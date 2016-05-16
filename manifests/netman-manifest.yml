@@ -1,0 +1,104 @@
+---
+name: netman
+
+# replace with bosh status --uuid
+director_uuid: <%= `bosh target lite > /dev/null 2>&1 && bosh status --uuid` %>
+
+releases:
+  - name: garden-runc
+    version: latest
+  - name: netman
+    version: latest
+  - name: etcd
+    version: latest
+
+networks:
+  - name: garden
+    subnets:
+      - range: 10.244.18.0/24
+        reserved: [10.244.18.1]
+        static: &garden_addresses
+          - &test_address_1 10.244.18.2
+          - &test_address_2 10.244.18.3
+          - &db_address 10.244.18.9
+
+        cloud_properties:
+          name: random
+
+properties:
+  cni-flannel:
+    etcd_endpoints:
+      - http://10.244.18.9:4001
+  garden:
+    default_container_grace_time: 90m
+    listen_network: tcp
+    listen_address: 0.0.0.0:7777
+    network_plugin: /var/vcap/packages/runc-cni/bin/guardian-cni-adapter
+    network_plugin_extra_args:
+      - "--configFile=/var/vcap/jobs/cni-flannel/config/adapter.json"
+
+jobs:
+  - name: acceptance-tests
+    lifecycle: errand
+    instances: 1
+    templates:
+      - name: acceptance-tests
+        release: netman
+    resource_pool: garden
+    networks:
+      - name: garden
+    properties:
+      netman:
+        acceptance_tests:
+          garden_server_1: *test_address_1
+          garden_server_2: *test_address_2
+
+  - name: flannel_db
+    instances: 1
+    templates:
+      - name: etcd
+        release: etcd
+    resource_pool: garden
+    networks:
+      - name: garden
+        static_ips: *db_address
+    properties:
+      etcd:
+        require_ssl: false
+        peer_require_ssl: false
+        machines:
+        - *db_address
+
+  - name: garden
+    instances: 2
+    templates:
+      - name: garden
+        release: garden-runc
+      - name: cni-flannel
+        release: netman
+    resource_pool: garden
+    networks:
+      - name: garden
+        static_ips: [ *test_address_1, *test_address_2 ]
+
+resource_pools:
+  - name: garden
+    network: garden
+    stemcell:
+      name: bosh-warden-boshlite-ubuntu-trusty-go_agent
+      version: latest
+    cloud_properties:
+      name: random
+
+compilation:
+  workers: 3
+  network: garden
+  cloud_properties:
+    name: random
+
+update:
+  canaries: 1
+  max_in_flight: 3
+  serial: false
+  canary_watch_time: 1000-30000
+  update_watch_time: 1000-30000

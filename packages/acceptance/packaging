@@ -1,0 +1,15 @@
+#!/bin/bash
+set -eu
+
+mkdir -p ${BOSH_INSTALL_TARGET}/src
+cp -a . ${BOSH_INSTALL_TARGET}/src
+
+export GOROOT=$(readlink -nf /var/vcap/packages/golang)
+export GOPATH=$BOSH_INSTALL_TARGET
+export PATH=$GOROOT/bin:$GOPATH/bin:$PATH
+
+go install github.com/onsi/ginkgo/ginkgo
+
+cd ${BOSH_INSTALL_TARGET}/src/acceptance
+
+go test -c -o ${BOSH_INSTALL_TARGET}/bin/acceptance-tests

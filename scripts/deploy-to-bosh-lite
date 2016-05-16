@@ -1,0 +1,131 @@
+#!/bin/bash
+
+# Simple script to download binary releases, update, create, and upload source
+# releases, generate deployment manifests and deploy releases to bosh-lite.
+#
+# We assume you have already cloned the necessary releases into ~/workspace.
+
+set -eu
+
+error() {
+    echo "[ERROR]: $1" 2>&1
+    exit 1
+}
+
+target_bosh_lite() {
+    bosh target lite || error "bosh target 'lite' is unknown. Please set an alias."
+}
+
+upload_bosh_stemcell() {
+    bosh upload stemcell https://bosh.io/d/stemcells/bosh-warden-boshlite-ubuntu-trusty-go_agent
+}
+
+download_release() {
+    local org=$1
+    local release=$2
+
+    curl -L -o $download_dir/${release}.tgz https://bosh.io/d/github.com/${org}/${release}
+}
+
+upload_release() {
+    local release=$1
+
+    bosh upload release ${download_dir}/${release}.tgz
+}
+
+verify_clone_exists() {
+    local release_name=$1
+
+    [[ -d ${workspace_dir}/${release_name} ]] || error "${release_name} needs to be cloned"
+    if [[ "$(git -C ${workspace_dir}/${release_name} rev-parse --is-inside-work-tree)" != "true" ]]; then
+        error "${release_name} is not a git repo"
+    fi
+}
+
+has_upstream() {
+    git rev-parse @{u} > /dev/null 2>&1
+}
+
+checkout_and_update() {
+    local branch=$1
+
+    git checkout $branch
+
+    ## verify that the checkout is clean
+    if [ -n "$(git status --porcelain)" ]; then
+      error "$branch is dirty"
+    fi
+
+    git pull
+    git submodule sync --recursive && git submodule update --init --recursive
+}
+
+update_release() {
+    local release_name=$1
+    local branch_name=$2
+
+    verify_clone_exists ${release_name}
+
+    pushd ${workspace_dir}/${release_name}
+
+    # Example fix: git branch --set-upstream-to sykesm/another-terrible-hack
+    has_upstream || error "${release_name} is missing an upstream to pull from"
+    checkout_and_update ${branch_name}
+
+    bosh -n create release --force
+    bosh -n upload release
+    popd
+}
+
+generate_manifests() {
+    ${workspace_dir}/cf-release/scripts/generate-bosh-lite-dev-manifest \
+        ${workspace_dir}/netman-release/manifests/cf-overrides.yml
+
+    ${workspace_dir}/netman-release/scripts/generate-bosh-lite-manifests
+}
+
+main() {
+    target_bosh_lite
+
+    if [ $upload_stemcell == true ]; then
+      upload_bosh_stemcell
+    fi
+
+    download_release cloudfoundry-incubator etcd-release
+    upload_release etcd-release
+
+    download_release cloudfoundry cflinuxfs2-rootfs-release
+    upload_release cflinuxfs2-rootfs-release
+
+    update_release cf-release runtime-passed
+    update_release diego-release master
+    update_release garden-runc-release master
+    update_release netman-release master
+
+    generate_manifests
+
+    bosh -n -d ${workspace_dir}/cf-release/bosh-lite/deployments/cf.yml deploy
+    bosh -n -d ${workspace_dir}/netman-release/bosh-lite/deployments/diego_with_netman.yml deploy
+}
+
+upload_stemcell=false
+download_dir=$(mktemp -d -t deploy_bosh_lite.XXXXXXX)
+workspace_dir=$(cd $(dirname $0)/../.. && pwd)
+
+while getopts "d:w:s" opt; do
+    case ${opt} in
+        s)
+            upload_stemcell=true
+        ;;
+
+        d)
+            download_dir=$OPTARG
+        ;;
+
+        w)
+            workspace_dir=$OPTARG
+        ;;
+    esac
+done
+
+main

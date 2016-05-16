@@ -1,0 +1,23 @@
+#!/bin/bash
+
+set -eu
+
+export GOROOT=$(readlink -nf /var/vcap/packages/golang)
+
+cd /var/vcap/packages/acceptance
+export GOPATH=$PWD
+export PATH=$GOROOT/bin:$GOPATH/bin:$PATH
+
+export GARDEN_SERVER_1="<%= p('netman.acceptance_tests.garden_server_1') %>"
+export GARDEN_SERVER_2="<%= p('netman.acceptance_tests.garden_server_2') %>"
+
+for i in {1..5}; do
+    ping -c1 ${GARDEN_SERVER_1} >/dev/null 2>&1 && break || sleep 5
+    if [ $i -eq 5 ]; then
+        echo "Unable to reach ${GARDEN_SERVER_1}..."
+        exit 1
+    fi
+done
+
+cd bin
+./acceptance-tests -ginkgo.v

@@ -1,0 +1,53 @@
+#!/bin/bash
+
+set -e
+
+# ensure gosub is installed (this will recompile it only if necessary)
+# go get github.com/vito/gosub
+go install github.com/vito/gosub
+
+function sync_package() {
+  bosh_pkg=${1}
+
+  shift
+
+  (
+    set -e
+
+    cd packages/${bosh_pkg}
+
+    {
+      cat spec | grep -v '# gosub'
+
+      for package in $(gosub list "$@"); do
+        repo=$(echo ${2} | cut -f1-3 -d/)
+        if [ -d "../../src/${repo}/Godeps/_workspace/src/${package}" ]; then
+          package="${repo}/Godeps/_workspace/src/${package}"
+        fi
+        echo ${package} | sed -e 's/\(.*\)/  - \1\/*.go # gosub/g'
+        if ls ../../src/${package}/*.s >/dev/null 2>&1; then
+          echo ${package} | sed -e 's/\(.*\)/  - \1\/*.s # gosub/g'
+        fi
+      done
+    } > spec.new
+
+    mv spec.new spec
+  )
+}
+
+sync_package acceptance \
+  -test acceptance \
+  -app github.com/onsi/ginkgo/ginkgo &
+
+sync_package runc-cni \
+  -app github.com/cloudfoundry-incubator/guardian-cni-adapter \
+  -app github.com/containernetworking/cni/plugins/main/bridge \
+  -app github.com/containernetworking/cni/plugins/ipam/host-local \
+  -app github.com/containernetworking/cni/plugins/meta/flannel &
+
+wait
+
+GOOS=linux sync_package utils \
+  -app utils/netns-exec... &
+
+git diff --name-only packages/*/spec

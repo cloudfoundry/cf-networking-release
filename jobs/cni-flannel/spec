@@ -1,0 +1,41 @@
+---
+name: cni-flannel
+
+templates:
+  flanneld_ctl.erb: bin/flanneld_ctl
+  adapter.json.erb: config/adapter.json
+  30-flannel.conf.erb: config/cni/30-flannel.conf
+
+packages:
+  - flannel
+  - runc-cni
+  - utils
+
+properties:
+  cni-flannel.etcd_endpoints:
+    description: "a list of etcd endpoints"
+    default: []
+
+  cni-flannel.flannel.Network:
+    description: "CIDR block for overlay network.  Should be /16"
+    default: "10.255.0.0/16"
+
+  cni-flannel.flannel.Backend.Type:
+    description: "Flannel backend to use"
+    default: "udp"
+
+  cni-flannel.adapter.cni_plugin_dir:
+    description: "Directory containing CNI plugins"
+    default: /var/vcap/packages/runc-cni/bin
+
+  cni-flannel.adapter.cni_config_dir:
+    description: "Directory containing CNI configuration files"
+    default: /var/vcap/jobs/cni-flannel/config/cni
+
+  cni-flannel.adapter.bind_mount_dir:
+    description: "The CNI adapter will bind-mount network namespaces in this directory"
+    default: /var/vcap/data/cni-flannel/container-netns
+
+  cni-flannel.adapter.log_dir:
+    description: "The CNI adapter will drop logs here"
+    default: /var/vcap/sys/log/cni-flannel/adapter

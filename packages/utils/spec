@@ -1,0 +1,9 @@
+---
+name: utils
+
+dependencies:
+  - golang
+
+files:
+  - github.com/containernetworking/cni/pkg/ns/*.go # gosub
+  - utils/netns-exec/*.go # gosub

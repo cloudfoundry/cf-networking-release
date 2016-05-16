@@ -1,0 +1,21 @@
+#!/bin/bash
+
+set -e -x -u
+cd $GOPATH
+
+# ensure gosub is installed (this will recompile it only if necessary)
+# go get github.com/vito/gosub
+go install github.com/vito/gosub
+
+{
+  gosub list \
+    -app github.com/cloudfoundry-incubator/guardian-cni-adapter/... \
+    -app github.com/containernetworking/cni/plugins/main/bridge \
+    -app github.com/containernetworking/cni/plugins/ipam/host-local
+
+  gosub list \
+      -test acceptance
+
+} > /tmp/packages
+
+cat /tmp/packages | xargs gosub sync

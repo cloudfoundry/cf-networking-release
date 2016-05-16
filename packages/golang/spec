@@ -1,0 +1,5 @@
+---
+name: golang
+
+files:
+  - golang/go1.6.2.linux-amd64.tar.gz # From https://storage.googleapis.com/golang/go1.6.2.linux-amd64.tar.gz
