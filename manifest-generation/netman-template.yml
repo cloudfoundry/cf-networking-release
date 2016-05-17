@@ -18,6 +18,8 @@ properties:
     network_plugin: /var/vcap/packages/runc-cni/bin/guardian-cni-adapter
     network_plugin_extra_args:
     - --configFile=/var/vcap/jobs/cni-flannel/config/adapter.json
+    shared_mounts:
+      - /var/vcap/data/cni-flannel/container-netns
   cni-flannel:
     etcd_endpoints:
       - http://netman-db.service.cf.internal:4001
