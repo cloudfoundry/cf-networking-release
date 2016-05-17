@@ -1,11 +1,12 @@
 # netman-release
 
-This release should be deployed so that the `netman` job co-locates with the `garden` job from garden-runc-release.  See below.
+A [garden-runc](https://github.com/cloudfoundry-incubator/garden-runc-release) add-on
+that provides container networking.
 
 ## What you can do
 - [Running tests](#running-tests)
 - [Deploy and test in isolation](#deploy-and-test-in-isolation)
-- [Deploying with Diego](#deploying-with-diego)
+- [Deploy and test with Diego](#deploy-and-test-with-diego)
 
 ## Running tests
 
@@ -15,32 +16,10 @@ eval $(docker-machine env dev-box)
 ~/workspace/netman-release/scripts/docker-test
 ```
 
-## Deploy and Test in Isolation
 
-```bash
-bosh target lite
+## Deploy and test with Diego
 
-pushd ~/workspace/netman-release
-  git pull
-  git submodule sync
-  git submodule update --init --recursive
-  bosh -n create release --force && bosh -n upload release
-  bosh deployment manifests/netman-manifest.yml
-popd
-
-mkdir -p ~/Downloads/releases
-pushd ~/Downloads/releases
-  curl -L -o consul-release.tgz https://bosh.io/d/github.com/cloudfoundry-incubator/consul-release
-  bosh upload release consul-release.tgz
-popd
-
-bosh -n deploy
-bosh run errand acceptance-tests
-```
-
-## Deploying And Testing with Diego
-
-Clone the necessary repositories:
+Clone the necessary repositories
 
 ```bash
 pushd ~/workspace
@@ -62,4 +41,19 @@ Finally, run the acceptance errand:
 
 ```bash
 bosh run errand netman-cf-acceptance
+```
+
+## Deploy and test in isolation
+
+```bash
+bosh target lite
+
+cd ~/workspace/netman-release
+
+./scripts/update
+bosh -n create release --force && bosh -n upload release --rebase
+bosh deployment bosh-lite/deployments/netman-bare.yml
+
+bosh -n deploy
+bosh run errand acceptance-tests
 ```
