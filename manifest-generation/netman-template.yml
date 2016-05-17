@@ -1,0 +1,135 @@
+---
+releases:
+  - <<: (( merge ))
+  - name: netman
+    version: latest
+
+properties:
+  <<: (( merge ))
+  netman-cf-acceptance:
+    <<: (( merge ))
+    admin_password: (( merge || "admin" ))
+    admin_user: (( merge || "admin" ))
+    api: (( merge || "api.bosh-lite.com" ))
+    apps_domain: (( merge || "bosh-lite.com" ))
+    skip_ssl_validation: (( merge || true ))
+  garden:
+    <<: (( merge ))
+    network_plugin: /var/vcap/packages/runc-cni/bin/guardian-cni-adapter
+    network_plugin_extra_args:
+    - --configFile=/var/vcap/jobs/cni-flannel/config/adapter.json
+  cni-flannel:
+    etcd_endpoints:
+      - http://netman-db.service.cf.internal:4001
+jobs:
+- name: database_z1
+  <<: (( merge ))
+- name: database_z2
+  <<: (( merge ))
+- name: database_z3
+  <<: (( merge ))
+
+- name: netman_db
+  instances: 1
+  networks:
+  - name: diego1
+  persistent_disk: 256
+  resource_pool: database_z1
+  templates:
+  - name: consul_agent
+    release: cf
+  - name: etcd
+    release: etcd
+  properties:
+    etcd:
+      require_ssl: false
+      peer_require_ssl: false
+      machines:
+      - netman-db.service.cf.internal
+    consul:
+      agent:
+        services:
+          netman-db:
+            name: netman-db
+            check:
+              interval: 5s
+              script: /bin/true
+
+- name: brain_z1
+  <<: (( merge ))
+- name: cell_z1
+  <<: (( merge ))
+  templates:
+  - <<: (( merge ))
+  - name: cni-flannel
+    release: netman
+- name: cc_bridge_z1
+  <<: (( merge ))
+- name: route_emitter_z1
+  <<: (( merge ))
+- name: access_z1
+  <<: (( merge ))
+
+- name: brain_z2
+  <<: (( merge ))
+- name: cell_z2
+  <<: (( merge ))
+  templates:
+  - <<: (( merge ))
+  - name: cni-flannel
+    release: netman
+- name: cc_bridge_z2
+  <<: (( merge ))
+- name: route_emitter_z2
+  <<: (( merge ))
+- name: access_z2
+  <<: (( merge ))
+
+- name: brain_z3
+  <<: (( merge ))
+- name: cell_z3
+  <<: (( merge ))
+  templates:
+  - <<: (( merge ))
+  - name: cni-flannel
+    release: netman
+- name: cc_bridge_z3
+  <<: (( merge ))
+- name: route_emitter_z3
+  <<: (( merge ))
+- name: access_z3
+  <<: (( merge ))
+
+- name: colocated_z1
+  <<: (( merge ))
+  templates:
+  - <<: (( merge ))
+  - name: cni-flannel
+    release: netman
+- name: colocated_z2
+  <<: (( merge ))
+  templates:
+  - <<: (( merge ))
+  - name: cni-flannel
+    release: netman
+- name: colocated_z3
+  <<: (( merge ))
+  templates:
+  - <<: (( merge ))
+  - name: cni-flannel
+    release: netman
+
+- <<: (( merge ))
+
+- name: netman-cf-acceptance
+  instances: 1
+  lifecycle: errand
+  networks:
+  - name: diego1
+  resource_pool:
+    database_z1
+  templates:
+  - name: netman-cf-acceptance
+    release: netman
+
+<<: (( merge ))

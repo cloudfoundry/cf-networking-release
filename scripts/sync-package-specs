@@ -37,6 +37,8 @@ function sync_package() {
 
 sync_package acceptance \
   -test acceptance \
+  -test netman-cf-acceptance \
+  -app netman-cf-acceptance/example-apps/proxy \
   -app github.com/onsi/ginkgo/ginkgo &
 
 sync_package runc-cni \

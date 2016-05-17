@@ -12,7 +12,7 @@
 	branch = master
 [submodule "src/github.com/cloudfoundry-incubator/garden"]
 	path = src/github.com/cloudfoundry-incubator/garden
-	url = https://github.com/cloudfoundry-incubator/garden
+	url = https://github.com/cloudfoundry-incubator/garden/
 	branch = master
 [submodule "src/github.com/pivotal-golang/lager"]
 	path = src/github.com/pivotal-golang/lager
@@ -34,3 +34,16 @@
 	path = src/golang.org/x/sys
 	url = https://go.googlesource.com/sys
 	branch = master
+[submodule "src/github.com/cloudfoundry-incubator/cf-test-helpers"]
+	path = src/github.com/cloudfoundry-incubator/cf-test-helpers
+	url = https://github.com/cloudfoundry-incubator/cf-test-helpers
+[submodule "src/github.com/vito/gosub"]
+	path = src/github.com/vito/gosub
+	url = https://github.com/rosenhouse/gosub
+	branch = actionfunc
+[submodule "src/github.com/codegangsta/cli"]
+	path = src/github.com/codegangsta/cli
+	url = https://github.com/codegangsta/cli
+[submodule "src/github.com/coreos/flannel"]
+	path = src/github.com/coreos/flannel
+	url = https://github.com/coreos/flannel

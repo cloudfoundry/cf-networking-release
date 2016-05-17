@@ -1,0 +1,19 @@
+#!/bin/bash
+
+set -eu
+
+export GOROOT=$(readlink -nf /var/vcap/packages/golang)
+
+cd /var/vcap/packages/acceptance
+export GOPATH=$PWD
+export PATH=$GOROOT/bin:$GOPATH/bin:$PATH
+
+export PATH=/var/vcap/packages/cli/bin:${PATH} # put the cli on the path
+
+export CONFIG=/var/vcap/jobs/netman-cf-acceptance/bin/config.json
+
+cd src/netman-cf-acceptance
+
+export APP_DIR=./example-apps/proxy
+
+ginkgo -r -v

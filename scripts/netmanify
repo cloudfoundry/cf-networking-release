@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -e
+
+absolute_path() {
+  (cd $1 && pwd)
+}
+
+scripts_path=$(absolute_path `dirname $0`)
+manifest_generation=${scripts_path}/../manifest-generation
+
+spiff merge ${manifest_generation}/netman-template.yml "$@"

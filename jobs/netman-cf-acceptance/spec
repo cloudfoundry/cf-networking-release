@@ -1,0 +1,11 @@
+---
+name: netman-cf-acceptance
+
+templates:
+  test.sh.erb: bin/run
+  config.json.erb: bin/config.json
+
+packages:
+  - acceptance
+  - golang
+  - cli

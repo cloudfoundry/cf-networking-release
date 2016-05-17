@@ -5,6 +5,7 @@ config/dev.yml
 config/private.yml
 .final_builds/jobs/**/*.tgz
 .final_builds/packages/**/*.tgz
+bosh-lite
 releases/*.tgz
 output/
 tmp/

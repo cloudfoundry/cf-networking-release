@@ -57,7 +57,6 @@ checkout_and_update() {
     fi
 
     git pull
-    git submodule sync --recursive && git submodule update --init --recursive
 }
 
 update_release() {
@@ -72,16 +71,35 @@ update_release() {
     has_upstream || error "${release_name} is missing an upstream to pull from"
     checkout_and_update ${branch_name}
 
-    bosh -n create release --force
-    bosh -n upload release
     popd
 }
 
 generate_manifests() {
+    # we need the git repos for manifest generation
+    update_release cf-release master
+    update_release diego-release master
+
     ${workspace_dir}/cf-release/scripts/generate-bosh-lite-dev-manifest \
-        ${workspace_dir}/netman-release/manifests/cf-overrides.yml
+        ${workspace_dir}/netman-release/manifest-generation/stubs/cf-overrides.yml
 
     ${workspace_dir}/netman-release/scripts/generate-bosh-lite-manifests
+}
+
+update_dependencies() {
+    download_release cloudfoundry-incubator etcd-release
+    upload_release etcd-release
+
+    download_release cloudfoundry cflinuxfs2-rootfs-release
+    upload_release cflinuxfs2-rootfs-release
+
+    download_release cloudfoundry cf-release
+    upload_release cf-release
+
+    download_release cloudfoundry-incubator diego-release
+    upload_release diego-release
+
+    download_release cloudfoundry-incubator garden-runc-release
+    upload_release garden-runc-release
 }
 
 main() {
@@ -91,16 +109,7 @@ main() {
       upload_bosh_stemcell
     fi
 
-    download_release cloudfoundry-incubator etcd-release
-    upload_release etcd-release
-
-    download_release cloudfoundry cflinuxfs2-rootfs-release
-    upload_release cflinuxfs2-rootfs-release
-
-    update_release cf-release runtime-passed
-    update_release diego-release master
-    update_release garden-runc-release master
-    update_release netman-release master
+    update_dependencies
 
     generate_manifests
 

@@ -19,13 +19,6 @@ eval $(docker-machine env dev-box)
 
 ```bash
 bosh target lite
-pushd ~/workspace/garden-runc-release
-  git pull
-  git submodule sync
-  git submodule update --init --recursive
-  bosh -n create release
-  bosh upload release
-popd
 
 pushd ~/workspace/netman-release
   git pull
@@ -54,7 +47,6 @@ pushd ~/workspace
   git clone https://github.com/cloudfoundry-incubator/diego-release
   git clone https://github.com/cloudfoundry/cf-release
   git clone https://github.com/cloudfoundry-incubator/netman-release
-  git clone https://github.com/cloudfoundry-incubator/garden-runc-release
 popd
 ```
 
@@ -69,5 +61,5 @@ popd
 Finally, run the acceptance errand:
 
 ```bash
-bosh run errand netman-acceptance
+bosh run errand netman-cf-acceptance
 ```

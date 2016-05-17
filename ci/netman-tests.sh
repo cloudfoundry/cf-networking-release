@@ -6,7 +6,6 @@ cd netman-release
 export GOPATH=$PWD
 
 declare -a packages=(
-  "src/lib"
   "src/github.com/cloudfoundry-incubator/guardian-cni-adapter"
   )
 
