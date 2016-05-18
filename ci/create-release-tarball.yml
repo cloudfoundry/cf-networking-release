@@ -1,0 +1,19 @@
+---
+image: docker:///c2cnetworking/ducati-deployment
+
+platform: linux
+
+inputs:
+- name: release
+
+outputs:
+- name: tarballs
+
+run:
+  path: bash
+  args:
+  - -c
+  - |
+    bosh create release --with-tarball --name $RELEASE_NAME --dir release && cp release/dev_releases/$RELEASE_NAME/*.tgz tarballs
+params:
+  RELEASE_NAME: netman

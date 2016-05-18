@@ -1,0 +1,15 @@
+---
+image_resource:
+  type: docker-image
+  source: { repository: c2cnetworking/ducati-dev }
+
+platform: linux
+
+inputs:
+- name: netman-release
+
+run:
+  path: netman-release/ci/netman-tests.sh
+
+params:
+  GINKGO_EXTRA_FLAGS: "-race"
