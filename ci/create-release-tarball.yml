@@ -14,6 +14,6 @@ run:
   args:
   - -c
   - |
-    bosh create release --with-tarball --name $RELEASE_NAME --dir release && cp release/dev_releases/$RELEASE_NAME/*.tgz tarballs
+    bosh create release --with-tarball --name $RELEASE_NAME --dir netman-release && cp netman-release/dev_releases/$RELEASE_NAME/*.tgz tarballs
 params:
   RELEASE_NAME: netman
