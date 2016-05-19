@@ -74,6 +74,7 @@ func getInstanceIP(appName string, instanceIndex int) string {
 	sshSession := cf.Cf(
 		"ssh", appName,
 		"-i", fmt.Sprintf("%d", instanceIndex),
+		"--skip-host-validation",
 		"-c", "ip addr",
 	)
 	Expect(sshSession.Wait(Timeout_Push)).To(gexec.Exit(0))
