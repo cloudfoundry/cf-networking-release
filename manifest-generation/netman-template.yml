@@ -21,6 +21,9 @@ properties:
     shared_mounts:
       - /var/vcap/data/cni-flannel/container-netns
   cni-flannel:
+    flannel:
+      Backend:
+        Type: vxlan
     etcd_endpoints:
       - http://netman-db.service.cf.internal:4001
 jobs:
