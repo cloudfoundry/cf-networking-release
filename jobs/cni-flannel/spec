@@ -22,7 +22,7 @@ properties:
 
   cni-flannel.flannel.Backend.Type:
     description: "Flannel backend to use"
-    default: "udp"
+    default: "vxlan"
 
   cni-flannel.adapter.cni_plugin_dir:
     description: "Directory containing CNI plugins"

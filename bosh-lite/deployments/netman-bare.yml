@@ -27,9 +27,6 @@ networks:
 
 properties:
   cni-flannel:
-    flannel:
-      Backend:
-        Type: vxlan
     etcd_endpoints:
       - http://10.244.18.9:4001
   garden:
