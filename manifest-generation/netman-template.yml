@@ -49,7 +49,7 @@ jobs:
         port: 4002
         registration_interval: 20s
         uris:
-        - (( "policy-server." properties.system_domain || "policy-server.bosh-lite.com" ))
+        - (( "api." properties.system_domain "/networking" || "api.bosh-lite.com/networking" ))
 
 - name: netman_db
   instances: 1

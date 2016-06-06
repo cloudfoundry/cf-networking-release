@@ -8,12 +8,18 @@ import (
 	"log"
 	"net/http"
 	"policy-server/config"
+	"time"
 )
 
-type handler struct{}
+type handler struct {
+	StartTime time.Time
+}
 
 func (h *handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusOK)
+	currentTime := time.Now()
+	uptime := currentTime.Sub(h.StartTime)
+	w.Write([]byte(fmt.Sprintf("Network policy server, up for %v\n", uptime)))
 	return
 }
 
@@ -33,7 +39,9 @@ func main() {
 		log.Fatal("error unmarshalling config")
 	}
 
-	handler := &handler{}
+	handler := &handler{
+		StartTime: time.Now(),
+	}
 	server := &http.Server{
 		Addr:    fmt.Sprintf("%s:%d", conf.ListenHost, conf.ListenPort),
 		Handler: handler,
