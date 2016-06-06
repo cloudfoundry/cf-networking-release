@@ -50,7 +50,7 @@ jobs:
         port: 4002
         registration_interval: 20s
         uris:
-        - (( "http://api." .properties.system_domain "/networking" || "api.bosh-lite.com/networking" ))
+        - (( "api." .properties.system_domain "/networking" || "api.bosh-lite.com/networking" ))
 
 - name: netman_db
   instances: 1
