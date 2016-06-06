@@ -31,6 +31,26 @@ jobs:
 - name: database_z3
   <<: (( merge ))
 
+- name: policy-server
+  instances: 1
+  templates:
+    - name: policy-server
+      release: netman
+    - name: route_registrar
+      release: cf
+  resource_pool: database_z1
+  networks:
+    - name: diego1
+  properties:
+    nats: (( .properties.diego.route_emitter.nats ))
+    route_registrar:
+      routes:
+      - name: policy-server
+        port: 4002
+        registration_interval: 20s
+        uris:
+        - (( "policy-server." properties.system_domain || "policy-server.bosh-lite.com" ))
+
 - name: netman_db
   instances: 1
   networks:
