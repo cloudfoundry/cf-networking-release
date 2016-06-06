@@ -39,5 +39,7 @@ func main() {
 		Handler: handler,
 	}
 
+	fmt.Printf("starting server at %s:%d\n", conf.ListenHost, conf.ListenPort)
+
 	log.Fatal(server.ListenAndServe())
 }

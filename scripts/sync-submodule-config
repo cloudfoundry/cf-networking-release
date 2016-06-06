@@ -11,10 +11,19 @@ go install github.com/vito/gosub
   gosub list \
     -app github.com/cloudfoundry-incubator/guardian-cni-adapter/... \
     -app github.com/containernetworking/cni/plugins/main/bridge \
-    -app github.com/containernetworking/cni/plugins/ipam/host-local
+    -app github.com/containernetworking/cni/plugins/ipam/host-local \
+    -app netman-cf-acceptance/example-apps/proxy \
+    -app github.com/onsi/ginkgo/ginkgo \
+    -app github.com/cloudfoundry-incubator/guardian-cni-adapter \
+    -app github.com/containernetworking/cni/plugins/main/bridge \
+    -app github.com/containernetworking/cni/plugins/ipam/host-local \
+    -app github.com/containernetworking/cni/plugins/meta/flannel \
+    -app github.com/coreos/flannel \
+    -app github.com/rosenhouse/gosub &
 
   gosub list \
-      -test acceptance
+    -test acceptance \
+    -test netman-cf-acceptance
 
 } > /tmp/packages
 

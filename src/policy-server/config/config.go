@@ -1,12 +1,6 @@
 package config
 
-import "io"
-
 type Config struct {
-	ListenHost string
-	ListenPort int
-}
-
-func (c Config) Marshal(output io.Writer) error {
-	return nil
+	ListenHost string `json:"listen_host"`
+	ListenPort int    `json:"listen_port"`
 }

@@ -1,0 +1,17 @@
+---
+name: policy-server
+templates:
+  policy-server_ctl.erb: bin/policy-server_ctl
+  policy-server.json.erb: config/policy-server.json
+
+packages:
+  - policy-server
+
+properties:
+  policy-server.server.listen_host:
+    description: "Host where the policy server will serve its API"
+    default: 0.0.0.0
+
+  policy-server.server.listen_port:
+    description: "Port where the policy server will serve its API"
+    default: 4002

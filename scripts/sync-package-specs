@@ -35,6 +35,9 @@ function sync_package() {
   )
 }
 
+sync_package policy-server \
+  -app policy-server/cmd/policy-server &
+
 sync_package acceptance \
   -test acceptance \
   -test netman-cf-acceptance \

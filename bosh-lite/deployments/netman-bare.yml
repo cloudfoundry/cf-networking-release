@@ -21,6 +21,7 @@ networks:
           - &test_address_1 10.244.18.2
           - &test_address_2 10.244.18.3
           - &db_address 10.244.18.9
+          - &policy_server_address 10.244.18.11
 
         cloud_properties:
           name: random
@@ -68,6 +69,16 @@ jobs:
         peer_require_ssl: false
         machines:
         - *db_address
+
+  - name: policy-server
+    instances: 1
+    templates:
+      - name: policy-server
+        release: netman
+    resource_pool: garden
+    networks:
+      - name: garden
+        static_ips: *policy_server_address
 
   - name: garden
     instances: 2

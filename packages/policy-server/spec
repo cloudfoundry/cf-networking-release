@@ -1,0 +1,9 @@
+---
+name: policy-server
+
+dependencies:
+  - golang
+
+files:
+  - policy-server/cmd/policy-server/*.go # gosub
+  - policy-server/config/*.go # gosub
