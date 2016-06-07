@@ -7,3 +7,4 @@ dependencies:
 files:
   - policy-server/cmd/policy-server/*.go # gosub
   - policy-server/config/*.go # gosub
+  - policy-server/handlers/*.go # gosub
