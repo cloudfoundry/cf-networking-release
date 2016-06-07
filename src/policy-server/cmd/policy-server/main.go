@@ -8,20 +8,9 @@ import (
 	"log"
 	"net/http"
 	"policy-server/config"
+	"policy-server/handlers"
 	"time"
 )
-
-type handler struct {
-	StartTime time.Time
-}
-
-func (h *handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	currentTime := time.Now()
-	uptime := currentTime.Sub(h.StartTime)
-	w.Write([]byte(fmt.Sprintf("Network policy server, up for %v\n", uptime)))
-	return
-}
 
 func main() {
 	conf := &config.Config{}
@@ -39,12 +28,14 @@ func main() {
 		log.Fatal("error unmarshalling config")
 	}
 
-	handler := &handler{
+	uptimeHandler := &handlers.UptimeHandler{
 		StartTime: time.Now(),
 	}
+	mux := http.NewServeMux()
+	mux.Handle("/", uptimeHandler)
 	server := &http.Server{
 		Addr:    fmt.Sprintf("%s:%d", conf.ListenHost, conf.ListenPort),
-		Handler: handler,
+		Handler: mux,
 	}
 
 	fmt.Printf("starting server at %s:%d\n", conf.ListenHost, conf.ListenPort)

@@ -3,7 +3,9 @@ package acceptance_test
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
 	"os/exec"
 	"policy-server/config"
 
@@ -14,9 +16,10 @@ import (
 
 var _ = Describe("Acceptance", func() {
 	var (
-		session *gexec.Session
-		conf    config.Config
-		address string
+		session       *gexec.Session
+		conf          config.Config
+		address       string
+		mockUAAServer *httptest.Server
 	)
 
 	var serverIsAvailable = func() error {
@@ -24,9 +27,33 @@ var _ = Describe("Acceptance", func() {
 	}
 
 	BeforeEach(func() {
+		mockUAAServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/check_token" {
+				if r.Header["Authorization"][0] == "Basic dGVzdDp0ZXN0Cg==" {
+					token, err := ioutil.ReadAll(r.Body)
+					Expect(err).NotTo(HaveOccurred())
+
+					if string(token) == "token=valid-token" {
+						w.WriteHeader(http.StatusOK)
+						w.Write([]byte(`{"scope":["network.admin"], "user_name":"some-user"}`))
+					} else {
+						w.WriteHeader(http.StatusBadRequest)
+						w.Write([]byte(`{"error_description":"Some requested scopes are missing: network.admin"}`))
+					}
+				} else {
+					w.WriteHeader(http.StatusUnauthorized)
+				}
+				return
+			}
+			w.WriteHeader(http.StatusNotFound)
+		}))
+
 		conf = config.Config{
-			ListenHost: "127.0.0.1",
-			ListenPort: 9001 + GinkgoParallelNode(),
+			ListenHost:      "127.0.0.1",
+			ListenPort:      9001 + GinkgoParallelNode(),
+			UAAClient:       "test",
+			UAAClientSecret: "test",
+			UAAURL:          mockUAAServer.URL,
 		}
 		configFilePath := WriteConfigFile(conf)
 
@@ -62,5 +89,19 @@ var _ = Describe("Acceptance", func() {
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
 		})
 
+		PIt("has a whoami endpoint", func() {
+			client := &http.Client{}
+			tokenString := "token=valid-token"
+			req, err := http.NewRequest("GET", fmt.Sprintf("http://%s:%d/networking/v0/external/whoami", conf.ListenHost, conf.ListenPort), bytes.NewBuffer([]byte{}))
+			Expect(err).NotTo(HaveOccurred())
+			req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", tokenString))
+
+			resp, err := client.Do(req)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(resp.StatusCode).To(Equal(http.StatusOK))
+			responseString, err := ioutil.ReadAll(resp.Body)
+			Expect(responseString).To(ContainSubstring("some-user"))
+		})
 	})
 })
