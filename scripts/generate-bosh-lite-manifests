@@ -18,6 +18,6 @@ mkdir -p ${NETMAN_MANIFESTS_DIR}
 
 ( cd ${DIEGO_RELEASE_DIR} && ./scripts/generate-bosh-lite-manifests -g )
 
-${scripts_path}/netmanify ${DIEGO_MANIFESTS_DIR}/diego.yml "$@" | \
+${scripts_path}/netmanify ${DIEGO_MANIFESTS_DIR}/diego.yml ${NETMAN_RELEASE_DIR}/manifest-generation/stubs/bosh-lite-cf.yml "$@" | \
     sed 's/\ guardian/\ garden-runc/' \
     > ${NETMAN_MANIFESTS_DIR}/diego_with_netman.yml
