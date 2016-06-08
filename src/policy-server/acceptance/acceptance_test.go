@@ -29,7 +29,7 @@ var _ = Describe("Acceptance", func() {
 	BeforeEach(func() {
 		mockUAAServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Path == "/check_token" {
-				if r.Header["Authorization"][0] == "Basic dGVzdDp0ZXN0Cg==" {
+				if r.Header["Authorization"][0] == "Basic dGVzdDp0ZXN0" {
 					token, err := ioutil.ReadAll(r.Body)
 					Expect(err).NotTo(HaveOccurred())
 
@@ -83,15 +83,15 @@ var _ = Describe("Acceptance", func() {
 		It("has an available endpoint", func() {
 			client := &http.Client{}
 
-			resp, err := client.Post(fmt.Sprintf("http://%s:%d/rule", conf.ListenHost, conf.ListenPort), "", bytes.NewReader([]byte{}))
+			resp, err := client.Post(fmt.Sprintf("http://%s:%d/networking", conf.ListenHost, conf.ListenPort), "", bytes.NewReader([]byte{}))
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
 		})
 
-		PIt("has a whoami endpoint", func() {
+		It("has a whoami endpoint", func() {
 			client := &http.Client{}
-			tokenString := "token=valid-token"
+			tokenString := "valid-token"
 			req, err := http.NewRequest("GET", fmt.Sprintf("http://%s:%d/networking/v0/external/whoami", conf.ListenHost, conf.ListenPort), bytes.NewBuffer([]byte{}))
 			Expect(err).NotTo(HaveOccurred())
 			req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", tokenString))

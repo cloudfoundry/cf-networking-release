@@ -2,11 +2,12 @@ package uaa_client_test
 
 import (
 	"errors"
+	"io/ioutil"
 	"net/http"
-	"net/http/httptest"
-	"policy-server"
 	"policy-server/fakes"
+	"policy-server/testsupport"
 	"policy-server/uaa_client"
+	"strings"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -14,46 +15,50 @@ import (
 
 var _ = Describe("Client", func() {
 	var (
-		client        *uaa_client.Client
-		mockUAAServer *httptest.Server
-		handler       http.HandlerFunc
-		httpClient    *fakes.HTTPClient
+		client           *uaa_client.Client
+		httpClient       *fakes.HTTPClient
+		returnedResponse *http.Response
 	)
 
 	Describe("GetName", func() {
 		BeforeEach(func() {
-			handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				if r.URL.Path == "/check_token" && r.Method == "POST" {
-					w.WriteHeader(http.StatusOK)
-					w.Write([]byte(`{"scope":["network.admin"], "user_name":"some-user"}`))
-					return
-				}
-			})
-			mockUAAServer = httptest.NewServer(handler)
+			httpClient = &fakes.HTTPClient{}
 			client = &uaa_client.Client{
-				Host:       mockUAAServer.URL,
+				Host:       "some.url",
 				Name:       "test",
 				Secret:     "test",
-				HTTPClient: http.DefaultClient,
+				HTTPClient: httpClient,
 			}
-			httpClient = &fakes.HTTPClient{}
+			returnedResponse = &http.Response{
+				Body: ioutil.NopCloser(strings.NewReader(`{"scope":["network.admin"], "user_name":"some-user"}`)),
+			}
+			httpClient.DoReturns(returnedResponse, nil)
 		})
 
 		It("Gets the username by posting to check_token uaa endpoint", func() {
 			userName, err := client.GetName("valid-token")
 			Expect(err).NotTo(HaveOccurred())
 
+			receivedRequest := httpClient.DoArgsForCall(0)
+			receivedBody, err := ioutil.ReadAll(receivedRequest.Body)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(receivedRequest.Method).To(Equal("POST"))
+			Expect(receivedBody).To(ContainSubstring("token=valid-token"))
+
+			authHeader := receivedRequest.Header["Authorization"]
+			Expect(authHeader).To(HaveLen(1))
+			Expect(authHeader[0]).To(Equal("Basic dGVzdDp0ZXN0"))
+
 			Expect(userName).To(Equal("some-user"))
 		})
 
 		Context("when the response body is not valid json", func() {
+
 			BeforeEach(func() {
-				handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					w.WriteHeader(http.StatusOK)
-					w.Write([]byte(`%%%%%%%%`))
-				})
-				mockUAAServer = httptest.NewServer(handler)
-				client.Host = mockUAAServer.URL
+				returnedResponse = &http.Response{
+					Body: ioutil.NopCloser(strings.NewReader(`%%%%`)),
+				}
+				httpClient.DoReturns(returnedResponse, nil)
 			})
 
 			It("returns a helpful error", func() {

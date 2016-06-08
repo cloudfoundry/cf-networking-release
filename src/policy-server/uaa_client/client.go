@@ -26,7 +26,8 @@ type CheckTokenResponse struct {
 
 func (c *Client) GetName(token string) (string, error) {
 	reqURL := fmt.Sprintf("%s/check_token", c.Host)
-	request, err := http.NewRequest("POST", reqURL, bytes.NewBuffer([]byte{}))
+	request, err := http.NewRequest("POST", reqURL, bytes.NewBuffer([]byte(fmt.Sprintf("token=%s", token))))
+	request.SetBasicAuth(c.Name, c.Secret)
 
 	resp, err := c.HTTPClient.Do(request)
 	if err != nil {

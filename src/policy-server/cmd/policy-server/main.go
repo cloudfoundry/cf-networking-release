@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"policy-server/config"
 	"policy-server/handlers"
+	"policy-server/uaa_client"
 	"time"
 )
 
@@ -28,11 +29,21 @@ func main() {
 		log.Fatal("error unmarshalling config")
 	}
 
+	uaaRequestClient := &uaa_client.Client{
+		Host:       conf.UAAURL,
+		Name:       conf.UAAClient,
+		Secret:     conf.UAAClientSecret,
+		HTTPClient: http.DefaultClient,
+	}
+	whoamiHandler := &handlers.WhoAmIHandler{
+		Client: uaaRequestClient,
+	}
 	uptimeHandler := &handlers.UptimeHandler{
 		StartTime: time.Now(),
 	}
 	mux := http.NewServeMux()
 	mux.Handle("/", uptimeHandler)
+	mux.Handle("/networking/v0/external/whoami", whoamiHandler)
 	server := &http.Server{
 		Addr:    fmt.Sprintf("%s:%d", conf.ListenHost, conf.ListenPort),
 		Handler: mux,
