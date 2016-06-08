@@ -52,6 +52,19 @@ var _ = Describe("Client", func() {
 			Expect(userName).To(Equal("some-user"))
 		})
 
+		Context("when the response does not have the network.admin scope", func() {
+			BeforeEach(func() {
+				returnedResponse = &http.Response{
+					Body: ioutil.NopCloser(strings.NewReader(`{"scope":["wrong.scope"], "user_name":"some-user"}`)),
+				}
+				httpClient.DoReturns(returnedResponse, nil)
+			})
+			It("returns a helpful error", func() {
+				_, err := client.GetName("valid-token")
+
+				Expect(err).To(MatchError("network.admin scope not found"))
+			})
+		})
 		Context("when the response body is not valid json", func() {
 
 			BeforeEach(func() {
