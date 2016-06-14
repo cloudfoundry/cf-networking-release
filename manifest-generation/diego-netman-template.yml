@@ -7,13 +7,6 @@ releases:
 properties:
   <<: (( merge ))
   system_domain: (( merge ))
-  netman-cf-acceptance:
-    <<: (( merge ))
-    admin_password: (( merge || "admin" ))
-    admin_user: (( merge || "admin" ))
-    api: (( merge || "api.bosh-lite.com" ))
-    apps_domain: (( merge || "bosh-lite.com" ))
-    skip_ssl_validation: (( merge || true ))
   garden:
     <<: (( merge ))
     network_plugin: /var/vcap/packages/runc-cni/bin/guardian-cni-adapter

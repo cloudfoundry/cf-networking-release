@@ -12,9 +12,29 @@ packages:
 
 properties:
   netman-cf-acceptance.test_user:
-    description: "user for testing policy api"
+    description: "user for testing policy api, must have network.admin scope"
     default: network-admin
 
   netman-cf-acceptance.test_user_password:
     description: "password for test user"
     default: network-admin
+
+  netman-cf-acceptance.admin_user:
+    description: "admin user for cats-like tests"
+    default: admin
+
+  netman-cf-acceptance.admin_password:
+    description: "admin user password"
+    default: admin
+
+  netman-cf-acceptance.api:
+    description: "api endpoint"
+    default: api.bosh-lite.com
+
+  netman-cf-acceptance.apps_domain:
+    description: "apps domain for cf deployment"
+    default: bosh-lite.com
+
+  netman-cf-acceptance.skip_ssl_validation:
+    description: "skip ssl validation in acceptance tests"
+    default: false
