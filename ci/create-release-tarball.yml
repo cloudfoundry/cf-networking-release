@@ -1,5 +1,5 @@
 ---
-image: docker:///c2cnetworking/ducati-deployment
+image: docker:///c2cnetworking/deploy
 
 platform: linux
 

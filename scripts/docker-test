@@ -11,5 +11,5 @@ docker run --privileged \
    -e GINKGO_EXTRA_FLAGS="${GINKGO_EXTRA_FLAGS:-""}" \
    -e NO_POSTGRES="${NO_POSTGRES:-""}" \
    -w / \
-   c2cnetworking/ducati-dev \
+   c2cnetworking/dev \
    /netman-release/ci/netman-tests.sh "$@"

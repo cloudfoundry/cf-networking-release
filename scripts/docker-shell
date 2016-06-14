@@ -9,5 +9,5 @@ docker run --privileged \
    -v $PWD:/netman-release \
    -e GOPATH=/netman-release \
    -w /netman-release \
-   c2cnetworking/ducati-dev \
+   c2cnetworking/dev \
    /bin/bash
