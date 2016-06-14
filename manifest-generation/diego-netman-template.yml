@@ -27,6 +27,18 @@ properties:
     clients:
       network-policy:
         secret: (( merge ))
+  netman:
+    database:
+      db_scheme: postgres
+      port: 5432
+      databases:
+      - name: netman
+        tag: whatever
+      roles:
+      - name: policy_server
+        password: some-password
+        tag: admin
+
 jobs:
 - name: database_z1
   <<: (( merge ))
@@ -37,11 +49,14 @@ jobs:
 
 - name: policy-server
   instances: 1
+  persistent_disk: 256
   templates:
     - name: policy-server
       release: netman
     - name: route_registrar
       release: cf
+    - name: postgres
+      release: netman
   resource_pool: database_z1
   networks:
     - name: diego1

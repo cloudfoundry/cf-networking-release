@@ -46,7 +46,6 @@ type db interface {
 	Query(query string, args ...interface{}) (*sql.Rows, error)
 }
 
-//go:generate counterfeiter -o ../fakes/db.go --fake-name Db . db
 type Transaction interface {
 	Exec(query string, args ...interface{}) (sql.Result, error)
 	QueryRow(query string, args ...interface{}) *sql.Row
@@ -89,7 +88,7 @@ func rollback(tx Transaction, err error) error {
 func (s *store) Create(policies []models.Policy) error {
 	tx, err := s.conn.Begin()
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("begin transaction: %s", err)
 	}
 
 	for _, policy := range policies {

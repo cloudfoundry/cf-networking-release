@@ -1,0 +1,36 @@
+---
+name: postgres
+
+description: "The Postgres server provides a single instance Postgres database that can be used with the Cloud Controller or the UAA. It does not provide highly-available configuration."
+
+templates:
+  postgres_ctl.erb: bin/postgres_ctl
+  postgres_start.sh.erb: bin/postgres_start.sh
+  postgresql.conf.erb: config/postgresql.conf
+  pg_hba.conf.erb: config/pg_hba.conf
+
+packages:
+  - netman-common
+  - postgres
+
+properties:
+  netman.database.db_scheme:
+    description: "The database scheme"
+  netman.database.port:
+    description: "The database port"
+  netman.database.address:
+    description: "The database address"
+  netman.database.databases:
+    description: "A list of databases and associated properties to create"
+  netman.database.roles:
+    description: "A list of database roles and associated properties to create"
+  netman.database.max_connections:
+    description: "Maximum number of database connections"
+  netman.database.log_line_prefix:
+    description: "The postgres `printf` style string that is output at the beginning of each log line"
+    default: "%m: "
+  netman.database.collect_statement_statistics:
+    description: "Enable the `pg_stat_statements` extension and collect statement execution statistics"
+    default: false
+  netman.database.additional_config:
+    description: "A map of additional key/value pairs to include as extra configuration properties"

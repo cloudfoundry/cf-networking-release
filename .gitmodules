@@ -50,3 +50,6 @@
 [submodule "src/github.com/jmoiron/sqlx"]
 	path = src/github.com/jmoiron/sqlx
 	url = https://github.com/jmoiron/sxlx
+[submodule "src/github.com/nu7hatch/gouuid"]
+	path = src/github.com/nu7hatch/gouuid
+	url = https://github.com/nu7hatch/gouuid

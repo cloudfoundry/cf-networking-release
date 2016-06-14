@@ -56,6 +56,7 @@ var _ = Describe("Acceptance", func() {
 			UAAClient:       "test",
 			UAAClientSecret: "test",
 			UAAURL:          mockUAAServer.URL,
+			DatabaseURL:     "postgres://pivotal@localhost:5432/policy_server?sslmode=disable",
 		}
 		configFilePath := WriteConfigFile(conf)
 

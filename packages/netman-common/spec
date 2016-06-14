@@ -1,0 +1,4 @@
+---
+name: netman-common
+files:
+- netman-common/utils.sh

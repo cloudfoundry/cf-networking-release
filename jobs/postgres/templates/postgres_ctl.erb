@@ -1,0 +1,73 @@
+#!/bin/bash
+
+set -e -x -u
+
+PACKAGE_DIR=/var/vcap/packages/postgres
+JOB_DIR=/var/vcap/jobs/postgres
+PACKAGE_DIR_OLD=/var/vcap/packages/postgres-9.4.2
+
+STORE_DIR=/var/vcap/store
+DATA_DIR=$STORE_DIR/postgres
+DATA_DIR_OLD=$STORE_DIR/postgres-9.4.2
+
+RUN_DIR=/var/vcap/sys/run/postgres
+LOG_DIR=/var/vcap/sys/log/postgres
+
+# external_pid_file in postgresql.conf takes care of
+# overwriting $PIDFILE with actual DB server pid
+PIDFILE=$RUN_DIR/postgres.pid
+
+source /var/vcap/packages/netman-common/utils.sh
+
+case "$1" in
+  start)
+    if [ -d $DATA_DIR_OLD -a -f $DATA_DIR_OLD/postgresql.conf ]; then
+      set +e
+      su - vcap -c "$PACKAGE_DIR/bin/pg_ctl stop -m fast -w -D $DATA_DIR"
+      su - vcap -c "$PACKAGE_DIR_OLD/bin/pg_ctl stop -m fast -w -D $DATA_DIR_OLD"
+      set -e
+    fi
+
+    pid_guard $PIDFILE "PostgreSQL"
+
+    # TODO: This script is responsible for both
+    # starting PostgreSQL and running some queries
+    # (create DBs, roles, applying grants). One problem
+    # that needs to be addressed in the future is that
+    # if some queries fail job is still considered running.
+    # Later we'll change it to use a more involved approach
+    # (i.e. script that brings DB to sync)
+
+    mkdir -p $RUN_DIR
+    chown vcap:vcap $RUN_DIR
+
+    echo "" > $PIDFILE
+    chown vcap:vcap $PIDFILE
+
+    if [ ! -d $LOG_DIR ]; then
+      mkdir -p $LOG_DIR
+      chown vcap:vcap $LOG_DIR
+    fi
+
+    exec $JOB_DIR/bin/postgres_start.sh
+    ;;
+
+  stop)
+    echo "Stopping PostgreSQL: "
+    su - vcap -c "$PACKAGE_DIR/bin/pg_ctl stop -m fast -w -D $DATA_DIR"
+    wait_pidfile $PIDFILE
+
+    ;;
+
+  status)
+    su - vcap -c "$PACKAGE_DIR/bin/pg_ctl status -D $DATA_DIR"
+
+    ;;
+
+  *)
+    echo "Usage: $0 {start|stop|status}"
+    exit 1
+
+    ;;
+
+esac

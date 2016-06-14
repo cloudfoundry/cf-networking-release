@@ -5,9 +5,14 @@ dependencies:
   - golang
 
 files:
+  - github.com/jmoiron/sqlx/*.go # gosub
+  - github.com/lib/pq/*.go # gosub
   - github.com/pivotal-golang/lager/*.go # gosub
+  - lib/db/*.go # gosub
   - lib/marshal/*.go # gosub
   - policy-server/cmd/policy-server/*.go # gosub
   - policy-server/config/*.go # gosub
   - policy-server/handlers/*.go # gosub
+  - policy-server/models/*.go # gosub
+  - policy-server/store/*.go # gosub
   - policy-server/uaa_client/*.go # gosub

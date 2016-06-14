@@ -37,6 +37,14 @@ properties:
     network_plugin: /var/vcap/packages/runc-cni/bin/guardian-cni-adapter
     network_plugin_extra_args:
       - "--configFile=/var/vcap/jobs/cni-flannel/config/adapter.json"
+  netman:
+    database:
+      db_scheme: postgres
+      port: 5432
+      databases:
+      - {name: netman, tag: whatever}
+      roles:
+      - {name: policy_server, password: some-password, tag: admin}
 
 jobs:
   - name: acceptance-tests
@@ -72,8 +80,11 @@ jobs:
 
   - name: policy-server
     instances: 1
+    persistent_disk: 256
     templates:
       - name: policy-server
+        release: netman
+      - name: postgres
         release: netman
     resource_pool: garden
     networks:

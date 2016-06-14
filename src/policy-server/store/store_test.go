@@ -136,6 +136,21 @@ var _ = Describe("Store", func() {
 			})
 		})
 
+		Context("when a transaction create fails", func() {
+			var err error
+
+			BeforeEach(func() {
+				mockDb.BeginReturns(nil, errors.New("some-db-error"))
+				dataStore, err = store.New(mockDb, group, destination, policy)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("returns an error", func() {
+				err = dataStore.Create(nil)
+				Expect(err).To(MatchError("begin transaction: some-db-error"))
+			})
+		})
+
 		Context("when a Group create record fails", func() {
 			var fakeGroup *fakes.GroupCreator
 			var err error

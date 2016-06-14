@@ -31,3 +31,7 @@ properties:
   policy-server.server.skip_ssl_validation:
     description: "skip verifying ssl certs"
     default: false
+
+  policy-server.server.database_url:
+    description: "Database URL for the policy server"
+    default: postgres://policy_server:some-password@localhost:5432/netman?sslmode=disable
