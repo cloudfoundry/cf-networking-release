@@ -47,3 +47,6 @@
 [submodule "src/github.com/coreos/flannel"]
 	path = src/github.com/coreos/flannel
 	url = https://github.com/coreos/flannel
+[submodule "src/github.com/jmoiron/sqlx"]
+	path = src/github.com/jmoiron/sqlx
+	url = https://github.com/jmoiron/sxlx
