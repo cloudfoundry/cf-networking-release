@@ -21,6 +21,9 @@ var _ = Describe("Store", func() {
 	var testDatabase *testsupport.TestDatabase
 	var realDb *sqlx.DB
 	var mockDb *fakes.Db
+	var group store.GroupCreator
+	var destination store.DestinationCreator
+	var transaction *sql.Tx
 
 	BeforeEach(func() {
 		mockDb = &fakes.Db{}
@@ -32,11 +35,22 @@ var _ = Describe("Store", func() {
 		var err error
 		realDb, err = db.GetConnectionPool(testDatabase.URL())
 		Expect(err).NotTo(HaveOccurred())
-		dataStore, err = store.New(realDb)
+
+		transaction, err = realDb.Begin()
+		Expect(err).NotTo(HaveOccurred())
+
+		group, err = store.NewGroup()
+		Expect(err).NotTo(HaveOccurred())
+
+		destination, err = store.NewDestination()
+		Expect(err).NotTo(HaveOccurred())
+
+		dataStore, err = store.New(realDb, group, destination)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
 	AfterEach(func() {
+		transaction.Rollback()
 		if realDb != nil {
 			Expect(realDb.Close()).To(Succeed())
 		}
@@ -48,7 +62,7 @@ var _ = Describe("Store", func() {
 	Describe("Connecting to the database and migrating", func() {
 		Context("when the tables already exist", func() {
 			It("succeeds", func() {
-				_, err := store.New(realDb)
+				_, err := store.New(realDb, group, destination)
 				Expect(err).NotTo(HaveOccurred())
 			})
 		})
@@ -59,7 +73,7 @@ var _ = Describe("Store", func() {
 			})
 
 			It("should return a sensible error", func() {
-				_, err := store.New(mockDb)
+				_, err := store.New(mockDb, group, destination)
 				Expect(err).To(MatchError("setting up tables: some error"))
 			})
 		})
@@ -123,12 +137,98 @@ var _ = Describe("Store", func() {
 			})
 		})
 
-		// Context("when a Group create record fails", func() {
-		// 	It("returns a error", func() {
-		// 		err = dataStore.Create()
-		// 		Expect(err).NotTo(HaveOccurred())
-		// 	})
-		// })
+		Context("when a Group create record fails", func() {
+			var fakeGroup *fakes.GroupCreator
+			var err error
+
+			BeforeEach(func() {
+				fakeGroup = &fakes.GroupCreator{}
+				fakeGroup.CreateReturns(-1, errors.New("some-insert-error"))
+
+				dataStore, err = store.New(realDb, fakeGroup, destination)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("returns a error", func() {
+				err = dataStore.Create([]models.Policy{{
+					Source: models.Source{"some-app-guid"},
+					Destination: models.Destination{
+						ID:       "some-other-app-guid",
+						Protocol: "tcp",
+						Port:     8080,
+					},
+				}})
+				Expect(err).To(MatchError("creating group: some-insert-error"))
+			})
+
+		})
+
+		Context("when the second create group fails", func() {
+			var fakeGroup *fakes.GroupCreator
+			var err error
+
+			BeforeEach(func() {
+				fakeGroup = &fakes.GroupCreator{}
+				type response struct {
+					Id  int
+					Err error
+				}
+
+				responses := []response{
+					{2, nil},
+					{-1, errors.New("some-insert-error")},
+				}
+				fakeGroup.CreateStub = func(t store.Transaction, guid string) (int, error) {
+					response := responses[0]
+					responses = responses[1:]
+					return response.Id, response.Err
+				}
+
+				dataStore, err = store.New(realDb, fakeGroup, destination)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("returns the error", func() {
+				err = dataStore.Create([]models.Policy{{
+					Source: models.Source{"some-app-guid"},
+					Destination: models.Destination{
+						ID:       "some-other-app-guid",
+						Protocol: "tcp",
+						Port:     8080,
+					},
+				}})
+
+				Expect(err).To(MatchError("creating group: some-insert-error"))
+			})
+		})
+
+		Context("when a Destination create record fails", func() {
+			var fakeDestination *fakes.DestinationCreator
+			var err error
+
+			BeforeEach(func() {
+				fakeDestination = &fakes.DestinationCreator{}
+				fakeDestination.CreateReturns(-1, errors.New("some-insert-error"))
+
+				dataStore, err = store.New(realDb, group, fakeDestination)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("returns a error", func() {
+				err = dataStore.Create([]models.Policy{{
+					Source: models.Source{"some-app-guid"},
+					Destination: models.Destination{
+						ID:       "some-other-app-guid",
+						Protocol: "tcp",
+						Port:     8080,
+					},
+				}})
+				Expect(err).To(MatchError("creating destination: some-insert-error"))
+				var groupsCount int
+				err = realDb.QueryRow(`select count(*) from groups`).Scan(&groupsCount)
+				Expect(groupsCount).To(BeZero())
+			})
+		})
 
 		// 	Context("when the db operation fails", func() {
 		// 		Context("when the failure is an unexpected pq error", func() {
@@ -140,7 +240,7 @@ var _ = Describe("Store", func() {
 		// 			})
 
 		// 			It("should return the error code", func() {
-		// 				store, err := store.New(mockDb)
+		// 				store, err := store.New(mockDb, group, destination)
 		// 				Expect(err).NotTo(HaveOccurred())
 
 		// 				err = store.Create(models.Container{})
@@ -154,7 +254,7 @@ var _ = Describe("Store", func() {
 		// 			})
 
 		// 			It("should return a sensible error", func() {
-		// 				store, err := store.New(mockDb)
+		// 				store, err := store.New(mockDb, group, destination)
 		// 				Expect(err).NotTo(HaveOccurred())
 
 		// 				err = store.Create(models.Container{})
@@ -193,7 +293,7 @@ var _ = Describe("Store", func() {
 			})
 
 			It("should return a sensible error", func() {
-				store, err := store.New(mockDb)
+				store, err := store.New(mockDb, group, destination)
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = store.All()
@@ -217,7 +317,7 @@ var _ = Describe("Store", func() {
 				err := dataStore.Create(expectedPolicies)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = store.New(realDb)
+				_, err = store.New(realDb, group, destination)
 				Expect(err).NotTo(HaveOccurred())
 				rows, err = realDb.Query(`select * from policies`)
 				Expect(err).NotTo(HaveOccurred())
@@ -230,7 +330,7 @@ var _ = Describe("Store", func() {
 			})
 
 			It("should return a sensible error", func() {
-				store, err := store.New(mockDb)
+				store, err := store.New(mockDb, group, destination)
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = store.All()

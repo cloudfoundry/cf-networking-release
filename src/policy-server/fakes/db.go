@@ -7,6 +7,13 @@ import (
 )
 
 type Db struct {
+	BeginStub        func() (*sql.Tx, error)
+	beginMutex       sync.RWMutex
+	beginArgsForCall []struct{}
+	beginReturns     struct {
+		result1 *sql.Tx
+		result2 error
+	}
 	ExecStub        func(query string, args ...interface{}) (sql.Result, error)
 	execMutex       sync.RWMutex
 	execArgsForCall []struct {
@@ -68,6 +75,32 @@ type Db struct {
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
+}
+
+func (fake *Db) Begin() (*sql.Tx, error) {
+	fake.beginMutex.Lock()
+	fake.beginArgsForCall = append(fake.beginArgsForCall, struct{}{})
+	fake.recordInvocation("Begin", []interface{}{})
+	fake.beginMutex.Unlock()
+	if fake.BeginStub != nil {
+		return fake.BeginStub()
+	} else {
+		return fake.beginReturns.result1, fake.beginReturns.result2
+	}
+}
+
+func (fake *Db) BeginCallCount() int {
+	fake.beginMutex.RLock()
+	defer fake.beginMutex.RUnlock()
+	return len(fake.beginArgsForCall)
+}
+
+func (fake *Db) BeginReturns(result1 *sql.Tx, result2 error) {
+	fake.BeginStub = nil
+	fake.beginReturns = struct {
+		result1 *sql.Tx
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *Db) Exec(query string, args ...interface{}) (sql.Result, error) {
@@ -282,6 +315,8 @@ func (fake *Db) QueryReturns(result1 *sql.Rows, result2 error) {
 func (fake *Db) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.beginMutex.RLock()
+	defer fake.beginMutex.RUnlock()
 	fake.execMutex.RLock()
 	defer fake.execMutex.RUnlock()
 	fake.namedExecMutex.RLock()

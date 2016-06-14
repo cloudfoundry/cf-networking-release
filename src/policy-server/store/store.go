@@ -37,6 +37,7 @@ type Store interface {
 
 //go:generate counterfeiter -o ../fakes/db.go --fake-name Db . db
 type db interface {
+	Begin() (*sql.Tx, error)
 	Exec(query string, args ...interface{}) (sql.Result, error)
 	NamedExec(query string, arg interface{}) (sql.Result, error)
 	Get(dest interface{}, query string, args ...interface{}) error
@@ -45,26 +46,63 @@ type db interface {
 	Query(query string, args ...interface{}) (*sql.Rows, error)
 }
 
-var RecordNotFoundError = errors.New("record not found")
-var RecordExistsError = errors.New("record already exists")
-
-type store struct {
-	conn db
+//go:generate counterfeiter -o ../fakes/db.go --fake-name Db . db
+type Transaction interface {
+	Exec(query string, args ...interface{}) (sql.Result, error)
+	QueryRow(query string, args ...interface{}) *sql.Row
+	Commit() error
+	Rollback() error
 }
 
-func New(dbConnectionPool db) (Store, error) {
+var RecordNotFoundError = errors.New("record not found")
+
+type store struct {
+	conn        db
+	group       GroupCreator
+	destination DestinationCreator
+}
+
+func NewGroup() (GroupCreator, error) {
+	return &Group{}, nil
+}
+
+func NewDestination() (DestinationCreator, error) {
+	return &Destination{}, nil
+}
+
+func New(dbConnectionPool db, g GroupCreator, d DestinationCreator) (Store, error) {
 	err := setupTables(dbConnectionPool)
 	if err != nil {
 		return nil, fmt.Errorf("setting up tables: %s", err)
 	}
 
 	return &store{
-		conn: dbConnectionPool,
+		conn:        dbConnectionPool,
+		group:       g,
+		destination: d,
 	}, nil
 }
 
-func (s *store) createGroup(guid string) (int, error) {
-	_, err := s.conn.Exec(
+//go:generate counterfeiter -o ../fakes/group_creator.go --fake-name GroupCreator . GroupCreator
+type GroupCreator interface {
+	Create(Transaction, string) (int, error)
+}
+
+type Group struct {
+	conn Transaction
+}
+
+//go:generate counterfeiter -o ../fakes/destination_creator.go --fake-name DestinationCreator . DestinationCreator
+type DestinationCreator interface {
+	Create(Transaction, int, int, string) (int, error)
+}
+
+type Destination struct {
+	conn Transaction
+}
+
+func (g *Group) Create(trxn Transaction, guid string) (int, error) {
+	_, err := trxn.Exec(
 		`INSERT INTO groups (guid) SELECT $1
 			WHERE
 				NOT EXISTS (
@@ -78,26 +116,14 @@ func (s *store) createGroup(guid string) (int, error) {
 	}
 
 	var id int
-	err = s.conn.QueryRow(`SELECT id FROM groups WHERE guid = $1`, guid).Scan(&id)
+	err = trxn.QueryRow(`SELECT id FROM groups WHERE guid = $1`, guid).Scan(&id)
 
 	return id, err
 }
 
-func (s *store) Create(policies []models.Policy) error {
-	for _, policy := range policies {
-		source_group_id, err := s.createGroup(policy.Source.ID)
-		if err != nil {
-			panic(err)
-		}
-
-		destination_group_id, err := s.createGroup(policy.Destination.ID)
-		if err != nil {
-			panic(err)
-		}
-
-		var destination_id int
-		_, err = s.conn.Exec(
-			`INSERT INTO destinations (group_id, port, protocol)
+func (d *Destination) Create(trxn Transaction, destination_group_id int, port int, protocol string) (int, error) {
+	_, err := trxn.Exec(
+		`INSERT INTO destinations (group_id, port, protocol)
 				SELECT $1, $2, $3
 				WHERE
 					NOT EXISTS (
@@ -105,26 +131,64 @@ func (s *store) Create(policies []models.Policy) error {
 						FROM destinations
 						WHERE group_id = $1 AND port = $2 AND protocol = $3
 					)`,
-			destination_group_id,
-			policy.Destination.Port,
-			policy.Destination.Protocol,
-		)
-		if err != nil {
-			panic(err)
-		}
+		destination_group_id,
+		port,
+		protocol,
+	)
+	if err != nil {
+		return -1, err
+	}
 
-		err = s.conn.QueryRow(
-			`SELECT id FROM destinations
+	var id int
+	err = trxn.QueryRow(
+		`SELECT id FROM destinations
 				WHERE group_id = $1 AND port = $2 AND protocol = $3`,
-			destination_group_id,
-			policy.Destination.Port,
-			policy.Destination.Protocol,
-		).Scan(&destination_id)
+		destination_group_id,
+		port,
+		protocol,
+	).Scan(&id)
+
+	return id, err
+}
+
+func (s *store) Create(policies []models.Policy) error {
+	trxn, err := s.conn.Begin()
+	if err != nil {
+		panic(err)
+	}
+
+	for _, policy := range policies {
+		source_group_id, err := s.group.Create(trxn, policy.Source.ID)
 		if err != nil {
-			panic(err)
+			txErr := trxn.Rollback()
+			if txErr != nil {
+				panic(txErr)
+			}
+
+			return fmt.Errorf("creating group: %s", err)
 		}
 
-		_, err = s.conn.Exec(
+		destination_group_id, err := s.group.Create(trxn, policy.Destination.ID)
+		if err != nil {
+			txErr := trxn.Rollback()
+			if txErr != nil {
+				panic(txErr)
+			}
+
+			return fmt.Errorf("creating group: %s", err)
+		}
+
+		destination_id, err := s.destination.Create(trxn, destination_group_id, policy.Destination.Port, policy.Destination.Protocol)
+		if err != nil {
+			txErr := trxn.Rollback()
+			if txErr != nil {
+				panic(txErr)
+			}
+
+			return fmt.Errorf("creating destination: %s", err)
+		}
+
+		_, err = trxn.Exec(
 			`INSERT INTO policies (group_id, destination_id)
 				SELECT $1, $2
 				WHERE
@@ -137,8 +201,18 @@ func (s *store) Create(policies []models.Policy) error {
 			destination_id,
 		)
 		if err != nil {
+			txErr := trxn.Rollback()
+			if txErr != nil {
+				panic(txErr)
+			}
+
 			panic(err)
 		}
+	}
+
+	err = trxn.Commit()
+	if err != nil {
+		panic(err)
 	}
 
 	return nil
