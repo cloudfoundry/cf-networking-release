@@ -1,0 +1,3 @@
+# if git-secrets is giving you false positives, put them here
+# https://github.com/awslabs/git-secrets#ignoring-false-positives
+network-admin
