@@ -26,4 +26,8 @@ properties:
 
   policy-server.server.uaa_url:
     description: "address of uaa server"
-    default: http://uaa.bosh-lite.com
+    default: https://uaa.bosh-lite.com
+
+  policy-server.server.skip_ssl_validation:
+    description: "skip verifying ssl certs"
+    default: false

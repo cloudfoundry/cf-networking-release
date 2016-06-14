@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -36,11 +37,19 @@ func main() {
 		log.Fatal("error unmarshalling config")
 	}
 
+	httpClient := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: conf.SkipSSLValidation,
+			},
+		},
+	}
+
 	uaaRequestClient := &uaa_client.Client{
 		Host:       conf.UAAURL,
 		Name:       conf.UAAClient,
 		Secret:     conf.UAAClientSecret,
-		HTTPClient: http.DefaultClient,
+		HTTPClient: httpClient,
 		Logger:     logger,
 	}
 	whoamiHandler := &handlers.WhoAmIHandler{
