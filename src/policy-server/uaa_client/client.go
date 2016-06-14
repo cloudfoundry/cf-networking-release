@@ -2,7 +2,6 @@ package uaa_client
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -38,7 +37,7 @@ type CheckTokenResponse struct {
 	UserName string   `json:"user_name"`
 }
 
-func (c *Client) GetName(token string) (string, error) {
+func (c *Client) CheckToken(token string) (CheckTokenResponse, error) {
 	reqURL := fmt.Sprintf("%s/check_token", c.Host)
 	bodyString := "token=" + token
 	request, err := http.NewRequest("POST", reqURL, strings.NewReader(bodyString))
@@ -53,13 +52,13 @@ func (c *Client) GetName(token string) (string, error) {
 
 	resp, err := c.HTTPClient.Do(request)
 	if err != nil {
-		return "", fmt.Errorf("http client: %s", err)
+		return CheckTokenResponse{}, fmt.Errorf("http client: %s", err)
 	}
 	defer resp.Body.Close()
 
 	respBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("read body: %s", err)
+		return CheckTokenResponse{}, fmt.Errorf("read body: %s", err)
 	}
 
 	if resp.StatusCode != 200 {
@@ -67,26 +66,14 @@ func (c *Client) GetName(token string) (string, error) {
 			StatusCode:      resp.StatusCode,
 			UaaResponseBody: string(respBytes),
 		}
-		return "", err
+		return CheckTokenResponse{}, err
 	}
 
 	responseStruct := CheckTokenResponse{}
 	err = json.Unmarshal(respBytes, &responseStruct)
 	if err != nil {
-		return "", fmt.Errorf("unmarshal json: %s", err)
+		return CheckTokenResponse{}, fmt.Errorf("unmarshal json: %s", err)
 	}
-	if !hasRequiredScope(responseStruct.Scope, "network.admin") {
-		return "", errors.New("network.admin scope not found")
-	}
-
-	return responseStruct.UserName, nil
+	return responseStruct, nil
 }
 
-func hasRequiredScope(scopes []string, requiredScope string) bool {
-	for _, scope := range scopes {
-		if scope == requiredScope {
-			return true
-		}
-	}
-	return false
-}

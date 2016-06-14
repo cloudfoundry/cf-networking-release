@@ -26,7 +26,7 @@ var _ = Describe("Client", func() {
 		logger           *lagertest.TestLogger
 	)
 
-	Describe("GetName", func() {
+	Describe("CheckToken", func() {
 		BeforeEach(func() {
 			httpClient = &fakes.HTTPClient{}
 			logger = lagertest.NewTestLogger("test")
@@ -44,9 +44,9 @@ var _ = Describe("Client", func() {
 			httpClient.DoReturns(returnedResponse, nil)
 		})
 
-		It("Gets the username by posting to check_token uaa endpoint", func() {
+		It("Returns the scopes and user name for the token", func() {
 			fakeToken := fmt.Sprintf("%x", rand.Int31())
-			userName, err := client.GetName(fakeToken)
+			tokenData, err := client.CheckToken(fakeToken)
 			Expect(err).NotTo(HaveOccurred())
 
 			receivedRequest := httpClient.DoArgsForCall(0)
@@ -62,11 +62,12 @@ var _ = Describe("Client", func() {
 			contentType := receivedRequest.Header.Get("Content-Type")
 			Expect(contentType).To(Equal("application/x-www-form-urlencoded"))
 
-			Expect(userName).To(Equal("some-user"))
+			Expect(tokenData.UserName).To(Equal("some-user"))
+			Expect(tokenData.Scope).To(Equal([]string{"network.admin"}))
 		})
 
 		It("logs the request before sending", func() {
-			_, err := client.GetName("valid-token")
+			_, err := client.CheckToken("valid-token")
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(logger).To(gbytes.Say("check_token"))
@@ -79,7 +80,7 @@ var _ = Describe("Client", func() {
 			})
 
 			It("returns a helpful error", func() {
-				_, err := client.GetName("valid-token")
+				_, err := client.CheckToken("valid-token")
 
 				Expect(err).To(MatchError(ContainSubstring("http client: potato")))
 			})
@@ -95,7 +96,7 @@ var _ = Describe("Client", func() {
 			})
 
 			It("returns the response body in the error", func() {
-				_, err := client.GetName("something")
+				_, err := client.CheckToken("something")
 
 				Expect(err).To(Equal(uaa_client.BadUaaResponse{
 					StatusCode:      418,
@@ -111,7 +112,7 @@ var _ = Describe("Client", func() {
 			})
 
 			It("returns a helpful error", func() {
-				_, err := client.GetName("valid-token")
+				_, err := client.CheckToken("valid-token")
 
 				Expect(err).To(MatchError(ContainSubstring("read body: banana")))
 			})
@@ -127,24 +128,9 @@ var _ = Describe("Client", func() {
 			})
 
 			It("returns a helpful error", func() {
-				_, err := client.GetName("valid-token")
+				_, err := client.CheckToken("valid-token")
 
 				Expect(err).To(MatchError(ContainSubstring("unmarshal json: invalid character")))
-			})
-		})
-
-		Context("when the response does not have the network.admin scope", func() {
-			BeforeEach(func() {
-				returnedResponse = &http.Response{
-					StatusCode: 200,
-					Body:       ioutil.NopCloser(strings.NewReader(`{"scope":["wrong.scope"], "user_name":"some-user"}`)),
-				}
-				httpClient.DoReturns(returnedResponse, nil)
-			})
-			It("returns a helpful error", func() {
-				_, err := client.GetName("valid-token")
-
-				Expect(err).To(MatchError("network.admin scope not found"))
 			})
 		})
 	})
