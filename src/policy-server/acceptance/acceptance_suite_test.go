@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net"
 	"os"
 	"policy-server/config"
 
 	. "github.com/onsi/ginkgo"
+	ginkgoConfig "github.com/onsi/ginkgo/config"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 
@@ -31,6 +33,8 @@ var _ = BeforeSuite(func() {
 	policyServerPath, err = gexec.Build("policy-server/cmd/policy-server", "-race")
 	fmt.Fprintf(GinkgoWriter, "done")
 	Expect(err).NotTo(HaveOccurred())
+
+	rand.Seed(ginkgoConfig.GinkgoConfig.RandomSeed + int64(GinkgoParallelNode()))
 })
 
 var _ = AfterSuite(func() {

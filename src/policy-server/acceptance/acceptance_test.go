@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"lib/testsupport"
+	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"os/exec"
@@ -21,6 +23,7 @@ var _ = Describe("Acceptance", func() {
 		conf          config.Config
 		address       string
 		mockUAAServer *httptest.Server
+		testDatabase  *testsupport.TestDatabase
 	)
 
 	var serverIsAvailable = func() error {
@@ -50,13 +53,17 @@ var _ = Describe("Acceptance", func() {
 			w.WriteHeader(http.StatusNotFound)
 		}))
 
+		dbName := fmt.Sprintf("test_netman_database_%x", rand.Int())
+		dbConnectionInfo := testsupport.GetDBConnectionInfo()
+		testDatabase = dbConnectionInfo.CreateDatabase(dbName)
+
 		conf = config.Config{
 			ListenHost:      "127.0.0.1",
 			ListenPort:      9001 + GinkgoParallelNode(),
 			UAAClient:       "test",
 			UAAClientSecret: "test",
 			UAAURL:          mockUAAServer.URL,
-			DatabaseURL:     "postgres://pivotal@localhost:5432/policy_server?sslmode=disable",
+			DatabaseURL:     testDatabase.URL(),
 		}
 		configFilePath := WriteConfigFile(conf)
 
@@ -73,6 +80,10 @@ var _ = Describe("Acceptance", func() {
 	AfterEach(func() {
 		session.Interrupt()
 		Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit())
+
+		if testDatabase != nil {
+			testDatabase.Destroy()
+		}
 	})
 
 	It("should boot and gracefully terminate", func() {

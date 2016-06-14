@@ -24,7 +24,6 @@ var _ = Describe("Store", func() {
 	var group store.GroupCreator
 	var destination store.DestinationCreator
 	var policy store.PolicyCreator
-	var transaction *sql.Tx
 
 	BeforeEach(func() {
 		mockDb = &fakes.Db{}
@@ -37,9 +36,6 @@ var _ = Describe("Store", func() {
 		realDb, err = db.GetConnectionPool(testDatabase.URL())
 		Expect(err).NotTo(HaveOccurred())
 
-		transaction, err = realDb.Begin()
-		Expect(err).NotTo(HaveOccurred())
-
 		group = &store.Group{}
 		destination = &store.Destination{}
 		policy = &store.Policy{}
@@ -49,7 +45,6 @@ var _ = Describe("Store", func() {
 	})
 
 	AfterEach(func() {
-		transaction.Rollback()
 		if realDb != nil {
 			Expect(realDb.Close()).To(Succeed())
 		}

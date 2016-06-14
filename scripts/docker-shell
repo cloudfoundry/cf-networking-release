@@ -1,0 +1,13 @@
+#!/bin/bash
+set -e -u
+
+ROOT_DIR_PATH=$(cd $(dirname $0)/.. && pwd)
+cd $ROOT_DIR_PATH
+docker run --privileged \
+   --rm \
+   -it \
+   -v $PWD:/netman-release \
+   -e GOPATH=/netman-release \
+   -w /netman-release \
+   c2cnetworking/ducati-dev \
+   /bin/bash
