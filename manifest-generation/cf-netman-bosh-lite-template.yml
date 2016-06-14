@@ -1,0 +1,11 @@
+---
+properties:
+  <<: (( merge ))
+  uaa:
+    <<: (( merge ))
+    scim:
+      <<: (( merge ))
+      users:
+      - <<: (( merge ))
+      - network-admin|network-admin|openid,network.admin
+<<: (( merge ))

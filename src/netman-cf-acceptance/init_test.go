@@ -1,7 +1,9 @@
 package acceptance_test
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -17,9 +19,25 @@ import (
 )
 
 var (
-	appDir string
-	config helpers.Config
+	appDir     string
+	config     helpers.Config
+	testConfig struct {
+		TestUser         string `json:"test_user"`
+		TestUserPassword string `json:"test_user_password"`
+	}
 )
+
+func Auth(username, password string) {
+	By("authenticating as " + username)
+	cmd := exec.Command("cf", "auth", username, password)
+	sess, err := gexec.Start(cmd, nil, nil)
+	Expect(err).NotTo(HaveOccurred())
+	Eventually(sess.Wait(Timeout_Push)).Should(gexec.Exit(0))
+}
+
+func AuthAsAdmin() {
+	Auth(config.AdminUser, config.AdminPassword)
+}
 
 func TestAcceptance(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -27,12 +45,15 @@ func TestAcceptance(t *testing.T) {
 	BeforeSuite(func() {
 		config = helpers.LoadConfig()
 
-		Expect(cf.Cf("api", "--skip-ssl-validation", config.ApiEndpoint).Wait(Timeout_Push)).To(gexec.Exit(0))
-
-		cmd := exec.Command("cf", "auth", config.AdminUser, config.AdminPassword)
-		sess, err := gexec.Start(cmd, nil, nil)
+		configPath := helpers.ConfigPath()
+		configBytes, err := ioutil.ReadFile(configPath)
 		Expect(err).NotTo(HaveOccurred())
-		Eventually(sess.Wait(Timeout_Push)).Should(gexec.Exit(0))
+
+		err = json.Unmarshal(configBytes, &testConfig)
+		Expect(err).NotTo(HaveOccurred())
+
+		Expect(cf.Cf("api", "--skip-ssl-validation", config.ApiEndpoint).Wait(Timeout_Push)).To(gexec.Exit(0))
+		AuthAsAdmin()
 
 		appDir = os.Getenv("APP_DIR")
 		Expect(appDir).NotTo(BeEmpty())

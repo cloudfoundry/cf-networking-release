@@ -9,4 +9,4 @@ absolute_path() {
 scripts_path=$(absolute_path `dirname $0`)
 manifest_generation=${scripts_path}/../manifest-generation
 
-spiff merge ${manifest_generation}/netman-template.yml "$@"
+spiff merge ${manifest_generation}/diego-netman-template.yml "$@"

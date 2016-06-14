@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"os/exec"
 	"policy-server/config"
+	"strings"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -30,10 +31,11 @@ var _ = Describe("Acceptance", func() {
 		mockUAAServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Path == "/check_token" {
 				if r.Header["Authorization"][0] == "Basic dGVzdDp0ZXN0" {
-					token, err := ioutil.ReadAll(r.Body)
-					Expect(err).NotTo(HaveOccurred())
+					bodyBytes, _ := ioutil.ReadAll(r.Body)
+					token := strings.Split(string(bodyBytes), "=")[1]
+					Expect(token).NotTo(BeEmpty())
 
-					if string(token) == "token=valid-token" {
+					if string(token) == "valid-token" {
 						w.WriteHeader(http.StatusOK)
 						w.Write([]byte(`{"scope":["network.admin"], "user_name":"some-user"}`))
 					} else {

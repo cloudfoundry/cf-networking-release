@@ -9,3 +9,12 @@ packages:
   - acceptance
   - golang
   - cli
+
+properties:
+  netman-cf-acceptance.test_user:
+    description: "user for testing policy api"
+    default: network-admin
+
+  netman-cf-acceptance.test_user_password:
+    description: "password for test user"
+    default: network-admin

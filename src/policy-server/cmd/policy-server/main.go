@@ -5,12 +5,16 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"lib/marshal"
 	"log"
 	"net/http"
+	"os"
 	"policy-server/config"
 	"policy-server/handlers"
 	"policy-server/uaa_client"
 	"time"
+
+	"github.com/pivotal-golang/lager"
 )
 
 func main() {
@@ -18,6 +22,9 @@ func main() {
 
 	configFilePath := flag.String("config-file", "", "path to config file")
 	flag.Parse()
+
+	logger := lager.NewLogger("policy-server")
+	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.DEBUG))
 
 	configData, err := ioutil.ReadFile(*configFilePath)
 	if err != nil {
@@ -34,9 +41,12 @@ func main() {
 		Name:       conf.UAAClient,
 		Secret:     conf.UAAClientSecret,
 		HTTPClient: http.DefaultClient,
+		Logger:     logger,
 	}
 	whoamiHandler := &handlers.WhoAmIHandler{
-		Client: uaaRequestClient,
+		Client:    uaaRequestClient,
+		Logger:    logger.Session("external"),
+		Marshaler: marshal.MarshalFunc(json.Marshal),
 	}
 	uptimeHandler := &handlers.UptimeHandler{
 		StartTime: time.Now(),
@@ -49,7 +59,7 @@ func main() {
 		Handler: mux,
 	}
 
-	fmt.Printf("starting server at %s:%d\n", conf.ListenHost, conf.ListenPort)
+	logger.Info("starting", lager.Data{"listen-address": conf.ListenHost, "port": conf.ListenPort})
 
 	log.Fatal(server.ListenAndServe())
 }

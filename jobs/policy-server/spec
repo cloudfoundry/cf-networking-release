@@ -15,3 +15,15 @@ properties:
   policy-server.server.listen_port:
     description: "Port where the policy server will serve its API"
     default: 4002
+
+  policy-server.server.uaa_client:
+    description: "uaa client name"
+    default: network-policy
+
+  policy-server.server.uaa_client_secret:
+    description: "uaa client secret"
+    default: network-policy-secret
+
+  policy-server.server.uaa_url:
+    description: "address of uaa server"
+    default: http://uaa.bosh-lite.com

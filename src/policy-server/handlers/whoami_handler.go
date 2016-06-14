@@ -1,9 +1,12 @@
 package handlers
 
 import (
-	"encoding/json"
+	"errors"
+	"lib/marshal"
 	"net/http"
 	"strings"
+
+	"github.com/pivotal-golang/lager"
 )
 
 //go:generate counterfeiter -o ../fakes/uaa_request_client.go --fake-name UAARequestClient . uaaRequestClient
@@ -12,7 +15,9 @@ type uaaRequestClient interface {
 }
 
 type WhoAmIHandler struct {
-	Client uaaRequestClient
+	Client    uaaRequestClient
+	Logger    lager.Logger
+	Marshaler marshal.Marshaler
 }
 
 type WhoAmIResponse struct {
@@ -22,14 +27,17 @@ type WhoAmIResponse struct {
 func (h *WhoAmIHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	authorization := req.Header["Authorization"]
 	if len(authorization) < 1 {
+		h.Logger.Error("auth", errors.New("no auth header"))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	token := authorization[0]
 	token = strings.TrimPrefix(token, "Bearer ")
+	token = strings.TrimPrefix(token, "bearer ")
 	userName, err := h.Client.GetName(token)
 	if err != nil {
+		h.Logger.Error("uaa-getname", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -37,10 +45,10 @@ func (h *WhoAmIHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	whoAmIResponse := WhoAmIResponse{
 		UserName: userName,
 	}
-	responseJSON, err := json.Marshal(whoAmIResponse)
+	responseJSON, err := h.Marshaler.Marshal(whoAmIResponse)
 	if err != nil {
-		//not tested
-		w.WriteHeader(http.StatusBadRequest)
+		h.Logger.Error("marshal-response", err)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)

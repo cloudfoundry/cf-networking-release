@@ -10,14 +10,27 @@ scripts_path=$(absolute_path `dirname $0`)
 
 NETMAN_RELEASE_DIR=${NETMAN_RELEASE_DIR:-$(absolute_path $scripts_path/..)}
 DIEGO_RELEASE_DIR=${DIEGO_RELEASE_DIR:-$(absolute_path $NETMAN_RELEASE_DIR/../diego-release)}
+CF_RELEASE_DIR=${CF_RELEASE_DIR:-$(absolute_path $NETMAN_RELEASE_DIR/../cf-release)}
 
 DIEGO_MANIFESTS_DIR=$DIEGO_RELEASE_DIR/bosh-lite/deployments
 NETMAN_MANIFESTS_DIR=$NETMAN_RELEASE_DIR/bosh-lite/deployments
 
 mkdir -p ${NETMAN_MANIFESTS_DIR}
 
+# generate custom cc deployment manifest
+${CF_RELEASE_DIR}/scripts/generate-bosh-lite-dev-manifest \
+  ${NETMAN_RELEASE_DIR}/manifest-generation/stubs/bosh-lite-cf.yml \
+  ${NETMAN_RELEASE_DIR}/manifest-generation/stubs/cf-overrides.yml
+
+spiff merge ${NETMAN_RELEASE_DIR}/manifest-generation/cf-netman-bosh-lite-template.yml \
+  ${CF_RELEASE_DIR}/bosh-lite/deployments/cf.yml \
+    > ${NETMAN_RELEASE_DIR}/bosh-lite/deployments/cf_with_netman.yml
+
+# generate custom diego deployment manifest
 ( cd ${DIEGO_RELEASE_DIR} && ./scripts/generate-bosh-lite-manifests -g )
 
-${scripts_path}/netmanify ${DIEGO_MANIFESTS_DIR}/diego.yml ${NETMAN_RELEASE_DIR}/manifest-generation/stubs/bosh-lite-cf.yml "$@" | \
+${scripts_path}/netmanify ${DIEGO_MANIFESTS_DIR}/diego.yml \
+  ${NETMAN_RELEASE_DIR}/manifest-generation/stubs/bosh-lite-cf.yml \
+  "$@" | \
     sed 's/\ guardian/\ garden-runc/' \
     > ${NETMAN_MANIFESTS_DIR}/diego_with_netman.yml

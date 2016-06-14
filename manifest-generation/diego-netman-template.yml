@@ -24,6 +24,13 @@ properties:
   cni-flannel:
     etcd_endpoints:
       - http://netman-db.service.cf.internal:4001
+  policy-server:
+    server:
+      uaa_client_secret: (( .properties.uaa.clients.network-policy.secret ))
+  uaa:
+    clients:
+      network-policy:
+        secret: (( merge ))
 jobs:
 - name: database_z1
   <<: (( merge ))

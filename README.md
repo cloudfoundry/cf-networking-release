@@ -57,3 +57,11 @@ bosh deployment bosh-lite/deployments/netman-bare.yml
 bosh -n deploy
 bosh run errand acceptance-tests
 ```
+
+## Testing OAuth access to the policy server
+To accept:
+
+```
+cf auth network-admin network-admin
+cf curl /networking/v0/external/whoami
+```

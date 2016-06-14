@@ -79,9 +79,6 @@ generate_manifests() {
     update_release cf-release master
     update_release diego-release master
 
-    ${workspace_dir}/cf-release/scripts/generate-bosh-lite-dev-manifest \
-        ${workspace_dir}/netman-release/manifest-generation/stubs/cf-overrides.yml
-
     ${workspace_dir}/netman-release/scripts/generate-bosh-lite-manifests
 }
 
@@ -113,7 +110,7 @@ main() {
 
     generate_manifests
 
-    bosh -n -d ${workspace_dir}/cf-release/bosh-lite/deployments/cf.yml deploy
+    bosh -n -d ${workspace_dir}/netman-release/bosh-lite/deployments/cf_with_netman.yml deploy
     bosh -n -d ${workspace_dir}/netman-release/bosh-lite/deployments/diego_with_netman.yml deploy
 }
 
