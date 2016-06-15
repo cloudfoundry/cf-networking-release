@@ -34,4 +34,4 @@ properties:
 
   policy-server.server.database_url:
     description: "Database URL for the policy server"
-    default: postgres://policy_server:some-password@localhost:5432/netman?sslmode=disable
+    default: postgres://policy_server:some-password@localhost:5432/policy_server?sslmode=disable

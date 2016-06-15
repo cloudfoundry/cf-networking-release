@@ -19,25 +19,27 @@ properties:
       - http://netman-db.service.cf.internal:4001
   netman-cf-acceptance: (( merge ))
   policy-server:
-    server:
-      uaa_client_secret: (( .properties.uaa.clients.network-policy.secret ))
-      uaa_url: (( "https://uaa." .properties.system_domain ))
-      skip_ssl_validation: (( .properties.diego.ssl.skip_cert_verify ))
-  uaa:
-    clients:
-      network-policy:
-        secret: (( merge ))
-  netman:
+    <<: (( merge ))
+    database_password: (( merge ))
     database:
       db_scheme: postgres
       port: 5432
       databases:
-      - name: netman
+      - name: policy_server
         tag: whatever
       roles:
       - name: policy_server
-        password: some-password
+        password: (( .properties.policy-server.database_password ))
         tag: admin
+    server:
+      uaa_client_secret: (( .properties.uaa.clients.network-policy.secret ))
+      uaa_url: (( "https://uaa." .properties.system_domain ))
+      skip_ssl_validation: (( .properties.diego.ssl.skip_cert_verify ))
+      database_url: (( "postgres://policy_server:" .properties.policy-server.database_password "@localhost:5432/policy_server?sslmode=disable" ))
+  uaa:
+    clients:
+      network-policy:
+        secret: (( merge ))
 
 jobs:
 - name: database_z1

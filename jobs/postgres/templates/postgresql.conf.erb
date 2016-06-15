@@ -14,8 +14,8 @@
 #     static_ips:
 #     - 9.8.7.6
 listen_addresses = '0.0.0.0'
-port = <%= p("netman.database.port") %>
-max_connections = <%= p("netman.database.max_connections", 500) %>
+port = <%= p("policy-server.database.port") %>
+max_connections = <%= p("policy-server.database.max_connections", 500) %>
 external_pid_file = '/var/vcap/sys/run/postgres/postgres.pid'
 authentication_timeout = 1min
 
@@ -27,7 +27,7 @@ max_files_per_process = 1000
 logging_collector = on
 log_directory = '/var/vcap/sys/log/postgres'
 log_filename = 'postgresql.log'
-log_line_prefix = '<%= p("netman.database.log_line_prefix") %>'
+log_line_prefix = '<%= p("policy-server.database.log_line_prefix") %>'
 
 datestyle = 'iso, mdy'
 
@@ -38,13 +38,13 @@ lc_time = 'en_US.UTF-8'
 
 default_text_search_config = 'pg_catalog.english'
 
-<% if p("netman.database.collect_statement_statistics") %>
+<% if p("policy-server.database.collect_statement_statistics") %>
 shared_preload_libraries = 'pg_stat_statements'
 track_activity_query_size = 4096
 pg_stat_statements.track = all
 <% end %>
 
-<% if_p("netman.database.additional_config") do |db_config| %>
+<% if_p("policy-server.database.additional_config") do |db_config| %>
 # Additional configuration
 <% db_config.each do |key, value| %>
 <%= key %> = <%= value %>

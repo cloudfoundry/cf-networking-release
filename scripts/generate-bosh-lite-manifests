@@ -17,20 +17,22 @@ NETMAN_MANIFESTS_DIR=$NETMAN_RELEASE_DIR/bosh-lite/deployments
 
 mkdir -p ${NETMAN_MANIFESTS_DIR}
 
-# generate custom cc deployment manifest
+echo running vanilla cf-release manifest generation
 ${CF_RELEASE_DIR}/scripts/generate-bosh-lite-dev-manifest \
   ${NETMAN_RELEASE_DIR}/manifest-generation/stubs/bosh-lite-cf.yml \
   ${NETMAN_RELEASE_DIR}/manifest-generation/stubs/cf-overrides.yml
 
+echo merging cf-release manifest into custom netman cf manifest
 spiff merge ${NETMAN_RELEASE_DIR}/manifest-generation/cf-netman-bosh-lite-template.yml \
   ${CF_RELEASE_DIR}/bosh-lite/deployments/cf.yml \
     > ${NETMAN_RELEASE_DIR}/bosh-lite/deployments/cf_with_netman.yml
 
 bosh deployment ${NETMAN_RELEASE_DIR}/bosh-lite/deployments/cf_with_netman.yml
 
-# generate custom diego deployment manifest
+echo generate vanilla diego deployment manifest
 ( cd ${DIEGO_RELEASE_DIR} && ./scripts/generate-bosh-lite-manifests -g )
 
+echo merging diego manifest into custom netman diego manifest
 ${scripts_path}/netmanify ${DIEGO_MANIFESTS_DIR}/diego.yml \
   ${NETMAN_RELEASE_DIR}/manifest-generation/stubs/bosh-lite-cf.yml \
   "$@" | \

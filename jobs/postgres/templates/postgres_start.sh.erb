@@ -13,7 +13,7 @@ RUN_DIR=/var/vcap/sys/run/postgres
 PIDFILE=$RUN_DIR/postgres.pid
 
 HOST='0.0.0.0'
-PORT="<%= p("netman.database.port") %>"
+PORT="<%= p("policy-server.database.port") %>"
 LD_LIBRARY_PATH=$PACKAGE_DIR/lib:$LD_LIBRARY_PATH
 
 sysctl -w "kernel.shmmax=284934144"
@@ -52,7 +52,7 @@ su - vcap -c "$PACKAGE_DIR/bin/pg_ctl -o \"-h $HOST -p $PORT\" \
 echo "PostgreSQL started successfully"
 
 echo "Creating roles..."
-<% p("netman.database.roles", []).each do |role| %>
+<% p("policy-server.database.roles", []).each do |role| %>
   echo "Trying to create role <%= role["name"] %>..."
   set +e
   # TODO remove unused roles automatically
@@ -76,7 +76,7 @@ echo "Creating roles..."
 <% end %>
 
 echo "Creating databases..."
-<% p("netman.database.databases", []).each do |database| %>
+<% p("policy-server.database.databases", []).each do |database| %>
   echo "Trying to create database <%= database["name"] %>..."
   set +e
   su - vcap -c "$PACKAGE_DIR/bin/createdb \"<%= database["name"] %>\" -p $PORT"
@@ -100,7 +100,7 @@ echo "Creating databases..."
                           -c "CREATE EXTENSION IF NOT EXISTS pgcrypto"
 
 
-  <% if p("netman.database.collect_statement_statistics") %>
+  <% if p("policy-server.database.collect_statement_statistics") %>
     echo "Enabling pg_stat_statements extension..."
     $PACKAGE_DIR/bin/psql -U vcap -p $PORT \
                           -d "<%= database["name"] %>" \

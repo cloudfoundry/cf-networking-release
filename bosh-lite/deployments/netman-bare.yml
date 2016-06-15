@@ -37,12 +37,12 @@ properties:
     network_plugin: /var/vcap/packages/runc-cni/bin/guardian-cni-adapter
     network_plugin_extra_args:
       - "--configFile=/var/vcap/jobs/cni-flannel/config/adapter.json"
-  netman:
+  policy-server:
     database:
       db_scheme: postgres
       port: 5432
       databases:
-      - {name: netman, tag: whatever}
+      - {name: policy_server, tag: whatever}
       roles:
       - {name: policy_server, password: some-password, tag: admin}
 
