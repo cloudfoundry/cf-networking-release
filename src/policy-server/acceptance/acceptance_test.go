@@ -1,7 +1,6 @@
 package acceptance_test
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"lib/testsupport"
@@ -93,29 +92,70 @@ var _ = Describe("Acceptance", func() {
 		Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit())
 	})
 
+	It("has a whoami endpoint", func() {
+		client := &http.Client{}
+		tokenString := "valid-token"
+		req, err := http.NewRequest("GET", fmt.Sprintf("http://%s:%d/networking/v0/external/whoami", conf.ListenHost, conf.ListenPort), nil)
+		Expect(err).NotTo(HaveOccurred())
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", tokenString))
+
+		resp, err := client.Do(req)
+		Expect(err).NotTo(HaveOccurred())
+
+		Expect(resp.StatusCode).To(Equal(http.StatusOK))
+		responseString, err := ioutil.ReadAll(resp.Body)
+		Expect(responseString).To(ContainSubstring("some-user"))
+	})
+
 	Describe("adding policies", func() {
-		It("has an available endpoint", func() {
-			client := &http.Client{}
+		Context("when the request is missing an Authorization header", func() {
+			It("responds with 401", func() {
+				client := &http.Client{}
+				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
+				req, err := http.NewRequest("POST", fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort), body)
+				Expect(err).NotTo(HaveOccurred())
 
-			resp, err := client.Post(fmt.Sprintf("http://%s:%d/networking", conf.ListenHost, conf.ListenPort), "", bytes.NewReader([]byte{}))
-			Expect(err).NotTo(HaveOccurred())
+				resp, err := client.Do(req)
+				Expect(err).NotTo(HaveOccurred())
 
-			Expect(resp.StatusCode).To(Equal(http.StatusOK))
+				Expect(resp.StatusCode).To(Equal(http.StatusUnauthorized))
+				responseString, err := ioutil.ReadAll(resp.Body)
+				Expect(responseString).To(MatchJSON(`{ "error": "missing authorization header"}`))
+			})
 		})
 
-		It("has a whoami endpoint", func() {
-			client := &http.Client{}
-			tokenString := "valid-token"
-			req, err := http.NewRequest("GET", fmt.Sprintf("http://%s:%d/networking/v0/external/whoami", conf.ListenHost, conf.ListenPort), bytes.NewBuffer([]byte{}))
-			Expect(err).NotTo(HaveOccurred())
-			req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", tokenString))
+		Context("when the authorization token is invalid", func() {
+			It("responds with 403", func() {
+				client := &http.Client{}
+				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
+				req, err := http.NewRequest("POST", fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort), body)
+				Expect(err).NotTo(HaveOccurred())
+				req.Header.Set("Authorization", "Bearer bad-token")
 
-			resp, err := client.Do(req)
-			Expect(err).NotTo(HaveOccurred())
+				resp, err := client.Do(req)
+				Expect(err).NotTo(HaveOccurred())
 
-			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-			responseString, err := ioutil.ReadAll(resp.Body)
-			Expect(responseString).To(ContainSubstring("some-user"))
+				Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
+				responseString, err := ioutil.ReadAll(resp.Body)
+				Expect(responseString).To(MatchJSON(`{ "error": "failed to verify token with uaa" }`))
+			})
+		})
+
+		Context("when the user is authorized", func() {
+			It("responds with 200 and a body of {}", func() {
+				client := &http.Client{}
+				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
+				req, err := http.NewRequest("POST", fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort), body)
+				Expect(err).NotTo(HaveOccurred())
+				req.Header.Set("Authorization", "Bearer valid-token")
+
+				resp, err := client.Do(req)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
+				responseString, err := ioutil.ReadAll(resp.Body)
+				Expect(responseString).To(MatchJSON("{}"))
+			})
 		})
 	})
 })

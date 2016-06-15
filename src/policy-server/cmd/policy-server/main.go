@@ -87,6 +87,11 @@ func main() {
 
 	unmarshaler := marshal.UnmarshalFunc(json.Unmarshal)
 
+	authenticator := handlers.Authenticator{
+		Client: uaaRequestClient,
+		Logger: logger,
+	}
+
 	createPolicyHandler := &handlers.CreatePolicyHandler{
 		Store:       dataStore,
 		Logger:      lager.NewLogger("policy_server"),
@@ -96,7 +101,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.Handle("/", uptimeHandler)
 	mux.Handle("/networking/v0/external/whoami", whoamiHandler)
-	mux.Handle("/networking/v0/external/policies", createPolicyHandler)
+	mux.Handle("/networking/v0/external/policies", authenticator.Wrap(createPolicyHandler))
 	server := &http.Server{
 		Addr:    fmt.Sprintf("%s:%d", conf.ListenHost, conf.ListenPort),
 		Handler: mux,
