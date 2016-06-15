@@ -86,6 +86,13 @@ func pushApp(appName string) {
 	).Wait(Timeout_Push)).To(gexec.Exit(0))
 }
 
+func scaleApp(appName string, instances int) {
+	Expect(cf.Cf(
+		"scale", appName,
+		"-i", fmt.Sprintf("%d", instances),
+	).Wait(Timeout_Push)).To(gexec.Exit(0))
+}
+
 const (
 	ip4Regex         = `(?:[0-9]{1,3}\.){3}[0-9]{1,3}`
 	ipAddrParseRegex = `inet (` + ip4Regex + `)/24 scope global eth0`
