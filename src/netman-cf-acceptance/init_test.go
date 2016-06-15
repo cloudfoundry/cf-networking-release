@@ -111,3 +111,15 @@ func getInstanceIP(appName string, instanceIndex int) string {
 	matches := regexp.MustCompile(ipAddrParseRegex).FindStringSubmatch(addrOut)
 	return matches[1]
 }
+
+func curlFromApp(appName string, instanceIndex int, endpoint string) string {
+	sshSession := cf.Cf(
+		"ssh", appName,
+		"-i", fmt.Sprintf("%d", instanceIndex),
+		"--skip-host-validation",
+		"-c", fmt.Sprintf("curl %s", endpoint),
+	)
+	Expect(sshSession.Wait(Timeout_Push)).To(gexec.Exit(0))
+
+	return string(sshSession.Out.Contents())
+}

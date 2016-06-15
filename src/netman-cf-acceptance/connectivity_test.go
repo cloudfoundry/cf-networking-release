@@ -1,6 +1,7 @@
 package acceptance_test
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -74,12 +75,12 @@ var _ = Describe("connectivity tests", func() {
 
 		By("checking that the backend in a different cell is reachable via the proxy at its **internal** route")
 		Eventually(func() string {
-			return helpers.CurlAppWithTimeout(proxyApp, "/proxy/"+backendIP+":8080", 6*Timeout_Short)
+			return curlFromApp(proxyApp, 0, fmt.Sprintf("%s:%d/proxy", backendIP, 8080))
 		}, 6*Timeout_Short).Should(ContainSubstring("hello, this is proxy"))
 
 		By("checking that the backend in the same cell is reachable via the proxy at its **internal** route")
 		Eventually(func() string {
-			return helpers.CurlAppWithTimeout(proxyApp, "/proxy/"+sameCellIP+":8080", 6*Timeout_Short)
+			return curlFromApp(proxyApp, 0, fmt.Sprintf("%s:%d/proxy", sameCellIP, 8080))
 		}, 6*Timeout_Short).Should(ContainSubstring("hello, this is proxy"))
 	})
 })
