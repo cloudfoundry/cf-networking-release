@@ -47,18 +47,18 @@ properties:
       - {name: policy_server, password: some-password, tag: admin}
 
 jobs:
-  - name: acceptance-tests
+  - name: netman-garden-integration-tests
     lifecycle: errand
     instances: 1
     templates:
-      - name: acceptance-tests
+      - name: netman-garden-integration-tests
         release: netman
     resource_pool: garden
     networks:
       - name: garden
     properties:
       netman:
-        acceptance_tests:
+        garden_integration_tests:
           garden_server_1: *test_address_1
           garden_server_2: *test_address_2
 
@@ -122,5 +122,5 @@ update:
   canaries: 1
   max_in_flight: 3
   serial: false
-  canary_watch_time: 1000-30000
-  update_watch_time: 1000-30000
+  canary_watch_time: 5000-90000
+  update_watch_time: 5000-90000

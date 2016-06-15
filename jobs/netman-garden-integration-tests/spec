@@ -1,5 +1,5 @@
 ---
-name: acceptance-tests
+name: netman-garden-integration-tests
 
 templates:
   test.sh.erb: bin/run
@@ -8,7 +8,7 @@ packages:
   - acceptance
 
 properties:
-  netman.acceptance_tests.garden_server_1:
+  netman.garden_integration_tests.garden_server_1:
     description: 'Host name or IP of first garden server to target'
-  netman.acceptance_tests.garden_server_2:
+  netman.garden_integration_tests.garden_server_2:
     description: 'Host name or IP of second garden server to target'

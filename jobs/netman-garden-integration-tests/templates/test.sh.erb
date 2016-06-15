@@ -8,8 +8,8 @@ cd /var/vcap/packages/acceptance
 export GOPATH=$PWD
 export PATH=$GOROOT/bin:$GOPATH/bin:$PATH
 
-export GARDEN_SERVER_1="<%= p('netman.acceptance_tests.garden_server_1') %>"
-export GARDEN_SERVER_2="<%= p('netman.acceptance_tests.garden_server_2') %>"
+export GARDEN_SERVER_1="<%= p('netman.garden_integration_tests.garden_server_1') %>"
+export GARDEN_SERVER_2="<%= p('netman.garden_integration_tests.garden_server_2') %>"
 
 for i in {1..5}; do
     ping -c1 ${GARDEN_SERVER_1} >/dev/null 2>&1 && break || sleep 5
@@ -20,4 +20,4 @@ for i in {1..5}; do
 done
 
 cd bin
-./acceptance-tests -ginkgo.v
+./netman-garden-integration-tests -ginkgo.v
