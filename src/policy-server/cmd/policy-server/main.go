@@ -108,6 +108,7 @@ func main() {
 
 	routes := rata.Routes{
 		{Name: "uptime", Method: "GET", Path: "/"},
+		{Name: "uptime", Method: "GET", Path: "/networking"},
 		{Name: "whoami", Method: "GET", Path: "/networking/v0/external/whoami"},
 		{Name: "create_policies", Method: "POST", Path: "/networking/v0/external/policies"},
 		{Name: "policies_index", Method: "GET", Path: "/networking/v0/external/policies"},

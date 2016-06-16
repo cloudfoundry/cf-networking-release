@@ -85,26 +85,52 @@ var _ = Describe("Acceptance", func() {
 		}
 	})
 
-	It("should boot and gracefully terminate", func() {
-		Consistently(session).ShouldNot(gexec.Exit())
+	Describe("boring server behavior", func() {
+		It("should boot and gracefully terminate", func() {
+			Consistently(session).ShouldNot(gexec.Exit())
 
-		session.Interrupt()
-		Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit())
-	})
+			session.Interrupt()
+			Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit())
+		})
 
-	It("has a whoami endpoint", func() {
-		client := &http.Client{}
-		tokenString := "valid-token"
-		req, err := http.NewRequest("GET", fmt.Sprintf("http://%s:%d/networking/v0/external/whoami", conf.ListenHost, conf.ListenPort), nil)
-		Expect(err).NotTo(HaveOccurred())
-		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", tokenString))
+		It("responds with uptime when accessed on the root path", func() {
+			req, err := http.NewRequest("GET", fmt.Sprintf("http://%s:%d/", conf.ListenHost, conf.ListenPort), nil)
+			Expect(err).NotTo(HaveOccurred())
 
-		resp, err := client.Do(req)
-		Expect(err).NotTo(HaveOccurred())
+			resp, err := http.DefaultClient.Do(req)
+			Expect(err).NotTo(HaveOccurred())
 
-		Expect(resp.StatusCode).To(Equal(http.StatusOK))
-		responseString, err := ioutil.ReadAll(resp.Body)
-		Expect(responseString).To(ContainSubstring("some-user"))
+			Expect(resp.StatusCode).To(Equal(http.StatusOK))
+			responseString, err := ioutil.ReadAll(resp.Body)
+			Expect(responseString).To(ContainSubstring("Network policy server, up for"))
+		})
+
+		It("responds with uptime when accessed on the context path", func() {
+			req, err := http.NewRequest("GET", fmt.Sprintf("http://%s:%d/networking", conf.ListenHost, conf.ListenPort), nil)
+			Expect(err).NotTo(HaveOccurred())
+
+			resp, err := http.DefaultClient.Do(req)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(resp.StatusCode).To(Equal(http.StatusOK))
+			responseString, err := ioutil.ReadAll(resp.Body)
+			Expect(responseString).To(ContainSubstring("Network policy server, up for"))
+		})
+
+		It("has a whoami endpoint", func() {
+			client := &http.Client{}
+			tokenString := "valid-token"
+			req, err := http.NewRequest("GET", fmt.Sprintf("http://%s:%d/networking/v0/external/whoami", conf.ListenHost, conf.ListenPort), nil)
+			Expect(err).NotTo(HaveOccurred())
+			req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", tokenString))
+
+			resp, err := client.Do(req)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(resp.StatusCode).To(Equal(http.StatusOK))
+			responseString, err := ioutil.ReadAll(resp.Body)
+			Expect(responseString).To(ContainSubstring("some-user"))
+		})
 	})
 
 	Describe("adding policies", func() {
