@@ -63,6 +63,7 @@ jobs:
           garden_server_2: *test_address_2
 
   - name: flannel_db
+    serial: true
     instances: 1
     templates:
       - name: etcd
