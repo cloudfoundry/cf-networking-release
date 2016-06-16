@@ -11,14 +11,14 @@ import (
 	"github.com/pivotal-golang/lager"
 )
 
-type CreatePolicyHandler struct {
+type PoliciesCreate struct {
 	Logger      lager.Logger
 	Store       store.Store
 	Unmarshaler marshal.Unmarshaler
 	Marshaler   marshal.Marshaler
 }
 
-func (h *CreatePolicyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	bodyBytes, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		h.Logger.Error("body-read-failed", err)

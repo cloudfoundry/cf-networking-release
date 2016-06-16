@@ -93,7 +93,7 @@ func main() {
 		Logger: logger,
 	}
 
-	createPolicyHandler := &handlers.CreatePolicyHandler{
+	createPolicyHandler := &handlers.PoliciesCreate{
 		Store:       dataStore,
 		Logger:      lager.NewLogger("policy_server"),
 		Unmarshaler: unmarshaler,
@@ -101,10 +101,9 @@ func main() {
 	}
 
 	policiesIndexHandler := &handlers.PoliciesIndex{
-		Store:       dataStore,
-		Logger:      lager.NewLogger("policy_server"),
-		Unmarshaler: unmarshaler,
-		Marshaler:   marshal.MarshalFunc(json.Marshal),
+		Store:     dataStore,
+		Logger:    lager.NewLogger("policy_server"),
+		Marshaler: marshal.MarshalFunc(json.Marshal),
 	}
 
 	routes := rata.Routes{

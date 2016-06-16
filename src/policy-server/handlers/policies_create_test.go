@@ -19,11 +19,11 @@ import (
 	"github.com/pivotal-golang/lager/lagertest"
 )
 
-var _ = Describe("CreatePolicyHandler", func() {
+var _ = Describe("PoliciesCreate", func() {
 	var (
 		requestJSON     string
 		request         *http.Request
-		handler         *handlers.CreatePolicyHandler
+		handler         *handlers.PoliciesCreate
 		resp            *httptest.ResponseRecorder
 		fakeStore       *fakes.Store
 		logger          *lagertest.TestLogger
@@ -61,7 +61,7 @@ var _ = Describe("CreatePolicyHandler", func() {
 		logger = lagertest.NewTestLogger("test")
 		fakeUnmarshaler = &lfakes.Unmarshaler{}
 		fakeUnmarshaler.UnmarshalStub = json.Unmarshal
-		handler = &handlers.CreatePolicyHandler{
+		handler = &handlers.PoliciesCreate{
 			Logger:      logger,
 			Store:       fakeStore,
 			Unmarshaler: fakeUnmarshaler,
