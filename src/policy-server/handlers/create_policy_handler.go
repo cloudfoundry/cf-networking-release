@@ -15,6 +15,7 @@ type CreatePolicyHandler struct {
 	Logger      lager.Logger
 	Store       store.Store
 	Unmarshaler marshal.Unmarshaler
+	Marshaler   marshal.Marshaler
 }
 
 func (h *CreatePolicyHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {

@@ -5,11 +5,13 @@ dependencies:
   - golang
 
 files:
+  - github.com/bmizerany/pat/*.go # gosub
   - github.com/jmoiron/sqlx/*.go # gosub
   - github.com/jmoiron/sqlx/reflectx/*.go # gosub
   - github.com/lib/pq/*.go # gosub
   - github.com/lib/pq/oid/*.go # gosub
   - github.com/pivotal-golang/lager/*.go # gosub
+  - github.com/tedsuo/rata/*.go # gosub
   - lib/db/*.go # gosub
   - lib/marshal/*.go # gosub
   - policy-server/cmd/policy-server/*.go # gosub

@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/pivotal-golang/lager"
+	"github.com/tedsuo/rata"
 )
 
 func main() {
@@ -96,15 +97,37 @@ func main() {
 		Store:       dataStore,
 		Logger:      lager.NewLogger("policy_server"),
 		Unmarshaler: unmarshaler,
+		Marshaler:   marshal.MarshalFunc(json.Marshal),
 	}
 
-	mux := http.NewServeMux()
-	mux.Handle("/", uptimeHandler)
-	mux.Handle("/networking/v0/external/whoami", whoamiHandler)
-	mux.Handle("/networking/v0/external/policies", authenticator.Wrap(createPolicyHandler))
+	policiesIndexHandler := &handlers.PoliciesIndex{
+		Store:       dataStore,
+		Logger:      lager.NewLogger("policy_server"),
+		Unmarshaler: unmarshaler,
+		Marshaler:   marshal.MarshalFunc(json.Marshal),
+	}
+
+	routes := rata.Routes{
+		{Name: "uptime", Method: "GET", Path: "/"},
+		{Name: "whoami", Method: "GET", Path: "/networking/v0/external/whoami"},
+		{Name: "create_policies", Method: "POST", Path: "/networking/v0/external/policies"},
+		{Name: "policies_index", Method: "GET", Path: "/networking/v0/external/policies"},
+	}
+
+	handlers := rata.Handlers{
+		"uptime":          uptimeHandler,
+		"create_policies": authenticator.Wrap(createPolicyHandler),
+		"policies_index":  authenticator.Wrap(policiesIndexHandler),
+		"whoami":          whoamiHandler,
+	}
+	router, err := rata.NewRouter(routes, handlers)
+	if err != nil {
+		log.Fatalf("unable to create rata Router: %s", err) // not tested
+	}
+
 	server := &http.Server{
 		Addr:    fmt.Sprintf("%s:%d", conf.ListenHost, conf.ListenPort),
-		Handler: mux,
+		Handler: router,
 	}
 
 	logger.Info("starting", lager.Data{"listen-address": conf.ListenHost, "port": conf.ListenPort})
