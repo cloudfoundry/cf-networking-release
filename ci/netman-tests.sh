@@ -8,6 +8,7 @@ export GOPATH=$PWD
 declare -a packages=(
   "src/lib"
   "src/policy-server"
+  "src/flannel-watchdog"
   "src/github.com/cloudfoundry-incubator/guardian-cni-adapter"
   )
 
