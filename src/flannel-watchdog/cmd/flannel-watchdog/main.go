@@ -32,12 +32,14 @@ type Runner struct {
 func (r *Runner) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	close(ready)
 
-	checkError := make(chan error)
+	errCh := make(chan error)
 	go func() {
 		for {
+			time.Sleep(1 * time.Second)
+
 			file, err := os.Open(r.SubnetFile)
 			if err != nil {
-				checkError <- err
+				errCh <- err
 				return
 			}
 
@@ -54,28 +56,27 @@ func (r *Runner) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 
 			output, err := exec.Command("ip", "addr", "show", "dev", r.BridgeName).CombinedOutput()
 			if err != nil {
-				checkError <- fmt.Errorf("%s: %s", err, string(output))
-				return
+				fmt.Println("no bridge device found")
+				continue
 			}
 
 			matches := regexp.MustCompile(ipAddrParseRegex).FindStringSubmatch(string(output))
 			if len(matches) < 2 {
-				checkError <- fmt.Errorf(`device "%s" has no ip`, r.BridgeName)
+				errCh <- fmt.Errorf(`device "%s" has no ip`, r.BridgeName)
 				return
 			}
 
 			if flannelIP != matches[1] {
-				checkError <- errors.New("out of sync")
+				errCh <- errors.New("out of sync")
 				return
 			}
-			time.Sleep(1 * time.Second)
 		}
 	}()
 
 	select {
 	case <-signals:
 		return nil
-	case err := <-checkError:
+	case err := <-errCh:
 		return err
 	}
 }

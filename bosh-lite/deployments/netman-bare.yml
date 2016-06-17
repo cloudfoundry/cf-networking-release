@@ -99,6 +99,8 @@ jobs:
         release: garden-runc
       - name: cni-flannel
         release: netman
+      - name: flannel-watchdog
+        release: netman
     resource_pool: garden
     networks:
       - name: garden

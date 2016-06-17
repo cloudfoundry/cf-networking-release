@@ -1,0 +1,41 @@
+#!/bin/bash
+
+set -e -u
+
+RUN_DIR=/var/vcap/sys/run/flannel-watchdog
+LOG_DIR=/var/vcap/sys/log/flannel-watchdog
+PIDFILE=$RUN_DIR/flannel-watchdog.pid
+
+mkdir -p /var/vcap/sys/log/monit
+exec 1>> /var/vcap/sys/log/monit/flannel-watchdog.out.log
+exec 2>> /var/vcap/sys/log/monit/flannel-watchdog.err.log
+
+
+case $1 in
+
+  start)
+
+    mkdir -p $RUN_DIR
+    mkdir -p $LOG_DIR
+
+    echo $$ > $PIDFILE
+
+    exec /var/vcap/packages/flannel-watchdog/bin/flannel-watchdog \
+      -config-file=/var/vcap/jobs/flannel-watchdog/config/flannel-watchdog.json \
+      1>>$LOG_DIR/flannel-watchdog.stdout.log \
+      2>>$LOG_DIR/flannel-watchdog.stderr.log
+
+    ;;
+
+  stop)
+
+    kill -INT $(cat $PIDFILE)
+
+    ;;
+
+  *)
+    echo "Usage: $0 {start|stop}"
+
+    ;;
+
+esac

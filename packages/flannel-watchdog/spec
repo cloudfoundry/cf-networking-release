@@ -1,0 +1,11 @@
+---
+name: flannel-watchdog
+
+dependencies:
+  - golang
+
+files:
+  - flannel-watchdog/cmd/flannel-watchdog/*.go # gosub
+  - flannel-watchdog/config/*.go # gosub
+  - github.com/tedsuo/ifrit/*.go # gosub
+  - github.com/tedsuo/ifrit/grouper/*.go # gosub

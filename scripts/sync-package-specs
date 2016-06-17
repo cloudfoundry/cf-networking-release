@@ -35,6 +35,9 @@ function sync_package() {
   )
 }
 
+sync_package flannel-watchdog \
+  -app flannel-watchdog/cmd/flannel-watchdog &
+
 sync_package policy-server \
   -app policy-server/cmd/policy-server &
 

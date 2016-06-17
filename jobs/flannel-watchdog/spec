@@ -1,0 +1,18 @@
+---
+name: flannel-watchdog
+templates:
+  flannel-watchdog_ctl.erb: bin/flannel-watchdog_ctl
+  flannel-watchdog.json.erb: config/flannel-watchdog.json
+
+packages:
+  - flannel-watchdog
+
+properties:
+  flannel-watchdog.config.bridge_name:
+    description: "name of cni bridge on host"
+    default: cni-flannel0
+
+  flannel-watchdog.config.flannel_subnet_file:
+    description: "file that flannel writes out the subnet environment"
+    default: /run/flannel/subnet.env
+

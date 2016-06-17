@@ -1,0 +1,7 @@
+<%=
+    require 'json'
+
+    server = p("flannel-watchdog.config")
+
+    JSON.pretty_generate(server)
+%>

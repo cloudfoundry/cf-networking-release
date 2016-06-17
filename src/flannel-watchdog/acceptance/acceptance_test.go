@@ -37,7 +37,7 @@ var _ = Describe("Flannel Watchdog", func() {
 
 		subnetFile, err = ioutil.TempFile("", "subnet.env")
 		subnetFileName = subnetFile.Name()
-		_, err = subnetFile.WriteString(fmt.Sprintf("FLANNEL_SUBNET=%s", bridgeIP))
+		err = ioutil.WriteFile(subnetFileName, []byte(fmt.Sprintf("FLANNEL_SUBNET=%s", bridgeIP)), os.ModePerm)
 		Expect(err).NotTo(HaveOccurred())
 
 		configFilePath := WriteConfigFile(config.Config{
@@ -93,9 +93,8 @@ var _ = Describe("Flannel Watchdog", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		It("exits with nonzero status code and logs the error", func() {
-			Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit(1))
-			Expect(session.Err.Contents()).To(ContainSubstring(fmt.Sprintf(`Device "%s" does not exist`, bridgeName)))
+		It("continues running", func() {
+			Consistently(session, "1.5s").ShouldNot(gexec.Exit())
 		})
 	})
 
