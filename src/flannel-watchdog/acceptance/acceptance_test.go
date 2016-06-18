@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"os/exec"
 
@@ -24,16 +25,16 @@ var _ = Describe("Flannel Watchdog", func() {
 	)
 
 	BeforeEach(func() {
-		var err error
-
-		bridgeName = fmt.Sprintf("test-bridge-%d", GinkgoParallelNode())
+		bridgeName = fmt.Sprintf("test-bridge-%d", rand.Int()%1000)
 		bridgeIP = "10.255.78.1/24"
 
-		_, err = runCmd("ip", "link", "add", "name", bridgeName, "type", "bridge")
+		ipLinkSession, err := runCmd("ip", "link", "add", "name", bridgeName, "type", "bridge")
 		Expect(err).NotTo(HaveOccurred())
+		Eventually(ipLinkSession, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
 
-		_, err = runCmd("ip", "addr", "add", bridgeIP, "dev", bridgeName)
+		ipAddSession, err := runCmd("ip", "addr", "add", bridgeIP, "dev", bridgeName)
 		Expect(err).NotTo(HaveOccurred())
+		Eventually(ipAddSession, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
 
 		subnetFile, err = ioutil.TempFile("", "subnet.env")
 		subnetFileName = subnetFile.Name()
@@ -100,7 +101,8 @@ var _ = Describe("Flannel Watchdog", func() {
 
 	Context("when the bridge device ip is not found", func() {
 		BeforeEach(func() {
-			_, err := runCmd("ip", "addr", "del", bridgeIP, "dev", bridgeName)
+			ipDelSession, err := runCmd("ip", "addr", "del", bridgeIP, "dev", bridgeName)
+			Eventually(ipDelSession, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
 			Expect(err).NotTo(HaveOccurred())
 		})
 
