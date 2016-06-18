@@ -3,3 +3,9 @@ check process flanneld
   start program "/var/vcap/jobs/cni-flannel/bin/flanneld_ctl start"
   stop program "/var/vcap/jobs/cni-flannel/bin/flanneld_ctl stop"
   group vcap
+
+check process flannel-watchdog
+  with pidfile /var/vcap/sys/run/flannel-watchdog/flannel-watchdog.pid
+  start program "/var/vcap/jobs/cni-flannel/bin/flannel-watchdog_ctl start"
+  stop program "/var/vcap/jobs/cni-flannel/bin/flannel-watchdog_ctl stop"
+  group vcap
