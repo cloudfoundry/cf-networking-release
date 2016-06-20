@@ -9,13 +9,14 @@ type Group struct {
 }
 
 func (g *Group) Create(tx Transaction, guid string) (int, error) {
-	_, err := tx.Exec(
-		`INSERT INTO groups (guid) SELECT $1
-			WHERE
-				NOT EXISTS (
-					SELECT guid FROM groups WHERE guid = $1
-				)
-			`,
+	_, err := tx.Exec(`
+		INSERT INTO groups (guid) SELECT $1
+		WHERE
+		NOT EXISTS (
+			SELECT guid FROM groups WHERE guid = $2
+		)
+		`,
+		guid,
 		guid,
 	)
 	if err != nil {

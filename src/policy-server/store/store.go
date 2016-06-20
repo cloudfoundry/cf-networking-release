@@ -125,14 +125,15 @@ func (s *store) All() ([]models.Policy, error) {
 	policies := []models.Policy{}
 
 	rows, err := s.conn.Query(`
-		select src_grp.guid,
-				dst_grp.guid,
-				destinations.port,
-				destinations.protocol
-			from policies
-			left outer join groups as src_grp on (policies.group_id = src_grp.id)
-			left outer join destinations on (destinations.id = policies.destination_id)
-			left outer join groups as dst_grp on (destinations.group_id = dst_grp.id);`)
+		select
+			src_grp.guid,
+			dst_grp.guid,
+			destinations.port,
+			destinations.protocol
+		from policies
+		left outer join groups as src_grp on (policies.group_id = src_grp.id)
+		left outer join destinations on (destinations.id = policies.destination_id)
+		left outer join groups as dst_grp on (destinations.group_id = dst_grp.id);`)
 	if err != nil {
 		return nil, fmt.Errorf("listing all: %s", err)
 	}

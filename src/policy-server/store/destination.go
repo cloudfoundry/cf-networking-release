@@ -9,15 +9,18 @@ type Destination struct {
 }
 
 func (d *Destination) Create(tx Transaction, destination_group_id int, port int, protocol string) (int, error) {
-	_, err := tx.Exec(
-		`INSERT INTO destinations (group_id, port, protocol)
-				SELECT $1, $2, $3
-				WHERE
-					NOT EXISTS (
-						SELECT *
-						FROM destinations
-						WHERE group_id = $1 AND port = $2 AND protocol = $3
-					)`,
+	_, err := tx.Exec(`
+		INSERT INTO destinations (group_id, port, protocol)
+		SELECT $1, $2, $3
+		WHERE
+		NOT EXISTS (
+			SELECT *
+			FROM destinations
+			WHERE group_id = $4 AND port = $5 AND protocol = $6
+		)`,
+		destination_group_id,
+		port,
+		protocol,
 		destination_group_id,
 		port,
 		protocol,
@@ -27,9 +30,9 @@ func (d *Destination) Create(tx Transaction, destination_group_id int, port int,
 	}
 
 	var id int
-	err = tx.QueryRow(
-		`SELECT id FROM destinations
-				WHERE group_id = $1 AND port = $2 AND protocol = $3`,
+	err = tx.QueryRow(`
+		SELECT id FROM destinations
+		WHERE group_id = $1 AND port = $2 AND protocol = $3`,
 		destination_group_id,
 		port,
 		protocol,
