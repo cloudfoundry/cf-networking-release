@@ -336,7 +336,7 @@ var _ = Describe("Store", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = store.All()
-				Expect(err).To(MatchError("listing all: sql: expected 3 destination arguments in Scan, not 4"))
+				Expect(err).To(MatchError(ContainSubstring("listing all: sql: expected")))
 			})
 		})
 	})
