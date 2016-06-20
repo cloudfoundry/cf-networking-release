@@ -226,5 +226,41 @@ var _ = Describe("Acceptance", func() {
 				Expect(responseString).To(MatchJSON(`{ "error": "failed to verify token with uaa" }`))
 			})
 		})
+
+		Context("when providing a list of ids as a query parameter", func() {
+			It("responds with a 200 and lists all policies which contain one of those ids", func() {
+				client := &http.Client{}
+				body := strings.NewReader(`{ "policies": [
+				 {"source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "port": 8080 } },
+				 {"source": { "id": "app3" }, "destination": { "id": "app1", "protocol": "tcp", "port": 9999 } },
+				 {"source": { "id": "app3" }, "destination": { "id": "app4", "protocol": "tcp", "port": 3333 } }
+				 ]}
+				`)
+				req, err := http.NewRequest("POST", fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort), body)
+				Expect(err).NotTo(HaveOccurred())
+				req.Header.Set("Authorization", "Bearer valid-token")
+
+				resp, err := client.Do(req)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
+				responseString, err := ioutil.ReadAll(resp.Body)
+				Expect(responseString).To(MatchJSON("{}"))
+
+				req, err = http.NewRequest("GET", fmt.Sprintf("http://%s:%d/networking/v0/external/policies?id=app1,app2", conf.ListenHost, conf.ListenPort), nil)
+				Expect(err).NotTo(HaveOccurred())
+				req.Header.Set("Authorization", "Bearer valid-token")
+				resp, err = client.Do(req)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
+				responseString, err = ioutil.ReadAll(resp.Body)
+				Expect(responseString).To(MatchJSON(`{ "policies": [
+				 {"source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "port": 8080 } },
+				 {"source": { "id": "app3" }, "destination": { "id": "app1", "protocol": "tcp", "port": 9999 } }
+				 ]}
+				`))
+			})
+		})
 	})
 })

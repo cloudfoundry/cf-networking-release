@@ -93,6 +93,70 @@ var _ = Describe("Policies index handler", func() {
 		Expect(resp.Body).To(MatchJSON(expectedResponseJSON))
 	})
 
+	Context("when a list of ids is provided as a query parameter", func() {
+		BeforeEach(func() {
+			allPolicies = []models.Policy{{
+				Source: models.Source{ID: "some-app-guid"},
+				Destination: models.Destination{
+					ID:       "some-other-app-guid",
+					Protocol: "tcp",
+					Port:     8080,
+				},
+			},
+				{
+					Source: models.Source{ID: "another-app-guid"},
+					Destination: models.Destination{
+						ID:       "some-other-app-guid",
+						Protocol: "udp",
+						Port:     1234,
+					},
+				},
+				{
+					Source: models.Source{ID: "another-app-guid"},
+					Destination: models.Destination{
+						ID:       "yet-another-app-guid",
+						Protocol: "udp",
+						Port:     5678,
+					},
+				},
+			}
+			fakeStore.AllReturns(allPolicies, nil)
+
+			var err error
+			request, err = http.NewRequest("GET", "/networking/v0/external/policies?id=some-app-guid,yet-another-app-guid", nil)
+			Expect(err).NotTo(HaveOccurred())
+		})
+		It("returns only those policies which contain that id", func() {
+			expectedResponseJSON := `{"policies": [
+			{
+				"source": {
+					"id": "some-app-guid"
+				},
+				"destination": {
+					"id": "some-other-app-guid",
+					"protocol": "tcp",
+					"port": 8080
+				}
+			},
+			{
+				"source": {
+					"id": "another-app-guid"
+				},
+				"destination": {
+					"id": "yet-another-app-guid",
+					"protocol": "udp",
+					"port": 5678
+				}
+			}
+        ]}`
+			handler.ServeHTTP(resp, request)
+
+			Expect(fakeStore.AllCallCount()).To(Equal(1))
+			Expect(resp.Code).To(Equal(http.StatusOK))
+			Expect(resp.Body).To(MatchJSON(expectedResponseJSON))
+		})
+	})
+
 	Context("when the store throws an error", func() {
 		BeforeEach(func() {
 			fakeStore.AllReturns(nil, errors.New("banana"))

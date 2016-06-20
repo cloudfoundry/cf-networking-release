@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"policy-server/models"
 	"policy-server/store"
+	"strings"
 
 	"github.com/pivotal-golang/lager"
 )
@@ -24,6 +25,13 @@ func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	queryValues := req.URL.Query()
+	idList, ok := queryValues["id"]
+	if ok {
+		ids := strings.Split(idList[0], ",")
+		policies = filterByID(policies, ids)
+	}
+
 	policyResponse := struct {
 		Policies []models.Policy `json:"policies"`
 	}{policies}
@@ -35,4 +43,23 @@ func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	w.Write(bytes)
+}
+
+func filterByID(policies []models.Policy, ids []string) []models.Policy {
+	var filteredPolicies []models.Policy
+	for _, policy := range policies {
+		if containsID(policy, ids) {
+			filteredPolicies = append(filteredPolicies, policy)
+		}
+	}
+	return filteredPolicies
+}
+
+func containsID(policy models.Policy, ids []string) bool {
+	for _, id := range ids {
+		if id == policy.Source.ID || id == policy.Destination.ID {
+			return true
+		}
+	}
+	return false
 }
