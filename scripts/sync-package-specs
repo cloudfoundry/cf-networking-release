@@ -35,6 +35,10 @@ function sync_package() {
   )
 }
 
+## Create a sync_package line for each BOSH package in this release
+## add a -app line or -test line to include a particular app or test
+## along with all of its dependencies
+
 sync_package flannel-watchdog \
   -app flannel-watchdog/cmd/flannel-watchdog &
 
