@@ -4,12 +4,25 @@ set -e -u
 ROOT_DIR_PATH=$(cd $(dirname $0)/.. && pwd)
 cd $ROOT_DIR_PATH
 
-docker run --privileged \
-   --rm \
-   -v $PWD:/netman-release \
-   -e GOPATH=/netman-release \
-   -e GINKGO_EXTRA_FLAGS="${GINKGO_EXTRA_FLAGS:-""}" \
-   -e NO_POSTGRES="${NO_POSTGRES:-""}" \
-   -w / \
-   c2cnetworking/dev \
-   /netman-release/ci/netman-tests.sh "$@"
+if [ ${MYSQL:-"false"} = "true" ]; then
+  docker run --privileged \
+     --rm \
+     -v $PWD:/netman-release \
+     -e GOPATH=/netman-release \
+     -e GINKGO_EXTRA_FLAGS="${GINKGO_EXTRA_FLAGS:-""}" \
+     -e NO_DB="${NO_DB:-""}" \
+     -e MYSQL=true \
+     -w / \
+     c2cnetworking/dev-mysql \
+     /netman-release/ci/netman-tests.sh "$@"
+else
+  docker run --privileged \
+     --rm \
+     -v $PWD:/netman-release \
+     -e GOPATH=/netman-release \
+     -e GINKGO_EXTRA_FLAGS="${GINKGO_EXTRA_FLAGS:-""}" \
+     -e NO_DB="${NO_DB:-""}" \
+     -w / \
+     c2cnetworking/dev-postgres \
+     /netman-release/ci/netman-tests.sh "$@"
+fi

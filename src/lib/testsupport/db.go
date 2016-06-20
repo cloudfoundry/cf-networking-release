@@ -105,3 +105,11 @@ func GetMySQLDBConnectionInfo() *DBConnectionInfo {
 		Password: "password",
 	}
 }
+
+func GetDBConnectionInfo() *DBConnectionInfo {
+	if os.Getenv("MYSQL") == "true" {
+		return GetMySQLDBConnectionInfo()
+	} else {
+		return GetPostgresDBConnectionInfo()
+	}
+}
