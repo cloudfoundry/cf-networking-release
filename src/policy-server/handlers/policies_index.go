@@ -46,7 +46,7 @@ func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 }
 
 func filterByID(policies []models.Policy, ids []string) []models.Policy {
-	var filteredPolicies []models.Policy
+	filteredPolicies := []models.Policy{}
 	for _, policy := range policies {
 		if containsID(policy, ids) {
 			filteredPolicies = append(filteredPolicies, policy)

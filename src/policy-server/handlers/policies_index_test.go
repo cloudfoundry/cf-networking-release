@@ -126,6 +126,7 @@ var _ = Describe("Policies index handler", func() {
 			request, err = http.NewRequest("GET", "/networking/v0/external/policies?id=some-app-guid,yet-another-app-guid", nil)
 			Expect(err).NotTo(HaveOccurred())
 		})
+
 		It("returns only those policies which contain that id", func() {
 			expectedResponseJSON := `{"policies": [
 			{
@@ -154,6 +155,17 @@ var _ = Describe("Policies index handler", func() {
 			Expect(fakeStore.AllCallCount()).To(Equal(1))
 			Expect(resp.Code).To(Equal(http.StatusOK))
 			Expect(resp.Body).To(MatchJSON(expectedResponseJSON))
+		})
+
+		It("returns an empty list when the id list is empty", func() {
+			var err error
+			request, err = http.NewRequest("GET", "/networking/v0/external/policies?id=", nil)
+			Expect(err).NotTo(HaveOccurred())
+
+			handler.ServeHTTP(resp, request)
+			Expect(fakeStore.AllCallCount()).To(Equal(1))
+			Expect(resp.Code).To(Equal(http.StatusOK))
+			Expect(resp.Body).To(MatchJSON(`{"policies": []}`))
 		})
 	})
 
