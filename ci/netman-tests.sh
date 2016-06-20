@@ -36,7 +36,7 @@ function bootMysql {
 	echo -n "booting mysql"
 	(MYSQL_ROOT_PASSWORD=password  /entrypoint.sh mysqld &> /var/log/postgres-boot.log) &
 	trycount=0
-	for i in `seq 1 9`; do
+	for i in `seq 1 30`; do
 		set +e
     echo '\s;' | mysql -h 127.0.0.1 -u root --password="password" &>/dev/null
 		exitcode=$?
