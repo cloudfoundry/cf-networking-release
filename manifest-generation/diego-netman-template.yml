@@ -37,6 +37,7 @@ properties:
       skip_ssl_validation: (( .properties.diego.ssl.skip_cert_verify ))
       database:
          <<: (( merge ))
+         host: (( merge || policy-server-db.service.cf.internal ))
          password: (( .properties.policy-server.database_password ))
   uaa:
     clients:
@@ -51,16 +52,37 @@ jobs:
 - name: database_z3
   <<: (( merge ))
 
+- name: policy-server-db
+  instances: 1
+  persistent_disk: 256
+  templates:
+  - name: postgres
+    release: netman
+  - name: consul_agent
+    release: cf
+  resource_pool: database_z1
+  networks:
+    - name: diego1
+  properties:
+    consul:
+      agent:
+        services:
+          policy-server-db:
+            name: policy-server-db
+            check:
+              interval: 5s
+              script: /bin/true
+
 - name: policy-server
   instances: 1
   persistent_disk: 256
   templates:
-    - name: policy-server
-      release: netman
-    - name: route_registrar
-      release: cf
-    - name: postgres
-      release: netman
+  - name: policy-server
+    release: netman
+  - name: route_registrar
+    release: cf
+  - name: consul_agent
+    release: cf
   resource_pool: database_z1
   networks:
     - name: diego1
@@ -74,7 +96,7 @@ jobs:
         uris:
         - (( "api." .properties.system_domain "/networking" || "api.bosh-lite.com/networking" ))
 
-- name: netman_db
+- name: flannel_etcd
   instances: 1
   networks:
   - name: diego1

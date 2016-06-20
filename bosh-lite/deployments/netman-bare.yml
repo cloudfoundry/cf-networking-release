@@ -79,19 +79,6 @@ jobs:
         machines:
         - *db_address
 
-  - name: policy-server
-    instances: 1
-    persistent_disk: 256
-    templates:
-      - name: policy-server
-        release: netman
-      - name: postgres
-        release: netman
-    resource_pool: garden
-    networks:
-      - name: garden
-        static_ips: *policy_server_address
-
   - name: garden
     instances: 2
     templates:
