@@ -35,7 +35,9 @@ properties:
       uaa_client_secret: (( .properties.uaa.clients.network-policy.secret ))
       uaa_url: (( "https://uaa." .properties.system_domain ))
       skip_ssl_validation: (( .properties.diego.ssl.skip_cert_verify ))
-      database_url: (( "postgres://policy_server:" .properties.policy-server.database_password "@localhost:5432/policy_server?sslmode=disable" ))
+      database:
+         <<: (( merge ))
+         password: (( .properties.policy-server.database_password ))
   uaa:
     clients:
       network-policy:

@@ -43,3 +43,5 @@ ${scripts_path}/netmanify \
   "$@" | \
     sed 's/\ guardian/\ garden-runc/' \
     > ${NETMAN_MANIFESTS_DIR}/diego_with_netman.yml
+
+bosh deployment ${NETMAN_RELEASE_DIR}/bosh-lite/deployments/diego_with_netman.yml
