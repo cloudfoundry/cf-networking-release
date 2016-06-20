@@ -75,6 +75,12 @@ type Db struct {
 		result1 *sql.Rows
 		result2 error
 	}
+	DriverNameStub        func() string
+	driverNameMutex       sync.RWMutex
+	driverNameArgsForCall []struct{}
+	driverNameReturns     struct {
+		result1 string
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -314,6 +320,31 @@ func (fake *Db) QueryReturns(result1 *sql.Rows, result2 error) {
 	}{result1, result2}
 }
 
+func (fake *Db) DriverName() string {
+	fake.driverNameMutex.Lock()
+	fake.driverNameArgsForCall = append(fake.driverNameArgsForCall, struct{}{})
+	fake.recordInvocation("DriverName", []interface{}{})
+	fake.driverNameMutex.Unlock()
+	if fake.DriverNameStub != nil {
+		return fake.DriverNameStub()
+	} else {
+		return fake.driverNameReturns.result1
+	}
+}
+
+func (fake *Db) DriverNameCallCount() int {
+	fake.driverNameMutex.RLock()
+	defer fake.driverNameMutex.RUnlock()
+	return len(fake.driverNameArgsForCall)
+}
+
+func (fake *Db) DriverNameReturns(result1 string) {
+	fake.DriverNameStub = nil
+	fake.driverNameReturns = struct {
+		result1 string
+	}{result1}
+}
+
 func (fake *Db) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -331,6 +362,8 @@ func (fake *Db) Invocations() map[string][][]interface{} {
 	defer fake.queryRowMutex.RUnlock()
 	fake.queryMutex.RLock()
 	defer fake.queryMutex.RUnlock()
+	fake.driverNameMutex.RLock()
+	defer fake.driverNameMutex.RUnlock()
 	return fake.invocations
 }
 

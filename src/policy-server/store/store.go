@@ -9,27 +9,47 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-const schema = `
-CREATE TABLE IF NOT EXISTS groups (
-	id SERIAL PRIMARY KEY,
-	guid text
-);
-
-CREATE TABLE IF NOT EXISTS destinations (
-	id SERIAL PRIMARY KEY,
-	group_id int REFERENCES groups(id),
-	port int,
-	protocol text,
-	UNIQUE (group_id, port, protocol)
-);
-
-CREATE TABLE IF NOT EXISTS policies (
-	id SERIAL PRIMARY KEY,
-	group_id int REFERENCES groups(id),
-	destination_id int REFERENCES destinations(id),
-	UNIQUE (group_id, destination_id)
-);
-`
+var schemas = map[string][]string{
+	"mysql": []string{
+		`CREATE TABLE IF NOT EXISTS groups (
+		id int NOT NULL AUTO_INCREMENT,
+		guid varchar(255),
+		PRIMARY KEY (id)
+	);`,
+		`CREATE TABLE IF NOT EXISTS destinations (
+		id int NOT NULL AUTO_INCREMENT,
+		group_id int REFERENCES groups(id),
+		port int,
+		protocol varchar(255),
+		UNIQUE (group_id, port, protocol),
+		PRIMARY KEY (id)
+	);`,
+		`CREATE TABLE IF NOT EXISTS policies (
+		group_id int REFERENCES groups(id),
+		destination_id int REFERENCES destinations(id),
+		UNIQUE (group_id, destination_id)
+	);`,
+	},
+	"postgres": []string{
+		`CREATE TABLE IF NOT EXISTS groups (
+		id SERIAL PRIMARY KEY,
+		guid text
+	);`,
+		`CREATE TABLE IF NOT EXISTS destinations (
+		id SERIAL PRIMARY KEY,
+		group_id int REFERENCES groups(id),
+		port int,
+		protocol text,
+		UNIQUE (group_id, port, protocol)
+	);`,
+		`CREATE TABLE IF NOT EXISTS policies (
+		id SERIAL PRIMARY KEY,
+		group_id int REFERENCES groups(id),
+		destination_id int REFERENCES destinations(id),
+		UNIQUE (group_id, destination_id)
+	);`,
+	},
+}
 
 //go:generate counterfeiter -o ../fakes/store.go --fake-name Store . Store
 type Store interface {
@@ -46,6 +66,7 @@ type db interface {
 	Select(dest interface{}, query string, args ...interface{}) error
 	QueryRow(query string, args ...interface{}) *sql.Row
 	Query(query string, args ...interface{}) (*sql.Rows, error)
+	DriverName() string
 }
 
 type Transaction interface {
@@ -165,6 +186,16 @@ func (s *store) All() ([]models.Policy, error) {
 }
 
 func setupTables(dbConnectionPool db) error {
-	_, err := dbConnectionPool.Exec(schema)
-	return err
+	driverName := dbConnectionPool.DriverName()
+	schema, ok := schemas[driverName]
+	if !ok {
+		panic("unsupported DB DriverName")
+	}
+	for _, table := range schema {
+		_, err := dbConnectionPool.Exec(table)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

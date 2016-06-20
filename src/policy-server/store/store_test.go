@@ -42,6 +42,7 @@ var _ = Describe("Store", func() {
 
 		dataStore, err = store.New(realDb, group, destination, policy)
 		Expect(err).NotTo(HaveOccurred())
+		mockDb.DriverNameReturns(realDb.DriverName())
 	})
 
 	AfterEach(func() {
