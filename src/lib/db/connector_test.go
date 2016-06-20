@@ -69,4 +69,15 @@ var _ = Describe("GetConnectionPool", func() {
 			Expect(err.Error()).To(ContainSubstring("unable to ping"))
 		})
 	})
+
+	It("sets the databaseConfig.Type as the DriverName", func() {
+		dbConfig := testDatabase.DBConfig()
+
+		database, err := db.GetConnectionPool(dbConfig)
+		Expect(err).NotTo(HaveOccurred())
+		defer database.Close()
+
+		Expect(database.DriverName()).To(Equal(dbConfig.Type))
+
+	})
 })

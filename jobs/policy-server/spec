@@ -32,6 +32,9 @@ properties:
     description: "skip verifying ssl certs"
     default: false
 
+  policy-server.server.database.type:
+    description: "Type of database: postgres or mysql"
+    default: postgres
   policy-server.server.database.host:
     description: "Host of database server, DNS or IP address"
     default: 127.0.0.1

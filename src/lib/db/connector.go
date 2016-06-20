@@ -22,7 +22,7 @@ func GetConnectionPool(dbConfig Config) (*sqlx.DB, error) {
 
 	configString := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s",
 		dbConfig.Username, dbConfig.Password, dbConfig.Host, dbConfig.Port, dbConfig.Name, dbConfig.SSLMode)
-	dbConn, err = sqlx.Open("postgres", configString)
+	dbConn, err = sqlx.Open(dbConfig.Type, configString)
 	if err != nil {
 		return nil, fmt.Errorf("unable to open database connection: %s", err)
 	}

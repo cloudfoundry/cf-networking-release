@@ -24,16 +24,12 @@ type TestDatabase struct {
 	ConnInfo *DBConnectionInfo
 }
 
-func (d *TestDatabase) URL() string {
-	return fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s",
-		d.ConnInfo.Username, d.ConnInfo.Password, d.ConnInfo.Hostname, d.ConnInfo.Port, d.Name, "disable")
-}
-
 func (d *TestDatabase) DBConfig() db.Config {
 	port, err := strconv.Atoi(d.ConnInfo.Port)
 	Expect(err).NotTo(HaveOccurred())
 
 	return db.Config{
+		Type:     "postgres",
 		Host:     d.ConnInfo.Hostname,
 		Port:     port,
 		Username: d.ConnInfo.Username,
