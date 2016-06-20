@@ -5,7 +5,6 @@ import (
 	"lib/db"
 
 	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 )
 
@@ -43,25 +42,4 @@ var _ = Describe("Config", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(config).To(Equal(config2))
 	})
-
-	It("generates a Postgres URL", func() {
-		url, err := config.PostgresURL()
-		Expect(err).NotTo(HaveOccurred())
-
-		Expect(url).To(Equal(`postgres://bob:secret@example.com:9953/database1?sslmode=false`))
-	})
-
-	DescribeTable("missing or invalid config",
-		func(expectedError string, corrupter func()) {
-			corrupter()
-			_, err := config.PostgresURL()
-			Expect(err).To(MatchError(expectedError))
-		},
-
-		Entry("missing Host", `"host" is required`, func() { config.Host = "" }),
-		Entry("missing Port", `"port" is required`, func() { config.Port = 0 }),
-		Entry("missing Username", `"username" is required`, func() { config.Username = "" }),
-		Entry("missing Name", `"name" is required`, func() { config.Name = "" }),
-		Entry("missing SSLMode", `"ssl_mode" is required`, func() { config.SSLMode = "" }),
-	)
 })
