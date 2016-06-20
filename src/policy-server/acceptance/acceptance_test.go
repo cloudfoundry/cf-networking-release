@@ -53,7 +53,7 @@ var _ = Describe("Acceptance", func() {
 		}))
 
 		dbName := fmt.Sprintf("test_netman_database_%x", rand.Int())
-		dbConnectionInfo := testsupport.GetDBConnectionInfo()
+		dbConnectionInfo := testsupport.GetPostgresDBConnectionInfo()
 		testDatabase = dbConnectionInfo.CreateDatabase(dbName)
 
 		conf = config.Config{

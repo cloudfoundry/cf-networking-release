@@ -29,7 +29,7 @@ var _ = Describe("Store", func() {
 		mockDb = &fakes.Db{}
 
 		dbName := fmt.Sprintf("test_netman_database_%x", rand.Int())
-		dbConnectionInfo := testsupport.GetDBConnectionInfo()
+		dbConnectionInfo := testsupport.GetPostgresDBConnectionInfo()
 		testDatabase = dbConnectionInfo.CreateDatabase(dbName)
 
 		var err error

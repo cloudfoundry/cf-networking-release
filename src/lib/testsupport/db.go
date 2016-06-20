@@ -13,6 +13,7 @@ import (
 )
 
 type DBConnectionInfo struct {
+	Type     string
 	Hostname string
 	Port     string
 	Username string
@@ -29,7 +30,7 @@ func (d *TestDatabase) DBConfig() db.Config {
 	Expect(err).NotTo(HaveOccurred())
 
 	return db.Config{
-		Type:     "postgres",
+		Type:     d.ConnInfo.Type,
 		Host:     d.ConnInfo.Hostname,
 		Port:     port,
 		Username: d.ConnInfo.Username,
@@ -56,12 +57,26 @@ func (c *DBConnectionInfo) RemoveDatabase(db *TestDatabase) {
 }
 
 func (c *DBConnectionInfo) execSQL(sqlCommand string) (string, error) {
-	cmd := exec.Command("psql",
-		"-h", c.Hostname,
-		"-p", c.Port,
-		"-U", c.Username,
-		"-c", sqlCommand)
-	cmd.Env = append(os.Environ(), "PGPASSWORD="+c.Password)
+	var cmd *exec.Cmd
+
+	if c.Type == "mysql" {
+		cmd = exec.Command("mysql",
+			"-h", c.Hostname,
+			"-P", c.Port,
+			"-u", c.Username,
+			"-e", sqlCommand)
+		cmd.Env = append(os.Environ(), "MYSQL_PWD="+c.Password)
+	} else if c.Type == "postgres" {
+		cmd = exec.Command("psql",
+			"-h", c.Hostname,
+			"-p", c.Port,
+			"-U", c.Username,
+			"-c", sqlCommand)
+		cmd.Env = append(os.Environ(), "PGPASSWORD="+c.Password)
+	} else {
+		panic("unsupported database type: " + c.Type)
+	}
+
 	session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 	Expect(err).NotTo(HaveOccurred())
 	Eventually(session, "9s").Should(gexec.Exit())
@@ -71,11 +86,22 @@ func (c *DBConnectionInfo) execSQL(sqlCommand string) (string, error) {
 	return string(session.Out.Contents()), nil
 }
 
-func GetDBConnectionInfo() *DBConnectionInfo {
+func GetPostgresDBConnectionInfo() *DBConnectionInfo {
 	return &DBConnectionInfo{
-		Hostname: "localhost",
+		Type:     "postgres",
+		Hostname: "127.0.0.1",
 		Port:     "5432",
 		Username: "postgres",
 		Password: "",
+	}
+}
+
+func GetMySQLDBConnectionInfo() *DBConnectionInfo {
+	return &DBConnectionInfo{
+		Type:     "mysql",
+		Hostname: "127.0.0.1",
+		Port:     "3306",
+		Username: "root",
+		Password: "password",
 	}
 }

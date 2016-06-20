@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	_ "github.com/lib/pq"
 )
 
 //go:generate counterfeiter -o ../fakes/sleeper.go --fake-name Sleeper . sleeper

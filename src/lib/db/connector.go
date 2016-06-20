@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"net"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 )
 
 type RetriableError struct {
@@ -20,9 +22,18 @@ func GetConnectionPool(dbConfig Config) (*sqlx.DB, error) {
 	var dbConn *sqlx.DB
 	var err error
 
-	configString := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s",
-		dbConfig.Username, dbConfig.Password, dbConfig.Host, dbConfig.Port, dbConfig.Name, dbConfig.SSLMode)
-	dbConn, err = sqlx.Open(dbConfig.Type, configString)
+	var connectionString string
+	if dbConfig.Type == "mysql" {
+		connectionString = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s",
+			dbConfig.Username, dbConfig.Password, dbConfig.Host, dbConfig.Port, dbConfig.Name)
+	} else if dbConfig.Type == "postgres" {
+		connectionString = fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s",
+			dbConfig.Username, dbConfig.Password, dbConfig.Host, dbConfig.Port, dbConfig.Name, dbConfig.SSLMode)
+	} else {
+		panic("unknown db type " + dbConfig.Type)
+	}
+
+	dbConn, err = sqlx.Open(dbConfig.Type, connectionString)
 	if err != nil {
 		return nil, fmt.Errorf("unable to open database connection: %s", err)
 	}

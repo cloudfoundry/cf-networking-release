@@ -6,6 +6,7 @@ dependencies:
 
 files:
   - github.com/bmizerany/pat/*.go # gosub
+  - github.com/go-sql-driver/mysql/*.go # gosub
   - github.com/jmoiron/sqlx/*.go # gosub
   - github.com/jmoiron/sqlx/reflectx/*.go # gosub
   - github.com/lib/pq/*.go # gosub
