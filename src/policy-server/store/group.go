@@ -9,13 +9,12 @@ type Group struct {
 }
 
 func (g *Group) Create(tx Transaction, guid string) (int, error) {
-	_, err := tx.Exec(`
-		INSERT INTO groups (guid) SELECT $1
+	_, err := tx.Exec(tx.Rebind(`
+		INSERT INTO groups (guid) SELECT ?
 		WHERE
 		NOT EXISTS (
-			SELECT guid FROM groups WHERE guid = $2
-		)
-		`,
+			SELECT guid FROM groups WHERE guid = ?
+		)`),
 		guid,
 		guid,
 	)
@@ -24,7 +23,10 @@ func (g *Group) Create(tx Transaction, guid string) (int, error) {
 	}
 
 	var id int
-	err = tx.QueryRow(`SELECT id FROM groups WHERE guid = $1`, guid).Scan(&id)
+	err = tx.QueryRow(
+		tx.Rebind(`SELECT id FROM groups WHERE guid = ?`),
+		guid,
+	).Scan(&id)
 
 	return id, err
 }

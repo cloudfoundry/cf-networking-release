@@ -4,14 +4,16 @@ package fakes
 import (
 	"database/sql"
 	"sync"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type Db struct {
-	BeginStub        func() (*sql.Tx, error)
-	beginMutex       sync.RWMutex
-	beginArgsForCall []struct{}
-	beginReturns     struct {
-		result1 *sql.Tx
+	BeginxStub        func() (*sqlx.Tx, error)
+	beginxMutex       sync.RWMutex
+	beginxArgsForCall []struct{}
+	beginxReturns     struct {
+		result1 *sqlx.Tx
 		result2 error
 	}
 	ExecStub        func(query string, args ...interface{}) (sql.Result, error)
@@ -77,28 +79,28 @@ type Db struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *Db) Begin() (*sql.Tx, error) {
-	fake.beginMutex.Lock()
-	fake.beginArgsForCall = append(fake.beginArgsForCall, struct{}{})
-	fake.recordInvocation("Begin", []interface{}{})
-	fake.beginMutex.Unlock()
-	if fake.BeginStub != nil {
-		return fake.BeginStub()
+func (fake *Db) Beginx() (*sqlx.Tx, error) {
+	fake.beginxMutex.Lock()
+	fake.beginxArgsForCall = append(fake.beginxArgsForCall, struct{}{})
+	fake.recordInvocation("Beginx", []interface{}{})
+	fake.beginxMutex.Unlock()
+	if fake.BeginxStub != nil {
+		return fake.BeginxStub()
 	} else {
-		return fake.beginReturns.result1, fake.beginReturns.result2
+		return fake.beginxReturns.result1, fake.beginxReturns.result2
 	}
 }
 
-func (fake *Db) BeginCallCount() int {
-	fake.beginMutex.RLock()
-	defer fake.beginMutex.RUnlock()
-	return len(fake.beginArgsForCall)
+func (fake *Db) BeginxCallCount() int {
+	fake.beginxMutex.RLock()
+	defer fake.beginxMutex.RUnlock()
+	return len(fake.beginxArgsForCall)
 }
 
-func (fake *Db) BeginReturns(result1 *sql.Tx, result2 error) {
-	fake.BeginStub = nil
-	fake.beginReturns = struct {
-		result1 *sql.Tx
+func (fake *Db) BeginxReturns(result1 *sqlx.Tx, result2 error) {
+	fake.BeginxStub = nil
+	fake.beginxReturns = struct {
+		result1 *sqlx.Tx
 		result2 error
 	}{result1, result2}
 }
@@ -315,8 +317,8 @@ func (fake *Db) QueryReturns(result1 *sql.Rows, result2 error) {
 func (fake *Db) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.beginMutex.RLock()
-	defer fake.beginMutex.RUnlock()
+	fake.beginxMutex.RLock()
+	defer fake.beginxMutex.RUnlock()
 	fake.execMutex.RLock()
 	defer fake.execMutex.RUnlock()
 	fake.namedExecMutex.RLock()

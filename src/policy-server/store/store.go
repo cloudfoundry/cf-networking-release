@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"policy-server/models"
+
+	"github.com/jmoiron/sqlx"
 )
 
 const schema = `
@@ -37,7 +39,7 @@ type Store interface {
 
 //go:generate counterfeiter -o ../fakes/db.go --fake-name Db . db
 type db interface {
-	Begin() (*sql.Tx, error)
+	Beginx() (*sqlx.Tx, error)
 	Exec(query string, args ...interface{}) (sql.Result, error)
 	NamedExec(query string, arg interface{}) (sql.Result, error)
 	Get(dest interface{}, query string, args ...interface{}) error
@@ -51,6 +53,7 @@ type Transaction interface {
 	QueryRow(query string, args ...interface{}) *sql.Row
 	Commit() error
 	Rollback() error
+	Rebind(string) string
 }
 
 var RecordNotFoundError = errors.New("record not found")
@@ -86,7 +89,7 @@ func rollback(tx Transaction, err error) error {
 }
 
 func (s *store) Create(policies []models.Policy) error {
-	tx, err := s.conn.Begin()
+	tx, err := s.conn.Beginx()
 	if err != nil {
 		return fmt.Errorf("begin transaction: %s", err)
 	}

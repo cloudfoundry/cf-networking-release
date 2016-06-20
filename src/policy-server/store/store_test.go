@@ -135,7 +135,7 @@ var _ = Describe("Store", func() {
 			var err error
 
 			BeforeEach(func() {
-				mockDb.BeginReturns(nil, errors.New("some-db-error"))
+				mockDb.BeginxReturns(nil, errors.New("some-db-error"))
 				dataStore, err = store.New(mockDb, group, destination, policy)
 				Expect(err).NotTo(HaveOccurred())
 			})
