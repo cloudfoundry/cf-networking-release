@@ -133,6 +133,114 @@ var _ = Describe("PoliciesCreate", func() {
 		})
 	})
 
+	Context("when the destination port field is empty", func() {
+		BeforeEach(func() {
+			request.Body = ioutil.NopCloser(bytes.NewReader([]byte(`{"policies":[
+			{
+				"source": {
+					"id": "some-app-guid"
+				},
+				"destination": {
+					"id": "some-other-app-guid",
+					"protocol": "tcp"
+				}
+			}
+			]}`)))
+		})
+		It("returns a descriptive error", func() {
+			handler.ServeHTTP(resp, request)
+
+			Expect(resp.Code).To(Equal(http.StatusBadRequest))
+			Expect(resp.Body.String()).To(MatchJSON(`{"error": "missing destination port"}`))
+		})
+
+		It("logs the full error", func() {
+			handler.ServeHTTP(resp, request)
+			Expect(logger).To(gbytes.Say("missing destination port"))
+		})
+	})
+
+	Context("when the destination protocol field is empty", func() {
+		BeforeEach(func() {
+			request.Body = ioutil.NopCloser(bytes.NewReader([]byte(`{"policies":[
+			{
+				"source": {
+					"id": "some-app-guid"
+				},
+				"destination": {
+					"id": "some-other-app-guid",
+					"port": 8080
+				}
+			}
+			]}`)))
+		})
+		It("returns a descriptive error", func() {
+			handler.ServeHTTP(resp, request)
+
+			Expect(resp.Code).To(Equal(http.StatusBadRequest))
+			Expect(resp.Body.String()).To(MatchJSON(`{"error": "missing destination protocol"}`))
+		})
+
+		It("logs the full error", func() {
+			handler.ServeHTTP(resp, request)
+			Expect(logger).To(gbytes.Say("missing destination protocol"))
+		})
+	})
+
+	Context("when the destination id is missing", func() {
+		BeforeEach(func() {
+			request.Body = ioutil.NopCloser(bytes.NewReader([]byte(`{"policies":[
+			{
+				"source": {
+					"id": "some-app-guid"
+				},
+				"destination": {
+					"protocol": "tcp",
+					"port": 8080
+				}
+			}
+			]}`)))
+		})
+		It("returns a descriptive error", func() {
+			handler.ServeHTTP(resp, request)
+
+			Expect(resp.Code).To(Equal(http.StatusBadRequest))
+			Expect(resp.Body.String()).To(MatchJSON(`{"error": "missing destination id"}`))
+		})
+
+		It("logs the full error", func() {
+			handler.ServeHTTP(resp, request)
+			Expect(logger).To(gbytes.Say("missing destination id"))
+		})
+	})
+
+	Context("when the source id is missing", func() {
+		BeforeEach(func() {
+			request.Body = ioutil.NopCloser(bytes.NewReader([]byte(`{"policies":[
+			{
+				"source": {
+				},
+				"destination": {
+					"id": "some-other-app-guid",
+					"protocol": "tcp",
+					"port": 8080
+				}
+			}
+			]}`)))
+		})
+		It("returns a descriptive error", func() {
+			handler.ServeHTTP(resp, request)
+
+			Expect(resp.Code).To(Equal(http.StatusBadRequest))
+			Expect(resp.Body.String()).To(MatchJSON(`{"error": "missing source id"}`))
+		})
+
+		It("logs the full error", func() {
+			handler.ServeHTTP(resp, request)
+			Expect(logger).To(gbytes.Say("missing source id"))
+		})
+	})
+
 	Context("when there are errors reading the body bytes", func() {
 		BeforeEach(func() {
 			request.Body = ioutil.NopCloser(&testsupport.BadReader{})

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"lib/marshal"
 	"net/http"
@@ -43,6 +44,13 @@ func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	if err = validateFields(payload.Policies); err != nil {
+		h.Logger.Error("bad-request", err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(fmt.Sprintf(`{"error": "%s"}`, err)))
+		return
+	}
+
 	err = h.Store.Create(payload.Policies)
 	if err != nil {
 		h.Logger.Error("store-create-failed", err)
@@ -54,4 +62,22 @@ func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("{}"))
 	return
+}
+
+func validateFields(policies []models.Policy) error {
+	for _, policy := range policies {
+		if policy.Source.ID == "" {
+			return errors.New("missing source id")
+		}
+		if policy.Destination.ID == "" {
+			return errors.New("missing destination id")
+		}
+		if policy.Destination.Protocol == "" {
+			return errors.New("missing destination protocol")
+		}
+		if policy.Destination.Port == 0 {
+			return errors.New("missing destination port")
+		}
+	}
+	return nil
 }
