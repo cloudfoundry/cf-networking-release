@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -12,6 +13,7 @@ import (
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
 	. "github.com/onsi/ginkgo"
+	ginkgoConfig "github.com/onsi/ginkgo/config"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 
@@ -65,6 +67,8 @@ func TestAcceptance(t *testing.T) {
 		Expect(err).NotTo(HaveOccurred())
 		err = os.Rename(binaryPath, filepath.Join(appDir, "proxy"))
 		Expect(err).NotTo(HaveOccurred())
+
+		rand.Seed(ginkgoConfig.GinkgoConfig.RandomSeed + int64(GinkgoParallelNode()))
 	})
 
 	AfterSuite(func() {

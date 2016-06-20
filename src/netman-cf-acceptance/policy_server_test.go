@@ -2,6 +2,7 @@ package acceptance_test
 
 import (
 	"fmt"
+	"math/rand"
 	"os/exec"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
@@ -36,6 +37,21 @@ var _ = Describe("policy server tests", func() {
 			Expect(curlSession.Wait(Timeout_Push)).To(gexec.Exit(0))
 			whoamiOut := string(curlSession.Out.Contents())
 			Expect(whoamiOut).To(MatchJSON(fmt.Sprintf(`{"user_name":%q}`, testConfig.TestUser)))
+		})
+
+		It("allows users to post and get policies", func() {
+			appGuid := rand.Int()
+			policyJSON := fmt.Sprintf(`{"policies":[{"source":{"id":"%d"},"destination":{"id":"some-other-app-guid","protocol":"tcp","port":3333}}]}`, appGuid)
+			curlSession := cf.Cf("curl", "-X", "POST", "/networking/v0/external/policies", "-d", "'"+policyJSON+"'").Wait(Timeout_Push)
+
+			Expect(curlSession.Wait(Timeout_Push)).To(gexec.Exit(0))
+			postPolicyOut := string(curlSession.Out.Contents())
+			Expect(postPolicyOut).To(MatchJSON(`{}`))
+
+			curlSession = cf.Cf("curl", "-X", "GET", fmt.Sprintf("/networking/v0/external/policies?id=%d", appGuid)).Wait(Timeout_Push)
+			Expect(curlSession.Wait(Timeout_Push)).To(gexec.Exit(0))
+			getPolicyOut := string(curlSession.Out.Contents())
+			Expect(getPolicyOut).To(MatchJSON(policyJSON))
 		})
 	})
 
