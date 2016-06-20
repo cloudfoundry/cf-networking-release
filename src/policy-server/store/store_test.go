@@ -33,7 +33,7 @@ var _ = Describe("Store", func() {
 		testDatabase = dbConnectionInfo.CreateDatabase(dbName)
 
 		var err error
-		realDb, err = db.GetConnectionPool(testDatabase.URL())
+		realDb, err = db.GetConnectionPool(testDatabase.DBConfig())
 		Expect(err).NotTo(HaveOccurred())
 
 		group = &store.Group{}

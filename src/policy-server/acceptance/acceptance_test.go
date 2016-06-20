@@ -62,7 +62,7 @@ var _ = Describe("Acceptance", func() {
 			UAAClient:       "test",
 			UAAClientSecret: "test",
 			UAAURL:          mockUAAServer.URL,
-			DatabaseURL:     testDatabase.URL(),
+			Database:        testDatabase.DBConfig(),
 		}
 		configFilePath := WriteConfigFile(conf)
 

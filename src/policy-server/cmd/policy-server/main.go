@@ -75,8 +75,7 @@ func main() {
 		MaxRetries:    10,
 	}
 
-	databaseURL := conf.DatabaseURL
-	dbConnectionPool, err := retriableConnector.GetConnectionPool(databaseURL)
+	dbConnectionPool, err := retriableConnector.GetConnectionPool(conf.Database)
 	if err != nil {
 		log.Fatalf("db connect: %s", err)
 	}

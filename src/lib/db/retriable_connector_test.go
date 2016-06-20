@@ -26,7 +26,7 @@ var _ = Describe("RetriableConnector", func() {
 		retriableConnector = &db.RetriableConnector{
 			Sleeper:       sleeper,
 			RetryInterval: time.Minute,
-			Connector: func(string) (*sqlx.DB, error) {
+			Connector: func(db.Config) (*sqlx.DB, error) {
 				numTries++
 				if numTries > 3 {
 					return nil, nil
@@ -39,12 +39,12 @@ var _ = Describe("RetriableConnector", func() {
 	Context("when the inner Connector returns a non-retriable error", func() {
 		It("returns the error immediately", func() {
 			retriableConnector := db.RetriableConnector{
-				Connector: func(string) (*sqlx.DB, error) {
+				Connector: func(db.Config) (*sqlx.DB, error) {
 					return nil, errors.New("banana")
 				},
 			}
 
-			_, err := retriableConnector.GetConnectionPool("whatever")
+			_, err := retriableConnector.GetConnectionPool(db.Config{Host: "whatever"})
 			Expect(err).To(MatchError("banana"))
 		})
 	})
@@ -53,7 +53,7 @@ var _ = Describe("RetriableConnector", func() {
 		It("retries the connection", func() {
 			retriableConnector.MaxRetries = 5
 
-			_, err := retriableConnector.GetConnectionPool("whatever")
+			_, err := retriableConnector.GetConnectionPool(db.Config{Host: "whatever"})
 
 			Expect(numTries).To(Equal(4))
 			Expect(err).NotTo(HaveOccurred())
@@ -62,7 +62,7 @@ var _ = Describe("RetriableConnector", func() {
 		It("waits between retries", func() {
 			retriableConnector.MaxRetries = 5
 
-			_, err := retriableConnector.GetConnectionPool("whatever")
+			_, err := retriableConnector.GetConnectionPool(db.Config{Host: "whatever"})
 			Expect(err).To(Succeed())
 
 			Expect(sleeper.SleepCallCount()).To(Equal(3))
@@ -74,12 +74,12 @@ var _ = Describe("RetriableConnector", func() {
 		Context("when max retries have occurred", func() {
 			It("stops retrying and returns the last error", func() {
 				retriableConnector.MaxRetries = 10
-				retriableConnector.Connector = func(string) (*sqlx.DB, error) {
+				retriableConnector.Connector = func(db.Config) (*sqlx.DB, error) {
 					numTries++
 					return nil, db.RetriableError{Inner: errors.New("welp")}
 				}
 
-				_, err := retriableConnector.GetConnectionPool("whatever")
+				_, err := retriableConnector.GetConnectionPool(db.Config{Host: "whatever"})
 				Expect(err).To(MatchError(db.RetriableError{Inner: errors.New("welp")}))
 
 				Eventually(numTries).Should(Equal(10))

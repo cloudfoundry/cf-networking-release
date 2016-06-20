@@ -19,18 +19,18 @@ func (sf SleeperFunc) Sleep(duration time.Duration) {
 }
 
 type RetriableConnector struct {
-	Connector     func(databaseConfig string) (*sqlx.DB, error)
+	Connector     func(Config) (*sqlx.DB, error)
 	Sleeper       sleeper
 	RetryInterval time.Duration
 	MaxRetries    int
 }
 
-func (r *RetriableConnector) GetConnectionPool(databaseConfig string) (*sqlx.DB, error) {
+func (r *RetriableConnector) GetConnectionPool(dbConfig Config) (*sqlx.DB, error) {
 	var attempts int
 	for {
 		attempts++
 
-		db, err := r.Connector(databaseConfig)
+		db, err := r.Connector(dbConfig)
 		if err == nil {
 			return db, nil
 		}
