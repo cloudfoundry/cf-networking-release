@@ -21,6 +21,7 @@ var _ = Describe("Acceptance", func() {
 		session       *gexec.Session
 		conf          config.Config
 		address       string
+		client        *http.Client
 		mockUAAServer *httptest.Server
 		testDatabase  *testsupport.TestDatabase
 	)
@@ -30,6 +31,7 @@ var _ = Describe("Acceptance", func() {
 	}
 
 	BeforeEach(func() {
+		client = http.DefaultClient
 		mockUAAServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Path == "/check_token" {
 				if r.Header["Authorization"][0] == "Basic dGVzdDp0ZXN0" {
@@ -118,7 +120,6 @@ var _ = Describe("Acceptance", func() {
 		})
 
 		It("has a whoami endpoint", func() {
-			client := &http.Client{}
 			tokenString := "valid-token"
 			req, err := http.NewRequest("GET", fmt.Sprintf("http://%s:%d/networking/v0/external/whoami", conf.ListenHost, conf.ListenPort), nil)
 			Expect(err).NotTo(HaveOccurred())
@@ -136,7 +137,6 @@ var _ = Describe("Acceptance", func() {
 	Describe("adding policies", func() {
 		Context("when the request is missing an Authorization header", func() {
 			It("responds with 401", func() {
-				client := &http.Client{}
 				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
 				req, err := http.NewRequest("POST", fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort), body)
 				Expect(err).NotTo(HaveOccurred())
@@ -152,7 +152,6 @@ var _ = Describe("Acceptance", func() {
 
 		Context("when the authorization token is invalid", func() {
 			It("responds with 403", func() {
-				client := &http.Client{}
 				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
 				req, err := http.NewRequest("POST", fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort), body)
 				Expect(err).NotTo(HaveOccurred())
@@ -169,7 +168,6 @@ var _ = Describe("Acceptance", func() {
 
 		Context("when the user is authorized", func() {
 			It("responds with 200 and a body of {} and we can see it in the list", func() {
-				client := &http.Client{}
 				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
 				req, err := http.NewRequest("POST", fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort), body)
 				Expect(err).NotTo(HaveOccurred())
@@ -198,7 +196,6 @@ var _ = Describe("Acceptance", func() {
 	Describe("listing policies", func() {
 		Context("when the request is missing an Authorization header", func() {
 			It("responds with 401", func() {
-				client := &http.Client{}
 				req, err := http.NewRequest("GET", fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort), nil)
 				Expect(err).NotTo(HaveOccurred())
 
@@ -213,7 +210,6 @@ var _ = Describe("Acceptance", func() {
 
 		Context("when the authorization token is invalid", func() {
 			It("responds with 403", func() {
-				client := &http.Client{}
 				req, err := http.NewRequest("GET", fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort), nil)
 				Expect(err).NotTo(HaveOccurred())
 				req.Header.Set("Authorization", "Bearer bad-token")
@@ -229,7 +225,6 @@ var _ = Describe("Acceptance", func() {
 
 		Context("when providing a list of ids as a query parameter", func() {
 			It("responds with a 200 and lists all policies which contain one of those ids", func() {
-				client := &http.Client{}
 				body := strings.NewReader(`{ "policies": [
 				 {"source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "port": 8080 } },
 				 {"source": { "id": "app3" }, "destination": { "id": "app1", "protocol": "tcp", "port": 9999 } },
@@ -266,7 +261,6 @@ var _ = Describe("Acceptance", func() {
 	Describe("deleting policies", func() {
 		Context("when the request is missing an Authorization header", func() {
 			It("responds with 401", func() {
-				client := &http.Client{}
 				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
 				req, err := http.NewRequest("DELETE", fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort), body)
 				Expect(err).NotTo(HaveOccurred())
@@ -282,7 +276,6 @@ var _ = Describe("Acceptance", func() {
 
 		Context("when the authorization token is invalid", func() {
 			It("responds with 403", func() {
-				client := &http.Client{}
 				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
 				req, err := http.NewRequest("DELETE", fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort), body)
 				Expect(err).NotTo(HaveOccurred())
@@ -299,7 +292,6 @@ var _ = Describe("Acceptance", func() {
 
 		Context("when the user is authorized", func() {
 			BeforeEach(func() {
-				client := &http.Client{}
 				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
 				req, err := http.NewRequest("POST", fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort), body)
 				Expect(err).NotTo(HaveOccurred())
@@ -313,38 +305,47 @@ var _ = Describe("Acceptance", func() {
 				Expect(responseString).To(MatchJSON("{}"))
 			})
 
-			It("responds with 200 and a body of {} and we can see it is removed from the list", func() {
-				client := &http.Client{}
-				req, err := http.NewRequest("GET", fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort), nil)
-				Expect(err).NotTo(HaveOccurred())
-				req.Header.Set("Authorization", "Bearer valid-token")
-				resp, err := client.Do(req)
-				Expect(err).NotTo(HaveOccurred())
+			Context("when all of the deletes succeed", func() {
+				It("responds with 200 and a body of {} and we can see it is removed from the list", func() {
+					body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
+					req, err := http.NewRequest("DELETE", fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort), body)
+					Expect(err).NotTo(HaveOccurred())
+					req.Header.Set("Authorization", "Bearer valid-token")
+					resp, err := client.Do(req)
+					Expect(err).NotTo(HaveOccurred())
 
-				Expect(resp.StatusCode).To(Equal(http.StatusOK))
-				responseString, err := ioutil.ReadAll(resp.Body)
-				Expect(responseString).To(MatchJSON(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`))
+					Expect(resp.StatusCode).To(Equal(http.StatusOK))
+					responseString, err := ioutil.ReadAll(resp.Body)
+					Expect(responseString).To(MatchJSON(`{}`))
 
-				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
-				req, err = http.NewRequest("DELETE", fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort), body)
-				Expect(err).NotTo(HaveOccurred())
-				req.Header.Set("Authorization", "Bearer valid-token")
-				resp, err = client.Do(req)
-				Expect(err).NotTo(HaveOccurred())
+					req, err = http.NewRequest("GET", fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort), nil)
+					Expect(err).NotTo(HaveOccurred())
+					req.Header.Set("Authorization", "Bearer valid-token")
+					resp, err = client.Do(req)
+					Expect(err).NotTo(HaveOccurred())
 
-				Expect(resp.StatusCode).To(Equal(http.StatusOK))
-				responseString, err = ioutil.ReadAll(resp.Body)
-				Expect(responseString).To(MatchJSON(`{}`))
+					Expect(resp.StatusCode).To(Equal(http.StatusOK))
+					responseString, err = ioutil.ReadAll(resp.Body)
+					Expect(responseString).To(MatchJSON(`{ "policies": [] }`))
+				})
+			})
 
-				req, err = http.NewRequest("GET", fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort), nil)
-				Expect(err).NotTo(HaveOccurred())
-				req.Header.Set("Authorization", "Bearer valid-token")
-				resp, err = client.Do(req)
-				Expect(err).NotTo(HaveOccurred())
+			Context("when one of the policies to delete does not exist", func() {
+				It("responds with status 200", func() {
+					body := strings.NewReader(`{ "policies": [ 
+						{"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } },
+						{"source": { "id": "some-non-existent-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } }
+					] }`)
+					req, err := http.NewRequest("DELETE", fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort), body)
+					Expect(err).NotTo(HaveOccurred())
+					req.Header.Set("Authorization", "Bearer valid-token")
+					resp, err := client.Do(req)
+					Expect(err).NotTo(HaveOccurred())
 
-				Expect(resp.StatusCode).To(Equal(http.StatusOK))
-				responseString, err = ioutil.ReadAll(resp.Body)
-				Expect(responseString).To(MatchJSON(`{ "policies": [] }`))
+					Expect(resp.StatusCode).To(Equal(http.StatusOK))
+					responseString, err := ioutil.ReadAll(resp.Body)
+					Expect(responseString).To(MatchJSON(`{}`))
+				})
 			})
 		})
 	})

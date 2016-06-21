@@ -387,123 +387,219 @@ var _ = Describe("Store", func() {
 			}}))
 		})
 
-		Context("when a transaction create fails", func() {
-			var err error
-
-			BeforeEach(func() {
-				mockDb.BeginxReturns(nil, errors.New("some-db-error"))
-				dataStore, err = store.New(mockDb, group, destination, policy)
-				Expect(err).NotTo(HaveOccurred())
-			})
-
-			It("returns an error", func() {
-				err = dataStore.Delete(nil)
-				Expect(err).To(MatchError("begin transaction: some-db-error"))
-			})
-		})
-
-		Context("when getting the source id fails", func() {
+		Context("when an error occurs", func() {
 			var fakeGroup *fakes.GroupRepo
-			var err error
-
-			BeforeEach(func() {
-				fakeGroup = &fakes.GroupRepo{}
-				fakeGroup.GetIDReturns(-1, errors.New("some-get-error"))
-
-				dataStore, err = store.New(realDb, fakeGroup, destination, policy)
-				Expect(err).NotTo(HaveOccurred())
-			})
-
-			It("returns a error", func() {
-				err = dataStore.Delete([]models.Policy{{
-					Source: models.Source{ID: "some-app-guid"},
-					Destination: models.Destination{
-						ID:       "some-other-app-guid",
-						Protocol: "tcp",
-						Port:     8080,
-					},
-				}})
-				Expect(err).To(MatchError("getting source id: some-get-error"))
-			})
-		})
-
-		Context("when getting the destination group id fails", func() {
-			var fakeGroup *fakes.GroupRepo
-			var err error
-
-			BeforeEach(func() {
-				fakeGroup = &fakes.GroupRepo{}
-				fakeGroup.GetIDStub = func(store.Transaction, string) (int, error) {
-					if fakeGroup.GetIDCallCount() > 1 {
-						return -1, errors.New("some-get-error")
-					}
-					return 0, nil
-				}
-
-				dataStore, err = store.New(realDb, fakeGroup, destination, policy)
-				Expect(err).NotTo(HaveOccurred())
-			})
-
-			It("returns a error", func() {
-				err = dataStore.Delete([]models.Policy{{
-					Source: models.Source{ID: "some-app-guid"},
-					Destination: models.Destination{
-						ID:       "some-other-app-guid",
-						Protocol: "tcp",
-						Port:     8080,
-					},
-				}})
-				Expect(err).To(MatchError("getting destination group id: some-get-error"))
-			})
-		})
-
-		Context("when getting the destination id fails", func() {
 			var fakeDestination *fakes.DestinationRepo
-			var err error
-
-			BeforeEach(func() {
-				fakeDestination = &fakes.DestinationRepo{}
-				fakeDestination.GetIDReturns(-1, errors.New("some-dest-id-get-error"))
-
-				dataStore, err = store.New(realDb, group, fakeDestination, policy)
-				Expect(err).NotTo(HaveOccurred())
-			})
-
-			It("returns a error", func() {
-				err = dataStore.Delete([]models.Policy{{
-					Source: models.Source{ID: "some-app-guid"},
-					Destination: models.Destination{
-						ID:       "some-other-app-guid",
-						Protocol: "tcp",
-						Port:     8080,
-					},
-				}})
-				Expect(err).To(MatchError("getting destination id: some-dest-id-get-error"))
-			})
-		})
-
-		Context("when deleting the policy fails", func() {
 			var fakePolicy *fakes.PolicyRepo
 			var err error
 
 			BeforeEach(func() {
+				fakeGroup = &fakes.GroupRepo{}
+				fakeDestination = &fakes.DestinationRepo{}
 				fakePolicy = &fakes.PolicyRepo{}
-				fakePolicy.DeleteReturns(errors.New("some-delete-error"))
-
-				dataStore, err = store.New(realDb, group, destination, fakePolicy)
+				dataStore, err = store.New(realDb, fakeGroup, fakeDestination, fakePolicy)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
-			It("returns a error", func() {
-				err = dataStore.Delete([]models.Policy{{
-					Source: models.Source{ID: "some-app-guid"},
-					Destination: models.Destination{
-						ID:       "some-other-app-guid",
-						Protocol: "tcp",
-						Port:     8080,
-					},
-				}})
-				Expect(err).To(MatchError("deleting policy: some-delete-error"))
+			Context("when a transaction create fails", func() {
+				var err error
+
+				BeforeEach(func() {
+					mockDb.BeginxReturns(nil, errors.New("some-db-error"))
+					dataStore, err = store.New(mockDb, group, destination, policy)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("returns an error", func() {
+					err = dataStore.Delete(nil)
+					Expect(err).To(MatchError("begin transaction: some-db-error"))
+				})
+			})
+
+			Context("when getting the source id fails", func() {
+				Context("when the error is because the source does not exist", func() {
+					BeforeEach(func() {
+						fakeGroup.GetIDStub = func(store.Transaction, string) (int, error) {
+							if fakeGroup.GetIDCallCount() == 1 {
+								return -1, sql.ErrNoRows
+							}
+							return 0, nil
+						}
+					})
+
+					It("swallows the error and continues", func() {
+						err = dataStore.Delete([]models.Policy{
+							models.Policy{Source: models.Source{ID: "0"}},
+							models.Policy{Source: models.Source{ID: "apple"}, Destination: models.Destination{ID: "banana"}},
+						})
+						Expect(err).NotTo(HaveOccurred())
+						Expect(fakeGroup.GetIDCallCount()).To(Equal(3))
+
+						_, call0SourceID := fakeGroup.GetIDArgsForCall(0)
+						Expect(call0SourceID).To(Equal("0"))
+
+						_, call1SourceID := fakeGroup.GetIDArgsForCall(1)
+						Expect(call1SourceID).To(Equal("apple"))
+
+						_, call2SourceID := fakeGroup.GetIDArgsForCall(2)
+						Expect(call2SourceID).To(Equal("banana"))
+					})
+				})
+
+				Context("when the error is for any other reason", func() {
+					BeforeEach(func() {
+						fakeGroup.GetIDReturns(-1, errors.New("some-get-error"))
+					})
+					It("returns the error", func() {
+						err = dataStore.Delete([]models.Policy{{
+							Source: models.Source{ID: "some-app-guid"},
+							Destination: models.Destination{
+								ID:       "some-other-app-guid",
+								Protocol: "tcp",
+								Port:     8080,
+							},
+						}})
+						Expect(err).To(MatchError("getting source id: some-get-error"))
+					})
+				})
+			})
+
+			Context("when getting the destination group id fails", func() {
+				Context("when the error is because the destination group does not exist", func() {
+					BeforeEach(func() {
+						fakeGroup.GetIDStub = func(store.Transaction, string) (int, error) {
+							if fakeGroup.GetIDCallCount() == 2 {
+								return -1, sql.ErrNoRows
+							}
+							return 0, nil
+						}
+					})
+
+					It("swallows the error and continues", func() {
+						err = dataStore.Delete([]models.Policy{
+							models.Policy{Source: models.Source{ID: "peach"}, Destination: models.Destination{ID: "pear"}},
+							models.Policy{Source: models.Source{ID: "apple"}, Destination: models.Destination{ID: "banana"}},
+						})
+						Expect(err).NotTo(HaveOccurred())
+						Expect(fakeGroup.GetIDCallCount()).To(Equal(4))
+
+						_, call0SourceID := fakeGroup.GetIDArgsForCall(0)
+						Expect(call0SourceID).To(Equal("peach"))
+
+						_, call1SourceID := fakeGroup.GetIDArgsForCall(1)
+						Expect(call1SourceID).To(Equal("pear"))
+
+						_, call2SourceID := fakeGroup.GetIDArgsForCall(2)
+						Expect(call2SourceID).To(Equal("apple"))
+
+						_, call3SourceID := fakeGroup.GetIDArgsForCall(3)
+						Expect(call3SourceID).To(Equal("banana"))
+
+						Expect(fakeDestination.GetIDCallCount()).To(Equal(1))
+					})
+				})
+
+				Context("when the error is for any other reason", func() {
+					BeforeEach(func() {
+						fakeGroup.GetIDStub = func(store.Transaction, string) (int, error) {
+							if fakeGroup.GetIDCallCount() > 1 {
+								return -1, errors.New("some-get-error")
+							}
+							return 0, nil
+						}
+					})
+					It("returns a error", func() {
+						err = dataStore.Delete([]models.Policy{{
+							Source: models.Source{ID: "some-app-guid"},
+							Destination: models.Destination{
+								ID:       "some-other-app-guid",
+								Protocol: "tcp",
+								Port:     8080,
+							},
+						}})
+						Expect(err).To(MatchError("getting destination group id: some-get-error"))
+					})
+				})
+			})
+
+			Context("when getting the destination id fails", func() {
+				Context("when the error is because the destination does not exist", func() {
+					BeforeEach(func() {
+						fakeDestination.GetIDStub = func(store.Transaction, int, int, string) (int, error) {
+							if fakeDestination.GetIDCallCount() == 1 {
+								return -1, sql.ErrNoRows
+							}
+							return 0, nil
+						}
+					})
+
+					It("swallows the error and continues", func() {
+						err = dataStore.Delete([]models.Policy{
+							models.Policy{Source: models.Source{ID: "peach"}, Destination: models.Destination{ID: "pear"}},
+							models.Policy{Source: models.Source{ID: "apple"}, Destination: models.Destination{ID: "banana"}},
+						})
+						Expect(err).NotTo(HaveOccurred())
+						Expect(fakePolicy.DeleteCallCount()).To(Equal(1))
+					})
+				})
+
+				Context("when the error is for any other reason", func() {
+					BeforeEach(func() {
+						fakeDestination.GetIDReturns(-1, errors.New("some-dest-id-get-error"))
+					})
+
+					It("returns a error", func() {
+						err = dataStore.Delete([]models.Policy{{
+							Source: models.Source{ID: "some-app-guid"},
+							Destination: models.Destination{
+								ID:       "some-other-app-guid",
+								Protocol: "tcp",
+								Port:     8080,
+							},
+						}})
+						Expect(err).To(MatchError("getting destination id: some-dest-id-get-error"))
+					})
+				})
+			})
+
+			Context("when deleting the policy fails", func() {
+				Context("when the error is because the policy does not exist", func() {
+					BeforeEach(func() {
+						fakePolicy.DeleteStub = func(store.Transaction, int, int) error {
+							if fakePolicy.DeleteCallCount() == 1 {
+								return sql.ErrNoRows
+							}
+							return nil
+						}
+					})
+
+					It("swallows the error and continues", func() {
+						err = dataStore.Delete([]models.Policy{
+							models.Policy{Source: models.Source{ID: "peach"}, Destination: models.Destination{ID: "pear"}},
+							models.Policy{Source: models.Source{ID: "apple"}, Destination: models.Destination{ID: "banana"}},
+						})
+						Expect(err).NotTo(HaveOccurred())
+						Expect(fakePolicy.DeleteCallCount()).To(Equal(2))
+					})
+				})
+
+				Context("when the error is for any other reason", func() {
+					BeforeEach(func() {
+						fakePolicy.DeleteReturns(errors.New("some-delete-error"))
+					})
+
+					It("returns a error", func() {
+						err = dataStore.Delete([]models.Policy{{
+							Source: models.Source{ID: "some-app-guid"},
+							Destination: models.Destination{
+								ID:       "some-other-app-guid",
+								Protocol: "tcp",
+								Port:     8080,
+							},
+						}})
+						Expect(err).To(MatchError("deleting policy: some-delete-error"))
+					})
+				})
 			})
 		})
 	})

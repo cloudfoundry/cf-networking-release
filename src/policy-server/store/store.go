@@ -155,22 +155,38 @@ func (s *store) Delete(policies []models.Policy) error {
 	for _, p := range policies {
 		sourceGroupID, err := s.group.GetID(tx, p.Source.ID)
 		if err != nil {
-			return rollback(tx, fmt.Errorf("getting source id: %s", err))
+			if err == sql.ErrNoRows {
+				continue
+			} else {
+				return rollback(tx, fmt.Errorf("getting source id: %s", err))
+			}
 		}
 
 		destGroupID, err := s.group.GetID(tx, p.Destination.ID)
 		if err != nil {
-			return rollback(tx, fmt.Errorf("getting destination group id: %s", err))
+			if err == sql.ErrNoRows {
+				continue
+			} else {
+				return rollback(tx, fmt.Errorf("getting destination group id: %s", err))
+			}
 		}
 
 		destID, err := s.destination.GetID(tx, destGroupID, p.Destination.Port, p.Destination.Protocol)
 		if err != nil {
-			return rollback(tx, fmt.Errorf("getting destination id: %s", err))
+			if err == sql.ErrNoRows {
+				continue
+			} else {
+				return rollback(tx, fmt.Errorf("getting destination id: %s", err))
+			}
 		}
 
 		err = s.policy.Delete(tx, sourceGroupID, destID)
 		if err != nil {
-			return rollback(tx, fmt.Errorf("deleting policy: %s", err))
+			if err == sql.ErrNoRows {
+				continue
+			} else {
+				return rollback(tx, fmt.Errorf("deleting policy: %s", err))
+			}
 		}
 	}
 
