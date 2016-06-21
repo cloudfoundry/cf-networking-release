@@ -39,19 +39,34 @@ var _ = Describe("policy server tests", func() {
 			Expect(whoamiOut).To(MatchJSON(fmt.Sprintf(`{"user_name":%q}`, testConfig.TestUser)))
 		})
 
-		It("allows users to post and get policies", func() {
+		It("allows users to post, get and delete policies", func() {
 			appGuid := rand.Int()
-			policyJSON := fmt.Sprintf(`{"policies":[{"source":{"id":"%d"},"destination":{"id":"some-other-app-guid","protocol":"tcp","port":3333}}]}`, appGuid)
-			curlSession := cf.Cf("curl", "-X", "POST", "/networking/v0/external/policies", "-d", "'"+policyJSON+"'").Wait(Timeout_Push)
 
+			policyJSON := fmt.Sprintf(`{"policies":[{"source":{"id":"%d"},"destination":{"id":"some-other-app-guid","protocol":"tcp","port":3333}}]}`, appGuid)
+
+			By("creating a new policy")
+			curlSession := cf.Cf("curl", "-X", "POST", "/networking/v0/external/policies", "-d", "'"+policyJSON+"'").Wait(Timeout_Push)
 			Expect(curlSession.Wait(Timeout_Push)).To(gexec.Exit(0))
 			postPolicyOut := string(curlSession.Out.Contents())
 			Expect(postPolicyOut).To(MatchJSON(`{}`))
 
+			By("getting the new policy")
 			curlSession = cf.Cf("curl", "-X", "GET", fmt.Sprintf("/networking/v0/external/policies?id=%d", appGuid)).Wait(Timeout_Push)
 			Expect(curlSession.Wait(Timeout_Push)).To(gexec.Exit(0))
 			getPolicyOut := string(curlSession.Out.Contents())
 			Expect(getPolicyOut).To(MatchJSON(policyJSON))
+
+			By("deleting the policy")
+			curlSession = cf.Cf("curl", "-X", "DELETE", "/networking/v0/external/policies", "-d", "'"+policyJSON+"'").Wait(Timeout_Push)
+			Expect(curlSession.Wait(Timeout_Push)).To(gexec.Exit(0))
+			deletePolicyOut := string(curlSession.Out.Contents())
+			Expect(deletePolicyOut).To(MatchJSON(`{}`))
+
+			By("checking that the policy no longer exists")
+			curlSession = cf.Cf("curl", "-X", "GET", fmt.Sprintf("/networking/v0/external/policies?id=%d", appGuid)).Wait(Timeout_Push)
+			Expect(curlSession.Wait(Timeout_Push)).To(gexec.Exit(0))
+			getPolicyOut = string(curlSession.Out.Contents())
+			Expect(getPolicyOut).To(MatchJSON(`{ "policies": [] }`))
 		})
 	})
 
