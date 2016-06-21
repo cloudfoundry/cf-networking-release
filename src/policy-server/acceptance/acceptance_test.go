@@ -263,4 +263,89 @@ var _ = Describe("Acceptance", func() {
 			})
 		})
 	})
+	Describe("deleting policies", func() {
+		Context("when the request is missing an Authorization header", func() {
+			It("responds with 401", func() {
+				client := &http.Client{}
+				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
+				req, err := http.NewRequest("DELETE", fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort), body)
+				Expect(err).NotTo(HaveOccurred())
+
+				resp, err := client.Do(req)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(resp.StatusCode).To(Equal(http.StatusUnauthorized))
+				responseString, err := ioutil.ReadAll(resp.Body)
+				Expect(responseString).To(MatchJSON(`{ "error": "missing authorization header"}`))
+			})
+		})
+
+		Context("when the authorization token is invalid", func() {
+			It("responds with 403", func() {
+				client := &http.Client{}
+				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
+				req, err := http.NewRequest("DELETE", fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort), body)
+				Expect(err).NotTo(HaveOccurred())
+				req.Header.Set("Authorization", "Bearer bad-token")
+
+				resp, err := client.Do(req)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
+				responseString, err := ioutil.ReadAll(resp.Body)
+				Expect(responseString).To(MatchJSON(`{ "error": "failed to verify token with uaa" }`))
+			})
+		})
+
+		Context("when the user is authorized", func() {
+			BeforeEach(func() {
+				client := &http.Client{}
+				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
+				req, err := http.NewRequest("POST", fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort), body)
+				Expect(err).NotTo(HaveOccurred())
+				req.Header.Set("Authorization", "Bearer valid-token")
+
+				resp, err := client.Do(req)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
+				responseString, err := ioutil.ReadAll(resp.Body)
+				Expect(responseString).To(MatchJSON("{}"))
+			})
+
+			It("responds with 200 and a body of {} and we can see it is removed from the list", func() {
+				client := &http.Client{}
+				req, err := http.NewRequest("GET", fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort), nil)
+				Expect(err).NotTo(HaveOccurred())
+				req.Header.Set("Authorization", "Bearer valid-token")
+				resp, err := client.Do(req)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
+				responseString, err := ioutil.ReadAll(resp.Body)
+				Expect(responseString).To(MatchJSON(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`))
+
+				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
+				req, err = http.NewRequest("DELETE", fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort), body)
+				Expect(err).NotTo(HaveOccurred())
+				req.Header.Set("Authorization", "Bearer valid-token")
+				resp, err = client.Do(req)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
+				responseString, err = ioutil.ReadAll(resp.Body)
+				Expect(responseString).To(MatchJSON(`{}`))
+
+				req, err = http.NewRequest("GET", fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort), nil)
+				Expect(err).NotTo(HaveOccurred())
+				req.Header.Set("Authorization", "Bearer valid-token")
+				resp, err = client.Do(req)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
+				responseString, err = ioutil.ReadAll(resp.Body)
+				Expect(responseString).To(MatchJSON(`{ "policies": [] }`))
+			})
+		})
+	})
 })

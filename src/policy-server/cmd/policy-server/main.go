@@ -93,15 +93,21 @@ func main() {
 	}
 
 	createPolicyHandler := &handlers.PoliciesCreate{
+		Logger:      logger.Session("policies-create"),
 		Store:       dataStore,
-		Logger:      lager.NewLogger("policy_server"),
 		Unmarshaler: unmarshaler,
 		Marshaler:   marshal.MarshalFunc(json.Marshal),
 	}
 
+	deletePolicyHandler := &handlers.PoliciesDelete{
+		Logger:      logger.Session("policies-create"),
+		Store:       dataStore,
+		Unmarshaler: unmarshaler,
+	}
+
 	policiesIndexHandler := &handlers.PoliciesIndex{
+		Logger:    logger.Session("policies-index"),
 		Store:     dataStore,
-		Logger:    lager.NewLogger("policy_server"),
 		Marshaler: marshal.MarshalFunc(json.Marshal),
 	}
 
@@ -110,12 +116,14 @@ func main() {
 		{Name: "uptime", Method: "GET", Path: "/networking"},
 		{Name: "whoami", Method: "GET", Path: "/networking/v0/external/whoami"},
 		{Name: "create_policies", Method: "POST", Path: "/networking/v0/external/policies"},
+		{Name: "delete_policies", Method: "DELETE", Path: "/networking/v0/external/policies"},
 		{Name: "policies_index", Method: "GET", Path: "/networking/v0/external/policies"},
 	}
 
 	handlers := rata.Handlers{
 		"uptime":          uptimeHandler,
 		"create_policies": authenticator.Wrap(createPolicyHandler),
+		"delete_policies": authenticator.Wrap(deletePolicyHandler),
 		"policies_index":  authenticator.Wrap(policiesIndexHandler),
 		"whoami":          whoamiHandler,
 	}

@@ -23,6 +23,14 @@ type Store struct {
 		result1 []models.Policy
 		result2 error
 	}
+	DeleteStub        func([]models.Policy) error
+	deleteMutex       sync.RWMutex
+	deleteArgsForCall []struct {
+		arg1 []models.Policy
+	}
+	deleteReturns struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -91,6 +99,44 @@ func (fake *Store) AllReturns(result1 []models.Policy, result2 error) {
 	}{result1, result2}
 }
 
+func (fake *Store) Delete(arg1 []models.Policy) error {
+	var arg1Copy []models.Policy
+	if arg1 != nil {
+		arg1Copy = make([]models.Policy, len(arg1))
+		copy(arg1Copy, arg1)
+	}
+	fake.deleteMutex.Lock()
+	fake.deleteArgsForCall = append(fake.deleteArgsForCall, struct {
+		arg1 []models.Policy
+	}{arg1Copy})
+	fake.recordInvocation("Delete", []interface{}{arg1Copy})
+	fake.deleteMutex.Unlock()
+	if fake.DeleteStub != nil {
+		return fake.DeleteStub(arg1)
+	} else {
+		return fake.deleteReturns.result1
+	}
+}
+
+func (fake *Store) DeleteCallCount() int {
+	fake.deleteMutex.RLock()
+	defer fake.deleteMutex.RUnlock()
+	return len(fake.deleteArgsForCall)
+}
+
+func (fake *Store) DeleteArgsForCall(i int) []models.Policy {
+	fake.deleteMutex.RLock()
+	defer fake.deleteMutex.RUnlock()
+	return fake.deleteArgsForCall[i].arg1
+}
+
+func (fake *Store) DeleteReturns(result1 error) {
+	fake.DeleteStub = nil
+	fake.deleteReturns = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *Store) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -98,6 +144,8 @@ func (fake *Store) Invocations() map[string][][]interface{} {
 	defer fake.createMutex.RUnlock()
 	fake.allMutex.RLock()
 	defer fake.allMutex.RUnlock()
+	fake.deleteMutex.RLock()
+	defer fake.deleteMutex.RUnlock()
 	return fake.invocations
 }
 

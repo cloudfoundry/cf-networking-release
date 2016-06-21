@@ -55,6 +55,7 @@ var schemas = map[string][]string{
 type Store interface {
 	Create([]models.Policy) error
 	All() ([]models.Policy, error)
+	Delete([]models.Policy) error
 }
 
 //go:generate counterfeiter -o ../fakes/db.go --fake-name Db . db
@@ -81,12 +82,12 @@ var RecordNotFoundError = errors.New("record not found")
 
 type store struct {
 	conn        db
-	group       GroupCreator
-	destination DestinationCreator
-	policy      PolicyCreator
+	group       GroupRepo
+	destination DestinationRepo
+	policy      PolicyRepo
 }
 
-func New(dbConnectionPool db, g GroupCreator, d DestinationCreator, p PolicyCreator) (Store, error) {
+func New(dbConnectionPool db, g GroupRepo, d DestinationRepo, p PolicyRepo) (Store, error) {
 	err := setupTables(dbConnectionPool)
 	if err != nil {
 		return nil, fmt.Errorf("setting up tables: %s", err)
@@ -139,7 +140,43 @@ func (s *store) Create(policies []models.Policy) error {
 
 	err = tx.Commit()
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("commit transaction: %s", err) // untested
+	}
+
+	return nil
+}
+
+func (s *store) Delete(policies []models.Policy) error {
+	tx, err := s.conn.Beginx()
+	if err != nil {
+		return fmt.Errorf("begin transaction: %s", err)
+	}
+
+	for _, p := range policies {
+		sourceGroupID, err := s.group.GetID(tx, p.Source.ID)
+		if err != nil {
+			return rollback(tx, fmt.Errorf("getting source id: %s", err))
+		}
+
+		destGroupID, err := s.group.GetID(tx, p.Destination.ID)
+		if err != nil {
+			return rollback(tx, fmt.Errorf("getting destination group id: %s", err))
+		}
+
+		destID, err := s.destination.GetID(tx, destGroupID, p.Destination.Port, p.Destination.Protocol)
+		if err != nil {
+			return rollback(tx, fmt.Errorf("getting destination id: %s", err))
+		}
+
+		err = s.policy.Delete(tx, sourceGroupID, destID)
+		if err != nil {
+			return rollback(tx, fmt.Errorf("deleting policy: %s", err))
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return fmt.Errorf("commit transaction: %s", err) // untested
 	}
 
 	return nil
