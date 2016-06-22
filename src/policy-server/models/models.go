@@ -1,9 +1,5 @@
 package models
 
-type Policies struct {
-	Policies []Policy `json:"policies"`
-}
-
 type Policy struct {
 	Source      Source      `json:"source"`
 	Destination Destination `json:"destination"`

@@ -28,7 +28,9 @@ func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var payload models.Policies
+	var payload struct {
+		Policies []models.Policy `json:"policies"`
+	}
 	err = h.Unmarshaler.Unmarshal(bodyBytes, &payload)
 	if err != nil {
 		h.Logger.Error("unmarshal-failed", err)
