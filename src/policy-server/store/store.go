@@ -25,6 +25,7 @@ var schemas = map[string][]string{
 		PRIMARY KEY (id)
 	);`,
 		`CREATE TABLE IF NOT EXISTS policies (
+		id int NOT NULL AUTO_INCREMENT,
 		group_id int REFERENCES groups(id),
 		destination_id int REFERENCES destinations(id),
 		UNIQUE (group_id, destination_id)
