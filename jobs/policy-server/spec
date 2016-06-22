@@ -53,3 +53,7 @@ properties:
   policy-server.server.database.ssl_mode:
     description: "SSL mode for use in Postgres"
     default: disable
+
+  policy-server.server.tag_length:
+    description: "length in bytes of the packet tags to generate for policy sources and destinations"
+    default: 2
