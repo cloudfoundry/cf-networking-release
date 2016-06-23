@@ -58,6 +58,7 @@ type Store interface {
 	Create([]models.Policy) error
 	All() ([]models.Policy, error)
 	Delete([]models.Policy) error
+	Tags() ([]models.Tag, error)
 }
 
 //go:generate counterfeiter -o ../fakes/db.go --fake-name Db . db
@@ -238,6 +239,32 @@ func (s *store) All() ([]models.Policy, error) {
 	}
 
 	return policies, nil
+}
+
+func (s *store) Tags() ([]models.Tag, error) {
+	tags := []models.Tag{}
+
+	rows, err := s.conn.Query(`SELECT guid, id FROM groups;`)
+	if err != nil {
+		return nil, fmt.Errorf("listing tags: %s", err)
+	}
+
+	for rows.Next() {
+		var id string
+		var tag int
+
+		err = rows.Scan(&id, &tag)
+		if err != nil {
+			return nil, fmt.Errorf("listing tags: %s", err)
+		}
+
+		tags = append(tags, models.Tag{
+			ID:  id,
+			Tag: fmt.Sprintf("%04X", tag),
+		})
+	}
+
+	return tags, nil
 }
 
 func setupTables(dbConnectionPool db) error {

@@ -341,6 +341,77 @@ var _ = Describe("Store", func() {
 		})
 	})
 
+	Describe("Tags", func() {
+		BeforeEach(func() {
+			policies := []models.Policy{{
+				Source: models.Source{"some-app-guid"},
+				Destination: models.Destination{
+					ID:       "some-other-app-guid",
+					Protocol: "tcp",
+					Port:     8080,
+				},
+			}, {
+				Source: models.Source{"some-app-guid"},
+				Destination: models.Destination{
+					ID:       "another-app-guid",
+					Protocol: "udp",
+					Port:     5555,
+				},
+			}}
+
+			err := dataStore.Create(policies)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("returns all tags that have been added", func() {
+			tags, err := dataStore.Tags()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(tags).To(ConsistOf([]models.Tag{
+				{ID: "some-app-guid", Tag: "0001"},
+				{ID: "some-other-app-guid", Tag: "0002"},
+				{ID: "another-app-guid", Tag: "0003"},
+			}))
+		})
+
+		Context("when the db operation fails", func() {
+			BeforeEach(func() {
+				mockDb.QueryReturns(nil, errors.New("some query error"))
+			})
+
+			It("should return a sensible error", func() {
+				store, err := store.New(mockDb, group, destination, policy)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = store.Tags()
+				Expect(err).To(MatchError("listing tags: some query error"))
+			})
+		})
+
+		Context("when the query result parsing fails", func() {
+			var rows *sql.Rows
+
+			BeforeEach(func() {
+				var err error
+				rows, err = realDb.Query(`select id from groups`)
+				Expect(err).NotTo(HaveOccurred())
+
+				mockDb.QueryReturns(rows, nil)
+			})
+
+			AfterEach(func() {
+				rows.Close()
+			})
+
+			It("should return a sensible error", func() {
+				store, err := store.New(mockDb, group, destination, policy)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = store.Tags()
+				Expect(err).To(MatchError(ContainSubstring("listing tags: sql: expected")))
+			})
+		})
+	})
+
 	Describe("Delete", func() {
 		BeforeEach(func() {
 			err := dataStore.Create([]models.Policy{

@@ -256,6 +256,7 @@ var _ = Describe("Acceptance", func() {
 			})
 		})
 	})
+
 	Describe("deleting policies", func() {
 		BeforeEach(func() {
 			body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
@@ -312,6 +313,37 @@ var _ = Describe("Acceptance", func() {
 				responseString, err := ioutil.ReadAll(resp.Body)
 				Expect(responseString).To(MatchJSON(`{}`))
 			})
+		})
+	})
+
+	Describe("listing tags", func() {
+		BeforeEach(func() {
+			body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
+			req, err := http.NewRequest("POST", fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort), body)
+			Expect(err).NotTo(HaveOccurred())
+			req.Header.Set("Authorization", "Bearer valid-token")
+
+			resp, err := client.Do(req)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(resp.StatusCode).To(Equal(http.StatusOK))
+			responseString, err := ioutil.ReadAll(resp.Body)
+			Expect(responseString).To(MatchJSON("{}"))
+		})
+
+		It("returns a list of application guid to tag mapping", func() {
+			req, err := http.NewRequest("GET", fmt.Sprintf("http://%s:%d/networking/v0/external/tags", conf.ListenHost, conf.ListenPort), nil)
+			Expect(err).NotTo(HaveOccurred())
+			req.Header.Set("Authorization", "Bearer valid-token")
+			resp, err := client.Do(req)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(resp.StatusCode).To(Equal(http.StatusOK))
+			responseString, err := ioutil.ReadAll(resp.Body)
+			Expect(responseString).To(MatchJSON(`{ "tags": [
+				{ "id": "some-app-guid", "tag": "0001" },
+				{ "id": "some-other-app-guid", "tag": "0002" }
+			] }`))
 		})
 	})
 })

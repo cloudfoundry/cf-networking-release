@@ -1,9 +1,11 @@
 package acceptance_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"os/exec"
+	"policy-server/models"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	. "github.com/onsi/ginkgo"
@@ -40,9 +42,9 @@ var _ = Describe("policy server tests", func() {
 		})
 
 		It("allows users to post, get and delete policies", func() {
-			appGuid := rand.Int()
+			appGuid := fmt.Sprintf("%x", rand.Int())
 
-			policyJSON := fmt.Sprintf(`{"policies":[{"source":{"id":"%d"},"destination":{"id":"some-other-app-guid","protocol":"tcp","port":3333}}]}`, appGuid)
+			policyJSON := fmt.Sprintf(`{"policies":[{"source":{"id":"%s"},"destination":{"id":"some-other-app-guid","protocol":"tcp","port":3333}}]}`, appGuid)
 
 			By("creating a new policy")
 			curlSession := cf.Cf("curl", "-X", "POST", "/networking/v0/external/policies", "-d", "'"+policyJSON+"'").Wait(Timeout_Push)
@@ -51,10 +53,26 @@ var _ = Describe("policy server tests", func() {
 			Expect(postPolicyOut).To(MatchJSON(`{}`))
 
 			By("getting the new policy")
-			curlSession = cf.Cf("curl", "-X", "GET", fmt.Sprintf("/networking/v0/external/policies?id=%d", appGuid)).Wait(Timeout_Push)
+			curlSession = cf.Cf("curl", "-X", "GET", fmt.Sprintf("/networking/v0/external/policies?id=%s", appGuid)).Wait(Timeout_Push)
 			Expect(curlSession.Wait(Timeout_Push)).To(gexec.Exit(0))
 			getPolicyOut := string(curlSession.Out.Contents())
 			Expect(getPolicyOut).To(MatchJSON(policyJSON))
+
+			By("listing tags")
+			curlSession = cf.Cf("curl", "-X", "GET", fmt.Sprintf("/networking/v0/external/tags")).Wait(Timeout_Push)
+			Expect(curlSession.Wait(Timeout_Push)).To(gexec.Exit(0))
+			var tagsResponse struct {
+				Tags []models.Tag `json:"tags"`
+			}
+			Expect(json.Unmarshal(curlSession.Out.Contents(), &tagsResponse)).To(Succeed())
+			tagsHash := make(map[string]string)
+			for _, tag := range tagsResponse.Tags {
+				tagsHash[tag.ID] = tag.Tag
+			}
+			Expect(tagsHash).To(HaveKey(appGuid))
+			Expect(tagsHash).To(HaveKey("some-other-app-guid"))
+			Expect(tagsHash[appGuid]).NotTo(BeEmpty())
+			Expect(tagsHash["some-other-app-guid"]).NotTo(BeEmpty())
 
 			By("deleting the policy")
 			curlSession = cf.Cf("curl", "-X", "DELETE", "/networking/v0/external/policies", "-d", "'"+policyJSON+"'").Wait(Timeout_Push)
@@ -63,7 +81,7 @@ var _ = Describe("policy server tests", func() {
 			Expect(deletePolicyOut).To(MatchJSON(`{}`))
 
 			By("checking that the policy no longer exists")
-			curlSession = cf.Cf("curl", "-X", "GET", fmt.Sprintf("/networking/v0/external/policies?id=%d", appGuid)).Wait(Timeout_Push)
+			curlSession = cf.Cf("curl", "-X", "GET", fmt.Sprintf("/networking/v0/external/policies?id=%s", appGuid)).Wait(Timeout_Push)
 			Expect(curlSession.Wait(Timeout_Push)).To(gexec.Exit(0))
 			getPolicyOut = string(curlSession.Out.Contents())
 			Expect(getPolicyOut).To(MatchJSON(`{ "policies": [] }`))

@@ -14,3 +14,8 @@ type Destination struct {
 	Protocol string `json:"protocol"`
 	Port     int    `json:"port"`
 }
+
+type Tag struct {
+	ID  string `json:"id"`
+	Tag string `json:"tag"`
+}
