@@ -474,6 +474,28 @@ var _ = Describe("Store", func() {
 			}}))
 		})
 
+		It("deletes the tags if no longer referenced", func() {
+			err := dataStore.Delete([]models.Policy{{
+				Source: models.Source{ID: "some-app-guid"},
+				Destination: models.Destination{
+					ID:       "some-other-app-guid",
+					Protocol: "tcp",
+					Port:     8080,
+				},
+			}})
+			Expect(err).NotTo(HaveOccurred())
+
+			policies, err := dataStore.Tags()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(policies).To(Equal([]models.Tag{{
+				ID:  "another-app-guid",
+				Tag: "000003",
+			}, {
+				ID:  "yet-another-app-guid",
+				Tag: "000004",
+			}}))
+		})
+
 		Context("when an error occurs", func() {
 			var fakeGroup *fakes.GroupRepo
 			var fakeDestination *fakes.DestinationRepo
@@ -686,6 +708,96 @@ var _ = Describe("Store", func() {
 						}})
 						Expect(err).To(MatchError("deleting policy: some-delete-error"))
 					})
+				})
+			})
+
+			Context("when counting policies by destination_id fails", func() {
+				BeforeEach(func() {
+					fakePolicy.CountWhereDestinationIDReturns(0, errors.New("some-dst-count-error"))
+				})
+
+				It("returns a error", func() {
+					err = dataStore.Delete([]models.Policy{{
+						Source: models.Source{ID: "some-app-guid"},
+						Destination: models.Destination{
+							ID:       "some-other-app-guid",
+							Protocol: "tcp",
+							Port:     8080,
+						},
+					}})
+					Expect(err).To(MatchError("counting destination id: some-dst-count-error"))
+				})
+			})
+
+			Context("when deleting a destination fails", func() {
+				BeforeEach(func() {
+					fakeDestination.DeleteReturns(errors.New("some-dst-delete-error"))
+				})
+
+				It("returns a error", func() {
+					err = dataStore.Delete([]models.Policy{{
+						Source: models.Source{ID: "some-app-guid"},
+						Destination: models.Destination{
+							ID:       "some-other-app-guid",
+							Protocol: "tcp",
+							Port:     8080,
+						},
+					}})
+					Expect(err).To(MatchError("deleting destination: some-dst-delete-error"))
+				})
+			})
+
+			Context("when counting policies by group_id fails", func() {
+				BeforeEach(func() {
+					fakePolicy.CountWhereGroupIDReturns(-1, errors.New("some-group-id-count-error"))
+				})
+
+				It("returns a error", func() {
+					err = dataStore.Delete([]models.Policy{{
+						Source: models.Source{ID: "some-app-guid"},
+						Destination: models.Destination{
+							ID:       "some-other-app-guid",
+							Protocol: "tcp",
+							Port:     8080,
+						},
+					}})
+					Expect(err).To(MatchError("deleting group row: some-group-id-count-error"))
+				})
+			})
+
+			Context("when counting destinations by group_id fails", func() {
+				BeforeEach(func() {
+					fakeDestination.CountWhereGroupIDReturns(-1, errors.New("some-dst-count-error"))
+				})
+
+				It("returns a error", func() {
+					err = dataStore.Delete([]models.Policy{{
+						Source: models.Source{ID: "some-app-guid"},
+						Destination: models.Destination{
+							ID:       "some-other-app-guid",
+							Protocol: "tcp",
+							Port:     8080,
+						},
+					}})
+					Expect(err).To(MatchError("deleting group row: some-dst-count-error"))
+				})
+			})
+
+			Context("when deleting the group fails", func() {
+				BeforeEach(func() {
+					fakeGroup.DeleteReturns(errors.New("some-group-delete-error"))
+				})
+
+				It("returns a error", func() {
+					err = dataStore.Delete([]models.Policy{{
+						Source: models.Source{ID: "some-app-guid"},
+						Destination: models.Destination{
+							ID:       "some-other-app-guid",
+							Protocol: "tcp",
+							Port:     8080,
+						},
+					}})
+					Expect(err).To(MatchError("deleting group row: some-group-delete-error"))
 				})
 			})
 		})

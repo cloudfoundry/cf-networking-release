@@ -3,6 +3,7 @@ package store
 //go:generate counterfeiter -o ../fakes/group_repo.go --fake-name GroupRepo . GroupRepo
 type GroupRepo interface {
 	Create(Transaction, string) (int, error)
+	Delete(Transaction, int) error
 	GetID(Transaction, string) (int, error)
 }
 
@@ -24,6 +25,14 @@ func (g *Group) Create(tx Transaction, guid string) (int, error) {
 	}
 
 	return g.GetID(tx, guid)
+}
+
+func (g *Group) Delete(tx Transaction, id int) error {
+	_, err := tx.Exec(
+		tx.Rebind(`DELETE FROM groups WHERE id = ?`),
+		id,
+	)
+	return err
 }
 
 func (g *Group) GetID(tx Transaction, guid string) (int, error) {

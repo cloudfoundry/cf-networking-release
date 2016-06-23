@@ -204,11 +204,53 @@ func (s *store) Delete(policies []models.Policy) error {
 				return rollback(tx, fmt.Errorf("deleting policy: %s", err))
 			}
 		}
+
+		destIDCount, err := s.policy.CountWhereDestinationID(tx, destID)
+		if err != nil {
+			return rollback(tx, fmt.Errorf("counting destination id: %s", err))
+		}
+		if destIDCount == 0 {
+			err = s.destination.Delete(tx, destID)
+			if err != nil {
+				return rollback(tx, fmt.Errorf("deleting destination: %s", err))
+			}
+		}
+
+		err = s.deleteGroupRowIfLast(tx, sourceGroupID)
+		if err != nil {
+			return rollback(tx, fmt.Errorf("deleting group row: %s", err))
+		}
+
+		err = s.deleteGroupRowIfLast(tx, destGroupID)
+		if err != nil {
+			return rollback(tx, fmt.Errorf("deleting group row: %s", err))
+		}
 	}
 
 	err = tx.Commit()
 	if err != nil {
 		return fmt.Errorf("commit transaction: %s", err) // untested
+	}
+
+	return nil
+}
+
+func (s *store) deleteGroupRowIfLast(tx Transaction, group_id int) error {
+	policiesGroupIDCount, err := s.policy.CountWhereGroupID(tx, group_id)
+	if err != nil {
+		return err
+	}
+
+	destinationsGroupIDCount, err := s.destination.CountWhereGroupID(tx, group_id)
+	if err != nil {
+		return err
+	}
+
+	if policiesGroupIDCount == 0 && destinationsGroupIDCount == 0 {
+		err = s.group.Delete(tx, group_id)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

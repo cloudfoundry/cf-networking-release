@@ -17,6 +17,15 @@ type GroupRepo struct {
 		result1 int
 		result2 error
 	}
+	DeleteStub        func(store.Transaction, int) error
+	deleteMutex       sync.RWMutex
+	deleteArgsForCall []struct {
+		arg1 store.Transaction
+		arg2 int
+	}
+	deleteReturns struct {
+		result1 error
+	}
 	GetIDStub        func(store.Transaction, string) (int, error)
 	getIDMutex       sync.RWMutex
 	getIDArgsForCall []struct {
@@ -66,6 +75,40 @@ func (fake *GroupRepo) CreateReturns(result1 int, result2 error) {
 	}{result1, result2}
 }
 
+func (fake *GroupRepo) Delete(arg1 store.Transaction, arg2 int) error {
+	fake.deleteMutex.Lock()
+	fake.deleteArgsForCall = append(fake.deleteArgsForCall, struct {
+		arg1 store.Transaction
+		arg2 int
+	}{arg1, arg2})
+	fake.recordInvocation("Delete", []interface{}{arg1, arg2})
+	fake.deleteMutex.Unlock()
+	if fake.DeleteStub != nil {
+		return fake.DeleteStub(arg1, arg2)
+	} else {
+		return fake.deleteReturns.result1
+	}
+}
+
+func (fake *GroupRepo) DeleteCallCount() int {
+	fake.deleteMutex.RLock()
+	defer fake.deleteMutex.RUnlock()
+	return len(fake.deleteArgsForCall)
+}
+
+func (fake *GroupRepo) DeleteArgsForCall(i int) (store.Transaction, int) {
+	fake.deleteMutex.RLock()
+	defer fake.deleteMutex.RUnlock()
+	return fake.deleteArgsForCall[i].arg1, fake.deleteArgsForCall[i].arg2
+}
+
+func (fake *GroupRepo) DeleteReturns(result1 error) {
+	fake.DeleteStub = nil
+	fake.deleteReturns = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *GroupRepo) GetID(arg1 store.Transaction, arg2 string) (int, error) {
 	fake.getIDMutex.Lock()
 	fake.getIDArgsForCall = append(fake.getIDArgsForCall, struct {
@@ -106,6 +149,8 @@ func (fake *GroupRepo) Invocations() map[string][][]interface{} {
 	defer fake.invocationsMutex.RUnlock()
 	fake.createMutex.RLock()
 	defer fake.createMutex.RUnlock()
+	fake.deleteMutex.RLock()
+	defer fake.deleteMutex.RUnlock()
 	fake.getIDMutex.RLock()
 	defer fake.getIDMutex.RUnlock()
 	return fake.invocations

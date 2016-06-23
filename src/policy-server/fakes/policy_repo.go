@@ -27,6 +27,26 @@ type PolicyRepo struct {
 	deleteReturns struct {
 		result1 error
 	}
+	CountWhereGroupIDStub        func(store.Transaction, int) (int, error)
+	countWhereGroupIDMutex       sync.RWMutex
+	countWhereGroupIDArgsForCall []struct {
+		arg1 store.Transaction
+		arg2 int
+	}
+	countWhereGroupIDReturns struct {
+		result1 int
+		result2 error
+	}
+	CountWhereDestinationIDStub        func(store.Transaction, int) (int, error)
+	countWhereDestinationIDMutex       sync.RWMutex
+	countWhereDestinationIDArgsForCall []struct {
+		arg1 store.Transaction
+		arg2 int
+	}
+	countWhereDestinationIDReturns struct {
+		result1 int
+		result2 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -101,6 +121,76 @@ func (fake *PolicyRepo) DeleteReturns(result1 error) {
 	}{result1}
 }
 
+func (fake *PolicyRepo) CountWhereGroupID(arg1 store.Transaction, arg2 int) (int, error) {
+	fake.countWhereGroupIDMutex.Lock()
+	fake.countWhereGroupIDArgsForCall = append(fake.countWhereGroupIDArgsForCall, struct {
+		arg1 store.Transaction
+		arg2 int
+	}{arg1, arg2})
+	fake.recordInvocation("CountWhereGroupID", []interface{}{arg1, arg2})
+	fake.countWhereGroupIDMutex.Unlock()
+	if fake.CountWhereGroupIDStub != nil {
+		return fake.CountWhereGroupIDStub(arg1, arg2)
+	} else {
+		return fake.countWhereGroupIDReturns.result1, fake.countWhereGroupIDReturns.result2
+	}
+}
+
+func (fake *PolicyRepo) CountWhereGroupIDCallCount() int {
+	fake.countWhereGroupIDMutex.RLock()
+	defer fake.countWhereGroupIDMutex.RUnlock()
+	return len(fake.countWhereGroupIDArgsForCall)
+}
+
+func (fake *PolicyRepo) CountWhereGroupIDArgsForCall(i int) (store.Transaction, int) {
+	fake.countWhereGroupIDMutex.RLock()
+	defer fake.countWhereGroupIDMutex.RUnlock()
+	return fake.countWhereGroupIDArgsForCall[i].arg1, fake.countWhereGroupIDArgsForCall[i].arg2
+}
+
+func (fake *PolicyRepo) CountWhereGroupIDReturns(result1 int, result2 error) {
+	fake.CountWhereGroupIDStub = nil
+	fake.countWhereGroupIDReturns = struct {
+		result1 int
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *PolicyRepo) CountWhereDestinationID(arg1 store.Transaction, arg2 int) (int, error) {
+	fake.countWhereDestinationIDMutex.Lock()
+	fake.countWhereDestinationIDArgsForCall = append(fake.countWhereDestinationIDArgsForCall, struct {
+		arg1 store.Transaction
+		arg2 int
+	}{arg1, arg2})
+	fake.recordInvocation("CountWhereDestinationID", []interface{}{arg1, arg2})
+	fake.countWhereDestinationIDMutex.Unlock()
+	if fake.CountWhereDestinationIDStub != nil {
+		return fake.CountWhereDestinationIDStub(arg1, arg2)
+	} else {
+		return fake.countWhereDestinationIDReturns.result1, fake.countWhereDestinationIDReturns.result2
+	}
+}
+
+func (fake *PolicyRepo) CountWhereDestinationIDCallCount() int {
+	fake.countWhereDestinationIDMutex.RLock()
+	defer fake.countWhereDestinationIDMutex.RUnlock()
+	return len(fake.countWhereDestinationIDArgsForCall)
+}
+
+func (fake *PolicyRepo) CountWhereDestinationIDArgsForCall(i int) (store.Transaction, int) {
+	fake.countWhereDestinationIDMutex.RLock()
+	defer fake.countWhereDestinationIDMutex.RUnlock()
+	return fake.countWhereDestinationIDArgsForCall[i].arg1, fake.countWhereDestinationIDArgsForCall[i].arg2
+}
+
+func (fake *PolicyRepo) CountWhereDestinationIDReturns(result1 int, result2 error) {
+	fake.CountWhereDestinationIDStub = nil
+	fake.countWhereDestinationIDReturns = struct {
+		result1 int
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *PolicyRepo) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -108,6 +198,10 @@ func (fake *PolicyRepo) Invocations() map[string][][]interface{} {
 	defer fake.createMutex.RUnlock()
 	fake.deleteMutex.RLock()
 	defer fake.deleteMutex.RUnlock()
+	fake.countWhereGroupIDMutex.RLock()
+	defer fake.countWhereGroupIDMutex.RUnlock()
+	fake.countWhereDestinationIDMutex.RLock()
+	defer fake.countWhereDestinationIDMutex.RUnlock()
 	return fake.invocations
 }
 
