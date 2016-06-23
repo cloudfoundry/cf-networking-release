@@ -80,7 +80,13 @@ func main() {
 		log.Fatalf("db connect: %s", err)
 	}
 
-	dataStore, err := store.New(dbConnectionPool, group, destination, policy)
+	dataStore, err := store.New(
+		dbConnectionPool,
+		group,
+		destination,
+		policy,
+		conf.TagLength,
+	)
 	if err != nil {
 		log.Fatalf("failed to construct datastore: %s", err)
 	}

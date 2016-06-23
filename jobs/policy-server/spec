@@ -55,5 +55,5 @@ properties:
     default: disable
 
   policy-server.server.tag_length:
-    description: "length in bytes of the packet tags to generate for policy sources and destinations"
+    description: "Length in bytes of the packet tags to generate for policy sources and destinations. Must be greater than 0 and less than 4."
     default: 2

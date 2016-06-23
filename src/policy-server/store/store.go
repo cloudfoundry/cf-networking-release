@@ -88,9 +88,21 @@ type store struct {
 	group       GroupRepo
 	destination DestinationRepo
 	policy      PolicyRepo
+	tagLength   int
 }
 
-func New(dbConnectionPool db, g GroupRepo, d DestinationRepo, p PolicyRepo) (Store, error) {
+const MAX_TAG_LENGTH = 3
+const MIN_TAG_LENGTH = 1
+
+func New(dbConnectionPool db, g GroupRepo, d DestinationRepo, p PolicyRepo, tl int) (Store, error) {
+	if tl < MIN_TAG_LENGTH || tl > MAX_TAG_LENGTH {
+		return nil, fmt.Errorf("tag length out of range (%d-%d): %d",
+			MIN_TAG_LENGTH,
+			MAX_TAG_LENGTH,
+			tl,
+		)
+	}
+
 	err := setupTables(dbConnectionPool)
 	if err != nil {
 		return nil, fmt.Errorf("setting up tables: %s", err)
@@ -101,6 +113,7 @@ func New(dbConnectionPool db, g GroupRepo, d DestinationRepo, p PolicyRepo) (Sto
 		group:       g,
 		destination: d,
 		policy:      p,
+		tagLength:   tl,
 	}, nil
 }
 
@@ -260,7 +273,7 @@ func (s *store) Tags() ([]models.Tag, error) {
 
 		tags = append(tags, models.Tag{
 			ID:  id,
-			Tag: fmt.Sprintf("%04X", tag),
+			Tag: fmt.Sprintf("%"+fmt.Sprintf("0%d", s.tagLength*2)+"X", tag),
 		})
 	}
 

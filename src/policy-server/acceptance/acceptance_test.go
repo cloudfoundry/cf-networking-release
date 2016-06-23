@@ -67,6 +67,7 @@ var _ = Describe("Acceptance", func() {
 			UAAClientSecret: "test",
 			UAAURL:          mockUAAServer.URL,
 			Database:        testDatabase.DBConfig(),
+			TagLength:       1,
 		}
 		configFilePath := WriteConfigFile(conf)
 
@@ -341,8 +342,8 @@ var _ = Describe("Acceptance", func() {
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
 			responseString, err := ioutil.ReadAll(resp.Body)
 			Expect(responseString).To(MatchJSON(`{ "tags": [
-				{ "id": "some-app-guid", "tag": "0001" },
-				{ "id": "some-other-app-guid", "tag": "0002" }
+				{ "id": "some-app-guid", "tag": "01" },
+				{ "id": "some-other-app-guid", "tag": "02" }
 			] }`))
 		})
 	})

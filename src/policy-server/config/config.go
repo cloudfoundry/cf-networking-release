@@ -10,4 +10,5 @@ type Config struct {
 	UAAURL            string    `json:"uaa_url"`
 	SkipSSLValidation bool      `json:"skip_ssl_validation"`
 	Database          db.Config `json:"database"`
+	TagLength         int       `json:"tag_length"`
 }

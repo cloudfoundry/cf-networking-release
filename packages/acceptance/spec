@@ -56,3 +56,4 @@ files:
   - netman-cf-acceptance/*.go # gosub
   - netman-cf-acceptance/example-apps/proxy/*.go # gosub
   - netman-garden-integration/*.go # gosub
+  - policy-server/models/*.go # gosub
