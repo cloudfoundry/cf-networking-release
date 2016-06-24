@@ -29,7 +29,7 @@ var _ = Describe("Store", func() {
 	BeforeEach(func() {
 		mockDb = &fakes.Db{}
 
-		dbName := fmt.Sprintf("yet_anotehr_test_netman_database_%x", rand.Int())
+		dbName := fmt.Sprintf("test_netman_database_%x", rand.Int())
 		dbConnectionInfo := testsupport.GetDBConnectionInfo()
 		testDatabase = dbConnectionInfo.CreateDatabase(dbName)
 
@@ -73,6 +73,31 @@ var _ = Describe("Store", func() {
 					_, err := store.New(mockDb, group, destination, policy, 2)
 					Expect(err).To(MatchError("setting up tables: some error"))
 				})
+			})
+		})
+
+		Context("when the groups table is ALREADY populated", func() {
+			It("does not add more rows", func() {
+				var id int
+				err := realDb.QueryRow(`SELECT id FROM groups ORDER BY id DESC LIMIT 1`).Scan(&id)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(id).To(Equal(65535))
+
+				_, err = store.New(mockDb, group, destination, policy, 2)
+				Expect(err).NotTo(HaveOccurred())
+
+				err = realDb.QueryRow(`SELECT id FROM groups ORDER BY id DESC LIMIT 1`).Scan(&id)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(id).To(Equal(65535))
+			})
+		})
+
+		Context("when the groups table is being populated", func() {
+			It("does not exceed 2^(tag_length * 8) rows", func() {
+				var id int
+				err := realDb.QueryRow(`SELECT id FROM groups ORDER BY id DESC LIMIT 1`).Scan(&id)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(id).To(Equal(65535))
 			})
 		})
 

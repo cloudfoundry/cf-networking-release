@@ -358,7 +358,7 @@ func populateTables(dbConnectionPool db, tl int) error {
 		return err
 	}
 
-	for i := 1; i <= int(math.Exp2(float64(tl*8))); i++ {
+	for i := 1; i < int(math.Exp2(float64(tl*8)))-1; i++ {
 		_, err = b.WriteString(", (NULL)")
 		if err != nil {
 			return err
