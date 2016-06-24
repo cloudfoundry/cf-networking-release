@@ -27,6 +27,18 @@ properties:
     description: "Flannel backend to use"
     default: "vxlan"
 
+  cni-flannel.flannel.Backend.VNI:
+    description: "VXLAN Virtual Network Identifier to use"
+    default: 1
+
+  cni-flannel.flannel.Backend.Port:
+    description: "UDP port to use for VXLAN Tunnel Endpoints"
+    default: 8472
+
+  cni-flannel.flannel.Backend.GBP:
+    description: "Enable GBP on VXLAN devices"
+    default: true
+
   cni-flannel.adapter.cni_plugin_dir:
     description: "Directory containing CNI plugins"
     default: /var/vcap/packages/runc-cni/bin
