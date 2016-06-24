@@ -1,9 +1,11 @@
 package store
 
 import (
+	"bytes"
 	"database/sql"
 	"errors"
 	"fmt"
+	"math"
 	"policy-server/models"
 
 	"github.com/jmoiron/sqlx"
@@ -14,6 +16,7 @@ var schemas = map[string][]string{
 		`CREATE TABLE IF NOT EXISTS groups (
 		id int NOT NULL AUTO_INCREMENT,
 		guid varchar(255),
+		UNIQUE (guid),
 		PRIMARY KEY (id)
 	);`,
 		`CREATE TABLE IF NOT EXISTS destinations (
@@ -35,7 +38,8 @@ var schemas = map[string][]string{
 	"postgres": []string{
 		`CREATE TABLE IF NOT EXISTS groups (
 		id SERIAL PRIMARY KEY,
-		guid text
+		guid text,
+		UNIQUE (guid)
 	);`,
 		`CREATE TABLE IF NOT EXISTS destinations (
 		id SERIAL PRIMARY KEY,
@@ -106,6 +110,11 @@ func New(dbConnectionPool db, g GroupRepo, d DestinationRepo, p PolicyRepo, tl i
 	err := setupTables(dbConnectionPool)
 	if err != nil {
 		return nil, fmt.Errorf("setting up tables: %s", err)
+	}
+
+	err = populateTables(dbConnectionPool, tl)
+	if err != nil {
+		return nil, fmt.Errorf("populating tables: %s", err)
 	}
 
 	return &store{
@@ -299,7 +308,11 @@ func (s *store) All() ([]models.Policy, error) {
 func (s *store) Tags() ([]models.Tag, error) {
 	tags := []models.Tag{}
 
-	rows, err := s.conn.Query(`SELECT guid, id FROM groups;`)
+	rows, err := s.conn.Query(`
+		SELECT guid, id FROM groups
+		WHERE guid IS NOT NULL
+		ORDER BY id
+	`)
 	if err != nil {
 		return nil, fmt.Errorf("listing tags: %s", err)
 	}
@@ -326,13 +339,36 @@ func setupTables(dbConnectionPool db) error {
 	driverName := dbConnectionPool.DriverName()
 	schema, ok := schemas[driverName]
 	if !ok {
-		panic("unsupported DB DriverName")
+		return errors.New("unsupported DB DriverName")
 	}
+
 	for _, table := range schema {
 		_, err := dbConnectionPool.Exec(table)
 		if err != nil {
 			return err
 		}
 	}
+	return nil
+}
+
+func populateTables(dbConnectionPool db, tl int) error {
+	var b bytes.Buffer
+	_, err := b.WriteString("INSERT INTO groups (guid) VALUES (NULL)")
+	if err != nil {
+		return err
+	}
+
+	for i := 1; i <= int(math.Exp2(float64(tl*8))); i++ {
+		_, err = b.WriteString(", (NULL)")
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = dbConnectionPool.Exec(b.String())
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

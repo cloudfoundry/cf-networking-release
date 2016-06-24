@@ -11,11 +11,21 @@ type Group struct {
 }
 
 func (g *Group) Create(tx Transaction, guid string) (int, error) {
-	_, err := tx.Exec(tx.Rebind(`
-		INSERT INTO groups (guid) SELECT ?
-		WHERE
-		NOT EXISTS (
-			SELECT guid FROM groups WHERE guid = ?
+	_, err := tx.Exec(
+		tx.Rebind(`
+		UPDATE groups SET guid = ?
+		WHERE NOT EXISTS (
+			SELECT t.guid FROM (
+				SELECT guid FROM groups
+			) t
+			WHERE t.guid = ?
+		) AND id = (
+			SELECT t.id FROM (
+				SELECT id, guid FROM groups
+			) t
+			WHERE t.guid IS NULL
+			ORDER BY t.id
+			LIMIT 1
 		)`),
 		guid,
 		guid,
@@ -29,7 +39,7 @@ func (g *Group) Create(tx Transaction, guid string) (int, error) {
 
 func (g *Group) Delete(tx Transaction, id int) error {
 	_, err := tx.Exec(
-		tx.Rebind(`DELETE FROM groups WHERE id = ?`),
+		tx.Rebind(`UPDATE groups SET guid = NULL WHERE id = ?`),
 		id,
 	)
 	return err

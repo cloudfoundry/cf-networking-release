@@ -348,7 +348,37 @@ var _ = Describe("Acceptance", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(responseString).To(MatchJSON(`{ "tags": [
 				{ "id": "some-app-guid", "tag": "01" },
-				{ "id": "some-other-app-guid", "tag": "02" }
+				{ "id": "some-other-app-guid", "tag": "02" },
+				{ "id": "another-app-guid", "tag": "03" }
+			] }`))
+
+			By("reusing tags that are no longer in use")
+			body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
+			resp = makeAndDoRequest(
+				"DELETE",
+				fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+				body,
+			)
+
+			body = strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "yet-another-app-guid", "protocol": "udp", "port": 4567 } } ] }`)
+			resp = makeAndDoRequest(
+				"POST",
+				fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+				body,
+			)
+
+			resp = makeAndDoRequest(
+				"GET",
+				fmt.Sprintf("http://%s:%d/networking/v0/external/tags", conf.ListenHost, conf.ListenPort),
+				nil,
+			)
+
+			Expect(resp.StatusCode).To(Equal(http.StatusOK))
+			responseString, err = ioutil.ReadAll(resp.Body)
+			Expect(responseString).To(MatchJSON(`{ "tags": [
+				{ "id": "some-app-guid", "tag": "01" },
+				{ "id": "yet-another-app-guid", "tag": "02" },
+				{ "id": "another-app-guid", "tag": "03" }
 			] }`))
 		})
 	})

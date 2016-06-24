@@ -10,6 +10,7 @@ import (
 	"policy-server/fakes"
 	"policy-server/models"
 	"policy-server/store"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 	. "github.com/onsi/ginkgo"
@@ -28,7 +29,7 @@ var _ = Describe("Store", func() {
 	BeforeEach(func() {
 		mockDb = &fakes.Db{}
 
-		dbName := fmt.Sprintf("test_netman_database_%x", rand.Int())
+		dbName := fmt.Sprintf("yet_anotehr_test_netman_database_%x", rand.Int())
 		dbConnectionInfo := testsupport.GetDBConnectionInfo()
 		testDatabase = dbConnectionInfo.CreateDatabase(dbName)
 
@@ -40,7 +41,7 @@ var _ = Describe("Store", func() {
 		destination = &store.Destination{}
 		policy = &store.Policy{}
 
-		dataStore, err = store.New(realDb, group, destination, policy, 3)
+		dataStore, err = store.New(realDb, group, destination, policy, 2)
 		Expect(err).NotTo(HaveOccurred())
 		mockDb.DriverNameReturns(realDb.DriverName())
 	})
@@ -86,6 +87,22 @@ var _ = Describe("Store", func() {
 			It("returns an error", func() {
 				_, err := store.New(realDb, group, destination, policy, 0)
 				Expect(err).To(MatchError("tag length out of range (1-3): 0"))
+			})
+		})
+
+		Context("when the groups table fails to populate", func() {
+			BeforeEach(func() {
+				mockDb.ExecStub = func(sql string, t ...interface{}) (sql.Result, error) {
+					if strings.Contains(sql, "INSERT") {
+						return nil, errors.New("some error")
+					}
+					return nil, nil
+				}
+			})
+
+			It("returns an error", func() {
+				_, err := store.New(mockDb, group, destination, policy, 1)
+				Expect(err).To(MatchError("populating tables: some error"))
 			})
 		})
 	})
@@ -145,6 +162,58 @@ var _ = Describe("Store", func() {
 				p, err := dataStore.All()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(p)).To(Equal(1))
+			})
+		})
+
+		Context("when a tag is freed by delete", func() {
+			It("reuses the tag", func() {
+				policies := []models.Policy{{
+					Source: models.Source{"some-app-guid"},
+					Destination: models.Destination{
+						ID:       "some-other-app-guid",
+						Protocol: "tcp",
+						Port:     8080,
+					},
+				}, {
+					Source: models.Source{"another-app-guid"},
+					Destination: models.Destination{
+						ID:       "some-other-app-guid",
+						Protocol: "udp",
+						Port:     1234,
+					},
+				}}
+
+				err := dataStore.Create(policies)
+				Expect(err).NotTo(HaveOccurred())
+
+				tags, err := dataStore.Tags()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(tags).To(ConsistOf([]models.Tag{
+					{ID: "some-app-guid", Tag: "0001"},
+					{ID: "some-other-app-guid", Tag: "0002"},
+					{ID: "another-app-guid", Tag: "0003"},
+				}))
+
+				err = dataStore.Delete(policies[:1])
+				Expect(err).NotTo(HaveOccurred())
+
+				err = dataStore.Create([]models.Policy{{
+					Source: models.Source{"yet-another-app-guid"},
+					Destination: models.Destination{
+						ID:       "some-other-app-guid",
+						Protocol: "tcp",
+						Port:     8080,
+					},
+				}})
+				Expect(err).NotTo(HaveOccurred())
+
+				tags, err = dataStore.Tags()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(tags).To(ConsistOf([]models.Tag{
+					{ID: "yet-another-app-guid", Tag: "0001"},
+					{ID: "some-other-app-guid", Tag: "0002"},
+					{ID: "another-app-guid", Tag: "0003"},
+				}))
 			})
 		})
 
@@ -251,7 +320,7 @@ var _ = Describe("Store", func() {
 				}})
 				Expect(err).To(MatchError("creating destination: some-insert-error"))
 				var groupsCount int
-				err = realDb.QueryRow(`select count(*) from groups`).Scan(&groupsCount)
+				err = realDb.QueryRow(`SELECT count(*) FROM groups WHERE guid IS NOT NULL`).Scan(&groupsCount)
 				Expect(groupsCount).To(BeZero())
 			})
 		})
@@ -383,9 +452,9 @@ var _ = Describe("Store", func() {
 			tags, err := dataStore.Tags()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(tags).To(ConsistOf([]models.Tag{
-				{ID: "some-app-guid", Tag: "000001"},
-				{ID: "some-other-app-guid", Tag: "000002"},
-				{ID: "another-app-guid", Tag: "000003"},
+				{ID: "some-app-guid", Tag: "0001"},
+				{ID: "some-other-app-guid", Tag: "0002"},
+				{ID: "another-app-guid", Tag: "0003"},
 			}))
 		})
 
@@ -489,10 +558,10 @@ var _ = Describe("Store", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(policies).To(Equal([]models.Tag{{
 				ID:  "another-app-guid",
-				Tag: "000003",
+				Tag: "0003",
 			}, {
 				ID:  "yet-another-app-guid",
-				Tag: "000004",
+				Tag: "0004",
 			}}))
 		})
 
