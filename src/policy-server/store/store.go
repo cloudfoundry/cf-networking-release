@@ -352,8 +352,21 @@ func setupTables(dbConnectionPool db) error {
 }
 
 func populateTables(dbConnectionPool db, tl int) error {
+	var err error
+	row := dbConnectionPool.QueryRow(`SELECT COUNT(*) FROM groups`)
+	if row != nil {
+		var count int
+		err = row.Scan(&count)
+		if err != nil {
+			return err
+		}
+		if count > 0 {
+			return nil
+		}
+	}
+
 	var b bytes.Buffer
-	_, err := b.WriteString("INSERT INTO groups (guid) VALUES (NULL)")
+	_, err = b.WriteString("INSERT INTO groups (guid) VALUES (NULL)")
 	if err != nil {
 		return err
 	}

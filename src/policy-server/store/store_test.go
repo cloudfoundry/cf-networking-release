@@ -83,7 +83,7 @@ var _ = Describe("Store", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(id).To(Equal(65535))
 
-				_, err = store.New(mockDb, group, destination, policy, 2)
+				_, err = store.New(realDb, group, destination, policy, 2)
 				Expect(err).NotTo(HaveOccurred())
 
 				err = realDb.QueryRow(`SELECT id FROM groups ORDER BY id DESC LIMIT 1`).Scan(&id)
