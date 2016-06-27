@@ -41,7 +41,7 @@ var _ = Describe("Store", func() {
 		destination = &store.Destination{}
 		policy = &store.Policy{}
 
-		dataStore, err = store.New(realDb, group, destination, policy, 2)
+		dataStore, err = store.New(realDb, group, destination, policy, 1)
 		Expect(err).NotTo(HaveOccurred())
 		mockDb.DriverNameReturns(realDb.DriverName())
 	})
@@ -81,14 +81,14 @@ var _ = Describe("Store", func() {
 				var id int
 				err := realDb.QueryRow(`SELECT id FROM groups ORDER BY id DESC LIMIT 1`).Scan(&id)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(id).To(Equal(65535))
+				Expect(id).To(Equal(255))
 
 				_, err = store.New(realDb, group, destination, policy, 2)
 				Expect(err).NotTo(HaveOccurred())
 
 				err = realDb.QueryRow(`SELECT id FROM groups ORDER BY id DESC LIMIT 1`).Scan(&id)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(id).To(Equal(65535))
+				Expect(id).To(Equal(255))
 			})
 		})
 
@@ -97,7 +97,7 @@ var _ = Describe("Store", func() {
 				var id int
 				err := realDb.QueryRow(`SELECT id FROM groups ORDER BY id DESC LIMIT 1`).Scan(&id)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(id).To(Equal(65535))
+				Expect(id).To(Equal(255))
 			})
 		})
 
@@ -190,6 +190,38 @@ var _ = Describe("Store", func() {
 			})
 		})
 
+		Context("when there are no tags left to allocate", func() {
+			BeforeEach(func() {
+				policies := []models.Policy{}
+				for i := 1; i < 256; i++ {
+					policies = append(policies, models.Policy{
+						Source: models.Source{fmt.Sprintf("%d", i)},
+						Destination: models.Destination{
+							ID:       fmt.Sprintf("%d", i),
+							Protocol: "tcp",
+							Port:     8080,
+						},
+					})
+				}
+				err := dataStore.Create(policies)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(dataStore.All()).To(HaveLen(255))
+			})
+			It("returns an error", func() {
+				policies := []models.Policy{{
+					Source: models.Source{"some-app-guid"},
+					Destination: models.Destination{
+						ID:       "some-other-app-guid",
+						Protocol: "tcp",
+						Port:     8080,
+					},
+				}}
+
+				err := dataStore.Create(policies)
+				Expect(err).To(MatchError(ContainSubstring("failed to find available tag")))
+			})
+		})
+
 		Context("when a tag is freed by delete", func() {
 			It("reuses the tag", func() {
 				policies := []models.Policy{{
@@ -214,9 +246,9 @@ var _ = Describe("Store", func() {
 				tags, err := dataStore.Tags()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(tags).To(ConsistOf([]models.Tag{
-					{ID: "some-app-guid", Tag: "0001"},
-					{ID: "some-other-app-guid", Tag: "0002"},
-					{ID: "another-app-guid", Tag: "0003"},
+					{ID: "some-app-guid", Tag: "01"},
+					{ID: "some-other-app-guid", Tag: "02"},
+					{ID: "another-app-guid", Tag: "03"},
 				}))
 
 				err = dataStore.Delete(policies[:1])
@@ -235,9 +267,9 @@ var _ = Describe("Store", func() {
 				tags, err = dataStore.Tags()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(tags).To(ConsistOf([]models.Tag{
-					{ID: "yet-another-app-guid", Tag: "0001"},
-					{ID: "some-other-app-guid", Tag: "0002"},
-					{ID: "another-app-guid", Tag: "0003"},
+					{ID: "yet-another-app-guid", Tag: "01"},
+					{ID: "some-other-app-guid", Tag: "02"},
+					{ID: "another-app-guid", Tag: "03"},
 				}))
 			})
 		})
@@ -477,9 +509,9 @@ var _ = Describe("Store", func() {
 			tags, err := dataStore.Tags()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(tags).To(ConsistOf([]models.Tag{
-				{ID: "some-app-guid", Tag: "0001"},
-				{ID: "some-other-app-guid", Tag: "0002"},
-				{ID: "another-app-guid", Tag: "0003"},
+				{ID: "some-app-guid", Tag: "01"},
+				{ID: "some-other-app-guid", Tag: "02"},
+				{ID: "another-app-guid", Tag: "03"},
 			}))
 		})
 
@@ -583,10 +615,10 @@ var _ = Describe("Store", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(policies).To(Equal([]models.Tag{{
 				ID:  "another-app-guid",
-				Tag: "0003",
+				Tag: "03",
 			}, {
 				ID:  "yet-another-app-guid",
-				Tag: "0004",
+				Tag: "04",
 			}}))
 		})
 
