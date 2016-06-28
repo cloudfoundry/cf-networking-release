@@ -6,7 +6,7 @@ THIS_DIR=$(cd $(dirname $0) && pwd)
 cd $THIS_DIR
 
 export CONFIG=/tmp/bosh-lite-integration-config.json
-export APP_DIR=./example-apps/proxy
+export APP_DIR=../example-apps/proxy
 
 echo '
 {

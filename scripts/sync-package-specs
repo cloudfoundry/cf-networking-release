@@ -48,7 +48,7 @@ sync_package policy-server \
 sync_package acceptance \
   -test netman-garden-integration \
   -test netman-cf-acceptance \
-  -app netman-cf-acceptance/example-apps/proxy \
+  -app example-apps/proxy \
   -app github.com/onsi/ginkgo/ginkgo &
 
 sync_package runc-cni \

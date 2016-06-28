@@ -5,7 +5,8 @@ dependencies:
   - golang
 
 files:
-  - netman-cf-acceptance/example-apps/proxy/manifest.yml # HANDCRAFTED
+  - example-apps/proxy/manifest.yml # HANDCRAFTED
+  - example-apps/proxy/*.go # gosub
   - github.com/bmizerany/pat/*.go # gosub
   - github.com/cloudfoundry-incubator/cf-test-helpers/cf/*.go # gosub
   - github.com/cloudfoundry-incubator/cf-test-helpers/helpers/*.go # gosub
@@ -54,6 +55,5 @@ files:
   - github.com/pivotal-golang/lager/*.go # gosub
   - github.com/tedsuo/rata/*.go # gosub
   - netman-cf-acceptance/*.go # gosub
-  - netman-cf-acceptance/example-apps/proxy/*.go # gosub
   - netman-garden-integration/*.go # gosub
   - policy-server/models/*.go # gosub
