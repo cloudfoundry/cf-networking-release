@@ -46,6 +46,15 @@ func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	for _, policy := range payload.Policies {
+		if policy.Source.Tag != "" || policy.Destination.Tag != "" {
+			h.Logger.Error("bad-request", errors.New("user tried to set tag"))
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(`{"error": "tags cannot be set"}`))
+			return
+		}
+	}
+
 	if err = validateFields(payload.Policies); err != nil {
 		h.Logger.Error("bad-request", err)
 		w.WriteHeader(http.StatusBadRequest)

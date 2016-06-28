@@ -10,13 +10,13 @@ import (
 	"github.com/pivotal-golang/lager"
 )
 
-type PoliciesIndex struct {
+type PoliciesIndexInternal struct {
 	Logger    lager.Logger
 	Store     store.Store
 	Marshaler marshal.Marshaler
 }
 
-func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (h *PoliciesIndexInternal) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	policies, err := h.Store.All()
 	if err != nil {
 		h.Logger.Error("store-list-policies-failed", err)
@@ -32,11 +32,6 @@ func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		policies = filterByID(policies, ids)
 	}
 
-	for i, _ := range policies {
-		policies[i].Source.Tag = ""
-		policies[i].Destination.Tag = ""
-	}
-
 	policyResponse := struct {
 		Policies []models.Policy `json:"policies"`
 	}{policies}
@@ -48,23 +43,4 @@ func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	w.Write(bytes)
-}
-
-func filterByID(policies []models.Policy, ids []string) []models.Policy {
-	filteredPolicies := []models.Policy{}
-	for _, policy := range policies {
-		if containsID(policy, ids) {
-			filteredPolicies = append(filteredPolicies, policy)
-		}
-	}
-	return filteredPolicies
-}
-
-func containsID(policy models.Policy, ids []string) bool {
-	for _, id := range ids {
-		if id == policy.Source.ID || id == policy.Destination.ID {
-			return true
-		}
-	}
-	return false
 }

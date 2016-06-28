@@ -6,11 +6,13 @@ type Policy struct {
 }
 
 type Source struct {
-	ID string `json:"id"`
+	ID  string `json:"id"`
+	Tag string `json:"tag,omitempty"`
 }
 
 type Destination struct {
 	ID       string `json:"id"`
+	Tag      string `json:"tag,omitempty"`
 	Protocol string `json:"protocol"`
 	Port     int    `json:"port"`
 }

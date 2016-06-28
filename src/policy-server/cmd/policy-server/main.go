@@ -123,6 +123,12 @@ func main() {
 		Marshaler: marshal.MarshalFunc(json.Marshal),
 	}
 
+	internalPoliciesHandler := &handlers.PoliciesIndexInternal{
+		Logger:    logger.Session("policies-index-internal"),
+		Store:     dataStore,
+		Marshaler: marshal.MarshalFunc(json.Marshal),
+	}
+
 	routes := rata.Routes{
 		{Name: "uptime", Method: "GET", Path: "/"},
 		{Name: "uptime", Method: "GET", Path: "/networking"},
@@ -130,16 +136,18 @@ func main() {
 		{Name: "create_policies", Method: "POST", Path: "/networking/v0/external/policies"},
 		{Name: "delete_policies", Method: "DELETE", Path: "/networking/v0/external/policies"},
 		{Name: "policies_index", Method: "GET", Path: "/networking/v0/external/policies"},
+		{Name: "internal_policies", Method: "GET", Path: "/networking/v0/internal/policies"},
 		{Name: "tags_index", Method: "GET", Path: "/networking/v0/external/tags"},
 	}
 
 	handlers := rata.Handlers{
-		"uptime":          uptimeHandler,
-		"create_policies": authenticator.Wrap(createPolicyHandler),
-		"delete_policies": authenticator.Wrap(deletePolicyHandler),
-		"policies_index":  authenticator.Wrap(policiesIndexHandler),
-		"tags_index":      authenticator.Wrap(tagsIndexHandler),
-		"whoami":          whoamiHandler,
+		"uptime":            uptimeHandler,
+		"create_policies":   authenticator.Wrap(createPolicyHandler),
+		"delete_policies":   authenticator.Wrap(deletePolicyHandler),
+		"policies_index":    authenticator.Wrap(policiesIndexHandler),
+		"tags_index":        authenticator.Wrap(tagsIndexHandler),
+		"whoami":            whoamiHandler,
+		"internal_policies": internalPoliciesHandler,
 	}
 	router, err := rata.NewRouter(routes, handlers)
 	if err != nil {

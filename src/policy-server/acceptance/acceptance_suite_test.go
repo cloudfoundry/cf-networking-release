@@ -6,8 +6,11 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"policy-server/config"
+	"strings"
 
 	. "github.com/onsi/ginkgo"
 	ginkgoConfig "github.com/onsi/ginkgo/config"
@@ -20,6 +23,28 @@ import (
 const DEFAULT_TIMEOUT = "5s"
 
 var policyServerPath string
+
+var mockUAAServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path == "/check_token" {
+		if r.Header["Authorization"][0] == "Basic dGVzdDp0ZXN0" {
+			bodyBytes, _ := ioutil.ReadAll(r.Body)
+			token := strings.Split(string(bodyBytes), "=")[1]
+			Expect(token).NotTo(BeEmpty())
+
+			if string(token) == "valid-token" {
+				w.WriteHeader(http.StatusOK)
+				w.Write([]byte(`{"scope":["network.admin"], "user_name":"some-user"}`))
+			} else {
+				w.WriteHeader(http.StatusBadRequest)
+				w.Write([]byte(`{"error_description":"Some requested scopes are missing: network.admin"}`))
+			}
+		} else {
+			w.WriteHeader(http.StatusUnauthorized)
+		}
+		return
+	}
+	w.WriteHeader(http.StatusNotFound)
+}))
 
 func TestAcceptance(t *testing.T) {
 	RegisterFailHandler(Fail)

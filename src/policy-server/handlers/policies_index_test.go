@@ -30,9 +30,10 @@ var _ = Describe("Policies index handler", func() {
 
 	BeforeEach(func() {
 		allPolicies = []models.Policy{{
-			Source: models.Source{ID: "some-app-guid"},
+			Source: models.Source{ID: "some-app-guid", Tag: "some-tag"},
 			Destination: models.Destination{
 				ID:       "some-other-app-guid",
+				Tag:      "some-other-tag",
 				Protocol: "tcp",
 				Port:     8080,
 			},
@@ -63,7 +64,7 @@ var _ = Describe("Policies index handler", func() {
 		resp = httptest.NewRecorder()
 	})
 
-	It("returns all the policies", func() {
+	It("returns all the policies, but does not include the tags", func() {
 		expectedResponseJSON := `{"policies": [
 			{
 				"source": {

@@ -7,7 +7,6 @@ import (
 	"lib/testsupport"
 	"math/rand"
 	"net/http"
-	"net/http/httptest"
 	"os/exec"
 	"policy-server/config"
 	"strings"
@@ -20,11 +19,10 @@ import (
 
 var _ = Describe("Acceptance", func() {
 	var (
-		session       *gexec.Session
-		conf          config.Config
-		address       string
-		mockUAAServer *httptest.Server
-		testDatabase  *testsupport.TestDatabase
+		session      *gexec.Session
+		conf         config.Config
+		address      string
+		testDatabase *testsupport.TestDatabase
 	)
 
 	var serverIsAvailable = func() error {
@@ -32,28 +30,6 @@ var _ = Describe("Acceptance", func() {
 	}
 
 	BeforeEach(func() {
-		mockUAAServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == "/check_token" {
-				if r.Header["Authorization"][0] == "Basic dGVzdDp0ZXN0" {
-					bodyBytes, _ := ioutil.ReadAll(r.Body)
-					token := strings.Split(string(bodyBytes), "=")[1]
-					Expect(token).NotTo(BeEmpty())
-
-					if string(token) == "valid-token" {
-						w.WriteHeader(http.StatusOK)
-						w.Write([]byte(`{"scope":["network.admin"], "user_name":"some-user"}`))
-					} else {
-						w.WriteHeader(http.StatusBadRequest)
-						w.Write([]byte(`{"error_description":"Some requested scopes are missing: network.admin"}`))
-					}
-				} else {
-					w.WriteHeader(http.StatusUnauthorized)
-				}
-				return
-			}
-			w.WriteHeader(http.StatusNotFound)
-		}))
-
 		dbName := fmt.Sprintf("test_netman_database_%x", rand.Int())
 		dbConnectionInfo := testsupport.GetDBConnectionInfo()
 		testDatabase = dbConnectionInfo.CreateDatabase(dbName)

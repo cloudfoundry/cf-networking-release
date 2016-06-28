@@ -271,7 +271,9 @@ func (s *store) All() ([]models.Policy, error) {
 	rows, err := s.conn.Query(`
 		select
 			src_grp.guid,
+			src_grp.id,
 			dst_grp.guid,
+			dst_grp.id,
 			destinations.port,
 			destinations.protocol
 		from policies
@@ -284,18 +286,20 @@ func (s *store) All() ([]models.Policy, error) {
 
 	for rows.Next() {
 		var source_id, destination_id, protocol string
-		var port int
-		err = rows.Scan(&source_id, &destination_id, &port, &protocol)
+		var port, source_tag, destination_tag int
+		err = rows.Scan(&source_id, &source_tag, &destination_id, &destination_tag, &port, &protocol)
 		if err != nil {
 			return nil, fmt.Errorf("listing all: %s", err)
 		}
 
 		policies = append(policies, models.Policy{
 			Source: models.Source{
-				ID: source_id,
+				ID:  source_id,
+				Tag: s.tagIntToString(source_tag),
 			},
 			Destination: models.Destination{
 				ID:       destination_id,
+				Tag:      s.tagIntToString(destination_tag),
 				Protocol: protocol,
 				Port:     port,
 			},
@@ -328,11 +332,15 @@ func (s *store) Tags() ([]models.Tag, error) {
 
 		tags = append(tags, models.Tag{
 			ID:  id,
-			Tag: fmt.Sprintf("%"+fmt.Sprintf("0%d", s.tagLength*2)+"X", tag),
+			Tag: s.tagIntToString(tag),
 		})
 	}
 
 	return tags, nil
+}
+
+func (s *store) tagIntToString(tag int) string {
+	return fmt.Sprintf("%"+fmt.Sprintf("0%d", s.tagLength*2)+"X", tag)
 }
 
 func setupTables(dbConnectionPool db) error {

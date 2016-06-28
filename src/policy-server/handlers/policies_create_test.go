@@ -71,14 +71,14 @@ var _ = Describe("PoliciesCreate", func() {
 
 	It("persists a new policy rule", func() {
 		expectedPolicies := []models.Policy{{
-			Source: models.Source{"some-app-guid"},
+			Source: models.Source{ID: "some-app-guid"},
 			Destination: models.Destination{
 				ID:       "some-other-app-guid",
 				Protocol: "tcp",
 				Port:     8080,
 			},
 		}, {
-			Source: models.Source{"another-app-guid"},
+			Source: models.Source{ID: "another-app-guid"},
 			Destination: models.Destination{
 				ID:       "some-other-app-guid",
 				Protocol: "udp",
@@ -95,6 +95,48 @@ var _ = Describe("PoliciesCreate", func() {
 		Expect(fakeStore.CreateArgsForCall(0)).To(Equal(expectedPolicies))
 		Expect(resp.Code).To(Equal(http.StatusOK))
 		Expect(resp.Body.String()).To(MatchJSON("{}"))
+	})
+
+	Context("when a policy to create includes an explicit tag", func() {
+		BeforeEach(func() {
+			var err error
+			requestJSON = `{"policies": [
+			{
+				"source": {
+					"id": "some-app-guid",
+					"tag": "user is not allowed to set this field"
+				},
+				"destination": {
+					"id": "some-other-app-guid",
+					"protocol": "tcp",
+					"port": 8080
+				}
+			},
+			{
+				"source": {
+					"id": "another-app-guid"
+				},
+				"destination": {
+					"id": "some-other-app-guid",
+					"protocol": "udp",
+					"port": 1234
+				}
+			}
+        ]}`
+			request, err = http.NewRequest("POST", "/networking/v0/external/policies", bytes.NewBuffer([]byte(requestJSON)))
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("responds with code 400 and a useful error", func() {
+			handler.ServeHTTP(resp, request)
+			Expect(resp.Code).To(Equal(http.StatusBadRequest))
+			Expect(resp.Body.String()).To(MatchJSON(`{"error": "tags cannot be set"}`))
+		})
+
+		It("logs the full error", func() {
+			handler.ServeHTTP(resp, request)
+			Expect(logger).To(gbytes.Say("bad-request.*user tried to set tag"))
+		})
 	})
 
 	Context("when the store Create call returns an error", func() {
