@@ -1,22 +1,49 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 )
 
-type Handler struct{}
+type InfoHandler struct {
+	Port int
+}
 
-func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
-	if !strings.HasPrefix(req.URL.Path, "/proxy/") {
-		resp.Write([]byte("hello, this is proxy"))
-		return
+func (h *InfoHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		panic(err)
+	}
+	addressStrings := []string{}
+	for _, addr := range addrs {
+		listenAddr := strings.Split(addr.String(), "/")[0]
+		addressStrings = append(addressStrings, listenAddr)
 	}
 
+	respBytes, err := json.Marshal(struct {
+		ListenAddresses []string
+		Port            int
+	}{
+		ListenAddresses: addressStrings,
+		Port:            h.Port,
+	})
+	if err != nil {
+		panic(err)
+	}
+	resp.Write(respBytes)
+	return
+}
+
+type ProxyHandler struct{}
+
+func (h *ProxyHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	destination := strings.TrimPrefix(req.URL.Path, "/proxy/")
 	destination = "http://" + destination
 
@@ -38,13 +65,37 @@ func (h *Handler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	resp.Write(readBytes)
 }
 
+func launchHandler(port int, proxyHandler http.Handler) {
+	mux := http.NewServeMux()
+	mux.Handle("/proxy", proxyHandler)
+	mux.Handle("/", &InfoHandler{
+		Port: port,
+	})
+	http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", port), mux)
+}
+
 func main() {
-	listenPort := os.Getenv("PORT")
-	if listenPort == "" {
-		log.Fatal("missing required env var PORT")
+	systemPortString := os.Getenv("PORT")
+	systemPort, err := strconv.Atoi(systemPortString)
+	if err != nil {
+		log.Fatal("invalid required env var PORT")
 	}
 
-	handler := &Handler{}
-	http.ListenAndServe("0.0.0.0:"+listenPort, handler)
+	proxyHandler := &ProxyHandler{}
 
+	userPortsString := os.Getenv("USER_PORTS")
+	userPorts := strings.Split(userPortsString, ",")
+	for _, userPortString := range userPorts {
+		if strings.TrimSpace(userPortString) == "" {
+			continue
+		}
+		userPort, err := strconv.Atoi(userPortString)
+		if err != nil {
+			log.Fatal("invalid user port " + userPortString)
+		}
+
+		go launchHandler(userPort, proxyHandler)
+	}
+
+	launchHandler(systemPort, proxyHandler)
 }

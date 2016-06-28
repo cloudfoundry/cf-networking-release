@@ -71,16 +71,16 @@ var _ = Describe("connectivity tests", func() {
 		By("checking that the proxy is reachable via its external route")
 		Eventually(func() string {
 			return helpers.CurlAppWithTimeout(proxyApp, "/", 6*Timeout_Short)
-		}, 6*Timeout_Short).Should(ContainSubstring("hello, this is proxy"))
+		}, 6*Timeout_Short).Should(ContainSubstring(proxyIP))
 
 		By("checking that the backend in a different cell is reachable via the proxy at its **internal** route")
 		Eventually(func() string {
 			return curlFromApp(proxyApp, 0, fmt.Sprintf("%s:%d/proxy", backendIP, 8080))
-		}, 6*Timeout_Short).Should(ContainSubstring("hello, this is proxy"))
+		}, 6*Timeout_Short).Should(ContainSubstring(backendIP))
 
 		By("checking that the backend in the same cell is reachable via the proxy at its **internal** route")
 		Eventually(func() string {
 			return curlFromApp(proxyApp, 0, fmt.Sprintf("%s:%d/proxy", sameCellIP, 8080))
-		}, 6*Timeout_Short).Should(ContainSubstring("hello, this is proxy"))
+		}, 6*Timeout_Short).Should(ContainSubstring(sameCellIP))
 	})
 })
