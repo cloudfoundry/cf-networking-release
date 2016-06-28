@@ -130,12 +130,12 @@ var _ = Describe("PoliciesCreate", func() {
 		It("responds with code 400 and a useful error", func() {
 			handler.ServeHTTP(resp, request)
 			Expect(resp.Code).To(Equal(http.StatusBadRequest))
-			Expect(resp.Body.String()).To(MatchJSON(`{"error": "tags cannot be set"}`))
+			Expect(resp.Body.String()).To(MatchJSON(`{"error": "tags may not be specified"}`))
 		})
 
 		It("logs the full error", func() {
 			handler.ServeHTTP(resp, request)
-			Expect(logger).To(gbytes.Say("bad-request.*user tried to set tag"))
+			Expect(logger).To(gbytes.Say("bad-request.*tags may not be specified"))
 		})
 	})
 

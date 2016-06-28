@@ -80,6 +80,48 @@ var _ = Describe("PoliciesDelete", func() {
 		Expect(resp.Body.String()).To(MatchJSON("{}"))
 	})
 
+	Context("when a policy to delete includes an explicit tag", func() {
+		BeforeEach(func() {
+			var err error
+			requestJSON = `{"policies": [
+			{
+				"source": {
+					"id": "some-app-guid",
+					"tag": "user is not allowed to set this field"
+				},
+				"destination": {
+					"id": "some-other-app-guid",
+					"protocol": "tcp",
+					"port": 8080
+				}
+			},
+			{
+				"source": {
+					"id": "another-app-guid"
+				},
+				"destination": {
+					"id": "some-other-app-guid",
+					"protocol": "udp",
+					"port": 1234
+				}
+			}
+        ]}`
+			request, err = http.NewRequest("DELETE", "/networking/v0/external/policies", bytes.NewBuffer([]byte(requestJSON)))
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("responds with code 400 and a useful error", func() {
+			handler.ServeHTTP(resp, request)
+			Expect(resp.Code).To(Equal(http.StatusBadRequest))
+			Expect(resp.Body.String()).To(MatchJSON(`{"error": "tags may not be specified"}`))
+		})
+
+		It("logs the full error", func() {
+			handler.ServeHTTP(resp, request)
+			Expect(logger).To(gbytes.Say("bad-request.*tags may not be specified"))
+		})
+	})
+
 	Context("when reading the request body fails", func() {
 		BeforeEach(func() {
 			var err error

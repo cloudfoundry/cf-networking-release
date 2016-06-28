@@ -46,15 +46,6 @@ func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	for _, policy := range payload.Policies {
-		if policy.Source.Tag != "" || policy.Destination.Tag != "" {
-			h.Logger.Error("bad-request", errors.New("user tried to set tag"))
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(`{"error": "tags cannot be set"}`))
-			return
-		}
-	}
-
 	if err = validateFields(payload.Policies); err != nil {
 		h.Logger.Error("bad-request", err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -73,22 +64,4 @@ func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("{}"))
 	return
-}
-
-func validateFields(policies []models.Policy) error {
-	for _, policy := range policies {
-		if policy.Source.ID == "" {
-			return errors.New("missing source id")
-		}
-		if policy.Destination.ID == "" {
-			return errors.New("missing destination id")
-		}
-		if policy.Destination.Protocol == "" {
-			return errors.New("missing destination protocol")
-		}
-		if policy.Destination.Port == 0 {
-			return errors.New("missing destination port")
-		}
-	}
-	return nil
 }

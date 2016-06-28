@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"io/ioutil"
 	"lib/marshal"
 	"net/http"
@@ -33,6 +34,13 @@ func (h *PoliciesDelete) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		h.Logger.Error("unmarshal-failed", err)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(`{"error": "invalid values passed to API"}`))
+		return
+	}
+
+	if err = validateFields(payload.Policies); err != nil {
+		h.Logger.Error("bad-request", err)
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(fmt.Sprintf(`{"error": "%s"}`, err)))
 		return
 	}
 
