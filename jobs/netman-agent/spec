@@ -8,6 +8,8 @@ packages:
   - netman-agent
 
 properties:
-  netman-agent.policy-server.url:
+  netman-agent.policy_server_url:
     description: "URL where the policy server can be reached"
-    default: "0.0.0.0:4001"
+  netman-agent.poll_interval:
+    description: "Query the policy server on this interval, in seconds"
+    default: 1
