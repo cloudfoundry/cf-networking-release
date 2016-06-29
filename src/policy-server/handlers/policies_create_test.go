@@ -193,39 +193,12 @@ var _ = Describe("PoliciesCreate", func() {
 			handler.ServeHTTP(resp, request)
 
 			Expect(resp.Code).To(Equal(http.StatusBadRequest))
-			Expect(resp.Body.String()).To(MatchJSON(`{"error": "missing destination port"}`))
+			Expect(resp.Body.String()).To(MatchJSON(`{"error": "invalid destination port value: 0"}`))
 		})
 
 		It("logs the full error", func() {
 			handler.ServeHTTP(resp, request)
-			Expect(logger).To(gbytes.Say("missing destination port"))
-		})
-	})
-
-	Context("when the destination protocol field is empty", func() {
-		BeforeEach(func() {
-			request.Body = ioutil.NopCloser(bytes.NewReader([]byte(`{"policies":[
-			{
-				"source": {
-					"id": "some-app-guid"
-				},
-				"destination": {
-					"id": "some-other-app-guid",
-					"port": 8080
-				}
-			}
-			]}`)))
-		})
-		It("returns a descriptive error", func() {
-			handler.ServeHTTP(resp, request)
-
-			Expect(resp.Code).To(Equal(http.StatusBadRequest))
-			Expect(resp.Body.String()).To(MatchJSON(`{"error": "missing destination protocol"}`))
-		})
-
-		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request)
-			Expect(logger).To(gbytes.Say("missing destination protocol"))
+			Expect(logger).To(gbytes.Say("invalid destination port value: 0"))
 		})
 	})
 
@@ -280,6 +253,117 @@ var _ = Describe("PoliciesCreate", func() {
 		It("logs the full error", func() {
 			handler.ServeHTTP(resp, request)
 			Expect(logger).To(gbytes.Say("missing source id"))
+		})
+	})
+
+	Context("when the destination protocol is missing", func() {
+		BeforeEach(func() {
+			request.Body = ioutil.NopCloser(bytes.NewReader([]byte(`{"policies":[
+			{
+				"source": {
+					"id": "some-app-guid"
+				},
+				"destination": {
+					"id": "some-other-app-guid",
+					"port": 8080
+				}
+			}
+			]}`)))
+		})
+		It("returns a descriptive error", func() {
+			handler.ServeHTTP(resp, request)
+
+			Expect(resp.Code).To(Equal(http.StatusBadRequest))
+			Expect(resp.Body.String()).To(MatchJSON(`{"error": "invalid destination protocol, specify either udp or tcp"}`))
+		})
+
+		It("logs the full error", func() {
+			handler.ServeHTTP(resp, request)
+			Expect(logger).To(gbytes.Say("invalid destination protocol, specify either udp or tcp"))
+		})
+	})
+
+	Context("when the destination protocol is not udp or tcp", func() {
+		BeforeEach(func() {
+			request.Body = ioutil.NopCloser(bytes.NewReader([]byte(`{"policies":[
+			{
+				"source": {
+					"id": "some-app-guid"
+				},
+				"destination": {
+					"id": "some-other-app-guid",
+					"protocol": "banana",
+					"port": 8080
+				}
+			}
+			]}`)))
+		})
+		It("returns a descriptive error", func() {
+			handler.ServeHTTP(resp, request)
+
+			Expect(resp.Code).To(Equal(http.StatusBadRequest))
+			Expect(resp.Body.String()).To(MatchJSON(`{"error": "invalid destination protocol, specify either udp or tcp"}`))
+		})
+
+		It("logs the full error", func() {
+			handler.ServeHTTP(resp, request)
+			Expect(logger).To(gbytes.Say("invalid destination protocol, specify either udp or tcp"))
+		})
+	})
+
+	Context("when the destination port is less than 1", func() {
+		BeforeEach(func() {
+			request.Body = ioutil.NopCloser(bytes.NewReader([]byte(`{"policies":[
+			{
+				"source": {
+					"id": "some-app-guid"
+				},
+				"destination": {
+					"id": "some-other-app-guid",
+					"protocol": "udp",
+					"port": -1
+				}
+			}
+			]}`)))
+		})
+		It("returns a descriptive error", func() {
+			handler.ServeHTTP(resp, request)
+
+			Expect(resp.Code).To(Equal(http.StatusBadRequest))
+			Expect(resp.Body.String()).To(MatchJSON(`{"error": "invalid destination port value: -1"}`))
+		})
+
+		It("logs the full error", func() {
+			handler.ServeHTTP(resp, request)
+			Expect(logger).To(gbytes.Say("invalid destination port value: -1"))
+		})
+	})
+
+	Context("when the destination port is greater than 65535", func() {
+		BeforeEach(func() {
+			request.Body = ioutil.NopCloser(bytes.NewReader([]byte(`{"policies":[
+			{
+				"source": {
+					"id": "some-app-guid"
+				},
+				"destination": {
+					"id": "some-other-app-guid",
+					"protocol": "udp",
+					"port": 77777
+				}
+			}
+			]}`)))
+		})
+		It("returns a descriptive error", func() {
+			handler.ServeHTTP(resp, request)
+
+			Expect(resp.Code).To(Equal(http.StatusBadRequest))
+			Expect(resp.Body.String()).To(MatchJSON(`{"error": "invalid destination port value: 77777"}`))
+		})
+
+		It("logs the full error", func() {
+			handler.ServeHTTP(resp, request)
+			Expect(logger).To(gbytes.Say("invalid destination port value: 77777"))
 		})
 	})
 
