@@ -46,9 +46,9 @@ type ProxyHandler struct{}
 func (h *ProxyHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	destination := strings.TrimPrefix(req.URL.Path, "/proxy/")
 	destination = "http://" + destination
-
 	getResp, err := http.Get(destination)
 	if err != nil {
+		fmt.Fprintf(os.Stderr, "request failed: %s", err)
 		resp.WriteHeader(http.StatusInternalServerError)
 		resp.Write([]byte(fmt.Sprintf("request failed: %s", err)))
 		return
@@ -67,7 +67,7 @@ func (h *ProxyHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 
 func launchHandler(port int, proxyHandler http.Handler) {
 	mux := http.NewServeMux()
-	mux.Handle("/proxy", proxyHandler)
+	mux.Handle("/proxy/", proxyHandler)
 	mux.Handle("/", &InfoHandler{
 		Port: port,
 	})

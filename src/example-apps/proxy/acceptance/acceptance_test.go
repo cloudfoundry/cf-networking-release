@@ -73,6 +73,30 @@ var _ = Describe("Acceptance", func() {
 			Expect(responseData.ListenAddresses).To(ContainElement("127.0.0.1"))
 			Expect(responseData.Port).To(Equal(listenPort))
 		})
+
+		It("should respond to /proxy by proxying the request to the provided address", func() {
+			response, err := http.DefaultClient.Get("http://" + address + "/proxy/example.com")
+			Expect(err).NotTo(HaveOccurred())
+			defer response.Body.Close()
+			Expect(response.StatusCode).To(Equal(200))
+
+			responseBytes, err := ioutil.ReadAll(response.Body)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(responseBytes).To(ContainSubstring("Example Domain"))
+		})
+
+		Context("when the proxy destination is invalid", func() {
+			It("logs the error", func() {
+
+				response, err := http.DefaultClient.Get("http://" + address + "/proxy/////!!")
+				Expect(err).NotTo(HaveOccurred())
+				defer response.Body.Close()
+				Expect(response.StatusCode).To(Equal(500))
+
+				Expect(session.Err.Contents()).To(ContainSubstring("no such host"))
+
+			})
+		})
 	})
 
 	Context("when multiple user ports are configured", func() {
