@@ -39,10 +39,12 @@ func main() {
 	}
 
 	for {
-		url := fmt.Sprintf("%s/internal/v0/policies", conf.PolicyServerURL)
+		url := fmt.Sprintf("%s/networking/v0/internal/policies", conf.PolicyServerURL)
 		resp, err := http.Get(url)
 		if err != nil {
-			panic(err)
+			logger.Error("server-error", err)
+			time.Sleep(pollInterval)
+			continue
 		}
 		defer resp.Body.Close()
 
@@ -51,7 +53,13 @@ func main() {
 			panic(err)
 		}
 
-		logger.Info("got-policies", lager.Data{"response-body": string(bodyBytes)})
+		if resp.StatusCode != 200 {
+			logger.Error("policy-server-error",
+				fmt.Errorf("unexpected status code: %d", resp.StatusCode),
+				lager.Data{"response-body": string(bodyBytes)})
+		} else {
+			logger.Info("got-policies", lager.Data{"response-body": string(bodyBytes)})
+		}
 
 		time.Sleep(pollInterval)
 	}

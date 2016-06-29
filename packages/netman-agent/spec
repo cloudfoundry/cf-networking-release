@@ -7,3 +7,4 @@ dependencies:
 files:
   - github.com/pivotal-golang/lager/*.go # gosub
   - netman-agent/cmd/netman-agent/*.go # gosub
+  - netman-agent/config/*.go # gosub

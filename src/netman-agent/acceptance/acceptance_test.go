@@ -13,31 +13,36 @@ import (
 	"github.com/onsi/gomega/gexec"
 )
 
-var serverCallCount = 0
-var mockPolicyServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path == "/internal/v0/policies" {
-		serverCallCount += 1
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(fmt.Sprintf("POLICIES VERSION %d", serverCallCount)))
-		return
-	}
-	w.WriteHeader(http.StatusTeapot)
-	w.Write([]byte(`you asked for a path that we do not mock`))
-}))
+var mockPolicyServerResponseCode int = 200
+
+func createMockPolicyServer() *httptest.Server {
+	var serverCallCount = 0
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/networking/v0/internal/policies" {
+			serverCallCount += 1
+			w.WriteHeader(mockPolicyServerResponseCode)
+			w.Write([]byte(fmt.Sprintf("POLICIES VERSION %d", serverCallCount)))
+			return
+		}
+		w.WriteHeader(http.StatusTeapot)
+		w.Write([]byte(`you asked for a path that we do not mock`))
+	}))
+}
 
 var _ = Describe("Acceptance", func() {
 	var (
-		session *gexec.Session
-		conf    config.Config
+		session          *gexec.Session
+		conf             config.Config
+		mockPolicyServer *httptest.Server
 	)
 
 	BeforeEach(func() {
+		mockPolicyServer = createMockPolicyServer()
 		conf = config.Config{
 			PolicyServerURL: mockPolicyServer.URL,
 			PollInterval:    1,
 		}
 		configFilePath := WriteConfigFile(conf)
-		serverCallCount = 0
 
 		netmanAgentCmd := exec.Command(netmanAgentPath, "-config-file", configFilePath)
 		var err error
@@ -48,6 +53,11 @@ var _ = Describe("Acceptance", func() {
 	AfterEach(func() {
 		session.Interrupt()
 		Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit())
+
+		if mockPolicyServer != nil {
+			mockPolicyServer.Close()
+			mockPolicyServer = nil
+		}
 	})
 
 	Describe("boring daemon behavior", func() {
@@ -63,5 +73,24 @@ var _ = Describe("Acceptance", func() {
 		Eventually(session.Out, DEFAULT_TIMEOUT).Should(gbytes.Say(`.*got-policies.*POLICIES VERSION 1`))
 		Eventually(session.Out, DEFAULT_TIMEOUT).Should(gbytes.Say(`.*got-policies.*POLICIES VERSION 2`))
 		Eventually(session.Out, DEFAULT_TIMEOUT).Should(gbytes.Say(`.*got-policies.*POLICIES VERSION 3`))
+	})
+
+	Context("if the policy server is unavailable", func() {
+		BeforeEach(func() {
+			mockPolicyServer.Close()
+			mockPolicyServer = nil
+		})
+		It("should log", func() {
+			Eventually(session.Out).Should(gbytes.Say(`.*server-error`))
+		})
+	})
+
+	Context("if the policy server responds with an error status code", func() {
+		BeforeEach(func() {
+			mockPolicyServerResponseCode = 409
+		})
+		It("should log", func() {
+			Eventually(session.Out, DEFAULT_TIMEOUT).Should(gbytes.Say(`.*policy-server-error.*409.*POLICIES VERSION 1`))
+		})
 	})
 })
