@@ -64,18 +64,41 @@ bosh run errand acceptance-tests
 	- This will contain the plugin directory where RUNC-CNI will be looking when it is invoking CNI plugins. By default the CNI plugins should end up in `/var/vcap/packages/runc-cni/bin/` on the host VM.
 	- For more info on **bosh packaging scripts** read [this](http://bosh.io/docs/packages.html#create-a-packaging-script).
 
+0. Remove the `packages/flannel/` and `packages/flannel-watchdog/` directories
+
 0. Replace flannel specific templates in this directory [`jobs/cni-plugin/templates`](https://github.com/cloudfoundry-incubator/netman-release/tree/master/jobs/cni-plugin/templates)
 	- Remove the templates `flannel-watchdog.json.erb`, `flannel-watchdog_ctl.erb`, `flanneld_ctl.erb`.
 	- Replace `30-flannel.conf.erb` with the config for your CNI plugin.
-	- Change the reference to this file under the `templates` key in the [spec](https://github.com/cloudfoundry-incubator/netman-release/tree/master/jobs/cni-plugin/spec) file.
+
+0. Remove the contents of this file [`jobs/cni-plugin/monit`](https://github.com/cloudfoundry-incubator/netman-release/tree/master/jobs/cni-plugin/monit)
+
 
 0. Replace flannel specific config in this file [`jobs/cni-plugin/spec`](https://github.com/cloudfoundry-incubator/netman-release/tree/master/jobs/cni-plugin/spec)
-	- Remove lines containing `cni-plugin.flannel` or `flannel-watchdog`
+	- Change the reference to the `30-flannel.conf.erb` file under the `templates` key.
+	- Remove `flannel` and `flannel-watchdog` under the `packages` key.
+	- Remove lines containing `cni-plugin.flannel`, `cni-plugin.etcd_endpoints` or `flannel-watchdog` under the `properties` key.
 	- For more info on **bosh jobs** read [this](http://bosh.io/docs/jobs.html).
-	
-0. Make the corresponding changes to your bosh manifest from previous step
-	- If you're using the provided manifest generation templates be sure to make the necessary changes.
+0. Remove the references to `flannel` and `flannel-watchdog` from [`scripts/sync-package-specs`](https://github.com/cloudfoundry-incubator/netman-release/tree/master/scripts/sync-package-specs#L42-L46)
+
+0. Make the corresponding config changes to your bosh manifest
 	- Setting the config in your deployment is done through the deployment manifest [properties](http://bosh.io/docs/deployment-manifest.html#properties).
+	- If you're using the provided manifest generation templates be sure to make the necessary changes.
+	- If you want to deploy using the [netman-bare](https://github.com/cloudfoundry-incubator/netman-release/blob/master/bosh-lite/deployments/netman-bare.yml) manifest, just add any config specified in `jobs/cni-plugin/spec` under the `properties` key. 
+
+
+###Installing the plugin
+To install your CNI plugin you will need to add the executable to the bosh packaging script in [`packages/runc-cni/packaging`](https://github.com/cloudfoundry-incubator/netman-release/tree/master/packages/runc-cni/packaging). This will contain the plugin directory where RUNC-CNI will be looking when it is invoking CNI plugins. By default the CNI plugins should end up in `/var/vcap/packages/runc-cni/bin/` on the host VM.
+
+For more info on **bosh packaging scripts** read [this](http://bosh.io/docs/packages.html#create-a-packaging-script)
+
+###Getting the CNI config
+This requires modifications to the cni-plugin [job](https://github.com/cloudfoundry-incubator/netman-release/tree/master/jobs/cni-plugin). The cni-plugin job contains the config for the netman-agent CNI handler as well as some flannel specific config. To use your own plugin remove all the flannel specific config (fields beginning with `cni-plugin.flannel` or `flannel-watchdog`) from the spec file `jobs/cni-plugin/spec` and replace with your plugin specific config.
+
+In the templates directory, include whatever config file is needed for your CNI plugin. Then under the templates key in the spec file make sure that the config file ends up in `config/cni/<your-config>.conf`.
+
+For more info on **bosh jobs** read [this](http://bosh.io/docs/jobs.html).
+
+The properties specified in the spec file are configured via the bosh deployment manifest [properties](http://bosh.io/docs/deployment-manifest.html#properties).
 
 ## Testing the policy server
 To accept:
