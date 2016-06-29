@@ -1,0 +1,9 @@
+---
+name: netman-agent
+
+dependencies:
+  - golang
+
+files:
+  - github.com/pivotal-golang/lager/*.go # gosub
+  - netman-agent/cmd/netman-agent/*.go # gosub

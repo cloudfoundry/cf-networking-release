@@ -1,0 +1,41 @@
+#!/bin/bash
+
+set -e -u
+
+RUN_DIR=/var/vcap/sys/run/netman-agent
+LOG_DIR=/var/vcap/sys/log/netman-agent
+PIDFILE=$RUN_DIR/netman-agent.pid
+
+mkdir -p /var/vcap/sys/log/monit
+exec 1>> /var/vcap/sys/log/monit/netman-agent.out.log
+exec 2>> /var/vcap/sys/log/monit/netman-agent.err.log
+
+
+case $1 in
+
+  start)
+
+    mkdir -p $RUN_DIR
+    mkdir -p $LOG_DIR
+
+    echo $$ > $PIDFILE
+
+    exec /var/vcap/packages/netman-agent/bin/netman-agent \
+      -config-file=/var/vcap/jobs/netman-agent/config/netman-agent.json \
+      1>>$LOG_DIR/netman-agent.stdout.log \
+      2>>$LOG_DIR/netman-agent.stderr.log
+
+    ;;
+
+  stop)
+
+    kill -INT $(cat $PIDFILE)
+
+    ;;
+
+  *)
+    echo "Usage: $0 {start|stop}"
+
+    ;;
+
+esac
