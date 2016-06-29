@@ -86,6 +86,8 @@ bosh run errand acceptance-tests
 	- If you want to deploy using the [netman-bare](https://github.com/cloudfoundry-incubator/netman-release/blob/master/bosh-lite/deployments/netman-bare.yml) manifest, just add any config specified in `jobs/cni-plugin/spec` under the `properties` key. 
 
 
+See [here](https://gist.github.com/jaydunk/97ddf7c3a9384ca76f1b9d8bb1a92d0b) for an example patch which removes flannel and replaces it with the bridge cni plugin.
+
 ###Installing the plugin
 To install your CNI plugin you will need to add the executable to the bosh packaging script in [`packages/runc-cni/packaging`](https://github.com/cloudfoundry-incubator/netman-release/tree/master/packages/runc-cni/packaging). This will contain the plugin directory where RUNC-CNI will be looking when it is invoking CNI plugins. By default the CNI plugins should end up in `/var/vcap/packages/runc-cni/bin/` on the host VM.
 
