@@ -146,6 +146,37 @@ var _ = Describe("Acceptance", func() {
 			responseString, err = ioutil.ReadAll(resp.Body)
 			Expect(responseString).To(MatchJSON(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`))
 		})
+
+		Context("when the protocol is invalid", func() {
+			It("gives a helpful error", func() {
+				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "nope", "port": 8090 } } ] }`)
+				resp := makeAndDoRequest(
+					"POST",
+					fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+					body,
+				)
+
+				Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
+				responseString, err := ioutil.ReadAll(resp.Body)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(responseString).To(MatchJSON(`{ "error": "invalid destination protocol, specify either udp or tcp" }`))
+			})
+		})
+		Context("when the port is invalid", func() {
+			It("gives a helpful error", func() {
+				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 0 } } ] }`)
+				resp := makeAndDoRequest(
+					"POST",
+					fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+					body,
+				)
+
+				Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
+				responseString, err := ioutil.ReadAll(resp.Body)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(responseString).To(MatchJSON(`{ "error": "invalid destination port value 0, must be 1-65535" }`))
+			})
+		})
 	})
 
 	Describe("listing policies", func() {

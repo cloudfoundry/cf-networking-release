@@ -15,6 +15,7 @@ type PoliciesDelete struct {
 	Logger      lager.Logger
 	Unmarshaler marshal.Unmarshaler
 	Store       store.Store
+	Validator   validator
 }
 
 func (h *PoliciesDelete) ServeHTTP(w http.ResponseWriter, req *http.Request) {
@@ -37,7 +38,7 @@ func (h *PoliciesDelete) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if err = validateFields(payload.Policies); err != nil {
+	if err = h.Validator.ValidatePolicies(payload.Policies); err != nil {
 		h.Logger.Error("bad-request", err)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf(`{"error": "%s"}`, err)))

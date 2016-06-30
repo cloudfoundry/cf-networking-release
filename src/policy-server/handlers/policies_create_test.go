@@ -26,6 +26,7 @@ var _ = Describe("PoliciesCreate", func() {
 		handler         *handlers.PoliciesCreate
 		resp            *httptest.ResponseRecorder
 		fakeStore       *fakes.Store
+		fakeValidator   *fakes.Validator
 		logger          *lagertest.TestLogger
 		fakeUnmarshaler *lfakes.Unmarshaler
 	)
@@ -58,6 +59,7 @@ var _ = Describe("PoliciesCreate", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		fakeStore = &fakes.Store{}
+		fakeValidator = &fakes.Validator{}
 		logger = lagertest.NewTestLogger("test")
 		fakeUnmarshaler = &lfakes.Unmarshaler{}
 		fakeUnmarshaler.UnmarshalStub = json.Unmarshal
@@ -65,6 +67,7 @@ var _ = Describe("PoliciesCreate", func() {
 			Logger:      logger,
 			Store:       fakeStore,
 			Unmarshaler: fakeUnmarshaler,
+			Validator:   fakeValidator,
 		}
 		resp = httptest.NewRecorder()
 	})
@@ -97,45 +100,25 @@ var _ = Describe("PoliciesCreate", func() {
 		Expect(resp.Body.String()).To(MatchJSON("{}"))
 	})
 
-	Context("when a policy to create includes an explicit tag", func() {
+	Context("when the validator fails", func() {
 		BeforeEach(func() {
 			var err error
-			requestJSON = `{"policies": [
-			{
-				"source": {
-					"id": "some-app-guid",
-					"tag": "user is not allowed to set this field"
-				},
-				"destination": {
-					"id": "some-other-app-guid",
-					"protocol": "tcp",
-					"port": 8080
-				}
-			},
-			{
-				"source": {
-					"id": "another-app-guid"
-				},
-				"destination": {
-					"id": "some-other-app-guid",
-					"protocol": "udp",
-					"port": 1234
-				}
-			}
-        ]}`
+			requestJSON = `{}`
 			request, err = http.NewRequest("POST", "/networking/v0/external/policies", bytes.NewBuffer([]byte(requestJSON)))
 			Expect(err).NotTo(HaveOccurred())
+
+			fakeValidator.ValidatePoliciesReturns(errors.New("banana"))
 		})
 
 		It("responds with code 400 and a useful error", func() {
 			handler.ServeHTTP(resp, request)
 			Expect(resp.Code).To(Equal(http.StatusBadRequest))
-			Expect(resp.Body.String()).To(MatchJSON(`{"error": "tags may not be specified"}`))
+			Expect(resp.Body.String()).To(MatchJSON(`{"error": "banana"}`))
 		})
 
 		It("logs the full error", func() {
 			handler.ServeHTTP(resp, request)
-			Expect(logger).To(gbytes.Say("bad-request.*tags may not be specified"))
+			Expect(logger).To(gbytes.Say("bad-request.*banana"))
 		})
 	})
 
@@ -154,216 +137,6 @@ var _ = Describe("PoliciesCreate", func() {
 		It("logs the full error", func() {
 			handler.ServeHTTP(resp, request)
 			Expect(logger).To(gbytes.Say("store-create-failed.*banana"))
-		})
-	})
-
-	Context("when the policies list is empty", func() {
-		BeforeEach(func() {
-			request.Body = ioutil.NopCloser(bytes.NewReader([]byte(`{"policies":[]}`)))
-		})
-
-		It("returns a descriptive error", func() {
-			handler.ServeHTTP(resp, request)
-
-			Expect(resp.Code).To(Equal(http.StatusBadRequest))
-			Expect(resp.Body.String()).To(MatchJSON(`{"error": "missing policies"}`))
-		})
-
-		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request)
-			Expect(logger).To(gbytes.Say("missing policies"))
-		})
-	})
-
-	Context("when the destination port field is empty", func() {
-		BeforeEach(func() {
-			request.Body = ioutil.NopCloser(bytes.NewReader([]byte(`{"policies":[
-			{
-				"source": {
-					"id": "some-app-guid"
-				},
-				"destination": {
-					"id": "some-other-app-guid",
-					"protocol": "tcp"
-				}
-			}
-			]}`)))
-		})
-		It("returns a descriptive error", func() {
-			handler.ServeHTTP(resp, request)
-
-			Expect(resp.Code).To(Equal(http.StatusBadRequest))
-			Expect(resp.Body.String()).To(MatchJSON(`{"error": "invalid destination port value: 0"}`))
-		})
-
-		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request)
-			Expect(logger).To(gbytes.Say("invalid destination port value: 0"))
-		})
-	})
-
-	Context("when the destination id is missing", func() {
-		BeforeEach(func() {
-			request.Body = ioutil.NopCloser(bytes.NewReader([]byte(`{"policies":[
-			{
-				"source": {
-					"id": "some-app-guid"
-				},
-				"destination": {
-					"protocol": "tcp",
-					"port": 8080
-				}
-			}
-			]}`)))
-		})
-		It("returns a descriptive error", func() {
-			handler.ServeHTTP(resp, request)
-
-			Expect(resp.Code).To(Equal(http.StatusBadRequest))
-			Expect(resp.Body.String()).To(MatchJSON(`{"error": "missing destination id"}`))
-		})
-
-		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request)
-			Expect(logger).To(gbytes.Say("missing destination id"))
-		})
-	})
-
-	Context("when the source id is missing", func() {
-		BeforeEach(func() {
-			request.Body = ioutil.NopCloser(bytes.NewReader([]byte(`{"policies":[
-			{
-				"source": {
-				},
-				"destination": {
-					"id": "some-other-app-guid",
-					"protocol": "tcp",
-					"port": 8080
-				}
-			}
-			]}`)))
-		})
-		It("returns a descriptive error", func() {
-			handler.ServeHTTP(resp, request)
-
-			Expect(resp.Code).To(Equal(http.StatusBadRequest))
-			Expect(resp.Body.String()).To(MatchJSON(`{"error": "missing source id"}`))
-		})
-
-		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request)
-			Expect(logger).To(gbytes.Say("missing source id"))
-		})
-	})
-
-	Context("when the destination protocol is missing", func() {
-		BeforeEach(func() {
-			request.Body = ioutil.NopCloser(bytes.NewReader([]byte(`{"policies":[
-			{
-				"source": {
-					"id": "some-app-guid"
-				},
-				"destination": {
-					"id": "some-other-app-guid",
-					"port": 8080
-				}
-			}
-			]}`)))
-		})
-		It("returns a descriptive error", func() {
-			handler.ServeHTTP(resp, request)
-
-			Expect(resp.Code).To(Equal(http.StatusBadRequest))
-			Expect(resp.Body.String()).To(MatchJSON(`{"error": "invalid destination protocol, specify either udp or tcp"}`))
-		})
-
-		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request)
-			Expect(logger).To(gbytes.Say("invalid destination protocol, specify either udp or tcp"))
-		})
-	})
-
-	Context("when the destination protocol is not udp or tcp", func() {
-		BeforeEach(func() {
-			request.Body = ioutil.NopCloser(bytes.NewReader([]byte(`{"policies":[
-			{
-				"source": {
-					"id": "some-app-guid"
-				},
-				"destination": {
-					"id": "some-other-app-guid",
-					"protocol": "banana",
-					"port": 8080
-				}
-			}
-			]}`)))
-		})
-		It("returns a descriptive error", func() {
-			handler.ServeHTTP(resp, request)
-
-			Expect(resp.Code).To(Equal(http.StatusBadRequest))
-			Expect(resp.Body.String()).To(MatchJSON(`{"error": "invalid destination protocol, specify either udp or tcp"}`))
-		})
-
-		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request)
-			Expect(logger).To(gbytes.Say("invalid destination protocol, specify either udp or tcp"))
-		})
-	})
-
-	Context("when the destination port is less than 1", func() {
-		BeforeEach(func() {
-			request.Body = ioutil.NopCloser(bytes.NewReader([]byte(`{"policies":[
-			{
-				"source": {
-					"id": "some-app-guid"
-				},
-				"destination": {
-					"id": "some-other-app-guid",
-					"protocol": "udp",
-					"port": -1
-				}
-			}
-			]}`)))
-		})
-		It("returns a descriptive error", func() {
-			handler.ServeHTTP(resp, request)
-
-			Expect(resp.Code).To(Equal(http.StatusBadRequest))
-			Expect(resp.Body.String()).To(MatchJSON(`{"error": "invalid destination port value: -1"}`))
-		})
-
-		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request)
-			Expect(logger).To(gbytes.Say("invalid destination port value: -1"))
-		})
-	})
-
-	Context("when the destination port is greater than 65535", func() {
-		BeforeEach(func() {
-			request.Body = ioutil.NopCloser(bytes.NewReader([]byte(`{"policies":[
-			{
-				"source": {
-					"id": "some-app-guid"
-				},
-				"destination": {
-					"id": "some-other-app-guid",
-					"protocol": "udp",
-					"port": 77777
-				}
-			}
-			]}`)))
-		})
-		It("returns a descriptive error", func() {
-			handler.ServeHTTP(resp, request)
-
-			Expect(resp.Code).To(Equal(http.StatusBadRequest))
-			Expect(resp.Body.String()).To(MatchJSON(`{"error": "invalid destination port value: 77777"}`))
-		})
-
-		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request)
-			Expect(logger).To(gbytes.Say("invalid destination port value: 77777"))
 		})
 	})
 

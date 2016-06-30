@@ -98,17 +98,21 @@ func main() {
 		Logger: logger,
 	}
 
+	validator := &handlers.Validator{}
+
 	createPolicyHandler := &handlers.PoliciesCreate{
 		Logger:      logger.Session("policies-create"),
 		Store:       dataStore,
 		Unmarshaler: unmarshaler,
 		Marshaler:   marshal.MarshalFunc(json.Marshal),
+		Validator:   validator,
 	}
 
 	deletePolicyHandler := &handlers.PoliciesDelete{
 		Logger:      logger.Session("policies-create"),
 		Store:       dataStore,
 		Unmarshaler: unmarshaler,
+		Validator:   validator,
 	}
 
 	policiesIndexHandler := &handlers.PoliciesIndex{

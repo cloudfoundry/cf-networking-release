@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"lib/marshal"
@@ -17,6 +16,7 @@ type PoliciesCreate struct {
 	Store       store.Store
 	Unmarshaler marshal.Unmarshaler
 	Marshaler   marshal.Marshaler
+	Validator   validator
 }
 
 func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request) {
@@ -39,14 +39,7 @@ func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if len(payload.Policies) == 0 {
-		h.Logger.Error("bad-request", errors.New("missing policies"))
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"error": "missing policies"}`))
-		return
-	}
-
-	if err = validateFields(payload.Policies); err != nil {
+	if err = h.Validator.ValidatePolicies(payload.Policies); err != nil {
 		h.Logger.Error("bad-request", err)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf(`{"error": "%s"}`, err)))
