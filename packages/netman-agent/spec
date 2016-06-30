@@ -6,5 +6,9 @@ dependencies:
 
 files:
   - github.com/pivotal-golang/lager/*.go # gosub
+  - lib/marshal/*.go # gosub
   - netman-agent/cmd/netman-agent/*.go # gosub
   - netman-agent/config/*.go # gosub
+  - netman-agent/models/*.go # gosub
+  - netman-agent/policy_client/*.go # gosub
+  - netman-agent/rule_updater/*.go # gosub
