@@ -3,16 +3,30 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"fmt"
 	"io/ioutil"
+	"lib/marshal"
 	"log"
 	"net/http"
 	"netman-agent/config"
+	"netman-agent/models"
+	"netman-agent/policy_client"
+	"netman-agent/rule_updater"
 	"os"
 	"time"
 
 	"github.com/pivotal-golang/lager"
 )
+
+type fakeStoreReader struct{}
+
+func (r *fakeStoreReader) GetContainers() models.Containers {
+	return map[string][]models.Container{
+		"app-guid": []models.Container{{
+			ID: "some-container-id",
+			IP: "8.8.8.8",
+		}},
+	}
+}
 
 func main() {
 	conf := &config.Config{}
@@ -38,29 +52,22 @@ func main() {
 		log.Fatal("error unmarshalling config")
 	}
 
+	policyClient := policy_client.New(
+		logger.Session("policy-client"),
+		http.DefaultClient,
+		conf.PolicyServerURL,
+		marshal.UnmarshalFunc(json.Unmarshal),
+	)
+	ruleUpdater := rule_updater.New(
+		logger.Session("rules-updater"),
+		&fakeStoreReader{},
+		policyClient,
+	)
 	for {
-		url := fmt.Sprintf("%s/networking/v0/internal/policies", conf.PolicyServerURL)
-		resp, err := http.Get(url)
+		err = ruleUpdater.Update()
 		if err != nil {
-			logger.Error("server-error", err)
-			time.Sleep(pollInterval)
-			continue
+			log.Fatal(err)
 		}
-		defer resp.Body.Close()
-
-		bodyBytes, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			panic(err)
-		}
-
-		if resp.StatusCode != 200 {
-			logger.Error("policy-server-error",
-				fmt.Errorf("unexpected status code: %d", resp.StatusCode),
-				lager.Data{"response-body": string(bodyBytes)})
-		} else {
-			logger.Info("got-policies", lager.Data{"response-body": string(bodyBytes)})
-		}
-
 		time.Sleep(pollInterval)
 	}
 }

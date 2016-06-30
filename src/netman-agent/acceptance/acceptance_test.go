@@ -21,11 +21,11 @@ func createMockPolicyServer() *httptest.Server {
 		if r.URL.Path == "/networking/v0/internal/policies" {
 			serverCallCount += 1
 			w.WriteHeader(mockPolicyServerResponseCode)
-			w.Write([]byte(fmt.Sprintf("POLICIES VERSION %d", serverCallCount)))
+			w.Write([]byte(fmt.Sprintf(`{ "policies": [{"source": {"id": "app-%d"}, "destination": { "id": "other-app", "port": 8080, "protocol": "tcp"}}]}`, serverCallCount)))
 			return
 		}
 		w.WriteHeader(http.StatusTeapot)
-		w.Write([]byte(`you asked for a path that we do not mock`))
+		w.Write([]byte(fmt.Sprintf(`you asked for a path that we do not mock %s`, r.URL.Path)))
 	}))
 }
 
@@ -70,9 +70,9 @@ var _ = Describe("Acceptance", func() {
 	})
 
 	It("polls the policy server on a regular interval", func() {
-		Eventually(session.Out, DEFAULT_TIMEOUT).Should(gbytes.Say(`.*got-policies.*POLICIES VERSION 1`))
-		Eventually(session.Out, DEFAULT_TIMEOUT).Should(gbytes.Say(`.*got-policies.*POLICIES VERSION 2`))
-		Eventually(session.Out, DEFAULT_TIMEOUT).Should(gbytes.Say(`.*got-policies.*POLICIES VERSION 3`))
+		Eventually(session.Out, DEFAULT_TIMEOUT).Should(gbytes.Say(`.*get-policies.*app-1`))
+		Eventually(session.Out, DEFAULT_TIMEOUT).Should(gbytes.Say(`.*get-policies.*app-2`))
+		Eventually(session.Out, DEFAULT_TIMEOUT).Should(gbytes.Say(`.*get-policies.*app-3`))
 	})
 
 	Context("if the policy server is unavailable", func() {
@@ -81,7 +81,7 @@ var _ = Describe("Acceptance", func() {
 			mockPolicyServer = nil
 		})
 		It("should log", func() {
-			Eventually(session.Out).Should(gbytes.Say(`.*server-error`))
+			Eventually(session.Out).Should(gbytes.Say(`.*get-policies.*error`))
 		})
 	})
 
@@ -90,7 +90,7 @@ var _ = Describe("Acceptance", func() {
 			mockPolicyServerResponseCode = 409
 		})
 		It("should log", func() {
-			Eventually(session.Out, DEFAULT_TIMEOUT).Should(gbytes.Say(`.*policy-server-error.*409.*POLICIES VERSION 1`))
+			Eventually(session.Out, DEFAULT_TIMEOUT).Should(gbytes.Say(`policy-client.http-client.*app-1.*409`))
 		})
 	})
 })
