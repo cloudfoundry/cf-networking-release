@@ -6,8 +6,6 @@ dependencies:
 
 files:
   - github.com/containernetworking/cni/scripts/*
-  - github.com/cloudfoundry-incubator/guardian-cni-adapter/*.go # gosub
-  - github.com/cloudfoundry-incubator/guardian-cni-adapter/controller/*.go # gosub
   - github.com/containernetworking/cni/libcni/*.go # gosub
   - github.com/containernetworking/cni/pkg/invoke/*.go # gosub
   - github.com/containernetworking/cni/pkg/ip/*.go # gosub
@@ -26,3 +24,5 @@ files:
   - github.com/containernetworking/cni/vendor/github.com/vishvananda/netlink/nl/*.go # gosub
   - golang.org/x/sys/unix/*.go # gosub
   - golang.org/x/sys/unix/*.s # gosub
+  - guardian-cni-adapter/*.go # gosub
+  - guardian-cni-adapter/controller/*.go # gosub

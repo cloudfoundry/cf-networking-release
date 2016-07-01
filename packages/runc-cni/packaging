@@ -8,7 +8,7 @@ export GOROOT=$(readlink -nf /var/vcap/packages/golang)
 export GOPATH=$BOSH_INSTALL_TARGET
 export PATH=$GOROOT/bin:$GOPATH/bin:$PATH
 
-go install github.com/cloudfoundry-incubator/guardian-cni-adapter
+go install guardian-cni-adapter
 
 export GOPATH=$GOPATH:$PWD/github.com/containernetworking/cni/Godeps/_workspace
 go install github.com/containernetworking/cni/plugins/main/bridge

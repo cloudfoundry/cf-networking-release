@@ -6,10 +6,6 @@
 	path = src/github.com/onsi/gomega
 	url = https://github.com/onsi/gomega
 	branch = master
-[submodule "src/github.com/cloudfoundry-incubator/guardian-cni-adapter"]
-	path = src/github.com/cloudfoundry-incubator/guardian-cni-adapter
-	url = https://github.com/cloudfoundry-incubator/guardian-cni-adapter
-	branch = master
 [submodule "src/github.com/cloudfoundry-incubator/garden"]
 	path = src/github.com/cloudfoundry-incubator/garden
 	url = https://github.com/cloudfoundry-incubator/garden/
