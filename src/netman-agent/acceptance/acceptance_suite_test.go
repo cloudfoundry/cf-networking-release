@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/rand"
+	"net"
 	"netman-agent/config"
 	"os"
 
@@ -50,4 +51,13 @@ func WriteConfigFile(netmanAgentConfig config.Config) string {
 	Expect(err).NotTo(HaveOccurred())
 
 	return configFile.Name()
+}
+
+func VerifyTCPConnection(address string) error {
+	conn, err := net.Dial("tcp", address)
+	if err != nil {
+		return err
+	}
+	conn.Close()
+	return nil
 }

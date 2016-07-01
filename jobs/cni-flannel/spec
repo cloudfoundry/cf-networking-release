@@ -55,6 +55,10 @@ properties:
     description: "The CNI adapter will drop logs here"
     default: /var/vcap/sys/log/cni-flannel/adapter
 
+  cni-flannel.adapter.netman_url:
+    description: "Post CNI results to this URL.  If empty, results will be ignored."
+    default: http://127.0.0.1:4007
+
   flannel-watchdog.config.bridge_name:
     description: "name of cni bridge on host"
     default: cni-flannel0

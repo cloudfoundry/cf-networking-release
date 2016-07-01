@@ -5,10 +5,17 @@ dependencies:
   - golang
 
 files:
+  - github.com/bmizerany/pat/*.go # gosub
   - github.com/pivotal-golang/lager/*.go # gosub
+  - github.com/tedsuo/ifrit/*.go # gosub
+  - github.com/tedsuo/ifrit/grouper/*.go # gosub
+  - github.com/tedsuo/ifrit/http_server/*.go # gosub
+  - github.com/tedsuo/ifrit/sigmon/*.go # gosub
+  - github.com/tedsuo/rata/*.go # gosub
   - lib/marshal/*.go # gosub
   - netman-agent/cmd/netman-agent/*.go # gosub
   - netman-agent/config/*.go # gosub
+  - netman-agent/handlers/*.go # gosub
   - netman-agent/models/*.go # gosub
   - netman-agent/policy_client/*.go # gosub
   - netman-agent/rule_updater/*.go # gosub

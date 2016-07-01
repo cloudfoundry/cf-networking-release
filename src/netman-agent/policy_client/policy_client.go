@@ -40,6 +40,7 @@ func (c *Client) GetPolicies() ([]models.Policy, error) {
 	if err != nil {
 		return nil, fmt.Errorf("http client do: %s", err)
 	}
+	defer resp.Body.Close() // untested
 
 	policyBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {

@@ -3,11 +3,13 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"lib/marshal"
 	"log"
 	"net/http"
 	"netman-agent/config"
+	"netman-agent/handlers"
 	"netman-agent/models"
 	"netman-agent/policy_client"
 	"netman-agent/rule_updater"
@@ -15,6 +17,11 @@ import (
 	"time"
 
 	"github.com/pivotal-golang/lager"
+	"github.com/tedsuo/ifrit"
+	"github.com/tedsuo/ifrit/grouper"
+	"github.com/tedsuo/ifrit/http_server"
+	"github.com/tedsuo/ifrit/sigmon"
+	"github.com/tedsuo/rata"
 )
 
 type fakeStoreReader struct{}
@@ -52,6 +59,25 @@ func main() {
 		log.Fatal("error unmarshalling config")
 	}
 
+	cniResultHandler := &handlers.CNIResult{
+		Logger: logger,
+	}
+
+	routes := rata.Routes{
+		{Name: "add", Method: "POST", Path: "/cni_result"},
+		{Name: "del", Method: "DELETE", Path: "/cni_result"},
+	}
+
+	rataHandlers := rata.Handlers{
+		"add": cniResultHandler,
+		"del": cniResultHandler,
+	}
+
+	router, err := rata.NewRouter(routes, rataHandlers)
+	if err != nil {
+		log.Fatalf("unable to create rata Router: %s", err) // not tested
+	}
+
 	policyClient := policy_client.New(
 		logger.Session("policy-client"),
 		http.DefaultClient,
@@ -63,11 +89,32 @@ func main() {
 		&fakeStoreReader{},
 		policyClient,
 	)
-	for {
-		err = ruleUpdater.Update()
-		if err != nil {
-			log.Fatal(err)
+
+	policyPoller := ifrit.RunFunc(func(signals <-chan os.Signal, ready chan<- struct{}) error {
+		close(ready)
+		for {
+			select {
+			case <-signals:
+				return nil
+			case <-time.After(pollInterval):
+				err = ruleUpdater.Update()
+				if err != nil {
+					return err
+				}
+			}
 		}
-		time.Sleep(pollInterval)
+	})
+
+	httpServer := http_server.New(fmt.Sprintf("%s:%d", conf.ListenHost, conf.ListenPort), router)
+
+	members := grouper.Members{
+		{"http_server", httpServer},
+		{"policy_poller", policyPoller},
+	}
+
+	monitor := ifrit.Invoke(sigmon.New(grouper.NewOrdered(os.Interrupt, members)))
+	err = <-monitor.Wait()
+	if err != nil {
+		log.Fatalf("daemon terminated: %s", err)
 	}
 }
