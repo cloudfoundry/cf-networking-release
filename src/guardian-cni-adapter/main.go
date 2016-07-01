@@ -6,7 +6,11 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"lib/marshal"
 	"log"
+	"net"
+	"net/http"
+	"netman-agent/client"
 	"os"
 	"path/filepath"
 
@@ -18,6 +22,7 @@ type Config struct {
 	CniConfigDir string `json:"cni_config_dir"`
 	BindMountDir string `json:"bind_mount_dir"`
 	LogDir       string `json:"log_dir"`
+	NetmanURL    string `json:"netman_url"`
 }
 
 var (
@@ -148,10 +153,18 @@ func main() {
 
 	mounter := &controller.Mounter{}
 
+	var netmanClient netmanClient
+	if config.NetmanURL != "" {
+		netmanClient = client.New(http.DefaultClient, config.NetmanURL, marshal.MarshalFunc(json.Marshal))
+	} else {
+		netmanClient = &NopNetmanClient{}
+	}
+
 	manager := &controller.Manager{
 		CNIController: cniController,
 		Mounter:       mounter,
 		BindMountRoot: config.BindMountDir,
+		NetmanClient:  netmanClient,
 	}
 
 	switch action {
@@ -168,4 +181,19 @@ func main() {
 	default:
 		log.Fatalf("action: %s is unrecognized", action)
 	}
+}
+
+type netmanClient interface {
+	Add(containerID string, groupID string, containerIP net.IP) error // TODO: reorder these args
+	Del(containerID string) error
+}
+
+type NopNetmanClient struct{}
+
+func (c *NopNetmanClient) Add(string, string, net.IP) error {
+	return nil
+}
+
+func (c *NopNetmanClient) Del(string) error {
+	return nil
 }

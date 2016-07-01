@@ -26,3 +26,5 @@ files:
   - golang.org/x/sys/unix/*.s # gosub
   - guardian-cni-adapter/*.go # gosub
   - guardian-cni-adapter/controller/*.go # gosub
+  - lib/marshal/*.go # gosub
+  - netman-agent/client/*.go # gosub

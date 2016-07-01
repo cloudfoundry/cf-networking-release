@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/containernetworking/cni/libcni"
+	"github.com/containernetworking/cni/pkg/types"
 )
 
 type CNIController struct {
@@ -103,12 +104,13 @@ func AppendNetworkSpec(existingNetConfig *libcni.NetworkConfig, gardenNetworkSpe
 	}, nil
 }
 
-func (c *CNIController) Up(namespacePath, handle, spec string) error {
+func (c *CNIController) Up(namespacePath, handle, spec string) (*types.Result, error) {
 	err := c.ensureInitialized()
 	if err != nil {
-		return fmt.Errorf("failed to initialize controller: %s", err)
+		return nil, fmt.Errorf("failed to initialize controller: %s", err)
 	}
 
+	var result *types.Result
 	for i, networkConfig := range c.networkConfigs {
 		runtimeConfig := &libcni.RuntimeConf{
 			ContainerID: handle,
@@ -118,20 +120,20 @@ func (c *CNIController) Up(namespacePath, handle, spec string) error {
 
 		enhancedNetConfig, err := AppendNetworkSpec(networkConfig, spec)
 		if err != nil {
-			return fmt.Errorf("adding garden network spec to CNI config: %s", err)
+			return nil, fmt.Errorf("adding garden network spec to CNI config: %s", err)
 		}
 
 		if enhancedNetConfig != nil {
-			result, err := c.cniConfig.AddNetwork(enhancedNetConfig, runtimeConfig)
+			result, err = c.cniConfig.AddNetwork(enhancedNetConfig, runtimeConfig)
 			if err != nil {
-				return fmt.Errorf("add network failed: %s", err)
+				return nil, fmt.Errorf("add network failed: %s", err)
 			}
 
 			log.Printf("up result for name=%s, type=%s: \n%s\n", networkConfig.Network.Name, networkConfig.Network.Type, result.String())
 		}
 	}
 
-	return nil
+	return result, nil
 }
 
 func (c *CNIController) Down(namespacePath, handle, spec string) error {
