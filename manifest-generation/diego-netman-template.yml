@@ -15,6 +15,9 @@ properties:
     shared_mounts:
       - /var/vcap/data/cni-flannel/container-netns
   cni-flannel:
+    adapter:
+      netman_url:
+        http://127.0.0.1:4007
     etcd_endpoints:
       - http://netman-db.service.cf.internal:4001
   netman-cf-acceptance: (( merge ))
