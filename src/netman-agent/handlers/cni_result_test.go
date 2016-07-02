@@ -2,9 +2,11 @@ package handlers_test
 
 import (
 	"bytes"
+	"errors"
 	"lib/testsupport"
 	"net/http"
 	"net/http/httptest"
+	"netman-agent/fakes"
 	"netman-agent/handlers"
 
 	. "github.com/onsi/ginkgo"
@@ -15,17 +17,22 @@ import (
 
 var _ = Describe("CNI Result", func() {
 	var (
-		request *http.Request
-		handler *handlers.CNIResult
-		resp    *httptest.ResponseRecorder
-		logger  *lagertest.TestLogger
-		err     error
+		request     *http.Request
+		handler     *handlers.CNIResult
+		resp        *httptest.ResponseRecorder
+		logger      *lagertest.TestLogger
+		storeWriter *fakes.StoreWriter
+		err         error
 	)
 
 	BeforeEach(func() {
 		resp = httptest.NewRecorder()
 		logger = lagertest.NewTestLogger("test")
-		handler = &handlers.CNIResult{Logger: logger}
+		storeWriter = &fakes.StoreWriter{}
+		handler = &handlers.CNIResult{
+			Logger:      logger,
+			StoreWriter: storeWriter,
+		}
 	})
 
 	It("records the container info from cni add results", func() {
@@ -45,7 +52,25 @@ var _ = Describe("CNI Result", func() {
 		Expect(logger).To(gbytes.Say(`cni_result_add.*container_id.*foo.*group_id.*bar.*ip.*9.8.7.6`))
 	})
 
-	It("records the container info from cni del results", func() {
+	It("updates the store on CNI ADD", func() {
+		requestJSON := `{
+			"container_id": "foo",
+			"group_id": "bar",
+			"ip": "9.8.7.6"
+		}`
+		request, err = http.NewRequest("POST", "/cni_result", bytes.NewBuffer([]byte(requestJSON)))
+		Expect(err).NotTo(HaveOccurred())
+
+		handler.ServeHTTP(resp, request)
+
+		Expect(storeWriter.AddCallCount()).To(Equal(1))
+		containerID, groupID, IP := storeWriter.AddArgsForCall(0)
+		Expect(containerID).To(Equal("foo"))
+		Expect(groupID).To(Equal("bar"))
+		Expect(IP).To(Equal("9.8.7.6"))
+	})
+
+	It("updates the store on CNI DEL", func() {
 		requestJSON := `{
 			"container_id": "foo"
 		}`
@@ -58,6 +83,48 @@ var _ = Describe("CNI Result", func() {
 		Expect(resp.Body.String()).To(MatchJSON("{}"))
 
 		Expect(logger).To(gbytes.Say(`cni_result_del.*container_id.*foo`))
+
+		Expect(storeWriter.DelCallCount()).To(Equal(1))
+		containerID := storeWriter.DelArgsForCall(0)
+		Expect(containerID).To(Equal("foo"))
+	})
+
+	Context("when adding to the store fails", func() {
+		BeforeEach(func() {
+			storeWriter.AddReturns(errors.New("potato"))
+		})
+		It("responds with a 500 status code and logs the error", func() {
+			requestJSON := `{
+			"container_id": "foo",
+			"group_id": "bar",
+			"ip": "9.8.7.6"
+		}`
+			request, err = http.NewRequest("POST", "/cni_result", bytes.NewBuffer([]byte(requestJSON)))
+			Expect(err).NotTo(HaveOccurred())
+
+			handler.ServeHTTP(resp, request)
+
+			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
+			Expect(logger).To(gbytes.Say(`store-add.*potato`))
+		})
+	})
+
+	Context("when deleting from the store fails", func() {
+		BeforeEach(func() {
+			storeWriter.DelReturns(errors.New("potato"))
+		})
+		It("responds with a 500 status code and logs the error", func() {
+			requestJSON := `{
+			"container_id": "foo"
+		}`
+			request, err = http.NewRequest("DELETE", "/cni_result", bytes.NewBuffer([]byte(requestJSON)))
+			Expect(err).NotTo(HaveOccurred())
+
+			handler.ServeHTTP(resp, request)
+
+			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
+			Expect(logger).To(gbytes.Say(`store-del.*potato`))
+		})
 	})
 
 	Context("when a request body cannot be deserialized from JSON", func() {

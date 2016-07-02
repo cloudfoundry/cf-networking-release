@@ -104,6 +104,34 @@ var _ = Describe("Acceptance", func() {
 		})
 	})
 
+	Describe("creating rules", func() {
+		Context("when an app container comes up and has its results posted to cni_result", func() {
+			It("gets rules based on what policies are configured on the server", func() {
+				body := strings.NewReader(`{
+							"container_id":  "some-container-id",
+							"group_id":  "app-3",
+							"ip":  "1.2.3.4"
+						}`)
+				_ = makeAndDoRequest(
+					"POST",
+					fmt.Sprintf("http://%s:%d/cni_result", conf.ListenHost, conf.ListenPort),
+					body,
+				)
+				body = strings.NewReader(`{
+							"container_id":  "some-other-container-id",
+							"group_id":  "other-app",
+							"ip":  "5.6.7.8"
+						}`)
+				_ = makeAndDoRequest(
+					"POST",
+					fmt.Sprintf("http://%s:%d/cni_result", conf.ListenHost, conf.ListenPort),
+					body,
+				)
+				Eventually(session.Out, DEFAULT_TIMEOUT).Should(gbytes.Say(`dstIP.*5.6.7.8.*port.*8080.*proto.*tcp.*srcIP.*1.2.3.4`))
+			})
+		})
+	})
+
 	Describe("getting policy updates", func() {
 		It("polls the policy server on a regular interval", func() {
 			Eventually(session.Out, DEFAULT_TIMEOUT).Should(gbytes.Say(`.*get-policies.*app-1`))

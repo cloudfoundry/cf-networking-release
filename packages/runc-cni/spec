@@ -28,3 +28,4 @@ files:
   - guardian-cni-adapter/controller/*.go # gosub
   - lib/marshal/*.go # gosub
   - netman-agent/client/*.go # gosub
+  - netman-agent/models/*.go # gosub

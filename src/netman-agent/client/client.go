@@ -6,6 +6,7 @@ import (
 	"lib/marshal"
 	"net"
 	"net/http"
+	"netman-agent/models"
 )
 
 //go:generate counterfeiter -o ../fakes/http_client.go --fake-name HTTPClient . httpClient
@@ -53,11 +54,7 @@ func (c *Client) send(method string, data interface{}) error {
 }
 
 func (c *Client) Add(containerID string, groupID string, containerIP net.IP) error {
-	return c.send("POST", struct {
-		ContainerID string `json:"container_id"`
-		GroupID     string `json:"group_id"`
-		IP          string `json:"ip"`
-	}{
+	return c.send("POST", models.CNIAddResult{
 		ContainerID: containerID,
 		GroupID:     groupID,
 		IP:          containerIP.String(),
@@ -65,9 +62,7 @@ func (c *Client) Add(containerID string, groupID string, containerIP net.IP) err
 }
 
 func (c *Client) Del(containerID string) error {
-	return c.send("DELETE", struct {
-		ContainerID string `json:"container_id"`
-	}{
+	return c.send("DELETE", models.CNIDelResult{
 		ContainerID: containerID,
 	})
 }

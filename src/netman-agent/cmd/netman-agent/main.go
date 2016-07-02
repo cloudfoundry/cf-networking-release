@@ -10,9 +10,9 @@ import (
 	"net/http"
 	"netman-agent/config"
 	"netman-agent/handlers"
-	"netman-agent/models"
 	"netman-agent/policy_client"
 	"netman-agent/rule_updater"
+	"netman-agent/store"
 	"os"
 	"time"
 
@@ -23,17 +23,6 @@ import (
 	"github.com/tedsuo/ifrit/sigmon"
 	"github.com/tedsuo/rata"
 )
-
-type fakeStoreReader struct{}
-
-func (r *fakeStoreReader) GetContainers() models.Containers {
-	return map[string][]models.Container{
-		"app-guid": []models.Container{{
-			ID: "some-container-id",
-			IP: "8.8.8.8",
-		}},
-	}
-}
 
 func main() {
 	conf := &config.Config{}
@@ -59,8 +48,11 @@ func main() {
 		log.Fatal("error unmarshalling config")
 	}
 
+	store := store.New()
+
 	cniResultHandler := &handlers.CNIResult{
-		Logger: logger,
+		Logger:      logger,
+		StoreWriter: store,
 	}
 
 	routes := rata.Routes{
@@ -86,7 +78,7 @@ func main() {
 	)
 	ruleUpdater := rule_updater.New(
 		logger.Session("rules-updater"),
-		&fakeStoreReader{},
+		store,
 		policyClient,
 	)
 
