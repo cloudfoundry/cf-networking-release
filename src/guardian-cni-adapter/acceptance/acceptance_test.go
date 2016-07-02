@@ -148,6 +148,7 @@ var _ = Describe("Guardian CNI adapter", func() {
 		Expect(writeConfig(2, cniConfigDir)).To(Succeed())
 
 		netmanAgentReceivedData = ""
+		netmanAgentReceivedMethod = ""
 		mockNetmanAgentServer = createMockNetmanAgentServer()
 
 		configFile, err := ioutil.TempFile("", "adapter-config-")
