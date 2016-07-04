@@ -3,6 +3,11 @@
 A [garden-runc](https://github.com/cloudfoundry-incubator/garden-runc-release) add-on
 that provides container networking.
 
+## Project links
+- [Design doc for Container Networking Policy](https://docs.google.com/document/d/1HDS89TJKD7ACG6cqQHph5BdNSKLt8jvo6sPGBZ5DmsM)
+- [Engineering backlog](https://www.pivotaltracker.com/n/projects/1498342)
+- Chat with us at the `#container-networking` channel on [CloudFoundry Slack](http://slack.cloudfoundry.org/)
+
 ## What you can do
 - [Running tests](#running-tests)
 - [Deploy and test in isolation](#deploy-and-test-in-isolation)
