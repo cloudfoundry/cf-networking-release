@@ -6,6 +6,7 @@ dependencies:
 
 files:
   - github.com/bmizerany/pat/*.go # gosub
+  - github.com/coreos/go-iptables/iptables/*.go # gosub
   - github.com/pivotal-golang/lager/*.go # gosub
   - github.com/tedsuo/ifrit/*.go # gosub
   - github.com/tedsuo/ifrit/grouper/*.go # gosub
