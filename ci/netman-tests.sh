@@ -67,6 +67,6 @@ fi
 for dir in "${packages[@]}"; do
   pushd $dir
     extraFlags="${GINKGO_EXTRA_FLAGS:-""}"
-    ginkgo -r -p -randomizeAllSpecs -randomizeSuites $extraFlags "$@"
+    ginkgo -r -randomizeAllSpecs -randomizeSuites $extraFlags "$@"
   popd
 done

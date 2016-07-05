@@ -5,6 +5,7 @@ ROOT_DIR_PATH=$(cd $(dirname $0)/.. && pwd)
 cd $ROOT_DIR_PATH
 
 if [ ${MYSQL:-"false"} = "true" ]; then
+  docker pull c2cnetworking/dev-mysql
   docker run --privileged \
      --rm \
      -it \
@@ -15,6 +16,7 @@ if [ ${MYSQL:-"false"} = "true" ]; then
      /bin/bash
 
 else
+  docker pull c2cnetworking/dev-postgres
   docker run --privileged \
      --rm \
      -it \

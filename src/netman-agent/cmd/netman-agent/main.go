@@ -16,6 +16,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/coreos/go-iptables/iptables"
 	"github.com/pivotal-golang/lager"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
@@ -76,11 +77,21 @@ func main() {
 		conf.PolicyServerURL,
 		marshal.UnmarshalFunc(json.Unmarshal),
 	)
-	ruleUpdater := rule_updater.New(
+
+	ipt, err := iptables.New()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ruleUpdater, err := rule_updater.New(
 		logger.Session("rules-updater"),
 		store,
 		policyClient,
+		ipt,
 	)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	policyPoller := ifrit.RunFunc(func(signals <-chan os.Signal, ready chan<- struct{}) error {
 		close(ready)
