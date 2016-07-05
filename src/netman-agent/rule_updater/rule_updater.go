@@ -26,6 +26,7 @@ type Updater struct {
 	storeReader  storeReader
 	policyClient policyClient
 	iptables     iptables
+	VNI          int
 }
 
 //go:generate counterfeiter -o ../fakes/iptables.go --fake-name IPTables . iptables
@@ -81,7 +82,7 @@ func setupDefaultIptablesChain(ipt iptables) error {
 	return nil
 }
 
-func New(logger lager.Logger, storeReader storeReader, policyClient policyClient, iptables iptables) (*Updater, error) {
+func New(logger lager.Logger, storeReader storeReader, policyClient policyClient, iptables iptables, vni int) (*Updater, error) {
 	err := setupDefaultIptablesChain(iptables)
 	if err != nil {
 		return nil, fmt.Errorf("setting up default chain: %s", err)
@@ -92,6 +93,7 @@ func New(logger lager.Logger, storeReader storeReader, policyClient policyClient
 		storeReader:  storeReader,
 		policyClient: policyClient,
 		iptables:     iptables,
+		VNI:          vni,
 	}, nil
 }
 
@@ -111,11 +113,33 @@ func (u *Updater) Update() error {
 		return fmt.Errorf("creating chain: %s", err)
 	}
 
-	//local
 	for _, policy := range policies {
 		srcContainers, srcOk := containers[policy.Source.ID]
 		dstContainers, dstOk := containers[policy.Destination.ID]
 
+		// local dest
+		if dstOk {
+			for _, dstContainer := range dstContainers {
+				u.Logger.Info("enforce-remote-rule", lager.Data{
+					"srcTag": policy.Source.Tag,
+					"dstIP":  dstContainer.IP,
+					"port":   policy.Destination.Port,
+					"proto":  policy.Destination.Protocol,
+					"vni":    u.VNI,
+				})
+			}
+		}
+
+		if srcOk {
+			for _, srcContainer := range srcContainers {
+				u.Logger.Info("set-local-tag", lager.Data{
+					"srcTag": policy.Source.Tag,
+					"srcIP":  srcContainer.IP,
+				})
+			}
+		}
+
+		// local
 		if srcOk && dstOk {
 			for _, srcContainer := range srcContainers {
 				for _, dstContainer := range dstContainers {

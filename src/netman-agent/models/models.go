@@ -13,7 +13,8 @@ type Policy struct {
 }
 
 type Source struct {
-	ID string
+	ID  string
+	Tag string
 }
 
 type Destination struct {

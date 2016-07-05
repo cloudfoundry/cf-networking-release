@@ -5,4 +5,5 @@ type Config struct {
 	PollInterval    int    `json:"poll_interval"`
 	ListenHost      string `json:"listen_host"`
 	ListenPort      int    `json:"listen_port"`
+	VNI             int    `json:"vni"`
 }

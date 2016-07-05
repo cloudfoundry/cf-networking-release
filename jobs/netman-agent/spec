@@ -22,3 +22,7 @@ properties:
   netman-agent.listen_port:
     description: "Port where the netman-agent will serve its API"
     default: 4007
+
+  netman-agent.vni:
+    description: "VXLAN VNI"
+    default: 1

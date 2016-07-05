@@ -88,6 +88,7 @@ func main() {
 		store,
 		policyClient,
 		ipt,
+		conf.VNI,
 	)
 	if err != nil {
 		log.Fatal(err)

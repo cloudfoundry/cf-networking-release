@@ -49,7 +49,18 @@ var _ = Describe("RuleUpdater", func() {
 
 		policyClient.GetPoliciesReturns([]models.Policy{{
 			models.Source{
-				ID: "some-app-guid",
+				ID:  "some-app-guid",
+				Tag: "0123",
+			},
+			models.Destination{
+				ID:       "some-other-app-guid",
+				Port:     5555,
+				Protocol: "tcp",
+			},
+		}, {
+			models.Source{
+				ID:  "some-remote-app",
+				Tag: "0124",
 			},
 			models.Destination{
 				ID:       "some-other-app-guid",
@@ -64,6 +75,7 @@ var _ = Describe("RuleUpdater", func() {
 			storeReader,
 			policyClient,
 			iptables,
+			42,
 		)
 		Expect(err).NotTo(HaveOccurred())
 	})
@@ -218,7 +230,10 @@ var _ = Describe("RuleUpdater", func() {
 			err := ruleUpdater.Update()
 			Expect(err).NotTo(HaveOccurred())
 
+			Expect(logger).To(gbytes.Say(`enforce-remote-rule.*{"dstIP":"8.8.8.9","port":5555,"proto":"tcp","srcTag":"0123","vni":42}`))
+			Expect(logger).To(gbytes.Say(`set-local-tag.*{"srcIP":"8.8.8.8","srcTag":"0123"}`))
 			Expect(logger).To(gbytes.Say(`enforce-local-rule.*{"dstIP":"8.8.8.9","port":5555,"proto":"tcp","srcIP":"8.8.8.8"}`))
+			Expect(logger).To(gbytes.Say(`enforce-remote-rule.*{"dstIP":"8.8.8.9","port":5555,"proto":"tcp","srcTag":"0124","vni":42}`))
 		})
 
 		Context("when the policy client fails", func() {
