@@ -122,6 +122,7 @@ var _ = Describe("RuleUpdater", func() {
 					storeReader,
 					policyClient,
 					iptables,
+					42,
 				)
 				Expect(err).To(MatchError("setting up default chain: banana"))
 			})
