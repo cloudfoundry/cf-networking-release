@@ -17,6 +17,7 @@ import (
 	"policy-server/uaa_client"
 	"time"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/pivotal-golang/lager"
 	"github.com/tedsuo/rata"
 )
@@ -75,13 +76,27 @@ func main() {
 		MaxRetries:    10,
 	}
 
-	dbConnectionPool, err := retriableConnector.GetConnectionPool(conf.Database)
-	if err != nil {
-		log.Fatalf("db connect: %s", err)
+	type dbConnection struct {
+		ConnectionPool *sqlx.DB
+		Err            error
+	}
+	channel := make(chan dbConnection)
+	go func() {
+		connection, err := retriableConnector.GetConnectionPool(conf.Database)
+		channel <- dbConnection{connection, err}
+	}()
+	var connectionResult dbConnection
+	select {
+	case connectionResult = <-channel:
+	case <-time.After(5 * time.Second):
+		log.Fatal("db connection timeout")
+	}
+	if connectionResult.Err != nil {
+		log.Fatalf("db connect: %s", connectionResult.Err)
 	}
 
 	dataStore, err := store.New(
-		dbConnectionPool,
+		connectionResult.ConnectionPool,
 		group,
 		destination,
 		policy,
