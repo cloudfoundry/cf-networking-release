@@ -36,7 +36,7 @@ var _ = Describe("RuleUpdater", func() {
 		logger = lagertest.NewTestLogger("test")
 		iptables = &fakes.IPTables{}
 
-		storeReader.GetContainersReturns(models.Containers{
+		storeReader.GetContainersReturns(map[string][]models.Container{
 			"some-app-guid": []models.Container{{
 				ID: "some-container-id",
 				IP: "8.8.8.8",

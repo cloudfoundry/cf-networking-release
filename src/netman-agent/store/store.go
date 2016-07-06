@@ -6,21 +6,21 @@ import (
 )
 
 type Store struct {
-	data models.Containers
+	data map[string][]models.Container
 	lock *sync.Mutex
 }
 
 func New() *Store {
 	return &Store{
-		data: make(models.Containers),
+		data: make(map[string][]models.Container),
 		lock: new(sync.Mutex),
 	}
 }
 
-func (s *Store) GetContainers() models.Containers {
+func (s *Store) GetContainers() map[string][]models.Container {
 	s.lock.Lock()
 	defer s.lock.Unlock()
-	toReturn := make(models.Containers)
+	toReturn := make(map[string][]models.Container)
 	for k, v := range s.data {
 		toReturn[k] = v
 	}

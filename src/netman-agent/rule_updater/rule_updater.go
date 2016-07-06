@@ -13,7 +13,7 @@ import (
 
 //go:generate counterfeiter -o ../fakes/store_reader.go --fake-name StoreReader . storeReader
 type storeReader interface {
-	GetContainers() models.Containers
+	GetContainers() map[string][]models.Container
 }
 
 //go:generate counterfeiter -o ../fakes/policy_client.go --fake-name PolicyClient . policyClient

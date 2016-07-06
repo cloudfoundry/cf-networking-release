@@ -4,7 +4,7 @@ package fakes
 import "sync"
 
 type StoreWriter struct {
-	AddStub        func(containerID string, groupID string, IP string) error
+	AddStub        func(containerID, groupID, IP string) error
 	addMutex       sync.RWMutex
 	addArgsForCall []struct {
 		containerID string

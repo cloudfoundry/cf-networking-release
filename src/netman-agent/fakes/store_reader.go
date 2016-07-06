@@ -7,17 +7,17 @@ import (
 )
 
 type StoreReader struct {
-	GetContainersStub        func() models.Containers
+	GetContainersStub        func() map[string][]models.Container
 	getContainersMutex       sync.RWMutex
 	getContainersArgsForCall []struct{}
 	getContainersReturns     struct {
-		result1 models.Containers
+		result1 map[string][]models.Container
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *StoreReader) GetContainers() models.Containers {
+func (fake *StoreReader) GetContainers() map[string][]models.Container {
 	fake.getContainersMutex.Lock()
 	fake.getContainersArgsForCall = append(fake.getContainersArgsForCall, struct{}{})
 	fake.recordInvocation("GetContainers", []interface{}{})
@@ -35,10 +35,10 @@ func (fake *StoreReader) GetContainersCallCount() int {
 	return len(fake.getContainersArgsForCall)
 }
 
-func (fake *StoreReader) GetContainersReturns(result1 models.Containers) {
+func (fake *StoreReader) GetContainersReturns(result1 map[string][]models.Container) {
 	fake.GetContainersStub = nil
 	fake.getContainersReturns = struct {
-		result1 models.Containers
+		result1 map[string][]models.Container
 	}{result1}
 }
 

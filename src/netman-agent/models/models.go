@@ -1,7 +1,5 @@
 package models
 
-type Containers map[string][]Container
-
 type Container struct {
 	ID string
 	IP string
