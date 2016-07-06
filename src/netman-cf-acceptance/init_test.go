@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
@@ -116,14 +117,25 @@ func getInstanceIP(appName string, instanceIndex int) string {
 	return matches[1]
 }
 
-func curlFromApp(appName string, instanceIndex int, endpoint string) string {
+func curlFromApp(appName string, instanceIndex int, endpoint string, expectSuccess bool) string {
 	sshSession := cf.Cf(
 		"ssh", appName,
 		"-i", fmt.Sprintf("%d", instanceIndex),
 		"--skip-host-validation",
-		"-c", fmt.Sprintf("curl %s", endpoint),
+		"-c", fmt.Sprintf("curl --connect-timeout 5 %s", endpoint),
 	)
-	Expect(sshSession.Wait(Timeout_Push)).To(gexec.Exit(0))
+
+	if expectSuccess {
+		Expect(sshSession.Wait(Timeout_Push)).To(gexec.Exit(0))
+	} else {
+		sshSession.Wait(Timeout_Push)
+	}
 
 	return string(sshSession.Out.Contents())
+}
+
+func getAppGuid(appName string) string {
+	session := cf.Cf("app", appName, "--guid")
+	Expect(session.Wait(Timeout_Push)).To(gexec.Exit(0))
+	return strings.TrimSpace(string(session.Out.Contents()))
 }
