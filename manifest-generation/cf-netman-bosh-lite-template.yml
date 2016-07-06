@@ -7,5 +7,5 @@ properties:
       <<: (( merge ))
       users:
       - <<: (( merge ))
-      - network-admin|network-admin|openid,network.admin
+      - network-admin|network-admin|openid,network.admin,cloud_controller.admin
 <<: (( merge ))

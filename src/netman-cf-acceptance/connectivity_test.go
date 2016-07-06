@@ -37,6 +37,8 @@ var _ = Describe("connectivity tests", func() {
 		appA = fmt.Sprintf("appA-%d", rand.Int31())
 		appB = fmt.Sprintf("appB-%d", rand.Int31())
 
+		Auth(testConfig.TestUser, testConfig.TestUserPassword)
+
 		orgName = "test-org"
 		Expect(cf.Cf("create-org", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
 		Expect(cf.Cf("target", "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
@@ -99,7 +101,6 @@ var _ = Describe("connectivity tests", func() {
 					return curlFromApp(appA, 0, fmt.Sprintf("%s:%d/", sameCellContainerIP, 8080), false)
 				}, Timeout_Short).ShouldNot(ContainSubstring(sameCellContainerIP))
 
-				Auth(testConfig.TestUser, testConfig.TestUserPassword)
 				By("creating a new policy")
 				policyJSON = fmt.Sprintf(`{"policies":[{"source":{"id":"%s"},"destination":{"id":"%s","protocol":"tcp","port":8080}}]}`,
 					appAGuid,
@@ -110,7 +111,6 @@ var _ = Describe("connectivity tests", func() {
 				postPolicyOut := string(curlSession.Out.Contents())
 				Expect(postPolicyOut).To(MatchJSON(`{}`))
 
-				AuthAsAdmin()
 				Expect(cf.Cf("target", "-o", orgName, "-s", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
 
 				By("checking that an app on the same cell becomes reachable at its **internal** route")
@@ -118,14 +118,12 @@ var _ = Describe("connectivity tests", func() {
 					return curlFromApp(appA, 0, fmt.Sprintf("%s:%d/", sameCellContainerIP, 8080), true)
 				}, 6*Timeout_Short).Should(ContainSubstring(sameCellContainerIP))
 
-				Auth(testConfig.TestUser, testConfig.TestUserPassword)
 				By("deleting the policy")
 				curlSession = cf.Cf("curl", "-X", "DELETE", "/networking/v0/external/policies", "-d", "'"+policyJSON+"'").Wait(Timeout_Push)
 				Expect(curlSession.Wait(Timeout_Push)).To(gexec.Exit(0))
 				deletePolicyOut := string(curlSession.Out.Contents())
 				Expect(deletePolicyOut).To(MatchJSON(`{}`))
 
-				AuthAsAdmin()
 				Expect(cf.Cf("target", "-o", orgName, "-s", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
 
 				By("checking that the app is no longer reachable")
