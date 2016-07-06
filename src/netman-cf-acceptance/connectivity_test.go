@@ -2,6 +2,7 @@ package acceptance_test
 
 import (
 	"fmt"
+	"math/rand"
 	"strings"
 	"time"
 
@@ -33,8 +34,8 @@ var _ = Describe("connectivity tests", func() {
 	)
 
 	BeforeEach(func() {
-		appA = "appA"
-		appB = "appB"
+		appA = fmt.Sprintf("appA-%d", rand.Int31())
+		appB = fmt.Sprintf("appB-%d", rand.Int31())
 
 		orgName = "test-org"
 		Expect(cf.Cf("create-org", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
