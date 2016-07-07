@@ -1,8 +1,8 @@
-package rule_updater_test
+package flannel_test
 
 import (
 	"io/ioutil"
-	"netman-agent/rule_updater"
+	"lib/flannel"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -10,7 +10,7 @@ import (
 
 var _ = Describe("Discovering the local subnet", func() {
 	var (
-		localSubnet rule_updater.LocalSubnet
+		localSubnet flannel.LocalSubnet
 	)
 
 	BeforeEach(func() {
@@ -26,7 +26,7 @@ FLANNEL_IPMASQ=false
 		Expect(err).NotTo(HaveOccurred())
 		Expect(tempFile.Close()).To(Succeed())
 
-		localSubnet = rule_updater.LocalSubnet{
+		localSubnet = flannel.LocalSubnet{
 			FlannelSubnetFilePath: tempFile.Name(),
 		}
 	})
@@ -39,7 +39,7 @@ FLANNEL_IPMASQ=false
 
 	Context("when there is a problem opening the file", func() {
 		It("returns a helpful error", func() {
-			localSubnet = rule_updater.LocalSubnet{
+			localSubnet = flannel.LocalSubnet{
 				FlannelSubnetFilePath: "bad-path",
 			}
 			_, err := localSubnet.DiscoverLocalSubnet()

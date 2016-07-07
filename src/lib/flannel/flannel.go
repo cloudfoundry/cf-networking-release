@@ -1,4 +1,4 @@
-package rule_updater
+package flannel
 
 import (
 	"fmt"

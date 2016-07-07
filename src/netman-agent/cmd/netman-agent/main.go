@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"lib/flannel"
 	"lib/marshal"
 	"log"
 	"net/http"
@@ -49,7 +50,7 @@ func main() {
 		log.Fatal("error unmarshalling config")
 	}
 
-	localSubnetter := &rule_updater.LocalSubnet{
+	localSubnetter := &flannel.LocalSubnet{
 		FlannelSubnetFilePath: conf.FlannelSubnetFile,
 	}
 	localSubnetCIDR, err := localSubnetter.DiscoverLocalSubnet()
