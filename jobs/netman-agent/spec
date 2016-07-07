@@ -26,3 +26,7 @@ properties:
   netman-agent.vni:
     description: "VXLAN VNI"
     default: 1
+
+  netman-agent.flannel_subnet_file:
+    description: "File path to look for flannel's subnet.env file"
+    default: "/run/flannel/subnet.env"

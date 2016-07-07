@@ -59,21 +59,32 @@ var _ = Describe("Acceptance", func() {
 	}
 
 	BeforeEach(func() {
+		subnetFile, err := ioutil.TempFile("", "subnet.env")
+		Expect(err).NotTo(HaveOccurred())
+		_, err = subnetFile.WriteString(`
+			FLANNEL_NETWORK=10.255.0.0/16
+			FLANNEL_SUBNET=10.255.19.1/24
+			FLANNEL_MTU=1450
+			FLANNEL_IPMASQ=false
+		`)
+		Expect(subnetFile.Close()).To(Succeed())
+		Expect(err).NotTo(HaveOccurred())
+
 		mockServerControl = &sync.Mutex{}
 		setResponseCode(200)
 		mockPolicyServer = createMockPolicyServer()
 		listenPort := 6666 + GinkgoParallelNode() + rand.Intn(5000)
 		address = fmt.Sprintf("127.0.0.1:%d", listenPort)
 		conf = config.Config{
-			PolicyServerURL: mockPolicyServer.URL,
-			PollInterval:    1,
-			ListenHost:      "127.0.0.1",
-			ListenPort:      listenPort,
+			PolicyServerURL:   mockPolicyServer.URL,
+			PollInterval:      1,
+			ListenHost:        "127.0.0.1",
+			ListenPort:        listenPort,
+			FlannelSubnetFile: subnetFile.Name(),
 		}
 		configFilePath := WriteConfigFile(conf)
 
 		netmanAgentCmd := exec.Command(netmanAgentPath, "-config-file", configFilePath)
-		var err error
 		session, err = gexec.Start(netmanAgentCmd, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
 

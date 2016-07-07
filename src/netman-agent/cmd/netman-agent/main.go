@@ -49,6 +49,14 @@ func main() {
 		log.Fatal("error unmarshalling config")
 	}
 
+	localSubnetter := &rule_updater.LocalSubnet{
+		FlannelSubnetFilePath: conf.FlannelSubnetFile,
+	}
+	localSubnetCIDR, err := localSubnetter.DiscoverLocalSubnet()
+	if err != nil {
+		log.Fatalf("discovering local subnet: %s", err)
+	}
+
 	store := store.New()
 
 	cniResultHandler := &handlers.CNIResult{
@@ -89,6 +97,7 @@ func main() {
 		policyClient,
 		ipt,
 		conf.VNI,
+		localSubnetCIDR,
 	)
 	if err != nil {
 		log.Fatal(err)

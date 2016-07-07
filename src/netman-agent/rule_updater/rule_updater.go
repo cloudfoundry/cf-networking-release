@@ -41,7 +41,7 @@ type iptables interface {
 	DeleteChain(table, chain string) error
 }
 
-func setupDefaultIptablesChain(ipt iptables) error {
+func setupDefaultIptablesChain(ipt iptables, localSubnet string) error {
 	rules, err := ipt.List("filter", "FORWARD")
 	if err != nil {
 		return err
@@ -73,6 +73,7 @@ func setupDefaultIptablesChain(ipt iptables) error {
 	}
 
 	err = ipt.AppendUnique("filter", "netman--forward-default", []string{
+		"-s", localSubnet,
 		"-j", "DROP",
 	}...)
 	if err != nil {
@@ -82,8 +83,8 @@ func setupDefaultIptablesChain(ipt iptables) error {
 	return nil
 }
 
-func New(logger lager.Logger, storeReader storeReader, policyClient policyClient, iptables iptables, vni int) (*Updater, error) {
-	err := setupDefaultIptablesChain(iptables)
+func New(logger lager.Logger, storeReader storeReader, policyClient policyClient, iptables iptables, vni int, localSubnet string) (*Updater, error) {
+	err := setupDefaultIptablesChain(iptables, localSubnet)
 	if err != nil {
 		return nil, fmt.Errorf("setting up default chain: %s", err)
 	}

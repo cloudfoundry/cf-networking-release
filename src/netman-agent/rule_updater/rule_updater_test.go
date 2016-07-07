@@ -76,6 +76,7 @@ var _ = Describe("RuleUpdater", func() {
 			policyClient,
 			iptables,
 			42,
+			"8.8.8.0/24",
 		)
 		Expect(err).NotTo(HaveOccurred())
 	})
@@ -108,7 +109,7 @@ var _ = Describe("RuleUpdater", func() {
 			table, chain, ruleSpec = iptables.AppendUniqueArgsForCall(2)
 			Expect(table).To(Equal("filter"))
 			Expect(chain).To(Equal("netman--forward-default"))
-			Expect(ruleSpec).To(Equal([]string{"-j", "DROP"}))
+			Expect(ruleSpec).To(Equal([]string{"-s", "8.8.8.0/24", "-j", "DROP"}))
 		})
 
 		Context("when setting up new default chain fails", func() {
@@ -123,6 +124,7 @@ var _ = Describe("RuleUpdater", func() {
 					policyClient,
 					iptables,
 					42,
+					"8.8.8.0/24",
 				)
 				Expect(err).To(MatchError("setting up default chain: banana"))
 			})
