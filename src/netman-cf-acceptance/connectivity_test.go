@@ -1,13 +1,13 @@
 package acceptance_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"strings"
 	"time"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
-	"github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
@@ -20,17 +20,18 @@ func getSubnet(ip string) string {
 	return strings.Split(ip, ".")[2]
 }
 
+func isSameCell(sourceIP, destIP string) bool {
+	return getSubnet(sourceIP) == getSubnet(destIP)
+}
+
 var _ = Describe("connectivity tests", func() {
 	var (
-		appA                string
-		appB                string
-		appAIP              string
-		appAGuid            string
-		appBGuid            string
-		remoteContainerIP   string
-		sameCellContainerIP string
-		orgName             string
-		spaceName           string
+		appA      string
+		appB      string
+		appAGuid  string
+		appBGuid  string
+		orgName   string
+		spaceName string
 	)
 
 	BeforeEach(func() {
@@ -58,21 +59,6 @@ var _ = Describe("connectivity tests", func() {
 
 		appAGuid = getAppGuid(appA)
 		appBGuid = getAppGuid(appB)
-
-		appAIP = getInstanceIP(appA, 0)
-
-		inDifferentCells := false
-		for i := 0; i < instances; i++ {
-			instanceIP := getInstanceIP(appB, i)
-
-			if getSubnet(appAIP) != getSubnet(instanceIP) {
-				inDifferentCells = true
-				remoteContainerIP = instanceIP
-			} else {
-				sameCellContainerIP = instanceIP
-			}
-		}
-		Expect(inDifferentCells).To(BeTrue())
 	})
 
 	AfterEach(func() {
@@ -81,57 +67,108 @@ var _ = Describe("connectivity tests", func() {
 	})
 
 	Describe("networking policy", func() {
-		It("makes an app reachable via its external route", func() {
-			Eventually(func() string {
-				return helpers.CurlAppWithTimeout(appA, "/", 6*Timeout_Short)
-			}, 6*Timeout_Short).Should(ContainSubstring(appAIP))
-		})
 
-		Context("when the user is network admin", func() {
-			var policyJSON string
+		It("allows the user to configure connections", func() {
+			AssertConnectionFails(appA, appB, 8080)
 
-			It("allows the user to configure connections", func() {
-				By("by denying inter-cell communication by default")
-				Consistently(func() string {
-					return curlFromApp(appA, 0, fmt.Sprintf("%s:%d/", remoteContainerIP, 8080), false)
-				}, Timeout_Short).ShouldNot(ContainSubstring(remoteContainerIP))
+			By("creating a new policy")
+			policyJSON := fmt.Sprintf(`{"policies":[{"source":{"id":"%s"},"destination":{"id":"%s","protocol":"tcp","port":8080}}]}`,
+				appAGuid,
+				appBGuid,
+			)
+			curlSession := cf.Cf("curl", "-X", "POST", "/networking/v0/external/policies", "-d", "'"+policyJSON+"'").Wait(Timeout_Push)
+			Expect(curlSession.Wait(Timeout_Push)).To(gexec.Exit(0))
+			postPolicyOut := string(curlSession.Out.Contents())
+			Expect(postPolicyOut).To(MatchJSON(`{}`))
 
-				By("by denying intra-cell communication by default")
-				Consistently(func() string {
-					return curlFromApp(appA, 0, fmt.Sprintf("%s:%d/", sameCellContainerIP, 8080), false)
-				}, Timeout_Short).ShouldNot(ContainSubstring(sameCellContainerIP))
+			AssertConnectionSucceeds(appA, appB, 8080)
 
-				By("creating a new policy")
-				policyJSON = fmt.Sprintf(`{"policies":[{"source":{"id":"%s"},"destination":{"id":"%s","protocol":"tcp","port":8080}}]}`,
-					appAGuid,
-					appBGuid,
-				)
-				curlSession := cf.Cf("curl", "-X", "POST", "/networking/v0/external/policies", "-d", "'"+policyJSON+"'").Wait(Timeout_Push)
-				Expect(curlSession.Wait(Timeout_Push)).To(gexec.Exit(0))
-				postPolicyOut := string(curlSession.Out.Contents())
-				Expect(postPolicyOut).To(MatchJSON(`{}`))
+			By("deleting the policy")
+			curlSession = cf.Cf("curl", "-X", "DELETE", "/networking/v0/external/policies", "-d", "'"+policyJSON+"'").Wait(Timeout_Push)
+			Expect(curlSession.Wait(Timeout_Push)).To(gexec.Exit(0))
+			deletePolicyOut := string(curlSession.Out.Contents())
+			Expect(deletePolicyOut).To(MatchJSON(`{}`))
 
-				Expect(cf.Cf("target", "-o", orgName, "-s", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
-
-				By("checking that an app on the same cell becomes reachable at its **internal** route")
-				Eventually(func() string {
-					return curlFromApp(appA, 0, fmt.Sprintf("%s:%d/", sameCellContainerIP, 8080), true)
-				}, 6*Timeout_Short).Should(ContainSubstring(sameCellContainerIP))
-
-				By("deleting the policy")
-				curlSession = cf.Cf("curl", "-X", "DELETE", "/networking/v0/external/policies", "-d", "'"+policyJSON+"'").Wait(Timeout_Push)
-				Expect(curlSession.Wait(Timeout_Push)).To(gexec.Exit(0))
-				deletePolicyOut := string(curlSession.Out.Contents())
-				Expect(deletePolicyOut).To(MatchJSON(`{}`))
-
-				Expect(cf.Cf("target", "-o", orgName, "-s", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
-
-				By("checking that the app is no longer reachable")
-				time.Sleep(5 * time.Second)
-				Consistently(func() string {
-					return curlFromApp(appA, 0, fmt.Sprintf("%s:%d/", sameCellContainerIP, 8080), false)
-				}, Timeout_Short).ShouldNot(ContainSubstring(sameCellContainerIP))
-			})
+			time.Sleep(5 * time.Second)
+			AssertConnectionFails(appA, appB, 8080)
 		})
 	})
 })
+
+func assertConnection(sourceAppName string, sourceAppInstance int, destIP string, destPort int, shouldSucceed bool) {
+	if shouldSucceed {
+		Eventually(func() string {
+			return curlFromApp(sourceAppName, sourceAppInstance, fmt.Sprintf("%s:%d/", destIP, destPort), shouldSucceed)
+		}, 6*Timeout_Short).Should(ContainSubstring(destIP))
+	} else {
+		Consistently(func() string {
+			return curlFromApp(sourceAppName, sourceAppInstance, fmt.Sprintf("%s:%d/", destIP, destPort), shouldSucceed)
+		}, 6*Timeout_Short).ShouldNot(ContainSubstring(destIP))
+	}
+}
+
+func getInstanceCount(appName string) int {
+	appGuid := getAppGuid(appName)
+	curlSession := cf.Cf("curl", "-X", "GET", fmt.Sprintf("/v2/apps/%s", appGuid)).Wait(Timeout_Push)
+	Expect(curlSession.Wait(Timeout_Push)).To(gexec.Exit(0))
+	var infoStruct struct {
+		Entity struct {
+			Instances int `json:"instances"`
+		} `json:"entity"`
+	}
+	Expect(json.Unmarshal(curlSession.Out.Contents(), &infoStruct)).To(Succeed())
+	count := infoStruct.Entity.Instances
+	Expect(count).To(BeNumerically(">", 0))
+	return count
+}
+
+func AssertConnectionSucceeds(sourceApp, destApp string, destPort int) {
+	By(fmt.Sprintf("checking that %s can reach %s at port %d", sourceApp, destApp, destPort))
+	assertConnectionStatus(sourceApp, destApp, destPort, true)
+}
+
+func AssertConnectionFails(sourceApp, destApp string, destPort int) {
+	By(fmt.Sprintf("checking that %s can NOT reach %s at port %d", sourceApp, destApp, destPort))
+	assertConnectionStatus(sourceApp, destApp, destPort, false)
+}
+
+func assertConnectionStatus(sourceApp, destApp string, destPort int, shouldSucceed bool) {
+	sourceAppInstances := getInstanceCount(sourceApp)
+	destAppInstances := getInstanceCount(destApp)
+
+	sameCellChan := make(chan bool)
+
+	for i := 0; i < sourceAppInstances; i++ {
+		for j := 0; j < destAppInstances; j++ {
+			go func(sourceAppInstance, destAppInstance int) {
+				sourceIP := getInstanceIP(sourceApp, sourceAppInstance)
+				destIP := getInstanceIP(destApp, destAppInstance)
+
+				sameCell := isSameCell(sourceIP, destIP)
+
+				//TODO: remove if statement when intercell policies are ready
+				if sameCell {
+					assertConnection(sourceApp, sourceAppInstance, destIP, destPort, shouldSucceed)
+				}
+
+				sameCellChan <- sameCell
+			}(i, j)
+		}
+	}
+
+	var coveredSameCell, coveredDifferentCells bool
+	for i := 0; i < sourceAppInstances*destAppInstances; i++ {
+		sameCell := <-sameCellChan
+		if sameCell {
+			coveredSameCell = true
+		} else {
+			coveredDifferentCells = true
+		}
+	}
+
+	Expect(coveredSameCell).To(BeTrue())
+
+	//TODO: uncomment expectation when intercell policies are ready
+	fmt.Printf("covered different cells: %+v\n", coveredDifferentCells)
+	// Expect(coveredDifferentCells).To(BeTrue())
+}
