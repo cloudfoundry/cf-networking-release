@@ -1,4 +1,4 @@
-package rule_updater_test
+package rules_test
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestRuleUpdater(t *testing.T) {
+func TestRules(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "RuleUpdater Suite")
+	RunSpecs(t, "Rules Suite")
 }

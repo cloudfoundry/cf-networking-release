@@ -12,7 +12,7 @@ import (
 	"netman-agent/config"
 	"netman-agent/handlers"
 	"netman-agent/policy_client"
-	"netman-agent/rule_updater"
+	"netman-agent/rules"
 	"netman-agent/store"
 	"os"
 	"time"
@@ -92,7 +92,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	ruleUpdater, err := rule_updater.New(
+	ruleUpdater, err := rules.New(
 		logger.Session("rules-updater"),
 		store,
 		policyClient,

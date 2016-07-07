@@ -1,11 +1,11 @@
-package rule_updater_test
+package rules_test
 
 import (
 	"errors"
 	"fmt"
 	"netman-agent/fakes"
 	"netman-agent/models"
-	"netman-agent/rule_updater"
+	"netman-agent/rules"
 	"strconv"
 	"strings"
 	"time"
@@ -17,9 +17,9 @@ import (
 	"github.com/onsi/gomega/gbytes"
 )
 
-var _ = Describe("RuleUpdater", func() {
+var _ = Describe("Rules", func() {
 	var (
-		ruleUpdater  *rule_updater.Updater
+		ruleUpdater  *rules.Updater
 		storeReader  *fakes.StoreReader
 		policyClient *fakes.PolicyClient
 		logger       *lagertest.TestLogger
@@ -70,7 +70,7 @@ var _ = Describe("RuleUpdater", func() {
 		}}, nil)
 
 		var err error
-		ruleUpdater, err = rule_updater.New(
+		ruleUpdater, err = rules.New(
 			logger,
 			storeReader,
 			policyClient,
@@ -118,7 +118,7 @@ var _ = Describe("RuleUpdater", func() {
 			})
 
 			It("it logs and returns a useful error", func() {
-				_, err := rule_updater.New(
+				_, err := rules.New(
 					logger,
 					storeReader,
 					policyClient,

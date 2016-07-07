@@ -1,4 +1,4 @@
-package rule_updater
+package rules
 
 import (
 	"fmt"
@@ -101,6 +101,9 @@ func New(logger lager.Logger, storeReader storeReader, policyClient policyClient
 func (u *Updater) Update() error {
 	containers := u.storeReader.GetContainers()
 	policies, err := u.policyClient.GetPolicies()
+
+	rules := []Rule{}
+
 	if err != nil {
 		u.Logger.Error("get-policies", err)
 		return fmt.Errorf("get policies failed: %s", err)
@@ -121,21 +124,25 @@ func (u *Updater) Update() error {
 		// local dest
 		if dstOk {
 			for _, dstContainer := range dstContainers {
-				u.Logger.Info("enforce-remote-rule", lager.Data{
-					"srcTag": policy.Source.Tag,
-					"dstIP":  dstContainer.IP,
-					"port":   policy.Destination.Port,
-					"proto":  policy.Destination.Protocol,
-					"vni":    u.VNI,
+				rules = append(rules, RemoteAllowRule{
+					SrcTag:   policy.Source.Tag,
+					DstIP:    dstContainer.IP,
+					Port:     policy.Destination.Port,
+					Proto:    policy.Destination.Protocol,
+					VNI:      u.VNI,
+					IPTables: u.iptables,
+					Logger:   u.Logger,
 				})
 			}
 		}
 
 		if srcOk {
 			for _, srcContainer := range srcContainers {
-				u.Logger.Info("set-local-tag", lager.Data{
-					"srcTag": policy.Source.Tag,
-					"srcIP":  srcContainer.IP,
+				rules = append(rules, LocalTagRule{
+					SourceTag:         policy.Source.Tag,
+					SourceContainerIP: srcContainer.IP,
+					IPTables:          u.iptables,
+					Logger:            u.Logger,
 				})
 			}
 		}
@@ -144,27 +151,23 @@ func (u *Updater) Update() error {
 		if srcOk && dstOk {
 			for _, srcContainer := range srcContainers {
 				for _, dstContainer := range dstContainers {
-					err = u.iptables.AppendUnique("filter", newChain, []string{
-						"-i", "cni-flannel0",
-						"-s", srcContainer.IP,
-						"-d", dstContainer.IP,
-						"-p", policy.Destination.Protocol,
-						"--dport", strconv.Itoa(policy.Destination.Port),
-						"-j", "ACCEPT",
-					}...)
-					if err != nil {
-						u.Logger.Error("append-rule", err)
-						return fmt.Errorf("appending rule: %s", err)
-					}
-
-					u.Logger.Info("enforce-local-rule", lager.Data{
-						"srcIP": srcContainer.IP,
-						"dstIP": dstContainer.IP,
-						"port":  policy.Destination.Port,
-						"proto": policy.Destination.Protocol,
+					rules = append(rules, LocalAllowRule{
+						SrcIP:    srcContainer.IP,
+						DstIP:    dstContainer.IP,
+						Port:     policy.Destination.Port,
+						Proto:    policy.Destination.Protocol,
+						IPTables: u.iptables,
+						Logger:   u.Logger,
 					})
 				}
 			}
+		}
+	}
+
+	for _, rule := range rules {
+		err = rule.Enforce(rule.Chain(newTime))
+		if err != nil {
+			return err
 		}
 	}
 
