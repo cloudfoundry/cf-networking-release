@@ -32,6 +32,7 @@ var _ = Describe("connectivity tests", func() {
 		appBGuid  string
 		orgName   string
 		spaceName string
+		port      int
 	)
 
 	BeforeEach(func() {
@@ -50,15 +51,13 @@ var _ = Describe("connectivity tests", func() {
 
 		pushApp(appA)
 
-		instances := 4
 		pushApp(appB)
-		scaleApp(appB, instances)
-
-		// wait for ssh to become available on new instances
-		time.Sleep(5000 * time.Millisecond)
+		scaleApp(appB, 4 /* instances */)
 
 		appAGuid = getAppGuid(appA)
 		appBGuid = getAppGuid(appB)
+
+		port = 8080
 	})
 
 	AfterEach(func() {
@@ -69,19 +68,26 @@ var _ = Describe("connectivity tests", func() {
 	Describe("networking policy", func() {
 
 		It("allows the user to configure connections", func() {
-			AssertConnectionFails(appA, appB, 8080)
+			AssertConnectionFails(appA, appB, port)
 
 			By("creating a new policy")
-			policyJSON := fmt.Sprintf(`{"policies":[{"source":{"id":"%s"},"destination":{"id":"%s","protocol":"tcp","port":8080}}]}`,
+			policyJSON := fmt.Sprintf(`{"policies":[{"source":{"id":"%s"},"destination":{"id":"%s","protocol":"tcp","port":%d}}]}`,
 				appAGuid,
 				appBGuid,
+				port,
 			)
 			curlSession := cf.Cf("curl", "-X", "POST", "/networking/v0/external/policies", "-d", "'"+policyJSON+"'").Wait(Timeout_Push)
 			Expect(curlSession.Wait(Timeout_Push)).To(gexec.Exit(0))
 			postPolicyOut := string(curlSession.Out.Contents())
 			Expect(postPolicyOut).To(MatchJSON(`{}`))
 
-			AssertConnectionSucceeds(appA, appB, 8080)
+			AssertConnectionSucceeds(appA, appB, port)
+
+			scaleApp(appA, 4 /* instances */)
+			AssertConnectionSucceeds(appA, appB, port)
+
+			scaleApp(appB, 6 /* instances */)
+			AssertConnectionSucceeds(appA, appB, port)
 
 			By("deleting the policy")
 			curlSession = cf.Cf("curl", "-X", "DELETE", "/networking/v0/external/policies", "-d", "'"+policyJSON+"'").Wait(Timeout_Push)
@@ -90,7 +96,7 @@ var _ = Describe("connectivity tests", func() {
 			Expect(deletePolicyOut).To(MatchJSON(`{}`))
 
 			time.Sleep(5 * time.Second)
-			AssertConnectionFails(appA, appB, 8080)
+			AssertConnectionFails(appA, appB, port)
 		})
 	})
 })

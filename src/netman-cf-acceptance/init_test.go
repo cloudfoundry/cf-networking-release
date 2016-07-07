@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
@@ -96,6 +97,9 @@ func scaleApp(appName string, instances int) {
 		"scale", appName,
 		"-i", fmt.Sprintf("%d", instances),
 	).Wait(Timeout_Push)).To(gexec.Exit(0))
+
+	// wait for ssh to become available on new instances
+	time.Sleep(5 * time.Second)
 }
 
 const (
