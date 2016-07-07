@@ -147,6 +147,7 @@ func assertConnectionStatus(sourceApp, destApp string, destPort int, shouldSucce
 	for i := 0; i < sourceAppInstances; i++ {
 		for j := 0; j < destAppInstances; j++ {
 			go func(sourceAppInstance, destAppInstance int) {
+				defer GinkgoRecover()
 				sourceIP := getInstanceIP(sourceApp, sourceAppInstance)
 				destIP := getInstanceIP(destApp, destAppInstance)
 
