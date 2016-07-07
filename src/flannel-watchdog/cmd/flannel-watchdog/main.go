@@ -1,17 +1,15 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"lib/flannel"
 	"log"
 	"os"
 	"os/exec"
 	"regexp"
-	"strings"
 	"time"
 
 	"flannel-watchdog/config"
@@ -37,22 +35,13 @@ func (r *Runner) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 		for {
 			time.Sleep(1 * time.Second)
 
-			file, err := os.Open(r.SubnetFile)
+			localSubnetter := flannel.LocalSubnet{
+				FlannelSubnetFilePath: r.SubnetFile,
+			}
+			flannelIP, err := localSubnetter.DiscoverLocalSubnet()
 			if err != nil {
-				errCh <- err
-				return
+				errCh <- fmt.Errorf("discovering flannel subnet: %s", err)
 			}
-
-			var flannelIP string
-			scanner := bufio.NewScanner(file)
-			for scanner.Scan() {
-				line := scanner.Text()
-				trimmedLine := strings.TrimPrefix(line, "FLANNEL_SUBNET=")
-				if line != trimmedLine {
-					flannelIP = trimmedLine
-				}
-			}
-			file.Close()
 
 			output, err := exec.Command("ip", "addr", "show", "dev", r.BridgeName).CombinedOutput()
 			if err != nil {
@@ -66,8 +55,9 @@ func (r *Runner) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 				return
 			}
 
-			if flannelIP != matches[1] {
-				errCh <- errors.New("out of sync")
+			deviceIP := matches[1]
+			if flannelIP != deviceIP {
+				errCh <- fmt.Errorf("out of sync: flannel subnet.net has %s but bridge device has %s", flannelIP, deviceIP)
 				return
 			}
 		}
