@@ -111,7 +111,11 @@ func main() {
 			case <-signals:
 				return nil
 			case <-time.After(pollInterval):
-				err = ruleUpdater.Update()
+				ruleArray, err := ruleUpdater.Rules()
+				if err != nil {
+					return err
+				}
+				err = ruleUpdater.Enforce(ruleArray)
 				if err != nil {
 					return err
 				}

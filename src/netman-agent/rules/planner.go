@@ -122,6 +122,18 @@ func New(logger lager.Logger, storeReader storeReader, policyClient policyClient
 }
 
 func (u *Updater) Update() error {
+	rules, err := u.Rules()
+	if err != nil {
+		return err
+	}
+	err = u.Enforce(rules)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *Updater) Rules() ([]Rule, error) {
 	containers := u.storeReader.GetContainers()
 	policies, err := u.policyClient.GetPolicies()
 
@@ -129,15 +141,7 @@ func (u *Updater) Update() error {
 
 	if err != nil {
 		u.Logger.Error("get-policies", err)
-		return fmt.Errorf("get policies failed: %s", err)
-	}
-
-	newTime := time.Now().Unix()
-	newChain := fmt.Sprintf("netman--forward-%d", newTime)
-	err = u.iptables.NewChain("filter", newChain)
-	if err != nil {
-		u.Logger.Error("create-chain", err)
-		return fmt.Errorf("creating chain: %s", err)
+		return rules, fmt.Errorf("get policies failed: %s", err)
 	}
 
 	for _, policy := range policies {
@@ -185,6 +189,18 @@ func (u *Updater) Update() error {
 				}
 			}
 		}
+	}
+
+	return rules, nil
+}
+
+func (u *Updater) Enforce(rules []Rule) error {
+	newTime := time.Now().Unix()
+	newChain := fmt.Sprintf("netman--forward-%d", newTime)
+	err := u.iptables.NewChain("filter", newChain)
+	if err != nil {
+		u.Logger.Error("create-chain", err)
+		return fmt.Errorf("creating chain: %s", err)
 	}
 
 	for _, rule := range rules {
