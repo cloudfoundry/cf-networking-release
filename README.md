@@ -7,12 +7,12 @@ that provides container networking.
 - [Design doc for Container Networking Policy](https://docs.google.com/document/d/1HDS89TJKD7ACG6cqQHph5BdNSKLt8jvo6sPGBZ5DmsM)
 - [Engineering backlog](https://www.pivotaltracker.com/n/projects/1498342)
 - Chat with us at the `#container-networking` channel on [CloudFoundry Slack](http://slack.cloudfoundry.org/)
+- [CI pipeline](https://c2c.ci.cf-app.com/) and [config](https://github.com/cloudfoundry-incubator/container-networking-ci)
+
 
 ## Running tests
 
 ```bash
-docker-machine create --driver virtualbox --virtualbox-cpu-count 4 --virtualbox-memory 2048 dev-box
-eval $(docker-machine env dev-box)
 ~/workspace/netman-release/scripts/docker-test
 ```
 
@@ -26,19 +26,11 @@ pushd ~/workspace
   git clone https://github.com/cloudfoundry/cf-release
   git clone https://github.com/cloudfoundry-incubator/netman-release
 popd
-```
 
-Run the deploy script
-
-```bash
 pushd ~/workspace/netman-release
   ./scripts/deploy-to-bosh-lite
 popd
-```
 
-Finally, run the acceptance errand:
-
-```bash
 bosh run errand netman-cf-acceptance
 ```
 
