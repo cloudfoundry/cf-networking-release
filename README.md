@@ -68,7 +68,8 @@ cf curl -X DELETE /networking/v0/external/policies -d '{ "policies": [ {"source"
 0. Add in all packages and jobs required by your CNI plugin.  At a minimum, you must provide a CNI binary program and a CNI config file.
   - For more info on **bosh packaging scripts** read [this](http://bosh.io/docs/packages.html#create-a-packaging-script).
   - For more info on **bosh jobs** read [this](http://bosh.io/docs/jobs.html).
-0. Update the [deployment manifest properties](http://bosh.io/docs/deployment-manifest.html#properties):
+0. Update the [deployment manifest properties](http://bosh.io/docs/deployment-manifest.html#properties)
+
   ```yaml
   garden-cni:
     adapter:
