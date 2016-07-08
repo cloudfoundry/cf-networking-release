@@ -66,7 +66,7 @@ var _ = Describe("connectivity tests", func() {
 	})
 
 	Describe("networking policy", func() {
-		It("allows the user to configure connections", func() {
+		It("allows the user to configure connections", func(done Done) {
 			AssertConnectionFails(appA, appB, port)
 
 			By("creating a new policy")
@@ -96,7 +96,9 @@ var _ = Describe("connectivity tests", func() {
 
 			time.Sleep(5 * time.Second)
 			AssertConnectionFails(appA, appB, port)
-		})
+
+			close(done)
+		}, 600 /* <-- overall spec timeout in seconds */)
 	})
 })
 
