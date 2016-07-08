@@ -27,7 +27,7 @@ popd
 bosh run errand netman-cf-acceptance
 ```
 
-## Testing the policy server
+## Kicking the tires on the policy server
 ```bash
 cf auth network-admin network-admin
 
