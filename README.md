@@ -74,6 +74,7 @@ cf curl -X DELETE /networking/v0/external/policies -d '{ "policies": [ {"source"
 
 ### Referencing a new library from existing BOSH package
 1. Add any new libraries into the submodule from the root of the repo
+
   ```
   cd $GOPATH
   git submodule add https://github.com/foo/bar src/github.com/foo/bar
