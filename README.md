@@ -8,12 +8,6 @@ that provides container networking.
 - [Engineering backlog](https://www.pivotaltracker.com/n/projects/1498342)
 - Chat with us at the `#container-networking` channel on [CloudFoundry Slack](http://slack.cloudfoundry.org/)
 
-## What you can do
-- [Running tests](#running-tests)
-- [Deploy and test in isolation](#deploy-and-test-in-isolation)
-- [Deploy and test with Diego](#deploy-and-test-with-diego)
-- [Using your own CNI plugin](#using-your-own-cni-plugin)
-
 ## Running tests
 
 ```bash
