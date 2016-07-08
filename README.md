@@ -43,8 +43,6 @@ bosh run errand netman-cf-acceptance
 ```
 
 ## Testing the policy server
-To accept:
-
 ```bash
 cf auth network-admin network-admin
 
