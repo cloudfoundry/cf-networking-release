@@ -60,10 +60,23 @@ type RemoteAllowRule struct {
 }
 
 func (r RemoteAllowRule) Chain(timeStamp int64) string {
-	return ""
+	return fmt.Sprintf("netman--forward-%d", timeStamp)
 }
 
 func (r RemoteAllowRule) Enforce(chain string) error {
+	err := r.IPTables.AppendUnique("filter", chain, []string{
+		"-i", fmt.Sprintf("flannel.%d", r.VNI),
+		"-d", r.DstIP,
+		"-p", r.Proto,
+		"--dport", strconv.Itoa(r.Port),
+		"-m", "mark", "--mark", fmt.Sprintf("0x%s", r.SrcTag),
+		"-j", "ACCEPT",
+	}...)
+	if err != nil {
+		r.Logger.Error("append-rule", err)
+		return fmt.Errorf("appending rule: %s", err)
+	}
+
 	r.Logger.Info("enforce-remote-rule", lager.Data{
 		"srcTag": r.SrcTag,
 		"dstIP":  r.DstIP,
@@ -83,10 +96,19 @@ type LocalTagRule struct {
 }
 
 func (r LocalTagRule) Chain(timeStamp int64) string {
-	return ""
+	return fmt.Sprintf("netman--forward-%d", timeStamp)
 }
 
 func (r LocalTagRule) Enforce(chain string) error {
+	err := r.IPTables.AppendUnique("filter", chain, []string{
+		"-s", r.SourceContainerIP,
+		"-j", "MARK", "--set-xmark", fmt.Sprintf("0x%s", r.SourceTag),
+	}...)
+	if err != nil {
+		r.Logger.Error("append-rule", err)
+		return fmt.Errorf("appending rule: %s", err)
+	}
+
 	r.Logger.Info("set-local-tag", lager.Data{
 		"srcTag": r.SourceTag,
 		"srcIP":  r.SourceContainerIP,

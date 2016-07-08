@@ -41,7 +41,7 @@ type iptables interface {
 	DeleteChain(table, chain string) error
 }
 
-func setupDefaultIptablesChain(ipt iptables, localSubnet string) error {
+func setupDefaultIptablesChain(ipt iptables, localSubnet string, vni int) error {
 	rules, err := ipt.List("filter", "FORWARD")
 	if err != nil {
 		return err
@@ -58,13 +58,15 @@ func setupDefaultIptablesChain(ipt iptables, localSubnet string) error {
 	}
 
 	err = ipt.AppendUnique("filter", "FORWARD", []string{
-		"-i", "cni-flannel0", "-j", "netman--forward-default",
+		"-j", "netman--forward-default",
 	}...)
 	if err != nil {
 		return err
 	}
 
+	// default allow for local containers to respond
 	err = ipt.AppendUnique("filter", "netman--forward-default", []string{
+		"-i", "cni-flannel0",
 		"-m", "state", "--state", "ESTABLISHED,RELATED",
 		"-j", "ACCEPT",
 	}...)
@@ -72,19 +74,40 @@ func setupDefaultIptablesChain(ipt iptables, localSubnet string) error {
 		return err
 	}
 
+	// default deny for local containers
 	err = ipt.AppendUnique("filter", "netman--forward-default", []string{
+		"-i", "cni-flannel0",
 		"-s", localSubnet,
+		"-d", localSubnet,
 		"-j", "DROP",
 	}...)
 	if err != nil {
 		return err
 	}
 
+	// default allow for remote containers to respond
+	err = ipt.AppendUnique("filter", "netman--forward-default", []string{
+		"-i", fmt.Sprintf("flannel.%d", vni),
+		"-m", "state", "--state", "ESTABLISHED,RELATED",
+		"-j", "ACCEPT",
+	}...)
+	if err != nil {
+		return err
+	}
+
+	// default deny for remote containers
+	err = ipt.AppendUnique("filter", "netman--forward-default", []string{
+		"-i", fmt.Sprintf("flannel.%d", vni),
+		"-j", "DROP",
+	}...)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func New(logger lager.Logger, storeReader storeReader, policyClient policyClient, iptables iptables, vni int, localSubnet string) (*Updater, error) {
-	err := setupDefaultIptablesChain(iptables, localSubnet)
+	err := setupDefaultIptablesChain(iptables, localSubnet, vni)
 	if err != nil {
 		return nil, fmt.Errorf("setting up default chain: %s", err)
 	}
@@ -171,9 +194,7 @@ func (u *Updater) Update() error {
 		}
 	}
 
-	err = u.iptables.Insert("filter", "FORWARD", 1, []string{
-		"-i", "cni-flannel0", "-j", newChain,
-	}...)
+	err = u.iptables.Insert("filter", "FORWARD", 1, []string{"-j", newChain}...)
 	if err != nil {
 		u.Logger.Error("insert-chain", err)
 		return fmt.Errorf("inserting chain: %s", err)
@@ -217,9 +238,7 @@ func (u *Updater) cleanupOldRules(newTime int) error {
 }
 
 func (u *Updater) cleanupOldChain(timeStampedChain string) error {
-	err := u.iptables.Delete("filter", "FORWARD", []string{
-		"-i", "cni-flannel0", "-j", timeStampedChain,
-	}...)
+	err := u.iptables.Delete("filter", "FORWARD", []string{"-j", timeStampedChain}...)
 	if err != nil {
 		return fmt.Errorf("cleanup old chain: %s", err)
 	}

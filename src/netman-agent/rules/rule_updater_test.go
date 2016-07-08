@@ -84,7 +84,7 @@ var _ = Describe("Rules", func() {
 	Describe("New", func() {
 		It("creates the default chain with default rules and jumps to it", func() {
 			Expect(iptables.NewChainCallCount()).To(Equal(1))
-			Expect(iptables.AppendUniqueCallCount()).To(Equal(3))
+			Expect(iptables.AppendUniqueCallCount()).To(Equal(5))
 
 			table, chain = iptables.NewChainArgsForCall(0)
 			Expect(table).To(Equal("filter"))
@@ -93,15 +93,13 @@ var _ = Describe("Rules", func() {
 			table, chain, ruleSpec = iptables.AppendUniqueArgsForCall(0)
 			Expect(table).To(Equal("filter"))
 			Expect(chain).To(Equal("FORWARD"))
-			Expect(ruleSpec).To(Equal([]string{
-				"-i", "cni-flannel0",
-				"-j", "netman--forward-default",
-			}))
+			Expect(ruleSpec).To(Equal([]string{"-j", "netman--forward-default"}))
 
 			table, chain, ruleSpec = iptables.AppendUniqueArgsForCall(1)
 			Expect(table).To(Equal("filter"))
 			Expect(chain).To(Equal("netman--forward-default"))
 			Expect(ruleSpec).To(Equal([]string{
+				"-i", "cni-flannel0",
 				"-m", "state", "--state", "ESTABLISHED,RELATED",
 				"-j", "ACCEPT",
 			}))
@@ -109,7 +107,12 @@ var _ = Describe("Rules", func() {
 			table, chain, ruleSpec = iptables.AppendUniqueArgsForCall(2)
 			Expect(table).To(Equal("filter"))
 			Expect(chain).To(Equal("netman--forward-default"))
-			Expect(ruleSpec).To(Equal([]string{"-s", "8.8.8.0/24", "-j", "DROP"}))
+			Expect(ruleSpec).To(Equal([]string{
+				"-i", "cni-flannel0",
+				"-s", "8.8.8.0/24",
+				"-d", "8.8.8.0/24",
+				"-j", "DROP",
+			}))
 		})
 
 		Context("when setting up new default chain fails", func() {
@@ -149,8 +152,9 @@ var _ = Describe("Rules", func() {
 			Expect(table).To(Equal("filter"))
 			Expect(myChain).To(MatchRegexp("netman--forward-[0-9]{10}"))
 
-			Expect(iptables.AppendUniqueCallCount()).To(Equal(4))
-			table, chain, ruleSpec = iptables.AppendUniqueArgsForCall(3)
+			Expect(iptables.AppendUniqueCallCount()).To(Equal(9))
+
+			table, chain, ruleSpec = iptables.AppendUniqueArgsForCall(7)
 			Expect(table).To(Equal("filter"))
 			Expect(chain).To(MatchRegexp("netman--forward-[0-9]{10}"))
 			Expect(ruleSpec).To(Equal([]string{
@@ -167,10 +171,7 @@ var _ = Describe("Rules", func() {
 			Expect(table).To(Equal("filter"))
 			Expect(chain).To(Equal("FORWARD"))
 			Expect(pos).To(Equal(1))
-			Expect(ruleSpec).To(Equal([]string{
-				"-i", "cni-flannel0",
-				"-j", myChain,
-			}))
+			Expect(ruleSpec).To(Equal([]string{"-j", myChain}))
 		})
 
 		Context("when there is already a forward chain from previous poll", func() {
@@ -212,10 +213,7 @@ var _ = Describe("Rules", func() {
 				table, chain, ruleSpec = iptables.DeleteArgsForCall(0)
 				Expect(table).To(Equal("filter"))
 				Expect(chain).To(Equal("FORWARD"))
-				Expect(ruleSpec).To(Equal([]string{
-					"-i", "cni-flannel0",
-					"-j", oldChain,
-				}))
+				Expect(ruleSpec).To(Equal([]string{"-j", oldChain}))
 
 				Expect(iptables.ClearChainCallCount()).To(Equal(1))
 				table, chain = iptables.ClearChainArgsForCall(0)

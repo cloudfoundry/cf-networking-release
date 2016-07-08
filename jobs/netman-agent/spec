@@ -13,7 +13,7 @@ properties:
 
   netman-agent.poll_interval:
     description: "Query the policy server on this interval, in seconds"
-    default: 1
+    default: 5
 
   netman-agent.listen_host:
     description: "IP address where the netman-agent will serve its API"

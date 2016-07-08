@@ -66,7 +66,6 @@ var _ = Describe("connectivity tests", func() {
 	})
 
 	Describe("networking policy", func() {
-
 		It("allows the user to configure connections", func() {
 			AssertConnectionFails(appA, appB, port)
 
@@ -153,10 +152,7 @@ func assertConnectionStatus(sourceApp, destApp string, destPort int, shouldSucce
 
 				sameCell := isSameCell(sourceIP, destIP)
 
-				//TODO: remove if statement when intercell policies are ready
-				if sameCell {
-					assertConnection(sourceApp, sourceAppInstance, destIP, destPort, shouldSucceed)
-				}
+				assertConnection(sourceApp, sourceAppInstance, destIP, destPort, shouldSucceed)
 
 				sameCellChan <- sameCell
 			}(i, j)
@@ -174,8 +170,5 @@ func assertConnectionStatus(sourceApp, destApp string, destPort int, shouldSucce
 	}
 
 	Expect(coveredSameCell).To(BeTrue())
-
-	//TODO: uncomment expectation when intercell policies are ready
-	fmt.Printf("covered different cells: %+v\n", coveredDifferentCells)
-	// Expect(coveredDifferentCells).To(BeTrue())
+	Expect(coveredDifferentCells).To(BeTrue())
 }

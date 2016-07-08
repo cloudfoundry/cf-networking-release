@@ -40,14 +40,14 @@ func main() {
 		log.Fatal("error reading config")
 	}
 
-	pollInterval := time.Duration(conf.PollInterval) * time.Second
-	if pollInterval == 0 {
-		pollInterval = time.Second
-	}
-
 	err = json.Unmarshal(configBytes, conf)
 	if err != nil {
 		log.Fatal("error unmarshalling config")
+	}
+
+	pollInterval := time.Duration(conf.PollInterval) * time.Second
+	if pollInterval == 0 {
+		pollInterval = time.Second
 	}
 
 	localSubnetter := &flannel.LocalSubnet{

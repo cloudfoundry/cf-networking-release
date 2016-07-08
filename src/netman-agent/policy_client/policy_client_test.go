@@ -41,7 +41,8 @@ var _ = Describe("PolicyClient", func() {
 				"policies": [
 				{
 					"source": {
-						"id": "some-app-guid"
+						"id": "some-app-guid",
+						"tag": "BEEF"
 					},
 					"destination": {
 						"id": "some-other-app-guid",
@@ -68,7 +69,8 @@ var _ = Describe("PolicyClient", func() {
 			Expect(policies).To(Equal([]models.Policy{
 				{
 					Source: models.Source{
-						ID: "some-app-guid",
+						ID:  "some-app-guid",
+						Tag: "BEEF",
 					},
 					Destination: models.Destination{
 						ID:       "some-other-app-guid",

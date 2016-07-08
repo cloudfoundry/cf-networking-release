@@ -46,7 +46,11 @@ var _ = Describe("Acceptance", func() {
 			if r.URL.Path == "/networking/v0/internal/policies" {
 				serverCallCount += 1
 				w.WriteHeader(getResponseCode())
-				w.Write([]byte(fmt.Sprintf(`{ "policies": [{"source": {"id": "app-%d"}, "destination": { "id": "other-app", "port": 8080, "protocol": "tcp"}}]}`, serverCallCount)))
+				w.Write([]byte(fmt.Sprintf(`{
+					"policies": [{
+						"source": {"id": "app-%d", "tag": "BEEF"},
+						"destination": { "id": "other-app", "port": 8080, "protocol": "tcp"}
+					}]}`, serverCallCount)))
 				return
 			}
 			w.WriteHeader(http.StatusTeapot)
