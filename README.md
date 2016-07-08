@@ -65,49 +65,25 @@ bosh run errand acceptance-tests
 ```
 
 ## Using your own CNI plugin
-**Note: these instructions say to put 3rd party plugins into a job called `cni-flannel`.  Feel free to rename that job if you're no longer using flannel.**
+0. Remove the following BOSH jobs:
+  - `cni-flannel`
+  - `netman-agent`
+0. Remove the following BOSH packages:
+  - `flannel`
+  - `flannel-watchdog`
+  - `netman-agent`
+0. Add in all packages and jobs required by your CNI plugin.  At a minimum, you must provide a CNI binary program and a CNI config file.
+  - For more info on **bosh packaging scripts** read [this](http://bosh.io/docs/packages.html#create-a-packaging-script).
+  - For more info on **bosh jobs** read [this](http://bosh.io/docs/jobs.html).
+0. Update the [deployment manifest properties](http://bosh.io/docs/deployment-manifest.html#properties):
+  ```yaml
+  garden-cni:
+    adapter:
+      cni_plugin_dir: /var/vcap/packages/YOUR_PACKAGE/bin # your CNI binary goes in this directory
+      cni_config_dir: /var/vcap/jobs/YOUR_JOB/config/cni  # your CNI config file goes in this directory
+  ```
+  Remove any lingering references to `flannel` or `cni-flannel` in the deployment manifest.
 
-0. Replace lines with installation procedure for your plugin in this file [`packages/runc-cni/packaging`](https://github.com/cloudfoundry-incubator/netman-release/tree/master/packages/runc-cni/packaging#L11-L14)
-	- This will contain the plugin directory where RUNC-CNI will be looking when it is invoking CNI plugins. By default the CNI plugins should end up in `/var/vcap/packages/runc-cni/bin/` on the host VM.
-	- For more info on **bosh packaging scripts** read [this](http://bosh.io/docs/packages.html#create-a-packaging-script).
-
-0. Remove the `packages/flannel/` and `packages/flannel-watchdog/` directories
-
-0. Replace flannel specific templates in this directory [`jobs/cni-flannel/templates`](https://github.com/cloudfoundry-incubator/netman-release/tree/master/jobs/cni-flannel/templates)
-	- Remove the templates `flannel-watchdog.json.erb`, `flannel-watchdog_ctl.erb`, `flanneld_ctl.erb`.
-	- Replace `30-flannel.conf.erb` with the config for your CNI plugin.
-
-0. Remove the contents of this file [`jobs/cni-flannel/monit`](https://github.com/cloudfoundry-incubator/netman-release/tree/master/jobs/cni-flannel/monit)
-
-
-0. Replace flannel specific config in this file [`jobs/cni-flannel/spec`](https://github.com/cloudfoundry-incubator/netman-release/tree/master/jobs/cni-flannel/spec)
-	- Change the reference to the `30-flannel.conf.erb` file under the `templates` key.
-	- Remove `flannel` and `flannel-watchdog` under the `packages` key.
-	- Remove lines containing `cni-flannel.flannel`, `cni-flannel.etcd_endpoints` or `flannel-watchdog` under the `properties` key.
-	- For more info on **bosh jobs** read [this](http://bosh.io/docs/jobs.html).
-0. Remove the references to `flannel` and `flannel-watchdog` from [`scripts/sync-package-specs`](https://github.com/cloudfoundry-incubator/netman-release/tree/master/scripts/sync-package-specs#L42-L46)
-
-0. Make the corresponding config changes to your bosh manifest
-	- Setting the config in your deployment is done through the deployment manifest [properties](http://bosh.io/docs/deployment-manifest.html#properties).
-	- If you're using the provided manifest generation templates be sure to make the necessary changes.
-	- If you want to deploy using the [netman-bare](https://github.com/cloudfoundry-incubator/netman-release/blob/master/bosh-lite/deployments/netman-bare.yml) manifest, just add any config specified in `jobs/cni-flannel/spec` under the `properties` key.
-
-
-See [here](https://gist.github.com/jaydunk/97ddf7c3a9384ca76f1b9d8bb1a92d0b) for an example patch which removes flannel and replaces it with the bridge cni plugin.
-
-###Installing the plugin
-To install your CNI plugin you will need to add the executable to the bosh packaging script in [`packages/runc-cni/packaging`](https://github.com/cloudfoundry-incubator/netman-release/tree/master/packages/runc-cni/packaging). This will contain the plugin directory where RUNC-CNI will be looking when it is invoking CNI plugins. By default the CNI plugins should end up in `/var/vcap/packages/runc-cni/bin/` on the host VM.
-
-For more info on **bosh packaging scripts** read [this](http://bosh.io/docs/packages.html#create-a-packaging-script)
-
-###Getting the CNI config
-This requires modifications to the cni-flannel [job](https://github.com/cloudfoundry-incubator/netman-release/tree/master/jobs/cni-flannel). The cni-flannel job contains the config for the netman-agent CNI handler as well as some flannel specific config. To use your own plugin remove all the flannel specific config (fields beginning with `cni-flannel.flannel` or `flannel-watchdog`) from the spec file `jobs/cni-flannel/spec` and replace with your plugin specific config.
-
-In the templates directory, include whatever config file is needed for your CNI plugin. Then under the templates key in the spec file make sure that the config file ends up in `config/cni/<your-config>.conf`.
-
-For more info on **bosh jobs** read [this](http://bosh.io/docs/jobs.html).
-
-The properties specified in the spec file are configured via the bosh deployment manifest [properties](http://bosh.io/docs/deployment-manifest.html#properties).
 
 ## Testing the policy server
 To accept:

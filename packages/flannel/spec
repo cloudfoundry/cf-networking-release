@@ -6,3 +6,18 @@ dependencies:
 
 files:
   - github.com/coreos/flannel/**/*
+  - github.com/containernetworking/cni/pkg/invoke/*.go # gosub
+  - github.com/containernetworking/cni/pkg/ip/*.go # gosub
+  - github.com/containernetworking/cni/pkg/ipam/*.go # gosub
+  - github.com/containernetworking/cni/pkg/ns/*.go # gosub
+  - github.com/containernetworking/cni/pkg/skel/*.go # gosub
+  - github.com/containernetworking/cni/pkg/types/*.go # gosub
+  - github.com/containernetworking/cni/pkg/utils/*.go # gosub
+  - github.com/containernetworking/cni/plugins/ipam/host-local/*.go # gosub
+  - github.com/containernetworking/cni/plugins/ipam/host-local/backend/*.go # gosub
+  - github.com/containernetworking/cni/plugins/ipam/host-local/backend/disk/*.go # gosub
+  - github.com/containernetworking/cni/plugins/main/bridge/*.go # gosub
+  - github.com/containernetworking/cni/plugins/meta/flannel/*.go # gosub
+  - github.com/containernetworking/cni/vendor/github.com/coreos/go-iptables/iptables/*.go # gosub
+  - github.com/containernetworking/cni/vendor/github.com/vishvananda/netlink/*.go # gosub
+  - github.com/containernetworking/cni/vendor/github.com/vishvananda/netlink/nl/*.go # gosub
