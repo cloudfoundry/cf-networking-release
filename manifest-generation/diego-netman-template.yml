@@ -12,8 +12,6 @@ properties:
     network_plugin: /var/vcap/packages/runc-cni/bin/guardian-cni-adapter
     network_plugin_extra_args:
     - --configFile=/var/vcap/jobs/garden-cni/config/adapter.json
-    shared_mounts:
-      - /var/vcap/data/garden-cni/container-netns
   garden-cni:
     adapter:
       cni_plugin_dir: /var/vcap/packages/flannel/bin
