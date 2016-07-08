@@ -136,13 +136,12 @@ func (u *Updater) Update() error {
 func (u *Updater) Rules() ([]Rule, error) {
 	containers := u.storeReader.GetContainers()
 	policies, err := u.policyClient.GetPolicies()
-
-	rules := []Rule{}
-
 	if err != nil {
 		u.Logger.Error("get-policies", err)
-		return rules, fmt.Errorf("get policies failed: %s", err)
+		return nil, fmt.Errorf("get policies failed: %s", err)
 	}
+
+	rules := []Rule{}
 
 	for _, policy := range policies {
 		srcContainers, srcOk := containers[policy.Source.ID]

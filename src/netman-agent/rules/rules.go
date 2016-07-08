@@ -7,6 +7,7 @@ import (
 	"github.com/pivotal-golang/lager"
 )
 
+//go:generate counterfeiter -o ../fakes/rule.go --fake-name Rule . Rule
 type Rule interface {
 	Enforce(string) error
 	Chain(int64) string

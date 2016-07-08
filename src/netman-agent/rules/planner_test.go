@@ -19,7 +19,7 @@ import (
 
 var _ = Describe("Rules", func() {
 	var (
-		ruleUpdater  *rules.Updater
+		planner      *rules.Updater
 		storeReader  *fakes.StoreReader
 		policyClient *fakes.PolicyClient
 		logger       *lagertest.TestLogger
@@ -70,7 +70,7 @@ var _ = Describe("Rules", func() {
 		}}, nil)
 
 		var err error
-		ruleUpdater, err = rules.New(
+		planner, err = rules.New(
 			logger,
 			storeReader,
 			policyClient,
@@ -134,17 +134,72 @@ var _ = Describe("Rules", func() {
 		})
 	})
 
-	Describe("Update", func() {
+	Describe("Rules", func() {
 		It("gets the policies and containers", func() {
-			err := ruleUpdater.Update()
+			_, err := planner.Rules()
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(storeReader.GetContainersCallCount()).To(Equal(1))
 			Expect(policyClient.GetPoliciesCallCount()).To(Equal(1))
 		})
 
+		It("converts policies into rule structs", func() {
+			r, err := planner.Rules()
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(len(r)).To(Equal(4))
+			Expect(r).To(ConsistOf(
+				rules.RemoteAllowRule{SrcTag: "0123", DstIP: "8.8.8.9", Port: 5555, Proto: "tcp", VNI: 42, IPTables: iptables, Logger: logger},
+				rules.LocalTagRule{SourceTag: "0123", SourceContainerIP: "8.8.8.8", IPTables: iptables, Logger: logger},
+				rules.LocalAllowRule{SrcIP: "8.8.8.8", DstIP: "8.8.8.9", Port: 5555, Proto: "tcp", IPTables: iptables, Logger: logger},
+				rules.RemoteAllowRule{SrcTag: "0124", DstIP: "8.8.8.9", Port: 5555, Proto: "tcp", VNI: 42, IPTables: iptables, Logger: logger},
+			))
+		})
+
+		Context("when the policy client fails", func() {
+			BeforeEach(func() {
+				policyClient.GetPoliciesReturns(nil, errors.New("banana"))
+			})
+
+			It("returns and logs the error", func() {
+				_, err := planner.Rules()
+				Expect(err).To(MatchError("get policies failed: banana"))
+				Expect(logger).To(gbytes.Say(`get-policies.*banana`))
+			})
+		})
+	})
+
+	Describe("Enforce", func() {
+		var fakeRule *fakes.Rule
+
+		BeforeEach(func() {
+			fakeRule = &fakes.Rule{}
+			fakeRule.ChainReturns("some-chain")
+		})
+
+		It("enforces all the rules it receives on the correct chain", func() {
+			err := planner.Enforce([]rules.Rule{fakeRule})
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(fakeRule.EnforceCallCount()).To(Equal(1))
+			Expect(fakeRule.EnforceArgsForCall(0)).To(Equal("some-chain"))
+		})
+
+		Context("when there is an error enforcing a rule", func() {
+			BeforeEach(func() {
+				fakeRule.EnforceReturns(errors.New("banana"))
+			})
+
+			It("returns the error", func() {
+				err := planner.Enforce([]rules.Rule{fakeRule})
+				Expect(err).To(MatchError("banana"))
+			})
+		})
+	})
+
+	Describe("Update", func() {
 		It("updates the iptables forward chain rules for netman", func() {
-			err := ruleUpdater.Update()
+			err := planner.Update()
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(iptables.NewChainCallCount()).To(Equal(2))
@@ -178,7 +233,7 @@ var _ = Describe("Rules", func() {
 			var oldChain string
 
 			BeforeEach(func() {
-				err := ruleUpdater.Update()
+				err := planner.Update()
 				Expect(err).NotTo(HaveOccurred())
 
 				table, oldChain = iptables.NewChainArgsForCall(1)
@@ -191,7 +246,7 @@ var _ = Describe("Rules", func() {
 					"-A FORWARD -i cni-flannel0 -j netman--forward-9999999999",
 				}, nil)
 
-				err = ruleUpdater.Update()
+				err = planner.Update()
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -228,7 +283,7 @@ var _ = Describe("Rules", func() {
 		})
 
 		It("logs the rules it is about to enforce", func() {
-			err := ruleUpdater.Update()
+			err := planner.Update()
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(logger).To(gbytes.Say(`enforce-remote-rule.*{"dstIP":"8.8.8.9","port":5555,"proto":"tcp","srcTag":"0123","vni":42}`))
@@ -237,25 +292,13 @@ var _ = Describe("Rules", func() {
 			Expect(logger).To(gbytes.Say(`enforce-remote-rule.*{"dstIP":"8.8.8.9","port":5555,"proto":"tcp","srcTag":"0124","vni":42}`))
 		})
 
-		Context("when the policy client fails", func() {
-			BeforeEach(func() {
-				policyClient.GetPoliciesReturns(nil, errors.New("banana"))
-			})
-			It("returns and logs the error", func() {
-				err := ruleUpdater.Update()
-				Expect(err).To(MatchError("get policies failed: banana"))
-
-				Expect(logger).To(gbytes.Say(`get-policies.*banana`))
-			})
-		})
-
 		Context("when appending a new rule fails", func() {
 			BeforeEach(func() {
 				iptables.AppendUniqueReturns(errors.New("banana"))
 			})
 
 			It("it logs and returns a useful error", func() {
-				err := ruleUpdater.Update()
+				err := planner.Update()
 				Expect(err).To(MatchError("appending rule: banana"))
 
 				Expect(logger).To(gbytes.Say("append-rule.*banana"))
@@ -268,7 +311,7 @@ var _ = Describe("Rules", func() {
 			})
 
 			It("it logs and returns a useful error", func() {
-				err := ruleUpdater.Update()
+				err := planner.Update()
 				Expect(err).To(MatchError("listing forward rules: blueberry"))
 
 				Expect(logger).To(gbytes.Say("cleanup-rules.*blueberry"))
@@ -284,7 +327,7 @@ var _ = Describe("Rules", func() {
 			})
 
 			It("returns a useful error", func() {
-				err := ruleUpdater.Update()
+				err := planner.Update()
 				Expect(err).To(MatchError("cleanup old chain: banana"))
 			})
 		})
@@ -295,7 +338,7 @@ var _ = Describe("Rules", func() {
 			})
 
 			It("it logs and returns a useful error", func() {
-				err := ruleUpdater.Update()
+				err := planner.Update()
 				Expect(err).To(MatchError("creating chain: banana"))
 
 				Expect(logger).To(gbytes.Say("create-chain.*banana"))
@@ -308,7 +351,7 @@ var _ = Describe("Rules", func() {
 			})
 
 			It("it logs and returns a useful error", func() {
-				err := ruleUpdater.Update()
+				err := planner.Update()
 				Expect(err).To(MatchError("inserting chain: banana"))
 
 				Expect(logger).To(gbytes.Say("insert-chain.*banana"))
