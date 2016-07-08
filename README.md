@@ -22,7 +22,6 @@ eval $(docker-machine env dev-box)
 ~/workspace/netman-release/scripts/docker-test
 ```
 
-
 ## Deploy and test with Diego
 
 Clone the necessary repositories
@@ -49,19 +48,21 @@ Finally, run the acceptance errand:
 bosh run errand netman-cf-acceptance
 ```
 
-## Deploy and test in isolation
+## Testing the policy server
+To accept:
 
 ```bash
-bosh target lite
+cf auth network-admin network-admin
 
-cd ~/workspace/netman-release
+# list policies
+cf curl /networking/v0/external/policies
 
-./scripts/update
-bosh -n create release --force && bosh -n upload release --rebase
-bosh deployment bosh-lite/deployments/netman-bare.yml
+# create a new policy
+cf curl -X POST /networking/v0/external/policies -d '{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8080 } } ] }'
 
-bosh -n deploy
-bosh run errand acceptance-tests
+# delete that policy
+cf curl -X DELETE /networking/v0/external/policies -d '{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8080 } } ] }'
+
 ```
 
 ## Using your own CNI plugin
@@ -84,14 +85,6 @@ bosh run errand acceptance-tests
   ```
   Remove any lingering references to `flannel` or `cni-flannel` in the deployment manifest.
 
-
-## Testing the policy server
-To accept:
-
-```
-cf auth network-admin network-admin
-cf curl /networking/v0/external/policies
-```
 
 # Development
 
