@@ -10,15 +10,8 @@ that provides container networking.
 - [CI pipeline](https://c2c.ci.cf-app.com/) and [config](https://github.com/cloudfoundry-incubator/container-networking-ci)
 
 
-## Running tests
 
-```bash
-~/workspace/netman-release/scripts/docker-test
-```
-
-## Deploy and test with Diego
-
-Clone the necessary repositories
+## Deploy and run high-level acceptance test errand
 
 ```bash
 pushd ~/workspace
@@ -71,7 +64,13 @@ cf curl -X DELETE /networking/v0/external/policies -d '{ "policies": [ {"source"
   Remove any lingering references to `flannel` or `cni-flannel` in the deployment manifest.
 
 
-# Development
+## Development
+
+### Running low-level tests
+
+```bash
+~/workspace/netman-release/scripts/docker-test
+```
 
 ### Referencing a new library from existing BOSH package
 1. Add any new libraries into the submodule from the root of the repo
