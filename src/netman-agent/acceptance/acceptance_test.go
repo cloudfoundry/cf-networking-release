@@ -142,7 +142,7 @@ var _ = Describe("Acceptance", func() {
 					fmt.Sprintf("http://%s:%d/cni_result", conf.ListenHost, conf.ListenPort),
 					body,
 				)
-				Eventually(session.Out, DEFAULT_TIMEOUT).Should(gbytes.Say(`dstIP.*5.6.7.8.*port.*8080.*proto.*tcp.*srcIP.*1.2.3.4`))
+				Eventually(session.Out, DEFAULT_TIMEOUT).Should(gbytes.Say(`properties":\["-i","cni-flannel0","-s","1.2.3.4","-d","5.6.7.8","-p","tcp","--dport","8080","-j","ACCEPT"\]`))
 			})
 		})
 	})

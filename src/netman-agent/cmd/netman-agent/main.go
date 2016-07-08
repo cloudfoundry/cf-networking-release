@@ -92,14 +92,25 @@ func main() {
 		log.Fatal(err)
 	}
 
-	ruleUpdater, err := rules.New(
+	timestamper := &rules.Timestamper{}
+
+	ruleEnforcer := rules.NewEnforcer(
+		logger.Session("rules-enforcer"),
+		timestamper,
+		ipt,
+	)
+
+	ruleUpdater := rules.New(
 		logger.Session("rules-updater"),
 		store,
 		policyClient,
-		ipt,
 		conf.VNI,
 		localSubnetCIDR,
+		ruleEnforcer,
 	)
+
+	r := ruleUpdater.DefaultRules()
+	err = ruleEnforcer.Enforce("netman--default-", r)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -111,11 +122,7 @@ func main() {
 			case <-signals:
 				return nil
 			case <-time.After(pollInterval):
-				ruleArray, err := ruleUpdater.Rules()
-				if err != nil {
-					return err
-				}
-				err = ruleUpdater.Enforce(ruleArray)
+				err = ruleUpdater.Update()
 				if err != nil {
 					return err
 				}

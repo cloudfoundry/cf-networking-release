@@ -2,117 +2,29 @@ package rules
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/pivotal-golang/lager"
 )
 
 //go:generate counterfeiter -o ../fakes/rule.go --fake-name Rule . Rule
 type Rule interface {
-	Enforce(string) error
-	Chain(int64) string
+	Enforce(string, IPTables, lager.Logger) error
 }
 
-type LocalAllowRule struct {
-	SrcIP    string
-	DstIP    string
-	Port     int
-	Proto    string
-	IPTables iptables
-	Logger   lager.Logger
+type GenericRule struct {
+	Properties []string
 }
 
-func (r LocalAllowRule) Chain(timeStamp int64) string {
-	return fmt.Sprintf("netman--forward-%d", timeStamp)
-}
-
-func (r LocalAllowRule) Enforce(chain string) error {
-	err := r.IPTables.AppendUnique("filter", chain, []string{
-		"-i", "cni-flannel0",
-		"-s", r.SrcIP,
-		"-d", r.DstIP,
-		"-p", r.Proto,
-		"--dport", strconv.Itoa(r.Port),
-		"-j", "ACCEPT",
-	}...)
+func (r GenericRule) Enforce(chain string, iptables IPTables, logger lager.Logger) error {
+	err := iptables.AppendUnique("filter", chain, r.Properties...)
 	if err != nil {
-		r.Logger.Error("append-rule", err)
+		logger.Error("append-rule", err)
 		return fmt.Errorf("appending rule: %s", err)
 	}
 
-	r.Logger.Info("enforce-local-rule", lager.Data{
-		"srcIP": r.SrcIP,
-		"dstIP": r.DstIP,
-		"port":  r.Port,
-		"proto": r.Proto,
-	})
-
-	return nil
-}
-
-type RemoteAllowRule struct {
-	SrcTag   string
-	DstIP    string
-	Port     int
-	Proto    string
-	VNI      int
-	IPTables iptables
-	Logger   lager.Logger
-}
-
-func (r RemoteAllowRule) Chain(timeStamp int64) string {
-	return fmt.Sprintf("netman--forward-%d", timeStamp)
-}
-
-func (r RemoteAllowRule) Enforce(chain string) error {
-	err := r.IPTables.AppendUnique("filter", chain, []string{
-		"-i", fmt.Sprintf("flannel.%d", r.VNI),
-		"-d", r.DstIP,
-		"-p", r.Proto,
-		"--dport", strconv.Itoa(r.Port),
-		"-m", "mark", "--mark", fmt.Sprintf("0x%s", r.SrcTag),
-		"-j", "ACCEPT",
-	}...)
-	if err != nil {
-		r.Logger.Error("append-rule", err)
-		return fmt.Errorf("appending rule: %s", err)
-	}
-
-	r.Logger.Info("enforce-remote-rule", lager.Data{
-		"srcTag": r.SrcTag,
-		"dstIP":  r.DstIP,
-		"port":   r.Port,
-		"proto":  r.Proto,
-		"vni":    r.VNI,
-	})
-
-	return nil
-}
-
-type LocalTagRule struct {
-	SourceTag         string
-	SourceContainerIP string
-	IPTables          iptables
-	Logger            lager.Logger
-}
-
-func (r LocalTagRule) Chain(timeStamp int64) string {
-	return fmt.Sprintf("netman--forward-%d", timeStamp)
-}
-
-func (r LocalTagRule) Enforce(chain string) error {
-	err := r.IPTables.AppendUnique("filter", chain, []string{
-		"-s", r.SourceContainerIP,
-		"-j", "MARK", "--set-xmark", fmt.Sprintf("0x%s", r.SourceTag),
-	}...)
-	if err != nil {
-		r.Logger.Error("append-rule", err)
-		return fmt.Errorf("appending rule: %s", err)
-	}
-
-	r.Logger.Info("set-local-tag", lager.Data{
-		"srcTag": r.SourceTag,
-		"srcIP":  r.SourceContainerIP,
+	logger.Info("enforce-rule", lager.Data{
+		"chain":      chain,
+		"properties": r.Properties,
 	})
 
 	return nil

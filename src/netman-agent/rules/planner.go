@@ -3,10 +3,7 @@ package rules
 import (
 	"fmt"
 	"netman-agent/models"
-	"regexp"
 	"strconv"
-	"strings"
-	"time"
 
 	"github.com/pivotal-golang/lager"
 )
@@ -25,100 +22,57 @@ type Updater struct {
 	Logger       lager.Logger
 	storeReader  storeReader
 	policyClient policyClient
-	iptables     iptables
 	VNI          int
+	LocalSubnet  string
+	RuleEnforcer RuleEnforcer
 }
 
-//go:generate counterfeiter -o ../fakes/iptables.go --fake-name IPTables . iptables
-type iptables interface {
-	Exists(table, chain string, rulespec ...string) (bool, error)
-	Insert(table, chain string, pos int, rulespec ...string) error
-	AppendUnique(table, chain string, rulespec ...string) error
-	Delete(table, chain string, rulespec ...string) error
-	List(table, chain string) ([]string, error)
-	NewChain(table, chain string) error
-	ClearChain(table, chain string) error
-	DeleteChain(table, chain string) error
+//go:generate counterfeiter -o ../fakes/rule_enforcer.go --fake-name RuleEnforcer . RuleEnforcer
+type RuleEnforcer interface {
+	Enforce(chain string, r []Rule) error
 }
 
-func setupDefaultIptablesChain(ipt iptables, localSubnet string, vni int) error {
-	rules, err := ipt.List("filter", "FORWARD")
-	if err != nil {
-		return err
-	}
-	for _, r := range rules {
-		if strings.Contains(r, "netman--forward-default") {
-			return nil
-		}
-	}
-
-	err = ipt.NewChain("filter", "netman--forward-default")
-	if err != nil {
-		return err
-	}
-
-	err = ipt.AppendUnique("filter", "FORWARD", []string{
-		"-j", "netman--forward-default",
-	}...)
-	if err != nil {
-		return err
-	}
-
-	// default allow for local containers to respond
-	err = ipt.AppendUnique("filter", "netman--forward-default", []string{
-		"-i", "cni-flannel0",
-		"-m", "state", "--state", "ESTABLISHED,RELATED",
-		"-j", "ACCEPT",
-	}...)
-	if err != nil {
-		return err
-	}
-
-	// default deny for local containers
-	err = ipt.AppendUnique("filter", "netman--forward-default", []string{
-		"-i", "cni-flannel0",
-		"-s", localSubnet,
-		"-d", localSubnet,
-		"-j", "DROP",
-	}...)
-	if err != nil {
-		return err
-	}
-
-	// default allow for remote containers to respond
-	err = ipt.AppendUnique("filter", "netman--forward-default", []string{
-		"-i", fmt.Sprintf("flannel.%d", vni),
-		"-m", "state", "--state", "ESTABLISHED,RELATED",
-		"-j", "ACCEPT",
-	}...)
-	if err != nil {
-		return err
-	}
-
-	// default deny for remote containers
-	err = ipt.AppendUnique("filter", "netman--forward-default", []string{
-		"-i", fmt.Sprintf("flannel.%d", vni),
-		"-j", "DROP",
-	}...)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func New(logger lager.Logger, storeReader storeReader, policyClient policyClient, iptables iptables, vni int, localSubnet string) (*Updater, error) {
-	err := setupDefaultIptablesChain(iptables, localSubnet, vni)
-	if err != nil {
-		return nil, fmt.Errorf("setting up default chain: %s", err)
-	}
-
+func New(logger lager.Logger, storeReader storeReader, policyClient policyClient, vni int, localSubnet string, ruleEnforcer RuleEnforcer) *Updater {
 	return &Updater{
 		Logger:       logger,
 		storeReader:  storeReader,
 		policyClient: policyClient,
-		iptables:     iptables,
 		VNI:          vni,
-	}, nil
+		LocalSubnet:  localSubnet,
+		RuleEnforcer: ruleEnforcer,
+	}
+}
+
+func (u *Updater) DefaultRules() []Rule {
+	r := []Rule{}
+
+	r = append(r, GenericRule{
+		Properties: []string{
+			"-i", "cni-flannel0",
+			"-m", "state", "--state", "ESTABLISHED,RELATED",
+			"-j", "ACCEPT",
+		},
+	}, GenericRule{
+		Properties: []string{
+			"-i", "cni-flannel0",
+			"-s", u.LocalSubnet,
+			"-d", u.LocalSubnet,
+			"-j", "DROP",
+		},
+	}, GenericRule{
+		Properties: []string{
+			"-i", fmt.Sprintf("flannel.%d", u.VNI),
+			"-m", "state", "--state", "ESTABLISHED,RELATED",
+			"-j", "ACCEPT",
+		},
+	}, GenericRule{
+		Properties: []string{
+			"-i", fmt.Sprintf("flannel.%d", u.VNI),
+			"-j", "DROP",
+		},
+	})
+
+	return r
 }
 
 func (u *Updater) Update() error {
@@ -126,7 +80,7 @@ func (u *Updater) Update() error {
 	if err != nil {
 		return err
 	}
-	err = u.Enforce(rules)
+	err = u.RuleEnforcer.Enforce("netman--forward-", rules)
 	if err != nil {
 		return err
 	}
@@ -150,25 +104,26 @@ func (u *Updater) Rules() ([]Rule, error) {
 		// local dest
 		if dstOk {
 			for _, dstContainer := range dstContainers {
-				rules = append(rules, RemoteAllowRule{
-					SrcTag:   policy.Source.Tag,
-					DstIP:    dstContainer.IP,
-					Port:     policy.Destination.Port,
-					Proto:    policy.Destination.Protocol,
-					VNI:      u.VNI,
-					IPTables: u.iptables,
-					Logger:   u.Logger,
+				rules = append(rules, GenericRule{
+					Properties: []string{
+						"-i", fmt.Sprintf("flannel.%d", u.VNI),
+						"-d", dstContainer.IP,
+						"-p", policy.Destination.Protocol,
+						"--dport", strconv.Itoa(policy.Destination.Port),
+						"-m", "mark", "--mark", fmt.Sprintf("0x%s", policy.Source.Tag),
+						"-j", "ACCEPT",
+					},
 				})
 			}
 		}
 
 		if srcOk {
 			for _, srcContainer := range srcContainers {
-				rules = append(rules, LocalTagRule{
-					SourceTag:         policy.Source.Tag,
-					SourceContainerIP: srcContainer.IP,
-					IPTables:          u.iptables,
-					Logger:            u.Logger,
+				rules = append(rules, GenericRule{
+					Properties: []string{
+						"-s", srcContainer.IP,
+						"-j", "MARK", "--set-xmark", fmt.Sprintf("0x%s", policy.Source.Tag),
+					},
 				})
 			}
 		}
@@ -177,13 +132,15 @@ func (u *Updater) Rules() ([]Rule, error) {
 		if srcOk && dstOk {
 			for _, srcContainer := range srcContainers {
 				for _, dstContainer := range dstContainers {
-					rules = append(rules, LocalAllowRule{
-						SrcIP:    srcContainer.IP,
-						DstIP:    dstContainer.IP,
-						Port:     policy.Destination.Port,
-						Proto:    policy.Destination.Protocol,
-						IPTables: u.iptables,
-						Logger:   u.Logger,
+					rules = append(rules, GenericRule{
+						Properties: []string{
+							"-i", "cni-flannel0",
+							"-s", srcContainer.IP,
+							"-d", dstContainer.IP,
+							"-p", policy.Destination.Protocol,
+							"--dport", strconv.Itoa(policy.Destination.Port),
+							"-j", "ACCEPT",
+						},
 					})
 				}
 			}
@@ -191,82 +148,4 @@ func (u *Updater) Rules() ([]Rule, error) {
 	}
 
 	return rules, nil
-}
-
-func (u *Updater) Enforce(rules []Rule) error {
-	newTime := time.Now().Unix()
-	newChain := fmt.Sprintf("netman--forward-%d", newTime)
-	err := u.iptables.NewChain("filter", newChain)
-	if err != nil {
-		u.Logger.Error("create-chain", err)
-		return fmt.Errorf("creating chain: %s", err)
-	}
-
-	for _, rule := range rules {
-		err = rule.Enforce(rule.Chain(newTime))
-		if err != nil {
-			return err
-		}
-	}
-
-	err = u.iptables.Insert("filter", "FORWARD", 1, []string{"-j", newChain}...)
-	if err != nil {
-		u.Logger.Error("insert-chain", err)
-		return fmt.Errorf("inserting chain: %s", err)
-	}
-
-	err = u.cleanupOldRules(int(newTime))
-	if err != nil {
-		u.Logger.Error("cleanup-rules", err)
-		return err
-	}
-
-	return nil
-}
-
-func (u *Updater) cleanupOldRules(newTime int) error {
-	chainList, err := u.iptables.List("filter", "FORWARD")
-	if err != nil {
-		return fmt.Errorf("listing forward rules: %s", err)
-	}
-
-	re := regexp.MustCompile("netman--forward-[0-9]{10}")
-	for _, c := range chainList {
-		timeStampedChain := string(re.Find([]byte(c)))
-
-		if timeStampedChain != "" {
-			oldTime, err := strconv.Atoi(strings.TrimPrefix(timeStampedChain, "netman--forward-"))
-			if err != nil {
-				return err
-			}
-
-			if oldTime < newTime {
-				err = u.cleanupOldChain(timeStampedChain)
-				if err != nil {
-					return err
-				}
-			}
-		}
-	}
-
-	return nil
-}
-
-func (u *Updater) cleanupOldChain(timeStampedChain string) error {
-	err := u.iptables.Delete("filter", "FORWARD", []string{"-j", timeStampedChain}...)
-	if err != nil {
-		return fmt.Errorf("cleanup old chain: %s", err)
-	}
-
-	err = u.iptables.ClearChain("filter", timeStampedChain)
-	if err != nil {
-		return fmt.Errorf("cleanup old chain: %s", err)
-	}
-
-	err = u.iptables.DeleteChain("filter", timeStampedChain)
-	if err != nil {
-		return fmt.Errorf("cleanup old chain: %s", err)
-	}
-
-	return nil
 }

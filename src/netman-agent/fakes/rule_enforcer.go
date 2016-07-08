@@ -4,17 +4,14 @@ package fakes
 import (
 	"netman-agent/rules"
 	"sync"
-
-	"github.com/pivotal-golang/lager"
 )
 
-type Rule struct {
-	EnforceStub        func(string, rules.IPTables, lager.Logger) error
+type RuleEnforcer struct {
+	EnforceStub        func(chain string, r []rules.Rule) error
 	enforceMutex       sync.RWMutex
 	enforceArgsForCall []struct {
-		arg1 string
-		arg2 rules.IPTables
-		arg3 lager.Logger
+		chain string
+		r     []rules.Rule
 	}
 	enforceReturns struct {
 		result1 error
@@ -23,42 +20,46 @@ type Rule struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *Rule) Enforce(arg1 string, arg2 rules.IPTables, arg3 lager.Logger) error {
+func (fake *RuleEnforcer) Enforce(chain string, r []rules.Rule) error {
+	var rCopy []rules.Rule
+	if r != nil {
+		rCopy = make([]rules.Rule, len(r))
+		copy(rCopy, r)
+	}
 	fake.enforceMutex.Lock()
 	fake.enforceArgsForCall = append(fake.enforceArgsForCall, struct {
-		arg1 string
-		arg2 rules.IPTables
-		arg3 lager.Logger
-	}{arg1, arg2, arg3})
-	fake.recordInvocation("Enforce", []interface{}{arg1, arg2, arg3})
+		chain string
+		r     []rules.Rule
+	}{chain, rCopy})
+	fake.recordInvocation("Enforce", []interface{}{chain, rCopy})
 	fake.enforceMutex.Unlock()
 	if fake.EnforceStub != nil {
-		return fake.EnforceStub(arg1, arg2, arg3)
+		return fake.EnforceStub(chain, r)
 	} else {
 		return fake.enforceReturns.result1
 	}
 }
 
-func (fake *Rule) EnforceCallCount() int {
+func (fake *RuleEnforcer) EnforceCallCount() int {
 	fake.enforceMutex.RLock()
 	defer fake.enforceMutex.RUnlock()
 	return len(fake.enforceArgsForCall)
 }
 
-func (fake *Rule) EnforceArgsForCall(i int) (string, rules.IPTables, lager.Logger) {
+func (fake *RuleEnforcer) EnforceArgsForCall(i int) (string, []rules.Rule) {
 	fake.enforceMutex.RLock()
 	defer fake.enforceMutex.RUnlock()
-	return fake.enforceArgsForCall[i].arg1, fake.enforceArgsForCall[i].arg2, fake.enforceArgsForCall[i].arg3
+	return fake.enforceArgsForCall[i].chain, fake.enforceArgsForCall[i].r
 }
 
-func (fake *Rule) EnforceReturns(result1 error) {
+func (fake *RuleEnforcer) EnforceReturns(result1 error) {
 	fake.EnforceStub = nil
 	fake.enforceReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *Rule) Invocations() map[string][][]interface{} {
+func (fake *RuleEnforcer) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.enforceMutex.RLock()
@@ -66,7 +67,7 @@ func (fake *Rule) Invocations() map[string][][]interface{} {
 	return fake.invocations
 }
 
-func (fake *Rule) recordInvocation(key string, args []interface{}) {
+func (fake *RuleEnforcer) recordInvocation(key string, args []interface{}) {
 	fake.invocationsMutex.Lock()
 	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {
@@ -78,4 +79,4 @@ func (fake *Rule) recordInvocation(key string, args []interface{}) {
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ rules.Rule = new(Rule)
+var _ rules.RuleEnforcer = new(RuleEnforcer)
