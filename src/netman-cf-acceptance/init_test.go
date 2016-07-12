@@ -36,7 +36,7 @@ func Auth(username, password string) {
 	cmd := exec.Command("cf", "auth", username, password)
 	sess, err := gexec.Start(cmd, nil, nil)
 	Expect(err).NotTo(HaveOccurred())
-	Eventually(sess.Wait(Timeout_Push)).Should(gexec.Exit(0))
+	Eventually(sess.Wait(Timeout_Short)).Should(gexec.Exit(0))
 }
 
 func AuthAsAdmin() {
@@ -56,7 +56,7 @@ func TestAcceptance(t *testing.T) {
 		err = json.Unmarshal(configBytes, &testConfig)
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(cf.Cf("api", "--skip-ssl-validation", config.ApiEndpoint).Wait(Timeout_Push)).To(gexec.Exit(0))
+		Expect(cf.Cf("api", "--skip-ssl-validation", config.ApiEndpoint).Wait(Timeout_Short)).To(gexec.Exit(0))
 		AuthAsAdmin()
 
 		appDir = os.Getenv("APP_DIR")
@@ -96,10 +96,10 @@ func scaleApp(appName string, instances int) {
 	Expect(cf.Cf(
 		"scale", appName,
 		"-i", fmt.Sprintf("%d", instances),
-	).Wait(Timeout_Push)).To(gexec.Exit(0))
+	).Wait(Timeout_Short)).To(gexec.Exit(0))
 
 	// wait for ssh to become available on new instances
-	time.Sleep(5 * time.Second)
+	time.Sleep(15 * time.Second)
 }
 
 const (
@@ -114,7 +114,7 @@ func getInstanceIP(appName string, instanceIndex int) string {
 		"--skip-host-validation",
 		"-c", "ip addr",
 	)
-	Expect(sshSession.Wait(Timeout_Push)).To(gexec.Exit(0))
+	Expect(sshSession.Wait(2 * Timeout_Short)).To(gexec.Exit(0))
 
 	addrOut := string(sshSession.Out.Contents())
 	matches := regexp.MustCompile(ipAddrParseRegex).FindStringSubmatch(addrOut)
@@ -130,9 +130,9 @@ func curlFromApp(appName string, instanceIndex int, endpoint string, expectSucce
 	)
 
 	if expectSuccess {
-		Expect(sshSession.Wait(Timeout_Push)).To(gexec.Exit(0))
+		Expect(sshSession.Wait(Timeout_Short)).To(gexec.Exit(0))
 	} else {
-		sshSession.Wait(Timeout_Push)
+		Expect(sshSession.Wait(Timeout_Short)).To(gexec.Exit(28))
 	}
 
 	return string(sshSession.Out.Contents())
@@ -140,6 +140,6 @@ func curlFromApp(appName string, instanceIndex int, endpoint string, expectSucce
 
 func getAppGuid(appName string) string {
 	session := cf.Cf("app", appName, "--guid")
-	Expect(session.Wait(Timeout_Push)).To(gexec.Exit(0))
+	Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
 	return strings.TrimSpace(string(session.Out.Contents()))
 }

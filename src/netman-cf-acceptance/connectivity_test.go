@@ -75,8 +75,8 @@ var _ = Describe("connectivity tests", func() {
 				appBGuid,
 				port,
 			)
-			curlSession := cf.Cf("curl", "-X", "POST", "/networking/v0/external/policies", "-d", "'"+policyJSON+"'").Wait(Timeout_Push)
-			Expect(curlSession.Wait(Timeout_Push)).To(gexec.Exit(0))
+			curlSession := cf.Cf("curl", "-X", "POST", "/networking/v0/external/policies", "-d", "'"+policyJSON+"'").Wait(Timeout_Short)
+			Expect(curlSession.Wait(Timeout_Short)).To(gexec.Exit(0))
 			postPolicyOut := string(curlSession.Out.Contents())
 			Expect(postPolicyOut).To(MatchJSON(`{}`))
 
@@ -89,8 +89,8 @@ var _ = Describe("connectivity tests", func() {
 			AssertConnectionSucceeds(appA, appB, port)
 
 			By("deleting the policy")
-			curlSession = cf.Cf("curl", "-X", "DELETE", "/networking/v0/external/policies", "-d", "'"+policyJSON+"'").Wait(Timeout_Push)
-			Expect(curlSession.Wait(Timeout_Push)).To(gexec.Exit(0))
+			curlSession = cf.Cf("curl", "-X", "DELETE", "/networking/v0/external/policies", "-d", "'"+policyJSON+"'").Wait(Timeout_Short)
+			Expect(curlSession.Wait(Timeout_Short)).To(gexec.Exit(0))
 			deletePolicyOut := string(curlSession.Out.Contents())
 			Expect(deletePolicyOut).To(MatchJSON(`{}`))
 
@@ -104,20 +104,16 @@ var _ = Describe("connectivity tests", func() {
 
 func assertConnection(sourceAppName string, sourceAppInstance int, destIP string, destPort int, shouldSucceed bool) {
 	if shouldSucceed {
-		Eventually(func() string {
-			return curlFromApp(sourceAppName, sourceAppInstance, fmt.Sprintf("%s:%d/", destIP, destPort), shouldSucceed)
-		}, 6*Timeout_Short).Should(ContainSubstring(destIP))
+		Expect(curlFromApp(sourceAppName, sourceAppInstance, fmt.Sprintf("%s:%d/", destIP, destPort), shouldSucceed)).To(ContainSubstring(destIP))
 	} else {
-		Consistently(func() string {
-			return curlFromApp(sourceAppName, sourceAppInstance, fmt.Sprintf("%s:%d/", destIP, destPort), shouldSucceed)
-		}, 6*Timeout_Short).ShouldNot(ContainSubstring(destIP))
+		Expect(curlFromApp(sourceAppName, sourceAppInstance, fmt.Sprintf("%s:%d/", destIP, destPort), shouldSucceed)).NotTo(ContainSubstring(destIP))
 	}
 }
 
 func getInstanceCount(appName string) int {
 	appGuid := getAppGuid(appName)
-	curlSession := cf.Cf("curl", "-X", "GET", fmt.Sprintf("/v2/apps/%s", appGuid)).Wait(Timeout_Push)
-	Expect(curlSession.Wait(Timeout_Push)).To(gexec.Exit(0))
+	curlSession := cf.Cf("curl", "-X", "GET", fmt.Sprintf("/v2/apps/%s", appGuid)).Wait(Timeout_Short)
+	Expect(curlSession.Wait(Timeout_Short)).To(gexec.Exit(0))
 	var infoStruct struct {
 		Entity struct {
 			Instances int `json:"instances"`
@@ -143,21 +139,28 @@ func assertConnectionStatus(sourceApp, destApp string, destPort int, shouldSucce
 	sourceAppInstances := getInstanceCount(sourceApp)
 	destAppInstances := getInstanceCount(destApp)
 
+	sources := []string{}
+	for i := 0; i < sourceAppInstances; i++ {
+		sources = append(sources, getInstanceIP(sourceApp, i))
+	}
+	dests := []string{}
+	for j := 0; j < destAppInstances; j++ {
+		dests = append(dests, getInstanceIP(destApp, j))
+	}
+
 	sameCellChan := make(chan bool)
 
-	for i := 0; i < sourceAppInstances; i++ {
-		for j := 0; j < destAppInstances; j++ {
-			go func(sourceAppInstance, destAppInstance int) {
+	for sourceAppInstance, sourceIP := range sources {
+		for _, destIP := range dests {
+			go func(sourceIP, destIP string, sourceAppInstance int) {
 				defer GinkgoRecover()
-				sourceIP := getInstanceIP(sourceApp, sourceAppInstance)
-				destIP := getInstanceIP(destApp, destAppInstance)
 
 				sameCell := isSameCell(sourceIP, destIP)
 
 				assertConnection(sourceApp, sourceAppInstance, destIP, destPort, shouldSucceed)
 
 				sameCellChan <- sameCell
-			}(i, j)
+			}(sourceIP, destIP, sourceAppInstance)
 		}
 	}
 
