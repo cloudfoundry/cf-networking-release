@@ -6,19 +6,19 @@ type Container struct {
 }
 
 type Policy struct {
-	Source      Source
-	Destination Destination
+	Source      Source      `json:"source"`
+	Destination Destination `json:"destination"`
 }
 
 type Source struct {
-	ID  string
-	Tag string
+	ID  string `json:"id"`
+	Tag string `json:"tag,omitempty"`
 }
 
 type Destination struct {
-	ID       string
-	Port     int
-	Protocol string
+	ID       string `json:"id"`
+	Port     int    `json:"port"`
+	Protocol string `json:"protocol"`
 }
 
 type CNIAddResult struct {

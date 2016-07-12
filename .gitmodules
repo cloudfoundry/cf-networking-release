@@ -62,3 +62,6 @@
 [submodule "src/github.com/coreos/go-iptables"]
 	path = src/github.com/coreos/go-iptables
 	url = https://github.com/coreos/go-iptables
+[submodule "src/github.com/cloudfoundry/cli"]
+	path = src/github.com/cloudfoundry/cli
+	url = https://github.com/cloudfoundry/cli
