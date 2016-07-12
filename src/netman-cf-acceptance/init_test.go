@@ -130,9 +130,9 @@ func curlFromApp(appName string, instanceIndex int, endpoint string, expectSucce
 	)
 
 	if expectSuccess {
-		Expect(sshSession.Wait(Timeout_Short)).To(gexec.Exit(0))
+		Expect(sshSession.Wait(2 * Timeout_Short)).To(gexec.Exit(0))
 	} else {
-		Expect(sshSession.Wait(Timeout_Short)).To(gexec.Exit(28))
+		Expect(sshSession.Wait(2 * Timeout_Short)).To(gexec.Exit(28))
 	}
 
 	return string(sshSession.Out.Contents())
