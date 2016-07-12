@@ -43,7 +43,7 @@
 [submodule "src/github.com/coreos/flannel"]
 	path = src/github.com/coreos/flannel
 	url = https://github.com/cloudfoundry-incubator/flannel
-	branch = vxlan-gbp
+	branch = vxlan-gbp-2
 [submodule "src/github.com/nu7hatch/gouuid"]
 	path = src/github.com/nu7hatch/gouuid
 	url = https://github.com/nu7hatch/gouuid
