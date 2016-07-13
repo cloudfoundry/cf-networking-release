@@ -32,6 +32,10 @@ const AllowCommand = "allow-access"
 const ListCommand = "list-access"
 const DenyCommand = "deny-access"
 
+const CLR_N = "\x1b[0m"
+const CLR_R = "\x1b[31;1m"
+const CLR_G = "\x1b[32;1m"
+
 func (p *Plugin) GetMetadata() plugin.PluginMetadata {
 	return plugin.PluginMetadata{
 		Name: "network-policy",
@@ -74,9 +78,11 @@ func (p *Plugin) Run(cliConnection plugin.CliConnection, args []string) {
 
 	output, err := p.RunWithErrors(cliConnection, args)
 	if err != nil {
+		logger.Printf("%sFAILED%s", CLR_R, CLR_N)
 		logger.Fatalf("%s", err)
 	}
 
+	logger.Printf("%sOK%s", CLR_G, CLR_N)
 	logger.Print(output)
 }
 
@@ -198,7 +204,7 @@ func (p *Plugin) AllowCommand(cliConnection plugin.CliConnection, args []string)
 func (p *Plugin) DenyCommand(cliConnection plugin.CliConnection, args []string) (string, error) {
 	validArgs, err := ValidateArgs(cliConnection, args)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
 
 	policy := models.Policy{
