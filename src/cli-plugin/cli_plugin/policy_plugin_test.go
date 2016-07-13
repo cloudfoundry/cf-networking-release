@@ -22,7 +22,8 @@ var _ = Describe("Plugin", func() {
 
 	BeforeEach(func() {
 		policyPlugin = cli_plugin.Plugin{
-			Marshaler: marshal.MarshalFunc(json.Marshal),
+			Marshaler:   marshal.MarshalFunc(json.Marshal),
+			Unmarshaler: marshal.UnmarshalFunc(json.Unmarshal),
 		}
 	})
 
@@ -58,6 +59,98 @@ var _ = Describe("Plugin", func() {
 					},
 				},
 			))
+		})
+	})
+
+	Describe("ListCommand", func() {
+		BeforeEach(func() {
+			fakeCliConnection = &pluginfakes.FakeCliConnection{}
+			fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{`{"policies":[{"source":{"id":"some-app-guid"},"destination":{"id":"some-other-app-guid","port":9999,"protocol":"tcp"}}]}`}, nil)
+			fakeCliConnection.GetAppsReturns([]plugin_models.GetAppsModel{
+				{Guid: "some-app-guid", Name: "some-app"},
+				{Guid: "some-other-app-guid", Name: "some-other-app"},
+			}, nil)
+		})
+
+		Context("when there are no policies", func() {
+			BeforeEach(func() {
+				fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{`{"policies":[]}`}, nil)
+			})
+			It("shows nothing", func() {
+				output, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"list-access"})
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(fakeCliConnection.GetAppsCallCount()).To(Equal(1))
+				Expect(fakeCliConnection.CliCommandWithoutTerminalOutputCallCount()).To(Equal(1))
+				Expect(fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)).To(Equal([]string{"curl", "/networking/v0/external/policies"}))
+
+				Expect(output).To(Equal("Source\tDestination\tProtocol\tPort\n"))
+			})
+		})
+
+		Context("when there is a policy and I can resolve the guids", func() {
+			It("shows them", func() {
+				output, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"list-access"})
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(fakeCliConnection.GetAppsCallCount()).To(Equal(1))
+				Expect(fakeCliConnection.CliCommandWithoutTerminalOutputCallCount()).To(Equal(1))
+				Expect(fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)).To(Equal([]string{"curl", "/networking/v0/external/policies"}))
+
+				Expect(output).To(Equal("Source\t\tDestination\tProtocol\tPort\nsome-app\tsome-other-app\ttcp\t\t9999\n"))
+			})
+		})
+
+		Context("when there is a policy but I cannot resolve the guids", func() {
+			BeforeEach(func() {
+				fakeCliConnection.GetAppsReturns([]plugin_models.GetAppsModel{
+					{Guid: "another-guid", Name: "some-app"},
+					{Guid: "some-other-app-guid", Name: "some-other-app"},
+				}, nil)
+			})
+
+			It("shows nothing", func() {
+				output, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"list-access"})
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(fakeCliConnection.GetAppsCallCount()).To(Equal(1))
+				Expect(fakeCliConnection.CliCommandWithoutTerminalOutputCallCount()).To(Equal(1))
+				Expect(fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)).To(Equal([]string{"curl", "/networking/v0/external/policies"}))
+
+				Expect(output).To(Equal("Source\tDestination\tProtocol\tPort\n"))
+			})
+		})
+
+		Context("when getting the apps fails", func() {
+			BeforeEach(func() {
+				fakeCliConnection.GetAppsReturns([]plugin_models.GetAppsModel{}, errors.New("banana"))
+			})
+			It("returns the error", func() {
+				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"list-access"})
+				Expect(err).To(MatchError("getting apps: banana"))
+			})
+		})
+
+		Context("when getting the apps fails", func() {
+			BeforeEach(func() {
+				fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{}, errors.New("ERROR"))
+			})
+			It("returns the error", func() {
+				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"list-access"})
+				Expect(err).To(MatchError("getting policies: ERROR"))
+			})
+		})
+
+		Context("when the response from the policy server cannot be unmarshalled", func() {
+			BeforeEach(func() {
+				policyPlugin.Unmarshaler = marshal.UnmarshalFunc(func([]byte, interface{}) error {
+					return errors.New("banana")
+				})
+			})
+			It("returns an error", func() {
+				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"list-access"})
+				Expect(err).To(MatchError("unmarshaling: banana"))
+			})
 		})
 	})
 
@@ -100,8 +193,8 @@ var _ = Describe("Plugin", func() {
 				Expect(fakeCliConnection.GetAppArgsForCall(0)).To(Equal("some-app"))
 				Expect(fakeCliConnection.GetAppArgsForCall(1)).To(Equal("some-other-app"))
 
-				Expect(fakeCliConnection.CliCommandCallCount()).To(Equal(1))
-				Expect(fakeCliConnection.CliCommandArgsForCall(0)).To(Equal([]string{
+				Expect(fakeCliConnection.CliCommandWithoutTerminalOutputCallCount()).To(Equal(1))
+				Expect(fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)).To(Equal([]string{
 					"curl", "-X", "POST", "/networking/v0/external/policies", "-d",
 					`'{"policies":[{"source":{"id":"some-app-guid"},"destination":{"id":"some-other-app-guid","port":9999,"protocol":"tcp"}}]}'`,
 				}))
@@ -138,8 +231,8 @@ var _ = Describe("Plugin", func() {
 					Expect(fakeCliConnection.GetAppArgsForCall(0)).To(Equal("some-app"))
 					Expect(fakeCliConnection.GetAppArgsForCall(1)).To(Equal("some-other-app"))
 
-					Expect(fakeCliConnection.CliCommandCallCount()).To(Equal(1))
-					Expect(fakeCliConnection.CliCommandArgsForCall(0)).To(Equal([]string{
+					Expect(fakeCliConnection.CliCommandWithoutTerminalOutputCallCount()).To(Equal(1))
+					Expect(fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)).To(Equal([]string{
 						"curl", "-X", "POST", "/networking/v0/external/policies", "-d",
 						`'{"policies":[{"source":{"id":"some-app-guid"},"destination":{"id":"some-other-app-guid","port":9999,"protocol":"tcp"}}]}'`,
 					}))
@@ -196,7 +289,7 @@ var _ = Describe("Plugin", func() {
 
 			Context("when the cli curl command fails", func() {
 				BeforeEach(func() {
-					fakeCliConnection.CliCommandReturns(nil, errors.New("blueberry"))
+					fakeCliConnection.CliCommandWithoutTerminalOutputReturns(nil, errors.New("blueberry"))
 				})
 
 				It("returns a useful error", func() {

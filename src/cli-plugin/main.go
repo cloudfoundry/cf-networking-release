@@ -10,6 +10,7 @@ import (
 
 func main() {
 	plugin.Start(&cli_plugin.Plugin{
-		Marshaler: marshal.MarshalFunc(json.Marshal),
+		Marshaler:   marshal.MarshalFunc(json.Marshal),
+		Unmarshaler: marshal.UnmarshalFunc(json.Unmarshal),
 	})
 }

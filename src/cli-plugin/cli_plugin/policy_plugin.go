@@ -1,20 +1,24 @@
 package cli_plugin
 
 import (
+	"bytes"
 	"errors"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"lib/marshal"
 	"log"
 	"netman-agent/models"
 	"os"
 	"strconv"
+	"text/tabwriter"
 
 	"github.com/cloudfoundry/cli/plugin"
 )
 
 type Plugin struct {
-	Marshaler marshal.Marshaler
+	Marshaler   marshal.Marshaler
+	Unmarshaler marshal.Unmarshaler
 }
 
 const AllowCommand = "allow-access"
@@ -62,7 +66,54 @@ func (p *Plugin) RunWithErrors(cliConnection plugin.CliConnection, args []string
 }
 
 func (p *Plugin) ListCommand(cliConnection plugin.CliConnection, args []string) (string, error) {
-	return "", nil
+	apps, err := cliConnection.GetApps()
+	if err != nil {
+		return "", fmt.Errorf("getting apps: %s", err)
+	}
+
+	var policiesResponse = struct {
+		Policies []models.Policy `json:"policies"`
+	}{}
+
+	policiesJSON, err := cliConnection.CliCommandWithoutTerminalOutput("curl", "/networking/v0/external/policies")
+	if err != nil {
+		return "", fmt.Errorf("getting policies: %s", err)
+	}
+
+	output := bytes.NewBuffer([]byte{})
+	tabWriter := new(tabwriter.Writer)
+	tabWriter.Init(output, 0, 8, 2, '\t', 0)
+	fmt.Fprintln(tabWriter, "Source\tDestination\tProtocol\tPort")
+	err = p.Unmarshaler.Unmarshal([]byte(policiesJSON[0]), &policiesResponse)
+	if err != nil {
+		return "", fmt.Errorf("unmarshaling: %s", err)
+	}
+	policies := policiesResponse.Policies
+
+	for _, policy := range policies {
+		srcName := ""
+		dstName := ""
+		for _, app := range apps {
+			if policy.Source.ID == app.Guid {
+				srcName = app.Name
+			}
+			if policy.Destination.ID == app.Guid {
+				dstName = app.Name
+			}
+		}
+		if srcName != "" && dstName != "" {
+			fmt.Fprintf(tabWriter, "%s\t%s\t%s\t%d\n", srcName, dstName, policy.Destination.Protocol, policy.Destination.Port)
+		}
+	}
+
+	tabWriter.Flush()
+	outBytes, err := ioutil.ReadAll(output)
+	if err != nil {
+		//untested
+		return "", fmt.Errorf("formatting output: %s", err)
+	}
+
+	return string(outBytes), nil
 }
 
 func (p *Plugin) AllowCommand(cliConnection plugin.CliConnection, args []string) (string, error) {
@@ -128,7 +179,7 @@ func (p *Plugin) AllowCommand(cliConnection plugin.CliConnection, args []string)
 		return "", fmt.Errorf("payload cannot be marshaled: %s", err)
 	}
 
-	_, err = cliConnection.CliCommand("curl", "-X", "POST", "/networking/v0/external/policies", "-d", "'"+string(payload)+"'")
+	_, err = cliConnection.CliCommandWithoutTerminalOutput("curl", "-X", "POST", "/networking/v0/external/policies", "-d", "'"+string(payload)+"'")
 	if err != nil {
 		return "", fmt.Errorf("policy creation failed: %s", err)
 	}
