@@ -34,7 +34,7 @@ bosh run errand netman-cf-acceptance
 0. Create netman stubs
   - netman requires additional information in several stubs.
   - Add under `properties: uaa` in `stubs/cf/properties.yml`:
-    ```yaml
+    ```
     scim:
       users:
       - admin|<admin-password>|scim.write,scim.read,openid,cloud_controller.admin,doppler.firehose
@@ -55,7 +55,7 @@ bosh run errand netman-cf-acceptance
       use_http: true
     ```
   - Create a `cf_creds_stub.yml`
-    ```yaml
+    ```
     ---
     properties:
       netman-cf-acceptance:
