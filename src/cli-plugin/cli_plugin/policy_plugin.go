@@ -69,6 +69,17 @@ func (p *Plugin) GetMetadata() plugin.PluginMetadata {
 	}
 }
 
+func (p *Plugin) Run(cliConnection plugin.CliConnection, args []string) {
+	logger := log.New(os.Stdout, "", 0)
+
+	output, err := p.RunWithErrors(cliConnection, args)
+	if err != nil {
+		logger.Fatalf("%s", err)
+	}
+
+	logger.Print(output)
+}
+
 func (p *Plugin) RunWithErrors(cliConnection plugin.CliConnection, args []string) (string, error) {
 	switch args[0] {
 	case AllowCommand:
@@ -147,54 +158,19 @@ func (p *Plugin) ListCommand(cliConnection plugin.CliConnection, args []string) 
 }
 
 func (p *Plugin) AllowCommand(cliConnection plugin.CliConnection, args []string) (string, error) {
-	if len(args) < 3 {
-		return "", errors.New("not enough arguments")
-	}
-	srcAppName := args[1]
-	dstAppName := args[2]
-
-	srcAppModel, err := cliConnection.GetApp(srcAppName)
+	validArgs, err := ValidateArgs(cliConnection, args)
 	if err != nil {
-		return "", fmt.Errorf("resolving source app: %s", err)
-	}
-	if srcAppModel.Guid == "" {
-		return "", fmt.Errorf("resolving source app: %s not found", srcAppName)
-	}
-
-	dstAppModel, err := cliConnection.GetApp(dstAppName)
-	if err != nil {
-		return "", fmt.Errorf("resolving destination app: %s", err)
-	}
-	if dstAppModel.Guid == "" {
-		return "", fmt.Errorf("resolving destination app: %s not found", dstAppName)
-	}
-
-	flags := flag.NewFlagSet("cf allow-policy <src> <dest>", flag.ContinueOnError)
-	protocol := flags.String("protocol", "", "the protocol allowed")
-	portString := flags.String("port", "", "the destination port")
-	flags.Parse(args[3:])
-
-	if *protocol == "" {
-		return "", fmt.Errorf("Requires --protocol PROTOCOL as argument.")
-	}
-
-	if *portString == "" {
-		return "", fmt.Errorf("Requires --port PORT as argument.")
-	}
-
-	port, err := strconv.Atoi(*portString)
-	if err != nil {
-		return "", fmt.Errorf("port is not valid: %s", *portString)
+		return "", err
 	}
 
 	policy := models.Policy{
 		Source: models.Source{
-			ID: srcAppModel.Guid,
+			ID: validArgs.SourceAppGuid,
 		},
 		Destination: models.Destination{
-			ID:       dstAppModel.Guid,
-			Protocol: *protocol,
-			Port:     port,
+			ID:       validArgs.DestAppGuid,
+			Protocol: validArgs.Protocol,
+			Port:     validArgs.Port,
 		},
 	}
 
@@ -217,17 +193,6 @@ func (p *Plugin) AllowCommand(cliConnection plugin.CliConnection, args []string)
 	}
 
 	return "", nil
-}
-
-func (p *Plugin) Run(cliConnection plugin.CliConnection, args []string) {
-	logger := log.New(os.Stdout, "", 0)
-
-	output, err := p.RunWithErrors(cliConnection, args)
-	if err != nil {
-		logger.Fatalf("%s", err)
-	}
-
-	logger.Print(output)
 }
 
 func (p *Plugin) DenyCommand(cliConnection plugin.CliConnection, args []string) (string, error) {
@@ -295,7 +260,7 @@ func ValidateArgs(cliConnection plugin.CliConnection, args []string) (ValidArgs,
 	}
 	validArgs.DestAppGuid = dstAppModel.Guid
 
-	flags := flag.NewFlagSet("cf allow-policy <src> <dest>", flag.ContinueOnError)
+	flags := flag.NewFlagSet("cf "+args[0]+" <src> <dest>", flag.ContinueOnError)
 	protocol := flags.String("protocol", "", "the protocol allowed")
 	portString := flags.String("port", "", "the destination port")
 	flags.Parse(args[3:])

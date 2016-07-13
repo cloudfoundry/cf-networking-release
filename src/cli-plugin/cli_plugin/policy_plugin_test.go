@@ -225,92 +225,23 @@ var _ = Describe("Plugin", func() {
 	Describe("AllowCommand", func() {
 		Context("when the command is allow-access", func() {
 			It("translates the app names to app guids", func() {
-				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"allow-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999"})
+				By("dispatching to the AllowCommand")
+				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{
+					"allow-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999",
+				})
 				Expect(err).NotTo(HaveOccurred())
 
+				By("translating all the app names to app guids")
 				Expect(fakeCliConnection.GetAppCallCount()).To(Equal(2))
 				Expect(fakeCliConnection.GetAppArgsForCall(0)).To(Equal("some-app"))
 				Expect(fakeCliConnection.GetAppArgsForCall(1)).To(Equal("some-other-app"))
 
+				By("sending a post request to the policy server")
 				Expect(fakeCliConnection.CliCommandWithoutTerminalOutputCallCount()).To(Equal(1))
 				Expect(fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)).To(Equal([]string{
 					"curl", "-X", "POST", "/networking/v0/external/policies", "-d",
 					`'{"policies":[{"source":{"id":"some-app-guid"},"destination":{"id":"some-other-app-guid","port":9999,"protocol":"tcp"}}]}'`,
 				}))
-			})
-
-			Context("when there are missing args", func() {
-				Context("when there are < 2 args", func() {
-					It("returns an error", func() {
-						_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"allow-access"})
-						Expect(err).To(MatchError("not enough arguments"))
-					})
-				})
-
-				Context("when the port is missing", func() {
-					It("returns an error", func() {
-						_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"allow-access", "some-app", "some-other-app", "--protocol", "tcp"})
-						Expect(err).To(MatchError("Requires --port PORT as argument."))
-					})
-				})
-
-				Context("when the protocol is missing", func() {
-					It("returns an error", func() {
-						_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"allow-access", "some-app", "some-other-app", "--port", "9999"})
-						Expect(err).To(MatchError("Requires --protocol PROTOCOL as argument."))
-					})
-				})
-			})
-
-			Context("when the args are in a different order", func() {
-				It("parses them correctly", func() {
-					_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"allow-access", "some-app", "some-other-app", "--port", "9999", "--protocol", "tcp"})
-					Expect(err).NotTo(HaveOccurred())
-					Expect(fakeCliConnection.GetAppCallCount()).To(Equal(2))
-					Expect(fakeCliConnection.GetAppArgsForCall(0)).To(Equal("some-app"))
-					Expect(fakeCliConnection.GetAppArgsForCall(1)).To(Equal("some-other-app"))
-
-					Expect(fakeCliConnection.CliCommandWithoutTerminalOutputCallCount()).To(Equal(1))
-					Expect(fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)).To(Equal([]string{
-						"curl", "-X", "POST", "/networking/v0/external/policies", "-d",
-						`'{"policies":[{"source":{"id":"some-app-guid"},"destination":{"id":"some-other-app-guid","port":9999,"protocol":"tcp"}}]}'`,
-					}))
-				})
-			})
-
-			Context("when there are errors talking to CC", func() {
-				It("returns a useful error", func() {
-					_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"allow-access", "bad-access", "some-other-app", "--protocol", "tcp", "--port", "9999"})
-					Expect(err).To(MatchError("resolving source app: apple"))
-				})
-			})
-
-			Context("when the source app could not be resolved to a GUID", func() {
-				It("returns a useful error", func() {
-					_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"allow-access", "inaccessible-app", "some-other-app", "--protocol", "tcp", "--port", "9999"})
-					Expect(err).To(MatchError("resolving source app: inaccessible-app not found"))
-				})
-			})
-
-			Context("when there are errors resolving destination app", func() {
-				It("returns a useful error", func() {
-					_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"allow-access", "some-app", "not-some-other-app", "--protocol", "tcp", "--port", "9999"})
-					Expect(err).To(MatchError("resolving destination app: apple"))
-				})
-			})
-
-			Context("when the destination app could not be resolved to a GUID", func() {
-				It("returns a useful error", func() {
-					_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"allow-access", "some-app", "inaccessible-app", "--protocol", "tcp", "--port", "9999"})
-					Expect(err).To(MatchError("resolving destination app: inaccessible-app not found"))
-				})
-			})
-
-			Context("when the port is not an int", func() {
-				It("returns a useful error", func() {
-					_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"allow-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "not-an-int"})
-					Expect(err).To(MatchError(`port is not valid: not-an-int`))
-				})
 			})
 
 			Context("when the policies are not marshalable", func() {
@@ -394,7 +325,7 @@ var _ = Describe("Plugin", func() {
 	Describe("ValidateArgs", func() {
 		It("returns a struct with validated and converted args", func() {
 			argStruct, err := cli_plugin.ValidateArgs(fakeCliConnection, []string{
-				"deny-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999",
+				"command-arg", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999",
 			})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(argStruct).To(Equal(cli_plugin.ValidArgs{
@@ -408,7 +339,7 @@ var _ = Describe("Plugin", func() {
 		Context("when the flags are in different order", func() {
 			It("returns a struct with validated and converted args", func() {
 				argStruct, err := cli_plugin.ValidateArgs(fakeCliConnection, []string{
-					"deny-access", "some-app", "some-other-app", "--port", "9999", "--protocol", "tcp",
+					"command-arg", "some-app", "some-other-app", "--port", "9999", "--protocol", "tcp",
 				})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(argStruct).To(Equal(cli_plugin.ValidArgs{
@@ -423,7 +354,7 @@ var _ = Describe("Plugin", func() {
 		Context("when there are missing args", func() {
 			Context("when there are < 2 args", func() {
 				It("returns an error", func() {
-					_, err := cli_plugin.ValidateArgs(fakeCliConnection, []string{"deny-access"})
+					_, err := cli_plugin.ValidateArgs(fakeCliConnection, []string{"command-arg"})
 					Expect(err).To(MatchError("not enough arguments"))
 				})
 			})
@@ -431,7 +362,7 @@ var _ = Describe("Plugin", func() {
 			Context("when the port is missing", func() {
 				It("returns an error", func() {
 					_, err := cli_plugin.ValidateArgs(fakeCliConnection, []string{
-						"deny-access", "some-app", "some-other-app", "--protocol", "tcp",
+						"command-arg", "some-app", "some-other-app", "--protocol", "tcp",
 					})
 					Expect(err).To(MatchError("Requires --port PORT as argument."))
 				})
@@ -440,7 +371,7 @@ var _ = Describe("Plugin", func() {
 			Context("when the protocol is missing", func() {
 				It("returns an error", func() {
 					_, err := cli_plugin.ValidateArgs(fakeCliConnection, []string{
-						"deny-access", "some-app", "some-other-app", "--port", "9999",
+						"command-arg", "some-app", "some-other-app", "--port", "9999",
 					})
 					Expect(err).To(MatchError("Requires --protocol PROTOCOL as argument."))
 				})
@@ -450,7 +381,7 @@ var _ = Describe("Plugin", func() {
 		Context("when there are errors talking to CC", func() {
 			It("returns a useful error", func() {
 				_, err := cli_plugin.ValidateArgs(fakeCliConnection, []string{
-					"deny-access", "bad-access", "some-other-app", "--protocol", "tcp", "--port", "9999",
+					"command-arg", "bad-access", "some-other-app", "--protocol", "tcp", "--port", "9999",
 				})
 				Expect(err).To(MatchError("resolving source app: apple"))
 			})
@@ -459,7 +390,7 @@ var _ = Describe("Plugin", func() {
 		Context("when the source app could not be resolved to a GUID", func() {
 			It("returns a useful error", func() {
 				_, err := cli_plugin.ValidateArgs(fakeCliConnection, []string{
-					"deny-access", "inaccessible-app", "some-other-app", "--protocol", "tcp", "--port", "9999",
+					"command-arg", "inaccessible-app", "some-other-app", "--protocol", "tcp", "--port", "9999",
 				})
 				Expect(err).To(MatchError("resolving source app: inaccessible-app not found"))
 			})
@@ -468,7 +399,7 @@ var _ = Describe("Plugin", func() {
 		Context("when there are errors resolving destination app", func() {
 			It("returns a useful error", func() {
 				_, err := cli_plugin.ValidateArgs(fakeCliConnection, []string{
-					"deny-access", "some-app", "not-some-other-app", "--protocol", "tcp", "--port", "9999",
+					"command-arg", "some-app", "not-some-other-app", "--protocol", "tcp", "--port", "9999",
 				})
 				Expect(err).To(MatchError("resolving destination app: apple"))
 			})
@@ -477,7 +408,7 @@ var _ = Describe("Plugin", func() {
 		Context("when the destination app could not be resolved to a GUID", func() {
 			It("returns a useful error", func() {
 				_, err := cli_plugin.ValidateArgs(fakeCliConnection, []string{
-					"deny-access", "some-app", "inaccessible-app", "--protocol", "tcp", "--port", "9999",
+					"command-arg", "some-app", "inaccessible-app", "--protocol", "tcp", "--port", "9999",
 				})
 				Expect(err).To(MatchError("resolving destination app: inaccessible-app not found"))
 			})
@@ -486,7 +417,7 @@ var _ = Describe("Plugin", func() {
 		Context("when the port is not an int", func() {
 			It("returns a useful error", func() {
 				_, err := cli_plugin.ValidateArgs(fakeCliConnection, []string{
-					"deny-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "not-an-int",
+					"command-arg", "some-app", "some-other-app", "--protocol", "tcp", "--port", "not-an-int",
 				})
 				Expect(err).To(MatchError(`port is not valid: not-an-int`))
 			})
