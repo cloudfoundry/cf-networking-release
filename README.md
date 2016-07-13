@@ -34,6 +34,7 @@ bosh run errand netman-cf-acceptance
 0. Create netman stubs
   - netman requires additional information in several stubs.
   - Add under `properties: uaa` in `stubs/cf/properties.yml`:
+
     ```
     scim:
       users:
@@ -43,7 +44,9 @@ bosh run errand netman-cf-acceptance
       cf:
         scope: cloud_controller.read,cloud_controller.write,openid,password.write,cloud_controller.admin,scim.read,scim.write,doppler.firehose,uaa.user,routing.router_groups.read,network.admin
     ```
+
   - Add under `properties` in `stubs/cf/properties.yml`:
+
     ```
     acceptance_tests:
       admin_password: <admin-password>
@@ -54,7 +57,9 @@ bosh run errand netman-cf-acceptance
       skip_ssl_validation: true
       use_http: true
     ```
+
   - Create a `cf_creds_stub.yml`
+
     ```
     ---
     properties:
@@ -74,10 +79,12 @@ bosh run errand netman-cf-acceptance
       policy-server:
         database_password: <db-password>
     ```
+
 0. Generate diego with netman manifest
   - Run `generate-deployment-manifest`. Set `environment_path` to the directory containing your stubs for cf, diego, and netman.
     Set `output_path` to the directory you want your manifest to be created in.
     Set `diego_release_path` to your local copy of the diego-release repository.
+
   ```bash
   set -e -x -u
 
@@ -116,6 +123,7 @@ bosh run errand netman-cf-acceptance
       > ${output_path}/diego.yml
   popd
   ```
+
 0. Deploy
   - Target your bosh director.
   ```
