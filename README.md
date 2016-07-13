@@ -30,7 +30,7 @@ bosh run errand netman-cf-acceptance
 ## Deploy to AWS
 0. Upload stemcell with Linux kernel 4.4 to bosh director
   - Current AWS stemcells only have 3.19
-  - For now you will need a special stemcell that can be found at [s3 bucket]
+  - For now you will need a special stemcell that can be found [here](https://s3.amazonaws.com/dk-shared-assets/bosh-stemcell-3232.kernel-4.4-aws-xen-ubuntu-trusty-go_agent.tgz)
 0. Create netman stubs
   - netman requires additional information in several stubs.
   - Add under `properties: uaa` in `stubs/cf/properties.yml`:
