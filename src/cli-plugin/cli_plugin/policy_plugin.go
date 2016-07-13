@@ -21,8 +21,16 @@ type Plugin struct {
 	Unmarshaler marshal.Unmarshaler
 }
 
+type ValidArgs struct {
+	SourceAppGuid string
+	DestAppGuid   string
+	Protocol      string
+	Port          int
+}
+
 const AllowCommand = "allow-access"
 const ListCommand = "list-access"
+const DenyCommand = "deny-access"
 
 func (p *Plugin) GetMetadata() plugin.PluginMetadata {
 	return plugin.PluginMetadata{
@@ -50,6 +58,13 @@ func (p *Plugin) GetMetadata() plugin.PluginMetadata {
 					Usage: "cf list-access",
 				},
 			},
+			plugin.Command{
+				Name:     DenyCommand,
+				HelpText: "Remove direct network traffic from one app to another",
+				UsageDetails: plugin.Usage{
+					Usage: "cf deny-access SOURCE_APP DESTINATION_APP --protocol <tcp|udp> --port [1-65535]",
+				},
+			},
 		},
 	}
 }
@@ -60,6 +75,8 @@ func (p *Plugin) RunWithErrors(cliConnection plugin.CliConnection, args []string
 		return p.AllowCommand(cliConnection, args)
 	case ListCommand:
 		return p.ListCommand(cliConnection, args)
+	case DenyCommand:
+		return p.DenyCommand(cliConnection, args)
 	}
 
 	return "", nil
@@ -192,7 +209,9 @@ func (p *Plugin) AllowCommand(cliConnection plugin.CliConnection, args []string)
 		return "", fmt.Errorf("payload cannot be marshaled: %s", err)
 	}
 
-	_, err = cliConnection.CliCommandWithoutTerminalOutput("curl", "-X", "POST", "/networking/v0/external/policies", "-d", "'"+string(payload)+"'")
+	_, err = cliConnection.CliCommandWithoutTerminalOutput(
+		"curl", "-X", "POST", "/networking/v0/external/policies", "-d", "'"+string(payload)+"'",
+	)
 	if err != nil {
 		return "", fmt.Errorf("policy creation failed: %s", err)
 	}
@@ -209,4 +228,92 @@ func (p *Plugin) Run(cliConnection plugin.CliConnection, args []string) {
 	}
 
 	logger.Print(output)
+}
+
+func (p *Plugin) DenyCommand(cliConnection plugin.CliConnection, args []string) (string, error) {
+	validArgs, err := ValidateArgs(cliConnection, args)
+	if err != nil {
+		panic(err)
+	}
+
+	policy := models.Policy{
+		Source: models.Source{
+			ID: validArgs.SourceAppGuid,
+		},
+		Destination: models.Destination{
+			ID:       validArgs.DestAppGuid,
+			Protocol: validArgs.Protocol,
+			Port:     validArgs.Port,
+		},
+	}
+
+	var policies = struct {
+		Policies []models.Policy `json:"policies"`
+	}{
+		[]models.Policy{policy},
+	}
+
+	payload, err := p.Marshaler.Marshal(policies)
+	if err != nil {
+		return "", fmt.Errorf("payload cannot be marshaled: %s", err)
+	}
+
+	_, err = cliConnection.CliCommandWithoutTerminalOutput(
+		"curl", "-X", "DELETE", "/networking/v0/external/policies", "-d", "'"+string(payload)+"'",
+	)
+	if err != nil {
+		return "", fmt.Errorf("policy creation failed: %s", err)
+	}
+
+	return "", nil
+}
+
+func ValidateArgs(cliConnection plugin.CliConnection, args []string) (ValidArgs, error) {
+	validArgs := ValidArgs{}
+
+	if len(args) < 3 {
+		return ValidArgs{}, errors.New("not enough arguments")
+	}
+	srcAppName := args[1]
+	dstAppName := args[2]
+
+	srcAppModel, err := cliConnection.GetApp(srcAppName)
+	if err != nil {
+		return ValidArgs{}, fmt.Errorf("resolving source app: %s", err)
+	}
+	if srcAppModel.Guid == "" {
+		return ValidArgs{}, fmt.Errorf("resolving source app: %s not found", srcAppName)
+	}
+	validArgs.SourceAppGuid = srcAppModel.Guid
+
+	dstAppModel, err := cliConnection.GetApp(dstAppName)
+	if err != nil {
+		return ValidArgs{}, fmt.Errorf("resolving destination app: %s", err)
+	}
+	if dstAppModel.Guid == "" {
+		return ValidArgs{}, fmt.Errorf("resolving destination app: %s not found", dstAppName)
+	}
+	validArgs.DestAppGuid = dstAppModel.Guid
+
+	flags := flag.NewFlagSet("cf allow-policy <src> <dest>", flag.ContinueOnError)
+	protocol := flags.String("protocol", "", "the protocol allowed")
+	portString := flags.String("port", "", "the destination port")
+	flags.Parse(args[3:])
+
+	if *protocol == "" {
+		return ValidArgs{}, fmt.Errorf("Requires --protocol PROTOCOL as argument.")
+	}
+	validArgs.Protocol = *protocol
+
+	if *portString == "" {
+		return ValidArgs{}, fmt.Errorf("Requires --port PORT as argument.")
+	}
+
+	port, err := strconv.Atoi(*portString)
+	if err != nil {
+		return ValidArgs{}, fmt.Errorf("port is not valid: %s", *portString)
+	}
+	validArgs.Port = port
+
+	return validArgs, nil
 }
