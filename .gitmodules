@@ -42,8 +42,8 @@
 	url = https://github.com/codegangsta/cli
 [submodule "src/github.com/coreos/flannel"]
 	path = src/github.com/coreos/flannel
-	url = https://github.com/cloudfoundry-incubator/flannel
-	branch = vxlan-gbp-2
+	url = https://github.com/coreos/flannel
+	branch = master
 [submodule "src/github.com/nu7hatch/gouuid"]
 	path = src/github.com/nu7hatch/gouuid
 	url = https://github.com/nu7hatch/gouuid
