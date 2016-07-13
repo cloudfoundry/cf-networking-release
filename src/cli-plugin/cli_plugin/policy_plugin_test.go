@@ -131,7 +131,7 @@ var _ = Describe("Plugin", func() {
 			})
 		})
 
-		Context("when getting the apps fails", func() {
+		Context("when getting policies fails", func() {
 			BeforeEach(func() {
 				fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{}, errors.New("ERROR"))
 			})
@@ -150,6 +150,44 @@ var _ = Describe("Plugin", func() {
 			It("returns an error", func() {
 				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"list-access"})
 				Expect(err).To(MatchError("unmarshaling: banana"))
+			})
+		})
+
+		Context("when the user specifies an app name", func() {
+			BeforeEach(func() {
+				fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{`{"policies":[
+					{"source":{"id":"some-app-guid"},"destination":{"id":"some-other-app-guid","port":9999,"protocol":"tcp"}}
+				]}`}, nil)
+				fakeCliConnection.GetAppReturns(plugin_models.GetAppModel{
+					Guid: "some-app-guid",
+					Name: "some-app",
+				}, nil)
+				fakeCliConnection.GetAppsReturns([]plugin_models.GetAppsModel{
+					{Guid: "some-app-guid", Name: "some-app"},
+					{Guid: "some-other-app-guid", Name: "some-other-app"},
+				}, nil)
+			})
+			It("filters the call to the policy server", func() {
+				output, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"list-access", "--app", "some-app"})
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(fakeCliConnection.GetAppCallCount()).To(Equal(1))
+				Expect(fakeCliConnection.GetAppArgsForCall(0)).To(Equal("some-app"))
+				Expect(fakeCliConnection.GetAppsCallCount()).To(Equal(1))
+				Expect(fakeCliConnection.CliCommandWithoutTerminalOutputCallCount()).To(Equal(1))
+				Expect(fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)).To(Equal([]string{"curl", "/networking/v0/external/policies?id=some-app-guid"}))
+
+				Expect(output).To(Equal("Source\t\tDestination\tProtocol\tPort\nsome-app\tsome-other-app\ttcp\t\t9999\n"))
+			})
+
+			Context("when GetApp fails", func() {
+				BeforeEach(func() {
+					fakeCliConnection.GetAppReturns(plugin_models.GetAppModel{}, errors.New("ERROR"))
+				})
+				It("returns the error", func() {
+					_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"list-access", "--app", "some-app"})
+					Expect(err).To(MatchError("getting app: ERROR"))
+				})
 			})
 		})
 	})

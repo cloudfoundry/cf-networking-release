@@ -66,6 +66,19 @@ func (p *Plugin) RunWithErrors(cliConnection plugin.CliConnection, args []string
 }
 
 func (p *Plugin) ListCommand(cliConnection plugin.CliConnection, args []string) (string, error) {
+	flags := flag.NewFlagSet("cf list-policies", flag.ContinueOnError)
+	appName := flags.String("app", "", "app name to filter results")
+	flags.Parse(args[1:])
+
+	path := "/networking/v0/external/policies"
+	if *appName != "" {
+		app, err := cliConnection.GetApp(*appName)
+		if err != nil {
+			return "", fmt.Errorf("getting app: %s", err)
+		}
+		path = fmt.Sprintf("%s?id=%s", path, app.Guid)
+	}
+
 	apps, err := cliConnection.GetApps()
 	if err != nil {
 		return "", fmt.Errorf("getting apps: %s", err)
@@ -75,7 +88,7 @@ func (p *Plugin) ListCommand(cliConnection plugin.CliConnection, args []string) 
 		Policies []models.Policy `json:"policies"`
 	}{}
 
-	policiesJSON, err := cliConnection.CliCommandWithoutTerminalOutput("curl", "/networking/v0/external/policies")
+	policiesJSON, err := cliConnection.CliCommandWithoutTerminalOutput("curl", path)
 	if err != nil {
 		return "", fmt.Errorf("getting policies: %s", err)
 	}
