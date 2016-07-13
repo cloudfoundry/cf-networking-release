@@ -18,6 +18,7 @@ type Plugin struct {
 }
 
 const AllowCommand = "allow-access"
+const ListCommand = "list-access"
 
 func (p *Plugin) GetMetadata() plugin.PluginMetadata {
 	return plugin.PluginMetadata{
@@ -38,31 +39,53 @@ func (p *Plugin) GetMetadata() plugin.PluginMetadata {
 					Usage: "cf allow-access SOURCE_APP DESTINATION_APP --protocol <tcp|udp> --port [1-65535]",
 				},
 			},
+			plugin.Command{
+				Name:     ListCommand,
+				HelpText: "List policy for direct network traffic from one app to another",
+				UsageDetails: plugin.Usage{
+					Usage: "cf list-access",
+				},
+			},
 		},
 	}
 }
 
-func (p *Plugin) RunWithErrors(cliConnection plugin.CliConnection, args []string) error {
-	if len(args) < 2 {
-		return errors.New("not enough arguments")
+func (p *Plugin) RunWithErrors(cliConnection plugin.CliConnection, args []string) (string, error) {
+	switch args[0] {
+	case AllowCommand:
+		return p.AllowCommand(cliConnection, args)
+	case ListCommand:
+		return p.ListCommand(cliConnection, args)
+	}
+
+	return "", nil
+}
+
+func (p *Plugin) ListCommand(cliConnection plugin.CliConnection, args []string) (string, error) {
+	return "", nil
+}
+
+func (p *Plugin) AllowCommand(cliConnection plugin.CliConnection, args []string) (string, error) {
+	if len(args) < 3 {
+		return "", errors.New("not enough arguments")
 	}
 	srcAppName := args[1]
 	dstAppName := args[2]
 
 	srcAppModel, err := cliConnection.GetApp(srcAppName)
 	if err != nil {
-		return fmt.Errorf("resolving source app: %s", err)
+		return "", fmt.Errorf("resolving source app: %s", err)
 	}
 	if srcAppModel.Guid == "" {
-		return fmt.Errorf("resolving source app: %s not found", srcAppName)
+		return "", fmt.Errorf("resolving source app: %s not found", srcAppName)
 	}
 
 	dstAppModel, err := cliConnection.GetApp(dstAppName)
 	if err != nil {
-		return fmt.Errorf("resolving destination app: %s", err)
+		return "", fmt.Errorf("resolving destination app: %s", err)
 	}
 	if dstAppModel.Guid == "" {
-		return fmt.Errorf("resolving destination app: %s not found", dstAppName)
+		return "", fmt.Errorf("resolving destination app: %s not found", dstAppName)
 	}
 
 	flags := flag.NewFlagSet("cf allow-policy <src> <dest>", flag.ContinueOnError)
@@ -71,16 +94,16 @@ func (p *Plugin) RunWithErrors(cliConnection plugin.CliConnection, args []string
 	flags.Parse(args[3:])
 
 	if *protocol == "" {
-		return fmt.Errorf("Requires --protocol PROTOCOL as argument.")
+		return "", fmt.Errorf("Requires --protocol PROTOCOL as argument.")
 	}
 
 	if *portString == "" {
-		return fmt.Errorf("Requires --port PORT as argument.")
+		return "", fmt.Errorf("Requires --port PORT as argument.")
 	}
 
 	port, err := strconv.Atoi(*portString)
 	if err != nil {
-		return fmt.Errorf("port is not valid: %s", *portString)
+		return "", fmt.Errorf("port is not valid: %s", *portString)
 	}
 
 	policy := models.Policy{
@@ -102,22 +125,24 @@ func (p *Plugin) RunWithErrors(cliConnection plugin.CliConnection, args []string
 
 	payload, err := p.Marshaler.Marshal(policies)
 	if err != nil {
-		return fmt.Errorf("payload cannot be marshaled: %s", err)
+		return "", fmt.Errorf("payload cannot be marshaled: %s", err)
 	}
 
 	_, err = cliConnection.CliCommand("curl", "-X", "POST", "/networking/v0/external/policies", "-d", "'"+string(payload)+"'")
 	if err != nil {
-		return fmt.Errorf("policy creation failed: %s", err)
+		return "", fmt.Errorf("policy creation failed: %s", err)
 	}
 
-	return nil
+	return "", nil
 }
 
 func (p *Plugin) Run(cliConnection plugin.CliConnection, args []string) {
 	logger := log.New(os.Stdout, "", 0)
 
-	err := p.RunWithErrors(cliConnection, args)
+	output, err := p.RunWithErrors(cliConnection, args)
 	if err != nil {
 		logger.Fatalf("%s", err)
 	}
+
+	logger.Print(output)
 }
