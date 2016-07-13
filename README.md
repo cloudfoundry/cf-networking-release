@@ -11,7 +11,7 @@ that provides container networking.
 
 
 
-## Deploy and run high-level acceptance test errand
+## Deploy and run high-level acceptance test errand on bosh-lite
 
 ```bash
 pushd ~/workspace
@@ -26,6 +26,113 @@ popd
 
 bosh run errand netman-cf-acceptance
 ```
+
+## Deploy to AWS
+0. Upload stemcell with Linux kernel 4.4 to bosh director
+  - Current AWS stemcells only have 3.19
+  - For now you will need a special stemcell that can be found at [s3 bucket]
+0. Create netman stubs
+  - netman requires additional information in several stubs.
+  - Add under `properties: uaa` in `stubs/cf/properties.yml`:
+    ```yaml
+    scim:
+      users:
+      - admin|<admin-password>|scim.write,scim.read,openid,cloud_controller.admin,doppler.firehose
+      - network-admin|<network-admin-password>|openid,network.admin
+    clients:
+      cf:
+        scope: cloud_controller.read,cloud_controller.write,openid,password.write,cloud_controller.admin,scim.read,scim.write,doppler.firehose,uaa.user,routing.router_groups.read,network.admin
+    ```
+  - Add under `properties` in `stubs/cf/properties.yml`:
+    ```
+    acceptance_tests:
+      admin_password: <admin-password>
+      admin_user: admin
+      api: api.<system-domain>
+      apps_domain: <apps-domain>
+      nodes: 1
+      skip_ssl_validation: true
+      use_http: true
+    ```
+  - Create a `cf_creds_stub.yml`
+    ```yaml
+    ---
+    properties:
+      netman-cf-acceptance:
+        admin_password: <admin-password>
+        admin_user: admin
+        api: api.<system-domain>
+        apps_domain: <apps-domain>
+        nodes: 1
+        skip_ssl_validation: true
+        use_http: true
+          test_user_password: <test-user-password>
+      uaa:
+        clients:
+          network-policy:
+            secret: <uaa-client-secret>
+      policy-server:
+        database_password: <db-password>
+    ```
+0. Generate diego with netman manifest
+  - Run `generate-deployment-manifest`. Set `environment_path` to the directory containing your stubs for cf, diego, and netman.
+    Set `output_path` to the directory you want your manifest to be created in.
+    Set `diego_release_path` to your local copy of the diego-release repository.
+  ```bash
+  set -e -x -u
+
+  environment_path=
+  output_path=
+  diego_release_path=
+
+  pushd cf-release
+    ./scripts/generate_deployment_manifest aws \
+      ${environment_path}/stubs/director-uuid.yml \
+      ${diego_release_path}/examples/aws/stubs/cf/diego.yml \
+      ${environment_path}/stubs/cf/properties.yml \
+      ${environment_path}/stubs/cf/instance-count-overrides.yml \
+      ${environment_path}/stubs/cf/stub.yml \
+      > ${output_path}/cf.yml
+  popd
+
+  pushd diego-release
+    ./scripts/generate-deployment-manifest \
+      -g \
+      -c ${output_path}/cf.yml \
+      -i ${environment_path}/stubs/diego/iaas-settings.yml \
+      -p ${environment_path}/stubs/diego/property-overrides.yml \
+      -n ${environment_path}/stubs/diego/instance-count-overrides.yml \
+      -v ${environment_path}/stubs/diego/release-versions.yml \
+      > ${output_path}/diego0.yml
+  popd
+
+  sed 's/\ guardian/\ garden-runc/' < ${output_path}/diego0.yml > ${output_path}/diego1.yml
+
+  pushd netman-release
+    ./scripts/netmanify \
+      ${output_path}/diego1.yml \
+      ${environment_path}/stubs/netman/cf_creds_stub.yml \
+      ${environment_path}/stubs/cf/stub.yml \
+      > ${output_path}/diego.yml
+  popd
+  ```
+0. Deploy
+  - Target your bosh director.
+  ```
+  bosh target <your-director>
+  ```
+  - Set the deployment
+  ```
+  bosh deployment ${output_path}/diego.yml
+  ```
+  - Deploy
+  ```
+  bosh deploy
+  ```
+0. Run the acceptance errand
+  ```
+  bosh run errand netman-cf-acceptance
+  ```
 
 ## Kicking the tires on the policy server
 ```bash
