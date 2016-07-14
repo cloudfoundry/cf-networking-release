@@ -22,8 +22,8 @@ type Plugin struct {
 }
 
 type ValidArgs struct {
-	SourceAppGuid string
-	DestAppGuid   string
+	SourceAppName string
+	DestAppName   string
 	Protocol      string
 	Port          int
 }
@@ -169,12 +169,27 @@ func (p *Plugin) AllowCommand(cliConnection plugin.CliConnection, args []string)
 		return "", err
 	}
 
+	srcAppModel, err := cliConnection.GetApp(validArgs.SourceAppName)
+	if err != nil {
+		return "", fmt.Errorf("resolving source app: %s", err)
+	}
+	if srcAppModel.Guid == "" {
+		return "", fmt.Errorf("resolving source app: %s not found", validArgs.SourceAppName)
+	}
+	dstAppModel, err := cliConnection.GetApp(validArgs.DestAppName)
+	if err != nil {
+		return "", fmt.Errorf("resolving destination app: %s", err)
+	}
+	if dstAppModel.Guid == "" {
+		return "", fmt.Errorf("resolving destination app: %s not found", validArgs.DestAppName)
+	}
+
 	policy := models.Policy{
 		Source: models.Source{
-			ID: validArgs.SourceAppGuid,
+			ID: srcAppModel.Guid,
 		},
 		Destination: models.Destination{
-			ID:       validArgs.DestAppGuid,
+			ID:       dstAppModel.Guid,
 			Protocol: validArgs.Protocol,
 			Port:     validArgs.Port,
 		},
@@ -207,12 +222,27 @@ func (p *Plugin) DenyCommand(cliConnection plugin.CliConnection, args []string) 
 		return "", err
 	}
 
+	srcAppModel, err := cliConnection.GetApp(validArgs.SourceAppName)
+	if err != nil {
+		return "", fmt.Errorf("resolving source app: %s", err)
+	}
+	if srcAppModel.Guid == "" {
+		return "", fmt.Errorf("resolving source app: %s not found", validArgs.SourceAppName)
+	}
+	dstAppModel, err := cliConnection.GetApp(validArgs.DestAppName)
+	if err != nil {
+		return "", fmt.Errorf("resolving destination app: %s", err)
+	}
+	if dstAppModel.Guid == "" {
+		return "", fmt.Errorf("resolving destination app: %s not found", validArgs.DestAppName)
+	}
+
 	policy := models.Policy{
 		Source: models.Source{
-			ID: validArgs.SourceAppGuid,
+			ID: srcAppModel.Guid,
 		},
 		Destination: models.Destination{
-			ID:       validArgs.DestAppGuid,
+			ID:       dstAppModel.Guid,
 			Protocol: validArgs.Protocol,
 			Port:     validArgs.Port,
 		},
@@ -248,24 +278,6 @@ func ValidateArgs(cliConnection plugin.CliConnection, args []string) (ValidArgs,
 	srcAppName := args[1]
 	dstAppName := args[2]
 
-	srcAppModel, err := cliConnection.GetApp(srcAppName)
-	if err != nil {
-		return ValidArgs{}, fmt.Errorf("resolving source app: %s", err)
-	}
-	if srcAppModel.Guid == "" {
-		return ValidArgs{}, fmt.Errorf("resolving source app: %s not found", srcAppName)
-	}
-	validArgs.SourceAppGuid = srcAppModel.Guid
-
-	dstAppModel, err := cliConnection.GetApp(dstAppName)
-	if err != nil {
-		return ValidArgs{}, fmt.Errorf("resolving destination app: %s", err)
-	}
-	if dstAppModel.Guid == "" {
-		return ValidArgs{}, fmt.Errorf("resolving destination app: %s not found", dstAppName)
-	}
-	validArgs.DestAppGuid = dstAppModel.Guid
-
 	flags := flag.NewFlagSet("cf "+args[0]+" <src> <dest>", flag.ContinueOnError)
 	protocol := flags.String("protocol", "", "the protocol allowed")
 	portString := flags.String("port", "", "the destination port")
@@ -285,6 +297,10 @@ func ValidateArgs(cliConnection plugin.CliConnection, args []string) (ValidArgs,
 		return ValidArgs{}, fmt.Errorf("port is not valid: %s", *portString)
 	}
 	validArgs.Port = port
+
+	validArgs.SourceAppName = srcAppName
+
+	validArgs.DestAppName = dstAppName
 
 	return validArgs, nil
 }

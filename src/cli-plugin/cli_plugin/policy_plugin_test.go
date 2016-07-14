@@ -322,6 +322,45 @@ var _ = Describe("Plugin", func() {
 		})
 	})
 
+	Describe("Resolving App Names to Guids", func() {
+		Context("when there are errors talking to CC", func() {
+			It("returns a useful error", func() {
+				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{
+					"deny-access", "bad-access", "some-other-app", "--protocol", "tcp", "--port", "9999",
+				})
+				Expect(err).To(MatchError("resolving source app: apple"))
+			})
+		})
+
+		Context("when the source app could not be resolved to a GUID", func() {
+			It("returns a useful error", func() {
+				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{
+					"deny-access", "inaccessible-app", "some-other-app", "--protocol", "tcp", "--port", "9999",
+				})
+				Expect(err).To(MatchError("resolving source app: inaccessible-app not found"))
+			})
+		})
+
+		Context("when there are errors resolving destination app", func() {
+			It("returns a useful error", func() {
+				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{
+					"deny-access", "some-app", "not-some-other-app", "--protocol", "tcp", "--port", "9999",
+				})
+				Expect(err).To(MatchError("resolving destination app: apple"))
+			})
+		})
+
+		Context("when the destination app could not be resolved to a GUID", func() {
+			It("returns a useful error", func() {
+				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{
+					"deny-access", "some-app", "inaccessible-app", "--protocol", "tcp", "--port", "9999",
+				})
+				Expect(err).To(MatchError("resolving destination app: inaccessible-app not found"))
+			})
+		})
+
+	})
+
 	Describe("ValidateArgs", func() {
 		It("returns a struct with validated and converted args", func() {
 			argStruct, err := cli_plugin.ValidateArgs(fakeCliConnection, []string{
@@ -329,8 +368,8 @@ var _ = Describe("Plugin", func() {
 			})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(argStruct).To(Equal(cli_plugin.ValidArgs{
-				SourceAppGuid: "some-app-guid",
-				DestAppGuid:   "some-other-app-guid",
+				SourceAppName: "some-app",
+				DestAppName:   "some-other-app",
 				Protocol:      "tcp",
 				Port:          9999,
 			}))
@@ -343,8 +382,8 @@ var _ = Describe("Plugin", func() {
 				})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(argStruct).To(Equal(cli_plugin.ValidArgs{
-					SourceAppGuid: "some-app-guid",
-					DestAppGuid:   "some-other-app-guid",
+					SourceAppName: "some-app",
+					DestAppName:   "some-other-app",
 					Protocol:      "tcp",
 					Port:          9999,
 				}))
@@ -375,42 +414,6 @@ var _ = Describe("Plugin", func() {
 					})
 					Expect(err).To(MatchError("Requires --protocol PROTOCOL as argument."))
 				})
-			})
-		})
-
-		Context("when there are errors talking to CC", func() {
-			It("returns a useful error", func() {
-				_, err := cli_plugin.ValidateArgs(fakeCliConnection, []string{
-					"command-arg", "bad-access", "some-other-app", "--protocol", "tcp", "--port", "9999",
-				})
-				Expect(err).To(MatchError("resolving source app: apple"))
-			})
-		})
-
-		Context("when the source app could not be resolved to a GUID", func() {
-			It("returns a useful error", func() {
-				_, err := cli_plugin.ValidateArgs(fakeCliConnection, []string{
-					"command-arg", "inaccessible-app", "some-other-app", "--protocol", "tcp", "--port", "9999",
-				})
-				Expect(err).To(MatchError("resolving source app: inaccessible-app not found"))
-			})
-		})
-
-		Context("when there are errors resolving destination app", func() {
-			It("returns a useful error", func() {
-				_, err := cli_plugin.ValidateArgs(fakeCliConnection, []string{
-					"command-arg", "some-app", "not-some-other-app", "--protocol", "tcp", "--port", "9999",
-				})
-				Expect(err).To(MatchError("resolving destination app: apple"))
-			})
-		})
-
-		Context("when the destination app could not be resolved to a GUID", func() {
-			It("returns a useful error", func() {
-				_, err := cli_plugin.ValidateArgs(fakeCliConnection, []string{
-					"command-arg", "some-app", "inaccessible-app", "--protocol", "tcp", "--port", "9999",
-				})
-				Expect(err).To(MatchError("resolving destination app: inaccessible-app not found"))
 			})
 		})
 
