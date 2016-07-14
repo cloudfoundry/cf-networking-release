@@ -56,4 +56,3 @@ files:
   - github.com/tedsuo/rata/*.go # gosub
   - netman-cf-acceptance/*.go # gosub
   - netman-garden-integration/*.go # gosub
-  - policy-server/models/*.go # gosub

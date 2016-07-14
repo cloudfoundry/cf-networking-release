@@ -39,6 +39,9 @@ function sync_package() {
 ## add a -app line or -test line to include a particular app or test
 ## along with all of its dependencies
 
+sync_package cli \
+  -app cli-plugin &
+
 sync_package netman-agent \
   -app netman-agent/cmd/netman-agent &
 

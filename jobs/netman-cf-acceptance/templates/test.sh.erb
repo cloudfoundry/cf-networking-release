@@ -16,4 +16,7 @@ cd src/netman-cf-acceptance
 
 export APP_DIR=../example-apps/proxy
 
+export CF_PLUGIN_HOME=/var/vcap/packages/cli/
+cf install-plugin -f /var/vcap/packages/cli/bin/cli-plugin
+
 ginkgo -r -v
