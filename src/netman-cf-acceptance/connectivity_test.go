@@ -28,8 +28,6 @@ var _ = Describe("connectivity tests", func() {
 	var (
 		appA      string
 		appB      string
-		appAGuid  string
-		appBGuid  string
 		orgName   string
 		spaceName string
 		port      int
@@ -50,12 +48,8 @@ var _ = Describe("connectivity tests", func() {
 		Expect(cf.Cf("target", "-o", orgName, "-s", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
 
 		pushApp(appA)
-
 		pushApp(appB)
 		scaleApp(appB, 4 /* instances */)
-
-		appAGuid = getAppGuid(appA)
-		appBGuid = getAppGuid(appB)
 
 		port = 8080
 	})
@@ -70,15 +64,8 @@ var _ = Describe("connectivity tests", func() {
 			AssertConnectionFails(appA, appB, port)
 
 			By("creating a new policy")
-			policyJSON := fmt.Sprintf(`{"policies":[{"source":{"id":"%s"},"destination":{"id":"%s","protocol":"tcp","port":%d}}]}`,
-				appAGuid,
-				appBGuid,
-				port,
-			)
-			curlSession := cf.Cf("curl", "-X", "POST", "/networking/v0/external/policies", "-d", "'"+policyJSON+"'").Wait(Timeout_Short)
-			Expect(curlSession.Wait(Timeout_Short)).To(gexec.Exit(0))
-			postPolicyOut := string(curlSession.Out.Contents())
-			Expect(postPolicyOut).To(MatchJSON(`{}`))
+			session := cf.Cf("allow-access", appA, appB, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(Timeout_Short)
+			Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
 
 			AssertConnectionSucceeds(appA, appB, port)
 
@@ -89,10 +76,8 @@ var _ = Describe("connectivity tests", func() {
 			AssertConnectionSucceeds(appA, appB, port)
 
 			By("deleting the policy")
-			curlSession = cf.Cf("curl", "-X", "DELETE", "/networking/v0/external/policies", "-d", "'"+policyJSON+"'").Wait(Timeout_Short)
-			Expect(curlSession.Wait(Timeout_Short)).To(gexec.Exit(0))
-			deletePolicyOut := string(curlSession.Out.Contents())
-			Expect(deletePolicyOut).To(MatchJSON(`{}`))
+			session = cf.Cf("deny-access", appA, appB, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(Timeout_Short)
+			Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
 
 			time.Sleep(5 * time.Second)
 			AssertConnectionFails(appA, appB, port)
