@@ -191,6 +191,9 @@ var _ = Describe("Plugin", func() {
 	})
 
 	Describe("AllowCommand", func() {
+		BeforeEach(func() {
+			fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{`{}`}, nil)
+		})
 		Context("when the command is allow-access", func() {
 			It("translates the app names to app guids", func() {
 				By("dispatching to the AllowCommand")
@@ -232,6 +235,29 @@ var _ = Describe("Plugin", func() {
 				It("returns a useful error", func() {
 					_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"allow-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999"})
 					Expect(err).To(MatchError("payload cannot be marshaled: banana"))
+				})
+			})
+
+			Context("when the policy server returns a json error", func() {
+				BeforeEach(func() {
+					fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{`{"error": "banana"}`}, nil)
+				})
+
+				It("returns the error and fails the command", func() {
+					_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"allow-access", "some-app", "some-other-app", "-protocol", "tcp", "--port", "9999"})
+					Expect(err).To(MatchError("error creating policy: banana"))
+				})
+
+				Context("when unmarshaling the policy error fails", func() {
+					BeforeEach(func() {
+						policyPlugin.Unmarshaler = marshal.UnmarshalFunc(func([]byte, interface{}) error {
+							return errors.New("banana")
+						})
+					})
+					It("returns the error", func() {
+						_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"allow-access", "some-app", "some-other-app", "-protocol", "tcp", "--port", "9999"})
+						Expect(err).To(MatchError("error unmarshaling policy response: banana"))
+					})
 				})
 			})
 

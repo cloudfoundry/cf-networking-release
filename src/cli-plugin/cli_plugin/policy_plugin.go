@@ -231,11 +231,22 @@ func (p *Plugin) AllowCommand(cliConnection plugin.CliConnection, args []string)
 		return "", fmt.Errorf("payload cannot be marshaled: %s", err)
 	}
 
-	_, err = cliConnection.CliCommandWithoutTerminalOutput(
+	output, err := cliConnection.CliCommandWithoutTerminalOutput(
 		"curl", "-X", "POST", "/networking/v0/external/policies", "-d", "'"+string(payload)+"'",
 	)
 	if err != nil {
 		return "", fmt.Errorf("policy creation failed: %s", err)
+	}
+
+	if output[0] != "{}" {
+		var policyError struct {
+			Error string `json:"error"`
+		}
+		err = p.Unmarshaler.Unmarshal([]byte(output[0]), &policyError)
+		if err != nil {
+			return "", fmt.Errorf("error unmarshaling policy response: %s", err)
+		}
+		return "", fmt.Errorf("error creating policy: %s", policyError.Error)
 	}
 
 	return "", nil
