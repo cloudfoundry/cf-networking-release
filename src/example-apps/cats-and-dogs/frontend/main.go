@@ -41,7 +41,7 @@ func (h *ProxyHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	destination := queryParams["url"][0]
 	destination = "http://" + destination
 	httpClient := http.DefaultClient
-	httpClient.Timeout = 30 * time.Seconds
+	httpClient.Timeout = 30 * time.Second
 	getResp, err := httpClient.Get(destination)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "request failed: %s", err)
