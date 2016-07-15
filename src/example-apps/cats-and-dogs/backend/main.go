@@ -17,10 +17,20 @@ type InfoHandler struct {
 }
 
 var stylesheet template.HTML = template.HTML(`
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
 <style>
-* {
-	font-family: 'arial';
-	font-size: 30px;
+.jumbotron {
+	text-align: center;
+}
+.header h3 {
+	color: white;
 }
 </style>
 `)
@@ -32,11 +42,26 @@ type PublicPage struct {
 }
 
 var publicPageTemplate string = `
-<html>
-	<head>{{.Stylesheet}}</head>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+	{{.Stylesheet}}
+	</head>
 	<body>
-		<p>My overlay IP is: {{.OverlayIP}}</p>
-		<p>I'm serving cats on ports {{.UserPorts}}</p>
+		<div class="container">
+			<div class="header clearfix navbar navbar-inverse">
+				<div class="container">
+					<h3>Backend Sample App</h3>
+				</div>
+			</div>
+			<div class="jumbotron">
+				<h1>My overlay IP is: {{.OverlayIP}}</h1>
+				<p class="lead">I'm serving cats on TCP ports {{.UserPorts}}</p>
+			</div>
+		</div>
 	</body>
 </html>
 `
@@ -47,11 +72,28 @@ type CatPage struct {
 }
 
 var catPageTemplate string = `
-<html>
-	<head>{{.Stylesheet}}</head>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+	{{.Stylesheet}}
+	</head>
 	<body>
-		<p><img src="http://i.imgur.com/1uYroRF.gif" /></p>
-		<p>Hello from the backend, port: {{.Port}}</p>
+		<div class="row">
+			<div class="col-md-8 col-md-offset-2">
+				<div class="header clearfix navbar navbar-inverse">
+					<div class="container">
+						<h3>Backend Sample App</h3>
+					</div>
+				</div>
+				<div class="jumbotron">
+					<p class="lead">Hello from the backend, here is a picture of a cat:</p>
+					<p><img src="http://i.imgur.com/1uYroRF.gif" /></p>
+				</div>
+			</div>
+		</div>
 	</body>
 </html>
 `

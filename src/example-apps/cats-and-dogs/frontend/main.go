@@ -14,13 +14,20 @@ import (
 )
 
 var stylesheet template.HTML = template.HTML(`
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
 <style>
-* {
-	font-family: 'arial';
-	font-size: 30px;
+.jumbotron {
+	text-align: center;
 }
-h2 {
-	font-size: 32px;
+.header h3 {
+	color: white;
 }
 </style>
 `)
@@ -31,15 +38,65 @@ type FormPage struct {
 }
 
 var formPageTemplate string = `
-<html>
-	<head>{{.Stylesheet}}</head>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+	{{.Stylesheet}}
+	</head>
 	<body>
-		<h2>Frontend</h2>
-		<form action="/proxy/" method="get">
-			<label>Backend URL:<input type="text" name="url"/></label>
-			<input type="hidden" name="cachebuster" value="{{.Cachebuster}}">
-			<input type="submit">
-		</form>
+		<div class="container">
+			<div class="header clearfix navbar navbar-inverse">
+				<div class="container">
+					<h3>Frontend Sample App</h3>
+				</div>
+			</div>
+
+			<div class="jumbotron">
+				<form action="/proxy/" method="get" class="form-inline">
+					<div class="row">
+						<div class=".col-md-4.col-md-offset-4">
+				  			<div class="form-group">
+								<label for="url">Backend URL</label>
+								<input type="text" name="url" class="form-control" placeholder="127.0.0.1:8080">
+							</div>
+							<input type="hidden" name="cachebuster" value="{{.Cachebuster}}">
+							<button type="submit" class="btn btn-default">Submit</button>
+						</div>
+  					</div>
+				</form>
+			</div>
+		</div>
+	</body>
+</html>
+`
+
+type ProxyPage struct {
+	Stylesheet template.HTML
+	CatBody    template.HTML
+}
+
+var proxyPageTemplate string = `
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+	{{.Stylesheet}}
+	</head>
+	<body>
+		<div class="container">
+			<div class="header clearfix navbar navbar-inverse">
+				<div class="container">
+					<h3>Frontend Sample App</h3>
+				</div>
+			</div>
+
+			{{.CatBody}}
+		</div>
 	</body>
 </html>
 `
@@ -50,11 +107,27 @@ type ErrorPage struct {
 }
 
 var errorPageTemplate string = `
-<html>
-	<head>{{.Stylesheet}}</head>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+	{{.Stylesheet}}
+	</head>
 	<body>
-		<p><img src="http://i2.kym-cdn.com/photos/images/original/000/234/765/b7e.jpg" /></p>
-		<p>request failed: {{.Error}}</p>
+		<div class="container">
+			<div class="header clearfix navbar navbar-inverse">
+				<div class="container">
+					<h3>Frontend Sample App</h3>
+				</div>
+			</div>
+
+			<div class="jumbotron">
+				<p><img src="http://i2.kym-cdn.com/photos/images/original/000/234/765/b7e.jpg" /></p>
+				<p class="lead">request failed: {{.Error}}</p>
+			</div>
+		</div>
 	</body>
 </html>
 `
@@ -108,7 +181,17 @@ func (h *ProxyHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	resp.Write(readBytes)
+	theTemplate := template.Must(template.New("proxyPage").Parse(proxyPageTemplate))
+	catBody := template.HTML(string(readBytes))
+	err = theTemplate.Execute(resp, ProxyPage{
+		Stylesheet: stylesheet,
+		CatBody:    catBody,
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	return
 }
 
 func launchHandler(port int, proxyHandler http.Handler) {
