@@ -2,6 +2,7 @@ package cli_plugin
 
 import (
 	"bytes"
+	"cli-plugin/styles"
 	"errors"
 	"flag"
 	"fmt"
@@ -21,6 +22,7 @@ import (
 type Plugin struct {
 	Marshaler   marshal.Marshaler
 	Unmarshaler marshal.Unmarshaler
+	Styler      *styles.StyleGroup
 }
 
 type ValidArgs struct {
@@ -33,14 +35,6 @@ type ValidArgs struct {
 const AllowCommand = "allow-access"
 const ListCommand = "list-access"
 const DenyCommand = "deny-access"
-
-var STYLES = map[string]string{
-	"<RESET>": "\x1B[0m",
-	"<CLR_R>": "\x1B[31;1m",
-	"<CLR_G>": "\x1B[32;1m",
-	"<CLR_C>": "\x1B[36;1m",
-	"<BOLD>":  "\x1B[;1m",
-}
 
 var ListUsageRegex = fmt.Sprintf(`\A%s\s*(--app(\s+|=)\S+\z|\z)`, ListCommand)
 var AllowUsageRegex = fmt.Sprintf(`\A%s\s+\S+\s+\S+\s+(--|-)\w+(\s+|=)\w+\s+(--|-)\w+(\s+|=)\w+\z`, AllowCommand)
@@ -97,12 +91,12 @@ func (p *Plugin) Run(cliConnection plugin.CliConnection, args []string) {
 
 	output, err := p.RunWithErrors(cliConnection, args)
 	if err != nil {
-		logger.Printf("%sFAILED%s", STYLES["<CLR_R>"], STYLES["<RESET>"])
+		logger.Printf(p.Styler.ApplyStyles(p.Styler.AddStyle("FAILED", "red")))
 		logger.Fatalf("%s", err)
 	}
 
-	logger.Printf("%sOK%s\n", STYLES["<CLR_G>"], STYLES["<RESET>"])
-	logger.Print(output)
+	logger.Printf(p.Styler.ApplyStyles(p.Styler.AddStyle("OK\n\n", "green")))
+	logger.Print(p.Styler.ApplyStyles(output))
 }
 
 func (p *Plugin) RunWithErrors(cliConnection plugin.CliConnection, args []string) (string, error) {
@@ -153,7 +147,7 @@ func (p *Plugin) ListCommand(cliConnection plugin.CliConnection, args []string) 
 
 	buffer := &bytes.Buffer{}
 	tabWriter := tabwriter.NewWriter(buffer, 0, 8, 2, '\t', tabwriter.FilterHTML)
-	fmt.Fprintf(tabWriter, "%sSource\tDestination\tProtocol\tPort%s\n", STYLES["<BOLD>"], STYLES["<RESET>"])
+	fmt.Fprintf(tabWriter, p.Styler.AddStyle("Source\tDestination\tProtocol\tPort\n", "bold"))
 
 	err = p.Unmarshaler.Unmarshal([]byte(policiesJSON[0]), &policiesResponse)
 	if err != nil {
@@ -173,7 +167,12 @@ func (p *Plugin) ListCommand(cliConnection plugin.CliConnection, args []string) 
 			}
 		}
 		if srcName != "" && dstName != "" {
-			fmt.Fprintf(tabWriter, "%s\t%s\t%s\t%d\n", srcName, dstName, policy.Destination.Protocol, policy.Destination.Port)
+			fmt.Fprintf(tabWriter, "%s\t%s\t%s\t%d\n",
+				p.Styler.AddStyle(srcName, "cyan"),
+				p.Styler.AddStyle(dstName, "cyan"),
+				policy.Destination.Protocol,
+				policy.Destination.Port,
+			)
 		}
 	}
 
@@ -319,7 +318,7 @@ func validateUsage(cliConnection plugin.CliConnection, regex string, args []stri
 	if !rx.MatchString(strings.Join(args, " ")) {
 		output, err := cliConnection.CliCommandWithoutTerminalOutput("help", args[0])
 		if err != nil {
-			panic(err)
+			return fmt.Errorf("cf cli error: %s", err)
 		}
 		return errors.New(strings.Join(output, "\n"))
 	}
@@ -341,7 +340,7 @@ func ValidateArgs(cliConnection plugin.CliConnection, args []string) (ValidArgs,
 	if err != nil {
 		output, err := cliConnection.CliCommandWithoutTerminalOutput("help", args[0])
 		if err != nil {
-			panic(err)
+			return ValidArgs{}, fmt.Errorf("cf cli error: %s", err)
 		}
 		usageError := fmt.Sprintf("Incorrect usage. Port is not valid: %s\n\n%s", *portString, strings.Join(output, "\n"))
 		return ValidArgs{}, errors.New(usageError)

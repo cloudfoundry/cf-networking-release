@@ -2,6 +2,7 @@ package cli_plugin_test
 
 import (
 	"cli-plugin/cli_plugin"
+	"cli-plugin/styles"
 	"encoding/json"
 	"errors"
 	"lib/marshal"
@@ -25,6 +26,7 @@ var _ = Describe("Plugin", func() {
 		policyPlugin = cli_plugin.Plugin{
 			Marshaler:   marshal.MarshalFunc(json.Marshal),
 			Unmarshaler: marshal.UnmarshalFunc(json.Unmarshal),
+			Styler:      styles.NewGroup(),
 		}
 
 		srcAppData = plugin_models.GetAppModel{
@@ -72,7 +74,7 @@ var _ = Describe("Plugin", func() {
 				Expect(fakeCliConnection.CliCommandWithoutTerminalOutputCallCount()).To(Equal(1))
 				Expect(fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)).To(Equal([]string{"curl", "/networking/v0/external/policies"}))
 
-				Expect(output).To(Equal("Source\tDestination\tProtocol\tPort\n"))
+				Expect(output).To(Equal("<BOLD>Source\tDestination\tProtocol\tPort\n<RESET>"))
 			})
 		})
 
@@ -85,7 +87,7 @@ var _ = Describe("Plugin", func() {
 				Expect(fakeCliConnection.CliCommandWithoutTerminalOutputCallCount()).To(Equal(1))
 				Expect(fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)).To(Equal([]string{"curl", "/networking/v0/external/policies"}))
 
-				Expect(output).To(Equal("Source\t\tDestination\tProtocol\tPort\nsome-app\tsome-other-app\ttcp\t\t9999\n"))
+				Expect(output).To(Equal("<BOLD>Source\t\tDestination\tProtocol\tPort\n<RESET><CLR_C>some-app<RESET>\t<CLR_C>some-other-app<RESET>\ttcp\t\t9999\n"))
 			})
 		})
 
@@ -105,7 +107,7 @@ var _ = Describe("Plugin", func() {
 				Expect(fakeCliConnection.CliCommandWithoutTerminalOutputCallCount()).To(Equal(1))
 				Expect(fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)).To(Equal([]string{"curl", "/networking/v0/external/policies"}))
 
-				Expect(output).To(Equal("Source\tDestination\tProtocol\tPort\n"))
+				Expect(output).To(Equal("<BOLD>Source\tDestination\tProtocol\tPort\n<RESET>"))
 			})
 		})
 
@@ -165,7 +167,7 @@ var _ = Describe("Plugin", func() {
 				Expect(fakeCliConnection.CliCommandWithoutTerminalOutputCallCount()).To(Equal(1))
 				Expect(fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)).To(Equal([]string{"curl", "/networking/v0/external/policies?id=some-app-guid"}))
 
-				Expect(output).To(Equal("Source\t\tDestination\tProtocol\tPort\nsome-app\tsome-other-app\ttcp\t\t9999\n"))
+				Expect(output).To(Equal("<BOLD>Source\t\tDestination\tProtocol\tPort\n<RESET><CLR_C>some-app<RESET>\t<CLR_C>some-other-app<RESET>\ttcp\t\t9999\n"))
 			})
 
 			Context("when GetApp fails", func() {
@@ -222,6 +224,17 @@ var _ = Describe("Plugin", func() {
 					Expect(err).To(MatchError("USAGE:\nbanana"))
 					c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
 					Expect(c).To(Equal([]string{"help", "allow-access"}))
+				})
+
+				Context("and then when the cf cli command fails", func() {
+					BeforeEach(func() {
+						fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{}, errors.New("banana"))
+					})
+
+					It("returns the error", func() {
+						_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"allow-access"})
+						Expect(err).To(MatchError("cf cli error: banana"))
+					})
 				})
 			})
 
@@ -413,6 +426,17 @@ var _ = Describe("Plugin", func() {
 				Expect(err).To(MatchError("Incorrect usage. Port is not valid: not-an-int\n\nUSAGE:\nbanana"))
 				c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
 				Expect(c).To(Equal([]string{"help", "command-arg"}))
+			})
+			Context("when the cf cli command fails", func() {
+				BeforeEach(func() {
+					fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{}, errors.New("banana"))
+				})
+				It("returns the error", func() {
+					_, err := cli_plugin.ValidateArgs(fakeCliConnection, []string{
+						"command-arg", "some-app", "some-other-app", "--protocol", "tcp", "--port", "not-an-int",
+					})
+					Expect(err).To(MatchError("cf cli error: banana"))
+				})
 			})
 		})
 	})
