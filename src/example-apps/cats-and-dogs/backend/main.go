@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"log"
 	"net"
 	"net/http"
@@ -14,6 +15,46 @@ type InfoHandler struct {
 	Port      int
 	UserPorts string
 }
+
+var stylesheet template.HTML = template.HTML(`
+<style>
+* {
+	font-family: 'arial';
+	font-size: 30px;
+}
+</style>
+`)
+
+type PublicPage struct {
+	Stylesheet template.HTML
+	OverlayIP  string
+	UserPorts  string
+}
+
+var publicPageTemplate string = `
+<html>
+	<head>{{.Stylesheet}}</head>
+	<body>
+		<p>My overlay IP is: {{.OverlayIP}}</p>
+		<p>I'm serving cats on ports {{.UserPorts}}</p>
+	</body>
+</html>
+`
+
+type CatPage struct {
+	Stylesheet template.HTML
+	Port       int
+}
+
+var catPageTemplate string = `
+<html>
+	<head>{{.Stylesheet}}</head>
+	<body>
+		<p><img src="http://i.imgur.com/1uYroRF.gif" /></p>
+		<p>Hello from the backend, port: {{.Port}}</p>
+	</body>
+</html>
+`
 
 func (h *InfoHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	addrs, err := net.InterfaceAddrs()
@@ -28,13 +69,15 @@ func (h *InfoHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	resp.Write([]byte("<html><style>* { font-family: 'arial' }</style><body><p>"))
-	resp.Write([]byte("My overlay IP is: "))
-	resp.Write([]byte(overlayIP))
-	resp.Write([]byte(`</p><p>I'm serving cats on ports `))
-	resp.Write([]byte(h.UserPorts))
-	resp.Write([]byte(`</p>`))
-	resp.Write([]byte("</html></body>"))
+	template := template.Must(template.New("publicPage").Parse(publicPageTemplate))
+	err = template.Execute(resp, PublicPage{
+		Stylesheet: stylesheet,
+		OverlayIP:  overlayIP,
+		UserPorts:  h.UserPorts,
+	})
+	if err != nil {
+		panic(err)
+	}
 	return
 }
 
@@ -43,10 +86,14 @@ type CatHandler struct {
 }
 
 func (h *CatHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
-	resp.Write([]byte("<html><style>* { font-family: 'arial' }</style><body><p>"))
-	resp.Write([]byte(`<img src="http://i.imgur.com/1uYroRF.gif" />`))
-	resp.Write([]byte(fmt.Sprintf("</p><p>Hello from the backend, port: %d</p>", h.Port)))
-	resp.Write([]byte("</html></body>"))
+	template := template.Must(template.New("catPage").Parse(catPageTemplate))
+	err := template.Execute(resp, CatPage{
+		Stylesheet: stylesheet,
+		Port:       h.Port,
+	})
+	if err != nil {
+		panic(err)
+	}
 	return
 }
 
