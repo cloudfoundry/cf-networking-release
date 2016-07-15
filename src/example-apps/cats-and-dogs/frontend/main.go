@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"io/ioutil"
 	"log"
 	"math/rand"
@@ -9,31 +10,74 @@ import (
 	"net/url"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 )
+
+var stylesheet template.HTML = template.HTML(`
+<style>
+* {
+	font-family: 'arial';
+	font-size: 30px;
+}
+h2 {
+	font-size: 32px;
+}
+</style>
+`)
+
+type FormPage struct {
+	Stylesheet  template.HTML
+	Cachebuster int
+}
+
+var formPageTemplate string = `
+<html>
+	<head>{{.Stylesheet}}</head>
+	<body>
+		<h2>Frontend</h2>
+		<form action="/proxy/" method="get">
+			<label>Backend URL:<input type="text" name="url"/></label>
+			<input type="hidden" name="cachebuster" value="{{.Cachebuster}}">
+			<input type="submit">
+		</form>
+	</body>
+</html>
+`
+
+type ErrorPage struct {
+	Stylesheet template.HTML
+	Error      error
+}
+
+var errorPageTemplate string = `
+<html>
+	<head>{{.Stylesheet}}</head>
+	<body>
+		<p><img src="http://i2.kym-cdn.com/photos/images/original/000/234/765/b7e.jpg" /></p>
+		<p>request failed: {{.Error}}</p>
+	</body>
+</html>
+`
 
 type InfoHandler struct {
 	Port int
 }
 
 func (h *InfoHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
-	resp.Write([]byte("<html><style>* { font-family: 'arial' }</style><body><p>"))
-	resp.Write([]byte(fmt.Sprintf(`
-		</p>
-		<h2>Frontend</h2>
-		<form action="/proxy/" method="get">
-		<label>Backend URL:<input type="text" name="url"/></label><input type="submit">
-		<input type="hidden" name="cachebuster" value="%d">
-		</form>`, rand.Int())))
-	resp.Write([]byte("</html></body>"))
+	template := template.Must(template.New("formPage").Parse(formPageTemplate))
+	err := template.Execute(resp, FormPage{
+		Stylesheet:  stylesheet,
+		Cachebuster: rand.Int(),
+	})
+	if err != nil {
+		panic(err)
+	}
 	return
 }
 
 type ProxyHandler struct{}
 
 func (h *ProxyHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
-	log.Printf("rawquery: %+v\n", req.URL.RawQuery)
 	queryParams, err := url.ParseQuery(req.URL.RawQuery)
 	if err != nil {
 		panic(err)
@@ -44,12 +88,15 @@ func (h *ProxyHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	httpClient.Timeout = 30 * time.Second
 	getResp, err := httpClient.Get(destination)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "request failed: %s", err)
-		resp.WriteHeader(http.StatusInternalServerError)
-		resp.Write([]byte("<html><style>* { font-family: 'arial' }</style><body><p>"))
-		resp.Write([]byte(`<img src="http://i2.kym-cdn.com/photos/images/original/000/234/765/b7e.jpg" /></p><p>`))
-		resp.Write([]byte(fmt.Sprintf("request failed: %s", err)))
-		resp.Write([]byte("</p></html></body>"))
+		template := template.Must(template.New("formPage").Parse(errorPageTemplate))
+		err = template.Execute(resp, ErrorPage{
+			Stylesheet: stylesheet,
+			Error:      err,
+		})
+		if err != nil {
+			panic(err)
+		}
+
 		return
 	}
 	defer getResp.Body.Close()
@@ -81,20 +128,6 @@ func main() {
 	}
 
 	proxyHandler := &ProxyHandler{}
-
-	userPortsString := os.Getenv("USER_PORTS")
-	userPorts := strings.Split(userPortsString, ",")
-	for _, userPortString := range userPorts {
-		if strings.TrimSpace(userPortString) == "" {
-			continue
-		}
-		userPort, err := strconv.Atoi(userPortString)
-		if err != nil {
-			log.Fatal("invalid user port " + userPortString)
-		}
-
-		go launchHandler(userPort, proxyHandler)
-	}
 
 	launchHandler(systemPort, proxyHandler)
 }
