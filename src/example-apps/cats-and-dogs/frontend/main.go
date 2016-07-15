@@ -40,11 +40,12 @@ type FormPage struct {
 var formPageTemplate string = `
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-	{{.Stylesheet}}
+	<head>
+		<title>Frontend</title>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		{{.Stylesheet}}
 	</head>
 	<body>
 		<div class="container">
@@ -81,11 +82,12 @@ type ProxyPage struct {
 var proxyPageTemplate string = `
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-	{{.Stylesheet}}
+	<head>
+		<title>Frontend</title>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		{{.Stylesheet}}
 	</head>
 	<body>
 		<div class="container">
@@ -109,11 +111,12 @@ type ErrorPage struct {
 var errorPageTemplate string = `
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-	{{.Stylesheet}}
+	<head>
+		<title>Frontend</title>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		{{.Stylesheet}}
 	</head>
 	<body>
 		<div class="container">
