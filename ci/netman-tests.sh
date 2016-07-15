@@ -11,6 +11,7 @@ declare -a packages=(
   "src/flannel-watchdog"
   "src/guardian-cni-adapter"
   "src/netman-agent"
+  "src/cli-plugin"
   )
 
 function bootPostgres {

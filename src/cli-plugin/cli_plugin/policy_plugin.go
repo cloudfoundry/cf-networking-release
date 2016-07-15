@@ -10,7 +10,9 @@ import (
 	"log"
 	"netman-agent/models"
 	"os"
+	"regexp"
 	"strconv"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/cloudfoundry/cli/plugin"
@@ -36,6 +38,10 @@ const CLR_N = "\x1b[0m"
 const CLR_R = "\x1b[31;1m"
 const CLR_G = "\x1b[32;1m"
 
+var ListUsageRegex = fmt.Sprintf(`\A%s\s*(--app(\s+|=)\S+\z|\z)`, ListCommand)
+var AllowUsageRegex = fmt.Sprintf(`\A%s\s+\S+\s+\S+\s+(--|-)\w+(\s+|=)\w+\s+(--|-)\w+(\s+|=)\w+\z`, AllowCommand)
+var DenyUsageRegex = fmt.Sprintf(`\A%s\s+\S+\s+\S+\s+(--|-)\w+(\s+|=)\w+\s+(--|-)\w+(\s+|=)\w+\z`, DenyCommand)
+
 func (p *Plugin) GetMetadata() plugin.PluginMetadata {
 	return plugin.PluginMetadata{
 		Name: "network-policy",
@@ -53,13 +59,18 @@ func (p *Plugin) GetMetadata() plugin.PluginMetadata {
 				HelpText: "Allow direct network traffic from one app to another",
 				UsageDetails: plugin.Usage{
 					Usage: "cf allow-access SOURCE_APP DESTINATION_APP --protocol <tcp|udp> --port [1-65535]",
+					Options: map[string]string{
+						"--protocol": "Protocol to connect apps with. (required)",
+						"--port":     "Port to connect to destination app with. (required)",
+					},
 				},
 			},
 			plugin.Command{
 				Name:     ListCommand,
 				HelpText: "List policy for direct network traffic from one app to another",
 				UsageDetails: plugin.Usage{
-					Usage: "cf list-access",
+					Usage:   "cf list-access [--app appName]",
+					Options: map[string]string{"--app": "Application to filter results by. (optional)"},
 				},
 			},
 			plugin.Command{
@@ -67,6 +78,10 @@ func (p *Plugin) GetMetadata() plugin.PluginMetadata {
 				HelpText: "Remove direct network traffic from one app to another",
 				UsageDetails: plugin.Usage{
 					Usage: "cf deny-access SOURCE_APP DESTINATION_APP --protocol <tcp|udp> --port [1-65535]",
+					Options: map[string]string{
+						"--protocol": "Protocol to connect apps with. (required)",
+						"--port":     "Port to connect to destination app with. (required)",
+					},
 				},
 			},
 		},
@@ -100,6 +115,11 @@ func (p *Plugin) RunWithErrors(cliConnection plugin.CliConnection, args []string
 }
 
 func (p *Plugin) ListCommand(cliConnection plugin.CliConnection, args []string) (string, error) {
+	err := validateUsage(cliConnection, ListUsageRegex, args)
+	if err != nil {
+		return "", err
+	}
+
 	flags := flag.NewFlagSet("cf list-policies", flag.ContinueOnError)
 	appName := flags.String("app", "", "app name to filter results")
 	flags.Parse(args[1:])
@@ -164,6 +184,11 @@ func (p *Plugin) ListCommand(cliConnection plugin.CliConnection, args []string) 
 }
 
 func (p *Plugin) AllowCommand(cliConnection plugin.CliConnection, args []string) (string, error) {
+	err := validateUsage(cliConnection, AllowUsageRegex, args)
+	if err != nil {
+		return "", err
+	}
+
 	validArgs, err := ValidateArgs(cliConnection, args)
 	if err != nil {
 		return "", err
@@ -217,6 +242,11 @@ func (p *Plugin) AllowCommand(cliConnection plugin.CliConnection, args []string)
 }
 
 func (p *Plugin) DenyCommand(cliConnection plugin.CliConnection, args []string) (string, error) {
+	err := validateUsage(cliConnection, DenyUsageRegex, args)
+	if err != nil {
+		return "", err
+	}
+
 	validArgs, err := ValidateArgs(cliConnection, args)
 	if err != nil {
 		return "", err
@@ -269,12 +299,21 @@ func (p *Plugin) DenyCommand(cliConnection plugin.CliConnection, args []string) 
 	return "", nil
 }
 
+func validateUsage(cliConnection plugin.CliConnection, regex string, args []string) error {
+	rx := regexp.MustCompile(regex)
+	if !rx.MatchString(strings.Join(args, " ")) {
+		output, err := cliConnection.CliCommandWithoutTerminalOutput("help", args[0])
+		if err != nil {
+			panic(err)
+		}
+		return errors.New(strings.Join(output, "\n"))
+	}
+	return nil
+}
+
 func ValidateArgs(cliConnection plugin.CliConnection, args []string) (ValidArgs, error) {
 	validArgs := ValidArgs{}
 
-	if len(args) < 3 {
-		return ValidArgs{}, errors.New("not enough arguments")
-	}
 	srcAppName := args[1]
 	dstAppName := args[2]
 
@@ -283,24 +322,20 @@ func ValidateArgs(cliConnection plugin.CliConnection, args []string) (ValidArgs,
 	portString := flags.String("port", "", "the destination port")
 	flags.Parse(args[3:])
 
-	if *protocol == "" {
-		return ValidArgs{}, fmt.Errorf("Requires --protocol PROTOCOL as argument.")
-	}
-	validArgs.Protocol = *protocol
-
-	if *portString == "" {
-		return ValidArgs{}, fmt.Errorf("Requires --port PORT as argument.")
-	}
-
 	port, err := strconv.Atoi(*portString)
 	if err != nil {
-		return ValidArgs{}, fmt.Errorf("port is not valid: %s", *portString)
+		output, err := cliConnection.CliCommandWithoutTerminalOutput("help", args[0])
+		if err != nil {
+			panic(err)
+		}
+		usageError := fmt.Sprintf("Incorrect usage. Port is not valid: %s\n\n%s", *portString, strings.Join(output, "\n"))
+		return ValidArgs{}, errors.New(usageError)
 	}
-	validArgs.Port = port
 
 	validArgs.SourceAppName = srcAppName
-
 	validArgs.DestAppName = dstAppName
+	validArgs.Protocol = *protocol
+	validArgs.Port = port
 
 	return validArgs, nil
 }

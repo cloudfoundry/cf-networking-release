@@ -6,7 +6,6 @@ import (
 	"errors"
 	"lib/marshal"
 
-	"github.com/cloudfoundry/cli/plugin"
 	"github.com/cloudfoundry/cli/plugin/models"
 	"github.com/cloudfoundry/cli/plugin/pluginfakes"
 
@@ -49,47 +48,6 @@ var _ = Describe("Plugin", func() {
 				return plugin_models.GetAppModel{}, errors.New("apple")
 			}
 		}
-	})
-
-	Describe("GetMetadata", func() {
-		It("responds with its metadata", func() {
-			Expect(policyPlugin.GetMetadata()).To(Equal(
-				plugin.PluginMetadata{
-					Name: "network-policy",
-					Version: plugin.VersionType{
-						Major: 0,
-						Minor: 0,
-					},
-					MinCliVersion: plugin.VersionType{
-						Major: 6,
-						Minor: 15,
-					},
-					Commands: []plugin.Command{
-						plugin.Command{
-							Name:     "allow-access",
-							HelpText: "Allow direct network traffic from one app to another",
-							UsageDetails: plugin.Usage{
-								Usage: "cf allow-access SOURCE_APP DESTINATION_APP --protocol <tcp|udp> --port [1-65535]",
-							},
-						},
-						plugin.Command{
-							Name:     "list-access",
-							HelpText: "List policy for direct network traffic from one app to another",
-							UsageDetails: plugin.Usage{
-								Usage: "cf list-access",
-							},
-						},
-						plugin.Command{
-							Name:     "deny-access",
-							HelpText: "Remove direct network traffic from one app to another",
-							UsageDetails: plugin.Usage{
-								Usage: "cf deny-access SOURCE_APP DESTINATION_APP --protocol <tcp|udp> --port [1-65535]",
-							},
-						},
-					},
-				},
-			))
-		})
 	})
 
 	Describe("ListCommand", func() {
@@ -220,6 +178,16 @@ var _ = Describe("Plugin", func() {
 				})
 			})
 		})
+
+		Context("when the user supplies additional arguments", func() {
+			It("shows usage", func() {
+				fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
+				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"list-access", "some-app"})
+				Expect(err).To(MatchError("USAGE:\nbanana"))
+				c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
+				Expect(c).To(Equal([]string{"help", "list-access"}))
+			})
+		})
 	})
 
 	Describe("AllowCommand", func() {
@@ -244,6 +212,16 @@ var _ = Describe("Plugin", func() {
 				}))
 			})
 
+			Context("when the user supplies incorrect arguments", func() {
+				It("shows usage", func() {
+					fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
+					_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"allow-access", "some-app", "--protocol", "tcp", "some-other-app", "--port", "9999"})
+					Expect(err).To(MatchError("USAGE:\nbanana"))
+					c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
+					Expect(c).To(Equal([]string{"help", "allow-access"}))
+				})
+			})
+
 			Context("when the policies are not marshalable", func() {
 				BeforeEach(func() {
 					policyPlugin.Marshaler = marshal.MarshalFunc(func(input interface{}) ([]byte, error) {
@@ -263,7 +241,7 @@ var _ = Describe("Plugin", func() {
 				})
 
 				It("returns a useful error", func() {
-					_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"allow-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999"})
+					_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"allow-access", "some-app", "some-other-app", "-protocol", "tcp", "--port", "9999"})
 					Expect(err).To(MatchError("policy creation failed: blueberry"))
 				})
 			})
@@ -290,6 +268,16 @@ var _ = Describe("Plugin", func() {
 					"curl", "-X", "DELETE", "/networking/v0/external/policies", "-d",
 					`'{"policies":[{"source":{"id":"some-app-guid"},"destination":{"id":"some-other-app-guid","port":9999,"protocol":"tcp"}}]}'`,
 				}))
+			})
+		})
+
+		Context("when the user supplies incorrect arguments", func() {
+			It("shows usage", func() {
+				fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
+				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"deny-access", "some-app", "some-other-app", "yet-another-app", "--protocol", "tcp", "--port", "9999"})
+				Expect(err).To(MatchError("USAGE:\nbanana"))
+				c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
+				Expect(c).To(Equal([]string{"help", "deny-access"}))
 			})
 		})
 
@@ -390,39 +378,15 @@ var _ = Describe("Plugin", func() {
 			})
 		})
 
-		Context("when there are missing args", func() {
-			Context("when there are < 2 args", func() {
-				It("returns an error", func() {
-					_, err := cli_plugin.ValidateArgs(fakeCliConnection, []string{"command-arg"})
-					Expect(err).To(MatchError("not enough arguments"))
-				})
-			})
-
-			Context("when the port is missing", func() {
-				It("returns an error", func() {
-					_, err := cli_plugin.ValidateArgs(fakeCliConnection, []string{
-						"command-arg", "some-app", "some-other-app", "--protocol", "tcp",
-					})
-					Expect(err).To(MatchError("Requires --port PORT as argument."))
-				})
-			})
-
-			Context("when the protocol is missing", func() {
-				It("returns an error", func() {
-					_, err := cli_plugin.ValidateArgs(fakeCliConnection, []string{
-						"command-arg", "some-app", "some-other-app", "--port", "9999",
-					})
-					Expect(err).To(MatchError("Requires --protocol PROTOCOL as argument."))
-				})
-			})
-		})
-
 		Context("when the port is not an int", func() {
 			It("returns a useful error", func() {
+				fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
 				_, err := cli_plugin.ValidateArgs(fakeCliConnection, []string{
 					"command-arg", "some-app", "some-other-app", "--protocol", "tcp", "--port", "not-an-int",
 				})
-				Expect(err).To(MatchError(`port is not valid: not-an-int`))
+				Expect(err).To(MatchError("Incorrect usage. Port is not valid: not-an-int\n\nUSAGE:\nbanana"))
+				c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
+				Expect(c).To(Equal([]string{"help", "command-arg"}))
 			})
 		})
 	})
