@@ -34,9 +34,13 @@ const AllowCommand = "allow-access"
 const ListCommand = "list-access"
 const DenyCommand = "deny-access"
 
-const CLR_N = "\x1b[0m"
-const CLR_R = "\x1b[31;1m"
-const CLR_G = "\x1b[32;1m"
+var STYLES = map[string]string{
+	"<RESET>": "\x1B[0m",
+	"<CLR_R>": "\x1B[31;1m",
+	"<CLR_G>": "\x1B[32;1m",
+	"<CLR_C>": "\x1B[36;1m",
+	"<BOLD>":  "\x1B[;1m",
+}
 
 var ListUsageRegex = fmt.Sprintf(`\A%s\s*(--app(\s+|=)\S+\z|\z)`, ListCommand)
 var AllowUsageRegex = fmt.Sprintf(`\A%s\s+\S+\s+\S+\s+(--|-)\w+(\s+|=)\w+\s+(--|-)\w+(\s+|=)\w+\z`, AllowCommand)
@@ -93,11 +97,11 @@ func (p *Plugin) Run(cliConnection plugin.CliConnection, args []string) {
 
 	output, err := p.RunWithErrors(cliConnection, args)
 	if err != nil {
-		logger.Printf("%sFAILED%s", CLR_R, CLR_N)
+		logger.Printf("%sFAILED%s", STYLES["<CLR_R>"], STYLES["<RESET>"])
 		logger.Fatalf("%s", err)
 	}
 
-	logger.Printf("%sOK%s", CLR_G, CLR_N)
+	logger.Printf("%sOK%s\n", STYLES["<CLR_G>"], STYLES["<RESET>"])
 	logger.Print(output)
 }
 
@@ -147,10 +151,10 @@ func (p *Plugin) ListCommand(cliConnection plugin.CliConnection, args []string) 
 		return "", fmt.Errorf("getting policies: %s", err)
 	}
 
-	output := bytes.NewBuffer([]byte{})
-	tabWriter := new(tabwriter.Writer)
-	tabWriter.Init(output, 0, 8, 2, '\t', 0)
-	fmt.Fprintln(tabWriter, "Source\tDestination\tProtocol\tPort")
+	buffer := &bytes.Buffer{}
+	tabWriter := tabwriter.NewWriter(buffer, 0, 8, 2, '\t', tabwriter.FilterHTML)
+	fmt.Fprintf(tabWriter, "%sSource\tDestination\tProtocol\tPort%s\n", STYLES["<BOLD>"], STYLES["<RESET>"])
+
 	err = p.Unmarshaler.Unmarshal([]byte(policiesJSON[0]), &policiesResponse)
 	if err != nil {
 		return "", fmt.Errorf("unmarshaling: %s", err)
@@ -174,7 +178,7 @@ func (p *Plugin) ListCommand(cliConnection plugin.CliConnection, args []string) 
 	}
 
 	tabWriter.Flush()
-	outBytes, err := ioutil.ReadAll(output)
+	outBytes, err := ioutil.ReadAll(buffer)
 	if err != nil {
 		//untested
 		return "", fmt.Errorf("formatting output: %s", err)
