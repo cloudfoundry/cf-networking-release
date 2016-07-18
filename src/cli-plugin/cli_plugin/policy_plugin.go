@@ -10,7 +10,6 @@ import (
 	"lib/marshal"
 	"log"
 	"netman-agent/models"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -23,6 +22,7 @@ type Plugin struct {
 	Marshaler   marshal.Marshaler
 	Unmarshaler marshal.Unmarshaler
 	Styler      *styles.StyleGroup
+	Logger      *log.Logger
 }
 
 type ValidArgs struct {
@@ -87,16 +87,14 @@ func (p *Plugin) GetMetadata() plugin.PluginMetadata {
 }
 
 func (p *Plugin) Run(cliConnection plugin.CliConnection, args []string) {
-	logger := log.New(os.Stdout, "", 0)
-
 	output, err := p.RunWithErrors(cliConnection, args)
 	if err != nil {
-		logger.Printf(p.Styler.ApplyStyles(p.Styler.AddStyle("FAILED", "red")))
-		logger.Fatalf("%s", err)
+		p.Logger.Printf(p.Styler.ApplyStyles(p.Styler.AddStyle("FAILED", "red")))
+		p.Logger.Fatalf("%s", err)
 	}
 
-	logger.Printf(p.Styler.ApplyStyles(p.Styler.AddStyle("OK\n\n", "green")))
-	logger.Print(p.Styler.ApplyStyles(output))
+	p.Logger.Printf(p.Styler.ApplyStyles(p.Styler.AddStyle("OK\n", "green")))
+	p.Logger.Print(p.Styler.ApplyStyles(output))
 }
 
 func (p *Plugin) RunWithErrors(cliConnection plugin.CliConnection, args []string) (string, error) {
@@ -117,6 +115,12 @@ func (p *Plugin) ListCommand(cliConnection plugin.CliConnection, args []string) 
 	if err != nil {
 		return "", err
 	}
+
+	username, err := cliConnection.Username()
+	if err != nil {
+		return "", fmt.Errorf("could not resolve username: %s", err)
+	}
+	p.Logger.Printf(p.Styler.ApplyStyles("Listing policies as " + p.Styler.AddStyle(username, "cyan") + "..."))
 
 	flags := flag.NewFlagSet("cf list-policies", flag.ContinueOnError)
 	appName := flags.String("app", "", "app name to filter results")
@@ -197,6 +201,15 @@ func (p *Plugin) AllowCommand(cliConnection plugin.CliConnection, args []string)
 		return "", err
 	}
 
+	username, err := cliConnection.Username()
+	if err != nil {
+		return "", fmt.Errorf("could not resolve username: %s", err)
+	}
+	p.Logger.Printf(p.Styler.ApplyStyles(
+		"Allowing traffic from " + p.Styler.AddStyle(validArgs.SourceAppName, "cyan") +
+			" to " + p.Styler.AddStyle(validArgs.DestAppName, "cyan") +
+			" as " + p.Styler.AddStyle(username, "cyan") + "..."))
+
 	srcAppModel, err := cliConnection.GetApp(validArgs.SourceAppName)
 	if err != nil {
 		return "", fmt.Errorf("resolving source app: %s", err)
@@ -241,14 +254,14 @@ func (p *Plugin) AllowCommand(cliConnection plugin.CliConnection, args []string)
 		return "", fmt.Errorf("policy creation failed: %s", err)
 	}
 
-	if output[0] != "{}" {
-		var policyError struct {
-			Error string `json:"error"`
-		}
-		err = p.Unmarshaler.Unmarshal([]byte(output[0]), &policyError)
-		if err != nil {
-			return "", fmt.Errorf("error unmarshaling policy response: %s", err)
-		}
+	var policyError struct {
+		Error string `json:"error"`
+	}
+	err = p.Unmarshaler.Unmarshal([]byte(output[0]), &policyError)
+	if err != nil {
+		return "", fmt.Errorf("error unmarshaling policy response: %s", err)
+	}
+	if policyError.Error != "" {
 		return "", fmt.Errorf("error creating policy: %s", policyError.Error)
 	}
 
@@ -265,6 +278,15 @@ func (p *Plugin) DenyCommand(cliConnection plugin.CliConnection, args []string) 
 	if err != nil {
 		return "", err
 	}
+
+	username, err := cliConnection.Username()
+	if err != nil {
+		return "", fmt.Errorf("could not resolve username: %s", err)
+	}
+	p.Logger.Printf(p.Styler.ApplyStyles(
+		"Denying traffic from " + p.Styler.AddStyle(validArgs.SourceAppName, "cyan") +
+			" to " + p.Styler.AddStyle(validArgs.DestAppName, "cyan") +
+			" as " + p.Styler.AddStyle(username, "cyan") + "..."))
 
 	srcAppModel, err := cliConnection.GetApp(validArgs.SourceAppName)
 	if err != nil {
@@ -303,11 +325,22 @@ func (p *Plugin) DenyCommand(cliConnection plugin.CliConnection, args []string) 
 		return "", fmt.Errorf("payload cannot be marshaled: %s", err)
 	}
 
-	_, err = cliConnection.CliCommandWithoutTerminalOutput(
+	output, err := cliConnection.CliCommandWithoutTerminalOutput(
 		"curl", "-X", "DELETE", "/networking/v0/external/policies", "-d", "'"+string(payload)+"'",
 	)
 	if err != nil {
-		return "", fmt.Errorf("policy creation failed: %s", err)
+		return "", fmt.Errorf("policy deletion failed: %s", err)
+	}
+
+	var policyError struct {
+		Error string `json:"error"`
+	}
+	err = p.Unmarshaler.Unmarshal([]byte(output[0]), &policyError)
+	if err != nil {
+		return "", fmt.Errorf("error unmarshaling policy response: %s", err)
+	}
+	if policyError.Error != "" {
+		return "", fmt.Errorf("error deleting policy: %s", policyError.Error)
 	}
 
 	return "", nil
