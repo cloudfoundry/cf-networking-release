@@ -32,9 +32,9 @@ type ValidArgs struct {
 	Port          int
 }
 
-const AllowCommand = "allow-access"
-const ListCommand = "list-access"
-const DenyCommand = "deny-access"
+const AllowCommand = "access-allow"
+const ListCommand = "access-list"
+const DenyCommand = "access-deny"
 
 var ListUsageRegex = fmt.Sprintf(`\A%s\s*(--app(\s+|=)\S+\z|\z)`, ListCommand)
 var AllowUsageRegex = fmt.Sprintf(`\A%s\s+\S+\s+\S+\s+(--|-)\w+(\s+|=)\w+\s+(--|-)\w+(\s+|=)\w+\z`, AllowCommand)
@@ -56,7 +56,7 @@ func (p *Plugin) GetMetadata() plugin.PluginMetadata {
 				Name:     AllowCommand,
 				HelpText: "Allow direct network traffic from one app to another",
 				UsageDetails: plugin.Usage{
-					Usage: "cf allow-access SOURCE_APP DESTINATION_APP --protocol <tcp|udp> --port [1-65535]",
+					Usage: fmt.Sprintf("cf %s SOURCE_APP DESTINATION_APP --protocol <tcp|udp> --port [1-65535]", AllowCommand),
 					Options: map[string]string{
 						"--protocol": "Protocol to connect apps with. (required)",
 						"--port":     "Port to connect to destination app with. (required)",
@@ -67,7 +67,7 @@ func (p *Plugin) GetMetadata() plugin.PluginMetadata {
 				Name:     ListCommand,
 				HelpText: "List policy for direct network traffic from one app to another",
 				UsageDetails: plugin.Usage{
-					Usage:   "cf list-access [--app appName]",
+					Usage:   fmt.Sprintf("cf %s [--app appName]", ListCommand),
 					Options: map[string]string{"--app": "Application to filter results by. (optional)"},
 				},
 			},
@@ -75,7 +75,7 @@ func (p *Plugin) GetMetadata() plugin.PluginMetadata {
 				Name:     DenyCommand,
 				HelpText: "Remove direct network traffic from one app to another",
 				UsageDetails: plugin.Usage{
-					Usage: "cf deny-access SOURCE_APP DESTINATION_APP --protocol <tcp|udp> --port [1-65535]",
+					Usage: fmt.Sprintf("cf %s SOURCE_APP DESTINATION_APP --protocol <tcp|udp> --port [1-65535]", DenyCommand),
 					Options: map[string]string{
 						"--protocol": "Protocol to connect apps with. (required)",
 						"--port":     "Port to connect to destination app with. (required)",

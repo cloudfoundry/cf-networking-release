@@ -64,7 +64,7 @@ var _ = Describe("connectivity tests", func() {
 			AssertConnectionFails(appA, appB, port)
 
 			By("creating a new policy")
-			session := cf.Cf("allow-access", appA, appB, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(Timeout_Short)
+			session := cf.Cf("access-allow", appA, appB, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(Timeout_Short)
 			Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
 
 			AssertConnectionSucceeds(appA, appB, port)
@@ -76,7 +76,7 @@ var _ = Describe("connectivity tests", func() {
 			AssertConnectionSucceeds(appA, appB, port)
 
 			By("deleting the policy")
-			session = cf.Cf("deny-access", appA, appB, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(Timeout_Short)
+			session = cf.Cf("access-deny", appA, appB, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(Timeout_Short)
 			Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
 
 			time.Sleep(5 * time.Second)

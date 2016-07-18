@@ -69,7 +69,7 @@ var _ = Describe("Plugin", func() {
 				fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{`{"policies":[]}`}, nil)
 			})
 			It("shows nothing", func() {
-				output, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"list-access"})
+				output, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"access-list"})
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(fakeCliConnection.GetAppsCallCount()).To(Equal(1))
@@ -82,7 +82,7 @@ var _ = Describe("Plugin", func() {
 
 		Context("when there is a policy and I can resolve the guids", func() {
 			It("shows them", func() {
-				output, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"list-access"})
+				output, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"access-list"})
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(fakeCliConnection.GetAppsCallCount()).To(Equal(1))
@@ -102,7 +102,7 @@ var _ = Describe("Plugin", func() {
 			})
 
 			It("shows nothing", func() {
-				output, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"list-access"})
+				output, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"access-list"})
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(fakeCliConnection.GetAppsCallCount()).To(Equal(1))
@@ -119,7 +119,7 @@ var _ = Describe("Plugin", func() {
 			})
 
 			It("returns an error", func() {
-				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"list-access"})
+				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"access-list"})
 				Expect(err).To(MatchError("could not resolve username: banana"))
 			})
 		})
@@ -129,7 +129,7 @@ var _ = Describe("Plugin", func() {
 				fakeCliConnection.GetAppsReturns([]plugin_models.GetAppsModel{}, errors.New("banana"))
 			})
 			It("returns the error", func() {
-				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"list-access"})
+				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"access-list"})
 				Expect(err).To(MatchError("getting apps: banana"))
 			})
 		})
@@ -139,7 +139,7 @@ var _ = Describe("Plugin", func() {
 				fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{}, errors.New("ERROR"))
 			})
 			It("returns the error", func() {
-				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"list-access"})
+				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"access-list"})
 				Expect(err).To(MatchError("getting policies: ERROR"))
 			})
 		})
@@ -151,7 +151,7 @@ var _ = Describe("Plugin", func() {
 				})
 			})
 			It("returns an error", func() {
-				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"list-access"})
+				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"access-list"})
 				Expect(err).To(MatchError("unmarshaling: banana"))
 			})
 		})
@@ -171,7 +171,7 @@ var _ = Describe("Plugin", func() {
 				}, nil)
 			})
 			It("filters the call to the policy server", func() {
-				output, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"list-access", "--app", "some-app"})
+				output, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"access-list", "--app", "some-app"})
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(fakeCliConnection.GetAppCallCount()).To(Equal(1))
@@ -188,7 +188,7 @@ var _ = Describe("Plugin", func() {
 					fakeCliConnection.GetAppReturns(plugin_models.GetAppModel{}, errors.New("ERROR"))
 				})
 				It("returns the error", func() {
-					_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"list-access", "--app", "some-app"})
+					_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"access-list", "--app", "some-app"})
 					Expect(err).To(MatchError("getting app: ERROR"))
 				})
 			})
@@ -197,10 +197,10 @@ var _ = Describe("Plugin", func() {
 		Context("when the user supplies additional arguments", func() {
 			It("shows usage", func() {
 				fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
-				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"list-access", "some-app"})
+				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"access-list", "some-app"})
 				Expect(err).To(MatchError("USAGE:\nbanana"))
 				c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
-				Expect(c).To(Equal([]string{"help", "list-access"}))
+				Expect(c).To(Equal([]string{"help", "access-list"}))
 			})
 		})
 	})
@@ -209,11 +209,11 @@ var _ = Describe("Plugin", func() {
 		BeforeEach(func() {
 			fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"{}\n"}, nil)
 		})
-		Context("when the command is allow-access", func() {
+		Context("when the command is access-allow", func() {
 			It("translates the app names to app guids", func() {
 				By("dispatching to the AllowCommand")
 				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{
-					"allow-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999",
+					"access-allow", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999",
 				})
 				Expect(err).NotTo(HaveOccurred())
 
@@ -233,10 +233,10 @@ var _ = Describe("Plugin", func() {
 			Context("when the user supplies incorrect arguments", func() {
 				It("shows usage", func() {
 					fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
-					_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"allow-access", "some-app", "--protocol", "tcp", "some-other-app", "--port", "9999"})
+					_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"access-allow", "some-app", "--protocol", "tcp", "some-other-app", "--port", "9999"})
 					Expect(err).To(MatchError("USAGE:\nbanana"))
 					c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
-					Expect(c).To(Equal([]string{"help", "allow-access"}))
+					Expect(c).To(Equal([]string{"help", "access-allow"}))
 				})
 
 				Context("and then when the cf cli command fails", func() {
@@ -245,7 +245,7 @@ var _ = Describe("Plugin", func() {
 					})
 
 					It("returns the error", func() {
-						_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"allow-access"})
+						_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"access-allow"})
 						Expect(err).To(MatchError("cf cli error: banana"))
 					})
 				})
@@ -257,7 +257,7 @@ var _ = Describe("Plugin", func() {
 				})
 
 				It("returns an error", func() {
-					_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"allow-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999"})
+					_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"access-allow", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999"})
 					Expect(err).To(MatchError("could not resolve username: banana"))
 				})
 			})
@@ -270,7 +270,7 @@ var _ = Describe("Plugin", func() {
 				})
 
 				It("returns a useful error", func() {
-					_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"allow-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999"})
+					_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"access-allow", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999"})
 					Expect(err).To(MatchError("payload cannot be marshaled: banana"))
 				})
 			})
@@ -281,7 +281,7 @@ var _ = Describe("Plugin", func() {
 				})
 
 				It("returns the error and fails the command", func() {
-					_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"allow-access", "some-app", "some-other-app", "-protocol", "tcp", "--port", "9999"})
+					_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"access-allow", "some-app", "some-other-app", "-protocol", "tcp", "--port", "9999"})
 					Expect(err).To(MatchError("error creating policy: banana"))
 				})
 
@@ -292,7 +292,7 @@ var _ = Describe("Plugin", func() {
 						})
 					})
 					It("returns the error", func() {
-						_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"allow-access", "some-app", "some-other-app", "-protocol", "tcp", "--port", "9999"})
+						_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"access-allow", "some-app", "some-other-app", "-protocol", "tcp", "--port", "9999"})
 						Expect(err).To(MatchError("error unmarshaling policy response: banana"))
 					})
 				})
@@ -304,7 +304,7 @@ var _ = Describe("Plugin", func() {
 				})
 
 				It("returns a useful error", func() {
-					_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"allow-access", "some-app", "some-other-app", "-protocol", "tcp", "--port", "9999"})
+					_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"access-allow", "some-app", "some-other-app", "-protocol", "tcp", "--port", "9999"})
 					Expect(err).To(MatchError("policy creation failed: blueberry"))
 				})
 			})
@@ -319,7 +319,7 @@ var _ = Describe("Plugin", func() {
 			It("removes the policy", func() {
 				By("dispatching to the DenyCommand")
 				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{
-					"deny-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999",
+					"access-deny", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999",
 				})
 				Expect(err).NotTo(HaveOccurred())
 
@@ -340,10 +340,10 @@ var _ = Describe("Plugin", func() {
 		Context("when the user supplies incorrect arguments", func() {
 			It("shows usage", func() {
 				fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
-				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"deny-access", "some-app", "some-other-app", "yet-another-app", "--protocol", "tcp", "--port", "9999"})
+				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"access-deny", "some-app", "some-other-app", "yet-another-app", "--protocol", "tcp", "--port", "9999"})
 				Expect(err).To(MatchError("USAGE:\nbanana"))
 				c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
-				Expect(c).To(Equal([]string{"help", "deny-access"}))
+				Expect(c).To(Equal([]string{"help", "access-deny"}))
 			})
 		})
 
@@ -356,7 +356,7 @@ var _ = Describe("Plugin", func() {
 
 			It("returns a useful error", func() {
 				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{
-					"deny-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999",
+					"access-deny", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999",
 				})
 				Expect(err).To(MatchError("payload cannot be marshaled: banana"))
 			})
@@ -369,7 +369,7 @@ var _ = Describe("Plugin", func() {
 
 			It("returns a useful error", func() {
 				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{
-					"deny-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999",
+					"access-deny", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999",
 				})
 				Expect(err).To(MatchError("policy deletion failed: blueberry"))
 			})
@@ -381,7 +381,7 @@ var _ = Describe("Plugin", func() {
 			})
 
 			It("returns an error", func() {
-				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"deny-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999"})
+				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"access-deny", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999"})
 				Expect(err).To(MatchError("could not resolve username: banana"))
 			})
 		})
@@ -392,7 +392,7 @@ var _ = Describe("Plugin", func() {
 			})
 
 			It("returns the error and fails the command", func() {
-				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"deny-access", "some-app", "some-other-app", "-protocol", "tcp", "--port", "9999"})
+				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"access-deny", "some-app", "some-other-app", "-protocol", "tcp", "--port", "9999"})
 				Expect(err).To(MatchError("error deleting policy: banana"))
 			})
 
@@ -403,7 +403,7 @@ var _ = Describe("Plugin", func() {
 					})
 				})
 				It("returns the error", func() {
-					_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"deny-access", "some-app", "some-other-app", "-protocol", "tcp", "--port", "9999"})
+					_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"access-deny", "some-app", "some-other-app", "-protocol", "tcp", "--port", "9999"})
 					Expect(err).To(MatchError("error unmarshaling policy response: banana"))
 				})
 			})
@@ -414,7 +414,7 @@ var _ = Describe("Plugin", func() {
 		Context("when there are errors talking to CC", func() {
 			It("returns a useful error", func() {
 				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{
-					"deny-access", "bad-access", "some-other-app", "--protocol", "tcp", "--port", "9999",
+					"access-deny", "bad-access", "some-other-app", "--protocol", "tcp", "--port", "9999",
 				})
 				Expect(err).To(MatchError("resolving source app: apple"))
 			})
@@ -423,7 +423,7 @@ var _ = Describe("Plugin", func() {
 		Context("when the source app could not be resolved to a GUID", func() {
 			It("returns a useful error", func() {
 				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{
-					"deny-access", "inaccessible-app", "some-other-app", "--protocol", "tcp", "--port", "9999",
+					"access-deny", "inaccessible-app", "some-other-app", "--protocol", "tcp", "--port", "9999",
 				})
 				Expect(err).To(MatchError("resolving source app: inaccessible-app not found"))
 			})
@@ -432,7 +432,7 @@ var _ = Describe("Plugin", func() {
 		Context("when there are errors resolving destination app", func() {
 			It("returns a useful error", func() {
 				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{
-					"deny-access", "some-app", "not-some-other-app", "--protocol", "tcp", "--port", "9999",
+					"access-deny", "some-app", "not-some-other-app", "--protocol", "tcp", "--port", "9999",
 				})
 				Expect(err).To(MatchError("resolving destination app: apple"))
 			})
@@ -441,7 +441,7 @@ var _ = Describe("Plugin", func() {
 		Context("when the destination app could not be resolved to a GUID", func() {
 			It("returns a useful error", func() {
 				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{
-					"deny-access", "some-app", "inaccessible-app", "--protocol", "tcp", "--port", "9999",
+					"access-deny", "some-app", "inaccessible-app", "--protocol", "tcp", "--port", "9999",
 				})
 				Expect(err).To(MatchError("resolving destination app: inaccessible-app not found"))
 			})

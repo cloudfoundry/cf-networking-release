@@ -42,7 +42,7 @@ Backend URL: [_____] [ Submit ]
 Enter the backend's overlay IP and port (10.255.76.2:9876) and hit submit. You will see an error message. This is because the two apps have not been configured to allow connections from the frontend to the backend. Now allow access:
 
 ```
-cf allow-access frontend backend --port 9876 --protocol tcp
+cf access-allow frontend backend --port 9876 --protocol tcp
 ```
 
 Now if you were to try entering the backend app's overlay IP and port again in the frontend you will see:
