@@ -36,9 +36,10 @@ var stylesheet template.HTML = template.HTML(`
 `)
 
 type PublicPage struct {
-	Stylesheet template.HTML
-	OverlayIP  string
-	UserPorts  string
+	Stylesheet    template.HTML
+	OverlayIP     string
+	InstanceIndex string
+	UserPorts     string
 }
 
 var publicPageTemplate string = `
@@ -60,6 +61,7 @@ var publicPageTemplate string = `
 			</div>
 			<div class="jumbotron">
 				<h1>My overlay IP is: {{.OverlayIP}}</h1>
+				<h3>My instance index is: {{.InstanceIndex}}</h3>
 				<p class="lead">I'm serving cats on TCP ports {{.UserPorts}}</p>
 			</div>
 		</div>
@@ -113,11 +115,14 @@ func (h *InfoHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		}
 	}
 
+	instanceIndex := os.Getenv("CF_INSTANCE_INDEX")
+
 	template := template.Must(template.New("publicPage").Parse(publicPageTemplate))
 	err = template.Execute(resp, PublicPage{
-		Stylesheet: stylesheet,
-		OverlayIP:  overlayIP,
-		UserPorts:  h.UserPorts,
+		Stylesheet:    stylesheet,
+		OverlayIP:     overlayIP,
+		InstanceIndex: instanceIndex,
+		UserPorts:     h.UserPorts,
 	})
 	if err != nil {
 		panic(err)
