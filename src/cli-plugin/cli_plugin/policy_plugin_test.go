@@ -198,7 +198,7 @@ var _ = Describe("Plugin", func() {
 			It("shows usage", func() {
 				fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
 				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"access-list", "some-app"})
-				Expect(err).To(MatchError("USAGE:\nbanana"))
+				Expect(err).To(MatchError("Incorrect usage. \n\nUSAGE:\nbanana"))
 				c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
 				Expect(c).To(Equal([]string{"help", "access-list"}))
 			})
@@ -234,7 +234,7 @@ var _ = Describe("Plugin", func() {
 				It("shows usage", func() {
 					fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
 					_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"access-allow", "some-app", "--protocol", "tcp", "some-other-app", "--port", "9999"})
-					Expect(err).To(MatchError("USAGE:\nbanana"))
+					Expect(err).To(MatchError("Incorrect usage. \n\nUSAGE:\nbanana"))
 					c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
 					Expect(c).To(Equal([]string{"help", "access-allow"}))
 				})
@@ -338,12 +338,34 @@ var _ = Describe("Plugin", func() {
 		})
 
 		Context("when the user supplies incorrect arguments", func() {
-			It("shows usage", func() {
-				fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
-				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"access-deny", "some-app", "some-other-app", "yet-another-app", "--protocol", "tcp", "--port", "9999"})
-				Expect(err).To(MatchError("USAGE:\nbanana"))
-				c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
-				Expect(c).To(Equal([]string{"help", "access-deny"}))
+			Context("when there are too many leading positional arguments", func() {
+				It("shows usage", func() {
+					fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
+					_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"access-deny", "some-app", "some-other-app", "yet-another-app", "--protocol", "tcp", "--port", "9999"})
+					Expect(err).To(MatchError("Incorrect usage. \n\nUSAGE:\nbanana"))
+					c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
+					Expect(c).To(Equal([]string{"help", "access-deny"}))
+				})
+			})
+			Context("when there are extra positional arguments after the flag args", func() {
+				It("shows usage", func() {
+					fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
+					_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"access-deny", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999", "something-else"})
+					Expect(err).To(MatchError("Incorrect usage. \n\nUSAGE:\nbanana"))
+					c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
+					Expect(c).To(Equal([]string{"help", "access-deny"}))
+				})
+			})
+			Context("when one of the flags is misspelled", func() {
+				It("shows usage", func() {
+					fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
+					_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"access-deny", "some-app", "some-other-app", "--protocol", "tcp", "--poooort", "9999"})
+					Expect(err).To(MatchError("Incorrect usage. flag provided but not defined: -poooort\n\nUSAGE:\nbanana"))
+					c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
+					Expect(c).To(Equal([]string{"help", "access-deny"}))
+
+				})
+
 			})
 		})
 

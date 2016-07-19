@@ -3,7 +3,6 @@ package cli_plugin
 import (
 	"bytes"
 	"cli-plugin/styles"
-	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -349,11 +348,7 @@ func (p *Plugin) DenyCommand(cliConnection plugin.CliConnection, args []string) 
 func validateUsage(cliConnection plugin.CliConnection, regex string, args []string) error {
 	rx := regexp.MustCompile(regex)
 	if !rx.MatchString(strings.Join(args, " ")) {
-		output, err := cliConnection.CliCommandWithoutTerminalOutput("help", args[0])
-		if err != nil {
-			return fmt.Errorf("cf cli error: %s", err)
-		}
-		return errors.New(strings.Join(output, "\n"))
+		return errorWithUsage("", args[0], cliConnection)
 	}
 	return nil
 }
@@ -367,16 +362,14 @@ func ValidateArgs(cliConnection plugin.CliConnection, args []string) (ValidArgs,
 	flags := flag.NewFlagSet("cf "+args[0]+" <src> <dest>", flag.ContinueOnError)
 	protocol := flags.String("protocol", "", "the protocol allowed")
 	portString := flags.String("port", "", "the destination port")
-	flags.Parse(args[3:])
+	err := flags.Parse(args[3:])
+	if err != nil {
+		return ValidArgs{}, errorWithUsage(err.Error(), args[0], cliConnection)
+	}
 
 	port, err := strconv.Atoi(*portString)
 	if err != nil {
-		output, err := cliConnection.CliCommandWithoutTerminalOutput("help", args[0])
-		if err != nil {
-			return ValidArgs{}, fmt.Errorf("cf cli error: %s", err)
-		}
-		usageError := fmt.Sprintf("Incorrect usage. Port is not valid: %s\n\n%s", *portString, strings.Join(output, "\n"))
-		return ValidArgs{}, errors.New(usageError)
+		return ValidArgs{}, errorWithUsage(fmt.Sprintf("Port is not valid: %s", *portString), args[0], cliConnection)
 	}
 
 	validArgs.SourceAppName = srcAppName
@@ -385,4 +378,12 @@ func ValidateArgs(cliConnection plugin.CliConnection, args []string) (ValidArgs,
 	validArgs.Port = port
 
 	return validArgs, nil
+}
+
+func errorWithUsage(errorString, cmd string, cliConnection plugin.CliConnection) error {
+	output, err := cliConnection.CliCommandWithoutTerminalOutput("help", cmd)
+	if err != nil {
+		return fmt.Errorf("cf cli error: %s", err)
+	}
+	return fmt.Errorf("Incorrect usage. %s\n\n%s", errorString, strings.Join(output, "\n"))
 }
