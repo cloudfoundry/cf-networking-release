@@ -97,6 +97,10 @@ update_dependencies() {
 
     download_release cloudfoundry-incubator garden-runc-release
     upload_release garden-runc-release
+
+    ./scripts/update
+    bosh create release
+    bosh upload release
 }
 
 main() {
