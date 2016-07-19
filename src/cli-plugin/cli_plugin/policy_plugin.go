@@ -58,8 +58,8 @@ func (p *Plugin) GetMetadata() plugin.PluginMetadata {
 				UsageDetails: plugin.Usage{
 					Usage: fmt.Sprintf("cf %s SOURCE_APP DESTINATION_APP --protocol <tcp|udp> --port [1-65535]", AllowCommand),
 					Options: map[string]string{
-						"--protocol": "Protocol to connect apps with. (required)",
-						"--port":     "Port to connect to destination app with. (required)",
+						"-protocol": "Protocol to connect apps with. (required)",
+						"-port":     "Port to connect to destination app with. (required)",
 					},
 				},
 			},
@@ -68,7 +68,7 @@ func (p *Plugin) GetMetadata() plugin.PluginMetadata {
 				HelpText: "List policy for direct network traffic from one app to another",
 				UsageDetails: plugin.Usage{
 					Usage:   fmt.Sprintf("cf %s [--app appName]", ListCommand),
-					Options: map[string]string{"--app": "Application to filter results by. (optional)"},
+					Options: map[string]string{"-app": "Application to filter results by. (optional)"},
 				},
 			},
 			plugin.Command{
@@ -77,8 +77,8 @@ func (p *Plugin) GetMetadata() plugin.PluginMetadata {
 				UsageDetails: plugin.Usage{
 					Usage: fmt.Sprintf("cf %s SOURCE_APP DESTINATION_APP --protocol <tcp|udp> --port [1-65535]", DenyCommand),
 					Options: map[string]string{
-						"--protocol": "Protocol to connect apps with. (required)",
-						"--port":     "Port to connect to destination app with. (required)",
+						"-protocol": "Protocol to connect apps with. (required)",
+						"-port":     "Port to connect to destination app with. (required)",
 					},
 				},
 			},
