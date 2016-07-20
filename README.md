@@ -33,7 +33,7 @@ that provides container networking.
 
 ```bash
 pushd ~/workspace
-  git clone https://github.com/cloudfoundry-incubator/diego-release
+  git clone https://github.com/cloudfoundry/diego-release
   git clone https://github.com/cloudfoundry/cf-release
   git clone https://github.com/cloudfoundry-incubator/netman-release
 popd
@@ -57,8 +57,7 @@ Then follow [the instructions for testing with the cats & dogs example](https://
     ```
     scim:
       users:
-      - admin|<admin-password>|scim.write,scim.read,openid,cloud_controller.admin,doppler.firehose
-      - network-admin|<network-admin-password>|openid,network.admin
+      - admin|<admin-password>|scim.write,scim.read,openid,cloud_controller.admin,doppler.firehose,network.admin
     clients:
       cf:
         scope: cloud_controller.read,cloud_controller.write,openid,password.write,cloud_controller.admin,scim.read,scim.write,doppler.firehose,uaa.user,routing.router_groups.read,network.admin

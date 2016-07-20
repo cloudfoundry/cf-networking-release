@@ -16,8 +16,8 @@ echo '
   "apps_domain": "bosh-lite.com",
   "skip_ssl_validation": true,
   "use_http": true,
-  "test_user": "network-admin",
-  "test_user_password": "network-admin"
+  "test_user": "admin",
+  "test_user_password": "password"
 }
 ' > $CONFIG
 

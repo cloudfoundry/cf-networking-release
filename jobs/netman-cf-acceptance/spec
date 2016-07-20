@@ -13,11 +13,11 @@ packages:
 properties:
   netman-cf-acceptance.test_user:
     description: "user for testing policy api, must have network.admin scope"
-    default: network-admin
+    default: admin
 
   netman-cf-acceptance.test_user_password:
     description: "password for test user"
-    default: network-admin
+    default: password
 
   netman-cf-acceptance.admin_user:
     description: "admin user for cats-like tests"
