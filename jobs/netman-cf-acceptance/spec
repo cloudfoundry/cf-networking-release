@@ -25,7 +25,7 @@ properties:
 
   netman-cf-acceptance.admin_password:
     description: "admin user password"
-    default: admin
+    default: password
 
   netman-cf-acceptance.api:
     description: "api endpoint"

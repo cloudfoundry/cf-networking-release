@@ -12,7 +12,7 @@ echo '
 {
   "api": "api.bosh-lite.com",
   "admin_user": "admin",
-  "admin_password": "admin",
+  "admin_password": "password",
   "apps_domain": "bosh-lite.com",
   "skip_ssl_validation": true,
   "use_http": true,
