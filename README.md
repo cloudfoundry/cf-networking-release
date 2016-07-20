@@ -25,6 +25,7 @@ that provides container networking.
 2. Install it
 
   ```bash
+  chmod +x ~/Downloads/network-policy-plugin
   cf install-plugin ~/Downloads/network-policy-plugin
   ```
 
