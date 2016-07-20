@@ -10,8 +10,25 @@ that provides container networking.
 - [CI pipeline](https://c2c.ci.cf-app.com/) and [config](https://github.com/cloudfoundry-incubator/container-networking-ci)
 
 
+## Install the CF CLI Plugin
 
-## Deploy and run high-level acceptance test errand on bosh-lite
+1. Get the binary
+
+  - Option 1: Download a precompiled binary for Mac from our [GitHub Releases](https://github.com/cloudfoundry-incubator/netman-release/releases)
+
+  - Option 2: Build from source
+
+    ```bash
+    go build -o /tmp/network-policy-plugin ./src/cli-plugin
+    ```
+
+2. Install it
+
+  ```bash
+  cf install-plugin ~/Downloads/network-policy-plugin
+  ```
+
+## Deploy netman-release and test
 
 ```bash
 pushd ~/workspace
@@ -23,9 +40,10 @@ popd
 pushd ~/workspace/netman-release
   ./scripts/deploy-to-bosh-lite
 popd
-
-bosh run errand netman-cf-acceptance
 ```
+
+Then follow [the instructions for testing with the cats & dogs example](https://github.com/cloudfoundry-incubator/netman-release/tree/master/src/example-apps/cats-and-dogs).
+
 
 ## Deploy to AWS
 0. Upload stemcell with Linux kernel 4.4 to bosh director
@@ -113,11 +131,9 @@ bosh run errand netman-cf-acceptance
       > ${output_path}/diego0.yml
   popd
 
-  sed 's/\ guardian/\ garden-runc/' < ${output_path}/diego0.yml > ${output_path}/diego1.yml
-
   pushd netman-release
     ./scripts/netmanify \
-      ${output_path}/diego1.yml \
+      ${output_path}/diego0.yml \
       ${environment_path}/stubs/netman/cf_creds_stub.yml \
       ${environment_path}/stubs/cf/stub.yml \
       > ${output_path}/diego.yml
@@ -142,22 +158,7 @@ bosh run errand netman-cf-acceptance
   bosh run errand netman-cf-acceptance
   ```
 
-## Kicking the tires on the policy server
-```bash
-cf auth network-admin network-admin
-
-# list policies
-cf curl /networking/v0/external/policies
-
-# create a new policy
-cf curl -X POST /networking/v0/external/policies -d '{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8080 } } ] }'
-
-# delete that policy
-cf curl -X DELETE /networking/v0/external/policies -d '{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8080 } } ] }'
-
-```
-
-## Using your own CNI plugin
+## To replace flannel with your own CNI plugin
 0. Remove the following BOSH jobs:
   - `cni-flannel`
   - `netman-agent`
@@ -185,6 +186,14 @@ cf curl -X DELETE /networking/v0/external/policies -d '{ "policies": [ {"source"
 
 ```bash
 ~/workspace/netman-release/scripts/docker-test
+```
+
+### Running the full acceptance test
+WARNING: This test is taxing and has an aggressive timeout.
+It may fail on a laptop or other underpowered bosh-lite.
+
+```bash
+bosh run errand netman-cf-acceptance
 ```
 
 ### Referencing a new library from existing BOSH package
