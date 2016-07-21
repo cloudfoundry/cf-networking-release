@@ -17,7 +17,7 @@ properties:
 
   netman-cf-acceptance.test_user_password:
     description: "password for test user"
-    default: password
+    default: admin
 
   netman-cf-acceptance.admin_user:
     description: "admin user for cats-like tests"
