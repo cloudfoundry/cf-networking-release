@@ -92,10 +92,10 @@ update_dependencies() {
     download_release cloudfoundry cf-release
     upload_release cf-release
 
-    download_release cloudfoundry-incubator diego-release
+    download_release cloudfoundry diego-release
     upload_release diego-release
 
-    download_release cloudfoundry-incubator garden-runc-release
+    download_release cloudfoundry garden-runc-release
     upload_release garden-runc-release
 
     ./scripts/update
