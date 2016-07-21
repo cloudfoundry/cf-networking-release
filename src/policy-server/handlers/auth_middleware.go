@@ -23,7 +23,12 @@ type Authenticator struct {
 	Logger lager.Logger
 }
 
-func (a *Authenticator) Wrap(handle http.Handler) http.Handler {
+//go:generate counterfeiter -o ../fakes/authenticated_handler.go --fake-name AuthenticatedHandler . authenticatedHandler
+type authenticatedHandler interface {
+	ServeHTTP(response http.ResponseWriter, request *http.Request, currentUserName string)
+}
+
+func (a *Authenticator) Wrap(handle authenticatedHandler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		authorization := req.Header["Authorization"]
 		if len(authorization) < 1 {
@@ -54,6 +59,6 @@ func (a *Authenticator) Wrap(handle http.Handler) http.Handler {
 			return
 		}
 
-		handle.ServeHTTP(w, req)
+		handle.ServeHTTP(w, req, tokenData.UserName)
 	})
 }

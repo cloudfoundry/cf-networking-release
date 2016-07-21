@@ -19,7 +19,7 @@ type PoliciesCreate struct {
 	Validator   validator
 }
 
-func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request, currentUserName string) {
 	bodyBytes, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		h.Logger.Error("body-read-failed", err)
@@ -54,6 +54,7 @@ func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	h.Logger.Info("policy-create", lager.Data{"policies": payload.Policies, "userName": currentUserName})
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("{}"))
 	return

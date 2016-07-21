@@ -60,7 +60,7 @@ var _ = Describe("Tags index handler", func() {
 			{ "id": "some-app-guid", "tag": "0001" },
 			{ "id": "some-other-app-guid", "tag": "0002" }
         ]}`
-		handler.ServeHTTP(resp, request)
+		handler.ServeHTTP(resp, request, "")
 
 		Expect(fakeStore.TagsCallCount()).To(Equal(1))
 		Expect(resp.Code).To(Equal(http.StatusOK))
@@ -72,14 +72,14 @@ var _ = Describe("Tags index handler", func() {
 			fakeStore.TagsReturns(nil, errors.New("banana"))
 		})
 		It("responds with 500", func() {
-			handler.ServeHTTP(resp, request)
+			handler.ServeHTTP(resp, request, "")
 
 			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
 			Expect(resp.Body.String()).To(MatchJSON(`{"error": "database read failed"}`))
 		})
 
 		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request)
+			handler.ServeHTTP(resp, request, "")
 			Expect(logger).To(gbytes.Say("store-list-tags-failed.*banana"))
 		})
 	})
@@ -92,14 +92,14 @@ var _ = Describe("Tags index handler", func() {
 		})
 
 		It("responds with 500 and returns a descriptive error", func() {
-			handler.ServeHTTP(resp, request)
+			handler.ServeHTTP(resp, request, "")
 
 			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
 			Expect(resp.Body.String()).To(MatchJSON(`{"error": "database marshaling failed"}`))
 		})
 
 		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request)
+			handler.ServeHTTP(resp, request, "")
 			Expect(logger).To(gbytes.Say("marshal-failed.*grapes"))
 		})
 	})

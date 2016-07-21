@@ -16,7 +16,7 @@ type PoliciesIndex struct {
 	Marshaler marshal.Marshaler
 }
 
-func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request, currentUserName string) {
 	policies, err := h.Store.All()
 	if err != nil {
 		h.Logger.Error("store-list-policies-failed", err)

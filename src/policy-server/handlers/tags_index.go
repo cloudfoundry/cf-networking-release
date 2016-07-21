@@ -15,7 +15,7 @@ type TagsIndex struct {
 	Marshaler marshal.Marshaler
 }
 
-func (h *TagsIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (h *TagsIndex) ServeHTTP(w http.ResponseWriter, req *http.Request, currentUserName string) {
 	tags, err := h.Store.Tags()
 	if err != nil {
 		h.Logger.Error("store-list-tags-failed", err)

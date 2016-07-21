@@ -18,7 +18,7 @@ import (
 var _ = Describe("Authentication middleware", func() {
 	var (
 		request       *http.Request
-		unprotected   *fakes.HTTPHandler
+		unprotected   *fakes.AuthenticatedHandler
 		protected     http.Handler
 		authenticator *handlers.Authenticator
 
@@ -35,7 +35,7 @@ var _ = Describe("Authentication middleware", func() {
 
 		uaaClient = &fakes.UAARequestClient{}
 		logger = lagertest.NewTestLogger("test")
-		unprotected = &fakes.HTTPHandler{}
+		unprotected = &fakes.AuthenticatedHandler{}
 
 		authenticator = &handlers.Authenticator{
 			Client: uaaClient,
@@ -58,9 +58,10 @@ var _ = Describe("Authentication middleware", func() {
 
 			Expect(unprotected.ServeHTTPCallCount()).To(Equal(1))
 
-			unprotectedResp, unprotectedRequest := unprotected.ServeHTTPArgsForCall(0)
+			unprotectedResp, unprotectedRequest, currentUser := unprotected.ServeHTTPArgsForCall(0)
 			Expect(unprotectedResp).To(Equal(resp))
 			Expect(unprotectedRequest).To(Equal(request))
+			Expect(currentUser).To(Equal("some_user"))
 		})
 	})
 
