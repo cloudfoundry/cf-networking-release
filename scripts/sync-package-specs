@@ -52,7 +52,6 @@ sync_package policy-server \
   -app policy-server/cmd/policy-server &
 
 sync_package acceptance \
-  -test netman-garden-integration \
   -test netman-cf-acceptance \
   -app example-apps/proxy \
   -app github.com/onsi/ginkgo/ginkgo &

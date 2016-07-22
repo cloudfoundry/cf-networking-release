@@ -7,15 +7,9 @@ dependencies:
 files:
   - example-apps/proxy/manifest.yml # HANDCRAFTED
   - example-apps/proxy/*.go # gosub
-  - github.com/bmizerany/pat/*.go # gosub
   - github.com/cloudfoundry-incubator/cf-test-helpers/cf/*.go # gosub
   - github.com/cloudfoundry-incubator/cf-test-helpers/helpers/*.go # gosub
   - github.com/cloudfoundry-incubator/cf-test-helpers/runner/*.go # gosub
-  - github.com/cloudfoundry-incubator/garden/*.go # gosub
-  - github.com/cloudfoundry-incubator/garden/client/*.go # gosub
-  - github.com/cloudfoundry-incubator/garden/client/connection/*.go # gosub
-  - github.com/cloudfoundry-incubator/garden/routes/*.go # gosub
-  - github.com/cloudfoundry-incubator/garden/transport/*.go # gosub
   - github.com/onsi/ginkgo/*.go # gosub
   - github.com/onsi/ginkgo/config/*.go # gosub
   - github.com/onsi/ginkgo/ginkgo/*.go # gosub
@@ -52,7 +46,4 @@ files:
   - github.com/onsi/gomega/matchers/support/goraph/node/*.go # gosub
   - github.com/onsi/gomega/matchers/support/goraph/util/*.go # gosub
   - github.com/onsi/gomega/types/*.go # gosub
-  - github.com/pivotal-golang/lager/*.go # gosub
-  - github.com/tedsuo/rata/*.go # gosub
   - netman-cf-acceptance/*.go # gosub
-  - netman-garden-integration/*.go # gosub

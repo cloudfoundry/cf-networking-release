@@ -9,7 +9,3 @@ export GOPATH=$BOSH_INSTALL_TARGET
 export PATH=$GOROOT/bin:$GOPATH/bin:$PATH
 
 go install github.com/onsi/ginkgo/ginkgo
-
-cd ${BOSH_INSTALL_TARGET}/src/netman-garden-integration
-
-go test -c -o ${BOSH_INSTALL_TARGET}/bin/netman-garden-integration-tests
