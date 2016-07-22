@@ -22,8 +22,8 @@ case $1 in
 
     exec /var/vcap/packages/policy-server/bin/policy-server \
       -config-file=/var/vcap/jobs/policy-server/config/policy-server.json \
-      1>>$LOG_DIR/policy-server.stdout.log \
-      2>>$LOG_DIR/policy-server.stderr.log
+      2> >(tee -a $LOG_DIR/policy-server.stderr.log | logger -p user.error -t policy-server) \
+      1> >(tee -a $LOG_DIR/policy-server.stdout.log | logger -t policy-server)
 
     ;;
 

@@ -34,8 +34,8 @@ case $1 in
     exec /var/vcap/packages/flannel/bin/flanneld \
       --log_dir=${LOG_DIR} \
       --etcd-endpoints=<%= p("cni-flannel.etcd_endpoints").join(",") %> \
-      1>>$LOG_DIR/flanneld.stdout.log \
-      2>>$LOG_DIR/flanneld.stderr.log
+      2> >(tee -a $LOG_DIR/flanneld.stderr.log | logger -p user.error -t flanneld) \
+      1> >(tee -a $LOG_DIR/flanneld.stdout.log | logger -t flanneld)
 
     ;;
 

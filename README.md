@@ -222,3 +222,13 @@ bosh run errand netman-cf-acceptance
   ```
   ./scripts/sync-package-specs
   ```
+
+## Syslog forwarding
+To forward all logs from your bosh-lite to a syslog destination (like Papertrail),
+add the following block to `manifest-generation/stubs/bosh-lite-cf.yml`:
+```yaml
+  syslog_daemon_config:
+    address: some-syslog-host.example.com
+    port: 12345
+    transport: udp
+```

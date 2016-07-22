@@ -22,8 +22,8 @@ case $1 in
 
     exec /var/vcap/packages/flannel-watchdog/bin/flannel-watchdog \
       -config-file=/var/vcap/jobs/cni-flannel/config/flannel-watchdog.json \
-      1>>$LOG_DIR/flannel-watchdog.stdout.log \
-      2>>$LOG_DIR/flannel-watchdog.stderr.log
+      2> >(tee -a $LOG_DIR/flannel-watchdog.stderr.log | logger -p user.error -t flannel-watchdog) \
+      1> >(tee -a $LOG_DIR/flannel-watchdog.stdout.log | logger -t flannel-watchdog)
 
     ;;
 

@@ -26,9 +26,8 @@ case $1 in
 
     exec /var/vcap/packages/netman-agent/bin/netman-agent \
       -config-file=/var/vcap/jobs/netman-agent/config/netman-agent.json \
-      1>>$LOG_DIR/netman-agent.stdout.log \
-      2>>$LOG_DIR/netman-agent.stderr.log
-
+      2> >(tee -a $LOG_DIR/netman-agent.stderr.log | logger -p user.error -t netman-agent) \
+      1> >(tee -a $LOG_DIR/netman-agent.stdout.log | logger -t netman-agent)
     ;;
 
   stop)

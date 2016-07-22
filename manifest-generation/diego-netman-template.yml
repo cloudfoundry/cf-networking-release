@@ -89,11 +89,15 @@ jobs:
     release: cf
   - name: consul_agent
     release: cf
+  - name: metron_agent
+    release: cf
   resource_pool: database_z1
   networks:
     - name: diego1
   properties:
     nats: (( .properties.diego.route_emitter.nats ))
+    metron_agent:
+      zone: z1
     route_registrar:
       routes:
       - name: policy-server
