@@ -9,7 +9,7 @@ The frontend serves a form at `http://frontend.bosh-lite.com/` that allows you t
 ```
 cd netman-release/src/example-apps/cats-and-dogs/frontend
 cf api api.bosh-lite.com --skip-ssl-validation
-cf auth network-admin network-admin
+cf auth admin admin
 cf push frontend
 ```
 
