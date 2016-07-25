@@ -232,6 +232,7 @@ var _ = Describe("Guardian CNI adapter", func() {
 			upSession, err := gexec.Start(upCommand, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(upSession, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
+			Expect(upSession.Out.Contents()).To(MatchJSON(`{ "properties": {"network.external-networker.container-ip": "169.254.1.2" } }`))
 
 			By("checking that the netman-agent server was not called")
 			Expect(netmanAgentReceivedMethod).To(BeEmpty())
@@ -254,6 +255,7 @@ var _ = Describe("Guardian CNI adapter", func() {
 		upSession, err := gexec.Start(upCommand, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(upSession, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
+		Expect(upSession.Out.Contents()).To(MatchJSON(`{ "properties": {"network.external-networker.container-ip": "169.254.1.2" } }`))
 
 		By("checking that every CNI plugin in the plugin directory got called with ADD")
 		for i := 0; i < 3; i++ {

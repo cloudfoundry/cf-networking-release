@@ -169,9 +169,13 @@ func main() {
 
 	switch action {
 	case "up":
-		err = manager.Up(containerState.Pid, handle, encodedProperties)
+		properties, err := manager.Up(containerState.Pid, handle, encodedProperties)
 		if err != nil {
 			log.Fatalf("up failed: %s", err)
+		}
+		err = json.NewEncoder(os.Stdout).Encode(map[string]interface{}{"properties": properties})
+		if err != nil {
+			log.Fatalf("encoding properties failed: %s", err)
 		}
 	case "down":
 		err = manager.Down(handle, encodedProperties)

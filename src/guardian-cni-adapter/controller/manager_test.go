@@ -44,16 +44,26 @@ var _ = Describe("Manager", func() {
 
 	Describe("Up", func() {
 		It("should ensure that the netNS is mounted to the provided path", func() {
-			Expect(manager.Up(42, "some-container-handle", encodedGardenProperties)).To(Succeed())
-			Expect(mounter.IdempotentlyMountCallCount()).To(Equal(1))
+			_, err := manager.Up(42, "some-container-handle", encodedGardenProperties)
+			Expect(err).NotTo(HaveOccurred())
 
+			Expect(mounter.IdempotentlyMountCallCount()).To(Equal(1))
 			source, target := mounter.IdempotentlyMountArgsForCall(0)
 			Expect(source).To(Equal("/proc/42/ns/net"))
 			Expect(target).To(Equal("/some/fake/path/some-container-handle"))
 		})
 
+		It("should return the IP address in the CNI result as a property", func() {
+			properties, err := manager.Up(42, "some-container-handle", encodedGardenProperties)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(properties.ContainerIP).To(Equal(net.ParseIP("169.254.1.2")))
+		})
+
 		It("should call CNI Up, passing in the bind-mounted path to the net ns", func() {
-			Expect(manager.Up(42, "some-container-handle", encodedGardenProperties)).To(Succeed())
+			_, err := manager.Up(42, "some-container-handle", encodedGardenProperties)
+			Expect(err).NotTo(HaveOccurred())
+
 			Expect(cniController.UpCallCount()).To(Equal(1))
 			namespacePath, handle, spec := cniController.UpArgsForCall(0)
 			Expect(namespacePath).To(Equal("/some/fake/path/some-container-handle"))
@@ -62,7 +72,8 @@ var _ = Describe("Manager", func() {
 		})
 
 		It("should call netman agent, passing the group id, container id and ip", func() {
-			Expect(manager.Up(42, "some-container-handle", encodedGardenProperties)).To(Succeed())
+			_, err := manager.Up(42, "some-container-handle", encodedGardenProperties)
+			Expect(err).NotTo(HaveOccurred())
 
 			Expect(netmanClient.AddCallCount()).To(Equal(1))
 			containerID, groupID, ip := netmanClient.AddArgsForCall(0)
@@ -73,17 +84,17 @@ var _ = Describe("Manager", func() {
 
 		Context("when missing args", func() {
 			It("should return a friendly error", func() {
-				err := manager.Up(0, "some-container-handle", encodedGardenProperties)
+				_, err := manager.Up(0, "some-container-handle", encodedGardenProperties)
 				Expect(err).To(MatchError("up missing pid"))
 
-				err = manager.Up(42, "", "some-network-spec")
+				_, err = manager.Up(42, "", encodedGardenProperties)
 				Expect(err).To(MatchError("up missing container handle"))
 			})
 		})
 
 		Context("when missing the network spec", func() {
 			It("should be a no-op and not call CNI", func() {
-				err := manager.Up(42, "some-container-handle", "")
+				_, err := manager.Up(42, "some-container-handle", "")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(cniController.UpCallCount()).To(Equal(0))
 				Expect(mounter.IdempotentlyMountCallCount()).To(Equal(0))
@@ -93,7 +104,7 @@ var _ = Describe("Manager", func() {
 
 		Context("when unmarshaling the encoded garden properties fails", func() {
 			It("returns the error", func() {
-				err := manager.Up(42, "some-container-handle", "%%%%")
+				_, err := manager.Up(42, "some-container-handle", "%%%%")
 				Expect(err).To(MatchError(ContainSubstring("parsing garden properties: invalid character")))
 			})
 		})
@@ -101,7 +112,7 @@ var _ = Describe("Manager", func() {
 		Context("when the mounter fails", func() {
 			It("should return the error", func() {
 				mounter.IdempotentlyMountReturns(errors.New("boom"))
-				err := manager.Up(42, "some-container-handle", encodedGardenProperties)
+				_, err := manager.Up(42, "some-container-handle", encodedGardenProperties)
 				Expect(err).To(MatchError("failed mounting /proc/42/ns/net to /some/fake/path/some-container-handle: boom"))
 			})
 		})
@@ -109,7 +120,7 @@ var _ = Describe("Manager", func() {
 		Context("when the cni Up fails", func() {
 			It("should return the error", func() {
 				cniController.UpReturns(nil, errors.New("bang"))
-				err := manager.Up(42, "some-container-handle", encodedGardenProperties)
+				_, err := manager.Up(42, "some-container-handle", encodedGardenProperties)
 				Expect(err).To(MatchError("cni up failed: bang"))
 			})
 		})
@@ -117,7 +128,7 @@ var _ = Describe("Manager", func() {
 		Context("when the netman client fails", func() {
 			It("should return the error", func() {
 				netmanClient.AddReturns(errors.New("potato"))
-				err := manager.Up(42, "some-container-handle", encodedGardenProperties)
+				_, err := manager.Up(42, "some-container-handle", encodedGardenProperties)
 				Expect(err).To(MatchError("netman client failed: potato"))
 			})
 		})

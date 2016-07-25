@@ -35,6 +35,10 @@ type Manager struct {
 	NetmanClient  netmanClient
 }
 
+type Properties struct {
+	ContainerIP net.IP `json:"network.external-networker.container-ip"`
+}
+
 func getGroupID(encodedGardenProperties string) (string, error) {
 	var properties map[string]string
 	err := json.Unmarshal([]byte(encodedGardenProperties), &properties)
@@ -44,21 +48,21 @@ func getGroupID(encodedGardenProperties string) (string, error) {
 	return properties["app_id"], nil
 }
 
-func (m *Manager) Up(pid int, containerHandle, encodedGardenProperties string) error {
+func (m *Manager) Up(pid int, containerHandle, encodedGardenProperties string) (*Properties, error) {
 	if pid == 0 {
-		return errors.New("up missing pid")
+		return nil, errors.New("up missing pid")
 	}
 	if containerHandle == "" {
-		return errors.New("up missing container handle")
+		return nil, errors.New("up missing container handle")
 	}
 
 	if encodedGardenProperties == "" {
-		return nil
+		return nil, nil
 	}
 
 	groupID, err := getGroupID(encodedGardenProperties)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	procNsPath := fmt.Sprintf("/proc/%d/ns/net", pid)
@@ -66,24 +70,26 @@ func (m *Manager) Up(pid int, containerHandle, encodedGardenProperties string) e
 
 	err = m.Mounter.IdempotentlyMount(procNsPath, bindMountPath)
 	if err != nil {
-		return fmt.Errorf("failed mounting %s to %s: %s", procNsPath, bindMountPath, err)
+		return nil, fmt.Errorf("failed mounting %s to %s: %s", procNsPath, bindMountPath, err)
 	}
 
 	result, err := m.CNIController.Up(bindMountPath, containerHandle, encodedGardenProperties)
 	if err != nil {
-		return fmt.Errorf("cni up failed: %s", err)
+		return nil, fmt.Errorf("cni up failed: %s", err)
 	}
 
 	if result == nil {
-		return errors.New("cni up failed: no ip allocated")
+		return nil, errors.New("cni up failed: no ip allocated")
 	}
 
 	err = m.NetmanClient.Add(containerHandle, groupID, result.IP4.IP.IP)
 	if err != nil {
-		return fmt.Errorf("netman client failed: %s", err)
+		return nil, fmt.Errorf("netman client failed: %s", err)
 	}
 
-	return nil
+	return &Properties{
+		ContainerIP: result.IP4.IP.IP,
+	}, nil
 }
 
 func (m *Manager) Down(containerHandle string, encodedGardenProperties string) error {
