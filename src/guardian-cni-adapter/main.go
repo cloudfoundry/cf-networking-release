@@ -133,17 +133,19 @@ func main() {
 		log.Fatalf("unable to read stdin: %s", err)
 	}
 
-	var containerState struct {
-		Pid int
-	}
-	err = json.Unmarshal(inputBytes, &containerState)
-	if err != nil {
-		log.Fatalf("input is not valid json: %s: %q", err, string(inputBytes))
-	}
-
 	err = parseArgs(os.Args)
 	if err != nil {
 		log.Fatalf("arg parsing error: %s", err)
+	}
+
+	var containerState struct {
+		Pid int
+	}
+	if action == "up" {
+		err = json.Unmarshal(inputBytes, &containerState)
+		if err != nil {
+			log.Fatalf("input is not valid json: %s: %q", err, string(inputBytes))
+		}
 	}
 
 	cniController := &controller.CNIController{
