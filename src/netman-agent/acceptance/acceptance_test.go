@@ -128,8 +128,8 @@ var _ = Describe("Acceptance", func() {
 			Eventually(session.Out, DEFAULT_TIMEOUT).Should(gbytes.Say(`"chain":"netman--remote-.*"-i","flannel.42","-j","DROP".*"table":"filter"`))
 		})
 
-		PIt("writes a rule to allow outbound access to the internet", func() {
-			Eventually(session.Out, DEFAULT_TIMEOUT).Should(gbytes.Say(`"-s","10.255.19.1/24","!","-d","10.255.0.0/16","-j","MASQUERADE"`))
+		It("writes a rule to allow outbound access to the internet", func() {
+			Eventually(session.Out, DEFAULT_TIMEOUT).Should(gbytes.Say(`"chain":"netman--postrout-.*"-s","10.255.19.1/24","!","-d","10.255.0.0/16","-j","MASQUERADE".*"table":"nat"`))
 		})
 
 		Context("when an app container comes up and has its results posted to cni_result", func() {

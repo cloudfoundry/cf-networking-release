@@ -7,23 +7,29 @@ import (
 )
 
 const (
-	flannelRegex = `FLANNEL_SUBNET=((?:[0-9]{1,3}\.){3}[0-9]{1,3}/24)`
+	flannelSubnetRegex  = `FLANNEL_SUBNET=((?:[0-9]{1,3}\.){3}[0-9]{1,3}/24)`
+	flannelNetworkRegex = `FLANNEL_NETWORK=((?:[0-9]{1,3}\.){3}[0-9]{1,3}/16)`
 )
 
-type LocalSubnet struct {
+type NetworkInfo struct {
 	FlannelSubnetFilePath string
 }
 
-func (l *LocalSubnet) DiscoverLocalSubnet() (string, error) {
+func (l *NetworkInfo) DiscoverNetworkInfo() (string, string, error) {
 	fileContents, err := ioutil.ReadFile(l.FlannelSubnetFilePath)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	matches := regexp.MustCompile(flannelRegex).FindStringSubmatch(string(fileContents))
-	if len(matches) < 2 {
-		return "", fmt.Errorf("unable to parse flannel subnet file")
+	subnetMatches := regexp.MustCompile(flannelSubnetRegex).FindStringSubmatch(string(fileContents))
+	if len(subnetMatches) < 2 {
+		return "", "", fmt.Errorf("unable to parse flannel subnet file")
 	}
 
-	return matches[1], nil
+	networkMatches := regexp.MustCompile(flannelNetworkRegex).FindStringSubmatch(string(fileContents))
+	if len(networkMatches) < 2 {
+		return "", "", fmt.Errorf("unable to parse flannel network from subnet file")
+	}
+
+	return subnetMatches[1], networkMatches[1], nil
 }

@@ -67,6 +67,7 @@ var _ = Describe("Rules", func() {
 			policyClient,
 			42,
 			"8.8.8.0/24",
+			"8.8.0.0/16",
 			enforcer,
 		)
 	})
@@ -120,6 +121,21 @@ var _ = Describe("Rules", func() {
 				{Properties: []string{
 					"-i", "flannel.42",
 					"-j", "DROP",
+				}},
+			}))
+		})
+	})
+
+	Describe("DefaultEgressRules", func() {
+		It("creates the default rules to allow connectivity to the internet", func() {
+			r := planner.DefaultEgressRules()
+
+			Expect(len(r)).To(Equal(1))
+			Expect(r).To(ConsistOf([]rules.GenericRule{
+				{Properties: []string{
+					"-s", "8.8.8.0/24",
+					"!", "-d", "8.8.0.0/16",
+					"-j", "MASQUERADE",
 				}},
 			}))
 		})

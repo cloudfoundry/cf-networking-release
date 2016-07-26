@@ -19,12 +19,13 @@ type policyClient interface {
 }
 
 type Planner struct {
-	Logger       lager.Logger
-	storeReader  storeReader
-	policyClient policyClient
-	VNI          int
-	LocalSubnet  string
-	RuleEnforcer RuleEnforcer
+	Logger         lager.Logger
+	storeReader    storeReader
+	policyClient   policyClient
+	VNI            int
+	LocalSubnet    string
+	OverlayNetwork string
+	RuleEnforcer   RuleEnforcer
 }
 
 //go:generate counterfeiter -o ../fakes/rule_enforcer.go --fake-name RuleEnforcer . RuleEnforcer
@@ -32,14 +33,15 @@ type RuleEnforcer interface {
 	Enforce(table, parentChain, chain string, r []Rule) error
 }
 
-func New(logger lager.Logger, storeReader storeReader, policyClient policyClient, vni int, localSubnet string, ruleEnforcer RuleEnforcer) *Planner {
+func New(logger lager.Logger, storeReader storeReader, policyClient policyClient, vni int, localSubnet string, overlayNetwork string, ruleEnforcer RuleEnforcer) *Planner {
 	return &Planner{
-		Logger:       logger,
-		storeReader:  storeReader,
-		policyClient: policyClient,
-		VNI:          vni,
-		LocalSubnet:  localSubnet,
-		RuleEnforcer: ruleEnforcer,
+		Logger:         logger,
+		storeReader:    storeReader,
+		policyClient:   policyClient,
+		VNI:            vni,
+		LocalSubnet:    localSubnet,
+		OverlayNetwork: overlayNetwork,
+		RuleEnforcer:   ruleEnforcer,
 	}
 }
 
@@ -97,6 +99,18 @@ func (p *Planner) DefaultRemoteRules() []Rule {
 	})
 
 	return rules
+}
+
+func (p *Planner) DefaultEgressRules() []Rule {
+	return []Rule{
+		GenericRule{
+			Properties: []string{
+				"-s", p.LocalSubnet,
+				"!", "-d", p.OverlayNetwork,
+				"-j", "MASQUERADE",
+			},
+		},
+	}
 }
 
 func (p *Planner) Update() error {

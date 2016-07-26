@@ -50,12 +50,12 @@ func main() {
 		pollInterval = time.Second
 	}
 
-	localSubnetter := &flannel.LocalSubnet{
+	flannelInfoReader := &flannel.NetworkInfo{
 		FlannelSubnetFilePath: conf.FlannelSubnetFile,
 	}
-	localSubnetCIDR, err := localSubnetter.DiscoverLocalSubnet()
+	localSubnetCIDR, overlayNetwork, err := flannelInfoReader.DiscoverNetworkInfo()
 	if err != nil {
-		log.Fatalf("discovering local subnet: %s", err)
+		log.Fatalf("discovering network info: %s", err)
 	}
 
 	store := store.New()
@@ -106,16 +106,22 @@ func main() {
 		policyClient,
 		conf.VNI,
 		localSubnetCIDR,
+		overlayNetwork,
 		ruleEnforcer,
 	)
 
-	r := ruleUpdater.DefaultLocalRules()
-	err = ruleEnforcer.Enforce("filter", "FORWARD", "netman--local-", r)
+	localRules := ruleUpdater.DefaultLocalRules()
+	err = ruleEnforcer.Enforce("filter", "FORWARD", "netman--local-", localRules)
 	if err != nil {
 		log.Fatal(err)
 	}
-	r = ruleUpdater.DefaultRemoteRules()
-	err = ruleEnforcer.Enforce("filter", "FORWARD", "netman--remote-", r)
+	remoteRules := ruleUpdater.DefaultRemoteRules()
+	err = ruleEnforcer.Enforce("filter", "FORWARD", "netman--remote-", remoteRules)
+	if err != nil {
+		log.Fatal(err)
+	}
+	egressRules := ruleUpdater.DefaultEgressRules()
+	err = ruleEnforcer.Enforce("nat", "POSTROUTING", "netman--postrout-", egressRules)
 	if err != nil {
 		log.Fatal(err)
 	}
