@@ -71,11 +71,11 @@ var _ = Describe("Rules", func() {
 		)
 	})
 
-	Describe("DefaultRules", func() {
-		It("creates a list of default rules and enforces them", func() {
-			r := planner.DefaultRules()
+	Describe("DefaultLocalRules", func() {
+		It("creates a list of default local rules and enforces them", func() {
+			r := planner.DefaultLocalRules()
 
-			Expect(len(r)).To(Equal(4))
+			Expect(len(r)).To(Equal(3))
 			Expect(r).To(ConsistOf([]rules.GenericRule{
 				{Properties: []string{
 					"-i", "cni-flannel0",
@@ -86,12 +86,36 @@ var _ = Describe("Rules", func() {
 					"-i", "cni-flannel0",
 					"-s", "8.8.8.0/24",
 					"-d", "8.8.8.0/24",
+					"-m", "limit", "--limit", "2/min",
+					"-j", "LOG",
+					"--log-prefix", "DROP_LOCAL",
+				}},
+				{Properties: []string{
+					"-i", "cni-flannel0",
+					"-s", "8.8.8.0/24",
+					"-d", "8.8.8.0/24",
 					"-j", "DROP",
 				}},
+			}))
+		})
+	})
+
+	Describe("DefaultRemoteRules", func() {
+		It("creates a list of default remote rules and enforces them", func() {
+			r := planner.DefaultRemoteRules()
+
+			Expect(len(r)).To(Equal(3))
+			Expect(r).To(ConsistOf([]rules.GenericRule{
 				{Properties: []string{
 					"-i", "flannel.42",
 					"-m", "state", "--state", "ESTABLISHED,RELATED",
 					"-j", "ACCEPT",
+				}},
+				{Properties: []string{
+					"-i", "flannel.42",
+					"-m", "limit", "--limit", "2/min",
+					"-j", "LOG",
+					"--log-prefix", "DROP_REMOTE",
 				}},
 				{Properties: []string{
 					"-i", "flannel.42",

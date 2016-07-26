@@ -43,7 +43,7 @@ func New(logger lager.Logger, storeReader storeReader, policyClient policyClient
 	}
 }
 
-func (u *Updater) DefaultRules() []Rule {
+func (u *Updater) DefaultLocalRules() []Rule {
 	r := []Rule{}
 
 	r = append(r, GenericRule{
@@ -57,13 +57,37 @@ func (u *Updater) DefaultRules() []Rule {
 			"-i", "cni-flannel0",
 			"-s", u.LocalSubnet,
 			"-d", u.LocalSubnet,
-			"-j", "DROP",
+			"-m", "limit", "--limit", "2/min",
+			"-j", "LOG",
+			"--log-prefix", "DROP_LOCAL",
 		},
 	}, GenericRule{
+		Properties: []string{
+			"-i", "cni-flannel0",
+			"-s", u.LocalSubnet,
+			"-d", u.LocalSubnet,
+			"-j", "DROP",
+		},
+	})
+
+	return r
+}
+
+func (u *Updater) DefaultRemoteRules() []Rule {
+	r := []Rule{}
+
+	r = append(r, GenericRule{
 		Properties: []string{
 			"-i", fmt.Sprintf("flannel.%d", u.VNI),
 			"-m", "state", "--state", "ESTABLISHED,RELATED",
 			"-j", "ACCEPT",
+		},
+	}, GenericRule{
+		Properties: []string{
+			"-i", fmt.Sprintf("flannel.%d", u.VNI),
+			"-m", "limit", "--limit", "2/min",
+			"-j", "LOG",
+			"--log-prefix", "DROP_REMOTE",
 		},
 	}, GenericRule{
 		Properties: []string{
