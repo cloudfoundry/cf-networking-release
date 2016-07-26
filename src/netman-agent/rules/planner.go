@@ -18,7 +18,7 @@ type policyClient interface {
 	GetPolicies() ([]models.Policy, error)
 }
 
-type Updater struct {
+type Planner struct {
 	Logger       lager.Logger
 	storeReader  storeReader
 	policyClient policyClient
@@ -32,8 +32,8 @@ type RuleEnforcer interface {
 	Enforce(chain string, r []Rule) error
 }
 
-func New(logger lager.Logger, storeReader storeReader, policyClient policyClient, vni int, localSubnet string, ruleEnforcer RuleEnforcer) *Updater {
-	return &Updater{
+func New(logger lager.Logger, storeReader storeReader, policyClient policyClient, vni int, localSubnet string, ruleEnforcer RuleEnforcer) *Planner {
+	return &Planner{
 		Logger:       logger,
 		storeReader:  storeReader,
 		policyClient: policyClient,
@@ -43,7 +43,7 @@ func New(logger lager.Logger, storeReader storeReader, policyClient policyClient
 	}
 }
 
-func (u *Updater) DefaultLocalRules() []Rule {
+func (u *Planner) DefaultLocalRules() []Rule {
 	r := []Rule{}
 
 	r = append(r, GenericRule{
@@ -73,7 +73,7 @@ func (u *Updater) DefaultLocalRules() []Rule {
 	return r
 }
 
-func (u *Updater) DefaultRemoteRules() []Rule {
+func (u *Planner) DefaultRemoteRules() []Rule {
 	r := []Rule{}
 
 	r = append(r, GenericRule{
@@ -99,23 +99,23 @@ func (u *Updater) DefaultRemoteRules() []Rule {
 	return r
 }
 
-func (u *Updater) Update() error {
-	rules, err := u.Rules()
+func (p *Planner) Update() error {
+	rules, err := p.Rules()
 	if err != nil {
 		return err
 	}
-	err = u.RuleEnforcer.Enforce("netman--forward-", rules)
+	err = p.RuleEnforcer.Enforce("netman--forward-", rules)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (u *Updater) Rules() ([]Rule, error) {
-	containers := u.storeReader.GetContainers()
-	policies, err := u.policyClient.GetPolicies()
+func (p *Planner) Rules() ([]Rule, error) {
+	containers := p.storeReader.GetContainers()
+	policies, err := p.policyClient.GetPolicies()
 	if err != nil {
-		u.Logger.Error("get-policies", err)
+		p.Logger.Error("get-policies", err)
 		return nil, fmt.Errorf("get policies failed: %s", err)
 	}
 
@@ -130,7 +130,7 @@ func (u *Updater) Rules() ([]Rule, error) {
 			for _, dstContainer := range dstContainers {
 				rules = append(rules, GenericRule{
 					Properties: []string{
-						"-i", fmt.Sprintf("flannel.%d", u.VNI),
+						"-i", fmt.Sprintf("flannel.%d", p.VNI),
 						"-d", dstContainer.IP,
 						"-p", policy.Destination.Protocol,
 						"--dport", strconv.Itoa(policy.Destination.Port),

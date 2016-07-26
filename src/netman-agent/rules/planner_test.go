@@ -15,7 +15,7 @@ import (
 
 var _ = Describe("Rules", func() {
 	var (
-		planner      *rules.Updater
+		planner      *rules.Planner
 		storeReader  *fakes.StoreReader
 		policyClient *fakes.PolicyClient
 		enforcer     *fakes.RuleEnforcer
