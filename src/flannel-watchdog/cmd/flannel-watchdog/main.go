@@ -35,10 +35,10 @@ func (r *Runner) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 		for {
 			time.Sleep(1 * time.Second)
 
-			localSubnetter := flannel.LocalSubnet{
+			localSubnetter := flannel.NetworkInfo{
 				FlannelSubnetFilePath: r.SubnetFile,
 			}
-			flannelIP, err := localSubnetter.DiscoverLocalSubnet()
+			flannelIP, _, err := localSubnetter.DiscoverNetworkInfo()
 			if err != nil {
 				errCh <- fmt.Errorf("discovering flannel subnet: %s", err)
 			}

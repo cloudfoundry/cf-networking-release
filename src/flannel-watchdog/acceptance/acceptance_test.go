@@ -38,7 +38,7 @@ var _ = Describe("Flannel Watchdog", func() {
 
 		subnetFile, err = ioutil.TempFile("", "subnet.env")
 		subnetFileName = subnetFile.Name()
-		err = ioutil.WriteFile(subnetFileName, []byte(fmt.Sprintf("FLANNEL_SUBNET=%s", bridgeIP)), os.ModePerm)
+		err = ioutil.WriteFile(subnetFileName, []byte(fmt.Sprintf("FLANNEL_SUBNET=%s\nFLANNEL_NETWORK=10.255.0.0/16", bridgeIP)), os.ModePerm)
 		Expect(err).NotTo(HaveOccurred())
 
 		configFilePath := WriteConfigFile(config.Config{
@@ -69,7 +69,7 @@ var _ = Describe("Flannel Watchdog", func() {
 		It("exits with a nonzero status", func() {
 			Consistently(session, "1.5s").ShouldNot(gexec.Exit())
 
-			err := ioutil.WriteFile(subnetFileName, []byte("FLANNEL_SUBNET=10.255.13.1/24"), os.ModePerm)
+			err := ioutil.WriteFile(subnetFileName, []byte(`FLANNEL_SUBNET=10.255.13.1/24\nFLANNEL_NETWORK=10.255.0.0/16`), os.ModePerm)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit(1))
 			Expect(session.Err.Contents()).To(ContainSubstring("out of sync"))
