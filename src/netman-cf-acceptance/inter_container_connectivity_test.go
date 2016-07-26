@@ -24,7 +24,7 @@ func isSameCell(sourceIP, destIP string) bool {
 	return getSubnet(sourceIP) == getSubnet(destIP)
 }
 
-var _ = Describe("connectivity tests", func() {
+var _ = Describe("connectivity between containers on the overlay network", func() {
 	var (
 		appA      string
 		appB      string

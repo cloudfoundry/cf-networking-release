@@ -17,7 +17,7 @@ echo '
   "skip_ssl_validation": true,
   "use_http": true,
   "test_user": "admin",
-  "test_user_password": "password"
+  "test_user_password": "admin"
 }
 ' > $CONFIG
 
