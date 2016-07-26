@@ -122,10 +122,14 @@ var _ = Describe("Acceptance", func() {
 
 	Describe("creating rules", func() {
 		It("writes default deny rules", func() {
-			Eventually(session.Out, DEFAULT_TIMEOUT).Should(gbytes.Say(`"-i","cni-flannel0","-m","state","--state","ESTABLISHED,RELATED","-j","ACCEPT"`))
-			Eventually(session.Out, DEFAULT_TIMEOUT).Should(gbytes.Say(`"-i","cni-flannel0","-s","10.255.19.1/24","-d","10.255.19.1/24","-j","DROP"`))
-			Eventually(session.Out, DEFAULT_TIMEOUT).Should(gbytes.Say(`"-i","flannel.42","-m","state","--state","ESTABLISHED,RELATED","-j","ACCEPT"`))
-			Eventually(session.Out, DEFAULT_TIMEOUT).Should(gbytes.Say(`"-i","flannel.42","-j","DROP"`))
+			Eventually(session.Out, DEFAULT_TIMEOUT).Should(gbytes.Say(`"chain":"netman--local-.*"-i","cni-flannel0","-m","state","--state","ESTABLISHED,RELATED","-j","ACCEPT".*"table":"filter"`))
+			Eventually(session.Out, DEFAULT_TIMEOUT).Should(gbytes.Say(`"chain":"netman--local-.*"-i","cni-flannel0","-s","10.255.19.1/24","-d","10.255.19.1/24","-j","DROP".*"table":"filter"`))
+			Eventually(session.Out, DEFAULT_TIMEOUT).Should(gbytes.Say(`"chain":"netman--remote-.*"-i","flannel.42","-m","state","--state","ESTABLISHED,RELATED","-j","ACCEPT".*"table":"filter"`))
+			Eventually(session.Out, DEFAULT_TIMEOUT).Should(gbytes.Say(`"chain":"netman--remote-.*"-i","flannel.42","-j","DROP".*"table":"filter"`))
+		})
+
+		PIt("writes a rule to allow outbound access to the internet", func() {
+			Eventually(session.Out, DEFAULT_TIMEOUT).Should(gbytes.Say(`"-s","10.255.19.1/24","!","-d","10.255.0.0/16","-j","MASQUERADE"`))
 		})
 
 		Context("when an app container comes up and has its results posted to cni_result", func() {

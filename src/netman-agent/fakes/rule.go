@@ -9,12 +9,13 @@ import (
 )
 
 type Rule struct {
-	EnforceStub        func(string, rules.IPTables, lager.Logger) error
+	EnforceStub        func(table, chain string, ipt rules.IPTables, logger lager.Logger) error
 	enforceMutex       sync.RWMutex
 	enforceArgsForCall []struct {
-		arg1 string
-		arg2 rules.IPTables
-		arg3 lager.Logger
+		table  string
+		chain  string
+		ipt    rules.IPTables
+		logger lager.Logger
 	}
 	enforceReturns struct {
 		result1 error
@@ -23,17 +24,18 @@ type Rule struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *Rule) Enforce(arg1 string, arg2 rules.IPTables, arg3 lager.Logger) error {
+func (fake *Rule) Enforce(table string, chain string, ipt rules.IPTables, logger lager.Logger) error {
 	fake.enforceMutex.Lock()
 	fake.enforceArgsForCall = append(fake.enforceArgsForCall, struct {
-		arg1 string
-		arg2 rules.IPTables
-		arg3 lager.Logger
-	}{arg1, arg2, arg3})
-	fake.recordInvocation("Enforce", []interface{}{arg1, arg2, arg3})
+		table  string
+		chain  string
+		ipt    rules.IPTables
+		logger lager.Logger
+	}{table, chain, ipt, logger})
+	fake.recordInvocation("Enforce", []interface{}{table, chain, ipt, logger})
 	fake.enforceMutex.Unlock()
 	if fake.EnforceStub != nil {
-		return fake.EnforceStub(arg1, arg2, arg3)
+		return fake.EnforceStub(table, chain, ipt, logger)
 	} else {
 		return fake.enforceReturns.result1
 	}
@@ -45,10 +47,10 @@ func (fake *Rule) EnforceCallCount() int {
 	return len(fake.enforceArgsForCall)
 }
 
-func (fake *Rule) EnforceArgsForCall(i int) (string, rules.IPTables, lager.Logger) {
+func (fake *Rule) EnforceArgsForCall(i int) (string, string, rules.IPTables, lager.Logger) {
 	fake.enforceMutex.RLock()
 	defer fake.enforceMutex.RUnlock()
-	return fake.enforceArgsForCall[i].arg1, fake.enforceArgsForCall[i].arg2, fake.enforceArgsForCall[i].arg3
+	return fake.enforceArgsForCall[i].table, fake.enforceArgsForCall[i].chain, fake.enforceArgsForCall[i].ipt, fake.enforceArgsForCall[i].logger
 }
 
 func (fake *Rule) EnforceReturns(result1 error) {

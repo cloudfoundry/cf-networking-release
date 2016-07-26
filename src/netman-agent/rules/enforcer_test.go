@@ -32,30 +32,30 @@ var _ = Describe("Enforcer", func() {
 		})
 
 		It("enforces all the rules it receives on the correct chain", func() {
-			err := enforcer.Enforce("foo", []rules.Rule{fakeRule})
+			err := enforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeRule.EnforceCallCount()).To(Equal(1))
 		})
 
 		It("creates a timestamped chain", func() {
-			err := enforcer.Enforce("foo", []rules.Rule{fakeRule})
+			err := enforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(iptables.NewChainCallCount()).To(Equal(1))
 			tableName, chainName := iptables.NewChainArgsForCall(0)
-			Expect(tableName).To(Equal("filter"))
+			Expect(tableName).To(Equal("some-table"))
 			Expect(chainName).To(Equal("foo42"))
 		})
 
-		It("inserts the new chain into the FORWARD chain", func() {
-			err := enforcer.Enforce("foo", []rules.Rule{fakeRule})
+		It("inserts the new chain into the chain", func() {
+			err := enforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(iptables.InsertCallCount()).To(Equal(1))
 			tableName, chainName, pos, ruleSpec := iptables.InsertArgsForCall(0)
-			Expect(tableName).To(Equal("filter"))
-			Expect(chainName).To(Equal("FORWARD"))
+			Expect(tableName).To(Equal("some-table"))
+			Expect(chainName).To(Equal("some-chain"))
 			Expect(pos).To(Equal(1))
 			Expect(ruleSpec).To(Equal([]string{"-j", "foo42"}))
 		})
@@ -63,26 +63,26 @@ var _ = Describe("Enforcer", func() {
 		Context("when there is an older timestamped chain", func() {
 			BeforeEach(func() {
 				iptables.ListReturns([]string{
-					"-A FORWARD -j foo0000000001",
-					"-A FORWARD -j foo9999999999",
+					"-A some-chain -j foo0000000001",
+					"-A some-chain -j foo9999999999",
 				}, nil)
 			})
 			It("gets deleted", func() {
-				err := enforcer.Enforce("foo", []rules.Rule{fakeRule})
+				err := enforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(iptables.DeleteCallCount()).To(Equal(1))
 				table, chain, ruleSpec := iptables.DeleteArgsForCall(0)
-				Expect(table).To(Equal("filter"))
-				Expect(chain).To(Equal("FORWARD"))
+				Expect(table).To(Equal("some-table"))
+				Expect(chain).To(Equal("some-chain"))
 				Expect(ruleSpec).To(Equal([]string{"-j", "foo0000000001"}))
 				Expect(iptables.ClearChainCallCount()).To(Equal(1))
 				table, chain = iptables.ClearChainArgsForCall(0)
-				Expect(table).To(Equal("filter"))
+				Expect(table).To(Equal("some-table"))
 				Expect(chain).To(Equal("foo0000000001"))
 				Expect(iptables.DeleteChainCallCount()).To(Equal(1))
 				table, chain = iptables.DeleteChainArgsForCall(0)
-				Expect(table).To(Equal("filter"))
+				Expect(table).To(Equal("some-table"))
 				Expect(chain).To(Equal("foo0000000001"))
 			})
 		})
@@ -93,7 +93,7 @@ var _ = Describe("Enforcer", func() {
 			})
 
 			It("returns the error", func() {
-				err := enforcer.Enforce("foo", []rules.Rule{fakeRule})
+				err := enforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
 				Expect(err).To(MatchError("banana"))
 			})
 		})
@@ -104,7 +104,7 @@ var _ = Describe("Enforcer", func() {
 			})
 
 			It("it logs and returns a useful error", func() {
-				err := enforcer.Enforce("foo", []rules.Rule{fakeRule})
+				err := enforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
 				Expect(err).To(MatchError("inserting chain: banana"))
 
 				Expect(logger).To(gbytes.Say("insert-chain.*banana"))
@@ -117,7 +117,7 @@ var _ = Describe("Enforcer", func() {
 			})
 
 			It("it logs and returns a useful error", func() {
-				err := enforcer.Enforce("foo", []rules.Rule{fakeRule})
+				err := enforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
 				Expect(err).To(MatchError("listing forward rules: blueberry"))
 
 				Expect(logger).To(gbytes.Say("cleanup-rules.*blueberry"))
@@ -127,11 +127,11 @@ var _ = Describe("Enforcer", func() {
 		Context("when there are errors cleaning up old chains", func() {
 			BeforeEach(func() {
 				iptables.DeleteReturns(errors.New("banana"))
-				iptables.ListReturns([]string{"-A FORWARD -j foo0000000001"}, nil)
+				iptables.ListReturns([]string{"-A some-chain -j foo0000000001"}, nil)
 			})
 
 			It("returns a useful error", func() {
-				err := enforcer.Enforce("foo", []rules.Rule{fakeRule})
+				err := enforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
 				Expect(err).To(MatchError("cleanup old chain: banana"))
 			})
 		})
@@ -142,7 +142,7 @@ var _ = Describe("Enforcer", func() {
 			})
 
 			It("it logs and returns a useful error", func() {
-				err := enforcer.Enforce("foo", []rules.Rule{fakeRule})
+				err := enforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
 				Expect(err).To(MatchError("creating chain: banana"))
 
 				Expect(logger).To(gbytes.Say("create-chain.*banana"))

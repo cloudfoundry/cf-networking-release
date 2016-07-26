@@ -110,12 +110,12 @@ func main() {
 	)
 
 	r := ruleUpdater.DefaultLocalRules()
-	err = ruleEnforcer.Enforce("netman--local-", r)
+	err = ruleEnforcer.Enforce("filter", "FORWARD", "netman--local-", r)
 	if err != nil {
 		log.Fatal(err)
 	}
 	r = ruleUpdater.DefaultRemoteRules()
-	err = ruleEnforcer.Enforce("netman--remote-", r)
+	err = ruleEnforcer.Enforce("filter", "FORWARD", "netman--remote-", r)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -29,7 +29,7 @@ type Planner struct {
 
 //go:generate counterfeiter -o ../fakes/rule_enforcer.go --fake-name RuleEnforcer . RuleEnforcer
 type RuleEnforcer interface {
-	Enforce(chain string, r []Rule) error
+	Enforce(table, parentChain, chain string, r []Rule) error
 }
 
 func New(logger lager.Logger, storeReader storeReader, policyClient policyClient, vni int, localSubnet string, ruleEnforcer RuleEnforcer) *Planner {
@@ -43,10 +43,10 @@ func New(logger lager.Logger, storeReader storeReader, policyClient policyClient
 	}
 }
 
-func (u *Planner) DefaultLocalRules() []Rule {
-	r := []Rule{}
+func (p *Planner) DefaultLocalRules() []Rule {
+	rules := []Rule{}
 
-	r = append(r, GenericRule{
+	rules = append(rules, GenericRule{
 		Properties: []string{
 			"-i", "cni-flannel0",
 			"-m", "state", "--state", "ESTABLISHED,RELATED",
@@ -55,8 +55,8 @@ func (u *Planner) DefaultLocalRules() []Rule {
 	}, GenericRule{
 		Properties: []string{
 			"-i", "cni-flannel0",
-			"-s", u.LocalSubnet,
-			"-d", u.LocalSubnet,
+			"-s", p.LocalSubnet,
+			"-d", p.LocalSubnet,
 			"-m", "limit", "--limit", "2/min",
 			"-j", "LOG",
 			"--log-prefix", "DROP_LOCAL",
@@ -64,39 +64,39 @@ func (u *Planner) DefaultLocalRules() []Rule {
 	}, GenericRule{
 		Properties: []string{
 			"-i", "cni-flannel0",
-			"-s", u.LocalSubnet,
-			"-d", u.LocalSubnet,
+			"-s", p.LocalSubnet,
+			"-d", p.LocalSubnet,
 			"-j", "DROP",
 		},
 	})
 
-	return r
+	return rules
 }
 
-func (u *Planner) DefaultRemoteRules() []Rule {
-	r := []Rule{}
+func (p *Planner) DefaultRemoteRules() []Rule {
+	rules := []Rule{}
 
-	r = append(r, GenericRule{
+	rules = append(rules, GenericRule{
 		Properties: []string{
-			"-i", fmt.Sprintf("flannel.%d", u.VNI),
+			"-i", fmt.Sprintf("flannel.%d", p.VNI),
 			"-m", "state", "--state", "ESTABLISHED,RELATED",
 			"-j", "ACCEPT",
 		},
 	}, GenericRule{
 		Properties: []string{
-			"-i", fmt.Sprintf("flannel.%d", u.VNI),
+			"-i", fmt.Sprintf("flannel.%d", p.VNI),
 			"-m", "limit", "--limit", "2/min",
 			"-j", "LOG",
 			"--log-prefix", "DROP_REMOTE",
 		},
 	}, GenericRule{
 		Properties: []string{
-			"-i", fmt.Sprintf("flannel.%d", u.VNI),
+			"-i", fmt.Sprintf("flannel.%d", p.VNI),
 			"-j", "DROP",
 		},
 	})
 
-	return r
+	return rules
 }
 
 func (p *Planner) Update() error {
@@ -104,7 +104,7 @@ func (p *Planner) Update() error {
 	if err != nil {
 		return err
 	}
-	err = p.RuleEnforcer.Enforce("netman--forward-", rules)
+	err = p.RuleEnforcer.Enforce("filter", "FORWARD", "netman--forward-", rules)
 	if err != nil {
 		return err
 	}

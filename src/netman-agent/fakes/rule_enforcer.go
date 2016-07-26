@@ -7,11 +7,13 @@ import (
 )
 
 type RuleEnforcer struct {
-	EnforceStub        func(chain string, r []rules.Rule) error
+	EnforceStub        func(table, parentChain, chain string, r []rules.Rule) error
 	enforceMutex       sync.RWMutex
 	enforceArgsForCall []struct {
-		chain string
-		r     []rules.Rule
+		table       string
+		parentChain string
+		chain       string
+		r           []rules.Rule
 	}
 	enforceReturns struct {
 		result1 error
@@ -20,7 +22,7 @@ type RuleEnforcer struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *RuleEnforcer) Enforce(chain string, r []rules.Rule) error {
+func (fake *RuleEnforcer) Enforce(table string, parentChain string, chain string, r []rules.Rule) error {
 	var rCopy []rules.Rule
 	if r != nil {
 		rCopy = make([]rules.Rule, len(r))
@@ -28,13 +30,15 @@ func (fake *RuleEnforcer) Enforce(chain string, r []rules.Rule) error {
 	}
 	fake.enforceMutex.Lock()
 	fake.enforceArgsForCall = append(fake.enforceArgsForCall, struct {
-		chain string
-		r     []rules.Rule
-	}{chain, rCopy})
-	fake.recordInvocation("Enforce", []interface{}{chain, rCopy})
+		table       string
+		parentChain string
+		chain       string
+		r           []rules.Rule
+	}{table, parentChain, chain, rCopy})
+	fake.recordInvocation("Enforce", []interface{}{table, parentChain, chain, rCopy})
 	fake.enforceMutex.Unlock()
 	if fake.EnforceStub != nil {
-		return fake.EnforceStub(chain, r)
+		return fake.EnforceStub(table, parentChain, chain, r)
 	} else {
 		return fake.enforceReturns.result1
 	}
@@ -46,10 +50,10 @@ func (fake *RuleEnforcer) EnforceCallCount() int {
 	return len(fake.enforceArgsForCall)
 }
 
-func (fake *RuleEnforcer) EnforceArgsForCall(i int) (string, []rules.Rule) {
+func (fake *RuleEnforcer) EnforceArgsForCall(i int) (string, string, string, []rules.Rule) {
 	fake.enforceMutex.RLock()
 	defer fake.enforceMutex.RUnlock()
-	return fake.enforceArgsForCall[i].chain, fake.enforceArgsForCall[i].r
+	return fake.enforceArgsForCall[i].table, fake.enforceArgsForCall[i].parentChain, fake.enforceArgsForCall[i].chain, fake.enforceArgsForCall[i].r
 }
 
 func (fake *RuleEnforcer) EnforceReturns(result1 error) {

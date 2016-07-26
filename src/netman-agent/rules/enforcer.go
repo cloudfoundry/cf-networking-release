@@ -47,30 +47,30 @@ func NewEnforcer(logger lager.Logger, timestamper TimeStamper, ipt IPTables) *En
 	}
 }
 
-func (e *Enforcer) Enforce(chainPrefix string, rules []Rule) error {
+func (e *Enforcer) Enforce(table, parentChain, chainPrefix string, rules []Rule) error {
 	newTime := e.timestamper.CurrentTime()
 	chain := fmt.Sprintf("%s%d", chainPrefix, newTime)
 
-	err := e.iptables.NewChain("filter", chain)
+	err := e.iptables.NewChain(table, chain)
 	if err != nil {
 		e.Logger.Error("create-chain", err)
 		return fmt.Errorf("creating chain: %s", err)
 	}
 
 	for _, rule := range rules {
-		err = rule.Enforce(chain, e.iptables, e.Logger)
+		err = rule.Enforce(table, chain, e.iptables, e.Logger)
 		if err != nil {
 			return err
 		}
 	}
 
-	err = e.iptables.Insert("filter", "FORWARD", 1, []string{"-j", chain}...)
+	err = e.iptables.Insert(table, parentChain, 1, []string{"-j", chain}...)
 	if err != nil {
 		e.Logger.Error("insert-chain", err)
 		return fmt.Errorf("inserting chain: %s", err)
 	}
 
-	err = e.cleanupOldRules(chainPrefix, int(newTime))
+	err = e.cleanupOldRules(table, parentChain, chainPrefix, int(newTime))
 	if err != nil {
 		e.Logger.Error("cleanup-rules", err)
 		return err
@@ -79,8 +79,8 @@ func (e *Enforcer) Enforce(chainPrefix string, rules []Rule) error {
 	return nil
 }
 
-func (e *Enforcer) cleanupOldRules(chainPrefix string, newTime int) error {
-	chainList, err := e.iptables.List("filter", "FORWARD")
+func (e *Enforcer) cleanupOldRules(table, parentChain, chainPrefix string, newTime int) error {
+	chainList, err := e.iptables.List(table, parentChain)
 	if err != nil {
 		return fmt.Errorf("listing forward rules: %s", err)
 	}
@@ -96,7 +96,7 @@ func (e *Enforcer) cleanupOldRules(chainPrefix string, newTime int) error {
 			}
 
 			if oldTime < newTime {
-				err = e.cleanupOldChain(timeStampedChain)
+				err = e.cleanupOldChain(table, parentChain, timeStampedChain)
 				if err != nil {
 					return err
 				}
@@ -107,18 +107,18 @@ func (e *Enforcer) cleanupOldRules(chainPrefix string, newTime int) error {
 	return nil
 }
 
-func (e *Enforcer) cleanupOldChain(timeStampedChain string) error {
-	err := e.iptables.Delete("filter", "FORWARD", []string{"-j", timeStampedChain}...)
+func (e *Enforcer) cleanupOldChain(table, parentChain, timeStampedChain string) error {
+	err := e.iptables.Delete(table, parentChain, []string{"-j", timeStampedChain}...)
 	if err != nil {
 		return fmt.Errorf("cleanup old chain: %s", err)
 	}
 
-	err = e.iptables.ClearChain("filter", timeStampedChain)
+	err = e.iptables.ClearChain(table, timeStampedChain)
 	if err != nil {
 		return fmt.Errorf("cleanup old chain: %s", err)
 	}
 
-	err = e.iptables.DeleteChain("filter", timeStampedChain)
+	err = e.iptables.DeleteChain(table, timeStampedChain)
 	if err != nil {
 		return fmt.Errorf("cleanup old chain: %s", err)
 	}
