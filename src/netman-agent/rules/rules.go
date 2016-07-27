@@ -59,11 +59,12 @@ func NewLocalAllowRule(sourceIP, destinationIP, protocol string, port int, sourc
 	}
 }
 
-func NewGBPTagRule(sourceIP, tag string) GenericRule {
+func NewGBPTagRule(sourceIP, tag, appGUID string) GenericRule {
 	return GenericRule{
 		Properties: []string{
 			"-s", sourceIP,
 			"-j", "MARK", "--set-xmark", fmt.Sprintf("0x%s", tag),
+			"-m", "comment", "--comment", fmt.Sprintf("src:%s", appGUID),
 		},
 	}
 }

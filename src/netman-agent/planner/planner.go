@@ -130,7 +130,7 @@ func (p *Planner) Rules() ([]rules.Rule, error) {
 			for _, srcContainer := range srcContainers {
 				ruleset = append(
 					ruleset,
-					rules.NewGBPTagRule(srcContainer.IP, policy.Source.Tag),
+					rules.NewGBPTagRule(srcContainer.IP, policy.Source.Tag, policy.Source.ID),
 				)
 			}
 		}

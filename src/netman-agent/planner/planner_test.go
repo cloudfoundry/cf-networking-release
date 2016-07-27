@@ -208,6 +208,7 @@ var _ = Describe("Planner", func() {
 				Properties: []string{
 					"-s", "8.8.8.8",
 					"-j", "MARK", "--set-xmark", "0x0123",
+					"-m", "comment", "--comment", "src:some-app-guid",
 				},
 			}, {
 				Properties: []string{
