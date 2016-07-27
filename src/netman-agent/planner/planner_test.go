@@ -1,9 +1,10 @@
-package rules_test
+package planner_test
 
 import (
 	"errors"
 	"netman-agent/fakes"
 	"netman-agent/models"
+	"netman-agent/planner"
 	"netman-agent/rules"
 
 	"github.com/pivotal-golang/lager/lagertest"
@@ -13,9 +14,9 @@ import (
 	"github.com/onsi/gomega/gbytes"
 )
 
-var _ = Describe("Rules", func() {
+var _ = Describe("Planner", func() {
 	var (
-		planner      *rules.Planner
+		p            *planner.Planner
 		storeReader  *fakes.StoreReader
 		policyClient *fakes.PolicyClient
 		enforcer     *fakes.RuleEnforcer
@@ -61,7 +62,7 @@ var _ = Describe("Rules", func() {
 			},
 		}}, nil)
 
-		planner = rules.New(
+		p = planner.New(
 			logger,
 			storeReader,
 			policyClient,
@@ -74,10 +75,18 @@ var _ = Describe("Rules", func() {
 
 	Describe("DefaultLocalRules", func() {
 		It("creates a list of default local rules and enforces them", func() {
-			r := planner.DefaultLocalRules()
+			err := p.DefaultLocalRules()
+			Expect(err).NotTo(HaveOccurred())
 
-			Expect(len(r)).To(Equal(3))
-			Expect(r).To(ConsistOf([]rules.GenericRule{
+			Expect(enforcer.EnforceCallCount()).To(Equal(1))
+			tableArg, parentChain, chainName, localRules := enforcer.EnforceArgsForCall(0)
+
+			Expect(tableArg).To(Equal("filter"))
+			Expect(parentChain).To(Equal("FORWARD"))
+			Expect(chainName).To(Equal("netman--local-"))
+
+			Expect(len(localRules)).To(Equal(3))
+			Expect(localRules).To(ConsistOf([]rules.GenericRule{
 				{Properties: []string{
 					"-i", "cni-flannel0",
 					"-m", "state", "--state", "ESTABLISHED,RELATED",
@@ -99,14 +108,29 @@ var _ = Describe("Rules", func() {
 				}},
 			}))
 		})
+
+		It("returns when there is an error", func() {
+			expectedError := errors.New("banana")
+			enforcer.EnforceReturns(expectedError)
+			err := p.DefaultLocalRules()
+			Expect(err).To(Equal(expectedError))
+		})
 	})
 
 	Describe("DefaultRemoteRules", func() {
 		It("creates a list of default remote rules and enforces them", func() {
-			r := planner.DefaultRemoteRules()
+			err := p.DefaultRemoteRules()
+			Expect(err).NotTo(HaveOccurred())
 
-			Expect(len(r)).To(Equal(3))
-			Expect(r).To(ConsistOf([]rules.GenericRule{
+			Expect(enforcer.EnforceCallCount()).To(Equal(1))
+			tableArg, parentChain, chainName, remoteRules := enforcer.EnforceArgsForCall(0)
+
+			Expect(tableArg).To(Equal("filter"))
+			Expect(parentChain).To(Equal("FORWARD"))
+			Expect(chainName).To(Equal("netman--remote-"))
+
+			Expect(len(remoteRules)).To(Equal(3))
+			Expect(remoteRules).To(ConsistOf([]rules.GenericRule{
 				{Properties: []string{
 					"-i", "flannel.42",
 					"-m", "state", "--state", "ESTABLISHED,RELATED",
@@ -124,14 +148,29 @@ var _ = Describe("Rules", func() {
 				}},
 			}))
 		})
+
+		It("returns when there is an error", func() {
+			expectedError := errors.New("banana")
+			enforcer.EnforceReturns(expectedError)
+			err := p.DefaultRemoteRules()
+			Expect(err).To(Equal(expectedError))
+		})
 	})
 
 	Describe("DefaultEgressRules", func() {
 		It("creates the default rules to allow connectivity to the internet", func() {
-			r := planner.DefaultEgressRules()
+			err := p.DefaultEgressRules()
+			Expect(err).NotTo(HaveOccurred())
 
-			Expect(len(r)).To(Equal(1))
-			Expect(r).To(ConsistOf([]rules.GenericRule{
+			Expect(enforcer.EnforceCallCount()).To(Equal(1))
+			tableArg, parentChain, chainName, egressRules := enforcer.EnforceArgsForCall(0)
+
+			Expect(tableArg).To(Equal("nat"))
+			Expect(parentChain).To(Equal("POSTROUTING"))
+			Expect(chainName).To(Equal("netman--postrout-"))
+
+			Expect(len(egressRules)).To(Equal(1))
+			Expect(egressRules).To(ConsistOf([]rules.GenericRule{
 				{Properties: []string{
 					"-s", "8.8.8.0/24",
 					"!", "-d", "8.8.0.0/16",
@@ -143,7 +182,7 @@ var _ = Describe("Rules", func() {
 
 	Describe("Rules", func() {
 		It("gets the policies and containers", func() {
-			_, err := planner.Rules()
+			_, err := p.Rules()
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(storeReader.GetContainersCallCount()).To(Equal(1))
@@ -151,7 +190,7 @@ var _ = Describe("Rules", func() {
 		})
 
 		It("converts policies into rule structs", func() {
-			r, err := planner.Rules()
+			r, err := p.Rules()
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(len(r)).To(Equal(4))
@@ -196,7 +235,7 @@ var _ = Describe("Rules", func() {
 			})
 
 			It("returns and logs the error", func() {
-				_, err := planner.Rules()
+				_, err := p.Rules()
 				Expect(err).To(MatchError("get policies failed: banana"))
 				Expect(logger).To(gbytes.Say(`get-policies.*banana`))
 			})

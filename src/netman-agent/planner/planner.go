@@ -1,8 +1,9 @@
-package rules
+package planner
 
 import (
 	"fmt"
 	"netman-agent/models"
+	"netman-agent/rules"
 
 	"github.com/pivotal-golang/lager"
 )
@@ -24,15 +25,10 @@ type Planner struct {
 	VNI            int
 	LocalSubnet    string
 	OverlayNetwork string
-	RuleEnforcer   RuleEnforcer
+	ruleEnforcer   rules.RuleEnforcer
 }
 
-//go:generate counterfeiter -o ../fakes/rule_enforcer.go --fake-name RuleEnforcer . RuleEnforcer
-type RuleEnforcer interface {
-	Enforce(table, parentChain, chain string, r []Rule) error
-}
-
-func New(logger lager.Logger, storeReader storeReader, policyClient policyClient, vni int, localSubnet string, overlayNetwork string, ruleEnforcer RuleEnforcer) *Planner {
+func New(logger lager.Logger, storeReader storeReader, policyClient policyClient, vni int, localSubnet string, overlayNetwork string, ruleEnforcer rules.RuleEnforcer) *Planner {
 	return &Planner{
 		Logger:         logger,
 		storeReader:    storeReader,
@@ -40,20 +36,20 @@ func New(logger lager.Logger, storeReader storeReader, policyClient policyClient
 		VNI:            vni,
 		LocalSubnet:    localSubnet,
 		OverlayNetwork: overlayNetwork,
-		RuleEnforcer:   ruleEnforcer,
+		ruleEnforcer:   ruleEnforcer,
 	}
 }
 
-func (p *Planner) DefaultLocalRules() []Rule {
-	rules := []Rule{}
+func (p *Planner) DefaultLocalRules() error {
+	ruleset := []rules.Rule{}
 
-	rules = append(rules, GenericRule{
+	ruleset = append(ruleset, rules.GenericRule{
 		Properties: []string{
 			"-i", "cni-flannel0",
 			"-m", "state", "--state", "ESTABLISHED,RELATED",
 			"-j", "ACCEPT",
 		},
-	}, GenericRule{
+	}, rules.GenericRule{
 		Properties: []string{
 			"-i", "cni-flannel0",
 			"-s", p.LocalSubnet,
@@ -62,7 +58,7 @@ func (p *Planner) DefaultLocalRules() []Rule {
 			"-j", "LOG",
 			"--log-prefix", "DROP_LOCAL: ",
 		},
-	}, GenericRule{
+	}, rules.GenericRule{
 		Properties: []string{
 			"-i", "cni-flannel0",
 			"-s", p.LocalSubnet,
@@ -71,54 +67,57 @@ func (p *Planner) DefaultLocalRules() []Rule {
 		},
 	})
 
-	return rules
+	return p.ruleEnforcer.Enforce("filter", "FORWARD", "netman--local-", ruleset)
 }
 
-func (p *Planner) DefaultRemoteRules() []Rule {
-	rules := []Rule{}
+func (p *Planner) DefaultRemoteRules() error {
+	ruleset := []rules.Rule{}
 
-	rules = append(rules, GenericRule{
+	ruleset = append(ruleset, rules.GenericRule{
 		Properties: []string{
 			"-i", fmt.Sprintf("flannel.%d", p.VNI),
 			"-m", "state", "--state", "ESTABLISHED,RELATED",
 			"-j", "ACCEPT",
 		},
-	}, GenericRule{
+	}, rules.GenericRule{
 		Properties: []string{
 			"-i", fmt.Sprintf("flannel.%d", p.VNI),
 			"-m", "limit", "--limit", "2/min",
 			"-j", "LOG",
 			"--log-prefix", "DROP_REMOTE: ",
 		},
-	}, GenericRule{
+	}, rules.GenericRule{
 		Properties: []string{
 			"-i", fmt.Sprintf("flannel.%d", p.VNI),
 			"-j", "DROP",
 		},
 	})
 
-	return rules
+	return p.ruleEnforcer.Enforce("filter", "FORWARD", "netman--remote-", ruleset)
 }
 
-func (p *Planner) DefaultEgressRules() []Rule {
-	return []Rule{
-		NewDefaultEgressRule(p.LocalSubnet, p.OverlayNetwork),
-	}
+func (p *Planner) DefaultEgressRules() error {
+	return p.ruleEnforcer.Enforce(
+		"nat",
+		"POSTROUTING",
+		"netman--postrout-",
+		[]rules.Rule{rules.NewDefaultEgressRule(p.LocalSubnet, p.OverlayNetwork)},
+	)
 }
 
 func (p *Planner) Update() error {
-	rules, err := p.Rules()
+	ruleset, err := p.Rules()
 	if err != nil {
 		return err
 	}
-	err = p.RuleEnforcer.Enforce("filter", "FORWARD", "netman--forward-", rules)
+	err = p.ruleEnforcer.Enforce("filter", "FORWARD", "netman--forward-", ruleset)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (p *Planner) Rules() ([]Rule, error) {
+func (p *Planner) Rules() ([]rules.Rule, error) {
 	containers := p.storeReader.GetContainers()
 	policies, err := p.policyClient.GetPolicies()
 	if err != nil {
@@ -126,7 +125,7 @@ func (p *Planner) Rules() ([]Rule, error) {
 		return nil, fmt.Errorf("get policies failed: %s", err)
 	}
 
-	rules := []Rule{}
+	ruleset := []rules.Rule{}
 
 	for _, policy := range policies {
 		srcContainers, srcOk := containers[policy.Source.ID]
@@ -134,9 +133,9 @@ func (p *Planner) Rules() ([]Rule, error) {
 
 		if dstOk {
 			for _, dstContainer := range dstContainers {
-				rules = append(
-					rules,
-					NewRemoteAllowRule(
+				ruleset = append(
+					ruleset,
+					rules.NewRemoteAllowRule(
 						p.VNI,
 						dstContainer.IP,
 						policy.Destination.Protocol,
@@ -149,9 +148,9 @@ func (p *Planner) Rules() ([]Rule, error) {
 
 		if srcOk {
 			for _, srcContainer := range srcContainers {
-				rules = append(
-					rules,
-					NewGBPTagRule(srcContainer.IP, policy.Source.Tag),
+				ruleset = append(
+					ruleset,
+					rules.NewGBPTagRule(srcContainer.IP, policy.Source.Tag),
 				)
 			}
 		}
@@ -159,9 +158,9 @@ func (p *Planner) Rules() ([]Rule, error) {
 		if srcOk && dstOk {
 			for _, srcContainer := range srcContainers {
 				for _, dstContainer := range dstContainers {
-					rules = append(
-						rules,
-						NewLocalAllowRule(
+					ruleset = append(
+						ruleset,
+						rules.NewLocalAllowRule(
 							srcContainer.IP,
 							dstContainer.IP,
 							policy.Destination.Protocol,
@@ -173,5 +172,5 @@ func (p *Planner) Rules() ([]Rule, error) {
 		}
 	}
 
-	return rules, nil
+	return ruleset, nil
 }

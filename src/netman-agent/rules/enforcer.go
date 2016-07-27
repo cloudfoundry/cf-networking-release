@@ -28,6 +28,11 @@ type IPTables interface {
 	DeleteChain(table, chain string) error
 }
 
+//go:generate counterfeiter -o ../fakes/rule_enforcer.go --fake-name RuleEnforcer . RuleEnforcer
+type RuleEnforcer interface {
+	Enforce(table, parentChain, chain string, r []Rule) error
+}
+
 //go:generate counterfeiter -o ../fakes/timestamper.go --fake-name TimeStamper . TimeStamper
 type TimeStamper interface {
 	CurrentTime() int

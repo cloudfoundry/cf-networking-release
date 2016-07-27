@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"netman-agent/config"
 	"netman-agent/handlers"
+	"netman-agent/planner"
 	"netman-agent/policy_client"
 	"netman-agent/rules"
 	"netman-agent/store"
@@ -100,7 +101,7 @@ func main() {
 		ipt,
 	)
 
-	ruleUpdater := rules.New(
+	planner := planner.New(
 		logger.Session("rules-updater"),
 		store,
 		policyClient,
@@ -110,18 +111,15 @@ func main() {
 		ruleEnforcer,
 	)
 
-	localRules := ruleUpdater.DefaultLocalRules()
-	err = ruleEnforcer.Enforce("filter", "FORWARD", "netman--local-", localRules)
+	err = planner.DefaultLocalRules()
 	if err != nil {
 		log.Fatal(err)
 	}
-	remoteRules := ruleUpdater.DefaultRemoteRules()
-	err = ruleEnforcer.Enforce("filter", "FORWARD", "netman--remote-", remoteRules)
+	err = planner.DefaultRemoteRules()
 	if err != nil {
 		log.Fatal(err)
 	}
-	egressRules := ruleUpdater.DefaultEgressRules()
-	err = ruleEnforcer.Enforce("nat", "POSTROUTING", "netman--postrout-", egressRules)
+	err = planner.DefaultEgressRules()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -133,7 +131,7 @@ func main() {
 			case <-signals:
 				return nil
 			case <-time.After(pollInterval):
-				err = ruleUpdater.Update()
+				err = planner.Update()
 				if err != nil {
 					return err
 				}
