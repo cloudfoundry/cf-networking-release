@@ -43,29 +43,18 @@ func New(logger lager.Logger, storeReader storeReader, policyClient policyClient
 func (p *Planner) DefaultLocalRules() error {
 	ruleset := []rules.Rule{}
 
-	ruleset = append(ruleset, rules.GenericRule{
-		Properties: []string{
-			"-i", "cni-flannel0",
-			"-m", "state", "--state", "ESTABLISHED,RELATED",
-			"-j", "ACCEPT",
-		},
-	}, rules.GenericRule{
-		Properties: []string{
-			"-i", "cni-flannel0",
-			"-s", p.LocalSubnet,
-			"-d", p.LocalSubnet,
-			"-m", "limit", "--limit", "2/min",
-			"-j", "LOG",
-			"--log-prefix", "DROP_LOCAL: ",
-		},
-	}, rules.GenericRule{
-		Properties: []string{
-			"-i", "cni-flannel0",
-			"-s", p.LocalSubnet,
-			"-d", p.LocalSubnet,
-			"-j", "DROP",
-		},
-	})
+	ruleset = append(ruleset,
+		rules.NewAcceptExistingLocalRule(),
+		rules.NewLogRule(
+			[]string{
+				"-i", "cni-flannel0",
+				"-s", p.LocalSubnet,
+				"-d", p.LocalSubnet,
+			},
+			"DROP_LOCAL: ",
+		),
+		rules.NewDefaultDenyLocalRule(p.LocalSubnet),
+	)
 
 	return p.ruleEnforcer.Enforce("filter", "FORWARD", "netman--local-", ruleset)
 }
@@ -73,25 +62,14 @@ func (p *Planner) DefaultLocalRules() error {
 func (p *Planner) DefaultRemoteRules() error {
 	ruleset := []rules.Rule{}
 
-	ruleset = append(ruleset, rules.GenericRule{
-		Properties: []string{
-			"-i", fmt.Sprintf("flannel.%d", p.VNI),
-			"-m", "state", "--state", "ESTABLISHED,RELATED",
-			"-j", "ACCEPT",
-		},
-	}, rules.GenericRule{
-		Properties: []string{
-			"-i", fmt.Sprintf("flannel.%d", p.VNI),
-			"-m", "limit", "--limit", "2/min",
-			"-j", "LOG",
-			"--log-prefix", "DROP_REMOTE: ",
-		},
-	}, rules.GenericRule{
-		Properties: []string{
-			"-i", fmt.Sprintf("flannel.%d", p.VNI),
-			"-j", "DROP",
-		},
-	})
+	ruleset = append(ruleset,
+		rules.NewAcceptExistingRemoteRule(p.VNI),
+		rules.NewLogRule(
+			[]string{"-i", fmt.Sprintf("flannel.%d", p.VNI)},
+			"DROP_REMOTE: ",
+		),
+		rules.NewDefaultDenyRemoteRule(p.VNI),
+	)
 
 	return p.ruleEnforcer.Enforce("filter", "FORWARD", "netman--remote-", ruleset)
 }

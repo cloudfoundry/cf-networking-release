@@ -19,6 +19,7 @@ files:
   - netman-agent/config/*.go # gosub
   - netman-agent/handlers/*.go # gosub
   - netman-agent/models/*.go # gosub
+  - netman-agent/planner/*.go # gosub
   - netman-agent/policy_client/*.go # gosub
   - netman-agent/rules/*.go # gosub
   - netman-agent/store/*.go # gosub

@@ -75,3 +75,53 @@ func NewDefaultEgressRule(localSubnet, overlayNetwork string) GenericRule {
 		},
 	}
 }
+
+func NewLogRule(guardConditions []string, name string) GenericRule {
+	properties := append(
+		guardConditions,
+		"-m", "limit", "--limit", "2/min",
+		"-j", "LOG",
+		"--log-prefix", name,
+	)
+	return GenericRule{Properties: properties}
+}
+
+func NewAcceptExistingLocalRule() GenericRule {
+	return GenericRule{
+		Properties: []string{
+			"-i", "cni-flannel0",
+			"-m", "state", "--state", "ESTABLISHED,RELATED",
+			"-j", "ACCEPT",
+		},
+	}
+}
+
+func NewDefaultDenyLocalRule(localSubnet string) GenericRule {
+	return GenericRule{
+		Properties: []string{
+			"-i", "cni-flannel0",
+			"-s", localSubnet,
+			"-d", localSubnet,
+			"-j", "DROP",
+		},
+	}
+}
+
+func NewAcceptExistingRemoteRule(vni int) GenericRule {
+	return GenericRule{
+		Properties: []string{
+			"-i", fmt.Sprintf("flannel.%d", vni),
+			"-m", "state", "--state", "ESTABLISHED,RELATED",
+			"-j", "ACCEPT",
+		},
+	}
+}
+
+func NewDefaultDenyRemoteRule(vni int) GenericRule {
+	return GenericRule{
+		Properties: []string{
+			"-i", fmt.Sprintf("flannel.%d", vni),
+			"-j", "DROP",
+		},
+	}
+}
