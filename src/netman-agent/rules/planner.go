@@ -61,7 +61,7 @@ func (p *Planner) DefaultLocalRules() []Rule {
 			"-d", p.LocalSubnet,
 			"-m", "limit", "--limit", "2/min",
 			"-j", "LOG",
-			"--log-prefix", "DROP_LOCAL",
+			"--log-prefix", "DROP_LOCAL: ",
 		},
 	}, GenericRule{
 		Properties: []string{
@@ -89,7 +89,7 @@ func (p *Planner) DefaultRemoteRules() []Rule {
 			"-i", fmt.Sprintf("flannel.%d", p.VNI),
 			"-m", "limit", "--limit", "2/min",
 			"-j", "LOG",
-			"--log-prefix", "DROP_REMOTE",
+			"--log-prefix", "DROP_REMOTE: ",
 		},
 	}, GenericRule{
 		Properties: []string{

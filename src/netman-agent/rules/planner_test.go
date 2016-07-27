@@ -89,7 +89,7 @@ var _ = Describe("Rules", func() {
 					"-d", "8.8.8.0/24",
 					"-m", "limit", "--limit", "2/min",
 					"-j", "LOG",
-					"--log-prefix", "DROP_LOCAL",
+					"--log-prefix", "DROP_LOCAL: ",
 				}},
 				{Properties: []string{
 					"-i", "cni-flannel0",
@@ -116,7 +116,7 @@ var _ = Describe("Rules", func() {
 					"-i", "flannel.42",
 					"-m", "limit", "--limit", "2/min",
 					"-j", "LOG",
-					"--log-prefix", "DROP_REMOTE",
+					"--log-prefix", "DROP_REMOTE: ",
 				}},
 				{Properties: []string{
 					"-i", "flannel.42",
