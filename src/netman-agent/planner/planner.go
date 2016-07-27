@@ -119,6 +119,8 @@ func (p *Planner) Rules() ([]rules.Rule, error) {
 						policy.Destination.Protocol,
 						policy.Destination.Port,
 						policy.Source.Tag,
+						policy.Source.ID,
+						policy.Destination.ID,
 					),
 				)
 			}
@@ -143,6 +145,8 @@ func (p *Planner) Rules() ([]rules.Rule, error) {
 							dstContainer.IP,
 							policy.Destination.Protocol,
 							policy.Destination.Port,
+							policy.Source.ID,
+							policy.Destination.ID,
 						),
 					)
 				}

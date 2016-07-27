@@ -202,6 +202,7 @@ var _ = Describe("Planner", func() {
 					"--dport", "5555",
 					"-m", "mark", "--mark", "0x0123",
 					"-j", "ACCEPT",
+					"-m", "comment", "--comment", "src:some-app-guid dst:some-other-app-guid",
 				},
 			}, {
 				Properties: []string{
@@ -216,6 +217,7 @@ var _ = Describe("Planner", func() {
 					"-p", "tcp",
 					"--dport", "5555",
 					"-j", "ACCEPT",
+					"-m", "comment", "--comment", "src:some-app-guid dst:some-other-app-guid",
 				},
 			}, {
 				Properties: []string{
@@ -225,6 +227,7 @@ var _ = Describe("Planner", func() {
 					"--dport", "5555",
 					"-m", "mark", "--mark", "0x0124",
 					"-j", "ACCEPT",
+					"-m", "comment", "--comment", "src:some-remote-app dst:some-other-app-guid",
 				},
 			}}))
 		})
