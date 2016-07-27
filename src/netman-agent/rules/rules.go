@@ -2,6 +2,7 @@ package rules
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/pivotal-golang/lager"
 )
@@ -29,4 +30,48 @@ func (r GenericRule) Enforce(table, chain string, iptables IPTables, logger lage
 	})
 
 	return nil
+}
+func NewRemoteAllowRule(vni int, destinationIP, protocol string, port int, tag string) GenericRule {
+	return GenericRule{
+		Properties: []string{
+			"-i", fmt.Sprintf("flannel.%d", vni),
+			"-d", destinationIP,
+			"-p", protocol,
+			"--dport", strconv.Itoa(port),
+			"-m", "mark", "--mark", fmt.Sprintf("0x%s", tag),
+			"-j", "ACCEPT",
+		},
+	}
+}
+
+func NewLocalAllowRule(sourceIP, destinationIP, protocol string, port int) GenericRule {
+	return GenericRule{
+		Properties: []string{
+			"-i", "cni-flannel0",
+			"-s", sourceIP,
+			"-d", destinationIP,
+			"-p", protocol,
+			"--dport", strconv.Itoa(port),
+			"-j", "ACCEPT",
+		},
+	}
+}
+
+func NewGBPTagRule(sourceIP, tag string) GenericRule {
+	return GenericRule{
+		Properties: []string{
+			"-s", sourceIP,
+			"-j", "MARK", "--set-xmark", fmt.Sprintf("0x%s", tag),
+		},
+	}
+}
+
+func NewDefaultEgressRule(localSubnet, overlayNetwork string) GenericRule {
+	return GenericRule{
+		Properties: []string{
+			"-s", localSubnet,
+			"!", "-d", overlayNetwork,
+			"-j", "MASQUERADE",
+		},
+	}
 }

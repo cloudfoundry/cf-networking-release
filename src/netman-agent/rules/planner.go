@@ -3,7 +3,6 @@ package rules
 import (
 	"fmt"
 	"netman-agent/models"
-	"strconv"
 
 	"github.com/pivotal-golang/lager"
 )
@@ -103,13 +102,7 @@ func (p *Planner) DefaultRemoteRules() []Rule {
 
 func (p *Planner) DefaultEgressRules() []Rule {
 	return []Rule{
-		GenericRule{
-			Properties: []string{
-				"-s", p.LocalSubnet,
-				"!", "-d", p.OverlayNetwork,
-				"-j", "MASQUERADE",
-			},
-		},
+		NewDefaultEgressRule(p.LocalSubnet, p.OverlayNetwork),
 	}
 }
 
@@ -139,47 +132,42 @@ func (p *Planner) Rules() ([]Rule, error) {
 		srcContainers, srcOk := containers[policy.Source.ID]
 		dstContainers, dstOk := containers[policy.Destination.ID]
 
-		// local dest
 		if dstOk {
 			for _, dstContainer := range dstContainers {
-				rules = append(rules, GenericRule{
-					Properties: []string{
-						"-i", fmt.Sprintf("flannel.%d", p.VNI),
-						"-d", dstContainer.IP,
-						"-p", policy.Destination.Protocol,
-						"--dport", strconv.Itoa(policy.Destination.Port),
-						"-m", "mark", "--mark", fmt.Sprintf("0x%s", policy.Source.Tag),
-						"-j", "ACCEPT",
-					},
-				})
+				rules = append(
+					rules,
+					NewRemoteAllowRule(
+						p.VNI,
+						dstContainer.IP,
+						policy.Destination.Protocol,
+						policy.Destination.Port,
+						policy.Source.Tag,
+					),
+				)
 			}
 		}
 
 		if srcOk {
 			for _, srcContainer := range srcContainers {
-				rules = append(rules, GenericRule{
-					Properties: []string{
-						"-s", srcContainer.IP,
-						"-j", "MARK", "--set-xmark", fmt.Sprintf("0x%s", policy.Source.Tag),
-					},
-				})
+				rules = append(
+					rules,
+					NewGBPTagRule(srcContainer.IP, policy.Source.Tag),
+				)
 			}
 		}
 
-		// local
 		if srcOk && dstOk {
 			for _, srcContainer := range srcContainers {
 				for _, dstContainer := range dstContainers {
-					rules = append(rules, GenericRule{
-						Properties: []string{
-							"-i", "cni-flannel0",
-							"-s", srcContainer.IP,
-							"-d", dstContainer.IP,
-							"-p", policy.Destination.Protocol,
-							"--dport", strconv.Itoa(policy.Destination.Port),
-							"-j", "ACCEPT",
-						},
-					})
+					rules = append(
+						rules,
+						NewLocalAllowRule(
+							srcContainer.IP,
+							dstContainer.IP,
+							policy.Destination.Protocol,
+							policy.Destination.Port,
+						),
+					)
 				}
 			}
 		}
