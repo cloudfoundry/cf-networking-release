@@ -29,7 +29,7 @@ that provides container networking.
   cf install-plugin ~/Downloads/network-policy-plugin
   ```
 
-## Deploy netman-release and test
+## Deploy to bosh-lite
 
 ```bash
 pushd ~/workspace
@@ -157,6 +157,9 @@ Then follow [the instructions for testing with the cats & dogs example](https://
   ```
   bosh run errand netman-cf-acceptance
   ```
+
+## Other infrastructures
+The policy enforcement engine we use requires Linux Kernel version 4.4.0-30.49 or later.  Unfortunately, this kernel version is not yet in any official BOSH stemcell.  There are rough work-arounds available for bosh-lite and AWS at the moment (see above) but otherwise you should wait for the official stemcells to roll forward.
 
 ## To replace flannel with your own CNI plugin
 0. Remove the following BOSH jobs:
