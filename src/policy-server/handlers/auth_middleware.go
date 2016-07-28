@@ -6,7 +6,7 @@ import (
 	"policy-server/uaa_client"
 	"strings"
 
-	"github.com/pivotal-golang/lager"
+	"code.cloudfoundry.org/lager"
 )
 
 //go:generate counterfeiter -o ../fakes/http_handler.go --fake-name HTTPHandler . http_handler

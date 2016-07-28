@@ -19,7 +19,7 @@ import (
 	"time"
 
 	"github.com/coreos/go-iptables/iptables"
-	"github.com/pivotal-golang/lager"
+	"code.cloudfoundry.org/lager"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
 	"github.com/tedsuo/ifrit/http_server"

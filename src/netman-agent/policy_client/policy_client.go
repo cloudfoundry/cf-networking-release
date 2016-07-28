@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"netman-agent/models"
 
-	"github.com/pivotal-golang/lager"
+	"code.cloudfoundry.org/lager"
 )
 
 //go:generate counterfeiter -o ../fakes/http_client.go --fake-name HTTPClient . httpClient

@@ -8,7 +8,7 @@ import (
 	"policy-server/models"
 	"policy-server/store"
 
-	"github.com/pivotal-golang/lager"
+	"code.cloudfoundry.org/lager"
 )
 
 type PoliciesDelete struct {

@@ -5,7 +5,7 @@ import (
 	"netman-agent/rules"
 	"sync"
 
-	"github.com/pivotal-golang/lager"
+	"code.cloudfoundry.org/lager"
 )
 
 type Rule struct {

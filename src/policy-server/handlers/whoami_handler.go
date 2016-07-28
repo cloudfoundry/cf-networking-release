@@ -7,7 +7,7 @@ import (
 	"policy-server/uaa_client"
 	"strings"
 
-	"github.com/pivotal-golang/lager"
+	"code.cloudfoundry.org/lager"
 )
 
 //go:generate counterfeiter -o ../fakes/uaa_request_client.go --fake-name UAARequestClient . uaaRequestClient

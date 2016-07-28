@@ -5,7 +5,7 @@ import (
 	"netman-agent/models"
 	"netman-agent/rules"
 
-	"github.com/pivotal-golang/lager"
+	"code.cloudfoundry.org/lager"
 )
 
 //go:generate counterfeiter -o ../fakes/store_reader.go --fake-name StoreReader . storeReader

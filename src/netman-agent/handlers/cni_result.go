@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"netman-agent/models"
 
-	"github.com/pivotal-golang/lager"
+	"code.cloudfoundry.org/lager"
 )
 
 //go:generate counterfeiter -o ../fakes/store_writer.go --fake-name StoreWriter . storeWriter
