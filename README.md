@@ -30,14 +30,22 @@ that provides container networking.
   ```
 
 ## Deploy to bosh-lite
-
+Ensure that `br_netfilter` is enabled on your vagrant box:
 ```bash
+pushd ~/workspace/bosh-lite
+  vagrant ssh -c 'sudo modprobe br_netfilter'
+popd
+```
+Then grab the required releases
+```
 pushd ~/workspace
   git clone https://github.com/cloudfoundry/diego-release
   git clone https://github.com/cloudfoundry/cf-release
   git clone https://github.com/cloudfoundry-incubator/netman-release
 popd
-
+```
+and deploy
+```
 pushd ~/workspace/netman-release
   ./scripts/deploy-to-bosh-lite
 popd
