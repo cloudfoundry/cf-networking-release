@@ -38,6 +38,10 @@ var _ = Describe("external connectivity", func() {
 		pushApp(appA)
 		appRoute = fmt.Sprintf("http://%s.%s/", appA, config.AppsDomain)
 
+		allSecurityGroups := getAllSecurityGroups()
+		for _, sg := range allSecurityGroups {
+			Expect(cf.Cf("bind-running-security-group", sg).Wait(Timeout_Short)).To(gexec.Exit(0))
+		}
 		originalRunningSecurityGroups = getRunningSecurityGroups()
 	})
 
@@ -113,6 +117,25 @@ func getRunningSecurityGroups() []string {
 	actualGroups := []string{}
 	for _, l := range candidateGroups {
 		trimmed := strings.TrimSpace(l)
+		if trimmed != "" {
+			actualGroups = append(actualGroups, trimmed)
+		}
+	}
+	return actualGroups
+}
+
+func getAllSecurityGroups() []string {
+	session := cf.Cf("security-groups")
+	Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
+
+	candidateGroups := strings.Split(string(session.Out.Contents()), "\n")[4:]
+	actualGroups := []string{}
+	for _, l := range candidateGroups {
+		fields := strings.Fields(l)
+		if len(fields) < 2 {
+			continue
+		}
+		trimmed := strings.TrimSpace(fields[1])
 		if trimmed != "" {
 			actualGroups = append(actualGroups, trimmed)
 		}
