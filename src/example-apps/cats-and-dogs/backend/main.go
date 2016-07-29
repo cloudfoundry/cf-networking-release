@@ -95,6 +95,7 @@ var catPageTemplate string = `
 				<div class="jumbotron">
 					<p class="lead">Hello from the backend, here is a picture of a cat:</p>
 					<p><img src="http://i.imgur.com/1uYroRF.gif" /></p>
+				  <p class="lead">You reached me on port {{.Port}}</p>
 				</div>
 			</div>
 		</div>
@@ -175,7 +176,7 @@ func main() {
 		log.Fatal("invalid required env var PORT")
 	}
 
-	userPortsString := os.Getenv("USER_PORTS")
+	userPortsString := os.Getenv("CATS_PORTS")
 	userPorts := strings.Split(userPortsString, ",")
 	for _, userPortString := range userPorts {
 		if strings.TrimSpace(userPortString) == "" {

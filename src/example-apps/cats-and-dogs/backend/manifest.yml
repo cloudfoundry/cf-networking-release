@@ -6,3 +6,4 @@ applications:
     buildpack: go_buildpack
     env:
       GOPACKAGENAME: backend
+      CATS_PORTS: 7007,7008,7009
