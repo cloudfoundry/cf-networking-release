@@ -152,6 +152,8 @@ jobs:
     release: netman
   - name: netman-agent
     release: netman
+  - name: netmon
+    release: netman
 - name: cc_bridge_z1
   <<: (( merge ))
 - name: route_emitter_z1
@@ -170,6 +172,8 @@ jobs:
   - name: cni-flannel
     release: netman
   - name: netman-agent
+    release: netman
+  - name: netmon
     release: netman
 - name: cc_bridge_z2
   <<: (( merge ))

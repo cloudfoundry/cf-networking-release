@@ -1,0 +1,18 @@
+---
+name: netmon
+
+templates:
+  netmon_ctl.erb: bin/netmon_ctl
+  netmon.json.erb: config/netmon.json
+
+packages:
+  - netmon
+
+properties:
+  netmon.metron_address:
+    description: "Forward metrics to this metron agent"
+    default: 127.0.0.1:3457
+
+  netmon.poll_interval:
+    description: "Gather and report metrics at this interval, in seconds"
+    default: 30

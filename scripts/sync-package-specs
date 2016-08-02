@@ -51,6 +51,9 @@ sync_package flannel-watchdog \
 sync_package policy-server \
   -app policy-server/cmd/policy-server &
 
+sync_package netmon \
+  -app netmon/cmd/netmon &
+
 sync_package acceptance \
   -test netman-cf-acceptance \
   -app example-apps/proxy \
