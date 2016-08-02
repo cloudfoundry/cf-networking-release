@@ -7,7 +7,7 @@ that provides container networking.
 - [Design doc for Container Networking Policy](https://docs.google.com/document/d/1HDS89TJKD7ACG6cqQHph5BdNSKLt8jvo6sPGBZ5DmsM)
 - [Engineering backlog](https://www.pivotaltracker.com/n/projects/1498342)
 - Chat with us at the `#container-networking` channel on [CloudFoundry Slack](http://slack.cloudfoundry.org/)
-- [CI pipeline](https://c2c.ci.cf-app.com/) and [config](https://github.com/cloudfoundry-incubator/container-networking-ci)
+- [CI dashboard](http://dashboard.c2c.cf-app.com) and [config](https://github.com/cloudfoundry-incubator/container-networking-ci)
 
 
 ## Install the CF CLI Plugin
