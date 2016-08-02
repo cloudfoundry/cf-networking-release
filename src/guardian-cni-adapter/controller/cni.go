@@ -92,12 +92,6 @@ func AppendNetworkSpec(existingNetConfig *libcni.NetworkConfig, gardenNetworkSpe
 		return nil, err //Not tested
 	}
 
-	if skipValue, ok := config["skip_without_network"]; ok && config["network"] == nil {
-		if value, ok := skipValue.(bool); value && ok {
-			return nil, nil
-		}
-	}
-
 	return &libcni.NetworkConfig{
 		Network: existingNetConfig.Network,
 		Bytes:   newBytes,

@@ -95,10 +95,18 @@ var _ = Describe("Manager", func() {
 		Context("when missing the network spec", func() {
 			It("should be a no-op and not call CNI", func() {
 				_, err := manager.Up(42, "some-container-handle", "")
+				Expect(err).To(MatchError(ContainSubstring("parsing garden properties")))
+			})
+		})
+
+		Context("when the encoded garden properties is an empty hash", func() {
+			It("should still call CNI and the netman agent", func() {
+				_, err := manager.Up(42, "some-container-handle", "{}")
 				Expect(err).NotTo(HaveOccurred())
-				Expect(cniController.UpCallCount()).To(Equal(0))
-				Expect(mounter.IdempotentlyMountCallCount()).To(Equal(0))
-				Expect(netmanClient.AddCallCount()).To(Equal(0))
+
+				Expect(cniController.UpCallCount()).To(Equal(1))
+				Expect(netmanClient.AddCallCount()).To(Equal(1))
+				Expect(mounter.IdempotentlyMountCallCount()).To(Equal(1))
 			})
 		})
 
@@ -160,12 +168,12 @@ var _ = Describe("Manager", func() {
 		})
 
 		Context("when encodedGardenProperties is empty", func() {
-			It("should be a no-op and not call CNI", func() {
+			It("should call CNI and netman agent", func() {
 				err := manager.Down("some-container-handle", "")
 				Expect(err).NotTo(HaveOccurred())
-				Expect(cniController.DownCallCount()).To(Equal(0))
-				Expect(mounter.RemoveMountCallCount()).To(Equal(0))
-				Expect(netmanClient.DelCallCount()).To(Equal(0))
+				Expect(cniController.DownCallCount()).To(Equal(1))
+				Expect(mounter.RemoveMountCallCount()).To(Equal(1))
+				Expect(netmanClient.DelCallCount()).To(Equal(1))
 			})
 		})
 

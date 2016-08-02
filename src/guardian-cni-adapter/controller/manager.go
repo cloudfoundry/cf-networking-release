@@ -56,10 +56,6 @@ func (m *Manager) Up(pid int, containerHandle, encodedGardenProperties string) (
 		return nil, errors.New("up missing container handle")
 	}
 
-	if encodedGardenProperties == "" {
-		return nil, nil
-	}
-
 	groupID, err := getGroupID(encodedGardenProperties)
 	if err != nil {
 		return nil, err
@@ -95,10 +91,6 @@ func (m *Manager) Up(pid int, containerHandle, encodedGardenProperties string) (
 func (m *Manager) Down(containerHandle string, encodedGardenProperties string) error {
 	if containerHandle == "" {
 		return errors.New("down missing container handle")
-	}
-
-	if encodedGardenProperties == "" {
-		return nil
 	}
 
 	bindMountPath := filepath.Join(m.BindMountRoot, containerHandle)
