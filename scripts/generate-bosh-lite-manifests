@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -e -u
 
 absolute_path() {
   (cd $1 && pwd)
