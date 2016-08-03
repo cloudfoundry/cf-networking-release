@@ -102,7 +102,7 @@ var _ = Describe("external connectivity", func() {
 				Expect(resp.StatusCode).To(Equal(500))
 				respBytes, err := ioutil.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(respBytes).To(ContainSubstring("connection refused"))
+				Expect(respBytes).To(ContainSubstring("example.com"))
 				return true
 			}, "10s", "1s").Should(BeTrue())
 		})
