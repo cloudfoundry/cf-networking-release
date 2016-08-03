@@ -105,7 +105,7 @@ func NewDefaultDenyLocalRule(localSubnet string) GenericRule {
 			"-i", "cni-flannel0",
 			"-s", localSubnet,
 			"-d", localSubnet,
-			"-j", "DROP",
+			"-j", "REJECT",
 		},
 	}
 }
@@ -124,7 +124,7 @@ func NewDefaultDenyRemoteRule(vni int) GenericRule {
 	return GenericRule{
 		Properties: []string{
 			"-i", fmt.Sprintf("flannel.%d", vni),
-			"-j", "DROP",
+			"-j", "REJECT",
 		},
 	}
 }

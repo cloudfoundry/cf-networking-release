@@ -83,7 +83,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			AssertConnectionFails(appA, appB, port)
 
 			close(done)
-		}, 600 /* <-- overall spec timeout in seconds */)
+		}, 300 /* <-- overall spec timeout in seconds */)
 	})
 })
 

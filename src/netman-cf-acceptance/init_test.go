@@ -132,7 +132,15 @@ func curlFromApp(appName string, instanceIndex int, endpoint string, expectSucce
 	if expectSuccess {
 		Expect(sshSession.Wait(2 * Timeout_Short)).To(gexec.Exit(0))
 	} else {
-		Expect(sshSession.Wait(2 * Timeout_Short)).To(gexec.Exit(28))
+		const CURL_EXIT_CODE_COULDNT_RESOLVE_HOST = 6
+		const CURL_EXIT_CODE_COULDNT_CONNECT = 7
+		const CURL_EXIT_CODE_OPERATION_TIMEDOUT = 28
+		Expect(sshSession.Wait(2 * Timeout_Short)).To(gexec.Exit())
+		Expect([]int{
+			CURL_EXIT_CODE_COULDNT_RESOLVE_HOST,
+			CURL_EXIT_CODE_COULDNT_CONNECT,
+			CURL_EXIT_CODE_OPERATION_TIMEDOUT,
+		}).To(ContainElement(sshSession.ExitCode()))
 	}
 
 	return string(sshSession.Out.Contents())

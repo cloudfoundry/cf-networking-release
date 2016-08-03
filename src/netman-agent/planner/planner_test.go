@@ -98,13 +98,13 @@ var _ = Describe("Planner", func() {
 					"-d", "8.8.8.0/24",
 					"-m", "limit", "--limit", "2/min",
 					"-j", "LOG",
-					"--log-prefix", "DROP_LOCAL: ",
+					"--log-prefix", "REJECT_LOCAL: ",
 				}},
 				{Properties: []string{
 					"-i", "cni-flannel0",
 					"-s", "8.8.8.0/24",
 					"-d", "8.8.8.0/24",
-					"-j", "DROP",
+					"-j", "REJECT",
 				}},
 			}))
 		})
@@ -140,11 +140,11 @@ var _ = Describe("Planner", func() {
 					"-i", "flannel.42",
 					"-m", "limit", "--limit", "2/min",
 					"-j", "LOG",
-					"--log-prefix", "DROP_REMOTE: ",
+					"--log-prefix", "REJECT_REMOTE: ",
 				}},
 				{Properties: []string{
 					"-i", "flannel.42",
-					"-j", "DROP",
+					"-j", "REJECT",
 				}},
 			}))
 		})

@@ -51,7 +51,7 @@ func (p *Planner) DefaultLocalRules() error {
 				"-s", p.LocalSubnet,
 				"-d", p.LocalSubnet,
 			},
-			"DROP_LOCAL: ",
+			"REJECT_LOCAL: ",
 		),
 		rules.NewDefaultDenyLocalRule(p.LocalSubnet),
 	)
@@ -66,7 +66,7 @@ func (p *Planner) DefaultRemoteRules() error {
 		rules.NewAcceptExistingRemoteRule(p.VNI),
 		rules.NewLogRule(
 			[]string{"-i", fmt.Sprintf("flannel.%d", p.VNI)},
-			"DROP_REMOTE: ",
+			"REJECT_REMOTE: ",
 		),
 		rules.NewDefaultDenyRemoteRule(p.VNI),
 	)
