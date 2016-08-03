@@ -6,6 +6,6 @@ properties:
     scim:
       <<: (( merge ))
       users:
-      - admin|admin|scim.write,scim.read,openid,cloud_controller.admin,doppler.firehose,routing.router_groups.read,network.admin
+      - admin|admin|scim.write,scim.read,openid,cloud_controller.admin,clients.read,clients.write,doppler.firehose,routing.router_groups.read,routing.router_groups.write,network.admin
 
 <<: (( merge ))
