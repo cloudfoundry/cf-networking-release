@@ -128,3 +128,16 @@ func NewDefaultDenyRemoteRule(vni int) GenericRule {
 		},
 	}
 }
+
+func NewNetInRule(containerIP string, containerPort int, hostIP string, hostPort int, groupID string) GenericRule {
+	return GenericRule{
+		Properties: []string{
+			"-d", hostIP,
+			"-p", "tcp",
+			"-m", "tcp", "--dport", fmt.Sprintf("%d", hostPort),
+			"-j", "DNAT",
+			"--to-destination", fmt.Sprintf("%s:%d", containerIP, containerPort),
+			"-m", "comment", "--comment", fmt.Sprintf("dst:%s", groupID),
+		},
+	}
+}

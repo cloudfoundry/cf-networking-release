@@ -1,17 +1,22 @@
 package poller
 
 import (
+	"netman-agent/rules"
 	"os"
 	"time"
 
-	"code.cloudfoundry.org/garden"
 	"code.cloudfoundry.org/lager"
 )
+
+type planner interface {
+	GetRules() ([]rules.Rule, error)
+}
 
 type Poller struct {
 	Logger       lager.Logger
 	PollInterval time.Duration
-	GardenClient garden.Client
+	Planner      planner
+	Enforcer     rules.RuleEnforcer
 }
 
 func (m *Poller) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
@@ -21,36 +26,17 @@ func (m *Poller) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 		case <-signals:
 			return nil
 		case <-time.After(m.PollInterval):
-			m.pollOnce()
-		}
-	}
-}
+			ruleset, err := m.Planner.GetRules()
+			if err != nil {
+				m.Logger.Error("get-rules", err)
+				continue
+			}
 
-func (m *Poller) pollOnce() {
-	logger := m.Logger.Session("pollOnce")
-	logger.Info("start")
-	defer logger.Info("done")
-
-	properties := garden.Properties{}
-	allContainers, err := m.GardenClient.Containers(properties)
-	if err != nil {
-		logger.Error("gardenClient.Containers", err)
-		return
-	}
-
-	for _, container := range allContainers {
-		info, err := container.Info()
-		if err != nil {
-			logger.Error("container.Info", err)
-			return
-		}
-		for _, mapping := range info.MappedPorts {
-			logger.Info("net-in-rule", lager.Data{
-				"host_port":      mapping.HostPort,
-				"container_port": mapping.ContainerPort,
-				"container_ip":   info.ContainerIP,
-				"external_ip":    info.ExternalIP,
-			})
+			err = m.Enforcer.Enforce("nat", "PREROUTING", "natman--netin-", ruleset)
+			if err != nil {
+				m.Logger.Error("enforce", err)
+				continue
+			}
 		}
 	}
 }

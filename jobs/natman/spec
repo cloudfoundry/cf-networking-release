@@ -11,12 +11,12 @@ packages:
 properties:
   natman.garden_address:
     description: "Address of garden server"
-    default: 127.0.0.1:7777
+    default: /var/vcap/data/garden/garden.sock
 
   natman.garden_protocol:
     description: "Protocol of garden server"
-    default: tcp
+    default: unix
 
   natman.poll_interval:
-    description: "Gather and report metrics at this interval, in seconds"
-    default: 30
+    description: "Update rules on this interval, in seconds"
+    default: 5
