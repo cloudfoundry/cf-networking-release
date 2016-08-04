@@ -10,7 +10,6 @@ templates:
 packages:
   - flannel
   - runc-cni
-  - utils
   - flannel-watchdog
 
 properties:

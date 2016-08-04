@@ -6,7 +6,6 @@ templates:
 
 packages:
   - runc-cni
-  - utils
 
 properties:
   garden-cni.adapter.cni_plugin_dir:
