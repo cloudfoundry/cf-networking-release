@@ -1,0 +1,21 @@
+---
+name: natman
+
+dependencies:
+  - golang
+
+files:
+  - code.cloudfoundry.org/garden/*.go # gosub
+  - code.cloudfoundry.org/garden/client/*.go # gosub
+  - code.cloudfoundry.org/garden/client/connection/*.go # gosub
+  - code.cloudfoundry.org/garden/routes/*.go # gosub
+  - code.cloudfoundry.org/garden/transport/*.go # gosub
+  - code.cloudfoundry.org/lager/*.go # gosub
+  - github.com/bmizerany/pat/*.go # gosub
+  - github.com/tedsuo/ifrit/*.go # gosub
+  - github.com/tedsuo/ifrit/grouper/*.go # gosub
+  - github.com/tedsuo/ifrit/sigmon/*.go # gosub
+  - github.com/tedsuo/rata/*.go # gosub
+  - natman/cmd/natman/*.go # gosub
+  - natman/config/*.go # gosub
+  - natman/poller/*.go # gosub

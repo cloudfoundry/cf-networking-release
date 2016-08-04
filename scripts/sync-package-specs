@@ -54,6 +54,9 @@ sync_package policy-server \
 sync_package netmon \
   -app netmon/cmd/netmon &
 
+sync_package natman \
+  -app natman/cmd/natman &
+
 sync_package acceptance \
   -test netman-cf-acceptance \
   -app example-apps/proxy \

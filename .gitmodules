@@ -75,3 +75,6 @@
 [submodule "src/code.cloudfoundry.org/runtimeschema"]
 	path = src/code.cloudfoundry.org/runtimeschema
 	url = https://github.com/cloudfoundry/runtimeschema
+[submodule "src/code.cloudfoundry.org/garden"]
+	path = src/code.cloudfoundry.org/garden
+	url = https://github.com/cloudfoundry/garden

@@ -1,0 +1,5 @@
+check process natman
+  with pidfile /var/vcap/sys/run/natman/natman.pid
+  start program "/var/vcap/jobs/natman/bin/natman_ctl start"
+  stop program "/var/vcap/jobs/natman/bin/natman_ctl stop"
+  group vcap
