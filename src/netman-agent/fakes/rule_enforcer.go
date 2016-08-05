@@ -7,6 +7,15 @@ import (
 )
 
 type RuleEnforcer struct {
+	EnforceOnChainStub        func(chain rules.Chain, r []rules.Rule) error
+	enforceOnChainMutex       sync.RWMutex
+	enforceOnChainArgsForCall []struct {
+		chain rules.Chain
+		r     []rules.Rule
+	}
+	enforceOnChainReturns struct {
+		result1 error
+	}
 	EnforceStub        func(table, parentChain, chain string, r []rules.Rule) error
 	enforceMutex       sync.RWMutex
 	enforceArgsForCall []struct {
@@ -20,6 +29,45 @@ type RuleEnforcer struct {
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
+}
+
+func (fake *RuleEnforcer) EnforceOnChain(chain rules.Chain, r []rules.Rule) error {
+	var rCopy []rules.Rule
+	if r != nil {
+		rCopy = make([]rules.Rule, len(r))
+		copy(rCopy, r)
+	}
+	fake.enforceOnChainMutex.Lock()
+	fake.enforceOnChainArgsForCall = append(fake.enforceOnChainArgsForCall, struct {
+		chain rules.Chain
+		r     []rules.Rule
+	}{chain, rCopy})
+	fake.recordInvocation("EnforceOnChain", []interface{}{chain, rCopy})
+	fake.enforceOnChainMutex.Unlock()
+	if fake.EnforceOnChainStub != nil {
+		return fake.EnforceOnChainStub(chain, r)
+	} else {
+		return fake.enforceOnChainReturns.result1
+	}
+}
+
+func (fake *RuleEnforcer) EnforceOnChainCallCount() int {
+	fake.enforceOnChainMutex.RLock()
+	defer fake.enforceOnChainMutex.RUnlock()
+	return len(fake.enforceOnChainArgsForCall)
+}
+
+func (fake *RuleEnforcer) EnforceOnChainArgsForCall(i int) (rules.Chain, []rules.Rule) {
+	fake.enforceOnChainMutex.RLock()
+	defer fake.enforceOnChainMutex.RUnlock()
+	return fake.enforceOnChainArgsForCall[i].chain, fake.enforceOnChainArgsForCall[i].r
+}
+
+func (fake *RuleEnforcer) EnforceOnChainReturns(result1 error) {
+	fake.EnforceOnChainStub = nil
+	fake.enforceOnChainReturns = struct {
+		result1 error
+	}{result1}
 }
 
 func (fake *RuleEnforcer) Enforce(table string, parentChain string, chain string, r []rules.Rule) error {
@@ -66,6 +114,8 @@ func (fake *RuleEnforcer) EnforceReturns(result1 error) {
 func (fake *RuleEnforcer) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.enforceOnChainMutex.RLock()
+	defer fake.enforceOnChainMutex.RUnlock()
 	fake.enforceMutex.RLock()
 	defer fake.enforceMutex.RUnlock()
 	return fake.invocations
