@@ -162,6 +162,8 @@ jobs:
     release: netman
   - name: natman
     release: netman
+  - name: vxlan-policy-agent
+    release: netman
 - name: cc_bridge_z1
   <<: (( merge ))
 - name: route_emitter_z1
@@ -184,6 +186,8 @@ jobs:
   - name: netmon
     release: netman
   - name: natman
+    release: netman
+  - name: vxlan-policy-agent
     release: netman
 - name: cc_bridge_z2
   <<: (( merge ))
