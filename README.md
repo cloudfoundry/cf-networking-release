@@ -165,7 +165,8 @@ Then follow [the instructions for testing with the cats & dogs example](https://
   ```
 
 ## Other infrastructures
-The policy enforcement engine we use requires Linux Kernel version 4.4.0-30.49 or later.  Unfortunately, this kernel version is not yet in any official BOSH stemcell.  There are rough work-arounds available for bosh-lite and AWS at the moment (see above) but otherwise you should wait for the official stemcells to roll forward.
+We do not currently test this software on infrastructures other than BOSH-lite and AWS.  With recent stemcells and the appropriate manifest changes, it should work.  Let us know if you find issues.
+
 
 ## To replace flannel with your own CNI plugin
 0. Remove the following BOSH jobs:
