@@ -30,6 +30,7 @@ type IPTables interface {
 
 //go:generate counterfeiter -o ../fakes/rule_enforcer.go --fake-name RuleEnforcer . RuleEnforcer
 type RuleEnforcer interface {
+	EnforceOnChain(chain Chain, r []Rule) error
 	Enforce(table, parentChain, chain string, r []Rule) error
 }
 
@@ -50,6 +51,16 @@ func NewEnforcer(logger lager.Logger, timestamper TimeStamper, ipt IPTables) *En
 		timestamper: timestamper,
 		iptables:    ipt,
 	}
+}
+
+type Chain struct {
+	Table       string
+	ParentChain string
+	Prefix      string
+}
+
+func (e *Enforcer) EnforceOnChain(c Chain, rules []Rule) error {
+	return e.Enforce(c.Table, c.ParentChain, c.Prefix, rules)
 }
 
 func (e *Enforcer) Enforce(table, parentChain, chainPrefix string, rules []Rule) error {

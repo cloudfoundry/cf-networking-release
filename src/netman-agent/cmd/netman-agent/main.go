@@ -3,28 +3,19 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"fmt"
 	"io/ioutil"
 	"lib/flannel"
-	"lib/marshal"
 	"log"
-	"net/http"
 	"netman-agent/config"
-	"netman-agent/handlers"
 	"netman-agent/planner"
-	"netman-agent/policy_client"
 	"netman-agent/rules"
-	"netman-agent/store"
 	"os"
-	"time"
 
-	"github.com/coreos/go-iptables/iptables"
 	"code.cloudfoundry.org/lager"
+	"github.com/coreos/go-iptables/iptables"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
-	"github.com/tedsuo/ifrit/http_server"
 	"github.com/tedsuo/ifrit/sigmon"
-	"github.com/tedsuo/rata"
 )
 
 func main() {
@@ -46,11 +37,6 @@ func main() {
 		log.Fatal("error unmarshalling config")
 	}
 
-	pollInterval := time.Duration(conf.PollInterval) * time.Second
-	if pollInterval == 0 {
-		pollInterval = time.Second
-	}
-
 	flannelInfoReader := &flannel.NetworkInfo{
 		FlannelSubnetFilePath: conf.FlannelSubnetFile,
 	}
@@ -58,35 +44,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("discovering network info: %s", err)
 	}
-
-	store := store.New()
-
-	cniResultHandler := &handlers.CNIResult{
-		Logger:      logger,
-		StoreWriter: store,
-	}
-
-	routes := rata.Routes{
-		{Name: "add", Method: "POST", Path: "/cni_result"},
-		{Name: "del", Method: "DELETE", Path: "/cni_result"},
-	}
-
-	rataHandlers := rata.Handlers{
-		"add": cniResultHandler,
-		"del": cniResultHandler,
-	}
-
-	router, err := rata.NewRouter(routes, rataHandlers)
-	if err != nil {
-		log.Fatalf("unable to create rata Router: %s", err) // not tested
-	}
-
-	policyClient := policy_client.New(
-		logger.Session("policy-client"),
-		http.DefaultClient,
-		conf.PolicyServerURL,
-		marshal.UnmarshalFunc(json.Unmarshal),
-	)
 
 	ipt, err := iptables.New()
 	if err != nil {
@@ -101,49 +58,23 @@ func main() {
 		ipt,
 	)
 
-	planner := planner.New(
-		logger.Session("rules-updater"),
-		store,
-		policyClient,
-		conf.VNI,
-		localSubnetCIDR,
-		overlayNetwork,
-		ruleEnforcer,
-	)
+	defaultPlanner := planner.Planner{
+		LocalSubnet:    localSubnetCIDR,
+		OverlayNetwork: overlayNetwork,
+		RuleEnforcer:   ruleEnforcer,
+	}
 
-	err = planner.DefaultLocalRules()
+	err = defaultPlanner.DefaultEgressRules()
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = planner.DefaultRemoteRules()
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = planner.DefaultEgressRules()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	policyPoller := ifrit.RunFunc(func(signals <-chan os.Signal, ready chan<- struct{}) error {
-		close(ready)
-		for {
-			select {
-			case <-signals:
-				return nil
-			case <-time.After(pollInterval):
-				err = planner.Update()
-				if err != nil {
-					return err
-				}
-			}
-		}
-	})
-
-	httpServer := http_server.New(fmt.Sprintf("%s:%d", conf.ListenHost, conf.ListenPort), router)
 
 	members := grouper.Members{
-		{"http_server", httpServer},
-		{"policy_poller", policyPoller},
+		{"noop", ifrit.RunFunc(func(signals <-chan os.Signal, ready chan<- struct{}) error {
+			close(ready)
+			<-signals
+			return nil
+		})},
 	}
 
 	monitor := ifrit.Invoke(sigmon.New(grouper.NewOrdered(os.Interrupt, members)))

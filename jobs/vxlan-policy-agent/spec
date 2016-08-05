@@ -1,0 +1,32 @@
+---
+name: vxlan-policy-agent
+templates:
+  vxlan-policy-agent_ctl.erb: bin/vxlan-policy-agent_ctl
+  vxlan-policy-agent.json.erb: config/vxlan-policy-agent.json
+
+packages:
+  - vxlan-policy-agent
+
+properties:
+  vxlan-policy-agent.garden_address:
+    description: "Address of garden server"
+    default: /var/vcap/data/garden/garden.sock
+
+  vxlan-policy-agent.garden_protocol:
+    description: "Protocol of garden server"
+    default: unix
+
+  vxlan-policy-agent.policy_server_url:
+    description: "URL where the policy server can be reached"
+
+  vxlan-policy-agent.poll_interval:
+    description: "Query the policy server on this interval, in seconds"
+    default: 5
+
+  vxlan-policy-agent.vni:
+    description: "VXLAN VNI"
+    default: 1
+
+  vxlan-policy-agent.flannel_subnet_file:
+    description: "File path to look for flannel's subnet.env file"
+    default: "/run/flannel/subnet.env"

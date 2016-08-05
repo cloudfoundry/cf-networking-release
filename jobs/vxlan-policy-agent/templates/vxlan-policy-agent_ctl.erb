@@ -1,0 +1,64 @@
+#!/bin/bash
+
+set -e -u
+
+RUN_DIR=/var/vcap/sys/run/vxlan-policy-agent
+LOG_DIR=/var/vcap/sys/log/vxlan-policy-agent
+PIDFILE=$RUN_DIR/vxlan-policy-agent.pid
+
+mkdir -p /var/vcap/sys/log/monit
+exec 1>> /var/vcap/sys/log/monit/vxlan-policy-agent.out.log
+exec 2>> /var/vcap/sys/log/monit/vxlan-policy-agent.err.log
+
+
+case $1 in
+
+  start)
+
+    set +e
+    modprobe br_netfilter
+    set -e
+
+    mkdir -p $RUN_DIR
+    mkdir -p $LOG_DIR
+
+    echo $$ > $PIDFILE
+
+    exec /var/vcap/packages/vxlan-policy-agent/bin/vxlan-policy-agent \
+      -config-file=/var/vcap/jobs/vxlan-policy-agent/config/vxlan-policy-agent.json \
+      2> >(tee -a $LOG_DIR/vxlan-policy-agent.stderr.log | logger -p user.error -t vxlan-policy-agent) \
+      1> >(tee -a $LOG_DIR/vxlan-policy-agent.stdout.log | logger -t vxlan-policy-agent)
+    ;;
+
+  stop)
+
+    pid=$(cat $PIDFILE)
+
+    for i in $(seq 30); do
+      echo "sending INT to ${pid}..."
+      if kill -INT $pid; then
+        sleep 1
+      else
+        echo "exited"
+        exit 0
+      fi
+    done
+
+    echo "timed out; sending SIGQUIT followed by SIGKILL to ${pid}..."
+    if kill -QUIT $pid; then
+      sleep 5
+
+      echo "killing ${pid}..."
+      kill -9 $pid
+    fi
+
+    echo "killed"
+
+    ;;
+
+  *)
+    echo "Usage: $0 {start|stop}"
+
+    ;;
+
+esac

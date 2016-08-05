@@ -1,0 +1,7 @@
+<%=
+    require 'json'
+
+    agentConfig = p("vxlan-policy-agent")
+
+    JSON.pretty_generate(agentConfig)
+%>

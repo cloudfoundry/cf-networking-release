@@ -45,6 +45,9 @@ sync_package cli \
 sync_package netman-agent \
   -app netman-agent/cmd/netman-agent &
 
+sync_package vxlan-policy-agent \
+  -app vxlan-policy-agent/cmd/vxlan-policy-agent &
+
 sync_package flannel-watchdog \
   -app flannel-watchdog/cmd/flannel-watchdog &
 
@@ -71,8 +74,5 @@ GOOS=linux sync_package flannel \
   -app github.com/containernetworking/cni/plugins/meta/flannel &
 
 wait
-
-GOOS=linux sync_package utils \
-  -app utils/netns-exec...
 
 git diff --name-only packages/*/spec
