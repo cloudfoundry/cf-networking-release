@@ -55,9 +55,7 @@ Then follow [the instructions for testing with the cats & dogs example](https://
 
 
 ## Deploy to AWS
-0. Upload stemcell with Linux kernel 4.4 to bosh director
-  - Current AWS stemcells only have 3.19
-  - For now you will need a special stemcell that can be found [here](https://s3.amazonaws.com/dk-shared-assets/bosh-stemcell-3232.kernel-4.4-aws-xen-ubuntu-trusty-go_agent.tgz)
+0. Upload stemcell with Linux kernel 4.4 to bosh director.  Versions >= 3262.5 should work.
 0. Create netman stubs
   - netman requires additional information in several stubs.
   - Add under `properties: uaa` in `stubs/cf/properties.yml`:
