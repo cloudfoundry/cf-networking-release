@@ -122,28 +122,37 @@ func getInstanceIP(appName string, instanceIndex int) string {
 }
 
 func curlFromApp(appName string, instanceIndex int, endpoint string, expectSuccess bool) string {
-	sshSession := cf.Cf(
-		"ssh", appName,
-		"-i", fmt.Sprintf("%d", instanceIndex),
-		"--skip-host-validation",
-		"-c", fmt.Sprintf("curl --connect-timeout 5 %s", endpoint),
-	)
+	var output string
 
-	if expectSuccess {
-		Expect(sshSession.Wait(2 * Timeout_Short)).To(gexec.Exit(0))
-	} else {
-		const CURL_EXIT_CODE_COULDNT_RESOLVE_HOST = 6
-		const CURL_EXIT_CODE_COULDNT_CONNECT = 7
-		const CURL_EXIT_CODE_OPERATION_TIMEDOUT = 28
+	tryIt := func() int {
+		sshSession := cf.Cf(
+			"ssh", appName,
+			"-i", fmt.Sprintf("%d", instanceIndex),
+			"--skip-host-validation",
+			"-c", fmt.Sprintf("curl --connect-timeout 5 %s", endpoint),
+		)
 		Expect(sshSession.Wait(2 * Timeout_Short)).To(gexec.Exit())
-		Expect([]int{
-			CURL_EXIT_CODE_COULDNT_RESOLVE_HOST,
-			CURL_EXIT_CODE_COULDNT_CONNECT,
-			CURL_EXIT_CODE_OPERATION_TIMEDOUT,
-		}).To(ContainElement(sshSession.ExitCode()))
+		output = string(sshSession.Out.Contents())
+		return sshSession.ExitCode()
 	}
 
-	return string(sshSession.Out.Contents())
+	if expectSuccess {
+		Eventually(tryIt).Should(Equal(0))
+	} else {
+		Eventually(func() bool {
+			code := tryIt()
+			const CURL_EXIT_CODE_COULDNT_RESOLVE_HOST = 6
+			const CURL_EXIT_CODE_COULDNT_CONNECT = 7
+			const CURL_EXIT_CODE_OPERATION_TIMEDOUT = 28
+			switch code {
+			case CURL_EXIT_CODE_COULDNT_RESOLVE_HOST, CURL_EXIT_CODE_COULDNT_CONNECT, CURL_EXIT_CODE_OPERATION_TIMEDOUT:
+				return true
+			default:
+				return false
+			}
+		}).Should(BeTrue())
+	}
+	return output
 }
 
 func getAppGuid(appName string) string {
