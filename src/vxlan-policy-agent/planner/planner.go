@@ -34,7 +34,7 @@ func getContainersMap(allContainers []garden.Container) (map[string][]models.Con
 			return nil, err
 		}
 		properties := info.Properties
-		groupID := properties["app_id"]
+		groupID := properties["network.app_id"]
 
 		containers[groupID] = append(containers[groupID],
 			models.Container{
@@ -57,6 +57,7 @@ func (p *VxlanPolicyPlanner) GetRules() ([]rules.Rule, error) {
 	if err != nil {
 		return nil, err
 	}
+	p.Logger.Info("got-containers", lager.Data{"containers": containers})
 
 	policies, err := p.PolicyClient.GetPolicies()
 	if err != nil {
@@ -114,5 +115,6 @@ func (p *VxlanPolicyPlanner) GetRules() ([]rules.Rule, error) {
 			}
 		}
 	}
+	p.Logger.Info("generated-rules", lager.Data{"rules": ruleset})
 	return ruleset, nil
 }
