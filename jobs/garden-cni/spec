@@ -3,6 +3,7 @@ name: garden-cni
 
 templates:
   adapter.json.erb: config/adapter.json
+  30-bridge.conf.erb: config/cni/30-bridge.conf
 
 packages:
   - runc-cni

@@ -172,6 +172,7 @@ We do not currently test this software on infrastructures other than BOSH-lite a
 0. Remove the following BOSH jobs:
   - `cni-flannel`
   - `netman-agent`
+  - `vxlan-policy-agent`
 0. Remove the following BOSH packages:
   - `flannel`
   - `flannel-watchdog`
@@ -188,6 +189,21 @@ We do not currently test this software on infrastructures other than BOSH-lite a
       cni_config_dir: /var/vcap/jobs/YOUR_JOB/config/cni  # your CNI config file goes in this directory
   ```
   Remove any lingering references to `flannel` or `cni-flannel` in the deployment manifest.
+
+## To deploy a local-only (no-op) CNI plugin
+As a baseline, you can deploy using only the basic [bridge CNI plugin](https://github.com/containernetworking/cni/blob/master/Documentation/bridge.md).
+
+This plugin will provide connectivity between containeres on the same Garden host (Diego cell)
+but will not provide a cross-host network.  However, it can be a useful baseline configuration for
+testing and development.
+
+```bash
+cd bosh-lite
+bosh target lite
+bosh update cloud-config cloud-config.yml
+bosh deployment local-only.yml
+bosh deploy
+```
 
 
 ## Development
