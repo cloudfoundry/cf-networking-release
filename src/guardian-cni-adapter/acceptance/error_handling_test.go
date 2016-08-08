@@ -7,7 +7,6 @@ import (
 	"math/rand"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 
 	. "github.com/onsi/ginkgo"
@@ -21,8 +20,6 @@ var _ = Describe("Guardian CNI adapter", func() {
 		command            *exec.Cmd
 		cniConfigDir       string
 		fakePid            int
-		fakeLogDir         string
-		adapterLogFilePath string
 		fakeConfigFilePath string
 		defaultConfig      map[string]string
 	)
@@ -36,12 +33,6 @@ var _ = Describe("Guardian CNI adapter", func() {
 
 	BeforeEach(func() {
 		var err error
-		adapterLogDir, err := ioutil.TempDir("", "adapter-log-dir")
-		Expect(err).NotTo(HaveOccurred())
-		Expect(os.RemoveAll(adapterLogDir)).To(Succeed()) // directory need not exist
-
-		adapterLogFilePath = filepath.Join(adapterLogDir, "some-container-handle.log")
-
 		configFile, err := ioutil.TempFile("", "adapter-config-")
 		Expect(err).NotTo(HaveOccurred())
 		Expect(configFile.Close()).To(Succeed())
@@ -51,7 +42,6 @@ var _ = Describe("Guardian CNI adapter", func() {
 			"cni_plugin_dir": "/some/cni/plugin/dir",
 			"cni_config_dir": "/some/cni/config/dir",
 			"bind_mount_dir": "/some/bind/mount/dir",
-			"log_dir":        adapterLogDir,
 		}
 		writeConfig(defaultConfig)
 
@@ -69,7 +59,6 @@ var _ = Describe("Guardian CNI adapter", func() {
 
 	AfterEach(func() {
 		Expect(os.RemoveAll(cniConfigDir)).To(Succeed())
-		Expect(os.RemoveAll(fakeLogDir)).To(Succeed())
 	})
 
 	Context("when inputs are invalid", func() {
@@ -82,7 +71,6 @@ var _ = Describe("Guardian CNI adapter", func() {
 				Eventually(session).Should(gexec.Exit(1))
 				Expect(session.Out.Contents()).To(BeEmpty())
 				By("checking that the error was logged to stderr")
-				Expect(session.Err.Contents()).To(ContainSubstring("json"))
 				Expect(session.Err.Contents()).To(ContainSubstring("{{{bad"))
 
 			})
@@ -121,25 +109,7 @@ var _ = Describe("Guardian CNI adapter", func() {
 
 				Eventually(session).Should(gexec.Exit(1))
 				Expect(session.Out.Contents()).To(BeEmpty())
-				Expect(session.Err.Contents()).To(ContainSubstring(`action: some-invalid-action is unrecognized`))
-
-				By("checking that the error was logged to a file")
-				Expect(ioutil.ReadFile(adapterLogFilePath)).To(ContainSubstring("action: some-invalid-action"))
-			})
-
-			Context("when the log file already exists", func() {
-				It("should append to it", func() {
-					Expect(os.MkdirAll(filepath.Dir(adapterLogFilePath), 0644)).To(Succeed())
-					Expect(ioutil.WriteFile(adapterLogFilePath, []byte("some existing logs\n"), 0644)).To(Succeed())
-
-					command.Args[1] = "--action=some-invalid-action"
-					session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-					Expect(err).NotTo(HaveOccurred())
-
-					Eventually(session).Should(gexec.Exit(1))
-					Expect(ioutil.ReadFile(adapterLogFilePath)).To(HavePrefix("some existing logs"))
-					Expect(ioutil.ReadFile(adapterLogFilePath)).To(ContainSubstring("action: some-invalid-action"))
-				})
+				Expect(session.Err.Contents()).To(ContainSubstring(`unrecognized action: some-invalid-action`))
 			})
 		})
 
@@ -194,11 +164,6 @@ var _ = Describe("Guardian CNI adapter", func() {
 				Expect(session.Out.Contents()).To(BeEmpty())
 				expectedErrorString := fmt.Sprintf("missing required flag '%s'", missingFlag)
 				Expect(session.Err.Contents()).To(ContainSubstring(expectedErrorString))
-
-				By("checking that the error was logged to a file")
-				if missingFlag != "handle" && missingFlag != "configFile" {
-					Expect(ioutil.ReadFile(adapterLogFilePath)).To(ContainSubstring(expectedErrorString))
-				}
 			},
 			Entry("action", "action"),
 			Entry("handle", "handle"),
@@ -237,7 +202,7 @@ var _ = Describe("Guardian CNI adapter", func() {
 
 					Eventually(session).Should(gexec.Exit(1))
 					Expect(session.Out.Contents()).To(BeEmpty())
-					Expect(session.Err.Contents()).To(ContainSubstring(`this is a OCI prestart/poststop hook.  see https://github.com/opencontainers/specs/blob/master/runtime-config.md`))
+					Expect(session.Err.Contents()).To(ContainSubstring(`this is used by garden-runc.  don't run it directly.`))
 				},
 				Entry("no args", []string{pathToAdapter}),
 				Entry("short help", []string{pathToAdapter, "-h"}),

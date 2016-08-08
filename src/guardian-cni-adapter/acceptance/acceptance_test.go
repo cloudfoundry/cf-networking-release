@@ -22,25 +22,6 @@ type fakePluginLogData struct {
 	Stdin string
 }
 
-func getConfig(index int) string {
-	return fmt.Sprintf(`
-{
-  "cniVersion": "0.1.0",
-  "name": "some-net-%d",
-  "type": "plugin-%d"
-}`, index, index)
-}
-
-func getSkipConfig(index int) string {
-	return fmt.Sprintf(`
-{
-  "cniVersion": "0.1.0",
-  "name": "some-net-%d",
-  "type": "plugin-%d",
-  "skip_without_network": true
-}`, index, index)
-}
-
 func expectedStdin(index int) string {
 	return fmt.Sprintf(`
 {
@@ -57,13 +38,12 @@ func expectedStdin(index int) string {
 }
 
 func writeConfig(index int, outDir string) error {
-	config := getConfig(index)
-	outpath := filepath.Join(outDir, fmt.Sprintf("%d-plugin-%d.conf", 10*index, index))
-	return ioutil.WriteFile(outpath, []byte(config), 0600)
-}
-
-func writeSkipConfig(index int, outDir string) error {
-	config := getSkipConfig(index)
+	config := fmt.Sprintf(`
+{
+  "cniVersion": "0.1.0",
+  "name": "some-net-%d",
+  "type": "plugin-%d"
+}`, index, index)
 	outpath := filepath.Join(outDir, fmt.Sprintf("%d-plugin-%d.conf", 10*index, index))
 	return ioutil.WriteFile(outpath, []byte(config), 0600)
 }
@@ -296,7 +276,7 @@ var _ = Describe("Guardian CNI adapter", func() {
 			var pluginCallInfo fakePluginLogData
 			Expect(json.Unmarshal(logFileContents, &pluginCallInfo)).To(Succeed())
 
-			Expect(pluginCallInfo.Stdin).To(MatchJSON(getConfig(i)))
+			Expect(pluginCallInfo.Stdin).To(MatchJSON(expectedStdin(i)))
 			Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_COMMAND", "DEL"))
 			Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_CONTAINERID", containerHandle))
 			Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_IFNAME", fmt.Sprintf("eth%d", i)))

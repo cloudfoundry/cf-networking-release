@@ -3,11 +3,12 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"code.cloudfoundry.org/lager"
 
 	"github.com/containernetworking/cni/libcni"
 	"github.com/containernetworking/cni/pkg/types"
@@ -16,6 +17,7 @@ import (
 type CNIController struct {
 	PluginDir string
 	ConfigDir string
+	Logger    lager.Logger
 
 	cniConfig      *libcni.CNIConfig
 	networkConfigs []*libcni.NetworkConfig
@@ -45,7 +47,7 @@ func (c *CNIController) ensureInitialized() error {
 				return fmt.Errorf("unable to load config from %s: %s", path, err)
 			}
 			c.networkConfigs = append(c.networkConfigs, conf)
-			log.Printf("loaded config %+v\n%s\n", conf.Network, string(conf.Bytes))
+			c.Logger.Info("loaded-config", lager.Data{"network": conf.Network, "raw": string(conf.Bytes)})
 			return nil
 		})
 		if err != nil {
@@ -117,15 +119,13 @@ func (c *CNIController) Up(namespacePath, handle, spec string) (*types.Result, e
 			return nil, fmt.Errorf("adding garden network spec to CNI config: %s", err)
 		}
 
-		if enhancedNetConfig != nil {
-			result, err = c.cniConfig.AddNetwork(enhancedNetConfig, runtimeConfig)
-			if err != nil {
-				return nil, fmt.Errorf("add network failed: %s", err)
-			}
-
-			log.Printf("up result for name=%s, type=%s: \n%s\n", networkConfig.Network.Name, networkConfig.Network.Type, result.String())
+		result, err = c.cniConfig.AddNetwork(enhancedNetConfig, runtimeConfig)
+		if err != nil {
+			return nil, fmt.Errorf("add network failed: %s", err)
 		}
+		c.Logger.Info("up-result", lager.Data{"name": networkConfig.Network.Name, "type": networkConfig.Network.Type, "result": result.String()})
 	}
+	c.Logger.Info("up-complete", lager.Data{"numConfigs": len(c.networkConfigs)})
 
 	return result, nil
 }
@@ -148,15 +148,14 @@ func (c *CNIController) Down(namespacePath, handle, spec string) error {
 			return fmt.Errorf("adding garden network spec to CNI config: %s", err)
 		}
 
-		if enhancedNetConfig != nil {
-			err = c.cniConfig.DelNetwork(networkConfig, runtimeConfig)
-			if err != nil {
-				return fmt.Errorf("del network failed: %s", err)
-			}
-
-			log.Printf("down complete for name=%s, type=%s\n", networkConfig.Network.Name, networkConfig.Network.Type)
+		err = c.cniConfig.DelNetwork(enhancedNetConfig, runtimeConfig)
+		if err != nil {
+			return fmt.Errorf("del network failed: %s", err)
 		}
+
+		c.Logger.Info("down-result", lager.Data{"name": networkConfig.Network.Name, "type": networkConfig.Network.Type})
 	}
+	c.Logger.Info("down-complete", lager.Data{"numConfigs": len(c.networkConfigs)})
 
 	return nil
 }

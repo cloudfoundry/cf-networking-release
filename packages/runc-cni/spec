@@ -6,6 +6,7 @@ dependencies:
 
 files:
   - github.com/containernetworking/cni/scripts/*
+  - code.cloudfoundry.org/lager/*.go # gosub
   - github.com/containernetworking/cni/libcni/*.go # gosub
   - github.com/containernetworking/cni/pkg/invoke/*.go # gosub
   - github.com/containernetworking/cni/pkg/ip/*.go # gosub

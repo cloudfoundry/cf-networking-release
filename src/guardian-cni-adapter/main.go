@@ -4,24 +4,21 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io"
+	"guardian-cni-adapter/controller"
 	"io/ioutil"
 	"lib/marshal"
-	"log"
 	"net"
 	"net/http"
 	"netman-agent/client"
 	"os"
-	"path/filepath"
 
-	"guardian-cni-adapter/controller"
+	"code.cloudfoundry.org/lager"
 )
 
 type Config struct {
 	CniPluginDir string `json:"cni_plugin_dir"`
 	CniConfigDir string `json:"cni_config_dir"`
 	BindMountDir string `json:"bind_mount_dir"`
-	LogDir       string `json:"log_dir"`
 	NetmanURL    string `json:"netman_url"`
 }
 
@@ -32,25 +29,6 @@ var (
 	encodedProperties string
 )
 
-func setupLogging(logDir, handle string) error {
-	if logDir == "" {
-		return nil
-	}
-
-	if err := os.MkdirAll(logDir, 0644); err != nil {
-		return fmt.Errorf("unable to create log dir %q: %s", logDir, err)
-	}
-
-	logFilePath := filepath.Join(logDir, handle+".log")
-	logFile, err := os.OpenFile(logFilePath, os.O_APPEND|os.O_RDWR|os.O_CREATE, 0644)
-	if err != nil {
-		return fmt.Errorf("unable to create log file %q: %s", logFilePath, err)
-	}
-	log.SetOutput(io.MultiWriter(os.Stderr, logFile))
-	log.Printf("started logging to %s\n", logFilePath)
-	return nil
-}
-
 func parseConfig(configFilePath string) error {
 	configBytes, err := ioutil.ReadFile(configFilePath)
 	if err != nil {
@@ -60,10 +38,6 @@ func parseConfig(configFilePath string) error {
 	err = json.Unmarshal(configBytes, &config)
 	if err != nil {
 		return fmt.Errorf("parsing config (%s): %s", configFilePath, err)
-	}
-
-	if config.LogDir == "" {
-		return fmt.Errorf("missing required config 'log_dir'")
 	}
 
 	if config.CniPluginDir == "" {
@@ -112,10 +86,6 @@ func parseArgs(allArgs []string) error {
 		return err
 	}
 
-	if err = setupLogging(config.LogDir, handle); err != nil {
-		return err
-	}
-
 	if action == "" {
 		return fmt.Errorf("missing required flag 'action'")
 	}
@@ -123,19 +93,28 @@ func parseArgs(allArgs []string) error {
 	return nil
 }
 
+func die(logger lager.Logger, action string, err error, data ...lager.Data) {
+	logger.Error(action, err, data...)
+	os.Exit(1)
+}
+
 func main() {
+	logger := lager.NewLogger("guardian-cni-adapter")
+	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.INFO))
+
 	if len(os.Args) == 1 || os.Args[1] == "-h" || os.Args[1] == "--help" {
-		log.Fatalf("this is a OCI prestart/poststop hook.  see https://github.com/opencontainers/specs/blob/master/runtime-config.md")
+		fmt.Fprintf(os.Stderr, "this is used by garden-runc.  don't run it directly.")
+		os.Exit(1)
 	}
 
 	inputBytes, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {
-		log.Fatalf("unable to read stdin: %s", err)
+		die(logger, "read-stdin", err)
 	}
 
 	err = parseArgs(os.Args)
 	if err != nil {
-		log.Fatalf("arg parsing error: %s", err)
+		die(logger, "parse-args", err)
 	}
 
 	var containerState struct {
@@ -144,13 +123,14 @@ func main() {
 	if action == "up" {
 		err = json.Unmarshal(inputBytes, &containerState)
 		if err != nil {
-			log.Fatalf("input is not valid json: %s: %q", err, string(inputBytes))
+			die(logger, "reading-stdin", err, lager.Data{"stdin": string(inputBytes)})
 		}
 	}
 
 	cniController := &controller.CNIController{
 		PluginDir: config.CniPluginDir,
 		ConfigDir: config.CniConfigDir,
+		Logger:    logger,
 	}
 
 	mounter := &controller.Mounter{}
@@ -169,23 +149,25 @@ func main() {
 		NetmanClient:  netmanClient,
 	}
 
+	logger.Info("action", lager.Data{"action": action})
+
 	switch action {
 	case "up":
 		properties, err := manager.Up(containerState.Pid, handle, encodedProperties)
 		if err != nil {
-			log.Fatalf("up failed: %s", err)
+			die(logger, "manager-up", err)
 		}
 		err = json.NewEncoder(os.Stdout).Encode(map[string]interface{}{"properties": properties})
 		if err != nil {
-			log.Fatalf("encoding properties failed: %s", err)
+			die(logger, "writing-properties", err)
 		}
 	case "down":
 		err = manager.Down(handle, encodedProperties)
 		if err != nil {
-			log.Fatalf("down failed: %s", err)
+			die(logger, "manager-down", err)
 		}
 	default:
-		log.Fatalf("action: %s is unrecognized", action)
+		die(logger, "unknown-action", fmt.Errorf("unrecognized action: %s", action))
 	}
 }
 
