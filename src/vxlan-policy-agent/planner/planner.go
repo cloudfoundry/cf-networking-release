@@ -2,9 +2,9 @@ package planner
 
 import (
 	"fmt"
-	"netman-agent/models"
-	"netman-agent/policy_client"
-	"netman-agent/rules"
+	"lib/models"
+	"lib/policy_client"
+	"lib/rules"
 
 	"code.cloudfoundry.org/garden"
 	"code.cloudfoundry.org/lager"

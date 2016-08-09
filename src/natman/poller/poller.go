@@ -1,7 +1,7 @@
 package poller
 
 import (
-	"netman-agent/rules"
+	"lib/rules"
 	"os"
 	"time"
 

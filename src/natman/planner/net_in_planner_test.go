@@ -1,8 +1,8 @@
 package planner_test
 
 import (
+	"lib/rules"
 	"natman/planner"
-	"netman-agent/rules"
 
 	"code.cloudfoundry.org/garden"
 	"code.cloudfoundry.org/garden/gardenfakes"

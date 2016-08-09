@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"flag"
 	"io/ioutil"
+	"lib/rules"
 	"log"
 	"natman/config"
 	"natman/planner"
 	"natman/poller"
-	"netman-agent/rules"
 	"os"
 	"time"
 

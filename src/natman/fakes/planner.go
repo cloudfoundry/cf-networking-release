@@ -2,7 +2,7 @@
 package fakes
 
 import (
-	"netman-agent/rules"
+	"lib/rules"
 	"sync"
 )
 

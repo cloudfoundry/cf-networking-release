@@ -20,3 +20,4 @@ dev_releases
 .vagrant/
 /pkg
 /bin
+src/example-apps/proxy/proxy

@@ -27,8 +27,6 @@ properties:
     etcd_endpoints:
       - http://netman-db.service.cf.internal:4001
   netman-cf-acceptance: (( merge ))
-  netman-agent:
-    policy_server_url: http://policy-server.service.cf.internal:4002
   policy-server:
     <<: (( merge ))
     database_password: (( merge ))
@@ -156,8 +154,6 @@ jobs:
     release: netman
   - name: cni-flannel
     release: netman
-  - name: netman-agent
-    release: netman
   - name: netmon
     release: netman
   - name: natman
@@ -180,8 +176,6 @@ jobs:
   - name: garden-cni
     release: netman
   - name: cni-flannel
-    release: netman
-  - name: netman-agent
     release: netman
   - name: netmon
     release: netman

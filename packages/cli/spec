@@ -12,4 +12,4 @@ files:
   - github.com/cloudfoundry/cli/plugin/*.go # gosub
   - github.com/cloudfoundry/cli/plugin/models/*.go # gosub
   - lib/marshal/*.go # gosub
-  - netman-agent/models/*.go # gosub
+  - lib/models/*.go # gosub

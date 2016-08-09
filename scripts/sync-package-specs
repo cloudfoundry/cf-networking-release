@@ -42,9 +42,6 @@ function sync_package() {
 sync_package cli \
   -app cli-plugin &
 
-sync_package netman-agent \
-  -app netman-agent/cmd/netman-agent &
-
 sync_package vxlan-policy-agent \
   -app vxlan-policy-agent/cmd/vxlan-policy-agent &
 

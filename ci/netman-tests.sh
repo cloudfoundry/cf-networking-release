@@ -10,7 +10,6 @@ declare -a packages=(
   "src/policy-server"
   "src/flannel-watchdog"
   "src/guardian-cni-adapter"
-  "src/netman-agent"
   "src/netmon"
   "src/cli-plugin"
   )

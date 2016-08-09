@@ -2,15 +2,15 @@ package poller_test
 
 import (
 	"errors"
+	"lib/rules"
 	"natman/fakes"
 	"natman/poller"
-	"netman-agent/rules"
 	"os"
 	"time"
 
 	"code.cloudfoundry.org/lager/lagertest"
 
-	common_fakes "netman-agent/fakes"
+	common_fakes "lib/fakes"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

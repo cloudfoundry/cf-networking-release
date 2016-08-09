@@ -1,7 +1,7 @@
 package planner
 
 import (
-	"netman-agent/rules"
+	"lib/rules"
 
 	"code.cloudfoundry.org/garden"
 )

@@ -2,9 +2,9 @@ package planner_test
 
 import (
 	"encoding/json"
+	"lib/rules"
 	"natman/planner"
 	"net"
-	"netman-agent/rules"
 
 	"code.cloudfoundry.org/garden"
 	"code.cloudfoundry.org/garden/gardenfakes"

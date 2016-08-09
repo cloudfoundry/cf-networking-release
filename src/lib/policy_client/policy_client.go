@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"lib/marshal"
+	"lib/models"
 	"net/http"
-	"netman-agent/models"
 
 	"code.cloudfoundry.org/lager"
 )

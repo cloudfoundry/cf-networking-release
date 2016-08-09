@@ -4,19 +4,19 @@ import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
+	"lib/models"
+	"lib/policy_client"
 	"net/http"
-	"netman-agent/models"
-	"netman-agent/policy_client"
 	"policy-server/fakes"
 	"strings"
 
 	lfakes "lib/fakes"
 	"lib/testsupport"
 
+	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
-	"code.cloudfoundry.org/lager/lagertest"
 )
 
 var _ = Describe("PolicyClient", func() {

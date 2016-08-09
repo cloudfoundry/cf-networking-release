@@ -191,45 +191,6 @@ var _ = Describe("Guardian CNI adapter", func() {
 		}
 	})
 
-	Context("when a netman url is not provided", func() {
-		BeforeEach(func() {
-			configFilePath := upCommand.Args[2]
-			config := map[string]string{
-				"cni_plugin_dir": cniPluginDir,
-				"cni_config_dir": cniConfigDir,
-				"bind_mount_dir": bindMountRoot,
-				"log_dir":        adapterLogDir,
-				"netman_url":     "",
-			}
-			configBytes, err := json.Marshal(config)
-			Expect(err).NotTo(HaveOccurred())
-			err = ioutil.WriteFile(configFilePath, configBytes, 0600)
-			Expect(err).NotTo(HaveOccurred())
-		})
-
-		It("should succeed but not POST results to the netman agent", func() {
-			By("calling up")
-			upSession, err := gexec.Start(upCommand, GinkgoWriter, GinkgoWriter)
-			Expect(err).NotTo(HaveOccurred())
-			Eventually(upSession, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
-			Expect(upSession.Out.Contents()).To(MatchJSON(`{ "properties": {"network.external-networker.container-ip": "169.254.1.2" } }`))
-
-			By("checking that the netman-agent server was not called")
-			Expect(netmanAgentReceivedMethod).To(BeEmpty())
-			Expect(netmanAgentReceivedData).To(BeEmpty())
-
-			By("calling down")
-			downSession, err := gexec.Start(downCommand, GinkgoWriter, GinkgoWriter)
-			Expect(err).NotTo(HaveOccurred())
-			Eventually(downSession, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
-
-			By("checking that the netman-agent server was not called")
-			Expect(netmanAgentReceivedMethod).To(BeEmpty())
-			Expect(netmanAgentReceivedData).To(BeEmpty())
-		})
-
-	})
-
 	It("should call CNI ADD and DEL", func() {
 		By("calling up")
 		upSession, err := gexec.Start(upCommand, GinkgoWriter, GinkgoWriter)
@@ -256,14 +217,6 @@ var _ = Describe("Guardian CNI adapter", func() {
 		By("checking that the fake process's network namespace has been bind-mounted into the filesystem")
 		Expect(sameFile(expectedNetNSPath, fmt.Sprintf("/proc/%d/ns/net", fakePid))).To(BeTrue())
 
-		By("checking that the netman-agent received the CNI ADD result")
-		Expect(netmanAgentReceivedMethod).To(Equal("POST"))
-		Expect(netmanAgentReceivedData).To(MatchJSON(fmt.Sprintf(`{
-					"container_id": %q,
-					"group_id": "some-group-id",
-					"ip": "169.254.1.2"
-				}`, containerHandle)))
-
 		By("calling down")
 		downSession, err := gexec.Start(downCommand, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
@@ -287,11 +240,5 @@ var _ = Describe("Guardian CNI adapter", func() {
 
 		By("checking that the bind-mounted namespace has been removed")
 		Expect(expectedNetNSPath).NotTo(BeAnExistingFile())
-
-		By("checking that the netman-agent received the CNI DEL result")
-		Expect(netmanAgentReceivedMethod).To(Equal("DELETE"))
-		Expect(netmanAgentReceivedData).To(MatchJSON(fmt.Sprintf(`{
-					"container_id": %q
-				}`, containerHandle)))
 	})
 })

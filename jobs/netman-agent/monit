@@ -1,5 +1,0 @@
-check process netman-agent
-  with pidfile /var/vcap/sys/run/netman-agent/netman-agent.pid
-  start program "/var/vcap/jobs/netman-agent/bin/netman-agent_ctl start"
-  stop program "/var/vcap/jobs/netman-agent/bin/netman-agent_ctl stop"
-  group vcap

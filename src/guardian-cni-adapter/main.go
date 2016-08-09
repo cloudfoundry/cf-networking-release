@@ -6,10 +6,7 @@ import (
 	"fmt"
 	"guardian-cni-adapter/controller"
 	"io/ioutil"
-	"lib/marshal"
 	"net"
-	"net/http"
-	"netman-agent/client"
 	"os"
 
 	"code.cloudfoundry.org/lager"
@@ -135,12 +132,7 @@ func main() {
 
 	mounter := &controller.Mounter{}
 
-	var netmanClient netmanClient
-	if config.NetmanURL != "" {
-		netmanClient = client.New(http.DefaultClient, config.NetmanURL, marshal.MarshalFunc(json.Marshal))
-	} else {
-		netmanClient = &NopNetmanClient{}
-	}
+	netmanClient := &NopNetmanClient{}
 
 	manager := &controller.Manager{
 		CNIController: cniController,

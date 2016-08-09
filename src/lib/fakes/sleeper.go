@@ -4,8 +4,6 @@ package fakes
 import (
 	"sync"
 	"time"
-
-	_ "github.com/lib/pq"
 )
 
 type Sleeper struct {

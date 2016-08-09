@@ -171,12 +171,10 @@ We do not currently test this software on infrastructures other than BOSH-lite a
 ## To replace flannel with your own CNI plugin
 0. Remove the following BOSH jobs:
   - `cni-flannel`
-  - `netman-agent`
   - `vxlan-policy-agent`
 0. Remove the following BOSH packages:
   - `flannel`
   - `flannel-watchdog`
-  - `netman-agent`
 0. Add in all packages and jobs required by your CNI plugin.  At a minimum, you must provide a CNI binary program and a CNI config file.
   - For more info on **bosh packaging scripts** read [this](http://bosh.io/docs/packages.html#create-a-packaging-script).
   - For more info on **bosh jobs** read [this](http://bosh.io/docs/jobs.html).

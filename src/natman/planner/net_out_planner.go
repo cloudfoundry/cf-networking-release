@@ -2,7 +2,7 @@ package planner
 
 import (
 	"encoding/json"
-	"netman-agent/rules"
+	"lib/rules"
 
 	"code.cloudfoundry.org/garden"
 	"code.cloudfoundry.org/lager"

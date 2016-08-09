@@ -2,7 +2,7 @@ package planner
 
 import (
 	"fmt"
-	"netman-agent/rules"
+	"lib/rules"
 
 	"code.cloudfoundry.org/lager"
 )
