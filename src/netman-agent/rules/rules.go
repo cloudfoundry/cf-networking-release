@@ -169,9 +169,21 @@ func NewNetOutWithPortsRule(containerIP string, startIP string, endIP string, st
 	}
 }
 
+func NewNetOutRelatedEstablishedRule(subnet string) GenericRule {
+	return GenericRule{
+		Properties: []string{
+			"-s", subnet,
+			"!", "-d", subnet,
+			"-m", "state", "--state", "RELATED,ESTABLISHED",
+			"--jump", "RETURN",
+		},
+	}
+}
+
 func NewNetOutDefaultRejectRule(subnet string) GenericRule {
 	return GenericRule{
 		Properties: []string{
+			"-s", subnet,
 			"!", "-d", subnet,
 			"--jump", "REJECT",
 			"--reject-with", "icmp-port-unreachable",

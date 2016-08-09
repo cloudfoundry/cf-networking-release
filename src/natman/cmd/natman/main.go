@@ -56,6 +56,7 @@ func main() {
 	netOutPlanner := &planner.NetOutPlanner{
 		GardenClient:   gardenClient,
 		OverlayNetwork: conf.OverlayNetwork,
+		Logger:         logger.Session("netout-planner"),
 	}
 
 	ipt, err := iptables.New()
@@ -83,7 +84,7 @@ func main() {
 	}
 
 	gardenNetInPoller := &poller.Poller{
-		Logger:       logger,
+		Logger:       logger.Session("netin-poller"),
 		PollInterval: pollInterval,
 		Planner:      netInPlanner,
 		Enforcer:     ruleEnforcer,
@@ -91,7 +92,7 @@ func main() {
 	}
 
 	gardenNetOutPoller := &poller.Poller{
-		Logger:       logger,
+		Logger:       logger.Session("netout-poller"),
 		PollInterval: pollInterval,
 		Planner:      netOutPlanner,
 		Enforcer:     ruleEnforcer,

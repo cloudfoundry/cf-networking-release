@@ -5,10 +5,10 @@ import (
 	"netman-agent/fakes"
 	"netman-agent/rules"
 
+	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
-	"code.cloudfoundry.org/lager/lagertest"
 )
 
 var _ = Describe("Rules", func() {
@@ -41,7 +41,7 @@ var _ = Describe("Rules", func() {
 				Expect(table).To(Equal("some-table"))
 				Expect(chain).To(Equal("some-chain"))
 				Expect(ruleSpec).To(Equal([]string{"-j", "some-other-chain"}))
-				Expect(logger).To(gbytes.Say(`enforce-rule.*{"chain":"some-chain","properties":\["-j","some-other-chain"\],"table":"some-table"}`))
+				Expect(logger).To(gbytes.Say(`enforce-rule.*{"chain":"some-chain","properties":"\[-j some-other-chain\]","table":"some-table"}`))
 			})
 
 			Context("when theres an error appending the rule", func() {

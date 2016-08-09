@@ -9,10 +9,10 @@ import (
 	"netman-agent/fakes"
 	"netman-agent/handlers"
 
+	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
-	"code.cloudfoundry.org/lager/lagertest"
 )
 
 var _ = Describe("CNI Result", func() {

@@ -5,11 +5,13 @@ import (
 	"netman-agent/rules"
 
 	"code.cloudfoundry.org/garden"
+	"code.cloudfoundry.org/lager"
 )
 
 type NetOutPlanner struct {
 	GardenClient   garden.Client
 	OverlayNetwork string
+	Logger         lager.Logger
 }
 
 func (netOutPlanner *NetOutPlanner) GetRules() ([]rules.Rule, error) {
@@ -23,12 +25,18 @@ func (netOutPlanner *NetOutPlanner) GetRules() ([]rules.Rule, error) {
 	for _, container := range allContainers {
 		info, err := container.Info()
 		if err != nil {
+			netOutPlanner.Logger.Error("container-info", err, lager.Data{"info": info})
 			return nil, err
 		}
 
 		var netOuts []garden.NetOutRule
-		err = json.Unmarshal([]byte(info.Properties["network.external-networker.net-out"]), &netOuts)
+		netoutJSON, ok := info.Properties["network.external-networker.net-out"]
+		if !ok || netoutJSON == "" {
+			continue
+		}
+		err = json.Unmarshal([]byte(netoutJSON), &netOuts)
 		if err != nil {
+			netOutPlanner.Logger.Error("netout-unmarshal-json", err, lager.Data{"properties": info.Properties["network.external-networker.net-out"]})
 			return nil, err
 		}
 
@@ -58,6 +66,7 @@ func (netOutPlanner *NetOutPlanner) GetRules() ([]rules.Rule, error) {
 		}
 	}
 
+	specs = append(specs, rules.NewNetOutRelatedEstablishedRule(netOutPlanner.OverlayNetwork))
 	specs = append(specs, rules.NewNetOutDefaultRejectRule(netOutPlanner.OverlayNetwork))
 
 	return specs, nil
