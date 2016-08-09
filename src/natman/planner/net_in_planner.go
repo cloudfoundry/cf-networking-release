@@ -24,13 +24,13 @@ func (netInPlanner *NetInPlanner) GetRules() ([]rules.Rule, error) {
 			return nil, err
 		}
 		for _, mapping := range info.MappedPorts {
-			specs = append(specs,
-				rules.NewNetInRule(
-					info.ContainerIP,
-					int(mapping.ContainerPort),
-					info.ExternalIP,
-					int(mapping.HostPort),
-					info.Properties["app_id"]))
+			specs = append(specs, rules.NewNetInRule(
+				info.ContainerIP,
+				int(mapping.ContainerPort),
+				info.ExternalIP,
+				int(mapping.HostPort),
+				info.Properties["network.app_id"]),
+			)
 		}
 	}
 	return specs, nil

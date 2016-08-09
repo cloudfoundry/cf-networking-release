@@ -26,7 +26,7 @@ func (r GenericRule) Enforce(table, chain string, iptables IPTables, logger lage
 	logger.Info("enforce-rule", lager.Data{
 		"table":      table,
 		"chain":      chain,
-		"properties": r.Properties,
+		"properties": fmt.Sprintf("%s", r.Properties),
 	})
 
 	return nil
@@ -39,7 +39,7 @@ func NewRemoteAllowRule(vni int, destinationIP, protocol string, port int, tag s
 			"-p", protocol,
 			"--dport", strconv.Itoa(port),
 			"-m", "mark", "--mark", fmt.Sprintf("0x%s", tag),
-			"-j", "ACCEPT",
+			"--jump", "ACCEPT",
 			"-m", "comment", "--comment", fmt.Sprintf("src:%s dst:%s", sourceAppGUID, destinationAppGUID),
 		},
 	}
@@ -49,11 +49,11 @@ func NewLocalAllowRule(sourceIP, destinationIP, protocol string, port int, sourc
 	return GenericRule{
 		Properties: []string{
 			"-i", "cni-flannel0",
-			"-s", sourceIP,
+			"--source", sourceIP,
 			"-d", destinationIP,
 			"-p", protocol,
 			"--dport", strconv.Itoa(port),
-			"-j", "ACCEPT",
+			"--jump", "ACCEPT",
 			"-m", "comment", "--comment", fmt.Sprintf("src:%s dst:%s", sourceAppGUID, destinationAppGUID),
 		},
 	}
@@ -62,8 +62,8 @@ func NewLocalAllowRule(sourceIP, destinationIP, protocol string, port int, sourc
 func NewGBPTagRule(sourceIP, tag, appGUID string) GenericRule {
 	return GenericRule{
 		Properties: []string{
-			"-s", sourceIP,
-			"-j", "MARK", "--set-xmark", fmt.Sprintf("0x%s", tag),
+			"--source", sourceIP,
+			"--jump", "MARK", "--set-xmark", fmt.Sprintf("0x%s", tag),
 			"-m", "comment", "--comment", fmt.Sprintf("src:%s", appGUID),
 		},
 	}
@@ -72,9 +72,9 @@ func NewGBPTagRule(sourceIP, tag, appGUID string) GenericRule {
 func NewDefaultEgressRule(localSubnet, overlayNetwork string) GenericRule {
 	return GenericRule{
 		Properties: []string{
-			"-s", localSubnet,
+			"--source", localSubnet,
 			"!", "-d", overlayNetwork,
-			"-j", "MASQUERADE",
+			"--jump", "MASQUERADE",
 		},
 	}
 }
@@ -83,7 +83,7 @@ func NewLogRule(guardConditions []string, name string) GenericRule {
 	properties := append(
 		guardConditions,
 		"-m", "limit", "--limit", "2/min",
-		"-j", "LOG",
+		"--jump", "LOG",
 		"--log-prefix", name,
 	)
 	return GenericRule{Properties: properties}
@@ -94,7 +94,7 @@ func NewAcceptExistingLocalRule() GenericRule {
 		Properties: []string{
 			"-i", "cni-flannel0",
 			"-m", "state", "--state", "ESTABLISHED,RELATED",
-			"-j", "ACCEPT",
+			"--jump", "ACCEPT",
 		},
 	}
 }
@@ -103,9 +103,9 @@ func NewDefaultDenyLocalRule(localSubnet string) GenericRule {
 	return GenericRule{
 		Properties: []string{
 			"-i", "cni-flannel0",
-			"-s", localSubnet,
+			"--source", localSubnet,
 			"-d", localSubnet,
-			"-j", "REJECT",
+			"--jump", "REJECT",
 		},
 	}
 }
@@ -115,7 +115,7 @@ func NewAcceptExistingRemoteRule(vni int) GenericRule {
 		Properties: []string{
 			"-i", fmt.Sprintf("flannel.%d", vni),
 			"-m", "state", "--state", "ESTABLISHED,RELATED",
-			"-j", "ACCEPT",
+			"--jump", "ACCEPT",
 		},
 	}
 }
@@ -124,7 +124,7 @@ func NewDefaultDenyRemoteRule(vni int) GenericRule {
 	return GenericRule{
 		Properties: []string{
 			"-i", fmt.Sprintf("flannel.%d", vni),
-			"-j", "REJECT",
+			"--jump", "REJECT",
 		},
 	}
 }
@@ -135,9 +135,46 @@ func NewNetInRule(containerIP string, containerPort int, hostIP string, hostPort
 			"-d", hostIP,
 			"-p", "tcp",
 			"-m", "tcp", "--dport", fmt.Sprintf("%d", hostPort),
-			"-j", "DNAT",
+			"--jump", "DNAT",
 			"--to-destination", fmt.Sprintf("%s:%d", containerIP, containerPort),
 			"-m", "comment", "--comment", fmt.Sprintf("dst:%s", groupID),
+		},
+	}
+}
+
+func NewNetOutRule(containerIP string, startIP string, endIP string, groupID string) GenericRule {
+	return GenericRule{
+		Properties: []string{
+			"--source", containerIP,
+			"-m", "iprange",
+			"--dst-range", fmt.Sprintf("%s-%s", startIP, endIP),
+			"--jump", "RETURN",
+			"-m", "comment", "--comment", fmt.Sprintf("dst:%s", groupID),
+		},
+	}
+}
+
+func NewNetOutWithPortsRule(containerIP string, startIP string, endIP string, startPort int, endPort int, protocol string, groupID string) GenericRule {
+	return GenericRule{
+		Properties: []string{
+			"--source", containerIP,
+			"-m", "iprange",
+			"-p", protocol,
+			"--dst-range", fmt.Sprintf("%s-%s", startIP, endIP),
+			"-m", protocol,
+			"--destination-port", fmt.Sprintf("%d:%d", startPort, endPort),
+			"--jump", "RETURN",
+			"-m", "comment", "--comment", fmt.Sprintf("dst:%s", groupID),
+		},
+	}
+}
+
+func NewNetOutDefaultRejectRule(subnet string) GenericRule {
+	return GenericRule{
+		Properties: []string{
+			"!", "-d", subnet,
+			"--jump", "REJECT",
+			"--reject-with", "icmp-port-unreachable",
 		},
 	}
 }

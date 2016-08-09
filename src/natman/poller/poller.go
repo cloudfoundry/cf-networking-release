@@ -8,6 +8,7 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
+//go:generate counterfeiter -o ../fakes/planner.go --fake-name Planner . planner
 type planner interface {
 	GetRules() ([]rules.Rule, error)
 }
@@ -16,7 +17,9 @@ type Poller struct {
 	Logger       lager.Logger
 	PollInterval time.Duration
 	Planner      planner
-	Enforcer     rules.RuleEnforcer
+
+	Chain    rules.Chain
+	Enforcer rules.RuleEnforcer
 }
 
 func (m *Poller) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
@@ -32,7 +35,7 @@ func (m *Poller) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 				continue
 			}
 
-			err = m.Enforcer.Enforce("nat", "PREROUTING", "natman--netin-", ruleset)
+			err = m.Enforcer.EnforceOnChain(m.Chain, ruleset)
 			if err != nil {
 				m.Logger.Error("enforce", err)
 				continue

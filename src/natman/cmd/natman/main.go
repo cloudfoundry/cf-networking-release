@@ -48,8 +48,14 @@ func main() {
 	}
 
 	gardenClient := client.New(connection.New(conf.GardenProtocol, conf.GardenAddress))
-	planner := &planner.NetInPlanner{
+
+	netInPlanner := &planner.NetInPlanner{
 		GardenClient: gardenClient,
+	}
+
+	netOutPlanner := &planner.NetOutPlanner{
+		GardenClient:   gardenClient,
+		OverlayNetwork: conf.OverlayNetwork,
 	}
 
 	ipt, err := iptables.New()
@@ -64,14 +70,37 @@ func main() {
 		ipt,
 	)
 
-	gardenPoller := &poller.Poller{
+	netInChain := rules.Chain{
+		Table:       "nat",
+		ParentChain: "PREROUTING",
+		Prefix:      "natman--netin-",
+	}
+
+	netOutChain := rules.Chain{
+		Table:       "filter",
+		ParentChain: "FORWARD",
+		Prefix:      "natman--netout-",
+	}
+
+	gardenNetInPoller := &poller.Poller{
 		Logger:       logger,
 		PollInterval: pollInterval,
-		Planner:      planner,
+		Planner:      netInPlanner,
 		Enforcer:     ruleEnforcer,
+		Chain:        netInChain,
 	}
+
+	gardenNetOutPoller := &poller.Poller{
+		Logger:       logger,
+		PollInterval: pollInterval,
+		Planner:      netOutPlanner,
+		Enforcer:     ruleEnforcer,
+		Chain:        netOutChain,
+	}
+
 	members := grouper.Members{
-		{"garden_poller", gardenPoller},
+		{"garden_net_in_poller", gardenNetInPoller},
+		{"garden_net_out_poller", gardenNetOutPoller},
 	}
 
 	monitor := ifrit.Invoke(sigmon.New(grouper.NewOrdered(os.Interrupt, members)))

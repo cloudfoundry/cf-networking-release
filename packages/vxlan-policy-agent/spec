@@ -19,10 +19,10 @@ files:
   - github.com/tedsuo/rata/*.go # gosub
   - lib/flannel/*.go # gosub
   - lib/marshal/*.go # gosub
+  - natman/poller/*.go # gosub
   - netman-agent/models/*.go # gosub
   - netman-agent/policy_client/*.go # gosub
   - netman-agent/rules/*.go # gosub
   - vxlan-policy-agent/cmd/vxlan-policy-agent/*.go # gosub
   - vxlan-policy-agent/config/*.go # gosub
   - vxlan-policy-agent/planner/*.go # gosub
-  - vxlan-policy-agent/poller/*.go # gosub

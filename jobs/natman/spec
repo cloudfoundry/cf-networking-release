@@ -20,3 +20,7 @@ properties:
   natman.poll_interval:
     description: "Update rules on this interval, in seconds"
     default: 5
+
+  natman.overlay_network:
+    description: "IP range used by the container network"
+    default: 10.255.0.0/16

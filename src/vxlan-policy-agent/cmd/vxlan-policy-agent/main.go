@@ -13,7 +13,8 @@ import (
 	"time"
 	"vxlan-policy-agent/config"
 	"vxlan-policy-agent/planner"
-	"vxlan-policy-agent/poller"
+
+	"natman/poller"
 
 	"code.cloudfoundry.org/garden/client"
 	"code.cloudfoundry.org/garden/client/connection"
