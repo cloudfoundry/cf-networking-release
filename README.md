@@ -191,7 +191,7 @@ We do not currently test this software on infrastructures other than BOSH-lite a
 ## To deploy a local-only (no-op) CNI plugin
 As a baseline, you can deploy using only the basic [bridge CNI plugin](https://github.com/containernetworking/cni/blob/master/Documentation/bridge.md).
 
-This plugin will provide connectivity between containeres on the same Garden host (Diego cell)
+This plugin will provide connectivity between containers on the same Garden host (Diego cell)
 but will not provide a cross-host network.  However, it can be a useful baseline configuration for
 testing and development.
 
@@ -203,6 +203,13 @@ bosh deployment local-only.yml
 bosh deploy
 ```
 
+## To deploy diego with CNI but without cross-host container networking
+For generating a cloudfoundry-diego deployment without container to container connectivity, but using the CNI bridge plugin for NAT'ed connectivity.
+
+```bash
+CNI_BRIDGE=true ./scripts/generate-deployment-manifest
+bosh deploy
+```
 
 ## Development
 

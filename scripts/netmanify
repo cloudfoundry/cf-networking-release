@@ -9,4 +9,10 @@ absolute_path() {
 scripts_path=$(absolute_path `dirname $0`)
 manifest_generation=${scripts_path}/../manifest-generation
 
-spiff merge ${manifest_generation}/diego-netman-template.yml "$@"
+if [ ${CNI_BRIDGE:-"false"} = "true" ]; then
+  echo "bridge only" >&2
+  spiff merge ${manifest_generation}/diego-cni-bridge-template.yml "$@"
+else
+  echo "flannel vxlan" >&2
+  spiff merge ${manifest_generation}/diego-netman-template.yml "$@"
+fi
