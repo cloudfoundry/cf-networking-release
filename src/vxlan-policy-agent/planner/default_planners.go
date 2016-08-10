@@ -50,3 +50,19 @@ func (p *VxlanDefaultRemotePlanner) GetRules() ([]rules.Rule, error) {
 
 	return ruleset, nil
 }
+
+type VxlanDefaultMasqueradePlanner struct {
+	Logger         lager.Logger
+	LocalSubnet    string
+	OverlayNetwork string
+}
+
+func (p *VxlanDefaultMasqueradePlanner) GetRules() ([]rules.Rule, error) {
+	ruleset := []rules.Rule{}
+
+	ruleset = append(ruleset,
+		rules.NewDefaultEgressRule(p.LocalSubnet, p.OverlayNetwork),
+	)
+
+	return ruleset, nil
+}

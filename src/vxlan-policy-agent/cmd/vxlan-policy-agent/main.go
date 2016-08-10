@@ -101,6 +101,12 @@ func main() {
 		Prefix:      "vpa--remote-",
 	}
 
+	defaultMasqueradeChain := rules.Chain{
+		Table:       "nat",
+		ParentChain: "POSTROUTING",
+		Prefix:      "vpa--masq-",
+	}
+
 	dynamicChain := rules.Chain{
 		Table:       "filter",
 		ParentChain: "FORWARD",
@@ -115,6 +121,12 @@ func main() {
 	vxlanDefaultRemotePlanner := planner.VxlanDefaultRemotePlanner{
 		Logger: logger,
 		VNI:    conf.VNI,
+	}
+
+	vxlanDefaultMasqueradePlanner := planner.VxlanDefaultMasqueradePlanner{
+		Logger:         logger,
+		LocalSubnet:    localSubnetCIDR,
+		OverlayNetwork: overlayNetwork,
 	}
 
 	defaultLocalRules, err := vxlanDefaultLocalPlanner.GetRules()
@@ -134,6 +146,15 @@ func main() {
 	err = ruleEnforcer.EnforceOnChain(defaultRemoteChain, defaultRemoteRules)
 	if err != nil {
 		logger.Fatal("enforce-default-remote", err)
+	}
+
+	defaultMasqueradeRules, err := vxlanDefaultMasqueradePlanner.GetRules()
+	if err != nil {
+		logger.Fatal("default-masquerade-rules.GetRules", err)
+	}
+	err = ruleEnforcer.EnforceOnChain(defaultMasqueradeChain, defaultMasqueradeRules)
+	if err != nil {
+		logger.Fatal("enforce-default-masquerade", err)
 	}
 
 	policyPoller := &poller.Poller{
