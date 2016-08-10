@@ -55,6 +55,9 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 	})
 
 	AfterEach(func() {
+		AppReport(appA, Timeout_Short)
+		AppReport(appB, Timeout_Short)
+
 		// clean up everything
 		Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 	})
@@ -64,7 +67,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			AssertConnectionFails(appA, appB, port)
 
 			By("creating a new policy")
-			session := cf.Cf("access-allow", appA, appB, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(Timeout_Short)
+			session := cf.Cf("access-allow", appA, appB, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(2 * Timeout_Short)
 			Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
 
 			AssertConnectionSucceeds(appA, appB, port)
@@ -76,7 +79,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			AssertConnectionSucceeds(appA, appB, port)
 
 			By("deleting the policy")
-			session = cf.Cf("access-deny", appA, appB, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(Timeout_Short)
+			session = cf.Cf("access-deny", appA, appB, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(2 * Timeout_Short)
 			Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
 
 			time.Sleep(5 * time.Second)

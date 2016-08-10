@@ -148,6 +148,7 @@ func curlFromApp(appName string, instanceIndex int, endpoint string, expectSucce
 			case CURL_EXIT_CODE_COULDNT_RESOLVE_HOST, CURL_EXIT_CODE_COULDNT_CONNECT, CURL_EXIT_CODE_OPERATION_TIMEDOUT:
 				return true
 			default:
+				fmt.Printf("curl exit code: %d\n", code)
 				return false
 			}
 		}).Should(BeTrue())
@@ -159,4 +160,9 @@ func getAppGuid(appName string) string {
 	session := cf.Cf("app", appName, "--guid")
 	Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
 	return strings.TrimSpace(string(session.Out.Contents()))
+}
+
+func AppReport(appName string, timeout time.Duration) {
+	Eventually(cf.Cf("app", appName, "--guid"), timeout).Should(gexec.Exit())
+	Eventually(cf.Cf("logs", appName, "--recent"), timeout).Should(gexec.Exit())
 }

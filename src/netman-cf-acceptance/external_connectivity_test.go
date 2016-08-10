@@ -46,6 +46,8 @@ var _ = Describe("external connectivity", func() {
 	})
 
 	AfterEach(func() {
+		AppReport(appA, Timeout_Short)
+
 		// clean up everything
 		Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 
