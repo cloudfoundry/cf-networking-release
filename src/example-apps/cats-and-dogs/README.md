@@ -20,7 +20,7 @@ The backend displays its container network IP if you visit `http://backend.bosh-
 ```
 cd netman-release/src/example-apps/cats-and-dogs/backend
 cf push backend
-cf set-env USER_PORTS "5678,9876"
+cf set-env backend USER_PORTS "5678,9876"
 ```
 
 ## Usage
