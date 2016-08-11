@@ -60,6 +60,7 @@ sync_package natman \
 sync_package acceptance \
   -test netman-cf-acceptance \
   -app example-apps/proxy \
+  -app example-apps/reflex \
   -app github.com/onsi/ginkgo/ginkgo &
 
 GOOS=linux sync_package runc-cni \

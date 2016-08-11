@@ -7,6 +7,19 @@ dependencies:
 files:
   - example-apps/proxy/manifest.yml # HANDCRAFTED
   - example-apps/proxy/*.go # gosub
+  - example-apps/reflex/*.go # gosub
+  - example-apps/reflex/client/*.go # gosub
+  - example-apps/reflex/converger/*.go # gosub
+  - example-apps/reflex/handlers/*.go # gosub
+  - example-apps/reflex/models/*.go # gosub
+  - example-apps/reflex/pollers/*.go # gosub
+  - example-apps/reflex/store/*.go # gosub
+  - example-apps/reflex/vendor/code.cloudfoundry.org/lager/*.go # gosub
+  - example-apps/reflex/vendor/code.cloudfoundry.org/localip/*.go # gosub
+  - example-apps/reflex/vendor/github.com/tedsuo/ifrit/*.go # gosub
+  - example-apps/reflex/vendor/github.com/tedsuo/ifrit/grouper/*.go # gosub
+  - example-apps/reflex/vendor/github.com/tedsuo/ifrit/http_server/*.go # gosub
+  - example-apps/reflex/vendor/github.com/tedsuo/ifrit/sigmon/*.go # gosub
   - github.com/cloudfoundry-incubator/cf-test-helpers/cf/*.go # gosub
   - github.com/cloudfoundry-incubator/cf-test-helpers/helpers/*.go # gosub
   - github.com/cloudfoundry-incubator/cf-test-helpers/runner/*.go # gosub
