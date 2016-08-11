@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"guardian-cni-adapter/cni"
 	"guardian-cni-adapter/config"
 	"guardian-cni-adapter/controller"
 	"io/ioutil"
@@ -92,7 +93,7 @@ func main() {
 		}
 	}
 
-	cniLoader := &controller.CNILoader{
+	cniLoader := &cni.CNILoader{
 		PluginDir: cfg.CniPluginDir,
 		ConfigDir: cfg.CniConfigDir,
 		Logger:    logger,
@@ -103,7 +104,7 @@ func main() {
 		die(logger, "load-cni-plugins", err)
 	}
 
-	cniController := &controller.CNIController{
+	cniController := &cni.CNIController{
 		Logger:         logger,
 		CNIConfig:      cniLoader.GetCNIConfig(),
 		NetworkConfigs: networks,

@@ -1,4 +1,4 @@
-package controller
+package cni
 
 import (
 	"encoding/json"
