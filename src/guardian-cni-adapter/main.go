@@ -92,10 +92,21 @@ func main() {
 		}
 	}
 
-	cniController := &controller.CNIController{
+	cniLoader := &controller.CNILoader{
 		PluginDir: cfg.CniPluginDir,
 		ConfigDir: cfg.CniConfigDir,
 		Logger:    logger,
+	}
+
+	networks, err := cniLoader.GetNetworkConfigs()
+	if err != nil {
+		die(logger, "load-cni-plugins", err)
+	}
+
+	cniController := &controller.CNIController{
+		Logger:         logger,
+		CNIConfig:      cniLoader.GetCNIConfig(),
+		NetworkConfigs: networks,
 	}
 
 	mounter := &controller.Mounter{}

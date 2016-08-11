@@ -37,11 +37,14 @@ var _ = Describe("Guardian CNI adapter", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(configFile.Close()).To(Succeed())
 
+		dir, err := ioutil.TempDir("", "fake-cni-dir")
+		Expect(err).ToNot(HaveOccurred())
+
 		fakeConfigFilePath = configFile.Name()
 		defaultConfig = map[string]string{
-			"cni_plugin_dir": "/some/cni/plugin/dir",
-			"cni_config_dir": "/some/cni/config/dir",
-			"bind_mount_dir": "/some/bind/mount/dir",
+			"cni_plugin_dir": dir,
+			"cni_config_dir": dir,
+			"bind_mount_dir": dir,
 		}
 		writeConfig(defaultConfig)
 
