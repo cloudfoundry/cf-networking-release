@@ -14,13 +14,13 @@ cf push frontend
 ```
 
 ## Backend
-The backend displays its container network IP if you visit `http://backend.bosh-lite.com/` and it serves pictures of cats on the ports specified in the environment variable `USER_PORTS`
+The backend displays its container network IP if you visit `http://backend.bosh-lite.com/` and it serves pictures of cats on the ports specified in the environment variable `CATS_PORTS`
 
 ### Deploying
 ```
 cd netman-release/src/example-apps/cats-and-dogs/backend
 cf push backend
-cf set-env backend USER_PORTS "5678,9876"
+cf set-env backend CATS_PORTS "5678,9876"
 ```
 
 ## Usage
