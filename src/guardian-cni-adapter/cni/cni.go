@@ -63,35 +63,7 @@ type CNIController struct {
 	NetworkConfigs []*libcni.NetworkConfig
 }
 
-func InjectGardenProperties(existingNetConfig *libcni.NetworkConfig, encodedGardenProperties string) (*libcni.NetworkConfig, error) {
-	if encodedGardenProperties == "" {
-		return existingNetConfig, nil
-	}
-
-	gardenProps, err := ExtractGardenProperties(encodedGardenProperties)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(gardenProps) == 0 {
-		return existingNetConfig, nil
-	}
-
-	return InjectConf(existingNetConfig, "network", map[string]interface{}{
-		"properties": gardenProps,
-	})
-}
-
-func ExtractGardenProperties(encodedGardenProperties string) (map[string]string, error) {
-	props := make(map[string]string)
-	err := json.Unmarshal([]byte(encodedGardenProperties), &props)
-	if err != nil {
-		return nil, fmt.Errorf("unmarshal garden properties: %s", err)
-	}
-	return props, nil
-}
-
-func InjectConf(original *libcni.NetworkConfig, key string, newValue interface{}) (*libcni.NetworkConfig, error) {
+func injectConf(original *libcni.NetworkConfig, key string, newValue interface{}) (*libcni.NetworkConfig, error) {
 	config := make(map[string]interface{})
 	err := json.Unmarshal(original.Bytes, &config)
 	if err != nil {
@@ -116,8 +88,10 @@ func InjectConf(original *libcni.NetworkConfig, key string, newValue interface{}
 	return libcni.ConfFromBytes(newBytes)
 }
 
-func (c *CNIController) Up(namespacePath, handle, encodedGardenProperties string) (*types.Result, error) {
+func (c *CNIController) Up(namespacePath, handle string, properties map[string]string) (*types.Result, error) {
 	var result *types.Result
+	var err error
+
 	for i, networkConfig := range c.NetworkConfigs {
 		runtimeConfig := &libcni.RuntimeConf{
 			ContainerID: handle,
@@ -125,12 +99,16 @@ func (c *CNIController) Up(namespacePath, handle, encodedGardenProperties string
 			IfName:      fmt.Sprintf("eth%d", i),
 		}
 
-		enhancedNetConfig, err := InjectGardenProperties(networkConfig, encodedGardenProperties)
-		if err != nil {
-			return nil, fmt.Errorf("adding garden properties to CNI config: %s", err)
+		if len(properties) > 0 {
+			networkConfig, err = injectConf(networkConfig, "network", map[string]interface{}{
+				"properties": properties,
+			})
+			if err != nil {
+				return nil, fmt.Errorf("adding garden properties to CNI config: %s", err)
+			}
 		}
 
-		result, err = c.CNIConfig.AddNetwork(enhancedNetConfig, runtimeConfig)
+		result, err = c.CNIConfig.AddNetwork(networkConfig, runtimeConfig)
 		if err != nil {
 			return nil, fmt.Errorf("add network failed: %s", err)
 		}
@@ -141,7 +119,8 @@ func (c *CNIController) Up(namespacePath, handle, encodedGardenProperties string
 	return result, nil
 }
 
-func (c *CNIController) Down(namespacePath, handle, encodedGardenProperties string) error {
+func (c *CNIController) Down(namespacePath, handle string, properties map[string]string) error {
+	var err error
 	for i, networkConfig := range c.NetworkConfigs {
 		runtimeConfig := &libcni.RuntimeConf{
 			ContainerID: handle,
@@ -149,12 +128,14 @@ func (c *CNIController) Down(namespacePath, handle, encodedGardenProperties stri
 			IfName:      fmt.Sprintf("eth%d", i),
 		}
 
-		enhancedNetConfig, err := InjectGardenProperties(networkConfig, encodedGardenProperties)
+		networkConfig, err = injectConf(networkConfig, "network", map[string]interface{}{
+			"properties": properties,
+		})
 		if err != nil {
 			return fmt.Errorf("adding garden properties to CNI config: %s", err)
 		}
 
-		err = c.CNIConfig.DelNetwork(enhancedNetConfig, runtimeConfig)
+		err = c.CNIConfig.DelNetwork(networkConfig, runtimeConfig)
 		if err != nil {
 			return fmt.Errorf("del network failed: %s", err)
 		}

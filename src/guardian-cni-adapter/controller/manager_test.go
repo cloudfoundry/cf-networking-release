@@ -18,6 +18,7 @@ var _ = Describe("Manager", func() {
 		cniController           *fakes.CNIController
 		mounter                 *fakes.Mounter
 		encodedGardenProperties string
+		expectedExtraProperties map[string]string
 	)
 
 	BeforeEach(func() {
@@ -37,6 +38,7 @@ var _ = Describe("Manager", func() {
 			BindMountRoot: "/some/fake/path",
 		}
 		encodedGardenProperties = `{ "app_id": "some-group-id" }`
+		expectedExtraProperties = map[string]string{"app_id": "some-group-id"}
 	})
 
 	Describe("Up", func() {
@@ -62,10 +64,10 @@ var _ = Describe("Manager", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(cniController.UpCallCount()).To(Equal(1))
-			namespacePath, handle, spec := cniController.UpArgsForCall(0)
+			namespacePath, handle, properties := cniController.UpArgsForCall(0)
 			Expect(namespacePath).To(Equal("/some/fake/path/some-container-handle"))
 			Expect(handle).To(Equal("some-container-handle"))
-			Expect(spec).To(Equal(encodedGardenProperties))
+			Expect(properties).To(Equal(expectedExtraProperties))
 		})
 
 		Context("when missing args", func() {
@@ -78,10 +80,10 @@ var _ = Describe("Manager", func() {
 			})
 		})
 
-		Context("when missing the network spec", func() {
-			It("should be a no-op and not call CNI", func() {
+		Context("when missing the encoded garden properties", func() {
+			It("should not complain", func() {
 				_, err := manager.Up(42, "some-container-handle", "")
-				Expect(err).To(MatchError(ContainSubstring("parsing garden properties")))
+				Expect(err).NotTo(HaveOccurred())
 			})
 		})
 
@@ -98,7 +100,7 @@ var _ = Describe("Manager", func() {
 		Context("when unmarshaling the encoded garden properties fails", func() {
 			It("returns the error", func() {
 				_, err := manager.Up(42, "some-container-handle", "%%%%")
-				Expect(err).To(MatchError(ContainSubstring("parsing garden properties: invalid character")))
+				Expect(err).To(MatchError(ContainSubstring("unmarshal garden properties: invalid character")))
 			})
 		})
 
@@ -121,19 +123,19 @@ var _ = Describe("Manager", func() {
 
 	Describe("Down", func() {
 		It("should ensure that the netNS is unmounted", func() {
-			Expect(manager.Down("some-container-handle", "some-network-spec")).To(Succeed())
+			Expect(manager.Down("some-container-handle", encodedGardenProperties)).To(Succeed())
 			Expect(mounter.RemoveMountCallCount()).To(Equal(1))
 
 			Expect(mounter.RemoveMountArgsForCall(0)).To(Equal("/some/fake/path/some-container-handle"))
 		})
 
 		It("should call CNI Down, passing in the bind-mounted path to the net ns", func() {
-			Expect(manager.Down("some-container-handle", "some-network-spec")).To(Succeed())
+			Expect(manager.Down("some-container-handle", encodedGardenProperties)).To(Succeed())
 			Expect(cniController.DownCallCount()).To(Equal(1))
 			namespacePath, handle, spec := cniController.DownArgsForCall(0)
 			Expect(namespacePath).To(Equal("/some/fake/path/some-container-handle"))
 			Expect(handle).To(Equal("some-container-handle"))
-			Expect(spec).To(Equal("some-network-spec"))
+			Expect(spec).To(Equal(expectedExtraProperties))
 		})
 
 		Context("when encodedGardenProperties is empty", func() {
@@ -155,7 +157,7 @@ var _ = Describe("Manager", func() {
 		Context("when the mounter fails", func() {
 			It("should return the error", func() {
 				mounter.RemoveMountReturns(errors.New("boom"))
-				err := manager.Down("some-container-handle", "some-network-spec")
+				err := manager.Down("some-container-handle", encodedGardenProperties)
 				Expect(err).To(MatchError("failed removing mount /some/fake/path/some-container-handle: boom"))
 			})
 		})
@@ -163,7 +165,7 @@ var _ = Describe("Manager", func() {
 		Context("when the cni Down fails", func() {
 			It("should return the error", func() {
 				cniController.DownReturns(errors.New("bang"))
-				err := manager.Down("some-container-handle", "some-network-spec")
+				err := manager.Down("some-container-handle", encodedGardenProperties)
 				Expect(err).To(MatchError("cni down failed: bang"))
 			})
 		})

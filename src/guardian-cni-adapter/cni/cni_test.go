@@ -7,7 +7,6 @@ import (
 
 	"code.cloudfoundry.org/lager/lagertest"
 
-	"github.com/containernetworking/cni/libcni"
 	"github.com/containernetworking/cni/pkg/types"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -92,69 +91,6 @@ var _ = Describe("CNI", func() {
 				Expect(netCfgs).To(HaveLen(2))
 				Expect(netCfgs[0].Network).To(Equal(expectedNetCfgs[1]))
 				Expect(netCfgs[1].Network).To(Equal(expectedNetCfgs[0]))
-			})
-		})
-	})
-
-	Describe("InjectGardenProperties", func() {
-		var (
-			encodedGardenProperties string
-			existingConfig          *libcni.NetworkConfig
-		)
-
-		BeforeEach(func() {
-			encodedGardenProperties = `{"key": "value"}`
-			existingConfig = &libcni.NetworkConfig{
-				Network: nil,
-				Bytes:   []byte(`{"something": "some-value"}`),
-			}
-		})
-
-		It("inserts the garden network properties inside the 'network' field", func() {
-			newNetworkConfig, err := cni.InjectGardenProperties(existingConfig, encodedGardenProperties)
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(newNetworkConfig.Bytes).To(MatchJSON([]byte(`
-			{
-				"something":"some-value",
-				"network": {
-					"properties": {
-						"key":"value"
-					}
-				}
-			}`)))
-		})
-
-		Context("when the encoded garden properties is empty", func() {
-			It("should omit the network field", func() {
-				newNetworkConfig, err := cni.InjectGardenProperties(existingConfig, "")
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(newNetworkConfig.Bytes).To(MatchJSON([]byte(`{"something":"some-value"}`)))
-			})
-		})
-
-		Context("when the encoded garden properties is empty json", func() {
-			It("should omit the network field", func() {
-				newNetworkConfig, err := cni.InjectGardenProperties(existingConfig, " {  }")
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(newNetworkConfig.Bytes).To(MatchJSON([]byte(`{"something":"some-value"}`)))
-			})
-		})
-
-		Context("when the existingNetConfig.Bytes is malformed JSON", func() {
-			It("should return an error", func() {
-				existingConfig.Bytes = []byte("%%%%%%")
-				_, err := cni.InjectGardenProperties(existingConfig, encodedGardenProperties)
-				Expect(err).To(MatchError(ContainSubstring("unmarshal existing network bytes")))
-			})
-		})
-
-		Context("when the encoded garden properties is malformed JSON", func() {
-			It("should return an error", func() {
-				_, err := cni.InjectGardenProperties(existingConfig, "%%%%%%")
-				Expect(err).To(MatchError(ContainSubstring("unmarshal garden properties")))
 			})
 		})
 	})
