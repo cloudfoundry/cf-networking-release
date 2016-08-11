@@ -25,7 +25,6 @@ func (l *CNILoader) GetCNIConfig() *libcni.CNIConfig {
 
 func (l *CNILoader) GetNetworkConfigs() ([]*libcni.NetworkConfig, error) {
 	networkConfigs := []*libcni.NetworkConfig{}
-
 	err := filepath.Walk(l.ConfigDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
