@@ -22,30 +22,14 @@ type mounter interface {
 	RemoveMount(target string) error
 }
 
-//go:generate counterfeiter -o ../fakes/netman_client.go --fake-name NetmanClient . netmanClient
-type netmanClient interface {
-	Add(containerID string, groupID string, containerIP net.IP) error // TODO: reorder these args
-	Del(containerID string) error
-}
-
 type Manager struct {
 	CNIController cniController
 	Mounter       mounter
 	BindMountRoot string
-	NetmanClient  netmanClient
 }
 
 type Properties struct {
 	ContainerIP net.IP `json:"network.external-networker.container-ip"`
-}
-
-func getGroupID(encodedGardenProperties string) (string, error) {
-	var properties map[string]string
-	err := json.Unmarshal([]byte(encodedGardenProperties), &properties)
-	if err != nil {
-		return "", fmt.Errorf("parsing garden properties: %s", err)
-	}
-	return properties["app_id"], nil
 }
 
 func (m *Manager) Up(pid int, containerHandle, encodedGardenProperties string) (*Properties, error) {
@@ -56,9 +40,10 @@ func (m *Manager) Up(pid int, containerHandle, encodedGardenProperties string) (
 		return nil, errors.New("up missing container handle")
 	}
 
-	groupID, err := getGroupID(encodedGardenProperties)
+	var properties map[string]string
+	err := json.Unmarshal([]byte(encodedGardenProperties), &properties)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("parsing garden properties: %s", err)
 	}
 
 	procNsPath := fmt.Sprintf("/proc/%d/ns/net", pid)
@@ -76,11 +61,6 @@ func (m *Manager) Up(pid int, containerHandle, encodedGardenProperties string) (
 
 	if result == nil {
 		return nil, errors.New("cni up failed: no ip allocated")
-	}
-
-	err = m.NetmanClient.Add(containerHandle, groupID, result.IP4.IP.IP)
-	if err != nil {
-		return nil, fmt.Errorf("netman client failed: %s", err)
 	}
 
 	return &Properties{
@@ -103,11 +83,6 @@ func (m *Manager) Down(containerHandle string, encodedGardenProperties string) e
 	err = m.Mounter.RemoveMount(bindMountPath)
 	if err != nil {
 		return fmt.Errorf("failed removing mount %s: %s", bindMountPath, err)
-	}
-
-	err = m.NetmanClient.Del(containerHandle)
-	if err != nil {
-		return fmt.Errorf("netman client failed: %s", err)
 	}
 
 	return nil

@@ -4,53 +4,20 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"guardian-cni-adapter/config"
 	"guardian-cni-adapter/controller"
 	"io/ioutil"
-	"net"
 	"os"
 
 	"code.cloudfoundry.org/lager"
 )
 
-type Config struct {
-	CniPluginDir string `json:"cni_plugin_dir"`
-	CniConfigDir string `json:"cni_config_dir"`
-	BindMountDir string `json:"bind_mount_dir"`
-	NetmanURL    string `json:"netman_url"`
-}
-
 var (
 	action            string
 	handle            string
-	config            Config
+	cfg               config.Config
 	encodedProperties string
 )
-
-func parseConfig(configFilePath string) error {
-	configBytes, err := ioutil.ReadFile(configFilePath)
-	if err != nil {
-		return fmt.Errorf("reading config file: %s", err)
-	}
-
-	err = json.Unmarshal(configBytes, &config)
-	if err != nil {
-		return fmt.Errorf("parsing config (%s): %s", configFilePath, err)
-	}
-
-	if config.CniPluginDir == "" {
-		return fmt.Errorf("missing required config 'cni_plugin_dir'")
-	}
-
-	if config.CniConfigDir == "" {
-		return fmt.Errorf("missing required config 'cni_config_dir'")
-	}
-
-	if config.BindMountDir == "" {
-		return fmt.Errorf("missing required config 'bind_mount_dir'")
-	}
-
-	return nil
-}
 
 func parseArgs(allArgs []string) error {
 	var gardenNetworkSpec, configFilePath string
@@ -79,7 +46,8 @@ func parseArgs(allArgs []string) error {
 		return fmt.Errorf("missing required flag 'configFile'")
 	}
 
-	if err = parseConfig(configFilePath); err != nil {
+	cfg, err = config.New(configFilePath)
+	if err != nil {
 		return err
 	}
 
@@ -125,20 +93,17 @@ func main() {
 	}
 
 	cniController := &controller.CNIController{
-		PluginDir: config.CniPluginDir,
-		ConfigDir: config.CniConfigDir,
+		PluginDir: cfg.CniPluginDir,
+		ConfigDir: cfg.CniConfigDir,
 		Logger:    logger,
 	}
 
 	mounter := &controller.Mounter{}
 
-	netmanClient := &NopNetmanClient{}
-
 	manager := &controller.Manager{
 		CNIController: cniController,
 		Mounter:       mounter,
-		BindMountRoot: config.BindMountDir,
-		NetmanClient:  netmanClient,
+		BindMountRoot: cfg.BindMountDir,
 	}
 
 	logger.Info("action", lager.Data{"action": action})
@@ -161,19 +126,4 @@ func main() {
 	default:
 		die(logger, "unknown-action", fmt.Errorf("unrecognized action: %s", action))
 	}
-}
-
-type netmanClient interface {
-	Add(containerID string, groupID string, containerIP net.IP) error // TODO: reorder these args
-	Del(containerID string) error
-}
-
-type NopNetmanClient struct{}
-
-func (c *NopNetmanClient) Add(string, string, net.IP) error {
-	return nil
-}
-
-func (c *NopNetmanClient) Del(string) error {
-	return nil
 }

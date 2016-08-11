@@ -17,7 +17,6 @@ var _ = Describe("Manager", func() {
 		manager                 *controller.Manager
 		cniController           *fakes.CNIController
 		mounter                 *fakes.Mounter
-		netmanClient            *fakes.NetmanClient
 		encodedGardenProperties string
 	)
 
@@ -32,12 +31,10 @@ var _ = Describe("Manager", func() {
 				},
 			},
 		}, nil)
-		netmanClient = &fakes.NetmanClient{}
 		manager = &controller.Manager{
 			CNIController: cniController,
 			Mounter:       mounter,
 			BindMountRoot: "/some/fake/path",
-			NetmanClient:  netmanClient,
 		}
 		encodedGardenProperties = `{ "app_id": "some-group-id" }`
 	})
@@ -71,17 +68,6 @@ var _ = Describe("Manager", func() {
 			Expect(spec).To(Equal(encodedGardenProperties))
 		})
 
-		It("should call netman agent, passing the group id, container id and ip", func() {
-			_, err := manager.Up(42, "some-container-handle", encodedGardenProperties)
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(netmanClient.AddCallCount()).To(Equal(1))
-			containerID, groupID, ip := netmanClient.AddArgsForCall(0)
-			Expect(containerID).To(Equal("some-container-handle"))
-			Expect(groupID).To(Equal("some-group-id"))
-			Expect(ip).To(Equal(net.ParseIP("169.254.1.2")))
-		})
-
 		Context("when missing args", func() {
 			It("should return a friendly error", func() {
 				_, err := manager.Up(0, "some-container-handle", encodedGardenProperties)
@@ -105,7 +91,6 @@ var _ = Describe("Manager", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(cniController.UpCallCount()).To(Equal(1))
-				Expect(netmanClient.AddCallCount()).To(Equal(1))
 				Expect(mounter.IdempotentlyMountCallCount()).To(Equal(1))
 			})
 		})
@@ -132,14 +117,6 @@ var _ = Describe("Manager", func() {
 				Expect(err).To(MatchError("cni up failed: bang"))
 			})
 		})
-
-		Context("when the netman client fails", func() {
-			It("should return the error", func() {
-				netmanClient.AddReturns(errors.New("potato"))
-				_, err := manager.Up(42, "some-container-handle", encodedGardenProperties)
-				Expect(err).To(MatchError("netman client failed: potato"))
-			})
-		})
 	})
 
 	Describe("Down", func() {
@@ -159,21 +136,12 @@ var _ = Describe("Manager", func() {
 			Expect(spec).To(Equal("some-network-spec"))
 		})
 
-		It("should call netman agent, passing the group id, container id and ip", func() {
-			Expect(manager.Down("some-container-handle", encodedGardenProperties)).To(Succeed())
-
-			Expect(netmanClient.DelCallCount()).To(Equal(1))
-			containerID := netmanClient.DelArgsForCall(0)
-			Expect(containerID).To(Equal("some-container-handle"))
-		})
-
 		Context("when encodedGardenProperties is empty", func() {
-			It("should call CNI and netman agent", func() {
+			It("should call CNI", func() {
 				err := manager.Down("some-container-handle", "")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(cniController.DownCallCount()).To(Equal(1))
 				Expect(mounter.RemoveMountCallCount()).To(Equal(1))
-				Expect(netmanClient.DelCallCount()).To(Equal(1))
 			})
 		})
 
@@ -197,14 +165,6 @@ var _ = Describe("Manager", func() {
 				cniController.DownReturns(errors.New("bang"))
 				err := manager.Down("some-container-handle", "some-network-spec")
 				Expect(err).To(MatchError("cni down failed: bang"))
-			})
-		})
-
-		Context("when the netman client fails", func() {
-			It("should return the error", func() {
-				netmanClient.DelReturns(errors.New("potato"))
-				err := manager.Down("some-container-handle", encodedGardenProperties)
-				Expect(err).To(MatchError("netman client failed: potato"))
 			})
 		})
 	})
