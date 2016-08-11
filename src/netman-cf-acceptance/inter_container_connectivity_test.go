@@ -3,7 +3,9 @@ package acceptance_test
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math/rand"
+	"net/http"
 	"strings"
 	"time"
 
@@ -25,44 +27,44 @@ func isSameCell(sourceIP, destIP string) bool {
 }
 
 var _ = Describe("connectivity between containers on the overlay network", func() {
-	var (
-		appA      string
-		appB      string
-		orgName   string
-		spaceName string
-		port      int
-	)
-
-	BeforeEach(func() {
-		appA = fmt.Sprintf("appA-%d", rand.Int31())
-		appB = fmt.Sprintf("appB-%d", rand.Int31())
-
-		Auth(testConfig.TestUser, testConfig.TestUserPassword)
-
-		orgName = "test-org"
-		Expect(cf.Cf("create-org", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
-		Expect(cf.Cf("target", "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
-
-		spaceName = "test-space"
-		Expect(cf.Cf("create-space", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
-		Expect(cf.Cf("target", "-o", orgName, "-s", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
-
-		pushApp(appA)
-		pushApp(appB)
-		scaleApp(appB, 4 /* instances */)
-
-		port = 8080
-	})
-
-	AfterEach(func() {
-		AppReport(appA, Timeout_Short)
-		AppReport(appB, Timeout_Short)
-
-		// clean up everything
-		Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
-	})
-
 	Describe("networking policy", func() {
+		var (
+			appA      string
+			appB      string
+			orgName   string
+			spaceName string
+			port      int
+		)
+
+		BeforeEach(func() {
+			appA = fmt.Sprintf("appA-%d", rand.Int31())
+			appB = fmt.Sprintf("appB-%d", rand.Int31())
+
+			Auth(testConfig.TestUser, testConfig.TestUserPassword)
+
+			orgName = "test-org"
+			Expect(cf.Cf("create-org", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
+			Expect(cf.Cf("target", "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
+
+			spaceName = "test-space"
+			Expect(cf.Cf("create-space", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
+			Expect(cf.Cf("target", "-o", orgName, "-s", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
+
+			pushApp(appA)
+			pushApp(appB)
+			scaleApp(appB, 4 /* instances */)
+
+			port = 8080
+		})
+
+		AfterEach(func() {
+			AppReport(appA, Timeout_Short)
+			AppReport(appB, Timeout_Short)
+
+			// clean up everything
+			Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
+		})
+
 		It("allows the user to configure connections", func(done Done) {
 			AssertConnectionFails(appA, appB, port)
 
@@ -87,6 +89,78 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 
 			close(done)
 		}, 300 /* <-- overall spec timeout in seconds */)
+	})
+
+	Describe("reflex app", func() {
+		var (
+			appName   string
+			orgName   string
+			spaceName string
+			port      int
+		)
+
+		BeforeEach(func() {
+			appName = fmt.Sprintf("reflex-%d", rand.Int31())
+			port = 8080
+
+			Auth(testConfig.TestUser, testConfig.TestUserPassword)
+
+			orgName = "test-org"
+			Expect(cf.Cf("create-org", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
+			Expect(cf.Cf("target", "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
+
+			spaceName = "test-space"
+			Expect(cf.Cf("create-space", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
+			Expect(cf.Cf("target", "-o", orgName, "-s", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
+
+			pushAppOfType(appName, "reflex")
+
+			By("creating a new policy to allow the app to talk to itself")
+			session := cf.Cf("access-allow", appName, appName, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(2 * Timeout_Short)
+			Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
+		})
+
+		AfterEach(func() {
+			AppReport(appName, Timeout_Short)
+
+			By("creating a new policy to allow the app to talk to itself")
+			session := cf.Cf("access-deny", appName, appName, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(2 * Timeout_Short)
+			Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
+
+			// clean up everything
+			Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
+		})
+
+		It("eventually discovers the ip addresses of all its peers", func() {
+			getPeers := func() ([]string, error) {
+				resp, err := http.Get(fmt.Sprintf("http://%s.%s/peers", appName, config.AppsDomain))
+				if err != nil {
+					return nil, err
+				}
+
+				respBytes, err := ioutil.ReadAll(resp.Body)
+				if err != nil {
+					return nil, err
+				}
+				defer resp.Body.Close()
+
+				var peersResponse struct {
+					IPs []string
+				}
+				err = json.Unmarshal(respBytes, &peersResponse)
+				if err != nil {
+					return nil, err
+				}
+				return peersResponse.IPs, nil
+			}
+			Eventually(getPeers).Should(HaveLen(1))
+
+			scaleApp(appName, 3 /* instances */)
+			Eventually(getPeers, 60*time.Second, 500*time.Millisecond).Should(HaveLen(3))
+
+			scaleApp(appName, 1 /* instances */)
+			Eventually(getPeers, 60*time.Second, 500*time.Millisecond).Should(HaveLen(1))
+		})
 	})
 })
 
