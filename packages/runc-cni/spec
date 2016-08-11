@@ -28,5 +28,6 @@ files:
   - golang.org/x/sys/unix/*.go # gosub
   - golang.org/x/sys/unix/*.s # gosub
   - guardian-cni-adapter/*.go # gosub
+  - guardian-cni-adapter/cni/*.go # gosub
   - guardian-cni-adapter/config/*.go # gosub
   - guardian-cni-adapter/controller/*.go # gosub

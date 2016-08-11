@@ -64,35 +64,56 @@ type CNIController struct {
 }
 
 func InjectGardenProperties(existingNetConfig *libcni.NetworkConfig, encodedGardenProperties string) (*libcni.NetworkConfig, error) {
+	if encodedGardenProperties == "" {
+		return existingNetConfig, nil
+	}
+
+	gardenProps, err := ExtractGardenProperties(encodedGardenProperties)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(gardenProps) == 0 {
+		return existingNetConfig, nil
+	}
+
+	return InjectConf(existingNetConfig, "network", map[string]interface{}{
+		"properties": gardenProps,
+	})
+}
+
+func ExtractGardenProperties(encodedGardenProperties string) (map[string]string, error) {
+	props := make(map[string]string)
+	err := json.Unmarshal([]byte(encodedGardenProperties), &props)
+	if err != nil {
+		return nil, fmt.Errorf("unmarshal garden properties: %s", err)
+	}
+	return props, nil
+}
+
+func InjectConf(original *libcni.NetworkConfig, key string, newValue interface{}) (*libcni.NetworkConfig, error) {
 	config := make(map[string]interface{})
-	err := json.Unmarshal(existingNetConfig.Bytes, &config)
+	err := json.Unmarshal(original.Bytes, &config)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshal existing network bytes: %s", err)
 	}
 
-	if encodedGardenProperties != "" {
-		networkPayloadMap := make(map[string]interface{})
-		err = json.Unmarshal([]byte(encodedGardenProperties), &networkPayloadMap)
-		if err != nil {
-			return nil, fmt.Errorf("unmarshal garden properties: %s", err)
-		}
-
-		if len(networkPayloadMap) != 0 {
-			config["network"] = map[string]interface{}{
-				"properties": networkPayloadMap,
-			}
-		}
+	if key == "" {
+		return nil, fmt.Errorf("key value can not be empty")
 	}
+
+	if newValue == nil {
+		return nil, fmt.Errorf("newValue must be specified")
+	}
+
+	config[key] = newValue
 
 	newBytes, err := json.Marshal(config)
 	if err != nil {
-		return nil, err //Not tested
+		return nil, err
 	}
 
-	return &libcni.NetworkConfig{
-		Network: existingNetConfig.Network,
-		Bytes:   newBytes,
-	}, nil
+	return libcni.ConfFromBytes(newBytes)
 }
 
 func (c *CNIController) Up(namespacePath, handle, encodedGardenProperties string) (*types.Result, error) {
