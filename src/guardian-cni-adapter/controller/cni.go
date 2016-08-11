@@ -63,18 +63,18 @@ type CNIController struct {
 	NetworkConfigs []*libcni.NetworkConfig
 }
 
-func AppendNetworkSpec(existingNetConfig *libcni.NetworkConfig, gardenNetworkSpec string) (*libcni.NetworkConfig, error) {
+func InjectGardenProperties(existingNetConfig *libcni.NetworkConfig, encodedGardenProperties string) (*libcni.NetworkConfig, error) {
 	config := make(map[string]interface{})
 	err := json.Unmarshal(existingNetConfig.Bytes, &config)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshal existing network bytes: %s", err)
 	}
 
-	if gardenNetworkSpec != "" {
+	if encodedGardenProperties != "" {
 		networkPayloadMap := make(map[string]interface{})
-		err = json.Unmarshal([]byte(gardenNetworkSpec), &networkPayloadMap)
+		err = json.Unmarshal([]byte(encodedGardenProperties), &networkPayloadMap)
 		if err != nil {
-			return nil, fmt.Errorf("unmarshal garden network spec: %s", err)
+			return nil, fmt.Errorf("unmarshal garden properties: %s", err)
 		}
 
 		if len(networkPayloadMap) != 0 {
@@ -95,7 +95,7 @@ func AppendNetworkSpec(existingNetConfig *libcni.NetworkConfig, gardenNetworkSpe
 	}, nil
 }
 
-func (c *CNIController) Up(namespacePath, handle, spec string) (*types.Result, error) {
+func (c *CNIController) Up(namespacePath, handle, encodedGardenProperties string) (*types.Result, error) {
 	var result *types.Result
 	for i, networkConfig := range c.NetworkConfigs {
 		runtimeConfig := &libcni.RuntimeConf{
@@ -104,9 +104,9 @@ func (c *CNIController) Up(namespacePath, handle, spec string) (*types.Result, e
 			IfName:      fmt.Sprintf("eth%d", i),
 		}
 
-		enhancedNetConfig, err := AppendNetworkSpec(networkConfig, spec)
+		enhancedNetConfig, err := InjectGardenProperties(networkConfig, encodedGardenProperties)
 		if err != nil {
-			return nil, fmt.Errorf("adding garden network spec to CNI config: %s", err)
+			return nil, fmt.Errorf("adding garden properties to CNI config: %s", err)
 		}
 
 		result, err = c.CNIConfig.AddNetwork(enhancedNetConfig, runtimeConfig)
@@ -120,7 +120,7 @@ func (c *CNIController) Up(namespacePath, handle, spec string) (*types.Result, e
 	return result, nil
 }
 
-func (c *CNIController) Down(namespacePath, handle, spec string) error {
+func (c *CNIController) Down(namespacePath, handle, encodedGardenProperties string) error {
 	for i, networkConfig := range c.NetworkConfigs {
 		runtimeConfig := &libcni.RuntimeConf{
 			ContainerID: handle,
@@ -128,9 +128,9 @@ func (c *CNIController) Down(namespacePath, handle, spec string) error {
 			IfName:      fmt.Sprintf("eth%d", i),
 		}
 
-		enhancedNetConfig, err := AppendNetworkSpec(networkConfig, spec)
+		enhancedNetConfig, err := InjectGardenProperties(networkConfig, encodedGardenProperties)
 		if err != nil {
-			return fmt.Errorf("adding garden network spec to CNI config: %s", err)
+			return fmt.Errorf("adding garden properties to CNI config: %s", err)
 		}
 
 		err = c.CNIConfig.DelNetwork(enhancedNetConfig, runtimeConfig)

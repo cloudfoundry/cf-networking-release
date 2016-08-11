@@ -96,14 +96,14 @@ var _ = Describe("CNI", func() {
 		})
 	})
 
-	Describe("AppendNetworkSpec", func() {
+	Describe("InjectGardenProperties", func() {
 		var (
-			networkSpec    string
-			existingConfig *libcni.NetworkConfig
+			encodedGardenProperties string
+			existingConfig          *libcni.NetworkConfig
 		)
 
 		BeforeEach(func() {
-			networkSpec = `{"key": "value"}`
+			encodedGardenProperties = `{"key": "value"}`
 			existingConfig = &libcni.NetworkConfig{
 				Network: nil,
 				Bytes:   []byte(`{"something": "some-value"}`),
@@ -111,10 +111,10 @@ var _ = Describe("CNI", func() {
 		})
 
 		It("inserts the garden network properties inside the 'network' field", func() {
-			newNetworkSpec, err := controller.AppendNetworkSpec(existingConfig, networkSpec)
+			newNetworkConfig, err := controller.InjectGardenProperties(existingConfig, encodedGardenProperties)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(newNetworkSpec.Bytes).To(MatchJSON([]byte(`
+			Expect(newNetworkConfig.Bytes).To(MatchJSON([]byte(`
 			{
 				"something":"some-value",
 				"network": {
@@ -125,36 +125,36 @@ var _ = Describe("CNI", func() {
 			}`)))
 		})
 
-		Context("when the network spec is empty", func() {
+		Context("when the encoded garden properties is empty", func() {
 			It("should omit the network field", func() {
-				newNetworkSpec, err := controller.AppendNetworkSpec(existingConfig, "")
+				newNetworkConfig, err := controller.InjectGardenProperties(existingConfig, "")
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(newNetworkSpec.Bytes).To(MatchJSON([]byte(`{"something":"some-value"}`)))
+				Expect(newNetworkConfig.Bytes).To(MatchJSON([]byte(`{"something":"some-value"}`)))
 			})
 		})
 
-		Context("when the network spec is empty json", func() {
+		Context("when the encoded garden properties is empty json", func() {
 			It("should omit the network field", func() {
-				newNetworkSpec, err := controller.AppendNetworkSpec(existingConfig, " {  }")
+				newNetworkConfig, err := controller.InjectGardenProperties(existingConfig, " {  }")
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(newNetworkSpec.Bytes).To(MatchJSON([]byte(`{"something":"some-value"}`)))
+				Expect(newNetworkConfig.Bytes).To(MatchJSON([]byte(`{"something":"some-value"}`)))
 			})
 		})
 
 		Context("when the existingNetConfig.Bytes is malformed JSON", func() {
 			It("should return an error", func() {
 				existingConfig.Bytes = []byte("%%%%%%")
-				_, err := controller.AppendNetworkSpec(existingConfig, networkSpec)
+				_, err := controller.InjectGardenProperties(existingConfig, encodedGardenProperties)
 				Expect(err).To(MatchError(ContainSubstring("unmarshal existing network bytes")))
 			})
 		})
 
-		Context("when the network spec is malformed JSON", func() {
+		Context("when the encoded garden properties is malformed JSON", func() {
 			It("should return an error", func() {
-				_, err := controller.AppendNetworkSpec(existingConfig, "%%%%%%")
-				Expect(err).To(MatchError(ContainSubstring("unmarshal garden network spec")))
+				_, err := controller.InjectGardenProperties(existingConfig, "%%%%%%")
+				Expect(err).To(MatchError(ContainSubstring("unmarshal garden properties")))
 			})
 		})
 	})
