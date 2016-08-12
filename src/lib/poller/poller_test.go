@@ -2,9 +2,9 @@ package poller_test
 
 import (
 	"errors"
+	"lib/fakes"
+	"lib/poller"
 	"lib/rules"
-	"natman/fakes"
-	"natman/poller"
 	"os"
 	"time"
 

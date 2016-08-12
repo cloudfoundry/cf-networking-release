@@ -1,22 +1,23 @@
 package planner
 
 import (
-	"fmt"
 	"lib/models"
-	"lib/policy_client"
 	"lib/rules"
 
 	"code.cloudfoundry.org/garden"
 	"code.cloudfoundry.org/lager"
 )
 
+//go:generate counterfeiter -o ../fakes/policy_client.go --fake-name PolicyClient . policyClient
+type policyClient interface {
+	GetPolicies() ([]models.Policy, error)
+}
+
 type VxlanPolicyPlanner struct {
-	GardenClient   garden.Client
-	PolicyClient   *policy_client.Client
-	Logger         lager.Logger
-	VNI            int
-	LocalSubnet    string
-	OverlayNetwork string
+	Logger       lager.Logger
+	GardenClient garden.Client
+	PolicyClient policyClient
+	VNI          int
 }
 
 type Container struct {
@@ -25,8 +26,8 @@ type Container struct {
 	GroupID string
 }
 
-func getContainersMap(allContainers []garden.Container) (map[string][]models.Container, error) {
-	containers := map[string][]models.Container{}
+func getContainersMap(allContainers []garden.Container) (map[string][]string, error) {
+	containers := map[string][]string{}
 
 	for _, container := range allContainers {
 		info, err := container.Info()
@@ -36,11 +37,7 @@ func getContainersMap(allContainers []garden.Container) (map[string][]models.Con
 		properties := info.Properties
 		groupID := properties["network.app_id"]
 
-		containers[groupID] = append(containers[groupID],
-			models.Container{
-				ID: container.Handle(),
-				IP: info.ContainerIP,
-			})
+		containers[groupID] = append(containers[groupID], info.ContainerIP)
 	}
 
 	return containers, nil
@@ -50,34 +47,36 @@ func (p *VxlanPolicyPlanner) GetRules() ([]rules.Rule, error) {
 	properties := garden.Properties{}
 	gardenContainers, err := p.GardenClient.Containers(properties)
 	if err != nil {
+		p.Logger.Error("garden-client-containers", err)
 		return nil, err
 	}
 
 	containers, err := getContainersMap(gardenContainers)
 	if err != nil {
+		p.Logger.Error("container-info", err)
 		return nil, err
 	}
 	p.Logger.Info("got-containers", lager.Data{"containers": containers})
 
 	policies, err := p.PolicyClient.GetPolicies()
 	if err != nil {
-		p.Logger.Error("get-policies", err)
-		return nil, fmt.Errorf("get policies failed: %s", err)
+		p.Logger.Error("policy-client-get-policies", err)
+		return nil, err
 	}
 
 	ruleset := []rules.Rule{}
 
 	for _, policy := range policies {
-		srcContainers, srcOk := containers[policy.Source.ID]
-		dstContainers, dstOk := containers[policy.Destination.ID]
+		srcContainerIPs, srcOk := containers[policy.Source.ID]
+		dstContainerIPs, dstOk := containers[policy.Destination.ID]
 
 		if dstOk {
-			for _, dstContainer := range dstContainers {
+			for _, dstContainerIP := range dstContainerIPs {
 				ruleset = append(
 					ruleset,
 					rules.NewRemoteAllowRule(
 						p.VNI,
-						dstContainer.IP,
+						dstContainerIP,
 						policy.Destination.Protocol,
 						policy.Destination.Port,
 						policy.Source.Tag,
@@ -89,22 +88,22 @@ func (p *VxlanPolicyPlanner) GetRules() ([]rules.Rule, error) {
 		}
 
 		if srcOk {
-			for _, srcContainer := range srcContainers {
+			for _, srcContainerIP := range srcContainerIPs {
 				ruleset = append(
 					ruleset,
-					rules.NewGBPTagRule(srcContainer.IP, policy.Source.Tag, policy.Source.ID),
+					rules.NewGBPTagRule(srcContainerIP, policy.Source.Tag, policy.Source.ID),
 				)
 			}
 		}
 
 		if srcOk && dstOk {
-			for _, srcContainer := range srcContainers {
-				for _, dstContainer := range dstContainers {
+			for _, srcContainerIP := range srcContainerIPs {
+				for _, dstContainerIP := range dstContainerIPs {
 					ruleset = append(
 						ruleset,
 						rules.NewLocalAllowRule(
-							srcContainer.IP,
-							dstContainer.IP,
+							srcContainerIP,
+							dstContainerIP,
 							policy.Destination.Protocol,
 							policy.Destination.Port,
 							policy.Source.ID,

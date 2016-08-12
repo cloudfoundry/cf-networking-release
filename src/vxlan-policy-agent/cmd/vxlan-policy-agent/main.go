@@ -7,14 +7,13 @@ import (
 	"lib/flannel"
 	"lib/marshal"
 	"lib/policy_client"
+	"lib/poller"
 	"lib/rules"
 	"net/http"
 	"os"
 	"time"
 	"vxlan-policy-agent/config"
 	"vxlan-policy-agent/planner"
-
-	"natman/poller"
 
 	"code.cloudfoundry.org/garden/client"
 	"code.cloudfoundry.org/garden/client/connection"
@@ -74,12 +73,10 @@ func main() {
 	}
 
 	dynamicPlanner := &planner.VxlanPolicyPlanner{
-		GardenClient:   gardenClient,
-		PolicyClient:   policyClient,
-		Logger:         logger.Session("rules-updater"),
-		VNI:            conf.VNI,
-		LocalSubnet:    localSubnetCIDR,
-		OverlayNetwork: overlayNetwork,
+		GardenClient: gardenClient,
+		PolicyClient: policyClient,
+		Logger:       logger.Session("rules-updater"),
+		VNI:          conf.VNI,
 	}
 
 	timestamper := &rules.Timestamper{}

@@ -21,8 +21,8 @@ files:
   - lib/marshal/*.go # gosub
   - lib/models/*.go # gosub
   - lib/policy_client/*.go # gosub
+  - lib/poller/*.go # gosub
   - lib/rules/*.go # gosub
-  - natman/poller/*.go # gosub
   - vxlan-policy-agent/cmd/vxlan-policy-agent/*.go # gosub
   - vxlan-policy-agent/config/*.go # gosub
   - vxlan-policy-agent/planner/*.go # gosub

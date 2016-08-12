@@ -11,6 +11,7 @@ declare -a packages=(
   "src/flannel-watchdog"
   "src/guardian-cni-adapter"
   "src/netmon"
+  "src/vxlan-policy-agent"
   "src/cli-plugin"
   )
 

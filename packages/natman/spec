@@ -17,8 +17,8 @@ files:
   - github.com/tedsuo/ifrit/grouper/*.go # gosub
   - github.com/tedsuo/ifrit/sigmon/*.go # gosub
   - github.com/tedsuo/rata/*.go # gosub
+  - lib/poller/*.go # gosub
   - lib/rules/*.go # gosub
   - natman/cmd/natman/*.go # gosub
   - natman/config/*.go # gosub
   - natman/planner/*.go # gosub
-  - natman/poller/*.go # gosub
