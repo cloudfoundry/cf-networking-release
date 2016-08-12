@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"time"
 
@@ -17,6 +16,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	ginkgoConfig "github.com/onsi/ginkgo/config"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 
 	"testing"
@@ -114,58 +114,12 @@ func scaleApp(appName string, instances int) {
 	time.Sleep(15 * time.Second)
 }
 
-const (
-	ip4Regex         = `(?:[0-9]{1,3}\.){3}[0-9]{1,3}`
-	ipAddrParseRegex = `inet (` + ip4Regex + `)/24 scope global eth0`
-)
-
-func getInstanceIP(appName string, instanceIndex int) string {
-	sshSession := cf.Cf(
-		"ssh", appName,
-		"-i", fmt.Sprintf("%d", instanceIndex),
-		"--skip-host-validation",
-		"-c", "ip addr",
-	)
-	Expect(sshSession.Wait(2 * Timeout_Short)).To(gexec.Exit(0))
-
-	addrOut := string(sshSession.Out.Contents())
-	matches := regexp.MustCompile(ipAddrParseRegex).FindStringSubmatch(addrOut)
-	return matches[1]
-}
-
-func curlFromApp(appName string, instanceIndex int, endpoint string, expectSuccess bool) string {
-	var output string
-
-	tryIt := func() int {
-		sshSession := cf.Cf(
-			"ssh", appName,
-			"-i", fmt.Sprintf("%d", instanceIndex),
-			"--skip-host-validation",
-			"-c", fmt.Sprintf("curl --connect-timeout 5 %s", endpoint),
-		)
-		Expect(sshSession.Wait(2 * Timeout_Short)).To(gexec.Exit())
-		output = string(sshSession.Out.Contents())
-		return sshSession.ExitCode()
-	}
-
-	if expectSuccess {
-		Eventually(tryIt).Should(Equal(0))
-	} else {
-		Eventually(func() bool {
-			code := tryIt()
-			const CURL_EXIT_CODE_COULDNT_RESOLVE_HOST = 6
-			const CURL_EXIT_CODE_COULDNT_CONNECT = 7
-			const CURL_EXIT_CODE_OPERATION_TIMEDOUT = 28
-			switch code {
-			case CURL_EXIT_CODE_COULDNT_RESOLVE_HOST, CURL_EXIT_CODE_COULDNT_CONNECT, CURL_EXIT_CODE_OPERATION_TIMEDOUT:
-				return true
-			default:
-				fmt.Printf("curl exit code: %d\n", code)
-				return false
-			}
-		}).Should(BeTrue())
-	}
-	return output
+func curlApp(endpoint string) *gbytes.Buffer {
+	cmd := exec.Command("curl", "--connect-timeout", "5", endpoint)
+	curlSession, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(curlSession.Wait(2 * Timeout_Short)).To(gexec.Exit())
+	return curlSession.Out
 }
 
 func getAppGuid(appName string) string {

@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/tedsuo/ifrit"
@@ -49,10 +50,7 @@ func main() {
 		dieWith(logger, "localip", err)
 	}
 
-	peerStore := store.New(
-		localIP,
-		50,
-	)
+	peerStore := store.New(localIP, 50, &sync.Mutex{})
 
 	vcapAppBytes := []byte(os.Getenv("VCAP_APPLICATION"))
 	var vcapApp struct {

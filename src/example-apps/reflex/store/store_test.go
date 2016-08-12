@@ -1,6 +1,7 @@
 package store_test
 
 import (
+	"example-apps/reflex/fakes"
 	"example-apps/reflex/store"
 
 	. "github.com/onsi/ginkgo"
@@ -10,18 +11,26 @@ import (
 var _ = Describe("Store", func() {
 	var (
 		addrStore          *store.Store
+		lock               *fakes.Mutex
 		stalenessThreshold int
 	)
 
 	BeforeEach(func() {
 		stalenessThreshold = 10
-		addrStore = store.New("local-addr", stalenessThreshold)
+		lock = &fakes.Mutex{}
+		addrStore = store.New("local-addr", stalenessThreshold, lock)
 	})
 
 	Describe("Add", func() {
 		It("adds the addresses to the store", func() {
 			addrStore.Add([]string{"some-addr", "some-other-addr"})
 			Expect(addrStore.GetAddresses()).To(ConsistOf("some-addr", "some-other-addr", "local-addr"))
+		})
+
+		It("locks and unlocks the store", func() {
+			addrStore.Add([]string{"some-addr", "some-other-addr"})
+			Expect(lock.LockCallCount()).To(Equal(1))
+			Expect(lock.UnlockCallCount()).To(Equal(1))
 		})
 	})
 
@@ -36,6 +45,12 @@ var _ = Describe("Store", func() {
 			}
 			addrStore.Add([]string{"some-addr"})
 			Expect(addrStore.GetAddresses()).To(ConsistOf("some-addr", "local-addr"))
+		})
+
+		It("locks and unlocks the store", func() {
+			addrStore.Add([]string{"some-addr", "some-other-addr"})
+			Expect(lock.LockCallCount()).To(Equal(1))
+			Expect(lock.UnlockCallCount()).To(Equal(1))
 		})
 	})
 })

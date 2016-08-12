@@ -29,16 +29,17 @@ func isSameCell(sourceIP, destIP string) bool {
 var _ = Describe("connectivity between containers on the overlay network", func() {
 	Describe("networking policy", func() {
 		var (
-			appA      string
-			appB      string
+			appProxy  string
+			appReflex string
 			orgName   string
 			spaceName string
 			port      int
 		)
 
 		BeforeEach(func() {
-			appA = fmt.Sprintf("appA-%d", rand.Int31())
-			appB = fmt.Sprintf("appB-%d", rand.Int31())
+			appProxy = fmt.Sprintf("proxy-%d", rand.Int31())
+			appReflex = fmt.Sprintf("reflex-%d", rand.Int31())
+			port = 8080
 
 			Auth(testConfig.TestUser, testConfig.TestUserPassword)
 
@@ -50,90 +51,27 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			Expect(cf.Cf("create-space", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
 			Expect(cf.Cf("target", "-o", orgName, "-s", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
 
-			pushApp(appA)
-			pushApp(appB)
-			scaleApp(appB, 4 /* instances */)
+			pushAppOfType(appProxy, "proxy")
+			pushAppOfType(appReflex, "reflex")
 
-			port = 8080
+			By("creating a new policy to allow the app to talk to itself")
+			session := cf.Cf("access-allow", appReflex, appReflex, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(2 * Timeout_Short)
+			Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
+
+			scaleApp(appReflex, 4 /* instances */)
 		})
 
 		AfterEach(func() {
-			AppReport(appA, Timeout_Short)
-			AppReport(appB, Timeout_Short)
+			AppReport(appProxy, Timeout_Short)
+			AppReport(appReflex, Timeout_Short)
 
 			// clean up everything
-			Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
+			// Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 		})
 
 		It("allows the user to configure connections", func(done Done) {
-			AssertConnectionFails(appA, appB, port)
-
-			By("creating a new policy")
-			session := cf.Cf("access-allow", appA, appB, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(2 * Timeout_Short)
-			Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
-
-			AssertConnectionSucceeds(appA, appB, port)
-
-			scaleApp(appA, 4 /* instances */)
-			AssertConnectionSucceeds(appA, appB, port)
-
-			scaleApp(appB, 6 /* instances */)
-			AssertConnectionSucceeds(appA, appB, port)
-
-			By("deleting the policy")
-			session = cf.Cf("access-deny", appA, appB, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(2 * Timeout_Short)
-			Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
-
-			time.Sleep(5 * time.Second)
-			AssertConnectionFails(appA, appB, port)
-
-			close(done)
-		}, 300 /* <-- overall spec timeout in seconds */)
-	})
-
-	Describe("reflex app", func() {
-		var (
-			appName   string
-			orgName   string
-			spaceName string
-			port      int
-		)
-
-		BeforeEach(func() {
-			appName = fmt.Sprintf("reflex-%d", rand.Int31())
-			port = 8080
-
-			Auth(testConfig.TestUser, testConfig.TestUserPassword)
-
-			orgName = "test-org"
-			Expect(cf.Cf("create-org", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
-			Expect(cf.Cf("target", "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
-
-			spaceName = "test-space"
-			Expect(cf.Cf("create-space", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
-			Expect(cf.Cf("target", "-o", orgName, "-s", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
-
-			pushAppOfType(appName, "reflex")
-
-			By("creating a new policy to allow the app to talk to itself")
-			session := cf.Cf("access-allow", appName, appName, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(2 * Timeout_Short)
-			Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
-		})
-
-		AfterEach(func() {
-			AppReport(appName, Timeout_Short)
-
-			By("creating a new policy to allow the app to talk to itself")
-			session := cf.Cf("access-deny", appName, appName, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(2 * Timeout_Short)
-			Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
-
-			// clean up everything
-			Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
-		})
-
-		It("eventually discovers the ip addresses of all its peers", func() {
 			getPeers := func() ([]string, error) {
-				resp, err := http.Get(fmt.Sprintf("http://%s.%s/peers", appName, config.AppsDomain))
+				resp, err := http.Get(fmt.Sprintf("http://%s.%s/peers", appReflex, config.AppsDomain))
 				if err != nil {
 					return nil, err
 				}
@@ -153,38 +91,53 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 				}
 				return peersResponse.IPs, nil
 			}
-			Eventually(getPeers).Should(HaveLen(1))
 
-			scaleApp(appName, 3 /* instances */)
-			Eventually(getPeers, 60*time.Second, 500*time.Millisecond).Should(HaveLen(3))
+			By("checking that the reflex app has discovered all its instances")
+			Eventually(getPeers, 60*time.Second, 500*time.Millisecond).Should(HaveLen(4))
 
-			scaleApp(appName, 1 /* instances */)
+			By("checking that the connection fails")
+			AssertConnectionFails(appProxy, appReflex, port)
+
+			By("creating a new policy")
+			session := cf.Cf("access-allow", appProxy, appReflex, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(2 * Timeout_Short)
+			Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
+
+			AssertConnectionSucceeds(appProxy, appReflex, port)
+
+			By("deleting the policy")
+			session = cf.Cf("access-deny", appProxy, appReflex, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(2 * Timeout_Short)
+			Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
+
+			time.Sleep(10 * time.Second)
+			AssertConnectionFails(appProxy, appReflex, port)
+
+			By("checking that reflex no longer reports deleted instances")
+			scaleApp(appReflex, 1 /* instances */)
 			Eventually(getPeers, 60*time.Second, 500*time.Millisecond).Should(HaveLen(1))
-		})
+
+			close(done)
+		}, 300 /* <-- overall spec timeout in seconds */)
 	})
 })
 
-func assertConnection(sourceAppName string, sourceAppInstance int, destIP string, destPort int, shouldSucceed bool) {
+func assertConnection(sourceAppName string, destIP string, destPort int, shouldSucceed bool) {
+	proxyTest := func() (string, error) {
+		resp, err := http.Get(fmt.Sprintf("http://%s.%s/proxy/%s:%d/peers", sourceAppName, config.AppsDomain, destIP, destPort))
+		if err != nil {
+			return "", err
+		}
+		defer resp.Body.Close()
+		respBytes, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return "", err
+		}
+		return string(respBytes), nil
+	}
 	if shouldSucceed {
-		Expect(curlFromApp(sourceAppName, sourceAppInstance, fmt.Sprintf("%s:%d/", destIP, destPort), shouldSucceed)).To(ContainSubstring(destIP))
+		Eventually(proxyTest).Should(ContainSubstring(destIP))
 	} else {
-		Expect(curlFromApp(sourceAppName, sourceAppInstance, fmt.Sprintf("%s:%d/", destIP, destPort), shouldSucceed)).NotTo(ContainSubstring(destIP))
+		Eventually(proxyTest).Should(ContainSubstring("request failed"))
 	}
-}
-
-func getInstanceCount(appName string) int {
-	appGuid := getAppGuid(appName)
-	curlSession := cf.Cf("curl", "-X", "GET", fmt.Sprintf("/v2/apps/%s", appGuid)).Wait(Timeout_Short)
-	Expect(curlSession.Wait(Timeout_Short)).To(gexec.Exit(0))
-	var infoStruct struct {
-		Entity struct {
-			Instances int `json:"instances"`
-		} `json:"entity"`
-	}
-	Expect(json.Unmarshal(curlSession.Out.Contents(), &infoStruct)).To(Succeed())
-	count := infoStruct.Entity.Instances
-	Expect(count).To(BeNumerically(">", 0))
-	return count
 }
 
 func AssertConnectionSucceeds(sourceApp, destApp string, destPort int) {
@@ -198,44 +151,18 @@ func AssertConnectionFails(sourceApp, destApp string, destPort int) {
 }
 
 func assertConnectionStatus(sourceApp, destApp string, destPort int, shouldSucceed bool) {
-	sourceAppInstances := getInstanceCount(sourceApp)
-	destAppInstances := getInstanceCount(destApp)
+	resp, err := http.Get(fmt.Sprintf("http://%s.%s/peers", destApp, config.AppsDomain))
+	Expect(err).NotTo(HaveOccurred())
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	Expect(err).NotTo(HaveOccurred())
+	defer resp.Body.Close()
 
-	sources := []string{}
-	for i := 0; i < sourceAppInstances; i++ {
-		sources = append(sources, getInstanceIP(sourceApp, i))
+	var addressListJson struct {
+		IPs []string
 	}
-	dests := []string{}
-	for j := 0; j < destAppInstances; j++ {
-		dests = append(dests, getInstanceIP(destApp, j))
+	Expect(json.Unmarshal(respBytes, &addressListJson)).To(Succeed())
+
+	for _, destIP := range addressListJson.IPs {
+		assertConnection(sourceApp, destIP, destPort, shouldSucceed)
 	}
-
-	sameCellChan := make(chan bool)
-
-	for sourceAppInstance, sourceIP := range sources {
-		for _, destIP := range dests {
-			go func(sourceIP, destIP string, sourceAppInstance int) {
-				defer GinkgoRecover()
-
-				sameCell := isSameCell(sourceIP, destIP)
-
-				assertConnection(sourceApp, sourceAppInstance, destIP, destPort, shouldSucceed)
-
-				sameCellChan <- sameCell
-			}(sourceIP, destIP, sourceAppInstance)
-		}
-	}
-
-	var coveredSameCell, coveredDifferentCells bool
-	for i := 0; i < sourceAppInstances*destAppInstances; i++ {
-		sameCell := <-sameCellChan
-		if sameCell {
-			coveredSameCell = true
-		} else {
-			coveredDifferentCells = true
-		}
-	}
-
-	Expect(coveredSameCell).To(BeTrue())
-	Expect(coveredDifferentCells).To(BeTrue())
 }
