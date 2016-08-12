@@ -46,7 +46,12 @@ type ProxyHandler struct{}
 func (h *ProxyHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	destination := strings.TrimPrefix(req.URL.Path, "/proxy/")
 	destination = "http://" + destination
-	getResp, err := http.Get(destination)
+	client := &http.Client{
+		Transport: &http.Transport{
+			DisableKeepAlives: true,
+		},
+	}
+	getResp, err := client.Get(destination)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "request failed: %s", err)
 		resp.WriteHeader(http.StatusInternalServerError)

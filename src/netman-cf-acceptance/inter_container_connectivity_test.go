@@ -159,8 +159,8 @@ func assertSingleConnection(sourceAppName string, destIP string, shouldSucceed b
 		return string(respBytes), nil
 	}
 	if shouldSucceed {
-		Eventually(proxyTest).Should(ContainSubstring(destIP))
+		Eventually(proxyTest, 10*time.Second).Should(ContainSubstring(destIP))
 	} else {
-		Eventually(proxyTest).Should(ContainSubstring("request failed"))
+		Eventually(proxyTest, 10*time.Second).Should(ContainSubstring("request failed"))
 	}
 }
