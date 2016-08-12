@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
@@ -16,7 +15,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	ginkgoConfig "github.com/onsi/ginkgo/config"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 
 	"testing"
@@ -109,26 +107,9 @@ func scaleApp(appName string, instances int) {
 		"scale", appName,
 		"-i", fmt.Sprintf("%d", instances),
 	).Wait(Timeout_Short)).To(gexec.Exit(0))
-
-	// wait for ssh to become available on new instances
-	time.Sleep(15 * time.Second)
 }
 
-func curlApp(endpoint string) *gbytes.Buffer {
-	cmd := exec.Command("curl", "--connect-timeout", "5", endpoint)
-	curlSession, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(curlSession.Wait(2 * Timeout_Short)).To(gexec.Exit())
-	return curlSession.Out
-}
-
-func getAppGuid(appName string) string {
-	session := cf.Cf("app", appName, "--guid")
-	Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
-	return strings.TrimSpace(string(session.Out.Contents()))
-}
-
-func AppReport(appName string, timeout time.Duration) {
+func appReport(appName string, timeout time.Duration) {
 	Eventually(cf.Cf("app", appName, "--guid"), timeout).Should(gexec.Exit())
 	Eventually(cf.Cf("logs", appName, "--recent"), timeout).Should(gexec.Exit())
 }
