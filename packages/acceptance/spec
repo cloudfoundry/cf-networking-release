@@ -6,6 +6,7 @@ dependencies:
 
 files:
   - example-apps/proxy/manifest.yml # HANDCRAFTED
+  - example-apps/reflex/manifest.yml # HANDCRAFTED
   - example-apps/proxy/*.go # gosub
   - example-apps/reflex/*.go # gosub
   - example-apps/reflex/client/*.go # gosub
