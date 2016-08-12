@@ -1,6 +1,7 @@
 package planner_test
 
 import (
+	"errors"
 	"lib/rules"
 	"natman/planner"
 
@@ -11,10 +12,12 @@ import (
 )
 
 var _ = Describe("NetInPlanner", func() {
-	var p *planner.NetInPlanner
-	var fakeClient *gardenfakes.FakeClient
-	var fakeContainer1 *gardenfakes.FakeContainer
-	var fakeContainer2 *gardenfakes.FakeContainer
+	var (
+		p              *planner.NetInPlanner
+		fakeClient     *gardenfakes.FakeClient
+		fakeContainer1 *gardenfakes.FakeContainer
+		fakeContainer2 *gardenfakes.FakeContainer
+	)
 
 	BeforeEach(func() {
 		fakeContainer1 = &gardenfakes.FakeContainer{}
@@ -56,6 +59,13 @@ var _ = Describe("NetInPlanner", func() {
 			}, nil)
 		})
 
+		It("contacts the gets all of the containers from the garden server", func() {
+			_, err := p.GetRules()
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(fakeClient.ContainersCallCount()).To(Equal(1))
+			Expect(fakeClient.ContainersArgsForCall(0)).To(Equal(garden.Properties{}))
+		})
 		It("returns a list of rules", func() {
 			r, err := p.GetRules()
 			Expect(err).NotTo(HaveOccurred())
@@ -87,6 +97,26 @@ var _ = Describe("NetInPlanner", func() {
 					"-m", "comment", "--comment", "dst:some-other-app-guid",
 				},
 			}}))
+		})
+
+		Context("when getting the containers fails", func() {
+			BeforeEach(func() {
+				fakeClient.ContainersReturns(nil, errors.New("banana"))
+			})
+			It("returns the error", func() {
+				_, err := p.GetRules()
+				Expect(err).To(MatchError("banana"))
+			})
+		})
+
+		Context("when getting the container info fails", func() {
+			BeforeEach(func() {
+				fakeContainer1.InfoReturns(garden.ContainerInfo{}, errors.New("potato"))
+			})
+			It("returns the error", func() {
+				_, err := p.GetRules()
+				Expect(err).To(MatchError("potato"))
+			})
 		})
 	})
 })

@@ -2,6 +2,7 @@ package planner_test
 
 import (
 	"encoding/json"
+	"errors"
 	"lib/rules"
 	"natman/planner"
 	"net"
@@ -197,6 +198,28 @@ var _ = Describe("NetOutPlanner", func() {
 						},
 					},
 				}))
+			})
+		})
+
+		Context("when getting the containers fails", func() {
+			BeforeEach(func() {
+				fakeClient.ContainersReturns(nil, errors.New("banana"))
+			})
+			It("logs and returns the error", func() {
+				_, err := p.GetRules()
+				Expect(err).To(MatchError("banana"))
+				Expect(logger).To(gbytes.Say("garden-client-containers.*banana"))
+			})
+		})
+
+		Context("when getting the container info fails", func() {
+			BeforeEach(func() {
+				fakeContainer1.InfoReturns(garden.ContainerInfo{}, errors.New("potato"))
+			})
+			It("logs and returns the error", func() {
+				_, err := p.GetRules()
+				Expect(err).To(MatchError("potato"))
+				Expect(logger).To(gbytes.Say("container-info.*potato.*info"))
 			})
 		})
 

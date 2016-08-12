@@ -18,6 +18,7 @@ func (netOutPlanner *NetOutPlanner) GetRules() ([]rules.Rule, error) {
 	properties := garden.Properties{}
 	allContainers, err := netOutPlanner.GardenClient.Containers(properties)
 	if err != nil {
+		netOutPlanner.Logger.Error("garden-client-containers", err)
 		return nil, err
 	}
 
