@@ -138,8 +138,6 @@ var _ = Describe("Guardian CNI adapter", func() {
 			"cni_plugin_dir": cniPluginDir,
 			"cni_config_dir": cniConfigDir,
 			"bind_mount_dir": bindMountRoot,
-			"log_dir":        adapterLogDir,
-			"netman_url":     mockNetmanAgentServer.URL,
 		}
 		configBytes, err := json.Marshal(config)
 		Expect(err).NotTo(HaveOccurred())

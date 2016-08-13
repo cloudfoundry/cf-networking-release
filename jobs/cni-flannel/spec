@@ -44,7 +44,3 @@ properties:
   flannel-watchdog.config.flannel_subnet_file:
     description: "file that flannel writes out the subnet environment"
     default: /run/flannel/subnet.env
-
-  garden-cni.adapter.cni_config_dir:
-    description: "Directory to store CNI config files.  Other jobs may write files into here."
-    default: /var/vcap/data/garden-cni/cni-config

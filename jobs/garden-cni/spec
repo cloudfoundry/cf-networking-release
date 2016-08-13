@@ -9,19 +9,12 @@ packages:
   - runc-cni
 
 properties:
-  garden-cni.adapter.cni_plugin_dir:
+  garden-cni.cni_plugin_dir:
     description: "Directory containing CNI plugins."
 
-  garden-cni.adapter.cni_config_dir:
+  garden-cni.cni_config_dir:
     description: "Directory to store CNI config files.  Other jobs may write files into here."
 
-  garden-cni.adapter.bind_mount_dir:
+  garden-cni.bind_mount_dir:
     description: "The CNI adapter will bind-mount network namespaces in this directory"
     default: /var/vcap/data/garden-cni/container-netns
-
-  garden-cni.adapter.log_dir:
-    description: "The CNI adapter will drop logs here"
-    default: /var/vcap/sys/log/garden-cni/adapter
-
-  garden-cni.adapter.netman_url:
-    description: "Post CNI results to this URL.  If empty, results will be ignored."
