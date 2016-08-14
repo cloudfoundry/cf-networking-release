@@ -27,8 +27,7 @@
 	url = https://github.com/cloudfoundry-incubator/cf-test-helpers
 [submodule "src/github.com/vito/gosub"]
 	path = src/github.com/vito/gosub
-	url = https://github.com/rosenhouse/gosub
-	branch = actionfunc
+	url = https://github.com/vito/gosub
 [submodule "src/github.com/codegangsta/cli"]
 	path = src/github.com/codegangsta/cli
 	url = https://github.com/codegangsta/cli
