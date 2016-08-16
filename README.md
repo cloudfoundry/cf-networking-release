@@ -208,7 +208,7 @@ bosh deploy
 For generating a cloudfoundry-diego deployment without container to container connectivity, but using the CNI bridge plugin for NAT'ed connectivity.
 
 ```bash
-CNI_BRIDGE=true ./scripts/generate-deployment-manifest
+CNI_BRIDGE=true ./scripts/generate-bosh-lite-manifests
 bosh deploy
 ```
 
