@@ -23,7 +23,7 @@ func (r GenericRule) Enforce(table, chain string, iptables IPTables, logger lage
 		return fmt.Errorf("appending rule: %s", err)
 	}
 
-	logger.Info("enforce-rule", lager.Data{
+	logger.Debug("enforce-rule", lager.Data{
 		"table":      table,
 		"chain":      chain,
 		"properties": fmt.Sprintf("%s", r.Properties),

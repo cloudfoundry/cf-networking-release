@@ -56,7 +56,7 @@ func (p *VxlanPolicyPlanner) GetRules() ([]rules.Rule, error) {
 		p.Logger.Error("container-info", err)
 		return nil, err
 	}
-	p.Logger.Info("got-containers", lager.Data{"containers": containers})
+	p.Logger.Debug("got-containers", lager.Data{"containers": containers})
 
 	policies, err := p.PolicyClient.GetPolicies()
 	if err != nil {
@@ -114,6 +114,6 @@ func (p *VxlanPolicyPlanner) GetRules() ([]rules.Rule, error) {
 			}
 		}
 	}
-	p.Logger.Info("generated-rules", lager.Data{"rules": ruleset})
+	p.Logger.Debug("generated-rules", lager.Data{"rules": ruleset})
 	return ruleset, nil
 }

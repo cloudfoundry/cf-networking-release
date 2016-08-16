@@ -55,7 +55,7 @@ func (c *Client) GetPolicies() ([]models.Policy, error) {
 		return nil, err
 	}
 
-	c.logger.Info("get-policies", lager.Data{
+	c.logger.Debug("get-policies", lager.Data{
 		"body": string(policyBytes),
 	})
 
