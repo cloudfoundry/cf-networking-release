@@ -65,10 +65,15 @@ else
   fi
 fi
 
-
-for dir in "${packages[@]}"; do
-  pushd $dir
-    extraFlags="${GINKGO_EXTRA_FLAGS:-""}"
-    ginkgo -r -randomizeAllSpecs -randomizeSuites $extraFlags "$@"
+if [ "${1:-""}" = "" ]; then
+  for dir in "${packages[@]}"; do
+    pushd $dir
+      ginkgo -r -randomizeAllSpecs -randomizeSuites "${@:2}"
+    popd
+  done
+else
+  testdir="$1"
+  pushd $testdir
+    ginkgo -r -randomizeAllSpecs -randomizeSuites "${@:2}"
   popd
-done
+fi

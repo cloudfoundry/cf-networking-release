@@ -9,7 +9,6 @@ if [ ${MYSQL:-"false"} = "true" ]; then
      --rm \
      -v $PWD:/netman-release \
      -e GOPATH=/netman-release \
-     -e GINKGO_EXTRA_FLAGS="${GINKGO_EXTRA_FLAGS:-""}" \
      -e NO_DB="${NO_DB:-""}" \
      -e MYSQL=true \
      -w / \
@@ -20,7 +19,6 @@ else
      --rm \
      -v $PWD:/netman-release \
      -e GOPATH=/netman-release \
-     -e GINKGO_EXTRA_FLAGS="${GINKGO_EXTRA_FLAGS:-""}" \
      -e NO_DB="${NO_DB:-""}" \
      -w / \
      c2cnetworking/dev-postgres \
