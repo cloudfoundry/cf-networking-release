@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -57,27 +55,8 @@ func sameFile(path1, path2 string) bool {
 	return os.SameFile(fi1, fi2)
 }
 
-var mockNetmanAgentServerResponseCode = 200
 var netmanAgentReceivedData = ``
 var netmanAgentReceivedMethod = ``
-
-func createMockNetmanAgentServer() *httptest.Server {
-	var serverCallCount = 0
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		requestBytes, err := ioutil.ReadAll(r.Body)
-		Expect(err).NotTo(HaveOccurred())
-		netmanAgentReceivedData = string(requestBytes)
-		netmanAgentReceivedMethod = r.Method
-		if r.URL.Path == "/cni_result" {
-			serverCallCount += 1
-			w.WriteHeader(mockNetmanAgentServerResponseCode)
-			w.Write([]byte(`{}`))
-			return
-		}
-		w.WriteHeader(http.StatusTeapot)
-		w.Write([]byte(`you asked for a path that we do not mock`))
-	}))
-}
 
 const DEFAULT_TIMEOUT = "10s"
 
@@ -92,7 +71,6 @@ var _ = Describe("Guardian CNI adapter", func() {
 		fakeProcess            *os.Process
 		fakeConfigFilePath     string
 		adapterLogFilePath     string
-		mockNetmanAgentServer  *httptest.Server
 		upCommand, downCommand *exec.Cmd
 		adapterLogDir          string
 	)
@@ -129,7 +107,6 @@ var _ = Describe("Guardian CNI adapter", func() {
 
 		netmanAgentReceivedData = ""
 		netmanAgentReceivedMethod = ""
-		mockNetmanAgentServer = createMockNetmanAgentServer()
 
 		configFile, err := ioutil.TempFile("", "adapter-config-")
 		Expect(err).NotTo(HaveOccurred())
@@ -182,11 +159,6 @@ var _ = Describe("Guardian CNI adapter", func() {
 		Expect(os.RemoveAll(cniConfigDir)).To(Succeed())
 		Expect(os.RemoveAll(fakeLogDir)).To(Succeed())
 		Expect(fakeProcess.Kill()).To(Succeed())
-
-		if mockNetmanAgentServer != nil {
-			mockNetmanAgentServer.Close()
-			mockNetmanAgentServer = nil
-		}
 	})
 
 	It("should call CNI ADD and DEL", func() {
