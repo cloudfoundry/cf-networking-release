@@ -95,7 +95,8 @@ Then follow [the instructions for testing with the cats & dogs example](https://
         nodes: 1
         skip_ssl_validation: true
         use_http: true
-          test_user_password: <test-user-password>
+        test_user_password: <test-user-password>
+        test_user: <test-user>
       uaa:
         clients:
           network-policy:
