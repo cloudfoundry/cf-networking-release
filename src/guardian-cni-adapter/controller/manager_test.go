@@ -57,6 +57,7 @@ var _ = Describe("Manager", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(properties.ContainerIP).To(Equal(net.ParseIP("169.254.1.2")))
+			Expect(properties.DeprecatedHostIP).To(Equal(net.ParseIP("255.255.255.255")))
 		})
 
 		It("should call CNI Up, passing in the bind-mounted path to the net ns", func() {

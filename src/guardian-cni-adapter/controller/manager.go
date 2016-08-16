@@ -29,7 +29,8 @@ type Manager struct {
 }
 
 type Properties struct {
-	ContainerIP net.IP `json:"network.external-networker.container-ip"`
+	ContainerIP      net.IP `json:"garden.network.container-ip"`
+	DeprecatedHostIP net.IP `json:"garden.network.host-ip"`
 }
 
 func ExtractGardenProperties(encodedGardenProperties string) (map[string]string, error) {
@@ -75,7 +76,8 @@ func (m *Manager) Up(pid int, containerHandle, encodedGardenProperties string) (
 	}
 
 	return &Properties{
-		ContainerIP: result.IP4.IP.IP,
+		ContainerIP:      result.IP4.IP.IP,
+		DeprecatedHostIP: net.ParseIP("255.255.255.255"),
 	}, nil
 }
 
