@@ -25,6 +25,11 @@ import (
 	"github.com/tedsuo/ifrit/sigmon"
 )
 
+func die(logger lager.Logger, action string, err error) {
+	logger.Error(action, err)
+	os.Exit(1)
+}
+
 func main() {
 	conf := &config.VxlanPolicyAgent{}
 
@@ -36,12 +41,12 @@ func main() {
 
 	configBytes, err := ioutil.ReadFile(*configFilePath)
 	if err != nil {
-		logger.Fatal("error reading config", err)
+		die(logger, "error reading config", err)
 	}
 
 	err = json.Unmarshal(configBytes, conf)
 	if err != nil {
-		logger.Fatal("error unmarshalling config", err)
+		die(logger, "error unmarshalling config", err)
 	}
 	logger.Info("parsed-config", lager.Data{"config": conf})
 
@@ -55,7 +60,7 @@ func main() {
 	}
 	localSubnetCIDR, overlayNetwork, err := flannelInfoReader.DiscoverNetworkInfo()
 	if err != nil {
-		logger.Fatal("discovering network info", err)
+		die(logger, "discovering network info", err)
 	}
 
 	policyClient := policy_client.New(
@@ -69,7 +74,7 @@ func main() {
 
 	ipt, err := iptables.New()
 	if err != nil {
-		logger.Fatal("iptables-new", err)
+		die(logger, "iptables-new", err)
 	}
 
 	dynamicPlanner := &planner.VxlanPolicyPlanner{
@@ -128,30 +133,30 @@ func main() {
 
 	defaultLocalRules, err := vxlanDefaultLocalPlanner.GetRules()
 	if err != nil {
-		logger.Fatal("default-local-rules.GetRules", err)
+		die(logger, "default-local-rules.GetRules", err)
 	}
 
 	err = ruleEnforcer.EnforceOnChain(defaultLocalChain, defaultLocalRules)
 	if err != nil {
-		logger.Fatal("enforce-default-local", err)
+		die(logger, "enforce-default-local", err)
 	}
 
 	defaultRemoteRules, err := vxlanDefaultRemotePlanner.GetRules()
 	if err != nil {
-		logger.Fatal("default-local-rules.GetRules", err)
+		die(logger, "default-local-rules.GetRules", err)
 	}
 	err = ruleEnforcer.EnforceOnChain(defaultRemoteChain, defaultRemoteRules)
 	if err != nil {
-		logger.Fatal("enforce-default-remote", err)
+		die(logger, "enforce-default-remote", err)
 	}
 
 	defaultMasqueradeRules, err := vxlanDefaultMasqueradePlanner.GetRules()
 	if err != nil {
-		logger.Fatal("default-masquerade-rules.GetRules", err)
+		die(logger, "default-masquerade-rules.GetRules", err)
 	}
 	err = ruleEnforcer.EnforceOnChain(defaultMasqueradeChain, defaultMasqueradeRules)
 	if err != nil {
-		logger.Fatal("enforce-default-masquerade", err)
+		die(logger, "enforce-default-masquerade", err)
 	}
 
 	policyPoller := &poller.Poller{
@@ -171,6 +176,6 @@ func main() {
 	logger.Info("starting")
 	err = <-monitor.Wait()
 	if err != nil {
-		logger.Fatal("ifrit monitor", err)
+		die(logger, "ifrit monitor", err)
 	}
 }
