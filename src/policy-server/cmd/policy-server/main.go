@@ -17,8 +17,8 @@ import (
 	"policy-server/uaa_client"
 	"time"
 
-	"github.com/jmoiron/sqlx"
 	"code.cloudfoundry.org/lager"
+	"github.com/jmoiron/sqlx"
 	"github.com/tedsuo/rata"
 )
 
@@ -29,7 +29,7 @@ func main() {
 	flag.Parse()
 
 	logger := lager.NewLogger("policy-server")
-	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.DEBUG))
+	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.INFO))
 
 	configData, err := ioutil.ReadFile(*configFilePath)
 	if err != nil {
