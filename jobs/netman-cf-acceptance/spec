@@ -11,6 +11,14 @@ packages:
   - cli
 
 properties:
+  netman-cf-acceptance.reflex_applications:
+    description: "number of reflex apps to deploy during acceptance"
+    default: 1
+
+  netman-cf-acceptance.reflex_instances:
+    description: "instances to scale a given reflex app to when running tests"
+    default: 4
+
   netman-cf-acceptance.test_user:
     description: "user for testing policy api, must have network.admin scope"
     default: admin

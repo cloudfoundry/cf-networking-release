@@ -30,15 +30,22 @@ func isSameCell(sourceIP, destIP string) bool {
 var _ = Describe("connectivity between containers on the overlay network", func() {
 	Describe("networking policy", func() {
 		var (
-			appProxy  string
-			appReflex string
-			orgName   string
-			spaceName string
+			appProxy     string
+			appsReflex   []string
+			orgName      string
+			spaceName    string
+			appInstances int
+			applications int
 		)
 
 		BeforeEach(func() {
+			appInstances = testConfig.AppInstances
+			applications = testConfig.Applications
+
 			appProxy = fmt.Sprintf("proxy-%d", rand.Int31())
-			appReflex = fmt.Sprintf("reflex-%d", rand.Int31())
+			for i := 0; i < applications; i++ {
+				appsReflex = append(appsReflex, fmt.Sprintf("reflex-%d-%d", i, rand.Int31()))
+			}
 
 			Auth(testConfig.TestUser, testConfig.TestUserPassword)
 
@@ -51,81 +58,95 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			Expect(cf.Cf("target", "-o", orgName, "-s", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
 
 			pushAppOfType(appProxy, "proxy")
-			pushAppOfType(appReflex, "reflex")
-
-			By("creating a new policy to allow the app to talk to itself")
-			session := cf.Cf("access-allow", appReflex, appReflex, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(2 * Timeout_Short)
-			Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
-
-			scaleApp(appReflex, 4 /* instances */)
+			pushAppsOfType(appsReflex, "reflex")
+			for _, app := range appsReflex {
+				By("creating a new policy to allow the reflex app to talk to itself")
+				session := cf.Cf("access-allow", app, app, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(2 * Timeout_Short)
+				Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
+				scaleApp(app, appInstances)
+			}
 		})
 
 		AfterEach(func() {
 			appReport(appProxy, Timeout_Short)
-			appReport(appReflex, Timeout_Short)
+			appsReport(appsReflex, Timeout_Short)
 
 			// clean up everything
 			Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 		})
 
 		It("allows the user to configure connections", func(done Done) {
-			getPeers := func() ([]string, error) {
-				resp, err := http.Get(fmt.Sprintf("http://%s.%s/peers", appReflex, config.AppsDomain))
-				if err != nil {
-					return nil, err
-				}
-
-				respBytes, err := ioutil.ReadAll(resp.Body)
-				if err != nil {
-					return nil, err
-				}
-				defer resp.Body.Close()
-
-				var peersResponse struct {
-					IPs []string
-				}
-				err = json.Unmarshal(respBytes, &peersResponse)
-				if err != nil {
-					return nil, err
-				}
-				return peersResponse.IPs, nil
-			}
-
 			By("checking that the reflex app has discovered all its instances")
-			Eventually(getPeers, 60*time.Second, 500*time.Millisecond).Should(HaveLen(4))
+			checkPeers(appsReflex, 60*time.Second, 500*time.Millisecond, appInstances)
 
 			By("checking that the connection fails")
-			assertConnectionFails(appProxy, appReflex)
+			assertConnectionFails(appProxy, appsReflex)
 
 			By("creating a new policy")
-			session := cf.Cf("access-allow", appProxy, appReflex, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(2 * Timeout_Short)
-			Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
+			for _, app := range appsReflex {
+				session := cf.Cf("access-allow", appProxy, app, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(2 * Timeout_Short)
+				Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
+			}
 
-			By(fmt.Sprintf("checking that %s can reach %s", appProxy, appReflex))
-			assertConnectionSucceeds(appProxy, appReflex)
+			By(fmt.Sprintf("checking that %s can reach %s", appProxy, appsReflex))
+			assertConnectionSucceeds(appProxy, appsReflex)
 
 			By("deleting the policy")
-			session = cf.Cf("access-deny", appProxy, appReflex, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(2 * Timeout_Short)
-			Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
+			for _, app := range appsReflex {
+				session := cf.Cf("access-deny", appProxy, app, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(2 * Timeout_Short)
+				Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
+			}
 
-			By(fmt.Sprintf("checking that %s can NOT reach %s", appProxy, appReflex))
-			assertConnectionFails(appProxy, appReflex)
+			By(fmt.Sprintf("checking that %s can NOT reach %s", appProxy, appsReflex))
+			assertConnectionFails(appProxy, appsReflex)
 
 			By("checking that reflex no longer reports deleted instances")
-			scaleApp(appReflex, 1 /* instances */)
-			Eventually(getPeers, 60*time.Second, 500*time.Millisecond).Should(HaveLen(1))
+			scaleApps(appsReflex, 1 /* instances */)
+			checkPeers(appsReflex, 60*time.Second, 500*time.Millisecond, appInstances)
 
 			close(done)
 		}, 300 /* <-- overall spec timeout in seconds */)
 	})
 })
 
-func assertConnectionSucceeds(sourceApp, destApp string) {
-	assertAllConnectionStatus(sourceApp, destApp, true)
+func checkPeers(apps []string, timeout, pollingInterval time.Duration, instances int) {
+	for _, app := range apps {
+		getPeers := func() ([]string, error) {
+			resp, err := http.Get(fmt.Sprintf("http://%s.%s/peers", app, config.AppsDomain))
+			if err != nil {
+				return nil, err
+			}
+
+			respBytes, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				return nil, err
+			}
+			defer resp.Body.Close()
+
+			var peersResponse struct {
+				IPs []string
+			}
+			err = json.Unmarshal(respBytes, &peersResponse)
+			if err != nil {
+				return nil, err
+			}
+			return peersResponse.IPs, nil
+		}
+
+		Eventually(getPeers, timeout, pollingInterval).Should(HaveLen(instances))
+	}
 }
 
-func assertConnectionFails(sourceApp, destApp string) {
-	assertAllConnectionStatus(sourceApp, destApp, false)
+func assertConnectionSucceeds(sourceApp string, destApps []string) {
+	for _, app := range destApps {
+		assertAllConnectionStatus(sourceApp, app, true)
+	}
+}
+
+func assertConnectionFails(sourceApp string, destApps []string) {
+	for _, app := range destApps {
+		assertAllConnectionStatus(sourceApp, app, false)
+	}
 }
 
 func assertAllConnectionStatus(sourceApp, destApp string, shouldSucceed bool) {

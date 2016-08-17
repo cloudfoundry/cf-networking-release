@@ -26,6 +26,8 @@ var (
 	testConfig struct {
 		TestUser         string `json:"test_user"`
 		TestUserPassword string `json:"test_user_password"`
+		Applications     int    `json:"reflex_applications"`
+		AppInstances     int    `json:"reflex_instances"`
 	}
 	preBuiltBinaries map[string]string
 )
@@ -85,11 +87,20 @@ func TestAcceptance(t *testing.T) {
 
 	RunSpecs(t, "Acceptance Suite")
 }
+
 func appDir(appType string) string {
 	return filepath.Join(appsDir, appType)
 }
+
 func pushApp(appName string) {
 	pushAppOfType(appName, "proxy")
+}
+
+func pushAppsOfType(appNames []string, appType string) {
+	for _, app := range appNames {
+		By(fmt.Sprintf("pushing app %s of type %s", app, appType))
+		pushAppOfType(app, appType)
+	}
 }
 
 func pushAppOfType(appName, appType string) {
@@ -102,6 +113,12 @@ func pushAppOfType(appName, appType string) {
 	).Wait(Timeout_Push)).To(gexec.Exit(0))
 }
 
+func scaleApps(apps []string, instances int) {
+	for _, app := range apps {
+		scaleApp(app, instances)
+	}
+}
+
 func scaleApp(appName string, instances int) {
 	Expect(cf.Cf(
 		"scale", appName,
@@ -109,7 +126,14 @@ func scaleApp(appName string, instances int) {
 	).Wait(Timeout_Short)).To(gexec.Exit(0))
 }
 
+func appsReport(appNames []string, timeout time.Duration) {
+	for _, app := range appNames {
+		appReport(app, timeout)
+	}
+}
+
 func appReport(appName string, timeout time.Duration) {
+	By(fmt.Sprintf("reporting app %s", appName))
 	Eventually(cf.Cf("app", appName, "--guid"), timeout).Should(gexec.Exit())
 	Eventually(cf.Cf("logs", appName, "--recent"), timeout).Should(gexec.Exit())
 }

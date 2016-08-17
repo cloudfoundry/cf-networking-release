@@ -17,7 +17,9 @@ echo '
   "skip_ssl_validation": true,
   "use_http": true,
   "test_user": "admin",
-  "test_user_password": "admin"
+  "test_user_password": "admin",
+  "reflex_instances": 4,
+  "reflex_applications": 1
 }
 ' > $CONFIG
 
