@@ -32,7 +32,7 @@ func main() {
 	flag.Parse()
 
 	logger := lager.NewLogger("vxlan-policy-agent")
-	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.DEBUG))
+	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.INFO))
 
 	configBytes, err := ioutil.ReadFile(*configFilePath)
 	if err != nil {

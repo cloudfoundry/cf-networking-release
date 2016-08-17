@@ -29,7 +29,7 @@ func main() {
 	flag.Parse()
 
 	logger := lager.NewLogger("natman")
-	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.DEBUG))
+	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.INFO))
 
 	configBytes, err := ioutil.ReadFile(*configFilePath)
 	if err != nil {
