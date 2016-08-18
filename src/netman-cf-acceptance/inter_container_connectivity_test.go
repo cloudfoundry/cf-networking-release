@@ -91,6 +91,8 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			By(fmt.Sprintf("checking that %s can reach %s", appProxy, appsReflex))
 			assertConnectionSucceeds(appProxy, appsReflex)
 
+			dumpStats(appProxy, config.AppsDomain)
+
 			By("deleting the policy")
 			for _, app := range appsReflex {
 				session := cf.Cf("access-deny", appProxy, app, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(2 * Timeout_Short)
@@ -108,6 +110,16 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 		}, 300 /* <-- overall spec timeout in seconds */)
 	})
 })
+
+func dumpStats(host, domain string) {
+	resp, err := http.Get(fmt.Sprintf("http://%s.%s/stats", host, domain))
+	Expect(err).NotTo(HaveOccurred())
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	Expect(err).NotTo(HaveOccurred())
+	defer resp.Body.Close()
+
+	fmt.Printf("STATS: %s\n", string(respBytes))
+}
 
 func checkPeers(apps []string, timeout, pollingInterval time.Duration, instances int) {
 	for _, app := range apps {
@@ -180,7 +192,7 @@ func assertSingleConnection(sourceAppName string, destIP string, shouldSucceed b
 		return string(respBytes), nil
 	}
 	if shouldSucceed {
-		Eventually(proxyTest, 10*time.Second).Should(ContainSubstring(destIP))
+		Eventually(proxyTest, 10*time.Second).ShouldNot(ContainSubstring("failed"))
 	} else {
 		Eventually(proxyTest, 10*time.Second).Should(ContainSubstring("request failed"))
 	}
