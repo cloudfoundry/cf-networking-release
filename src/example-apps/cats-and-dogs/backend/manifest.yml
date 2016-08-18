@@ -5,5 +5,5 @@ applications:
     disk_quota: 32M
     buildpack: go_buildpack
     env:
-      GOPACKAGENAME: backend
+      GOPACKAGENAME: example-apps/cats-and-dogs/backend
       CATS_PORTS: 7007,7008,7009
