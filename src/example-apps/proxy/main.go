@@ -7,12 +7,12 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 )
 
-func launchHandler(port int, proxyHandler http.Handler) {
+func launchHandler(port int, proxyHandler, statsHandler http.Handler) {
 	mux := http.NewServeMux()
 	mux.Handle("/proxy/", proxyHandler)
+	mux.Handle("/stats", statsHandler)
 	mux.Handle("/", &handlers.InfoHandler{
 		Port: port,
 	})
@@ -26,21 +26,15 @@ func main() {
 		log.Fatal("invalid required env var PORT")
 	}
 
-	proxyHandler := &handlers.ProxyHandler{}
-
-	userPortsString := os.Getenv("USER_PORTS")
-	userPorts := strings.Split(userPortsString, ",")
-	for _, userPortString := range userPorts {
-		if strings.TrimSpace(userPortString) == "" {
-			continue
-		}
-		userPort, err := strconv.Atoi(userPortString)
-		if err != nil {
-			log.Fatal("invalid user port " + userPortString)
-		}
-
-		go launchHandler(userPort, proxyHandler)
+	stats := &handlers.Stats{
+		Latency: []int{},
+	}
+	proxyHandler := &handlers.ProxyHandler{
+		Stats: stats,
+	}
+	statsHandler := &handlers.StatsHandler{
+		Stats: stats,
 	}
 
-	launchHandler(systemPort, proxyHandler)
+	launchHandler(systemPort, proxyHandler, statsHandler)
 }

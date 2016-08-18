@@ -6,9 +6,12 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
-type ProxyHandler struct{}
+type ProxyHandler struct {
+	Stats *Stats
+}
 
 func (h *ProxyHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	destination := strings.TrimPrefix(req.URL.Path, "/proxy/")
@@ -18,6 +21,7 @@ func (h *ProxyHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 			DisableKeepAlives: true,
 		},
 	}
+	before := time.Now()
 	getResp, err := client.Get(destination)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "request failed: %s", err)
@@ -26,6 +30,7 @@ func (h *ProxyHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		return
 	}
 	defer getResp.Body.Close()
+	h.Stats.Add(int(time.Since(before).Nanoseconds() / int64(time.Millisecond)))
 
 	readBytes, err := ioutil.ReadAll(getResp.Body)
 	if err != nil {
