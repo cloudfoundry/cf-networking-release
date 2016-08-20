@@ -9,6 +9,8 @@ that provides container networking.
 - Chat with us at the `#container-networking` channel on [CloudFoundry Slack](http://slack.cloudfoundry.org/)
 - [CI dashboard](http://dashboard.c2c.cf-app.com) and [config](https://github.com/cloudfoundry-incubator/container-networking-ci)
 
+## NOTICE
+We're currently integrating against [a fork of Garden-runC](https://github.com/cf-container-networking/garden-runc-release).  Using anything else will probably not work.  You can see more details in our [CI config](https://github.com/cloudfoundry-incubator/container-networking-ci).
 
 ## Install the CF CLI Plugin
 
