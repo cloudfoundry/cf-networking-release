@@ -27,7 +27,7 @@ func main() {
 	}
 
 	stats := &handlers.Stats{
-		Latency: []int{},
+		Latency: []float64{},
 	}
 	proxyHandler := &handlers.ProxyHandler{
 		Stats: stats,

@@ -18,7 +18,7 @@ var _ = Describe("StatsHandler", func() {
 	)
 	BeforeEach(func() {
 		stats = &handlers.Stats{}
-		stats.Latency = []int{1, 2, 3}
+		stats.Latency = []float64{1, 2, 3}
 		handler = &handlers.StatsHandler{
 			Stats: stats,
 		}
@@ -35,7 +35,7 @@ var _ = Describe("StatsHandler", func() {
 			handler.ServeHTTP(resp, req)
 
 			Expect(resp.Code).To(Equal(http.StatusOK))
-			Expect(resp.Body.String()).To(MatchJSON(`{"latency" : [1,2,3]}`))
+			Expect(resp.Body.String()).To(MatchJSON(`{"latency" : [1.0,2.0,3.0]}`))
 		})
 	})
 	Describe("DELETE", func() {

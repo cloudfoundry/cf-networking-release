@@ -96,7 +96,7 @@ var _ = Describe("Acceptance", func() {
 			responseBytes, err := ioutil.ReadAll(statsResponse.Body)
 			Expect(err).NotTo(HaveOccurred())
 			var statsJSON struct {
-				Latency []int
+				Latency []float64
 			}
 			Expect(json.Unmarshal(responseBytes, &statsJSON)).To(Succeed())
 			Expect(len(statsJSON.Latency)).To(BeNumerically(">=", 1))

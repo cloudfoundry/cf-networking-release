@@ -30,7 +30,7 @@ func (h *ProxyHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		return
 	}
 	defer getResp.Body.Close()
-	h.Stats.Add(int(time.Since(before).Nanoseconds() / int64(time.Millisecond)))
+	h.Stats.Add(time.Since(before).Seconds())
 
 	readBytes, err := ioutil.ReadAll(getResp.Body)
 	if err != nil {
