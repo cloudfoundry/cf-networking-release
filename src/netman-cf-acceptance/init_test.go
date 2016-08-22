@@ -49,9 +49,7 @@ func preBuildLinuxBinary(appType string) {
 	os.Setenv("GOOS", "linux")
 	os.Setenv("GOARCH", "amd64")
 	appDir := filepath.Join(appsDir, appType)
-	binaryPath, err := gexec.Build(appDir)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(os.Rename(binaryPath, filepath.Join(appDir, appType))).To(Succeed())
+	Expect(exec.Command("go", "build", "-o", filepath.Join(appDir, appType), appDir).Run()).To(Succeed())
 }
 
 func TestAcceptance(t *testing.T) {
