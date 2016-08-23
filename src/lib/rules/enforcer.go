@@ -59,6 +59,15 @@ type Chain struct {
 	Prefix      string
 }
 
+type RulesWithChain struct {
+	Chain Chain
+	Rules []Rule
+}
+
+func (e *Enforcer) EnforceRulesAndChain(rulesAndChain RulesWithChain) error {
+	return e.EnforceOnChain(rulesAndChain.Chain, rulesAndChain.Rules)
+}
+
 func (e *Enforcer) EnforceOnChain(c Chain, rules []Rule) error {
 	return e.Enforce(c.Table, c.ParentChain, c.Prefix, rules)
 }

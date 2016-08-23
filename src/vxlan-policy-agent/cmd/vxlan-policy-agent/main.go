@@ -91,24 +91,6 @@ func main() {
 		ipt,
 	)
 
-	defaultLocalChain := rules.Chain{
-		Table:       "filter",
-		ParentChain: "FORWARD",
-		Prefix:      "vpa--local-",
-	}
-
-	defaultRemoteChain := rules.Chain{
-		Table:       "filter",
-		ParentChain: "FORWARD",
-		Prefix:      "vpa--remote-",
-	}
-
-	defaultMasqueradeChain := rules.Chain{
-		Table:       "nat",
-		ParentChain: "POSTROUTING",
-		Prefix:      "vpa--masq-",
-	}
-
 	dynamicChain := rules.Chain{
 		Table:       "filter",
 		ParentChain: "FORWARD",
@@ -118,43 +100,59 @@ func main() {
 	vxlanDefaultLocalPlanner := planner.VxlanDefaultLocalPlanner{
 		Logger:      logger,
 		LocalSubnet: localSubnetCIDR,
+		Chain: rules.Chain{
+			Table:       "filter",
+			ParentChain: "FORWARD",
+			Prefix:      "vpa--local-",
+		},
 	}
 
 	vxlanDefaultRemotePlanner := planner.VxlanDefaultRemotePlanner{
 		Logger: logger,
 		VNI:    conf.VNI,
+		Chain: rules.Chain{
+			Table:       "filter",
+			ParentChain: "FORWARD",
+			Prefix:      "vpa--remote-",
+		},
 	}
 
 	vxlanDefaultMasqueradePlanner := planner.VxlanDefaultMasqueradePlanner{
 		Logger:         logger,
 		LocalSubnet:    localSubnetCIDR,
 		OverlayNetwork: overlayNetwork,
+		Chain: rules.Chain{
+			Table:       "nat",
+			ParentChain: "POSTROUTING",
+			Prefix:      "vpa--masq-",
+		},
 	}
 
-	defaultLocalRules, err := vxlanDefaultLocalPlanner.GetRules()
+	defaultLocalStuff, err := vxlanDefaultLocalPlanner.GetRulesAndChain()
 	if err != nil {
 		die(logger, "default-local-rules.GetRules", err)
 	}
 
-	err = ruleEnforcer.EnforceOnChain(defaultLocalChain, defaultLocalRules)
+	err = ruleEnforcer.EnforceRulesAndChain(defaultLocalStuff)
 	if err != nil {
 		die(logger, "enforce-default-local", err)
 	}
 
-	defaultRemoteRules, err := vxlanDefaultRemotePlanner.GetRules()
+	defaultRemoteStuff, err := vxlanDefaultRemotePlanner.GetRulesAndChain()
 	if err != nil {
 		die(logger, "default-local-rules.GetRules", err)
 	}
-	err = ruleEnforcer.EnforceOnChain(defaultRemoteChain, defaultRemoteRules)
+	err = ruleEnforcer.EnforceRulesAndChain(defaultRemoteStuff)
 	if err != nil {
 		die(logger, "enforce-default-remote", err)
 	}
 
-	defaultMasqueradeRules, err := vxlanDefaultMasqueradePlanner.GetRules()
+	defaultMasqueradeStuff, err := vxlanDefaultMasqueradePlanner.GetRulesAndChain()
 	if err != nil {
 		die(logger, "default-masquerade-rules.GetRules", err)
 	}
-	err = ruleEnforcer.EnforceOnChain(defaultMasqueradeChain, defaultMasqueradeRules)
+
+	err = ruleEnforcer.EnforceRulesAndChain(defaultMasqueradeStuff)
 	if err != nil {
 		die(logger, "enforce-default-masquerade", err)
 	}
