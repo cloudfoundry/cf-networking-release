@@ -64,18 +64,19 @@ func (p *VxlanPolicyPlanner) GetRules() ([]rules.Rule, error) {
 		return nil, err
 	}
 
-	ruleset := []rules.Rule{}
+	marksRuleset := []rules.Rule{}
+	filterRuleset := []rules.Rule{}
 
 	for _, policy := range policies {
 		srcContainerIPs, srcOk := containers[policy.Source.ID]
 		dstContainerIPs, dstOk := containers[policy.Destination.ID]
 
 		if dstOk {
+			// there are some containers on this host that are dests for the policy
 			for _, dstContainerIP := range dstContainerIPs {
-				ruleset = append(
-					ruleset,
-					rules.NewRemoteAllowRule(
-						p.VNI,
+				filterRuleset = append(
+					filterRuleset,
+					rules.NewMarkAllowRule(
 						dstContainerIP,
 						policy.Destination.Protocol,
 						policy.Destination.Port,
@@ -88,32 +89,16 @@ func (p *VxlanPolicyPlanner) GetRules() ([]rules.Rule, error) {
 		}
 
 		if srcOk {
+			// there are some containers on this host that are sources for the policy
 			for _, srcContainerIP := range srcContainerIPs {
-				ruleset = append(
-					ruleset,
-					rules.NewGBPTagRule(srcContainerIP, policy.Source.Tag, policy.Source.ID),
+				marksRuleset = append(
+					marksRuleset,
+					rules.NewMarkSetRule(srcContainerIP, policy.Source.Tag, policy.Source.ID),
 				)
 			}
 		}
-
-		if srcOk && dstOk {
-			for _, srcContainerIP := range srcContainerIPs {
-				for _, dstContainerIP := range dstContainerIPs {
-					ruleset = append(
-						ruleset,
-						rules.NewLocalAllowRule(
-							srcContainerIP,
-							dstContainerIP,
-							policy.Destination.Protocol,
-							policy.Destination.Port,
-							policy.Source.ID,
-							policy.Destination.ID,
-						),
-					)
-				}
-			}
-		}
 	}
+	ruleset := append(marksRuleset, filterRuleset...)
 	p.Logger.Debug("generated-rules", lager.Data{"rules": ruleset})
 	return ruleset, nil
 }

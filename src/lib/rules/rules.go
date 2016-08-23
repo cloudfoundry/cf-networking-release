@@ -31,10 +31,9 @@ func (r GenericRule) Enforce(table, chain string, iptables IPTables, logger lage
 
 	return nil
 }
-func NewRemoteAllowRule(vni int, destinationIP, protocol string, port int, tag string, sourceAppGUID, destinationAppGUID string) GenericRule {
+func NewMarkAllowRule(destinationIP, protocol string, port int, tag string, sourceAppGUID, destinationAppGUID string) GenericRule {
 	return GenericRule{
 		Properties: []string{
-			"-i", fmt.Sprintf("flannel.%d", vni),
 			"-d", destinationIP,
 			"-p", protocol,
 			"--dport", strconv.Itoa(port),
@@ -45,21 +44,7 @@ func NewRemoteAllowRule(vni int, destinationIP, protocol string, port int, tag s
 	}
 }
 
-func NewLocalAllowRule(sourceIP, destinationIP, protocol string, port int, sourceAppGUID, destinationAppGUID string) GenericRule {
-	return GenericRule{
-		Properties: []string{
-			"-i", "cni-flannel0",
-			"--source", sourceIP,
-			"-d", destinationIP,
-			"-p", protocol,
-			"--dport", strconv.Itoa(port),
-			"--jump", "ACCEPT",
-			"-m", "comment", "--comment", fmt.Sprintf("src:%s dst:%s", sourceAppGUID, destinationAppGUID),
-		},
-	}
-}
-
-func NewGBPTagRule(sourceIP, tag, appGUID string) GenericRule {
+func NewMarkSetRule(sourceIP, tag, appGUID string) GenericRule {
 	return GenericRule{
 		Properties: []string{
 			"--source", sourceIP,

@@ -102,15 +102,14 @@ var _ = Describe("Planner", func() {
 
 			Expect(policyClient.GetPoliciesCallCount()).To(Equal(1))
 		})
-		It("returns local and remote rules based on the policies", func() {
+		It("returns all the rules", func() {
 			ruleset, err := policyPlanner.GetRules()
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(ruleset).To(ConsistOf([]rules.GenericRule{
-				// remote allows
+				// allow based on mark
 				{
 					Properties: []string{
-						"-i", "flannel.42",
 						"-d", "10.255.1.3",
 						"-p", "udp",
 						"--dport", "5555",
@@ -121,7 +120,6 @@ var _ = Describe("Planner", func() {
 				},
 				{
 					Properties: []string{
-						"-i", "flannel.42",
 						"-d", "10.255.1.3",
 						"-p", "tcp",
 						"--dport", "1234",
@@ -130,19 +128,7 @@ var _ = Describe("Planner", func() {
 						"-m", "comment", "--comment", "src:some-app-guid dst:some-other-app-guid",
 					},
 				},
-				// local allows
-				{
-					Properties: []string{
-						"-i", "cni-flannel0",
-						"--source", "10.255.1.2",
-						"-d", "10.255.1.3",
-						"-p", "tcp",
-						"--dport", "1234",
-						"--jump", "ACCEPT",
-						"-m", "comment", "--comment", "src:some-app-guid dst:some-other-app-guid",
-					},
-				},
-				// tagging
+				// set tags on all outgoing packets, regardless of local vs remote
 				{
 					Properties: []string{
 						"--source", "10.255.1.2",
@@ -158,6 +144,15 @@ var _ = Describe("Planner", func() {
 					},
 				},
 			}))
+		})
+		It("returns all mark set rules before any mark filter rules", func() {
+			ruleset, err := policyPlanner.GetRules()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(ruleset).To(HaveLen(4))
+			Expect(ruleset[0].(rules.GenericRule).Properties).To(ContainElement("--set-xmark"))
+			Expect(ruleset[1].(rules.GenericRule).Properties).To(ContainElement("--set-xmark"))
+			Expect(ruleset[2].(rules.GenericRule).Properties).To(ContainElement("ACCEPT"))
+			Expect(ruleset[3].(rules.GenericRule).Properties).To(ContainElement("ACCEPT"))
 		})
 		Context("when getting containers from garden fails", func() {
 			BeforeEach(func() {
