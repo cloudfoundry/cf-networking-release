@@ -1,7 +1,7 @@
 package cni_test
 
 import (
-	"guardian-cni-adapter/cni"
+	"garden-external-networker/cni"
 	"io/ioutil"
 	"path/filepath"
 

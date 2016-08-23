@@ -60,7 +60,7 @@ var netmanAgentReceivedMethod = ``
 
 const DEFAULT_TIMEOUT = "10s"
 
-var _ = Describe("Guardian CNI adapter", func() {
+var _ = Describe("Garden External Networker", func() {
 	var (
 		cniConfigDir           string
 		fakePid                int

@@ -7,6 +7,10 @@ dependencies:
 files:
   - github.com/containernetworking/cni/scripts/*
   - code.cloudfoundry.org/lager/*.go # gosub
+  - garden-external-networker/*.go # gosub
+  - garden-external-networker/cni/*.go # gosub
+  - garden-external-networker/config/*.go # gosub
+  - garden-external-networker/controller/*.go # gosub
   - github.com/containernetworking/cni/libcni/*.go # gosub
   - github.com/containernetworking/cni/pkg/invoke/*.go # gosub
   - github.com/containernetworking/cni/pkg/ip/*.go # gosub
@@ -27,7 +31,3 @@ files:
   - github.com/containernetworking/cni/vendor/golang.org/x/sys/unix/*.s # gosub
   - golang.org/x/sys/unix/*.go # gosub
   - golang.org/x/sys/unix/*.s # gosub
-  - guardian-cni-adapter/*.go # gosub
-  - guardian-cni-adapter/cni/*.go # gosub
-  - guardian-cni-adapter/config/*.go # gosub
-  - guardian-cni-adapter/controller/*.go # gosub

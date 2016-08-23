@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"guardian-cni-adapter/cni"
-	"guardian-cni-adapter/config"
-	"guardian-cni-adapter/controller"
+	"garden-external-networker/cni"
+	"garden-external-networker/config"
+	"garden-external-networker/controller"
 	"io/ioutil"
 	"os"
 
@@ -65,7 +65,7 @@ func die(logger lager.Logger, action string, err error, data ...lager.Data) {
 }
 
 func main() {
-	logger := lager.NewLogger("guardian-cni-adapter")
+	logger := lager.NewLogger("garden-external-networker")
 	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.INFO))
 
 	if len(os.Args) == 1 || os.Args[1] == "-h" || os.Args[1] == "--help" {

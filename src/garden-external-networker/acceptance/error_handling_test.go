@@ -15,7 +15,7 @@ import (
 	"github.com/onsi/gomega/gexec"
 )
 
-var _ = Describe("Guardian CNI adapter", func() {
+var _ = Describe("Garden External Networker", func() {
 	var (
 		command            *exec.Cmd
 		cniConfigDir       string

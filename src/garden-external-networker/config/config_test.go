@@ -2,7 +2,7 @@ package config_test
 
 import (
 	"fmt"
-	"guardian-cni-adapter/config"
+	"garden-external-networker/config"
 	"io/ioutil"
 	"os"
 

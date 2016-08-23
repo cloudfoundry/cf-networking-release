@@ -4,8 +4,8 @@ import (
 	"errors"
 	"net"
 
-	"guardian-cni-adapter/controller"
-	"guardian-cni-adapter/fakes"
+	"garden-external-networker/controller"
+	"garden-external-networker/fakes"
 
 	"github.com/containernetworking/cni/pkg/types"
 	. "github.com/onsi/ginkgo"

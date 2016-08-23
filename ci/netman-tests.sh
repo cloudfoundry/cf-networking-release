@@ -9,7 +9,7 @@ declare -a packages=(
   "src/lib"
   "src/policy-server"
   "src/flannel-watchdog"
-  "src/guardian-cni-adapter"
+  "src/garden-external-networker"
   "src/netmon"
   "src/vxlan-policy-agent"
   "src/cli-plugin"

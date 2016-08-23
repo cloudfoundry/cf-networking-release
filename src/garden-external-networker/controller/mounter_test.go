@@ -7,7 +7,7 @@ import (
 
 	"golang.org/x/sys/unix"
 
-	"guardian-cni-adapter/controller"
+	"garden-external-networker/controller"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

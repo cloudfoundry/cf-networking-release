@@ -30,10 +30,10 @@ var _ = BeforeSuite(func() {
 	rand.Seed(config.GinkgoConfig.RandomSeed)
 
 	var err error
-	pathToAdapter, err = gexec.Build("guardian-cni-adapter", "-race")
+	pathToAdapter, err = gexec.Build("garden-external-networker", "-race")
 	Expect(err).NotTo(HaveOccurred())
 
-	pathToFakeCNIPlugin, err := gexec.Build("guardian-cni-adapter/acceptance/fake-cni-plugin", "-race")
+	pathToFakeCNIPlugin, err := gexec.Build("garden-external-networker/acceptance/fake-cni-plugin", "-race")
 	Expect(err).NotTo(HaveOccurred())
 
 	cniPluginDir, err = ioutil.TempDir("", "cni-plugin-")
