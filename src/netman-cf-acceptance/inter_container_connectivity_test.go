@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -119,6 +120,10 @@ func dumpStats(host, domain string) {
 	defer resp.Body.Close()
 
 	fmt.Printf("STATS: %s\n", string(respBytes))
+	netStatsFile := os.Getenv("NETWORK_STATS_FILE")
+	if netStatsFile != "" {
+		Expect(ioutil.WriteFile(netStatsFile, respBytes, 0600)).To(Succeed())
+	}
 }
 
 func checkPeers(apps []string, timeout, pollingInterval time.Duration, instances int) {
