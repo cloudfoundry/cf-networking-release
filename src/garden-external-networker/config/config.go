@@ -8,9 +8,10 @@ import (
 )
 
 type Config struct {
-	CniPluginDir string `json:"cni_plugin_dir"`
-	CniConfigDir string `json:"cni_config_dir"`
-	BindMountDir string `json:"bind_mount_dir"`
+	CniPluginDir   string `json:"cni_plugin_dir"`
+	CniConfigDir   string `json:"cni_config_dir"`
+	BindMountDir   string `json:"bind_mount_dir"`
+	OverlayNetwork string `json:"overlay_network"`
 }
 
 func New(configFilePath string) (Config, error) {
@@ -40,6 +41,10 @@ func New(configFilePath string) (Config, error) {
 
 	if cfg.BindMountDir == "" {
 		return cfg, fmt.Errorf("missing required config 'bind_mount_dir'")
+	}
+
+	if cfg.OverlayNetwork == "" {
+		return cfg, fmt.Errorf("missing required config 'overlay_network'")
 	}
 
 	return cfg, nil

@@ -154,22 +154,22 @@ func NewNetOutWithPortsRule(containerIP string, startIP string, endIP string, st
 	}
 }
 
-func NewNetOutRelatedEstablishedRule(subnet string) GenericRule {
+func NewNetOutRelatedEstablishedRule(subnet, overlayNetwork string) GenericRule {
 	return GenericRule{
 		Properties: []string{
 			"-s", subnet,
-			"!", "-d", subnet,
+			"!", "-d", overlayNetwork,
 			"-m", "state", "--state", "RELATED,ESTABLISHED",
 			"--jump", "RETURN",
 		},
 	}
 }
 
-func NewNetOutDefaultRejectRule(subnet string) GenericRule {
+func NewNetOutDefaultRejectRule(subnet, overlayNetwork string) GenericRule {
 	return GenericRule{
 		Properties: []string{
 			"-s", subnet,
-			"!", "-d", subnet,
+			"!", "-d", overlayNetwork,
 			"--jump", "REJECT",
 			"--reject-with", "icmp-port-unreachable",
 		},

@@ -25,7 +25,7 @@ var _ = Describe("Config", func() {
 
 		Context("when config file is valid", func() {
 			It("returns the config", func() {
-				file.WriteString(`{"cni_plugin_dir": "foo", "cni_config_dir": "bar", "bind_mount_dir": "baz"}`)
+				file.WriteString(`{"cni_plugin_dir": "foo", "cni_config_dir": "bar", "bind_mount_dir": "baz", "overlay_network": "10.255.0.0./16"}`)
 				c, err := config.New(file.Name())
 				Expect(err).NotTo(HaveOccurred())
 				Expect(c.CniPluginDir).To(Equal("foo"))
@@ -40,6 +40,7 @@ var _ = Describe("Config", func() {
 				Expect(err).To(MatchError(ContainSubstring("file does not exist:")))
 			})
 		})
+
 		Context("when config file path is blank", func() {
 			It("returns the error", func() {
 				_, err := config.New("")
@@ -63,19 +64,21 @@ var _ = Describe("Config", func() {
 		})
 
 		DescribeTable("when config file is missing a member",
-			func(missingFlag, cpd, ccd, bmd string) {
+			func(missingFlag, cpd, ccd, bmd, on string) {
 				file.WriteString(fmt.Sprintf(`
 				{
 					"cni_plugin_dir": "%s",
 					"cni_config_dir": "%s",
-					"bind_mount_dir": "%s"
-				}`, cpd, ccd, bmd))
+					"bind_mount_dir": "%s",
+					"overlay_network": "%s"
+				}`, cpd, ccd, bmd, on))
 				_, err = config.New(file.Name())
 				Expect(err).To(MatchError(fmt.Sprintf("missing required config '%s'", missingFlag)))
 			},
-			Entry("missing cni plugin dir", "cni_plugin_dir", "", "bar", "baz"),
-			Entry("missing cni config dir", "cni_config_dir", "foo", "", "baz"),
-			Entry("missing bind mount dir", "bind_mount_dir", "foo", "bar", ""),
+			Entry("missing cni plugin dir", "cni_plugin_dir", "", "bar", "baz", "10.255.0.0/16"),
+			Entry("missing cni config dir", "cni_config_dir", "foo", "", "baz", "10.255.0.0/16"),
+			Entry("missing bind mount dir", "bind_mount_dir", "foo", "bar", "", "10.255.0.0/16"),
+			Entry("missing overlay network", "overlay_network", "foo", "bar", "baz", ""),
 		)
 	})
 })

@@ -42,9 +42,10 @@ var _ = Describe("Garden External Networker", func() {
 
 		fakeConfigFilePath = configFile.Name()
 		defaultConfig = map[string]string{
-			"cni_plugin_dir": dir,
-			"cni_config_dir": dir,
-			"bind_mount_dir": dir,
+			"cni_plugin_dir":  dir,
+			"cni_config_dir":  dir,
+			"bind_mount_dir":  dir,
+			"overlay_network": "10.255.0.0/16",
 		}
 		writeConfig(defaultConfig)
 

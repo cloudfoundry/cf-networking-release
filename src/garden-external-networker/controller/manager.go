@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"lib/rules"
 	"net"
 	"path/filepath"
+
+	"code.cloudfoundry.org/lager"
 
 	"github.com/containernetworking/cni/pkg/types"
 )
@@ -23,9 +26,12 @@ type mounter interface {
 }
 
 type Manager struct {
-	CNIController cniController
-	Mounter       mounter
-	BindMountRoot string
+	Logger         lager.Logger
+	CNIController  cniController
+	Mounter        mounter
+	BindMountRoot  string
+	IPTables       rules.IPTables
+	OverlayNetwork string
 }
 
 type Properties struct {
@@ -75,6 +81,32 @@ func (m *Manager) Up(pid int, containerHandle, encodedGardenProperties string) (
 		return nil, errors.New("cni up failed: no ip allocated")
 	}
 
+	chain := fmt.Sprintf("netout--%s", containerHandle)
+	if len(chain) > 28 {
+		chain = chain[:28]
+	}
+	err = m.IPTables.NewChain("filter", chain)
+	if err != nil {
+		return nil, fmt.Errorf("creating chain: %s", err)
+	}
+
+	err = m.IPTables.Insert("filter", "FORWARD", 1, []string{"--jump", chain}...)
+	if err != nil {
+		return nil, fmt.Errorf("inserting rule: %s", err)
+	}
+
+	ruleSpecs := []rules.Rule{
+		rules.NewNetOutRelatedEstablishedRule(result.IP4.IP.IP.String(), m.OverlayNetwork),
+		rules.NewNetOutDefaultRejectRule(result.IP4.IP.IP.String(), m.OverlayNetwork),
+	}
+
+	for _, spec := range ruleSpecs {
+		err = spec.Enforce("filter", chain, m.IPTables, m.Logger)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return &Properties{
 		ContainerIP:      result.IP4.IP.IP,
 		DeprecatedHostIP: net.ParseIP("255.255.255.255"),
@@ -101,6 +133,54 @@ func (m *Manager) Down(containerHandle string, encodedGardenProperties string) e
 	err = m.Mounter.RemoveMount(bindMountPath)
 	if err != nil {
 		return fmt.Errorf("failed removing mount %s: %s", bindMountPath, err)
+	}
+
+	return nil
+}
+
+type NetOutProperties struct {
+	ContainerIP string     `json:"container_ip"`
+	NetOutRule  NetOutRule `json:"netout_rule"`
+}
+
+type NetOutRule struct {
+	Protocol string      `json:"protocol"`
+	Networks []IPRange   `json:"networks"`
+	Ports    []PortRange `json:"ports"`
+}
+
+type IPRange struct {
+	Start string `json:"start"`
+	End   string `json:"end"`
+}
+
+type PortRange struct {
+	Start int `json:"start"`
+	End   int `json:"end"`
+}
+
+func (m *Manager) NetOut(containerHandle string, encodedGardenProperties string) error {
+	var properties NetOutProperties
+	err := json.Unmarshal([]byte(encodedGardenProperties), &properties)
+	if err != nil {
+		return fmt.Errorf("unmarshaling net-out properties: %s", err)
+	}
+
+	chain := fmt.Sprintf("netout--%s", containerHandle)
+	if len(chain) > 28 {
+		chain = chain[:28]
+	}
+	for _, network := range properties.NetOutRule.Networks {
+		for _, portRange := range properties.NetOutRule.Ports {
+			ruleSpec := []string{"-s", properties.ContainerIP, "-m", "iprange", "-p", "tcp",
+				"--dst-range", fmt.Sprintf("%s-%s", network.Start, network.End),
+				"-m", "tcp", "--destination-port", fmt.Sprintf("%d:%d", portRange.Start, portRange.End),
+				"-j", "RETURN"}
+			err = m.IPTables.Insert("filter", chain, 1, ruleSpec...)
+			if err != nil {
+				return fmt.Errorf("inserting net-out rule: %s", err)
+			}
+		}
 	}
 
 	return nil

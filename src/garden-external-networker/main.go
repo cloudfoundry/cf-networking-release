@@ -10,6 +10,8 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/coreos/go-iptables/iptables"
+
 	"code.cloudfoundry.org/lager"
 )
 
@@ -21,13 +23,12 @@ var (
 )
 
 func parseArgs(allArgs []string) error {
-	var gardenNetworkSpec, configFilePath string
+	var configFilePath string
 
 	flagSet := flag.NewFlagSet("", flag.ContinueOnError)
 
 	flagSet.StringVar(&action, "action", "", "")
 	flagSet.StringVar(&handle, "handle", "", "")
-	flagSet.StringVar(&gardenNetworkSpec, "network", "", "")
 	flagSet.StringVar(&encodedProperties, "properties", "", "")
 	flagSet.StringVar(&configFilePath, "configFile", "", "")
 
@@ -112,10 +113,18 @@ func main() {
 
 	mounter := &controller.Mounter{}
 
+	ipt, err := iptables.New()
+	if err != nil {
+		die(logger, "iptables-new", err)
+	}
+
 	manager := &controller.Manager{
-		CNIController: cniController,
-		Mounter:       mounter,
-		BindMountRoot: cfg.BindMountDir,
+		Logger:         logger,
+		CNIController:  cniController,
+		Mounter:        mounter,
+		BindMountRoot:  cfg.BindMountDir,
+		IPTables:       ipt,
+		OverlayNetwork: cfg.OverlayNetwork,
 	}
 
 	logger.Info("action", lager.Data{"action": action})
@@ -134,6 +143,11 @@ func main() {
 		err = manager.Down(handle, encodedProperties)
 		if err != nil {
 			die(logger, "manager-down", err)
+		}
+	case "net-out":
+		err = manager.NetOut(handle, encodedProperties)
+		if err != nil {
+			die(logger, "manager-net-out", err)
 		}
 	default:
 		die(logger, "unknown-action", fmt.Errorf("unrecognized action: %s", action))
