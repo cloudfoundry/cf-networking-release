@@ -161,7 +161,7 @@ var _ = Describe("Garden External Networker", func() {
 			"--action", "net-out",
 			"--handle", "some-container-handle",
 			"--configFile", fakeConfigFilePath,
-			"--properties", `{ "container_ip":"169.254.1.2","netout_rule":{"protocol": "tcp", "networks": [{"start":"1.1.1.1","end":"2.2.2.2"}], "ports": [{"start":9000,"end":9999}]}}`,
+			"--properties", `{ "container_ip":"169.254.1.2","netout_rule":{"protocol": 1, "networks": [{"start":"1.1.1.1","end":"2.2.2.2"}], "ports": [{"start":9000,"end":9999}]}}`,
 		}
 	})
 

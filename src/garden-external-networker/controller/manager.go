@@ -8,6 +8,7 @@ import (
 	"net"
 	"path/filepath"
 
+	"code.cloudfoundry.org/garden"
 	"code.cloudfoundry.org/lager"
 
 	"github.com/containernetworking/cni/pkg/types"
@@ -139,24 +140,8 @@ func (m *Manager) Down(containerHandle string, encodedGardenProperties string) e
 }
 
 type NetOutProperties struct {
-	ContainerIP string     `json:"container_ip"`
-	NetOutRule  NetOutRule `json:"netout_rule"`
-}
-
-type NetOutRule struct {
-	Protocol string      `json:"protocol"`
-	Networks []IPRange   `json:"networks"`
-	Ports    []PortRange `json:"ports"`
-}
-
-type IPRange struct {
-	Start string `json:"start"`
-	End   string `json:"end"`
-}
-
-type PortRange struct {
-	Start int `json:"start"`
-	End   int `json:"end"`
+	ContainerIP string            `json:"container_ip"`
+	NetOutRule  garden.NetOutRule `json:"netout_rule"`
 }
 
 func (m *Manager) NetOut(containerHandle string, encodedGardenProperties string) error {
@@ -170,13 +155,18 @@ func (m *Manager) NetOut(containerHandle string, encodedGardenProperties string)
 	if len(chain) > 28 {
 		chain = chain[:28]
 	}
+
 	for _, network := range properties.NetOutRule.Networks {
 		for _, portRange := range properties.NetOutRule.Ports {
-			ruleSpec := []string{"-s", properties.ContainerIP, "-m", "iprange", "-p", "tcp",
-				"--dst-range", fmt.Sprintf("%s-%s", network.Start, network.End),
-				"-m", "tcp", "--destination-port", fmt.Sprintf("%d:%d", portRange.Start, portRange.End),
-				"-j", "RETURN"}
-			err = m.IPTables.Insert("filter", chain, 1, ruleSpec...)
+			ruleSpec := rules.NewNetOutWithPortsRule(
+				properties.ContainerIP,
+				network.Start.String(),
+				network.End.String(),
+				int(portRange.Start),
+				int(portRange.End),
+				lookupProtocol(properties.NetOutRule.Protocol),
+			)
+			err = m.IPTables.Insert("filter", chain, 1, ruleSpec.Properties...)
 			if err != nil {
 				return fmt.Errorf("inserting net-out rule: %s", err)
 			}
@@ -184,4 +174,15 @@ func (m *Manager) NetOut(containerHandle string, encodedGardenProperties string)
 	}
 
 	return nil
+}
+
+func lookupProtocol(protocol garden.Protocol) string {
+	switch protocol {
+	case garden.ProtocolTCP:
+		return "tcp"
+	case garden.ProtocolUDP:
+		return "udp"
+	default:
+		return "all"
+	}
 }

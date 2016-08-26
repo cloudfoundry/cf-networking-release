@@ -139,7 +139,7 @@ func NewNetOutRule(containerIP string, startIP string, endIP string, groupID str
 	}
 }
 
-func NewNetOutWithPortsRule(containerIP string, startIP string, endIP string, startPort int, endPort int, protocol string, groupID string) GenericRule {
+func NewNetOutWithPortsRule(containerIP string, startIP string, endIP string, startPort int, endPort int, protocol string) GenericRule {
 	return GenericRule{
 		Properties: []string{
 			"--source", containerIP,
@@ -149,7 +149,6 @@ func NewNetOutWithPortsRule(containerIP string, startIP string, endIP string, st
 			"-m", protocol,
 			"--destination-port", fmt.Sprintf("%d:%d", startPort, endPort),
 			"--jump", "RETURN",
-			"-m", "comment", "--comment", fmt.Sprintf("dst:%s", groupID),
 		},
 	}
 }

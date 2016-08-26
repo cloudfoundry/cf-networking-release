@@ -20,6 +20,7 @@ var (
 	handle            string
 	cfg               config.Config
 	encodedProperties string
+	gardenNetworkSpec string
 )
 
 func parseArgs(allArgs []string) error {
@@ -29,6 +30,7 @@ func parseArgs(allArgs []string) error {
 
 	flagSet.StringVar(&action, "action", "", "")
 	flagSet.StringVar(&handle, "handle", "", "")
+	flagSet.StringVar(&gardenNetworkSpec, "network", "", "")
 	flagSet.StringVar(&encodedProperties, "properties", "", "")
 	flagSet.StringVar(&configFilePath, "configFile", "", "")
 

@@ -266,7 +266,14 @@ var _ = Describe("Manager", func() {
 	Describe("NetOut", func() {
 		var netOutProperties string
 		BeforeEach(func() {
-			netOutProperties = `{"container_ip":"1.2.3.4","netout_rule":{"protocol":"tcp", "networks":[{"start":"1.1.1.1","end":"2.2.2.2"},{"start":"3.3.3.3","end":"4.4.4.4"}],"ports":[{"start":9000,"end":9999},{"start":1111,"end":2222}]}}`
+			netOutProperties = `{
+				"container_ip":"1.2.3.4",
+				"netout_rule":{
+					"protocol":1,
+					"networks":[{"start":"1.1.1.1","end":"2.2.2.2"},{"start":"3.3.3.3","end":"4.4.4.4"}],
+					"ports":[{"start":9000,"end":9999},{"start":1111,"end":2222}]
+				}
+			}`
 		})
 		It("prepends allow rules to the container's netout chain", func() {
 			err := manager.NetOut("some-handle", netOutProperties)
@@ -282,26 +289,26 @@ var _ = Describe("Manager", func() {
 				writtenRules = append(writtenRules, rulespec)
 			}
 			Expect(writtenRules).To(ConsistOf(
-				[]string{"-s", "1.2.3.4",
+				[]string{"--source", "1.2.3.4",
 					"-m", "iprange", "-p", "tcp",
 					"--dst-range", "1.1.1.1-2.2.2.2",
 					"-m", "tcp", "--destination-port", "9000:9999",
-					"-j", "RETURN"},
-				[]string{"-s", "1.2.3.4",
+					"--jump", "RETURN"},
+				[]string{"--source", "1.2.3.4",
 					"-m", "iprange", "-p", "tcp",
 					"--dst-range", "1.1.1.1-2.2.2.2",
 					"-m", "tcp", "--destination-port", "1111:2222",
-					"-j", "RETURN"},
-				[]string{"-s", "1.2.3.4",
+					"--jump", "RETURN"},
+				[]string{"--source", "1.2.3.4",
 					"-m", "iprange", "-p", "tcp",
 					"--dst-range", "3.3.3.3-4.4.4.4",
 					"-m", "tcp", "--destination-port", "9000:9999",
-					"-j", "RETURN"},
-				[]string{"-s", "1.2.3.4",
+					"--jump", "RETURN"},
+				[]string{"--source", "1.2.3.4",
 					"-m", "iprange", "-p", "tcp",
 					"--dst-range", "3.3.3.3-4.4.4.4",
 					"-m", "tcp", "--destination-port", "1111:2222",
-					"-j", "RETURN"},
+					"--jump", "RETURN"},
 			))
 		})
 		Context("when the handle is over 28 characters", func() {
