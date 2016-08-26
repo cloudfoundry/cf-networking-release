@@ -53,12 +53,6 @@ func main() {
 		GardenClient: gardenClient,
 	}
 
-	netOutPlanner := &planner.NetOutPlanner{
-		GardenClient:   gardenClient,
-		OverlayNetwork: conf.OverlayNetwork,
-		Logger:         logger.Session("netout-planner"),
-	}
-
 	ipt, err := iptables.New()
 	if err != nil {
 		logger.Fatal("iptables-new", err)
@@ -77,12 +71,6 @@ func main() {
 		Prefix:      "natman--netin-",
 	}
 
-	netOutChain := rules.Chain{
-		Table:       "filter",
-		ParentChain: "FORWARD",
-		Prefix:      "natman--netout-",
-	}
-
 	gardenNetInPoller := &poller.Poller{
 		Logger:       logger.Session("netin-poller"),
 		PollInterval: pollInterval,
@@ -91,17 +79,8 @@ func main() {
 		Chain:        netInChain,
 	}
 
-	gardenNetOutPoller := &poller.Poller{
-		Logger:       logger.Session("netout-poller"),
-		PollInterval: pollInterval,
-		Planner:      netOutPlanner,
-		Enforcer:     ruleEnforcer,
-		Chain:        netOutChain,
-	}
-
 	members := grouper.Members{
 		{"garden_net_in_poller", gardenNetInPoller},
-		{"garden_net_out_poller", gardenNetOutPoller},
 	}
 
 	monitor := ifrit.Invoke(sigmon.New(grouper.NewOrdered(os.Interrupt, members)))

@@ -29,5 +29,7 @@ files:
   - github.com/containernetworking/cni/vendor/github.com/vishvananda/netlink/nl/*.go # gosub
   - github.com/containernetworking/cni/vendor/golang.org/x/sys/unix/*.go # gosub
   - github.com/containernetworking/cni/vendor/golang.org/x/sys/unix/*.s # gosub
+  - github.com/coreos/go-iptables/iptables/*.go # gosub
   - golang.org/x/sys/unix/*.go # gosub
   - golang.org/x/sys/unix/*.s # gosub
+  - lib/rules/*.go # gosub
