@@ -82,30 +82,8 @@ func (m *Manager) Up(pid int, containerHandle, encodedGardenProperties string) (
 		return nil, errors.New("cni up failed: no ip allocated")
 	}
 
-	chain := fmt.Sprintf("netout--%s", containerHandle)
-	if len(chain) > 28 {
-		chain = chain[:28]
-	}
-	err = m.IPTables.NewChain("filter", chain)
-	if err != nil {
-		return nil, fmt.Errorf("creating chain: %s", err)
-	}
-
-	err = m.IPTables.Insert("filter", "FORWARD", 1, []string{"--jump", chain}...)
-	if err != nil {
-		return nil, fmt.Errorf("inserting rule: %s", err)
-	}
-
-	ruleSpecs := []rules.Rule{
-		rules.NewNetOutRelatedEstablishedRule(result.IP4.IP.IP.String(), m.OverlayNetwork),
-		rules.NewNetOutDefaultRejectRule(result.IP4.IP.IP.String(), m.OverlayNetwork),
-	}
-
-	for _, spec := range ruleSpecs {
-		err = spec.Enforce("filter", chain, m.IPTables, m.Logger)
-		if err != nil {
-			return nil, err
-		}
+	if err := m.InitializeIPTablesNetOut(containerHandle, result.IP4.IP.IP); err != nil {
+		return nil, fmt.Errorf("initialize net out: %s", err)
 	}
 
 	return &Properties{
@@ -136,6 +114,10 @@ func (m *Manager) Down(containerHandle string, encodedGardenProperties string) e
 		return fmt.Errorf("failed removing mount %s: %s", bindMountPath, err)
 	}
 
+	if err = m.RemoveIPTablesNetOut(containerHandle); err != nil {
+		return fmt.Errorf("remove net out: %s", err)
+	}
+
 	return nil
 }
 
@@ -150,21 +132,35 @@ func (m *Manager) NetOut(containerHandle string, encodedGardenProperties string)
 	if err != nil {
 		return fmt.Errorf("unmarshaling net-out properties: %s", err)
 	}
+	m.Logger.Info("net-out", lager.Data{"properties": properties})
 
 	chain := fmt.Sprintf("netout--%s", containerHandle)
 	if len(chain) > 28 {
 		chain = chain[:28]
 	}
 
-	for _, network := range properties.NetOutRule.Networks {
-		for _, portRange := range properties.NetOutRule.Ports {
-			ruleSpec := rules.NewNetOutWithPortsRule(
+	rule := properties.NetOutRule
+	for _, network := range rule.Networks {
+		if len(rule.Ports) > 0 && udpOrTcp(rule.Protocol) {
+			for _, portRange := range properties.NetOutRule.Ports {
+				ruleSpec := rules.NewNetOutWithPortsRule(
+					properties.ContainerIP,
+					network.Start.String(),
+					network.End.String(),
+					int(portRange.Start),
+					int(portRange.End),
+					lookupProtocol(properties.NetOutRule.Protocol),
+				)
+				err = m.IPTables.Insert("filter", chain, 1, ruleSpec.Properties...)
+				if err != nil {
+					return fmt.Errorf("inserting net-out rule: %s", err)
+				}
+			}
+		} else {
+			ruleSpec := rules.NewNetOutRule(
 				properties.ContainerIP,
 				network.Start.String(),
 				network.End.String(),
-				int(portRange.Start),
-				int(portRange.End),
-				lookupProtocol(properties.NetOutRule.Protocol),
 			)
 			err = m.IPTables.Insert("filter", chain, 1, ruleSpec.Properties...)
 			if err != nil {
@@ -174,6 +170,9 @@ func (m *Manager) NetOut(containerHandle string, encodedGardenProperties string)
 	}
 
 	return nil
+}
+func udpOrTcp(protocol garden.Protocol) bool {
+	return protocol == garden.ProtocolTCP || protocol == garden.ProtocolUDP
 }
 
 func lookupProtocol(protocol garden.Protocol) string {
@@ -185,4 +184,58 @@ func lookupProtocol(protocol garden.Protocol) string {
 	default:
 		return "all"
 	}
+}
+
+func (m *Manager) RemoveIPTablesNetOut(containerHandle string) error {
+	chain := fmt.Sprintf("netout--%s", containerHandle)
+	if len(chain) > 28 {
+		chain = chain[:28]
+	}
+
+	err := m.IPTables.Delete("filter", "FORWARD", []string{"--jump", chain}...)
+	if err != nil {
+		return fmt.Errorf("deleting rule: %s", err)
+	}
+
+	err = m.IPTables.ClearChain("filter", chain)
+	if err != nil {
+		return fmt.Errorf("creating chain: %s", err)
+	}
+
+	err = m.IPTables.DeleteChain("filter", chain)
+	if err != nil {
+		return fmt.Errorf("creating chain: %s", err)
+	}
+
+	return nil
+}
+
+func (m *Manager) InitializeIPTablesNetOut(containerHandle string, containerIP net.IP) error {
+	chain := fmt.Sprintf("netout--%s", containerHandle)
+	if len(chain) > 28 {
+		chain = chain[:28]
+	}
+	err := m.IPTables.NewChain("filter", chain)
+	if err != nil {
+		return fmt.Errorf("creating chain: %s", err)
+	}
+
+	err = m.IPTables.Insert("filter", "FORWARD", 1, []string{"--jump", chain}...)
+	if err != nil {
+		return fmt.Errorf("inserting rule: %s", err)
+	}
+
+	ruleSpecs := []rules.Rule{
+		rules.NewNetOutRelatedEstablishedRule(containerIP.String(), m.OverlayNetwork),
+		rules.NewNetOutDefaultRejectRule(containerIP.String(), m.OverlayNetwork),
+	}
+
+	for _, spec := range ruleSpecs {
+		err = spec.Enforce("filter", chain, m.IPTables, m.Logger)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

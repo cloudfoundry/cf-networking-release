@@ -253,5 +253,26 @@ var _ = Describe("Garden External Networker", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(iptSession, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
 		Expect(iptSession.Out.Contents()).To(ContainSubstring(`netout--some-container-handl -s 169.254.1.2/32 -p tcp -m iprange --dst-range 1.1.1.1-2.2.2.2 -m tcp --dport 9000:9999 -j RETURN`))
+
+		By("calling netout again but without ports or protocols")
+		netOutCommand = exec.Command(pathToAdapter)
+		netOutCommand.Env = append(os.Environ(), "FAKE_LOG_DIR="+fakeLogDir)
+		netOutCommand.Stdin = strings.NewReader(`{}`)
+		netOutCommand.Args = []string{
+			pathToAdapter,
+			"--action", "net-out",
+			"--handle", "some-container-handle",
+			"--configFile", fakeConfigFilePath,
+			"--properties", `{ "container_ip":"169.254.1.2","netout_rule":{"networks": [{"start":"3.3.3.3","end":"4.4.4.4"}]}}`,
+		}
+		netOutSession, err = gexec.Start(netOutCommand, GinkgoWriter, GinkgoWriter)
+		Expect(err).NotTo(HaveOccurred())
+		Eventually(netOutSession, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
+		iptablesCommand = exec.Command("iptables", "-t", "filter", "-S")
+		iptSession, err = gexec.Start(iptablesCommand, GinkgoWriter, GinkgoWriter)
+		Expect(err).NotTo(HaveOccurred())
+		Eventually(iptSession, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
+		Expect(iptSession.Out.Contents()).To(ContainSubstring(`netout--some-container-handl -s 169.254.1.2/32 -p tcp -m iprange --dst-range 1.1.1.1-2.2.2.2 -m tcp --dport 9000:9999 -j RETURN`))
+		Expect(iptSession.Out.Contents()).To(ContainSubstring(`netout--some-container-handl -s 169.254.1.2/32 -m iprange --dst-range 3.3.3.3-4.4.4.4 -j RETURN`))
 	})
 })

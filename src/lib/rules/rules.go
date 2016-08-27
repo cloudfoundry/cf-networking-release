@@ -127,14 +127,14 @@ func NewNetInRule(containerIP string, containerPort int, hostIP string, hostPort
 	}
 }
 
-func NewNetOutRule(containerIP string, startIP string, endIP string, groupID string) GenericRule {
+func NewNetOutRule(containerIP string, startIP string, endIP string) GenericRule {
 	return GenericRule{
 		Properties: []string{
 			"--source", containerIP,
 			"-m", "iprange",
 			"--dst-range", fmt.Sprintf("%s-%s", startIP, endIP),
 			"--jump", "RETURN",
-			"-m", "comment", "--comment", fmt.Sprintf("dst:%s", groupID),
+			// "-m", "comment", "--comment", fmt.Sprintf("dst:%s", groupID),
 		},
 	}
 }

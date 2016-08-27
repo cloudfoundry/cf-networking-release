@@ -138,7 +138,7 @@ var _ = Describe("Manager", func() {
 			})
 			It("returns the error", func() {
 				_, err := manager.Up(42, "container-handle", encodedGardenProperties)
-				Expect(err).To(MatchError("inserting rule: banana"))
+				Expect(err).To(MatchError("initialize net out: inserting rule: banana"))
 			})
 		})
 
@@ -148,7 +148,7 @@ var _ = Describe("Manager", func() {
 			})
 			It("returns the error", func() {
 				_, err := manager.Up(42, "container-handle", encodedGardenProperties)
-				Expect(err).To(MatchError("creating chain: banana"))
+				Expect(err).To(MatchError("initialize net out: creating chain: banana"))
 			})
 		})
 
@@ -158,7 +158,7 @@ var _ = Describe("Manager", func() {
 			})
 			It("returns the error", func() {
 				_, err := manager.Up(42, "container-handle", encodedGardenProperties)
-				Expect(err).To(MatchError("appending rule: banana"))
+				Expect(err).To(MatchError("initialize net out: appending rule: banana"))
 			})
 		})
 
