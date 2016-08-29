@@ -25,7 +25,6 @@ properties:
   cni-flannel:
     etcd_endpoints:
       - http://netman-db.service.cf.internal:4001
-  netman-cf-acceptance: (( merge ))
   policy-server:
     <<: (( merge ))
     database_password: (( merge ))
@@ -205,16 +204,5 @@ jobs:
   <<: (( merge ))
 
 - <<: (( merge ))
-
-- name: netman-cf-acceptance
-  instances: 1
-  lifecycle: errand
-  networks:
-  - name: diego1
-  resource_pool:
-    database_z1
-  templates:
-  - name: netman-cf-acceptance
-    release: netman
 
 <<: (( merge ))

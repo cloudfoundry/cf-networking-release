@@ -1,8 +1,6 @@
 properties:
   <<: (( merge ))
   system_domain: bosh-lite.com
-  netman-cf-acceptance:
-    skip_ssl_validation: true
   uaa:
     scim:
       users:

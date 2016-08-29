@@ -18,7 +18,6 @@ properties:
   garden-cni:
     cni_plugin_dir: /var/vcap/packages/runc-cni/bin
     cni_config_dir: /var/vcap/jobs/garden-cni/config/cni
-  netman-cf-acceptance: (( merge ))
 
 jobs:
 - name: database_z1

@@ -4,7 +4,9 @@ properties:
   uaa:
     <<: (( merge ))
     scim:
-      <<: (( merge ))
+      external_groups: null
+      groups: null
+      userids_enabled: true
       users:
       - admin|admin|scim.write,scim.read,openid,cloud_controller.admin,clients.read,clients.write,doppler.firehose,routing.router_groups.read,routing.router_groups.write,network.admin
 

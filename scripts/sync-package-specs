@@ -57,12 +57,6 @@ sync_package netmon \
 sync_package natman \
   -app natman/cmd/natman &
 
-sync_package acceptance \
-  -test netman-cf-acceptance \
-  -app example-apps/proxy \
-  -app example-apps/reflex \
-  -app github.com/onsi/ginkgo/ginkgo &
-
 GOOS=linux sync_package runc-cni \
   -app github.com/containernetworking/cni/plugins/main/bridge \
   -app github.com/containernetworking/cni/plugins/ipam/host-local \
