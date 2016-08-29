@@ -89,16 +89,6 @@ Then follow [the instructions for testing with the cats & dogs example](https://
     ```
     ---
     properties:
-      netman-cf-acceptance:
-        admin_password: <admin-password>
-        admin_user: admin
-        api: api.<system-domain>
-        apps_domain: <apps-domain>
-        nodes: 1
-        skip_ssl_validation: true
-        use_http: true
-        test_user_password: <test-user-password>
-        test_user: <test-user>
       uaa:
         clients:
           network-policy:
@@ -162,10 +152,6 @@ Then follow [the instructions for testing with the cats & dogs example](https://
   ```
   bosh deploy
   ```
-0. Run the acceptance errand
-  ```
-  bosh run errand netman-cf-acceptance
-  ```
 
 ## Other infrastructures
 We do not currently test this software on infrastructures other than BOSH-lite and AWS.  With recent stemcells and the appropriate manifest changes, it should work.  Let us know if you find issues.
@@ -222,12 +208,13 @@ bosh deploy
 ~/workspace/netman-release/scripts/docker-test
 ```
 
-### Running the full acceptance test
+### Running the full acceptance test on bosh-lite
 WARNING: This test is taxing and has an aggressive timeout.
 It may fail on a laptop or other underpowered bosh-lite.
 
 ```bash
-bosh run errand netman-cf-acceptance
+cd src/netman-cf-acceptance
+./run-locally.sh
 ```
 
 ### Referencing a new library from existing BOSH package
