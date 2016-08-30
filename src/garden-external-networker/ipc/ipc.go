@@ -59,7 +59,7 @@ func (m *Mux) Handle(action string, handle string, stdin io.Reader, stdout io.Wr
 			return err
 		}
 	default:
-		return fmt.Errorf("unrecognized action %s", action)
+		return fmt.Errorf("unrecognized action: %s", action)
 	}
 	return nil
 }

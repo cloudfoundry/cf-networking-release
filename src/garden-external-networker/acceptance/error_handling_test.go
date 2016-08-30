@@ -15,7 +15,7 @@ import (
 	"github.com/onsi/gomega/gexec"
 )
 
-var _ = XDescribe("Garden External Networker errors", func() {
+var _ = Describe("Garden External Networker errors", func() {
 	var (
 		command            *exec.Cmd
 		cniConfigDir       string
@@ -59,7 +59,6 @@ var _ = XDescribe("Garden External Networker errors", func() {
 		command.Args = []string{pathToAdapter,
 			"--action=up",
 			"--handle=some-container-handle",
-			"--properties=some-network-spec",
 			"--configFile=" + fakeConfigFilePath,
 		}
 		command.Env = []string{"PATH=/sbin"}
@@ -82,7 +81,7 @@ var _ = XDescribe("Garden External Networker errors", func() {
 				Eventually(session).Should(gexec.Exit(1))
 				Expect(session.Out.Contents()).To(BeEmpty())
 				By("checking that the error was logged to stderr")
-				Expect(session.Err.Contents()).To(ContainSubstring("{{{bad"))
+				Expect(session.Err.Contents()).To(ContainSubstring("invalid character"))
 			})
 		})
 
@@ -212,7 +211,7 @@ var _ = XDescribe("Garden External Networker errors", func() {
 
 					Eventually(session).Should(gexec.Exit(1))
 					Expect(session.Out.Contents()).To(BeEmpty())
-					Expect(session.Err.Contents()).To(ContainSubstring(`this is used by garden-runc.  don't run it directly.`))
+					Expect(session.Err.Contents()).To(ContainSubstring(`this is a plugin for Garden-runC.  Don't run it directly.`))
 				},
 				Entry("no args", []string{pathToAdapter}),
 				Entry("short help", []string{pathToAdapter, "-h"}),
