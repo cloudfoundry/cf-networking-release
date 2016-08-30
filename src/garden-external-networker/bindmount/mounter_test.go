@@ -1,4 +1,4 @@
-package controller_test
+package bindmount_test
 
 import (
 	"io/ioutil"
@@ -7,7 +7,7 @@ import (
 
 	"golang.org/x/sys/unix"
 
-	"garden-external-networker/controller"
+	"garden-external-networker/bindmount"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -31,12 +31,12 @@ func getInode(path string) uint64 {
 
 var _ = Describe("Mounter", func() {
 	var (
-		mounter                                      *controller.Mounter
+		mounter                                      *bindmount.Mounter
 		sourceDir, targetDir, sourceFile, targetFile string
 	)
 
 	BeforeEach(func() {
-		mounter = &controller.Mounter{}
+		mounter = &bindmount.Mounter{}
 
 		var err error
 		sourceDir, err = ioutil.TempDir("", "bind-mount-test-source-")

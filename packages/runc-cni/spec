@@ -9,10 +9,13 @@ files:
   - code.cloudfoundry.org/garden/*.go # gosub
   - code.cloudfoundry.org/lager/*.go # gosub
   - garden-external-networker/*.go # gosub
+  - garden-external-networker/bindmount/*.go # gosub
   - garden-external-networker/cni/*.go # gosub
   - garden-external-networker/config/*.go # gosub
-  - garden-external-networker/controller/*.go # gosub
   - garden-external-networker/filelock/*.go # gosub
+  - garden-external-networker/ipc/*.go # gosub
+  - garden-external-networker/legacynet/*.go # gosub
+  - garden-external-networker/manager/*.go # gosub
   - garden-external-networker/port_allocator/*.go # gosub
   - github.com/containernetworking/cni/libcni/*.go # gosub
   - github.com/containernetworking/cni/pkg/invoke/*.go # gosub

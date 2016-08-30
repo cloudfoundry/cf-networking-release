@@ -119,20 +119,13 @@ func (c *CNIController) Up(namespacePath, handle string, properties map[string]s
 	return result, nil
 }
 
-func (c *CNIController) Down(namespacePath, handle string, properties map[string]string) error {
+func (c *CNIController) Down(namespacePath, handle string) error {
 	var err error
 	for i, networkConfig := range c.NetworkConfigs {
 		runtimeConfig := &libcni.RuntimeConf{
 			ContainerID: handle,
 			NetNS:       namespacePath,
 			IfName:      fmt.Sprintf("eth%d", i),
-		}
-
-		networkConfig, err = injectConf(networkConfig, "network", map[string]interface{}{
-			"properties": properties,
-		})
-		if err != nil {
-			return fmt.Errorf("adding garden properties to CNI config: %s", err)
 		}
 
 		err = c.CNIConfig.DelNetwork(networkConfig, runtimeConfig)

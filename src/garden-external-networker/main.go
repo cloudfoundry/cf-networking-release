@@ -1,15 +1,16 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
+	"garden-external-networker/bindmount"
 	"garden-external-networker/cni"
 	"garden-external-networker/config"
-	"garden-external-networker/controller"
 	"garden-external-networker/filelock"
+	"garden-external-networker/ipc"
+	"garden-external-networker/legacynet"
+	"garden-external-networker/manager"
 	"garden-external-networker/port_allocator"
-	"io/ioutil"
 	"os"
 
 	"github.com/coreos/go-iptables/iptables"
@@ -18,12 +19,9 @@ import (
 )
 
 var (
-	action            string
-	handle            string
-	cfg               config.Config
-	encodedProperties string
-	gardenNetworkSpec string
-	deprecatedNetwork string
+	action string
+	handle string
+	cfg    config.Config
 )
 
 func parseArgs(allArgs []string) error {
@@ -33,8 +31,6 @@ func parseArgs(allArgs []string) error {
 
 	flagSet.StringVar(&action, "action", "", "")
 	flagSet.StringVar(&handle, "handle", "", "")
-	flagSet.StringVar(&deprecatedNetwork, "network", "", "")
-	flagSet.StringVar(&encodedProperties, "properties", "", "")
 	flagSet.StringVar(&configFilePath, "configFile", "", "")
 
 	err := flagSet.Parse(allArgs[1:])
@@ -65,39 +61,27 @@ func parseArgs(allArgs []string) error {
 	return nil
 }
 
-func die(logger lager.Logger, action string, err error, data ...lager.Data) {
-	logger.Error(action, err, data...)
-	os.Exit(1)
+func main() {
+	if err := mainWithError(); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %s", err)
+		os.Exit(1)
+	}
 }
 
-func main() {
+func mainWithError() error {
 	logger := lager.NewLogger("garden-external-networker")
 	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.INFO))
 
 	if len(os.Args) == 1 || os.Args[1] == "-h" || os.Args[1] == "--help" {
-		fmt.Fprintf(os.Stderr, "this is used by garden-runc.  don't run it directly.")
+		fmt.Fprintf(os.Stderr, "this is a plugin for Garden-runC.  Don't run it directly.")
 		os.Exit(1)
 	}
 
-	inputBytes, err := ioutil.ReadAll(os.Stdin)
+	err := parseArgs(os.Args)
 	if err != nil {
-		die(logger, "read-stdin", err)
+		return fmt.Errorf("parse args: %s", err)
 	}
-
-	err = parseArgs(os.Args)
-	if err != nil {
-		die(logger, "parse-args", err)
-	}
-
-	var containerState struct {
-		Pid int
-	}
-	if action == "up" {
-		err = json.Unmarshal(inputBytes, &containerState)
-		if err != nil {
-			die(logger, "reading-stdin", err, lager.Data{"stdin": string(inputBytes)})
-		}
-	}
+	logger.Info("action", lager.Data{"action": action})
 
 	cniLoader := &cni.CNILoader{
 		PluginDir: cfg.CniPluginDir,
@@ -107,7 +91,7 @@ func main() {
 
 	networks, err := cniLoader.GetNetworkConfigs()
 	if err != nil {
-		die(logger, "load-cni-plugins", err)
+		return fmt.Errorf("load cni config: %s", err)
 	}
 
 	cniController := &cni.CNIController{
@@ -116,11 +100,11 @@ func main() {
 		NetworkConfigs: networks,
 	}
 
-	mounter := &controller.Mounter{}
+	mounter := &bindmount.Mounter{}
 
 	ipt, err := iptables.New()
 	if err != nil {
-		die(logger, "iptables-new", err)
+		return fmt.Errorf("initialize iptables package: %s", err)
 	}
 
 	locker := &filelock.Locker{Path: cfg.StateFilePath}
@@ -136,48 +120,35 @@ func main() {
 		Locker:     locker,
 	}
 
-	manager := &controller.Manager{
+	chainNamer := legacynet.ChainNamer{MaxLength: 28}
+	netinProvider := legacynet.NetIn{
+		ChainNamer: chainNamer,
+		IPTables:   ipt,
+		Logger:     logger,
+	}
+
+	netoutProvider := legacynet.NetOut{
+		ChainNamer: chainNamer,
+		IPTables:   ipt,
+	}
+
+	manager := &manager.Manager{
 		Logger:         logger,
 		CNIController:  cniController,
 		Mounter:        mounter,
 		BindMountRoot:  cfg.BindMountDir,
 		PortAllocator:  portAllocator,
 		OverlayNetwork: cfg.OverlayNetwork,
-		IPTables:       ipt,
+		NetInProvider:  netinProvider,
+		NetOutProvider: netoutProvider,
 	}
 
-	logger.Info("action", lager.Data{"action": action})
-
-	switch action {
-	case "up":
-		properties, err := manager.Up(containerState.Pid, handle, encodedProperties)
-		if err != nil {
-			die(logger, "manager-up", err)
-		}
-		err = json.NewEncoder(os.Stdout).Encode(map[string]interface{}{"properties": properties})
-		if err != nil {
-			die(logger, "writing-properties", err)
-		}
-	case "down":
-		err = manager.Down(handle, encodedProperties)
-		if err != nil {
-			die(logger, "manager-down", err)
-		}
-	case "net-out":
-		err = manager.NetOut(handle, encodedProperties)
-		if err != nil {
-			die(logger, "manager-net-out", err)
-		}
-	case "net-in":
-		netInResult, err := manager.NetIn(handle, encodedProperties)
-		if err != nil {
-			die(logger, "manager-net-in", err)
-		}
-		err = json.NewEncoder(os.Stdout).Encode(netInResult)
-		if err != nil {
-			die(logger, "writing-net-in-result", err)
-		}
-	default:
-		die(logger, "unknown-action", fmt.Errorf("unrecognized action: %s", action))
+	mux := ipc.Mux{
+		Up:     manager.Up,
+		Down:   manager.Down,
+		NetOut: manager.NetOut,
+		NetIn:  manager.NetIn,
 	}
+
+	return mux.Handle(action, handle, os.Stdin, os.Stdout)
 }

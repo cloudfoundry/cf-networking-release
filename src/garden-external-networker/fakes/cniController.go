@@ -19,12 +19,11 @@ type CNIController struct {
 		result1 *types.Result
 		result2 error
 	}
-	DownStub        func(namespacePath, handle string, properties map[string]string) error
+	DownStub        func(namespacePath, handle string) error
 	downMutex       sync.RWMutex
 	downArgsForCall []struct {
 		namespacePath string
 		handle        string
-		properties    map[string]string
 	}
 	downReturns struct {
 		result1 error
@@ -69,17 +68,16 @@ func (fake *CNIController) UpReturns(result1 *types.Result, result2 error) {
 	}{result1, result2}
 }
 
-func (fake *CNIController) Down(namespacePath string, handle string, properties map[string]string) error {
+func (fake *CNIController) Down(namespacePath string, handle string) error {
 	fake.downMutex.Lock()
 	fake.downArgsForCall = append(fake.downArgsForCall, struct {
 		namespacePath string
 		handle        string
-		properties    map[string]string
-	}{namespacePath, handle, properties})
-	fake.recordInvocation("Down", []interface{}{namespacePath, handle, properties})
+	}{namespacePath, handle})
+	fake.recordInvocation("Down", []interface{}{namespacePath, handle})
 	fake.downMutex.Unlock()
 	if fake.DownStub != nil {
-		return fake.DownStub(namespacePath, handle, properties)
+		return fake.DownStub(namespacePath, handle)
 	} else {
 		return fake.downReturns.result1
 	}
@@ -91,10 +89,10 @@ func (fake *CNIController) DownCallCount() int {
 	return len(fake.downArgsForCall)
 }
 
-func (fake *CNIController) DownArgsForCall(i int) (string, string, map[string]string) {
+func (fake *CNIController) DownArgsForCall(i int) (string, string) {
 	fake.downMutex.RLock()
 	defer fake.downMutex.RUnlock()
-	return fake.downArgsForCall[i].namespacePath, fake.downArgsForCall[i].handle, fake.downArgsForCall[i].properties
+	return fake.downArgsForCall[i].namespacePath, fake.downArgsForCall[i].handle
 }
 
 func (fake *CNIController) DownReturns(result1 error) {

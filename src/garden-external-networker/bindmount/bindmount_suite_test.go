@@ -1,4 +1,4 @@
-package planner_test
+package bindmount_test
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestPolicyClient(t *testing.T) {
+func TestBindmount(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Planner Suite")
+	RunSpecs(t, "Bindmount Suite")
 }

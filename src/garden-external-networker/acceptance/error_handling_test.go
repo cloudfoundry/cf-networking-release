@@ -15,7 +15,7 @@ import (
 	"github.com/onsi/gomega/gexec"
 )
 
-var _ = Describe("Garden External Networker", func() {
+var _ = XDescribe("Garden External Networker errors", func() {
 	var (
 		command            *exec.Cmd
 		cniConfigDir       string
