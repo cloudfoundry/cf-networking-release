@@ -1,6 +1,7 @@
 package config_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"garden-external-networker/config"
 	"io/ioutil"
@@ -25,12 +26,23 @@ var _ = Describe("Config", func() {
 
 		Context("when config file is valid", func() {
 			It("returns the config", func() {
-				file.WriteString(`{"cni_plugin_dir": "foo", "cni_config_dir": "bar", "bind_mount_dir": "baz", "overlay_network": "10.255.0.0./16"}`)
+				file.WriteString(`{
+					"cni_plugin_dir": "foo",
+					"cni_config_dir": "bar",
+					"bind_mount_dir": "baz",
+					"overlay_network": "10.255.0.0./16",
+					"state_file": "some/path",
+					"start_port": 1234,
+					"total_ports": 56
+				}`)
 				c, err := config.New(file.Name())
 				Expect(err).NotTo(HaveOccurred())
 				Expect(c.CniPluginDir).To(Equal("foo"))
 				Expect(c.CniConfigDir).To(Equal("bar"))
 				Expect(c.BindMountDir).To(Equal("baz"))
+				Expect(c.StateFilePath).To(Equal("some/path"))
+				Expect(c.StartPort).To(Equal(1234))
+				Expect(c.TotalPorts).To(Equal(56))
 			})
 		})
 
@@ -64,21 +76,29 @@ var _ = Describe("Config", func() {
 		})
 
 		DescribeTable("when config file is missing a member",
-			func(missingFlag, cpd, ccd, bmd, on string) {
-				file.WriteString(fmt.Sprintf(`
-				{
-					"cni_plugin_dir": "%s",
-					"cni_config_dir": "%s",
-					"bind_mount_dir": "%s",
-					"overlay_network": "%s"
-				}`, cpd, ccd, bmd, on))
+			func(missingFlag string) {
+				allData := map[string]interface{}{
+					"cni_plugin_dir":  "/some/plugin/dir",
+					"cni_config_dir":  "/some/config/dir",
+					"bind_mount_dir":  "/some/mount/dir",
+					"overlay_network": "10.1.0.0/16",
+					"state_file":      "/some/state/file",
+					"start_port":      50000,
+					"total_ports":     10000,
+				}
+				delete(allData, missingFlag)
+				Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
+
 				_, err = config.New(file.Name())
 				Expect(err).To(MatchError(fmt.Sprintf("missing required config '%s'", missingFlag)))
 			},
-			Entry("missing cni plugin dir", "cni_plugin_dir", "", "bar", "baz", "10.255.0.0/16"),
-			Entry("missing cni config dir", "cni_config_dir", "foo", "", "baz", "10.255.0.0/16"),
-			Entry("missing bind mount dir", "bind_mount_dir", "foo", "bar", "", "10.255.0.0/16"),
-			Entry("missing overlay network", "overlay_network", "foo", "bar", "baz", ""),
+			Entry("missing cni plugin dir", "cni_plugin_dir"),
+			Entry("missing cni config dir", "cni_config_dir"),
+			Entry("missing bind mount dir", "bind_mount_dir"),
+			Entry("missing overlay network", "overlay_network"),
+			Entry("missing state file", "state_file"),
+			Entry("missing start port", "start_port"),
+			Entry("missing total ports", "total_ports"),
 		)
 	})
 })

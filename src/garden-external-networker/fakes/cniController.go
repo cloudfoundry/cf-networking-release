@@ -29,6 +29,8 @@ type CNIController struct {
 	downReturns struct {
 		result1 error
 	}
+	invocations      map[string][][]interface{}
+	invocationsMutex sync.RWMutex
 }
 
 func (fake *CNIController) Up(namespacePath string, handle string, properties map[string]string) (*types.Result, error) {
@@ -38,6 +40,7 @@ func (fake *CNIController) Up(namespacePath string, handle string, properties ma
 		handle        string
 		properties    map[string]string
 	}{namespacePath, handle, properties})
+	fake.recordInvocation("Up", []interface{}{namespacePath, handle, properties})
 	fake.upMutex.Unlock()
 	if fake.UpStub != nil {
 		return fake.UpStub(namespacePath, handle, properties)
@@ -73,6 +76,7 @@ func (fake *CNIController) Down(namespacePath string, handle string, properties 
 		handle        string
 		properties    map[string]string
 	}{namespacePath, handle, properties})
+	fake.recordInvocation("Down", []interface{}{namespacePath, handle, properties})
 	fake.downMutex.Unlock()
 	if fake.DownStub != nil {
 		return fake.DownStub(namespacePath, handle, properties)
@@ -98,4 +102,26 @@ func (fake *CNIController) DownReturns(result1 error) {
 	fake.downReturns = struct {
 		result1 error
 	}{result1}
+}
+
+func (fake *CNIController) Invocations() map[string][][]interface{} {
+	fake.invocationsMutex.RLock()
+	defer fake.invocationsMutex.RUnlock()
+	fake.upMutex.RLock()
+	defer fake.upMutex.RUnlock()
+	fake.downMutex.RLock()
+	defer fake.downMutex.RUnlock()
+	return fake.invocations
+}
+
+func (fake *CNIController) recordInvocation(key string, args []interface{}) {
+	fake.invocationsMutex.Lock()
+	defer fake.invocationsMutex.Unlock()
+	if fake.invocations == nil {
+		fake.invocations = map[string][][]interface{}{}
+	}
+	if fake.invocations[key] == nil {
+		fake.invocations[key] = [][]interface{}{}
+	}
+	fake.invocations[key] = append(fake.invocations[key], args)
 }

@@ -21,10 +21,10 @@ var _ = Describe("Garden External Networker", func() {
 		cniConfigDir       string
 		fakePid            int
 		fakeConfigFilePath string
-		defaultConfig      map[string]string
+		defaultConfig      map[string]interface{}
 	)
 
-	var writeConfig = func(configHash map[string]string) {
+	var writeConfig = func(configHash map[string]interface{}) {
 		configBytes, err := json.Marshal(configHash)
 		Expect(err).NotTo(HaveOccurred())
 		err = ioutil.WriteFile(fakeConfigFilePath, configBytes, 0600)
@@ -40,12 +40,18 @@ var _ = Describe("Garden External Networker", func() {
 		dir, err := ioutil.TempDir("", "fake-cni-dir")
 		Expect(err).ToNot(HaveOccurred())
 
+		stateFilePath, err := ioutil.TempFile("", "external-networker-state.json")
+		Expect(err).NotTo(HaveOccurred())
+
 		fakeConfigFilePath = configFile.Name()
-		defaultConfig = map[string]string{
+		defaultConfig = map[string]interface{}{
 			"cni_plugin_dir":  dir,
 			"cni_config_dir":  dir,
 			"bind_mount_dir":  dir,
 			"overlay_network": "10.255.0.0/16",
+			"state_file":      stateFilePath.Name(),
+			"start_port":      1234,
+			"total_ports":     56,
 		}
 		writeConfig(defaultConfig)
 
@@ -56,6 +62,7 @@ var _ = Describe("Garden External Networker", func() {
 			"--properties=some-network-spec",
 			"--configFile=" + fakeConfigFilePath,
 		}
+		command.Env = []string{"PATH=/sbin"}
 
 		fakePid = rand.Intn(30000)
 		command.Stdin = strings.NewReader(fmt.Sprintf(`{ "pid": %d }`, fakePid))
@@ -76,7 +83,6 @@ var _ = Describe("Garden External Networker", func() {
 				Expect(session.Out.Contents()).To(BeEmpty())
 				By("checking that the error was logged to stderr")
 				Expect(session.Err.Contents()).To(ContainSubstring("{{{bad"))
-
 			})
 		})
 

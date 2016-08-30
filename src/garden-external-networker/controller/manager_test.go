@@ -23,6 +23,7 @@ var _ = Describe("Manager", func() {
 		mounter                 *fakes.Mounter
 		encodedGardenProperties string
 		expectedExtraProperties map[string]string
+		portAllocator           *fakes.PortAllocator
 		ipTables                *lib_fakes.IPTables
 		logger                  *lagertest.TestLogger
 	)
@@ -32,6 +33,8 @@ var _ = Describe("Manager", func() {
 		mounter = &fakes.Mounter{}
 		cniController = &fakes.CNIController{}
 		ipTables = &lib_fakes.IPTables{}
+		portAllocator = &fakes.PortAllocator{}
+
 		cniController.UpReturns(&types.Result{
 			IP4: &types.IPConfig{
 				IP: net.IPNet{
@@ -47,6 +50,7 @@ var _ = Describe("Manager", func() {
 			BindMountRoot:  "/some/fake/path",
 			IPTables:       ipTables,
 			OverlayNetwork: "10.255.0.0/16",
+			PortAllocator:  portAllocator,
 		}
 		encodedGardenProperties = `{ "app_id": "some-group-id" }`
 		expectedExtraProperties = map[string]string{"app_id": "some-group-id"}
@@ -338,6 +342,78 @@ var _ = Describe("Manager", func() {
 			It("returns the error", func() {
 				err := manager.NetOut("some-handle", netOutProperties)
 				Expect(err).To(MatchError(ContainSubstring("unmarshaling net-out properties: invalid character")))
+			})
+
+		})
+	})
+
+	Describe("NetIn", func() {
+		BeforeEach(func() {
+			encodedGardenProperties = `{ "host-ip": "1.2.3.4", "host-port": "0", "container-ip": "10.0.0.2", "container-port": "8888", "app_id": "some-group-id" }`
+			portAllocator.AllocatePortReturns(1234, nil)
+		})
+
+		It("writes a netin iptables rule", func() {
+			_, err := manager.NetIn("some-container-handle", encodedGardenProperties)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(ipTables.AppendUniqueCallCount()).To(Equal(1))
+			table, chain, extraArgs := ipTables.AppendUniqueArgsForCall(0)
+			Expect(table).To(Equal("nat"))
+			Expect(chain).To(Equal("netin--some-container-handle"))
+			Expect(extraArgs).To(Equal([]string{
+				"-d", "1.2.3.4",
+				"-p", "tcp",
+				"-m", "tcp", "--dport", "1234",
+				"--jump", "DNAT",
+				"--to-destination", "10.0.0.2:8888",
+				"-m", "comment", "--comment", "dst:some-group-id"}))
+		})
+
+		Context("when the container handle is longer than 29 characters", func() {
+			It("truncates the chain name to no more than 29 characters", func() {
+				_, err := manager.NetIn("some-container-handle-that-is-longer-than-29-characters", encodedGardenProperties)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(ipTables.AppendUniqueCallCount()).To(Equal(1))
+				_, chain, _ := ipTables.AppendUniqueArgsForCall(0)
+				Expect(chain).To(Equal("netin--some-container-handle-"))
+			})
+		})
+
+		BeforeEach(func() {
+			encodedGardenProperties = `{ "host-ip": "1.2.3.4", "host-port": "11111", "container-ip": "10.0.0.2", "container-port": "8888", "app_id": "some-group-id" }`
+		})
+
+		It("uses the specified port", func() {
+			netInProperties, err := manager.NetIn("some-container-handle", encodedGardenProperties)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(netInProperties).To(Equal(&controller.NetInProperties{
+				HostIP:        "1.2.3.4",
+				HostPort:      1234,
+				ContainerIP:   "10.0.0.2",
+				ContainerPort: 8888,
+				GroupID:       "some-group-id",
+			}))
+		})
+
+		Context("when no container port is specified", func() {
+			BeforeEach(func() {
+				encodedGardenProperties = `{ "host-ip": "1.2.3.4", "host-port": "1234", "container-ip": "10.0.0.2", "container-port": "0", "app_id": "some-group-id" }`
+			})
+
+			It("uses the specified external port", func() {
+				netInProperties, err := manager.NetIn("some-container-handle", encodedGardenProperties)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(netInProperties).To(Equal(&controller.NetInProperties{
+					HostIP:        "1.2.3.4",
+					HostPort:      1234,
+					ContainerIP:   "10.0.0.2",
+					ContainerPort: 1234,
+					GroupID:       "some-group-id",
+				}))
 			})
 		})
 	})

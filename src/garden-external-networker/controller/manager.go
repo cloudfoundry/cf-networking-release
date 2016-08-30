@@ -7,10 +7,10 @@ import (
 	"lib/rules"
 	"net"
 	"path/filepath"
+	"strconv"
 
 	"code.cloudfoundry.org/garden"
 	"code.cloudfoundry.org/lager"
-
 	"github.com/containernetworking/cni/pkg/types"
 )
 
@@ -26,6 +26,11 @@ type mounter interface {
 	RemoveMount(target string) error
 }
 
+//go:generate counterfeiter -o ../fakes/portAllocator.go --fake-name PortAllocator . portAllocator
+type portAllocator interface {
+	AllocatePort(handle string, port int) (int, error)
+}
+
 type Manager struct {
 	Logger         lager.Logger
 	CNIController  cniController
@@ -33,9 +38,10 @@ type Manager struct {
 	BindMountRoot  string
 	IPTables       rules.IPTables
 	OverlayNetwork string
+	PortAllocator  portAllocator
 }
 
-type Properties struct {
+type UpResultProperties struct {
 	ContainerIP      net.IP `json:"garden.network.container-ip"`
 	DeprecatedHostIP net.IP `json:"garden.network.host-ip"`
 }
@@ -52,7 +58,7 @@ func ExtractGardenProperties(encodedGardenProperties string) (map[string]string,
 	return props, nil
 }
 
-func (m *Manager) Up(pid int, containerHandle, encodedGardenProperties string) (*Properties, error) {
+func (m *Manager) Up(pid int, containerHandle, encodedGardenProperties string) (*UpResultProperties, error) {
 	if pid == 0 {
 		return nil, errors.New("up missing pid")
 	}
@@ -86,7 +92,7 @@ func (m *Manager) Up(pid int, containerHandle, encodedGardenProperties string) (
 		return nil, fmt.Errorf("initialize net out: %s", err)
 	}
 
-	return &Properties{
+	return &UpResultProperties{
 		ContainerIP:      result.IP4.IP.IP,
 		DeprecatedHostIP: net.ParseIP("255.255.255.255"),
 	}, nil
@@ -238,4 +244,61 @@ func (m *Manager) InitializeIPTablesNetOut(containerHandle string, containerIP n
 	}
 
 	return nil
+}
+
+type NetInProperties struct {
+	HostIP        string
+	HostPort      int `json:"host_port"`
+	ContainerIP   string
+	ContainerPort int `json:"container_port"`
+	GroupID       string
+}
+
+func (m *Manager) NetIn(containerHandle, encodedGardenProperties string) (*NetInProperties, error) {
+	gardenProps, err := ExtractGardenProperties(encodedGardenProperties)
+	if err != nil {
+		panic(err)
+	}
+
+	hostPort, err := strconv.Atoi(gardenProps["host-port"])
+	if err != nil {
+		panic(err)
+	}
+
+	hostPort, err = m.PortAllocator.AllocatePort(containerHandle, hostPort)
+	if err != nil {
+		panic(err)
+	}
+
+	containerPort, err := strconv.Atoi(gardenProps["container-port"])
+	if err != nil {
+		panic(err)
+	}
+
+	if containerPort == 0 {
+		containerPort = hostPort
+	}
+
+	containerIP := gardenProps["container-ip"]
+	hostIP := gardenProps["host-ip"]
+	groupID := gardenProps["app_id"]
+
+	chainName := fmt.Sprintf("netin--%s", containerHandle)
+	if len(chainName) > 29 {
+		chainName = chainName[:29]
+	}
+
+	rule := rules.NewNetInRule(containerIP, containerPort, hostIP, hostPort, groupID)
+	err = rule.Enforce("nat", chainName, m.IPTables, m.Logger)
+	if err != nil {
+		panic(err)
+	}
+
+	return &NetInProperties{
+		HostIP:        hostIP,
+		HostPort:      hostPort,
+		ContainerIP:   containerIP,
+		ContainerPort: containerPort,
+		GroupID:       groupID,
+	}, nil
 }

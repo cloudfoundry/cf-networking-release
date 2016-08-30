@@ -68,6 +68,7 @@ var _ = Describe("Garden External Networker", func() {
 		fakeLogDir             string
 		expectedNetNSPath      string
 		bindMountRoot          string
+		stateFilePath          string
 		containerHandle        string
 		fakeProcess            *os.Process
 		fakeConfigFilePath     string
@@ -98,6 +99,11 @@ var _ = Describe("Garden External Networker", func() {
 
 		expectedNetNSPath = fmt.Sprintf("%s/%s", bindMountRoot, containerHandle)
 
+		stateFile, err := ioutil.TempFile("", "external-networker-state.json")
+		Expect(err).NotTo(HaveOccurred())
+		Expect(stateFile.Close()).To(Succeed())
+		stateFilePath = stateFile.Name()
+
 		adapterLogDir, err = ioutil.TempDir("", "adapter-log-dir")
 		Expect(err).NotTo(HaveOccurred())
 		Expect(os.RemoveAll(adapterLogDir)).To(Succeed()) // directory need not exist
@@ -113,11 +119,14 @@ var _ = Describe("Garden External Networker", func() {
 		configFile, err := ioutil.TempFile("", "adapter-config-")
 		Expect(err).NotTo(HaveOccurred())
 		fakeConfigFilePath = configFile.Name()
-		config := map[string]string{
+		config := map[string]interface{}{
 			"cni_plugin_dir":  cniPluginDir,
 			"cni_config_dir":  cniConfigDir,
 			"bind_mount_dir":  bindMountRoot,
 			"overlay_network": "10.255.0.0/16",
+			"state_file":      stateFilePath,
+			"start_port":      60000,
+			"total_ports":     56,
 		}
 		configBytes, err := json.Marshal(config)
 		Expect(err).NotTo(HaveOccurred())
@@ -274,5 +283,59 @@ var _ = Describe("Garden External Networker", func() {
 		Eventually(iptSession, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
 		Expect(iptSession.Out.Contents()).To(ContainSubstring(`netout--some-container-handl -s 169.254.1.2/32 -p tcp -m iprange --dst-range 1.1.1.1-2.2.2.2 -m tcp --dport 9000:9999 -j RETURN`))
 		Expect(iptSession.Out.Contents()).To(ContainSubstring(`netout--some-container-handl -s 169.254.1.2/32 -m iprange --dst-range 3.3.3.3-4.4.4.4 -j RETURN`))
+	})
+
+	Describe("NetIn", func() {
+		var netInCommand *exec.Cmd
+
+		BeforeEach(func() {
+			netInCommand = exec.Command(pathToAdapter)
+			netInCommand.Env = append(os.Environ(), "FAKE_LOG_DIR="+fakeLogDir)
+			netInCommand.Stdin = strings.NewReader(`{}`)
+			netInCommand.Args = []string{
+				pathToAdapter,
+				"--action", "net-in",
+				"--handle", "some-container-handle",
+				"--configFile", fakeConfigFilePath,
+			}
+			netInCommand.Args = append(
+				netInCommand.Args,
+				"--properties", `{ "host-ip": "1.2.3.4", "host-port": "0", "container-ip": "10.0.0.2", "container-port": "8080", "app_id": "some-group-id" }`,
+			)
+		})
+
+		It("writes iptables rules for NetIn", func() {
+			By("ensuring iptables chain is present for the container handle")
+			iptablesCmd := exec.Command("iptables", "-w", "-t", "nat", "-N", "netin--some-container-handle")
+			iptablesSession, err := gexec.Start(iptablesCmd, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(iptablesSession).Should(gexec.Exit(0))
+
+			By("returning the ports allocated")
+			netInSession, err := gexec.Start(netInCommand, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(netInSession, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
+			var result struct {
+				HostPort      int `json:"host_port"`
+				ContainerPort int `json:"container_port"`
+			}
+			Expect(json.Unmarshal(netInSession.Out.Contents(), &result)).To(Succeed())
+			Expect(result.HostPort).To(BeNumerically(">=", 60000))
+			Expect(result.ContainerPort).To(Equal(8080))
+
+			By("calling out to iptables")
+			iptablesCmd = exec.Command("iptables", "-w", "-S", "-t", "nat")
+			iptablesSession, err = gexec.Start(iptablesCmd, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(iptablesSession).Should(gexec.Exit(0))
+			allRules := strings.Split(string(iptablesSession.Out.Contents()), "\n")
+			expectedRule := `-A netin--some-container-handle -d 1.2.3.4/32 -p tcp -m tcp --dport 60000 -m comment --comment "dst:some-group-id" -j DNAT --to-destination 10.0.0.2:8080`
+			Expect(allRules).To(ContainElement(expectedRule))
+
+			By("seeing that the allocated port is stored to the state file on disk")
+			stateFileBytes, err := ioutil.ReadFile(stateFilePath)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(stateFileBytes).To(ContainSubstring(fmt.Sprintf("%d", result.HostPort)))
+		})
 	})
 })

@@ -12,6 +12,8 @@ files:
   - garden-external-networker/cni/*.go # gosub
   - garden-external-networker/config/*.go # gosub
   - garden-external-networker/controller/*.go # gosub
+  - garden-external-networker/filelock/*.go # gosub
+  - garden-external-networker/port_allocator/*.go # gosub
   - github.com/containernetworking/cni/libcni/*.go # gosub
   - github.com/containernetworking/cni/pkg/invoke/*.go # gosub
   - github.com/containernetworking/cni/pkg/ip/*.go # gosub

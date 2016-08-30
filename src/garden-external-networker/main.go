@@ -7,6 +7,8 @@ import (
 	"garden-external-networker/cni"
 	"garden-external-networker/config"
 	"garden-external-networker/controller"
+	"garden-external-networker/filelock"
+	"garden-external-networker/port_allocator"
 	"io/ioutil"
 	"os"
 
@@ -30,7 +32,6 @@ func parseArgs(allArgs []string) error {
 
 	flagSet.StringVar(&action, "action", "", "")
 	flagSet.StringVar(&handle, "handle", "", "")
-	flagSet.StringVar(&gardenNetworkSpec, "network", "", "")
 	flagSet.StringVar(&encodedProperties, "properties", "", "")
 	flagSet.StringVar(&configFilePath, "configFile", "", "")
 
@@ -120,13 +121,27 @@ func main() {
 		die(logger, "iptables-new", err)
 	}
 
+	locker := &filelock.Locker{Path: cfg.StateFilePath}
+	tracker := &port_allocator.Tracker{
+		Logger:    logger,
+		StartPort: cfg.StartPort,
+		Capacity:  cfg.TotalPorts,
+	}
+	serializer := &port_allocator.Serializer{}
+	portAllocator := &port_allocator.PortAllocator{
+		Tracker:    tracker,
+		Serializer: serializer,
+		Locker:     locker,
+	}
+
 	manager := &controller.Manager{
 		Logger:         logger,
 		CNIController:  cniController,
 		Mounter:        mounter,
 		BindMountRoot:  cfg.BindMountDir,
-		IPTables:       ipt,
+		PortAllocator:  portAllocator,
 		OverlayNetwork: cfg.OverlayNetwork,
+		IPTables:       ipt,
 	}
 
 	logger.Info("action", lager.Data{"action": action})
@@ -150,6 +165,15 @@ func main() {
 		err = manager.NetOut(handle, encodedProperties)
 		if err != nil {
 			die(logger, "manager-net-out", err)
+		}
+	case "net-in":
+		netInResult, err := manager.NetIn(handle, encodedProperties)
+		if err != nil {
+			die(logger, "manager-net-in", err)
+		}
+		err = json.NewEncoder(os.Stdout).Encode(netInResult)
+		if err != nil {
+			die(logger, "writing-net-in-result", err)
 		}
 	default:
 		die(logger, "unknown-action", fmt.Errorf("unrecognized action: %s", action))
