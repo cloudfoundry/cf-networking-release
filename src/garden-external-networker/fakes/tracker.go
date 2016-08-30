@@ -25,6 +25,14 @@ type Tracker struct {
 	releaseManyReturns struct {
 		result1 error
 	}
+	InRangeStub        func(port int) bool
+	inRangeMutex       sync.RWMutex
+	inRangeArgsForCall []struct {
+		port int
+	}
+	inRangeReturns struct {
+		result1 bool
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -102,6 +110,39 @@ func (fake *Tracker) ReleaseManyReturns(result1 error) {
 	}{result1}
 }
 
+func (fake *Tracker) InRange(port int) bool {
+	fake.inRangeMutex.Lock()
+	fake.inRangeArgsForCall = append(fake.inRangeArgsForCall, struct {
+		port int
+	}{port})
+	fake.recordInvocation("InRange", []interface{}{port})
+	fake.inRangeMutex.Unlock()
+	if fake.InRangeStub != nil {
+		return fake.InRangeStub(port)
+	} else {
+		return fake.inRangeReturns.result1
+	}
+}
+
+func (fake *Tracker) InRangeCallCount() int {
+	fake.inRangeMutex.RLock()
+	defer fake.inRangeMutex.RUnlock()
+	return len(fake.inRangeArgsForCall)
+}
+
+func (fake *Tracker) InRangeArgsForCall(i int) int {
+	fake.inRangeMutex.RLock()
+	defer fake.inRangeMutex.RUnlock()
+	return fake.inRangeArgsForCall[i].port
+}
+
+func (fake *Tracker) InRangeReturns(result1 bool) {
+	fake.InRangeStub = nil
+	fake.inRangeReturns = struct {
+		result1 bool
+	}{result1}
+}
+
 func (fake *Tracker) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -109,6 +150,8 @@ func (fake *Tracker) Invocations() map[string][][]interface{} {
 	defer fake.acquireOneMutex.RUnlock()
 	fake.releaseManyMutex.RLock()
 	defer fake.releaseManyMutex.RUnlock()
+	fake.inRangeMutex.RLock()
+	defer fake.inRangeMutex.RUnlock()
 	return fake.invocations
 }
 

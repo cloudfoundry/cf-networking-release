@@ -1,6 +1,7 @@
 package port_allocator
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -10,6 +11,7 @@ import (
 type tracker interface {
 	AcquireOne(pool *Pool) (int, error)
 	ReleaseMany(pool *Pool, toRelease []int) error
+	InRange(port int) bool
 }
 
 //go:generate counterfeiter -o ../fakes/serializer.go --fake-name Serializer . serializer
@@ -29,7 +31,15 @@ type PortAllocator struct {
 	Locker     fileLocker
 }
 
-func (p *PortAllocator) AllocatePort(handle string) (int, error) {
+func (p *PortAllocator) AllocatePort(handle string, port int) (int, error) {
+	if port != 0 {
+		if p.Tracker.InRange(port) {
+			return -1, errors.New("cannot specify port from allocation range")
+		} else {
+			return port, nil
+		}
+	}
+
 	file, err := p.Locker.Open()
 	if err != nil {
 		return -1, fmt.Errorf("open lock: %s", err)

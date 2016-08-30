@@ -38,7 +38,7 @@ var _ = Describe("PortAllocator", func() {
 
 	Describe("AllocatePort", func() {
 		It("deserializes the pool from the locked file", func() {
-			_, err := portAllocator.AllocatePort("some-handle")
+			_, err := portAllocator.AllocatePort("some-handle", 0)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(serializer.DecodeAllCallCount()).To(Equal(1))
@@ -47,19 +47,44 @@ var _ = Describe("PortAllocator", func() {
 			Expect(file).To(Equal(lockedFile))
 		})
 
-		It("acquires the port from the pool", func() {
-			_, err := portAllocator.AllocatePort("some-handle")
-			Expect(err).NotTo(HaveOccurred())
+		Context("when the passed in port is 0", func() {
+			It("acquires the port from the pool", func() {
+				_, err := portAllocator.AllocatePort("some-handle", 0)
+				Expect(err).NotTo(HaveOccurred())
 
-			Expect(serializer.DecodeAllCallCount()).To(Equal(1))
-			Expect(tracker.AcquireOneCallCount()).To(Equal(1))
+				Expect(serializer.DecodeAllCallCount()).To(Equal(1))
+				Expect(tracker.AcquireOneCallCount()).To(Equal(1))
 
-			_, pool := serializer.DecodeAllArgsForCall(0)
-			Expect(tracker.AcquireOneArgsForCall(0)).To(Equal(pool))
+				_, pool := serializer.DecodeAllArgsForCall(0)
+				Expect(tracker.AcquireOneArgsForCall(0)).To(Equal(pool))
+			})
+		})
+
+		Context("when the passed in port is non-zero and not in the range", func() {
+			BeforeEach(func() {
+				tracker.InRangeReturns(false)
+			})
+			It("noops and returns the port", func() {
+				port, err := portAllocator.AllocatePort("some-handle", 42)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(tracker.AcquireOneCallCount()).To(Equal(0))
+				Expect(port).To(Equal(42))
+			})
+		})
+
+		Context("when the passed in port is non-zero in the range", func() {
+			BeforeEach(func() {
+				tracker.InRangeReturns(true)
+			})
+			It("returns an error", func() {
+				_, err := portAllocator.AllocatePort("some-handle", 42)
+				Expect(err).To(MatchError(errors.New("cannot specify port from allocation range")))
+			})
 		})
 
 		It("re-serializes the pool to the locked file", func() {
-			_, err := portAllocator.AllocatePort("some-handle")
+			_, err := portAllocator.AllocatePort("some-handle", 0)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(serializer.EncodeAndOverwriteCallCount()).To(Equal(1))
@@ -72,7 +97,7 @@ var _ = Describe("PortAllocator", func() {
 		})
 
 		It("returns the port", func() {
-			port, err := portAllocator.AllocatePort("some-handle")
+			port, err := portAllocator.AllocatePort("some-handle", 0)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(port).To(Equal(111))
 		})
@@ -82,7 +107,7 @@ var _ = Describe("PortAllocator", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			locker.OpenReturns(file, nil)
-			_, err = portAllocator.AllocatePort("some-handle")
+			_, err = portAllocator.AllocatePort("some-handle", 0)
 			Expect(err).NotTo(HaveOccurred())
 
 			By("checking that the write to the closed file should fail")
@@ -95,7 +120,7 @@ var _ = Describe("PortAllocator", func() {
 				locker.OpenReturns(nil, errors.New("potato"))
 			})
 			It("wraps and returns the error", func() {
-				_, err := portAllocator.AllocatePort("some-handle")
+				_, err := portAllocator.AllocatePort("some-handle", 0)
 				Expect(err).To(MatchError("open lock: potato"))
 			})
 		})
@@ -105,7 +130,7 @@ var _ = Describe("PortAllocator", func() {
 				serializer.DecodeAllReturns(errors.New("potato"))
 			})
 			It("wraps and returns the error", func() {
-				_, err := portAllocator.AllocatePort("some-handle")
+				_, err := portAllocator.AllocatePort("some-handle", 0)
 				Expect(err).To(MatchError("decoding state file: potato"))
 			})
 		})
@@ -115,7 +140,7 @@ var _ = Describe("PortAllocator", func() {
 				tracker.AcquireOneReturns(0, errors.New("turnip"))
 			})
 			It("wraps and returns the error", func() {
-				_, err := portAllocator.AllocatePort("some-handle")
+				_, err := portAllocator.AllocatePort("some-handle", 0)
 				Expect(err).To(MatchError("acquire port: turnip"))
 			})
 		})
@@ -125,7 +150,7 @@ var _ = Describe("PortAllocator", func() {
 				serializer.EncodeAndOverwriteReturns(errors.New("turnip"))
 			})
 			It("wraps and returns the error", func() {
-				_, err := portAllocator.AllocatePort("some-handle")
+				_, err := portAllocator.AllocatePort("some-handle", 0)
 				Expect(err).To(MatchError("encode and overwrite: turnip"))
 			})
 		})

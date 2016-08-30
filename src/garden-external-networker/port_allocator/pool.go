@@ -50,6 +50,10 @@ type Tracker struct {
 	Capacity  int
 }
 
+func (t *Tracker) InRange(port int) bool {
+	return port >= t.StartPort && port < t.StartPort+t.Capacity
+}
+
 func (t *Tracker) AcquireOne(pool *Pool) (int, error) {
 	if pool.AcquiredPorts == nil {
 		pool.AcquiredPorts = make(map[int]bool)

@@ -4,10 +4,11 @@ package fakes
 import "sync"
 
 type PortAllocator struct {
-	AllocatePortStub        func(handle string) (int, error)
+	AllocatePortStub        func(handle string, port int) (int, error)
 	allocatePortMutex       sync.RWMutex
 	allocatePortArgsForCall []struct {
 		handle string
+		port   int
 	}
 	allocatePortReturns struct {
 		result1 int
@@ -17,15 +18,16 @@ type PortAllocator struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *PortAllocator) AllocatePort(handle string) (int, error) {
+func (fake *PortAllocator) AllocatePort(handle string, port int) (int, error) {
 	fake.allocatePortMutex.Lock()
 	fake.allocatePortArgsForCall = append(fake.allocatePortArgsForCall, struct {
 		handle string
-	}{handle})
-	fake.recordInvocation("AllocatePort", []interface{}{handle})
+		port   int
+	}{handle, port})
+	fake.recordInvocation("AllocatePort", []interface{}{handle, port})
 	fake.allocatePortMutex.Unlock()
 	if fake.AllocatePortStub != nil {
-		return fake.AllocatePortStub(handle)
+		return fake.AllocatePortStub(handle, port)
 	} else {
 		return fake.allocatePortReturns.result1, fake.allocatePortReturns.result2
 	}
@@ -37,10 +39,10 @@ func (fake *PortAllocator) AllocatePortCallCount() int {
 	return len(fake.allocatePortArgsForCall)
 }
 
-func (fake *PortAllocator) AllocatePortArgsForCall(i int) string {
+func (fake *PortAllocator) AllocatePortArgsForCall(i int) (string, int) {
 	fake.allocatePortMutex.RLock()
 	defer fake.allocatePortMutex.RUnlock()
-	return fake.allocatePortArgsForCall[i].handle
+	return fake.allocatePortArgsForCall[i].handle, fake.allocatePortArgsForCall[i].port
 }
 
 func (fake *PortAllocator) AllocatePortReturns(result1 int, result2 error) {

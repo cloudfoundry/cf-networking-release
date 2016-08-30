@@ -156,6 +156,17 @@ var _ = Describe("Tracker", func() {
 		})
 	})
 
+	Describe("InRange", func() {
+		It("returns true if the given port is in the allocation range", func() {
+			for i := 100; i < 110; i++ {
+				Expect(tracker.InRange(i)).To(BeTrue())
+			}
+		})
+		It("otherwise returns false", func() {
+			Expect(tracker.InRange(110)).To(BeFalse())
+		})
+	})
+
 	Describe("serializing the pool", func() {
 		It("can be roud-tripped through JSON intact", func() {
 			pool.AcquiredPorts = map[int]bool{
