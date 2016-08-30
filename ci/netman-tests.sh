@@ -11,7 +11,6 @@ declare -a packages=(
   "src/flannel-watchdog"
   "src/garden-external-networker"
   "src/netmon"
-  "src/natman"
   "src/vxlan-policy-agent"
   "src/cli-plugin"
   )
