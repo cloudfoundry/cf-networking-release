@@ -2,6 +2,11 @@ package legacynet
 
 import "fmt"
 
+//go:generate counterfeiter -o ../fakes/chain_namer.go --fake-name ChainNamer . chainNamer
+type chainNamer interface {
+	Name(prefix, containerHandle string) string
+}
+
 type ChainNamer struct {
 	MaxLength int
 }

@@ -12,8 +12,8 @@ import (
 const prefixNetOut = "netout"
 
 type NetOut struct {
-	ChainNamer
-	IPTables rules.IPTables
+	ChainNamer chainNamer
+	IPTables   rules.IPTables
 }
 
 func (m *NetOut) Initialize(logger lager.Logger, containerHandle string, containerIP net.IP, overlayNetwork string) error {
@@ -49,17 +49,17 @@ func (m *NetOut) Cleanup(containerHandle string) error {
 
 	err := m.IPTables.Delete("filter", "FORWARD", []string{"--jump", chain}...)
 	if err != nil {
-		return fmt.Errorf("deleting rule: %s", err)
+		return fmt.Errorf("delete rule: %s", err)
 	}
 
 	err = m.IPTables.ClearChain("filter", chain)
 	if err != nil {
-		return fmt.Errorf("creating chain: %s", err)
+		return fmt.Errorf("clear chain: %s", err)
 	}
 
 	err = m.IPTables.DeleteChain("filter", chain)
 	if err != nil {
-		return fmt.Errorf("creating chain: %s", err)
+		return fmt.Errorf("delete chain: %s", err)
 	}
 
 	return nil

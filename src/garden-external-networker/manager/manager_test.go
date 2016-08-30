@@ -2,8 +2,10 @@ package manager_test
 
 import (
 	"errors"
+	"fmt"
 	"net"
 
+	"code.cloudfoundry.org/garden"
 	"code.cloudfoundry.org/lager/lagertest"
 
 	"garden-external-networker/fakes"
@@ -21,19 +23,26 @@ var _ = Describe("Manager", func() {
 		mgr                     *manager.Manager
 		cniController           *fakes.CNIController
 		mounter                 *fakes.Mounter
-		encodedGardenProperties string
+		gardenProperties        map[string]string
 		expectedExtraProperties map[string]string
 		portAllocator           *fakes.PortAllocator
+		netInProvider           *fakes.NetInProvider
+		netOutProvider          *fakes.NetOutProvider
 		ipTables                *lib_fakes.IPTables
 		logger                  *lagertest.TestLogger
+		containerHandle         string
 	)
 
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test")
+		containerHandle = "some-container-handle"
 		mounter = &fakes.Mounter{}
 		cniController = &fakes.CNIController{}
 		ipTables = &lib_fakes.IPTables{}
 		portAllocator = &fakes.PortAllocator{}
+
+		netInProvider = &fakes.NetInProvider{}
+		netOutProvider = &fakes.NetOutProvider{}
 
 		cniController.UpReturns(&types.Result{
 			IP4: &types.IPConfig{
@@ -48,144 +57,90 @@ var _ = Describe("Manager", func() {
 			CNIController:  cniController,
 			Mounter:        mounter,
 			BindMountRoot:  "/some/fake/path",
-			IPTables:       ipTables,
 			OverlayNetwork: "10.255.0.0/16",
 			PortAllocator:  portAllocator,
+			NetInProvider:  netInProvider,
+			NetOutProvider: netOutProvider,
 		}
-		encodedGardenProperties = `{ "app_id": "some-group-id" }`
+		gardenProperties = map[string]string{"app_id": "some-group-id"}
 		expectedExtraProperties = map[string]string{"app_id": "some-group-id"}
 	})
 
 	Describe("Up", func() {
 		It("should ensure that the netNS is mounted to the provided path", func() {
-			_, err := mgr.Up("some-container-handle", encodedGardenProperties)
+			_, err := mgr.Up(containerHandle, manager.UpInputs{
+				Pid:        42,
+				Properties: gardenProperties,
+			})
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(mounter.IdempotentlyMountCallCount()).To(Equal(1))
 			source, target := mounter.IdempotentlyMountArgsForCall(0)
 			Expect(source).To(Equal("/proc/42/ns/net"))
-			Expect(target).To(Equal("/some/fake/path/some-container-handle"))
+			Expect(target).To(Equal(fmt.Sprintf("/some/fake/path/%s", containerHandle)))
 		})
 
 		It("should return the IP address in the CNI result as a property", func() {
-			properties, err := mgr.Up(42, "some-container-handle", encodedGardenProperties)
+			out, err := mgr.Up(containerHandle, manager.UpInputs{Pid: 42, Properties: gardenProperties})
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(properties.ContainerIP).To(Equal(net.ParseIP("169.254.1.2")))
-			Expect(properties.DeprecatedHostIP).To(Equal(net.ParseIP("255.255.255.255")))
+			Expect(out.Properties.ContainerIP).To(Equal("169.254.1.2"))
+			Expect(out.Properties.DeprecatedHostIP).To(Equal("255.255.255.255"))
 		})
 
 		It("should call CNI Up, passing in the bind-mounted path to the net ns", func() {
-			_, err := mgr.Up(42, "some-container-handle", encodedGardenProperties)
+			_, err := mgr.Up(containerHandle, manager.UpInputs{Pid: 42, Properties: gardenProperties})
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(cniController.UpCallCount()).To(Equal(1))
 			namespacePath, handle, properties := cniController.UpArgsForCall(0)
-			Expect(namespacePath).To(Equal("/some/fake/path/some-container-handle"))
-			Expect(handle).To(Equal("some-container-handle"))
+			Expect(namespacePath).To(Equal(fmt.Sprintf("/some/fake/path/%s", containerHandle)))
+			Expect(handle).To(Equal(containerHandle))
 			Expect(properties).To(Equal(expectedExtraProperties))
 		})
 
-		XContext("when the chain name is longer than 28 characters", func() {
-			It("truncates the name", func() {
-				_, err := mgr.Up(42, "some-very-long-container-handle", encodedGardenProperties)
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(ipTables.NewChainCallCount()).To(Equal(1))
-				_, chain := ipTables.NewChainArgsForCall(0)
-				Expect(chain).To(Equal("netout--some-very-long-conta"))
-			})
-		})
-
-		XIt("should create the container's chain by prepending netout to the handle", func() {
-			_, err := mgr.Up(42, "container-handle", encodedGardenProperties)
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(ipTables.NewChainCallCount()).To(Equal(1))
-			table, chain := ipTables.NewChainArgsForCall(0)
-			Expect(table).To(Equal("filter"))
-			Expect(chain).To(Equal("netout--container-handle"))
-
-			Expect(ipTables.InsertCallCount()).To(Equal(1))
-			table, chain, pos, rulespec := ipTables.InsertArgsForCall(0)
-			Expect(table).To(Equal("filter"))
-			Expect(chain).To(Equal("FORWARD"))
-			Expect(pos).To(Equal(1))
-			Expect(rulespec).To(Equal([]string{"--jump", "netout--container-handle"}))
-		})
-
-		XIt("should write the default NetOut rules", func() {
-			_, err := mgr.Up(42, "container-handle", encodedGardenProperties)
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(ipTables.AppendUniqueCallCount()).To(Equal(2))
-			table, chain, rulespec := ipTables.AppendUniqueArgsForCall(0)
-			Expect(table).To(Equal("filter"))
-			Expect(chain).To(Equal("netout--container-handle"))
-			Expect(rulespec).To(Equal([]string{"-s", "169.254.1.2",
-				"!", "-d", "10.255.0.0/16",
-				"-m", "state", "--state", "RELATED,ESTABLISHED",
-				"--jump", "RETURN"}))
-
-			table, chain, rulespec = ipTables.AppendUniqueArgsForCall(1)
-			Expect(table).To(Equal("filter"))
-			Expect(chain).To(Equal("netout--container-handle"))
-			Expect(rulespec).To(Equal([]string{"-s", "169.254.1.2",
-				"!", "-d", "10.255.0.0/16",
-				"--jump", "REJECT",
-				"--reject-with", "icmp-port-unreachable"}))
-		})
-
-		Context("when inserting fails", func() {
+		Context("when initializing netout files", func() {
 			BeforeEach(func() {
-				ipTables.InsertReturns(errors.New("banana"))
+				netInProvider.InitializeReturns(errors.New("banana"))
 			})
 			It("returns the error", func() {
-				_, err := mgr.Up(42, "container-handle", encodedGardenProperties)
-				Expect(err).To(MatchError("initialize net out: inserting rule: banana"))
+				_, err := mgr.Up("container-handle", manager.UpInputs{Pid: 42, Properties: gardenProperties})
+				Expect(err).To(MatchError("initialize iptables for netin: banana"))
 			})
 		})
 
 		Context("when creating the chain fails", func() {
 			BeforeEach(func() {
-				ipTables.NewChainReturns(errors.New("banana"))
+				netOutProvider.InitializeReturns(errors.New("banana"))
 			})
 			It("returns the error", func() {
-				_, err := mgr.Up(42, "container-handle", encodedGardenProperties)
-				Expect(err).To(MatchError("initialize net out: creating chain: banana"))
-			})
-		})
-
-		Context("when appending a rule fails", func() {
-			BeforeEach(func() {
-				ipTables.AppendUniqueReturns(errors.New("banana"))
-			})
-			It("returns the error", func() {
-				_, err := mgr.Up(42, "container-handle", encodedGardenProperties)
-				Expect(err).To(MatchError("initialize net out: appending rule: banana"))
+				_, err := mgr.Up("container-handle", manager.UpInputs{Pid: 42, Properties: gardenProperties})
+				Expect(err).To(MatchError("initialize net out: banana"))
 			})
 		})
 
 		Context("when missing args", func() {
 			It("should return a friendly error", func() {
-				_, err := mgr.Up(0, "some-container-handle", encodedGardenProperties)
+				_, err := mgr.Up(containerHandle, manager.UpInputs{Pid: 0, Properties: gardenProperties})
 				Expect(err).To(MatchError("up missing pid"))
 
-				_, err = mgr.Up(42, "", encodedGardenProperties)
+				_, err = mgr.Up("", manager.UpInputs{Pid: 42, Properties: gardenProperties})
 				Expect(err).To(MatchError("up missing container handle"))
 			})
 		})
 
-		Context("when missing the encoded garden properties", func() {
+		Context("when missing the garden properties are nil", func() {
 			It("should not complain", func() {
-				_, err := mgr.Up(42, "some-container-handle", "")
+				var props map[string]string
+				_, err := mgr.Up(containerHandle, manager.UpInputs{Pid: 42, Properties: props})
 				Expect(err).NotTo(HaveOccurred())
 			})
 		})
 
 		Context("when the encoded garden properties is an empty hash", func() {
 			It("should still call CNI and the netman agent", func() {
-				_, err := mgr.Up(42, "some-container-handle", "{}")
+				props := make(map[string]string)
+				_, err := mgr.Up(containerHandle, manager.UpInputs{Pid: 42, Properties: props})
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(cniController.UpCallCount()).To(Equal(1))
@@ -193,17 +148,10 @@ var _ = Describe("Manager", func() {
 			})
 		})
 
-		Context("when unmarshaling the encoded garden properties fails", func() {
-			It("returns the error", func() {
-				_, err := mgr.Up(42, "some-container-handle", "%%%%")
-				Expect(err).To(MatchError(ContainSubstring("unmarshal garden properties: invalid character")))
-			})
-		})
-
 		Context("when the mounter fails", func() {
 			It("should return the error", func() {
 				mounter.IdempotentlyMountReturns(errors.New("boom"))
-				_, err := mgr.Up(42, "some-container-handle", encodedGardenProperties)
+				_, err := mgr.Up(containerHandle, manager.UpInputs{Pid: 42, Properties: gardenProperties})
 				Expect(err).To(MatchError("failed mounting /proc/42/ns/net to /some/fake/path/some-container-handle: boom"))
 			})
 		})
@@ -211,7 +159,7 @@ var _ = Describe("Manager", func() {
 		Context("when the cni Up fails", func() {
 			It("should return the error", func() {
 				cniController.UpReturns(nil, errors.New("bang"))
-				_, err := mgr.Up(42, "some-container-handle", encodedGardenProperties)
+				_, err := mgr.Up(containerHandle, manager.UpInputs{Pid: 42, Properties: gardenProperties})
 				Expect(err).To(MatchError("cni up failed: bang"))
 			})
 		})
@@ -219,24 +167,23 @@ var _ = Describe("Manager", func() {
 
 	Describe("Down", func() {
 		It("should ensure that the netNS is unmounted", func() {
-			Expect(mgr.Down("some-container-handle", encodedGardenProperties)).To(Succeed())
+			Expect(mgr.Down(containerHandle)).To(Succeed())
 			Expect(mounter.RemoveMountCallCount()).To(Equal(1))
 
 			Expect(mounter.RemoveMountArgsForCall(0)).To(Equal("/some/fake/path/some-container-handle"))
 		})
 
 		It("should call CNI Down, passing in the bind-mounted path to the net ns", func() {
-			Expect(mgr.Down("some-container-handle", encodedGardenProperties)).To(Succeed())
+			Expect(mgr.Down(containerHandle)).To(Succeed())
 			Expect(cniController.DownCallCount()).To(Equal(1))
-			namespacePath, handle, spec := cniController.DownArgsForCall(0)
+			namespacePath, handle := cniController.DownArgsForCall(0)
 			Expect(namespacePath).To(Equal("/some/fake/path/some-container-handle"))
-			Expect(handle).To(Equal("some-container-handle"))
-			Expect(spec).To(Equal(expectedExtraProperties))
+			Expect(handle).To(Equal(containerHandle))
 		})
 
 		Context("when encodedGardenProperties is empty", func() {
 			It("should call CNI", func() {
-				err := mgr.Down("some-container-handle", "")
+				err := mgr.Down(containerHandle)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(cniController.DownCallCount()).To(Equal(1))
 				Expect(mounter.RemoveMountCallCount()).To(Equal(1))
@@ -245,7 +192,7 @@ var _ = Describe("Manager", func() {
 
 		Context("when missing args", func() {
 			It("should return a friendly error", func() {
-				err := mgr.Down("", "")
+				err := mgr.Down("")
 				Expect(err).To(MatchError("down missing container handle"))
 			})
 		})
@@ -253,7 +200,7 @@ var _ = Describe("Manager", func() {
 		Context("when the mounter fails", func() {
 			It("should return the error", func() {
 				mounter.RemoveMountReturns(errors.New("boom"))
-				err := mgr.Down("some-container-handle", encodedGardenProperties)
+				err := mgr.Down(containerHandle)
 				Expect(err).To(MatchError("failed removing mount /some/fake/path/some-container-handle: boom"))
 			})
 		})
@@ -261,158 +208,116 @@ var _ = Describe("Manager", func() {
 		Context("when the cni Down fails", func() {
 			It("should return the error", func() {
 				cniController.DownReturns(errors.New("bang"))
-				err := mgr.Down("some-container-handle", encodedGardenProperties)
+				err := mgr.Down(containerHandle)
 				Expect(err).To(MatchError("cni down failed: bang"))
 			})
 		})
 	})
 
 	Describe("NetOut", func() {
-		var netOutProperties string
+		var (
+			netOutInputs manager.NetOutInputs
+		)
 		BeforeEach(func() {
-			netOutProperties = `{
-				"container_ip":"1.2.3.4",
-				"netout_rule":{
-					"protocol":1,
-					"networks":[{"start":"1.1.1.1","end":"2.2.2.2"},{"start":"3.3.3.3","end":"4.4.4.4"}],
-					"ports":[{"start":9000,"end":9999},{"start":1111,"end":2222}]
-				}
-			}`
-		})
-		It("prepends allow rules to the container's netout chain", func() {
-			err := mgr.NetOut("some-handle", netOutProperties)
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(ipTables.InsertCallCount()).To(Equal(4))
-			writtenRules := [][]string{}
-			for i := 0; i < 4; i++ {
-				table, chain, pos, rulespec := ipTables.InsertArgsForCall(i)
-				Expect(table).To(Equal("filter"))
-				Expect(chain).To(Equal("netout--some-handle"))
-				Expect(pos).To(Equal(1))
-				writtenRules = append(writtenRules, rulespec)
+			netOutRule := garden.NetOutRule{
+				Protocol: garden.ProtocolTCP,
+				Networks: []garden.IPRange{
+					{Start: net.ParseIP("1.1.1.1"), End: net.ParseIP("2.2.2.2")},
+					{Start: net.ParseIP("3.3.3.3"), End: net.ParseIP("4.4.4.4")},
+				},
+				Ports: []garden.PortRange{
+					{Start: 9000, End: 9999},
+					{Start: 1111, End: 2222},
+				},
 			}
-			Expect(writtenRules).To(ConsistOf(
-				[]string{"--source", "1.2.3.4",
-					"-m", "iprange", "-p", "tcp",
-					"--dst-range", "1.1.1.1-2.2.2.2",
-					"-m", "tcp", "--destination-port", "9000:9999",
-					"--jump", "RETURN"},
-				[]string{"--source", "1.2.3.4",
-					"-m", "iprange", "-p", "tcp",
-					"--dst-range", "1.1.1.1-2.2.2.2",
-					"-m", "tcp", "--destination-port", "1111:2222",
-					"--jump", "RETURN"},
-				[]string{"--source", "1.2.3.4",
-					"-m", "iprange", "-p", "tcp",
-					"--dst-range", "3.3.3.3-4.4.4.4",
-					"-m", "tcp", "--destination-port", "9000:9999",
-					"--jump", "RETURN"},
-				[]string{"--source", "1.2.3.4",
-					"-m", "iprange", "-p", "tcp",
-					"--dst-range", "3.3.3.3-4.4.4.4",
-					"-m", "tcp", "--destination-port", "1111:2222",
-					"--jump", "RETURN"},
-			))
+			netOutInputs = manager.NetOutInputs{
+				ContainerIP: "1.2.3.4",
+				NetOutRule:  netOutRule,
+			}
 		})
-		Context("when the handle is over 28 characters", func() {
-			It("truncates the handle", func() {
-				err := mgr.NetOut("a-very-long-container-handle", netOutProperties)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(ipTables.InsertCallCount()).To(Equal(4))
-				for i := 0; i < 4; i++ {
-					_, chain, _, _ := ipTables.InsertArgsForCall(i)
-					Expect(chain).To(Equal("netout--a-very-long-containe"))
-				}
-			})
+
+		It("delegates to netout provider for netout calls", func() {
+			err := mgr.NetOut("some-handle", netOutInputs)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(netOutProvider.InsertRuleCallCount()).To(Equal(1))
+			handle, rule, containerIP := netOutProvider.InsertRuleArgsForCall(0)
+			Expect(handle).To(Equal("some-handle"))
+			Expect(rule).To(Equal(netOutInputs.NetOutRule))
+			Expect(containerIP).To(Equal(netOutInputs.ContainerIP))
 		})
+
 		Context("when inserting the rule fails", func() {
 			BeforeEach(func() {
-				ipTables.InsertReturns(errors.New("banana"))
+				netOutProvider.InsertRuleReturns(errors.New("banana"))
 			})
 			It("returns the error", func() {
-				err := mgr.NetOut("some-handle", netOutProperties)
-				Expect(err).To(MatchError("inserting net-out rule: banana"))
+				err := mgr.NetOut("some-handle", netOutInputs)
+				Expect(err).To(MatchError("banana"))
 			})
-		})
-		Context("when unmarshaling json fails", func() {
-			BeforeEach(func() {
-				netOutProperties = `%%%%%%%`
-			})
-			It("returns the error", func() {
-				err := mgr.NetOut("some-handle", netOutProperties)
-				Expect(err).To(MatchError(ContainSubstring("unmarshaling net-out properties: invalid character")))
-			})
-
 		})
 	})
 
 	Describe("NetIn", func() {
+		var input manager.NetInInputs
 		BeforeEach(func() {
-			encodedGardenProperties = `{ "host-ip": "1.2.3.4", "host-port": "0", "container-ip": "10.0.0.2", "container-port": "8888", "app_id": "some-group-id" }`
+			input = manager.NetInInputs{
+				HostIP:        "1.2.3.4",
+				HostPort:      0,
+				ContainerIP:   "10.0.0.2",
+				ContainerPort: 8888,
+			}
 			portAllocator.AllocatePortReturns(1234, nil)
 		})
 
-		It("writes a netin iptables rule", func() {
-			_, err := mgr.NetIn("some-container-handle", encodedGardenProperties)
+		It("allocates a port and calls netin provider", func() {
+			_, err := mgr.NetIn(containerHandle, input)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(ipTables.AppendUniqueCallCount()).To(Equal(1))
-			table, chain, extraArgs := ipTables.AppendUniqueArgsForCall(0)
-			Expect(table).To(Equal("nat"))
-			Expect(chain).To(Equal("netin--some-container-handle"))
-			Expect(extraArgs).To(Equal([]string{
-				"-d", "1.2.3.4",
-				"-p", "tcp",
-				"-m", "tcp", "--dport", "1234",
-				"--jump", "DNAT",
-				"--to-destination", "10.0.0.2:8888",
-				"-m", "comment", "--comment", "dst:some-group-id"}))
-		})
-
-		Context("when the container handle is longer than 29 characters", func() {
-			It("truncates the chain name to no more than 29 characters", func() {
-				_, err := mgr.NetIn("some-container-handle-that-is-longer-than-29-characters", encodedGardenProperties)
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(ipTables.AppendUniqueCallCount()).To(Equal(1))
-				_, chain, _ := ipTables.AppendUniqueArgsForCall(0)
-				Expect(chain).To(Equal("netin--some-container-handle-"))
-			})
+			Expect(netInProvider.AddRuleCallCount()).To(Equal(1))
+			handle, hostPort, containerPort, hostIP, containerIP := netInProvider.AddRuleArgsForCall(0)
+			Expect(handle).To(Equal(containerHandle))
+			Expect(hostPort).To(Equal(1234))
+			Expect(containerPort).To(Equal(input.ContainerPort))
+			Expect(hostIP).To(Equal(input.HostIP))
+			Expect(containerIP).To(Equal(input.ContainerIP))
 		})
 
 		BeforeEach(func() {
-			encodedGardenProperties = `{ "host-ip": "1.2.3.4", "host-port": "11111", "container-ip": "10.0.0.2", "container-port": "8888", "app_id": "some-group-id" }`
+			input = manager.NetInInputs{
+				HostIP:        "1.2.3.4",
+				HostPort:      1111,
+				ContainerIP:   "10.0.0.2",
+				ContainerPort: 8888,
+			}
 		})
 
 		It("uses the specified port", func() {
-			netInProperties, err := mgr.NetIn("some-container-handle", encodedGardenProperties)
+			output, err := mgr.NetIn(containerHandle, input)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(netInProperties).To(Equal(&manager.NetInProperties{
-				HostIP:        "1.2.3.4",
+			Expect(output).To(Equal(&manager.NetInOutputs{
 				HostPort:      1234,
-				ContainerIP:   "10.0.0.2",
 				ContainerPort: 8888,
-				GroupID:       "some-group-id",
 			}))
 		})
 
 		Context("when no container port is specified", func() {
 			BeforeEach(func() {
-				encodedGardenProperties = `{ "host-ip": "1.2.3.4", "host-port": "1234", "container-ip": "10.0.0.2", "container-port": "0", "app_id": "some-group-id" }`
+				input = manager.NetInInputs{
+					HostIP:        "1.2.3.4",
+					HostPort:      1111,
+					ContainerIP:   "10.0.0.2",
+					ContainerPort: 0,
+				}
 			})
 
 			It("uses the specified external port", func() {
-				netInProperties, err := mgr.NetIn("some-container-handle", encodedGardenProperties)
+				output, err := mgr.NetIn(containerHandle, input)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(netInProperties).To(Equal(&manager.NetInProperties{
-					HostIP:        "1.2.3.4",
+				Expect(output).To(Equal(&manager.NetInOutputs{
 					HostPort:      1234,
-					ContainerIP:   "10.0.0.2",
 					ContainerPort: 1234,
-					GroupID:       "some-group-id",
 				}))
 			})
 		})

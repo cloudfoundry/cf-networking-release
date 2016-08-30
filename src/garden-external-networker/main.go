@@ -120,14 +120,14 @@ func mainWithError() error {
 		Locker:     locker,
 	}
 
-	chainNamer := legacynet.ChainNamer{MaxLength: 28}
-	netinProvider := legacynet.NetIn{
+	chainNamer := &legacynet.ChainNamer{MaxLength: 28}
+
+	netinProvider := &legacynet.NetIn{
 		ChainNamer: chainNamer,
 		IPTables:   ipt,
-		Logger:     logger,
 	}
 
-	netoutProvider := legacynet.NetOut{
+	netoutProvider := &legacynet.NetOut{
 		ChainNamer: chainNamer,
 		IPTables:   ipt,
 	}

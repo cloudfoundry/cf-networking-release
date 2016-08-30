@@ -3,7 +3,7 @@ package manager
 import (
 	"errors"
 	"fmt"
-	"garden-external-networker/legacynet"
+	"net"
 	"path/filepath"
 
 	"code.cloudfoundry.org/garden"
@@ -28,6 +28,20 @@ type portAllocator interface {
 	AllocatePort(handle string, port int) (int, error)
 }
 
+//go:generate counterfeiter -o ../fakes/netin_provider.go --fake-name NetInProvider . netInProvider
+type netInProvider interface {
+	Initialize(containerHandle string) error
+	Cleanup(containerHandle string) error
+	AddRule(containerHandle string, hostPort, containerPort int, hostIP, containerIP string) error
+}
+
+//go:generate counterfeiter -o ../fakes/netout_provider.go --fake-name NetOutProvider . netOutProvider
+type netOutProvider interface {
+	Initialize(logger lager.Logger, containerHandle string, containerIP net.IP, overlayNetwork string) error
+	Cleanup(containerHandle string) error
+	InsertRule(containerHandle string, rule garden.NetOutRule, containerIP string) error
+}
+
 type Manager struct {
 	Logger         lager.Logger
 	CNIController  cniController
@@ -35,8 +49,8 @@ type Manager struct {
 	BindMountRoot  string
 	OverlayNetwork string
 	PortAllocator  portAllocator
-	NetInProvider  legacynet.NetIn
-	NetOutProvider legacynet.NetOut
+	NetInProvider  netInProvider
+	NetOutProvider netOutProvider
 }
 
 type UpInputs struct {
