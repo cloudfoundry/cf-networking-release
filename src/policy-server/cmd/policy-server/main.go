@@ -119,7 +119,6 @@ func main() {
 		Logger:      logger.Session("policies-create"),
 		Store:       dataStore,
 		Unmarshaler: unmarshaler,
-		Marshaler:   marshal.MarshalFunc(json.Marshal),
 		Validator:   validator,
 	}
 

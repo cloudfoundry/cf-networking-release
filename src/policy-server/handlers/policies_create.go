@@ -15,7 +15,6 @@ type PoliciesCreate struct {
 	Logger      lager.Logger
 	Store       store.Store
 	Unmarshaler marshal.Unmarshaler
-	Marshaler   marshal.Marshaler
 	Validator   validator
 }
 
