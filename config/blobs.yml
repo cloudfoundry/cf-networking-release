@@ -11,3 +11,7 @@ postgresql-9.4.5.tar.gz:
   object_id: b5c996bf-7aa0-4e9f-b53f-6a4bb5d70a66
   sha: 5278d04093f3cb2e00796fae15b2e33406844d01
   size: 23211720
+golang/go1.7.linux-amd64.tar.gz:
+  object_id: b5af8cc4-5873-45d0-a556-b9a937161be7
+  sha: a744e29da97fc3aadad1ee0d7d89b0d899645e50
+  size: 81573766
