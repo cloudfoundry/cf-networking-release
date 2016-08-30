@@ -92,10 +92,55 @@ func (m *Manager) Up(pid int, containerHandle, encodedGardenProperties string) (
 		return nil, fmt.Errorf("initialize net out: %s", err)
 	}
 
+	err = m.InitializeIPtablesNetIn(containerHandle)
+	if err != nil {
+		return nil, fmt.Errorf("initialize iptables for netin: %s", err)
+	}
+
 	return &UpResultProperties{
 		ContainerIP:      result.IP4.IP.IP,
 		DeprecatedHostIP: net.ParseIP("255.255.255.255"),
 	}, nil
+}
+
+func (m *Manager) InitializeIPtablesNetIn(containerHandle string) error {
+	chain := fmt.Sprintf("netin--%s", containerHandle)
+	if len(chain) > 28 {
+		chain = chain[:28]
+	}
+	err := m.IPTables.NewChain("nat", chain)
+	if err != nil {
+		return fmt.Errorf("creating chain: %s", err)
+	}
+
+	err = m.IPTables.AppendUnique("nat", "PREROUTING", []string{"--jump", chain}...)
+	if err != nil {
+		return fmt.Errorf("inserting rule: %s", err)
+	}
+	return nil
+}
+
+func (m *Manager) RemoveIPtablesNetIn(containerHandle string) error {
+	chain := fmt.Sprintf("netin--%s", containerHandle)
+	if len(chain) > 28 {
+		chain = chain[:28]
+	}
+
+	err := m.IPTables.Delete("nat", "PREROUTING", []string{"--jump", chain}...)
+	if err != nil {
+		return fmt.Errorf("delete rule: %s", err)
+	}
+
+	err = m.IPTables.ClearChain("nat", chain)
+	if err != nil {
+		return fmt.Errorf("clear chain: %s", err)
+	}
+
+	err = m.IPTables.DeleteChain("nat", chain)
+	if err != nil {
+		return fmt.Errorf("delete chain: %s", err)
+	}
+	return nil
 }
 
 func (m *Manager) Down(containerHandle string, encodedGardenProperties string) error {
@@ -122,6 +167,11 @@ func (m *Manager) Down(containerHandle string, encodedGardenProperties string) e
 
 	if err = m.RemoveIPTablesNetOut(containerHandle); err != nil {
 		return fmt.Errorf("remove net out: %s", err)
+	}
+
+	err = m.RemoveIPtablesNetIn(containerHandle)
+	if err != nil {
+		return fmt.Errorf("failed removing iptables for netin: %s", err)
 	}
 
 	return nil

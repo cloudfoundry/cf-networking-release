@@ -246,22 +246,15 @@ var _ = Describe("Garden External Networker", func() {
 		Expect(upSession.Out.Contents()).To(MatchJSON(`{ "properties": {"garden.network.container-ip": "169.254.1.2",  "garden.network.host-ip": "255.255.255.255"} }`))
 
 		By("checking that the default rules are created for that container")
-		iptablesCommand := exec.Command("iptables", "-t", "filter", "-S")
-		iptSession, err := gexec.Start(iptablesCommand, GinkgoWriter, GinkgoWriter)
-		Expect(err).NotTo(HaveOccurred())
-		Eventually(iptSession, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
-		Expect(iptSession.Out.Contents()).To(ContainSubstring(`netout--some-container-handl -s 169.254.1.2/32 ! -d 10.255.0.0/16 -m state --state RELATED,ESTABLISHED -j RETURN`))
-		Expect(iptSession.Out.Contents()).To(ContainSubstring(`netout--some-container-handl -s 169.254.1.2/32 ! -d 10.255.0.0/16 -j REJECT --reject-with icmp-port-unreachable`))
+		Expect(AllIPTablesRules("filter")).To(ContainElement(`-A netout--some-container-handl -s 169.254.1.2/32 ! -d 10.255.0.0/16 -m state --state RELATED,ESTABLISHED -j RETURN`))
+		Expect(AllIPTablesRules("filter")).To(ContainElement(`-A netout--some-container-handl -s 169.254.1.2/32 ! -d 10.255.0.0/16 -j REJECT --reject-with icmp-port-unreachable`))
 
 		By("calling netout")
 		netOutSession, err := gexec.Start(netOutCommand, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
-		Eventually(netOutSession, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
-		iptablesCommand = exec.Command("iptables", "-t", "filter", "-S")
-		iptSession, err = gexec.Start(iptablesCommand, GinkgoWriter, GinkgoWriter)
-		Expect(err).NotTo(HaveOccurred())
-		Eventually(iptSession, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
-		Expect(iptSession.Out.Contents()).To(ContainSubstring(`netout--some-container-handl -s 169.254.1.2/32 -p tcp -m iprange --dst-range 1.1.1.1-2.2.2.2 -m tcp --dport 9000:9999 -j RETURN`))
+
+		By("checking that the filter rule was installed")
+		Expect(AllIPTablesRules("filter")).To(ContainElement(`-A netout--some-container-handl -s 169.254.1.2/32 -p tcp -m iprange --dst-range 1.1.1.1-2.2.2.2 -m tcp --dport 9000:9999 -j RETURN`))
 
 		By("calling netout again but without ports or protocols")
 		netOutCommand = exec.Command(pathToAdapter)
@@ -277,15 +270,21 @@ var _ = Describe("Garden External Networker", func() {
 		netOutSession, err = gexec.Start(netOutCommand, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(netOutSession, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
-		iptablesCommand = exec.Command("iptables", "-t", "filter", "-S")
-		iptSession, err = gexec.Start(iptablesCommand, GinkgoWriter, GinkgoWriter)
+
+		By("checking that both filter rules were installed")
+		Expect(AllIPTablesRules("filter")).To(ContainElement(`-A netout--some-container-handl -s 169.254.1.2/32 -p tcp -m iprange --dst-range 1.1.1.1-2.2.2.2 -m tcp --dport 9000:9999 -j RETURN`))
+		Expect(AllIPTablesRules("filter")).To(ContainElement(`-A netout--some-container-handl -s 169.254.1.2/32 -m iprange --dst-range 3.3.3.3-4.4.4.4 -j RETURN`))
+
+		By("calling down")
+		downSession, err := gexec.Start(downCommand, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
-		Eventually(iptSession, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
-		Expect(iptSession.Out.Contents()).To(ContainSubstring(`netout--some-container-handl -s 169.254.1.2/32 -p tcp -m iprange --dst-range 1.1.1.1-2.2.2.2 -m tcp --dport 9000:9999 -j RETURN`))
-		Expect(iptSession.Out.Contents()).To(ContainSubstring(`netout--some-container-handl -s 169.254.1.2/32 -m iprange --dst-range 3.3.3.3-4.4.4.4 -j RETURN`))
+		Eventually(downSession, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
+
+		By("checking that there are no more netout rules for this container")
+		Expect(AllIPTablesRules("filter")).NotTo(ContainElement(ContainSubstring("netout--some-container-handl")))
 	})
 
-	Describe("NetIn", func() {
+	Describe("NetIn rule lifecycle", func() {
 		var netInCommand *exec.Cmd
 
 		BeforeEach(func() {
@@ -300,42 +299,58 @@ var _ = Describe("Garden External Networker", func() {
 			}
 			netInCommand.Args = append(
 				netInCommand.Args,
-				"--properties", `{ "host-ip": "1.2.3.4", "host-port": "0", "container-ip": "10.0.0.2", "container-port": "8080", "app_id": "some-group-id" }`,
+				"--properties", `{ "host-ip": "1.2.3.4", "host-port": "0", "container-ip": "169.254.1.2", "container-port": "8080", "app_id": "some-group-id" }`,
 			)
 		})
 
 		It("writes iptables rules for NetIn", func() {
-			By("ensuring iptables chain is present for the container handle")
-			iptablesCmd := exec.Command("iptables", "-w", "-t", "nat", "-N", "netin--some-container-handle")
-			iptablesSession, err := gexec.Start(iptablesCmd, GinkgoWriter, GinkgoWriter)
+			By("calling up")
+			upSession, err := gexec.Start(upCommand, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
-			Eventually(iptablesSession).Should(gexec.Exit(0))
+			Eventually(upSession, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
+			Expect(upSession.Out.Contents()).To(MatchJSON(`{ "properties": {"garden.network.container-ip": "169.254.1.2",  "garden.network.host-ip": "255.255.255.255"} }`))
 
-			By("returning the ports allocated")
+			By("checking that a netin chain was created for the container")
+			Expect(AllIPTablesRules("nat")).To(ContainElement(`-N netin--some-container-handle`))
+			Expect(AllIPTablesRules("nat")).To(ContainElement(`-A PREROUTING -j netin--some-container-handle`))
+
+			By("calling netin")
 			netInSession, err := gexec.Start(netInCommand, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(netInSession, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
+
+			By("checking the return host and container port")
 			var result struct {
 				HostPort      int `json:"host_port"`
 				ContainerPort int `json:"container_port"`
 			}
 			Expect(json.Unmarshal(netInSession.Out.Contents(), &result)).To(Succeed())
-			Expect(result.HostPort).To(BeNumerically(">=", 60000))
+			Expect(result.HostPort).To(Equal(60000))
 			Expect(result.ContainerPort).To(Equal(8080))
 
-			By("calling out to iptables")
-			iptablesCmd = exec.Command("iptables", "-w", "-S", "-t", "nat")
-			iptablesSession, err = gexec.Start(iptablesCmd, GinkgoWriter, GinkgoWriter)
-			Expect(err).NotTo(HaveOccurred())
-			Eventually(iptablesSession).Should(gexec.Exit(0))
-			allRules := strings.Split(string(iptablesSession.Out.Contents()), "\n")
-			expectedRule := `-A netin--some-container-handle -d 1.2.3.4/32 -p tcp -m tcp --dport 60000 -m comment --comment "dst:some-group-id" -j DNAT --to-destination 10.0.0.2:8080`
-			Expect(allRules).To(ContainElement(expectedRule))
+			By("checking that a port forwarding rule was added to the netin chain")
+			expectedRule := `-A netin--some-container-handle -d 1.2.3.4/32 -p tcp -m tcp --dport 60000 -m comment --comment "dst:some-group-id" -j DNAT --to-destination 169.254.1.2:8080`
+			Expect(AllIPTablesRules("nat")).To(ContainElement(expectedRule))
 
 			By("seeing that the allocated port is stored to the state file on disk")
 			stateFileBytes, err := ioutil.ReadFile(stateFilePath)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(stateFileBytes).To(ContainSubstring(fmt.Sprintf("%d", result.HostPort)))
+
+			By("calling down")
+			downSession, err := gexec.Start(downCommand, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(downSession, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
+
+			By("checking that there are no more netin rules for this container")
+			Expect(AllIPTablesRules("nat")).NotTo(ContainElement(ContainSubstring("netin--some-container-handle")))
 		})
 	})
 })
+
+func AllIPTablesRules(tableName string) []string {
+	iptablesSession, err := gexec.Start(exec.Command("iptables", "-w", "-S", "-t", tableName), GinkgoWriter, GinkgoWriter)
+	Expect(err).NotTo(HaveOccurred())
+	Eventually(iptablesSession).Should(gexec.Exit(0))
+	return strings.Split(strings.TrimSpace(string(iptablesSession.Out.Contents())), "\n")
+}
