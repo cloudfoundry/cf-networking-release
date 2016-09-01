@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
@@ -167,22 +168,30 @@ func checkPeers(apps []string, timeout, pollingInterval time.Duration, instances
 }
 
 func assertConnectionSucceeds(sourceApp string, destApps []string, ports []int) {
+	var wg sync.WaitGroup
 	for _, app := range destApps {
 		for _, port := range ports {
-			assertAllConnectionStatus(sourceApp, app, port, true)
+			wg.Add(1)
+			go assertAllConnectionStatus(sourceApp, app, port, true, &wg)
 		}
 	}
+	wg.Wait()
 }
 
 func assertConnectionFails(sourceApp string, destApps []string, ports []int) {
+	var wg sync.WaitGroup
 	for _, app := range destApps {
 		for _, port := range ports {
-			assertAllConnectionStatus(sourceApp, app, port, false)
+			wg.Add(1)
+			go assertAllConnectionStatus(sourceApp, app, port, false, &wg)
 		}
 	}
+	wg.Wait()
 }
 
-func assertAllConnectionStatus(sourceApp, destApp string, port int, shouldSucceed bool) {
+func assertAllConnectionStatus(sourceApp, destApp string, port int, shouldSucceed bool, wg *sync.WaitGroup) {
+	defer GinkgoRecover()
+	defer wg.Done()
 	resp, err := http.Get(fmt.Sprintf("http://%s.%s/peers", destApp, config.AppsDomain))
 	Expect(err).NotTo(HaveOccurred())
 	respBytes, err := ioutil.ReadAll(resp.Body)
