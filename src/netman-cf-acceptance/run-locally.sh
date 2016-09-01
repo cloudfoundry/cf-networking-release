@@ -19,8 +19,7 @@ echo '
   "test_user": "admin",
   "test_user_password": "admin",
   "reflex_instances": 4,
-  "reflex_applications": 1,
-  "reflex_policies": 5
+  "reflex_applications": 1
 }
 ' > $CONFIG
 

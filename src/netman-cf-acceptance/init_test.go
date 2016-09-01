@@ -80,6 +80,8 @@ func TestAcceptance(t *testing.T) {
 		configBytes, err := ioutil.ReadFile(configPath)
 		Expect(err).NotTo(HaveOccurred())
 
+		//default to 1 policy if not otherwise configured
+		testConfig.Policies = 1
 		err = json.Unmarshal(configBytes, &testConfig)
 		Expect(err).NotTo(HaveOccurred())
 
