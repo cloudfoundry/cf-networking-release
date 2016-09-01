@@ -120,7 +120,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			checkPeers(appsReflex, 60*time.Second, 500*time.Millisecond, appInstances)
 
 			close(done)
-		}, 300 /* <-- overall spec timeout in seconds */)
+		}, 900 /* <-- overall spec timeout in seconds */)
 	})
 })
 
