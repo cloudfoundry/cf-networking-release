@@ -54,9 +54,6 @@ sync_package policy-server \
 sync_package netmon \
   -app netmon/cmd/netmon &
 
-sync_package natman \
-  -app natman/cmd/natman &
-
 GOOS=linux sync_package runc-cni \
   -app github.com/containernetworking/cni/plugins/main/bridge \
   -app github.com/containernetworking/cni/plugins/ipam/host-local \
