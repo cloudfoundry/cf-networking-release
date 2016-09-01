@@ -77,3 +77,6 @@
 [submodule "src/code.cloudfoundry.org/garden"]
 	path = src/code.cloudfoundry.org/garden
 	url = https://github.com/cloudfoundry/garden
+[submodule "src/gopkg.in/yaml.v2"]
+	path = src/gopkg.in/yaml.v2
+	url = https://gopkg.in/yaml.v2

@@ -7,3 +7,5 @@ applications:
     instances: 3
     env:
       GOPACKAGENAME: example-apps/reflex
+      START_PORT: 7000
+      LISTEN_PORTS: 3

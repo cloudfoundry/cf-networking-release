@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"gopkg.in/yaml.v2"
+
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
 	. "github.com/onsi/ginkgo"
@@ -28,9 +30,25 @@ var (
 		TestUserPassword string `json:"test_user_password"`
 		Applications     int    `json:"reflex_applications"`
 		AppInstances     int    `json:"reflex_instances"`
+		Policies         int    `json:"reflex_policies"`
 	}
 	preBuiltBinaries map[string]string
 )
+
+type ReflexManifest struct {
+	Applications []struct {
+		Name      string `yaml:"name"`
+		Memory    string `yaml:"memory"`
+		DiskQuota string `yaml:"disk_quota"`
+		BuildPack string `yaml:"buildpack"`
+		Instances int    `yaml:"instances"`
+		Env       struct {
+			GoPackageName string `yaml:"GOPACKAGENAME"`
+			StartPort     int    `yaml:"START_PORT"`
+			ListenPorts   int    `yaml:"LISTEN_PORTS"`
+		} `yaml:"env"`
+	}
+}
 
 func Auth(username, password string) {
 	By("authenticating as " + username)
@@ -94,29 +112,51 @@ func TestAcceptance(t *testing.T) {
 	RunSpecs(t, "Acceptance Suite")
 }
 
+func modifyReflexManifest() string {
+	manifestFile := defaultManifest("reflex")
+
+	var manifestStruct ReflexManifest
+	manifestBytes, err := ioutil.ReadFile(manifestFile)
+
+	Expect(yaml.Unmarshal(manifestBytes, &manifestStruct)).To(Succeed())
+	manifestStruct.Applications[0].Instances = 1
+	manifestStruct.Applications[0].Env.StartPort = 7000
+	manifestStruct.Applications[0].Env.ListenPorts = testConfig.Policies
+
+	manifestBytes, err = yaml.Marshal(manifestStruct)
+	Expect(err).NotTo(HaveOccurred())
+
+	tempDir, err := ioutil.TempDir("", "")
+	Expect(err).NotTo(HaveOccurred())
+
+	newManifestFile := filepath.Join(tempDir, "test.yml")
+	Expect(ioutil.WriteFile(newManifestFile, manifestBytes, os.ModePerm)).To(Succeed())
+	return newManifestFile
+}
+
 func appDir(appType string) string {
 	return filepath.Join(appsDir, appType)
 }
 
 func pushApp(appName string) {
-	pushAppOfType(appName, "proxy")
+	pushAppsOfType([]string{appName}, "proxy", defaultManifest("proxy"))
 }
 
-func pushAppsOfType(appNames []string, appType string) {
+func defaultManifest(appType string) string {
+	return filepath.Join(appDir(appType), "manifest.yml")
+}
+
+func pushAppsOfType(appNames []string, appType string, manifest string) {
 	for _, app := range appNames {
 		By(fmt.Sprintf("pushing app %s of type %s", app, appType))
-		pushAppOfType(app, appType)
+		Expect(cf.Cf(
+			"push", app,
+			"-p", appDir(appType),
+			"-f", manifest,
+			"-c", "./"+appType,
+			"-b", "binary_buildpack",
+		).Wait(Timeout_Push)).To(gexec.Exit(0))
 	}
-}
-
-func pushAppOfType(appName, appType string) {
-	Expect(cf.Cf(
-		"push", appName,
-		"-p", appDir(appType),
-		"-f", filepath.Join(appDir(appType), "manifest.yml"),
-		"-c", "./"+appType,
-		"-b", "binary_buildpack",
-	).Wait(Timeout_Push)).To(gexec.Exit(0))
 }
 
 func scaleApps(apps []string, instances int) {
