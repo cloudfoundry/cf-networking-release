@@ -167,31 +167,7 @@ func checkPeers(apps []string, timeout, pollingInterval time.Duration, instances
 	}
 }
 
-func assertConnectionSucceeds(sourceApp string, destApps []string, ports []int) {
-	var wg sync.WaitGroup
-	for _, app := range destApps {
-		for _, port := range ports {
-			wg.Add(1)
-			go assertAllConnectionStatus(sourceApp, app, port, true, &wg)
-		}
-	}
-	wg.Wait()
-}
-
-func assertConnectionFails(sourceApp string, destApps []string, ports []int) {
-	var wg sync.WaitGroup
-	for _, app := range destApps {
-		for _, port := range ports {
-			wg.Add(1)
-			go assertAllConnectionStatus(sourceApp, app, port, false, &wg)
-		}
-	}
-	wg.Wait()
-}
-
-func assertAllConnectionStatus(sourceApp, destApp string, port int, shouldSucceed bool, wg *sync.WaitGroup) {
-	defer GinkgoRecover()
-	defer wg.Done()
+func getReflexIPs(destApp string) []string {
 	resp, err := http.Get(fmt.Sprintf("http://%s.%s/peers", destApp, config.AppsDomain))
 	Expect(err).NotTo(HaveOccurred())
 	respBytes, err := ioutil.ReadAll(resp.Body)
@@ -202,13 +178,48 @@ func assertAllConnectionStatus(sourceApp, destApp string, port int, shouldSuccee
 		IPs []string
 	}
 	Expect(json.Unmarshal(respBytes, &addressListJson)).To(Succeed())
-
-	for _, destIP := range addressListJson.IPs {
-		assertSingleConnection(sourceApp, destIP, port, shouldSucceed)
-	}
+	return addressListJson.IPs
 }
 
-func assertSingleConnection(sourceAppName string, destIP string, port int, shouldSucceed bool) {
+func assertConnectionSucceeds(sourceApp string, destApps []string, ports []int) {
+	var wg sync.WaitGroup
+	for _, app := range destApps {
+		ips := getReflexIPs(app)
+		for _, port := range ports {
+			wg.Add(1)
+			go assertAllConnectionStatus(ips, sourceApp, port, true, &wg)
+		}
+	}
+	wg.Wait()
+}
+
+func assertConnectionFails(sourceApp string, destApps []string, ports []int) {
+	var wg sync.WaitGroup
+	for _, app := range destApps {
+		ips := getReflexIPs(app)
+		for _, port := range ports {
+			wg.Add(1)
+			go assertAllConnectionStatus(ips, sourceApp, port, false, &wg)
+		}
+	}
+	wg.Wait()
+}
+
+func assertAllConnectionStatus(reflexIPs []string, sourceApp string, port int, shouldSucceed bool, wg *sync.WaitGroup) {
+	var innerWg sync.WaitGroup
+	defer wg.Done()
+
+	for _, destIP := range reflexIPs {
+		innerWg.Add(1)
+		go assertSingleConnection(sourceApp, destIP, port, shouldSucceed, &innerWg)
+	}
+	innerWg.Wait()
+}
+
+func assertSingleConnection(sourceAppName string, destIP string, port int, shouldSucceed bool, wg *sync.WaitGroup) {
+	defer GinkgoRecover()
+	defer wg.Done()
+
 	proxyTest := func() (string, error) {
 		resp, err := http.Get(fmt.Sprintf("http://%s.%s/proxy/%s:%d/peers", sourceAppName, config.AppsDomain, destIP, port))
 		if err != nil {
@@ -222,8 +233,8 @@ func assertSingleConnection(sourceAppName string, destIP string, port int, shoul
 		return string(respBytes), nil
 	}
 	if shouldSucceed {
-		Eventually(proxyTest, 10*time.Second).ShouldNot(ContainSubstring("failed"))
+		Eventually(proxyTest, 10*time.Second, 500*time.Millisecond).ShouldNot(ContainSubstring("failed"))
 	} else {
-		Eventually(proxyTest, 10*time.Second).Should(ContainSubstring("request failed"))
+		Eventually(proxyTest, 10*time.Second, 500*time.Millisecond).Should(ContainSubstring("request failed"))
 	}
 }
