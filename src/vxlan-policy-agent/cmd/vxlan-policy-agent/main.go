@@ -3,9 +3,11 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"lib/flannel"
 	"lib/marshal"
+	"lib/metrics"
 	"lib/policy_client"
 	"lib/poller"
 	"lib/rules"
@@ -19,10 +21,17 @@ import (
 	"code.cloudfoundry.org/garden/client/connection"
 
 	"code.cloudfoundry.org/lager"
+	"github.com/cloudfoundry/dropsonde"
 	"github.com/coreos/go-iptables/iptables"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
 	"github.com/tedsuo/ifrit/sigmon"
+)
+
+const (
+	dropsondeOrigin      = "vxlan-policy-agent"
+	defaultDropsondePort = 3457
+	emitInterval         = 30 * time.Second
 )
 
 func die(logger lager.Logger, action string, err error) {
@@ -157,6 +166,11 @@ func main() {
 		die(logger, "enforce-default-masquerade", err)
 	}
 
+	// metrics
+	initializeDropsonde(logger)
+	uptime := metrics.NewUptime(emitInterval)
+	go uptime.Start()
+
 	policyPoller := &poller.Poller{
 		Logger:       logger,
 		PollInterval: pollInterval,
@@ -173,7 +187,16 @@ func main() {
 	monitor := ifrit.Invoke(sigmon.New(grouper.NewOrdered(os.Interrupt, members)))
 	logger.Info("starting")
 	err = <-monitor.Wait()
+	uptime.Stop()
 	if err != nil {
 		die(logger, "ifrit monitor", err)
+	}
+}
+
+func initializeDropsonde(logger lager.Logger) {
+	dest := fmt.Sprint("localhost:", defaultDropsondePort)
+	err := dropsonde.Initialize(dest, dropsondeOrigin)
+	if err != nil {
+		logger.Error("failed to initialize dropsonde: %v", err)
 	}
 }
