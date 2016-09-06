@@ -7,14 +7,38 @@ dependencies:
 files:
   - code.cloudfoundry.org/lager/*.go # gosub
   - github.com/bmizerany/pat/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/emitter/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/envelope_sender/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/envelopes/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/factories/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/instrumented_handler/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/instrumented_round_tripper/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/log_sender/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/logs/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/metric_sender/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/metricbatcher/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/metrics/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/runtime_stats/*.go # gosub
+  - github.com/cloudfoundry/gosteno/*.go # gosub
+  - github.com/cloudfoundry/gosteno/syslog/*.go # gosub
+  - github.com/cloudfoundry/sonde-go/events/*.go # gosub
   - github.com/go-sql-driver/mysql/*.go # gosub
+  - github.com/gogo/protobuf/gogoproto/*.go # gosub
+  - github.com/gogo/protobuf/proto/*.go # gosub
+  - github.com/gogo/protobuf/protoc-gen-gogo/descriptor/*.go # gosub
   - github.com/jmoiron/sqlx/*.go # gosub
   - github.com/jmoiron/sqlx/reflectx/*.go # gosub
   - github.com/lib/pq/*.go # gosub
   - github.com/lib/pq/oid/*.go # gosub
+  - github.com/nu7hatch/gouuid/*.go # gosub
+  - github.com/tedsuo/ifrit/*.go # gosub
+  - github.com/tedsuo/ifrit/http_server/*.go # gosub
+  - github.com/tedsuo/ifrit/sigmon/*.go # gosub
   - github.com/tedsuo/rata/*.go # gosub
   - lib/db/*.go # gosub
   - lib/marshal/*.go # gosub
+  - lib/metrics/*.go # gosub
   - policy-server/cmd/policy-server/*.go # gosub
   - policy-server/config/*.go # gosub
   - policy-server/handlers/*.go # gosub
