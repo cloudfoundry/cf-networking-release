@@ -1,7 +1,15 @@
 # netman-release
 
-A [garden-runc](https://github.com/cloudfoundry-incubator/garden-runc-release) add-on
+A [garden-runc](https://github.com/cloudfoundry/garden-runc-release) add-on
 that provides container networking.
+
+## Overview
+
+`netman` provides a batteries included container to container system and several APIs for swapping in third party components.
+- IPAM and connectivity are provided by a swappable CNI plugin (`flannel` in the batteries included case).
+- A swappable policy agent polls garden and the policy server for polices to enforce on the cell. In the provided solution, the VXLAN policy agent writes iptables rules to filter packets based on VXLAN gbp tags.
+- Inbound traffic from the gorouter is port forwarded from the cell to the container via a NetIn rule. NetIn calls are made by garden to the external networker which then writes the iptables NAT rule.
+- Application security groups are enforced by NetOut calls from garden. The external networker also writes iptables rules to enforce ASGs.
 
 ## Project links
 - [Design doc for Container Networking Policy](https://docs.google.com/document/d/1HDS89TJKD7ACG6cqQHph5BdNSKLt8jvo6sPGBZ5DmsM)
@@ -10,7 +18,7 @@ that provides container networking.
 - [CI dashboard](http://dashboard.c2c.cf-app.com) and [config](https://github.com/cloudfoundry-incubator/container-networking-ci)
 
 ## NOTICE
-We're currently integrating against [a fork of Garden-runC](https://github.com/cf-container-networking/garden-runc-release).  Using anything else will probably not work.  You can see more details in our [CI config](https://github.com/cloudfoundry-incubator/container-networking-ci).
+`netman` is currently only compatible with the `develop` branch of `garden-runc-release`.
 
 ## Install the CF CLI Plugin
 
