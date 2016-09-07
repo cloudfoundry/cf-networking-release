@@ -12,13 +12,34 @@ files:
   - code.cloudfoundry.org/garden/transport/*.go # gosub
   - code.cloudfoundry.org/lager/*.go # gosub
   - github.com/bmizerany/pat/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/emitter/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/envelope_sender/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/envelopes/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/factories/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/instrumented_handler/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/instrumented_round_tripper/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/log_sender/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/logs/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/metric_sender/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/metricbatcher/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/metrics/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/runtime_stats/*.go # gosub
+  - github.com/cloudfoundry/gosteno/*.go # gosub
+  - github.com/cloudfoundry/gosteno/syslog/*.go # gosub
+  - github.com/cloudfoundry/sonde-go/events/*.go # gosub
   - github.com/coreos/go-iptables/iptables/*.go # gosub
+  - github.com/gogo/protobuf/gogoproto/*.go # gosub
+  - github.com/gogo/protobuf/proto/*.go # gosub
+  - github.com/gogo/protobuf/protoc-gen-gogo/descriptor/*.go # gosub
+  - github.com/nu7hatch/gouuid/*.go # gosub
   - github.com/tedsuo/ifrit/*.go # gosub
   - github.com/tedsuo/ifrit/grouper/*.go # gosub
   - github.com/tedsuo/ifrit/sigmon/*.go # gosub
   - github.com/tedsuo/rata/*.go # gosub
   - lib/flannel/*.go # gosub
   - lib/marshal/*.go # gosub
+  - lib/metrics/*.go # gosub
   - lib/models/*.go # gosub
   - lib/policy_client/*.go # gosub
   - lib/poller/*.go # gosub

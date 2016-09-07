@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"lib/db"
 	"lib/marshal"
+	"lib/metrics"
 	"log"
 	"net/http"
 	"os"
@@ -18,8 +19,18 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/lager"
+	"github.com/cloudfoundry/dropsonde"
 	"github.com/jmoiron/sqlx"
+	"github.com/tedsuo/ifrit"
+	"github.com/tedsuo/ifrit/http_server"
+	"github.com/tedsuo/ifrit/sigmon"
 	"github.com/tedsuo/rata"
+)
+
+const (
+	dropsondeOrigin      = "policy-server"
+	defaultDropsondePort = 3457
+	emitInterval         = 30 * time.Second
 )
 
 func main() {
@@ -172,12 +183,31 @@ func main() {
 		log.Fatalf("unable to create rata Router: %s", err) // not tested
 	}
 
-	server := &http.Server{
-		Addr:    fmt.Sprintf("%s:%d", conf.ListenHost, conf.ListenPort),
-		Handler: router,
-	}
+	addr := fmt.Sprintf("%s:%d", conf.ListenHost, conf.ListenPort)
+	server := http_server.New(addr, router)
+
+	// metrics
+	initializeDropsonde(logger)
+	uptime := metrics.NewUptime(emitInterval)
+	go uptime.Start()
 
 	logger.Info("starting", lager.Data{"listen-address": conf.ListenHost, "port": conf.ListenPort})
+	monitor := ifrit.Invoke(sigmon.New(server))
 
-	log.Fatal(server.ListenAndServe())
+	err = <-monitor.Wait()
+	uptime.Stop()
+	if err != nil {
+		logger.Error("exited-with-failure", err)
+		os.Exit(1)
+	}
+
+	logger.Info("exited")
+}
+
+func initializeDropsonde(logger lager.Logger) {
+	dest := fmt.Sprint("localhost:", defaultDropsondePort)
+	err := dropsonde.Initialize(dest, dropsondeOrigin)
+	if err != nil {
+		logger.Error("failed to initialize dropsonde: %v", err)
+	}
 }
