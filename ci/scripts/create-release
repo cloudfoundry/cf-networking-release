@@ -3,8 +3,6 @@
 
 set -e -x
 
-pwd
-
 VERSION=$(cat ./netman-version/number)
 if [ -z "$VERSION" ]; then
   echo "missing version number"
@@ -15,5 +13,5 @@ cd netman-release
 
 bosh -n create release --with-tarball --version "${VERSION}"
 
-mkdir -p ../bosh-release
-mv dev_releases/netman/*.tgz ../bosh-release/netman-${VERSION}.tgz
+mkdir -p ../tarballs
+mv dev_releases/netman/*.tgz ../tarballs/netman-${VERSION}.tgz
