@@ -1,0 +1,92 @@
+---
+packages:
+- name: cli
+  version: a5afae9fe8ea115d4a43b8bea4d38b60f36d838f
+  fingerprint: a5afae9fe8ea115d4a43b8bea4d38b60f36d838f
+  sha1: b9aa75132c7092f615e136dfb41226e0565cae87
+  dependencies:
+  - golang
+- name: flannel-watchdog
+  version: 366e92c8481c7beae2d7eca67560ba31cc525e4f
+  fingerprint: 366e92c8481c7beae2d7eca67560ba31cc525e4f
+  sha1: 4c7e5382a1b748ea6ab5cc0b12db413a8a5fbc11
+  dependencies:
+  - golang
+- name: flannel
+  version: 7a7f0ddc029f8abc3d0fa7a1630bd2cc2069008b
+  fingerprint: 7a7f0ddc029f8abc3d0fa7a1630bd2cc2069008b
+  sha1: 951644074a7b48cd6a7d0f0a126c792c5d7e0c99
+  dependencies:
+  - golang
+- name: golang
+  version: 48ce7b3927e6f7e6576fff21a7dc9d22b7ba9c62
+  fingerprint: 48ce7b3927e6f7e6576fff21a7dc9d22b7ba9c62
+  sha1: 134d8876746cc75713e7c8f335c4c76a374d99bc
+  dependencies: []
+- name: netman-common
+  version: ca83633980ca48ab0a540a73e497020893e08d78
+  fingerprint: ca83633980ca48ab0a540a73e497020893e08d78
+  sha1: 1382e2f019f08d2162c5af28fa940c51ad10a6b0
+  dependencies: []
+- name: netmon
+  version: c49151f59f08698a0c4be2c9f7a0b5e2cb0fbc11
+  fingerprint: c49151f59f08698a0c4be2c9f7a0b5e2cb0fbc11
+  sha1: 57867c8c23e89996b944cced19d242c7ec8347a9
+  dependencies:
+  - golang
+- name: policy-server
+  version: d8f7248ece438165725d7e3f2b03629985578baa
+  fingerprint: d8f7248ece438165725d7e3f2b03629985578baa
+  sha1: c11323e81103dc71205aa63be2bbd0feeb85575d
+  dependencies:
+  - golang
+- name: postgres
+  version: e2944860dab3d408e9dc03a1977bb4908ca2b54e
+  fingerprint: e2944860dab3d408e9dc03a1977bb4908ca2b54e
+  sha1: 8017eb575c375d44819f605708759ae935785dbe
+  dependencies: []
+- name: runc-cni
+  version: 40940aa6866c66932474258a6fa190ab698e9004
+  fingerprint: 40940aa6866c66932474258a6fa190ab698e9004
+  sha1: 7a26a63ac1373ed1c80e8f0cc99ef5fbae17a1ef
+  dependencies:
+  - golang
+- name: vxlan-policy-agent
+  version: 7e769bdc4a5c2d9722bd74a93d4147a01fd51cff
+  fingerprint: 7e769bdc4a5c2d9722bd74a93d4147a01fd51cff
+  sha1: 37849a596a01b7814555d8550fa0b0f76751ee87
+  dependencies:
+  - golang
+jobs:
+- name: cni-flannel
+  version: f4db229b705c57ce50ba224ea5949a6330668777
+  fingerprint: f4db229b705c57ce50ba224ea5949a6330668777
+  sha1: 3b7339657246bd7b98fd0dcfce0b6f7c36be5bfb
+- name: garden-cni
+  version: b842a084461d18bf13797654438364463d9fc7a6
+  fingerprint: b842a084461d18bf13797654438364463d9fc7a6
+  sha1: 5509ca940cf6fb6b2c863e64337a66c56fe661d6
+- name: netmon
+  version: 4fe4d5e4d2593019f6b0cc8ba52f2a4500816938
+  fingerprint: 4fe4d5e4d2593019f6b0cc8ba52f2a4500816938
+  sha1: 7e01f9c358542278f2e1d57bbda1de298d0af800
+- name: policy-server
+  version: 83ae040b731a8cb8952a9428a828877f01d8156f
+  fingerprint: 83ae040b731a8cb8952a9428a828877f01d8156f
+  sha1: fbc727ad1bbf4c128909c60dfa4c402c7369007c
+- name: postgres
+  version: 9be9b1b633c2435958c611be534dd392824540b2
+  fingerprint: 9be9b1b633c2435958c611be534dd392824540b2
+  sha1: d4dc5233c19daf8153d2b6cbf77f7e13841b0db1
+- name: vxlan-policy-agent
+  version: f6b183b954c6810014d289f0315adeb341b2b00a
+  fingerprint: f6b183b954c6810014d289f0315adeb341b2b00a
+  sha1: ecd0a21944e7607d8d45617b48c5548991206eb2
+license:
+  version: e6c4ccc65c76e75e2338d1edabdcf264d37ee663
+  fingerprint: e6c4ccc65c76e75e2338d1edabdcf264d37ee663
+  sha1: 9743338f66fc55c7c9b4d41327fd0d6f7023fc69
+commit_hash: '26769686'
+uncommitted_changes: false
+name: netman
+version: 0.1.0
