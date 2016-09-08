@@ -1,0 +1,14 @@
+---
+image: docker:///c2cnetworking/deploy
+
+platform: linux
+
+inputs:
+- name: netman-release
+- name: netman-version
+
+outputs:
+- name: tarballs
+
+run:
+  path: netman-release/ci/scripts/create-release
