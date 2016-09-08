@@ -3,6 +3,8 @@
 
 set -e -x
 
+pwd
+
 VERSION=$(cat ./netman-version/number)
 if [ -z "$VERSION" ]; then
   echo "missing version number"
