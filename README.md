@@ -56,6 +56,18 @@ pushd ~/workspace
   git clone https://github.com/cloudfoundry-incubator/netman-release
 popd
 ```
+
+**Note:** The current netman release depends on `develop` branch of garden-runc-release, please do the following:
+```
+pushd ~/workspace
+  git clone https://github.com/cloudfoundry/garden-runc-release
+  cd garden-runc-release
+  git checkout develop
+  git submodule update --init --recursive
+  bosh target lite && bosh create release && bosh upload release
+popd
+```
+
 and deploy
 ```
 pushd ~/workspace/netman-release
