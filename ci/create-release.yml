@@ -5,7 +5,7 @@ platform: linux
 
 inputs:
 - name: netman-release
-- name: netman-version
+- name: version
 
 outputs:
 - name: tarballs
