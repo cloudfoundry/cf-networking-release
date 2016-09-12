@@ -101,12 +101,17 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		})
 	})
 
+	var waitUntilPollLoop = func(numComplete int) {
+		Eventually(gardenBackend.ContainersCallCount, DEFAULT_TIMEOUT).Should(BeNumerically(">=", numComplete+1))
+	}
+
 	Describe("Default rules", func() {
 		BeforeEach(func() {
 			session = StartAgent(vxlanPolicyAgentPath, configFilePath)
 		})
+
 		It("writes the masquerade rule", func() {
-			Consistently(session).ShouldNot(gexec.Exit())
+			waitUntilPollLoop(1)
 
 			ipTablesRules := RunIptablesCommand("nat", "S")
 
@@ -114,7 +119,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		})
 
 		It("writes the default remote rules", func() {
-			Consistently(session).ShouldNot(gexec.Exit())
+			waitUntilPollLoop(1)
 
 			ipTablesRules := RunIptablesCommand("filter", "S")
 
@@ -123,7 +128,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		})
 
 		It("writes the default local rules", func() {
-			Consistently(session).ShouldNot(gexec.Exit())
+			waitUntilPollLoop(1)
 
 			ipTablesRules := RunIptablesCommand("filter", "S")
 
@@ -137,14 +142,14 @@ var _ = Describe("VXLAN Policy Agent", func() {
 			session = StartAgent(vxlanPolicyAgentPath, configFilePath)
 		})
 		It("writes the mark rule", func() {
-			Consistently(session, DEFAULT_TIMEOUT).ShouldNot(gexec.Exit())
+			waitUntilPollLoop(2) // wait for a second one so we know the first enforcement completed
 
 			ipTablesRules := RunIptablesCommand("filter", "S")
 
 			Expect(ipTablesRules).To(ContainSubstring(`-s 10.255.100.21/32 -m comment --comment "src:some-app-guid" -j MARK --set-xmark 0xa/0xffffffff`))
 		})
 		It("enforces policies", func() {
-			Consistently(session, DEFAULT_TIMEOUT).ShouldNot(gexec.Exit())
+			waitUntilPollLoop(2) // wait for a second one so we know the first enforcement completed
 
 			ipTablesRules := RunIptablesCommand("filter", "S")
 
@@ -167,7 +172,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		})
 
 		It("still writes the default rules", func() {
-			Consistently(session, DEFAULT_TIMEOUT).ShouldNot(gexec.Exit())
+			waitUntilPollLoop(2) // wait for a second one so we know the first enforcement completed
 
 			ipTablesRules := RunIptablesCommand("filter", "S")
 			Expect(ipTablesRules).To(ContainSubstring("-i flannel.42 -m state --state RELATED,ESTABLISHED -j ACCEPT"))
@@ -182,10 +187,10 @@ var _ = Describe("VXLAN Policy Agent", func() {
 })
 
 func RunIptablesCommand(table, flag string) string {
-	iptCmd := exec.Command("iptables", "-t", table, "-"+flag)
+	iptCmd := exec.Command("iptables", "-w", "-t", table, "-"+flag)
 	iptablesSession, err := gexec.Start(iptCmd, GinkgoWriter, GinkgoWriter)
 	Expect(err).NotTo(HaveOccurred())
-	Eventually(iptablesSession).Should(gexec.Exit(0))
+	Eventually(iptablesSession, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
 	return string(iptablesSession.Out.Contents())
 }
 
