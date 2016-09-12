@@ -3,6 +3,7 @@ package acceptance_test
 import (
 	"net"
 	"os/exec"
+	"strings"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -53,4 +54,44 @@ var _ = Describe("Acceptance", func() {
 			Value:     float64(nIfaces),
 		}))
 	})
+
+	It("should emit a metric of the total number of iptables rules", func() {
+		filterRules := runAndWait("iptables", "-S")
+		natRules := runAndWait("iptables", "-S", "-t", "nat")
+		totalRulesBaseline := numLines(filterRules) + numLines(natRules)
+
+		Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(fakes.Event{
+			EventType: "ValueMetric",
+			Name:      "IPTablesRuleCount",
+			Origin:    "netmon",
+			Value:     float64(totalRulesBaseline),
+		}))
+
+		runAndWait("iptables", "-w", "-A", "FORWARD", "-s", "1.1.1.1", "-d", "2.2.2.2", "-j", "ACCEPT")
+
+		Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(fakes.Event{
+			EventType: "ValueMetric",
+			Name:      "IPTablesRuleCount",
+			Origin:    "netmon",
+			Value:     float64(totalRulesBaseline + 1),
+		}))
+	})
 })
+
+func runAndWait(bin string, args ...string) string {
+	cmd := exec.Command(bin, args...)
+	out, err := cmd.CombinedOutput()
+	Expect(err).NotTo(HaveOccurred())
+	return string(out)
+}
+
+func numLines(text string) int {
+	allLines := strings.Split(text, "\n")
+	counter := 0
+	for _, l := range allLines {
+		if len(strings.TrimSpace(l)) > 0 {
+			counter++
+		}
+	}
+	return counter
+}

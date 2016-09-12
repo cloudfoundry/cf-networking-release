@@ -3,6 +3,8 @@ package poller
 import (
 	"net"
 	"os"
+	"os/exec"
+	"strings"
 	"time"
 
 	"code.cloudfoundry.org/lager"
@@ -10,6 +12,7 @@ import (
 )
 
 const netInterfaceCount = metric.Metric("NetInterfaceCount")
+const iptablesRuleCount = metric.Metric("IPTablesRuleCount")
 
 type SystemMetrics struct {
 	Logger       lager.Logger
@@ -36,6 +39,35 @@ func countNetworkInterfaces() (int, error) {
 	return len(ifaces), nil
 }
 
+func lineCount(data []byte) int {
+	lines := strings.Split(string(data), "\n")
+	counter := 0
+	for _, line := range lines {
+		if len(strings.TrimSpace(line)) > 0 {
+			counter++
+		}
+	}
+	return counter
+}
+
+func countIPTablesRules(logger lager.Logger) (int, error) {
+	cmd := exec.Command("iptables", "-w", "-S")
+	filterRules, err := cmd.CombinedOutput()
+	if err != nil {
+		logger.Error("failed-getting-filter-rules", err)
+		return 0, err
+	}
+
+	cmd = exec.Command("iptables", "-w", "-t", "nat", "-S")
+	natRules, err := cmd.CombinedOutput()
+	if err != nil {
+		logger.Error("failed-getting-nat-rules", err)
+		return 0, err
+	}
+
+	return lineCount(filterRules) + lineCount(natRules), nil
+}
+
 func (m *SystemMetrics) measure(logger lager.Logger) {
 	nInterfaces, err := countNetworkInterfaces()
 	if err != nil {
@@ -46,6 +78,18 @@ func (m *SystemMetrics) measure(logger lager.Logger) {
 	if err := netInterfaceCount.Send(nInterfaces); err != nil {
 		logger.Error("failed-to-send-metric", err, lager.Data{
 			"metric": netInterfaceCount})
+		return
+	}
+
+	nIpTablesRule, err := countIPTablesRules(logger)
+	if err != nil {
+		logger.Error("count-iptables-rules", err)
+		return
+	}
+
+	if err := iptablesRuleCount.Send(nIpTablesRule); err != nil {
+		logger.Error("failed-to-send-metric", err, lager.Data{
+			"metric": iptablesRuleCount})
 		return
 	}
 }
