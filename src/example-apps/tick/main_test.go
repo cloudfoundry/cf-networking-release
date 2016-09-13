@@ -21,7 +21,6 @@ var _ = Describe("Tick", func() {
 		tickSession     *gexec.Session
 		registryPort    string
 		tickPort        string
-		tickURL         string
 		registryURL     string
 	)
 
@@ -73,7 +72,6 @@ var _ = Describe("Tick", func() {
 		registryPort = strconv.Itoa(40000 + rand.Intn(20000))
 		registryURL = fmt.Sprintf("http://127.0.0.1:%s/api/v1/instances", registryPort)
 		tickPort = strconv.Itoa(40000 + rand.Intn(20000))
-		tickURL = fmt.Sprintf("http://127.0.0.1:%s", tickPort)
 
 		StartRegistry()
 
@@ -98,6 +96,8 @@ var _ = Describe("Tick", func() {
 	Describe("HTTP server", func() {
 		It("listens on PORT env var", func() {
 			StartTick()
+
+			tickURL := fmt.Sprintf("http://127.0.0.1:%s", tickPort)
 
 			Eventually(getURL(tickURL)).Should(MatchJSON(`{
 				"application_name": "my-tick-app",
@@ -138,7 +138,15 @@ var _ = Describe("Tick", func() {
 			instances, err := getInstances()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(instances[0].ServiceName).To(Equal("my-tick-app"))
+
+			registeredAddress := instances[0].Endpoint.Value
+
+			tickResponseBody, err := getURL(fmt.Sprintf("http://%s", registeredAddress))()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(tickResponseBody).To(MatchJSON(`{
+				"application_name": "my-tick-app",
+				"instance_index": 13
+			}`))
 		})
 	})
-
 })

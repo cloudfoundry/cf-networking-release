@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 
+	"code.cloudfoundry.org/localip"
+
 	"github.com/ryanmoran/viron"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
@@ -39,11 +41,17 @@ func mainWithError() error {
 		return fmt.Errorf("unable to parse environment: %s", err)
 	}
 
+	localIP, err := localip.LocalIP()
+	if err != nil {
+		return fmt.Errorf("unable to discover local ip: %s", err)
+	}
+
 	a8Client := &a8.Client{
 		BaseURL:            env.RegistryBaseURL,
 		HttpClient:         http.DefaultClient,
-		LocalServerAddress: "some:1234",
+		LocalServerAddress: fmt.Sprintf("%s:%s", localIP, env.Port),
 		ServiceName:        env.VCAPApplication.ApplicationName,
+		TTLSeconds:         10,
 	}
 	err = a8Client.Register()
 	if err != nil {

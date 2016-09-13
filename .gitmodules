@@ -86,3 +86,12 @@
 [submodule "src/github.com/ryanmoran/viron"]
 	path = src/github.com/ryanmoran/viron
 	url = https://github.com/ryanmoran/viron
+[submodule "src/example-apps/tick/vendor/github.com/ryanmoran/viron"]
+	path = src/example-apps/tick/vendor/github.com/ryanmoran/viron
+	url = https://github.com/ryanmoran/viron
+[submodule "src/example-apps/tick/vendor/github.com/tedsuo/ifrit"]
+	path = src/example-apps/tick/vendor/github.com/tedsuo/ifrit
+	url = https://github.com/tedsuo/ifrit
+[submodule "src/example-apps/tick/vendor/code.cloudfoundry.org/localip"]
+	path = src/example-apps/tick/vendor/code.cloudfoundry.org/localip
+	url = https://github.com/cloudfoundry/localip

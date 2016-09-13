@@ -1,0 +1,10 @@
+---
+applications:
+  - name: tick
+    memory: 32M
+    disk_quota: 32M
+    buildpack: go_buildpack
+    instances: 3
+    env:
+      GOPACKAGENAME: example-apps/tick
+      REGISTRY_BASE_URL: http://registry.some-cf-deployment.example.com

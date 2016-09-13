@@ -28,6 +28,7 @@ type Client struct {
 	HttpClient         *http.Client
 	LocalServerAddress string
 	ServiceName        string
+	TTLSeconds         int
 }
 
 func (c *Client) createURL(route string) (string, error) {
@@ -82,7 +83,7 @@ func (c *Client) Register() error {
 			Value: c.LocalServerAddress,
 		},
 		Status: "UP",
-		TTL:    10,
+		TTL:    c.TTLSeconds,
 	}
 
 	return c.postServiceInstance(serviceInstance)
