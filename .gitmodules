@@ -80,3 +80,6 @@
 [submodule "src/gopkg.in/yaml.v2"]
 	path = src/gopkg.in/yaml.v2
 	url = https://gopkg.in/yaml.v2
+[submodule "src/github.com/amalgam8/amalgam8"]
+	path = src/github.com/amalgam8/amalgam8
+	url = https://github.com/amalgam8/amalgam8
