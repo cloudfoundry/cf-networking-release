@@ -13,6 +13,7 @@ declare -a packages=(
   "src/netmon"
   "src/vxlan-policy-agent"
   "src/cli-plugin"
+  "src/example-apps/tick"
   )
 
 function bootPostgres {
