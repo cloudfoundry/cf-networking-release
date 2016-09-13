@@ -26,7 +26,7 @@ that provides container networking.
 
 1. Get the binary
 
-  - Option 1: Download a precompiled binary for Mac from our [GitHub Releases](https://github.com/cloudfoundry-incubator/netman-release/releases)
+  - Option 1: Download a precompiled binary of the `network-policy-plugin` for your operating system from our [GitHub Releases](https://github.com/cloudfoundry-incubator/netman-release/releases)
 
   - Option 2: Build from source
 
@@ -42,12 +42,27 @@ that provides container networking.
   ```
 
 ## Deploy to bosh-lite
+
+Follow the instructions [here](https://github.com/cloudfoundry/bosh-lite) to install `bosh-lite` on your machine.
+
 Ensure that `br_netfilter` is enabled on your vagrant box:
 ```bash
 pushd ~/workspace/bosh-lite
   vagrant ssh -c 'sudo modprobe br_netfilter'
 popd
 ```
+
+Upload the latest `bosh-lite` stemcell 
+```
+bosh upload stemcell https://bosh.io/d/stemcells/bosh-warden-boshlite-ubuntu-trusty-go_agent
+```
+
+Or download the stemcell and manually upload it to `bosh-lite` (potentially faster)
+```
+curl -L -o bosh-lite-stemcell-latest.tgz https://bosh.io/d/stemcells/bosh-warden-boshlite-ubuntu-trusty-go_agent
+bosh upload stemcell bosh-lite-stemcell-latest.tgz
+```
+
 Then grab the required releases
 ```
 pushd ~/workspace
