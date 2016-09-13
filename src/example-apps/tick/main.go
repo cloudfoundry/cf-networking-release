@@ -1,26 +1,59 @@
 package main
 
 import (
+	"encoding/json"
+	"example-apps/tick/a8"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 
+	"github.com/ryanmoran/viron"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
 	"github.com/tedsuo/ifrit/http_server"
 	"github.com/tedsuo/ifrit/sigmon"
 )
 
-func main() {
+type Environment struct {
+	VCAPApplication struct {
+		ApplicationName string `json:"application_name"`
+		InstanceIndex   int    `json:"instance_index"`
+	} `env:"VCAP_APPLICATION" env-required:"true"`
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		log.Printf("missing required env var PORT")
+	Port            string `env:"PORT" env-required:"true"`
+	RegistryBaseURL string `env:"REGISTRY_BASE_URL"  env-required:"true"`
+}
+
+func main() {
+	if err := mainWithError(); err != nil {
+		log.Printf("%s", err)
 		os.Exit(1)
 	}
+}
 
-	server := http_server.New("0.0.0.0:"+port, http.HandlerFunc(index))
+func mainWithError() error {
+	var env Environment
+	err := viron.Parse(&env)
+	if err != nil {
+		return fmt.Errorf("unable to parse environment: %s", err)
+	}
+
+	a8Client := &a8.Client{
+		BaseURL:            env.RegistryBaseURL,
+		HttpClient:         http.DefaultClient,
+		LocalServerAddress: "some:1234",
+		ServiceName:        env.VCAPApplication.ApplicationName,
+	}
+	err = a8Client.Register()
+	if err != nil {
+		return fmt.Errorf("a8 register: %s", err)
+	}
+
+	infoHandler := &InfoHandler{
+		InfoData: env.VCAPApplication,
+	}
+	server := http_server.New("0.0.0.0:"+env.Port, infoHandler)
 
 	members := grouper.Members{
 		{"http_server", server},
@@ -28,12 +61,18 @@ func main() {
 
 	monitor := ifrit.Invoke(sigmon.New(grouper.NewOrdered(os.Interrupt, members)))
 
-	err := <-monitor.Wait()
+	err = <-monitor.Wait()
 	if err != nil {
-		os.Exit(1)
+		return fmt.Errorf("ifrit monitor: %s", err)
 	}
+
+	return nil
 }
 
-func index(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "hello")
+type InfoHandler struct {
+	InfoData interface{}
+}
+
+func (h *InfoHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	json.NewEncoder(w).Encode(h.InfoData)
 }

@@ -83,3 +83,6 @@
 [submodule "src/github.com/amalgam8/amalgam8"]
 	path = src/github.com/amalgam8/amalgam8
 	url = https://github.com/amalgam8/amalgam8
+[submodule "src/github.com/ryanmoran/viron"]
+	path = src/github.com/ryanmoran/viron
+	url = https://github.com/ryanmoran/viron
