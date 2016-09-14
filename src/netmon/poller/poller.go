@@ -1,6 +1,7 @@
 package poller
 
 import (
+	"io/ioutil"
 	"net"
 	"os"
 	"os/exec"
@@ -73,8 +74,7 @@ func countIPTablesRules(logger lager.Logger) (int, error) {
 }
 
 func readTxBytes(logger lager.Logger, ifName string) (int, error) {
-	cmd := exec.Command("cat", filepath.Join("/sys/class/net/", ifName, "/statistics/tx_bytes"))
-	txBytesData, err := cmd.CombinedOutput()
+	txBytesData, err := ioutil.ReadFile(filepath.Join("/sys/class/net/", ifName, "/statistics/tx_bytes"))
 	if err != nil {
 		logger.Error("failed-reading-txbytes-file", err)
 		return 0, err

@@ -16,3 +16,7 @@ properties:
   netmon.poll_interval:
     description: "Gather and report metrics at this interval, in seconds"
     default: 30
+
+  netmon.interface_name:
+    description: "Report tx/rx bytes on the interface with this name"
+    default: flannel.1
