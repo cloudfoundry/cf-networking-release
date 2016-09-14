@@ -23,6 +23,9 @@ var _ = Describe("Tick app", func() {
 		tickPort        string
 		registryURL     string
 		tickTTLSeconds  int
+
+		startPort   int
+		listenPorts int
 	)
 
 	var getURL = func(url string) func() (string, error) {
@@ -47,6 +50,8 @@ var _ = Describe("Tick app", func() {
 	var StartTick = func() {
 		cmd := exec.Command(binaryPath)
 		cmd.Env = []string{
+			fmt.Sprintf("START_PORT=%d", startPort),
+			fmt.Sprintf("LISTEN_PORTS=%d", listenPorts),
 			fmt.Sprintf("PORT=%s", tickPort),
 			fmt.Sprintf("REGISTRY_BASE_URL=http://127.0.0.1:%s", registryPort),
 			fmt.Sprintf(`VCAP_APPLICATION={
@@ -99,6 +104,22 @@ var _ = Describe("Tick app", func() {
 		Expect(json.Unmarshal([]byte(responseBody), &instancesResponse)).To(Succeed())
 		return instancesResponse.Instances, nil
 	}
+
+	It("listens on configured ports", func() {
+		StartRegistry()
+		Eventually(getURL(registryURL)).Should(MatchJSON(`{"instances": []}`))
+
+		startPort = 7007
+		listenPorts = 3
+		StartTick()
+
+		Eventually(getInstances).Should(HaveLen(1))
+
+		for i := 0; i < listenPorts; i++ {
+			_, err := getURL(fmt.Sprintf("http://%s:%d", "127.0.0.1", startPort+i))()
+			Expect(err).NotTo(HaveOccurred())
+		}
+	})
 
 	It("registers itself with amalgam8", func() {
 		By("starting the a8 registry")

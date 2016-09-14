@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"code.cloudfoundry.org/localip"
@@ -26,6 +27,8 @@ type Environment struct {
 
 	Port            string `env:"PORT"               env-required:"true"`
 	RegistryBaseURL string `env:"REGISTRY_BASE_URL"  env-required:"true"`
+	StartPort       string `env:"START_PORT"         env-required:"false"`
+	ListenPorts     string `env:"LISTEN_PORTS"       env-required:"false"`
 }
 
 func main() {
@@ -40,6 +43,22 @@ func mainWithError() error {
 	err := viron.Parse(&env)
 	if err != nil {
 		return fmt.Errorf("unable to parse environment: %s", err)
+	}
+
+	var startPort int
+	if env.StartPort != "" {
+		startPort, err = strconv.Atoi(env.StartPort)
+		if err != nil {
+			return fmt.Errorf("invalid env var START_PORT: %s", err)
+		}
+	}
+
+	var listenPorts int
+	if env.ListenPorts != "" {
+		listenPorts, err = strconv.Atoi(env.ListenPorts)
+		if err != nil {
+			return fmt.Errorf("invalid env var LISTEN_PORTS: %s", err)
+		}
 	}
 
 	localIP, err := localip.LocalIP()
@@ -66,11 +85,17 @@ func mainWithError() error {
 	infoHandler := &InfoHandler{
 		InfoData: env.VCAPApplication,
 	}
-	server := http_server.New("0.0.0.0:"+env.Port, infoHandler)
+
+	servers := []ifrit.Runner{http_server.New(fmt.Sprintf("0.0.0.0:%s", env.Port), infoHandler)}
+	for i := 0; i < listenPorts; i++ {
+		servers = append(servers, http_server.New(fmt.Sprintf("0.0.0.0:%d", startPort+i), infoHandler))
+	}
 
 	members := grouper.Members{
-		{"http_server", server},
 		{"registration_poller", poller},
+	}
+	for i, server := range servers {
+		members = append(members, grouper.Member{fmt.Sprintf("http_server_%d", i), server})
 	}
 
 	monitor := ifrit.Invoke(sigmon.New(grouper.NewOrdered(os.Interrupt, members)))
