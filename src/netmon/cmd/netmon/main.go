@@ -44,8 +44,9 @@ func main() {
 
 	dropsonde.Initialize(conf.MetronAddress, "netmon")
 	systemMetrics := &poller.SystemMetrics{
-		Logger:       logger,
-		PollInterval: pollInterval,
+		Logger:        logger,
+		PollInterval:  pollInterval,
+		InterfaceName: conf.InterfaceName,
 	}
 
 	members := grouper.Members{

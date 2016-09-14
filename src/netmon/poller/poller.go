@@ -4,6 +4,8 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -13,10 +15,12 @@ import (
 
 const netInterfaceCount = metric.Metric("NetInterfaceCount")
 const iptablesRuleCount = metric.Metric("IPTablesRuleCount")
+const overlayTxBytes = metric.Metric("OverlayTxBytes")
 
 type SystemMetrics struct {
-	Logger       lager.Logger
-	PollInterval time.Duration
+	Logger        lager.Logger
+	PollInterval  time.Duration
+	InterfaceName string
 }
 
 func (m *SystemMetrics) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
@@ -68,6 +72,24 @@ func countIPTablesRules(logger lager.Logger) (int, error) {
 	return lineCount(filterRules) + lineCount(natRules), nil
 }
 
+func readTxBytes(logger lager.Logger, ifName string) (int, error) {
+	cmd := exec.Command("cat", filepath.Join("/sys/class/net/", ifName, "/statistics/tx_bytes"))
+	txBytesData, err := cmd.CombinedOutput()
+	if err != nil {
+		logger.Error("failed-reading-txbytes-file", err)
+		return 0, err
+	}
+
+	trimmedString := strings.TrimSpace(string(txBytesData))
+	nBytes, err := strconv.Atoi(trimmedString)
+	if err != nil {
+		logger.Error("txbytes-could-not-be-converted-to-int", err)
+		return 0, err
+	}
+
+	return nBytes, nil
+}
+
 func (m *SystemMetrics) measure(logger lager.Logger) {
 	nInterfaces, err := countNetworkInterfaces()
 	if err != nil {
@@ -90,6 +112,18 @@ func (m *SystemMetrics) measure(logger lager.Logger) {
 	if err := iptablesRuleCount.Send(nIpTablesRule); err != nil {
 		logger.Error("failed-to-send-metric", err, lager.Data{
 			"metric": iptablesRuleCount})
+		return
+	}
+
+	nTxBytes, err := readTxBytes(logger, m.InterfaceName)
+	if err != nil {
+		logger.Error("read-tx-bytes", err)
+		return
+	}
+
+	if err := overlayTxBytes.Send(nTxBytes); err != nil {
+		logger.Error("failed-to-send-metric", err, lager.Data{
+			"metric": overlayTxBytes})
 		return
 	}
 }

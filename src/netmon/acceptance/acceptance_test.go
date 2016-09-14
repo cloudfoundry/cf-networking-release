@@ -26,6 +26,7 @@ var _ = Describe("Acceptance", func() {
 		conf = config.Netmon{
 			PollInterval:  1,
 			MetronAddress: fakeMetron.Address(),
+			InterfaceName: "lo",
 		}
 		configFilePath := WriteConfigFile(conf)
 
