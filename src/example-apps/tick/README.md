@@ -2,14 +2,13 @@
 Simple app that registers itself with an [a8registry](https://github.com/amalgam8/registry) on a regular interval.
 
 ## Prerequisites
+The following instructions for this example assume the following:
 - Go 1.6+
 - [netman-release](http://github.com/cloudfoundry-incubator/netman-release)
+  - cloned under `~/workspace/netman-release`
 - [jq](https://stedolan.github.io/jq/download/)
-
-The following instructions assume the following:
-- [netman-release](http://github.com/cloudfoundry-incubator/netman-release) git cloned under `~/workspace/netman-release`
-- deploying to bosh-lite
-- Cloud Foundry org and space created and targetted
+- Deploying to [bosh-lite](https://github.com/cloudfoundry/bosh-lite)
+  - Cloud Foundry org and space created and targetted
 
 ## Setup
 - Build and Deploy the [service registry](https://github.com/amalgam8/registry)
@@ -28,13 +27,13 @@ cf set-env tick REGISTRY_BASE_URL "http://registry.bosh-lite.com"
 cf start tick
 ```
 
-**Verify the # of apps registered in service registry**
+**Verify the # of app instances registered in service registry**
 ```bash
 $ curl -s registry.bosh-lite.com/api/v1/instances | jq '.instances | length'
-3
+  3
 ```
 
-**See details of apps registered in service registry**
+**See details of app instances registered in service registry**
 ```bash
 $ curl -s registry.bosh-lite.com/api/v1/instances | jq .
 {
