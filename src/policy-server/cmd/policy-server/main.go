@@ -22,6 +22,7 @@ import (
 	"github.com/cloudfoundry/dropsonde"
 	"github.com/jmoiron/sqlx"
 	"github.com/tedsuo/ifrit"
+	"github.com/tedsuo/ifrit/grouper"
 	"github.com/tedsuo/ifrit/http_server"
 	"github.com/tedsuo/ifrit/sigmon"
 	"github.com/tedsuo/rata"
@@ -76,7 +77,7 @@ func main() {
 		StartTime: time.Now(),
 	}
 
-	group := &store.Group{}
+	storeGroup := &store.Group{}
 	destination := &store.Destination{}
 	policy := &store.Policy{}
 
@@ -108,7 +109,7 @@ func main() {
 
 	dataStore, err := store.New(
 		connectionResult.ConnectionPool,
-		group,
+		storeGroup,
 		destination,
 		policy,
 		conf.TagLength,
@@ -189,13 +190,18 @@ func main() {
 	// metrics
 	initializeDropsonde(logger)
 	uptime := metrics.NewUptime(emitInterval)
-	go uptime.Start()
+
+	members := grouper.Members{
+		{"uptime", uptime},
+		{"http_server", server},
+	}
 
 	logger.Info("starting", lager.Data{"listen-address": conf.ListenHost, "port": conf.ListenPort})
-	monitor := ifrit.Invoke(sigmon.New(server))
+
+	group := grouper.NewOrdered(os.Interrupt, members)
+	monitor := ifrit.Invoke(sigmon.New(group))
 
 	err = <-monitor.Wait()
-	uptime.Stop()
 	if err != nil {
 		logger.Error("exited-with-failure", err)
 		os.Exit(1)
