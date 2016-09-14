@@ -15,13 +15,14 @@ import (
 	"github.com/onsi/gomega/gexec"
 )
 
-var _ = Describe("Tick", func() {
+var _ = Describe("Tick app", func() {
 	var (
 		registrySession *gexec.Session
 		tickSession     *gexec.Session
 		registryPort    string
 		tickPort        string
 		registryURL     string
+		tickTTLSeconds  int
 	)
 
 	var getURL = func(url string) func() (string, error) {
@@ -72,11 +73,7 @@ var _ = Describe("Tick", func() {
 		registryPort = strconv.Itoa(40000 + rand.Intn(20000))
 		registryURL = fmt.Sprintf("http://127.0.0.1:%s/api/v1/instances", registryPort)
 		tickPort = strconv.Itoa(40000 + rand.Intn(20000))
-
-		StartRegistry()
-
-		By("checking that registry is available and empty")
-		Eventually(getURL(registryURL)).Should(MatchJSON(`{"instances": []}`))
+		tickTTLSeconds = 2
 	})
 
 	AfterEach(func() {
@@ -84,69 +81,70 @@ var _ = Describe("Tick", func() {
 			tickSession.Interrupt()
 			Eventually(tickSession, DEFAULT_TIMEOUT).Should(gexec.Exit())
 		}
-	})
 
-	Describe("boring daemon behavior", func() {
-		It("should boot and gracefully terminate", func() {
-			StartTick()
-			Consistently(tickSession).ShouldNot(gexec.Exit())
-		})
-	})
-
-	Describe("HTTP server", func() {
-		It("listens on PORT env var", func() {
-			StartTick()
-
-			tickURL := fmt.Sprintf("http://127.0.0.1:%s", tickPort)
-
-			Eventually(getURL(tickURL)).Should(MatchJSON(`{
-				"application_name": "my-tick-app",
-				"instance_index": 13
-			}`))
-		})
-
-		Context("when PORT env variable is missing", func() {
-			It("fails to start", func() {
-				tickPort = ""
-				StartTick()
-				Eventually(tickSession).Should(gexec.Exit(1))
-				Expect(tickSession.Err.Contents()).To(ContainSubstring("PORT is a required environment variable"))
-			})
-		})
-	})
-
-	Describe("Registry", func() {
-		var getInstances = func() ([]a8.ServiceInstance, error) {
-			responseBody, err := getURL(registryURL)()
-			if err != nil {
-				return nil, err
-			}
-			var instancesResponse struct {
-				Instances []a8.ServiceInstance `json:"instances"`
-			}
-			Expect(json.Unmarshal([]byte(responseBody), &instancesResponse)).To(Succeed())
-			return instancesResponse.Instances, nil
+		if registrySession != nil {
+			registrySession.Interrupt()
+			Eventually(registrySession, DEFAULT_TIMEOUT).Should(gexec.Exit())
 		}
+	})
 
-		It("supports registration of the tick app", func() {
-			StartTick()
+	var getInstances = func() ([]a8.ServiceInstance, error) {
+		responseBody, err := getURL(registryURL)()
+		if err != nil {
+			return nil, err
+		}
+		var instancesResponse struct {
+			Instances []a8.ServiceInstance `json:"instances"`
+		}
+		Expect(json.Unmarshal([]byte(responseBody), &instancesResponse)).To(Succeed())
+		return instancesResponse.Instances, nil
+	}
 
-			By("checking that the tick app registers itself")
-			Eventually(getInstances).Should(HaveLen(1))
+	It("registers itself with amalgam8", func() {
+		By("starting the a8 registry")
+		StartRegistry()
 
-			By("validating the service metadata")
-			instances, err := getInstances()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(instances[0].ServiceName).To(Equal("my-tick-app"))
+		By("checking that registry is available and empty")
+		Eventually(getURL(registryURL)).Should(MatchJSON(`{"instances": []}`))
 
-			registeredAddress := instances[0].Endpoint.Value
+		By("starting the tick app")
+		StartTick()
 
-			tickResponseBody, err := getURL(fmt.Sprintf("http://%s", registeredAddress))()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(tickResponseBody).To(MatchJSON(`{
+		By("checking that the tick app registers itself")
+		Eventually(getInstances).Should(HaveLen(1))
+
+		By("validating the service metadata")
+		instances, err := getInstances()
+		Expect(err).NotTo(HaveOccurred())
+		Expect(instances[0].ServiceName).To(Equal("my-tick-app"))
+
+		By("contacting the tick app via the registered address")
+		registeredAddress := instances[0].Endpoint.Value
+		tickResponseBody, err := getURL(fmt.Sprintf("http://%s", registeredAddress))()
+		Expect(err).NotTo(HaveOccurred())
+		Expect(tickResponseBody).To(MatchJSON(`{
 				"application_name": "my-tick-app",
 				"instance_index": 13
 			}`))
+
+		By("verifying that the app remains registered beyond the TTL duration")
+		Consistently(getInstances, "15s").Should(HaveLen(1))
+	})
+})
+
+var _ = Describe("Tick error behavior", func() {
+	Context("when missing a required env var", func() {
+		It("fails to start", func() {
+			cmd := exec.Command(binaryPath)
+			cmd.Env = []string{
+				"REGISTRY_BASE_URL=http://something:4001",
+				`VCAP_APPLICATION={}`,
+			}
+			tickSession, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+
+			Eventually(tickSession).Should(gexec.Exit(1))
+			Expect(tickSession.Err.Contents()).To(ContainSubstring("PORT is a required environment variable"))
 		})
 	})
 })

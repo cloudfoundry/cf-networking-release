@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"code.cloudfoundry.org/localip"
 
@@ -23,7 +24,7 @@ type Environment struct {
 		InstanceIndex   int    `json:"instance_index"`
 	} `env:"VCAP_APPLICATION" env-required:"true"`
 
-	Port            string `env:"PORT" env-required:"true"`
+	Port            string `env:"PORT"               env-required:"true"`
 	RegistryBaseURL string `env:"REGISTRY_BASE_URL"  env-required:"true"`
 }
 
@@ -46,16 +47,20 @@ func mainWithError() error {
 		return fmt.Errorf("unable to discover local ip: %s", err)
 	}
 
+	const TTLSeconds = 10
+	const PollSeconds = 8
+
 	a8Client := &a8.Client{
 		BaseURL:            env.RegistryBaseURL,
 		HttpClient:         http.DefaultClient,
 		LocalServerAddress: fmt.Sprintf("%s:%s", localIP, env.Port),
 		ServiceName:        env.VCAPApplication.ApplicationName,
-		TTLSeconds:         10,
+		TTLSeconds:         TTLSeconds,
 	}
-	err = a8Client.Register()
-	if err != nil {
-		return fmt.Errorf("a8 register: %s", err)
+
+	poller := &Poller{
+		PollInterval: (PollSeconds * time.Second),
+		Action:       a8Client.Register,
 	}
 
 	infoHandler := &InfoHandler{
@@ -65,6 +70,7 @@ func mainWithError() error {
 
 	members := grouper.Members{
 		{"http_server", server},
+		{"registration_poller", poller},
 	}
 
 	monitor := ifrit.Invoke(sigmon.New(grouper.NewOrdered(os.Interrupt, members)))
@@ -83,4 +89,31 @@ type InfoHandler struct {
 
 func (h *InfoHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(h.InfoData)
+}
+
+type Poller struct {
+	PollInterval time.Duration
+	Action       func() error
+}
+
+func (m *Poller) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
+	err := m.Action()
+	if err != nil {
+		return err
+	}
+
+	close(ready)
+
+	for {
+		select {
+		case <-signals:
+			return nil
+		case <-time.After(m.PollInterval):
+			err = m.Action()
+			if err != nil {
+				log.Printf("%s", err)
+				continue
+			}
+		}
+	}
 }
