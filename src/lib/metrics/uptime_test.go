@@ -2,12 +2,14 @@ package metrics_test
 
 import (
 	"lib/metrics"
+	"os"
 	"time"
 
 	"github.com/cloudfoundry/sonde-go/events"
 	"github.com/gogo/protobuf/proto"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/tedsuo/ifrit"
 )
 
 const (
@@ -16,19 +18,20 @@ const (
 
 var _ = Describe("Uptime", func() {
 	var (
-		uptime *metrics.Uptime
+		uptime     *metrics.Uptime
+		uptimeProc ifrit.Process
 	)
 
 	BeforeEach(func() {
 		fakeEventEmitter.Reset()
 		uptime = metrics.NewUptime(interval)
-		go uptime.Start()
+		uptimeProc = ifrit.Invoke(uptime)
 	})
 
 	Context("stops automatically", func() {
 
 		AfterEach(func() {
-			uptime.Stop()
+			uptimeProc.Signal(os.Interrupt)
 		})
 
 		It("returns a value metric containing uptime after specified time", func() {
@@ -51,7 +54,7 @@ var _ = Describe("Uptime", func() {
 	It("stops the monitor and respective ticker", func() {
 		Eventually(func() int { return len(fakeEventEmitter.GetMessages()) }).Should(BeNumerically(">=", 1))
 
-		uptime.Stop()
+		uptimeProc.Signal(os.Interrupt)
 
 		current := getLatestUptime()
 		Consistently(getLatestUptime, 2).Should(Equal(current))

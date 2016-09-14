@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"os"
 	"time"
 
 	dropsondemetrics "github.com/cloudfoundry/dropsonde/metrics"
@@ -9,34 +10,26 @@ import (
 type Uptime struct {
 	interval time.Duration
 	started  int64
-	doneChan chan chan struct{}
 }
 
 func NewUptime(interval time.Duration) *Uptime {
 	return &Uptime{
 		interval: interval,
 		started:  time.Now().Unix(),
-		doneChan: make(chan chan struct{}),
 	}
 }
 
-func (u *Uptime) Start() {
+func (u *Uptime) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
+	close(ready)
 	ticker := time.NewTicker(u.interval)
 
 	for {
 		select {
 		case <-ticker.C:
 			dropsondemetrics.SendValue("uptime", float64(time.Now().Unix()-u.started), "seconds")
-		case stopped := <-u.doneChan:
+		case <-signals:
 			ticker.Stop()
-			close(stopped)
-			return
+			return nil
 		}
 	}
-}
-
-func (u *Uptime) Stop() {
-	stopped := make(chan struct{})
-	u.doneChan <- stopped
-	<-stopped
 }
