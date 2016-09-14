@@ -169,7 +169,6 @@ func main() {
 	// metrics
 	initializeDropsonde(logger)
 	uptime := metrics.NewUptime(emitInterval)
-	go uptime.Start()
 
 	policyPoller := &poller.Poller{
 		Logger:       logger,
@@ -181,13 +180,13 @@ func main() {
 	}
 
 	members := grouper.Members{
+		{"uptime", uptime},
 		{"policy_poller", policyPoller},
 	}
 
 	monitor := ifrit.Invoke(sigmon.New(grouper.NewOrdered(os.Interrupt, members)))
 	logger.Info("starting")
 	err = <-monitor.Wait()
-	uptime.Stop()
 	if err != nil {
 		die(logger, "ifrit monitor", err)
 	}
