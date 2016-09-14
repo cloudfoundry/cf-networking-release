@@ -11,10 +11,10 @@ import (
 
 	lfakes "lib/fakes"
 
+	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
-	"code.cloudfoundry.org/lager/lagertest"
 )
 
 var _ = Describe("Policies index handler", func() {
@@ -65,7 +65,9 @@ var _ = Describe("Policies index handler", func() {
 	})
 
 	It("returns all the policies, but does not include the tags", func() {
-		expectedResponseJSON := `{"policies": [
+		expectedResponseJSON := `{
+			"total_policies": 2,
+			"policies": [
 			{
 				"source": {
 					"id": "some-app-guid"
@@ -129,7 +131,9 @@ var _ = Describe("Policies index handler", func() {
 		})
 
 		It("returns only those policies which contain that id", func() {
-			expectedResponseJSON := `{"policies": [
+			expectedResponseJSON := `{
+		"total_policies": 2,
+		"policies": [
 			{
 				"source": {
 					"id": "some-app-guid"
@@ -166,7 +170,10 @@ var _ = Describe("Policies index handler", func() {
 			handler.ServeHTTP(resp, request, "")
 			Expect(fakeStore.AllCallCount()).To(Equal(1))
 			Expect(resp.Code).To(Equal(http.StatusOK))
-			Expect(resp.Body).To(MatchJSON(`{"policies": []}`))
+			Expect(resp.Body).To(MatchJSON(`{
+				"total_policies": 0,
+				"policies": []
+			}`))
 		})
 	})
 
