@@ -7,19 +7,19 @@ import (
 	dropsondemetrics "github.com/cloudfoundry/dropsonde/metrics"
 )
 
-type Uptime struct {
+type MetricsEmitter struct {
 	interval time.Duration
 	started  int64
 }
 
-func NewUptime(interval time.Duration) *Uptime {
-	return &Uptime{
+func NewMetricsEmitter(interval time.Duration) *MetricsEmitter {
+	return &MetricsEmitter{
 		interval: interval,
 		started:  time.Now().Unix(),
 	}
 }
 
-func (u *Uptime) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
+func (u *MetricsEmitter) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	close(ready)
 	ticker := time.NewTicker(u.interval)
 

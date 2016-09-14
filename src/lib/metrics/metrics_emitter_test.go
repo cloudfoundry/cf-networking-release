@@ -16,22 +16,22 @@ const (
 	interval = 100 * time.Millisecond
 )
 
-var _ = Describe("Uptime", func() {
+var _ = Describe("MetricsEmitter", func() {
 	var (
-		uptime     *metrics.Uptime
-		uptimeProc ifrit.Process
+		metricsEmitter     *metrics.MetricsEmitter
+		metricsEmitterProc ifrit.Process
 	)
 
 	BeforeEach(func() {
 		fakeEventEmitter.Reset()
-		uptime = metrics.NewUptime(interval)
-		uptimeProc = ifrit.Invoke(uptime)
+		metricsEmitter = metrics.NewMetricsEmitter(interval)
+		metricsEmitterProc = ifrit.Invoke(metricsEmitter)
 	})
 
 	Context("stops automatically", func() {
 
 		AfterEach(func() {
-			uptimeProc.Signal(os.Interrupt)
+			metricsEmitterProc.Signal(os.Interrupt)
 		})
 
 		It("returns a value metric containing uptime after specified time", func() {
@@ -54,7 +54,7 @@ var _ = Describe("Uptime", func() {
 	It("stops the monitor and respective ticker", func() {
 		Eventually(func() int { return len(fakeEventEmitter.GetMessages()) }).Should(BeNumerically(">=", 1))
 
-		uptimeProc.Signal(os.Interrupt)
+		metricsEmitterProc.Signal(os.Interrupt)
 
 		current := getLatestUptime()
 		Consistently(getLatestUptime, 2).Should(Equal(current))
