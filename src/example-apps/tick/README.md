@@ -6,6 +6,8 @@ The following instructions for this example assume the following:
 - Go 1.6+
 - [netman-release](http://github.com/cloudfoundry-incubator/netman-release)
   - cloned under `~/workspace/netman-release`
+- Ensure GOPATH is set to netman-release:
+  - export GOPATH=~/workspace/netman-release
 - [jq](https://stedolan.github.io/jq/download/)
 - Deploying to [bosh-lite](https://github.com/cloudfoundry/bosh-lite)
   - Cloud Foundry org and space created and targetted
