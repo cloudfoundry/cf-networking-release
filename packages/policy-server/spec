@@ -44,5 +44,6 @@ files:
   - policy-server/config/*.go # gosub
   - policy-server/handlers/*.go # gosub
   - policy-server/models/*.go # gosub
+  - policy-server/server_metrics/*.go # gosub
   - policy-server/store/*.go # gosub
   - policy-server/uaa_client/*.go # gosub
