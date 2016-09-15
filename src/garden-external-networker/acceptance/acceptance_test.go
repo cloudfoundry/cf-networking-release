@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"code.cloudfoundry.org/garden"
 
@@ -89,6 +90,8 @@ var _ = Describe("Garden External Networker", func() {
 		bindMountRoot          string
 		stateFilePath          string
 		containerHandle        string
+		netoutChainName        string
+		netinChainName         string
 		fakeProcess            *os.Process
 		fakeConfigFilePath     string
 		adapterLogFilePath     string
@@ -104,7 +107,9 @@ var _ = Describe("Garden External Networker", func() {
 		fakeLogDir, err = ioutil.TempDir("", "fake-logs-")
 		Expect(err).NotTo(HaveOccurred())
 
-		containerHandle = "some-container-handle"
+		containerHandle = fmt.Sprintf("container-%011d", time.Now().Nanosecond())
+		netoutChainName = fmt.Sprintf("netout--%s", containerHandle[:len(containerHandle)-1])
+		netinChainName = fmt.Sprintf("netin--%s", containerHandle)
 
 		sleepCmd := exec.Command("/bin/sleep", "1000")
 		Expect(sleepCmd.Start()).To(Succeed())
@@ -125,7 +130,7 @@ var _ = Describe("Garden External Networker", func() {
 		adapterLogDir, err = ioutil.TempDir("", "adapter-log-dir")
 		Expect(err).NotTo(HaveOccurred())
 		Expect(os.RemoveAll(adapterLogDir)).To(Succeed()) // directory need not exist
-		adapterLogFilePath = filepath.Join(adapterLogDir, "some-container-handle.log")
+		adapterLogFilePath = filepath.Join(adapterLogDir, fmt.Sprintf("%s.log", containerHandle))
 
 		Expect(writeConfig(0, cniConfigDir)).To(Succeed())
 		Expect(writeConfig(1, cniConfigDir)).To(Succeed())
@@ -166,7 +171,7 @@ var _ = Describe("Garden External Networker", func() {
 			pathToAdapter,
 			"--configFile", fakeConfigFilePath,
 			"--action", "up",
-			"--handle", "some-container-handle",
+			"--handle", containerHandle,
 		}
 
 		downCommand = exec.Command(pathToAdapter)
@@ -175,7 +180,7 @@ var _ = Describe("Garden External Networker", func() {
 		downCommand.Args = []string{
 			pathToAdapter,
 			"--action", "down",
-			"--handle", "some-container-handle",
+			"--handle", containerHandle,
 			"--configFile", fakeConfigFilePath,
 		}
 	})
@@ -188,9 +193,9 @@ var _ = Describe("Garden External Networker", func() {
 
 		ipt, err := iptables.New()
 		Expect(err).NotTo(HaveOccurred())
-		Expect(ipt.ClearChain("filter", "netout--some-container-handl")).To(Succeed())
+		Expect(ipt.ClearChain("filter", netoutChainName)).To(Succeed())
 		Expect(ipt.ClearChain("filter", "FORWARD")).To(Succeed())
-		Expect(ipt.DeleteChain("filter", "netout--some-container-handl")).To(Succeed())
+		Expect(ipt.DeleteChain("filter", netoutChainName)).To(Succeed())
 	})
 
 	It("should call CNI ADD and DEL", func() {
@@ -251,7 +256,7 @@ var _ = Describe("Garden External Networker", func() {
 			netOutCommand.Args = []string{
 				pathToAdapter,
 				"--action", "net-out",
-				"--handle", "some-container-handle",
+				"--handle", containerHandle,
 				"--configFile", fakeConfigFilePath,
 			}
 			return netOutCommand
@@ -273,15 +278,15 @@ var _ = Describe("Garden External Networker", func() {
 			Expect(upSession.Out.Contents()).To(MatchJSON(`{ "properties": {"garden.network.container-ip": "169.254.1.2",  "garden.network.host-ip": "255.255.255.255"} }`))
 
 			By("checking that the default rules are created for that container")
-			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A netout--some-container-handl -s 169.254.1.2/32 ! -d 10.255.0.0/16 -m state --state RELATED,ESTABLISHED -j RETURN`))
-			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A netout--some-container-handl -s 169.254.1.2/32 ! -d 10.255.0.0/16 -j REJECT --reject-with icmp-port-unreachable`))
+			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 169.254.1.2/32 ! -d 10.255.0.0/16 -m state --state RELATED,ESTABLISHED -j RETURN`))
+			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 169.254.1.2/32 ! -d 10.255.0.0/16 -j REJECT --reject-with icmp-port-unreachable`))
 
 			By("calling netout")
 			netOutCommand := buildNetOutCommand("169.254.1.2", someRule)
 			runAndWait(netOutCommand)
 
 			By("checking that the filter rule was installed")
-			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A netout--some-container-handl -s 169.254.1.2/32 -p tcp -m iprange --dst-range 1.1.1.1-2.2.2.2 -m tcp --dport 9000:9999 -j RETURN`))
+			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 169.254.1.2/32 -p tcp -m iprange --dst-range 1.1.1.1-2.2.2.2 -m tcp --dport 9000:9999 -j RETURN`))
 
 			By("calling netout again but without ports or protocols")
 			someRule.Ports = nil
@@ -293,14 +298,14 @@ var _ = Describe("Garden External Networker", func() {
 			runAndWait(netOutCommand)
 
 			By("checking that both filter rules were installed")
-			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A netout--some-container-handl -s 169.254.1.2/32 -p tcp -m iprange --dst-range 1.1.1.1-2.2.2.2 -m tcp --dport 9000:9999 -j RETURN`))
-			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A netout--some-container-handl -s 169.254.1.2/32 -m iprange --dst-range 3.3.3.3-4.4.4.4 -j RETURN`))
+			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 169.254.1.2/32 -p tcp -m iprange --dst-range 1.1.1.1-2.2.2.2 -m tcp --dport 9000:9999 -j RETURN`))
+			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 169.254.1.2/32 -m iprange --dst-range 3.3.3.3-4.4.4.4 -j RETURN`))
 
 			By("calling down")
 			runAndWait(downCommand)
 
 			By("checking that there are no more netout rules for this container")
-			Expect(AllIPTablesRules("filter")).NotTo(ContainElement(ContainSubstring("netout--some-container-handl")))
+			Expect(AllIPTablesRules("filter")).NotTo(ContainElement(ContainSubstring(netoutChainName)))
 		})
 	})
 
@@ -319,7 +324,7 @@ var _ = Describe("Garden External Networker", func() {
 			netInCommand.Args = []string{
 				pathToAdapter,
 				"--action", "net-in",
-				"--handle", "some-container-handle",
+				"--handle", containerHandle,
 				"--configFile", fakeConfigFilePath,
 			}
 		})
@@ -330,8 +335,8 @@ var _ = Describe("Garden External Networker", func() {
 			Expect(upSession.Out.Contents()).To(MatchJSON(`{ "properties": {"garden.network.container-ip": "169.254.1.2",  "garden.network.host-ip": "255.255.255.255"} }`))
 
 			By("checking that a netin chain was created for the container")
-			Expect(AllIPTablesRules("nat")).To(ContainElement(`-N netin--some-container-handle`))
-			Expect(AllIPTablesRules("nat")).To(ContainElement(`-A PREROUTING -j netin--some-container-handle`))
+			Expect(AllIPTablesRules("nat")).To(ContainElement(`-N ` + netinChainName))
+			Expect(AllIPTablesRules("nat")).To(ContainElement(`-A PREROUTING -j ` + netinChainName))
 
 			By("calling netin")
 			netInSession := runAndWait(netInCommand)
@@ -346,8 +351,7 @@ var _ = Describe("Garden External Networker", func() {
 			Expect(result.ContainerPort).To(Equal(8080))
 
 			By("checking that a port forwarding rule was added to the netin chain")
-			expectedRule := `-A netin--some-container-handle -d 1.2.3.4/32 -p tcp -m tcp --dport 60000 -j DNAT --to-destination 169.254.1.2:8080`
-			Expect(AllIPTablesRules("nat")).To(ContainElement(expectedRule))
+			Expect(AllIPTablesRules("nat")).To(ContainElement(`-A ` + netinChainName + ` -d 1.2.3.4/32 -p tcp -m tcp --dport 60000 -j DNAT --to-destination 169.254.1.2:8080`))
 
 			By("seeing that the allocated port is stored to the state file on disk")
 			stateFileBytes, err := ioutil.ReadFile(stateFilePath)
@@ -358,7 +362,7 @@ var _ = Describe("Garden External Networker", func() {
 			runAndWait(downCommand)
 
 			By("checking that there are no more netin rules for this container")
-			Expect(AllIPTablesRules("nat")).NotTo(ContainElement(ContainSubstring("netin--some-container-handle")))
+			Expect(AllIPTablesRules("nat")).NotTo(ContainElement(ContainSubstring(netinChainName)))
 		})
 	})
 })
