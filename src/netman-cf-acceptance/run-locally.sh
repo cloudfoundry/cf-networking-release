@@ -18,8 +18,8 @@ echo '
   "use_http": true,
   "test_user": "admin",
   "test_user_password": "admin",
-  "reflex_instances": 4,
-  "reflex_applications": 1
+  "test_app_instances": 4,
+  "test_applications": 1
 }
 ' > $CONFIG
 
