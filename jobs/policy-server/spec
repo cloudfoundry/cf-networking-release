@@ -58,6 +58,6 @@ properties:
     description: "Length in bytes of the packet tags to generate for policy sources and destinations. Must be greater than 0 and less than 4."
     default: 2
 
-  policy-server.metron_address:
+  policy-server.server.metron_address:
     description: "Forward metrics to this metron agent"
     default: 127.0.0.1:3457
