@@ -28,14 +28,14 @@ var (
 	testConfig struct {
 		TestUser         string `json:"test_user"`
 		TestUserPassword string `json:"test_user_password"`
-		Applications     int    `json:"reflex_applications"`
-		AppInstances     int    `json:"reflex_instances"`
-		Policies         int    `json:"reflex_policies"`
+		Applications     int    `json:"test_applications"`
+		AppInstances     int    `json:"test_app_instances"`
+		Policies         int    `json:"test_policies"`
 	}
 	preBuiltBinaries map[string]string
 )
 
-type ReflexManifest struct {
+type TickManifest struct {
 	Applications []struct {
 		Name      string `yaml:"name"`
 		Memory    string `yaml:"memory"`
@@ -43,9 +43,10 @@ type ReflexManifest struct {
 		BuildPack string `yaml:"buildpack"`
 		Instances int    `yaml:"instances"`
 		Env       struct {
-			GoPackageName string `yaml:"GOPACKAGENAME"`
-			StartPort     int    `yaml:"START_PORT"`
-			ListenPorts   int    `yaml:"LISTEN_PORTS"`
+			GoPackageName   string `yaml:"GOPACKAGENAME"`
+			RegistryBaseURL string `yaml:"REGISTRY_BASE_URL"`
+			StartPort       int    `yaml:"START_PORT"`
+			ListenPorts     int    `yaml:"LISTEN_PORTS"`
 		} `yaml:"env"`
 	}
 }
@@ -68,6 +69,17 @@ func preBuildLinuxBinary(appType string) {
 	os.Setenv("GOARCH", "amd64")
 	appDir := filepath.Join(appsDir, appType)
 	Expect(exec.Command("go", "build", "-o", filepath.Join(appDir, appType), appDir).Run()).To(Succeed())
+}
+
+func preBuildRegistry(appType, path string) {
+	By("pre-building the linux binary for " + appType)
+	os.Setenv("GOOS", "linux")
+	os.Setenv("GOARCH", "amd64")
+	appDir := filepath.Join(appsDir, appType)
+	if _, err := os.Stat(appDir); os.IsNotExist(err) {
+		os.Mkdir(appDir, os.ModePerm)
+	}
+	Expect(exec.Command("go", "build", "-o", filepath.Join(appDir, appType), path).Run()).To(Succeed())
 }
 
 func TestAcceptance(t *testing.T) {
@@ -100,7 +112,8 @@ func TestAcceptance(t *testing.T) {
 		Expect(appsDir).NotTo(BeEmpty())
 
 		preBuildLinuxBinary("proxy")
-		preBuildLinuxBinary("reflex")
+		preBuildLinuxBinary("tick")
+		preBuildRegistry("registry", "../github.com/amalgam8/amalgam8/cmd/registry/")
 
 		rand.Seed(ginkgoConfig.GinkgoConfig.RandomSeed + int64(GinkgoParallelNode()))
 	})
@@ -108,20 +121,22 @@ func TestAcceptance(t *testing.T) {
 	AfterSuite(func() {
 		// remove binaries
 		Expect(os.Remove(filepath.Join(appsDir, "proxy", "proxy"))).To(Succeed())
-		Expect(os.Remove(filepath.Join(appsDir, "reflex", "reflex"))).To(Succeed())
+		Expect(os.Remove(filepath.Join(appsDir, "tick", "tick"))).To(Succeed())
+		Expect(os.RemoveAll(filepath.Join(appsDir, "registry"))).To(Succeed())
 	})
 
 	RunSpecs(t, "Acceptance Suite")
 }
 
-func modifyReflexManifest() string {
-	manifestFile := defaultManifest("reflex")
+func modifyTickManifest(registryName string) string {
+	manifestFile := defaultManifest("tick")
 
-	var manifestStruct ReflexManifest
+	var manifestStruct TickManifest
 	manifestBytes, err := ioutil.ReadFile(manifestFile)
 
 	Expect(yaml.Unmarshal(manifestBytes, &manifestStruct)).To(Succeed())
 	manifestStruct.Applications[0].Instances = 1
+	manifestStruct.Applications[0].Env.RegistryBaseURL = "http://" + registryName + "." + config.AppsDomain
 	manifestStruct.Applications[0].Env.StartPort = 7000
 	manifestStruct.Applications[0].Env.ListenPorts = testConfig.Policies
 
@@ -159,6 +174,15 @@ func pushAppsOfType(appNames []string, appType string, manifest string) {
 			"-b", "binary_buildpack",
 		).Wait(Timeout_Push)).To(gexec.Exit(0))
 	}
+}
+
+func pushRegistryApp(appName string) {
+	Expect(cf.Cf(
+		"push", appName,
+		"-p", appDir("registry"),
+		"-c", "./registry",
+		"-b", "binary_buildpack",
+	).Wait(Timeout_Push)).To(gexec.Exit(0))
 }
 
 func scaleApps(apps []string, instances int) {

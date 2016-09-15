@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math/rand"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -34,7 +35,8 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 	Describe("networking policy", func() {
 		var (
 			appProxy     string
-			appsReflex   []string
+			appRegistry  string
+			appsTest     []string
 			orgName      string
 			spaceName    string
 			appInstances int
@@ -46,8 +48,9 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			applications = testConfig.Applications
 
 			appProxy = fmt.Sprintf("proxy-%d", rand.Int31())
+			appRegistry = fmt.Sprintf("registry-%d", rand.Int31())
 			for i := 0; i < applications; i++ {
-				appsReflex = append(appsReflex, fmt.Sprintf("reflex-%d-%d", i, rand.Int31()))
+				appsTest = append(appsTest, fmt.Sprintf("tick-%d-%d", i, rand.Int31()))
 			}
 
 			ports = []int{8080}
@@ -65,60 +68,61 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			Expect(cf.Cf("create-space", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
 			Expect(cf.Cf("target", "-o", orgName, "-s", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
 
+			pushRegistryApp(appRegistry)
+
 			pushApp(appProxy)
 
-			newManifest := modifyReflexManifest()
-			pushAppsOfType(appsReflex, "reflex", newManifest)
-			for _, app := range appsReflex {
-				By("creating a new policy to allow the reflex app to talk to itself")
-				session := cf.Cf("access-allow", app, app, "--protocol", "tcp", "--port", fmt.Sprintf("%d", ports[0])).Wait(2 * Timeout_Short)
-				Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
-				scaleApp(app, appInstances)
-			}
+			newManifest := modifyTickManifest(appRegistry)
+			pushAppsOfType(appsTest, "tick", newManifest)
+			scaleApps(appsTest, appInstances)
 		})
 
 		AfterEach(func() {
 			appReport(appProxy, Timeout_Short)
-			appsReport(appsReflex, Timeout_Short)
+			appReport(appRegistry, Timeout_Short)
+			appsReport(appsTest, Timeout_Short)
 
 			// clean up everything
 			Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 		})
 
 		It("allows the user to configure connections", func(done Done) {
-			By("checking that the reflex app has discovered all its instances")
-			checkPeers(appsReflex, 60*time.Second, 500*time.Millisecond, appInstances)
+			Expect(true).To(BeTrue())
+			By("checking that all test app instances have registered themselves")
+			checkRegistry(appRegistry, 60*time.Second, 500*time.Millisecond, len(appsTest)*appInstances)
+
+			appIPs := getAppIPs(appRegistry)
 
 			By("checking that the connection fails")
-			assertConnectionFails(appProxy, appsReflex, ports)
+			assertConnectionFails(appProxy, appIPs, ports)
 
 			By("creating a new policy")
-			for _, app := range appsReflex {
+			for _, app := range appsTest {
 				for _, port := range ports {
 					session := cf.Cf("access-allow", appProxy, app, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(2 * Timeout_Short)
 					Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
 				}
 			}
 
-			By(fmt.Sprintf("checking that %s can reach %s", appProxy, appsReflex))
-			assertConnectionSucceeds(appProxy, appsReflex, ports)
+			By(fmt.Sprintf("checking that %s can reach %s", appProxy, appsTest))
+			assertConnectionSucceeds(appProxy, appIPs, ports)
 
 			dumpStats(appProxy, config.AppsDomain)
 
 			By("deleting the policy")
-			for _, app := range appsReflex {
+			for _, app := range appsTest {
 				for _, port := range ports {
 					session := cf.Cf("access-deny", appProxy, app, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(2 * Timeout_Short)
 					Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
 				}
 			}
 
-			By(fmt.Sprintf("checking that %s can NOT reach %s", appProxy, appsReflex))
-			assertConnectionFails(appProxy, appsReflex, ports)
+			By(fmt.Sprintf("checking that %s can NOT reach %s", appProxy, appsTest))
+			assertConnectionFails(appProxy, appIPs, ports)
 
 			By("checking that reflex no longer reports deleted instances")
-			scaleApps(appsReflex, 1 /* instances */)
-			checkPeers(appsReflex, 60*time.Second, 500*time.Millisecond, appInstances)
+			scaleApps(appsTest, 1 /* instances */)
+			checkRegistry(appRegistry, 60*time.Second, 500*time.Millisecond, len(appsTest))
 
 			close(done)
 		}, 900 /* <-- overall spec timeout in seconds */)
@@ -139,55 +143,64 @@ func dumpStats(host, domain string) {
 	}
 }
 
-func checkPeers(apps []string, timeout, pollingInterval time.Duration, instances int) {
-	for _, app := range apps {
-		getPeers := func() ([]string, error) {
-			resp, err := http.Get(fmt.Sprintf("http://%s.%s/peers", app, config.AppsDomain))
-			if err != nil {
-				return nil, err
-			}
-
-			respBytes, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				return nil, err
-			}
-			defer resp.Body.Close()
-
-			var peersResponse struct {
-				IPs []string
-			}
-			err = json.Unmarshal(respBytes, &peersResponse)
-			if err != nil {
-				return nil, err
-			}
-			return peersResponse.IPs, nil
+func checkRegistry(registry string, timeout, pollingInterval time.Duration, totalInstances int) {
+	registeredApps := func() (int, error) {
+		resp, err := http.Get(fmt.Sprintf("http://%s.%s/api/v1/instances", registry, config.AppsDomain))
+		if err != nil {
+			return 0, err
 		}
 
-		Eventually(getPeers, timeout, pollingInterval).Should(HaveLen(instances))
+		respBytes, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return 0, err
+		}
+		defer resp.Body.Close()
+
+		var instancesResponse struct {
+			Instances []struct {
+				ServiceName string `json:"service_name"`
+			} `json:"instances"`
+		}
+		err = json.Unmarshal(respBytes, &instancesResponse)
+		if err != nil {
+			return 0, err
+		}
+		return len(instancesResponse.Instances), nil
 	}
+
+	Eventually(registeredApps, timeout, pollingInterval).Should(Equal(totalInstances))
 }
 
-func getReflexIPs(destApp string) []string {
-	resp, err := http.Get(fmt.Sprintf("http://%s.%s/peers", destApp, config.AppsDomain))
+func getAppIPs(registry string) []string {
+	resp, err := http.Get(fmt.Sprintf("http://%s.%s/api/v1/instances", registry, config.AppsDomain))
 	Expect(err).NotTo(HaveOccurred())
 	respBytes, err := ioutil.ReadAll(resp.Body)
 	Expect(err).NotTo(HaveOccurred())
 	defer resp.Body.Close()
 
-	var addressListJson struct {
-		IPs []string
+	var instancesResponse struct {
+		Instances []struct {
+			Endpoint struct {
+				Value string `json:"value"`
+			} `json:"endpoint"`
+		} `json:"instances"`
 	}
-	Expect(json.Unmarshal(respBytes, &addressListJson)).To(Succeed())
-	return addressListJson.IPs
+	Expect(json.Unmarshal(respBytes, &instancesResponse)).To(Succeed())
+	ips := []string{}
+	for _, instance := range instancesResponse.Instances {
+		ip, _, err := net.SplitHostPort(instance.Endpoint.Value)
+		Expect(err).NotTo(HaveOccurred())
+		ips = append(ips, ip)
+	}
+	return ips
 }
 
 func assertConnectionSucceeds(sourceApp string, destApps []string, ports []int) {
 	var wg sync.WaitGroup
-	for _, app := range destApps {
-		ips := getReflexIPs(app)
+	for _, appIP := range destApps {
 		for _, port := range ports {
 			wg.Add(1)
-			go assertAllConnectionStatus(ips, sourceApp, port, true, &wg)
+			go assertSingleConnection(appIP, port, sourceApp, true, &wg)
 		}
 	}
 	wg.Wait()
@@ -195,33 +208,21 @@ func assertConnectionSucceeds(sourceApp string, destApps []string, ports []int) 
 
 func assertConnectionFails(sourceApp string, destApps []string, ports []int) {
 	var wg sync.WaitGroup
-	for _, app := range destApps {
-		ips := getReflexIPs(app)
+	for _, appIP := range destApps {
 		for _, port := range ports {
 			wg.Add(1)
-			go assertAllConnectionStatus(ips, sourceApp, port, false, &wg)
+			go assertSingleConnection(appIP, port, sourceApp, false, &wg)
 		}
 	}
 	wg.Wait()
 }
 
-func assertAllConnectionStatus(reflexIPs []string, sourceApp string, port int, shouldSucceed bool, wg *sync.WaitGroup) {
-	var innerWg sync.WaitGroup
-	defer wg.Done()
-
-	for _, destIP := range reflexIPs {
-		innerWg.Add(1)
-		go assertSingleConnection(sourceApp, destIP, port, shouldSucceed, &innerWg)
-	}
-	innerWg.Wait()
-}
-
-func assertSingleConnection(sourceAppName string, destIP string, port int, shouldSucceed bool, wg *sync.WaitGroup) {
+func assertSingleConnection(destIP string, port int, sourceAppName string, shouldSucceed bool, wg *sync.WaitGroup) {
 	defer GinkgoRecover()
 	defer wg.Done()
 
 	proxyTest := func() (string, error) {
-		resp, err := http.Get(fmt.Sprintf("http://%s.%s/proxy/%s:%d/peers", sourceAppName, config.AppsDomain, destIP, port))
+		resp, err := http.Get(fmt.Sprintf("http://%s.%s/proxy/%s:%d", sourceAppName, config.AppsDomain, destIP, port))
 		if err != nil {
 			return "", err
 		}
