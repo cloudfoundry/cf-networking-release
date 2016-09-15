@@ -168,7 +168,7 @@ func main() {
 
 	// metrics
 	initializeDropsonde(logger)
-	uptime := metrics.NewUptime(emitInterval)
+	metricsEmitter := metrics.NewMetricsEmitter(emitInterval)
 
 	policyPoller := &poller.Poller{
 		Logger:       logger,
@@ -180,7 +180,7 @@ func main() {
 	}
 
 	members := grouper.Members{
-		{"uptime", uptime},
+		{"metrics_emitter", metricsEmitter},
 		{"policy_poller", policyPoller},
 	}
 
@@ -196,6 +196,6 @@ func initializeDropsonde(logger lager.Logger) {
 	dest := fmt.Sprint("localhost:", defaultDropsondePort)
 	err := dropsonde.Initialize(dest, dropsondeOrigin)
 	if err != nil {
-		logger.Error("failed to initialize dropsonde: %v", err)
+		logger.Error("initialize-dropsonde", err)
 	}
 }

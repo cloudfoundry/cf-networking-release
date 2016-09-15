@@ -38,8 +38,9 @@ func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request, curr
 	}
 
 	policyResponse := struct {
-		Policies []models.Policy `json:"policies"`
-	}{policies}
+		TotalPolicies int             `json:"total_policies"`
+		Policies      []models.Policy `json:"policies"`
+	}{len(policies), policies}
 	bytes, err := h.Marshaler.Marshal(policyResponse)
 	if err != nil {
 		h.Logger.Error("marshal-failed", err)

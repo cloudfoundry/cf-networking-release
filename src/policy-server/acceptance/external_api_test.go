@@ -144,7 +144,11 @@ var _ = Describe("Acceptance", func() {
 
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
 			responseString, err = ioutil.ReadAll(resp.Body)
-			Expect(responseString).To(MatchJSON(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`))
+			Expect(responseString).To(MatchJSON(`{
+				"total_policies": 1,
+				"policies": [
+					{ "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } }
+				]}`))
 		})
 
 		Context("when the protocol is invalid", func() {
@@ -207,7 +211,9 @@ var _ = Describe("Acceptance", func() {
 
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 				responseString, err = ioutil.ReadAll(resp.Body)
-				Expect(responseString).To(MatchJSON(`{ "policies": [
+				Expect(responseString).To(MatchJSON(`{
+					"total_policies": 2,	
+					"policies": [
 				 {"source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "port": 8080 } },
 				 {"source": { "id": "app3" }, "destination": { "id": "app1", "protocol": "tcp", "port": 9999 } }
 				 ]}
@@ -253,7 +259,10 @@ var _ = Describe("Acceptance", func() {
 
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 				responseString, err = ioutil.ReadAll(resp.Body)
-				Expect(responseString).To(MatchJSON(`{ "policies": [] }`))
+				Expect(responseString).To(MatchJSON(`{
+					"total_policies": 0,
+					"policies": []
+				}`))
 			})
 		})
 
