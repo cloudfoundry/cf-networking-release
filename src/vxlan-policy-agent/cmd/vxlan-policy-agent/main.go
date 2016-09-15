@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"fmt"
 	"io/ioutil"
 	"lib/flannel"
 	"lib/marshal"
@@ -11,6 +10,7 @@ import (
 	"lib/policy_client"
 	"lib/poller"
 	"lib/rules"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -29,9 +29,8 @@ import (
 )
 
 const (
-	dropsondeOrigin      = "vxlan-policy-agent"
-	defaultDropsondePort = 3457
-	emitInterval         = 30 * time.Second
+	dropsondeOrigin = "vxlan-policy-agent"
+	emitInterval    = 30 * time.Second
 )
 
 func die(logger lager.Logger, action string, err error) {
@@ -166,9 +165,13 @@ func main() {
 		die(logger, "enforce-default-masquerade", err)
 	}
 
-	// metrics
-	initializeDropsonde(logger)
-	metricsEmitter := metrics.NewMetricsEmitter(emitInterval)
+	err = dropsonde.Initialize(conf.MetronAddress, dropsondeOrigin)
+	if err != nil {
+		log.Fatalf("initializing dropsonde: %s", err)
+	}
+
+	uptimeSource := metrics.NewUptimeSource()
+	metricsEmitter := metrics.NewMetricsEmitter(logger, emitInterval, uptimeSource)
 
 	policyPoller := &poller.Poller{
 		Logger:       logger,
@@ -189,13 +192,5 @@ func main() {
 	err = <-monitor.Wait()
 	if err != nil {
 		die(logger, "ifrit monitor", err)
-	}
-}
-
-func initializeDropsonde(logger lager.Logger) {
-	dest := fmt.Sprint("localhost:", defaultDropsondePort)
-	err := dropsonde.Initialize(dest, dropsondeOrigin)
-	if err != nil {
-		logger.Error("initialize-dropsonde", err)
 	}
 }

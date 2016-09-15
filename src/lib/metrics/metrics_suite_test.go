@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-var fakeEventEmitter *fake.FakeEventEmitter
+var fakeDropsonde *fake.FakeEventEmitter
 
 func TestMetrics(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -18,11 +18,11 @@ func TestMetrics(t *testing.T) {
 }
 
 var _ = BeforeSuite(func() {
-	fakeEventEmitter = fake.NewFakeEventEmitter("MetricsTest")
-	sender := metric_sender.NewMetricSender(fakeEventEmitter)
+	fakeDropsonde = fake.NewFakeEventEmitter("MetricsTest")
+	sender := metric_sender.NewMetricSender(fakeDropsonde)
 	metrics.Initialize(sender, nil)
 })
 
 var _ = AfterSuite(func() {
-	fakeEventEmitter.Close()
+	fakeDropsonde.Close()
 })

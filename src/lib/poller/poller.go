@@ -24,6 +24,7 @@ type Poller struct {
 
 func (m *Poller) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	close(ready)
+
 	for {
 		select {
 		case <-signals:

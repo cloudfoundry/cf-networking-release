@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"netmon/acceptance/fakes"
 	"os"
 	"os/exec"
 	"vxlan-policy-agent/config"
@@ -29,8 +30,12 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		logger          *lagertest.TestLogger
 		subnetFile      *os.File
 		configFilePath  string
+		fakeMetron      fakes.FakeMetron
 	)
+
 	BeforeEach(func() {
+		fakeMetron = fakes.New()
+
 		mockPolicyServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Path == "/networking/v0/internal/policies" {
 				w.WriteHeader(http.StatusOK)
@@ -75,6 +80,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 			GardenProtocol:    "tcp",
 			VNI:               42,
 			FlannelSubnetFile: subnetFile.Name(),
+			MetronAddress:     fakeMetron.Address(),
 		}
 		configFilePath = WriteConfigFile(conf)
 	})
@@ -89,6 +95,8 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		_ = RunIptablesCommand("filter", "X")
 		_ = RunIptablesCommand("nat", "F")
 		_ = RunIptablesCommand("nat", "X")
+
+		Expect(fakeMetron.Close()).To(Succeed())
 	})
 
 	Describe("boring daemon behavior", func() {
@@ -166,6 +174,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 				GardenProtocol:    "tcp",
 				VNI:               42,
 				FlannelSubnetFile: subnetFile.Name(),
+				MetronAddress:     fakeMetron.Address(),
 			}
 			configFilePath = WriteConfigFile(conf)
 			session = StartAgent(vxlanPolicyAgentPath, configFilePath)

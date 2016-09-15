@@ -30,3 +30,7 @@ properties:
   vxlan-policy-agent.flannel_subnet_file:
     description: "File path to look for flannel's subnet.env file"
     default: "/run/flannel/subnet.env"
+
+  vxlan-policy-agent.metron_address:
+    description: "Forward metrics to this metron agent"
+    default: 127.0.0.1:3457

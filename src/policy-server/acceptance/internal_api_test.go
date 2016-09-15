@@ -6,6 +6,7 @@ import (
 	"lib/testsupport"
 	"math/rand"
 	"net/http"
+	"netmon/acceptance/fakes"
 	"os/exec"
 	"policy-server/config"
 	"strings"
@@ -21,6 +22,8 @@ var _ = Describe("Internal API", func() {
 		conf         config.Config
 		address      string
 		testDatabase *testsupport.TestDatabase
+
+		fakeMetron fakes.FakeMetron
 	)
 
 	var serverIsAvailable = func() error {
@@ -28,6 +31,7 @@ var _ = Describe("Internal API", func() {
 	}
 
 	BeforeEach(func() {
+		fakeMetron = fakes.New()
 		dbName := fmt.Sprintf("test_netman_database_%x", rand.Int())
 		dbConnectionInfo := testsupport.GetDBConnectionInfo()
 		testDatabase = dbConnectionInfo.CreateDatabase(dbName)
@@ -40,6 +44,7 @@ var _ = Describe("Internal API", func() {
 			UAAURL:          mockUAAServer.URL,
 			Database:        testDatabase.DBConfig(),
 			TagLength:       2,
+			MetronAddress:   fakeMetron.Address(),
 		}
 		configFilePath := WriteConfigFile(conf)
 
@@ -60,6 +65,8 @@ var _ = Describe("Internal API", func() {
 		if testDatabase != nil {
 			testDatabase.Destroy()
 		}
+
+		Expect(fakeMetron.Close()).To(Succeed())
 	})
 
 	It("Lists policies and associated tags", func() {

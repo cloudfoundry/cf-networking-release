@@ -7,6 +7,7 @@ import (
 	"lib/testsupport"
 	"math/rand"
 	"net/http"
+	"netmon/acceptance/fakes"
 	"os/exec"
 	"policy-server/config"
 	"strings"
@@ -23,6 +24,8 @@ var _ = Describe("Acceptance", func() {
 		conf         config.Config
 		address      string
 		testDatabase *testsupport.TestDatabase
+
+		fakeMetron fakes.FakeMetron
 	)
 
 	var serverIsAvailable = func() error {
@@ -30,6 +33,8 @@ var _ = Describe("Acceptance", func() {
 	}
 
 	BeforeEach(func() {
+		fakeMetron = fakes.New()
+
 		dbName := fmt.Sprintf("test_netman_database_%x", rand.Int())
 		dbConnectionInfo := testsupport.GetDBConnectionInfo()
 		testDatabase = dbConnectionInfo.CreateDatabase(dbName)
@@ -42,6 +47,7 @@ var _ = Describe("Acceptance", func() {
 			UAAURL:          mockUAAServer.URL,
 			Database:        testDatabase.DBConfig(),
 			TagLength:       1,
+			MetronAddress:   fakeMetron.Address(),
 		}
 		configFilePath := WriteConfigFile(conf)
 
@@ -62,6 +68,8 @@ var _ = Describe("Acceptance", func() {
 		if testDatabase != nil {
 			testDatabase.Destroy()
 		}
+
+		Expect(fakeMetron.Close()).To(Succeed())
 	})
 
 	Describe("authentication", func() {

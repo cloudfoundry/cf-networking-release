@@ -11,4 +11,5 @@ type Config struct {
 	SkipSSLValidation bool      `json:"skip_ssl_validation"`
 	Database          db.Config `json:"database"`
 	TagLength         int       `json:"tag_length"`
+	MetronAddress     string    `json:"metron_address"`
 }

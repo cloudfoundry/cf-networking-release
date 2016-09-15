@@ -4,32 +4,53 @@ import (
 	"os"
 	"time"
 
+	"code.cloudfoundry.org/lager"
+
 	dropsondemetrics "github.com/cloudfoundry/dropsonde/metrics"
 )
 
-type MetricsEmitter struct {
-	interval time.Duration
-	started  int64
+type MetricSource struct {
+	Name   string
+	Unit   string
+	Getter func() (float64, error)
 }
 
-func NewMetricsEmitter(interval time.Duration) *MetricsEmitter {
+type MetricsEmitter struct {
+	logger   lager.Logger
+	interval time.Duration
+	metrics  []MetricSource
+}
+
+func NewMetricsEmitter(logger lager.Logger, interval time.Duration, metrics ...MetricSource) *MetricsEmitter {
 	return &MetricsEmitter{
+		logger:   logger,
 		interval: interval,
-		started:  time.Now().Unix(),
+		metrics:  metrics,
 	}
 }
 
-func (u *MetricsEmitter) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
+func (m *MetricsEmitter) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
+	m.emitMetrics()
 	close(ready)
-	ticker := time.NewTicker(u.interval)
 
 	for {
 		select {
-		case <-ticker.C:
-			dropsondemetrics.SendValue("uptime", float64(time.Now().Unix()-u.started), "seconds")
 		case <-signals:
-			ticker.Stop()
 			return nil
+		case <-time.After(m.interval):
+			m.emitMetrics()
 		}
+	}
+}
+
+func (m *MetricsEmitter) emitMetrics() {
+	for _, source := range m.metrics {
+		value, err := source.Getter()
+		if err != nil {
+			m.logger.Error("metric-getter", err, lager.Data{"source": source.Name})
+			continue
+		}
+
+		dropsondemetrics.SendValue(source.Name, value, source.Unit)
 	}
 }

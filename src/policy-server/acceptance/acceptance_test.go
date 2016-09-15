@@ -8,6 +8,7 @@ import (
 	"lib/testsupport"
 	"math/rand"
 	"net/http"
+	"netmon/acceptance/fakes"
 	"os/exec"
 	"policy-server/config"
 	"time"
@@ -16,6 +17,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
+	"github.com/onsi/gomega/types"
 )
 
 var _ = Describe("Integration", func() {
@@ -25,6 +27,8 @@ var _ = Describe("Integration", func() {
 			conf         config.Config
 			address      string
 			testDatabase *testsupport.TestDatabase
+
+			fakeMetron fakes.FakeMetron
 		)
 
 		var serverIsAvailable = func() error {
@@ -32,6 +36,8 @@ var _ = Describe("Integration", func() {
 		}
 
 		BeforeEach(func() {
+			fakeMetron = fakes.New()
+
 			dbName := fmt.Sprintf("test_netman_database_%x", rand.Int())
 			dbConnectionInfo := testsupport.GetDBConnectionInfo()
 			testDatabase = dbConnectionInfo.CreateDatabase(dbName)
@@ -44,6 +50,7 @@ var _ = Describe("Integration", func() {
 				UAAURL:          mockUAAServer.URL,
 				Database:        testDatabase.DBConfig(),
 				TagLength:       1,
+				MetronAddress:   fakeMetron.Address(),
 			}
 			configFilePath := WriteConfigFile(conf)
 
@@ -64,6 +71,8 @@ var _ = Describe("Integration", func() {
 			if testDatabase != nil {
 				testDatabase.Destroy()
 			}
+
+			Expect(fakeMetron.Close()).To(Succeed())
 		})
 
 		Describe("boring server behavior", func() {
@@ -110,9 +119,27 @@ var _ = Describe("Integration", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(responseString).To(ContainSubstring("some-user"))
 			})
-		})
 
+			var HaveName = func(name string) types.GomegaMatcher {
+				return WithTransform(func(ev fakes.Event) string {
+					return ev.Name
+				}, Equal(name))
+			}
+
+			It("should emit some metrics", func() {
+				Eventually(fakeMetron.AllEvents, "5s").Should(
+					ContainElement(
+						HaveName("uptime"),
+					))
+
+				Eventually(fakeMetron.AllEvents, "5s").Should(
+					ContainElement(
+						HaveName("totalPolicies"),
+					))
+			})
+		})
 	})
+
 	Context("when the database is down", func() {
 		var (
 			session *gexec.Session

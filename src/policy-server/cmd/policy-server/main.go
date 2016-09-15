@@ -8,12 +8,15 @@ import (
 	"io/ioutil"
 	"lib/db"
 	"lib/marshal"
+
 	"lib/metrics"
+
 	"log"
 	"net/http"
 	"os"
 	"policy-server/config"
 	"policy-server/handlers"
+	"policy-server/server_metrics"
 	"policy-server/store"
 	"policy-server/uaa_client"
 	"time"
@@ -29,9 +32,8 @@ import (
 )
 
 const (
-	dropsondeOrigin      = "policy-server"
-	defaultDropsondePort = 3457
-	emitInterval         = 30 * time.Second
+	dropsondeOrigin = "policy-server"
+	emitInterval    = 30 * time.Second
 )
 
 func main() {
@@ -187,9 +189,14 @@ func main() {
 	addr := fmt.Sprintf("%s:%d", conf.ListenHost, conf.ListenPort)
 	server := http_server.New(addr, router)
 
-	// metrics
-	initializeDropsonde(logger)
-	metricsEmitter := metrics.NewMetricsEmitter(emitInterval)
+	err = dropsonde.Initialize(conf.MetronAddress, dropsondeOrigin)
+	if err != nil {
+		log.Fatalf("initializing dropsonde: %s", err)
+	}
+
+	totalPoliciesSource := server_metrics.NewTotalPoliciesSource(dataStore)
+	uptimeSource := metrics.NewUptimeSource()
+	metricsEmitter := metrics.NewMetricsEmitter(logger, emitInterval, uptimeSource, totalPoliciesSource)
 
 	members := grouper.Members{
 		{"metrics_emitter", metricsEmitter},
@@ -208,12 +215,4 @@ func main() {
 	}
 
 	logger.Info("exited")
-}
-
-func initializeDropsonde(logger lager.Logger) {
-	dest := fmt.Sprint("localhost:", defaultDropsondePort)
-	err := dropsonde.Initialize(dest, dropsondeOrigin)
-	if err != nil {
-		logger.Error("initialize-dropsonde", err)
-	}
 }
