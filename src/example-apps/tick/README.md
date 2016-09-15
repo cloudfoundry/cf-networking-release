@@ -1,5 +1,5 @@
 # tick ❤
-Simple app that registers itself with an [a8registry](https://github.com/amalgam8/registry) on a regular interval.
+Simple app that registers itself with an [a8registry](https://github.com/amalgam8/amalgam8/tree/master/registry) on a regular interval.
 
 ## Prerequisites
 The following instructions for this example assume the following:
