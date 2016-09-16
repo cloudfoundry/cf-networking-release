@@ -21,7 +21,7 @@ properties:
     cni_config_dir: /var/vcap/jobs/cni-flannel/config/cni
   cni-flannel:
     etcd_endpoints:
-      - http://netman-db.service.cf.internal:4001
+      - (( "http://" .properties.cf_etcd.advertise_urls_dns_suffix ":4001" ))
   policy-server:
     <<: (( merge ))
     database_password: (( merge ))
@@ -109,32 +109,6 @@ jobs:
         services:
           policy-server:
             name: policy-server
-            check:
-              interval: 5s
-              script: /bin/true
-
-- name: flannel_etcd
-  instances: 1
-  networks:
-  - name: diego1
-  persistent_disk: 256
-  resource_pool: database_z1
-  templates:
-  - name: consul_agent
-    release: cf
-  - name: etcd
-    release: etcd
-  properties:
-    etcd:
-      require_ssl: false
-      peer_require_ssl: false
-      machines:
-      - netman-db.service.cf.internal
-    consul:
-      agent:
-        services:
-          netman-db:
-            name: netman-db
             check:
               interval: 5s
               script: /bin/true
