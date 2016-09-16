@@ -57,8 +57,9 @@ var _ = Describe("external connectivity", func() {
 		}
 	})
 
-	Describe("accessing the app via the router", func() {
-		It("allows external traffic to reach the app", func(done Done) {
+	Describe("basic (legacy) network behavior for an app", func() {
+		It("is reachable from the router, and can reach the internet only if allowed", func(done Done) {
+			By("checking that the app is reachable via the router")
 			Consistently(func() bool {
 				resp, err := http.Get(appRoute)
 				Expect(err).NotTo(HaveOccurred())
@@ -70,13 +71,7 @@ var _ = Describe("external connectivity", func() {
 				return true
 			}, "10s", "1s").Should(BeTrue())
 
-			close(done)
-		}, 60 /* <-- overall spec timeout in seconds */)
-	})
-
-	Describe("reaching the internet", func() {
-		It("can reach the internet only if the application security groups allow it", func() {
-			By("checking that the internet is reachable")
+			By("checking that it can reach the internet")
 			Consistently(func() bool {
 				resp, err := http.Get(appRoute + "proxy/example.com")
 				Expect(err).NotTo(HaveOccurred())
@@ -96,7 +91,7 @@ var _ = Describe("external connectivity", func() {
 			By("restarting the app")
 			Expect(cf.Cf("restart", appA).Wait(Timeout_Push)).To(gexec.Exit(0))
 
-			By("checking that the connection fails")
+			By("checking that the app cannot reach the internet")
 			Consistently(func() bool {
 				resp, err := http.Get(appRoute + "proxy/example.com")
 				Expect(err).NotTo(HaveOccurred())
@@ -107,7 +102,9 @@ var _ = Describe("external connectivity", func() {
 				Expect(respBytes).To(ContainSubstring("example.com"))
 				return true
 			}, "10s", "1s").Should(BeTrue())
-		})
+
+			close(done)
+		}, 60 /* <-- overall spec timeout in seconds */)
 	})
 })
 
