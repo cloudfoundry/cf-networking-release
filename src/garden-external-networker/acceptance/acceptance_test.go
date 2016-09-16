@@ -196,6 +196,9 @@ var _ = Describe("Garden External Networker", func() {
 		Expect(ipt.ClearChain("filter", netoutChainName)).To(Succeed())
 		Expect(ipt.ClearChain("filter", "FORWARD")).To(Succeed())
 		Expect(ipt.DeleteChain("filter", netoutChainName)).To(Succeed())
+		Expect(ipt.ClearChain("nat", netinChainName)).To(Succeed())
+		Expect(ipt.ClearChain("nat", "PREROUTING")).To(Succeed())
+		Expect(ipt.DeleteChain("nat", netinChainName)).To(Succeed())
 	})
 
 	It("should call CNI ADD and DEL", func() {
