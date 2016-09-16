@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"gopkg.in/yaml.v2"
@@ -164,16 +165,45 @@ func defaultManifest(appType string) string {
 }
 
 func pushAppsOfType(appNames []string, appType string, manifest string) {
-	for _, app := range appNames {
-		By(fmt.Sprintf("pushing app %s of type %s", app, appType))
-		Expect(cf.Cf(
-			"push", app,
-			"-p", appDir(appType),
-			"-f", manifest,
-			"-c", "./"+appType,
-			"-b", "binary_buildpack",
-		).Wait(Timeout_Push)).To(gexec.Exit(0))
+	workPoolRun(appNames, func(appName string) {
+		pushAppOfType(appName, appType, manifest)
+	})
+}
+
+const NUM_PARALLEL_WORKERS = 4
+
+func workPoolRun(items []string, workFunc func(item string)) {
+	var wg sync.WaitGroup
+	work := make(chan string)
+
+	for workerID := 0; workerID < NUM_PARALLEL_WORKERS; workerID++ {
+		wg.Add(1)
+		go func() {
+			defer GinkgoRecover()
+			for item := range work {
+				workFunc(item)
+			}
+			wg.Done()
+		}()
 	}
+
+	// queue the work
+	for _, item := range items {
+		work <- item
+	}
+	close(work)
+	wg.Wait()
+}
+
+func pushAppOfType(appName string, appType string, manifest string) {
+	By(fmt.Sprintf("pushing app %s of type %s", appName, appType))
+	Expect(cf.Cf(
+		"push", appName,
+		"-p", appDir(appType),
+		"-f", manifest,
+		"-c", "./"+appType,
+		"-b", "binary_buildpack",
+	).Wait(Timeout_Push)).To(gexec.Exit(0))
 }
 
 func pushRegistryApp(appName string) {
@@ -186,9 +216,9 @@ func pushRegistryApp(appName string) {
 }
 
 func scaleApps(apps []string, instances int) {
-	for _, app := range apps {
+	workPoolRun(apps, func(app string) {
 		scaleApp(app, instances)
-	}
+	})
 }
 
 func scaleApp(appName string, instances int) {

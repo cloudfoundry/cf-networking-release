@@ -68,9 +68,20 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			Expect(cf.Cf("create-space", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
 			Expect(cf.Cf("target", "-o", orgName, "-s", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
 
-			pushRegistryApp(appRegistry)
+			var setupWG sync.WaitGroup
+			setupWG.Add(2)
+			go func() {
+				defer GinkgoRecover()
+				pushRegistryApp(appRegistry)
+				setupWG.Done()
+			}()
 
-			pushApp(appProxy)
+			go func() {
+				defer GinkgoRecover()
+				pushApp(appProxy)
+				setupWG.Done()
+			}()
+			setupWG.Wait()
 
 			newManifest := modifyTickManifest(appRegistry)
 			pushAppsOfType(appsTest, "tick", newManifest)
@@ -196,31 +207,22 @@ func getAppIPs(registry string) []string {
 }
 
 func assertConnectionSucceeds(sourceApp string, destApps []string, ports []int) {
-	var wg sync.WaitGroup
-	for _, appIP := range destApps {
+	workPoolRun(destApps, func(appIP string) {
 		for _, port := range ports {
-			wg.Add(1)
-			go assertSingleConnection(appIP, port, sourceApp, true, &wg)
+			assertSingleConnection(appIP, port, sourceApp, true)
 		}
-	}
-	wg.Wait()
+	})
 }
 
 func assertConnectionFails(sourceApp string, destApps []string, ports []int) {
-	var wg sync.WaitGroup
-	for _, appIP := range destApps {
+	workPoolRun(destApps, func(appIP string) {
 		for _, port := range ports {
-			wg.Add(1)
-			go assertSingleConnection(appIP, port, sourceApp, false, &wg)
+			assertSingleConnection(appIP, port, sourceApp, false)
 		}
-	}
-	wg.Wait()
+	})
 }
 
-func assertSingleConnection(destIP string, port int, sourceAppName string, shouldSucceed bool, wg *sync.WaitGroup) {
-	defer GinkgoRecover()
-	defer wg.Done()
-
+func assertSingleConnection(destIP string, port int, sourceAppName string, shouldSucceed bool) {
 	proxyTest := func() (string, error) {
 		resp, err := http.Get(fmt.Sprintf("http://%s.%s/proxy/%s:%d", sourceAppName, config.AppsDomain, destIP, port))
 		if err != nil {
@@ -234,8 +236,10 @@ func assertSingleConnection(destIP string, port int, sourceAppName string, shoul
 		return string(respBytes), nil
 	}
 	if shouldSucceed {
+		By(fmt.Sprintf("eventually proxy should reach %s", destIP))
 		Eventually(proxyTest, 10*time.Second, 500*time.Millisecond).ShouldNot(ContainSubstring("failed"))
 	} else {
+		By(fmt.Sprintf("eventually proxy should NOT reach %s", destIP))
 		Eventually(proxyTest, 10*time.Second, 500*time.Millisecond).Should(ContainSubstring("request failed"))
 	}
 }
