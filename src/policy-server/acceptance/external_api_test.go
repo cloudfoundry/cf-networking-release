@@ -1,6 +1,8 @@
 package acceptance_test
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -10,7 +12,9 @@ import (
 	"netmon/acceptance/fakes"
 	"os/exec"
 	"policy-server/config"
+	"policy-server/models"
 	"strings"
+	"sync/atomic"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -128,6 +132,58 @@ var _ = Describe("Acceptance", func() {
 				`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`,
 			),
 		)
+	})
+
+	PContext("when there are concurrent requests", func() {
+		It("remains consistent", func() {
+			url := fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort)
+			add := func(policy models.Policy) {
+				requestBody, _ := json.Marshal(map[string]interface{}{
+					"policies": []models.Policy{policy},
+				})
+				resp := makeAndDoRequest("POST", url, bytes.NewReader(requestBody))
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
+				responseString, err := ioutil.ReadAll(resp.Body)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(responseString).To(MatchJSON("{}"))
+			}
+
+			nPolicies := 100
+			policies := []interface{}{}
+			for i := 0; i < nPolicies; i++ {
+				appName := fmt.Sprintf("random-app-%x", rand.Int31())
+				policies = append(policies, models.Policy{
+					Source:      models.Source{ID: appName},
+					Destination: models.Destination{ID: appName, Protocol: "tcp", Port: 1234},
+				})
+			}
+
+			By("adding lots of policies concurrently")
+			var nAdded int32
+			workPoolRun(policies, func(policy interface{}) {
+				add(policy.(models.Policy))
+				atomic.AddInt32(&nAdded, 1)
+			})
+			Expect(nAdded).To(Equal(int32(nPolicies)))
+
+			By("getting all the policies")
+			resp := makeAndDoRequest("GET", url, nil)
+			Expect(resp.StatusCode).To(Equal(http.StatusOK))
+			responseBytes, err := ioutil.ReadAll(resp.Body)
+			Expect(err).NotTo(HaveOccurred())
+			var policiesResponse struct {
+				TotalPolicies int             `json:"total_policies"`
+				Policies      []models.Policy `json:"policies"`
+			}
+			Expect(json.Unmarshal(responseBytes, &policiesResponse)).To(Succeed())
+
+			Expect(policiesResponse.TotalPolicies).To(Equal(nPolicies))
+
+			By("verifying all the policies are present")
+			for _, policy := range policies {
+				Expect(policiesResponse.Policies).To(ContainElement(policy))
+			}
+		})
 	})
 
 	Describe("adding policies", func() {

@@ -11,6 +11,7 @@ import (
 	"os"
 	"policy-server/config"
 	"strings"
+	"sync"
 
 	. "github.com/onsi/ginkgo"
 	ginkgoConfig "github.com/onsi/ginkgo/config"
@@ -86,4 +87,31 @@ func WriteConfigFile(policyServerConfig config.Config) string {
 	Expect(err).NotTo(HaveOccurred())
 
 	return configFile.Name()
+}
+
+const NUM_PARALLEL_WORKERS = 4
+
+func workPoolRun(items []interface{}, workFunc func(item interface{})) {
+	var wg sync.WaitGroup
+	work := make(chan interface{})
+
+	for workerID := 0; workerID < NUM_PARALLEL_WORKERS; workerID++ {
+		wg.Add(1)
+		go func() {
+			defer GinkgoRecover()
+			for item := range work {
+				workFunc(item)
+			}
+			wg.Done()
+		}()
+	}
+
+	// queue the work
+	for _, item := range items {
+		work <- item
+	}
+	close(work)
+
+	// wait for all work to complete
+	wg.Wait()
 }
