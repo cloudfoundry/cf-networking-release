@@ -170,7 +170,7 @@ func pushAppsOfType(appNames []string, appType string, manifest string) {
 	})
 }
 
-const NUM_PARALLEL_WORKERS = 4
+const NUM_PARALLEL_WORKERS = 16
 
 func workPoolRun(items []string, workFunc func(item string)) {
 	var wg sync.WaitGroup

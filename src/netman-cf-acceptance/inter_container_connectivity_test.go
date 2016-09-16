@@ -67,7 +67,19 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			spaceName = "test-space"
 			Expect(cf.Cf("create-space", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
 			Expect(cf.Cf("target", "-o", orgName, "-s", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
+		})
 
+		AfterEach(func() {
+			appReport(appProxy, Timeout_Short)
+			appReport(appRegistry, Timeout_Short)
+			appsReport(appsTest, Timeout_Short)
+
+			// clean up everything
+			Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
+		})
+
+		It("allows the user to configure policies", func(done Done) {
+			By("pushing the registry app and proxy app")
 			var setupWG sync.WaitGroup
 			setupWG.Add(2)
 			go func() {
@@ -83,22 +95,13 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			}()
 			setupWG.Wait()
 
+			By("pushing the tick apps")
 			newManifest := modifyTickManifest(appRegistry)
 			pushAppsOfType(appsTest, "tick", newManifest)
+
+			By("scaling the tick apps")
 			scaleApps(appsTest, appInstances)
-		})
 
-		AfterEach(func() {
-			appReport(appProxy, Timeout_Short)
-			appReport(appRegistry, Timeout_Short)
-			appsReport(appsTest, Timeout_Short)
-
-			// clean up everything
-			Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
-		})
-
-		It("allows the user to configure connections", func(done Done) {
-			Expect(true).To(BeTrue())
 			By("checking that all test app instances have registered themselves")
 			checkRegistry(appRegistry, 60*time.Second, 500*time.Millisecond, len(appsTest)*appInstances)
 
@@ -107,7 +110,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			By("checking that the connection fails")
 			assertConnectionFails(appProxy, appIPs, ports)
 
-			By("creating a new policy")
+			By("creating policies")
 			for _, app := range appsTest {
 				for _, port := range ports {
 					session := cf.Cf("access-allow", appProxy, app, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(2 * Timeout_Short)
@@ -120,7 +123,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 
 			dumpStats(appProxy, config.AppsDomain)
 
-			By("deleting the policy")
+			By("deleting policies")
 			for _, app := range appsTest {
 				for _, port := range ports {
 					session := cf.Cf("access-deny", appProxy, app, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(2 * Timeout_Short)
@@ -136,7 +139,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			checkRegistry(appRegistry, 60*time.Second, 500*time.Millisecond, len(appsTest))
 
 			close(done)
-		}, 900 /* <-- overall spec timeout in seconds */)
+		}, 10*60 /* <-- overall spec timeout in seconds */)
 	})
 })
 
@@ -160,6 +163,7 @@ func checkRegistry(registry string, timeout, pollingInterval time.Duration, tota
 		if err != nil {
 			return 0, err
 		}
+		defer resp.Body.Close()
 
 		respBytes, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
@@ -236,10 +240,10 @@ func assertSingleConnection(destIP string, port int, sourceAppName string, shoul
 		return string(respBytes), nil
 	}
 	if shouldSucceed {
-		By(fmt.Sprintf("eventually proxy should reach %s", destIP))
+		By(fmt.Sprintf("eventually proxy should reach %s at port %d", destIP, port))
 		Eventually(proxyTest, 10*time.Second, 500*time.Millisecond).ShouldNot(ContainSubstring("failed"))
 	} else {
-		By(fmt.Sprintf("eventually proxy should NOT reach %s", destIP))
+		By(fmt.Sprintf("eventually proxy should NOT reach %s at port %d", destIP, port))
 		Eventually(proxyTest, 10*time.Second, 500*time.Millisecond).Should(ContainSubstring("request failed"))
 	}
 }
