@@ -35,24 +35,9 @@ properties:
   policy-server.server.database.type:
     description: "Type of database: postgres or mysql"
     default: postgres
-  policy-server.server.database.host:
-    description: "Host of database server, DNS or IP address"
-    default: 127.0.0.1
-  policy-server.server.database.port:
-    description: "Port number for database server"
-    default: 5432
-  policy-server.server.database.username:
-    description: "Username for policy server connecting to database"
-    default: policy_server
-  policy-server.server.database.password:
-    description: "Password for policy server user connecting to database"
-    default: some-password
-  policy-server.server.database.name:
-    description: "Name of database to use on the server"
-    default: policy_server
-  policy-server.server.database.ssl_mode:
-    description: "SSL mode for use in Postgres"
-    default: disable
+  policy-server.server.database.connection_string:
+    description: "Connection string to policy server database"
+    default: postgres://policy_server:some-password@policy-server-db.service.cf.internal:5432/policy_server?sslmode=disable
 
   policy-server.server.tag_length:
     description: "Length in bytes of the packet tags to generate for policy sources and destinations. Must be greater than 0 and less than 4."

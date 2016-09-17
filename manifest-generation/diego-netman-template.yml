@@ -25,6 +25,7 @@ properties:
   policy-server:
     <<: (( merge ))
     database_password: (( merge ))
+    connection_string: (( merge ))
     database:
       db_scheme: postgres
       port: 5432
@@ -41,9 +42,8 @@ properties:
       uaa_url: (( "https://uaa." .properties.system_domain ))
       skip_ssl_validation: (( .properties.diego.ssl.skip_cert_verify ))
       database:
-         <<: (( merge ))
-         host: (( merge || "policy-server-db.service.cf.internal" ))
-         password: (( .properties.policy-server.database_password ))
+        <<: (( merge ))
+        connection_string: (( .properties.policy-server.connection_string ))
   uaa:
     clients:
       network-policy:

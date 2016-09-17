@@ -5,7 +5,6 @@ import (
 	"lib/db"
 	"os"
 	"os/exec"
-	"strconv"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -26,17 +25,20 @@ type TestDatabase struct {
 }
 
 func (d *TestDatabase) DBConfig() db.Config {
-	port, err := strconv.Atoi(d.ConnInfo.Port)
-	Expect(err).NotTo(HaveOccurred())
+	var connectionString string
+	if d.ConnInfo.Type == "mysql" {
+		connectionString = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s",
+			d.ConnInfo.Username, d.ConnInfo.Password, d.ConnInfo.Hostname, d.ConnInfo.Port, d.Name)
+	} else if d.ConnInfo.Type == "postgres" {
+		connectionString = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
+			d.ConnInfo.Username, d.ConnInfo.Password, d.ConnInfo.Hostname, d.ConnInfo.Port, d.Name)
+	} else {
+		connectionString = fmt.Sprintf("some unsupported db type connection string: %s\n", d.ConnInfo.Type)
+	}
 
 	return db.Config{
-		Type:     d.ConnInfo.Type,
-		Host:     d.ConnInfo.Hostname,
-		Port:     port,
-		Username: d.ConnInfo.Username,
-		Password: d.ConnInfo.Password,
-		Name:     d.Name,
-		SSLMode:  "disable",
+		Type:             d.ConnInfo.Type,
+		ConnectionString: connectionString,
 	}
 }
 

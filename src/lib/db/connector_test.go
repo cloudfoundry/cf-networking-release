@@ -66,7 +66,13 @@ var _ = Describe("GetConnectionPool", func() {
 	Context("when there is a network connectivity problem", func() {
 		It("returns a retriable error", func() {
 			dbConfig := testDatabase.DBConfig()
-			dbConfig.Port = 0
+			if dbConfig.Type == "mysql" {
+				dbConfig.ConnectionString = fmt.Sprintf("root:password@tcp(127.0.0.1:0)/%s", testDatabase.Name)
+			} else if dbConfig.Type == "postgres" {
+				dbConfig.ConnectionString = fmt.Sprintf("postgres://postgres:@127.0.0.1:0/%s?sslmode=disable", testDatabase.Name)
+			} else {
+				Fail("something is wrong with this test")
+			}
 
 			_, err := db.GetConnectionPool(dbConfig)
 			Expect(err).To(HaveOccurred())

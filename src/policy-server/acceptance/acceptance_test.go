@@ -154,13 +154,8 @@ var _ = Describe("Integration", func() {
 				UAAClientSecret: "test",
 				UAAURL:          mockUAAServer.URL,
 				Database: db.Config{
-					Type:     "postgres",
-					Host:     "1.2.3.4",
-					Port:     9999,
-					Username: "",
-					Password: "",
-					Name:     "",
-					SSLMode:  "",
+					Type:             "postgres",
+					ConnectionString: "postgres://:@1.2.3.4:9999/?sslmode=disable",
 				},
 				TagLength: 1,
 			}

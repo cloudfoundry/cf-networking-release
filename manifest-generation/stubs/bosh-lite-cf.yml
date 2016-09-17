@@ -14,6 +14,7 @@ properties:
   policy-server:
     <<: (( merge ))
     database_password: some-policy-server-db-password
+    connection_string: postgres://policy_server:some-policy-server-db-password@policy-server-db.service.cf.internal:5432/policy_server?sslmode=disable
     # to use a local local mysql database, run
     #    docker run -it -e MYSQL_ROOT_PASSWORD=password -p 30000:3306 mysql
     #    echo 'create database bosh_lite_policy_server;' | mysql --user=root --password="password" --host=127.0.0.1 --port=30000
