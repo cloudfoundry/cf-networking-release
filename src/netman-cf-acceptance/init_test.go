@@ -213,6 +213,7 @@ func pushRegistryApp(appName string) {
 		"-p", appDir("registry"),
 		"-c", "./registry",
 		"-b", "binary_buildpack",
+		"-m", "32M",
 	).Wait(Timeout_Push)).To(gexec.Exit(0))
 }
 
