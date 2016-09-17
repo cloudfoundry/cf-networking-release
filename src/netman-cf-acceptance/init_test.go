@@ -165,6 +165,7 @@ func defaultManifest(appType string) string {
 }
 
 func pushAppsOfType(appNames []string, appType string, manifest string) {
+	By(fmt.Sprintf("pushing %d apps of type %s", len(appNames), appType))
 	workPoolRun(appNames, func(appName string) {
 		pushAppOfType(appName, appType, manifest)
 	})

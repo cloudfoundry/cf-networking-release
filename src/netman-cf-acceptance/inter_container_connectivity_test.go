@@ -97,7 +97,9 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 
 			By("pushing the tick apps")
 			newManifest := modifyTickManifest(appRegistry)
-			pushAppsOfType(appsTest, "tick", newManifest)
+			runWithTimeout("push tick apps", 5*time.Minute, func() {
+				pushAppsOfType(appsTest, "tick", newManifest)
+			})
 
 			By("scaling the tick apps")
 			scaleApps(appsTest, appInstances)
@@ -108,7 +110,9 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			appIPs := getAppIPs(appRegistry)
 
 			By("checking that the connection fails")
-			assertConnectionFails(appProxy, appIPs, ports)
+			runWithTimeout("check connection failures", 5*time.Minute, func() {
+				assertConnectionFails(appProxy, appIPs, ports)
+			})
 
 			By("creating policies")
 			for _, app := range appsTest {
@@ -119,7 +123,9 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			}
 
 			By(fmt.Sprintf("checking that %s can reach %s", appProxy, appsTest))
-			assertConnectionSucceeds(appProxy, appIPs, ports)
+			runWithTimeout("check connection success", 5*time.Minute, func() {
+				assertConnectionSucceeds(appProxy, appIPs, ports)
+			})
 
 			dumpStats(appProxy, config.AppsDomain)
 
@@ -132,23 +138,39 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			}
 
 			By(fmt.Sprintf("checking that %s can NOT reach %s", appProxy, appsTest))
-			assertConnectionFails(appProxy, appIPs, ports)
+			runWithTimeout("check connection failures, again", 5*time.Minute, func() {
+				assertConnectionFails(appProxy, appIPs, ports)
+			})
 
 			By("checking that reflex no longer reports deleted instances")
 			scaleApps(appsTest, 1 /* instances */)
 			checkRegistry(appRegistry, 60*time.Second, 500*time.Millisecond, len(appsTest))
 
 			close(done)
-		}, 10*60 /* <-- overall spec timeout in seconds */)
+		}, 20*60 /* <-- overall spec timeout in seconds */)
 	})
 })
 
+func runWithTimeout(operation string, timeout time.Duration, work func()) {
+	done := make(chan bool)
+	go func() {
+		fmt.Printf("starting %s\n", operation)
+		work()
+		done <- true
+	}()
+
+	select {
+	case <-done:
+		fmt.Printf("completed %s\n", operation)
+		return
+	case <-time.After(timeout):
+		Fail("timeout on " + operation)
+	}
+}
+
 func dumpStats(host, domain string) {
-	resp, err := http.Get(fmt.Sprintf("http://%s.%s/stats", host, domain))
+	respBytes, err := httpGetBytes(fmt.Sprintf("http://%s.%s/stats", host, domain))
 	Expect(err).NotTo(HaveOccurred())
-	respBytes, err := ioutil.ReadAll(resp.Body)
-	Expect(err).NotTo(HaveOccurred())
-	defer resp.Body.Close()
 
 	fmt.Printf("STATS: %s\n", string(respBytes))
 	netStatsFile := os.Getenv("NETWORK_STATS_FILE")
@@ -157,26 +179,32 @@ func dumpStats(host, domain string) {
 	}
 }
 
+type RegistryInstancesResponse struct {
+	Instances []struct {
+		ServiceName string `json:"service_name"`
+		Endpoint    struct {
+			Value string `json:"value"`
+		} `json:"endpoint"`
+	} `json:"instances"`
+}
+
+func getInstancesFromA8(registry string) (*RegistryInstancesResponse, error) {
+	respBytes, err := httpGetBytes(fmt.Sprintf("http://%s.%s/api/v1/instances", registry, config.AppsDomain))
+	if err != nil {
+		return nil, err
+	}
+
+	var instancesResponse RegistryInstancesResponse
+	err = json.Unmarshal(respBytes, &instancesResponse)
+	if err != nil {
+		return nil, err
+	}
+	return &instancesResponse, nil
+}
+
 func checkRegistry(registry string, timeout, pollingInterval time.Duration, totalInstances int) {
 	registeredApps := func() (int, error) {
-		resp, err := http.Get(fmt.Sprintf("http://%s.%s/api/v1/instances", registry, config.AppsDomain))
-		if err != nil {
-			return 0, err
-		}
-		defer resp.Body.Close()
-
-		respBytes, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return 0, err
-		}
-		defer resp.Body.Close()
-
-		var instancesResponse struct {
-			Instances []struct {
-				ServiceName string `json:"service_name"`
-			} `json:"instances"`
-		}
-		err = json.Unmarshal(respBytes, &instancesResponse)
+		instancesResponse, err := getInstancesFromA8(registry)
 		if err != nil {
 			return 0, err
 		}
@@ -187,20 +215,9 @@ func checkRegistry(registry string, timeout, pollingInterval time.Duration, tota
 }
 
 func getAppIPs(registry string) []string {
-	resp, err := http.Get(fmt.Sprintf("http://%s.%s/api/v1/instances", registry, config.AppsDomain))
+	instancesResponse, err := getInstancesFromA8(registry)
 	Expect(err).NotTo(HaveOccurred())
-	respBytes, err := ioutil.ReadAll(resp.Body)
-	Expect(err).NotTo(HaveOccurred())
-	defer resp.Body.Close()
 
-	var instancesResponse struct {
-		Instances []struct {
-			Endpoint struct {
-				Value string `json:"value"`
-			} `json:"endpoint"`
-		} `json:"instances"`
-	}
-	Expect(json.Unmarshal(respBytes, &instancesResponse)).To(Succeed())
 	ips := []string{}
 	for _, instance := range instancesResponse.Instances {
 		ip, _, err := net.SplitHostPort(instance.Endpoint.Value)
@@ -228,12 +245,7 @@ func assertConnectionFails(sourceApp string, destApps []string, ports []int) {
 
 func assertSingleConnection(destIP string, port int, sourceAppName string, shouldSucceed bool) {
 	proxyTest := func() (string, error) {
-		resp, err := http.Get(fmt.Sprintf("http://%s.%s/proxy/%s:%d", sourceAppName, config.AppsDomain, destIP, port))
-		if err != nil {
-			return "", err
-		}
-		defer resp.Body.Close()
-		respBytes, err := ioutil.ReadAll(resp.Body)
+		respBytes, err := httpGetBytes(fmt.Sprintf("http://%s.%s/proxy/%s:%d", sourceAppName, config.AppsDomain, destIP, port))
 		if err != nil {
 			return "", err
 		}
@@ -241,9 +253,22 @@ func assertSingleConnection(destIP string, port int, sourceAppName string, shoul
 	}
 	if shouldSucceed {
 		By(fmt.Sprintf("eventually proxy should reach %s at port %d", destIP, port))
-		Eventually(proxyTest, 10*time.Second, 500*time.Millisecond).ShouldNot(ContainSubstring("failed"))
+		Eventually(proxyTest, 10*time.Second, 500*time.Millisecond).Should(ContainSubstring(`application_name`))
 	} else {
 		By(fmt.Sprintf("eventually proxy should NOT reach %s at port %d", destIP, port))
 		Eventually(proxyTest, 10*time.Second, 500*time.Millisecond).Should(ContainSubstring("request failed"))
 	}
+}
+
+func httpGetBytes(url string) ([]byte, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	return respBytes, nil
 }
