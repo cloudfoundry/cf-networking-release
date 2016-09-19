@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -13,16 +14,21 @@ type ProxyHandler struct {
 	Stats *Stats
 }
 
+var httpClient = &http.Client{
+	Transport: &http.Transport{
+		DisableKeepAlives: true,
+		Dial: (&net.Dialer{
+			Timeout:   4 * time.Second,
+			KeepAlive: 0,
+		}).Dial,
+	},
+}
+
 func (h *ProxyHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	destination := strings.TrimPrefix(req.URL.Path, "/proxy/")
 	destination = "http://" + destination
-	client := &http.Client{
-		Transport: &http.Transport{
-			DisableKeepAlives: true,
-		},
-	}
 	before := time.Now()
-	getResp, err := client.Get(destination)
+	getResp, err := httpClient.Get(destination)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "request failed: %s", err)
 		resp.WriteHeader(http.StatusInternalServerError)

@@ -260,8 +260,18 @@ func assertSingleConnection(destIP string, port int, sourceAppName string, shoul
 	}
 }
 
+var httpClient = &http.Client{
+	Transport: &http.Transport{
+		DisableKeepAlives: true,
+		Dial: (&net.Dialer{
+			Timeout:   4 * time.Second,
+			KeepAlive: 0,
+		}).Dial,
+	},
+}
+
 func httpGetBytes(url string) ([]byte, error) {
-	resp, err := http.Get(url)
+	resp, err := httpClient.Get(url)
 	if err != nil {
 		return nil, err
 	}
