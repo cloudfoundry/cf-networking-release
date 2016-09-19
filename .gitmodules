@@ -95,3 +95,6 @@
 [submodule "src/example-apps/tick/vendor/code.cloudfoundry.org/localip"]
 	path = src/example-apps/tick/vendor/code.cloudfoundry.org/localip
 	url = https://github.com/cloudfoundry/localip
+[submodule "src/github.com/pivotal-cf-experimental/rainmaker"]
+	path = src/github.com/pivotal-cf-experimental/rainmaker
+	url = https://github.com/pivotal-cf-experimental/rainmaker
