@@ -115,12 +115,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			})
 
 			By("creating policies")
-			for _, app := range appsTest {
-				for _, port := range ports {
-					session := cf.Cf("access-allow", appProxy, app, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(2 * Timeout_Short)
-					Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
-				}
-			}
+			doAllPolicies("access-allow", appProxy, appsTest, ports)
 
 			By(fmt.Sprintf("checking that %s can reach %s", appProxy, appsTest))
 			runWithTimeout("check connection success", 5*time.Minute, func() {
@@ -130,12 +125,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			dumpStats(appProxy, config.AppsDomain)
 
 			By("deleting policies")
-			for _, app := range appsTest {
-				for _, port := range ports {
-					session := cf.Cf("access-deny", appProxy, app, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(2 * Timeout_Short)
-					Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
-				}
-			}
+			doAllPolicies("access-deny", appProxy, appsTest, ports)
 
 			By(fmt.Sprintf("checking that %s can NOT reach %s", appProxy, appsTest))
 			runWithTimeout("check connection failures, again", 5*time.Minute, func() {
@@ -147,9 +137,18 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			checkRegistry(appRegistry, 60*time.Second, 500*time.Millisecond, len(appsTest))
 
 			close(done)
-		}, 20*60 /* <-- overall spec timeout in seconds */)
+		}, 30*60 /* <-- overall spec timeout in seconds */)
 	})
 })
+
+func doAllPolicies(action string, source string, dstList []string, dstPorts []int) {
+	for _, app := range dstList {
+		for _, port := range dstPorts {
+			session := cf.Cf(action, source, app, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(2 * Timeout_Short)
+			Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
+		}
+	}
+}
 
 func runWithTimeout(operation string, timeout time.Duration, work func()) {
 	done := make(chan bool)
