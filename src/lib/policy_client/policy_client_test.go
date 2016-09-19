@@ -80,7 +80,7 @@ var _ = Describe("PolicyClient", func() {
 				},
 			},
 			))
-			Expect(logger).To(gbytes.Say(`get-policies.*some-app-guid.*some-other-app-guid`))
+			Expect(logger).To(gbytes.Say(`http-do.*some-app-guid.*some-other-app-guid`))
 		})
 
 		Context("when the request returns a non 200 status code", func() {
