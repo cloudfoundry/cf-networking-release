@@ -36,8 +36,7 @@ properties:
     description: "Type of database: postgres or mysql"
     default: postgres
   policy-server.server.database.connection_string:
-    description: "Connection string to policy server database"
-    default: postgres://policy_server:some-password@policy-server-db.service.cf.internal:5432/policy_server?sslmode=disable
+    description: "Connection string to policy server database (for example, postgres://username:password@1.1.1.1:1234/db_name)"
 
   policy-server.server.tag_length:
     description: "Length in bytes of the packet tags to generate for policy sources and destinations. Must be greater than 0 and less than 4."

@@ -24,18 +24,7 @@ properties:
       - (( "http://" .properties.cf_etcd.advertise_urls_dns_suffix ":4001" ))
   policy-server:
     <<: (( merge ))
-    database_password: (( merge ))
     connection_string: (( merge ))
-    database:
-      db_scheme: postgres
-      port: 5432
-      databases:
-      - name: policy_server
-        tag: whatever
-      roles:
-      - name: policy_server
-        password: (( .properties.policy-server.database_password ))
-        tag: admin
     server:
       <<: (( merge ))
       uaa_client_secret: (( .properties.uaa.clients.network-policy.secret ))
@@ -56,27 +45,6 @@ jobs:
   <<: (( merge ))
 - name: database_z3
   <<: (( merge ))
-
-- name: policy-server-db
-  instances: 1
-  persistent_disk: 256
-  templates:
-  - name: postgres
-    release: netman
-  - name: consul_agent
-    release: cf
-  resource_pool: database_z1
-  networks:
-    - name: diego1
-  properties:
-    consul:
-      agent:
-        services:
-          policy-server-db:
-            name: policy-server-db
-            check:
-              interval: 5s
-              script: /bin/true
 
 - name: policy-server
   instances: 1

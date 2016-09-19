@@ -131,7 +131,7 @@ Then follow [the instructions for testing with the cats & dogs example](https://
           network-policy:
             secret: <uaa-client-secret>
       policy-server:
-        database_password: <db-password>
+        connection_string: <db-connection-string>
     ```
 
 0. Generate diego with netman manifest
