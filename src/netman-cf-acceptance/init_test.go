@@ -32,6 +32,7 @@ var (
 		Applications     int    `json:"test_applications"`
 		AppInstances     int    `json:"test_app_instances"`
 		Policies         int    `json:"test_policies"`
+		ProxyInstances   int    `json:"proxy_instances"`
 	}
 	preBuiltBinaries map[string]string
 )
@@ -95,6 +96,7 @@ func TestAcceptance(t *testing.T) {
 
 		//default to 1 policy if not otherwise configured
 		testConfig.Policies = 1
+		testConfig.ProxyInstances = 1
 		err = json.Unmarshal(configBytes, &testConfig)
 		Expect(err).NotTo(HaveOccurred())
 

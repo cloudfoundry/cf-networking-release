@@ -40,18 +40,20 @@ func isSameCell(sourceIP, destIP string) bool {
 var _ = Describe("connectivity between containers on the overlay network", func() {
 	Describe("networking policy", func() {
 		var (
-			appProxy     string
-			appRegistry  string
-			appsTest     []string
-			orgName      string
-			spaceName    string
-			appInstances int
-			applications int
+			appProxy       string
+			appRegistry    string
+			appsTest       []string
+			orgName        string
+			spaceName      string
+			appInstances   int
+			applications   int
+			proxyInstances int
 		)
 
 		BeforeEach(func() {
 			appInstances = testConfig.AppInstances
 			applications = testConfig.Applications
+			proxyInstances = testConfig.ProxyInstances
 
 			appProxy = fmt.Sprintf("proxy-%d", rand.Int31())
 			appRegistry = fmt.Sprintf("registry-%d", rand.Int31())
@@ -97,6 +99,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			go func() {
 				defer GinkgoRecover()
 				pushApp(appProxy)
+				scaleApp(appProxy, proxyInstances)
 				setupWG.Done()
 			}()
 			setupWG.Wait()
@@ -117,7 +120,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 
 			By("checking that the connection fails")
 			runWithTimeout("check connection failures", 5*time.Minute, func() {
-				assertConnectionFails(appProxy, appIPs, ports)
+				assertConnectionFails(appProxy, appIPs, ports, proxyInstances)
 			})
 
 			By("creating policies")
@@ -125,7 +128,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 
 			By(fmt.Sprintf("checking that %s can reach %s", appProxy, appsTest))
 			runWithTimeout("check connection success", 5*time.Minute, func() {
-				assertConnectionSucceeds(appProxy, appIPs, ports)
+				assertConnectionSucceeds(appProxy, appIPs, ports, proxyInstances)
 			})
 
 			dumpStats(appProxy, config.AppsDomain)
@@ -135,7 +138,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 
 			By(fmt.Sprintf("checking that %s can NOT reach %s", appProxy, appsTest))
 			runWithTimeout("check connection failures, again", 5*time.Minute, func() {
-				assertConnectionFails(appProxy, appIPs, ports)
+				assertConnectionFails(appProxy, appIPs, ports, proxyInstances)
 			})
 
 			By("checking that reflex no longer reports deleted instances")
@@ -295,16 +298,16 @@ func getAppIPs(registry string) []string {
 	return ips
 }
 
-func assertConnectionSucceeds(sourceApp string, destApps []string, ports []int) {
-	workPoolRun(5, destApps, func(appIP string) {
+func assertConnectionSucceeds(sourceApp string, destApps []string, ports []int, nProxies int) {
+	workPoolRun(5*nProxies, destApps, func(appIP string) {
 		for _, port := range ports {
 			assertSingleConnection(appIP, port, sourceApp, true)
 		}
 	})
 }
 
-func assertConnectionFails(sourceApp string, destApps []string, ports []int) {
-	workPoolRun(5, destApps, func(appIP string) {
+func assertConnectionFails(sourceApp string, destApps []string, ports []int, nProxies int) {
+	workPoolRun(5*nProxies, destApps, func(appIP string) {
 		for _, port := range ports {
 			assertSingleConnection(appIP, port, sourceApp, false)
 		}
