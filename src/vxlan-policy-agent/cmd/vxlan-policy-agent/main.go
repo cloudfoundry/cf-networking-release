@@ -5,7 +5,6 @@ import (
 	"flag"
 	"io/ioutil"
 	"lib/flannel"
-	"lib/marshal"
 	"lib/metrics"
 	"lib/policy_client"
 	"lib/poller"
@@ -75,7 +74,6 @@ func main() {
 		logger.Session("policy-client"),
 		http.DefaultClient,
 		conf.PolicyServerURL,
-		marshal.UnmarshalFunc(json.Unmarshal),
 	)
 
 	gardenClient := client.New(connection.New(conf.GardenProtocol, conf.GardenAddress))
