@@ -8,40 +8,41 @@ packages:
   - policy-server
 
 properties:
-  policy-server.server.listen_host:
+  policy-server.listen_host:
     description: "Host where the policy server will serve its API"
     default: 0.0.0.0
 
-  policy-server.server.listen_port:
+  policy-server.listen_port:
     description: "Port where the policy server will serve its API"
     default: 4002
 
-  policy-server.server.uaa_client:
+  policy-server.uaa_client:
     description: "uaa client name"
     default: network-policy
 
-  policy-server.server.uaa_client_secret:
+  policy-server.uaa_client_secret:
     description: "uaa client secret"
     default: network-policy-secret
 
-  policy-server.server.uaa_url:
+  policy-server.uaa_url:
     description: "address of uaa server"
     default: https://uaa.bosh-lite.com
 
-  policy-server.server.skip_ssl_validation:
+  policy-server.skip_ssl_validation:
     description: "skip verifying ssl certs"
     default: false
 
-  policy-server.server.database.type:
+  policy-server.database.type:
     description: "Type of database: postgres or mysql"
     default: postgres
-  policy-server.server.database.connection_string:
+
+  policy-server.database.connection_string:
     description: "Connection string to policy server database (for example, postgres://username:password@1.1.1.1:1234/db_name)"
 
-  policy-server.server.tag_length:
+  policy-server.tag_length:
     description: "Length in bytes of the packet tags to generate for policy sources and destinations. Must be greater than 0 and less than 4."
     default: 2
 
-  policy-server.server.metron_address:
+  policy-server.metron_address:
     description: "Forward metrics to this metron agent"
     default: 127.0.0.1:3457

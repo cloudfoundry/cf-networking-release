@@ -9,5 +9,6 @@ properties:
       cf:
         scope: cloud_controller.read,cloud_controller.write,openid,password.write,cloud_controller.admin,scim.read,scim.write,doppler.firehose,uaa.user,routing.router_groups.read,network.admin
   policy-server:
-    <<: (( merge ))
-    connection_string: postgres://networkpolicyadmin:admin@10.244.0.30:5524/networkpolicydb?sslmode=disable
+    database:
+      type: postgres
+      connection_string: postgres://networkpolicyadmin:admin@10.244.0.30:5524/networkpolicydb?sslmode=disable
