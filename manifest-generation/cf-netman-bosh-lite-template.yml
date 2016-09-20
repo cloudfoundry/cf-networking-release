@@ -21,6 +21,17 @@ properties:
           - routing.router_groups.read
           - routing.router_groups.write
           - network.admin
-
+  databases:
+    <<: (( merge ))
+    databases:
+    - <<: (( merge ))
+    - citext: false
+      name: networkpolicydb
+      tag: networkpolicy
+    roles:
+    - <<: (( merge ))
+    - name: networkpolicyadmin
+      password: admin
+      tag: admin
 
 <<: (( merge ))
