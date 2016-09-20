@@ -18,7 +18,7 @@ type JsonClient struct {
 	Unmarshaler marshal.Unmarshaler
 }
 
-func (c *JsonClient) Do(method, route string, reqData, respData interface{}) error {
+func (c *JsonClient) Do(method, route string, reqData, respData interface{}, token string) error {
 	reqURL := c.Url + route
 	bodyBytes, err := c.Marshaler.Marshal(reqData)
 	if err != nil {
@@ -28,6 +28,7 @@ func (c *JsonClient) Do(method, route string, reqData, respData interface{}) err
 	if err != nil {
 		return fmt.Errorf("http new request: %s", err)
 	}
+	request.Header["Authorization"] = []string{token}
 	resp, err := c.HttpClient.Do(request)
 	if err != nil {
 		return fmt.Errorf("http client do: %s", err)

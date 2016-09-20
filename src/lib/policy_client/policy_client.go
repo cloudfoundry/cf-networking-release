@@ -16,7 +16,7 @@ type httpClient interface {
 
 //go:generate counterfeiter -o ../fakes/json_client.go --fake-name JSONClient . jsonClient
 type jsonClient interface {
-	Do(method, route string, reqData, respData interface{}) error
+	Do(method, route string, reqData, respData interface{}, token string) error
 }
 
 type Client struct {
@@ -39,23 +39,29 @@ func (c *Client) GetPolicies() ([]models.Policy, error) {
 	var policies struct {
 		Policies []models.Policy `json:"policies"`
 	}
-	err := c.JsonClient.Do("GET", "/networking/v0/internal/policies", nil, &policies)
+	err := c.JsonClient.Do("GET", "/networking/v0/internal/policies", nil, &policies, "")
 	if err != nil {
 		return nil, err
 	}
 	return policies.Policies, nil
 }
 
-func (c *Client) AddPolicies(policies []models.Policy) error {
-	err := c.JsonClient.Do("POST", "/networking/v0/external/policies", policies, nil)
+func (c *Client) AddPolicies(policies []models.Policy, token string) error {
+	reqPolicies := map[string][]models.Policy{
+		"policies": policies,
+	}
+	err := c.JsonClient.Do("POST", "/networking/v0/external/policies", reqPolicies, nil, token)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (c *Client) DeletePolicies(policies []models.Policy) error {
-	err := c.JsonClient.Do("DELETE", "/networking/v0/external/policies", policies, nil)
+func (c *Client) DeletePolicies(policies []models.Policy, token string) error {
+	reqPolicies := map[string][]models.Policy{
+		"policies": policies,
+	}
+	err := c.JsonClient.Do("DELETE", "/networking/v0/external/policies", reqPolicies, nil, token)
 	if err != nil {
 		return err
 	}

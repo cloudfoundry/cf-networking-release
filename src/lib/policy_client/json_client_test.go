@@ -31,6 +31,7 @@ var _ = Describe("JsonClient", func() {
 		route            string
 		reqData          map[string]string
 		respData         map[string]string
+		token            string
 	)
 
 	BeforeEach(func() {
@@ -58,11 +59,12 @@ var _ = Describe("JsonClient", func() {
 		route = "/some/route"
 		reqData = map[string]string{"request": "data"}
 		respData = map[string]string{}
+		token = "some-token"
 		httpClient.DoReturns(returnedResponse, nil)
 	})
 	Describe("Do", func() {
 		It("makes a request with the given body", func() {
-			err := jsonClient.Do(method, route, reqData, &respData)
+			err := jsonClient.Do(method, route, reqData, &respData, token)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(httpClient.DoCallCount()).To(Equal(1))
@@ -78,13 +80,22 @@ var _ = Describe("JsonClient", func() {
 			Expect(logger).To(gbytes.Say(`http-do.*some-key.*some-value`))
 		})
 
+		It("sets the authorization header with the token", func() {
+			err := jsonClient.Do(method, route, reqData, &respData, token)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(httpClient.DoCallCount()).To(Equal(1))
+			receivedRequest := httpClient.DoArgsForCall(0)
+			Expect(receivedRequest.Header["Authorization"][0]).To(Equal("some-token"))
+		})
+
 		Context("when marshaling the request data to json fails", func() {
 			BeforeEach(func() {
 				fakeMarshaler.MarshalStub = nil
 				fakeMarshaler.MarshalReturns(nil, errors.New("banana"))
 			})
 			It("returns an error", func() {
-				err := jsonClient.Do(method, route, reqData, &respData)
+				err := jsonClient.Do(method, route, reqData, &respData, token)
 				Expect(err).To(MatchError("json marshal request body: banana"))
 			})
 		})
@@ -94,7 +105,7 @@ var _ = Describe("JsonClient", func() {
 				jsonClient.Url = "%%%%"
 			})
 			It("returns an error", func() {
-				err := jsonClient.Do(method, route, reqData, &respData)
+				err := jsonClient.Do(method, route, reqData, &respData, token)
 				Expect(err).To(MatchError(HavePrefix("http new request: parse")))
 			})
 		})
@@ -104,7 +115,7 @@ var _ = Describe("JsonClient", func() {
 				httpClient.DoReturns(nil, errors.New("banana"))
 			})
 			It("returns the error", func() {
-				err := jsonClient.Do(method, route, reqData, &respData)
+				err := jsonClient.Do(method, route, reqData, &respData, token)
 				Expect(err).To(MatchError("http client do: banana"))
 			})
 		})
@@ -118,7 +129,7 @@ var _ = Describe("JsonClient", func() {
 				httpClient.DoReturns(returnedResponse, nil)
 			})
 			It("returns the error", func() {
-				err := jsonClient.Do(method, route, reqData, &respData)
+				err := jsonClient.Do(method, route, reqData, &respData, token)
 				Expect(err).To(MatchError("body read: banana"))
 			})
 		})
@@ -131,7 +142,7 @@ var _ = Describe("JsonClient", func() {
 			})
 
 			It("returns the error and logs the body", func() {
-				err := jsonClient.Do(method, route, reqData, &respData)
+				err := jsonClient.Do(method, route, reqData, &respData, token)
 				Expect(err).To(MatchError("http client do: bad response status 400"))
 
 				Expect(logger).To(gbytes.Say(`http-client.*some-error.*400`))
@@ -145,7 +156,7 @@ var _ = Describe("JsonClient", func() {
 				}
 			})
 			It("returns and logs the error", func() {
-				err := jsonClient.Do(method, route, reqData, &respData)
+				err := jsonClient.Do(method, route, reqData, &respData, token)
 				Expect(err).To(MatchError("json unmarshal: grapes"))
 			})
 		})

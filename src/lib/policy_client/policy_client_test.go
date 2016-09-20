@@ -26,7 +26,7 @@ var _ = Describe("PolicyClient", func() {
 
 	Describe("GetPolicies", func() {
 		BeforeEach(func() {
-			jsonClient.DoStub = func(method, route string, reqData, respData interface{}) error {
+			jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 				respBytes := []byte(`{ "policies": [ {"source": { "id": "some-app-guid", "tag": "BEEF" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
 				json.Unmarshal(respBytes, respData)
 				return nil
@@ -37,7 +37,7 @@ var _ = Describe("PolicyClient", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(jsonClient.DoCallCount()).To(Equal(1))
-			method, route, reqData, _ := jsonClient.DoArgsForCall(0)
+			method, route, reqData, _, token := jsonClient.DoArgsForCall(0)
 			Expect(method).To(Equal("GET"))
 			Expect(route).To(Equal("/networking/v0/internal/policies"))
 			Expect(reqData).To(BeNil())
@@ -56,6 +56,7 @@ var _ = Describe("PolicyClient", func() {
 				},
 			},
 			))
+			Expect(token).To(BeEmpty())
 		})
 
 		Context("when the json client fails", func() {
@@ -71,13 +72,13 @@ var _ = Describe("PolicyClient", func() {
 
 	Describe("AddPolicies", func() {
 		BeforeEach(func() {
-			jsonClient.DoStub = func(method, route string, reqData, respData interface{}) error {
+			jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 				respBytes := []byte(`{}`)
 				json.Unmarshal(respBytes, respData)
 				return nil
 			}
 		})
-		It("does the right json http client request", func() {
+		It("does the right json http client request and passes the authorization token", func() {
 			err := client.AddPolicies([]models.Policy{
 				{
 					Source: models.Source{
@@ -89,15 +90,15 @@ var _ = Describe("PolicyClient", func() {
 						Protocol: "tcp",
 					},
 				},
-			})
+			}, "some-token")
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(jsonClient.DoCallCount()).To(Equal(1))
-			method, route, reqData, _ := jsonClient.DoArgsForCall(0)
+			method, route, reqData, _, token := jsonClient.DoArgsForCall(0)
 			Expect(method).To(Equal("POST"))
 			Expect(route).To(Equal("/networking/v0/external/policies"))
-			Expect(reqData).To(Equal([]models.Policy{
-				{
+			Expect(reqData).To(Equal(map[string][]models.Policy{
+				"policies": []models.Policy{{
 					Source: models.Source{
 						ID: "some-app-guid",
 					},
@@ -107,8 +108,9 @@ var _ = Describe("PolicyClient", func() {
 						Protocol: "tcp",
 					},
 				},
-			},
+				}},
 			))
+			Expect(token).To(Equal("some-token"))
 		})
 		Context("when the json client fails", func() {
 			BeforeEach(func() {
@@ -123,7 +125,7 @@ var _ = Describe("PolicyClient", func() {
 
 	Describe("DeletePolicies", func() {
 		BeforeEach(func() {
-			jsonClient.DoStub = func(method, route string, reqData, respData interface{}) error {
+			jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 				respBytes := []byte(`{}`)
 				json.Unmarshal(respBytes, respData)
 				return nil
@@ -141,15 +143,15 @@ var _ = Describe("PolicyClient", func() {
 						Protocol: "tcp",
 					},
 				},
-			})
+			}, "some-token")
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(jsonClient.DoCallCount()).To(Equal(1))
-			method, route, reqData, _ := jsonClient.DoArgsForCall(0)
+			method, route, reqData, _, token := jsonClient.DoArgsForCall(0)
 			Expect(method).To(Equal("DELETE"))
 			Expect(route).To(Equal("/networking/v0/external/policies"))
-			Expect(reqData).To(Equal([]models.Policy{
-				{
+			Expect(reqData).To(Equal(map[string][]models.Policy{
+				"policies": []models.Policy{{
 					Source: models.Source{
 						ID: "some-app-guid",
 					},
@@ -159,8 +161,9 @@ var _ = Describe("PolicyClient", func() {
 						Protocol: "tcp",
 					},
 				},
-			},
+				}},
 			))
+			Expect(token).To(Equal("some-token"))
 		})
 		Context("when the json client fails", func() {
 			BeforeEach(func() {

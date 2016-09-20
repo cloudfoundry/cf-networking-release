@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"lib/models"
+	"lib/policy_client"
 	"math/rand"
 	"net"
 	"net/http"
@@ -12,10 +14,13 @@ import (
 	"sync"
 	"time"
 
+	"code.cloudfoundry.org/lager/lagertest"
+
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
+	"github.com/pivotal-cf-experimental/rainmaker"
 )
 
 const Timeout_Push = 5 * time.Minute
@@ -115,7 +120,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			})
 
 			By("creating policies")
-			doAllPolicies("access-allow", appProxy, appsTest, ports)
+			doAllPolicies("create", appProxy, appsTest, ports)
 
 			By(fmt.Sprintf("checking that %s can reach %s", appProxy, appsTest))
 			runWithTimeout("check connection success", 5*time.Minute, func() {
@@ -125,7 +130,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			dumpStats(appProxy, config.AppsDomain)
 
 			By("deleting policies")
-			doAllPolicies("access-deny", appProxy, appsTest, ports)
+			doAllPolicies("delete", appProxy, appsTest, ports)
 
 			By(fmt.Sprintf("checking that %s can NOT reach %s", appProxy, appsTest))
 			runWithTimeout("check connection failures, again", 5*time.Minute, func() {
@@ -141,12 +146,72 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 	})
 })
 
-func doAllPolicies(action string, source string, dstList []string, dstPorts []int) {
-	for _, app := range dstList {
-		for _, port := range dstPorts {
-			session := cf.Cf(action, source, app, "--protocol", "tcp", "--port", fmt.Sprintf("%d", port)).Wait(2 * Timeout_Short)
-			Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
+func getToken() string {
+	session := cf.Cf("oauth-token").Wait(2 * Timeout_Short)
+	Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
+	return string(session.Out.Contents())
+}
+
+func getGuids(sourceAppName string, dstAppNames []string) (string, []string) {
+	dstGuids := []string{}
+	sourceGuid := ""
+	token := getToken()
+	token = strings.TrimPrefix(token, "bearer ")
+	appsClient := rainmaker.NewApplicationsService(rainmaker.Config{Host: "http://" + config.ApiEndpoint})
+
+	appsList, err := appsClient.List(token)
+	Expect(err).NotTo(HaveOccurred())
+
+	for {
+		for _, app := range appsList.Applications {
+			if app.Name == sourceAppName {
+				sourceGuid = app.GUID
+				continue
+			}
+			for _, tickAppName := range dstAppNames {
+				if app.Name == tickAppName {
+					dstGuids = append(dstGuids, app.GUID)
+					break
+				}
+			}
 		}
+		if appsList.HasNextPage() {
+			appsList, err = appsList.Next(token)
+			Expect(err).NotTo(HaveOccurred())
+		} else {
+			break
+		}
+	}
+
+	Expect(sourceGuid).NotTo(BeEmpty())
+	Expect(dstGuids).To(HaveLen(len(dstAppNames)))
+
+	return sourceGuid, dstGuids
+}
+
+func doAllPolicies(action string, source string, dstList []string, dstPorts []int) {
+	policyClient := policy_client.New(lagertest.NewTestLogger("test"), &http.Client{}, "http://"+config.ApiEndpoint)
+	sourceGuid, dstGuids := getGuids(source, dstList)
+	policies := []models.Policy{}
+	for _, dstGuid := range dstGuids {
+		for _, port := range dstPorts {
+			policies = append(policies, models.Policy{
+				Source: models.Source{
+					ID: sourceGuid,
+				},
+				Destination: models.Destination{
+					ID:       dstGuid,
+					Port:     port,
+					Protocol: "tcp",
+				},
+			})
+		}
+	}
+	token := getToken()
+	if action == "create" {
+		Expect(policyClient.AddPolicies(policies, token)).To(Succeed())
+	} else if action == "delete" {
+		Expect(policyClient.DeletePolicies(policies, token)).To(Succeed())
 	}
 }
 

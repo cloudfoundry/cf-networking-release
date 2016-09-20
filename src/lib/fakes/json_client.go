@@ -4,13 +4,14 @@ package fakes
 import "sync"
 
 type JSONClient struct {
-	DoStub        func(method, route string, reqData, respData interface{}) error
+	DoStub        func(method, route string, reqData, respData interface{}, token string) error
 	doMutex       sync.RWMutex
 	doArgsForCall []struct {
 		method   string
 		route    string
 		reqData  interface{}
 		respData interface{}
+		token    string
 	}
 	doReturns struct {
 		result1 error
@@ -19,18 +20,19 @@ type JSONClient struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *JSONClient) Do(method string, route string, reqData interface{}, respData interface{}) error {
+func (fake *JSONClient) Do(method string, route string, reqData interface{}, respData interface{}, token string) error {
 	fake.doMutex.Lock()
 	fake.doArgsForCall = append(fake.doArgsForCall, struct {
 		method   string
 		route    string
 		reqData  interface{}
 		respData interface{}
-	}{method, route, reqData, respData})
-	fake.recordInvocation("Do", []interface{}{method, route, reqData, respData})
+		token    string
+	}{method, route, reqData, respData, token})
+	fake.recordInvocation("Do", []interface{}{method, route, reqData, respData, token})
 	fake.doMutex.Unlock()
 	if fake.DoStub != nil {
-		return fake.DoStub(method, route, reqData, respData)
+		return fake.DoStub(method, route, reqData, respData, token)
 	} else {
 		return fake.doReturns.result1
 	}
@@ -42,10 +44,10 @@ func (fake *JSONClient) DoCallCount() int {
 	return len(fake.doArgsForCall)
 }
 
-func (fake *JSONClient) DoArgsForCall(i int) (string, string, interface{}, interface{}) {
+func (fake *JSONClient) DoArgsForCall(i int) (string, string, interface{}, interface{}, string) {
 	fake.doMutex.RLock()
 	defer fake.doMutex.RUnlock()
-	return fake.doArgsForCall[i].method, fake.doArgsForCall[i].route, fake.doArgsForCall[i].reqData, fake.doArgsForCall[i].respData
+	return fake.doArgsForCall[i].method, fake.doArgsForCall[i].route, fake.doArgsForCall[i].reqData, fake.doArgsForCall[i].respData, fake.doArgsForCall[i].token
 }
 
 func (fake *JSONClient) DoReturns(result1 error) {
