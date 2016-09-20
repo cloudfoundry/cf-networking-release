@@ -53,3 +53,11 @@ func (c *Client) AddPolicies(policies []models.Policy) error {
 	}
 	return nil
 }
+
+func (c *Client) DeletePolicies(policies []models.Policy) error {
+	err := c.JsonClient.Do("DELETE", "/networking/v0/external/policies", policies, nil)
+	if err != nil {
+		return err
+	}
+	return nil
+}
