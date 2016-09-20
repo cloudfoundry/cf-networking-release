@@ -27,10 +27,6 @@ properties:
     uaa_client_secret: (( merge ))
     uaa_url: (( "https://uaa." .properties.system_domain ))
     skip_ssl_validation: (( .properties.diego.ssl.skip_cert_verify ))
-  uaa:
-    clients:
-      network-policy:
-        secret: (( merge ))
 
 jobs:
 - name: database_z1
