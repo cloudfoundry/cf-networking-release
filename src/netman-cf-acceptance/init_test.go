@@ -166,18 +166,16 @@ func defaultManifest(appType string) string {
 
 func pushAppsOfType(appNames []string, appType string, manifest string) {
 	By(fmt.Sprintf("pushing %d apps of type %s", len(appNames), appType))
-	workPoolRun(appNames, func(appName string) {
+	workPoolRun(16, appNames, func(appName string) {
 		pushAppOfType(appName, appType, manifest)
 	})
 }
 
-const NUM_PARALLEL_WORKERS = 16
-
-func workPoolRun(items []string, workFunc func(item string)) {
+func workPoolRun(workers int, items []string, workFunc func(item string)) {
 	var wg sync.WaitGroup
 	work := make(chan string)
 
-	for workerID := 0; workerID < NUM_PARALLEL_WORKERS; workerID++ {
+	for workerID := 0; workerID < workers; workerID++ {
 		wg.Add(1)
 		go func() {
 			defer GinkgoRecover()
@@ -218,7 +216,7 @@ func pushRegistryApp(appName string) {
 }
 
 func scaleApps(apps []string, instances int) {
-	workPoolRun(apps, func(app string) {
+	workPoolRun(16, apps, func(app string) {
 		scaleApp(app, instances)
 	})
 }

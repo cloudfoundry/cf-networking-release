@@ -292,7 +292,7 @@ func getAppIPs(registry string) []string {
 }
 
 func assertConnectionSucceeds(sourceApp string, destApps []string, ports []int) {
-	workPoolRun(destApps, func(appIP string) {
+	workPoolRun(5, destApps, func(appIP string) {
 		for _, port := range ports {
 			assertSingleConnection(appIP, port, sourceApp, true)
 		}
@@ -300,7 +300,7 @@ func assertConnectionSucceeds(sourceApp string, destApps []string, ports []int) 
 }
 
 func assertConnectionFails(sourceApp string, destApps []string, ports []int) {
-	workPoolRun(destApps, func(appIP string) {
+	workPoolRun(5, destApps, func(appIP string) {
 		for _, port := range ports {
 			assertSingleConnection(appIP, port, sourceApp, false)
 		}
