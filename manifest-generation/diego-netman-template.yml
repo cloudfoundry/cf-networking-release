@@ -24,7 +24,7 @@ properties:
       - (( "http://" .properties.cf_etcd.advertise_urls_dns_suffix ":4001" ))
   policy-server:
     <<: (( merge ))
-    uaa_client_secret: (( .properties.uaa.clients.network-policy.secret ))
+    uaa_client_secret: (( merge ))
     uaa_url: (( "https://uaa." .properties.system_domain ))
     skip_ssl_validation: (( .properties.diego.ssl.skip_cert_verify ))
   uaa:
