@@ -2,21 +2,6 @@ properties:
   <<: (( merge ))
   system_domain: bosh-lite.com
   uaa:
-    scim:
-      users:
-      - name: admin
-        password: admin
-        groups:
-          - scim.write
-          - scim.read
-          - openid
-          - cloud_controller.admin
-          - clients.read
-          - clients.write
-          - doppler.firehose
-          - routing.router_groups.read
-          - routing.router_groups.write
-          - network.admin
     clients:
       network-policy:
         authorities: uaa.resource
