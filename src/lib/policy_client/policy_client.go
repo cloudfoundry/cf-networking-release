@@ -45,3 +45,11 @@ func (c *Client) GetPolicies() ([]models.Policy, error) {
 	}
 	return policies.Policies, nil
 }
+
+func (c *Client) AddPolicies(policies []models.Policy) error {
+	err := c.JsonClient.Do("POST", "/networking/v0/external/policies", policies, nil)
+	if err != nil {
+		return err
+	}
+	return nil
+}
