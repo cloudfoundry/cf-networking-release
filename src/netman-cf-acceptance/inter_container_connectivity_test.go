@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"os/exec"
 	"strings"
 	"sync"
 	"time"
@@ -147,8 +148,11 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 })
 
 func getToken() string {
-	session := cf.Cf("oauth-token").Wait(2 * Timeout_Short)
-	Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
+	By("getting token")
+	cmd := exec.Command("cf", "oauth-token")
+	session, err := gexec.Start(cmd, nil, nil)
+	Expect(err).NotTo(HaveOccurred())
+	Eventually(session.Wait(2 * Timeout_Short)).Should(gexec.Exit(0))
 	return string(session.Out.Contents())
 }
 
