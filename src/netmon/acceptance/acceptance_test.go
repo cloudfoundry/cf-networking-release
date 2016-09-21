@@ -27,6 +27,7 @@ var _ = Describe("Acceptance", func() {
 			PollInterval:  1,
 			MetronAddress: fakeMetron.Address(),
 			InterfaceName: "lo",
+			LogLevel:      "info",
 		}
 		configFilePath := WriteConfigFile(conf)
 

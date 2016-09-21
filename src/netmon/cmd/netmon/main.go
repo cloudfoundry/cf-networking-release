@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"io/ioutil"
-	"log"
 	"netmon/config"
 	"netmon/poller"
 	"os"
@@ -24,18 +23,26 @@ func main() {
 	flag.Parse()
 
 	logger := lager.NewLogger("netmon")
-	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.INFO))
+	sink := lager.NewReconfigurableSink(lager.NewWriterSink(os.Stdout, lager.DEBUG), lager.DEBUG)
+	logger.RegisterSink(sink)
 
 	configBytes, err := ioutil.ReadFile(*configFilePath)
 	if err != nil {
-		log.Fatal("error reading config")
+		logger.Fatal("reading config", err)
 	}
 
 	err = json.Unmarshal(configBytes, conf)
 	if err != nil {
-		log.Fatal("error unmarshalling config")
+		logger.Fatal("unmarshaling config", err)
 	}
 	logger.Info("parsed-config", lager.Data{"config": conf})
+
+	logLevel, err := conf.ParseLogLevel()
+	if err != nil {
+		logger.Fatal("parsing-log-level", err)
+	}
+
+	sink.SetMinLevel(logLevel)
 
 	pollInterval := time.Duration(conf.PollInterval) * time.Second
 	if pollInterval == 0 {

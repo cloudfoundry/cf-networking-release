@@ -20,3 +20,7 @@ properties:
   netmon.interface_name:
     description: "Report tx/rx bytes on the interface with this name"
     default: flannel.1
+
+  netmon.log_level:
+    description: "Log level"
+    default: info

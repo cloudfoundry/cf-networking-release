@@ -91,6 +91,9 @@ func readStatsFile(ifName, stat string) (int, error) {
 }
 
 func (m *SystemMetrics) measure(logger lager.Logger) {
+	logger.Debug("measure-start")
+	defer logger.Debug("measure-complete")
+
 	nInterfaces, err := countNetworkInterfaces()
 	if err != nil {
 		logger.Error("count-network-interfaces", err)
@@ -102,6 +105,7 @@ func (m *SystemMetrics) measure(logger lager.Logger) {
 			"metric": netInterfaceCount})
 		return
 	}
+	logger.Debug("metric-sent", lager.Data{"NetInterfaceCount": nInterfaces})
 
 	nIpTablesRule, err := countIPTablesRules(logger)
 	if err != nil {
@@ -114,6 +118,7 @@ func (m *SystemMetrics) measure(logger lager.Logger) {
 			"metric": iptablesRuleCount})
 		return
 	}
+	logger.Debug("metric-sent", lager.Data{"IPTablesRuleCount": nIpTablesRule})
 
 	nTxBytes, err := readStatsFile(m.InterfaceName, "tx_bytes")
 	if err != nil {
@@ -126,6 +131,7 @@ func (m *SystemMetrics) measure(logger lager.Logger) {
 			"metric": overlayTxBytes})
 		return
 	}
+	logger.Debug("metric-sent", lager.Data{"OverlayTxBytes": nTxBytes})
 
 	nRxBytes, err := readStatsFile(m.InterfaceName, "rx_bytes")
 	if err != nil {
@@ -138,4 +144,5 @@ func (m *SystemMetrics) measure(logger lager.Logger) {
 			"metric": overlayRxBytes})
 		return
 	}
+	logger.Debug("metric-sent", lager.Data{"OverlayRxBytes": nRxBytes})
 }
