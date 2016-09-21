@@ -19,6 +19,7 @@ const netInterfaceCount = metric.Metric("NetInterfaceCount")
 const iptablesRuleCount = metric.Metric("IPTablesRuleCount")
 const overlayTxBytes = metric.Metric("OverlayTxBytes")
 const overlayRxBytes = metric.Metric("OverlayRxBytes")
+const overlayRxDropped = metric.Metric("OverlayRxDropped")
 
 type SystemMetrics struct {
 	Logger        lager.Logger
@@ -145,4 +146,17 @@ func (m *SystemMetrics) measure(logger lager.Logger) {
 		return
 	}
 	logger.Debug("metric-sent", lager.Data{"OverlayRxBytes": nRxBytes})
+
+	nRxDropped, err := readStatsFile(m.InterfaceName, "rx_dropped")
+	if err != nil {
+		logger.Error("read-rx-dropped", err)
+		return
+	}
+
+	if err := overlayRxDropped.Send(nRxDropped); err != nil {
+		logger.Error("failed-to-send-metric", err, lager.Data{
+			"metric": overlayRxDropped})
+		return
+	}
+	logger.Debug("metric-sent", lager.Data{"OverlayRxDropped": nRxDropped})
 }

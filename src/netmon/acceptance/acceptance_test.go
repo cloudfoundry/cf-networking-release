@@ -26,7 +26,7 @@ var _ = Describe("Acceptance", func() {
 		conf = config.Netmon{
 			PollInterval:  1,
 			MetronAddress: fakeMetron.Address(),
-			InterfaceName: "lo",
+			InterfaceName: "eth0",
 			LogLevel:      "info",
 		}
 		configFilePath := WriteConfigFile(conf)
@@ -38,6 +38,8 @@ var _ = Describe("Acceptance", func() {
 	})
 
 	AfterEach(func() {
+		runAndWait("ip", "link", "set", "dev", "eth0", "mtu", "1500")
+
 		session.Interrupt()
 		Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit())
 
@@ -76,6 +78,21 @@ var _ = Describe("Acceptance", func() {
 			Name:      "IPTablesRuleCount",
 			Origin:    "netmon",
 			Value:     float64(totalRulesBaseline + 1),
+		}))
+	})
+
+	It("should emit a metric for rx dropped bytes", func() {
+		runAndWait("ip", "link", "set", "dev", "eth0", "mtu", "70")
+		cmd := exec.Command("ping", "-c1", "--linger=1", "8.8.8.8")
+		pingSession, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+		Expect(err).NotTo(HaveOccurred())
+		Eventually(pingSession, "5s").Should(gexec.Exit(1))
+
+		Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(fakes.Event{
+			EventType: "ValueMetric",
+			Name:      "OverlayRxDropped",
+			Origin:    "netmon",
+			Value:     float64(2),
 		}))
 	})
 })
