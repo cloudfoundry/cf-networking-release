@@ -134,7 +134,7 @@ var _ = Describe("Acceptance", func() {
 		)
 	})
 
-	PContext("when there are concurrent requests", func() {
+	Context("when there are concurrent requests", func() {
 		It("remains consistent", func() {
 			url := fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort)
 			add := func(policy models.Policy) {
@@ -151,7 +151,7 @@ var _ = Describe("Acceptance", func() {
 			nPolicies := 100
 			policies := []interface{}{}
 			for i := 0; i < nPolicies; i++ {
-				appName := fmt.Sprintf("random-app-%x", rand.Int31())
+				appName := fmt.Sprintf("some-app-%x", i)
 				policies = append(policies, models.Policy{
 					Source:      models.Source{ID: appName},
 					Destination: models.Destination{ID: appName, Protocol: "tcp", Port: 1234},
@@ -183,6 +183,18 @@ var _ = Describe("Acceptance", func() {
 			for _, policy := range policies {
 				Expect(policiesResponse.Policies).To(ContainElement(policy))
 			}
+
+			By("verify tags")
+			url = fmt.Sprintf("http://%s:%d/networking/v0/external/tags", conf.ListenHost, conf.ListenPort)
+			resp = makeAndDoRequest("GET", url, nil)
+			Expect(resp.StatusCode).To(Equal(http.StatusOK))
+			responseBytes, err = ioutil.ReadAll(resp.Body)
+			Expect(err).NotTo(HaveOccurred())
+			var tagsResponse struct {
+				Tags []models.Tag `json:"tags"`
+			}
+			Expect(json.Unmarshal(responseBytes, &tagsResponse)).To(Succeed())
+			Expect(tagsResponse.Tags).To(HaveLen(nPolicies))
 		})
 	})
 

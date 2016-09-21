@@ -2,7 +2,7 @@ package store
 
 import (
 	"database/sql"
-	"errors"
+	"fmt"
 )
 
 //go:generate counterfeiter -o ../fakes/group_repo.go --fake-name GroupRepo . GroupRepo
@@ -21,7 +21,7 @@ func (g *Group) Create(tx Transaction, guid string) (int, error) {
 		if err == sql.ErrNoRows {
 			id, err = g.firstBlankRow(tx)
 			if err != nil {
-				return -1, errors.New("failed to find available tag")
+				return -1, fmt.Errorf("failed to find available tag: %s", err.Error())
 			} else {
 				err = g.updateRow(tx, id, guid)
 				if err != nil {
@@ -54,6 +54,7 @@ func (g *Group) firstBlankRow(tx Transaction) (int, error) {
 		WHERE guid is NULL
 		ORDER BY id
 		LIMIT 1
+		FOR UPDATE
 	`).Scan(&id)
 	return id, err
 }
