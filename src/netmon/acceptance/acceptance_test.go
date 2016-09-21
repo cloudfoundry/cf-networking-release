@@ -5,6 +5,8 @@ import (
 	"os/exec"
 	"strings"
 
+	"code.cloudfoundry.org/localip"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
@@ -13,32 +15,51 @@ import (
 	"netmon/config"
 )
 
+func discoverInterfaceName() string {
+	localIP, err := localip.LocalIP()
+	Expect(err).NotTo(HaveOccurred())
+	ifaces, err := net.Interfaces()
+	Expect(err).NotTo(HaveOccurred())
+	for _, iface := range ifaces {
+		addrs, err := iface.Addrs()
+		Expect(err).NotTo(HaveOccurred())
+		for _, addr := range addrs {
+			if localIP == strings.Split(addr.String(), "/")[0] {
+				return iface.Name
+			}
+		}
+	}
+	return ""
+}
+
 var _ = Describe("Acceptance", func() {
 	var (
 		session    *gexec.Session
 		conf       config.Netmon
 		fakeMetron fakes.FakeMetron
+		ifName     string
 	)
 
 	BeforeEach(func() {
 		fakeMetron = fakes.New()
 
+		ifName = discoverInterfaceName()
 		conf = config.Netmon{
 			PollInterval:  1,
 			MetronAddress: fakeMetron.Address(),
-			InterfaceName: "eth0",
+			InterfaceName: ifName,
 			LogLevel:      "info",
 		}
 		configFilePath := WriteConfigFile(conf)
 
-		netmonCmd := exec.Command(binaryPath, "-config-file", configFilePath)
 		var err error
+		netmonCmd := exec.Command(binaryPath, "-config-file", configFilePath)
 		session, err = gexec.Start(netmonCmd, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
 	AfterEach(func() {
-		runAndWait("ip", "link", "set", "dev", "eth0", "mtu", "1500")
+		runAndWait("ip", "link", "set", "dev", ifName, "mtu", "1500")
 
 		session.Interrupt()
 		Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit())
@@ -82,7 +103,7 @@ var _ = Describe("Acceptance", func() {
 	})
 
 	It("should emit a metric for rx dropped bytes", func() {
-		runAndWait("ip", "link", "set", "dev", "eth0", "mtu", "70")
+		runAndWait("ip", "link", "set", "dev", ifName, "mtu", "70")
 		cmd := exec.Command("ping", "-c1", "--linger=1", "8.8.8.8")
 		pingSession, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
