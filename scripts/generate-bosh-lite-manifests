@@ -33,15 +33,10 @@ echo generate vanilla diego deployment manifest
 pushd ${DIEGO_RELEASE_DIR}
   ./scripts/generate-bosh-lite-manifests \
     -g \
-    -n ${NETMAN_RELEASE_DIR}/manifest-generation/stubs/diego/instance-count-overrides.yml
+    -n ${NETMAN_RELEASE_DIR}/manifest-generation/stubs/diego/instance-count-overrides.yml \
+    -N ${NETMAN_RELEASE_DIR}/manifest-generation/stubs/bosh-lite-netman-diego.yml
 popd
 
-echo merging diego manifest into custom netman diego manifest
-${scripts_path}/netmanify \
-  ${DIEGO_MANIFESTS_DIR}/diego.yml \
-  ${NETMAN_RELEASE_DIR}/manifest-generation/stubs/bosh-lite-cf.yml \
-  "$@" | \
-    sed 's/\ guardian/\ garden-runc/' \
-    > ${NETMAN_MANIFESTS_DIR}/diego_with_netman.yml
+mv ${DIEGO_MANIFESTS_DIR}/diego.yml ${NETMAN_MANIFESTS_DIR}/diego_with_netman.yml
 
 bosh deployment ${NETMAN_RELEASE_DIR}/bosh-lite/deployments/diego_with_netman.yml
