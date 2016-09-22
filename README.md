@@ -53,18 +53,18 @@ popd
 ```
 
 Upload the latest `bosh-lite` stemcell 
-```
+```bash
 bosh upload stemcell https://bosh.io/d/stemcells/bosh-warden-boshlite-ubuntu-trusty-go_agent
 ```
 
 Or download the stemcell and manually upload it to `bosh-lite` (potentially faster)
-```
+```bash
 curl -L -o bosh-lite-stemcell-latest.tgz https://bosh.io/d/stemcells/bosh-warden-boshlite-ubuntu-trusty-go_agent
 bosh upload stemcell bosh-lite-stemcell-latest.tgz
 ```
 
 Then grab the required releases
-```
+```bash
 pushd ~/workspace
   git clone https://github.com/cloudfoundry/diego-release
   git clone https://github.com/cloudfoundry/cf-release
@@ -73,7 +73,7 @@ popd
 ```
 
 **Note:** The current netman release depends on `develop` branch of garden-runc-release, please do the following:
-```
+```bash
 pushd ~/workspace
   git clone https://github.com/cloudfoundry/garden-runc-release
   cd garden-runc-release
@@ -84,7 +84,7 @@ popd
 ```
 
 and deploy
-```
+```bash
 pushd ~/workspace/netman-release
   ./scripts/deploy-to-bosh-lite
 popd
@@ -99,7 +99,7 @@ Then follow [the instructions for testing with the cats & dogs example](https://
   - netman requires additional information in several stubs.
   - Add under `properties: uaa` in `stubs/cf/properties.yml`:
 
-    ```
+    ```bash
     scim:
       users:
       - admin|<admin-password>|scim.write,scim.read,openid,cloud_controller.admin,doppler.firehose,network.admin
@@ -225,15 +225,15 @@ Then follow [the instructions for testing with the cats & dogs example](https://
 
 0. Deploy
   - Target your bosh director.
-  ```
+  ```bash
   bosh target <your-director>
   ```
   - Set the deployment
-  ```
+  ```bash
   bosh deployment ${output_path}/diego.yml
   ```
   - Deploy
-  ```
+  ```bash
   bosh deploy
   ```
 
@@ -304,7 +304,7 @@ cd src/netman-cf-acceptance
 ### Referencing a new library from existing BOSH package
 1. Add any new libraries into the submodule from the root of the repo
 
-  ```
+  ```bash
   cd $GOPATH
   git submodule add https://github.com/foo/bar src/github.com/foo/bar
   ./scripts/sync-package-specs
@@ -312,19 +312,19 @@ cd src/netman-cf-acceptance
 
 ### Adding a new BOSH package
 1. Add any new libraries into the submodules from the root of the repo
-  ```
+  ```bash
   cd $GOPATH
   git submodule add https://github.com/foo/bar src/github.com/foo/bar
   ```
 
 2. Update the package sync script:
-  ```
+  ```bash
   vim $GOPATH/scripts/sync-package-specs
   ```
   Find or create the `sync_package` line for `baz`
 
 3. Run the sync script:
-  ```
+  ```bash
   ./scripts/sync-package-specs
   ```
 
