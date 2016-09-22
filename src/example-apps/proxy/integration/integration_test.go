@@ -1,4 +1,4 @@
-package acceptance_test
+package integration_test
 
 import (
 	"encoding/json"
@@ -13,7 +13,7 @@ import (
 	"github.com/onsi/gomega/gexec"
 )
 
-var _ = Describe("Acceptance", func() {
+var _ = Describe("Integration", func() {
 	var (
 		session    *gexec.Session
 		address    string

@@ -1,4 +1,4 @@
-package acceptance_test
+package integration_test
 
 import (
 	"bytes"
@@ -9,7 +9,7 @@ import (
 	"lib/testsupport"
 	"math/rand"
 	"net/http"
-	"netmon/acceptance/fakes"
+	"netmon/integration/fakes"
 	"os/exec"
 	"policy-server/config"
 	"policy-server/models"
@@ -22,7 +22,7 @@ import (
 	"github.com/onsi/gomega/gexec"
 )
 
-var _ = Describe("Acceptance", func() {
+var _ = Describe("Integration", func() {
 	var (
 		session      *gexec.Session
 		conf         config.Config

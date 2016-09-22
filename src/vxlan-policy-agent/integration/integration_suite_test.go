@@ -1,4 +1,4 @@
-package acceptance_test
+package integration_test
 
 import (
 	"encoding/json"
@@ -20,9 +20,9 @@ var DEFAULT_TIMEOUT = "5s"
 
 var vxlanPolicyAgentPath string
 
-func TestAcceptance(t *testing.T) {
+func TestIntegration(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Acceptance Suite")
+	RunSpecs(t, "Integration Suite")
 }
 
 var _ = BeforeSuite(func() {

@@ -1,4 +1,4 @@
-package acceptance_test
+package integration_test
 
 import (
 	"net"
@@ -11,8 +11,8 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 
-	"netmon/acceptance/fakes"
 	"netmon/config"
+	"netmon/integration/fakes"
 )
 
 func discoverInterfaceName() string {
@@ -32,7 +32,7 @@ func discoverInterfaceName() string {
 	return ""
 }
 
-var _ = Describe("Acceptance", func() {
+var _ = Describe("Integration", func() {
 	var (
 		session    *gexec.Session
 		conf       config.Netmon

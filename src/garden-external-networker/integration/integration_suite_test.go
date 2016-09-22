@@ -1,4 +1,4 @@
-package acceptance_test
+package integration_test
 
 import (
 	"io/ioutil"
@@ -15,9 +15,9 @@ import (
 	"testing"
 )
 
-func TestAcceptance(t *testing.T) {
+func TestIntegration(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Acceptance Suite")
+	RunSpecs(t, "Integration Suite")
 }
 
 var (
@@ -33,7 +33,7 @@ var _ = BeforeSuite(func() {
 	pathToAdapter, err = gexec.Build("garden-external-networker", "-race")
 	Expect(err).NotTo(HaveOccurred())
 
-	pathToFakeCNIPlugin, err := gexec.Build("garden-external-networker/acceptance/fake-cni-plugin", "-race")
+	pathToFakeCNIPlugin, err := gexec.Build("garden-external-networker/integration/fake-cni-plugin", "-race")
 	Expect(err).NotTo(HaveOccurred())
 
 	cniPluginDir, err = ioutil.TempDir("", "cni-plugin-")

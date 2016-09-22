@@ -1,10 +1,10 @@
-package acceptance_test
+package integration_test
 
 import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"netmon/acceptance/fakes"
+	"netmon/integration/fakes"
 	"os"
 	"os/exec"
 	"vxlan-policy-agent/config"

@@ -1,4 +1,4 @@
-package acceptance_test
+package integration_test
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"lib/testsupport"
 	"math/rand"
 	"net/http"
-	"netmon/acceptance/fakes"
+	"netmon/integration/fakes"
 	"os/exec"
 	"policy-server/config"
 	"time"

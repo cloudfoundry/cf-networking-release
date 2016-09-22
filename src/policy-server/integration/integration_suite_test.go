@@ -1,4 +1,4 @@
-package acceptance_test
+package integration_test
 
 import (
 	"encoding/json"
@@ -47,9 +47,9 @@ var mockUAAServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWrit
 	w.WriteHeader(http.StatusNotFound)
 }))
 
-func TestAcceptance(t *testing.T) {
+func TestIntegration(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Acceptance Suite")
+	RunSpecs(t, "Integration Suite")
 }
 
 var _ = BeforeSuite(func() {
