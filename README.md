@@ -108,34 +108,88 @@ Then follow [the instructions for testing with the cats & dogs example](https://
         scope: cloud_controller.read,cloud_controller.write,openid,password.write,cloud_controller.admin,scim.read,scim.write,doppler.firehose,uaa.user,routing.router_groups.read,network.admin
     ```
 
-  - Add under `properties` in `stubs/cf/properties.yml`:
+  - Create a netman stub `stubs/netman/stub.yml`, fill in all `REPLACE_ME` fields with the appropriate credentials:
 
-    ```
-    acceptance_tests:
-      admin_password: <admin-password>
-      admin_user: admin
-      api: api.<system-domain>
-      apps_domain: <apps-domain>
-      nodes: 1
-      skip_ssl_validation: true
-      use_http: true
-    ```
-
-  - Create a `cf_creds_stub.yml`
-
-    ```
+    ```yaml
     ---
-    properties:
-      uaa:
-        clients:
-          network-policy:
-            secret: <uaa-client-secret>
-      policy-server:
-        connection_string: <db-connection-string>
+    netman_overrides:
+      releases:
+      - name: netman
+        version: latest
+      driver_templates:
+      - name: garden-cni
+        release: netman
+      - name: cni-flannel
+        release: netman
+      - name: netmon
+        release: netman
+      - name: vxlan-policy-agent
+        release: netman
+      properties:
+        vxlan-policy-agent:
+          policy_server_url: http://policy-server.service.cf.internal:4002
+        garden-cni:
+          cni_plugin_dir: /var/vcap/packages/flannel/bin
+          cni_config_dir: /var/vcap/jobs/cni-flannel/config/cni
+        cni-flannel:
+          etcd_endpoints:
+            - (( "http://" config_from_cf.etcd.advertise_urls_dns_suffix ":4001" ))
+        policy-server:
+          uaa_client_secret: REPLACE_WITH_UAA_CLIENT_SECRET
+          uaa_url: (( "https://uaa." config_from_cf.system_domain ))
+          skip_ssl_validation: true
+          database:
+            type: REPLACE_WITH_DB_TYPE # mysql or postgres
+            connection_string: REPLACE_WITH_DB_CONNECTION_STRING
+      garden_properties:
+        network_plugin: /var/vcap/packages/runc-cni/bin/garden-external-networker
+        network_plugin_extra_args:
+        - --configFile=/var/vcap/jobs/garden-cni/config/adapter.json
+      jobs:
+      - name: policy-server
+        instances: 1
+        persistent_disk: 256
+        templates:
+        - name: policy-server
+          release: netman
+        - name: route_registrar
+          release: cf
+        - name: consul_agent
+          release: cf
+        - name: metron_agent
+          release: cf
+        resource_pool: database_z1
+        networks:
+          - name: diego1
+        properties:
+          nats:
+            machines: (( config_from_cf.nats.machines ))
+            user: (( config_from_cf.nats.user ))
+            password: (( config_from_cf.nats.password ))
+            port: (( config_from_cf.nats.port ))
+          metron_agent:
+            zone: z1
+          route_registrar:
+            routes:
+            - name: policy-server
+              port: 4002
+              registration_interval: 20s
+              uris:
+              - (( "api." config_from_cf.system_domain "/networking" ))
+          consul:
+            agent:
+              services:
+                policy-server:
+                  name: policy-server
+                  check:
+                    interval: 5s
+                    script: /bin/true
+
+    config_from_cf: (( merge ))
     ```
 
-0. Generate diego with netman manifest
-  - Run `generate-deployment-manifest`. Set `environment_path` to the directory containing your stubs for cf, diego, and netman.
+0. Generate diego with netman manifest:
+  - Run the following bash script. Set `environment_path` to the directory containing your stubs for cf, diego, and netman.
     Set `output_path` to the directory you want your manifest to be created in.
     Set `diego_release_path` to your local copy of the diego-release repository.
 
@@ -163,15 +217,8 @@ Then follow [the instructions for testing with the cats & dogs example](https://
       -i ${environment_path}/stubs/diego/iaas-settings.yml \
       -p ${environment_path}/stubs/diego/property-overrides.yml \
       -n ${environment_path}/stubs/diego/instance-count-overrides.yml \
+      -N ${environment_path}/stubs/netman/stub.yml \
       -v ${environment_path}/stubs/diego/release-versions.yml \
-      > ${output_path}/diego0.yml
-  popd
-
-  pushd netman-release
-    ./scripts/netmanify \
-      ${output_path}/diego0.yml \
-      ${environment_path}/stubs/netman/cf_creds_stub.yml \
-      ${environment_path}/stubs/cf/stub.yml \
       > ${output_path}/diego.yml
   popd
   ```
