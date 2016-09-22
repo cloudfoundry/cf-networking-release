@@ -9,7 +9,7 @@ inputs:
 - name: netman-release
 
 run:
-  path: netman-release/ci/netman-tests.sh
+  path: netman-release/ci/unit-and-integration-tests.sh
 
 params:
   GINKGO_EXTRA_FLAGS: "-race"

@@ -13,7 +13,7 @@ if [ ${MYSQL:-"false"} = "true" ]; then
      -e MYSQL=true \
      -w / \
      c2cnetworking/dev-mysql \
-     /netman-release/ci/netman-tests.sh "$@"
+     /netman-release/ci/unit-and-integration-tests.sh "$@"
 else
   docker run --privileged \
      --rm \
@@ -22,5 +22,5 @@ else
      -e NO_DB="${NO_DB:-""}" \
      -w / \
      c2cnetworking/dev-postgres \
-     /netman-release/ci/netman-tests.sh "$@"
+     /netman-release/ci/unit-and-integration-tests.sh "$@"
 fi
