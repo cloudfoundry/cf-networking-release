@@ -91,9 +91,8 @@ func WriteConfigFile(policyServerConfig config.Config) string {
 
 const NUM_PARALLEL_WORKERS = 4
 
-func workPoolRun(items []interface{}, workFunc func(item interface{})) {
+func workPoolRunOnChannel(work chan interface{}, workFunc func(item interface{})) {
 	var wg sync.WaitGroup
-	work := make(chan interface{})
 
 	for workerID := 0; workerID < NUM_PARALLEL_WORKERS; workerID++ {
 		wg.Add(1)
@@ -106,12 +105,20 @@ func workPoolRun(items []interface{}, workFunc func(item interface{})) {
 		}()
 	}
 
-	// queue the work
-	for _, item := range items {
-		work <- item
-	}
-	close(work)
-
 	// wait for all work to complete
 	wg.Wait()
+}
+
+func workPoolRun(items []interface{}, workFunc func(item interface{})) {
+	work := make(chan interface{})
+
+	go func() {
+		// queue the work
+		for _, item := range items {
+			work <- item
+		}
+		close(work)
+	}()
+
+	workPoolRunOnChannel(work, workFunc)
 }

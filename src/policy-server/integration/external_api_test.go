@@ -134,7 +134,7 @@ var _ = Describe("Integration", func() {
 		)
 	})
 
-	Context("when there are concurrent requests", func() {
+	Context("when there are concurrent create requests", func() {
 		It("remains consistent", func() {
 			url := fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort)
 			add := func(policy models.Policy) {
@@ -195,6 +195,64 @@ var _ = Describe("Integration", func() {
 			}
 			Expect(json.Unmarshal(responseBytes, &tagsResponse)).To(Succeed())
 			Expect(tagsResponse.Tags).To(HaveLen(nPolicies))
+		})
+	})
+
+	Context("when these are concurrent create and delete requests", func() {
+		It("remains consistent", func() {
+			url := fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort)
+			do := func(method string, policy models.Policy) {
+				requestBody, _ := json.Marshal(map[string]interface{}{
+					"policies": []models.Policy{policy},
+				})
+				resp := makeAndDoRequest(method, url, bytes.NewReader(requestBody))
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
+				responseString, err := ioutil.ReadAll(resp.Body)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(responseString).To(MatchJSON("{}"))
+			}
+
+			nPolicies := 100
+			policies := []interface{}{}
+			for i := 0; i < nPolicies; i++ {
+				appName := fmt.Sprintf("some-app-%x", i)
+				policies = append(policies, models.Policy{
+					Source:      models.Source{ID: appName},
+					Destination: models.Destination{ID: appName, Protocol: "tcp", Port: 1234},
+				})
+			}
+
+			toDelete := make(chan (interface{}), nPolicies)
+
+			go func() {
+				workPoolRun(policies, func(policy interface{}) {
+					p := policy.(models.Policy)
+					do("POST", p)
+					toDelete <- p
+				})
+				close(toDelete)
+			}()
+
+			var nDeleted int32
+			workPoolRunOnChannel(toDelete, func(policy interface{}) {
+				p := policy.(models.Policy)
+				do("DELETE", p)
+				atomic.AddInt32(&nDeleted, 1)
+			})
+
+			Expect(nDeleted).To(Equal(int32(nPolicies)))
+
+			resp := makeAndDoRequest("GET", url, nil)
+			Expect(resp.StatusCode).To(Equal(http.StatusOK))
+			responseBytes, err := ioutil.ReadAll(resp.Body)
+			Expect(err).NotTo(HaveOccurred())
+			var policiesResponse struct {
+				TotalPolicies int             `json:"total_policies"`
+				Policies      []models.Policy `json:"policies"`
+			}
+			Expect(json.Unmarshal(responseBytes, &policiesResponse)).To(Succeed())
+
+			Expect(policiesResponse.TotalPolicies).To(Equal(0))
 		})
 	})
 
