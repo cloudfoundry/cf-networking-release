@@ -74,7 +74,7 @@ var _ = Describe("Store", func() {
 
 			parallelRunner := &testsupport.ParallelRunner{
 				NumWorkers: 4,
-				Timeout:    5 * time.Second,
+				Timeout:    30 * time.Second,
 			}
 			toDelete := make(chan (interface{}), nPolicies)
 
