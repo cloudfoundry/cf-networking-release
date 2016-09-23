@@ -47,7 +47,7 @@ func (d *Destination) GetID(tx Transaction, destination_group_id int, port int, 
 	var id int
 	err := tx.QueryRow(tx.Rebind(`
 		SELECT id FROM destinations
-		WHERE group_id = ? AND port = ? AND protocol = ?`),
+		WHERE group_id = ? AND port = ? AND protocol = ? FOR UPDATE`),
 		destination_group_id,
 		port,
 		protocol,
