@@ -15,6 +15,7 @@ import (
 	"policy-server/models"
 	"strings"
 	"sync/atomic"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -158,9 +159,13 @@ var _ = Describe("Integration", func() {
 				})
 			}
 
+			parallelRunner := &testsupport.ParallelRunner{
+				NumWorkers: 4,
+				Timeout:    10 * time.Second,
+			}
 			By("adding lots of policies concurrently")
 			var nAdded int32
-			workPoolRun(policies, func(policy interface{}) {
+			parallelRunner.RunOnSlice(policies, func(policy interface{}) {
 				add(policy.(models.Policy))
 				atomic.AddInt32(&nAdded, 1)
 			})
@@ -222,10 +227,14 @@ var _ = Describe("Integration", func() {
 				})
 			}
 
+			parallelRunner := &testsupport.ParallelRunner{
+				NumWorkers: 4,
+				Timeout:    10 * time.Second,
+			}
 			toDelete := make(chan (interface{}), nPolicies)
 
 			go func() {
-				workPoolRun(policies, func(policy interface{}) {
+				parallelRunner.RunOnSlice(policies, func(policy interface{}) {
 					p := policy.(models.Policy)
 					do("POST", p)
 					toDelete <- p
@@ -234,7 +243,7 @@ var _ = Describe("Integration", func() {
 			}()
 
 			var nDeleted int32
-			workPoolRunOnChannel(toDelete, func(policy interface{}) {
+			parallelRunner.RunOnChannel(toDelete, func(policy interface{}) {
 				p := policy.(models.Policy)
 				do("DELETE", p)
 				atomic.AddInt32(&nDeleted, 1)

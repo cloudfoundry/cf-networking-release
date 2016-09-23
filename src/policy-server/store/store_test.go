@@ -12,6 +12,7 @@ import (
 	"policy-server/store"
 	"strings"
 	"sync/atomic"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	. "github.com/onsi/ginkgo"
@@ -57,7 +58,7 @@ var _ = Describe("Store", func() {
 	})
 
 	Describe("concurrent create and delete requests", func() {
-		PIt("remains consistent", func(done Done) {
+		It("remains consistent", func() {
 			dataStore, err := store.New(realDb, group, destination, policy, 2)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -71,36 +72,40 @@ var _ = Describe("Store", func() {
 				})
 			}
 
+			parallelRunner := &testsupport.ParallelRunner{
+				NumWorkers: 4,
+				Timeout:    5 * time.Second,
+			}
 			toDelete := make(chan (interface{}), nPolicies)
 
 			go func() {
-				testsupport.WorkPoolRun(policies, func(policy interface{}) {
+				defer GinkgoRecover()
+				err := parallelRunner.RunOnSlice(policies, func(policy interface{}) {
+					defer GinkgoRecover()
 					p := policy.(models.Policy)
 					Expect(dataStore.Create([]models.Policy{p})).To(Succeed())
 					toDelete <- p
-					fmt.Printf("+")
 				})
+				Expect(err).NotTo(HaveOccurred())
 				close(toDelete)
 			}()
 
 			var nDeleted int32
-			testsupport.WorkPoolRunOnChannel(toDelete, func(policy interface{}) {
+			err = parallelRunner.RunOnChannel(toDelete, func(policy interface{}) {
+				defer GinkgoRecover()
 				p := policy.(models.Policy)
 				Expect(dataStore.Delete([]models.Policy{p})).To(Succeed())
 				atomic.AddInt32(&nDeleted, 1)
-				fmt.Printf("x")
 			})
+			Expect(err).NotTo(HaveOccurred())
 
-			fmt.Printf("done creating and deleting\n")
 			Expect(nDeleted).To(Equal(int32(nPolicies)))
 
 			allPolicies, err := dataStore.All()
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(allPolicies).To(BeEmpty())
-
-			close(done)
-		}, 60 /* <---- total seconds allowed for this test */)
+		})
 	})
 
 	Describe("New", func() {
