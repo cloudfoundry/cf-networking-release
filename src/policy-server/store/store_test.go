@@ -11,6 +11,7 @@ import (
 	"policy-server/models"
 	"policy-server/store"
 	"strings"
+	"sync/atomic"
 
 	"github.com/jmoiron/sqlx"
 	. "github.com/onsi/ginkgo"
@@ -53,6 +54,53 @@ var _ = Describe("Store", func() {
 		if testDatabase != nil {
 			testDatabase.Destroy()
 		}
+	})
+
+	Describe("concurrent create and delete requests", func() {
+		PIt("remains consistent", func(done Done) {
+			dataStore, err := store.New(realDb, group, destination, policy, 2)
+			Expect(err).NotTo(HaveOccurred())
+
+			nPolicies := 1000
+			policies := []interface{}{}
+			for i := 0; i < nPolicies; i++ {
+				appName := fmt.Sprintf("some-app-%x", i)
+				policies = append(policies, models.Policy{
+					Source:      models.Source{ID: appName},
+					Destination: models.Destination{ID: appName, Protocol: "tcp", Port: 1234},
+				})
+			}
+
+			toDelete := make(chan (interface{}), nPolicies)
+
+			go func() {
+				testsupport.WorkPoolRun(policies, func(policy interface{}) {
+					p := policy.(models.Policy)
+					Expect(dataStore.Create([]models.Policy{p})).To(Succeed())
+					toDelete <- p
+					fmt.Printf("+")
+				})
+				close(toDelete)
+			}()
+
+			var nDeleted int32
+			testsupport.WorkPoolRunOnChannel(toDelete, func(policy interface{}) {
+				p := policy.(models.Policy)
+				Expect(dataStore.Delete([]models.Policy{p})).To(Succeed())
+				atomic.AddInt32(&nDeleted, 1)
+				fmt.Printf("x")
+			})
+
+			fmt.Printf("done creating and deleting\n")
+			Expect(nDeleted).To(Equal(int32(nPolicies)))
+
+			allPolicies, err := dataStore.All()
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(allPolicies).To(BeEmpty())
+
+			close(done)
+		}, 60 /* <---- total seconds allowed for this test */)
 	})
 
 	Describe("New", func() {
