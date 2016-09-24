@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"lib/models"
 	"lib/policy_client"
+	"lib/testsupport"
 	"math/rand"
 	"net"
 	"net/http"
@@ -299,7 +300,11 @@ func getAppIPs(registry string) []string {
 }
 
 func assertConnectionSucceeds(sourceApp string, destApps []string, ports []int, nProxies int) {
-	workPoolRun(5*nProxies, destApps, func(appIP string) {
+	parallelRunner := &testsupport.ParallelRunner{
+		NumWorkers: 5 * nProxies,
+		Timeout:    nProxies * time.Second,
+	}
+	parallelRunner.RunOnSlices(destApps, func(appIP string) {
 		for _, port := range ports {
 			assertSingleConnection(appIP, port, sourceApp, true)
 		}
@@ -307,7 +312,11 @@ func assertConnectionSucceeds(sourceApp string, destApps []string, ports []int, 
 }
 
 func assertConnectionFails(sourceApp string, destApps []string, ports []int, nProxies int) {
-	workPoolRun(5*nProxies, destApps, func(appIP string) {
+	parallelRunner := &testsupport.ParallelRunner{
+		NumWorkers: 5 * nProxies,
+		Timeout:    nProxies * time.Second,
+	}
+	parallelRunner.RunOnSlices(destApps, func(appIP string) {
 		for _, port := range ports {
 			assertSingleConnection(appIP, port, sourceApp, false)
 		}

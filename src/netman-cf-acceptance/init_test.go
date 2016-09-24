@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"lib/testsupport"
 	"math/rand"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sync"
 	"time"
 
 	"gopkg.in/yaml.v2"
@@ -168,32 +168,14 @@ func defaultManifest(appType string) string {
 
 func pushAppsOfType(appNames []string, appType string, manifest string) {
 	By(fmt.Sprintf("pushing %d apps of type %s", len(appNames), appType))
-	workPoolRun(16, appNames, func(appName string) {
+
+	parallelRunner := &testsupport.ParallelRunner{
+		NumWorkers: 16,
+		Timeout:    4 * time.Second,
+	}
+	parallelRunner.RunOnSlices(appNames, func(appName string) {
 		pushAppOfType(appName, appType, manifest)
 	})
-}
-
-func workPoolRun(workers int, items []string, workFunc func(item string)) {
-	var wg sync.WaitGroup
-	work := make(chan string)
-
-	for workerID := 0; workerID < workers; workerID++ {
-		wg.Add(1)
-		go func() {
-			defer GinkgoRecover()
-			for item := range work {
-				workFunc(item)
-			}
-			wg.Done()
-		}()
-	}
-
-	// queue the work
-	for _, item := range items {
-		work <- item
-	}
-	close(work)
-	wg.Wait()
 }
 
 func pushAppOfType(appName string, appType string, manifest string) {
@@ -218,7 +200,11 @@ func pushRegistryApp(appName string) {
 }
 
 func scaleApps(apps []string, instances int) {
-	workPoolRun(16, apps, func(app string) {
+	parallelRunner := &testsupport.ParallelRunner{
+		NumWorkers: 16,
+		Timeout:    4 * time.Second,
+	}
+	parallelRunner.RunOnSlices(apps, func(app string) {
 		scaleApp(app, instances)
 	})
 }
