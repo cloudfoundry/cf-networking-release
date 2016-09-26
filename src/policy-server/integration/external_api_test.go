@@ -15,7 +15,6 @@ import (
 	"policy-server/models"
 	"strings"
 	"sync/atomic"
-	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -161,7 +160,6 @@ var _ = Describe("Integration", func() {
 
 			parallelRunner := &testsupport.ParallelRunner{
 				NumWorkers: 4,
-				Timeout:    10 * time.Second,
 			}
 			By("adding lots of policies concurrently")
 			var nAdded int32
@@ -229,7 +227,6 @@ var _ = Describe("Integration", func() {
 
 			parallelRunner := &testsupport.ParallelRunner{
 				NumWorkers: 4,
-				Timeout:    10 * time.Second,
 			}
 			toDelete := make(chan (interface{}), nPolicies)
 

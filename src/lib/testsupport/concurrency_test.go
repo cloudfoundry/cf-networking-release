@@ -3,7 +3,6 @@ package testsupport_test
 import (
 	"lib/testsupport"
 	"sync/atomic"
-	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -15,8 +14,21 @@ var _ = Describe("Running work in parallel", func() {
 	BeforeEach(func() {
 		runner = &testsupport.ParallelRunner{
 			NumWorkers: 4,
-			Timeout:    500 * time.Millisecond,
 		}
+	})
+	Describe("RunOnSliceStrings", func() {
+		It("does the right thing", func() {
+			items := []string{"foo", "bar"}
+
+			callCount := new(int32)
+
+			workFunc := func(item string) {
+				atomic.AddInt32(callCount, 1)
+			}
+
+			runner.RunOnSliceStrings(items, workFunc)
+			Expect(*callCount).To(Equal(int32(2)))
+		})
 	})
 
 	It("calls the workFunc for every item", func() {
@@ -28,9 +40,21 @@ var _ = Describe("Running work in parallel", func() {
 			atomic.AddInt32(callCount, 1)
 		}
 
-		go runner.RunOnSlice(items, workFunc)
-		Eventually(func() int32 { return atomic.LoadInt32(callCount) }).Should(
-			Equal(int32(4)))
+		runner.RunOnSlice(items, workFunc)
+		Expect(*callCount).To(Equal(int32(4)))
+	})
+
+	Specify("once the function returns, all of the work is complete", func() {
+		items := []interface{}{1, 2, 3, 4}
+
+		callCount := new(int32)
+
+		workFunc := func(item interface{}) {
+			atomic.AddInt32(callCount, 1)
+		}
+
+		runner.RunOnSlice(items, workFunc)
+		Expect(*callCount).To(Equal(int32(4)))
 	})
 
 	It("runs some workFuncs in parallel", func() {
@@ -45,13 +69,20 @@ var _ = Describe("Running work in parallel", func() {
 			<-allowProgress
 		}
 
-		go runner.RunOnSlice(items, workFunc)
+		callComplete := make(chan bool)
+		go func() {
+			runner.RunOnSlice(items, workFunc)
+			callComplete <- true
+		}()
+
 		Eventually(func() int32 { return atomic.LoadInt32(callCount) }).Should(
 			Equal(int32(4)))
 
 		for range items {
 			allowProgress <- false
 		}
+
+		Eventually(callComplete).Should(Receive())
 	})
 
 	It("runs no more than NumWorkers in parallel", func() {
@@ -77,17 +108,4 @@ var _ = Describe("Running work in parallel", func() {
 		Eventually(func() int32 { return atomic.LoadInt32(callCount) }).Should(
 			Equal(int32(len(items))))
 	})
-
-	It("will timeout eventually if a worker hangs", func() {
-		items := []interface{}{1, 2, 3, 4}
-
-		workFunc := func(item interface{}) {
-			// bad slow workers
-			time.Sleep(60 * time.Second)
-		}
-
-		err := runner.RunOnSlice(items, workFunc)
-		Expect(err).To(MatchError("timeout waiting for workers"))
-	})
-
 })

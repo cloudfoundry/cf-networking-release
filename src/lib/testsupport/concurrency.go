@@ -1,17 +1,16 @@
 package testsupport
 
 import (
-	"fmt"
 	"sync"
-	"time"
+
+	. "github.com/onsi/ginkgo"
 )
 
 type ParallelRunner struct {
 	NumWorkers int
-	Timeout    time.Duration
 }
 
-func (p *ParallelRunner) RunOnSlice(items []interface{}, workFunc func(item interface{})) error {
+func (p *ParallelRunner) RunOnSlice(items []interface{}, workFunc func(item interface{})) {
 	queue := make(chan interface{})
 
 	go func() {
@@ -21,32 +20,31 @@ func (p *ParallelRunner) RunOnSlice(items []interface{}, workFunc func(item inte
 		close(queue)
 	}()
 
-	return p.RunOnChannel(queue, workFunc)
+	p.RunOnChannel(queue, workFunc)
 }
 
-func (p *ParallelRunner) RunOnChannel(queue chan interface{}, workFunc func(item interface{})) error {
+func (p *ParallelRunner) RunOnChannel(queue chan interface{}, workFunc func(item interface{})) {
 	var wg sync.WaitGroup
 
 	for i := 0; i < p.NumWorkers; i++ {
 		wg.Add(1)
 		go func() {
+			defer GinkgoRecover() //not tested
+			defer wg.Done()
 			for item := range queue {
 				workFunc(item)
 			}
-			wg.Done()
 		}()
 	}
 
-	done := make(chan interface{})
-	go func() {
-		wg.Wait()
-		close(done)
-	}()
+	wg.Wait()
+}
 
-	select {
-	case <-done:
-		return nil
-	case <-time.After(p.Timeout):
-		return fmt.Errorf("timeout waiting for workers")
+func (p *ParallelRunner) RunOnSliceStrings(someStrings []string, workFunc func(aString string)) {
+	items := []interface{}{}
+	for _, aString := range someStrings {
+		items = append(items, aString)
 	}
+
+	p.RunOnSlice(items, func(item interface{}) { workFunc(item.(string)) })
 }

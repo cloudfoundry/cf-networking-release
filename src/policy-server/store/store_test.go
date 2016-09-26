@@ -12,7 +12,6 @@ import (
 	"policy-server/store"
 	"strings"
 	"sync/atomic"
-	"time"
 
 	"github.com/jmoiron/sqlx"
 	. "github.com/onsi/ginkgo"
@@ -74,30 +73,24 @@ var _ = Describe("Store", func() {
 
 			parallelRunner := &testsupport.ParallelRunner{
 				NumWorkers: 4,
-				Timeout:    60 * time.Second,
 			}
 			toDelete := make(chan (interface{}), nPolicies)
 
 			go func() {
-				defer GinkgoRecover()
-				err := parallelRunner.RunOnSlice(policies, func(policy interface{}) {
-					defer GinkgoRecover()
+				parallelRunner.RunOnSlice(policies, func(policy interface{}) {
 					p := policy.(models.Policy)
 					Expect(dataStore.Create([]models.Policy{p})).To(Succeed())
 					toDelete <- p
 				})
-				Expect(err).NotTo(HaveOccurred())
 				close(toDelete)
 			}()
 
 			var nDeleted int32
-			err = parallelRunner.RunOnChannel(toDelete, func(policy interface{}) {
-				defer GinkgoRecover()
+			parallelRunner.RunOnChannel(toDelete, func(policy interface{}) {
 				p := policy.(models.Policy)
 				Expect(dataStore.Delete([]models.Policy{p})).To(Succeed())
 				atomic.AddInt32(&nDeleted, 1)
 			})
-			Expect(err).NotTo(HaveOccurred())
 
 			Expect(nDeleted).To(Equal(int32(nPolicies)))
 

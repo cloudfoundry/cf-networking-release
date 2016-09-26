@@ -171,9 +171,8 @@ func pushAppsOfType(appNames []string, appType string, manifest string) {
 
 	parallelRunner := &testsupport.ParallelRunner{
 		NumWorkers: 16,
-		Timeout:    4 * time.Second,
 	}
-	parallelRunner.RunOnSlices(appNames, func(appName string) {
+	parallelRunner.RunOnSliceStrings(appNames, func(appName string) {
 		pushAppOfType(appName, appType, manifest)
 	})
 }
@@ -202,9 +201,8 @@ func pushRegistryApp(appName string) {
 func scaleApps(apps []string, instances int) {
 	parallelRunner := &testsupport.ParallelRunner{
 		NumWorkers: 16,
-		Timeout:    4 * time.Second,
 	}
-	parallelRunner.RunOnSlices(apps, func(app string) {
+	parallelRunner.RunOnSliceStrings(apps, func(app string) {
 		scaleApp(app, instances)
 	})
 }
