@@ -6,14 +6,14 @@ cd netman-release
 export GOPATH=$PWD
 
 declare -a packages=(
-  "src/lib"
-  "src/policy-server"
+  "src/cli-plugin"
+  "src/example-apps"
   "src/flannel-watchdog"
   "src/garden-external-networker"
+  "src/lib"
   "src/netmon"
+  "src/policy-server"
   "src/vxlan-policy-agent"
-  "src/cli-plugin"
-  "src/example-apps/tick"
   )
 
 function bootPostgres {
