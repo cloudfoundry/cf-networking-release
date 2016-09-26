@@ -1,3 +1,0 @@
-set -e -x
-
-cp -a netman-common/* ${BOSH_INSTALL_TARGET}
