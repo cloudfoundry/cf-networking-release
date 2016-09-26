@@ -72,7 +72,7 @@ pushd ~/workspace
 popd
 ```
 
-**Note:** The current netman release depends on `develop` branch of garden-runc-release, please do the following:
+**Note:** The current netman release depends on `develop` branch of `garden-runc-release`, please do the following:
 ```bash
 pushd ~/workspace
   git clone https://github.com/cloudfoundry/garden-runc-release
@@ -83,7 +83,14 @@ pushd ~/workspace
 popd
 ```
 
-and deploy
+It also depends on the `develop` branch of `diego-release`:
+```bash
+pushd ~/workspace/diego-release
+   git checkout develop
+popd
+```
+
+Then deploy
 ```bash
 pushd ~/workspace/netman-release
   ./scripts/deploy-to-bosh-lite
