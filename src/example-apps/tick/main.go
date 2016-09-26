@@ -91,12 +91,13 @@ func mainWithError() error {
 		servers = append(servers, http_server.New(fmt.Sprintf("0.0.0.0:%d", startPort+i), infoHandler))
 	}
 
-	members := grouper.Members{
-		{"registration_poller", poller},
-	}
+	members := []grouper.Member{}
 	for i, server := range servers {
 		members = append(members, grouper.Member{fmt.Sprintf("http_server_%d", i), server})
 	}
+
+	// poller goes at the end, so that registration happens after all servers start
+	members = append(members, grouper.Member{"registration_poller", poller})
 
 	monitor := ifrit.Invoke(sigmon.New(grouper.NewOrdered(os.Interrupt, members)))
 
