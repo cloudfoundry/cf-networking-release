@@ -104,14 +104,12 @@ var _ = Describe("Integration", func() {
 
 		Context("when the proxy destination is invalid", func() {
 			It("logs the error", func() {
-
 				response, err := http.DefaultClient.Get("http://" + address + "/proxy/////!!")
 				Expect(err).NotTo(HaveOccurred())
 				defer response.Body.Close()
 				Expect(response.StatusCode).To(Equal(500))
 
-				Expect(session.Err.Contents()).To(ContainSubstring("no such host"))
-
+				Expect(session.Err.Contents()).To(ContainSubstring("request failed: Get"))
 			})
 		})
 	})
