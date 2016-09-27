@@ -19,8 +19,6 @@ that provides container networking.
 - Chat with us at the `#container-networking` channel on [CloudFoundry Slack](http://slack.cloudfoundry.org/)
 - [CI dashboard](http://dashboard.c2c.cf-app.com) and [config](https://github.com/cloudfoundry-incubator/container-networking-ci)
 
-## NOTICE
-`netman` is currently only compatible with the `develop` branch of `garden-runc-release`.
 
 ## Install the CF CLI Plugin
 
@@ -72,18 +70,7 @@ pushd ~/workspace
 popd
 ```
 
-**Note:** The current netman release depends on `develop` branch of `garden-runc-release`, please do the following:
-```bash
-pushd ~/workspace
-  git clone https://github.com/cloudfoundry/garden-runc-release
-  cd garden-runc-release
-  git checkout develop
-  git submodule update --init --recursive
-  bosh target lite && bosh create release && bosh upload release
-popd
-```
-
-It also depends on the `develop` branch of `diego-release`:
+**Note:** The current `netman` release depends on `develop` branch of `diego-release`.  Please do the following
 ```bash
 pushd ~/workspace/diego-release
    git checkout develop
