@@ -57,7 +57,8 @@ func (r *Runner) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 
 			deviceIP := matches[1]
 			if flannelIP != deviceIP {
-				errCh <- fmt.Errorf("out of sync: flannel subnet.net has %s but bridge device has %s", flannelIP, deviceIP)
+				errCh <- fmt.Errorf(`This cell must be recreated.  Flannel is out of sync with the local bridge. `+
+					`flannel (%s): %s bridge (%s): %s`, r.SubnetFile, flannelIP, r.BridgeName, deviceIP)
 				return
 			}
 		}
@@ -72,7 +73,7 @@ func (r *Runner) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 }
 
 func main() {
-	fmt.Println("hello")
+	fmt.Println("woof!")
 
 	conf := &config.Config{}
 

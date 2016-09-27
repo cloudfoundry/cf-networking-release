@@ -72,7 +72,8 @@ var _ = Describe("Flannel Watchdog", func() {
 			err := ioutil.WriteFile(subnetFileName, []byte(`FLANNEL_SUBNET=10.255.13.1/24\nFLANNEL_NETWORK=10.255.0.0/16`), os.ModePerm)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit(1))
-			Expect(session.Err.Contents()).To(ContainSubstring("out of sync"))
+			expectedMsg := fmt.Sprintf(`This cell must be recreated.  Flannel is out of sync with the local bridge. flannel (%s): 10.255.13.1/24 bridge (%s): 10.255.78.1/24`, subnetFileName, bridgeName)
+			Expect(session.Err.Contents()).To(ContainSubstring(expectedMsg))
 		})
 	})
 
