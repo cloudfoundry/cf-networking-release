@@ -242,33 +242,14 @@ func (p *Plugin) AllowCommand(cliConnection plugin.CliConnection, args []string)
 		},
 	}
 
-	var policies = struct {
-		Policies []models.Policy `json:"policies"`
-	}{
-		[]models.Policy{policy},
+	token, err := cliConnection.AccessToken()
+	if err != nil {
+		return "", fmt.Errorf("getting access token: %s", err)
 	}
 
-	payload, err := p.Marshaler.Marshal(policies)
+	err = p.PolicyClient.AddPolicies(token, []models.Policy{policy})
 	if err != nil {
-		return "", fmt.Errorf("payload cannot be marshaled: %s", err)
-	}
-
-	output, err := cliConnection.CliCommandWithoutTerminalOutput(
-		"curl", "-X", "POST", "/networking/v0/external/policies", "-d", "'"+string(payload)+"'",
-	)
-	if err != nil {
-		return "", fmt.Errorf("policy creation failed: %s", err)
-	}
-
-	var policyError struct {
-		Error string `json:"error"`
-	}
-	err = p.Unmarshaler.Unmarshal([]byte(output[0]), &policyError)
-	if err != nil {
-		return "", fmt.Errorf("error unmarshaling policy response: %s", err)
-	}
-	if policyError.Error != "" {
-		return "", fmt.Errorf("error creating policy: %s", policyError.Error)
+		return "", fmt.Errorf("adding policies: %s", err)
 	}
 
 	return "", nil

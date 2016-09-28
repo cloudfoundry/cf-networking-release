@@ -120,7 +120,7 @@ var _ = Describe("ExternalClient", func() {
 			}
 		})
 		It("does the right json http client request and passes the authorization token", func() {
-			err := client.AddPolicies([]models.Policy{
+			err := client.AddPolicies("some-token", []models.Policy{
 				{
 					Source: models.Source{
 						ID: "some-app-guid",
@@ -131,7 +131,7 @@ var _ = Describe("ExternalClient", func() {
 						Protocol: "tcp",
 					},
 				},
-			}, "some-token")
+			})
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(jsonClient.DoCallCount()).To(Equal(1))
@@ -173,7 +173,7 @@ var _ = Describe("ExternalClient", func() {
 			}
 		})
 		It("does the right json http client request", func() {
-			err := client.DeletePolicies([]models.Policy{
+			err := client.DeletePolicies("some-token", []models.Policy{
 				{
 					Source: models.Source{
 						ID: "some-app-guid",
@@ -184,7 +184,7 @@ var _ = Describe("ExternalClient", func() {
 						Protocol: "tcp",
 					},
 				},
-			}, "some-token")
+			})
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(jsonClient.DoCallCount()).To(Equal(1))

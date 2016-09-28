@@ -13,8 +13,8 @@ import (
 type ExternalPolicyClient interface {
 	GetPolicies(token string) ([]models.Policy, error)
 	GetPoliciesByID(token string, ids ...string) ([]models.Policy, error)
-	DeletePolicies(policies []models.Policy, token string) error
-	AddPolicies(policies []models.Policy, token string) error
+	DeletePolicies(token string, policies []models.Policy) error
+	AddPolicies(token string, policies []models.Policy) error
 }
 
 type ExternalClient struct {
@@ -56,7 +56,7 @@ func (c *ExternalClient) GetPoliciesByID(token string, ids ...string) ([]models.
 	return policies.Policies, nil
 }
 
-func (c *ExternalClient) AddPolicies(policies []models.Policy, token string) error {
+func (c *ExternalClient) AddPolicies(token string, policies []models.Policy) error {
 	reqPolicies := map[string][]models.Policy{
 		"policies": policies,
 	}
@@ -67,7 +67,7 @@ func (c *ExternalClient) AddPolicies(policies []models.Policy, token string) err
 	return nil
 }
 
-func (c *ExternalClient) DeletePolicies(policies []models.Policy, token string) error {
+func (c *ExternalClient) DeletePolicies(token string, policies []models.Policy) error {
 	reqPolicies := map[string][]models.Policy{
 		"policies": policies,
 	}
