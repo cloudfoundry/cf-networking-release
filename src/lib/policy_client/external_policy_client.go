@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"lib/marshal"
 	"lib/models"
+	"strings"
 
 	"code.cloudfoundry.org/lager"
 )
@@ -11,6 +12,7 @@ import (
 //go:generate counterfeiter -o ../fakes/external_policy_client.go --fake-name ExternalPolicyClient . ExternalPolicyClient
 type ExternalPolicyClient interface {
 	GetPolicies(token string) ([]models.Policy, error)
+	GetPoliciesByID(token string, ids ...string) ([]models.Policy, error)
 	DeletePolicies(policies []models.Policy, token string) error
 	AddPolicies(policies []models.Policy, token string) error
 }
@@ -36,6 +38,18 @@ func (c *ExternalClient) GetPolicies(token string) ([]models.Policy, error) {
 		Policies []models.Policy `json:"policies"`
 	}
 	err := c.JsonClient.Do("GET", "/networking/v0/external/policies", nil, &policies, token)
+	if err != nil {
+		return nil, err
+	}
+	return policies.Policies, nil
+}
+
+func (c *ExternalClient) GetPoliciesByID(token string, ids ...string) ([]models.Policy, error) {
+	var policies struct {
+		Policies []models.Policy `json:"policies"`
+	}
+	route := "/networking/v0/external/policies?id=" + strings.Join(ids, ",")
+	err := c.JsonClient.Do("GET", route, nil, &policies, token)
 	if err != nil {
 		return nil, err
 	}
