@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"lib/marshal"
 	"lib/models"
+	"lib/policy_client"
 	"log"
 	"regexp"
 	"strconv"
@@ -18,10 +19,11 @@ import (
 )
 
 type Plugin struct {
-	Marshaler   marshal.Marshaler
-	Unmarshaler marshal.Unmarshaler
-	Styler      *styles.StyleGroup
-	Logger      *log.Logger
+	Marshaler    marshal.Marshaler
+	Unmarshaler  marshal.Unmarshaler
+	Styler       *styles.StyleGroup
+	Logger       *log.Logger
+	PolicyClient policy_client.ExternalPolicyClient
 }
 
 type ValidArgs struct {
@@ -121,17 +123,37 @@ func (p *Plugin) ListCommand(cliConnection plugin.CliConnection, args []string) 
 	}
 	p.Logger.Printf(p.Styler.ApplyStyles("Listing policies as " + p.Styler.AddStyle(username, "cyan") + "..."))
 
+	accessToken, err := cliConnection.AccessToken()
+	if err != nil {
+		return "", fmt.Errorf("getting access token: %s", err)
+	}
+
 	flags := flag.NewFlagSet("cf list-policies", flag.ContinueOnError)
 	appName := flags.String("app", "", "app name to filter results")
 	flags.Parse(args[1:])
 
-	path := "/networking/v0/external/policies"
+	var appGuid string
 	if *appName != "" {
 		app, err := cliConnection.GetApp(*appName)
 		if err != nil {
 			return "", fmt.Errorf("getting app: %s", err)
 		}
-		path = fmt.Sprintf("%s?id=%s", path, app.Guid)
+		appGuid = app.Guid
+	}
+
+	var policies []models.Policy
+	if appGuid != "" {
+		var err error
+		policies, err = p.PolicyClient.GetPoliciesByID(accessToken, appGuid)
+		if err != nil {
+			return "", fmt.Errorf("getting policies by id: %s", err)
+		}
+	} else {
+		var err error
+		policies, err = p.PolicyClient.GetPolicies(accessToken)
+		if err != nil {
+			return "", fmt.Errorf("getting policies: %s", err)
+		}
 	}
 
 	apps, err := cliConnection.GetApps()
@@ -139,24 +161,9 @@ func (p *Plugin) ListCommand(cliConnection plugin.CliConnection, args []string) 
 		return "", fmt.Errorf("getting apps: %s", err)
 	}
 
-	var policiesResponse = struct {
-		Policies []models.Policy `json:"policies"`
-	}{}
-
-	policiesJSON, err := cliConnection.CliCommandWithoutTerminalOutput("curl", path)
-	if err != nil {
-		return "", fmt.Errorf("getting policies: %s", err)
-	}
-
 	buffer := &bytes.Buffer{}
 	tabWriter := tabwriter.NewWriter(buffer, 0, 8, 2, '\t', tabwriter.FilterHTML)
 	fmt.Fprintf(tabWriter, p.Styler.AddStyle("Source\tDestination\tProtocol\tPort\n", "bold"))
-
-	err = p.Unmarshaler.Unmarshal([]byte(policiesJSON[0]), &policiesResponse)
-	if err != nil {
-		return "", fmt.Errorf("unmarshaling: %s", err)
-	}
-	policies := policiesResponse.Policies
 
 	for _, policy := range policies {
 		srcName := ""

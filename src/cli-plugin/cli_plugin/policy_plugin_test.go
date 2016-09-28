@@ -5,7 +5,9 @@ import (
 	"cli-plugin/styles"
 	"encoding/json"
 	"errors"
+	"lib/fakes"
 	"lib/marshal"
+	"lib/models"
 	"log"
 
 	"github.com/cloudfoundry/cli/plugin/models"
@@ -19,16 +21,19 @@ var _ = Describe("Plugin", func() {
 	var (
 		policyPlugin      cli_plugin.Plugin
 		fakeCliConnection *pluginfakes.FakeCliConnection
+		policyClient      *fakes.ExternalPolicyClient
 		srcAppData        plugin_models.GetAppModel
 		dstAppData        plugin_models.GetAppModel
 	)
 
 	BeforeEach(func() {
+		policyClient = &fakes.ExternalPolicyClient{}
 		policyPlugin = cli_plugin.Plugin{
-			Marshaler:   marshal.MarshalFunc(json.Marshal),
-			Unmarshaler: marshal.UnmarshalFunc(json.Unmarshal),
-			Styler:      styles.NewGroup(),
-			Logger:      log.New(GinkgoWriter, "", 0),
+			Marshaler:    marshal.MarshalFunc(json.Marshal),
+			Unmarshaler:  marshal.UnmarshalFunc(json.Unmarshal),
+			Styler:       styles.NewGroup(),
+			Logger:       log.New(GinkgoWriter, "", 0),
+			PolicyClient: policyClient,
 		}
 
 		srcAppData = plugin_models.GetAppModel{
@@ -57,27 +62,14 @@ var _ = Describe("Plugin", func() {
 	Describe("ListCommand", func() {
 		BeforeEach(func() {
 			fakeCliConnection = &pluginfakes.FakeCliConnection{}
-			fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{`{"policies":[{"source":{"id":"some-app-guid"},"destination":{"id":"some-other-app-guid","port":9999,"protocol":"tcp"}}]}`}, nil)
+			policyClient.GetPoliciesReturns([]models.Policy{
+				models.Policy{Source: models.Source{ID: "some-app-guid"}, Destination: models.Destination{ID: "some-other-app-guid", Port: 9999, Protocol: "tcp"}},
+			}, nil)
 			fakeCliConnection.GetAppsReturns([]plugin_models.GetAppsModel{
 				{Guid: "some-app-guid", Name: "some-app"},
 				{Guid: "some-other-app-guid", Name: "some-other-app"},
 			}, nil)
-		})
-
-		Context("when there are no policies", func() {
-			BeforeEach(func() {
-				fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{`{"policies":[]}`}, nil)
-			})
-			It("shows nothing", func() {
-				output, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"access-list"})
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(fakeCliConnection.GetAppsCallCount()).To(Equal(1))
-				Expect(fakeCliConnection.CliCommandWithoutTerminalOutputCallCount()).To(Equal(1))
-				Expect(fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)).To(Equal([]string{"curl", "/networking/v0/external/policies"}))
-
-				Expect(output).To(Equal("<BOLD>Source\tDestination\tProtocol\tPort\n<RESET>"))
-			})
+			fakeCliConnection.AccessTokenReturns("some-token", nil)
 		})
 
 		Context("when there is a policy and I can resolve the guids", func() {
@@ -85,11 +77,27 @@ var _ = Describe("Plugin", func() {
 				output, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"access-list"})
 				Expect(err).NotTo(HaveOccurred())
 
+				Expect(policyClient.GetPoliciesCallCount()).To(Equal(1))
+				Expect(policyClient.GetPoliciesArgsForCall(0)).To(Equal("some-token"))
 				Expect(fakeCliConnection.GetAppsCallCount()).To(Equal(1))
-				Expect(fakeCliConnection.CliCommandWithoutTerminalOutputCallCount()).To(Equal(1))
-				Expect(fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)).To(Equal([]string{"curl", "/networking/v0/external/policies"}))
 
 				Expect(output).To(Equal("<BOLD>Source\t\tDestination\tProtocol\tPort\n<RESET><CLR_C>some-app<RESET>\t<CLR_C>some-other-app<RESET>\ttcp\t\t9999\n"))
+			})
+		})
+
+		Context("when there are no policies", func() {
+			BeforeEach(func() {
+				policyClient.GetPoliciesReturns([]models.Policy{}, nil)
+			})
+			It("shows nothing", func() {
+				output, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"access-list"})
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(policyClient.GetPoliciesCallCount()).To(Equal(1))
+				Expect(policyClient.GetPoliciesArgsForCall(0)).To(Equal("some-token"))
+				Expect(fakeCliConnection.GetAppsCallCount()).To(Equal(1))
+
+				Expect(output).To(Equal("<BOLD>Source\tDestination\tProtocol\tPort\n<RESET>"))
 			})
 		})
 
@@ -105,9 +113,9 @@ var _ = Describe("Plugin", func() {
 				output, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"access-list"})
 				Expect(err).NotTo(HaveOccurred())
 
+				Expect(policyClient.GetPoliciesCallCount()).To(Equal(1))
+				Expect(policyClient.GetPoliciesArgsForCall(0)).To(Equal("some-token"))
 				Expect(fakeCliConnection.GetAppsCallCount()).To(Equal(1))
-				Expect(fakeCliConnection.CliCommandWithoutTerminalOutputCallCount()).To(Equal(1))
-				Expect(fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)).To(Equal([]string{"curl", "/networking/v0/external/policies"}))
 
 				Expect(output).To(Equal("<BOLD>Source\tDestination\tProtocol\tPort\n<RESET>"))
 			})
@@ -124,7 +132,7 @@ var _ = Describe("Plugin", func() {
 			})
 		})
 
-		Context("when getting the apps fails", func() {
+		Context("when getting apps fails", func() {
 			BeforeEach(func() {
 				fakeCliConnection.GetAppsReturns([]plugin_models.GetAppsModel{}, errors.New("banana"))
 			})
@@ -136,31 +144,29 @@ var _ = Describe("Plugin", func() {
 
 		Context("when getting policies fails", func() {
 			BeforeEach(func() {
-				fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{}, errors.New("ERROR"))
+				policyClient.GetPoliciesReturns(nil, errors.New("banana"))
 			})
 			It("returns the error", func() {
 				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"access-list"})
-				Expect(err).To(MatchError("getting policies: ERROR"))
+				Expect(err).To(MatchError("getting policies: banana"))
 			})
 		})
 
-		Context("when the response from the policy server cannot be unmarshalled", func() {
+		Context("when getting access token fails", func() {
 			BeforeEach(func() {
-				policyPlugin.Unmarshaler = marshal.UnmarshalFunc(func([]byte, interface{}) error {
-					return errors.New("banana")
-				})
+				fakeCliConnection.AccessTokenReturns("", errors.New("banana"))
 			})
-			It("returns an error", func() {
+			It("returns the error", func() {
 				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"access-list"})
-				Expect(err).To(MatchError("unmarshaling: banana"))
+				Expect(err).To(MatchError("getting access token: banana"))
 			})
 		})
 
 		Context("when the user specifies an app name", func() {
 			BeforeEach(func() {
-				fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{`{"policies":[
-					{"source":{"id":"some-app-guid"},"destination":{"id":"some-other-app-guid","port":9999,"protocol":"tcp"}}
-				]}`}, nil)
+				policyClient.GetPoliciesByIDReturns([]models.Policy{
+					models.Policy{Source: models.Source{ID: "some-app-guid"}, Destination: models.Destination{ID: "some-other-app-guid", Port: 9999, Protocol: "tcp"}},
+				}, nil)
 				fakeCliConnection.GetAppReturns(plugin_models.GetAppModel{
 					Guid: "some-app-guid",
 					Name: "some-app",
@@ -177,8 +183,10 @@ var _ = Describe("Plugin", func() {
 				Expect(fakeCliConnection.GetAppCallCount()).To(Equal(1))
 				Expect(fakeCliConnection.GetAppArgsForCall(0)).To(Equal("some-app"))
 				Expect(fakeCliConnection.GetAppsCallCount()).To(Equal(1))
-				Expect(fakeCliConnection.CliCommandWithoutTerminalOutputCallCount()).To(Equal(1))
-				Expect(fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)).To(Equal([]string{"curl", "/networking/v0/external/policies?id=some-app-guid"}))
+				Expect(policyClient.GetPoliciesByIDCallCount()).To(Equal(1))
+				token, ids := policyClient.GetPoliciesByIDArgsForCall(0)
+				Expect(token).To(Equal("some-token"))
+				Expect(ids).To(ConsistOf("some-app-guid"))
 
 				Expect(output).To(Equal("<BOLD>Source\t\tDestination\tProtocol\tPort\n<RESET><CLR_C>some-app<RESET>\t<CLR_C>some-other-app<RESET>\ttcp\t\t9999\n"))
 			})
