@@ -10,7 +10,7 @@ import (
 
 //go:generate counterfeiter -o ../fakes/external_policy_client.go --fake-name ExternalPolicyClient . ExternalPolicyClient
 type ExternalPolicyClient interface {
-	GetPolicies() ([]models.Policy, error)
+	GetPolicies(token string) ([]models.Policy, error)
 	DeletePolicies(policies []models.Policy, token string) error
 	AddPolicies(policies []models.Policy, token string) error
 }
@@ -31,11 +31,11 @@ func NewExternal(logger lager.Logger, httpClient httpClient, url string) *Extern
 	}
 }
 
-func (c *ExternalClient) GetPolicies() ([]models.Policy, error) {
+func (c *ExternalClient) GetPolicies(token string) ([]models.Policy, error) {
 	var policies struct {
 		Policies []models.Policy `json:"policies"`
 	}
-	err := c.JsonClient.Do("GET", "/networking/v0/external/policies", nil, &policies, "")
+	err := c.JsonClient.Do("GET", "/networking/v0/external/policies", nil, &policies, token)
 	if err != nil {
 		return nil, err
 	}

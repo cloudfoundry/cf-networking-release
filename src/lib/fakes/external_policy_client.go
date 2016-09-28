@@ -8,10 +8,12 @@ import (
 )
 
 type ExternalPolicyClient struct {
-	GetPoliciesStub        func() ([]models.Policy, error)
+	GetPoliciesStub        func(token string) ([]models.Policy, error)
 	getPoliciesMutex       sync.RWMutex
-	getPoliciesArgsForCall []struct{}
-	getPoliciesReturns     struct {
+	getPoliciesArgsForCall []struct {
+		token string
+	}
+	getPoliciesReturns struct {
 		result1 []models.Policy
 		result2 error
 	}
@@ -37,13 +39,15 @@ type ExternalPolicyClient struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *ExternalPolicyClient) GetPolicies() ([]models.Policy, error) {
+func (fake *ExternalPolicyClient) GetPolicies(token string) ([]models.Policy, error) {
 	fake.getPoliciesMutex.Lock()
-	fake.getPoliciesArgsForCall = append(fake.getPoliciesArgsForCall, struct{}{})
-	fake.recordInvocation("GetPolicies", []interface{}{})
+	fake.getPoliciesArgsForCall = append(fake.getPoliciesArgsForCall, struct {
+		token string
+	}{token})
+	fake.recordInvocation("GetPolicies", []interface{}{token})
 	fake.getPoliciesMutex.Unlock()
 	if fake.GetPoliciesStub != nil {
-		return fake.GetPoliciesStub()
+		return fake.GetPoliciesStub(token)
 	} else {
 		return fake.getPoliciesReturns.result1, fake.getPoliciesReturns.result2
 	}
@@ -53,6 +57,12 @@ func (fake *ExternalPolicyClient) GetPoliciesCallCount() int {
 	fake.getPoliciesMutex.RLock()
 	defer fake.getPoliciesMutex.RUnlock()
 	return len(fake.getPoliciesArgsForCall)
+}
+
+func (fake *ExternalPolicyClient) GetPoliciesArgsForCall(i int) string {
+	fake.getPoliciesMutex.RLock()
+	defer fake.getPoliciesMutex.RUnlock()
+	return fake.getPoliciesArgsForCall[i].token
 }
 
 func (fake *ExternalPolicyClient) GetPoliciesReturns(result1 []models.Policy, result2 error) {

@@ -33,7 +33,7 @@ var _ = Describe("ExternalClient", func() {
 			}
 		})
 		It("does the right json http client request", func() {
-			policies, err := client.GetPolicies()
+			policies, err := client.GetPolicies("some-token")
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(jsonClient.DoCallCount()).To(Equal(1))
@@ -45,7 +45,7 @@ var _ = Describe("ExternalClient", func() {
 			Expect(policies).To(Equal([]models.Policy{
 				{
 					Source: models.Source{
-						ID:  "some-app-guid",
+						ID: "some-app-guid",
 					},
 					Destination: models.Destination{
 						ID:       "some-other-app-guid",
@@ -55,14 +55,14 @@ var _ = Describe("ExternalClient", func() {
 				},
 			},
 			))
-			Expect(token).To(BeEmpty())
+			Expect(token).To(Equal("some-token"))
 		})
 		Context("when the json client fails", func() {
 			BeforeEach(func() {
 				jsonClient.DoReturns(errors.New("banana"))
 			})
 			It("returns the error", func() {
-				_, err := client.GetPolicies()
+				_, err := client.GetPolicies("some-token")
 				Expect(err).To(MatchError("banana"))
 			})
 		})
@@ -115,7 +115,7 @@ var _ = Describe("ExternalClient", func() {
 				jsonClient.DoReturns(errors.New("banana"))
 			})
 			It("returns the error", func() {
-				_, err := client.GetPolicies()
+				_, err := client.GetPolicies("some-token")
 				Expect(err).To(MatchError("banana"))
 			})
 		})
@@ -168,7 +168,7 @@ var _ = Describe("ExternalClient", func() {
 				jsonClient.DoReturns(errors.New("banana"))
 			})
 			It("returns the error", func() {
-				_, err := client.GetPolicies()
+				_, err := client.GetPolicies("some-token")
 				Expect(err).To(MatchError("banana"))
 			})
 		})
