@@ -217,9 +217,9 @@ func doAllPolicies(action string, source string, dstList []string, dstPorts []in
 	}
 	token := getToken()
 	if action == "create" {
-		Expect(policyClient.AddPolicies(policies, token)).To(Succeed())
+		Expect(policyClient.AddPolicies(token, policies)).To(Succeed())
 	} else if action == "delete" {
-		Expect(policyClient.DeletePolicies(policies, token)).To(Succeed())
+		Expect(policyClient.DeletePolicies(token, policies)).To(Succeed())
 	}
 }
 
