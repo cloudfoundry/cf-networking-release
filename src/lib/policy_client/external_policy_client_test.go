@@ -27,7 +27,7 @@ var _ = Describe("ExternalClient", func() {
 	Describe("GetPolicies", func() {
 		BeforeEach(func() {
 			jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
-				respBytes := []byte(`{ "policies": [ {"source": { "id": "some-app-guid", "tag": "BEEF" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
+				respBytes := []byte(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
 				json.Unmarshal(respBytes, respData)
 				return nil
 			}
@@ -46,7 +46,6 @@ var _ = Describe("ExternalClient", func() {
 				{
 					Source: models.Source{
 						ID:  "some-app-guid",
-						Tag: "BEEF",
 					},
 					Destination: models.Destination{
 						ID:       "some-other-app-guid",
