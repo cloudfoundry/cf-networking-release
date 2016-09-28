@@ -3,6 +3,7 @@ package cli_plugin
 import (
 	"cli-plugin/styles"
 	"crypto/tls"
+	"errors"
 	"flag"
 	"fmt"
 	"lib/policy_client"
@@ -102,6 +103,7 @@ func (p *Plugin) RunWithErrors(cliConnection plugin.CliConnection, args []string
 	if err != nil {
 		return "", fmt.Errorf("getting api endpoint: %s", err)
 	}
+
 	skipSSL, err := cliConnection.IsSSLDisabled()
 	if err != nil {
 		return "", fmt.Errorf("checking if ssl disabled: %s", err)
@@ -139,7 +141,18 @@ func (p *Plugin) RunWithErrors(cliConnection plugin.CliConnection, args []string
 	return "", nil
 }
 
-func validateUsage(cliConnection plugin.CliConnection, regex string, args []string) error {
+func validateUsage(cliConnection plugin.CliConnection, args []string) error {
+	var regex string
+	switch args[0] {
+	case ListCommand:
+		regex = ListUsageRegex
+	case AllowCommand:
+		regex = AllowUsageRegex
+	case DenyCommand:
+		regex = DenyUsageRegex
+	default:
+		return errors.New("Invalid command")
+	}
 	rx := regexp.MustCompile(regex)
 	if !rx.MatchString(strings.Join(args, " ")) {
 		return errorWithUsage("", args[0], cliConnection)

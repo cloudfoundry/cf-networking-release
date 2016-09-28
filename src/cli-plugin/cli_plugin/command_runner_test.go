@@ -271,7 +271,6 @@ var _ = Describe("CommandRunner", func() {
 					BeforeEach(func() {
 						fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{}, errors.New("banana"))
 					})
-
 					It("returns the error", func() {
 						_, err := runner.Allow()
 						Expect(err).To(MatchError("cf cli error: banana"))
@@ -283,7 +282,6 @@ var _ = Describe("CommandRunner", func() {
 				BeforeEach(func() {
 					fakeCliConnection.UsernameReturns("", errors.New("banana"))
 				})
-
 				It("returns an error", func() {
 					_, err := runner.Allow()
 					Expect(err).To(MatchError("could not resolve username: banana"))
@@ -376,6 +374,48 @@ var _ = Describe("CommandRunner", func() {
 			It("returns an error", func() {
 				_, err := runner.Deny()
 				Expect(err).To(MatchError("could not resolve username: banana"))
+			})
+		})
+	})
+
+	Describe("Resolving App Names to Guids", func() {
+		Context("when there are errors talking to CC", func() {
+			BeforeEach(func() {
+				runner.Args = []string{"access-deny", "bad-access", "some-other-app", "--protocol", "tcp", "--port", "9999"}
+			})
+			It("returns a useful error", func() {
+				_, err := runner.Deny()
+				Expect(err).To(MatchError("resolving source app: apple"))
+			})
+		})
+
+		Context("when the source app could not be resolved to a GUID", func() {
+			BeforeEach(func() {
+				runner.Args = []string{"access-deny", "inaccessible-app", "some-other-app", "--protocol", "tcp", "--port", "9999"}
+			})
+			It("returns a useful error", func() {
+				_, err := runner.Deny()
+				Expect(err).To(MatchError("resolving source app: inaccessible-app not found"))
+			})
+		})
+
+		Context("when there are errors resolving destination app", func() {
+			BeforeEach(func() {
+				runner.Args = []string{"access-deny", "some-app", "not-some-other-app", "--protocol", "tcp", "--port", "9999"}
+			})
+			It("returns a useful error", func() {
+				_, err := runner.Deny()
+				Expect(err).To(MatchError("resolving destination app: apple"))
+			})
+		})
+
+		Context("when the destination app could not be resolved to a GUID", func() {
+			BeforeEach(func() {
+				runner.Args = []string{"access-deny", "some-app", "inaccessible-app", "--protocol", "tcp", "--port", "9999"}
+			})
+			It("returns a useful error", func() {
+				_, err := runner.Deny()
+				Expect(err).To(MatchError("resolving destination app: inaccessible-app not found"))
 			})
 		})
 	})

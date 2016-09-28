@@ -7,7 +7,6 @@ import (
 	"lib/fakes"
 	"log"
 
-	"github.com/cloudfoundry/cli/plugin/models"
 	"github.com/cloudfoundry/cli/plugin/pluginfakes"
 
 	. "github.com/onsi/ginkgo"
@@ -19,8 +18,6 @@ var _ = Describe("Plugin", func() {
 		policyPlugin      cli_plugin.Plugin
 		fakeCliConnection *pluginfakes.FakeCliConnection
 		policyClient      *fakes.ExternalPolicyClient
-		srcAppData        plugin_models.GetAppModel
-		dstAppData        plugin_models.GetAppModel
 	)
 
 	BeforeEach(func() {
@@ -31,27 +28,7 @@ var _ = Describe("Plugin", func() {
 			PolicyClient: policyClient,
 		}
 
-		srcAppData = plugin_models.GetAppModel{
-			Name: "some-app",
-			Guid: "some-app-guid",
-		}
-		dstAppData = plugin_models.GetAppModel{
-			Name: "some-other-app",
-			Guid: "some-other-app-guid",
-		}
 		fakeCliConnection = &pluginfakes.FakeCliConnection{}
-		fakeCliConnection.GetAppStub = func(name string) (plugin_models.GetAppModel, error) {
-			switch name {
-			case "some-app":
-				return srcAppData, nil
-			case "some-other-app":
-				return dstAppData, nil
-			case "inaccessible-app":
-				return plugin_models.GetAppModel{}, nil
-			default:
-				return plugin_models.GetAppModel{}, errors.New("apple")
-			}
-		}
 	})
 
 	Context("when getting the api endpoint fails", func() {
@@ -64,43 +41,14 @@ var _ = Describe("Plugin", func() {
 		})
 	})
 
-	Describe("Resolving App Names to Guids", func() {
-		Context("when there are errors talking to CC", func() {
-			It("returns a useful error", func() {
-				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{
-					"access-deny", "bad-access", "some-other-app", "--protocol", "tcp", "--port", "9999",
-				})
-				Expect(err).To(MatchError("resolving source app: apple"))
-			})
+	Context("when checking if ssl is disabled fails", func() {
+		BeforeEach(func() {
+			fakeCliConnection.IsSSLDisabledReturns(true, errors.New("banana"))
 		})
-
-		Context("when the source app could not be resolved to a GUID", func() {
-			It("returns a useful error", func() {
-				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{
-					"access-deny", "inaccessible-app", "some-other-app", "--protocol", "tcp", "--port", "9999",
-				})
-				Expect(err).To(MatchError("resolving source app: inaccessible-app not found"))
-			})
+		It("returns the error", func() {
+			_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"some-command"})
+			Expect(err).To(MatchError("checking if ssl disabled: banana"))
 		})
-
-		Context("when there are errors resolving destination app", func() {
-			It("returns a useful error", func() {
-				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{
-					"access-deny", "some-app", "not-some-other-app", "--protocol", "tcp", "--port", "9999",
-				})
-				Expect(err).To(MatchError("resolving destination app: apple"))
-			})
-		})
-
-		Context("when the destination app could not be resolved to a GUID", func() {
-			It("returns a useful error", func() {
-				_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{
-					"access-deny", "some-app", "inaccessible-app", "--protocol", "tcp", "--port", "9999",
-				})
-				Expect(err).To(MatchError("resolving destination app: inaccessible-app not found"))
-			})
-		})
-
 	})
 
 	Describe("ValidateArgs", func() {

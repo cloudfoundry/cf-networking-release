@@ -23,7 +23,7 @@ type CommandRunner struct {
 }
 
 func (r *CommandRunner) List() (string, error) {
-	err := validateUsage(r.CliConnection, ListUsageRegex, r.Args)
+	err := validateUsage(r.CliConnection, r.Args)
 	if err != nil {
 		return "", err
 	}
@@ -32,7 +32,9 @@ func (r *CommandRunner) List() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("could not resolve username: %s", err)
 	}
-	r.Logger.Printf(r.Styler.ApplyStyles("Listing policies as " + r.Styler.AddStyle(username, "cyan") + "..."))
+
+	r.Logger.Printf(r.Styler.ApplyStyles(
+		"Listing policies as " + r.Styler.AddStyle(username, "cyan") + "..."))
 
 	accessToken, err := r.CliConnection.AccessToken()
 	if err != nil {
@@ -108,7 +110,7 @@ func (r *CommandRunner) List() (string, error) {
 }
 
 func (r *CommandRunner) Allow() (string, error) {
-	err := validateUsage(r.CliConnection, AllowUsageRegex, r.Args)
+	err := validateUsage(r.CliConnection, r.Args)
 	if err != nil {
 		return "", err
 	}
@@ -122,35 +124,15 @@ func (r *CommandRunner) Allow() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("could not resolve username: %s", err)
 	}
+
 	r.Logger.Printf(r.Styler.ApplyStyles(
 		"Allowing traffic from " + r.Styler.AddStyle(validArgs.SourceAppName, "cyan") +
 			" to " + r.Styler.AddStyle(validArgs.DestAppName, "cyan") +
 			" as " + r.Styler.AddStyle(username, "cyan") + "..."))
 
-	srcAppModel, err := r.CliConnection.GetApp(validArgs.SourceAppName)
+	policy, err := r.constructPolicy(validArgs)
 	if err != nil {
-		return "", fmt.Errorf("resolving source app: %s", err)
-	}
-	if srcAppModel.Guid == "" {
-		return "", fmt.Errorf("resolving source app: %s not found", validArgs.SourceAppName)
-	}
-	dstAppModel, err := r.CliConnection.GetApp(validArgs.DestAppName)
-	if err != nil {
-		return "", fmt.Errorf("resolving destination app: %s", err)
-	}
-	if dstAppModel.Guid == "" {
-		return "", fmt.Errorf("resolving destination app: %s not found", validArgs.DestAppName)
-	}
-
-	policy := models.Policy{
-		Source: models.Source{
-			ID: srcAppModel.Guid,
-		},
-		Destination: models.Destination{
-			ID:       dstAppModel.Guid,
-			Protocol: validArgs.Protocol,
-			Port:     validArgs.Port,
-		},
+		return "", err
 	}
 
 	token, err := r.CliConnection.AccessToken()
@@ -167,7 +149,7 @@ func (r *CommandRunner) Allow() (string, error) {
 }
 
 func (r *CommandRunner) Deny() (string, error) {
-	err := validateUsage(r.CliConnection, DenyUsageRegex, r.Args)
+	err := validateUsage(r.CliConnection, r.Args)
 	if err != nil {
 		return "", err
 	}
@@ -181,35 +163,15 @@ func (r *CommandRunner) Deny() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("could not resolve username: %s", err)
 	}
+
 	r.Logger.Printf(r.Styler.ApplyStyles(
 		"Denying traffic from " + r.Styler.AddStyle(validArgs.SourceAppName, "cyan") +
 			" to " + r.Styler.AddStyle(validArgs.DestAppName, "cyan") +
 			" as " + r.Styler.AddStyle(username, "cyan") + "..."))
 
-	srcAppModel, err := r.CliConnection.GetApp(validArgs.SourceAppName)
+	policy, err := r.constructPolicy(validArgs)
 	if err != nil {
-		return "", fmt.Errorf("resolving source app: %s", err)
-	}
-	if srcAppModel.Guid == "" {
-		return "", fmt.Errorf("resolving source app: %s not found", validArgs.SourceAppName)
-	}
-	dstAppModel, err := r.CliConnection.GetApp(validArgs.DestAppName)
-	if err != nil {
-		return "", fmt.Errorf("resolving destination app: %s", err)
-	}
-	if dstAppModel.Guid == "" {
-		return "", fmt.Errorf("resolving destination app: %s not found", validArgs.DestAppName)
-	}
-
-	policy := models.Policy{
-		Source: models.Source{
-			ID: srcAppModel.Guid,
-		},
-		Destination: models.Destination{
-			ID:       dstAppModel.Guid,
-			Protocol: validArgs.Protocol,
-			Port:     validArgs.Port,
-		},
+		return "", err
 	}
 
 	accessToken, err := r.CliConnection.AccessToken()
@@ -223,4 +185,32 @@ func (r *CommandRunner) Deny() (string, error) {
 	}
 
 	return "", nil
+}
+
+func (r *CommandRunner) constructPolicy(validArgs ValidArgs) (models.Policy, error) {
+	srcAppModel, err := r.CliConnection.GetApp(validArgs.SourceAppName)
+	if err != nil {
+		return models.Policy{}, fmt.Errorf("resolving source app: %s", err)
+	}
+	if srcAppModel.Guid == "" {
+		return models.Policy{}, fmt.Errorf("resolving source app: %s not found", validArgs.SourceAppName)
+	}
+	dstAppModel, err := r.CliConnection.GetApp(validArgs.DestAppName)
+	if err != nil {
+		return models.Policy{}, fmt.Errorf("resolving destination app: %s", err)
+	}
+	if dstAppModel.Guid == "" {
+		return models.Policy{}, fmt.Errorf("resolving destination app: %s not found", validArgs.DestAppName)
+	}
+
+	return models.Policy{
+		Source: models.Source{
+			ID: srcAppModel.Guid,
+		},
+		Destination: models.Destination{
+			ID:       dstAppModel.Guid,
+			Protocol: validArgs.Protocol,
+			Port:     validArgs.Port,
+		},
+	}, nil
 }
