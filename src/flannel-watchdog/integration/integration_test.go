@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"os"
 	"os/exec"
+	"strings"
 
 	"flannel-watchdog/config"
 
@@ -24,18 +25,29 @@ var _ = Describe("Flannel Watchdog", func() {
 		bridgeIP       string
 	)
 
-	BeforeEach(func() {
-		bridgeName = fmt.Sprintf("test-bridge-%d", rand.Int()%1000)
-		bridgeIP = "10.255.78.1/24"
-
+	createBridge := func() {
 		ipLinkSession, err := runCmd("ip", "link", "add", "name", bridgeName, "type", "bridge")
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(ipLinkSession, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
 
-		ipAddSession, err := runCmd("ip", "addr", "add", bridgeIP, "dev", bridgeName)
+		ipLinkSession, err = runCmd("ip", "addr", "add", bridgeIP, "dev", bridgeName)
 		Expect(err).NotTo(HaveOccurred())
-		Eventually(ipAddSession, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
+		Eventually(ipLinkSession, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
+	}
 
+	deleteBridge := func() {
+		ipLinkSession, err := runCmd("ip", "link", "delete", "dev", bridgeName)
+		Expect(err).NotTo(HaveOccurred())
+		Eventually(ipLinkSession, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
+	}
+
+	BeforeEach(func() {
+		bridgeName = fmt.Sprintf("test-bridge-%d", rand.Int()%1000)
+		bridgeIP = "10.255.78.1/24"
+
+		createBridge()
+
+		var err error
 		subnetFile, err = ioutil.TempFile("", "subnet.env")
 		subnetFileName = subnetFile.Name()
 		err = ioutil.WriteFile(subnetFileName, []byte(fmt.Sprintf("FLANNEL_SUBNET=%s\nFLANNEL_NETWORK=10.255.0.0/16", bridgeIP)), os.ModePerm)
@@ -91,12 +103,37 @@ var _ = Describe("Flannel Watchdog", func() {
 
 	Context("when the bridge device cannot be found", func() {
 		BeforeEach(func() {
-			_, err := runCmd("ip", "link", "delete", "dev", bridgeName)
-			Expect(err).NotTo(HaveOccurred())
+			deleteBridge()
 		})
 
 		It("continues running", func() {
 			Consistently(session, "1.5s").ShouldNot(gexec.Exit())
+		})
+	})
+
+	Context("once the bridge device is found", func() {
+		howManyFinds := func() int {
+			return strings.Count(string(session.Out.Contents()), "Found bridge")
+		}
+
+		It("reports this fact and then shuts up", func() {
+			expectedMsg := fmt.Sprintf("Found bridge %s", bridgeName)
+			Eventually(session.Out.Contents, DEFAULT_TIMEOUT).Should(ContainSubstring(expectedMsg))
+			Consistently(howManyFinds, "2s").Should(Equal(1))
+		})
+
+		Context("when the bridge is lost and then found", func() {
+			It("reports the Found message again", func() {
+				Eventually(howManyFinds, DEFAULT_TIMEOUT).Should(Equal(1))
+
+				deleteBridge()
+
+				Eventually(session.Out.Contents, DEFAULT_TIMEOUT).Should(ContainSubstring("no bridge device found"))
+
+				createBridge()
+
+				Eventually(howManyFinds, DEFAULT_TIMEOUT).Should(Equal(2))
+			})
 		})
 	})
 

@@ -32,6 +32,7 @@ func (r *Runner) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 
 	errCh := make(chan error)
 	go func() {
+		found := false
 		for {
 			time.Sleep(1 * time.Second)
 
@@ -46,6 +47,7 @@ func (r *Runner) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 			output, err := exec.Command("ip", "addr", "show", "dev", r.BridgeName).CombinedOutput()
 			if err != nil {
 				fmt.Println("no bridge device found")
+				found = false
 				continue
 			}
 
@@ -56,6 +58,11 @@ func (r *Runner) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 			}
 
 			deviceIP := matches[1]
+			if !found {
+				found = true
+				fmt.Printf("Found bridge %s\n", r.BridgeName)
+			}
+
 			if flannelIP != deviceIP {
 				errCh <- fmt.Errorf(`This cell must be recreated.  Flannel is out of sync with the local bridge. `+
 					`flannel (%s): %s bridge (%s): %s`, r.SubnetFile, flannelIP, r.BridgeName, deviceIP)
