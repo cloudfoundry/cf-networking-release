@@ -109,7 +109,7 @@ var _ = Describe("Integration", func() {
 				defer response.Body.Close()
 				Expect(response.StatusCode).To(Equal(500))
 
-				Expect(session.Err.Contents()).To(ContainSubstring("request failed: Get"))
+				Eventually(session.Err.Contents).Should(ContainSubstring("request failed: Get"))
 			})
 		})
 	})
