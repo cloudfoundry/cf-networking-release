@@ -301,33 +301,14 @@ func (p *Plugin) DenyCommand(cliConnection plugin.CliConnection, args []string) 
 		},
 	}
 
-	var policies = struct {
-		Policies []models.Policy `json:"policies"`
-	}{
-		[]models.Policy{policy},
+	accessToken, err := cliConnection.AccessToken()
+	if err != nil {
+		return "", fmt.Errorf("getting access token: %s", err)
 	}
 
-	payload, err := p.Marshaler.Marshal(policies)
+	err = p.PolicyClient.DeletePolicies(accessToken, []models.Policy{policy})
 	if err != nil {
-		return "", fmt.Errorf("payload cannot be marshaled: %s", err)
-	}
-
-	output, err := cliConnection.CliCommandWithoutTerminalOutput(
-		"curl", "-X", "DELETE", "/networking/v0/external/policies", "-d", "'"+string(payload)+"'",
-	)
-	if err != nil {
-		return "", fmt.Errorf("policy deletion failed: %s", err)
-	}
-
-	var policyError struct {
-		Error string `json:"error"`
-	}
-	err = p.Unmarshaler.Unmarshal([]byte(output[0]), &policyError)
-	if err != nil {
-		return "", fmt.Errorf("error unmarshaling policy response: %s", err)
-	}
-	if policyError.Error != "" {
-		return "", fmt.Errorf("error deleting policy: %s", policyError.Error)
+		return "", fmt.Errorf("deleting policies: %s", err)
 	}
 
 	return "", nil
