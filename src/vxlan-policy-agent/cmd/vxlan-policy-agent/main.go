@@ -70,7 +70,7 @@ func main() {
 		die(logger, "discovering network info", err)
 	}
 
-	policyClient := policy_client.New(
+	policyClient := policy_client.NewInternal(
 		logger.Session("policy-client"),
 		http.DefaultClient,
 		conf.PolicyServerURL,

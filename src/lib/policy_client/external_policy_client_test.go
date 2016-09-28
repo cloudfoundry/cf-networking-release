@@ -11,15 +11,15 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("PolicyClient", func() {
+var _ = Describe("ExternalClient", func() {
 	var (
-		client     *policy_client.Client
+		client     *policy_client.ExternalClient
 		jsonClient *fakes.JSONClient
 	)
 
 	BeforeEach(func() {
 		jsonClient = &fakes.JSONClient{}
-		client = &policy_client.Client{
+		client = &policy_client.ExternalClient{
 			JsonClient: jsonClient,
 		}
 	})
@@ -39,7 +39,7 @@ var _ = Describe("PolicyClient", func() {
 			Expect(jsonClient.DoCallCount()).To(Equal(1))
 			method, route, reqData, _, token := jsonClient.DoArgsForCall(0)
 			Expect(method).To(Equal("GET"))
-			Expect(route).To(Equal("/networking/v0/internal/policies"))
+			Expect(route).To(Equal("/networking/v0/external/policies"))
 			Expect(reqData).To(BeNil())
 
 			Expect(policies).To(Equal([]models.Policy{
@@ -58,7 +58,6 @@ var _ = Describe("PolicyClient", func() {
 			))
 			Expect(token).To(BeEmpty())
 		})
-
 		Context("when the json client fails", func() {
 			BeforeEach(func() {
 				jsonClient.DoReturns(errors.New("banana"))

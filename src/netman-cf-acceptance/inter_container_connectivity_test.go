@@ -198,7 +198,7 @@ func getGuids(sourceAppName string, dstAppNames []string) (string, []string) {
 }
 
 func doAllPolicies(action string, source string, dstList []string, dstPorts []int) {
-	policyClient := policy_client.New(lagertest.NewTestLogger("test"), &http.Client{}, "http://"+config.ApiEndpoint)
+	policyClient := policy_client.NewExternal(lagertest.NewTestLogger("test"), &http.Client{}, "http://"+config.ApiEndpoint)
 	sourceGuid, dstGuids := getGuids(source, dstList)
 	policies := []models.Policy{}
 	for _, dstGuid := range dstGuids {

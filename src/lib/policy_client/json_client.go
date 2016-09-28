@@ -10,6 +10,16 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
+//go:generate counterfeiter -o ../fakes/http_client.go --fake-name HTTPClient . httpClient
+type httpClient interface {
+	Do(*http.Request) (*http.Response, error)
+}
+
+//go:generate counterfeiter -o ../fakes/json_client.go --fake-name JSONClient . jsonClient
+type jsonClient interface {
+	Do(method, route string, reqData, respData interface{}, token string) error
+}
+
 type JsonClient struct {
 	Logger      lager.Logger
 	HttpClient  httpClient

@@ -4,27 +4,23 @@ import (
 	"encoding/json"
 	"lib/marshal"
 	"lib/models"
-	"net/http"
 
 	"code.cloudfoundry.org/lager"
 )
 
-//go:generate counterfeiter -o ../fakes/http_client.go --fake-name HTTPClient . httpClient
-type httpClient interface {
-	Do(*http.Request) (*http.Response, error)
+//go:generate counterfeiter -o ../fakes/external_policy_client.go --fake-name ExternalPolicyClient . ExternalPolicyClient
+type ExternalPolicyClient interface {
+	GetPolicies() ([]models.Policy, error)
+	DeletePolicies(policies []models.Policy, token string) error
+	AddPolicies(policies []models.Policy, token string) error
 }
 
-//go:generate counterfeiter -o ../fakes/json_client.go --fake-name JSONClient . jsonClient
-type jsonClient interface {
-	Do(method, route string, reqData, respData interface{}, token string) error
-}
-
-type Client struct {
+type ExternalClient struct {
 	JsonClient jsonClient
 }
 
-func New(logger lager.Logger, httpClient httpClient, url string) *Client {
-	return &Client{
+func NewExternal(logger lager.Logger, httpClient httpClient, url string) *ExternalClient {
+	return &ExternalClient{
 		JsonClient: &JsonClient{
 			Logger:      logger,
 			HttpClient:  httpClient,
@@ -35,18 +31,18 @@ func New(logger lager.Logger, httpClient httpClient, url string) *Client {
 	}
 }
 
-func (c *Client) GetPolicies() ([]models.Policy, error) {
+func (c *ExternalClient) GetPolicies() ([]models.Policy, error) {
 	var policies struct {
 		Policies []models.Policy `json:"policies"`
 	}
-	err := c.JsonClient.Do("GET", "/networking/v0/internal/policies", nil, &policies, "")
+	err := c.JsonClient.Do("GET", "/networking/v0/external/policies", nil, &policies, "")
 	if err != nil {
 		return nil, err
 	}
 	return policies.Policies, nil
 }
 
-func (c *Client) AddPolicies(policies []models.Policy, token string) error {
+func (c *ExternalClient) AddPolicies(policies []models.Policy, token string) error {
 	reqPolicies := map[string][]models.Policy{
 		"policies": policies,
 	}
@@ -57,7 +53,7 @@ func (c *Client) AddPolicies(policies []models.Policy, token string) error {
 	return nil
 }
 
-func (c *Client) DeletePolicies(policies []models.Policy, token string) error {
+func (c *ExternalClient) DeletePolicies(policies []models.Policy, token string) error {
 	reqPolicies := map[string][]models.Policy{
 		"policies": policies,
 	}
