@@ -157,14 +157,14 @@ func getToken() string {
 	session, err := gexec.Start(cmd, nil, nil)
 	Expect(err).NotTo(HaveOccurred())
 	Eventually(session.Wait(2 * Timeout_Short)).Should(gexec.Exit(0))
-	return string(session.Out.Contents())
+	rawOutput := string(session.Out.Contents())
+	return strings.TrimSpace(strings.TrimPrefix(rawOutput, "bearer "))
 }
 
 func getGuids(sourceAppName string, dstAppNames []string) (string, []string) {
 	dstGuids := []string{}
 	sourceGuid := ""
 	token := getToken()
-	token = strings.TrimPrefix(token, "bearer ")
 	appsClient := rainmaker.NewApplicationsService(rainmaker.Config{Host: "http://" + config.ApiEndpoint})
 
 	appsList, err := appsClient.List(token)
