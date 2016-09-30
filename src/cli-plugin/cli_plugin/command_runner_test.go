@@ -142,9 +142,9 @@ var _ = Describe("CommandRunner", func() {
 			BeforeEach(func() {
 				policyClient.GetPoliciesReturns(nil, errors.New("banana"))
 			})
-			It("returns the error", func() {
+			It("wraps the error in a more helpful message", func() {
 				_, err := runner.List()
-				Expect(err).To(MatchError("getting policies: banana"))
+				Expect(err).To(MatchError("getting policies: failed to make request to policy server"))
 			})
 		})
 
@@ -197,6 +197,17 @@ var _ = Describe("CommandRunner", func() {
 					Expect(err).To(MatchError("getting app: ERROR"))
 				})
 			})
+
+			Context("when getting policies by ID fails", func() {
+				BeforeEach(func() {
+					policyClient.GetPoliciesByIDReturns(nil, errors.New("banana"))
+				})
+				It("wraps the error in a more helpful message", func() {
+					_, err := runner.List()
+					Expect(err).To(MatchError("getting policies by id: failed to make request to policy server"))
+				})
+			})
+
 		})
 
 		Context("when the user supplies additional arguments", func() {
@@ -239,9 +250,9 @@ var _ = Describe("CommandRunner", func() {
 				BeforeEach(func() {
 					policyClient.AddPoliciesReturns(errors.New("banana"))
 				})
-				It("returns the error", func() {
+				It("wraps the error in a more helpful message", func() {
 					_, err := runner.Allow()
-					Expect(err).To(MatchError("adding policies: banana"))
+					Expect(err).To(MatchError("adding policies: failed to make request to policy server"))
 				})
 			})
 
@@ -351,9 +362,9 @@ var _ = Describe("CommandRunner", func() {
 			BeforeEach(func() {
 				policyClient.DeletePoliciesReturns(errors.New("banana"))
 			})
-			It("returns the error", func() {
+			It("wraps the error in a more helpful message", func() {
 				_, err := runner.Deny()
-				Expect(err).To(MatchError("deleting policies: banana"))
+				Expect(err).To(MatchError("deleting policies: failed to make request to policy server"))
 			})
 		})
 
