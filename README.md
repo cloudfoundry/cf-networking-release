@@ -91,9 +91,22 @@ Then follow [the instructions for testing with the cats & dogs example](https://
 0. Upload stemcell with Linux kernel 4.4 to bosh director.  Versions >= 3263.2 should work.
 0. Create netman stubs
   - netman requires additional information in several stubs.
+  - netman only supports connecting to etcd over TLS, generate the certs using `./scripts/generate-etcd-certs` in `cf-release` add under `properties` in `stubs/cf/properties.yml`:
+
+    ```yaml
+    etcd:
+      require_ssl: true
+      peer_require_ssl: false # Required if you don't want communication between etcd nodes to be secured via TLS
+      ca_cert: <contents of cf-release/etcd-certs/etcd-ca.crt>
+      server_cert: <contents of cf-release/etcd-certs/server.crt>
+      server_key: <contents of cf-release/etcd-certs/server.key>
+      client_cert: <contents of cf-release/etcd-certs/client.crt>
+      client_key: <contents of cf-release/etcd-certs/client.key>
+    ```
+
   - Add under `properties: uaa` in `stubs/cf/properties.yml`:
 
-    ```bash
+    ```yaml
     scim:
       users:
       - admin|<admin-password>|scim.write,scim.read,openid,cloud_controller.admin,doppler.firehose,network.admin
@@ -101,6 +114,7 @@ Then follow [the instructions for testing with the cats & dogs example](https://
       cf:
         scope: cloud_controller.read,cloud_controller.write,openid,password.write,cloud_controller.admin,scim.read,scim.write,doppler.firehose,uaa.user,routing.router_groups.read,network.admin
     ```
+
 
   - Create a netman stub `stubs/netman/stub.yml`, fill in all `REPLACE_ME` fields with the appropriate credentials:
 
@@ -127,7 +141,10 @@ Then follow [the instructions for testing with the cats & dogs example](https://
           cni_config_dir: /var/vcap/jobs/cni-flannel/config/cni
         cni-flannel:
           etcd_endpoints:
-            - (( "http://" config_from_cf.etcd.advertise_urls_dns_suffix ":4001" ))
+            - (( "https://" config_from_cf.etcd.advertise_urls_dns_suffix ":4001" ))
+          etcd_ca_cert: REPLACE_WITH_ETCD_CA_CERT_FROM_CF_MANIFEST
+          etcd_client_cert: REPLACE_WITH_ETCD_CLIENT_CERT_FROM_CF_MANIFEST
+          etcd_client_key: REPLACE_WITH_ETCD_CLIENT_KEY_FROM_CF_MANIFEST
         policy-server:
           uaa_client_secret: REPLACE_WITH_UAA_CLIENT_SECRET
           uaa_url: (( "https://uaa." config_from_cf.system_domain ))
