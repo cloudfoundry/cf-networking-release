@@ -6,6 +6,9 @@ templates:
   30-flannel.conf.erb: config/cni/30-flannel.conf
   flannel-watchdog_ctl.erb: bin/flannel-watchdog_ctl
   flannel-watchdog.json.erb: config/flannel-watchdog.json
+  etcd_ca.crt.erb: config/certs/etcd/ca.crt
+  etcd_client.crt.erb: config/certs/etcd/client.crt
+  etcd_client.key.erb: config/certs/etcd/client.key
 
 packages:
   - flannel
@@ -16,6 +19,15 @@ properties:
   cni-flannel.etcd_endpoints:
     description: "a list of etcd endpoints"
     default: []
+
+  cni-flannel.etcd_ca_cert:
+    description: "PEM encoded CA cert"
+
+  cni-flannel.etcd_client_cert:
+    description: "PEM encoded client cert"
+
+  cni-flannel.etcd_client_key:
+    description: "PEM encoded client key"
 
   cni-flannel.flannel.Network:
     description: "CIDR block for overlay network.  Should be /16"
