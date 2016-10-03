@@ -7,22 +7,23 @@ import (
 )
 
 type Tracker struct {
-	AcquireOneStub        func(pool *port_allocator.Pool) (int, error)
+	AcquireOneStub        func(pool *port_allocator.Pool, handle string) (int, error)
 	acquireOneMutex       sync.RWMutex
 	acquireOneArgsForCall []struct {
-		pool *port_allocator.Pool
+		pool   *port_allocator.Pool
+		handle string
 	}
 	acquireOneReturns struct {
 		result1 int
 		result2 error
 	}
-	ReleaseManyStub        func(pool *port_allocator.Pool, toRelease []int) error
-	releaseManyMutex       sync.RWMutex
-	releaseManyArgsForCall []struct {
-		pool      *port_allocator.Pool
-		toRelease []int
+	ReleaseAllStub        func(pool *port_allocator.Pool, handle string) error
+	releaseAllMutex       sync.RWMutex
+	releaseAllArgsForCall []struct {
+		pool   *port_allocator.Pool
+		handle string
 	}
-	releaseManyReturns struct {
+	releaseAllReturns struct {
 		result1 error
 	}
 	InRangeStub        func(port int) bool
@@ -37,15 +38,16 @@ type Tracker struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *Tracker) AcquireOne(pool *port_allocator.Pool) (int, error) {
+func (fake *Tracker) AcquireOne(pool *port_allocator.Pool, handle string) (int, error) {
 	fake.acquireOneMutex.Lock()
 	fake.acquireOneArgsForCall = append(fake.acquireOneArgsForCall, struct {
-		pool *port_allocator.Pool
-	}{pool})
-	fake.recordInvocation("AcquireOne", []interface{}{pool})
+		pool   *port_allocator.Pool
+		handle string
+	}{pool, handle})
+	fake.recordInvocation("AcquireOne", []interface{}{pool, handle})
 	fake.acquireOneMutex.Unlock()
 	if fake.AcquireOneStub != nil {
-		return fake.AcquireOneStub(pool)
+		return fake.AcquireOneStub(pool, handle)
 	} else {
 		return fake.acquireOneReturns.result1, fake.acquireOneReturns.result2
 	}
@@ -57,10 +59,10 @@ func (fake *Tracker) AcquireOneCallCount() int {
 	return len(fake.acquireOneArgsForCall)
 }
 
-func (fake *Tracker) AcquireOneArgsForCall(i int) *port_allocator.Pool {
+func (fake *Tracker) AcquireOneArgsForCall(i int) (*port_allocator.Pool, string) {
 	fake.acquireOneMutex.RLock()
 	defer fake.acquireOneMutex.RUnlock()
-	return fake.acquireOneArgsForCall[i].pool
+	return fake.acquireOneArgsForCall[i].pool, fake.acquireOneArgsForCall[i].handle
 }
 
 func (fake *Tracker) AcquireOneReturns(result1 int, result2 error) {
@@ -71,41 +73,36 @@ func (fake *Tracker) AcquireOneReturns(result1 int, result2 error) {
 	}{result1, result2}
 }
 
-func (fake *Tracker) ReleaseMany(pool *port_allocator.Pool, toRelease []int) error {
-	var toReleaseCopy []int
-	if toRelease != nil {
-		toReleaseCopy = make([]int, len(toRelease))
-		copy(toReleaseCopy, toRelease)
-	}
-	fake.releaseManyMutex.Lock()
-	fake.releaseManyArgsForCall = append(fake.releaseManyArgsForCall, struct {
-		pool      *port_allocator.Pool
-		toRelease []int
-	}{pool, toReleaseCopy})
-	fake.recordInvocation("ReleaseMany", []interface{}{pool, toReleaseCopy})
-	fake.releaseManyMutex.Unlock()
-	if fake.ReleaseManyStub != nil {
-		return fake.ReleaseManyStub(pool, toRelease)
+func (fake *Tracker) ReleaseAll(pool *port_allocator.Pool, handle string) error {
+	fake.releaseAllMutex.Lock()
+	fake.releaseAllArgsForCall = append(fake.releaseAllArgsForCall, struct {
+		pool   *port_allocator.Pool
+		handle string
+	}{pool, handle})
+	fake.recordInvocation("ReleaseAll", []interface{}{pool, handle})
+	fake.releaseAllMutex.Unlock()
+	if fake.ReleaseAllStub != nil {
+		return fake.ReleaseAllStub(pool, handle)
 	} else {
-		return fake.releaseManyReturns.result1
+		return fake.releaseAllReturns.result1
 	}
 }
 
-func (fake *Tracker) ReleaseManyCallCount() int {
-	fake.releaseManyMutex.RLock()
-	defer fake.releaseManyMutex.RUnlock()
-	return len(fake.releaseManyArgsForCall)
+func (fake *Tracker) ReleaseAllCallCount() int {
+	fake.releaseAllMutex.RLock()
+	defer fake.releaseAllMutex.RUnlock()
+	return len(fake.releaseAllArgsForCall)
 }
 
-func (fake *Tracker) ReleaseManyArgsForCall(i int) (*port_allocator.Pool, []int) {
-	fake.releaseManyMutex.RLock()
-	defer fake.releaseManyMutex.RUnlock()
-	return fake.releaseManyArgsForCall[i].pool, fake.releaseManyArgsForCall[i].toRelease
+func (fake *Tracker) ReleaseAllArgsForCall(i int) (*port_allocator.Pool, string) {
+	fake.releaseAllMutex.RLock()
+	defer fake.releaseAllMutex.RUnlock()
+	return fake.releaseAllArgsForCall[i].pool, fake.releaseAllArgsForCall[i].handle
 }
 
-func (fake *Tracker) ReleaseManyReturns(result1 error) {
-	fake.ReleaseManyStub = nil
-	fake.releaseManyReturns = struct {
+func (fake *Tracker) ReleaseAllReturns(result1 error) {
+	fake.ReleaseAllStub = nil
+	fake.releaseAllReturns = struct {
 		result1 error
 	}{result1}
 }
@@ -148,8 +145,8 @@ func (fake *Tracker) Invocations() map[string][][]interface{} {
 	defer fake.invocationsMutex.RUnlock()
 	fake.acquireOneMutex.RLock()
 	defer fake.acquireOneMutex.RUnlock()
-	fake.releaseManyMutex.RLock()
-	defer fake.releaseManyMutex.RUnlock()
+	fake.releaseAllMutex.RLock()
+	defer fake.releaseAllMutex.RUnlock()
 	fake.inRangeMutex.RLock()
 	defer fake.inRangeMutex.RUnlock()
 	return fake.invocations

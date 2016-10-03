@@ -9,8 +9,8 @@ import (
 
 //go:generate counterfeiter -o ../fakes/tracker.go --fake-name Tracker . tracker
 type tracker interface {
-	AcquireOne(pool *Pool) (int, error)
-	ReleaseMany(pool *Pool, toRelease []int) error
+	AcquireOne(pool *Pool, handle string) (int, error)
+	ReleaseAll(pool *Pool, handle string) error
 	InRange(port int) bool
 }
 
@@ -52,7 +52,7 @@ func (p *PortAllocator) AllocatePort(handle string, port int) (int, error) {
 		return -1, fmt.Errorf("decoding state file: %s", err)
 	}
 
-	newPort, err := p.Tracker.AcquireOne(pool)
+	newPort, err := p.Tracker.AcquireOne(pool, handle)
 	if err != nil {
 		return -1, fmt.Errorf("acquire port: %s", err)
 	}
@@ -66,11 +66,26 @@ func (p *PortAllocator) AllocatePort(handle string, port int) (int, error) {
 }
 
 func (p *PortAllocator) ReleaseAllPorts(handle string) error {
-	// - acquire the lock as a file
-	// - defer file.Close()
+	file, err := p.Locker.Open()
+	if err != nil {
+		return fmt.Errorf("open lock: %s", err)
+	}
+	defer file.Close() // defer not tested
 
-	// - serializer.DecodeAll(file, &pool)
-	//    - newPool, newPort, err := tracker.ReleaseMany(pool, allPortsForContainer)
-	// - serializer.EncodeAndOverwrite(file, pool)
+	pool := &Pool{}
+	err = p.Serializer.DecodeAll(file, pool)
+	if err != nil {
+		return fmt.Errorf("decoding state file: %s", err)
+	}
+
+	if err := p.Tracker.ReleaseAll(pool, handle); err != nil {
+		return fmt.Errorf("release all ports: %s", err)
+	}
+
+	err = p.Serializer.EncodeAndOverwrite(file, pool)
+	if err != nil {
+		return fmt.Errorf("encode and overwrite: %s", err)
+	}
+
 	return nil
 }

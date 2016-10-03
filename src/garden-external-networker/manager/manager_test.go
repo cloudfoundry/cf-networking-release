@@ -181,6 +181,12 @@ var _ = Describe("Manager", func() {
 			Expect(handle).To(Equal(containerHandle))
 		})
 
+		It("should release all ports which were allocated for the container", func() {
+			Expect(mgr.Down(containerHandle)).To(Succeed())
+			Expect(portAllocator.ReleaseAllPortsCallCount()).To(Equal(1))
+			Expect(portAllocator.ReleaseAllPortsArgsForCall(0)).To(Equal(containerHandle))
+		})
+
 		Context("when encodedGardenProperties is empty", func() {
 			It("should call CNI", func() {
 				err := mgr.Down(containerHandle)
@@ -201,7 +207,7 @@ var _ = Describe("Manager", func() {
 			It("should return the error", func() {
 				mounter.RemoveMountReturns(errors.New("boom"))
 				err := mgr.Down(containerHandle)
-				Expect(err).To(MatchError("failed removing mount /some/fake/path/some-container-handle: boom"))
+				Expect(err).To(MatchError("removing mount /some/fake/path/some-container-handle: boom"))
 			})
 		})
 
@@ -209,7 +215,15 @@ var _ = Describe("Manager", func() {
 			It("should return the error", func() {
 				cniController.DownReturns(errors.New("bang"))
 				err := mgr.Down(containerHandle)
-				Expect(err).To(MatchError("cni down failed: bang"))
+				Expect(err).To(MatchError("cni down: bang"))
+			})
+		})
+
+		Context("when releasing all ports fails", func() {
+			It("should return the error", func() {
+				portAllocator.ReleaseAllPortsReturns(errors.New("potato"))
+				err := mgr.Down(containerHandle)
+				Expect(err).To(MatchError("releasing ports: potato"))
 			})
 		})
 	})

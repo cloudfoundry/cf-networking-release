@@ -26,6 +26,7 @@ type mounter interface {
 //go:generate counterfeiter -o ../fakes/portAllocator.go --fake-name PortAllocator . portAllocator
 type portAllocator interface {
 	AllocatePort(handle string, port int) (int, error)
+	ReleaseAllPorts(handle string) error
 }
 
 //go:generate counterfeiter -o ../fakes/netin_provider.go --fake-name NetInProvider . netInProvider
@@ -114,12 +115,12 @@ func (m *Manager) Down(containerHandle string) error {
 
 	err := m.CNIController.Down(bindMountPath, containerHandle)
 	if err != nil {
-		return fmt.Errorf("cni down failed: %s", err)
+		return fmt.Errorf("cni down: %s", err)
 	}
 
 	err = m.Mounter.RemoveMount(bindMountPath)
 	if err != nil {
-		return fmt.Errorf("failed removing mount %s: %s", bindMountPath, err)
+		return fmt.Errorf("removing mount %s: %s", bindMountPath, err)
 	}
 
 	if err = m.NetOutProvider.Cleanup(containerHandle); err != nil {
@@ -128,7 +129,12 @@ func (m *Manager) Down(containerHandle string) error {
 
 	err = m.NetInProvider.Cleanup(containerHandle)
 	if err != nil {
-		return fmt.Errorf("failed removing iptables for netin: %s", err)
+		return fmt.Errorf("removing iptables for netin: %s", err)
+	}
+
+	err = m.PortAllocator.ReleaseAllPorts(containerHandle)
+	if err != nil {
+		return fmt.Errorf("releasing ports: %s", err)
 	}
 
 	return nil

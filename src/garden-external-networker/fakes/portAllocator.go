@@ -14,6 +14,14 @@ type PortAllocator struct {
 		result1 int
 		result2 error
 	}
+	ReleaseAllPortsStub        func(handle string) error
+	releaseAllPortsMutex       sync.RWMutex
+	releaseAllPortsArgsForCall []struct {
+		handle string
+	}
+	releaseAllPortsReturns struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -53,11 +61,46 @@ func (fake *PortAllocator) AllocatePortReturns(result1 int, result2 error) {
 	}{result1, result2}
 }
 
+func (fake *PortAllocator) ReleaseAllPorts(handle string) error {
+	fake.releaseAllPortsMutex.Lock()
+	fake.releaseAllPortsArgsForCall = append(fake.releaseAllPortsArgsForCall, struct {
+		handle string
+	}{handle})
+	fake.recordInvocation("ReleaseAllPorts", []interface{}{handle})
+	fake.releaseAllPortsMutex.Unlock()
+	if fake.ReleaseAllPortsStub != nil {
+		return fake.ReleaseAllPortsStub(handle)
+	} else {
+		return fake.releaseAllPortsReturns.result1
+	}
+}
+
+func (fake *PortAllocator) ReleaseAllPortsCallCount() int {
+	fake.releaseAllPortsMutex.RLock()
+	defer fake.releaseAllPortsMutex.RUnlock()
+	return len(fake.releaseAllPortsArgsForCall)
+}
+
+func (fake *PortAllocator) ReleaseAllPortsArgsForCall(i int) string {
+	fake.releaseAllPortsMutex.RLock()
+	defer fake.releaseAllPortsMutex.RUnlock()
+	return fake.releaseAllPortsArgsForCall[i].handle
+}
+
+func (fake *PortAllocator) ReleaseAllPortsReturns(result1 error) {
+	fake.ReleaseAllPortsStub = nil
+	fake.releaseAllPortsReturns = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *PortAllocator) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.allocatePortMutex.RLock()
 	defer fake.allocatePortMutex.RUnlock()
+	fake.releaseAllPortsMutex.RLock()
+	defer fake.releaseAllPortsMutex.RUnlock()
 	return fake.invocations
 }
 

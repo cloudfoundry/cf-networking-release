@@ -56,7 +56,9 @@ var _ = Describe("PortAllocator", func() {
 				Expect(tracker.AcquireOneCallCount()).To(Equal(1))
 
 				_, pool := serializer.DecodeAllArgsForCall(0)
-				Expect(tracker.AcquireOneArgsForCall(0)).To(Equal(pool))
+				receivedPool, receivedHandle := tracker.AcquireOneArgsForCall(0)
+				Expect(receivedPool).To(Equal(pool))
+				Expect(receivedHandle).To(Equal("some-handle"))
 			})
 		})
 
@@ -154,5 +156,84 @@ var _ = Describe("PortAllocator", func() {
 				Expect(err).To(MatchError("encode and overwrite: turnip"))
 			})
 		})
+	})
+
+	Describe("ReleaseAllPorts", func() {
+		It("deserializes the pool from the locked file", func() {
+			err := portAllocator.ReleaseAllPorts("some-handle")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(serializer.DecodeAllCallCount()).To(Equal(1))
+
+			file, _ := serializer.DecodeAllArgsForCall(0)
+			Expect(file).To(Equal(lockedFile))
+		})
+
+		It("re-serializes the pool to the locked file", func() {
+			err := portAllocator.ReleaseAllPorts("some-handle")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(serializer.EncodeAndOverwriteCallCount()).To(Equal(1))
+
+			_, poolForDecode := serializer.DecodeAllArgsForCall(0)
+			file, poolForEncode := serializer.EncodeAndOverwriteArgsForCall(0)
+
+			Expect(file).To(Equal(lockedFile))
+			Expect(poolForEncode).To(Equal(poolForDecode))
+		})
+
+		It("closes (and thus unlocks) the file", func() {
+			file, err := ioutil.TempFile("", "")
+			Expect(err).NotTo(HaveOccurred())
+
+			locker.OpenReturns(file, nil)
+			err = portAllocator.ReleaseAllPorts("some-handle")
+			Expect(err).NotTo(HaveOccurred())
+
+			By("checking that the write to the closed file should fail")
+			_, err = file.WriteString("foo")
+			Expect(err).To(HaveOccurred())
+		})
+
+		Context("when the locker fails to open the file", func() {
+			BeforeEach(func() {
+				locker.OpenReturns(nil, errors.New("potato"))
+			})
+			It("wraps and returns the error", func() {
+				err := portAllocator.ReleaseAllPorts("some-handle")
+				Expect(err).To(MatchError("open lock: potato"))
+			})
+		})
+
+		Context("when the serializer fails to decode", func() {
+			BeforeEach(func() {
+				serializer.DecodeAllReturns(errors.New("potato"))
+			})
+			It("wraps and returns the error", func() {
+				err := portAllocator.ReleaseAllPorts("some-handle")
+				Expect(err).To(MatchError("decoding state file: potato"))
+			})
+		})
+
+		Context("when the tracker releases ports fail", func() {
+			BeforeEach(func() {
+				tracker.ReleaseAllReturns(errors.New("turnip"))
+			})
+			It("wraps and returns the error", func() {
+				err := portAllocator.ReleaseAllPorts("some-handle")
+				Expect(err).To(MatchError("release all ports: turnip"))
+			})
+		})
+
+		Context("when serializing the pool fails", func() {
+			BeforeEach(func() {
+				serializer.EncodeAndOverwriteReturns(errors.New("turnip"))
+			})
+			It("wraps and returns the error", func() {
+				err := portAllocator.ReleaseAllPorts("some-handle")
+				Expect(err).To(MatchError("encode and overwrite: turnip"))
+			})
+		})
+
 	})
 })

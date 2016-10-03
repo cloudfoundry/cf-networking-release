@@ -366,6 +366,11 @@ var _ = Describe("Garden External Networker", func() {
 
 			By("checking that there are no more netin rules for this container")
 			Expect(AllIPTablesRules("nat")).NotTo(ContainElement(ContainSubstring(netinChainName)))
+
+			By("seeing that the port is released from the state file on disk")
+			stateFileBytes, err = ioutil.ReadFile(stateFilePath)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(stateFileBytes).NotTo(ContainSubstring(fmt.Sprintf("%d", result.HostPort)))
 		})
 	})
 })
