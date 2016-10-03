@@ -13,8 +13,12 @@ properties:
     default: 0.0.0.0
 
   policy-server.listen_port:
-    description: "Port where the policy server will serve its API"
+    description: "Port where the policy server will serve its external API"
     default: 4002
+
+  policy-server.internal_listen_port:
+    description: "Port where the policy server will serve its internal API"
+    default: 4003
 
   policy-server.uaa_client:
     description: "uaa client name"

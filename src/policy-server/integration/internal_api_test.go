@@ -1,7 +1,10 @@
 package integration_test
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"lib/testsupport"
 	"math/rand"
@@ -22,6 +25,7 @@ var _ = Describe("Internal API", func() {
 		conf         config.Config
 		address      string
 		testDatabase *testsupport.TestDatabase
+		tlsConfig    *tls.Config
 
 		fakeMetron fakes.FakeMetron
 	)
@@ -35,21 +39,35 @@ var _ = Describe("Internal API", func() {
 		dbName := fmt.Sprintf("test_netman_database_%x", rand.Int())
 		dbConnectionInfo := testsupport.GetDBConnectionInfo()
 		testDatabase = dbConnectionInfo.CreateDatabase(dbName)
+		cert, err := tls.LoadX509KeyPair("fixtures/cert.pem", "fixtures/key.pem")
+		Expect(err).NotTo(HaveOccurred())
+
+		clientCACert, err := ioutil.ReadFile("fixtures/cacert.pem")
+		Expect(err).NotTo(HaveOccurred())
+
+		clientCertPool := x509.NewCertPool()
+		clientCertPool.AppendCertsFromPEM(clientCACert)
+
+		tlsConfig = &tls.Config{
+			Certificates: []tls.Certificate{cert},
+			RootCAs:      clientCertPool,
+		}
+		tlsConfig.BuildNameToCertificate()
 
 		conf = config.Config{
-			ListenHost:      "127.0.0.1",
-			ListenPort:      9001 + GinkgoParallelNode(),
-			UAAClient:       "test",
-			UAAClientSecret: "test",
-			UAAURL:          mockUAAServer.URL,
-			Database:        testDatabase.DBConfig(),
-			TagLength:       2,
-			MetronAddress:   fakeMetron.Address(),
+			ListenHost:         "127.0.0.1",
+			ListenPort:         9001 + GinkgoParallelNode(),
+			InternalListenPort: 10001 + GinkgoParallelNode(),
+			UAAClient:          "test",
+			UAAClientSecret:    "test",
+			UAAURL:             mockUAAServer.URL,
+			Database:           testDatabase.DBConfig(),
+			TagLength:          2,
+			MetronAddress:      fakeMetron.Address(),
 		}
 		configFilePath := WriteConfigFile(conf)
 
 		policyServerCmd := exec.Command(policyServerPath, "-config-file", configFilePath)
-		var err error
 		session, err = gexec.Start(policyServerCmd, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -82,10 +100,11 @@ var _ = Describe("Internal API", func() {
 			body,
 		)
 
-		resp = makeAndDoRequest(
+		resp = makeRequestWithTLS(
 			"GET",
-			fmt.Sprintf("http://%s:%d/networking/v0/internal/policies?id=app1,app2", conf.ListenHost, conf.ListenPort),
+			fmt.Sprintf("http://%s:%d/networking/v0/internal/policies?id=app1,app2", conf.ListenHost, conf.InternalListenPort),
 			nil,
+			tlsConfig,
 		)
 		Expect(resp.StatusCode).To(Equal(http.StatusOK))
 		responseString, err := ioutil.ReadAll(resp.Body)
@@ -96,4 +115,46 @@ var _ = Describe("Internal API", func() {
 			]}
 		`))
 	})
+
+	PContext("when the certs are not correct", func() {
+		BeforeEach(func() {
+			cert, err := tls.LoadX509KeyPair("fixtures/cert.pem", "fixtures/key.pem")
+			Expect(err).NotTo(HaveOccurred())
+
+			clientCACert, err := ioutil.ReadFile("fixtures/wrong-cacert.pem")
+			Expect(err).NotTo(HaveOccurred())
+
+			clientCertPool := x509.NewCertPool()
+			clientCertPool.AppendCertsFromPEM(clientCACert)
+
+			tlsConfig = &tls.Config{
+				Certificates: []tls.Certificate{cert},
+				RootCAs:      clientCertPool,
+			}
+			tlsConfig.BuildNameToCertificate()
+		})
+		It("does not complete the request to the internal API", func() {
+			resp := makeRequestWithTLS(
+				"GET",
+				fmt.Sprintf("http://%s:%d/networking/v0/internal/policies?id=app1,app2", conf.ListenHost, conf.InternalListenPort),
+				nil,
+				tlsConfig,
+			)
+			Expect(resp.StatusCode).To(Equal(http.StatusUnauthorized))
+		})
+
+	})
 })
+
+func makeRequestWithTLS(method string, endpoint string, body io.Reader, tlsConfig *tls.Config) *http.Response {
+	req, err := http.NewRequest(method, endpoint, body)
+	Expect(err).NotTo(HaveOccurred())
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: tlsConfig,
+		},
+	}
+	resp, err := client.Do(req)
+	Expect(err).NotTo(HaveOccurred())
+	return resp
+}

@@ -168,18 +168,16 @@ func main() {
 		{Name: "create_policies", Method: "POST", Path: "/networking/v0/external/policies"},
 		{Name: "delete_policies", Method: "DELETE", Path: "/networking/v0/external/policies"},
 		{Name: "policies_index", Method: "GET", Path: "/networking/v0/external/policies"},
-		{Name: "internal_policies", Method: "GET", Path: "/networking/v0/internal/policies"},
 		{Name: "tags_index", Method: "GET", Path: "/networking/v0/external/tags"},
 	}
 
 	handlers := rata.Handlers{
-		"uptime":            uptimeHandler,
-		"create_policies":   authenticator.Wrap(createPolicyHandler),
-		"delete_policies":   authenticator.Wrap(deletePolicyHandler),
-		"policies_index":    authenticator.Wrap(policiesIndexHandler),
-		"tags_index":        authenticator.Wrap(tagsIndexHandler),
-		"whoami":            whoamiHandler,
-		"internal_policies": internalPoliciesHandler,
+		"uptime":          uptimeHandler,
+		"create_policies": authenticator.Wrap(createPolicyHandler),
+		"delete_policies": authenticator.Wrap(deletePolicyHandler),
+		"policies_index":  authenticator.Wrap(policiesIndexHandler),
+		"tags_index":      authenticator.Wrap(tagsIndexHandler),
+		"whoami":          whoamiHandler,
 	}
 	router, err := rata.NewRouter(routes, handlers)
 	if err != nil {
@@ -188,6 +186,20 @@ func main() {
 
 	addr := fmt.Sprintf("%s:%d", conf.ListenHost, conf.ListenPort)
 	server := http_server.New(addr, router)
+
+	internalRoutes := rata.Routes{
+		{Name: "internal_policies", Method: "GET", Path: "/networking/v0/internal/policies"},
+	}
+
+	internalHandlers := rata.Handlers{
+		"internal_policies": internalPoliciesHandler,
+	}
+	internalRouter, err := rata.NewRouter(internalRoutes, internalHandlers)
+	if err != nil {
+		log.Fatalf("unable to create rata Router: %s", err)
+	}
+	internalAddr := fmt.Sprintf("%s:%d", conf.ListenHost, conf.InternalListenPort)
+	internalServer := http_server.New(internalAddr, internalRouter)
 
 	err = dropsonde.Initialize(conf.MetronAddress, dropsondeOrigin)
 	if err != nil {
@@ -201,9 +213,11 @@ func main() {
 	members := grouper.Members{
 		{"metrics_emitter", metricsEmitter},
 		{"http_server", server},
+		{"internal_http_server", internalServer},
 	}
 
-	logger.Info("starting", lager.Data{"listen-address": conf.ListenHost, "port": conf.ListenPort})
+	logger.Info("starting external server", lager.Data{"listen-address": conf.ListenHost, "port": conf.ListenPort})
+	logger.Info("starting internal server", lager.Data{"listen-address": conf.ListenHost, "port": conf.InternalListenPort})
 
 	group := grouper.NewOrdered(os.Interrupt, members)
 	monitor := ifrit.Invoke(sigmon.New(group))
