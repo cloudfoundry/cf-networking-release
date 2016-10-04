@@ -43,14 +43,18 @@ var _ = Describe("Integration", func() {
 			testDatabase = dbConnectionInfo.CreateDatabase(dbName)
 
 			conf = config.Config{
-				ListenHost:      "127.0.0.1",
-				ListenPort:      9001 + GinkgoParallelNode(),
-				UAAClient:       "test",
-				UAAClientSecret: "test",
-				UAAURL:          mockUAAServer.URL,
-				Database:        testDatabase.DBConfig(),
-				TagLength:       1,
-				MetronAddress:   fakeMetron.Address(),
+				ListenHost:         "127.0.0.1",
+				ListenPort:         9001 + GinkgoParallelNode(),
+				InternalListenPort: 10001 + GinkgoParallelNode(),
+				CACertPath:         "fixtures/netman-ca.crt",
+				ServerCertPath:     "fixtures/server.crt",
+				ServerKeyPath:      "fixtures/server.key",
+				UAAClient:          "test",
+				UAAClientSecret:    "test",
+				UAAURL:             mockUAAServer.URL,
+				Database:           testDatabase.DBConfig(),
+				TagLength:          1,
+				MetronAddress:      fakeMetron.Address(),
 			}
 			configFilePath := WriteConfigFile(conf)
 

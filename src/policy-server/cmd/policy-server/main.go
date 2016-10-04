@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -199,7 +200,26 @@ func main() {
 		log.Fatalf("unable to create rata Router: %s", err)
 	}
 	internalAddr := fmt.Sprintf("%s:%d", conf.ListenHost, conf.InternalListenPort)
-	internalServer := http_server.New(internalAddr, internalRouter)
+
+	serverCert, err := tls.LoadX509KeyPair(conf.ServerCertPath, conf.ServerKeyPath)
+	if err != nil {
+		log.Fatalf("unable to load server cert or key: %s", err)
+	}
+
+	caCert, err := ioutil.ReadFile(conf.CACertPath)
+	if err != nil {
+		log.Fatalf("unable to load root certificate: %s", err)
+	}
+
+	certPool := x509.NewCertPool()
+	certPool.AppendCertsFromPEM(caCert)
+	tlsConfig := &tls.Config{
+		ClientAuth:   tls.RequireAndVerifyClientCert,
+		Certificates: []tls.Certificate{serverCert},
+		ClientCAs:    certPool,
+	}
+	tlsConfig.BuildNameToCertificate()
+	internalServer := http_server.NewTLSServer(internalAddr, internalRouter, tlsConfig)
 
 	err = dropsonde.Initialize(conf.MetronAddress, dropsondeOrigin)
 	if err != nil {
