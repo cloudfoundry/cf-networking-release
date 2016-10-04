@@ -140,6 +140,9 @@ Then follow [the instructions for testing with the cats & dogs example](https://
           cni_plugin_dir: /var/vcap/packages/flannel/bin
           cni_config_dir: /var/vcap/jobs/cni-flannel/config/cni
         cni-flannel:
+          flannel:
+            etcd:
+              require_ssl: true
           etcd_endpoints:
             - (( "https://" config_from_cf.etcd.advertise_urls_dns_suffix ":4001" ))
           etcd_ca_cert: REPLACE_WITH_ETCD_CA_CERT_FROM_CF_MANIFEST
