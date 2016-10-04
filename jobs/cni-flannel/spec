@@ -20,14 +20,21 @@ properties:
     description: "a list of etcd endpoints"
     default: []
 
+  cni-flannel.flannel.etcd.require_ssl:
+    description: "Enable ssl for communication between flannel and etcd"
+    default: true
+
   cni-flannel.etcd_ca_cert:
     description: "PEM encoded CA cert"
+    default: ""
 
   cni-flannel.etcd_client_cert:
     description: "PEM encoded client cert"
+    default: ""
 
   cni-flannel.etcd_client_key:
     description: "PEM encoded client key"
+    default: ""
 
   cni-flannel.flannel.Network:
     description: "CIDR block for overlay network.  Should be /16"
