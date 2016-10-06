@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"lib/db"
 	"lib/marshal"
 
@@ -38,22 +37,14 @@ const (
 )
 
 func main() {
-	conf := &config.Config{}
-
 	configFilePath := flag.String("config-file", "", "path to config file")
 	flag.Parse()
 
 	logger := lager.NewLogger("policy-server")
 	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.INFO))
-
-	configData, err := ioutil.ReadFile(*configFilePath)
+	conf, err := config.Load(*configFilePath)
 	if err != nil {
-		log.Fatal("error reading config")
-	}
-
-	err = json.Unmarshal(configData, conf)
-	if err != nil {
-		log.Fatal("error unmarshalling config")
+		log.Fatalf("could not read config file", err)
 	}
 
 	httpClient := &http.Client{

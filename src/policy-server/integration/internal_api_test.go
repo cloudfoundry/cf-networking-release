@@ -178,7 +178,7 @@ var _ = Describe("Internal API", func() {
 				nil,
 				tlsConfig,
 			)
-			Expect(err).To(MatchError(ContainSubstring("remote error: tls: bad certificate")))
+			Expect(err).To(MatchError(ContainSubstring("remote error")))
 		})
 
 	})

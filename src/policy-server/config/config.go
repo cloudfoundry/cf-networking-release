@@ -1,6 +1,11 @@
 package config
 
-import "lib/db"
+import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"lib/db"
+)
 
 type Config struct {
 	ListenHost         string    `json:"listen_host"`
@@ -16,4 +21,19 @@ type Config struct {
 	Database           db.Config `json:"database"`
 	TagLength          int       `json:"tag_length"`
 	MetronAddress      string    `json:"metron_address"`
+}
+
+func Load(path string) (*Config, error) {
+	jsonBytes, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("reading config: %s", err)
+	}
+
+	var cfg Config
+	err = json.Unmarshal(jsonBytes, &cfg)
+	if err != nil {
+		return nil, fmt.Errorf("parsing json: %s", err)
+	}
+
+	return &cfg, nil
 }
