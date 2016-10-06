@@ -99,7 +99,17 @@ var _ = Describe("Manager", func() {
 			Expect(properties).To(Equal(expectedExtraProperties))
 		})
 
-		Context("when initializing netout files", func() {
+		Context("when CNI up returns a nil result", func() {
+			BeforeEach(func() {
+				cniController.UpReturns(nil, nil)
+			})
+			It("returns an error", func() {
+				_, err := mgr.Up("container-handle", manager.UpInputs{Pid: 42, Properties: gardenProperties})
+				Expect(err).To(MatchError("cni up failed: no ip allocated"))
+			})
+		})
+
+		Context("when initializing netout fails", func() {
 			BeforeEach(func() {
 				netInProvider.InitializeReturns(errors.New("banana"))
 			})
@@ -226,6 +236,22 @@ var _ = Describe("Manager", func() {
 				Expect(err).To(MatchError("releasing ports: potato"))
 			})
 		})
+
+		Context("when the net out cleanup fails", func() {
+			It("should return the error", func() {
+				netOutProvider.CleanupReturns(errors.New("potato"))
+				err := mgr.Down(containerHandle)
+				Expect(err).To(MatchError("net out cleanup: potato"))
+			})
+		})
+
+		Context("when the net in cleanup fails", func() {
+			It("should return the error", func() {
+				netInProvider.CleanupReturns(errors.New("potato"))
+				err := mgr.Down(containerHandle)
+				Expect(err).To(MatchError("net in cleanup: potato"))
+			})
+		})
 	})
 
 	Describe("NetOut", func() {
@@ -335,5 +361,26 @@ var _ = Describe("Manager", func() {
 				}))
 			})
 		})
+
+		Context("when the port allocator errors", func() {
+			BeforeEach(func() {
+				portAllocator.AllocatePortReturns(0, errors.New("potato"))
+			})
+			It("wraps and returns the error", func() {
+				_, err := mgr.NetIn(containerHandle, input)
+				Expect(err).To(MatchError("allocate port: potato"))
+			})
+		})
+
+		Context("when the add rule errors", func() {
+			BeforeEach(func() {
+				netInProvider.AddRuleReturns(errors.New("potato"))
+			})
+			It("wraps and returns the error", func() {
+				_, err := mgr.NetIn(containerHandle, input)
+				Expect(err).To(MatchError("add rule: potato"))
+			})
+		})
+
 	})
 })

@@ -124,12 +124,12 @@ func (m *Manager) Down(containerHandle string) error {
 	}
 
 	if err = m.NetOutProvider.Cleanup(containerHandle); err != nil {
-		return fmt.Errorf("remove net out: %s", err)
+		return fmt.Errorf("net out cleanup: %s", err)
 	}
 
 	err = m.NetInProvider.Cleanup(containerHandle)
 	if err != nil {
-		return fmt.Errorf("removing iptables for netin: %s", err)
+		return fmt.Errorf("net in cleanup: %s", err)
 	}
 
 	err = m.PortAllocator.ReleaseAllPorts(containerHandle)
@@ -164,7 +164,7 @@ type NetInOutputs struct {
 func (m *Manager) NetIn(containerHandle string, inputs NetInInputs) (*NetInOutputs, error) {
 	hostPort, err := m.PortAllocator.AllocatePort(containerHandle, inputs.HostPort)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("allocate port: %s", err)
 	}
 
 	containerPort := inputs.ContainerPort
@@ -177,7 +177,7 @@ func (m *Manager) NetIn(containerHandle string, inputs NetInInputs) (*NetInOutpu
 
 	err = m.NetInProvider.AddRule(containerHandle, hostPort, containerPort, hostIP, containerIP)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("add rule: %s", err)
 	}
 
 	return &NetInOutputs{
