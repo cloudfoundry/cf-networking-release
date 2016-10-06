@@ -2,7 +2,6 @@ package main
 
 import (
 	"crypto/tls"
-	"crypto/x509"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -16,6 +15,7 @@ import (
 	"os"
 	"policy-server/config"
 	"policy-server/handlers"
+	"policy-server/mutualtls"
 	"policy-server/server_metrics"
 	"policy-server/store"
 	"policy-server/uaa_client"
@@ -194,19 +194,10 @@ func main() {
 	}
 	internalAddr := fmt.Sprintf("%s:%d", conf.ListenHost, conf.InternalListenPort)
 
-	serverCert, err := tls.X509KeyPair(conf.ServerCert, conf.ServerKey)
+	tlsConfig, err := mutualtls.BuildConfig(conf.ServerCert, conf.ServerKey, conf.CACert)
 	if err != nil {
-		log.Fatalf("unable to load server cert or key: %s", err)
+		log.Fatalf("mutual tls config: %s", err)
 	}
-
-	certPool := x509.NewCertPool()
-	certPool.AppendCertsFromPEM(conf.CACert)
-	tlsConfig := &tls.Config{
-		ClientAuth:   tls.RequireAndVerifyClientCert,
-		Certificates: []tls.Certificate{serverCert},
-		ClientCAs:    certPool,
-	}
-	tlsConfig.BuildNameToCertificate()
 	internalServer := http_server.NewTLSServer(internalAddr, internalRouter, tlsConfig)
 
 	err = dropsonde.Initialize(conf.MetronAddress, dropsondeOrigin)

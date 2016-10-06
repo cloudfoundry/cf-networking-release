@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"lib/testsupport"
 	"math/rand"
@@ -109,12 +108,14 @@ var _ = Describe("Internal API", func() {
 			]}
 		`))
 
-		resp, err = makeRequestWithTLS(
-			"GET",
-			fmt.Sprintf("https://%s:%d/networking/v0/internal/policies?id=app1,app2", conf.ListenHost, conf.InternalListenPort),
-			nil,
-			tlsConfig,
-		)
+		req, err := http.NewRequest("GET", fmt.Sprintf("https://%s:%d/networking/v0/internal/policies?id=app1,app2", conf.ListenHost, conf.InternalListenPort), nil)
+		Expect(err).NotTo(HaveOccurred())
+		client := &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: tlsConfig,
+			},
+		}
+		resp, err = client.Do(req)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(resp.StatusCode).To(Equal(http.StatusOK))
 		responseString, err = ioutil.ReadAll(resp.Body)
@@ -125,72 +126,4 @@ var _ = Describe("Internal API", func() {
 			]}
 		`))
 	})
-
-	Context("when the client does not have the right certificate authority", func() {
-		BeforeEach(func() {
-			cert, err := tls.LoadX509KeyPair("fixtures/client.crt", "fixtures/client.key")
-			Expect(err).NotTo(HaveOccurred())
-
-			clientCACert, err := ioutil.ReadFile("fixtures/wrong-netman-ca.crt")
-			Expect(err).NotTo(HaveOccurred())
-
-			clientCertPool := x509.NewCertPool()
-			clientCertPool.AppendCertsFromPEM(clientCACert)
-
-			tlsConfig = &tls.Config{
-				Certificates: []tls.Certificate{cert},
-				RootCAs:      clientCertPool,
-			}
-			tlsConfig.BuildNameToCertificate()
-		})
-		It("does not complete the request to the internal API", func() {
-			_, err := makeRequestWithTLS(
-				"GET",
-				fmt.Sprintf("https://%s:%d/networking/v0/internal/policies?id=app1,app2", conf.ListenHost, conf.InternalListenPort),
-				nil,
-				tlsConfig,
-			)
-			Expect(err).To(MatchError(ContainSubstring("certificate signed by unknown authority")))
-		})
-
-	})
-	Context("when the client does not have the right client certificate", func() {
-		BeforeEach(func() {
-			cert, err := tls.LoadX509KeyPair("fixtures/wrong-client.crt", "fixtures/wrong-client.key")
-			Expect(err).NotTo(HaveOccurred())
-
-			clientCACert, err := ioutil.ReadFile("fixtures/netman-ca.crt")
-			Expect(err).NotTo(HaveOccurred())
-
-			clientCertPool := x509.NewCertPool()
-			clientCertPool.AppendCertsFromPEM(clientCACert)
-
-			tlsConfig = &tls.Config{
-				Certificates: []tls.Certificate{cert},
-				RootCAs:      clientCertPool,
-			}
-			tlsConfig.BuildNameToCertificate()
-		})
-		It("does not complete the request to the internal API", func() {
-			_, err := makeRequestWithTLS(
-				"GET",
-				fmt.Sprintf("https://%s:%d/networking/v0/internal/policies?id=app1,app2", conf.ListenHost, conf.InternalListenPort),
-				nil,
-				tlsConfig,
-			)
-			Expect(err).To(MatchError(ContainSubstring("remote error")))
-		})
-
-	})
 })
-
-func makeRequestWithTLS(method string, endpoint string, body io.Reader, tlsConfig *tls.Config) (*http.Response, error) {
-	req, err := http.NewRequest(method, endpoint, body)
-	Expect(err).NotTo(HaveOccurred())
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: tlsConfig,
-		},
-	}
-	return client.Do(req)
-}
