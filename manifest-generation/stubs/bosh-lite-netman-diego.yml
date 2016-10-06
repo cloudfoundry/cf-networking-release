@@ -106,11 +106,13 @@ netman_overrides:
       cni_config_dir: /var/vcap/jobs/cni-flannel/config/cni
     cni-flannel:
       etcd_endpoints:
-      - https://cf-etcd.service.cf.internal:4001
+        - (( config_from_cf.etcd.advertise_urls_dns_suffix ))
       etcd_client_cert: (( config_from_cf.etcd.client_cert ))
       etcd_client_key: (( config_from_cf.etcd.client_key ))
       etcd_ca_cert: (( config_from_cf.etcd.ca_cert ))
-      require_ssl: (( config_from_cf.etcd.require_ssl))
+      flannel:
+        etcd:
+          require_ssl: (( config_from_cf.etcd.require_ssl))
     policy-server:
       database:
         connection_string: postgres://networkpolicyadmin:admin@10.244.0.30:5524/networkpolicydb?sslmode=disable
