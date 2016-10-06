@@ -84,7 +84,7 @@ Then follow [the instructions for testing with the cats & dogs example](https://
 0. Upload stemcell with Linux kernel 4.4 to bosh director.  Versions >= 3263.2 should work.
 0. Create netman stubs
   - netman requires additional information in several stubs.
-  - netman only supports connecting to etcd over TLS, generate the certs using `./scripts/generate-etcd-certs` in `cf-release` add under `properties` in `stubs/cf/properties.yml`:
+  - netman supports connecting to etcd over TLS. To generate the certs, use `./scripts/generate-etcd-certs` in `cf-release` and add them to the `properties` in `stubs/cf/properties.yml`:
 
     ```yaml
     etcd:
