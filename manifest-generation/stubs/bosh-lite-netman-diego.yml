@@ -114,6 +114,12 @@ netman_overrides:
       skip_ssl_validation: true
       uaa_client_secret: network-policy-secret
       uaa_url: https://uaa.bosh-lite.com
+      ca_cert: |
+        foo
+      server_cert: |
+        foo
+      server_key: |
+        foo
   garden_properties:
     network_plugin: /var/vcap/packages/runc-cni/bin/garden-external-networker
     network_plugin_extra_args:

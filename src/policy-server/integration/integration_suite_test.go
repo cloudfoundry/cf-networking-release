@@ -75,6 +75,30 @@ func VerifyTCPConnection(address string) error {
 	return nil
 }
 
+func DefaultTestConfig() config.Config {
+	serverCert, err := ioutil.ReadFile("fixtures/server.crt")
+	Expect(err).NotTo(HaveOccurred())
+	serverKey, err := ioutil.ReadFile("fixtures/server.key")
+	Expect(err).NotTo(HaveOccurred())
+	caCert, err := ioutil.ReadFile("fixtures/netman-ca.crt")
+	Expect(err).NotTo(HaveOccurred())
+
+	config := config.Config{
+		ListenHost:         "127.0.0.1",
+		ListenPort:         9001 + GinkgoParallelNode(),
+		InternalListenPort: 10001 + GinkgoParallelNode(),
+		CACert:             caCert,
+		ServerCert:         serverCert,
+		ServerKey:          serverKey,
+		UAAClient:          "test",
+		UAAClientSecret:    "test",
+		UAAURL:             mockUAAServer.URL,
+		TagLength:          1,
+	}
+
+	return config
+}
+
 func WriteConfigFile(policyServerConfig config.Config) string {
 	configFile, err := ioutil.TempFile("", "test-config")
 	Expect(err).NotTo(HaveOccurred())

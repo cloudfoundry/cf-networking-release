@@ -20,6 +20,15 @@ properties:
     description: "Port where the policy server will serve its internal API"
     default: 4003
 
+  policy-server.ca_cert:
+    description: "Trusted CA certificate for clients"
+	
+  policy-server.server_cert:
+    description: "Server certificate for TLS"
+
+  policy-server.server_key:
+    description: "Server private key for TLS"
+
   policy-server.uaa_client:
     description: "uaa client name"
     default: network-policy

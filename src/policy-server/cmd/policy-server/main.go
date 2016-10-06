@@ -170,15 +170,17 @@ func main() {
 		{Name: "delete_policies", Method: "DELETE", Path: "/networking/v0/external/policies"},
 		{Name: "policies_index", Method: "GET", Path: "/networking/v0/external/policies"},
 		{Name: "tags_index", Method: "GET", Path: "/networking/v0/external/tags"},
+		{Name: "internal_policies", Method: "GET", Path: "/networking/v0/internal/policies"},
 	}
 
 	handlers := rata.Handlers{
-		"uptime":          uptimeHandler,
-		"create_policies": authenticator.Wrap(createPolicyHandler),
-		"delete_policies": authenticator.Wrap(deletePolicyHandler),
-		"policies_index":  authenticator.Wrap(policiesIndexHandler),
-		"tags_index":      authenticator.Wrap(tagsIndexHandler),
-		"whoami":          whoamiHandler,
+		"uptime":            uptimeHandler,
+		"create_policies":   authenticator.Wrap(createPolicyHandler),
+		"delete_policies":   authenticator.Wrap(deletePolicyHandler),
+		"policies_index":    authenticator.Wrap(policiesIndexHandler),
+		"tags_index":        authenticator.Wrap(tagsIndexHandler),
+		"whoami":            whoamiHandler,
+		"internal_policies": internalPoliciesHandler,
 	}
 	router, err := rata.NewRouter(routes, handlers)
 	if err != nil {
@@ -201,18 +203,13 @@ func main() {
 	}
 	internalAddr := fmt.Sprintf("%s:%d", conf.ListenHost, conf.InternalListenPort)
 
-	serverCert, err := tls.LoadX509KeyPair(conf.ServerCertPath, conf.ServerKeyPath)
+	serverCert, err := tls.X509KeyPair(conf.ServerCert, conf.ServerKey)
 	if err != nil {
 		log.Fatalf("unable to load server cert or key: %s", err)
 	}
 
-	caCert, err := ioutil.ReadFile(conf.CACertPath)
-	if err != nil {
-		log.Fatalf("unable to load root certificate: %s", err)
-	}
-
 	certPool := x509.NewCertPool()
-	certPool.AppendCertsFromPEM(caCert)
+	certPool.AppendCertsFromPEM(conf.CACert)
 	tlsConfig := &tls.Config{
 		ClientAuth:   tls.RequireAndVerifyClientCert,
 		Certificates: []tls.Certificate{serverCert},

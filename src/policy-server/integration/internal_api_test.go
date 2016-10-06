@@ -54,20 +54,11 @@ var _ = Describe("Internal API", func() {
 		}
 		tlsConfig.BuildNameToCertificate()
 
-		conf = config.Config{
-			ListenHost:         "127.0.0.1",
-			ListenPort:         9001 + GinkgoParallelNode(),
-			InternalListenPort: 10001 + GinkgoParallelNode(),
-			CACertPath:         "fixtures/netman-ca.crt",
-			ServerCertPath:     "fixtures/server.crt",
-			ServerKeyPath:      "fixtures/server.key",
-			UAAClient:          "test",
-			UAAClientSecret:    "test",
-			UAAURL:             mockUAAServer.URL,
-			Database:           testDatabase.DBConfig(),
-			TagLength:          2,
-			MetronAddress:      fakeMetron.Address(),
-		}
+		conf = DefaultTestConfig()
+		conf.Database = testDatabase.DBConfig()
+		conf.MetronAddress = fakeMetron.Address()
+		conf.TagLength = 2
+
 		configFilePath := WriteConfigFile(conf)
 
 		policyServerCmd := exec.Command(policyServerPath, "-config-file", configFilePath)
@@ -97,13 +88,28 @@ var _ = Describe("Internal API", func() {
 				 {"source": { "id": "app3" }, "destination": { "id": "app4", "protocol": "tcp", "port": 3333 } }
 				 ]}
 				`)
+
 		_ = makeAndDoRequest(
 			"POST",
 			fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
 			body,
 		)
 
-		resp, err := makeRequestWithTLS(
+		resp := makeAndDoRequest(
+			"GET",
+			fmt.Sprintf("http://%s:%d/networking/v0/internal/policies?id=app1,app2", conf.ListenHost, conf.ListenPort),
+			nil,
+		)
+		Expect(resp.StatusCode).To(Equal(http.StatusOK))
+		responseString, err := ioutil.ReadAll(resp.Body)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(responseString).To(MatchJSON(`{ "policies": [
+				{"source": { "id": "app1", "tag": "0001" }, "destination": { "id": "app2", "tag": "0002", "protocol": "tcp", "port": 8080 } },
+				{"source": { "id": "app3", "tag": "0003" }, "destination": { "id": "app1", "tag": "0001", "protocol": "tcp", "port": 9999 } }
+			]}
+		`))
+
+		resp, err = makeRequestWithTLS(
 			"GET",
 			fmt.Sprintf("https://%s:%d/networking/v0/internal/policies?id=app1,app2", conf.ListenHost, conf.InternalListenPort),
 			nil,
@@ -111,7 +117,7 @@ var _ = Describe("Internal API", func() {
 		)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(resp.StatusCode).To(Equal(http.StatusOK))
-		responseString, err := ioutil.ReadAll(resp.Body)
+		responseString, err = ioutil.ReadAll(resp.Body)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(responseString).To(MatchJSON(`{ "policies": [
 				{"source": { "id": "app1", "tag": "0001" }, "destination": { "id": "app2", "tag": "0002", "protocol": "tcp", "port": 8080 } },
