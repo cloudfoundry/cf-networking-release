@@ -70,13 +70,6 @@ pushd ~/workspace
 popd
 ```
 
-**Note:** The current `netman` release depends on `develop` branch of `diego-release`.  Please do the following
-```bash
-pushd ~/workspace/diego-release
-   git checkout develop
-popd
-```
-
 Then deploy
 ```bash
 pushd ~/workspace/netman-release
