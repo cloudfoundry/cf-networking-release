@@ -83,19 +83,6 @@ Then follow [the instructions for testing with the cats & dogs example](https://
 ## Deploy to AWS
 0. Upload stemcell with Linux kernel 4.4 to bosh director.  Versions >= 3263.2 should work.
 0. Create netman stubs
-  - netman requires additional information in several stubs.
-  - netman supports connecting to etcd over TLS. To generate the certs, use `./scripts/generate-etcd-certs` in `cf-release` and add them to the `properties` in `stubs/cf/properties.yml`:
-
-    ```yaml
-    etcd:
-      require_ssl: true
-      peer_require_ssl: false # Required if you don't want communication between etcd nodes to be secured via TLS
-      ca_cert: <contents of cf-release/etcd-certs/etcd-ca.crt>
-      server_cert: <contents of cf-release/etcd-certs/server.crt>
-      server_key: <contents of cf-release/etcd-certs/server.key>
-      client_cert: <contents of cf-release/etcd-certs/client.crt>
-      client_key: <contents of cf-release/etcd-certs/client.key>
-    ```
 
   - Add under `properties: uaa` in `stubs/cf/properties.yml`:
 
@@ -109,7 +96,12 @@ Then follow [the instructions for testing with the cats & dogs example](https://
     ```
 
 
-  - Create a netman stub `stubs/netman/stub.yml`, fill in all `REPLACE_ME` fields with the appropriate credentials:
+  - Create a netman stub `stubs/netman/stub.yml`:
+
+     - netman uses the same etcd cluster as CF, so netman's etcd TLS properties should be configured to match.
+        - Set `require_ssl` in the `cni-flannel` section to match the etcd property in the CF manifest.
+        - If `require_ssl` is `true`, also replace the `REPLACE_WITH_ETCD*` cert and key values.
+    - All other fields with `REPLACE_*` values must be provided
 
     ```yaml
     ---
