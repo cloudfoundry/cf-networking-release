@@ -79,6 +79,12 @@ popd
 
 Then follow [the instructions for testing with the cats & dogs example](https://github.com/cloudfoundry-incubator/netman-release/tree/master/src/example-apps/cats-and-dogs).
 
+**NOTE:** There is a known issue where VMs on `bosh-lite` can start failing,
+particularly if the host machine goes to sleep.
+
+If you run `bosh vms` and see any failing VMs, then you can either recreate the
+individual failing vm(s) with `bosh recreate <vm_name>` or you can run
+`bosh deploy --recreate` to recreate all VMs.
 
 ## Deploy to AWS
 0. Upload stemcell with Linux kernel 4.4 to bosh director.  Versions >= 3263.2 should work.
