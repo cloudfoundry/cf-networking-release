@@ -28,16 +28,16 @@ var _ = Describe("TLS config for internal API server", func() {
 
 	BeforeEach(func() {
 		var err error
-		serverCert, err = ioutil.ReadFile("../integration/fixtures/server.crt")
+		serverCert, err = ioutil.ReadFile("/tmp/server.crt")
 		Expect(err).NotTo(HaveOccurred())
-		serverKey, err = ioutil.ReadFile("../integration/fixtures/server.key")
+		serverKey, err = ioutil.ReadFile("/tmp/server.key")
 		Expect(err).NotTo(HaveOccurred())
 
 		serverListenAddr = fmt.Sprintf("127.0.0.1:%d", 40000+rand.Intn(10000))
-		cert, err := tls.LoadX509KeyPair("../integration/fixtures/client.crt", "../integration/fixtures/client.key")
+		cert, err := tls.LoadX509KeyPair("/tmp/client.crt", "/tmp/client.key")
 		Expect(err).NotTo(HaveOccurred())
 
-		clientCACert, err = ioutil.ReadFile("../integration/fixtures/netman-ca.crt")
+		clientCACert, err = ioutil.ReadFile("/tmp/netman-ca.crt")
 		Expect(err).NotTo(HaveOccurred())
 
 		clientCertPool := x509.NewCertPool()
@@ -107,7 +107,7 @@ var _ = Describe("TLS config for internal API server", func() {
 		Context("when the server has been configured with the wrong CA for the client", func() {
 			BeforeEach(func() {
 				var err error
-				clientCACert, err = ioutil.ReadFile("../integration/fixtures/wrong-netman-ca.crt")
+				clientCACert, err = ioutil.ReadFile("/tmp/wrong-netman-ca.crt")
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -165,7 +165,7 @@ var _ = Describe("TLS config for internal API server", func() {
 
 		Context("when the client presents certificates that the server does not trust", func() {
 			BeforeEach(func() {
-				invalidClient, err := tls.LoadX509KeyPair("../integration/fixtures/wrong-client.crt", "../integration/fixtures/wrong-client.key")
+				invalidClient, err := tls.LoadX509KeyPair("/tmp/wrong-client.crt", "/tmp/wrong-client.key")
 				Expect(err).NotTo(HaveOccurred())
 				clientTLSConfig.Certificates = []tls.Certificate{invalidClient}
 			})

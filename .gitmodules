@@ -101,3 +101,6 @@
 [submodule "src/code.cloudfoundry.org/localip"]
 	path = src/code.cloudfoundry.org/localip
 	url = https://github.com/cloudfoundry/localip
+[submodule "src/github.com/square/certstrap"]
+	path = src/github.com/square/certstrap
+	url = https://github.com/square/certstrap.git
