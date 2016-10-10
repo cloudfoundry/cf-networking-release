@@ -20,6 +20,7 @@ func BuildConfig(serverCert, serverKey, clientCACert []byte) (*tls.Config, error
 		ClientCAs:                certPool,
 		PreferServerCipherSuites: true,
 		MinVersion:               tls.VersionTLS12,
+		CipherSuites:             []uint16{tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384},
 	}
 	return tlsConfig, nil
 }
