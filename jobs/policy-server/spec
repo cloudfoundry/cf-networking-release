@@ -22,15 +22,12 @@ properties:
 
   policy-server.ca_cert:
     description: "Trusted CA certificate for clients"
-    default: "Temp: default will be removed when cert is required for TLS"
 
   policy-server.server_cert:
     description: "Server certificate for TLS"
-    default: "Temp: default will be removed when cert is required for TLS"
 
   policy-server.server_key:
     description: "Server private key for TLS"
-    default: "Temp: default will be removed when key is required for TLS"
 
   policy-server.uaa_client:
     description: "uaa client name"
@@ -45,7 +42,7 @@ properties:
     default: https://uaa.bosh-lite.com
 
   policy-server.skip_ssl_validation:
-    description: "skip verifying ssl certs"
+    description: "skip verifying ssl certs when speaking to uaa"
     default: false
 
   policy-server.database.type:

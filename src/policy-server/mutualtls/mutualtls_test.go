@@ -218,7 +218,7 @@ var _ = Describe("TLS config for internal API server", func() {
 
 			Expect(serverTLSConfig.PreferServerCipherSuites).To(BeTrue())
 			Expect(serverTLSConfig.MinVersion).To(Equal(uint16(tls.VersionTLS12)))
-			Expect(serverTLSConfig.CipherSuites).To(Equal([]uint16{tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384}))
+			Expect(serverTLSConfig.CipherSuites).To(Equal([]uint16{tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256}))
 		})
 	})
 })
