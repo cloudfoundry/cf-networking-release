@@ -95,10 +95,25 @@ individual failing vm(s) with `bosh recreate <vm_name>` or you can run
     ```yaml
     scim:
       users:
-      - admin|<admin-password>|scim.write,scim.read,openid,cloud_controller.admin,doppler.firehose,network.admin
+      - name: admin
+        password: <admin-password>
+        groups:
+          - scim.write
+          - scim.read
+          - openid
+          - cloud_controller.admin
+          - clients.read
+          - clients.write
+          - doppler.firehose
+          - routing.router_groups.read
+          - routing.router_groups.write
+          - network.admin
     clients:
       cf:
         scope: cloud_controller.read,cloud_controller.write,openid,password.write,cloud_controller.admin,scim.read,scim.write,doppler.firehose,uaa.user,routing.router_groups.read,network.admin
+      network-policy:
+        authorities: uaa.resource
+        secret: <network-policy-secret>
     ```
 
 
