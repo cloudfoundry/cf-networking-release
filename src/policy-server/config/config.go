@@ -11,9 +11,9 @@ type Config struct {
 	ListenHost         string    `json:"listen_host"`
 	ListenPort         int       `json:"listen_port"`
 	InternalListenPort int       `json:"internal_listen_port"`
-	CACert             []byte    `json:"ca_cert"`
-	ServerCert         []byte    `json:"server_cert"`
-	ServerKey          []byte    `json:"server_key"`
+	CACert             string    `json:"ca_cert"`
+	ServerCert         string    `json:"server_cert"`
+	ServerKey          string    `json:"server_key"`
 	UAAClient          string    `json:"uaa_client"`
 	UAAClientSecret    string    `json:"uaa_client_secret"`
 	UAAURL             string    `json:"uaa_url"`

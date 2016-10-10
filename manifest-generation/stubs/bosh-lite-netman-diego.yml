@@ -114,6 +114,92 @@ netman_overrides:
       skip_ssl_validation: true
       uaa_client_secret: network-policy-secret
       uaa_url: https://uaa.bosh-lite.com
+      ca_cert: |
+        -----BEGIN CERTIFICATE-----
+        MIIE5jCCAs6gAwIBAgIBATANBgkqhkiG9w0BAQsFADATMREwDwYDVQQDEwhuZXRt
+        YW5DQTAeFw0xNjEwMTAxNzQxNTRaFw0yNjEwMTAxNzQxNTdaMBMxETAPBgNVBAMT
+        CG5ldG1hbkNBMIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAxeTRXmRr
+        EZSIIvag9j4Qkehtn2P67BerL2wNH2Agzn2eKOvqmzASn7S2+wDF9b86d90KT44a
+        X8WM3SONEaP9phAXZVdh/uta0XyN+ZneCp8Xb1WfSx5reB/8vtj+jc3bv/6NbsSy
+        QREURVhK+WNk3PBsd+UMRilA6NMZzFrTAhMmYXSa3KPpnca7bwGQTKdTGaeWwiHv
+        YkaMmrtLbAo4ObyuZcnZWfAQX+YlwCQNBL/ctZrEBGGmE1ZUk5DbeUv2f0jNN6dA
+        /NpQE3OsyOEzFeNTguR1KKbgJ3YmN6D4T/A6zRj7WH0WyUuspo+TxD62hFrm1iia
+        MXJ1QQS+dBOq6f5ILNYi1q/Af2aZ/ezzruyzwvuDLo3xBVzghW2xLf+4m0h6dIGx
+        paw+SnsTyUWNmr6SSvcDK0zumh6Vql8o4mR1RdLiLxI47NjlaVP/lj9IZIhcy2OC
+        bMrCXBZFzGClduUn9cRS7ciRTxLgoziAueULKzoHKtoO0aaayjSfoRwaBsyAIYPh
+        YjuCCpVlZGFUXUonqyAV3chEv1nBKyr8f3liuS/+fFBUkKqdxGzmyKIGxLE2/gK2
+        EGymH9IIOVGju4VyagIT9wiGgZrrfwVLCUZXLIrTmUpKkQyn5cF+y8qhE2UVWaG2
+        UGphqiqxbBTcpQfNXdPl/z0UhzZyGqUF/e8CAwEAAaNFMEMwDgYDVR0PAQH/BAQD
+        AgEGMBIGA1UdEwEB/wQIMAYBAf8CAQAwHQYDVR0OBBYEFMGZ50mLaMPngqd4REOg
+        V6y7Y0n3MA0GCSqGSIb3DQEBCwUAA4ICAQC7jkcMKa9wQt947brvawUt8k/FMczv
+        32stMW1x8AjSpc6+OE2US3ILjg0EqLxbaxLCj9NdgPjfivEy+uB/Fq54zIV8RlcQ
+        OT76nQ6ew8nu5QCSTybYoNuayXlTZH2fPq6nE41TiRU0Smqup9uO+GLdoVL0e+32
+        /PM/kRlfUWRKbs4XLJT2g01I5I+l0yXx+GNCrcdc1lG1QzHTK7h8m3X+IVetXvGK
+        azISPyQNePTGGYDdiC03w22zX1+7vdstNWjBgBzRMsamp+jiP5Ts7EKQTHxgiCkD
+        unWrMtw0TsxqaMG2YMi9SaIZIGzFU9rskHf8m/7tsyrjJajmPi+zX/XhKasZVpzq
+        Uzzo5BlohPidzBmXgRDFHt3tGACpLiCu8QtDfjyD74ixMZydQyP8oLYfsdbk9omv
+        +B0WSW82wLQKTsz7xfqHHrSVRufSKrMataDexk9UFWc3L8UD8PZx6jnqHa6WeLI4
+        Fi31gFVpJvH/nrJOVBn1iSdLhbYiYD6OPYBgry1On90cQz3xQe4qiPjiEvblODL0
+        S1qERcxIuv9LlTD7tv5KxZL7jAttyfK6alJy9LmqDVg2v0o3L/YzMu2BCfjgb2wL
+        OnrwM+3H8I4BdtjVOXeSmITh9E/KQS6QmxuyzlXBhn5OLjqHpCLpYIOC9Tkj/yQl
+        gvEDHgAPg0SjAg==
+        -----END CERTIFICATE-----
+      server_cert: |
+        -----BEGIN CERTIFICATE-----
+        MIIEjzCCAnegAwIBAgIQEKwiwD/42C5tvTi8fszDsjANBgkqhkiG9w0BAQsFADAT
+        MREwDwYDVQQDEwhuZXRtYW5DQTAeFw0xNjEwMTAxNzQxNTdaFw0xODEwMTAxNzQx
+        NTdaMCwxKjAoBgNVBAMTIXBvbGljeS1zZXJ2ZXIuc2VydmljZS5jZi5pbnRlcm5h
+        bDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBALiBg+96qpEE0DAN7tFy
+        qumhU9+UcRXomURrXqql7TK2sMfFk26jlUWnMdppW5FwHSExwItMwuiUFtENaXOz
+        f1eeSXq935zRBULauuHRB1Dg156ROV2VZWUBL19opZGkVN6MqsJnaOl/ZoYjm/ne
+        fn+mXq/DypVnuw3pnq3cxT02AyY7rNdkzF/VFyJGMWiEgXRB7obeu82pHbIccq8B
+        U2eXhl/8SKFltGJfegZFhbjslOfcUpArduItDMEsbTG4m5egT5EDBy1oO39+Sp3g
+        Juyk/3HKUDwOon6fjP+gwKCgMfZmeZw4js9E1QpvClogT4EfJU3Bo7GXQUTPddbV
+        TXsCAwEAAaOBxTCBwjAOBgNVHQ8BAf8EBAMCA7gwHQYDVR0lBBYwFAYIKwYBBQUH
+        AwEGCCsGAQUFBwMCMB0GA1UdDgQWBBR8iw8TbIqO1pDMtnhKpB1cEGINIjAfBgNV
+        HSMEGDAWgBTBmedJi2jD54KneERDoFesu2NJ9zBRBgNVHREESjBIgiMqLnBvbGlj
+        eS1zZXJ2ZXIuc2VydmljZS5jZi5pbnRlcm5hbIIhcG9saWN5LXNlcnZlci5zZXJ2
+        aWNlLmNmLmludGVybmFsMA0GCSqGSIb3DQEBCwUAA4ICAQAIgJgBB0RMuvCt3J2Y
+        MjDJN6X1HRz1jOmpU32owgngr6HG2iOHt/h0feELm7eaowHvylXwTdr9kSRAr62K
+        TU5CYp2D/qsyekQ66aaub4Sw25ZHOaUsYnqXc2k3C6ehHHchM9VLY9o8Ix1qEAUD
+        zxMqAObHAVDuUmhwY4qpKz2zfaB7sYYE2ygww8bFxAppoGmVn/DFQbH2sLFO+MlU
+        golrOrPeEkFt2nZdKN1AXcUJeM1UJx5I7ibx1cWI92706Be55ELi/2kOnU5s1ApA
+        xqQdRtO3B3zYBAiv5ou/sl12lEwR74zBBQRHPDsDBUsFRx7nFTpdDBs/wRHK6/J3
+        DPU1UHBAVtQftg7MBihVxZDNgGCw+Z6HyuTpApMg2CjLxUbFHB5vaBG3BLrtXB4w
+        If6f/7wQUN+LbFe3jm8Ka2fIe+6aXqe7+REWfA881LmSss1H9lShf2qYikBedvyT
+        bD32+/p3SB6SboKOQ8OZtQ0kpgPeX4L0YGzp5Z4Qn+3+BUkNn1z+6uguBAz46qve
+        ibodwP2Zvq4lNcJavBxzh+XKWyj8iO6cr/pPydyRekAjgkFbyUfE0b6sag3+1pwL
+        B8LqgvH0D6UHW4LkldRl6W5IaAZaJqqU+2kBiPmXMEDh9nveObUOctyB+3hNeSSN
+        ibWeY32IGd774T34twD/BFB4/A==
+        -----END CERTIFICATE-----
+      server_key: |
+        -----BEGIN RSA PRIVATE KEY-----
+        MIIEpQIBAAKCAQEAuIGD73qqkQTQMA3u0XKq6aFT35RxFeiZRGteqqXtMrawx8WT
+        bqOVRacx2mlbkXAdITHAi0zC6JQW0Q1pc7N/V55Jer3fnNEFQtq64dEHUODXnpE5
+        XZVlZQEvX2ilkaRU3oyqwmdo6X9mhiOb+d5+f6Zer8PKlWe7DemerdzFPTYDJjus
+        12TMX9UXIkYxaISBdEHuht67zakdshxyrwFTZ5eGX/xIoWW0Yl96BkWFuOyU59xS
+        kCt24i0MwSxtMbibl6BPkQMHLWg7f35KneAm7KT/ccpQPA6ifp+M/6DAoKAx9mZ5
+        nDiOz0TVCm8KWiBPgR8lTcGjsZdBRM911tVNewIDAQABAoIBAQCOzNbza6pF0Ubc
+        WnxDKQ+1AQLsYXRg84RkWwGK7B84iAMsqvNfx0YKAcxo8fBIEVDKVzph1ghof+1k
+        4Y+DWCKwCrduQzSlp3T9+FJ54hFafJsFg/q1PqKaWR90JYc3wMta795d1jFxvwP3
+        v+nBq32WiIpyWQQbPIyeyPjiMaOKqkkjCReuJo+YvKl/Mtmqw7cchk6sQcaMzdoJ
+        Nk9ZbaCvBvy8VKyL40Z4AmF9nEVMnFjMNaxbiDpPvnMQsAzdccHP1EMKtLM2VAbK
+        kM1Z+oeV069NGXuZcdikdXS/QeRwYKZ97X/ZtOFRu86vu9N9v44MfVjKnW4ok6nS
+        Xu6Ibu75AoGBAMy9Ilj63k/enrv05Xg6eowOt1gxuwV3C6GJ2JCfZbleMleqeTKv
+        KZS6P/1paaiG6xwz7Dy+S6LPGgDTxip55g98PsjHk0xEdCgxw8Wxy84OnVfgHBWl
+        yoHfmGzDOrhrOdp7nLNzgztZwA3Mwkbfo8nxwnoGdvKBWlckXA1nnf39AoGBAOaz
+        ipRABWUa8Xkm92M/BStp56iIyddISN9cdvnrZ9lX3Oi4bA/U2h0gcdi4jEnDK4BC
+        sL9QF6EKCAZdZbUsAHBFCeflkJYteHaTVYddtWzL0u1914KMObCTaLqtGvq3b5Az
+        PyilQUZS2FHJ+rvepPB0prKEH1RMSP6/q59EulbXAoGBAKAqUaV0U9f9mwYE9kLQ
+        1K+ej5XCCcGjuIidsrqox8Z0x0NHjFq3Jvs/nPGctlhte53rjKKUZ80s4PXGth7i
+        j7SLiP4/Cp8+afRLwhB1H6/KRRLKso3Izhw9lBt5uwUsdOzTiOnlssMKWjExfsY9
+        C//eTjpxtjnOMaM8QXsHFVTtAoGAerhbKU19ETFp7laKFqM5bsShVIefRwPOr/KR
+        35QX5AfXHXytDybc982AghZ5metWQp43Qy2pxCJ/7lLUfbFwckhnYpI9fYWmpPzu
+        7Fku3zb1dxwP/gP11DY16ceXqHLXx89a85YkyPHc3HUjCbj/6GFFI4Ug3UjPM6Rl
+        +Q0oSnUCgYEAwUpRnToYYMgsGRVd/rXPZdynRZhN1b1VA61Ds8izddoYGC2P7NBj
+        enRLx2gYVW1tAv67NYRTL6n5FAXtdAaTApgK/BwpXF6dLhIK2Vw0muCcdeys9F6t
+        lfeOGMuC2XaPlZlzj5LJbGEwf+Xn/OPacdDyYgBUcm2jPSAlcjRHXpY=
+        -----END RSA PRIVATE KEY-----
   garden_properties:
     network_plugin: /var/vcap/packages/runc-cni/bin/garden-external-networker
     network_plugin_extra_args:

@@ -47,3 +47,4 @@ files:
   - policy-server/server_metrics/*.go # gosub
   - policy-server/store/*.go # gosub
   - policy-server/uaa_client/*.go # gosub
+  - policy-server/mutualtls/*.go

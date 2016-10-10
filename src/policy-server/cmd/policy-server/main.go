@@ -44,7 +44,7 @@ func main() {
 	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.INFO))
 	conf, err := config.Load(*configFilePath)
 	if err != nil {
-		log.Fatalf("could not read config file", err)
+		log.Fatalf("could not read config file %s", err)
 	}
 
 	httpClient := &http.Client{
@@ -194,7 +194,7 @@ func main() {
 	}
 	internalAddr := fmt.Sprintf("%s:%d", conf.ListenHost, conf.InternalListenPort)
 
-	tlsConfig, err := mutualtls.BuildConfig(conf.ServerCert, conf.ServerKey, conf.CACert)
+	tlsConfig, err := mutualtls.BuildConfig([]byte(conf.ServerCert), []byte(conf.ServerKey), []byte(conf.CACert))
 	if err != nil {
 		log.Fatalf("mutual tls config: %s", err)
 	}
