@@ -40,6 +40,7 @@ files:
   - lib/db/*.go # gosub
   - lib/marshal/*.go # gosub
   - lib/metrics/*.go # gosub
+  - lib/mutualtls/*.go # gosub
   - policy-server/cmd/policy-server/*.go # gosub
   - policy-server/config/*.go # gosub
   - policy-server/handlers/*.go # gosub
@@ -47,4 +48,3 @@ files:
   - policy-server/server_metrics/*.go # gosub
   - policy-server/store/*.go # gosub
   - policy-server/uaa_client/*.go # gosub
-  - policy-server/mutualtls/*.go

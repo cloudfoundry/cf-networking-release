@@ -41,6 +41,7 @@ files:
   - lib/marshal/*.go # gosub
   - lib/metrics/*.go # gosub
   - lib/models/*.go # gosub
+  - lib/mutualtls/*.go # gosub
   - lib/policy_client/*.go # gosub
   - lib/poller/*.go # gosub
   - lib/rules/*.go # gosub
