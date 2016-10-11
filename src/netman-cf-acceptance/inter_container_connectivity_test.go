@@ -30,14 +30,6 @@ const Timeout_Short = 10 * time.Second
 
 var ports []int
 
-func getSubnet(ip string) string {
-	return strings.Split(ip, ".")[2]
-}
-
-func isSameCell(sourceIP, destIP string) bool {
-	return getSubnet(sourceIP) == getSubnet(destIP)
-}
-
 var _ = Describe("connectivity between containers on the overlay network", func() {
 	Describe("networking policy", func() {
 		var (
