@@ -1,9 +1,12 @@
 package integration_test
 
 import (
+	"crypto/tls"
+	"fmt"
 	"io/ioutil"
+	"lib/mutualtls"
+	"math/rand"
 	"net/http"
-	"net/http/httptest"
 	"netmon/integration/fakes"
 	"os"
 	"os/exec"
@@ -17,26 +20,32 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
+	"github.com/tedsuo/ifrit"
+	"github.com/tedsuo/ifrit/grouper"
+	"github.com/tedsuo/ifrit/http_server"
+	"github.com/tedsuo/ifrit/sigmon"
 )
-
-var mockPolicyServer *httptest.Server
 
 var _ = Describe("VXLAN Policy Agent", func() {
 	var (
-		session         *gexec.Session
-		gardenBackend   *gardenfakes.FakeBackend
-		gardenContainer *gardenfakes.FakeContainer
-		gardenServer    *server.GardenServer
-		logger          *lagertest.TestLogger
-		subnetFile      *os.File
-		configFilePath  string
-		fakeMetron      fakes.FakeMetron
+		session          *gexec.Session
+		gardenBackend    *gardenfakes.FakeBackend
+		gardenContainer  *gardenfakes.FakeContainer
+		gardenServer     *server.GardenServer
+		logger           *lagertest.TestLogger
+		subnetFile       *os.File
+		configFilePath   string
+		fakeMetron       fakes.FakeMetron
+		mockPolicyServer ifrit.Process
+
+		serverListenAddr string
+		serverCACert     []byte
+		clientCert       []byte
+		clientKey        []byte
 	)
 
-	BeforeEach(func() {
-		fakeMetron = fakes.New()
-
-		mockPolicyServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	startServer := func(tlsConfig *tls.Config) ifrit.Process {
+		testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if r.URL.Path == "/networking/v0/internal/policies" {
 				w.WriteHeader(http.StatusOK)
 				w.Write([]byte(`{"policies": [
@@ -50,7 +59,47 @@ var _ = Describe("VXLAN Policy Agent", func() {
 
 			w.WriteHeader(http.StatusNotFound)
 			return
-		}))
+		})
+		serverListenAddr = fmt.Sprintf("127.0.0.1:%d", 40000+rand.Intn(10000))
+		someServer := http_server.NewTLSServer(serverListenAddr, testHandler, tlsConfig)
+
+		members := grouper.Members{{
+			Name:   "http_server",
+			Runner: someServer,
+		}}
+		group := grouper.NewOrdered(os.Interrupt, members)
+		monitor := ifrit.Invoke(sigmon.New(group))
+
+		Eventually(monitor.Ready()).Should(BeClosed())
+		return monitor
+	}
+
+	BeforeEach(func() {
+		var err error
+		fakeMetron = fakes.New()
+
+		serverCACert, err = ioutil.ReadFile(serverCACertPath)
+		Expect(err).NotTo(HaveOccurred())
+
+		serverCert, err := ioutil.ReadFile(serverCertPath)
+		Expect(err).NotTo(HaveOccurred())
+
+		serverKey, err := ioutil.ReadFile(serverKeyPath)
+		Expect(err).NotTo(HaveOccurred())
+
+		clientCACert, err := ioutil.ReadFile(clientCACertPath)
+		Expect(err).NotTo(HaveOccurred())
+
+		clientCert, err = ioutil.ReadFile(clientCertPath)
+		Expect(err).NotTo(HaveOccurred())
+
+		clientKey, err = ioutil.ReadFile(clientKeyPath)
+		Expect(err).NotTo(HaveOccurred())
+
+		serverTLSConfig, err := mutualtls.BuildConfig(serverCert, serverKey, clientCACert)
+		Expect(err).NotTo(HaveOccurred())
+
+		mockPolicyServer = startServer(serverTLSConfig)
 
 		logger = lagertest.NewTestLogger("fake garden server")
 		gardenBackend = &gardenfakes.FakeBackend{}
@@ -68,24 +117,29 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		gardenServer = server.New("tcp", ":60123", 0, gardenBackend, logger)
 		Expect(gardenServer.Start()).To(Succeed())
 
-		var err error
 		subnetFile, err = ioutil.TempFile("", "")
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ioutil.WriteFile(subnetFile.Name(), []byte("FLANNEL_NETWORK=10.255.0.0/16\nFLANNEL_SUBNET=10.255.100.1/24"), os.ModePerm))
 
 		conf := config.VxlanPolicyAgent{
 			PollInterval:      1,
-			PolicyServerURL:   mockPolicyServer.URL,
+			PolicyServerURL:   fmt.Sprintf("https://%s", serverListenAddr),
 			GardenAddress:     ":60123",
 			GardenProtocol:    "tcp",
 			VNI:               42,
 			FlannelSubnetFile: subnetFile.Name(),
 			MetronAddress:     fakeMetron.Address(),
+			ServerCACert:      string(serverCACert),
+			ClientCert:        string(clientCert),
+			ClientKey:         string(clientKey),
 		}
 		configFilePath = WriteConfigFile(conf)
 	})
 
 	AfterEach(func() {
+		mockPolicyServer.Signal(os.Interrupt)
+		Eventually(mockPolicyServer.Wait()).Should(Receive())
+
 		session.Interrupt()
 		Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit())
 
@@ -175,6 +229,9 @@ var _ = Describe("VXLAN Policy Agent", func() {
 				VNI:               42,
 				FlannelSubnetFile: subnetFile.Name(),
 				MetronAddress:     fakeMetron.Address(),
+				ServerCACert:      string(serverCACert),
+				ClientCert:        string(clientCert),
+				ClientKey:         string(clientKey),
 			}
 			configFilePath = WriteConfigFile(conf)
 			session = StartAgent(vxlanPolicyAgentPath, configFilePath)

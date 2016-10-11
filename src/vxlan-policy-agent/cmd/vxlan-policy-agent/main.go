@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"lib/flannel"
 	"lib/metrics"
+	"lib/mutualtls"
 	"lib/policy_client"
 	"lib/poller"
 	"lib/rules"
@@ -70,9 +71,20 @@ func main() {
 		die(logger, "discovering network info", err)
 	}
 
+	clientTLSConfig, err := mutualtls.BuildConfig([]byte(conf.ClientCert), []byte(conf.ClientKey), []byte(conf.ServerCACert))
+	if err != nil {
+		die(logger, "mutal tls config", err)
+	}
+
+	httpClient := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: clientTLSConfig,
+		},
+	}
+
 	policyClient := policy_client.NewInternal(
 		logger.Session("policy-client"),
-		http.DefaultClient,
+		httpClient,
 		conf.PolicyServerURL,
 	)
 

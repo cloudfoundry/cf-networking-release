@@ -8,4 +8,7 @@ type VxlanPolicyAgent struct {
 	VNI               int    `json:"vni"`
 	FlannelSubnetFile string `json:"flannel_subnet_file"`
 	MetronAddress     string `json:"metron_address"`
+	ServerCACert      string `json:"ca_cert"`
+	ClientCert        string `json:"server_cert"`
+	ClientKey         string `json:"server_key"`
 }

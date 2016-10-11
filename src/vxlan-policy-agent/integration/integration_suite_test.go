@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	. "lib/testsupport"
 	"math/rand"
 	"os"
+	"os/exec"
 	"vxlan-policy-agent/config"
 
 	. "github.com/onsi/ginkgo"
@@ -18,7 +20,17 @@ import (
 
 var DEFAULT_TIMEOUT = "5s"
 
-var vxlanPolicyAgentPath string
+var (
+	certstrapBin         string
+	certDir              string
+	serverCACertPath     string
+	clientCACertPath     string
+	serverCertPath       string
+	serverKeyPath        string
+	clientCertPath       string
+	clientKeyPath        string
+	vxlanPolicyAgentPath string
+)
 
 func TestIntegration(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -26,18 +38,37 @@ func TestIntegration(t *testing.T) {
 }
 
 var _ = BeforeSuite(func() {
-	// only run on node 1
-	fmt.Fprintf(GinkgoWriter, "building binary...")
+	rand.Seed(ginkgoConfig.GinkgoConfig.RandomSeed + int64(GinkgoParallelNode()))
+
 	var err error
+	certDir, err = ioutil.TempDir("", "netman-certs")
+	Expect(err).NotTo(HaveOccurred())
+
+	certstrapBin = fmt.Sprintf("/%s/certstrap", certDir)
+	cmd := exec.Command("go", "build", "-o", certstrapBin, "github.com/square/certstrap")
+	Expect(cmd.Run()).NotTo(HaveOccurred())
+
+	serverCACertPath, err = WriteCACert(certstrapBin, certDir, "server-ca")
+	Expect(err).NotTo(HaveOccurred())
+
+	serverCertPath, serverKeyPath, err = WriteAndSignServerCert(certstrapBin, certDir, "server", "server-ca")
+	Expect(err).NotTo(HaveOccurred())
+
+	clientCACertPath, err = WriteCACert(certstrapBin, certDir, "client-ca")
+	Expect(err).NotTo(HaveOccurred())
+
+	clientCertPath, clientKeyPath, err = WriteAndSignServerCert(certstrapBin, certDir, "client", "client-ca")
+	Expect(err).NotTo(HaveOccurred())
+
+	fmt.Fprintf(GinkgoWriter, "building binary...")
 	vxlanPolicyAgentPath, err = gexec.Build("vxlan-policy-agent/cmd/vxlan-policy-agent", "-race")
 	fmt.Fprintf(GinkgoWriter, "done")
 	Expect(err).NotTo(HaveOccurred())
-
-	rand.Seed(ginkgoConfig.GinkgoConfig.RandomSeed + int64(GinkgoParallelNode()))
 })
 
 var _ = AfterSuite(func() {
 	gexec.CleanupBuildArtifacts()
+	os.Remove(certDir)
 })
 
 func WriteConfigFile(Config config.VxlanPolicyAgent) string {

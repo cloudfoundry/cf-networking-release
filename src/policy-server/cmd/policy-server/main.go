@@ -5,21 +5,21 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"lib/db"
-	"lib/marshal"
-
-	"lib/metrics"
-
 	"log"
 	"net/http"
 	"os"
+	"time"
+
+	"lib/db"
+	"lib/marshal"
+	"lib/metrics"
+	"lib/mutualtls"
+
 	"policy-server/config"
 	"policy-server/handlers"
-	"policy-server/mutualtls"
 	"policy-server/server_metrics"
 	"policy-server/store"
 	"policy-server/uaa_client"
-	"time"
 
 	"code.cloudfoundry.org/lager"
 	"github.com/cloudfoundry/dropsonde"
@@ -194,7 +194,7 @@ func main() {
 	}
 	internalAddr := fmt.Sprintf("%s:%d", conf.ListenHost, conf.InternalListenPort)
 
-	tlsConfig, err := mutualtls.BuildConfig([]byte(conf.ServerCert), []byte(conf.ServerKey), []byte(conf.CACert))
+	tlsConfig, err := mutualtls.BuildServerConfig([]byte(conf.ServerCert), []byte(conf.ServerKey), []byte(conf.CACert))
 	if err != nil {
 		log.Fatalf("mutual tls config: %s", err)
 	}
