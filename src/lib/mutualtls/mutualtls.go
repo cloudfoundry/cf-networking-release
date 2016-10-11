@@ -9,7 +9,7 @@ import (
 func BuildConfig(serverCert, serverKey, clientCACert []byte) (*tls.Config, error) {
 	keyPair, err := tls.X509KeyPair(serverCert, serverKey)
 	if err != nil {
-		return nil, fmt.Errorf("unable to load server cert or key: %s", err)
+		return nil, fmt.Errorf("unable to load cert or key: %s", err)
 	}
 
 	certPool := x509.NewCertPool()

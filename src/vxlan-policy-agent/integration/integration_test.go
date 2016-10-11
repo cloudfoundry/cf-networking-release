@@ -19,7 +19,9 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
+
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
 	"github.com/tedsuo/ifrit/http_server"
@@ -248,6 +250,30 @@ var _ = Describe("VXLAN Policy Agent", func() {
 
 			ipTablesRules = RunIptablesCommand("nat", "S")
 			Expect(ipTablesRules).To(ContainSubstring("-s 10.255.100.0/24 ! -d 10.255.0.0/16 -j MASQUERADE"))
+		})
+	})
+
+	Context("when vxlan policy agent has invalid certs", func() {
+		BeforeEach(func() {
+			conf := config.VxlanPolicyAgent{
+				PollInterval:      1,
+				PolicyServerURL:   "",
+				GardenAddress:     ":60123",
+				GardenProtocol:    "tcp",
+				VNI:               42,
+				FlannelSubnetFile: subnetFile.Name(),
+				MetronAddress:     fakeMetron.Address(),
+				ServerCACert:      string(serverCACert),
+				ClientCert:        string("totally"),
+				ClientKey:         string("not-cool"),
+			}
+			configFilePath = WriteConfigFile(conf)
+		})
+
+		It("does not start", func() {
+			session = StartAgent(vxlanPolicyAgentPath, configFilePath)
+			Eventually(session).Should(gexec.Exit(1))
+			Eventually(session.Out).Should(Say("unable to load cert or key"))
 		})
 	})
 })
