@@ -3,28 +3,40 @@ package mutualtls
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"fmt"
+	"io/ioutil"
 )
 
-func BuildConfig(serverCert, serverKey, clientCACert []byte) (*tls.Config, error) {
-	keyPair, err := tls.X509KeyPair(serverCert, serverKey)
+func BuildConfig(certFile, keyFile, caCertFile string) (*tls.Config, error) {
+	keyPair, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
 		return nil, fmt.Errorf("unable to load cert or key: %s", err)
 	}
-
-	certPool := x509.NewCertPool()
-	certPool.AppendCertsFromPEM(clientCACert)
 	tlsConfig := &tls.Config{
 		Certificates: []tls.Certificate{keyPair},
-		ClientCAs:    certPool,
-		RootCAs:      certPool,
 		MinVersion:   tls.VersionTLS12,
 	}
+
+	if caCertFile != "" {
+		certBytes, err := ioutil.ReadFile(caCertFile)
+		if err != nil {
+			return nil, fmt.Errorf("failed read ca cert file: %s", err.Error())
+		}
+
+		caCertPool := x509.NewCertPool()
+		if ok := caCertPool.AppendCertsFromPEM(certBytes); !ok {
+			return nil, errors.New("Unable to load caCert")
+		}
+		tlsConfig.RootCAs = caCertPool
+		tlsConfig.ClientCAs = caCertPool
+	}
+
 	return tlsConfig, nil
 }
 
-func BuildServerConfig(serverCert, serverKey, clientCACert []byte) (*tls.Config, error) {
-	c, err := BuildConfig(serverCert, serverKey, clientCACert)
+func BuildServerConfig(certFile, keyFile, caCertFile string) (*tls.Config, error) {
+	c, err := BuildConfig(certFile, keyFile, caCertFile)
 	if err != nil {
 		return nil, err
 	}

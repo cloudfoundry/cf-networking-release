@@ -41,9 +41,6 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		mockPolicyServer ifrit.Process
 
 		serverListenAddr string
-		serverCACert     []byte
-		clientCert       []byte
-		clientKey        []byte
 	)
 
 	startServer := func(tlsConfig *tls.Config) ifrit.Process {
@@ -80,25 +77,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		var err error
 		fakeMetron = fakes.New()
 
-		serverCACert, err = ioutil.ReadFile(serverCACertPath)
-		Expect(err).NotTo(HaveOccurred())
-
-		serverCert, err := ioutil.ReadFile(serverCertPath)
-		Expect(err).NotTo(HaveOccurred())
-
-		serverKey, err := ioutil.ReadFile(serverKeyPath)
-		Expect(err).NotTo(HaveOccurred())
-
-		clientCACert, err := ioutil.ReadFile(clientCACertPath)
-		Expect(err).NotTo(HaveOccurred())
-
-		clientCert, err = ioutil.ReadFile(clientCertPath)
-		Expect(err).NotTo(HaveOccurred())
-
-		clientKey, err = ioutil.ReadFile(clientKeyPath)
-		Expect(err).NotTo(HaveOccurred())
-
-		serverTLSConfig, err := mutualtls.BuildConfig(serverCert, serverKey, clientCACert)
+		serverTLSConfig, err := mutualtls.BuildConfig(serverCertFile, serverKeyFile, clientCACertFile)
 		Expect(err).NotTo(HaveOccurred())
 
 		mockPolicyServer = startServer(serverTLSConfig)
@@ -131,9 +110,9 @@ var _ = Describe("VXLAN Policy Agent", func() {
 			VNI:               42,
 			FlannelSubnetFile: subnetFile.Name(),
 			MetronAddress:     fakeMetron.Address(),
-			ServerCACert:      string(serverCACert),
-			ClientCert:        string(clientCert),
-			ClientKey:         string(clientKey),
+			ServerCACertFile:  serverCACertFile,
+			ClientCertFile:    clientCertFile,
+			ClientKeyFile:     clientKeyFile,
 		}
 		configFilePath = WriteConfigFile(conf)
 	})
@@ -231,9 +210,9 @@ var _ = Describe("VXLAN Policy Agent", func() {
 				VNI:               42,
 				FlannelSubnetFile: subnetFile.Name(),
 				MetronAddress:     fakeMetron.Address(),
-				ServerCACert:      string(serverCACert),
-				ClientCert:        string(clientCert),
-				ClientKey:         string(clientKey),
+				ServerCACertFile:  serverCACertFile,
+				ClientCertFile:    clientCertFile,
+				ClientKeyFile:     clientKeyFile,
 			}
 			configFilePath = WriteConfigFile(conf)
 			session = StartAgent(vxlanPolicyAgentPath, configFilePath)
@@ -263,9 +242,9 @@ var _ = Describe("VXLAN Policy Agent", func() {
 				VNI:               42,
 				FlannelSubnetFile: subnetFile.Name(),
 				MetronAddress:     fakeMetron.Address(),
-				ServerCACert:      string(serverCACert),
-				ClientCert:        string("totally"),
-				ClientKey:         string("not-cool"),
+				ServerCACertFile:  serverCACertFile,
+				ClientCertFile:    "totally",
+				ClientKeyFile:     "not-cool",
 			}
 			configFilePath = WriteConfigFile(conf)
 		})

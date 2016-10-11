@@ -20,28 +20,18 @@ import (
 
 var _ = Describe("TLS config for internal API server", func() {
 	var (
-		serverListenAddr      string
-		clientTLSConfig       *tls.Config
-		clientCACert          []byte
-		serverCACert          []byte
-		serverCert, serverKey []byte
+		serverListenAddr string
+		clientTLSConfig  *tls.Config
 	)
 
 	BeforeEach(func() {
 		var err error
-		serverCert, err = ioutil.ReadFile(serverCertPath)
-		Expect(err).NotTo(HaveOccurred())
-		serverKey, err = ioutil.ReadFile(serverKeyPath)
-		Expect(err).NotTo(HaveOccurred())
 
 		serverListenAddr = fmt.Sprintf("127.0.0.1:%d", 40000+rand.Intn(10000))
 		cert, err := tls.LoadX509KeyPair(clientCertPath, clientKeyPath)
 		Expect(err).NotTo(HaveOccurred())
 
-		serverCACert, err = ioutil.ReadFile(serverCACertPath)
-		Expect(err).NotTo(HaveOccurred())
-
-		clientCACert, err = ioutil.ReadFile(clientCACertPath)
+		serverCACert, err := ioutil.ReadFile(serverCACertPath)
 		Expect(err).NotTo(HaveOccurred())
 
 		clientCertPool := x509.NewCertPool()
@@ -84,7 +74,7 @@ var _ = Describe("TLS config for internal API server", func() {
 
 	Describe("BuildServerConfig", func() {
 		It("returns a TLSConfig that can be used by an HTTP server", func() {
-			serverTLSConfig, err := mutualtls.BuildServerConfig(serverCert, serverKey, clientCACert)
+			serverTLSConfig, err := mutualtls.BuildServerConfig(serverCertPath, serverKeyPath, clientCACertPath)
 			Expect(err).NotTo(HaveOccurred())
 
 			server := startServer(serverTLSConfig)
@@ -103,20 +93,14 @@ var _ = Describe("TLS config for internal API server", func() {
 
 		Context("when the key pair cannot be created", func() {
 			It("returns a meaningful error", func() {
-				_, err := mutualtls.BuildServerConfig(nil, nil, nil)
-				Expect(err).To(MatchError(HavePrefix("unable to load server cert or key")))
+				_, err := mutualtls.BuildServerConfig("", "", "")
+				Expect(err).To(MatchError(HavePrefix("unable to load cert or key")))
 			})
 		})
 
 		Context("when the server has been configured with the wrong CA for the client", func() {
-			BeforeEach(func() {
-				var err error
-				clientCACert, err = ioutil.ReadFile(wrongClientCACertPath)
-				Expect(err).NotTo(HaveOccurred())
-			})
-
 			It("refuses to connect to the client", func() {
-				serverTLSConfig, err := mutualtls.BuildServerConfig(serverCert, serverKey, clientCACert)
+				serverTLSConfig, err := mutualtls.BuildServerConfig(serverCertPath, serverKeyPath, wrongClientCACertPath)
 				Expect(err).NotTo(HaveOccurred())
 
 				server := startServer(serverTLSConfig)
@@ -135,7 +119,7 @@ var _ = Describe("TLS config for internal API server", func() {
 			})
 
 			It("refuses to connect to the server", func() {
-				serverTLSConfig, err := mutualtls.BuildServerConfig(serverCert, serverKey, clientCACert)
+				serverTLSConfig, err := mutualtls.BuildServerConfig(serverCertPath, serverKeyPath, clientCACertPath)
 				Expect(err).NotTo(HaveOccurred())
 
 				server := startServer(serverTLSConfig)
@@ -159,7 +143,7 @@ var _ = Describe("TLS config for internal API server", func() {
 			})
 
 			It("refuses to connect to the server", func() {
-				serverTLSConfig, err := mutualtls.BuildServerConfig(serverCert, serverKey, clientCACert)
+				serverTLSConfig, err := mutualtls.BuildServerConfig(serverCertPath, serverKeyPath, clientCACertPath)
 				Expect(err).NotTo(HaveOccurred())
 
 				server := startServer(serverTLSConfig)
@@ -178,7 +162,7 @@ var _ = Describe("TLS config for internal API server", func() {
 			})
 
 			It("refuses the connection from the client", func() {
-				serverTLSConfig, err := mutualtls.BuildServerConfig(serverCert, serverKey, clientCACert)
+				serverTLSConfig, err := mutualtls.BuildServerConfig(serverCertPath, serverKeyPath, clientCACertPath)
 				Expect(err).NotTo(HaveOccurred())
 
 				server := startServer(serverTLSConfig)
@@ -199,7 +183,7 @@ var _ = Describe("TLS config for internal API server", func() {
 			})
 
 			It("refuses the connection from the client", func() {
-				serverTLSConfig, err := mutualtls.BuildServerConfig(serverCert, serverKey, clientCACert)
+				serverTLSConfig, err := mutualtls.BuildServerConfig(serverCertPath, serverKeyPath, clientCACertPath)
 				Expect(err).NotTo(HaveOccurred())
 
 				server := startServer(serverTLSConfig)
@@ -213,7 +197,7 @@ var _ = Describe("TLS config for internal API server", func() {
 		})
 
 		It("returns config with reasonable security properties", func() {
-			serverTLSConfig, err := mutualtls.BuildServerConfig(serverCert, serverKey, clientCACert)
+			serverTLSConfig, err := mutualtls.BuildServerConfig(serverCertPath, serverKeyPath, clientCACertPath)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(serverTLSConfig.PreferServerCipherSuites).To(BeTrue())

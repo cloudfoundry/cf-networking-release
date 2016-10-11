@@ -23,12 +23,12 @@ var DEFAULT_TIMEOUT = "5s"
 var (
 	certstrapBin         string
 	certDir              string
-	serverCACertPath     string
-	clientCACertPath     string
-	serverCertPath       string
-	serverKeyPath        string
-	clientCertPath       string
-	clientKeyPath        string
+	serverCACertFile     string
+	clientCACertFile     string
+	serverCertFile       string
+	serverKeyFile        string
+	clientCertFile       string
+	clientKeyFile        string
 	vxlanPolicyAgentPath string
 )
 
@@ -48,16 +48,16 @@ var _ = BeforeSuite(func() {
 	cmd := exec.Command("go", "build", "-o", certstrapBin, "github.com/square/certstrap")
 	Expect(cmd.Run()).NotTo(HaveOccurred())
 
-	serverCACertPath, err = WriteCACert(certstrapBin, certDir, "server-ca")
+	serverCACertFile, err = WriteCACert(certstrapBin, certDir, "server-ca")
 	Expect(err).NotTo(HaveOccurred())
 
-	serverCertPath, serverKeyPath, err = WriteAndSignServerCert(certstrapBin, certDir, "server", "server-ca")
+	serverCertFile, serverKeyFile, err = WriteAndSignServerCert(certstrapBin, certDir, "server", "server-ca")
 	Expect(err).NotTo(HaveOccurred())
 
-	clientCACertPath, err = WriteCACert(certstrapBin, certDir, "client-ca")
+	clientCACertFile, err = WriteCACert(certstrapBin, certDir, "client-ca")
 	Expect(err).NotTo(HaveOccurred())
 
-	clientCertPath, clientKeyPath, err = WriteAndSignServerCert(certstrapBin, certDir, "client", "client-ca")
+	clientCertFile, clientKeyFile, err = WriteAndSignServerCert(certstrapBin, certDir, "client", "client-ca")
 	Expect(err).NotTo(HaveOccurred())
 
 	fmt.Fprintf(GinkgoWriter, "building binary...")
