@@ -3,6 +3,9 @@ name: vxlan-policy-agent
 templates:
   vxlan-policy-agent_ctl.erb: bin/vxlan-policy-agent_ctl
   vxlan-policy-agent.json.erb: config/vxlan-policy-agent.json
+  ca.crt.erb: config/certs/ca.crt
+  client.crt.erb: config/certs/client.crt
+  client.key.erb: config/certs/client.key
 
 packages:
   - vxlan-policy-agent
@@ -23,11 +26,23 @@ properties:
     description: "Query the policy server on this interval, in seconds"
     default: 5
 
+  vxlan-policy-agent.ca_cert_file:
+    description: "Trusted CA certificate for server"
+    default: "/var/vcap/jobs/vxlan-policy-agent/config/certs/ca.crt"
+
   vxlan-policy-agent.ca_cert:
-    description: "Trusted CA certificate for clients"
+    description: "Trusted CA certificate for server"
+
+  vxlan-policy-agent.client_cert_file:
+    description: "Client certificate file for TLS to access policy server"
+    default: "/var/vcap/jobs/vxlan-policy-agent/config/certs/client.crt"
 
   vxlan-policy-agent.client_cert:
     description: "Client certificate for TLS to access policy server"
+
+  vxlan-policy-agent.client_key_file:
+    description: "Client private key file for TLS to access policy server"
+    default: "/var/vcap/jobs/vxlan-policy-agent/config/certs/client.key"
 
   vxlan-policy-agent.client_key:
     description: "Client private key for TLS to access policy server"
