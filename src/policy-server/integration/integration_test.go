@@ -1,6 +1,7 @@
 package integration_test
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -179,6 +180,20 @@ func makeAndDoRequest(method string, endpoint string, body io.Reader) *http.Resp
 	Expect(err).NotTo(HaveOccurred())
 	req.Header.Set("Authorization", "Bearer valid-token")
 	resp, err := http.DefaultClient.Do(req)
+	Expect(err).NotTo(HaveOccurred())
+	return resp
+}
+
+func makeAndDoHTTPSRequest(method string, endpoint string, body io.Reader, c *tls.Config) *http.Response {
+	req, err := http.NewRequest(method, endpoint, body)
+	Expect(err).NotTo(HaveOccurred())
+	req.Header.Set("Authorization", "Bearer valid-token")
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: c,
+		},
+	}
+	resp, err := client.Do(req)
 	Expect(err).NotTo(HaveOccurred())
 	return resp
 }

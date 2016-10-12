@@ -161,17 +161,15 @@ func main() {
 		{Name: "delete_policies", Method: "DELETE", Path: "/networking/v0/external/policies"},
 		{Name: "policies_index", Method: "GET", Path: "/networking/v0/external/policies"},
 		{Name: "tags_index", Method: "GET", Path: "/networking/v0/external/tags"},
-		{Name: "internal_policies", Method: "GET", Path: "/networking/v0/internal/policies"},
 	}
 
 	handlers := rata.Handlers{
-		"uptime":            uptimeHandler,
-		"create_policies":   authenticator.Wrap(createPolicyHandler),
-		"delete_policies":   authenticator.Wrap(deletePolicyHandler),
-		"policies_index":    authenticator.Wrap(policiesIndexHandler),
-		"tags_index":        authenticator.Wrap(tagsIndexHandler),
-		"whoami":            whoamiHandler,
-		"internal_policies": internalPoliciesHandler,
+		"uptime":          uptimeHandler,
+		"create_policies": authenticator.Wrap(createPolicyHandler),
+		"delete_policies": authenticator.Wrap(deletePolicyHandler),
+		"policies_index":  authenticator.Wrap(policiesIndexHandler),
+		"tags_index":      authenticator.Wrap(tagsIndexHandler),
+		"whoami":          whoamiHandler,
 	}
 	router, err := rata.NewRouter(routes, handlers)
 	if err != nil {

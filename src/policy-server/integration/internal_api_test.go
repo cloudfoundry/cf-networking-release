@@ -94,31 +94,14 @@ var _ = Describe("Internal API", func() {
 			body,
 		)
 
-		resp := makeAndDoRequest(
+		resp := makeAndDoHTTPSRequest(
 			"GET",
-			fmt.Sprintf("http://%s:%d/networking/v0/internal/policies?id=app1,app2", conf.ListenHost, conf.ListenPort),
+			fmt.Sprintf("https://%s:%d/networking/v0/internal/policies?id=app1,app2", conf.ListenHost, conf.InternalListenPort),
 			nil,
+			tlsConfig,
 		)
 		Expect(resp.StatusCode).To(Equal(http.StatusOK))
 		responseString, err := ioutil.ReadAll(resp.Body)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(responseString).To(MatchJSON(`{ "policies": [
-				{"source": { "id": "app1", "tag": "0001" }, "destination": { "id": "app2", "tag": "0002", "protocol": "tcp", "port": 8080 } },
-				{"source": { "id": "app3", "tag": "0003" }, "destination": { "id": "app1", "tag": "0001", "protocol": "tcp", "port": 9999 } }
-			]}
-		`))
-
-		req, err := http.NewRequest("GET", fmt.Sprintf("https://%s:%d/networking/v0/internal/policies?id=app1,app2", conf.ListenHost, conf.InternalListenPort), nil)
-		Expect(err).NotTo(HaveOccurred())
-		client := &http.Client{
-			Transport: &http.Transport{
-				TLSClientConfig: tlsConfig,
-			},
-		}
-		resp, err = client.Do(req)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(resp.StatusCode).To(Equal(http.StatusOK))
-		responseString, err = ioutil.ReadAll(resp.Body)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(responseString).To(MatchJSON(`{ "policies": [
 				{"source": { "id": "app1", "tag": "0001" }, "destination": { "id": "app2", "tag": "0002", "protocol": "tcp", "port": 8080 } },
