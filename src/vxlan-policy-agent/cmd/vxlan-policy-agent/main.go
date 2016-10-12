@@ -71,7 +71,7 @@ func main() {
 		die(logger, "discovering network info", err)
 	}
 
-	clientTLSConfig, err := mutualtls.BuildConfig(conf.ClientCertFile, conf.ClientKeyFile, conf.ServerCACertFile)
+	clientTLSConfig, err := mutualtls.NewClientTLSConfig(conf.ClientCertFile, conf.ClientKeyFile, conf.ServerCACertFile)
 	if err != nil {
 		die(logger, "mutal tls config", err)
 	}

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	. "lib/testsupport"
+	"lib/testsupport"
 	"math/rand"
 	"os"
 	"os/exec"
@@ -48,16 +48,19 @@ var _ = BeforeSuite(func() {
 	cmd := exec.Command("go", "build", "-o", certstrapBin, "github.com/square/certstrap")
 	Expect(cmd.Run()).NotTo(HaveOccurred())
 
-	serverCACertFile, err = WriteCACert(certstrapBin, certDir, "server-ca")
+	certWriter := &testsupport.CertWriter{
+		BinPath:  certstrapBin,
+		CertPath: certDir,
+	}
+
+	serverCACertFile, err = certWriter.WriteCA("server-ca")
+	Expect(err).NotTo(HaveOccurred())
+	serverCertFile, serverKeyFile, err = certWriter.WriteAndSignForServer("server", "server-ca")
 	Expect(err).NotTo(HaveOccurred())
 
-	serverCertFile, serverKeyFile, err = WriteAndSignServerCert(certstrapBin, certDir, "server", "server-ca")
+	clientCACertFile, err = certWriter.WriteCA("client-ca")
 	Expect(err).NotTo(HaveOccurred())
-
-	clientCACertFile, err = WriteCACert(certstrapBin, certDir, "client-ca")
-	Expect(err).NotTo(HaveOccurred())
-
-	clientCertFile, clientKeyFile, err = WriteAndSignServerCert(certstrapBin, certDir, "client", "client-ca")
+	clientCertFile, clientKeyFile, err = certWriter.WriteAndSignForClient("client", "client-ca")
 	Expect(err).NotTo(HaveOccurred())
 
 	fmt.Fprintf(GinkgoWriter, "building binary...")

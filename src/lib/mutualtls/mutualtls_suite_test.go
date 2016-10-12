@@ -3,7 +3,7 @@ package mutualtls_test
 import (
 	"fmt"
 	"io/ioutil"
-	. "lib/testsupport"
+	"lib/testsupport"
 	"math/rand"
 	"os"
 	"os/exec"
@@ -40,22 +40,24 @@ var _ = BeforeSuite(func() {
 	cmd := exec.Command("go", "build", "-o", certstrapBin, "github.com/square/certstrap")
 	Expect(cmd.Run()).NotTo(HaveOccurred())
 
-	serverCACertPath, err = WriteCACert(certstrapBin, certDir, "server-ca")
+	certWriter := &testsupport.CertWriter{
+		BinPath:  certstrapBin,
+		CertPath: certDir,
+	}
+
+	serverCACertPath, err = certWriter.WriteCA("server-ca")
+	Expect(err).NotTo(HaveOccurred())
+	serverCertPath, serverKeyPath, err = certWriter.WriteAndSignForServer("server", "server-ca")
 	Expect(err).NotTo(HaveOccurred())
 
-	serverCertPath, serverKeyPath, err = WriteAndSignServerCert(certstrapBin, certDir, "server", "server-ca")
+	clientCACertPath, err = certWriter.WriteCA("client-ca")
+	Expect(err).NotTo(HaveOccurred())
+	clientCertPath, clientKeyPath, err = certWriter.WriteAndSignForClient("client", "client-ca")
 	Expect(err).NotTo(HaveOccurred())
 
-	clientCACertPath, err = WriteCACert(certstrapBin, certDir, "client-ca")
+	wrongClientCACertPath, err = certWriter.WriteCA("wrong-client-ca")
 	Expect(err).NotTo(HaveOccurred())
-
-	clientCertPath, clientKeyPath, err = WriteAndSignServerCert(certstrapBin, certDir, "client", "client-ca")
-	Expect(err).NotTo(HaveOccurred())
-
-	wrongClientCACertPath, err = WriteCACert(certstrapBin, certDir, "wrong-client-ca")
-	Expect(err).NotTo(HaveOccurred())
-
-	wrongClientCertPath, wrongClientKeyPath, err = WriteAndSignServerCert(certstrapBin, certDir, "wrong-client", "wrong-client-ca")
+	wrongClientCertPath, wrongClientKeyPath, err = certWriter.WriteAndSignForClient("wrong-client", "wrong-client-ca")
 	Expect(err).NotTo(HaveOccurred())
 })
 

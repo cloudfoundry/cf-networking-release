@@ -5,19 +5,24 @@ import (
 	"os/exec"
 )
 
-func WriteCACert(bin, path, caName string) (string, error) {
-	err := exec.Command(bin,
-		"--depot-path", path,
+type CertWriter struct {
+	BinPath  string
+	CertPath string
+}
+
+func (c *CertWriter) WriteCA(caName string) (string, error) {
+	err := exec.Command(c.BinPath,
+		"--depot-path", c.CertPath,
 		"init",
 		"--passphrase", "",
 		"--common-name", caName).Run()
 
-	return fmt.Sprintf("%s/%s.crt", path, caName), err
+	return fmt.Sprintf("%s/%s.crt", c.CertPath, caName), err
 }
 
-func WriteAndSignServerCert(bin, path, commonName, caName string) (string, string, error) {
-	err := exec.Command(bin,
-		"--depot-path", path,
+func (c *CertWriter) WriteAndSignForServer(commonName, caName string) (string, string, error) {
+	err := exec.Command(c.BinPath,
+		"--depot-path", c.CertPath,
 		"request-cert",
 		"--passphrase", "",
 		"--common-name", commonName,
@@ -27,17 +32,17 @@ func WriteAndSignServerCert(bin, path, commonName, caName string) (string, strin
 		return "", "", err
 	}
 
-	err = exec.Command(bin,
-		"--depot-path", path,
+	err = exec.Command(c.BinPath,
+		"--depot-path", c.CertPath,
 		"sign", commonName,
 		"--CA", caName).Run()
 
-	return fmt.Sprintf("%s/%s.crt", path, commonName), fmt.Sprintf("%s/%s.key", path, commonName), nil
+	return fmt.Sprintf("%s/%s.crt", c.CertPath, commonName), fmt.Sprintf("%s/%s.key", c.CertPath, commonName), nil
 }
 
-func WriteAndSignClientCert(bin, path, commonName, caName string) (string, string, error) {
-	err := exec.Command(bin,
-		"--depot-path", path,
+func (c *CertWriter) WriteAndSignForClient(commonName, caName string) (string, string, error) {
+	err := exec.Command(c.BinPath,
+		"--depot-path", c.CertPath,
 		"request-cert",
 		"--passphrase", "",
 		"--common-name", commonName).Run()
@@ -45,10 +50,10 @@ func WriteAndSignClientCert(bin, path, commonName, caName string) (string, strin
 		return "", "", err
 	}
 
-	err = exec.Command(bin,
-		"--depot-path", path,
+	err = exec.Command(c.BinPath,
+		"--depot-path", c.CertPath,
 		"sign", commonName,
 		"--CA", caName).Run()
 
-	return fmt.Sprintf("%s/%s.crt", path, commonName), fmt.Sprintf("%s/%s.key", path, commonName), nil
+	return fmt.Sprintf("%s/%s.crt", c.CertPath, commonName), fmt.Sprintf("%s/%s.key", c.CertPath, commonName), nil
 }

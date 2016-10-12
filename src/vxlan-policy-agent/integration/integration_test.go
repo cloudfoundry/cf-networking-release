@@ -77,7 +77,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		var err error
 		fakeMetron = fakes.New()
 
-		serverTLSConfig, err := mutualtls.BuildConfig(serverCertFile, serverKeyFile, clientCACertFile)
+		serverTLSConfig, err := mutualtls.NewServerTLSConfig(serverCertFile, serverKeyFile, clientCACertFile)
 		Expect(err).NotTo(HaveOccurred())
 
 		mockPolicyServer = startServer(serverTLSConfig)

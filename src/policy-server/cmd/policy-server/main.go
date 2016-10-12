@@ -192,7 +192,7 @@ func main() {
 	}
 	internalAddr := fmt.Sprintf("%s:%d", conf.ListenHost, conf.InternalListenPort)
 
-	tlsConfig, err := mutualtls.BuildServerConfig(conf.ServerCertFile, conf.ServerKeyFile, conf.CACertFile)
+	tlsConfig, err := mutualtls.NewServerTLSConfig(conf.ServerCertFile, conf.ServerKeyFile, conf.CACertFile)
 	if err != nil {
 		log.Fatalf("mutual tls config: %s", err)
 	}
