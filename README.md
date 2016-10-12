@@ -122,6 +122,9 @@ individual failing vm(s) with `bosh recreate <vm_name>` or you can run
      - netman uses the same etcd cluster as CF, so netman's etcd TLS properties should be configured to match.
         - Set `require_ssl` in the `cni-flannel` section to match the etcd property in the CF manifest.
         - If `require_ssl` is `true`, also replace the `REPLACE_WITH_ETCD*` cert and key values.
+    - The policy-agent communicates with the policy-server using mutual TLS.
+      Generate PEM encoded certs and keys for `vxlan-policy-agent` and `policy-server` and update the associated properties.
+        - See the [generate-certs](scripts/generate-certs.sh) script for an example
     - All other fields with `REPLACE_*` values must be provided
 
     ```yaml
@@ -141,7 +144,20 @@ individual failing vm(s) with `bosh recreate <vm_name>` or you can run
         release: netman
       properties:
         vxlan-policy-agent:
-          policy_server_url: http://policy-server.service.cf.internal:4002
+          policy_server_url: https://policy-server.service.cf.internal:4003
+          ca_cert: REPLACE_WITH_SERVER_CA_CERT
+          client_cert: REPLACE_WITH_CLIENT_CERT
+          client_key: REPLACE_WITH_CLIENT_KEY
+        policy-server:
+          uaa_client_secret: REPLACE_WITH_UAA_CLIENT_SECRET
+          uaa_url: (( "https://uaa." config_from_cf.system_domain ))
+          skip_ssl_validation: true
+          database:
+            type: REPLACE_WITH_DB_TYPE # mysql or postgres
+            connection_string: REPLACE_WITH_DB_CONNECTION_STRING
+          ca_cert: REPLACE_WITH_CLIENT_CA_CERT
+          server_cert: REPLACE_WITH_SERVER_CERT
+          server_key: REPLACE_WITH_SERVER_KEY
         garden-cni:
           cni_plugin_dir: /var/vcap/packages/flannel/bin
           cni_config_dir: /var/vcap/jobs/cni-flannel/config/cni
@@ -154,13 +170,6 @@ individual failing vm(s) with `bosh recreate <vm_name>` or you can run
           etcd_ca_cert: REPLACE_WITH_ETCD_CA_CERT_FROM_CF_MANIFEST
           etcd_client_cert: REPLACE_WITH_ETCD_CLIENT_CERT_FROM_CF_MANIFEST
           etcd_client_key: REPLACE_WITH_ETCD_CLIENT_KEY_FROM_CF_MANIFEST
-        policy-server:
-          uaa_client_secret: REPLACE_WITH_UAA_CLIENT_SECRET
-          uaa_url: (( "https://uaa." config_from_cf.system_domain ))
-          skip_ssl_validation: true
-          database:
-            type: REPLACE_WITH_DB_TYPE # mysql or postgres
-            connection_string: REPLACE_WITH_DB_CONNECTION_STRING
       garden_properties:
         network_plugin: /var/vcap/packages/runc-cni/bin/garden-external-networker
         network_plugin_extra_args:

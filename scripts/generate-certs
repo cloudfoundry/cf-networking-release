@@ -10,9 +10,7 @@ depot_path="netman-certs"
 mkdir -p ${depot_path}
 
 # CA to distribute to netman clients and servers
-certstrap --depot-path ${depot_path} init --passphrase '' --common-name netmanCA
-mv -f ${depot_path}/netmanCA.crt ${depot_path}/netman-ca.crt
-mv -f ${depot_path}/netmanCA.key ${depot_path}/netman-ca.key
+certstrap --depot-path ${depot_path} init --passphrase '' --common-name netman-ca
 
 # Server certificate for the policy server
 certstrap --depot-path ${depot_path} request-cert --passphrase '' --common-name policy-server.service.cf.internal --domain '*.policy-server.service.cf.internal,policy-server.service.cf.internal'
@@ -22,8 +20,8 @@ mv -f ${depot_path}/policy-server.service.cf.internal.csr ${depot_path}/server.c
 mv -f ${depot_path}/policy-server.service.cf.internal.crt ${depot_path}/server.crt
 
 # Client certificate for the policy agents
-certstrap --depot-path ${depot_path} request-cert --passphrase '' --common-name 'clientName'
-certstrap --depot-path ${depot_path} sign clientName --CA netman-ca
-mv -f ${depot_path}/clientName.key ${depot_path}/client.key
-mv -f ${depot_path}/clientName.csr ${depot_path}/client.csr
-mv -f ${depot_path}/clientName.crt ${depot_path}/client.crt
+certstrap --depot-path ${depot_path} request-cert --passphrase '' --common-name 'policy-agent'
+certstrap --depot-path ${depot_path} sign policy-agent --CA netman-ca
+mv -f ${depot_path}/policy-agent.key ${depot_path}/client.key
+mv -f ${depot_path}/policy-agent.csr ${depot_path}/client.csr
+mv -f ${depot_path}/policy-agent.crt ${depot_path}/client.crt
