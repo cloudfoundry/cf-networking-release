@@ -1,7 +1,11 @@
 <%=
     require 'json'
 
-    server = p("policy-server")
+    config = p("policy-server")
 
-	JSON.pretty_generate(server)
+    # exclude these properties
+    excludes = ["ca_cert", "server_cert", "server_key"]
+    excludes.each { |k| config.delete k }
+
+    JSON.pretty_generate(config)
 %>

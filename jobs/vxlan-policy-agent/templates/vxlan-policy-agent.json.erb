@@ -1,7 +1,11 @@
 <%=
     require 'json'
 
-    agentConfig = p("vxlan-policy-agent")
+    config = p("vxlan-policy-agent")
 
-    JSON.pretty_generate(agentConfig)
+    # exclude these properties
+    excludes = ["ca_cert", "client_cert", "client_key"]
+    excludes.each { |k| config.delete k }
+
+    JSON.pretty_generate(config)
 %>
