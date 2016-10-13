@@ -119,9 +119,6 @@ individual failing vm(s) with `bosh recreate <vm_name>` or you can run
 
   - Create a netman stub `stubs/netman/stub.yml`:
 
-     - netman uses the same etcd cluster as CF, so netman's etcd TLS properties should be configured to match.
-        - Set `require_ssl` in the `cni-flannel` section to match the etcd property in the CF manifest.
-        - If `require_ssl` is `true`, also replace the `REPLACE_WITH_ETCD*` cert and key values.
     - The policy-agent communicates with the policy-server using mutual TLS.
       Generate PEM encoded certs and keys for `vxlan-policy-agent` and `policy-server` and update the associated properties.
         - See the [generate-certs](scripts/generate-certs.sh) script for an example
@@ -164,12 +161,12 @@ individual failing vm(s) with `bosh recreate <vm_name>` or you can run
         cni-flannel:
           flannel:
             etcd:
-              require_ssl: true
+              require_ssl: (( config_from_cf.etcd.require_ssl))
           etcd_endpoints:
-            - (( "https://" config_from_cf.etcd.advertise_urls_dns_suffix ":4001" ))
-          etcd_ca_cert: REPLACE_WITH_ETCD_CA_CERT_FROM_CF_MANIFEST
-          etcd_client_cert: REPLACE_WITH_ETCD_CLIENT_CERT_FROM_CF_MANIFEST
-          etcd_client_key: REPLACE_WITH_ETCD_CLIENT_KEY_FROM_CF_MANIFEST
+            - (( config_from_cf.etcd.advertise_urls_dns_suffix ))
+          etcd_client_cert: (( config_from_cf.etcd.client_cert ))
+          etcd_client_key: (( config_from_cf.etcd.client_key ))
+          etcd_ca_cert: (( config_from_cf.etcd.ca_cert ))
       garden_properties:
         network_plugin: /var/vcap/packages/runc-cni/bin/garden-external-networker
         network_plugin_extra_args:
