@@ -23,3 +23,4 @@ dev_releases
 /bin
 src/example-apps/proxy/proxy
 src/example-apps/tick/tick
+src/example-apps/registry/registry

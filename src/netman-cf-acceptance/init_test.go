@@ -125,7 +125,7 @@ func TestAcceptance(t *testing.T) {
 		// remove binaries
 		Expect(os.Remove(filepath.Join(appsDir, "proxy", "proxy"))).To(Succeed())
 		Expect(os.Remove(filepath.Join(appsDir, "tick", "tick"))).To(Succeed())
-		Expect(os.RemoveAll(filepath.Join(appsDir, "registry"))).To(Succeed())
+		Expect(os.Remove(filepath.Join(appsDir, "registry", "registry"))).To(Succeed())
 	})
 
 	RunSpecs(t, "Acceptance Suite")
