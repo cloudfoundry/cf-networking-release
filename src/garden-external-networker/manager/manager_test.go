@@ -62,8 +62,8 @@ var _ = Describe("Manager", func() {
 			NetInProvider:  netInProvider,
 			NetOutProvider: netOutProvider,
 		}
-		gardenProperties = map[string]string{"app_id": "some-group-id"}
-		expectedExtraProperties = map[string]string{"app_id": "some-group-id"}
+		gardenProperties = map[string]string{"policy_group_id": "some-group-id"}
+		expectedExtraProperties = map[string]string{"policy_group_id": "some-group-id"}
 	})
 
 	Describe("Up", func() {

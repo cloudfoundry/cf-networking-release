@@ -35,7 +35,7 @@ func getContainersMap(allContainers []garden.Container) (map[string][]string, er
 			return nil, err
 		}
 		properties := info.Properties
-		groupID := properties["network.app_id"]
+		groupID := properties["network.policy_group_id"]
 
 		containers[groupID] = append(containers[groupID], info.ContainerIP)
 	}

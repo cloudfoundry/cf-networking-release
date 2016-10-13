@@ -87,7 +87,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		gardenContainer = &gardenfakes.FakeContainer{}
 		gardenContainer.InfoReturns(garden.ContainerInfo{
 			ContainerIP: "10.255.100.21",
-			Properties:  garden.Properties{"network.app_id": "some-app-guid"},
+			Properties:  garden.Properties{"network.policy_group_id": "some-app-guid"},
 		}, nil)
 		gardenContainer.HandleReturns("some-handle")
 

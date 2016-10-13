@@ -34,11 +34,11 @@ var _ = Describe("Planner", func() {
 
 		fakeContainer1.InfoReturns(garden.ContainerInfo{
 			ContainerIP: "10.255.1.2",
-			Properties:  map[string]string{"network.app_id": "some-app-guid"},
+			Properties:  map[string]string{"network.policy_group_id": "some-app-guid"},
 		}, nil)
 		fakeContainer2.InfoReturns(garden.ContainerInfo{
 			ContainerIP: "10.255.1.3",
-			Properties:  map[string]string{"network.app_id": "some-other-app-guid"},
+			Properties:  map[string]string{"network.policy_group_id": "some-other-app-guid"},
 		}, nil)
 		gardenClient.ContainersReturns([]garden.Container{
 			fakeContainer1,

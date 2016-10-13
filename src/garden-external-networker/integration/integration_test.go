@@ -36,7 +36,7 @@ func expectedStdin_CNI_ADD(index int) string {
   "network": {
     "properties": {
       "some-key": "some-value",
-      "app_id": "some-group-id"
+      "policy_group_id": "some-group-id"
     }
   }
 }`, index, index)
@@ -162,8 +162,8 @@ var _ = Describe("Garden External Networker", func() {
 		upCommand.Stdin = buildStdin(map[string]interface{}{
 			"pid": fakePid,
 			"properties": map[string]string{
-				"some-key": "some-value",
-				"app_id":   "some-group-id",
+				"some-key":        "some-value",
+				"policy_group_id": "some-group-id",
 			},
 		},
 		)
