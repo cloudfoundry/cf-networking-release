@@ -79,6 +79,14 @@ func main() {
 		log.Fatalf("connecting to api: %s", err)
 	}
 
+	orgDeleter := &cf_command.OrgDeleter{
+		Org:     scaleGroup.Org,
+		Adapter: adapter,
+	}
+	if err = orgDeleter.Delete(); err != nil {
+		log.Fatalf("deleting org: %s", err)
+	}
+
 	orgSpaceCreator := &cf_command.OrgSpaceCreator{
 		Org:     scaleGroup.Org,
 		Space:   scaleGroup.Space,
@@ -134,6 +142,14 @@ func main() {
 
 	if err := appPusher.Push(); err != nil {
 		log.Fatalf("pushing apps: %s", err)
+	}
+
+	appChecker := cf_command.AppChecker{
+		Applications: appsToPush,
+		Adapter:      adapter,
+	}
+	if err := appChecker.CheckApps(); err != nil {
+		log.Fatalf("checking apps: %s", err)
 	}
 
 	output, err := json.Marshal(scaleGroup)

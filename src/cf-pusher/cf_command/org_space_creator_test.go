@@ -17,9 +17,9 @@ var _ = Describe("OrgSpaceCreator", func() {
 	BeforeEach(func() {
 		fakeCli = &fakes.OrgSpaceCli{}
 		orgSpaceCreator = &cf_command.OrgSpaceCreator{
-			Org:   "some-org",
-			Space: "some-space",
-			Adapter:   fakeCli,
+			Org:     "some-org",
+			Space:   "some-space",
+			Adapter: fakeCli,
 		}
 	})
 	It("creates and targets the org and space", func() {

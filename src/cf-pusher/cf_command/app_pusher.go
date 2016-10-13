@@ -1,6 +1,8 @@
 package cf_command
 
-import "fmt"
+import (
+	"fmt"
+)
 
 //go:generate counterfeiter -o ../fakes/push_cli_adapter.go --fake-name PushCLIAdapter . pushCLIAdapter
 type pushCLIAdapter interface {
