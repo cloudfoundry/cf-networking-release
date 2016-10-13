@@ -119,6 +119,10 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			By("creating policies")
 			doAllPolicies("create", appProxy, appsTest, ports)
 
+			// we should wait for minimum (pollInterval * 2)
+			By("waiting for policies to be created on cells")
+			time.Sleep(10 * time.Second)
+
 			By(fmt.Sprintf("checking that %s can reach %s", appProxy, appsTest))
 			runWithTimeout("check connection success", 5*time.Minute, func() {
 				assertConnectionSucceeds(appProxy, appIPs, ports, proxyInstances)
