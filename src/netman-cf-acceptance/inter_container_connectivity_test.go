@@ -314,6 +314,16 @@ func assertConnectionFails(sourceApp string, destApps []string, ports []int, nPr
 }
 
 func assertSingleConnection(destIP string, port int, sourceAppName string, shouldSucceed bool) {
+	if shouldSucceed {
+		By(fmt.Sprintf("eventually proxy should reach %s at port %d", destIP, port))
+		assertResponseContains(destIP, port, sourceAppName, "application_name")
+	} else {
+		By(fmt.Sprintf("eventually proxy should NOT reach %s at port %d", destIP, port))
+		assertResponseContains(destIP, port, sourceAppName, "request failed")
+	}
+}
+
+func assertResponseContains(destIP string, port int, sourceAppName string, desiredResponse string) {
 	proxyTest := func() (string, error) {
 		respBytes, err := httpGetBytes(fmt.Sprintf("http://%s.%s/proxy/%s:%d", sourceAppName, config.AppsDomain, destIP, port))
 		if err != nil {
@@ -321,13 +331,7 @@ func assertSingleConnection(destIP string, port int, sourceAppName string, shoul
 		}
 		return string(respBytes), nil
 	}
-	if shouldSucceed {
-		By(fmt.Sprintf("eventually proxy should reach %s at port %d", destIP, port))
-		Eventually(proxyTest, 10*time.Second, 500*time.Millisecond).Should(ContainSubstring(`application_name`))
-	} else {
-		By(fmt.Sprintf("eventually proxy should NOT reach %s at port %d", destIP, port))
-		Eventually(proxyTest, 10*time.Second, 500*time.Millisecond).Should(ContainSubstring("request failed"))
-	}
+	Eventually(proxyTest, 10*time.Second, 500*time.Millisecond).Should(ContainSubstring(desiredResponse))
 }
 
 var httpClient = &http.Client{
