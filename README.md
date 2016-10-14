@@ -70,21 +70,42 @@ pushd ~/workspace
 popd
 ```
 
-Then deploy
-```bash
-pushd ~/workspace/netman-release
-  ./scripts/deploy-to-bosh-lite
-popd
-```
+Deploy:
+- Option 1: use the script
+  ```bash
+  pushd ~/workspace/netman-release
+    ./scripts/deploy-to-bosh-lite
+  popd
+  ```
 
-Then follow [the instructions for testing with the cats & dogs example](https://github.com/cloudfoundry-incubator/netman-release/tree/master/src/example-apps/cats-and-dogs).
+- Option 2: deploy by hand
+  This assumes you're comfortable with BOSH.  First acquire `diego-release`, `cf-release`, and all of their dependencies.  Upload to your bosh director.  Then
+  ```bash
+  pushd ~/workspace/netman-release
+    bosh upload release releases/netman-<LATEST-VERSION>.yml
+
+    ./scripts/generate-bosh-lite-manifests
+    bosh -d bosh-lite/deployments/cf_with_netman.yml deploy
+    bosh -d bosh-lite/deployments/diego_with_netman.yml deploy
+  popd
+  ```
 
 **NOTE:** There is a known issue where VMs on `bosh-lite` can start failing,
 particularly if the host machine goes to sleep.
 
 If you run `bosh vms` and see any failing VMs, then you can either recreate the
-individual failing vm(s) with `bosh recreate <vm_name>` or you can run
-`bosh deploy --recreate` to recreate all VMs.
+individual failing vm(s) with
+```
+bosh recreate <vm_name>
+```
+or you can run
+```
+bosh deploy --recreate
+```
+to recreate all VMs.
+
+### Kick the tires
+Follow [the instructions for testing with the cats & dogs example](https://github.com/cloudfoundry-incubator/netman-release/tree/master/src/example-apps/cats-and-dogs).
 
 ## Deploy to AWS
 0. Upload stemcell with Linux kernel 4.4 to bosh director.  Versions >= 3263.2 should work.
