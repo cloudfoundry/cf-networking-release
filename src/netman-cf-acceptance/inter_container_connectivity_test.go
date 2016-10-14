@@ -237,13 +237,13 @@ func runWithTimeout(operation string, timeout time.Duration, work func()) {
 }
 
 func dumpStats(host, domain string) {
-	respBytes, err := httpGetBytes(fmt.Sprintf("http://%s.%s/stats", host, domain))
+	resp, err := httpGetBytes(fmt.Sprintf("http://%s.%s/stats", host, domain))
 	Expect(err).NotTo(HaveOccurred())
 
-	fmt.Printf("STATS: %s\n", string(respBytes))
+	fmt.Printf("STATS: %s\n", string(resp.Body))
 	netStatsFile := os.Getenv("NETWORK_STATS_FILE")
 	if netStatsFile != "" {
-		Expect(ioutil.WriteFile(netStatsFile, respBytes, 0600)).To(Succeed())
+		Expect(ioutil.WriteFile(netStatsFile, resp.Body, 0600)).To(Succeed())
 	}
 }
 
@@ -257,13 +257,15 @@ type RegistryInstancesResponse struct {
 }
 
 func getInstancesFromA8(registry string) (*RegistryInstancesResponse, error) {
-	respBytes, err := httpGetBytes(fmt.Sprintf("http://%s.%s/api/v1/instances", registry, config.AppsDomain))
+	resp, err := httpGetBytes(fmt.Sprintf("http://%s.%s/api/v1/instances", registry, config.AppsDomain))
 	if err != nil {
 		return nil, err
 	}
 
+	Expect(resp.StatusCode).To(Equal(http.StatusOK))
+
 	var instancesResponse RegistryInstancesResponse
-	err = json.Unmarshal(respBytes, &instancesResponse)
+	err = json.Unmarshal(resp.Body, &instancesResponse)
 	if err != nil {
 		return nil, err
 	}
@@ -329,11 +331,11 @@ func assertSingleConnection(destIP string, port int, sourceAppName string, shoul
 
 func assertResponseContains(destIP string, port int, sourceAppName string, desiredResponse string) {
 	proxyTest := func() (string, error) {
-		respBytes, err := httpGetBytes(fmt.Sprintf("http://%s.%s/proxy/%s:%d", sourceAppName, config.AppsDomain, destIP, port))
+		resp, err := httpGetBytes(fmt.Sprintf("http://%s.%s/proxy/%s:%d", sourceAppName, config.AppsDomain, destIP, port))
 		if err != nil {
 			return "", err
 		}
-		return string(respBytes), nil
+		return string(resp.Body), nil
 	}
 	Eventually(proxyTest, 10*time.Second, 500*time.Millisecond).Should(ContainSubstring(desiredResponse))
 }
@@ -348,15 +350,22 @@ var httpClient = &http.Client{
 	},
 }
 
-func httpGetBytes(url string) ([]byte, error) {
+type httpResp struct {
+	StatusCode int
+	Body       []byte
+}
+
+func httpGetBytes(url string) (httpResp, error) {
 	resp, err := httpClient.Get(url)
 	if err != nil {
-		return nil, err
+		return httpResp{}, err
 	}
 	defer resp.Body.Close()
+
 	respBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return httpResp{}, err
 	}
-	return respBytes, nil
+
+	return httpResp{resp.StatusCode, respBytes}, nil
 }
