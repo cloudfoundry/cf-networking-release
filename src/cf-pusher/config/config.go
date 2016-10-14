@@ -10,4 +10,5 @@ type Config struct {
 	AppInstances      int    `json:"test_app_instances"`
 	Policies          int    `json:"test_policies"`
 	ProxyInstances    int    `json:"proxy_instances"`
+	Concurrency       int    `json:"concurrency"`
 }

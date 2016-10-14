@@ -88,7 +88,66 @@ var _ = Describe("AppPusher", func() {
 					err := appPusher.Push()
 					Expect(err).To(MatchError("potato"))
 				})
+			})
+		})
+		Context("when there are multiple apps", func() {
+			type manifest struct {
+				SomeProperty string
+			}
+			var manifestStruct manifest
 
+			BeforeEach(func() {
+				manifestStruct = manifest{SomeProperty: "value"}
+				fakeManifestGenerator.GenerateReturns("some/tmp/dir/manifest.yml", nil)
+				appPusher.Applications = []cf_command.Application{}
+				for i := 0; i < 10; i++ {
+					app := cf_command.Application{
+						Name:      "some-name",
+						Directory: "some/dir",
+						Manifest:  manifestStruct,
+					}
+					appPusher.Applications = append(appPusher.Applications, app)
+				}
+			})
+			It("writes out the manifest and uses it", func() {
+				err := appPusher.Push()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(fakeAdapter.PushCallCount()).To(Equal(10))
+				Expect(fakeManifestGenerator.GenerateCallCount()).To(Equal(10))
+			})
+			Context("when generating the manifest fails", func() {
+				BeforeEach(func() {
+					fakeManifestGenerator.GenerateReturns("", errors.New("potato"))
+				})
+				It("return the error", func() {
+					err := appPusher.Push()
+					Expect(err).To(MatchError("potato"))
+				})
+			})
+			Context("when pushing an app fails", func() {
+				BeforeEach(func() {
+					fakeAdapter.PushReturns(errors.New("potato"))
+				})
+				It("return the error", func() {
+					err := appPusher.Push()
+					Expect(err).To(MatchError("potato"))
+				})
+			})
+			Context("when pushing the last app fails", func() {
+				BeforeEach(func() {
+					callCount := 0
+					fakeAdapter.PushStub = func(x, y, z string) error {
+						callCount++
+						if callCount == 10 {
+							return errors.New("potato")
+						}
+						return nil
+					}
+				})
+				It("return the error", func() {
+					err := appPusher.Push()
+					Expect(err).To(MatchError("potato"))
+				})
 			})
 		})
 	})

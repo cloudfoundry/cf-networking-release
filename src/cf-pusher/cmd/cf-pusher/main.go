@@ -138,16 +138,18 @@ func main() {
 		Applications:      appsToPush,
 		Adapter:           adapter,
 		ManifestGenerator: manifestGenerator,
+		Concurrency:       config.Concurrency,
 	}
 
 	if err := appPusher.Push(); err != nil {
-		log.Fatalf("pushing apps: %s", err)
+		log.Printf("Got an error while pushing apps: %s", err)
 	}
 
 	appChecker := cf_command.AppChecker{
 		Applications: appsToPush,
 		Adapter:      adapter,
 	}
+
 	if err := appChecker.CheckApps(); err != nil {
 		log.Fatalf("checking apps: %s", err)
 	}
