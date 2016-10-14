@@ -13,6 +13,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 type ScaleGroup struct {
@@ -150,8 +151,19 @@ func main() {
 		Adapter:      adapter,
 	}
 
-	if err := appChecker.CheckApps(); err != nil {
-		log.Fatalf("checking apps: %s", err)
+	maxRetries := 5
+	for i := 0; ; i++ {
+		if err := appChecker.CheckApps(); err != nil {
+			log.Printf("checking apps: %s\n", err)
+			if i == maxRetries {
+				log.Fatal("max retries exceeded")
+			} else {
+				log.Println("checking again in 30 seconds...")
+				time.Sleep(30 * time.Second)
+			}
+		} else {
+			break
+		}
 	}
 
 	output, err := json.Marshal(scaleGroup)
