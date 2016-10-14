@@ -79,7 +79,15 @@ Deploy:
   ```
 
 - Option 2: deploy by hand
-  This assumes you're comfortable with BOSH.  First acquire `diego-release`, `cf-release`, and all of their dependencies.  Upload to your bosh director.  Then
+  This assumes you're comfortable with BOSH.  First acquire `cf-release`, `diego-release` and [all of its dependencies](https://github.com/cloudfoundry/diego-release/tree/develop/examples/bosh-lite).  Upload to your bosh director.
+  At a minimum, you'll need to do something like
+  ```
+  bosh upload release https://bosh.io/d/github.com/cloudfoundry/garden-runc-release
+  bosh upload release https://bosh.io/d/github.com/cloudfoundry/cflinuxfs2-rootfs-release
+  bosh upload release https://bosh.io/d/github.com/cloudfoundry-incubator/etcd-release
+  ```
+
+  Then
   ```bash
   pushd ~/workspace/netman-release
     bosh upload release releases/netman-<LATEST-VERSION>.yml
