@@ -8,7 +8,7 @@ type Config struct {
 	SkipSSLValidation bool   `json:"skip_ssl_validation"`
 	Applications      int    `json:"test_applications"`
 	AppInstances      int    `json:"test_app_instances"`
-	Policies          int    `json:"test_policies"`
+	ExtraListenPorts  int    `json:"extra_listen_ports"`
 	ProxyInstances    int    `json:"proxy_instances"`
 	Concurrency       int    `json:"concurrency"`
 }

@@ -46,13 +46,15 @@ func main() {
 		log.Fatalf("error reading config: %s", err)
 	}
 
-	var config config.Config
+	config := config.Config{
+		Concurrency: 16,
+	}
 	if err := json.Unmarshal(configBytes, &config); err != nil {
 		log.Fatalf("error unmarshaling config: %s", err)
 	}
 
 	var tickApps []string
-	for i := 1; i < config.Applications+1; i++ {
+	for i := 0; i < config.Applications; i++ {
 		tickApps = append(tickApps, fmt.Sprintf("%s%s-%d", prefix, "tick", i))
 	}
 
@@ -98,12 +100,12 @@ func main() {
 	}
 
 	proxyApp := cf_command.Application{
-		Name:      "proxy",
+		Name:      scaleGroup.ProxyApp,
 		Directory: filepath.Join(appsDir, "proxy"),
 	}
 
 	registryApp := cf_command.Application{
-		Name:      "registry",
+		Name:      scaleGroup.Registry,
 		Directory: filepath.Join(appsDir, "registry"),
 	}
 
@@ -120,7 +122,7 @@ func main() {
 				GoPackageName:   "example-apps/tick",
 				RegistryBaseURL: "http://" + registryApp.Name + "." + config.AppsDomain,
 				StartPort:       7000,
-				ListenPorts:     3,
+				ListenPorts:     config.ExtraListenPorts,
 			},
 		}},
 	}

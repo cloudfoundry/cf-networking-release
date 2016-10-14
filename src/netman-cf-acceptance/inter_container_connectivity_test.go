@@ -7,18 +7,16 @@ import (
 	"lib/models"
 	"lib/policy_client"
 	"lib/testsupport"
-	"math/rand"
 	"net"
 	"net/http"
 	"os"
 	"os/exec"
 	"strings"
-	"sync"
 	"time"
 
 	"code.cloudfoundry.org/lager/lagertest"
 
-	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
+	"github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
@@ -36,8 +34,6 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			appProxy       string
 			appRegistry    string
 			appsTest       []string
-			orgName        string
-			spaceName      string
 			appInstances   int
 			applications   int
 			proxyInstances int
@@ -48,63 +44,32 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			applications = testConfig.Applications
 			proxyInstances = testConfig.ProxyInstances
 
-			appProxy = fmt.Sprintf("proxy-%d", rand.Int31())
-			appRegistry = fmt.Sprintf("registry-%d", rand.Int31())
+			appProxy = "scale-proxy"
+			appRegistry = "scale-registry"
 			for i := 0; i < applications; i++ {
-				appsTest = append(appsTest, fmt.Sprintf("tick-%d-%d", i, rand.Int31()))
+				appsTest = append(appsTest, fmt.Sprintf("scale-tick-%d", i))
 			}
 
 			ports = []int{8080}
-			for i := 0; i < testConfig.Policies; i++ {
+			for i := 0; i < testConfig.ExtraListenPorts; i++ {
 				ports = append(ports, 7000+i)
 			}
-
-			Auth(testConfig.TestUser, testConfig.TestUserPassword)
-
-			orgName = "test-org"
-			Expect(cf.Cf("create-org", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
-			Expect(cf.Cf("target", "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
-
-			spaceName = "test-space"
-			Expect(cf.Cf("create-space", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
-			Expect(cf.Cf("target", "-o", orgName, "-s", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
 		})
 
 		AfterEach(func() {
 			appReport(appProxy, Timeout_Short)
 			appReport(appRegistry, Timeout_Short)
 			appsReport(appsTest, Timeout_Short)
-
-			// clean up everything
-			Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 		})
 
 		It("allows the user to configure policies", func(done Done) {
-			By("pushing the registry app and proxy app")
-			var setupWG sync.WaitGroup
-			setupWG.Add(2)
-			go func() {
-				defer GinkgoRecover()
-				pushRegistryApp(appRegistry)
-				setupWG.Done()
-			}()
-
-			go func() {
-				defer GinkgoRecover()
-				pushApp(appProxy)
-				scaleApp(appProxy, proxyInstances)
-				setupWG.Done()
-			}()
-			setupWG.Wait()
-
-			By("pushing the tick apps")
-			newManifest := modifyTickManifest(appRegistry)
-			runWithTimeout("push tick apps", 5*time.Minute, func() {
-				pushAppsOfType(appsTest, "tick", newManifest)
-			})
-
-			By("scaling the tick apps")
-			scaleApps(appsTest, appInstances)
+			cmd := exec.Command("go", "run", "../cf-pusher/cmd/cf-pusher/main.go", "--config", helpers.ConfigPath())
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			fmt.Println("-----cf-pusher start ------")
+			err := cmd.Run()
+			fmt.Println("-----cf-pusher done -------")
+			Expect(err).NotTo(HaveOccurred())
 
 			By("checking that all test app instances have registered themselves")
 			checkRegistry(appRegistry, 60*time.Second, 500*time.Millisecond, len(appsTest)*appInstances)

@@ -27,7 +27,7 @@ var _ = Describe("network policy plugin", func() {
 		appA = fmt.Sprintf("appA-%d", rand.Int31())
 		appB = fmt.Sprintf("appB-%d", rand.Int31())
 
-		Auth(testConfig.TestUser, testConfig.TestUserPassword)
+		AuthAsAdmin()
 
 		orgName = "test-org"
 		Expect(cf.Cf("create-org", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
@@ -52,13 +52,13 @@ var _ = Describe("network policy plugin", func() {
 		setupWG.Add(2)
 		go func() {
 			defer GinkgoRecover()
-			pushApp(appA)
+			pushProxy(appA)
 			setupWG.Done()
 		}()
 
 		go func() {
 			defer GinkgoRecover()
-			pushApp(appB)
+			pushProxy(appB)
 			setupWG.Done()
 		}()
 		setupWG.Wait()

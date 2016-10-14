@@ -25,7 +25,7 @@ var _ = Describe("external connectivity", func() {
 	BeforeEach(func() {
 		appA = fmt.Sprintf("appA-%d", rand.Int31())
 
-		Auth(testConfig.TestUser, testConfig.TestUserPassword)
+		AuthAsAdmin()
 
 		orgName = "test-org"
 		Expect(cf.Cf("create-org", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
@@ -35,7 +35,7 @@ var _ = Describe("external connectivity", func() {
 		Expect(cf.Cf("create-space", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
 		Expect(cf.Cf("target", "-o", orgName, "-s", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
 
-		pushApp(appA)
+		pushProxy(appA)
 		appRoute = fmt.Sprintf("http://%s.%s/", appA, config.AppsDomain)
 
 		allSecurityGroups := getAllSecurityGroups()
