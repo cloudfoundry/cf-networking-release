@@ -26,8 +26,6 @@ type ScaleGroup struct {
 	ProxyInstances int      `json:"proxy-instances"`
 }
 
-const prefix = "scale-"
-
 func main() {
 	appsDir := os.Getenv("APPS_DIR")
 	if appsDir == "" {
@@ -51,6 +49,13 @@ func main() {
 	}
 	if err := json.Unmarshal(configBytes, &config); err != nil {
 		log.Fatalf("error unmarshaling config: %s", err)
+	}
+
+	var prefix string
+	if config.Prefix == "" {
+		prefix = "scale-"
+	} else {
+		prefix = config.Prefix
 	}
 
 	var tickApps []string

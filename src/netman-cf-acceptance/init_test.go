@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 	"time"
 
+	pusherConfig "cf-pusher/config"
+
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
 	. "github.com/onsi/ginkgo"
@@ -22,14 +24,9 @@ import (
 )
 
 var (
-	appsDir    string
-	config     helpers.Config
-	testConfig struct {
-		Applications     int `json:"test_applications"`
-		AppInstances     int `json:"test_app_instances"`
-		ExtraListenPorts int `json:"extra_listen_ports"`
-		ProxyInstances   int `json:"proxy_instances"`
-	}
+	appsDir string
+	config  helpers.Config
+	testConfig pusherConfig.Config
 )
 
 func Auth(username, password string) {
@@ -54,9 +51,11 @@ func TestAcceptance(t *testing.T) {
 		configBytes, err := ioutil.ReadFile(configPath)
 		Expect(err).NotTo(HaveOccurred())
 
-		testConfig.ProxyInstances = 1
 		err = json.Unmarshal(configBytes, &testConfig)
 		Expect(err).NotTo(HaveOccurred())
+
+		//TODO see if this property is necessary.
+		testConfig.ProxyInstances = 1
 
 		if testConfig.Applications <= 0 {
 			Fail("Applications count needs to be greater than 0")

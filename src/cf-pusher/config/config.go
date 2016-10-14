@@ -11,4 +11,6 @@ type Config struct {
 	ExtraListenPorts  int    `json:"extra_listen_ports"`
 	ProxyInstances    int    `json:"proxy_instances"`
 	Concurrency       int    `json:"concurrency"`
+	Prefix            string `json:"prefix"`
+	SkipCfPush        bool   `json:"skip_cf_push"`
 }
