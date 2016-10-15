@@ -281,7 +281,7 @@ func getAppIPs(registry string) []string {
 
 func assertConnectionSucceeds(sourceApp string, destApps []string, ports []int, nProxies int) {
 	parallelRunner := &testsupport.ParallelRunner{
-		NumWorkers: 5 * nProxies,
+		NumWorkers: 50 * nProxies,
 	}
 	parallelRunner.RunOnSliceStrings(destApps, func(appIP string) {
 		for _, port := range ports {
@@ -292,7 +292,7 @@ func assertConnectionSucceeds(sourceApp string, destApps []string, ports []int, 
 
 func assertConnectionFails(sourceApp string, destApps []string, ports []int, nProxies int) {
 	parallelRunner := &testsupport.ParallelRunner{
-		NumWorkers: 5 * nProxies,
+		NumWorkers: 50 * nProxies,
 	}
 	parallelRunner.RunOnSliceStrings(destApps, func(appIP string) {
 		for _, port := range ports {
