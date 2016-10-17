@@ -91,7 +91,7 @@ var _ = Describe("Garden External Networker errors", func() {
 				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 				Expect(err).NotTo(HaveOccurred())
 
-				Eventually(session).Should(gexec.Exit(1))
+				Eventually(session, "2s").Should(gexec.Exit(1))
 				Expect(session.Out.Contents()).To(BeEmpty())
 				Expect(session.Err.Contents()).To(ContainSubstring("missing pid"))
 			})
