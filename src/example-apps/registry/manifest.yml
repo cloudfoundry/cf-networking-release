@@ -1,7 +1,7 @@
 ---
 applications:
   - name: registry
-    memory: 128M
+    memory: 512M
     disk_quota: 32M
     buildpack: go_buildpack
     instances: 1
