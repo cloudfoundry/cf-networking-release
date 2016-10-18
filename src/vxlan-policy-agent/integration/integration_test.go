@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"lib/mutualtls"
-	"math/rand"
 	"net/http"
 	"netmon/integration/fakes"
 	"os"
@@ -40,6 +39,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		fakeMetron       fakes.FakeMetron
 		mockPolicyServer ifrit.Process
 
+		gardenListenAddr string
 		serverListenAddr string
 	)
 
@@ -59,7 +59,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		})
-		serverListenAddr = fmt.Sprintf("127.0.0.1:%d", 40000+rand.Intn(10000))
+		serverListenAddr = fmt.Sprintf("127.0.0.1:%d", 40000+GinkgoParallelNode())
 		someServer := http_server.NewTLSServer(serverListenAddr, testHandler, tlsConfig)
 
 		members := grouper.Members{{
@@ -95,7 +95,8 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		gardenBackend.LookupReturns(gardenContainer, nil)
 		gardenBackend.ContainersReturns([]garden.Container{gardenContainer}, nil)
 
-		gardenServer = server.New("tcp", ":60123", 0, gardenBackend, logger)
+		gardenListenAddr = fmt.Sprintf(":%d", 50000+GinkgoParallelNode())
+		gardenServer = server.New("tcp", gardenListenAddr, 0, gardenBackend, logger)
 		Expect(gardenServer.Start()).To(Succeed())
 
 		subnetFile, err = ioutil.TempFile("", "")
@@ -105,7 +106,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		conf := config.VxlanPolicyAgent{
 			PollInterval:      1,
 			PolicyServerURL:   fmt.Sprintf("https://%s", serverListenAddr),
-			GardenAddress:     ":60123",
+			GardenAddress:     gardenListenAddr,
 			GardenProtocol:    "tcp",
 			VNI:               42,
 			FlannelSubnetFile: subnetFile.Name(),
@@ -126,10 +127,10 @@ var _ = Describe("VXLAN Policy Agent", func() {
 
 		gardenServer.Stop()
 
-		_ = RunIptablesCommand("filter", "F")
-		_ = RunIptablesCommand("filter", "X")
-		_ = RunIptablesCommand("nat", "F")
-		_ = RunIptablesCommand("nat", "X")
+		RunIptablesCommand("filter", "F")
+		RunIptablesCommand("filter", "X")
+		RunIptablesCommand("nat", "F")
+		RunIptablesCommand("nat", "X")
 
 		Expect(fakeMetron.Close()).To(Succeed())
 	})
@@ -205,7 +206,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 			conf := config.VxlanPolicyAgent{
 				PollInterval:      1,
 				PolicyServerURL:   "",
-				GardenAddress:     ":60123",
+				GardenAddress:     gardenListenAddr,
 				GardenProtocol:    "tcp",
 				VNI:               42,
 				FlannelSubnetFile: subnetFile.Name(),
@@ -237,7 +238,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 			conf := config.VxlanPolicyAgent{
 				PollInterval:      1,
 				PolicyServerURL:   "",
-				GardenAddress:     ":60123",
+				GardenAddress:     gardenListenAddr,
 				GardenProtocol:    "tcp",
 				VNI:               42,
 				FlannelSubnetFile: subnetFile.Name(),
