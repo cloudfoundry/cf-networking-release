@@ -7,12 +7,15 @@ export GOPATH=$PWD
 
 declare -a packages=(
   "src/cli-plugin"
-  "src/example-apps"
   "src/flannel-watchdog"
-  "src/garden-external-networker"
   "src/lib"
   "src/netmon"
   "src/policy-server"
+  )
+
+declare -a serial_packages=(
+  "src/example-apps"
+  "src/garden-external-networker"
   "src/vxlan-policy-agent"
   )
 
@@ -68,6 +71,11 @@ fi
 
 if [ "${1:-""}" = "" ]; then
   for dir in "${packages[@]}"; do
+    pushd $dir
+      ginkgo -r -p -randomizeAllSpecs -randomizeSuites "${@:2}"
+    popd
+  done
+  for dir in "${serial_packages[@]}"; do
     pushd $dir
       ginkgo -r -randomizeAllSpecs -randomizeSuites "${@:2}"
     popd
