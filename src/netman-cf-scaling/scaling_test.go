@@ -61,10 +61,10 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 
 			appIPs := getAppIPs(appRegistry)
 
-			// By("checking that the connection fails")
-			// runWithTimeout("check connection failures", Timeout_Check, func() {
-			// 	assertConnectionFails(appProxy, appIPs, ports, proxyInstances)
-			// })
+			By("checking that the connection fails")
+			runWithTimeout("check connection failures", Timeout_Check, func() {
+				assertConnectionFails(appProxy, appIPs, ports, proxyInstances)
+			})
 
 			By("creating policies")
 			doAllPolicies("create", appProxy, appsTest, ports)
@@ -83,10 +83,10 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			By("deleting policies")
 			doAllPolicies("delete", appProxy, appsTest, ports)
 
-			// By(fmt.Sprintf("checking that %s can NOT reach %s", appProxy, appsTest))
-			// runWithTimeout("check connection failures, again", Timeout_Check, func() {
-			// 	assertConnectionFails(appProxy, appIPs, ports, proxyInstances)
-			// })
+			By(fmt.Sprintf("checking that %s can NOT reach %s", appProxy, appsTest))
+			runWithTimeout("check connection failures, again", Timeout_Check, func() {
+				assertConnectionFails(appProxy, appIPs, ports, proxyInstances)
+			})
 
 			close(done)
 		}, 30*60 /* <-- overall spec timeout in seconds */)
