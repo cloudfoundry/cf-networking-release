@@ -7,6 +7,7 @@ import (
 	"lib/models"
 	"lib/policy_client"
 	"lib/testsupport"
+	"math/rand"
 	"net"
 	"net/http"
 	"os"
@@ -22,9 +23,10 @@ import (
 	"github.com/pivotal-cf-experimental/rainmaker"
 )
 
-const Timeout_Push = 5 * time.Minute
-const Timeout_Short = 10 * time.Second
 const Timeout_Check = 20 * time.Minute
+
+// 2 * Agent Total Poll Time
+const Policy_Update_Wait = 120 * time.Second
 
 var ports []int
 
@@ -37,20 +39,22 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			appInstances   int
 			applications   int
 			proxyInstances int
+			sampleSize     int
 		)
 
 		BeforeEach(func() {
-			appInstances = testConfig.AppInstances
-			applications = testConfig.Applications
-			proxyInstances = testConfig.ProxyInstances
-			appProxy = testConfig.Prefix + "proxy"
-			appRegistry = testConfig.Prefix + "registry"
+			appInstances = pushConfig.AppInstances
+			applications = pushConfig.Applications
+			proxyInstances = pushConfig.ProxyInstances
+			sampleSize = pushConfig.SampleSize
+			appProxy = pushConfig.Prefix + "proxy"
+			appRegistry = pushConfig.Prefix + "registry"
 			for i := 0; i < applications; i++ {
-				appsTest = append(appsTest, fmt.Sprintf(testConfig.Prefix+"tick-%d", i))
+				appsTest = append(appsTest, fmt.Sprintf(pushConfig.Prefix+"tick-%d", i))
 			}
 
 			ports = []int{8080}
-			for i := 0; i < testConfig.ExtraListenPorts; i++ {
+			for i := 0; i < pushConfig.ExtraListenPorts; i++ {
 				ports = append(ports, 7000+i)
 			}
 		})
@@ -60,22 +64,23 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			checkRegistry(appRegistry, 10*time.Second, 500*time.Millisecond, len(appsTest)*appInstances)
 
 			appIPs := getAppIPs(appRegistry)
+			sample := sampleIPs(appIPs, sampleSize)
 
-			By("checking that the connection fails")
+			By(fmt.Sprintf("checking that the connection fails sampling %d out of %d IPs", len(sample), len(appIPs)))
 			runWithTimeout("check connection failures", Timeout_Check, func() {
-				assertConnectionFails(appProxy, appIPs, ports, proxyInstances)
+				assertConnectionFails(appProxy, sample, ports, proxyInstances)
 			})
 
 			By("creating policies")
 			doAllPolicies("create", appProxy, appsTest, ports)
 
-			// we should wait for minimum (pollInterval * 2)
-			By("waiting for policies to be created on cells")
-			time.Sleep(10 * time.Second)
+			By(fmt.Sprintf("waiting %s for policies to be updated on cells", Policy_Update_Wait))
+			time.Sleep(Policy_Update_Wait)
 
-			By(fmt.Sprintf("checking that %s can reach %s", appProxy, appsTest))
+			sample = sampleIPs(appIPs, sampleSize)
+			By(fmt.Sprintf("checking that the connection succeeds sampling %d out of %d IPs", len(sample), len(appIPs)))
 			runWithTimeout("check connection success", Timeout_Check, func() {
-				assertConnectionSucceeds(appProxy, appIPs, ports, proxyInstances)
+				assertConnectionSucceeds(appProxy, sample, ports, proxyInstances)
 			})
 
 			dumpStats(appProxy, config.AppsDomain)
@@ -83,9 +88,13 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			By("deleting policies")
 			doAllPolicies("delete", appProxy, appsTest, ports)
 
-			By(fmt.Sprintf("checking that %s can NOT reach %s", appProxy, appsTest))
+			By(fmt.Sprintf("waiting %s for policies to be updated on cells", Policy_Update_Wait))
+			time.Sleep(Policy_Update_Wait)
+
+			sample = sampleIPs(appIPs, sampleSize)
+			By(fmt.Sprintf("checking that the connection succeeds sampling %d out of %d IPs", len(sample), len(appIPs)))
 			runWithTimeout("check connection failures, again", Timeout_Check, func() {
-				assertConnectionFails(appProxy, appIPs, ports, proxyInstances)
+				assertConnectionFails(appProxy, sample, ports, proxyInstances)
 			})
 
 			close(done)
@@ -98,7 +107,7 @@ func getToken() string {
 	cmd := exec.Command("cf", "oauth-token")
 	session, err := gexec.Start(cmd, nil, nil)
 	Expect(err).NotTo(HaveOccurred())
-	Eventually(session.Wait(2 * Timeout_Short)).Should(gexec.Exit(0))
+	Eventually(session.Wait(Timeout_Short)).Should(gexec.Exit(0))
 	rawOutput := string(session.Out.Contents())
 	return strings.TrimSpace(strings.TrimPrefix(rawOutput, "bearer "))
 }
@@ -243,9 +252,22 @@ func getAppIPs(registry string) []string {
 	return ips
 }
 
+func sampleIPs(population []string, sampleSize int) []string {
+	populationSize := len(population)
+	if len(population) < sampleSize || sampleSize == 0 {
+		sampleSize = populationSize
+	}
+	var sample = []string{}
+	for i := 0; i < sampleSize; i++ {
+		j := rand.Intn(populationSize + 1)
+		sample = append(sample, population[j])
+	}
+	return sample
+}
+
 func assertConnectionSucceeds(sourceApp string, destApps []string, ports []int, nProxies int) {
 	parallelRunner := &testsupport.ParallelRunner{
-		NumWorkers: 20 * nProxies,
+		NumWorkers: 50 * nProxies,
 	}
 	parallelRunner.RunOnSliceStrings(destApps, func(appIP string) {
 		for _, port := range ports {

@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"os/exec"
+	"time"
 
 	pusherConfig "cf-pusher/config"
 
@@ -18,9 +19,11 @@ import (
 	"testing"
 )
 
+const Timeout_Short = 20 * time.Second
+
 var (
 	config     helpers.Config
-	testConfig pusherConfig.Config
+	pushConfig pusherConfig.Config
 )
 
 func TestScaling(t *testing.T) {
@@ -37,23 +40,23 @@ var _ = BeforeSuite(func() {
 	configBytes, err := ioutil.ReadFile(configPath)
 	Expect(err).NotTo(HaveOccurred())
 
-	err = json.Unmarshal(configBytes, &testConfig)
+	err = json.Unmarshal(configBytes, &pushConfig)
 	Expect(err).NotTo(HaveOccurred())
 
 	//TODO see if this property is necessary.
-	testConfig.ProxyInstances = 1
+	pushConfig.ProxyInstances = 1
 
-	if testConfig.Applications <= 0 {
+	if pushConfig.Applications <= 0 {
 		Fail("Applications count needs to be greater than 0")
 	}
 
-	if testConfig.AppInstances <= 0 {
+	if pushConfig.AppInstances <= 0 {
 		Fail("AppInstances count needs to be greater than 0")
 	}
 
 	Expect(cf.Cf("api", "--skip-ssl-validation", config.ApiEndpoint).Wait(Timeout_Short)).To(gexec.Exit(0))
 	AuthAsAdmin()
-	Expect(cf.Cf("target", "-o", testConfig.Prefix+"org", "-s", testConfig.Prefix+"space").Wait(Timeout_Push)).To(gexec.Exit(0))
+	Expect(cf.Cf("target", "-o", pushConfig.Prefix+"org", "-s", pushConfig.Prefix+"space").Wait(Timeout_Short)).To(gexec.Exit(0))
 })
 
 func AuthAsAdmin() {
