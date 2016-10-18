@@ -54,3 +54,7 @@ func (m *MetricsEmitter) emitMetrics() {
 		dropsondemetrics.SendValue(source.Name, value, source.Unit)
 	}
 }
+
+func (m *MetricsEmitter) EmitMetrics() {
+	m.emitMetrics()
+}

@@ -1,8 +1,10 @@
 package planner
 
 import (
+	"lib/metrics"
 	"lib/models"
 	"lib/rules"
+	"vxlan-policy-agent/agent_metrics"
 
 	"code.cloudfoundry.org/garden"
 	"code.cloudfoundry.org/lager"
@@ -44,8 +46,14 @@ func getContainersMap(allContainers []garden.Container) (map[string][]string, er
 }
 
 func (p *VxlanPolicyPlanner) GetRules() ([]rules.Rule, error) {
+	totalPollTime := metrics.NewMetricsEmitter(p.Logger, 0,
+		agent_metrics.NewElapsedTimeMetricSource(agent_metrics.Timer{}, "totalPollTime"))
+
+	gardenPollTime := metrics.NewMetricsEmitter(p.Logger, 0,
+		agent_metrics.NewElapsedTimeMetricSource(agent_metrics.Timer{}, "gardenPollTime"))
 	properties := garden.Properties{}
 	gardenContainers, err := p.GardenClient.Containers(properties)
+	gardenPollTime.EmitMetrics()
 	if err != nil {
 		p.Logger.Error("garden-client-containers", err)
 		return nil, err
@@ -58,7 +66,10 @@ func (p *VxlanPolicyPlanner) GetRules() ([]rules.Rule, error) {
 	}
 	p.Logger.Debug("got-containers", lager.Data{"containers": containers})
 
+	policyServerPollTime := metrics.NewMetricsEmitter(p.Logger, 0,
+		agent_metrics.NewElapsedTimeMetricSource(agent_metrics.Timer{}, "policyServerPollTime"))
 	policies, err := p.PolicyClient.GetPolicies()
+	policyServerPollTime.EmitMetrics()
 	if err != nil {
 		p.Logger.Error("policy-client-get-policies", err)
 		return nil, err
@@ -100,5 +111,6 @@ func (p *VxlanPolicyPlanner) GetRules() ([]rules.Rule, error) {
 	}
 	ruleset := append(marksRuleset, filterRuleset...)
 	p.Logger.Debug("generated-rules", lager.Data{"rules": ruleset})
+	totalPollTime.EmitMetrics()
 	return ruleset, nil
 }
