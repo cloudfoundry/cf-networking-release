@@ -53,13 +53,13 @@ func (p *VxlanPolicyPlanner) GetRules() ([]rules.Rule, error) {
 		agent_metrics.NewElapsedTimeMetricSource(agent_metrics.Timer{}, "gardenPollTime"))
 	properties := garden.Properties{}
 	gardenContainers, err := p.GardenClient.Containers(properties)
-	gardenPollTime.EmitMetrics()
 	if err != nil {
 		p.Logger.Error("garden-client-containers", err)
 		return nil, err
 	}
 
 	containers, err := getContainersMap(gardenContainers)
+	gardenPollTime.EmitMetrics()
 	if err != nil {
 		p.Logger.Error("container-info", err)
 		return nil, err
