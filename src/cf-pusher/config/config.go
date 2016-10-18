@@ -12,5 +12,5 @@ type Config struct {
 	ProxyInstances    int    `json:"proxy_instances"`
 	Concurrency       int    `json:"concurrency"`
 	Prefix            string `json:"prefix"`
-	SkipCfPush        bool   `json:"skip_cf_push"`
+	SampleSize        int    `json:"sample_size"`
 }

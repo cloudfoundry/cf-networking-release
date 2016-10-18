@@ -23,9 +23,11 @@ import (
 	"testing"
 )
 
+const Timeout_Push = 2 * time.Minute
+
 var (
-	appsDir string
-	config  helpers.Config
+	appsDir    string
+	config     helpers.Config
 	testConfig pusherConfig.Config
 )
 

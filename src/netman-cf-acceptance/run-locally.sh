@@ -16,9 +16,11 @@ echo '
   "apps_domain": "bosh-lite.com",
   "skip_ssl_validation": true,
   "use_http": true,
-  "test_app_instances": 4,
-  "test_applications": 1,
-  "concurrency": 2
+  "test_app_instances": 2,
+  "test_applications": 2,
+  "extra_listen_ports": 2,
+  "concurrency": 2,
+  "prefix":"test-"
 }
 ' > $CONFIG
 

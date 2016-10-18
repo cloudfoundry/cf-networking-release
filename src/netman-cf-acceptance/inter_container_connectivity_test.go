@@ -16,7 +16,6 @@ import (
 
 	"code.cloudfoundry.org/lager/lagertest"
 
-	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -24,7 +23,6 @@ import (
 	"github.com/pivotal-cf-experimental/rainmaker"
 )
 
-const Timeout_Push = 5 * time.Minute
 const Timeout_Short = 10 * time.Second
 
 var ports []int
@@ -45,11 +43,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			appInstances = testConfig.AppInstances
 			applications = testConfig.Applications
 			proxyInstances = testConfig.ProxyInstances
-			if testConfig.Prefix == "" {
-				prefix = "scale-"
-			} else {
-				prefix = testConfig.Prefix
-			}
+			prefix = testConfig.Prefix
 
 			appProxy = prefix + "proxy"
 			appRegistry = prefix + "registry"
@@ -70,18 +64,13 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 		})
 
 		It("allows the user to configure policies", func(done Done) {
-			if testConfig.SkipCfPush {
-				AuthAsAdmin()
-				Expect(cf.Cf("target", "-o", prefix+"org", "-s", prefix+"space").Wait(Timeout_Push)).To(gexec.Exit(0))
-			} else {
-				cmd := exec.Command("go", "run", "../cf-pusher/cmd/cf-pusher/main.go", "--config", helpers.ConfigPath())
-				cmd.Stdout = os.Stdout
-				cmd.Stderr = os.Stderr
-				fmt.Println("\n-----cf-pusher start ------")
-				err := cmd.Run()
-				fmt.Println("\n-----cf-pusher done -------")
-				Expect(err).NotTo(HaveOccurred())
-			}
+			cmd := exec.Command("go", "run", "../cf-pusher/cmd/cf-pusher/main.go", "--config", helpers.ConfigPath())
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			fmt.Println("\n-----cf-pusher start ------")
+			err := cmd.Run()
+			fmt.Println("\n-----cf-pusher done -------")
+			Expect(err).NotTo(HaveOccurred())
 
 			By("checking that all test app instances have registered themselves")
 			checkRegistry(appRegistry, 60*time.Second, 500*time.Millisecond, len(appsTest)*appInstances)
@@ -115,14 +104,12 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 				assertConnectionFails(appProxy, appIPs, ports, proxyInstances)
 			})
 
-			if !testConfig.SkipCfPush {
-				By("checking that the registry updates when apps are scaled")
-				scaleApps(appsTest, 1 /* instances */)
-				checkRegistry(appRegistry, 60*time.Second, 500*time.Millisecond, len(appsTest))
+			By("checking that the registry updates when apps are scaled")
+			scaleApps(appsTest, 1 /* instances */)
+			checkRegistry(appRegistry, 60*time.Second, 500*time.Millisecond, len(appsTest))
 
-				scaleApps(appsTest, appInstances /* instances */)
-				checkRegistry(appRegistry, 60*time.Second, 500*time.Millisecond, len(appsTest)*appInstances)
-			}
+			scaleApps(appsTest, appInstances /* instances */)
+			checkRegistry(appRegistry, 60*time.Second, 500*time.Millisecond, len(appsTest)*appInstances)
 
 			close(done)
 		}, 30*60 /* <-- overall spec timeout in seconds */)
