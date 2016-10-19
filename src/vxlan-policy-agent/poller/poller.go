@@ -1,7 +1,6 @@
 package poller
 
 import (
-	"lib/metrics"
 	"lib/rules"
 	"os"
 	"time"
@@ -20,8 +19,9 @@ type Poller struct {
 	PollInterval time.Duration
 	Planner      planner
 
-	Chain    rules.Chain
-	Enforcer rules.RuleEnforcer
+	Chain             rules.Chain
+	Enforcer          rules.RuleEnforcer
+	CollectionEmitter agent_metrics.TimeMetricsEmitter
 }
 
 func (m *Poller) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
@@ -32,23 +32,25 @@ func (m *Poller) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 		case <-signals:
 			return nil
 		case <-time.After(m.PollInterval):
-			totalPollTime := metrics.NewMetricsEmitter(m.Logger, 0,
-				agent_metrics.NewElapsedTimeMetricSource(agent_metrics.Timer{}, "totalPollTime"))
+			pollStartTime := time.Now()
 			ruleset, err := m.Planner.GetRules()
 			if err != nil {
 				m.Logger.Error("get-rules", err)
 				continue
 			}
 
-			iptablesEnforceTime := metrics.NewMetricsEmitter(m.Logger, 0,
-				agent_metrics.NewElapsedTimeMetricSource(agent_metrics.Timer{}, "iptablesEnforceTime"))
+			enforceStartTime := time.Now()
 			err = m.Enforcer.EnforceOnChain(m.Chain, ruleset)
-			iptablesEnforceTime.EmitMetrics()
 			if err != nil {
 				m.Logger.Error("enforce", err)
 				continue
 			}
-			totalPollTime.EmitMetrics()
+			enforceDuration := time.Now().Sub(enforceStartTime)
+			pollDuration := time.Now().Sub(pollStartTime)
+			m.CollectionEmitter.EmitAll(map[string]time.Duration{
+				agent_metrics.MetricEnforceDuration: enforceDuration,
+				agent_metrics.MetricPollDuration:    pollDuration,
+			})
 		}
 	}
 }

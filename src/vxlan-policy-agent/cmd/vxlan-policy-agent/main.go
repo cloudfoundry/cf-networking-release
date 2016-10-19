@@ -8,14 +8,15 @@ import (
 	"lib/metrics"
 	"lib/mutualtls"
 	"lib/policy_client"
-	"lib/poller"
 	"lib/rules"
 	"log"
 	"net/http"
 	"os"
 	"time"
+	"vxlan-policy-agent/agent_metrics"
 	"vxlan-policy-agent/config"
 	"vxlan-policy-agent/planner"
+	"vxlan-policy-agent/poller"
 
 	"code.cloudfoundry.org/garden/client"
 	"code.cloudfoundry.org/garden/client/connection"
@@ -95,11 +96,16 @@ func main() {
 		die(logger, "iptables-new", err)
 	}
 
+	timeMetricsEmitter := &agent_metrics.TimeMetrics{
+		Logger: logger.Session("time-metric-emitter"),
+	}
+
 	dynamicPlanner := &planner.VxlanPolicyPlanner{
-		GardenClient: gardenClient,
-		PolicyClient: policyClient,
-		Logger:       logger.Session("rules-updater"),
-		VNI:          conf.VNI,
+		GardenClient:      gardenClient,
+		PolicyClient:      policyClient,
+		Logger:            logger.Session("rules-updater"),
+		VNI:               conf.VNI,
+		CollectionEmitter: timeMetricsEmitter,
 	}
 
 	timestamper := &rules.Timestamper{}
@@ -188,8 +194,9 @@ func main() {
 		PollInterval: pollInterval,
 		Planner:      dynamicPlanner,
 
-		Chain:    dynamicChain,
-		Enforcer: ruleEnforcer,
+		Chain:             dynamicChain,
+		Enforcer:          ruleEnforcer,
+		CollectionEmitter: timeMetricsEmitter,
 	}
 
 	members := grouper.Members{

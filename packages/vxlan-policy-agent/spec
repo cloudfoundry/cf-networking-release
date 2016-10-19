@@ -43,9 +43,9 @@ files:
   - lib/models/*.go # gosub
   - lib/mutualtls/*.go # gosub
   - lib/policy_client/*.go # gosub
-  - lib/poller/*.go # gosub
   - lib/rules/*.go # gosub
   - vxlan-policy-agent/agent_metrics/*.go # gosub
   - vxlan-policy-agent/cmd/vxlan-policy-agent/*.go # gosub
   - vxlan-policy-agent/config/*.go # gosub
   - vxlan-policy-agent/planner/*.go # gosub
+  - vxlan-policy-agent/poller/*.go # gosub

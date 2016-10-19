@@ -1,43 +1,59 @@
 package agent_metrics_test
 
 import (
+	"netmon/integration/fakes"
+	"time"
 	"vxlan-policy-agent/agent_metrics"
-	"vxlan-policy-agent/fakes"
 
+	"code.cloudfoundry.org/lager/lagertest"
+
+	"github.com/cloudfoundry/dropsonde"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Agent Metrics", func() {
+var _ = Describe("TimeMetrics", func() {
 
-	var fakeTimer *fakes.Timer
+	var (
+		timeMetrics *agent_metrics.TimeMetrics
+		fakeMetron  fakes.FakeMetron
+	)
+
 	BeforeEach(func() {
-		fakeTimer = &fakes.Timer{}
-		fakeTimer.ElapsedTimeReturns(100.0, nil)
+		logger := lagertest.NewTestLogger("test")
+		timeMetrics = &agent_metrics.TimeMetrics{
+			Logger: logger,
+		}
+		fakeMetron = fakes.New()
+		metronAddress := fakeMetron.Address()
+		dropsonde.Initialize(metronAddress, "whatever")
 	})
 
-	Describe("NewElapsedTimeMetricSource", func() {
-		It("returns the elapsed time", func() {
-			source := agent_metrics.NewElapsedTimeMetricSource(fakeTimer, "elapsedTime")
-			Expect(source.Name).To(Equal("elapsedTime"))
-			Expect(source.Unit).To(Equal("ms"))
-
-			value, err := source.Getter()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(fakeTimer.ElapsedTimeCallCount()).To(Equal(1))
-			Expect(value).To(Equal(100.0))
-		})
+	AfterEach(func() {
+		Expect(fakeMetron.Close()).To(Succeed())
 	})
 
-	Describe("Timer", func() {
-		var timer agent_metrics.Timer
-		BeforeEach(func() {
-			timer = agent_metrics.Timer{}
-		})
-		It("takes start and end times in nanoseconds and returns the elapsed time in milliseconds", func() {
-			value, err := timer.ElapsedTime(20*1e9, 30*1e9)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(value).To(Equal(10 * 1e3))
+	Describe("EmitAll", func() {
+		It("sends a value for each duration", func() {
+			durations := map[string]time.Duration{
+				"one": time.Second,
+				"two": time.Hour,
+			}
+
+			timeMetrics.EmitAll(durations)
+
+			Eventually(fakeMetron.AllEvents).Should(ContainElement(fakes.Event{
+				EventType: "ValueMetric",
+				Name:      "one",
+				Origin:    "whatever",
+				Value:     time.Second.Seconds() * 1000,
+			}))
+			Eventually(fakeMetron.AllEvents).Should(ContainElement(fakes.Event{
+				EventType: "ValueMetric",
+				Name:      "two",
+				Origin:    "whatever",
+				Value:     time.Hour.Seconds() * 1000,
+			}))
 		})
 	})
 })

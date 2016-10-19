@@ -2,15 +2,15 @@ package poller_test
 
 import (
 	"errors"
-	"lib/fakes"
-	"lib/poller"
 	"lib/rules"
 	"os"
 	"time"
+	"vxlan-policy-agent/fakes"
+	"vxlan-policy-agent/poller"
+
+	libfakes "lib/fakes"
 
 	"code.cloudfoundry.org/lager/lagertest"
-
-	common_fakes "lib/fakes"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -20,12 +20,13 @@ import (
 var _ = Describe("Poller", func() {
 	Describe("Run", func() {
 		var (
-			logger       *lagertest.TestLogger
-			p            *poller.Poller
-			c            rules.Chain
-			fakePlanner  *fakes.Planner
-			fakeEnforcer *common_fakes.RuleEnforcer
-			r            []rules.Rule
+			logger             *lagertest.TestLogger
+			p                  *poller.Poller
+			c                  rules.Chain
+			fakePlanner        *fakes.Planner
+			fakeEnforcer       *libfakes.RuleEnforcer
+			timeMetricsEmitter *fakes.TimeMetricsEmitter
+			r                  []rules.Rule
 		)
 
 		BeforeEach(func() {
@@ -38,14 +39,16 @@ var _ = Describe("Poller", func() {
 			}
 
 			fakePlanner = &fakes.Planner{}
-			fakeEnforcer = &common_fakes.RuleEnforcer{}
+			fakeEnforcer = &libfakes.RuleEnforcer{}
+			timeMetricsEmitter = &fakes.TimeMetricsEmitter{}
 
 			p = &poller.Poller{
-				Logger:       logger,
-				PollInterval: 1 * time.Millisecond,
-				Planner:      fakePlanner,
-				Chain:        c,
-				Enforcer:     fakeEnforcer,
+				Logger:            logger,
+				PollInterval:      1 * time.Millisecond,
+				Planner:           fakePlanner,
+				Chain:             c,
+				Enforcer:          fakeEnforcer,
+				CollectionEmitter: timeMetricsEmitter,
 			}
 
 			r = []rules.Rule{}
@@ -64,6 +67,14 @@ var _ = Describe("Poller", func() {
 			ch, rs := fakeEnforcer.EnforceOnChainArgsForCall(0)
 			Expect(ch).To(Equal(c))
 			Expect(rs).To(Equal(r))
+		})
+		It("emits time metrics", func() {
+			signals := make(chan os.Signal)
+			ready := make(chan struct{})
+			go p.Run(signals, ready)
+			Eventually(ready).Should(BeClosed())
+			Expect(timeMetricsEmitter.EmitAllCallCount()).To(BeNumerically(">", 0))
+			signals <- os.Interrupt
 		})
 
 		Context("when planner errors", func() {

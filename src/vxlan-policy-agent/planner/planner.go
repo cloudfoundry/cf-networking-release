@@ -1,9 +1,9 @@
 package planner
 
 import (
-	"lib/metrics"
 	"lib/models"
 	"lib/rules"
+	"time"
 	"vxlan-policy-agent/agent_metrics"
 
 	"code.cloudfoundry.org/garden"
@@ -16,10 +16,11 @@ type policyClient interface {
 }
 
 type VxlanPolicyPlanner struct {
-	Logger       lager.Logger
-	GardenClient garden.Client
-	PolicyClient policyClient
-	VNI          int
+	Logger            lager.Logger
+	GardenClient      garden.Client
+	PolicyClient      policyClient
+	VNI               int
+	CollectionEmitter agent_metrics.TimeMetricsEmitter
 }
 
 type Container struct {
@@ -46,8 +47,7 @@ func getContainersMap(allContainers []garden.Container) (map[string][]string, er
 }
 
 func (p *VxlanPolicyPlanner) GetRules() ([]rules.Rule, error) {
-	gardenPollTime := metrics.NewMetricsEmitter(p.Logger, 0,
-		agent_metrics.NewElapsedTimeMetricSource(agent_metrics.Timer{}, "gardenPollTime"))
+	gardenStartTime := time.Now()
 	properties := garden.Properties{}
 	gardenContainers, err := p.GardenClient.Containers(properties)
 	if err != nil {
@@ -56,21 +56,25 @@ func (p *VxlanPolicyPlanner) GetRules() ([]rules.Rule, error) {
 	}
 
 	containers, err := getContainersMap(gardenContainers)
-	gardenPollTime.EmitMetrics()
 	if err != nil {
 		p.Logger.Error("container-info", err)
 		return nil, err
 	}
+	gardenPollDuration := time.Now().Sub(gardenStartTime)
 	p.Logger.Debug("got-containers", lager.Data{"containers": containers})
 
-	policyServerPollTime := metrics.NewMetricsEmitter(p.Logger, 0,
-		agent_metrics.NewElapsedTimeMetricSource(agent_metrics.Timer{}, "policyServerPollTime"))
+	policyServerStartRequestTime := time.Now()
 	policies, err := p.PolicyClient.GetPolicies()
-	policyServerPollTime.EmitMetrics()
 	if err != nil {
 		p.Logger.Error("policy-client-get-policies", err)
 		return nil, err
 	}
+	policyServerPollDuration := time.Now().Sub(policyServerStartRequestTime)
+
+	p.CollectionEmitter.EmitAll(map[string]time.Duration{
+		agent_metrics.MetricGardenPoll:       gardenPollDuration,
+		agent_metrics.MetricPolicyServerPoll: policyServerPollDuration,
+	})
 
 	marksRuleset := []rules.Rule{}
 	filterRuleset := []rules.Rule{}

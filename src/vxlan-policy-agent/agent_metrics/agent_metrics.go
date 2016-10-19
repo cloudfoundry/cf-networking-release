@@ -1,30 +1,32 @@
 package agent_metrics
 
 import (
-	"lib/metrics"
 	"time"
+
+	"code.cloudfoundry.org/lager"
+
+	dropsondemetrics "github.com/cloudfoundry/dropsonde/metrics"
 )
 
-//go:generate counterfeiter -o ../fakes/timer.go --fake-name Timer . timer
-type timer interface {
-	ElapsedTime(start, end int64) (float64, error)
+//go:generate counterfeiter -o ../fakes/time_metrics_emitter.go --fake-name TimeMetricsEmitter . TimeMetricsEmitter
+type TimeMetricsEmitter interface {
+	EmitAll(map[string]time.Duration)
 }
 
-func NewElapsedTimeMetricSource(t timer, name string) metrics.MetricSource {
-	start := time.Now().UnixNano()
-	elapsedTime := func() (float64, error) {
-		end := time.Now().UnixNano()
-		return t.ElapsedTime(start, end)
-	}
-	return metrics.MetricSource{
-		Name:   name,
-		Unit:   "ms",
-		Getter: elapsedTime,
-	}
+const MetricEnforceDuration = "iptablesEnforceTime"
+const MetricPollDuration = "totalPollTime"
+const MetricGardenPoll = "gardenPollTime"
+const MetricPolicyServerPoll = "policyServerPollTime"
+
+type TimeMetrics struct {
+	Logger lager.Logger
 }
 
-type Timer struct{}
-
-func (t Timer) ElapsedTime(start, end int64) (float64, error) {
-	return float64(end-start) / 1e6, nil
+func (e *TimeMetrics) EmitAll(durations map[string]time.Duration) {
+	for name, duration := range durations {
+		err := dropsondemetrics.SendValue(name, duration.Seconds()*1000, "ms")
+		if err != nil {
+			e.Logger.Error("sending-metric", err) // not tested
+		}
+	}
 }

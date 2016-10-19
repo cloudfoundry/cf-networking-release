@@ -18,12 +18,13 @@ import (
 
 var _ = Describe("Planner", func() {
 	var (
-		policyPlanner  *planner.VxlanPolicyPlanner
-		gardenClient   *gardenfakes.FakeClient
-		policyClient   *fakes.PolicyClient
-		fakeContainer1 *gardenfakes.FakeContainer
-		fakeContainer2 *gardenfakes.FakeContainer
-		logger         *lagertest.TestLogger
+		policyPlanner      *planner.VxlanPolicyPlanner
+		gardenClient       *gardenfakes.FakeClient
+		policyClient       *fakes.PolicyClient
+		fakeContainer1     *gardenfakes.FakeContainer
+		fakeContainer2     *gardenfakes.FakeContainer
+		timeMetricsEmitter *fakes.TimeMetricsEmitter
+		logger             *lagertest.TestLogger
 	)
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test")
@@ -31,6 +32,7 @@ var _ = Describe("Planner", func() {
 		fakeContainer2 = &gardenfakes.FakeContainer{}
 		gardenClient = &gardenfakes.FakeClient{}
 		policyClient = &fakes.PolicyClient{}
+		timeMetricsEmitter = &fakes.TimeMetricsEmitter{}
 
 		fakeContainer1.InfoReturns(garden.ContainerInfo{
 			ContainerIP: "10.255.1.2",
@@ -82,10 +84,11 @@ var _ = Describe("Planner", func() {
 		}, nil)
 
 		policyPlanner = &planner.VxlanPolicyPlanner{
-			Logger:       logger,
-			GardenClient: gardenClient,
-			PolicyClient: policyClient,
-			VNI:          42,
+			Logger:            logger,
+			GardenClient:      gardenClient,
+			PolicyClient:      policyClient,
+			VNI:               42,
+			CollectionEmitter: timeMetricsEmitter,
 		}
 	})
 	Describe("GetRules", func() {
@@ -153,6 +156,12 @@ var _ = Describe("Planner", func() {
 			Expect(ruleset[1].(rules.GenericRule).Properties).To(ContainElement("--set-xmark"))
 			Expect(ruleset[2].(rules.GenericRule).Properties).To(ContainElement("ACCEPT"))
 			Expect(ruleset[3].(rules.GenericRule).Properties).To(ContainElement("ACCEPT"))
+		})
+		It("emits time metrics", func() {
+			_, err := policyPlanner.GetRules()
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(timeMetricsEmitter.EmitAllCallCount()).To(Equal(1))
 		})
 		Context("when getting containers from garden fails", func() {
 			BeforeEach(func() {

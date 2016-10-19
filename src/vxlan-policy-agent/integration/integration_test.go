@@ -201,6 +201,26 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		})
 	})
 
+	Describe("reporting metrics", func() {
+		BeforeEach(func() {
+			session = StartAgent(vxlanPolicyAgentPath, configFilePath)
+		})
+		It("emits metrics about durations", func() {
+			gatherMetricNames := func() map[string]bool {
+				events := fakeMetron.AllEvents()
+				metrics := map[string]bool{}
+				for _, event := range events {
+					metrics[event.Name] = true
+				}
+				return metrics
+			}
+			Eventually(gatherMetricNames, "5s").Should(HaveKey("iptablesEnforceTime"))
+			Expect(gatherMetricNames()).To(HaveKey("totalPollTime"))
+			Expect(gatherMetricNames()).To(HaveKey("gardenPollTime"))
+			Expect(gatherMetricNames()).To(HaveKey("policyServerPollTime"))
+		})
+	})
+
 	Context("when the policy server is unavailable", func() {
 		BeforeEach(func() {
 			conf := config.VxlanPolicyAgent{
