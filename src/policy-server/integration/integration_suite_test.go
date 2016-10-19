@@ -51,14 +51,15 @@ func TestIntegration(t *testing.T) {
 	RunSpecs(t, "Integration Suite")
 }
 
-var _ = BeforeSuite(func() {
-	// only run on node 1
+var _ = SynchronizedBeforeSuite(func() []byte {
 	fmt.Fprintf(GinkgoWriter, "building binary...")
-	var err error
-	policyServerPath, err = gexec.Build("policy-server/cmd/policy-server", "-race")
+	policyServerPath, err := gexec.Build("policy-server/cmd/policy-server", "-race")
 	fmt.Fprintf(GinkgoWriter, "done")
 	Expect(err).NotTo(HaveOccurred())
 
+	return []byte(policyServerPath)
+}, func(data []byte) {
+	policyServerPath = string(data)
 	rand.Seed(ginkgoConfig.GinkgoConfig.RandomSeed + int64(GinkgoParallelNode()))
 })
 
