@@ -71,3 +71,15 @@ func (a *Adapter) CheckApp(guid string) ([]byte, error) {
 	bytes, err := exec.Command(a.CfCliPath, "curl", fmt.Sprintf("/v2/apps/%s/summary", guid)).CombinedOutput()
 	return bytes, err
 }
+
+func (a *Adapter) AccessAllow(sourceApp, destApp string, port int, protocol string) error {
+	portStr := fmt.Sprintf("%d", port)
+	fmt.Printf("running: cf access-allow %s %s --port %s --protocol tcp\n", sourceApp, destApp, portStr)
+	return exec.Command("cf", "access-allow", sourceApp, destApp, "--port", portStr, "--protocol", "tcp").Run()
+}
+
+func (a *Adapter) AccessDeny(sourceApp, destApp string, port int, protocol string) error {
+	portStr := fmt.Sprintf("%d", port)
+	fmt.Printf("running: cf access-deny %s %s --port %s --protocol tcp\n", sourceApp, destApp, portStr)
+	return exec.Command("cf", "access-deny", sourceApp, destApp, "--port", portStr, "--protocol", "tcp").Run()
+}

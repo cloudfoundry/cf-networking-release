@@ -1,26 +1,20 @@
 package acceptance_test
 
 import (
+	"cf-pusher/cf_cli_adapter"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"lib/models"
-	"lib/policy_client"
 	"lib/testsupport"
 	"net"
 	"net/http"
 	"os"
 	"os/exec"
-	"strings"
 	"time"
-
-	"code.cloudfoundry.org/lager/lagertest"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gexec"
-	"github.com/pivotal-cf-experimental/rainmaker"
 )
 
 const Timeout_Short = 10 * time.Second
@@ -83,7 +77,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			})
 
 			By("creating policies")
-			doAllPolicies("create", appProxy, appsTest, ports)
+			createAllPolicies(appProxy, appsTest, ports)
 
 			// we should wait for minimum (pollInterval * 2)
 			By("waiting for policies to be created on cells")
@@ -97,7 +91,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			dumpStats(appProxy, config.AppsDomain)
 
 			By("deleting policies")
-			doAllPolicies("delete", appProxy, appsTest, ports)
+			deleteAllPolicies(appProxy, appsTest, ports)
 
 			By(fmt.Sprintf("checking that %s can NOT reach %s", appProxy, appsTest))
 			runWithTimeout("check connection failures, again", 5*time.Minute, func() {
@@ -116,75 +110,27 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 	})
 })
 
-func getToken() string {
-	By("getting token")
-	cmd := exec.Command("cf", "oauth-token")
-	session, err := gexec.Start(cmd, nil, nil)
-	Expect(err).NotTo(HaveOccurred())
-	Eventually(session.Wait(2 * Timeout_Short)).Should(gexec.Exit(0))
-	rawOutput := string(session.Out.Contents())
-	return strings.TrimSpace(strings.TrimPrefix(rawOutput, "bearer "))
-}
-
-func getGuids(sourceAppName string, dstAppNames []string) (string, []string) {
-	dstGuids := []string{}
-	sourceGuid := ""
-	token := getToken()
-	appsClient := rainmaker.NewApplicationsService(rainmaker.Config{Host: "http://" + config.ApiEndpoint})
-
-	appsList, err := appsClient.List(token)
-	Expect(err).NotTo(HaveOccurred())
-
-	for {
-		for _, app := range appsList.Applications {
-			if app.Name == sourceAppName {
-				sourceGuid = app.GUID
-				continue
-			}
-			for _, tickAppName := range dstAppNames {
-				if app.Name == tickAppName {
-					dstGuids = append(dstGuids, app.GUID)
-					break
-				}
-			}
-		}
-		if appsList.HasNextPage() {
-			appsList, err = appsList.Next(token)
-			Expect(err).NotTo(HaveOccurred())
-		} else {
-			break
-		}
+func createAllPolicies(sourceApp string, dstList []string, dstPorts []int) {
+	cfCli := &cf_cli_adapter.Adapter{
+		CfCliPath: "cf",
 	}
-
-	Expect(sourceGuid).NotTo(BeEmpty())
-	Expect(dstGuids).To(HaveLen(len(dstAppNames)))
-
-	return sourceGuid, dstGuids
-}
-
-func doAllPolicies(action string, source string, dstList []string, dstPorts []int) {
-	policyClient := policy_client.NewExternal(lagertest.NewTestLogger("test"), &http.Client{}, "http://"+config.ApiEndpoint)
-	sourceGuid, dstGuids := getGuids(source, dstList)
-	policies := []models.Policy{}
-	for _, dstGuid := range dstGuids {
+	for _, destApp := range dstList {
 		for _, port := range dstPorts {
-			policies = append(policies, models.Policy{
-				Source: models.Source{
-					ID: sourceGuid,
-				},
-				Destination: models.Destination{
-					ID:       dstGuid,
-					Port:     port,
-					Protocol: "tcp",
-				},
-			})
+			err := cfCli.AccessAllow(sourceApp, destApp, port, "tcp")
+			Expect(err).NotTo(HaveOccurred())
 		}
 	}
-	token := getToken()
-	if action == "create" {
-		Expect(policyClient.AddPolicies(token, policies)).To(Succeed())
-	} else if action == "delete" {
-		Expect(policyClient.DeletePolicies(token, policies)).To(Succeed())
+}
+
+func deleteAllPolicies(sourceApp string, dstList []string, dstPorts []int) {
+	cfCli := &cf_cli_adapter.Adapter{
+		CfCliPath: "cf",
+	}
+	for _, destApp := range dstList {
+		for _, port := range dstPorts {
+			err := cfCli.AccessDeny(sourceApp, destApp, port, "tcp")
+			Expect(err).NotTo(HaveOccurred())
+		}
 	}
 }
 
