@@ -25,12 +25,16 @@ func TestIntegration(t *testing.T) {
 	RunSpecs(t, "Integration Suite")
 }
 
-var _ = BeforeSuite(func() {
+var _ = SynchronizedBeforeSuite(func() []byte {
 	fmt.Fprintf(GinkgoWriter, "building binary...")
 	var err error
 	binaryPath, err = gexec.Build("netmon/cmd/netmon", "-race")
 	fmt.Fprintf(GinkgoWriter, "done")
 	Expect(err).NotTo(HaveOccurred())
+
+	return []byte(binaryPath)
+}, func(data []byte) {
+	binaryPath = string(data)
 
 	rand.Seed(ginkgoConfig.GinkgoConfig.RandomSeed + int64(GinkgoParallelNode()))
 })
