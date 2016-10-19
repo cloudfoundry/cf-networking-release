@@ -32,6 +32,8 @@ func (m *Poller) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 		case <-signals:
 			return nil
 		case <-time.After(m.PollInterval):
+			totalPollTime := metrics.NewMetricsEmitter(m.Logger, 0,
+				agent_metrics.NewElapsedTimeMetricSource(agent_metrics.Timer{}, "totalPollTime"))
 			ruleset, err := m.Planner.GetRules()
 			if err != nil {
 				m.Logger.Error("get-rules", err)
@@ -46,6 +48,7 @@ func (m *Poller) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 				m.Logger.Error("enforce", err)
 				continue
 			}
+			totalPollTime.EmitMetrics()
 		}
 	}
 }

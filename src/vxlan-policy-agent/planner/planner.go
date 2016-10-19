@@ -46,9 +46,6 @@ func getContainersMap(allContainers []garden.Container) (map[string][]string, er
 }
 
 func (p *VxlanPolicyPlanner) GetRules() ([]rules.Rule, error) {
-	totalPollTime := metrics.NewMetricsEmitter(p.Logger, 0,
-		agent_metrics.NewElapsedTimeMetricSource(agent_metrics.Timer{}, "totalPollTime"))
-
 	gardenPollTime := metrics.NewMetricsEmitter(p.Logger, 0,
 		agent_metrics.NewElapsedTimeMetricSource(agent_metrics.Timer{}, "gardenPollTime"))
 	properties := garden.Properties{}
@@ -111,6 +108,5 @@ func (p *VxlanPolicyPlanner) GetRules() ([]rules.Rule, error) {
 	}
 	ruleset := append(marksRuleset, filterRuleset...)
 	p.Logger.Debug("generated-rules", lager.Data{"rules": ruleset})
-	totalPollTime.EmitMetrics()
 	return ruleset, nil
 }
