@@ -1,6 +1,7 @@
 package mutualtls_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"lib/testsupport"
@@ -16,7 +17,6 @@ import (
 )
 
 var (
-	certstrapBin          string
 	certDir               string
 	serverCACertPath      string
 	clientCACertPath      string
@@ -29,14 +29,25 @@ var (
 	wrongClientKeyPath    string
 )
 
-var _ = BeforeSuite(func() {
-	rand.Seed(config.GinkgoConfig.RandomSeed + int64(GinkgoParallelNode()))
+type testPaths struct {
+	ServerCACertPath      string
+	ClientCACertPath      string
+	ServerCertPath        string
+	ServerKeyPath         string
+	ClientCertPath        string
+	ClientKeyPath         string
+	WrongClientCACertPath string
+	WrongClientCertPath   string
+	WrongClientKeyPath    string
+}
+
+var _ = SynchronizedBeforeSuite(func() []byte {
 
 	var err error
 	certDir, err = ioutil.TempDir("", "netman-certs")
 	Expect(err).NotTo(HaveOccurred())
 
-	certstrapBin = fmt.Sprintf("/%s/certstrap", certDir)
+	certstrapBin := fmt.Sprintf("/%s/certstrap", certDir)
 	cmd := exec.Command("go", "build", "-o", certstrapBin, "github.com/square/certstrap")
 	Expect(cmd.Run()).NotTo(HaveOccurred())
 
@@ -59,9 +70,41 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	wrongClientCertPath, wrongClientKeyPath, err = certWriter.WriteAndSignForClient("wrong-client", "wrong-client-ca")
 	Expect(err).NotTo(HaveOccurred())
+
+	paths := testPaths{
+		serverCACertPath,
+		clientCACertPath,
+		serverCertPath,
+		serverKeyPath,
+		clientCertPath,
+		clientKeyPath,
+		wrongClientCACertPath,
+		wrongClientCertPath,
+		wrongClientKeyPath,
+	}
+	data, err := json.Marshal(paths)
+	Expect(err).NotTo(HaveOccurred())
+
+	return data
+}, func(data []byte) {
+
+	var paths testPaths
+	Expect(json.Unmarshal(data, &paths)).To(Succeed())
+
+	serverCACertPath = paths.ServerCACertPath
+	clientCACertPath = paths.ClientCACertPath
+	serverCertPath = paths.ServerCertPath
+	serverKeyPath = paths.ServerKeyPath
+	clientCertPath = paths.ClientCertPath
+	clientKeyPath = paths.ClientKeyPath
+	wrongClientCACertPath = paths.WrongClientCACertPath
+	wrongClientCertPath = paths.WrongClientCertPath
+	wrongClientKeyPath = paths.WrongClientKeyPath
+
+	rand.Seed(config.GinkgoConfig.RandomSeed + int64(GinkgoParallelNode()))
 })
 
-var _ = AfterSuite(func() {
+var _ = SynchronizedAfterSuite(func() {}, func() {
 	os.Remove(certDir)
 })
 
