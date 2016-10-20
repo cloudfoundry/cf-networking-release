@@ -7,3 +7,4 @@
 - [Examples - Tick, Cats & Dogs, Service Discovery](../src/example-apps/cats-and-dogs)
 - [3rd Party Plugin Development](3rd-party.md)
 - [Contributing to Netman](contributing.md)
+- [Operation](operation.md)

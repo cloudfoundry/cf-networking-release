@@ -1,3 +1,11 @@
+## Expectations for CNI plugin developers
+### MTU
+CNI plugins should automatically detect the MTU settings on the host, and set the MTU
+on container network interfaces appropriately.  For example, if the host MTU is 1500 bytes
+and the plugin encapsulates with 50 bytes of header, the plugin should ensure that the
+container MTU is no greater than 1450 bytes.  This is to ensure there is no fragmentation.
+The built-in flannel CNI plugin does this.
+
 ## To replace flannel with your own CNI plugin
 0. Remove the following BOSH jobs:
   - `cni-flannel`
