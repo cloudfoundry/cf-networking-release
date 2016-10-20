@@ -17,6 +17,7 @@ declare -a serial_packages=(
   "src/example-apps"
   "src/garden-external-networker"
   "src/vxlan-policy-agent"
+  "src/cf-pusher"
   )
 
 function bootPostgres {

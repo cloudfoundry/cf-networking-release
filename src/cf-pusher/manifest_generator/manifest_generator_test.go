@@ -41,12 +41,4 @@ applications:
       GOPACKAGENAME: test-package/testme
 `))
 	})
-	Context("when input cannot be marshaled", func() {
-		It("returns the error", func() {
-			myMap := map[int]int{1: 2, 3: 4}
-			_, err := manifestGenerator.Generate(myMap)
-			Expect(err).To(MatchError("something"))
-		})
-	})
-
 })

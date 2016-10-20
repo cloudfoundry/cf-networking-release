@@ -21,6 +21,7 @@ var _ = Describe("AppPusher", func() {
 		appPusher = &cf_command.AppPusher{
 			Adapter:           fakeAdapter,
 			ManifestGenerator: fakeManifestGenerator,
+			Concurrency:       2,
 		}
 	})
 	Describe("Push", func() {
