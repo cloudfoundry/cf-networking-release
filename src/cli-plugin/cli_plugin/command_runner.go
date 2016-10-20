@@ -42,7 +42,7 @@ func (r *CommandRunner) List() (string, error) {
 		return "", fmt.Errorf("getting access token: %s", err)
 	}
 
-	flags := flag.NewFlagSet("cf access-list", flag.ContinueOnError)
+	flags := flag.NewFlagSet("cf list-access", flag.ContinueOnError)
 	appName := flags.String("app", "", "app name to filter results")
 	flags.Parse(r.Args[1:])
 

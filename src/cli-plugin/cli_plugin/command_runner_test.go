@@ -65,7 +65,7 @@ var _ = Describe("CommandRunner", func() {
 			policyClient.GetPoliciesReturns([]models.Policy{
 				models.Policy{Source: models.Source{ID: "some-app-guid"}, Destination: models.Destination{ID: "some-other-app-guid", Port: 9999, Protocol: "tcp"}},
 			}, nil)
-			runner.Args = []string{"access-list"}
+			runner.Args = []string{"list-access"}
 		})
 
 		Context("when there is a policy and I can resolve the guids", func() {
@@ -171,7 +171,7 @@ var _ = Describe("CommandRunner", func() {
 					{Guid: "some-app-guid", Name: "some-app"},
 					{Guid: "some-other-app-guid", Name: "some-other-app"},
 				}, nil)
-				runner.Args = []string{"access-list", "--app", "some-app"}
+				runner.Args = []string{"list-access", "--app", "some-app"}
 			})
 			It("filters the call to the policy server", func() {
 				output, err := runner.List()
@@ -212,24 +212,24 @@ var _ = Describe("CommandRunner", func() {
 
 		Context("when the user supplies additional arguments", func() {
 			BeforeEach(func() {
-				runner.Args = []string{"access-list", "some-app"}
+				runner.Args = []string{"list-access", "some-app"}
 			})
 			It("shows usage", func() {
 				fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
 				_, err := runner.List()
 				Expect(err).To(MatchError("Incorrect usage. \n\nUSAGE:\nbanana"))
 				c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
-				Expect(c).To(Equal([]string{"help", "access-list"}))
+				Expect(c).To(Equal([]string{"help", "list-access"}))
 			})
 		})
 	})
 
 	Describe("Allow", func() {
 		BeforeEach(func() {
-			runner.Args = []string{"access-allow", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999"}
+			runner.Args = []string{"allow-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999"}
 		})
 
-		Context("when the command is access-allow", func() {
+		Context("when the command is allow-access", func() {
 			It("translates the app names to app guids", func() {
 				_, err := runner.Allow()
 				Expect(err).NotTo(HaveOccurred())
@@ -268,14 +268,14 @@ var _ = Describe("CommandRunner", func() {
 
 			Context("when the user supplies incorrect arguments", func() {
 				BeforeEach(func() {
-					runner.Args = []string{"access-allow", "some-app", "--protocol", "tcp", "some-other-app", "--port", "9999"}
+					runner.Args = []string{"allow-access", "some-app", "--protocol", "tcp", "some-other-app", "--port", "9999"}
 				})
 				It("shows usage", func() {
 					fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
 					_, err := runner.Allow()
 					Expect(err).To(MatchError("Incorrect usage. \n\nUSAGE:\nbanana"))
 					c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
-					Expect(c).To(Equal([]string{"help", "access-allow"}))
+					Expect(c).To(Equal([]string{"help", "allow-access"}))
 				})
 
 				Context("and then when the cf cli command fails", func() {
@@ -303,7 +303,7 @@ var _ = Describe("CommandRunner", func() {
 
 	Describe("Deny", func() {
 		BeforeEach(func() {
-			runner.Args = []string{"access-deny", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999"}
+			runner.Args = []string{"deny-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999"}
 		})
 
 		Context("when the policy is found", func() {
@@ -327,32 +327,32 @@ var _ = Describe("CommandRunner", func() {
 		Context("when the user supplies incorrect arguments", func() {
 			Context("when there are too many leading positional arguments", func() {
 				It("shows usage", func() {
-					runner.Args = []string{"access-deny", "some-app", "some-other-app", "yet-another-app", "--protocol", "tcp", "--port", "9999"}
+					runner.Args = []string{"deny-access", "some-app", "some-other-app", "yet-another-app", "--protocol", "tcp", "--port", "9999"}
 					fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
 					_, err := runner.Deny()
 					Expect(err).To(MatchError("Incorrect usage. \n\nUSAGE:\nbanana"))
 					c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
-					Expect(c).To(Equal([]string{"help", "access-deny"}))
+					Expect(c).To(Equal([]string{"help", "deny-access"}))
 				})
 			})
 			Context("when there are extra positional arguments after the flag args", func() {
 				It("shows usage", func() {
-					runner.Args = []string{"access-deny", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999", "something-else"}
+					runner.Args = []string{"deny-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999", "something-else"}
 					fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
 					_, err := runner.Deny()
 					Expect(err).To(MatchError("Incorrect usage. \n\nUSAGE:\nbanana"))
 					c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
-					Expect(c).To(Equal([]string{"help", "access-deny"}))
+					Expect(c).To(Equal([]string{"help", "deny-access"}))
 				})
 			})
 			Context("when one of the flags is misspelled", func() {
 				It("shows usage", func() {
-					runner.Args = []string{"access-deny", "some-app", "some-other-app", "--protocol", "tcp", "--poooort", "9999"}
+					runner.Args = []string{"deny-access", "some-app", "some-other-app", "--protocol", "tcp", "--poooort", "9999"}
 					fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
 					_, err := runner.Deny()
 					Expect(err).To(MatchError("Incorrect usage. flag provided but not defined: -poooort\n\nUSAGE:\nbanana"))
 					c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
-					Expect(c).To(Equal([]string{"help", "access-deny"}))
+					Expect(c).To(Equal([]string{"help", "deny-access"}))
 
 				})
 			})
@@ -392,7 +392,7 @@ var _ = Describe("CommandRunner", func() {
 	Describe("Resolving App Names to Guids", func() {
 		Context("when there are errors talking to CC", func() {
 			BeforeEach(func() {
-				runner.Args = []string{"access-deny", "bad-access", "some-other-app", "--protocol", "tcp", "--port", "9999"}
+				runner.Args = []string{"deny-access", "bad-access", "some-other-app", "--protocol", "tcp", "--port", "9999"}
 			})
 			It("returns a useful error", func() {
 				_, err := runner.Deny()
@@ -402,7 +402,7 @@ var _ = Describe("CommandRunner", func() {
 
 		Context("when the source app could not be resolved to a GUID", func() {
 			BeforeEach(func() {
-				runner.Args = []string{"access-deny", "inaccessible-app", "some-other-app", "--protocol", "tcp", "--port", "9999"}
+				runner.Args = []string{"deny-access", "inaccessible-app", "some-other-app", "--protocol", "tcp", "--port", "9999"}
 			})
 			It("returns a useful error", func() {
 				_, err := runner.Deny()
@@ -412,7 +412,7 @@ var _ = Describe("CommandRunner", func() {
 
 		Context("when there are errors resolving destination app", func() {
 			BeforeEach(func() {
-				runner.Args = []string{"access-deny", "some-app", "not-some-other-app", "--protocol", "tcp", "--port", "9999"}
+				runner.Args = []string{"deny-access", "some-app", "not-some-other-app", "--protocol", "tcp", "--port", "9999"}
 			})
 			It("returns a useful error", func() {
 				_, err := runner.Deny()
@@ -422,7 +422,7 @@ var _ = Describe("CommandRunner", func() {
 
 		Context("when the destination app could not be resolved to a GUID", func() {
 			BeforeEach(func() {
-				runner.Args = []string{"access-deny", "some-app", "inaccessible-app", "--protocol", "tcp", "--port", "9999"}
+				runner.Args = []string{"deny-access", "some-app", "inaccessible-app", "--protocol", "tcp", "--port", "9999"}
 			})
 			It("returns a useful error", func() {
 				_, err := runner.Deny()

@@ -33,9 +33,9 @@ type ValidArgs struct {
 	Port          int
 }
 
-const AllowCommand = "access-allow"
-const ListCommand = "access-list"
-const DenyCommand = "access-deny"
+const AllowCommand = "allow-access"
+const ListCommand = "list-access"
+const DenyCommand = "deny-access"
 
 var ListUsageRegex = fmt.Sprintf(`\A%s\s*(--app(\s+|=)\S+\z|\z)`, ListCommand)
 var AllowUsageRegex = fmt.Sprintf(`\A%s\s+\S+\s+\S+\s+(--|-)\w+(\s+|=)\w+\s+(--|-)\w+(\s+|=)\w+\z`, AllowCommand)
