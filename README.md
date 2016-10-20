@@ -10,6 +10,17 @@ A [Garden-runC](https://github.com/cloudfoundry/garden-runc-release) add-on that
 - Inbound traffic from the gorouter is port forwarded from the cell to the container via a NetIn rule. NetIn calls are made by garden to the external networker which then writes the iptables NAT rule.
 - Application security groups are enforced by NetOut calls from garden. The external networker also writes iptables rules to enforce ASGs.
 
+# Documentation
+
+- [Architecture](docs/arch.md)
+- [Deploy to BOSH-lite](docs/bosh-lite.md)
+- [Deploy to AWS](docs/aws.md)
+- [Configuring Policies - CLI and API](docs/usage.md)
+- [Examples - Tick, Cats & Dogs, Service Discovery](src/example-apps/cats-and-dogs)
+- [3rd Party Plugin Development](docs/3rd-party.md)
+- [Contributing to Netman](docs/contributing.md)
+- [Operation](docs/operation.md)
+
 ## Project links
 - [Design doc for Container Networking Policy](https://docs.google.com/document/d/1HDS89TJKD7ACG6cqQHph5BdNSKLt8jvo6sPGBZ5DmsM)
 - [Engineering backlog](https://www.pivotaltracker.com/n/projects/1498342)
