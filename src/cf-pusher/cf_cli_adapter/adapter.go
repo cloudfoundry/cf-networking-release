@@ -72,14 +72,14 @@ func (a *Adapter) CheckApp(guid string) ([]byte, error) {
 	return bytes, err
 }
 
-func (a *Adapter) AccessAllow(sourceApp, destApp string, port int, protocol string) error {
+func (a *Adapter) AllowAccess(sourceApp, destApp string, port int, protocol string) error {
 	portStr := fmt.Sprintf("%d", port)
-	fmt.Printf("running: cf access-allow %s %s --port %s --protocol tcp\n", sourceApp, destApp, portStr)
-	return exec.Command("cf", "access-allow", sourceApp, destApp, "--port", portStr, "--protocol", "tcp").Run()
+	fmt.Printf("running: cf allow-access %s %s --port %s --protocol tcp\n", sourceApp, destApp, portStr)
+	return exec.Command("cf", "allow-access", sourceApp, destApp, "--port", portStr, "--protocol", "tcp").Run()
 }
 
-func (a *Adapter) AccessDeny(sourceApp, destApp string, port int, protocol string) error {
+func (a *Adapter) DenyAccess(sourceApp, destApp string, port int, protocol string) error {
 	portStr := fmt.Sprintf("%d", port)
-	fmt.Printf("running: cf access-deny %s %s --port %s --protocol tcp\n", sourceApp, destApp, portStr)
-	return exec.Command("cf", "access-deny", sourceApp, destApp, "--port", portStr, "--protocol", "tcp").Run()
+	fmt.Printf("running: cf deny-access %s %s --port %s --protocol tcp\n", sourceApp, destApp, portStr)
+	return exec.Command("cf", "deny-access", sourceApp, destApp, "--port", portStr, "--protocol", "tcp").Run()
 }
