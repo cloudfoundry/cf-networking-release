@@ -42,7 +42,6 @@ type testPaths struct {
 }
 
 var _ = SynchronizedBeforeSuite(func() []byte {
-
 	var err error
 	certDir, err = ioutil.TempDir("", "netman-certs")
 	Expect(err).NotTo(HaveOccurred())

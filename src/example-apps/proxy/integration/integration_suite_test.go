@@ -22,18 +22,21 @@ func TestIntegration(t *testing.T) {
 	RunSpecs(t, "Integration Suite")
 }
 
-var _ = BeforeSuite(func() {
-	// only run on node 1
+var _ = SynchronizedBeforeSuite(func() []byte {
 	fmt.Fprintf(GinkgoWriter, "building binary...")
 	var err error
 	exampleAppPath, err = gexec.Build("example-apps/proxy", "-race")
 	fmt.Fprintf(GinkgoWriter, "done")
 	Expect(err).NotTo(HaveOccurred())
 
+	return []byte(exampleAppPath)
+}, func(data []byte) {
+	exampleAppPath = string(data)
+
 	rand.Seed(ginkgoConfig.GinkgoConfig.RandomSeed + int64(GinkgoParallelNode()))
 })
 
-var _ = AfterSuite(func() {
+var _ = SynchronizedAfterSuite(func() {}, func() {
 	gexec.CleanupBuildArtifacts()
 })
 
