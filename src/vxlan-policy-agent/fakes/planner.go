@@ -7,18 +7,18 @@ import (
 )
 
 type Planner struct {
-	GetRulesStub        func() ([]rules.Rule, error)
+	GetRulesStub        func() (rules.RulesWithChain, error)
 	getRulesMutex       sync.RWMutex
 	getRulesArgsForCall []struct{}
 	getRulesReturns     struct {
-		result1 []rules.Rule
+		result1 rules.RulesWithChain
 		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *Planner) GetRules() ([]rules.Rule, error) {
+func (fake *Planner) GetRules() (rules.RulesWithChain, error) {
 	fake.getRulesMutex.Lock()
 	fake.getRulesArgsForCall = append(fake.getRulesArgsForCall, struct{}{})
 	fake.recordInvocation("GetRules", []interface{}{})
@@ -36,10 +36,10 @@ func (fake *Planner) GetRulesCallCount() int {
 	return len(fake.getRulesArgsForCall)
 }
 
-func (fake *Planner) GetRulesReturns(result1 []rules.Rule, result2 error) {
+func (fake *Planner) GetRulesReturns(result1 rules.RulesWithChain, result2 error) {
 	fake.GetRulesStub = nil
 	fake.getRulesReturns = struct {
-		result1 []rules.Rule
+		result1 rules.RulesWithChain
 		result2 error
 	}{result1, result2}
 }

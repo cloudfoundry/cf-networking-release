@@ -22,21 +22,14 @@ var _ = Describe("Poller", func() {
 		var (
 			logger             *lagertest.TestLogger
 			p                  *poller.Poller
-			c                  rules.Chain
 			fakePlanner        *fakes.Planner
 			fakeEnforcer       *libfakes.RuleEnforcer
 			timeMetricsEmitter *fakes.TimeMetricsEmitter
-			r                  []rules.Rule
+			rulesWithChain     rules.RulesWithChain
 		)
 
 		BeforeEach(func() {
 			logger = lagertest.NewTestLogger("test")
-
-			c = rules.Chain{
-				Table:       "some-table",
-				ParentChain: "INPUT",
-				Prefix:      "some-prefix",
-			}
 
 			fakePlanner = &fakes.Planner{}
 			fakeEnforcer = &libfakes.RuleEnforcer{}
@@ -46,13 +39,19 @@ var _ = Describe("Poller", func() {
 				Logger:            logger,
 				PollInterval:      1 * time.Millisecond,
 				Planner:           fakePlanner,
-				Chain:             c,
 				Enforcer:          fakeEnforcer,
 				CollectionEmitter: timeMetricsEmitter,
 			}
 
-			r = []rules.Rule{}
-			fakePlanner.GetRulesReturns(r, nil)
+			rulesWithChain = rules.RulesWithChain{
+				Rules: []rules.Rule{},
+				Chain: rules.Chain{
+					Table:       "some-table",
+					ParentChain: "INPUT",
+					Prefix:      "some-prefix",
+				},
+			}
+			fakePlanner.GetRulesReturns(rulesWithChain, nil)
 		})
 
 		It("enforces rules on configured interval", func() {
@@ -61,12 +60,11 @@ var _ = Describe("Poller", func() {
 			go p.Run(signals, ready)
 			Eventually(ready).Should(BeClosed())
 			Eventually(fakePlanner.GetRulesCallCount()).Should(BeNumerically(">", 0))
-			Eventually(fakeEnforcer.EnforceOnChainCallCount()).Should(BeNumerically(">", 0))
+			Eventually(fakeEnforcer.EnforceRulesAndChainCallCount()).Should(BeNumerically(">", 0))
 			signals <- os.Interrupt
 
-			ch, rs := fakeEnforcer.EnforceOnChainArgsForCall(0)
-			Expect(ch).To(Equal(c))
-			Expect(rs).To(Equal(r))
+			rws := fakeEnforcer.EnforceRulesAndChainArgsForCall(0)
+			Expect(rws).To(Equal(rulesWithChain))
 		})
 		It("emits time metrics", func() {
 			signals := make(chan os.Signal)
@@ -79,7 +77,7 @@ var _ = Describe("Poller", func() {
 
 		Context("when planner errors", func() {
 			BeforeEach(func() {
-				fakePlanner.GetRulesReturns(r, errors.New("eggplant"))
+				fakePlanner.GetRulesReturns(rulesWithChain, errors.New("eggplant"))
 			})
 
 			It("logs the error and continues", func() {
@@ -95,7 +93,7 @@ var _ = Describe("Poller", func() {
 
 		Context("when enforcer errors", func() {
 			BeforeEach(func() {
-				fakeEnforcer.EnforceOnChainReturns(errors.New("eggplant"))
+				fakeEnforcer.EnforceRulesAndChainReturns(errors.New("eggplant"))
 			})
 
 			It("logs the error and continues", func() {

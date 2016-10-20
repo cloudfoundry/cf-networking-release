@@ -30,6 +30,7 @@ type IPTables interface {
 
 //go:generate counterfeiter -o ../fakes/rule_enforcer.go --fake-name RuleEnforcer . RuleEnforcer
 type RuleEnforcer interface {
+	EnforceRulesAndChain(RulesWithChain) error
 	EnforceOnChain(chain Chain, r []Rule) error
 	Enforce(table, parentChain, chain string, r []Rule) error
 }

@@ -7,6 +7,14 @@ import (
 )
 
 type RuleEnforcer struct {
+	EnforceRulesAndChainStub        func(rules.RulesWithChain) error
+	enforceRulesAndChainMutex       sync.RWMutex
+	enforceRulesAndChainArgsForCall []struct {
+		arg1 rules.RulesWithChain
+	}
+	enforceRulesAndChainReturns struct {
+		result1 error
+	}
 	EnforceOnChainStub        func(chain rules.Chain, r []rules.Rule) error
 	enforceOnChainMutex       sync.RWMutex
 	enforceOnChainArgsForCall []struct {
@@ -29,6 +37,39 @@ type RuleEnforcer struct {
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
+}
+
+func (fake *RuleEnforcer) EnforceRulesAndChain(arg1 rules.RulesWithChain) error {
+	fake.enforceRulesAndChainMutex.Lock()
+	fake.enforceRulesAndChainArgsForCall = append(fake.enforceRulesAndChainArgsForCall, struct {
+		arg1 rules.RulesWithChain
+	}{arg1})
+	fake.recordInvocation("EnforceRulesAndChain", []interface{}{arg1})
+	fake.enforceRulesAndChainMutex.Unlock()
+	if fake.EnforceRulesAndChainStub != nil {
+		return fake.EnforceRulesAndChainStub(arg1)
+	} else {
+		return fake.enforceRulesAndChainReturns.result1
+	}
+}
+
+func (fake *RuleEnforcer) EnforceRulesAndChainCallCount() int {
+	fake.enforceRulesAndChainMutex.RLock()
+	defer fake.enforceRulesAndChainMutex.RUnlock()
+	return len(fake.enforceRulesAndChainArgsForCall)
+}
+
+func (fake *RuleEnforcer) EnforceRulesAndChainArgsForCall(i int) rules.RulesWithChain {
+	fake.enforceRulesAndChainMutex.RLock()
+	defer fake.enforceRulesAndChainMutex.RUnlock()
+	return fake.enforceRulesAndChainArgsForCall[i].arg1
+}
+
+func (fake *RuleEnforcer) EnforceRulesAndChainReturns(result1 error) {
+	fake.EnforceRulesAndChainStub = nil
+	fake.enforceRulesAndChainReturns = struct {
+		result1 error
+	}{result1}
 }
 
 func (fake *RuleEnforcer) EnforceOnChain(chain rules.Chain, r []rules.Rule) error {
@@ -114,6 +155,8 @@ func (fake *RuleEnforcer) EnforceReturns(result1 error) {
 func (fake *RuleEnforcer) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.enforceRulesAndChainMutex.RLock()
+	defer fake.enforceRulesAndChainMutex.RUnlock()
 	fake.enforceOnChainMutex.RLock()
 	defer fake.enforceOnChainMutex.RUnlock()
 	fake.enforceMutex.RLock()

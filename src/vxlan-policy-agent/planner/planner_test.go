@@ -25,6 +25,7 @@ var _ = Describe("Planner", func() {
 		fakeContainer2     *gardenfakes.FakeContainer
 		timeMetricsEmitter *fakes.TimeMetricsEmitter
 		logger             *lagertest.TestLogger
+		chain              rules.Chain
 	)
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test")
@@ -83,12 +84,19 @@ var _ = Describe("Planner", func() {
 			},
 		}, nil)
 
+		chain = rules.Chain{
+			Table:       "some-table",
+			ParentChain: "INPUT",
+			Prefix:      "some-prefix",
+		}
+
 		policyPlanner = &planner.VxlanPolicyPlanner{
 			Logger:            logger,
 			GardenClient:      gardenClient,
 			PolicyClient:      policyClient,
 			VNI:               42,
 			CollectionEmitter: timeMetricsEmitter,
+			Chain:             chain,
 		}
 	})
 	Describe("GetRules", func() {
@@ -106,10 +114,11 @@ var _ = Describe("Planner", func() {
 			Expect(policyClient.GetPoliciesCallCount()).To(Equal(1))
 		})
 		It("returns all the rules", func() {
-			ruleset, err := policyPlanner.GetRules()
+			rulesWithChain, err := policyPlanner.GetRules()
 			Expect(err).NotTo(HaveOccurred())
+			Expect(rulesWithChain.Chain).To(Equal(chain))
 
-			Expect(ruleset).To(ConsistOf([]rules.GenericRule{
+			Expect(rulesWithChain.Rules).To(ConsistOf([]rules.GenericRule{
 				// allow based on mark
 				{
 					Properties: []string{
@@ -149,13 +158,13 @@ var _ = Describe("Planner", func() {
 			}))
 		})
 		It("returns all mark set rules before any mark filter rules", func() {
-			ruleset, err := policyPlanner.GetRules()
+			rulesWithChain, err := policyPlanner.GetRules()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(ruleset).To(HaveLen(4))
-			Expect(ruleset[0].(rules.GenericRule).Properties).To(ContainElement("--set-xmark"))
-			Expect(ruleset[1].(rules.GenericRule).Properties).To(ContainElement("--set-xmark"))
-			Expect(ruleset[2].(rules.GenericRule).Properties).To(ContainElement("ACCEPT"))
-			Expect(ruleset[3].(rules.GenericRule).Properties).To(ContainElement("ACCEPT"))
+			Expect(rulesWithChain.Rules).To(HaveLen(4))
+			Expect(rulesWithChain.Rules[0].(rules.GenericRule).Properties).To(ContainElement("--set-xmark"))
+			Expect(rulesWithChain.Rules[1].(rules.GenericRule).Properties).To(ContainElement("--set-xmark"))
+			Expect(rulesWithChain.Rules[2].(rules.GenericRule).Properties).To(ContainElement("ACCEPT"))
+			Expect(rulesWithChain.Rules[3].(rules.GenericRule).Properties).To(ContainElement("ACCEPT"))
 		})
 		It("emits time metrics", func() {
 			_, err := policyPlanner.GetRules()

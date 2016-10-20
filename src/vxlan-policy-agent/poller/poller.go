@@ -11,7 +11,7 @@ import (
 
 //go:generate counterfeiter -o ../fakes/planner.go --fake-name Planner . planner
 type planner interface {
-	GetRules() ([]rules.Rule, error)
+	GetRules() (rules.RulesWithChain, error)
 }
 
 type Poller struct {
@@ -19,7 +19,6 @@ type Poller struct {
 	PollInterval time.Duration
 	Planner      planner
 
-	Chain             rules.Chain
 	Enforcer          rules.RuleEnforcer
 	CollectionEmitter agent_metrics.TimeMetricsEmitter
 }
@@ -33,14 +32,14 @@ func (m *Poller) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 			return nil
 		case <-time.After(m.PollInterval):
 			pollStartTime := time.Now()
-			ruleset, err := m.Planner.GetRules()
+			rulesWithChain, err := m.Planner.GetRules()
 			if err != nil {
 				m.Logger.Error("get-rules", err)
 				continue
 			}
 
 			enforceStartTime := time.Now()
-			err = m.Enforcer.EnforceOnChain(m.Chain, ruleset)
+			err = m.Enforcer.EnforceRulesAndChain(rulesWithChain)
 			if err != nil {
 				m.Logger.Error("enforce", err)
 				continue

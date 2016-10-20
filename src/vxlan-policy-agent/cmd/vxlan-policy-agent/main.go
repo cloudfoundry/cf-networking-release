@@ -106,6 +106,11 @@ func main() {
 		Logger:            logger.Session("rules-updater"),
 		VNI:               conf.VNI,
 		CollectionEmitter: timeMetricsEmitter,
+		Chain: rules.Chain{
+			Table:       "filter",
+			ParentChain: "FORWARD",
+			Prefix:      "vpa--",
+		},
 	}
 
 	timestamper := &rules.Timestamper{}
@@ -114,12 +119,6 @@ func main() {
 		timestamper,
 		ipt,
 	)
-
-	dynamicChain := rules.Chain{
-		Table:       "filter",
-		ParentChain: "FORWARD",
-		Prefix:      "vpa--",
-	}
 
 	vxlanDefaultLocalPlanner := planner.VxlanDefaultLocalPlanner{
 		Logger:      logger,
@@ -175,7 +174,6 @@ func main() {
 	if err != nil {
 		die(logger, "default-masquerade-rules.GetRules", err)
 	}
-
 	err = ruleEnforcer.EnforceRulesAndChain(defaultMasqueradeStuff)
 	if err != nil {
 		die(logger, "enforce-default-masquerade", err)
@@ -194,7 +192,6 @@ func main() {
 		PollInterval: pollInterval,
 		Planner:      dynamicPlanner,
 
-		Chain:             dynamicChain,
 		Enforcer:          ruleEnforcer,
 		CollectionEmitter: timeMetricsEmitter,
 	}

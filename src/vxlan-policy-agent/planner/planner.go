@@ -21,6 +21,7 @@ type VxlanPolicyPlanner struct {
 	PolicyClient      policyClient
 	VNI               int
 	CollectionEmitter agent_metrics.TimeMetricsEmitter
+	Chain             rules.Chain
 }
 
 type Container struct {
@@ -46,19 +47,19 @@ func getContainersMap(allContainers []garden.Container) (map[string][]string, er
 	return containers, nil
 }
 
-func (p *VxlanPolicyPlanner) GetRules() ([]rules.Rule, error) {
+func (p *VxlanPolicyPlanner) GetRules() (rules.RulesWithChain, error) {
 	gardenStartTime := time.Now()
 	properties := garden.Properties{}
 	gardenContainers, err := p.GardenClient.Containers(properties)
 	if err != nil {
 		p.Logger.Error("garden-client-containers", err)
-		return nil, err
+		return rules.RulesWithChain{}, err
 	}
 
 	containers, err := getContainersMap(gardenContainers)
 	if err != nil {
 		p.Logger.Error("container-info", err)
-		return nil, err
+		return rules.RulesWithChain{}, err
 	}
 	gardenPollDuration := time.Now().Sub(gardenStartTime)
 	p.Logger.Debug("got-containers", lager.Data{"containers": containers})
@@ -67,7 +68,7 @@ func (p *VxlanPolicyPlanner) GetRules() ([]rules.Rule, error) {
 	policies, err := p.PolicyClient.GetPolicies()
 	if err != nil {
 		p.Logger.Error("policy-client-get-policies", err)
-		return nil, err
+		return rules.RulesWithChain{}, err
 	}
 	policyServerPollDuration := time.Now().Sub(policyServerStartRequestTime)
 
@@ -112,5 +113,8 @@ func (p *VxlanPolicyPlanner) GetRules() ([]rules.Rule, error) {
 	}
 	ruleset := append(marksRuleset, filterRuleset...)
 	p.Logger.Debug("generated-rules", lager.Data{"rules": ruleset})
-	return ruleset, nil
+	return rules.RulesWithChain{
+		Chain: p.Chain,
+		Rules: ruleset,
+	}, nil
 }
