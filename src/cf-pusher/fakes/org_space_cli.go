@@ -36,6 +36,29 @@ type OrgSpaceCli struct {
 	targetSpaceReturns struct {
 		result1 error
 	}
+	CreateQuotaStub        func(name, memory string, instanceMemory, routes, serviceInstances, appInstances, routePorts int) error
+	createQuotaMutex       sync.RWMutex
+	createQuotaArgsForCall []struct {
+		name             string
+		memory           string
+		instanceMemory   int
+		routes           int
+		serviceInstances int
+		appInstances     int
+		routePorts       int
+	}
+	createQuotaReturns struct {
+		result1 error
+	}
+	SetQuotaStub        func(org, quota string) error
+	setQuotaMutex       sync.RWMutex
+	setQuotaArgsForCall []struct {
+		org   string
+		quota string
+	}
+	setQuotaReturns struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -172,6 +195,79 @@ func (fake *OrgSpaceCli) TargetSpaceReturns(result1 error) {
 	}{result1}
 }
 
+func (fake *OrgSpaceCli) CreateQuota(name string, memory string, instanceMemory int, routes int, serviceInstances int, appInstances int, routePorts int) error {
+	fake.createQuotaMutex.Lock()
+	fake.createQuotaArgsForCall = append(fake.createQuotaArgsForCall, struct {
+		name             string
+		memory           string
+		instanceMemory   int
+		routes           int
+		serviceInstances int
+		appInstances     int
+		routePorts       int
+	}{name, memory, instanceMemory, routes, serviceInstances, appInstances, routePorts})
+	fake.recordInvocation("CreateQuota", []interface{}{name, memory, instanceMemory, routes, serviceInstances, appInstances, routePorts})
+	fake.createQuotaMutex.Unlock()
+	if fake.CreateQuotaStub != nil {
+		return fake.CreateQuotaStub(name, memory, instanceMemory, routes, serviceInstances, appInstances, routePorts)
+	} else {
+		return fake.createQuotaReturns.result1
+	}
+}
+
+func (fake *OrgSpaceCli) CreateQuotaCallCount() int {
+	fake.createQuotaMutex.RLock()
+	defer fake.createQuotaMutex.RUnlock()
+	return len(fake.createQuotaArgsForCall)
+}
+
+func (fake *OrgSpaceCli) CreateQuotaArgsForCall(i int) (string, string, int, int, int, int, int) {
+	fake.createQuotaMutex.RLock()
+	defer fake.createQuotaMutex.RUnlock()
+	return fake.createQuotaArgsForCall[i].name, fake.createQuotaArgsForCall[i].memory, fake.createQuotaArgsForCall[i].instanceMemory, fake.createQuotaArgsForCall[i].routes, fake.createQuotaArgsForCall[i].serviceInstances, fake.createQuotaArgsForCall[i].appInstances, fake.createQuotaArgsForCall[i].routePorts
+}
+
+func (fake *OrgSpaceCli) CreateQuotaReturns(result1 error) {
+	fake.CreateQuotaStub = nil
+	fake.createQuotaReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *OrgSpaceCli) SetQuota(org string, quota string) error {
+	fake.setQuotaMutex.Lock()
+	fake.setQuotaArgsForCall = append(fake.setQuotaArgsForCall, struct {
+		org   string
+		quota string
+	}{org, quota})
+	fake.recordInvocation("SetQuota", []interface{}{org, quota})
+	fake.setQuotaMutex.Unlock()
+	if fake.SetQuotaStub != nil {
+		return fake.SetQuotaStub(org, quota)
+	} else {
+		return fake.setQuotaReturns.result1
+	}
+}
+
+func (fake *OrgSpaceCli) SetQuotaCallCount() int {
+	fake.setQuotaMutex.RLock()
+	defer fake.setQuotaMutex.RUnlock()
+	return len(fake.setQuotaArgsForCall)
+}
+
+func (fake *OrgSpaceCli) SetQuotaArgsForCall(i int) (string, string) {
+	fake.setQuotaMutex.RLock()
+	defer fake.setQuotaMutex.RUnlock()
+	return fake.setQuotaArgsForCall[i].org, fake.setQuotaArgsForCall[i].quota
+}
+
+func (fake *OrgSpaceCli) SetQuotaReturns(result1 error) {
+	fake.SetQuotaStub = nil
+	fake.setQuotaReturns = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *OrgSpaceCli) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -183,6 +279,10 @@ func (fake *OrgSpaceCli) Invocations() map[string][][]interface{} {
 	defer fake.targetOrgMutex.RUnlock()
 	fake.targetSpaceMutex.RLock()
 	defer fake.targetSpaceMutex.RUnlock()
+	fake.createQuotaMutex.RLock()
+	defer fake.createQuotaMutex.RUnlock()
+	fake.setQuotaMutex.RLock()
+	defer fake.setQuotaMutex.RUnlock()
 	return fake.invocations
 }
 

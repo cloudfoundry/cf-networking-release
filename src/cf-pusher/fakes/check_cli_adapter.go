@@ -4,10 +4,10 @@ package fakes
 import "sync"
 
 type CheckCLIAdapter struct {
-	CheckAppStub        func(name string) ([]byte, error)
+	CheckAppStub        func(guid string) ([]byte, error)
 	checkAppMutex       sync.RWMutex
 	checkAppArgsForCall []struct {
-		name string
+		guid string
 	}
 	checkAppReturns struct {
 		result1 []byte
@@ -26,15 +26,15 @@ type CheckCLIAdapter struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *CheckCLIAdapter) CheckApp(name string) ([]byte, error) {
+func (fake *CheckCLIAdapter) CheckApp(guid string) ([]byte, error) {
 	fake.checkAppMutex.Lock()
 	fake.checkAppArgsForCall = append(fake.checkAppArgsForCall, struct {
-		name string
-	}{name})
-	fake.recordInvocation("CheckApp", []interface{}{name})
+		guid string
+	}{guid})
+	fake.recordInvocation("CheckApp", []interface{}{guid})
 	fake.checkAppMutex.Unlock()
 	if fake.CheckAppStub != nil {
-		return fake.CheckAppStub(name)
+		return fake.CheckAppStub(guid)
 	} else {
 		return fake.checkAppReturns.result1, fake.checkAppReturns.result2
 	}
@@ -49,7 +49,7 @@ func (fake *CheckCLIAdapter) CheckAppCallCount() int {
 func (fake *CheckCLIAdapter) CheckAppArgsForCall(i int) string {
 	fake.checkAppMutex.RLock()
 	defer fake.checkAppMutex.RUnlock()
-	return fake.checkAppArgsForCall[i].name
+	return fake.checkAppArgsForCall[i].guid
 }
 
 func (fake *CheckCLIAdapter) CheckAppReturns(result1 []byte, result2 error) {

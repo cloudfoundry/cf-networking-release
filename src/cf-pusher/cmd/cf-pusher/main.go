@@ -87,8 +87,19 @@ func main() {
 		log.Fatalf("connecting to api: %s", err)
 	}
 
+	quota := cf_command.Quota{
+		Name:             prefix + "quota",
+		Memory:           "100G",
+		InstanceMemory:   -1,
+		Routes:           10000,
+		ServiceInstances: 100,
+		AppInstances:     -1,
+		RoutePorts:       -1,
+	}
+
 	orgDeleter := &cf_command.OrgDeleter{
 		Org:     scaleGroup.Org,
+		Quota:   quota,
 		Adapter: adapter,
 	}
 	if err = orgDeleter.Delete(); err != nil {
@@ -98,6 +109,7 @@ func main() {
 	orgSpaceCreator := &cf_command.OrgSpaceCreator{
 		Org:     scaleGroup.Org,
 		Space:   scaleGroup.Space,
+		Quota:   quota,
 		Adapter: adapter,
 	}
 	if err = orgSpaceCreator.Create(); err != nil {

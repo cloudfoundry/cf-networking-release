@@ -83,3 +83,23 @@ func (a *Adapter) DenyAccess(sourceApp, destApp string, port int, protocol strin
 	fmt.Printf("running: cf deny-access %s %s --port %s --protocol tcp\n", sourceApp, destApp, portStr)
 	return exec.Command("cf", "deny-access", sourceApp, destApp, "--port", portStr, "--protocol", "tcp").Run()
 }
+
+func (a *Adapter) CreateQuota(name, memory string, instanceMemory, routes, serviceInstances, appInstances, routePorts int) error {
+	instanceMemoryStr := fmt.Sprintf("%d", instanceMemory)
+	routesStr := fmt.Sprintf("%d", routes)
+	serviceInstancesStr := fmt.Sprintf("%d", serviceInstances)
+	appInstancesStr := fmt.Sprintf("%d", appInstances)
+	routePortsStr := fmt.Sprintf("%d", routePorts)
+	fmt.Printf("running cf create-quota %s -m %s -i %s -r %s -s %s -a %s --reserved-route-ports %s\n", name, memory, instanceMemoryStr, routesStr, serviceInstancesStr, appInstancesStr, routePortsStr)
+	return exec.Command("cf", "create-quota", name, "-m", memory, "-i", instanceMemoryStr, "-r", routesStr, "-s", serviceInstancesStr, "-a", appInstancesStr, "--reserved-route-ports", routePortsStr).Run()
+}
+
+func (a *Adapter) SetQuota(org, quota string) error {
+	fmt.Printf("running cf set-quota %s %s\n", org, quota)
+	return exec.Command("cf", "set-quota", org, quota).Run()
+}
+
+func (a *Adapter) DeleteQuota(quota string) error {
+	fmt.Printf("running cf delete-quota %s -f\n", quota)
+	return exec.Command("cf", "delete-quota", quota, "-f").Run()
+}

@@ -12,6 +12,14 @@ type OrgDeleterCli struct {
 	deleteOrgReturns struct {
 		result1 error
 	}
+	DeleteQuotaStub        func(name string) error
+	deleteQuotaMutex       sync.RWMutex
+	deleteQuotaArgsForCall []struct {
+		name string
+	}
+	deleteQuotaReturns struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -49,11 +57,46 @@ func (fake *OrgDeleterCli) DeleteOrgReturns(result1 error) {
 	}{result1}
 }
 
+func (fake *OrgDeleterCli) DeleteQuota(name string) error {
+	fake.deleteQuotaMutex.Lock()
+	fake.deleteQuotaArgsForCall = append(fake.deleteQuotaArgsForCall, struct {
+		name string
+	}{name})
+	fake.recordInvocation("DeleteQuota", []interface{}{name})
+	fake.deleteQuotaMutex.Unlock()
+	if fake.DeleteQuotaStub != nil {
+		return fake.DeleteQuotaStub(name)
+	} else {
+		return fake.deleteQuotaReturns.result1
+	}
+}
+
+func (fake *OrgDeleterCli) DeleteQuotaCallCount() int {
+	fake.deleteQuotaMutex.RLock()
+	defer fake.deleteQuotaMutex.RUnlock()
+	return len(fake.deleteQuotaArgsForCall)
+}
+
+func (fake *OrgDeleterCli) DeleteQuotaArgsForCall(i int) string {
+	fake.deleteQuotaMutex.RLock()
+	defer fake.deleteQuotaMutex.RUnlock()
+	return fake.deleteQuotaArgsForCall[i].name
+}
+
+func (fake *OrgDeleterCli) DeleteQuotaReturns(result1 error) {
+	fake.DeleteQuotaStub = nil
+	fake.deleteQuotaReturns = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *OrgDeleterCli) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.deleteOrgMutex.RLock()
 	defer fake.deleteOrgMutex.RUnlock()
+	fake.deleteQuotaMutex.RLock()
+	defer fake.deleteQuotaMutex.RUnlock()
 	return fake.invocations
 }
 

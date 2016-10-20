@@ -8,11 +8,24 @@ type orgSpaceCli interface {
 	CreateSpace(name string) error
 	TargetOrg(name string) error
 	TargetSpace(name string) error
+	CreateQuota(name, memory string, instanceMemory, routes, serviceInstances, appInstances, routePorts int) error
+	SetQuota(org, quota string) error
+}
+
+type Quota struct {
+	Name             string
+	Memory           string
+	InstanceMemory   int
+	Routes           int
+	ServiceInstances int
+	AppInstances     int
+	RoutePorts       int
 }
 
 type OrgSpaceCreator struct {
 	Org     string
 	Space   string
+	Quota   Quota
 	Adapter orgSpaceCli
 }
 
@@ -36,5 +49,17 @@ func (c *OrgSpaceCreator) Create() error {
 	if err != nil {
 		return fmt.Errorf("targeting space: %s", err)
 	}
+
+	q := c.Quota
+	err = c.Adapter.CreateQuota(q.Name, q.Memory, q.InstanceMemory, q.Routes, q.ServiceInstances, q.AppInstances, q.RoutePorts)
+	if err != nil {
+		return fmt.Errorf("creating quota: %s", err)
+	}
+
+	err = c.Adapter.SetQuota(c.Org, c.Quota.Name)
+	if err != nil {
+		return fmt.Errorf("setting quota: %s", err)
+	}
+
 	return nil
 }
