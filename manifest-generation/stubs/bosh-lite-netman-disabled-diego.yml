@@ -1,0 +1,41 @@
+---
+netman_overrides:
+  releases:
+  - name: netman
+    version: latest
+  driver_templates:
+  - name: garden-cni
+    release: netman
+  - name: cni-flannel
+    release: netman
+  - name: netmon
+    release: netman
+  - name: vxlan-policy-agent
+    release: netman
+  jobs:
+  - name: policy-server
+    instances: 0
+    persistent_disk: 256
+    resource_pool: database_z1
+    networks:
+      - name: diego1
+    properties:
+      consul:
+        agent:
+          services:
+            policy-server:
+              name: policy-server
+              check:
+                interval: 5s
+                script: /bin/true
+    templates:
+    - name: policy-server
+      release: netman
+    - name: route_registrar
+      release: cf
+    - name: consul_agent
+      release: cf
+    - name: metron_agent
+      release: cf
+
+config_from_cf: (( merge ))

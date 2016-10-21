@@ -24,3 +24,7 @@ properties:
   netmon.log_level:
     description: "Log level"
     default: info
+
+  netman.disable:
+    description: "disable container to container networking"
+    default: false

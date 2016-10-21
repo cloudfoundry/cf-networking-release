@@ -63,3 +63,7 @@ properties:
   flannel-watchdog.config.flannel_subnet_file:
     description: "file that flannel writes out the subnet environment"
     default: /run/flannel/subnet.env
+
+  netman.disable:
+    description: "disable container to container networking"
+    default: false

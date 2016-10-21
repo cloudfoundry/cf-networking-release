@@ -1,3 +1,5 @@
+<% if p("netman.disable") %>
+<% else %>
 check process flanneld
   with pidfile /var/vcap/sys/run/flannel/flanneld.pid
   start program "/var/vcap/jobs/cni-flannel/bin/flanneld_ctl start"
@@ -9,3 +11,4 @@ check process flannel-watchdog
   start program "/var/vcap/jobs/cni-flannel/bin/flannel-watchdog_ctl start"
   stop program "/var/vcap/jobs/cni-flannel/bin/flannel-watchdog_ctl stop"
   group vcap
+<% end %>

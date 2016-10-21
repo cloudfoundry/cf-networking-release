@@ -1,5 +1,8 @@
+<% if p("netman.disable") %>
+<% else %>
 check process netmon
   with pidfile /var/vcap/sys/run/netmon/netmon.pid
   start program "/var/vcap/jobs/netmon/bin/netmon_ctl start"
   stop program "/var/vcap/jobs/netmon/bin/netmon_ctl stop"
   group vcap
+<% end %>

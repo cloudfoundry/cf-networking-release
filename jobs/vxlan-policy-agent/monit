@@ -1,5 +1,8 @@
+<% if p("netman.disable") %>
+<% else %>
 check process vxlan-policy-agent
   with pidfile /var/vcap/sys/run/vxlan-policy-agent/vxlan-policy-agent.pid
   start program "/var/vcap/jobs/vxlan-policy-agent/bin/vxlan-policy-agent_ctl start"
   stop program "/var/vcap/jobs/vxlan-policy-agent/bin/vxlan-policy-agent_ctl stop"
   group vcap
+<% end %>
