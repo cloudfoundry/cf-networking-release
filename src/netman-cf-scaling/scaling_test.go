@@ -85,6 +85,9 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 
 			dumpStats(appProxy, config.AppsDomain)
 
+			By("sleeping for 5 minutes while policies exist")
+			time.Sleep(5 * time.Minute)
+
 			By("deleting policies")
 			doAllPolicies("delete", appProxy, appsTest, ports)
 
