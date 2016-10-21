@@ -66,7 +66,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			appIPs := getAppIPs(appRegistry)
 			sample := sampleIPs(appIPs, sampleSize)
 
-			By(fmt.Sprintf("checking that the connection fails sampling %d out of %d IPs", len(sample), len(appIPs)))
+			By(fmt.Sprintf("checking that the connection fails sampling %d out of %d IPs on %d ports", len(sample), len(appIPs), len(ports)))
 			runWithTimeout("check connection failures", Timeout_Check, func() {
 				assertConnectionFails(appProxy, sample, ports, proxyInstances)
 			})
@@ -78,11 +78,12 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			time.Sleep(Policy_Update_Wait)
 
 			sample = sampleIPs(appIPs, sampleSize)
-			By(fmt.Sprintf("checking that the connection succeeds sampling %d out of %d IPs", len(sample), len(appIPs)))
+			By(fmt.Sprintf("checking that the connection succeeds sampling %d out of %d IPs on %d ports", len(sample), len(appIPs), len(ports)))
 			runWithTimeout("check connection success", Timeout_Check, func() {
 				assertConnectionSucceeds(appProxy, sample, ports, proxyInstances)
 			})
 
+			By("dumping stats to commit to stats repo")
 			dumpStats(appProxy, config.AppsDomain)
 
 			By("sleeping for 5 minutes while policies exist")
@@ -95,7 +96,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			time.Sleep(Policy_Update_Wait)
 
 			sample = sampleIPs(appIPs, sampleSize)
-			By(fmt.Sprintf("checking that the connection succeeds sampling %d out of %d IPs", len(sample), len(appIPs)))
+			By(fmt.Sprintf("checking that the connection succeeds sampling %d out of %d IPs on %d ports", len(sample), len(appIPs), len(ports)))
 			runWithTimeout("check connection failures, again", Timeout_Check, func() {
 				assertConnectionFails(appProxy, sample, ports, proxyInstances)
 			})
@@ -140,7 +141,6 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 })
 
 func getToken() string {
-	By("getting token")
 	cmd := exec.Command("cf", "oauth-token")
 	session, err := gexec.Start(cmd, nil, nil)
 	Expect(err).NotTo(HaveOccurred())
@@ -214,14 +214,14 @@ func doAllPolicies(action string, source string, dstList []string, dstPorts []in
 func runWithTimeout(operation string, timeout time.Duration, work func()) {
 	done := make(chan bool)
 	go func() {
-		fmt.Printf("starting %s\n", operation)
+		By(fmt.Sprintf("starting %s\n", operation))
 		work()
 		done <- true
 	}()
 
 	select {
 	case <-done:
-		fmt.Printf("completed %s\n", operation)
+		By(fmt.Sprintf("completed %s\n", operation))
 		return
 	case <-time.After(timeout):
 		Fail("timeout on " + operation)
@@ -232,7 +232,6 @@ func dumpStats(host, domain string) {
 	resp, err := httpGetBytes(fmt.Sprintf("http://%s.%s/stats", host, domain))
 	Expect(err).NotTo(HaveOccurred())
 
-	fmt.Printf("STATS: %s\n", string(resp.Body))
 	netStatsFile := os.Getenv("NETWORK_STATS_FILE")
 	if netStatsFile != "" {
 		Expect(ioutil.WriteFile(netStatsFile, resp.Body, 0600)).To(Succeed())
@@ -328,10 +327,8 @@ func assertConnectionFails(sourceApp string, destApps []string, ports []int, nPr
 
 func assertSingleConnection(destIP string, port int, sourceAppName string, shouldSucceed bool) {
 	if shouldSucceed {
-		By(fmt.Sprintf("eventually proxy should reach %s at port %d", destIP, port))
 		assertResponseContains(destIP, port, sourceAppName, "application_name")
 	} else {
-		By(fmt.Sprintf("eventually proxy should NOT reach %s at port %d", destIP, port))
 		assertResponseContains(destIP, port, sourceAppName, "request failed")
 	}
 }
