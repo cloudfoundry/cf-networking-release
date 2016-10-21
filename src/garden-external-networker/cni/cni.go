@@ -1,7 +1,6 @@
 package cni
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -63,31 +62,6 @@ type CNIController struct {
 	NetworkConfigs []*libcni.NetworkConfig
 }
 
-func injectConf(original *libcni.NetworkConfig, key string, newValue interface{}) (*libcni.NetworkConfig, error) {
-	config := make(map[string]interface{})
-	err := json.Unmarshal(original.Bytes, &config)
-	if err != nil {
-		return nil, fmt.Errorf("unmarshal existing network bytes: %s", err)
-	}
-
-	if key == "" {
-		return nil, fmt.Errorf("key value can not be empty")
-	}
-
-	if newValue == nil {
-		return nil, fmt.Errorf("newValue must be specified")
-	}
-
-	config[key] = newValue
-
-	newBytes, err := json.Marshal(config)
-	if err != nil {
-		return nil, err
-	}
-
-	return libcni.ConfFromBytes(newBytes)
-}
-
 func (c *CNIController) Up(namespacePath, handle string, properties map[string]string) (*types.Result, error) {
 	var result *types.Result
 	var err error
@@ -100,7 +74,7 @@ func (c *CNIController) Up(namespacePath, handle string, properties map[string]s
 		}
 
 		if len(properties) > 0 {
-			networkConfig, err = injectConf(networkConfig, "network", map[string]interface{}{
+			networkConfig, err = libcni.InjectConf(networkConfig, "network", map[string]interface{}{
 				"properties": properties,
 			})
 			if err != nil {
