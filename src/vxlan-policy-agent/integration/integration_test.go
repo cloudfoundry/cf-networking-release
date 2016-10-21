@@ -77,7 +77,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		var err error
 		fakeMetron = fakes.New()
 
-		serverTLSConfig, err := mutualtls.NewServerTLSConfig(serverCertFile, serverKeyFile, clientCACertFile)
+		serverTLSConfig, err := mutualtls.NewServerTLSConfig(paths.ServerCertFile, paths.ServerKeyFile, paths.ClientCACertFile)
 		Expect(err).NotTo(HaveOccurred())
 
 		mockPolicyServer = startServer(serverTLSConfig)
@@ -111,9 +111,9 @@ var _ = Describe("VXLAN Policy Agent", func() {
 			VNI:               42,
 			FlannelSubnetFile: subnetFile.Name(),
 			MetronAddress:     fakeMetron.Address(),
-			ServerCACertFile:  serverCACertFile,
-			ClientCertFile:    clientCertFile,
-			ClientKeyFile:     clientKeyFile,
+			ServerCACertFile:  paths.ServerCACertFile,
+			ClientCertFile:    paths.ClientCertFile,
+			ClientKeyFile:     paths.ClientKeyFile,
 		}
 		configFilePath = WriteConfigFile(conf)
 	})
@@ -137,7 +137,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 
 	Describe("boring daemon behavior", func() {
 		It("should boot and gracefully terminate", func() {
-			session = StartAgent(vxlanPolicyAgentPath, configFilePath)
+			session = StartAgent(paths.VxlanPolicyAgentPath, configFilePath)
 			Consistently(session).ShouldNot(gexec.Exit())
 
 			session.Interrupt()
@@ -151,7 +151,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 
 	Describe("Default rules", func() {
 		BeforeEach(func() {
-			session = StartAgent(vxlanPolicyAgentPath, configFilePath)
+			session = StartAgent(paths.VxlanPolicyAgentPath, configFilePath)
 		})
 
 		It("writes the masquerade rule", func() {
@@ -183,7 +183,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 
 	Describe("policy enforcement", func() {
 		BeforeEach(func() {
-			session = StartAgent(vxlanPolicyAgentPath, configFilePath)
+			session = StartAgent(paths.VxlanPolicyAgentPath, configFilePath)
 		})
 		It("writes the mark rule", func() {
 			waitUntilPollLoop(2) // wait for a second one so we know the first enforcement completed
@@ -203,7 +203,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 
 	Describe("reporting metrics", func() {
 		BeforeEach(func() {
-			session = StartAgent(vxlanPolicyAgentPath, configFilePath)
+			session = StartAgent(paths.VxlanPolicyAgentPath, configFilePath)
 		})
 		It("emits metrics about durations", func() {
 			gatherMetricNames := func() map[string]bool {
@@ -231,12 +231,12 @@ var _ = Describe("VXLAN Policy Agent", func() {
 				VNI:               42,
 				FlannelSubnetFile: subnetFile.Name(),
 				MetronAddress:     fakeMetron.Address(),
-				ServerCACertFile:  serverCACertFile,
-				ClientCertFile:    clientCertFile,
-				ClientKeyFile:     clientKeyFile,
+				ServerCACertFile:  paths.ServerCACertFile,
+				ClientCertFile:    paths.ClientCertFile,
+				ClientKeyFile:     paths.ClientKeyFile,
 			}
 			configFilePath = WriteConfigFile(conf)
-			session = StartAgent(vxlanPolicyAgentPath, configFilePath)
+			session = StartAgent(paths.VxlanPolicyAgentPath, configFilePath)
 		})
 
 		It("still writes the default rules", func() {
@@ -263,7 +263,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 				VNI:               42,
 				FlannelSubnetFile: subnetFile.Name(),
 				MetronAddress:     fakeMetron.Address(),
-				ServerCACertFile:  serverCACertFile,
+				ServerCACertFile:  paths.ServerCACertFile,
 				ClientCertFile:    "totally",
 				ClientKeyFile:     "not-cool",
 			}
@@ -271,7 +271,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		})
 
 		It("does not start", func() {
-			session = StartAgent(vxlanPolicyAgentPath, configFilePath)
+			session = StartAgent(paths.VxlanPolicyAgentPath, configFilePath)
 			Eventually(session).Should(gexec.Exit(1))
 			Eventually(session.Out).Should(Say("unable to load cert or key"))
 		})

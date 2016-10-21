@@ -21,30 +21,31 @@ import (
 var DEFAULT_TIMEOUT = "5s"
 
 var (
-	certstrapBin         string
-	certDir              string
-	serverCACertFile     string
-	clientCACertFile     string
-	serverCertFile       string
-	serverKeyFile        string
-	clientCertFile       string
-	clientKeyFile        string
-	vxlanPolicyAgentPath string
+	certDir string
+	paths   testPaths
 )
+
+type testPaths struct {
+	ServerCACertFile     string
+	ClientCACertFile     string
+	ServerCertFile       string
+	ServerKeyFile        string
+	ClientCertFile       string
+	ClientKeyFile        string
+	VxlanPolicyAgentPath string
+}
 
 func TestIntegration(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Integration Suite")
 }
 
-var _ = BeforeSuite(func() {
-	rand.Seed(ginkgoConfig.GinkgoConfig.RandomSeed + int64(GinkgoParallelNode()))
-
+var _ = SynchronizedBeforeSuite(func() []byte {
 	var err error
 	certDir, err = ioutil.TempDir("", "netman-certs")
 	Expect(err).NotTo(HaveOccurred())
 
-	certstrapBin = fmt.Sprintf("/%s/certstrap", certDir)
+	certstrapBin := fmt.Sprintf("/%s/certstrap", certDir)
 	cmd := exec.Command("go", "build", "-o", certstrapBin, "github.com/square/certstrap")
 	Expect(cmd.Run()).NotTo(HaveOccurred())
 
@@ -53,23 +54,32 @@ var _ = BeforeSuite(func() {
 		CertPath: certDir,
 	}
 
-	serverCACertFile, err = certWriter.WriteCA("server-ca")
+	paths.ServerCACertFile, err = certWriter.WriteCA("server-ca")
 	Expect(err).NotTo(HaveOccurred())
-	serverCertFile, serverKeyFile, err = certWriter.WriteAndSignForServer("server", "server-ca")
+	paths.ServerCertFile, paths.ServerKeyFile, err = certWriter.WriteAndSignForServer("server", "server-ca")
 	Expect(err).NotTo(HaveOccurred())
 
-	clientCACertFile, err = certWriter.WriteCA("client-ca")
+	paths.ClientCACertFile, err = certWriter.WriteCA("client-ca")
 	Expect(err).NotTo(HaveOccurred())
-	clientCertFile, clientKeyFile, err = certWriter.WriteAndSignForClient("client", "client-ca")
+	paths.ClientCertFile, paths.ClientKeyFile, err = certWriter.WriteAndSignForClient("client", "client-ca")
 	Expect(err).NotTo(HaveOccurred())
 
 	fmt.Fprintf(GinkgoWriter, "building binary...")
-	vxlanPolicyAgentPath, err = gexec.Build("vxlan-policy-agent/cmd/vxlan-policy-agent", "-race")
+	paths.VxlanPolicyAgentPath, err = gexec.Build("vxlan-policy-agent/cmd/vxlan-policy-agent", "-race")
 	fmt.Fprintf(GinkgoWriter, "done")
 	Expect(err).NotTo(HaveOccurred())
+
+	data, err := json.Marshal(paths)
+	Expect(err).NotTo(HaveOccurred())
+
+	return data
+}, func(data []byte) {
+	Expect(json.Unmarshal(data, &paths)).To(Succeed())
+
+	rand.Seed(ginkgoConfig.GinkgoConfig.RandomSeed + int64(GinkgoParallelNode()))
 })
 
-var _ = AfterSuite(func() {
+var _ = SynchronizedAfterSuite(func() {}, func() {
 	gexec.CleanupBuildArtifacts()
 	os.Remove(certDir)
 })
