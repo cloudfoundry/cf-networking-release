@@ -41,7 +41,12 @@ var ListUsageRegex = fmt.Sprintf(`\A%s\s*(--app(\s+|=)\S+\z|\z)`, ListCommand)
 var AllowUsageRegex = fmt.Sprintf(`\A%s\s+\S+\s+\S+\s+(--|-)\w+(\s+|=)\w+\s+(--|-)\w+(\s+|=)\w+\z`, AllowCommand)
 var DenyUsageRegex = fmt.Sprintf(`\A%s\s+\S+\s+\S+\s+(--|-)\w+(\s+|=)\w+\s+(--|-)\w+(\s+|=)\w+\z`, DenyCommand)
 
+const MinPort = 1
+const MaxPort = 65535
+
 func (p *Plugin) GetMetadata() plugin.PluginMetadata {
+	const usageTemplate = "cf %s SOURCE_APP DESTINATION_APP --protocol <tcp|udp> --port [%d-%d]"
+
 	return plugin.PluginMetadata{
 		Name: "network-policy",
 		Version: plugin.VersionType{
@@ -57,7 +62,7 @@ func (p *Plugin) GetMetadata() plugin.PluginMetadata {
 				Name:     AllowCommand,
 				HelpText: "Allow direct network traffic from one app to another",
 				UsageDetails: plugin.Usage{
-					Usage: fmt.Sprintf("cf %s SOURCE_APP DESTINATION_APP --protocol <tcp|udp> --port [1-65535]", AllowCommand),
+					Usage: fmt.Sprintf(usageTemplate, AllowCommand, MinPort, MaxPort),
 					Options: map[string]string{
 						"-protocol": "Protocol to connect apps with. (required)",
 						"-port":     "Port to connect to destination app with. (required)",
@@ -76,7 +81,7 @@ func (p *Plugin) GetMetadata() plugin.PluginMetadata {
 				Name:     DenyCommand,
 				HelpText: "Remove direct network traffic from one app to another",
 				UsageDetails: plugin.Usage{
-					Usage: fmt.Sprintf("cf %s SOURCE_APP DESTINATION_APP --protocol <tcp|udp> --port [1-65535]", DenyCommand),
+					Usage: fmt.Sprintf(usageTemplate, DenyCommand, MinPort, MaxPort),
 					Options: map[string]string{
 						"-protocol": "Protocol to connect apps with. (required)",
 						"-port":     "Port to connect to destination app with. (required)",
@@ -177,6 +182,13 @@ func ValidateArgs(cliConnection plugin.CliConnection, args []string) (ValidArgs,
 	port, err := strconv.Atoi(*portString)
 	if err != nil {
 		return ValidArgs{}, errorWithUsage(fmt.Sprintf("Port is not valid: %s", *portString), args[0], cliConnection)
+	}
+	if port < MinPort || port > MaxPort {
+		return ValidArgs{}, errorWithUsage(fmt.Sprintf("Port is not valid. Must be in range [%d-%d].", MinPort, MaxPort), args[0], cliConnection)
+	}
+
+	if *protocol != "tcp" && *protocol != "udp" {
+		return ValidArgs{}, errorWithUsage("Protocol is not valid. Must be tcp or udp.", args[0], cliConnection)
 	}
 
 	validArgs.SourceAppName = srcAppName

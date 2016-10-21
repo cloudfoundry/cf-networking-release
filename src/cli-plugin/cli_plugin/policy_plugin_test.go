@@ -90,16 +90,41 @@ var _ = Describe("Plugin", func() {
 				c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
 				Expect(c).To(Equal([]string{"help", "command-arg"}))
 			})
-			Context("when the cf cli command fails", func() {
-				BeforeEach(func() {
-					fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{}, errors.New("banana"))
+		})
+
+		Context("when the port is out of range", func() {
+			It("returns a useful error", func() {
+				fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
+				_, err := cli_plugin.ValidateArgs(fakeCliConnection, []string{
+					"command-arg", "some-app", "some-other-app", "--protocol", "tcp", "--port", "0",
 				})
-				It("returns the error", func() {
-					_, err := cli_plugin.ValidateArgs(fakeCliConnection, []string{
-						"command-arg", "some-app", "some-other-app", "--protocol", "tcp", "--port", "not-an-int",
-					})
-					Expect(err).To(MatchError("cf cli error: banana"))
+				Expect(err).To(MatchError("Incorrect usage. Port is not valid. Must be in range [1-65535].\n\nUSAGE:\nbanana"))
+				c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
+				Expect(c).To(Equal([]string{"help", "command-arg"}))
+			})
+		})
+
+		Context("when the protocol is not tcp or udp", func() {
+			It("returns a useful error", func() {
+				fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
+				_, err := cli_plugin.ValidateArgs(fakeCliConnection, []string{
+					"command-arg", "some-app", "some-other-app", "--protocol", "kiwi", "--port", "8080",
 				})
+				Expect(err).To(MatchError("Incorrect usage. Protocol is not valid. Must be tcp or udp.\n\nUSAGE:\nbanana"))
+				c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
+				Expect(c).To(Equal([]string{"help", "command-arg"}))
+			})
+		})
+
+		Context("when the cf cli command fails", func() {
+			BeforeEach(func() {
+				fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{}, errors.New("banana"))
+			})
+			It("returns the error", func() {
+				_, err := cli_plugin.ValidateArgs(fakeCliConnection, []string{
+					"command-arg", "some-app", "some-other-app", "--protocol", "tcp", "--port", "not-an-int",
+				})
+				Expect(err).To(MatchError("cf cli error: banana"))
 			})
 		})
 	})
