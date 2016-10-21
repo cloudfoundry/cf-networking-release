@@ -100,6 +100,40 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			close(done)
 		}, 30*60 /* <-- overall spec timeout in seconds */)
 	})
+	Describe("sampleIPs", func() {
+		var population []string
+		BeforeEach(func() {
+			population = []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"}
+		})
+
+		It("returns a sample of unique choices from the population", func() {
+			sample := sampleIPs(population, 9)
+			Expect(len(sample)).To(Equal(9))
+			for i := 0; i < len(sample); i++ {
+				for j := i + 1; j < len(sample); j++ {
+					Expect(sample[i]).NotTo(Equal(sample[j]))
+				}
+			}
+		})
+		Context("when the sample size is larger than the population", func() {
+			It("returns the whole population", func() {
+				sample := sampleIPs(population, 999)
+				Expect(sample).To(Equal(population))
+			})
+		})
+		Context("when the sample size is zero", func() {
+			It("returns the whole population", func() {
+				sample := sampleIPs(population, 0)
+				Expect(sample).To(Equal(population))
+			})
+		})
+		Context("when the sample size is negative", func() {
+			It("returns the whole population", func() {
+				sample := sampleIPs(population, -1)
+				Expect(sample).To(Equal(population))
+			})
+		})
+	})
 })
 
 func getToken() string {
@@ -254,13 +288,15 @@ func getAppIPs(registry string) []string {
 
 func sampleIPs(population []string, sampleSize int) []string {
 	populationSize := len(population)
-	if len(population) < sampleSize || sampleSize == 0 {
-		sampleSize = populationSize
+	if len(population) < sampleSize || sampleSize < 1 {
+		return population
 	}
 	var sample = []string{}
 	for i := 0; i < sampleSize; i++ {
-		j := rand.Intn(populationSize + 1)
+		j := rand.Intn(populationSize)
 		sample = append(sample, population[j])
+		population = append(population[:j], population[j+1:]...)
+		populationSize--
 	}
 	return sample
 }
