@@ -14,6 +14,7 @@ files:
   - github.com/containernetworking/cni/pkg/types/*.go # gosub
   - github.com/containernetworking/cni/pkg/utils/*.go # gosub
   - github.com/containernetworking/cni/pkg/utils/hwaddr/*.go # gosub
+  - github.com/containernetworking/cni/pkg/version/*.go # gosub
   - github.com/containernetworking/cni/plugins/ipam/host-local/*.go # gosub
   - github.com/containernetworking/cni/plugins/ipam/host-local/backend/*.go # gosub
   - github.com/containernetworking/cni/plugins/ipam/host-local/backend/disk/*.go # gosub
@@ -22,5 +23,6 @@ files:
   - github.com/containernetworking/cni/vendor/github.com/coreos/go-iptables/iptables/*.go # gosub
   - github.com/containernetworking/cni/vendor/github.com/vishvananda/netlink/*.go # gosub
   - github.com/containernetworking/cni/vendor/github.com/vishvananda/netlink/nl/*.go # gosub
+  - github.com/containernetworking/cni/vendor/github.com/vishvananda/netns/*.go # gosub
   - github.com/containernetworking/cni/vendor/golang.org/x/sys/unix/*.go # gosub
   - github.com/containernetworking/cni/vendor/golang.org/x/sys/unix/*.s # gosub
