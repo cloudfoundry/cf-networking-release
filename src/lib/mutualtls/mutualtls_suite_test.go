@@ -17,16 +17,8 @@ import (
 )
 
 var (
-	certDir               string
-	serverCACertPath      string
-	clientCACertPath      string
-	serverCertPath        string
-	serverKeyPath         string
-	clientCertPath        string
-	clientKeyPath         string
-	wrongClientCACertPath string
-	wrongClientCertPath   string
-	wrongClientKeyPath    string
+	certDir string
+	paths   testPaths
 )
 
 type testPaths struct {
@@ -55,50 +47,27 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 		CertPath: certDir,
 	}
 
-	serverCACertPath, err = certWriter.WriteCA("server-ca")
+	paths.ServerCACertPath, err = certWriter.WriteCA("server-ca")
 	Expect(err).NotTo(HaveOccurred())
-	serverCertPath, serverKeyPath, err = certWriter.WriteAndSignForServer("server", "server-ca")
-	Expect(err).NotTo(HaveOccurred())
-
-	clientCACertPath, err = certWriter.WriteCA("client-ca")
-	Expect(err).NotTo(HaveOccurred())
-	clientCertPath, clientKeyPath, err = certWriter.WriteAndSignForClient("client", "client-ca")
+	paths.ServerCertPath, paths.ServerKeyPath, err = certWriter.WriteAndSignForServer("server", "server-ca")
 	Expect(err).NotTo(HaveOccurred())
 
-	wrongClientCACertPath, err = certWriter.WriteCA("wrong-client-ca")
+	paths.ClientCACertPath, err = certWriter.WriteCA("client-ca")
 	Expect(err).NotTo(HaveOccurred())
-	wrongClientCertPath, wrongClientKeyPath, err = certWriter.WriteAndSignForClient("wrong-client", "wrong-client-ca")
+	paths.ClientCertPath, paths.ClientKeyPath, err = certWriter.WriteAndSignForClient("client", "client-ca")
 	Expect(err).NotTo(HaveOccurred())
 
-	paths := testPaths{
-		serverCACertPath,
-		clientCACertPath,
-		serverCertPath,
-		serverKeyPath,
-		clientCertPath,
-		clientKeyPath,
-		wrongClientCACertPath,
-		wrongClientCertPath,
-		wrongClientKeyPath,
-	}
+	paths.WrongClientCACertPath, err = certWriter.WriteCA("wrong-client-ca")
+	Expect(err).NotTo(HaveOccurred())
+	paths.WrongClientCertPath, paths.WrongClientKeyPath, err = certWriter.WriteAndSignForClient("wrong-client", "wrong-client-ca")
+	Expect(err).NotTo(HaveOccurred())
+
 	data, err := json.Marshal(paths)
 	Expect(err).NotTo(HaveOccurred())
 
 	return data
 }, func(data []byte) {
-
-	var paths testPaths
 	Expect(json.Unmarshal(data, &paths)).To(Succeed())
-
-	serverCACertPath = paths.ServerCACertPath
-	clientCACertPath = paths.ClientCACertPath
-	serverCertPath = paths.ServerCertPath
-	serverKeyPath = paths.ServerKeyPath
-	clientCertPath = paths.ClientCertPath
-	clientKeyPath = paths.ClientKeyPath
-	wrongClientCACertPath = paths.WrongClientCACertPath
-	wrongClientCertPath = paths.WrongClientCertPath
-	wrongClientKeyPath = paths.WrongClientKeyPath
 
 	rand.Seed(config.GinkgoConfig.RandomSeed + int64(GinkgoParallelNode()))
 })
