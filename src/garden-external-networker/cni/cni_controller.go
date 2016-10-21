@@ -41,11 +41,12 @@ func (c *CNIController) Up(namespacePath, handle string, properties map[string]s
 			}
 		}
 
+		c.Logger.Info("up-add-network-start", lager.Data{"networkConfig": string(networkConfig.Bytes), "runtimeConfig": runtimeConfig})
 		result, err = c.CNIConfig.AddNetwork(networkConfig, runtimeConfig)
 		if err != nil {
 			return nil, fmt.Errorf("add network failed: %s", err)
 		}
-		c.Logger.Info("up-result", lager.Data{"name": networkConfig.Network.Name, "type": networkConfig.Network.Type, "result": result.String()})
+		c.Logger.Info("up-add-network-result", lager.Data{"name": networkConfig.Network.Name, "type": networkConfig.Network.Type, "result": result.String()})
 	}
 	c.Logger.Info("up-complete", lager.Data{"numConfigs": len(c.NetworkConfigs)})
 
@@ -61,12 +62,13 @@ func (c *CNIController) Down(namespacePath, handle string) error {
 			IfName:      fmt.Sprintf("eth%d", i),
 		}
 
+		c.Logger.Info("down-del-network-start", lager.Data{"networkConfig": string(networkConfig.Bytes), "runtimeConfig": runtimeConfig})
 		err = c.CNIConfig.DelNetwork(networkConfig, runtimeConfig)
 		if err != nil {
 			return fmt.Errorf("del network failed: %s", err)
 		}
 
-		c.Logger.Info("down-result", lager.Data{"name": networkConfig.Network.Name, "type": networkConfig.Network.Type})
+		c.Logger.Info("down-del-network-result", lager.Data{"name": networkConfig.Network.Name, "type": networkConfig.Network.Type})
 	}
 	c.Logger.Info("down-complete", lager.Data{"numConfigs": len(c.NetworkConfigs)})
 
