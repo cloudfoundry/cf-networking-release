@@ -4,6 +4,24 @@ package fakes
 import "sync"
 
 type CheckCLIAdapter struct {
+	OrgGuidStub        func(name string) (string, error)
+	orgGuidMutex       sync.RWMutex
+	orgGuidArgsForCall []struct {
+		name string
+	}
+	orgGuidReturns struct {
+		result1 string
+		result2 error
+	}
+	AppCountStub        func(orgGuid string) (int, error)
+	appCountMutex       sync.RWMutex
+	appCountArgsForCall []struct {
+		orgGuid string
+	}
+	appCountReturns struct {
+		result1 int
+		result2 error
+	}
 	CheckAppStub        func(guid string) ([]byte, error)
 	checkAppMutex       sync.RWMutex
 	checkAppArgsForCall []struct {
@@ -24,6 +42,74 @@ type CheckCLIAdapter struct {
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
+}
+
+func (fake *CheckCLIAdapter) OrgGuid(name string) (string, error) {
+	fake.orgGuidMutex.Lock()
+	fake.orgGuidArgsForCall = append(fake.orgGuidArgsForCall, struct {
+		name string
+	}{name})
+	fake.recordInvocation("OrgGuid", []interface{}{name})
+	fake.orgGuidMutex.Unlock()
+	if fake.OrgGuidStub != nil {
+		return fake.OrgGuidStub(name)
+	} else {
+		return fake.orgGuidReturns.result1, fake.orgGuidReturns.result2
+	}
+}
+
+func (fake *CheckCLIAdapter) OrgGuidCallCount() int {
+	fake.orgGuidMutex.RLock()
+	defer fake.orgGuidMutex.RUnlock()
+	return len(fake.orgGuidArgsForCall)
+}
+
+func (fake *CheckCLIAdapter) OrgGuidArgsForCall(i int) string {
+	fake.orgGuidMutex.RLock()
+	defer fake.orgGuidMutex.RUnlock()
+	return fake.orgGuidArgsForCall[i].name
+}
+
+func (fake *CheckCLIAdapter) OrgGuidReturns(result1 string, result2 error) {
+	fake.OrgGuidStub = nil
+	fake.orgGuidReturns = struct {
+		result1 string
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *CheckCLIAdapter) AppCount(orgGuid string) (int, error) {
+	fake.appCountMutex.Lock()
+	fake.appCountArgsForCall = append(fake.appCountArgsForCall, struct {
+		orgGuid string
+	}{orgGuid})
+	fake.recordInvocation("AppCount", []interface{}{orgGuid})
+	fake.appCountMutex.Unlock()
+	if fake.AppCountStub != nil {
+		return fake.AppCountStub(orgGuid)
+	} else {
+		return fake.appCountReturns.result1, fake.appCountReturns.result2
+	}
+}
+
+func (fake *CheckCLIAdapter) AppCountCallCount() int {
+	fake.appCountMutex.RLock()
+	defer fake.appCountMutex.RUnlock()
+	return len(fake.appCountArgsForCall)
+}
+
+func (fake *CheckCLIAdapter) AppCountArgsForCall(i int) string {
+	fake.appCountMutex.RLock()
+	defer fake.appCountMutex.RUnlock()
+	return fake.appCountArgsForCall[i].orgGuid
+}
+
+func (fake *CheckCLIAdapter) AppCountReturns(result1 int, result2 error) {
+	fake.AppCountStub = nil
+	fake.appCountReturns = struct {
+		result1 int
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *CheckCLIAdapter) CheckApp(guid string) ([]byte, error) {
@@ -97,6 +183,10 @@ func (fake *CheckCLIAdapter) AppGuidReturns(result1 string, result2 error) {
 func (fake *CheckCLIAdapter) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.orgGuidMutex.RLock()
+	defer fake.orgGuidMutex.RUnlock()
+	fake.appCountMutex.RLock()
+	defer fake.appCountMutex.RUnlock()
 	fake.checkAppMutex.RLock()
 	defer fake.checkAppMutex.RUnlock()
 	fake.appGuidMutex.RLock()

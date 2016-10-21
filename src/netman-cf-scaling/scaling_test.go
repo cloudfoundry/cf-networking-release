@@ -25,8 +25,8 @@ import (
 
 const Timeout_Check = 20 * time.Minute
 
-// 2 * Agent Total Poll Time
-const Policy_Update_Wait = 120 * time.Second
+// 3 * observed agent total poll time with 200 containers per cell
+const Policy_Update_Wait = 180 * time.Second
 
 var ports []int
 

@@ -1,6 +1,7 @@
 package cf_cli_adapter
 
 import (
+	"encoding/json"
 	"fmt"
 	"os/exec"
 	"strings"
@@ -64,6 +65,26 @@ func (a *Adapter) AppGuid(name string) (string, error) {
 	fmt.Printf("running: %s app %s --guid\n", a.CfCliPath, name)
 	bytes, err := exec.Command(a.CfCliPath, "app", name, "--guid").CombinedOutput()
 	return strings.TrimSpace(string(bytes)), err
+}
+
+type Apps struct {
+	TotalResults int `json:"total_results"`
+}
+
+func (a *Adapter) OrgGuid(name string) (string, error) {
+	fmt.Printf("running: %s org %s --guid\n", a.CfCliPath, name)
+	bytes, err := exec.Command(a.CfCliPath, "org", name, "--guid").CombinedOutput()
+	return strings.TrimSpace(string(bytes)), err
+}
+
+func (a *Adapter) AppCount(orgGuid string) (int, error) {
+	fmt.Printf("running: %s curl \"/v2/apps?q=organization_guid%%20IN%%20%s\"\n", a.CfCliPath, orgGuid)
+	bytes, err := exec.Command(a.CfCliPath, "curl", fmt.Sprintf("/v2/apps?q=organization_guid%%20IN%%20%s", orgGuid)).CombinedOutput()
+	apps := &Apps{}
+	if err := json.Unmarshal(bytes, apps); err != nil {
+		return -1, err
+	}
+	return apps.TotalResults, err
 }
 
 func (a *Adapter) CheckApp(guid string) ([]byte, error) {

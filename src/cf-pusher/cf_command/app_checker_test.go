@@ -17,6 +17,7 @@ var _ = Describe("AppChecker", func() {
 	BeforeEach(func() {
 		fakeAdapter = &fakes.CheckCLIAdapter{}
 		appChecker = &cf_command.AppChecker{
+			Org:     "some-org-name",
 			Adapter: fakeAdapter,
 		}
 	})
@@ -31,7 +32,8 @@ var _ = Describe("AppChecker", func() {
 			fakeAdapter.AppGuidReturns("some-guid-1", nil)
 			str := `{ "guid": "some-guid-1", "name": "scale-tick-1", "running_instances": 2, "instances": 2, "state": "STARTED"}`
 			fakeAdapter.CheckAppReturns([]byte(str), nil)
-
+			fakeAdapter.OrgGuidReturns("some-org-guid", nil)
+			fakeAdapter.AppCountReturns(1, nil)
 		})
 		It("when the app is in state running", func() {
 			err := appChecker.CheckApps()
@@ -42,6 +44,41 @@ var _ = Describe("AppChecker", func() {
 
 			Expect(fakeAdapter.CheckAppCallCount()).To(Equal(1))
 			Expect(fakeAdapter.CheckAppArgsForCall(0)).To(Equal("some-guid-1"))
+
+			Expect(fakeAdapter.OrgGuidCallCount()).To(Equal(1))
+			Expect(fakeAdapter.OrgGuidArgsForCall(0)).To(Equal("some-org-name"))
+			Expect(fakeAdapter.AppCountCallCount()).To(Equal(1))
+			Expect(fakeAdapter.AppCountArgsForCall(0)).To(Equal("some-org-guid"))
+		})
+
+		Context("when org guid fails", func() {
+			BeforeEach(func() {
+				fakeAdapter.OrgGuidReturns("", errors.New("potato"))
+			})
+			It("returns a meaningful error", func() {
+				err := appChecker.CheckApps()
+				Expect(err).To(MatchError("checking org guid some-org-name: potato"))
+			})
+		})
+
+		Context("when app count fails", func() {
+			BeforeEach(func() {
+				fakeAdapter.AppCountReturns(-1, errors.New("potato"))
+			})
+			It("returns a meaningful error", func() {
+				err := appChecker.CheckApps()
+				Expect(err).To(MatchError("checking app counts: potato"))
+			})
+		})
+
+		Context("when app count does not match", func() {
+			BeforeEach(func() {
+				fakeAdapter.AppCountReturns(2, nil)
+			})
+			It("returns a meaningful error", func() {
+				err := appChecker.CheckApps()
+				Expect(err).To(MatchError("app count 2 does not match 1"))
+			})
 		})
 
 		Context("when check app guid fails", func() {

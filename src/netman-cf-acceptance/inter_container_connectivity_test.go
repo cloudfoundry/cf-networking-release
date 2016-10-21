@@ -12,9 +12,11 @@ import (
 	"os/exec"
 	"time"
 
+	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gexec"
 )
 
 const Timeout_Short = 10 * time.Second
@@ -55,6 +57,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			appReport(appProxy, Timeout_Short)
 			appReport(appRegistry, Timeout_Short)
 			appsReport(appsTest, Timeout_Short)
+			Expect(cf.Cf("delete-org", prefix+"org", "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 		})
 
 		It("allows the user to configure policies", func(done Done) {

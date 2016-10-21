@@ -97,25 +97,6 @@ func main() {
 		RoutePorts:       -1,
 	}
 
-	orgDeleter := &cf_command.OrgDeleter{
-		Org:     scaleGroup.Org,
-		Quota:   quota,
-		Adapter: adapter,
-	}
-	if err = orgDeleter.Delete(); err != nil {
-		log.Fatalf("deleting org: %s", err)
-	}
-
-	orgSpaceCreator := &cf_command.OrgSpaceCreator{
-		Org:     scaleGroup.Org,
-		Space:   scaleGroup.Space,
-		Quota:   quota,
-		Adapter: adapter,
-	}
-	if err = orgSpaceCreator.Create(); err != nil {
-		log.Fatalf("creating org and space: %s", err)
-	}
-
 	proxyApp := cf_command.Application{
 		Name:      scaleGroup.ProxyApp,
 		Directory: filepath.Join(appsDir, "proxy"),
@@ -125,7 +106,6 @@ func main() {
 		Name:      scaleGroup.Registry,
 		Directory: filepath.Join(appsDir, "registry"),
 	}
-
 	appsToPush := []cf_command.Application{proxyApp, registryApp}
 
 	tickManifest := models.Manifest{
@@ -153,6 +133,39 @@ func main() {
 		appsToPush = append(appsToPush, t)
 	}
 
+	appChecker := cf_command.AppChecker{
+		Org:          scaleGroup.Org,
+		Applications: appsToPush,
+		Adapter:      adapter,
+	}
+
+	adapter.TargetOrg(scaleGroup.Org)
+	adapter.TargetSpace(scaleGroup.Space)
+	err = appChecker.CheckApps()
+	if err == nil {
+		success(scaleGroup)
+		return
+	}
+
+	orgDeleter := &cf_command.OrgDeleter{
+		Org:     scaleGroup.Org,
+		Quota:   quota,
+		Adapter: adapter,
+	}
+	if err = orgDeleter.Delete(); err != nil {
+		log.Fatalf("deleting org: %s", err)
+	}
+
+	orgSpaceCreator := &cf_command.OrgSpaceCreator{
+		Org:     scaleGroup.Org,
+		Space:   scaleGroup.Space,
+		Quota:   quota,
+		Adapter: adapter,
+	}
+	if err = orgSpaceCreator.Create(); err != nil {
+		log.Fatalf("creating org and space: %s", err)
+	}
+
 	manifestGenerator := &manifest_generator.ManifestGenerator{}
 	appPusher := cf_command.AppPusher{
 		Applications:      appsToPush,
@@ -163,11 +176,6 @@ func main() {
 
 	if err := appPusher.Push(); err != nil {
 		log.Printf("Got an error while pushing apps: %s", err)
-	}
-
-	appChecker := cf_command.AppChecker{
-		Applications: appsToPush,
-		Adapter:      adapter,
 	}
 
 	maxRetries := 5
@@ -185,6 +193,10 @@ func main() {
 		}
 	}
 
+	success(scaleGroup)
+}
+
+func success(scaleGroup ScaleGroup) {
 	output, err := json.Marshal(scaleGroup)
 	if err != nil {
 		log.Fatalf("%s", err)
