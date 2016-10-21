@@ -26,6 +26,35 @@ The built-in flannel CNI plugin does this.
   ```
   Remove any lingering references to `flannel` or `cni-flannel` in the deployment manifest.
 
+## What data will my CNI plugin receive?
+The `garden-external-networker` will invoke one or more CNI plugins, according to the [CNI Spec](https://github.com/containernetworking/cni/blob/master/SPEC.md).
+It will start with the CNI config files available in the `cni_config_dir` and also inject
+some dynamic information about the container, including the CloudFoundry App, Space and Org that it belongs to.
+
+Here's an example of the Network Configuration data that is passed to the `flannel` plugin:
+```json
+{
+  "type": "flannel",
+  "name": "cni-flannel",
+  "delegate": {
+    "bridge": "cni-flannel0",
+    "ipMasq": false,
+    "isDefaultGateway": true
+  },
+
+  "network": {
+    "properties": {
+      "app_id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
+      "org_id": "2ac41bbf-8eae-4f28-abab-51ca38dea3e4",
+      "policy_group_id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
+      "space_id": "4246c57d-aefc-49cc-afe0-5f734e2656e8"
+    }
+  }
+}
+```
+Note that the `delegate`, `name` and `type` fields are present in the static `30-flannel.conf` file provided by the BOSH release.
+At runtime, the `garden-external-networker` also injects the `network` field with `properties` which include CF-specific info.
+
 ## To deploy a local-only (no-op) CNI plugin
 As a baseline, you can deploy using only the basic [bridge CNI plugin](https://github.com/containernetworking/cni/blob/master/Documentation/bridge.md).
 
