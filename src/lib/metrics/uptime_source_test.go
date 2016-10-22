@@ -14,7 +14,7 @@ var _ = Describe("UptimeSource", func() {
 		Expect(uptimeSource.Name).To(Equal("uptime"))
 		Expect(uptimeSource.Unit).To(Equal("seconds"))
 
-		Eventually(uptimeSource.Getter, "2s").Should(
-			BeNumerically(">", 1))
+		Eventually(uptimeSource.Getter, "2.5s").Should(
+			BeNumerically(">=", 2))
 	})
 })
