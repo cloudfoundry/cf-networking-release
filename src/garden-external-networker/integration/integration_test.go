@@ -143,7 +143,7 @@ var _ = Describe("Garden External Networker", func() {
 		Expect(err).NotTo(HaveOccurred())
 		fakeConfigFilePath = configFile.Name()
 		config := map[string]interface{}{
-			"cni_plugin_dir":  cniPluginDir,
+			"cni_plugin_dir":  paths.CniPluginDir,
 			"cni_config_dir":  cniConfigDir,
 			"bind_mount_dir":  bindMountRoot,
 			"overlay_network": "10.255.0.0/16",
@@ -157,7 +157,7 @@ var _ = Describe("Garden External Networker", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(configFile.Close()).To(Succeed())
 
-		upCommand = exec.Command(pathToAdapter)
+		upCommand = exec.Command(paths.PathToAdapter)
 		upCommand.Env = append(os.Environ(), "FAKE_LOG_DIR="+fakeLogDir)
 		upCommand.Stdin = buildStdin(map[string]interface{}{
 			"pid": fakePid,
@@ -168,17 +168,17 @@ var _ = Describe("Garden External Networker", func() {
 		},
 		)
 		upCommand.Args = []string{
-			pathToAdapter,
+			paths.PathToAdapter,
 			"--configFile", fakeConfigFilePath,
 			"--action", "up",
 			"--handle", containerHandle,
 		}
 
-		downCommand = exec.Command(pathToAdapter)
+		downCommand = exec.Command(paths.PathToAdapter)
 		downCommand.Env = append(os.Environ(), "FAKE_LOG_DIR="+fakeLogDir)
 		downCommand.Stdin = strings.NewReader(`{}`)
 		downCommand.Args = []string{
-			pathToAdapter,
+			paths.PathToAdapter,
 			"--action", "down",
 			"--handle", containerHandle,
 			"--configFile", fakeConfigFilePath,
@@ -217,7 +217,7 @@ var _ = Describe("Garden External Networker", func() {
 			Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_COMMAND", "ADD"))
 			Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_CONTAINERID", containerHandle))
 			Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_IFNAME", fmt.Sprintf("eth%d", i)))
-			Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_PATH", cniPluginDir))
+			Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_PATH", paths.CniPluginDir))
 			Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_NETNS", expectedNetNSPath))
 			Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_ARGS", ""))
 		}
@@ -239,7 +239,7 @@ var _ = Describe("Garden External Networker", func() {
 			Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_COMMAND", "DEL"))
 			Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_CONTAINERID", containerHandle))
 			Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_IFNAME", fmt.Sprintf("eth%d", i)))
-			Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_PATH", cniPluginDir))
+			Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_PATH", paths.CniPluginDir))
 			Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_NETNS", expectedNetNSPath))
 			Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_ARGS", ""))
 		}
@@ -250,14 +250,14 @@ var _ = Describe("Garden External Networker", func() {
 
 	Describe("NetOut rule lifecycle", func() {
 		var buildNetOutCommand = func(containerIP string, rule garden.NetOutRule) *exec.Cmd {
-			netOutCommand := exec.Command(pathToAdapter)
+			netOutCommand := exec.Command(paths.PathToAdapter)
 			netOutCommand.Env = append(os.Environ(), "FAKE_LOG_DIR="+fakeLogDir)
 			netOutCommand.Stdin = buildStdin(map[string]interface{}{
 				"container_ip": containerIP,
 				"netout_rule":  rule,
 			})
 			netOutCommand.Args = []string{
-				pathToAdapter,
+				paths.PathToAdapter,
 				"--action", "net-out",
 				"--handle", containerHandle,
 				"--configFile", fakeConfigFilePath,
@@ -316,7 +316,7 @@ var _ = Describe("Garden External Networker", func() {
 		var netInCommand *exec.Cmd
 
 		BeforeEach(func() {
-			netInCommand = exec.Command(pathToAdapter)
+			netInCommand = exec.Command(paths.PathToAdapter)
 			netInCommand.Env = append(os.Environ(), "FAKE_LOG_DIR="+fakeLogDir)
 			netInCommand.Stdin = buildStdin(map[string]interface{}{
 				"HostIP":        "1.2.3.4",
@@ -325,7 +325,7 @@ var _ = Describe("Garden External Networker", func() {
 				"ContainerPort": 8080,
 			})
 			netInCommand.Args = []string{
-				pathToAdapter,
+				paths.PathToAdapter,
 				"--action", "net-in",
 				"--handle", containerHandle,
 				"--configFile", fakeConfigFilePath,

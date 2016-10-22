@@ -1,6 +1,7 @@
 package integration_test
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"math/rand"
 	"os"
@@ -21,31 +22,41 @@ func TestIntegration(t *testing.T) {
 }
 
 var (
-	pathToAdapter  string
-	cniPluginDir   string
-	cniPluginNames []string
+	paths testPaths
 )
 
-var _ = BeforeSuite(func() {
-	rand.Seed(config.GinkgoConfig.RandomSeed)
+type testPaths struct {
+	PathToAdapter string
+	CniPluginDir  string
+}
 
+var _ = SynchronizedBeforeSuite(func() []byte {
 	var err error
-	pathToAdapter, err = gexec.Build("garden-external-networker", "-race")
+	paths.PathToAdapter, err = gexec.Build("garden-external-networker", "-race")
 	Expect(err).NotTo(HaveOccurred())
 
 	pathToFakeCNIPlugin, err := gexec.Build("garden-external-networker/integration/fake-cni-plugin", "-race")
 	Expect(err).NotTo(HaveOccurred())
 
-	cniPluginDir, err = ioutil.TempDir("", "cni-plugin-")
+	paths.CniPluginDir, err = ioutil.TempDir("", "cni-plugin-")
 	Expect(err).NotTo(HaveOccurred())
 
-	cniPluginNames = []string{"plugin-0", "plugin-1", "plugin-2", "plugin-3"}
+	cniPluginNames := []string{"plugin-0", "plugin-1", "plugin-2", "plugin-3"}
 	for _, name := range cniPluginNames {
-		os.Link(pathToFakeCNIPlugin, filepath.Join(cniPluginDir, name))
+		os.Link(pathToFakeCNIPlugin, filepath.Join(paths.CniPluginDir, name))
 	}
+
+	data, err := json.Marshal(paths)
+	Expect(err).NotTo(HaveOccurred())
+
+	return data
+}, func(data []byte) {
+	Expect(json.Unmarshal(data, &paths)).To(Succeed())
+
+	rand.Seed(config.GinkgoConfig.RandomSeed)
 })
 
-var _ = AfterSuite(func() {
+var _ = SynchronizedAfterSuite(func() {}, func() {
 	gexec.CleanupBuildArtifacts()
-	Expect(os.RemoveAll(cniPluginDir)).To(Succeed())
+	Expect(os.RemoveAll(paths.CniPluginDir)).To(Succeed())
 })

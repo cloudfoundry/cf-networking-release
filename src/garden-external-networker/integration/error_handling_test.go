@@ -55,8 +55,8 @@ var _ = Describe("Garden External Networker errors", func() {
 		}
 		writeConfig(defaultConfig)
 
-		command = exec.Command(pathToAdapter)
-		command.Args = []string{pathToAdapter,
+		command = exec.Command(paths.PathToAdapter)
+		command.Args = []string{paths.PathToAdapter,
 			"--action=up",
 			"--handle=some-container-handle",
 			"--configFile=" + fakeConfigFilePath,
@@ -213,9 +213,9 @@ var _ = Describe("Garden External Networker errors", func() {
 					Expect(session.Out.Contents()).To(BeEmpty())
 					Expect(session.Err.Contents()).To(ContainSubstring(`this is a plugin for Garden-runC.  Don't run it directly.`))
 				},
-				Entry("no args", []string{pathToAdapter}),
-				Entry("short help", []string{pathToAdapter, "-h"}),
-				Entry("long help", []string{pathToAdapter, "--help"}),
+				Entry("no args", []string{paths.PathToAdapter}),
+				Entry("short help", []string{paths.PathToAdapter, "-h"}),
+				Entry("long help", []string{paths.PathToAdapter, "--help"}),
 			)
 		})
 	})
