@@ -125,6 +125,12 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 				Expect(sample).To(Equal(population))
 			})
 		})
+		Context("when the sample size is equal to the population size", func() {
+			It("returns the whole population", func() {
+				sample := sampleIPs(population, len(population))
+				Expect(sample).To(Equal(population))
+			})
+		})
 		Context("when the sample size is zero", func() {
 			It("returns the whole population", func() {
 				sample := sampleIPs(population, 0)
@@ -290,7 +296,7 @@ func getAppIPs(registry string) []string {
 
 func sampleIPs(population []string, sampleSize int) []string {
 	populationSize := len(population)
-	if len(population) < sampleSize || sampleSize < 1 {
+	if len(population) <= sampleSize || sampleSize < 1 {
 		return population
 	}
 	var sample = []string{}
