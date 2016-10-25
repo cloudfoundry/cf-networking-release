@@ -61,6 +61,13 @@ func (a *Adapter) Push(name, directory, manifestFile string) error {
 	return err
 }
 
+func (a *Adapter) Scale(name string, instances int) error {
+	instancesStr := fmt.Sprintf("%d", instances)
+	fmt.Printf("running: %s scale %s -i %s\n", a.CfCliPath, name, instancesStr)
+	err := exec.Command(a.CfCliPath, "scale", name, "-i", instancesStr).Run()
+	return err
+}
+
 func (a *Adapter) AppGuid(name string) (string, error) {
 	fmt.Printf("running: %s app %s --guid\n", a.CfCliPath, name)
 	bytes, err := exec.Command(a.CfCliPath, "app", name, "--guid").CombinedOutput()

@@ -33,6 +33,15 @@ echo generate vanilla diego deployment manifest
 pushd ${DIEGO_RELEASE_DIR}
   ./scripts/generate-bosh-lite-manifests \
     -g \
+    -n ${NETMAN_RELEASE_DIR}/manifest-generation/stubs/diego/instance-count-overrides.yml
+popd
+
+mv ${DIEGO_MANIFESTS_DIR}/diego.yml ${NETMAN_MANIFESTS_DIR}/diego.yml
+
+echo generate diego with netman deployment manifest
+pushd ${DIEGO_RELEASE_DIR}
+  ./scripts/generate-bosh-lite-manifests \
+    -g \
     -n ${NETMAN_RELEASE_DIR}/manifest-generation/stubs/diego/instance-count-overrides.yml \
     -N ${NETMAN_RELEASE_DIR}/manifest-generation/stubs/bosh-lite-netman-diego.yml
 popd
