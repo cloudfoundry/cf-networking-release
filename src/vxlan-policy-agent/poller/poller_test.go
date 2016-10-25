@@ -71,7 +71,7 @@ var _ = Describe("Poller", func() {
 			ready := make(chan struct{})
 			go p.Run(signals, ready)
 			Eventually(ready).Should(BeClosed())
-			Expect(timeMetricsEmitter.EmitAllCallCount()).To(BeNumerically(">", 0))
+			Eventually(timeMetricsEmitter.EmitAllCallCount).Should(BeNumerically(">", 0))
 			signals <- os.Interrupt
 		})
 
