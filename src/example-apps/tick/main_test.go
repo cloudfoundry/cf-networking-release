@@ -132,7 +132,7 @@ var _ = Describe("Tick app", func() {
 		StartTick()
 
 		By("checking that the tick app registers itself")
-		Eventually(getInstances).Should(HaveLen(1))
+		Eventually(getInstances, "5s").Should(HaveLen(1))
 
 		By("validating the service metadata")
 		instances, err := getInstances()
