@@ -20,6 +20,7 @@ A [Garden-runC](https://github.com/cloudfoundry/garden-runc-release) add-on that
 - [3rd Party Plugin Development](docs/3rd-party.md)
 - [Contributing to Netman](docs/contributing.md)
 - [Operation](docs/operation.md)
+- [Known Issues](docs/known-issues.md)
 
 ## Project links
 - [Design doc for Container Networking Policy](https://docs.google.com/document/d/1HDS89TJKD7ACG6cqQHph5BdNSKLt8jvo6sPGBZ5DmsM)
