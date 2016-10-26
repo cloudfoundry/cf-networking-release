@@ -19,7 +19,7 @@ import (
 )
 
 const Timeout_Short = 10 * time.Second
-const BOSH_DEPLOY_TIMEOUT = 5 * time.Minute
+const BOSH_DEPLOY_TIMEOUT = 75 * time.Minute
 
 var (
 	config     helpers.Config
