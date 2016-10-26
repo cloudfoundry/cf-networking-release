@@ -6,13 +6,11 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"strings"
 	"time"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 
 	"testing"
@@ -32,6 +30,7 @@ type BoshConfig struct {
 	AdminUser      string `json:"bosh_admin_user"`
 	AdminPassword  string `json:"bosh_admin_password"`
 	DeploymentName string `json:"bosh_deployment_name"`
+	DirectorCACert string `json:"bosh_director_ca_cert"`
 }
 
 func TestNetmanCfUpgrade(t *testing.T) {
@@ -49,20 +48,24 @@ var _ = BeforeSuite(func() {
 	cli = &cf_cli_adapter.Adapter{CfCliPath: "cf"}
 })
 
-func boshCmd(manifest, action, completeMsg string) {
-	args := []string{"-n"}
-	if manifest != "" {
-		args = append(args, "-d", manifest)
-	}
-	args = append(args, strings.Split(action, " ")...)
-	cmd := bosh(args...)
+func boshDeploy(manifestPath string) {
+	bosh("deploy", manifestPath)
+}
+
+func boshDeleteDeployment() {
+	bosh("delete-deployment")
+}
+
+func bosh(args ...string) {
+	boshArgs := append([]string{
+		"-n",
+		"--environment", boshConfig.DirectorURL,
+		"--deployment", boshConfig.DeploymentName,
+		"--user", boshConfig.AdminUser,
+		"--password", boshConfig.AdminPassword,
+		"--ca-cert", boshConfig.DirectorCACert}, args...)
+	cmd := exec.Command("bosh-cli", boshArgs...)
 	sess, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 	Expect(err).NotTo(HaveOccurred())
 	Eventually(sess, BOSH_DEPLOY_TIMEOUT).Should(gexec.Exit(0))
-	Expect(sess).To(gbytes.Say(completeMsg))
-}
-
-func bosh(args ...string) *exec.Cmd {
-	boshArgs := append([]string{"-t", boshConfig.DirectorURL, "-u", boshConfig.AdminUser, "-p", boshConfig.AdminPassword}, args...)
-	return exec.Command("bosh", boshArgs...)
 }

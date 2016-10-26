@@ -1,7 +1,6 @@
 package netman_cf_upgrade_test
 
 import (
-	"fmt"
 	"net/http"
 	"os"
 	"time"
@@ -10,16 +9,15 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("NetmanUpgrade", func() {
-
+var _ = Describe("apps remain available during an upgrade deploy", func() {
 	It("upgrades CF with no downtime", func() {
 		baseManifest := os.Getenv("BASE_MANIFEST")
 		upgradeManifest := os.Getenv("UPGRADE_MANIFEST")
-		By("deleting the diego deployment")
-		boshCmd("", fmt.Sprintf("delete deployment %s", boshConfig.DeploymentName), "")
+		By("deleting the deployment")
+		boshDeleteDeployment()
 
-		By("deploying CF without netman")
-		boshCmd(baseManifest, "deploy", fmt.Sprintf("Deployed '%s'", boshConfig.DeploymentName))
+		By("deploying base manifest")
+		boshDeploy(baseManifest)
 
 		By("pushing the proxy app")
 		Expect(cli.SetApiWithoutSsl(config.ApiEndpoint)).To(Succeed())
@@ -37,8 +35,8 @@ var _ = Describe("NetmanUpgrade", func() {
 		By("checking the app continuously")
 		go checkStatusCodeContinuously()
 
-		By("deploying CF with netman")
-		boshCmd(upgradeManifest, "deploy", fmt.Sprintf("Deployed '%s'", boshConfig.DeploymentName))
+		By("deploying upgrade manifest")
+		boshDeploy(upgradeManifest)
 	})
 })
 
