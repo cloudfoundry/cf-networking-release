@@ -1,5 +1,7 @@
 ---
-image: docker:///c2cnetworking/deploy
+image_resource:
+  type: docker-image
+  source: { repository: c2cnetworking/deploy }
 
 platform: linux
 
