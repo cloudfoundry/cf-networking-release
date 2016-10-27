@@ -1,5 +1,29 @@
 # Known Issues
 
+- ### Missing Feature Parity For Application Security Groups
+  Current support for application security groups in netman is incomplete:
+  - The only supported protocols are `tcp` and `udp`, this means `icmp` protocol,
+    code and type are not supported
+  - Only single ports are supported, not ranges
+  - We currently do not support logging in ASGs
+
+- ###  Behavior Changes From Existing Application Security Groups
+  Current implementations of ASGs allow opening security groups to other containers
+  via the NATed port on the diego cell. With container networking we only support
+  direct addressing of other containers through the overlay network and app-to-app
+  policy system. Direct addressing of other containers (without going through the gorouter)
+  on the underlay is not supported and may result in undefined behavior.
+
+- ###  Performance Issues
+  The policy update cycle can take a few minutes when a cell has more than 50
+  app containers. If you are running a deployment with many apps per cell,
+  you can expect to wait around 5 minutes for the policies to be applied.
+
+- ### CIDR blocks other than /16
+  It is possible to configure the CIDR block for containers to be something
+  other than the default of /16. This hasn't been tested.
+  We don't know what happens. Good luck.
+
 - ### Blue/Green deploys of apps must reconfigure policies
   Following the instructions
   [here](https://docs.cloudfoundry.org/devguide/deploy-apps/blue-green.html),
