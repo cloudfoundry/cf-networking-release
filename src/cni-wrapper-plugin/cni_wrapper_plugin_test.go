@@ -2,6 +2,7 @@ package main_test
 
 import (
 	"io/ioutil"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -20,19 +21,21 @@ var _ = Describe("CniWrapperPlugin", func() {
 		expectedCmdArgs skel.CmdArgs
 	)
 
+	const delegateInput = `
+{
+		"type": "noop",
+		"some": "other data"
+}
+`
+
 	const input = `
 {
   "name": "cni-wrapper",
   "type": "wrapper",
   "datastore": "/path/to/datastore",
-	"delegate": {
-			"name": "cni-noop",
-			"type": "noop",
-			"delegate":
-			{"some":"stdin-json", "cniVersion": "0.2.0"}
-   }
-}
-`
+	"delegate": ` +
+		delegateInput +
+		`}`
 
 	BeforeEach(func() {
 
@@ -41,9 +44,12 @@ var _ = Describe("CniWrapperPlugin", func() {
 		Expect(debugFile.Close()).To(Succeed())
 		debugFileName = debugFile.Name()
 
+		debug = &noop_debug.Debug{
+			ReportResult:         `{ "ip4": { "ip": "1.2.3.4/32" } }`,
+			ReportVersionSupport: []string{"0.1.0", "0.2.0", "0.3.0"},
+		}
 		Expect(debug.WriteDebug(debugFileName)).To(Succeed())
 
-		// fmt.Println(debugFileName)
 		cmd = exec.Command(paths.PathToPlugin)
 		cmd.Env = []string{
 			"CNI_COMMAND=ADD",
@@ -65,13 +71,25 @@ var _ = Describe("CniWrapperPlugin", func() {
 	})
 
 	AfterEach(func() {
-		//os.Remove(debugFileName)
+		os.Remove(debugFileName)
 	})
 
-	It("responds to ADD using the ReportResult debug field", func() {
+	It("passes the delegate result back to the caller", func() {
 		session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(session).Should(gexec.Exit(0))
-		//Expect(session.Out.Contents()).To(MatchJSON("something"))
+		Expect(session.Out.Contents()).To(MatchJSON(`{ "ip4": { "ip": "1.2.3.4/32" }, "dns":{} }`))
 	})
+
+	It("passes the correct stdin to the delegate plugin", func() {
+		session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+		Expect(err).NotTo(HaveOccurred())
+		Eventually(session).Should(gexec.Exit(0))
+
+		debug, err := noop_debug.ReadDebug(debugFileName)
+		Expect(err).NotTo(HaveOccurred())
+
+		Expect(debug.CmdArgs.StdinData).To(MatchJSON(delegateInput))
+	})
+
 })
