@@ -1,0 +1,78 @@
+---
+packages:
+- name: cli
+  version: 26df087cd413abf4b0ec74c5f284f9b91ecf669d
+  fingerprint: 26df087cd413abf4b0ec74c5f284f9b91ecf669d
+  sha1: 7f23ffb209737b5da7bbcee589fcbe07bacea183
+  dependencies:
+  - golang
+- name: flannel-watchdog
+  version: cf12a795cfd96dc7f55c526de75e25c04666c544
+  fingerprint: cf12a795cfd96dc7f55c526de75e25c04666c544
+  sha1: 2a3ca13cc02d5ca5d463372a24b75a93fd8246e7
+  dependencies:
+  - golang
+- name: flannel
+  version: c4478af5341c99193a66a4dab3ddce893261d262
+  fingerprint: c4478af5341c99193a66a4dab3ddce893261d262
+  sha1: 469e1215debc482dd3f1c9da369579cc50f935a3
+  dependencies:
+  - golang
+- name: golang
+  version: 48ce7b3927e6f7e6576fff21a7dc9d22b7ba9c62
+  fingerprint: 48ce7b3927e6f7e6576fff21a7dc9d22b7ba9c62
+  sha1: 134d8876746cc75713e7c8f335c4c76a374d99bc
+  dependencies: []
+- name: netmon
+  version: 1928eac6fb571026ae558b25724949a97448d6a6
+  fingerprint: 1928eac6fb571026ae558b25724949a97448d6a6
+  sha1: a3591c2b7f98c741034f3aec72969447411b2b12
+  dependencies:
+  - golang
+- name: policy-server
+  version: 49ebfc0c30d37f3a2f973137971d198496aa27fd
+  fingerprint: 49ebfc0c30d37f3a2f973137971d198496aa27fd
+  sha1: 4d7c1bac2c00f993cc634154c2036804bf5408e0
+  dependencies:
+  - golang
+- name: runc-cni
+  version: b66585674f1e8c9a2dde8247a205a9e9156cde9a
+  fingerprint: b66585674f1e8c9a2dde8247a205a9e9156cde9a
+  sha1: 5302ec393db2150ae5a60436ead2be1e501800cf
+  dependencies:
+  - golang
+- name: vxlan-policy-agent
+  version: f946daffedd4c7059d6deba8c55273d5a3b423e0
+  fingerprint: f946daffedd4c7059d6deba8c55273d5a3b423e0
+  sha1: 9b526a83f315c445357e606a06b59709b12c529f
+  dependencies:
+  - golang
+jobs:
+- name: cni-flannel
+  version: 25b89d4617028be247199cbc4ffb47483c281170
+  fingerprint: 25b89d4617028be247199cbc4ffb47483c281170
+  sha1: 532bf8e442e78ffb6bd77f93bdb702106c5700eb
+- name: garden-cni
+  version: b842a084461d18bf13797654438364463d9fc7a6
+  fingerprint: b842a084461d18bf13797654438364463d9fc7a6
+  sha1: 5509ca940cf6fb6b2c863e64337a66c56fe661d6
+- name: netmon
+  version: ac8a6c11b807c333149d9adb5b922b32386cd957
+  fingerprint: ac8a6c11b807c333149d9adb5b922b32386cd957
+  sha1: 93fe25361d05c4b4cb2426feb26b85e37e06b688
+- name: policy-server
+  version: 74fefcc0244682748d16e99cdcfa68ef1746c58b
+  fingerprint: 74fefcc0244682748d16e99cdcfa68ef1746c58b
+  sha1: 5808319b328b688ac7f2e85651de20b6a59080d1
+- name: vxlan-policy-agent
+  version: 21486d0eb89a6205fc853be1fcf396c2f65f312d
+  fingerprint: 21486d0eb89a6205fc853be1fcf396c2f65f312d
+  sha1: 4b39c5e6e5bd5927e18385988eea6d635c3ef538
+license:
+  version: e6c4ccc65c76e75e2338d1edabdcf264d37ee663
+  fingerprint: e6c4ccc65c76e75e2338d1edabdcf264d37ee663
+  sha1: 9743338f66fc55c7c9b4d41327fd0d6f7023fc69
+commit_hash: f7868a29
+uncommitted_changes: false
+name: netman
+version: 0.5.0
