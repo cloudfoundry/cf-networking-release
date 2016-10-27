@@ -7,18 +7,18 @@ export GOPATH=$PWD
 
 declare -a packages=(
   "src/cli-plugin"
+  "src/cni-wrapper-plugin"
+  "src/example-apps"
   "src/flannel-watchdog"
   "src/lib"
   "src/netmon"
   "src/policy-server"
-  "src/cni-wrapper-plugin"
   )
 
 declare -a serial_packages=(
-  "src/example-apps"
+  "src/cf-pusher"
   "src/garden-external-networker"
   "src/vxlan-policy-agent"
-  "src/cf-pusher"
   )
 
 function bootPostgres {
@@ -85,6 +85,6 @@ if [ "${1:-""}" = "" ]; then
 else
   testdir="$1"
   pushd $testdir
-    ginkgo -r -randomizeAllSpecs -randomizeSuites "${@:2}"
+    ginkgo -r -p --race -randomizeAllSpecs -randomizeSuites "${@:2}"
   popd
 fi
