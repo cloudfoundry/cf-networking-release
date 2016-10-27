@@ -1,4 +1,4 @@
-package port_allocator
+package serial
 
 import (
 	"encoding/json"
@@ -13,9 +13,15 @@ type OverwriteableFile interface {
 	Truncate(size int64) error
 }
 
-type Serializer struct{}
+//go:generate counterfeiter -o ../fakes/serializer.go --fake-name Serializer . Serializer
+type Serializer interface {
+	DecodeAll(file io.ReadSeeker, outData interface{}) error
+	EncodeAndOverwrite(file OverwriteableFile, outData interface{}) error
+}
 
-func (s *Serializer) DecodeAll(file io.ReadSeeker, outData interface{}) error {
+type Serial struct{}
+
+func (s *Serial) DecodeAll(file io.ReadSeeker, outData interface{}) error {
 	const SeekStart = 0 // TODO: when we upgrade to Go 1.7+, replace this with io.SeekStart
 	_, err := file.Seek(0, SeekStart)
 	if err != nil {
@@ -28,7 +34,7 @@ func (s *Serializer) DecodeAll(file io.ReadSeeker, outData interface{}) error {
 	return nil
 }
 
-func (s *Serializer) EncodeAndOverwrite(file OverwriteableFile, outData interface{}) error {
+func (s *Serial) EncodeAndOverwrite(file OverwriteableFile, outData interface{}) error {
 	const SeekStart = 0 // TODO: when we upgrade to Go 1.7+, replace this with io.SeekStart
 	_, err := file.Seek(0, SeekStart)
 	if err != nil {

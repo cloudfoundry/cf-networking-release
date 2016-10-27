@@ -1,10 +1,10 @@
-package port_allocator_test
+package serial_test
 
 import (
 	"errors"
-	"garden-external-networker/fakes"
-	"garden-external-networker/port_allocator"
 	"io/ioutil"
+	"lib/fakes"
+	"lib/serial"
 	"os"
 	"strings"
 
@@ -13,9 +13,9 @@ import (
 )
 
 var _ = Describe("FileSerializer", func() {
-	var serializer *port_allocator.Serializer
+	var serializer *serial.Serial
 	BeforeEach(func() {
-		serializer = &port_allocator.Serializer{}
+		serializer = &serial.Serial{}
 	})
 
 	Describe("DecodeAll", func() {

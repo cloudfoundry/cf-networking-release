@@ -3,8 +3,8 @@ package port_allocator
 import (
 	"errors"
 	"fmt"
-	"io"
 	"lib/filelock"
+	"lib/serial"
 )
 
 //go:generate counterfeiter -o ../fakes/tracker.go --fake-name Tracker . tracker
@@ -14,15 +14,9 @@ type tracker interface {
 	InRange(port int) bool
 }
 
-//go:generate counterfeiter -o ../fakes/serializer.go --fake-name Serializer . serializer
-type serializer interface {
-	DecodeAll(file io.ReadSeeker, outData interface{}) error
-	EncodeAndOverwrite(file OverwriteableFile, outData interface{}) error
-}
-
 type PortAllocator struct {
 	Tracker    tracker
-	Serializer serializer
+	Serializer serial.Serializer
 	Locker     filelock.FileLocker
 }
 

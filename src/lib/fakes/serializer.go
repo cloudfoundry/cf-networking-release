@@ -119,3 +119,5 @@ func (fake *Serializer) recordInvocation(key string, args []interface{}) {
 	}
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
+
+var _ serial.Serializer = new(Serializer)

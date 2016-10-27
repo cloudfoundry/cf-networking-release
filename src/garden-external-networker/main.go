@@ -11,6 +11,7 @@ import (
 	"garden-external-networker/manager"
 	"garden-external-networker/port_allocator"
 	"lib/filelock"
+	"lib/serial"
 	"os"
 
 	"github.com/coreos/go-iptables/iptables"
@@ -113,7 +114,7 @@ func mainWithError() error {
 		StartPort: cfg.StartPort,
 		Capacity:  cfg.TotalPorts,
 	}
-	serializer := &port_allocator.Serializer{}
+	serializer := &serial.Serial{}
 	portAllocator := &port_allocator.PortAllocator{
 		Tracker:    tracker,
 		Serializer: serializer,

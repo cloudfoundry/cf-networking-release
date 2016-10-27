@@ -2,7 +2,7 @@
 package fakes
 
 import (
-	"garden-external-networker/port_allocator"
+	"lib/serial"
 	"sync"
 )
 
@@ -219,4 +219,4 @@ func (fake *OverwriteableFile) recordInvocation(key string, args []interface{}) 
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ port_allocator.OverwriteableFile = new(OverwriteableFile)
+var _ serial.OverwriteableFile = new(OverwriteableFile)
