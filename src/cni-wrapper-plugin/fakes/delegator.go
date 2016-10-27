@@ -19,6 +19,15 @@ type Delegator struct {
 		result1 *types.Result
 		result2 error
 	}
+	DelegateDelStub        func(delegatePlugin string, netconf []byte) error
+	delegateDelMutex       sync.RWMutex
+	delegateDelArgsForCall []struct {
+		delegatePlugin string
+		netconf        []byte
+	}
+	delegateDelReturns struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -63,11 +72,52 @@ func (fake *Delegator) DelegateAddReturns(result1 *types.Result, result2 error) 
 	}{result1, result2}
 }
 
+func (fake *Delegator) DelegateDel(delegatePlugin string, netconf []byte) error {
+	var netconfCopy []byte
+	if netconf != nil {
+		netconfCopy = make([]byte, len(netconf))
+		copy(netconfCopy, netconf)
+	}
+	fake.delegateDelMutex.Lock()
+	fake.delegateDelArgsForCall = append(fake.delegateDelArgsForCall, struct {
+		delegatePlugin string
+		netconf        []byte
+	}{delegatePlugin, netconfCopy})
+	fake.recordInvocation("DelegateDel", []interface{}{delegatePlugin, netconfCopy})
+	fake.delegateDelMutex.Unlock()
+	if fake.DelegateDelStub != nil {
+		return fake.DelegateDelStub(delegatePlugin, netconf)
+	} else {
+		return fake.delegateDelReturns.result1
+	}
+}
+
+func (fake *Delegator) DelegateDelCallCount() int {
+	fake.delegateDelMutex.RLock()
+	defer fake.delegateDelMutex.RUnlock()
+	return len(fake.delegateDelArgsForCall)
+}
+
+func (fake *Delegator) DelegateDelArgsForCall(i int) (string, []byte) {
+	fake.delegateDelMutex.RLock()
+	defer fake.delegateDelMutex.RUnlock()
+	return fake.delegateDelArgsForCall[i].delegatePlugin, fake.delegateDelArgsForCall[i].netconf
+}
+
+func (fake *Delegator) DelegateDelReturns(result1 error) {
+	fake.DelegateDelStub = nil
+	fake.delegateDelReturns = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *Delegator) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.delegateAddMutex.RLock()
 	defer fake.delegateAddMutex.RUnlock()
+	fake.delegateDelMutex.RLock()
+	defer fake.delegateDelMutex.RUnlock()
 	return fake.invocations
 }
 

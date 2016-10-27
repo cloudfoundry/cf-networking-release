@@ -44,11 +44,17 @@ INPUT_WRAPPER=$(cat <<END
 	"cniVersion": "0.2.0",
   "datastore": "/path/to/datastore",
 	"delegate": {
-			"name": "cni-noop",
-			"type": "noop",
-      "delegate":
-        {"some":"stdin-json", "cniVersion": "0.2.0"}
-   }
+    "name": "cni-flannel",
+    "type": "flannel",
+    "delegate": {
+      "bridge": "cni-flannel0",
+      "isDefaultGateway": true,
+      "ipMasq": false
+     }
+  },
+   "cloudfoundry_metadata": {
+    "app_id": "some guid here"
+  }
 }
 END
 )

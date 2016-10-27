@@ -42,3 +42,17 @@ func (c *PluginController) DelegateAdd(netconf map[string]interface{}) (*types.R
 
 	return c.Delegator.DelegateAdd(delegateType, netconfBytes)
 }
+
+func (c *PluginController) DelegateDel(netconf map[string]interface{}) error {
+	netconfBytes, err := json.Marshal(netconf)
+	if err != nil {
+		return fmt.Errorf("serializing delegate netconf: %v", err)
+	}
+
+	delegateType, ok := (netconf["type"]).(string)
+	if !ok {
+		return fmt.Errorf("delegate config is missing type")
+	}
+
+	return c.Delegator.DelegateDel(delegateType, netconfBytes)
+}

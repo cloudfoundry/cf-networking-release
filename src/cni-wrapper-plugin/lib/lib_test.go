@@ -97,7 +97,7 @@ var _ = Describe("DelegateAdd", func() {
 		})
 	})
 
-	Context("when the input cannot be serialized into json", func() {
+	Context("when the delegator returns an error", func() {
 		BeforeEach(func() {
 			fakeDelegator.DelegateAddReturns(nil, fmt.Errorf("patato"))
 		})
@@ -108,6 +108,7 @@ var _ = Describe("DelegateAdd", func() {
 			Expect(err).To(MatchError("patato"))
 		})
 	})
+
 	Context("when the input type is missing", func() {
 		BeforeEach(func() {
 			input = map[string]interface{}{
@@ -122,5 +123,69 @@ var _ = Describe("DelegateAdd", func() {
 			Expect(err).To(MatchError("delegate config is missing type"))
 		})
 	})
+})
 
+var _ = Describe("DelegateDel", func() {
+	var (
+		input            map[string]interface{}
+		pluginController *lib.PluginController
+		fakeDelegator    *fakes.Delegator
+	)
+
+	BeforeEach(func() {
+		fakeDelegator = &fakes.Delegator{}
+		fakeDelegator.DelegateDelReturns(nil)
+		pluginController = &lib.PluginController{
+			Delegator: fakeDelegator,
+		}
+
+		input = map[string]interface{}{
+			"type": "something",
+		}
+	})
+
+	It("should call the plugin specified by the type", func() {
+		err := pluginController.DelegateDel(input)
+		Expect(err).NotTo(HaveOccurred())
+	})
+
+	Context("when the input cannot be serialized into json", func() {
+		BeforeEach(func() {
+			input = map[string]interface{}{
+				"bad-data": make(chan bool),
+			}
+		})
+
+		It("should return a useful error", func() {
+			err := pluginController.DelegateDel(input)
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError(HavePrefix("serializing delegate netconf:")))
+		})
+	})
+
+	Context("when the delegator returns an error", func() {
+		BeforeEach(func() {
+			fakeDelegator.DelegateDelReturns(fmt.Errorf("patato"))
+		})
+
+		It("should return a useful error", func() {
+			err := pluginController.DelegateDel(input)
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError("patato"))
+		})
+	})
+
+	Context("when the input type is missing", func() {
+		BeforeEach(func() {
+			input = map[string]interface{}{
+				"notype": "shoudbemissing",
+			}
+		})
+
+		It("should return a useful error", func() {
+			err := pluginController.DelegateDel(input)
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError("delegate config is missing type"))
+		})
+	})
 })

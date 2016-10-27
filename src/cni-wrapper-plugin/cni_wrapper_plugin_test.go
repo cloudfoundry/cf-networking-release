@@ -52,7 +52,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 
 		cmd = exec.Command(paths.PathToPlugin)
 		cmd.Env = []string{
-			"CNI_COMMAND=ADD",
+			"CNI_COMMAND=SOME_COMMAND",
 			"CNI_CONTAINERID=some-container-id",
 			"CNI_ARGS=DEBUG=" + debugFileName,
 			"CNI_NETNS=/some/netns/path",
@@ -74,22 +74,77 @@ var _ = Describe("CniWrapperPlugin", func() {
 		os.Remove(debugFileName)
 	})
 
-	It("passes the delegate result back to the caller", func() {
-		session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
-		Expect(err).NotTo(HaveOccurred())
-		Eventually(session).Should(gexec.Exit(0))
-		Expect(session.Out.Contents()).To(MatchJSON(`{ "ip4": { "ip": "1.2.3.4/32" }, "dns":{} }`))
+	Context("When call with command ADD", func() {
+		BeforeEach(func() {
+			cmd.Env[0] = "CNI_COMMAND=ADD"
+		})
+
+		It("passes the delegate result back to the caller", func() {
+			session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+			Expect(session.Out.Contents()).To(MatchJSON(`{ "ip4": { "ip": "1.2.3.4/32" }, "dns":{} }`))
+		})
+
+		It("passes the correct stdin to the delegate plugin", func() {
+			session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+
+			debug, err := noop_debug.ReadDebug(debugFileName)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(debug.Command).To(Equal("ADD"))
+
+			Expect(debug.CmdArgs.StdinData).To(MatchJSON(delegateInput))
+		})
+
+		Context("When the delegate plugin return an error", func() {
+			BeforeEach(func() {
+				debug.ReportError = "banana"
+				Expect(debug.WriteDebug(debugFileName)).To(Succeed())
+			})
+
+			It("wraps and returns the error", func() {
+				session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+				Eventually(session).Should(gexec.Exit(1))
+
+				Expect(session.Out.Contents()).To(MatchJSON(`{ "code": 100, "msg": "delegate call: banana" }`))
+			})
+		})
 	})
 
-	It("passes the correct stdin to the delegate plugin", func() {
-		session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
-		Expect(err).NotTo(HaveOccurred())
-		Eventually(session).Should(gexec.Exit(0))
+	Context("When call with command DEL", func() {
+		BeforeEach(func() {
+			cmd.Env[0] = "CNI_COMMAND=DEL"
+		})
 
-		debug, err := noop_debug.ReadDebug(debugFileName)
-		Expect(err).NotTo(HaveOccurred())
+		It("passes the correct stdin to the delegate plugin", func() {
+			session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
 
-		Expect(debug.CmdArgs.StdinData).To(MatchJSON(delegateInput))
+			debug, err := noop_debug.ReadDebug(debugFileName)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(debug.Command).To(Equal("DEL"))
+
+			Expect(debug.CmdArgs.StdinData).To(MatchJSON(delegateInput))
+		})
+
+		Context("When the delegate plugin return an error", func() {
+			BeforeEach(func() {
+				debug.ReportError = "banana"
+				Expect(debug.WriteDebug(debugFileName)).To(Succeed())
+			})
+
+			It("wraps and returns the error", func() {
+				session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+				Eventually(session).Should(gexec.Exit(1))
+
+				Expect(session.Out.Contents()).To(MatchJSON(`{ "code": 100, "msg": "delegate call: banana" }`))
+			})
+		})
+
 	})
-
 })
