@@ -11,6 +11,7 @@ declare -a packages=(
   "src/lib"
   "src/netmon"
   "src/policy-server"
+  "src/cni-wrapper-plugin"
   )
 
 declare -a serial_packages=(
