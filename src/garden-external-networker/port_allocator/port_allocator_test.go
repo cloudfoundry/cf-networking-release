@@ -5,6 +5,7 @@ import (
 	"garden-external-networker/fakes"
 	"garden-external-networker/port_allocator"
 	"io/ioutil"
+	libfakes "lib/fakes"
 	"os"
 
 	. "github.com/onsi/ginkgo"
@@ -16,13 +17,13 @@ var _ = Describe("PortAllocator", func() {
 		portAllocator *port_allocator.PortAllocator
 		tracker       *fakes.Tracker
 		serializer    *fakes.Serializer
-		locker        *fakes.FileLocker
+		locker        *libfakes.FileLocker
 		lockedFile    *os.File
 	)
 	BeforeEach(func() {
 		serializer = &fakes.Serializer{}
 		tracker = &fakes.Tracker{}
-		locker = &fakes.FileLocker{}
+		locker = &libfakes.FileLocker{}
 		serializer.DecodeAllReturns(nil)
 		tracker.AcquireOneReturns(111, nil)
 

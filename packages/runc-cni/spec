@@ -12,7 +12,6 @@ files:
   - garden-external-networker/bindmount/*.go # gosub
   - garden-external-networker/cni/*.go # gosub
   - garden-external-networker/config/*.go # gosub
-  - garden-external-networker/filelock/*.go # gosub
   - garden-external-networker/ipc/*.go # gosub
   - garden-external-networker/legacynet/*.go # gosub
   - garden-external-networker/manager/*.go # gosub
@@ -40,4 +39,5 @@ files:
   - github.com/coreos/go-iptables/iptables/*.go # gosub
   - golang.org/x/sys/unix/*.go # gosub
   - golang.org/x/sys/unix/*.s # gosub
+  - lib/filelock/*.go # gosub
   - lib/rules/*.go # gosub

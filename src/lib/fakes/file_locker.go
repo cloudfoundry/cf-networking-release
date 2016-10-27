@@ -2,6 +2,7 @@
 package fakes
 
 import (
+	"lib/filelock"
 	"os"
 	"sync"
 )
@@ -63,3 +64,5 @@ func (fake *FileLocker) recordInvocation(key string, args []interface{}) {
 	}
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
+
+var _ filelock.FileLocker = new(FileLocker)

@@ -6,6 +6,11 @@ import (
 	"syscall"
 )
 
+//go:generate counterfeiter -o ../fakes/file_locker.go --fake-name FileLocker . FileLocker
+type FileLocker interface {
+	Open() (*os.File, error)
+}
+
 type Locker struct {
 	Path string
 }
@@ -31,4 +36,3 @@ func (l *Locker) Open() (*os.File, error) {
 	}
 	return file, nil
 }
-

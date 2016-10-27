@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
+	"lib/filelock"
 )
 
 //go:generate counterfeiter -o ../fakes/tracker.go --fake-name Tracker . tracker
@@ -20,15 +20,10 @@ type serializer interface {
 	EncodeAndOverwrite(file OverwriteableFile, outData interface{}) error
 }
 
-//go:generate counterfeiter -o ../fakes/file_locker.go --fake-name FileLocker . fileLocker
-type fileLocker interface {
-	Open() (*os.File, error)
-}
-
 type PortAllocator struct {
 	Tracker    tracker
 	Serializer serializer
-	Locker     fileLocker
+	Locker     filelock.FileLocker
 }
 
 func (p *PortAllocator) AllocatePort(handle string, port int) (int, error) {

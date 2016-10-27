@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"garden-external-networker/filelock"
+	"lib/filelock"
 )
 
 func main() {

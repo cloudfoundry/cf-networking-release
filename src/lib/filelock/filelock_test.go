@@ -3,7 +3,7 @@ package filelock_test
 import (
 	"os/exec"
 
-	"garden-external-networker/filelock"
+	"lib/filelock"
 
 	"io/ioutil"
 	"os"

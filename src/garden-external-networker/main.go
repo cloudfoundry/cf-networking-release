@@ -6,11 +6,11 @@ import (
 	"garden-external-networker/bindmount"
 	"garden-external-networker/cni"
 	"garden-external-networker/config"
-	"garden-external-networker/filelock"
 	"garden-external-networker/ipc"
 	"garden-external-networker/legacynet"
 	"garden-external-networker/manager"
 	"garden-external-networker/port_allocator"
+	"lib/filelock"
 	"os"
 
 	"github.com/coreos/go-iptables/iptables"
