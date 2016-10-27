@@ -17,6 +17,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 	pluginController := &lib.PluginController{
 		Delegator: lib.NewDelegator(),
 	}
+
 	result, err := pluginController.DelegateAdd(n.Delegate)
 	if err != nil {
 		return fmt.Errorf("delegate call: %v", err)
@@ -30,6 +31,7 @@ func cmdDel(args *skel.CmdArgs) error {
 	if err != nil {
 		return err
 	}
+
 	pluginController := &lib.PluginController{
 		Delegator: lib.NewDelegator(),
 	}
@@ -43,5 +45,6 @@ func cmdDel(args *skel.CmdArgs) error {
 
 func main() {
 	supportedVersions := []string{"0.1.0", "0.2.0"}
+
 	skel.PluginMain(cmdAdd, cmdDel, version.PluginSupports(supportedVersions...))
 }

@@ -29,29 +29,33 @@ type PluginController struct {
 	Delegator Delegator
 }
 
-func (c *PluginController) DelegateAdd(netconf map[string]interface{}) (*types.Result, error) {
+func getDelegateParams(netconf map[string]interface{}) (string, []byte, error) {
 	netconfBytes, err := json.Marshal(netconf)
 	if err != nil {
-		return nil, fmt.Errorf("serializing delegate netconf: %v", err)
+		return "", nil, fmt.Errorf("serializing delegate netconf: %v", err)
 	}
 
 	delegateType, ok := (netconf["type"]).(string)
 	if !ok {
-		return nil, fmt.Errorf("delegate config is missing type")
+		return "", nil, fmt.Errorf("delegate config is missing type")
+	}
+
+	return delegateType, netconfBytes, nil
+}
+
+func (c *PluginController) DelegateAdd(netconf map[string]interface{}) (*types.Result, error) {
+	delegateType, netconfBytes, err := getDelegateParams(netconf)
+	if err != nil {
+		return nil, err
 	}
 
 	return c.Delegator.DelegateAdd(delegateType, netconfBytes)
 }
 
 func (c *PluginController) DelegateDel(netconf map[string]interface{}) error {
-	netconfBytes, err := json.Marshal(netconf)
+	delegateType, netconfBytes, err := getDelegateParams(netconf)
 	if err != nil {
-		return fmt.Errorf("serializing delegate netconf: %v", err)
-	}
-
-	delegateType, ok := (netconf["type"]).(string)
-	if !ok {
-		return fmt.Errorf("delegate config is missing type")
+		return err
 	}
 
 	return c.Delegator.DelegateDel(delegateType, netconfBytes)

@@ -1,5 +1,8 @@
 #! /bin/bash
 
+## this is an example script we're using to understand how the wrapper plugin will work
+## it is not supported right now.  we will eventually document this behavior properly in the docs/3rd-party.md file
+
 set -e -u
 set -o pipefail
 
