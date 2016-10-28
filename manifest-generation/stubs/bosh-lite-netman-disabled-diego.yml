@@ -12,6 +12,9 @@ netman_overrides:
     release: netman
   - name: vxlan-policy-agent
     release: netman
+  properties:
+    netman:
+      disable: true
   jobs:
   - name: policy-server
     instances: 0
