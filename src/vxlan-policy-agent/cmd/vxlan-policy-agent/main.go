@@ -190,10 +190,12 @@ func main() {
 	policyPoller := &poller.Poller{
 		Logger:       logger,
 		PollInterval: pollInterval,
-		Planner:      dynamicPlanner,
 
-		Enforcer:          ruleEnforcer,
-		CollectionEmitter: timeMetricsEmitter,
+		SingleCycleFunc: (&poller.SinglePollCycle{
+			Planner:           dynamicPlanner,
+			Enforcer:          ruleEnforcer,
+			CollectionEmitter: timeMetricsEmitter,
+		}).DoCycle,
 	}
 
 	members := grouper.Members{

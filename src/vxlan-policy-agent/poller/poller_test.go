@@ -2,13 +2,10 @@ package poller_test
 
 import (
 	"errors"
-	"lib/rules"
 	"os"
+	"sync/atomic"
 	"time"
-	"vxlan-policy-agent/fakes"
 	"vxlan-policy-agent/poller"
-
-	libfakes "lib/fakes"
 
 	"code.cloudfoundry.org/lager/lagertest"
 
@@ -20,89 +17,69 @@ import (
 var _ = Describe("Poller", func() {
 	Describe("Run", func() {
 		var (
-			logger             *lagertest.TestLogger
-			p                  *poller.Poller
-			fakePlanner        *fakes.Planner
-			fakeEnforcer       *libfakes.RuleEnforcer
-			timeMetricsEmitter *fakes.TimeMetricsEmitter
-			rulesWithChain     rules.RulesWithChain
+			logger  *lagertest.TestLogger
+			p       *poller.Poller
+			signals chan os.Signal
+			ready   chan struct{}
+
+			cycleCount uint64
+			retChan    chan error
 		)
 
 		BeforeEach(func() {
+			signals = make(chan os.Signal)
+			ready = make(chan struct{})
+
+			cycleCount = 0
+			retChan = make(chan error)
+
 			logger = lagertest.NewTestLogger("test")
 
-			fakePlanner = &fakes.Planner{}
-			fakeEnforcer = &libfakes.RuleEnforcer{}
-			timeMetricsEmitter = &fakes.TimeMetricsEmitter{}
-
 			p = &poller.Poller{
-				Logger:            logger,
-				PollInterval:      1 * time.Millisecond,
-				Planner:           fakePlanner,
-				Enforcer:          fakeEnforcer,
-				CollectionEmitter: timeMetricsEmitter,
-			}
+				Logger:       logger,
+				PollInterval: 10 * time.Millisecond,
 
-			rulesWithChain = rules.RulesWithChain{
-				Rules: []rules.Rule{},
-				Chain: rules.Chain{
-					Table:       "some-table",
-					ParentChain: "INPUT",
-					Prefix:      "some-prefix",
+				SingleCycleFunc: func() error {
+					atomic.AddUint64(&cycleCount, 1)
+					return nil
 				},
 			}
-			fakePlanner.GetRulesReturns(rulesWithChain, nil)
 		})
 
-		It("enforces rules on configured interval", func() {
-			signals := make(chan os.Signal)
-			ready := make(chan struct{})
-			go p.Run(signals, ready)
+		It("calls the single cycle func", func() {
+			go func() {
+				retChan <- p.Run(signals, ready)
+			}()
+
 			Eventually(ready).Should(BeClosed())
-			Eventually(fakePlanner.GetRulesCallCount()).Should(BeNumerically(">", 0))
-			Eventually(fakeEnforcer.EnforceRulesAndChainCallCount()).Should(BeNumerically(">", 0))
-			signals <- os.Interrupt
+			Eventually(func() uint64 {
+				return atomic.LoadUint64(&cycleCount)
+			}).Should(BeNumerically(">", 0))
 
-			rws := fakeEnforcer.EnforceRulesAndChainArgsForCall(0)
-			Expect(rws).To(Equal(rulesWithChain))
-		})
-		It("emits time metrics", func() {
-			signals := make(chan os.Signal)
-			ready := make(chan struct{})
-			go p.Run(signals, ready)
-			Eventually(ready).Should(BeClosed())
-			Eventually(timeMetricsEmitter.EmitAllCallCount).Should(BeNumerically(">", 0))
+			Consistently(retChan).ShouldNot(Receive())
+
 			signals <- os.Interrupt
+			Eventually(retChan).Should(Receive(nil))
 		})
 
-		Context("when planner errors", func() {
+		Context("when the cycle func errors", func() {
 			BeforeEach(func() {
-				fakePlanner.GetRulesReturns(rulesWithChain, errors.New("eggplant"))
+				p.SingleCycleFunc = func() error { return errors.New("banana") }
 			})
 
 			It("logs the error and continues", func() {
-				signals := make(chan os.Signal)
-				ready := make(chan struct{})
-				go p.Run(signals, ready)
+				go func() {
+					retChan <- p.Run(signals, ready)
+				}()
 
-				Eventually(logger).Should(gbytes.Say("get-rules.*eggplant"))
-				Consistently(fakeEnforcer.EnforceOnChainCallCount()).Should(Equal(0))
+				Eventually(ready).Should(BeClosed())
+
+				Eventually(logger).Should(gbytes.Say("poll-cycle.*banana"))
+
+				Consistently(retChan).ShouldNot(Receive())
+
 				signals <- os.Interrupt
-			})
-		})
-
-		Context("when enforcer errors", func() {
-			BeforeEach(func() {
-				fakeEnforcer.EnforceRulesAndChainReturns(errors.New("eggplant"))
-			})
-
-			It("logs the error and continues", func() {
-				signals := make(chan os.Signal)
-				ready := make(chan struct{})
-				go p.Run(signals, ready)
-
-				Eventually(logger).Should(gbytes.Say("enforce.*eggplant"))
-				signals <- os.Interrupt
+				Eventually(retChan).Should(Receive(nil))
 			})
 		})
 	})
