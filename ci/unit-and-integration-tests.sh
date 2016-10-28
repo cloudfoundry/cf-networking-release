@@ -7,18 +7,18 @@ export GOPATH=$PWD
 
 declare -a packages=(
   "src/cli-plugin"
+  "src/cni-wrapper-plugin"
   "src/flannel-watchdog"
   "src/lib"
   "src/netmon"
   "src/policy-server"
-  "src/cni-wrapper-plugin"
   )
 
 declare -a serial_packages=(
+  "src/cf-pusher"
   "src/example-apps"
   "src/garden-external-networker"
   "src/vxlan-policy-agent"
-  "src/cf-pusher"
   )
 
 function bootPostgres {
