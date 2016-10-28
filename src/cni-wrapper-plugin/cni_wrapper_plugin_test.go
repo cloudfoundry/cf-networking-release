@@ -1,6 +1,7 @@
 package main_test
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -14,9 +15,12 @@ import (
 )
 
 var _ = Describe("CniWrapperPlugin", func() {
+
 	var (
 		cmd             *exec.Cmd
 		debugFileName   string
+		datastorePath   string
+		input           string
 		debug           *noop_debug.Debug
 		expectedCmdArgs skel.CmdArgs
 	)
@@ -28,14 +32,28 @@ var _ = Describe("CniWrapperPlugin", func() {
 }
 `
 
-	const input = `
+	const inputTemplate = `
 {
   "name": "cni-wrapper",
   "type": "wrapper",
-  "datastore": "/path/to/datastore",
+  "datastore": "%s",
 	"delegate": ` +
 		delegateInput +
 		`}`
+
+	var cniCommand = func(command, input string) *exec.Cmd {
+		toReturn := exec.Command(paths.PathToPlugin)
+		toReturn.Env = []string{
+			"CNI_COMMAND=" + command,
+			"CNI_CONTAINERID=some-container-id",
+			"CNI_NETNS=/some/netns/path",
+			"CNI_IFNAME=some-eth0",
+			"CNI_PATH=" + paths.CNIPath,
+			"CNI_ARGS=DEBUG=" + debugFileName,
+		}
+		toReturn.Stdin = strings.NewReader(input)
+		return toReturn
+	}
 
 	BeforeEach(func() {
 
@@ -50,16 +68,12 @@ var _ = Describe("CniWrapperPlugin", func() {
 		}
 		Expect(debug.WriteDebug(debugFileName)).To(Succeed())
 
-		cmd = exec.Command(paths.PathToPlugin)
-		cmd.Env = []string{
-			"CNI_COMMAND=SOME_COMMAND",
-			"CNI_CONTAINERID=some-container-id",
-			"CNI_ARGS=DEBUG=" + debugFileName,
-			"CNI_NETNS=/some/netns/path",
-			"CNI_IFNAME=some-eth0",
-			"CNI_PATH=" + paths.CNIPath,
-		}
-		cmd.Stdin = strings.NewReader(input)
+		datastoreFile, err := ioutil.TempFile("", "datastore")
+		Expect(err).NotTo(HaveOccurred())
+		Expect(datastoreFile.Close()).To(Succeed())
+		datastorePath = datastoreFile.Name()
+		input = fmt.Sprintf(inputTemplate, datastorePath)
+
 		expectedCmdArgs = skel.CmdArgs{
 			ContainerID: "some-container-id",
 			Netns:       "/some/netns/path",
@@ -68,10 +82,40 @@ var _ = Describe("CniWrapperPlugin", func() {
 			Path:        "/some/bin/path",
 			StdinData:   []byte(input),
 		}
+		cmd = cniCommand("ADD", input)
 	})
 
 	AfterEach(func() {
 		os.Remove(debugFileName)
+		os.Remove(datastorePath)
+	})
+
+	Describe("state lifecylcle", func() {
+		It("stores and removes metadata with the lifetime of the container", func() {
+			By("calling ADD")
+			cmd.Env[0] = "CNI_COMMAND=ADD"
+			session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+
+			By("check that metadata is stored")
+			stateFileBytes, err := ioutil.ReadFile(datastorePath)
+			Expect(err).NotTo(HaveOccurred())
+			fmt.Println(datastorePath)
+			Expect(string(stateFileBytes)).To(ContainSubstring(fmt.Sprintf("1.2.3.4")))
+
+			By("calling DEL")
+			cmd = cniCommand("DEL", input)
+			cmd.Env[0] = "CNI_COMMAND=DEL"
+			session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+
+			By("check that metadata is has been removed")
+			stateFileBytes, err = ioutil.ReadFile(datastorePath)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(stateFileBytes)).NotTo(ContainSubstring(fmt.Sprintf("1.2.3.4")))
+		})
 	})
 
 	Context("When call with command ADD", func() {
