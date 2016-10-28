@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
 	"os"
 	"os/exec"
 	"strings"
@@ -35,15 +34,19 @@ var _ = Describe("Flannel Watchdog", func() {
 		Eventually(ipLinkSession, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
 	}
 
-	deleteBridge := func() {
+	deleteBridge := func(allowError bool) {
 		ipLinkSession, err := runCmd("ip", "link", "delete", "dev", bridgeName)
 		Expect(err).NotTo(HaveOccurred())
-		Eventually(ipLinkSession, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
+		if allowError {
+			Eventually(ipLinkSession, DEFAULT_TIMEOUT).Should(gexec.Exit())
+		} else {
+			Eventually(ipLinkSession, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
+		}
 	}
 
 	BeforeEach(func() {
-		bridgeName = fmt.Sprintf("test-bridge-%d", rand.Int()%1000)
-		bridgeIP = "10.255.78.1/24"
+		bridgeName = fmt.Sprintf("test-bridge-%d", 100+GinkgoParallelNode())
+		bridgeIP = fmt.Sprintf("10.255.%d.1/24", GinkgoParallelNode())
 
 		createBridge()
 
@@ -66,8 +69,7 @@ var _ = Describe("Flannel Watchdog", func() {
 		session.Interrupt()
 		Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit())
 
-		_, err := runCmd("ip", "link", "delete", "dev", bridgeName)
-		Expect(err).NotTo(HaveOccurred())
+		deleteBridge(true)
 	})
 
 	It("should boot and gracefully terminate", func() {
@@ -81,11 +83,13 @@ var _ = Describe("Flannel Watchdog", func() {
 		It("exits with a nonzero status", func() {
 			Consistently(session, "1.5s").ShouldNot(gexec.Exit())
 
-			err := ioutil.WriteFile(subnetFileName, []byte(`FLANNEL_SUBNET=10.255.13.1/24\nFLANNEL_NETWORK=10.255.0.0/16`), os.ModePerm)
+			err := ioutil.WriteFile(subnetFileName, []byte(`FLANNEL_SUBNET=10.4.13.1/24\nFLANNEL_NETWORK=10.4.0.0/16`), os.ModePerm)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit(1))
-			expectedMsg := fmt.Sprintf(`This cell must be recreated.  Flannel is out of sync with the local bridge. flannel (%s): 10.255.13.1/24 bridge (%s): 10.255.78.1/24`, subnetFileName, bridgeName)
-			Expect(session.Err.Contents()).To(ContainSubstring(expectedMsg))
+			expectedMsg := fmt.Sprintf(
+				`This cell must be recreated.  Flannel is out of sync with the local bridge. `+
+					`flannel (%s): 10.4.13.1/24 bridge (%s): %s`, subnetFileName, bridgeName, bridgeIP)
+			Expect(string(session.Err.Contents())).To(ContainSubstring(expectedMsg))
 		})
 	})
 
@@ -103,7 +107,7 @@ var _ = Describe("Flannel Watchdog", func() {
 
 	Context("when the bridge device cannot be found", func() {
 		BeforeEach(func() {
-			deleteBridge()
+			deleteBridge(false)
 		})
 
 		It("continues running", func() {
@@ -126,7 +130,7 @@ var _ = Describe("Flannel Watchdog", func() {
 			It("reports the Found message again", func() {
 				Eventually(howManyFinds, DEFAULT_TIMEOUT).Should(Equal(1))
 
-				deleteBridge()
+				deleteBridge(false)
 
 				Eventually(session.Out.Contents, DEFAULT_TIMEOUT).Should(ContainSubstring("no bridge device found"))
 
