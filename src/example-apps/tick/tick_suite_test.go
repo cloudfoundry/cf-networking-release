@@ -48,7 +48,8 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	rand.Seed(config.GinkgoConfig.RandomSeed + int64(GinkgoParallelNode()))
 })
 
-var _ = AfterSuite(func() {
+var _ = SynchronizedAfterSuite(func() {
+}, func() {
 	gexec.CleanupBuildArtifacts()
 })
 
