@@ -6,6 +6,8 @@ dependencies:
 
 files:
   - github.com/coreos/flannel/**/*
+  - cni-wrapper-plugin/*.go # gosub
+  - cni-wrapper-plugin/lib/*.go # gosub
   - github.com/containernetworking/cni/pkg/invoke/*.go # gosub
   - github.com/containernetworking/cni/pkg/ip/*.go # gosub
   - github.com/containernetworking/cni/pkg/ipam/*.go # gosub

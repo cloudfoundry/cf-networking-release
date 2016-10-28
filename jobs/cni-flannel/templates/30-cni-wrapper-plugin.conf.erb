@@ -1,0 +1,15 @@
+{
+  "name": "cni-wrapper",
+  "type": "cni-wrapper-plugin",
+  "cniVersion": "0.2.0",
+  "datastore": "/path/to/datastore",
+  "delegate": {
+    "name": "cni-flannel",
+    "type": "flannel",
+    "delegate": {
+      "bridge": "cni-flannel0",
+      "isDefaultGateway": true,
+      "ipMasq": false
+     }
+  }
+}

@@ -62,7 +62,8 @@ GOOS=linux sync_package runc-cni \
 GOOS=linux sync_package flannel \
   -app github.com/containernetworking/cni/plugins/main/bridge \
   -app github.com/containernetworking/cni/plugins/ipam/host-local \
-  -app github.com/containernetworking/cni/plugins/meta/flannel &
+  -app github.com/containernetworking/cni/plugins/meta/flannel \
+  -app cni-wrapper-plugin &
 
 wait
 

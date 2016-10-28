@@ -16,3 +16,4 @@ export GOPATH=$GOPATH:$PWD/github.com/containernetworking/cni/Godeps/_workspace
 go install github.com/containernetworking/cni/plugins/main/bridge
 go install github.com/containernetworking/cni/plugins/ipam/host-local
 go install github.com/containernetworking/cni/plugins/meta/flannel
+go install cni-wrapper-plugin

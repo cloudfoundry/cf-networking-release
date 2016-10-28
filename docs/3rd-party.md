@@ -34,16 +34,24 @@ The `garden-external-networker` will invoke one or more CNI plugins, according t
 It will start with the CNI config files available in the `cni_config_dir` and also inject
 some dynamic information about the container, including the CloudFoundry App, Space and Org that it belongs to.
 
-Here's an example of the Network Configuration data that is passed to the `flannel` plugin:
+Here's an example of the Network Configuration data that is passed to the `wrapper` plugin:
 ```json
 {
-  "type": "flannel",
-  "name": "cni-flannel",
-  "delegate": {
-    "bridge": "cni-flannel0",
-    "ipMasq": false,
-    "isDefaultGateway": true
-  },
+  {
+    "name": "cni-wrapper",
+    "type": "wrapper",
+    "cniVersion": "0.2.0",
+    "datastore": "/path/to/datastore",
+    "delegate": {
+      "name": "cni-flannel",
+      "type": "flannel",
+      "delegate": {
+        "bridge": "cni-flannel0",
+        "isDefaultGateway": true,
+        "ipMasq": false
+       }
+    }
+  }
 
   "network": {
     "properties": {
@@ -55,7 +63,7 @@ Here's an example of the Network Configuration data that is passed to the `flann
   }
 }
 ```
-Note that the `delegate`, `name` and `type` fields are present in the static `30-flannel.conf` file provided by the BOSH release.
+Note that the `delegate`, `name` and `type` fields are present in the static `30-cni-wrapper-plugin.conf` file provided by the BOSH release.
 At runtime, the `garden-external-networker` also injects the `network` field with `properties` which include CF-specific info.
 
 ## To deploy a local-only (no-op) CNI plugin
