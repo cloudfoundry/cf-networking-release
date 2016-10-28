@@ -41,3 +41,4 @@ files:
   - golang.org/x/sys/unix/*.s # gosub
   - lib/filelock/*.go # gosub
   - lib/rules/*.go # gosub
+  - lib/serial/*.go # gosub
