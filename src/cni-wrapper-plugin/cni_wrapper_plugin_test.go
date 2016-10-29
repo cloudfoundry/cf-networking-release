@@ -37,6 +37,14 @@ var _ = Describe("CniWrapperPlugin", func() {
   "name": "cni-wrapper",
   "type": "wrapper",
   "datastore": "%s",
+
+	"network": {
+		"properties": {
+			"key1": "value1",
+			"key2": [ "some", "data" ]
+		}
+	},
+
 	"delegate": ` +
 		delegateInput +
 		`}`
@@ -93,7 +101,6 @@ var _ = Describe("CniWrapperPlugin", func() {
 	Describe("state lifecylcle", func() {
 		It("stores and removes metadata with the lifetime of the container", func() {
 			By("calling ADD")
-			cmd.Env[0] = "CNI_COMMAND=ADD"
 			session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(0))
@@ -101,12 +108,11 @@ var _ = Describe("CniWrapperPlugin", func() {
 			By("check that metadata is stored")
 			stateFileBytes, err := ioutil.ReadFile(datastorePath)
 			Expect(err).NotTo(HaveOccurred())
-			fmt.Println(datastorePath)
-			Expect(string(stateFileBytes)).To(ContainSubstring(fmt.Sprintf("1.2.3.4")))
+			Expect(string(stateFileBytes)).To(ContainSubstring("1.2.3.4"))
+			Expect(string(stateFileBytes)).To(ContainSubstring("value1"))
 
 			By("calling DEL")
 			cmd = cniCommand("DEL", input)
-			cmd.Env[0] = "CNI_COMMAND=DEL"
 			session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(0))
@@ -114,15 +120,12 @@ var _ = Describe("CniWrapperPlugin", func() {
 			By("check that metadata is has been removed")
 			stateFileBytes, err = ioutil.ReadFile(datastorePath)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(string(stateFileBytes)).NotTo(ContainSubstring(fmt.Sprintf("1.2.3.4")))
+			Expect(string(stateFileBytes)).NotTo(ContainSubstring("1.2.3.4"))
+			Expect(string(stateFileBytes)).NotTo(ContainSubstring("value1"))
 		})
 	})
 
 	Context("When call with command ADD", func() {
-		BeforeEach(func() {
-			cmd.Env[0] = "CNI_COMMAND=ADD"
-		})
-
 		It("passes the delegate result back to the caller", func() {
 			session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
@@ -154,6 +157,43 @@ var _ = Describe("CniWrapperPlugin", func() {
 				Eventually(session).Should(gexec.Exit(1))
 
 				Expect(session.Out.Contents()).To(MatchJSON(`{ "code": 100, "msg": "delegate call: banana" }`))
+			})
+		})
+
+		Context("when the CNI call has no metadata", func() {
+			BeforeEach(func() {
+				inputTemplate := `
+{
+  "name": "cni-wrapper",
+  "type": "wrapper",
+  "datastore": "%s",
+
+	"delegate": ` +
+					delegateInput +
+					`}`
+				input = fmt.Sprintf(inputTemplate, datastorePath)
+			})
+			It("succeeds and writes container IP to the datastore", func() {
+				cmd = cniCommand("ADD", input)
+				session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+				Eventually(session).Should(gexec.Exit(0))
+
+				By("check that metadata is stored")
+				stateFileBytes, err := ioutil.ReadFile(datastorePath)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(stateFileBytes)).To(ContainSubstring("1.2.3.4"))
+
+				By("calling DEL")
+				cmd = cniCommand("DEL", input)
+				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+				Eventually(session).Should(gexec.Exit(0))
+
+				By("check that metadata is has been removed")
+				stateFileBytes, err = ioutil.ReadFile(datastorePath)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(stateFileBytes)).NotTo(ContainSubstring("1.2.3.4"))
 			})
 		})
 	})

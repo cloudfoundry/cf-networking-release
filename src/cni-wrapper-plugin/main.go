@@ -3,6 +3,7 @@ package main
 import (
 	"cni-wrapper-plugin/lib"
 	"cni-wrapper-plugin/lib/datastore"
+	"encoding/json"
 	"fmt"
 	"lib/filelock"
 	"lib/serial"
@@ -33,7 +34,17 @@ func cmdAdd(args *skel.CmdArgs) error {
 		},
 	}
 
-	if err := store.Add(args.ContainerID, result.IP4.IP.IP.String(), nil); err != nil {
+	var metadata struct {
+		Network struct {
+			Properties map[string]interface{}
+		}
+	}
+	if err := json.Unmarshal(args.StdinData, &metadata); err != nil {
+		// log error, set to nil
+		panic(err)
+	}
+
+	if err := store.Add(args.ContainerID, result.IP4.IP.IP.String(), metadata.Network.Properties); err != nil {
 		panic(err)
 	}
 
