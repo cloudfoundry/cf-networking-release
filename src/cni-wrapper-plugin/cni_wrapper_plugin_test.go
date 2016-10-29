@@ -160,6 +160,20 @@ var _ = Describe("CniWrapperPlugin", func() {
 			})
 		})
 
+		Context("when the datastore add fails", func() {
+			BeforeEach(func() {
+				cmd.Env[1] = "CNI_CONTAINERID="
+			})
+
+			It("wraps and returns the error", func() {
+				session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+				Eventually(session).Should(gexec.Exit(1))
+
+				Expect(session.Out.Contents()).To(MatchJSON(`{ "code": 100, "msg": "store add: invalid handle" }`))
+			})
+		})
+
 		Context("when the CNI call has no metadata", func() {
 			BeforeEach(func() {
 				inputTemplate := `
@@ -221,12 +235,38 @@ var _ = Describe("CniWrapperPlugin", func() {
 				Expect(debug.WriteDebug(debugFileName)).To(Succeed())
 			})
 
-			It("wraps and returns the error", func() {
+			It("logs the wrapped error to stderr and return the success status code (for idempotency)", func() {
 				session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 				Expect(err).NotTo(HaveOccurred())
-				Eventually(session).Should(gexec.Exit(1))
+				Eventually(session).Should(gexec.Exit(0))
 
-				Expect(session.Out.Contents()).To(MatchJSON(`{ "code": 100, "msg": "delegate call: banana" }`))
+				Expect(session.Err.Contents()).To(ContainSubstring("delegate delete: banana"))
+			})
+		})
+
+		Context("when the datastore delete fails", func() {
+			BeforeEach(func() {
+				cmd.Env[1] = "CNI_CONTAINERID="
+			})
+
+			It("wraps and logs the error, and returns the success status code (for idempotency)", func() {
+				session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+				Eventually(session).Should(gexec.Exit(0))
+
+				Expect(session.Err.Contents()).To(ContainSubstring("store delete: invalid handle"))
+			})
+
+			It("still calls plugin delete (so that DEL is idempotent)", func() {
+				session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+				Eventually(session).Should(gexec.Exit(0))
+
+				debug, err := noop_debug.ReadDebug(debugFileName)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(debug.Command).To(Equal("DEL"))
+
+				Expect(debug.CmdArgs.StdinData).To(MatchJSON(delegateInput))
 			})
 		})
 

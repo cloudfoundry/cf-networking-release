@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"lib/filelock"
 	"lib/serial"
+	"os"
 
 	"github.com/containernetworking/cni/pkg/skel"
 	"github.com/containernetworking/cni/pkg/version"
@@ -40,12 +41,11 @@ func cmdAdd(args *skel.CmdArgs) error {
 		}
 	}
 	if err := json.Unmarshal(args.StdinData, &metadata); err != nil {
-		// log error, set to nil
-		panic(err)
+		panic(err) // not tested, this should be impossible
 	}
 
 	if err := store.Add(args.ContainerID, result.IP4.IP.IP.String(), metadata.Network.Properties); err != nil {
-		panic(err)
+		return fmt.Errorf("store add: %s", err)
 	}
 
 	return result.Print()
@@ -57,16 +57,6 @@ func cmdDel(args *skel.CmdArgs) error {
 		return err
 	}
 
-	pluginController := &lib.PluginController{
-		Delegator: lib.NewDelegator(),
-	}
-
-	if err := pluginController.DelegateDel(n.Delegate); err != nil {
-		//log to stderr
-		return fmt.Errorf("delegate call: %v", err)
-	}
-
-	//delete from disk
 	store := &datastore.Store{
 		Serializer: &serial.Serial{},
 		Locker: &filelock.Locker{
@@ -75,7 +65,15 @@ func cmdDel(args *skel.CmdArgs) error {
 	}
 
 	if err := store.Delete(args.ContainerID); err != nil {
-		panic(err) //tostderr
+		fmt.Fprintf(os.Stderr, "store delete: %s", err)
+	}
+
+	pluginController := &lib.PluginController{
+		Delegator: lib.NewDelegator(),
+	}
+
+	if err := pluginController.DelegateDel(n.Delegate); err != nil {
+		fmt.Fprintf(os.Stderr, "delegate delete: %s", err)
 	}
 
 	return nil
