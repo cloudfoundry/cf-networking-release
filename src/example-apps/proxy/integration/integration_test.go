@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
+	"net/http/httptest"
 	"os/exec"
+	"strings"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -18,6 +19,9 @@ var _ = Describe("Integration", func() {
 		session    *gexec.Session
 		address    string
 		listenPort int
+
+		proxyDestinationServer *httptest.Server
+		destinationAddress     string
 	)
 
 	var serverIsAvailable = func() error {
@@ -25,7 +29,12 @@ var _ = Describe("Integration", func() {
 	}
 
 	BeforeEach(func() {
-		listenPort = rand.Intn(1000) + 5000
+		proxyDestinationServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			fmt.Fprintln(w, "Example Domain")
+		}))
+		destinationAddress = strings.Replace(proxyDestinationServer.URL, "http://", "", 1)
+
+		listenPort = 44000 + GinkgoParallelNode()
 		address = fmt.Sprintf("127.0.0.1:%d", listenPort)
 
 		exampleAppCmd := exec.Command(exampleAppPath)
@@ -42,7 +51,9 @@ var _ = Describe("Integration", func() {
 	AfterEach(func() {
 		session.Interrupt()
 		Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit())
+		proxyDestinationServer.Close()
 	})
+
 	Describe("boring server behavior", func() {
 		It("should boot and gracefully terminate", func() {
 			Consistently(session).ShouldNot(gexec.Exit())
@@ -74,7 +85,7 @@ var _ = Describe("Integration", func() {
 		})
 
 		It("should respond to /proxy by proxying the request to the provided address", func() {
-			response, err := http.DefaultClient.Get("http://" + address + "/proxy/example.com")
+			response, err := http.DefaultClient.Get("http://" + address + "/proxy/" + destinationAddress)
 			Expect(err).NotTo(HaveOccurred())
 			defer response.Body.Close()
 			Expect(response.StatusCode).To(Equal(200))
@@ -85,7 +96,7 @@ var _ = Describe("Integration", func() {
 		})
 
 		It("should report latency stats on /stats", func() {
-			response, err := http.DefaultClient.Get("http://" + address + "/proxy/example.com")
+			response, err := http.DefaultClient.Get("http://" + address + "/proxy/" + destinationAddress)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(response.StatusCode).To(Equal(200))
 
