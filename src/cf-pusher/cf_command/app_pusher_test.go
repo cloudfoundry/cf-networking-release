@@ -4,6 +4,7 @@ import (
 	"cf-pusher/cf_command"
 	"cf-pusher/fakes"
 	"errors"
+	"sync/atomic"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -136,10 +137,10 @@ var _ = Describe("AppPusher", func() {
 			})
 			Context("when pushing the last app fails", func() {
 				BeforeEach(func() {
-					callCount := 0
+					var callCount uint32 = 0
 					fakeAdapter.PushStub = func(x, y, z string) error {
-						callCount++
-						if callCount == 10 {
+						count := atomic.AddUint32(&callCount, 1)
+						if count == 10 {
 							return errors.New("potato")
 						}
 						return nil
