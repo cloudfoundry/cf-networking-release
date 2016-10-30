@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math/rand"
 	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"code.cloudfoundry.org/garden"
 
@@ -107,9 +107,9 @@ var _ = Describe("Garden External Networker", func() {
 		fakeLogDir, err = ioutil.TempDir("", "fake-logs-")
 		Expect(err).NotTo(HaveOccurred())
 
-		containerHandle = fmt.Sprintf("container-%011d", time.Now().Nanosecond())
-		netoutChainName = fmt.Sprintf("netout--%s", containerHandle[:len(containerHandle)-1])
-		netinChainName = fmt.Sprintf("netin--%s", containerHandle)
+		containerHandle = fmt.Sprintf("container-%04x-%x", GinkgoParallelNode(), rand.Int63())
+		netoutChainName = fmt.Sprintf("netout--%s", containerHandle)[:28]
+		netinChainName = fmt.Sprintf("netin--%s", containerHandle)[:28]
 
 		sleepCmd := exec.Command("/bin/sleep", "1000")
 		Expect(sleepCmd.Start()).To(Succeed())

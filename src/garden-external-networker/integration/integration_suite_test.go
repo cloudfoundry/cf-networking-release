@@ -53,7 +53,7 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 }, func(data []byte) {
 	Expect(json.Unmarshal(data, &paths)).To(Succeed())
 
-	rand.Seed(config.GinkgoConfig.RandomSeed)
+	rand.Seed(config.GinkgoConfig.RandomSeed + int64(GinkgoParallelNode()))
 })
 
 var _ = SynchronizedAfterSuite(func() {}, func() {
