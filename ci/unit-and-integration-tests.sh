@@ -6,6 +6,7 @@ cd netman-release
 export GOPATH=$PWD
 
 declare -a packages=(
+  "src/cf-pusher"
   "src/cli-plugin"
   "src/cni-wrapper-plugin"
   "src/example-apps"
@@ -16,7 +17,6 @@ declare -a packages=(
   )
 
 declare -a serial_packages=(
-  "src/cf-pusher"
   "src/garden-external-networker"
   "src/vxlan-policy-agent"
   )
