@@ -47,7 +47,7 @@ function bootMysql {
 	trycount=0
 	for i in `seq 1 30`; do
 		set +e
-    echo '\s;' | mysql -h 127.0.0.1 -u root --password="password" &>/dev/null
+		echo '\s;' | mysql -h 127.0.0.1 -u root --password="password" &>/dev/null
 		exitcode=$?
 		set -e
 		if [ $exitcode -eq 0 ]; then
