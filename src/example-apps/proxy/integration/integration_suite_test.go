@@ -19,7 +19,7 @@ const DEFAULT_TIMEOUT = "5s"
 
 func TestIntegration(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Integration Suite")
+	RunSpecs(t, "Proxy Integration Suite")
 }
 
 var _ = SynchronizedBeforeSuite(func() []byte {
