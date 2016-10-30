@@ -215,9 +215,9 @@ var _ = Describe("VXLAN Policy Agent", func() {
 				return metrics
 			}
 			Eventually(gatherMetricNames, "5s").Should(HaveKey("iptablesEnforceTime"))
-			Expect(gatherMetricNames()).To(HaveKey("totalPollTime"))
-			Expect(gatherMetricNames()).To(HaveKey("gardenPollTime"))
-			Expect(gatherMetricNames()).To(HaveKey("policyServerPollTime"))
+			Eventually(gatherMetricNames, "5s").Should(HaveKey("totalPollTime"))
+			Eventually(gatherMetricNames, "5s").Should(HaveKey("gardenPollTime"))
+			Eventually(gatherMetricNames, "5s").Should(HaveKey("policyServerPollTime"))
 		})
 	})
 
