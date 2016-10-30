@@ -5,10 +5,8 @@ import (
 	"example-apps/tick/a8"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
 	"os/exec"
-	"strconv"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -19,8 +17,8 @@ var _ = Describe("Tick app", func() {
 	var (
 		registrySession *gexec.Session
 		tickSession     *gexec.Session
-		registryPort    string
-		tickPort        string
+		registryPort    int
+		tickPort        int
 		registryURL     string
 		tickTTLSeconds  int
 
@@ -52,8 +50,8 @@ var _ = Describe("Tick app", func() {
 		cmd.Env = []string{
 			fmt.Sprintf("START_PORT=%d", startPort),
 			fmt.Sprintf("LISTEN_PORTS=%d", listenPorts),
-			fmt.Sprintf("PORT=%s", tickPort),
-			fmt.Sprintf("REGISTRY_BASE_URL=http://127.0.0.1:%s", registryPort),
+			fmt.Sprintf("PORT=%d", tickPort),
+			fmt.Sprintf("REGISTRY_BASE_URL=http://127.0.0.1:%d", registryPort),
 			fmt.Sprintf(`VCAP_APPLICATION={
 				"instance_index": 13,
 				"application_name": "my-tick-app"
@@ -67,7 +65,7 @@ var _ = Describe("Tick app", func() {
 	var StartRegistry = func() {
 		cmd := exec.Command(registryBinaryPath)
 		cmd.Env = []string{
-			fmt.Sprintf("A8_API_PORT=%s", registryPort),
+			fmt.Sprintf("A8_API_PORT=%d", registryPort),
 		}
 		var err error
 		registrySession, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
@@ -75,10 +73,12 @@ var _ = Describe("Tick app", func() {
 	}
 
 	BeforeEach(func() {
-		registryPort = strconv.Itoa(40000 + rand.Intn(20000))
-		registryURL = fmt.Sprintf("http://127.0.0.1:%s/api/v1/instances", registryPort)
-		tickPort = strconv.Itoa(40000 + rand.Intn(20000))
+		registryPort = 40000 + GinkgoParallelNode()
+		registryURL = fmt.Sprintf("http://127.0.0.1:%d/api/v1/instances", registryPort)
+		tickPort = 41000 + GinkgoParallelNode()
 		tickTTLSeconds = 2
+		startPort = 42000 + 100*GinkgoParallelNode()
+		listenPorts = 3
 	})
 
 	AfterEach(func() {
@@ -109,8 +109,6 @@ var _ = Describe("Tick app", func() {
 		StartRegistry()
 		Eventually(getURL(registryURL)).Should(MatchJSON(`{"instances": []}`))
 
-		startPort = 7007
-		listenPorts = 3
 		StartTick()
 
 		Eventually(getInstances).Should(HaveLen(1))
