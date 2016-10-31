@@ -29,49 +29,46 @@ type fakePluginLogData struct {
 
 func expectedStdin_CNI_ADD(index int) string {
 	return fmt.Sprintf(`
-{
-  "cniVersion": "0.1.0",
-  "name": "some-net-%d",
-  "type": "plugin-%d",
-  "network": {
-    "properties": {
-      "some-key": "some-value",
-      "policy_group_id": "some-group-id"
-    }
-  }
-}`, index, index)
+	{
+		"cniVersion": "0.1.0",
+		"name": "some-net-%d",
+		"type": "plugin-%d",
+		"network": {
+			"properties": {
+				"some-key": "some-value",
+				"policy_group_id": "some-group-id"
+			}
+		}
+	}`, index, index)
 }
 func expectedStdin_CNI_DEL(index int) string {
 	return fmt.Sprintf(`
-{
-  "cniVersion": "0.1.0",
-  "name": "some-net-%d",
-  "type": "plugin-%d"
-}`, index, index)
+	{
+		"cniVersion": "0.1.0",
+		"name": "some-net-%d",
+		"type": "plugin-%d"
+	}`, index, index)
 }
 
 func writeConfig(index int, outDir string) error {
 	config := fmt.Sprintf(`
-{
-  "cniVersion": "0.1.0",
-  "name": "some-net-%d",
-  "type": "plugin-%d"
-}`, index, index)
+	{
+		"cniVersion": "0.1.0",
+		"name": "some-net-%d",
+		"type": "plugin-%d"
+	}`, index, index)
 	outpath := filepath.Join(outDir, fmt.Sprintf("%d-plugin-%d.conf", 10*index, index))
 	return ioutil.WriteFile(outpath, []byte(config), 0600)
 }
 
 func sameFile(path1, path2 string) bool {
-	fi1, err := os.Stat(path1)
+	file1, err := os.Stat(path1)
 	Expect(err).NotTo(HaveOccurred())
 
-	fi2, err := os.Stat(path2)
+	file2, err := os.Stat(path2)
 	Expect(err).NotTo(HaveOccurred())
-	return os.SameFile(fi1, fi2)
+	return os.SameFile(file1, file2)
 }
-
-var netmanAgentReceivedData = ``
-var netmanAgentReceivedMethod = ``
 
 const DEFAULT_TIMEOUT = "10s"
 
@@ -94,9 +91,7 @@ var _ = Describe("Garden External Networker", func() {
 		netinChainName         string
 		fakeProcess            *os.Process
 		fakeConfigFilePath     string
-		adapterLogFilePath     string
 		upCommand, downCommand *exec.Cmd
-		adapterLogDir          string
 	)
 
 	BeforeEach(func() {
@@ -127,17 +122,9 @@ var _ = Describe("Garden External Networker", func() {
 		Expect(stateFile.Close()).To(Succeed())
 		stateFilePath = stateFile.Name()
 
-		adapterLogDir, err = ioutil.TempDir("", "adapter-log-dir")
-		Expect(err).NotTo(HaveOccurred())
-		Expect(os.RemoveAll(adapterLogDir)).To(Succeed()) // directory need not exist
-		adapterLogFilePath = filepath.Join(adapterLogDir, fmt.Sprintf("%s.log", containerHandle))
-
 		Expect(writeConfig(0, cniConfigDir)).To(Succeed())
 		Expect(writeConfig(1, cniConfigDir)).To(Succeed())
 		Expect(writeConfig(2, cniConfigDir)).To(Succeed())
-
-		netmanAgentReceivedData = ""
-		netmanAgentReceivedMethod = ""
 
 		configFile, err := ioutil.TempFile("", "adapter-config-")
 		Expect(err).NotTo(HaveOccurred())

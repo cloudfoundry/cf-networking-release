@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
-	"os"
 	"os/exec"
 	"strings"
 
@@ -18,8 +16,6 @@ import (
 var _ = Describe("Garden External Networker errors", func() {
 	var (
 		command            *exec.Cmd
-		cniConfigDir       string
-		fakePid            int
 		fakeConfigFilePath string
 		defaultConfig      map[string]interface{}
 	)
@@ -63,12 +59,7 @@ var _ = Describe("Garden External Networker errors", func() {
 		}
 		command.Env = []string{"PATH=/sbin"}
 
-		fakePid = rand.Intn(30000)
-		command.Stdin = strings.NewReader(fmt.Sprintf(`{ "pid": %d }`, fakePid))
-	})
-
-	AfterEach(func() {
-		Expect(os.RemoveAll(cniConfigDir)).To(Succeed())
+		command.Stdin = strings.NewReader(fmt.Sprintf(`{ "pid": %d }`, GinkgoParallelNode()))
 	})
 
 	Context("when inputs are invalid", func() {
