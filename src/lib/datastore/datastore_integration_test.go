@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"sync/atomic"
 
 	"lib/datastore"
 	"lib/filelock"
 	"lib/serial"
+	"lib/testsupport"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -126,6 +128,63 @@ var _ = Describe("Datastore Lifecycle", func() {
 			By("verify store is empty")
 			data = loadStoreFrom(filepath)
 			Expect(data).Should(BeEmpty())
+		})
+	})
+
+	Context("when adding and deleting concurrently", func() {
+		It("remains consistent", func() {
+
+			containerHandles := []interface{}{}
+			total := 250
+			for i := 0; i < total; i++ {
+				id := fmt.Sprintf("%s-%d", handle, i)
+				containerHandles = append(containerHandles, id)
+			}
+
+			parallelRunner := &testsupport.ParallelRunner{
+				NumWorkers: 50,
+			}
+			toDelete := make(chan (interface{}), total)
+			toRead := make(chan (interface{}), total)
+
+			go func() {
+				parallelRunner.RunOnSlice(containerHandles, func(containerHandle interface{}) {
+					p := containerHandle.(string)
+					func(id string) {
+						err := store.Add(id, ip, metadata)
+						Expect(err).NotTo(HaveOccurred())
+					}(p)
+					toRead <- p
+				})
+				close(toRead)
+			}()
+
+			go func() {
+				parallelRunner.RunOnChannel(toRead, func(containerHandle interface{}) {
+					p := containerHandle.(string)
+					func(id string) {
+						//TODO. add the read case
+					}(p)
+					toDelete <- p
+				})
+				close(toDelete)
+			}()
+
+			var nDeleted int32
+			parallelRunner.RunOnChannel(toDelete, func(containerHandle interface{}) {
+				p := containerHandle.(string)
+				func(id string) {
+					err := store.Delete(id)
+					Expect(err).NotTo(HaveOccurred())
+				}(p)
+				atomic.AddInt32(&nDeleted, 1)
+			})
+			Expect(nDeleted).To(Equal(int32(total)))
+
+			By("adding an entries to store")
+			data := loadStoreFrom(filepath)
+			Expect(data).Should(HaveLen(0))
+
 		})
 	})
 })
