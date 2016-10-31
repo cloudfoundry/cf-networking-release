@@ -88,7 +88,7 @@ var _ = Describe("CniController", func() {
 
 			Expect(logger).To(gbytes.Say(`test.up-add-network-start.*type.*some-plugin`))
 			Expect(logger).To(gbytes.Say(`test.up-add-network-result.*type.*some-plugin`))
-			expectedNetConfBytes := `{"cniVersion":"some-version","type":"some-plugin", "network":{"properties":{"some":"properties"}}}`
+			expectedNetConfBytes := `{"cniVersion":"some-version","type":"some-plugin", "metadata":{"some":"properties"}}`
 			Expect(logger.Logs()).To(ContainElement(HasLogDataWith("networkConfig", expectedNetConfBytes)))
 
 		})

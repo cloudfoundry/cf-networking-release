@@ -33,9 +33,7 @@ func (c *CNIController) Up(namespacePath, handle string, properties map[string]s
 		}
 
 		if len(properties) > 0 {
-			networkConfig, err = libcni.InjectConf(networkConfig, "network", map[string]interface{}{
-				"properties": properties,
-			})
+			networkConfig, err = libcni.InjectConf(networkConfig, "metadata", properties)
 			if err != nil {
 				return nil, fmt.Errorf("adding garden properties to CNI config: %s", err)
 			}

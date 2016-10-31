@@ -33,11 +33,9 @@ func expectedStdin_CNI_ADD(index int) string {
 		"cniVersion": "0.1.0",
 		"name": "some-net-%d",
 		"type": "plugin-%d",
-		"network": {
-			"properties": {
+		"metadata": {
 				"some-key": "some-value",
 				"policy_group_id": "some-group-id"
-			}
 		}
 	}`, index, index)
 }

@@ -52,14 +52,11 @@ Here's an example of the Network Configuration data that is passed to the `wrapp
        }
     }
   }
-
-  "network": {
-    "properties": {
-      "app_id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
-      "org_id": "2ac41bbf-8eae-4f28-abab-51ca38dea3e4",
-      "policy_group_id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
-      "space_id": "4246c57d-aefc-49cc-afe0-5f734e2656e8"
-    }
+  "metadata": {
+    "app_id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
+    "org_id": "2ac41bbf-8eae-4f28-abab-51ca38dea3e4",
+    "policy_group_id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
+    "space_id": "4246c57d-aefc-49cc-afe0-5f734e2656e8"
   }
 }
 ```
