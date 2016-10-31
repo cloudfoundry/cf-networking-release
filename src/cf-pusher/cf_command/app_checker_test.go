@@ -13,6 +13,7 @@ var _ = Describe("AppChecker", func() {
 	var (
 		appChecker  *cf_command.AppChecker
 		fakeAdapter *fakes.CheckCLIAdapter
+		appSpec     map[string]int
 	)
 	BeforeEach(func() {
 		fakeAdapter = &fakes.CheckCLIAdapter{}
@@ -29,6 +30,8 @@ var _ = Describe("AppChecker", func() {
 					Directory: "some/dir",
 				},
 			}
+			appSpec = map[string]int{}
+			appSpec["some-name-1"] = 2
 			fakeAdapter.AppGuidReturns("some-guid-1", nil)
 			str := `{ "guid": "some-guid-1", "name": "scale-tick-1", "running_instances": 2, "instances": 2, "state": "STARTED"}`
 			fakeAdapter.CheckAppReturns([]byte(str), nil)
@@ -36,7 +39,7 @@ var _ = Describe("AppChecker", func() {
 			fakeAdapter.AppCountReturns(1, nil)
 		})
 		It("when the app is in state running", func() {
-			err := appChecker.CheckApps()
+			err := appChecker.CheckApps(appSpec)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeAdapter.AppGuidCallCount()).To(Equal(1))
@@ -51,12 +54,36 @@ var _ = Describe("AppChecker", func() {
 			Expect(fakeAdapter.AppCountArgsForCall(0)).To(Equal("some-org-guid"))
 		})
 
+		Context("when an app is not running the specified number of instances", func() {
+			BeforeEach(func() {
+				appSpec["some-name-1"] = 1
+			})
+			It("returns an error", func() {
+				err := appChecker.CheckApps(appSpec)
+				Expect(err).To(MatchError("checking app some-name-1: not running desired instances, running: 2 desired: 1"))
+			})
+		})
+
+		Context("when the app name is not in the app spec", func() {
+			BeforeEach(func() {
+				appChecker.Applications = append(appChecker.Applications, cf_command.Application{
+					Name:      "banana",
+					Directory: "some/dir",
+				})
+				fakeAdapter.AppCountReturns(2, nil)
+			})
+			It("returns a helpful error", func() {
+				err := appChecker.CheckApps(appSpec)
+				Expect(err).To(MatchError("checking app banana: not found in app spec"))
+			})
+		})
+
 		Context("when org guid fails", func() {
 			BeforeEach(func() {
 				fakeAdapter.OrgGuidReturns("", errors.New("potato"))
 			})
 			It("returns a meaningful error", func() {
-				err := appChecker.CheckApps()
+				err := appChecker.CheckApps(appSpec)
 				Expect(err).To(MatchError("checking org guid some-org-name: potato"))
 			})
 		})
@@ -66,7 +93,7 @@ var _ = Describe("AppChecker", func() {
 				fakeAdapter.AppCountReturns(-1, errors.New("potato"))
 			})
 			It("returns a meaningful error", func() {
-				err := appChecker.CheckApps()
+				err := appChecker.CheckApps(appSpec)
 				Expect(err).To(MatchError("checking app counts: potato"))
 			})
 		})
@@ -76,7 +103,7 @@ var _ = Describe("AppChecker", func() {
 				fakeAdapter.AppCountReturns(2, nil)
 			})
 			It("returns a meaningful error", func() {
-				err := appChecker.CheckApps()
+				err := appChecker.CheckApps(appSpec)
 				Expect(err).To(MatchError("app count 2 does not match 1"))
 			})
 		})
@@ -86,7 +113,7 @@ var _ = Describe("AppChecker", func() {
 				fakeAdapter.AppGuidReturns("", errors.New("potato"))
 			})
 			It("returns a meaningful error", func() {
-				err := appChecker.CheckApps()
+				err := appChecker.CheckApps(appSpec)
 				Expect(err).To(MatchError("checking app guid some-name-1: potato"))
 			})
 		})
@@ -95,7 +122,7 @@ var _ = Describe("AppChecker", func() {
 				fakeAdapter.CheckAppReturns(nil, errors.New("potato"))
 			})
 			It("returns a meaningful error", func() {
-				err := appChecker.CheckApps()
+				err := appChecker.CheckApps(appSpec)
 				Expect(err).To(MatchError("checking app some-name-1: potato"))
 			})
 		})
@@ -105,7 +132,7 @@ var _ = Describe("AppChecker", func() {
 				fakeAdapter.CheckAppReturns([]byte(str), nil)
 			})
 			It("returns a meaningul error", func() {
-				err := appChecker.CheckApps()
+				err := appChecker.CheckApps(appSpec)
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -119,7 +146,7 @@ var _ = Describe("AppChecker", func() {
 				fakeAdapter.CheckAppReturns([]byte(str), nil)
 			})
 			It("returns a meaningul error", func() {
-				err := appChecker.CheckApps()
+				err := appChecker.CheckApps(appSpec)
 				Expect(err).To(MatchError("checking app some-name-1: no instances are running"))
 			})
 		})
@@ -130,7 +157,7 @@ var _ = Describe("AppChecker", func() {
 				fakeAdapter.CheckAppReturns([]byte(str), nil)
 			})
 			It("returns a meaningul error", func() {
-				err := appChecker.CheckApps()
+				err := appChecker.CheckApps(appSpec)
 				Expect(err).To(MatchError("checking app some-name-1: no instances are running"))
 			})
 		})
@@ -141,7 +168,7 @@ var _ = Describe("AppChecker", func() {
 				fakeAdapter.CheckAppReturns([]byte(str), nil)
 			})
 			It("returns a meaningul error", func() {
-				err := appChecker.CheckApps()
+				err := appChecker.CheckApps(appSpec)
 				Expect(err).To(MatchError("checking app some-name-1: not all instances are running"))
 			})
 

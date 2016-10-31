@@ -28,15 +28,17 @@ type AppStatus struct {
 	State            string `json:"state"`
 }
 
-func (a *AppChecker) CheckApps() error {
+func (a *AppChecker) CheckApps(appSpec map[string]int) error {
 	orgGuid, err := a.Adapter.OrgGuid(a.Org)
 	if err != nil {
 		return fmt.Errorf("checking org guid %s: %s", a.Org, err)
 	}
+
 	appCount, err := a.Adapter.AppCount(orgGuid)
 	if err != nil {
 		return fmt.Errorf("checking app counts: %s", err)
 	}
+
 	if appCount != len(a.Applications) {
 		return errors.New(fmt.Sprintf("app count %d does not match %d", appCount, len(a.Applications)))
 	}
@@ -62,6 +64,14 @@ func (a *AppChecker) CheckApps() error {
 
 		if s.RunningInstances != s.Instances {
 			return fmt.Errorf("checking app %s: %s", app.Name, "not all instances are running")
+		}
+
+		if desiredInstances, ok := appSpec[app.Name]; ok {
+			if appSpec[app.Name] != s.RunningInstances {
+				return fmt.Errorf("checking app %s: %s, running: %d desired: %d", app.Name, "not running desired instances", s.RunningInstances, desiredInstances)
+			}
+		} else {
+			return fmt.Errorf("checking app %s: not found in app spec", app.Name)
 		}
 	}
 	return nil

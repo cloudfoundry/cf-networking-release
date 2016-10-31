@@ -95,7 +95,7 @@ func (a *Adapter) AppCount(orgGuid string) (int, error) {
 }
 
 func (a *Adapter) CheckApp(guid string) ([]byte, error) {
-	fmt.Printf("running: %s curl \"/v2/apps/%s/summary/\"\n", a.CfCliPath, guid)
+	fmt.Printf("running: %s curl \"/v2/apps/%s/summary\"\n", a.CfCliPath, guid)
 	bytes, err := exec.Command(a.CfCliPath, "curl", fmt.Sprintf("/v2/apps/%s/summary", guid)).CombinedOutput()
 	return bytes, err
 }

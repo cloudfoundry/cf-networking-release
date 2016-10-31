@@ -141,7 +141,15 @@ func main() {
 
 	adapter.TargetOrg(scaleGroup.Org)
 	adapter.TargetSpace(scaleGroup.Space)
-	err = appChecker.CheckApps()
+
+	appSpec := map[string]int{
+		prefix + "proxy":    1,
+		prefix + "registry": 1,
+	}
+	for i := 0; i < config.Applications; i++ {
+		appSpec[fmt.Sprintf("%stick-%d", prefix, i)] = config.AppInstances
+	}
+	err = appChecker.CheckApps(appSpec)
 	if err == nil {
 		success(scaleGroup)
 		return
@@ -180,7 +188,7 @@ func main() {
 
 	maxRetries := 5
 	for i := 0; ; i++ {
-		if err := appChecker.CheckApps(); err != nil {
+		if err := appChecker.CheckApps(appSpec); err != nil {
 			log.Printf("checking apps: %s\n", err)
 			if i == maxRetries {
 				log.Fatal("max retries exceeded")
