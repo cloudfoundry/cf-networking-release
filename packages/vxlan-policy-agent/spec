@@ -5,13 +5,7 @@ dependencies:
   - golang
 
 files:
-  - code.cloudfoundry.org/garden/*.go # gosub
-  - code.cloudfoundry.org/garden/client/*.go # gosub
-  - code.cloudfoundry.org/garden/client/connection/*.go # gosub
-  - code.cloudfoundry.org/garden/routes/*.go # gosub
-  - code.cloudfoundry.org/garden/transport/*.go # gosub
   - code.cloudfoundry.org/lager/*.go # gosub
-  - github.com/bmizerany/pat/*.go # gosub
   - github.com/cloudfoundry/dropsonde/*.go # gosub
   - github.com/cloudfoundry/dropsonde/emitter/*.go # gosub
   - github.com/cloudfoundry/dropsonde/envelope_sender/*.go # gosub
@@ -36,7 +30,8 @@ files:
   - github.com/tedsuo/ifrit/*.go # gosub
   - github.com/tedsuo/ifrit/grouper/*.go # gosub
   - github.com/tedsuo/ifrit/sigmon/*.go # gosub
-  - github.com/tedsuo/rata/*.go # gosub
+  - lib/datastore/*.go # gosub
+  - lib/filelock/*.go # gosub
   - lib/flannel/*.go # gosub
   - lib/marshal/*.go # gosub
   - lib/metrics/*.go # gosub
@@ -44,6 +39,7 @@ files:
   - lib/mutualtls/*.go # gosub
   - lib/policy_client/*.go # gosub
   - lib/rules/*.go # gosub
+  - lib/serial/*.go # gosub
   - vxlan-policy-agent/agent_metrics/*.go # gosub
   - vxlan-policy-agent/cmd/vxlan-policy-agent/*.go # gosub
   - vxlan-policy-agent/config/*.go # gosub
