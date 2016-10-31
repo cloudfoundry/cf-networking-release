@@ -35,16 +35,14 @@ func cmdAdd(args *skel.CmdArgs) error {
 		},
 	}
 
-	var metadata struct {
-		Network struct {
-			Properties map[string]interface{}
-		}
+	var cniAddData struct {
+		Metadata map[string]interface{}
 	}
-	if err := json.Unmarshal(args.StdinData, &metadata); err != nil {
+	if err := json.Unmarshal(args.StdinData, &cniAddData); err != nil {
 		panic(err) // not tested, this should be impossible
 	}
 
-	if err := store.Add(args.ContainerID, result.IP4.IP.IP.String(), metadata.Network.Properties); err != nil {
+	if err := store.Add(args.ContainerID, result.IP4.IP.IP.String(), cniAddData.Metadata); err != nil {
 		return fmt.Errorf("store add: %s", err)
 	}
 

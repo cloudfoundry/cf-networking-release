@@ -45,7 +45,7 @@ INPUT_WRAPPER=$(cat <<END
   "name": "cni-wrapper",
   "type": "wrapper",
 	"cniVersion": "0.2.0",
-  "datastore": "/path/to/datastore",
+  "datastore": "/tmp/datastore.json",
 	"delegate": {
     "name": "cni-flannel",
     "type": "flannel",
@@ -55,7 +55,7 @@ INPUT_WRAPPER=$(cat <<END
       "ipMasq": false
      }
   },
-   "cloudfoundry_metadata": {
+   "metadata": {
     "app_id": "some guid here"
   }
 }

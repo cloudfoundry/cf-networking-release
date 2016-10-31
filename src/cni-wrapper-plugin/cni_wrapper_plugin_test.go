@@ -38,11 +38,9 @@ var _ = Describe("CniWrapperPlugin", func() {
   "type": "wrapper",
   "datastore": "%s",
 
-	"network": {
-		"properties": {
+	"metadata": {
 			"key1": "value1",
 			"key2": [ "some", "data" ]
-		}
 	},
 
 	"delegate": ` +
