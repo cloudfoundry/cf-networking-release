@@ -2,13 +2,13 @@ package planner_test
 
 import (
 	"errors"
+	"lib/datastore"
+	libfakes "lib/fakes"
 	"lib/models"
 	"lib/rules"
 	"vxlan-policy-agent/fakes"
 	"vxlan-policy-agent/planner"
 
-	"code.cloudfoundry.org/garden"
-	"code.cloudfoundry.org/garden/gardenfakes"
 	"code.cloudfoundry.org/lager/lagertest"
 
 	. "github.com/onsi/ginkgo"
@@ -19,34 +19,40 @@ import (
 var _ = Describe("Planner", func() {
 	var (
 		policyPlanner      *planner.VxlanPolicyPlanner
-		gardenClient       *gardenfakes.FakeClient
 		policyClient       *fakes.PolicyClient
-		fakeContainer1     *gardenfakes.FakeContainer
-		fakeContainer2     *gardenfakes.FakeContainer
+		store              *libfakes.Datastore
 		timeMetricsEmitter *fakes.TimeMetricsEmitter
 		logger             *lagertest.TestLogger
 		chain              rules.Chain
 	)
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test")
-		fakeContainer1 = &gardenfakes.FakeContainer{}
-		fakeContainer2 = &gardenfakes.FakeContainer{}
-		gardenClient = &gardenfakes.FakeClient{}
 		policyClient = &fakes.PolicyClient{}
 		timeMetricsEmitter = &fakes.TimeMetricsEmitter{}
 
-		fakeContainer1.InfoReturns(garden.ContainerInfo{
-			ContainerIP: "10.255.1.2",
-			Properties:  map[string]string{"network.policy_group_id": "some-app-guid"},
-		}, nil)
-		fakeContainer2.InfoReturns(garden.ContainerInfo{
-			ContainerIP: "10.255.1.3",
-			Properties:  map[string]string{"network.policy_group_id": "some-other-app-guid"},
-		}, nil)
-		gardenClient.ContainersReturns([]garden.Container{
-			fakeContainer1,
-			fakeContainer2,
-		}, nil)
+		store = &libfakes.Datastore{}
+
+		data := make(map[string]datastore.Container)
+		data["container-id-1"] = datastore.Container{
+			Handle: "container-id-1",
+			IP:     "10.255.1.2",
+			Metadata: map[string]interface{}{
+				"policy_group_id": "some-app-guid",
+			},
+		}
+		data["container-id-2"] = datastore.Container{
+			Handle: "container-id-2",
+			IP:     "10.255.1.3",
+			Metadata: map[string]interface{}{
+				"policy_group_id": "some-other-app-guid",
+			},
+		}
+		data["container-id-3"] = datastore.Container{
+			Handle: "container-id-3",
+			IP:     "10.255.1.4",
+		}
+
+		store.ReadAllReturns(data, nil)
 
 		policyClient.GetPoliciesReturns([]models.Policy{
 			{
@@ -92,7 +98,7 @@ var _ = Describe("Planner", func() {
 
 		policyPlanner = &planner.VxlanPolicyPlanner{
 			Logger:            logger,
-			GardenClient:      gardenClient,
+			Datastore:         store,
 			PolicyClient:      policyClient,
 			VNI:               42,
 			CollectionEmitter: timeMetricsEmitter,
@@ -104,8 +110,7 @@ var _ = Describe("Planner", func() {
 			_, err := policyPlanner.GetRules()
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(gardenClient.ContainersCallCount()).To(Equal(1))
-			Expect(gardenClient.ContainersArgsForCall(0)).To(Equal(garden.Properties{}))
+			Expect(store.ReadAllCallCount()).To(Equal(1))
 		})
 		It("gets policies from the policy server", func() {
 			_, err := policyPlanner.GetRules()
@@ -170,28 +175,17 @@ var _ = Describe("Planner", func() {
 			_, err := policyPlanner.GetRules()
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(timeMetricsEmitter.EmitAllCallCount()).To(Equal(1))
+			Expect(timeMetricsEmitter.EmitAllCallCount()).To(Equal(2))
 		})
 		Context("when getting containers from garden fails", func() {
 			BeforeEach(func() {
-				gardenClient.ContainersReturns(nil, errors.New("banana"))
+				store.ReadAllReturns(nil, errors.New("banana"))
 			})
 			It("logs and returns the error", func() {
 				_, err := policyPlanner.GetRules()
 
 				Expect(err).To(MatchError("banana"))
-				Expect(logger).To(gbytes.Say("garden-client-containers.*banana"))
-			})
-		})
-		Context("when getting container info fails", func() {
-			BeforeEach(func() {
-				fakeContainer1.InfoReturns(garden.ContainerInfo{}, errors.New("potato"))
-			})
-			It("logs and returns the error", func() {
-				_, err := policyPlanner.GetRules()
-
-				Expect(err).To(MatchError("potato"))
-				Expect(logger).To(gbytes.Say("container-info.*potato"))
+				Expect(logger).To(gbytes.Say("datastore.*banana"))
 			})
 		})
 		Context("when getting policies fails", func() {

@@ -1,12 +1,12 @@
 package planner
 
 import (
+	"lib/datastore"
 	"lib/models"
 	"lib/rules"
 	"time"
 	"vxlan-policy-agent/agent_metrics"
 
-	"code.cloudfoundry.org/garden"
 	"code.cloudfoundry.org/lager"
 )
 
@@ -17,7 +17,7 @@ type policyClient interface {
 
 type VxlanPolicyPlanner struct {
 	Logger            lager.Logger
-	GardenClient      garden.Client
+	Datastore         datastore.Datastore
 	PolicyClient      policyClient
 	VNI               int
 	CollectionEmitter agent_metrics.TimeMetricsEmitter
@@ -30,38 +30,34 @@ type Container struct {
 	GroupID string
 }
 
-func getContainersMap(allContainers []garden.Container) (map[string][]string, error) {
+func getContainersMap(allContainers map[string]datastore.Container) (map[string][]string, error) {
 	containers := map[string][]string{}
-
 	for _, container := range allContainers {
-		info, err := container.Info()
-		if err != nil {
-			return nil, err
+		if container.Metadata != nil {
+			groupID := container.Metadata["policy_group_id"].(string)
+			containers[groupID] = append(containers[groupID], container.IP)
 		}
-		properties := info.Properties
-		groupID := properties["network.policy_group_id"]
-
-		containers[groupID] = append(containers[groupID], info.ContainerIP)
 	}
-
 	return containers, nil
 }
 
 func (p *VxlanPolicyPlanner) GetRules() (rules.RulesWithChain, error) {
-	gardenStartTime := time.Now()
-	properties := garden.Properties{}
-	gardenContainers, err := p.GardenClient.Containers(properties)
+	containerMetadataStartTime := time.Now()
+	containerMetadata, err := p.Datastore.ReadAll()
 	if err != nil {
-		p.Logger.Error("garden-client-containers", err)
+		p.Logger.Error("datastore", err)
 		return rules.RulesWithChain{}, err
 	}
 
-	containers, err := getContainersMap(gardenContainers)
+	containers, err := getContainersMap(containerMetadata)
 	if err != nil {
 		p.Logger.Error("container-info", err)
 		return rules.RulesWithChain{}, err
 	}
-	gardenPollDuration := time.Now().Sub(gardenStartTime)
+	containerMetadataDuration := time.Now().Sub(containerMetadataStartTime)
+	p.CollectionEmitter.EmitAll(map[string]time.Duration{
+		agent_metrics.MetricContainerMetadata: containerMetadataDuration,
+	})
 	p.Logger.Debug("got-containers", lager.Data{"containers": containers})
 
 	policyServerStartRequestTime := time.Now()
@@ -71,9 +67,7 @@ func (p *VxlanPolicyPlanner) GetRules() (rules.RulesWithChain, error) {
 		return rules.RulesWithChain{}, err
 	}
 	policyServerPollDuration := time.Now().Sub(policyServerStartRequestTime)
-
 	p.CollectionEmitter.EmitAll(map[string]time.Duration{
-		agent_metrics.MetricGardenPoll:       gardenPollDuration,
 		agent_metrics.MetricPolicyServerPoll: policyServerPollDuration,
 	})
 

@@ -11,6 +11,7 @@ import (
 type Datastore interface {
 	Add(handle, ip string, metadata map[string]interface{}) error
 	Delete(handle string) error
+	ReadAll() (map[string]Container, error)
 }
 
 type Container struct {
@@ -90,4 +91,19 @@ func (c *Store) Delete(handle string) error {
 		return fmt.Errorf("encode and overwrite: %s", err)
 	}
 	return nil
+}
+
+func (c *Store) ReadAll() (map[string]Container, error) {
+	file, err := c.Locker.Open()
+	if err != nil {
+		return nil, fmt.Errorf("open lock: %s", err)
+	}
+	defer file.Close()
+
+	pool := make(map[string]Container)
+	err = c.Serializer.DecodeAll(file, &pool)
+	if err != nil {
+		return nil, fmt.Errorf("decoding file: %s", err)
+	}
+	return pool, nil
 }

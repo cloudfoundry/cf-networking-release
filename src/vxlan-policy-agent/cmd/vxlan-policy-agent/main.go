@@ -4,11 +4,14 @@ import (
 	"encoding/json"
 	"flag"
 	"io/ioutil"
+	"lib/datastore"
+	"lib/filelock"
 	"lib/flannel"
 	"lib/metrics"
 	"lib/mutualtls"
 	"lib/policy_client"
 	"lib/rules"
+	"lib/serial"
 	"log"
 	"net/http"
 	"os"
@@ -17,9 +20,6 @@ import (
 	"vxlan-policy-agent/config"
 	"vxlan-policy-agent/planner"
 	"vxlan-policy-agent/poller"
-
-	"code.cloudfoundry.org/garden/client"
-	"code.cloudfoundry.org/garden/client/connection"
 
 	"code.cloudfoundry.org/lager"
 	"github.com/cloudfoundry/dropsonde"
@@ -74,7 +74,7 @@ func main() {
 
 	clientTLSConfig, err := mutualtls.NewClientTLSConfig(conf.ClientCertFile, conf.ClientKeyFile, conf.ServerCACertFile)
 	if err != nil {
-		die(logger, "mutal tls config", err)
+		die(logger, "mutual tls config", err)
 	}
 
 	httpClient := &http.Client{
@@ -89,7 +89,12 @@ func main() {
 		conf.PolicyServerURL,
 	)
 
-	gardenClient := client.New(connection.New(conf.GardenProtocol, conf.GardenAddress))
+	store := &datastore.Store{
+		Serializer: &serial.Serial{},
+		Locker: &filelock.Locker{
+			Path: conf.Datastore,
+		},
+	}
 
 	ipt, err := iptables.New()
 	if err != nil {
@@ -101,7 +106,7 @@ func main() {
 	}
 
 	dynamicPlanner := &planner.VxlanPolicyPlanner{
-		GardenClient:      gardenClient,
+		Datastore:         store,
 		PolicyClient:      policyClient,
 		Logger:            logger.Session("rules-updater"),
 		VNI:               conf.VNI,

@@ -167,4 +167,38 @@ var _ = Describe("Datastore", func() {
 		})
 
 	})
+
+	Context("when reading from datastore", func() {
+		It("deserializes the data from the file", func() {
+			data, err := store.ReadAll()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(data).NotTo(BeNil())
+
+			Expect(serializer.DecodeAllCallCount()).To(Equal(1))
+			Expect(serializer.EncodeAndOverwriteCallCount()).To(Equal(0))
+
+			file, _ := serializer.DecodeAllArgsForCall(0)
+			Expect(file).To(Equal(lockedFile))
+		})
+
+		Context("when file locker fails to open", func() {
+			BeforeEach(func() {
+				locker.OpenReturns(nil, errors.New("potato"))
+			})
+			It("wraps and returns the error", func() {
+				_, err := store.ReadAll()
+				Expect(err).To(MatchError("open lock: potato"))
+			})
+		})
+
+		Context("when serializer fails to decode", func() {
+			BeforeEach(func() {
+				serializer.DecodeAllReturns(errors.New("potato"))
+			})
+			It("wraps and returns the error", func() {
+				_, err := store.ReadAll()
+				Expect(err).To(MatchError("decoding file: potato"))
+			})
+		})
+	})
 })

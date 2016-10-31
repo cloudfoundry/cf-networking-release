@@ -11,11 +11,6 @@ import (
 	"os/exec"
 	"vxlan-policy-agent/config"
 
-	"code.cloudfoundry.org/garden"
-	"code.cloudfoundry.org/garden/gardenfakes"
-	"code.cloudfoundry.org/garden/server"
-	"code.cloudfoundry.org/lager/lagertest"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	. "github.com/onsi/gomega/gbytes"
@@ -30,16 +25,12 @@ import (
 var _ = Describe("VXLAN Policy Agent", func() {
 	var (
 		session          *gexec.Session
-		gardenBackend    *gardenfakes.FakeBackend
-		gardenContainer  *gardenfakes.FakeContainer
-		gardenServer     *server.GardenServer
-		logger           *lagertest.TestLogger
+		datastorePath    string
 		subnetFile       *os.File
 		configFilePath   string
 		fakeMetron       fakes.FakeMetron
 		mockPolicyServer ifrit.Process
 
-		gardenListenAddr string
 		serverListenAddr string
 	)
 
@@ -82,32 +73,30 @@ var _ = Describe("VXLAN Policy Agent", func() {
 
 		mockPolicyServer = startServer(serverTLSConfig)
 
-		logger = lagertest.NewTestLogger("fake garden server")
-		gardenBackend = &gardenfakes.FakeBackend{}
-		gardenContainer = &gardenfakes.FakeContainer{}
-		gardenContainer.InfoReturns(garden.ContainerInfo{
-			ContainerIP: "10.255.100.21",
-			Properties:  garden.Properties{"network.policy_group_id": "some-app-guid"},
-		}, nil)
-		gardenContainer.HandleReturns("some-handle")
-
-		gardenBackend.CreateReturns(gardenContainer, nil)
-		gardenBackend.LookupReturns(gardenContainer, nil)
-		gardenBackend.ContainersReturns([]garden.Container{gardenContainer}, nil)
-
-		gardenListenAddr = fmt.Sprintf(":%d", 50000+GinkgoParallelNode())
-		gardenServer = server.New("tcp", gardenListenAddr, 0, gardenBackend, logger)
-		Expect(gardenServer.Start()).To(Succeed())
-
 		subnetFile, err = ioutil.TempFile("", "")
 		Expect(err).NotTo(HaveOccurred())
 		Expect(ioutil.WriteFile(subnetFile.Name(), []byte("FLANNEL_NETWORK=10.255.0.0/16\nFLANNEL_SUBNET=10.255.100.1/24"), os.ModePerm))
 
+		containerMetadata := `
+{
+	"some-handle": {
+		"handle":"some-handle",
+		"ip":"10.255.100.21",
+		"metadata": {
+			"policy_group_id":"some-app-guid"
+		}
+	}
+}
+`
+		containerMetadataFile, err := ioutil.TempFile("", "")
+		Expect(err).NotTo(HaveOccurred())
+		Expect(ioutil.WriteFile(containerMetadataFile.Name(), []byte(containerMetadata), os.ModePerm))
+		datastorePath = containerMetadataFile.Name()
+
 		conf := config.VxlanPolicyAgent{
 			PollInterval:      1,
 			PolicyServerURL:   fmt.Sprintf("https://%s", serverListenAddr),
-			GardenAddress:     gardenListenAddr,
-			GardenProtocol:    "tcp",
+			Datastore:         datastorePath,
 			VNI:               42,
 			FlannelSubnetFile: subnetFile.Name(),
 			MetronAddress:     fakeMetron.Address(),
@@ -124,8 +113,6 @@ var _ = Describe("VXLAN Policy Agent", func() {
 
 		session.Interrupt()
 		Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit())
-
-		gardenServer.Stop()
 
 		RunIptablesCommand("filter", "F")
 		RunIptablesCommand("filter", "X")
@@ -146,7 +133,17 @@ var _ = Describe("VXLAN Policy Agent", func() {
 	})
 
 	var waitUntilPollLoop = func(numComplete int) {
-		Eventually(gardenBackend.ContainersCallCount, DEFAULT_TIMEOUT).Should(BeNumerically(">=", numComplete+1))
+		pollLoopCount := func() int {
+			count := 0
+			events := fakeMetron.AllEvents()
+			for _, event := range events {
+				if event.Name == "containerMetadataTime" {
+					count++
+				}
+			}
+			return count
+		}
+		Eventually(pollLoopCount, DEFAULT_TIMEOUT).Should(BeNumerically(">=", numComplete+1))
 	}
 
 	Describe("Default rules", func() {
@@ -216,7 +213,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 			}
 			Eventually(gatherMetricNames, "5s").Should(HaveKey("iptablesEnforceTime"))
 			Eventually(gatherMetricNames, "5s").Should(HaveKey("totalPollTime"))
-			Eventually(gatherMetricNames, "5s").Should(HaveKey("gardenPollTime"))
+			Eventually(gatherMetricNames, "5s").Should(HaveKey("containerMetadataTime"))
 			Eventually(gatherMetricNames, "5s").Should(HaveKey("policyServerPollTime"))
 		})
 	})
@@ -224,10 +221,9 @@ var _ = Describe("VXLAN Policy Agent", func() {
 	Context("when the policy server is unavailable", func() {
 		BeforeEach(func() {
 			conf := config.VxlanPolicyAgent{
+				Datastore:         datastorePath,
 				PollInterval:      1,
 				PolicyServerURL:   "",
-				GardenAddress:     gardenListenAddr,
-				GardenProtocol:    "tcp",
 				VNI:               42,
 				FlannelSubnetFile: subnetFile.Name(),
 				MetronAddress:     fakeMetron.Address(),
@@ -256,10 +252,9 @@ var _ = Describe("VXLAN Policy Agent", func() {
 	Context("when vxlan policy agent has invalid certs", func() {
 		BeforeEach(func() {
 			conf := config.VxlanPolicyAgent{
+				Datastore:         datastorePath,
 				PollInterval:      1,
 				PolicyServerURL:   "",
-				GardenAddress:     gardenListenAddr,
-				GardenProtocol:    "tcp",
 				VNI:               42,
 				FlannelSubnetFile: subnetFile.Name(),
 				MetronAddress:     fakeMetron.Address(),

@@ -1,7 +1,6 @@
 package datastore_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -62,7 +61,8 @@ var _ = Describe("Datastore Lifecycle", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			By("verify entry is in store")
-			data := loadStoreFrom(filepath)
+			data, err := store.ReadAll()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(data).Should(HaveKey(handle))
 
 			Expect(data[handle].IP).To(Equal(ip))
@@ -81,7 +81,8 @@ var _ = Describe("Datastore Lifecycle", func() {
 			}
 
 			By("verify entries are in store")
-			data := loadStoreFrom(filepath)
+			data, err := store.ReadAll()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(data).Should(HaveLen(total))
 		})
 	})
@@ -93,7 +94,8 @@ var _ = Describe("Datastore Lifecycle", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			By("verify entry is in store")
-			data := loadStoreFrom(filepath)
+			data, err := store.ReadAll()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(data).Should(HaveLen(1))
 
 			By("removing entry from store")
@@ -101,7 +103,8 @@ var _ = Describe("Datastore Lifecycle", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			By("verify entry no longer in store")
-			data = loadStoreFrom(filepath)
+			data, err = store.ReadAll()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(data).Should(BeEmpty())
 		})
 
@@ -115,7 +118,8 @@ var _ = Describe("Datastore Lifecycle", func() {
 			}
 
 			By("verify entries are in store")
-			data := loadStoreFrom(filepath)
+			data, err := store.ReadAll()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(data).Should(HaveLen(total))
 
 			By("removing entries from store")
@@ -126,7 +130,8 @@ var _ = Describe("Datastore Lifecycle", func() {
 			}
 
 			By("verify store is empty")
-			data = loadStoreFrom(filepath)
+			data, err = store.ReadAll()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(data).Should(BeEmpty())
 		})
 	})
@@ -188,13 +193,3 @@ var _ = Describe("Datastore Lifecycle", func() {
 		})
 	})
 })
-
-func loadStoreFrom(file string) map[string]datastore.Container {
-	bytes, err := ioutil.ReadFile(file)
-	Expect(err).NotTo(HaveOccurred())
-
-	var data map[string]datastore.Container
-	err = json.Unmarshal(bytes, &data)
-	Expect(err).NotTo(HaveOccurred())
-	return data
-}

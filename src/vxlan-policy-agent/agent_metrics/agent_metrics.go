@@ -15,7 +15,7 @@ type TimeMetricsEmitter interface {
 
 const MetricEnforceDuration = "iptablesEnforceTime"
 const MetricPollDuration = "totalPollTime"
-const MetricGardenPoll = "gardenPollTime"
+const MetricContainerMetadata = "containerMetadataTime"
 const MetricPolicyServerPoll = "policyServerPollTime"
 
 type TimeMetrics struct {
