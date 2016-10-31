@@ -2,9 +2,9 @@ package main
 
 import (
 	"cni-wrapper-plugin/lib"
-	"cni-wrapper-plugin/lib/datastore"
 	"encoding/json"
 	"fmt"
+	"lib/datastore"
 	"lib/filelock"
 	"lib/serial"
 	"os"

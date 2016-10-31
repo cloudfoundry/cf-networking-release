@@ -1,12 +1,12 @@
 package datastore_test
 
 import (
-	"cni-wrapper-plugin/lib/datastore"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
 
+	"lib/datastore"
 	"lib/filelock"
 	"lib/serial"
 

@@ -1,10 +1,10 @@
 package datastore_test
 
 import (
-	"cni-wrapper-plugin/lib/datastore"
 	"errors"
 	"os"
 
+	"lib/datastore"
 	libfakes "lib/fakes"
 
 	. "github.com/onsi/ginkgo"

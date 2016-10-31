@@ -8,7 +8,6 @@ files:
   - github.com/coreos/flannel/**/*
   - cni-wrapper-plugin/*.go # gosub
   - cni-wrapper-plugin/lib/*.go # gosub
-  - cni-wrapper-plugin/lib/datastore/*.go # gosub
   - github.com/containernetworking/cni/pkg/invoke/*.go # gosub
   - github.com/containernetworking/cni/pkg/ip/*.go # gosub
   - github.com/containernetworking/cni/pkg/ipam/*.go # gosub
@@ -29,5 +28,6 @@ files:
   - github.com/containernetworking/cni/vendor/github.com/vishvananda/netns/*.go # gosub
   - github.com/containernetworking/cni/vendor/golang.org/x/sys/unix/*.go # gosub
   - github.com/containernetworking/cni/vendor/golang.org/x/sys/unix/*.s # gosub
+  - lib/datastore/*.go # gosub
   - lib/filelock/*.go # gosub
   - lib/serial/*.go # gosub
