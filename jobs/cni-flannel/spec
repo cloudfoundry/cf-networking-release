@@ -16,6 +16,10 @@ packages:
   - flannel-watchdog
 
 properties:
+  cni-flannel.cni_datastore_path:
+    description: "file where the wrapper plugin will store container info"
+    default: "/var/vcap/data/container-metadata/store.json"
+
   cni-flannel.etcd_endpoints:
     description: "a list of etcd endpoints"
     default: []

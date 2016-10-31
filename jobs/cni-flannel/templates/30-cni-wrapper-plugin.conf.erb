@@ -2,7 +2,7 @@
   "name": "cni-wrapper",
   "type": "cni-wrapper-plugin",
   "cniVersion": "0.2.0",
-  "datastore": "/var/vcap/data/cni-flannel/container-metadata.json",
+  "datastore": "<%= p('cni-flannel.cni_datastore_path') %>",
   "delegate": {
     "name": "cni-flannel",
     "type": "flannel",
