@@ -24,3 +24,4 @@ dev_releases
 src/example-apps/proxy/proxy
 src/example-apps/tick/tick
 src/example-apps/registry/registry
+vim-go-test-compile
