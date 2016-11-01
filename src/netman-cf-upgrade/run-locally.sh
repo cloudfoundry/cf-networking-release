@@ -9,6 +9,8 @@ export CONFIG=/tmp/bosh-lite-integration-config.json
 export APPS_DIR=../example-apps
 export BASE_MANIFEST=../../bosh-lite/deployments/diego.yml
 export UPGRADE_MANIFEST=../../bosh-lite/deployments/diego_with_netman.yml
+#bosh vms 2>/dev/null |grep router |grep -v ha_proxy|awk '{print  $11}'
+export ASG_TARGET_IP="10.244.0.22"
 
 echo '
 {

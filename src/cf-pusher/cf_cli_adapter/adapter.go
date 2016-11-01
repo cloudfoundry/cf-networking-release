@@ -127,6 +127,16 @@ func (a *Adapter) SetQuota(org, quota string) error {
 	return exec.Command("cf", "set-quota", org, quota).Run()
 }
 
+func (a *Adapter) CreateSecurityGroup(name, filepath string) error {
+	fmt.Printf("running cf create-security-group %s %s\n", name, filepath)
+	return exec.Command("cf", "create-security-group", name, filepath).Run()
+}
+
+func (a *Adapter) BindSecurityGroup(name, org, space string) error {
+	fmt.Printf("running cf bind-security-group %s %s %s\n", name, org, space)
+	return exec.Command("cf", "bind-security-group", name, org, space).Run()
+}
+
 func (a *Adapter) DeleteQuota(quota string) error {
 	fmt.Printf("running cf delete-quota %s -f\n", quota)
 	return exec.Command("cf", "delete-quota", quota, "-f").Run()
