@@ -42,8 +42,6 @@ var _ = Describe("Store", func() {
 		destination = &store.Destination{}
 		policy = &store.Policy{}
 
-		dataStore, err = store.New(realDb, group, destination, policy, 1)
-		Expect(err).NotTo(HaveOccurred())
 		mockDb.DriverNameReturns(realDb.DriverName())
 	})
 
@@ -102,6 +100,12 @@ var _ = Describe("Store", func() {
 	})
 
 	Describe("New", func() {
+		BeforeEach(func() {
+			var err error
+			dataStore, err = store.New(realDb, group, destination, policy, 1)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
 		Describe("Connecting to the database and migrating", func() {
 			Context("when the tables already exist", func() {
 				It("succeeds", func() {
@@ -179,6 +183,12 @@ var _ = Describe("Store", func() {
 	})
 
 	Describe("Create", func() {
+		BeforeEach(func() {
+			var err error
+			dataStore, err = store.New(realDb, group, destination, policy, 1)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
 		It("saves the policies", func() {
 			policies := []models.Policy{{
 				Source: models.Source{ID: "some-app-guid"},
@@ -458,6 +468,7 @@ var _ = Describe("Store", func() {
 		var expectedPolicies []models.Policy
 
 		BeforeEach(func() {
+			var err error
 			expectedPolicies = []models.Policy{models.Policy{
 				Source: models.Source{ID: "some-app-guid", Tag: "01"},
 				Destination: models.Destination{
@@ -468,7 +479,10 @@ var _ = Describe("Store", func() {
 				},
 			}}
 
-			err := dataStore.Create(expectedPolicies)
+			dataStore, err = store.New(realDb, group, destination, policy, 1)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = dataStore.Create(expectedPolicies)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -531,6 +545,12 @@ var _ = Describe("Store", func() {
 	})
 
 	Describe("Tags", func() {
+		BeforeEach(func() {
+			var err error
+			dataStore, err = store.New(realDb, group, destination, policy, 1)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
 		BeforeEach(func() {
 			policies := []models.Policy{{
 				Source: models.Source{ID: "some-app-guid"},
@@ -603,7 +623,11 @@ var _ = Describe("Store", func() {
 
 	Describe("Delete", func() {
 		BeforeEach(func() {
-			err := dataStore.Create([]models.Policy{
+			var err error
+			dataStore, err = store.New(realDb, group, destination, policy, 1)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = dataStore.Create([]models.Policy{
 				{
 					Source: models.Source{ID: "some-app-guid"},
 					Destination: models.Destination{
