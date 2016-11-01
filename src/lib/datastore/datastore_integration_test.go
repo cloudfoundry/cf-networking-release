@@ -187,7 +187,8 @@ var _ = Describe("Datastore Lifecycle", func() {
 			Expect(nDeleted).To(Equal(int32(total)))
 
 			By("adding an entries to store")
-			data := loadStoreFrom(filepath)
+			data, err := store.ReadAll()
+			Expect(err).NotTo(HaveOccurred())
 			Expect(data).Should(HaveLen(0))
 
 		})
