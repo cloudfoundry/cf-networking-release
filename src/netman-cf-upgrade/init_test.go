@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
@@ -68,4 +69,30 @@ func bosh(args ...string) {
 	sess, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 	Expect(err).NotTo(HaveOccurred())
 	Eventually(sess, BOSH_DEPLOY_TIMEOUT).Should(gexec.Exit(0))
+}
+
+func boshIPFor(job string) string {
+	boshArgs := append([]string{
+		"-n",
+		"--environment", boshConfig.DirectorURL,
+		"--deployment", boshConfig.DeploymentName,
+		"--user", boshConfig.AdminUser,
+		"--password", boshConfig.AdminPassword,
+		"--ca-cert", boshConfig.DirectorCACert},
+		"vms")
+	cmd := exec.Command("bosh-cli", boshArgs...)
+	sess, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+	Expect(err).NotTo(HaveOccurred())
+	Eventually(sess, 3*Timeout_Short).Should(gexec.Exit(0))
+
+	output := string(sess.Out.Contents())
+	for _, line := range strings.Split(output, "\n") {
+		if strings.Contains(line, job) {
+			temp := strings.Split(line, "\t")
+			if len(temp) > 3 {
+				return temp[3]
+			}
+		}
+	}
+	return ""
 }

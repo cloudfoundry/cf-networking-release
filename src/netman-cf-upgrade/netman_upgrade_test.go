@@ -17,11 +17,6 @@ var _ = Describe("apps remain available during an upgrade deploy", func() {
 		ASGFilepath string
 	)
 
-	BeforeEach(func() {
-		ASGTargetIP = os.Getenv("ASG_TARGET_IP")
-		Expect(ASGTargetIP).ToNot(BeEmpty(), "ASG_TARGET_IP environment variable not set")
-	})
-
 	AfterEach(func() {
 		os.Remove(ASGFilepath)
 	})
@@ -37,6 +32,9 @@ var _ = Describe("apps remain available during an upgrade deploy", func() {
 		By("deploying base manifest")
 		boshDeploy(baseManifest)
 
+		By("finding the ASGTargetIP")
+		ASGTargetIP = boshIPFor("router")
+
 		By("pushing the proxy app")
 		Expect(cli.SetApiWithoutSsl(config.ApiEndpoint)).To(Succeed())
 		Expect(cli.Auth(config.AdminUser, config.AdminPassword)).To(Succeed())
@@ -48,13 +46,13 @@ var _ = Describe("apps remain available during an upgrade deploy", func() {
 		By("create and bind security group")
 
 		asg := `[
-     {
-       "protocol": "tcp",
-       "destination": "` + ASGTargetIP + `",
-       "ports": "80"
-     }
-]
-`
+		 {
+		 "protocol": "tcp",
+		 "destination": "` + ASGTargetIP + `",
+		 "ports": "80"
+		 }
+		 ]
+		 `
 		ASGFilepath = createASGFile(asg)
 		Expect(cli.CreateSecurityGroup("test-running-asg", ASGFilepath)).To(Succeed())
 		Expect(cli.BindSecurityGroup("test-running-asg", org, space)).To(Succeed())
