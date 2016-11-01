@@ -55,9 +55,6 @@ func (p *VxlanPolicyPlanner) GetRules() (rules.RulesWithChain, error) {
 		return rules.RulesWithChain{}, err
 	}
 	containerMetadataDuration := time.Now().Sub(containerMetadataStartTime)
-	p.CollectionEmitter.EmitAll(map[string]time.Duration{
-		agent_metrics.MetricContainerMetadata: containerMetadataDuration,
-	})
 	p.Logger.Debug("got-containers", lager.Data{"containers": containers})
 
 	policyServerStartRequestTime := time.Now()
@@ -68,6 +65,7 @@ func (p *VxlanPolicyPlanner) GetRules() (rules.RulesWithChain, error) {
 	}
 	policyServerPollDuration := time.Now().Sub(policyServerStartRequestTime)
 	p.CollectionEmitter.EmitAll(map[string]time.Duration{
+		agent_metrics.MetricContainerMetadata: containerMetadataDuration,
 		agent_metrics.MetricPolicyServerPoll: policyServerPollDuration,
 	})
 

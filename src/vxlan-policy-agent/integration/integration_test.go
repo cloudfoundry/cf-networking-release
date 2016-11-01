@@ -132,49 +132,17 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		})
 	})
 
-	var waitUntilPollLoop = func(numComplete int) {
-		pollLoopCount := func() int {
-			count := 0
-			events := fakeMetron.AllEvents()
-			for _, event := range events {
-				if event.Name == "containerMetadataTime" {
-					count++
-				}
-			}
-			return count
-		}
-		Eventually(pollLoopCount, DEFAULT_TIMEOUT).Should(BeNumerically(">=", numComplete+1))
-	}
-
 	Describe("Default rules", func() {
 		BeforeEach(func() {
 			session = StartAgent(paths.VxlanPolicyAgentPath, configFilePath)
 		})
 
-		It("writes the masquerade rule", func() {
-			waitUntilPollLoop(1)
-
-			ipTablesRules := RunIptablesCommand("nat", "S")
-
-			Expect(ipTablesRules).To(ContainSubstring("-s 10.255.100.0/24 ! -d 10.255.0.0/16 -j MASQUERADE"))
-		})
-
-		It("writes the default remote rules", func() {
-			waitUntilPollLoop(1)
-
-			ipTablesRules := RunIptablesCommand("filter", "S")
-
-			Expect(ipTablesRules).To(ContainSubstring("-i flannel.42 -m state --state RELATED,ESTABLISHED -j ACCEPT"))
-			Expect(ipTablesRules).To(ContainSubstring("-i flannel.42 -j REJECT --reject-with icmp-port-unreachable"))
-		})
-
-		It("writes the default local rules", func() {
-			waitUntilPollLoop(1)
-
-			ipTablesRules := RunIptablesCommand("filter", "S")
-
-			Expect(ipTablesRules).To(ContainSubstring("-i cni-flannel0 -m state --state RELATED,ESTABLISHED -j ACCEPT"))
-			Expect(ipTablesRules).To(ContainSubstring("-s 10.255.100.0/24 -d 10.255.100.0/24 -i cni-flannel0 -j REJECT --reject-with icmp-port-unreachable"))
+		It("writes the default rules", func() {
+			Eventually(IptablesFilterRules, "10s", "1s").Should(ContainSubstring("-i flannel.42 -m state --state RELATED,ESTABLISHED -j ACCEPT"))
+			Expect(IptablesFilterRules()).To(ContainSubstring("-i flannel.42 -j REJECT --reject-with icmp-port-unreachable"))
+			Expect(IptablesFilterRules()).To(ContainSubstring("-i cni-flannel0 -m state --state RELATED,ESTABLISHED -j ACCEPT"))
+			Expect(IptablesFilterRules()).To(ContainSubstring("-s 10.255.100.0/24 -d 10.255.100.0/24 -i cni-flannel0 -j REJECT --reject-with icmp-port-unreachable"))
+			Expect(IptablesNATRules()).To(ContainSubstring("-s 10.255.100.0/24 ! -d 10.255.0.0/16 -j MASQUERADE"))
 		})
 	})
 
@@ -182,19 +150,9 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		BeforeEach(func() {
 			session = StartAgent(paths.VxlanPolicyAgentPath, configFilePath)
 		})
-		It("writes the mark rule", func() {
-			waitUntilPollLoop(2) // wait for a second one so we know the first enforcement completed
-
-			ipTablesRules := RunIptablesCommand("filter", "S")
-
-			Expect(ipTablesRules).To(ContainSubstring(`-s 10.255.100.21/32 -m comment --comment "src:some-app-guid" -j MARK --set-xmark 0xa/0xffffffff`))
-		})
-		It("enforces policies", func() {
-			waitUntilPollLoop(2) // wait for a second one so we know the first enforcement completed
-
-			ipTablesRules := RunIptablesCommand("filter", "S")
-
-			Expect(ipTablesRules).To(ContainSubstring(`-d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m comment --comment "src:another-app-guid dst:some-app-guid" -j ACCEPT`))
+		It("writes the mark rule and enforces policies", func() {
+			Eventually(IptablesFilterRules, "10s", "1s").Should(ContainSubstring(`-s 10.255.100.21/32 -m comment --comment "src:some-app-guid" -j MARK --set-xmark 0xa/0xffffffff`))
+			Expect(IptablesFilterRules()).To(ContainSubstring(`-d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m comment --comment "src:another-app-guid dst:some-app-guid" -j ACCEPT`))
 		})
 	})
 
@@ -236,16 +194,11 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		})
 
 		It("still writes the default rules", func() {
-			waitUntilPollLoop(2) // wait for a second one so we know the first enforcement completed
-
-			ipTablesRules := RunIptablesCommand("filter", "S")
-			Expect(ipTablesRules).To(ContainSubstring("-i flannel.42 -m state --state RELATED,ESTABLISHED -j ACCEPT"))
-			Expect(ipTablesRules).To(ContainSubstring("-i flannel.42 -j REJECT --reject-with icmp-port-unreachable"))
-			Expect(ipTablesRules).To(ContainSubstring("-i cni-flannel0 -m state --state RELATED,ESTABLISHED -j ACCEPT"))
-			Expect(ipTablesRules).To(ContainSubstring("-s 10.255.100.0/24 -d 10.255.100.0/24 -i cni-flannel0 -j REJECT --reject-with icmp-port-unreachable"))
-
-			ipTablesRules = RunIptablesCommand("nat", "S")
-			Expect(ipTablesRules).To(ContainSubstring("-s 10.255.100.0/24 ! -d 10.255.0.0/16 -j MASQUERADE"))
+			Eventually(IptablesFilterRules, "10s", "1s").Should(ContainSubstring("-i flannel.42 -m state --state RELATED,ESTABLISHED -j ACCEPT"))
+			Expect(IptablesFilterRules()).To(ContainSubstring("-i flannel.42 -j REJECT --reject-with icmp-port-unreachable"))
+			Expect(IptablesFilterRules()).To(ContainSubstring("-i cni-flannel0 -m state --state RELATED,ESTABLISHED -j ACCEPT"))
+			Expect(IptablesFilterRules()).To(ContainSubstring("-s 10.255.100.0/24 -d 10.255.100.0/24 -i cni-flannel0 -j REJECT --reject-with icmp-port-unreachable"))
+			Expect(IptablesNATRules()).To(ContainSubstring("-s 10.255.100.0/24 ! -d 10.255.0.0/16 -j MASQUERADE"))
 		})
 	})
 
@@ -272,6 +225,14 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		})
 	})
 })
+
+func IptablesFilterRules() string {
+	return RunIptablesCommand("filter", "S")
+}
+
+func IptablesNATRules() string {
+	return RunIptablesCommand("nat", "S")
+}
 
 func RunIptablesCommand(table, flag string) string {
 	iptCmd := exec.Command("iptables", "-w", "-t", table, "-"+flag)

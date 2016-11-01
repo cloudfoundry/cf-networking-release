@@ -175,7 +175,7 @@ var _ = Describe("Planner", func() {
 			_, err := policyPlanner.GetRules()
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(timeMetricsEmitter.EmitAllCallCount()).To(Equal(2))
+			Expect(timeMetricsEmitter.EmitAllCallCount()).To(Equal(1))
 		})
 		Context("when getting containers from garden fails", func() {
 			BeforeEach(func() {
