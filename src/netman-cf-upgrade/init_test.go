@@ -27,11 +27,12 @@ var (
 )
 
 type BoshConfig struct {
-	DirectorURL    string `json:"bosh_director_url"`
-	AdminUser      string `json:"bosh_admin_user"`
-	AdminPassword  string `json:"bosh_admin_password"`
-	DeploymentName string `json:"bosh_deployment_name"`
-	DirectorCACert string `json:"bosh_director_ca_cert"`
+	DirectorURL         string `json:"bosh_director_url"`
+	AdminUser           string `json:"bosh_admin_user"`
+	AdminPassword       string `json:"bosh_admin_password"`
+	DiegoDeploymentName string `json:"bosh_diego_deployment_name"`
+	CFDeploymentName    string `json:"bosh_cf_deployment_name"`
+	DirectorCACert      string `json:"bosh_director_ca_cert"`
 }
 
 func TestNetmanCfUpgrade(t *testing.T) {
@@ -61,7 +62,7 @@ func bosh(args ...string) {
 	boshArgs := append([]string{
 		"-n",
 		"--environment", boshConfig.DirectorURL,
-		"--deployment", boshConfig.DeploymentName,
+		"--deployment", boshConfig.DiegoDeploymentName,
 		"--user", boshConfig.AdminUser,
 		"--password", boshConfig.AdminPassword,
 		"--ca-cert", boshConfig.DirectorCACert}, args...)
@@ -75,7 +76,7 @@ func boshIPFor(job string) string {
 	boshArgs := append([]string{
 		"-n",
 		"--environment", boshConfig.DirectorURL,
-		"--deployment", boshConfig.DeploymentName,
+		"--deployment", boshConfig.CFDeploymentName,
 		"--user", boshConfig.AdminUser,
 		"--password", boshConfig.AdminPassword,
 		"--ca-cert", boshConfig.DirectorCACert},

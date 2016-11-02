@@ -13,8 +13,9 @@ import (
 
 var _ = Describe("apps remain available during an upgrade deploy", func() {
 	var (
-		ASGTargetIP string
-		ASGFilepath string
+		NoASGTargetIP string
+		ASGTargetIP   string
+		ASGFilepath   string
 	)
 
 	AfterEach(func() {
@@ -32,8 +33,9 @@ var _ = Describe("apps remain available during an upgrade deploy", func() {
 		By("deploying base manifest")
 		boshDeploy(baseManifest)
 
-		By("finding the ASGTargetIP")
 		ASGTargetIP = boshIPFor("router")
+		NoASGTargetIP = boshIPFor("uaa")
+		By(fmt.Sprintf("found ASG Target IPs (allow %s) (deny %s)", ASGTargetIP, NoASGTargetIP))
 
 		By("pushing the proxy app")
 		Expect(cli.SetApiWithoutSsl(config.ApiEndpoint)).To(Succeed())
@@ -64,7 +66,7 @@ var _ = Describe("apps remain available during an upgrade deploy", func() {
 		Eventually(checkStatusCode).Should(Equal(http.StatusOK))
 
 		By("checking the app continuously")
-		go checkStatusCodeContinuously(ASGTargetIP)
+		go checkStatusCodeContinuously(ASGTargetIP, NoASGTargetIP)
 
 		By("deploying upgrade manifest")
 		boshDeploy(upgradeManifest)
@@ -89,11 +91,12 @@ func checkStatusCode() int {
 	return resp.StatusCode
 }
 
-func checkStatusCodeContinuously(ip string) {
+func checkStatusCodeContinuously(allowIP, denyIP string) {
 	defer GinkgoRecover()
 	for {
-		Expect(checkASG(ip)).To(Equal(http.StatusOK))
 		Expect(checkStatusCode()).To(Equal(http.StatusOK))
+		Expect(checkASG(allowIP)).To(Equal(http.StatusOK))
+		Expect(checkASG(denyIP)).To(Equal(http.StatusInternalServerError))
 		time.Sleep(1 * time.Second)
 	}
 }
