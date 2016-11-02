@@ -90,7 +90,7 @@ func boshIPFor(job string) string {
 		if strings.Contains(line, job) {
 			temp := strings.Split(line, "\t")
 			if len(temp) > 3 {
-				return temp[3]
+				return strings.TrimSpace(temp[3])
 			}
 		}
 	}
