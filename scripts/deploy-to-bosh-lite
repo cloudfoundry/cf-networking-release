@@ -77,7 +77,7 @@ update_release() {
 generate_manifests() {
     # we need the git repos for manifest generation
     update_release cf-release master
-    update_release diego-release develop
+    update_release diego-release master
 
     ${workspace_dir}/netman-release/scripts/generate-bosh-lite-manifests
 }
