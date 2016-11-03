@@ -8,6 +8,10 @@ pushd ~/workspace/bosh-lite
   vagrant ssh -c 'sudo modprobe br_netfilter'
 popd
 ```
+or edit your `Vagrantfile` to include
+```ruby
+config.vm.provision "shell", inline: "sudo modprobe br_netfilter"
+```
 
 Upload the latest `bosh-lite` stemcell 
 ```bash
