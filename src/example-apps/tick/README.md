@@ -13,7 +13,7 @@ The following instructions for this example assume the following:
   - Cloud Foundry org and space created and targetted
 
 ## Setup
-- Build and Deploy the [service registry](https://github.com/amalgam8/registry)
+- Build and Deploy the [service registry](https://github.com/amalgam8/amalgam8/tree/master/registry)
 ```bash
 cd ~/workspace/netman-release/src/github.com/amalgam8/amalgam8
 GOOS=linux GOARCH=amd64 go build -o a8registry cmd/registry/main.go
