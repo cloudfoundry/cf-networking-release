@@ -41,6 +41,7 @@ case $1 in
 
     exec /var/vcap/packages/flannel/bin/flanneld \
       --log_dir=${LOG_DIR} \
+      --subnet-file=<%= p("cni-flannel.flannel.subnet_file") %> \
     <% if p("cni-flannel.flannel.etcd.require_ssl") %> \
       --etcd-cafile=${ETCD_CERTS_DIR}/ca.crt \
       --etcd-certfile=${ETCD_CERTS_DIR}/client.crt \

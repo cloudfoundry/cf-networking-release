@@ -60,13 +60,17 @@ properties:
     description: "Enable GBP on VXLAN devices"
     default: true
 
+  cni-flannel.flannel.subnet_file:
+    description: "file that flannel writes out the subnet environment"
+    default: /var/vcap/data/flannel/subnet.env
+
   flannel-watchdog.config.bridge_name:
     description: "name of cni bridge on host"
     default: cni-flannel0
 
   flannel-watchdog.config.flannel_subnet_file:
     description: "file that flannel writes out the subnet environment"
-    default: /run/flannel/subnet.env
+    default: /var/vcap/data/flannel/subnet.env
 
   netman.disable:
     description: "disable container to container networking"

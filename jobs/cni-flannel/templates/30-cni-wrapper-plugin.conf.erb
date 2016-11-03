@@ -6,6 +6,7 @@
   "delegate": {
     "name": "cni-flannel",
     "type": "flannel",
+    "subnetFile": "<%= p('cni-flannel.flannel.subnet_file') %>",
     "delegate": {
       "bridge": "cni-flannel0",
       "isDefaultGateway": true,
