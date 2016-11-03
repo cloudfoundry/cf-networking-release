@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/httputil"
 	"os"
+	"strings"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -37,7 +39,6 @@ var _ = Describe("apps remain available during an upgrade deploy", func() {
 		NoASGTargetIP = boshIPFor("uaa")
 		By(fmt.Sprintf("found ASG Target IPs (allow %s) (deny %s)", ASGTargetIP, NoASGTargetIP))
 
-		By("pushing the proxy app")
 		Expect(cli.SetApiWithoutSsl(config.ApiEndpoint)).To(Succeed())
 		Expect(cli.Auth(config.AdminUser, config.AdminPassword)).To(Succeed())
 		Expect(cli.CreateOrg(org)).To(Succeed())
@@ -59,6 +60,7 @@ var _ = Describe("apps remain available during an upgrade deploy", func() {
 		Expect(cli.CreateSecurityGroup("test-running-asg", ASGFilepath)).To(Succeed())
 		Expect(cli.BindSecurityGroup("test-running-asg", org, space)).To(Succeed())
 
+		By("pushing the proxy app")
 		Expect(cli.Push("proxy-upgrade", "../example-apps/proxy", "../example-apps/proxy/manifest.yml")).To(Succeed())
 		Expect(cli.Scale("proxy-upgrade", 3)).To(Succeed())
 
@@ -66,20 +68,35 @@ var _ = Describe("apps remain available during an upgrade deploy", func() {
 		Eventually(checkStatusCode).Should(Equal(http.StatusOK))
 
 		By("checking the app continuously")
-		go checkStatusCodeContinuously(ASGTargetIP, NoASGTargetIP)
+		var failures []string
+		go checkStatusCodeContinuously(ASGTargetIP, NoASGTargetIP, &failures)
 
 		By("deploying upgrade manifest")
 		boshDeploy(upgradeManifest)
+		fmt.Printf("\n\n### Got %d failures ###\n\n", len(failures))
+		fmt.Println(strings.Join(failures, "\n"))
+		Expect(len(failures)).To(BeNumerically("<", 5))
 	})
 })
 
-func checkASG(ip string) int {
+func checkASG(ip string) (int, string) {
 	resp, err := http.Get(fmt.Sprintf("http://proxy-upgrade.%s/proxy/%s", config.AppsDomain, ip))
+	dump, err := httputil.DumpResponse(resp, true)
 	if err != nil {
-		return http.StatusTeapot
+		return http.StatusTeapot, string(dump)
 	}
 	defer resp.Body.Close()
-	return resp.StatusCode
+	return resp.StatusCode, string(dump)
+}
+
+func checkApp() (int, string) {
+	resp, err := http.Get("http://proxy-upgrade." + config.AppsDomain)
+	dump, err := httputil.DumpResponse(resp, true)
+	if err != nil {
+		return http.StatusTeapot, string(dump)
+	}
+	defer resp.Body.Close()
+	return resp.StatusCode, string(dump)
 }
 
 func checkStatusCode() int {
@@ -91,12 +108,21 @@ func checkStatusCode() int {
 	return resp.StatusCode
 }
 
-func checkStatusCodeContinuously(allowIP, denyIP string) {
+func checkStatusCodeContinuously(allowIP, denyIP string, failures *[]string) {
 	defer GinkgoRecover()
 	for {
-		Expect(checkStatusCode()).To(Equal(http.StatusOK))
-		Expect(checkASG(allowIP)).To(Equal(http.StatusOK))
-		Expect(checkASG(denyIP)).To(Equal(http.StatusInternalServerError))
+		sc, dump := checkApp()
+		if sc != http.StatusOK {
+			*failures = append(*failures, dump)
+		}
+		sc, dump = checkASG(allowIP)
+		if sc != http.StatusOK {
+			*failures = append(*failures, dump)
+		}
+		sc, dump = checkASG(denyIP)
+		if sc != http.StatusInternalServerError {
+			*failures = append(*failures, dump)
+		}
 		time.Sleep(1 * time.Second)
 	}
 }
