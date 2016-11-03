@@ -15,9 +15,7 @@ import (
 
 var _ = Describe("apps remain available during an upgrade deploy", func() {
 	var (
-		NoASGTargetIP string
-		ASGTargetIP   string
-		ASGFilepath   string
+		ASGFilepath string
 	)
 
 	AfterEach(func() {
@@ -35,9 +33,9 @@ var _ = Describe("apps remain available during an upgrade deploy", func() {
 		By("deploying base manifest")
 		boshDeploy(baseManifest)
 
-		ASGTargetIP = boshIPFor("router")
-		NoASGTargetIP = boshIPFor("uaa")
-		By(fmt.Sprintf("found ASG Target IPs (allow %s) (deny %s)", ASGTargetIP, NoASGTargetIP))
+		ASGTargetIP := boshIPFor("router")
+		noASGTargetIP := boshIPFor("uaa")
+		By(fmt.Sprintf("found ASG Target IPs (allow %s) (deny %s)", ASGTargetIP, noASGTargetIP))
 
 		Expect(cli.SetApiWithoutSsl(config.ApiEndpoint)).To(Succeed())
 		Expect(cli.Auth(config.AdminUser, config.AdminPassword)).To(Succeed())
@@ -47,7 +45,6 @@ var _ = Describe("apps remain available during an upgrade deploy", func() {
 		Expect(cli.TargetSpace(space)).To(Succeed())
 
 		By("create and bind security group")
-
 		asg := `[
 		 {
 		 "protocol": "tcp",
@@ -68,59 +65,54 @@ var _ = Describe("apps remain available during an upgrade deploy", func() {
 		Eventually(checkStatusCode).Should(Equal(http.StatusOK))
 
 		By("checking the app continuously")
-		var failures []string
-		go checkStatusCodeContinuously(ASGTargetIP, NoASGTargetIP, &failures)
+		var appFailures []string
+		var ASGFailures []string
+		var noASGFailures []string
+		go checkContinuously("http://proxy-upgrade."+config.AppsDomain, http.StatusOK, &appFailures)
+		go checkContinuously(fmt.Sprintf("http://proxy-upgrade.%s/proxy/%s", config.AppsDomain, ASGTargetIP), http.StatusOK, &ASGFailures)
+		go checkContinuously(fmt.Sprintf("http://proxy-upgrade.%s/proxy/%s", config.AppsDomain, noASGTargetIP), http.StatusInternalServerError, &noASGFailures)
 
 		By("deploying upgrade manifest")
 		boshDeploy(upgradeManifest)
-		fmt.Printf("\n\n### Got %d failures ###\n\n", len(failures))
-		fmt.Println(strings.Join(failures, "\n"))
-		Expect(len(failures)).To(BeNumerically("<", 5))
+
+		fmt.Printf("\n\n### Got %d app failures ###\n\n", len(appFailures))
+		fmt.Println(strings.Join(appFailures, "\n"))
+		fmt.Printf("\n\n### Got %d ASG failures ###\n\n", len(ASGFailures))
+		fmt.Println(strings.Join(ASGFailures, "\n"))
+		fmt.Printf("\n\n### Got %d no ASG failures ###\n\n", len(noASGFailures))
+		fmt.Println(strings.Join(noASGFailures, "\n"))
+
+		Expect(len(appFailures)).To(BeNumerically("<", 5))
+		Expect(len(ASGFailures)).To(BeNumerically("<", 5))
+		Expect(len(noASGFailures)).To(BeNumerically("<", 5))
 	})
 })
 
-func checkASG(ip string) (int, string) {
-	resp, err := http.Get(fmt.Sprintf("http://proxy-upgrade.%s/proxy/%s", config.AppsDomain, ip))
-	dump, err := httputil.DumpResponse(resp, true)
-	if err != nil {
-		return http.StatusTeapot, string(dump)
-	}
+func check(url string) (int, string) {
+	resp, err := http.Get(url)
 	defer resp.Body.Close()
-	return resp.StatusCode, string(dump)
-}
+	if err != nil {
+		return http.StatusTeapot, ""
+	}
 
-func checkApp() (int, string) {
-	resp, err := http.Get("http://proxy-upgrade." + config.AppsDomain)
 	dump, err := httputil.DumpResponse(resp, true)
 	if err != nil {
 		return http.StatusTeapot, string(dump)
 	}
-	defer resp.Body.Close()
+
 	return resp.StatusCode, string(dump)
 }
 
 func checkStatusCode() int {
-	resp, err := http.Get("http://proxy-upgrade." + config.AppsDomain)
-	if err != nil {
-		return http.StatusTeapot
-	}
-	defer resp.Body.Close()
-	return resp.StatusCode
+	sc, _ := check("http://proxy-upgrade." + config.AppsDomain)
+	return sc
 }
 
-func checkStatusCodeContinuously(allowIP, denyIP string, failures *[]string) {
+func checkContinuously(url string, statusCode int, failures *[]string) {
 	defer GinkgoRecover()
 	for {
-		sc, dump := checkApp()
-		if sc != http.StatusOK {
-			*failures = append(*failures, dump)
-		}
-		sc, dump = checkASG(allowIP)
-		if sc != http.StatusOK {
-			*failures = append(*failures, dump)
-		}
-		sc, dump = checkASG(denyIP)
-		if sc != http.StatusInternalServerError {
+		sc, dump := check(url)
+		if sc != statusCode {
 			*failures = append(*failures, dump)
 		}
 		time.Sleep(1 * time.Second)
