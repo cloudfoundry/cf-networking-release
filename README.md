@@ -18,6 +18,7 @@ A [Garden-runC](https://github.com/cloudfoundry/garden-runc-release) add-on that
 - [Configuring Policies - CLI and API](docs/usage.md)
 - [Examples](src/example-apps)
   - [Cats & Dogs](src/example-apps/cats-and-dogs)
+  - [Eureka](src/example-apps/eureka)
   - [Proxy](src/example-apps/proxy)
   - [Tick](src/example-apps/tick)
 - [3rd Party Plugin Development](docs/3rd-party.md)

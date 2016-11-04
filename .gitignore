@@ -24,4 +24,5 @@ dev_releases
 src/example-apps/proxy/proxy
 src/example-apps/tick/tick
 src/example-apps/registry/registry
+src/example-apps/eureka/**/target
 vim-go-test-compile

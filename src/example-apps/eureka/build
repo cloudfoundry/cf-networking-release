@@ -1,0 +1,14 @@
+#!/bin/bash
+
+pushd registry
+  mvn package
+popd
+pushd backend
+  mvn package
+popd
+pushd frontend
+  mvn package
+popd
+pushd zuul-proxy
+  mvn package
+popd
