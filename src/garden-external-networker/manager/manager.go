@@ -185,3 +185,18 @@ func (m *Manager) NetIn(containerHandle string, inputs NetInInputs) (*NetInOutpu
 		ContainerPort: containerPort,
 	}, nil
 }
+
+type BulkNetOutInputs struct {
+	ContainerIP string              `json:"container_ip"`
+	NetOutRules []garden.NetOutRule `json:"netout_rules"`
+}
+
+func (m *Manager) BulkNetOut(containerHandle string, inputs BulkNetOutInputs) error {
+	for _, rule := range inputs.NetOutRules {
+		err := m.NetOutProvider.InsertRule(containerHandle, rule, inputs.ContainerIP)
+		if err != nil {
+			return fmt.Errorf("insert rule: %s", err)
+		}
+	}
+	return nil
+}

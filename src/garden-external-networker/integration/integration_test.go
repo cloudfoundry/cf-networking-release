@@ -233,6 +233,65 @@ var _ = Describe("Garden External Networker", func() {
 		Expect(expectedNetNSPath).NotTo(BeAnExistingFile())
 	})
 
+	Describe("BulkNetOut lifecycle", func() {
+		var buildBulkNetOutCommand = func(containerIP string, rules []garden.NetOutRule) *exec.Cmd {
+			bulkNetOutCommand := exec.Command(paths.PathToAdapter)
+			bulkNetOutCommand.Env = append(os.Environ(), "FAKE_LOG_DIR="+fakeLogDir)
+			bulkNetOutCommand.Stdin = buildStdin(map[string]interface{}{
+				"container_ip": containerIP,
+				"netout_rules": rules,
+			})
+			bulkNetOutCommand.Args = []string{
+				paths.PathToAdapter,
+				"--action", "bulk-net-out",
+				"--handle", containerHandle,
+				"--configFile", fakeConfigFilePath,
+			}
+			return bulkNetOutCommand
+		}
+
+		var someRules []garden.NetOutRule
+		BeforeEach(func() {
+			for i := 0; i < 5; i++ {
+				rule := garden.NetOutRule{
+					Protocol: garden.ProtocolTCP,
+					Networks: []garden.IPRange{
+						{Start: net.ParseIP(fmt.Sprintf("1.1.1.%d", i+1)), End: net.ParseIP("2.2.2.2")},
+					},
+					Ports: []garden.PortRange{{Start: 9000, End: 9999}},
+				}
+				someRules = append(someRules, rule)
+			}
+		})
+
+		It("it writes NetOut rules in bulk", func() {
+			By("calling up")
+			runAndWait(upCommand)
+
+			By("checking that the default rules are created for that container")
+			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 169.254.1.2/32 ! -d 10.255.0.0/16 -m state --state RELATED,ESTABLISHED -j RETURN`))
+			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 169.254.1.2/32 ! -d 10.255.0.0/16 -j REJECT --reject-with icmp-port-unreachable`))
+
+			By("calling bulk netout")
+			bulkNetOutCommand := buildBulkNetOutCommand("169.254.1.2", someRules)
+			runAndWait(bulkNetOutCommand)
+
+			By("checking that the filter rule was installed")
+			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 169.254.1.2/32 -p tcp -m iprange --dst-range 1.1.1.1-2.2.2.2 -m tcp --dport 9000:9999 -j RETURN`))
+			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 169.254.1.2/32 -p tcp -m iprange --dst-range 1.1.1.2-2.2.2.2 -m tcp --dport 9000:9999 -j RETURN`))
+			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 169.254.1.2/32 -p tcp -m iprange --dst-range 1.1.1.3-2.2.2.2 -m tcp --dport 9000:9999 -j RETURN`))
+			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 169.254.1.2/32 -p tcp -m iprange --dst-range 1.1.1.4-2.2.2.2 -m tcp --dport 9000:9999 -j RETURN`))
+			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 169.254.1.2/32 -p tcp -m iprange --dst-range 1.1.1.5-2.2.2.2 -m tcp --dport 9000:9999 -j RETURN`))
+
+			By("calling down")
+			runAndWait(downCommand)
+
+			By("checking that there are no more netout rules for this container")
+			Expect(AllIPTablesRules("filter")).NotTo(ContainElement(ContainSubstring(netoutChainName)))
+		})
+
+	})
+
 	Describe("NetOut rule lifecycle", func() {
 		var buildNetOutCommand = func(containerIP string, rule garden.NetOutRule) *exec.Cmd {
 			netOutCommand := exec.Command(paths.PathToAdapter)

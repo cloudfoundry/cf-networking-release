@@ -381,6 +381,64 @@ var _ = Describe("Manager", func() {
 				Expect(err).To(MatchError("add rule: potato"))
 			})
 		})
-
 	})
+
+	Describe("BulkNetOut", func() {
+		var (
+			bulkNetOutInputs manager.BulkNetOutInputs
+		)
+		BeforeEach(func() {
+			netOutRules := []garden.NetOutRule{
+				garden.NetOutRule{
+					Protocol: garden.ProtocolTCP,
+					Networks: []garden.IPRange{
+						{Start: net.ParseIP("1.1.1.1"), End: net.ParseIP("2.2.2.2")},
+					},
+					Ports: []garden.PortRange{
+						{Start: 9000, End: 9999},
+					},
+				},
+				garden.NetOutRule{
+					Protocol: garden.ProtocolTCP,
+					Networks: []garden.IPRange{
+						{Start: net.ParseIP("2.2.2.2"), End: net.ParseIP("3.3.3.3")},
+					},
+					Ports: []garden.PortRange{
+						{Start: 9000, End: 9999},
+					},
+				},
+			}
+			bulkNetOutInputs = manager.BulkNetOutInputs{
+				ContainerIP: "1.2.3.4",
+				NetOutRules: netOutRules,
+			}
+		})
+
+		It("delegates to netout provider for bulk netout calls", func() {
+			err := mgr.BulkNetOut("some-handle", bulkNetOutInputs)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(netOutProvider.InsertRuleCallCount()).To(Equal(2))
+
+			handle, rule, containerIP := netOutProvider.InsertRuleArgsForCall(0)
+			Expect(handle).To(Equal("some-handle"))
+			Expect(rule).To(Equal(bulkNetOutInputs.NetOutRules[0]))
+			Expect(containerIP).To(Equal(bulkNetOutInputs.ContainerIP))
+
+			handle, rule, containerIP = netOutProvider.InsertRuleArgsForCall(1)
+			Expect(handle).To(Equal("some-handle"))
+			Expect(rule).To(Equal(bulkNetOutInputs.NetOutRules[1]))
+			Expect(containerIP).To(Equal(bulkNetOutInputs.ContainerIP))
+		})
+
+		Context("when inserting the rule fails", func() {
+			BeforeEach(func() {
+				netOutProvider.InsertRuleReturns(errors.New("banana"))
+			})
+			It("returns the error", func() {
+				err := mgr.BulkNetOut("some-handle", bulkNetOutInputs)
+				Expect(err).To(MatchError("insert rule: banana"))
+			})
+		})
+	})
+
 })

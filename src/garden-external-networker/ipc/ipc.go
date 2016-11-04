@@ -8,10 +8,11 @@ import (
 )
 
 type Mux struct {
-	Up     func(handle string, inputs manager.UpInputs) (*manager.UpOutputs, error)
-	Down   func(handle string) error
-	NetOut func(handle string, inputs manager.NetOutInputs) error
-	NetIn  func(handle string, inputs manager.NetInInputs) (*manager.NetInOutputs, error)
+	Up         func(handle string, inputs manager.UpInputs) (*manager.UpOutputs, error)
+	Down       func(handle string) error
+	NetOut     func(handle string, inputs manager.NetOutInputs) error
+	NetIn      func(handle string, inputs manager.NetInInputs) (*manager.NetInOutputs, error)
+	BulkNetOut func(handle string, inputs manager.BulkNetOutInputs) error
 }
 
 func (m *Mux) Handle(action string, handle string, stdin io.Reader, stdout io.Writer) error {
@@ -56,6 +57,15 @@ func (m *Mux) Handle(action string, handle string, stdin io.Reader, stdout io.Wr
 			return err
 		}
 		if err := json.NewEncoder(stdout).Encode(outputs); err != nil {
+			return err
+		}
+	case "bulk-net-out":
+		var inputs manager.BulkNetOutInputs
+		if err := json.NewDecoder(stdin).Decode(&inputs); err != nil {
+			return err
+		}
+		err := m.BulkNetOut(handle, inputs)
+		if err != nil {
 			return err
 		}
 	default:

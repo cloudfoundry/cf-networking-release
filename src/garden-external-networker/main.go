@@ -145,10 +145,11 @@ func mainWithError() error {
 	}
 
 	mux := ipc.Mux{
-		Up:     manager.Up,
-		Down:   manager.Down,
-		NetOut: manager.NetOut,
-		NetIn:  manager.NetIn,
+		Up:         manager.Up,
+		Down:       manager.Down,
+		NetOut:     manager.NetOut,
+		NetIn:      manager.NetIn,
+		BulkNetOut: manager.BulkNetOut,
 	}
 
 	return mux.Handle(action, handle, os.Stdin, os.Stdout)
