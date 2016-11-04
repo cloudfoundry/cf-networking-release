@@ -9,9 +9,9 @@ https://spring.io/guides/gs/service-registration-and-discovery/
 ## Assumptions
 
 - `maven` installed (`brew install maven`)
-- CF deployment with [netman](https://github.com/cloudfoundry-incubator/netman-release)
+- CF deployed with [netman](https://github.com/cloudfoundry-incubator/netman-release)
   (The examples assume a bosh-lite deployment)
-- `cf` cli [`network-policy-plugin`](https://github.com/cloudfoundry-incubator/netman-release/blob/develop/docs/usage.md) is installed
+- `cf` cli installed with [`network-policy-plugin`](https://github.com/cloudfoundry-incubator/netman-release/blob/develop/docs/usage.md)
 
 ## Build the applications
 
@@ -37,7 +37,7 @@ cf push
 
 The `backend` is configured with the `no-route:true` property to disable
 accessing it via the `go-router`. In order for the `zuul-proxy` or the
-`frontend` to reach it, policies must be added to allow access.
+`frontend` to reach it, policies must be added.
 
 ### Allow access from frontend to backend
 
@@ -90,7 +90,7 @@ cf deny-access frontend backend --protocol tcp --port 8080
 
 ## More Details
 
-These properties are set to have the `euerka-client` register with it's IP
+These properties are set to have the `backend` register with it's IP
 address:
 
 - `spring.cloud.inetutils.preferredNetworks`
