@@ -1,6 +1,7 @@
 ---
 name: vxlan-policy-agent
 templates:
+  pre-start.erb: bin/pre-start
   vxlan-policy-agent_ctl.erb: bin/vxlan-policy-agent_ctl
   vxlan-policy-agent.json.erb: config/vxlan-policy-agent.json
   ca.crt.erb: config/certs/ca.crt
