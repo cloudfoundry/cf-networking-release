@@ -96,7 +96,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 		os.Remove(datastorePath)
 	})
 
-	Describe("state lifecylcle", func() {
+	Describe("state lifecycle", func() {
 		It("stores and removes metadata with the lifetime of the container", func() {
 			By("calling ADD")
 			session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
