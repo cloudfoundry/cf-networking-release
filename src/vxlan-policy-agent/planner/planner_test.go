@@ -106,7 +106,7 @@ var _ = Describe("Planner", func() {
 		}
 	})
 	Describe("GetRules", func() {
-		It("gets every container's properties from the garden client", func() {
+		It("gets every container's properties from the datastore", func() {
 			_, err := policyPlanner.GetRules()
 			Expect(err).NotTo(HaveOccurred())
 
@@ -177,7 +177,7 @@ var _ = Describe("Planner", func() {
 
 			Expect(timeMetricsEmitter.EmitAllCallCount()).To(Equal(1))
 		})
-		Context("when getting containers from garden fails", func() {
+		Context("when getting containers from datastore fails", func() {
 			BeforeEach(func() {
 				store.ReadAllReturns(nil, errors.New("banana"))
 			})
