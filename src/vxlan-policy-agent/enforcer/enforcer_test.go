@@ -1,9 +1,12 @@
-package rules_test
+package enforcer_test
 
 import (
 	"errors"
-	"lib/fakes"
 	"lib/rules"
+	"vxlan-policy-agent/enforcer"
+	"vxlan-policy-agent/fakes"
+
+	libfakes "lib/fakes"
 
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
@@ -14,32 +17,32 @@ import (
 var _ = Describe("Enforcer", func() {
 	Describe("Enforce", func() {
 		var (
-			fakeRule    *fakes.Rule
-			iptables    *fakes.IPTables
-			timestamper *fakes.TimeStamper
-			logger      *lagertest.TestLogger
-			enforcer    *rules.Enforcer
+			fakeRule     *libfakes.Rule
+			iptables     *libfakes.IPTables
+			timestamper  *fakes.TimeStamper
+			logger       *lagertest.TestLogger
+			ruleEnforcer *enforcer.Enforcer
 		)
 
 		BeforeEach(func() {
-			fakeRule = &fakes.Rule{}
+			fakeRule = &libfakes.Rule{}
 			timestamper = &fakes.TimeStamper{}
 			logger = lagertest.NewTestLogger("test")
-			iptables = &fakes.IPTables{}
+			iptables = &libfakes.IPTables{}
 
 			timestamper.CurrentTimeReturns(42)
-			enforcer = rules.NewEnforcer(logger, timestamper, iptables)
+			ruleEnforcer = enforcer.NewEnforcer(logger, timestamper, iptables)
 		})
 
 		It("enforces all the rules it receives on the correct chain", func() {
-			err := enforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
+			err := ruleEnforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeRule.EnforceCallCount()).To(Equal(1))
 		})
 
 		It("creates a timestamped chain", func() {
-			err := enforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
+			err := ruleEnforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(iptables.NewChainCallCount()).To(Equal(1))
@@ -49,7 +52,7 @@ var _ = Describe("Enforcer", func() {
 		})
 
 		It("inserts the new chain into the chain", func() {
-			err := enforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
+			err := ruleEnforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(iptables.InsertCallCount()).To(Equal(1))
@@ -68,7 +71,7 @@ var _ = Describe("Enforcer", func() {
 				}, nil)
 			})
 			It("gets deleted", func() {
-				err := enforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
+				err := ruleEnforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(iptables.DeleteCallCount()).To(Equal(1))
@@ -93,7 +96,7 @@ var _ = Describe("Enforcer", func() {
 			})
 
 			It("returns the error", func() {
-				err := enforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
+				err := ruleEnforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
 				Expect(err).To(MatchError("banana"))
 			})
 		})
@@ -104,7 +107,7 @@ var _ = Describe("Enforcer", func() {
 			})
 
 			It("it logs and returns a useful error", func() {
-				err := enforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
+				err := ruleEnforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
 				Expect(err).To(MatchError("inserting chain: banana"))
 
 				Expect(logger).To(gbytes.Say("insert-chain.*banana"))
@@ -117,7 +120,7 @@ var _ = Describe("Enforcer", func() {
 			})
 
 			It("it logs and returns a useful error", func() {
-				err := enforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
+				err := ruleEnforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
 				Expect(err).To(MatchError("listing forward rules: blueberry"))
 
 				Expect(logger).To(gbytes.Say("cleanup-rules.*blueberry"))
@@ -131,7 +134,7 @@ var _ = Describe("Enforcer", func() {
 			})
 
 			It("returns a useful error", func() {
-				err := enforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
+				err := ruleEnforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
 				Expect(err).To(MatchError("cleanup old chain: banana"))
 			})
 		})
@@ -142,7 +145,7 @@ var _ = Describe("Enforcer", func() {
 			})
 
 			It("it logs and returns a useful error", func() {
-				err := enforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
+				err := ruleEnforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
 				Expect(err).To(MatchError("creating chain: banana"))
 
 				Expect(logger).To(gbytes.Say("create-chain.*banana"))

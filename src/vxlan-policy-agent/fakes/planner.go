@@ -2,23 +2,23 @@
 package fakes
 
 import (
-	"lib/rules"
 	"sync"
+	"vxlan-policy-agent/enforcer"
 )
 
 type Planner struct {
-	GetRulesStub        func() (rules.RulesWithChain, error)
+	GetRulesStub        func() (enforcer.RulesWithChain, error)
 	getRulesMutex       sync.RWMutex
 	getRulesArgsForCall []struct{}
 	getRulesReturns     struct {
-		result1 rules.RulesWithChain
+		result1 enforcer.RulesWithChain
 		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *Planner) GetRules() (rules.RulesWithChain, error) {
+func (fake *Planner) GetRules() (enforcer.RulesWithChain, error) {
 	fake.getRulesMutex.Lock()
 	fake.getRulesArgsForCall = append(fake.getRulesArgsForCall, struct{}{})
 	fake.recordInvocation("GetRules", []interface{}{})
@@ -36,10 +36,10 @@ func (fake *Planner) GetRulesCallCount() int {
 	return len(fake.getRulesArgsForCall)
 }
 
-func (fake *Planner) GetRulesReturns(result1 rules.RulesWithChain, result2 error) {
+func (fake *Planner) GetRulesReturns(result1 enforcer.RulesWithChain, result2 error) {
 	fake.GetRulesStub = nil
 	fake.getRulesReturns = struct {
-		result1 rules.RulesWithChain
+		result1 enforcer.RulesWithChain
 		result2 error
 	}{result1, result2}
 }

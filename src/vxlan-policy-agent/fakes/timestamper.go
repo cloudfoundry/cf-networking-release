@@ -2,8 +2,8 @@
 package fakes
 
 import (
-	"lib/rules"
 	"sync"
+	"vxlan-policy-agent/enforcer"
 )
 
 type TimeStamper struct {
@@ -62,4 +62,4 @@ func (fake *TimeStamper) recordInvocation(key string, args []interface{}) {
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ rules.TimeStamper = new(TimeStamper)
+var _ enforcer.TimeStamper = new(TimeStamper)

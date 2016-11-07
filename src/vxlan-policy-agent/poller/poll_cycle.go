@@ -2,20 +2,20 @@ package poller
 
 import (
 	"fmt"
-	"lib/rules"
 	"time"
 	"vxlan-policy-agent/agent_metrics"
+	"vxlan-policy-agent/enforcer"
 )
 
 //go:generate counterfeiter -o ../fakes/planner.go --fake-name Planner . planner
 type planner interface {
-	GetRules() (rules.RulesWithChain, error)
+	GetRules() (enforcer.RulesWithChain, error)
 }
 
 type SinglePollCycle struct {
 	Planner planner
 
-	Enforcer          rules.RuleEnforcer
+	Enforcer          enforcer.RuleEnforcer
 	CollectionEmitter agent_metrics.TimeMetricsEmitter
 }
 

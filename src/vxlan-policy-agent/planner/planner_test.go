@@ -6,6 +6,7 @@ import (
 	libfakes "lib/fakes"
 	"lib/models"
 	"lib/rules"
+	"vxlan-policy-agent/enforcer"
 	"vxlan-policy-agent/fakes"
 	"vxlan-policy-agent/planner"
 
@@ -23,7 +24,7 @@ var _ = Describe("Planner", func() {
 		store              *libfakes.Datastore
 		timeMetricsEmitter *fakes.TimeMetricsEmitter
 		logger             *lagertest.TestLogger
-		chain              rules.Chain
+		chain              enforcer.Chain
 	)
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test")
@@ -90,7 +91,7 @@ var _ = Describe("Planner", func() {
 			},
 		}, nil)
 
-		chain = rules.Chain{
+		chain = enforcer.Chain{
 			Table:       "some-table",
 			ParentChain: "INPUT",
 			Prefix:      "some-prefix",

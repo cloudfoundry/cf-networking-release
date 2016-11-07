@@ -10,7 +10,6 @@ import (
 	"lib/metrics"
 	"lib/mutualtls"
 	"lib/policy_client"
-	"lib/rules"
 	"lib/serial"
 	"log"
 	"net/http"
@@ -18,6 +17,7 @@ import (
 	"time"
 	"vxlan-policy-agent/agent_metrics"
 	"vxlan-policy-agent/config"
+	"vxlan-policy-agent/enforcer"
 	"vxlan-policy-agent/planner"
 	"vxlan-policy-agent/poller"
 
@@ -111,15 +111,15 @@ func main() {
 		Logger:            logger.Session("rules-updater"),
 		VNI:               conf.VNI,
 		CollectionEmitter: timeMetricsEmitter,
-		Chain: rules.Chain{
+		Chain: enforcer.Chain{
 			Table:       "filter",
 			ParentChain: "FORWARD",
 			Prefix:      "vpa--",
 		},
 	}
 
-	timestamper := &rules.Timestamper{}
-	ruleEnforcer := rules.NewEnforcer(
+	timestamper := &enforcer.Timestamper{}
+	ruleEnforcer := enforcer.NewEnforcer(
 		logger.Session("rules-enforcer"),
 		timestamper,
 		ipt,
@@ -128,7 +128,7 @@ func main() {
 	vxlanDefaultLocalPlanner := planner.VxlanDefaultLocalPlanner{
 		Logger:      logger,
 		LocalSubnet: localSubnetCIDR,
-		Chain: rules.Chain{
+		Chain: enforcer.Chain{
 			Table:       "filter",
 			ParentChain: "FORWARD",
 			Prefix:      "vpa--local-",
@@ -138,7 +138,7 @@ func main() {
 	vxlanDefaultRemotePlanner := planner.VxlanDefaultRemotePlanner{
 		Logger: logger,
 		VNI:    conf.VNI,
-		Chain: rules.Chain{
+		Chain: enforcer.Chain{
 			Table:       "filter",
 			ParentChain: "FORWARD",
 			Prefix:      "vpa--remote-",
@@ -149,7 +149,7 @@ func main() {
 		Logger:         logger,
 		LocalSubnet:    localSubnetCIDR,
 		OverlayNetwork: overlayNetwork,
-		Chain: rules.Chain{
+		Chain: enforcer.Chain{
 			Table:       "nat",
 			ParentChain: "POSTROUTING",
 			Prefix:      "vpa--masq-",

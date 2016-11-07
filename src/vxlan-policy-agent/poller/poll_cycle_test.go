@@ -3,10 +3,9 @@ package poller_test
 import (
 	"errors"
 	"lib/rules"
+	"vxlan-policy-agent/enforcer"
 	"vxlan-policy-agent/fakes"
 	"vxlan-policy-agent/poller"
-
-	libfakes "lib/fakes"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -17,14 +16,14 @@ var _ = Describe("Single Poll Cycle", func() {
 		var (
 			p                  *poller.SinglePollCycle
 			fakePlanner        *fakes.Planner
-			fakeEnforcer       *libfakes.RuleEnforcer
+			fakeEnforcer       *fakes.RuleEnforcer
 			timeMetricsEmitter *fakes.TimeMetricsEmitter
-			rulesWithChain     rules.RulesWithChain
+			rulesWithChain     enforcer.RulesWithChain
 		)
 
 		BeforeEach(func() {
 			fakePlanner = &fakes.Planner{}
-			fakeEnforcer = &libfakes.RuleEnforcer{}
+			fakeEnforcer = &fakes.RuleEnforcer{}
 			timeMetricsEmitter = &fakes.TimeMetricsEmitter{}
 
 			p = &poller.SinglePollCycle{
@@ -33,9 +32,9 @@ var _ = Describe("Single Poll Cycle", func() {
 				CollectionEmitter: timeMetricsEmitter,
 			}
 
-			rulesWithChain = rules.RulesWithChain{
+			rulesWithChain = enforcer.RulesWithChain{
 				Rules: []rules.Rule{},
-				Chain: rules.Chain{
+				Chain: enforcer.Chain{
 					Table:       "some-table",
 					ParentChain: "INPUT",
 					Prefix:      "some-prefix",

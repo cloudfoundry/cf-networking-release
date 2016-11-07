@@ -4,21 +4,22 @@ package fakes
 import (
 	"lib/rules"
 	"sync"
+	"vxlan-policy-agent/enforcer"
 )
 
 type RuleEnforcer struct {
-	EnforceRulesAndChainStub        func(rules.RulesWithChain) error
+	EnforceRulesAndChainStub        func(enforcer.RulesWithChain) error
 	enforceRulesAndChainMutex       sync.RWMutex
 	enforceRulesAndChainArgsForCall []struct {
-		arg1 rules.RulesWithChain
+		arg1 enforcer.RulesWithChain
 	}
 	enforceRulesAndChainReturns struct {
 		result1 error
 	}
-	EnforceOnChainStub        func(chain rules.Chain, r []rules.Rule) error
+	EnforceOnChainStub        func(chain enforcer.Chain, r []rules.Rule) error
 	enforceOnChainMutex       sync.RWMutex
 	enforceOnChainArgsForCall []struct {
-		chain rules.Chain
+		chain enforcer.Chain
 		r     []rules.Rule
 	}
 	enforceOnChainReturns struct {
@@ -39,10 +40,10 @@ type RuleEnforcer struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *RuleEnforcer) EnforceRulesAndChain(arg1 rules.RulesWithChain) error {
+func (fake *RuleEnforcer) EnforceRulesAndChain(arg1 enforcer.RulesWithChain) error {
 	fake.enforceRulesAndChainMutex.Lock()
 	fake.enforceRulesAndChainArgsForCall = append(fake.enforceRulesAndChainArgsForCall, struct {
-		arg1 rules.RulesWithChain
+		arg1 enforcer.RulesWithChain
 	}{arg1})
 	fake.recordInvocation("EnforceRulesAndChain", []interface{}{arg1})
 	fake.enforceRulesAndChainMutex.Unlock()
@@ -59,7 +60,7 @@ func (fake *RuleEnforcer) EnforceRulesAndChainCallCount() int {
 	return len(fake.enforceRulesAndChainArgsForCall)
 }
 
-func (fake *RuleEnforcer) EnforceRulesAndChainArgsForCall(i int) rules.RulesWithChain {
+func (fake *RuleEnforcer) EnforceRulesAndChainArgsForCall(i int) enforcer.RulesWithChain {
 	fake.enforceRulesAndChainMutex.RLock()
 	defer fake.enforceRulesAndChainMutex.RUnlock()
 	return fake.enforceRulesAndChainArgsForCall[i].arg1
@@ -72,7 +73,7 @@ func (fake *RuleEnforcer) EnforceRulesAndChainReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *RuleEnforcer) EnforceOnChain(chain rules.Chain, r []rules.Rule) error {
+func (fake *RuleEnforcer) EnforceOnChain(chain enforcer.Chain, r []rules.Rule) error {
 	var rCopy []rules.Rule
 	if r != nil {
 		rCopy = make([]rules.Rule, len(r))
@@ -80,7 +81,7 @@ func (fake *RuleEnforcer) EnforceOnChain(chain rules.Chain, r []rules.Rule) erro
 	}
 	fake.enforceOnChainMutex.Lock()
 	fake.enforceOnChainArgsForCall = append(fake.enforceOnChainArgsForCall, struct {
-		chain rules.Chain
+		chain enforcer.Chain
 		r     []rules.Rule
 	}{chain, rCopy})
 	fake.recordInvocation("EnforceOnChain", []interface{}{chain, rCopy})
@@ -98,7 +99,7 @@ func (fake *RuleEnforcer) EnforceOnChainCallCount() int {
 	return len(fake.enforceOnChainArgsForCall)
 }
 
-func (fake *RuleEnforcer) EnforceOnChainArgsForCall(i int) (rules.Chain, []rules.Rule) {
+func (fake *RuleEnforcer) EnforceOnChainArgsForCall(i int) (enforcer.Chain, []rules.Rule) {
 	fake.enforceOnChainMutex.RLock()
 	defer fake.enforceOnChainMutex.RUnlock()
 	return fake.enforceOnChainArgsForCall[i].chain, fake.enforceOnChainArgsForCall[i].r
@@ -176,4 +177,4 @@ func (fake *RuleEnforcer) recordInvocation(key string, args []interface{}) {
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ rules.RuleEnforcer = new(RuleEnforcer)
+var _ enforcer.RuleEnforcer = new(RuleEnforcer)

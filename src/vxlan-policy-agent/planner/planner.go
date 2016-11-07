@@ -6,6 +6,7 @@ import (
 	"lib/rules"
 	"time"
 	"vxlan-policy-agent/agent_metrics"
+	"vxlan-policy-agent/enforcer"
 
 	"code.cloudfoundry.org/lager"
 )
@@ -21,7 +22,7 @@ type VxlanPolicyPlanner struct {
 	PolicyClient      policyClient
 	VNI               int
 	CollectionEmitter agent_metrics.TimeMetricsEmitter
-	Chain             rules.Chain
+	Chain             enforcer.Chain
 }
 
 type Container struct {
@@ -41,18 +42,18 @@ func getContainersMap(allContainers map[string]datastore.Container) (map[string]
 	return containers, nil
 }
 
-func (p *VxlanPolicyPlanner) GetRules() (rules.RulesWithChain, error) {
+func (p *VxlanPolicyPlanner) GetRules() (enforcer.RulesWithChain, error) {
 	containerMetadataStartTime := time.Now()
 	containerMetadata, err := p.Datastore.ReadAll()
 	if err != nil {
 		p.Logger.Error("datastore", err)
-		return rules.RulesWithChain{}, err
+		return enforcer.RulesWithChain{}, err
 	}
 
 	containers, err := getContainersMap(containerMetadata)
 	if err != nil {
 		p.Logger.Error("container-info", err)
-		return rules.RulesWithChain{}, err
+		return enforcer.RulesWithChain{}, err
 	}
 	containerMetadataDuration := time.Now().Sub(containerMetadataStartTime)
 	p.Logger.Debug("got-containers", lager.Data{"containers": containers})
@@ -61,12 +62,12 @@ func (p *VxlanPolicyPlanner) GetRules() (rules.RulesWithChain, error) {
 	policies, err := p.PolicyClient.GetPolicies()
 	if err != nil {
 		p.Logger.Error("policy-client-get-policies", err)
-		return rules.RulesWithChain{}, err
+		return enforcer.RulesWithChain{}, err
 	}
 	policyServerPollDuration := time.Now().Sub(policyServerStartRequestTime)
 	p.CollectionEmitter.EmitAll(map[string]time.Duration{
 		agent_metrics.MetricContainerMetadata: containerMetadataDuration,
-		agent_metrics.MetricPolicyServerPoll: policyServerPollDuration,
+		agent_metrics.MetricPolicyServerPoll:  policyServerPollDuration,
 	})
 
 	marksRuleset := []rules.Rule{}
@@ -105,7 +106,7 @@ func (p *VxlanPolicyPlanner) GetRules() (rules.RulesWithChain, error) {
 	}
 	ruleset := append(marksRuleset, filterRuleset...)
 	p.Logger.Debug("generated-rules", lager.Data{"rules": ruleset})
-	return rules.RulesWithChain{
+	return enforcer.RulesWithChain{
 		Chain: p.Chain,
 		Rules: ruleset,
 	}, nil

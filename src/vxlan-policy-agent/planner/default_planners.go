@@ -3,6 +3,7 @@ package planner
 import (
 	"fmt"
 	"lib/rules"
+	"vxlan-policy-agent/enforcer"
 
 	"code.cloudfoundry.org/lager"
 )
@@ -10,16 +11,16 @@ import (
 type VxlanDefaultLocalPlanner struct {
 	Logger      lager.Logger
 	LocalSubnet string
-	Chain       rules.Chain
+	Chain       enforcer.Chain
 }
 
-func (p *VxlanDefaultLocalPlanner) GetRulesAndChain() (rules.RulesWithChain, error) {
+func (p *VxlanDefaultLocalPlanner) GetRulesAndChain() (enforcer.RulesWithChain, error) {
 	theRules, err := p.GetRules()
 	if err != nil {
-		return rules.RulesWithChain{}, err
+		return enforcer.RulesWithChain{}, err
 	}
 
-	return rules.RulesWithChain{
+	return enforcer.RulesWithChain{
 		Chain: p.Chain,
 		Rules: theRules,
 	}, nil
@@ -47,16 +48,16 @@ func (p *VxlanDefaultLocalPlanner) GetRules() ([]rules.Rule, error) {
 type VxlanDefaultRemotePlanner struct {
 	Logger lager.Logger
 	VNI    int
-	Chain  rules.Chain
+	Chain  enforcer.Chain
 }
 
-func (p *VxlanDefaultRemotePlanner) GetRulesAndChain() (rules.RulesWithChain, error) {
+func (p *VxlanDefaultRemotePlanner) GetRulesAndChain() (enforcer.RulesWithChain, error) {
 	theRules, err := p.GetRules()
 	if err != nil {
-		return rules.RulesWithChain{}, err
+		return enforcer.RulesWithChain{}, err
 	}
 
-	return rules.RulesWithChain{
+	return enforcer.RulesWithChain{
 		Chain: p.Chain,
 		Rules: theRules,
 	}, nil
@@ -81,7 +82,7 @@ type VxlanDefaultMasqueradePlanner struct {
 	Logger         lager.Logger
 	LocalSubnet    string
 	OverlayNetwork string
-	Chain          rules.Chain
+	Chain          enforcer.Chain
 }
 
 func (p *VxlanDefaultMasqueradePlanner) GetRules() ([]rules.Rule, error) {
@@ -94,13 +95,13 @@ func (p *VxlanDefaultMasqueradePlanner) GetRules() ([]rules.Rule, error) {
 	return ruleset, nil
 }
 
-func (p *VxlanDefaultMasqueradePlanner) GetRulesAndChain() (rules.RulesWithChain, error) {
+func (p *VxlanDefaultMasqueradePlanner) GetRulesAndChain() (enforcer.RulesWithChain, error) {
 	theRules, err := p.GetRules()
 	if err != nil {
-		return rules.RulesWithChain{}, err
+		return enforcer.RulesWithChain{}, err
 	}
 
-	return rules.RulesWithChain{
+	return enforcer.RulesWithChain{
 		Chain: p.Chain,
 		Rules: theRules,
 	}, nil

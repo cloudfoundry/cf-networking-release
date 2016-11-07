@@ -12,6 +12,18 @@ type Rule interface {
 	Enforce(table, chain string, ipt IPTables, logger lager.Logger) error
 }
 
+//go:generate counterfeiter -o ../fakes/iptables.go --fake-name IPTables . IPTables
+type IPTables interface {
+	Exists(table, chain string, rulespec ...string) (bool, error)
+	Insert(table, chain string, pos int, rulespec ...string) error
+	AppendUnique(table, chain string, rulespec ...string) error
+	Delete(table, chain string, rulespec ...string) error
+	List(table, chain string) ([]string, error)
+	NewChain(table, chain string) error
+	ClearChain(table, chain string) error
+	DeleteChain(table, chain string) error
+}
+
 type GenericRule struct {
 	Properties []string
 }
@@ -31,6 +43,7 @@ func (r GenericRule) Enforce(table, chain string, iptables IPTables, logger lage
 
 	return nil
 }
+
 func NewMarkAllowRule(destinationIP, protocol string, port int, tag string, sourceAppGUID, destinationAppGUID string) GenericRule {
 	return GenericRule{
 		Properties: []string{

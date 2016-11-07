@@ -1,7 +1,8 @@
-package rules
+package enforcer
 
 import (
 	"fmt"
+	"lib/rules"
 	"regexp"
 	"strconv"
 	"strings"
@@ -16,23 +17,11 @@ func (_ Timestamper) CurrentTime() int {
 	return int(time.Now().Unix())
 }
 
-//go:generate counterfeiter -o ../fakes/iptables.go --fake-name IPTables . IPTables
-type IPTables interface {
-	Exists(table, chain string, rulespec ...string) (bool, error)
-	Insert(table, chain string, pos int, rulespec ...string) error
-	AppendUnique(table, chain string, rulespec ...string) error
-	Delete(table, chain string, rulespec ...string) error
-	List(table, chain string) ([]string, error)
-	NewChain(table, chain string) error
-	ClearChain(table, chain string) error
-	DeleteChain(table, chain string) error
-}
-
 //go:generate counterfeiter -o ../fakes/rule_enforcer.go --fake-name RuleEnforcer . RuleEnforcer
 type RuleEnforcer interface {
 	EnforceRulesAndChain(RulesWithChain) error
-	EnforceOnChain(chain Chain, r []Rule) error
-	Enforce(table, parentChain, chain string, r []Rule) error
+	EnforceOnChain(chain Chain, r []rules.Rule) error
+	Enforce(table, parentChain, chain string, r []rules.Rule) error
 }
 
 //go:generate counterfeiter -o ../fakes/timestamper.go --fake-name TimeStamper . TimeStamper
@@ -43,10 +32,10 @@ type TimeStamper interface {
 type Enforcer struct {
 	Logger      lager.Logger
 	timestamper TimeStamper
-	iptables    IPTables
+	iptables    rules.IPTables
 }
 
-func NewEnforcer(logger lager.Logger, timestamper TimeStamper, ipt IPTables) *Enforcer {
+func NewEnforcer(logger lager.Logger, timestamper TimeStamper, ipt rules.IPTables) *Enforcer {
 	return &Enforcer{
 		Logger:      logger,
 		timestamper: timestamper,
@@ -62,18 +51,18 @@ type Chain struct {
 
 type RulesWithChain struct {
 	Chain Chain
-	Rules []Rule
+	Rules []rules.Rule
 }
 
 func (e *Enforcer) EnforceRulesAndChain(rulesAndChain RulesWithChain) error {
 	return e.EnforceOnChain(rulesAndChain.Chain, rulesAndChain.Rules)
 }
 
-func (e *Enforcer) EnforceOnChain(c Chain, rules []Rule) error {
+func (e *Enforcer) EnforceOnChain(c Chain, rules []rules.Rule) error {
 	return e.Enforce(c.Table, c.ParentChain, c.Prefix, rules)
 }
 
-func (e *Enforcer) Enforce(table, parentChain, chainPrefix string, rules []Rule) error {
+func (e *Enforcer) Enforce(table, parentChain, chainPrefix string, rules []rules.Rule) error {
 	newTime := e.timestamper.CurrentTime()
 	chain := fmt.Sprintf("%s%d", chainPrefix, newTime)
 
