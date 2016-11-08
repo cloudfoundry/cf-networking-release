@@ -1,14 +1,15 @@
 # Policy Server External API
 
-## Purpose: 
+## Purpose:
 
 The policy server API is used for creating, deleting and listing policies and tags.
 
-## API Authentication
+## API Authorization
 In order to communicate with the policy server API, a UAA oauth token with valid `network.admin` scope is required.
+The CF admin by default has `network.admin` scope, other users will need to have this scope granted by an admin.
 
 ### Option 1: cf curl
-By using the `cf curl`, the token is automatically passed in the request
+Use the `cf curl` command as admin
 
 Example
 ```sh
@@ -21,7 +22,8 @@ When using curl the token must be explicitly provided in the `Authorization` hea
 
 Example
 ```sh
-$ curl http://api.bosh-lite.com/networking/v0/external/policies -H "Authorization: `cf oauth-token`"
+$ export TOKEN=`cf oauth-token` # as CF admin
+$ curl http://api.bosh-lite.com/networking/v0/external/policies -H "Authorization: $TOKEN"
 {"total_policies":2,"policies":[{"source":{...}]}
 ```
 
