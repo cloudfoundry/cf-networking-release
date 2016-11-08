@@ -21,6 +21,30 @@ Network policies can be managed using the netman CF CLI plugin.
 
 ## Usage
 
+### Allow Policy:
+
+Allow direct network traffic from one app to another
+
+```
+$ cf allow-access -h
+NAME:
+   allow-access - Allow direct network traffic from one app to another
+
+USAGE:
+   cf allow-access SOURCE_APP DESTINATION_APP --protocol <tcp|udp> --port [1-65535]
+
+OPTIONS:
+   --port           Port to connect to destination app with. (required)
+   --protocol       Protocol to connect apps with. (required)
+```
+
+**Example:**
+```sh
+$ cf allow-access frontend backend --protocol tcp --port 8080
+Allowing traffic from frontend to backend as admin...
+OK
+```
+
 ### List Policies:
 
 List policy for direct network traffic from one app to another
@@ -47,30 +71,6 @@ Source		Destination	Protocol	Port
 frontend	backend		tcp		8080
 ```
 
-
-### Allow Policy:
-
-Allow direct network traffic from one app to another
-
-```
-$ cf allow-access -h
-NAME:
-   allow-access - Allow direct network traffic from one app to another
-
-USAGE:
-   cf allow-access SOURCE_APP DESTINATION_APP --protocol <tcp|udp> --port [1-65535]
-
-OPTIONS:
-   --port           Port to connect to destination app with. (required)
-   --protocol       Protocol to connect apps with. (required)
-```
-
-**Example:**
-```sh
-$ cf allow-access frontend backend --protocol tcp --port 8080
-Allowing traffic from frontend to backend as admin...
-OK
-```
 
 ### Deny Policy:
 
