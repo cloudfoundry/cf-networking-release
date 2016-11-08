@@ -181,7 +181,7 @@ var _ = Describe("Netout", func() {
 		})
 	})
 
-	Context("InsertRule", func() {
+	Describe("InsertRule", func() {
 		var netOutRule garden.NetOutRule
 
 		Context("when ports and protocol are specified", func() {
