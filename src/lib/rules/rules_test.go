@@ -15,11 +15,13 @@ var _ = Describe("Rules", func() {
 	var (
 		logger   *lagertest.TestLogger
 		iptables *fakes.IPTables
+		restorer *fakes.Restorer
 	)
 
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test")
 		iptables = &fakes.IPTables{}
+		restorer = &fakes.Restorer{}
 	})
 
 	Describe("GenericRule", func() {
@@ -51,6 +53,41 @@ var _ = Describe("Rules", func() {
 					err := rule.Enforce("some-table", "some-chain", iptables, logger)
 					Expect(err).To(MatchError("appending rule: raspberry"))
 					Expect(logger).To(gbytes.Say("append-rule.*raspberry"))
+				})
+			})
+		})
+	})
+	Describe("RuleSet", func() {
+		var ruleSet rules.RuleSet
+
+		Describe("BulkEnforce", func() {
+			BeforeEach(func() {
+				ruleSet = rules.RuleSet{
+					Rules: []rules.GenericRule{
+						rules.NewMarkSetRule("1.2.3.4", "A", "a-guid"),
+						rules.NewMarkSetRule("2.2.2.2", "B", "b-guid"),
+					},
+				}
+			})
+			It("aggregates the rules and enforces them", func() {
+				err := ruleSet.BulkAppend("some-table", "some-chain", restorer, logger)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(restorer.RestoreCallCount()).To(Equal(1))
+				restoreInput := restorer.RestoreArgsForCall(0)
+				Expect(restoreInput).To(ContainSubstring("*some-table\n"))
+				Expect(restoreInput).To(ContainSubstring("-A some-chain --source 1.2.3.4 --jump MARK --set-xmark 0xA -m comment --comment src:a-guid\n"))
+				Expect(restoreInput).To(ContainSubstring("-A some-chain --source 2.2.2.2 --jump MARK --set-xmark 0xB -m comment --comment src:b-guid\n"))
+				Expect(restoreInput).To(ContainSubstring("COMMIT\n"))
+			})
+			Context("when the restorer fails", func() {
+				It("logs and returns a useful error", func() {
+					restorer.RestoreReturns(errors.New("banana"))
+
+					err := ruleSet.BulkAppend("some-table", "some-chain", restorer, logger)
+
+					Expect(err).To(MatchError("bulk appending rules: banana"))
+					Expect(logger).To(gbytes.Say("bulk-append.*banana"))
 				})
 			})
 		})

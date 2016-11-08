@@ -3,6 +3,7 @@ package rules
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"code.cloudfoundry.org/lager"
 )
@@ -24,8 +25,38 @@ type IPTables interface {
 	DeleteChain(table, chain string) error
 }
 
+//go:generate counterfeiter -o ../fakes/restorer.go --fake-name Restorer . restorer
+type restorer interface {
+	Restore(ruleState string) error
+}
+
 type GenericRule struct {
 	Properties []string
+}
+
+type RuleSet struct {
+	Rules []GenericRule
+}
+
+func (r *RuleSet) BulkAppend(table, chain string, iptRestorer restorer, logger lager.Logger) error {
+	preamble := GenericRule{
+		Properties: []string{"-A", chain},
+	}
+	ruleState := []string{fmt.Sprintf("*%s", table), "\n"}
+
+	for _, rule := range r.Rules {
+		line := strings.Join(append(preamble.Properties, rule.Properties...), " ")
+		ruleState = append(ruleState, line, "\n")
+	}
+	ruleState = append(ruleState, "COMMIT", "\n")
+
+	err := iptRestorer.Restore(strings.Join(ruleState, ""))
+	if err != nil {
+		logger.Error("bulk-append", err)
+		return fmt.Errorf("bulk appending rules: %s", err)
+	}
+
+	return nil
 }
 
 func (r GenericRule) Enforce(table, chain string, iptables IPTables, logger lager.Logger) error {
