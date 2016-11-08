@@ -68,36 +68,42 @@ func (m *NetOut) Cleanup(containerHandle string) error {
 func (m *NetOut) InsertRule(containerHandle string, rule garden.NetOutRule, containerIP string) error {
 	chain := m.ChainNamer.Name(prefixNetOut, containerHandle)
 
+	ruleSpec := generateRuleSpec(containerHandle, chain, rule, containerIP)
+	for _, iptRule := range ruleSpec {
+		err := m.IPTables.Insert("filter", chain, 1, iptRule.Properties...)
+		if err != nil {
+			return fmt.Errorf("inserting net-out rule: %s", err)
+		}
+	}
+
+	return nil
+}
+
+func generateRuleSpec(containerHandle, chain string, rule garden.NetOutRule, containerIP string) []rules.GenericRule {
+	ruleSpec := []rules.GenericRule{}
 	for _, network := range rule.Networks {
 		if len(rule.Ports) > 0 && udpOrTcp(rule.Protocol) {
 			for _, portRange := range rule.Ports {
-				ruleSpec := rules.NewNetOutWithPortsRule(
+				ruleSpec = append(ruleSpec, rules.NewNetOutWithPortsRule(
 					containerIP,
 					network.Start.String(),
 					network.End.String(),
 					int(portRange.Start),
 					int(portRange.End),
 					lookupProtocol(rule.Protocol),
+				),
 				)
-				err := m.IPTables.Insert("filter", chain, 1, ruleSpec.Properties...)
-				if err != nil {
-					return fmt.Errorf("inserting net-out rule: %s", err)
-				}
 			}
 		} else {
-			ruleSpec := rules.NewNetOutRule(
+			ruleSpec = append(ruleSpec, rules.NewNetOutRule(
 				containerIP,
 				network.Start.String(),
 				network.End.String(),
+			),
 			)
-			err := m.IPTables.Insert("filter", chain, 1, ruleSpec.Properties...)
-			if err != nil {
-				return fmt.Errorf("inserting net-out rule: %s", err)
-			}
 		}
 	}
-
-	return nil
+	return ruleSpec
 }
 
 func udpOrTcp(protocol garden.Protocol) bool {
