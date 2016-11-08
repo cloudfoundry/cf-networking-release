@@ -17,6 +17,7 @@ type Config struct {
 	UAAClient          string    `json:"uaa_client"`
 	UAAClientSecret    string    `json:"uaa_client_secret"`
 	UAAURL             string    `json:"uaa_url"`
+	CCURL              string    `json:"cc_url"`
 	SkipSSLValidation  bool      `json:"skip_ssl_validation"`
 	Database           db.Config `json:"database"`
 	TagLength          int       `json:"tag_length"`

@@ -57,8 +57,12 @@ properties:
     description: "address of uaa server"
     default: https://uaa.bosh-lite.com
 
+  policy-server.cc_url:
+    description: "address of cloud controller server"
+    default: https://api.bosh-lite.com
+
   policy-server.skip_ssl_validation:
-    description: "skip verifying ssl certs when speaking to uaa"
+    description: "skip verifying ssl certs when speaking to uaa or cloud-controller"
     default: false
 
   policy-server.database.type:

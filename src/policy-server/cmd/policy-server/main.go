@@ -15,6 +15,7 @@ import (
 	"lib/metrics"
 	"lib/mutualtls"
 
+	"policy-server/cc_client"
 	"policy-server/config"
 	"policy-server/handlers"
 	"policy-server/server_metrics"
@@ -24,6 +25,7 @@ import (
 	"code.cloudfoundry.org/lager"
 	"github.com/cloudfoundry/dropsonde"
 	"github.com/jmoiron/sqlx"
+	"github.com/pivotal-cf-experimental/warrant"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
 	"github.com/tedsuo/ifrit/http_server"
@@ -55,15 +57,21 @@ func main() {
 		},
 	}
 
-	uaaRequestClient := &uaa_client.Client{
-		Host:       conf.UAAURL,
-		Name:       conf.UAAClient,
-		Secret:     conf.UAAClientSecret,
-		HTTPClient: httpClient,
-		Logger:     logger,
+	warrantClient := warrant.New(warrant.Config{
+		Host:          conf.UAAURL,
+		SkipVerifySSL: conf.SkipSSLValidation,
+	})
+
+	uaaClient := &uaa_client.Client{
+		Host:          conf.UAAURL,
+		Name:          conf.UAAClient,
+		Secret:        conf.UAAClientSecret,
+		HTTPClient:    httpClient,
+		WarrantClient: warrantClient.Clients,
+		Logger:        logger,
 	}
 	whoamiHandler := &handlers.WhoAmIHandler{
-		Client:    uaaRequestClient,
+		Client:    uaaClient,
 		Logger:    logger.Session("external"),
 		Marshaler: marshal.MarshalFunc(json.Marshal),
 	}
@@ -115,7 +123,7 @@ func main() {
 	unmarshaler := marshal.UnmarshalFunc(json.Unmarshal)
 
 	authenticator := handlers.Authenticator{
-		Client: uaaRequestClient,
+		Client: uaaClient,
 		Logger: logger,
 	}
 
@@ -141,6 +149,20 @@ func main() {
 		Marshaler: marshal.MarshalFunc(json.Marshal),
 	}
 
+	ccClient := &cc_client.Client{
+		Host:       conf.CCURL,
+		HTTPClient: httpClient,
+		Logger:     logger,
+	}
+
+	policiesCleanupHandler := &handlers.PoliciesCleanup{
+		Logger:    logger.Session("policies-cleanup"),
+		Store:     dataStore,
+		Marshaler: marshal.MarshalFunc(json.Marshal),
+		UAAClient: uaaClient,
+		CCClient:  ccClient,
+	}
+
 	tagsIndexHandler := &handlers.TagsIndex{
 		Logger:    logger.Session("tags-index"),
 		Store:     dataStore,
@@ -160,6 +182,7 @@ func main() {
 		{Name: "create_policies", Method: "POST", Path: "/networking/v0/external/policies"},
 		{Name: "delete_policies", Method: "DELETE", Path: "/networking/v0/external/policies"},
 		{Name: "policies_index", Method: "GET", Path: "/networking/v0/external/policies"},
+		{Name: "cleanup", Method: "POST", Path: "/networking/v0/external/policies/cleanup"},
 		{Name: "tags_index", Method: "GET", Path: "/networking/v0/external/tags"},
 	}
 
@@ -168,6 +191,7 @@ func main() {
 		"create_policies": authenticator.Wrap(createPolicyHandler),
 		"delete_policies": authenticator.Wrap(deletePolicyHandler),
 		"policies_index":  authenticator.Wrap(policiesIndexHandler),
+		"cleanup":         authenticator.Wrap(policiesCleanupHandler),
 		"tags_index":      authenticator.Wrap(tagsIndexHandler),
 		"whoami":          whoamiHandler,
 	}

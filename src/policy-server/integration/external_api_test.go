@@ -317,6 +317,43 @@ var _ = Describe("External API", func() {
 		})
 	})
 
+	Describe("cleanup policies", func() {
+		BeforeEach(func() {
+			body := strings.NewReader(`{ "policies": [
+				{"source": { "id": "src-app1" }, "destination": { "id": "dst-app1", "protocol": "tcp", "port": 8080 } },
+				{"source": { "id": "src-app2" }, "destination": { "id": "dst-app2", "protocol": "tcp", "port": 9999 } },
+				{"source": { "id": "src-app3" }, "destination": { "id": "dead-app", "protocol": "tcp", "port": 3333 } }
+				]} `)
+
+			resp := makeAndDoRequest(
+				"POST",
+				fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+				body,
+			)
+			Expect(resp.StatusCode).To(Equal(http.StatusOK))
+
+		})
+
+		It("responds with a 200 and lists all stale policies", func() {
+			resp := makeAndDoRequest(
+				"POST",
+				fmt.Sprintf("http://%s:%d/networking/v0/external/policies/cleanup", conf.ListenHost, conf.ListenPort),
+				nil,
+			)
+
+			stalePoliciesStr := `{
+				"total_policies":1,
+				"policies": [
+				 {"source": { "id": "src-app3" }, "destination": { "id": "dead-app", "protocol": "tcp", "port": 3333 } }
+				 ]}
+				`
+
+			Expect(resp.StatusCode).To(Equal(http.StatusOK))
+			bodyBytes, _ := ioutil.ReadAll(resp.Body)
+			Expect(bodyBytes).To(MatchJSON(stalePoliciesStr))
+		})
+	})
+
 	Describe("listing policies", func() {
 		Context("when providing a list of ids as a query parameter", func() {
 			It("responds with a 200 and lists all policies which contain one of those ids", func() {

@@ -32,6 +32,10 @@ files:
   - github.com/lib/pq/*.go # gosub
   - github.com/lib/pq/oid/*.go # gosub
   - github.com/nu7hatch/gouuid/*.go # gosub
+  - github.com/pivotal-cf-experimental/warrant/*.go # gosub
+  - github.com/pivotal-cf-experimental/warrant/internal/documents/*.go # gosub
+  - github.com/pivotal-cf-experimental/warrant/internal/network/*.go # gosub
+  - github.com/pivotal-cf-experimental/warrant/vendor/github.com/dgrijalva/jwt-go/*.go # gosub
   - github.com/tedsuo/ifrit/*.go # gosub
   - github.com/tedsuo/ifrit/grouper/*.go # gosub
   - github.com/tedsuo/ifrit/http_server/*.go # gosub
@@ -41,6 +45,7 @@ files:
   - lib/marshal/*.go # gosub
   - lib/metrics/*.go # gosub
   - lib/mutualtls/*.go # gosub
+  - policy-server/cc_client/*.go # gosub
   - policy-server/cmd/policy-server/*.go # gosub
   - policy-server/config/*.go # gosub
   - policy-server/handlers/*.go # gosub

@@ -26,6 +26,45 @@ var _ = Describe("Client", func() {
 		logger           *lagertest.TestLogger
 	)
 
+	Describe("GetToken", func() {
+		var fakeWarrantClient *fakes.WarrantClient
+		BeforeEach(func() {
+			fakeWarrantClient = &fakes.WarrantClient{}
+			logger = lagertest.NewTestLogger("test")
+			client = &uaa_client.Client{
+				Host:          "some.url",
+				Name:          "some-name",
+				Secret:        "some-secret",
+				Logger:        logger,
+				WarrantClient: fakeWarrantClient,
+			}
+
+			fakeWarrantClient.GetTokenReturns("valid-token", nil)
+		})
+
+		It("Returns the token", func() {
+			token, err := client.GetToken()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(token).To(Equal("valid-token"))
+			Expect(fakeWarrantClient.GetTokenCallCount()).To(Equal(1))
+			name, secret := fakeWarrantClient.GetTokenArgsForCall(0)
+			Expect(name).To(Equal("some-name"))
+			Expect(secret).To(Equal("some-secret"))
+		})
+
+		Context("When get token fails", func() {
+			BeforeEach(func() {
+				fakeWarrantClient.GetTokenReturns("", errors.New("potato"))
+			})
+			It("Returns a meaningful error", func() {
+				_, err := client.GetToken()
+				Expect(err).To(MatchError(ContainSubstring("get token failed: potato")))
+			})
+
+		})
+
+	})
+
 	Describe("CheckToken", func() {
 		BeforeEach(func() {
 			httpClient = &fakes.HTTPClient{}

@@ -104,3 +104,9 @@
 [submodule "src/github.com/square/certstrap"]
 	path = src/github.com/square/certstrap
 	url = https://github.com/square/certstrap.git
+[submodule "src/github.com/dgrijalva/jwt-go"]
+	path = src/github.com/dgrijalva/jwt-go
+	url = https://github.com/dgrijalva/jwt-go
+[submodule "src/github.com/pivotal-cf-experimental/warrant"]
+	path = src/github.com/pivotal-cf-experimental/warrant
+	url = https://github.com/pivotal-cf-experimental/warrant

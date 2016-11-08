@@ -20,11 +20,17 @@ func (r BadUaaResponse) Error() string {
 }
 
 type Client struct {
-	Host       string
-	Name       string
-	Secret     string
-	HTTPClient httpClient
-	Logger     lager.Logger
+	Host          string
+	Name          string
+	Secret        string
+	HTTPClient    httpClient
+	WarrantClient warrantClient
+	Logger        lager.Logger
+}
+
+//go:generate counterfeiter -o ../fakes/warrant_client.go --fake-name WarrantClient . warrantClient
+type warrantClient interface {
+	GetToken(clientName, clientSecret string) (string, error)
 }
 
 //go:generate counterfeiter -o ../fakes/http_client.go --fake-name HTTPClient . httpClient
@@ -35,6 +41,14 @@ type httpClient interface {
 type CheckTokenResponse struct {
 	Scope    []string `json:"scope"`
 	UserName string   `json:"user_name"`
+}
+
+func (c *Client) GetToken() (string, error) {
+	token, err := c.WarrantClient.GetToken(c.Name, c.Secret)
+	if err != nil {
+		return "", fmt.Errorf("get token failed: %s", err)
+	}
+	return token, nil
 }
 
 func (c *Client) CheckToken(token string) (CheckTokenResponse, error) {
@@ -76,4 +90,3 @@ func (c *Client) CheckToken(token string) (CheckTokenResponse, error) {
 	}
 	return responseStruct, nil
 }
-
