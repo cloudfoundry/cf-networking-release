@@ -17,6 +17,3 @@
   chmod +x ~/Downloads/network-policy-plugin
   cf install-plugin ~/Downloads/network-policy-plugin
   ```
-
-
-# Using the API
