@@ -11,9 +11,15 @@ import (
 
 const prefixNetOut = "netout"
 
+//go:generate counterfeiter -o ../fakes/net_out_rule_converter.go --fake-name NetOutRuleConverter . netOutRuleConverter
+type netOutRuleConverter interface {
+	Convert(rule garden.NetOutRule, containerIP string) []rules.GenericRule
+}
+
 type NetOut struct {
 	ChainNamer chainNamer
 	IPTables   rules.IPTables
+	Converter  netOutRuleConverter
 }
 
 func (m *NetOut) Initialize(logger lager.Logger, containerHandle string, containerIP net.IP, overlayNetwork string) error {
@@ -68,7 +74,7 @@ func (m *NetOut) Cleanup(containerHandle string) error {
 func (m *NetOut) InsertRule(containerHandle string, rule garden.NetOutRule, containerIP string) error {
 	chain := m.ChainNamer.Name(prefixNetOut, containerHandle)
 
-	ruleSpec := generateRuleSpec(containerHandle, chain, rule, containerIP)
+	ruleSpec := m.Converter.Convert(rule, containerIP)
 	for _, iptRule := range ruleSpec {
 		err := m.IPTables.Insert("filter", chain, 1, iptRule.Properties...)
 		if err != nil {
@@ -77,46 +83,4 @@ func (m *NetOut) InsertRule(containerHandle string, rule garden.NetOutRule, cont
 	}
 
 	return nil
-}
-
-func generateRuleSpec(containerHandle, chain string, rule garden.NetOutRule, containerIP string) []rules.GenericRule {
-	ruleSpec := []rules.GenericRule{}
-	for _, network := range rule.Networks {
-		if len(rule.Ports) > 0 && udpOrTcp(rule.Protocol) {
-			for _, portRange := range rule.Ports {
-				ruleSpec = append(ruleSpec, rules.NewNetOutWithPortsRule(
-					containerIP,
-					network.Start.String(),
-					network.End.String(),
-					int(portRange.Start),
-					int(portRange.End),
-					lookupProtocol(rule.Protocol),
-				),
-				)
-			}
-		} else {
-			ruleSpec = append(ruleSpec, rules.NewNetOutRule(
-				containerIP,
-				network.Start.String(),
-				network.End.String(),
-			),
-			)
-		}
-	}
-	return ruleSpec
-}
-
-func udpOrTcp(protocol garden.Protocol) bool {
-	return protocol == garden.ProtocolTCP || protocol == garden.ProtocolUDP
-}
-
-func lookupProtocol(protocol garden.Protocol) string {
-	switch protocol {
-	case garden.ProtocolTCP:
-		return "tcp"
-	case garden.ProtocolUDP:
-		return "udp"
-	default:
-		return "all"
-	}
 }

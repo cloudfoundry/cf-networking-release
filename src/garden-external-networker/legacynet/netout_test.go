@@ -10,6 +10,7 @@ import (
 	"code.cloudfoundry.org/lager/lagertest"
 
 	lib_fakes "lib/fakes"
+	"lib/rules"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -18,6 +19,7 @@ import (
 var _ = Describe("Netout", func() {
 	var (
 		netOut     *legacynet.NetOut
+		converter  *fakes.NetOutRuleConverter
 		chainNamer *fakes.ChainNamer
 		ipTables   *lib_fakes.IPTables
 		logger     *lagertest.TestLogger
@@ -25,10 +27,12 @@ var _ = Describe("Netout", func() {
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test")
 		chainNamer = &fakes.ChainNamer{}
+		converter = &fakes.NetOutRuleConverter{}
 		ipTables = &lib_fakes.IPTables{}
 		netOut = &legacynet.NetOut{
 			ChainNamer: chainNamer,
 			IPTables:   ipTables,
+			Converter:  converter,
 		}
 		chainNamer.NameReturns("some-chain-name")
 	})
@@ -184,110 +188,50 @@ var _ = Describe("Netout", func() {
 	Describe("InsertRule", func() {
 		var netOutRule garden.NetOutRule
 
-		Context("when ports and protocol are specified", func() {
-			BeforeEach(func() {
-				netOutRule = garden.NetOutRule{
-					Protocol: garden.ProtocolTCP,
-					Networks: []garden.IPRange{
-						{Start: net.ParseIP("1.1.1.1"), End: net.ParseIP("2.2.2.2")},
-						{Start: net.ParseIP("3.3.3.3"), End: net.ParseIP("4.4.4.4")},
-					},
-					Ports: []garden.PortRange{
-						{Start: 9000, End: 9999},
-						{Start: 1111, End: 2222},
-					},
-				}
-			})
-
-			It("prepends allow rules to the container's netout chain", func() {
-				err := netOut.InsertRule("some-handle", netOutRule, "1.2.3.4")
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(ipTables.InsertCallCount()).To(Equal(4))
-				writtenRules := [][]string{}
-				for i := 0; i < 4; i++ {
-					table, chain, pos, rulespec := ipTables.InsertArgsForCall(i)
-					Expect(table).To(Equal("filter"))
-					Expect(chain).To(Equal("some-chain-name"))
-					Expect(pos).To(Equal(1))
-					writtenRules = append(writtenRules, rulespec)
-				}
-				Expect(writtenRules).To(ConsistOf(
-					[]string{"--source", "1.2.3.4",
-						"-m", "iprange", "-p", "tcp",
-						"--dst-range", "1.1.1.1-2.2.2.2",
-						"-m", "tcp", "--destination-port", "9000:9999",
-						"--jump", "RETURN"},
-					[]string{"--source", "1.2.3.4",
-						"-m", "iprange", "-p", "tcp",
-						"--dst-range", "1.1.1.1-2.2.2.2",
-						"-m", "tcp", "--destination-port", "1111:2222",
-						"--jump", "RETURN"},
-					[]string{"--source", "1.2.3.4",
-						"-m", "iprange", "-p", "tcp",
-						"--dst-range", "3.3.3.3-4.4.4.4",
-						"-m", "tcp", "--destination-port", "9000:9999",
-						"--jump", "RETURN"},
-					[]string{"--source", "1.2.3.4",
-						"-m", "iprange", "-p", "tcp",
-						"--dst-range", "3.3.3.3-4.4.4.4",
-						"-m", "tcp", "--destination-port", "1111:2222",
-						"--jump", "RETURN"},
-				))
-			})
-
-			Context("when insert rule fails", func() {
-				BeforeEach(func() {
-					ipTables.InsertReturns(errors.New("potato"))
-				})
-				It("returns an error", func() {
-					err := netOut.InsertRule("some-container-handle", netOutRule, "1.2.3.4")
-					Expect(err).To(MatchError("inserting net-out rule: potato"))
-				})
+		BeforeEach(func() {
+			netOutRule = garden.NetOutRule{
+				Protocol: garden.ProtocolTCP,
+				Networks: []garden.IPRange{
+					{Start: net.ParseIP("1.1.1.1"), End: net.ParseIP("2.2.2.2")},
+					{Start: net.ParseIP("3.3.3.3"), End: net.ParseIP("4.4.4.4")},
+				},
+				Ports: []garden.PortRange{
+					{Start: 9000, End: 9999},
+					{Start: 1111, End: 2222},
+				},
+			}
+			converter.ConvertReturns([]rules.GenericRule{
+				rules.GenericRule{[]string{"rule1"}},
+				rules.GenericRule{[]string{"rule2"}},
 			})
 		})
 
-		Context("when ports or protocol are not specified", func() {
+		It("prepends allow rules to the container's netout chain", func() {
+			err := netOut.InsertRule("some-handle", netOutRule, "1.2.3.4")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(ipTables.InsertCallCount()).To(Equal(2))
+			writtenRules := [][]string{}
+			for i := 0; i < 2; i++ {
+				table, chain, pos, rulespec := ipTables.InsertArgsForCall(i)
+				Expect(table).To(Equal("filter"))
+				Expect(chain).To(Equal("some-chain-name"))
+				Expect(pos).To(Equal(1))
+				writtenRules = append(writtenRules, rulespec)
+			}
+			Expect(writtenRules).To(ConsistOf(
+				[]string{"rule1"},
+				[]string{"rule2"},
+			))
+		})
+
+		Context("when insert rule fails", func() {
 			BeforeEach(func() {
-				netOutRule = garden.NetOutRule{
-					Networks: []garden.IPRange{
-						{Start: net.ParseIP("1.1.1.1"), End: net.ParseIP("2.2.2.2")},
-						{Start: net.ParseIP("3.3.3.3"), End: net.ParseIP("4.4.4.4")},
-					},
-				}
+				ipTables.InsertReturns(errors.New("potato"))
 			})
-
-			It("prepends allow rules to the container's netout chain", func() {
-				err := netOut.InsertRule("some-handle", netOutRule, "1.2.3.4")
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(ipTables.InsertCallCount()).To(Equal(2))
-				writtenRules := [][]string{}
-				for i := 0; i < 2; i++ {
-					table, chain, pos, rulespec := ipTables.InsertArgsForCall(i)
-					Expect(table).To(Equal("filter"))
-					Expect(chain).To(Equal("some-chain-name"))
-					Expect(pos).To(Equal(1))
-					writtenRules = append(writtenRules, rulespec)
-				}
-				Expect(writtenRules).To(ConsistOf(
-					[]string{"--source", "1.2.3.4", "-m", "iprange",
-						"--dst-range", "1.1.1.1-2.2.2.2",
-						"--jump", "RETURN"},
-					[]string{"--source", "1.2.3.4", "-m", "iprange",
-						"--dst-range", "3.3.3.3-4.4.4.4",
-						"--jump", "RETURN"},
-				))
-			})
-
-			Context("when insert rule fails", func() {
-				BeforeEach(func() {
-					ipTables.InsertReturns(errors.New("potato"))
-				})
-				It("returns an error", func() {
-					err := netOut.InsertRule("some-container-handle", netOutRule, "1.2.3.4")
-					Expect(err).To(MatchError("inserting net-out rule: potato"))
-				})
+			It("returns an error", func() {
+				err := netOut.InsertRule("some-container-handle", netOutRule, "1.2.3.4")
+				Expect(err).To(MatchError("inserting net-out rule: potato"))
 			})
 		})
 	})

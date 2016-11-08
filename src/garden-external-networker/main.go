@@ -131,6 +131,7 @@ func mainWithError() error {
 	netoutProvider := &legacynet.NetOut{
 		ChainNamer: chainNamer,
 		IPTables:   ipt,
+		Converter:  &legacynet.NetOutRuleConverter{},
 	}
 
 	manager := &manager.Manager{
