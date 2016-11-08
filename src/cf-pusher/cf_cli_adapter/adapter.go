@@ -61,6 +61,11 @@ func (a *Adapter) Push(name, directory, manifestFile string) error {
 	return err
 }
 
+func (a *Adapter) Delete(appName string) error {
+	fmt.Printf("running: %s delete -f %s\n", a.CfCliPath, appName)
+	return exec.Command(a.CfCliPath, "delete", "-f", appName).Run()
+}
+
 func (a *Adapter) Scale(name string, instances int) error {
 	instancesStr := fmt.Sprintf("%d", instances)
 	fmt.Printf("running: %s scale %s -i %s\n", a.CfCliPath, name, instancesStr)
@@ -82,6 +87,16 @@ func (a *Adapter) OrgGuid(name string) (string, error) {
 	fmt.Printf("running: %s org %s --guid\n", a.CfCliPath, name)
 	bytes, err := exec.Command(a.CfCliPath, "org", name, "--guid").CombinedOutput()
 	return strings.TrimSpace(string(bytes)), err
+}
+
+func (a *Adapter) Curl(method, path, inputFile string) ([]byte, error) {
+	if inputFile != "" {
+		fmt.Println("running:", a.CfCliPath, "curl", "-X", method, "-d", fmt.Sprintf("@%s", inputFile), path)
+		return exec.Command(a.CfCliPath, "curl", "-X", method, "-d", fmt.Sprintf("@%s", inputFile), path).CombinedOutput()
+	}
+
+	fmt.Printf("running: %s curl -X %s \"%s\"\n", a.CfCliPath, method, path)
+	return exec.Command(a.CfCliPath, "curl", "-X", method, path).CombinedOutput()
 }
 
 func (a *Adapter) AppCount(orgGuid string) (int, error) {
