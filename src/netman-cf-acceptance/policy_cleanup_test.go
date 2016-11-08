@@ -55,6 +55,9 @@ var _ = Describe("policy cleanup", func() {
 			Expect(cfCli.AllowAccess(appB, appC, 1234, "tcp")).To(Succeed())
 			Expect(cfCli.AllowAccess(appC, appA, 1234, "tcp")).To(Succeed())
 
+			appAGuid, err := cfCli.AppGuid(appA)
+			Expect(err).NotTo(HaveOccurred())
+
 			appCGuid, err := cfCli.AppGuid(appC)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -62,6 +65,7 @@ var _ = Describe("policy cleanup", func() {
 			allPolicies, err := cfCli.Curl("GET", "/networking/v0/external/policies", "")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(allPolicies)).Should(ContainSubstring(appCGuid))
+			Expect(string(allPolicies)).Should(ContainSubstring(appAGuid))
 
 			By("deleting appC")
 			Expect(cfCli.Delete(appC)).To(Succeed())
@@ -71,7 +75,7 @@ var _ = Describe("policy cleanup", func() {
 			Expect(err).NotTo(HaveOccurred())
 			fmt.Println(string(stalePolicies))
 
-			tmpfile, err := ioutil.TempFile("", "stalepolices.json")
+			tmpfile, err := ioutil.TempFile("", "stalepolicies")
 			Expect(err).NotTo(HaveOccurred())
 			defer os.Remove(tmpfile.Name())
 
@@ -87,7 +91,7 @@ var _ = Describe("policy cleanup", func() {
 			allPolicies, err = cfCli.Curl("GET", "/networking/v0/external/policies", "")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(allPolicies)).ShouldNot(ContainSubstring(appCGuid))
-
+			Expect(string(allPolicies)).Should(ContainSubstring(appAGuid))
 		})
 	})
 })
