@@ -15,8 +15,8 @@ A [Garden-runC](https://github.com/cloudfoundry/garden-runc-release) add-on that
 - [Architecture](docs/arch.md)
 - [Deploy to BOSH-lite](docs/bosh-lite.md)
 - [Deploy to AWS](docs/aws.md)
-- [Configuring Policies]()
-  - [CLI](doc/CLI.md)
+- Configuring Policies
+  - [CLI](docs/CLI.md)
   - [API](docs/API.md)
 - [Examples](src/example-apps)
   - [Cats & Dogs](src/example-apps/cats-and-dogs)
