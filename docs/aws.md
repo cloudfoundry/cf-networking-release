@@ -33,7 +33,7 @@
 
     - The policy-agent communicates with the policy-server using mutual TLS.
       Generate PEM encoded certs and keys for `vxlan-policy-agent` and `policy-server` and update the associated properties.
-        - See the [generate-certs](scripts/generate-certs.sh) script for an example
+        - See the [generate-certs](../scripts/generate-certs) script for an example
     - All other fields with `REPLACE_*` values must be provided
 
     ```yaml
