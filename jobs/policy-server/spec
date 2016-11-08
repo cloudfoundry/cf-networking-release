@@ -3,6 +3,7 @@ name: policy-server
 templates:
   pre-start.erb: bin/pre-start
   policy-server_ctl.erb: bin/policy-server_ctl
+  policy-server_as_vcap.erb: bin/policy-server_as_vcap
   policy-server.json.erb: config/policy-server.json
   ca.crt.erb: config/certs/ca.crt
   server.crt.erb: config/certs/server.crt

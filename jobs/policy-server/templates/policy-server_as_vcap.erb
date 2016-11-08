@@ -1,0 +1,6 @@
+#!/bin/bash -e
+
+/var/vcap/packages/policy-server/bin/policy-server \
+  -config-file=$CONF_DIR/policy-server.json \
+  2> >(tee -a $LOG_DIR/policy-server.stderr.log | logger -p user.error -t policy-server) \
+  1> >(tee -a $LOG_DIR/policy-server.stdout.log | logger -t policy-server) & echo $! > $PIDFILE
