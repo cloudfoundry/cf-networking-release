@@ -3,7 +3,7 @@
 <%=
     require 'json'
 
-    config = p("vxlan-policy-agent")
+    config = p("vxlan-policy-agent").dup
 
     # exclude these properties
     excludes = ["ca_cert", "client_cert", "client_key"]
