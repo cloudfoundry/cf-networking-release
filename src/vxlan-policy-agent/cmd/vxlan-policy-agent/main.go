@@ -101,8 +101,13 @@ func main() {
 	if err != nil {
 		die(logger, "iptables-new", err)
 	}
+
+	iptLocker := &rules.IPTablesLocker{
+		FileLocker: &filelock.Locker{Path: "/var/run/netman-iptables.lock"},
+	}
 	lockedIPTables := &rules.LockedIPTables{
 		IPTables: ipt,
+		Locker:   iptLocker,
 	}
 
 	timeMetricsEmitter := &agent_metrics.TimeMetrics{

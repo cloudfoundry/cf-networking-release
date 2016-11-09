@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"lib/filelock"
 	"lib/rules"
 	"math/rand"
 	"net"
@@ -179,8 +180,12 @@ var _ = Describe("Garden External Networker", func() {
 
 		ipt, err := iptables.New()
 		Expect(err).NotTo(HaveOccurred())
+		iptLocker := &rules.IPTablesLocker{
+			FileLocker: &filelock.Locker{Path: "/var/run/netman-iptables.lock"},
+		}
 		lockedIPTables := &rules.LockedIPTables{
 			IPTables: ipt,
+			Locker:   iptLocker,
 		}
 		Expect(lockedIPTables.ClearChain("filter", netoutChainName)).To(Succeed())
 		Expect(lockedIPTables.ClearChain("filter", "FORWARD")).To(Succeed())

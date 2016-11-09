@@ -12,7 +12,6 @@ type Restorer struct {
 	Locker *filelock.Locker
 }
 
-// untested
 func (r *Restorer) Restore(input string) error {
 	cmd := exec.Command("iptables-restore", "--noflush")
 	cmd.Stdin = strings.NewReader(input)

@@ -108,8 +108,13 @@ func mainWithError() error {
 	if err != nil {
 		return fmt.Errorf("initialize iptables package: %s", err)
 	}
+
+	iptLocker := &rules.IPTablesLocker{
+		FileLocker: &filelock.Locker{Path: "/var/run/netman-iptables.lock"},
+	}
 	lockedIPTables := &rules.LockedIPTables{
 		IPTables: ipt,
+		Locker:   iptLocker,
 	}
 
 	locker := &filelock.Locker{Path: cfg.StateFilePath}
