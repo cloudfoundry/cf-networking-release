@@ -25,7 +25,7 @@
         scope: cloud_controller.read,cloud_controller.write,openid,password.write,cloud_controller.admin,scim.read,scim.write,doppler.firehose,uaa.user,routing.router_groups.read,network.admin
       network-policy:
         authorities: uaa.resource
-        secret: <network-policy-secret>
+        secret: REPLACE_WITH_UAA_CLIENT_SECRET
     ```
 
 
