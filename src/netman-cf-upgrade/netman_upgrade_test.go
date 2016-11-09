@@ -27,6 +27,7 @@ var _ = Describe("apps remain available during an upgrade deploy", func() {
 
 		baseManifest := os.Getenv("BASE_MANIFEST")
 		upgradeManifest := os.Getenv("UPGRADE_MANIFEST")
+
 		By("deleting the deployment")
 		boshDeleteDeployment()
 
@@ -85,6 +86,9 @@ var _ = Describe("apps remain available during an upgrade deploy", func() {
 		Expect(len(appFailures)).To(BeNumerically("<", 5))
 		Expect(len(ASGFailures)).To(BeNumerically("<", 5))
 		Expect(len(noASGFailures)).To(BeNumerically("<", 5))
+
+		By("deleting the deployment")
+		boshDeleteDeployment()
 	})
 })
 
