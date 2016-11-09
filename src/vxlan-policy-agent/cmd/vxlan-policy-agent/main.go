@@ -10,6 +10,7 @@ import (
 	"lib/metrics"
 	"lib/mutualtls"
 	"lib/policy_client"
+	"lib/rules"
 	"lib/serial"
 	"log"
 	"net/http"
@@ -100,6 +101,9 @@ func main() {
 	if err != nil {
 		die(logger, "iptables-new", err)
 	}
+	lockedIPTables := &rules.LockedIPTables{
+		IPTables: ipt,
+	}
 
 	timeMetricsEmitter := &agent_metrics.TimeMetrics{
 		Logger: logger.Session("time-metric-emitter"),
@@ -122,7 +126,7 @@ func main() {
 	ruleEnforcer := enforcer.NewEnforcer(
 		logger.Session("rules-enforcer"),
 		timestamper,
-		ipt,
+		lockedIPTables,
 	)
 
 	vxlanDefaultLocalPlanner := planner.VxlanDefaultLocalPlanner{

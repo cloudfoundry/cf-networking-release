@@ -13,18 +13,6 @@ type Rule interface {
 	Enforce(table, chain string, ipt IPTables, logger lager.Logger) error
 }
 
-//go:generate counterfeiter -o ../fakes/iptables.go --fake-name IPTables . IPTables
-type IPTables interface {
-	Exists(table, chain string, rulespec ...string) (bool, error)
-	Insert(table, chain string, pos int, rulespec ...string) error
-	AppendUnique(table, chain string, rulespec ...string) error
-	Delete(table, chain string, rulespec ...string) error
-	List(table, chain string) ([]string, error)
-	NewChain(table, chain string) error
-	ClearChain(table, chain string) error
-	DeleteChain(table, chain string) error
-}
-
 //go:generate counterfeiter -o ../fakes/restorer.go --fake-name Restorer . restorer
 type restorer interface {
 	Restore(ruleState string) error

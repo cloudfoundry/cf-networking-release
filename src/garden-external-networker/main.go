@@ -11,6 +11,7 @@ import (
 	"garden-external-networker/manager"
 	"garden-external-networker/port_allocator"
 	"lib/filelock"
+	"lib/rules"
 	"lib/serial"
 	"os"
 
@@ -107,6 +108,9 @@ func mainWithError() error {
 	if err != nil {
 		return fmt.Errorf("initialize iptables package: %s", err)
 	}
+	lockedIPTables := &rules.LockedIPTables{
+		IPTables: ipt,
+	}
 
 	locker := &filelock.Locker{Path: cfg.StateFilePath}
 	tracker := &port_allocator.Tracker{
@@ -125,12 +129,12 @@ func mainWithError() error {
 
 	netinProvider := &legacynet.NetIn{
 		ChainNamer: chainNamer,
-		IPTables:   ipt,
+		IPTables:   lockedIPTables,
 	}
 
 	netoutProvider := &legacynet.NetOut{
 		ChainNamer: chainNamer,
-		IPTables:   ipt,
+		IPTables:   lockedIPTables,
 		Converter:  &legacynet.NetOutRuleConverter{},
 	}
 

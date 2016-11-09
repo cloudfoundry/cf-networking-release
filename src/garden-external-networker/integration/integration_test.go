@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"lib/rules"
 	"math/rand"
 	"net"
 	"os"
@@ -178,12 +179,15 @@ var _ = Describe("Garden External Networker", func() {
 
 		ipt, err := iptables.New()
 		Expect(err).NotTo(HaveOccurred())
-		Expect(ipt.ClearChain("filter", netoutChainName)).To(Succeed())
-		Expect(ipt.ClearChain("filter", "FORWARD")).To(Succeed())
-		Expect(ipt.DeleteChain("filter", netoutChainName)).To(Succeed())
-		Expect(ipt.ClearChain("nat", netinChainName)).To(Succeed())
-		Expect(ipt.ClearChain("nat", "PREROUTING")).To(Succeed())
-		Expect(ipt.DeleteChain("nat", netinChainName)).To(Succeed())
+		lockedIPTables := &rules.LockedIPTables{
+			IPTables: ipt,
+		}
+		Expect(lockedIPTables.ClearChain("filter", netoutChainName)).To(Succeed())
+		Expect(lockedIPTables.ClearChain("filter", "FORWARD")).To(Succeed())
+		Expect(lockedIPTables.DeleteChain("filter", netoutChainName)).To(Succeed())
+		Expect(lockedIPTables.ClearChain("nat", netinChainName)).To(Succeed())
+		Expect(lockedIPTables.ClearChain("nat", "PREROUTING")).To(Succeed())
+		Expect(lockedIPTables.DeleteChain("nat", netinChainName)).To(Succeed())
 	})
 
 	It("should call CNI ADD and DEL", func() {
