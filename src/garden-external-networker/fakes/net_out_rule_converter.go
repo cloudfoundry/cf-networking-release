@@ -18,6 +18,15 @@ type NetOutRuleConverter struct {
 	convertReturns struct {
 		result1 []rules.GenericRule
 	}
+	BulkConvertStub        func(rules []garden.NetOutRule, containerIP string) []rules.GenericRule
+	bulkConvertMutex       sync.RWMutex
+	bulkConvertArgsForCall []struct {
+		rules       []garden.NetOutRule
+		containerIP string
+	}
+	bulkConvertReturns struct {
+		result1 []rules.GenericRule
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -56,11 +65,52 @@ func (fake *NetOutRuleConverter) ConvertReturns(result1 []rules.GenericRule) {
 	}{result1}
 }
 
+func (fake *NetOutRuleConverter) BulkConvert(rules []garden.NetOutRule, containerIP string) []rules.GenericRule {
+	var rulesCopy []garden.NetOutRule
+	if rules != nil {
+		rulesCopy = make([]garden.NetOutRule, len(rules))
+		copy(rulesCopy, rules)
+	}
+	fake.bulkConvertMutex.Lock()
+	fake.bulkConvertArgsForCall = append(fake.bulkConvertArgsForCall, struct {
+		rules       []garden.NetOutRule
+		containerIP string
+	}{rulesCopy, containerIP})
+	fake.recordInvocation("BulkConvert", []interface{}{rulesCopy, containerIP})
+	fake.bulkConvertMutex.Unlock()
+	if fake.BulkConvertStub != nil {
+		return fake.BulkConvertStub(rules, containerIP)
+	} else {
+		return fake.bulkConvertReturns.result1
+	}
+}
+
+func (fake *NetOutRuleConverter) BulkConvertCallCount() int {
+	fake.bulkConvertMutex.RLock()
+	defer fake.bulkConvertMutex.RUnlock()
+	return len(fake.bulkConvertArgsForCall)
+}
+
+func (fake *NetOutRuleConverter) BulkConvertArgsForCall(i int) ([]garden.NetOutRule, string) {
+	fake.bulkConvertMutex.RLock()
+	defer fake.bulkConvertMutex.RUnlock()
+	return fake.bulkConvertArgsForCall[i].rules, fake.bulkConvertArgsForCall[i].containerIP
+}
+
+func (fake *NetOutRuleConverter) BulkConvertReturns(result1 []rules.GenericRule) {
+	fake.BulkConvertStub = nil
+	fake.bulkConvertReturns = struct {
+		result1 []rules.GenericRule
+	}{result1}
+}
+
 func (fake *NetOutRuleConverter) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.convertMutex.RLock()
 	defer fake.convertMutex.RUnlock()
+	fake.bulkConvertMutex.RLock()
+	defer fake.bulkConvertMutex.RUnlock()
 	return fake.invocations
 }
 

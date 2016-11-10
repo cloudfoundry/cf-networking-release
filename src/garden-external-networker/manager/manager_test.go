@@ -417,22 +417,18 @@ var _ = Describe("Manager", func() {
 		It("delegates to netout provider for bulk netout calls", func() {
 			err := mgr.BulkNetOut("some-handle", bulkNetOutInputs)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(netOutProvider.InsertRuleCallCount()).To(Equal(2))
+			Expect(netOutProvider.BulkInsertRulesCallCount()).To(Equal(1))
 
-			handle, rule, containerIP := netOutProvider.InsertRuleArgsForCall(0)
+			handle, rules, containerIP := netOutProvider.BulkInsertRulesArgsForCall(0)
 			Expect(handle).To(Equal("some-handle"))
-			Expect(rule).To(Equal(bulkNetOutInputs.NetOutRules[0]))
+			Expect(rules).To(Equal(bulkNetOutInputs.NetOutRules))
 			Expect(containerIP).To(Equal(bulkNetOutInputs.ContainerIP))
 
-			handle, rule, containerIP = netOutProvider.InsertRuleArgsForCall(1)
-			Expect(handle).To(Equal("some-handle"))
-			Expect(rule).To(Equal(bulkNetOutInputs.NetOutRules[1]))
-			Expect(containerIP).To(Equal(bulkNetOutInputs.ContainerIP))
 		})
 
 		Context("when inserting the rule fails", func() {
 			BeforeEach(func() {
-				netOutProvider.InsertRuleReturns(errors.New("banana"))
+				netOutProvider.BulkInsertRulesReturns(errors.New("banana"))
 			})
 			It("returns the error", func() {
 				err := mgr.BulkNetOut("some-handle", bulkNetOutInputs)

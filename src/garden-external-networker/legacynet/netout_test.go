@@ -21,14 +21,14 @@ var _ = Describe("Netout", func() {
 		netOut     *legacynet.NetOut
 		converter  *fakes.NetOutRuleConverter
 		chainNamer *fakes.ChainNamer
-		ipTables   *lib_fakes.IPTables
+		ipTables   *lib_fakes.IPTablesExtended
 		logger     *lagertest.TestLogger
 	)
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test")
 		chainNamer = &fakes.ChainNamer{}
 		converter = &fakes.NetOutRuleConverter{}
-		ipTables = &lib_fakes.IPTables{}
+		ipTables = &lib_fakes.IPTablesExtended{}
 		netOut = &legacynet.NetOut{
 			ChainNamer: chainNamer,
 			IPTables:   ipTables,
@@ -232,6 +232,56 @@ var _ = Describe("Netout", func() {
 			It("returns an error", func() {
 				err := netOut.InsertRule("some-container-handle", netOutRule, "1.2.3.4")
 				Expect(err).To(MatchError("inserting net-out rule: potato"))
+			})
+		})
+	})
+
+	Describe("BulkInsertRules", func() {
+		var (
+			netOutRules  []garden.NetOutRule
+			genericRules []rules.GenericRule
+		)
+
+		BeforeEach(func() {
+			genericRules = []rules.GenericRule{
+				rules.GenericRule{[]string{"rule1"}},
+				rules.GenericRule{[]string{"rule2"}},
+			}
+
+			converter.BulkConvertReturns(genericRules)
+
+		})
+
+		It("prepends allow rules to the container's netout chain", func() {
+			err := netOut.BulkInsertRules("some-handle", netOutRules, "1.2.3.4")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(chainNamer.NameCallCount()).To(Equal(1))
+			prefix, handle := chainNamer.NameArgsForCall(0)
+			Expect(prefix).To(Equal("netout"))
+			Expect(handle).To(Equal("some-handle"))
+
+			Expect(converter.BulkConvertCallCount()).To(Equal(1))
+			convertedRules, ip := converter.BulkConvertArgsForCall(0)
+			Expect(convertedRules).To(Equal(netOutRules))
+			Expect(ip).To(Equal("1.2.3.4"))
+
+			Expect(ipTables.BulkInsertCallCount()).To(Equal(1))
+			table, chain, pos, rulespec := ipTables.BulkInsertArgsForCall(0)
+
+			Expect(table).To(Equal("filter"))
+			Expect(chain).To(Equal("some-chain-name"))
+			Expect(pos).To(Equal(1))
+			Expect(rulespec).To(Equal(genericRules))
+		})
+
+		Context("when bulk insert fails", func() {
+			BeforeEach(func() {
+				ipTables.BulkInsertReturns(errors.New("potato"))
+			})
+			It("returns an error", func() {
+				err := netOut.BulkInsertRules("some-container-handle", netOutRules, "1.2.3.4")
+				Expect(err).To(MatchError("bulk inserting net-out rules: potato"))
 			})
 		})
 	})

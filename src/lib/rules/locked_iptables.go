@@ -18,6 +18,12 @@ type IPTables interface {
 	DeleteChain(table, chain string) error
 }
 
+//go:generate counterfeiter -o ../fakes/iptables_extended.go --fake-name IPTablesExtended . IPTablesExtended
+type IPTablesExtended interface {
+	IPTables
+	BulkInsert(table, chain string, pos int, rulespec ...GenericRule) error
+}
+
 //go:generate counterfeiter -o ../fakes/locker.go --fake-name Locker . locker
 type locker interface {
 	Lock() error

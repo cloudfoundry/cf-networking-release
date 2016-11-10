@@ -15,13 +15,11 @@ var _ = Describe("Rules", func() {
 	var (
 		logger   *lagertest.TestLogger
 		iptables *fakes.IPTables
-		restorer *fakes.Restorer
 	)
 
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test")
 		iptables = &fakes.IPTables{}
-		restorer = &fakes.Restorer{}
 	})
 
 	Describe("GenericRule", func() {

@@ -39,6 +39,16 @@ type NetOutProvider struct {
 	insertRuleReturns struct {
 		result1 error
 	}
+	BulkInsertRulesStub        func(containerHandle string, rules []garden.NetOutRule, containerIP string) error
+	bulkInsertRulesMutex       sync.RWMutex
+	bulkInsertRulesArgsForCall []struct {
+		containerHandle string
+		rules           []garden.NetOutRule
+		containerIP     string
+	}
+	bulkInsertRulesReturns struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -147,6 +157,46 @@ func (fake *NetOutProvider) InsertRuleReturns(result1 error) {
 	}{result1}
 }
 
+func (fake *NetOutProvider) BulkInsertRules(containerHandle string, rules []garden.NetOutRule, containerIP string) error {
+	var rulesCopy []garden.NetOutRule
+	if rules != nil {
+		rulesCopy = make([]garden.NetOutRule, len(rules))
+		copy(rulesCopy, rules)
+	}
+	fake.bulkInsertRulesMutex.Lock()
+	fake.bulkInsertRulesArgsForCall = append(fake.bulkInsertRulesArgsForCall, struct {
+		containerHandle string
+		rules           []garden.NetOutRule
+		containerIP     string
+	}{containerHandle, rulesCopy, containerIP})
+	fake.recordInvocation("BulkInsertRules", []interface{}{containerHandle, rulesCopy, containerIP})
+	fake.bulkInsertRulesMutex.Unlock()
+	if fake.BulkInsertRulesStub != nil {
+		return fake.BulkInsertRulesStub(containerHandle, rules, containerIP)
+	} else {
+		return fake.bulkInsertRulesReturns.result1
+	}
+}
+
+func (fake *NetOutProvider) BulkInsertRulesCallCount() int {
+	fake.bulkInsertRulesMutex.RLock()
+	defer fake.bulkInsertRulesMutex.RUnlock()
+	return len(fake.bulkInsertRulesArgsForCall)
+}
+
+func (fake *NetOutProvider) BulkInsertRulesArgsForCall(i int) (string, []garden.NetOutRule, string) {
+	fake.bulkInsertRulesMutex.RLock()
+	defer fake.bulkInsertRulesMutex.RUnlock()
+	return fake.bulkInsertRulesArgsForCall[i].containerHandle, fake.bulkInsertRulesArgsForCall[i].rules, fake.bulkInsertRulesArgsForCall[i].containerIP
+}
+
+func (fake *NetOutProvider) BulkInsertRulesReturns(result1 error) {
+	fake.BulkInsertRulesStub = nil
+	fake.bulkInsertRulesReturns = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *NetOutProvider) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -156,6 +206,8 @@ func (fake *NetOutProvider) Invocations() map[string][][]interface{} {
 	defer fake.cleanupMutex.RUnlock()
 	fake.insertRuleMutex.RLock()
 	defer fake.insertRuleMutex.RUnlock()
+	fake.bulkInsertRulesMutex.RLock()
+	defer fake.bulkInsertRulesMutex.RUnlock()
 	return fake.invocations
 }
 

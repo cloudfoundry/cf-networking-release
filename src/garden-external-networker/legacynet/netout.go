@@ -14,11 +14,12 @@ const prefixNetOut = "netout"
 //go:generate counterfeiter -o ../fakes/net_out_rule_converter.go --fake-name NetOutRuleConverter . netOutRuleConverter
 type netOutRuleConverter interface {
 	Convert(rule garden.NetOutRule, containerIP string) []rules.GenericRule
+	BulkConvert(rules []garden.NetOutRule, containerIP string) []rules.GenericRule
 }
 
 type NetOut struct {
 	ChainNamer chainNamer
-	IPTables   rules.IPTables
+	IPTables   rules.IPTablesExtended
 	Converter  netOutRuleConverter
 }
 
@@ -80,6 +81,18 @@ func (m *NetOut) InsertRule(containerHandle string, rule garden.NetOutRule, cont
 		if err != nil {
 			return fmt.Errorf("inserting net-out rule: %s", err)
 		}
+	}
+
+	return nil
+}
+
+func (m *NetOut) BulkInsertRules(containerHandle string, netOutRules []garden.NetOutRule, containerIP string) error {
+	chain := m.ChainNamer.Name(prefixNetOut, containerHandle)
+
+	ruleSpec := m.Converter.BulkConvert(netOutRules, containerIP)
+	err := m.IPTables.BulkInsert("filter", chain, 1, ruleSpec...)
+	if err != nil {
+		return fmt.Errorf("bulk inserting net-out rules: %s", err)
 	}
 
 	return nil

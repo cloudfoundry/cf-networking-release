@@ -8,6 +8,16 @@ import (
 
 type NetOutRuleConverter struct{}
 
+func (c *NetOutRuleConverter) BulkConvert(netOutRules []garden.NetOutRule, containerIP string) []rules.GenericRule {
+	ruleSpec := []rules.GenericRule{}
+	for _, rule := range netOutRules {
+		for _, t := range c.Convert(rule, containerIP) {
+			ruleSpec = append(ruleSpec, t)
+		}
+	}
+	return ruleSpec
+}
+
 func (c *NetOutRuleConverter) Convert(rule garden.NetOutRule, containerIP string) []rules.GenericRule {
 	ruleSpec := []rules.GenericRule{}
 	for _, network := range rule.Networks {
