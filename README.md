@@ -1,17 +1,20 @@
-# netman-release
+# Netman
 
-A [Garden-runC](https://github.com/cloudfoundry/garden-runc-release) add-on that provides container networking for CloudFoundry.
+Netman provides policy-based container networking for Cloud Foundry.
 
-## Overview
+Netman integrates with [Garden-runC](https://github.com/cloudfoundry/garden-runc-release) in a
+[Diego](https://github.com/cloudfoundry/diego-release) deployment.  Additionally, a VM is deployed to act as a network Policy Server.
+A [JSON API](docs/API.md) and a [CF CLI plugin](docs/CLI.md) are available to control network policies.
 
-`netman` provides a batteries included container to container system and several APIs for swapping in third party components.
-- IPAM and connectivity are provided by a swappable CNI plugin (`flannel` in the batteries included case).
-- A swappable policy agent polls garden and the policy server for polices to enforce on the cell. In the provided solution, the VXLAN policy agent writes iptables rules to filter packets based on VXLAN gbp tags.
-- Inbound traffic from the gorouter is port forwarded from the cell to the container via a NetIn rule. NetIn calls are made by garden to the external networker which then writes the iptables NAT rule.
-- Application security groups are enforced by NetOut calls from garden. The external networker also writes iptables rules to enforce ASGs.
+For more information about deploying Netman, look at our docs for [BOSH-lite](docs/bosh-lite.md) or [AWS](docs/aws.md).
 
-# Documentation
+## Downloads
+- [BOSH release](http://bosh.io/docs/release.html) available on
+  [bosh.io](http://bosh.io/releases/github.com/cloudfoundry-incubator/netman-release)
+  and [GitHub Releases](https://github.com/cloudfoundry-incubator/netman-release/releases)
+- [CF CLI Plugin](https://docs.cloudfoundry.org/cf-cli/use-cli-plugins.html) on our [GitHub Releases page](https://github.com/cloudfoundry-incubator/netman-release/releases)
 
+## Documentation
 - [Architecture](docs/arch.md)
 - [Deploy to BOSH-lite](docs/bosh-lite.md)
 - [Deploy to AWS](docs/aws.md)
@@ -31,6 +34,6 @@ A [Garden-runC](https://github.com/cloudfoundry/garden-runc-release) add-on that
 ## Project links
 - [Design doc for Container Networking Policy](https://docs.google.com/document/d/1HDS89TJKD7ACG6cqQHph5BdNSKLt8jvo6sPGBZ5DmsM)
 - [Engineering backlog](https://www.pivotaltracker.com/n/projects/1498342)
-- Chat with us at the `#container-networking` channel on [CloudFoundry Slack](http://slack.cloudfoundry.org/)
-- [CI dashboard](http://dashboard.c2c.cf-app.com) and [config](https://github.com/cloudfoundry-incubator/container-networking-ci)
+- Chat with us at the `#container-networking` channel on [Cloud Foundry Slack](http://slack.cloudfoundry.org/)
+- [CI dashboard](http://dashboard.c2c.cf-app.com), [metrics](https://p.datadoghq.com/sb/f3af7f8e2-baf5212773?tv_mode=true) and [config](https://github.com/cloudfoundry-incubator/container-networking-ci)
 - [Documentation](./docs)
