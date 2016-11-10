@@ -2,6 +2,7 @@ package rules
 
 import (
 	"fmt"
+	"os/exec"
 	"strconv"
 	"strings"
 
@@ -13,37 +14,20 @@ type Rule interface {
 	Enforce(table, chain string, ipt IPTables, logger lager.Logger) error
 }
 
-//go:generate counterfeiter -o ../fakes/restorer.go --fake-name Restorer . restorer
-type restorer interface {
-	Restore(ruleState string) error
-}
-
 type GenericRule struct {
 	Properties []string
 }
 
-type RuleSet struct {
-	Rules []GenericRule
-}
+type Restorer struct{}
 
-func (r *RuleSet) BulkAppend(table, chain string, iptRestorer restorer, logger lager.Logger) error {
-	preamble := GenericRule{
-		Properties: []string{"-A", chain},
-	}
-	ruleState := []string{fmt.Sprintf("*%s", table), "\n"}
+func (r *Restorer) Restore(input string) error {
+	cmd := exec.Command("iptables-restore", "--noflush")
+	cmd.Stdin = strings.NewReader(input)
 
-	for _, rule := range r.Rules {
-		line := strings.Join(append(preamble.Properties, rule.Properties...), " ")
-		ruleState = append(ruleState, line, "\n")
-	}
-	ruleState = append(ruleState, "COMMIT", "\n")
-
-	err := iptRestorer.Restore(strings.Join(ruleState, ""))
+	bytes, err := cmd.CombinedOutput()
 	if err != nil {
-		logger.Error("bulk-append", err)
-		return fmt.Errorf("bulk appending rules: %s", err)
+		return fmt.Errorf("iptables-restore error: %s combined output: %s", err, string(bytes))
 	}
-
 	return nil
 }
 

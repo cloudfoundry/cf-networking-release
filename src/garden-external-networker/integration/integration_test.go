@@ -183,9 +183,11 @@ var _ = Describe("Garden External Networker", func() {
 		iptLocker := &rules.IPTablesLocker{
 			FileLocker: &filelock.Locker{Path: "/var/run/netman-iptables.lock"},
 		}
+		restorer := &rules.Restorer{}
 		lockedIPTables := &rules.LockedIPTables{
 			IPTables: ipt,
 			Locker:   iptLocker,
+			Restorer: restorer,
 		}
 		Expect(lockedIPTables.ClearChain("filter", netoutChainName)).To(Succeed())
 		Expect(lockedIPTables.ClearChain("filter", "FORWARD")).To(Succeed())

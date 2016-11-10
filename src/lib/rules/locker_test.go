@@ -9,7 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("IptablesLocker", func() {
+var _ = Describe("Locker", func() {
 	var (
 		locker *rules.IPTablesLocker
 		flock  *fakes.FileLocker

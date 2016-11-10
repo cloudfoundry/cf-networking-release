@@ -2,6 +2,7 @@ package rules_test
 
 import (
 	"errors"
+	"fmt"
 	"lib/fakes"
 	"lib/rules"
 
@@ -13,18 +14,84 @@ var _ = Describe("LockedIptables", func() {
 	var (
 		lockedIPT *rules.LockedIPTables
 		ipt       *fakes.IPTables
+		restorer  *fakes.Restorer
 		lock      *fakes.Locker
 		rulespec  []string
 	)
 	BeforeEach(func() {
 		ipt = &fakes.IPTables{}
 		lock = &fakes.Locker{}
+		restorer = &fakes.Restorer{}
 		lockedIPT = &rules.LockedIPTables{
 			IPTables: ipt,
 			Locker:   lock,
+			Restorer: restorer,
 		}
 		rulespec = []string{"some", "args"}
 	})
+	Describe("BulkInsert", func() {
+		var ruleSet []rules.GenericRule
+		BeforeEach(func() {
+			ruleSet = []rules.GenericRule{
+				rules.NewMarkSetRule("1.2.3.4", "A", "a-guid"),
+				rules.NewMarkSetRule("2.2.2.2", "B", "b-guid"),
+			}
+		})
+
+		It("constructs the input and passes it to the restorer", func() {
+			err := lockedIPT.BulkInsert("some-table", "some-chain", 1, ruleSet...)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(lock.LockCallCount()).To(Equal(1))
+			Expect(lock.UnlockCallCount()).To(Equal(1))
+			Expect(restorer.RestoreCallCount()).To(Equal(1))
+			restoreInput := restorer.RestoreArgsForCall(0)
+			Expect(restoreInput).To(ContainSubstring("*some-table\n"))
+			Expect(restoreInput).To(ContainSubstring("-I some-chain 1 --source 1.2.3.4 --jump MARK --set-xmark 0xA -m comment --comment src:a-guid\n"))
+			Expect(restoreInput).To(ContainSubstring("-I some-chain 1 --source 2.2.2.2 --jump MARK --set-xmark 0xB -m comment --comment src:b-guid\n"))
+			Expect(restoreInput).To(ContainSubstring("COMMIT\n"))
+		})
+		Context("when the lock fails", func() {
+			BeforeEach(func() {
+				lock.LockReturns(errors.New("banana"))
+			})
+			It("should return an error", func() {
+				err := lockedIPT.BulkInsert("some-table", "some-chain", 1, ruleSet...)
+				Expect(err).To(MatchError("lock: banana"))
+			})
+		})
+
+		Context("when the restorer fails", func() {
+			BeforeEach(func() {
+				restorer.RestoreReturns(fmt.Errorf("banana"))
+			})
+			It("should return an error", func() {
+				err := lockedIPT.BulkInsert("some-table", "some-chain", 1, ruleSet...)
+				Expect(err).To(MatchError("iptables call: banana and unlock: <nil>"))
+			})
+		})
+
+		Context("when the unlock fails", func() {
+			BeforeEach(func() {
+				lock.UnlockReturns(errors.New("banana"))
+			})
+			It("should return an error", func() {
+				err := lockedIPT.BulkInsert("some-table", "some-chain", 1, ruleSet...)
+				Expect(err).To(MatchError("banana"))
+			})
+		})
+		Context("when the restorer fails and then the unlock fails", func() {
+			BeforeEach(func() {
+				lock.UnlockReturns(errors.New("banana"))
+				restorer.RestoreReturns(fmt.Errorf("patato"))
+			})
+			It("should return an error", func() {
+				err := lockedIPT.BulkInsert("some-table", "some-chain", 1, ruleSet...)
+				Expect(err).To(MatchError("iptables call: patato and unlock: banana"))
+			})
+		})
+	})
+
 	Describe("Exists", func() {
 		BeforeEach(func() {
 			ipt.ExistsReturns(true, nil)

@@ -105,9 +105,11 @@ func main() {
 	iptLocker := &rules.IPTablesLocker{
 		FileLocker: &filelock.Locker{Path: "/var/run/netman-iptables.lock"},
 	}
+	restorer := &rules.Restorer{}
 	lockedIPTables := &rules.LockedIPTables{
 		IPTables: ipt,
 		Locker:   iptLocker,
+		Restorer: restorer,
 	}
 
 	timeMetricsEmitter := &agent_metrics.TimeMetrics{

@@ -1,6 +1,9 @@
 package rules
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 //go:generate counterfeiter -o ../fakes/iptables.go --fake-name IPTables . IPTables
 type IPTables interface {
@@ -20,9 +23,15 @@ type locker interface {
 	Unlock() error
 }
 
+//go:generate counterfeiter -o ../fakes/restorer.go --fake-name Restorer . restorer
+type restorer interface {
+	Restore(ruleState string) error
+}
+
 type LockedIPTables struct {
 	IPTables IPTables
 	Locker   locker
+	Restorer restorer
 }
 
 func handleIPTablesError(err1, err2 error) error {
@@ -40,6 +49,26 @@ func (l *LockedIPTables) Exists(table, chain string, rulespec ...string) (bool, 
 	}
 
 	return b, l.Locker.Unlock()
+}
+
+func (l *LockedIPTables) BulkInsert(table, chain string, pos int, rulespec ...GenericRule) error {
+	if err := l.Locker.Lock(); err != nil {
+		return fmt.Errorf("lock: %s", err)
+	}
+
+	input := []string{fmt.Sprintf("*%s\n", table)}
+	for _, r := range rulespec {
+		tmp := fmt.Sprintf("-I %s %d %s\n", chain, pos, strings.Join(r.Properties, " "))
+		input = append(input, tmp)
+	}
+	input = append(input, "COMMIT\n")
+
+	err := l.Restorer.Restore(strings.Join(input, ""))
+	if err != nil {
+		return handleIPTablesError(err, l.Locker.Unlock())
+	}
+
+	return l.Locker.Unlock()
 }
 
 func (l *LockedIPTables) Insert(table, chain string, pos int, rulespec ...string) error {
