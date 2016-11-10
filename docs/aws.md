@@ -213,3 +213,7 @@
   bosh deploy
   ```
 
+
+0. Kicking the tires
+
+   Try out our [Cats and Dogs example](../src/example-apps/cats-and-dogs) on your new deployment.

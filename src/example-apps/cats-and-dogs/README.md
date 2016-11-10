@@ -2,6 +2,9 @@
 
 A sample app to demonstrate communication between a frontend and a backend application.
 
+We're assuming that you've [deployed to BOSH lite](../../../docs/bosh-lite.md).  If you've [deployed to AWS](../../../docs/aws.md) or
+another environment, substitute `bosh-lite.com` below with the domain name of your installation.
+
 ## Frontend
 The frontend serves a form at `http://frontend.bosh-lite.com/` that allows you to enter a backend URL whose contents will be fetched and rendered.
 

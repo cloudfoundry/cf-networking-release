@@ -61,7 +61,13 @@ Deploy:
   popd
   ```
 
-**NOTE:** There is a known issue where VMs on `bosh-lite` can start failing,
+## Kicking the tires
+
+Try out our [Cats and Dogs example](../src/example-apps/cats-and-dogs) on your new deployment.
+
+
+## Known issues with bosh-lite
+There is a known issue where VMs on `bosh-lite` can start failing,
 particularly if the host machine goes to sleep.
 
 If you run `bosh vms` and see any failing VMs, then you can either recreate the
@@ -85,21 +91,4 @@ add the following block to `manifest-generation/stubs/bosh-lite-cf.yml`:
     address: some-syslog-host.example.com
     port: 12345
     transport: udp
-```
-
-## Development
-
-### Running low-level tests
-
-```bash
-~/workspace/netman-release/scripts/docker-test
-```
-
-### Running the full acceptance test on bosh-lite
-WARNING: This test is taxing and has an aggressive timeout.
-It may fail on a laptop or other underpowered bosh-lite.
-
-```bash
-cd src/netman-cf-acceptance
-./run-locally.sh
 ```
