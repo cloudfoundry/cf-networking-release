@@ -15,6 +15,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 	"vxlan-policy-agent/agent_metrics"
 	"vxlan-policy-agent/config"
@@ -104,6 +105,7 @@ func main() {
 
 	iptLocker := &rules.IPTablesLocker{
 		FileLocker: &filelock.Locker{Path: "/var/run/netman-iptables.lock"},
+		Mutex:      &sync.Mutex{},
 	}
 	restorer := &rules.Restorer{}
 	lockedIPTables := &rules.LockedIPTables{

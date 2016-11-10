@@ -2,6 +2,7 @@ package rules
 
 import (
 	"fmt"
+	"os/exec"
 	"strings"
 )
 
@@ -26,6 +27,19 @@ type locker interface {
 //go:generate counterfeiter -o ../fakes/restorer.go --fake-name Restorer . restorer
 type restorer interface {
 	Restore(ruleState string) error
+}
+
+type Restorer struct{}
+
+func (r *Restorer) Restore(input string) error {
+	cmd := exec.Command("iptables-restore", "--noflush")
+	cmd.Stdin = strings.NewReader(input)
+
+	bytes, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("iptables-restore error: %s combined output: %s", err, string(bytes))
+	}
+	return nil
 }
 
 type LockedIPTables struct {

@@ -2,9 +2,7 @@ package rules
 
 import (
 	"fmt"
-	"os/exec"
 	"strconv"
-	"strings"
 
 	"code.cloudfoundry.org/lager"
 )
@@ -16,19 +14,6 @@ type Rule interface {
 
 type GenericRule struct {
 	Properties []string
-}
-
-type Restorer struct{}
-
-func (r *Restorer) Restore(input string) error {
-	cmd := exec.Command("iptables-restore", "--noflush")
-	cmd.Stdin = strings.NewReader(input)
-
-	bytes, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("iptables-restore error: %s combined output: %s", err, string(bytes))
-	}
-	return nil
 }
 
 func (r GenericRule) Enforce(table, chain string, iptables IPTables, logger lager.Logger) error {

@@ -14,6 +14,7 @@ import (
 	"lib/rules"
 	"lib/serial"
 	"os"
+	"sync"
 
 	"github.com/coreos/go-iptables/iptables"
 
@@ -112,6 +113,7 @@ func mainWithError() error {
 	restorer := &rules.Restorer{}
 	iptLocker := &rules.IPTablesLocker{
 		FileLocker: &filelock.Locker{Path: "/var/run/netman-iptables.lock"},
+		Mutex:      &sync.Mutex{},
 	}
 	lockedIPTables := &rules.LockedIPTables{
 		IPTables: ipt,

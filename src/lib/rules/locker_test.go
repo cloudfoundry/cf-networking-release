@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"lib/fakes"
 	"lib/rules"
+	"sync"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -18,6 +19,7 @@ var _ = Describe("Locker", func() {
 		flock = &fakes.FileLocker{}
 		locker = &rules.IPTablesLocker{
 			FileLocker: flock,
+			Mutex:      &sync.Mutex{},
 		}
 	})
 	Describe("Lifecycle", func() {

@@ -14,6 +14,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"code.cloudfoundry.org/garden"
 
@@ -182,6 +183,7 @@ var _ = Describe("Garden External Networker", func() {
 		Expect(err).NotTo(HaveOccurred())
 		iptLocker := &rules.IPTablesLocker{
 			FileLocker: &filelock.Locker{Path: "/var/run/netman-iptables.lock"},
+			Mutex:      &sync.Mutex{},
 		}
 		restorer := &rules.Restorer{}
 		lockedIPTables := &rules.LockedIPTables{

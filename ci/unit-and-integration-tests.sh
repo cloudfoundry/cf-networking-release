@@ -11,13 +11,13 @@ declare -a packages=(
   "src/cni-wrapper-plugin"
   "src/example-apps"
   "src/flannel-watchdog"
+  "src/lib"
   "src/netmon"
   "src/policy-server"
   )
 
 declare -a serial_packages=(
   "src/garden-external-networker"
-  "src/lib"
   "src/vxlan-policy-agent"
   )
 
