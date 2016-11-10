@@ -1,10 +1,10 @@
 ## Deploy to AWS
 0. Upload stemcell with Linux kernel 4.4 to bosh director.  Versions >= 3263.2 should work.
-0. Create netman stubs
 
-  - Add under `properties: uaa` in `stubs/cf/properties.yml`:
+0. Edit the CF properties stub
 
-    ```yaml
+  - Add under `properties.uaa.scim.users` the group `network.admin` for `admin`
+    ```diff
     scim:
       users:
       - name: admin
@@ -19,22 +19,29 @@
           - doppler.firehose
           - routing.router_groups.read
           - routing.router_groups.write
-          - network.admin
+    +     - network.admin
+    ```
+
+  - Generate a client secret (password) for the `network-policy` UAA client.
+  - Add under `properties.uaa.clients`
+
+    ```diff
     clients:
       cf:
-        scope: cloud_controller.read,cloud_controller.write,openid,password.write,cloud_controller.admin,scim.read,scim.write,doppler.firehose,uaa.user,routing.router_groups.read,network.admin
-      network-policy:
-        authorities: uaa.resource
-        secret: REPLACE_WITH_UAA_CLIENT_SECRET
+    -   scope: cloud_controller.read,cloud_controller.write,openid,password.write,cloud_controller.admin,scim.read,scim.write,doppler.firehose,uaa.user,routing.router_groups.read
+    +   scope: cloud_controller.read,cloud_controller.write,openid,password.write,cloud_controller.admin,scim.read,scim.write,doppler.firehose,uaa.user,routing.router_groups.read,network.admin
+    + network-policy:
+    +   authorities: uaa.resource
+    +   secret: YOUR_NETWORK_POLICY_CLIENT_SECRET
     ```
 
 
-  - Create a netman stub `stubs/netman/stub.yml`:
+0. Create a netman stub `stubs/netman/stub.yml`:
 
     - The policy-agent communicates with the policy-server using mutual TLS.
       Generate PEM encoded certs and keys for `vxlan-policy-agent` and `policy-server` and update the associated properties.
         - See the [generate-certs](../scripts/generate-certs) script for an example
-    - All other fields with `REPLACE_*` values must be provided
+    - All other fields with `REPLACE_*` or `YOUR_*` values must be provided
 
     ```yaml
     ---
@@ -58,7 +65,7 @@
           client_cert: REPLACE_WITH_CLIENT_CERT
           client_key: REPLACE_WITH_CLIENT_KEY
         policy-server:
-          uaa_client_secret: REPLACE_WITH_UAA_CLIENT_SECRET
+          uaa_client_secret: YOUR_NETWORK_POLICY_CLIENT_SECRET
           uaa_url: (( "https://uaa." config_from_cf.system_domain ))
           skip_ssl_validation: true
           database:
