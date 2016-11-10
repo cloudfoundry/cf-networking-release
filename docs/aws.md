@@ -69,8 +69,12 @@
           uaa_url: (( "https://uaa." config_from_cf.system_domain ))
           skip_ssl_validation: true
           database:
-            type: REPLACE_WITH_DB_TYPE # mysql or postgres
-            connection_string: REPLACE_WITH_DB_CONNECTION_STRING
+            # For MySQL use these two lines
+            type: mysql
+            connection_string: USERNAME:PASSWORD@tcp(DB_HOSTNAME:3306)/DB_NAME
+            # OR for Postgres, use these
+            # type: postgres
+            # connection_string: postgres://USERNAME:PASSWORD@DB_HOSTNAME:5524/DB_NAME?sslmode=disable
           ca_cert: REPLACE_WITH_CLIENT_CA_CERT
           server_cert: REPLACE_WITH_SERVER_CERT
           server_key: REPLACE_WITH_SERVER_KEY
