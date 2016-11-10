@@ -61,9 +61,18 @@
       properties:
         vxlan-policy-agent:
           policy_server_url: https://policy-server.service.cf.internal:4003
-          ca_cert: REPLACE_WITH_SERVER_CA_CERT
-          client_cert: REPLACE_WITH_CLIENT_CERT
-          client_key: REPLACE_WITH_CLIENT_KEY
+          ca_cert: |
+            -----BEGIN CERTIFICATE-----
+            REPLACE_WITH_CA_CERT
+            -----END CERTIFICATE-----
+          client_cert: |
+            -----BEGIN CERTIFICATE-----
+            REPLACE_WITH_CLIENT_CERT
+            -----END CERTIFICATE-----
+          client_key: |
+            -----BEGIN RSA PRIVATE KEY-----
+            REPLACE_WITH_CLIENT_KEY
+            -----END RSA PRIVATE KEY-----
         policy-server:
           uaa_client_secret: YOUR_NETWORK_POLICY_CLIENT_SECRET
           uaa_url: (( "https://uaa." config_from_cf.system_domain ))
@@ -75,9 +84,18 @@
             # OR for Postgres, use these
             # type: postgres
             # connection_string: postgres://USERNAME:PASSWORD@DB_HOSTNAME:5524/DB_NAME?sslmode=disable
-          ca_cert: REPLACE_WITH_CLIENT_CA_CERT
-          server_cert: REPLACE_WITH_SERVER_CERT
-          server_key: REPLACE_WITH_SERVER_KEY
+          ca_cert: |
+            -----BEGIN CERTIFICATE-----
+            REPLACE_WITH_CA_CERT
+            -----END CERTIFICATE-----
+          server_cert: |
+            -----BEGIN CERTIFICATE-----
+            REPLACE_WITH_SERVER_CERT
+            -----END CERTIFICATE-----
+          server_key: |
+            -----BEGIN RSA PRIVATE KEY-----
+            REPLACE_WITH_SERVER_KEY
+            -----END RSA PRIVATE KEY-----
         garden-cni:
           cni_plugin_dir: /var/vcap/packages/flannel/bin
           cni_config_dir: /var/vcap/jobs/cni-flannel/config/cni
