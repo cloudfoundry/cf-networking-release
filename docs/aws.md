@@ -1,6 +1,20 @@
 ## Deploy to AWS
 0. Upload stemcell with Linux kernel 4.4 to bosh director.  Versions >= 3263.2 should work.
 
+0. Generate credentials
+  - Create a strong password for a new UAA client to be called `network-policy`.  We'll refer to this
+    with the string `REPLACE_WITH_UAA_CLIENT_SECRET` below.
+  - Generate certs & keys for mutual TLS between the policy server and policy agents.  You can use our
+    [handy script](../scripts/generate-certs) to create these.  We'll refer to these with the strings
+
+    ```
+    REPLACE_WITH_CA_CERT
+    REPLACE_WITH_CLIENT_CERT
+    REPLACE_WITH_CLIENT_KEY
+    REPLACE_WITH_SERVER_CERT
+    REPLACE_WITH_SERVER_KEY
+    ```
+
 0. Edit the CF properties stub
 
   - Add under `properties.uaa.scim.users` the group `network.admin` for `admin`
@@ -32,16 +46,11 @@
     +   scope: cloud_controller.read,cloud_controller.write,openid,password.write,cloud_controller.admin,scim.read,scim.write,doppler.firehose,uaa.user,routing.router_groups.read,network.admin
     + network-policy:
     +   authorities: uaa.resource
-    +   secret: YOUR_NETWORK_POLICY_CLIENT_SECRET
+    +   secret: REPLACE_WITH_UAA_CLIENT_SECRET
     ```
 
 
 0. Create a netman stub `stubs/netman/stub.yml`:
-
-    - The policy-agent communicates with the policy-server using mutual TLS.
-      Generate PEM encoded certs and keys for `vxlan-policy-agent` and `policy-server` and update the associated properties.
-        - See the [generate-certs](../scripts/generate-certs) script for an example
-    - All other fields with `REPLACE_*` or `YOUR_*` values must be provided
 
     ```yaml
     ---
@@ -74,7 +83,7 @@
             REPLACE_WITH_CLIENT_KEY
             -----END RSA PRIVATE KEY-----
         policy-server:
-          uaa_client_secret: YOUR_NETWORK_POLICY_CLIENT_SECRET
+          uaa_client_secret: REPLACE_WITH_UAA_CLIENT_SECRET
           uaa_url: (( "https://uaa." config_from_cf.system_domain ))
           skip_ssl_validation: true
           database:
