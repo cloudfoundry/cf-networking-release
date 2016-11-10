@@ -115,19 +115,18 @@ func NewDefaultDenyRemoteRule(vni int) GenericRule {
 	}
 }
 
-func NewNetOutRule(containerIP string, startIP string, endIP string) GenericRule {
+func NewNetOutRule(containerIP, startIP, endIP string) GenericRule {
 	return GenericRule{
 		Properties: []string{
 			"--source", containerIP,
 			"-m", "iprange",
 			"--dst-range", fmt.Sprintf("%s-%s", startIP, endIP),
 			"--jump", "RETURN",
-			// "-m", "comment", "--comment", fmt.Sprintf("dst:%s", groupID),
 		},
 	}
 }
 
-func NewNetOutWithPortsRule(containerIP string, startIP string, endIP string, startPort int, endPort int, protocol string) GenericRule {
+func NewNetOutWithPortsRule(containerIP, startIP, endIP string, startPort, endPort int, protocol string) GenericRule {
 	return GenericRule{
 		Properties: []string{
 			"--source", containerIP,
@@ -137,6 +136,41 @@ func NewNetOutWithPortsRule(containerIP string, startIP string, endIP string, st
 			"-m", protocol,
 			"--destination-port", fmt.Sprintf("%d:%d", startPort, endPort),
 			"--jump", "RETURN",
+		},
+	}
+}
+
+func NewNetOutLogRule(containerIP, startIP, endIP, chain string) GenericRule {
+	return GenericRule{
+		Properties: []string{
+			"--source", containerIP,
+			"-m", "iprange",
+			"--dst-range", fmt.Sprintf("%s-%s", startIP, endIP),
+			"-g", chain,
+		},
+	}
+}
+
+func NewNetOutWithPortsLogRule(containerIP, startIP, endIP string, startPort, endPort int, protocol, chain string) GenericRule {
+	return GenericRule{
+		Properties: []string{
+			"--source", containerIP,
+			"-m", "iprange",
+			"-p", protocol,
+			"--dst-range", fmt.Sprintf("%s-%s", startIP, endIP),
+			"-m", protocol,
+			"--destination-port", fmt.Sprintf("%d:%d", startPort, endPort),
+			"-g", chain,
+		},
+	}
+}
+
+func NewNetOutDefaultLogRule(prefix string) GenericRule {
+	return GenericRule{
+		Properties: []string{
+			"-p", "tcp",
+			"-m", "conntrack", "--ctstate", "INVALID,NEW,UNTRACKED",
+			"-j", "LOG", "--log-prefix", prefix,
 		},
 	}
 }
