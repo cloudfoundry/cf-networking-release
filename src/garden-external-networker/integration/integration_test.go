@@ -72,6 +72,7 @@ func sameFile(path1, path2 string) bool {
 }
 
 const DEFAULT_TIMEOUT = "10s"
+const GlobalIPTablesLockFile = "/tmp/netman/iptables.lock"
 
 func buildStdin(inputs interface{}) io.Reader {
 	jsonBytes, err := json.Marshal(inputs)
@@ -133,13 +134,14 @@ var _ = Describe("Garden External Networker", func() {
 		Expect(err).NotTo(HaveOccurred())
 		fakeConfigFilePath = configFile.Name()
 		config := map[string]interface{}{
-			"cni_plugin_dir":  paths.CniPluginDir,
-			"cni_config_dir":  cniConfigDir,
-			"bind_mount_dir":  bindMountRoot,
-			"overlay_network": "10.255.0.0/16",
-			"state_file":      stateFilePath,
-			"start_port":      60000,
-			"total_ports":     56,
+			"cni_plugin_dir":     paths.CniPluginDir,
+			"cni_config_dir":     cniConfigDir,
+			"bind_mount_dir":     bindMountRoot,
+			"overlay_network":    "10.255.0.0/16",
+			"state_file":         stateFilePath,
+			"start_port":         60000,
+			"total_ports":        56,
+			"iptables_lock_file": GlobalIPTablesLockFile,
 		}
 		configBytes, err := json.Marshal(config)
 		Expect(err).NotTo(HaveOccurred())

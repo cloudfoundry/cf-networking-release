@@ -33,7 +33,8 @@ var _ = Describe("Config", func() {
 					"overlay_network": "10.255.0.0./16",
 					"state_file": "some/path",
 					"start_port": 1234,
-					"total_ports": 56
+					"total_ports": 56,
+					"iptables_lock_file": "/some/lock/file/path"
 				}`)
 				c, err := config.New(file.Name())
 				Expect(err).NotTo(HaveOccurred())
@@ -43,6 +44,7 @@ var _ = Describe("Config", func() {
 				Expect(c.StateFilePath).To(Equal("some/path"))
 				Expect(c.StartPort).To(Equal(1234))
 				Expect(c.TotalPorts).To(Equal(56))
+				Expect(c.IPTablesLockFile).To(Equal("/some/lock/file/path"))
 			})
 		})
 
@@ -78,13 +80,14 @@ var _ = Describe("Config", func() {
 		DescribeTable("when config file is missing a member",
 			func(missingFlag string) {
 				allData := map[string]interface{}{
-					"cni_plugin_dir":  "/some/plugin/dir",
-					"cni_config_dir":  "/some/config/dir",
-					"bind_mount_dir":  "/some/mount/dir",
-					"overlay_network": "10.1.0.0/16",
-					"state_file":      "/some/state/file",
-					"start_port":      50000,
-					"total_ports":     10000,
+					"cni_plugin_dir":     "/some/plugin/dir",
+					"cni_config_dir":     "/some/config/dir",
+					"bind_mount_dir":     "/some/mount/dir",
+					"overlay_network":    "10.1.0.0/16",
+					"state_file":         "/some/state/file",
+					"start_port":         50000,
+					"total_ports":        10000,
+					"iptables_lock_file": "/some/lock/file",
 				}
 				delete(allData, missingFlag)
 				Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
@@ -99,6 +102,7 @@ var _ = Describe("Config", func() {
 			Entry("missing state file", "state_file"),
 			Entry("missing start port", "start_port"),
 			Entry("missing total ports", "total_ports"),
+			Entry("missing iptables lock file", "iptables_lock_file"),
 		)
 	})
 })

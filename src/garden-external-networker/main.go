@@ -112,7 +112,7 @@ func mainWithError() error {
 
 	restorer := &rules.Restorer{}
 	iptLocker := &rules.IPTablesLocker{
-		FileLocker: &filelock.Locker{Path: "/var/run/netman-iptables.lock"},
+		FileLocker: &filelock.Locker{Path: cfg.IPTablesLockFile},
 		Mutex:      &sync.Mutex{},
 	}
 	lockedIPTables := &rules.LockedIPTables{
