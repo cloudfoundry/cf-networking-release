@@ -110,3 +110,6 @@
 [submodule "src/github.com/pivotal-cf-experimental/warrant"]
 	path = src/github.com/pivotal-cf-experimental/warrant
 	url = https://github.com/pivotal-cf-experimental/warrant
+[submodule "src/gopkg.in/validator.v2"]
+	path = src/gopkg.in/validator.v2
+	url = https://github.com/go-validator/validator
