@@ -75,6 +75,25 @@ var _ = Describe("Config", func() {
 			})
 		})
 
+		Context("when the policy server url is empty", func() {
+			It("succeeds (so that we can run without a policy server deployed", func() {
+				file.WriteString(`{
+					"poll_interval": 1234,
+					"cni_datastore_path": "/some/datastore/path",
+					"policy_server_url": "",
+					"vni": 42,
+					"flannel_subnet_file": "/some/subnet/file",
+					"metron_address": "http://1.2.3.4:1234",
+					"ca_cert_file": "/some/ca/file",
+					"client_cert_file": "/some/client/cert/file",
+					"client_key_file": "/some/client/key/file",
+					"iptables_lock_file":  "/var/vcap/data/lock"
+				}`)
+				_, err := config.New(file.Name())
+				Expect(err).NotTo(HaveOccurred())
+			})
+		})
+
 		DescribeTable("when config file is missing a member",
 			func(missingFlag, errorMsg string) {
 				allData := map[string]interface{}{
@@ -97,7 +116,6 @@ var _ = Describe("Config", func() {
 			},
 			Entry("missing poll interval", "poll_interval", "PollInterval: zero value"),
 			Entry("missing datastore path", "cni_datastore_path", "Datastore: zero value"),
-			Entry("missing policy server url", "policy_server_url", "PolicyServerURL: zero value"),
 			Entry("missing vni", "vni", "VNI: zero value"),
 			Entry("missing flannel subnet file", "flannel_subnet_file", "FlannelSubnetFile: zero value"),
 			Entry("missing metron address", "metron_address", "MetronAddress: zero value"),
