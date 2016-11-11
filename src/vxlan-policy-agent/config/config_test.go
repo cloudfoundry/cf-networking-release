@@ -35,7 +35,8 @@ var _ = Describe("Config", func() {
 					"metron_address": "http://1.2.3.4:1234",
 					"ca_cert_file": "/some/ca/file",
 					"client_cert_file": "/some/client/cert/file",
-					"client_key_file": "/some/client/key/file"
+					"client_key_file": "/some/client/key/file",
+					"iptables_lock_file":  "/var/vcap/data/lock"
 				}`)
 				c, err := config.New(file.Name())
 				Expect(err).NotTo(HaveOccurred())
@@ -48,6 +49,7 @@ var _ = Describe("Config", func() {
 				Expect(c.ServerCACertFile).To(Equal("/some/ca/file"))
 				Expect(c.ClientCertFile).To(Equal("/some/client/cert/file"))
 				Expect(c.ClientKeyFile).To(Equal("/some/client/key/file"))
+				Expect(c.IPTablesLockFile).To(Equal("/var/vcap/data/lock"))
 			})
 		})
 
@@ -85,6 +87,7 @@ var _ = Describe("Config", func() {
 					"ca_cert_file":        "/some/ca/file",
 					"client_cert_file":    "/some/client/cert/file",
 					"client_key_file":     "/some/client/key/file",
+					"iptables_lock_file":  "/var/vcap/data/lock",
 				}
 				delete(allData, missingFlag)
 				Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
@@ -101,6 +104,7 @@ var _ = Describe("Config", func() {
 			Entry("missing ca cert", "ca_cert_file", "ServerCACertFile: zero value"),
 			Entry("missing client cert file", "client_cert_file", "ClientCertFile: zero value"),
 			Entry("missing client key file", "client_key_file", "ClientKeyFile: zero value"),
+			Entry("missing iptables lock file", "iptables_lock_file", "IPTablesLockFile: zero value"),
 		)
 	})
 })

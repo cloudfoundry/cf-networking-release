@@ -103,7 +103,9 @@ var _ = Describe("VXLAN Policy Agent", func() {
 			ServerCACertFile:  paths.ServerCACertFile,
 			ClientCertFile:    paths.ClientCertFile,
 			ClientKeyFile:     paths.ClientKeyFile,
+			IPTablesLockFile:  GlobalIPTablesLockFile,
 		}
+		Expect(conf.Validate()).To(Succeed())
 		configFilePath = WriteConfigFile(conf)
 	})
 
@@ -188,7 +190,9 @@ var _ = Describe("VXLAN Policy Agent", func() {
 				ServerCACertFile:  paths.ServerCACertFile,
 				ClientCertFile:    paths.ClientCertFile,
 				ClientKeyFile:     paths.ClientKeyFile,
+				IPTablesLockFile:  GlobalIPTablesLockFile,
 			}
+			Expect(conf.Validate()).To(Succeed())
 			configFilePath = WriteConfigFile(conf)
 			session = StartAgent(paths.VxlanPolicyAgentPath, configFilePath)
 		})

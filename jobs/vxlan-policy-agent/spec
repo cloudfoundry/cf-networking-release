@@ -52,6 +52,10 @@ properties:
     description: "File path to look for flannel's subnet.env file"
     default: "/var/vcap/data/flannel/subnet.env"
 
+  vxlan-policy-agent.iptables_lock_file:
+    description: "Path to file that will be used to synchronize access to iptables"
+    default: /var/vcap/data/garden-cni/iptables.lock
+
   vxlan-policy-agent.metron_address:
     description: "Forward metrics to this metron agent"
     default: 127.0.0.1:3457

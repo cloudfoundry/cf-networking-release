@@ -19,6 +19,11 @@ type VxlanPolicyAgent struct {
 	ServerCACertFile  string `json:"ca_cert_file" validate:"nonzero"`
 	ClientCertFile    string `json:"client_cert_file" validate:"nonzero"`
 	ClientKeyFile     string `json:"client_key_file" validate:"nonzero"`
+	IPTablesLockFile  string `json:"iptables_lock_file" validate:"nonzero"`
+}
+
+func (c *VxlanPolicyAgent) Validate() error {
+	return validator.Validate(c)
 }
 
 func New(configFilePath string) (*VxlanPolicyAgent, error) {
@@ -37,8 +42,8 @@ func New(configFilePath string) (*VxlanPolicyAgent, error) {
 		return cfg, fmt.Errorf("parsing config (%s): %s", configFilePath, err)
 	}
 
-	if errs := validator.Validate(cfg); errs != nil {
-		return cfg, fmt.Errorf("invalid config: %s", errs)
+	if err := cfg.Validate(); err != nil {
+		return cfg, fmt.Errorf("invalid config: %s", err)
 	}
 
 	return cfg, nil

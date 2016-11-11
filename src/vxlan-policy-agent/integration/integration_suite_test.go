@@ -20,6 +20,8 @@ import (
 
 var DEFAULT_TIMEOUT = "5s"
 
+const GlobalIPTablesLockFile = "/tmp/netman/iptables.lock"
+
 var (
 	certDir string
 	paths   testPaths

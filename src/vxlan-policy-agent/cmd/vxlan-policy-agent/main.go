@@ -104,7 +104,7 @@ func main() {
 	}
 
 	iptLocker := &rules.IPTablesLocker{
-		FileLocker: &filelock.Locker{Path: "/var/run/netman-iptables.lock"},
+		FileLocker: &filelock.Locker{Path: conf.IPTablesLockFile},
 		Mutex:      &sync.Mutex{},
 	}
 	restorer := &rules.Restorer{}
