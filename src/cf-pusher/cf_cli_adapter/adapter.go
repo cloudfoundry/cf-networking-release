@@ -152,6 +152,11 @@ func (a *Adapter) BindSecurityGroup(name, org, space string) error {
 	return exec.Command("cf", "bind-security-group", name, org, space).Run()
 }
 
+func (a *Adapter) DeleteSecurityGroup(name string) error {
+	fmt.Printf("running cf delete-security-group -f %s \n", name)
+	return exec.Command("cf", "delete-security-group", "-f", name).Run()
+}
+
 func (a *Adapter) DeleteQuota(quota string) error {
 	fmt.Printf("running cf delete-quota %s -f\n", quota)
 	return exec.Command("cf", "delete-quota", quota, "-f").Run()
