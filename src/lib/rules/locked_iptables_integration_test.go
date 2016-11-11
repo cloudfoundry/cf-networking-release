@@ -69,9 +69,9 @@ var _ = Describe("Locked IPTables Integration Test", func() {
 			Expect(err).NotTo(HaveOccurred())
 		}
 		runner.RunOnSlice(genericRules, restoreWorker)
-
+		allRules := AllIPTablesRules("filter")
 		for i := 0; i < numRules; i++ {
-			Expect(AllIPTablesRules("filter")).To(ContainElement(
+			Expect(allRules).To(ContainElement(
 				fmt.Sprintf("-A FORWARD -s 1.2.3.4/32 -m comment --comment \"src:guid-%d\" -j MARK --set-xmark 0xa/0xffffffff", i)))
 		}
 	})
@@ -98,10 +98,11 @@ var _ = Describe("Locked IPTables Integration Test", func() {
 		}
 		runner.RunOnSliceStrings(things, restoreWorker)
 
+		allRules := AllIPTablesRules("filter")
 		for i := 0; i < numRules; i++ {
-			Expect(AllIPTablesRules("filter")).To(ContainElement(
+			Expect(allRules).To(ContainElement(
 				fmt.Sprintf("-A FORWARD -s 1.3.5.7/32 -m comment --comment \"src:bulk-%d\" -j MARK --set-xmark 0xa/0xffffffff", i)))
-			Expect(AllIPTablesRules("filter")).To(ContainElement(
+			Expect(allRules).To(ContainElement(
 				fmt.Sprintf("-A FORWARD -s 2.4.6.8/32 -m comment --comment \"src:uniq-%d\" -j MARK --set-xmark 0xa/0xffffffff", i)))
 		}
 	})
