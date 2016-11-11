@@ -61,7 +61,7 @@ var _ = Describe("policy cleanup", func() {
 			appCGuid, err := cfCli.AppGuid(appC)
 			Expect(err).NotTo(HaveOccurred())
 
-			By("get all policies")
+			By("getting all policies")
 			allPolicies, err := cfCli.Curl("GET", "/networking/v0/external/policies", "")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(allPolicies)).Should(ContainSubstring(appCGuid))
@@ -83,11 +83,11 @@ var _ = Describe("policy cleanup", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(tmpfile.Close()).To(Succeed())
 
-			By("delete stale policies")
+			By("deleting stale policies")
 			_, err = cfCli.Curl("DELETE", "/networking/v0/external/policies", tmpfile.Name())
 			Expect(err).NotTo(HaveOccurred())
 
-			By("get all policies")
+			By("getting all policies")
 			allPolicies, err = cfCli.Curl("GET", "/networking/v0/external/policies", "")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(allPolicies)).ShouldNot(ContainSubstring(appCGuid))
