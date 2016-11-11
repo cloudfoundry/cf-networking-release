@@ -80,13 +80,13 @@ func (h *PoliciesCleanup) ServeHTTP(w http.ResponseWriter, req *http.Request, cu
 	w.Write(bytes)
 }
 
-func getStalePolicies(policyList []models.Policy, ccList map[string]interface{}) (ret []models.Policy) {
+func getStalePolicies(policyList []models.Policy, ccList map[string]interface{}) (stalePolicies []models.Policy) {
 	for _, p := range policyList {
 		_, foundSrc := ccList[p.Source.ID]
 		_, foundDst := ccList[p.Destination.ID]
 		if !foundSrc || !foundDst {
-			ret = append(ret, p)
+			stalePolicies = append(stalePolicies, p)
 		}
 	}
-	return ret
+	return stalePolicies
 }
