@@ -44,7 +44,7 @@ var _ = Describe("policy cleanup", func() {
 		Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 	})
 
-	FDescribe("policies/cleanup endpoint", func() {
+	Describe("policies/cleanup endpoint", func() {
 		It("returns stale policies for deleted apps", func() {
 			By("creating a policy")
 			Expect(cfCli.AllowAccess(appA, appA, 1234, "tcp")).To(Succeed())
