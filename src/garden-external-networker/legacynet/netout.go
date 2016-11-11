@@ -10,11 +10,12 @@ import (
 )
 
 const prefixNetOut = "netout"
+const suffixNetOutLog = "log"
 
 //go:generate counterfeiter -o ../fakes/net_out_rule_converter.go --fake-name NetOutRuleConverter . netOutRuleConverter
 type netOutRuleConverter interface {
-	Convert(rule garden.NetOutRule, containerIP string) []rules.GenericRule
-	BulkConvert(rules []garden.NetOutRule, containerIP string) []rules.GenericRule
+	Convert(rule garden.NetOutRule, containerIP, logChainName string) []rules.GenericRule
+	BulkConvert(rules []garden.NetOutRule, containerIP, logChainName string) []rules.GenericRule
 }
 
 type NetOut struct {
@@ -24,27 +25,47 @@ type NetOut struct {
 }
 
 func (m *NetOut) Initialize(logger lager.Logger, containerHandle string, containerIP net.IP, overlayNetwork string) error {
-	chain := m.ChainNamer.Name(prefixNetOut, containerHandle)
-
-	err := m.IPTables.NewChain("filter", chain)
+	chain := m.ChainNamer.Prefix(prefixNetOut, containerHandle)
+	logChain, err := m.ChainNamer.Postfix(chain, suffixNetOutLog)
 	if err != nil {
-		return fmt.Errorf("creating chain: %s", err)
+		return fmt.Errorf("getting chain name: %s", err)
+	}
+	chainsToCreate := []string{chain, logChain}
+
+	for _, c := range chainsToCreate {
+		err = m.IPTables.NewChain("filter", c)
+		if err != nil {
+			return fmt.Errorf("creating chain: %s", err)
+		}
+
+		err = m.IPTables.Insert("filter", "FORWARD", 1, []string{"--jump", c}...)
+		if err != nil {
+			return fmt.Errorf("inserting rule: %s", err)
+		}
 	}
 
-	err = m.IPTables.Insert("filter", "FORWARD", 1, []string{"--jump", chain}...)
-	if err != nil {
-		return fmt.Errorf("inserting rule: %s", err)
-	}
-
-	ruleSpecs := []rules.Rule{
+	defaultRuleSpec := []rules.Rule{
 		rules.NewNetOutRelatedEstablishedRule(containerIP.String(), overlayNetwork),
 		rules.NewNetOutDefaultRejectRule(containerIP.String(), overlayNetwork),
 	}
+	logRuleSpec := []rules.Rule{
+		rules.NewNetOutDefaultLogRule(containerHandle),
+		rules.NewReturnRule(),
+	}
 
-	for _, spec := range ruleSpecs {
-		err = spec.Enforce("filter", chain, m.IPTables, logger)
-		if err != nil {
-			return err
+	var ruleSpecs []rules.Rule
+	for _, c := range chainsToCreate {
+		switch c {
+		case chain:
+			ruleSpecs = defaultRuleSpec
+		case logChain:
+			ruleSpecs = logRuleSpec
+		}
+		for _, spec := range ruleSpecs {
+			err = spec.Enforce("filter", c, m.IPTables, logger)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -52,30 +73,41 @@ func (m *NetOut) Initialize(logger lager.Logger, containerHandle string, contain
 }
 
 func (m *NetOut) Cleanup(containerHandle string) error {
-	chain := m.ChainNamer.Name(prefixNetOut, containerHandle)
-
-	err := m.IPTables.Delete("filter", "FORWARD", []string{"--jump", chain}...)
+	chain := m.ChainNamer.Prefix(prefixNetOut, containerHandle)
+	logChain, err := m.ChainNamer.Postfix(chain, suffixNetOutLog)
 	if err != nil {
-		return fmt.Errorf("delete rule: %s", err)
+		return fmt.Errorf("getting chain name: %s", err)
 	}
 
-	err = m.IPTables.ClearChain("filter", chain)
-	if err != nil {
-		return fmt.Errorf("clear chain: %s", err)
-	}
+	chainsToClean := []string{chain, logChain}
+	for _, c := range chainsToClean {
+		err = m.IPTables.Delete("filter", "FORWARD", []string{"--jump", c}...)
+		if err != nil {
+			return fmt.Errorf("delete rule: %s", err)
+		}
 
-	err = m.IPTables.DeleteChain("filter", chain)
-	if err != nil {
-		return fmt.Errorf("delete chain: %s", err)
+		err = m.IPTables.ClearChain("filter", c)
+		if err != nil {
+			return fmt.Errorf("clear chain: %s", err)
+		}
+
+		err = m.IPTables.DeleteChain("filter", c)
+		if err != nil {
+			return fmt.Errorf("delete chain: %s", err)
+		}
 	}
 
 	return nil
 }
 
 func (m *NetOut) InsertRule(containerHandle string, rule garden.NetOutRule, containerIP string) error {
-	chain := m.ChainNamer.Name(prefixNetOut, containerHandle)
+	chain := m.ChainNamer.Prefix(prefixNetOut, containerHandle)
+	logChain, err := m.ChainNamer.Postfix(chain, suffixNetOutLog)
+	if err != nil {
+		return fmt.Errorf("getting chain name: %s", err)
+	}
 
-	ruleSpec := m.Converter.Convert(rule, containerIP)
+	ruleSpec := m.Converter.Convert(rule, containerIP, logChain)
 	for _, iptRule := range ruleSpec {
 		err := m.IPTables.Insert("filter", chain, 1, iptRule.Properties...)
 		if err != nil {
@@ -87,10 +119,14 @@ func (m *NetOut) InsertRule(containerHandle string, rule garden.NetOutRule, cont
 }
 
 func (m *NetOut) BulkInsertRules(containerHandle string, netOutRules []garden.NetOutRule, containerIP string) error {
-	chain := m.ChainNamer.Name(prefixNetOut, containerHandle)
+	chain := m.ChainNamer.Prefix(prefixNetOut, containerHandle)
+	logChain, err := m.ChainNamer.Postfix(chain, suffixNetOutLog)
+	if err != nil {
+		return fmt.Errorf("getting chain name: %s", err)
+	}
 
-	ruleSpec := m.Converter.BulkConvert(netOutRules, containerIP)
-	err := m.IPTables.BulkInsert("filter", chain, 1, ruleSpec...)
+	ruleSpec := m.Converter.BulkConvert(netOutRules, containerIP, logChain)
+	err = m.IPTables.BulkInsert("filter", chain, 1, ruleSpec...)
 	if err != nil {
 		return fmt.Errorf("bulk inserting net-out rules: %s", err)
 	}

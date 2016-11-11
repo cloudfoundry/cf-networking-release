@@ -89,6 +89,7 @@ var _ = Describe("Garden External Networker", func() {
 		stateFilePath          string
 		containerHandle        string
 		netoutChainName        string
+		netoutLoggingChainName string
 		netinChainName         string
 		fakeProcess            *os.Process
 		fakeConfigFilePath     string
@@ -106,6 +107,7 @@ var _ = Describe("Garden External Networker", func() {
 		containerHandle = fmt.Sprintf("container-%04x-%x", GinkgoParallelNode(), rand.Int63())
 		netoutChainName = fmt.Sprintf("netout--%s", containerHandle)[:28]
 		netinChainName = fmt.Sprintf("netin--%s", containerHandle)[:28]
+		netoutLoggingChainName = fmt.Sprintf("%s--log", netoutChainName[:23])
 
 		sleepCmd := exec.Command("/bin/sleep", "1000")
 		Expect(sleepCmd.Start()).To(Succeed())
@@ -191,12 +193,17 @@ var _ = Describe("Garden External Networker", func() {
 			Locker:   iptLocker,
 			Restorer: restorer,
 		}
+		Expect(lockedIPTables.ClearChain("filter", netoutLoggingChainName)).To(Succeed())
 		Expect(lockedIPTables.ClearChain("filter", netoutChainName)).To(Succeed())
 		Expect(lockedIPTables.ClearChain("filter", "FORWARD")).To(Succeed())
+		Expect(lockedIPTables.DeleteChain("filter", netoutLoggingChainName)).To(Succeed())
 		Expect(lockedIPTables.DeleteChain("filter", netoutChainName)).To(Succeed())
 		Expect(lockedIPTables.ClearChain("nat", netinChainName)).To(Succeed())
 		Expect(lockedIPTables.ClearChain("nat", "PREROUTING")).To(Succeed())
 		Expect(lockedIPTables.DeleteChain("nat", netinChainName)).To(Succeed())
+
+		// assert that the test returns iptables to a pristine state when finished
+		Expect(AllIPTablesRules("filter")).To(ConsistOf("-P INPUT ACCEPT", "-P FORWARD ACCEPT", "-P OUTPUT ACCEPT"))
 	})
 
 	It("should call CNI ADD and DEL", func() {
@@ -273,6 +280,9 @@ var _ = Describe("Garden External Networker", func() {
 					},
 					Ports: []garden.PortRange{{Start: 9000, End: 9999}},
 				}
+				if i == 0 {
+					rule.Log = true
+				}
 				someRules = append(someRules, rule)
 			}
 		})
@@ -289,18 +299,22 @@ var _ = Describe("Garden External Networker", func() {
 			bulkNetOutCommand := buildBulkNetOutCommand("169.254.1.2", someRules)
 			runAndWait(bulkNetOutCommand)
 
-			By("checking that the filter rule was installed")
-			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 169.254.1.2/32 -p tcp -m iprange --dst-range 1.1.1.1-2.2.2.2 -m tcp --dport 9000:9999 -j RETURN`))
+			By("checking that the filter rule was installed and that logging can be enabled")
+			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 169.254.1.2/32 -p tcp -m iprange --dst-range 1.1.1.1-2.2.2.2 -m tcp --dport 9000:9999 -g ` + netoutLoggingChainName))
 			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 169.254.1.2/32 -p tcp -m iprange --dst-range 1.1.1.2-2.2.2.2 -m tcp --dport 9000:9999 -j RETURN`))
 			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 169.254.1.2/32 -p tcp -m iprange --dst-range 1.1.1.3-2.2.2.2 -m tcp --dport 9000:9999 -j RETURN`))
 			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 169.254.1.2/32 -p tcp -m iprange --dst-range 1.1.1.4-2.2.2.2 -m tcp --dport 9000:9999 -j RETURN`))
 			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 169.254.1.2/32 -p tcp -m iprange --dst-range 1.1.1.5-2.2.2.2 -m tcp --dport 9000:9999 -j RETURN`))
+
+			By("checking that it writes the logging rules")
+			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutLoggingChainName + ` -p tcp -m conntrack --ctstate INVALID,NEW,UNTRACKED -j LOG --log-prefix ` + containerHandle[:29]))
 
 			By("calling down")
 			runAndWait(downCommand)
 
 			By("checking that there are no more netout rules for this container")
 			Expect(AllIPTablesRules("filter")).NotTo(ContainElement(ContainSubstring(netoutChainName)))
+			Expect(AllIPTablesRules("filter")).NotTo(ContainElement(ContainSubstring(netoutLoggingChainName)))
 		})
 
 	})

@@ -26,7 +26,7 @@ var _ = Describe("Netin", func() {
 			ChainNamer: chainNamer,
 			IPTables:   ipTables,
 		}
-		chainNamer.NameReturns("some-chain-name")
+		chainNamer.PrefixReturns("some-chain-name")
 	})
 
 	Describe("Initialize", func() {
@@ -34,8 +34,8 @@ var _ = Describe("Netin", func() {
 			err := netIn.Initialize("some-container-handle")
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(chainNamer.NameCallCount()).To(Equal(1))
-			prefix, handle := chainNamer.NameArgsForCall(0)
+			Expect(chainNamer.PrefixCallCount()).To(Equal(1))
+			prefix, handle := chainNamer.PrefixArgsForCall(0)
 			Expect(prefix).To(Equal("netin"))
 			Expect(handle).To(Equal("some-container-handle"))
 
@@ -81,8 +81,8 @@ var _ = Describe("Netin", func() {
 			err := netIn.Cleanup("some-container-handle")
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(chainNamer.NameCallCount()).To(Equal(1))
-			prefix, handle := chainNamer.NameArgsForCall(0)
+			Expect(chainNamer.PrefixCallCount()).To(Equal(1))
+			prefix, handle := chainNamer.PrefixArgsForCall(0)
 			Expect(prefix).To(Equal("netin"))
 			Expect(handle).To(Equal("some-container-handle"))
 
@@ -149,8 +149,8 @@ var _ = Describe("Netin", func() {
 			err := netIn.AddRule("some-container-handle", 1111, 2222, "1.2.3.4", "5.6.7.8")
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(chainNamer.NameCallCount()).To(Equal(1))
-			prefix, handle := chainNamer.NameArgsForCall(0)
+			Expect(chainNamer.PrefixCallCount()).To(Equal(1))
+			prefix, handle := chainNamer.PrefixArgsForCall(0)
 			Expect(prefix).To(Equal("netin"))
 			Expect(handle).To(Equal("some-container-handle"))
 

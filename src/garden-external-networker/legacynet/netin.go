@@ -13,7 +13,7 @@ type NetIn struct {
 }
 
 func (m *NetIn) Initialize(containerHandle string) error {
-	chain := m.ChainNamer.Name(prefixNetIn, containerHandle)
+	chain := m.ChainNamer.Prefix(prefixNetIn, containerHandle)
 	err := m.IPTables.NewChain("nat", chain)
 	if err != nil {
 		return fmt.Errorf("creating chain: %s", err)
@@ -27,7 +27,7 @@ func (m *NetIn) Initialize(containerHandle string) error {
 }
 
 func (m *NetIn) Cleanup(containerHandle string) error {
-	chain := m.ChainNamer.Name(prefixNetIn, containerHandle)
+	chain := m.ChainNamer.Prefix(prefixNetIn, containerHandle)
 
 	err := m.IPTables.Delete("nat", "PREROUTING", []string{"--jump", chain}...)
 	if err != nil {
@@ -49,7 +49,7 @@ func (m *NetIn) Cleanup(containerHandle string) error {
 func (m *NetIn) AddRule(containerHandle string,
 	hostPort, containerPort int, hostIP, containerIP string) error {
 
-	chainName := m.ChainNamer.Name(prefixNetIn, containerHandle)
+	chainName := m.ChainNamer.Prefix(prefixNetIn, containerHandle)
 	err := m.IPTables.AppendUnique("nat", chainName, []string{
 		"-d", hostIP, "-p", "tcp",
 		"-m", "tcp", "--dport", fmt.Sprintf("%d", hostPort),

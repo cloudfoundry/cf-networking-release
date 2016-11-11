@@ -6,40 +6,46 @@ import (
 	"code.cloudfoundry.org/garden"
 )
 
-type NetOutRuleConverter struct{}
+type NetOutRuleConverter struct {
+}
 
-func (c *NetOutRuleConverter) BulkConvert(netOutRules []garden.NetOutRule, containerIP string) []rules.GenericRule {
+func (c *NetOutRuleConverter) BulkConvert(netOutRules []garden.NetOutRule, containerIP, logChainName string) []rules.GenericRule {
 	ruleSpec := []rules.GenericRule{}
 	for _, rule := range netOutRules {
-		for _, t := range c.Convert(rule, containerIP) {
+		for _, t := range c.Convert(rule, containerIP, logChainName) {
 			ruleSpec = append(ruleSpec, t)
 		}
 	}
 	return ruleSpec
 }
 
-func (c *NetOutRuleConverter) Convert(rule garden.NetOutRule, containerIP string) []rules.GenericRule {
+func (c *NetOutRuleConverter) Convert(rule garden.NetOutRule, containerIP, logChainName string) []rules.GenericRule {
 	ruleSpec := []rules.GenericRule{}
 	for _, network := range rule.Networks {
 		if len(rule.Ports) > 0 && udpOrTcp(rule.Protocol) {
 			for _, portRange := range rule.Ports {
-				ruleSpec = append(ruleSpec, rules.NewNetOutWithPortsRule(
-					containerIP,
-					network.Start.String(),
-					network.End.String(),
-					int(portRange.Start),
-					int(portRange.End),
-					lookupProtocol(rule.Protocol),
-				),
-				)
+				if rule.Log {
+					ruleSpec = append(ruleSpec, rules.NewNetOutWithPortsLogRule(
+						containerIP, network.Start.String(), network.End.String(),
+						int(portRange.Start), int(portRange.End), lookupProtocol(rule.Protocol), logChainName),
+					)
+				} else {
+					ruleSpec = append(ruleSpec, rules.NewNetOutWithPortsRule(
+						containerIP, network.Start.String(), network.End.String(),
+						int(portRange.Start), int(portRange.End), lookupProtocol(rule.Protocol)),
+					)
+				}
 			}
 		} else {
-			ruleSpec = append(ruleSpec, rules.NewNetOutRule(
-				containerIP,
-				network.Start.String(),
-				network.End.String(),
-			),
-			)
+			if rule.Log {
+				ruleSpec = append(ruleSpec, rules.NewNetOutLogRule(
+					containerIP, network.Start.String(), network.End.String(), logChainName),
+				)
+			} else {
+				ruleSpec = append(ruleSpec, rules.NewNetOutRule(
+					containerIP, network.Start.String(), network.End.String()),
+				)
+			}
 		}
 	}
 	return ruleSpec

@@ -175,6 +175,14 @@ func NewNetOutDefaultLogRule(prefix string) GenericRule {
 	}
 }
 
+func NewReturnRule() GenericRule {
+	return GenericRule{
+		Properties: []string{
+			"--jump", "RETURN",
+		},
+	}
+}
+
 func NewNetOutRelatedEstablishedRule(subnet, overlayNetwork string) GenericRule {
 	return GenericRule{
 		Properties: []string{

@@ -4,58 +4,105 @@ package fakes
 import "sync"
 
 type ChainNamer struct {
-	NameStub        func(prefix, containerHandle string) string
-	nameMutex       sync.RWMutex
-	nameArgsForCall []struct {
-		prefix          string
-		containerHandle string
+	PrefixStub        func(prefix, body string) string
+	prefixMutex       sync.RWMutex
+	prefixArgsForCall []struct {
+		prefix string
+		body   string
 	}
-	nameReturns struct {
+	prefixReturns struct {
 		result1 string
+	}
+	PostfixStub        func(body, suffix string) (string, error)
+	postfixMutex       sync.RWMutex
+	postfixArgsForCall []struct {
+		body   string
+		suffix string
+	}
+	postfixReturns struct {
+		result1 string
+		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *ChainNamer) Name(prefix string, containerHandle string) string {
-	fake.nameMutex.Lock()
-	fake.nameArgsForCall = append(fake.nameArgsForCall, struct {
-		prefix          string
-		containerHandle string
-	}{prefix, containerHandle})
-	fake.recordInvocation("Name", []interface{}{prefix, containerHandle})
-	fake.nameMutex.Unlock()
-	if fake.NameStub != nil {
-		return fake.NameStub(prefix, containerHandle)
+func (fake *ChainNamer) Prefix(prefix string, body string) string {
+	fake.prefixMutex.Lock()
+	fake.prefixArgsForCall = append(fake.prefixArgsForCall, struct {
+		prefix string
+		body   string
+	}{prefix, body})
+	fake.recordInvocation("Prefix", []interface{}{prefix, body})
+	fake.prefixMutex.Unlock()
+	if fake.PrefixStub != nil {
+		return fake.PrefixStub(prefix, body)
 	} else {
-		return fake.nameReturns.result1
+		return fake.prefixReturns.result1
 	}
 }
 
-func (fake *ChainNamer) NameCallCount() int {
-	fake.nameMutex.RLock()
-	defer fake.nameMutex.RUnlock()
-	return len(fake.nameArgsForCall)
+func (fake *ChainNamer) PrefixCallCount() int {
+	fake.prefixMutex.RLock()
+	defer fake.prefixMutex.RUnlock()
+	return len(fake.prefixArgsForCall)
 }
 
-func (fake *ChainNamer) NameArgsForCall(i int) (string, string) {
-	fake.nameMutex.RLock()
-	defer fake.nameMutex.RUnlock()
-	return fake.nameArgsForCall[i].prefix, fake.nameArgsForCall[i].containerHandle
+func (fake *ChainNamer) PrefixArgsForCall(i int) (string, string) {
+	fake.prefixMutex.RLock()
+	defer fake.prefixMutex.RUnlock()
+	return fake.prefixArgsForCall[i].prefix, fake.prefixArgsForCall[i].body
 }
 
-func (fake *ChainNamer) NameReturns(result1 string) {
-	fake.NameStub = nil
-	fake.nameReturns = struct {
+func (fake *ChainNamer) PrefixReturns(result1 string) {
+	fake.PrefixStub = nil
+	fake.prefixReturns = struct {
 		result1 string
 	}{result1}
+}
+
+func (fake *ChainNamer) Postfix(body string, suffix string) (string, error) {
+	fake.postfixMutex.Lock()
+	fake.postfixArgsForCall = append(fake.postfixArgsForCall, struct {
+		body   string
+		suffix string
+	}{body, suffix})
+	fake.recordInvocation("Postfix", []interface{}{body, suffix})
+	fake.postfixMutex.Unlock()
+	if fake.PostfixStub != nil {
+		return fake.PostfixStub(body, suffix)
+	} else {
+		return fake.postfixReturns.result1, fake.postfixReturns.result2
+	}
+}
+
+func (fake *ChainNamer) PostfixCallCount() int {
+	fake.postfixMutex.RLock()
+	defer fake.postfixMutex.RUnlock()
+	return len(fake.postfixArgsForCall)
+}
+
+func (fake *ChainNamer) PostfixArgsForCall(i int) (string, string) {
+	fake.postfixMutex.RLock()
+	defer fake.postfixMutex.RUnlock()
+	return fake.postfixArgsForCall[i].body, fake.postfixArgsForCall[i].suffix
+}
+
+func (fake *ChainNamer) PostfixReturns(result1 string, result2 error) {
+	fake.PostfixStub = nil
+	fake.postfixReturns = struct {
+		result1 string
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *ChainNamer) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.nameMutex.RLock()
-	defer fake.nameMutex.RUnlock()
+	fake.prefixMutex.RLock()
+	defer fake.prefixMutex.RUnlock()
+	fake.postfixMutex.RLock()
+	defer fake.postfixMutex.RUnlock()
 	return fake.invocations
 }
 
