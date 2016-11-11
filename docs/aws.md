@@ -36,7 +36,6 @@
     +     - network.admin
     ```
 
-  - Generate a client secret (password) for the `network-policy` UAA client.
   - Add under `properties.uaa.clients`
 
     ```diff
