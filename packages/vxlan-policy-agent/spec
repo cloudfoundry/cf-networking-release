@@ -30,6 +30,7 @@ files:
   - github.com/tedsuo/ifrit/*.go # gosub
   - github.com/tedsuo/ifrit/grouper/*.go # gosub
   - github.com/tedsuo/ifrit/sigmon/*.go # gosub
+  - gopkg.in/validator.v2/*.go # gosub
   - lib/datastore/*.go # gosub
   - lib/filelock/*.go # gosub
   - lib/flannel/*.go # gosub
