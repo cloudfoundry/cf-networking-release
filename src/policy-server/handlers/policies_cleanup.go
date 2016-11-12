@@ -55,18 +55,24 @@ func (h *PoliciesCleanup) ServeHTTP(w http.ResponseWriter, req *http.Request, cu
 
 	stalePolicies := getStalePolicies(policies, ccAppGuids)
 
-	//h.Logger.Info("I am cleaning up policies")
-	//ret, err := h.Store.DeleteByGroup(staleAppGuids)
-
-	for i, _ := range stalePolicies {
-		stalePolicies[i].Source.Tag = ""
-		stalePolicies[i].Destination.Tag = ""
-	}
-
 	policyCleanup := struct {
 		TotalPolicies int             `json:"total_policies"`
 		Policies      []models.Policy `json:"policies"`
 	}{len(stalePolicies), stalePolicies}
+
+	h.Logger.Info("deleting stale policies:", lager.Data{"stale_policies": policyCleanup})
+	err = h.Store.Delete(stalePolicies)
+	if err != nil {
+		h.Logger.Error("store-delete-policies-failed", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"error": "database write failed"}`))
+		return
+	}
+
+	for i, _ := range policyCleanup.Policies {
+		policyCleanup.Policies[i].Source.Tag = ""
+		policyCleanup.Policies[i].Destination.Tag = ""
+	}
 
 	bytes, err := h.Marshaler.Marshal(policyCleanup)
 	if err != nil {

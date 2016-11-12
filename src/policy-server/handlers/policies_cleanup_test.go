@@ -79,24 +79,28 @@ var _ = Describe("PoliciesCleanup", func() {
 		fakeCCClient.GetAllAppGUIDsReturns(map[string]interface{}{"live-guid": nil}, nil)
 	})
 
-	It("Returns the policies which should be cleaned up without tags", func() {
-
+	It("Cleans up stale policies for deleted apps", func() {
 		handler.ServeHTTP(resp, request, "")
 		Expect(fakeStore.AllCallCount()).To(Equal(1))
 		Expect(fakeUAAClient.GetTokenCallCount()).To(Equal(1))
 		Expect(fakeCCClient.GetAllAppGUIDsCallCount()).To(Equal(1))
 		Expect(fakeCCClient.GetAllAppGUIDsArgsForCall(0)).To(Equal("valid-token"))
 		Expect(fakeMarshaler.MarshalCallCount()).To(Equal(1))
-		policies := allPolicies[1:]
-		for i, _ := range policies {
-			policies[i].Source.Tag = ""
-			policies[i].Destination.Tag = ""
+		stalePolicies := allPolicies[1:]
+		Expect(fakeStore.DeleteCallCount()).To(Equal(1))
+		Expect(fakeStore.DeleteArgsForCall(0)).To(Equal(stalePolicies))
+
+		for i, _ := range stalePolicies {
+			stalePolicies[i].Source.Tag = ""
+			stalePolicies[i].Destination.Tag = ""
 		}
-		policyCleanup := struct {
+		deletedPolicies := struct {
 			TotalPolicies int             `json:"total_policies"`
 			Policies      []models.Policy `json:"policies"`
-		}{2, policies}
-		Expect(fakeMarshaler.MarshalArgsForCall(0)).To(Equal(policyCleanup))
+		}{2, stalePolicies}
+
+		Expect(fakeMarshaler.MarshalArgsForCall(0)).To(Equal(deletedPolicies))
+		Expect(logger).To(gbytes.Say("deleting stale policies:.*total_policies\":2.*policies.*dead-guid.*dead-guid"))
 
 		Expect(resp.Code).To(Equal(http.StatusOK))
 		Expect(resp.Body.String()).To(MatchJSON(`{
@@ -132,6 +136,7 @@ var _ = Describe("PoliciesCleanup", func() {
 		BeforeEach(func() {
 			fakeStore.AllReturns(nil, errors.New("potato"))
 		})
+
 		It("responds with 500", func() {
 			handler.ServeHTTP(resp, request, "")
 			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
@@ -148,6 +153,7 @@ var _ = Describe("PoliciesCleanup", func() {
 		BeforeEach(func() {
 			fakeUAAClient.GetTokenReturns("", errors.New("potato"))
 		})
+
 		It("responds with 500", func() {
 			handler.ServeHTTP(resp, request, "")
 			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
@@ -164,6 +170,7 @@ var _ = Describe("PoliciesCleanup", func() {
 		BeforeEach(func() {
 			fakeCCClient.GetAllAppGUIDsReturns(nil, errors.New("potato"))
 		})
+
 		It("responds with 500", func() {
 			handler.ServeHTTP(resp, request, "")
 			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
@@ -176,10 +183,28 @@ var _ = Describe("PoliciesCleanup", func() {
 		})
 	})
 
+	Context("When deleting the policies fails", func() {
+		BeforeEach(func() {
+			fakeStore.DeleteReturns(errors.New("potato"))
+		})
+
+		It("responds with 500", func() {
+			handler.ServeHTTP(resp, request, "")
+			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
+			Expect(resp.Body.String()).To(MatchJSON(`{"error": "database write failed"}`))
+		})
+
+		It("logs the full error", func() {
+			handler.ServeHTTP(resp, request, "")
+			Expect(logger).To(gbytes.Say("store-delete-policies-failed.*potato"))
+		})
+	})
+
 	Context("When marshalling the reponse fails", func() {
 		BeforeEach(func() {
 			fakeMarshaler.MarshalReturns(nil, errors.New("potato"))
 		})
+
 		It("responds with 500", func() {
 			handler.ServeHTTP(resp, request, "")
 			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
@@ -191,5 +216,4 @@ var _ = Describe("PoliciesCleanup", func() {
 			Expect(logger).To(gbytes.Say("marshal-failed.*potato"))
 		})
 	})
-
 })
