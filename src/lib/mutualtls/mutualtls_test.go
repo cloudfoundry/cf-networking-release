@@ -202,6 +202,26 @@ var _ = Describe("TLS config for internal API server", func() {
 			})
 		})
 
+		Context("when the client is configured to use TLS 1.1", func() {
+			BeforeEach(func() {
+				clientTLSConfig.MinVersion = tls.VersionTLS11
+				clientTLSConfig.MaxVersion = tls.VersionTLS11
+			})
+
+			It("refuses the connection from the client", func() {
+				serverTLSConfig, err := mutualtls.NewServerTLSConfig(paths.ServerCertPath, paths.ServerKeyPath, paths.ClientCACertPath)
+				Expect(err).NotTo(HaveOccurred())
+
+				server := startServer(serverTLSConfig)
+
+				_, err = makeRequest(serverListenAddr, clientTLSConfig)
+				Expect(err).To(MatchError(ContainSubstring("remote error")))
+
+				server.Signal(os.Interrupt)
+				Eventually(server.Wait()).Should(Receive())
+			})
+		})
+
 		It("returns config with reasonable security properties", func() {
 			serverTLSConfig, err := mutualtls.NewServerTLSConfig(paths.ServerCertPath, paths.ServerKeyPath, paths.ClientCACertPath)
 			Expect(err).NotTo(HaveOccurred())
