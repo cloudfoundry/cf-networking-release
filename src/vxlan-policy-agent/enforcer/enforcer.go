@@ -17,13 +17,6 @@ func (_ Timestamper) CurrentTime() int {
 	return int(time.Now().Unix())
 }
 
-//go:generate counterfeiter -o ../fakes/rule_enforcer.go --fake-name RuleEnforcer . RuleEnforcer
-type RuleEnforcer interface {
-	EnforceRulesAndChain(RulesWithChain) error
-	EnforceOnChain(chain Chain, r []rules.Rule) error
-	Enforce(table, parentChain, chain string, r []rules.Rule) error
-}
-
 //go:generate counterfeiter -o ../fakes/timestamper.go --fake-name TimeStamper . TimeStamper
 type TimeStamper interface {
 	CurrentTime() int
@@ -32,10 +25,10 @@ type TimeStamper interface {
 type Enforcer struct {
 	Logger      lager.Logger
 	timestamper TimeStamper
-	iptables    rules.IPTables
+	iptables    rules.IPTablesExtended
 }
 
-func NewEnforcer(logger lager.Logger, timestamper TimeStamper, ipt rules.IPTables) *Enforcer {
+func NewEnforcer(logger lager.Logger, timestamper TimeStamper, ipt rules.IPTablesExtended) *Enforcer {
 	return &Enforcer{
 		Logger:      logger,
 		timestamper: timestamper,
@@ -51,18 +44,18 @@ type Chain struct {
 
 type RulesWithChain struct {
 	Chain Chain
-	Rules []rules.Rule
+	Rules []rules.GenericRule
 }
 
 func (e *Enforcer) EnforceRulesAndChain(rulesAndChain RulesWithChain) error {
 	return e.EnforceOnChain(rulesAndChain.Chain, rulesAndChain.Rules)
 }
 
-func (e *Enforcer) EnforceOnChain(c Chain, rules []rules.Rule) error {
-	return e.Enforce(c.Table, c.ParentChain, c.Prefix, rules)
+func (e *Enforcer) EnforceOnChain(c Chain, rules []rules.GenericRule) error {
+	return e.Enforce(c.Table, c.ParentChain, c.Prefix, rules...)
 }
 
-func (e *Enforcer) Enforce(table, parentChain, chainPrefix string, rules []rules.Rule) error {
+func (e *Enforcer) Enforce(table, parentChain, chainPrefix string, rules ...rules.GenericRule) error {
 	newTime := e.timestamper.CurrentTime()
 	chain := fmt.Sprintf("%s%d", chainPrefix, newTime)
 
@@ -72,17 +65,15 @@ func (e *Enforcer) Enforce(table, parentChain, chainPrefix string, rules []rules
 		return fmt.Errorf("creating chain: %s", err)
 	}
 
-	for _, rule := range rules {
-		err = rule.Enforce(table, chain, e.iptables, e.Logger)
-		if err != nil {
-			return err
-		}
-	}
-
 	err = e.iptables.Insert(table, parentChain, 1, []string{"-j", chain}...)
 	if err != nil {
 		e.Logger.Error("insert-chain", err)
 		return fmt.Errorf("inserting chain: %s", err)
+	}
+
+	err = e.iptables.BulkAppend(table, chain, rules...)
+	if err != nil {
+		return fmt.Errorf("bulk appending: %s", err)
 	}
 
 	err = e.cleanupOldRules(table, parentChain, chainPrefix, int(newTime))

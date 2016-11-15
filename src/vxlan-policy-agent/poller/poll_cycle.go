@@ -12,10 +12,15 @@ type planner interface {
 	GetRules() (enforcer.RulesWithChain, error)
 }
 
+//go:generate counterfeiter -o ../fakes/rule_enforcer.go --fake-name RuleEnforcer . ruleEnforcer
+type ruleEnforcer interface {
+	EnforceRulesAndChain(enforcer.RulesWithChain) error
+}
+
 type SinglePollCycle struct {
 	Planner planner
 
-	Enforcer          enforcer.RuleEnforcer
+	Enforcer          ruleEnforcer
 	CollectionEmitter agent_metrics.TimeMetricsEmitter
 }
 

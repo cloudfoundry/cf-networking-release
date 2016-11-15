@@ -22,6 +22,7 @@ type IPTables interface {
 type IPTablesExtended interface {
 	IPTables
 	BulkInsert(table, chain string, pos int, rulespec ...GenericRule) error
+	BulkAppend(table, chain string, rulespec ...GenericRule) error
 }
 
 //go:generate counterfeiter -o ../fakes/locker.go --fake-name Locker . locker
@@ -71,14 +72,14 @@ func (l *LockedIPTables) Exists(table, chain string, rulespec ...string) (bool, 
 	return b, l.Locker.Unlock()
 }
 
-func (l *LockedIPTables) BulkInsert(table, chain string, pos int, rulespec ...GenericRule) error {
+func (l *LockedIPTables) bulkAction(table, prefix string, rulespec ...GenericRule) error {
 	if err := l.Locker.Lock(); err != nil {
 		return fmt.Errorf("lock: %s", err)
 	}
 
 	input := []string{fmt.Sprintf("*%s\n", table)}
 	for _, r := range rulespec {
-		tmp := fmt.Sprintf("-I %s %d %s\n", chain, pos, strings.Join(r.Properties, " "))
+		tmp := fmt.Sprintf("%s %s\n", prefix, strings.Join(r.Properties, " "))
 		input = append(input, tmp)
 	}
 	input = append(input, "COMMIT\n")
@@ -89,6 +90,14 @@ func (l *LockedIPTables) BulkInsert(table, chain string, pos int, rulespec ...Ge
 	}
 
 	return l.Locker.Unlock()
+}
+
+func (l *LockedIPTables) BulkInsert(table, chain string, pos int, rulespec ...GenericRule) error {
+	return l.bulkAction(table, fmt.Sprintf("-I %s %d", chain, pos), rulespec...)
+}
+
+func (l *LockedIPTables) BulkAppend(table, chain string, rulespec ...GenericRule) error {
+	return l.bulkAction(table, fmt.Sprintf("-A %s", chain), rulespec...)
 }
 
 func (l *LockedIPTables) Insert(table, chain string, pos int, rulespec ...string) error {

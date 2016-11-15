@@ -26,8 +26,8 @@ func (p *VxlanDefaultLocalPlanner) GetRulesAndChain() (enforcer.RulesWithChain, 
 	}, nil
 }
 
-func (p *VxlanDefaultLocalPlanner) GetRules() ([]rules.Rule, error) {
-	ruleset := []rules.Rule{}
+func (p *VxlanDefaultLocalPlanner) GetRules() ([]rules.GenericRule, error) {
+	ruleset := []rules.GenericRule{}
 
 	ruleset = append(ruleset,
 		rules.NewAcceptExistingLocalRule(),
@@ -63,8 +63,8 @@ func (p *VxlanDefaultRemotePlanner) GetRulesAndChain() (enforcer.RulesWithChain,
 	}, nil
 }
 
-func (p *VxlanDefaultRemotePlanner) GetRules() ([]rules.Rule, error) {
-	ruleset := []rules.Rule{}
+func (p *VxlanDefaultRemotePlanner) GetRules() ([]rules.GenericRule, error) {
+	ruleset := []rules.GenericRule{}
 
 	ruleset = append(ruleset,
 		rules.NewAcceptExistingRemoteRule(p.VNI),
@@ -85,8 +85,8 @@ type VxlanDefaultMasqueradePlanner struct {
 	Chain          enforcer.Chain
 }
 
-func (p *VxlanDefaultMasqueradePlanner) GetRules() ([]rules.Rule, error) {
-	ruleset := []rules.Rule{}
+func (p *VxlanDefaultMasqueradePlanner) GetRules() ([]rules.GenericRule, error) {
+	ruleset := []rules.GenericRule{}
 
 	ruleset = append(ruleset,
 		rules.NewDefaultEgressRule(p.LocalSubnet, p.OverlayNetwork),

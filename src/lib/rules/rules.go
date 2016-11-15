@@ -3,6 +3,7 @@ package rules
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"code.cloudfoundry.org/lager"
 )
@@ -14,6 +15,14 @@ type Rule interface {
 
 type GenericRule struct {
 	Properties []string
+}
+
+func AppendComment(rule GenericRule, comment string) GenericRule {
+	comment = strings.Replace(comment, " ", "_", -1)
+	return GenericRule{
+		Properties: append(rule.Properties,
+			"-m", "comment", "--comment", comment),
+	}
 }
 
 func (r GenericRule) Enforce(table, chain string, iptables IPTables, logger lager.Logger) error {
@@ -33,26 +42,24 @@ func (r GenericRule) Enforce(table, chain string, iptables IPTables, logger lage
 }
 
 func NewMarkAllowRule(destinationIP, protocol string, port int, tag string, sourceAppGUID, destinationAppGUID string) GenericRule {
-	return GenericRule{
+	return AppendComment(GenericRule{
 		Properties: []string{
 			"-d", destinationIP,
 			"-p", protocol,
 			"--dport", strconv.Itoa(port),
 			"-m", "mark", "--mark", fmt.Sprintf("0x%s", tag),
 			"--jump", "ACCEPT",
-			"-m", "comment", "--comment", fmt.Sprintf("src:%s dst:%s", sourceAppGUID, destinationAppGUID),
 		},
-	}
+	}, fmt.Sprintf("src:%s_dst:%s", sourceAppGUID, destinationAppGUID))
 }
 
 func NewMarkSetRule(sourceIP, tag, appGUID string) GenericRule {
-	return GenericRule{
+	return AppendComment(GenericRule{
 		Properties: []string{
 			"--source", sourceIP,
 			"--jump", "MARK", "--set-xmark", fmt.Sprintf("0x%s", tag),
-			"-m", "comment", "--comment", fmt.Sprintf("src:%s", appGUID),
 		},
-	}
+	}, fmt.Sprintf("src:%s", appGUID))
 }
 
 func NewDefaultEgressRule(localSubnet, overlayNetwork string) GenericRule {

@@ -97,6 +97,16 @@ type IPTablesExtended struct {
 	bulkInsertReturns struct {
 		result1 error
 	}
+	BulkAppendStub        func(table, chain string, rulespec ...rules.GenericRule) error
+	bulkAppendMutex       sync.RWMutex
+	bulkAppendArgsForCall []struct {
+		table    string
+		chain    string
+		rulespec []rules.GenericRule
+	}
+	bulkAppendReturns struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -416,6 +426,41 @@ func (fake *IPTablesExtended) BulkInsertReturns(result1 error) {
 	}{result1}
 }
 
+func (fake *IPTablesExtended) BulkAppend(table string, chain string, rulespec ...rules.GenericRule) error {
+	fake.bulkAppendMutex.Lock()
+	fake.bulkAppendArgsForCall = append(fake.bulkAppendArgsForCall, struct {
+		table    string
+		chain    string
+		rulespec []rules.GenericRule
+	}{table, chain, rulespec})
+	fake.recordInvocation("BulkAppend", []interface{}{table, chain, rulespec})
+	fake.bulkAppendMutex.Unlock()
+	if fake.BulkAppendStub != nil {
+		return fake.BulkAppendStub(table, chain, rulespec...)
+	} else {
+		return fake.bulkAppendReturns.result1
+	}
+}
+
+func (fake *IPTablesExtended) BulkAppendCallCount() int {
+	fake.bulkAppendMutex.RLock()
+	defer fake.bulkAppendMutex.RUnlock()
+	return len(fake.bulkAppendArgsForCall)
+}
+
+func (fake *IPTablesExtended) BulkAppendArgsForCall(i int) (string, string, []rules.GenericRule) {
+	fake.bulkAppendMutex.RLock()
+	defer fake.bulkAppendMutex.RUnlock()
+	return fake.bulkAppendArgsForCall[i].table, fake.bulkAppendArgsForCall[i].chain, fake.bulkAppendArgsForCall[i].rulespec
+}
+
+func (fake *IPTablesExtended) BulkAppendReturns(result1 error) {
+	fake.BulkAppendStub = nil
+	fake.bulkAppendReturns = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *IPTablesExtended) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -437,6 +482,8 @@ func (fake *IPTablesExtended) Invocations() map[string][][]interface{} {
 	defer fake.deleteChainMutex.RUnlock()
 	fake.bulkInsertMutex.RLock()
 	defer fake.bulkInsertMutex.RUnlock()
+	fake.bulkAppendMutex.RLock()
+	defer fake.bulkAppendMutex.RUnlock()
 	return fake.invocations
 }
 

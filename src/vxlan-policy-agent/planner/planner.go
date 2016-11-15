@@ -78,8 +78,8 @@ func (p *VxlanPolicyPlanner) GetRules() (enforcer.RulesWithChain, error) {
 		agent_metrics.MetricPolicyServerPoll:  policyServerPollDuration,
 	})
 
-	marksRuleset := []rules.Rule{}
-	filterRuleset := []rules.Rule{}
+	marksRuleset := []rules.GenericRule{}
+	filterRuleset := []rules.GenericRule{}
 
 	for _, policy := range policies {
 		srcContainerIPs, srcOk := containers[policy.Source.ID]

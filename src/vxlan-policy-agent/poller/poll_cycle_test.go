@@ -33,7 +33,7 @@ var _ = Describe("Single Poll Cycle", func() {
 			}
 
 			rulesWithChain = enforcer.RulesWithChain{
-				Rules: []rules.Rule{},
+				Rules: []rules.GenericRule{},
 				Chain: enforcer.Chain{
 					Table:       "some-table",
 					ParentChain: "INPUT",
@@ -68,7 +68,7 @@ var _ = Describe("Single Poll Cycle", func() {
 				err := p.DoCycle()
 				Expect(err).To(MatchError("get-rules: eggplant"))
 
-				Expect(fakeEnforcer.EnforceOnChainCallCount()).To(Equal(0))
+				Expect(fakeEnforcer.EnforceRulesAndChainCallCount()).To(Equal(0))
 				Expect(timeMetricsEmitter.EmitAllCallCount()).To(Equal(0))
 			})
 		})

@@ -17,32 +17,55 @@ import (
 var _ = Describe("Enforcer", func() {
 	Describe("Enforce", func() {
 		var (
-			fakeRule     *libfakes.Rule
-			iptables     *libfakes.IPTables
+			fakeRule     rules.GenericRule
+			fakeRule2    rules.GenericRule
+			iptables     *libfakes.IPTablesExtended
 			timestamper  *fakes.TimeStamper
 			logger       *lagertest.TestLogger
 			ruleEnforcer *enforcer.Enforcer
 		)
 
 		BeforeEach(func() {
-			fakeRule = &libfakes.Rule{}
+			fakeRule = rules.GenericRule{
+				Properties: []string{"rule1"},
+			}
+			fakeRule2 = rules.GenericRule{
+				Properties: []string{"rule2"},
+			}
+
 			timestamper = &fakes.TimeStamper{}
 			logger = lagertest.NewTestLogger("test")
-			iptables = &libfakes.IPTables{}
+			iptables = &libfakes.IPTablesExtended{}
 
 			timestamper.CurrentTimeReturns(42)
 			ruleEnforcer = enforcer.NewEnforcer(logger, timestamper, iptables)
 		})
 
 		It("enforces all the rules it receives on the correct chain", func() {
-			err := ruleEnforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
+			rulesToAppend := []rules.GenericRule{fakeRule, fakeRule2}
+			err := ruleEnforcer.Enforce("some-table", "some-chain", "foo", rulesToAppend...)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(fakeRule.EnforceCallCount()).To(Equal(1))
+			Expect(iptables.BulkAppendCallCount()).To(Equal(1))
+			tbl, chain, rules := iptables.BulkAppendArgsForCall(0)
+			Expect(tbl).To(Equal("some-table"))
+			Expect(chain).To(Equal("foo42"))
+			Expect(rules).To(Equal(rulesToAppend))
+		})
+
+		Context("when the bulk append fails", func() {
+			BeforeEach(func() {
+				iptables.BulkAppendReturns(errors.New("banana"))
+			})
+			It("returns an error", func() {
+				rulesToAppend := []rules.GenericRule{fakeRule, fakeRule2}
+				err := ruleEnforcer.Enforce("some-table", "some-chain", "foo", rulesToAppend...)
+				Expect(err).To(MatchError("bulk appending: banana"))
+			})
 		})
 
 		It("creates a timestamped chain", func() {
-			err := ruleEnforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
+			err := ruleEnforcer.Enforce("some-table", "some-chain", "foo", []rules.GenericRule{fakeRule}...)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(iptables.NewChainCallCount()).To(Equal(1))
@@ -52,7 +75,7 @@ var _ = Describe("Enforcer", func() {
 		})
 
 		It("inserts the new chain into the chain", func() {
-			err := ruleEnforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
+			err := ruleEnforcer.Enforce("some-table", "some-chain", "foo", []rules.GenericRule{fakeRule}...)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(iptables.InsertCallCount()).To(Equal(1))
@@ -71,7 +94,7 @@ var _ = Describe("Enforcer", func() {
 				}, nil)
 			})
 			It("gets deleted", func() {
-				err := ruleEnforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
+				err := ruleEnforcer.Enforce("some-table", "some-chain", "foo", []rules.GenericRule{fakeRule}...)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(iptables.DeleteCallCount()).To(Equal(1))
@@ -90,24 +113,13 @@ var _ = Describe("Enforcer", func() {
 			})
 		})
 
-		Context("when there is an error enforcing a rule", func() {
-			BeforeEach(func() {
-				fakeRule.EnforceReturns(errors.New("banana"))
-			})
-
-			It("returns the error", func() {
-				err := ruleEnforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
-				Expect(err).To(MatchError("banana"))
-			})
-		})
-
 		Context("when inserting the new chain fails", func() {
 			BeforeEach(func() {
 				iptables.InsertReturns(errors.New("banana"))
 			})
 
 			It("it logs and returns a useful error", func() {
-				err := ruleEnforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
+				err := ruleEnforcer.Enforce("some-table", "some-chain", "foo", []rules.GenericRule{fakeRule}...)
 				Expect(err).To(MatchError("inserting chain: banana"))
 
 				Expect(logger).To(gbytes.Say("insert-chain.*banana"))
@@ -120,7 +132,7 @@ var _ = Describe("Enforcer", func() {
 			})
 
 			It("it logs and returns a useful error", func() {
-				err := ruleEnforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
+				err := ruleEnforcer.Enforce("some-table", "some-chain", "foo", []rules.GenericRule{fakeRule}...)
 				Expect(err).To(MatchError("listing forward rules: blueberry"))
 
 				Expect(logger).To(gbytes.Say("cleanup-rules.*blueberry"))
@@ -134,7 +146,7 @@ var _ = Describe("Enforcer", func() {
 			})
 
 			It("returns a useful error", func() {
-				err := ruleEnforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
+				err := ruleEnforcer.Enforce("some-table", "some-chain", "foo", []rules.GenericRule{fakeRule}...)
 				Expect(err).To(MatchError("cleanup old chain: banana"))
 			})
 		})
@@ -145,7 +157,7 @@ var _ = Describe("Enforcer", func() {
 			})
 
 			It("it logs and returns a useful error", func() {
-				err := ruleEnforcer.Enforce("some-table", "some-chain", "foo", []rules.Rule{fakeRule})
+				err := ruleEnforcer.Enforce("some-table", "some-chain", "foo", []rules.GenericRule{fakeRule}...)
 				Expect(err).To(MatchError("creating chain: banana"))
 
 				Expect(logger).To(gbytes.Say("create-chain.*banana"))

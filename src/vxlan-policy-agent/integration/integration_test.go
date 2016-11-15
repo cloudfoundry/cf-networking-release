@@ -154,7 +154,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		})
 		It("writes the mark rule and enforces policies", func() {
 			Eventually(IptablesFilterRules, "10s", "1s").Should(ContainSubstring(`-s 10.255.100.21/32 -m comment --comment "src:some-app-guid" -j MARK --set-xmark 0xa/0xffffffff`))
-			Expect(IptablesFilterRules()).To(ContainSubstring(`-d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m comment --comment "src:another-app-guid dst:some-app-guid" -j ACCEPT`))
+			Expect(IptablesFilterRules()).To(ContainSubstring(`-d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m comment --comment "src:another-app-guid_dst:some-app-guid" -j ACCEPT`))
 		})
 	})
 

@@ -43,13 +43,24 @@ var _ = Describe("Locked IPTables Integration Test", func() {
 		}
 	})
 
-	It("Writes IP tables rules", func() {
+	It("bulk inserts iptables rules", func() {
 		onlyRunOnLinux()
 		err := lockedIPT.BulkInsert("filter", "FORWARD", 1, []rules.GenericRule{
 			rules.NewMarkSetRule("1.2.3.4", "A", fmt.Sprintf("guid-%d", 1)),
 		}...)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(AllIPTablesRules("filter")).To(ContainElement("-A FORWARD -s 1.2.3.4/32 -m comment --comment \"src:guid-1\" -j MARK --set-xmark 0xa/0xffffffff"))
+	})
+
+	It("bulk appends iptables rules", func() {
+		onlyRunOnLinux()
+		err := lockedIPT.BulkAppend("filter", "FORWARD", []rules.GenericRule{
+			rules.NewMarkAllowRule("1.2.3.4", "tcp", 1234, "A", "some-src-app-guid", "some-dst-app-guid"),
+		}...)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(AllIPTablesRules("filter")).To(ContainElement(
+			`-A FORWARD -d 1.2.3.4/32 -p tcp -m tcp --dport 1234 -m mark --mark 0xa -m comment --comment "src:some-src-app-guid_dst:some-dst-app-guid" -j ACCEPT`,
+		))
 	})
 
 	It("supports concurrent bulk inserts", func() {

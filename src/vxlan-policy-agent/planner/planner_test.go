@@ -138,7 +138,7 @@ var _ = Describe("Planner", func() {
 						"--dport", "5555",
 						"-m", "mark", "--mark", "0xBB",
 						"--jump", "ACCEPT",
-						"-m", "comment", "--comment", "src:another-app-guid dst:some-other-app-guid",
+						"-m", "comment", "--comment", "src:another-app-guid_dst:some-other-app-guid",
 					},
 				},
 				{
@@ -148,7 +148,7 @@ var _ = Describe("Planner", func() {
 						"--dport", "1234",
 						"-m", "mark", "--mark", "0xAA",
 						"--jump", "ACCEPT",
-						"-m", "comment", "--comment", "src:some-app-guid dst:some-other-app-guid",
+						"-m", "comment", "--comment", "src:some-app-guid_dst:some-other-app-guid",
 					},
 				},
 				// set tags on all outgoing packets, regardless of local vs remote
@@ -173,10 +173,10 @@ var _ = Describe("Planner", func() {
 			rulesWithChain, err := policyPlanner.GetRules()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(rulesWithChain.Rules).To(HaveLen(4))
-			Expect(rulesWithChain.Rules[0].(rules.GenericRule).Properties).To(ContainElement("--set-xmark"))
-			Expect(rulesWithChain.Rules[1].(rules.GenericRule).Properties).To(ContainElement("--set-xmark"))
-			Expect(rulesWithChain.Rules[2].(rules.GenericRule).Properties).To(ContainElement("ACCEPT"))
-			Expect(rulesWithChain.Rules[3].(rules.GenericRule).Properties).To(ContainElement("ACCEPT"))
+			Expect(rulesWithChain.Rules[0].Properties).To(ContainElement("--set-xmark"))
+			Expect(rulesWithChain.Rules[1].Properties).To(ContainElement("--set-xmark"))
+			Expect(rulesWithChain.Rules[2].Properties).To(ContainElement("ACCEPT"))
+			Expect(rulesWithChain.Rules[3].Properties).To(ContainElement("ACCEPT"))
 		})
 
 		It("emits time metrics", func() {

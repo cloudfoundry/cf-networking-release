@@ -2,7 +2,6 @@
 package fakes
 
 import (
-	"lib/rules"
 	"sync"
 	"vxlan-policy-agent/enforcer"
 )
@@ -14,26 +13,6 @@ type RuleEnforcer struct {
 		arg1 enforcer.RulesWithChain
 	}
 	enforceRulesAndChainReturns struct {
-		result1 error
-	}
-	EnforceOnChainStub        func(chain enforcer.Chain, r []rules.Rule) error
-	enforceOnChainMutex       sync.RWMutex
-	enforceOnChainArgsForCall []struct {
-		chain enforcer.Chain
-		r     []rules.Rule
-	}
-	enforceOnChainReturns struct {
-		result1 error
-	}
-	EnforceStub        func(table, parentChain, chain string, r []rules.Rule) error
-	enforceMutex       sync.RWMutex
-	enforceArgsForCall []struct {
-		table       string
-		parentChain string
-		chain       string
-		r           []rules.Rule
-	}
-	enforceReturns struct {
 		result1 error
 	}
 	invocations      map[string][][]interface{}
@@ -73,95 +52,11 @@ func (fake *RuleEnforcer) EnforceRulesAndChainReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *RuleEnforcer) EnforceOnChain(chain enforcer.Chain, r []rules.Rule) error {
-	var rCopy []rules.Rule
-	if r != nil {
-		rCopy = make([]rules.Rule, len(r))
-		copy(rCopy, r)
-	}
-	fake.enforceOnChainMutex.Lock()
-	fake.enforceOnChainArgsForCall = append(fake.enforceOnChainArgsForCall, struct {
-		chain enforcer.Chain
-		r     []rules.Rule
-	}{chain, rCopy})
-	fake.recordInvocation("EnforceOnChain", []interface{}{chain, rCopy})
-	fake.enforceOnChainMutex.Unlock()
-	if fake.EnforceOnChainStub != nil {
-		return fake.EnforceOnChainStub(chain, r)
-	} else {
-		return fake.enforceOnChainReturns.result1
-	}
-}
-
-func (fake *RuleEnforcer) EnforceOnChainCallCount() int {
-	fake.enforceOnChainMutex.RLock()
-	defer fake.enforceOnChainMutex.RUnlock()
-	return len(fake.enforceOnChainArgsForCall)
-}
-
-func (fake *RuleEnforcer) EnforceOnChainArgsForCall(i int) (enforcer.Chain, []rules.Rule) {
-	fake.enforceOnChainMutex.RLock()
-	defer fake.enforceOnChainMutex.RUnlock()
-	return fake.enforceOnChainArgsForCall[i].chain, fake.enforceOnChainArgsForCall[i].r
-}
-
-func (fake *RuleEnforcer) EnforceOnChainReturns(result1 error) {
-	fake.EnforceOnChainStub = nil
-	fake.enforceOnChainReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *RuleEnforcer) Enforce(table string, parentChain string, chain string, r []rules.Rule) error {
-	var rCopy []rules.Rule
-	if r != nil {
-		rCopy = make([]rules.Rule, len(r))
-		copy(rCopy, r)
-	}
-	fake.enforceMutex.Lock()
-	fake.enforceArgsForCall = append(fake.enforceArgsForCall, struct {
-		table       string
-		parentChain string
-		chain       string
-		r           []rules.Rule
-	}{table, parentChain, chain, rCopy})
-	fake.recordInvocation("Enforce", []interface{}{table, parentChain, chain, rCopy})
-	fake.enforceMutex.Unlock()
-	if fake.EnforceStub != nil {
-		return fake.EnforceStub(table, parentChain, chain, r)
-	} else {
-		return fake.enforceReturns.result1
-	}
-}
-
-func (fake *RuleEnforcer) EnforceCallCount() int {
-	fake.enforceMutex.RLock()
-	defer fake.enforceMutex.RUnlock()
-	return len(fake.enforceArgsForCall)
-}
-
-func (fake *RuleEnforcer) EnforceArgsForCall(i int) (string, string, string, []rules.Rule) {
-	fake.enforceMutex.RLock()
-	defer fake.enforceMutex.RUnlock()
-	return fake.enforceArgsForCall[i].table, fake.enforceArgsForCall[i].parentChain, fake.enforceArgsForCall[i].chain, fake.enforceArgsForCall[i].r
-}
-
-func (fake *RuleEnforcer) EnforceReturns(result1 error) {
-	fake.EnforceStub = nil
-	fake.enforceReturns = struct {
-		result1 error
-	}{result1}
-}
-
 func (fake *RuleEnforcer) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.enforceRulesAndChainMutex.RLock()
 	defer fake.enforceRulesAndChainMutex.RUnlock()
-	fake.enforceOnChainMutex.RLock()
-	defer fake.enforceOnChainMutex.RUnlock()
-	fake.enforceMutex.RLock()
-	defer fake.enforceMutex.RUnlock()
 	return fake.invocations
 }
 
@@ -176,5 +71,3 @@ func (fake *RuleEnforcer) recordInvocation(key string, args []interface{}) {
 	}
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
-
-var _ enforcer.RuleEnforcer = new(RuleEnforcer)
