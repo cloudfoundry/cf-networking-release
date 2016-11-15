@@ -86,23 +86,23 @@ type IPTablesExtended struct {
 	deleteChainReturns struct {
 		result1 error
 	}
-	BulkInsertStub        func(table, chain string, pos int, rulespec ...rules.GenericRule) error
+	BulkInsertStub        func(table, chain string, pos int, rulespec ...rules.IPTablesRule) error
 	bulkInsertMutex       sync.RWMutex
 	bulkInsertArgsForCall []struct {
 		table    string
 		chain    string
 		pos      int
-		rulespec []rules.GenericRule
+		rulespec []rules.IPTablesRule
 	}
 	bulkInsertReturns struct {
 		result1 error
 	}
-	BulkAppendStub        func(table, chain string, rulespec ...rules.GenericRule) error
+	BulkAppendStub        func(table, chain string, rulespec ...rules.IPTablesRule) error
 	bulkAppendMutex       sync.RWMutex
 	bulkAppendArgsForCall []struct {
 		table    string
 		chain    string
-		rulespec []rules.GenericRule
+		rulespec []rules.IPTablesRule
 	}
 	bulkAppendReturns struct {
 		result1 error
@@ -390,13 +390,13 @@ func (fake *IPTablesExtended) DeleteChainReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *IPTablesExtended) BulkInsert(table string, chain string, pos int, rulespec ...rules.GenericRule) error {
+func (fake *IPTablesExtended) BulkInsert(table string, chain string, pos int, rulespec ...rules.IPTablesRule) error {
 	fake.bulkInsertMutex.Lock()
 	fake.bulkInsertArgsForCall = append(fake.bulkInsertArgsForCall, struct {
 		table    string
 		chain    string
 		pos      int
-		rulespec []rules.GenericRule
+		rulespec []rules.IPTablesRule
 	}{table, chain, pos, rulespec})
 	fake.recordInvocation("BulkInsert", []interface{}{table, chain, pos, rulespec})
 	fake.bulkInsertMutex.Unlock()
@@ -413,7 +413,7 @@ func (fake *IPTablesExtended) BulkInsertCallCount() int {
 	return len(fake.bulkInsertArgsForCall)
 }
 
-func (fake *IPTablesExtended) BulkInsertArgsForCall(i int) (string, string, int, []rules.GenericRule) {
+func (fake *IPTablesExtended) BulkInsertArgsForCall(i int) (string, string, int, []rules.IPTablesRule) {
 	fake.bulkInsertMutex.RLock()
 	defer fake.bulkInsertMutex.RUnlock()
 	return fake.bulkInsertArgsForCall[i].table, fake.bulkInsertArgsForCall[i].chain, fake.bulkInsertArgsForCall[i].pos, fake.bulkInsertArgsForCall[i].rulespec
@@ -426,12 +426,12 @@ func (fake *IPTablesExtended) BulkInsertReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *IPTablesExtended) BulkAppend(table string, chain string, rulespec ...rules.GenericRule) error {
+func (fake *IPTablesExtended) BulkAppend(table string, chain string, rulespec ...rules.IPTablesRule) error {
 	fake.bulkAppendMutex.Lock()
 	fake.bulkAppendArgsForCall = append(fake.bulkAppendArgsForCall, struct {
 		table    string
 		chain    string
-		rulespec []rules.GenericRule
+		rulespec []rules.IPTablesRule
 	}{table, chain, rulespec})
 	fake.recordInvocation("BulkAppend", []interface{}{table, chain, rulespec})
 	fake.bulkAppendMutex.Unlock()
@@ -448,7 +448,7 @@ func (fake *IPTablesExtended) BulkAppendCallCount() int {
 	return len(fake.bulkAppendArgsForCall)
 }
 
-func (fake *IPTablesExtended) BulkAppendArgsForCall(i int) (string, string, []rules.GenericRule) {
+func (fake *IPTablesExtended) BulkAppendArgsForCall(i int) (string, string, []rules.IPTablesRule) {
 	fake.bulkAppendMutex.RLock()
 	defer fake.bulkAppendMutex.RUnlock()
 	return fake.bulkAppendArgsForCall[i].table, fake.bulkAppendArgsForCall[i].chain, fake.bulkAppendArgsForCall[i].rulespec

@@ -26,13 +26,13 @@ func (p *VxlanDefaultLocalPlanner) GetRulesAndChain() (enforcer.RulesWithChain, 
 	}, nil
 }
 
-func (p *VxlanDefaultLocalPlanner) GetRules() ([]rules.GenericRule, error) {
-	ruleset := []rules.GenericRule{}
+func (p *VxlanDefaultLocalPlanner) GetRules() ([]rules.IPTablesRule, error) {
+	ruleset := []rules.IPTablesRule{}
 
 	ruleset = append(ruleset,
 		rules.NewAcceptExistingLocalRule(),
 		rules.NewLogRule(
-			[]string{
+			rules.IPTablesRule{
 				"-i", "cni-flannel0",
 				"-s", p.LocalSubnet,
 				"-d", p.LocalSubnet,
@@ -63,8 +63,8 @@ func (p *VxlanDefaultRemotePlanner) GetRulesAndChain() (enforcer.RulesWithChain,
 	}, nil
 }
 
-func (p *VxlanDefaultRemotePlanner) GetRules() ([]rules.GenericRule, error) {
-	ruleset := []rules.GenericRule{}
+func (p *VxlanDefaultRemotePlanner) GetRules() ([]rules.IPTablesRule, error) {
+	ruleset := []rules.IPTablesRule{}
 
 	ruleset = append(ruleset,
 		rules.NewAcceptExistingRemoteRule(p.VNI),
@@ -85,8 +85,8 @@ type VxlanDefaultMasqueradePlanner struct {
 	Chain          enforcer.Chain
 }
 
-func (p *VxlanDefaultMasqueradePlanner) GetRules() ([]rules.GenericRule, error) {
-	ruleset := []rules.GenericRule{}
+func (p *VxlanDefaultMasqueradePlanner) GetRules() ([]rules.IPTablesRule, error) {
+	ruleset := []rules.IPTablesRule{}
 
 	ruleset = append(ruleset,
 		rules.NewDefaultEgressRule(p.LocalSubnet, p.OverlayNetwork),

@@ -14,8 +14,8 @@ const suffixNetOutLog = "log"
 
 //go:generate counterfeiter -o ../fakes/net_out_rule_converter.go --fake-name NetOutRuleConverter . netOutRuleConverter
 type netOutRuleConverter interface {
-	Convert(rule garden.NetOutRule, containerIP, logChainName string) []rules.GenericRule
-	BulkConvert(rules []garden.NetOutRule, containerIP, logChainName string) []rules.GenericRule
+	Convert(rule garden.NetOutRule, containerIP, logChainName string) []rules.IPTablesRule
+	BulkConvert(rules []garden.NetOutRule, containerIP, logChainName string) []rules.IPTablesRule
 }
 
 type NetOut struct {
@@ -30,42 +30,42 @@ func (m *NetOut) Initialize(logger lager.Logger, containerHandle string, contain
 	if err != nil {
 		return fmt.Errorf("getting chain name: %s", err)
 	}
-	chainsToCreate := []string{chain, logChain}
 
-	for _, c := range chainsToCreate {
-		err = m.IPTables.NewChain("filter", c)
+	type rulesAndChain struct {
+		Chain string
+		Rules []rules.IPTablesRule
+	}
+
+	args := []rulesAndChain{
+		{
+			Chain: chain,
+			Rules: []rules.IPTablesRule{
+				rules.NewNetOutRelatedEstablishedRule(containerIP.String(), overlayNetwork),
+				rules.NewNetOutDefaultRejectRule(containerIP.String(), overlayNetwork),
+			},
+		},
+		{
+			Chain: logChain,
+			Rules: []rules.IPTablesRule{
+				rules.NewNetOutDefaultLogRule(containerHandle),
+				rules.NewReturnRule(),
+			},
+		},
+	}
+
+	for _, arg := range args {
+		err = m.IPTables.NewChain("filter", arg.Chain)
 		if err != nil {
 			return fmt.Errorf("creating chain: %s", err)
 		}
 
-		err = m.IPTables.Insert("filter", "FORWARD", 1, []string{"--jump", c}...)
+		err = m.IPTables.Insert("filter", "FORWARD", 1, []string{"--jump", arg.Chain}...)
 		if err != nil {
 			return fmt.Errorf("inserting rule: %s", err)
 		}
-	}
-
-	defaultRuleSpec := []rules.Rule{
-		rules.NewNetOutRelatedEstablishedRule(containerIP.String(), overlayNetwork),
-		rules.NewNetOutDefaultRejectRule(containerIP.String(), overlayNetwork),
-	}
-	logRuleSpec := []rules.Rule{
-		rules.NewNetOutDefaultLogRule(containerHandle),
-		rules.NewReturnRule(),
-	}
-
-	var ruleSpecs []rules.Rule
-	for _, c := range chainsToCreate {
-		switch c {
-		case chain:
-			ruleSpecs = defaultRuleSpec
-		case logChain:
-			ruleSpecs = logRuleSpec
-		}
-		for _, spec := range ruleSpecs {
-			err = spec.Enforce("filter", c, m.IPTables, logger)
-			if err != nil {
-				return err
-			}
+		err = m.IPTables.BulkAppend("filter", arg.Chain, arg.Rules...)
+		if err != nil {
+			return fmt.Errorf("appending rule: %s", err)
 		}
 	}
 
@@ -109,7 +109,7 @@ func (m *NetOut) InsertRule(containerHandle string, rule garden.NetOutRule, cont
 
 	ruleSpec := m.Converter.Convert(rule, containerIP, logChain)
 	for _, iptRule := range ruleSpec {
-		err := m.IPTables.Insert("filter", chain, 1, iptRule.Properties...)
+		err := m.IPTables.Insert("filter", chain, 1, iptRule...)
 		if err != nil {
 			return fmt.Errorf("inserting net-out rule: %s", err)
 		}

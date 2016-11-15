@@ -45,7 +45,7 @@ var _ = Describe("Locked IPTables Integration Test", func() {
 
 	It("bulk inserts iptables rules", func() {
 		onlyRunOnLinux()
-		err := lockedIPT.BulkInsert("filter", "FORWARD", 1, []rules.GenericRule{
+		err := lockedIPT.BulkInsert("filter", "FORWARD", 1, []rules.IPTablesRule{
 			rules.NewMarkSetRule("1.2.3.4", "A", fmt.Sprintf("guid-%d", 1)),
 		}...)
 		Expect(err).NotTo(HaveOccurred())
@@ -54,7 +54,7 @@ var _ = Describe("Locked IPTables Integration Test", func() {
 
 	It("bulk appends iptables rules", func() {
 		onlyRunOnLinux()
-		err := lockedIPT.BulkAppend("filter", "FORWARD", []rules.GenericRule{
+		err := lockedIPT.BulkAppend("filter", "FORWARD", []rules.IPTablesRule{
 			rules.NewMarkAllowRule("1.2.3.4", "tcp", 1234, "A", "some-src-app-guid", "some-dst-app-guid"),
 		}...)
 		Expect(err).NotTo(HaveOccurred())
@@ -69,13 +69,13 @@ var _ = Describe("Locked IPTables Integration Test", func() {
 		numRules := 100
 		numWorkers := 10
 		for i := 0; i < numRules; i++ {
-			genericRules = append(genericRules, []rules.GenericRule{rules.NewMarkSetRule("1.2.3.4", "A", fmt.Sprintf("guid-%d", i))})
+			genericRules = append(genericRules, []rules.IPTablesRule{rules.NewMarkSetRule("1.2.3.4", "A", fmt.Sprintf("guid-%d", i))})
 		}
 		runner := testsupport.ParallelRunner{
 			NumWorkers: numWorkers,
 		}
 		restoreWorker := func(item interface{}) {
-			ruleItems := item.([]rules.GenericRule)
+			ruleItems := item.([]rules.IPTablesRule)
 			err := lockedIPT.BulkInsert("filter", "FORWARD", 1, ruleItems...)
 			Expect(err).NotTo(HaveOccurred())
 		}
@@ -99,12 +99,12 @@ var _ = Describe("Locked IPTables Integration Test", func() {
 			NumWorkers: numWorkers,
 		}
 		restoreWorker := func(item string) {
-			ruleItems := []rules.GenericRule{rules.NewMarkSetRule("1.3.5.7", "A", fmt.Sprintf("bulk-%s", item))}
+			ruleItems := []rules.IPTablesRule{rules.NewMarkSetRule("1.3.5.7", "A", fmt.Sprintf("bulk-%s", item))}
 			err := lockedIPT.BulkInsert("filter", "FORWARD", 1, ruleItems...)
 			Expect(err).NotTo(HaveOccurred())
 
 			r := rules.NewMarkSetRule("2.4.6.8", "A", fmt.Sprintf("uniq-%s", item))
-			err = lockedIPT.AppendUnique("filter", "FORWARD", r.Properties...)
+			err = lockedIPT.AppendUnique("filter", "FORWARD", r...)
 			Expect(err).NotTo(HaveOccurred())
 		}
 		runner.RunOnSliceStrings(things, restoreWorker)

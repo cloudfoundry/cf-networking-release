@@ -9,7 +9,7 @@ import (
 )
 
 type NetOutRuleConverter struct {
-	ConvertStub        func(rule garden.NetOutRule, containerIP, logChainName string) []rules.GenericRule
+	ConvertStub        func(rule garden.NetOutRule, containerIP, logChainName string) []rules.IPTablesRule
 	convertMutex       sync.RWMutex
 	convertArgsForCall []struct {
 		rule         garden.NetOutRule
@@ -17,9 +17,9 @@ type NetOutRuleConverter struct {
 		logChainName string
 	}
 	convertReturns struct {
-		result1 []rules.GenericRule
+		result1 []rules.IPTablesRule
 	}
-	BulkConvertStub        func(rules []garden.NetOutRule, containerIP, logChainName string) []rules.GenericRule
+	BulkConvertStub        func(rules []garden.NetOutRule, containerIP, logChainName string) []rules.IPTablesRule
 	bulkConvertMutex       sync.RWMutex
 	bulkConvertArgsForCall []struct {
 		rules        []garden.NetOutRule
@@ -27,13 +27,13 @@ type NetOutRuleConverter struct {
 		logChainName string
 	}
 	bulkConvertReturns struct {
-		result1 []rules.GenericRule
+		result1 []rules.IPTablesRule
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *NetOutRuleConverter) Convert(rule garden.NetOutRule, containerIP string, logChainName string) []rules.GenericRule {
+func (fake *NetOutRuleConverter) Convert(rule garden.NetOutRule, containerIP string, logChainName string) []rules.IPTablesRule {
 	fake.convertMutex.Lock()
 	fake.convertArgsForCall = append(fake.convertArgsForCall, struct {
 		rule         garden.NetOutRule
@@ -61,14 +61,14 @@ func (fake *NetOutRuleConverter) ConvertArgsForCall(i int) (garden.NetOutRule, s
 	return fake.convertArgsForCall[i].rule, fake.convertArgsForCall[i].containerIP, fake.convertArgsForCall[i].logChainName
 }
 
-func (fake *NetOutRuleConverter) ConvertReturns(result1 []rules.GenericRule) {
+func (fake *NetOutRuleConverter) ConvertReturns(result1 []rules.IPTablesRule) {
 	fake.ConvertStub = nil
 	fake.convertReturns = struct {
-		result1 []rules.GenericRule
+		result1 []rules.IPTablesRule
 	}{result1}
 }
 
-func (fake *NetOutRuleConverter) BulkConvert(rules []garden.NetOutRule, containerIP string, logChainName string) []rules.GenericRule {
+func (fake *NetOutRuleConverter) BulkConvert(rules []garden.NetOutRule, containerIP string, logChainName string) []rules.IPTablesRule {
 	var rulesCopy []garden.NetOutRule
 	if rules != nil {
 		rulesCopy = make([]garden.NetOutRule, len(rules))
@@ -101,10 +101,10 @@ func (fake *NetOutRuleConverter) BulkConvertArgsForCall(i int) ([]garden.NetOutR
 	return fake.bulkConvertArgsForCall[i].rules, fake.bulkConvertArgsForCall[i].containerIP, fake.bulkConvertArgsForCall[i].logChainName
 }
 
-func (fake *NetOutRuleConverter) BulkConvertReturns(result1 []rules.GenericRule) {
+func (fake *NetOutRuleConverter) BulkConvertReturns(result1 []rules.IPTablesRule) {
 	fake.BulkConvertStub = nil
 	fake.bulkConvertReturns = struct {
-		result1 []rules.GenericRule
+		result1 []rules.IPTablesRule
 	}{result1}
 }
 

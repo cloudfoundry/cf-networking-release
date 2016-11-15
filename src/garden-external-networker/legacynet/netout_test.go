@@ -84,35 +84,31 @@ var _ = Describe("Netout", func() {
 			err := netOut.Initialize(logger, "some-container-handle", net.ParseIP("5.6.7.8"), "9.9.0.0/16")
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(ipTables.AppendUniqueCallCount()).To(Equal(4))
-			table, chain, rulespec := ipTables.AppendUniqueArgsForCall(0)
+			Expect(ipTables.BulkAppendCallCount()).To(Equal(2))
+
+			table, chain, rulespec := ipTables.BulkAppendArgsForCall(0)
 			Expect(table).To(Equal("filter"))
 			Expect(chain).To(Equal("some-chain-name"))
-			Expect(rulespec).To(Equal([]string{"-s", "5.6.7.8",
-				"!", "-d", "9.9.0.0/16",
-				"-m", "state", "--state", "RELATED,ESTABLISHED",
-				"--jump", "RETURN"}))
+			Expect(rulespec).To(Equal([]rules.IPTablesRule{
+				{"-s", "5.6.7.8",
+					"!", "-d", "9.9.0.0/16",
+					"-m", "state", "--state", "RELATED,ESTABLISHED",
+					"--jump", "RETURN"},
+				{"-s", "5.6.7.8",
+					"!", "-d", "9.9.0.0/16",
+					"--jump", "REJECT",
+					"--reject-with", "icmp-port-unreachable"},
+			}))
 
-			table, chain, rulespec = ipTables.AppendUniqueArgsForCall(1)
-			Expect(table).To(Equal("filter"))
-			Expect(chain).To(Equal("some-chain-name"))
-			Expect(rulespec).To(Equal([]string{"-s", "5.6.7.8",
-				"!", "-d", "9.9.0.0/16",
-				"--jump", "REJECT",
-				"--reject-with", "icmp-port-unreachable"}))
-
-			table, chain, rulespec = ipTables.AppendUniqueArgsForCall(2)
+			table, chain, rulespec = ipTables.BulkAppendArgsForCall(1)
 			Expect(table).To(Equal("filter"))
 			Expect(chain).To(Equal("some-other-chain-name"))
-			Expect(rulespec).To(Equal([]string{
-				"-p", "tcp",
-				"-m", "conntrack", "--ctstate", "INVALID,NEW,UNTRACKED",
-				"-j", "LOG", "--log-prefix", "some-container-handle"}))
-
-			table, chain, rulespec = ipTables.AppendUniqueArgsForCall(3)
-			Expect(table).To(Equal("filter"))
-			Expect(chain).To(Equal("some-other-chain-name"))
-			Expect(rulespec).To(Equal([]string{"--jump", "RETURN"}))
+			Expect(rulespec).To(Equal([]rules.IPTablesRule{
+				{"-p", "tcp",
+					"-m", "conntrack", "--ctstate", "INVALID,NEW,UNTRACKED",
+					"-j", "LOG", "--log-prefix", "some-container-handle"},
+				{"--jump", "RETURN"},
+			}))
 		})
 
 		It("writes the logging rules", func() {
@@ -152,7 +148,7 @@ var _ = Describe("Netout", func() {
 
 		Context("when writing the netout rule fails", func() {
 			BeforeEach(func() {
-				ipTables.AppendUniqueReturns(errors.New("potato"))
+				ipTables.BulkAppendReturns(errors.New("potato"))
 			})
 			It("returns the error", func() {
 				err := netOut.Initialize(logger, "some-container-handle", net.ParseIP("5.6.7.8"), "9.9.0.0/16")
@@ -275,9 +271,9 @@ var _ = Describe("Netout", func() {
 					{Start: 1111, End: 2222},
 				},
 			}
-			converter.ConvertReturns([]rules.GenericRule{
-				rules.GenericRule{[]string{"rule1"}},
-				rules.GenericRule{[]string{"rule2"}},
+			converter.ConvertReturns([]rules.IPTablesRule{
+				rules.IPTablesRule{"rule1"},
+				rules.IPTablesRule{"rule2"},
 			})
 		})
 
@@ -340,13 +336,13 @@ var _ = Describe("Netout", func() {
 	Describe("BulkInsertRules", func() {
 		var (
 			netOutRules  []garden.NetOutRule
-			genericRules []rules.GenericRule
+			genericRules []rules.IPTablesRule
 		)
 
 		BeforeEach(func() {
-			genericRules = []rules.GenericRule{
-				rules.GenericRule{[]string{"rule1"}},
-				rules.GenericRule{[]string{"rule2"}},
+			genericRules = []rules.IPTablesRule{
+				rules.IPTablesRule{"rule1"},
+				rules.IPTablesRule{"rule2"},
 			}
 
 			converter.BulkConvertReturns(genericRules)

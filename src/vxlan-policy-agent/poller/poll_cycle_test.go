@@ -33,7 +33,7 @@ var _ = Describe("Single Poll Cycle", func() {
 			}
 
 			rulesWithChain = enforcer.RulesWithChain{
-				Rules: []rules.GenericRule{},
+				Rules: []rules.IPTablesRule{},
 				Chain: enforcer.Chain{
 					Table:       "some-table",
 					ParentChain: "INPUT",

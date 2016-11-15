@@ -30,9 +30,9 @@ var _ = Describe("LockedIptables", func() {
 		rulespec = []string{"some", "args"}
 	})
 	Describe("BulkInsert", func() {
-		var ruleSet []rules.GenericRule
+		var ruleSet []rules.IPTablesRule
 		BeforeEach(func() {
-			ruleSet = []rules.GenericRule{
+			ruleSet = []rules.IPTablesRule{
 				rules.NewMarkSetRule("1.2.3.4", "A", "a-guid"),
 				rules.NewMarkSetRule("2.2.2.2", "B", "b-guid"),
 			}
@@ -93,9 +93,9 @@ var _ = Describe("LockedIptables", func() {
 	})
 
 	Describe("BulkAppend", func() {
-		var ruleSet []rules.GenericRule
+		var ruleSet []rules.IPTablesRule
 		BeforeEach(func() {
-			ruleSet = []rules.GenericRule{
+			ruleSet = []rules.IPTablesRule{
 				rules.NewMarkSetRule("1.2.3.4", "A", "a-guid"),
 				rules.NewMarkSetRule("2.2.2.2", "B", "b-guid"),
 			}

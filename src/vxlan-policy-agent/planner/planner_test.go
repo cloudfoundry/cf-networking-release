@@ -129,42 +129,34 @@ var _ = Describe("Planner", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(rulesWithChain.Chain).To(Equal(chain))
 
-			Expect(rulesWithChain.Rules).To(ConsistOf([]rules.GenericRule{
+			Expect(rulesWithChain.Rules).To(ConsistOf([]rules.IPTablesRule{
 				// allow based on mark
 				{
-					Properties: []string{
-						"-d", "10.255.1.3",
-						"-p", "udp",
-						"--dport", "5555",
-						"-m", "mark", "--mark", "0xBB",
-						"--jump", "ACCEPT",
-						"-m", "comment", "--comment", "src:another-app-guid_dst:some-other-app-guid",
-					},
+					"-d", "10.255.1.3",
+					"-p", "udp",
+					"--dport", "5555",
+					"-m", "mark", "--mark", "0xBB",
+					"--jump", "ACCEPT",
+					"-m", "comment", "--comment", "src:another-app-guid_dst:some-other-app-guid",
 				},
 				{
-					Properties: []string{
-						"-d", "10.255.1.3",
-						"-p", "tcp",
-						"--dport", "1234",
-						"-m", "mark", "--mark", "0xAA",
-						"--jump", "ACCEPT",
-						"-m", "comment", "--comment", "src:some-app-guid_dst:some-other-app-guid",
-					},
+					"-d", "10.255.1.3",
+					"-p", "tcp",
+					"--dport", "1234",
+					"-m", "mark", "--mark", "0xAA",
+					"--jump", "ACCEPT",
+					"-m", "comment", "--comment", "src:some-app-guid_dst:some-other-app-guid",
 				},
 				// set tags on all outgoing packets, regardless of local vs remote
 				{
-					Properties: []string{
-						"--source", "10.255.1.2",
-						"--jump", "MARK", "--set-xmark", "0xAA",
-						"-m", "comment", "--comment", "src:some-app-guid",
-					},
+					"--source", "10.255.1.2",
+					"--jump", "MARK", "--set-xmark", "0xAA",
+					"-m", "comment", "--comment", "src:some-app-guid",
 				},
 				{
-					Properties: []string{
-						"--source", "10.255.1.3",
-						"--jump", "MARK", "--set-xmark", "0xCC",
-						"-m", "comment", "--comment", "src:some-other-app-guid",
-					},
+					"--source", "10.255.1.3",
+					"--jump", "MARK", "--set-xmark", "0xCC",
+					"-m", "comment", "--comment", "src:some-other-app-guid",
 				},
 			}))
 		})
@@ -173,10 +165,10 @@ var _ = Describe("Planner", func() {
 			rulesWithChain, err := policyPlanner.GetRules()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(rulesWithChain.Rules).To(HaveLen(4))
-			Expect(rulesWithChain.Rules[0].Properties).To(ContainElement("--set-xmark"))
-			Expect(rulesWithChain.Rules[1].Properties).To(ContainElement("--set-xmark"))
-			Expect(rulesWithChain.Rules[2].Properties).To(ContainElement("ACCEPT"))
-			Expect(rulesWithChain.Rules[3].Properties).To(ContainElement("ACCEPT"))
+			Expect(rulesWithChain.Rules[0]).To(ContainElement("--set-xmark"))
+			Expect(rulesWithChain.Rules[1]).To(ContainElement("--set-xmark"))
+			Expect(rulesWithChain.Rules[2]).To(ContainElement("ACCEPT"))
+			Expect(rulesWithChain.Rules[3]).To(ContainElement("ACCEPT"))
 		})
 
 		It("emits time metrics", func() {

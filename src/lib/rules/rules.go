@@ -4,210 +4,152 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-
-	"code.cloudfoundry.org/lager"
 )
 
-//go:generate counterfeiter -o ../fakes/rule.go --fake-name Rule . Rule
-type Rule interface {
-	Enforce(table, chain string, ipt IPTables, logger lager.Logger) error
-}
+type IPTablesRule []string
 
-type GenericRule struct {
-	Properties []string
-}
-
-func AppendComment(rule GenericRule, comment string) GenericRule {
+func AppendComment(rule IPTablesRule, comment string) IPTablesRule {
 	comment = strings.Replace(comment, " ", "_", -1)
-	return GenericRule{
-		Properties: append(rule.Properties,
-			"-m", "comment", "--comment", comment),
-	}
+	return IPTablesRule(
+		append(rule, "-m", "comment", "--comment", comment),
+	)
 }
 
-func (r GenericRule) Enforce(table, chain string, iptables IPTables, logger lager.Logger) error {
-	err := iptables.AppendUnique(table, chain, r.Properties...)
-	if err != nil {
-		logger.Error("append-rule", err)
-		return fmt.Errorf("appending rule: %s", err)
-	}
-
-	logger.Debug("enforce-rule", lager.Data{
-		"table":      table,
-		"chain":      chain,
-		"properties": fmt.Sprintf("%s", r.Properties),
-	})
-
-	return nil
-}
-
-func NewMarkAllowRule(destinationIP, protocol string, port int, tag string, sourceAppGUID, destinationAppGUID string) GenericRule {
-	return AppendComment(GenericRule{
-		Properties: []string{
-			"-d", destinationIP,
-			"-p", protocol,
-			"--dport", strconv.Itoa(port),
-			"-m", "mark", "--mark", fmt.Sprintf("0x%s", tag),
-			"--jump", "ACCEPT",
-		},
+func NewMarkAllowRule(destinationIP, protocol string, port int, tag string, sourceAppGUID, destinationAppGUID string) IPTablesRule {
+	return AppendComment(IPTablesRule{
+		"-d", destinationIP,
+		"-p", protocol,
+		"--dport", strconv.Itoa(port),
+		"-m", "mark", "--mark", fmt.Sprintf("0x%s", tag),
+		"--jump", "ACCEPT",
 	}, fmt.Sprintf("src:%s_dst:%s", sourceAppGUID, destinationAppGUID))
 }
 
-func NewMarkSetRule(sourceIP, tag, appGUID string) GenericRule {
-	return AppendComment(GenericRule{
-		Properties: []string{
-			"--source", sourceIP,
-			"--jump", "MARK", "--set-xmark", fmt.Sprintf("0x%s", tag),
-		},
+func NewMarkSetRule(sourceIP, tag, appGUID string) IPTablesRule {
+	return AppendComment(IPTablesRule{
+		"--source", sourceIP,
+		"--jump", "MARK", "--set-xmark", fmt.Sprintf("0x%s", tag),
 	}, fmt.Sprintf("src:%s", appGUID))
 }
 
-func NewDefaultEgressRule(localSubnet, overlayNetwork string) GenericRule {
-	return GenericRule{
-		Properties: []string{
-			"--source", localSubnet,
-			"!", "-d", overlayNetwork,
-			"--jump", "MASQUERADE",
-		},
+func NewDefaultEgressRule(localSubnet, overlayNetwork string) IPTablesRule {
+	return IPTablesRule{
+		"--source", localSubnet,
+		"!", "-d", overlayNetwork,
+		"--jump", "MASQUERADE",
 	}
 }
 
-func NewLogRule(guardConditions []string, name string) GenericRule {
-	properties := append(
-		guardConditions,
-		"-m", "limit", "--limit", "2/min",
+func NewLogRule(rule IPTablesRule, name string) IPTablesRule {
+	return IPTablesRule(append(
+		rule, "-m", "limit", "--limit", "2/min",
 		"--jump", "LOG",
 		"--log-prefix", name,
-	)
-	return GenericRule{Properties: properties}
+	))
 }
 
-func NewAcceptExistingLocalRule() GenericRule {
-	return GenericRule{
-		Properties: []string{
-			"-i", "cni-flannel0",
-			"-m", "state", "--state", "ESTABLISHED,RELATED",
-			"--jump", "ACCEPT",
-		},
+func NewAcceptExistingLocalRule() IPTablesRule {
+	return IPTablesRule{
+		"-i", "cni-flannel0",
+		"-m", "state", "--state", "ESTABLISHED,RELATED",
+		"--jump", "ACCEPT",
 	}
 }
 
-func NewDefaultDenyLocalRule(localSubnet string) GenericRule {
-	return GenericRule{
-		Properties: []string{
-			"-i", "cni-flannel0",
-			"--source", localSubnet,
-			"-d", localSubnet,
-			"--jump", "REJECT",
-		},
+func NewDefaultDenyLocalRule(localSubnet string) IPTablesRule {
+	return IPTablesRule{
+		"-i", "cni-flannel0",
+		"--source", localSubnet,
+		"-d", localSubnet,
+		"--jump", "REJECT",
 	}
 }
 
-func NewAcceptExistingRemoteRule(vni int) GenericRule {
-	return GenericRule{
-		Properties: []string{
-			"-i", fmt.Sprintf("flannel.%d", vni),
-			"-m", "state", "--state", "ESTABLISHED,RELATED",
-			"--jump", "ACCEPT",
-		},
+func NewAcceptExistingRemoteRule(vni int) IPTablesRule {
+	return IPTablesRule{
+		"-i", fmt.Sprintf("flannel.%d", vni),
+		"-m", "state", "--state", "ESTABLISHED,RELATED",
+		"--jump", "ACCEPT",
 	}
 }
 
-func NewDefaultDenyRemoteRule(vni int) GenericRule {
-	return GenericRule{
-		Properties: []string{
-			"-i", fmt.Sprintf("flannel.%d", vni),
-			"--jump", "REJECT",
-		},
+func NewDefaultDenyRemoteRule(vni int) IPTablesRule {
+	return IPTablesRule{
+		"-i", fmt.Sprintf("flannel.%d", vni),
+		"--jump", "REJECT",
 	}
 }
 
-func NewNetOutRule(containerIP, startIP, endIP string) GenericRule {
-	return GenericRule{
-		Properties: []string{
-			"--source", containerIP,
-			"-m", "iprange",
-			"--dst-range", fmt.Sprintf("%s-%s", startIP, endIP),
-			"--jump", "RETURN",
-		},
+func NewNetOutRule(containerIP, startIP, endIP string) IPTablesRule {
+	return IPTablesRule{
+		"--source", containerIP,
+		"-m", "iprange",
+		"--dst-range", fmt.Sprintf("%s-%s", startIP, endIP),
+		"--jump", "RETURN",
 	}
 }
 
-func NewNetOutWithPortsRule(containerIP, startIP, endIP string, startPort, endPort int, protocol string) GenericRule {
-	return GenericRule{
-		Properties: []string{
-			"--source", containerIP,
-			"-m", "iprange",
-			"-p", protocol,
-			"--dst-range", fmt.Sprintf("%s-%s", startIP, endIP),
-			"-m", protocol,
-			"--destination-port", fmt.Sprintf("%d:%d", startPort, endPort),
-			"--jump", "RETURN",
-		},
+func NewNetOutWithPortsRule(containerIP, startIP, endIP string, startPort, endPort int, protocol string) IPTablesRule {
+	return IPTablesRule{
+		"--source", containerIP,
+		"-m", "iprange",
+		"-p", protocol,
+		"--dst-range", fmt.Sprintf("%s-%s", startIP, endIP),
+		"-m", protocol,
+		"--destination-port", fmt.Sprintf("%d:%d", startPort, endPort),
+		"--jump", "RETURN",
 	}
 }
 
-func NewNetOutLogRule(containerIP, startIP, endIP, chain string) GenericRule {
-	return GenericRule{
-		Properties: []string{
-			"--source", containerIP,
-			"-m", "iprange",
-			"--dst-range", fmt.Sprintf("%s-%s", startIP, endIP),
-			"-g", chain,
-		},
+func NewNetOutLogRule(containerIP, startIP, endIP, chain string) IPTablesRule {
+	return IPTablesRule{
+		"--source", containerIP,
+		"-m", "iprange",
+		"--dst-range", fmt.Sprintf("%s-%s", startIP, endIP),
+		"-g", chain,
 	}
 }
 
-func NewNetOutWithPortsLogRule(containerIP, startIP, endIP string, startPort, endPort int, protocol, chain string) GenericRule {
-	return GenericRule{
-		Properties: []string{
-			"--source", containerIP,
-			"-m", "iprange",
-			"-p", protocol,
-			"--dst-range", fmt.Sprintf("%s-%s", startIP, endIP),
-			"-m", protocol,
-			"--destination-port", fmt.Sprintf("%d:%d", startPort, endPort),
-			"-g", chain,
-		},
+func NewNetOutWithPortsLogRule(containerIP, startIP, endIP string, startPort, endPort int, protocol, chain string) IPTablesRule {
+	return IPTablesRule{
+		"--source", containerIP,
+		"-m", "iprange",
+		"-p", protocol,
+		"--dst-range", fmt.Sprintf("%s-%s", startIP, endIP),
+		"-m", protocol,
+		"--destination-port", fmt.Sprintf("%d:%d", startPort, endPort),
+		"-g", chain,
 	}
 }
 
-func NewNetOutDefaultLogRule(prefix string) GenericRule {
-	return GenericRule{
-		Properties: []string{
-			"-p", "tcp",
-			"-m", "conntrack", "--ctstate", "INVALID,NEW,UNTRACKED",
-			"-j", "LOG", "--log-prefix", prefix,
-		},
+func NewNetOutDefaultLogRule(prefix string) IPTablesRule {
+	return IPTablesRule{
+		"-p", "tcp",
+		"-m", "conntrack", "--ctstate", "INVALID,NEW,UNTRACKED",
+		"-j", "LOG", "--log-prefix", prefix,
 	}
 }
 
-func NewReturnRule() GenericRule {
-	return GenericRule{
-		Properties: []string{
-			"--jump", "RETURN",
-		},
+func NewReturnRule() IPTablesRule {
+	return IPTablesRule{
+		"--jump", "RETURN",
 	}
 }
 
-func NewNetOutRelatedEstablishedRule(subnet, overlayNetwork string) GenericRule {
-	return GenericRule{
-		Properties: []string{
-			"-s", subnet,
-			"!", "-d", overlayNetwork,
-			"-m", "state", "--state", "RELATED,ESTABLISHED",
-			"--jump", "RETURN",
-		},
+func NewNetOutRelatedEstablishedRule(subnet, overlayNetwork string) IPTablesRule {
+	return IPTablesRule{
+		"-s", subnet,
+		"!", "-d", overlayNetwork,
+		"-m", "state", "--state", "RELATED,ESTABLISHED",
+		"--jump", "RETURN",
 	}
 }
 
-func NewNetOutDefaultRejectRule(subnet, overlayNetwork string) GenericRule {
-	return GenericRule{
-		Properties: []string{
-			"-s", subnet,
-			"!", "-d", overlayNetwork,
-			"--jump", "REJECT",
-			"--reject-with", "icmp-port-unreachable",
-		},
+func NewNetOutDefaultRejectRule(subnet, overlayNetwork string) IPTablesRule {
+	return IPTablesRule{
+		"-s", subnet,
+		"!", "-d", overlayNetwork,
+		"--jump", "REJECT",
+		"--reject-with", "icmp-port-unreachable",
 	}
 }

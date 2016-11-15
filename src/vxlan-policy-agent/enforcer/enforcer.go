@@ -44,18 +44,18 @@ type Chain struct {
 
 type RulesWithChain struct {
 	Chain Chain
-	Rules []rules.GenericRule
+	Rules []rules.IPTablesRule
 }
 
 func (e *Enforcer) EnforceRulesAndChain(rulesAndChain RulesWithChain) error {
 	return e.EnforceOnChain(rulesAndChain.Chain, rulesAndChain.Rules)
 }
 
-func (e *Enforcer) EnforceOnChain(c Chain, rules []rules.GenericRule) error {
+func (e *Enforcer) EnforceOnChain(c Chain, rules []rules.IPTablesRule) error {
 	return e.Enforce(c.Table, c.ParentChain, c.Prefix, rules...)
 }
 
-func (e *Enforcer) Enforce(table, parentChain, chainPrefix string, rules ...rules.GenericRule) error {
+func (e *Enforcer) Enforce(table, parentChain, chainPrefix string, rules ...rules.IPTablesRule) error {
 	newTime := e.timestamper.CurrentTime()
 	chain := fmt.Sprintf("%s%d", chainPrefix, newTime)
 

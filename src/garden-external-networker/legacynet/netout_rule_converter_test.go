@@ -40,26 +40,26 @@ var _ = Describe("NetOutRuleConverter", func() {
 				ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName)
 
 				Expect(ruleSpec).To(ConsistOf(
-					rules.GenericRule{[]string{"--source", "1.2.3.4",
+					rules.IPTablesRule{"--source", "1.2.3.4",
 						"-m", "iprange", "-p", "tcp",
 						"--dst-range", "1.1.1.1-2.2.2.2",
 						"-m", "tcp", "--destination-port", "9000:9999",
-						"--jump", "RETURN"}},
-					rules.GenericRule{[]string{"--source", "1.2.3.4",
+						"--jump", "RETURN"},
+					rules.IPTablesRule{"--source", "1.2.3.4",
 						"-m", "iprange", "-p", "tcp",
 						"--dst-range", "1.1.1.1-2.2.2.2",
 						"-m", "tcp", "--destination-port", "1111:2222",
-						"--jump", "RETURN"}},
-					rules.GenericRule{[]string{"--source", "1.2.3.4",
+						"--jump", "RETURN"},
+					rules.IPTablesRule{"--source", "1.2.3.4",
 						"-m", "iprange", "-p", "tcp",
 						"--dst-range", "3.3.3.3-4.4.4.4",
 						"-m", "tcp", "--destination-port", "9000:9999",
-						"--jump", "RETURN"}},
-					rules.GenericRule{[]string{"--source", "1.2.3.4",
+						"--jump", "RETURN"},
+					rules.IPTablesRule{"--source", "1.2.3.4",
 						"-m", "iprange", "-p", "tcp",
 						"--dst-range", "3.3.3.3-4.4.4.4",
 						"-m", "tcp", "--destination-port", "1111:2222",
-						"--jump", "RETURN"}},
+						"--jump", "RETURN"},
 				))
 			})
 		})
@@ -77,12 +77,12 @@ var _ = Describe("NetOutRuleConverter", func() {
 			It("returns IP tables rules without ports or protocol", func() {
 				ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName)
 				Expect(ruleSpec).To(ConsistOf(
-					rules.GenericRule{[]string{"--source", "1.2.3.4", "-m", "iprange",
+					rules.IPTablesRule{"--source", "1.2.3.4", "-m", "iprange",
 						"--dst-range", "1.1.1.1-2.2.2.2",
-						"-g", "some-chain"}},
-					rules.GenericRule{[]string{"--source", "1.2.3.4", "-m", "iprange",
+						"-g", "some-chain"},
+					rules.IPTablesRule{"--source", "1.2.3.4", "-m", "iprange",
 						"--dst-range", "3.3.3.3-4.4.4.4",
-						"-g", "some-chain"}},
+						"-g", "some-chain"},
 				))
 			})
 		})
@@ -99,12 +99,12 @@ var _ = Describe("NetOutRuleConverter", func() {
 			It("returns IP tables rules without ports or protocol", func() {
 				ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName)
 				Expect(ruleSpec).To(ConsistOf(
-					rules.GenericRule{[]string{"--source", "1.2.3.4", "-m", "iprange",
+					rules.IPTablesRule{"--source", "1.2.3.4", "-m", "iprange",
 						"--dst-range", "1.1.1.1-2.2.2.2",
-						"--jump", "RETURN"}},
-					rules.GenericRule{[]string{"--source", "1.2.3.4", "-m", "iprange",
+						"--jump", "RETURN"},
+					rules.IPTablesRule{"--source", "1.2.3.4", "-m", "iprange",
 						"--dst-range", "3.3.3.3-4.4.4.4",
-						"--jump", "RETURN"}},
+						"--jump", "RETURN"},
 				))
 			})
 		})
@@ -139,34 +139,34 @@ var _ = Describe("NetOutRuleConverter", func() {
 				ruleSpec := converter.BulkConvert(netOutRules, "1.2.3.4", logChainName)
 
 				Expect(ruleSpec).To(ConsistOf(
-					rules.GenericRule{[]string{"--source", "1.2.3.4",
+					rules.IPTablesRule{"--source", "1.2.3.4",
 						"-m", "iprange", "-p", "tcp",
 						"--dst-range", "1.1.1.1-2.2.2.2",
 						"-m", "tcp", "--destination-port", "9000:9999",
-						"--jump", "RETURN"}},
-					rules.GenericRule{[]string{"--source", "1.2.3.4",
+						"--jump", "RETURN"},
+					rules.IPTablesRule{"--source", "1.2.3.4",
 						"-m", "iprange", "-p", "tcp",
 						"--dst-range", "1.1.1.1-2.2.2.2",
 						"-m", "tcp", "--destination-port", "1111:2222",
-						"--jump", "RETURN"}},
-					rules.GenericRule{[]string{"--source", "1.2.3.4",
+						"--jump", "RETURN"},
+					rules.IPTablesRule{"--source", "1.2.3.4",
 						"-m", "iprange", "-p", "tcp",
 						"--dst-range", "3.3.3.3-4.4.4.4",
 						"-m", "tcp", "--destination-port", "9000:9999",
-						"--jump", "RETURN"}},
-					rules.GenericRule{[]string{"--source", "1.2.3.4",
+						"--jump", "RETURN"},
+					rules.IPTablesRule{"--source", "1.2.3.4",
 						"-m", "iprange", "-p", "tcp",
 						"--dst-range", "3.3.3.3-4.4.4.4",
 						"-m", "tcp", "--destination-port", "1111:2222",
-						"--jump", "RETURN"}},
-					rules.GenericRule{[]string{"--source", "1.2.3.4",
+						"--jump", "RETURN"},
+					rules.IPTablesRule{"--source", "1.2.3.4",
 						"-m", "iprange",
 						"--dst-range", "5.5.5.5-6.6.6.6",
-						"--jump", "RETURN"}},
-					rules.GenericRule{[]string{"--source", "1.2.3.4",
+						"--jump", "RETURN"},
+					rules.IPTablesRule{"--source", "1.2.3.4",
 						"-m", "iprange",
 						"--dst-range", "7.7.7.7-8.8.8.8",
-						"--jump", "RETURN"}},
+						"--jump", "RETURN"},
 				))
 			})
 		})

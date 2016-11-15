@@ -9,8 +9,8 @@ import (
 type NetOutRuleConverter struct {
 }
 
-func (c *NetOutRuleConverter) BulkConvert(netOutRules []garden.NetOutRule, containerIP, logChainName string) []rules.GenericRule {
-	ruleSpec := []rules.GenericRule{}
+func (c *NetOutRuleConverter) BulkConvert(netOutRules []garden.NetOutRule, containerIP, logChainName string) []rules.IPTablesRule {
+	ruleSpec := []rules.IPTablesRule{}
 	for _, rule := range netOutRules {
 		for _, t := range c.Convert(rule, containerIP, logChainName) {
 			ruleSpec = append(ruleSpec, t)
@@ -19,8 +19,8 @@ func (c *NetOutRuleConverter) BulkConvert(netOutRules []garden.NetOutRule, conta
 	return ruleSpec
 }
 
-func (c *NetOutRuleConverter) Convert(rule garden.NetOutRule, containerIP, logChainName string) []rules.GenericRule {
-	ruleSpec := []rules.GenericRule{}
+func (c *NetOutRuleConverter) Convert(rule garden.NetOutRule, containerIP, logChainName string) []rules.IPTablesRule {
+	ruleSpec := []rules.IPTablesRule{}
 	for _, network := range rule.Networks {
 		if len(rule.Ports) > 0 && udpOrTcp(rule.Protocol) {
 			for _, portRange := range rule.Ports {
