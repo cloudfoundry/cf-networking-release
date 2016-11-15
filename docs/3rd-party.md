@@ -100,14 +100,19 @@ only policies with a source or destination that match any of the comma-separated
 `group_policy_id`'s that are included.
 
 ### TLS configuration
-The Policy Server uses TLS and requires that calls include a client certificate
-that is signed with the CA it has in it's Client CA store.
+The Policy Server internal API requires Mutual TLS.  All connections must use a client certificate
+that is signed by a trusted certificate authority.
 
 This CA is configured for the policy server in the bosh deployment manifest
 property `properties.policy-server.ca_cert`.
 
 An example can be found in the `bosh-lite` stubs included in this repository
 [here](../bosh-lite/deployments/diego_with_netman.yml).
+
+Additionally, the server requires that connections use the TLS cipher suite
+`TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256`.  Your client must support this cipher suite.
+
+We provide [a script](../scripts/generate-certs) to generate all required certs & keys.
 
 ### Policy Server Internal API Details
 
