@@ -183,7 +183,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 			conf := config.VxlanPolicyAgent{
 				Datastore:         datastorePath,
 				PollInterval:      1,
-				PolicyServerURL:   "",
+				PolicyServerURL:   "foo",
 				VNI:               42,
 				FlannelSubnetFile: subnetFile.Name(),
 				MetronAddress:     fakeMetron.Address(),

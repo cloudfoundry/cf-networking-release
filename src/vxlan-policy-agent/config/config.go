@@ -12,7 +12,7 @@ import (
 type VxlanPolicyAgent struct {
 	PollInterval      int    `json:"poll_interval" validate:"nonzero"`
 	Datastore         string `json:"cni_datastore_path" validate:"nonzero"`
-	PolicyServerURL   string `json:"policy_server_url"`
+	PolicyServerURL   string `json:"policy_server_url" validate:"min=1"`
 	VNI               int    `json:"vni" validate:"nonzero"`
 	FlannelSubnetFile string `json:"flannel_subnet_file" validate:"nonzero"`
 	MetronAddress     string `json:"metron_address" validate:"nonzero"`
