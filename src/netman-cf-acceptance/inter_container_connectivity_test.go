@@ -131,7 +131,7 @@ func deleteAllPolicies(sourceApp string, dstList []string, dstPorts []int) {
 	}
 	for _, destApp := range dstList {
 		for _, port := range dstPorts {
-			err := cfCli.DenyAccess(sourceApp, destApp, port, "tcp")
+			err := cfCli.RemoveAccess(sourceApp, destApp, port, "tcp")
 			Expect(err).NotTo(HaveOccurred())
 		}
 	}

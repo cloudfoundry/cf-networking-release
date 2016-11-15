@@ -35,11 +35,11 @@ type ValidArgs struct {
 
 const AllowCommand = "allow-access"
 const ListCommand = "list-access"
-const DenyCommand = "deny-access"
+const RemoveCommand = "remove-access"
 
 var ListUsageRegex = fmt.Sprintf(`\A%s\s*(--app(\s+|=)\S+\z|\z)`, ListCommand)
 var AllowUsageRegex = fmt.Sprintf(`\A%s\s+\S+\s+\S+\s+(--|-)\w+(\s+|=)\w+\s+(--|-)\w+(\s+|=)\w+\z`, AllowCommand)
-var DenyUsageRegex = fmt.Sprintf(`\A%s\s+\S+\s+\S+\s+(--|-)\w+(\s+|=)\w+\s+(--|-)\w+(\s+|=)\w+\z`, DenyCommand)
+var RemoveUsageRegex = fmt.Sprintf(`\A%s\s+\S+\s+\S+\s+(--|-)\w+(\s+|=)\w+\s+(--|-)\w+(\s+|=)\w+\z`, RemoveCommand)
 
 const MinPort = 1
 const MaxPort = 65535
@@ -78,10 +78,10 @@ func (p *Plugin) GetMetadata() plugin.PluginMetadata {
 				},
 			},
 			plugin.Command{
-				Name:     DenyCommand,
+				Name:     RemoveCommand,
 				HelpText: "Remove direct network traffic from one app to another",
 				UsageDetails: plugin.Usage{
-					Usage: fmt.Sprintf(usageTemplate, DenyCommand, MinPort, MaxPort),
+					Usage: fmt.Sprintf(usageTemplate, RemoveCommand, MinPort, MaxPort),
 					Options: map[string]string{
 						"-protocol": "Protocol to connect apps with. (required)",
 						"-port":     "Port to connect to destination app with. (required)",
@@ -139,8 +139,8 @@ func (p *Plugin) RunWithErrors(cliConnection plugin.CliConnection, args []string
 		return runner.Allow()
 	case ListCommand:
 		return runner.List()
-	case DenyCommand:
-		return runner.Deny()
+	case RemoveCommand:
+		return runner.Remove()
 	}
 
 	return "", nil
@@ -153,8 +153,8 @@ func validateUsage(cliConnection plugin.CliConnection, args []string) error {
 		regex = ListUsageRegex
 	case AllowCommand:
 		regex = AllowUsageRegex
-	case DenyCommand:
-		regex = DenyUsageRegex
+	case RemoveCommand:
+		regex = RemoveUsageRegex
 	default:
 		return errors.New("Invalid command")
 	}

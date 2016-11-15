@@ -81,11 +81,11 @@ In addition to the `/whoami`, the following actuator endpoints are also availabl
 - /backend/metrics
 - /backend/mappings
 
-### Deny access
+### Remove access
 
 ```
-cf deny-access zuul-proxy backend --protocol tcp --port 8080
-cf deny-access frontend backend --protocol tcp --port 8080
+cf remove-access zuul-proxy backend --protocol tcp --port 8080
+cf remove-access frontend backend --protocol tcp --port 8080
 ```
 
 ## More Details

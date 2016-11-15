@@ -301,14 +301,14 @@ var _ = Describe("CommandRunner", func() {
 		})
 	})
 
-	Describe("Deny", func() {
+	Describe("Remove", func() {
 		BeforeEach(func() {
-			runner.Args = []string{"deny-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999"}
+			runner.Args = []string{"remove-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999"}
 		})
 
 		Context("when the policy is found", func() {
 			It("removes the policy", func() {
-				_, err := runner.Deny()
+				_, err := runner.Remove()
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(fakeCliConnection.GetAppCallCount()).To(Equal(2))
@@ -327,32 +327,32 @@ var _ = Describe("CommandRunner", func() {
 		Context("when the user supplies incorrect arguments", func() {
 			Context("when there are too many leading positional arguments", func() {
 				It("shows usage", func() {
-					runner.Args = []string{"deny-access", "some-app", "some-other-app", "yet-another-app", "--protocol", "tcp", "--port", "9999"}
+					runner.Args = []string{"remove-access", "some-app", "some-other-app", "yet-another-app", "--protocol", "tcp", "--port", "9999"}
 					fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
-					_, err := runner.Deny()
+					_, err := runner.Remove()
 					Expect(err).To(MatchError("Incorrect usage. \n\nUSAGE:\nbanana"))
 					c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
-					Expect(c).To(Equal([]string{"help", "deny-access"}))
+					Expect(c).To(Equal([]string{"help", "remove-access"}))
 				})
 			})
 			Context("when there are extra positional arguments after the flag args", func() {
 				It("shows usage", func() {
-					runner.Args = []string{"deny-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999", "something-else"}
+					runner.Args = []string{"remove-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999", "something-else"}
 					fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
-					_, err := runner.Deny()
+					_, err := runner.Remove()
 					Expect(err).To(MatchError("Incorrect usage. \n\nUSAGE:\nbanana"))
 					c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
-					Expect(c).To(Equal([]string{"help", "deny-access"}))
+					Expect(c).To(Equal([]string{"help", "remove-access"}))
 				})
 			})
 			Context("when one of the flags is misspelled", func() {
 				It("shows usage", func() {
-					runner.Args = []string{"deny-access", "some-app", "some-other-app", "--protocol", "tcp", "--poooort", "9999"}
+					runner.Args = []string{"remove-access", "some-app", "some-other-app", "--protocol", "tcp", "--poooort", "9999"}
 					fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
-					_, err := runner.Deny()
+					_, err := runner.Remove()
 					Expect(err).To(MatchError("Incorrect usage. flag provided but not defined: -poooort\n\nUSAGE:\nbanana"))
 					c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
-					Expect(c).To(Equal([]string{"help", "deny-access"}))
+					Expect(c).To(Equal([]string{"help", "remove-access"}))
 
 				})
 			})
@@ -363,7 +363,7 @@ var _ = Describe("CommandRunner", func() {
 				policyClient.DeletePoliciesReturns(errors.New("banana"))
 			})
 			It("wraps the error in a more helpful message", func() {
-				_, err := runner.Deny()
+				_, err := runner.Remove()
 				Expect(err).To(MatchError("deleting policies: failed to make request to policy server"))
 			})
 		})
@@ -373,7 +373,7 @@ var _ = Describe("CommandRunner", func() {
 				fakeCliConnection.AccessTokenReturns("", errors.New("banana"))
 			})
 			It("returns the error", func() {
-				_, err := runner.Deny()
+				_, err := runner.Remove()
 				Expect(err).To(MatchError("getting access token: banana"))
 			})
 		})
@@ -383,7 +383,7 @@ var _ = Describe("CommandRunner", func() {
 				fakeCliConnection.UsernameReturns("", errors.New("banana"))
 			})
 			It("returns an error", func() {
-				_, err := runner.Deny()
+				_, err := runner.Remove()
 				Expect(err).To(MatchError("could not resolve username: banana"))
 			})
 		})
@@ -392,40 +392,40 @@ var _ = Describe("CommandRunner", func() {
 	Describe("Resolving App Names to Guids", func() {
 		Context("when there are errors talking to CC", func() {
 			BeforeEach(func() {
-				runner.Args = []string{"deny-access", "bad-access", "some-other-app", "--protocol", "tcp", "--port", "9999"}
+				runner.Args = []string{"remove-access", "bad-access", "some-other-app", "--protocol", "tcp", "--port", "9999"}
 			})
 			It("returns a useful error", func() {
-				_, err := runner.Deny()
+				_, err := runner.Remove()
 				Expect(err).To(MatchError("resolving source app: apple"))
 			})
 		})
 
 		Context("when the source app could not be resolved to a GUID", func() {
 			BeforeEach(func() {
-				runner.Args = []string{"deny-access", "inaccessible-app", "some-other-app", "--protocol", "tcp", "--port", "9999"}
+				runner.Args = []string{"remove-access", "inaccessible-app", "some-other-app", "--protocol", "tcp", "--port", "9999"}
 			})
 			It("returns a useful error", func() {
-				_, err := runner.Deny()
+				_, err := runner.Remove()
 				Expect(err).To(MatchError("resolving source app: inaccessible-app not found"))
 			})
 		})
 
 		Context("when there are errors resolving destination app", func() {
 			BeforeEach(func() {
-				runner.Args = []string{"deny-access", "some-app", "not-some-other-app", "--protocol", "tcp", "--port", "9999"}
+				runner.Args = []string{"remove-access", "some-app", "not-some-other-app", "--protocol", "tcp", "--port", "9999"}
 			})
 			It("returns a useful error", func() {
-				_, err := runner.Deny()
+				_, err := runner.Remove()
 				Expect(err).To(MatchError("resolving destination app: apple"))
 			})
 		})
 
 		Context("when the destination app could not be resolved to a GUID", func() {
 			BeforeEach(func() {
-				runner.Args = []string{"deny-access", "some-app", "inaccessible-app", "--protocol", "tcp", "--port", "9999"}
+				runner.Args = []string{"remove-access", "some-app", "inaccessible-app", "--protocol", "tcp", "--port", "9999"}
 			})
 			It("returns a useful error", func() {
-				_, err := runner.Deny()
+				_, err := runner.Remove()
 				Expect(err).To(MatchError("resolving destination app: inaccessible-app not found"))
 			})
 		})

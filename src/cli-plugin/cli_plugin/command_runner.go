@@ -149,7 +149,7 @@ func (r *CommandRunner) Allow() (string, error) {
 	return "", nil
 }
 
-func (r *CommandRunner) Deny() (string, error) {
+func (r *CommandRunner) Remove() (string, error) {
 	err := validateUsage(r.CliConnection, r.Args)
 	if err != nil {
 		return "", err
