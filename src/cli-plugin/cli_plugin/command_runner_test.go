@@ -430,4 +430,28 @@ var _ = Describe("CommandRunner", func() {
 			})
 		})
 	})
+
+	Describe("Deny (deprecated)", func() {
+		BeforeEach(func() {
+			runner.Args = []string{"deny-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999"}
+		})
+
+		Context("when the policy is found", func() {
+			It("removes the policy", func() {
+				_, err := runner.Remove()
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(fakeCliConnection.GetAppCallCount()).To(Equal(2))
+				Expect(fakeCliConnection.GetAppArgsForCall(0)).To(Equal("some-app"))
+				Expect(fakeCliConnection.GetAppArgsForCall(1)).To(Equal("some-other-app"))
+
+				Expect(policyClient.DeletePoliciesCallCount()).To(Equal(1))
+				token, policies := policyClient.DeletePoliciesArgsForCall(0)
+				Expect(token).To(Equal("some-token"))
+				Expect(policies).To(ConsistOf(models.Policy{
+					Source:      models.Source{ID: "some-app-guid"},
+					Destination: models.Destination{ID: "some-other-app-guid", Port: 9999, Protocol: "tcp"}}))
+			})
+		})
+	})
 })
