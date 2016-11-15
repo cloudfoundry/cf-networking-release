@@ -1,6 +1,7 @@
 package planner
 
 import (
+	"errors"
 	"lib/datastore"
 	"lib/models"
 	"lib/rules"
@@ -31,13 +32,20 @@ type Container struct {
 	GroupID string
 }
 
-func getContainersMap(allContainers map[string]datastore.Container) (map[string][]string, error) {
+var missingPolicyGroupIdError error = errors.New("Container metadata is missing key policy_group_id. Check version of CloudController.")
+
+func (p *VxlanPolicyPlanner) getContainersMap(allContainers map[string]datastore.Container) (map[string][]string, error) {
 	containers := map[string][]string{}
 	for _, container := range allContainers {
-		if container.Metadata != nil {
-			groupID := container.Metadata["policy_group_id"].(string)
-			containers[groupID] = append(containers[groupID], container.IP)
+		if container.Metadata == nil {
+			continue
 		}
+		groupID, ok := container.Metadata["policy_group_id"].(string)
+		if !ok {
+			p.Logger.Error("container-metadata-policy-group-id", missingPolicyGroupIdError, lager.Data{"container_handle": container.Handle})
+			continue
+		}
+		containers[groupID] = append(containers[groupID], container.IP)
 	}
 	return containers, nil
 }
@@ -50,7 +58,7 @@ func (p *VxlanPolicyPlanner) GetRules() (enforcer.RulesWithChain, error) {
 		return enforcer.RulesWithChain{}, err
 	}
 
-	containers, err := getContainersMap(containerMetadata)
+	containers, err := p.getContainersMap(containerMetadata)
 	if err != nil {
 		p.Logger.Error("container-info", err)
 		return enforcer.RulesWithChain{}, err

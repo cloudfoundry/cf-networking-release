@@ -25,7 +25,9 @@ var _ = Describe("Planner", func() {
 		timeMetricsEmitter *fakes.TimeMetricsEmitter
 		logger             *lagertest.TestLogger
 		chain              enforcer.Chain
+		data               map[string]datastore.Container
 	)
+
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test")
 		policyClient = &fakes.PolicyClient{}
@@ -33,7 +35,7 @@ var _ = Describe("Planner", func() {
 
 		store = &libfakes.Datastore{}
 
-		data := make(map[string]datastore.Container)
+		data = make(map[string]datastore.Container)
 		data["container-id-1"] = datastore.Container{
 			Handle: "container-id-1",
 			IP:     "10.255.1.2",
@@ -106,6 +108,7 @@ var _ = Describe("Planner", func() {
 			Chain:             chain,
 		}
 	})
+
 	Describe("GetRules", func() {
 		It("gets every container's properties from the datastore", func() {
 			_, err := policyPlanner.GetRules()
@@ -113,12 +116,14 @@ var _ = Describe("Planner", func() {
 
 			Expect(store.ReadAllCallCount()).To(Equal(1))
 		})
+
 		It("gets policies from the policy server", func() {
 			_, err := policyPlanner.GetRules()
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(policyClient.GetPoliciesCallCount()).To(Equal(1))
 		})
+
 		It("returns all the rules", func() {
 			rulesWithChain, err := policyPlanner.GetRules()
 			Expect(err).NotTo(HaveOccurred())
@@ -163,6 +168,7 @@ var _ = Describe("Planner", func() {
 				},
 			}))
 		})
+
 		It("returns all mark set rules before any mark filter rules", func() {
 			rulesWithChain, err := policyPlanner.GetRules()
 			Expect(err).NotTo(HaveOccurred())
@@ -172,30 +178,53 @@ var _ = Describe("Planner", func() {
 			Expect(rulesWithChain.Rules[2].(rules.GenericRule).Properties).To(ContainElement("ACCEPT"))
 			Expect(rulesWithChain.Rules[3].(rules.GenericRule).Properties).To(ContainElement("ACCEPT"))
 		})
+
 		It("emits time metrics", func() {
 			_, err := policyPlanner.GetRules()
 			Expect(err).NotTo(HaveOccurred())
-
 			Expect(timeMetricsEmitter.EmitAllCallCount()).To(Equal(1))
 		})
+
+		Context("when a container's metadata is missing required key policy group id", func() {
+			BeforeEach(func() {
+				data["container-id-fruit"] = datastore.Container{
+					Handle: "container-id-fruit",
+					IP:     "10.255.1.5",
+					Metadata: map[string]interface{}{
+						"fruit": "banana",
+					},
+				}
+			})
+
+			It("logs an error for that container and returns rules for other containers", func() {
+				rulesWithChain, err := policyPlanner.GetRules()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(logger).To(gbytes.Say("container-metadata-policy-group-id.*container-id-fruit.*Container.*metadata.*policy_group_id.*CloudController"))
+
+				Expect(rulesWithChain.Chain).To(Equal(chain))
+				Expect(rulesWithChain.Rules).To(HaveLen(4))
+			})
+		})
+
 		Context("when getting containers from datastore fails", func() {
 			BeforeEach(func() {
 				store.ReadAllReturns(nil, errors.New("banana"))
 			})
+
 			It("logs and returns the error", func() {
 				_, err := policyPlanner.GetRules()
-
 				Expect(err).To(MatchError("banana"))
 				Expect(logger).To(gbytes.Say("datastore.*banana"))
 			})
 		})
+
 		Context("when getting policies fails", func() {
 			BeforeEach(func() {
 				policyClient.GetPoliciesReturns(nil, errors.New("kiwi"))
 			})
+
 			It("logs and returns the error", func() {
 				_, err := policyPlanner.GetRules()
-
 				Expect(err).To(MatchError("kiwi"))
 				Expect(logger).To(gbytes.Say("policy-client-get-policies.*kiwi"))
 			})
