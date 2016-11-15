@@ -71,18 +71,17 @@ Source		Destination	Protocol	Port
 frontend	backend		tcp		8080
 ```
 
-
-### Deny Policy:
+### Remove Policy:
 
 Remove direct network traffic from one app to another
 
 ```
-$ cf deny-access -h
+$ cf remove-access -h
 NAME:
-   deny-access - Remove direct network traffic from one app to another
+   remove-access - Remove policy and deny direct network traffic from one app to another
 
 USAGE:
-   cf deny-access SOURCE_APP DESTINATION_APP --protocol <tcp|udp> --port [1-65535]
+   cf remove-access SOURCE_APP DESTINATION_APP --protocol <tcp|udp> --port [1-65535]
 
 OPTIONS:
    --port           Port to connect to destination app with. (required)
@@ -91,7 +90,11 @@ OPTIONS:
 
 **Example:**
 ```sh
-$ cf deny-access frontend backend --protocol tcp --port 8080
+$ cf remove-access frontend backend --protocol tcp --port 8080
 Denying traffic from frontend to backend as admin...
 OK
 ```
+
+### DEPCRECATED Deny Policy:
+
+Deprecated! Use remove-access
