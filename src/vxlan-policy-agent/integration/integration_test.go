@@ -139,11 +139,16 @@ var _ = Describe("VXLAN Policy Agent", func() {
 			session = StartAgent(paths.VxlanPolicyAgentPath, configFilePath)
 		})
 
-		It("writes the default rules", func() {
-			Eventually(IptablesFilterRules, "10s", "1s").Should(ContainSubstring("-i flannel.42 -m state --state RELATED,ESTABLISHED -j ACCEPT"))
-			Expect(IptablesFilterRules()).To(ContainSubstring("-i flannel.42 -j REJECT --reject-with icmp-port-unreachable"))
-			Expect(IptablesFilterRules()).To(ContainSubstring("-i cni-flannel0 -m state --state RELATED,ESTABLISHED -j ACCEPT"))
-			Expect(IptablesFilterRules()).To(ContainSubstring("-s 10.255.100.0/24 -d 10.255.100.0/24 -i cni-flannel0 -j REJECT --reject-with icmp-port-unreachable"))
+		It("writes the default rules in the correct order", func() {
+			remoteRules := `.*-A vpa--remote-[0-9]+ -i flannel\.42 -m state --state RELATED,ESTABLISHED -j ACCEPT`
+			remoteRules += `\n-A vpa--remote-[0-9]+ -i flannel\.42 -m limit --limit 2/min -j LOG --log-prefix "REJECT_REMOTE:"`
+			remoteRules += `\n-A vpa--remote-[0-9]+ -i flannel\.42 -j REJECT --reject-with icmp-port-unreachable`
+			Eventually(IptablesFilterRules, "10s", "1s").Should(MatchRegexp(remoteRules))
+
+			localRules := `.*-A vpa--local-[0-9]+ -i cni-flannel0 -m state --state RELATED,ESTABLISHED -j ACCEPT`
+			localRules += `\n.*-A vpa--local-[0-9]+ -s 10\.255\.100\.0/24 -d 10\.255\.100\.0/24 -i cni-flannel0 -m limit --limit 2/min -j LOG --log-prefix "REJECT_LOCAL:"`
+			localRules += `\n.*-A vpa--local-[0-9]+ -s 10\.255\.100\.0/24 -d 10\.255\.100\.0/24 -i cni-flannel0 -j REJECT --reject-with icmp-port-unreachable`
+			Expect(IptablesFilterRules()).Should(MatchRegexp(localRules))
 			Expect(IptablesNATRules()).To(ContainSubstring("-s 10.255.100.0/24 ! -d 10.255.0.0/16 -j MASQUERADE"))
 		})
 	})
