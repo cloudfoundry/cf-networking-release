@@ -1,11 +1,14 @@
 package config_test
 
 import (
+	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"policy-server/config"
 
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 )
 
@@ -88,6 +91,91 @@ var _ = Describe("Config", func() {
 
 				_, err = config.New(configFile.Name())
 				Expect(err).To(MatchError("parsing config: unexpected end of JSON input"))
+			})
+		})
+
+		DescribeTable("when config file is missing a member",
+			func(missingFlag, errorMsg string) {
+				allData := map[string]interface{}{
+					"listen_host":          "http://1.2.3.4",
+					"listen_port":          1234,
+					"internal_listen_port": 2222,
+					"ca_cert_file":         "some/ca/cert/file",
+					"server_cert_file":     "some/server/cert/file",
+					"server_key_file":      "some/server/key/file",
+					"uaa_client":           "some-uaa-client",
+					"uaa_client_secret":    "some-uaa-client-secret",
+					"uaa_url":              "http://uaa.example.com",
+					"cc_url":               "http://ccapi.example.com",
+					"skip_ssl_validation":  true,
+					"database": map[string]interface{}{
+						"type":              "mysql",
+						"connection_string": "some-db-connection-string",
+					},
+					"tag_length":     2,
+					"metron_address": "http://1.2.3.4:9999",
+				}
+				delete(allData, missingFlag)
+				Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
+
+				_, err = config.New(file.Name())
+				Expect(err).To(MatchError(fmt.Sprintf("invalid config: %s", errorMsg)))
+			},
+			Entry("missing listen host", "listen_host", "ListenHost: zero value"),
+			Entry("missing listen port", "listen_port", "ListenPort: zero value"),
+			Entry("missing internal listen port", "internal_listen_port", "InternalListenPort: zero value"),
+			Entry("missing ca cert file", "ca_cert_file", "CACertFile: zero value"),
+			Entry("missing server cert file", "server_cert_file", "ServerCertFile: zero value"),
+			Entry("missing server key file", "server_key_file", "ServerKeyFile: zero value"),
+			Entry("missing uaa client", "uaa_client", "UAAClient: zero value"),
+			Entry("missing uaa client secret", "uaa_client_secret", "UAAClientSecret: zero value"),
+			Entry("missing uaa url", "uaa_url", "UAAURL: zero value"),
+			Entry("missing cc url", "cc_url", "CCURL: zero value"),
+			Entry("missing tag length", "tag_length", "TagLength: zero value"),
+			Entry("missing metron address", "metron_address", "MetronAddress: zero value"),
+		)
+		Describe("database config", func() {
+			var allData map[string]interface{}
+			BeforeEach(func() {
+				allData = map[string]interface{}{
+					"listen_host":          "http://1.2.3.4",
+					"listen_port":          1234,
+					"internal_listen_port": 2222,
+					"ca_cert_file":         "some/ca/cert/file",
+					"server_cert_file":     "some/server/cert/file",
+					"server_key_file":      "some/server/key/file",
+					"uaa_client":           "some-uaa-client",
+					"uaa_client_secret":    "some-uaa-client-secret",
+					"uaa_url":              "http://uaa.example.com",
+					"cc_url":               "http://ccapi.example.com",
+					"skip_ssl_validation":  true,
+					"database": map[string]interface{}{
+						"type":              "mysql",
+						"connection_string": "some-db-connection-string",
+					},
+					"tag_length":     2,
+					"metron_address": "http://1.2.3.4:9999",
+				}
+			})
+			Context("when the config file is missing a db type", func() {
+				BeforeEach(func() {
+					delete(allData["database"].(map[string]interface{}), "type")
+					Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
+				})
+				It("returns an error", func() {
+					_, err = config.New(file.Name())
+					Expect(err).To(MatchError("invalid config: Database.Type: zero value"))
+				})
+			})
+			Context("when the config file is missing a db connection string", func() {
+				BeforeEach(func() {
+					delete(allData["database"].(map[string]interface{}), "connection_string")
+					Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
+				})
+				It("returns an error", func() {
+					_, err = config.New(file.Name())
+					Expect(err).To(MatchError("invalid config: Database.ConnectionString: zero value"))
+				})
 			})
 		})
 	})

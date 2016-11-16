@@ -5,23 +5,29 @@ import (
 	"fmt"
 	"io/ioutil"
 	"lib/db"
+
+	"gopkg.in/validator.v2"
 )
 
 type Config struct {
-	ListenHost         string    `json:"listen_host"`
-	ListenPort         int       `json:"listen_port"`
-	InternalListenPort int       `json:"internal_listen_port"`
-	CACertFile         string    `json:"ca_cert_file"`
-	ServerCertFile     string    `json:"server_cert_file"`
-	ServerKeyFile      string    `json:"server_key_file"`
-	UAAClient          string    `json:"uaa_client"`
-	UAAClientSecret    string    `json:"uaa_client_secret"`
-	UAAURL             string    `json:"uaa_url"`
-	CCURL              string    `json:"cc_url"`
+	ListenHost         string    `json:"listen_host" validate:"nonzero"`
+	ListenPort         int       `json:"listen_port" validate:"nonzero"`
+	InternalListenPort int       `json:"internal_listen_port" validate:"nonzero"`
+	CACertFile         string    `json:"ca_cert_file" validate:"nonzero"`
+	ServerCertFile     string    `json:"server_cert_file" validate:"nonzero"`
+	ServerKeyFile      string    `json:"server_key_file" validate:"nonzero"`
+	UAAClient          string    `json:"uaa_client" validate:"nonzero"`
+	UAAClientSecret    string    `json:"uaa_client_secret" validate:"nonzero"`
+	UAAURL             string    `json:"uaa_url" validate:"nonzero"`
+	CCURL              string    `json:"cc_url" validate:"nonzero"`
 	SkipSSLValidation  bool      `json:"skip_ssl_validation"`
-	Database           db.Config `json:"database"`
-	TagLength          int       `json:"tag_length"`
-	MetronAddress      string    `json:"metron_address"`
+	Database           db.Config `json:"database" validate:"nonzero"`
+	TagLength          int       `json:"tag_length" validate:"nonzero"`
+	MetronAddress      string    `json:"metron_address" validate:"nonzero"`
+}
+
+func (c *Config) Validate() error {
+	return validator.Validate(c)
 }
 
 func New(path string) (*Config, error) {
@@ -34,6 +40,10 @@ func New(path string) (*Config, error) {
 	err = json.Unmarshal(jsonBytes, &cfg)
 	if err != nil {
 		return nil, fmt.Errorf("parsing config: %s", err)
+	}
+
+	if err := cfg.Validate(); err != nil {
+		return &cfg, fmt.Errorf("invalid config: %s", err)
 	}
 
 	return &cfg, nil

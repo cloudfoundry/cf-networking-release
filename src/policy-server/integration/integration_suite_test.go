@@ -152,6 +152,7 @@ func DefaultTestConfig() config.Config {
 		UAAURL:             mockUAAServer.URL,
 		CCURL:              mockCCServer.URL,
 		TagLength:          1,
+		MetronAddress:      "some-metron.address",
 	}
 	return config
 }

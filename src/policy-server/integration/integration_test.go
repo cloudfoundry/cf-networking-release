@@ -142,17 +142,10 @@ var _ = Describe("Integration", func() {
 		)
 
 		BeforeEach(func() {
-			conf = config.Config{
-				ListenHost:      "127.0.0.1",
-				ListenPort:      9001 + GinkgoParallelNode(),
-				UAAClient:       "test",
-				UAAClientSecret: "test",
-				UAAURL:          mockUAAServer.URL,
-				Database: db.Config{
-					Type:             "postgres",
-					ConnectionString: "postgres://:@1.2.3.4:9999/?sslmode=disable",
-				},
-				TagLength: 1,
+			conf = DefaultTestConfig()
+			conf.Database = db.Config{
+				Type:             "postgres",
+				ConnectionString: "postgres://:@1.2.3.4:9999/?sslmode=disable",
 			}
 			configFilePath := WriteConfigFile(conf)
 
