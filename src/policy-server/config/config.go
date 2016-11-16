@@ -24,7 +24,7 @@ type Config struct {
 	MetronAddress      string    `json:"metron_address"`
 }
 
-func Load(path string) (*Config, error) {
+func New(path string) (*Config, error) {
 	jsonBytes, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("reading config: %s", err)
@@ -33,7 +33,7 @@ func Load(path string) (*Config, error) {
 	var cfg Config
 	err = json.Unmarshal(jsonBytes, &cfg)
 	if err != nil {
-		return nil, fmt.Errorf("parsing json: %s", err)
+		return nil, fmt.Errorf("parsing config: %s", err)
 	}
 
 	return &cfg, nil

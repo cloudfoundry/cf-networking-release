@@ -44,7 +44,7 @@ func main() {
 
 	logger := lager.NewLogger("policy-server")
 	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.INFO))
-	conf, err := config.Load(*configFilePath)
+	conf, err := config.New(*configFilePath)
 	if err != nil {
 		log.Fatalf("could not read config file %s", err)
 	}
