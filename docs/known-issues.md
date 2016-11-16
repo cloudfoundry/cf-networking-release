@@ -32,11 +32,6 @@
   policy system. Direct addressing of other containers (without going through the gorouter)
   on the underlay is not supported and may result in undefined behavior.
 
-- ###  Performance Issues
-  The policy update cycle can take a few minutes when a cell has more than 50
-  app containers. If you are running a deployment with many apps per cell,
-  you can expect to wait around 5 minutes for the policies to be applied.
-
 - ### CIDR blocks other than /16
   It is possible to configure the CIDR block for containers to be something
   other than the default of /16. This hasn't been tested.
