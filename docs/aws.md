@@ -44,7 +44,8 @@
     -   scope: cloud_controller.read,cloud_controller.write,openid,password.write,cloud_controller.admin,scim.read,scim.write,doppler.firehose,uaa.user,routing.router_groups.read
     +   scope: cloud_controller.read,cloud_controller.write,openid,password.write,cloud_controller.admin,scim.read,scim.write,doppler.firehose,uaa.user,routing.router_groups.read,network.admin
     + network-policy:
-    +   authorities: uaa.resource
+    +   authorities: uaa.resource,cloud_controller.admin_read_only
+    +   authorized-grant-types: client_credentials,refresh_token
     +   secret: REPLACE_WITH_UAA_CLIENT_SECRET
     ```
 
@@ -84,6 +85,7 @@
         policy-server:
           uaa_client_secret: REPLACE_WITH_UAA_CLIENT_SECRET
           uaa_url: (( "https://uaa." config_from_cf.system_domain ))
+          cc_url: (( "https://api." config_from_cf.system_domain ))
           skip_ssl_validation: true
           database:
             # For MySQL use these two lines
