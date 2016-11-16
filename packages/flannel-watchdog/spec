@@ -9,4 +9,5 @@ files:
   - flannel-watchdog/config/*.go # gosub
   - github.com/tedsuo/ifrit/*.go # gosub
   - github.com/tedsuo/ifrit/grouper/*.go # gosub
+  - github.com/tedsuo/ifrit/sigmon/*.go # gosub
   - lib/flannel/*.go # gosub

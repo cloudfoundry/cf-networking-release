@@ -16,6 +16,7 @@ import (
 
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
+	"github.com/tedsuo/ifrit/sigmon"
 )
 
 const (
@@ -105,7 +106,7 @@ func main() {
 		{"runner", runner},
 	}
 	group := grouper.NewOrdered(os.Interrupt, members)
-	monitor := ifrit.Invoke(group)
+	monitor := ifrit.Invoke(sigmon.New(group))
 
 	err = <-monitor.Wait()
 	if err != nil {
