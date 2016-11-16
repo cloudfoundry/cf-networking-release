@@ -6,8 +6,8 @@ import (
 	"strings"
 )
 
-//go:generate counterfeiter -o ../fakes/iptables.go --fake-name IPTables . IPTables
-type IPTables interface {
+//go:generate counterfeiter -o ../fakes/iptables.go --fake-name IPTables . iptables
+type iptables interface {
 	Exists(table, chain string, rulespec ...string) (bool, error)
 	Insert(table, chain string, pos int, rulespec ...string) error
 	AppendUnique(table, chain string, rulespec ...string) error
@@ -18,9 +18,14 @@ type IPTables interface {
 	DeleteChain(table, chain string) error
 }
 
-//go:generate counterfeiter -o ../fakes/iptables_extended.go --fake-name IPTablesExtended . IPTablesExtended
-type IPTablesExtended interface {
-	IPTables
+//go:generate counterfeiter -o ../fakes/iptables_extended.go --fake-name IPTablesAdapter . IPTablesAdapter
+type IPTablesAdapter interface {
+	Exists(table, chain string, rulespec ...string) (bool, error)
+	Delete(table, chain string, rulespec ...string) error
+	List(table, chain string) ([]string, error)
+	NewChain(table, chain string) error
+	ClearChain(table, chain string) error
+	DeleteChain(table, chain string) error
 	BulkInsert(table, chain string, pos int, rulespec ...IPTablesRule) error
 	BulkAppend(table, chain string, rulespec ...IPTablesRule) error
 }
@@ -50,7 +55,7 @@ func (r *Restorer) Restore(input string) error {
 }
 
 type LockedIPTables struct {
-	IPTables IPTables
+	IPTables iptables
 	Locker   locker
 	Restorer restorer
 }
@@ -98,32 +103,6 @@ func (l *LockedIPTables) BulkInsert(table, chain string, pos int, rulespec ...IP
 
 func (l *LockedIPTables) BulkAppend(table, chain string, rulespec ...IPTablesRule) error {
 	return l.bulkAction(table, fmt.Sprintf("-A %s", chain), rulespec...)
-}
-
-func (l *LockedIPTables) Insert(table, chain string, pos int, rulespec ...string) error {
-	if err := l.Locker.Lock(); err != nil {
-		return fmt.Errorf("lock: %s", err)
-	}
-
-	err := l.IPTables.Insert(table, chain, pos, rulespec...)
-	if err != nil {
-		return handleIPTablesError(err, l.Locker.Unlock())
-	}
-
-	return l.Locker.Unlock()
-}
-
-func (l *LockedIPTables) AppendUnique(table, chain string, rulespec ...string) error {
-	if err := l.Locker.Lock(); err != nil {
-		return fmt.Errorf("lock: %s", err)
-	}
-
-	err := l.IPTables.AppendUnique(table, chain, rulespec...)
-	if err != nil {
-		return handleIPTablesError(err, l.Locker.Unlock())
-	}
-
-	return l.Locker.Unlock()
 }
 
 func (l *LockedIPTables) Delete(table, chain string, rulespec ...string) error {

@@ -25,10 +25,10 @@ type TimeStamper interface {
 type Enforcer struct {
 	Logger      lager.Logger
 	timestamper TimeStamper
-	iptables    rules.IPTablesExtended
+	iptables    rules.IPTablesAdapter
 }
 
-func NewEnforcer(logger lager.Logger, timestamper TimeStamper, ipt rules.IPTablesExtended) *Enforcer {
+func NewEnforcer(logger lager.Logger, timestamper TimeStamper, ipt rules.IPTablesAdapter) *Enforcer {
 	return &Enforcer{
 		Logger:      logger,
 		timestamper: timestamper,
@@ -55,7 +55,7 @@ func (e *Enforcer) EnforceOnChain(c Chain, rules []rules.IPTablesRule) error {
 	return e.Enforce(c.Table, c.ParentChain, c.Prefix, rules...)
 }
 
-func (e *Enforcer) Enforce(table, parentChain, chainPrefix string, rules ...rules.IPTablesRule) error {
+func (e *Enforcer) Enforce(table, parentChain, chainPrefix string, rulespec ...rules.IPTablesRule) error {
 	newTime := e.timestamper.CurrentTime()
 	chain := fmt.Sprintf("%s%d", chainPrefix, newTime)
 
@@ -65,13 +65,13 @@ func (e *Enforcer) Enforce(table, parentChain, chainPrefix string, rules ...rule
 		return fmt.Errorf("creating chain: %s", err)
 	}
 
-	err = e.iptables.Insert(table, parentChain, 1, []string{"-j", chain}...)
+	err = e.iptables.BulkInsert(table, parentChain, 1, rules.IPTablesRule{"-j", chain})
 	if err != nil {
 		e.Logger.Error("insert-chain", err)
 		return fmt.Errorf("inserting chain: %s", err)
 	}
 
-	err = e.iptables.BulkAppend(table, chain, rules...)
+	err = e.iptables.BulkAppend(table, chain, rulespec...)
 	if err != nil {
 		return fmt.Errorf("bulk appending: %s", err)
 	}

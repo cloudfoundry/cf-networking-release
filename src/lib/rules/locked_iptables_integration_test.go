@@ -87,37 +87,6 @@ var _ = Describe("Locked IPTables Integration Test", func() {
 		}
 	})
 
-	It("supports concurrent bulk inserts and append uniques", func() {
-		onlyRunOnLinux()
-		numRules := 100
-		numWorkers := 10
-		things := []string{}
-		for i := 0; i < numRules; i++ {
-			things = append(things, fmt.Sprintf("%d", i))
-		}
-		runner := testsupport.ParallelRunner{
-			NumWorkers: numWorkers,
-		}
-		restoreWorker := func(item string) {
-			ruleItems := []rules.IPTablesRule{rules.NewMarkSetRule("1.3.5.7", "A", fmt.Sprintf("bulk-%s", item))}
-			err := lockedIPT.BulkInsert("filter", "FORWARD", 1, ruleItems...)
-			Expect(err).NotTo(HaveOccurred())
-
-			r := rules.NewMarkSetRule("2.4.6.8", "A", fmt.Sprintf("uniq-%s", item))
-			err = lockedIPT.AppendUnique("filter", "FORWARD", r...)
-			Expect(err).NotTo(HaveOccurred())
-		}
-		runner.RunOnSliceStrings(things, restoreWorker)
-
-		allRules := AllIPTablesRules("filter")
-		for i := 0; i < numRules; i++ {
-			Expect(allRules).To(ContainElement(
-				fmt.Sprintf("-A FORWARD -s 1.3.5.7/32 -m comment --comment \"src:bulk-%d\" -j MARK --set-xmark 0xa/0xffffffff", i)))
-			Expect(allRules).To(ContainElement(
-				fmt.Sprintf("-A FORWARD -s 2.4.6.8/32 -m comment --comment \"src:uniq-%d\" -j MARK --set-xmark 0xa/0xffffffff", i)))
-		}
-	})
-
 })
 
 func onlyRunOnLinux() {

@@ -20,7 +20,7 @@ type netOutRuleConverter interface {
 
 type NetOut struct {
 	ChainNamer chainNamer
-	IPTables   rules.IPTablesExtended
+	IPTables   rules.IPTablesAdapter
 	Converter  netOutRuleConverter
 }
 
@@ -59,7 +59,7 @@ func (m *NetOut) Initialize(logger lager.Logger, containerHandle string, contain
 			return fmt.Errorf("creating chain: %s", err)
 		}
 
-		err = m.IPTables.Insert("filter", "FORWARD", 1, []string{"--jump", arg.Chain}...)
+		err = m.IPTables.BulkInsert("filter", "FORWARD", 1, rules.IPTablesRule{"--jump", arg.Chain})
 		if err != nil {
 			return fmt.Errorf("inserting rule: %s", err)
 		}
@@ -108,11 +108,9 @@ func (m *NetOut) InsertRule(containerHandle string, rule garden.NetOutRule, cont
 	}
 
 	ruleSpec := m.Converter.Convert(rule, containerIP, logChain)
-	for _, iptRule := range ruleSpec {
-		err := m.IPTables.Insert("filter", chain, 1, iptRule...)
-		if err != nil {
-			return fmt.Errorf("inserting net-out rule: %s", err)
-		}
+	err = m.IPTables.BulkInsert("filter", chain, 1, ruleSpec...)
+	if err != nil {
+		return fmt.Errorf("inserting net-out rule: %s", err)
 	}
 
 	return nil

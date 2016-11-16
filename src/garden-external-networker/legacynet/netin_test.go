@@ -6,6 +6,7 @@ import (
 	"garden-external-networker/legacynet"
 
 	lib_fakes "lib/fakes"
+	"lib/rules"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -15,12 +16,12 @@ var _ = Describe("Netin", func() {
 
 	var (
 		netIn      *legacynet.NetIn
-		ipTables   *lib_fakes.IPTables
+		ipTables   *lib_fakes.IPTablesAdapter
 		chainNamer *fakes.ChainNamer
 	)
 
 	BeforeEach(func() {
-		ipTables = &lib_fakes.IPTables{}
+		ipTables = &lib_fakes.IPTablesAdapter{}
 		chainNamer = &fakes.ChainNamer{}
 		netIn = &legacynet.NetIn{
 			ChainNamer: chainNamer,
@@ -48,11 +49,11 @@ var _ = Describe("Netin", func() {
 			err := netIn.Initialize("some-container-handle")
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(ipTables.AppendUniqueCallCount()).To(Equal(1))
-			table, chain, extraArgs := ipTables.AppendUniqueArgsForCall(0)
+			Expect(ipTables.BulkAppendCallCount()).To(Equal(1))
+			table, chain, rulespec := ipTables.BulkAppendArgsForCall(0)
 			Expect(table).To(Equal("nat"))
 			Expect(chain).To(Equal("PREROUTING"))
-			Expect(extraArgs).To(Equal([]string{"--jump", "some-chain-name"}))
+			Expect(rulespec).To(Equal([]rules.IPTablesRule{{"--jump", "some-chain-name"}}))
 		})
 
 		Context("when creating a new chain fails", func() {
@@ -67,7 +68,7 @@ var _ = Describe("Netin", func() {
 
 		Context("when appending the jump rule fails", func() {
 			BeforeEach(func() {
-				ipTables.AppendUniqueReturns(errors.New("sweet potato"))
+				ipTables.BulkAppendReturns(errors.New("sweet potato"))
 			})
 			It("returns an error", func() {
 				err := netIn.Initialize("some-container-handle")
@@ -154,21 +155,21 @@ var _ = Describe("Netin", func() {
 			Expect(prefix).To(Equal("netin"))
 			Expect(handle).To(Equal("some-container-handle"))
 
-			Expect(ipTables.AppendUniqueCallCount()).To(Equal(1))
-			table, chain, extraArgs := ipTables.AppendUniqueArgsForCall(0)
+			Expect(ipTables.BulkAppendCallCount()).To(Equal(1))
+			table, chain, rulespec := ipTables.BulkAppendArgsForCall(0)
 			Expect(table).To(Equal("nat"))
 			Expect(chain).To(Equal("some-chain-name"))
-			Expect(extraArgs).To(Equal([]string{
+			Expect(rulespec).To(Equal([]rules.IPTablesRule{{
 				"-d", "1.2.3.4", "-p", "tcp",
 				"-m", "tcp", "--dport", "1111",
 				"--jump", "DNAT",
 				"--to-destination", "5.6.7.8:2222",
-			}))
+			}}))
 		})
 
 		Context("when writing the netin rule fails", func() {
 			BeforeEach(func() {
-				ipTables.AppendUniqueReturns(errors.New("blue potato"))
+				ipTables.BulkAppendReturns(errors.New("blue potato"))
 			})
 			It("returns an error", func() {
 				err := netIn.AddRule("some-container-handle", 1111, 2222, "1.2.3.4", "5.6.7.8")

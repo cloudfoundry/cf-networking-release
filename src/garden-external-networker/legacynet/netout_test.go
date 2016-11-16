@@ -21,14 +21,14 @@ var _ = Describe("Netout", func() {
 		netOut     *legacynet.NetOut
 		converter  *fakes.NetOutRuleConverter
 		chainNamer *fakes.ChainNamer
-		ipTables   *lib_fakes.IPTablesExtended
+		ipTables   *lib_fakes.IPTablesAdapter
 		logger     *lagertest.TestLogger
 	)
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test")
 		chainNamer = &fakes.ChainNamer{}
 		converter = &fakes.NetOutRuleConverter{}
-		ipTables = &lib_fakes.IPTablesExtended{}
+		ipTables = &lib_fakes.IPTablesAdapter{}
 		netOut = &legacynet.NetOut{
 			ChainNamer: chainNamer,
 			IPTables:   ipTables,
@@ -66,18 +66,18 @@ var _ = Describe("Netout", func() {
 			err := netOut.Initialize(logger, "some-container-handle", net.ParseIP("5.6.7.8"), "9.9.0.0/16")
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(ipTables.InsertCallCount()).To(Equal(2))
-			table, chain, position, extraArgs := ipTables.InsertArgsForCall(0)
+			Expect(ipTables.BulkInsertCallCount()).To(Equal(2))
+			table, chain, position, rulespec := ipTables.BulkInsertArgsForCall(0)
 			Expect(table).To(Equal("filter"))
 			Expect(chain).To(Equal("FORWARD"))
 			Expect(position).To(Equal(1))
-			Expect(extraArgs).To(Equal([]string{"--jump", "some-chain-name"}))
+			Expect(rulespec).To(Equal([]rules.IPTablesRule{{"--jump", "some-chain-name"}}))
 
-			table, chain, position, extraArgs = ipTables.InsertArgsForCall(1)
+			table, chain, position, rulespec = ipTables.BulkInsertArgsForCall(1)
 			Expect(table).To(Equal("filter"))
 			Expect(chain).To(Equal("FORWARD"))
 			Expect(position).To(Equal(1))
-			Expect(extraArgs).To(Equal([]string{"--jump", "some-other-chain-name"}))
+			Expect(rulespec).To(Equal([]rules.IPTablesRule{{"--jump", "some-other-chain-name"}}))
 		})
 
 		It("writes the default netout and logging rules", func() {
@@ -138,7 +138,7 @@ var _ = Describe("Netout", func() {
 
 		Context("when inserting a new rule fails", func() {
 			BeforeEach(func() {
-				ipTables.InsertReturns(errors.New("potato"))
+				ipTables.BulkInsertReturns(errors.New("potato"))
 			})
 			It("returns the error", func() {
 				err := netOut.Initialize(logger, "some-container-handle", net.ParseIP("5.6.7.8"), "9.9.0.0/16")
@@ -257,7 +257,10 @@ var _ = Describe("Netout", func() {
 	})
 
 	Describe("InsertRule", func() {
-		var netOutRule garden.NetOutRule
+		var (
+			netOutRule     garden.NetOutRule
+			convertedRules []rules.IPTablesRule
+		)
 
 		BeforeEach(func() {
 			netOutRule = garden.NetOutRule{
@@ -271,10 +274,11 @@ var _ = Describe("Netout", func() {
 					{Start: 1111, End: 2222},
 				},
 			}
-			converter.ConvertReturns([]rules.IPTablesRule{
+			convertedRules = []rules.IPTablesRule{
 				rules.IPTablesRule{"rule1"},
 				rules.IPTablesRule{"rule2"},
-			})
+			}
+			converter.ConvertReturns(convertedRules)
 		})
 
 		It("prepends allow rules to the container's netout chain", func() {
@@ -297,19 +301,12 @@ var _ = Describe("Netout", func() {
 			Expect(ip).To(Equal("1.2.3.4"))
 			Expect(logChainName).To(Equal("some-other-chain-name"))
 
-			Expect(ipTables.InsertCallCount()).To(Equal(2))
-			writtenRules := [][]string{}
-			for i := 0; i < 2; i++ {
-				table, chain, pos, rulespec := ipTables.InsertArgsForCall(i)
-				Expect(table).To(Equal("filter"))
-				Expect(chain).To(Equal("some-chain-name"))
-				Expect(pos).To(Equal(1))
-				writtenRules = append(writtenRules, rulespec)
-			}
-			Expect(writtenRules).To(ConsistOf(
-				[]string{"rule1"},
-				[]string{"rule2"},
-			))
+			Expect(ipTables.BulkInsertCallCount()).To(Equal(1))
+			table, chain, pos, rulespec := ipTables.BulkInsertArgsForCall(0)
+			Expect(table).To(Equal("filter"))
+			Expect(chain).To(Equal("some-chain-name"))
+			Expect(pos).To(Equal(1))
+			Expect(rulespec).To(Equal(convertedRules))
 		})
 
 		Context("when the chain namer fails", func() {
@@ -324,7 +321,7 @@ var _ = Describe("Netout", func() {
 
 		Context("when insert rule fails", func() {
 			BeforeEach(func() {
-				ipTables.InsertReturns(errors.New("potato"))
+				ipTables.BulkInsertReturns(errors.New("potato"))
 			})
 			It("returns an error", func() {
 				err := netOut.InsertRule("some-container-handle", netOutRule, "1.2.3.4")

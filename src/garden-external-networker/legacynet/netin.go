@@ -9,7 +9,7 @@ const prefixNetIn = "netin"
 
 type NetIn struct {
 	ChainNamer chainNamer
-	IPTables   rules.IPTables
+	IPTables   rules.IPTablesAdapter
 }
 
 func (m *NetIn) Initialize(containerHandle string) error {
@@ -19,7 +19,7 @@ func (m *NetIn) Initialize(containerHandle string) error {
 		return fmt.Errorf("creating chain: %s", err)
 	}
 
-	err = m.IPTables.AppendUnique("nat", "PREROUTING", []string{"--jump", chain}...)
+	err = m.IPTables.BulkAppend("nat", "PREROUTING", rules.IPTablesRule{"--jump", chain})
 	if err != nil {
 		return fmt.Errorf("inserting rule: %s", err)
 	}
@@ -50,12 +50,12 @@ func (m *NetIn) AddRule(containerHandle string,
 	hostPort, containerPort int, hostIP, containerIP string) error {
 
 	chainName := m.ChainNamer.Prefix(prefixNetIn, containerHandle)
-	err := m.IPTables.AppendUnique("nat", chainName, []string{
+	err := m.IPTables.BulkAppend("nat", chainName, rules.IPTablesRule{
 		"-d", hostIP, "-p", "tcp",
 		"-m", "tcp", "--dport", fmt.Sprintf("%d", hostPort),
 		"--jump", "DNAT",
 		"--to-destination", fmt.Sprintf("%s:%d", containerIP, containerPort),
-	}...)
+	})
 	if err != nil {
 		return fmt.Errorf("inserting rule: %s", err)
 	}

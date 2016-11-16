@@ -19,7 +19,7 @@ var _ = Describe("Enforcer", func() {
 		var (
 			fakeRule     rules.IPTablesRule
 			fakeRule2    rules.IPTablesRule
-			iptables     *libfakes.IPTablesExtended
+			iptables     *libfakes.IPTablesAdapter
 			timestamper  *fakes.TimeStamper
 			logger       *lagertest.TestLogger
 			ruleEnforcer *enforcer.Enforcer
@@ -31,7 +31,7 @@ var _ = Describe("Enforcer", func() {
 
 			timestamper = &fakes.TimeStamper{}
 			logger = lagertest.NewTestLogger("test")
-			iptables = &libfakes.IPTablesExtended{}
+			iptables = &libfakes.IPTablesAdapter{}
 
 			timestamper.CurrentTimeReturns(42)
 			ruleEnforcer = enforcer.NewEnforcer(logger, timestamper, iptables)
@@ -74,12 +74,12 @@ var _ = Describe("Enforcer", func() {
 			err := ruleEnforcer.Enforce("some-table", "some-chain", "foo", []rules.IPTablesRule{fakeRule}...)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(iptables.InsertCallCount()).To(Equal(1))
-			tableName, chainName, pos, ruleSpec := iptables.InsertArgsForCall(0)
+			Expect(iptables.BulkInsertCallCount()).To(Equal(1))
+			tableName, chainName, pos, ruleSpec := iptables.BulkInsertArgsForCall(0)
 			Expect(tableName).To(Equal("some-table"))
 			Expect(chainName).To(Equal("some-chain"))
 			Expect(pos).To(Equal(1))
-			Expect(ruleSpec).To(Equal([]string{"-j", "foo42"}))
+			Expect(ruleSpec).To(Equal([]rules.IPTablesRule{{"-j", "foo42"}}))
 		})
 
 		Context("when there is an older timestamped chain", func() {
@@ -111,7 +111,7 @@ var _ = Describe("Enforcer", func() {
 
 		Context("when inserting the new chain fails", func() {
 			BeforeEach(func() {
-				iptables.InsertReturns(errors.New("banana"))
+				iptables.BulkInsertReturns(errors.New("banana"))
 			})
 
 			It("it logs and returns a useful error", func() {
