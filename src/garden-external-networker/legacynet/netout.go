@@ -81,7 +81,7 @@ func (m *NetOut) Cleanup(containerHandle string) error {
 
 	chainsToClean := []string{chain, logChain}
 	for _, c := range chainsToClean {
-		err = m.IPTables.Delete("filter", "FORWARD", []string{"--jump", c}...)
+		err = m.IPTables.Delete("filter", "FORWARD", rules.IPTablesRule{"--jump", c})
 		if err != nil {
 			return fmt.Errorf("delete rule: %s", err)
 		}

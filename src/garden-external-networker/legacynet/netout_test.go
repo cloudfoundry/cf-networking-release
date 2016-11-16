@@ -176,12 +176,12 @@ var _ = Describe("Netout", func() {
 			table, chain, extraArgs := ipTables.DeleteArgsForCall(0)
 			Expect(table).To(Equal("filter"))
 			Expect(chain).To(Equal("FORWARD"))
-			Expect(extraArgs).To(Equal([]string{"--jump", "some-chain-name"}))
+			Expect(extraArgs).To(Equal(rules.IPTablesRule{"--jump", "some-chain-name"}))
 
 			table, chain, extraArgs = ipTables.DeleteArgsForCall(1)
 			Expect(table).To(Equal("filter"))
 			Expect(chain).To(Equal("FORWARD"))
-			Expect(extraArgs).To(Equal([]string{"--jump", "some-other-chain-name"}))
+			Expect(extraArgs).To(Equal(rules.IPTablesRule{"--jump", "some-other-chain-name"}))
 
 		})
 

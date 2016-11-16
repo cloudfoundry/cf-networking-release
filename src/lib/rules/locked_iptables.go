@@ -20,8 +20,8 @@ type iptables interface {
 
 //go:generate counterfeiter -o ../fakes/iptables_extended.go --fake-name IPTablesAdapter . IPTablesAdapter
 type IPTablesAdapter interface {
-	Exists(table, chain string, rulespec ...string) (bool, error)
-	Delete(table, chain string, rulespec ...string) error
+	Exists(table, chain string, rulespec IPTablesRule) (bool, error)
+	Delete(table, chain string, rulespec IPTablesRule) error
 	List(table, chain string) ([]string, error)
 	NewChain(table, chain string) error
 	ClearChain(table, chain string) error
@@ -64,7 +64,7 @@ func handleIPTablesError(err1, err2 error) error {
 	return fmt.Errorf("iptables call: %+v and unlock: %+v", err1, err2)
 }
 
-func (l *LockedIPTables) Exists(table, chain string, rulespec ...string) (bool, error) {
+func (l *LockedIPTables) Exists(table, chain string, rulespec IPTablesRule) (bool, error) {
 	if err := l.Locker.Lock(); err != nil {
 		return false, fmt.Errorf("lock: %s", err)
 	}
@@ -105,7 +105,7 @@ func (l *LockedIPTables) BulkAppend(table, chain string, rulespec ...IPTablesRul
 	return l.bulkAction(table, fmt.Sprintf("-A %s", chain), rulespec...)
 }
 
-func (l *LockedIPTables) Delete(table, chain string, rulespec ...string) error {
+func (l *LockedIPTables) Delete(table, chain string, rulespec IPTablesRule) error {
 	if err := l.Locker.Lock(); err != nil {
 		return fmt.Errorf("lock: %s", err)
 	}

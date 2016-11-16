@@ -7,23 +7,23 @@ import (
 )
 
 type IPTablesAdapter struct {
-	ExistsStub        func(table, chain string, rulespec ...string) (bool, error)
+	ExistsStub        func(table, chain string, rulespec rules.IPTablesRule) (bool, error)
 	existsMutex       sync.RWMutex
 	existsArgsForCall []struct {
 		table    string
 		chain    string
-		rulespec []string
+		rulespec rules.IPTablesRule
 	}
 	existsReturns struct {
 		result1 bool
 		result2 error
 	}
-	DeleteStub        func(table, chain string, rulespec ...string) error
+	DeleteStub        func(table, chain string, rulespec rules.IPTablesRule) error
 	deleteMutex       sync.RWMutex
 	deleteArgsForCall []struct {
 		table    string
 		chain    string
-		rulespec []string
+		rulespec rules.IPTablesRule
 	}
 	deleteReturns struct {
 		result1 error
@@ -90,17 +90,17 @@ type IPTablesAdapter struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *IPTablesAdapter) Exists(table string, chain string, rulespec ...string) (bool, error) {
+func (fake *IPTablesAdapter) Exists(table string, chain string, rulespec rules.IPTablesRule) (bool, error) {
 	fake.existsMutex.Lock()
 	fake.existsArgsForCall = append(fake.existsArgsForCall, struct {
 		table    string
 		chain    string
-		rulespec []string
+		rulespec rules.IPTablesRule
 	}{table, chain, rulespec})
 	fake.recordInvocation("Exists", []interface{}{table, chain, rulespec})
 	fake.existsMutex.Unlock()
 	if fake.ExistsStub != nil {
-		return fake.ExistsStub(table, chain, rulespec...)
+		return fake.ExistsStub(table, chain, rulespec)
 	} else {
 		return fake.existsReturns.result1, fake.existsReturns.result2
 	}
@@ -112,7 +112,7 @@ func (fake *IPTablesAdapter) ExistsCallCount() int {
 	return len(fake.existsArgsForCall)
 }
 
-func (fake *IPTablesAdapter) ExistsArgsForCall(i int) (string, string, []string) {
+func (fake *IPTablesAdapter) ExistsArgsForCall(i int) (string, string, rules.IPTablesRule) {
 	fake.existsMutex.RLock()
 	defer fake.existsMutex.RUnlock()
 	return fake.existsArgsForCall[i].table, fake.existsArgsForCall[i].chain, fake.existsArgsForCall[i].rulespec
@@ -126,17 +126,17 @@ func (fake *IPTablesAdapter) ExistsReturns(result1 bool, result2 error) {
 	}{result1, result2}
 }
 
-func (fake *IPTablesAdapter) Delete(table string, chain string, rulespec ...string) error {
+func (fake *IPTablesAdapter) Delete(table string, chain string, rulespec rules.IPTablesRule) error {
 	fake.deleteMutex.Lock()
 	fake.deleteArgsForCall = append(fake.deleteArgsForCall, struct {
 		table    string
 		chain    string
-		rulespec []string
+		rulespec rules.IPTablesRule
 	}{table, chain, rulespec})
 	fake.recordInvocation("Delete", []interface{}{table, chain, rulespec})
 	fake.deleteMutex.Unlock()
 	if fake.DeleteStub != nil {
-		return fake.DeleteStub(table, chain, rulespec...)
+		return fake.DeleteStub(table, chain, rulespec)
 	} else {
 		return fake.deleteReturns.result1
 	}
@@ -148,7 +148,7 @@ func (fake *IPTablesAdapter) DeleteCallCount() int {
 	return len(fake.deleteArgsForCall)
 }
 
-func (fake *IPTablesAdapter) DeleteArgsForCall(i int) (string, string, []string) {
+func (fake *IPTablesAdapter) DeleteArgsForCall(i int) (string, string, rules.IPTablesRule) {
 	fake.deleteMutex.RLock()
 	defer fake.deleteMutex.RUnlock()
 	return fake.deleteArgsForCall[i].table, fake.deleteArgsForCall[i].chain, fake.deleteArgsForCall[i].rulespec

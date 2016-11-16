@@ -114,7 +114,7 @@ func (e *Enforcer) cleanupOldRules(table, parentChain, chainPrefix string, newTi
 }
 
 func (e *Enforcer) cleanupOldChain(table, parentChain, timeStampedChain string) error {
-	err := e.iptables.Delete(table, parentChain, []string{"-j", timeStampedChain}...)
+	err := e.iptables.Delete(table, parentChain, rules.IPTablesRule{"-j", timeStampedChain})
 	if err != nil {
 		return fmt.Errorf("cleanup old chain: %s", err)
 	}

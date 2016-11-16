@@ -29,7 +29,7 @@ func (m *NetIn) Initialize(containerHandle string) error {
 func (m *NetIn) Cleanup(containerHandle string) error {
 	chain := m.ChainNamer.Prefix(prefixNetIn, containerHandle)
 
-	err := m.IPTables.Delete("nat", "PREROUTING", []string{"--jump", chain}...)
+	err := m.IPTables.Delete("nat", "PREROUTING", rules.IPTablesRule{"--jump", chain})
 	if err != nil {
 		return fmt.Errorf("delete rule: %s", err)
 	}

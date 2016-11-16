@@ -91,7 +91,7 @@ var _ = Describe("Netin", func() {
 			table, chain, extraArgs := ipTables.DeleteArgsForCall(0)
 			Expect(table).To(Equal("nat"))
 			Expect(chain).To(Equal("PREROUTING"))
-			Expect(extraArgs).To(Equal([]string{"--jump", "some-chain-name"}))
+			Expect(extraArgs).To(Equal(rules.IPTablesRule{"--jump", "some-chain-name"}))
 		})
 
 		It("clears the container chain", func() {

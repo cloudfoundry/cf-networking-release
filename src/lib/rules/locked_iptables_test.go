@@ -17,6 +17,7 @@ var _ = Describe("LockedIptables", func() {
 		restorer  *fakes.Restorer
 		lock      *fakes.Locker
 		rulespec  []string
+		rule      rules.IPTablesRule
 	)
 	BeforeEach(func() {
 		ipt = &fakes.IPTables{}
@@ -28,6 +29,7 @@ var _ = Describe("LockedIptables", func() {
 			Restorer: restorer,
 		}
 		rulespec = []string{"some", "args"}
+		rule = rules.IPTablesRule{"some", "args"}
 	})
 	Describe("BulkInsert", func() {
 		var ruleSet []rules.IPTablesRule
@@ -160,7 +162,7 @@ var _ = Describe("LockedIptables", func() {
 			ipt.ExistsReturns(true, nil)
 		})
 		It("passes the correct parameters to the iptables library", func() {
-			exists, err := lockedIPT.Exists("some-table", "some-chain", rulespec...)
+			exists, err := lockedIPT.Exists("some-table", "some-chain", rule)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(exists).To(Equal(true))
 
@@ -178,7 +180,7 @@ var _ = Describe("LockedIptables", func() {
 				lock.LockReturns(errors.New("banana"))
 			})
 			It("returns an error", func() {
-				_, err := lockedIPT.Exists("some-table", "some-chain", rulespec...)
+				_, err := lockedIPT.Exists("some-table", "some-chain", rule)
 				Expect(err).To(MatchError("lock: banana"))
 			})
 		})
@@ -188,7 +190,7 @@ var _ = Describe("LockedIptables", func() {
 				ipt.ExistsReturns(false, errors.New("banana"))
 			})
 			It("returns an error", func() {
-				_, err := lockedIPT.Exists("some-table", "some-chain", rulespec...)
+				_, err := lockedIPT.Exists("some-table", "some-chain", rule)
 				Expect(err).To(MatchError("iptables call: banana and unlock: <nil>"))
 			})
 		})
@@ -199,7 +201,7 @@ var _ = Describe("LockedIptables", func() {
 				ipt.ExistsReturns(false, errors.New("patato"))
 			})
 			It("returns an error", func() {
-				_, err := lockedIPT.Exists("some-table", "some-chain", rulespec...)
+				_, err := lockedIPT.Exists("some-table", "some-chain", rule)
 				Expect(err).To(MatchError("iptables call: patato and unlock: banana"))
 			})
 		})
@@ -207,7 +209,7 @@ var _ = Describe("LockedIptables", func() {
 
 	Describe("Delete", func() {
 		It("locks and passes the correct parameters to the iptables library", func() {
-			err := lockedIPT.Delete("some-table", "some-chain", rulespec...)
+			err := lockedIPT.Delete("some-table", "some-chain", rule)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(lock.LockCallCount()).To(Equal(1))
@@ -224,7 +226,7 @@ var _ = Describe("LockedIptables", func() {
 				lock.LockReturns(errors.New("banana"))
 			})
 			It("returns an error", func() {
-				err := lockedIPT.Delete("some-table", "some-chain", rulespec...)
+				err := lockedIPT.Delete("some-table", "some-chain", rule)
 				Expect(err).To(MatchError("lock: banana"))
 			})
 		})
@@ -234,7 +236,7 @@ var _ = Describe("LockedIptables", func() {
 				ipt.DeleteReturns(errors.New("banana"))
 			})
 			It("returns an error", func() {
-				err := lockedIPT.Delete("some-table", "some-chain", rulespec...)
+				err := lockedIPT.Delete("some-table", "some-chain", rule)
 				Expect(err).To(MatchError("iptables call: banana and unlock: <nil>"))
 			})
 		})
@@ -245,7 +247,7 @@ var _ = Describe("LockedIptables", func() {
 				ipt.DeleteReturns(errors.New("patato"))
 			})
 			It("returns an error", func() {
-				err := lockedIPT.Delete("some-table", "some-chain", rulespec...)
+				err := lockedIPT.Delete("some-table", "some-chain", rule)
 				Expect(err).To(MatchError("iptables call: patato and unlock: banana"))
 			})
 		})

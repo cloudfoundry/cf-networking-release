@@ -97,7 +97,7 @@ var _ = Describe("Enforcer", func() {
 				table, chain, ruleSpec := iptables.DeleteArgsForCall(0)
 				Expect(table).To(Equal("some-table"))
 				Expect(chain).To(Equal("some-chain"))
-				Expect(ruleSpec).To(Equal([]string{"-j", "foo0000000001"}))
+				Expect(ruleSpec).To(Equal(rules.IPTablesRule{"-j", "foo0000000001"}))
 				Expect(iptables.ClearChainCallCount()).To(Equal(1))
 				table, chain = iptables.ClearChainArgsForCall(0)
 				Expect(table).To(Equal("some-table"))
