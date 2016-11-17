@@ -7,6 +7,8 @@ import (
 	"os"
 	"policy-server/config"
 
+	"code.cloudfoundry.org/lager"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
@@ -43,7 +45,8 @@ var _ = Describe("Config", func() {
 						"connection_string": "some-db-connection-string"
 					},
 					"tag_length": 2,
-					"metron_address": "http://1.2.3.4:9999"
+					"metron_address": "http://1.2.3.4:9999",
+					"log_level": 1
 				}`)
 				c, err := config.New(file.Name())
 				Expect(err).NotTo(HaveOccurred())
@@ -62,6 +65,7 @@ var _ = Describe("Config", func() {
 				Expect(c.Database.ConnectionString).To(Equal("some-db-connection-string"))
 				Expect(c.TagLength).To(Equal(2))
 				Expect(c.MetronAddress).To(Equal("http://1.2.3.4:9999"))
+				Expect(c.LogLevel).To(Equal(lager.INFO))
 			})
 		})
 
@@ -134,6 +138,7 @@ var _ = Describe("Config", func() {
 			Entry("missing tag length", "tag_length", "TagLength: zero value"),
 			Entry("missing metron address", "metron_address", "MetronAddress: zero value"),
 		)
+
 		Describe("database config", func() {
 			var allData map[string]interface{}
 			BeforeEach(func() {
@@ -155,8 +160,10 @@ var _ = Describe("Config", func() {
 					},
 					"tag_length":     2,
 					"metron_address": "http://1.2.3.4:9999",
+					"log_level":      1,
 				}
 			})
+
 			Context("when the config file is missing a db type", func() {
 				BeforeEach(func() {
 					delete(allData["database"].(map[string]interface{}), "type")
@@ -167,6 +174,7 @@ var _ = Describe("Config", func() {
 					Expect(err).To(MatchError("invalid config: Database.Type: zero value"))
 				})
 			})
+
 			Context("when the config file is missing a db connection string", func() {
 				BeforeEach(func() {
 					delete(allData["database"].(map[string]interface{}), "connection_string")
@@ -175,6 +183,42 @@ var _ = Describe("Config", func() {
 				It("returns an error", func() {
 					_, err = config.New(file.Name())
 					Expect(err).To(MatchError("invalid config: Database.ConnectionString: zero value"))
+				})
+			})
+		})
+
+		Describe("default values", func() {
+			var allData map[string]interface{}
+			BeforeEach(func() {
+				allData = map[string]interface{}{
+					"listen_host":          "http://1.2.3.4",
+					"listen_port":          1234,
+					"internal_listen_port": 2222,
+					"ca_cert_file":         "some/ca/cert/file",
+					"server_cert_file":     "some/server/cert/file",
+					"server_key_file":      "some/server/key/file",
+					"uaa_client":           "some-uaa-client",
+					"uaa_client_secret":    "some-uaa-client-secret",
+					"uaa_url":              "http://uaa.example.com",
+					"cc_url":               "http://ccapi.example.com",
+					"skip_ssl_validation":  true,
+					"database": map[string]interface{}{
+						"type":              "mysql",
+						"connection_string": "some-db-connection-string",
+					},
+					"tag_length":     2,
+					"metron_address": "http://1.2.3.4:9999",
+				}
+
+				Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
+			})
+
+			Context("when the config file is missing the log level", func() {
+				It("defaults to info", func() {
+					conf, err := config.New(file.Name())
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(conf.LogLevel).To(Equal(lager.INFO))
 				})
 			})
 		})
