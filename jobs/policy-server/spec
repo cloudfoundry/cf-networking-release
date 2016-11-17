@@ -47,23 +47,23 @@ properties:
     description: "Server key for TLS"
 
   policy-server.uaa_client:
-    description: "uaa client name"
+    description: "UAA client name"
     default: network-policy
 
   policy-server.uaa_client_secret:
-    description: "uaa client secret"
+    description: "UAA client secret"
     default: network-policy-secret
 
   policy-server.uaa_url:
-    description: "address of uaa server"
+    description: "Address of UAA server"
     default: https://uaa.bosh-lite.com
 
   policy-server.cc_url:
-    description: "address of cloud controller server"
+    description: "Address of Cloud Controller server"
     default: https://api.bosh-lite.com
 
   policy-server.skip_ssl_validation:
-    description: "skip verifying ssl certs when speaking to uaa or cloud-controller"
+    description: "Skip verifying ssl certs when speaking to UAA or Cloud Controller"
     default: false
 
   policy-server.database.type:
@@ -80,3 +80,7 @@ properties:
   policy-server.metron_address:
     description: "Forward metrics to this metron agent"
     default: 127.0.0.1:3457
+
+  policy-server.log_level:
+    description: "Logging level"
+    default: 1
