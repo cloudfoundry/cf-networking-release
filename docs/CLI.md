@@ -95,6 +95,6 @@ Denying traffic from frontend to backend as admin...
 OK
 ```
 
-### DEPCRECATED Deny Policy:
+### DEPRECATED Deny Policy:
 
 Deprecated! Use remove-access
