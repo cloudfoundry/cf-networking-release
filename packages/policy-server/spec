@@ -41,6 +41,7 @@ files:
   - github.com/tedsuo/ifrit/http_server/*.go # gosub
   - github.com/tedsuo/ifrit/sigmon/*.go # gosub
   - github.com/tedsuo/rata/*.go # gosub
+  - gopkg.in/validator.v2/*.go # gosub
   - lib/db/*.go # gosub
   - lib/marshal/*.go # gosub
   - lib/metrics/*.go # gosub
