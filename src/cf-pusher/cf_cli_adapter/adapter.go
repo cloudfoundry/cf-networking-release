@@ -2,9 +2,11 @@ package cf_cli_adapter
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 type Adapter struct {
@@ -13,42 +15,50 @@ type Adapter struct {
 
 func (a *Adapter) CreateOrg(name string) error {
 	fmt.Printf("running: %s create-org %s\n", a.CfCliPath, name)
-	return exec.Command(a.CfCliPath, "create-org", name).Run()
+	cmd := exec.Command(a.CfCliPath, "create-org", name)
+	return runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) DeleteOrg(name string) error {
 	fmt.Printf("running: %s delete-org -f %s\n", a.CfCliPath, name)
-	return exec.Command(a.CfCliPath, "delete-org", "-f", name).Run()
+	cmd := exec.Command(a.CfCliPath, "delete-org", "-f", name)
+	return runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) CreateSpace(name string) error {
 	fmt.Printf("running: %s create-space %s\n", a.CfCliPath, name)
-	return exec.Command(a.CfCliPath, "create-space", name).Run()
+	cmd := exec.Command(a.CfCliPath, "create-space", name)
+	return runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) TargetOrg(name string) error {
 	fmt.Printf("running: %s target -o  %s\n", a.CfCliPath, name)
-	return exec.Command(a.CfCliPath, "target", "-o", name).Run()
+	cmd := exec.Command(a.CfCliPath, "target", "-o", name)
+	return runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) TargetSpace(name string) error {
 	fmt.Printf("running: %s target -s  %s\n", a.CfCliPath, name)
-	return exec.Command(a.CfCliPath, "target", "-s", name).Run()
+	cmd := exec.Command(a.CfCliPath, "target", "-s", name)
+	return runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) SetApiWithSsl(api string) error {
 	fmt.Printf("running: %s api  %s\n", a.CfCliPath, api)
-	return exec.Command(a.CfCliPath, "api", api).Run()
+	cmd := exec.Command(a.CfCliPath, "api", api)
+	return runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) SetApiWithoutSsl(api string) error {
 	fmt.Printf("running: %s api  %s --skip-ssl-validation\n", a.CfCliPath, api)
-	return exec.Command(a.CfCliPath, "api", api, "--skip-ssl-validation").Run()
+	cmd := exec.Command(a.CfCliPath, "api", api, "--skip-ssl-validation")
+	return runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) Auth(user, password string) error {
 	fmt.Printf("running: %s auth <user> <pass> \n", a.CfCliPath)
-	return exec.Command(a.CfCliPath, "auth", user, password).Run()
+	cmd := exec.Command(a.CfCliPath, "auth", user, password)
+	return runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) Push(name, directory, manifestFile string) error {
@@ -63,14 +73,15 @@ func (a *Adapter) Push(name, directory, manifestFile string) error {
 
 func (a *Adapter) Delete(appName string) error {
 	fmt.Printf("running: %s delete -f %s\n", a.CfCliPath, appName)
-	return exec.Command(a.CfCliPath, "delete", "-f", appName).Run()
+	cmd := exec.Command(a.CfCliPath, "delete", "-f", appName)
+	return runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) Scale(name string, instances int) error {
 	instancesStr := fmt.Sprintf("%d", instances)
 	fmt.Printf("running: %s scale %s -i %s\n", a.CfCliPath, name, instancesStr)
-	err := exec.Command(a.CfCliPath, "scale", name, "-i", instancesStr).Run()
-	return err
+	cmd := exec.Command(a.CfCliPath, "scale", name, "-i", instancesStr)
+	return runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) AppGuid(name string) (string, error) {
@@ -118,13 +129,15 @@ func (a *Adapter) CheckApp(guid string) ([]byte, error) {
 func (a *Adapter) AllowAccess(sourceApp, destApp string, port int, protocol string) error {
 	portStr := fmt.Sprintf("%d", port)
 	fmt.Printf("running: cf allow-access %s %s --port %s --protocol tcp\n", sourceApp, destApp, portStr)
-	return exec.Command("cf", "allow-access", sourceApp, destApp, "--port", portStr, "--protocol", "tcp").Run()
+	cmd := exec.Command("cf", "allow-access", sourceApp, destApp, "--port", portStr, "--protocol", "tcp")
+	return runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) RemoveAccess(sourceApp, destApp string, port int, protocol string) error {
 	portStr := fmt.Sprintf("%d", port)
 	fmt.Printf("running: cf remove-access %s %s --port %s --protocol tcp\n", sourceApp, destApp, portStr)
-	return exec.Command("cf", "remove-access", sourceApp, destApp, "--port", portStr, "--protocol", "tcp").Run()
+	cmd := exec.Command("cf", "remove-access", sourceApp, destApp, "--port", portStr, "--protocol", "tcp")
+	return runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) CreateQuota(name, memory string, instanceMemory, routes, serviceInstances, appInstances, routePorts int) error {
@@ -134,30 +147,59 @@ func (a *Adapter) CreateQuota(name, memory string, instanceMemory, routes, servi
 	appInstancesStr := fmt.Sprintf("%d", appInstances)
 	routePortsStr := fmt.Sprintf("%d", routePorts)
 	fmt.Printf("running cf create-quota %s -m %s -i %s -r %s -s %s -a %s --reserved-route-ports %s\n", name, memory, instanceMemoryStr, routesStr, serviceInstancesStr, appInstancesStr, routePortsStr)
-	return exec.Command("cf", "create-quota", name, "-m", memory, "-i", instanceMemoryStr, "-r", routesStr, "-s", serviceInstancesStr, "-a", appInstancesStr, "--reserved-route-ports", routePortsStr).Run()
+	cmd := exec.Command("cf", "create-quota", name, "-m", memory, "-i", instanceMemoryStr, "-r", routesStr, "-s", serviceInstancesStr, "-a", appInstancesStr, "--reserved-route-ports", routePortsStr)
+	return runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) SetQuota(org, quota string) error {
 	fmt.Printf("running cf set-quota %s %s\n", org, quota)
-	return exec.Command("cf", "set-quota", org, quota).Run()
+	cmd := exec.Command("cf", "set-quota", org, quota)
+	return runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) CreateSecurityGroup(name, filepath string) error {
 	fmt.Printf("running cf create-security-group %s %s\n", name, filepath)
-	return exec.Command("cf", "create-security-group", name, filepath).Run()
+	cmd := exec.Command("cf", "create-security-group", name, filepath)
+	return runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) BindSecurityGroup(name, org, space string) error {
 	fmt.Printf("running cf bind-security-group %s %s %s\n", name, org, space)
-	return exec.Command("cf", "bind-security-group", name, org, space).Run()
+	cmd := exec.Command("cf", "bind-security-group", name, org, space)
+	return runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) DeleteSecurityGroup(name string) error {
 	fmt.Printf("running cf delete-security-group -f %s \n", name)
-	return exec.Command("cf", "delete-security-group", "-f", name).Run()
+	cmd := exec.Command("cf", "delete-security-group", "-f", name)
+	return runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) DeleteQuota(quota string) error {
 	fmt.Printf("running cf delete-quota %s -f\n", quota)
-	return exec.Command("cf", "delete-quota", quota, "-f").Run()
+	cmd := exec.Command("cf", "delete-quota", quota, "-f")
+	return runCommandWithTimeout(cmd)
+}
+
+func runCommandWithTimeout(cmd *exec.Cmd) error {
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+	done := make(chan error, 1)
+	go func() {
+		done <- cmd.Wait()
+	}()
+
+	select {
+	case <-time.After(2 * time.Minute):
+		if err := cmd.Process.Kill(); err != nil {
+			return fmt.Errorf("command timed out and could not be killed: %s", err)
+		}
+		return errors.New("command timed out")
+	case err := <-done:
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
