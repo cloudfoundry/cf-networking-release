@@ -81,6 +81,9 @@ var _ = Describe("PoliciesCleanup", func() {
 
 	It("Cleans up stale policies for deleted apps", func() {
 		handler.ServeHTTP(resp, request, "")
+
+		Expect(logger).To(gbytes.Say("policy-cleanup called.*URL.*/policies/cleanup.*User"))
+
 		Expect(fakeStore.AllCallCount()).To(Equal(1))
 		Expect(fakeUAAClient.GetTokenCallCount()).To(Equal(1))
 		Expect(fakeCCClient.GetAllAppGUIDsCallCount()).To(Equal(1))
