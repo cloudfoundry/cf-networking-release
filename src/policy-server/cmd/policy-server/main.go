@@ -43,11 +43,11 @@ func main() {
 	flag.Parse()
 
 	logger := lager.NewLogger("policy-server")
-	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.INFO))
 	conf, err := config.New(*configFilePath)
 	if err != nil {
 		log.Fatalf("could not read config file %s", err)
 	}
+	logger.RegisterSink(lager.NewWriterSink(os.Stdout, conf.LogLevel))
 
 	httpClient := &http.Client{
 		Transport: &http.Transport{

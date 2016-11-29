@@ -46,7 +46,7 @@ var _ = Describe("Config", func() {
 					},
 					"tag_length": 2,
 					"metron_address": "http://1.2.3.4:9999",
-					"log_level": 1
+					"log_level": 0
 				}`)
 				c, err := config.New(file.Name())
 				Expect(err).NotTo(HaveOccurred())
@@ -65,7 +65,7 @@ var _ = Describe("Config", func() {
 				Expect(c.Database.ConnectionString).To(Equal("some-db-connection-string"))
 				Expect(c.TagLength).To(Equal(2))
 				Expect(c.MetronAddress).To(Equal("http://1.2.3.4:9999"))
-				Expect(c.LogLevel).To(Equal(lager.INFO))
+				Expect(c.LogLevel).To(Equal(lager.DEBUG))
 			})
 		})
 
