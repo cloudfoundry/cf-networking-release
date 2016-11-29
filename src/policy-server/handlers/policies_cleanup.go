@@ -28,11 +28,6 @@ type PoliciesCleanup struct {
 }
 
 func (h *PoliciesCleanup) ServeHTTP(w http.ResponseWriter, req *http.Request, currentUserName string) {
-	h.Logger.Debug("policy-cleanup called", lager.Data{
-		"URL":  req.URL,
-		"User": currentUserName,
-	})
-
 	policies, err := h.Store.All()
 	if err != nil {
 		h.Logger.Error("store-list-policies-failed", err)

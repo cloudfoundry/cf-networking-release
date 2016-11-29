@@ -30,6 +30,8 @@ type authenticatedHandler interface {
 
 func (a *Authenticator) Wrap(handle authenticatedHandler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		a.Logger.Debug("request made to policy-server", lager.Data{"URL": req.URL, "RemoteAddr": req.RemoteAddr})
+
 		authorization := req.Header["Authorization"]
 		if len(authorization) < 1 {
 			a.Logger.Error("auth", errors.New("no auth header"))
@@ -49,6 +51,7 @@ func (a *Authenticator) Wrap(handle authenticatedHandler) http.Handler {
 			return
 		}
 
+		a.Logger.Debug("request made with token:", lager.Data{"tokenData": tokenData})
 		if !isAuthorized(tokenData) {
 			a.Logger.Error("authorization", errors.New("network.admin scope not found"),
 				lager.Data{

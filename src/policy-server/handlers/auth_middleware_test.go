@@ -9,10 +9,10 @@ import (
 	"policy-server/handlers"
 	"policy-server/uaa_client"
 
+	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
-	"code.cloudfoundry.org/lager/lagertest"
 )
 
 var _ = Describe("Authentication middleware", func() {
@@ -32,6 +32,7 @@ var _ = Describe("Authentication middleware", func() {
 		request, err = http.NewRequest("GET", "/networking/v0/whoami", bytes.NewBuffer([]byte{}))
 		Expect(err).NotTo(HaveOccurred())
 		request.Header.Set("Authorization", "Bearer correct-token")
+		request.RemoteAddr = "some-host:some-ip"
 
 		uaaClient = &fakes.UAARequestClient{}
 		logger = lagertest.NewTestLogger("test")
@@ -53,11 +54,13 @@ var _ = Describe("Authentication middleware", func() {
 	})
 
 	Context("when everything is ok", func() {
-		It("calls into the unprotected handler", func() {
+		It("calls into the unprotected handler and logs the request", func() {
 			protected.ServeHTTP(resp, request)
 
+			Expect(logger).To(gbytes.Say("request made to policy-server.*RemoteAddr.*some-host:some-ip.*URL.*/networking/v0/whoami"))
 			Expect(unprotected.ServeHTTPCallCount()).To(Equal(1))
 
+			Expect(logger).To(gbytes.Say("request made with token:.*tokenData.*scope.*network.admin.*user_name.*some_user"))
 			unprotectedResp, unprotectedRequest, currentUser := unprotected.ServeHTTPArgsForCall(0)
 			Expect(unprotectedResp).To(Equal(resp))
 			Expect(unprotectedRequest).To(Equal(request))
