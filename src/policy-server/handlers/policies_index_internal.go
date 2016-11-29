@@ -17,6 +17,7 @@ type PoliciesIndexInternal struct {
 }
 
 func (h *PoliciesIndexInternal) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	h.Logger.Debug("internal request made to list policies", lager.Data{"URL": req.URL, "RemoteAddr": req.RemoteAddr})
 	policies, err := h.Store.All()
 	if err != nil {
 		h.Logger.Error("store-list-policies-failed", err)

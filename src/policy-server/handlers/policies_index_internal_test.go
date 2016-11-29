@@ -11,10 +11,10 @@ import (
 
 	lfakes "lib/fakes"
 
+	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
-	"code.cloudfoundry.org/lager/lagertest"
 )
 
 var _ = Describe("PoliciesIndexInternal", func() {
@@ -62,7 +62,10 @@ var _ = Describe("PoliciesIndexInternal", func() {
 			fakeStore.AllReturns([]models.Policy{}, nil)
 			request, err := http.NewRequest("GET", "/networking/v0/internal/policies", nil)
 			Expect(err).NotTo(HaveOccurred())
+			request.RemoteAddr = "some-host:some-port"
+
 			handler.ServeHTTP(resp, request)
+			Expect(logger).To(gbytes.Say("internal request made to list policies.*RemoteAddr.*some-host:some-port.*URL.*/networking/v0/internal/policies"))
 
 			Expect(resp.Body).To(MatchJSON(`{ "policies": [] }`))
 		})
