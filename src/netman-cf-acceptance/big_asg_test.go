@@ -3,7 +3,7 @@ package acceptance_test
 import (
 	"cf-pusher/cf_cli_adapter"
 	"fmt"
-	"io/ioutil"
+	"lib/testsupport"
 	"math/rand"
 	"os"
 	"time"
@@ -56,8 +56,10 @@ var _ = Describe("policy cleanup", func() {
 			duration := time.Since(start)
 
 			By("creating large ASG")
-			asg := buildASG(1000)
-			ASGFilepath = createASGFile(asg)
+			asg := testsupport.BuildASG(1000)
+			var err error
+			ASGFilepath, err = testsupport.CreateASGFile(asg)
+			Expect(err).NotTo(HaveOccurred())
 			Expect(cli.CreateSecurityGroup("big-asg", ASGFilepath)).To(Succeed())
 			By("binding ASG to the space")
 			Expect(cli.BindSecurityGroup("big-asg", orgName, spaceName)).To(Succeed())
@@ -74,21 +76,3 @@ var _ = Describe("policy cleanup", func() {
 		})
 	})
 })
-
-func createASGFile(asg string) string {
-	asgFile, err := ioutil.TempFile("", "")
-	Expect(err).NotTo(HaveOccurred())
-	path := asgFile.Name()
-	Expect(ioutil.WriteFile(path, []byte(asg), os.ModePerm))
-	return path
-}
-func buildASG(n int) string {
-	asg := "["
-	for i := 1; i < n; i++ {
-		t := `{"protocol": "tcp", "destination": "` + fmt.Sprintf("10.0.%d.%d", i/254, i%254) + `", "ports": "80" },`
-		asg = asg + t
-	}
-
-	t := `{"protocol": "tcp", "destination": "` + fmt.Sprintf("10.0.%d.%d", n/254, n%254) + `", "ports": "80" }`
-	return asg + t + "]"
-}
