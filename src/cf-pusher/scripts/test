@@ -17,7 +17,8 @@ echo '
   "skip_ssl_validation": true,
   "test_app_instances": 2,
   "test_applications": 4,
-  "concurrency": 2
+  "concurrency": 2,
+  "asg_size": 9
 }
 ' > $CONFIG
 

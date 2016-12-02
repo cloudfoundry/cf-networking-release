@@ -13,4 +13,5 @@ type Config struct {
 	Concurrency       int    `json:"concurrency"`
 	Prefix            string `json:"prefix"`
 	SampleSize        int    `json:"sample_size"`
+	ASGSize           int    `json:"asg_size"`
 }

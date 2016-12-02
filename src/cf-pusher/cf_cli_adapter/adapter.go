@@ -163,6 +163,35 @@ func (a *Adapter) CreateSecurityGroup(name, filepath string) error {
 	return runCommandWithTimeout(cmd)
 }
 
+type ASG struct {
+	Resources []struct {
+		Entity struct {
+			Rules []struct {
+				Destination string `json:"destination"`
+				Ports       string `json:"ports"`
+				Protocol    string `json:"protocol"`
+			} `json:"rules"`
+		} `json:"entity"`
+	} `json:"resources"`
+}
+
+func (a *Adapter) SecurityGroup(name string) (string, error) {
+	fmt.Printf("running: %s curl \"/v2/security_groups?q=name%%3A%s\n", a.CfCliPath, name)
+	bytes, err := exec.Command(a.CfCliPath, "curl", fmt.Sprintf("/v2/security_groups?q=name%%3A%s", name)).CombinedOutput()
+	asg := &ASG{}
+	if err := json.Unmarshal(bytes, asg); err != nil {
+		return "", err
+	}
+	if len(asg.Resources) == 0 {
+		return "", errors.New("no asgs with the name " + name)
+	}
+	rules, err := json.Marshal(asg.Resources[0].Entity.Rules)
+	if err != nil {
+		return "", err
+	}
+	return string(rules), err
+}
+
 func (a *Adapter) BindSecurityGroup(name, org, space string) error {
 	fmt.Printf("running cf bind-security-group %s %s %s\n", name, org, space)
 	cmd := exec.Command("cf", "bind-security-group", name, org, space)

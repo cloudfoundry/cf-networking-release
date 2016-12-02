@@ -10,6 +10,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"lib/testsupport"
 	"log"
 	"os"
 	"path/filepath"
@@ -157,6 +158,14 @@ func main() {
 		Concurrency:       config.Concurrency,
 	}
 
+	asgChecker := cf_command.ASGChecker{
+		Adapter: adapter,
+	}
+
+	asgInstaller := cf_command.ASGInstaller{
+		Adapter: adapter,
+	}
+
 	// connect to org and space
 	if err := apiConnector.Connect(); err != nil {
 		log.Fatalf("connecting to api: %s", err)
@@ -174,19 +183,35 @@ func main() {
 		expectedApps[fmt.Sprintf("%stick-%d", prefix, i)] = config.AppInstances
 	}
 
-	err = appChecker.CheckApps(expectedApps)
-	if err == nil {
+	expectedASG := testsupport.BuildASG(config.ASGSize)
+	asgFile, err := testsupport.CreateASGFile(expectedASG)
+	if err != nil {
+		log.Fatalf("creating asg file: %s", err)
+	}
+
+	// check Apps and ASG and exit if both OK
+	asgName := fmt.Sprintf("%sasg", prefix)
+	appsErr := appChecker.CheckApps(expectedApps)
+	asgErr := asgChecker.CheckASG(asgName, expectedASG)
+	if appsErr == nil && (asgErr == nil) {
 		success(scaleGroup)
 		return
 	}
 
-	// push apps if necessary
+	// re-create org and space
 	if err = orgDeleter.Delete(); err != nil {
 		log.Fatalf("deleting org: %s", err)
 	}
 	if err = orgSpaceCreator.Create(); err != nil {
 		log.Fatalf("creating org and space: %s", err)
 	}
+
+	// install ASG
+	if err = asgInstaller.InstallASG(asgName, asgFile, scaleGroup.Org, scaleGroup.Space); err != nil {
+		log.Fatalf("install asg: %s", err)
+	}
+
+	// push apps
 	if err := appPusher.Push(); err != nil {
 		log.Printf("Got an error while pushing apps: %s", err)
 	}
