@@ -136,11 +136,6 @@ func main() {
 		Adapter:      adapter,
 	}
 
-	appSpec := map[string]int{
-		prefix + "proxy":    1,
-		prefix + "registry": 1,
-	}
-
 	orgDeleter := &cf_command.OrgDeleter{
 		Org:     scaleGroup.Org,
 		Quota:   quota,
@@ -162,21 +157,30 @@ func main() {
 		Concurrency:       config.Concurrency,
 	}
 
+	// connect to org and space
 	if err := apiConnector.Connect(); err != nil {
 		log.Fatalf("connecting to api: %s", err)
 	}
 	adapter.TargetOrg(scaleGroup.Org)
 	adapter.TargetSpace(scaleGroup.Space)
 
-	for i := 0; i < config.Applications; i++ {
-		appSpec[fmt.Sprintf("%stick-%d", prefix, i)] = config.AppInstances
+	// declare what apps we expect
+	expectedApps := map[string]int{
+		prefix + "proxy":    1,
+		prefix + "registry": 1,
 	}
-	err = appChecker.CheckApps(appSpec)
+
+	for i := 0; i < config.Applications; i++ {
+		expectedApps[fmt.Sprintf("%stick-%d", prefix, i)] = config.AppInstances
+	}
+
+	err = appChecker.CheckApps(expectedApps)
 	if err == nil {
 		success(scaleGroup)
 		return
 	}
 
+	// push apps if necessary
 	if err = orgDeleter.Delete(); err != nil {
 		log.Fatalf("deleting org: %s", err)
 	}
@@ -187,9 +191,10 @@ func main() {
 		log.Printf("Got an error while pushing apps: %s", err)
 	}
 
+	// check that apps pushed OK
 	maxRetries := 5
 	for i := 0; ; i++ {
-		if err := appChecker.CheckApps(appSpec); err != nil {
+		if err := appChecker.CheckApps(expectedApps); err != nil {
 			log.Printf("checking apps: %s\n", err)
 			if i == maxRetries {
 				log.Fatal("max retries exceeded")
