@@ -83,9 +83,6 @@ func main() {
 		SkipSSLValidation: config.SkipSSLValidation,
 		Adapter:           adapter,
 	}
-	if err := apiConnector.Connect(); err != nil {
-		log.Fatalf("connecting to api: %s", err)
-	}
 
 	quota := cf_command.Quota{
 		Name:             prefix + "quota",
@@ -139,20 +136,9 @@ func main() {
 		Adapter:      adapter,
 	}
 
-	adapter.TargetOrg(scaleGroup.Org)
-	adapter.TargetSpace(scaleGroup.Space)
-
 	appSpec := map[string]int{
 		prefix + "proxy":    1,
 		prefix + "registry": 1,
-	}
-	for i := 0; i < config.Applications; i++ {
-		appSpec[fmt.Sprintf("%stick-%d", prefix, i)] = config.AppInstances
-	}
-	err = appChecker.CheckApps(appSpec)
-	if err == nil {
-		success(scaleGroup)
-		return
 	}
 
 	orgDeleter := &cf_command.OrgDeleter{
@@ -160,18 +146,12 @@ func main() {
 		Quota:   quota,
 		Adapter: adapter,
 	}
-	if err = orgDeleter.Delete(); err != nil {
-		log.Fatalf("deleting org: %s", err)
-	}
 
 	orgSpaceCreator := &cf_command.OrgSpaceCreator{
 		Org:     scaleGroup.Org,
 		Space:   scaleGroup.Space,
 		Quota:   quota,
 		Adapter: adapter,
-	}
-	if err = orgSpaceCreator.Create(); err != nil {
-		log.Fatalf("creating org and space: %s", err)
 	}
 
 	manifestGenerator := &manifest_generator.ManifestGenerator{}
@@ -182,6 +162,27 @@ func main() {
 		Concurrency:       config.Concurrency,
 	}
 
+	if err := apiConnector.Connect(); err != nil {
+		log.Fatalf("connecting to api: %s", err)
+	}
+	adapter.TargetOrg(scaleGroup.Org)
+	adapter.TargetSpace(scaleGroup.Space)
+
+	for i := 0; i < config.Applications; i++ {
+		appSpec[fmt.Sprintf("%stick-%d", prefix, i)] = config.AppInstances
+	}
+	err = appChecker.CheckApps(appSpec)
+	if err == nil {
+		success(scaleGroup)
+		return
+	}
+
+	if err = orgDeleter.Delete(); err != nil {
+		log.Fatalf("deleting org: %s", err)
+	}
+	if err = orgSpaceCreator.Create(); err != nil {
+		log.Fatalf("creating org and space: %s", err)
+	}
 	if err := appPusher.Push(); err != nil {
 		log.Printf("Got an error while pushing apps: %s", err)
 	}
