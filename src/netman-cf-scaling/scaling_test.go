@@ -30,7 +30,7 @@ const Policy_Update_Wait = 180 * time.Second
 
 var ports []int
 
-var _ = Describe("connectivity between containers on the overlay network", func() {
+var _ = Describe("how the container network performs at scale", func() {
 	Describe("networking policy", func() {
 		var (
 			appProxy       string
