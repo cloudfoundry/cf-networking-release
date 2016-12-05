@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"lib/db"
@@ -47,7 +48,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("could not read config file %s", err)
 	}
-	logger.RegisterSink(lager.NewWriterSink(os.Stdout, conf.LogLevel))
+
+	initLogger(logger, conf.LogLevel)
 
 	httpClient := &http.Client{
 		Transport: &http.Transport{
@@ -250,4 +252,28 @@ func main() {
 	}
 
 	logger.Info("exited")
+}
+
+const (
+	DEBUG = "debug"
+	INFO  = "info"
+	ERROR = "error"
+	FATAL = "fatal"
+)
+
+func initLogger(logger lager.Logger, level string) {
+	var logLevel lager.LogLevel
+	switch strings.ToLower(level) {
+	case DEBUG:
+		logLevel = lager.DEBUG
+	case INFO:
+		logLevel = lager.INFO
+	case ERROR:
+		logLevel = lager.ERROR
+	case FATAL:
+		logLevel = lager.FATAL
+	default:
+		logLevel = lager.INFO
+	}
+	logger.RegisterSink(lager.NewWriterSink(os.Stdout, logLevel))
 }
