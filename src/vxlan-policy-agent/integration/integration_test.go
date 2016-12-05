@@ -30,48 +30,18 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		configFilePath   string
 		fakeMetron       fakes.FakeMetron
 		mockPolicyServer ifrit.Process
-
 		serverListenAddr string
+		serverTLSConfig  *tls.Config
 	)
-
-	startServer := func(tlsConfig *tls.Config) ifrit.Process {
-		testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == "/networking/v0/internal/policies" {
-				w.WriteHeader(http.StatusOK)
-				w.Write([]byte(`{"policies": [
-				{"source": {"id":"some-app-guid", "tag":"A"},
-				"destination": {"id": "some-other-app-guid", "tag":"B", "protocol":"tcp", "port":3333}},
-				{"source": {"id":"another-app-guid", "tag":"C"},
-				"destination": {"id": "some-app-guid", "tag":"A", "protocol":"tcp", "port":9999}}
-					]}`))
-				return
-			}
-
-			w.WriteHeader(http.StatusNotFound)
-			return
-		})
-		serverListenAddr = fmt.Sprintf("127.0.0.1:%d", 40000+GinkgoParallelNode())
-		someServer := http_server.NewTLSServer(serverListenAddr, testHandler, tlsConfig)
-
-		members := grouper.Members{{
-			Name:   "http_server",
-			Runner: someServer,
-		}}
-		group := grouper.NewOrdered(os.Interrupt, members)
-		monitor := ifrit.Invoke(sigmon.New(group))
-
-		Eventually(monitor.Ready()).Should(BeClosed())
-		return monitor
-	}
 
 	BeforeEach(func() {
 		var err error
 		fakeMetron = fakes.New()
 
-		serverTLSConfig, err := mutualtls.NewServerTLSConfig(paths.ServerCertFile, paths.ServerKeyFile, paths.ClientCACertFile)
+		serverTLSConfig, err = mutualtls.NewServerTLSConfig(paths.ServerCertFile, paths.ServerKeyFile, paths.ClientCACertFile)
 		Expect(err).NotTo(HaveOccurred())
 
-		mockPolicyServer = startServer(serverTLSConfig)
+		serverListenAddr = fmt.Sprintf("127.0.0.1:%d", 40000+GinkgoParallelNode())
 
 		subnetFile, err = ioutil.TempFile("", "")
 		Expect(err).NotTo(HaveOccurred())
@@ -110,63 +80,48 @@ var _ = Describe("VXLAN Policy Agent", func() {
 	})
 
 	AfterEach(func() {
-		mockPolicyServer.Signal(os.Interrupt)
-		Eventually(mockPolicyServer.Wait()).Should(Receive())
-
+		stopServer(mockPolicyServer)
 		session.Interrupt()
 		Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit())
 
-		RunIptablesCommand("filter", "F")
-		RunIptablesCommand("filter", "X")
-		RunIptablesCommand("nat", "F")
-		RunIptablesCommand("nat", "X")
+		runIptablesCommand("filter", "F")
+		runIptablesCommand("filter", "X")
+		runIptablesCommand("nat", "F")
+		runIptablesCommand("nat", "X")
 
 		Expect(fakeMetron.Close()).To(Succeed())
 	})
 
-	Describe("boring daemon behavior", func() {
-		It("should boot and gracefully terminate", func() {
-			session = StartAgent(paths.VxlanPolicyAgentPath, configFilePath)
-			Consistently(session).ShouldNot(gexec.Exit())
+	Describe("policy agent", func() {
+		BeforeEach(func() {
+			mockPolicyServer = startServer(serverListenAddr, serverTLSConfig)
+			session = startAgent(paths.VxlanPolicyAgentPath, configFilePath)
+		})
 
+		It("should boot and gracefully terminate", func() {
+			Consistently(session).ShouldNot(gexec.Exit())
 			session.Interrupt()
 			Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit())
-		})
-	})
-
-	Describe("Default rules", func() {
-		BeforeEach(func() {
-			session = StartAgent(paths.VxlanPolicyAgentPath, configFilePath)
 		})
 
 		It("writes the default rules in the correct order", func() {
 			remoteRules := `.*-A vpa--remote-[0-9]+ -i flannel\.42 -m state --state RELATED,ESTABLISHED -j ACCEPT`
 			remoteRules += `\n-A vpa--remote-[0-9]+ -i flannel\.42 -m limit --limit 2/min -j LOG --log-prefix "REJECT_REMOTE:"`
 			remoteRules += `\n-A vpa--remote-[0-9]+ -i flannel\.42 -j REJECT --reject-with icmp-port-unreachable`
-			Eventually(IptablesFilterRules, "10s", "1s").Should(MatchRegexp(remoteRules))
+			Eventually(iptablesFilterRules, "10s", "1s").Should(MatchRegexp(remoteRules))
 
 			localRules := `.*-A vpa--local-[0-9]+ -i cni-flannel0 -m state --state RELATED,ESTABLISHED -j ACCEPT`
 			localRules += `\n.*-A vpa--local-[0-9]+ -s 10\.255\.100\.0/24 -d 10\.255\.100\.0/24 -i cni-flannel0 -m limit --limit 2/min -j LOG --log-prefix "REJECT_LOCAL:"`
 			localRules += `\n.*-A vpa--local-[0-9]+ -s 10\.255\.100\.0/24 -d 10\.255\.100\.0/24 -i cni-flannel0 -j REJECT --reject-with icmp-port-unreachable`
-			Expect(IptablesFilterRules()).Should(MatchRegexp(localRules))
-			Expect(IptablesNATRules()).To(ContainSubstring("-s 10.255.100.0/24 ! -d 10.255.0.0/16 -j MASQUERADE"))
+			Expect(iptablesFilterRules()).Should(MatchRegexp(localRules))
+			Expect(iptablesNATRules()).To(ContainSubstring("-s 10.255.100.0/24 ! -d 10.255.0.0/16 -j MASQUERADE"))
 		})
-	})
 
-	Describe("policy enforcement", func() {
-		BeforeEach(func() {
-			session = StartAgent(paths.VxlanPolicyAgentPath, configFilePath)
-		})
 		It("writes the mark rule and enforces policies", func() {
-			Eventually(IptablesFilterRules, "10s", "1s").Should(ContainSubstring(`-s 10.255.100.21/32 -m comment --comment "src:some-app-guid" -j MARK --set-xmark 0xa/0xffffffff`))
-			Expect(IptablesFilterRules()).To(ContainSubstring(`-d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m comment --comment "src:another-app-guid_dst:some-app-guid" -j ACCEPT`))
+			Eventually(iptablesFilterRules, "10s", "1s").Should(ContainSubstring(`-s 10.255.100.21/32 -m comment --comment "src:some-app-guid" -j MARK --set-xmark 0xa/0xffffffff`))
+			Expect(iptablesFilterRules()).To(ContainSubstring(`-d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m comment --comment "src:another-app-guid_dst:some-app-guid" -j ACCEPT`))
 		})
-	})
 
-	Describe("reporting metrics", func() {
-		BeforeEach(func() {
-			session = StartAgent(paths.VxlanPolicyAgentPath, configFilePath)
-		})
 		It("emits metrics about durations", func() {
 			gatherMetricNames := func() map[string]bool {
 				events := fakeMetron.AllEvents()
@@ -185,29 +140,15 @@ var _ = Describe("VXLAN Policy Agent", func() {
 
 	Context("when the policy server is unavailable", func() {
 		BeforeEach(func() {
-			conf := config.VxlanPolicyAgent{
-				Datastore:         datastorePath,
-				PollInterval:      1,
-				PolicyServerURL:   "foo",
-				VNI:               42,
-				FlannelSubnetFile: subnetFile.Name(),
-				MetronAddress:     fakeMetron.Address(),
-				ServerCACertFile:  paths.ServerCACertFile,
-				ClientCertFile:    paths.ClientCertFile,
-				ClientKeyFile:     paths.ClientKeyFile,
-				IPTablesLockFile:  GlobalIPTablesLockFile,
-			}
-			Expect(conf.Validate()).To(Succeed())
-			configFilePath = WriteConfigFile(conf)
-			session = StartAgent(paths.VxlanPolicyAgentPath, configFilePath)
+			session = startAgent(paths.VxlanPolicyAgentPath, configFilePath)
 		})
 
 		It("still writes the default rules", func() {
-			Eventually(IptablesFilterRules, "10s", "1s").Should(ContainSubstring("-i flannel.42 -m state --state RELATED,ESTABLISHED -j ACCEPT"))
-			Expect(IptablesFilterRules()).To(ContainSubstring("-i flannel.42 -j REJECT --reject-with icmp-port-unreachable"))
-			Expect(IptablesFilterRules()).To(ContainSubstring("-i cni-flannel0 -m state --state RELATED,ESTABLISHED -j ACCEPT"))
-			Expect(IptablesFilterRules()).To(ContainSubstring("-s 10.255.100.0/24 -d 10.255.100.0/24 -i cni-flannel0 -j REJECT --reject-with icmp-port-unreachable"))
-			Expect(IptablesNATRules()).To(ContainSubstring("-s 10.255.100.0/24 ! -d 10.255.0.0/16 -j MASQUERADE"))
+			Eventually(iptablesFilterRules, "10s", "1s").Should(ContainSubstring("-i flannel.42 -m state --state RELATED,ESTABLISHED -j ACCEPT"))
+			Expect(iptablesFilterRules()).To(ContainSubstring("-i flannel.42 -j REJECT --reject-with icmp-port-unreachable"))
+			Expect(iptablesFilterRules()).To(ContainSubstring("-i cni-flannel0 -m state --state RELATED,ESTABLISHED -j ACCEPT"))
+			Expect(iptablesFilterRules()).To(ContainSubstring("-s 10.255.100.0/24 -d 10.255.100.0/24 -i cni-flannel0 -j REJECT --reject-with icmp-port-unreachable"))
+			Expect(iptablesNATRules()).To(ContainSubstring("-s 10.255.100.0/24 ! -d 10.255.0.0/16 -j MASQUERADE"))
 		})
 	})
 
@@ -228,22 +169,22 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		})
 
 		It("does not start", func() {
-			session = StartAgent(paths.VxlanPolicyAgentPath, configFilePath)
+			session = startAgent(paths.VxlanPolicyAgentPath, configFilePath)
 			Eventually(session).Should(gexec.Exit(1))
 			Eventually(session.Out).Should(Say("unable to load cert or key"))
 		})
 	})
 })
 
-func IptablesFilterRules() string {
-	return RunIptablesCommand("filter", "S")
+func iptablesFilterRules() string {
+	return runIptablesCommand("filter", "S")
 }
 
-func IptablesNATRules() string {
-	return RunIptablesCommand("nat", "S")
+func iptablesNATRules() string {
+	return runIptablesCommand("nat", "S")
 }
 
-func RunIptablesCommand(table, flag string) string {
+func runIptablesCommand(table, flag string) string {
 	iptCmd := exec.Command("iptables", "-w", "-t", table, "-"+flag)
 	iptablesSession, err := gexec.Start(iptCmd, GinkgoWriter, GinkgoWriter)
 	Expect(err).NotTo(HaveOccurred())
@@ -251,9 +192,46 @@ func RunIptablesCommand(table, flag string) string {
 	return string(iptablesSession.Out.Contents())
 }
 
-func StartAgent(binaryPath, configPath string) *gexec.Session {
+func startAgent(binaryPath, configPath string) *gexec.Session {
 	cmd := exec.Command(binaryPath, "-config-file", configPath)
 	session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 	Expect(err).NotTo(HaveOccurred())
 	return session
+}
+
+func startServer(serverListenAddr string, tlsConfig *tls.Config) ifrit.Process {
+	testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/networking/v0/internal/policies" {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`{"policies": [
+				{"source": {"id":"some-app-guid", "tag":"A"},
+				"destination": {"id": "some-other-app-guid", "tag":"B", "protocol":"tcp", "port":3333}},
+				{"source": {"id":"another-app-guid", "tag":"C"},
+				"destination": {"id": "some-app-guid", "tag":"A", "protocol":"tcp", "port":9999}}
+					]}`))
+			return
+		}
+
+		w.WriteHeader(http.StatusNotFound)
+		return
+	})
+	someServer := http_server.NewTLSServer(serverListenAddr, testHandler, tlsConfig)
+
+	members := grouper.Members{{
+		Name:   "http_server",
+		Runner: someServer,
+	}}
+	group := grouper.NewOrdered(os.Interrupt, members)
+	monitor := ifrit.Invoke(sigmon.New(group))
+
+	Eventually(monitor.Ready()).Should(BeClosed())
+	return monitor
+}
+
+func stopServer(server ifrit.Process) {
+	if server == nil {
+		return
+	}
+	server.Signal(os.Interrupt)
+	Eventually(server.Wait()).Should(Receive())
 }
