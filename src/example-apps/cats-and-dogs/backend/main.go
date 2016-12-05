@@ -104,6 +104,7 @@ var catPageTemplate string = `
 `
 
 func (h *InfoHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
+	log.Printf("InfoHandler: request received from %s", req.RemoteAddr)
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
 		panic(err)
@@ -136,6 +137,7 @@ type CatHandler struct {
 }
 
 func (h *CatHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
+	log.Printf("CatHandler: request received from %s", req.RemoteAddr)
 	template := template.Must(template.New("catPage").Parse(catPageTemplate))
 	err := template.Execute(resp, CatPage{
 		Stylesheet: stylesheet,
@@ -172,6 +174,7 @@ func launchInfoHandler(port int, userPorts string) {
 func main() {
 	systemPortString := os.Getenv("PORT")
 	systemPort, err := strconv.Atoi(systemPortString)
+	log.SetOutput(os.Stdout)
 	if err != nil {
 		log.Fatal("invalid required env var PORT")
 	}
