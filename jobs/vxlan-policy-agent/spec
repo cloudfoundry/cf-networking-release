@@ -60,6 +60,10 @@ properties:
     description: "Forward metrics to this metron agent"
     default: 127.0.0.1:3457
 
+  vxlan-policy-agent.log_level:
+    description: "Logging level (debug, info, warn, error)"
+    default: info
+
   netman.disable:
     description: "disable container to container networking"
     default: false

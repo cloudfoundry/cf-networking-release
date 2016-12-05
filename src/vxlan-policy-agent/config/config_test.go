@@ -36,7 +36,8 @@ var _ = Describe("Config", func() {
 					"ca_cert_file": "/some/ca/file",
 					"client_cert_file": "/some/client/cert/file",
 					"client_key_file": "/some/client/key/file",
-					"iptables_lock_file":  "/var/vcap/data/lock"
+					"iptables_lock_file":  "/var/vcap/data/lock",
+					"log_level": "debug"
 				}`)
 				c, err := config.New(file.Name())
 				Expect(err).NotTo(HaveOccurred())
@@ -50,6 +51,7 @@ var _ = Describe("Config", func() {
 				Expect(c.ClientCertFile).To(Equal("/some/client/cert/file"))
 				Expect(c.ClientKeyFile).To(Equal("/some/client/key/file"))
 				Expect(c.IPTablesLockFile).To(Equal("/var/vcap/data/lock"))
+				Expect(c.LogLevel).To(Equal("debug"))
 			})
 		})
 

@@ -20,6 +20,7 @@ type VxlanPolicyAgent struct {
 	ClientCertFile    string `json:"client_cert_file" validate:"nonzero"`
 	ClientKeyFile     string `json:"client_key_file" validate:"nonzero"`
 	IPTablesLockFile  string `json:"iptables_lock_file" validate:"nonzero"`
+	LogLevel          string `json:"log_level"`
 }
 
 func (c *VxlanPolicyAgent) Validate() error {

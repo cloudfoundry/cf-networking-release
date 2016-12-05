@@ -15,6 +15,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"time"
 	"vxlan-policy-agent/agent_metrics"
@@ -47,18 +48,19 @@ func main() {
 	configFilePath := flag.String("config-file", "", "path to config file")
 	flag.Parse()
 
-	logger := lager.NewLogger("vxlan-policy-agent")
-	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.INFO))
-
 	configBytes, err := ioutil.ReadFile(*configFilePath)
 	if err != nil {
-		die(logger, "error reading config", err)
+		log.Fatalf("error reading config: %s", err)
 	}
 
 	err = json.Unmarshal(configBytes, conf)
 	if err != nil {
-		die(logger, "error unmarshalling config", err)
+		log.Fatalf("error unmarshalling config: %s", err)
 	}
+
+	logger := lager.NewLogger("vxlan-policy-agent")
+	initLogger(logger, conf.LogLevel)
+
 	logger.Info("parsed-config", lager.Data{"config": conf})
 
 	pollInterval := time.Duration(conf.PollInterval) * time.Second
@@ -227,4 +229,28 @@ func main() {
 	if err != nil {
 		die(logger, "ifrit monitor", err)
 	}
+}
+
+const (
+	DEBUG = "debug"
+	INFO  = "info"
+	ERROR = "error"
+	FATAL = "fatal"
+)
+
+func initLogger(logger lager.Logger, level string) {
+	var logLevel lager.LogLevel
+	switch strings.ToLower(level) {
+	case DEBUG:
+		logLevel = lager.DEBUG
+	case INFO:
+		logLevel = lager.INFO
+	case ERROR:
+		logLevel = lager.ERROR
+	case FATAL:
+		logLevel = lager.FATAL
+	default:
+		logLevel = lager.INFO
+	}
+	logger.RegisterSink(lager.NewWriterSink(os.Stdout, logLevel))
 }
