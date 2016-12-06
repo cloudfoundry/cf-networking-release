@@ -10,6 +10,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
+	"github.com/onsi/gomega/types"
 
 	"netmon/config"
 	"netmon/integration/fakes"
@@ -102,19 +103,15 @@ var _ = Describe("Integration", func() {
 		}))
 	})
 
-	It("should emit a metric for rx dropped bytes", func() {
-		runAndWait("ip", "link", "set", "dev", ifName, "mtu", "70")
-		cmd := exec.Command("ping", "-c1", "--linger=1", "8.8.8.8")
-		pingSession, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
-		Expect(err).NotTo(HaveOccurred())
-		Eventually(pingSession, "5s").Should(gexec.Exit(1))
+	IsMetricWithName := func(name string) types.GomegaMatcher {
+		return WithTransform(func(e fakes.Event) bool {
+			return e.Name == name
+		}, BeTrue())
+	}
 
-		Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(fakes.Event{
-			EventType: "ValueMetric",
-			Name:      "OverlayRxDropped",
-			Origin:    "netmon",
-			Value:     float64(2),
-		}))
+	It("should emit metrics for dropped packets", func() {
+		Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(IsMetricWithName("OverlayRxDropped")))
+		Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(IsMetricWithName("OverlayTxDropped")))
 	})
 })
 
