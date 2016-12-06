@@ -119,7 +119,6 @@ netman_overrides:
         type: postgres
       skip_ssl_validation: true
       uaa_client_secret: network-policy-secret
-      uaa_url: https://uaa.bosh-lite.com
       ca_cert: |
         -----BEGIN CERTIFICATE-----
         MIIE5jCCAs6gAwIBAgIBATANBgkqhkiG9w0BAQsFADATMREwDwYDVQQDEwhuZXRt

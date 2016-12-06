@@ -56,7 +56,7 @@ properties:
 
   policy-server.uaa_url:
     description: "Address of UAA server"
-    default: https://uaa.bosh-lite.com
+    default: http://uaa.service.cf.internal:8080
 
   policy-server.cc_url:
     description: "Address of Cloud Controller server"
