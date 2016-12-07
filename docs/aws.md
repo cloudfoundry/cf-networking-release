@@ -84,7 +84,6 @@
             -----END RSA PRIVATE KEY-----
         policy-server:
           uaa_client_secret: REPLACE_WITH_UAA_CLIENT_SECRET
-          cc_url: (( "https://api." config_from_cf.system_domain ))
           skip_ssl_validation: true
           database:
             # For MySQL use these two lines

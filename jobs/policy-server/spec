@@ -60,7 +60,7 @@ properties:
 
   policy-server.cc_url:
     description: "Address of Cloud Controller server"
-    default: https://api.bosh-lite.com
+    default: http://cloud-controller-ng.service.cf.internal:9022
 
   policy-server.skip_ssl_validation:
     description: "Skip verifying ssl certs when speaking to UAA or Cloud Controller"
