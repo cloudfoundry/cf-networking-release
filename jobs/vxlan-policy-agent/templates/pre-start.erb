@@ -5,3 +5,13 @@ set -e -u
 CERTS_DIR=/var/vcap/jobs/vxlan-policy-agent/config/certs
 
 chmod 600 ${CERTS_DIR}/*
+
+# Cleanup old vpa--masq chain/rules
+CHAIN=$(iptables -t nat -S | grep "\-N vpa--masq" | cut -d' ' -f2)
+
+if [[ ! -z "${CHAIN}" ]]; then
+  echo Cleaning up chain: ${CHAIN}
+  iptables -t nat -F ${CHAIN}
+  iptables -t nat -D POSTROUTING -j ${CHAIN}
+  iptables -t nat -X ${CHAIN}
+fi
