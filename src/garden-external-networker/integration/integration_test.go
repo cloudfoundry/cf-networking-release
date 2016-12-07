@@ -253,6 +253,18 @@ var _ = Describe("Garden External Networker", func() {
 
 		By("checking that the bind-mounted namespace has been removed")
 		Expect(expectedNetNSPath).NotTo(BeAnExistingFile())
+
+		By("seeing that is succeeds when calling down again")
+		downCommand2 := exec.Command(paths.PathToAdapter)
+		downCommand2.Env = append(os.Environ(), "FAKE_LOG_DIR="+fakeLogDir)
+		downCommand2.Stdin = strings.NewReader(`{}`)
+		downCommand2.Args = []string{
+			paths.PathToAdapter,
+			"--action", "down",
+			"--handle", containerHandle,
+			"--configFile", fakeConfigFilePath,
+		}
+		runAndWait(downCommand2)
 	})
 
 	Describe("BulkNetOut lifecycle", func() {

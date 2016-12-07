@@ -113,3 +113,6 @@
 [submodule "src/gopkg.in/validator.v2"]
 	path = src/gopkg.in/validator.v2
 	url = https://github.com/go-validator/validator
+[submodule "src/github.com/hashicorp/go-multierror"]
+	path = src/github.com/hashicorp/go-multierror
+	url = https://github.com/hashicorp/go-multierror

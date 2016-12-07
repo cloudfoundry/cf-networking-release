@@ -122,7 +122,7 @@ var _ = Describe("Mounter", func() {
 	})
 
 	Describe("RemoveMount", func() {
-		It("should unmount the thing", func() {
+		It("should idempotently unmount the thing", func() {
 			Expect(mounter.IdempotentlyMount(sourceFile, targetFile)).To(Succeed())
 
 			Expect(targetFile).To(BeAnExistingFile())
@@ -131,15 +131,12 @@ var _ = Describe("Mounter", func() {
 
 			Expect(targetFile).NotTo(BeAnExistingFile())
 			Expect(targetDir).To(BeADirectory())
-		})
 
-		Context("when things don't work the way you expect", func() {
-			Context("when unix.Unmount fails", func() {
-				It("should return the error", func() {
-					err := mounter.RemoveMount(targetFile)
-					Expect(err).To(MatchError("unmount failed: no such file or directory"))
-				})
-			})
+			err := mounter.RemoveMount(targetFile)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(targetFile).NotTo(BeAnExistingFile())
+			Expect(targetDir).To(BeADirectory())
 		})
 	})
 })

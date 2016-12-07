@@ -16,6 +16,7 @@ import (
 	"github.com/containernetworking/cni/pkg/types"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
 )
 
 var _ = Describe("Manager", func() {
@@ -213,14 +214,6 @@ var _ = Describe("Manager", func() {
 			})
 		})
 
-		Context("when the mounter fails", func() {
-			It("should return the error", func() {
-				mounter.RemoveMountReturns(errors.New("boom"))
-				err := mgr.Down(containerHandle)
-				Expect(err).To(MatchError("removing mount /some/fake/path/some-container-handle: boom"))
-			})
-		})
-
 		Context("when the cni Down fails", func() {
 			It("should return the error", func() {
 				cniController.DownReturns(errors.New("bang"))
@@ -229,29 +222,48 @@ var _ = Describe("Manager", func() {
 			})
 		})
 
-		Context("when releasing all ports fails", func() {
-			It("should return the error", func() {
-				portAllocator.ReleaseAllPortsReturns(errors.New("potato"))
+		Context("when the mounter fails", func() {
+			It("logs the error and continues cleanup", func() {
+				mounter.RemoveMountReturns(errors.New("boom"))
 				err := mgr.Down(containerHandle)
-				Expect(err).To(MatchError("releasing ports: potato"))
+				Expect(err).NotTo(HaveOccurred())
+				Expect(logger).To(gbytes.Say(`removing mount.*bind mount path.*/some/fake/path/some-container-handle.*boom`))
+
+				Expect(portAllocator.ReleaseAllPortsCallCount()).To(Equal(1))
 			})
 		})
 
 		Context("when the net out cleanup fails", func() {
-			It("should return the error", func() {
+			It("logs the error and continues cleanup", func() {
 				netOutProvider.CleanupReturns(errors.New("potato"))
 				err := mgr.Down(containerHandle)
-				Expect(err).To(MatchError("net out cleanup: potato"))
+				Expect(err).NotTo(HaveOccurred())
+				Expect(logger).To(gbytes.Say(`net out cleanup.*potato`))
+
+				Expect(portAllocator.ReleaseAllPortsCallCount()).To(Equal(1))
 			})
 		})
 
 		Context("when the net in cleanup fails", func() {
-			It("should return the error", func() {
+			It("logs the error and continues cleanup", func() {
 				netInProvider.CleanupReturns(errors.New("potato"))
 				err := mgr.Down(containerHandle)
-				Expect(err).To(MatchError("net in cleanup: potato"))
+				Expect(err).NotTo(HaveOccurred())
+				Expect(logger).To(gbytes.Say(`net in cleanup.*potato`))
+
+				Expect(portAllocator.ReleaseAllPortsCallCount()).To(Equal(1))
 			})
 		})
+
+		Context("when releasing all ports fails", func() {
+			It("logs the error and succeeds", func() {
+				portAllocator.ReleaseAllPortsReturns(errors.New("potato"))
+				err := mgr.Down(containerHandle)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(logger).To(gbytes.Say(`releasing ports.*potato`))
+			})
+		})
+
 	})
 
 	Describe("NetOut", func() {

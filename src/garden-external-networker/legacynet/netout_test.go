@@ -231,7 +231,7 @@ var _ = Describe("Netout", func() {
 			})
 			It("returns an error", func() {
 				err := netOut.Cleanup("some-container-handle")
-				Expect(err).To(MatchError("delete rule: yukon potato"))
+				Expect(err).To(MatchError(ContainSubstring("delete rule: yukon potato")))
 			})
 		})
 
@@ -241,7 +241,7 @@ var _ = Describe("Netout", func() {
 			})
 			It("returns an error", func() {
 				err := netOut.Cleanup("some-container-handle")
-				Expect(err).To(MatchError("clear chain: idaho potato"))
+				Expect(err).To(MatchError(ContainSubstring("clear chain: idaho potato")))
 			})
 		})
 
@@ -251,7 +251,21 @@ var _ = Describe("Netout", func() {
 			})
 			It("returns an error", func() {
 				err := netOut.Cleanup("some-container-handle")
-				Expect(err).To(MatchError("delete chain: purple potato"))
+				Expect(err).To(MatchError(ContainSubstring("delete chain: purple potato")))
+			})
+		})
+
+		Context("when all the steps fail", func() {
+			BeforeEach(func() {
+				ipTables.DeleteReturns(errors.New("yukon potato"))
+				ipTables.ClearChainReturns(errors.New("idaho potato"))
+				ipTables.DeleteChainReturns(errors.New("purple potato"))
+			})
+			It("returns all the errors", func() {
+				err := netOut.Cleanup("some-container-handle")
+				Expect(err).To(MatchError(ContainSubstring("delete rule: yukon potato")))
+				Expect(err).To(MatchError(ContainSubstring("clear chain: idaho potato")))
+				Expect(err).To(MatchError(ContainSubstring("delete chain: purple potato")))
 			})
 		})
 	})

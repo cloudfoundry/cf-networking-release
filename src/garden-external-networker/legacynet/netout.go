@@ -5,6 +5,8 @@ import (
 	"lib/rules"
 	"net"
 
+	multierror "github.com/hashicorp/go-multierror"
+
 	"code.cloudfoundry.org/garden"
 	"code.cloudfoundry.org/lager"
 )
@@ -79,25 +81,15 @@ func (m *NetOut) Cleanup(containerHandle string) error {
 		return fmt.Errorf("getting chain name: %s", err)
 	}
 
-	chainsToClean := []string{chain, logChain}
-	for _, c := range chainsToClean {
-		err = m.IPTables.Delete("filter", "FORWARD", rules.IPTablesRule{"--jump", c})
-		if err != nil {
-			return fmt.Errorf("delete rule: %s", err)
-		}
-
-		err = m.IPTables.ClearChain("filter", c)
-		if err != nil {
-			return fmt.Errorf("clear chain: %s", err)
-		}
-
-		err = m.IPTables.DeleteChain("filter", c)
-		if err != nil {
-			return fmt.Errorf("delete chain: %s", err)
-		}
+	var result error
+	if err := cleanupChain("filter", "FORWARD", chain, m.IPTables); err != nil {
+		result = multierror.Append(result, err)
+	}
+	if err := cleanupChain("filter", "FORWARD", logChain, m.IPTables); err != nil {
+		result = multierror.Append(result, err)
 	}
 
-	return nil
+	return result
 }
 
 func (m *NetOut) InsertRule(containerHandle string, rule garden.NetOutRule, containerIP string) error {

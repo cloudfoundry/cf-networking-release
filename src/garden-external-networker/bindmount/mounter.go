@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"syscall"
 
 	"golang.org/x/sys/unix"
 )
@@ -32,7 +33,7 @@ func (m *Mounter) IdempotentlyMount(source, target string) error {
 
 func (m *Mounter) RemoveMount(target string) error {
 	err := unix.Unmount(target, unix.MNT_DETACH)
-	if err != nil {
+	if err != nil && err != syscall.ENOENT {
 		return fmt.Errorf("unmount failed: %s", err)
 	}
 

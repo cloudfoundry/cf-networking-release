@@ -119,23 +119,20 @@ func (m *Manager) Down(containerHandle string) error {
 		return fmt.Errorf("cni down: %s", err)
 	}
 
-	err = m.Mounter.RemoveMount(bindMountPath)
-	if err != nil {
-		return fmt.Errorf("removing mount %s: %s", bindMountPath, err)
+	if err = m.Mounter.RemoveMount(bindMountPath); err != nil {
+		m.Logger.Error("removing mount", err, lager.Data{"bind mount path": bindMountPath})
 	}
 
 	if err = m.NetOutProvider.Cleanup(containerHandle); err != nil {
-		return fmt.Errorf("net out cleanup: %s", err)
+		m.Logger.Error("net out cleanup", err)
 	}
 
-	err = m.NetInProvider.Cleanup(containerHandle)
-	if err != nil {
-		return fmt.Errorf("net in cleanup: %s", err)
+	if err = m.NetInProvider.Cleanup(containerHandle); err != nil {
+		m.Logger.Error("net in cleanup", err)
 	}
 
-	err = m.PortAllocator.ReleaseAllPorts(containerHandle)
-	if err != nil {
-		return fmt.Errorf("releasing ports: %s", err)
+	if err = m.PortAllocator.ReleaseAllPorts(containerHandle); err != nil {
+		m.Logger.Error("releasing ports", err)
 	}
 
 	return nil

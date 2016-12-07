@@ -3,6 +3,8 @@ package legacynet
 import (
 	"fmt"
 	"lib/rules"
+
+	multierror "github.com/hashicorp/go-multierror"
 )
 
 const prefixNetIn = "netin"
@@ -29,21 +31,7 @@ func (m *NetIn) Initialize(containerHandle string) error {
 func (m *NetIn) Cleanup(containerHandle string) error {
 	chain := m.ChainNamer.Prefix(prefixNetIn, containerHandle)
 
-	err := m.IPTables.Delete("nat", "PREROUTING", rules.IPTablesRule{"--jump", chain})
-	if err != nil {
-		return fmt.Errorf("delete rule: %s", err)
-	}
-
-	err = m.IPTables.ClearChain("nat", chain)
-	if err != nil {
-		return fmt.Errorf("clear chain: %s", err)
-	}
-
-	err = m.IPTables.DeleteChain("nat", chain)
-	if err != nil {
-		return fmt.Errorf("delete chain: %s", err)
-	}
-	return nil
+	return cleanupChain("nat", "PREROUTING", chain, m.IPTables)
 }
 
 func (m *NetIn) AddRule(containerHandle string,
@@ -61,4 +49,20 @@ func (m *NetIn) AddRule(containerHandle string,
 	}
 
 	return nil
+}
+
+func cleanupChain(table, parentChain, chain string, iptables rules.IPTablesAdapter) error {
+	var result error
+	if err := iptables.Delete(table, parentChain, rules.IPTablesRule{"--jump", chain}); err != nil {
+		result = multierror.Append(result, fmt.Errorf("delete rule: %s", err))
+	}
+
+	if err := iptables.ClearChain(table, chain); err != nil {
+		result = multierror.Append(result, fmt.Errorf("clear chain: %s", err))
+	}
+
+	if err := iptables.DeleteChain(table, chain); err != nil {
+		result = multierror.Append(result, fmt.Errorf("delete chain: %s", err))
+	}
+	return result
 }
