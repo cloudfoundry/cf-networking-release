@@ -67,30 +67,33 @@ func (c *Store) Add(handle, ip string, metadata map[string]interface{}) error {
 	return nil
 }
 
-func (c *Store) Delete(handle string) error {
+func (c *Store) Delete(handle string) (Container, error) {
+	deleted := Container{}
 	if handle == "" {
-		return fmt.Errorf("invalid handle")
+		return deleted, fmt.Errorf("invalid handle")
 	}
 
 	file, err := c.Locker.Open()
 	if err != nil {
-		return fmt.Errorf("open lock: %s", err)
+		return deleted, fmt.Errorf("open lock: %s", err)
 	}
 	defer file.Close()
 
 	pool := make(map[string]Container)
 	err = c.Serializer.DecodeAll(file, &pool)
 	if err != nil {
-		return fmt.Errorf("decoding file: %s", err)
+		return deleted, fmt.Errorf("decoding file: %s", err)
 	}
+
+	deleted = pool[handle]
 
 	delete(pool, handle)
 
 	err = c.Serializer.EncodeAndOverwrite(file, pool)
 	if err != nil {
-		return fmt.Errorf("encode and overwrite: %s", err)
+		return deleted, fmt.Errorf("encode and overwrite: %s", err)
 	}
-	return nil
+	return deleted, nil
 }
 
 func (c *Store) ReadAll() (map[string]Container, error) {

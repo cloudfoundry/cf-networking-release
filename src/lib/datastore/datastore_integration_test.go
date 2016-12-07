@@ -99,8 +99,11 @@ var _ = Describe("Datastore Lifecycle", func() {
 			Expect(data).Should(HaveLen(1))
 
 			By("removing entry from store")
-			err = store.Delete(handle)
+			deleted, err := store.Delete(handle)
 			Expect(err).NotTo(HaveOccurred())
+			Expect(deleted.Handle).To(Equal(handle))
+			Expect(deleted.IP).To(Equal(ip))
+			Expect(deleted.Metadata).To(Equal(metadata))
 
 			By("verify entry no longer in store")
 			data, err = store.ReadAll()
@@ -125,7 +128,8 @@ var _ = Describe("Datastore Lifecycle", func() {
 			By("removing entries from store")
 			for i := 0; i < total; i++ {
 				id := fmt.Sprintf("%s-%d", handle, i)
-				err := store.Delete(id)
+				deleted, err := store.Delete(id)
+				Expect(deleted.Handle).To(Equal(id))
 				Expect(err).NotTo(HaveOccurred())
 			}
 
@@ -179,7 +183,7 @@ var _ = Describe("Datastore Lifecycle", func() {
 			parallelRunner.RunOnChannel(toDelete, func(containerHandle interface{}) {
 				p := containerHandle.(string)
 				func(id string) {
-					err := store.Delete(id)
+					_, err := store.Delete(id)
 					Expect(err).NotTo(HaveOccurred())
 				}(p)
 				atomic.AddInt32(&nDeleted, 1)
