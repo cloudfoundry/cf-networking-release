@@ -28,6 +28,8 @@ files:
   - github.com/containernetworking/cni/vendor/github.com/vishvananda/netns/*.go # gosub
   - github.com/containernetworking/cni/vendor/golang.org/x/sys/unix/*.go # gosub
   - github.com/containernetworking/cni/vendor/golang.org/x/sys/unix/*.s # gosub
+  - github.com/coreos/go-iptables/iptables/*.go # gosub
   - lib/datastore/*.go # gosub
   - lib/filelock/*.go # gosub
+  - lib/rules/*.go # gosub
   - lib/serial/*.go # gosub

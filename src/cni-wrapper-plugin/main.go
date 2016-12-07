@@ -6,11 +6,15 @@ import (
 	"fmt"
 	"lib/datastore"
 	"lib/filelock"
+	"lib/rules"
 	"lib/serial"
+	"net"
 	"os"
+	"sync"
 
 	"github.com/containernetworking/cni/pkg/skel"
 	"github.com/containernetworking/cni/pkg/version"
+	"github.com/coreos/go-iptables/iptables"
 )
 
 func cmdAdd(args *skel.CmdArgs) error {
@@ -19,13 +23,24 @@ func cmdAdd(args *skel.CmdArgs) error {
 		return err
 	}
 
-	pluginController := &lib.PluginController{
-		Delegator: lib.NewDelegator(),
+	pluginController, err := newPluginController(n.IPTablesLockFile)
+	if err != nil {
+		return err
 	}
 
 	result, err := pluginController.DelegateAdd(n.Delegate)
 	if err != nil {
 		return fmt.Errorf("delegate call: %v", err)
+	}
+
+	_, net, err := net.ParseCIDR(fmt.Sprintf("%s/24", result.IP4.IP.IP.String()))
+	if err != nil {
+		return err
+	}
+
+	err = pluginController.DefaultIPMasq(net.String(), n.OverlayNetwork)
+	if err != nil {
+		return fmt.Errorf("error setting up default ip masq rule: %s", err)
 	}
 
 	store := &datastore.Store{
@@ -66,8 +81,9 @@ func cmdDel(args *skel.CmdArgs) error {
 		fmt.Fprintf(os.Stderr, "store delete: %s", err)
 	}
 
-	pluginController := &lib.PluginController{
-		Delegator: lib.NewDelegator(),
+	pluginController, err := newPluginController(n.IPTablesLockFile)
+	if err != nil {
+		return err
 	}
 
 	if err := pluginController.DelegateDel(n.Delegate); err != nil {
@@ -75,6 +91,30 @@ func cmdDel(args *skel.CmdArgs) error {
 	}
 
 	return nil
+}
+
+func newPluginController(iptablesLockFile string) (*lib.PluginController, error) {
+	ipt, err := iptables.New()
+	if err != nil {
+		return nil, err
+	}
+
+	iptLocker := &rules.IPTablesLocker{
+		FileLocker: &filelock.Locker{Path: iptablesLockFile},
+		Mutex:      &sync.Mutex{},
+	}
+	restorer := &rules.Restorer{}
+	lockedIPTables := &rules.LockedIPTables{
+		IPTables: ipt,
+		Locker:   iptLocker,
+		Restorer: restorer,
+	}
+
+	pluginController := &lib.PluginController{
+		Delegator: lib.NewDelegator(),
+		IPTables:  lockedIPTables,
+	}
+	return pluginController, nil
 }
 
 func main() {

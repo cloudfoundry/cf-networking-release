@@ -3,13 +3,16 @@ package lib
 import (
 	"encoding/json"
 	"fmt"
+	"lib/rules"
 
 	"github.com/containernetworking/cni/pkg/types"
 )
 
 type WrapperConfig struct {
-	Datastore string                 `json:"datastore"`
-	Delegate  map[string]interface{} `json:"delegate"`
+	Datastore        string                 `json:"datastore"`
+	IPTablesLockFile string                 `json:"iptables_lock_file"`
+	OverlayNetwork   string                 `json:"overlay_network"`
+	Delegate         map[string]interface{} `json:"delegate"`
 }
 
 func LoadWrapperConfig(bytes []byte) (*WrapperConfig, error) {
@@ -22,11 +25,20 @@ func LoadWrapperConfig(bytes []byte) (*WrapperConfig, error) {
 		return nil, fmt.Errorf("missing datastore path")
 	}
 
+	if n.IPTablesLockFile == "" {
+		return nil, fmt.Errorf("missing iptables lock file path")
+	}
+
+	if n.OverlayNetwork == "" {
+		return nil, fmt.Errorf("missing overlay network")
+	}
+
 	return n, nil
 }
 
 type PluginController struct {
 	Delegator Delegator
+	IPTables  rules.IPTablesAdapter
 }
 
 func getDelegateParams(netconf map[string]interface{}) (string, []byte, error) {
@@ -59,4 +71,29 @@ func (c *PluginController) DelegateDel(netconf map[string]interface{}) error {
 	}
 
 	return c.Delegator.DelegateDel(delegateType, netconfBytes)
+}
+
+func (c *PluginController) DefaultIPMasq(localSubnetCIDR, overlayNetwork string) error {
+	rule := rules.NewDefaultEgressRule(localSubnetCIDR, overlayNetwork)
+
+	exists, err := c.IPTables.Exists("nat", "cni-masq", rule)
+	if err != nil {
+		return err
+	}
+
+	if exists {
+		return nil
+	}
+
+	err = c.IPTables.NewChain("nat", "cni-masq")
+	if err != nil {
+		return err
+	}
+
+	err = c.IPTables.BulkAppend("nat", "cni-masq", rule)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

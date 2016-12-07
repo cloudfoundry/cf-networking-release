@@ -17,12 +17,13 @@ import (
 var _ = Describe("CniWrapperPlugin", func() {
 
 	var (
-		cmd             *exec.Cmd
-		debugFileName   string
-		datastorePath   string
-		input           string
-		debug           *noop_debug.Debug
-		expectedCmdArgs skel.CmdArgs
+		cmd                  *exec.Cmd
+		debugFileName        string
+		datastorePath        string
+		iptablesLockFilePath string
+		input                string
+		debug                *noop_debug.Debug
+		expectedCmdArgs      skel.CmdArgs
 	)
 
 	const delegateInput = `
@@ -37,6 +38,8 @@ var _ = Describe("CniWrapperPlugin", func() {
   "name": "cni-wrapper",
   "type": "wrapper",
   "datastore": "%s",
+  "iptables_lock_file": "%s",
+  "overlay_network": "%s",
 
 	"metadata": {
 			"key1": "value1",
@@ -56,13 +59,14 @@ var _ = Describe("CniWrapperPlugin", func() {
 			"CNI_IFNAME=some-eth0",
 			"CNI_PATH=" + paths.CNIPath,
 			"CNI_ARGS=DEBUG=" + debugFileName,
+			"PATH=/sbin",
 		}
 		toReturn.Stdin = strings.NewReader(input)
+
 		return toReturn
 	}
 
 	BeforeEach(func() {
-
 		debugFile, err := ioutil.TempFile("", "cni_debug")
 		Expect(err).NotTo(HaveOccurred())
 		Expect(debugFile.Close()).To(Succeed())
@@ -78,7 +82,13 @@ var _ = Describe("CniWrapperPlugin", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(datastoreFile.Close()).To(Succeed())
 		datastorePath = datastoreFile.Name()
-		input = fmt.Sprintf(inputTemplate, datastorePath)
+
+		iptablesLockFile, err := ioutil.TempFile("", "iptables-lock")
+		Expect(err).NotTo(HaveOccurred())
+		Expect(iptablesLockFile.Close()).To(Succeed())
+		iptablesLockFilePath = iptablesLockFile.Name()
+
+		input = fmt.Sprintf(inputTemplate, datastorePath, iptablesLockFilePath, "10.255.0.0/16")
 
 		expectedCmdArgs = skel.CmdArgs{
 			ContainerID: "some-container-id",
@@ -94,6 +104,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 	AfterEach(func() {
 		os.Remove(debugFileName)
 		os.Remove(datastorePath)
+		os.Remove(iptablesLockFilePath)
 	})
 
 	Describe("state lifecycle", func() {
@@ -143,6 +154,20 @@ var _ = Describe("CniWrapperPlugin", func() {
 			Expect(debug.CmdArgs.StdinData).To(MatchJSON(delegateInput))
 		})
 
+		It("ensures the default masquerade rule is created", func() {
+			session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+			Expect(session.Out.Contents()).To(MatchJSON(`{ "ip4": { "ip": "1.2.3.4/32" }, "dns":{} }`))
+
+			iptCmd := exec.Command("iptables", "-w", "-t", "nat", "-S")
+			iptablesSession, err := gexec.Start(iptCmd, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(iptablesSession).Should(gexec.Exit(0))
+			rules := string(iptablesSession.Out.Contents())
+			Expect(rules).To(ContainSubstring("-s 1.2.3.0/24 ! -d 10.255.0.0/16 -j MASQUERADE"))
+		})
+
 		Context("When the delegate plugin return an error", func() {
 			BeforeEach(func() {
 				debug.ReportError = "banana"
@@ -179,11 +204,12 @@ var _ = Describe("CniWrapperPlugin", func() {
   "name": "cni-wrapper",
   "type": "wrapper",
   "datastore": "%s",
-
+	"iptables_lock_file": "%s",
+  "overlay_network": "%s",
 	"delegate": ` +
 					delegateInput +
 					`}`
-				input = fmt.Sprintf(inputTemplate, datastorePath)
+				input = fmt.Sprintf(inputTemplate, datastorePath, iptablesLockFilePath, "10.255.0.0/16")
 			})
 			It("succeeds and writes container IP to the datastore", func() {
 				cmd = cniCommand("ADD", input)
