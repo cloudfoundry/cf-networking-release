@@ -71,7 +71,8 @@ func main() {
 	flannelInfoReader := &flannel.NetworkInfo{
 		FlannelSubnetFilePath: conf.FlannelSubnetFile,
 	}
-	localSubnetCIDR, overlayNetwork, err := flannelInfoReader.DiscoverNetworkInfo()
+
+	localSubnetCIDR, _, err := flannelInfoReader.DiscoverNetworkInfo()
 	if err != nil {
 		die(logger, "discovering network info", err)
 	}
@@ -160,17 +161,6 @@ func main() {
 		},
 	}
 
-	vxlanDefaultMasqueradePlanner := planner.VxlanDefaultMasqueradePlanner{
-		Logger:         logger,
-		LocalSubnet:    localSubnetCIDR,
-		OverlayNetwork: overlayNetwork,
-		Chain: enforcer.Chain{
-			Table:       "nat",
-			ParentChain: "POSTROUTING",
-			Prefix:      "vpa--masq-",
-		},
-	}
-
 	defaultLocalStuff, err := vxlanDefaultLocalPlanner.GetRulesAndChain()
 	if err != nil {
 		die(logger, "default-local-rules.GetRules", err)
@@ -188,15 +178,6 @@ func main() {
 	err = ruleEnforcer.EnforceRulesAndChain(defaultRemoteStuff)
 	if err != nil {
 		die(logger, "enforce-default-remote", err)
-	}
-
-	defaultMasqueradeStuff, err := vxlanDefaultMasqueradePlanner.GetRulesAndChain()
-	if err != nil {
-		die(logger, "default-masquerade-rules.GetRules", err)
-	}
-	err = ruleEnforcer.EnforceRulesAndChain(defaultMasqueradeStuff)
-	if err != nil {
-		die(logger, "enforce-default-masquerade", err)
 	}
 
 	err = dropsonde.Initialize(conf.MetronAddress, dropsondeOrigin)

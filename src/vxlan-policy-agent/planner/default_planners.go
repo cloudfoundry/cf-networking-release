@@ -77,32 +77,3 @@ func (p *VxlanDefaultRemotePlanner) GetRules() ([]rules.IPTablesRule, error) {
 
 	return ruleset, nil
 }
-
-type VxlanDefaultMasqueradePlanner struct {
-	Logger         lager.Logger
-	LocalSubnet    string
-	OverlayNetwork string
-	Chain          enforcer.Chain
-}
-
-func (p *VxlanDefaultMasqueradePlanner) GetRules() ([]rules.IPTablesRule, error) {
-	ruleset := []rules.IPTablesRule{}
-
-	ruleset = append(ruleset,
-		rules.NewDefaultEgressRule(p.LocalSubnet, p.OverlayNetwork),
-	)
-
-	return ruleset, nil
-}
-
-func (p *VxlanDefaultMasqueradePlanner) GetRulesAndChain() (enforcer.RulesWithChain, error) {
-	theRules, err := p.GetRules()
-	if err != nil {
-		return enforcer.RulesWithChain{}, err
-	}
-
-	return enforcer.RulesWithChain{
-		Chain: p.Chain,
-		Rules: theRules,
-	}, nil
-}

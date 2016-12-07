@@ -114,7 +114,6 @@ var _ = Describe("VXLAN Policy Agent", func() {
 			localRules += `\n.*-A vpa--local-[0-9]+ -s 10\.255\.100\.0/24 -d 10\.255\.100\.0/24 -i cni-flannel0 -m limit --limit 2/min -j LOG --log-prefix "REJECT_LOCAL:"`
 			localRules += `\n.*-A vpa--local-[0-9]+ -s 10\.255\.100\.0/24 -d 10\.255\.100\.0/24 -i cni-flannel0 -j REJECT --reject-with icmp-port-unreachable`
 			Expect(iptablesFilterRules()).Should(MatchRegexp(localRules))
-			Expect(iptablesNATRules()).To(ContainSubstring("-s 10.255.100.0/24 ! -d 10.255.0.0/16 -j MASQUERADE"))
 		})
 
 		It("writes the mark rule and enforces policies", func() {
@@ -148,7 +147,6 @@ var _ = Describe("VXLAN Policy Agent", func() {
 			Expect(iptablesFilterRules()).To(ContainSubstring("-i flannel.42 -j REJECT --reject-with icmp-port-unreachable"))
 			Expect(iptablesFilterRules()).To(ContainSubstring("-i cni-flannel0 -m state --state RELATED,ESTABLISHED -j ACCEPT"))
 			Expect(iptablesFilterRules()).To(ContainSubstring("-s 10.255.100.0/24 -d 10.255.100.0/24 -i cni-flannel0 -j REJECT --reject-with icmp-port-unreachable"))
-			Expect(iptablesNATRules()).To(ContainSubstring("-s 10.255.100.0/24 ! -d 10.255.0.0/16 -j MASQUERADE"))
 		})
 
 		It("does not write the mark rule or enforces policies", func() {
