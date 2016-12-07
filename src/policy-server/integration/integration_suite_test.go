@@ -142,8 +142,8 @@ func VerifyTCPConnection(address string) error {
 func DefaultTestConfig() config.Config {
 	config := config.Config{
 		ListenHost:         "127.0.0.1",
-		ListenPort:         9001 + GinkgoParallelNode(),
-		InternalListenPort: 10001 + GinkgoParallelNode(),
+		ListenPort:         10001 + GinkgoParallelNode(),
+		InternalListenPort: 20001 + GinkgoParallelNode(),
 		CACertFile:         "fixtures/netman-ca.crt",
 		ServerCertFile:     "fixtures/server.crt",
 		ServerKeyFile:      "fixtures/server.key",

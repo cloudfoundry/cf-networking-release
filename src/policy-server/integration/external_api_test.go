@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"lib/db"
 	"lib/testsupport"
 	"math/rand"
 	"net/http"
@@ -24,17 +25,13 @@ import (
 
 var _ = Describe("External API", func() {
 	var (
-		session      *gexec.Session
-		conf         config.Config
-		address      string
-		testDatabase *testsupport.TestDatabase
+		sessions          []*gexec.Session
+		conf              config.Config
+		policyServerConfs []config.Config
+		testDatabase      *testsupport.TestDatabase
 
 		fakeMetron fakes.FakeMetron
 	)
-
-	var serverIsAvailable = func() error {
-		return VerifyTCPConnection(address)
-	}
 
 	BeforeEach(func() {
 		fakeMetron = fakes.New()
@@ -43,25 +40,15 @@ var _ = Describe("External API", func() {
 		dbConnectionInfo := testsupport.GetDBConnectionInfo()
 		testDatabase = dbConnectionInfo.CreateDatabase(dbName)
 
-		conf = DefaultTestConfig()
-		conf.Database = testDatabase.DBConfig()
-		conf.MetronAddress = fakeMetron.Address()
-
-		configFilePath := WriteConfigFile(conf)
-
-		policyServerCmd := exec.Command(policyServerPath, "-config-file", configFilePath)
-		var err error
-		session, err = gexec.Start(policyServerCmd, GinkgoWriter, GinkgoWriter)
-		Expect(err).NotTo(HaveOccurred())
-
-		address = fmt.Sprintf("%s:%d", conf.ListenHost, conf.ListenPort)
-
-		Eventually(serverIsAvailable, DEFAULT_TIMEOUT).Should(Succeed())
+		policyServerConfs, sessions = startPolicyServers(2, testDatabase.DBConfig(), fakeMetron.Address())
+		conf = policyServerConfs[0]
 	})
 
 	AfterEach(func() {
-		session.Interrupt()
-		Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit())
+		for _, session := range sessions {
+			session.Interrupt()
+			Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit())
+		}
 
 		if testDatabase != nil {
 			testDatabase.Destroy()
@@ -130,12 +117,12 @@ var _ = Describe("External API", func() {
 
 	Context("when there are concurrent create requests", func() {
 		It("remains consistent", func() {
-			url := fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort)
+			policiesRoute := "external/policies"
 			add := func(policy models.Policy) {
 				requestBody, _ := json.Marshal(map[string]interface{}{
 					"policies": []models.Policy{policy},
 				})
-				resp := makeAndDoRequest("POST", url, bytes.NewReader(requestBody))
+				resp := makeAndDoRequest("POST", policyServerUrl(policiesRoute, policyServerConfs), bytes.NewReader(requestBody))
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 				responseString, err := ioutil.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
@@ -164,7 +151,7 @@ var _ = Describe("External API", func() {
 			Expect(nAdded).To(Equal(int32(nPolicies)))
 
 			By("getting all the policies")
-			resp := makeAndDoRequest("GET", url, nil)
+			resp := makeAndDoRequest("GET", policyServerUrl(policiesRoute, policyServerConfs), nil)
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
 			responseBytes, err := ioutil.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
@@ -182,8 +169,8 @@ var _ = Describe("External API", func() {
 			}
 
 			By("verify tags")
-			url = fmt.Sprintf("http://%s:%d/networking/v0/external/tags", conf.ListenHost, conf.ListenPort)
-			resp = makeAndDoRequest("GET", url, nil)
+			tagsRoute := "external/tags"
+			resp = makeAndDoRequest("GET", policyServerUrl(tagsRoute, policyServerConfs), nil)
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
 			responseBytes, err = ioutil.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
@@ -524,3 +511,36 @@ var _ = Describe("External API", func() {
 		})
 	})
 })
+
+func startPolicyServers(numServers int, dbConfig db.Config, metronAddress string) ([]config.Config, []*gexec.Session) {
+	var confs []config.Config
+	var sessions []*gexec.Session
+	for i := 0; i < numServers; i++ {
+		conf := DefaultTestConfig()
+		conf.ListenPort += i * 100
+		conf.InternalListenPort += i * 100
+		conf.Database = dbConfig
+		conf.MetronAddress = metronAddress
+
+		configFilePath := WriteConfigFile(conf)
+
+		policyServerCmd := exec.Command(policyServerPath, "-config-file", configFilePath)
+		session, err := gexec.Start(policyServerCmd, GinkgoWriter, GinkgoWriter)
+		Expect(err).NotTo(HaveOccurred())
+
+		address := fmt.Sprintf("%s:%d", conf.ListenHost, conf.ListenPort)
+		serverIsAvailable := func() error {
+			return VerifyTCPConnection(address)
+		}
+		Eventually(serverIsAvailable, DEFAULT_TIMEOUT).Should(Succeed())
+
+		confs = append(confs, conf)
+		sessions = append(sessions, session)
+	}
+	return confs, sessions
+}
+
+func policyServerUrl(route string, confs []config.Config) string {
+	conf := confs[rand.Intn(len(confs))]
+	return fmt.Sprintf("http://%s:%d/networking/v0/%s", conf.ListenHost, conf.ListenPort, route)
+}
