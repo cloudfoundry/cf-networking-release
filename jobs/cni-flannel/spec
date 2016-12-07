@@ -19,15 +19,15 @@ packages:
 
 properties:
   cni-flannel.cni_datastore_path:
-    description: "file where the wrapper plugin will store container info"
+    description: "File where the wrapper plugin will store container info"
     default: "/var/vcap/data/container-metadata/store.json"
 
   cni-flannel.cni_iptables_lock_file:
-    description: "file that will be used to synchronize access to iptables"
+    description: "File that will be used to synchronize access to iptables"
     default: /var/vcap/data/garden-cni/iptables.lock
 
   cni-flannel.etcd_endpoints:
-    description: "a list of etcd endpoints"
+    description: "List of etcd endpoints"
     default: []
 
   cni-flannel.flannel.etcd.require_ssl:
@@ -67,17 +67,17 @@ properties:
     default: true
 
   cni-flannel.flannel.subnet_file:
-    description: "file that flannel writes out the subnet environment"
+    description: "File that flannel writes out the subnet environment"
     default: /var/vcap/data/flannel/subnet.env
 
   flannel-watchdog.config.bridge_name:
-    description: "name of cni bridge on host"
+    description: "Name of cni bridge on host"
     default: cni-flannel0
 
   flannel-watchdog.config.flannel_subnet_file:
-    description: "file that flannel writes out the subnet environment"
+    description: "File that flannel writes out the subnet environment"
     default: /var/vcap/data/flannel/subnet.env
 
   netman.disable:
-    description: "disable container to container networking"
+    description: "Disable container to container networking"
     default: false

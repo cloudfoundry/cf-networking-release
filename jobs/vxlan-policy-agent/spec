@@ -13,7 +13,7 @@ packages:
 
 properties:
   vxlan-policy-agent.cni_datastore_path:
-    description: "file where the cni wrapper plugin stores container info"
+    description: "File where the cni wrapper plugin stores container info"
     default: "/var/vcap/data/container-metadata/store.json"
 
   vxlan-policy-agent.policy_server_url:
@@ -49,11 +49,11 @@ properties:
     default: 1
 
   vxlan-policy-agent.flannel_subnet_file:
-    description: "File path to look for flannel's subnet.env file"
+    description: "File that flannel writes out the subnet environment"
     default: "/var/vcap/data/flannel/subnet.env"
 
   vxlan-policy-agent.iptables_lock_file:
-    description: "Path to file that will be used to synchronize access to iptables"
+    description: "File that will be used to synchronize access to iptables"
     default: /var/vcap/data/garden-cni/iptables.lock
 
   vxlan-policy-agent.metron_address:
@@ -65,5 +65,5 @@ properties:
     default: info
 
   netman.disable:
-    description: "disable container to container networking"
+    description: "Disable container to container networking"
     default: false

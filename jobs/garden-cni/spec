@@ -28,7 +28,7 @@ properties:
     default: /var/vcap/data/garden-cni/external-networker-state.json
 
   garden-cni.iptables_lock_file:
-    description: "Path to file that will be used to synchronize access to iptables"
+    description: "File that will be used to synchronize access to iptables"
     default: /var/vcap/data/garden-cni/iptables.lock
 
   garden-cni.start_port:
