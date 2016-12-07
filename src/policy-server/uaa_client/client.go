@@ -61,7 +61,6 @@ func (c *Client) CheckToken(token string) (CheckTokenResponse, error) {
 	c.Logger.Debug("check-token", lager.Data{
 		"URL":    request.URL,
 		"Header": request.Header,
-		"Body":   bodyString,
 	})
 
 	resp, err := c.HTTPClient.Do(request)
