@@ -8,7 +8,6 @@ export GOPATH=$PWD
 declare -a packages=(
   "src/cf-pusher"
   "src/cli-plugin"
-  "src/cni-wrapper-plugin"
   "src/example-apps"
   "src/flannel-watchdog"
   "src/lib"
@@ -17,6 +16,7 @@ declare -a packages=(
   )
 
 declare -a serial_packages=(
+  "src/cni-wrapper-plugin"
   "src/garden-external-networker"
   "src/vxlan-policy-agent"
   )

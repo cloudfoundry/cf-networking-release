@@ -66,6 +66,14 @@ var _ = Describe("CniWrapperPlugin", func() {
 		return toReturn
 	}
 
+	var iptablesNATRules = func() string {
+		iptCmd := exec.Command("iptables", "-w", "-t", "nat", "-S")
+		iptablesSession, err := gexec.Start(iptCmd, GinkgoWriter, GinkgoWriter)
+		Expect(err).NotTo(HaveOccurred())
+		Eventually(iptablesSession).Should(gexec.Exit(0))
+		return string(iptablesSession.Out.Contents())
+	}
+
 	BeforeEach(func() {
 		debugFile, err := ioutil.TempFile("", "cni_debug")
 		Expect(err).NotTo(HaveOccurred())
@@ -134,7 +142,37 @@ var _ = Describe("CniWrapperPlugin", func() {
 		})
 	})
 
+	Describe("iptables lifecycle", func() {
+		It("adds and removes ip masquerade rules with the lifetime of the container", func() {
+			By("calling ADD")
+			session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+
+			By("check that ip masquerade rule is created")
+			Expect(iptablesNATRules()).To(ContainSubstring("-A POSTROUTING -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j MASQUERADE"))
+
+			By("calling DEL")
+			cmd = cniCommand("DEL", input)
+			session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+
+			By("check that ip masquerade rule is removed")
+			Expect(iptablesNATRules()).NotTo(ContainSubstring("-A POSTROUTING -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j MASQUERADE"))
+		})
+	})
+
 	Context("When call with command ADD", func() {
+		AfterEach(func() {
+			cmd := cniCommand("DEL", input)
+			session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+
+			Expect(iptablesNATRules()).NotTo(ContainSubstring("-A POSTROUTING -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j MASQUERADE"))
+		})
+
 		It("passes the delegate result back to the caller", func() {
 			session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
@@ -154,21 +192,15 @@ var _ = Describe("CniWrapperPlugin", func() {
 			Expect(debug.CmdArgs.StdinData).To(MatchJSON(delegateInput))
 		})
 
-		It("ensures the default masquerade rule is created", func() {
+		It("ensures the container masquerade rule is created", func() {
 			session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(0))
 			Expect(session.Out.Contents()).To(MatchJSON(`{ "ip4": { "ip": "1.2.3.4/32" }, "dns":{} }`))
-
-			iptCmd := exec.Command("iptables", "-w", "-t", "nat", "-S")
-			iptablesSession, err := gexec.Start(iptCmd, GinkgoWriter, GinkgoWriter)
-			Expect(err).NotTo(HaveOccurred())
-			Eventually(iptablesSession).Should(gexec.Exit(0))
-			rules := string(iptablesSession.Out.Contents())
-			Expect(rules).To(ContainSubstring("-s 1.2.3.0/24 ! -d 10.255.0.0/16 -j MASQUERADE"))
+			Expect(iptablesNATRules()).To(ContainSubstring("-A POSTROUTING -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j MASQUERADE"))
 		})
 
-		Context("When the delegate plugin return an error", func() {
+		Context("When the delegate plugin returns an error", func() {
 			BeforeEach(func() {
 				debug.ReportError = "banana"
 				Expect(debug.WriteDebug(debugFileName)).To(Succeed())
@@ -194,6 +226,14 @@ var _ = Describe("CniWrapperPlugin", func() {
 				Eventually(session).Should(gexec.Exit(1))
 
 				Expect(session.Out.Contents()).To(MatchJSON(`{ "code": 100, "msg": "store add: invalid handle" }`))
+			})
+
+			It("does not leave any iptables rules behind", func() {
+				session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+				Eventually(session).Should(gexec.Exit(1))
+
+				Expect(iptablesNATRules()).NotTo(ContainSubstring("-A POSTROUTING -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j MASQUERADE"))
 			})
 		})
 

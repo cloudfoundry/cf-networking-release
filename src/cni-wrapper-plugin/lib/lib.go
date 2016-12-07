@@ -73,25 +73,20 @@ func (c *PluginController) DelegateDel(netconf map[string]interface{}) error {
 	return c.Delegator.DelegateDel(delegateType, netconfBytes)
 }
 
-func (c *PluginController) DefaultIPMasq(localSubnetCIDR, overlayNetwork string) error {
-	rule := rules.NewDefaultEgressRule(localSubnetCIDR, overlayNetwork)
+func (c *PluginController) AddIPMasq(ip, overlayNetwork string) error {
+	rule := rules.NewDefaultEgressRule(ip, overlayNetwork)
 
-	exists, err := c.IPTables.Exists("nat", "cni-masq", rule)
-	if err != nil {
+	if err := c.IPTables.BulkAppend("nat", "POSTROUTING", rule); err != nil {
 		return err
 	}
 
-	if exists {
-		return nil
-	}
+	return nil
+}
 
-	err = c.IPTables.NewChain("nat", "cni-masq")
-	if err != nil {
-		return err
-	}
+func (c *PluginController) DelIPMasq(ip, overlayNetwork string) error {
+	rule := rules.NewDefaultEgressRule(ip, overlayNetwork)
 
-	err = c.IPTables.BulkAppend("nat", "cni-masq", rule)
-	if err != nil {
+	if err := c.IPTables.Delete("nat", "POSTROUTING", rule); err != nil {
 		return err
 	}
 

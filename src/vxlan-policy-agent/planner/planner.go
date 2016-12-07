@@ -17,9 +17,14 @@ type policyClient interface {
 	GetPolicies() ([]models.Policy, error)
 }
 
+//go:generate counterfeiter -o ../fakes/dstore.go --fake-name Dstore . dstore
+type dstore interface {
+	ReadAll() (map[string]datastore.Container, error)
+}
+
 type VxlanPolicyPlanner struct {
 	Logger            lager.Logger
-	Datastore         datastore.Datastore
+	Datastore         dstore
 	PolicyClient      policyClient
 	VNI               int
 	CollectionEmitter agent_metrics.TimeMetricsEmitter

@@ -17,13 +17,14 @@ type Datastore struct {
 	addReturns struct {
 		result1 error
 	}
-	DeleteStub        func(handle string) error
+	DeleteStub        func(handle string) (datastore.Container, error)
 	deleteMutex       sync.RWMutex
 	deleteArgsForCall []struct {
 		handle string
 	}
 	deleteReturns struct {
-		result1 error
+		result1 datastore.Container
+		result2 error
 	}
 	ReadAllStub        func() (map[string]datastore.Container, error)
 	readAllMutex       sync.RWMutex
@@ -71,7 +72,7 @@ func (fake *Datastore) AddReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *Datastore) Delete(handle string) error {
+func (fake *Datastore) Delete(handle string) (datastore.Container, error) {
 	fake.deleteMutex.Lock()
 	fake.deleteArgsForCall = append(fake.deleteArgsForCall, struct {
 		handle string
@@ -81,7 +82,7 @@ func (fake *Datastore) Delete(handle string) error {
 	if fake.DeleteStub != nil {
 		return fake.DeleteStub(handle)
 	} else {
-		return fake.deleteReturns.result1
+		return fake.deleteReturns.result1, fake.deleteReturns.result2
 	}
 }
 
@@ -97,11 +98,12 @@ func (fake *Datastore) DeleteArgsForCall(i int) string {
 	return fake.deleteArgsForCall[i].handle
 }
 
-func (fake *Datastore) DeleteReturns(result1 error) {
+func (fake *Datastore) DeleteReturns(result1 datastore.Container, result2 error) {
 	fake.DeleteStub = nil
 	fake.deleteReturns = struct {
-		result1 error
-	}{result1}
+		result1 datastore.Container
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *Datastore) ReadAll() (map[string]datastore.Container, error) {

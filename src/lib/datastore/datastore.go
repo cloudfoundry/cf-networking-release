@@ -10,7 +10,7 @@ import (
 //go:generate counterfeiter -o ../fakes/datastore.go --fake-name Datastore . Datastore
 type Datastore interface {
 	Add(handle, ip string, metadata map[string]interface{}) error
-	Delete(handle string) error
+	Delete(handle string) (Container, error)
 	ReadAll() (map[string]Container, error)
 }
 

@@ -8,7 +8,6 @@ import (
 	"lib/filelock"
 	"lib/rules"
 	"lib/serial"
-	"net"
 	"os"
 	"sync"
 
@@ -33,12 +32,8 @@ func cmdAdd(args *skel.CmdArgs) error {
 		return fmt.Errorf("delegate call: %v", err)
 	}
 
-	_, net, err := net.ParseCIDR(fmt.Sprintf("%s/24", result.IP4.IP.IP.String()))
-	if err != nil {
-		return err
-	}
-
-	err = pluginController.DefaultIPMasq(net.String(), n.OverlayNetwork)
+	containerIP := result.IP4.IP.IP.String()
+	err = pluginController.AddIPMasq(containerIP, n.OverlayNetwork)
 	if err != nil {
 		return fmt.Errorf("error setting up default ip masq rule: %s", err)
 	}
@@ -57,8 +52,16 @@ func cmdAdd(args *skel.CmdArgs) error {
 		panic(err) // not tested, this should be impossible
 	}
 
-	if err := store.Add(args.ContainerID, result.IP4.IP.IP.String(), cniAddData.Metadata); err != nil {
-		return fmt.Errorf("store add: %s", err)
+	if err := store.Add(args.ContainerID, containerIP, cniAddData.Metadata); err != nil {
+		storeErr := fmt.Errorf("store add: %s", err)
+		fmt.Fprintf(os.Stderr, "%s", storeErr)
+		fmt.Fprintf(os.Stderr, "cleaning up from error")
+		err = pluginController.DelIPMasq(containerIP, n.OverlayNetwork)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "during cleanup: removing IP masq: %s", err)
+		}
+
+		return storeErr
 	}
 
 	return result.Print()
@@ -77,7 +80,8 @@ func cmdDel(args *skel.CmdArgs) error {
 		},
 	}
 
-	if err := store.Delete(args.ContainerID); err != nil {
+	container, err := store.Delete(args.ContainerID)
+	if err != nil {
 		fmt.Fprintf(os.Stderr, "store delete: %s", err)
 	}
 
@@ -88,6 +92,11 @@ func cmdDel(args *skel.CmdArgs) error {
 
 	if err := pluginController.DelegateDel(n.Delegate); err != nil {
 		fmt.Fprintf(os.Stderr, "delegate delete: %s", err)
+	}
+
+	err = pluginController.DelIPMasq(container.IP, n.OverlayNetwork)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "removing IP masq: %s", err)
 	}
 
 	return nil
