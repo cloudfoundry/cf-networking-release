@@ -58,10 +58,7 @@ func (c *Client) CheckToken(token string) (CheckTokenResponse, error) {
 	request.SetBasicAuth(c.Name, c.Secret)
 	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	c.Logger.Debug("check-token", lager.Data{
-		"URL":    request.URL,
-		"Header": request.Header,
-	})
+	c.Logger.Debug("check-token", lager.Data{"URL": request.URL})
 
 	resp, err := c.HTTPClient.Do(request)
 	if err != nil {

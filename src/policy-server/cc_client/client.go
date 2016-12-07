@@ -36,10 +36,7 @@ func (c *Client) GetAllAppGUIDs(token string) (map[string]interface{}, error) {
 		return nil, fmt.Errorf("create HTTP request: %s", err)
 	}
 
-	c.Logger.Debug("get_cc_apps", lager.Data{
-		"URL":    request.URL,
-		"Header": request.Header,
-	})
+	c.Logger.Debug("get_cc_apps", lager.Data{"URL": request.URL})
 
 	resp, err := c.HTTPClient.Do(request)
 	if err != nil {
