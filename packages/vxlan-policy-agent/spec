@@ -5,6 +5,7 @@ dependencies:
   - golang
 
 files:
+  - code.cloudfoundry.org/debugserver/*.go # gosub
   - code.cloudfoundry.org/lager/*.go # gosub
   - github.com/cloudfoundry/dropsonde/*.go # gosub
   - github.com/cloudfoundry/dropsonde/emitter/*.go # gosub
@@ -29,6 +30,7 @@ files:
   - github.com/nu7hatch/gouuid/*.go # gosub
   - github.com/tedsuo/ifrit/*.go # gosub
   - github.com/tedsuo/ifrit/grouper/*.go # gosub
+  - github.com/tedsuo/ifrit/http_server/*.go # gosub
   - github.com/tedsuo/ifrit/sigmon/*.go # gosub
   - gopkg.in/validator.v2/*.go # gosub
   - lib/datastore/*.go # gosub

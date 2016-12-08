@@ -20,6 +20,8 @@ type VxlanPolicyAgent struct {
 	ClientCertFile    string `json:"client_cert_file" validate:"nonzero"`
 	ClientKeyFile     string `json:"client_key_file" validate:"nonzero"`
 	IPTablesLockFile  string `json:"iptables_lock_file" validate:"nonzero"`
+	DebugServerHost   string `json:"debug_server_host" validate:"nonzero"`
+	DebugServerPort   int    `json:"debug_server_port" validate:"nonzero"`
 	LogLevel          string `json:"log_level"`
 }
 

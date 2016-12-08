@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"lib/datastore"
 	"lib/filelock"
@@ -24,6 +25,7 @@ import (
 	"vxlan-policy-agent/planner"
 	"vxlan-policy-agent/poller"
 
+	"code.cloudfoundry.org/debugserver"
 	"code.cloudfoundry.org/lager"
 	"github.com/cloudfoundry/dropsonde"
 	"github.com/coreos/go-iptables/iptables"
@@ -59,7 +61,8 @@ func main() {
 	}
 
 	logger := lager.NewLogger("vxlan-policy-agent")
-	initLogger(logger, conf.LogLevel)
+	reconfigurableSink := initLoggerSink(logger, conf.LogLevel)
+	logger.RegisterSink(reconfigurableSink)
 
 	logger.Info("parsed-config", lager.Data{"config": conf})
 
@@ -199,9 +202,11 @@ func main() {
 		}).DoCycle,
 	}
 
+	debugServerAddress := fmt.Sprintf("%s:%d", conf.DebugServerHost, conf.DebugServerPort)
 	members := grouper.Members{
 		{"metrics_emitter", metricsEmitter},
 		{"policy_poller", policyPoller},
+		{"debug-server", debugserver.Runner(debugServerAddress, reconfigurableSink)},
 	}
 
 	monitor := ifrit.Invoke(sigmon.New(grouper.NewOrdered(os.Interrupt, members)))
@@ -219,7 +224,7 @@ const (
 	FATAL = "fatal"
 )
 
-func initLogger(logger lager.Logger, level string) {
+func initLoggerSink(logger lager.Logger, level string) *lager.ReconfigurableSink {
 	var logLevel lager.LogLevel
 	switch strings.ToLower(level) {
 	case DEBUG:
@@ -233,5 +238,6 @@ func initLogger(logger lager.Logger, level string) {
 	default:
 		logLevel = lager.INFO
 	}
-	logger.RegisterSink(lager.NewWriterSink(os.Stdout, logLevel))
+	w := lager.NewWriterSink(os.Stdout, lager.DEBUG)
+	return lager.NewReconfigurableSink(w, logLevel)
 }

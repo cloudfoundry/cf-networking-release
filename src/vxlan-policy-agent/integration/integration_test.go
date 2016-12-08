@@ -9,6 +9,7 @@ import (
 	"netmon/integration/fakes"
 	"os"
 	"os/exec"
+	"strings"
 	"vxlan-policy-agent/config"
 
 	. "github.com/onsi/ginkgo"
@@ -27,6 +28,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		session          *gexec.Session
 		datastorePath    string
 		subnetFile       *os.File
+		conf             config.VxlanPolicyAgent
 		configFilePath   string
 		fakeMetron       fakes.FakeMetron
 		mockPolicyServer ifrit.Process
@@ -63,7 +65,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		Expect(ioutil.WriteFile(containerMetadataFile.Name(), []byte(containerMetadata), os.ModePerm))
 		datastorePath = containerMetadataFile.Name()
 
-		conf := config.VxlanPolicyAgent{
+		conf = config.VxlanPolicyAgent{
 			PollInterval:      1,
 			PolicyServerURL:   fmt.Sprintf("https://%s", serverListenAddr),
 			Datastore:         datastorePath,
@@ -74,6 +76,8 @@ var _ = Describe("VXLAN Policy Agent", func() {
 			ClientCertFile:    paths.ClientCertFile,
 			ClientKeyFile:     paths.ClientKeyFile,
 			IPTablesLockFile:  GlobalIPTablesLockFile,
+			DebugServerHost:   "127.0.0.1",
+			DebugServerPort:   22222 + GinkgoParallelNode(),
 		}
 		Expect(conf.Validate()).To(Succeed())
 		configFilePath = WriteConfigFile(conf)
@@ -135,6 +139,19 @@ var _ = Describe("VXLAN Policy Agent", func() {
 			Eventually(gatherMetricNames, "5s").Should(HaveKey("containerMetadataTime"))
 			Eventually(gatherMetricNames, "5s").Should(HaveKey("policyServerPollTime"))
 		})
+
+		It("has a log level thats configurable at runtime", func() {
+			Consistently(session).ShouldNot(gexec.Exit())
+			Expect(session.Out).NotTo(Say("got-containers"))
+
+			endpoint := fmt.Sprintf("http://%s:%d/log-level", conf.DebugServerHost, conf.DebugServerPort)
+			req, err := http.NewRequest("POST", endpoint, strings.NewReader("debug"))
+			Expect(err).NotTo(HaveOccurred())
+			_, err = http.DefaultClient.Do(req)
+			Expect(err).NotTo(HaveOccurred())
+
+			Eventually(session.Out, "5s").Should(Say("got-containers"))
+		})
 	})
 
 	Context("when the policy server is unavailable", func() {
@@ -163,7 +180,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 
 	Context("when vxlan policy agent has invalid certs", func() {
 		BeforeEach(func() {
-			conf := config.VxlanPolicyAgent{
+			conf = config.VxlanPolicyAgent{
 				Datastore:         datastorePath,
 				PollInterval:      1,
 				PolicyServerURL:   "",
@@ -173,6 +190,8 @@ var _ = Describe("VXLAN Policy Agent", func() {
 				ServerCACertFile:  paths.ServerCACertFile,
 				ClientCertFile:    "totally",
 				ClientKeyFile:     "not-cool",
+				DebugServerHost:   "127.0.0.1",
+				DebugServerPort:   22222 + GinkgoParallelNode(),
 			}
 			configFilePath = WriteConfigFile(conf)
 		})

@@ -37,6 +37,8 @@ var _ = Describe("Config", func() {
 					"client_cert_file": "/some/client/cert/file",
 					"client_key_file": "/some/client/key/file",
 					"iptables_lock_file":  "/var/vcap/data/lock",
+					"debug_server_host": "http://5.6.7.8",
+					"debug_server_port": 5678,
 					"log_level": "debug"
 				}`)
 				c, err := config.New(file.Name())
@@ -51,6 +53,8 @@ var _ = Describe("Config", func() {
 				Expect(c.ClientCertFile).To(Equal("/some/client/cert/file"))
 				Expect(c.ClientKeyFile).To(Equal("/some/client/key/file"))
 				Expect(c.IPTablesLockFile).To(Equal("/var/vcap/data/lock"))
+				Expect(c.DebugServerHost).To(Equal("http://5.6.7.8"))
+				Expect(c.DebugServerPort).To(Equal(5678))
 				Expect(c.LogLevel).To(Equal("debug"))
 			})
 		})
@@ -90,6 +94,8 @@ var _ = Describe("Config", func() {
 					"client_cert_file":    "/some/client/cert/file",
 					"client_key_file":     "/some/client/key/file",
 					"iptables_lock_file":  "/var/vcap/data/lock",
+					"debug_server_host":   "http://5.6.7.8",
+					"debug_server_port":   5678,
 				}
 				delete(allData, missingFlag)
 				Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
@@ -107,6 +113,8 @@ var _ = Describe("Config", func() {
 			Entry("missing client cert file", "client_cert_file", "ClientCertFile: zero value"),
 			Entry("missing client key file", "client_key_file", "ClientKeyFile: zero value"),
 			Entry("missing iptables lock file", "iptables_lock_file", "IPTablesLockFile: zero value"),
+			Entry("missing debug server host", "debug_server_host", "DebugServerHost: zero value"),
+			Entry("missing debug server port", "debug_server_port", "DebugServerPort: zero value"),
 		)
 	})
 })

@@ -60,6 +60,14 @@ properties:
     description: "Forward metrics to this metron agent"
     default: 127.0.0.1:3457
 
+  vxlan-policy-agent.debug_server_host:
+    description: "Host for the debug server"
+    default: 127.0.0.1
+
+  vxlan-policy-agent.debug_server_port:
+    description: "Port for the debug server"
+    default: 22222
+
   vxlan-policy-agent.log_level:
     description: "Logging level (debug, info, warn, error)"
     default: info
