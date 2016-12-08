@@ -23,6 +23,7 @@ import (
 	"policy-server/store"
 	"policy-server/uaa_client"
 
+	"code.cloudfoundry.org/debugserver"
 	"code.cloudfoundry.org/lager"
 	"github.com/cloudfoundry/dropsonde"
 	"github.com/jmoiron/sqlx"
@@ -43,13 +44,14 @@ func main() {
 	configFilePath := flag.String("config-file", "", "path to config file")
 	flag.Parse()
 
-	logger := lager.NewLogger("policy-server")
 	conf, err := config.New(*configFilePath)
 	if err != nil {
 		log.Fatalf("could not read config file %s", err)
 	}
 
-	initLogger(logger, conf.LogLevel)
+	logger := lager.NewLogger("policy-server")
+	reconfigurableSink := initLoggerSink(logger, conf.LogLevel)
+	logger.RegisterSink(reconfigurableSink)
 
 	httpClient := &http.Client{
 		Transport: &http.Transport{
@@ -233,10 +235,12 @@ func main() {
 	uptimeSource := metrics.NewUptimeSource()
 	metricsEmitter := metrics.NewMetricsEmitter(logger, emitInterval, uptimeSource, totalPoliciesSource)
 
+	debugServerAddress := fmt.Sprintf("%s:%d", conf.DebugServerHost, conf.DebugServerPort)
 	members := grouper.Members{
 		{"metrics_emitter", metricsEmitter},
 		{"http_server", server},
 		{"internal_http_server", internalServer},
+		{"debug-server", debugserver.Runner(debugServerAddress, reconfigurableSink)},
 	}
 
 	logger.Info("starting external server", lager.Data{"listen-address": conf.ListenHost, "port": conf.ListenPort})
@@ -261,7 +265,7 @@ const (
 	FATAL = "fatal"
 )
 
-func initLogger(logger lager.Logger, level string) {
+func initLoggerSink(logger lager.Logger, level string) *lager.ReconfigurableSink {
 	var logLevel lager.LogLevel
 	switch strings.ToLower(level) {
 	case DEBUG:
@@ -275,5 +279,6 @@ func initLogger(logger lager.Logger, level string) {
 	default:
 		logLevel = lager.INFO
 	}
-	logger.RegisterSink(lager.NewWriterSink(os.Stdout, logLevel))
+	w := lager.NewWriterSink(os.Stdout, lager.DEBUG)
+	return lager.NewReconfigurableSink(w, logLevel)
 }

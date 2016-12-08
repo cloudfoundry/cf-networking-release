@@ -21,6 +21,14 @@ properties:
     description: "Port where the policy server will serve its external API"
     default: 4002
 
+  policy-server.debug_server_host:
+    description: "Host for the debug server"
+    default: 127.0.0.1
+
+  policy-server.debug_server_port:
+    description: "Port for the debug server"
+    default: 22222
+
   policy-server.internal_listen_port:
     description: "Port where the policy server will serve its internal API"
     default: 4003

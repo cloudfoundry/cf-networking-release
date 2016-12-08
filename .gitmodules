@@ -116,3 +116,6 @@
 [submodule "src/github.com/hashicorp/go-multierror"]
 	path = src/github.com/hashicorp/go-multierror
 	url = https://github.com/hashicorp/go-multierror
+[submodule "src/code.cloudfoundry.org/debugserver"]
+	path = src/code.cloudfoundry.org/debugserver
+	url = https://github.com/cloudfoundry/debugserver

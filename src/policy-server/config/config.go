@@ -13,6 +13,8 @@ type Config struct {
 	ListenHost         string    `json:"listen_host" validate:"nonzero"`
 	ListenPort         int       `json:"listen_port" validate:"nonzero"`
 	InternalListenPort int       `json:"internal_listen_port" validate:"nonzero"`
+	DebugServerHost    string    `json:"debug_server_host" validate:"nonzero"`
+	DebugServerPort    int       `json:"debug_server_port" validate:"nonzero"`
 	CACertFile         string    `json:"ca_cert_file" validate:"nonzero"`
 	ServerCertFile     string    `json:"server_cert_file" validate:"nonzero"`
 	ServerKeyFile      string    `json:"server_key_file" validate:"nonzero"`

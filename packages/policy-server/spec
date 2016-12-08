@@ -5,6 +5,7 @@ dependencies:
   - golang
 
 files:
+  - code.cloudfoundry.org/debugserver/*.go # gosub
   - code.cloudfoundry.org/lager/*.go # gosub
   - github.com/bmizerany/pat/*.go # gosub
   - github.com/cloudfoundry/dropsonde/*.go # gosub

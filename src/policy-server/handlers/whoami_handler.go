@@ -26,6 +26,8 @@ type WhoAmIResponse struct {
 }
 
 func (h *WhoAmIHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	h.Logger.Debug("request made to whoami endpoint", lager.Data{"URL": req.URL, "RemoteAddr": req.RemoteAddr})
+
 	authorization := req.Header["Authorization"]
 	if len(authorization) < 1 {
 		h.Logger.Error("auth", errors.New("no auth header"))

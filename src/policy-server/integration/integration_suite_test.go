@@ -144,6 +144,8 @@ func DefaultTestConfig() config.Config {
 		ListenHost:         "127.0.0.1",
 		ListenPort:         10001 + GinkgoParallelNode(),
 		InternalListenPort: 20001 + GinkgoParallelNode(),
+		DebugServerHost:    "127.0.0.1",
+		DebugServerPort:    30001 + GinkgoParallelNode(),
 		CACertFile:         "fixtures/netman-ca.crt",
 		ServerCertFile:     "fixtures/server.crt",
 		ServerKeyFile:      "fixtures/server.key",

@@ -519,6 +519,7 @@ func startPolicyServers(numServers int, dbConfig db.Config, metronAddress string
 		conf := DefaultTestConfig()
 		conf.ListenPort += i * 100
 		conf.InternalListenPort += i * 100
+		conf.DebugServerPort += i * 100
 		conf.Database = dbConfig
 		conf.MetronAddress = metronAddress
 

@@ -12,6 +12,7 @@ import (
 	"netmon/integration/fakes"
 	"os/exec"
 	"policy-server/config"
+	"strings"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -113,6 +114,40 @@ var _ = Describe("Integration", func() {
 				responseString, err := ioutil.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(responseString).To(ContainSubstring("some-user"))
+			})
+
+			It("has a log level thats configurable at runtime", func() {
+				resp := makeAndDoRequest(
+					"GET",
+					fmt.Sprintf("http://%s:%d/networking/v0/external/whoami", conf.ListenHost, conf.ListenPort),
+					nil,
+				)
+
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
+				responseString, err := ioutil.ReadAll(resp.Body)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(responseString).To(ContainSubstring("some-user"))
+
+				Expect(session.Out).NotTo(gbytes.Say("request made to whoami endpoint"))
+
+				_ = makeAndDoRequest(
+					"POST",
+					fmt.Sprintf("http://%s:%d/log-level", conf.DebugServerHost, conf.DebugServerPort),
+					strings.NewReader("debug"),
+				)
+
+				resp = makeAndDoRequest(
+					"GET",
+					fmt.Sprintf("http://%s:%d/networking/v0/external/whoami", conf.ListenHost, conf.ListenPort),
+					nil,
+				)
+
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
+				responseString, err = ioutil.ReadAll(resp.Body)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(responseString).To(ContainSubstring("some-user"))
+
+				Expect(session.Out).To(gbytes.Say("request made to whoami endpoint"))
 			})
 
 			var HaveName = func(name string) types.GomegaMatcher {
