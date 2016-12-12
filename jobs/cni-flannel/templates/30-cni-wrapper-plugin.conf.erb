@@ -9,6 +9,7 @@
     "name": "cni-flannel",
     "type": "flannel",
     "subnetFile": "<%= p('cni-flannel.flannel.subnet_file') %>",
+    "dataDir": "<%= p('cni-flannel.flannel.data_dir') %>",
     "delegate": {
       "bridge": "cni-flannel0",
       "isDefaultGateway": true,
