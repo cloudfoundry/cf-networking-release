@@ -109,23 +109,23 @@ var _ = Describe("Planner", func() {
 		}
 	})
 
-	Describe("GetRules", func() {
+	Describe("GetRulesAndChain", func() {
 		It("gets every container's properties from the datastore", func() {
-			_, err := policyPlanner.GetRules()
+			_, err := policyPlanner.GetRulesAndChain()
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(store.ReadAllCallCount()).To(Equal(1))
 		})
 
 		It("gets policies from the policy server", func() {
-			_, err := policyPlanner.GetRules()
+			_, err := policyPlanner.GetRulesAndChain()
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(policyClient.GetPoliciesCallCount()).To(Equal(1))
 		})
 
 		It("returns all the rules", func() {
-			rulesWithChain, err := policyPlanner.GetRules()
+			rulesWithChain, err := policyPlanner.GetRulesAndChain()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(rulesWithChain.Chain).To(Equal(chain))
 
@@ -162,7 +162,7 @@ var _ = Describe("Planner", func() {
 		})
 
 		It("returns all mark set rules before any mark filter rules", func() {
-			rulesWithChain, err := policyPlanner.GetRules()
+			rulesWithChain, err := policyPlanner.GetRulesAndChain()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(rulesWithChain.Rules).To(HaveLen(4))
 			Expect(rulesWithChain.Rules[0]).To(ContainElement("--set-xmark"))
@@ -172,7 +172,7 @@ var _ = Describe("Planner", func() {
 		})
 
 		It("emits time metrics", func() {
-			_, err := policyPlanner.GetRules()
+			_, err := policyPlanner.GetRulesAndChain()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(timeMetricsEmitter.EmitAllCallCount()).To(Equal(1))
 		})
@@ -189,7 +189,7 @@ var _ = Describe("Planner", func() {
 			})
 
 			It("logs an error for that container and returns rules for other containers", func() {
-				rulesWithChain, err := policyPlanner.GetRules()
+				rulesWithChain, err := policyPlanner.GetRulesAndChain()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(logger).To(gbytes.Say("container-metadata-policy-group-id.*container-id-fruit.*Container.*metadata.*policy_group_id.*CloudController"))
 
@@ -204,7 +204,7 @@ var _ = Describe("Planner", func() {
 			})
 
 			It("logs and returns the error", func() {
-				_, err := policyPlanner.GetRules()
+				_, err := policyPlanner.GetRulesAndChain()
 				Expect(err).To(MatchError("banana"))
 				Expect(logger).To(gbytes.Say("datastore.*banana"))
 			})
@@ -216,7 +216,7 @@ var _ = Describe("Planner", func() {
 			})
 
 			It("logs and returns the error", func() {
-				_, err := policyPlanner.GetRules()
+				_, err := policyPlanner.GetRulesAndChain()
 				Expect(err).To(MatchError("kiwi"))
 				Expect(logger).To(gbytes.Say("policy-client-get-policies.*kiwi"))
 			})
