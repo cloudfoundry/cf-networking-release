@@ -5,17 +5,23 @@ import (
 	"net/http"
 )
 
+//go:generate counterfeiter -o ../fakes/loggingState.go --fake-name LoggingState . loggingState
+type loggingState interface {
+	Disable()
+	Enable()
+	IsEnabled() bool
+}
+
 type IPTablesLogging struct {
-	enabled     bool
-	LoggingChan chan bool
+	LoggingState loggingState
 }
 
 func (h *IPTablesLogging) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	var bodyStruct = struct {
-		Enabled *bool `json:"enabled"`
-	}{}
-
 	if r.Method == "PUT" {
+		var bodyStruct = struct {
+			Enabled *bool `json:"enabled"`
+		}{}
+
 		err := json.NewDecoder(r.Body).Decode(&bodyStruct)
 		if err != nil {
 			w.WriteHeader(http.StatusBadRequest)
@@ -27,11 +33,14 @@ func (h *IPTablesLogging) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte(`{ "error": "missing required key 'enabled'" }`))
 			return
 		}
-		h.enabled = *bodyStruct.Enabled
-		h.LoggingChan <- h.enabled
-		return
+		if *bodyStruct.Enabled {
+			h.LoggingState.Enable()
+		} else {
+			h.LoggingState.Disable()
+		}
 	}
 
-	bodyStruct.Enabled = &h.enabled
-	json.NewEncoder(w).Encode(bodyStruct)
+	json.NewEncoder(w).Encode(struct {
+		Enabled bool `json:"enabled"`
+	}{h.LoggingState.IsEnabled()})
 }

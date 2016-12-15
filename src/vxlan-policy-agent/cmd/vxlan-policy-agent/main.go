@@ -146,7 +146,8 @@ func main() {
 		lockedIPTables,
 	)
 
-	vxlanDefaultLocalPlanner := planner.VxlanDefaultLocalPlanner{
+	iptablesLoggingState := &planner.LoggingState{}
+	vxlanDefaultLocalPlanner := &planner.VxlanDefaultLocalPlanner{
 		Logger:      logger,
 		LocalSubnet: localSubnetCIDR,
 		Chain: enforcer.Chain{
@@ -154,9 +155,10 @@ func main() {
 			ParentChain: "FORWARD",
 			Prefix:      "vpa--local-",
 		},
+		LoggingState: iptablesLoggingState,
 	}
 
-	vxlanDefaultRemotePlanner := planner.VxlanDefaultRemotePlanner{
+	vxlanDefaultRemotePlanner := &planner.VxlanDefaultRemotePlanner{
 		Logger: logger,
 		VNI:    conf.VNI,
 		Chain: enforcer.Chain{
@@ -164,25 +166,7 @@ func main() {
 			ParentChain: "FORWARD",
 			Prefix:      "vpa--remote-",
 		},
-	}
-
-	defaultLocalStuff, err := vxlanDefaultLocalPlanner.GetRulesAndChain()
-	if err != nil {
-		die(logger, "default-local-rules.GetRules", err)
-	}
-
-	err = ruleEnforcer.EnforceRulesAndChain(defaultLocalStuff)
-	if err != nil {
-		die(logger, "enforce-default-local", err)
-	}
-
-	defaultRemoteStuff, err := vxlanDefaultRemotePlanner.GetRulesAndChain()
-	if err != nil {
-		die(logger, "default-local-rules.GetRules", err)
-	}
-	err = ruleEnforcer.EnforceRulesAndChain(defaultRemoteStuff)
-	if err != nil {
-		die(logger, "enforce-default-remote", err)
+		LoggingState: iptablesLoggingState,
 	}
 
 	err = dropsonde.Initialize(conf.MetronAddress, dropsondeOrigin)
@@ -196,17 +180,19 @@ func main() {
 	policyPoller := &poller.Poller{
 		Logger:       logger,
 		PollInterval: pollInterval,
-
 		SingleCycleFunc: (&poller.SinglePollCycle{
-			Planner:           dynamicPlanner,
+			Planners: []poller.Planner{
+				vxlanDefaultLocalPlanner,
+				vxlanDefaultRemotePlanner,
+				dynamicPlanner,
+			},
 			Enforcer:          ruleEnforcer,
 			CollectionEmitter: timeMetricsEmitter,
 		}).DoCycle,
 	}
 
-	iptablesLogging := make(chan bool)
 	debugServerAddress := fmt.Sprintf("%s:%d", conf.DebugServerHost, conf.DebugServerPort)
-	debugServer := createCustomDebugServer(debugServerAddress, reconfigurableSink, iptablesLogging)
+	debugServer := createCustomDebugServer(debugServerAddress, reconfigurableSink, iptablesLoggingState)
 	members := grouper.Members{
 		{"metrics_emitter", metricsEmitter},
 		{"policy_poller", policyPoller},
@@ -246,10 +232,10 @@ func initLoggerSink(logger lager.Logger, level string) *lager.ReconfigurableSink
 	return lager.NewReconfigurableSink(w, logLevel)
 }
 
-func createCustomDebugServer(listenAddress string, sink *lager.ReconfigurableSink, iptablesLoggingChan chan bool) ifrit.Runner {
+func createCustomDebugServer(listenAddress string, sink *lager.ReconfigurableSink, iptablesLoggingState *planner.LoggingState) ifrit.Runner {
 	mux := debugserver.Handler(sink).(*http.ServeMux)
 	mux.Handle("/iptables_logging", &handlers.IPTablesLogging{
-		LoggingChan: iptablesLoggingChan,
+		LoggingState: iptablesLoggingState,
 	})
 	return http_server.New(listenAddress, mux)
 }

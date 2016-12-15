@@ -55,7 +55,7 @@ func (p *VxlanPolicyPlanner) getContainersMap(allContainers map[string]datastore
 	return containers, nil
 }
 
-func (p *VxlanPolicyPlanner) GetRules() (enforcer.RulesWithChain, error) {
+func (p *VxlanPolicyPlanner) GetRulesAndChain() (enforcer.RulesWithChain, error) {
 	containerMetadataStartTime := time.Now()
 	containerMetadata, err := p.Datastore.ReadAll()
 	if err != nil {

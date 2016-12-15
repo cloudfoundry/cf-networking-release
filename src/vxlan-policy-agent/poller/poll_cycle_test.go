@@ -14,43 +14,73 @@ import (
 var _ = Describe("Single Poll Cycle", func() {
 	Describe("Run", func() {
 		var (
-			p                  *poller.SinglePollCycle
-			fakePlanner        *fakes.Planner
-			fakeEnforcer       *fakes.RuleEnforcer
-			timeMetricsEmitter *fakes.TimeMetricsEmitter
-			rulesWithChain     enforcer.RulesWithChain
+			p                    *poller.SinglePollCycle
+			fakePolicyPlanner    *fakes.Planner
+			fakeLocalPlanner     *fakes.Planner
+			fakeRemotePlanner    *fakes.Planner
+			fakeEnforcer         *fakes.RuleEnforcer
+			timeMetricsEmitter   *fakes.TimeMetricsEmitter
+			localRulesWithChain  enforcer.RulesWithChain
+			remoteRulesWithChain enforcer.RulesWithChain
+			policyRulesWithChain enforcer.RulesWithChain
 		)
 
 		BeforeEach(func() {
-			fakePlanner = &fakes.Planner{}
+			fakePolicyPlanner = &fakes.Planner{}
+			fakeLocalPlanner = &fakes.Planner{}
+			fakeRemotePlanner = &fakes.Planner{}
 			fakeEnforcer = &fakes.RuleEnforcer{}
 			timeMetricsEmitter = &fakes.TimeMetricsEmitter{}
 
 			p = &poller.SinglePollCycle{
-				Planner:           fakePlanner,
+				Planners:          []poller.Planner{fakeLocalPlanner, fakeRemotePlanner, fakePolicyPlanner},
 				Enforcer:          fakeEnforcer,
 				CollectionEmitter: timeMetricsEmitter,
 			}
 
-			rulesWithChain = enforcer.RulesWithChain{
+			localRulesWithChain = enforcer.RulesWithChain{
 				Rules: []rules.IPTablesRule{},
 				Chain: enforcer.Chain{
-					Table:       "some-table",
+					Table:       "local-table",
 					ParentChain: "INPUT",
 					Prefix:      "some-prefix",
 				},
 			}
-			fakePlanner.GetRulesReturns(rulesWithChain, nil)
+			remoteRulesWithChain = enforcer.RulesWithChain{
+				Rules: []rules.IPTablesRule{},
+				Chain: enforcer.Chain{
+					Table:       "remote-table",
+					ParentChain: "INPUT",
+					Prefix:      "some-prefix",
+				},
+			}
+			policyRulesWithChain = enforcer.RulesWithChain{
+				Rules: []rules.IPTablesRule{},
+				Chain: enforcer.Chain{
+					Table:       "policy-table",
+					ParentChain: "INPUT",
+					Prefix:      "some-prefix",
+				},
+			}
+
+			fakeLocalPlanner.GetRulesAndChainReturns(localRulesWithChain, nil)
+			fakeRemotePlanner.GetRulesAndChainReturns(remoteRulesWithChain, nil)
+			fakePolicyPlanner.GetRulesAndChainReturns(policyRulesWithChain, nil)
 		})
 
-		It("enforces rules on configured interval", func() {
+		It("enforces local,remote and policy rules on configured interval", func() {
 			err := p.DoCycle()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(fakePlanner.GetRulesCallCount()).To(Equal(1))
-			Expect(fakeEnforcer.EnforceRulesAndChainCallCount()).To(Equal(1))
+			Expect(fakeLocalPlanner.GetRulesAndChainCallCount()).To(Equal(1))
+			Expect(fakePolicyPlanner.GetRulesAndChainCallCount()).To(Equal(1))
+			Expect(fakeEnforcer.EnforceRulesAndChainCallCount()).To(Equal(3))
 
 			rws := fakeEnforcer.EnforceRulesAndChainArgsForCall(0)
-			Expect(rws).To(Equal(rulesWithChain))
+			Expect(rws).To(Equal(localRulesWithChain))
+			rws = fakeEnforcer.EnforceRulesAndChainArgsForCall(1)
+			Expect(rws).To(Equal(remoteRulesWithChain))
+			rws = fakeEnforcer.EnforceRulesAndChainArgsForCall(2)
+			Expect(rws).To(Equal(policyRulesWithChain))
 		})
 
 		It("emits time metrics", func() {
@@ -59,9 +89,9 @@ var _ = Describe("Single Poll Cycle", func() {
 			Expect(timeMetricsEmitter.EmitAllCallCount()).To(Equal(1))
 		})
 
-		Context("when planner errors", func() {
+		Context("when the local planner errors", func() {
 			BeforeEach(func() {
-				fakePlanner.GetRulesReturns(rulesWithChain, errors.New("eggplant"))
+				fakeLocalPlanner.GetRulesAndChainReturns(policyRulesWithChain, errors.New("eggplant"))
 			})
 
 			It("logs the error and returns", func() {
@@ -73,7 +103,35 @@ var _ = Describe("Single Poll Cycle", func() {
 			})
 		})
 
-		Context("when enforcer errors", func() {
+		Context("when the remote planner errors", func() {
+			BeforeEach(func() {
+				fakeRemotePlanner.GetRulesAndChainReturns(policyRulesWithChain, errors.New("eggplant"))
+			})
+
+			It("logs the error and returns", func() {
+				err := p.DoCycle()
+				Expect(err).To(MatchError("get-rules: eggplant"))
+
+				Expect(fakeEnforcer.EnforceRulesAndChainCallCount()).To(Equal(1))
+				Expect(timeMetricsEmitter.EmitAllCallCount()).To(Equal(0))
+			})
+		})
+
+		Context("when the policy planner errors", func() {
+			BeforeEach(func() {
+				fakePolicyPlanner.GetRulesAndChainReturns(policyRulesWithChain, errors.New("eggplant"))
+			})
+
+			It("logs the error and returns", func() {
+				err := p.DoCycle()
+				Expect(err).To(MatchError("get-rules: eggplant"))
+
+				Expect(fakeEnforcer.EnforceRulesAndChainCallCount()).To(Equal(2))
+				Expect(timeMetricsEmitter.EmitAllCallCount()).To(Equal(0))
+			})
+		})
+
+		Context("when policy enforcer errors", func() {
 			BeforeEach(func() {
 				fakeEnforcer.EnforceRulesAndChainReturns(errors.New("eggplant"))
 			})

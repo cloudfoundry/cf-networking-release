@@ -2,6 +2,7 @@ package integration_test
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"lib/mutualtls"
@@ -108,20 +109,91 @@ var _ = Describe("VXLAN Policy Agent", func() {
 			Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit())
 		})
 
-		It("writes the default rules in the correct order", func() {
-			remoteRules := `.*-A vpa--remote-[0-9]+ -i flannel\.42 -m state --state RELATED,ESTABLISHED -j ACCEPT`
-			remoteRules += `\n-A vpa--remote-[0-9]+ -i flannel\.42 -m limit --limit 2/min -j LOG --log-prefix "REJECT_REMOTE:"`
-			remoteRules += `\n-A vpa--remote-[0-9]+ -i flannel\.42 -j REJECT --reject-with icmp-port-unreachable`
-			Eventually(iptablesFilterRules, "10s", "1s").Should(MatchRegexp(remoteRules))
+		const (
+			LoggingDisabled = false
+			LoggingEnabled  = true
+		)
 
+		RemoteRulesRegexp := func(loggingEnabled bool) string {
+			remoteRules := `.*-A vpa--remote-[0-9]+ -i flannel\.42 -m state --state RELATED,ESTABLISHED -j ACCEPT`
+			if loggingEnabled {
+				remoteRules += `\n-A vpa--remote-[0-9]+ -i flannel\.42 -m limit --limit 2/min -j LOG --log-prefix "REJECT_REMOTE:"`
+			}
+			remoteRules += `\n-A vpa--remote-[0-9]+ -i flannel\.42 -j REJECT --reject-with icmp-port-unreachable`
+			return remoteRules
+		}
+
+		LocalRulesRegexp := func(loggingEnabled bool) string {
 			localRules := `.*-A vpa--local-[0-9]+ -i cni-flannel0 -m state --state RELATED,ESTABLISHED -j ACCEPT`
-			localRules += `\n.*-A vpa--local-[0-9]+ -s 10\.255\.100\.0/24 -d 10\.255\.100\.0/24 -i cni-flannel0 -m limit --limit 2/min -j LOG --log-prefix "REJECT_LOCAL:"`
+			if loggingEnabled {
+				localRules += `\n.*-A vpa--local-[0-9]+ -s 10\.255\.100\.0/24 -d 10\.255\.100\.0/24 -i cni-flannel0 -m limit --limit 2/min -j LOG --log-prefix "REJECT_LOCAL:"`
+			}
 			localRules += `\n.*-A vpa--local-[0-9]+ -s 10\.255\.100\.0/24 -d 10\.255\.100\.0/24 -i cni-flannel0 -j REJECT --reject-with icmp-port-unreachable`
-			Expect(iptablesFilterRules()).Should(MatchRegexp(localRules))
+			return localRules
+		}
+
+		It("writes the default rules in the correct order", func() {
+			Eventually(iptablesFilterRules, "4s", "1s").Should(MatchRegexp(RemoteRulesRegexp(LoggingDisabled)))
+			Eventually(iptablesFilterRules, "4s", "1s").Should(MatchRegexp(LocalRulesRegexp(LoggingDisabled)))
+		})
+
+		setIPTablesLogging := func(enabled bool) {
+			endpoint := fmt.Sprintf("http://%s:%d/iptables_logging", conf.DebugServerHost, conf.DebugServerPort)
+			req, err := http.NewRequest("PUT", endpoint, strings.NewReader(fmt.Sprintf(`{ "enabled": %t }`, enabled)))
+			Expect(err).NotTo(HaveOccurred())
+			resp, err := http.DefaultClient.Do(req)
+			Expect(err).NotTo(HaveOccurred())
+			defer resp.Body.Close()
+
+			Expect(resp.StatusCode).To(Equal(http.StatusOK))
+			Expect(ioutil.ReadAll(resp.Body)).To(MatchJSON(fmt.Sprintf(`{ "enabled": %t }`, enabled)))
+		}
+
+		getIPTablesLogging := func() (bool, error) {
+			endpoint := fmt.Sprintf("http://%s:%d/iptables_logging", conf.DebugServerHost, conf.DebugServerPort)
+			resp, err := http.DefaultClient.Get(endpoint)
+			if err != nil {
+				return false, err
+			}
+			defer resp.Body.Close()
+			Expect(resp.StatusCode).To(Equal(http.StatusOK))
+			var respStruct struct {
+				Enabled bool `json:"enabled"`
+			}
+			Expect(json.NewDecoder(resp.Body).Decode(&respStruct)).To(Succeed())
+			return respStruct.Enabled, nil
+		}
+
+		Describe("the debug server", func() {
+			It("has a iptables logging endpoint", func() {
+				Eventually(getIPTablesLogging).Should(BeFalse())
+				setIPTablesLogging(LoggingEnabled)
+				Expect(getIPTablesLogging()).To(BeTrue())
+			})
+		})
+
+		It("supports enabling/disabling iptables logging at runtime", func() {
+			By("checking that the logging rules are absent")
+			Eventually(iptablesFilterRules, "4s", "1s").Should(MatchRegexp(RemoteRulesRegexp(LoggingDisabled)))
+			Eventually(iptablesFilterRules, "4s", "1s").Should(MatchRegexp(LocalRulesRegexp(LoggingDisabled)))
+
+			By("enabling iptables logging")
+			setIPTablesLogging(LoggingEnabled)
+
+			By("checking that the logging rules are present")
+			Eventually(iptablesFilterRules, "2s", "1s").Should(MatchRegexp(RemoteRulesRegexp(LoggingEnabled)))
+			Eventually(iptablesFilterRules, "2s", "1s").Should(MatchRegexp(LocalRulesRegexp(LoggingEnabled)))
+
+			By("disabling iptables logging")
+			setIPTablesLogging(LoggingDisabled)
+
+			By("checking that the logging rules are absent")
+			Eventually(iptablesFilterRules, "2s", "1s").Should(MatchRegexp(RemoteRulesRegexp(LoggingDisabled)))
+			Eventually(iptablesFilterRules, "2s", "1s").Should(MatchRegexp(LocalRulesRegexp(LoggingDisabled)))
 		})
 
 		It("writes the mark rule and enforces policies", func() {
-			Eventually(iptablesFilterRules, "10s", "1s").Should(ContainSubstring(`-s 10.255.100.21/32 -m comment --comment "src:some-app-guid" -j MARK --set-xmark 0xa/0xffffffff`))
+			Eventually(iptablesFilterRules, "4s", "1s").Should(ContainSubstring(`-s 10.255.100.21/32 -m comment --comment "src:some-app-guid" -j MARK --set-xmark 0xa/0xffffffff`))
 			Expect(iptablesFilterRules()).To(ContainSubstring(`-d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m comment --comment "src:another-app-guid_dst:some-app-guid" -j ACCEPT`))
 		})
 

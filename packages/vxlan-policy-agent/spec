@@ -47,5 +47,6 @@ files:
   - vxlan-policy-agent/cmd/vxlan-policy-agent/*.go # gosub
   - vxlan-policy-agent/config/*.go # gosub
   - vxlan-policy-agent/enforcer/*.go # gosub
+  - vxlan-policy-agent/handlers/*.go # gosub
   - vxlan-policy-agent/planner/*.go # gosub
   - vxlan-policy-agent/poller/*.go # gosub
