@@ -22,6 +22,7 @@ import (
 	"vxlan-policy-agent/agent_metrics"
 	"vxlan-policy-agent/config"
 	"vxlan-policy-agent/enforcer"
+	"vxlan-policy-agent/handlers"
 	"vxlan-policy-agent/planner"
 	"vxlan-policy-agent/poller"
 
@@ -31,6 +32,7 @@ import (
 	"github.com/coreos/go-iptables/iptables"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
+	"github.com/tedsuo/ifrit/http_server"
 	"github.com/tedsuo/ifrit/sigmon"
 )
 
@@ -202,11 +204,13 @@ func main() {
 		}).DoCycle,
 	}
 
+	iptablesLogging := make(chan bool)
 	debugServerAddress := fmt.Sprintf("%s:%d", conf.DebugServerHost, conf.DebugServerPort)
+	debugServer := createCustomDebugServer(debugServerAddress, reconfigurableSink, iptablesLogging)
 	members := grouper.Members{
 		{"metrics_emitter", metricsEmitter},
 		{"policy_poller", policyPoller},
-		{"debug-server", debugserver.Runner(debugServerAddress, reconfigurableSink)},
+		{"debug-server", debugServer},
 	}
 
 	monitor := ifrit.Invoke(sigmon.New(grouper.NewOrdered(os.Interrupt, members)))
@@ -240,4 +244,12 @@ func initLoggerSink(logger lager.Logger, level string) *lager.ReconfigurableSink
 	}
 	w := lager.NewWriterSink(os.Stdout, lager.DEBUG)
 	return lager.NewReconfigurableSink(w, logLevel)
+}
+
+func createCustomDebugServer(listenAddress string, sink *lager.ReconfigurableSink, iptablesLoggingChan chan bool) ifrit.Runner {
+	mux := debugserver.Handler(sink).(*http.ServeMux)
+	mux.Handle("/iptables_logging", &handlers.IPTablesLogging{
+		LoggingChan: iptablesLoggingChan,
+	})
+	return http_server.New(listenAddress, mux)
 }
