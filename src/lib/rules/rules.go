@@ -154,6 +154,22 @@ func NewReturnRule() IPTablesRule {
 	}
 }
 
+func NewInputRelatedEstablishedRule(subnet string) IPTablesRule {
+	return IPTablesRule{
+		"-s", subnet,
+		"-m", "state", "--state", "RELATED,ESTABLISHED",
+		"--jump", "RETURN",
+	}
+}
+
+func NewInputDefaultRejectRule(subnet string) IPTablesRule {
+	return IPTablesRule{
+		"-s", subnet,
+		"--jump", "REJECT",
+		"--reject-with", "icmp-port-unreachable",
+	}
+}
+
 func NewNetOutRelatedEstablishedRule(subnet, overlayNetwork string) IPTablesRule {
 	return IPTablesRule{
 		"-s", subnet,

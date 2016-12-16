@@ -53,8 +53,10 @@ func (m *NetIn) AddRule(containerHandle string,
 
 func cleanupChain(table, parentChain, chain string, iptables rules.IPTablesAdapter) error {
 	var result error
-	if err := iptables.Delete(table, parentChain, rules.IPTablesRule{"--jump", chain}); err != nil {
-		result = multierror.Append(result, fmt.Errorf("delete rule: %s", err))
+	if parentChain != "" {
+		if err := iptables.Delete(table, parentChain, rules.IPTablesRule{"--jump", chain}); err != nil {
+			result = multierror.Append(result, fmt.Errorf("delete rule: %s", err))
+		}
 	}
 
 	if err := iptables.ClearChain(table, chain); err != nil {

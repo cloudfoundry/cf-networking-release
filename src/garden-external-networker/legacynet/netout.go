@@ -11,6 +11,7 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
+const prefixInput = "input"
 const prefixNetOut = "netout"
 const suffixNetOutLog = "log"
 
@@ -27,20 +28,31 @@ type NetOut struct {
 }
 
 func (m *NetOut) Initialize(logger lager.Logger, containerHandle string, containerIP net.IP, overlayNetwork string) error {
-	chain := m.ChainNamer.Prefix(prefixNetOut, containerHandle)
-	logChain, err := m.ChainNamer.Postfix(chain, suffixNetOutLog)
+	inputChain := m.ChainNamer.Prefix(prefixInput, containerHandle)
+	forwardChain := m.ChainNamer.Prefix(prefixNetOut, containerHandle)
+	logChain, err := m.ChainNamer.Postfix(forwardChain, suffixNetOutLog)
 	if err != nil {
 		return fmt.Errorf("getting chain name: %s", err)
 	}
 
 	type rulesAndChain struct {
-		Chain string
-		Rules []rules.IPTablesRule
+		ParentChain string
+		Chain       string
+		Rules       []rules.IPTablesRule
 	}
 
 	args := []rulesAndChain{
 		{
-			Chain: chain,
+			ParentChain: "INPUT",
+			Chain:       inputChain,
+			Rules: []rules.IPTablesRule{
+				rules.NewInputRelatedEstablishedRule(containerIP.String()),
+				rules.NewInputDefaultRejectRule(containerIP.String()),
+			},
+		},
+		{
+			ParentChain: "FORWARD",
+			Chain:       forwardChain,
 			Rules: []rules.IPTablesRule{
 				rules.NewNetOutRelatedEstablishedRule(containerIP.String(), overlayNetwork),
 				rules.NewNetOutDefaultRejectRule(containerIP.String(), overlayNetwork),
@@ -61,10 +73,13 @@ func (m *NetOut) Initialize(logger lager.Logger, containerHandle string, contain
 			return fmt.Errorf("creating chain: %s", err)
 		}
 
-		err = m.IPTables.BulkInsert("filter", "FORWARD", 1, rules.IPTablesRule{"--jump", arg.Chain})
-		if err != nil {
-			return fmt.Errorf("inserting rule: %s", err)
+		if arg.ParentChain != "" {
+			err = m.IPTables.BulkInsert("filter", arg.ParentChain, 1, rules.IPTablesRule{"--jump", arg.Chain})
+			if err != nil {
+				return fmt.Errorf("inserting rule: %s", err)
+			}
 		}
+
 		err = m.IPTables.BulkAppend("filter", arg.Chain, arg.Rules...)
 		if err != nil {
 			return fmt.Errorf("appending rule: %s", err)
@@ -75,17 +90,21 @@ func (m *NetOut) Initialize(logger lager.Logger, containerHandle string, contain
 }
 
 func (m *NetOut) Cleanup(containerHandle string) error {
-	chain := m.ChainNamer.Prefix(prefixNetOut, containerHandle)
-	logChain, err := m.ChainNamer.Postfix(chain, suffixNetOutLog)
+	forwardChain := m.ChainNamer.Prefix(prefixNetOut, containerHandle)
+	inputChain := m.ChainNamer.Prefix(prefixInput, containerHandle)
+	logChain, err := m.ChainNamer.Postfix(forwardChain, suffixNetOutLog)
 	if err != nil {
 		return fmt.Errorf("getting chain name: %s", err)
 	}
 
 	var result error
-	if err := cleanupChain("filter", "FORWARD", chain, m.IPTables); err != nil {
+	if err := cleanupChain("filter", "FORWARD", forwardChain, m.IPTables); err != nil {
 		result = multierror.Append(result, err)
 	}
-	if err := cleanupChain("filter", "FORWARD", logChain, m.IPTables); err != nil {
+	if err := cleanupChain("filter", "INPUT", inputChain, m.IPTables); err != nil {
+		result = multierror.Append(result, err)
+	}
+	if err := cleanupChain("filter", "", logChain, m.IPTables); err != nil {
 		result = multierror.Append(result, err)
 	}
 
