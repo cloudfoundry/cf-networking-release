@@ -51,11 +51,6 @@ checkout_and_update() {
 
     git checkout $branch
 
-    ## verify that the checkout is clean
-    if [ -n "$(git status --porcelain)" ]; then
-      error "$branch is dirty"
-    fi
-
     git pull
 }
 
