@@ -1,7 +1,52 @@
+<%
+    def db_params
+      ['username', 'password', 'host', 'port', 'name'].map {|name| "policy-server.database.#{name}"}
+    end
+
+    def param_exists? param
+      p(param) != ""
+    end
+
+    def connection_string_from_db_params
+      return "" unless db_params.any? {|p| param_exists?(p)}
+
+      unless db_params.all? {|p| param_exists?(p)}
+        raise "all of the following parameters must be specified #{db_params.join(",")}"
+      end
+
+      values = db_params.map {|param| p(param)}
+      # Note: order of the params is important here, it has to be username, password, host, port, name in that order
+      driver = p("policy-server.database.type")
+      case driver
+      when 'mysql'
+        sprintf "%s:%s@tcp(%s:%s)/%s", *values
+      when 'postgres'
+        sprintf "postgres://%s:%s@%s:%s/%s?sslmode=disable", *values
+      else
+        raise "unknown driver #{driver}"
+      end
+    end
+
+    connection_string = p('policy-server.database.connection_string')
+
+    if connection_string != "" && connection_string_from_db_params != ""
+       raise "You can only specify 'policy-server.database.connection_string' or '#{db_params.join(",")}'"
+    end
+
+    if connection_string == ""
+       connection_string = connection_string_from_db_params
+    end
+
+    if connection_string == ""
+       raise "#{db_params.join(",")} are required fields"
+    end
+%>
+
 <%=
     require 'json'
 
     config = p("policy-server").dup
+    config["database"]["connection_string"] = connection_string
 
     # exclude these properties
     excludes = ["ca_cert", "server_cert", "server_key"]

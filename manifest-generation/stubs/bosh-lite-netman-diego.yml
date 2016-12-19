@@ -115,7 +115,11 @@ netman_overrides:
           require_ssl: (( config_from_cf.etcd.require_ssl))
     policy-server:
       database:
-        connection_string: postgres://networkpolicyadmin:admin@10.244.0.30:5524/networkpolicydb?sslmode=disable
+        username: networkpolicyadmin
+        password: admin
+        host: 10.244.0.30
+        port: 5524
+        name: networkpolicydb
         type: postgres
       skip_ssl_validation: true
       uaa_client_secret: network-policy-secret

@@ -74,12 +74,36 @@ properties:
     description: "Skip verifying ssl certs when speaking to UAA or Cloud Controller"
     default: false
 
+
   policy-server.database.type:
     description: "Type of database: postgres or mysql"
     default: postgres
 
   policy-server.database.connection_string:
-    description: "Connection string to policy server database (for example, postgres://username:password@1.1.1.1:1234/db_name)"
+    description: "DEPRECATED: please instead set username,password,host,port,name"
+    default: ""
+
+  policy-server.database.username:
+    description: "Username for database connection"
+    default: ""
+
+  policy-server.database.password:
+    description: "Password for database connection"
+    default: ""
+
+  policy-server.database.host:
+    description: "Host (IP or DNS name) for database server"
+    default: ""
+
+  policy-server.database.port:
+    description: "Port for database server"
+    default: ""
+
+  policy-server.database.name:
+    description: "Name of logical database to use"
+    default: ""
+
+
 
   policy-server.tag_length:
     description: "Length in bytes of the packet tags to generate for policy sources and destinations. Must be greater than 0 and less than 4."
