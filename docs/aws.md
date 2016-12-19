@@ -86,12 +86,12 @@
           uaa_client_secret: REPLACE_WITH_UAA_CLIENT_SECRET
           skip_ssl_validation: true
           database:
-            # For MySQL use these two lines
-            type: mysql
-            connection_string: USERNAME:PASSWORD@tcp(DB_HOSTNAME:3306)/DB_NAME
-            # OR for Postgres, use these
-            # type: postgres
-            # connection_string: postgres://USERNAME:PASSWORD@DB_HOSTNAME:5524/DB_NAME?sslmode=disable
+            type: REPLACE_WITH_DB_TYPE # must be mysql or postgres
+            username: REPLACE_WITH_USERNAME
+            password: REPLACE_WITH_PASSWORD
+            host: REPLACE_WITH_DB_HOSTNAME
+            port: REPLACE_WITH_DB_PORT # e.g. 3306 for mysql
+            name: REPLACE_WITH_DB_NAME # e.g. network_policy
           ca_cert: |
             -----BEGIN CERTIFICATE-----
             REPLACE_WITH_CA_CERT
