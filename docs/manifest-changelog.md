@@ -10,8 +10,8 @@ In the Netman stub:
 ```diff
   policy_server:
     database:
+       type: REPLACE_WITH_DB_TYPE # must be mysql or postgres
 -      connection_string: postgres://USERNAME:PASSWORD@DB_HOSTNAME:5524/DB_NAME?sslmode=disable
-+      type: REPLACE_WITH_DB_TYPE # must be mysql or postgres
 +      username: REPLACE_WITH_USERNAME
 +      password: REPLACE_WITH_PASSWORD
 +      host: REPLACE_WITH_DB_HOSTNAME
