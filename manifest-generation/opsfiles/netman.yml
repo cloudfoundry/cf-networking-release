@@ -1,0 +1,240 @@
+# add netman release
+- type: replace
+  path: /releases/name=netman?/version
+  value: latest
+
+# add network policy db to cf mysql
+- type: replace
+  path: /instance_groups/name=mysql/jobs/name=mysql/properties/cf_mysql/mysql/seeded_databases/-
+  value:
+    name: network_policy
+    username: network_policy
+    password: "((cf_mysql_mysql_seeded_databases_network_policy_password))"
+
+# add users and client scopes
+- type: replace
+  path: /instance_groups/name=uaa/jobs/name=uaa/properties/uaa/scim/users/name=admin/groups/-
+  value: network.admin
+
+- type: replace
+  path: /instance_groups/name=uaa/jobs/name=uaa/properties/uaa/clients/cf/scope?
+  value: network.admin,cloud_controller.read,cloud_controller.write,openid,password.write,cloud_controller.admin,scim.read,scim.write,doppler.firehose,uaa.user,routing.router_groups.read,routing.router_groups.write
+
+- type: replace
+  path: /instance_groups/name=uaa/jobs/name=uaa/properties/uaa/clients/network-policy?
+  value:
+    authorities: uaa.resource,cloud_controller.admin_read_only
+    authorized-grant-types: client_credentials,refresh_token
+    secret: "((uaa_clients_network_policy_secret))"
+
+- type: replace
+  path: /instance_groups/name=uaa/jobs/name=uaa/properties/uaa/clients/datadog-firehose-nozzle?
+  value:
+    access-token-validity: 1209600
+    authorized-grant-types: authorization_code,client_credentials,refresh_token
+    override: true
+    secret: "((uaa_clients_datadog_firehose_nozzle_secret))"
+    scope: openid,oauth.approvals,doppler.firehose
+    authorities: oauth.login,doppler.firehose
+
+# point garden to external networker
+- type: replace
+  path: /instance_groups/name=diego-cell/jobs/name=garden/properties/garden/network_plugin?
+  value: /var/vcap/packages/runc-cni/bin/garden-external-networker
+
+- type: replace
+  path: /instance_groups/name=diego-cell/jobs/name=garden/properties/garden/network_plugin_extra_args?/-
+  value: --configFile=/var/vcap/jobs/garden-cni/config/adapter.json
+
+# c2c jobs on the diego cell
+- type: replace
+  path: /instance_groups/name=diego-cell/jobs/-
+  value:
+    name: garden-cni
+    release: netman
+    properties:
+      garden-cni:
+        cni_plugin_dir: /var/vcap/packages/flannel/bin
+        cni_config_dir: /var/vcap/jobs/cni-flannel/config/cni
+
+- type: replace
+  path: /instance_groups/name=diego-cell/jobs/-
+  value:
+    name: cni-flannel
+    release: netman
+    properties:
+      cni-flannel:
+        etcd_endpoints:
+          - etcd.service.cf.internal
+        etcd_client_cert: "((etcd_client.certificate))"
+        etcd_client_key: "((etcd_client.private_key))"
+        etcd_ca_cert: "((etcd_client.ca))"
+        flannel:
+          etcd:
+            require_ssl: "true"
+
+- type: replace
+  path: /instance_groups/name=diego-cell/jobs/-
+  value:
+    name: netmon
+    release: netman
+
+- type: replace
+  path: /instance_groups/name=diego-cell/jobs/-
+  value:
+    name: vxlan-policy-agent
+    release: netman
+    properties:
+      vxlan-policy-agent:
+        policy_server_url: https://policy-server.service.cf.internal:4003
+        ca_cert: "((network_policy_client.ca))"
+        client_cert: "((network_policy_client.certificate))"
+        client_key: "((network_policy_client.private_key))"
+
+# policy server vm
+- type: replace
+  path: /instance_groups/-
+  value:
+    name: policy-server
+    azs:
+    - z1
+    - z2
+    instances: 2
+    vm_type: t2.small
+    stemcell: default
+    networks:
+    - name: private
+    jobs:
+    - name: policy-server
+      release: netman
+      properties:
+        policy-server:
+          uaa_client_secret: "((uaa_clients_network_policy_secret))"
+          skip_ssl_validation: true
+          ca_cert: "((network_policy_server.ca))"
+          server_cert: "((network_policy_server.certificate))"
+          server_key: "((network_policy_server.private_key))"
+          database:
+            type: mysql
+            username: network_policy
+            password: "((cf_mysql_mysql_seeded_databases_network_policy_password))"
+            host: 10.0.31.193
+            port: 3306
+            name: network_policy
+    - name: route_registrar
+      release: routing
+      properties:
+        route_registrar:
+          routes:
+          - name: policy-server
+            port: 4002
+            registration_interval: 20s
+            uris:
+            - "api.((system_domain))/networking"
+        nats:
+          machines:
+          - 10.0.31.191
+          - 10.0.47.191
+          password: "((nats_password))"
+          port: 4222
+          user: nats
+    - name: consul_agent
+      release: consul
+      properties:
+        consul:
+          agent:
+            mode: client
+            domain: cf.internal
+            servers:
+              lan:
+              - 10.0.31.190
+              - 10.0.47.190
+              - 10.0.63.190
+            services:
+              policy-server:
+                name: policy-server
+                check:
+                  interval: 5s
+                  script: /bin/true
+          encrypt_keys:
+          - "((consul_encrypt_key))"
+          agent_cert: "((consul_agent.certificate))"
+          agent_key: "((consul_agent.private_key))"
+          ca_cert: "((consul_agent.ca))"
+          server_cert: "((consul_server.certificate))"
+          server_key: "((consul_server.private_key))"
+    - name: metron_agent
+      release: loggregator
+      properties:
+        syslog_daemon_config:
+          enable: false
+        metron_agent:
+          deployment: "((system_domain))"
+          etcd:
+            client_cert: "((etcd_client.certificate))"
+            client_key: "((etcd_client.private_key))"
+        metron_endpoint:
+          shared_secret: "((dropsonde_shared_secret))"
+        loggregator:
+          tls:
+            ca_cert: "((loggregator_ca.certificate))"
+            trafficcontroller:
+              cert: "((loggregator_tls_tc.certificate))"
+              key: "((loggregator_tls_tc.private_key))"
+            doppler:
+              cert: "((loggregator_tls_doppler.certificate))"
+              key: "((loggregator_tls_doppler.private_key))"
+          etcd:
+            require_ssl: true
+            ca_cert: "((etcd_server.ca))"
+            machines:
+            - etcd.service.cf.internal
+
+# add vars
+- type: replace
+  path: /variables/-
+  value:
+    name: cf_mysql_mysql_seeded_databases_network_policy_password
+    type: password
+
+- type: replace
+  path: /variables/-
+  value:
+    name: uaa_clients_network_policy_secret
+    type: password
+
+- type: replace
+  path: /variables/-
+  value:
+    name: uaa_clients_datadog_firehose_nozzle_secret
+    type: password
+
+- type: replace
+  path: /variables/-
+  value:
+    name: network_policy_ca
+    type: certificate
+    options:
+      common_name: networkPolicyCA
+
+- type: replace
+  path: /variables/-
+  value:
+    name: network_policy_server
+    type: certificate
+    options:
+      ca: network_policy_ca
+      common_name: policy-server.service.cf.internal
+      ext_key_usage:
+      - server_auth
+
+- type: replace
+  path: /variables/-
+  value:
+    name: network_policy_client
+    type: certificate
+    options:
+      ca: network_policy_ca
+      common_name: clientName
+      ext_key_usage:
+      - client_auth
