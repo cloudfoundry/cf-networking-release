@@ -126,6 +126,7 @@ func main() {
 		Logger: logger.Session("time-metric-emitter"),
 	}
 
+	iptablesLoggingState := &planner.LoggingState{}
 	dynamicPlanner := &planner.VxlanPolicyPlanner{
 		Datastore:         store,
 		PolicyClient:      policyClient,
@@ -137,6 +138,7 @@ func main() {
 			ParentChain: "FORWARD",
 			Prefix:      "vpa--",
 		},
+		LoggingState: iptablesLoggingState,
 	}
 
 	timestamper := &enforcer.Timestamper{}
@@ -146,7 +148,6 @@ func main() {
 		lockedIPTables,
 	)
 
-	iptablesLoggingState := &planner.LoggingState{}
 	vxlanDefaultLocalPlanner := &planner.VxlanDefaultLocalPlanner{
 		Logger:      logger,
 		LocalSubnet: localSubnetCIDR,

@@ -29,6 +29,7 @@ type VxlanPolicyPlanner struct {
 	VNI               int
 	CollectionEmitter agent_metrics.TimeMetricsEmitter
 	Chain             enforcer.Chain
+	LoggingState      loggingStateGetter
 }
 
 type Container struct {
@@ -86,6 +87,7 @@ func (p *VxlanPolicyPlanner) GetRulesAndChain() (enforcer.RulesWithChain, error)
 	marksRuleset := []rules.IPTablesRule{}
 	filterRuleset := []rules.IPTablesRule{}
 
+	iptablesLoggingEnabled := p.LoggingState.IsEnabled()
 	for _, policy := range policies {
 		srcContainerIPs, srcOk := containers[policy.Source.ID]
 		dstContainerIPs, dstOk := containers[policy.Destination.ID]
@@ -93,6 +95,18 @@ func (p *VxlanPolicyPlanner) GetRulesAndChain() (enforcer.RulesWithChain, error)
 		if dstOk {
 			// there are some containers on this host that are dests for the policy
 			for _, dstContainerIP := range dstContainerIPs {
+				if iptablesLoggingEnabled {
+					filterRuleset = append(
+						filterRuleset,
+						rules.NewMarkLogRule(
+							dstContainerIP,
+							policy.Destination.Protocol,
+							policy.Destination.Port,
+							policy.Source.Tag,
+							policy.Destination.ID,
+						),
+					)
+				}
 				filterRuleset = append(
 					filterRuleset,
 					rules.NewMarkAllowRule(

@@ -132,6 +132,15 @@ var _ = Describe("VXLAN Policy Agent", func() {
 			return localRules
 		}
 
+		PolicyRulesRegexp := func(loggingEnabled bool) string {
+			policyRules := ""
+			if loggingEnabled {
+				policyRules += `.*-A vpa--[0-9]+ -d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m limit --limit 2/min -j LOG --log-prefix OK_C_some-app-guid\n`
+			}
+			policyRules += `.*-A vpa--[0-9]+ -d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m comment --comment "src:another-app-guid_dst:some-app-guid" -j ACCEPT`
+			return policyRules
+		}
+
 		It("writes the default rules in the correct order", func() {
 			Eventually(iptablesFilterRules, "4s", "1s").Should(MatchRegexp(RemoteRulesRegexp(LoggingDisabled)))
 			Eventually(iptablesFilterRules, "4s", "1s").Should(MatchRegexp(LocalRulesRegexp(LoggingDisabled)))
@@ -176,6 +185,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 			By("checking that the logging rules are absent")
 			Eventually(iptablesFilterRules, "4s", "1s").Should(MatchRegexp(RemoteRulesRegexp(LoggingDisabled)))
 			Eventually(iptablesFilterRules, "4s", "1s").Should(MatchRegexp(LocalRulesRegexp(LoggingDisabled)))
+			Eventually(iptablesFilterRules, "4s", "1s").Should(MatchRegexp(PolicyRulesRegexp(LoggingDisabled)))
 
 			By("enabling iptables logging")
 			setIPTablesLogging(LoggingEnabled)
@@ -183,6 +193,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 			By("checking that the logging rules are present")
 			Eventually(iptablesFilterRules, "2s", "1s").Should(MatchRegexp(RemoteRulesRegexp(LoggingEnabled)))
 			Eventually(iptablesFilterRules, "2s", "1s").Should(MatchRegexp(LocalRulesRegexp(LoggingEnabled)))
+			Eventually(iptablesFilterRules, "2s", "1s").Should(MatchRegexp(PolicyRulesRegexp(LoggingEnabled)))
 
 			By("disabling iptables logging")
 			setIPTablesLogging(LoggingDisabled)
@@ -190,6 +201,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 			By("checking that the logging rules are absent")
 			Eventually(iptablesFilterRules, "2s", "1s").Should(MatchRegexp(RemoteRulesRegexp(LoggingDisabled)))
 			Eventually(iptablesFilterRules, "2s", "1s").Should(MatchRegexp(LocalRulesRegexp(LoggingDisabled)))
+			Eventually(iptablesFilterRules, "2s", "1s").Should(MatchRegexp(PolicyRulesRegexp(LoggingDisabled)))
 		})
 
 		It("writes the mark rule and enforces policies", func() {

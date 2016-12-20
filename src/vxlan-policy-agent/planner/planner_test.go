@@ -15,6 +15,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
+	"github.com/pivotal-cf-experimental/gomegamatchers"
 )
 
 var _ = Describe("Planner", func() {
@@ -26,12 +27,14 @@ var _ = Describe("Planner", func() {
 		logger             *lagertest.TestLogger
 		chain              enforcer.Chain
 		data               map[string]datastore.Container
+		loggingStateGetter *fakes.LoggingStateGetter
 	)
 
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test")
 		policyClient = &fakes.PolicyClient{}
 		timeMetricsEmitter = &fakes.TimeMetricsEmitter{}
+		loggingStateGetter = &fakes.LoggingStateGetter{}
 
 		store = &libfakes.Datastore{}
 
@@ -106,6 +109,7 @@ var _ = Describe("Planner", func() {
 			VNI:               42,
 			CollectionEmitter: timeMetricsEmitter,
 			Chain:             chain,
+			LoggingState:      loggingStateGetter,
 		}
 	})
 
@@ -124,41 +128,109 @@ var _ = Describe("Planner", func() {
 			Expect(policyClient.GetPoliciesCallCount()).To(Equal(1))
 		})
 
-		It("returns all the rules", func() {
-			rulesWithChain, err := policyPlanner.GetRulesAndChain()
-			Expect(err).NotTo(HaveOccurred())
-			Expect(rulesWithChain.Chain).To(Equal(chain))
+		Context("when iptables logging is disabled", func() {
+			BeforeEach(func() {
+				loggingStateGetter.IsEnabledReturns(false)
+			})
+			It("returns all the rules but no logging rules", func() {
+				rulesWithChain, err := policyPlanner.GetRulesAndChain()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(rulesWithChain.Chain).To(Equal(chain))
 
-			Expect(rulesWithChain.Rules).To(ConsistOf([]rules.IPTablesRule{
-				// allow based on mark
-				{
-					"-d", "10.255.1.3",
-					"-p", "udp",
-					"--dport", "5555",
-					"-m", "mark", "--mark", "0xBB",
-					"--jump", "ACCEPT",
-					"-m", "comment", "--comment", "src:another-app-guid_dst:some-other-app-guid",
-				},
-				{
-					"-d", "10.255.1.3",
-					"-p", "tcp",
-					"--dport", "1234",
-					"-m", "mark", "--mark", "0xAA",
-					"--jump", "ACCEPT",
-					"-m", "comment", "--comment", "src:some-app-guid_dst:some-other-app-guid",
-				},
-				// set tags on all outgoing packets, regardless of local vs remote
-				{
+				Expect(rulesWithChain.Rules).To(ConsistOf([]rules.IPTablesRule{
+					// allow based on mark
+					{
+						"-d", "10.255.1.3",
+						"-p", "udp",
+						"--dport", "5555",
+						"-m", "mark", "--mark", "0xBB",
+						"--jump", "ACCEPT",
+						"-m", "comment", "--comment", "src:another-app-guid_dst:some-other-app-guid",
+					},
+					{
+						"-d", "10.255.1.3",
+						"-p", "tcp",
+						"--dport", "1234",
+						"-m", "mark", "--mark", "0xAA",
+						"--jump", "ACCEPT",
+						"-m", "comment", "--comment", "src:some-app-guid_dst:some-other-app-guid",
+					},
+					// set tags on all outgoing packets, regardless of local vs remote
+					{
+						"--source", "10.255.1.2",
+						"--jump", "MARK", "--set-xmark", "0xAA",
+						"-m", "comment", "--comment", "src:some-app-guid",
+					},
+					{
+						"--source", "10.255.1.3",
+						"--jump", "MARK", "--set-xmark", "0xCC",
+						"-m", "comment", "--comment", "src:some-other-app-guid",
+					},
+				}))
+			})
+		})
+
+		Context("when iptables logging is enabled", func() {
+			BeforeEach(func() {
+				loggingStateGetter.IsEnabledReturns(true)
+			})
+			It("returns all the rules including logging rules", func() {
+				rulesWithChain, err := policyPlanner.GetRulesAndChain()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(rulesWithChain.Chain).To(Equal(chain))
+
+				Expect(rulesWithChain.Rules).To(gomegamatchers.ContainSequence([]rules.IPTablesRule{
+					// LOG bb allow based on mark
+					{
+						"-d", "10.255.1.3",
+						"-p", "udp",
+						"--dport", "5555",
+						"-m", "mark", "--mark", "0xBB",
+						"-m", "limit", "--limit", "2/min",
+						"--jump", "LOG", "--log-prefix", `"OK_BB_some-other-app-guid"`,
+					},
+					// allow bb based on mark
+					{
+						"-d", "10.255.1.3",
+						"-p", "udp",
+						"--dport", "5555",
+						"-m", "mark", "--mark", "0xBB",
+						"--jump", "ACCEPT",
+						"-m", "comment", "--comment", "src:another-app-guid_dst:some-other-app-guid",
+					},
+				}))
+				Expect(rulesWithChain.Rules).To(gomegamatchers.ContainSequence([]rules.IPTablesRule{
+					// LOG aa allow based on mark
+					{
+						"-d", "10.255.1.3",
+						"-p", "tcp",
+						"--dport", "1234",
+						"-m", "mark", "--mark", "0xAA",
+						"-m", "limit", "--limit", "2/min",
+						"--jump", "LOG", "--log-prefix", `"OK_AA_some-other-app-guid"`,
+					},
+					// allow aa based on mark
+					{
+						"-d", "10.255.1.3",
+						"-p", "tcp",
+						"--dport", "1234",
+						"-m", "mark", "--mark", "0xAA",
+						"--jump", "ACCEPT",
+						"-m", "comment", "--comment", "src:some-app-guid_dst:some-other-app-guid",
+					},
+				}))
+				Expect(rulesWithChain.Rules).To(ContainElement(rules.IPTablesRule{
+					// set tags on all outgoing packets, regardless of local vs remote
 					"--source", "10.255.1.2",
 					"--jump", "MARK", "--set-xmark", "0xAA",
 					"-m", "comment", "--comment", "src:some-app-guid",
-				},
-				{
+				}))
+				Expect(rulesWithChain.Rules).To(ContainElement(rules.IPTablesRule{
 					"--source", "10.255.1.3",
 					"--jump", "MARK", "--set-xmark", "0xCC",
 					"-m", "comment", "--comment", "src:some-other-app-guid",
-				},
-			}))
+				}))
+			})
 		})
 
 		It("returns all mark set rules before any mark filter rules", func() {

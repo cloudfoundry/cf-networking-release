@@ -119,3 +119,6 @@
 [submodule "src/code.cloudfoundry.org/debugserver"]
 	path = src/code.cloudfoundry.org/debugserver
 	url = https://github.com/cloudfoundry/debugserver
+[submodule "src/github.com/pivotal-cf-experimental/gomegamatchers"]
+	path = src/github.com/pivotal-cf-experimental/gomegamatchers
+	url = https://github.com/pivotal-cf-experimental/gomegamatchers
