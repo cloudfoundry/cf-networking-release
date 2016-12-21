@@ -45,17 +45,21 @@
   to be configured for green as well.
 
 
-- ### Stale policies not cleaned up
+- ### Stale policies not cleaned up automatically
   If you push an app and configure a policy for that app, when you delete the app
-  without deleting the policy, then the policy will stay in the policies database and be seen when you run (as cf admin):
+  without deleting the policy, then the policy will stay in the policies database.
+
+  Such "stale policies" are not visible from the CF CLI, but remain in the database.
+
+  Under normal circumstances, stale policies should not cause any major issues.
+
+  The policy server exposes a manual "policy cleanup" endpoint that will
+  remove all stale policies.  To perform a "cleanup":
+
   ```bash
-  cf curl /networking/v0/external/policies
+  cf curl -X POST /networking/v0/external/policies/cleanup
   ```
-  Under normal circumstances, these stale policies should not cause any major issues.
-  If you want to delete every policy from the server run (as cf admin):
-  ```bash
-  cf curl /networking/v0/external/policies -X DELETE -d `cf curl /networking/v0/external/policies`
-  ```
+
 
 - ### Upgrading/Downgrading between garden-runc and garden-runc + netman requires a recreate
 garden-runc and netman may leave around iptables rules or networking devices when switching networking stacks.
