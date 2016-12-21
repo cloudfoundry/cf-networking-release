@@ -1,4 +1,43 @@
-## Deploy to AWS
+## Deploy to AWS with cf-deployment
+
+0. Create a `vars-store.yml` with the line:
+
+  ```yaml
+  system_domain: REPLACE_WITH_SYSTEM_DOMAIN
+  ```
+
+0. Set up your environment for the new go bosh cli.
+From the directory with your `bbl-state.json`, export these variables:
+
+  ```bash
+  export BOSH_USER=$(bbl director-username)
+  export BOSH_PASSWORD=$(bbl director-password)
+  export BOSH_ENVIRONMENT=$(bbl director-address)
+  export BOSH_CA_CERT=/tmp/$env-ca-cert
+  bbl director-ca-cert > $BOSH_CA_CERT
+  chmod 600 $BOSH_CA_CERT
+  export BOSH_DEPLOYMENT=cf
+  ```
+
+0. Deploy using the vars-store and opsfiles.
+
+  ```
+  bosh-cli deploy \
+    --vars-store=vars-store.yml \
+    -o $CF_DEPLOYMENT_REPO/opsfiles/change-logging-port-for-aws-elb.yml \
+    -o $NETMAN_RELEASE_REPO/manifest-generation/opsfiles/netman.yml \
+    $CF_DEPLOYMENT_REPO/cf-deployment.yml
+  ```
+
+0. Commit any changes to `vars-store.yml`.
+
+0. Kicking the tires
+
+   Try out our [Cats and Dogs example](../src/example-apps/cats-and-dogs) on your new deployment.
+
+
+## Deploy to AWS with cf-release
+
 0. Upload stemcell with Linux kernel 4.4 to bosh director.  Versions >= 3263.2 should work.
 
 0. Generate credentials
