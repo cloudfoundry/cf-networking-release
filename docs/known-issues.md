@@ -17,6 +17,23 @@
 
   This issue can be resolved by upgrading your MySQL server to version 5.7+
 
+- ### Container network access may require a one-time app restage
+  Apps which were last pushed or restaged on older versions of CloudController
+  may need to be restaged on a newer version of CloudController in order to
+  connect to other apps via the container network.
+
+  Apps which have been pushed or restaged on [capi-release v1.0.0](https://github.com/cloudfoundry/capi-release/releases/tag/v1.0.0)
+  or higher, or [cf-release v240](https://github.com/cloudfoundry/cf-release/releases/tag/v240) or higher
+  should be ok.
+
+  One symptom of this issue is frequent log messages from the `vxlan-policy-agent` job on
+  the Diego Cell VMs which include the message
+  ```
+  Container metadata is missing key policy_group_id. Check version of CloudController.
+  ```
+
+  To resolve this, simply `cf restage MYAPP`.
+
 
 - ### Missing Feature Parity For Application Security Groups
   Current support for application security groups in netman is incomplete:
