@@ -6,11 +6,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"lib/flannel"
-	"log"
 	"os"
 	"os/exec"
 	"regexp"
 	"time"
+
+	"code.cloudfoundry.org/lager"
 
 	"flannel-watchdog/config"
 
@@ -19,13 +20,12 @@ import (
 	"github.com/tedsuo/ifrit/sigmon"
 )
 
-const (
-	ipAddrParseRegex = `((?:[0-9]{1,3}\.){3}[0-9]{1,3}/24)`
-)
+var ipAddrParseRegex = regexp.MustCompile(`((?:[0-9]{1,3}\.){3}[0-9]{1,3}/24)`)
 
 type Runner struct {
 	SubnetFile string
 	BridgeName string
+	Logger     lager.Logger
 }
 
 func (r *Runner) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
@@ -47,21 +47,21 @@ func (r *Runner) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 
 			output, err := exec.Command("ip", "addr", "show", "dev", r.BridgeName).CombinedOutput()
 			if err != nil {
-				fmt.Println("no bridge device found")
+				r.Logger.Info("no bridge device found")
 				found = false
 				continue
 			}
 
-			matches := regexp.MustCompile(ipAddrParseRegex).FindStringSubmatch(string(output))
+			matches := ipAddrParseRegex.FindStringSubmatch(string(output))
 			if len(matches) < 2 {
-				errCh <- fmt.Errorf(`device "%s" has no ip`, r.BridgeName)
+				errCh <- fmt.Errorf(`device '%s' has no ip`, r.BridgeName)
 				return
 			}
 
 			deviceIP := matches[1]
 			if !found {
 				found = true
-				fmt.Printf("Found bridge %s\n", r.BridgeName)
+				r.Logger.Info("Found bridge", lager.Data{"name": r.BridgeName})
 			}
 
 			if flannelIP != deviceIP {
@@ -80,36 +80,41 @@ func (r *Runner) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	}
 }
 
-func main() {
-	fmt.Println("woof!")
-
+func mainWithErr(logger lager.Logger) error {
 	conf := &config.Config{}
-
 	configFilePath := flag.String("config-file", "", "path to config file")
 	flag.Parse()
 
-	configData, err := ioutil.ReadFile(*configFilePath)
+	config, err := ioutil.ReadFile(*configFilePath)
 	if err != nil {
-		log.Fatal("error reading config")
+		return fmt.Errorf("reading config: %s", err)
 	}
 
-	err = json.Unmarshal(configData, conf)
+	err = json.Unmarshal(config, conf)
 	if err != nil {
-		log.Fatal("error unmarshalling config")
+		return fmt.Errorf("unmarshaling config: %s", err)
 	}
 
 	runner := &Runner{
 		SubnetFile: conf.FlannelSubnetFile,
 		BridgeName: conf.BridgeName,
+		Logger:     logger,
 	}
-	members := grouper.Members{
-		{"runner", runner},
-	}
+	members := grouper.Members{{"runner", runner}}
 	group := grouper.NewOrdered(os.Interrupt, members)
 	monitor := ifrit.Invoke(sigmon.New(group))
 
 	err = <-monitor.Wait()
-	if err != nil {
-		log.Fatalf("%s\n", err)
+	return err
+}
+
+func main() {
+	logger := lager.NewLogger("container-networking.flannel-watchdog")
+	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.INFO))
+	logger.Info("starting")
+
+	if err := mainWithErr(logger); err != nil {
+		logger.Error("fatal", err)
+		os.Exit(1)
 	}
 }

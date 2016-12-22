@@ -12,6 +12,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 )
 
@@ -72,6 +73,10 @@ var _ = Describe("Flannel Watchdog", func() {
 		deleteBridge(true)
 	})
 
+	It("should log on starting", func() {
+		Eventually(session.Out).Should(gbytes.Say("container-networking.flannel-watchdog.*starting"))
+	})
+
 	It("should boot and gracefully terminate", func() {
 		Consistently(session, "1.5s").ShouldNot(gexec.Exit())
 
@@ -89,7 +94,7 @@ var _ = Describe("Flannel Watchdog", func() {
 			expectedMsg := fmt.Sprintf(
 				`This cell must be recreated.  Flannel is out of sync with the local bridge. `+
 					`flannel (%s): 10.4.13.1/24 bridge (%s): %s`, subnetFileName, bridgeName, bridgeIP)
-			Expect(string(session.Err.Contents())).To(ContainSubstring(expectedMsg))
+			Expect(string(session.Out.Contents())).To(ContainSubstring(expectedMsg))
 		})
 	})
 
@@ -101,7 +106,7 @@ var _ = Describe("Flannel Watchdog", func() {
 		})
 		It("exits with nonzero status code and logs the error", func() {
 			Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit(1))
-			Expect(session.Err.Contents()).To(ContainSubstring("open "))
+			Expect(session.Out.Contents()).To(ContainSubstring("open "))
 		})
 	})
 
@@ -121,8 +126,8 @@ var _ = Describe("Flannel Watchdog", func() {
 		}
 
 		It("reports this fact and then shuts up", func() {
-			expectedMsg := fmt.Sprintf("Found bridge %s", bridgeName)
-			Eventually(session.Out.Contents, DEFAULT_TIMEOUT).Should(ContainSubstring(expectedMsg))
+			Eventually(session.Out, DEFAULT_TIMEOUT).Should(gbytes.Say(
+				fmt.Sprintf("Found bridge.*%s", bridgeName)))
 			Consistently(howManyFinds, "2s").Should(Equal(1))
 		})
 
@@ -150,7 +155,8 @@ var _ = Describe("Flannel Watchdog", func() {
 
 		It("exits with nonzero status code and logs the error", func() {
 			Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit(1))
-			Expect(session.Err.Contents()).To(ContainSubstring(fmt.Sprintf(`device "%s" has no ip`, bridgeName)))
+			Expect(session.Out).To(gbytes.Say(fmt.Sprintf(
+				`container-networking.flannel-watchdog.*device '%s' has no ip`, bridgeName)))
 		})
 	})
 
