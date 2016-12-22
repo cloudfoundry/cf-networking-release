@@ -3,6 +3,7 @@ package policy_client
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"lib/marshal"
 	"net/http"
@@ -29,15 +30,21 @@ type JsonClient struct {
 }
 
 func (c *JsonClient) Do(method, route string, reqData, respData interface{}, token string) error {
-	reqURL := c.Url + route
-	bodyBytes, err := c.Marshaler.Marshal(reqData)
-	if err != nil {
-		return fmt.Errorf("json marshal request body: %s", err)
+	var reader io.Reader
+	if method != "GET" {
+		bodyBytes, err := c.Marshaler.Marshal(reqData)
+		if err != nil {
+			return fmt.Errorf("json marshal request body: %s", err)
+		}
+		reader = bytes.NewReader(bodyBytes)
 	}
-	request, err := http.NewRequest(method, reqURL, bytes.NewReader(bodyBytes))
+
+	reqURL := c.Url + route
+	request, err := http.NewRequest(method, reqURL, reader)
 	if err != nil {
 		return fmt.Errorf("http new request: %s", err)
 	}
+
 	request.Header["Authorization"] = []string{token}
 	resp, err := c.HttpClient.Do(request)
 	if err != nil {

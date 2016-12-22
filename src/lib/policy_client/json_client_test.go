@@ -55,7 +55,7 @@ var _ = Describe("JsonClient", func() {
 				"some-key" : "some-value"
 			}`)),
 		}
-		method = "GET"
+		method = "POST"
 		route = "/some/route"
 		reqData = map[string]string{"request": "data"}
 		respData = map[string]string{}
@@ -63,7 +63,25 @@ var _ = Describe("JsonClient", func() {
 		httpClient.DoReturns(returnedResponse, nil)
 	})
 	Describe("Do", func() {
-		It("makes a request with the given body", func() {
+		It("makes non-GET requests with the given body", func() {
+			err := jsonClient.Do(method, route, reqData, &respData, token)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(httpClient.DoCallCount()).To(Equal(1))
+			receivedRequest := httpClient.DoArgsForCall(0)
+			Expect(receivedRequest.Method).To(Equal("POST"))
+			Expect(receivedRequest.URL.Host).To(Equal("some.url"))
+			Expect(receivedRequest.URL.Path).To(Equal("/some/route"))
+			bodyBytes, err := ioutil.ReadAll(receivedRequest.Body)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(bodyBytes).To(MatchJSON(`{"request":"data"}`))
+
+			Expect(respData).To(Equal(map[string]string{"some-key": "some-value"}))
+			Expect(logger).To(gbytes.Say(`http-do.*some-key.*some-value`))
+		})
+
+		It("does not include a request body for GET requests", func() {
+			method = "GET"
 			err := jsonClient.Do(method, route, reqData, &respData, token)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -72,9 +90,7 @@ var _ = Describe("JsonClient", func() {
 			Expect(receivedRequest.Method).To(Equal("GET"))
 			Expect(receivedRequest.URL.Host).To(Equal("some.url"))
 			Expect(receivedRequest.URL.Path).To(Equal("/some/route"))
-			bodyBytes, err := ioutil.ReadAll(receivedRequest.Body)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(bodyBytes).To(MatchJSON(`{"request":"data"}`))
+			Expect(receivedRequest.Body).To(BeNil())
 
 			Expect(respData).To(Equal(map[string]string{"some-key": "some-value"}))
 			Expect(logger).To(gbytes.Say(`http-do.*some-key.*some-value`))
