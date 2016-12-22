@@ -33,7 +33,7 @@ $ curl http://api.bosh-lite.com/networking/v0/external/policies -H "Authorizatio
 | :----- | :--- | :-------- | :----------- | :----------- |
 | GET | /networking/v0/external/policies | [see below](#get-networkingv0externalpolicies) | - | List Policies |
 | POST | /networking/v0/external/policies | - | [see below](#post-networkingv0externalpolicies)| Create Policies |
-| DELETE | /networking/v0/external/policies | - | [see below](#delete-networkingv0externalpolicies)| Delete Policies |
+| POST | /networking/v0/external/policies/delete | - | [see below](#post-networkingv0externalpoliciesdelete)| Delete Policies |
 | GET | /networking/v0/external/tags | - | - | List all tag and `id` mappings |
 
 Notes:
@@ -118,7 +118,7 @@ Will return only the policies which include the given policy_group_id either as 
 - 200 (successful)
 - 400 (invalid request)
 
-### DELETE /networking/v0/external/policies
+### POST /networking/v0/external/policies/delete
 
 #### Request Body:
 
