@@ -395,6 +395,35 @@ var _ = Describe("External API", func() {
 			Expect(responseString).To(MatchJSON("{}"))
 		})
 
+		Context("when using the alternate DELETE mechanism (for compatibility with GCP)", func() {
+			It("responds with 200 and a body of {} and we can see it is removed from the list", func() {
+				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
+				resp := makeAndDoRequest(
+					"POST",
+					fmt.Sprintf("http://%s:%d/networking/v0/external/policies/delete", conf.ListenHost, conf.ListenPort),
+					body,
+				)
+
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
+				responseString, err := ioutil.ReadAll(resp.Body)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(responseString).To(MatchJSON(`{}`))
+
+				resp = makeAndDoRequest(
+					"GET",
+					fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+					nil,
+				)
+
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
+				responseString, err = ioutil.ReadAll(resp.Body)
+				Expect(responseString).To(MatchJSON(`{
+					"total_policies": 0,
+					"policies": []
+				}`))
+			})
+		})
+
 		Context("when all of the deletes succeed", func() {
 			It("responds with 200 and a body of {} and we can see it is removed from the list", func() {
 				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
