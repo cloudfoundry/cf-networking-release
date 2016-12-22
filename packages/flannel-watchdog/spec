@@ -5,6 +5,7 @@ dependencies:
   - golang
 
 files:
+  - code.cloudfoundry.org/lager/*.go # gosub
   - flannel-watchdog/cmd/flannel-watchdog/*.go # gosub
   - flannel-watchdog/config/*.go # gosub
   - github.com/tedsuo/ifrit/*.go # gosub
