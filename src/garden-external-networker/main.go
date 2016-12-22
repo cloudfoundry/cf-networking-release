@@ -72,7 +72,7 @@ func main() {
 }
 
 func mainWithError() error {
-	logger := lager.NewLogger("garden-external-networker")
+	logger := lager.NewLogger("container-networking.garden-external-networker")
 	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.INFO))
 
 	if len(os.Args) == 1 || os.Args[1] == "-h" || os.Args[1] == "--help" {

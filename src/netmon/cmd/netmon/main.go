@@ -22,7 +22,7 @@ func main() {
 	configFilePath := flag.String("config-file", "", "path to config file")
 	flag.Parse()
 
-	logger := lager.NewLogger("netmon")
+	logger := lager.NewLogger("container-networking.netmon")
 	sink := lager.NewReconfigurableSink(lager.NewWriterSink(os.Stdout, lager.DEBUG), lager.DEBUG)
 	logger.RegisterSink(sink)
 

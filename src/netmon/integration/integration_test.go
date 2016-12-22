@@ -9,6 +9,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 	"github.com/onsi/gomega/types"
 
@@ -66,6 +67,10 @@ var _ = Describe("Integration", func() {
 		Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit())
 
 		Expect(fakeMetron.Close()).To(Succeed())
+	})
+
+	It("should log when starting", func() {
+		Eventually(session.Out).Should(gbytes.Say("container-networking.netmon.*starting"))
 	})
 
 	It("should emit a metric of the number of network interfaces", func() {

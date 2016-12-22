@@ -128,6 +128,7 @@ var _ = Describe("Integration", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(responseString).To(ContainSubstring("some-user"))
 
+				Expect(session.Out).To(gbytes.Say("container-networking.policy-server"))
 				Expect(session.Out).NotTo(gbytes.Say("request made to whoami endpoint"))
 
 				_ = makeAndDoRequest(
@@ -147,7 +148,7 @@ var _ = Describe("Integration", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(responseString).To(ContainSubstring("some-user"))
 
-				Expect(session.Out).To(gbytes.Say("request made to whoami endpoint"))
+				Expect(session.Out).To(gbytes.Say("container-networking.policy-server.*request made to whoami endpoint"))
 			})
 
 			var HaveName = func(name string) types.GomegaMatcher {

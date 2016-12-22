@@ -62,7 +62,7 @@ func main() {
 		log.Fatalf("error unmarshalling config: %s", err)
 	}
 
-	logger := lager.NewLogger("vxlan-policy-agent")
+	logger := lager.NewLogger("container-networking.vxlan-policy-agent")
 	reconfigurableSink := initLoggerSink(logger, conf.LogLevel)
 	logger.RegisterSink(reconfigurableSink)
 

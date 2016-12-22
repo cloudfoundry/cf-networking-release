@@ -21,6 +21,7 @@ import (
 	"github.com/coreos/go-iptables/iptables"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 )
 
@@ -217,6 +218,9 @@ var _ = Describe("Garden External Networker", func() {
 		By("calling up")
 		upSession := runAndWait(upCommand)
 		Expect(upSession.Out.Contents()).To(MatchJSON(`{ "properties": {"garden.network.container-ip": "169.254.1.2",  "garden.network.host-ip": "255.255.255.255"} }`))
+
+		By("checking that it logs basic info on stderr")
+		Expect(upSession.Err).To(gbytes.Say("container-networking.garden-external-networker.*action.*up"))
 
 		By("checking that every CNI plugin in the plugin directory got called with ADD")
 		for i := 0; i < 3; i++ {
