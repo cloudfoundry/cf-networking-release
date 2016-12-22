@@ -71,7 +71,7 @@ func (c *ExternalClient) DeletePolicies(token string, policies []models.Policy) 
 	reqPolicies := map[string][]models.Policy{
 		"policies": policies,
 	}
-	err := c.JsonClient.Do("DELETE", "/networking/v0/external/policies", reqPolicies, nil, token)
+	err := c.JsonClient.Do("POST", "/networking/v0/external/policies/delete", reqPolicies, nil, token)
 	if err != nil {
 		return err
 	}

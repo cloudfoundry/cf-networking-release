@@ -189,8 +189,8 @@ var _ = Describe("ExternalClient", func() {
 
 			Expect(jsonClient.DoCallCount()).To(Equal(1))
 			method, route, reqData, _, token := jsonClient.DoArgsForCall(0)
-			Expect(method).To(Equal("DELETE"))
-			Expect(route).To(Equal("/networking/v0/external/policies"))
+			Expect(method).To(Equal("POST"))
+			Expect(route).To(Equal("/networking/v0/external/policies/delete"))
 			Expect(reqData).To(Equal(map[string][]models.Policy{
 				"policies": []models.Policy{{
 					Source: models.Source{
