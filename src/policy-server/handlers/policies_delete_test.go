@@ -12,10 +12,10 @@ import (
 	"policy-server/handlers"
 	"policy-server/models"
 
+	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
-	"code.cloudfoundry.org/lager/lagertest"
 )
 
 var _ = Describe("PoliciesDelete", func() {
@@ -31,6 +31,8 @@ var _ = Describe("PoliciesDelete", func() {
 		fakeValidator    *fakes.Validator
 	)
 
+	const Route = "/networking/v0/external/policies/delete"
+
 	BeforeEach(func() {
 		var err error
 		requestJSON = `{"policies": [
@@ -45,7 +47,7 @@ var _ = Describe("PoliciesDelete", func() {
 				}
 			}
         ]}`
-		request, err = http.NewRequest("DELETE", "/networking/v0/external/policies", bytes.NewBuffer([]byte(requestJSON)))
+		request, err = http.NewRequest("POST", Route, bytes.NewBuffer([]byte(requestJSON)))
 		Expect(err).NotTo(HaveOccurred())
 
 		fakeStore = &fakes.Store{}
@@ -92,7 +94,7 @@ var _ = Describe("PoliciesDelete", func() {
 		BeforeEach(func() {
 			var err error
 			requestJSON = `{}`
-			request, err = http.NewRequest("DELETE", "/networking/v0/external/policies", bytes.NewBuffer([]byte(requestJSON)))
+			request, err = http.NewRequest("POST", Route, bytes.NewBuffer([]byte(requestJSON)))
 			Expect(err).NotTo(HaveOccurred())
 
 			fakeValidator.ValidatePoliciesReturns(errors.New("banana"))
@@ -110,12 +112,24 @@ var _ = Describe("PoliciesDelete", func() {
 		})
 	})
 
-	Context("when reading the request body fails", func() {
+	Context("when accessed using the legacy delete mechanism", func() {
 		BeforeEach(func() {
 			var err error
-			request, err = http.NewRequest("DELETE", "/networking/v0/external/policies", &testsupport.BadReader{})
+			request, err = http.NewRequest("DELETE", "/networking/v0/external/policies", bytes.NewBuffer([]byte(requestJSON)))
 			Expect(err).NotTo(HaveOccurred())
 		})
+
+		It("logs a warning", func() {
+			handler.ServeHTTP(resp, request, "")
+			Expect(logger).To(gbytes.Say("warning.*legacy-mechanism"))
+		})
+	})
+
+	Context("when reading the request body fails", func() {
+		BeforeEach(func() {
+			request.Body = &testsupport.BadReader{}
+		})
+
 		It("returns 400 and logs the error", func() {
 			handler.ServeHTTP(resp, request, "")
 
