@@ -263,7 +263,7 @@ var _ = Describe("Planner", func() {
 			It("logs an error for that container and returns rules for other containers", func() {
 				rulesWithChain, err := policyPlanner.GetRulesAndChain()
 				Expect(err).NotTo(HaveOccurred())
-				Expect(logger).To(gbytes.Say("container-metadata-policy-group-id.*container-id-fruit.*Container.*metadata.*policy_group_id.*CloudController"))
+				Expect(logger).To(gbytes.Say("container-metadata-policy-group-id.*container-id-fruit.*Container.*metadata.*policy_group_id.*CloudController.*restage"))
 
 				Expect(rulesWithChain.Chain).To(Equal(chain))
 				Expect(rulesWithChain.Rules).To(HaveLen(4))

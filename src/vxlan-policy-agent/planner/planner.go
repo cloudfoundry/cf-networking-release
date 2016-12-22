@@ -1,7 +1,6 @@
 package planner
 
 import (
-	"errors"
 	"lib/datastore"
 	"lib/models"
 	"lib/rules"
@@ -38,8 +37,6 @@ type Container struct {
 	GroupID string
 }
 
-var missingPolicyGroupIdError error = errors.New("Container metadata is missing key policy_group_id. Check version of CloudController.")
-
 func (p *VxlanPolicyPlanner) getContainersMap(allContainers map[string]datastore.Container) (map[string][]string, error) {
 	containers := map[string][]string{}
 	for _, container := range allContainers {
@@ -48,7 +45,8 @@ func (p *VxlanPolicyPlanner) getContainersMap(allContainers map[string]datastore
 		}
 		groupID, ok := container.Metadata["policy_group_id"].(string)
 		if !ok {
-			p.Logger.Error("container-metadata-policy-group-id", missingPolicyGroupIdError, lager.Data{"container_handle": container.Handle})
+			message := "Container metadata is missing key policy_group_id. CloudController version may be out of date or apps may need to be restaged."
+			p.Logger.Debug("container-metadata-policy-group-id", lager.Data{"container_handle": container.Handle, "message": message})
 			continue
 		}
 		containers[groupID] = append(containers[groupID], container.IP)
