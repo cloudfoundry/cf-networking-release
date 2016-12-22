@@ -1,42 +1,63 @@
-## Deploy to AWS with cf-deployment
+# Deploy to AWS
 
-0. Create a `vars-store.yml` with the line:
-
-  ```yaml
-  system_domain: REPLACE_WITH_SYSTEM_DOMAIN
-  ```
-
-0. Set up your environment for the new go bosh cli.
-From the directory with your `bbl-state.json`, export these variables:
-
-  ```bash
-  export BOSH_USER=$(bbl director-username)
-  export BOSH_PASSWORD=$(bbl director-password)
-  export BOSH_ENVIRONMENT=$(bbl director-address)
-  export BOSH_CA_CERT=/tmp/$env-ca-cert
-  bbl director-ca-cert > $BOSH_CA_CERT
-  chmod 600 $BOSH_CA_CERT
-  export BOSH_DEPLOYMENT=cf
-  ```
-
-0. Deploy using the vars-store and opsfiles.
-
-  ```
-  bosh-cli deploy \
-    --vars-store=vars-store.yml \
-    -o $CF_DEPLOYMENT_REPO/opsfiles/change-logging-port-for-aws-elb.yml \
-    -o $NETMAN_RELEASE_REPO/manifest-generation/opsfiles/netman.yml \
-    $CF_DEPLOYMENT_REPO/cf-deployment.yml
-  ```
-
-0. Commit any changes to `vars-store.yml`.
-
-0. Kicking the tires
-
-   Try out our [Cats and Dogs example](../src/example-apps/cats-and-dogs) on your new deployment.
+You have two options.  We recommend option #1 for new deployments.
 
 
-## Deploy to AWS with cf-release
+## Option 1: Using `cf-deployment`
+
+This deployment option uses the new tooling:
+- [bbl](https://github.com/cloudfoundry/bosh-bootloader), the bosh bootloader
+- the new Golang [bosh-cli](https://github.com/cloudfoundry/bosh-cli)
+- [cf-deployment](https://github.com/cloudfoundry/cf-deployment)
+
+It assumes you have a BOSH director on AWS that was created using [the `bbl` tool](https://github.com/cloudfoundry/bosh-bootloader).
+
+You'll need `bbl` installed on your local machine in order to acquire the credentials for the bosh director.  Grab [the latest release from GitHub](https://github.com/cloudfoundry/bosh-bootloader/releases).
+
+You should have a private directory in which you hold the `bbl-state.json` file for your bosh director
+
+```bash
+cd ~/my-deployment-credentials
+ls
+# bbl-state.json
+```
+
+```bash
+export BOSH_USER=$(bbl director-username)
+export BOSH_PASSWORD=$(bbl director-password)
+export BOSH_ENVIRONMENT=$(bbl director-address)
+export BOSH_CA_CERT=/tmp/$env-ca-cert
+bbl director-ca-cert > $BOSH_CA_CERT
+chmod 600 $BOSH_CA_CERT
+export BOSH_DEPLOYMENT=cf
+```
+
+If you are upgrading an existing `cf-deployment`, this same directory should hold your `vars-store.yml` file containing credentials for your existing deployment.
+
+If you don't have an existing deployment, you can seed one with the following contents:
+```yaml
+# vars-store.yml
+system_domain: mysystem.example.com
+```
+
+Then deploy
+```bash
+bosh-cli deploy \
+  --vars-store=vars-store.yml \
+  -o $CF_DEPLOYMENT_REPO/opsfiles/change-logging-port-for-aws-elb.yml \
+  -o $NETMAN_RELEASE_REPO/manifest-generation/opsfiles/netman.yml \
+  $CF_DEPLOYMENT_REPO/cf-deployment.yml
+```
+
+Note that your `vars-store.yml` likely changed.  If you keep it in source control, commit.  But ensure it is in a private repository.  It holds credentials.
+
+To kick the tires, try out our [Cats and Dogs example](../src/example-apps/cats-and-dogs) on your new deployment.
+
+
+## Option 2: Using `cf-release` with `diego-release` tooling
+
+This deployment option assumes you already have a BOSH director on AWS where you have already successfully deployed Diego + Cloud Foundry,
+by using the instructions and tooling in [the diego-release repo](https://github.com/cloudfoundry/diego-release/tree/develop/examples/aws).
 
 0. Upload stemcell with Linux kernel 4.4 to bosh director.  Versions >= 3263.2 should work.
 
