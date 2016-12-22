@@ -113,7 +113,7 @@ main() {
     bosh -n -d ${workspace_dir}/netman-release/bosh-lite/deployments/diego_with_netman.yml deploy
 }
 
-upload_stemcell=false
+upload_stemcell=true
 download_dir=$(mktemp -d -t deploy_bosh_lite.XXXXXXX)
 workspace_dir=$(cd $(dirname $0)/../.. && pwd)
 
