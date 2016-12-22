@@ -184,22 +184,22 @@ func main() {
 		{Name: "uptime", Method: "GET", Path: "/networking"},
 		{Name: "whoami", Method: "GET", Path: "/networking/v0/external/whoami"},
 		{Name: "create_policies", Method: "POST", Path: "/networking/v0/external/policies"},
-		{Name: "delete_policies", Method: "DELETE", Path: "/networking/v0/external/policies"},
-		{Name: "delete_policies_alternate", Method: "POST", Path: "/networking/v0/external/policies/delete"},
+		{Name: "delete_policies_legacy", Method: "DELETE", Path: "/networking/v0/external/policies"},
+		{Name: "delete_policies", Method: "POST", Path: "/networking/v0/external/policies/delete"},
 		{Name: "policies_index", Method: "GET", Path: "/networking/v0/external/policies"},
 		{Name: "cleanup", Method: "POST", Path: "/networking/v0/external/policies/cleanup"},
 		{Name: "tags_index", Method: "GET", Path: "/networking/v0/external/tags"},
 	}
 
 	handlers := rata.Handlers{
-		"uptime":                    uptimeHandler,
-		"create_policies":           authenticator.Wrap(createPolicyHandler),
-		"delete_policies":           authenticator.Wrap(deletePolicyHandler),
-		"delete_policies_alternate": authenticator.Wrap(deletePolicyHandler),
-		"policies_index":            authenticator.Wrap(policiesIndexHandler),
-		"cleanup":                   authenticator.Wrap(policiesCleanupHandler),
-		"tags_index":                authenticator.Wrap(tagsIndexHandler),
-		"whoami":                    whoamiHandler,
+		"uptime":                 uptimeHandler,
+		"create_policies":        authenticator.Wrap(createPolicyHandler),
+		"delete_policies_legacy": authenticator.Wrap(deletePolicyHandler),
+		"delete_policies":        authenticator.Wrap(deletePolicyHandler),
+		"policies_index":         authenticator.Wrap(policiesIndexHandler),
+		"cleanup":                authenticator.Wrap(policiesCleanupHandler),
+		"tags_index":             authenticator.Wrap(tagsIndexHandler),
+		"whoami":                 whoamiHandler,
 	}
 	router, err := rata.NewRouter(routes, handlers)
 	if err != nil {
