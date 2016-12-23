@@ -3,12 +3,28 @@
 <%=
     require 'json'
 
-    config = p("vxlan-policy-agent").dup
+    toRender = {
+      "cni_datastore_path" => p("vxlan-policy-agent.cni_datastore_path"),
+      "flannel_subnet_file" => p("vxlan-policy-agent.flannel_subnet_file"),
+      "iptables_lock_file" => p("vxlan-policy-agent.iptables_lock_file"),
 
-    # exclude these properties
-    excludes = ["ca_cert", "client_cert", "client_key"]
-    excludes.each { |k| config.delete k }
+      "policy_server_url" => p("vxlan-policy-agent.policy_server_url"),
+      "poll_interval" => p("vxlan-policy-agent.poll_interval"),
+      "vni" => p("vxlan-policy-agent.vni"),
 
-    JSON.pretty_generate(config)
+      "metron_address" => p("vxlan-policy-agent.metron_address"),
+
+      "debug_server_host" => p("vxlan-policy-agent.debug_server_host"),
+      "debug_server_port" => p("vxlan-policy-agent.debug_server_port"),
+
+      "log_level" => p("vxlan-policy-agent.log_level"),
+
+      # hard-coded values, not exposed as bosh spec properties
+      "ca_cert_file" => "/var/vcap/jobs/vxlan-policy-agent/config/certs/ca.crt",
+      "client_cert_file" => "/var/vcap/jobs/vxlan-policy-agent/config/certs/client.crt",
+      "client_key_file" => "/var/vcap/jobs/vxlan-policy-agent/config/certs/client.key",
+    }
+
+    JSON.pretty_generate(toRender)
 %>
 <% end %>
