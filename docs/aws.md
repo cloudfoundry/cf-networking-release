@@ -8,7 +8,7 @@ You have two options.  We recommend option #1 for new deployments.
 This deployment option uses the new tooling:
 - [bbl](https://github.com/cloudfoundry/bosh-bootloader), the bosh bootloader
 - the new Golang [bosh-cli](https://github.com/cloudfoundry/bosh-cli)
-- [cf-deployment](https://github.com/cloudfoundry/cf-deployment)
+- [cf-deployment](https://github.com/cloudfoundry/cf-deployment), refer to our [release notes](https://github.com/cloudfoundry-incubator/netman-release/releases) to get information on validated versions
 
 It assumes you have a BOSH director on AWS that was created using [the `bbl` tool](https://github.com/cloudfoundry/bosh-bootloader).
 
