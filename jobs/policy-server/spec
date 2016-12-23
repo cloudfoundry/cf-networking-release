@@ -33,23 +33,11 @@ properties:
     description: "Port where the policy server will serve its internal API"
     default: 4003
 
-  policy-server.ca_cert_file:
-    description: "Trusted CA certificate file for clients"
-    default: "/var/vcap/jobs/policy-server/config/certs/ca.crt"
-
   policy-server.ca_cert:
     description: "Trusted CA certificate for clients"
 
-  policy-server.server_cert_file:
-    description: "Server certificate  for TLS"
-    default: "/var/vcap/jobs/policy-server/config/certs/server.crt"
-
   policy-server.server_cert:
     description: "Server certificate for TLS"
-
-  policy-server.server_key_file:
-    description: "Server key file for TLS"
-    default: "/var/vcap/jobs/policy-server/config/certs/server.key"
 
   policy-server.server_key:
     description: "Server key for TLS"

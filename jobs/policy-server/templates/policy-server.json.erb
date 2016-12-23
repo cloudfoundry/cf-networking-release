@@ -45,12 +45,30 @@
 <%=
     require 'json'
 
-    config = p("policy-server").dup
-    config["database"]["connection_string"] = connection_string
+    toRender = {
+      "listen_host" => p("policy-server.listen_host"),
+      "listen_port" => p("policy-server.listen_port"),
+      "debug_server_host" => p("policy-server.debug_server_host"),
+      "debug_server_port" => p("policy-server.debug_server_port"),
+      "internal_listen_port" => p("policy-server.internal_listen_port"),
+      "uaa_client" => p("policy-server.uaa_client"),
+      "uaa_client_secret" => p("policy-server.uaa_client_secret"),
+      "uaa_url" => p("policy-server.uaa_url"),
+      "cc_url" => p("policy-server.cc_url"),
+      "skip_ssl_validation" => p("policy-server.skip_ssl_validation"),
+      "database" => {
+        "type" => p("policy-server.database.type"),
+        "connection_string" => connection_string,
+      },
+      "tag_length" => p("policy-server.tag_length"),
+      "metron_address" => p("policy-server.metron_address"),
+      "log_level" => p("policy-server.log_level"),
 
-    # exclude these properties
-    excludes = ["ca_cert", "server_cert", "server_key"]
-    excludes.each { |k| config.delete k }
+      # hard-coded values, not exposed as bosh spec properties
+      "ca_cert_file" => "/var/vcap/jobs/policy-server/config/certs/ca.crt",
+      "server_cert_file" => "/var/vcap/jobs/policy-server/config/certs/server.crt",
+      "server_key_file" => "/var/vcap/jobs/policy-server/config/certs/server.key",
+    }
 
-    JSON.pretty_generate(config)
+    JSON.pretty_generate(toRender)
 %>
