@@ -300,7 +300,7 @@ var _ = Describe("Client", func() {
 			Expect(authHeader).To(HaveLen(1))
 			Expect(authHeader[0]).To(Equal("bearer some-token"))
 			Expect(err).NotTo(HaveOccurred())
-			Expect(space).To(Equal(spaceModel))
+			Expect(space).To(Equal(&spaceModel))
 		})
 
 		It("logs the request before sending", func() {
@@ -346,7 +346,23 @@ var _ = Describe("Client", func() {
 			})
 		})
 
-		Context("if the response status code is not 200", func() {
+		Context("if the response status code is a 404", func() {
+			BeforeEach(func() {
+				fakeHTTPClient.DoReturns(
+					&http.Response{
+						StatusCode: 404,
+						Body:       ioutil.NopCloser(strings.NewReader("")),
+					}, nil)
+			})
+
+			It("returns nil", func() {
+				space, err := client.GetSpace("some-token", "some-space-guid")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(space).To(BeNil())
+			})
+		})
+
+		Context("if the response status code is not 200 or 404", func() {
 			BeforeEach(func() {
 				fakeHTTPClient.DoReturns(
 					&http.Response{
@@ -392,13 +408,28 @@ var _ = Describe("Client", func() {
 			Expect(authHeader).To(HaveLen(1))
 			Expect(authHeader[0]).To(Equal("bearer some-token"))
 			Expect(err).NotTo(HaveOccurred())
-			Expect(matchingSpace).To(Equal(space))
+			Expect(matchingSpace).To(Equal(&space))
 		})
 
 		It("logs the request before sending", func() {
 			_, err := client.GetUserSpace("some-token", "some-developer-guid", space)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(logger).To(gbytes.Say("get_user_space_with_name_and_org_guid"))
+		})
+
+		Context("when no spaces are returned", func() {
+			BeforeEach(func() {
+				fakeHTTPClient.DoReturns(
+					&http.Response{
+						StatusCode: 200,
+						Body:       ioutil.NopCloser(bytes.NewReader([]byte(fixtures.UserSpaceEmpty))),
+					}, nil)
+			})
+			It("returns nil", func() {
+				space, err := client.GetUserSpace("some-token", "some-developer-guid", space)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(space).To(BeNil())
+			})
 		})
 
 		Context("when more than one space is returned", func() {
@@ -411,21 +442,7 @@ var _ = Describe("Client", func() {
 			})
 			It("returns an error", func() {
 				_, err := client.GetUserSpace("some-token", "some-developer-guid", space)
-				Expect(err).To(MatchError("expected exactly 1 space and found: 2"))
-			})
-		})
-
-		Context("when no spaces are returned", func() {
-			BeforeEach(func() {
-				fakeHTTPClient.DoReturns(
-					&http.Response{
-						StatusCode: 200,
-						Body:       ioutil.NopCloser(bytes.NewReader([]byte(fixtures.UserSpaceEmpty))),
-					}, nil)
-			})
-			It("returns an error", func() {
-				_, err := client.GetUserSpace("some-token", "some-developer-guid", space)
-				Expect(err).To(MatchError("expected exactly 1 space and found: 0"))
+				Expect(err).To(MatchError("found more than one matching space"))
 			})
 		})
 

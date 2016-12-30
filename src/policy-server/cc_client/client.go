@@ -162,26 +162,29 @@ func (c *Client) GetSpaceGUIDs(token string, appGUIDs []string) ([]string, error
 	return ret, nil
 }
 
-func (c *Client) GetSpace(token, spaceGUID string) (models.Space, error) {
-	none := models.Space{}
+func (c *Client) GetSpace(token, spaceGUID string) (*models.Space, error) {
 	reqURL := fmt.Sprintf("%s/v2/spaces/%s", c.Host, spaceGUID)
 	request, err := http.NewRequest("GET", reqURL, nil)
 	request.Header.Set("Authorization", fmt.Sprintf("bearer %s", token))
 	if err != nil {
-		return none, fmt.Errorf("create HTTP request: %s", err) // untested
+		return nil, fmt.Errorf("create HTTP request: %s", err) // untested
 	}
 
 	c.Logger.Debug("get_space", lager.Data{"URL": request.URL})
 
 	resp, err := c.HTTPClient.Do(request)
 	if err != nil {
-		return none, fmt.Errorf("http client: %s", err)
+		return nil, fmt.Errorf("http client: %s", err)
 	}
 	defer resp.Body.Close()
 
 	respBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return none, fmt.Errorf("read body: %s", err)
+		return nil, fmt.Errorf("read body: %s", err)
+	}
+
+	if resp.StatusCode == 404 {
+		return nil, nil
 	}
 
 	if resp.StatusCode != 200 {
@@ -189,41 +192,40 @@ func (c *Client) GetSpace(token, spaceGUID string) (models.Space, error) {
 			StatusCode:     resp.StatusCode,
 			CCResponseBody: string(respBytes),
 		}
-		return none, err
+		return nil, err
 	}
 
 	var response SpaceResponse
 	err = json.Unmarshal(respBytes, &response)
 	if err != nil {
-		return none, fmt.Errorf("unmarshal json: %s", err)
+		return nil, fmt.Errorf("unmarshal json: %s", err)
 	}
 
-	return models.Space{
+	return &models.Space{
 		Name:    response.Entity.Name,
 		OrgGUID: response.Entity.OrganizationGUID,
 	}, nil
 }
 
-func (c *Client) GetUserSpace(token, userGUID string, space models.Space) (models.Space, error) {
-	none := models.Space{}
+func (c *Client) GetUserSpace(token, userGUID string, space models.Space) (*models.Space, error) {
 	reqURL := fmt.Sprintf("%s/v2/spaces?q=developer_guid%%3A%s&q=name%%3A%s&q=organization_guid%%3A%s", c.Host, userGUID, space.Name, space.OrgGUID)
 	request, err := http.NewRequest("GET", reqURL, nil)
 	request.Header.Set("Authorization", fmt.Sprintf("bearer %s", token))
 	if err != nil {
-		return none, fmt.Errorf("create HTTP request: %s", err) // untested
+		return nil, fmt.Errorf("create HTTP request: %s", err) // untested
 	}
 
 	c.Logger.Debug("get_user_space_with_name_and_org_guid", lager.Data{"URL": request.URL})
 
 	resp, err := c.HTTPClient.Do(request)
 	if err != nil {
-		return none, fmt.Errorf("http client: %s", err)
+		return nil, fmt.Errorf("http client: %s", err)
 	}
 	defer resp.Body.Close()
 
 	respBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return none, fmt.Errorf("read body: %s", err)
+		return nil, fmt.Errorf("read body: %s", err)
 	}
 
 	if resp.StatusCode != 200 {
@@ -231,23 +233,26 @@ func (c *Client) GetUserSpace(token, userGUID string, space models.Space) (model
 			StatusCode:     resp.StatusCode,
 			CCResponseBody: string(respBytes),
 		}
-		return none, err
+		return nil, err
 	}
 
 	var response SpacesResponse
 	err = json.Unmarshal(respBytes, &response)
 	if err != nil {
-		return none, fmt.Errorf("unmarshal json: %s", err)
+		return nil, fmt.Errorf("unmarshal json: %s", err)
 	}
 
 	numSpaces := len(response.Resources)
-	if numSpaces != 1 {
-		return none, errors.New(fmt.Sprintf("expected exactly 1 space and found: %d", numSpaces))
+	if numSpaces == 0 {
+		return nil, nil
+	}
+	if numSpaces > 1 {
+		return nil, errors.New(fmt.Sprintf("found more than one matching space"))
 	}
 
-	return models.Space{
+	return &models.Space{
 		Name:    response.Resources[0].Entity.Name,
 		OrgGUID: response.Resources[0].Entity.OrganizationGUID,
 	}, nil
-	return none, nil
+	return nil, nil
 }

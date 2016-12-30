@@ -72,43 +72,43 @@ var _ = Describe("PolicyGuard", func() {
 
 		fakeUAAClient.GetTokenReturns("policy-server-token", nil)
 		fakeCCClient.GetSpaceGUIDsReturns(spaceGUIDs, nil)
-		fakeCCClient.GetSpaceStub = func(token, spaceGUID string) (models.Space, error) {
+		fakeCCClient.GetSpaceStub = func(token, spaceGUID string) (*models.Space, error) {
 			switch spaceGUID {
 			case "space-guid-1":
 				{
-					return space1, nil
+					return &space1, nil
 				}
 			case "space-guid-2":
 				{
-					return space2, nil
+					return &space2, nil
 				}
 			case "space-guid-3":
 				{
-					return space3, nil
+					return &space3, nil
 				}
 			default:
 				{
-					return models.Space{}, errors.New("stub called with unexpected guid")
+					return nil, errors.New("stub called with unexpected guid")
 				}
 			}
 		}
-		fakeCCClient.GetUserSpaceStub = func(token, userGUID string, space models.Space) (models.Space, error) {
+		fakeCCClient.GetUserSpaceStub = func(token, userGUID string, space models.Space) (*models.Space, error) {
 			switch space {
 			case space1:
 				{
-					return space1, nil
+					return &space1, nil
 				}
 			case space2:
 				{
-					return space2, nil
+					return &space2, nil
 				}
 			case space3:
 				{
-					return space3, nil
+					return &space3, nil
 				}
 			default:
 				{
-					return models.Space{}, errors.New("stub called with unexpected guid")
+					return nil, errors.New("stub called with unexpected guid")
 				}
 			}
 		}
@@ -117,7 +117,7 @@ var _ = Describe("PolicyGuard", func() {
 	Describe("CheckAccess", func() {
 
 		It("checks that the user can access all apps references in policies", func() {
-			err := policyGuard.CheckAccess(policies, tokenData)
+			authorized, err := policyGuard.CheckAccess(policies, tokenData)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(fakeUAAClient.GetTokenCallCount()).To(Equal(1))
 			Expect(fakeCCClient.GetSpaceGUIDsCallCount()).To(Equal(1))
@@ -147,6 +147,7 @@ var _ = Describe("PolicyGuard", func() {
 			Expect(token).To(Equal("policy-server-token"))
 			Expect(userGUID).To(Equal("some-developer-guid"))
 			Expect(checkUserSpace).To(Equal(space3))
+			Expect(authorized).To(BeTrue())
 		})
 
 		Context("when the token has network.admin scope", func() {
@@ -156,11 +157,34 @@ var _ = Describe("PolicyGuard", func() {
 				}
 			})
 			It("returns successfully without making extra calls to UAA or CC", func() {
-				err := policyGuard.CheckAccess(policies, tokenData)
+				authorized, err := policyGuard.CheckAccess(policies, tokenData)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(fakeUAAClient.GetTokenCallCount()).To(Equal(0))
 				Expect(fakeCCClient.GetSpaceCallCount()).To(Equal(0))
 				Expect(fakeCCClient.GetUserSpaceCallCount()).To(Equal(0))
+				Expect(authorized).To(BeTrue())
+			})
+		})
+
+		Context("when the getting one of the the spaces returns nil", func() {
+			BeforeEach(func() {
+				fakeCCClient.GetSpaceReturns(nil, nil)
+			})
+			It("returns false", func() {
+				authorized, err := policyGuard.CheckAccess(policies, tokenData)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(authorized).To(BeFalse())
+			})
+		})
+
+		Context("when the getting the users spaces returns nil", func() {
+			BeforeEach(func() {
+				fakeCCClient.GetUserSpaceReturns(nil, nil)
+			})
+			It("returns false", func() {
+				authorized, err := policyGuard.CheckAccess(policies, tokenData)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(authorized).To(BeFalse())
 			})
 		})
 
@@ -169,8 +193,9 @@ var _ = Describe("PolicyGuard", func() {
 				fakeUAAClient.GetTokenReturns("", errors.New("banana"))
 			})
 			It("returns a useful error", func() {
-				err := policyGuard.CheckAccess(policies, tokenData)
+				authorized, err := policyGuard.CheckAccess(policies, tokenData)
 				Expect(err).To(MatchError("getting token: banana"))
+				Expect(authorized).To(BeFalse())
 			})
 		})
 
@@ -178,29 +203,32 @@ var _ = Describe("PolicyGuard", func() {
 			BeforeEach(func() {
 				fakeCCClient.GetSpaceGUIDsReturns(nil, errors.New("banana"))
 			})
-			It("returns an useful error", func() {
-				err := policyGuard.CheckAccess(policies, tokenData)
+			It("returns a useful error", func() {
+				authorized, err := policyGuard.CheckAccess(policies, tokenData)
 				Expect(err).To(MatchError("getting space guids: banana"))
+				Expect(authorized).To(BeFalse())
 			})
 		})
 
-		Context("when the getting all the spaces fails", func() {
+		Context("when the getting one of the the spaces fails", func() {
 			BeforeEach(func() {
-				fakeCCClient.GetSpaceReturns(models.Space{}, errors.New("banana"))
+				fakeCCClient.GetSpaceReturns(nil, errors.New("banana"))
 			})
-			It("returns an useful error", func() {
-				err := policyGuard.CheckAccess(policies, tokenData)
+			It("returns a useful error", func() {
+				authorized, err := policyGuard.CheckAccess(policies, tokenData)
 				Expect(err).To(MatchError("getting space with guid space-guid-1: banana"))
+				Expect(authorized).To(BeFalse())
 			})
 		})
 
 		Context("when the getting the users spaces fails", func() {
 			BeforeEach(func() {
-				fakeCCClient.GetUserSpaceReturns(models.Space{}, errors.New("banana"))
+				fakeCCClient.GetUserSpaceReturns(nil, errors.New("banana"))
 			})
-			It("returns an useful error", func() {
-				err := policyGuard.CheckAccess(policies, tokenData)
-				Expect(err).To(MatchError("getting user space space-1 in org org-guid-1: banana"))
+			It("returns a useful error", func() {
+				authorized, err := policyGuard.CheckAccess(policies, tokenData)
+				Expect(err).To(MatchError("getting space with guid space-guid-1: banana"))
+				Expect(authorized).To(BeFalse())
 			})
 		})
 	})

@@ -78,6 +78,7 @@ var _ = Describe("PoliciesCreate", func() {
 			Scope:    []string{"network.admin"},
 			UserName: "some_user",
 		}
+		fakePolicyGuard.CheckAccessReturns(true, nil)
 		resp = httptest.NewRecorder()
 	})
 
@@ -120,6 +121,23 @@ var _ = Describe("PoliciesCreate", func() {
 		Expect(logger).To(gbytes.Say("policy-create.*some-app-guid.*some_user"))
 	})
 
+	Context("when the policy guard returns false", func() {
+		BeforeEach(func() {
+			fakePolicyGuard.CheckAccessReturns(false, nil)
+		})
+
+		It("responds with code 403", func() {
+			handler.ServeHTTP(resp, request, tokenData)
+			Expect(resp.Code).To(Equal(http.StatusForbidden))
+			Expect(resp.Body.String()).To(MatchJSON(`{"error": "one or more applications cannot be found or accessed"}`))
+		})
+
+		It("logs the failure", func() {
+			handler.ServeHTTP(resp, request, tokenData)
+			Expect(logger).To(gbytes.Say("check-access-failed.*one or more applications cannot be found or accessed"))
+		})
+	})
+
 	Context("when the validator fails", func() {
 		BeforeEach(func() {
 			fakeValidator.ValidatePoliciesReturns(errors.New("banana"))
@@ -139,7 +157,7 @@ var _ = Describe("PoliciesCreate", func() {
 
 	Context("when the policy guard returns an error", func() {
 		BeforeEach(func() {
-			fakePolicyGuard.CheckAccessReturns(errors.New("banana"))
+			fakePolicyGuard.CheckAccessReturns(false, errors.New("banana"))
 		})
 
 		It("responds with code 500 and a useful error", func() {

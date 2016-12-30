@@ -166,7 +166,7 @@ var _ = Describe("External API", func() {
 
 					Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
 					responseString, err := ioutil.ReadAll(resp.Body)
-					Expect(responseString).To(MatchJSON(`{ "error": "app guid app-guid-not-in-my-spaces does not exist in any spaces you can access"}`))
+					Expect(responseString).To(MatchJSON(`{ "error": "one or more applications cannot be found or accessed"}`))
 				})
 			})
 		})
