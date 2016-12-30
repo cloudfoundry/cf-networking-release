@@ -5,8 +5,10 @@
 The policy server API is used for creating, deleting and listing policies and tags.
 
 ## API Authorization
-In order to communicate with the policy server API, a UAA oauth token with valid `network.admin` scope is required.
-The CF admin by default has `network.admin` scope, other users will need to have this scope granted by an admin.
+In order to communicate with the policy server API, a UAA oauth token with valid `network.admin` or `network.write` scope is required.
+The CF admin by default has `network.admin` scope, other users will need to have the proper scope granted by an admin.
+
+Space developers with the `network.write` scope can configure policies for applications in spaces for which they have the SpaceDeveloper role.
 
 ### Option 1: cf curl
 Use the `cf curl` command as admin

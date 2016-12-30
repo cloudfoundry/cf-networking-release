@@ -55,13 +55,13 @@ var _ = Describe("external connectivity", func() {
 		Expect(cf.Cf("create-space", spaceNameA).Wait(Timeout_Push)).To(gexec.Exit(0))
 		Expect(cf.Cf("target", "-o", orgName, "-s", spaceNameA).Wait(Timeout_Push)).To(gexec.Exit(0))
 
-		// pushProxy(appA)
+		pushProxy(appA)
 
 		spaceNameB = "test-space-B"
 		Expect(cf.Cf("create-space", spaceNameB).Wait(Timeout_Push)).To(gexec.Exit(0))
 		Expect(cf.Cf("target", "-o", orgName, "-s", spaceNameB).Wait(Timeout_Push)).To(gexec.Exit(0))
 
-		// pushProxy(appB)
+		pushProxy(appB)
 
 		w = warrant.New(warrant.Config{
 			Host:          fmt.Sprintf("https://uaa.%s", config.AppsDomain), // TODO(gabe): should be system domain
@@ -80,10 +80,11 @@ var _ = Describe("external connectivity", func() {
 	})
 
 	AfterEach(func() {
+		Expect(cf.Cf("auth", config.AdminUser, config.AdminPassword).Wait(Timeout_Push)).To(gexec.Exit(0))
 		Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 	})
 
-	FDescribe("space developer with network.write scope", func() {
+	Describe("space developer with network.write scope", func() {
 		It("can create network policies in spaces they have access to", func(done Done) {
 			By("something")
 
@@ -92,16 +93,24 @@ var _ = Describe("external connectivity", func() {
 
 			// log in as user
 			Expect(cf.Cf("auth", "space-developer", "password").Wait(Timeout_Push)).To(gexec.Exit(0))
-			getTokenSession := cf.Cf("oauth-token")
-			Expect(getTokenSession.Wait(Timeout_Push)).To(gexec.Exit(0))
-			spaceDevUserToken := strings.TrimSpace(string(getTokenSession.Out.Contents()))
+			session := cf.Cf("oauth-token")
+			Expect(session.Wait(Timeout_Push)).To(gexec.Exit(0))
+			spaceDevUserToken := strings.TrimSpace(string(session.Out.Contents()))
+			Expect(cf.Cf("target", "-o", orgName, "-s", spaceNameA).Wait(Timeout_Push)).To(gexec.Exit(0))
+			session = cf.Cf("app", appA, "--guid")
+			Expect(session.Wait(Timeout_Push)).To(gexec.Exit(0))
+			appAGUID := strings.TrimSpace(string(session.Out.Contents()))
+			Expect(cf.Cf("target", "-o", orgName, "-s", spaceNameB).Wait(Timeout_Push)).To(gexec.Exit(0))
+			session = cf.Cf("app", appB, "--guid")
+			Expect(session.Wait(Timeout_Push)).To(gexec.Exit(0))
+			appBGUID := strings.TrimSpace(string(session.Out.Contents()))
 			err := policyClient.AddPolicies(spaceDevUserToken, []models.Policy{
 				models.Policy{
 					Source: models.Source{
-						ID: "appAGuidgoes here",
+						ID: appAGUID,
 					},
 					Destination: models.Destination{
-						ID:       "appB guid goes here",
+						ID:       appBGUID,
 						Port:     1234,
 						Protocol: "tcp",
 					},

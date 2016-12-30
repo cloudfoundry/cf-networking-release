@@ -2,6 +2,15 @@
 
 See [AWS](aws.md) deployment docs for examples
 
+### 0.12.0
+
+In the CF properties stub:
+
+```diff
+    -   scope: cloud_controller.read,cloud_controller.write,openid,password.write,cloud_controller.admin,scim.read,scim.write,doppler.firehose,uaa.user,routing.router_groups.read,network.admin
+    +   scope: cloud_controller.read,cloud_controller.write,openid,password.write,cloud_controller.admin,scim.read,scim.write,doppler.firehose,uaa.user,routing.router_groups.read,network.admin,network.write
+```
+
 ###  0.10.0
 Policy Server database connection is now expressed as a set of config options, not a single connection string
 

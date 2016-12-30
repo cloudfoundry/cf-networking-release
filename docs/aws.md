@@ -102,7 +102,7 @@ by using the instructions and tooling in [the diego-release repo](https://github
     clients:
       cf:
     -   scope: cloud_controller.read,cloud_controller.write,openid,password.write,cloud_controller.admin,scim.read,scim.write,doppler.firehose,uaa.user,routing.router_groups.read
-    +   scope: cloud_controller.read,cloud_controller.write,openid,password.write,cloud_controller.admin,scim.read,scim.write,doppler.firehose,uaa.user,routing.router_groups.read,network.admin
+    +   scope: cloud_controller.read,cloud_controller.write,openid,password.write,cloud_controller.admin,scim.read,scim.write,doppler.firehose,uaa.user,routing.router_groups.read,network.admin,network.write
     + network-policy:
     +   authorities: uaa.resource,cloud_controller.admin_read_only
     +   authorized-grant-types: client_credentials,refresh_token
