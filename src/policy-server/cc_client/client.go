@@ -47,6 +47,15 @@ type SpaceResponse struct {
 	} `json:"entity"`
 }
 
+type SpacesResponse struct {
+	Resources []struct {
+		Entity struct {
+			Name             string `json:"name"`
+			OrganizationGuid string `json:"organization_guid"`
+		} `json:"entity"`
+	} `json:"resources"`
+}
+
 func (r BadCCResponse) Error() string {
 	return fmt.Sprintf("bad cc response: %d: %s", r.StatusCode, r.CCResponseBody)
 }
@@ -193,4 +202,52 @@ func (c *Client) GetSpace(token, spaceGuid string) (models.Space, error) {
 		Name:    response.Entity.Name,
 		OrgGuid: response.Entity.OrganizationGuid,
 	}, nil
+}
+
+func (c *Client) GetUserSpace(token, userGuid string, space models.Space) (models.Space, error) {
+	none := models.Space{}
+	reqURL := fmt.Sprintf("%s/v2/spaces?q=developer_guid%%3A%s&q=name%%3A%s&q=organization_guid%%3A%s", c.Host, userGuid, space.Name, space.OrgGuid)
+	request, err := http.NewRequest("GET", reqURL, nil)
+	request.Header.Set("Authorization", fmt.Sprintf("bearer %s", token))
+	if err != nil {
+		return none, fmt.Errorf("create HTTP request: %s", err) // untested
+	}
+
+	c.Logger.Debug("get_user_space_with_name_and_org_guid", lager.Data{"URL": request.URL})
+
+	resp, err := c.HTTPClient.Do(request)
+	if err != nil {
+		return none, fmt.Errorf("http client: %s", err)
+	}
+	defer resp.Body.Close()
+
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return none, fmt.Errorf("read body: %s", err)
+	}
+
+	if resp.StatusCode != 200 {
+		err = BadCCResponse{
+			StatusCode:     resp.StatusCode,
+			CCResponseBody: string(respBytes),
+		}
+		return none, err
+	}
+
+	var response SpacesResponse
+	err = json.Unmarshal(respBytes, &response)
+	if err != nil {
+		return none, fmt.Errorf("unmarshal json: %s", err)
+	}
+
+	numSpaces := len(response.Resources)
+	if numSpaces != 1 {
+		return none, errors.New(fmt.Sprintf("expected exactly 1 space and found: %d", numSpaces))
+	}
+
+	return models.Space{
+		Name:    response.Resources[0].Entity.Name,
+		OrgGuid: response.Resources[0].Entity.OrganizationGuid,
+	}, nil
+	return none, nil
 }

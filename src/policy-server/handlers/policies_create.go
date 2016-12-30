@@ -14,7 +14,7 @@ import (
 
 //go:generate counterfeiter -o ../fakes/policy_guard.go --fake-name PolicyGuard . policyGuard
 type policyGuard interface {
-	CheckAccess(policies []models.Policy, tokenData uaa_client.CheckTokenResponse) (bool, error)
+	CheckAccess(policies []models.Policy, tokenData uaa_client.CheckTokenResponse) error
 }
 
 type PoliciesCreate struct {
@@ -52,17 +52,11 @@ func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request, tok
 		return
 	}
 
-	authorized, err := h.PolicyGuard.CheckAccess(payload.Policies, tokenData)
+	err = h.PolicyGuard.CheckAccess(payload.Policies, tokenData)
 	if err != nil {
 		h.Logger.Error("check-access-failed", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(fmt.Sprintf(`{"error": "%s"}`, err)))
-		return
-	}
-	if !authorized {
-		h.Logger.Info("check-access", lager.Data{"message": "not all apps are accessible"})
-		w.WriteHeader(http.StatusForbidden)
-		w.Write([]byte(`{"error": "not all apps are accessible"}`))
 		return
 	}
 

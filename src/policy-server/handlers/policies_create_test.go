@@ -79,7 +79,6 @@ var _ = Describe("PoliciesCreate", func() {
 			UserName: "some_user",
 		}
 		resp = httptest.NewRecorder()
-		fakePolicyGuard.CheckAccessReturns(true, nil)
 	})
 
 	It("persists a new policy rule", func() {
@@ -140,7 +139,7 @@ var _ = Describe("PoliciesCreate", func() {
 
 	Context("when the policy guard returns an error", func() {
 		BeforeEach(func() {
-			fakePolicyGuard.CheckAccessReturns(false, errors.New("banana"))
+			fakePolicyGuard.CheckAccessReturns(errors.New("banana"))
 		})
 
 		It("responds with code 500 and a useful error", func() {
@@ -152,23 +151,6 @@ var _ = Describe("PoliciesCreate", func() {
 		It("logs the full error", func() {
 			handler.ServeHTTP(resp, request, tokenData)
 			Expect(logger).To(gbytes.Say("check-access-failed.*banana"))
-		})
-	})
-
-	Context("when the policy guard returns false", func() {
-		BeforeEach(func() {
-			fakePolicyGuard.CheckAccessReturns(false, nil)
-		})
-
-		It("responds with code 403 and a useful error", func() {
-			handler.ServeHTTP(resp, request, tokenData)
-			Expect(resp.Code).To(Equal(http.StatusForbidden))
-			Expect(resp.Body.String()).To(MatchJSON(`{"error": "not all apps are accessible"}`))
-		})
-
-		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request, tokenData)
-			Expect(logger).To(gbytes.Say("check-access.*not all apps are accessible"))
 		})
 	})
 

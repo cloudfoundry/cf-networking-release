@@ -8,21 +8,20 @@ import (
 )
 
 type PolicyGuard struct {
-	CheckAccessStub        func(policies []models.Policy, tokenData uaa_client.CheckTokenResponse) (bool, error)
+	CheckAccessStub        func(policies []models.Policy, tokenData uaa_client.CheckTokenResponse) error
 	checkAccessMutex       sync.RWMutex
 	checkAccessArgsForCall []struct {
 		policies  []models.Policy
 		tokenData uaa_client.CheckTokenResponse
 	}
 	checkAccessReturns struct {
-		result1 bool
-		result2 error
+		result1 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *PolicyGuard) CheckAccess(policies []models.Policy, tokenData uaa_client.CheckTokenResponse) (bool, error) {
+func (fake *PolicyGuard) CheckAccess(policies []models.Policy, tokenData uaa_client.CheckTokenResponse) error {
 	var policiesCopy []models.Policy
 	if policies != nil {
 		policiesCopy = make([]models.Policy, len(policies))
@@ -38,7 +37,7 @@ func (fake *PolicyGuard) CheckAccess(policies []models.Policy, tokenData uaa_cli
 	if fake.CheckAccessStub != nil {
 		return fake.CheckAccessStub(policies, tokenData)
 	} else {
-		return fake.checkAccessReturns.result1, fake.checkAccessReturns.result2
+		return fake.checkAccessReturns.result1
 	}
 }
 
@@ -54,12 +53,11 @@ func (fake *PolicyGuard) CheckAccessArgsForCall(i int) ([]models.Policy, uaa_cli
 	return fake.checkAccessArgsForCall[i].policies, fake.checkAccessArgsForCall[i].tokenData
 }
 
-func (fake *PolicyGuard) CheckAccessReturns(result1 bool, result2 error) {
+func (fake *PolicyGuard) CheckAccessReturns(result1 error) {
 	fake.CheckAccessStub = nil
 	fake.checkAccessReturns = struct {
-		result1 bool
-		result2 error
-	}{result1, result2}
+		result1 error
+	}{result1}
 }
 
 func (fake *PolicyGuard) Invocations() map[string][][]interface{} {

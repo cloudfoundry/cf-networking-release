@@ -366,4 +366,124 @@ var _ = Describe("Client", func() {
 			})
 		})
 	})
+
+	Describe("GetUserSpace", func() {
+		var space = models.Space{
+			Name:    "some-space-name",
+			OrgGuid: "some-org-guid",
+		}
+		BeforeEach(func() {
+			fakeHTTPClient.DoReturns(
+				&http.Response{
+					StatusCode: 200,
+					Body:       ioutil.NopCloser(bytes.NewReader([]byte(fixtures.UserSpace))),
+				}, nil)
+		})
+
+		It("Returns the matching spaces for the user", func() {
+			matchingSpace, err := client.GetUserSpace("some-token", "some-developer-guid", space)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(fakeHTTPClient.DoCallCount()).To(Equal(1))
+			request := fakeHTTPClient.DoArgsForCall(0)
+			Expect(request.Method).To(Equal("GET"))
+			Expect(request.URL.String()).To(Equal("some.url/v2/spaces?q=developer_guid%3Asome-developer-guid&q=name%3Asome-space-name&q=organization_guid%3Asome-org-guid"))
+			authHeader := request.Header["Authorization"]
+			Expect(authHeader).To(HaveLen(1))
+			Expect(authHeader[0]).To(Equal("bearer some-token"))
+			Expect(err).NotTo(HaveOccurred())
+			Expect(matchingSpace).To(Equal(space))
+		})
+
+		It("logs the request before sending", func() {
+			_, err := client.GetUserSpace("some-token", "some-developer-guid", space)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(logger).To(gbytes.Say("get_user_space_with_name_and_org_guid"))
+		})
+
+		Context("when more than one space is returned", func() {
+			BeforeEach(func() {
+				fakeHTTPClient.DoReturns(
+					&http.Response{
+						StatusCode: 200,
+						Body:       ioutil.NopCloser(bytes.NewReader([]byte(fixtures.Spaces))),
+					}, nil)
+			})
+			It("returns an error", func() {
+				_, err := client.GetUserSpace("some-token", "some-developer-guid", space)
+				Expect(err).To(MatchError("expected exactly 1 space and found: 2"))
+			})
+		})
+
+		Context("when no spaces are returned", func() {
+			BeforeEach(func() {
+				fakeHTTPClient.DoReturns(
+					&http.Response{
+						StatusCode: 200,
+						Body:       ioutil.NopCloser(bytes.NewReader([]byte(fixtures.UserSpaceEmpty))),
+					}, nil)
+			})
+			It("returns an error", func() {
+				_, err := client.GetUserSpace("some-token", "some-developer-guid", space)
+				Expect(err).To(MatchError("expected exactly 1 space and found: 0"))
+			})
+		})
+
+		Context("when the http client returns an error", func() {
+			BeforeEach(func() {
+				fakeHTTPClient.DoReturns(nil, errors.New("potato"))
+			})
+
+			It("returns a helpful error", func() {
+				_, err := client.GetUserSpace("some-token", "some-developer-guid", space)
+				Expect(err).To(MatchError(ContainSubstring("http client: potato")))
+			})
+		})
+
+		Context("when reading the body returns an error", func() {
+			BeforeEach(func() {
+				fakeHTTPClient.DoReturns(&http.Response{Body: &testsupport.BadReader{}}, nil)
+			})
+
+			It("returns a helpful error", func() {
+				_, err := client.GetUserSpace("some-token", "some-developer-guid", space)
+				Expect(err).To(MatchError(ContainSubstring("read body: banana")))
+			})
+		})
+
+		Context("when the response body is not valid json", func() {
+			BeforeEach(func() {
+				fakeHTTPClient.DoReturns(
+					&http.Response{
+						StatusCode: 200,
+						Body:       ioutil.NopCloser(strings.NewReader(`%%%%`)),
+					}, nil)
+			})
+
+			It("returns a helpful error", func() {
+				_, err := client.GetUserSpace("some-token", "some-developer-guid", space)
+				Expect(err).To(MatchError(ContainSubstring("unmarshal json: invalid character")))
+			})
+		})
+
+		Context("if the response status code is not 200", func() {
+			BeforeEach(func() {
+				fakeHTTPClient.DoReturns(
+					&http.Response{
+						StatusCode: 418,
+						Body:       ioutil.NopCloser(strings.NewReader("bad thing")),
+					}, nil)
+
+			})
+
+			It("returns the response body in the error", func() {
+				_, err := client.GetUserSpace("some-token", "some-developer-guid", space)
+
+				Expect(err).To(Equal(cc_client.BadCCResponse{
+					StatusCode:     418,
+					CCResponseBody: "bad thing",
+				}))
+			})
+		})
+	})
 })
