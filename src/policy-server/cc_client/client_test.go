@@ -5,11 +5,11 @@ import (
 	"errors"
 	"io/ioutil"
 	"lib/fakes"
-	"lib/models"
 	"lib/testsupport"
 	"net/http"
 	"policy-server/cc_client"
 	"policy-server/cc_client/fixtures"
+	"policy-server/models"
 	"strings"
 
 	. "github.com/onsi/ginkgo"
@@ -44,7 +44,7 @@ var _ = Describe("Client", func() {
 		}
 	})
 
-	Describe("GetAllAppGuids", func() {
+	Describe("GetAllAppGUIDs", func() {
 		BeforeEach(func() {
 			fakeHTTPClient.DoReturns(
 				&http.Response{
@@ -152,7 +152,7 @@ var _ = Describe("Client", func() {
 		})
 	})
 
-	Describe("GetSpaceGuids", func() {
+	Describe("GetSpaceGUIDs", func() {
 		BeforeEach(func() {
 			fakeHTTPClient.DoReturns(
 				&http.Response{
@@ -162,7 +162,7 @@ var _ = Describe("Client", func() {
 		})
 
 		It("Returns the space guids", func() {
-			spaceGuids, err := client.GetSpaceGUIDs("some-token", []string{"live-app-1-guid", "live-app-2-guid"})
+			spaceGUIDs, err := client.GetSpaceGUIDs("some-token", []string{"live-app-1-guid", "live-app-2-guid"})
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeHTTPClient.DoCallCount()).To(Equal(1))
@@ -173,7 +173,7 @@ var _ = Describe("Client", func() {
 			Expect(authHeader).To(HaveLen(1))
 			Expect(authHeader[0]).To(Equal("bearer some-token"))
 			Expect(err).NotTo(HaveOccurred())
-			Expect(spaceGuids).To(ConsistOf([]string{"space-1-guid", "space-2-guid", "space-3-guid"}))
+			Expect(spaceGUIDs).To(ConsistOf([]string{"space-1-guid", "space-2-guid", "space-3-guid"}))
 		})
 
 		It("logs the request before sending", func() {
@@ -278,7 +278,7 @@ var _ = Describe("Client", func() {
 	Describe("GetSpace", func() {
 		var spaceModel = models.Space{
 			Name:    "name-2064",
-			OrgGuid: "6e1ca5aa-55f1-4110-a97f-1f3473e771b9",
+			OrgGUID: "6e1ca5aa-55f1-4110-a97f-1f3473e771b9",
 		}
 		BeforeEach(func() {
 			fakeHTTPClient.DoReturns(
@@ -370,7 +370,7 @@ var _ = Describe("Client", func() {
 	Describe("GetUserSpace", func() {
 		var space = models.Space{
 			Name:    "some-space-name",
-			OrgGuid: "some-org-guid",
+			OrgGUID: "some-org-guid",
 		}
 		BeforeEach(func() {
 			fakeHTTPClient.DoReturns(

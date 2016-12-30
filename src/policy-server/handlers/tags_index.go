@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"policy-server/models"
 	"policy-server/store"
+	"policy-server/uaa_client"
 
 	"code.cloudfoundry.org/lager"
 )
@@ -15,7 +16,7 @@ type TagsIndex struct {
 	Marshaler marshal.Marshaler
 }
 
-func (h *TagsIndex) ServeHTTP(w http.ResponseWriter, req *http.Request, currentUserName string) {
+func (h *TagsIndex) ServeHTTP(w http.ResponseWriter, req *http.Request, _ uaa_client.CheckTokenResponse) {
 	tags, err := h.Store.Tags()
 	if err != nil {
 		h.Logger.Error("store-list-tags-failed", err)

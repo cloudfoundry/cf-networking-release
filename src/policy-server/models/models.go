@@ -21,3 +21,8 @@ type Tag struct {
 	ID  string `json:"id"`
 	Tag string `json:"tag"`
 }
+
+type Space struct {
+	Name    string `json:name`
+	OrgGUID string `json:organization_guid`
+}

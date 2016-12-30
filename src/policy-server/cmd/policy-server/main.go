@@ -137,6 +137,16 @@ func main() {
 		Scopes: []string{"network.admin", "network.write"},
 	}
 
+	ccClient := &cc_client.Client{
+		Host:       conf.CCURL,
+		HTTPClient: httpClient,
+		Logger:     logger,
+	}
+
+	policyGuard := &handlers.PolicyGuard{
+		UAAClient: uaaClient,
+		CCClient:  ccClient,
+	}
 	validator := &handlers.Validator{}
 
 	createPolicyHandler := &handlers.PoliciesCreate{
@@ -144,6 +154,7 @@ func main() {
 		Store:       dataStore,
 		Unmarshaler: unmarshaler,
 		Validator:   validator,
+		PolicyGuard: policyGuard,
 	}
 
 	deletePolicyHandler := &handlers.PoliciesDelete{
@@ -157,12 +168,6 @@ func main() {
 		Logger:    logger.Session("policies-index"),
 		Store:     dataStore,
 		Marshaler: marshal.MarshalFunc(json.Marshal),
-	}
-
-	ccClient := &cc_client.Client{
-		Host:       conf.CCURL,
-		HTTPClient: httpClient,
-		Logger:     logger,
 	}
 
 	policiesCleanupHandler := &handlers.PoliciesCleanup{

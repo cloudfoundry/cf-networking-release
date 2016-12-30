@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"lib/models"
 	"net/http"
+	"policy-server/models"
 	"strings"
 
 	"code.cloudfoundry.org/lager"
@@ -43,7 +43,7 @@ type AppsV3Response struct {
 type SpaceResponse struct {
 	Entity struct {
 		Name             string `json:"name"`
-		OrganizationGuid string `json:"organization_guid"`
+		OrganizationGUID string `json:"organization_guid"`
 	} `json:"entity"`
 }
 
@@ -51,7 +51,7 @@ type SpacesResponse struct {
 	Resources []struct {
 		Entity struct {
 			Name             string `json:"name"`
-			OrganizationGuid string `json:"organization_guid"`
+			OrganizationGUID string `json:"organization_guid"`
 		} `json:"entity"`
 	} `json:"resources"`
 }
@@ -162,9 +162,9 @@ func (c *Client) GetSpaceGUIDs(token string, appGUIDs []string) ([]string, error
 	return ret, nil
 }
 
-func (c *Client) GetSpace(token, spaceGuid string) (models.Space, error) {
+func (c *Client) GetSpace(token, spaceGUID string) (models.Space, error) {
 	none := models.Space{}
-	reqURL := fmt.Sprintf("%s/v2/spaces/%s", c.Host, spaceGuid)
+	reqURL := fmt.Sprintf("%s/v2/spaces/%s", c.Host, spaceGUID)
 	request, err := http.NewRequest("GET", reqURL, nil)
 	request.Header.Set("Authorization", fmt.Sprintf("bearer %s", token))
 	if err != nil {
@@ -200,13 +200,13 @@ func (c *Client) GetSpace(token, spaceGuid string) (models.Space, error) {
 
 	return models.Space{
 		Name:    response.Entity.Name,
-		OrgGuid: response.Entity.OrganizationGuid,
+		OrgGUID: response.Entity.OrganizationGUID,
 	}, nil
 }
 
-func (c *Client) GetUserSpace(token, userGuid string, space models.Space) (models.Space, error) {
+func (c *Client) GetUserSpace(token, userGUID string, space models.Space) (models.Space, error) {
 	none := models.Space{}
-	reqURL := fmt.Sprintf("%s/v2/spaces?q=developer_guid%%3A%s&q=name%%3A%s&q=organization_guid%%3A%s", c.Host, userGuid, space.Name, space.OrgGuid)
+	reqURL := fmt.Sprintf("%s/v2/spaces?q=developer_guid%%3A%s&q=name%%3A%s&q=organization_guid%%3A%s", c.Host, userGUID, space.Name, space.OrgGUID)
 	request, err := http.NewRequest("GET", reqURL, nil)
 	request.Header.Set("Authorization", fmt.Sprintf("bearer %s", token))
 	if err != nil {
@@ -247,7 +247,7 @@ func (c *Client) GetUserSpace(token, userGuid string, space models.Space) (model
 
 	return models.Space{
 		Name:    response.Resources[0].Entity.Name,
-		OrgGuid: response.Resources[0].Entity.OrganizationGuid,
+		OrgGUID: response.Resources[0].Entity.OrganizationGUID,
 	}, nil
 	return none, nil
 }

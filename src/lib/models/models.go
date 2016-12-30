@@ -30,8 +30,3 @@ type CNIAddResult struct {
 type CNIDelResult struct {
 	ContainerID string `json:"container_id"`
 }
-
-type Space struct {
-	Name    string `json:name`
-	OrgGuid string `json:organization_guid`
-}

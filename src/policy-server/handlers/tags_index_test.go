@@ -8,13 +8,14 @@ import (
 	"policy-server/fakes"
 	"policy-server/handlers"
 	"policy-server/models"
+	"policy-server/uaa_client"
 
 	lfakes "lib/fakes"
 
+	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
-	"code.cloudfoundry.org/lager/lagertest"
 )
 
 var _ = Describe("Tags index handler", func() {
@@ -26,6 +27,7 @@ var _ = Describe("Tags index handler", func() {
 		fakeStore *fakes.Store
 		logger    *lagertest.TestLogger
 		marshaler *lfakes.Marshaler
+		tokenData uaa_client.CheckTokenResponse
 	)
 
 	BeforeEach(func() {
@@ -53,6 +55,7 @@ var _ = Describe("Tags index handler", func() {
 			Marshaler: marshaler,
 		}
 		resp = httptest.NewRecorder()
+		tokenData = uaa_client.CheckTokenResponse{}
 	})
 
 	It("returns all the tags", func() {
@@ -60,7 +63,7 @@ var _ = Describe("Tags index handler", func() {
 			{ "id": "some-app-guid", "tag": "0001" },
 			{ "id": "some-other-app-guid", "tag": "0002" }
         ]}`
-		handler.ServeHTTP(resp, request, "")
+		handler.ServeHTTP(resp, request, tokenData)
 
 		Expect(fakeStore.TagsCallCount()).To(Equal(1))
 		Expect(resp.Code).To(Equal(http.StatusOK))
@@ -72,14 +75,14 @@ var _ = Describe("Tags index handler", func() {
 			fakeStore.TagsReturns(nil, errors.New("banana"))
 		})
 		It("responds with 500", func() {
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, tokenData)
 
 			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
 			Expect(resp.Body.String()).To(MatchJSON(`{"error": "database read failed"}`))
 		})
 
 		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, tokenData)
 			Expect(logger).To(gbytes.Say("store-list-tags-failed.*banana"))
 		})
 	})
@@ -92,14 +95,14 @@ var _ = Describe("Tags index handler", func() {
 		})
 
 		It("responds with 500 and returns a descriptive error", func() {
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, tokenData)
 
 			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
 			Expect(resp.Body.String()).To(MatchJSON(`{"error": "database marshaling failed"}`))
 		})
 
 		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, tokenData)
 			Expect(logger).To(gbytes.Say("marshal-failed.*grapes"))
 		})
 	})
