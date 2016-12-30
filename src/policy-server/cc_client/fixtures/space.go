@@ -25,3 +25,16 @@ const Space = `{
     "security_groups_url": "/v2/spaces/bc8d3381-390d-4bd7-8c71-25309900a2e3/security_groups"
   }
 }`
+
+const Space1 = `{
+  "entity": {
+    "name": "space-1",
+    "organization_guid": "org-1-guid"
+  }
+}`
+const Space2 = `{
+  "entity": {
+    "name": "space-2",
+    "organization_guid": "org-1-guid"
+  }
+}`

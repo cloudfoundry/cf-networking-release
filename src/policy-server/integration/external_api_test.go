@@ -115,7 +115,7 @@ var _ = Describe("External API", func() {
 		)
 	})
 
-	FDescribe("space developer", func() {
+	Describe("space developer", func() {
 		var makeNewRequest = func(method, route, bodyString string) *http.Request {
 			var body io.Reader
 			if bodyString != "" {
@@ -364,9 +364,9 @@ var _ = Describe("External API", func() {
 	Describe("cleanup policies", func() {
 		BeforeEach(func() {
 			body := strings.NewReader(`{ "policies": [
-				{"source": { "id": "src-app1" }, "destination": { "id": "dst-app1", "protocol": "tcp", "port": 8080 } },
-				{"source": { "id": "src-app2" }, "destination": { "id": "dst-app2", "protocol": "tcp", "port": 9999 } },
-				{"source": { "id": "src-app3" }, "destination": { "id": "dead-app", "protocol": "tcp", "port": 3333 } }
+				{"source": { "id": "live-app-1-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "port": 8080 } },
+				{"source": { "id": "live-app-2-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "port": 9999 } },
+				{"source": { "id": "live-app-1-guid" }, "destination": { "id": "dead-app", "protocol": "tcp", "port": 3333 } }
 				]} `)
 
 			resp := makeAndDoRequest(
@@ -388,7 +388,7 @@ var _ = Describe("External API", func() {
 			stalePoliciesStr := `{
 				"total_policies":1,
 				"policies": [
-				 {"source": { "id": "src-app3" }, "destination": { "id": "dead-app", "protocol": "tcp", "port": 3333 } }
+				 {"source": { "id": "live-app-1-guid" }, "destination": { "id": "dead-app", "protocol": "tcp", "port": 3333 } }
 				 ]}
 				`
 

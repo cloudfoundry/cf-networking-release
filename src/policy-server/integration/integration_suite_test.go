@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"policy-server/cc_client/fixtures"
 	"policy-server/config"
 	"strings"
 
@@ -25,46 +26,48 @@ const DEFAULT_TIMEOUT = "5s"
 var policyServerPath string
 
 var mockCCServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/v3/apps" {
-		w.WriteHeader(http.StatusTeapot)
-		return
-	}
-
 	if r.Header["Authorization"][0] != "bearer valid-token" {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(`{
-  "pagination": {
-    "total_results": 5,
-    "total_pages": 1,
-    "first": {
-      "href": "https://api.[your-domain.com]/v3/apps?page=1&per_page=10"
-    },
-    "last": {
-      "href": "https://api.[your-domain.com]/v3/apps?page=1&per_page=10"
-    }
-  },
-  "resources": [
-    {
-      "guid": "src-app1"
-    },
-    {
-      "guid": "src-app2"
-    },
-    {
-      "guid": "src-app3"
-    },
-    {
-      "guid": "dst-app1"
-    },
-    {
-      "guid": "dst-app2"
-    }
-  ]
-}`))
+	if r.URL.Path == "/v3/apps" {
+		if strings.Contains(r.URL.RawQuery, "app-guid-not-in-my-spaces") {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(fixtures.AppsV3TwoSpaces))
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(fixtures.AppsV3OneSpace))
+		return
+	}
+
+	if r.URL.Path == "/v2/spaces/space-1-guid" {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(fixtures.Space1))
+		return
+	}
+	if r.URL.Path == "/v2/spaces/space-2-guid" {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(fixtures.Space2))
+		return
+	}
+
+	if r.URL.Path == "/v2/spaces" {
+		if strings.Contains(r.URL.RawQuery, "space-1") {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(fixtures.UserSpace))
+			return
+		}
+		if strings.Contains(r.URL.RawQuery, "space-2") {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(fixtures.UserSpaceEmpty))
+			return
+		}
+	}
+
+	w.WriteHeader(http.StatusTeapot)
+	return
 }))
 
 var mockUAAServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
