@@ -28,6 +28,7 @@ var _ = Describe("PoliciesCreate", func() {
 		resp            *httptest.ResponseRecorder
 		fakeStore       *fakes.Store
 		fakeValidator   *fakes.Validator
+		fakePolicyGuard *fakes.PolicyGuard
 		logger          *lagertest.TestLogger
 		fakeUnmarshaler *lfakes.Unmarshaler
 		tokenData       uaa_client.CheckTokenResponse
@@ -62,6 +63,7 @@ var _ = Describe("PoliciesCreate", func() {
 
 		fakeStore = &fakes.Store{}
 		fakeValidator = &fakes.Validator{}
+		fakePolicyGuard = &fakes.PolicyGuard{}
 		logger = lagertest.NewTestLogger("test")
 		fakeUnmarshaler = &lfakes.Unmarshaler{}
 		fakeUnmarshaler.UnmarshalStub = json.Unmarshal
@@ -70,12 +72,14 @@ var _ = Describe("PoliciesCreate", func() {
 			Store:       fakeStore,
 			Unmarshaler: fakeUnmarshaler,
 			Validator:   fakeValidator,
+			PolicyGuard: fakePolicyGuard,
 		}
 		tokenData = uaa_client.CheckTokenResponse{
 			Scope:    []string{"network.admin"},
 			UserName: "some_user",
 		}
 		resp = httptest.NewRecorder()
+		fakePolicyGuard.CheckAccessReturns(true, nil)
 	})
 
 	It("persists a new policy rule", func() {
@@ -100,6 +104,12 @@ var _ = Describe("PoliciesCreate", func() {
 		Expect(fakeUnmarshaler.UnmarshalCallCount()).To(Equal(1))
 		bodyBytes, _ := fakeUnmarshaler.UnmarshalArgsForCall(0)
 		Expect(bodyBytes).To(Equal([]byte(requestJSON)))
+		Expect(fakeValidator.ValidatePoliciesCallCount()).To(Equal(1))
+		Expect(fakeValidator.ValidatePoliciesArgsForCall(0)).To(Equal(expectedPolicies))
+		Expect(fakePolicyGuard.CheckAccessCallCount()).To(Equal(1))
+		policies, token := fakePolicyGuard.CheckAccessArgsForCall(0)
+		Expect(policies).To(Equal(expectedPolicies))
+		Expect(token).To(Equal(tokenData))
 		Expect(fakeStore.CreateCallCount()).To(Equal(1))
 		Expect(fakeStore.CreateArgsForCall(0)).To(Equal(expectedPolicies))
 		Expect(resp.Code).To(Equal(http.StatusOK))
@@ -113,11 +123,6 @@ var _ = Describe("PoliciesCreate", func() {
 
 	Context("when the validator fails", func() {
 		BeforeEach(func() {
-			var err error
-			requestJSON = `{}`
-			request, err = http.NewRequest("POST", "/networking/v0/external/policies", bytes.NewBuffer([]byte(requestJSON)))
-			Expect(err).NotTo(HaveOccurred())
-
 			fakeValidator.ValidatePoliciesReturns(errors.New("banana"))
 		})
 
@@ -130,6 +135,40 @@ var _ = Describe("PoliciesCreate", func() {
 		It("logs the full error", func() {
 			handler.ServeHTTP(resp, request, tokenData)
 			Expect(logger).To(gbytes.Say("bad-request.*banana"))
+		})
+	})
+
+	Context("when the policy guard returns an error", func() {
+		BeforeEach(func() {
+			fakePolicyGuard.CheckAccessReturns(false, errors.New("banana"))
+		})
+
+		It("responds with code 500 and a useful error", func() {
+			handler.ServeHTTP(resp, request, tokenData)
+			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
+			Expect(resp.Body.String()).To(MatchJSON(`{"error": "banana"}`))
+		})
+
+		It("logs the full error", func() {
+			handler.ServeHTTP(resp, request, tokenData)
+			Expect(logger).To(gbytes.Say("check-access-failed.*banana"))
+		})
+	})
+
+	Context("when the policy guard returns false", func() {
+		BeforeEach(func() {
+			fakePolicyGuard.CheckAccessReturns(false, nil)
+		})
+
+		It("responds with code 403 and a useful error", func() {
+			handler.ServeHTTP(resp, request, tokenData)
+			Expect(resp.Code).To(Equal(http.StatusForbidden))
+			Expect(resp.Body.String()).To(MatchJSON(`{"error": "not all apps are accessible"}`))
+		})
+
+		It("logs the full error", func() {
+			handler.ServeHTTP(resp, request, tokenData)
+			Expect(logger).To(gbytes.Say("check-access.*not all apps are accessible"))
 		})
 	})
 
@@ -186,50 +225,4 @@ var _ = Describe("PoliciesCreate", func() {
 			Expect(logger).To(gbytes.Say("unmarshal-failed.*json: cannot unmarshal"))
 		})
 	})
-
-	// Context("when the token data only has network.write and request only contains authorized spaces", func() {
-	// 	BeforeEach(func() {
-	// 		uaaClient.CheckTokenReturns(uaa_client.CheckTokenResponse{
-	// 			Scope:    []string{"network.write"},
-	// 			UserName: "some_user",
-	// 		}, nil)
-	// 		spaceGuard.CheckRequestReturns(nil)
-	// 	})
-
-	// 	It("calls into the unprotected handler and logs the request", func() {
-	// 		protected.ServeHTTP(resp, request)
-
-	// 		Expect(logger).To(gbytes.Say("request made to policy-server.*RemoteAddr.*some-host:some-ip.*URL.*/networking/v0/whoami"))
-	// 		Expect(unprotected.ServeHTTPCallCount()).To(Equal(1))
-
-	// 		Expect(logger).To(gbytes.Say("request made with token:.*tokenData.*scope.*network.write.*user_name.*some_user"))
-	// 		unprotectedResp, unprotectedRequest, currentUser := unprotected.ServeHTTPArgsForCall(0)
-	// 		Expect(unprotectedResp).To(Equal(resp))
-	// 		Expect(unprotectedRequest).To(Equal(request))
-	// 		Expect(currentUser).To(Equal("some_user"))
-	// 	})
-	// })
-
-	// Context("when the token data only has network.write, and request contains unuathorized spaces", func() {
-	// 	BeforeEach(func() {
-	// 		uaaClient.CheckTokenReturns(uaa_client.CheckTokenResponse{
-	// 			Scope:    []string{"network.write"},
-	// 			UserName: "some_user",
-	// 		}, nil)
-	// 		spaceGuard.CheckRequestReturns(errors.New("banana"))
-	// 	})
-
-	// 	It("returns a 403 status code and a useful JSON error", func() {
-	// 		protected.ServeHTTP(resp, request)
-
-	// 		Expect(resp.Code).To(Equal(http.StatusForbidden))
-	// 		Expect(resp.Body).To(MatchJSON(`{ "error": "some requested apps are not accessible" }`))
-	// 	})
-
-	// 	It("logs a helpful error", func() {
-	// 		protected.ServeHTTP(resp, request)
-
-	// 		Expect(logger).To(gbytes.Say("some requested apps are not accessible.*banana"))
-	// 	})
-	// })
 })

@@ -12,11 +12,17 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
+//go:generate counterfeiter -o ../fakes/policy_guard.go --fake-name PolicyGuard . policyGuard
+type policyGuard interface {
+	CheckAccess(policies []models.Policy, tokenData uaa_client.CheckTokenResponse) (bool, error)
+}
+
 type PoliciesCreate struct {
 	Logger      lager.Logger
 	Store       store.Store
 	Unmarshaler marshal.Unmarshaler
 	Validator   validator
+	PolicyGuard policyGuard
 }
 
 func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request, tokenData uaa_client.CheckTokenResponse) {
@@ -43,6 +49,20 @@ func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request, tok
 		h.Logger.Error("bad-request", err)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf(`{"error": "%s"}`, err)))
+		return
+	}
+
+	authorized, err := h.PolicyGuard.CheckAccess(payload.Policies, tokenData)
+	if err != nil {
+		h.Logger.Error("check-access-failed", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf(`{"error": "%s"}`, err)))
+		return
+	}
+	if !authorized {
+		h.Logger.Info("check-access", lager.Data{"message": "not all apps are accessible"})
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte(`{"error": "not all apps are accessible"}`))
 		return
 	}
 

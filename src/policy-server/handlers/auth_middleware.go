@@ -15,20 +15,14 @@ type http_handler interface {
 	http.Handler
 }
 
-//go:generate counterfeiter -o ../fakes/space_guard.go --fake-name SpaceGuard . spaceGuard
-type spaceGuard interface {
-	CheckRequest(request *http.Request, tokenData uaa_client.CheckTokenResponse) error
-}
-
 type UAAClient interface {
 	CheckToken(token string) (uaa_client.CheckTokenResponse, error)
 }
 
 type Authenticator struct {
-	Client     UAAClient
-	Logger     lager.Logger
-	SpaceGuard spaceGuard
-	Scopes     []string
+	Client UAAClient
+	Logger lager.Logger
+	Scopes []string
 }
 
 //go:generate counterfeiter -o ../fakes/authenticated_handler.go --fake-name AuthenticatedHandler . authenticatedHandler

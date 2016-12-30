@@ -24,7 +24,6 @@ var _ = Describe("Authentication middleware", func() {
 
 		resp          *httptest.ResponseRecorder
 		uaaClient     *fakes.UAARequestClient
-		spaceGuard    *fakes.SpaceGuard
 		logger        *lagertest.TestLogger
 		tokenResponse uaa_client.CheckTokenResponse
 	)
@@ -37,15 +36,13 @@ var _ = Describe("Authentication middleware", func() {
 		request.RemoteAddr = "some-host:some-ip"
 
 		uaaClient = &fakes.UAARequestClient{}
-		spaceGuard = &fakes.SpaceGuard{}
 		logger = lagertest.NewTestLogger("test")
 		unprotected = &fakes.AuthenticatedHandler{}
 
 		authenticator = &handlers.Authenticator{
-			Client:     uaaClient,
-			Logger:     logger,
-			SpaceGuard: spaceGuard,
-			Scopes:     []string{"network.admin", "network.write"},
+			Client: uaaClient,
+			Logger: logger,
+			Scopes: []string{"network.admin", "network.write"},
 		}
 
 		protected = authenticator.Wrap(unprotected)
