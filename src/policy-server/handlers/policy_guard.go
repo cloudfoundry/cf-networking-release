@@ -9,7 +9,7 @@ import (
 //go:generate counterfeiter -o ../fakes/policy_guard_cc_client.go --fake-name PolicyGuardCCClient . policyGuardCCClient
 type policyGuardCCClient interface {
 	GetSpaceGuids(token string, appGuids []string) ([]string, error)
-	GetSpaces(token string, spaceGuids []string) ([]models.Space, error)
+	GetSpace(token, spaceGuid string) (models.Space, error)
 	GetUserSpaces(token, userGuid string, spaces []models.Space) ([]models.Space, error)
 }
 
@@ -33,9 +33,13 @@ func (g *PolicyGuard) CheckAccess(policies []models.Policy, userToken uaa_client
 	if err != nil {
 		return false, fmt.Errorf("getting space guids: %s", err)
 	}
-	spaces, err := g.CCClient.GetSpaces(token, spaceGuids)
-	if err != nil {
-		return false, fmt.Errorf("getting spaces: %s", err)
+	var spaces []models.Space
+	for _, guid := range spaceGuids {
+		space, err := g.CCClient.GetSpace(token, guid)
+		if err != nil {
+			return false, fmt.Errorf("getting space with guid %s: %s", guid, err)
+		}
+		spaces = append(spaces, space)
 	}
 	userSpaces, err := g.CCClient.GetUserSpaces(token, userToken.UserID, spaces)
 	if err != nil {

@@ -17,14 +17,14 @@ type PolicyGuardCCClient struct {
 		result1 []string
 		result2 error
 	}
-	GetSpacesStub        func(token string, spaceGuids []string) ([]models.Space, error)
-	getSpacesMutex       sync.RWMutex
-	getSpacesArgsForCall []struct {
-		token      string
-		spaceGuids []string
+	GetSpaceStub        func(token, spaceGuid string) (models.Space, error)
+	getSpaceMutex       sync.RWMutex
+	getSpaceArgsForCall []struct {
+		token     string
+		spaceGuid string
 	}
-	getSpacesReturns struct {
-		result1 []models.Space
+	getSpaceReturns struct {
+		result1 models.Space
 		result2 error
 	}
 	GetUserSpacesStub        func(token, userGuid string, spaces []models.Space) ([]models.Space, error)
@@ -82,42 +82,37 @@ func (fake *PolicyGuardCCClient) GetSpaceGuidsReturns(result1 []string, result2 
 	}{result1, result2}
 }
 
-func (fake *PolicyGuardCCClient) GetSpaces(token string, spaceGuids []string) ([]models.Space, error) {
-	var spaceGuidsCopy []string
-	if spaceGuids != nil {
-		spaceGuidsCopy = make([]string, len(spaceGuids))
-		copy(spaceGuidsCopy, spaceGuids)
-	}
-	fake.getSpacesMutex.Lock()
-	fake.getSpacesArgsForCall = append(fake.getSpacesArgsForCall, struct {
-		token      string
-		spaceGuids []string
-	}{token, spaceGuidsCopy})
-	fake.recordInvocation("GetSpaces", []interface{}{token, spaceGuidsCopy})
-	fake.getSpacesMutex.Unlock()
-	if fake.GetSpacesStub != nil {
-		return fake.GetSpacesStub(token, spaceGuids)
+func (fake *PolicyGuardCCClient) GetSpace(token string, spaceGuid string) (models.Space, error) {
+	fake.getSpaceMutex.Lock()
+	fake.getSpaceArgsForCall = append(fake.getSpaceArgsForCall, struct {
+		token     string
+		spaceGuid string
+	}{token, spaceGuid})
+	fake.recordInvocation("GetSpace", []interface{}{token, spaceGuid})
+	fake.getSpaceMutex.Unlock()
+	if fake.GetSpaceStub != nil {
+		return fake.GetSpaceStub(token, spaceGuid)
 	} else {
-		return fake.getSpacesReturns.result1, fake.getSpacesReturns.result2
+		return fake.getSpaceReturns.result1, fake.getSpaceReturns.result2
 	}
 }
 
-func (fake *PolicyGuardCCClient) GetSpacesCallCount() int {
-	fake.getSpacesMutex.RLock()
-	defer fake.getSpacesMutex.RUnlock()
-	return len(fake.getSpacesArgsForCall)
+func (fake *PolicyGuardCCClient) GetSpaceCallCount() int {
+	fake.getSpaceMutex.RLock()
+	defer fake.getSpaceMutex.RUnlock()
+	return len(fake.getSpaceArgsForCall)
 }
 
-func (fake *PolicyGuardCCClient) GetSpacesArgsForCall(i int) (string, []string) {
-	fake.getSpacesMutex.RLock()
-	defer fake.getSpacesMutex.RUnlock()
-	return fake.getSpacesArgsForCall[i].token, fake.getSpacesArgsForCall[i].spaceGuids
+func (fake *PolicyGuardCCClient) GetSpaceArgsForCall(i int) (string, string) {
+	fake.getSpaceMutex.RLock()
+	defer fake.getSpaceMutex.RUnlock()
+	return fake.getSpaceArgsForCall[i].token, fake.getSpaceArgsForCall[i].spaceGuid
 }
 
-func (fake *PolicyGuardCCClient) GetSpacesReturns(result1 []models.Space, result2 error) {
-	fake.GetSpacesStub = nil
-	fake.getSpacesReturns = struct {
-		result1 []models.Space
+func (fake *PolicyGuardCCClient) GetSpaceReturns(result1 models.Space, result2 error) {
+	fake.GetSpaceStub = nil
+	fake.getSpaceReturns = struct {
+		result1 models.Space
 		result2 error
 	}{result1, result2}
 }
@@ -168,8 +163,8 @@ func (fake *PolicyGuardCCClient) Invocations() map[string][][]interface{} {
 	defer fake.invocationsMutex.RUnlock()
 	fake.getSpaceGuidsMutex.RLock()
 	defer fake.getSpaceGuidsMutex.RUnlock()
-	fake.getSpacesMutex.RLock()
-	defer fake.getSpacesMutex.RUnlock()
+	fake.getSpaceMutex.RLock()
+	defer fake.getSpaceMutex.RUnlock()
 	fake.getUserSpacesMutex.RLock()
 	defer fake.getUserSpacesMutex.RUnlock()
 	return fake.invocations

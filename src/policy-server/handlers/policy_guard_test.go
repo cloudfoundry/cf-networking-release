@@ -19,6 +19,9 @@ var _ = Describe("PolicyGuard", func() {
 		tokenData     uaa_client.CheckTokenResponse
 		policies      []models.Policy
 		spaceGuids    []string
+		space1        models.Space
+		space2        models.Space
+		space3        models.Space
 		spaces        []models.Space
 	)
 
@@ -53,24 +56,42 @@ var _ = Describe("PolicyGuard", func() {
 			UserName: "some-developer",
 		}
 		spaceGuids = []string{"space-guid-1", "space-guid-2", "space-guid-3"}
-		spaces = []models.Space{
-			{
-				Name:    "space-1",
-				OrgGuid: "org-guid-1",
-			},
-			{
-				Name:    "space-2",
-				OrgGuid: "org-guid-2",
-			},
-			{
-				Name:    "space-3",
-				OrgGuid: "org-guid-3",
-			},
+		space1 = models.Space{
+			Name:    "space-1",
+			OrgGuid: "org-guid-1",
 		}
+		space2 = models.Space{
+			Name:    "space-2",
+			OrgGuid: "org-guid-2",
+		}
+		space3 = models.Space{
+			Name:    "space-3",
+			OrgGuid: "org-guid-3",
+		}
+		spaces = []models.Space{space1, space2, space3}
 
 		fakeUAAClient.GetTokenReturns("policy-server-token", nil)
 		fakeCCClient.GetSpaceGuidsReturns(spaceGuids, nil)
-		fakeCCClient.GetSpacesReturns(spaces, nil)
+		fakeCCClient.GetSpaceStub = func(token, spaceGuid string) (models.Space, error) {
+			switch spaceGuid {
+			case "space-guid-1":
+				{
+					return space1, nil
+				}
+			case "space-guid-2":
+				{
+					return space2, nil
+				}
+			case "space-guid-3":
+				{
+					return space3, nil
+				}
+			default:
+				{
+					return models.Space{}, errors.New("stub called with unexpected guid")
+				}
+			}
+		}
 		fakeCCClient.GetUserSpacesReturns(spaces, nil)
 	})
 
@@ -84,10 +105,16 @@ var _ = Describe("PolicyGuard", func() {
 			token, appGuids := fakeCCClient.GetSpaceGuidsArgsForCall(0)
 			Expect(token).To(Equal("policy-server-token"))
 			Expect(appGuids).To(ConsistOf([]string{"some-app-guid", "some-other-guid", "yet-another-guid"}))
-			Expect(fakeCCClient.GetSpacesCallCount()).To(Equal(1))
-			token, actualSpaceGuids := fakeCCClient.GetSpacesArgsForCall(0)
+			Expect(fakeCCClient.GetSpaceCallCount()).To(Equal(3))
+			token, guid := fakeCCClient.GetSpaceArgsForCall(0)
 			Expect(token).To(Equal("policy-server-token"))
-			Expect(actualSpaceGuids).To(Equal(spaceGuids))
+			Expect(guid).To(Equal("space-guid-1"))
+			token, guid = fakeCCClient.GetSpaceArgsForCall(1)
+			Expect(token).To(Equal("policy-server-token"))
+			Expect(guid).To(Equal("space-guid-2"))
+			token, guid = fakeCCClient.GetSpaceArgsForCall(2)
+			Expect(token).To(Equal("policy-server-token"))
+			Expect(guid).To(Equal("space-guid-3"))
 			Expect(fakeCCClient.GetUserSpacesCallCount()).To(Equal(1))
 			token, userGuid, checkUserSpaces := fakeCCClient.GetUserSpacesArgsForCall(0)
 			Expect(token).To(Equal("policy-server-token"))
@@ -106,7 +133,7 @@ var _ = Describe("PolicyGuard", func() {
 				authorized, err := policyGuard.CheckAccess(policies, tokenData)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(fakeUAAClient.GetTokenCallCount()).To(Equal(0))
-				Expect(fakeCCClient.GetSpacesCallCount()).To(Equal(0))
+				Expect(fakeCCClient.GetSpaceCallCount()).To(Equal(0))
 				Expect(fakeCCClient.GetUserSpacesCallCount()).To(Equal(0))
 				Expect(authorized).To(BeTrue())
 			})
@@ -155,11 +182,11 @@ var _ = Describe("PolicyGuard", func() {
 
 		Context("when the getting all the spaces fails", func() {
 			BeforeEach(func() {
-				fakeCCClient.GetSpacesReturns(nil, errors.New("banana"))
+				fakeCCClient.GetSpaceReturns(models.Space{}, errors.New("banana"))
 			})
 			It("returns an useful error", func() {
 				_, err := policyGuard.CheckAccess(policies, tokenData)
-				Expect(err).To(MatchError("getting spaces: banana"))
+				Expect(err).To(MatchError("getting space with guid space-guid-1: banana"))
 			})
 		})
 
