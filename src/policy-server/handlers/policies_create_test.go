@@ -12,11 +12,12 @@ import (
 	"policy-server/fakes"
 	"policy-server/handlers"
 	"policy-server/models"
+	"policy-server/uaa_client"
 
+	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
-	"code.cloudfoundry.org/lager/lagertest"
 )
 
 var _ = Describe("PoliciesCreate", func() {
@@ -29,6 +30,7 @@ var _ = Describe("PoliciesCreate", func() {
 		fakeValidator   *fakes.Validator
 		logger          *lagertest.TestLogger
 		fakeUnmarshaler *lfakes.Unmarshaler
+		tokenData       uaa_client.CheckTokenResponse
 	)
 
 	BeforeEach(func() {
@@ -69,6 +71,10 @@ var _ = Describe("PoliciesCreate", func() {
 			Unmarshaler: fakeUnmarshaler,
 			Validator:   fakeValidator,
 		}
+		tokenData = uaa_client.CheckTokenResponse{
+			Scope:    []string{"network.admin"},
+			UserName: "some_user",
+		}
 		resp = httptest.NewRecorder()
 	})
 
@@ -89,7 +95,7 @@ var _ = Describe("PoliciesCreate", func() {
 			},
 		}}
 
-		handler.ServeHTTP(resp, request, "")
+		handler.ServeHTTP(resp, request, tokenData)
 
 		Expect(fakeUnmarshaler.UnmarshalCallCount()).To(Equal(1))
 		bodyBytes, _ := fakeUnmarshaler.UnmarshalArgsForCall(0)
@@ -101,8 +107,8 @@ var _ = Describe("PoliciesCreate", func() {
 	})
 
 	It("logs the policy with username and app guid", func() {
-		handler.ServeHTTP(resp, request, "some-user")
-		Expect(logger).To(gbytes.Say("policy-create.*some-app-guid.*some-user"))
+		handler.ServeHTTP(resp, request, tokenData)
+		Expect(logger).To(gbytes.Say("policy-create.*some-app-guid.*some_user"))
 	})
 
 	Context("when the validator fails", func() {
@@ -116,13 +122,13 @@ var _ = Describe("PoliciesCreate", func() {
 		})
 
 		It("responds with code 400 and a useful error", func() {
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, tokenData)
 			Expect(resp.Code).To(Equal(http.StatusBadRequest))
 			Expect(resp.Body.String()).To(MatchJSON(`{"error": "banana"}`))
 		})
 
 		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, tokenData)
 			Expect(logger).To(gbytes.Say("bad-request.*banana"))
 		})
 	})
@@ -133,14 +139,14 @@ var _ = Describe("PoliciesCreate", func() {
 		})
 
 		It("sets a 500 error code, and returns a generic error", func() {
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, tokenData)
 
 			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
 			Expect(resp.Body.String()).To(MatchJSON(`{"error": "database create failed"}`))
 		})
 
 		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, tokenData)
 			Expect(logger).To(gbytes.Say("store-create-failed.*banana"))
 		})
 	})
@@ -151,14 +157,14 @@ var _ = Describe("PoliciesCreate", func() {
 		})
 
 		It("returns a descriptive error", func() {
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, tokenData)
 
 			Expect(resp.Code).To(Equal(http.StatusBadRequest))
 			Expect(resp.Body.String()).To(MatchJSON(`{"error": "invalid request body format passed to API should be JSON"}`))
 		})
 
 		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, tokenData)
 			Expect(logger).To(gbytes.Say("body-read-failed.*banana"))
 		})
 	})
@@ -169,15 +175,61 @@ var _ = Describe("PoliciesCreate", func() {
 		})
 
 		It("returns a descriptive error", func() {
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, tokenData)
 
 			Expect(resp.Code).To(Equal(http.StatusBadRequest))
 			Expect(resp.Body.String()).To(MatchJSON(`{"error": "invalid values passed to API"}`))
 		})
 
 		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, tokenData)
 			Expect(logger).To(gbytes.Say("unmarshal-failed.*json: cannot unmarshal"))
 		})
 	})
+
+	// Context("when the token data only has network.write and request only contains authorized spaces", func() {
+	// 	BeforeEach(func() {
+	// 		uaaClient.CheckTokenReturns(uaa_client.CheckTokenResponse{
+	// 			Scope:    []string{"network.write"},
+	// 			UserName: "some_user",
+	// 		}, nil)
+	// 		spaceGuard.CheckRequestReturns(nil)
+	// 	})
+
+	// 	It("calls into the unprotected handler and logs the request", func() {
+	// 		protected.ServeHTTP(resp, request)
+
+	// 		Expect(logger).To(gbytes.Say("request made to policy-server.*RemoteAddr.*some-host:some-ip.*URL.*/networking/v0/whoami"))
+	// 		Expect(unprotected.ServeHTTPCallCount()).To(Equal(1))
+
+	// 		Expect(logger).To(gbytes.Say("request made with token:.*tokenData.*scope.*network.write.*user_name.*some_user"))
+	// 		unprotectedResp, unprotectedRequest, currentUser := unprotected.ServeHTTPArgsForCall(0)
+	// 		Expect(unprotectedResp).To(Equal(resp))
+	// 		Expect(unprotectedRequest).To(Equal(request))
+	// 		Expect(currentUser).To(Equal("some_user"))
+	// 	})
+	// })
+
+	// Context("when the token data only has network.write, and request contains unuathorized spaces", func() {
+	// 	BeforeEach(func() {
+	// 		uaaClient.CheckTokenReturns(uaa_client.CheckTokenResponse{
+	// 			Scope:    []string{"network.write"},
+	// 			UserName: "some_user",
+	// 		}, nil)
+	// 		spaceGuard.CheckRequestReturns(errors.New("banana"))
+	// 	})
+
+	// 	It("returns a 403 status code and a useful JSON error", func() {
+	// 		protected.ServeHTTP(resp, request)
+
+	// 		Expect(resp.Code).To(Equal(http.StatusForbidden))
+	// 		Expect(resp.Body).To(MatchJSON(`{ "error": "some requested apps are not accessible" }`))
+	// 	})
+
+	// 	It("logs a helpful error", func() {
+	// 		protected.ServeHTTP(resp, request)
+
+	// 		Expect(logger).To(gbytes.Say("some requested apps are not accessible.*banana"))
+	// 	})
+	// })
 })

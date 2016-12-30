@@ -152,7 +152,7 @@ var _ = Describe("External API", func() {
 
 					Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
 					responseString, err := ioutil.ReadAll(resp.Body)
-					Expect(responseString).To(MatchJSON(`{ "error": "missing network.write or network.admin permission"}`))
+					Expect(responseString).To(MatchJSON(`{ "error": "token missing allowed scopes: [network.admin network.write]"}`))
 				})
 			})
 			Context("when one app is in spaces they do not have access to", func() {

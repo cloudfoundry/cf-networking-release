@@ -3,32 +3,33 @@ package fakes
 
 import (
 	"net/http"
+	"policy-server/uaa_client"
 	"sync"
 )
 
 type AuthenticatedHandler struct {
-	ServeHTTPStub        func(response http.ResponseWriter, request *http.Request, currentUserName string)
+	ServeHTTPStub        func(response http.ResponseWriter, request *http.Request, tokenData uaa_client.CheckTokenResponse)
 	serveHTTPMutex       sync.RWMutex
 	serveHTTPArgsForCall []struct {
-		response        http.ResponseWriter
-		request         *http.Request
-		currentUserName string
+		response  http.ResponseWriter
+		request   *http.Request
+		tokenData uaa_client.CheckTokenResponse
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *AuthenticatedHandler) ServeHTTP(response http.ResponseWriter, request *http.Request, currentUserName string) {
+func (fake *AuthenticatedHandler) ServeHTTP(response http.ResponseWriter, request *http.Request, tokenData uaa_client.CheckTokenResponse) {
 	fake.serveHTTPMutex.Lock()
 	fake.serveHTTPArgsForCall = append(fake.serveHTTPArgsForCall, struct {
-		response        http.ResponseWriter
-		request         *http.Request
-		currentUserName string
-	}{response, request, currentUserName})
-	fake.recordInvocation("ServeHTTP", []interface{}{response, request, currentUserName})
+		response  http.ResponseWriter
+		request   *http.Request
+		tokenData uaa_client.CheckTokenResponse
+	}{response, request, tokenData})
+	fake.recordInvocation("ServeHTTP", []interface{}{response, request, tokenData})
 	fake.serveHTTPMutex.Unlock()
 	if fake.ServeHTTPStub != nil {
-		fake.ServeHTTPStub(response, request, currentUserName)
+		fake.ServeHTTPStub(response, request, tokenData)
 	}
 }
 
@@ -38,10 +39,10 @@ func (fake *AuthenticatedHandler) ServeHTTPCallCount() int {
 	return len(fake.serveHTTPArgsForCall)
 }
 
-func (fake *AuthenticatedHandler) ServeHTTPArgsForCall(i int) (http.ResponseWriter, *http.Request, string) {
+func (fake *AuthenticatedHandler) ServeHTTPArgsForCall(i int) (http.ResponseWriter, *http.Request, uaa_client.CheckTokenResponse) {
 	fake.serveHTTPMutex.RLock()
 	defer fake.serveHTTPMutex.RUnlock()
-	return fake.serveHTTPArgsForCall[i].response, fake.serveHTTPArgsForCall[i].request, fake.serveHTTPArgsForCall[i].currentUserName
+	return fake.serveHTTPArgsForCall[i].response, fake.serveHTTPArgsForCall[i].request, fake.serveHTTPArgsForCall[i].tokenData
 }
 
 func (fake *AuthenticatedHandler) Invocations() map[string][][]interface{} {

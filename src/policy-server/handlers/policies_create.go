@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"policy-server/models"
 	"policy-server/store"
+	"policy-server/uaa_client"
 
 	"code.cloudfoundry.org/lager"
 )
@@ -18,7 +19,7 @@ type PoliciesCreate struct {
 	Validator   validator
 }
 
-func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request, currentUserName string) {
+func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request, tokenData uaa_client.CheckTokenResponse) {
 	bodyBytes, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		h.Logger.Error("body-read-failed", err)
@@ -53,7 +54,7 @@ func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request, cur
 		return
 	}
 
-	h.Logger.Info("policy-create", lager.Data{"policies": payload.Policies, "userName": currentUserName})
+	h.Logger.Info("policy-create", lager.Data{"policies": payload.Policies, "userName": tokenData.UserName})
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("{}"))
 	return

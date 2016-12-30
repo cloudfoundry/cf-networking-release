@@ -33,7 +33,7 @@ type Authenticator struct {
 
 //go:generate counterfeiter -o ../fakes/authenticated_handler.go --fake-name AuthenticatedHandler . authenticatedHandler
 type authenticatedHandler interface {
-	ServeHTTP(response http.ResponseWriter, request *http.Request, currentUserName string)
+	ServeHTTP(response http.ResponseWriter, request *http.Request, tokenData uaa_client.CheckTokenResponse)
 }
 
 func (a *Authenticator) Wrap(handle authenticatedHandler) http.Handler {
@@ -71,22 +71,7 @@ func (a *Authenticator) Wrap(handle authenticatedHandler) http.Handler {
 			return
 		}
 
-		if isNetworkAdmin(tokenData.Scope) {
-			handle.ServeHTTP(w, req, tokenData.UserName)
-			return
-		}
-
-		if isNetworkWrite(tokenData.Scope) && !isNetworkAdmin(tokenData.Scope) {
-			err := a.SpaceGuard.CheckRequest(req, tokenData)
-			if err != nil {
-				a.Logger.Error("authorization", fmt.Errorf("some requested apps are not accessible %s", err))
-				w.WriteHeader(http.StatusForbidden)
-				w.Write([]byte(`{ "error": "some requested apps are not accessible" }`))
-				return
-			}
-			handle.ServeHTTP(w, req, tokenData.UserName)
-			return
-		}
+		handle.ServeHTTP(w, req, tokenData)
 	})
 }
 

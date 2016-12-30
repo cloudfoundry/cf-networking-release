@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"policy-server/models"
 	"policy-server/store"
+	"policy-server/uaa_client"
 
 	"code.cloudfoundry.org/lager"
 )
@@ -18,7 +19,7 @@ type PoliciesDelete struct {
 	Validator   validator
 }
 
-func (h *PoliciesDelete) ServeHTTP(w http.ResponseWriter, req *http.Request, currentUserName string) {
+func (h *PoliciesDelete) ServeHTTP(w http.ResponseWriter, req *http.Request, tokenData uaa_client.CheckTokenResponse) {
 	if req.Method != "POST" {
 		h.Logger.Info("policy-delete", lager.Data{"warning": "legacy-mechanism", "method": req.Method})
 	}
@@ -57,7 +58,7 @@ func (h *PoliciesDelete) ServeHTTP(w http.ResponseWriter, req *http.Request, cur
 		return
 	}
 
-	h.Logger.Info("policy-delete", lager.Data{"policies": payload.Policies, "userName": currentUserName})
+	h.Logger.Info("policy-delete", lager.Data{"policies": payload.Policies, "userName": tokenData.UserName})
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{}`))
 	return

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"policy-server/models"
 	"policy-server/store"
+	"policy-server/uaa_client"
 	"strings"
 
 	"code.cloudfoundry.org/lager"
@@ -16,7 +17,7 @@ type PoliciesIndex struct {
 	Marshaler marshal.Marshaler
 }
 
-func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request, currentUserName string) {
+func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request, _ uaa_client.CheckTokenResponse) {
 	policies, err := h.Store.All()
 	if err != nil {
 		h.Logger.Error("store-list-policies-failed", err)

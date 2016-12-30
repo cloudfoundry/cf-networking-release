@@ -9,6 +9,7 @@ import (
 	"policy-server/fakes"
 	"policy-server/handlers"
 	"policy-server/models"
+	"policy-server/uaa_client"
 
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
@@ -27,6 +28,7 @@ var _ = Describe("PoliciesCleanup", func() {
 		logger        *lagertest.TestLogger
 		fakeMarshaler *lfakes.Marshaler
 		allPolicies   []models.Policy
+		tokenData     uaa_client.CheckTokenResponse
 	)
 
 	BeforeEach(func() {
@@ -71,6 +73,11 @@ var _ = Describe("PoliciesCleanup", func() {
 			Marshaler: fakeMarshaler,
 		}
 
+		tokenData = uaa_client.CheckTokenResponse{
+			Scope:    []string{"network.admin"},
+			UserName: "some_user",
+		}
+
 		resp = httptest.NewRecorder()
 		request, _ = http.NewRequest("POST", "/networking/v0/external/policies/cleanup", nil)
 
@@ -80,7 +87,7 @@ var _ = Describe("PoliciesCleanup", func() {
 	})
 
 	It("Cleans up stale policies for deleted apps", func() {
-		handler.ServeHTTP(resp, request, "")
+		handler.ServeHTTP(resp, request, tokenData)
 
 		Expect(fakeStore.AllCallCount()).To(Equal(1))
 		Expect(fakeUAAClient.GetTokenCallCount()).To(Equal(1))
@@ -139,13 +146,13 @@ var _ = Describe("PoliciesCleanup", func() {
 		})
 
 		It("responds with 500", func() {
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, tokenData)
 			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
 			Expect(resp.Body.String()).To(MatchJSON(`{"error": "database read failed"}`))
 		})
 
 		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, tokenData)
 			Expect(logger).To(gbytes.Say("store-list-policies-failed.*potato"))
 		})
 	})
@@ -156,13 +163,13 @@ var _ = Describe("PoliciesCleanup", func() {
 		})
 
 		It("responds with 500", func() {
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, tokenData)
 			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
 			Expect(resp.Body.String()).To(MatchJSON(`{"error": "get UAA token failed"}`))
 		})
 
 		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, tokenData)
 			Expect(logger).To(gbytes.Say("get-uaa-token-failed.*potato"))
 		})
 	})
@@ -173,13 +180,13 @@ var _ = Describe("PoliciesCleanup", func() {
 		})
 
 		It("responds with 500", func() {
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, tokenData)
 			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
 			Expect(resp.Body.String()).To(MatchJSON(`{"error": "get app guids from Cloud-Controller failed"}`))
 		})
 
 		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, tokenData)
 			Expect(logger).To(gbytes.Say("cc-get-app-guids-failed.*potato"))
 		})
 	})
@@ -190,13 +197,13 @@ var _ = Describe("PoliciesCleanup", func() {
 		})
 
 		It("responds with 500", func() {
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, tokenData)
 			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
 			Expect(resp.Body.String()).To(MatchJSON(`{"error": "database write failed"}`))
 		})
 
 		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, tokenData)
 			Expect(logger).To(gbytes.Say("store-delete-policies-failed.*potato"))
 		})
 	})
@@ -207,13 +214,13 @@ var _ = Describe("PoliciesCleanup", func() {
 		})
 
 		It("responds with 500", func() {
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, tokenData)
 			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
 			Expect(resp.Body.String()).To(MatchJSON(`{"error": "marshal response failed"}`))
 		})
 
 		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, tokenData)
 			Expect(logger).To(gbytes.Say("marshal-failed.*potato"))
 		})
 	})

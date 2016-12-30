@@ -11,6 +11,7 @@ import (
 	"policy-server/fakes"
 	"policy-server/handlers"
 	"policy-server/models"
+	"policy-server/uaa_client"
 
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
@@ -29,6 +30,7 @@ var _ = Describe("PoliciesDelete", func() {
 		fakeUnmarshaler  *lfakes.Unmarshaler
 		expectedPolicies []models.Policy
 		fakeValidator    *fakes.Validator
+		tokenData        uaa_client.CheckTokenResponse
 	)
 
 	const Route = "/networking/v0/external/policies/delete"
@@ -71,10 +73,14 @@ var _ = Describe("PoliciesDelete", func() {
 				Port:     8080,
 			},
 		}}
+		tokenData = uaa_client.CheckTokenResponse{
+			Scope:    []string{"network.admin"},
+			UserName: "some_user",
+		}
 	})
 
 	It("removes the entry from the policy server", func() {
-		handler.ServeHTTP(resp, request, "")
+		handler.ServeHTTP(resp, request, tokenData)
 
 		Expect(fakeUnmarshaler.UnmarshalCallCount()).To(Equal(1))
 		bodyBytes, _ := fakeUnmarshaler.UnmarshalArgsForCall(0)
@@ -86,8 +92,8 @@ var _ = Describe("PoliciesDelete", func() {
 	})
 
 	It("logs the policy with username and app guid", func() {
-		handler.ServeHTTP(resp, request, "some-user")
-		Expect(logger).To(gbytes.Say("policy-delete.*some-app-guid.*some-user"))
+		handler.ServeHTTP(resp, request, tokenData)
+		Expect(logger).To(gbytes.Say("policy-delete.*some-app-guid.*some_user"))
 	})
 
 	Context("when a policy to delete includes any validation error", func() {
@@ -101,13 +107,13 @@ var _ = Describe("PoliciesDelete", func() {
 		})
 
 		It("responds with code 400 and a useful error", func() {
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, tokenData)
 			Expect(resp.Code).To(Equal(http.StatusBadRequest))
 			Expect(resp.Body.String()).To(MatchJSON(`{"error": "banana"}`))
 		})
 
 		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, tokenData)
 			Expect(logger).To(gbytes.Say("bad-request.*banana"))
 		})
 	})
@@ -120,7 +126,7 @@ var _ = Describe("PoliciesDelete", func() {
 		})
 
 		It("logs a warning", func() {
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, tokenData)
 			Expect(logger).To(gbytes.Say("warning.*legacy-mechanism"))
 		})
 	})
@@ -131,7 +137,7 @@ var _ = Describe("PoliciesDelete", func() {
 		})
 
 		It("returns 400 and logs the error", func() {
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, tokenData)
 
 			Expect(resp.Code).To(Equal(http.StatusBadRequest))
 			Expect(resp.Body.String()).To(Equal(`{"error": "invalid request body format passed to API should be JSON"}`))
@@ -144,7 +150,7 @@ var _ = Describe("PoliciesDelete", func() {
 			fakeUnmarshaler.UnmarshalReturns(errors.New("banana"))
 		})
 		It("returns 400 and logs the error", func() {
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, tokenData)
 
 			Expect(resp.Code).To(Equal(http.StatusBadRequest))
 			Expect(resp.Body.String()).To(Equal(`{"error": "invalid values passed to API"}`))
@@ -157,7 +163,7 @@ var _ = Describe("PoliciesDelete", func() {
 			fakeStore.DeleteReturns(errors.New("banana"))
 		})
 		It("returns 500 and logs the error", func() {
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, tokenData)
 
 			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
 			Expect(resp.Body.String()).To(Equal(`{"error": "database delete failed"}`))

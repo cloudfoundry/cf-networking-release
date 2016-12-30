@@ -8,6 +8,7 @@ import (
 	"policy-server/fakes"
 	"policy-server/handlers"
 	"policy-server/models"
+	"policy-server/uaa_client"
 
 	lfakes "lib/fakes"
 
@@ -26,6 +27,7 @@ var _ = Describe("Policies index handler", func() {
 		fakeStore   *fakes.Store
 		logger      *lagertest.TestLogger
 		marshaler   *lfakes.Marshaler
+		token       uaa_client.CheckTokenResponse
 	)
 
 	BeforeEach(func() {
@@ -61,6 +63,8 @@ var _ = Describe("Policies index handler", func() {
 			Store:     fakeStore,
 			Marshaler: marshaler,
 		}
+
+		token = uaa_client.CheckTokenResponse{}
 		resp = httptest.NewRecorder()
 	})
 
@@ -89,7 +93,7 @@ var _ = Describe("Policies index handler", func() {
 				}
 			}
         ]}`
-		handler.ServeHTTP(resp, request, "")
+		handler.ServeHTTP(resp, request, token)
 
 		Expect(fakeStore.AllCallCount()).To(Equal(1))
 		Expect(resp.Code).To(Equal(http.StatusOK))
@@ -155,7 +159,7 @@ var _ = Describe("Policies index handler", func() {
 				}
 			}
         ]}`
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, token)
 
 			Expect(fakeStore.AllCallCount()).To(Equal(1))
 			Expect(resp.Code).To(Equal(http.StatusOK))
@@ -167,7 +171,7 @@ var _ = Describe("Policies index handler", func() {
 			request, err = http.NewRequest("GET", "/networking/v0/external/policies?id=", nil)
 			Expect(err).NotTo(HaveOccurred())
 
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, token)
 			Expect(fakeStore.AllCallCount()).To(Equal(1))
 			Expect(resp.Code).To(Equal(http.StatusOK))
 			Expect(resp.Body).To(MatchJSON(`{
@@ -182,14 +186,14 @@ var _ = Describe("Policies index handler", func() {
 			fakeStore.AllReturns(nil, errors.New("banana"))
 		})
 		It("responds with 500", func() {
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, token)
 
 			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
 			Expect(resp.Body.String()).To(MatchJSON(`{"error": "database read failed"}`))
 		})
 
 		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, token)
 			Expect(logger).To(gbytes.Say("store-list-policies-failed.*banana"))
 		})
 	})
@@ -202,14 +206,14 @@ var _ = Describe("Policies index handler", func() {
 		})
 
 		It("responds with 500 and returns a descriptive error", func() {
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, token)
 
 			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
 			Expect(resp.Body.String()).To(MatchJSON(`{"error": "database marshaling failed"}`))
 		})
 
 		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request, "")
+			handler.ServeHTTP(resp, request, token)
 			Expect(logger).To(gbytes.Say("marshal-failed.*grapes"))
 		})
 	})

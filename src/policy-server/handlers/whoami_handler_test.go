@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"policy-server/handlers"
+	"policy-server/uaa_client"
 
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
@@ -17,10 +18,11 @@ import (
 
 var _ = Describe("UaaHandler", func() {
 	var (
-		request *http.Request
-		handler *handlers.WhoAmIHandler
-		resp    *httptest.ResponseRecorder
-		logger  *lagertest.TestLogger
+		request   *http.Request
+		handler   *handlers.WhoAmIHandler
+		resp      *httptest.ResponseRecorder
+		logger    *lagertest.TestLogger
+		tokenData uaa_client.CheckTokenResponse
 	)
 
 	BeforeEach(func() {
@@ -34,10 +36,14 @@ var _ = Describe("UaaHandler", func() {
 			Marshaler: marshal.MarshalFunc(json.Marshal),
 		}
 		resp = httptest.NewRecorder()
+		tokenData = uaa_client.CheckTokenResponse{
+			Scope:    []string{"network.admin"},
+			UserName: "some_user",
+		}
 	})
 
 	It("returns the username", func() {
-		handler.ServeHTTP(resp, request, "some_user")
+		handler.ServeHTTP(resp, request, tokenData)
 
 		Expect(resp.Code).To(Equal(http.StatusOK))
 		Expect(resp.Body.String()).To(Equal(`{"user_name":"some_user"}`))
@@ -51,13 +57,13 @@ var _ = Describe("UaaHandler", func() {
 		})
 
 		It("returns a 500 status code", func() {
-			handler.ServeHTTP(resp, request, "some_user")
+			handler.ServeHTTP(resp, request, tokenData)
 
 			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
 		})
 
 		It("logs the error", func() {
-			handler.ServeHTTP(resp, request, "some_user")
+			handler.ServeHTTP(resp, request, tokenData)
 
 			Expect(logger).To(gbytes.Say("marshal-response.*banana"))
 		})

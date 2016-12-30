@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"policy-server/models"
 	"policy-server/store"
+	"policy-server/uaa_client"
 
 	"code.cloudfoundry.org/lager"
 )
@@ -27,7 +28,7 @@ type PoliciesCleanup struct {
 	CCClient  ccClient
 }
 
-func (h *PoliciesCleanup) ServeHTTP(w http.ResponseWriter, req *http.Request, currentUserName string) {
+func (h *PoliciesCleanup) ServeHTTP(w http.ResponseWriter, req *http.Request, tokenData uaa_client.CheckTokenResponse) {
 	policies, err := h.Store.All()
 	if err != nil {
 		h.Logger.Error("store-list-policies-failed", err)
