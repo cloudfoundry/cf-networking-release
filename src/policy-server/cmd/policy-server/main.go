@@ -75,7 +75,6 @@ func main() {
 		Logger:        logger,
 	}
 	whoamiHandler := &handlers.WhoAmIHandler{
-		Client:    uaaClient,
 		Logger:    logger.Session("external"),
 		Marshaler: marshal.MarshalFunc(json.Marshal),
 	}
@@ -129,6 +128,13 @@ func main() {
 	authenticator := handlers.Authenticator{
 		Client: uaaClient,
 		Logger: logger,
+		Scopes: []string{"network.admin"},
+	}
+
+	networkWriteAuthenticator := handlers.Authenticator{
+		Client: uaaClient,
+		Logger: logger,
+		Scopes: []string{"network.admin", "network.write"},
 	}
 
 	validator := &handlers.Validator{}
@@ -193,13 +199,13 @@ func main() {
 
 	handlers := rata.Handlers{
 		"uptime":                 uptimeHandler,
-		"create_policies":        authenticator.Wrap(createPolicyHandler),
+		"create_policies":        networkWriteAuthenticator.Wrap(createPolicyHandler),
 		"delete_policies_legacy": authenticator.Wrap(deletePolicyHandler),
 		"delete_policies":        authenticator.Wrap(deletePolicyHandler),
 		"policies_index":         authenticator.Wrap(policiesIndexHandler),
 		"cleanup":                authenticator.Wrap(policiesCleanupHandler),
 		"tags_index":             authenticator.Wrap(tagsIndexHandler),
-		"whoami":                 whoamiHandler,
+		"whoami":                 authenticator.Wrap(whoamiHandler),
 	}
 	router, err := rata.NewRouter(routes, handlers)
 	if err != nil {

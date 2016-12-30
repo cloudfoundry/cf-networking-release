@@ -1,22 +1,13 @@
 package handlers
 
 import (
-	"errors"
 	"lib/marshal"
 	"net/http"
-	"policy-server/uaa_client"
-	"strings"
 
 	"code.cloudfoundry.org/lager"
 )
 
-//go:generate counterfeiter -o ../fakes/uaa_request_client.go --fake-name UAARequestClient . uaaRequestClient
-type uaaRequestClient interface {
-	CheckToken(token string) (uaa_client.CheckTokenResponse, error)
-}
-
 type WhoAmIHandler struct {
-	Client    uaaRequestClient
 	Logger    lager.Logger
 	Marshaler marshal.Marshaler
 }
@@ -25,37 +16,9 @@ type WhoAmIResponse struct {
 	UserName string `json:"user_name"`
 }
 
-func (h *WhoAmIHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	h.Logger.Debug("request made to whoami endpoint", lager.Data{"URL": req.URL, "RemoteAddr": req.RemoteAddr})
-
-	authorization := req.Header["Authorization"]
-	if len(authorization) < 1 {
-		h.Logger.Error("auth", errors.New("no auth header"))
-		w.WriteHeader(http.StatusUnauthorized)
-		return
-	}
-
-	token := authorization[0]
-	token = strings.TrimPrefix(token, "Bearer ")
-	token = strings.TrimPrefix(token, "bearer ")
-	tokenData, err := h.Client.CheckToken(token)
-	if err != nil {
-		h.Logger.Error("uaa-getname", err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	if !isAuthorized(tokenData) {
-		h.Logger.Error("authorization", errors.New("network.admin scope not found"),
-			lager.Data{
-				"provided-scopes": tokenData.Scope,
-			})
-		w.WriteHeader(http.StatusForbidden)
-		return
-	}
-
+func (h *WhoAmIHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, currentUser string) {
 	whoAmIResponse := WhoAmIResponse{
-		UserName: tokenData.UserName,
+		UserName: currentUser,
 	}
 	responseJSON, err := h.Marshaler.Marshal(whoAmIResponse)
 	if err != nil {
@@ -66,13 +29,4 @@ func (h *WhoAmIHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write(responseJSON)
 	return
-}
-
-func isAuthorized(tokenData uaa_client.CheckTokenResponse) bool {
-	for _, scope := range tokenData.Scope {
-		if scope == "network.admin" {
-			return true
-		}
-	}
-	return false
 }

@@ -22,9 +22,10 @@ var _ = Describe("Authentication middleware", func() {
 		protected     http.Handler
 		authenticator *handlers.Authenticator
 
-		resp      *httptest.ResponseRecorder
-		uaaClient *fakes.UAARequestClient
-		logger    *lagertest.TestLogger
+		resp       *httptest.ResponseRecorder
+		uaaClient  *fakes.UAARequestClient
+		spaceGuard *fakes.SpaceGuard
+		logger     *lagertest.TestLogger
 	)
 
 	BeforeEach(func() {
@@ -35,12 +36,15 @@ var _ = Describe("Authentication middleware", func() {
 		request.RemoteAddr = "some-host:some-ip"
 
 		uaaClient = &fakes.UAARequestClient{}
+		spaceGuard = &fakes.SpaceGuard{}
 		logger = lagertest.NewTestLogger("test")
 		unprotected = &fakes.AuthenticatedHandler{}
 
 		authenticator = &handlers.Authenticator{
-			Client: uaaClient,
-			Logger: logger,
+			Client:     uaaClient,
+			Logger:     logger,
+			SpaceGuard: spaceGuard,
+			Scopes:     []string{"network.admin", "network.write"},
 		}
 
 		protected = authenticator.Wrap(unprotected)
@@ -53,19 +57,17 @@ var _ = Describe("Authentication middleware", func() {
 
 	})
 
-	Context("when everything is ok", func() {
-		It("calls into the unprotected handler and logs the request", func() {
-			protected.ServeHTTP(resp, request)
+	It("calls into the unprotected handler and logs the request", func() {
+		protected.ServeHTTP(resp, request)
 
-			Expect(logger).To(gbytes.Say("request made to policy-server.*RemoteAddr.*some-host:some-ip.*URL.*/networking/v0/whoami"))
-			Expect(unprotected.ServeHTTPCallCount()).To(Equal(1))
+		Expect(logger).To(gbytes.Say("request made to policy-server.*RemoteAddr.*some-host:some-ip.*URL.*/networking/v0/whoami"))
+		Expect(unprotected.ServeHTTPCallCount()).To(Equal(1))
 
-			Expect(logger).To(gbytes.Say("request made with token:.*tokenData.*scope.*network.admin.*user_name.*some_user"))
-			unprotectedResp, unprotectedRequest, currentUser := unprotected.ServeHTTPArgsForCall(0)
-			Expect(unprotectedResp).To(Equal(resp))
-			Expect(unprotectedRequest).To(Equal(request))
-			Expect(currentUser).To(Equal("some_user"))
-		})
+		Expect(logger).To(gbytes.Say("request made with token:.*tokenData.*scope.*network.admin.*user_name.*some_user"))
+		unprotectedResp, unprotectedRequest, currentUser := unprotected.ServeHTTPArgsForCall(0)
+		Expect(unprotectedResp).To(Equal(resp))
+		Expect(unprotectedRequest).To(Equal(request))
+		Expect(currentUser).To(Equal("some_user"))
 	})
 
 	It("checks the authorization bearer token with the uaa client", func() {
@@ -135,7 +137,7 @@ var _ = Describe("Authentication middleware", func() {
 		})
 	})
 
-	Context("when the token data scopes do not contain network.admin", func() {
+	Context("when the token data scopes do not contain any of the allowed scopes", func() {
 		BeforeEach(func() {
 			uaaClient.CheckTokenReturns(uaa_client.CheckTokenResponse{
 				Scope:    []string{"wrong.scope"},
@@ -147,15 +149,61 @@ var _ = Describe("Authentication middleware", func() {
 			protected.ServeHTTP(resp, request)
 
 			Expect(resp.Code).To(Equal(http.StatusForbidden))
-			Expect(resp.Body).To(MatchJSON(`{ "error": "token missing required scope network.admin" }`))
+			Expect(resp.Body).To(MatchJSON(`{ "error": "token missing allowed scopes: [network.admin network.write]" }`))
 		})
 
 		It("logs a helpful error", func() {
 			protected.ServeHTTP(resp, request)
 
-			Expect(logger).To(gbytes.Say("network.admin scope not found"))
-			Expect(logger).To(gbytes.Say("wrong.scope"))
+			Expect(logger).To(gbytes.Say("allowed-scopes.*network.admin.*network.write"))
+			Expect(logger).To(gbytes.Say("no allowed scopes found"))
+			Expect(logger).To(gbytes.Say("provided-scopes.*wrong.scope"))
 		})
 	})
 
+	Context("when the token data only has network.write and request only contains authorized spaces", func() {
+		BeforeEach(func() {
+			uaaClient.CheckTokenReturns(uaa_client.CheckTokenResponse{
+				Scope:    []string{"network.write"},
+				UserName: "some_user",
+			}, nil)
+			spaceGuard.CheckRequestReturns(nil)
+		})
+
+		It("calls into the unprotected handler and logs the request", func() {
+			protected.ServeHTTP(resp, request)
+
+			Expect(logger).To(gbytes.Say("request made to policy-server.*RemoteAddr.*some-host:some-ip.*URL.*/networking/v0/whoami"))
+			Expect(unprotected.ServeHTTPCallCount()).To(Equal(1))
+
+			Expect(logger).To(gbytes.Say("request made with token:.*tokenData.*scope.*network.write.*user_name.*some_user"))
+			unprotectedResp, unprotectedRequest, currentUser := unprotected.ServeHTTPArgsForCall(0)
+			Expect(unprotectedResp).To(Equal(resp))
+			Expect(unprotectedRequest).To(Equal(request))
+			Expect(currentUser).To(Equal("some_user"))
+		})
+	})
+
+	Context("when the token data only has network.write, and request contains unuathorized spaces", func() {
+		BeforeEach(func() {
+			uaaClient.CheckTokenReturns(uaa_client.CheckTokenResponse{
+				Scope:    []string{"network.write"},
+				UserName: "some_user",
+			}, nil)
+			spaceGuard.CheckRequestReturns(errors.New("banana"))
+		})
+
+		It("returns a 403 status code and a useful JSON error", func() {
+			protected.ServeHTTP(resp, request)
+
+			Expect(resp.Code).To(Equal(http.StatusForbidden))
+			Expect(resp.Body).To(MatchJSON(`{ "error": "some requested apps are not accessible" }`))
+		})
+
+		It("logs a helpful error", func() {
+			protected.ServeHTTP(resp, request)
+
+			Expect(logger).To(gbytes.Say("some requested apps are not accessible.*banana"))
+		})
+	})
 })

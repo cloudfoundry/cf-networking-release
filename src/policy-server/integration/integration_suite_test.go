@@ -74,12 +74,19 @@ var mockUAAServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWrit
 			token := strings.Split(string(bodyBytes), "=")[1]
 			Expect(token).NotTo(BeEmpty())
 
-			if string(token) == "valid-token" {
+			switch token {
+			case "valid-token":
 				w.WriteHeader(http.StatusOK)
 				w.Write([]byte(`{"scope":["network.admin"], "user_name":"some-user"}`))
-			} else {
+			case "space-dev-with-network-write-token":
+				w.WriteHeader(http.StatusOK)
+				w.Write([]byte(`{"scope":["network.write"], "user_name":"some-user"}`))
+			case "space-dev-token":
+				w.WriteHeader(http.StatusOK)
+				w.Write([]byte(`{"scope":[], "user_name":"some-user"}`))
+			default:
 				w.WriteHeader(http.StatusBadRequest)
-				w.Write([]byte(`{"error_description":"Some requested scopes are missing: network.admin"}`))
+				w.Write([]byte(`{"error_description":"banana"}`))
 			}
 		} else {
 			w.WriteHeader(http.StatusUnauthorized)

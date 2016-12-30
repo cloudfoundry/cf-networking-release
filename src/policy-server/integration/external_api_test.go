@@ -115,6 +115,63 @@ var _ = Describe("External API", func() {
 		)
 	})
 
+	FDescribe("space developer", func() {
+		var makeNewRequest = func(method, route, bodyString string) *http.Request {
+			var body io.Reader
+			if bodyString != "" {
+				body = strings.NewReader(bodyString)
+			}
+			url := fmt.Sprintf("http://%s:%d/%s", conf.ListenHost, conf.ListenPort, route)
+			req, err := http.NewRequest(method, url, body)
+			Expect(err).NotTo(HaveOccurred())
+
+			req.Header.Set("Authorization", "Bearer space-dev-with-network-write-token")
+			return req
+		}
+
+		Describe("POST to policies", func() {
+			var req *http.Request
+			BeforeEach(func() {
+				body := `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`
+				req = makeNewRequest("POST", "networking/v0/external/policies", body)
+			})
+			It("succeeds for developers with access to apps and network.write permission", func() {
+				resp, err := http.DefaultClient.Do(req)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
+			})
+
+			Context("when they do not have the network.write scope", func() {
+				BeforeEach(func() {
+					req.Header.Set("Authorization", "Bearer space-dev-token")
+				})
+				It("returns a 403 with a meaninful error", func() {
+					resp, err := http.DefaultClient.Do(req)
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
+					responseString, err := ioutil.ReadAll(resp.Body)
+					Expect(responseString).To(MatchJSON(`{ "error": "missing network.write or network.admin permission"}`))
+				})
+			})
+			Context("when one app is in spaces they do not have access to", func() {
+				BeforeEach(func() {
+					body := `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "app-guid-not-in-my-spaces", "protocol": "tcp", "port": 8090 } } ] }`
+					req = makeNewRequest("POST", "networking/v0/external/policies", body)
+				})
+				It("returns a 403 with a meaningful error", func() {
+					resp, err := http.DefaultClient.Do(req)
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
+					responseString, err := ioutil.ReadAll(resp.Body)
+					Expect(responseString).To(MatchJSON(`{ "error": "app guid app-guid-not-in-my-spaces does not exist in any spaces you can access"}`))
+				})
+			})
+		})
+	})
+
 	Context("when there are concurrent create requests", func() {
 		It("remains consistent", func() {
 			policiesRoute := "external/policies"
