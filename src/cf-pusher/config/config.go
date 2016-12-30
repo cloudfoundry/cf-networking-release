@@ -4,6 +4,7 @@ type Config struct {
 	Api               string `json:"api"`
 	AdminUser         string `json:"admin_user"`
 	AdminPassword     string `json:"admin_password"`
+	AdminSecret       string `json:"admin_secret"`
 	AppsDomain        string `json:"apps_domain"`
 	SkipSSLValidation bool   `json:"skip_ssl_validation"`
 	Applications      int    `json:"test_applications"`

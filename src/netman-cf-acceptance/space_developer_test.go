@@ -18,7 +18,7 @@ import (
 	"github.com/pivotal-cf-experimental/warrant"
 )
 
-var _ = Describe("external connectivity", func() {
+var _ = Describe("space developer policy configuration", func() {
 	var (
 		appA       string
 		appB       string
@@ -62,14 +62,13 @@ var _ = Describe("external connectivity", func() {
 		Expect(cf.Cf("target", "-o", orgName, "-s", spaceNameB).Wait(Timeout_Push)).To(gexec.Exit(0))
 
 		pushProxy(appB)
-
 		w = warrant.New(warrant.Config{
-			Host:          fmt.Sprintf("https://uaa.%s", config.AppsDomain), // TODO(gabe): should be system domain
+			Host:          fmt.Sprintf("https://uaa.%s", config.AppsDomain),
 			SkipVerifySSL: true,
 		})
 
 		// UAA group and user assignment stuff
-		uaaAdminClientToken, err := w.Clients.GetToken("admin", "admin-secret")
+		uaaAdminClientToken, err := w.Clients.GetToken("admin", testConfig.AdminSecret)
 		Expect(err).NotTo(HaveOccurred())
 
 		user := ensureUserExists(w, "space-developer", "password", uaaAdminClientToken)
