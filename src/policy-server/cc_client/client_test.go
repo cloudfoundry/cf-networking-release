@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"lib/fakes"
+	"lib/models"
 	"lib/testsupport"
 	"net/http"
 	"policy-server/cc_client"
@@ -265,6 +266,98 @@ var _ = Describe("Client", func() {
 
 			It("returns the response body in the error", func() {
 				_, err := client.GetSpaceGUIDs("some-token", []string{"foo"})
+
+				Expect(err).To(Equal(cc_client.BadCCResponse{
+					StatusCode:     418,
+					CCResponseBody: "bad thing",
+				}))
+			})
+		})
+	})
+
+	Describe("GetSpace", func() {
+		var spaceModel = models.Space{
+			Name:    "name-2064",
+			OrgGuid: "6e1ca5aa-55f1-4110-a97f-1f3473e771b9",
+		}
+		BeforeEach(func() {
+			fakeHTTPClient.DoReturns(
+				&http.Response{
+					StatusCode: 200,
+					Body:       ioutil.NopCloser(bytes.NewReader([]byte(fixtures.Space))),
+				}, nil)
+		})
+
+		It("Returns the space with the matching GUID", func() {
+			space, err := client.GetSpace("some-token", "some-space-guid")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(fakeHTTPClient.DoCallCount()).To(Equal(1))
+			request := fakeHTTPClient.DoArgsForCall(0)
+			Expect(request.Method).To(Equal("GET"))
+			Expect(request.URL.String()).To(Equal("some.url/v2/spaces/some-space-guid"))
+			authHeader := request.Header["Authorization"]
+			Expect(authHeader).To(HaveLen(1))
+			Expect(authHeader[0]).To(Equal("bearer some-token"))
+			Expect(err).NotTo(HaveOccurred())
+			Expect(space).To(Equal(spaceModel))
+		})
+
+		It("logs the request before sending", func() {
+			_, err := client.GetSpace("some-token", "some-space-guid")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(logger).To(gbytes.Say("get_space"))
+		})
+
+		Context("when the http client returns an error", func() {
+			BeforeEach(func() {
+				fakeHTTPClient.DoReturns(nil, errors.New("potato"))
+			})
+
+			It("returns a helpful error", func() {
+				_, err := client.GetSpace("some-token", "some-space-guid")
+				Expect(err).To(MatchError(ContainSubstring("http client: potato")))
+			})
+		})
+
+		Context("when reading the body returns an error", func() {
+			BeforeEach(func() {
+				fakeHTTPClient.DoReturns(&http.Response{Body: &testsupport.BadReader{}}, nil)
+			})
+
+			It("returns a helpful error", func() {
+				_, err := client.GetSpace("some-token", "some-space-guid")
+				Expect(err).To(MatchError(ContainSubstring("read body: banana")))
+			})
+		})
+
+		Context("when the response body is not valid json", func() {
+			BeforeEach(func() {
+				fakeHTTPClient.DoReturns(
+					&http.Response{
+						StatusCode: 200,
+						Body:       ioutil.NopCloser(strings.NewReader(`%%%%`)),
+					}, nil)
+			})
+
+			It("returns a helpful error", func() {
+				_, err := client.GetSpace("some-token", "some-space-guid")
+				Expect(err).To(MatchError(ContainSubstring("unmarshal json: invalid character")))
+			})
+		})
+
+		Context("if the response status code is not 200", func() {
+			BeforeEach(func() {
+				fakeHTTPClient.DoReturns(
+					&http.Response{
+						StatusCode: 418,
+						Body:       ioutil.NopCloser(strings.NewReader("bad thing")),
+					}, nil)
+
+			})
+
+			It("returns the response body in the error", func() {
+				_, err := client.GetSpace("some-token", "some-space-guid")
 
 				Expect(err).To(Equal(cc_client.BadCCResponse{
 					StatusCode:     418,

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"lib/models"
 	"net/http"
 	"strings"
 
@@ -37,6 +38,13 @@ type AppsV3Response struct {
 			} `json:"space"`
 		} `json:"links"`
 	} `json:"resources"`
+}
+
+type SpaceResponse struct {
+	Entity struct {
+		Name             string `json:"name"`
+		OrganizationGuid string `json:"organization_guid"`
+	} `json:"entity"`
 }
 
 func (r BadCCResponse) Error() string {
@@ -143,4 +151,46 @@ func (c *Client) GetSpaceGUIDs(token string, appGUIDs []string) ([]string, error
 	}
 
 	return ret, nil
+}
+
+func (c *Client) GetSpace(token, spaceGuid string) (models.Space, error) {
+	none := models.Space{}
+	reqURL := fmt.Sprintf("%s/v2/spaces/%s", c.Host, spaceGuid)
+	request, err := http.NewRequest("GET", reqURL, nil)
+	request.Header.Set("Authorization", fmt.Sprintf("bearer %s", token))
+	if err != nil {
+		return none, fmt.Errorf("create HTTP request: %s", err) // untested
+	}
+
+	c.Logger.Debug("get_space", lager.Data{"URL": request.URL})
+
+	resp, err := c.HTTPClient.Do(request)
+	if err != nil {
+		return none, fmt.Errorf("http client: %s", err)
+	}
+	defer resp.Body.Close()
+
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return none, fmt.Errorf("read body: %s", err)
+	}
+
+	if resp.StatusCode != 200 {
+		err = BadCCResponse{
+			StatusCode:     resp.StatusCode,
+			CCResponseBody: string(respBytes),
+		}
+		return none, err
+	}
+
+	var response SpaceResponse
+	err = json.Unmarshal(respBytes, &response)
+	if err != nil {
+		return none, fmt.Errorf("unmarshal json: %s", err)
+	}
+
+	return models.Space{
+		Name:    response.Entity.Name,
+		OrgGuid: response.Entity.OrganizationGuid,
+	}, nil
 }
