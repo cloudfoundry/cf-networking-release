@@ -118,19 +118,6 @@ var _ = Describe("PoliciesDelete", func() {
 		})
 	})
 
-	Context("when accessed using the legacy delete mechanism", func() {
-		BeforeEach(func() {
-			var err error
-			request, err = http.NewRequest("DELETE", "/networking/v0/external/policies", bytes.NewBuffer([]byte(requestJSON)))
-			Expect(err).NotTo(HaveOccurred())
-		})
-
-		It("logs a warning", func() {
-			handler.ServeHTTP(resp, request, tokenData)
-			Expect(logger).To(gbytes.Say("warning.*legacy-mechanism"))
-		})
-	})
-
 	Context("when reading the request body fails", func() {
 		BeforeEach(func() {
 			request.Body = &testsupport.BadReader{}

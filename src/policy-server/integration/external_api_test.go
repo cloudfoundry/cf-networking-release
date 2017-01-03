@@ -107,9 +107,9 @@ var _ = Describe("External API", func() {
 				"networking/v0/external/policies",
 				``,
 			),
-			Entry("DELETE to policies",
-				"DELETE",
-				"networking/v0/external/policies",
+			Entry("POST to policies/delete",
+				"POST",
+				"networking/v0/external/policies/delete",
 				`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`,
 			),
 		)
@@ -241,8 +241,11 @@ var _ = Describe("External API", func() {
 
 	Context("when these are concurrent create and delete requests", func() {
 		It("remains consistent", func() {
-			url := fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort)
-			do := func(method string, policy models.Policy) {
+			baseUrl := fmt.Sprintf("http://%s:%d", conf.ListenHost, conf.ListenPort)
+			policiesUrl := fmt.Sprintf("%s/networking/v0/external/policies", baseUrl)
+			policiesDeleteUrl := fmt.Sprintf("%s/networking/v0/external/policies/delete", baseUrl)
+
+			do := func(method, url string, policy models.Policy) {
 				requestBody, _ := json.Marshal(map[string]interface{}{
 					"policies": []models.Policy{policy},
 				})
@@ -271,7 +274,7 @@ var _ = Describe("External API", func() {
 			go func() {
 				parallelRunner.RunOnSlice(policies, func(policy interface{}) {
 					p := policy.(models.Policy)
-					do("POST", p)
+					do("POST", policiesUrl, p)
 					toDelete <- p
 				})
 				close(toDelete)
@@ -280,13 +283,13 @@ var _ = Describe("External API", func() {
 			var nDeleted int32
 			parallelRunner.RunOnChannel(toDelete, func(policy interface{}) {
 				p := policy.(models.Policy)
-				do("DELETE", p)
+				do("POST", policiesDeleteUrl, p)
 				atomic.AddInt32(&nDeleted, 1)
 			})
 
 			Expect(nDeleted).To(Equal(int32(nPolicies)))
 
-			resp := makeAndDoRequest("GET", url, nil)
+			resp := makeAndDoRequest("GET", policiesUrl, nil)
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
 			responseBytes, err := ioutil.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
@@ -452,41 +455,12 @@ var _ = Describe("External API", func() {
 			Expect(responseString).To(MatchJSON("{}"))
 		})
 
-		Context("when using the alternate DELETE mechanism (for compatibility with GCP)", func() {
+		Context("when all of the deletes succeed", func() {
 			It("responds with 200 and a body of {} and we can see it is removed from the list", func() {
 				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
 				resp := makeAndDoRequest(
 					"POST",
 					fmt.Sprintf("http://%s:%d/networking/v0/external/policies/delete", conf.ListenHost, conf.ListenPort),
-					body,
-				)
-
-				Expect(resp.StatusCode).To(Equal(http.StatusOK))
-				responseString, err := ioutil.ReadAll(resp.Body)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(responseString).To(MatchJSON(`{}`))
-
-				resp = makeAndDoRequest(
-					"GET",
-					fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
-					nil,
-				)
-
-				Expect(resp.StatusCode).To(Equal(http.StatusOK))
-				responseString, err = ioutil.ReadAll(resp.Body)
-				Expect(responseString).To(MatchJSON(`{
-					"total_policies": 0,
-					"policies": []
-				}`))
-			})
-		})
-
-		Context("when all of the deletes succeed", func() {
-			It("responds with 200 and a body of {} and we can see it is removed from the list", func() {
-				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
-				resp := makeAndDoRequest(
-					"DELETE",
-					fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
 					body,
 				)
 
@@ -517,8 +491,8 @@ var _ = Describe("External API", func() {
 						{"source": { "id": "some-non-existent-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } }
 					] }`)
 				resp := makeAndDoRequest(
-					"DELETE",
-					fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+					"POST",
+					fmt.Sprintf("http://%s:%d/networking/v0/external/policies/delete", conf.ListenHost, conf.ListenPort),
 					body,
 				)
 
@@ -569,8 +543,8 @@ var _ = Describe("External API", func() {
 			By("reusing tags that are no longer in use")
 			body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
 			resp = makeAndDoRequest(
-				"DELETE",
-				fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+				"POST",
+				fmt.Sprintf("http://%s:%d/networking/v0/external/policies/delete", conf.ListenHost, conf.ListenPort),
 				body,
 			)
 

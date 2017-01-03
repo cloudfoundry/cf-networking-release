@@ -20,10 +20,6 @@ type PoliciesDelete struct {
 }
 
 func (h *PoliciesDelete) ServeHTTP(w http.ResponseWriter, req *http.Request, tokenData uaa_client.CheckTokenResponse) {
-	if req.Method != "POST" {
-		h.Logger.Info("policy-delete", lager.Data{"warning": "legacy-mechanism", "method": req.Method})
-	}
-
 	bodyBytes, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		h.Logger.Error("body-read-failed", err)
