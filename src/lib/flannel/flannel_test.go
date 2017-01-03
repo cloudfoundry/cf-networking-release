@@ -14,7 +14,7 @@ var _ = Describe("Discovering the local subnet and flannel network", func() {
 	)
 
 	BeforeEach(func() {
-		contents := `FLANNEL_NETWORK=10.255.0.0/16
+		contents := `FLANNEL_NETWORK=10.240.0.0/12
 FLANNEL_SUBNET=10.255.19.1/24
 FLANNEL_MTU=1450
 FLANNEL_IPMASQ=false
@@ -35,7 +35,7 @@ FLANNEL_IPMASQ=false
 		subnet, network, err := networkInfo.DiscoverNetworkInfo()
 		Expect(err).NotTo(HaveOccurred())
 		Expect(subnet).To(Equal("10.255.19.1/24"))
-		Expect(network).To(Equal("10.255.0.0/16"))
+		Expect(network).To(Equal("10.240.0.0/12"))
 	})
 
 	Context("when there is a problem opening the file", func() {
@@ -52,6 +52,18 @@ FLANNEL_IPMASQ=false
 		It("returns a helpful error", func() {
 			Expect(ioutil.WriteFile(networkInfo.FlannelSubnetFilePath, []byte("boo"), 0600)).To(Succeed())
 
+			_, _, err := networkInfo.DiscoverNetworkInfo()
+			Expect(err).To(MatchError("unable to parse flannel subnet file"))
+		})
+	})
+
+	Context("when the file doesn't have a valid subnet entry", func() {
+		It("returns a helpful error", func() {
+			Expect(ioutil.WriteFile(networkInfo.FlannelSubnetFilePath, []byte(`FLANNEL_NETWORK=10.255.0.0/16
+FLANNEL_SUBNET=banana
+FLANNEL_MTU=1450
+FLANNEL_IPMASQ=false
+`), 0600)).To(Succeed())
 			_, _, err := networkInfo.DiscoverNetworkInfo()
 			Expect(err).To(MatchError("unable to parse flannel subnet file"))
 		})
