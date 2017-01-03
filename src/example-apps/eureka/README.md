@@ -91,18 +91,20 @@ cf remove-access frontend backend --protocol tcp --port 8080
 ## More Details
 
 These properties are set to have the `backend` register with it's IP
-address:
+address in the file `backend/src/main/resources/application.properties`:
 
-- `spring.cloud.inetutils.preferredNetworks`
-- `eureka.client.preferIpAddress=true`
+```
+eureka.client.preferIpAddress=true
+eureka.instance.hostname=${CF_INSTANCE_INTERNAL_IP}
+eureka.instance.nonSecurePort=${PORT}
+```
 
-They are both set in the `application.properties` file, but the former is
-overridden via an environment variable in the manifest to choose an IP address
-on the container overlay network:
-`SPRING_CLOUD_INETUTILS_PREFERREDNETWORKS: 10.255`
+This causes the backend instance to report its own address as the internal container-network address and port
+(not the external, NAT'ed address that the router uses to reach it).
 
-The `backend` registers with the `registry` via it's public address,
-`registry.bosh-lite.com`.  The `zuul-proxy` is also configured to look up
+
+The `backend` reaches the registry at the public address `registry.bosh-lite.com`.
+The `zuul-proxy` is also configured to look up
 services registered in eureka at this address. Edit this address if deploying
 to a CF on a different domain.
 

@@ -8,7 +8,6 @@ applications:
     no-route: true
     env:
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://registry.bosh-lite.com/eureka
-      SPRING_CLOUD_INETUTILS_PREFERREDNETWORKS: 10.255
   - name: frontend
     memory: 512M
     path: frontend/target/frontend-0.0.1-SNAPSHOT.jar
