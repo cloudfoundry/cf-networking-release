@@ -1,8 +1,24 @@
 # Information for operators
 
+### Flannel Network Configuration
+The default flannel network is `10.255.0.0/16` which will allow for a maximum of 256 cells.
+
+The network can be configured via the bosh property: `cni-flannel.flannel.Network`.
+
+For instance, to allow for up to 4096 cells, `10.240.0.0/12` could be used.
+
+It is safe to expand the network on a subsequent deploy.
+
+However, any changes which result in an IP range that does not completely contain the current network
+must be done with the --recreate option and may result in containers being unable to reach each
+other during the deploy.
+
+NOTE: On bosh-lite, the network should avoid any IP addresses that include the
+10.244 or 10.254 ranges, as those are both in use by bosh components.
+
 ### MTU
 Operators should not need to do any special configuration for MTUs.  The CNI plugins
-should automatically detect the host MTU and set the container MTU appropriately, 
+should automatically detect the host MTU and set the container MTU appropriately,
 accounting for any overhead.
 
 However, operators should understand that:
