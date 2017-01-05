@@ -67,7 +67,6 @@ var _ = Describe("space developer policy configuration", func() {
 			SkipVerifySSL: true,
 		})
 
-		// UAA group and user assignment stuff
 		uaaAdminClientToken, err := w.Clients.GetToken("admin", testConfig.AdminSecret)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -79,43 +78,72 @@ var _ = Describe("space developer policy configuration", func() {
 	})
 
 	AfterEach(func() {
-		Expect(cf.Cf("auth", config.AdminUser, config.AdminPassword).Wait(Timeout_Push)).To(gexec.Exit(0))
-		Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
+		By("logging in as admin and deleting the org", func() {
+			Expect(cf.Cf("auth", config.AdminUser, config.AdminPassword).Wait(Timeout_Push)).To(gexec.Exit(0))
+			Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
+		})
 	})
 
 	Describe("space developer with network.write scope", func() {
-		It("can create network policies in spaces they have access to", func(done Done) {
-			By("something")
-
-			Expect(cf.Cf("set-space-role", "space-developer", orgName, spaceNameA, "SpaceDeveloper").Wait(Timeout_Push)).To(gexec.Exit(0))
-			Expect(cf.Cf("set-space-role", "space-developer", orgName, spaceNameB, "SpaceDeveloper").Wait(Timeout_Push)).To(gexec.Exit(0))
-
-			// log in as user
-			Expect(cf.Cf("auth", "space-developer", "password").Wait(Timeout_Push)).To(gexec.Exit(0))
-			session := cf.Cf("oauth-token")
-			Expect(session.Wait(Timeout_Push)).To(gexec.Exit(0))
-			spaceDevUserToken := strings.TrimSpace(string(session.Out.Contents()))
-			Expect(cf.Cf("target", "-o", orgName, "-s", spaceNameA).Wait(Timeout_Push)).To(gexec.Exit(0))
-			session = cf.Cf("app", appA, "--guid")
-			Expect(session.Wait(Timeout_Push)).To(gexec.Exit(0))
-			appAGUID := strings.TrimSpace(string(session.Out.Contents()))
-			Expect(cf.Cf("target", "-o", orgName, "-s", spaceNameB).Wait(Timeout_Push)).To(gexec.Exit(0))
-			session = cf.Cf("app", appB, "--guid")
-			Expect(session.Wait(Timeout_Push)).To(gexec.Exit(0))
-			appBGUID := strings.TrimSpace(string(session.Out.Contents()))
-			err := policyClient.AddPolicies(spaceDevUserToken, []models.Policy{
-				models.Policy{
-					Source: models.Source{
-						ID: appAGUID,
-					},
-					Destination: models.Destination{
-						ID:       appBGUID,
-						Port:     1234,
-						Protocol: "tcp",
-					},
-				},
+		It("can create and delete network policies in spaces they have access to", func(done Done) {
+			By("setting space roles", func() {
+				Expect(cf.Cf("set-space-role", "space-developer", orgName, spaceNameA, "SpaceDeveloper").Wait(Timeout_Push)).To(gexec.Exit(0))
+				Expect(cf.Cf("set-space-role", "space-developer", orgName, spaceNameB, "SpaceDeveloper").Wait(Timeout_Push)).To(gexec.Exit(0))
 			})
-			Expect(err).NotTo(HaveOccurred())
+
+			var spaceDevUserToken string
+			By("logging in and getting the space developer user token", func() {
+				Expect(cf.Cf("auth", "space-developer", "password").Wait(Timeout_Push)).To(gexec.Exit(0))
+				session := cf.Cf("oauth-token")
+				Expect(session.Wait(Timeout_Push)).To(gexec.Exit(0))
+				spaceDevUserToken = strings.TrimSpace(string(session.Out.Contents()))
+			})
+
+			var appAGUID, appBGUID string
+			By("getting the app guids", func() {
+				Expect(cf.Cf("target", "-o", orgName, "-s", spaceNameA).Wait(Timeout_Push)).To(gexec.Exit(0))
+				session := cf.Cf("app", appA, "--guid")
+				Expect(session.Wait(Timeout_Push)).To(gexec.Exit(0))
+				appAGUID = strings.TrimSpace(string(session.Out.Contents()))
+
+				Expect(cf.Cf("target", "-o", orgName, "-s", spaceNameB).Wait(Timeout_Push)).To(gexec.Exit(0))
+				session = cf.Cf("app", appB, "--guid")
+				Expect(session.Wait(Timeout_Push)).To(gexec.Exit(0))
+				appBGUID = strings.TrimSpace(string(session.Out.Contents()))
+			})
+
+			By("creating a policy", func() {
+				err := policyClient.AddPolicies(spaceDevUserToken, []models.Policy{
+					models.Policy{
+						Source: models.Source{
+							ID: appAGUID,
+						},
+						Destination: models.Destination{
+							ID:       appBGUID,
+							Port:     1234,
+							Protocol: "tcp",
+						},
+					},
+				})
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			By("deleting the policy", func() {
+				err := policyClient.DeletePolicies(spaceDevUserToken, []models.Policy{
+					models.Policy{
+						Source: models.Source{
+							ID: appAGUID,
+						},
+						Destination: models.Destination{
+							ID:       appBGUID,
+							Port:     1234,
+							Protocol: "tcp",
+						},
+					},
+				})
+				Expect(err).NotTo(HaveOccurred())
+			})
+
 			close(done)
 		}, 60 /* <-- overall spec timeout in seconds */)
 	})

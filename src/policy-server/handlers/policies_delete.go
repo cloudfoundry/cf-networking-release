@@ -17,6 +17,7 @@ type PoliciesDelete struct {
 	Unmarshaler marshal.Unmarshaler
 	Store       store.Store
 	Validator   validator
+	PolicyGuard policyGuard
 }
 
 func (h *PoliciesDelete) ServeHTTP(w http.ResponseWriter, req *http.Request, tokenData uaa_client.CheckTokenResponse) {
@@ -43,6 +44,21 @@ func (h *PoliciesDelete) ServeHTTP(w http.ResponseWriter, req *http.Request, tok
 		h.Logger.Error("bad-request", err)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf(`{"error": "%s"}`, err)))
+		return
+	}
+
+	authorized, err := h.PolicyGuard.CheckAccess(payload.Policies, tokenData)
+	if err != nil {
+		h.Logger.Error("check-access-failed", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf(`{"error": "%s"}`, err)))
+		return
+	}
+	if !authorized {
+		message := "one or more applications cannot be found or accessed"
+		h.Logger.Info(fmt.Sprintf("check-access-failed: %s", message))
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte(fmt.Sprintf(`{"error": "%s"}`, message)))
 		return
 	}
 

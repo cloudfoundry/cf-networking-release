@@ -30,6 +30,7 @@ var _ = Describe("PoliciesDelete", func() {
 		fakeUnmarshaler  *lfakes.Unmarshaler
 		expectedPolicies []models.Policy
 		fakeValidator    *fakes.Validator
+		fakePolicyGuard  *fakes.PolicyGuard
 		tokenData        uaa_client.CheckTokenResponse
 	)
 
@@ -54,6 +55,7 @@ var _ = Describe("PoliciesDelete", func() {
 
 		fakeStore = &fakes.Store{}
 		fakeValidator = &fakes.Validator{}
+		fakePolicyGuard = &fakes.PolicyGuard{}
 		logger = lagertest.NewTestLogger("test")
 		fakeUnmarshaler = &lfakes.Unmarshaler{}
 		fakeUnmarshaler.UnmarshalStub = json.Unmarshal
@@ -62,6 +64,7 @@ var _ = Describe("PoliciesDelete", func() {
 			Unmarshaler: fakeUnmarshaler,
 			Store:       fakeStore,
 			Validator:   fakeValidator,
+			PolicyGuard: fakePolicyGuard,
 		}
 		resp = httptest.NewRecorder()
 
@@ -77,6 +80,7 @@ var _ = Describe("PoliciesDelete", func() {
 			Scope:    []string{"network.admin"},
 			UserName: "some_user",
 		}
+		fakePolicyGuard.CheckAccessReturns(true, nil)
 	})
 
 	It("removes the entry from the policy server", func() {
@@ -85,6 +89,10 @@ var _ = Describe("PoliciesDelete", func() {
 		Expect(fakeUnmarshaler.UnmarshalCallCount()).To(Equal(1))
 		bodyBytes, _ := fakeUnmarshaler.UnmarshalArgsForCall(0)
 		Expect(bodyBytes).To(Equal([]byte(requestJSON)))
+		Expect(fakePolicyGuard.CheckAccessCallCount()).To(Equal(1))
+		policies, token := fakePolicyGuard.CheckAccessArgsForCall(0)
+		Expect(policies).To(Equal(expectedPolicies))
+		Expect(token).To(Equal(tokenData))
 		Expect(fakeStore.DeleteCallCount()).To(Equal(1))
 		Expect(fakeStore.DeleteArgsForCall(0)).To(Equal(expectedPolicies))
 		Expect(resp.Code).To(Equal(http.StatusOK))
@@ -94,6 +102,40 @@ var _ = Describe("PoliciesDelete", func() {
 	It("logs the policy with username and app guid", func() {
 		handler.ServeHTTP(resp, request, tokenData)
 		Expect(logger).To(gbytes.Say("policy-delete.*some-app-guid.*some_user"))
+	})
+
+	Context("when the policy guard returns false", func() {
+		BeforeEach(func() {
+			fakePolicyGuard.CheckAccessReturns(false, nil)
+		})
+
+		It("responds with code 403", func() {
+			handler.ServeHTTP(resp, request, tokenData)
+			Expect(resp.Code).To(Equal(http.StatusForbidden))
+			Expect(resp.Body.String()).To(MatchJSON(`{"error": "one or more applications cannot be found or accessed"}`))
+		})
+
+		It("logs the failure", func() {
+			handler.ServeHTTP(resp, request, tokenData)
+			Expect(logger).To(gbytes.Say("check-access-failed.*one or more applications cannot be found or accessed"))
+		})
+	})
+
+	Context("when the policy guard returns an error", func() {
+		BeforeEach(func() {
+			fakePolicyGuard.CheckAccessReturns(false, errors.New("banana"))
+		})
+
+		It("responds with code 500 and a useful error", func() {
+			handler.ServeHTTP(resp, request, tokenData)
+			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
+			Expect(resp.Body.String()).To(MatchJSON(`{"error": "banana"}`))
+		})
+
+		It("logs the full error", func() {
+			handler.ServeHTTP(resp, request, tokenData)
+			Expect(logger).To(gbytes.Say("check-access-failed.*banana"))
+		})
 	})
 
 	Context("when a policy to delete includes any validation error", func() {

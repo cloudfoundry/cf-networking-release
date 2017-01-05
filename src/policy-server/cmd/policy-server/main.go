@@ -162,6 +162,7 @@ func main() {
 		Store:       dataStore,
 		Unmarshaler: unmarshaler,
 		Validator:   validator,
+		PolicyGuard: policyGuard,
 	}
 
 	policiesIndexHandler := &handlers.PoliciesIndex{
@@ -204,7 +205,7 @@ func main() {
 	handlers := rata.Handlers{
 		"uptime":          uptimeHandler,
 		"create_policies": networkWriteAuthenticator.Wrap(createPolicyHandler),
-		"delete_policies": authenticator.Wrap(deletePolicyHandler),
+		"delete_policies": networkWriteAuthenticator.Wrap(deletePolicyHandler),
 		"policies_index":  authenticator.Wrap(policiesIndexHandler),
 		"cleanup":         authenticator.Wrap(policiesCleanupHandler),
 		"tags_index":      authenticator.Wrap(tagsIndexHandler),
