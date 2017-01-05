@@ -21,9 +21,14 @@ type SinglePollCycle struct {
 	Planners          []Planner
 	Enforcer          ruleEnforcer
 	CollectionEmitter agent_metrics.TimeMetricsEmitter
+	ruleSets          map[enforcer.Chain]enforcer.RulesWithChain
 }
 
 func (m *SinglePollCycle) DoCycle() error {
+	if m.ruleSets == nil {
+		m.ruleSets = make(map[enforcer.Chain]enforcer.RulesWithChain)
+	}
+
 	pollStartTime := time.Now()
 	var enforceDuration time.Duration
 	for _, p := range m.Planners {
@@ -32,10 +37,16 @@ func (m *SinglePollCycle) DoCycle() error {
 			return fmt.Errorf("get-rules: %s", err)
 		}
 		enforceStartTime := time.Now()
-		err = m.Enforcer.EnforceRulesAndChain(ruleSet)
-		if err != nil {
-			return fmt.Errorf("enforce: %s", err)
+
+		oldRuleSet := m.ruleSets[ruleSet.Chain]
+		if !ruleSet.Equals(oldRuleSet) {
+			err = m.Enforcer.EnforceRulesAndChain(ruleSet)
+			if err != nil {
+				return fmt.Errorf("enforce: %s", err)
+			}
+			m.ruleSets[ruleSet.Chain] = ruleSet
 		}
+
 		enforceDuration += time.Now().Sub(enforceStartTime)
 	}
 

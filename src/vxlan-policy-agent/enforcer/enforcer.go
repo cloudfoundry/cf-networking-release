@@ -47,6 +47,29 @@ type RulesWithChain struct {
 	Rules []rules.IPTablesRule
 }
 
+func (r *RulesWithChain) Equals(other RulesWithChain) bool {
+	if r.Chain != other.Chain {
+		return false
+	}
+
+	if len(r.Rules) != len(other.Rules) {
+		return false
+	}
+
+	for i, rule := range r.Rules {
+		otherRule := other.Rules[i]
+		if len(rule) != len(otherRule) {
+			return false
+		}
+		for j, _ := range rule {
+			if rule[j] != otherRule[j] {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 func (e *Enforcer) EnforceRulesAndChain(rulesAndChain RulesWithChain) error {
 	return e.EnforceOnChain(rulesAndChain.Chain, rulesAndChain.Rules)
 }

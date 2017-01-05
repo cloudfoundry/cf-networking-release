@@ -160,4 +160,72 @@ var _ = Describe("Enforcer", func() {
 			})
 		})
 	})
+	Describe("RulesWithChain", func() {
+		Describe("Equals", func() {
+			var ruleSet, otherRuleSet enforcer.RulesWithChain
+
+			BeforeEach(func() {
+				ruleSet = enforcer.RulesWithChain{
+					Chain: enforcer.Chain{
+						Table:       "table",
+						ParentChain: "parent",
+						Prefix:      "prefix",
+					},
+					Rules: []rules.IPTablesRule{[]string{"rule1"}},
+				}
+				otherRuleSet = enforcer.RulesWithChain{
+					Chain: enforcer.Chain{
+						Table:       "table",
+						ParentChain: "parent",
+						Prefix:      "prefix",
+					},
+					Rules: []rules.IPTablesRule{[]string{"rule1"}},
+				}
+
+			})
+
+			Context("when the rule sets are the same", func() {
+				It("returns true if the rules are the same", func() {
+					Expect(ruleSet.Equals(otherRuleSet)).To(BeTrue())
+				})
+			})
+
+			Context("when the chain names are different", func() {
+				BeforeEach(func() {
+					otherRuleSet.Chain.Table = "other"
+				})
+				It("returns false", func() {
+					Expect(ruleSet.Equals(otherRuleSet)).To(BeFalse())
+				})
+			})
+
+			Context("when the rule sets are different", func() {
+				BeforeEach(func() {
+					otherRuleSet.Rules = []rules.IPTablesRule{[]string{"other-rule"}}
+				})
+				It("returns false", func() {
+					Expect(ruleSet.Equals(otherRuleSet)).To(BeFalse())
+				})
+			})
+
+			Context("when the rule sets are both empty", func() {
+				BeforeEach(func() {
+					ruleSet.Rules = []rules.IPTablesRule{}
+					otherRuleSet.Rules = []rules.IPTablesRule{}
+				})
+				It("returns true", func() {
+					Expect(ruleSet.Equals(otherRuleSet)).To(BeTrue())
+				})
+			})
+
+			Context("when the rule sets are different lengths", func() {
+				BeforeEach(func() {
+					otherRuleSet.Rules = []rules.IPTablesRule{[]string{"rule1", "other-rule"}}
+				})
+				It("returns false", func() {
+					Expect(ruleSet.Equals(otherRuleSet)).To(BeFalse())
+				})
+			})
+		})
+	})
 })

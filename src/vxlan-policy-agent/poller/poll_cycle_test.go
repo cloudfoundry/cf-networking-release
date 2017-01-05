@@ -39,7 +39,7 @@ var _ = Describe("Single Poll Cycle", func() {
 			}
 
 			localRulesWithChain = enforcer.RulesWithChain{
-				Rules: []rules.IPTablesRule{},
+				Rules: []rules.IPTablesRule{[]string{"local-rule"}},
 				Chain: enforcer.Chain{
 					Table:       "local-table",
 					ParentChain: "INPUT",
@@ -47,7 +47,7 @@ var _ = Describe("Single Poll Cycle", func() {
 				},
 			}
 			remoteRulesWithChain = enforcer.RulesWithChain{
-				Rules: []rules.IPTablesRule{},
+				Rules: []rules.IPTablesRule{[]string{"remote-rule"}},
 				Chain: enforcer.Chain{
 					Table:       "remote-table",
 					ParentChain: "INPUT",
@@ -55,7 +55,7 @@ var _ = Describe("Single Poll Cycle", func() {
 				},
 			}
 			policyRulesWithChain = enforcer.RulesWithChain{
-				Rules: []rules.IPTablesRule{},
+				Rules: []rules.IPTablesRule{[]string{"policy-rule"}},
 				Chain: enforcer.Chain{
 					Table:       "policy-table",
 					ParentChain: "INPUT",
@@ -72,6 +72,7 @@ var _ = Describe("Single Poll Cycle", func() {
 			err := p.DoCycle()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(fakeLocalPlanner.GetRulesAndChainCallCount()).To(Equal(1))
+			Expect(fakeRemotePlanner.GetRulesAndChainCallCount()).To(Equal(1))
 			Expect(fakePolicyPlanner.GetRulesAndChainCallCount()).To(Equal(1))
 			Expect(fakeEnforcer.EnforceRulesAndChainCallCount()).To(Equal(3))
 
@@ -87,6 +88,79 @@ var _ = Describe("Single Poll Cycle", func() {
 			err := p.DoCycle()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(timeMetricsEmitter.EmitAllCallCount()).To(Equal(1))
+		})
+
+		Context("when a ruleset has not changed since the last poll cycle", func() {
+			BeforeEach(func() {
+				err := p.DoCycle()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(fakeEnforcer.EnforceRulesAndChainCallCount()).To(Equal(3))
+			})
+
+			It("does not re-write the ip tables rules", func() {
+				err := p.DoCycle()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(fakeLocalPlanner.GetRulesAndChainCallCount()).To(Equal(2))
+				Expect(fakeRemotePlanner.GetRulesAndChainCallCount()).To(Equal(2))
+				Expect(fakePolicyPlanner.GetRulesAndChainCallCount()).To(Equal(2))
+
+				Expect(fakeEnforcer.EnforceRulesAndChainCallCount()).To(Equal(3))
+			})
+		})
+
+		Context("when a ruleset has changed since the last poll cycle", func() {
+			BeforeEach(func() {
+				err := p.DoCycle()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(fakeEnforcer.EnforceRulesAndChainCallCount()).To(Equal(3))
+				localRulesWithChain.Rules = []rules.IPTablesRule{[]string{"new-rule"}}
+				fakeLocalPlanner.GetRulesAndChainReturns(localRulesWithChain, nil)
+			})
+
+			It("re-writes the ip tables rules for that chain", func() {
+				err := p.DoCycle()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(fakeLocalPlanner.GetRulesAndChainCallCount()).To(Equal(2))
+				Expect(fakeRemotePlanner.GetRulesAndChainCallCount()).To(Equal(2))
+				Expect(fakePolicyPlanner.GetRulesAndChainCallCount()).To(Equal(2))
+
+				Expect(fakeEnforcer.EnforceRulesAndChainCallCount()).To(Equal(4))
+			})
+		})
+
+		Context("when a ruleset has all rules removed since the last poll cycle", func() {
+			BeforeEach(func() {
+				err := p.DoCycle()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(fakeEnforcer.EnforceRulesAndChainCallCount()).To(Equal(3))
+				localRulesWithChain.Rules = []rules.IPTablesRule{}
+				fakeLocalPlanner.GetRulesAndChainReturns(localRulesWithChain, nil)
+			})
+
+			It("re-writes the ip tables rules for that chain", func() {
+				err := p.DoCycle()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(fakeLocalPlanner.GetRulesAndChainCallCount()).To(Equal(2))
+				Expect(fakeRemotePlanner.GetRulesAndChainCallCount()).To(Equal(2))
+				Expect(fakePolicyPlanner.GetRulesAndChainCallCount()).To(Equal(2))
+
+				Expect(fakeEnforcer.EnforceRulesAndChainCallCount()).To(Equal(4))
+			})
+		})
+
+		Context("when a new empty chain is created", func() {
+			BeforeEach(func() {
+				localRulesWithChain.Rules = []rules.IPTablesRule{}
+				fakeLocalPlanner.GetRulesAndChainReturns(localRulesWithChain, nil)
+			})
+
+			It("enforces the rules for that chain", func() {
+				err := p.DoCycle()
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(fakeEnforcer.EnforceRulesAndChainCallCount()).To(Equal(3))
+				Expect(timeMetricsEmitter.EmitAllCallCount()).To(Equal(1))
+			})
 		})
 
 		Context("when the local planner errors", func() {
