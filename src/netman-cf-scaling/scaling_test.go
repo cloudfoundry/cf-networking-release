@@ -220,6 +220,9 @@ func doAllPolicies(action string, source string, dstList []string, dstPorts []in
 func runWithTimeout(operation string, timeout time.Duration, work func()) {
 	done := make(chan bool)
 	go func() {
+		defer GinkgoRecover()
+		defer fmt.Printf("\nfailure during %s\n", operation)
+
 		By(fmt.Sprintf("starting %s\n", operation))
 		work()
 		done <- true
