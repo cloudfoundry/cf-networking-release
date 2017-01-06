@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"html/template"
 	"log"
-	"net"
 	"net/http"
 	"os"
 	"strconv"
@@ -105,22 +104,11 @@ var catPageTemplate string = `
 
 func (h *InfoHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	log.Printf("InfoHandler: request received from %s", req.RemoteAddr)
-	addrs, err := net.InterfaceAddrs()
-	if err != nil {
-		panic(err)
-	}
-	var overlayIP string
-	for _, addr := range addrs {
-		listenAddr := strings.Split(addr.String(), "/")[0]
-		if strings.HasPrefix(listenAddr, "10.255.") {
-			overlayIP = listenAddr
-		}
-	}
-
 	instanceIndex := os.Getenv("CF_INSTANCE_INDEX")
 
+	overlayIP := os.Getenv("CF_INSTANCE_INTERNAL_IP")
 	template := template.Must(template.New("publicPage").Parse(publicPageTemplate))
-	err = template.Execute(resp, PublicPage{
+	err := template.Execute(resp, PublicPage{
 		Stylesheet:    stylesheet,
 		OverlayIP:     overlayIP,
 		InstanceIndex: instanceIndex,
