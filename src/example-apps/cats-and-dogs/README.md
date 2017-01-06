@@ -47,7 +47,7 @@ Backend URL: [_____] [ Submit ]
 
 Enter the backend's overlay IP and port (10.255.76.2:9876) and hit submit. You will see an error message. This is because the two apps have not been configured to allow connections from the frontend to the backend. 
 
-To configure policies you must have the netman (CF CLI plugin)[https://github.com/cloudfoundry-incubator/netman-release/blob/develop/docs/CLI.md] installed. Now allow access:
+To configure policies you must have the netman [CF CLI plugin](https://github.com/cloudfoundry-incubator/netman-release/blob/develop/docs/CLI.md) installed. Now allow access:
 
 ```
 cf allow-access frontend backend --port 9876 --protocol tcp
