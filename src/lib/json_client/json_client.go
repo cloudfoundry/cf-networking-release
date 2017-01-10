@@ -1,7 +1,8 @@
-package policy_client
+package json_client
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -11,25 +12,35 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-//go:generate counterfeiter -o ../fakes/http_client.go --fake-name HTTPClient . httpClient
-type httpClient interface {
+//go:generate counterfeiter -o ../fakes/http_client.go --fake-name HTTPClient . HttpClient
+type HttpClient interface {
 	Do(*http.Request) (*http.Response, error)
 }
 
-//go:generate counterfeiter -o ../fakes/json_client.go --fake-name JSONClient . jsonClient
-type jsonClient interface {
+//go:generate counterfeiter -o ../fakes/json_client.go --fake-name JSONClient . JsonClient
+type JsonClient interface {
 	Do(method, route string, reqData, respData interface{}, token string) error
 }
 
-type JsonClient struct {
+func New(logger lager.Logger, httpClient HttpClient, baseURL string) JsonClient {
+	return &Client{
+		Logger:      logger,
+		HttpClient:  httpClient,
+		Url:         baseURL,
+		Marshaler:   marshal.MarshalFunc(json.Marshal),
+		Unmarshaler: marshal.UnmarshalFunc(json.Unmarshal),
+	}
+}
+
+type Client struct {
 	Logger      lager.Logger
-	HttpClient  httpClient
+	HttpClient  HttpClient
 	Url         string
 	Marshaler   marshal.Marshaler
 	Unmarshaler marshal.Unmarshaler
 }
 
-func (c *JsonClient) Do(method, route string, reqData, respData interface{}, token string) error {
+func (c *Client) Do(method, route string, reqData, respData interface{}, token string) error {
 	var reader io.Reader
 	if method != "GET" {
 		bodyBytes, err := c.Marshaler.Marshal(reqData)

@@ -1,8 +1,7 @@
 package policy_client
 
 import (
-	"encoding/json"
-	"lib/marshal"
+	"lib/json_client"
 	"lib/models"
 	"strings"
 
@@ -18,18 +17,12 @@ type ExternalPolicyClient interface {
 }
 
 type ExternalClient struct {
-	JsonClient jsonClient
+	JsonClient json_client.JsonClient
 }
 
-func NewExternal(logger lager.Logger, httpClient httpClient, url string) *ExternalClient {
+func NewExternal(logger lager.Logger, httpClient json_client.HttpClient, baseURL string) *ExternalClient {
 	return &ExternalClient{
-		JsonClient: &JsonClient{
-			Logger:      logger,
-			HttpClient:  httpClient,
-			Url:         url,
-			Marshaler:   marshal.MarshalFunc(json.Marshal),
-			Unmarshaler: marshal.UnmarshalFunc(json.Unmarshal),
-		},
+		JsonClient: json_client.New(logger, httpClient, baseURL),
 	}
 }
 

@@ -1,11 +1,11 @@
-package policy_client_test
+package json_client_test
 
 import (
 	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"lib/fakes"
-	"lib/policy_client"
+	"lib/json_client"
 	"lib/testsupport"
 	"net/http"
 	"strings"
@@ -21,7 +21,7 @@ import (
 
 var _ = Describe("JsonClient", func() {
 	var (
-		jsonClient       *policy_client.JsonClient
+		jsonClient       *json_client.Client
 		httpClient       *fakes.HTTPClient
 		fakeUnmarshaler  *lfakes.Unmarshaler
 		fakeMarshaler    *lfakes.Marshaler
@@ -41,7 +41,7 @@ var _ = Describe("JsonClient", func() {
 		fakeMarshaler = &lfakes.Marshaler{}
 		fakeMarshaler.MarshalStub = json.Marshal
 		logger = lagertest.NewTestLogger("test")
-		jsonClient = &policy_client.JsonClient{
+		jsonClient = &json_client.Client{
 			Logger:      logger,
 			HttpClient:  httpClient,
 			Url:         "http://some.url",
@@ -62,6 +62,7 @@ var _ = Describe("JsonClient", func() {
 		token = "some-token"
 		httpClient.DoReturns(returnedResponse, nil)
 	})
+
 	Describe("Do", func() {
 		It("makes non-GET requests with the given body", func() {
 			err := jsonClient.Do(method, route, reqData, &respData, token)

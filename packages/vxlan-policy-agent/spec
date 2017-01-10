@@ -36,6 +36,7 @@ files:
   - lib/datastore/*.go # gosub
   - lib/filelock/*.go # gosub
   - lib/flannel/*.go # gosub
+  - lib/json_client/*.go # gosub
   - lib/marshal/*.go # gosub
   - lib/metrics/*.go # gosub
   - lib/models/*.go # gosub

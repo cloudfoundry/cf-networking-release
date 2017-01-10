@@ -1,26 +1,19 @@
 package policy_client
 
 import (
-	"encoding/json"
-	"lib/marshal"
+	"lib/json_client"
 	"lib/models"
 
 	"code.cloudfoundry.org/lager"
 )
 
 type InternalClient struct {
-	JsonClient jsonClient
+	JsonClient json_client.JsonClient
 }
 
-func NewInternal(logger lager.Logger, httpClient httpClient, url string) *InternalClient {
+func NewInternal(logger lager.Logger, httpClient json_client.HttpClient, baseURL string) *InternalClient {
 	return &InternalClient{
-		JsonClient: &JsonClient{
-			Logger:      logger,
-			HttpClient:  httpClient,
-			Url:         url,
-			Marshaler:   marshal.MarshalFunc(json.Marshal),
-			Unmarshaler: marshal.UnmarshalFunc(json.Unmarshal),
-		},
+		JsonClient: json_client.New(logger, httpClient, baseURL),
 	}
 }
 

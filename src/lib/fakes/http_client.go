@@ -2,6 +2,7 @@
 package fakes
 
 import (
+	"lib/json_client"
 	"net/http"
 	"sync"
 )
@@ -73,3 +74,5 @@ func (fake *HTTPClient) recordInvocation(key string, args []interface{}) {
 	}
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
+
+var _ json_client.HttpClient = new(HTTPClient)

@@ -12,6 +12,7 @@ files:
   - code.cloudfoundry.org/lager/*.go # gosub
   - github.com/cloudfoundry/cli/plugin/*.go # gosub
   - github.com/cloudfoundry/cli/plugin/models/*.go # gosub
+  - lib/json_client/*.go # gosub
   - lib/marshal/*.go # gosub
   - lib/models/*.go # gosub
   - lib/policy_client/*.go # gosub
