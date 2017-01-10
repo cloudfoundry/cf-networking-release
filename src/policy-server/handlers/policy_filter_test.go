@@ -100,6 +100,19 @@ var _ = Describe("PolicyFilter", func() {
 			Expect(filteredPolicies).To(Equal(expected))
 		})
 
+		Context("when the filter results in zero policies", func() {
+			BeforeEach(func() {
+				fakeCCClient.GetUserSpacesReturns(map[string]struct{}{}, nil)
+			})
+
+			It("returns a non-null, but empty, slice of policies", func() {
+				filteredPolicies, err := policyFilter.FilterPolicies(policies, tokenData)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(filteredPolicies).NotTo(BeNil())
+				Expect(filteredPolicies).To(HaveLen(0))
+			})
+		})
+
 		Context("when the token has network.admin scope", func() {
 			BeforeEach(func() {
 				tokenData = uaa_client.CheckTokenResponse{

@@ -41,3 +41,62 @@ const UserSpaceEmpty = `{
   "next_url": null,
   "resources": []
 }`
+
+const UserSpaces = `{
+  "total_results": 2,
+  "total_pages": 1,
+  "prev_url": null,
+  "next_url": null,
+  "resources": [
+    {
+      "metadata": {
+        "guid": "space-1-guid",
+        "url": "/v2/spaces/space-1-guid",
+        "created_at": "2016-06-08T16:41:40Z",
+        "updated_at": "2016-06-08T16:41:26Z"
+      },
+      "entity": {
+        "name": "space-1-name",
+        "organization_guid": "org-1-guid",
+        "space_quota_definition_guid": null,
+        "allow_ssh": true,
+        "organization_url": "/v2/organizations/org-1-guid",
+        "developers_url": "/v2/spaces/space-1-guid/developers",
+        "managers_url": "/v2/spaces/space-1-guid/managers",
+        "auditors_url": "/v2/spaces/space-1-guid/auditors",
+        "apps_url": "/v2/spaces/space-1-guid/apps",
+        "routes_url": "/v2/spaces/space-1-guid/routes",
+        "domains_url": "/v2/spaces/space-1-guid/domains",
+        "service_instances_url": "/v2/spaces/space-1-guid/service_instances",
+        "app_events_url": "/v2/spaces/space-1-guid/app_events",
+        "events_url": "/v2/spaces/space-1-guid/events",
+        "security_groups_url": "/v2/spaces/space-1-guid/security_groups"
+      }
+    },
+    {
+      "metadata": {
+        "guid": "space-2-guid",
+        "url": "/v2/spaces/space-2-guid",
+        "created_at": "2016-06-08T16:41:40Z",
+        "updated_at": "2016-06-08T16:41:26Z"
+      },
+      "entity": {
+        "name": "space-2-name",
+        "organization_guid": "org-2-guid",
+        "space_quota_definition_guid": null,
+        "allow_ssh": true,
+        "organization_url": "/v2/organizations/org-2-guid",
+        "developers_url": "/v2/spaces/space-2-guid/developers",
+        "managers_url": "/v2/spaces/space-2-guid/managers",
+        "auditors_url": "/v2/spaces/space-2-guid/auditors",
+        "apps_url": "/v2/spaces/space-2-guid/apps",
+        "routes_url": "/v2/spaces/space-2-guid/routes",
+        "domains_url": "/v2/spaces/space-2-guid/domains",
+        "service_instances_url": "/v2/spaces/space-2-guid/service_instances",
+        "app_events_url": "/v2/spaces/space-2-guid/app_events",
+        "events_url": "/v2/spaces/space-2-guid/events",
+        "security_groups_url": "/v2/spaces/space-2-guid/security_groups"
+      }
+    }
+  ]
+}`

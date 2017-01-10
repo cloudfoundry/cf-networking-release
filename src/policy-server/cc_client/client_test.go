@@ -31,7 +31,7 @@ var _ = Describe("Client", func() {
 		fakeHTTPClient = &fakes.HTTPClient{}
 		logger = lagertest.NewTestLogger("test")
 		client = &cc_client.Client{
-			Host:       "some.url",
+			Host:       "https://some.base.url",
 			HTTPClient: fakeHTTPClient,
 			Logger:     logger,
 		}
@@ -60,7 +60,7 @@ var _ = Describe("Client", func() {
 			Expect(fakeHTTPClient.DoCallCount()).To(Equal(1))
 			request := fakeHTTPClient.DoArgsForCall(0)
 			Expect(request.Method).To(Equal("GET"))
-			Expect(request.URL.String()).To(Equal("some.url/v3/apps"))
+			Expect(request.URL.String()).To(Equal("https://some.base.url/v3/apps"))
 			authHeader := request.Header["Authorization"]
 			Expect(authHeader).To(HaveLen(1))
 			Expect(authHeader[0]).To(Equal("bearer some-token"))
@@ -168,7 +168,7 @@ var _ = Describe("Client", func() {
 			Expect(fakeHTTPClient.DoCallCount()).To(Equal(1))
 			request := fakeHTTPClient.DoArgsForCall(0)
 			Expect(request.Method).To(Equal("GET"))
-			Expect(request.URL.String()).To(Equal("some.url/v3/apps?guids=live-app-1-guid,live-app-2-guid"))
+			Expect(request.URL.String()).To(Equal("https://some.base.url/v3/apps?guids=live-app-1-guid,live-app-2-guid"))
 			authHeader := request.Header["Authorization"]
 			Expect(authHeader).To(HaveLen(1))
 			Expect(authHeader[0]).To(Equal("bearer some-token"))
@@ -295,7 +295,7 @@ var _ = Describe("Client", func() {
 			Expect(fakeHTTPClient.DoCallCount()).To(Equal(1))
 			request := fakeHTTPClient.DoArgsForCall(0)
 			Expect(request.Method).To(Equal("GET"))
-			Expect(request.URL.String()).To(Equal("some.url/v2/spaces/some-space-guid"))
+			Expect(request.URL.String()).To(Equal("https://some.base.url/v2/spaces/some-space-guid"))
 			authHeader := request.Header["Authorization"]
 			Expect(authHeader).To(HaveLen(1))
 			Expect(authHeader[0]).To(Equal("bearer some-token"))
@@ -383,6 +383,73 @@ var _ = Describe("Client", func() {
 		})
 	})
 
+	Describe("GetAppSpaces", func() {
+		var appGUIDs []string
+		expectedAppSpaces := map[string]string{
+			"live-app-1-guid": "space-1-guid",
+			"live-app-2-guid": "space-1-guid",
+			"live-app-3-guid": "space-2-guid",
+			"live-app-4-guid": "space-2-guid",
+			"live-app-5-guid": "space-3-guid",
+		}
+		BeforeEach(func() {
+			appGUIDs = []string{}
+			for key, _ := range expectedAppSpaces {
+				appGUIDs = append(appGUIDs, key)
+			}
+			fakeHTTPClient.DoReturns(
+				&http.Response{
+					StatusCode: 200,
+					Body:       ioutil.NopCloser(bytes.NewReader([]byte(fixtures.AppsV3))),
+				}, nil)
+		})
+		It("returns the map from app to its space", func() {
+			appSpaceMap, err := client.GetAppSpaces("some-token", appGUIDs)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(fakeHTTPClient.DoCallCount()).To(Equal(1))
+			request := fakeHTTPClient.DoArgsForCall(0)
+			Expect(request.Method).To(Equal("GET"))
+			Expect(request.URL.Scheme).To(Equal("https"))
+			Expect(request.URL.Path).To(Equal("/v3/apps"))
+
+			authHeader := request.Header["Authorization"]
+			Expect(authHeader).To(HaveLen(1))
+			Expect(authHeader[0]).To(Equal("bearer some-token"))
+
+			Expect(appSpaceMap).To(Equal(expectedAppSpaces))
+		})
+	})
+
+	Describe("GetUserSpaces", func() {
+		expectedUserSpaces := map[string]struct{}{
+			"space-1-guid": struct{}{},
+			"space-2-guid": struct{}{},
+		}
+		BeforeEach(func() {
+			fakeHTTPClient.DoReturns(
+				&http.Response{
+					StatusCode: 200,
+					Body:       ioutil.NopCloser(bytes.NewReader([]byte(fixtures.UserSpaces))),
+				}, nil)
+		})
+		It("returns the list of spaces a user has access to", func() {
+			userSpaces, err := client.GetUserSpaces("some-token", "some-user-guid")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(fakeHTTPClient.DoCallCount()).To(Equal(1))
+			request := fakeHTTPClient.DoArgsForCall(0)
+			Expect(request.Method).To(Equal("GET"))
+			Expect(request.URL.Path).To(Equal("/v2/users/some-user-guid/spaces"))
+
+			authHeader := request.Header["Authorization"]
+			Expect(authHeader).To(HaveLen(1))
+			Expect(authHeader[0]).To(Equal("bearer some-token"))
+
+			Expect(userSpaces).To(Equal(expectedUserSpaces))
+		})
+	})
+
 	Describe("GetUserSpace", func() {
 		var space = models.Space{
 			Name:    "some-space-name",
@@ -403,7 +470,7 @@ var _ = Describe("Client", func() {
 			Expect(fakeHTTPClient.DoCallCount()).To(Equal(1))
 			request := fakeHTTPClient.DoArgsForCall(0)
 			Expect(request.Method).To(Equal("GET"))
-			Expect(request.URL.String()).To(Equal("some.url/v2/spaces?q=developer_guid%3Asome-developer-guid&q=name%3Asome-space-name&q=organization_guid%3Asome-org-guid"))
+			Expect(request.URL.String()).To(Equal("https://some.base.url/v2/spaces?q=developer_guid%3Asome-developer-guid&q=name%3Asome-space-name&q=organization_guid%3Asome-org-guid"))
 			authHeader := request.Header["Authorization"]
 			Expect(authHeader).To(HaveLen(1))
 			Expect(authHeader[0]).To(Equal("bearer some-token"))

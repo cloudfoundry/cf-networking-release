@@ -46,7 +46,7 @@ func (g *PolicyFilter) FilterPolicies(policies []models.Policy, userToken uaa_cl
 }
 
 func filter(policies []models.Policy, appSpaces map[string]string, userSpaces map[string]struct{}) []models.Policy {
-	var filtered []models.Policy
+	filtered := []models.Policy{}
 
 	for _, policy := range policies {
 		_, sourceFound := userSpaces[appSpaces[policy.Source.ID]]

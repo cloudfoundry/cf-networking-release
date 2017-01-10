@@ -13,7 +13,7 @@ import (
 
 //go:generate counterfeiter -o ../fakes/policy_filter.go --fake-name PolicyFilter . policyFilter
 type policyFilter interface {
-	FilterPolicies(policies []models.Policy) ([]models.Policy, error)
+	FilterPolicies(policies []models.Policy, userToken uaa_client.CheckTokenResponse) ([]models.Policy, error)
 }
 
 type PoliciesIndex struct {
@@ -23,7 +23,7 @@ type PoliciesIndex struct {
 	PolicyFilter policyFilter
 }
 
-func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request, _ uaa_client.CheckTokenResponse) {
+func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request, userToken uaa_client.CheckTokenResponse) {
 	policies, err := h.Store.All()
 	if err != nil {
 		h.Logger.Error("store-list-policies-failed", err)
@@ -39,7 +39,7 @@ func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request, _ ua
 		policies = filterByID(policies, ids)
 	}
 
-	policies, err = h.PolicyFilter.FilterPolicies(policies)
+	policies, err = h.PolicyFilter.FilterPolicies(policies, userToken)
 	if err != nil {
 		h.Logger.Error("filter-policies-failed", err)
 		w.WriteHeader(http.StatusInternalServerError)

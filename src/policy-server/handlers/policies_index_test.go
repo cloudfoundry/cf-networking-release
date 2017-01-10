@@ -84,7 +84,7 @@ var _ = Describe("Policies index handler", func() {
 		fakeStore = &fakes.Store{}
 		fakeStore.AllReturns(allPolicies, nil)
 		fakePolicyFilter = &fakes.PolicyFilter{}
-		fakePolicyFilter.FilterPoliciesStub = func(policies []models.Policy) ([]models.Policy, error) {
+		fakePolicyFilter.FilterPoliciesStub = func(policies []models.Policy, userToken uaa_client.CheckTokenResponse) ([]models.Policy, error) {
 			return filteredPolicies, nil
 		}
 		logger = lagertest.NewTestLogger("test")
@@ -95,7 +95,11 @@ var _ = Describe("Policies index handler", func() {
 			PolicyFilter: fakePolicyFilter,
 		}
 
-		token = uaa_client.CheckTokenResponse{}
+		token = uaa_client.CheckTokenResponse{
+			Scope:    []string{"some-scope", "some-other-scope"},
+			UserID:   "some-user-id",
+			UserName: "some-user",
+		}
 		resp = httptest.NewRecorder()
 	})
 
@@ -174,7 +178,9 @@ var _ = Describe("Policies index handler", func() {
 
 			Expect(fakeStore.AllCallCount()).To(Equal(1))
 			Expect(fakePolicyFilter.FilterPoliciesCallCount()).To(Equal(1))
-			Expect(fakePolicyFilter.FilterPoliciesArgsForCall(0)).To(Equal(filteredByID))
+			policies, userToken := fakePolicyFilter.FilterPoliciesArgsForCall(0)
+			Expect(policies).To(Equal(filteredByID))
+			Expect(userToken).To(Equal(token))
 			Expect(resp.Code).To(Equal(http.StatusOK))
 		})
 
@@ -186,7 +192,11 @@ var _ = Describe("Policies index handler", func() {
 			handler.ServeHTTP(resp, request, token)
 			Expect(fakeStore.AllCallCount()).To(Equal(1))
 			Expect(fakePolicyFilter.FilterPoliciesCallCount()).To(Equal(1))
-			Expect(fakePolicyFilter.FilterPoliciesArgsForCall(0)).To(Equal([]models.Policy{}))
+
+			policies, userToken := fakePolicyFilter.FilterPoliciesArgsForCall(0)
+			Expect(policies).To(Equal([]models.Policy{}))
+			Expect(userToken).To(Equal(token))
+
 			Expect(resp.Code).To(Equal(http.StatusOK))
 		})
 	})

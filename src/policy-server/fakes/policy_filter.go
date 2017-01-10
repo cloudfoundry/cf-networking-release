@@ -3,14 +3,16 @@ package fakes
 
 import (
 	"policy-server/models"
+	"policy-server/uaa_client"
 	"sync"
 )
 
 type PolicyFilter struct {
-	FilterPoliciesStub        func(policies []models.Policy) ([]models.Policy, error)
+	FilterPoliciesStub        func(policies []models.Policy, userToken uaa_client.CheckTokenResponse) ([]models.Policy, error)
 	filterPoliciesMutex       sync.RWMutex
 	filterPoliciesArgsForCall []struct {
-		policies []models.Policy
+		policies  []models.Policy
+		userToken uaa_client.CheckTokenResponse
 	}
 	filterPoliciesReturns struct {
 		result1 []models.Policy
@@ -20,7 +22,7 @@ type PolicyFilter struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *PolicyFilter) FilterPolicies(policies []models.Policy) ([]models.Policy, error) {
+func (fake *PolicyFilter) FilterPolicies(policies []models.Policy, userToken uaa_client.CheckTokenResponse) ([]models.Policy, error) {
 	var policiesCopy []models.Policy
 	if policies != nil {
 		policiesCopy = make([]models.Policy, len(policies))
@@ -28,12 +30,13 @@ func (fake *PolicyFilter) FilterPolicies(policies []models.Policy) ([]models.Pol
 	}
 	fake.filterPoliciesMutex.Lock()
 	fake.filterPoliciesArgsForCall = append(fake.filterPoliciesArgsForCall, struct {
-		policies []models.Policy
-	}{policiesCopy})
-	fake.recordInvocation("FilterPolicies", []interface{}{policiesCopy})
+		policies  []models.Policy
+		userToken uaa_client.CheckTokenResponse
+	}{policiesCopy, userToken})
+	fake.recordInvocation("FilterPolicies", []interface{}{policiesCopy, userToken})
 	fake.filterPoliciesMutex.Unlock()
 	if fake.FilterPoliciesStub != nil {
-		return fake.FilterPoliciesStub(policies)
+		return fake.FilterPoliciesStub(policies, userToken)
 	} else {
 		return fake.filterPoliciesReturns.result1, fake.filterPoliciesReturns.result2
 	}
@@ -45,10 +48,10 @@ func (fake *PolicyFilter) FilterPoliciesCallCount() int {
 	return len(fake.filterPoliciesArgsForCall)
 }
 
-func (fake *PolicyFilter) FilterPoliciesArgsForCall(i int) []models.Policy {
+func (fake *PolicyFilter) FilterPoliciesArgsForCall(i int) ([]models.Policy, uaa_client.CheckTokenResponse) {
 	fake.filterPoliciesMutex.RLock()
 	defer fake.filterPoliciesMutex.RUnlock()
-	return fake.filterPoliciesArgsForCall[i].policies
+	return fake.filterPoliciesArgsForCall[i].policies, fake.filterPoliciesArgsForCall[i].userToken
 }
 
 func (fake *PolicyFilter) FilterPoliciesReturns(result1 []models.Policy, result2 error) {

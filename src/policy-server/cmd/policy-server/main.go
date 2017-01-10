@@ -147,6 +147,12 @@ func main() {
 		UAAClient: uaaClient,
 		CCClient:  ccClient,
 	}
+
+	policyFilter := &handlers.PolicyFilter{
+		UAAClient: uaaClient,
+		CCClient:  ccClient,
+	}
+
 	validator := &handlers.Validator{}
 
 	createPolicyHandler := &handlers.PoliciesCreate{
@@ -166,9 +172,10 @@ func main() {
 	}
 
 	policiesIndexHandler := &handlers.PoliciesIndex{
-		Logger:    logger.Session("policies-index"),
-		Store:     dataStore,
-		Marshaler: marshal.MarshalFunc(json.Marshal),
+		Logger:       logger.Session("policies-index"),
+		Store:        dataStore,
+		Marshaler:    marshal.MarshalFunc(json.Marshal),
+		PolicyFilter: policyFilter,
 	}
 
 	policiesCleanupHandler := &handlers.PoliciesCleanup{
@@ -206,7 +213,7 @@ func main() {
 		"uptime":          uptimeHandler,
 		"create_policies": networkWriteAuthenticator.Wrap(createPolicyHandler),
 		"delete_policies": networkWriteAuthenticator.Wrap(deletePolicyHandler),
-		"policies_index":  authenticator.Wrap(policiesIndexHandler),
+		"policies_index":  networkWriteAuthenticator.Wrap(policiesIndexHandler),
 		"cleanup":         authenticator.Wrap(policiesCleanupHandler),
 		"tags_index":      authenticator.Wrap(tagsIndexHandler),
 		"whoami":          authenticator.Wrap(whoamiHandler),

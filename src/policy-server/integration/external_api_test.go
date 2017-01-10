@@ -225,18 +225,21 @@ var _ = Describe("External API", func() {
 
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 				responseString, err := ioutil.ReadAll(resp.Body)
-				Expect(responseString).To(MatchJSON(`{ "policies": [] }`))
+				Expect(responseString).To(MatchJSON(`{
+					"total_policies": 0,
+					"policies": []
+				}`))
 			})
 
 			Context("when there are policies in spaces the user does not belong to", func() {
 				BeforeEach(func() {
-					body := `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "app-guid-not-in-my-spaces", "protocol": "tcp", "port": 8090 } } ] }`
+					body := `{ "policies": [ {"source": { "id": "live-app-1-guid" }, "destination": { "id": "live-app-5-guid", "protocol": "tcp", "port": 8090 } } ] }`
 					req = makeNewRequest("POST", "networking/v0/external/policies", body)
 					req.Header.Set("Authorization", "Bearer valid-token")
 					_, err := http.DefaultClient.Do(req)
 					Expect(err).NotTo(HaveOccurred())
 
-					body = `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-app-guid", "protocol": "tcp", "port": 8090 } } ] }`
+					body = `{ "policies": [ {"source": { "id": "live-app-1-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "port": 8090 } } ] }`
 					req = makeNewRequest("POST", "networking/v0/external/policies", body)
 					req.Header.Set("Authorization", "Bearer valid-token")
 					_, err = http.DefaultClient.Do(req)
@@ -249,7 +252,10 @@ var _ = Describe("External API", func() {
 
 					Expect(resp.StatusCode).To(Equal(http.StatusOK))
 					responseString, err := ioutil.ReadAll(resp.Body)
-					expectedResp := `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-app-guid", "protocol": "tcp", "port": 8090 } } ] }`
+					expectedResp := `{
+						"total_policies": 1,
+						"policies": [ {"source": { "id": "live-app-1-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "port": 8090 } } ] 
+					}`
 					Expect(responseString).To(MatchJSON(expectedResp))
 				})
 			})
@@ -258,7 +264,7 @@ var _ = Describe("External API", func() {
 				BeforeEach(func() {
 					req.Header.Set("Authorization", "Bearer space-dev-token")
 				})
-				It("returns a 403 with a meaninful error", func() {
+				It("returns a 403 with a meaningful error", func() {
 					resp, err := http.DefaultClient.Do(req)
 					Expect(err).NotTo(HaveOccurred())
 

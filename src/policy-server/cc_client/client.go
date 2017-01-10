@@ -49,6 +49,9 @@ type SpaceResponse struct {
 
 type SpacesResponse struct {
 	Resources []struct {
+		Metadata struct {
+			GUID string `json:"guid"`
+		}
 		Entity struct {
 			Name             string `json:"name"`
 			OrganizationGUID string `json:"organization_guid"`
@@ -106,7 +109,7 @@ func (c *Client) GetAllAppGUIDs(token string) (map[string]interface{}, error) {
 	return ret, nil
 }
 
-func (c *Client) GetSpaceGUIDs(token string, appGUIDs []string) ([]string, error) {
+func (c *Client) GetAppSpaces(token string, appGUIDs []string) (map[string]string, error) {
 	if len(appGUIDs) < 1 {
 		return nil, errors.New("list of app GUIDs must not be empty")
 	}
@@ -148,15 +151,31 @@ func (c *Client) GetSpaceGUIDs(token string, appGUIDs []string) ([]string, error
 		return nil, fmt.Errorf("pagination support not yet implemented")
 	}
 
-	set := make(map[string]struct{})
+	set := make(map[string]string)
 	for _, r := range response.Resources {
 		href := r.Links.Space.Href
 		parts := strings.Split(href, "/")
-		set[parts[len(parts)-1]] = struct{}{}
+		appID := r.GUID
+		spaceID := parts[len(parts)-1]
+		set[appID] = spaceID
 	}
-	ret := make([]string, 0, len(set))
-	for guid, _ := range set {
-		ret = append(ret, guid)
+	return set, nil
+}
+
+func (c *Client) GetSpaceGUIDs(token string, appGUIDs []string) ([]string, error) {
+	mapping, err := c.GetAppSpaces(token, appGUIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	deduplicated := map[string]struct{}{}
+	for _, spaceID := range mapping {
+		deduplicated[spaceID] = struct{}{}
+	}
+
+	ret := []string{}
+	for spaceID, _ := range deduplicated {
+		ret = append(ret, spaceID)
 	}
 
 	return ret, nil
@@ -254,13 +273,52 @@ func (c *Client) GetUserSpace(token, userGUID string, space models.Space) (*mode
 		Name:    response.Resources[0].Entity.Name,
 		OrgGUID: response.Resources[0].Entity.OrganizationGUID,
 	}, nil
-	return nil, nil
-}
-
-func (c *Client) GetAppSpaces(token string, appGUIDs []string) (map[string]string, error) {
-	return make(map[string]string)
 }
 
 func (c *Client) GetUserSpaces(token, userGUID string) (map[string]struct{}, error) {
-	return make(map[string]struct{})
+	reqURL := fmt.Sprintf("%s/v2/users/%s/spaces", c.Host, userGUID)
+	request, err := http.NewRequest("GET", reqURL, nil)
+	request.Header.Set("Authorization", fmt.Sprintf("bearer %s", token))
+	if err != nil {
+		return nil, fmt.Errorf("create HTTP request: %s", err) // untested
+	}
+
+	c.Logger.Debug("get_user_spaces", lager.Data{"URL": request.URL})
+
+	resp, err := c.HTTPClient.Do(request)
+	if err != nil {
+		return nil, fmt.Errorf("http client: %s", err)
+	}
+	defer resp.Body.Close()
+
+	respBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read body: %s", err)
+	}
+
+	if resp.StatusCode != 200 {
+		err = BadCCResponse{
+			StatusCode:     resp.StatusCode,
+			CCResponseBody: string(respBytes),
+		}
+		return nil, err
+	}
+
+	var response SpacesResponse
+	err = json.Unmarshal(respBytes, &response)
+	if err != nil {
+		return nil, fmt.Errorf("unmarshal json: %s", err)
+	}
+
+	userSpaces := map[string]struct{}{}
+	for _, space := range response.Resources {
+		spaceID := space.Metadata.GUID
+		userSpaces[spaceID] = struct{}{}
+	}
+
+	// get /v2/users/uaa-id-309/spaces
+	//    reference: https://apidocs.cloudfoundry.org/249/users/list_all_spaces_for_the_user.html
+	// unmarshal response
+
+	return userSpaces, nil
 }

@@ -66,6 +66,12 @@ var mockCCServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWrite
 		}
 	}
 
+	if r.URL.Path == "/v2/users/some-user-id/spaces" {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(fixtures.UserSpaces))
+		return
+	}
+
 	w.WriteHeader(http.StatusTeapot)
 	return
 }))
@@ -80,13 +86,13 @@ var mockUAAServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWrit
 			switch token {
 			case "valid-token":
 				w.WriteHeader(http.StatusOK)
-				w.Write([]byte(`{"scope":["network.admin"], "user_name":"some-user"}`))
+				w.Write([]byte(`{"scope":["network.admin"], "user_name":"some-user", "user_id": "some-user-id"}`))
 			case "space-dev-with-network-write-token":
 				w.WriteHeader(http.StatusOK)
-				w.Write([]byte(`{"scope":["network.write"], "user_name":"some-user"}`))
+				w.Write([]byte(`{"scope":["network.write"], "user_name":"some-user", "user_id": "some-user-id"}`))
 			case "space-dev-token":
 				w.WriteHeader(http.StatusOK)
-				w.Write([]byte(`{"scope":[], "user_name":"some-user"}`))
+				w.Write([]byte(`{"scope":[], "user_name":"some-user", "user_id": "some-user-id"}`))
 			default:
 				w.WriteHeader(http.StatusBadRequest)
 				w.Write([]byte(`{"error_description":"banana"}`))
