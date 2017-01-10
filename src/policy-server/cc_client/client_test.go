@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"lib/fakes"
+	"lib/json_client"
 	"lib/testsupport"
 	"net/http"
 	"policy-server/cc_client"
@@ -22,17 +23,22 @@ import (
 var _ = Describe("Client", func() {
 	var (
 		client         *cc_client.Client
+		jsonClient     json_client.JsonClient
 		fakeHTTPClient *fakes.HTTPClient
 		logger         *lagertest.TestLogger
 		expectedApps   map[string]interface{}
 	)
 
 	BeforeEach(func() {
+		baseURL := "https://some.base.url"
 		fakeHTTPClient = &fakes.HTTPClient{}
 		logger = lagertest.NewTestLogger("test")
+
+		jsonClient = json_client.New(logger, fakeHTTPClient, baseURL)
 		client = &cc_client.Client{
-			BaseURL:    "https://some.base.url",
+			BaseURL:    baseURL,
 			HTTPClient: fakeHTTPClient,
+			JSONClient: jsonClient,
 			Logger:     logger,
 		}
 		expectedApps = map[string]interface{}{
@@ -66,12 +72,6 @@ var _ = Describe("Client", func() {
 			Expect(authHeader[0]).To(Equal("bearer some-token"))
 			Expect(apps).To(Equal(expectedApps))
 		})
-
-		It("logs the request before sending", func() {
-			_, err := client.GetAllAppGUIDs("some-token")
-			Expect(err).NotTo(HaveOccurred())
-			Expect(logger).To(gbytes.Say("get_cc_apps"))
-		})
 	})
 
 	Context("when the http client returns an error", func() {
@@ -81,7 +81,7 @@ var _ = Describe("Client", func() {
 
 		It("returns a helpful error", func() {
 			_, err := client.GetAllAppGUIDs("some-token")
-			Expect(err).To(MatchError(ContainSubstring("http client: potato")))
+			Expect(err).To(MatchError(ContainSubstring("http client do: potato")))
 		})
 	})
 
@@ -92,7 +92,7 @@ var _ = Describe("Client", func() {
 
 		It("returns a helpful error", func() {
 			_, err := client.GetAllAppGUIDs("some-token")
-			Expect(err).To(MatchError(ContainSubstring("read body: banana")))
+			Expect(err).To(MatchError(ContainSubstring("body read: banana")))
 		})
 	})
 
@@ -107,7 +107,7 @@ var _ = Describe("Client", func() {
 
 		It("returns a helpful error", func() {
 			_, err := client.GetAllAppGUIDs("some-token")
-			Expect(err).To(MatchError(ContainSubstring("unmarshal json: invalid character")))
+			Expect(err).To(MatchError(ContainSubstring("json unmarshal: invalid character")))
 		})
 	})
 
@@ -123,7 +123,6 @@ var _ = Describe("Client", func() {
 					StatusCode: 200,
 					Body:       ioutil.NopCloser(bytes.NewReader([]byte(v3AppsMultiplePages))),
 				}, nil)
-
 		})
 
 		It("should immediately return an error", func() {
@@ -139,16 +138,11 @@ var _ = Describe("Client", func() {
 					StatusCode: 418,
 					Body:       ioutil.NopCloser(strings.NewReader("bad thing")),
 				}, nil)
-
 		})
 
 		It("returns the response body in the error", func() {
 			_, err := client.GetAllAppGUIDs("some-token")
-
-			Expect(err).To(Equal(cc_client.BadCCResponse{
-				StatusCode:     418,
-				CCResponseBody: "bad thing",
-			}))
+			Expect(err).To(MatchError(ContainSubstring("http client do: bad response status 418")))
 		})
 	})
 

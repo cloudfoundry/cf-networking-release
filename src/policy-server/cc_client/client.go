@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"lib/json_client"
 	"net/http"
 	"policy-server/models"
 	"strings"
@@ -20,7 +21,9 @@ type Client struct {
 	BaseURL    string
 	HTTPClient httpClient
 	Logger     lager.Logger
+	JSONClient json_client.JsonClient
 }
+
 type BadCCResponse struct {
 	StatusCode     int
 	CCResponseBody string
@@ -64,38 +67,12 @@ func (r BadCCResponse) Error() string {
 }
 
 func (c *Client) GetAllAppGUIDs(token string) (map[string]interface{}, error) {
-	reqURL := fmt.Sprintf("%s/v3/apps", c.BaseURL)
-	request, err := http.NewRequest("GET", reqURL, nil)
-	request.Header.Set("Authorization", fmt.Sprintf("bearer %s", token))
-	if err != nil {
-		return nil, fmt.Errorf("create HTTP request: %s", err) // untested
-	}
-
-	c.Logger.Debug("get_cc_apps", lager.Data{"URL": request.URL})
-
-	resp, err := c.HTTPClient.Do(request)
-	if err != nil {
-		return nil, fmt.Errorf("http client: %s", err)
-	}
-	defer resp.Body.Close()
-
-	respBytes, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("read body: %s", err)
-	}
-
-	if resp.StatusCode != 200 {
-		err = BadCCResponse{
-			StatusCode:     resp.StatusCode,
-			CCResponseBody: string(respBytes),
-		}
-		return nil, err
-	}
+	token = fmt.Sprintf("bearer %s", token)
 
 	var response AppsV3Response
-	err = json.Unmarshal(respBytes, &response)
+	err := c.JSONClient.Do("GET", "/v3/apps", nil, &response, token)
 	if err != nil {
-		return nil, fmt.Errorf("unmarshal json: %s", err)
+		return nil, err
 	}
 
 	if response.Pagination.TotalPages > 1 {
@@ -106,6 +83,7 @@ func (c *Client) GetAllAppGUIDs(token string) (map[string]interface{}, error) {
 	for _, r := range response.Resources {
 		ret[r.GUID] = nil
 	}
+
 	return ret, nil
 }
 

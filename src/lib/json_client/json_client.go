@@ -81,7 +81,7 @@ func (c *Client) Do(method, route string, reqData, respData interface{}, token s
 	})
 
 	if respData != nil {
-		err = c.Unmarshaler.Unmarshal(respBytes, &respData)
+		err = c.Unmarshaler.Unmarshal(respBytes, respData)
 		if err != nil {
 			return fmt.Errorf("json unmarshal: %s", err)
 		}
