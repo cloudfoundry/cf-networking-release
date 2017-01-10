@@ -5,15 +5,12 @@ import (
 	"fmt"
 	"lib/json_client"
 	"net/http"
+	"net/url"
 	"policy-server/models"
 	"strings"
 
 	"code.cloudfoundry.org/lager"
 )
-
-type httpClient interface {
-	Do(*http.Request) (*http.Response, error)
-}
 
 type Client struct {
 	Logger     lager.Logger
@@ -99,7 +96,11 @@ func (c *Client) GetAppSpaces(token string, appGUIDs []string) (map[string]strin
 	}
 
 	token = fmt.Sprintf("bearer %s", token)
-	route := fmt.Sprintf("/v3/apps?guids=%s", strings.Join(appGUIDs, ","))
+
+	values := url.Values{}
+	values.Add("guids", strings.Join(appGUIDs, ","))
+
+	route := fmt.Sprintf("/v3/apps?%s", values.Encode())
 
 	var response AppsV3Response
 	err := c.JSONClient.Do("GET", route, nil, &response, token)
@@ -148,7 +149,12 @@ func (c *Client) GetSpace(token, spaceGUID string) (*models.Space, error) {
 func (c *Client) GetUserSpace(token, userGUID string, space models.Space) (*models.Space, error) {
 	token = fmt.Sprintf("bearer %s", token)
 
-	route := fmt.Sprintf("/v2/spaces?q=developer_guid%%3A%s&q=name%%3A%s&q=organization_guid%%3A%s", userGUID, space.Name, space.OrgGUID)
+	values := url.Values{}
+	values.Add("q", fmt.Sprintf("developer_guid:%s", userGUID))
+	values.Add("q", fmt.Sprintf("name:%s", space.Name))
+	values.Add("q", fmt.Sprintf("organization_guid:%s", space.OrgGUID))
+
+	route := fmt.Sprintf("/v2/spaces?%s", values.Encode())
 
 	var response SpacesResponse
 	err := c.JSONClient.Do("GET", route, nil, &response, token)

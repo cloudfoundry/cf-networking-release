@@ -161,7 +161,7 @@ var _ = Describe("Client", func() {
 			Expect(fakeHTTPClient.DoCallCount()).To(Equal(1))
 			request := fakeHTTPClient.DoArgsForCall(0)
 			Expect(request.Method).To(Equal("GET"))
-			Expect(request.URL.String()).To(Equal("https://some.base.url/v3/apps?guids=live-app-1-guid,live-app-2-guid"))
+			Expect(request.URL.String()).To(Equal("https://some.base.url/v3/apps?guids=live-app-1-guid%2Clive-app-2-guid"))
 			authHeader := request.Header["Authorization"]
 			Expect(authHeader).To(HaveLen(1))
 			Expect(authHeader[0]).To(Equal("bearer some-token"))
