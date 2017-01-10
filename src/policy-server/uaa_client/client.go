@@ -20,7 +20,7 @@ func (r BadUaaResponse) Error() string {
 }
 
 type Client struct {
-	Host          string
+	BaseURL       string
 	Name          string
 	Secret        string
 	HTTPClient    httpClient
@@ -53,7 +53,7 @@ func (c *Client) GetToken() (string, error) {
 }
 
 func (c *Client) CheckToken(token string) (CheckTokenResponse, error) {
-	reqURL := fmt.Sprintf("%s/check_token", c.Host)
+	reqURL := fmt.Sprintf("%s/check_token", c.BaseURL)
 	bodyString := "token=" + token
 	request, err := http.NewRequest("POST", reqURL, strings.NewReader(bodyString))
 	request.SetBasicAuth(c.Name, c.Secret)

@@ -32,7 +32,7 @@ var _ = Describe("Client", func() {
 			fakeWarrantClient = &fakes.WarrantClient{}
 			logger = lagertest.NewTestLogger("test")
 			client = &uaa_client.Client{
-				Host:          "some.url",
+				BaseURL:       "https://some.base.url",
 				Name:          "some-name",
 				Secret:        "some-secret",
 				Logger:        logger,
@@ -70,7 +70,7 @@ var _ = Describe("Client", func() {
 			httpClient = &fakes.HTTPClient{}
 			logger = lagertest.NewTestLogger("test")
 			client = &uaa_client.Client{
-				Host:       "some.url",
+				BaseURL:    "https://some.base.url",
 				Name:       "test",
 				Secret:     "test",
 				HTTPClient: httpClient,

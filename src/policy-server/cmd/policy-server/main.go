@@ -67,7 +67,7 @@ func main() {
 	})
 
 	uaaClient := &uaa_client.Client{
-		Host:          conf.UAAURL,
+		BaseURL:       conf.UAAURL,
 		Name:          conf.UAAClient,
 		Secret:        conf.UAAClientSecret,
 		HTTPClient:    httpClient,
