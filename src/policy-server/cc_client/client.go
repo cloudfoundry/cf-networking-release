@@ -17,7 +17,7 @@ type httpClient interface {
 }
 
 type Client struct {
-	Host       string
+	BaseURL    string
 	HTTPClient httpClient
 	Logger     lager.Logger
 }
@@ -64,7 +64,7 @@ func (r BadCCResponse) Error() string {
 }
 
 func (c *Client) GetAllAppGUIDs(token string) (map[string]interface{}, error) {
-	reqURL := fmt.Sprintf("%s/v3/apps", c.Host)
+	reqURL := fmt.Sprintf("%s/v3/apps", c.BaseURL)
 	request, err := http.NewRequest("GET", reqURL, nil)
 	request.Header.Set("Authorization", fmt.Sprintf("bearer %s", token))
 	if err != nil {
@@ -132,7 +132,7 @@ func (c *Client) GetAppSpaces(token string, appGUIDs []string) (map[string]strin
 	if len(appGUIDs) < 1 {
 		return map[string]string{}, nil
 	}
-	reqURL := fmt.Sprintf("%s/v3/apps?guids=%s", c.Host, strings.Join(appGUIDs, ","))
+	reqURL := fmt.Sprintf("%s/v3/apps?guids=%s", c.BaseURL, strings.Join(appGUIDs, ","))
 	request, err := http.NewRequest("GET", reqURL, nil)
 	request.Header.Set("Authorization", fmt.Sprintf("bearer %s", token))
 	if err != nil {
@@ -182,7 +182,7 @@ func (c *Client) GetAppSpaces(token string, appGUIDs []string) (map[string]strin
 }
 
 func (c *Client) GetSpace(token, spaceGUID string) (*models.Space, error) {
-	reqURL := fmt.Sprintf("%s/v2/spaces/%s", c.Host, spaceGUID)
+	reqURL := fmt.Sprintf("%s/v2/spaces/%s", c.BaseURL, spaceGUID)
 	request, err := http.NewRequest("GET", reqURL, nil)
 	request.Header.Set("Authorization", fmt.Sprintf("bearer %s", token))
 	if err != nil {
@@ -227,7 +227,7 @@ func (c *Client) GetSpace(token, spaceGUID string) (*models.Space, error) {
 }
 
 func (c *Client) GetUserSpace(token, userGUID string, space models.Space) (*models.Space, error) {
-	reqURL := fmt.Sprintf("%s/v2/spaces?q=developer_guid%%3A%s&q=name%%3A%s&q=organization_guid%%3A%s", c.Host, userGUID, space.Name, space.OrgGUID)
+	reqURL := fmt.Sprintf("%s/v2/spaces?q=developer_guid%%3A%s&q=name%%3A%s&q=organization_guid%%3A%s", c.BaseURL, userGUID, space.Name, space.OrgGUID)
 	request, err := http.NewRequest("GET", reqURL, nil)
 	request.Header.Set("Authorization", fmt.Sprintf("bearer %s", token))
 	if err != nil {
@@ -276,7 +276,7 @@ func (c *Client) GetUserSpace(token, userGUID string, space models.Space) (*mode
 }
 
 func (c *Client) GetUserSpaces(token, userGUID string) (map[string]struct{}, error) {
-	reqURL := fmt.Sprintf("%s/v2/users/%s/spaces", c.Host, userGUID)
+	reqURL := fmt.Sprintf("%s/v2/users/%s/spaces", c.BaseURL, userGUID)
 	request, err := http.NewRequest("GET", reqURL, nil)
 	request.Header.Set("Authorization", fmt.Sprintf("bearer %s", token))
 	if err != nil {

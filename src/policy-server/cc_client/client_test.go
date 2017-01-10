@@ -31,7 +31,7 @@ var _ = Describe("Client", func() {
 		fakeHTTPClient = &fakes.HTTPClient{}
 		logger = lagertest.NewTestLogger("test")
 		client = &cc_client.Client{
-			Host:       "https://some.base.url",
+			BaseURL:    "https://some.base.url",
 			HTTPClient: fakeHTTPClient,
 			Logger:     logger,
 		}

@@ -138,7 +138,7 @@ func main() {
 	}
 
 	ccClient := &cc_client.Client{
-		Host:       conf.CCURL,
+		BaseURL:    conf.CCURL,
 		HTTPClient: httpClient,
 		Logger:     logger,
 	}
