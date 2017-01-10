@@ -110,38 +110,14 @@ func (c *Client) GetAppSpaces(token string, appGUIDs []string) (map[string]strin
 	if len(appGUIDs) < 1 {
 		return map[string]string{}, nil
 	}
-	reqURL := fmt.Sprintf("%s/v3/apps?guids=%s", c.BaseURL, strings.Join(appGUIDs, ","))
-	request, err := http.NewRequest("GET", reqURL, nil)
-	request.Header.Set("Authorization", fmt.Sprintf("bearer %s", token))
-	if err != nil {
-		return nil, fmt.Errorf("create HTTP request: %s", err) // untested
-	}
 
-	c.Logger.Debug("get_cc_apps_with_guids", lager.Data{"URL": request.URL})
-
-	resp, err := c.HTTPClient.Do(request)
-	if err != nil {
-		return nil, fmt.Errorf("http client: %s", err)
-	}
-	defer resp.Body.Close()
-
-	respBytes, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("read body: %s", err)
-	}
-
-	if resp.StatusCode != 200 {
-		err = BadCCResponse{
-			StatusCode:     resp.StatusCode,
-			CCResponseBody: string(respBytes),
-		}
-		return nil, err
-	}
+	token = fmt.Sprintf("bearer %s", token)
+	route := fmt.Sprintf("/v3/apps?guids=%s", strings.Join(appGUIDs, ","))
 
 	var response AppsV3Response
-	err = json.Unmarshal(respBytes, &response)
+	err := c.JSONClient.Do("GET", route, nil, &response, token)
 	if err != nil {
-		return nil, fmt.Errorf("unmarshal json: %s", err)
+		return nil, err
 	}
 
 	if response.Pagination.TotalPages > 1 {

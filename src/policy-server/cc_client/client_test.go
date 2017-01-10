@@ -170,12 +170,6 @@ var _ = Describe("Client", func() {
 			Expect(spaceGUIDs).To(ConsistOf([]string{"space-1-guid", "space-2-guid", "space-3-guid"}))
 		})
 
-		It("logs the request before sending", func() {
-			_, err := client.GetSpaceGUIDs("some-token", []string{"live-app-1-guid", "live-app-2-guid"})
-			Expect(err).NotTo(HaveOccurred())
-			Expect(logger).To(gbytes.Say("get_cc_apps_with_guids"))
-		})
-
 		Context("when called with an empty list of app GUIDs", func() {
 			It("returns an empty slice of space guids", func() {
 				spaceGUIDs, err := client.GetSpaceGUIDs("some-token", []string{})
@@ -199,7 +193,7 @@ var _ = Describe("Client", func() {
 
 			It("returns a helpful error", func() {
 				_, err := client.GetSpaceGUIDs("some-token", []string{"foo"})
-				Expect(err).To(MatchError(ContainSubstring("http client: potato")))
+				Expect(err).To(MatchError(ContainSubstring("http client do: potato")))
 			})
 		})
 
@@ -210,7 +204,7 @@ var _ = Describe("Client", func() {
 
 			It("returns a helpful error", func() {
 				_, err := client.GetSpaceGUIDs("some-token", []string{"foo"})
-				Expect(err).To(MatchError(ContainSubstring("read body: banana")))
+				Expect(err).To(MatchError(ContainSubstring("body read: banana")))
 			})
 		})
 
@@ -225,7 +219,7 @@ var _ = Describe("Client", func() {
 
 			It("returns a helpful error", func() {
 				_, err := client.GetSpaceGUIDs("some-token", []string{"foo"})
-				Expect(err).To(MatchError(ContainSubstring("unmarshal json: invalid character")))
+				Expect(err).To(MatchError(ContainSubstring("json unmarshal: invalid character")))
 			})
 		})
 
@@ -257,16 +251,11 @@ var _ = Describe("Client", func() {
 						StatusCode: 418,
 						Body:       ioutil.NopCloser(strings.NewReader("bad thing")),
 					}, nil)
-
 			})
 
 			It("returns the response body in the error", func() {
 				_, err := client.GetSpaceGUIDs("some-token", []string{"foo"})
-
-				Expect(err).To(Equal(cc_client.BadCCResponse{
-					StatusCode:     418,
-					CCResponseBody: "bad thing",
-				}))
+				Expect(err).To(MatchError(ContainSubstring("http client do: bad response status 418")))
 			})
 		})
 	})
