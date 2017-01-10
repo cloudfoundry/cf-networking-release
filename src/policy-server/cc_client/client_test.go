@@ -15,7 +15,6 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gbytes"
 
 	"code.cloudfoundry.org/lager/lagertest"
 )
@@ -41,6 +40,7 @@ var _ = Describe("Client", func() {
 			JSONClient: jsonClient,
 			Logger:     logger,
 		}
+
 		expectedApps = map[string]interface{}{
 			"live-app-1-guid": nil,
 			"live-app-2-guid": nil,
@@ -70,6 +70,7 @@ var _ = Describe("Client", func() {
 			authHeader := request.Header["Authorization"]
 			Expect(authHeader).To(HaveLen(1))
 			Expect(authHeader[0]).To(Equal("bearer some-token"))
+
 			Expect(apps).To(Equal(expectedApps))
 		})
 	})
@@ -167,6 +168,7 @@ var _ = Describe("Client", func() {
 			Expect(authHeader).To(HaveLen(1))
 			Expect(authHeader[0]).To(Equal("bearer some-token"))
 			Expect(err).NotTo(HaveOccurred())
+
 			Expect(spaceGUIDs).To(ConsistOf([]string{"space-1-guid", "space-2-guid", "space-3-guid"}))
 		})
 
@@ -253,7 +255,7 @@ var _ = Describe("Client", func() {
 					}, nil)
 			})
 
-			It("returns the response body in the error", func() {
+			It("returns the error", func() {
 				_, err := client.GetSpaceGUIDs("some-token", []string{"foo"})
 				Expect(err).To(MatchError(ContainSubstring("http client do: bad response status 418")))
 			})
@@ -285,13 +287,8 @@ var _ = Describe("Client", func() {
 			Expect(authHeader).To(HaveLen(1))
 			Expect(authHeader[0]).To(Equal("bearer some-token"))
 			Expect(err).NotTo(HaveOccurred())
-			Expect(space).To(Equal(&spaceModel))
-		})
 
-		It("logs the request before sending", func() {
-			_, err := client.GetSpace("some-token", "some-space-guid")
-			Expect(err).NotTo(HaveOccurred())
-			Expect(logger).To(gbytes.Say("get_space"))
+			Expect(space).To(Equal(&spaceModel))
 		})
 
 		Context("when the http client returns an error", func() {
@@ -301,7 +298,7 @@ var _ = Describe("Client", func() {
 
 			It("returns a helpful error", func() {
 				_, err := client.GetSpace("some-token", "some-space-guid")
-				Expect(err).To(MatchError(ContainSubstring("http client: potato")))
+				Expect(err).To(MatchError(ContainSubstring("http client do: potato")))
 			})
 		})
 
@@ -312,7 +309,7 @@ var _ = Describe("Client", func() {
 
 			It("returns a helpful error", func() {
 				_, err := client.GetSpace("some-token", "some-space-guid")
-				Expect(err).To(MatchError(ContainSubstring("read body: banana")))
+				Expect(err).To(MatchError(ContainSubstring("body read: banana")))
 			})
 		})
 
@@ -327,7 +324,7 @@ var _ = Describe("Client", func() {
 
 			It("returns a helpful error", func() {
 				_, err := client.GetSpace("some-token", "some-space-guid")
-				Expect(err).To(MatchError(ContainSubstring("unmarshal json: invalid character")))
+				Expect(err).To(MatchError(ContainSubstring("json unmarshal: invalid character")))
 			})
 		})
 
@@ -357,13 +354,9 @@ var _ = Describe("Client", func() {
 
 			})
 
-			It("returns the response body in the error", func() {
+			It("returns the error", func() {
 				_, err := client.GetSpace("some-token", "some-space-guid")
-
-				Expect(err).To(Equal(cc_client.BadCCResponse{
-					StatusCode:     418,
-					CCResponseBody: "bad thing",
-				}))
+				Expect(err).To(MatchError(ContainSubstring("http client do: bad response status 418")))
 			})
 		})
 	})
@@ -468,13 +461,8 @@ var _ = Describe("Client", func() {
 			Expect(authHeader).To(HaveLen(1))
 			Expect(authHeader[0]).To(Equal("bearer some-token"))
 			Expect(err).NotTo(HaveOccurred())
-			Expect(matchingSpace).To(Equal(&space))
-		})
 
-		It("logs the request before sending", func() {
-			_, err := client.GetUserSpace("some-token", "some-developer-guid", space)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(logger).To(gbytes.Say("get_user_space_with_name_and_org_guid"))
+			Expect(matchingSpace).To(Equal(&space))
 		})
 
 		Context("when no spaces are returned", func() {
@@ -485,6 +473,7 @@ var _ = Describe("Client", func() {
 						Body:       ioutil.NopCloser(bytes.NewReader([]byte(fixtures.UserSpaceEmpty))),
 					}, nil)
 			})
+
 			It("returns nil", func() {
 				space, err := client.GetUserSpace("some-token", "some-developer-guid", space)
 				Expect(err).NotTo(HaveOccurred())
@@ -500,6 +489,7 @@ var _ = Describe("Client", func() {
 						Body:       ioutil.NopCloser(bytes.NewReader([]byte(fixtures.Spaces))),
 					}, nil)
 			})
+
 			It("returns an error", func() {
 				_, err := client.GetUserSpace("some-token", "some-developer-guid", space)
 				Expect(err).To(MatchError("found more than one matching space"))
@@ -513,7 +503,7 @@ var _ = Describe("Client", func() {
 
 			It("returns a helpful error", func() {
 				_, err := client.GetUserSpace("some-token", "some-developer-guid", space)
-				Expect(err).To(MatchError(ContainSubstring("http client: potato")))
+				Expect(err).To(MatchError(ContainSubstring("http client do: potato")))
 			})
 		})
 
@@ -524,7 +514,7 @@ var _ = Describe("Client", func() {
 
 			It("returns a helpful error", func() {
 				_, err := client.GetUserSpace("some-token", "some-developer-guid", space)
-				Expect(err).To(MatchError(ContainSubstring("read body: banana")))
+				Expect(err).To(MatchError(ContainSubstring("body read: banana")))
 			})
 		})
 
@@ -539,7 +529,7 @@ var _ = Describe("Client", func() {
 
 			It("returns a helpful error", func() {
 				_, err := client.GetUserSpace("some-token", "some-developer-guid", space)
-				Expect(err).To(MatchError(ContainSubstring("unmarshal json: invalid character")))
+				Expect(err).To(MatchError(ContainSubstring("json unmarshal: invalid character")))
 			})
 		})
 
@@ -553,13 +543,9 @@ var _ = Describe("Client", func() {
 
 			})
 
-			It("returns the response body in the error", func() {
+			It("returns the error", func() {
 				_, err := client.GetUserSpace("some-token", "some-developer-guid", space)
-
-				Expect(err).To(Equal(cc_client.BadCCResponse{
-					StatusCode:     418,
-					CCResponseBody: "bad thing",
-				}))
+				Expect(err).To(MatchError(ContainSubstring("http client do: bad response status 418")))
 			})
 		})
 	})

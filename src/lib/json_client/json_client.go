@@ -40,6 +40,15 @@ type Client struct {
 	Unmarshaler marshal.Unmarshaler
 }
 
+type HttpResponseCodeError struct {
+	StatusCode int
+	Message    string
+}
+
+func (h *HttpResponseCodeError) Error() string {
+	return h.Message
+}
+
 func (c *Client) Do(method, route string, reqData, respData interface{}, token string) error {
 	var reader io.Reader
 	if method != "GET" {
@@ -73,7 +82,10 @@ func (c *Client) Do(method, route string, reqData, respData interface{}, token s
 		c.Logger.Error("http-client", err, lager.Data{
 			"body": string(respBytes),
 		})
-		return err
+		return &HttpResponseCodeError{
+			StatusCode: resp.StatusCode,
+			Message:    err.Error(),
+		}
 	}
 
 	c.Logger.Debug("http-do", lager.Data{

@@ -164,6 +164,15 @@ var _ = Describe("JsonClient", func() {
 
 				Expect(logger).To(gbytes.Say(`http-client.*some-error.*400`))
 			})
+
+			It("returns information about the error", func() {
+				err := jsonClient.Do(method, route, reqData, &respData, token)
+				typedErr, ok := err.(*json_client.HttpResponseCodeError)
+				Expect(ok).To(BeTrue())
+
+				Expect(typedErr.StatusCode).To(Equal(400))
+				Expect(typedErr.Message).To(Equal("http client do: bad response status 400"))
+			})
 		})
 
 		Context("when the json unmarshal fails", func() {
