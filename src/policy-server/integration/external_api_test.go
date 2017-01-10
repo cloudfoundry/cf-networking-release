@@ -213,22 +213,24 @@ var _ = Describe("External API", func() {
 			})
 		})
 
-		FDescribe("List policies", func() {
+		Describe("List policies", func() {
 			var req *http.Request
 			BeforeEach(func() {
 				req = makeNewRequest("GET", "networking/v0/external/policies", "")
 			})
 
-			It("succeeds for developers with access to apps and network.write permission", func() {
-				resp, err := http.DefaultClient.Do(req)
-				Expect(err).NotTo(HaveOccurred())
+			Context("when there are no policies", func() {
+				It("succeeds", func() {
+					resp, err := http.DefaultClient.Do(req)
+					Expect(err).NotTo(HaveOccurred())
 
-				Expect(resp.StatusCode).To(Equal(http.StatusOK))
-				responseString, err := ioutil.ReadAll(resp.Body)
-				Expect(responseString).To(MatchJSON(`{
+					Expect(resp.StatusCode).To(Equal(http.StatusOK))
+					responseString, err := ioutil.ReadAll(resp.Body)
+					Expect(responseString).To(MatchJSON(`{
 					"total_policies": 0,
 					"policies": []
 				}`))
+				})
 			})
 
 			Context("when there are policies in spaces the user does not belong to", func() {
@@ -271,20 +273,6 @@ var _ = Describe("External API", func() {
 					Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
 					responseString, err := ioutil.ReadAll(resp.Body)
 					Expect(responseString).To(MatchJSON(`{ "error": "token missing allowed scopes: [network.admin network.write]"}`))
-				})
-			})
-
-			Context("when one app is in spaces they do not have access to", func() {
-				BeforeEach(func() {
-					req = makeNewRequest("GET", "networking/v0/external/policies", "")
-				})
-				It("returns a 403 with a meaningful error", func() {
-					resp, err := http.DefaultClient.Do(req)
-					Expect(err).NotTo(HaveOccurred())
-
-					Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
-					responseString, err := ioutil.ReadAll(resp.Body)
-					Expect(responseString).To(MatchJSON(`{ "error": "one or more applications cannot be found or accessed"}`))
 				})
 			})
 		})

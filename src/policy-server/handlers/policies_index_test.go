@@ -184,20 +184,22 @@ var _ = Describe("Policies index handler", func() {
 			Expect(resp.Code).To(Equal(http.StatusOK))
 		})
 
-		It("calls the policy filter with an empty list when the id list is empty", func() {
-			var err error
-			request, err = http.NewRequest("GET", "/networking/v0/external/policies?id=", nil)
-			Expect(err).NotTo(HaveOccurred())
+		Context("when the id list is empty", func() {
+			It("calls the policy filter with an empty list", func() {
+				var err error
+				request, err = http.NewRequest("GET", "/networking/v0/external/policies?id=", nil)
+				Expect(err).NotTo(HaveOccurred())
 
-			handler.ServeHTTP(resp, request, token)
-			Expect(fakeStore.AllCallCount()).To(Equal(1))
-			Expect(fakePolicyFilter.FilterPoliciesCallCount()).To(Equal(1))
+				handler.ServeHTTP(resp, request, token)
+				Expect(fakeStore.AllCallCount()).To(Equal(1))
+				Expect(fakePolicyFilter.FilterPoliciesCallCount()).To(Equal(1))
 
-			policies, userToken := fakePolicyFilter.FilterPoliciesArgsForCall(0)
-			Expect(policies).To(Equal([]models.Policy{}))
-			Expect(userToken).To(Equal(token))
+				policies, userToken := fakePolicyFilter.FilterPoliciesArgsForCall(0)
+				Expect(policies).To(Equal([]models.Policy{}))
+				Expect(userToken).To(Equal(token))
 
-			Expect(resp.Code).To(Equal(http.StatusOK))
+				Expect(resp.Code).To(Equal(http.StatusOK))
+			})
 		})
 	})
 

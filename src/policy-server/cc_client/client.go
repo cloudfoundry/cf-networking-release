@@ -109,9 +109,28 @@ func (c *Client) GetAllAppGUIDs(token string) (map[string]interface{}, error) {
 	return ret, nil
 }
 
+func (c *Client) GetSpaceGUIDs(token string, appGUIDs []string) ([]string, error) {
+	mapping, err := c.GetAppSpaces(token, appGUIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	deduplicated := map[string]struct{}{}
+	for _, spaceID := range mapping {
+		deduplicated[spaceID] = struct{}{}
+	}
+
+	ret := []string{}
+	for spaceID, _ := range deduplicated {
+		ret = append(ret, spaceID)
+	}
+
+	return ret, nil
+}
+
 func (c *Client) GetAppSpaces(token string, appGUIDs []string) (map[string]string, error) {
 	if len(appGUIDs) < 1 {
-		return nil, errors.New("list of app GUIDs must not be empty")
+		return map[string]string{}, nil
 	}
 	reqURL := fmt.Sprintf("%s/v3/apps?guids=%s", c.Host, strings.Join(appGUIDs, ","))
 	request, err := http.NewRequest("GET", reqURL, nil)
@@ -160,25 +179,6 @@ func (c *Client) GetAppSpaces(token string, appGUIDs []string) (map[string]strin
 		set[appID] = spaceID
 	}
 	return set, nil
-}
-
-func (c *Client) GetSpaceGUIDs(token string, appGUIDs []string) ([]string, error) {
-	mapping, err := c.GetAppSpaces(token, appGUIDs)
-	if err != nil {
-		return nil, err
-	}
-
-	deduplicated := map[string]struct{}{}
-	for _, spaceID := range mapping {
-		deduplicated[spaceID] = struct{}{}
-	}
-
-	ret := []string{}
-	for spaceID, _ := range deduplicated {
-		ret = append(ret, spaceID)
-	}
-
-	return ret, nil
 }
 
 func (c *Client) GetSpace(token, spaceGUID string) (*models.Space, error) {
@@ -315,10 +315,6 @@ func (c *Client) GetUserSpaces(token, userGUID string) (map[string]struct{}, err
 		spaceID := space.Metadata.GUID
 		userSpaces[spaceID] = struct{}{}
 	}
-
-	// get /v2/users/uaa-id-309/spaces
-	//    reference: https://apidocs.cloudfoundry.org/249/users/list_all_spaces_for_the_user.html
-	// unmarshal response
 
 	return userSpaces, nil
 }

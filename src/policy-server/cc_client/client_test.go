@@ -183,16 +183,18 @@ var _ = Describe("Client", func() {
 		})
 
 		Context("when called with an empty list of app GUIDs", func() {
-			It("returns an error", func() {
-				_, err := client.GetSpaceGUIDs("some-token", []string{})
-				Expect(err).To(MatchError("list of app GUIDs must not be empty"))
+			It("returns an empty slice of space guids", func() {
+				spaceGUIDs, err := client.GetSpaceGUIDs("some-token", []string{})
+				Expect(err).NotTo(HaveOccurred())
+				Expect(spaceGUIDs).To(BeEmpty())
 			})
 		})
 
 		Context("when called with nil list of app GUIDs", func() {
-			It("returns an error", func() {
-				_, err := client.GetSpaceGUIDs("some-token", nil)
-				Expect(err).To(MatchError("list of app GUIDs must not be empty"))
+			It("returns an empty slice of space guids", func() {
+				spaceGUIDs, err := client.GetSpaceGUIDs("some-token", nil)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(spaceGUIDs).To(BeEmpty())
 			})
 		})
 
@@ -418,6 +420,14 @@ var _ = Describe("Client", func() {
 			Expect(authHeader[0]).To(Equal("bearer some-token"))
 
 			Expect(appSpaceMap).To(Equal(expectedAppSpaces))
+		})
+
+		Context("when the list of app GUIDs is empty", func() {
+			It("returns an empty slice", func() {
+				appSpaceMap, err := client.GetAppSpaces("some-token", []string{})
+				Expect(err).NotTo(HaveOccurred())
+				Expect(appSpaceMap).To(BeEmpty())
+			})
 		})
 	})
 
