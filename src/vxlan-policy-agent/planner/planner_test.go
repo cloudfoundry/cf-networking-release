@@ -20,14 +20,15 @@ import (
 
 var _ = Describe("Planner", func() {
 	var (
-		policyPlanner      *planner.VxlanPolicyPlanner
-		policyClient       *fakes.PolicyClient
-		store              *libfakes.Datastore
-		timeMetricsEmitter *fakes.TimeMetricsEmitter
-		logger             *lagertest.TestLogger
-		chain              enforcer.Chain
-		data               map[string]datastore.Container
-		loggingStateGetter *fakes.LoggingStateGetter
+		policyPlanner        *planner.VxlanPolicyPlanner
+		policyClient         *fakes.PolicyClient
+		policyServerResponse []models.Policy
+		store                *libfakes.Datastore
+		timeMetricsEmitter   *fakes.TimeMetricsEmitter
+		logger               *lagertest.TestLogger
+		chain                enforcer.Chain
+		data                 map[string]datastore.Container
+		loggingStateGetter   *fakes.LoggingStateGetter
 	)
 
 	BeforeEach(func() {
@@ -60,7 +61,7 @@ var _ = Describe("Planner", func() {
 
 		store.ReadAllReturns(data, nil)
 
-		policyClient.GetPoliciesReturns([]models.Policy{
+		policyServerResponse = []models.Policy{
 			{
 				Source: models.Source{
 					ID:  "some-app-guid",
@@ -94,7 +95,8 @@ var _ = Describe("Planner", func() {
 					Protocol: "udp",
 				},
 			},
-		}, nil)
+		}
+		policyClient.GetPoliciesReturns(policyServerResponse, nil)
 
 		chain = enforcer.Chain{
 			Table:       "some-table",
@@ -247,6 +249,25 @@ var _ = Describe("Planner", func() {
 			_, err := policyPlanner.GetRulesAndChain()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(timeMetricsEmitter.EmitAllCallCount()).To(Equal(1))
+		})
+
+		Context("when the policies are returned from the server in a different order", func() {
+			var reversed []models.Policy
+			BeforeEach(func() {
+				for i, _ := range policyServerResponse {
+					reversed = append(reversed, policyServerResponse[len(policyServerResponse)-i-1])
+				}
+			})
+
+			It("the order of the rules is not affected", func() {
+				rulesWithChain, err := policyPlanner.GetRulesAndChain()
+				Expect(err).NotTo(HaveOccurred())
+				policyClient.GetPoliciesReturns(reversed, nil)
+				rulesWithChain2, err := policyPlanner.GetRulesAndChain()
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(rulesWithChain).To(Equal(rulesWithChain2))
+			})
 		})
 
 		Context("when a container's metadata is missing required key policy group id", func() {

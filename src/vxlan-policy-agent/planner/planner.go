@@ -4,6 +4,7 @@ import (
 	"lib/datastore"
 	"lib/models"
 	"lib/rules"
+	"sort"
 	"time"
 	"vxlan-policy-agent/agent_metrics"
 	"vxlan-policy-agent/enforcer"
@@ -86,7 +87,9 @@ func (p *VxlanPolicyPlanner) GetRulesAndChain() (enforcer.RulesWithChain, error)
 	filterRuleset := []rules.IPTablesRule{}
 
 	iptablesLoggingEnabled := p.LoggingState.IsEnabled()
-	for _, policy := range policies {
+	policySlice := models.PolicySlice(policies)
+	sort.Sort(policySlice)
+	for _, policy := range policySlice {
 		srcContainerIPs, srcOk := containers[policy.Source.ID]
 		dstContainerIPs, dstOk := containers[policy.Destination.ID]
 
