@@ -1,10 +1,8 @@
 package cc_client
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"lib/json_client"
 	"net/http"
 	"policy-server/models"
@@ -22,11 +20,6 @@ type Client struct {
 	HTTPClient httpClient
 	Logger     lager.Logger
 	JSONClient json_client.JsonClient
-}
-
-type BadCCResponse struct {
-	StatusCode     int
-	CCResponseBody string
 }
 
 type AppsV3Response struct {
@@ -60,10 +53,6 @@ type SpacesResponse struct {
 			OrganizationGUID string `json:"organization_guid"`
 		} `json:"entity"`
 	} `json:"resources"`
-}
-
-func (r BadCCResponse) Error() string {
-	return fmt.Sprintf("bad cc response: %d: %s", r.StatusCode, r.CCResponseBody)
 }
 
 func (c *Client) GetAllAppGUIDs(token string) (map[string]interface{}, error) {
@@ -184,38 +173,14 @@ func (c *Client) GetUserSpace(token, userGUID string, space models.Space) (*mode
 }
 
 func (c *Client) GetUserSpaces(token, userGUID string) (map[string]struct{}, error) {
-	reqURL := fmt.Sprintf("%s/v2/users/%s/spaces", c.BaseURL, userGUID)
-	request, err := http.NewRequest("GET", reqURL, nil)
-	request.Header.Set("Authorization", fmt.Sprintf("bearer %s", token))
-	if err != nil {
-		return nil, fmt.Errorf("create HTTP request: %s", err) // untested
-	}
+	token = fmt.Sprintf("bearer %s", token)
 
-	c.Logger.Debug("get_user_spaces", lager.Data{"URL": request.URL})
-
-	resp, err := c.HTTPClient.Do(request)
-	if err != nil {
-		return nil, fmt.Errorf("http client: %s", err)
-	}
-	defer resp.Body.Close()
-
-	respBytes, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("read body: %s", err)
-	}
-
-	if resp.StatusCode != 200 {
-		err = BadCCResponse{
-			StatusCode:     resp.StatusCode,
-			CCResponseBody: string(respBytes),
-		}
-		return nil, err
-	}
+	route := fmt.Sprintf("/v2/users/%s/spaces", userGUID)
 
 	var response SpacesResponse
-	err = json.Unmarshal(respBytes, &response)
+	err := c.JSONClient.Do("GET", route, nil, &response, token)
 	if err != nil {
-		return nil, fmt.Errorf("unmarshal json: %s", err)
+		return nil, err
 	}
 
 	userSpaces := map[string]struct{}{}
