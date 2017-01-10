@@ -16,8 +16,6 @@ type httpClient interface {
 }
 
 type Client struct {
-	BaseURL    string
-	HTTPClient httpClient
 	Logger     lager.Logger
 	JSONClient json_client.JsonClient
 }

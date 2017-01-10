@@ -35,8 +35,6 @@ var _ = Describe("Client", func() {
 
 		jsonClient = json_client.New(logger, fakeHTTPClient, baseURL)
 		client = &cc_client.Client{
-			BaseURL:    baseURL,
-			HTTPClient: fakeHTTPClient,
 			JSONClient: jsonClient,
 			Logger:     logger,
 		}

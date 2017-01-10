@@ -139,8 +139,6 @@ func main() {
 	}
 
 	ccClient := &cc_client.Client{
-		BaseURL:    conf.CCURL,
-		HTTPClient: httpClient,
 		JSONClient: json_client.New(logger.Session("cc-json-client"), httpClient, conf.CCURL),
 		Logger:     logger,
 	}
