@@ -85,7 +85,7 @@ var _ = Describe("space developer policy configuration", func() {
 	})
 
 	Describe("space developer with network.write scope", func() {
-		It("can create and delete network policies in spaces they have access to", func(done Done) {
+		It("can create, list, and delete network policies in spaces they have access to", func(done Done) {
 			By("setting space roles", func() {
 				Expect(cf.Cf("set-space-role", "space-developer", orgName, spaceNameA, "SpaceDeveloper").Wait(Timeout_Push)).To(gexec.Exit(0))
 				Expect(cf.Cf("set-space-role", "space-developer", orgName, spaceNameB, "SpaceDeveloper").Wait(Timeout_Push)).To(gexec.Exit(0))
@@ -126,6 +126,24 @@ var _ = Describe("space developer policy configuration", func() {
 					},
 				})
 				Expect(err).NotTo(HaveOccurred())
+			})
+
+			By("listing policies", func() {
+				expectedPolicies := []models.Policy{
+					models.Policy{
+						Source: models.Source{
+							ID: appAGUID,
+						},
+						Destination: models.Destination{
+							ID:       appBGUID,
+							Port:     1234,
+							Protocol: "tcp",
+						},
+					},
+				}
+				policies, err := policyClient.GetPolicies(spaceDevUserToken)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(policies).To(Equal(expectedPolicies))
 			})
 
 			By("deleting the policy", func() {

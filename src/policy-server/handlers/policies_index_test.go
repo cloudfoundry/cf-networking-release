@@ -20,18 +20,44 @@ import (
 
 var _ = Describe("Policies index handler", func() {
 	var (
-		allPolicies []models.Policy
-		request     *http.Request
-		handler     *handlers.PoliciesIndex
-		resp        *httptest.ResponseRecorder
-		fakeStore   *fakes.Store
-		logger      *lagertest.TestLogger
-		marshaler   *lfakes.Marshaler
-		token       uaa_client.CheckTokenResponse
+		allPolicies      []models.Policy
+		filteredPolicies []models.Policy
+		request          *http.Request
+		handler          *handlers.PoliciesIndex
+		resp             *httptest.ResponseRecorder
+		fakeStore        *fakes.Store
+		fakePolicyFilter *fakes.PolicyFilter
+		logger           *lagertest.TestLogger
+		marshaler        *lfakes.Marshaler
+		token            uaa_client.CheckTokenResponse
 	)
 
 	BeforeEach(func() {
 		allPolicies = []models.Policy{{
+			Source: models.Source{ID: "some-app-guid", Tag: "some-tag"},
+			Destination: models.Destination{
+				ID:       "some-other-app-guid",
+				Tag:      "some-other-tag",
+				Protocol: "tcp",
+				Port:     8080,
+			},
+		}, {
+			Source: models.Source{ID: "another-app-guid"},
+			Destination: models.Destination{
+				ID:       "some-other-app-guid",
+				Protocol: "udp",
+				Port:     1234,
+			},
+		}, {
+			Source: models.Source{ID: "yet-another-app-guid"},
+			Destination: models.Destination{
+				ID:       "yet-another-app-guid",
+				Protocol: "udp",
+				Port:     5555,
+			},
+		}}
+
+		filteredPolicies = []models.Policy{{
 			Source: models.Source{ID: "some-app-guid", Tag: "some-tag"},
 			Destination: models.Destination{
 				ID:       "some-other-app-guid",
@@ -57,11 +83,16 @@ var _ = Describe("Policies index handler", func() {
 
 		fakeStore = &fakes.Store{}
 		fakeStore.AllReturns(allPolicies, nil)
+		fakePolicyFilter = &fakes.PolicyFilter{}
+		fakePolicyFilter.FilterPoliciesStub = func(policies []models.Policy) ([]models.Policy, error) {
+			return filteredPolicies, nil
+		}
 		logger = lagertest.NewTestLogger("test")
 		handler = &handlers.PoliciesIndex{
-			Logger:    logger,
-			Store:     fakeStore,
-			Marshaler: marshaler,
+			Logger:       logger,
+			Store:        fakeStore,
+			Marshaler:    marshaler,
+			PolicyFilter: fakePolicyFilter,
 		}
 
 		token = uaa_client.CheckTokenResponse{}
@@ -96,6 +127,7 @@ var _ = Describe("Policies index handler", func() {
 		handler.ServeHTTP(resp, request, token)
 
 		Expect(fakeStore.AllCallCount()).To(Equal(1))
+		Expect(fakePolicyFilter.FilterPoliciesCallCount()).To(Equal(1))
 		Expect(resp.Code).To(Equal(http.StatusOK))
 		Expect(resp.Body).To(MatchJSON(expectedResponseJSON))
 	})
@@ -134,50 +166,28 @@ var _ = Describe("Policies index handler", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		It("returns only those policies which contain that id", func() {
-			expectedResponseJSON := `{
-		"total_policies": 2,
-		"policies": [
-			{
-				"source": {
-					"id": "some-app-guid"
-				},
-				"destination": {
-					"id": "some-other-app-guid",
-					"protocol": "tcp",
-					"port": 8080
-				}
-			},
-			{
-				"source": {
-					"id": "another-app-guid"
-				},
-				"destination": {
-					"id": "yet-another-app-guid",
-					"protocol": "udp",
-					"port": 5678
-				}
-			}
-        ]}`
+		It("filters only those policies which contain that id", func() {
+			var filteredByID []models.Policy
+			filteredByID = append(filteredByID, allPolicies[0], allPolicies[2])
+
 			handler.ServeHTTP(resp, request, token)
 
 			Expect(fakeStore.AllCallCount()).To(Equal(1))
+			Expect(fakePolicyFilter.FilterPoliciesCallCount()).To(Equal(1))
+			Expect(fakePolicyFilter.FilterPoliciesArgsForCall(0)).To(Equal(filteredByID))
 			Expect(resp.Code).To(Equal(http.StatusOK))
-			Expect(resp.Body).To(MatchJSON(expectedResponseJSON))
 		})
 
-		It("returns an empty list when the id list is empty", func() {
+		It("calls the policy filter with an empty list when the id list is empty", func() {
 			var err error
 			request, err = http.NewRequest("GET", "/networking/v0/external/policies?id=", nil)
 			Expect(err).NotTo(HaveOccurred())
 
 			handler.ServeHTTP(resp, request, token)
 			Expect(fakeStore.AllCallCount()).To(Equal(1))
+			Expect(fakePolicyFilter.FilterPoliciesCallCount()).To(Equal(1))
+			Expect(fakePolicyFilter.FilterPoliciesArgsForCall(0)).To(Equal([]models.Policy{}))
 			Expect(resp.Code).To(Equal(http.StatusOK))
-			Expect(resp.Body).To(MatchJSON(`{
-				"total_policies": 0,
-				"policies": []
-			}`))
 		})
 	})
 
@@ -215,6 +225,23 @@ var _ = Describe("Policies index handler", func() {
 		It("logs the full error", func() {
 			handler.ServeHTTP(resp, request, token)
 			Expect(logger).To(gbytes.Say("marshal-failed.*grapes"))
+		})
+	})
+
+	Context("when the policy guard throws an error", func() {
+		BeforeEach(func() {
+			fakePolicyFilter.FilterPoliciesReturns(nil, errors.New("banana"))
+		})
+		It("responds with 500", func() {
+			handler.ServeHTTP(resp, request, token)
+
+			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
+			Expect(resp.Body.String()).To(MatchJSON(`{"error": "filter policies failed"}`))
+		})
+
+		It("logs the full error", func() {
+			handler.ServeHTTP(resp, request, token)
+			Expect(logger).To(gbytes.Say("filter-policies-failed.*banana"))
 		})
 	})
 })

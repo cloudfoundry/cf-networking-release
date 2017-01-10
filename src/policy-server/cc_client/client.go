@@ -256,3 +256,11 @@ func (c *Client) GetUserSpace(token, userGUID string, space models.Space) (*mode
 	}, nil
 	return nil, nil
 }
+
+func (c *Client) GetAppSpaces(token string, appGUIDs []string) (map[string]string, error) {
+	return make(map[string]string)
+}
+
+func (c *Client) GetUserSpaces(token, userGUID string) (map[string]struct{}, error) {
+	return make(map[string]struct{})
+}

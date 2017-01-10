@@ -212,6 +212,76 @@ var _ = Describe("External API", func() {
 				})
 			})
 		})
+
+		FDescribe("List policies", func() {
+			var req *http.Request
+			BeforeEach(func() {
+				req = makeNewRequest("GET", "networking/v0/external/policies", "")
+			})
+
+			It("succeeds for developers with access to apps and network.write permission", func() {
+				resp, err := http.DefaultClient.Do(req)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
+				responseString, err := ioutil.ReadAll(resp.Body)
+				Expect(responseString).To(MatchJSON(`{ "policies": [] }`))
+			})
+
+			Context("when there are policies in spaces the user does not belong to", func() {
+				BeforeEach(func() {
+					body := `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "app-guid-not-in-my-spaces", "protocol": "tcp", "port": 8090 } } ] }`
+					req = makeNewRequest("POST", "networking/v0/external/policies", body)
+					req.Header.Set("Authorization", "Bearer valid-token")
+					_, err := http.DefaultClient.Do(req)
+					Expect(err).NotTo(HaveOccurred())
+
+					body = `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-app-guid", "protocol": "tcp", "port": 8090 } } ] }`
+					req = makeNewRequest("POST", "networking/v0/external/policies", body)
+					req.Header.Set("Authorization", "Bearer valid-token")
+					_, err = http.DefaultClient.Do(req)
+					Expect(err).NotTo(HaveOccurred())
+				})
+				It("does not return those policies", func() {
+					req = makeNewRequest("GET", "networking/v0/external/policies", "")
+					resp, err := http.DefaultClient.Do(req)
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(resp.StatusCode).To(Equal(http.StatusOK))
+					responseString, err := ioutil.ReadAll(resp.Body)
+					expectedResp := `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-app-guid", "protocol": "tcp", "port": 8090 } } ] }`
+					Expect(responseString).To(MatchJSON(expectedResp))
+				})
+			})
+
+			Context("when they do not have the network.write scope", func() {
+				BeforeEach(func() {
+					req.Header.Set("Authorization", "Bearer space-dev-token")
+				})
+				It("returns a 403 with a meaninful error", func() {
+					resp, err := http.DefaultClient.Do(req)
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
+					responseString, err := ioutil.ReadAll(resp.Body)
+					Expect(responseString).To(MatchJSON(`{ "error": "token missing allowed scopes: [network.admin network.write]"}`))
+				})
+			})
+
+			Context("when one app is in spaces they do not have access to", func() {
+				BeforeEach(func() {
+					req = makeNewRequest("GET", "networking/v0/external/policies", "")
+				})
+				It("returns a 403 with a meaningful error", func() {
+					resp, err := http.DefaultClient.Do(req)
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
+					responseString, err := ioutil.ReadAll(resp.Body)
+					Expect(responseString).To(MatchJSON(`{ "error": "one or more applications cannot be found or accessed"}`))
+				})
+			})
+		})
 	})
 
 	Context("when there are concurrent create requests", func() {

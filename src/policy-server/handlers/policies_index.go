@@ -11,10 +11,16 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
+//go:generate counterfeiter -o ../fakes/policy_filter.go --fake-name PolicyFilter . policyFilter
+type policyFilter interface {
+	FilterPolicies(policies []models.Policy) ([]models.Policy, error)
+}
+
 type PoliciesIndex struct {
-	Logger    lager.Logger
-	Store     store.Store
-	Marshaler marshal.Marshaler
+	Logger       lager.Logger
+	Store        store.Store
+	Marshaler    marshal.Marshaler
+	PolicyFilter policyFilter
 }
 
 func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request, _ uaa_client.CheckTokenResponse) {
@@ -31,6 +37,14 @@ func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request, _ ua
 	if ok {
 		ids := strings.Split(idList[0], ",")
 		policies = filterByID(policies, ids)
+	}
+
+	policies, err = h.PolicyFilter.FilterPolicies(policies)
+	if err != nil {
+		h.Logger.Error("filter-policies-failed", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{"error": "filter policies failed"}`))
+		return
 	}
 
 	for i, _ := range policies {
