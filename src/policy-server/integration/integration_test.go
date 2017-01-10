@@ -28,6 +28,7 @@ var _ = Describe("Integration", func() {
 			session      *gexec.Session
 			conf         config.Config
 			address      string
+			debugAddress string
 			testDatabase *testsupport.TestDatabase
 
 			fakeMetron fakes.FakeMetron
@@ -35,6 +36,10 @@ var _ = Describe("Integration", func() {
 
 		var serverIsAvailable = func() error {
 			return VerifyTCPConnection(address)
+		}
+
+		var debugServerIsAvailable = func() error {
+			return VerifyTCPConnection(debugAddress)
 		}
 
 		BeforeEach(func() {
@@ -56,8 +61,10 @@ var _ = Describe("Integration", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			address = fmt.Sprintf("%s:%d", conf.ListenHost, conf.ListenPort)
+			debugAddress = fmt.Sprintf("%s:%d", conf.DebugServerHost, conf.DebugServerPort)
 
 			Eventually(serverIsAvailable, DEFAULT_TIMEOUT).Should(Succeed())
+			Eventually(debugServerIsAvailable, DEFAULT_TIMEOUT).Should(Succeed())
 		})
 
 		AfterEach(func() {
