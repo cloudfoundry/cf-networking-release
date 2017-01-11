@@ -5,6 +5,8 @@ import (
 	"time"
 	"vxlan-policy-agent/agent_metrics"
 	"vxlan-policy-agent/enforcer"
+
+	"code.cloudfoundry.org/lager"
 )
 
 //go:generate counterfeiter -o ../fakes/planner.go --fake-name Planner . Planner
@@ -21,6 +23,7 @@ type SinglePollCycle struct {
 	Planners          []Planner
 	Enforcer          ruleEnforcer
 	CollectionEmitter agent_metrics.TimeMetricsEmitter
+	Logger            lager.Logger
 	ruleSets          map[enforcer.Chain]enforcer.RulesWithChain
 }
 
@@ -40,6 +43,13 @@ func (m *SinglePollCycle) DoCycle() error {
 
 		oldRuleSet := m.ruleSets[ruleSet.Chain]
 		if !ruleSet.Equals(oldRuleSet) {
+			m.Logger.Debug("poll-cycle", lager.Data{
+				"message":       "updating iptables rules",
+				"num old rules": len(oldRuleSet.Rules),
+				"num new rules": len(ruleSet.Rules),
+				"old rules":     oldRuleSet,
+				"new rules":     ruleSet,
+			})
 			err = m.Enforcer.EnforceRulesAndChain(ruleSet)
 			if err != nil {
 				return fmt.Errorf("enforce: %s", err)

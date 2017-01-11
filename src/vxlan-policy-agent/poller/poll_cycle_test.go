@@ -7,8 +7,11 @@ import (
 	"vxlan-policy-agent/fakes"
 	"vxlan-policy-agent/poller"
 
+	"code.cloudfoundry.org/lager/lagertest"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
 )
 
 var _ = Describe("Single Poll Cycle", func() {
@@ -23,6 +26,7 @@ var _ = Describe("Single Poll Cycle", func() {
 			localRulesWithChain  enforcer.RulesWithChain
 			remoteRulesWithChain enforcer.RulesWithChain
 			policyRulesWithChain enforcer.RulesWithChain
+			logger               *lagertest.TestLogger
 		)
 
 		BeforeEach(func() {
@@ -31,11 +35,13 @@ var _ = Describe("Single Poll Cycle", func() {
 			fakeRemotePlanner = &fakes.Planner{}
 			fakeEnforcer = &fakes.RuleEnforcer{}
 			timeMetricsEmitter = &fakes.TimeMetricsEmitter{}
+			logger = lagertest.NewTestLogger("test")
 
 			p = &poller.SinglePollCycle{
 				Planners:          []poller.Planner{fakeLocalPlanner, fakeRemotePlanner, fakePolicyPlanner},
 				Enforcer:          fakeEnforcer,
 				CollectionEmitter: timeMetricsEmitter,
+				Logger:            logger,
 			}
 
 			localRulesWithChain = enforcer.RulesWithChain{
@@ -125,6 +131,12 @@ var _ = Describe("Single Poll Cycle", func() {
 				Expect(fakePolicyPlanner.GetRulesAndChainCallCount()).To(Equal(2))
 
 				Expect(fakeEnforcer.EnforceRulesAndChainCallCount()).To(Equal(4))
+			})
+
+			It("logs a message about writing ip tables rules", func() {
+				err := p.DoCycle()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(logger).To(gbytes.Say("poll-cycle.*updating iptables rules.*new rules.*new-rule.*num new rules.*1.*num old rules.*1.*old rules.*local-rule"))
 			})
 		})
 
