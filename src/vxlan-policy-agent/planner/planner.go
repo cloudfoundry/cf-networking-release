@@ -95,7 +95,9 @@ func (p *VxlanPolicyPlanner) GetRulesAndChain() (enforcer.RulesWithChain, error)
 
 		if dstOk {
 			// there are some containers on this host that are dests for the policy
-			for _, dstContainerIP := range dstContainerIPs {
+			ips := sort.StringSlice(dstContainerIPs)
+			sort.Sort(ips)
+			for _, dstContainerIP := range ips {
 				if iptablesLoggingEnabled {
 					filterRuleset = append(
 						filterRuleset,
@@ -124,7 +126,9 @@ func (p *VxlanPolicyPlanner) GetRulesAndChain() (enforcer.RulesWithChain, error)
 
 		if srcOk {
 			// there are some containers on this host that are sources for the policy
-			for _, srcContainerIP := range srcContainerIPs {
+			ips := sort.StringSlice(srcContainerIPs)
+			sort.Sort(ips)
+			for _, srcContainerIP := range ips {
 				marksRuleset = append(
 					marksRuleset,
 					rules.NewMarkSetRule(srcContainerIP, policy.Source.Tag, policy.Source.ID),

@@ -270,6 +270,52 @@ var _ = Describe("Planner", func() {
 			})
 		})
 
+		Context("when there are multiple containers for an app on the cell", func() {
+			BeforeEach(func() {
+				data = make(map[string]datastore.Container)
+				data["container-id-1"] = datastore.Container{
+					Handle: "container-id-1",
+					IP:     "10.255.1.2",
+					Metadata: map[string]interface{}{
+						"policy_group_id": "some-app-guid",
+					},
+				}
+				data["container-id-2"] = datastore.Container{
+					Handle: "container-id-2",
+					IP:     "10.255.1.3",
+					Metadata: map[string]interface{}{
+						"policy_group_id": "some-other-app-guid",
+					},
+				}
+				data["container-id-3"] = datastore.Container{
+					Handle: "container-id-3",
+					IP:     "10.255.1.4",
+					Metadata: map[string]interface{}{
+						"policy_group_id": "some-app-guid",
+					},
+				}
+				data["container-id-4"] = datastore.Container{
+					Handle: "container-id-4",
+					IP:     "10.255.1.5",
+					Metadata: map[string]interface{}{
+						"policy_group_id": "some-other-app-guid",
+					},
+				}
+
+				store.ReadAllReturns(data, nil)
+			})
+
+			It("the order of the rules is not affected", func() {
+				rulesWithChain, err := policyPlanner.GetRulesAndChain()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(rulesWithChain.Rules).To(HaveLen(8))
+				Expect(rulesWithChain.Rules[0]).To(ContainElement("10.255.1.2"))
+				Expect(rulesWithChain.Rules[1]).To(ContainElement("10.255.1.4"))
+				Expect(rulesWithChain.Rules[2]).To(ContainElement("10.255.1.3"))
+				Expect(rulesWithChain.Rules[3]).To(ContainElement("10.255.1.5"))
+			})
+		})
+
 		Context("when a container's metadata is missing required key policy group id", func() {
 			BeforeEach(func() {
 				data["container-id-fruit"] = datastore.Container{
