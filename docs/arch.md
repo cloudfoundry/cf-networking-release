@@ -4,7 +4,7 @@ Netman provides policy-driven container networking for Cloud Foundry.
 
 It has several components.  Some are "core" to the platform, others are "swappable" by operators.
 
-![](https://github.com/cloudfoundry-incubator/container-networking-notes/blob/master/container_networking_block_digram.png?raw=true)
+![](diagram.png)
 
 
 ### Core components
