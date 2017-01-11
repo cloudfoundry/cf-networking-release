@@ -189,6 +189,7 @@ func main() {
 			},
 			Enforcer:          ruleEnforcer,
 			CollectionEmitter: timeMetricsEmitter,
+			Logger:            logger,
 		}).DoCycle,
 	}
 
