@@ -1,6 +1,7 @@
 package cf_cli_adapter
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -210,7 +211,28 @@ func (a *Adapter) DeleteQuota(quota string) error {
 	return runCommandWithTimeout(cmd)
 }
 
+type CmdErr struct {
+	Out     string
+	Err     string
+	Message string
+}
+
+func (e *CmdErr) Error() string {
+	return fmt.Sprintf("%s:\n\nOut:\n%s\n\nErr:%s\n", e.Message, e.Out, e.Err)
+}
+
 func runCommandWithTimeout(cmd *exec.Cmd) error {
+	outBuffer := &bytes.Buffer{}
+	errBuffer := &bytes.Buffer{}
+	wrapErr := func(msg string) error {
+		return &CmdErr{
+			Out:     outBuffer.String(),
+			Err:     errBuffer.String(),
+			Message: msg,
+		}
+	}
+	cmd.Stdout = outBuffer
+	cmd.Stderr = errBuffer
 	if err := cmd.Start(); err != nil {
 		return err
 	}
@@ -222,12 +244,13 @@ func runCommandWithTimeout(cmd *exec.Cmd) error {
 	select {
 	case <-time.After(2 * time.Minute):
 		if err := cmd.Process.Kill(); err != nil {
-			return fmt.Errorf("command timed out and could not be killed: %s", err)
+			return wrapErr(fmt.Sprintf("command timed out and could not be killed: %s", err))
 		}
-		return errors.New("command timed out")
+		return wrapErr("command timed out")
+
 	case err := <-done:
 		if err != nil {
-			return err
+			return wrapErr(err.Error())
 		}
 	}
 	return nil

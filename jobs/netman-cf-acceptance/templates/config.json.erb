@@ -1,0 +1,19 @@
+<%=
+    require 'json'
+
+    toRender = {
+      "api" => "api." + p("netman-cf-acceptance.system_domain"),
+      "apps_domain" => p("netman-cf-acceptance.apps_domain"),
+      "skip_ssl_validation" => p("netman-cf-acceptance.skip_ssl_validation"),
+      "admin_user" => p("netman-cf-acceptance.admin_user"),
+      "admin_password" => p("netman-cf-acceptance.admin_password"),
+      "admin_client" => p("netman-cf-acceptance.admin_client"),
+      "admin_secret" => p("netman-cf-acceptance.admin_secret"),
+      "test_applications" => p("netman-cf-acceptance.num_apps"),
+      "test_app_instances" => p("netman-cf-acceptance.num_app_instances"),
+      "extra_listen_ports" => 2,
+      "prefix" => p("netman-cf-acceptance.prefix"),
+    }
+
+    JSON.pretty_generate(toRender)
+%>
