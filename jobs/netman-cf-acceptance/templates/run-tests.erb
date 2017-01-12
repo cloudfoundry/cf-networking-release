@@ -15,8 +15,8 @@ mkdir -p $CF_PLUGIN_HOME
 
 cf uninstall-plugin network-policy || true
 
-go build -o /tmp/cli-plugin cli-plugin
-cf install-plugin -f /tmp/cli-plugin
+go build -o $GOPATH/bin/cli-plugin cli-plugin
+cf install-plugin -f $GOPATH/bin/cli-plugin
 
 export CONFIG=/var/vcap/jobs/netman-cf-acceptance/config.json
 export APPS_DIR=$GOPATH/src/example-apps
