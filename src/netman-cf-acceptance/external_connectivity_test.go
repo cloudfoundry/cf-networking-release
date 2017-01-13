@@ -19,19 +19,21 @@ var _ = Describe("external connectivity", func() {
 		orgName                       string
 		spaceName                     string
 		appRoute                      string
+		prefix                        string
 		originalRunningSecurityGroups []string
 	)
 
 	BeforeEach(func() {
 		appA = fmt.Sprintf("appA-%d", rand.Int31())
+		prefix = testConfig.Prefix
 
 		AuthAsAdmin()
 
-		orgName = "test-org"
+		orgName = prefix + "org"
 		Expect(cf.Cf("create-org", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
 		Expect(cf.Cf("target", "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
 
-		spaceName = "test-space"
+		spaceName = prefix + "space"
 		Expect(cf.Cf("create-space", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
 		Expect(cf.Cf("target", "-o", orgName, "-s", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
 

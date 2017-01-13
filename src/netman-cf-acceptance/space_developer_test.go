@@ -25,6 +25,7 @@ var _ = Describe("space developer policy configuration", func() {
 		orgName    string
 		spaceNameA string
 		spaceNameB string
+		prefix     string
 		w          warrant.Warrant
 
 		policyClient *policy_client.ExternalClient
@@ -42,22 +43,23 @@ var _ = Describe("space developer policy configuration", func() {
 			fmt.Sprintf("https://%s", config.ApiEndpoint),
 		)
 
+		prefix = testConfig.Prefix
 		appA = fmt.Sprintf("appA-%d", rand.Int31())
 		appB = fmt.Sprintf("appB-%d", rand.Int31())
 
 		AuthAsAdmin()
 
-		orgName = "test-org"
+		orgName = prefix + "org"
 		Expect(cf.Cf("create-org", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
 		Expect(cf.Cf("target", "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
 
-		spaceNameA = "test-space-A"
+		spaceNameA = prefix + "space-A"
 		Expect(cf.Cf("create-space", spaceNameA).Wait(Timeout_Push)).To(gexec.Exit(0))
 		Expect(cf.Cf("target", "-o", orgName, "-s", spaceNameA).Wait(Timeout_Push)).To(gexec.Exit(0))
 
 		pushProxy(appA)
 
-		spaceNameB = "test-space-B"
+		spaceNameB = prefix + "space-B"
 		Expect(cf.Cf("create-space", spaceNameB).Wait(Timeout_Push)).To(gexec.Exit(0))
 		Expect(cf.Cf("target", "-o", orgName, "-s", spaceNameB).Wait(Timeout_Push)).To(gexec.Exit(0))
 
