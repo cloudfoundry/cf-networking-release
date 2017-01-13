@@ -25,8 +25,8 @@ import (
 
 const Timeout_Check = 20 * time.Minute
 
-// 3 * observed agent total poll time with 200 containers per cell
-const Policy_Update_Wait = 180 * time.Second
+// 2 * poll cycle time (5s)
+const Policy_Update_Wait = 10 * time.Second
 
 var ports []int
 
@@ -86,8 +86,8 @@ var _ = Describe("how the container network performs at scale", func() {
 			By("dumping stats to commit to stats repo")
 			dumpStats(appProxy, config.AppsDomain)
 
-			By("sleeping for 5 minutes while policies exist")
-			time.Sleep(5 * time.Minute)
+			By("sleeping for 30 seconds while policies exist")
+			time.Sleep(30 * time.Second)
 
 			By("deleting policies")
 			doAllPolicies("delete", appProxy, appsTest, ports)
