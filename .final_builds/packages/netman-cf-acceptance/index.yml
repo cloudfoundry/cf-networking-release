@@ -1,0 +1,7 @@
+---
+builds:
+  ee550ad4f60baf0caadbc59050d2592e0ee6259a:
+    version: ee550ad4f60baf0caadbc59050d2592e0ee6259a
+    sha1: 5ff2ce74725b9dd86cb15ea61e1a73681e90444b
+    blobstore_id: 840aee82-11d4-4858-bd4c-7b685e1945ee
+format-version: '2'
