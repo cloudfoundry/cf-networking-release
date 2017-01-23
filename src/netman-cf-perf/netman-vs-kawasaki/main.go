@@ -1,10 +1,8 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"lib/marshal"
-	"lib/policy_client"
+	"lib/json_client"
 	"net/http"
 	"strings"
 	"time"
@@ -14,13 +12,7 @@ import (
 
 func main() {
 	logger := lager.NewLogger("test")
-	jsonClient := policy_client.JsonClient{
-		Logger:      logger,
-		Url:         "https://c2c-test.cfapps.io",
-		HttpClient:  http.DefaultClient,
-		Marshaler:   marshal.MarshalFunc(json.Marshal),
-		Unmarshaler: marshal.UnmarshalFunc(json.Unmarshal),
-	}
+	jsonClient := json_client.New(logger, http.DefaultClient, "https://c2c-test.cfapps.io")
 
 	nSamples := 1000
 
@@ -45,7 +37,7 @@ func main() {
 	report(kawasakiSamples, "KAWASAKI")
 }
 
-func sampleOne(jsonClient policy_client.JsonClient) (time.Duration, bool, error) {
+func sampleOne(jsonClient json_client.JsonClient) (time.Duration, bool, error) {
 	startTime := time.Now()
 	var resp struct{ ListenAddresses []string }
 	err := jsonClient.Do("GET", "/", nil, &resp, "")
