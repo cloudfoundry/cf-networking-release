@@ -147,7 +147,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		})
 
 		setIPTablesLogging := func(enabled bool) {
-			endpoint := fmt.Sprintf("http://%s:%d/iptables_logging", conf.DebugServerHost, conf.DebugServerPort)
+			endpoint := fmt.Sprintf("http://%s:%d/iptables-logging", conf.DebugServerHost, conf.DebugServerPort)
 			req, err := http.NewRequest("PUT", endpoint, strings.NewReader(fmt.Sprintf(`{ "enabled": %t }`, enabled)))
 			Expect(err).NotTo(HaveOccurred())
 			resp, err := http.DefaultClient.Do(req)
@@ -159,7 +159,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		}
 
 		getIPTablesLogging := func() (bool, error) {
-			endpoint := fmt.Sprintf("http://%s:%d/iptables_logging", conf.DebugServerHost, conf.DebugServerPort)
+			endpoint := fmt.Sprintf("http://%s:%d/iptables-logging", conf.DebugServerHost, conf.DebugServerPort)
 			resp, err := http.DefaultClient.Get(endpoint)
 			if err != nil {
 				return false, err
