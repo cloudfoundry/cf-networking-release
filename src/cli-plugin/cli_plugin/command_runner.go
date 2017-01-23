@@ -3,7 +3,6 @@ package cli_plugin
 import (
 	"bytes"
 	"cli-plugin/styles"
-	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -60,13 +59,13 @@ func (r *CommandRunner) List() (string, error) {
 		var err error
 		policies, err = r.PolicyClient.GetPoliciesByID(accessToken, appGuid)
 		if err != nil {
-			return "", errors.New("getting policies by id: failed to make request to policy server")
+			return "", fmt.Errorf("getting policies by id: %s", err)
 		}
 	} else {
 		var err error
 		policies, err = r.PolicyClient.GetPolicies(accessToken)
 		if err != nil {
-			return "", errors.New("getting policies: failed to make request to policy server")
+			return "", fmt.Errorf("getting policies: %s", err)
 		}
 	}
 
@@ -143,7 +142,7 @@ func (r *CommandRunner) Allow() (string, error) {
 
 	err = r.PolicyClient.AddPolicies(token, []models.Policy{policy})
 	if err != nil {
-		return "", errors.New("adding policies: failed to make request to policy server")
+		return "", fmt.Errorf("adding policies: %s", err)
 	}
 
 	return "", nil
@@ -182,7 +181,7 @@ func (r *CommandRunner) Remove() (string, error) {
 
 	err = r.PolicyClient.DeletePolicies(accessToken, []models.Policy{policy})
 	if err != nil {
-		return "", errors.New("deleting policies: failed to make request to policy server")
+		return "", fmt.Errorf("deleting policies: %s", err)
 	}
 
 	return "", nil

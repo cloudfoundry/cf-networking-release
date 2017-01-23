@@ -52,7 +52,7 @@ var _ = Describe("Client", func() {
 		BeforeEach(func() {
 			fakeHTTPClient.DoReturns(
 				&http.Response{
-					StatusCode: 200,
+					StatusCode: http.StatusOK,
 					Body:       ioutil.NopCloser(bytes.NewReader([]byte(fixtures.AppsV3))),
 				}, nil)
 		})
@@ -99,7 +99,7 @@ var _ = Describe("Client", func() {
 		BeforeEach(func() {
 			fakeHTTPClient.DoReturns(
 				&http.Response{
-					StatusCode: 200,
+					StatusCode: http.StatusOK,
 					Body:       ioutil.NopCloser(strings.NewReader(`%%%%`)),
 				}, nil)
 		})
@@ -119,7 +119,7 @@ var _ = Describe("Client", func() {
 			}`
 			fakeHTTPClient.DoReturns(
 				&http.Response{
-					StatusCode: 200,
+					StatusCode: http.StatusOK,
 					Body:       ioutil.NopCloser(bytes.NewReader([]byte(v3AppsMultiplePages))),
 				}, nil)
 		})
@@ -134,14 +134,14 @@ var _ = Describe("Client", func() {
 		BeforeEach(func() {
 			fakeHTTPClient.DoReturns(
 				&http.Response{
-					StatusCode: 418,
+					StatusCode: http.StatusTeapot,
 					Body:       ioutil.NopCloser(strings.NewReader("bad thing")),
 				}, nil)
 		})
 
 		It("returns the response body in the error", func() {
 			_, err := client.GetAllAppGUIDs("some-token")
-			Expect(err).To(MatchError(ContainSubstring("http client do: bad response status 418")))
+			Expect(err).To(MatchError(ContainSubstring("http client do: 418 I'm a teapot: bad thing")))
 		})
 	})
 
@@ -149,7 +149,7 @@ var _ = Describe("Client", func() {
 		BeforeEach(func() {
 			fakeHTTPClient.DoReturns(
 				&http.Response{
-					StatusCode: 200,
+					StatusCode: http.StatusOK,
 					Body:       ioutil.NopCloser(bytes.NewReader([]byte(fixtures.AppsV3))),
 				}, nil)
 		})
@@ -212,7 +212,7 @@ var _ = Describe("Client", func() {
 			BeforeEach(func() {
 				fakeHTTPClient.DoReturns(
 					&http.Response{
-						StatusCode: 200,
+						StatusCode: http.StatusOK,
 						Body:       ioutil.NopCloser(strings.NewReader(`%%%%`)),
 					}, nil)
 			})
@@ -232,7 +232,7 @@ var _ = Describe("Client", func() {
 			}`
 				fakeHTTPClient.DoReturns(
 					&http.Response{
-						StatusCode: 200,
+						StatusCode: http.StatusOK,
 						Body:       ioutil.NopCloser(bytes.NewReader([]byte(v3AppsMultiplePages))),
 					}, nil)
 
@@ -248,14 +248,14 @@ var _ = Describe("Client", func() {
 			BeforeEach(func() {
 				fakeHTTPClient.DoReturns(
 					&http.Response{
-						StatusCode: 418,
+						StatusCode: http.StatusTeapot,
 						Body:       ioutil.NopCloser(strings.NewReader("bad thing")),
 					}, nil)
 			})
 
 			It("returns the error", func() {
 				_, err := client.GetSpaceGUIDs("some-token", []string{"foo"})
-				Expect(err).To(MatchError(ContainSubstring("http client do: bad response status 418")))
+				Expect(err).To(MatchError(ContainSubstring("http client do: 418 I'm a teapot: bad thing")))
 			})
 		})
 	})
@@ -268,7 +268,7 @@ var _ = Describe("Client", func() {
 		BeforeEach(func() {
 			fakeHTTPClient.DoReturns(
 				&http.Response{
-					StatusCode: 200,
+					StatusCode: http.StatusOK,
 					Body:       ioutil.NopCloser(bytes.NewReader([]byte(fixtures.Space))),
 				}, nil)
 		})
@@ -315,7 +315,7 @@ var _ = Describe("Client", func() {
 			BeforeEach(func() {
 				fakeHTTPClient.DoReturns(
 					&http.Response{
-						StatusCode: 200,
+						StatusCode: http.StatusOK,
 						Body:       ioutil.NopCloser(strings.NewReader(`%%%%`)),
 					}, nil)
 			})
@@ -330,7 +330,7 @@ var _ = Describe("Client", func() {
 			BeforeEach(func() {
 				fakeHTTPClient.DoReturns(
 					&http.Response{
-						StatusCode: 404,
+						StatusCode: http.StatusNotFound,
 						Body:       ioutil.NopCloser(strings.NewReader("")),
 					}, nil)
 			})
@@ -346,7 +346,7 @@ var _ = Describe("Client", func() {
 			BeforeEach(func() {
 				fakeHTTPClient.DoReturns(
 					&http.Response{
-						StatusCode: 418,
+						StatusCode: http.StatusTeapot,
 						Body:       ioutil.NopCloser(strings.NewReader("bad thing")),
 					}, nil)
 
@@ -354,7 +354,7 @@ var _ = Describe("Client", func() {
 
 			It("returns the error", func() {
 				_, err := client.GetSpace("some-token", "some-space-guid")
-				Expect(err).To(MatchError(ContainSubstring("http client do: bad response status 418")))
+				Expect(err).To(MatchError(ContainSubstring("http client do: 418 I'm a teapot: bad thing")))
 			})
 		})
 	})
@@ -375,7 +375,7 @@ var _ = Describe("Client", func() {
 			}
 			fakeHTTPClient.DoReturns(
 				&http.Response{
-					StatusCode: 200,
+					StatusCode: http.StatusOK,
 					Body:       ioutil.NopCloser(bytes.NewReader([]byte(fixtures.AppsV3))),
 				}, nil)
 		})
@@ -413,7 +413,7 @@ var _ = Describe("Client", func() {
 		BeforeEach(func() {
 			fakeHTTPClient.DoReturns(
 				&http.Response{
-					StatusCode: 200,
+					StatusCode: http.StatusOK,
 					Body:       ioutil.NopCloser(bytes.NewReader([]byte(fixtures.UserSpaces))),
 				}, nil)
 		})
@@ -442,7 +442,7 @@ var _ = Describe("Client", func() {
 		BeforeEach(func() {
 			fakeHTTPClient.DoReturns(
 				&http.Response{
-					StatusCode: 200,
+					StatusCode: http.StatusOK,
 					Body:       ioutil.NopCloser(bytes.NewReader([]byte(fixtures.UserSpace))),
 				}, nil)
 		})
@@ -467,7 +467,7 @@ var _ = Describe("Client", func() {
 			BeforeEach(func() {
 				fakeHTTPClient.DoReturns(
 					&http.Response{
-						StatusCode: 200,
+						StatusCode: http.StatusOK,
 						Body:       ioutil.NopCloser(bytes.NewReader([]byte(fixtures.UserSpaceEmpty))),
 					}, nil)
 			})
@@ -483,7 +483,7 @@ var _ = Describe("Client", func() {
 			BeforeEach(func() {
 				fakeHTTPClient.DoReturns(
 					&http.Response{
-						StatusCode: 200,
+						StatusCode: http.StatusOK,
 						Body:       ioutil.NopCloser(bytes.NewReader([]byte(fixtures.Spaces))),
 					}, nil)
 			})
@@ -520,7 +520,7 @@ var _ = Describe("Client", func() {
 			BeforeEach(func() {
 				fakeHTTPClient.DoReturns(
 					&http.Response{
-						StatusCode: 200,
+						StatusCode: http.StatusOK,
 						Body:       ioutil.NopCloser(strings.NewReader(`%%%%`)),
 					}, nil)
 			})
@@ -535,7 +535,7 @@ var _ = Describe("Client", func() {
 			BeforeEach(func() {
 				fakeHTTPClient.DoReturns(
 					&http.Response{
-						StatusCode: 418,
+						StatusCode: http.StatusTeapot,
 						Body:       ioutil.NopCloser(strings.NewReader("bad thing")),
 					}, nil)
 
@@ -543,7 +543,7 @@ var _ = Describe("Client", func() {
 
 			It("returns the error", func() {
 				_, err := client.GetUserSpace("some-token", "some-developer-guid", space)
-				Expect(err).To(MatchError(ContainSubstring("http client do: bad response status 418")))
+				Expect(err).To(MatchError(ContainSubstring("http client do: 418 I'm a teapot: bad thing")))
 			})
 		})
 	})

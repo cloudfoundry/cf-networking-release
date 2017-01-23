@@ -160,7 +160,7 @@ var _ = Describe("JsonClient", func() {
 
 			It("returns the error and logs the body", func() {
 				err := jsonClient.Do(method, route, reqData, &respData, token)
-				Expect(err).To(MatchError("http client do: bad response status 400"))
+				Expect(err).To(MatchError(`http client do: 400 Bad Request: {"error":"some-error"}`))
 
 				Expect(logger).To(gbytes.Say(`http-client.*some-error.*400`))
 			})
@@ -171,7 +171,7 @@ var _ = Describe("JsonClient", func() {
 				Expect(ok).To(BeTrue())
 
 				Expect(typedErr.StatusCode).To(Equal(400))
-				Expect(typedErr.Message).To(Equal("http client do: bad response status 400"))
+				Expect(typedErr.Message).To(Equal(`http client do: 400 Bad Request: {"error":"some-error"}`))
 			})
 		})
 

@@ -78,7 +78,7 @@ func (c *Client) Do(method, route string, reqData, respData interface{}, token s
 	}
 
 	if resp.StatusCode > 299 {
-		err = fmt.Errorf("http client do: bad response status %d", resp.StatusCode)
+		err = fmt.Errorf("http client do: %d %s: %s", resp.StatusCode, http.StatusText(resp.StatusCode), string(respBytes))
 		c.Logger.Error("http-client", err, lager.Data{
 			"body": string(respBytes),
 		})

@@ -144,7 +144,7 @@ var _ = Describe("CommandRunner", func() {
 			})
 			It("wraps the error in a more helpful message", func() {
 				_, err := runner.List()
-				Expect(err).To(MatchError("getting policies: failed to make request to policy server"))
+				Expect(err).To(MatchError("getting policies: banana"))
 			})
 		})
 
@@ -204,7 +204,7 @@ var _ = Describe("CommandRunner", func() {
 				})
 				It("wraps the error in a more helpful message", func() {
 					_, err := runner.List()
-					Expect(err).To(MatchError("getting policies by id: failed to make request to policy server"))
+					Expect(err).To(MatchError("getting policies by id: banana"))
 				})
 			})
 
@@ -252,7 +252,7 @@ var _ = Describe("CommandRunner", func() {
 				})
 				It("wraps the error in a more helpful message", func() {
 					_, err := runner.Allow()
-					Expect(err).To(MatchError("adding policies: failed to make request to policy server"))
+					Expect(err).To(MatchError("adding policies: banana"))
 				})
 			})
 
@@ -364,7 +364,7 @@ var _ = Describe("CommandRunner", func() {
 			})
 			It("wraps the error in a more helpful message", func() {
 				_, err := runner.Remove()
-				Expect(err).To(MatchError("deleting policies: failed to make request to policy server"))
+				Expect(err).To(MatchError("deleting policies: banana"))
 			})
 		})
 
