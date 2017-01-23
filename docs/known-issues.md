@@ -39,8 +39,6 @@
   Current support for application security groups in netman is incomplete:
   - The only supported protocols are `tcp` and `udp`, this means `icmp` protocol,
     code and type are not supported
-  - Only single ports are supported, not ranges
-  - We currently do not support logging in ASGs
 
 - ###  Behavior Changes From Existing Application Security Groups
   Current implementations of ASGs allow opening security groups to other containers
@@ -49,10 +47,6 @@
   policy system. Direct addressing of other containers (without going through the gorouter)
   on the underlay is not supported and may result in undefined behavior.
 
-- ### CIDR blocks other than /16
-  It is possible to configure the CIDR block for containers to be something
-  other than the default of /16. This hasn't been tested.
-  We don't know what happens. Good luck.
 
 - ### Blue/Green deploys of apps must reconfigure policies
   Following the instructions
