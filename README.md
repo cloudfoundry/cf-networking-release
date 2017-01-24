@@ -1,12 +1,12 @@
-# Netman
+# CF Networking
 
-Netman provides policy-based container networking for Cloud Foundry.
+CF Networking provides policy-based container networking for Cloud Foundry.
 
-Netman integrates with [Garden-runC](https://github.com/cloudfoundry/garden-runc-release) in a
+CF Networking integrates with [Garden-runC](https://github.com/cloudfoundry/garden-runc-release) in a
 [Diego](https://github.com/cloudfoundry/diego-release) deployment.  Additionally, a VM is deployed to act as a network Policy Server.
 A [JSON API](docs/API.md) and a [CF CLI plugin](docs/CLI.md) are available to control network policies.
 
-For more information about deploying Netman, look at our docs for [BOSH-lite](docs/bosh-lite.md) or [AWS](docs/aws.md).
+For more information about deploying CF Networking, look at our docs for [BOSH-lite](docs/bosh-lite.md) or [AWS](docs/aws.md).
 
 ## Downloads
 - [BOSH release](http://bosh.io/docs/release.html) available on
@@ -27,7 +27,7 @@ For more information about deploying Netman, look at our docs for [BOSH-lite](do
   - [Proxy](src/example-apps/proxy)
   - [Tick](src/example-apps/tick)
 - [3rd Party Plugin Development](docs/3rd-party.md)
-- [Contributing to Netman](docs/contributing.md)
+- [Contributing to CF Networking](docs/contributing.md)
 - Operation
   - [Configuration](docs/configuration.md)
   - [Known Issues](docs/known-issues.md)
