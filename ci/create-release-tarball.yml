@@ -6,7 +6,7 @@ image_resource:
 platform: linux
 
 inputs:
-- name: netman-release
+- name: cf-networking
 
 outputs:
 - name: tarballs
@@ -16,6 +16,6 @@ run:
   args:
   - -c
   - |
-    bosh create release --with-tarball --name $RELEASE_NAME --timestamp-version --dir netman-release && cp netman-release/dev_releases/$RELEASE_NAME/*.tgz tarballs
+    bosh create release --with-tarball --name $RELEASE_NAME --timestamp-version --dir cf-networking && cp cf-networking/dev_releases/$RELEASE_NAME/*.tgz tarballs
 params:
   RELEASE_NAME: netman
