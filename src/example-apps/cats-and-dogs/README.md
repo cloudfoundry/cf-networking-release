@@ -10,7 +10,7 @@ The frontend serves a form at `http://frontend.bosh-lite.com/` that allows you t
 
 ### Deploying
 ```
-cd netman-release/src/example-apps/cats-and-dogs/frontend
+cd cf-networking/src/example-apps/cats-and-dogs/frontend
 cf api api.bosh-lite.com --skip-ssl-validation
 cf auth admin admin
 cf push frontend
@@ -21,7 +21,7 @@ The backend displays its container network IP if you visit `http://backend.bosh-
 
 ### Deploying
 ```
-cd netman-release/src/example-apps/cats-and-dogs/backend
+cd cf-networking/src/example-apps/cats-and-dogs/backend
 cf push backend --no-start
 cf set-env backend CATS_PORTS "5678,9876"
 cf start backend
@@ -45,9 +45,9 @@ Frontend
 Backend URL: [_____] [ Submit ]
 ```
 
-Enter the backend's overlay IP and port (10.255.76.2:9876) and hit submit. You will see an error message. This is because the two apps have not been configured to allow connections from the frontend to the backend. 
+Enter the backend's overlay IP and port (10.255.76.2:9876) and hit submit. You will see an error message. This is because the two apps have not been configured to allow connections from the frontend to the backend.
 
-To configure policies you must have the netman [CF CLI plugin](https://github.com/cloudfoundry-incubator/netman-release/blob/develop/docs/CLI.md) installed. Now allow access:
+To configure policies you must have the CF Networking [CLI plugin](https://github.com/cloudfoundry-incubator/cf-networking/blob/develop/docs/CLI.md) installed. Now allow access:
 
 ```
 cf allow-access frontend backend --port 9876 --protocol tcp

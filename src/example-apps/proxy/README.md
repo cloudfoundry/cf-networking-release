@@ -2,7 +2,7 @@
 
 Push two differently named instances of the app
 ```bash
-cd ~/workspace/netman-release/src/example-apps/proxy
+cd ~/workspace/cf-networking/src/example-apps/proxy
 cf push appA
 cf push appB
 ```
