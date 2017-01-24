@@ -2,7 +2,7 @@
 
 set -e -u
 
-cd netman-release
+cd cf-networking
 export GOPATH=$PWD
 
 declare -a packages=(

@@ -6,10 +6,10 @@ image_resource:
 platform: linux
 
 inputs:
-- name: netman-release
+- name: cf-networking
 
 run:
-  path: netman-release/ci/unit-and-integration-tests.sh
+  path: cf-networking/ci/unit-and-integration-tests.sh
 
 params:
   GINKGO_EXTRA_FLAGS: "-race"
