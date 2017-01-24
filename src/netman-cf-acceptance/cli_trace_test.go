@@ -1,6 +1,8 @@
 package acceptance_test
 
 import (
+	"os"
+
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 
 	. "github.com/onsi/ginkgo"
@@ -9,7 +11,7 @@ import (
 	"github.com/onsi/gomega/gexec"
 )
 
-var _ = FDescribe("enabling trace logging for the CF CLI plugin", func() {
+var _ = Describe("trace logging for the plugin", func() {
 	var (
 		orgName   string
 		spaceName string
@@ -30,12 +32,33 @@ var _ = FDescribe("enabling trace logging for the CF CLI plugin", func() {
 		Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 	})
 
-	It("logs the HTTP request and responses to the policy server", func() {
-		// run CF_TRACE=true cf list-access
-		// assert that stdout includes HTTP GET to the right url
+	Context("when tracing is disabled", func() {
+		It("does not log the HTTP request or response", func() {
+			listAccess := cf.Cf("list-access")
+			Expect(listAccess.Wait(Timeout_Push)).To(gexec.Exit(0))
+			Expect(string(listAccess.Out.Contents())).NotTo(ContainSubstring("GET /networking/v0/external/policies"))
+		})
+	})
 
-		listAccess := cf.Cf("-v", "list-access")
-		Expect(listAccess.Wait(Timeout_Push)).To(gexec.Exit(0))
-		Expect(string(listAccess.Out.Contents())).To(ContainSubstring("GET /networking/v0/external/policies"))
+	Context("when tracing is enabled", func() {
+		BeforeEach(func() {
+			Expect(os.Setenv("CF_TRACE", "true")).To(Succeed())
+		})
+
+		AfterEach(func() {
+			Expect(os.Unsetenv("CF_TRACE")).To(Succeed())
+		})
+
+		It("logs the HTTP request and responses to the policy server", func() {
+			listAccess := cf.Cf("list-access")
+			Expect(listAccess.Wait(Timeout_Push)).To(gexec.Exit(0))
+			Expect(string(listAccess.Out.Contents())).To(ContainSubstring("GET /networking/v0/external/policies"))
+		})
+
+		It("does not print private data", func() {
+			listAccess := cf.Cf("list-access")
+			Expect(listAccess.Wait(Timeout_Push)).To(gexec.Exit(0))
+			Expect(string(listAccess.Out.Contents())).ToNot(ContainSubstring("bearer"))
+		})
 	})
 })
