@@ -6,15 +6,19 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"lib/policy_client"
 	"log"
 	"net"
 	"net/http"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
+	cli_net "code.cloudfoundry.org/cli/cf/net"
+	"code.cloudfoundry.org/cli/cf/trace"
 	"code.cloudfoundry.org/cli/plugin"
 	"code.cloudfoundry.org/lager"
 )
@@ -126,20 +130,23 @@ func (p *Plugin) RunWithErrors(cliConnection plugin.CliConnection, args []string
 		return "", fmt.Errorf("checking if ssl disabled: %s", err)
 	}
 
+	isVerbose := true
+	logWriter := os.Stdout
+
 	runner := &CommandRunner{
 		Styler: p.Styler,
 		Logger: p.Logger,
 		PolicyClient: policy_client.NewExternal(
 			lager.NewLogger("command"),
 			&http.Client{
-				Transport: &http.Transport{
+				Transport: wrapWithDumper(&http.Transport{
 					Dial: (&net.Dialer{
 						Timeout: 3 * time.Second,
 					}).Dial,
 					TLSClientConfig: &tls.Config{
 						InsecureSkipVerify: skipSSL,
 					},
-				},
+				}, logWriter, isVerbose),
 			},
 			apiEndpoint),
 		CliConnection: cliConnection,
@@ -158,6 +165,30 @@ func (p *Plugin) RunWithErrors(cliConnection plugin.CliConnection, args []string
 	}
 
 	return "", nil
+}
+
+type dumperRoundTripper struct {
+	dumper cli_net.RequestDumper
+	inner  http.RoundTripper
+}
+
+func (t *dumperRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	t.dumper.DumpRequest(req)
+	resp, err := t.inner.RoundTrip(req)
+	if err != nil {
+		return nil, err
+	}
+	t.dumper.DumpResponse(resp)
+	return resp, nil
+}
+
+func wrapWithDumper(inner http.RoundTripper, logWriter io.Writer, isVerbose bool) http.RoundTripper {
+	tracePrinter := trace.NewLogger(logWriter, isVerbose, "", "")
+	dumper := cli_net.NewRequestDumper(tracePrinter)
+	return &dumperRoundTripper{
+		dumper: dumper,
+		inner:  inner,
+	}
 }
 
 func validateUsage(cliConnection plugin.CliConnection, args []string) error {
