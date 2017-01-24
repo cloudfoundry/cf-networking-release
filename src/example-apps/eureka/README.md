@@ -9,9 +9,9 @@ https://spring.io/guides/gs/service-registration-and-discovery/
 ## Assumptions
 
 - `maven` installed (`brew install maven`)
-- CF deployed with [netman](https://github.com/cloudfoundry-incubator/netman-release)
+- CF deployed with [cf-networking](https://github.com/cloudfoundry-incubator/cf-networking)
   (The examples assume a bosh-lite deployment)
-- `cf` cli installed with [`network-policy-plugin`](https://github.com/cloudfoundry-incubator/netman-release/blob/develop/docs/usage.md)
+- `cf` cli installed with [`network-policy-plugin`](https://github.com/cloudfoundry-incubator/cf-networking/blob/develop/docs/usage.md)
 
 ## Build the applications
 
