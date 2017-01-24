@@ -7,20 +7,20 @@ cd $ROOT_DIR_PATH
 if [ ${MYSQL:-"false"} = "true" ]; then
   docker run --privileged \
      --rm \
-     -v $PWD:/netman-release \
-     -e GOPATH=/netman-release \
+     -v $PWD:/cf-networking \
+     -e GOPATH=/cf-networking \
      -e NO_DB="${NO_DB:-""}" \
      -e MYSQL=true \
      -w / \
      c2cnetworking/dev-mysql \
-     /netman-release/ci/unit-and-integration-tests.sh "$@"
+     /cf-networking/ci/unit-and-integration-tests.sh "$@"
 else
   docker run --privileged \
      --rm \
-     -v $PWD:/netman-release \
-     -e GOPATH=/netman-release \
+     -v $PWD:/cf-networking \
+     -e GOPATH=/cf-networking \
      -e NO_DB="${NO_DB:-""}" \
      -w / \
      c2cnetworking/dev-postgres \
-     /netman-release/ci/unit-and-integration-tests.sh "$@"
+     /cf-networking/ci/unit-and-integration-tests.sh "$@"
 fi
