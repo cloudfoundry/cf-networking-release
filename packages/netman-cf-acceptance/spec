@@ -16,13 +16,13 @@ files:
   - cli-plugin/*.go # gosub
   - cli-plugin/cli_plugin/*.go # gosub
   - cli-plugin/styles/*.go # gosub
+  - code.cloudfoundry.org/cli/plugin/*.go # gosub
+  - code.cloudfoundry.org/cli/plugin/models/*.go # gosub
   - code.cloudfoundry.org/lager/*.go # gosub
   - code.cloudfoundry.org/lager/lagertest/*.go # gosub
   - github.com/cloudfoundry-incubator/cf-test-helpers/cf/*.go # gosub
   - github.com/cloudfoundry-incubator/cf-test-helpers/helpers/*.go # gosub
   - github.com/cloudfoundry-incubator/cf-test-helpers/runner/*.go # gosub
-  - github.com/cloudfoundry/cli/plugin/*.go # gosub
-  - github.com/cloudfoundry/cli/plugin/models/*.go # gosub
   - github.com/go-sql-driver/mysql/*.go # gosub
   - github.com/jmoiron/sqlx/*.go # gosub
   - github.com/jmoiron/sqlx/reflectx/*.go # gosub
