@@ -1,6 +1,6 @@
 # Known Issues
 
-- ### MySQL versions below 5.7
+### MySQL versions below 5.7
 
   When the policy server is backed by MySQL versions < 5.7, a user may see this error when trying to create a policy:
 
@@ -17,7 +17,7 @@
 
   This issue can be resolved by upgrading your MySQL server to version 5.7+
 
-- ### Container network access may require a one-time app restage
+### Container network access may require a one-time app restage
   Apps which were last pushed or restaged on older versions of CloudController
   may need to be restaged on a newer version of CloudController in order to
   connect to other apps via the container network.
@@ -35,12 +35,12 @@
   To resolve this, simply `cf restage MYAPP`.
 
 
-- ### Missing Feature Parity For Application Security Groups
+### Missing Feature Parity For Application Security Groups
   Current support for application security groups in netman is incomplete:
   - The only supported protocols are `tcp` and `udp`, this means `icmp` protocol,
     code and type are not supported
 
-- ###  Behavior Changes From Existing Application Security Groups
+###  Behavior Changes From Existing Application Security Groups
   Current implementations of ASGs allow opening security groups to other containers
   via the NATed port on the diego cell. With container networking we only support
   direct addressing of other containers through the overlay network and app-to-app
@@ -48,7 +48,7 @@
   on the underlay is not supported and may result in undefined behavior.
 
 
-- ### Blue/Green deploys of apps must reconfigure policies
+### Blue/Green deploys of apps must reconfigure policies
   Following the instructions
   [here](https://docs.cloudfoundry.org/devguide/deploy-apps/blue-green.html),
   when the green app is deployed it will have a different app guid than blue,
@@ -56,7 +56,7 @@
   to be configured for green as well.
 
 
-- ### Stale policies not cleaned up automatically
+### Stale policies not cleaned up automatically
   If you push an app and configure a policy for that app, when you delete the app
   without deleting the policy, then the policy will stay in the policies database.
 
@@ -72,14 +72,14 @@
   ```
 
 
-- ### Upgrading/Downgrading between garden-runc and garden-runc + netman requires a recreate
+### Upgrading/Downgrading between garden-runc and garden-runc + netman requires a recreate
 garden-runc and netman may leave around iptables rules or networking devices when switching networking stacks.
 The safest way to upgrade from one to the other is to run:
   ```bash
   bosh deploy --recreate
   ```
 
-- ### Flannel watchdog fails on bosh-lite
+### Flannel watchdog fails on bosh-lite
   Flannel on bosh-lite often gets into a state where the overlay network is not functioning.
   A process called `flannel-watchdog` runs on the cells and checks for this error and will cause BOSH to consider the VM unhealthy.
   If you run `bosh vms` and see output similar to this:

@@ -28,8 +28,10 @@ For more information about deploying Netman, look at our docs for [BOSH-lite](do
   - [Tick](src/example-apps/tick)
 - [3rd Party Plugin Development](docs/3rd-party.md)
 - [Contributing to Netman](docs/contributing.md)
-- [Operation](docs/operation.md)
-- [Known Issues](docs/known-issues.md)
+- Operation
+  - [Configuration](docs/configuration.md)
+  - [Known Issues](docs/known-issues.md)
+  - [Troubleshooting](docs/troubleshooting.md)
 
 ## Project links
 - [Design doc for Container Networking Policy](https://docs.google.com/document/d/1HDS89TJKD7ACG6cqQHph5BdNSKLt8jvo6sPGBZ5DmsM)

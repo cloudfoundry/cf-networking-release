@@ -1,4 +1,4 @@
-# Information for operators
+# Configuration Information for Operators
 
 ### Flannel Network Configuration
 The default flannel network is `10.255.0.0/16` which will allow for a maximum of 256 cells.
