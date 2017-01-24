@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/cloudfoundry/cli/plugin"
+	"code.cloudfoundry.org/cli/plugin"
 )
 
 func main() {

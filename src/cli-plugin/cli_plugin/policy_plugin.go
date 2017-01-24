@@ -15,9 +15,8 @@ import (
 	"strings"
 	"time"
 
+	"code.cloudfoundry.org/cli/plugin"
 	"code.cloudfoundry.org/lager"
-
-	"github.com/cloudfoundry/cli/plugin"
 )
 
 type Plugin struct {

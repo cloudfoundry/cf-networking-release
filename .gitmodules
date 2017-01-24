@@ -54,7 +54,7 @@
 	path = src/github.com/coreos/go-iptables
 	url = https://github.com/coreos/go-iptables
 [submodule "src/github.com/cloudfoundry/cli"]
-	path = src/github.com/cloudfoundry/cli
+	path = src/code.cloudfoundry.org/cli
 	url = https://github.com/cloudfoundry/cli
 [submodule "src/code.cloudfoundry.org/lager"]
 	path = src/code.cloudfoundry.org/lager

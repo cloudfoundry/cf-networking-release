@@ -8,8 +8,9 @@ import (
 	"lib/models"
 	"log"
 
-	"github.com/cloudfoundry/cli/plugin/models"
-	"github.com/cloudfoundry/cli/plugin/pluginfakes"
+	"code.cloudfoundry.org/cli/plugin/models"
+	"code.cloudfoundry.org/cli/plugin/pluginfakes"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
