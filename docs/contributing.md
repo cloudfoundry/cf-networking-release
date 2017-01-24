@@ -4,7 +4,7 @@ We welcome contributions from the community.  Here are guidelines for developmen
 ### Running low-level tests
 
 ```bash
-~/workspace/netman-release/scripts/docker-test
+~/workspace/cf-networking/scripts/docker-test
 ```
 
 ### Running the full acceptance test on bosh-lite

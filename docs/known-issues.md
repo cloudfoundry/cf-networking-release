@@ -36,7 +36,7 @@
 
 
 ### Missing Feature Parity For Application Security Groups
-  Current support for application security groups in netman is incomplete:
+  Current support for application security groups in cf-networking is incomplete:
   - The only supported protocols are `tcp` and `udp`, this means `icmp` protocol,
     code and type are not supported
 
@@ -72,8 +72,8 @@
   ```
 
 
-### Upgrading/Downgrading between garden-runc and garden-runc + netman requires a recreate
-garden-runc and netman may leave around iptables rules or networking devices when switching networking stacks.
+### Upgrading/Downgrading between garden-runc and garden-runc + cf-networking requires a recreate
+garden-runc and cf-networking may leave around iptables rules or networking devices when switching networking stacks.
 The safest way to upgrade from one to the other is to run:
   ```bash
   bosh deploy --recreate

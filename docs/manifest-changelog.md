@@ -14,7 +14,7 @@ In the CF properties stub:
 ###  0.10.0
 Policy Server database connection is now expressed as a set of config options, not a single connection string
 
-In the Netman stub:
+In the CF Networking stub:
 
 ```diff
   policy_server:
@@ -30,7 +30,7 @@ In the Netman stub:
 
 ###  0.7.0
 
-Netman stub
+CF Networking stub
 
 ```diff
         policy-server:

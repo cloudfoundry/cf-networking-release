@@ -29,14 +29,14 @@ Then grab the required releases
 pushd ~/workspace
   git clone https://github.com/cloudfoundry/diego-release
   git clone https://github.com/cloudfoundry/cf-release
-  git clone https://github.com/cloudfoundry-incubator/netman-release
+  git clone https://github.com/cloudfoundry-incubator/cf-networking
 popd
 ```
 
 Deploy:
 - Option 1: use the script
   ```bash
-  pushd ~/workspace/netman-release
+  pushd ~/workspace/cf-networking
     ./scripts/deploy-to-bosh-lite
   popd
   ```
@@ -52,7 +52,7 @@ Deploy:
 
   Then
   ```bash
-  pushd ~/workspace/netman-release
+  pushd ~/workspace/cf-networking
     bosh upload release releases/netman-<LATEST-VERSION>.yml
 
     ./scripts/generate-bosh-lite-manifests
@@ -82,7 +82,7 @@ bosh deploy --recreate
 to recreate all VMs.
 
 ## Syslog forwarding
-This is not specific to Netman, but is useful for debugging during development.
+This is not specific to CF Networking, but is useful for debugging during development.
 
 To forward all logs from your bosh-lite to a syslog destination (like Papertrail),
 add the following block to `manifest-generation/stubs/bosh-lite-cf.yml`:

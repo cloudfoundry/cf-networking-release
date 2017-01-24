@@ -1,6 +1,6 @@
 ## Overview
 
-Netman provides policy-driven container networking for Cloud Foundry.
+CF Networking provides policy-driven container networking for Cloud Foundry.
 
 It has several components.  Some are "core" to the platform, others are "swappable" by operators.
 
