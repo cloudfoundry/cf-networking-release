@@ -6,10 +6,10 @@ image_resource:
 platform: linux
 
 inputs:
-- name: cf-networking
+- name: cf-networking-release
 
 run:
-  path: cf-networking/ci/unit-and-integration-tests.sh
+  path: cf-networking-release/ci/unit-and-integration-tests.sh
 
 params:
   GINKGO_EXTRA_FLAGS: "-race"
