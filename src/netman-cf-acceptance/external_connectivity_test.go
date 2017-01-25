@@ -29,7 +29,7 @@ var _ = Describe("external connectivity", func() {
 
 		AuthAsAdmin()
 
-		orgName = prefix + "org"
+		orgName = prefix + "external-connectivity-org"
 		Expect(cf.Cf("create-org", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
 		Expect(cf.Cf("target", "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
 
