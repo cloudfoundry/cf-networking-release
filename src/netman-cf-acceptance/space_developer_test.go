@@ -49,7 +49,7 @@ var _ = Describe("space developer policy configuration", func() {
 
 		AuthAsAdmin()
 
-		orgName = prefix + "org"
+		orgName = prefix + "space-developer-org"
 		Expect(cf.Cf("create-org", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
 		Expect(cf.Cf("target", "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
 
