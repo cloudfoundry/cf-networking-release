@@ -29,14 +29,14 @@ Then grab the required releases
 pushd ~/workspace
   git clone https://github.com/cloudfoundry/diego-release
   git clone https://github.com/cloudfoundry/cf-release
-  git clone https://github.com/cloudfoundry-incubator/cf-networking
+  git clone https://github.com/cloudfoundry-incubator/cf-networking-release
 popd
 ```
 
 Deploy:
 - Option 1: use the script
   ```bash
-  pushd ~/workspace/cf-networking
+  pushd ~/workspace/cf-networking-release
     ./scripts/deploy-to-bosh-lite
   popd
   ```
@@ -52,12 +52,12 @@ Deploy:
 
   Then
   ```bash
-  pushd ~/workspace/cf-networking
-    bosh upload release releases/netman-<LATEST-VERSION>.yml
+  pushd ~/workspace/cf-networking-release
+    bosh upload release releases/cf-networking-<LATEST-VERSION>.yml
 
     ./scripts/generate-bosh-lite-manifests
-    bosh -d bosh-lite/deployments/cf_with_netman.yml deploy
-    bosh -d bosh-lite/deployments/diego_with_netman.yml deploy
+    bosh -d bosh-lite/deployments/cf_networking.yml deploy
+    bosh -d bosh-lite/deployments/diego_cf_networking.yml deploy
   popd
   ```
 

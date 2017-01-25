@@ -4,7 +4,7 @@ Network policies can be managed using the CF Networking CLI plugin.
 ## Installation
 1. Get the cf cli plugin binary
 
-  - Option 1: Download a precompiled binary of the `network-policy-plugin` for your operating system from our [GitHub Releases](https://github.com/cloudfoundry-incubator/cf-networking/releases)
+  - Option 1: Download a precompiled binary of the `network-policy-plugin` for your operating system from our [GitHub Releases](https://github.com/cloudfoundry-incubator/cf-networking-release/releases)
 
   - Option 2: Build from source
 

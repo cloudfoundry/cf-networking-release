@@ -1,4 +1,4 @@
-# CF Networking
+# CF Networking Release
 
 CF Networking provides policy-based container networking for Cloud Foundry.
 
@@ -11,8 +11,8 @@ For more information about deploying CF Networking, look at our docs for [BOSH-l
 ## Downloads
 - [BOSH release](http://bosh.io/docs/release.html) available on
   [bosh.io](http://bosh.io/releases/github.com/cloudfoundry-incubator/netman-release)
-  and [GitHub Releases](https://github.com/cloudfoundry-incubator/cf-networking/releases)
-- [CF CLI Plugin](https://docs.cloudfoundry.org/cf-cli/use-cli-plugins.html) on our [GitHub Releases page](https://github.com/cloudfoundry-incubator/cf-networking/releases)
+  and [GitHub Releases](https://github.com/cloudfoundry-incubator/cf-networking-release/releases)
+- [CF CLI Plugin](https://docs.cloudfoundry.org/cf-cli/use-cli-plugins.html) on our [GitHub Releases page](https://github.com/cloudfoundry-incubator/cf-networking-release/releases)
 
 ## Documentation
 - [Architecture](docs/arch.md)
