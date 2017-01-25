@@ -7,20 +7,20 @@ cd $ROOT_DIR_PATH
 if [ ${MYSQL:-"false"} = "true" ]; then
   docker run --privileged \
      --rm \
-     -v $PWD:/cf-networking \
-     -e GOPATH=/cf-networking \
+     -v $PWD:/cf-networking-release \
+     -e GOPATH=/cf-networking-release \
      -e NO_DB="${NO_DB:-""}" \
      -e MYSQL=true \
      -w / \
      c2cnetworking/dev-mysql \
-     /cf-networking/ci/unit-and-integration-tests.sh "$@"
+     /cf-networking-release/ci/unit-and-integration-tests.sh "$@"
 else
   docker run --privileged \
      --rm \
-     -v $PWD:/cf-networking \
-     -e GOPATH=/cf-networking \
+     -v $PWD:/cf-networking-release \
+     -e GOPATH=/cf-networking-release \
      -e NO_DB="${NO_DB:-""}" \
      -w / \
      c2cnetworking/dev-postgres \
-     /cf-networking/ci/unit-and-integration-tests.sh "$@"
+     /cf-networking-release/ci/unit-and-integration-tests.sh "$@"
 fi

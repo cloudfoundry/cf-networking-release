@@ -2,7 +2,7 @@
 
 set -e -u
 
-cd cf-networking
+cd cf-networking-release
 export GOPATH=$PWD
 
 declare -a packages=(
