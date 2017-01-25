@@ -33,13 +33,23 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			applications   int
 			proxyInstances int
 			prefix         string
+			orgName        string
 		)
 
 		BeforeEach(func() {
+			prefix = testConfig.Prefix
+
+			orgName = prefix + "inter-container-connectivity-org"
+			Expect(cf.Cf("create-org", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
+			Expect(cf.Cf("target", "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
+
+			spaceName := prefix + "space"
+			Expect(cf.Cf("create-space", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
+			Expect(cf.Cf("target", "-o", orgName, "-s", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
+
 			appInstances = testConfig.AppInstances
 			applications = testConfig.Applications
 			proxyInstances = testConfig.ProxyInstances
-			prefix = testConfig.Prefix
 
 			appProxy = prefix + "proxy"
 			appRegistry = prefix + "registry"
@@ -57,7 +67,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			appReport(appProxy, Timeout_Short)
 			appReport(appRegistry, Timeout_Short)
 			appsReport(appsTest, Timeout_Short)
-			Expect(cf.Cf("delete-org", prefix+"org", "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
+			Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 		})
 
 		It("allows the user to configure policies", func(done Done) {
