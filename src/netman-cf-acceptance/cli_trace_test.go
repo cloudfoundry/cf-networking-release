@@ -1,6 +1,7 @@
 package acceptance_test
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
@@ -19,7 +20,8 @@ var _ = Describe("trace logging for the plugin", func() {
 
 	BeforeEach(func() {
 		prefix := testConfig.Prefix
-		orgName = prefix + "org"
+		orgName = fmt.Sprintf("%scli-plugin-org-%d", prefix, GinkgoParallelNode())
+
 		Expect(cf.Cf("create-org", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
 		Expect(cf.Cf("target", "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
 
@@ -32,7 +34,7 @@ var _ = Describe("trace logging for the plugin", func() {
 		Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 	})
 
-	Context("when tracing is disabled", func() {
+	Describe("when tracing is disabled", func() {
 		It("does not log the HTTP request or response", func() {
 			listAccess := cf.Cf("list-access")
 			Expect(listAccess.Wait(Timeout_Push)).To(gexec.Exit(0))
@@ -40,7 +42,7 @@ var _ = Describe("trace logging for the plugin", func() {
 		})
 	})
 
-	Context("when tracing is enabled", func() {
+	Describe("when tracing is enabled", func() {
 		BeforeEach(func() {
 			Expect(os.Setenv("CF_TRACE", "true")).To(Succeed())
 		})
@@ -52,13 +54,14 @@ var _ = Describe("trace logging for the plugin", func() {
 		It("logs the HTTP request and responses to the policy server", func() {
 			listAccess := cf.Cf("list-access")
 			Expect(listAccess.Wait(Timeout_Push)).To(gexec.Exit(0))
-			Expect(string(listAccess.Out.Contents())).To(ContainSubstring("GET /networking/v0/external/policies"))
-		})
 
-		It("does not print private data", func() {
-			listAccess := cf.Cf("list-access")
-			Expect(listAccess.Wait(Timeout_Push)).To(gexec.Exit(0))
-			Expect(string(listAccess.Out.Contents())).ToNot(ContainSubstring("bearer"))
+			By("printing trace info", func() {
+				Expect(string(listAccess.Out.Contents())).To(ContainSubstring("GET /networking/v0/external/policies"))
+			})
+
+			By("not printing private data", func() {
+				Expect(string(listAccess.Out.Contents())).ToNot(ContainSubstring("bearer"))
+			})
 		})
 	})
 })
