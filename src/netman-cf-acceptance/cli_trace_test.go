@@ -15,7 +15,7 @@ var _ = Describe("trace logging for the plugin", func() {
 	var prefix = testConfig.Prefix
 	var orgName string
 
-	createAndTarget := func(orgName, spaceName string) {
+	createAndTarget := func(orgName string) {
 		Expect(cf.Cf("create-org", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
 		Expect(cf.Cf("target", "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
 
