@@ -1,17 +1,17 @@
 ---
 netman_overrides:
   releases:
-  - name: netman
+  - name: cf-networking
     version: latest
   driver_templates:
   - name: garden-cni
-    release: netman
+    release: cf-networking
   - name: cni-flannel
-    release: netman
+    release: cf-networking
   - name: netmon
-    release: netman
+    release: cf-networking
   - name: vxlan-policy-agent
-    release: netman
+    release: cf-networking
   properties:
     vxlan-policy-agent:
       policy_server_url: https://policy-server.service.cf.internal:4003
@@ -219,7 +219,7 @@ netman_overrides:
     persistent_disk: 256
     templates:
     - name: policy-server
-      release: netman
+      release: cf-networking
     - name: route_registrar
       release: cf
     - name: consul_agent
@@ -258,7 +258,7 @@ netman_overrides:
     lifecycle: errand
     templates:
     - name: netman-cf-acceptance
-      release: netman
+      release: cf-networking
     networks:
     - name: diego1
     resource_pool: database_z1

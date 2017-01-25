@@ -8,42 +8,42 @@ absolute_path() {
 
 scripts_path=$(absolute_path `dirname $0`)
 
-NETMAN_RELEASE_DIR=${NETMAN_RELEASE_DIR:-$(absolute_path $scripts_path/..)}
-DIEGO_RELEASE_DIR=${DIEGO_RELEASE_DIR:-$(absolute_path $NETMAN_RELEASE_DIR/../diego-release)}
-CF_RELEASE_DIR=${CF_RELEASE_DIR:-$(absolute_path $NETMAN_RELEASE_DIR/../cf-release)}
+CF_NETWORKING_DIR=${CF_NETWORKING_DIR:-$(absolute_path $scripts_path/..)}
+DIEGO_RELEASE_DIR=${DIEGO_RELEASE_DIR:-$(absolute_path $CF_NETWORKING_DIR/../diego-release)}
+CF_RELEASE_DIR=${CF_RELEASE_DIR:-$(absolute_path $CF_NETWORKING_DIR/../cf-release)}
 
 DIEGO_MANIFESTS_DIR=$DIEGO_RELEASE_DIR/bosh-lite/deployments
-NETMAN_MANIFESTS_DIR=$NETMAN_RELEASE_DIR/bosh-lite/deployments
+CF_NETWORKING_MANIFESTS_DIR=$CF_NETWORKING_DIR/bosh-lite/deployments
 
-mkdir -p ${NETMAN_MANIFESTS_DIR}
+mkdir -p ${CF_NETWORKING_MANIFESTS_DIR}
 
 echo running vanilla cf-release manifest generation
 ${CF_RELEASE_DIR}/scripts/generate-bosh-lite-dev-manifest \
-  ${NETMAN_RELEASE_DIR}/manifest-generation/stubs/bosh-lite-cf.yml \
-  ${NETMAN_RELEASE_DIR}/manifest-generation/stubs/cf-overrides.yml
+  ${CF_NETWORKING_DIR}/manifest-generation/stubs/bosh-lite-cf.yml \
+  ${CF_NETWORKING_DIR}/manifest-generation/stubs/cf-overrides.yml
 
-echo merging cf-release manifest into custom netman cf manifest
-spiff merge ${NETMAN_RELEASE_DIR}/manifest-generation/cf-netman-bosh-lite-template.yml \
+echo adding cf-networking to cf-release manifest
+spiff merge ${CF_NETWORKING_DIR}/manifest-generation/cf-networking-bosh-lite-template.yml \
   ${CF_RELEASE_DIR}/bosh-lite/deployments/cf.yml \
-    > ${NETMAN_RELEASE_DIR}/bosh-lite/deployments/cf_with_netman.yml
+    > ${CF_NETWORKING_DIR}/bosh-lite/deployments/cf_networking.yml
 
-bosh deployment ${NETMAN_RELEASE_DIR}/bosh-lite/deployments/cf_with_netman.yml
+bosh deployment ${CF_NETWORKING_DIR}/bosh-lite/deployments/cf_networking.yml
 
 echo generate vanilla diego deployment manifest
 pushd ${DIEGO_RELEASE_DIR}
   ./scripts/generate-bosh-lite-manifests \
-    -n ${NETMAN_RELEASE_DIR}/manifest-generation/stubs/diego/instance-count-overrides.yml
+    -n ${CF_NETWORKING_DIR}/manifest-generation/stubs/diego/instance-count-overrides.yml
 popd
 
-mv ${DIEGO_MANIFESTS_DIR}/diego.yml ${NETMAN_MANIFESTS_DIR}/diego.yml
+mv ${DIEGO_MANIFESTS_DIR}/diego.yml ${CF_NETWORKING_MANIFESTS_DIR}/diego.yml
 
-echo generate diego with netman deployment manifest
+echo generate diego with overlay deployment manifest
 pushd ${DIEGO_RELEASE_DIR}
   ./scripts/generate-bosh-lite-manifests \
-    -n ${NETMAN_RELEASE_DIR}/manifest-generation/stubs/diego/instance-count-overrides.yml \
-    -N ${NETMAN_RELEASE_DIR}/manifest-generation/stubs/bosh-lite-netman-diego.yml
+    -n ${CF_NETWORKING_DIR}/manifest-generation/stubs/diego/instance-count-overrides.yml \
+    -N ${CF_NETWORKING_DIR}/manifest-generation/stubs/bosh-lite-diego-cf-networking.yml
 popd
 
-mv ${DIEGO_MANIFESTS_DIR}/diego.yml ${NETMAN_MANIFESTS_DIR}/diego_with_netman.yml
+mv ${DIEGO_MANIFESTS_DIR}/diego.yml ${CF_NETWORKING_MANIFESTS_DIR}/diego_cf_networking.yml
 
-bosh deployment ${NETMAN_RELEASE_DIR}/bosh-lite/deployments/diego_with_netman.yml
+bosh deployment ${CF_NETWORKING_DIR}/bosh-lite/deployments/diego_cf_networking.yml

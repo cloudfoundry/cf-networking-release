@@ -18,4 +18,4 @@ run:
   - |
     bosh create release --with-tarball --name $RELEASE_NAME --timestamp-version --dir cf-networking && cp cf-networking/dev_releases/$RELEASE_NAME/*.tgz tarballs
 params:
-  RELEASE_NAME: netman
+  RELEASE_NAME: cf-networking

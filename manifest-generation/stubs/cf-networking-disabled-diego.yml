@@ -1,17 +1,17 @@
 ---
 netman_overrides:
   releases:
-  - name: netman
+  - name: cf-networking
     version: latest
   driver_templates:
   - name: garden-cni
-    release: netman
+    release: cf-networking
   - name: cni-flannel
-    release: netman
+    release: cf-networking
   - name: netmon
-    release: netman
+    release: cf-networking
   - name: vxlan-policy-agent
-    release: netman
+    release: cf-networking
   properties:
     netman:
       disable: true
@@ -33,7 +33,7 @@ netman_overrides:
                 script: /bin/true
     templates:
     - name: policy-server
-      release: netman
+      release: cf-networking
     - name: route_registrar
       release: cf
     - name: consul_agent

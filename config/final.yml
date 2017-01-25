@@ -1,5 +1,5 @@
 ---
-final_name: netman
+final_name: cf-networking
 blobstore:
   provider: s3
   options:

@@ -74,7 +74,7 @@ generate_manifests() {
     update_release cf-release master
     update_release diego-release master
 
-    ${workspace_dir}/netman-release/scripts/generate-bosh-lite-manifests
+    ${workspace_dir}/cf-networking/scripts/generate-bosh-lite-manifests
 }
 
 update_dependencies() {
@@ -94,7 +94,7 @@ update_dependencies() {
     upload_release garden-runc-release
 
     ./scripts/update
-    bosh create release
+    bosh create release --force
     bosh upload release
 }
 
@@ -109,8 +109,8 @@ main() {
 
     generate_manifests
 
-    bosh -n -d ${workspace_dir}/netman-release/bosh-lite/deployments/cf_with_netman.yml deploy
-    bosh -n -d ${workspace_dir}/netman-release/bosh-lite/deployments/diego_with_netman.yml deploy
+    bosh -n -d ${workspace_dir}/cf-networking/bosh-lite/deployments/cf_networking.yml deploy
+    bosh -n -d ${workspace_dir}/cf-networking/bosh-lite/deployments/diego_cf_networking.yml deploy
 }
 
 upload_stemcell=true
