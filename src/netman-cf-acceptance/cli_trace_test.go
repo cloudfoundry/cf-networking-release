@@ -1,7 +1,6 @@
 package acceptance_test
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
@@ -14,20 +13,21 @@ import (
 
 var _ = Describe("trace logging for the plugin", func() {
 	var (
+		prefix    string
 		orgName   string
 		spaceName string
 	)
 
-	BeforeEach(func() {
-		prefix := testConfig.Prefix
-		orgName = fmt.Sprintf("%scli-plugin-org-%d", prefix, GinkgoParallelNode())
-
+	createAndTarget := func(orgName, spaceName string) {
 		Expect(cf.Cf("create-org", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
 		Expect(cf.Cf("target", "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
 
-		spaceName = prefix + "space"
 		Expect(cf.Cf("create-space", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
 		Expect(cf.Cf("target", "-o", orgName, "-s", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
+	}
+
+	BeforeEach(func() {
+		prefix = testConfig.Prefix
 	})
 
 	AfterEach(func() {
@@ -35,6 +35,12 @@ var _ = Describe("trace logging for the plugin", func() {
 	})
 
 	Describe("when tracing is disabled", func() {
+		BeforeEach(func() {
+			orgName = prefix + "cli-plugin-trace-disabled-org"
+			spaceName = prefix + "space"
+			createAndTarget(orgName, spaceName)
+		})
+
 		It("does not log the HTTP request or response", func() {
 			listAccess := cf.Cf("list-access")
 			Expect(listAccess.Wait(Timeout_Push)).To(gexec.Exit(0))
@@ -44,6 +50,10 @@ var _ = Describe("trace logging for the plugin", func() {
 
 	Describe("when tracing is enabled", func() {
 		BeforeEach(func() {
+			orgName = prefix + "cli-plugin-trace-enabled-org"
+			spaceName = prefix + "space"
+			createAndTarget(orgName, spaceName)
+
 			Expect(os.Setenv("CF_TRACE", "true")).To(Succeed())
 		})
 
