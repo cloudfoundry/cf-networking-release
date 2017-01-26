@@ -12,6 +12,7 @@ cd $GOPATH
 #   cf auth admin admin
 #   cf target -o o -s s
 #   cf push proxy
+#   cf push proxy-backend
 # popd
 
 PROXY_APP_NAME=proxy
@@ -36,7 +37,7 @@ function runTest() {
   NUM_EXISTING_POLICIES=$1
   OAUTH_TOKEN="$(cf oauth-token)"  # refresh this frequently, since it expires
   go run \
-    src/netman-cf-perf/latency-to-enforce/main.go \
+    src/netman-cf-perf/latency-to-enforce-with-many-policies/main.go \
     "$OAUTH_TOKEN" \
     $NUM_EXISTING_POLICIES \
     $BASE_URL \
