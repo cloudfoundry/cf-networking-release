@@ -1,4 +1,4 @@
-package netman_cf_upgrade_test
+package upgrade_test
 
 import (
 	"cf-pusher/cf_cli_adapter"

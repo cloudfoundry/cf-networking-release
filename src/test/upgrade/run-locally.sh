@@ -5,10 +5,10 @@ set -e -u
 THIS_DIR=$(cd $(dirname $0) && pwd)
 cd $THIS_DIR
 
-export CONFIG=/tmp/bosh-lite-integration-config.json
-export APPS_DIR=../example-apps
-export BASE_MANIFEST=../../bosh-lite/deployments/diego.yml
-export UPGRADE_MANIFEST=../../bosh-lite/deployments/diego_with_netman.yml
+export CONFIG=/tmp/test-config.json
+export APPS_DIR=../../example-apps
+export BASE_MANIFEST=../../../bosh-lite/deployments/diego.yml
+export UPGRADE_MANIFEST=../../../bosh-lite/deployments/diego_with_netman.yml
 
 echo '
 {
@@ -23,10 +23,10 @@ echo '
   "bosh_admin_password":"admin",
   "bosh_diego_deployment_name":"cf-warden-diego",
   "bosh_cf_deployment_name":"cf-warden",
-  "bosh_director_ca_cert":"../../../bosh-lite/ca/certs/ca.crt"
+  "bosh_director_ca_cert":"../../../../bosh-lite/ca/certs/ca.crt"
 }
 ' > $CONFIG
 
-../../scripts/generate-bosh-lite-manifests
+../../../scripts/generate-bosh-lite-manifests
 
 ginkgo -v .
