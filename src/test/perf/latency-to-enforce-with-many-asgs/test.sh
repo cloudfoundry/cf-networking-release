@@ -34,7 +34,7 @@ function purgeAllPolicies() {
 }
 
 function runTest() {
-  pushd src/netman-cf-perf/latency-to-enforce-with-many-asgs/
+  pushd src/test/perf/latency-to-enforce-with-many-asgs/
     NUM_EXISTING_ASGS=$1
     OAUTH_TOKEN="$(cf oauth-token)"  # refresh this frequently, since it expires
 

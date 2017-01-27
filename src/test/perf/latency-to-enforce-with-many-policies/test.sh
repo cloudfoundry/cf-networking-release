@@ -37,7 +37,7 @@ function runTest() {
   NUM_EXISTING_POLICIES=$1
   OAUTH_TOKEN="$(cf oauth-token)"  # refresh this frequently, since it expires
   go run \
-    src/netman-cf-perf/latency-to-enforce-with-many-policies/main.go \
+    src/test/perf/latency-to-enforce-with-many-policies/main.go \
     "$OAUTH_TOKEN" \
     $NUM_EXISTING_POLICIES \
     $BASE_URL \
