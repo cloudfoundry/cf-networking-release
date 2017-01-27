@@ -268,6 +268,46 @@ var _ = Describe("Planner", func() {
 
 				Expect(rulesWithChain).To(Equal(rulesWithChain2))
 			})
+
+		})
+
+		Context("when multiple policies are defined for the same source app", func() {
+			BeforeEach(func() {
+				policyServerResponse = []models.Policy{
+					{
+						Source: models.Source{
+							ID:  "some-app-guid",
+							Tag: "AA",
+						},
+						Destination: models.Destination{
+							ID:       "some-other-app-guid",
+							Port:     1234,
+							Protocol: "tcp",
+						},
+					},
+					{
+						Source: models.Source{
+							ID:  "some-app-guid",
+							Tag: "AA",
+						},
+						Destination: models.Destination{
+							ID:       "some-other-app-guid",
+							Port:     1235,
+							Protocol: "tcp",
+						},
+					},
+				}
+				policyClient.GetPoliciesReturns(policyServerResponse, nil)
+			})
+
+			It("writes only one set mark rule", func() {
+				rulesWithChain, err := policyPlanner.GetRulesAndChain()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(rulesWithChain.Rules).To(HaveLen(3))
+				Expect(rulesWithChain.Rules[0]).To(ContainElement("--set-xmark"))
+				Expect(rulesWithChain.Rules[1]).To(ContainElement("ACCEPT"))
+				Expect(rulesWithChain.Rules[2]).To(ContainElement("ACCEPT"))
+			})
 		})
 
 		Context("when there are multiple containers for an app on the cell", func() {

@@ -84,6 +84,7 @@ func (p *VxlanPolicyPlanner) GetRulesAndChain() (enforcer.RulesWithChain, error)
 	})
 
 	marksRuleset := []rules.IPTablesRule{}
+	markedSourceIPs := make(map[string]struct{})
 	filterRuleset := []rules.IPTablesRule{}
 
 	iptablesLoggingEnabled := p.LoggingState.IsEnabled()
@@ -129,10 +130,12 @@ func (p *VxlanPolicyPlanner) GetRulesAndChain() (enforcer.RulesWithChain, error)
 			ips := sort.StringSlice(srcContainerIPs)
 			sort.Sort(ips)
 			for _, srcContainerIP := range ips {
-				marksRuleset = append(
-					marksRuleset,
-					rules.NewMarkSetRule(srcContainerIP, policy.Source.Tag, policy.Source.ID),
-				)
+				_, added := markedSourceIPs[srcContainerIP]
+				if !added {
+					rule := rules.NewMarkSetRule(srcContainerIP, policy.Source.Tag, policy.Source.ID)
+					marksRuleset = append(marksRuleset, rule)
+					markedSourceIPs[srcContainerIP] = struct{}{}
+				}
 			}
 		}
 	}

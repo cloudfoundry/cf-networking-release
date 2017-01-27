@@ -209,6 +209,11 @@ var _ = Describe("VXLAN Policy Agent", func() {
 			Expect(iptablesFilterRules()).To(ContainSubstring(`-d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m comment --comment "src:another-app-guid_dst:some-app-guid" -j ACCEPT`))
 		})
 
+		It("writes only one mark rule for a single container", func() {
+			Eventually(iptablesFilterRules, "4s", "1s").Should(ContainSubstring(`-s 10.255.100.21/32 -m comment --comment "src:some-app-guid" -j MARK --set-xmark 0xa/0xffffffff`))
+			Expect(iptablesFilterRules()).NotTo(MatchRegexp(`.*--set-xmark.*\n.*--set-xmark.*`))
+		})
+
 		It("emits metrics about durations", func() {
 			gatherMetricNames := func() map[string]bool {
 				events := fakeMetron.AllEvents()
@@ -319,6 +324,8 @@ func startServer(serverListenAddr string, tlsConfig *tls.Config) ifrit.Process {
 			w.Write([]byte(`{"policies": [
 				{"source": {"id":"some-app-guid", "tag":"A"},
 				"destination": {"id": "some-other-app-guid", "tag":"B", "protocol":"tcp", "port":3333}},
+				{"source": {"id":"some-app-guid", "tag":"A"},
+				"destination": {"id": "some-other-app-guid", "tag":"B", "protocol":"tcp", "port":3334}},
 				{"source": {"id":"another-app-guid", "tag":"C"},
 				"destination": {"id": "some-app-guid", "tag":"A", "protocol":"tcp", "port":9999}}
 					]}`))
