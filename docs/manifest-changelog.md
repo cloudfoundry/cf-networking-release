@@ -2,6 +2,10 @@
 
 See [AWS](aws.md) deployment docs for examples
 
+### on develop branch
+
+Release name changed from `netman` to `cf-networking`.
+
 ### 0.12.0
 
 In the CF properties stub:
