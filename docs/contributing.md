@@ -12,7 +12,7 @@ WARNING: This test is taxing and has an aggressive timeout.
 It may fail on a laptop or other underpowered bosh-lite.
 
 ```bash
-cd src/netman-cf-acceptance
+cd src/test/acceptance
 ./run-locally.sh
 ```
 

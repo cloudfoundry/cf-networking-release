@@ -5,8 +5,8 @@ set -e -u
 THIS_DIR=$(cd $(dirname $0) && pwd)
 cd $THIS_DIR
 
-export CONFIG=/tmp/bosh-lite-integration-config.json
-export APPS_DIR=../example-apps
+export CONFIG=/tmp/test-config.json
+export APPS_DIR=../../example-apps
 
 echo '
 {

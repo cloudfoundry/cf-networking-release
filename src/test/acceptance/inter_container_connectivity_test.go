@@ -71,7 +71,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 		})
 
 		It("allows the user to configure policies", func(done Done) {
-			cmd := exec.Command("go", "run", "../cf-pusher/cmd/cf-pusher/main.go", "--config", helpers.ConfigPath())
+			cmd := exec.Command("go", "run", "../../cf-pusher/cmd/cf-pusher/main.go", "--config", helpers.ConfigPath())
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 			fmt.Println("\n-----cf-pusher start ------")

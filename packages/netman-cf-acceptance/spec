@@ -75,4 +75,4 @@ files:
   - lib/models/*.go # gosub
   - lib/policy_client/*.go # gosub
   - lib/testsupport/*.go # gosub
-  - netman-cf-acceptance/*.go # gosub
+  - test/acceptance/*.go # gosub
