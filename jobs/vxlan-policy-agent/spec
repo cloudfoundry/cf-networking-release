@@ -36,10 +36,6 @@ properties:
     description: "VXLAN VNI"
     default: 1
 
-  vxlan-policy-agent.flannel_subnet_file:
-    description: "File that flannel writes out the subnet environment"
-    default: "/var/vcap/data/flannel/subnet.env"
-
   vxlan-policy-agent.iptables_lock_file:
     description: "File that will be used to synchronize access to iptables"
     default: /var/vcap/data/garden-cni/iptables.lock
