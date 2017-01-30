@@ -24,7 +24,7 @@ FLANNEL_CONFIG='<%=
   }
 
   toRender = {
-    "Network": p("cni-flannel.flannel.Network"),
+    "Network" => p("cni-flannel.flannel.Network"),
     "Backend" => backend,
     "Etcd" => etcd,
     "SubnetFile" => ("cni-flannel.flannel.subnet_file"),
