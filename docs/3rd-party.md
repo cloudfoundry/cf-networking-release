@@ -45,6 +45,8 @@ Here's an example of the Network Configuration data that is passed to the `wrapp
     "delegate": {
       "name": "cni-flannel",
       "type": "flannel",
+      "subnetFile": "/var/vcap/data/flannel/subnet.env",
+      "dataDir": "/var/vcap/data/flannel/data",
       "delegate": {
         "bridge": "cni-flannel0",
         "isDefaultGateway": true,
