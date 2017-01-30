@@ -50,22 +50,6 @@ properties:
     description: "CIDR block for overlay network.  Should be /16"
     default: "10.255.0.0/16"
 
-  cni-flannel.flannel.Backend.Type:
-    description: "Flannel backend to use"
-    default: "vxlan"
-
-  cni-flannel.flannel.Backend.VNI:
-    description: "VXLAN Virtual Network Identifier to use"
-    default: 1
-
-  cni-flannel.flannel.Backend.Port:
-    description: "UDP port to use for VXLAN Tunnel Endpoints"
-    default: 8472
-
-  cni-flannel.flannel.Backend.GBP:
-    description: "Enable GBP on VXLAN devices"
-    default: true
-
   cni-flannel.flannel.subnet_file:
     description: "File that flannel writes out the subnet environment"
     default: /var/vcap/data/flannel/subnet.env

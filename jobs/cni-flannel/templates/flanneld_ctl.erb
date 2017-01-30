@@ -9,6 +9,31 @@ PIDFILE=$RUN_DIR/flanneld.pid
 
 ETCD_ENDPOINT=<%= p("cni-flannel.etcd_endpoints").map{|addr| "\"#{p("cni-flannel.flannel.etcd.require_ssl") ? "https" : "http"}://#{addr}:4001\""}.join(",") %>
 
+FLANNEL_CONFIG='<%=
+  require 'json'
+
+  backend = {
+    "Type" => "vxlan",
+    "Port" => "8472",
+    "VNI" => "1",
+    "GBP" => "true"
+  }
+
+  etcd = {
+    "RequireSsl" =>  p("cni-flannel.flannel.etcd.require_ssl")
+  }
+
+  toRender = {
+    "Network": p("cni-flannel.flannel.Network"),
+    "Backend" => backend,
+    "Etcd" => etcd,
+    "SubnetFile" => ("cni-flannel.flannel.subnet_file"),
+    "DataDir" => ("cni-flannel.flannel.data_dir")
+  }
+
+  flannelConfig = JSON.pretty_generate(toRender)
+%>'
+
 mkdir -p /var/vcap/sys/log/monit
 exec 1>> /var/vcap/sys/log/monit/flanneld.out.log
 exec 2>> /var/vcap/sys/log/monit/flanneld.err.log
@@ -33,9 +58,7 @@ case $1 in
       --key ${ETCD_CERTS_DIR}/client.key \
     <% end %> \
       $keyURL \
-      -XPUT -d value='<%=
-      require 'json'
-      JSON.pretty_generate(p("cni-flannel.flannel")) %>' \
+      -XPUT -d value='<%= flannelConfig %>' \
       1>>$LOG_DIR/flanneld.stdout.log \
       2>>$LOG_DIR/flanneld.stderr.log
 
