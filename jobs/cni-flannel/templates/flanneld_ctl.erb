@@ -14,9 +14,9 @@ FLANNEL_CONFIG='<%=
 
   backend = {
     "Type" => "vxlan",
-    "Port" => "8472",
-    "VNI" => "1",
-    "GBP" => "true"
+    "Port" => 8472,
+    "VNI" => 1,
+    "GBP" => true
   }
 
   etcd = {
@@ -27,8 +27,8 @@ FLANNEL_CONFIG='<%=
     "Network" => p("cni-flannel.flannel.Network"),
     "Backend" => backend,
     "Etcd" => etcd,
-    "SubnetFile" => ("cni-flannel.flannel.subnet_file"),
-    "DataDir" => ("cni-flannel.flannel.data_dir")
+    "SubnetFile" => p("cni-flannel.flannel.subnet_file"),
+    "DataDir" => p("cni-flannel.flannel.data_dir")
   }
 
   flannelConfig = JSON.pretty_generate(toRender)
