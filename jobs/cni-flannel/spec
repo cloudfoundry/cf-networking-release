@@ -54,10 +54,6 @@ properties:
     description: "Name of cni bridge on host"
     default: cni-flannel0
 
-  flannel-watchdog.config.flannel_subnet_file:
-    description: "File that flannel writes out the subnet environment"
-    default: /var/vcap/data/flannel/subnet.env
-
   netman.disable:
     description: "Disable container to container networking"
     default: false

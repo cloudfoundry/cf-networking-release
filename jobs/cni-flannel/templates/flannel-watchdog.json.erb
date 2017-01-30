@@ -1,7 +1,10 @@
 <%=
     require 'json'
 
-    server = p("flannel-watchdog.config")
+    toRender = {
+      "bridge_name" => p("flannel-watchdog.config.bridge_name"),
+      "flannel_subnet_file" => "/var/vcap/data/flannel/subnet.env"
+    }
 
-    JSON.pretty_generate(server)
+    JSON.pretty_generate(toRender)
 %>
