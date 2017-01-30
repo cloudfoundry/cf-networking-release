@@ -8,8 +8,8 @@
   "delegate": {
     "name": "cni-flannel",
     "type": "flannel",
-    "subnetFile": "<%= p('cni-flannel.flannel.subnet_file') %>",
-    "dataDir": "<%= p('cni-flannel.flannel.data_dir') %>",
+    "subnetFile": "/var/vcap/data/flannel/subnet.env",
+    "dataDir": "/var/vcap/data/flannel/data",
     "delegate": {
       "bridge": "cni-flannel0",
       "isDefaultGateway": true,

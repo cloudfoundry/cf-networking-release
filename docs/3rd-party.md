@@ -34,7 +34,9 @@ The `garden-external-networker` will invoke one or more CNI plugins, according t
 It will start with the CNI config files available in the `cni_config_dir` and also inject
 some dynamic information about the container, including the CloudFoundry App, Space and Org that it belongs to.
 
-Here's an example of the Network Configuration data that is passed to the `wrapper` plugin:
+The Network Configuration data that is passed to the `wrapper` plugin is generated from this [template](../jobs/cni-flannel/templates/30-cni-wrapper-plugin.conf.erb).
+
+Here's an example:
 ```json
 {
   {
