@@ -96,7 +96,7 @@ var _ = Describe("Planner", func() {
 				},
 			},
 		}
-		policyClient.GetPoliciesReturns(policyServerResponse, nil)
+		policyClient.GetPoliciesByIDReturns(policyServerResponse, nil)
 
 		chain = enforcer.Chain{
 			Table:       "some-table",
@@ -127,7 +127,9 @@ var _ = Describe("Planner", func() {
 			_, err := policyPlanner.GetRulesAndChain()
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(policyClient.GetPoliciesCallCount()).To(Equal(1))
+			By("filtering by ID when calling the internal policy server")
+			Expect(policyClient.GetPoliciesByIDCallCount()).To(Equal(1))
+			Expect(policyClient.GetPoliciesByIDArgsForCall(0)).To(ConsistOf([]string{"some-app-guid", "some-other-app-guid"}))
 		})
 
 		Context("when iptables logging is disabled", func() {
@@ -262,7 +264,7 @@ var _ = Describe("Planner", func() {
 			It("the order of the rules is not affected", func() {
 				rulesWithChain, err := policyPlanner.GetRulesAndChain()
 				Expect(err).NotTo(HaveOccurred())
-				policyClient.GetPoliciesReturns(reversed, nil)
+				policyClient.GetPoliciesByIDReturns(reversed, nil)
 				rulesWithChain2, err := policyPlanner.GetRulesAndChain()
 				Expect(err).NotTo(HaveOccurred())
 
@@ -297,7 +299,7 @@ var _ = Describe("Planner", func() {
 						},
 					},
 				}
-				policyClient.GetPoliciesReturns(policyServerResponse, nil)
+				policyClient.GetPoliciesByIDReturns(policyServerResponse, nil)
 			})
 
 			It("writes only one set mark rule", func() {
@@ -356,6 +358,36 @@ var _ = Describe("Planner", func() {
 			})
 		})
 
+		Context("when there are no policies", func() {
+			BeforeEach(func() {
+				policyClient.GetPoliciesByIDReturns([]models.Policy{}, nil)
+			})
+			It("returns an chain with no rules", func() {
+				rulesWithChain, err := policyPlanner.GetRulesAndChain()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(policyClient.GetPoliciesByIDCallCount()).To(Equal(1))
+
+				Expect(rulesWithChain.Chain).To(Equal(chain))
+				Expect(rulesWithChain.Rules).To(HaveLen(0))
+			})
+		})
+
+		Context("when there are no containers in the datastore", func() {
+			BeforeEach(func() {
+				data = make(map[string]datastore.Container)
+				store.ReadAllReturns(data, nil)
+			})
+
+			It("does not call the policy client", func() {
+				rulesWithChain, err := policyPlanner.GetRulesAndChain()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(policyClient.GetPoliciesByIDCallCount()).To(Equal(0))
+
+				Expect(rulesWithChain.Chain).To(Equal(chain))
+				Expect(rulesWithChain.Rules).To(HaveLen(0))
+			})
+		})
+
 		Context("when a container's metadata is missing required key policy group id", func() {
 			BeforeEach(func() {
 				data["container-id-fruit"] = datastore.Container{
@@ -391,7 +423,7 @@ var _ = Describe("Planner", func() {
 
 		Context("when getting policies fails", func() {
 			BeforeEach(func() {
-				policyClient.GetPoliciesReturns(nil, errors.New("kiwi"))
+				policyClient.GetPoliciesByIDReturns(nil, errors.New("kiwi"))
 			})
 
 			It("logs and returns the error", func() {

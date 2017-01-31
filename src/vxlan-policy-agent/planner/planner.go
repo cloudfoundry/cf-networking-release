@@ -14,7 +14,7 @@ import (
 
 //go:generate counterfeiter -o ../fakes/policy_client.go --fake-name PolicyClient . policyClient
 type policyClient interface {
-	GetPolicies() ([]models.Policy, error)
+	GetPoliciesByID(ids ...string) ([]models.Policy, error)
 }
 
 //go:generate counterfeiter -o ../fakes/dstore.go --fake-name Dstore . dstore
@@ -64,6 +64,12 @@ func (p *VxlanPolicyPlanner) GetRulesAndChain() (enforcer.RulesWithChain, error)
 	}
 
 	containers, err := p.getContainersMap(containerMetadata)
+	groupIDs := make([]string, len(containers))
+	i := 0
+	for groupID := range containers {
+		groupIDs[i] = groupID
+		i++
+	}
 	if err != nil {
 		p.Logger.Error("container-info", err)
 		return enforcer.RulesWithChain{}, err
@@ -72,11 +78,15 @@ func (p *VxlanPolicyPlanner) GetRulesAndChain() (enforcer.RulesWithChain, error)
 	p.Logger.Debug("got-containers", lager.Data{"containers": containers})
 
 	policyServerStartRequestTime := time.Now()
-	policies, err := p.PolicyClient.GetPolicies()
-	if err != nil {
-		p.Logger.Error("policy-client-get-policies", err)
-		return enforcer.RulesWithChain{}, err
+	var policies []models.Policy
+	if len(groupIDs) > 0 {
+		policies, err = p.PolicyClient.GetPoliciesByID(groupIDs...)
+		if err != nil {
+			p.Logger.Error("policy-client-get-policies", err)
+			return enforcer.RulesWithChain{}, err
+		}
 	}
+
 	policyServerPollDuration := time.Now().Sub(policyServerStartRequestTime)
 	p.CollectionEmitter.EmitAll(map[string]time.Duration{
 		agent_metrics.MetricContainerMetadata: containerMetadataDuration,

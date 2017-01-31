@@ -14,6 +14,15 @@ type PolicyClient struct {
 		result1 []models.Policy
 		result2 error
 	}
+	GetPoliciesByIDStub        func(ids ...string) ([]models.Policy, error)
+	getPoliciesByIDMutex       sync.RWMutex
+	getPoliciesByIDArgsForCall []struct {
+		ids []string
+	}
+	getPoliciesByIDReturns struct {
+		result1 []models.Policy
+		result2 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -44,11 +53,47 @@ func (fake *PolicyClient) GetPoliciesReturns(result1 []models.Policy, result2 er
 	}{result1, result2}
 }
 
+func (fake *PolicyClient) GetPoliciesByID(ids ...string) ([]models.Policy, error) {
+	fake.getPoliciesByIDMutex.Lock()
+	fake.getPoliciesByIDArgsForCall = append(fake.getPoliciesByIDArgsForCall, struct {
+		ids []string
+	}{ids})
+	fake.recordInvocation("GetPoliciesByID", []interface{}{ids})
+	fake.getPoliciesByIDMutex.Unlock()
+	if fake.GetPoliciesByIDStub != nil {
+		return fake.GetPoliciesByIDStub(ids...)
+	} else {
+		return fake.getPoliciesByIDReturns.result1, fake.getPoliciesByIDReturns.result2
+	}
+}
+
+func (fake *PolicyClient) GetPoliciesByIDCallCount() int {
+	fake.getPoliciesByIDMutex.RLock()
+	defer fake.getPoliciesByIDMutex.RUnlock()
+	return len(fake.getPoliciesByIDArgsForCall)
+}
+
+func (fake *PolicyClient) GetPoliciesByIDArgsForCall(i int) []string {
+	fake.getPoliciesByIDMutex.RLock()
+	defer fake.getPoliciesByIDMutex.RUnlock()
+	return fake.getPoliciesByIDArgsForCall[i].ids
+}
+
+func (fake *PolicyClient) GetPoliciesByIDReturns(result1 []models.Policy, result2 error) {
+	fake.GetPoliciesByIDStub = nil
+	fake.getPoliciesByIDReturns = struct {
+		result1 []models.Policy
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *PolicyClient) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.getPoliciesMutex.RLock()
 	defer fake.getPoliciesMutex.RUnlock()
+	fake.getPoliciesByIDMutex.RLock()
+	defer fake.getPoliciesByIDMutex.RUnlock()
 	return fake.invocations
 }
 
