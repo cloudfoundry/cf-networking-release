@@ -4,7 +4,7 @@
     toRender = {
       "cni_plugin_dir" => p("garden-cni.cni_plugin_dir"),
       "cni_config_dir" => p("garden-cni.cni_config_dir"),
-      "bind_mount_dir" => p("garden-cni.bind_mount_dir"),
+      "bind_mount_dir" => "/var/vcap/data/garden-cni/container-netns",
       "overlay_network" => p("garden-cni.network"),
       "state_file" => "/var/vcap/data/garden-cni/external-networker-state.json",
       "start_port" => p("garden-cni.start_port"),
