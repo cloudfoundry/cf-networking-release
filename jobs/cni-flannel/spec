@@ -46,10 +46,6 @@ properties:
     description: "CIDR block for overlay network.  Should be /16"
     default: "10.255.0.0/16"
 
-  flannel-watchdog.config.bridge_name:
-    description: "Name of cni bridge on host"
-    default: cni-flannel0
-
   netman.disable:
     description: "Disable container to container networking"
     default: false
