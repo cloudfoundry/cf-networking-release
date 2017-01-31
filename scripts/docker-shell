@@ -8,9 +8,9 @@ if [ ${MYSQL:-"false"} = "true" ]; then
   docker run --privileged \
      --rm \
      -it \
-     -v $PWD:/netman-release \
-     -e GOPATH=/netman-release \
-     -w /netman-release \
+     -v $PWD:/cf-networking-release \
+     -e GOPATH=/cf-networking-release \
+     -w /cf-networking-release \
      c2cnetworking/dev-mysql \
      /bin/bash
 
@@ -18,9 +18,9 @@ else
   docker run --privileged \
      --rm \
      -it \
-     -v $PWD:/netman-release \
-     -e GOPATH=/netman-release \
-     -w /netman-release \
+     -v $PWD:/cf-networking-release \
+     -e GOPATH=/cf-networking-release \
+     -w /cf-networking-release \
      c2cnetworking/dev-postgres \
      /bin/bash
 fi
