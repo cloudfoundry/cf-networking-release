@@ -6,7 +6,7 @@
     toRender = {
       "cni_datastore_path" => p("vxlan-policy-agent.cni_datastore_path"),
       "flannel_subnet_file" => "/var/vcap/data/flannel/subnet.env",
-      "iptables_lock_file" => p("vxlan-policy-agent.iptables_lock_file"),
+      "iptables_lock_file" => "/var/vcap/data/garden-cni/iptables.lock",
 
       "policy_server_url" => p("vxlan-policy-agent.policy_server_url"),
       "poll_interval" => p("vxlan-policy-agent.poll_interval"),

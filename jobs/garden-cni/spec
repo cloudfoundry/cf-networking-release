@@ -27,10 +27,6 @@ properties:
     description: "Path to file that will hold the state persisted by the external networker binary"
     default: /var/vcap/data/garden-cni/external-networker-state.json
 
-  garden-cni.iptables_lock_file:
-    description: "File that will be used to synchronize access to iptables"
-    default: /var/vcap/data/garden-cni/iptables.lock
-
   garden-cni.start_port:
     description: "Starting value for allocating host ports to containers"
     default: 60000

@@ -3,7 +3,7 @@
   "type": "cni-wrapper-plugin",
   "cniVersion": "0.2.0",
   "datastore": "<%= p('cni-flannel.cni_datastore_path') %>",
-  "iptables_lock_file": "<%= p('cni-flannel.cni_iptables_lock_file') %>",
+  "iptables_lock_file": "/var/vcap/data/garden-cni/iptables.lock",
   "overlay_network": "<%= p('garden-cni.network') %>",
   "delegate": {
     "name": "cni-flannel",
