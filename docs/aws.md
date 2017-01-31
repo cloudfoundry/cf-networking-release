@@ -32,7 +32,8 @@ chmod 600 $BOSH_CA_CERT
 export BOSH_DEPLOYMENT=cf
 ```
 
-If you are upgrading an existing `cf-deployment`, this same directory should hold your `vars-store.yml` file containing credentials for your existing deployment.
+If you are upgrading an existing `cf-deployment`, this same directory should hold your `vars-store.yml`
+file containing credentials for your existing deployment.
 
 If you don't have an existing deployment, you can seed one with the following contents:
 ```yaml
@@ -45,7 +46,7 @@ Then deploy
 bosh-cli deploy \
   --vars-store=vars-store.yml \
   -o $CF_DEPLOYMENT_REPO/opsfiles/change-logging-port-for-aws-elb.yml \
-  -o $NETMAN_RELEASE_REPO/manifest-generation/opsfiles/netman.yml \
+  -o $CF_NETWORKING_RELEASE_REPO/manifest-generation/opsfiles/cf-networking.yml \
   $CF_DEPLOYMENT_REPO/cf-deployment.yml
 ```
 
@@ -110,23 +111,23 @@ by using the instructions and tooling in [the diego-release repo](https://github
     ```
 
 
-0. Create a netman stub `stubs/netman/stub.yml`:
+0. Create a CF Networking stub `stubs/netman/stub.yml`:
 
     ```yaml
     ---
     netman_overrides:
       releases:
-      - name: netman
+      - name: cf-networking
         version: latest
       driver_templates:
       - name: garden-cni
-        release: netman
+        release: cf-networking
       - name: cni-flannel
-        release: netman
+        release: cf-networking
       - name: netmon
-        release: netman
+        release: cf-networking
       - name: vxlan-policy-agent
-        release: netman
+        release: cf-networking
       properties:
         vxlan-policy-agent:
           policy_server_url: https://policy-server.service.cf.internal:4003
@@ -186,7 +187,7 @@ by using the instructions and tooling in [the diego-release repo](https://github
         persistent_disk: 256
         templates:
         - name: policy-server
-          release: netman
+          release: cf-networking
         - name: route_registrar
           release: cf
         - name: consul_agent
@@ -223,8 +224,8 @@ by using the instructions and tooling in [the diego-release repo](https://github
     config_from_cf: (( merge ))
     ```
 
-0. Generate diego with netman manifest:
-  - Run the following bash script. Set `environment_path` to the directory containing your stubs for cf, diego, and netman.
+0. Generate Diego with CF Networking manifest:
+  - Run the following bash script. Set `environment_path` to the directory containing your stubs for CF, Diego, and CF Networking.
     Set `output_path` to the directory you want your manifest to be created in.
     Set `diego_release_path` to your local copy of the diego-release repository.
 

@@ -111,7 +111,7 @@ This CA is configured for the policy server in the bosh deployment manifest
 property `properties.policy-server.ca_cert`.
 
 An example can be found in the `bosh-lite` stubs included in this repository
-[here](../bosh-lite/deployments/diego_with_netman.yml).
+[here](../bosh-lite/deployments/diego_cf_networking.yml).
 
 Additionally, the server requires that connections use the TLS cipher suite
 `TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256`.  Your client must support this cipher suite.

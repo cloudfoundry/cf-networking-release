@@ -47,7 +47,7 @@ to the `netman_overrides.properties.policy-server.ca_cert`
 and `netman_overrides.properties.vxlan-policy-agent.ca_cert` fields.
   - **Do not remove the old CA certificates.**
   - Regenerate your Diego manifest.
-  - Deploy Diego + Netman using your updated manifest.
+  - Deploy Diego + CF Networking using your updated manifest.
 
   ```yaml
   ---
@@ -113,7 +113,7 @@ and `netman_overrides.properties.vxlan-policy-agent.ca_cert` fields.
 0. In your netman stub file, replace the old server and client certificates and keys with the new certificates and keys. 
   - **Do not remove the old CA certificates.**
   - Regenerate your Diego manifest.
-  - Deploy Diego + Netman using your updated manifest.
+  - Deploy Diego + CF Networking using your updated manifest.
 
   ```yaml
   ---
@@ -179,7 +179,7 @@ and `netman_overrides.properties.vxlan-policy-agent.ca_cert` fields.
 0. In your netman stub file, remove the old CA certificate from the `netman_overrides.properties.policy-server.ca_cert`
 and `netman_overrides.properties.vxlan-policy-agent.ca_cert` fields.
   - Regenerate your Diego manifest.
-  - Deploy Diego + Netman using your updated manifest.
+  - Deploy Diego + CF Networking using your updated manifest.
 
   ```yaml
   ---
@@ -242,7 +242,7 @@ To rotate your SSL certificates, keys, and certificate authorities, you must per
   - **Do not remove the old CA certificate.**
   - Regenerate your CF and Diego manifests.
   - Deploy CF using your updated manifest.
-  - Deploy Diego + Netman using your updated manifest.
+  - Deploy Diego + CF Networking using your updated manifest.
 
   ```yaml
   ...
@@ -293,7 +293,7 @@ To rotate your SSL certificates, keys, and certificate authorities, you must per
   - **Do not remove the old CA certificate.**
   - Regenerate your CF and Diego manifests.
   - Deploy CF using your updated manifest.
-  - Deploy Diego + Netman using your updated manifest.
+  - Deploy Diego + CF Networking using your updated manifest.
 
   ```yaml
   ...
@@ -343,7 +343,7 @@ To rotate your SSL certificates, keys, and certificate authorities, you must per
 0. In your CF stub file, remove the old CA certificate.
   - Regenerate your CF and Diego manifests.
   - Deploy CF using your updated manifest.
-  - Deploy Diego + Netman using your updated manifest.
+  - Deploy Diego + CF Networking using your updated manifest.
 
   ```yaml
   ...
