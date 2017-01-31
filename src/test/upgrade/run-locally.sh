@@ -8,7 +8,7 @@ cd $THIS_DIR
 export CONFIG=/tmp/test-config.json
 export APPS_DIR=../../example-apps
 export BASE_MANIFEST=../../../bosh-lite/deployments/diego.yml
-export UPGRADE_MANIFEST=../../../bosh-lite/deployments/diego_with_netman.yml
+export UPGRADE_MANIFEST=../../../bosh-lite/deployments/diego_cf_networking.yml
 
 echo '
 {
