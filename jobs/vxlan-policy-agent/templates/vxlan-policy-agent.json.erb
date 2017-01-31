@@ -4,7 +4,7 @@
     require 'json'
 
     toRender = {
-      "cni_datastore_path" => p("vxlan-policy-agent.cni_datastore_path"),
+      "cni_datastore_path" => "/var/vcap/data/container-metadata/store.json",
       "flannel_subnet_file" => "/var/vcap/data/flannel/subnet.env",
       "iptables_lock_file" => "/var/vcap/data/garden-cni/iptables.lock",
 
