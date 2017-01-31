@@ -19,7 +19,7 @@ properties:
     description: "The CNI adapter will bind-mount network namespaces in this directory"
     default: /var/vcap/data/garden-cni/container-netns
 
-  garden-cni.overlay_network:
+  garden-cni.network:
     description: "IP range used by the container network"
     default: 10.255.0.0/16
 

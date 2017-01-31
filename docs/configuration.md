@@ -3,9 +3,7 @@
 ### Flannel Network Configuration
 The default flannel network is `10.255.0.0/16` which will allow for a maximum of 256 cells.
 
-The network can be configured via **two** bosh properties:
-  - `cni-flannel.flannel.Network`
-  - `garden-cni.overlay_network`
+The network can be configured via the bosh property `garden-cni.network` which is used by both the `cni-flannel` and `garden-cni` jobs.
 
 For instance, to allow for up to 4096 cells, `10.240.0.0/12` could be used.
 

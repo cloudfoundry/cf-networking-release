@@ -1,5 +1,16 @@
 <%=
     require 'json'
 
-    JSON.pretty_generate(p("garden-cni"))
+    toRender = {
+      "cni_plugin_dir" => p("garden-cni.cni_plugin_dir"),
+      "cni_config_dir" => p("garden-cni.cni_config_dir"),
+      "bind_mount_dir" => p("garden-cni.bind_mount_dir"),
+      "overlay_network" => p("garden-cni.network"),
+      "state_file" => p("garden-cni.state_file"),
+      "start_port" => p("garden-cni.start_port"),
+      "total_ports" => p("garden-cni.total_ports"),
+      "iptables_lock_file" =>p("garden-cni.iptables_lock_file")
+    }
+
+    JSON.pretty_generate(toRender)
 %>

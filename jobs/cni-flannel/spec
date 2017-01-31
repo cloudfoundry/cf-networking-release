@@ -46,7 +46,7 @@ properties:
     description: "PEM encoded client key"
     default: ""
 
-  cni-flannel.flannel.Network:
+  garden-cni.network:
     description: "CIDR block for overlay network.  Should be /16"
     default: "10.255.0.0/16"
 
