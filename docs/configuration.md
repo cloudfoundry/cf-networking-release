@@ -3,7 +3,7 @@
 ### Flannel Network Configuration
 The default flannel network is `10.255.0.0/16` which will allow for a maximum of 256 cells.
 
-The network can be configured via the bosh property `garden-cni.network` which is used by both the `cni-flannel` and `garden-cni` jobs.
+The network can be configured via the bosh property `cf_networking.network` which is used by both the `cni-flannel` and `garden-cni` jobs.
 
 For instance, to allow for up to 4096 cells, `10.240.0.0/12` could be used.
 
@@ -41,19 +41,19 @@ To rotate your SSL certificates, keys, and certificate authorities, you must per
 0. Generate new certificates by running `./scripts/generate-certs`.
 
 0. In your netman stub file, append the new CA certificate (contents of `netman-certs/netman-ca.crt`)
-to the `netman_overrides.properties.policy-server.ca_cert`
-and `netman_overrides.properties.vxlan-policy-agent.ca_cert` fields.
+to the `cf_networking_overrides.properties.policy_server.ca_cert`
+and `cf_networking_overrides.properties.vxlan_policy_agent.ca_cert` fields.
   - **Do not remove the old CA certificates.**
   - Regenerate your Diego manifest.
   - Deploy Diego + CF Networking using your updated manifest.
 
   ```yaml
   ---
-  netman_overrides:
+  cf_networking_overrides:
     ...
     properties:
       ...
-      policy-server:
+      policy_server:
         ...
         ca_cert: |
           -----BEGIN CERTIFICATE-----
@@ -78,7 +78,7 @@ and `netman_overrides.properties.vxlan-policy-agent.ca_cert` fields.
           #######           Your Old Server Key                ######
           ###########################################################
           -----END RSA PRIVATE KEY-----
-      vxlan-policy-agent:
+      vxlan_policy_agent:
         ...
         ca_cert: |
           -----BEGIN CERTIFICATE-----
@@ -115,11 +115,11 @@ and `netman_overrides.properties.vxlan-policy-agent.ca_cert` fields.
 
   ```yaml
   ---
-  netman_overrides:
+  cf_networking_overrides:
     ...
     properties:
       ...
-      policy-server:
+      policy_server:
         ...
         ca_cert: |
           -----BEGIN CERTIFICATE-----
@@ -144,7 +144,7 @@ and `netman_overrides.properties.vxlan-policy-agent.ca_cert` fields.
           #######           Your New Server Key                ######
           ###########################################################
           -----END RSA PRIVATE KEY-----
-      vxlan-policy-agent:
+      vxlan_policy_agent:
         ...
         ca_cert: |
           -----BEGIN CERTIFICATE-----
@@ -174,18 +174,18 @@ and `netman_overrides.properties.vxlan-policy-agent.ca_cert` fields.
   ```
 
 
-0. In your netman stub file, remove the old CA certificate from the `netman_overrides.properties.policy-server.ca_cert`
-and `netman_overrides.properties.vxlan-policy-agent.ca_cert` fields.
+0. In your netman stub file, remove the old CA certificate from the `cf_networking_overrides.properties.policy_server.ca_cert`
+and `cf_networking_overrides.properties.vxlan_policy_agent.ca_cert` fields.
   - Regenerate your Diego manifest.
   - Deploy Diego + CF Networking using your updated manifest.
 
   ```yaml
   ---
-  netman_overrides:
+  cf_networking_overrides:
     ...
     properties:
       ...
-      policy-server:
+      policy_server:
         ...
         ca_cert: |
           -----BEGIN CERTIFICATE-----
@@ -205,7 +205,7 @@ and `netman_overrides.properties.vxlan-policy-agent.ca_cert` fields.
           #######           Your New Server Key                ######
           ###########################################################
           -----END RSA PRIVATE KEY-----
-      vxlan-policy-agent:
+      vxlan_policy_agent:
         ...
         ca_cert: |
           -----BEGIN CERTIFICATE-----

@@ -1,5 +1,5 @@
 ---
-netman_overrides:
+cf_networking_overrides:
   releases:
   - name: cf-networking
     version: latest
@@ -13,7 +13,7 @@ netman_overrides:
   - name: vxlan-policy-agent
     release: cf-networking
   properties:
-    netman:
+    cf_networking:
       disable: true
   jobs:
   - name: policy-server

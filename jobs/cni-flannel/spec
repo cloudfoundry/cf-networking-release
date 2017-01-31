@@ -18,30 +18,30 @@ packages:
   - flannel-watchdog
 
 properties:
-  cni-flannel.etcd_endpoints:
+  cf_networking.plugin.etcd_endpoints:
     description: "List of etcd endpoints"
     default: []
 
-  cni-flannel.flannel.etcd.require_ssl:
-    description: "Enable ssl for communication between flannel and etcd"
+  cf_networking.plugin.etcd.require_ssl:
+    description: "Enable ssl for communication between plugin and etcd"
     default: true
 
-  cni-flannel.etcd_ca_cert:
+  cf_networking.plugin.etcd_ca_cert:
     description: "PEM encoded CA cert"
     default: ""
 
-  cni-flannel.etcd_client_cert:
+  cf_networking.plugin.etcd_client_cert:
     description: "PEM encoded client cert"
     default: ""
 
-  cni-flannel.etcd_client_key:
+  cf_networking.plugin.etcd_client_key:
     description: "PEM encoded client key"
     default: ""
 
-  garden-cni.network:
+  cf_networking.network:
     description: "CIDR block for overlay network.  Should be /16"
     default: "10.255.0.0/16"
 
-  netman.disable:
+  cf_networking.disable:
     description: "Disable container to container networking"
     default: false

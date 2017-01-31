@@ -4,7 +4,7 @@
   "cniVersion": "0.2.0",
   "datastore": "/var/vcap/data/container-metadata/store.json",
   "iptables_lock_file": "/var/vcap/data/garden-cni/iptables.lock",
-  "overlay_network": "<%= p('garden-cni.network') %>",
+  "overlay_network": "<%= p('cf_networking.network') %>",
   "delegate": {
     "name": "cni-flannel",
     "type": "flannel",

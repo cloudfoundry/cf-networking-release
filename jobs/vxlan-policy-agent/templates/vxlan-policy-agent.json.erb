@@ -1,4 +1,4 @@
-<% if p("netman.disable") %>
+<% if p("cf_networking.disable") %>
 <% else %>
 <%=
     require 'json'
@@ -8,16 +8,16 @@
       "flannel_subnet_file" => "/var/vcap/data/flannel/subnet.env",
       "iptables_lock_file" => "/var/vcap/data/garden-cni/iptables.lock",
 
-      "policy_server_url" => p("vxlan-policy-agent.policy_server_url"),
-      "poll_interval" => p("vxlan-policy-agent.poll_interval"),
+      "policy_server_url" => p("cf_networking.vxlan_policy_agent.policy_server_url"),
+      "poll_interval" => p("cf_networking.vxlan_policy_agent.poll_interval"),
       "vni" => 1,
 
-      "metron_address" => p("vxlan-policy-agent.metron_address"),
+      "metron_address" => p("cf_networking.vxlan_policy_agent.metron_address"),
 
-      "debug_server_host" => p("vxlan-policy-agent.debug_server_host"),
-      "debug_server_port" => p("vxlan-policy-agent.debug_server_port"),
+      "debug_server_host" => p("cf_networking.vxlan_policy_agent.debug_server_host"),
+      "debug_server_port" => p("cf_networking.vxlan_policy_agent.debug_server_port"),
 
-      "log_level" => p("vxlan-policy-agent.log_level"),
+      "log_level" => p("cf_networking.vxlan_policy_agent.log_level"),
 
       # hard-coded values, not exposed as bosh spec properties
       "ca_cert_file" => "/var/vcap/jobs/vxlan-policy-agent/config/certs/ca.crt",

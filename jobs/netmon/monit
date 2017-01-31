@@ -1,4 +1,4 @@
-<% if p("netman.disable") %>
+<% if p("cf_networking.disable") %>
 <% else %>
 check process netmon
   with pidfile /var/vcap/sys/run/netmon/netmon.pid

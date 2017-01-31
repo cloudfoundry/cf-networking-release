@@ -1,6 +1,6 @@
 <%
     def db_params
-      ['username', 'password', 'host', 'port', 'name'].map {|name| "policy-server.database.#{name}"}
+      ['username', 'password', 'host', 'port', 'name'].map {|name| "cf_networking.policy_server.database.#{name}"}
     end
 
     def param_exists? param
@@ -16,7 +16,7 @@
 
       values = db_params.map {|param| p(param)}
       # Note: order of the params is important here, it has to be username, password, host, port, name in that order
-      driver = p("policy-server.database.type")
+      driver = p("cf_networking.policy_server.database.type")
       case driver
       when 'mysql'
         sprintf "%s:%s@tcp(%s:%s)/%s", *values
@@ -27,10 +27,10 @@
       end
     end
 
-    connection_string = p('policy-server.database.connection_string')
+    connection_string = p('cf_networking.policy_server.database.connection_string')
 
     if connection_string != "" && connection_string_from_db_params != ""
-       raise "You can only specify 'policy-server.database.connection_string' or '#{db_params.join(",")}'"
+       raise "You can only specify 'cf_networking.policy_server.database.connection_string' or '#{db_params.join(",")}'"
     end
 
     if connection_string == ""
@@ -46,23 +46,23 @@
     require 'json'
 
     toRender = {
-      "listen_host" => p("policy-server.listen_host"),
-      "listen_port" => p("policy-server.listen_port"),
-      "debug_server_host" => p("policy-server.debug_server_host"),
-      "debug_server_port" => p("policy-server.debug_server_port"),
-      "internal_listen_port" => p("policy-server.internal_listen_port"),
-      "uaa_client" => p("policy-server.uaa_client"),
-      "uaa_client_secret" => p("policy-server.uaa_client_secret"),
-      "uaa_url" => p("policy-server.uaa_url"),
-      "cc_url" => p("policy-server.cc_url"),
-      "skip_ssl_validation" => p("policy-server.skip_ssl_validation"),
+      "listen_host" => p("cf_networking.policy_server.listen_host"),
+      "listen_port" => p("cf_networking.policy_server.listen_port"),
+      "debug_server_host" => p("cf_networking.policy_server.debug_server_host"),
+      "debug_server_port" => p("cf_networking.policy_server.debug_server_port"),
+      "internal_listen_port" => p("cf_networking.policy_server.internal_listen_port"),
+      "uaa_client" => p("cf_networking.policy_server.uaa_client"),
+      "uaa_client_secret" => p("cf_networking.policy_server.uaa_client_secret"),
+      "uaa_url" => p("cf_networking.policy_server.uaa_url"),
+      "cc_url" => p("cf_networking.policy_server.cc_url"),
+      "skip_ssl_validation" => p("cf_networking.policy_server.skip_ssl_validation"),
       "database" => {
-        "type" => p("policy-server.database.type"),
+        "type" => p("cf_networking.policy_server.database.type"),
         "connection_string" => connection_string,
       },
-      "tag_length" => p("policy-server.tag_length"),
-      "metron_address" => p("policy-server.metron_address"),
-      "log_level" => p("policy-server.log_level"),
+      "tag_length" => p("cf_networking.policy_server.tag_length"),
+      "metron_address" => p("cf_networking.policy_server.metron_address"),
+      "log_level" => p("cf_networking.policy_server.log_level"),
 
       # hard-coded values, not exposed as bosh spec properties
       "ca_cert_file" => "/var/vcap/jobs/policy-server/config/certs/ca.crt",

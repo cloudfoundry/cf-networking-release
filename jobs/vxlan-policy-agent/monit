@@ -1,4 +1,4 @@
-<% if p("netman.disable") %>
+<% if p("cf_networking.disable") %>
 <% else %>
 check process vxlan-policy-agent
   with pidfile /var/vcap/sys/run/vxlan-policy-agent/vxlan-policy-agent.pid

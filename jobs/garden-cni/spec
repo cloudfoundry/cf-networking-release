@@ -9,20 +9,21 @@ packages:
   - runc-cni
 
 properties:
-  garden-cni.cni_plugin_dir:
+  cf_networking.garden_external_networker.cni_plugin_dir:
     description: "Directory containing CNI plugins."
 
-  garden-cni.cni_config_dir:
+  cf_networking.garden_external_networker.cni_config_dir:
     description: "Directory to store CNI config files.  Other jobs may write files into here."
 
-  garden-cni.network:
-    description: "IP range used by the container network"
-    default: 10.255.0.0/16
-
-  garden-cni.start_port:
+  cf_networking.garden_external_networker.start_port:
     description: "Starting value for allocating host ports to containers"
     default: 60000
 
-  garden-cni.total_ports:
+  cf_networking.garden_external_networker.total_ports:
     description: "Total number of host ports that may be allocated to containers"
     default: 5000
+
+  cf_networking.network:
+    description: "IP range used by the container network"
+    default: 10.255.0.0/16
+

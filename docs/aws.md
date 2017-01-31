@@ -111,11 +111,11 @@ by using the instructions and tooling in [the diego-release repo](https://github
     ```
 
 
-0. Create a CF Networking stub `stubs/netman/stub.yml`:
+0. Create a CF Networking stub `stubs/cf-networking/stub.yml`:
 
     ```yaml
     ---
-    netman_overrides:
+    cf_networking_overrides:
       releases:
       - name: cf-networking
         version: latest
@@ -129,54 +129,52 @@ by using the instructions and tooling in [the diego-release repo](https://github
       - name: vxlan-policy-agent
         release: cf-networking
       properties:
-        vxlan-policy-agent:
-          policy_server_url: https://policy-server.service.cf.internal:4003
-          ca_cert: |
-            -----BEGIN CERTIFICATE-----
-            REPLACE_WITH_CA_CERT
-            -----END CERTIFICATE-----
-          client_cert: |
-            -----BEGIN CERTIFICATE-----
-            REPLACE_WITH_CLIENT_CERT
-            -----END CERTIFICATE-----
-          client_key: |
-            -----BEGIN RSA PRIVATE KEY-----
-            REPLACE_WITH_CLIENT_KEY
-            -----END RSA PRIVATE KEY-----
-        policy-server:
-          uaa_client_secret: REPLACE_WITH_UAA_CLIENT_SECRET
-          skip_ssl_validation: true
-          database:
-            type: REPLACE_WITH_DB_TYPE # must be mysql or postgres
-            username: REPLACE_WITH_USERNAME
-            password: REPLACE_WITH_PASSWORD
-            host: REPLACE_WITH_DB_HOSTNAME
-            port: REPLACE_WITH_DB_PORT # e.g. 3306 for mysql
-            name: REPLACE_WITH_DB_NAME # e.g. network_policy
-          ca_cert: |
-            -----BEGIN CERTIFICATE-----
-            REPLACE_WITH_CA_CERT
-            -----END CERTIFICATE-----
-          server_cert: |
-            -----BEGIN CERTIFICATE-----
-            REPLACE_WITH_SERVER_CERT
-            -----END CERTIFICATE-----
-          server_key: |
-            -----BEGIN RSA PRIVATE KEY-----
-            REPLACE_WITH_SERVER_KEY
-            -----END RSA PRIVATE KEY-----
-        garden-cni:
-          cni_plugin_dir: /var/vcap/packages/flannel/bin
-          cni_config_dir: /var/vcap/jobs/cni-flannel/config/cni
-        cni-flannel:
-          flannel:
-            etcd:
-              require_ssl: (( config_from_cf.etcd.require_ssl))
-          etcd_endpoints:
-            - (( config_from_cf.etcd.advertise_urls_dns_suffix ))
-          etcd_client_cert: (( config_from_cf.etcd.client_cert ))
-          etcd_client_key: (( config_from_cf.etcd.client_key ))
-          etcd_ca_cert: (( config_from_cf.etcd.ca_cert ))
+        cf_networking:
+          vxlan_policy_agent:
+            policy_server_url: https://policy-server.service.cf.internal:4003
+            ca_cert: |
+              -----BEGIN CERTIFICATE-----
+              REPLACE_WITH_CA_CERT
+              -----END CERTIFICATE-----
+            client_cert: |
+              -----BEGIN CERTIFICATE-----
+              REPLACE_WITH_CLIENT_CERT
+              -----END CERTIFICATE-----
+            client_key: |
+              -----BEGIN RSA PRIVATE KEY-----
+              REPLACE_WITH_CLIENT_KEY
+              -----END RSA PRIVATE KEY-----
+          policy_server:
+            uaa_client_secret: REPLACE_WITH_UAA_CLIENT_SECRET
+            skip_ssl_validation: true
+            database:
+              type: REPLACE_WITH_DB_TYPE # must be mysql or postgres
+              username: REPLACE_WITH_USERNAME
+              password: REPLACE_WITH_PASSWORD
+              host: REPLACE_WITH_DB_HOSTNAME
+              port: REPLACE_WITH_DB_PORT # e.g. 3306 for mysql
+              name: REPLACE_WITH_DB_NAME # e.g. network_policy
+            ca_cert: |
+              -----BEGIN CERTIFICATE-----
+              REPLACE_WITH_CA_CERT
+              -----END CERTIFICATE-----
+            server_cert: |
+              -----BEGIN CERTIFICATE-----
+              REPLACE_WITH_SERVER_CERT
+              -----END CERTIFICATE-----
+            server_key: |
+              -----BEGIN RSA PRIVATE KEY-----
+              REPLACE_WITH_SERVER_KEY
+              -----END RSA PRIVATE KEY-----
+          garden_external_networker:
+            cni_plugin_dir: /var/vcap/packages/flannel/bin
+            cni_config_dir: /var/vcap/jobs/cni-flannel/config/cni
+          plugin:
+            etcd_endpoints:
+              - (( config_from_cf.etcd.advertise_urls_dns_suffix ))
+            etcd_client_cert: (( config_from_cf.etcd.client_cert ))
+            etcd_client_key: (( config_from_cf.etcd.client_key ))
+            etcd_ca_cert: (( config_from_cf.etcd.ca_cert ))
       garden_properties:
         network_plugin: /var/vcap/packages/runc-cni/bin/garden-external-networker
         network_plugin_extra_args:
@@ -253,7 +251,7 @@ by using the instructions and tooling in [the diego-release repo](https://github
       -i ${environment_path}/stubs/diego/iaas-settings.yml \
       -p ${environment_path}/stubs/diego/property-overrides.yml \
       -n ${environment_path}/stubs/diego/instance-count-overrides.yml \
-      -N ${environment_path}/stubs/netman/stub.yml \
+      -N ${environment_path}/stubs/cf-networking/stub.yml \
       -v ${environment_path}/stubs/diego/release-versions.yml \
       > ${output_path}/diego.yml
   popd

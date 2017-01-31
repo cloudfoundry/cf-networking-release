@@ -13,94 +13,94 @@ packages:
   - policy-server
 
 properties:
-  policy-server.listen_host:
+  cf_networking.policy_server.listen_host:
     description: "Host where the policy server will serve its API"
     default: 0.0.0.0
 
-  policy-server.listen_port:
+  cf_networking.policy_server.listen_port:
     description: "Port where the policy server will serve its external API"
     default: 4002
 
-  policy-server.debug_server_host:
+  cf_networking.policy_server.debug_server_host:
     description: "Host for the debug server"
     default: 127.0.0.1
 
-  policy-server.debug_server_port:
+  cf_networking.policy_server.debug_server_port:
     description: "Port for the debug server"
     default: 22222
 
-  policy-server.internal_listen_port:
+  cf_networking.policy_server.internal_listen_port:
     description: "Port where the policy server will serve its internal API"
     default: 4003
 
-  policy-server.ca_cert:
+  cf_networking.policy_server.ca_cert:
     description: "Trusted CA certificate for clients"
 
-  policy-server.server_cert:
+  cf_networking.policy_server.server_cert:
     description: "Server certificate for TLS"
 
-  policy-server.server_key:
+  cf_networking.policy_server.server_key:
     description: "Server key for TLS"
 
-  policy-server.uaa_client:
+  cf_networking.policy_server.uaa_client:
     description: "UAA client name"
     default: network-policy
 
-  policy-server.uaa_client_secret:
+  cf_networking.policy_server.uaa_client_secret:
     description: "UAA client secret"
     default: network-policy-secret
 
-  policy-server.uaa_url:
+  cf_networking.policy_server.uaa_url:
     description: "Address of UAA server"
     default: https://uaa.service.cf.internal:8443
 
-  policy-server.cc_url:
+  cf_networking.policy_server.cc_url:
     description: "Address of Cloud Controller server"
     default: http://cloud-controller-ng.service.cf.internal:9022
 
-  policy-server.skip_ssl_validation:
+  cf_networking.policy_server.skip_ssl_validation:
     description: "Skip verifying ssl certs when speaking to UAA or Cloud Controller"
     default: false
 
 
-  policy-server.database.type:
+  cf_networking.policy_server.database.type:
     description: "Type of database: postgres or mysql"
     default: postgres
 
-  policy-server.database.connection_string:
+  cf_networking.policy_server.database.connection_string:
     description: "DEPRECATED: please instead set username,password,host,port,name"
     default: ""
 
-  policy-server.database.username:
+  cf_networking.policy_server.database.username:
     description: "Username for database connection"
     default: ""
 
-  policy-server.database.password:
+  cf_networking.policy_server.database.password:
     description: "Password for database connection"
     default: ""
 
-  policy-server.database.host:
+  cf_networking.policy_server.database.host:
     description: "Host (IP or DNS name) for database server"
     default: ""
 
-  policy-server.database.port:
+  cf_networking.policy_server.database.port:
     description: "Port for database server"
     default: ""
 
-  policy-server.database.name:
+  cf_networking.policy_server.database.name:
     description: "Name of logical database to use"
     default: ""
 
 
 
-  policy-server.tag_length:
+  cf_networking.policy_server.tag_length:
     description: "Length in bytes of the packet tags to generate for policy sources and destinations. Must be greater than 0 and less than 4."
     default: 2
 
-  policy-server.metron_address:
+  cf_networking.policy_server.metron_address:
     description: "Forward metrics to this metron agent"
     default: 127.0.0.1:3457
 
-  policy-server.log_level:
+  cf_networking.policy_server.log_level:
     description: "Logging level (debug, info, warn, error)"
     default: info

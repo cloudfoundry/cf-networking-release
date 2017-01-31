@@ -25,6 +25,6 @@ properties:
     description: "Log level"
     default: info
 
-  netman.disable:
+  cf_networking.disable:
     description: "disable container to container networking"
     default: false

@@ -7,13 +7,13 @@ LOG_DIR=/var/vcap/sys/log/flannel
 ETCD_CERTS_DIR=/var/vcap/jobs/cni-flannel/config/certs/etcd
 PIDFILE=$RUN_DIR/flanneld.pid
 
-ETCD_ENDPOINT=<%= p("cni-flannel.etcd_endpoints").map{|addr| "\"#{p("cni-flannel.flannel.etcd.require_ssl") ? "https" : "http"}://#{addr}:4001\""}.join(",") %>
+ETCD_ENDPOINT=<%= p("cf_networking.plugin.etcd_endpoints").map{|addr| "\"#{p("cf_networking.plugin.etcd.require_ssl") ? "https" : "http"}://#{addr}:4001\""}.join(",") %>
 
 FLANNEL_CONFIG='<%=
   require 'json'
 
   toRender = {
-    "Network" => p("garden-cni.network"),
+    "Network" => p("cf_networking.network"),
     "Backend" => {
       "Type" => "vxlan",
       "Port" => 8472,
@@ -43,7 +43,7 @@ case $1 in
     keyURL=${ETCD_ENDPOINT}/v2/keys/coreos.com/network/config
 
     curl -v \
-    <% if p("cni-flannel.flannel.etcd.require_ssl") %> \
+    <% if p("cf_networking.plugin.etcd.require_ssl") %> \
       --cacert ${ETCD_CERTS_DIR}/ca.crt \
       --cert ${ETCD_CERTS_DIR}/client.crt \
       --key ${ETCD_CERTS_DIR}/client.key \
@@ -56,7 +56,7 @@ case $1 in
     exec /var/vcap/packages/flannel/bin/flanneld \
       --log_dir=${LOG_DIR} \
       --subnet-file="/var/vcap/data/flannel/subnet.env" \
-    <% if p("cni-flannel.flannel.etcd.require_ssl") %> \
+    <% if p("cf_networking.plugin.etcd.require_ssl") %> \
       --etcd-cafile=${ETCD_CERTS_DIR}/ca.crt \
       --etcd-certfile=${ETCD_CERTS_DIR}/client.crt \
       --etcd-keyfile=${ETCD_CERTS_DIR}/client.key \

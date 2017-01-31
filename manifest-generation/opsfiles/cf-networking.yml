@@ -53,9 +53,10 @@
     name: garden-cni
     release: cf-networking
     properties:
-      garden-cni:
-        cni_plugin_dir: /var/vcap/packages/flannel/bin
-        cni_config_dir: /var/vcap/jobs/cni-flannel/config/cni
+      cf_networking:
+        garden_external_networker:
+          cni_plugin_dir: /var/vcap/packages/flannel/bin
+          cni_config_dir: /var/vcap/jobs/cni-flannel/config/cni
 
 - type: replace
   path: /instance_groups/name=diego-cell/jobs/-
@@ -63,15 +64,13 @@
     name: cni-flannel
     release: cf-networking
     properties:
-      cni-flannel:
-        etcd_endpoints:
-          - etcd.service.cf.internal
-        etcd_client_cert: "((etcd_client.certificate))"
-        etcd_client_key: "((etcd_client.private_key))"
-        etcd_ca_cert: "((etcd_client.ca))"
-        flannel:
-          etcd:
-            require_ssl: "true"
+      cf_networking:
+        plugin:
+          etcd_endpoints:
+            - etcd.service.cf.internal
+          etcd_client_cert: "((etcd_client.certificate))"
+          etcd_client_key: "((etcd_client.private_key))"
+          etcd_ca_cert: "((etcd_client.ca))"
 
 - type: replace
   path: /instance_groups/name=diego-cell/jobs/-
@@ -85,11 +84,12 @@
     name: vxlan-policy-agent
     release: cf-networking
     properties:
-      vxlan-policy-agent:
-        policy_server_url: https://policy-server.service.cf.internal:4003
-        ca_cert: "((network_policy_client.ca))"
-        client_cert: "((network_policy_client.certificate))"
-        client_key: "((network_policy_client.private_key))"
+      cf_networking:
+        vxlan_policy_agent:
+          policy_server_url: https://policy-server.service.cf.internal:4003
+          ca_cert: "((network_policy_client.ca))"
+          client_cert: "((network_policy_client.certificate))"
+          client_key: "((network_policy_client.private_key))"
 
 # policy server vm
 - type: replace
@@ -108,19 +108,20 @@
     - name: policy-server
       release: cf-networking
       properties:
-        policy-server:
-          uaa_client_secret: "((uaa_clients_network_policy_secret))"
-          skip_ssl_validation: true
-          ca_cert: "((network_policy_server.ca))"
-          server_cert: "((network_policy_server.certificate))"
-          server_key: "((network_policy_server.private_key))"
-          database:
-            type: mysql
-            username: network_policy
-            password: "((cf_mysql_mysql_seeded_databases_network_policy_password))"
-            host: 10.0.31.193
-            port: 3306
-            name: network_policy
+        cf_networking:
+          policy_server:
+            uaa_client_secret: "((uaa_clients_network_policy_secret))"
+            skip_ssl_validation: true
+            ca_cert: "((network_policy_server.ca))"
+            server_cert: "((network_policy_server.certificate))"
+            server_key: "((network_policy_server.private_key))"
+            database:
+              type: mysql
+              username: network_policy
+              password: "((cf_mysql_mysql_seeded_databases_network_policy_password))"
+              host: 10.0.31.193
+              port: 3306
+              name: network_policy
     - name: route_registrar
       release: routing
       properties:

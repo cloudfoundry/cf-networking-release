@@ -12,38 +12,38 @@ packages:
   - vxlan-policy-agent
 
 properties:
-  vxlan-policy-agent.policy_server_url:
+  cf_networking.vxlan_policy_agent.policy_server_url:
     description: "URL where the policy server can be reached"
 
-  vxlan-policy-agent.poll_interval:
+  cf_networking.vxlan_policy_agent.poll_interval:
     description: "Query the policy server on this interval, in seconds"
     default: 5
 
-  vxlan-policy-agent.ca_cert:
+  cf_networking.vxlan_policy_agent.ca_cert:
     description: "Trusted CA certificate for server"
 
-  vxlan-policy-agent.client_cert:
+  cf_networking.vxlan_policy_agent.client_cert:
     description: "Client certificate for TLS to access policy server"
 
-  vxlan-policy-agent.client_key:
+  cf_networking.vxlan_policy_agent.client_key:
     description: "Client private key for TLS to access policy server"
 
-  vxlan-policy-agent.metron_address:
+  cf_networking.vxlan_policy_agent.metron_address:
     description: "Forward metrics to this metron agent"
     default: 127.0.0.1:3457
 
-  vxlan-policy-agent.debug_server_host:
+  cf_networking.vxlan_policy_agent.debug_server_host:
     description: "Host for the debug server"
     default: 127.0.0.1
 
-  vxlan-policy-agent.debug_server_port:
+  cf_networking.vxlan_policy_agent.debug_server_port:
     description: "Port for the debug server"
     default: 22222
 
-  vxlan-policy-agent.log_level:
+  cf_networking.vxlan_policy_agent.log_level:
     description: "Logging level (debug, info, warn, error)"
     default: info
 
-  netman.disable:
+  cf_networking.disable:
     description: "Disable container to container networking"
     default: false
