@@ -23,10 +23,6 @@ properties:
     description: "IP range used by the container network"
     default: 10.255.0.0/16
 
-  garden-cni.state_file:
-    description: "Path to file that will hold the state persisted by the external networker binary"
-    default: /var/vcap/data/garden-cni/external-networker-state.json
-
   garden-cni.start_port:
     description: "Starting value for allocating host ports to containers"
     default: 60000

@@ -6,7 +6,7 @@
       "cni_config_dir" => p("garden-cni.cni_config_dir"),
       "bind_mount_dir" => p("garden-cni.bind_mount_dir"),
       "overlay_network" => p("garden-cni.network"),
-      "state_file" => p("garden-cni.state_file"),
+      "state_file" => "/var/vcap/data/garden-cni/external-networker-state.json",
       "start_port" => p("garden-cni.start_port"),
       "total_ports" => p("garden-cni.total_ports"),
       "iptables_lock_file" => "/var/vcap/data/garden-cni/iptables.lock"
