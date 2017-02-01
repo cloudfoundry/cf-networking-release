@@ -98,7 +98,7 @@ var _ = Describe("Plugin", func() {
 				_, err := cli_plugin.ValidateArgs(fakeCliConnection, []string{
 					"command-arg", "some-app", "some-other-app", "--protocol", "tcp", "--port", "0",
 				})
-				Expect(err).To(MatchError("Incorrect usage. Port is not valid. Must be in range [1-65535].\n\nUSAGE:\nbanana"))
+				Expect(err).To(MatchError("Incorrect usage. Port is not valid. Must be in range <1-65535>.\n\nUSAGE:\nbanana"))
 				c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
 				Expect(c).To(Equal([]string{"help", "command-arg"}))
 			})

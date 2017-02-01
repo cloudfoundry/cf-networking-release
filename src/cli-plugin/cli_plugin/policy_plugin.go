@@ -47,7 +47,7 @@ const MinPort = 1
 const MaxPort = 65535
 
 func (p *Plugin) GetMetadata() plugin.PluginMetadata {
-	const usageTemplate = "cf %s SOURCE_APP DESTINATION_APP --protocol <tcp|udp> --port [%d-%d]"
+	const usageTemplate = "cf %s SOURCE_APP DESTINATION_APP --protocol <tcp|udp> --port <%d-%d>"
 
 	return plugin.PluginMetadata{
 		Name: "network-policy",
@@ -202,7 +202,7 @@ func ValidateArgs(cliConnection plugin.CliConnection, args []string) (ValidArgs,
 		return ValidArgs{}, errorWithUsage(fmt.Sprintf("Port is not valid: %s", *portString), args[0], cliConnection)
 	}
 	if port < MinPort || port > MaxPort {
-		return ValidArgs{}, errorWithUsage(fmt.Sprintf("Port is not valid. Must be in range [%d-%d].", MinPort, MaxPort), args[0], cliConnection)
+		return ValidArgs{}, errorWithUsage(fmt.Sprintf("Port is not valid. Must be in range <%d-%d>.", MinPort, MaxPort), args[0], cliConnection)
 	}
 
 	if *protocol != "tcp" && *protocol != "udp" {
