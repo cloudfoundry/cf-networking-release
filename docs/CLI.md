@@ -31,7 +31,7 @@ NAME:
    allow-access - Allow direct network traffic from one app to another
 
 USAGE:
-   cf allow-access SOURCE_APP DESTINATION_APP --protocol <tcp|udp> --port [1-65535]
+   cf allow-access SOURCE_APP DESTINATION_APP --protocol <tcp|udp> --port <1-65535>
 
 OPTIONS:
    --port           Port to connect to destination app with. (required)
@@ -81,7 +81,7 @@ NAME:
    remove-access - Remove policy and deny direct network traffic from one app to another
 
 USAGE:
-   cf remove-access SOURCE_APP DESTINATION_APP --protocol <tcp|udp> --port [1-65535]
+   cf remove-access SOURCE_APP DESTINATION_APP --protocol <tcp|udp> --port <1-65535>
 
 OPTIONS:
    --port           Port to connect to destination app with. (required)
