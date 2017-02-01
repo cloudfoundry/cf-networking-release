@@ -2,9 +2,45 @@
 
 See [AWS](aws.md) deployment docs for examples
 
-### on develop branch
+### 0.15.0+
+### Many breaking changes!
+### Requires Diego Release (some new diego-release that's not out yet)+
 
-Release name changed from `netman` to `cf-networking`.
+0. Release name changed from `netman` to `cf-networking`
+
+0. Acceptance errand name changed from `netman-cf-acceptance` to `cf-networking-acceptance`
+
+0. All propeties of `cf-networking-release` jobs live under a global `properties.cf_networking` key e.g:
+
+  ```diff
+     properties:
+  +    cf_networking:
+  +      ...
+  ```
+
+0. Several references to jobs in properties have changed names:
+
+  ```diff
+     properties:
+  +    cf_networking:
+  -      policy-server:
+  +      policy_server:
+           ...
+  -      vxlan-policy-agent:
+  +      vxlan_policy_agent:
+           ...
+  -      cni-flannel:
+  +      plugin:
+           ...
+  -      garden-cni:
+  +      garden_external_networker:
+           ...
+  +      ...
+  ```
+
+0. `properties.netman.disable` renamed `properties.cf_networking.disable`
+
+0. In the stub file, `netman_overrides` renamed to `cf_networking_overrides`
 
 ### 0.12.0
 
