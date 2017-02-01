@@ -22,10 +22,6 @@ properties:
     description: "List of etcd endpoints"
     default: []
 
-  cf_networking.plugin.etcd.require_ssl:
-    description: "Enable ssl for communication between plugin and etcd"
-    default: true
-
   cf_networking.plugin.etcd_ca_cert:
     description: "PEM encoded CA cert"
     default: ""
