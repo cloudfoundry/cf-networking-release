@@ -4,21 +4,20 @@ import (
 	"lib/marshal"
 	"net/http"
 	"policy-server/models"
-	"policy-server/store"
 	"policy-server/uaa_client"
 	"strings"
 
 	"code.cloudfoundry.org/lager"
 )
 
-//go:generate counterfeiter -o ../fakes/policy_filter.go --fake-name PolicyFilter . policyFilter
+//go:generate counterfeiter -o fakes/policy_filter.go --fake-name PolicyFilter . policyFilter
 type policyFilter interface {
 	FilterPolicies(policies []models.Policy, userToken uaa_client.CheckTokenResponse) ([]models.Policy, error)
 }
 
 type PoliciesIndex struct {
 	Logger       lager.Logger
-	Store        store.Store
+	Store        store
 	Marshaler    marshal.Marshaler
 	PolicyFilter policyFilter
 }

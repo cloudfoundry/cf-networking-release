@@ -6,7 +6,6 @@ import (
 	"lib/marshal"
 	"net/http"
 	"policy-server/models"
-	"policy-server/store"
 	"policy-server/uaa_client"
 
 	"code.cloudfoundry.org/lager"
@@ -15,7 +14,7 @@ import (
 type PoliciesDelete struct {
 	Logger      lager.Logger
 	Unmarshaler marshal.Unmarshaler
-	Store       store.Store
+	Store       store
 	Validator   validator
 	PolicyGuard policyGuard
 }

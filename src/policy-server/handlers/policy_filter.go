@@ -6,14 +6,23 @@ import (
 	"policy-server/uaa_client"
 )
 
-//go:generate counterfeiter -o ../fakes/policy_filter_cc_client.go --fake-name PolicyFilterCCClient . policyFilterCCClient
-type policyFilterCCClient interface {
+//go:generate counterfeiter -o fakes/uua_client.go --fake-name UAAClient . uaaClient
+type uaaClient interface {
+	GetToken() (string, error)
+	CheckToken(string) (uaa_client.CheckTokenResponse, error)
+}
+
+//go:generate counterfeiter -o fakes/cc_client.go --fake-name CCClient . ccClient
+type ccClient interface {
 	GetAppSpaces(token string, appGUIDs []string) (map[string]string, error)
+	GetSpace(token, spaceGUID string) (*models.Space, error)
+	GetSpaceGUIDs(token string, appGUIDs []string) ([]string, error)
+	GetUserSpace(token, userGUID string, spaces models.Space) (*models.Space, error)
 	GetUserSpaces(token, userGUID string) (map[string]struct{}, error)
 }
 
 type PolicyFilter struct {
-	CCClient  policyFilterCCClient
+	CCClient  ccClient
 	UAAClient uaaClient
 }
 

@@ -5,8 +5,8 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
-	"policy-server/fakes"
 	"policy-server/handlers"
+	"policy-server/handlers/fakes"
 	"policy-server/models"
 
 	lfakes "lib/fakes"

@@ -6,15 +6,8 @@ import (
 	"policy-server/uaa_client"
 )
 
-//go:generate counterfeiter -o ../fakes/policy_guard_cc_client.go --fake-name PolicyGuardCCClient . policyGuardCCClient
-type policyGuardCCClient interface {
-	GetSpaceGUIDs(token string, appGUIDs []string) ([]string, error)
-	GetSpace(token, spaceGUID string) (*models.Space, error)
-	GetUserSpace(token, userGUID string, spaces models.Space) (*models.Space, error)
-}
-
 type PolicyGuard struct {
-	CCClient  policyGuardCCClient
+	CCClient  ccClient
 	UAAClient uaaClient
 }
 

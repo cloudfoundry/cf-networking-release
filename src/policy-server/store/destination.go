@@ -1,6 +1,6 @@
 package store
 
-//go:generate counterfeiter -o ../fakes/destination_repo.go --fake-name DestinationRepo . DestinationRepo
+//go:generate counterfeiter -o fakes/destination_repo.go --fake-name DestinationRepo . DestinationRepo
 type DestinationRepo interface {
 	Create(Transaction, int, int, string) (int, error)
 	Delete(Transaction, int) error

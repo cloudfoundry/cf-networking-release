@@ -7,9 +7,9 @@ import (
 	"lib/db"
 	"lib/testsupport"
 	"math/rand"
-	"policy-server/fakes"
 	"policy-server/models"
 	"policy-server/store"
+	"policy-server/store/fakes"
 	"strings"
 	"sync/atomic"
 

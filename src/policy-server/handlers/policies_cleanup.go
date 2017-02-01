@@ -10,7 +10,7 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-//go:generate counterfeiter -o ../fakes/policy_cleaner.go --fake-name PolicyCleaner . policyCleaner
+//go:generate counterfeiter -o fakes/policy_cleaner.go --fake-name PolicyCleaner . policyCleaner
 type policyCleaner interface {
 	DeleteStalePolicies() ([]models.Policy, error)
 }

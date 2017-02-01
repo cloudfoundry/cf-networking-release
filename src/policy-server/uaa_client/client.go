@@ -28,12 +28,12 @@ type Client struct {
 	Logger        lager.Logger
 }
 
-//go:generate counterfeiter -o ../fakes/warrant_client.go --fake-name WarrantClient . warrantClient
+//go:generate counterfeiter -o fakes/warrant_client.go --fake-name WarrantClient . warrantClient
 type warrantClient interface {
 	GetToken(clientName, clientSecret string) (string, error)
 }
 
-//go:generate counterfeiter -o ../fakes/http_client.go --fake-name HTTPClient . httpClient
+//go:generate counterfeiter -o fakes/http_client.go --fake-name HTTPClient . httpClient
 type httpClient interface {
 	Do(*http.Request) (*http.Response, error)
 }

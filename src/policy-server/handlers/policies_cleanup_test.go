@@ -6,8 +6,8 @@ import (
 	lfakes "lib/fakes"
 	"net/http"
 	"net/http/httptest"
-	"policy-server/fakes"
 	"policy-server/handlers"
+	"policy-server/handlers/fakes"
 	"policy-server/models"
 	"policy-server/uaa_client"
 

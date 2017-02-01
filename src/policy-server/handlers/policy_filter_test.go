@@ -2,8 +2,8 @@ package handlers_test
 
 import (
 	"errors"
-	"policy-server/fakes"
 	"policy-server/handlers"
+	"policy-server/handlers/fakes"
 	"policy-server/models"
 	"policy-server/uaa_client"
 
@@ -14,14 +14,14 @@ import (
 var _ = Describe("PolicyFilter", func() {
 	var (
 		policyFilter  *handlers.PolicyFilter
-		fakeCCClient  *fakes.PolicyFilterCCClient
+		fakeCCClient  *fakes.CCClient
 		fakeUAAClient *fakes.UAAClient
 		tokenData     uaa_client.CheckTokenResponse
 		policies      []models.Policy
 	)
 
 	BeforeEach(func() {
-		fakeCCClient = &fakes.PolicyFilterCCClient{}
+		fakeCCClient = &fakes.CCClient{}
 		fakeUAAClient = &fakes.UAAClient{}
 		policyFilter = &handlers.PolicyFilter{
 			CCClient:  fakeCCClient,

@@ -18,6 +18,7 @@ import (
 	"lib/mutualtls"
 
 	"policy-server/cc_client"
+	"policy-server/cleaner"
 	"policy-server/config"
 	"policy-server/handlers"
 	"policy-server/server_metrics"
@@ -181,7 +182,7 @@ func main() {
 	policiesCleanupHandler := &handlers.PoliciesCleanup{
 		Logger:    logger.Session("policies-cleanup"),
 		Marshaler: marshal.MarshalFunc(json.Marshal),
-		PolicyCleaner: &handlers.PolicyCleaner{
+		PolicyCleaner: &cleaner.PolicyCleaner{
 			Logger:    logger.Session("policy-cleaner"),
 			Store:     dataStore,
 			UAAClient: uaaClient,

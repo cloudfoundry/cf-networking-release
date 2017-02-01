@@ -1,9 +1,9 @@
-package handlers_test
+package cleaner_test
 
 import (
 	"errors"
-	"policy-server/fakes"
-	"policy-server/handlers"
+	"policy-server/cleaner"
+	"policy-server/cleaner/fakes"
 	"policy-server/models"
 
 	"code.cloudfoundry.org/lager/lagertest"
@@ -14,7 +14,7 @@ import (
 
 var _ = Describe("PolicyCleaner", func() {
 	var (
-		policyCleaner *handlers.PolicyCleaner
+		policyCleaner *cleaner.PolicyCleaner
 		fakeStore     *fakes.Store
 		fakeUAAClient *fakes.UAAClient
 		fakeCCClient  *fakes.CCClient
@@ -54,7 +54,7 @@ var _ = Describe("PolicyCleaner", func() {
 		fakeCCClient = &fakes.CCClient{}
 		logger = lagertest.NewTestLogger("test")
 
-		policyCleaner = &handlers.PolicyCleaner{
+		policyCleaner = &cleaner.PolicyCleaner{
 			Logger:    logger,
 			Store:     fakeStore,
 			UAAClient: fakeUAAClient,

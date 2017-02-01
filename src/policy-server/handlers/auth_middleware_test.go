@@ -5,8 +5,8 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
-	"policy-server/fakes"
 	"policy-server/handlers"
+	"policy-server/handlers/fakes"
 	"policy-server/uaa_client"
 
 	"code.cloudfoundry.org/lager/lagertest"
@@ -23,7 +23,7 @@ var _ = Describe("Authentication middleware", func() {
 		authenticator *handlers.Authenticator
 
 		resp          *httptest.ResponseRecorder
-		uaaClient     *fakes.UAARequestClient
+		uaaClient     *fakes.UAAClient
 		logger        *lagertest.TestLogger
 		tokenResponse uaa_client.CheckTokenResponse
 	)
@@ -35,7 +35,7 @@ var _ = Describe("Authentication middleware", func() {
 		request.Header.Set("Authorization", "Bearer correct-token")
 		request.RemoteAddr = "some-host:some-ip"
 
-		uaaClient = &fakes.UAARequestClient{}
+		uaaClient = &fakes.UAAClient{}
 		logger = lagertest.NewTestLogger("test")
 		unprotected = &fakes.AuthenticatedHandler{}
 

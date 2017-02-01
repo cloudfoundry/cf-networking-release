@@ -2,7 +2,7 @@ package cf_command
 
 import "fmt"
 
-//go:generate counterfeiter -o ../fakes/api_cli_adapter.go --fake-name ApiCliAdapter . apiCliAdapter
+//go:generate counterfeiter -o fakes/api_cli_adapter.go --fake-name ApiCliAdapter . apiCliAdapter
 type apiCliAdapter interface {
 	SetApiWithSsl(api string) error
 	SetApiWithoutSsl(api string) error

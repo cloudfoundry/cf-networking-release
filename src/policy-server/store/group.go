@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-//go:generate counterfeiter -o ../fakes/group_repo.go --fake-name GroupRepo . GroupRepo
+//go:generate counterfeiter -o fakes/group_repo.go --fake-name GroupRepo . GroupRepo
 type GroupRepo interface {
 	Create(Transaction, string) (int, error)
 	Delete(Transaction, int) error

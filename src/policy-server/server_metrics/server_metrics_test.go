@@ -1,9 +1,9 @@
 package server_metrics_test
 
 import (
-	"policy-server/fakes"
 	"policy-server/models"
 	"policy-server/server_metrics"
+	"policy-server/server_metrics/fakes"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

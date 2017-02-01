@@ -6,9 +6,9 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
-	"policy-server/fakes"
 	"policy-server/testsupport"
 	"policy-server/uaa_client"
+	"policy-server/uaa_client/fakes"
 	"strings"
 
 	. "github.com/onsi/ginkgo"

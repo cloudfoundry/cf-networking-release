@@ -10,7 +10,7 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-//go:generate counterfeiter -o ../fakes/http_handler.go --fake-name HTTPHandler . http_handler
+//go:generate counterfeiter -o fakes/http_handler.go --fake-name HTTPHandler . http_handler
 type http_handler interface {
 	http.Handler
 }
@@ -25,7 +25,7 @@ type Authenticator struct {
 	Scopes []string
 }
 
-//go:generate counterfeiter -o ../fakes/authenticated_handler.go --fake-name AuthenticatedHandler . authenticatedHandler
+//go:generate counterfeiter -o fakes/authenticated_handler.go --fake-name AuthenticatedHandler . authenticatedHandler
 type authenticatedHandler interface {
 	ServeHTTP(response http.ResponseWriter, request *http.Request, tokenData uaa_client.CheckTokenResponse)
 }

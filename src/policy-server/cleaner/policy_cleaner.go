@@ -1,26 +1,31 @@
-package handlers
+package cleaner
 
 import (
 	"fmt"
 	"policy-server/models"
-	"policy-server/store"
 
 	"code.cloudfoundry.org/lager"
 )
 
-//go:generate counterfeiter -o ../fakes/uua_client.go --fake-name UAAClient . uaaClient
+//go:generate counterfeiter -o fakes/uua_client.go --fake-name UAAClient . uaaClient
 type uaaClient interface {
 	GetToken() (string, error)
 }
 
-//go:generate counterfeiter -o ../fakes/cc_client.go --fake-name CCClient . ccClient
+//go:generate counterfeiter -o fakes/cc_client.go --fake-name CCClient . ccClient
 type ccClient interface {
 	GetAllAppGUIDs(token string) (map[string]interface{}, error)
 }
 
+//go:generate counterfeiter -o fakes/store.go --fake-name Store . store
+type store interface {
+	All() ([]models.Policy, error)
+	Delete([]models.Policy) error
+}
+
 type PolicyCleaner struct {
 	Logger    lager.Logger
-	Store     store.Store
+	Store     store
 	UAAClient uaaClient
 	CCClient  ccClient
 }

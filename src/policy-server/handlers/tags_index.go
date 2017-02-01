@@ -4,7 +4,6 @@ import (
 	"lib/marshal"
 	"net/http"
 	"policy-server/models"
-	"policy-server/store"
 	"policy-server/uaa_client"
 
 	"code.cloudfoundry.org/lager"
@@ -12,7 +11,7 @@ import (
 
 type TagsIndex struct {
 	Logger    lager.Logger
-	Store     store.Store
+	Store     store
 	Marshaler marshal.Marshaler
 }
 

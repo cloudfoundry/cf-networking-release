@@ -6,20 +6,19 @@ import (
 	"lib/marshal"
 	"net/http"
 	"policy-server/models"
-	"policy-server/store"
 	"policy-server/uaa_client"
 
 	"code.cloudfoundry.org/lager"
 )
 
-//go:generate counterfeiter -o ../fakes/policy_guard.go --fake-name PolicyGuard . policyGuard
+//go:generate counterfeiter -o fakes/policy_guard.go --fake-name PolicyGuard . policyGuard
 type policyGuard interface {
 	CheckAccess(policies []models.Policy, tokenData uaa_client.CheckTokenResponse) (bool, error)
 }
 
 type PoliciesCreate struct {
 	Logger      lager.Logger
-	Store       store.Store
+	Store       store
 	Unmarshaler marshal.Unmarshaler
 	Validator   validator
 	PolicyGuard policyGuard

@@ -1,6 +1,6 @@
 package store
 
-//go:generate counterfeiter -o ../fakes/policy_repo.go --fake-name PolicyRepo . PolicyRepo
+//go:generate counterfeiter -o fakes/policy_repo.go --fake-name PolicyRepo . PolicyRepo
 type PolicyRepo interface {
 	Create(Transaction, int, int) error
 	Delete(Transaction, int, int) error
