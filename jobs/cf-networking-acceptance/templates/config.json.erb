@@ -1,0 +1,19 @@
+<%=
+    require 'json'
+
+    toRender = {
+      "api" => "api." + p("cf_networking.acceptance.system_domain"),
+      "apps_domain" => p("cf_networking.acceptance.apps_domain"),
+      "skip_ssl_validation" => p("cf_networking.acceptance.skip_ssl_validation"),
+      "admin_user" => p("cf_networking.acceptance.admin_user"),
+      "admin_password" => p("cf_networking.acceptance.admin_password"),
+      "admin_client" => p("cf_networking.acceptance.admin_client"),
+      "admin_secret" => p("cf_networking.acceptance.admin_secret"),
+      "test_applications" => p("cf_networking.acceptance.num_apps"),
+      "test_app_instances" => p("cf_networking.acceptance.num_app_instances"),
+      "extra_listen_ports" => 2,
+      "prefix" => p("cf_networking.acceptance.prefix"),
+    }
+
+    JSON.pretty_generate(toRender)
+%>

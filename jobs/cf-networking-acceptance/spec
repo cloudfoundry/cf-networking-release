@@ -1,5 +1,5 @@
 ---
-name: netman-cf-acceptance
+name: cf-networking-acceptance
 
 templates:
   run-tests.erb: bin/run
@@ -7,42 +7,42 @@ templates:
 
 packages:
   - golang
-  - netman-cf-acceptance
+  - cf-networking-acceptance
 
 properties:
-  netman-cf-acceptance.system_domain:
+  cf_networking.acceptance.system_domain:
     description: "cf system domain, e.g. bosh-lite.com"
 
-  netman-cf-acceptance.apps_domain:
+  cf_networking.acceptance.apps_domain:
     description: "cf apps domain, e.g. bosh-lite.com"
 
-  netman-cf-acceptance.skip_ssl_validation:
+  cf_networking.acceptance.skip_ssl_validation:
     description: "Skip ssl validation when connecting to apis"
     default: false
 
-  netman-cf-acceptance.admin_user:
+  cf_networking.acceptance.admin_user:
     description: "cf admin user name"
     default: admin
 
-  netman-cf-acceptance.admin_password:
+  cf_networking.acceptance.admin_password:
     description: "cf admin user password"
 
-  netman-cf-acceptance.admin_client:
+  cf_networking.acceptance.admin_client:
     description: "uaa admin client name"
     default: "admin"
 
-  netman-cf-acceptance.admin_secret:
+  cf_networking.acceptance.admin_secret:
     description: "uaa admin client secret"
 
-  netman-cf-acceptance.prefix:
+  cf_networking.acceptance.prefix:
     description: "prefix applied to all apps, orgs and spaces created by test"
     default: netman-errand-
 
-  netman-cf-acceptance.num_apps:
+  cf_networking.acceptance.num_apps:
     description: "number of applications to use in acceptance tests"
     default: 2
 
-  netman-cf-acceptance.num_app_instances:
+  cf_networking.acceptance.num_app_instances:
     description: "number of app instances to use in acceptance tests"
     default: 2
 

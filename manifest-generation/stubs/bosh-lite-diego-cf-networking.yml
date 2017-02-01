@@ -251,22 +251,23 @@ cf_networking_overrides:
               check:
                 interval: 5s
                 script: /bin/true
-  - name: netman-cf-acceptance
+  - name: cf-networking-acceptance
     instances: 1
     lifecycle: errand
     templates:
-    - name: netman-cf-acceptance
+    - name: cf-networking-acceptance
       release: cf-networking
     networks:
     - name: diego1
     resource_pool: database_z1
     properties:
-      netman-cf-acceptance:
-        system_domain: bosh-lite.com
-        apps_domain: bosh-lite.com
-        skip_ssl_validation: true
-        admin_user: admin
-        admin_password: admin
-        admin_client: admin
-        admin_secret: admin-secret
+      cf_networking:
+        acceptance:
+          system_domain: bosh-lite.com
+          apps_domain: bosh-lite.com
+          skip_ssl_validation: true
+          admin_user: admin
+          admin_password: admin
+          admin_client: admin
+          admin_secret: admin-secret
 config_from_cf: (( merge ))

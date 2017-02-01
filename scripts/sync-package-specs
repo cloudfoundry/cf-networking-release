@@ -51,8 +51,8 @@ sync_package policy-server \
 sync_package netmon \
   -app netmon/cmd/netmon &
 
-sync_package netman-cf-acceptance \
-  -test netman-cf-acceptance \
+sync_package cf-networking-acceptance \
+  -test test/acceptance \
   -app cli-plugin \
   -app cf-pusher/cmd/cf-pusher \
   -app github.com/onsi/ginkgo/ginkgo &

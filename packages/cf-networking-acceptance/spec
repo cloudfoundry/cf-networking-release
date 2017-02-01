@@ -1,5 +1,5 @@
 ---
-name: netman-cf-acceptance
+name: cf-networking-acceptance
 
 dependencies:
   - golang
