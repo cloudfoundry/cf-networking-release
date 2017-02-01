@@ -26,9 +26,8 @@ func (fake *CCClient) GetAllAppGUIDs(token string) (map[string]interface{}, erro
 	fake.getAllAppGUIDsMutex.Unlock()
 	if fake.GetAllAppGUIDsStub != nil {
 		return fake.GetAllAppGUIDsStub(token)
-	} else {
-		return fake.getAllAppGUIDsReturns.result1, fake.getAllAppGUIDsReturns.result2
 	}
+	return fake.getAllAppGUIDsReturns.result1, fake.getAllAppGUIDsReturns.result2
 }
 
 func (fake *CCClient) GetAllAppGUIDsCallCount() int {

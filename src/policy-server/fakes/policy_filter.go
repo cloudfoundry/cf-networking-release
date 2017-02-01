@@ -37,9 +37,8 @@ func (fake *PolicyFilter) FilterPolicies(policies []models.Policy, userToken uaa
 	fake.filterPoliciesMutex.Unlock()
 	if fake.FilterPoliciesStub != nil {
 		return fake.FilterPoliciesStub(policies, userToken)
-	} else {
-		return fake.filterPoliciesReturns.result1, fake.filterPoliciesReturns.result2
 	}
+	return fake.filterPoliciesReturns.result1, fake.filterPoliciesReturns.result2
 }
 
 func (fake *PolicyFilter) FilterPoliciesCallCount() int {

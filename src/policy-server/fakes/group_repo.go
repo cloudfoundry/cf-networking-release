@@ -50,9 +50,8 @@ func (fake *GroupRepo) Create(arg1 store.Transaction, arg2 string) (int, error) 
 	fake.createMutex.Unlock()
 	if fake.CreateStub != nil {
 		return fake.CreateStub(arg1, arg2)
-	} else {
-		return fake.createReturns.result1, fake.createReturns.result2
 	}
+	return fake.createReturns.result1, fake.createReturns.result2
 }
 
 func (fake *GroupRepo) CreateCallCount() int {
@@ -85,9 +84,8 @@ func (fake *GroupRepo) Delete(arg1 store.Transaction, arg2 int) error {
 	fake.deleteMutex.Unlock()
 	if fake.DeleteStub != nil {
 		return fake.DeleteStub(arg1, arg2)
-	} else {
-		return fake.deleteReturns.result1
 	}
+	return fake.deleteReturns.result1
 }
 
 func (fake *GroupRepo) DeleteCallCount() int {
@@ -119,9 +117,8 @@ func (fake *GroupRepo) GetID(arg1 store.Transaction, arg2 string) (int, error) {
 	fake.getIDMutex.Unlock()
 	if fake.GetIDStub != nil {
 		return fake.GetIDStub(arg1, arg2)
-	} else {
-		return fake.getIDReturns.result1, fake.getIDReturns.result2
 	}
+	return fake.getIDReturns.result1, fake.getIDReturns.result2
 }
 
 func (fake *GroupRepo) GetIDCallCount() int {

@@ -28,9 +28,8 @@ func (fake *WarrantClient) GetToken(clientName string, clientSecret string) (str
 	fake.getTokenMutex.Unlock()
 	if fake.GetTokenStub != nil {
 		return fake.GetTokenStub(clientName, clientSecret)
-	} else {
-		return fake.getTokenReturns.result1, fake.getTokenReturns.result2
 	}
+	return fake.getTokenReturns.result1, fake.getTokenReturns.result2
 }
 
 func (fake *WarrantClient) GetTokenCallCount() int {

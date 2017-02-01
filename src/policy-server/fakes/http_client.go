@@ -29,9 +29,8 @@ func (fake *HTTPClient) Do(arg1 *http.Request) (*http.Response, error) {
 	fake.doMutex.Unlock()
 	if fake.DoStub != nil {
 		return fake.DoStub(arg1)
-	} else {
-		return fake.doReturns.result1, fake.doReturns.result2
 	}
+	return fake.doReturns.result1, fake.doReturns.result2
 }
 
 func (fake *HTTPClient) DoCallCount() int {

@@ -43,9 +43,8 @@ func (fake *PolicyFilterCCClient) GetAppSpaces(token string, appGUIDs []string) 
 	fake.getAppSpacesMutex.Unlock()
 	if fake.GetAppSpacesStub != nil {
 		return fake.GetAppSpacesStub(token, appGUIDs)
-	} else {
-		return fake.getAppSpacesReturns.result1, fake.getAppSpacesReturns.result2
 	}
+	return fake.getAppSpacesReturns.result1, fake.getAppSpacesReturns.result2
 }
 
 func (fake *PolicyFilterCCClient) GetAppSpacesCallCount() int {
@@ -78,9 +77,8 @@ func (fake *PolicyFilterCCClient) GetUserSpaces(token string, userGUID string) (
 	fake.getUserSpacesMutex.Unlock()
 	if fake.GetUserSpacesStub != nil {
 		return fake.GetUserSpacesStub(token, userGUID)
-	} else {
-		return fake.getUserSpacesReturns.result1, fake.getUserSpacesReturns.result2
 	}
+	return fake.getUserSpacesReturns.result1, fake.getUserSpacesReturns.result2
 }
 
 func (fake *PolicyFilterCCClient) GetUserSpacesCallCount() int {

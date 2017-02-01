@@ -62,9 +62,8 @@ func (fake *PolicyRepo) Create(arg1 store.Transaction, arg2 int, arg3 int) error
 	fake.createMutex.Unlock()
 	if fake.CreateStub != nil {
 		return fake.CreateStub(arg1, arg2, arg3)
-	} else {
-		return fake.createReturns.result1
 	}
+	return fake.createReturns.result1
 }
 
 func (fake *PolicyRepo) CreateCallCount() int {
@@ -97,9 +96,8 @@ func (fake *PolicyRepo) Delete(arg1 store.Transaction, arg2 int, arg3 int) error
 	fake.deleteMutex.Unlock()
 	if fake.DeleteStub != nil {
 		return fake.DeleteStub(arg1, arg2, arg3)
-	} else {
-		return fake.deleteReturns.result1
 	}
+	return fake.deleteReturns.result1
 }
 
 func (fake *PolicyRepo) DeleteCallCount() int {
@@ -131,9 +129,8 @@ func (fake *PolicyRepo) CountWhereGroupID(arg1 store.Transaction, arg2 int) (int
 	fake.countWhereGroupIDMutex.Unlock()
 	if fake.CountWhereGroupIDStub != nil {
 		return fake.CountWhereGroupIDStub(arg1, arg2)
-	} else {
-		return fake.countWhereGroupIDReturns.result1, fake.countWhereGroupIDReturns.result2
 	}
+	return fake.countWhereGroupIDReturns.result1, fake.countWhereGroupIDReturns.result2
 }
 
 func (fake *PolicyRepo) CountWhereGroupIDCallCount() int {
@@ -166,9 +163,8 @@ func (fake *PolicyRepo) CountWhereDestinationID(arg1 store.Transaction, arg2 int
 	fake.countWhereDestinationIDMutex.Unlock()
 	if fake.CountWhereDestinationIDStub != nil {
 		return fake.CountWhereDestinationIDStub(arg1, arg2)
-	} else {
-		return fake.countWhereDestinationIDReturns.result1, fake.countWhereDestinationIDReturns.result2
 	}
+	return fake.countWhereDestinationIDReturns.result1, fake.countWhereDestinationIDReturns.result2
 }
 
 func (fake *PolicyRepo) CountWhereDestinationIDCallCount() int {

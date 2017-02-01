@@ -180,10 +180,13 @@ func main() {
 
 	policiesCleanupHandler := &handlers.PoliciesCleanup{
 		Logger:    logger.Session("policies-cleanup"),
-		Store:     dataStore,
 		Marshaler: marshal.MarshalFunc(json.Marshal),
-		UAAClient: uaaClient,
-		CCClient:  ccClient,
+		PolicyCleaner: &handlers.PolicyCleaner{
+			Logger:    logger.Session("policy-cleaner"),
+			Store:     dataStore,
+			UAAClient: uaaClient,
+			CCClient:  ccClient,
+		},
 	}
 
 	tagsIndexHandler := &handlers.TagsIndex{

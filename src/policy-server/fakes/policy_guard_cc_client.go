@@ -57,9 +57,8 @@ func (fake *PolicyGuardCCClient) GetSpaceGUIDs(token string, appGUIDs []string) 
 	fake.getSpaceGUIDsMutex.Unlock()
 	if fake.GetSpaceGUIDsStub != nil {
 		return fake.GetSpaceGUIDsStub(token, appGUIDs)
-	} else {
-		return fake.getSpaceGUIDsReturns.result1, fake.getSpaceGUIDsReturns.result2
 	}
+	return fake.getSpaceGUIDsReturns.result1, fake.getSpaceGUIDsReturns.result2
 }
 
 func (fake *PolicyGuardCCClient) GetSpaceGUIDsCallCount() int {
@@ -92,9 +91,8 @@ func (fake *PolicyGuardCCClient) GetSpace(token string, spaceGUID string) (*mode
 	fake.getSpaceMutex.Unlock()
 	if fake.GetSpaceStub != nil {
 		return fake.GetSpaceStub(token, spaceGUID)
-	} else {
-		return fake.getSpaceReturns.result1, fake.getSpaceReturns.result2
 	}
+	return fake.getSpaceReturns.result1, fake.getSpaceReturns.result2
 }
 
 func (fake *PolicyGuardCCClient) GetSpaceCallCount() int {
@@ -128,9 +126,8 @@ func (fake *PolicyGuardCCClient) GetUserSpace(token string, userGUID string, spa
 	fake.getUserSpaceMutex.Unlock()
 	if fake.GetUserSpaceStub != nil {
 		return fake.GetUserSpaceStub(token, userGUID, spaces)
-	} else {
-		return fake.getUserSpaceReturns.result1, fake.getUserSpaceReturns.result2
 	}
+	return fake.getUserSpaceReturns.result1, fake.getUserSpaceReturns.result2
 }
 
 func (fake *PolicyGuardCCClient) GetUserSpaceCallCount() int {

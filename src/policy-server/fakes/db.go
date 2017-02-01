@@ -92,9 +92,8 @@ func (fake *Db) Beginx() (*sqlx.Tx, error) {
 	fake.beginxMutex.Unlock()
 	if fake.BeginxStub != nil {
 		return fake.BeginxStub()
-	} else {
-		return fake.beginxReturns.result1, fake.beginxReturns.result2
 	}
+	return fake.beginxReturns.result1, fake.beginxReturns.result2
 }
 
 func (fake *Db) BeginxCallCount() int {
@@ -121,9 +120,8 @@ func (fake *Db) Exec(query string, args ...interface{}) (sql.Result, error) {
 	fake.execMutex.Unlock()
 	if fake.ExecStub != nil {
 		return fake.ExecStub(query, args...)
-	} else {
-		return fake.execReturns.result1, fake.execReturns.result2
 	}
+	return fake.execReturns.result1, fake.execReturns.result2
 }
 
 func (fake *Db) ExecCallCount() int {
@@ -156,9 +154,8 @@ func (fake *Db) NamedExec(query string, arg interface{}) (sql.Result, error) {
 	fake.namedExecMutex.Unlock()
 	if fake.NamedExecStub != nil {
 		return fake.NamedExecStub(query, arg)
-	} else {
-		return fake.namedExecReturns.result1, fake.namedExecReturns.result2
 	}
+	return fake.namedExecReturns.result1, fake.namedExecReturns.result2
 }
 
 func (fake *Db) NamedExecCallCount() int {
@@ -192,9 +189,8 @@ func (fake *Db) Get(dest interface{}, query string, args ...interface{}) error {
 	fake.getMutex.Unlock()
 	if fake.GetStub != nil {
 		return fake.GetStub(dest, query, args...)
-	} else {
-		return fake.getReturns.result1
 	}
+	return fake.getReturns.result1
 }
 
 func (fake *Db) GetCallCount() int {
@@ -227,9 +223,8 @@ func (fake *Db) Select(dest interface{}, query string, args ...interface{}) erro
 	fake.selectMutex.Unlock()
 	if fake.SelectStub != nil {
 		return fake.SelectStub(dest, query, args...)
-	} else {
-		return fake.selectReturns.result1
 	}
+	return fake.selectReturns.result1
 }
 
 func (fake *Db) SelectCallCount() int {
@@ -261,9 +256,8 @@ func (fake *Db) QueryRow(query string, args ...interface{}) *sql.Row {
 	fake.queryRowMutex.Unlock()
 	if fake.QueryRowStub != nil {
 		return fake.QueryRowStub(query, args...)
-	} else {
-		return fake.queryRowReturns.result1
 	}
+	return fake.queryRowReturns.result1
 }
 
 func (fake *Db) QueryRowCallCount() int {
@@ -295,9 +289,8 @@ func (fake *Db) Query(query string, args ...interface{}) (*sql.Rows, error) {
 	fake.queryMutex.Unlock()
 	if fake.QueryStub != nil {
 		return fake.QueryStub(query, args...)
-	} else {
-		return fake.queryReturns.result1, fake.queryReturns.result2
 	}
+	return fake.queryReturns.result1, fake.queryReturns.result2
 }
 
 func (fake *Db) QueryCallCount() int {
@@ -327,9 +320,8 @@ func (fake *Db) DriverName() string {
 	fake.driverNameMutex.Unlock()
 	if fake.DriverNameStub != nil {
 		return fake.DriverNameStub()
-	} else {
-		return fake.driverNameReturns.result1
 	}
+	return fake.driverNameReturns.result1
 }
 
 func (fake *Db) DriverNameCallCount() int {

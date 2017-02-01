@@ -29,9 +29,8 @@ func (fake *SqlResult) LastInsertId() (int64, error) {
 	fake.lastInsertIdMutex.Unlock()
 	if fake.LastInsertIdStub != nil {
 		return fake.LastInsertIdStub()
-	} else {
-		return fake.lastInsertIdReturns.result1, fake.lastInsertIdReturns.result2
 	}
+	return fake.lastInsertIdReturns.result1, fake.lastInsertIdReturns.result2
 }
 
 func (fake *SqlResult) LastInsertIdCallCount() int {
@@ -55,9 +54,8 @@ func (fake *SqlResult) RowsAffected() (int64, error) {
 	fake.rowsAffectedMutex.Unlock()
 	if fake.RowsAffectedStub != nil {
 		return fake.RowsAffectedStub()
-	} else {
-		return fake.rowsAffectedReturns.result1, fake.rowsAffectedReturns.result2
 	}
+	return fake.rowsAffectedReturns.result1, fake.rowsAffectedReturns.result2
 }
 
 func (fake *SqlResult) RowsAffectedCallCount() int {
