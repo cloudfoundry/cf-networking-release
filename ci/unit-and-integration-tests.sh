@@ -25,7 +25,7 @@ function bootPostgres {
 	echo -n "booting postgres"
 	(/docker-entrypoint.sh postgres &> /var/log/postgres-boot.log) &
 	trycount=0
-	for i in `seq 1 9`; do
+	for i in `seq 1 30`; do
 		set +e
 		psql -h localhost -U postgres -c '\conninfo' &>/dev/null
 		exitcode=$?
