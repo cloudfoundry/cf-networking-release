@@ -94,7 +94,3 @@ $ cf remove-access frontend backend --protocol tcp --port 8080
 Denying traffic from frontend to backend as admin...
 OK
 ```
-
-### DEPRECATED Deny Policy:
-
-Deprecated! Use remove-access
