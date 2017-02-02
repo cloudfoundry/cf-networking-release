@@ -41,3 +41,7 @@ properties:
   cf_networking.disable:
     description: "Disable container to container networking"
     default: false
+
+  cf_networking.flannel_watchdog.metron_address:
+    description: "Forward metrics to this metron agent"
+    default: 127.0.0.1:3457

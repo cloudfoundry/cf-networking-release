@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"netmon/integration/fakes"
 	"os"
 	"os/exec"
 	"strings"
@@ -20,6 +21,7 @@ var _ = Describe("Flannel Watchdog", func() {
 	var (
 		session        *gexec.Session
 		subnetFile     *os.File
+		fakeMetron     fakes.FakeMetron
 		subnetFileName string
 		bridgeName     string
 		bridgeIP       string
@@ -46,6 +48,8 @@ var _ = Describe("Flannel Watchdog", func() {
 	}
 
 	BeforeEach(func() {
+		fakeMetron = fakes.New()
+
 		bridgeName = fmt.Sprintf("test-bridge-%d", 100+GinkgoParallelNode())
 		bridgeIP = fmt.Sprintf("10.255.%d.1/24", GinkgoParallelNode())
 
@@ -60,6 +64,7 @@ var _ = Describe("Flannel Watchdog", func() {
 		configFilePath := WriteConfigFile(config.Config{
 			FlannelSubnetFile: subnetFileName,
 			BridgeName:        bridgeName,
+			MetronAddress:     fakeMetron.Address(),
 		})
 		watchdogCmd := exec.Command(watchdogBinaryPath, "-config-file", configFilePath)
 		session, err = gexec.Start(watchdogCmd, GinkgoWriter, GinkgoWriter)
@@ -85,16 +90,31 @@ var _ = Describe("Flannel Watchdog", func() {
 	})
 
 	Context("when the subnets file and bridge get out of sync", func() {
-		It("exits with a nonzero status", func() {
+		BeforeEach(func() {
 			Consistently(session, "1.5s").ShouldNot(gexec.Exit())
 
 			err := ioutil.WriteFile(subnetFileName, []byte(`FLANNEL_SUBNET=10.4.13.1/24\nFLANNEL_NETWORK=10.4.0.0/16`), os.ModePerm)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit(1))
+		})
+
+		It("exits with a nonzero status", func() {
 			expectedMsg := fmt.Sprintf(
 				`This cell must be recreated.  Flannel is out of sync with the local bridge. `+
 					`flannel (%s): 10.4.13.1/24 bridge (%s): %s`, subnetFileName, bridgeName, bridgeIP)
 			Expect(string(session.Out.Contents())).To(ContainSubstring(expectedMsg))
+		})
+
+		It("emits a metric", func() {
+			gatherMetricNames := func() map[string]float64 {
+				events := fakeMetron.AllEvents()
+				metrics := map[string]float64{}
+				for _, event := range events {
+					metrics[event.Name] = event.Value
+				}
+				return metrics
+			}
+			Eventually(gatherMetricNames, "5s").Should(HaveKeyWithValue("flannelDown", 1.0))
 		})
 	})
 

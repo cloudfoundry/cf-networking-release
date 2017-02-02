@@ -15,10 +15,14 @@ import (
 
 	"flannel-watchdog/config"
 
+	"github.com/cloudfoundry/dropsonde"
+	"github.com/cloudfoundry/dropsonde/metrics"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
 	"github.com/tedsuo/ifrit/sigmon"
 )
+
+const dropsondeOrigin = "flannel-watchdog"
 
 var ipAddrParseRegex = regexp.MustCompile(`((?:[0-9]{1,3}\.){3}[0-9]{1,3}/24)`)
 
@@ -65,6 +69,7 @@ func (r *Runner) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 			}
 
 			if flannelIP != deviceIP {
+				metrics.SendValue("flannelDown", 1.0, "bool")
 				errCh <- fmt.Errorf(`This cell must be recreated.  Flannel is out of sync with the local bridge. `+
 					`flannel (%s): %s bridge (%s): %s`, r.SubnetFile, flannelIP, r.BridgeName, deviceIP)
 				return
@@ -93,6 +98,11 @@ func mainWithErr(logger lager.Logger) error {
 	err = json.Unmarshal(config, conf)
 	if err != nil {
 		return fmt.Errorf("unmarshaling config: %s", err)
+	}
+
+	err = dropsonde.Initialize(conf.MetronAddress, dropsondeOrigin)
+	if err != nil {
+		return fmt.Errorf("initializing dropsonde: %s", err)
 	}
 
 	runner := &Runner{
