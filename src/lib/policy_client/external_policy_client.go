@@ -1,8 +1,10 @@
 package policy_client
 
 import (
+	"fmt"
 	"lib/json_client"
 	"lib/models"
+	"net/http"
 	"strings"
 
 	"code.cloudfoundry.org/lager"
@@ -32,7 +34,7 @@ func (c *ExternalClient) GetPolicies(token string) ([]models.Policy, error) {
 	}
 	err := c.JsonClient.Do("GET", "/networking/v0/external/policies", nil, &policies, token)
 	if err != nil {
-		return nil, err
+		return nil, parseHttpError(err)
 	}
 	return policies.Policies, nil
 }
@@ -44,7 +46,7 @@ func (c *ExternalClient) GetPoliciesByID(token string, ids ...string) ([]models.
 	route := "/networking/v0/external/policies?id=" + strings.Join(ids, ",")
 	err := c.JsonClient.Do("GET", route, nil, &policies, token)
 	if err != nil {
-		return nil, err
+		return nil, parseHttpError(err)
 	}
 	return policies.Policies, nil
 }
@@ -55,7 +57,7 @@ func (c *ExternalClient) AddPolicies(token string, policies []models.Policy) err
 	}
 	err := c.JsonClient.Do("POST", "/networking/v0/external/policies", reqPolicies, nil, token)
 	if err != nil {
-		return err
+		return parseHttpError(err)
 	}
 	return nil
 }
@@ -66,7 +68,19 @@ func (c *ExternalClient) DeletePolicies(token string, policies []models.Policy) 
 	}
 	err := c.JsonClient.Do("POST", "/networking/v0/external/policies/delete", reqPolicies, nil, token)
 	if err != nil {
-		return err
+		return parseHttpError(err)
 	}
 	return nil
+}
+
+// Check if error is bad status code and parse out the JSON body
+func parseHttpError(err error) error {
+	httpErr, ok := err.(*json_client.HttpResponseCodeError)
+	if ok {
+		return fmt.Errorf("%d %s: %s", httpErr.StatusCode,
+			http.StatusText(httpErr.StatusCode),
+			httpErr.Message,
+		)
+	}
+	return err
 }

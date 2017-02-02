@@ -152,26 +152,43 @@ var _ = Describe("JsonClient", func() {
 		})
 
 		Context("when the request returns a non 2xx status code", func() {
-			BeforeEach(func() {
-				returnedResponse.Body = ioutil.NopCloser(strings.NewReader(`{"error":"some-error"}`))
-				returnedResponse.StatusCode = http.StatusBadRequest
-				httpClient.DoReturns(returnedResponse, nil)
+			Context("when the returned body is valid JSON", func() {
+				BeforeEach(func() {
+					returnedResponse.Body = ioutil.NopCloser(strings.NewReader(`{"error":"some-error"}`))
+					returnedResponse.StatusCode = http.StatusBadRequest
+					httpClient.DoReturns(returnedResponse, nil)
+				})
+
+				It("logs the body, parses the body and returns the error", func() {
+					err := jsonClient.Do(method, route, reqData, &respData, token)
+					Expect(err).To(MatchError(ContainSubstring("some-error")))
+
+					Expect(logger).To(gbytes.Say(`http-client.*some-error.*400`))
+				})
+
+				It("returns information about the error", func() {
+					err := jsonClient.Do(method, route, reqData, &respData, token)
+					typedErr, ok := err.(*json_client.HttpResponseCodeError)
+					Expect(ok).To(BeTrue())
+
+					Expect(typedErr.StatusCode).To(Equal(400))
+					Expect(typedErr.Message).To(Equal("some-error"))
+				})
 			})
+			Context("when the returned body is not valid JSON", func() {
+				BeforeEach(func() {
+					returnedResponse.Body = ioutil.NopCloser(strings.NewReader("not-json-error"))
+					returnedResponse.StatusCode = http.StatusBadRequest
+					httpClient.DoReturns(returnedResponse, nil)
+				})
+				It("returns the entire body", func() {
+					err := jsonClient.Do(method, route, reqData, &respData, token)
+					typedErr, ok := err.(*json_client.HttpResponseCodeError)
+					Expect(ok).To(BeTrue())
 
-			It("returns the error and logs the body", func() {
-				err := jsonClient.Do(method, route, reqData, &respData, token)
-				Expect(err).To(MatchError(`http client do: 400 Bad Request: {"error":"some-error"}`))
-
-				Expect(logger).To(gbytes.Say(`http-client.*some-error.*400`))
-			})
-
-			It("returns information about the error", func() {
-				err := jsonClient.Do(method, route, reqData, &respData, token)
-				typedErr, ok := err.(*json_client.HttpResponseCodeError)
-				Expect(ok).To(BeTrue())
-
-				Expect(typedErr.StatusCode).To(Equal(400))
-				Expect(typedErr.Message).To(Equal(`http client do: 400 Bad Request: {"error":"some-error"}`))
+					Expect(typedErr.StatusCode).To(Equal(400))
+					Expect(typedErr.Message).To(Equal("not-json-error"))
+				})
 			})
 		})
 

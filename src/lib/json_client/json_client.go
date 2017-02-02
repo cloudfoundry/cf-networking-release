@@ -3,6 +3,7 @@ package json_client
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -78,13 +79,25 @@ func (c *Client) Do(method, route string, reqData, respData interface{}, token s
 	}
 
 	if resp.StatusCode > 299 {
-		err = fmt.Errorf("http client do: %d %s: %s", resp.StatusCode, http.StatusText(resp.StatusCode), string(respBytes))
-		c.Logger.Error("http-client", err, lager.Data{
+		var errDescription string
+
+		var errBody struct {
+			Error string
+		}
+		err = json.Unmarshal(respBytes, &errBody)
+		if err != nil {
+			errDescription = string(respBytes)
+		} else {
+			errDescription = errBody.Error
+		}
+
+		c.Logger.Error("http-client", errors.New(errDescription), lager.Data{
 			"body": string(respBytes),
+			"code": resp.StatusCode,
 		})
 		return &HttpResponseCodeError{
 			StatusCode: resp.StatusCode,
-			Message:    err.Error(),
+			Message:    errDescription,
 		}
 	}
 

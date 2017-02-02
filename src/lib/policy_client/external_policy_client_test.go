@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"lib/fakes"
+	"lib/json_client"
 	"lib/models"
 	"lib/policy_client"
+	"net/http"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -66,6 +68,18 @@ var _ = Describe("ExternalClient", func() {
 				Expect(err).To(MatchError("banana"))
 			})
 		})
+		Context("when the json client gets a bad status code", func() {
+			BeforeEach(func() {
+				jsonClient.DoReturns(&json_client.HttpResponseCodeError{
+					StatusCode: http.StatusTeapot,
+					Message:    "some-error",
+				})
+			})
+			It("parses out the error body", func() {
+				_, err := client.GetPolicies("some-token")
+				Expect(err).To(MatchError("418 I'm a teapot: some-error"))
+			})
+		})
 	})
 
 	Describe("GetPoliciesByID", func() {
@@ -109,18 +123,30 @@ var _ = Describe("ExternalClient", func() {
 				Expect(err).To(MatchError("banana"))
 			})
 		})
+		Context("when the json client gets a bad status code", func() {
+			BeforeEach(func() {
+				jsonClient.DoReturns(&json_client.HttpResponseCodeError{
+					StatusCode: http.StatusTeapot,
+					Message:    "some-error",
+				})
+			})
+			It("parses out the error body", func() {
+				_, err := client.GetPoliciesByID("some-token", "some-id")
+				Expect(err).To(MatchError("418 I'm a teapot: some-error"))
+			})
+		})
 	})
 
 	Describe("AddPolicies", func() {
+		var policiesToAdd []models.Policy
 		BeforeEach(func() {
 			jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 				respBytes := []byte(`{}`)
 				json.Unmarshal(respBytes, respData)
 				return nil
 			}
-		})
-		It("does the right json http client request and passes the authorization token", func() {
-			err := client.AddPolicies("some-token", []models.Policy{
+
+			policiesToAdd = []models.Policy{
 				{
 					Source: models.Source{
 						ID: "some-app-guid",
@@ -131,7 +157,10 @@ var _ = Describe("ExternalClient", func() {
 						Protocol: "tcp",
 					},
 				},
-			})
+			}
+		})
+		It("does the right json http client request and passes the authorization token", func() {
+			err := client.AddPolicies("some-token", policiesToAdd)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(jsonClient.DoCallCount()).To(Equal(1))
@@ -158,22 +187,35 @@ var _ = Describe("ExternalClient", func() {
 				jsonClient.DoReturns(errors.New("banana"))
 			})
 			It("returns the error", func() {
-				_, err := client.GetPolicies("some-token")
+				err := client.AddPolicies("some-token", policiesToAdd)
 				Expect(err).To(MatchError("banana"))
+			})
+		})
+		Context("when the json client gets a bad status code", func() {
+			BeforeEach(func() {
+				jsonClient.DoReturns(&json_client.HttpResponseCodeError{
+					StatusCode: http.StatusTeapot,
+					Message:    "some-error",
+				})
+			})
+			It("parses out the error body", func() {
+				err := client.AddPolicies("some-token", policiesToAdd)
+				Expect(err).To(MatchError("418 I'm a teapot: some-error"))
 			})
 		})
 	})
 
 	Describe("DeletePolicies", func() {
+		var policiesToDelete []models.Policy
+
 		BeforeEach(func() {
 			jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 				respBytes := []byte(`{}`)
 				json.Unmarshal(respBytes, respData)
 				return nil
 			}
-		})
-		It("does the right json http client request", func() {
-			err := client.DeletePolicies("some-token", []models.Policy{
+
+			policiesToDelete = []models.Policy{
 				{
 					Source: models.Source{
 						ID: "some-app-guid",
@@ -184,7 +226,10 @@ var _ = Describe("ExternalClient", func() {
 						Protocol: "tcp",
 					},
 				},
-			})
+			}
+		})
+		It("does the right json http client request", func() {
+			err := client.DeletePolicies("some-token", policiesToDelete)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(jsonClient.DoCallCount()).To(Equal(1))
@@ -211,8 +256,20 @@ var _ = Describe("ExternalClient", func() {
 				jsonClient.DoReturns(errors.New("banana"))
 			})
 			It("returns the error", func() {
-				_, err := client.GetPolicies("some-token")
+				err := client.DeletePolicies("some-token", policiesToDelete)
 				Expect(err).To(MatchError("banana"))
+			})
+		})
+		Context("when the json client gets a bad status code", func() {
+			BeforeEach(func() {
+				jsonClient.DoReturns(&json_client.HttpResponseCodeError{
+					StatusCode: http.StatusTeapot,
+					Message:    "some-error",
+				})
+			})
+			It("parses out the error body", func() {
+				err := client.DeletePolicies("some-token", policiesToDelete)
+				Expect(err).To(MatchError("418 I'm a teapot: some-error"))
 			})
 		})
 	})

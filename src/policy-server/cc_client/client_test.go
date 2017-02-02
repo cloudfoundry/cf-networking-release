@@ -141,7 +141,10 @@ var _ = Describe("Client", func() {
 
 		It("returns the response body in the error", func() {
 			_, err := client.GetAllAppGUIDs("some-token")
-			Expect(err).To(MatchError(ContainSubstring("http client do: 418 I'm a teapot: bad thing")))
+			Expect(err).To(MatchError(&json_client.HttpResponseCodeError{
+				StatusCode: http.StatusTeapot,
+				Message:    "bad thing",
+			}))
 		})
 	})
 
@@ -255,7 +258,10 @@ var _ = Describe("Client", func() {
 
 			It("returns the error", func() {
 				_, err := client.GetSpaceGUIDs("some-token", []string{"foo"})
-				Expect(err).To(MatchError(ContainSubstring("http client do: 418 I'm a teapot: bad thing")))
+				Expect(err).To(MatchError(&json_client.HttpResponseCodeError{
+					StatusCode: http.StatusTeapot,
+					Message:    "bad thing",
+				}))
 			})
 		})
 	})
@@ -354,7 +360,10 @@ var _ = Describe("Client", func() {
 
 			It("returns the error", func() {
 				_, err := client.GetSpace("some-token", "some-space-guid")
-				Expect(err).To(MatchError(ContainSubstring("http client do: 418 I'm a teapot: bad thing")))
+				Expect(err).To(MatchError(&json_client.HttpResponseCodeError{
+					StatusCode: http.StatusTeapot,
+					Message:    "bad thing",
+				}))
 			})
 		})
 	})
@@ -543,7 +552,10 @@ var _ = Describe("Client", func() {
 
 			It("returns the error", func() {
 				_, err := client.GetUserSpace("some-token", "some-developer-guid", space)
-				Expect(err).To(MatchError(ContainSubstring("http client do: 418 I'm a teapot: bad thing")))
+				Expect(err).To(MatchError(&json_client.HttpResponseCodeError{
+					StatusCode: http.StatusTeapot,
+					Message:    "bad thing",
+				}))
 			})
 		})
 	})
