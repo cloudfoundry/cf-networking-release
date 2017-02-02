@@ -260,7 +260,7 @@ func main() {
 	uptimeSource := metrics.NewUptimeSource()
 	metricsEmitter := metrics.NewMetricsEmitter(logger, emitInterval, uptimeSource, totalPoliciesSource)
 
-	pollInterval := time.Duration(conf.CleanupInterval) * time.Minute
+	pollInterval := time.Duration(conf.CleanupInterval) * time.Second
 
 	poller := &cleaner.Poller{
 		Logger:          logger.Session("policy-cleaner-poller"),
