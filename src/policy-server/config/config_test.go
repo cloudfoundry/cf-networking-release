@@ -46,7 +46,8 @@ var _ = Describe("Config", func() {
 					},
 					"tag_length": 2,
 					"metron_address": "http://1.2.3.4:9999",
-					"log_level": "debug"
+					"log_level": "debug",
+					"cleanup_interval": 2
 				}`)
 				c, err := config.New(file.Name())
 				Expect(err).NotTo(HaveOccurred())
@@ -68,6 +69,7 @@ var _ = Describe("Config", func() {
 				Expect(c.TagLength).To(Equal(2))
 				Expect(c.MetronAddress).To(Equal("http://1.2.3.4:9999"))
 				Expect(c.LogLevel).To(Equal("debug"))
+				Expect(c.CleanupInterval).To(Equal(2))
 			})
 		})
 
@@ -120,8 +122,9 @@ var _ = Describe("Config", func() {
 						"type":              "mysql",
 						"connection_string": "some-db-connection-string",
 					},
-					"tag_length":     2,
-					"metron_address": "http://1.2.3.4:9999",
+					"tag_length":       2,
+					"metron_address":   "http://1.2.3.4:9999",
+					"cleanup_interval": 2,
 				}
 				delete(allData, missingFlag)
 				Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
@@ -143,6 +146,7 @@ var _ = Describe("Config", func() {
 			Entry("missing cc url", "cc_url", "CCURL: zero value"),
 			Entry("missing tag length", "tag_length", "TagLength: zero value"),
 			Entry("missing metron address", "metron_address", "MetronAddress: zero value"),
+			Entry("missing cleanup interval", "cleanup_interval", "CleanupInterval: less than min"),
 		)
 
 		Describe("database config", func() {
@@ -166,9 +170,10 @@ var _ = Describe("Config", func() {
 						"type":              "mysql",
 						"connection_string": "some-db-connection-string",
 					},
-					"tag_length":     2,
-					"metron_address": "http://1.2.3.4:9999",
-					"log_level":      "info",
+					"tag_length":       2,
+					"metron_address":   "http://1.2.3.4:9999",
+					"log_level":        "info",
+					"cleanup_interval": 2,
 				}
 			})
 

@@ -104,3 +104,7 @@ properties:
   cf_networking.policy_server.log_level:
     description: "Logging level (debug, info, warn, error)"
     default: info
+
+  cf_networking.policy_server.cleanup_interval:
+    description: "Clean up stale policies on this interval, in minutes"
+    default: 60

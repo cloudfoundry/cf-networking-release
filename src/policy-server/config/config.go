@@ -27,6 +27,7 @@ type Config struct {
 	TagLength          int       `json:"tag_length" validate:"nonzero"`
 	MetronAddress      string    `json:"metron_address" validate:"nonzero"`
 	LogLevel           string    `json:"log_level"`
+	CleanupInterval    int       `json:"cleanup_interval" validate:"min=1"`
 }
 
 func (c *Config) Validate() error {

@@ -179,15 +179,17 @@ func main() {
 		PolicyFilter: policyFilter,
 	}
 
+	policyCleaner := &cleaner.PolicyCleaner{
+		Logger:    logger.Session("policy-cleaner"),
+		Store:     dataStore,
+		UAAClient: uaaClient,
+		CCClient:  ccClient,
+	}
+
 	policiesCleanupHandler := &handlers.PoliciesCleanup{
-		Logger:    logger.Session("policies-cleanup"),
-		Marshaler: marshal.MarshalFunc(json.Marshal),
-		PolicyCleaner: &cleaner.PolicyCleaner{
-			Logger:    logger.Session("policy-cleaner"),
-			Store:     dataStore,
-			UAAClient: uaaClient,
-			CCClient:  ccClient,
-		},
+		Logger:        logger.Session("policies-cleanup"),
+		Marshaler:     marshal.MarshalFunc(json.Marshal),
+		PolicyCleaner: policyCleaner,
 	}
 
 	tagsIndexHandler := &handlers.TagsIndex{
@@ -258,11 +260,20 @@ func main() {
 	uptimeSource := metrics.NewUptimeSource()
 	metricsEmitter := metrics.NewMetricsEmitter(logger, emitInterval, uptimeSource, totalPoliciesSource)
 
+	pollInterval := time.Duration(conf.CleanupInterval) * time.Minute
+
+	poller := &cleaner.Poller{
+		Logger:          logger.Session("policy-cleaner-poller"),
+		PollInterval:    pollInterval,
+		SingleCycleFunc: policyCleaner.DeleteStalePoliciesWrapper,
+	}
+
 	debugServerAddress := fmt.Sprintf("%s:%d", conf.DebugServerHost, conf.DebugServerPort)
 	members := grouper.Members{
 		{"metrics_emitter", metricsEmitter},
 		{"http_server", server},
 		{"internal_http_server", internalServer},
+		{"policy-cleaner-poller", poller},
 		{"debug-server", debugserver.Runner(debugServerAddress, reconfigurableSink)},
 	}
 

@@ -64,6 +64,11 @@ func (p *PolicyCleaner) DeleteStalePolicies() ([]models.Policy, error) {
 	return stalePolicies, nil
 }
 
+func (p *PolicyCleaner) DeleteStalePoliciesWrapper() error {
+	_, err := p.DeleteStalePolicies()
+	return err
+}
+
 func getStalePolicies(policyList []models.Policy, ccList map[string]interface{}) (stalePolicies []models.Policy) {
 	for _, p := range policyList {
 		_, foundSrc := ccList[p.Source.ID]

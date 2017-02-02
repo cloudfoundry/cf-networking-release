@@ -171,6 +171,7 @@ func DefaultTestConfig() config.Config {
 		CCURL:              mockCCServer.URL,
 		TagLength:          1,
 		MetronAddress:      "some-metron.address",
+		CleanupInterval:    1,
 	}
 	return config
 }
