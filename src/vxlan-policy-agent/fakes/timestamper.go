@@ -24,9 +24,8 @@ func (fake *TimeStamper) CurrentTime() int {
 	fake.currentTimeMutex.Unlock()
 	if fake.CurrentTimeStub != nil {
 		return fake.CurrentTimeStub()
-	} else {
-		return fake.currentTimeReturns.result1
 	}
+	return fake.currentTimeReturns.result1
 }
 
 func (fake *TimeStamper) CurrentTimeCallCount() int {

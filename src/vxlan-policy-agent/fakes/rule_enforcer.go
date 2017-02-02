@@ -28,9 +28,8 @@ func (fake *RuleEnforcer) EnforceRulesAndChain(arg1 enforcer.RulesWithChain) err
 	fake.enforceRulesAndChainMutex.Unlock()
 	if fake.EnforceRulesAndChainStub != nil {
 		return fake.EnforceRulesAndChainStub(arg1)
-	} else {
-		return fake.enforceRulesAndChainReturns.result1
 	}
+	return fake.enforceRulesAndChainReturns.result1
 }
 
 func (fake *RuleEnforcer) EnforceRulesAndChainCallCount() int {

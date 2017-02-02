@@ -3,8 +3,8 @@ package fakes
 
 import (
 	"sync"
+	"vxlan-policy-agent/converger"
 	"vxlan-policy-agent/enforcer"
-	"vxlan-policy-agent/poller"
 )
 
 type Planner struct {
@@ -26,9 +26,8 @@ func (fake *Planner) GetRulesAndChain() (enforcer.RulesWithChain, error) {
 	fake.getRulesAndChainMutex.Unlock()
 	if fake.GetRulesAndChainStub != nil {
 		return fake.GetRulesAndChainStub()
-	} else {
-		return fake.getRulesAndChainReturns.result1, fake.getRulesAndChainReturns.result2
 	}
+	return fake.getRulesAndChainReturns.result1, fake.getRulesAndChainReturns.result2
 }
 
 func (fake *Planner) GetRulesAndChainCallCount() int {
@@ -65,4 +64,4 @@ func (fake *Planner) recordInvocation(key string, args []interface{}) {
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ poller.Planner = new(Planner)
+var _ converger.Planner = new(Planner)

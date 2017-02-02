@@ -25,9 +25,8 @@ func (fake *Dstore) ReadAll() (map[string]datastore.Container, error) {
 	fake.readAllMutex.Unlock()
 	if fake.ReadAllStub != nil {
 		return fake.ReadAllStub()
-	} else {
-		return fake.readAllReturns.result1, fake.readAllReturns.result2
 	}
+	return fake.readAllReturns.result1, fake.readAllReturns.result2
 }
 
 func (fake *Dstore) ReadAllCallCount() int {
