@@ -40,9 +40,9 @@ To rotate your SSL certificates, keys, and certificate authorities, you must per
 
 0. Generate new certificates by running `./scripts/generate-certs`.
 
-0. In your netman stub file, append the new CA certificate (contents of `netman-certs/netman-ca.crt`)
-to the `cf_networking_overrides.properties.policy_server.ca_cert`
-and `cf_networking_overrides.properties.vxlan_policy_agent.ca_cert` fields.
+0. In your CF Networking stub file, append the new CA certificate (contents of `cf-networking-certs/cf-networking-ca.crt`)
+to the `cf_networking_overrides.properties.cf_networking.policy_server.ca_cert`
+and `cf_networking_overrides.properties.cf_networking.vxlan_policy_agent.ca_cert` fields.
   - **Do not remove the old CA certificates.**
   - Regenerate your Diego manifest.
   - Deploy Diego + CF Networking using your updated manifest.
@@ -53,62 +53,63 @@ and `cf_networking_overrides.properties.vxlan_policy_agent.ca_cert` fields.
     ...
     properties:
       ...
-      policy_server:
+      cf_networking:
         ...
-        ca_cert: |
-          -----BEGIN CERTIFICATE-----
-          ###########################################################
-          #######           Your Old CA Certificate           #######
-          ###########################################################
-          -----END CERTIFICATE-----
-          -----BEGIN CERTIFICATE-----
-          ###########################################################
-          #######           Your New CA Certificate           #######
-          ###########################################################
-          -----END CERTIFICATE-----
-        server_cert: |
-          -----BEGIN CERTIFICATE-----
-          ###########################################################
-          #######           Your Old Server Certificate       #######
-          ###########################################################
-          -----END CERTIFICATE-----
-        server_key: |
-          -----BEGIN RSA PRIVATE KEY-----
-          ###########################################################
-          #######           Your Old Server Key                ######
-          ###########################################################
-          -----END RSA PRIVATE KEY-----
-      vxlan_policy_agent:
+        policy_server:
+          ...
+          ca_cert: |
+            -----BEGIN CERTIFICATE-----
+            ###########################################################
+            #######           Your Old CA Certificate           #######
+            ###########################################################
+            -----END CERTIFICATE-----
+            -----BEGIN CERTIFICATE-----
+            ###########################################################
+            #######           Your New CA Certificate           #######
+            ###########################################################
+            -----END CERTIFICATE-----
+          server_cert: |
+            -----BEGIN CERTIFICATE-----
+            ###########################################################
+            #######           Your Old Server Certificate       #######
+            ###########################################################
+            -----END CERTIFICATE-----
+          server_key: |
+            -----BEGIN RSA PRIVATE KEY-----
+            ###########################################################
+            #######           Your Old Server Key                ######
+            ###########################################################
+            -----END RSA PRIVATE KEY-----
+        vxlan_policy_agent:
+          ...
+          ca_cert: |
+            -----BEGIN CERTIFICATE-----
+            ###########################################################
+            #######           Your Old CA Certificate           #######
+            ###########################################################
+            -----END CERTIFICATE-----
+            -----BEGIN CERTIFICATE-----
+            ###########################################################
+            #######           Your New CA Certificate           #######
+            ###########################################################
+            -----END CERTIFICATE-----
+          client_cert: |
+            -----BEGIN CERTIFICATE-----
+            ###########################################################
+            #######           Your Old Client Certificate       #######
+            ###########################################################
+            -----END CERTIFICATE-----
+          client_key: |
+            -----BEGIN RSA PRIVATE KEY-----
+            ###########################################################
+            #######           Your Old Client Key                ######
+            ###########################################################
+            -----END RSA PRIVATE KEY-----
         ...
-        ca_cert: |
-          -----BEGIN CERTIFICATE-----
-          ###########################################################
-          #######           Your Old CA Certificate           #######
-          ###########################################################
-          -----END CERTIFICATE-----
-          -----BEGIN CERTIFICATE-----
-          ###########################################################
-          #######           Your New CA Certificate           #######
-          ###########################################################
-          -----END CERTIFICATE-----
-        client_cert: |
-          -----BEGIN CERTIFICATE-----
-          ###########################################################
-          #######           Your Old Client Certificate       #######
-          ###########################################################
-          -----END CERTIFICATE-----
-        client_key: |
-          -----BEGIN RSA PRIVATE KEY-----
-          ###########################################################
-          #######           Your Old Client Key                ######
-          ###########################################################
-          -----END RSA PRIVATE KEY-----
-      ...
-
   ```
 
 
-0. In your netman stub file, replace the old server and client certificates and keys with the new certificates and keys. 
+0. In your CF Networking stub file, replace the old server and client certificates and keys with the new certificates and keys.
   - **Do not remove the old CA certificates.**
   - Regenerate your Diego manifest.
   - Deploy Diego + CF Networking using your updated manifest.
@@ -119,63 +120,64 @@ and `cf_networking_overrides.properties.vxlan_policy_agent.ca_cert` fields.
     ...
     properties:
       ...
-      policy_server:
+      cf_networking:
         ...
-        ca_cert: |
-          -----BEGIN CERTIFICATE-----
-          ###########################################################
-          #######           Your Old CA Certificate           #######
-          ###########################################################
-          -----END CERTIFICATE-----
-          -----BEGIN CERTIFICATE-----
-          ###########################################################
-          #######           Your New CA Certificate           #######
-          ###########################################################
-          -----END CERTIFICATE-----
-        server_cert: |
-          -----BEGIN CERTIFICATE-----
-          ###########################################################
-          #######           Your New Server Certificate       #######
-          ###########################################################
-          -----END CERTIFICATE-----
-        server_key: |
-          -----BEGIN RSA PRIVATE KEY-----
-          ###########################################################
-          #######           Your New Server Key                ######
-          ###########################################################
-          -----END RSA PRIVATE KEY-----
-      vxlan_policy_agent:
+        policy_server:
+          ...
+          ca_cert: |
+            -----BEGIN CERTIFICATE-----
+            ###########################################################
+            #######           Your Old CA Certificate           #######
+            ###########################################################
+            -----END CERTIFICATE-----
+            -----BEGIN CERTIFICATE-----
+            ###########################################################
+            #######           Your New CA Certificate           #######
+            ###########################################################
+            -----END CERTIFICATE-----
+          server_cert: |
+            -----BEGIN CERTIFICATE-----
+            ###########################################################
+            #######           Your New Server Certificate       #######
+            ###########################################################
+            -----END CERTIFICATE-----
+          server_key: |
+            -----BEGIN RSA PRIVATE KEY-----
+            ###########################################################
+            #######           Your New Server Key                ######
+            ###########################################################
+            -----END RSA PRIVATE KEY-----
+        vxlan_policy_agent:
+          ...
+          ca_cert: |
+            -----BEGIN CERTIFICATE-----
+            ###########################################################
+            #######           Your Old CA Certificate           #######
+            ###########################################################
+            -----END CERTIFICATE-----
+            -----BEGIN CERTIFICATE-----
+            ###########################################################
+            #######           Your New CA Certificate           #######
+            ###########################################################
+            -----END CERTIFICATE-----
+          client_cert: |
+            -----BEGIN CERTIFICATE-----
+            ###########################################################
+            #######           Your New Client Certificate       #######
+            ###########################################################
+            -----END CERTIFICATE-----
+          client_key: |
+            -----BEGIN RSA PRIVATE KEY-----
+            ###########################################################
+            #######           Your New Client Key                ######
+            ###########################################################
+            -----END RSA PRIVATE KEY-----
         ...
-        ca_cert: |
-          -----BEGIN CERTIFICATE-----
-          ###########################################################
-          #######           Your Old CA Certificate           #######
-          ###########################################################
-          -----END CERTIFICATE-----
-          -----BEGIN CERTIFICATE-----
-          ###########################################################
-          #######           Your New CA Certificate           #######
-          ###########################################################
-          -----END CERTIFICATE-----
-        client_cert: |
-          -----BEGIN CERTIFICATE-----
-          ###########################################################
-          #######           Your New Client Certificate       #######
-          ###########################################################
-          -----END CERTIFICATE-----
-        client_key: |
-          -----BEGIN RSA PRIVATE KEY-----
-          ###########################################################
-          #######           Your New Client Key                ######
-          ###########################################################
-          -----END RSA PRIVATE KEY-----
-      ...
-
   ```
 
 
-0. In your netman stub file, remove the old CA certificate from the `cf_networking_overrides.properties.policy_server.ca_cert`
-and `cf_networking_overrides.properties.vxlan_policy_agent.ca_cert` fields.
+0. In your CF Networking stub file, remove the old CA certificate from the `cf_networking_overrides.properties.cf_networking.policy_server.ca_cert`
+and `cf_networking_overrides.properties.cf_networking.vxlan_policy_agent.ca_cert` fields.
   - Regenerate your Diego manifest.
   - Deploy Diego + CF Networking using your updated manifest.
 
@@ -185,48 +187,49 @@ and `cf_networking_overrides.properties.vxlan_policy_agent.ca_cert` fields.
     ...
     properties:
       ...
-      policy_server:
+      cf_networking:
         ...
-        ca_cert: |
-          -----BEGIN CERTIFICATE-----
-          ###########################################################
-          #######           Your New CA Certificate           #######
-          ###########################################################
-          -----END CERTIFICATE-----
-        server_cert: |
-          -----BEGIN CERTIFICATE-----
-          ###########################################################
-          #######           Your New Server Certificate       #######
-          ###########################################################
-          -----END CERTIFICATE-----
-        server_key: |
-          -----BEGIN RSA PRIVATE KEY-----
-          ###########################################################
-          #######           Your New Server Key                ######
-          ###########################################################
-          -----END RSA PRIVATE KEY-----
-      vxlan_policy_agent:
+        policy_server:
+          ...
+          ca_cert: |
+            -----BEGIN CERTIFICATE-----
+            ###########################################################
+            #######           Your New CA Certificate           #######
+            ###########################################################
+            -----END CERTIFICATE-----
+          server_cert: |
+            -----BEGIN CERTIFICATE-----
+            ###########################################################
+            #######           Your New Server Certificate       #######
+            ###########################################################
+            -----END CERTIFICATE-----
+          server_key: |
+            -----BEGIN RSA PRIVATE KEY-----
+            ###########################################################
+            #######           Your New Server Key                ######
+            ###########################################################
+            -----END RSA PRIVATE KEY-----
+        vxlan_policy_agent:
+          ...
+          ca_cert: |
+            -----BEGIN CERTIFICATE-----
+            ###########################################################
+            #######           Your New CA Certificate           #######
+            ###########################################################
+            -----END CERTIFICATE-----
+          client_cert: |
+            -----BEGIN CERTIFICATE-----
+            ###########################################################
+            #######           Your New Client Certificate       #######
+            ###########################################################
+            -----END CERTIFICATE-----
+          client_key: |
+            -----BEGIN RSA PRIVATE KEY-----
+            ###########################################################
+            #######           Your New Client Key                ######
+            ###########################################################
+            -----END RSA PRIVATE KEY-----
         ...
-        ca_cert: |
-          -----BEGIN CERTIFICATE-----
-          ###########################################################
-          #######           Your New CA Certificate           #######
-          ###########################################################
-          -----END CERTIFICATE-----
-        client_cert: |
-          -----BEGIN CERTIFICATE-----
-          ###########################################################
-          #######           Your New Client Certificate       #######
-          ###########################################################
-          -----END CERTIFICATE-----
-        client_key: |
-          -----BEGIN RSA PRIVATE KEY-----
-          ###########################################################
-          #######           Your New Client Key                ######
-          ###########################################################
-          -----END RSA PRIVATE KEY-----
-      ...
-
   ```
 
 
