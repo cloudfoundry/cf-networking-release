@@ -1,4 +1,4 @@
-package poller_test
+package converger_test
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -9,5 +9,5 @@ import (
 
 func TestPolicyClient(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Poller Suite")
+	RunSpecs(t, "Converger Suite")
 }

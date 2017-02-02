@@ -9,7 +9,6 @@ import (
 	"math/rand"
 	"net/http"
 	"netmon/integration/fakes"
-	"os/exec"
 	"policy-server/config"
 	"strings"
 
@@ -20,7 +19,7 @@ import (
 
 var _ = Describe("Internal API", func() {
 	var (
-		session      *gexec.Session
+		sessions     []*gexec.Session
 		conf         config.Config
 		address      string
 		testDatabase *testsupport.TestDatabase
@@ -28,10 +27,6 @@ var _ = Describe("Internal API", func() {
 
 		fakeMetron fakes.FakeMetron
 	)
-
-	var serverIsAvailable = func() error {
-		return VerifyTCPConnection(address)
-	}
 
 	BeforeEach(func() {
 		fakeMetron = fakes.New()
@@ -53,25 +48,17 @@ var _ = Describe("Internal API", func() {
 		}
 		tlsConfig.BuildNameToCertificate()
 
-		conf = DefaultTestConfig()
-		conf.Database = testDatabase.DBConfig()
-		conf.MetronAddress = fakeMetron.Address()
-		conf.TagLength = 2
-
-		configFilePath := WriteConfigFile(conf)
-
-		policyServerCmd := exec.Command(policyServerPath, "-config-file", configFilePath)
-		session, err = gexec.Start(policyServerCmd, GinkgoWriter, GinkgoWriter)
-		Expect(err).NotTo(HaveOccurred())
+		template := DefaultTestConfig(testDatabase.DBConfig(), fakeMetron.Address())
+		template.TagLength = 2
+		policyServerConfs := configurePolicyServers(template, 1)
+		sessions = startPolicyServers(policyServerConfs)
+		conf = policyServerConfs[0]
 
 		address = fmt.Sprintf("%s:%d", conf.ListenHost, conf.ListenPort)
-
-		Eventually(serverIsAvailable, DEFAULT_TIMEOUT).Should(Succeed())
 	})
 
 	AfterEach(func() {
-		session.Interrupt()
-		Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit())
+		stopPolicyServers(sessions)
 
 		if testDatabase != nil {
 			testDatabase.Destroy()

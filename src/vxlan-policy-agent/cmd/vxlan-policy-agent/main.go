@@ -11,6 +11,7 @@ import (
 	"lib/metrics"
 	"lib/mutualtls"
 	"lib/policy_client"
+	"lib/poller"
 	"lib/rules"
 	"lib/serial"
 	"log"
@@ -21,10 +22,10 @@ import (
 	"time"
 	"vxlan-policy-agent/agent_metrics"
 	"vxlan-policy-agent/config"
+	"vxlan-policy-agent/converger"
 	"vxlan-policy-agent/enforcer"
 	"vxlan-policy-agent/handlers"
 	"vxlan-policy-agent/planner"
-	"vxlan-policy-agent/poller"
 
 	"code.cloudfoundry.org/debugserver"
 	"code.cloudfoundry.org/lager"
@@ -181,8 +182,8 @@ func main() {
 	policyPoller := &poller.Poller{
 		Logger:       logger,
 		PollInterval: pollInterval,
-		SingleCycleFunc: (&poller.SinglePollCycle{
-			Planners: []poller.Planner{
+		SingleCycleFunc: (&converger.SinglePollCycle{
+			Planners: []converger.Planner{
 				vxlanDefaultLocalPlanner,
 				vxlanDefaultRemotePlanner,
 				dynamicPlanner,

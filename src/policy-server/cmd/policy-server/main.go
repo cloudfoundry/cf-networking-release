@@ -16,6 +16,7 @@ import (
 	"lib/marshal"
 	"lib/metrics"
 	"lib/mutualtls"
+	"lib/poller"
 
 	"policy-server/cc_client"
 	"policy-server/cleaner"
@@ -262,7 +263,7 @@ func main() {
 
 	pollInterval := time.Duration(conf.CleanupInterval) * time.Second
 
-	poller := &cleaner.Poller{
+	poller := &poller.Poller{
 		Logger:          logger.Session("policy-cleaner-poller"),
 		PollInterval:    pollInterval,
 		SingleCycleFunc: policyCleaner.DeleteStalePoliciesWrapper,

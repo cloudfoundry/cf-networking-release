@@ -2,13 +2,12 @@ package poller_test
 
 import (
 	"errors"
+	"lib/poller"
 	"os"
 	"sync/atomic"
 	"time"
-	"vxlan-policy-agent/poller"
 
 	"code.cloudfoundry.org/lager/lagertest"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"

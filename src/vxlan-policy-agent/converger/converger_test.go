@@ -1,11 +1,11 @@
-package poller_test
+package converger_test
 
 import (
 	"errors"
 	"lib/rules"
+	"vxlan-policy-agent/converger"
 	"vxlan-policy-agent/enforcer"
 	"vxlan-policy-agent/fakes"
-	"vxlan-policy-agent/poller"
 
 	"code.cloudfoundry.org/lager/lagertest"
 
@@ -17,7 +17,7 @@ import (
 var _ = Describe("Single Poll Cycle", func() {
 	Describe("Run", func() {
 		var (
-			p                    *poller.SinglePollCycle
+			p                    *converger.SinglePollCycle
 			fakePolicyPlanner    *fakes.Planner
 			fakeLocalPlanner     *fakes.Planner
 			fakeRemotePlanner    *fakes.Planner
@@ -37,8 +37,8 @@ var _ = Describe("Single Poll Cycle", func() {
 			timeMetricsEmitter = &fakes.TimeMetricsEmitter{}
 			logger = lagertest.NewTestLogger("test")
 
-			p = &poller.SinglePollCycle{
-				Planners:          []poller.Planner{fakeLocalPlanner, fakeRemotePlanner, fakePolicyPlanner},
+			p = &converger.SinglePollCycle{
+				Planners:          []converger.Planner{fakeLocalPlanner, fakeRemotePlanner, fakePolicyPlanner},
 				Enforcer:          fakeEnforcer,
 				CollectionEmitter: timeMetricsEmitter,
 				Logger:            logger,

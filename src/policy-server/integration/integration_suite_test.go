@@ -1,14 +1,18 @@
 package integration_test
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"lib/db"
 	"math/rand"
 	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"os/exec"
 	"policy-server/cc_client/fixtures"
 	"policy-server/config"
 	"strings"
@@ -155,7 +159,7 @@ func VerifyTCPConnection(address string) error {
 	return nil
 }
 
-func DefaultTestConfig() config.Config {
+func DefaultTestConfig(dbConfig db.Config, metronAddress string) config.Config {
 	config := config.Config{
 		ListenHost:         "127.0.0.1",
 		ListenPort:         10001 + GinkgoParallelNode(),
@@ -170,8 +174,9 @@ func DefaultTestConfig() config.Config {
 		UAAURL:             mockUAAServer.URL,
 		CCURL:              mockCCServer.URL,
 		TagLength:          1,
-		MetronAddress:      "some-metron.address",
-		CleanupInterval:    1,
+		Database:           dbConfig,
+		MetronAddress:      metronAddress,
+		CleanupInterval:    60,
 	}
 	return config
 }
@@ -187,4 +192,76 @@ func WriteConfigFile(policyServerConfig config.Config) string {
 	Expect(err).NotTo(HaveOccurred())
 
 	return configFile.Name()
+}
+
+func makeAndDoRequest(method string, endpoint string, body io.Reader) *http.Response {
+	req, err := http.NewRequest(method, endpoint, body)
+	Expect(err).NotTo(HaveOccurred())
+	req.Header.Set("Authorization", "Bearer valid-token")
+	resp, err := http.DefaultClient.Do(req)
+	Expect(err).NotTo(HaveOccurred())
+	return resp
+}
+
+func makeAndDoHTTPSRequest(method string, endpoint string, body io.Reader, c *tls.Config) *http.Response {
+	req, err := http.NewRequest(method, endpoint, body)
+	Expect(err).NotTo(HaveOccurred())
+	req.Header.Set("Authorization", "Bearer valid-token")
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: c,
+		},
+	}
+	resp, err := client.Do(req)
+	Expect(err).NotTo(HaveOccurred())
+	return resp
+}
+
+func configurePolicyServers(template config.Config, instances int) []config.Config {
+	var configs []config.Config
+	for i := 0; i < instances; i++ {
+		conf := template
+		conf.ListenPort += i * 100
+		conf.InternalListenPort += i * 100
+		conf.DebugServerPort += i * 100
+		configs = append(configs, conf)
+	}
+	return configs
+}
+
+func startPolicyServers(configs []config.Config) []*gexec.Session {
+	var sessions []*gexec.Session
+	for _, conf := range configs {
+		configFilePath := WriteConfigFile(conf)
+
+		policyServerCmd := exec.Command(policyServerPath, "-config-file", configFilePath)
+		session, err := gexec.Start(policyServerCmd, GinkgoWriter, GinkgoWriter)
+		Expect(err).NotTo(HaveOccurred())
+
+		address := fmt.Sprintf("%s:%d", conf.ListenHost, conf.ListenPort)
+		serverIsAvailable := func() error {
+			return VerifyTCPConnection(address)
+		}
+		debugAddress := fmt.Sprintf("%s:%d", conf.DebugServerHost, conf.DebugServerPort)
+		debugServerIsAvailable := func() error {
+			return VerifyTCPConnection(debugAddress)
+		}
+		Eventually(serverIsAvailable, DEFAULT_TIMEOUT).Should(Succeed())
+		Eventually(debugServerIsAvailable, DEFAULT_TIMEOUT).Should(Succeed())
+
+		sessions = append(sessions, session)
+	}
+	return sessions
+}
+
+func stopPolicyServers(sessions []*gexec.Session) {
+	for _, session := range sessions {
+		session.Interrupt()
+		Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit())
+	}
+}
+
+func policyServerUrl(route string, confs []config.Config) string {
+	conf := confs[rand.Intn(len(confs))]
+	return fmt.Sprintf("http://%s:%d/networking/v0/%s", conf.ListenHost, conf.ListenPort, route)
 }

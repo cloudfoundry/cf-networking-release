@@ -6,12 +6,10 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"lib/db"
 	"lib/testsupport"
 	"math/rand"
 	"net/http"
 	"netmon/integration/fakes"
-	"os/exec"
 	"policy-server/config"
 	"policy-server/models"
 	"strings"
@@ -40,15 +38,14 @@ var _ = Describe("External API", func() {
 		dbConnectionInfo := testsupport.GetDBConnectionInfo()
 		testDatabase = dbConnectionInfo.CreateDatabase(dbName)
 
-		policyServerConfs, sessions = startPolicyServers(2, testDatabase.DBConfig(), fakeMetron.Address())
+		template := DefaultTestConfig(testDatabase.DBConfig(), fakeMetron.Address())
+		policyServerConfs = configurePolicyServers(template, 2)
+		sessions = startPolicyServers(policyServerConfs)
 		conf = policyServerConfs[0]
 	})
 
 	AfterEach(func() {
-		for _, session := range sessions {
-			session.Interrupt()
-			Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit())
-		}
+		stopPolicyServers(sessions)
 
 		if testDatabase != nil {
 			testDatabase.Destroy()
@@ -677,37 +674,3 @@ var _ = Describe("External API", func() {
 		})
 	})
 })
-
-func startPolicyServers(numServers int, dbConfig db.Config, metronAddress string) ([]config.Config, []*gexec.Session) {
-	var confs []config.Config
-	var sessions []*gexec.Session
-	for i := 0; i < numServers; i++ {
-		conf := DefaultTestConfig()
-		conf.ListenPort += i * 100
-		conf.InternalListenPort += i * 100
-		conf.DebugServerPort += i * 100
-		conf.Database = dbConfig
-		conf.MetronAddress = metronAddress
-
-		configFilePath := WriteConfigFile(conf)
-
-		policyServerCmd := exec.Command(policyServerPath, "-config-file", configFilePath)
-		session, err := gexec.Start(policyServerCmd, GinkgoWriter, GinkgoWriter)
-		Expect(err).NotTo(HaveOccurred())
-
-		address := fmt.Sprintf("%s:%d", conf.ListenHost, conf.ListenPort)
-		serverIsAvailable := func() error {
-			return VerifyTCPConnection(address)
-		}
-		Eventually(serverIsAvailable, DEFAULT_TIMEOUT).Should(Succeed())
-
-		confs = append(confs, conf)
-		sessions = append(sessions, session)
-	}
-	return confs, sessions
-}
-
-func policyServerUrl(route string, confs []config.Config) string {
-	conf := confs[rand.Intn(len(confs))]
-	return fmt.Sprintf("http://%s:%d/networking/v0/%s", conf.ListenHost, conf.ListenPort, route)
-}

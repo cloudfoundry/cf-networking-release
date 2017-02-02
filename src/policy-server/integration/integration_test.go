@@ -1,9 +1,7 @@
 package integration_test
 
 import (
-	"crypto/tls"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"lib/db"
 	"lib/testsupport"
@@ -26,6 +24,7 @@ var _ = Describe("Integration", func() {
 	Context("with a database", func() {
 		var (
 			session      *gexec.Session
+			sessions     []*gexec.Session
 			conf         config.Config
 			address      string
 			debugAddress string
@@ -34,14 +33,6 @@ var _ = Describe("Integration", func() {
 			fakeMetron fakes.FakeMetron
 		)
 
-		var serverIsAvailable = func() error {
-			return VerifyTCPConnection(address)
-		}
-
-		var debugServerIsAvailable = func() error {
-			return VerifyTCPConnection(debugAddress)
-		}
-
 		BeforeEach(func() {
 			fakeMetron = fakes.New()
 
@@ -49,27 +40,18 @@ var _ = Describe("Integration", func() {
 			dbConnectionInfo := testsupport.GetDBConnectionInfo()
 			testDatabase = dbConnectionInfo.CreateDatabase(dbName)
 
-			conf = DefaultTestConfig()
-			conf.Database = testDatabase.DBConfig()
-			conf.MetronAddress = fakeMetron.Address()
-
-			configFilePath := WriteConfigFile(conf)
-
-			policyServerCmd := exec.Command(policyServerPath, "-config-file", configFilePath)
-			var err error
-			session, err = gexec.Start(policyServerCmd, GinkgoWriter, GinkgoWriter)
-			Expect(err).NotTo(HaveOccurred())
+			template := DefaultTestConfig(testDatabase.DBConfig(), fakeMetron.Address())
+			policyServerConfs := configurePolicyServers(template, 1)
+			sessions = startPolicyServers(policyServerConfs)
+			session = sessions[0]
+			conf = policyServerConfs[0]
 
 			address = fmt.Sprintf("%s:%d", conf.ListenHost, conf.ListenPort)
 			debugAddress = fmt.Sprintf("%s:%d", conf.DebugServerHost, conf.DebugServerPort)
-
-			Eventually(serverIsAvailable, DEFAULT_TIMEOUT).Should(Succeed())
-			Eventually(debugServerIsAvailable, DEFAULT_TIMEOUT).Should(Succeed())
 		})
 
 		AfterEach(func() {
-			session.Interrupt()
-			Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit())
+			stopPolicyServers(sessions)
 
 			if testDatabase != nil {
 				testDatabase.Destroy()
@@ -181,15 +163,14 @@ var _ = Describe("Integration", func() {
 	Context("when the database is down", func() {
 		var (
 			session *gexec.Session
-			conf    config.Config
 		)
 
 		BeforeEach(func() {
-			conf = DefaultTestConfig()
-			conf.Database = db.Config{
+			dbConfig := db.Config{
 				Type:             "postgres",
 				ConnectionString: "postgres://:@1.2.3.4:9999/?sslmode=disable",
 			}
+			conf := DefaultTestConfig(dbConfig, "some-address")
 			configFilePath := WriteConfigFile(conf)
 
 			policyServerCmd := exec.Command(policyServerPath, "-config-file", configFilePath)
@@ -210,26 +191,3 @@ var _ = Describe("Integration", func() {
 		})
 	})
 })
-
-func makeAndDoRequest(method string, endpoint string, body io.Reader) *http.Response {
-	req, err := http.NewRequest(method, endpoint, body)
-	Expect(err).NotTo(HaveOccurred())
-	req.Header.Set("Authorization", "Bearer valid-token")
-	resp, err := http.DefaultClient.Do(req)
-	Expect(err).NotTo(HaveOccurred())
-	return resp
-}
-
-func makeAndDoHTTPSRequest(method string, endpoint string, body io.Reader, c *tls.Config) *http.Response {
-	req, err := http.NewRequest(method, endpoint, body)
-	Expect(err).NotTo(HaveOccurred())
-	req.Header.Set("Authorization", "Bearer valid-token")
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: c,
-		},
-	}
-	resp, err := client.Do(req)
-	Expect(err).NotTo(HaveOccurred())
-	return resp
-}

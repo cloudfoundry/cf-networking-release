@@ -48,6 +48,7 @@ files:
   - lib/marshal/*.go # gosub
   - lib/metrics/*.go # gosub
   - lib/mutualtls/*.go # gosub
+  - lib/poller/*.go # gosub
   - policy-server/cc_client/*.go # gosub
   - policy-server/cleaner/*.go # gosub
   - policy-server/cmd/policy-server/*.go # gosub

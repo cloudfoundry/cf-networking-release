@@ -32,7 +32,11 @@ var _ = Describe("Automatic Stale Policy Cleanup", func() {
 		dbConnectionInfo := testsupport.GetDBConnectionInfo()
 		testDatabase = dbConnectionInfo.CreateDatabase(dbName)
 
-		policyServerConfs, sessions = startPolicyServers(2, testDatabase.DBConfig(), fakeMetron.Address())
+		template := DefaultTestConfig(testDatabase.DBConfig(), fakeMetron.Address())
+		template.CleanupInterval = 1
+
+		policyServerConfs = configurePolicyServers(template, 2)
+		sessions = startPolicyServers(policyServerConfs)
 		conf = policyServerConfs[0]
 	})
 
