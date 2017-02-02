@@ -29,7 +29,7 @@ func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request, tok
 	if err != nil {
 		h.Logger.Error("body-read-failed", err)
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"error": "invalid request body format passed to API should be JSON"}`))
+		w.Write([]byte(`{"error": "invalid request body"}`))
 		return
 	}
 

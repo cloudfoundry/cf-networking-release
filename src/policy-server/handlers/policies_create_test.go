@@ -199,7 +199,7 @@ var _ = Describe("PoliciesCreate", func() {
 			handler.ServeHTTP(resp, request, tokenData)
 
 			Expect(resp.Code).To(Equal(http.StatusBadRequest))
-			Expect(resp.Body.String()).To(MatchJSON(`{"error": "invalid request body format passed to API should be JSON"}`))
+			Expect(resp.Body.String()).To(MatchJSON(`{"error": "invalid request body"}`))
 		})
 
 		It("logs the full error", func() {

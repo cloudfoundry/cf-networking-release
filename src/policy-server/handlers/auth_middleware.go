@@ -10,6 +10,8 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
+const MAX_REQ_BODY_SIZE = 10 << 20 // 10 MB
+
 //go:generate counterfeiter -o fakes/http_handler.go --fake-name HTTPHandler . http_handler
 type http_handler interface {
 	http.Handler
@@ -65,6 +67,7 @@ func (a *Authenticator) Wrap(handle authenticatedHandler) http.Handler {
 			return
 		}
 
+		req.Body = http.MaxBytesReader(w, req.Body, MAX_REQ_BODY_SIZE)
 		handle.ServeHTTP(w, req, tokenData)
 	})
 }

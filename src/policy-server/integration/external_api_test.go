@@ -166,6 +166,20 @@ var _ = Describe("External API", func() {
 					Expect(responseString).To(MatchJSON(`{ "error": "one or more applications cannot be found or accessed"}`))
 				})
 			})
+
+			It("fails for requests with bodies larger than 10 MB", func() {
+				elevenMB := 11 << 20
+				bytes := make([]byte, elevenMB, elevenMB)
+
+				req := makeNewRequest("POST", "networking/v0/external/policies", string(bytes))
+				resp, err := http.DefaultClient.Do(req)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
+				responseString, err := ioutil.ReadAll(resp.Body)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(responseString).To(MatchJSON(`{"error": "invalid request body"}`))
+			})
 		})
 
 		Describe("Delete policies", func() {
