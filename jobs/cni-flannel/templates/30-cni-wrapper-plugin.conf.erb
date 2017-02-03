@@ -1,19 +1,29 @@
-{
-  "name": "cni-wrapper",
-  "type": "cni-wrapper-plugin",
-  "cniVersion": "0.2.0",
-  "datastore": "/var/vcap/data/container-metadata/store.json",
-  "iptables_lock_file": "/var/vcap/data/garden-cni/iptables.lock",
-  "overlay_network": "<%= p('cf_networking.network') %>",
-  "delegate": {
-    "name": "cni-flannel",
-    "type": "flannel",
-    "subnetFile": "/var/vcap/data/flannel/subnet.env",
-    "dataDir": "/var/vcap/data/flannel/data",
-    "delegate": {
-      "bridge": "cni-flannel0",
-      "isDefaultGateway": true,
-      "ipMasq": false
+<%=
+  require 'json'
+
+  toRender = {
+    "name" => "cni-wrapper",
+    "type" => "cni-wrapper-plugin",
+    "cniVersion" => "0.2.0",
+    "datastore" => "/var/vcap/data/container-metadata/store.json",
+    "iptables_lock_file" => "/var/vcap/data/garden-cni/iptables.lock",
+    "overlay_network" => p('cf_networking.network'),
+    "delegate" => {
+      "name" => "cni-flannel",
+      "type" => "flannel",
+      "subnetFile" => "/var/vcap/data/flannel/subnet.env",
+      "dataDir" => "/var/vcap/data/flannel/data",
+      "delegate" => {
+        "bridge" => "cni-flannel0",
+        "isDefaultGateway" => true,
+        "ipMasq" => false,
+       }
      }
   }
-}
+
+  if p('cf_networking.mtu') != 0
+    toRender["delegate"]["delegate"]["mtu"] = p("cf_networking.mtu")
+  end
+
+  JSON.pretty_generate(toRender)
+%>
