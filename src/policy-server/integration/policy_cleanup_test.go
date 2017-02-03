@@ -34,6 +34,7 @@ var _ = Describe("Automatic Stale Policy Cleanup", func() {
 
 		template := DefaultTestConfig(testDatabase.DBConfig(), fakeMetron.Address())
 		template.CleanupInterval = 1
+		template.CCAppRequestChunkSize = 1
 
 		policyServerConfs = configurePolicyServers(template, 2)
 		sessions = startPolicyServers(policyServerConfs)
@@ -67,7 +68,6 @@ var _ = Describe("Automatic Stale Policy Cleanup", func() {
 				body,
 			)
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-
 		})
 
 		It("eventually cleans up stale policies stale policies", func() {

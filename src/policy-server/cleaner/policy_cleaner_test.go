@@ -63,7 +63,15 @@ var _ = Describe("PolicyCleaner", func() {
 
 		fakeUAAClient.GetTokenReturns("valid-token", nil)
 		fakeStore.AllReturns(allPolicies, nil)
-		fakeCCClient.GetAllAppGUIDsReturns(map[string]interface{}{"live-guid": nil}, nil)
+		fakeCCClient.GetLiveAppGUIDsStub = func(token string, appGUIDs []string) (map[string]struct{}, error) {
+			liveGUIDs := make(map[string]struct{})
+			for _, guid := range appGUIDs {
+				if guid == "live-guid" {
+					liveGUIDs["live-guid"] = struct{}{}
+				}
+			}
+			return liveGUIDs, nil
+		}
 	})
 
 	It("Deletes policies that reference apps that do not exist", func() {
@@ -72,14 +80,54 @@ var _ = Describe("PolicyCleaner", func() {
 
 		Expect(fakeStore.AllCallCount()).To(Equal(1))
 		Expect(fakeUAAClient.GetTokenCallCount()).To(Equal(1))
-		Expect(fakeCCClient.GetAllAppGUIDsCallCount()).To(Equal(1))
-		Expect(fakeCCClient.GetAllAppGUIDsArgsForCall(0)).To(Equal("valid-token"))
+		Expect(fakeCCClient.GetLiveAppGUIDsCallCount()).To(Equal(1))
+		token, guids := fakeCCClient.GetLiveAppGUIDsArgsForCall(0)
+		Expect(token).To(Equal("valid-token"))
+		Expect(guids).To(ConsistOf("live-guid", "dead-guid"))
+
 		stalePolicies := allPolicies[1:]
 		Expect(fakeStore.DeleteCallCount()).To(Equal(1))
 		Expect(fakeStore.DeleteArgsForCall(0)).To(Equal(stalePolicies))
 
 		Expect(logger).To(gbytes.Say("deleting stale policies:.*policies.*dead-guid.*dead-guid.*total_policies\":2"))
 		Expect(policies).To(Equal(stalePolicies))
+	})
+
+	Context("when there are more apps with policies than the CC chunk size", func() {
+		BeforeEach(func() {
+			policyCleaner = &cleaner.PolicyCleaner{
+				Logger:                logger,
+				Store:                 fakeStore,
+				UAAClient:             fakeUAAClient,
+				CCClient:              fakeCCClient,
+				CCAppRequestChunkSize: 1,
+			}
+		})
+		It("Calls the CC server multiple times to check which policies to delete", func() {
+			policies, err := policyCleaner.DeleteStalePolicies()
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(fakeStore.AllCallCount()).To(Equal(1))
+			Expect(fakeUAAClient.GetTokenCallCount()).To(Equal(1))
+			Expect(fakeCCClient.GetLiveAppGUIDsCallCount()).To(Equal(2))
+			token, guids := fakeCCClient.GetLiveAppGUIDsArgsForCall(0)
+			Expect(token).To(Equal("valid-token"))
+			Expect(guids).To(ConsistOf("live-guid"))
+			token, guids = fakeCCClient.GetLiveAppGUIDsArgsForCall(1)
+			Expect(token).To(Equal("valid-token"))
+			Expect(guids).To(ConsistOf("dead-guid"))
+
+			stalePolicies := allPolicies[1:]
+			Expect(fakeStore.DeleteCallCount()).To(Equal(2))
+
+			var deleted [][]models.Policy
+			deleted = append(deleted, fakeStore.DeleteArgsForCall(0))
+			deleted = append(deleted, fakeStore.DeleteArgsForCall(1))
+			Expect(deleted).To(ConsistOf(stalePolicies, []models.Policy{}))
+
+			Expect(logger).To(gbytes.Say("deleting stale policies:.*policies.*dead-guid.*dead-guid.*total_policies\":2"))
+			Expect(policies).To(ConsistOf(stalePolicies[0], stalePolicies[1]))
+		})
 	})
 
 	Context("When retrieving policies from the db fails", func() {
@@ -118,7 +166,7 @@ var _ = Describe("PolicyCleaner", func() {
 
 	Context("When getting the apps from the Cloud-Controller fails", func() {
 		BeforeEach(func() {
-			fakeCCClient.GetAllAppGUIDsReturns(nil, errors.New("potato"))
+			fakeCCClient.GetLiveAppGUIDsReturns(nil, errors.New("potato"))
 		})
 
 		It("returns a meaningful error", func() {

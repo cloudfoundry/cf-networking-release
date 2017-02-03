@@ -10,24 +10,25 @@ import (
 )
 
 type Config struct {
-	ListenHost         string    `json:"listen_host" validate:"nonzero"`
-	ListenPort         int       `json:"listen_port" validate:"nonzero"`
-	InternalListenPort int       `json:"internal_listen_port" validate:"nonzero"`
-	DebugServerHost    string    `json:"debug_server_host" validate:"nonzero"`
-	DebugServerPort    int       `json:"debug_server_port" validate:"nonzero"`
-	CACertFile         string    `json:"ca_cert_file" validate:"nonzero"`
-	ServerCertFile     string    `json:"server_cert_file" validate:"nonzero"`
-	ServerKeyFile      string    `json:"server_key_file" validate:"nonzero"`
-	UAAClient          string    `json:"uaa_client" validate:"nonzero"`
-	UAAClientSecret    string    `json:"uaa_client_secret" validate:"nonzero"`
-	UAAURL             string    `json:"uaa_url" validate:"nonzero"`
-	CCURL              string    `json:"cc_url" validate:"nonzero"`
-	SkipSSLValidation  bool      `json:"skip_ssl_validation"`
-	Database           db.Config `json:"database" validate:"nonzero"`
-	TagLength          int       `json:"tag_length" validate:"nonzero"`
-	MetronAddress      string    `json:"metron_address" validate:"nonzero"`
-	LogLevel           string    `json:"log_level"`
-	CleanupInterval    int       `json:"cleanup_interval" validate:"min=1"`
+	ListenHost            string    `json:"listen_host" validate:"nonzero"`
+	ListenPort            int       `json:"listen_port" validate:"nonzero"`
+	InternalListenPort    int       `json:"internal_listen_port" validate:"nonzero"`
+	DebugServerHost       string    `json:"debug_server_host" validate:"nonzero"`
+	DebugServerPort       int       `json:"debug_server_port" validate:"nonzero"`
+	CACertFile            string    `json:"ca_cert_file" validate:"nonzero"`
+	ServerCertFile        string    `json:"server_cert_file" validate:"nonzero"`
+	ServerKeyFile         string    `json:"server_key_file" validate:"nonzero"`
+	UAAClient             string    `json:"uaa_client" validate:"nonzero"`
+	UAAClientSecret       string    `json:"uaa_client_secret" validate:"nonzero"`
+	UAAURL                string    `json:"uaa_url" validate:"nonzero"`
+	CCURL                 string    `json:"cc_url" validate:"nonzero"`
+	SkipSSLValidation     bool      `json:"skip_ssl_validation"`
+	Database              db.Config `json:"database" validate:"nonzero"`
+	TagLength             int       `json:"tag_length" validate:"nonzero"`
+	MetronAddress         string    `json:"metron_address" validate:"nonzero"`
+	LogLevel              string    `json:"log_level"`
+	CleanupInterval       int       `json:"cleanup_interval" validate:"min=1"`
+	CCAppRequestChunkSize int       `json:"cc_app_request_chunk_size"`
 }
 
 func (c *Config) Validate() error {

@@ -14,7 +14,7 @@ type uaaClient interface {
 
 //go:generate counterfeiter -o fakes/cc_client.go --fake-name CCClient . ccClient
 type ccClient interface {
-	GetAllAppGUIDs(token string) (map[string]interface{}, error)
+	GetLiveAppGUIDs(token string, appGUIDs []string) (map[string]struct{}, error)
 }
 
 //go:generate counterfeiter -o fakes/store.go --fake-name Store . store
@@ -24,10 +24,11 @@ type store interface {
 }
 
 type PolicyCleaner struct {
-	Logger    lager.Logger
-	Store     store
-	UAAClient uaaClient
-	CCClient  ccClient
+	Logger                lager.Logger
+	Store                 store
+	UAAClient             uaaClient
+	CCClient              ccClient
+	CCAppRequestChunkSize int
 }
 
 func (p *PolicyCleaner) DeleteStalePolicies() ([]models.Policy, error) {
@@ -36,29 +37,36 @@ func (p *PolicyCleaner) DeleteStalePolicies() ([]models.Policy, error) {
 		p.Logger.Error("store-list-policies-failed", err)
 		return nil, fmt.Errorf("database read failed: %s", err)
 	}
-
 	token, err := p.UAAClient.GetToken()
 	if err != nil {
 		p.Logger.Error("get-uaa-token-failed", err)
 		return nil, fmt.Errorf("get UAA token failed: %s", err)
 	}
 
-	ccAppGuids, err := p.CCClient.GetAllAppGUIDs(token)
-	if err != nil {
-		p.Logger.Error("cc-get-app-guids-failed", err)
-		return nil, fmt.Errorf("get app guids from Cloud-Controller failed: %s", err)
-	}
+	stalePolicies := []models.Policy{}
 
-	stalePolicies := getStalePolicies(policies, ccAppGuids)
+	appGUIDs := policyAppGUIDs(policies)
+	appGUIDchunks := getChunks(appGUIDs, p.CCAppRequestChunkSize)
 
-	p.Logger.Info("deleting stale policies:", lager.Data{
-		"total_policies": len(stalePolicies),
-		"stale_policies": stalePolicies,
-	})
-	err = p.Store.Delete(stalePolicies)
-	if err != nil {
-		p.Logger.Error("store-delete-policies-failed", err)
-		return nil, fmt.Errorf("database write failed: %s", err)
+	for _, appGUIDchunk := range appGUIDchunks {
+		liveAppGUIDs, err := p.CCClient.GetLiveAppGUIDs(token, appGUIDchunk)
+		if err != nil {
+			p.Logger.Error("cc-get-app-guids-failed", err)
+			return nil, fmt.Errorf("get app guids from Cloud-Controller failed: %s", err)
+		}
+
+		staleAppGUIDs := getStaleAppGUIDs(liveAppGUIDs, appGUIDchunk)
+		stalePolicies = append(stalePolicies, getStalePolicies(policies, staleAppGUIDs)...)
+
+		p.Logger.Info("deleting stale policies:", lager.Data{
+			"total_policies": len(stalePolicies),
+			"stale_policies": stalePolicies,
+		})
+		err = p.Store.Delete(stalePolicies)
+		if err != nil {
+			p.Logger.Error("store-delete-policies-failed", err)
+			return nil, fmt.Errorf("database write failed: %s", err)
+		}
 	}
 
 	return stalePolicies, nil
@@ -69,13 +77,53 @@ func (p *PolicyCleaner) DeleteStalePoliciesWrapper() error {
 	return err
 }
 
-func getStalePolicies(policyList []models.Policy, ccList map[string]interface{}) (stalePolicies []models.Policy) {
+func getStaleAppGUIDs(liveAppGUIDs map[string]struct{}, appGUIDs []string) map[string]struct{} {
+	staleAppGUIDs := make(map[string]struct{})
+	for _, guid := range appGUIDs {
+		if _, ok := liveAppGUIDs[guid]; !ok {
+			staleAppGUIDs[guid] = struct{}{}
+		}
+	}
+	return staleAppGUIDs
+}
+
+func getStalePolicies(policyList []models.Policy, staleAppGUIDs map[string]struct{}) []models.Policy {
+	var stalePolicies []models.Policy
 	for _, p := range policyList {
-		_, foundSrc := ccList[p.Source.ID]
-		_, foundDst := ccList[p.Destination.ID]
-		if !foundSrc || !foundDst {
+		_, foundSrc := staleAppGUIDs[p.Source.ID]
+		_, foundDst := staleAppGUIDs[p.Destination.ID]
+		if foundSrc || foundDst {
 			stalePolicies = append(stalePolicies, p)
 		}
 	}
 	return stalePolicies
+}
+
+func policyAppGUIDs(policyList []models.Policy) []string {
+	appGUIDset := make(map[string]struct{})
+	for _, p := range policyList {
+		appGUIDset[p.Source.ID] = struct{}{}
+		appGUIDset[p.Destination.ID] = struct{}{}
+	}
+	var appGUIDs []string
+	for guid, _ := range appGUIDset {
+		appGUIDs = append(appGUIDs, guid)
+	}
+	return appGUIDs
+}
+
+func getChunks(appGuids []string, chunkSize int) [][]string {
+	if chunkSize < 1 {
+		chunkSize = 100
+	}
+	var chunks [][]string
+
+	for i := 0; i < len(appGuids); i += chunkSize {
+		last := i + chunkSize
+		if last > len(appGuids) {
+			last = len(appGuids)
+		}
+		chunks = append(chunks, appGuids[i:last])
+	}
+	return chunks
 }

@@ -33,8 +33,9 @@ func (fake *Store) All() ([]models.Policy, error) {
 	fake.allMutex.Unlock()
 	if fake.AllStub != nil {
 		return fake.AllStub()
+	} else {
+		return fake.allReturns.result1, fake.allReturns.result2
 	}
-	return fake.allReturns.result1, fake.allReturns.result2
 }
 
 func (fake *Store) AllCallCount() int {
@@ -65,8 +66,9 @@ func (fake *Store) Delete(arg1 []models.Policy) error {
 	fake.deleteMutex.Unlock()
 	if fake.DeleteStub != nil {
 		return fake.DeleteStub(arg1)
+	} else {
+		return fake.deleteReturns.result1
 	}
-	return fake.deleteReturns.result1
 }
 
 func (fake *Store) DeleteCallCount() int {

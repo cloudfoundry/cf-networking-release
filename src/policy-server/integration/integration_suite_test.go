@@ -41,6 +41,16 @@ var mockCCServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWrite
 			w.Write([]byte(fixtures.AppsV3TwoSpaces))
 			return
 		}
+		if strings.Contains(r.URL.RawQuery, "live-app-1-guid") && !strings.Contains(r.URL.RawQuery, "live-app-2-guid") {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(fixtures.AppsV3LiveApp1GUID))
+			return
+		}
+		if strings.Contains(r.URL.RawQuery, "live-app-2-guid") && !strings.Contains(r.URL.RawQuery, "live-app-1-guid") {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(fixtures.AppsV3LiveApp2GUID))
+			return
+		}
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(fixtures.AppsV3OneSpace))
 		return
@@ -161,22 +171,23 @@ func VerifyTCPConnection(address string) error {
 
 func DefaultTestConfig(dbConfig db.Config, metronAddress string) config.Config {
 	config := config.Config{
-		ListenHost:         "127.0.0.1",
-		ListenPort:         10001 + GinkgoParallelNode(),
-		InternalListenPort: 20001 + GinkgoParallelNode(),
-		DebugServerHost:    "127.0.0.1",
-		DebugServerPort:    30001 + GinkgoParallelNode(),
-		CACertFile:         "fixtures/netman-ca.crt",
-		ServerCertFile:     "fixtures/server.crt",
-		ServerKeyFile:      "fixtures/server.key",
-		UAAClient:          "test",
-		UAAClientSecret:    "test",
-		UAAURL:             mockUAAServer.URL,
-		CCURL:              mockCCServer.URL,
-		TagLength:          1,
-		Database:           dbConfig,
-		MetronAddress:      metronAddress,
-		CleanupInterval:    60,
+		ListenHost:            "127.0.0.1",
+		ListenPort:            10001 + GinkgoParallelNode(),
+		InternalListenPort:    20001 + GinkgoParallelNode(),
+		DebugServerHost:       "127.0.0.1",
+		DebugServerPort:       30001 + GinkgoParallelNode(),
+		CACertFile:            "fixtures/netman-ca.crt",
+		ServerCertFile:        "fixtures/server.crt",
+		ServerKeyFile:         "fixtures/server.key",
+		UAAClient:             "test",
+		UAAClientSecret:       "test",
+		UAAURL:                mockUAAServer.URL,
+		CCURL:                 mockCCServer.URL,
+		TagLength:             1,
+		Database:              dbConfig,
+		MetronAddress:         metronAddress,
+		CleanupInterval:       60,
+		CCAppRequestChunkSize: 100,
 	}
 	return config
 }

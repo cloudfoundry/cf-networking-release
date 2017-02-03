@@ -148,6 +148,66 @@ var _ = Describe("Client", func() {
 		})
 	})
 
+	Describe("GetLiveAppGUIDs", func() {
+		BeforeEach(func() {
+			fakeHTTPClient.DoReturns(
+				&http.Response{
+					StatusCode: http.StatusOK,
+					Body:       ioutil.NopCloser(bytes.NewReader([]byte(fixtures.AppsV3LiveAppGUIDs))),
+				}, nil)
+		})
+
+		It("Returns the app guids", func() {
+			appGUIDs, err := client.GetLiveAppGUIDs("some-token", []string{"live-app-1-guid", "live-app-2-guid"})
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(fakeHTTPClient.DoCallCount()).To(Equal(1))
+			request := fakeHTTPClient.DoArgsForCall(0)
+			Expect(request.Method).To(Equal("GET"))
+			Expect(request.URL.String()).To(Equal("https://some.base.url/v3/apps?guids=live-app-1-guid%2Clive-app-2-guid&per_page=2"))
+			authHeader := request.Header["Authorization"]
+			Expect(authHeader).To(HaveLen(1))
+			Expect(authHeader[0]).To(Equal("bearer some-token"))
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(appGUIDs).To(Equal(map[string]struct{}{
+				"live-app-1-guid": struct{}{},
+				"live-app-2-guid": struct{}{},
+			}))
+		})
+	})
+
+	Context("when the json client returns an error (via the http client)", func() {
+		BeforeEach(func() {
+			fakeHTTPClient.DoReturns(nil, errors.New("potato"))
+		})
+
+		It("returns a helpful error", func() {
+			_, err := client.GetLiveAppGUIDs("some-token", []string{"live-app-1-guid", "live-app-2-guid"})
+			Expect(err).To(MatchError(ContainSubstring("http client do: potato")))
+		})
+	})
+
+	Context("when there are multiple pages", func() {
+		BeforeEach(func() {
+			v3AppsMultiplePages := `{
+				"pagination": {
+					"total_pages": 10
+				}
+			}`
+			fakeHTTPClient.DoReturns(
+				&http.Response{
+					StatusCode: http.StatusOK,
+					Body:       ioutil.NopCloser(bytes.NewReader([]byte(v3AppsMultiplePages))),
+				}, nil)
+		})
+
+		It("should immediately return an error", func() {
+			_, err := client.GetLiveAppGUIDs("some-token", []string{"live-app-1-guid", "live-app-2-guid"})
+			Expect(err).To(MatchError("pagination support not yet implemented"))
+		})
+	})
+
 	Describe("GetSpaceGUIDs", func() {
 		BeforeEach(func() {
 			fakeHTTPClient.DoReturns(

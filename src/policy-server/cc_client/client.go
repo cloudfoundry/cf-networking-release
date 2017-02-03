@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"policy-server/models"
+	"strconv"
 	"strings"
 
 	"code.cloudfoundry.org/lager"
@@ -69,6 +70,34 @@ func (c *Client) GetAllAppGUIDs(token string) (map[string]interface{}, error) {
 	}
 
 	return ret, nil
+}
+
+func (c *Client) GetLiveAppGUIDs(token string, appGUIDs []string) (map[string]struct{}, error) {
+	token = fmt.Sprintf("bearer %s", token)
+
+	values := url.Values{}
+	values.Add("guids", strings.Join(appGUIDs, ","))
+	values.Add("per_page", strconv.Itoa(len(appGUIDs)))
+
+	route := fmt.Sprintf("/v3/apps?%s", values.Encode())
+
+	var response AppsV3Response
+	err := c.JSONClient.Do("GET", route, nil, &response, token)
+	if err != nil {
+		return nil, err
+	}
+
+	if response.Pagination.TotalPages > 1 {
+		return nil, fmt.Errorf("pagination support not yet implemented")
+	}
+
+	set := make(map[string]struct{})
+	for _, r := range response.Resources {
+		appID := r.GUID
+		set[appID] = struct{}{}
+	}
+
+	return set, nil
 }
 
 func (c *Client) GetSpaceGUIDs(token string, appGUIDs []string) ([]string, error) {
