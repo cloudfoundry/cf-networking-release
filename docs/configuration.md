@@ -17,14 +17,20 @@ NOTE: On bosh-lite, the network should avoid any IP addresses that include the
 10.244 or 10.254 ranges, as those are both in use by bosh components.
 
 ### MTU
-Operators should not need to do any special configuration for MTUs.  The CNI plugins
-should automatically detect the host MTU and set the container MTU appropriately,
+Operators not using any additional encapsulation should not need to do any special configuration for MTUs.
+The CNI plugins should automatically detect the host MTU and set the container MTU appropriately,
 accounting for any overhead.
 
 However, operators should understand that:
  - All Diego cells should be on the same network, and should have the same MTU
  - A change the Diego cell MTU will likely require the VMs to be recreated in
    order for the container network to function properly.
+
+Operators using some additional encapsulation (e.g. ipsec) can manually configure the MTU for containers.
+The configuration can be specified in the manifest under `properties.cf_networking.mtu`.
+The operator should set the MTU low enough to account for the overhead of their own encapsulation plus the overhead from VXLAN.
+As an example, if you are using ipsec with a recommended overhead of 100 bytes, and your VMs have MTU 1500,
+you should set the MTU to 1350 (1500 - 100 for ipsec - 50 for VXLAN).
 
 ### Mutual TLS
 The policy server exposes its internal API over mutual TLS.  We provide [a script](../scripts/generate-certs)
