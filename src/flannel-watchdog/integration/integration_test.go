@@ -89,6 +89,19 @@ var _ = Describe("Flannel Watchdog", func() {
 		Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit())
 	})
 
+	It("emits a metric indicating flannel is not down", func() {
+		gatherMetricNames := func() map[string]float64 {
+			events := fakeMetron.AllEvents()
+			metrics := map[string]float64{}
+			for _, event := range events {
+				metrics[event.Name] = event.Value
+			}
+			return metrics
+		}
+		Eventually(gatherMetricNames, "5s").Should(HaveKeyWithValue("flannelDown", 0.0))
+		Consistently(gatherMetricNames, "5s").Should(HaveKeyWithValue("flannelDown", 0.0))
+	})
+
 	Context("when the subnets file and bridge get out of sync", func() {
 		BeforeEach(func() {
 			Consistently(session, "1.5s").ShouldNot(gexec.Exit())
@@ -105,7 +118,7 @@ var _ = Describe("Flannel Watchdog", func() {
 			Expect(string(session.Out.Contents())).To(ContainSubstring(expectedMsg))
 		})
 
-		It("emits a metric", func() {
+		It("emits a metric indicating flannel is down", func() {
 			gatherMetricNames := func() map[string]float64 {
 				events := fakeMetron.AllEvents()
 				metrics := map[string]float64{}

@@ -74,6 +74,8 @@ func (r *Runner) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 					`flannel (%s): %s bridge (%s): %s`, r.SubnetFile, flannelIP, r.BridgeName, deviceIP)
 				return
 			}
+
+			metrics.SendValue("flannelDown", 0.0, "bool")
 		}
 	}()
 
