@@ -19,12 +19,12 @@ import (
 
 var _ = Describe("PoliciesIndexInternal", func() {
 	var (
-		// allPolicies []models.Policy
-		handler   *handlers.PoliciesIndexInternal
-		resp      *httptest.ResponseRecorder
-		fakeStore *fakes.Store
-		logger    *lagertest.TestLogger
-		marshaler *lfakes.Marshaler
+		handler            *handlers.PoliciesIndexInternal
+		resp               *httptest.ResponseRecorder
+		fakeStore          *fakes.Store
+		logger             *lagertest.TestLogger
+		marshaler          *lfakes.Marshaler
+		fakeMetricsEmitter *fakes.MetricsEmitter
 	)
 
 	BeforeEach(func() {
@@ -48,13 +48,53 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		marshaler.MarshalStub = json.Marshal
 		fakeStore = &fakes.Store{}
 		fakeStore.AllReturns(allPolicies, nil)
+		fakeMetricsEmitter = &fakes.MetricsEmitter{}
 		logger = lagertest.NewTestLogger("test")
 		handler = &handlers.PoliciesIndexInternal{
-			Logger:    logger,
-			Store:     fakeStore,
-			Marshaler: marshaler,
+			Logger:         logger,
+			Store:          fakeStore,
+			Marshaler:      marshaler,
+			MetricsEmitter: fakeMetricsEmitter,
 		}
 		resp = httptest.NewRecorder()
+	})
+
+	It("it returns only policies that match the filter", func() {
+		expectedResponseJSON := `{"policies": [
+				{
+					"source": {
+						"id": "some-app-guid"
+					},
+					"destination": {
+						"id": "some-other-app-guid",
+						"protocol": "tcp",
+						"port": 8080
+					}
+				}
+			]}`
+		request, err := http.NewRequest("GET", "/networking/v0/internal/policies?id=some-app-guid", nil)
+		Expect(err).NotTo(HaveOccurred())
+		handler.ServeHTTP(resp, request)
+
+		Expect(fakeStore.AllCallCount()).To(Equal(1))
+		Expect(resp.Code).To(Equal(http.StatusOK))
+		Expect(resp.Body).To(MatchJSON(expectedResponseJSON))
+	})
+
+	It("emits timing metrics", func() {
+		request, err := http.NewRequest("GET", "/networking/v0/internal/policies?id=some-app-guid", nil)
+		Expect(err).NotTo(HaveOccurred())
+		handler.ServeHTTP(resp, request)
+
+		Expect(fakeMetricsEmitter.EmitAllCallCount()).To(Equal(2))
+
+		queryMetric := fakeMetricsEmitter.EmitAllArgsForCall(0)
+		_, ok := queryMetric["InternalPoliciesQueryTime"]
+		Expect(ok).To(BeTrue())
+
+		requestMetric := fakeMetricsEmitter.EmitAllArgsForCall(1)
+		_, ok = requestMetric["InternalPoliciesRequestTime"]
+		Expect(ok).To(BeTrue())
 	})
 
 	Context("when there are no policies", func() {
@@ -103,30 +143,6 @@ var _ = Describe("PoliciesIndexInternal", func() {
 			Expect(resp.Code).To(Equal(http.StatusOK))
 			Expect(resp.Body).To(MatchJSON(expectedResponseJSON))
 
-		})
-	})
-
-	Context("when there are policies and a filter is passed", func() {
-		It("it returns only policies that match the filter", func() {
-			expectedResponseJSON := `{"policies": [
-				{
-					"source": {
-						"id": "some-app-guid"
-					},
-					"destination": {
-						"id": "some-other-app-guid",
-						"protocol": "tcp",
-						"port": 8080
-					}
-				}
-			]}`
-			request, err := http.NewRequest("GET", "/networking/v0/internal/policies?id=some-app-guid", nil)
-			Expect(err).NotTo(HaveOccurred())
-			handler.ServeHTTP(resp, request)
-
-			Expect(fakeStore.AllCallCount()).To(Equal(1))
-			Expect(resp.Code).To(Equal(http.StatusOK))
-			Expect(resp.Body).To(MatchJSON(expectedResponseJSON))
 		})
 	})
 

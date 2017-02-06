@@ -199,10 +199,14 @@ func main() {
 		Marshaler: marshal.MarshalFunc(json.Marshal),
 	}
 
+	timeMetricsEmitter := &server_metrics.TimeMetrics{
+		Logger: logger.Session("time-metric-emitter"),
+	}
 	internalPoliciesHandler := &handlers.PoliciesIndexInternal{
-		Logger:    logger.Session("policies-index-internal"),
-		Store:     dataStore,
-		Marshaler: marshal.MarshalFunc(json.Marshal),
+		Logger:         logger.Session("policies-index-internal"),
+		Store:          dataStore,
+		Marshaler:      marshal.MarshalFunc(json.Marshal),
+		MetricsEmitter: timeMetricsEmitter,
 	}
 
 	routes := rata.Routes{

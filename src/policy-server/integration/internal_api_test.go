@@ -96,4 +96,24 @@ var _ = Describe("Internal API", func() {
 			]}
 		`))
 	})
+
+	It("emits metrics about durations", func() {
+		resp := makeAndDoHTTPSRequest(
+			"GET",
+			fmt.Sprintf("https://%s:%d/networking/v0/internal/policies?id=app1,app2", conf.ListenHost, conf.InternalListenPort),
+			nil,
+			tlsConfig,
+		)
+		Expect(resp.StatusCode).To(Equal(http.StatusOK))
+		gatherMetricNames := func() map[string]bool {
+			events := fakeMetron.AllEvents()
+			metrics := map[string]bool{}
+			for _, event := range events {
+				metrics[event.Name] = true
+			}
+			return metrics
+		}
+		Eventually(gatherMetricNames, "5s").Should(HaveKey("InternalPoliciesRequestTime"))
+		Eventually(gatherMetricNames, "5s").Should(HaveKey("InternalPoliciesQueryTime"))
+	})
 })

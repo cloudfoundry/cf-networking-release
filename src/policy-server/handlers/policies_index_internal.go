@@ -4,7 +4,9 @@ import (
 	"lib/marshal"
 	"net/http"
 	"policy-server/models"
+	"policy-server/server_metrics"
 	"strings"
+	"time"
 
 	"code.cloudfoundry.org/lager"
 )
@@ -17,15 +19,28 @@ type store interface {
 	Tags() ([]models.Tag, error)
 }
 
+//go:generate counterfeiter -o fakes/time_metrics_emitter.go --fake-name MetricsEmitter . metricsEmitter
+type metricsEmitter interface {
+	EmitAll(map[string]time.Duration)
+}
+
 type PoliciesIndexInternal struct {
-	Logger    lager.Logger
-	Store     store
-	Marshaler marshal.Marshaler
+	Logger         lager.Logger
+	Store          store
+	Marshaler      marshal.Marshaler
+	MetricsEmitter metricsEmitter
 }
 
 func (h *PoliciesIndexInternal) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	startTime := time.Now()
 	h.Logger.Debug("internal request made to list policies", lager.Data{"URL": req.URL, "RemoteAddr": req.RemoteAddr})
 	policies, err := h.Store.All()
+
+	queryDuration := time.Now().Sub(startTime)
+	h.MetricsEmitter.EmitAll(map[string]time.Duration{
+		server_metrics.MetricInternalPoliciesQueryDuration: queryDuration,
+	})
+
 	if err != nil {
 		h.Logger.Error("store-list-policies-failed", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -50,5 +65,11 @@ func (h *PoliciesIndexInternal) ServeHTTP(w http.ResponseWriter, req *http.Reque
 		w.Write([]byte(`{"error": "database marshaling failed"}`))
 		return
 	}
+
 	w.Write(bytes)
+
+	requestDuration := time.Now().Sub(startTime)
+	h.MetricsEmitter.EmitAll(map[string]time.Duration{
+		server_metrics.MetricInternalPoliciesRequestDuration: requestDuration,
+	})
 }
