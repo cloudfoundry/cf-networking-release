@@ -7,3 +7,4 @@ applications:
     env:
       GOPACKAGENAME: example-apps/cats-and-dogs/backend
       CATS_PORTS: 7007,7008,7009
+      UDP_PORTS: 9001,9002,9003

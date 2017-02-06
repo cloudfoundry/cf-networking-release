@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"html/template"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"strconv"
@@ -13,6 +15,7 @@ import (
 type InfoHandler struct {
 	Port      int
 	UserPorts string
+	UDPPorts  string
 }
 
 var stylesheet template.HTML = template.HTML(`
@@ -39,6 +42,7 @@ type PublicPage struct {
 	OverlayIP     string
 	InstanceIndex string
 	UserPorts     string
+	UDPPorts      string
 }
 
 var publicPageTemplate string = `
@@ -62,6 +66,7 @@ var publicPageTemplate string = `
 				<h1>My overlay IP is: {{.OverlayIP}}</h1>
 				<h3>My instance index is: {{.InstanceIndex}}</h3>
 				<p class="lead">I'm serving cats on TCP ports {{.UserPorts}}</p>
+				<p class="lead">I'm also serving a UDP echo server on UDP ports {{.UDPPorts}}</p>
 			</div>
 		</div>
 	</body>
@@ -113,6 +118,7 @@ func (h *InfoHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 		OverlayIP:     overlayIP,
 		InstanceIndex: instanceIndex,
 		UserPorts:     h.UserPorts,
+		UDPPorts:      h.UDPPorts,
 	})
 	if err != nil {
 		panic(err)
@@ -150,11 +156,55 @@ func launchCatHandler(port int) {
 	httpServer.ListenAndServe()
 }
 
-func launchInfoHandler(port int, userPorts string) {
+func generateReply(requestMessage []byte) []byte {
+	return bytes.ToUpper(requestMessage)
+}
+
+func handleUDPConnection(connection *net.UDPConn) error {
+	buffer := make([]byte, 1024)
+
+	numBytesReceived, clientAddress, err := connection.ReadFromUDP(buffer)
+	if err != nil {
+		return fmt.Errorf("reading udp packet: %s", err)
+	}
+
+	requestMessage := buffer[:numBytesReceived]
+	log.Printf("UDP client: %s sent message %s", clientAddress, string(requestMessage))
+
+	replyMessage := generateReply(requestMessage)
+
+	_, err = connection.WriteToUDP(replyMessage, clientAddress)
+	log.Printf("replied with: %s", string(replyMessage))
+	return err
+}
+
+func launchUDPServer(port int) {
+	udpAddr, err := net.ResolveUDPAddr("udp4", fmt.Sprintf("0.0.0.0:%d", port))
+	if err != nil {
+		panic(err)
+	}
+
+	connection, err := net.ListenUDP("udp", udpAddr)
+	if err != nil {
+		panic(err)
+	}
+
+	defer connection.Close()
+
+	for {
+		err := handleUDPConnection(connection)
+		if err != nil {
+			log.Panicf("handle UDP connection: %s", err)
+		}
+	}
+}
+
+func launchInfoHandler(port int, userPorts string, udpPorts string) {
 	mux := http.NewServeMux()
 	mux.Handle("/", &InfoHandler{
 		Port:      port,
 		UserPorts: userPorts,
+		UDPPorts:  udpPorts,
 	})
 	http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", port), mux)
 }
@@ -167,19 +217,38 @@ func main() {
 		log.Fatal("invalid required env var PORT")
 	}
 
-	userPortsString := os.Getenv("CATS_PORTS")
-	userPorts := strings.Split(userPortsString, ",")
-	for _, userPortString := range userPorts {
-		if strings.TrimSpace(userPortString) == "" {
-			continue
-		}
-		userPort, err := strconv.Atoi(userPortString)
-		if err != nil {
-			log.Fatal("invalid user port " + userPortString)
-		}
-
+	userPorts, err := extractPortNumbers("CATS_PORTS")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	for _, userPort := range userPorts {
 		go launchCatHandler(userPort)
 	}
 
-	launchInfoHandler(systemPort, userPortsString)
+	udpPorts, err := extractPortNumbers("UDP_PORTS")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	for _, udpPort := range udpPorts {
+		go launchUDPServer(udpPort)
+	}
+
+	launchInfoHandler(systemPort, os.Getenv("CATS_PORTS"), os.Getenv("UDP_PORTS"))
+}
+
+func extractPortNumbers(envVarName string) ([]int, error) {
+	portStrings := strings.Split(os.Getenv(envVarName), ",")
+	portNumbers := []int{}
+	for _, portString := range portStrings {
+		if strings.TrimSpace(portString) == "" {
+			continue
+		}
+		portNumber, err := strconv.Atoi(portString)
+		if err != nil {
+			return nil, fmt.Errorf("invalid port %s", portString)
+		}
+
+		portNumbers = append(portNumbers, portNumber)
+	}
+	return portNumbers, nil
 }
