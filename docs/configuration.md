@@ -1,5 +1,12 @@
 # Configuration Information for Operators
 
+## Table of Contents
+0. [Flannel Network Configuration](#flannel-network-configuration)
+0. [Network Policy Database](#network-policy-database)
+0. [MTU](#mtu)
+0. [Mutual TLS](#mutual-tls)
+0. [SSL Certificate, Key, and Certificate Authority Rotation](#ssl-certificate-key-and-certificate-authority-rotation)
+
 ### Flannel Network Configuration
 The default flannel network is `10.255.0.0/16` which will allow for a maximum of 256 cells.
 
