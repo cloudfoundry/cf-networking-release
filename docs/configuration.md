@@ -18,7 +18,7 @@ other during the deploy.
 10.244 or 10.254 ranges, as those are both in use by bosh components.
 
 
-### Policy Server Database
+### Network Policy Database
 Both the MySQL and PostgreSQL dialects of SQL are supported on CF Networking.
 
 Operators have a choice for deployment styles for both MySQL and PostgreSQL data stores.
@@ -31,8 +31,10 @@ For MySQL, operators have at least the following options:
   either as a single node, or as a highly available (HA) cluster.
   - Use an infrastructure-specific database deployment, such as an RDS MySQL
   instance on AWS.
-  - Add a `seeded database` to the MySQL cluster that comes with
-  [CF-Deployment](https://github.com/cloudfoundry/cf-deployment)
+  - Add a database to the MySQL cluster that comes with
+  [CF-Deployment](https://github.com/cloudfoundry/cf-deployment). There
+  is a [CF-Networking opsfile](../manifest-generation/opsfiles/cf-networking.yml)
+  that adds `network_policy` to the `seeded_databases`.
 
 For testing, we have an AWS RDS MySQL instance with these properties:
   - Version - Dev/Test
@@ -40,14 +42,14 @@ For testing, we have an AWS RDS MySQL instance with these properties:
   - DB Instance Class - db.t2.medium (4 Gib)
   - Storage - 20 GB
 
-**Note:** The policy server requires a MySQL version of 5.7 or higher.
+**Note:** The network policy database requires a MySQL version of 5.7 or higher.
 
 
 #### PostgreSQL
 For PostgreSQL, operators have at least the following options:
   - Use the PostgreSQL job from the CF release, either sharing an existing instance
   that houses the CC and UAA databases, or deploying a separate node specifically
-  for the policy server.
+  for the network policy database.
   - Use an infrastructure-specific database deployment, such as an RDS PostgreSQL
   instance on AWS.
 
@@ -57,7 +59,7 @@ For testing, we have two AWS RDS PostgreSQL instances with these properties:
   - DB Instance Class - db.m3.medium (3.75 GiB) and db.t2.medium (4 Gib)
   - Storage - 20 GB and 20 GB
 
-**Note:** The policy server requires a MySQL version of 5.7 or higher.
+**Note:** The network policy database requires a MySQL version of 5.7 or higher.
 
 
 ### MTU
