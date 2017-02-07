@@ -66,13 +66,8 @@ var _ = Describe("Client", func() {
 
 		Context("when there are multiple pages", func() {
 			BeforeEach(func() {
-				AppsV3TenPages := `{
-					"pagination": {
-						"total_pages": 10
-					}
-				}`
 				fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
-					_ = json.Unmarshal([]byte(AppsV3TenPages), respData)
+					_ = json.Unmarshal([]byte(fixtures.AppsV3MultiplePages), respData)
 					return nil
 				}
 			})
@@ -135,13 +130,8 @@ var _ = Describe("Client", func() {
 
 		Context("when there are multiple pages", func() {
 			BeforeEach(func() {
-				AppsV3TenPages := `{
-					"pagination": {
-						"total_pages": 10
-					}
-				}`
 				fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
-					_ = json.Unmarshal([]byte(AppsV3TenPages), respData)
+					_ = json.Unmarshal([]byte(fixtures.AppsV3MultiplePages), respData)
 					return nil
 				}
 			})
