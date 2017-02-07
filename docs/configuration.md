@@ -30,6 +30,13 @@ Both the MySQL and PostgreSQL dialects of SQL are supported on CF Networking.
 
 Operators have a choice for deployment styles for both MySQL and PostgreSQL data stores.
 
+**Note:** The current scale of performance testing we have done with the
+RDS instance configurations shown below is:
+  - 10 cells
+  - 200 apps
+  - 10 instances per app (i.e. 2000 app instances)
+  - 4 policies per app (i.e. 800 policies)
+
 
 #### MySQL
 For MySQL, operators have at least the following options:
