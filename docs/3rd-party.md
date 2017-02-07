@@ -40,37 +40,44 @@ some dynamic information about the container, including the CloudFoundry App, Sp
 
 For example, in the included networking stack, we have a `wrapper` CNI plugin.
 At deploy time, its config is generated from this [template](../jobs/cni-flannel/templates/30-cni-wrapper-plugin.conf.erb),
-but when the container is being created, the CNI plugin receives data like this:
+but when the container is being created, the CNI plugin receives network config data as JSON on standard input:
 
 ```json
 {
-  {
-    "name": "cni-wrapper",
-    "type": "cni-wrapper-plugin",
-    "cniVersion": "0.2.0",
-    "datastore": "/var/vcap/data/container-metadata/store.json",
-    "iptables_lock_file": "/var/vcap/data/garden-cni/iptables.lock",
-    "overlay_network": "10.255.0.0/16",
+  "name": "cni-wrapper",
+  "type": "cni-wrapper-plugin",
+  "cniVersion": "0.2.0",
+  "datastore": "/var/vcap/data/container-metadata/store.json",
+  "iptables_lock_file": "/var/vcap/data/garden-cni/iptables.lock",
+  "overlay_network": "10.255.0.0/16",
+  "delegate": {
+    "name": "cni-flannel",
+    "type": "flannel",
+    "subnetFile": "/var/vcap/data/flannel/subnet.env",
+    "dataDir": "/var/vcap/data/flannel/data",
     "delegate": {
-      "name": "cni-flannel",
-      "type": "flannel",
-      "subnetFile": "/var/vcap/data/flannel/subnet.env",
-      "dataDir": "/var/vcap/data/flannel/data",
-      "delegate": {
-        "bridge": "cni-flannel0",
-        "isDefaultGateway": true,
-        "ipMasq": false
-       }
-    }
+      "bridge": "cni-flannel0",
+      "isDefaultGateway": true,
+      "ipMasq": false
+     }
   },
+
   "metadata": {
-    "app_id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
-    "org_id": "2ac41bbf-8eae-4f28-abab-51ca38dea3e4",
     "policy_group_id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
-    "space_id": "4246c57d-aefc-49cc-afe0-5f734e2656e8"
+    "app_id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
+    "space_id": "4246c57d-aefc-49cc-afe0-5f734e2656e8",
+    "org_id": "2ac41bbf-8eae-4f28-abab-51ca38dea3e4"
   }
 }
 ```
+
+Furthermore, the CNI runtime data, provided as environment variables, sets the
+[CNI `ContainerID`](https://github.com/containernetworking/cni/blob/master/SPEC.md#parameters) equal to the
+[Garden container `Handle`](https://godoc.org/code.cloudfoundry.org/garden#ContainerSpec).
+
+When [Diego](https://github.com/cloudfoundry/diego-release) calls Garden, it sets that equal to the [`ActualLRP` `InstanceGuid`](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPInstanceKey).
+In this way, a 3rd-party system can relate data from CNI with data in the [Diego BBS](https://github.com/cloudfoundry/bbs/tree/master/doc).
+
 
 ## To deploy a local-only (no-op) CNI plugin
 As a baseline, you can deploy using only the basic [bridge CNI plugin](https://github.com/containernetworking/cni/blob/master/Documentation/bridge.md).
