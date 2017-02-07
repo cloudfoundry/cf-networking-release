@@ -1,7 +1,6 @@
 package cc_client
 
 import (
-	"errors"
 	"fmt"
 	"lib/json_client"
 	"net/http"
@@ -57,7 +56,7 @@ func (c *Client) GetAllAppGUIDs(token string) (map[string]interface{}, error) {
 	var response AppsV3Response
 	err := c.JSONClient.Do("GET", "/v3/apps", nil, &response, token)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("json client do: %s", err)
 	}
 
 	if response.Pagination.TotalPages > 1 {
@@ -84,7 +83,7 @@ func (c *Client) GetLiveAppGUIDs(token string, appGUIDs []string) (map[string]st
 	var response AppsV3Response
 	err := c.JSONClient.Do("GET", route, nil, &response, token)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("json client do: %s", err)
 	}
 
 	if response.Pagination.TotalPages > 1 {
@@ -134,7 +133,7 @@ func (c *Client) GetAppSpaces(token string, appGUIDs []string) (map[string]strin
 	var response AppsV3Response
 	err := c.JSONClient.Do("GET", route, nil, &response, token)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("json client do: %s", err)
 	}
 
 	if response.Pagination.TotalPages > 1 {
@@ -161,12 +160,12 @@ func (c *Client) GetSpace(token, spaceGUID string) (*models.Space, error) {
 	if err != nil {
 		typedErr, ok := err.(*json_client.HttpResponseCodeError)
 		if !ok {
-			return nil, err
+			return nil, fmt.Errorf("json client do: %s", err)
 		}
 		if typedErr.StatusCode == http.StatusNotFound {
 			return nil, nil
 		}
-		return nil, err
+		return nil, fmt.Errorf("json client do: %s", err)
 	}
 
 	return &models.Space{
@@ -188,7 +187,7 @@ func (c *Client) GetUserSpace(token, userGUID string, space models.Space) (*mode
 	var response SpacesResponse
 	err := c.JSONClient.Do("GET", route, nil, &response, token)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("json client do: %s", err)
 	}
 
 	numSpaces := len(response.Resources)
@@ -196,7 +195,7 @@ func (c *Client) GetUserSpace(token, userGUID string, space models.Space) (*mode
 		return nil, nil
 	}
 	if numSpaces > 1 {
-		return nil, errors.New(fmt.Sprintf("found more than one matching space"))
+		return nil, fmt.Errorf("found more than one matching space")
 	}
 
 	return &models.Space{
@@ -213,7 +212,7 @@ func (c *Client) GetUserSpaces(token, userGUID string) (map[string]struct{}, err
 	var response SpacesResponse
 	err := c.JSONClient.Do("GET", route, nil, &response, token)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("json client do: %s", err)
 	}
 
 	userSpaces := map[string]struct{}{}

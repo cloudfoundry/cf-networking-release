@@ -5,6 +5,7 @@ import (
 	"errors"
 	"lib/fakes"
 	"lib/json_client"
+	"net/http"
 	"policy-server/cc_client"
 	"policy-server/cc_client/fixtures"
 	"policy-server/models"
@@ -89,7 +90,7 @@ var _ = Describe("Client", func() {
 
 			It("returns the error", func() {
 				_, err := client.GetAllAppGUIDs("some-token")
-				Expect(err).To(MatchError(ContainSubstring("")))
+				Expect(err).To(MatchError(ContainSubstring("json client do: banana")))
 			})
 		})
 	})
@@ -123,12 +124,12 @@ var _ = Describe("Client", func() {
 
 		Context("when the json client returns an error", func() {
 			BeforeEach(func() {
-				fakeJSONClient.DoReturns(errors.New("json client: banana"))
+				fakeJSONClient.DoReturns(errors.New("banana"))
 			})
 
 			It("returns the error", func() {
 				_, err := client.GetLiveAppGUIDs("some-token", []string{})
-				Expect(err).To(MatchError(ContainSubstring("json client: banana")))
+				Expect(err).To(MatchError(ContainSubstring("json client do: banana")))
 			})
 		})
 
@@ -194,12 +195,12 @@ var _ = Describe("Client", func() {
 
 		Context("when the json client returns an error", func() {
 			BeforeEach(func() {
-				fakeJSONClient.DoReturns(errors.New("json client: banana"))
+				fakeJSONClient.DoReturns(errors.New("banana"))
 			})
 
 			It("returns a helpful error", func() {
 				_, err := client.GetSpaceGUIDs("some-token", []string{"foo"})
-				Expect(err).To(MatchError(ContainSubstring("json client: banana")))
+				Expect(err).To(MatchError(ContainSubstring("json client do: banana")))
 			})
 		})
 	})
@@ -235,12 +236,12 @@ var _ = Describe("Client", func() {
 
 		Context("when the json client returns an error", func() {
 			BeforeEach(func() {
-				fakeJSONClient.DoReturns(errors.New("json client: banana"))
+				fakeJSONClient.DoReturns(errors.New("banana"))
 			})
 
 			It("returns a helpful error", func() {
 				_, err := client.GetSpace("some-token", "some-space-guid")
-				Expect(err).To(MatchError(ContainSubstring("json client: banana")))
+				Expect(err).To(MatchError(ContainSubstring("json client do: banana")))
 			})
 		})
 
@@ -256,6 +257,20 @@ var _ = Describe("Client", func() {
 				space, err := client.GetSpace("some-token", "some-space-guid")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(space).To(BeNil())
+			})
+		})
+
+		Context("if the response status code is not 200 or 404", func() {
+			BeforeEach(func() {
+				fakeJSONClient.DoReturns(&json_client.HttpResponseCodeError{
+					StatusCode: http.StatusTeapot,
+					Message:    "i am a teapot",
+				})
+			})
+
+			It("returns a helpful error", func() {
+				_, err := client.GetSpace("some-token", "some-space-guid")
+				Expect(err).To(MatchError(ContainSubstring("json client do: i am a teapot")))
 			})
 		})
 	})
@@ -309,12 +324,12 @@ var _ = Describe("Client", func() {
 
 		Context("when the json client returns an error", func() {
 			BeforeEach(func() {
-				fakeJSONClient.DoReturns(errors.New("json client: banana"))
+				fakeJSONClient.DoReturns(errors.New("banana"))
 			})
 
 			It("returns a helpful error", func() {
 				_, err := client.GetAppSpaces("some-token", []string{"some-guid"})
-				Expect(err).To(MatchError(ContainSubstring("json client: banana")))
+				Expect(err).To(MatchError(ContainSubstring("json client do: banana")))
 			})
 		})
 	})
@@ -350,12 +365,12 @@ var _ = Describe("Client", func() {
 
 		Context("when the json client returns an error", func() {
 			BeforeEach(func() {
-				fakeJSONClient.DoReturns(errors.New("json client: banana"))
+				fakeJSONClient.DoReturns(errors.New("banana"))
 			})
 
 			It("returns a helpful error", func() {
 				_, err := client.GetUserSpaces("some-token", "some-user-guid")
-				Expect(err).To(MatchError(ContainSubstring("json client: banana")))
+				Expect(err).To(MatchError(ContainSubstring("json client do: banana")))
 			})
 		})
 	})
@@ -419,12 +434,12 @@ var _ = Describe("Client", func() {
 
 		Context("when the json client returns an error", func() {
 			BeforeEach(func() {
-				fakeJSONClient.DoReturns(errors.New("json client: banana"))
+				fakeJSONClient.DoReturns(errors.New("banana"))
 			})
 
 			It("returns a helpful error", func() {
 				_, err := client.GetUserSpace("some-token", "some-developer-guid", space)
-				Expect(err).To(MatchError(ContainSubstring("json client: banana")))
+				Expect(err).To(MatchError(ContainSubstring("json client do: banana")))
 			})
 		})
 	})
