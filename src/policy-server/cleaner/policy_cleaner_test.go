@@ -110,12 +110,14 @@ var _ = Describe("PolicyCleaner", func() {
 			Expect(fakeStore.AllCallCount()).To(Equal(1))
 			Expect(fakeUAAClient.GetTokenCallCount()).To(Equal(1))
 			Expect(fakeCCClient.GetLiveAppGUIDsCallCount()).To(Equal(2))
-			token, guids := fakeCCClient.GetLiveAppGUIDsArgsForCall(0)
-			Expect(token).To(Equal("valid-token"))
-			Expect(guids).To(ConsistOf("live-guid"))
-			token, guids = fakeCCClient.GetLiveAppGUIDsArgsForCall(1)
-			Expect(token).To(Equal("valid-token"))
-			Expect(guids).To(ConsistOf("dead-guid"))
+			token0, guids0 := fakeCCClient.GetLiveAppGUIDsArgsForCall(0)
+			Expect(token0).To(Equal("valid-token"))
+			token1, guids1 := fakeCCClient.GetLiveAppGUIDsArgsForCall(1)
+			Expect(token1).To(Equal("valid-token"))
+			Expect([][]string{guids0, guids1}).To(ConsistOf(
+				[]string{"live-guid"},
+				[]string{"dead-guid"},
+			))
 
 			stalePolicies := allPolicies[1:]
 			Expect(fakeStore.DeleteCallCount()).To(Equal(2))

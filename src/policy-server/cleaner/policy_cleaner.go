@@ -56,13 +56,14 @@ func (p *PolicyCleaner) DeleteStalePolicies() ([]models.Policy, error) {
 		}
 
 		staleAppGUIDs := getStaleAppGUIDs(liveAppGUIDs, appGUIDchunk)
-		stalePolicies = append(stalePolicies, getStalePolicies(policies, staleAppGUIDs)...)
+		toDelete := getStalePolicies(policies, staleAppGUIDs)
+		stalePolicies = append(stalePolicies, toDelete...)
 
 		p.Logger.Info("deleting stale policies:", lager.Data{
 			"total_policies": len(stalePolicies),
 			"stale_policies": stalePolicies,
 		})
-		err = p.Store.Delete(stalePolicies)
+		err = p.Store.Delete(toDelete)
 		if err != nil {
 			p.Logger.Error("store-delete-policies-failed", err)
 			return nil, fmt.Errorf("database write failed: %s", err)
@@ -88,7 +89,7 @@ func getStaleAppGUIDs(liveAppGUIDs map[string]struct{}, appGUIDs []string) map[s
 }
 
 func getStalePolicies(policyList []models.Policy, staleAppGUIDs map[string]struct{}) []models.Policy {
-	var stalePolicies []models.Policy
+	stalePolicies := []models.Policy{}
 	for _, p := range policyList {
 		_, foundSrc := staleAppGUIDs[p.Source.ID]
 		_, foundDst := staleAppGUIDs[p.Destination.ID]
