@@ -40,6 +40,8 @@ See [AWS](aws.md) deployment docs for examples
 
 0. `properties.netman.disable` renamed `properties.cf_networking.disable`
 
+0. `flannel.etcd.require_ssl` property has been completely removed.  Previously it defaulted to `true` but could be overridden to `false`.  Now SSL is required for the flannel connection to etcd.  Refer to the [manifest generation docs](https://github.com/cloudfoundry-incubator/cf-networking-release/blob/develop/docs/aws.md) for details on how to generate and configure certs and keys.  Note, you will likely need to make similar changes to other etcd clients, e.g. loggregator.
+
 0. In the stub file, `netman_overrides` renamed to `cf_networking_overrides`
 
 ### 0.12.0
