@@ -199,7 +199,7 @@ func main() {
 		Marshaler: marshal.MarshalFunc(json.Marshal),
 	}
 
-	timeMetricsEmitter := &server_metrics.TimeMetrics{
+	timeMetricsEmitter := &metrics.TimeMetrics{
 		Logger: logger.Session("time-metric-emitter"),
 	}
 	internalPoliciesHandler := &handlers.PoliciesIndexInternal{

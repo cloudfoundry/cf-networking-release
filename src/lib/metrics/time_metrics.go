@@ -1,4 +1,4 @@
-package server_metrics
+package metrics
 
 import (
 	"time"
@@ -7,9 +7,6 @@ import (
 
 	dropsondemetrics "github.com/cloudfoundry/dropsonde/metrics"
 )
-
-const MetricInternalPoliciesRequestDuration = "InternalPoliciesRequestTime"
-const MetricInternalPoliciesQueryDuration = "InternalPoliciesQueryTime"
 
 type TimeMetrics struct {
 	Logger lager.Logger

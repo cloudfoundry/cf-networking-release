@@ -20,7 +20,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"vxlan-policy-agent/agent_metrics"
 	"vxlan-policy-agent/config"
 	"vxlan-policy-agent/converger"
 	"vxlan-policy-agent/enforcer"
@@ -123,7 +122,7 @@ func main() {
 		Restorer: restorer,
 	}
 
-	timeMetricsEmitter := &agent_metrics.TimeMetrics{
+	timeMetricsEmitter := &metrics.TimeMetrics{
 		Logger: logger.Session("time-metric-emitter"),
 	}
 

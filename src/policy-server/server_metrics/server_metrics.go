@@ -5,6 +5,9 @@ import (
 	"policy-server/models"
 )
 
+const MetricInternalPoliciesRequestDuration = "InternalPoliciesRequestTime"
+const MetricInternalPoliciesQueryDuration = "InternalPoliciesQueryTime"
+
 //go:generate counterfeiter -o fakes/store.go --fake-name Store . store
 type store interface {
 	All() ([]models.Policy, error)

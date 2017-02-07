@@ -56,11 +56,6 @@ var _ = Describe("MetricsEmitter", func() {
 	})
 
 	It("immediately does one round of metrics reporting", func() {
-		fakeSource.Getter = func() (float64, error) {
-			time.Sleep(1 * time.Second)
-			return 42, nil
-		}
-
 		metricsEmitter = metrics.NewMetricsEmitter(logger, interval, fakeSource, fakeSource2)
 		metricsEmitterProc = ifrit.Invoke(metricsEmitter)
 		Eventually(metricsEmitterProc.Ready()).Should(BeClosed())
