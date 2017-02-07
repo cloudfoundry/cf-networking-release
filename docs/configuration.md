@@ -3,7 +3,8 @@
 ### Flannel Network Configuration
 The default flannel network is `10.255.0.0/16` which will allow for a maximum of 256 cells.
 
-The network can be configured via the bosh property `cf_networking.network` which is used by both the `cni-flannel` and `garden-cni` jobs.
+The network can be configured via the bosh property `cf_networking.network`
+which is used by both the `cni-flannel` and `garden-cni` jobs.
 
 For instance, to allow for up to 4096 cells, `10.240.0.0/12` could be used.
 
@@ -13,8 +14,51 @@ However, any changes which result in an IP range that does not completely contai
 must be done with the --recreate option and may result in containers being unable to reach each
 other during the deploy.
 
-NOTE: On bosh-lite, the network should avoid any IP addresses that include the
+**Note:** On bosh-lite, the network should avoid any IP addresses that include the
 10.244 or 10.254 ranges, as those are both in use by bosh components.
+
+
+### Policy Server Database
+Both the MySQL and PostgreSQL dialects of SQL are supported on CF Networking.
+
+Operators have a choice for deployment styles for both MySQL and PostgreSQL data stores.
+
+
+#### MySQL
+For MySQL, operators have at least the following options:
+  - Use the [CF-MySQL release](https://github.com/cloudfoundry/cf-mysql-release)
+  in standalone mode as a separate BOSH deployment,
+  either as a single node, or as a highly available (HA) cluster.
+  - Use an infrastructure-specific database deployment, such as an RDS MySQL
+  instance on AWS.
+  - Add a `seeded database` to the MySQL cluster that comes with
+  [CF-Deployment](https://github.com/cloudfoundry/cf-deployment)
+
+For testing, we have an AWS RDS MySQL instance with these properties:
+  - Version - Dev/Test
+  - Engine - MySQL 5.7.16
+  - DB Instance Class - db.t2.medium (4 Gib)
+  - Storage - 20 GB
+
+**Note:** The policy server requires a MySQL version of 5.7 or higher.
+
+
+#### PostgreSQL
+For PostgreSQL, operators have at least the following options:
+  - Use the PostgreSQL job from the CF release, either sharing an existing instance
+  that houses the CC and UAA databases, or deploying a separate node specifically
+  for the policy server.
+  - Use an infrastructure-specific database deployment, such as an RDS PostgreSQL
+  instance on AWS.
+
+For testing, we have two AWS RDS PostgreSQL instances with these properties:
+  - Version - Dev/Test
+  - Engine - PostgreSQL 9.5.4 and PostgreSQL 9.6.1
+  - DB Instance Class - db.m3.medium (3.75 GiB) and db.t2.medium (4 Gib)
+  - Storage - 20 GB and 20 GB
+
+**Note:** The policy server requires a MySQL version of 5.7 or higher.
+
 
 ### MTU
 Operators not using any additional encapsulation should not need to do any special configuration for MTUs.
@@ -32,16 +76,17 @@ The operator should set the MTU low enough to account for the overhead of their 
 As an example, if you are using ipsec with a recommended overhead of 100 bytes, and your VMs have MTU 1500,
 you should set the MTU to 1350 (1500 - 100 for ipsec - 50 for VXLAN).
 
+
 ### Mutual TLS
 The policy server exposes its internal API over mutual TLS.  We provide [a script](../scripts/generate-certs)
 to generate these certificates for you.  If you want to generate them yourself,
 ensure that the certificates support the cipher suite `TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256`.
 The Policy Server will reject connections using any other cipher suite.
 
+
 ### SSL Certificate, Key, and Certificate Authority Rotation
 
 #### Policy Server and Vxlan Policy Agent
-
 To rotate your SSL certificates, keys, and certificate authorities, you must perform the following steps.
 
 0. Generate new certificates by running `./scripts/generate-certs`.
