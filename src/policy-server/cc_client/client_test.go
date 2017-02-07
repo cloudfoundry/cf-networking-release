@@ -1,17 +1,13 @@
 package cc_client_test
 
 import (
-	"bytes"
+	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"lib/fakes"
 	"lib/json_client"
-	"lib/testsupport"
-	"net/http"
 	"policy-server/cc_client"
 	"policy-server/cc_client/fixtures"
 	"policy-server/models"
-	"strings"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -22,213 +18,160 @@ import (
 var _ = Describe("Client", func() {
 	var (
 		client         *cc_client.Client
-		jsonClient     json_client.JsonClient
-		fakeHTTPClient *fakes.HTTPClient
+		fakeJSONClient *fakes.JSONClient
 		logger         *lagertest.TestLogger
-		expectedApps   map[string]interface{}
 	)
 
 	BeforeEach(func() {
-		baseURL := "https://some.base.url"
-		fakeHTTPClient = &fakes.HTTPClient{}
 		logger = lagertest.NewTestLogger("test")
-
-		jsonClient = json_client.New(logger, fakeHTTPClient, baseURL)
+		fakeJSONClient = &fakes.JSONClient{}
 		client = &cc_client.Client{
-			JSONClient: jsonClient,
+			JSONClient: fakeJSONClient,
 			Logger:     logger,
 		}
 
-		expectedApps = map[string]interface{}{
+	})
+
+	Describe("GetAllAppGUIDs", func() {
+		expectedApps := map[string]interface{}{
 			"live-app-1-guid": nil,
 			"live-app-2-guid": nil,
 			"live-app-3-guid": nil,
 			"live-app-4-guid": nil,
 			"live-app-5-guid": nil,
 		}
-	})
-
-	Describe("GetAllAppGUIDs", func() {
 		BeforeEach(func() {
-			fakeHTTPClient.DoReturns(
-				&http.Response{
-					StatusCode: http.StatusOK,
-					Body:       ioutil.NopCloser(bytes.NewReader([]byte(fixtures.AppsV3))),
-				}, nil)
+			fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+				_ = json.Unmarshal([]byte(fixtures.AppsV3), respData)
+				return nil
+			}
 		})
 
 		It("Returns the app guids", func() {
 			apps, err := client.GetAllAppGUIDs("some-token")
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(fakeHTTPClient.DoCallCount()).To(Equal(1))
-			request := fakeHTTPClient.DoArgsForCall(0)
-			Expect(request.Method).To(Equal("GET"))
-			Expect(request.URL.String()).To(Equal("https://some.base.url/v3/apps"))
-			authHeader := request.Header["Authorization"]
-			Expect(authHeader).To(HaveLen(1))
-			Expect(authHeader[0]).To(Equal("bearer some-token"))
+			Expect(fakeJSONClient.DoCallCount()).To(Equal(1))
+
+			method, route, reqData, _, token := fakeJSONClient.DoArgsForCall(0)
+
+			Expect(method).To(Equal("GET"))
+			Expect(route).To(Equal("/v3/apps"))
+			Expect(reqData).To(BeNil())
+			Expect(token).To(Equal("bearer some-token"))
 
 			Expect(apps).To(Equal(expectedApps))
 		})
-	})
 
-	Context("when the http client returns an error", func() {
-		BeforeEach(func() {
-			fakeHTTPClient.DoReturns(nil, errors.New("potato"))
-		})
-
-		It("returns a helpful error", func() {
-			_, err := client.GetAllAppGUIDs("some-token")
-			Expect(err).To(MatchError(ContainSubstring("http client do: potato")))
-		})
-	})
-
-	Context("when reading the body returns an error", func() {
-		BeforeEach(func() {
-			fakeHTTPClient.DoReturns(&http.Response{Body: &testsupport.BadReader{}}, nil)
-		})
-
-		It("returns a helpful error", func() {
-			_, err := client.GetAllAppGUIDs("some-token")
-			Expect(err).To(MatchError(ContainSubstring("body read: banana")))
-		})
-	})
-
-	Context("when the response body is not valid json", func() {
-		BeforeEach(func() {
-			fakeHTTPClient.DoReturns(
-				&http.Response{
-					StatusCode: http.StatusOK,
-					Body:       ioutil.NopCloser(strings.NewReader(`%%%%`)),
-				}, nil)
-		})
-
-		It("returns a helpful error", func() {
-			_, err := client.GetAllAppGUIDs("some-token")
-			Expect(err).To(MatchError(ContainSubstring("json unmarshal: invalid character")))
-		})
-	})
-
-	Context("when there are multiple pages", func() {
-		BeforeEach(func() {
-			v3AppsMultiplePages := `{
-				"pagination": {
-					"total_pages": 10
+		Context("when there are multiple pages", func() {
+			BeforeEach(func() {
+				AppsV3TenPages := `{
+					"pagination": {
+						"total_pages": 10
+					}
+				}`
+				fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+					_ = json.Unmarshal([]byte(AppsV3TenPages), respData)
+					return nil
 				}
-			}`
-			fakeHTTPClient.DoReturns(
-				&http.Response{
-					StatusCode: http.StatusOK,
-					Body:       ioutil.NopCloser(bytes.NewReader([]byte(v3AppsMultiplePages))),
-				}, nil)
+			})
+
+			It("should immediately return an error", func() {
+				_, err := client.GetAllAppGUIDs("some-token")
+				Expect(err).To(MatchError("pagination support not yet implemented"))
+			})
 		})
 
-		It("should immediately return an error", func() {
-			_, err := client.GetAllAppGUIDs("some-token")
-			Expect(err).To(MatchError("pagination support not yet implemented"))
-		})
-	})
+		Context("when the json client returns an error", func() {
+			BeforeEach(func() {
+				fakeJSONClient.DoReturns(errors.New("banana"))
+			})
 
-	Context("if the response status code is not 200", func() {
-		BeforeEach(func() {
-			fakeHTTPClient.DoReturns(
-				&http.Response{
-					StatusCode: http.StatusTeapot,
-					Body:       ioutil.NopCloser(strings.NewReader("bad thing")),
-				}, nil)
-		})
-
-		It("returns the response body in the error", func() {
-			_, err := client.GetAllAppGUIDs("some-token")
-			Expect(err).To(MatchError(&json_client.HttpResponseCodeError{
-				StatusCode: http.StatusTeapot,
-				Message:    "bad thing",
-			}))
+			It("returns the error", func() {
+				_, err := client.GetAllAppGUIDs("some-token")
+				Expect(err).To(MatchError(ContainSubstring("")))
+			})
 		})
 	})
 
 	Describe("GetLiveAppGUIDs", func() {
 		BeforeEach(func() {
-			fakeHTTPClient.DoReturns(
-				&http.Response{
-					StatusCode: http.StatusOK,
-					Body:       ioutil.NopCloser(bytes.NewReader([]byte(fixtures.AppsV3LiveAppGUIDs))),
-				}, nil)
+			fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+				_ = json.Unmarshal([]byte(fixtures.AppsV3LiveAppGUIDs), respData)
+				return nil
+			}
 		})
 
 		It("Returns the app guids", func() {
 			appGUIDs, err := client.GetLiveAppGUIDs("some-token", []string{"live-app-1-guid", "live-app-2-guid"})
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(fakeHTTPClient.DoCallCount()).To(Equal(1))
-			request := fakeHTTPClient.DoArgsForCall(0)
-			Expect(request.Method).To(Equal("GET"))
-			Expect(request.URL.String()).To(Equal("https://some.base.url/v3/apps?guids=live-app-1-guid%2Clive-app-2-guid&per_page=2"))
-			authHeader := request.Header["Authorization"]
-			Expect(authHeader).To(HaveLen(1))
-			Expect(authHeader[0]).To(Equal("bearer some-token"))
-			Expect(err).NotTo(HaveOccurred())
+			Expect(fakeJSONClient.DoCallCount()).To(Equal(1))
+
+			method, route, reqData, _, token := fakeJSONClient.DoArgsForCall(0)
+
+			Expect(method).To(Equal("GET"))
+			Expect(route).To(Equal("/v3/apps?guids=live-app-1-guid%2Clive-app-2-guid&per_page=2"))
+			Expect(reqData).To(BeNil())
+			Expect(token).To(Equal("bearer some-token"))
 
 			Expect(appGUIDs).To(Equal(map[string]struct{}{
 				"live-app-1-guid": struct{}{},
 				"live-app-2-guid": struct{}{},
 			}))
 		})
-	})
 
-	Context("when the json client returns an error (via the http client)", func() {
-		BeforeEach(func() {
-			fakeHTTPClient.DoReturns(nil, errors.New("potato"))
+		Context("when the json client returns an error", func() {
+			BeforeEach(func() {
+				fakeJSONClient.DoReturns(errors.New("json client: banana"))
+			})
+
+			It("returns the error", func() {
+				_, err := client.GetLiveAppGUIDs("some-token", []string{})
+				Expect(err).To(MatchError(ContainSubstring("json client: banana")))
+			})
 		})
 
-		It("returns a helpful error", func() {
-			_, err := client.GetLiveAppGUIDs("some-token", []string{"live-app-1-guid", "live-app-2-guid"})
-			Expect(err).To(MatchError(ContainSubstring("http client do: potato")))
-		})
-	})
-
-	Context("when there are multiple pages", func() {
-		BeforeEach(func() {
-			v3AppsMultiplePages := `{
-				"pagination": {
-					"total_pages": 10
+		Context("when there are multiple pages", func() {
+			BeforeEach(func() {
+				AppsV3TenPages := `{
+					"pagination": {
+						"total_pages": 10
+					}
+				}`
+				fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+					_ = json.Unmarshal([]byte(AppsV3TenPages), respData)
+					return nil
 				}
-			}`
-			fakeHTTPClient.DoReturns(
-				&http.Response{
-					StatusCode: http.StatusOK,
-					Body:       ioutil.NopCloser(bytes.NewReader([]byte(v3AppsMultiplePages))),
-				}, nil)
-		})
+			})
 
-		It("should immediately return an error", func() {
-			_, err := client.GetLiveAppGUIDs("some-token", []string{"live-app-1-guid", "live-app-2-guid"})
-			Expect(err).To(MatchError("pagination support not yet implemented"))
+			It("should immediately return an error", func() {
+				_, err := client.GetLiveAppGUIDs("some-token", []string{})
+				Expect(err).To(MatchError("pagination support not yet implemented"))
+			})
 		})
 	})
 
 	Describe("GetSpaceGUIDs", func() {
 		BeforeEach(func() {
-			fakeHTTPClient.DoReturns(
-				&http.Response{
-					StatusCode: http.StatusOK,
-					Body:       ioutil.NopCloser(bytes.NewReader([]byte(fixtures.AppsV3))),
-				}, nil)
+			fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+				_ = json.Unmarshal([]byte(fixtures.AppsV3), respData)
+				return nil
+			}
 		})
 
 		It("Returns the space guids", func() {
 			spaceGUIDs, err := client.GetSpaceGUIDs("some-token", []string{"live-app-1-guid", "live-app-2-guid"})
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(fakeHTTPClient.DoCallCount()).To(Equal(1))
-			request := fakeHTTPClient.DoArgsForCall(0)
-			Expect(request.Method).To(Equal("GET"))
-			Expect(request.URL.String()).To(Equal("https://some.base.url/v3/apps?guids=live-app-1-guid%2Clive-app-2-guid"))
-			authHeader := request.Header["Authorization"]
-			Expect(authHeader).To(HaveLen(1))
-			Expect(authHeader[0]).To(Equal("bearer some-token"))
-			Expect(err).NotTo(HaveOccurred())
+			Expect(fakeJSONClient.DoCallCount()).To(Equal(1))
+
+			method, route, reqData, _, token := fakeJSONClient.DoArgsForCall(0)
+
+			Expect(method).To(Equal("GET"))
+			Expect(route).To(Equal("/v3/apps?guids=live-app-1-guid%2Clive-app-2-guid"))
+			Expect(reqData).To(BeNil())
+			Expect(token).To(Equal("bearer some-token"))
 
 			Expect(spaceGUIDs).To(ConsistOf([]string{"space-1-guid", "space-2-guid", "space-3-guid"}))
 		})
@@ -249,181 +192,70 @@ var _ = Describe("Client", func() {
 			})
 		})
 
-		Context("when the http client returns an error", func() {
+		Context("when the json client returns an error", func() {
 			BeforeEach(func() {
-				fakeHTTPClient.DoReturns(nil, errors.New("potato"))
+				fakeJSONClient.DoReturns(errors.New("json client: banana"))
 			})
 
 			It("returns a helpful error", func() {
 				_, err := client.GetSpaceGUIDs("some-token", []string{"foo"})
-				Expect(err).To(MatchError(ContainSubstring("http client do: potato")))
-			})
-		})
-
-		Context("when reading the body returns an error", func() {
-			BeforeEach(func() {
-				fakeHTTPClient.DoReturns(&http.Response{Body: &testsupport.BadReader{}}, nil)
-			})
-
-			It("returns a helpful error", func() {
-				_, err := client.GetSpaceGUIDs("some-token", []string{"foo"})
-				Expect(err).To(MatchError(ContainSubstring("body read: banana")))
-			})
-		})
-
-		Context("when the response body is not valid json", func() {
-			BeforeEach(func() {
-				fakeHTTPClient.DoReturns(
-					&http.Response{
-						StatusCode: http.StatusOK,
-						Body:       ioutil.NopCloser(strings.NewReader(`%%%%`)),
-					}, nil)
-			})
-
-			It("returns a helpful error", func() {
-				_, err := client.GetSpaceGUIDs("some-token", []string{"foo"})
-				Expect(err).To(MatchError(ContainSubstring("json unmarshal: invalid character")))
-			})
-		})
-
-		Context("when there are multiple pages", func() {
-			BeforeEach(func() {
-				v3AppsMultiplePages := `{
-				"pagination": {
-					"total_pages": 10
-				}
-			}`
-				fakeHTTPClient.DoReturns(
-					&http.Response{
-						StatusCode: http.StatusOK,
-						Body:       ioutil.NopCloser(bytes.NewReader([]byte(v3AppsMultiplePages))),
-					}, nil)
-
-			})
-
-			It("should immediately return an error", func() {
-				_, err := client.GetSpaceGUIDs("some-token", []string{"foo"})
-				Expect(err).To(MatchError("pagination support not yet implemented"))
-			})
-		})
-
-		Context("if the response status code is not 200", func() {
-			BeforeEach(func() {
-				fakeHTTPClient.DoReturns(
-					&http.Response{
-						StatusCode: http.StatusTeapot,
-						Body:       ioutil.NopCloser(strings.NewReader("bad thing")),
-					}, nil)
-			})
-
-			It("returns the error", func() {
-				_, err := client.GetSpaceGUIDs("some-token", []string{"foo"})
-				Expect(err).To(MatchError(&json_client.HttpResponseCodeError{
-					StatusCode: http.StatusTeapot,
-					Message:    "bad thing",
-				}))
+				Expect(err).To(MatchError(ContainSubstring("json client: banana")))
 			})
 		})
 	})
 
 	Describe("GetSpace", func() {
-		var spaceModel = models.Space{
-			Name:    "name-2064",
-			OrgGUID: "6e1ca5aa-55f1-4110-a97f-1f3473e771b9",
-		}
 		BeforeEach(func() {
-			fakeHTTPClient.DoReturns(
-				&http.Response{
-					StatusCode: http.StatusOK,
-					Body:       ioutil.NopCloser(bytes.NewReader([]byte(fixtures.Space))),
-				}, nil)
+			fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+				_ = json.Unmarshal([]byte(fixtures.Space), respData)
+				return nil
+			}
 		})
 
 		It("Returns the space with the matching GUID", func() {
+			var spaceModel = models.Space{
+				Name:    "name-2064",
+				OrgGUID: "6e1ca5aa-55f1-4110-a97f-1f3473e771b9",
+			}
+
 			space, err := client.GetSpace("some-token", "some-space-guid")
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(fakeHTTPClient.DoCallCount()).To(Equal(1))
-			request := fakeHTTPClient.DoArgsForCall(0)
-			Expect(request.Method).To(Equal("GET"))
-			Expect(request.URL.String()).To(Equal("https://some.base.url/v2/spaces/some-space-guid"))
-			authHeader := request.Header["Authorization"]
-			Expect(authHeader).To(HaveLen(1))
-			Expect(authHeader[0]).To(Equal("bearer some-token"))
-			Expect(err).NotTo(HaveOccurred())
+			Expect(fakeJSONClient.DoCallCount()).To(Equal(1))
+
+			method, route, reqData, _, token := fakeJSONClient.DoArgsForCall(0)
+
+			Expect(method).To(Equal("GET"))
+			Expect(route).To(Equal("/v2/spaces/some-space-guid"))
+			Expect(reqData).To(BeNil())
+			Expect(token).To(Equal("bearer some-token"))
 
 			Expect(space).To(Equal(&spaceModel))
 		})
 
-		Context("when the http client returns an error", func() {
+		Context("when the json client returns an error", func() {
 			BeforeEach(func() {
-				fakeHTTPClient.DoReturns(nil, errors.New("potato"))
+				fakeJSONClient.DoReturns(errors.New("json client: banana"))
 			})
 
 			It("returns a helpful error", func() {
 				_, err := client.GetSpace("some-token", "some-space-guid")
-				Expect(err).To(MatchError(ContainSubstring("http client do: potato")))
-			})
-		})
-
-		Context("when reading the body returns an error", func() {
-			BeforeEach(func() {
-				fakeHTTPClient.DoReturns(&http.Response{Body: &testsupport.BadReader{}}, nil)
-			})
-
-			It("returns a helpful error", func() {
-				_, err := client.GetSpace("some-token", "some-space-guid")
-				Expect(err).To(MatchError(ContainSubstring("body read: banana")))
-			})
-		})
-
-		Context("when the response body is not valid json", func() {
-			BeforeEach(func() {
-				fakeHTTPClient.DoReturns(
-					&http.Response{
-						StatusCode: http.StatusOK,
-						Body:       ioutil.NopCloser(strings.NewReader(`%%%%`)),
-					}, nil)
-			})
-
-			It("returns a helpful error", func() {
-				_, err := client.GetSpace("some-token", "some-space-guid")
-				Expect(err).To(MatchError(ContainSubstring("json unmarshal: invalid character")))
+				Expect(err).To(MatchError(ContainSubstring("json client: banana")))
 			})
 		})
 
 		Context("if the response status code is a 404", func() {
 			BeforeEach(func() {
-				fakeHTTPClient.DoReturns(
-					&http.Response{
-						StatusCode: http.StatusNotFound,
-						Body:       ioutil.NopCloser(strings.NewReader("")),
-					}, nil)
+				fakeJSONClient.DoReturns(&json_client.HttpResponseCodeError{
+					StatusCode: 404,
+					Message:    "not found",
+				})
 			})
 
 			It("returns nil", func() {
 				space, err := client.GetSpace("some-token", "some-space-guid")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(space).To(BeNil())
-			})
-		})
-
-		Context("if the response status code is not 200 or 404", func() {
-			BeforeEach(func() {
-				fakeHTTPClient.DoReturns(
-					&http.Response{
-						StatusCode: http.StatusTeapot,
-						Body:       ioutil.NopCloser(strings.NewReader("bad thing")),
-					}, nil)
-
-			})
-
-			It("returns the error", func() {
-				_, err := client.GetSpace("some-token", "some-space-guid")
-				Expect(err).To(MatchError(&json_client.HttpResponseCodeError{
-					StatusCode: http.StatusTeapot,
-					Message:    "bad thing",
-				}))
 			})
 		})
 	})
@@ -442,25 +274,27 @@ var _ = Describe("Client", func() {
 			for key, _ := range expectedAppSpaces {
 				appGUIDs = append(appGUIDs, key)
 			}
-			fakeHTTPClient.DoReturns(
-				&http.Response{
-					StatusCode: http.StatusOK,
-					Body:       ioutil.NopCloser(bytes.NewReader([]byte(fixtures.AppsV3))),
-				}, nil)
+			fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+				_ = json.Unmarshal([]byte(fixtures.AppsV3), respData)
+				return nil
+			}
 		})
+
 		It("returns the map from app to its space", func() {
 			appSpaceMap, err := client.GetAppSpaces("some-token", appGUIDs)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(fakeHTTPClient.DoCallCount()).To(Equal(1))
-			request := fakeHTTPClient.DoArgsForCall(0)
-			Expect(request.Method).To(Equal("GET"))
-			Expect(request.URL.Scheme).To(Equal("https"))
-			Expect(request.URL.Path).To(Equal("/v3/apps"))
+			Expect(fakeJSONClient.DoCallCount()).To(Equal(1))
 
-			authHeader := request.Header["Authorization"]
-			Expect(authHeader).To(HaveLen(1))
-			Expect(authHeader[0]).To(Equal("bearer some-token"))
+			method, route, reqData, _, token := fakeJSONClient.DoArgsForCall(0)
+
+			Expect(method).To(Equal("GET"))
+			Expect(route).To(ContainSubstring("/v3/apps?guids="))
+			for appGuid, _ := range expectedAppSpaces {
+				Expect(route).To(ContainSubstring(appGuid))
+			}
+			Expect(reqData).To(BeNil())
+			Expect(token).To(Equal("bearer some-token"))
 
 			Expect(appSpaceMap).To(Equal(expectedAppSpaces))
 		})
@@ -472,73 +306,94 @@ var _ = Describe("Client", func() {
 				Expect(appSpaceMap).To(BeEmpty())
 			})
 		})
+
+		Context("when the json client returns an error", func() {
+			BeforeEach(func() {
+				fakeJSONClient.DoReturns(errors.New("json client: banana"))
+			})
+
+			It("returns a helpful error", func() {
+				_, err := client.GetAppSpaces("some-token", []string{"some-guid"})
+				Expect(err).To(MatchError(ContainSubstring("json client: banana")))
+			})
+		})
 	})
 
 	Describe("GetUserSpaces", func() {
-		expectedUserSpaces := map[string]struct{}{
-			"space-1-guid": struct{}{},
-			"space-2-guid": struct{}{},
-		}
 		BeforeEach(func() {
-			fakeHTTPClient.DoReturns(
-				&http.Response{
-					StatusCode: http.StatusOK,
-					Body:       ioutil.NopCloser(bytes.NewReader([]byte(fixtures.UserSpaces))),
-				}, nil)
+			fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+				_ = json.Unmarshal([]byte(fixtures.UserSpaces), respData)
+				return nil
+			}
 		})
+
 		It("returns the list of spaces a user has access to", func() {
+			expectedUserSpaces := map[string]struct{}{
+				"space-1-guid": struct{}{},
+				"space-2-guid": struct{}{},
+			}
+
 			userSpaces, err := client.GetUserSpaces("some-token", "some-user-guid")
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(fakeHTTPClient.DoCallCount()).To(Equal(1))
-			request := fakeHTTPClient.DoArgsForCall(0)
-			Expect(request.Method).To(Equal("GET"))
-			Expect(request.URL.Path).To(Equal("/v2/users/some-user-guid/spaces"))
+			Expect(fakeJSONClient.DoCallCount()).To(Equal(1))
 
-			authHeader := request.Header["Authorization"]
-			Expect(authHeader).To(HaveLen(1))
-			Expect(authHeader[0]).To(Equal("bearer some-token"))
+			method, route, reqData, _, token := fakeJSONClient.DoArgsForCall(0)
+
+			Expect(method).To(Equal("GET"))
+			Expect(route).To(Equal("/v2/users/some-user-guid/spaces"))
+			Expect(reqData).To(BeNil())
+			Expect(token).To(Equal("bearer some-token"))
 
 			Expect(userSpaces).To(Equal(expectedUserSpaces))
+		})
+
+		Context("when the json client returns an error", func() {
+			BeforeEach(func() {
+				fakeJSONClient.DoReturns(errors.New("json client: banana"))
+			})
+
+			It("returns a helpful error", func() {
+				_, err := client.GetUserSpaces("some-token", "some-user-guid")
+				Expect(err).To(MatchError(ContainSubstring("json client: banana")))
+			})
 		})
 	})
 
 	Describe("GetUserSpace", func() {
-		var space = models.Space{
+		space := models.Space{
 			Name:    "some-space-name",
 			OrgGUID: "some-org-guid",
 		}
 		BeforeEach(func() {
-			fakeHTTPClient.DoReturns(
-				&http.Response{
-					StatusCode: http.StatusOK,
-					Body:       ioutil.NopCloser(bytes.NewReader([]byte(fixtures.UserSpace))),
-				}, nil)
+			fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+				_ = json.Unmarshal([]byte(fixtures.UserSpace), respData)
+				return nil
+			}
 		})
 
-		It("Returns the matching spaces for the user", func() {
+		It("returns the matching spaces for the user", func() {
 			matchingSpace, err := client.GetUserSpace("some-token", "some-developer-guid", space)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(fakeHTTPClient.DoCallCount()).To(Equal(1))
-			request := fakeHTTPClient.DoArgsForCall(0)
-			Expect(request.Method).To(Equal("GET"))
-			Expect(request.URL.String()).To(Equal("https://some.base.url/v2/spaces?q=developer_guid%3Asome-developer-guid&q=name%3Asome-space-name&q=organization_guid%3Asome-org-guid"))
-			authHeader := request.Header["Authorization"]
-			Expect(authHeader).To(HaveLen(1))
-			Expect(authHeader[0]).To(Equal("bearer some-token"))
-			Expect(err).NotTo(HaveOccurred())
+			Expect(fakeJSONClient.DoCallCount()).To(Equal(1))
+
+			method, route, reqData, _, token := fakeJSONClient.DoArgsForCall(0)
+
+			Expect(method).To(Equal("GET"))
+			Expect(route).To(Equal("/v2/spaces?q=developer_guid%3Asome-developer-guid&q=name%3Asome-space-name&q=organization_guid%3Asome-org-guid"))
+			Expect(reqData).To(BeNil())
+			Expect(token).To(Equal("bearer some-token"))
 
 			Expect(matchingSpace).To(Equal(&space))
 		})
 
-		Context("when no spaces are returned", func() {
+		Context("when the user has no spaces", func() {
 			BeforeEach(func() {
-				fakeHTTPClient.DoReturns(
-					&http.Response{
-						StatusCode: http.StatusOK,
-						Body:       ioutil.NopCloser(bytes.NewReader([]byte(fixtures.UserSpaceEmpty))),
-					}, nil)
+				fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+					_ = json.Unmarshal([]byte(fixtures.UserSpaceEmpty), respData)
+					return nil
+				}
 			})
 
 			It("returns nil", func() {
@@ -550,11 +405,10 @@ var _ = Describe("Client", func() {
 
 		Context("when more than one space is returned", func() {
 			BeforeEach(func() {
-				fakeHTTPClient.DoReturns(
-					&http.Response{
-						StatusCode: http.StatusOK,
-						Body:       ioutil.NopCloser(bytes.NewReader([]byte(fixtures.Spaces))),
-					}, nil)
+				fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+					_ = json.Unmarshal([]byte(fixtures.Spaces), respData)
+					return nil
+				}
 			})
 
 			It("returns an error", func() {
@@ -563,59 +417,14 @@ var _ = Describe("Client", func() {
 			})
 		})
 
-		Context("when the http client returns an error", func() {
+		Context("when the json client returns an error", func() {
 			BeforeEach(func() {
-				fakeHTTPClient.DoReturns(nil, errors.New("potato"))
+				fakeJSONClient.DoReturns(errors.New("json client: banana"))
 			})
 
 			It("returns a helpful error", func() {
 				_, err := client.GetUserSpace("some-token", "some-developer-guid", space)
-				Expect(err).To(MatchError(ContainSubstring("http client do: potato")))
-			})
-		})
-
-		Context("when reading the body returns an error", func() {
-			BeforeEach(func() {
-				fakeHTTPClient.DoReturns(&http.Response{Body: &testsupport.BadReader{}}, nil)
-			})
-
-			It("returns a helpful error", func() {
-				_, err := client.GetUserSpace("some-token", "some-developer-guid", space)
-				Expect(err).To(MatchError(ContainSubstring("body read: banana")))
-			})
-		})
-
-		Context("when the response body is not valid json", func() {
-			BeforeEach(func() {
-				fakeHTTPClient.DoReturns(
-					&http.Response{
-						StatusCode: http.StatusOK,
-						Body:       ioutil.NopCloser(strings.NewReader(`%%%%`)),
-					}, nil)
-			})
-
-			It("returns a helpful error", func() {
-				_, err := client.GetUserSpace("some-token", "some-developer-guid", space)
-				Expect(err).To(MatchError(ContainSubstring("json unmarshal: invalid character")))
-			})
-		})
-
-		Context("if the response status code is not 200", func() {
-			BeforeEach(func() {
-				fakeHTTPClient.DoReturns(
-					&http.Response{
-						StatusCode: http.StatusTeapot,
-						Body:       ioutil.NopCloser(strings.NewReader("bad thing")),
-					}, nil)
-
-			})
-
-			It("returns the error", func() {
-				_, err := client.GetUserSpace("some-token", "some-developer-guid", space)
-				Expect(err).To(MatchError(&json_client.HttpResponseCodeError{
-					StatusCode: http.StatusTeapot,
-					Message:    "bad thing",
-				}))
+				Expect(err).To(MatchError(ContainSubstring("json client: banana")))
 			})
 		})
 	})
