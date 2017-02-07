@@ -1,8 +1,10 @@
 # 3rd Party Plugin Development for Container Networking
 
-## Notes for CNI plugin developers
+*If you want to integrate your own CNI plugin with Cloud Foundry, read this document.*
 
-### MTU
+If you have any questions or feedback, please visit the `#container-networking` channel on [Cloud Foundry Slack](http://slack.cloudfoundry.org/).
+
+## MTU
 CNI plugins should automatically detect the MTU settings on the host, and set the MTU
 on container network interfaces appropriately.  For example, if the host MTU is 1500 bytes
 and the plugin encapsulates with 50 bytes of header, the plugin should ensure that the
@@ -22,28 +24,33 @@ The built-in flannel CNI plugin does this.
 0. Update the [deployment manifest properties](http://bosh.io/docs/deployment-manifest.html#properties)
 
   ```yaml
-  garden-cni:
-    adapter:
-      cni_plugin_dir: /var/vcap/packages/YOUR_PACKAGE/bin # your CNI binary goes in this directory
-      cni_config_dir: /var/vcap/jobs/YOUR_JOB/config/cni  # your CNI config file goes in this directory
+  properties:
+    cf_networking:
+      garden_external_networker:
+        cni_plugin_dir: /var/vcap/packages/YOUR_PACKAGE/bin # directory for CNI binaries
+        cni_config_dir: /var/vcap/jobs/YOUR_JOB/config/cni  # directory for CNI config file(s)
   ```
-  Remove any lingering references to `flannel` or `cni-flannel` in the deployment manifest.
+  Remove any lingering references to `vxlan-policy-agent` in the deployment manifest, and replace the `plugin` properties
+  with any manifest properties that your bosh job requires.
 
 ## What data will my CNI plugin receive?
 The `garden-external-networker` will invoke one or more CNI plugins, according to the [CNI Spec](https://github.com/containernetworking/cni/blob/master/SPEC.md).
 It will start with the CNI config files available in the `cni_config_dir` and also inject
 some dynamic information about the container, including the CloudFoundry App, Space and Org that it belongs to.
 
-The Network Configuration data that is passed to the `wrapper` plugin is generated from this [template](../jobs/cni-flannel/templates/30-cni-wrapper-plugin.conf.erb).
+For example, in the included networking stack, we have a `wrapper` CNI plugin.
+At deploy time, its config is generated from this [template](../jobs/cni-flannel/templates/30-cni-wrapper-plugin.conf.erb),
+but when the container is being created, the CNI plugin receives data like this:
 
-Here's an example:
 ```json
 {
   {
     "name": "cni-wrapper",
-    "type": "wrapper",
+    "type": "cni-wrapper-plugin",
     "cniVersion": "0.2.0",
-    "datastore": "/path/to/datastore",
+    "datastore": "/var/vcap/data/container-metadata/store.json",
+    "iptables_lock_file": "/var/vcap/data/garden-cni/iptables.lock",
+    "overlay_network": "10.255.0.0/16",
     "delegate": {
       "name": "cni-flannel",
       "type": "flannel",
@@ -55,7 +62,7 @@ Here's an example:
         "ipMasq": false
        }
     }
-  }
+  },
   "metadata": {
     "app_id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
     "org_id": "2ac41bbf-8eae-4f28-abab-51ca38dea3e4",
@@ -64,8 +71,6 @@ Here's an example:
   }
 }
 ```
-Note that the `delegate`, `name` and `type` fields are present in the static `30-cni-wrapper-plugin.conf` file provided by the BOSH release.
-At runtime, the `garden-external-networker` also injects the `network` field with `properties` which include CF-specific info.
 
 ## To deploy a local-only (no-op) CNI plugin
 As a baseline, you can deploy using only the basic [bridge CNI plugin](https://github.com/containernetworking/cni/blob/master/Documentation/bridge.md).
@@ -82,17 +87,10 @@ bosh deployment local-only.yml
 bosh deploy
 ```
 
-## To deploy diego with CNI but without cross-host container networking
-For generating a cloudfoundry-diego deployment without container to container connectivity, but using the CNI bridge plugin for NAT'ed connectivity.
-
-```bash
-CNI_BRIDGE=true ./scripts/generate-bosh-lite-manifests
-bosh deploy
-```
 
 
 ## Policy Server Internal API
-To replace the VXLAN Policy Agent with your own Policy Enforcement implementation,
+If you are replacing the built-in "VXLAN Policy Agent" with your own Policy Enforcement implementation,
 you can use the Policy Server's internal API to retrieve policy information.
 
 There is a single endpoint to retrieve policies:
@@ -105,15 +103,43 @@ only policies with a source or destination that match any of the comma-separated
 
 ### TLS configuration
 The Policy Server internal API requires Mutual TLS.  All connections must use a client certificate
-that is signed by a trusted certificate authority.
+that is signed by a trusted certificate authority.  The certs and keys should be configured via BOSH manifest
+properties on the Policy Server and on your custom policy client, e.g.
 
-This CA is configured for the policy server in the bosh deployment manifest
-property `properties.policy-server.ca_cert`.
+```yaml
+properties:
+  cf_networking:
+    policy_server:
+      ca_cert: |
+        -----BEGIN CERTIFICATE-----
+        REPLACE_WITH_CA_CERT
+        -----END CERTIFICATE-----
+      server_cert: |
+        -----BEGIN CERTIFICATE-----
+        REPLACE_WITH_SERVER_CERT
+        -----END CERTIFICATE-----
+      server_key: |
+        -----BEGIN RSA PRIVATE KEY-----
+        REPLACE_WITH_SERVER_KEY
+        -----END RSA PRIVATE KEY-----
 
-An example can be found in the `bosh-lite` stubs included in this repository
-[here](../bosh-lite/deployments/diego_cf_networking.yml).
+  your_networking_provider:
+    your_policy_client:
+      ca_cert: |
+        -----BEGIN CERTIFICATE-----
+        REPLACE_WITH_CA_CERT
+        -----END CERTIFICATE-----
+      client_cert: |
+        -----BEGIN CERTIFICATE-----
+        REPLACE_WITH_CLIENT_CERT
+        -----END CERTIFICATE-----
+      client_key: |
+        -----BEGIN RSA PRIVATE KEY-----
+        REPLACE_WITH_CLIENT_KEY
+        -----END RSA PRIVATE KEY-----
+```
 
-Additionally, the server requires that connections use the TLS cipher suite
+The server requires that connections use the TLS cipher suite
 `TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256`.  Your client must support this cipher suite.
 
 We provide [a script](../scripts/generate-certs) to generate all required certs & keys.
@@ -124,7 +150,7 @@ We provide [a script](../scripts/generate-certs) to generate all required certs 
 
 List all policies optionally filtered to match requested  `policy_group_id`'s
 
-Query Parameters:
+Query Parameters (optional):
 
 - `id`: comma-separated `policy_group_id` values
 
