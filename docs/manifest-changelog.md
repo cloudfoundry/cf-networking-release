@@ -2,9 +2,11 @@
 
 See [AWS](aws.md) deployment docs for examples
 
-### 0.15.0+
-### Many breaking changes!
-### Requires Diego Release (some new diego-release that's not out yet)+
+### 0.15.0
+
+**Many breaking changes!**
+
+0. Requires Diego Release v1.6.2 or higher
 
 0. Release name changed from `netman` to `cf-networking`
 
