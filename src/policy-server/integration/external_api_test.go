@@ -246,18 +246,36 @@ var _ = Describe("External API", func() {
 
 			Context("when there are policies in spaces the user does not belong to", func() {
 				BeforeEach(func() {
-					body := `{ "policies": [ {"source": { "id": "live-app-1-guid" }, "destination": { "id": "live-app-5-guid", "protocol": "tcp", "port": 8090 } } ] }`
-					req = makeNewRequest("POST", "networking/v0/external/policies", body)
-					req.Header.Set("Authorization", "Bearer valid-token")
-					_, err := http.DefaultClient.Do(req)
+					policies := []models.Policy{}
+					for i := 0; i < 150; i++ {
+						policies = append(policies, models.Policy{
+							Source: models.Source{ID: "live-app-1-guid"},
+							Destination: models.Destination{ID: fmt.Sprintf("not-in-space-app-%d-guid", i),
+								Port:     8090,
+								Protocol: "tcp",
+							},
+						})
+					}
+					policies = append(policies, models.Policy{
+						Source: models.Source{ID: "live-app-1-guid"},
+						Destination: models.Destination{ID: "live-app-2-guid",
+							Port:     8090,
+							Protocol: "tcp",
+						},
+					})
+
+					body := map[string][]models.Policy{
+						"policies": policies,
+					}
+					bodyBytes, err := json.Marshal(body)
 					Expect(err).NotTo(HaveOccurred())
 
-					body = `{ "policies": [ {"source": { "id": "live-app-1-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "port": 8090 } } ] }`
-					req = makeNewRequest("POST", "networking/v0/external/policies", body)
+					req = makeNewRequest("POST", "networking/v0/external/policies", string(bodyBytes))
 					req.Header.Set("Authorization", "Bearer valid-token")
 					_, err = http.DefaultClient.Do(req)
 					Expect(err).NotTo(HaveOccurred())
 				})
+
 				It("does not return those policies", func() {
 					req = makeNewRequest("GET", "networking/v0/external/policies", "")
 					resp, err := http.DefaultClient.Do(req)
