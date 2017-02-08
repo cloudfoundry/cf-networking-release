@@ -24,27 +24,36 @@ type ccClient interface {
 type PolicyFilter struct {
 	CCClient  ccClient
 	UAAClient uaaClient
+	ChunkSize int
 }
 
-func (g *PolicyFilter) FilterPolicies(policies []models.Policy, userToken uaa_client.CheckTokenResponse) ([]models.Policy, error) {
+func (f *PolicyFilter) FilterPolicies(policies []models.Policy, userToken uaa_client.CheckTokenResponse) ([]models.Policy, error) {
 	for _, scope := range userToken.Scope {
 		if scope == "network.admin" {
 			return policies, nil
 		}
 	}
 
-	token, err := g.UAAClient.GetToken()
+	token, err := f.UAAClient.GetToken()
 	if err != nil {
 		return nil, fmt.Errorf("getting token: %s", err)
 	}
 
 	appGuids := uniqueAppGUIDs(policies)
-	appSpaces, err := g.CCClient.GetAppSpaces(token, appGuids)
-	if err != nil {
-		return nil, fmt.Errorf("getting app spaces: %s", err)
+	appGuidChunks := getChunks(appGuids, f.ChunkSize)
+
+	appSpacesList := []map[string]string{}
+	for _, chunk := range appGuidChunks {
+		spaces, err := f.CCClient.GetAppSpaces(token, chunk)
+		if err != nil {
+			return nil, fmt.Errorf("getting app spaces: %s", err)
+		}
+		appSpacesList = append(appSpacesList, spaces)
 	}
 
-	userSpaces, err := g.CCClient.GetUserSpaces(token, userToken.UserID)
+	appSpaces := flatten(appSpacesList)
+
+	userSpaces, err := f.CCClient.GetUserSpaces(token, userToken.UserID)
 	if err != nil {
 		return nil, fmt.Errorf("getting user spaces: %s", err)
 	}
@@ -52,6 +61,32 @@ func (g *PolicyFilter) FilterPolicies(policies []models.Policy, userToken uaa_cl
 	filtered := filter(policies, appSpaces, userSpaces)
 
 	return filtered, nil
+}
+
+func flatten(list []map[string]string) map[string]string {
+	ret := make(map[string]string)
+	for _, m := range list {
+		for k, v := range m {
+			ret[k] = v
+		}
+	}
+	return ret
+}
+
+func getChunks(appGuids []string, chunkSize int) [][]string {
+	if chunkSize < 1 {
+		chunkSize = 100
+	}
+	appGuidChunks := [][]string{}
+	for i := 0; i < len(appGuids); i += chunkSize {
+		last := i + chunkSize
+		if last > len(appGuids) {
+			last = len(appGuids)
+		}
+		appGuidChunks = append(appGuidChunks, appGuids[i:last])
+	}
+
+	return appGuidChunks
 }
 
 func filter(policies []models.Policy, appSpaces map[string]string, userSpaces map[string]struct{}) []models.Policy {

@@ -26,6 +26,7 @@ var _ = Describe("PolicyFilter", func() {
 		policyFilter = &handlers.PolicyFilter{
 			CCClient:  fakeCCClient,
 			UAAClient: fakeUAAClient,
+			ChunkSize: 100,
 		}
 		policies = []models.Policy{
 			{
@@ -159,6 +160,42 @@ var _ = Describe("PolicyFilter", func() {
 				filtered, err := policyFilter.FilterPolicies(policies, tokenData)
 				Expect(err).To(MatchError("getting token: banana"))
 				Expect(filtered).To(BeNil())
+			})
+		})
+
+		Context("when the number of unique app guids is greater than the chunk size", func() {
+			BeforeEach(func() {
+				policyFilter.ChunkSize = 1
+			})
+			It("chunks the guids and makes multiple requests to CC", func() {
+				filtered, err := policyFilter.FilterPolicies(policies, tokenData)
+				Expect(err).NotTo(HaveOccurred())
+
+				expected := []models.Policy{
+					{
+						Source: models.Source{
+							ID: "app-guid-1",
+						},
+						Destination: models.Destination{
+							ID: "app-guid-2",
+						},
+					},
+				}
+
+				Expect(fakeCCClient.GetAppSpacesCallCount()).To(Equal(4))
+
+				appGUIDs := []string{}
+				for i := 0; i < 4; i++ {
+					_, guids := fakeCCClient.GetAppSpacesArgsForCall(i)
+					appGUIDs = append(appGUIDs, guids...)
+				}
+				Expect(appGUIDs).To(ConsistOf("app-guid-1",
+					"app-guid-2",
+					"app-guid-3",
+					"app-guid-4",
+				))
+
+				Expect(filtered).To(Equal(expected))
 			})
 		})
 	})
