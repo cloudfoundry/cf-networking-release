@@ -9,11 +9,20 @@ PIDFILE=$RUN_DIR/flanneld.pid
 
 ETCD_ENDPOINT=<%= p("cf_networking.plugin.etcd_endpoints").map{|addr| "\"https://#{addr}:4001\""}.join(",") %>
 
-FLANNEL_CONFIG='<%=
+<%
   require 'json'
+
+  def subnet_size
+    size = p("cf_networking.cell_subnet_size")
+    if size < 1 || size > 30
+      raise "'cf_networking.cell_subnet_size' must be a value between 1-30"
+    end
+    size
+  end
 
   toRender = {
     "Network" => p("cf_networking.network"),
+    "SubnetLen" => subnet_size,
     "Backend" => {
       "Type" => "vxlan",
       "Port" => 8472,
@@ -23,14 +32,11 @@ FLANNEL_CONFIG='<%=
   }
 
   flannelConfig = JSON.pretty_generate(toRender)
-%>'
+%>
 
 mkdir -p /var/vcap/sys/log/monit
 exec 1>> /var/vcap/sys/log/monit/flanneld.out.log
 exec 2>> /var/vcap/sys/log/monit/flanneld.err.log
-
-mkdir -p /dev/net
-mknod /dev/net/tun c 10 200 || true
 
 case $1 in
 

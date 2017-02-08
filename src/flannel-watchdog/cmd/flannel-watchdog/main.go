@@ -24,7 +24,7 @@ import (
 
 const dropsondeOrigin = "flannel-watchdog"
 
-var ipAddrParseRegex = regexp.MustCompile(`((?:[0-9]{1,3}\.){3}[0-9]{1,3}/24)`)
+var ipAddrParseRegex = regexp.MustCompile(`((?:[0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2})`)
 
 type Runner struct {
 	SubnetFile string

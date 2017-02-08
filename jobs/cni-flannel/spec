@@ -38,6 +38,10 @@ properties:
     description: "CIDR block for overlay network."
     default: "10.255.0.0/16"
 
+  cf_networking.cell_subnet_size:
+    description: "Size of subnet allocated per Diego cell, e.g. '24' for a '/24' subnet"
+    default: 24
+
   cf_networking.mtu:
     description: "MTU for containers"
     default: 0
