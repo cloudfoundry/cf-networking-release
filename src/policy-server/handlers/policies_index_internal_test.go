@@ -86,14 +86,10 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		Expect(err).NotTo(HaveOccurred())
 		handler.ServeHTTP(resp, request)
 
-		Expect(fakeMetricsEmitter.EmitAllCallCount()).To(Equal(2))
+		Expect(fakeMetricsEmitter.EmitAllCallCount()).To(Equal(1))
 
 		queryMetric := fakeMetricsEmitter.EmitAllArgsForCall(0)
 		_, ok := queryMetric["InternalPoliciesQueryTime"]
-		Expect(ok).To(BeTrue())
-
-		requestMetric := fakeMetricsEmitter.EmitAllArgsForCall(1)
-		_, ok = requestMetric["InternalPoliciesRequestTime"]
 		Expect(ok).To(BeTrue())
 	})
 

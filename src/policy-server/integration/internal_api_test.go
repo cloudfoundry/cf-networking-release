@@ -105,15 +105,11 @@ var _ = Describe("Internal API", func() {
 			tlsConfig,
 		)
 		Expect(resp.StatusCode).To(Equal(http.StatusOK))
-		gatherMetricNames := func() map[string]bool {
-			events := fakeMetron.AllEvents()
-			metrics := map[string]bool{}
-			for _, event := range events {
-				metrics[event.Name] = true
-			}
-			return metrics
-		}
-		Eventually(gatherMetricNames, "5s").Should(HaveKey("InternalPoliciesRequestTime"))
-		Eventually(gatherMetricNames, "5s").Should(HaveKey("InternalPoliciesQueryTime"))
+		Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
+			HaveName("InternalPoliciesRequestTime"),
+		))
+		Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
+			HaveName("InternalPoliciesQueryTime"),
+		))
 	})
 })

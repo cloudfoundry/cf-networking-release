@@ -17,10 +17,10 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
-	"github.com/onsi/gomega/types"
 )
 
 var _ = Describe("Integration", func() {
+
 	Context("with a database", func() {
 		var (
 			session      *gexec.Session
@@ -90,6 +90,10 @@ var _ = Describe("Integration", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 				responseString, err := ioutil.ReadAll(resp.Body)
 				Expect(responseString).To(ContainSubstring("Network policy server, up for"))
+
+				Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
+					HaveName("ExternalPoliciesUptimeRequestTime"),
+				))
 			})
 
 			It("has a whoami endpoint", func() {
@@ -103,6 +107,10 @@ var _ = Describe("Integration", func() {
 				responseString, err := ioutil.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(responseString).To(ContainSubstring("some-user"))
+
+				Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
+					HaveName("ExternalPoliciesWhoAmIRequestTime"),
+				))
 			})
 
 			It("has a log level thats configurable at runtime", func() {
@@ -139,12 +147,6 @@ var _ = Describe("Integration", func() {
 
 				Expect(session.Out).To(gbytes.Say("container-networking.policy-server.*request made to policy-server"))
 			})
-
-			var HaveName = func(name string) types.GomegaMatcher {
-				return WithTransform(func(ev fakes.Event) string {
-					return ev.Name
-				}, Equal(name))
-			}
 
 			It("should emit some metrics", func() {
 				Eventually(fakeMetron.AllEvents, "5s").Should(

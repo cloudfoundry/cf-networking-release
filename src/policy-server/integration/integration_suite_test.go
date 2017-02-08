@@ -11,6 +11,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"netmon/integration/fakes"
 	"os"
 	"os/exec"
 	"policy-server/cc_client/fixtures"
@@ -21,6 +22,7 @@ import (
 	ginkgoConfig "github.com/onsi/ginkgo/config"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
+	"github.com/onsi/gomega/types"
 
 	"testing"
 )
@@ -28,6 +30,12 @@ import (
 const DEFAULT_TIMEOUT = "5s"
 
 var policyServerPath string
+
+var HaveName = func(name string) types.GomegaMatcher {
+	return WithTransform(func(ev fakes.Event) string {
+		return ev.Name
+	}, Equal(name))
+}
 
 var mockCCServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	if r.Header["Authorization"][0] != "bearer valid-token" {

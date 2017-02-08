@@ -67,9 +67,4 @@ func (h *PoliciesIndexInternal) ServeHTTP(w http.ResponseWriter, req *http.Reque
 	}
 
 	w.Write(bytes)
-
-	requestDuration := time.Now().Sub(startTime)
-	h.MetricsEmitter.EmitAll(map[string]time.Duration{
-		server_metrics.MetricInternalPoliciesRequestDuration: requestDuration,
-	})
 }

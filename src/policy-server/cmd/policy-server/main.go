@@ -220,14 +220,44 @@ func main() {
 		{Name: "tags_index", Method: "GET", Path: "/networking/v0/external/tags"},
 	}
 
+	metricsWrap := func(name string, handle http.Handler) http.Handler {
+		metricsWrapper := handlers.MetricWrapper{
+			Name:           name,
+			MetricsEmitter: timeMetricsEmitter,
+		}
+		return metricsWrapper.Wrap(handle)
+	}
+
 	handlers := rata.Handlers{
-		"uptime":          uptimeHandler,
-		"create_policies": networkWriteAuthenticator.Wrap(createPolicyHandler),
-		"delete_policies": networkWriteAuthenticator.Wrap(deletePolicyHandler),
-		"policies_index":  networkWriteAuthenticator.Wrap(policiesIndexHandler),
-		"cleanup":         authenticator.Wrap(policiesCleanupHandler),
-		"tags_index":      authenticator.Wrap(tagsIndexHandler),
-		"whoami":          authenticator.Wrap(whoamiHandler),
+		"uptime": metricsWrap(
+			server_metrics.MetricExternalUptimeDuration,
+			uptimeHandler,
+		),
+
+		"create_policies": metricsWrap(
+			server_metrics.MetricExternalCreateDuration,
+			networkWriteAuthenticator.Wrap(createPolicyHandler),
+		),
+		"delete_policies": metricsWrap(
+			server_metrics.MetricExternalDeleteDuration,
+			networkWriteAuthenticator.Wrap(deletePolicyHandler),
+		),
+		"policies_index": metricsWrap(
+			server_metrics.MetricExternalIndexDuration,
+			networkWriteAuthenticator.Wrap(policiesIndexHandler),
+		),
+		"cleanup": metricsWrap(
+			server_metrics.MetricExternalCleanupDuration,
+			authenticator.Wrap(policiesCleanupHandler),
+		),
+		"tags_index": metricsWrap(
+			server_metrics.MetricExternalTagsIndexDuration,
+			authenticator.Wrap(tagsIndexHandler),
+		),
+		"whoami": metricsWrap(
+			server_metrics.MetricExternalWhoAmIDuration,
+			authenticator.Wrap(whoamiHandler),
+		),
 	}
 	router, err := rata.NewRouter(routes, handlers)
 	if err != nil {
@@ -242,7 +272,10 @@ func main() {
 	}
 
 	internalHandlers := rata.Handlers{
-		"internal_policies": internalPoliciesHandler,
+		"internal_policies": metricsWrap(
+			server_metrics.MetricInternalPoliciesRequestDuration,
+			internalPoliciesHandler,
+		),
 	}
 	internalRouter, err := rata.NewRouter(internalRoutes, internalHandlers)
 	if err != nil {
