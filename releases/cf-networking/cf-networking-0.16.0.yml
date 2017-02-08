@@ -1,0 +1,82 @@
+---
+packages:
+- name: cf-networking-acceptance
+  version: 8961988a4a9e04244aeb4eabf47694f7d7685377
+  fingerprint: 8961988a4a9e04244aeb4eabf47694f7d7685377
+  sha1: 1f62cf76379d6ff61382cc7e9c4fdd3ec5939534
+  dependencies:
+  - golang
+- name: flannel-watchdog
+  version: 37fbc3ce98d3b2958dd40b50dadf27bbdf0ad2c9
+  fingerprint: 37fbc3ce98d3b2958dd40b50dadf27bbdf0ad2c9
+  sha1: a54deb23b17a9e7e377a6e256d54b9fcd76a4954
+  dependencies:
+  - golang
+- name: flannel
+  version: bb4f9df620dc0825f4a2d58f0cdd1dfd432f4081
+  fingerprint: bb4f9df620dc0825f4a2d58f0cdd1dfd432f4081
+  sha1: db980cbe2ab4c0dc1183c1a166d75445ca2961d8
+  dependencies:
+  - golang
+- name: golang
+  version: 46105d4480ca083a6cafb8ca307d5e5084c655c4
+  fingerprint: 46105d4480ca083a6cafb8ca307d5e5084c655c4
+  sha1: '012497d60085d0f41f5e0629f5af1231a94b8599'
+  dependencies: []
+- name: netmon
+  version: f2ec21915b4a9d6b4796cf2b07b9be214c2f524c
+  fingerprint: f2ec21915b4a9d6b4796cf2b07b9be214c2f524c
+  sha1: d2f7c59df3f8522cc0de0bf8934692e3e579907f
+  dependencies:
+  - golang
+- name: policy-server
+  version: 04e8d38a6f85cf6740e2214067c575565aa47f97
+  fingerprint: 04e8d38a6f85cf6740e2214067c575565aa47f97
+  sha1: 742a2908d022661499e68de473fcbb268b9d7820
+  dependencies:
+  - golang
+- name: runc-cni
+  version: 6264ed477db55d06473184d460b003893ebb27de
+  fingerprint: 6264ed477db55d06473184d460b003893ebb27de
+  sha1: b326b729902b69cd7bed6c74ce20422b3dffcc3d
+  dependencies:
+  - golang
+- name: vxlan-policy-agent
+  version: f9bc2a9906e1a2bdf71434a5d49f58f38f4e3203
+  fingerprint: f9bc2a9906e1a2bdf71434a5d49f58f38f4e3203
+  sha1: e35a40f2d3cdee484a48eaecd00ab6cd27108ca6
+  dependencies:
+  - golang
+jobs:
+- name: cf-networking-acceptance
+  version: fb92c287fb6f8c62dfe3847e8054cae3b61a7689
+  fingerprint: fb92c287fb6f8c62dfe3847e8054cae3b61a7689
+  sha1: f1bea196adcc85f9d47da5261314aee31f1616d6
+- name: cni-flannel
+  version: 8878d936f48bd285db41e6ba213909e910a3f825
+  fingerprint: 8878d936f48bd285db41e6ba213909e910a3f825
+  sha1: 0ac74772dbb0a4d0ac80fb894a92b9653073e297
+- name: garden-cni
+  version: 472352af4aa2107f4b7c4234512af768a23b4c9f
+  fingerprint: 472352af4aa2107f4b7c4234512af768a23b4c9f
+  sha1: 0f2213d7f21997415d599d589dd32ff957b11a78
+- name: netmon
+  version: 7e911ec03e9fecfbb42bb38cb077d0bd97fa8933
+  fingerprint: 7e911ec03e9fecfbb42bb38cb077d0bd97fa8933
+  sha1: ea35d9f3aa47fa5fbec0f7c47c36ee5f34a92579
+- name: policy-server
+  version: 71a19f7613a45cd2c65543ce10dc157d3b14d7e1
+  fingerprint: 71a19f7613a45cd2c65543ce10dc157d3b14d7e1
+  sha1: '095470b80e577e82d29a04e261c2e90e33a574c0'
+- name: vxlan-policy-agent
+  version: f8f2fcd437a99970c21a8b6c004a6941c163d040
+  fingerprint: f8f2fcd437a99970c21a8b6c004a6941c163d040
+  sha1: 756c96168bfcb232242b3b3e3c6e4301e6df589d
+license:
+  version: 423fb3ce8453b2525eb5958ff970855c805830a6
+  fingerprint: 423fb3ce8453b2525eb5958ff970855c805830a6
+  sha1: 314d7a644ef8e0bb16cccad615af5ed305afd17e
+commit_hash: 3fdaa336
+uncommitted_changes: false
+name: cf-networking
+version: 0.16.0
