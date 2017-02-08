@@ -34,13 +34,6 @@ var _ = Describe("Client", func() {
 
 	Describe("GetAllAppGUIDs", func() {
 		Context("when there is a single page of app guids", func() {
-			expectedApps := map[string]interface{}{
-				"live-app-1-guid": nil,
-				"live-app-2-guid": nil,
-				"live-app-3-guid": nil,
-				"live-app-4-guid": nil,
-				"live-app-5-guid": nil,
-			}
 			BeforeEach(func() {
 				fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 					_ = json.Unmarshal([]byte(fixtures.AppsV3), respData)
@@ -61,16 +54,17 @@ var _ = Describe("Client", func() {
 				Expect(reqData).To(BeNil())
 				Expect(token).To(Equal("bearer some-token"))
 
-				Expect(apps).To(Equal(expectedApps))
+				Expect(apps).To(Equal(map[string]struct{}{
+					"live-app-1-guid": struct{}{},
+					"live-app-2-guid": struct{}{},
+					"live-app-3-guid": struct{}{},
+					"live-app-4-guid": struct{}{},
+					"live-app-5-guid": struct{}{},
+				}))
 			})
 		})
 
 		Context("when there are multiple pages", func() {
-			expectedApps := map[string]interface{}{
-				"live-app-1-guid": nil,
-				"live-app-2-guid": nil,
-				"live-app-3-guid": nil,
-			}
 			BeforeEach(func() {
 				fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 					if route == "/v3/apps?page=2&per_page=1" {
@@ -111,7 +105,11 @@ var _ = Describe("Client", func() {
 				Expect(reqData).To(BeNil())
 				Expect(token).To(Equal("bearer some-token"))
 
-				Expect(apps).To(Equal(expectedApps))
+				Expect(apps).To(Equal(map[string]struct{}{
+					"live-app-1-guid": struct{}{},
+					"live-app-2-guid": struct{}{},
+					"live-app-3-guid": struct{}{},
+				}))
 			})
 		})
 
@@ -369,11 +367,6 @@ var _ = Describe("Client", func() {
 		})
 
 		It("returns the list of spaces a user has access to", func() {
-			expectedUserSpaces := map[string]struct{}{
-				"space-1-guid": struct{}{},
-				"space-2-guid": struct{}{},
-			}
-
 			userSpaces, err := client.GetUserSpaces("some-token", "some-user-guid")
 			Expect(err).NotTo(HaveOccurred())
 
@@ -386,7 +379,10 @@ var _ = Describe("Client", func() {
 			Expect(reqData).To(BeNil())
 			Expect(token).To(Equal("bearer some-token"))
 
-			Expect(userSpaces).To(Equal(expectedUserSpaces))
+			Expect(userSpaces).To(Equal(map[string]struct{}{
+				"space-1-guid": struct{}{},
+				"space-2-guid": struct{}{},
+			}))
 		})
 
 		Context("when the json client returns an error", func() {

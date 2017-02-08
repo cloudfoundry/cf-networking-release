@@ -59,7 +59,7 @@ type SpacesResponse struct {
 	} `json:"resources"`
 }
 
-func (c *Client) GetAllAppGUIDs(token string) (map[string]interface{}, error) {
+func (c *Client) GetAllAppGUIDs(token string) (map[string]struct{}, error) {
 	token = fmt.Sprintf("bearer %s", token)
 
 	var response AppsV3Response
@@ -68,9 +68,9 @@ func (c *Client) GetAllAppGUIDs(token string) (map[string]interface{}, error) {
 		return nil, fmt.Errorf("json client do: %s", err)
 	}
 
-	set := make(map[string]interface{})
+	set := make(map[string]struct{})
 	for _, r := range response.Resources {
-		set[r.GUID] = nil
+		set[r.GUID] = struct{}{}
 	}
 
 	totalPages := response.Pagination.TotalPages
@@ -90,7 +90,7 @@ func (c *Client) GetAllAppGUIDs(token string) (map[string]interface{}, error) {
 		}
 
 		for _, r := range response.Resources {
-			set[r.GUID] = nil
+			set[r.GUID] = struct{}{}
 		}
 	}
 
@@ -118,8 +118,7 @@ func (c *Client) GetLiveAppGUIDs(token string, appGUIDs []string) (map[string]st
 
 	set := make(map[string]struct{})
 	for _, r := range response.Resources {
-		appID := r.GUID
-		set[appID] = struct{}{}
+		set[r.GUID] = struct{}{}
 	}
 
 	return set, nil
