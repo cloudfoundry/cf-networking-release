@@ -15,6 +15,7 @@ type Store interface {
 
 //go:generate counterfeiter -o fakes/metrics_sender.go --fake-name MetricsSender . metricsSender
 type metricsSender interface {
+	IncrementCounter(string)
 	SendDuration(string, time.Duration)
 }
 
@@ -28,7 +29,7 @@ func (mw *MetricsWrapper) Create(policies []models.Policy) error {
 	err := mw.Store.Create(policies)
 	createTimeDuration := time.Now().Sub(startTime)
 	if err != nil {
-		mw.MetricsSender.SendDuration("StoreCreateErrorTime", createTimeDuration)
+		mw.MetricsSender.IncrementCounter("StoreCreateError")
 	}
 	mw.MetricsSender.SendDuration("StoreCreateTime", createTimeDuration)
 	return err
@@ -39,7 +40,7 @@ func (mw *MetricsWrapper) All() ([]models.Policy, error) {
 	policies, err := mw.Store.All()
 	allTimeDuration := time.Now().Sub(startTime)
 	if err != nil {
-		mw.MetricsSender.SendDuration("StoreAllErrorTime", allTimeDuration)
+		mw.MetricsSender.IncrementCounter("StoreAllError")
 	}
 	mw.MetricsSender.SendDuration("StoreAllTime", allTimeDuration)
 	return policies, err
@@ -50,7 +51,7 @@ func (mw *MetricsWrapper) Delete(policies []models.Policy) error {
 	err := mw.Store.Delete(policies)
 	deleteTimeDuration := time.Now().Sub(startTime)
 	if err != nil {
-		mw.MetricsSender.SendDuration("StoreDeleteErrorTime", deleteTimeDuration)
+		mw.MetricsSender.IncrementCounter("StoreDeleteError")
 	}
 
 	mw.MetricsSender.SendDuration("StoreDeleteTime", deleteTimeDuration)
@@ -62,7 +63,7 @@ func (mw *MetricsWrapper) Tags() ([]models.Tag, error) {
 	tags, err := mw.Store.Tags()
 	allTimeDuration := time.Now().Sub(startTime)
 	if err != nil {
-		mw.MetricsSender.SendDuration("StoreTagsErrorTime", allTimeDuration)
+		mw.MetricsSender.IncrementCounter("StoreTagsError")
 	}
 	mw.MetricsSender.SendDuration("StoreTagsTime", allTimeDuration)
 	return tags, err

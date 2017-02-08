@@ -14,11 +14,11 @@ import (
 	"github.com/onsi/gomega/gbytes"
 )
 
-var _ = Describe("TimeMetrics", func() {
+var _ = Describe("Metrics Sender", func() {
 
 	var (
-		timeMetrics *metrics.MetricsSender
-		logger      *lagertest.TestLogger
+		metricsSender *metrics.MetricsSender
+		logger        *lagertest.TestLogger
 	)
 
 	getValueMetrics := func() []*events.ValueMetric {
@@ -29,9 +29,17 @@ var _ = Describe("TimeMetrics", func() {
 		return emittedMetrics
 	}
 
+	getCounterEvents := func() []*events.CounterEvent {
+		emittedEvents := []*events.CounterEvent{}
+		for _, message := range fakeDropsonde.GetMessages() {
+			emittedEvents = append(emittedEvents, message.Event.(*events.CounterEvent))
+		}
+		return emittedEvents
+	}
+
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test")
-		timeMetrics = &metrics.MetricsSender{
+		metricsSender = &metrics.MetricsSender{
 			Logger: logger,
 		}
 		fakeDropsonde.Reset()
@@ -47,7 +55,7 @@ var _ = Describe("TimeMetrics", func() {
 			duration = 5 * time.Second
 		})
 		It("sends a value through dropsonde", func() {
-			timeMetrics.SendDuration(name, duration)
+			metricsSender.SendDuration(name, duration)
 
 			Eventually(fakeDropsonde.GetMessages).Should(HaveLen(1))
 			Eventually(getValueMetrics).Should(ConsistOf(
@@ -66,7 +74,33 @@ var _ = Describe("TimeMetrics", func() {
 				fakeDropsonde.ReturnError = errors.New("banana")
 			})
 			It("logs the error from dropsonde", func() {
-				timeMetrics.SendDuration(name, duration)
+				metricsSender.SendDuration(name, duration)
+
+				Expect(logger).To(gbytes.Say("sending-metric.*banana"))
+			})
+		})
+	})
+
+	Describe("IncrementCounter", func() {
+		It("sends a value through dropsonde", func() {
+			metricsSender.IncrementCounter("foo")
+			Eventually(fakeDropsonde.GetMessages).Should(HaveLen(1))
+			Eventually(getCounterEvents).Should(ConsistOf(
+				[]*events.CounterEvent{
+					&events.CounterEvent{
+						Name:  proto.String("foo"),
+						Delta: proto.Uint64(1),
+					},
+				},
+			))
+		})
+
+		Context("when dropsonde returns an error", func() {
+			BeforeEach(func() {
+				fakeDropsonde.ReturnError = errors.New("banana")
+			})
+			It("logs the error from dropsonde", func() {
+				metricsSender.IncrementCounter("foo")
 
 				Expect(logger).To(gbytes.Say("sending-metric.*banana"))
 			})

@@ -69,10 +69,11 @@ var _ = Describe("MetricsWrapper", func() {
 				err := metricsWrapper.Create(policies)
 				Expect(err).To(MatchError("banana"))
 
-				Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(2))
+				Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
+				Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("StoreCreateError"))
+
+				Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
 				name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
-				Expect(name).To(Equal("StoreCreateErrorTime"))
-				name, _ = fakeMetricsSender.SendDurationArgsForCall(1)
 				Expect(name).To(Equal("StoreCreateTime"))
 			})
 		})
@@ -107,10 +108,11 @@ var _ = Describe("MetricsWrapper", func() {
 				_, err := metricsWrapper.All()
 				Expect(err).To(MatchError("banana"))
 
-				Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(2))
+				Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
+				Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("StoreAllError"))
+
+				Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
 				name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
-				Expect(name).To(Equal("StoreAllErrorTime"))
-				name, _ = fakeMetricsSender.SendDurationArgsForCall(1)
 				Expect(name).To(Equal("StoreAllTime"))
 
 			})
@@ -143,10 +145,11 @@ var _ = Describe("MetricsWrapper", func() {
 				err := metricsWrapper.Delete(policies)
 				Expect(err).To(MatchError("banana"))
 
-				Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(2))
+				Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
+				Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("StoreDeleteError"))
+
+				Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
 				name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
-				Expect(name).To(Equal("StoreDeleteErrorTime"))
-				name, _ = fakeMetricsSender.SendDurationArgsForCall(1)
 				Expect(name).To(Equal("StoreDeleteTime"))
 			})
 		})
@@ -182,10 +185,11 @@ var _ = Describe("MetricsWrapper", func() {
 				_, err := metricsWrapper.Tags()
 				Expect(err).To(MatchError("banana"))
 
-				Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(2))
+				Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
+				Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("StoreTagsError"))
+
+				Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
 				name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
-				Expect(name).To(Equal("StoreTagsErrorTime"))
-				name, _ = fakeMetricsSender.SendDurationArgsForCall(1)
 				Expect(name).To(Equal("StoreTagsTime"))
 
 			})
