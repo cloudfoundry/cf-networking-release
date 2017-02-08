@@ -62,39 +62,34 @@ type SpacesResponse struct {
 func (c *Client) GetAllAppGUIDs(token string) (map[string]struct{}, error) {
 	token = fmt.Sprintf("bearer %s", token)
 
-	var response AppsV3Response
-	err := c.JSONClient.Do("GET", "/v3/apps", nil, &response, token)
-	if err != nil {
-		return nil, fmt.Errorf("json client do: %s", err)
-	}
-
 	set := make(map[string]struct{})
-	for _, r := range response.Resources {
-		set[r.GUID] = struct{}{}
-	}
-
-	totalPages := response.Pagination.TotalPages
-	for i := 2; i <= totalPages; i += 1 {
-		nextPageHref := response.Pagination.Last.Href
-		if i != totalPages {
-			nextPageHref = response.Pagination.Next.Href
-		}
-
-		parts := strings.Split(nextPageHref, "?")
-		queryParams := parts[1]
-
-		route := fmt.Sprintf("/v3/apps?%s", queryParams)
-		err := c.JSONClient.Do("GET", route, nil, &response, token)
+	nextPage := "?"
+	for nextPage != "" {
+		queryParams := strings.Split(nextPage, "?")[1]
+		response, err := c.makeAppsV3Request(queryParams, token)
 		if err != nil {
-			return nil, fmt.Errorf("json client do: %s", err)
+			return nil, err
 		}
-
-		for _, r := range response.Resources {
-			set[r.GUID] = struct{}{}
+		for _, resource := range response.Resources {
+			set[resource.GUID] = struct{}{}
 		}
+		nextPage = response.Pagination.Next.Href
 	}
 
 	return set, nil
+}
+
+func (c *Client) makeAppsV3Request(queryParams, token string) (AppsV3Response, error) {
+	route := "/v3/apps"
+	if queryParams != "" {
+		route = fmt.Sprintf("%s?%s", route, queryParams)
+	}
+	var response AppsV3Response
+	err := c.JSONClient.Do("GET", route, nil, &response, token)
+	if err != nil {
+		return AppsV3Response{}, fmt.Errorf("json client do: %s", err)
+	}
+	return response, nil
 }
 
 func (c *Client) GetLiveAppGUIDs(token string, appGUIDs []string) (map[string]struct{}, error) {
