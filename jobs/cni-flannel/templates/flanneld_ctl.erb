@@ -13,9 +13,9 @@ ETCD_ENDPOINT=<%= p("cf_networking.plugin.etcd_endpoints").map{|addr| "\"https:/
   require 'json'
 
   def subnet_size
-    size = p("cf_networking.cell_subnet_size")
+    size = p("cf_networking.subnet_size")
     if size < 1 || size > 30
-      raise "'cf_networking.cell_subnet_size' must be a value between 1-30"
+      raise "'cf_networking.subnet_size' must be a value between 1-30"
     end
     size
   end
