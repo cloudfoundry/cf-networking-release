@@ -57,13 +57,6 @@ var schemas = map[string][]string{
 	},
 }
 
-type Store interface {
-	Create([]models.Policy) error
-	All() ([]models.Policy, error)
-	Delete([]models.Policy) error
-	Tags() ([]models.Tag, error)
-}
-
 //go:generate counterfeiter -o fakes/db.go --fake-name Db . db
 type db interface {
 	Beginx() (*sqlx.Tx, error)

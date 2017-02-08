@@ -126,6 +126,15 @@ func main() {
 		log.Fatalf("failed to construct datastore: %s", err)
 	}
 
+	timeMetricsEmitter := &metrics.TimeMetrics{
+		Logger: logger.Session("time-metric-emitter"),
+	}
+
+	wrappedStore := &store.MetricsWrapper{
+		Store:          dataStore,
+		MetricsEmitter: timeMetricsEmitter,
+	}
+
 	unmarshaler := marshal.UnmarshalFunc(json.Unmarshal)
 
 	authenticator := handlers.Authenticator{
@@ -159,7 +168,7 @@ func main() {
 
 	createPolicyHandler := &handlers.PoliciesCreate{
 		Logger:      logger.Session("policies-create"),
-		Store:       dataStore,
+		Store:       wrappedStore,
 		Unmarshaler: unmarshaler,
 		Validator:   validator,
 		PolicyGuard: policyGuard,
@@ -167,7 +176,7 @@ func main() {
 
 	deletePolicyHandler := &handlers.PoliciesDelete{
 		Logger:      logger.Session("policies-create"),
-		Store:       dataStore,
+		Store:       wrappedStore,
 		Unmarshaler: unmarshaler,
 		Validator:   validator,
 		PolicyGuard: policyGuard,
@@ -175,14 +184,14 @@ func main() {
 
 	policiesIndexHandler := &handlers.PoliciesIndex{
 		Logger:       logger.Session("policies-index"),
-		Store:        dataStore,
+		Store:        wrappedStore,
 		Marshaler:    marshal.MarshalFunc(json.Marshal),
 		PolicyFilter: policyFilter,
 	}
 
 	policyCleaner := &cleaner.PolicyCleaner{
 		Logger:    logger.Session("policy-cleaner"),
-		Store:     dataStore,
+		Store:     wrappedStore,
 		UAAClient: uaaClient,
 		CCClient:  ccClient,
 	}
@@ -195,16 +204,13 @@ func main() {
 
 	tagsIndexHandler := &handlers.TagsIndex{
 		Logger:    logger.Session("tags-index"),
-		Store:     dataStore,
+		Store:     wrappedStore,
 		Marshaler: marshal.MarshalFunc(json.Marshal),
 	}
 
-	timeMetricsEmitter := &metrics.TimeMetrics{
-		Logger: logger.Session("time-metric-emitter"),
-	}
 	internalPoliciesHandler := &handlers.PoliciesIndexInternal{
 		Logger:         logger.Session("policies-index-internal"),
-		Store:          dataStore,
+		Store:          wrappedStore,
 		Marshaler:      marshal.MarshalFunc(json.Marshal),
 		MetricsEmitter: timeMetricsEmitter,
 	}
@@ -294,7 +300,7 @@ func main() {
 		log.Fatalf("initializing dropsonde: %s", err)
 	}
 
-	totalPoliciesSource := server_metrics.NewTotalPoliciesSource(dataStore)
+	totalPoliciesSource := server_metrics.NewTotalPoliciesSource(wrappedStore)
 	uptimeSource := metrics.NewUptimeSource()
 	metricsEmitter := metrics.NewMetricsEmitter(logger, emitInterval, uptimeSource, totalPoliciesSource)
 

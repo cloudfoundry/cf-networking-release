@@ -111,5 +111,8 @@ var _ = Describe("Internal API", func() {
 		Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
 			HaveName("InternalPoliciesQueryTime"),
 		))
+		Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
+			HaveName("StoreAllTime"),
+		))
 	})
 })

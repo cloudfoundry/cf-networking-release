@@ -88,6 +88,11 @@ var _ = Describe("Automatic Stale Policy Cleanup", func() {
 				{"source": { "id": "live-app-2-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "port": 9999 } }
 				]} `
 			Eventually(listPolicies, "5s").Should(MatchJSON(activePolicies))
+
+			By("emitting store metrics")
+			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
+				HaveName("StoreDeleteTime"),
+			))
 		})
 	})
 })
