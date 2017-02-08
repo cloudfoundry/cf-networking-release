@@ -71,7 +71,7 @@ var _ = Describe("how the container network performs at scale", func() {
 				assertConnectionFails(appProxy, sample, ports, proxyInstances)
 			})
 
-			By("creating policies")
+			By(fmt.Sprintf("creating %d policies", len(appsTest)*len(ports)))
 			doAllPolicies("create", appProxy, appsTest, ports)
 
 			By(fmt.Sprintf("waiting %s for policies to be updated on cells", Policy_Update_Wait))
@@ -89,7 +89,7 @@ var _ = Describe("how the container network performs at scale", func() {
 			By("sleeping for 30 seconds while policies exist")
 			time.Sleep(30 * time.Second)
 
-			By("deleting policies")
+			By(fmt.Sprintf("deleting %d policies", len(appsTest)*len(ports)))
 			doAllPolicies("delete", appProxy, appsTest, ports)
 
 			By(fmt.Sprintf("waiting %s for policies to be updated on cells", Policy_Update_Wait))
