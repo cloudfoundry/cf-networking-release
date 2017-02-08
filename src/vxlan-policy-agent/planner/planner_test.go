@@ -250,7 +250,11 @@ var _ = Describe("Planner", func() {
 		It("emits time metrics", func() {
 			_, err := policyPlanner.GetRulesAndChain()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(timeMetricsEmitter.EmitAllCallCount()).To(Equal(1))
+			Expect(timeMetricsEmitter.EmitDurationCallCount()).To(Equal(2))
+			name, _ := timeMetricsEmitter.EmitDurationArgsForCall(0)
+			Expect(name).To(Equal("containerMetadataTime"))
+			name, _ = timeMetricsEmitter.EmitDurationArgsForCall(1)
+			Expect(name).To(Equal("policyServerPollTime"))
 		})
 
 		Context("when the policies are returned from the server in a different order", func() {

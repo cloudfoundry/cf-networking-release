@@ -7,44 +7,46 @@ import (
 )
 
 type MetricsEmitter struct {
-	EmitAllStub        func(map[string]time.Duration)
-	emitAllMutex       sync.RWMutex
-	emitAllArgsForCall []struct {
-		arg1 map[string]time.Duration
+	EmitDurationStub        func(string, time.Duration)
+	emitDurationMutex       sync.RWMutex
+	emitDurationArgsForCall []struct {
+		arg1 string
+		arg2 time.Duration
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *MetricsEmitter) EmitAll(arg1 map[string]time.Duration) {
-	fake.emitAllMutex.Lock()
-	fake.emitAllArgsForCall = append(fake.emitAllArgsForCall, struct {
-		arg1 map[string]time.Duration
-	}{arg1})
-	fake.recordInvocation("EmitAll", []interface{}{arg1})
-	fake.emitAllMutex.Unlock()
-	if fake.EmitAllStub != nil {
-		fake.EmitAllStub(arg1)
+func (fake *MetricsEmitter) EmitDuration(arg1 string, arg2 time.Duration) {
+	fake.emitDurationMutex.Lock()
+	fake.emitDurationArgsForCall = append(fake.emitDurationArgsForCall, struct {
+		arg1 string
+		arg2 time.Duration
+	}{arg1, arg2})
+	fake.recordInvocation("EmitDuration", []interface{}{arg1, arg2})
+	fake.emitDurationMutex.Unlock()
+	if fake.EmitDurationStub != nil {
+		fake.EmitDurationStub(arg1, arg2)
 	}
 }
 
-func (fake *MetricsEmitter) EmitAllCallCount() int {
-	fake.emitAllMutex.RLock()
-	defer fake.emitAllMutex.RUnlock()
-	return len(fake.emitAllArgsForCall)
+func (fake *MetricsEmitter) EmitDurationCallCount() int {
+	fake.emitDurationMutex.RLock()
+	defer fake.emitDurationMutex.RUnlock()
+	return len(fake.emitDurationArgsForCall)
 }
 
-func (fake *MetricsEmitter) EmitAllArgsForCall(i int) map[string]time.Duration {
-	fake.emitAllMutex.RLock()
-	defer fake.emitAllMutex.RUnlock()
-	return fake.emitAllArgsForCall[i].arg1
+func (fake *MetricsEmitter) EmitDurationArgsForCall(i int) (string, time.Duration) {
+	fake.emitDurationMutex.RLock()
+	defer fake.emitDurationMutex.RUnlock()
+	return fake.emitDurationArgsForCall[i].arg1, fake.emitDurationArgsForCall[i].arg2
 }
 
 func (fake *MetricsEmitter) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.emitAllMutex.RLock()
-	defer fake.emitAllMutex.RUnlock()
+	fake.emitDurationMutex.RLock()
+	defer fake.emitDurationMutex.RUnlock()
 	return fake.invocations
 }
 

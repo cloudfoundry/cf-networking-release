@@ -61,10 +61,8 @@ func (m *SinglePollCycle) DoCycle() error {
 	}
 
 	pollDuration := time.Now().Sub(pollStartTime)
-	m.CollectionEmitter.EmitAll(map[string]time.Duration{
-		agent_metrics.MetricEnforceDuration: enforceDuration,
-		agent_metrics.MetricPollDuration:    pollDuration,
-	})
+	m.CollectionEmitter.EmitDuration(agent_metrics.MetricEnforceDuration, enforceDuration)
+	m.CollectionEmitter.EmitDuration(agent_metrics.MetricPollDuration, pollDuration)
 
 	return nil
 }

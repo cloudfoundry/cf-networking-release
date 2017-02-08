@@ -56,9 +56,9 @@ var _ = Describe("MetricsWrapper", func() {
 			err := metricsWrapper.Create(policies)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(fakeMetricsEmitter.EmitAllCallCount()).To(Equal(1))
-			Expect(fakeMetricsEmitter.EmitAllArgsForCall(0)).To(HaveLen(1))
-			Expect(fakeMetricsEmitter.EmitAllArgsForCall(0)).To(HaveKey("StoreCreateTime"))
+			Expect(fakeMetricsEmitter.EmitDurationCallCount()).To(Equal(1))
+			name, _ := fakeMetricsEmitter.EmitDurationArgsForCall(0)
+			Expect(name).To(Equal("StoreCreateTime"))
 		})
 
 		Context("when there is an error", func() {
@@ -69,10 +69,11 @@ var _ = Describe("MetricsWrapper", func() {
 				err := metricsWrapper.Create(policies)
 				Expect(err).To(MatchError("banana"))
 
-				Expect(fakeMetricsEmitter.EmitAllCallCount()).To(Equal(1))
-				Expect(fakeMetricsEmitter.EmitAllArgsForCall(0)).To(HaveLen(2))
-				Expect(fakeMetricsEmitter.EmitAllArgsForCall(0)).To(HaveKey("StoreCreateErrorTime"))
-				Expect(fakeMetricsEmitter.EmitAllArgsForCall(0)).To(HaveKey("StoreCreateTime"))
+				Expect(fakeMetricsEmitter.EmitDurationCallCount()).To(Equal(2))
+				name, _ := fakeMetricsEmitter.EmitDurationArgsForCall(0)
+				Expect(name).To(Equal("StoreCreateErrorTime"))
+				name, _ = fakeMetricsEmitter.EmitDurationArgsForCall(1)
+				Expect(name).To(Equal("StoreCreateTime"))
 			})
 		})
 	})
@@ -93,9 +94,9 @@ var _ = Describe("MetricsWrapper", func() {
 			_, err := metricsWrapper.All()
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(fakeMetricsEmitter.EmitAllCallCount()).To(Equal(1))
-			Expect(fakeMetricsEmitter.EmitAllArgsForCall(0)).To(HaveLen(1))
-			Expect(fakeMetricsEmitter.EmitAllArgsForCall(0)).To(HaveKey("StoreAllTime"))
+			Expect(fakeMetricsEmitter.EmitDurationCallCount()).To(Equal(1))
+			name, _ := fakeMetricsEmitter.EmitDurationArgsForCall(0)
+			Expect(name).To(Equal("StoreAllTime"))
 		})
 
 		Context("when there is an error", func() {
@@ -106,10 +107,11 @@ var _ = Describe("MetricsWrapper", func() {
 				_, err := metricsWrapper.All()
 				Expect(err).To(MatchError("banana"))
 
-				Expect(fakeMetricsEmitter.EmitAllCallCount()).To(Equal(1))
-				Expect(fakeMetricsEmitter.EmitAllArgsForCall(0)).To(HaveLen(2))
-				Expect(fakeMetricsEmitter.EmitAllArgsForCall(0)).To(HaveKey("StoreAllTime"))
-				Expect(fakeMetricsEmitter.EmitAllArgsForCall(0)).To(HaveKey("StoreAllErrorTime"))
+				Expect(fakeMetricsEmitter.EmitDurationCallCount()).To(Equal(2))
+				name, _ := fakeMetricsEmitter.EmitDurationArgsForCall(0)
+				Expect(name).To(Equal("StoreAllErrorTime"))
+				name, _ = fakeMetricsEmitter.EmitDurationArgsForCall(1)
+				Expect(name).To(Equal("StoreAllTime"))
 
 			})
 		})
@@ -128,9 +130,9 @@ var _ = Describe("MetricsWrapper", func() {
 			err := metricsWrapper.Delete(policies)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(fakeMetricsEmitter.EmitAllCallCount()).To(Equal(1))
-			Expect(fakeMetricsEmitter.EmitAllArgsForCall(0)).To(HaveLen(1))
-			Expect(fakeMetricsEmitter.EmitAllArgsForCall(0)).To(HaveKey("StoreDeleteTime"))
+			Expect(fakeMetricsEmitter.EmitDurationCallCount()).To(Equal(1))
+			name, _ := fakeMetricsEmitter.EmitDurationArgsForCall(0)
+			Expect(name).To(Equal("StoreDeleteTime"))
 		})
 
 		Context("when there is an error", func() {
@@ -141,10 +143,11 @@ var _ = Describe("MetricsWrapper", func() {
 				err := metricsWrapper.Delete(policies)
 				Expect(err).To(MatchError("banana"))
 
-				Expect(fakeMetricsEmitter.EmitAllCallCount()).To(Equal(1))
-				Expect(fakeMetricsEmitter.EmitAllArgsForCall(0)).To(HaveLen(2))
-				Expect(fakeMetricsEmitter.EmitAllArgsForCall(0)).To(HaveKey("StoreDeleteErrorTime"))
-				Expect(fakeMetricsEmitter.EmitAllArgsForCall(0)).To(HaveKey("StoreDeleteTime"))
+				Expect(fakeMetricsEmitter.EmitDurationCallCount()).To(Equal(2))
+				name, _ := fakeMetricsEmitter.EmitDurationArgsForCall(0)
+				Expect(name).To(Equal("StoreDeleteErrorTime"))
+				name, _ = fakeMetricsEmitter.EmitDurationArgsForCall(1)
+				Expect(name).To(Equal("StoreDeleteTime"))
 			})
 		})
 	})
@@ -165,9 +168,10 @@ var _ = Describe("MetricsWrapper", func() {
 			_, err := metricsWrapper.Tags()
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(fakeMetricsEmitter.EmitAllCallCount()).To(Equal(1))
-			Expect(fakeMetricsEmitter.EmitAllArgsForCall(0)).To(HaveLen(1))
-			Expect(fakeMetricsEmitter.EmitAllArgsForCall(0)).To(HaveKey("StoreTagsTime"))
+			Expect(fakeMetricsEmitter.EmitDurationCallCount()).To(Equal(1))
+			name, _ := fakeMetricsEmitter.EmitDurationArgsForCall(0)
+			Expect(name).To(Equal("StoreTagsTime"))
+
 		})
 
 		Context("when there is an error", func() {
@@ -178,10 +182,11 @@ var _ = Describe("MetricsWrapper", func() {
 				_, err := metricsWrapper.Tags()
 				Expect(err).To(MatchError("banana"))
 
-				Expect(fakeMetricsEmitter.EmitAllCallCount()).To(Equal(1))
-				Expect(fakeMetricsEmitter.EmitAllArgsForCall(0)).To(HaveLen(2))
-				Expect(fakeMetricsEmitter.EmitAllArgsForCall(0)).To(HaveKey("StoreTagsTime"))
-				Expect(fakeMetricsEmitter.EmitAllArgsForCall(0)).To(HaveKey("StoreTagsErrorTime"))
+				Expect(fakeMetricsEmitter.EmitDurationCallCount()).To(Equal(2))
+				name, _ := fakeMetricsEmitter.EmitDurationArgsForCall(0)
+				Expect(name).To(Equal("StoreTagsErrorTime"))
+				name, _ = fakeMetricsEmitter.EmitDurationArgsForCall(1)
+				Expect(name).To(Equal("StoreTagsTime"))
 
 			})
 		})

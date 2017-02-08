@@ -88,10 +88,8 @@ func (p *VxlanPolicyPlanner) GetRulesAndChain() (enforcer.RulesWithChain, error)
 	}
 
 	policyServerPollDuration := time.Now().Sub(policyServerStartRequestTime)
-	p.CollectionEmitter.EmitAll(map[string]time.Duration{
-		agent_metrics.MetricContainerMetadata: containerMetadataDuration,
-		agent_metrics.MetricPolicyServerPoll:  policyServerPollDuration,
-	})
+	p.CollectionEmitter.EmitDuration(agent_metrics.MetricContainerMetadata, containerMetadataDuration)
+	p.CollectionEmitter.EmitDuration(agent_metrics.MetricPolicyServerPoll, policyServerPollDuration)
 
 	marksRuleset := []rules.IPTablesRule{}
 	markedSourceIPs := make(map[string]struct{})

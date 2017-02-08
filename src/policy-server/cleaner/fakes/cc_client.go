@@ -33,9 +33,8 @@ func (fake *CCClient) GetLiveAppGUIDs(token string, appGUIDs []string) (map[stri
 	fake.getLiveAppGUIDsMutex.Unlock()
 	if fake.GetLiveAppGUIDsStub != nil {
 		return fake.GetLiveAppGUIDsStub(token, appGUIDs)
-	} else {
-		return fake.getLiveAppGUIDsReturns.result1, fake.getLiveAppGUIDsReturns.result2
 	}
+	return fake.getLiveAppGUIDsReturns.result1, fake.getLiveAppGUIDsReturns.result2
 }
 
 func (fake *CCClient) GetLiveAppGUIDsCallCount() int {

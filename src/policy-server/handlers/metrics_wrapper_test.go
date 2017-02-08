@@ -38,8 +38,9 @@ var _ = Describe("MetricsWrapper", func() {
 
 		It("emits a metric", func() {
 			outerHandler.ServeHTTP(resp, request)
-			Expect(fakeMetricsEmitter.EmitAllCallCount()).To(Equal(1))
-			Expect(fakeMetricsEmitter.EmitAllArgsForCall(0)).To(HaveKey("name"))
+			Expect(fakeMetricsEmitter.EmitDurationCallCount()).To(Equal(1))
+			name, _ := fakeMetricsEmitter.EmitDurationArgsForCall(0)
+			Expect(name).To(Equal("name"))
 		})
 
 		It("serves the request with the provided handler", func() {

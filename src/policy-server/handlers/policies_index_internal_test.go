@@ -86,11 +86,9 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		Expect(err).NotTo(HaveOccurred())
 		handler.ServeHTTP(resp, request)
 
-		Expect(fakeMetricsEmitter.EmitAllCallCount()).To(Equal(1))
-
-		queryMetric := fakeMetricsEmitter.EmitAllArgsForCall(0)
-		_, ok := queryMetric["InternalPoliciesQueryTime"]
-		Expect(ok).To(BeTrue())
+		Expect(fakeMetricsEmitter.EmitDurationCallCount()).To(Equal(1))
+		name, _ := fakeMetricsEmitter.EmitDurationArgsForCall(0)
+		Expect(name).To(Equal("InternalPoliciesQueryTime"))
 	})
 
 	Context("when there are no policies", func() {

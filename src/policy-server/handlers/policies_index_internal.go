@@ -21,7 +21,7 @@ type store interface {
 
 //go:generate counterfeiter -o fakes/time_metrics_emitter.go --fake-name MetricsEmitter . metricsEmitter
 type metricsEmitter interface {
-	EmitAll(map[string]time.Duration)
+	EmitDuration(string, time.Duration)
 }
 
 type PoliciesIndexInternal struct {
@@ -37,9 +37,7 @@ func (h *PoliciesIndexInternal) ServeHTTP(w http.ResponseWriter, req *http.Reque
 	policies, err := h.Store.All()
 
 	queryDuration := time.Now().Sub(startTime)
-	h.MetricsEmitter.EmitAll(map[string]time.Duration{
-		server_metrics.MetricInternalPoliciesQueryDuration: queryDuration,
-	})
+	h.MetricsEmitter.EmitDuration(server_metrics.MetricInternalPoliciesQueryDuration, queryDuration)
 
 	if err != nil {
 		h.Logger.Error("store-list-policies-failed", err)
