@@ -4,13 +4,12 @@ package fakes
 import (
 	"sync"
 	"time"
-	"vxlan-policy-agent/agent_metrics"
 )
 
 type MetricsSender struct {
 	SendDurationStub        func(string, time.Duration)
-	emitDurationMutex       sync.RWMutex
-	emitDurationArgsForCall []struct {
+	sendDurationMutex       sync.RWMutex
+	sendDurationArgsForCall []struct {
 		arg1 string
 		arg2 time.Duration
 	}
@@ -19,35 +18,35 @@ type MetricsSender struct {
 }
 
 func (fake *MetricsSender) SendDuration(arg1 string, arg2 time.Duration) {
-	fake.emitDurationMutex.Lock()
-	fake.emitDurationArgsForCall = append(fake.emitDurationArgsForCall, struct {
+	fake.sendDurationMutex.Lock()
+	fake.sendDurationArgsForCall = append(fake.sendDurationArgsForCall, struct {
 		arg1 string
 		arg2 time.Duration
 	}{arg1, arg2})
 	fake.recordInvocation("SendDuration", []interface{}{arg1, arg2})
-	fake.emitDurationMutex.Unlock()
+	fake.sendDurationMutex.Unlock()
 	if fake.SendDurationStub != nil {
 		fake.SendDurationStub(arg1, arg2)
 	}
 }
 
 func (fake *MetricsSender) SendDurationCallCount() int {
-	fake.emitDurationMutex.RLock()
-	defer fake.emitDurationMutex.RUnlock()
-	return len(fake.emitDurationArgsForCall)
+	fake.sendDurationMutex.RLock()
+	defer fake.sendDurationMutex.RUnlock()
+	return len(fake.sendDurationArgsForCall)
 }
 
 func (fake *MetricsSender) SendDurationArgsForCall(i int) (string, time.Duration) {
-	fake.emitDurationMutex.RLock()
-	defer fake.emitDurationMutex.RUnlock()
-	return fake.emitDurationArgsForCall[i].arg1, fake.emitDurationArgsForCall[i].arg2
+	fake.sendDurationMutex.RLock()
+	defer fake.sendDurationMutex.RUnlock()
+	return fake.sendDurationArgsForCall[i].arg1, fake.sendDurationArgsForCall[i].arg2
 }
 
 func (fake *MetricsSender) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.emitDurationMutex.RLock()
-	defer fake.emitDurationMutex.RUnlock()
+	fake.sendDurationMutex.RLock()
+	defer fake.sendDurationMutex.RUnlock()
 	return fake.invocations
 }
 
@@ -62,5 +61,3 @@ func (fake *MetricsSender) recordInvocation(key string, args []interface{}) {
 	}
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
-
-var _ agent_metrics.MetricsSender = new(MetricsSender)

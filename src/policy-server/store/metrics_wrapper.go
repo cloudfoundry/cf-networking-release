@@ -13,14 +13,14 @@ type Store interface {
 	Tags() ([]models.Tag, error)
 }
 
-//go:generate counterfeiter -o fakes/time_metrics_emitter.go --fake-name MetricsEmitter . metricsEmitter
-type metricsEmitter interface {
-	EmitDuration(string, time.Duration)
+//go:generate counterfeiter -o fakes/metrics_sender.go --fake-name MetricsSender . metricsSender
+type metricsSender interface {
+	SendDuration(string, time.Duration)
 }
 
 type MetricsWrapper struct {
-	Store          Store
-	MetricsEmitter metricsEmitter
+	Store         Store
+	MetricsSender metricsSender
 }
 
 func (mw *MetricsWrapper) Create(policies []models.Policy) error {
@@ -28,9 +28,9 @@ func (mw *MetricsWrapper) Create(policies []models.Policy) error {
 	err := mw.Store.Create(policies)
 	createTimeDuration := time.Now().Sub(startTime)
 	if err != nil {
-		mw.MetricsEmitter.EmitDuration("StoreCreateErrorTime", createTimeDuration)
+		mw.MetricsSender.SendDuration("StoreCreateErrorTime", createTimeDuration)
 	}
-	mw.MetricsEmitter.EmitDuration("StoreCreateTime", createTimeDuration)
+	mw.MetricsSender.SendDuration("StoreCreateTime", createTimeDuration)
 	return err
 }
 
@@ -39,9 +39,9 @@ func (mw *MetricsWrapper) All() ([]models.Policy, error) {
 	policies, err := mw.Store.All()
 	allTimeDuration := time.Now().Sub(startTime)
 	if err != nil {
-		mw.MetricsEmitter.EmitDuration("StoreAllErrorTime", allTimeDuration)
+		mw.MetricsSender.SendDuration("StoreAllErrorTime", allTimeDuration)
 	}
-	mw.MetricsEmitter.EmitDuration("StoreAllTime", allTimeDuration)
+	mw.MetricsSender.SendDuration("StoreAllTime", allTimeDuration)
 	return policies, err
 }
 
@@ -50,10 +50,10 @@ func (mw *MetricsWrapper) Delete(policies []models.Policy) error {
 	err := mw.Store.Delete(policies)
 	deleteTimeDuration := time.Now().Sub(startTime)
 	if err != nil {
-		mw.MetricsEmitter.EmitDuration("StoreDeleteErrorTime", deleteTimeDuration)
+		mw.MetricsSender.SendDuration("StoreDeleteErrorTime", deleteTimeDuration)
 	}
 
-	mw.MetricsEmitter.EmitDuration("StoreDeleteTime", deleteTimeDuration)
+	mw.MetricsSender.SendDuration("StoreDeleteTime", deleteTimeDuration)
 	return err
 }
 
@@ -62,8 +62,8 @@ func (mw *MetricsWrapper) Tags() ([]models.Tag, error) {
 	tags, err := mw.Store.Tags()
 	allTimeDuration := time.Now().Sub(startTime)
 	if err != nil {
-		mw.MetricsEmitter.EmitDuration("StoreTagsErrorTime", allTimeDuration)
+		mw.MetricsSender.SendDuration("StoreTagsErrorTime", allTimeDuration)
 	}
-	mw.MetricsEmitter.EmitDuration("StoreTagsTime", allTimeDuration)
+	mw.MetricsSender.SendDuration("StoreTagsTime", allTimeDuration)
 	return tags, err
 }

@@ -19,16 +19,16 @@ type store interface {
 	Tags() ([]models.Tag, error)
 }
 
-//go:generate counterfeiter -o fakes/time_metrics_emitter.go --fake-name MetricsEmitter . metricsEmitter
-type metricsEmitter interface {
-	EmitDuration(string, time.Duration)
+//go:generate counterfeiter -o fakes/metrics_sender.go --fake-name MetricsSender . metricsSender
+type metricsSender interface {
+	SendDuration(string, time.Duration)
 }
 
 type PoliciesIndexInternal struct {
-	Logger         lager.Logger
-	Store          store
-	Marshaler      marshal.Marshaler
-	MetricsEmitter metricsEmitter
+	Logger        lager.Logger
+	Store         store
+	Marshaler     marshal.Marshaler
+	MetricsSender metricsSender
 }
 
 func (h *PoliciesIndexInternal) ServeHTTP(w http.ResponseWriter, req *http.Request) {
@@ -37,7 +37,7 @@ func (h *PoliciesIndexInternal) ServeHTTP(w http.ResponseWriter, req *http.Reque
 	policies, err := h.Store.All()
 
 	queryDuration := time.Now().Sub(startTime)
-	h.MetricsEmitter.EmitDuration(server_metrics.MetricInternalPoliciesQueryDuration, queryDuration)
+	h.MetricsSender.SendDuration(server_metrics.MetricInternalPoliciesQueryDuration, queryDuration)
 
 	if err != nil {
 		h.Logger.Error("store-list-policies-failed", err)

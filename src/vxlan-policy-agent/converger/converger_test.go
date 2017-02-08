@@ -22,7 +22,7 @@ var _ = Describe("Single Poll Cycle", func() {
 			fakeLocalPlanner     *fakes.Planner
 			fakeRemotePlanner    *fakes.Planner
 			fakeEnforcer         *fakes.RuleEnforcer
-			timeMetricsEmitter   *fakes.TimeMetricsEmitter
+			metricsSender        *fakes.MetricsSender
 			localRulesWithChain  enforcer.RulesWithChain
 			remoteRulesWithChain enforcer.RulesWithChain
 			policyRulesWithChain enforcer.RulesWithChain
@@ -34,14 +34,14 @@ var _ = Describe("Single Poll Cycle", func() {
 			fakeLocalPlanner = &fakes.Planner{}
 			fakeRemotePlanner = &fakes.Planner{}
 			fakeEnforcer = &fakes.RuleEnforcer{}
-			timeMetricsEmitter = &fakes.TimeMetricsEmitter{}
+			metricsSender = &fakes.MetricsSender{}
 			logger = lagertest.NewTestLogger("test")
 
 			p = &converger.SinglePollCycle{
-				Planners:          []converger.Planner{fakeLocalPlanner, fakeRemotePlanner, fakePolicyPlanner},
-				Enforcer:          fakeEnforcer,
-				CollectionEmitter: timeMetricsEmitter,
-				Logger:            logger,
+				Planners:      []converger.Planner{fakeLocalPlanner, fakeRemotePlanner, fakePolicyPlanner},
+				Enforcer:      fakeEnforcer,
+				MetricsSender: metricsSender,
+				Logger:        logger,
 			}
 
 			localRulesWithChain = enforcer.RulesWithChain{
@@ -93,10 +93,10 @@ var _ = Describe("Single Poll Cycle", func() {
 		It("emits time metrics", func() {
 			err := p.DoCycle()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(timeMetricsEmitter.EmitDurationCallCount()).To(Equal(2))
-			name, _ := timeMetricsEmitter.EmitDurationArgsForCall(0)
+			Expect(metricsSender.SendDurationCallCount()).To(Equal(2))
+			name, _ := metricsSender.SendDurationArgsForCall(0)
 			Expect(name).To(Equal("iptablesEnforceTime"))
-			name, _ = timeMetricsEmitter.EmitDurationArgsForCall(1)
+			name, _ = metricsSender.SendDurationArgsForCall(1)
 			Expect(name).To(Equal("totalPollTime"))
 		})
 
@@ -175,7 +175,7 @@ var _ = Describe("Single Poll Cycle", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(fakeEnforcer.EnforceRulesAndChainCallCount()).To(Equal(3))
-				Expect(timeMetricsEmitter.EmitDurationCallCount()).To(Equal(2))
+				Expect(metricsSender.SendDurationCallCount()).To(Equal(2))
 			})
 		})
 
@@ -189,7 +189,7 @@ var _ = Describe("Single Poll Cycle", func() {
 				Expect(err).To(MatchError("get-rules: eggplant"))
 
 				Expect(fakeEnforcer.EnforceRulesAndChainCallCount()).To(Equal(0))
-				Expect(timeMetricsEmitter.EmitDurationCallCount()).To(Equal(0))
+				Expect(metricsSender.SendDurationCallCount()).To(Equal(0))
 			})
 		})
 
@@ -203,7 +203,7 @@ var _ = Describe("Single Poll Cycle", func() {
 				Expect(err).To(MatchError("get-rules: eggplant"))
 
 				Expect(fakeEnforcer.EnforceRulesAndChainCallCount()).To(Equal(1))
-				Expect(timeMetricsEmitter.EmitDurationCallCount()).To(Equal(0))
+				Expect(metricsSender.SendDurationCallCount()).To(Equal(0))
 			})
 		})
 
@@ -217,7 +217,7 @@ var _ = Describe("Single Poll Cycle", func() {
 				Expect(err).To(MatchError("get-rules: eggplant"))
 
 				Expect(fakeEnforcer.EnforceRulesAndChainCallCount()).To(Equal(2))
-				Expect(timeMetricsEmitter.EmitDurationCallCount()).To(Equal(0))
+				Expect(metricsSender.SendDurationCallCount()).To(Equal(0))
 			})
 		})
 
@@ -230,7 +230,7 @@ var _ = Describe("Single Poll Cycle", func() {
 				err := p.DoCycle()
 				Expect(err).To(MatchError("enforce: eggplant"))
 
-				Expect(timeMetricsEmitter.EmitDurationCallCount()).To(Equal(0))
+				Expect(metricsSender.SendDurationCallCount()).To(Equal(0))
 			})
 		})
 	})

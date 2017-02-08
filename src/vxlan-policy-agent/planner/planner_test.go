@@ -24,7 +24,7 @@ var _ = Describe("Planner", func() {
 		policyClient         *fakes.PolicyClient
 		policyServerResponse []models.Policy
 		store                *libfakes.Datastore
-		timeMetricsEmitter   *fakes.TimeMetricsEmitter
+		metricsSender        *fakes.MetricsSender
 		logger               *lagertest.TestLogger
 		chain                enforcer.Chain
 		data                 map[string]datastore.Container
@@ -34,7 +34,7 @@ var _ = Describe("Planner", func() {
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test")
 		policyClient = &fakes.PolicyClient{}
-		timeMetricsEmitter = &fakes.TimeMetricsEmitter{}
+		metricsSender = &fakes.MetricsSender{}
 		loggingStateGetter = &fakes.LoggingStateGetter{}
 
 		store = &libfakes.Datastore{}
@@ -105,13 +105,13 @@ var _ = Describe("Planner", func() {
 		}
 
 		policyPlanner = &planner.VxlanPolicyPlanner{
-			Logger:            logger,
-			Datastore:         store,
-			PolicyClient:      policyClient,
-			VNI:               42,
-			CollectionEmitter: timeMetricsEmitter,
-			Chain:             chain,
-			LoggingState:      loggingStateGetter,
+			Logger:        logger,
+			Datastore:     store,
+			PolicyClient:  policyClient,
+			VNI:           42,
+			MetricsSender: metricsSender,
+			Chain:         chain,
+			LoggingState:  loggingStateGetter,
 		}
 	})
 
@@ -250,10 +250,10 @@ var _ = Describe("Planner", func() {
 		It("emits time metrics", func() {
 			_, err := policyPlanner.GetRulesAndChain()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(timeMetricsEmitter.EmitDurationCallCount()).To(Equal(2))
-			name, _ := timeMetricsEmitter.EmitDurationArgsForCall(0)
+			Expect(metricsSender.SendDurationCallCount()).To(Equal(2))
+			name, _ := metricsSender.SendDurationArgsForCall(0)
 			Expect(name).To(Equal("containerMetadataTime"))
-			name, _ = timeMetricsEmitter.EmitDurationArgsForCall(1)
+			name, _ = metricsSender.SendDurationArgsForCall(1)
 			Expect(name).To(Equal("policyServerPollTime"))
 		})
 

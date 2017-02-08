@@ -13,19 +13,19 @@ import (
 
 var _ = Describe("MetricsWrapper", func() {
 	var (
-		request            *http.Request
-		resp               *httptest.ResponseRecorder
-		innerHandler       *fakes.HTTPHandler
-		outerHandler       http.Handler
-		metricWrapper      *handlers.MetricWrapper
-		fakeMetricsEmitter *fakes.MetricsEmitter
+		request           *http.Request
+		resp              *httptest.ResponseRecorder
+		innerHandler      *fakes.HTTPHandler
+		outerHandler      http.Handler
+		metricWrapper     *handlers.MetricWrapper
+		fakeMetricsSender *fakes.MetricsSender
 	)
 	Describe("Wrap", func() {
 		BeforeEach(func() {
-			fakeMetricsEmitter = &fakes.MetricsEmitter{}
+			fakeMetricsSender = &fakes.MetricsSender{}
 			metricWrapper = &handlers.MetricWrapper{
-				Name:           "name",
-				MetricsEmitter: fakeMetricsEmitter,
+				Name:          "name",
+				MetricsSender: fakeMetricsSender,
 			}
 			var err error
 
@@ -38,8 +38,8 @@ var _ = Describe("MetricsWrapper", func() {
 
 		It("emits a metric", func() {
 			outerHandler.ServeHTTP(resp, request)
-			Expect(fakeMetricsEmitter.EmitDurationCallCount()).To(Equal(1))
-			name, _ := fakeMetricsEmitter.EmitDurationArgsForCall(0)
+			Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
+			name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
 			Expect(name).To(Equal("name"))
 		})
 

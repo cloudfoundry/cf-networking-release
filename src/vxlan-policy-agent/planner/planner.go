@@ -23,13 +23,13 @@ type dstore interface {
 }
 
 type VxlanPolicyPlanner struct {
-	Logger            lager.Logger
-	Datastore         dstore
-	PolicyClient      policyClient
-	VNI               int
-	CollectionEmitter agent_metrics.TimeMetricsEmitter
-	Chain             enforcer.Chain
-	LoggingState      loggingStateGetter
+	Logger        lager.Logger
+	Datastore     dstore
+	PolicyClient  policyClient
+	VNI           int
+	MetricsSender agent_metrics.MetricsSender
+	Chain         enforcer.Chain
+	LoggingState  loggingStateGetter
 }
 
 type Container struct {
@@ -88,8 +88,8 @@ func (p *VxlanPolicyPlanner) GetRulesAndChain() (enforcer.RulesWithChain, error)
 	}
 
 	policyServerPollDuration := time.Now().Sub(policyServerStartRequestTime)
-	p.CollectionEmitter.EmitDuration(agent_metrics.MetricContainerMetadata, containerMetadataDuration)
-	p.CollectionEmitter.EmitDuration(agent_metrics.MetricPolicyServerPoll, policyServerPollDuration)
+	p.MetricsSender.SendDuration(agent_metrics.MetricContainerMetadata, containerMetadataDuration)
+	p.MetricsSender.SendDuration(agent_metrics.MetricPolicyServerPoll, policyServerPollDuration)
 
 	marksRuleset := []rules.IPTablesRule{}
 	markedSourceIPs := make(map[string]struct{})

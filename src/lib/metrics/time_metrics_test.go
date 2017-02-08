@@ -17,7 +17,7 @@ import (
 var _ = Describe("TimeMetrics", func() {
 
 	var (
-		timeMetrics *metrics.TimeMetrics
+		timeMetrics *metrics.MetricsSender
 		logger      *lagertest.TestLogger
 	)
 
@@ -31,13 +31,13 @@ var _ = Describe("TimeMetrics", func() {
 
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test")
-		timeMetrics = &metrics.TimeMetrics{
+		timeMetrics = &metrics.MetricsSender{
 			Logger: logger,
 		}
 		fakeDropsonde.Reset()
 	})
 
-	Describe("EmitDuration", func() {
+	Describe("SendDuration", func() {
 		var (
 			name     string
 			duration time.Duration
@@ -47,7 +47,7 @@ var _ = Describe("TimeMetrics", func() {
 			duration = 5 * time.Second
 		})
 		It("sends a value through dropsonde", func() {
-			timeMetrics.EmitDuration(name, duration)
+			timeMetrics.SendDuration(name, duration)
 
 			Eventually(fakeDropsonde.GetMessages).Should(HaveLen(1))
 			Eventually(getValueMetrics).Should(ConsistOf(
@@ -66,7 +66,7 @@ var _ = Describe("TimeMetrics", func() {
 				fakeDropsonde.ReturnError = errors.New("banana")
 			})
 			It("logs the error from dropsonde", func() {
-				timeMetrics.EmitDuration(name, duration)
+				timeMetrics.SendDuration(name, duration)
 
 				Expect(logger).To(gbytes.Say("sending-metric.*banana"))
 			})

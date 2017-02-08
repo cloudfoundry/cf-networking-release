@@ -122,17 +122,17 @@ func main() {
 		Restorer: restorer,
 	}
 
-	timeMetricsEmitter := &metrics.TimeMetrics{
+	metricsSender := &metrics.MetricsSender{
 		Logger: logger.Session("time-metric-emitter"),
 	}
 
 	iptablesLoggingState := &planner.LoggingState{}
 	dynamicPlanner := &planner.VxlanPolicyPlanner{
-		Datastore:         store,
-		PolicyClient:      policyClient,
-		Logger:            logger.Session("rules-updater"),
-		VNI:               conf.VNI,
-		CollectionEmitter: timeMetricsEmitter,
+		Datastore:     store,
+		PolicyClient:  policyClient,
+		Logger:        logger.Session("rules-updater"),
+		VNI:           conf.VNI,
+		MetricsSender: metricsSender,
 		Chain: enforcer.Chain{
 			Table:       "filter",
 			ParentChain: "FORWARD",
@@ -187,9 +187,9 @@ func main() {
 				vxlanDefaultRemotePlanner,
 				dynamicPlanner,
 			},
-			Enforcer:          ruleEnforcer,
-			CollectionEmitter: timeMetricsEmitter,
-			Logger:            logger,
+			Enforcer:      ruleEnforcer,
+			MetricsSender: metricsSender,
+			Logger:        logger,
 		}).DoCycle,
 	}
 

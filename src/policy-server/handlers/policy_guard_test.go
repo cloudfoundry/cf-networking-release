@@ -22,7 +22,6 @@ var _ = Describe("PolicyGuard", func() {
 		space1        models.Space
 		space2        models.Space
 		space3        models.Space
-		spaces        []models.Space
 	)
 
 	BeforeEach(func() {
@@ -68,7 +67,6 @@ var _ = Describe("PolicyGuard", func() {
 			Name:    "space-3",
 			OrgGUID: "org-guid-3",
 		}
-		spaces = []models.Space{space1, space2, space3}
 
 		fakeUAAClient.GetTokenReturns("policy-server-token", nil)
 		fakeCCClient.GetSpaceGUIDsReturns(spaceGUIDs, nil)

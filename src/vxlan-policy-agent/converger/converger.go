@@ -20,11 +20,11 @@ type ruleEnforcer interface {
 }
 
 type SinglePollCycle struct {
-	Planners          []Planner
-	Enforcer          ruleEnforcer
-	CollectionEmitter agent_metrics.TimeMetricsEmitter
-	Logger            lager.Logger
-	ruleSets          map[enforcer.Chain]enforcer.RulesWithChain
+	Planners      []Planner
+	Enforcer      ruleEnforcer
+	MetricsSender agent_metrics.MetricsSender
+	Logger        lager.Logger
+	ruleSets      map[enforcer.Chain]enforcer.RulesWithChain
 }
 
 func (m *SinglePollCycle) DoCycle() error {
@@ -61,8 +61,8 @@ func (m *SinglePollCycle) DoCycle() error {
 	}
 
 	pollDuration := time.Now().Sub(pollStartTime)
-	m.CollectionEmitter.EmitDuration(agent_metrics.MetricEnforceDuration, enforceDuration)
-	m.CollectionEmitter.EmitDuration(agent_metrics.MetricPollDuration, pollDuration)
+	m.MetricsSender.SendDuration(agent_metrics.MetricEnforceDuration, enforceDuration)
+	m.MetricsSender.SendDuration(agent_metrics.MetricPollDuration, pollDuration)
 
 	return nil
 }

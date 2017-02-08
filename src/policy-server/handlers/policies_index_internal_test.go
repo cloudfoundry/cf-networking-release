@@ -19,12 +19,12 @@ import (
 
 var _ = Describe("PoliciesIndexInternal", func() {
 	var (
-		handler            *handlers.PoliciesIndexInternal
-		resp               *httptest.ResponseRecorder
-		fakeStore          *fakes.Store
-		logger             *lagertest.TestLogger
-		marshaler          *lfakes.Marshaler
-		fakeMetricsEmitter *fakes.MetricsEmitter
+		handler           *handlers.PoliciesIndexInternal
+		resp              *httptest.ResponseRecorder
+		fakeStore         *fakes.Store
+		logger            *lagertest.TestLogger
+		marshaler         *lfakes.Marshaler
+		fakeMetricsSender *fakes.MetricsSender
 	)
 
 	BeforeEach(func() {
@@ -48,13 +48,13 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		marshaler.MarshalStub = json.Marshal
 		fakeStore = &fakes.Store{}
 		fakeStore.AllReturns(allPolicies, nil)
-		fakeMetricsEmitter = &fakes.MetricsEmitter{}
+		fakeMetricsSender = &fakes.MetricsSender{}
 		logger = lagertest.NewTestLogger("test")
 		handler = &handlers.PoliciesIndexInternal{
-			Logger:         logger,
-			Store:          fakeStore,
-			Marshaler:      marshaler,
-			MetricsEmitter: fakeMetricsEmitter,
+			Logger:        logger,
+			Store:         fakeStore,
+			Marshaler:     marshaler,
+			MetricsSender: fakeMetricsSender,
 		}
 		resp = httptest.NewRecorder()
 	})
@@ -86,8 +86,8 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		Expect(err).NotTo(HaveOccurred())
 		handler.ServeHTTP(resp, request)
 
-		Expect(fakeMetricsEmitter.EmitDurationCallCount()).To(Equal(1))
-		name, _ := fakeMetricsEmitter.EmitDurationArgsForCall(0)
+		Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
+		name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
 		Expect(name).To(Equal("InternalPoliciesQueryTime"))
 	})
 

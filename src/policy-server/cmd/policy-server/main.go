@@ -126,13 +126,13 @@ func main() {
 		log.Fatalf("failed to construct datastore: %s", err)
 	}
 
-	timeMetricsEmitter := &metrics.TimeMetrics{
+	metricsSender := &metrics.MetricsSender{
 		Logger: logger.Session("time-metric-emitter"),
 	}
 
 	wrappedStore := &store.MetricsWrapper{
-		Store:          dataStore,
-		MetricsEmitter: timeMetricsEmitter,
+		Store:         dataStore,
+		MetricsSender: metricsSender,
 	}
 
 	unmarshaler := marshal.UnmarshalFunc(json.Unmarshal)
@@ -209,10 +209,10 @@ func main() {
 	}
 
 	internalPoliciesHandler := &handlers.PoliciesIndexInternal{
-		Logger:         logger.Session("policies-index-internal"),
-		Store:          wrappedStore,
-		Marshaler:      marshal.MarshalFunc(json.Marshal),
-		MetricsEmitter: timeMetricsEmitter,
+		Logger:        logger.Session("policies-index-internal"),
+		Store:         wrappedStore,
+		Marshaler:     marshal.MarshalFunc(json.Marshal),
+		MetricsSender: metricsSender,
 	}
 
 	routes := rata.Routes{
@@ -228,8 +228,8 @@ func main() {
 
 	metricsWrap := func(name string, handle http.Handler) http.Handler {
 		metricsWrapper := handlers.MetricWrapper{
-			Name:           name,
-			MetricsEmitter: timeMetricsEmitter,
+			Name:          name,
+			MetricsSender: metricsSender,
 		}
 		return metricsWrapper.Wrap(handle)
 	}
