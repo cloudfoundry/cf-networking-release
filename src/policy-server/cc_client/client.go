@@ -20,6 +20,15 @@ type Client struct {
 type AppsV3Response struct {
 	Pagination struct {
 		TotalPages int `json:"total_pages"`
+		First      struct {
+			Href string `json:"href"`
+		} `json:"first"`
+		Last struct {
+			Href string `json:"href"`
+		} `json:"last"`
+		Next struct {
+			Href string `json:"href"`
+		} `json:"next"`
 	} `json:"pagination"`
 	Resources []struct {
 		GUID  string `json:"guid"`
@@ -59,16 +68,33 @@ func (c *Client) GetAllAppGUIDs(token string) (map[string]interface{}, error) {
 		return nil, fmt.Errorf("json client do: %s", err)
 	}
 
-	if response.Pagination.TotalPages > 1 {
-		return nil, fmt.Errorf("pagination support not yet implemented")
-	}
-
-	ret := make(map[string]interface{})
+	set := make(map[string]interface{})
 	for _, r := range response.Resources {
-		ret[r.GUID] = nil
+		set[r.GUID] = nil
 	}
 
-	return ret, nil
+	totalPages := response.Pagination.TotalPages
+	for i := 2; i <= totalPages; i += 1 {
+		nextPageHref := response.Pagination.Last.Href
+		if i != totalPages {
+			nextPageHref = response.Pagination.Next.Href
+		}
+
+		parts := strings.Split(nextPageHref, "?")
+		queryParams := parts[1]
+
+		route := fmt.Sprintf("/v3/apps?%s", queryParams)
+		err := c.JSONClient.Do("GET", route, nil, &response, token)
+		if err != nil {
+			return nil, fmt.Errorf("json client do: %s", err)
+		}
+
+		for _, r := range response.Resources {
+			set[r.GUID] = nil
+		}
+	}
+
+	return set, nil
 }
 
 func (c *Client) GetLiveAppGUIDs(token string, appGUIDs []string) (map[string]struct{}, error) {

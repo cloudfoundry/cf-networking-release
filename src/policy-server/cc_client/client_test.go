@@ -30,51 +30,88 @@ var _ = Describe("Client", func() {
 			JSONClient: fakeJSONClient,
 			Logger:     logger,
 		}
-
 	})
 
 	Describe("GetAllAppGUIDs", func() {
-		expectedApps := map[string]interface{}{
-			"live-app-1-guid": nil,
-			"live-app-2-guid": nil,
-			"live-app-3-guid": nil,
-			"live-app-4-guid": nil,
-			"live-app-5-guid": nil,
-		}
-		BeforeEach(func() {
-			fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
-				_ = json.Unmarshal([]byte(fixtures.AppsV3), respData)
-				return nil
+		Context("when there is a single page of app guids", func() {
+			expectedApps := map[string]interface{}{
+				"live-app-1-guid": nil,
+				"live-app-2-guid": nil,
+				"live-app-3-guid": nil,
+				"live-app-4-guid": nil,
+				"live-app-5-guid": nil,
 			}
-		})
-
-		It("Returns the app guids", func() {
-			apps, err := client.GetAllAppGUIDs("some-token")
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(fakeJSONClient.DoCallCount()).To(Equal(1))
-
-			method, route, reqData, _, token := fakeJSONClient.DoArgsForCall(0)
-
-			Expect(method).To(Equal("GET"))
-			Expect(route).To(Equal("/v3/apps"))
-			Expect(reqData).To(BeNil())
-			Expect(token).To(Equal("bearer some-token"))
-
-			Expect(apps).To(Equal(expectedApps))
-		})
-
-		Context("when there are multiple pages", func() {
 			BeforeEach(func() {
 				fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
-					_ = json.Unmarshal([]byte(fixtures.AppsV3MultiplePages), respData)
+					_ = json.Unmarshal([]byte(fixtures.AppsV3), respData)
 					return nil
 				}
 			})
 
-			It("should immediately return an error", func() {
-				_, err := client.GetAllAppGUIDs("some-token")
-				Expect(err).To(MatchError("pagination support not yet implemented"))
+			It("returns the app guids", func() {
+				apps, err := client.GetAllAppGUIDs("some-token")
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(fakeJSONClient.DoCallCount()).To(Equal(1))
+
+				method, route, reqData, _, token := fakeJSONClient.DoArgsForCall(0)
+
+				Expect(method).To(Equal("GET"))
+				Expect(route).To(Equal("/v3/apps"))
+				Expect(reqData).To(BeNil())
+				Expect(token).To(Equal("bearer some-token"))
+
+				Expect(apps).To(Equal(expectedApps))
+			})
+		})
+
+		Context("when there are multiple pages", func() {
+			expectedApps := map[string]interface{}{
+				"live-app-1-guid": nil,
+				"live-app-2-guid": nil,
+				"live-app-3-guid": nil,
+			}
+			BeforeEach(func() {
+				fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+					if route == "/v3/apps?page=2&per_page=1" {
+						json.Unmarshal([]byte(fixtures.AppsV3MultiplePagesPg2), respData)
+					} else if route == "/v3/apps?page=3&per_page=1" {
+						json.Unmarshal([]byte(fixtures.AppsV3MultiplePagesPg3), respData)
+					} else {
+						json.Unmarshal([]byte(fixtures.AppsV3MultiplePages), respData)
+					}
+					return nil
+				}
+			})
+
+			It("returns all the app guids", func() {
+				apps, err := client.GetAllAppGUIDs("some-token")
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(fakeJSONClient.DoCallCount()).To(Equal(3))
+
+				method, route, reqData, _, token := fakeJSONClient.DoArgsForCall(0)
+
+				Expect(method).To(Equal("GET"))
+				Expect(route).To(Equal("/v3/apps"))
+				Expect(reqData).To(BeNil())
+				Expect(token).To(Equal("bearer some-token"))
+
+				method, route, reqData, _, token = fakeJSONClient.DoArgsForCall(1)
+
+				Expect(method).To(Equal("GET"))
+				Expect(route).To(Equal("/v3/apps?page=2&per_page=1"))
+				Expect(reqData).To(BeNil())
+				Expect(token).To(Equal("bearer some-token"))
+
+				method, route, reqData, _, token = fakeJSONClient.DoArgsForCall(2)
+
+				Expect(method).To(Equal("GET"))
+				Expect(route).To(Equal("/v3/apps?page=3&per_page=1"))
+				Expect(reqData).To(BeNil())
+				Expect(token).To(Equal("bearer some-token"))
+
+				Expect(apps).To(Equal(expectedApps))
 			})
 		})
 
@@ -203,13 +240,13 @@ var _ = Describe("Client", func() {
 			}
 		})
 
-		It("Returns the space with the matching GUID", func() {
-			var spaceModel = models.Space{
+		It("returns the space with the matching GUID", func() {
+			space := models.Space{
 				Name:    "name-2064",
 				OrgGUID: "6e1ca5aa-55f1-4110-a97f-1f3473e771b9",
 			}
 
-			space, err := client.GetSpace("some-token", "some-space-guid")
+			matchingSpace, err := client.GetSpace("some-token", "some-space-guid")
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeJSONClient.DoCallCount()).To(Equal(1))
@@ -221,7 +258,7 @@ var _ = Describe("Client", func() {
 			Expect(reqData).To(BeNil())
 			Expect(token).To(Equal("bearer some-token"))
 
-			Expect(space).To(Equal(&spaceModel))
+			Expect(matchingSpace).To(Equal(&space))
 		})
 
 		Context("when the json client returns an error", func() {
@@ -266,7 +303,7 @@ var _ = Describe("Client", func() {
 	})
 
 	Describe("GetAppSpaces", func() {
-		var appGUIDs []string
+		appGUIDs := []string{}
 		expectedAppSpaces := map[string]string{
 			"live-app-1-guid": "space-1-guid",
 			"live-app-2-guid": "space-1-guid",
@@ -275,7 +312,6 @@ var _ = Describe("Client", func() {
 			"live-app-5-guid": "space-3-guid",
 		}
 		BeforeEach(func() {
-			appGUIDs = []string{}
 			for key, _ := range expectedAppSpaces {
 				appGUIDs = append(appGUIDs, key)
 			}

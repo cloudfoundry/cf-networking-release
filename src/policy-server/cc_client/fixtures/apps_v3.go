@@ -203,7 +203,10 @@ const AppsV3MultiplePages = `{
     },
     "last": {
       "href": "https://api.[your-domain.com]/v3/apps?page=3&per_page=1"
-    }
+    },
+		"next": {
+			"href": "https://api.[your-domain.com]/v3/apps?page=2&per_page=1"
+		}
   },
   "resources": [
     {
@@ -213,22 +216,56 @@ const AppsV3MultiplePages = `{
 					"href": "https://api.example.org/v2/spaces/space-1-guid"
 				}
 			}
-    },
-    {
-      "guid": "live-app-2-guid",
-			"links": {
-				"space": {
-					"href": "https://api.example.org/v2/spaces/space-1-guid"
-				}
-			}
-    },
-    {
-      "guid": "live-app-3-guid",
-			"links": {
-				"space": {
-					"href": "https://api.example.org/v2/spaces/space-2-guid"
-				}
-			}
     }
   ]
+}`
+
+const AppsV3MultiplePagesPg2 = `{
+	"pagination": {
+		"total_results": 3,
+		"total_pages": 3,
+		"first": {
+			"href": "https://api.[your-domain.com]/v3/apps?page=1&per_page=1"
+		},
+		"last": {
+			"href": "https://api.[your-domain.com]/v3/apps?page=3&per_page=1"
+		},
+		"next": {
+			"href": "https://api.[your-domain.com]/v3/apps?page=3&per_page=1"
+		}
+	},
+	"resources": [
+	{
+		"guid": "live-app-2-guid",
+		"links": {
+			"space": {
+				"href": "https://api.example.org/v2/spaces/space-1-guid"
+			}
+		}
+	}
+	]
+}`
+
+const AppsV3MultiplePagesPg3 = `{
+	"pagination": {
+		"total_results": 3,
+		"total_pages": 3,
+		"first": {
+			"href": "https://api.[your-domain.com]/v3/apps?page=1&per_page=1"
+		},
+		"last": {
+			"href": "https://api.[your-domain.com]/v3/apps?page=3&per_page=1"
+		},
+		"next": null
+	},
+	"resources": [
+	{
+		"guid": "live-app-3-guid",
+		"links": {
+			"space": {
+				"href": "https://api.example.org/v2/spaces/space-2-guid"
+			}
+		}
+	}
+	]
 }`
