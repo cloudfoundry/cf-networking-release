@@ -45,7 +45,6 @@ files:
   - lib/poller/*.go # gosub
   - lib/rules/*.go # gosub
   - lib/serial/*.go # gosub
-  - vxlan-policy-agent/agent_metrics/*.go # gosub
   - vxlan-policy-agent/cmd/vxlan-policy-agent/*.go # gosub
   - vxlan-policy-agent/config/*.go # gosub
   - vxlan-policy-agent/converger/*.go # gosub
