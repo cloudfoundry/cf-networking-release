@@ -15,14 +15,53 @@ import (
 
 var _ = Describe("ExternalClient", func() {
 	var (
-		client     *policy_client.ExternalClient
-		jsonClient *fakes.JSONClient
+		client      *policy_client.ExternalClient
+		fakeChunker *fakes.Chunker
+		jsonClient  *fakes.JSONClient
 	)
 
 	BeforeEach(func() {
 		jsonClient = &fakes.JSONClient{}
+		fakeChunker = &fakes.Chunker{}
+		fakeChunker.ChunkReturns([][]models.Policy{
+			[]models.Policy{
+				{
+					Source: models.Source{
+						ID: "some-app-guid",
+					},
+					Destination: models.Destination{
+						ID:       "some-other-app-guid",
+						Port:     8090,
+						Protocol: "tcp",
+					},
+				},
+				{
+					Source: models.Source{
+						ID: "some-app-guid-2",
+					},
+					Destination: models.Destination{
+						ID:       "some-other-app-guid-2",
+						Port:     8091,
+						Protocol: "tcp",
+					},
+				},
+			},
+			[]models.Policy{
+				{
+					Source: models.Source{
+						ID: "some-app-guid-3",
+					},
+					Destination: models.Destination{
+						ID:       "some-other-app-guid-3",
+						Port:     8092,
+						Protocol: "tcp",
+					},
+				},
+			},
+		})
 		client = &policy_client.ExternalClient{
 			JsonClient: jsonClient,
+			Chunker:    fakeChunker,
 		}
 	})
 
@@ -163,7 +202,10 @@ var _ = Describe("ExternalClient", func() {
 			err := client.AddPolicies("some-token", policiesToAdd)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(jsonClient.DoCallCount()).To(Equal(1))
+			Expect(fakeChunker.ChunkCallCount()).To(Equal(1))
+			Expect(fakeChunker.ChunkArgsForCall(0)).To(Equal(policiesToAdd))
+
+			Expect(jsonClient.DoCallCount()).To(Equal(2))
 			method, route, reqData, _, token := jsonClient.DoArgsForCall(0)
 			Expect(method).To(Equal("POST"))
 			Expect(route).To(Equal("/networking/v0/external/policies"))
@@ -178,7 +220,37 @@ var _ = Describe("ExternalClient", func() {
 						Protocol: "tcp",
 					},
 				},
+					{
+						Source: models.Source{
+							ID: "some-app-guid-2",
+						},
+						Destination: models.Destination{
+							ID:       "some-other-app-guid-2",
+							Port:     8091,
+							Protocol: "tcp",
+						},
+					},
 				}},
+			))
+			Expect(token).To(Equal("some-token"))
+
+			method, route, reqData, _, token = jsonClient.DoArgsForCall(1)
+			Expect(method).To(Equal("POST"))
+			Expect(route).To(Equal("/networking/v0/external/policies"))
+			Expect(reqData).To(Equal(map[string][]models.Policy{
+				"policies": []models.Policy{
+					{
+						Source: models.Source{
+							ID: "some-app-guid-3",
+						},
+						Destination: models.Destination{
+							ID:       "some-other-app-guid-3",
+							Port:     8092,
+							Protocol: "tcp",
+						},
+					},
+				},
+			},
 			))
 			Expect(token).To(Equal("some-token"))
 		})
@@ -232,7 +304,10 @@ var _ = Describe("ExternalClient", func() {
 			err := client.DeletePolicies("some-token", policiesToDelete)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(jsonClient.DoCallCount()).To(Equal(1))
+			Expect(fakeChunker.ChunkCallCount()).To(Equal(1))
+			Expect(fakeChunker.ChunkArgsForCall(0)).To(Equal(policiesToDelete))
+
+			Expect(jsonClient.DoCallCount()).To(Equal(2))
 			method, route, reqData, _, token := jsonClient.DoArgsForCall(0)
 			Expect(method).To(Equal("POST"))
 			Expect(route).To(Equal("/networking/v0/external/policies/delete"))
@@ -247,7 +322,37 @@ var _ = Describe("ExternalClient", func() {
 						Protocol: "tcp",
 					},
 				},
+					{
+						Source: models.Source{
+							ID: "some-app-guid-2",
+						},
+						Destination: models.Destination{
+							ID:       "some-other-app-guid-2",
+							Port:     8091,
+							Protocol: "tcp",
+						},
+					},
 				}},
+			))
+			Expect(token).To(Equal("some-token"))
+
+			method, route, reqData, _, token = jsonClient.DoArgsForCall(1)
+			Expect(method).To(Equal("POST"))
+			Expect(route).To(Equal("/networking/v0/external/policies/delete"))
+			Expect(reqData).To(Equal(map[string][]models.Policy{
+				"policies": []models.Policy{
+					{
+						Source: models.Source{
+							ID: "some-app-guid-3",
+						},
+						Destination: models.Destination{
+							ID:       "some-other-app-guid-3",
+							Port:     8092,
+							Protocol: "tcp",
+						},
+					},
+				},
+			},
 			))
 			Expect(token).To(Equal("some-token"))
 		})

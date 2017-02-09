@@ -58,9 +58,8 @@ func (fake *ExternalPolicyClient) GetPolicies(token string) ([]models.Policy, er
 	fake.getPoliciesMutex.Unlock()
 	if fake.GetPoliciesStub != nil {
 		return fake.GetPoliciesStub(token)
-	} else {
-		return fake.getPoliciesReturns.result1, fake.getPoliciesReturns.result2
 	}
+	return fake.getPoliciesReturns.result1, fake.getPoliciesReturns.result2
 }
 
 func (fake *ExternalPolicyClient) GetPoliciesCallCount() int {
@@ -93,9 +92,8 @@ func (fake *ExternalPolicyClient) GetPoliciesByID(token string, ids ...string) (
 	fake.getPoliciesByIDMutex.Unlock()
 	if fake.GetPoliciesByIDStub != nil {
 		return fake.GetPoliciesByIDStub(token, ids...)
-	} else {
-		return fake.getPoliciesByIDReturns.result1, fake.getPoliciesByIDReturns.result2
 	}
+	return fake.getPoliciesByIDReturns.result1, fake.getPoliciesByIDReturns.result2
 }
 
 func (fake *ExternalPolicyClient) GetPoliciesByIDCallCount() int {
@@ -133,9 +131,8 @@ func (fake *ExternalPolicyClient) DeletePolicies(token string, policies []models
 	fake.deletePoliciesMutex.Unlock()
 	if fake.DeletePoliciesStub != nil {
 		return fake.DeletePoliciesStub(token, policies)
-	} else {
-		return fake.deletePoliciesReturns.result1
 	}
+	return fake.deletePoliciesReturns.result1
 }
 
 func (fake *ExternalPolicyClient) DeletePoliciesCallCount() int {
@@ -172,9 +169,8 @@ func (fake *ExternalPolicyClient) AddPolicies(token string, policies []models.Po
 	fake.addPoliciesMutex.Unlock()
 	if fake.AddPoliciesStub != nil {
 		return fake.AddPoliciesStub(token, policies)
-	} else {
-		return fake.addPoliciesReturns.result1
 	}
+	return fake.addPoliciesReturns.result1
 }
 
 func (fake *ExternalPolicyClient) AddPoliciesCallCount() int {

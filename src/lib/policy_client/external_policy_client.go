@@ -20,11 +20,13 @@ type ExternalPolicyClient interface {
 
 type ExternalClient struct {
 	JsonClient json_client.JsonClient
+	Chunker    Chunker
 }
 
 func NewExternal(logger lager.Logger, httpClient json_client.HttpClient, baseURL string) *ExternalClient {
 	return &ExternalClient{
 		JsonClient: json_client.New(logger, httpClient, baseURL),
+		Chunker:    &SimpleChunker{ChunkSize: DefaultMaxPolicies},
 	}
 }
 
@@ -52,23 +54,29 @@ func (c *ExternalClient) GetPoliciesByID(token string, ids ...string) ([]models.
 }
 
 func (c *ExternalClient) AddPolicies(token string, policies []models.Policy) error {
-	reqPolicies := map[string][]models.Policy{
-		"policies": policies,
-	}
-	err := c.JsonClient.Do("POST", "/networking/v0/external/policies", reqPolicies, nil, token)
-	if err != nil {
-		return parseHttpError(err)
+	chunks := c.Chunker.Chunk(policies)
+	for _, chunk := range chunks {
+		reqPolicies := map[string][]models.Policy{
+			"policies": chunk,
+		}
+		err := c.JsonClient.Do("POST", "/networking/v0/external/policies", reqPolicies, nil, token)
+		if err != nil {
+			return parseHttpError(err)
+		}
 	}
 	return nil
 }
 
 func (c *ExternalClient) DeletePolicies(token string, policies []models.Policy) error {
-	reqPolicies := map[string][]models.Policy{
-		"policies": policies,
-	}
-	err := c.JsonClient.Do("POST", "/networking/v0/external/policies/delete", reqPolicies, nil, token)
-	if err != nil {
-		return parseHttpError(err)
+	chunks := c.Chunker.Chunk(policies)
+	for _, chunk := range chunks {
+		reqPolicies := map[string][]models.Policy{
+			"policies": chunk,
+		}
+		err := c.JsonClient.Do("POST", "/networking/v0/external/policies/delete", reqPolicies, nil, token)
+		if err != nil {
+			return parseHttpError(err)
+		}
 	}
 	return nil
 }
