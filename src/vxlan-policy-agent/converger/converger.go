@@ -3,7 +3,6 @@ package converger
 import (
 	"fmt"
 	"time"
-	"vxlan-policy-agent/agent_metrics"
 	"vxlan-policy-agent/enforcer"
 
 	"code.cloudfoundry.org/lager"
@@ -31,6 +30,9 @@ type SinglePollCycle struct {
 	Logger        lager.Logger
 	ruleSets      map[enforcer.Chain]enforcer.RulesWithChain
 }
+
+const metricEnforceDuration = "iptablesEnforceTime"
+const metricPollDuration = "totalPollTime"
 
 func (m *SinglePollCycle) DoCycle() error {
 	if m.ruleSets == nil {
@@ -66,8 +68,8 @@ func (m *SinglePollCycle) DoCycle() error {
 	}
 
 	pollDuration := time.Now().Sub(pollStartTime)
-	m.MetricsSender.SendDuration(agent_metrics.MetricEnforceDuration, enforceDuration)
-	m.MetricsSender.SendDuration(agent_metrics.MetricPollDuration, pollDuration)
+	m.MetricsSender.SendDuration(metricEnforceDuration, enforceDuration)
+	m.MetricsSender.SendDuration(metricPollDuration, pollDuration)
 
 	return nil
 }

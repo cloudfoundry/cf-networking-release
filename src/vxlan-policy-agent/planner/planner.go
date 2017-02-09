@@ -6,7 +6,6 @@ import (
 	"lib/rules"
 	"sort"
 	"time"
-	"vxlan-policy-agent/agent_metrics"
 	"vxlan-policy-agent/enforcer"
 
 	"code.cloudfoundry.org/lager"
@@ -42,6 +41,9 @@ type Container struct {
 	IP      string
 	GroupID string
 }
+
+const metricContainerMetadata = "containerMetadataTime"
+const metricPolicyServerPoll = "policyServerPollTime"
 
 func (p *VxlanPolicyPlanner) getContainersMap(allContainers map[string]datastore.Container) (map[string][]string, error) {
 	containers := map[string][]string{}
@@ -93,8 +95,8 @@ func (p *VxlanPolicyPlanner) GetRulesAndChain() (enforcer.RulesWithChain, error)
 	}
 
 	policyServerPollDuration := time.Now().Sub(policyServerStartRequestTime)
-	p.MetricsSender.SendDuration(agent_metrics.MetricContainerMetadata, containerMetadataDuration)
-	p.MetricsSender.SendDuration(agent_metrics.MetricPolicyServerPoll, policyServerPollDuration)
+	p.MetricsSender.SendDuration(metricContainerMetadata, containerMetadataDuration)
+	p.MetricsSender.SendDuration(metricPolicyServerPoll, policyServerPollDuration)
 
 	marksRuleset := []rules.IPTablesRule{}
 	markedSourceIPs := make(map[string]struct{})
