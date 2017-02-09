@@ -5,6 +5,11 @@ import (
 	"time"
 )
 
+//go:generate counterfeiter -o fakes/metrics_sender.go --fake-name MetricsSender . metricsSender
+type metricsSender interface {
+	SendDuration(string, time.Duration)
+}
+
 type MetricWrapper struct {
 	Name          string
 	MetricsSender metricsSender

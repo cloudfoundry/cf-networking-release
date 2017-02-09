@@ -27,8 +27,8 @@ var _ = Describe("MetricsWrapper", func() {
 				Name:          "name",
 				MetricsSender: fakeMetricsSender,
 			}
-			var err error
 
+			var err error
 			request, err = http.NewRequest("GET", "asdf", bytes.NewBuffer([]byte{}))
 			Expect(err).NotTo(HaveOccurred())
 
@@ -36,7 +36,7 @@ var _ = Describe("MetricsWrapper", func() {
 			outerHandler = metricWrapper.Wrap(innerHandler)
 		})
 
-		It("emits a metric", func() {
+		It("emits a request duration metric", func() {
 			outerHandler.ServeHTTP(resp, request)
 			Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
 			name, _ := fakeMetricsSender.SendDurationArgsForCall(0)

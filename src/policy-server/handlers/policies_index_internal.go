@@ -4,9 +4,7 @@ import (
 	"lib/marshal"
 	"net/http"
 	"policy-server/models"
-	"policy-server/server_metrics"
 	"strings"
-	"time"
 
 	"code.cloudfoundry.org/lager"
 )
@@ -19,25 +17,15 @@ type store interface {
 	Tags() ([]models.Tag, error)
 }
 
-//go:generate counterfeiter -o fakes/metrics_sender.go --fake-name MetricsSender . metricsSender
-type metricsSender interface {
-	SendDuration(string, time.Duration)
-}
-
 type PoliciesIndexInternal struct {
-	Logger        lager.Logger
-	Store         store
-	Marshaler     marshal.Marshaler
-	MetricsSender metricsSender
+	Logger    lager.Logger
+	Store     store
+	Marshaler marshal.Marshaler
 }
 
 func (h *PoliciesIndexInternal) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	startTime := time.Now()
 	h.Logger.Debug("internal request made to list policies", lager.Data{"URL": req.URL, "RemoteAddr": req.RemoteAddr})
 	policies, err := h.Store.All()
-
-	queryDuration := time.Now().Sub(startTime)
-	h.MetricsSender.SendDuration(server_metrics.MetricInternalPoliciesQueryDuration, queryDuration)
 
 	if err != nil {
 		h.Logger.Error("store-list-policies-failed", err)

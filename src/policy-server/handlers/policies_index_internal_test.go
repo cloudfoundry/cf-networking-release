@@ -19,12 +19,11 @@ import (
 
 var _ = Describe("PoliciesIndexInternal", func() {
 	var (
-		handler           *handlers.PoliciesIndexInternal
-		resp              *httptest.ResponseRecorder
-		fakeStore         *fakes.Store
-		logger            *lagertest.TestLogger
-		marshaler         *lfakes.Marshaler
-		fakeMetricsSender *fakes.MetricsSender
+		handler   *handlers.PoliciesIndexInternal
+		resp      *httptest.ResponseRecorder
+		fakeStore *fakes.Store
+		logger    *lagertest.TestLogger
+		marshaler *lfakes.Marshaler
 	)
 
 	BeforeEach(func() {
@@ -48,13 +47,11 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		marshaler.MarshalStub = json.Marshal
 		fakeStore = &fakes.Store{}
 		fakeStore.AllReturns(allPolicies, nil)
-		fakeMetricsSender = &fakes.MetricsSender{}
 		logger = lagertest.NewTestLogger("test")
 		handler = &handlers.PoliciesIndexInternal{
-			Logger:        logger,
-			Store:         fakeStore,
-			Marshaler:     marshaler,
-			MetricsSender: fakeMetricsSender,
+			Logger:    logger,
+			Store:     fakeStore,
+			Marshaler: marshaler,
 		}
 		resp = httptest.NewRecorder()
 	})
@@ -79,16 +76,6 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		Expect(fakeStore.AllCallCount()).To(Equal(1))
 		Expect(resp.Code).To(Equal(http.StatusOK))
 		Expect(resp.Body).To(MatchJSON(expectedResponseJSON))
-	})
-
-	It("emits timing metrics", func() {
-		request, err := http.NewRequest("GET", "/networking/v0/internal/policies?id=some-app-guid", nil)
-		Expect(err).NotTo(HaveOccurred())
-		handler.ServeHTTP(resp, request)
-
-		Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
-		name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
-		Expect(name).To(Equal("InternalPoliciesQueryTime"))
 	})
 
 	Context("when there are no policies", func() {
