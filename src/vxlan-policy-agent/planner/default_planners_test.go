@@ -3,8 +3,8 @@ package planner_test
 import (
 	"lib/rules"
 	"vxlan-policy-agent/enforcer"
-	"vxlan-policy-agent/fakes"
 	"vxlan-policy-agent/planner"
+	"vxlan-policy-agent/planner/fakes"
 
 	"code.cloudfoundry.org/lager/lagertest"
 

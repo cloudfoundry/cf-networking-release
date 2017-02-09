@@ -17,7 +17,7 @@ func (_ Timestamper) CurrentTime() int {
 	return int(time.Now().Unix())
 }
 
-//go:generate counterfeiter -o ../fakes/timestamper.go --fake-name TimeStamper . TimeStamper
+//go:generate counterfeiter -o fakes/timestamper.go --fake-name TimeStamper . TimeStamper
 type TimeStamper interface {
 	CurrentTime() int
 }

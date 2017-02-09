@@ -4,7 +4,7 @@ import (
 	"errors"
 	"lib/rules"
 	"vxlan-policy-agent/enforcer"
-	"vxlan-policy-agent/fakes"
+	"vxlan-policy-agent/enforcer/fakes"
 
 	libfakes "lib/fakes"
 

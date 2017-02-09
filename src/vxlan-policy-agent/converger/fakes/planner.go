@@ -26,8 +26,9 @@ func (fake *Planner) GetRulesAndChain() (enforcer.RulesWithChain, error) {
 	fake.getRulesAndChainMutex.Unlock()
 	if fake.GetRulesAndChainStub != nil {
 		return fake.GetRulesAndChainStub()
+	} else {
+		return fake.getRulesAndChainReturns.result1, fake.getRulesAndChainReturns.result2
 	}
-	return fake.getRulesAndChainReturns.result1, fake.getRulesAndChainReturns.result2
 }
 
 func (fake *Planner) GetRulesAndChainCallCount() int {

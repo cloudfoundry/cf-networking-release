@@ -12,14 +12,19 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-//go:generate counterfeiter -o ../fakes/policy_client.go --fake-name PolicyClient . policyClient
+//go:generate counterfeiter -o fakes/policy_client.go --fake-name PolicyClient . policyClient
 type policyClient interface {
 	GetPoliciesByID(ids ...string) ([]models.Policy, error)
 }
 
-//go:generate counterfeiter -o ../fakes/dstore.go --fake-name Dstore . dstore
+//go:generate counterfeiter -o fakes/dstore.go --fake-name Dstore . dstore
 type dstore interface {
 	ReadAll() (map[string]datastore.Container, error)
+}
+
+//go:generate counterfeiter -o fakes/metrics_sender.go --fake-name MetricsSender . metricsSender
+type metricsSender interface {
+	SendDuration(string, time.Duration)
 }
 
 type VxlanPolicyPlanner struct {
@@ -27,7 +32,7 @@ type VxlanPolicyPlanner struct {
 	Datastore     dstore
 	PolicyClient  policyClient
 	VNI           int
-	MetricsSender agent_metrics.MetricsSender
+	MetricsSender metricsSender
 	Chain         enforcer.Chain
 	LoggingState  loggingStateGetter
 }

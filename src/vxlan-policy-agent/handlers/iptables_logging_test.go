@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
-	"vxlan-policy-agent/fakes"
 	"vxlan-policy-agent/handlers"
+	"vxlan-policy-agent/handlers/fakes"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-//go:generate counterfeiter -o ../fakes/loggingState.go --fake-name LoggingState . loggingState
+//go:generate counterfeiter -o fakes/loggingState.go --fake-name LoggingState . loggingState
 type loggingState interface {
 	Disable()
 	Enable()

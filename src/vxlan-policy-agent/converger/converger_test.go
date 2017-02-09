@@ -4,8 +4,8 @@ import (
 	"errors"
 	"lib/rules"
 	"vxlan-policy-agent/converger"
+	"vxlan-policy-agent/converger/fakes"
 	"vxlan-policy-agent/enforcer"
-	"vxlan-policy-agent/fakes"
 
 	"code.cloudfoundry.org/lager/lagertest"
 

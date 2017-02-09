@@ -7,7 +7,7 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-//go:generate counterfeiter -o ../fakes/loggingStateGetter.go --fake-name LoggingStateGetter . loggingStateGetter
+//go:generate counterfeiter -o fakes/loggingStateGetter.go --fake-name LoggingStateGetter . loggingStateGetter
 type loggingStateGetter interface {
 	IsEnabled() bool
 }

@@ -9,20 +9,25 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-//go:generate counterfeiter -o ../fakes/planner.go --fake-name Planner . Planner
+//go:generate counterfeiter -o fakes/planner.go --fake-name Planner . Planner
 type Planner interface {
 	GetRulesAndChain() (enforcer.RulesWithChain, error)
 }
 
-//go:generate counterfeiter -o ../fakes/rule_enforcer.go --fake-name RuleEnforcer . ruleEnforcer
+//go:generate counterfeiter -o fakes/rule_enforcer.go --fake-name RuleEnforcer . ruleEnforcer
 type ruleEnforcer interface {
 	EnforceRulesAndChain(enforcer.RulesWithChain) error
+}
+
+//go:generate counterfeiter -o fakes/metrics_sender.go --fake-name MetricsSender . metricsSender
+type metricsSender interface {
+	SendDuration(string, time.Duration)
 }
 
 type SinglePollCycle struct {
 	Planners      []Planner
 	Enforcer      ruleEnforcer
-	MetricsSender agent_metrics.MetricsSender
+	MetricsSender metricsSender
 	Logger        lager.Logger
 	ruleSets      map[enforcer.Chain]enforcer.RulesWithChain
 }

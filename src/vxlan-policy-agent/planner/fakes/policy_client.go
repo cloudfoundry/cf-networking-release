@@ -29,8 +29,9 @@ func (fake *PolicyClient) GetPoliciesByID(ids ...string) ([]models.Policy, error
 	fake.getPoliciesByIDMutex.Unlock()
 	if fake.GetPoliciesByIDStub != nil {
 		return fake.GetPoliciesByIDStub(ids...)
+	} else {
+		return fake.getPoliciesByIDReturns.result1, fake.getPoliciesByIDReturns.result2
 	}
-	return fake.getPoliciesByIDReturns.result1, fake.getPoliciesByIDReturns.result2
 }
 
 func (fake *PolicyClient) GetPoliciesByIDCallCount() int {

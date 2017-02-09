@@ -21,8 +21,9 @@ func (fake *LoggingStateGetter) IsEnabled() bool {
 	fake.isEnabledMutex.Unlock()
 	if fake.IsEnabledStub != nil {
 		return fake.IsEnabledStub()
+	} else {
+		return fake.isEnabledReturns.result1
 	}
-	return fake.isEnabledReturns.result1
 }
 
 func (fake *LoggingStateGetter) IsEnabledCallCount() int {
