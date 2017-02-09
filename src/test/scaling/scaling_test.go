@@ -191,6 +191,13 @@ func getGuids(sourceAppName string, dstAppNames []string) (string, []string) {
 	return sourceGuid, dstGuids
 }
 
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
 func doAllPolicies(action string, source string, dstList []string, dstPorts []int) {
 	policyClient := policy_client.NewExternal(lagertest.NewTestLogger("test"), &http.Client{}, "http://"+config.ApiEndpoint)
 	sourceGuid, dstGuids := getGuids(source, dstList)
@@ -213,7 +220,9 @@ func doAllPolicies(action string, source string, dstList []string, dstPorts []in
 	if action == "create" {
 		Expect(policyClient.AddPolicies(token, policies)).To(Succeed())
 	} else if action == "delete" {
-		Expect(policyClient.DeletePolicies(token, policies)).To(Succeed())
+		for i := 0; i < len(policies); i += 100 {
+			Expect(policyClient.DeletePolicies(token, policies[i:min(i+100, len(policies))])).To(Succeed())
+		}
 	}
 }
 
