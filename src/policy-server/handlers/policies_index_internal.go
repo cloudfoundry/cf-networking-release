@@ -4,6 +4,7 @@ import (
 	"lib/marshal"
 	"net/http"
 	"policy-server/models"
+	"policy-server/server_metrics"
 	"strings"
 
 	"code.cloudfoundry.org/lager"
@@ -18,9 +19,10 @@ type store interface {
 }
 
 type PoliciesIndexInternal struct {
-	Logger    lager.Logger
-	Store     store
-	Marshaler marshal.Marshaler
+	Logger        lager.Logger
+	Store         store
+	Marshaler     marshal.Marshaler
+	MetricsSender metricsSender
 }
 
 func (h *PoliciesIndexInternal) ServeHTTP(w http.ResponseWriter, req *http.Request) {
@@ -31,6 +33,7 @@ func (h *PoliciesIndexInternal) ServeHTTP(w http.ResponseWriter, req *http.Reque
 		h.Logger.Error("store-list-policies-failed", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{"error": "database read failed"}`))
+		h.MetricsSender.IncrementCounter(server_metrics.MetricInternalPoliciesError)
 		return
 	}
 
@@ -49,6 +52,7 @@ func (h *PoliciesIndexInternal) ServeHTTP(w http.ResponseWriter, req *http.Reque
 		h.Logger.Error("marshal-failed", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{"error": "database marshaling failed"}`))
+		h.MetricsSender.IncrementCounter(server_metrics.MetricInternalPoliciesError)
 		return
 	}
 

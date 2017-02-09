@@ -19,11 +19,12 @@ import (
 
 var _ = Describe("PoliciesIndexInternal", func() {
 	var (
-		handler   *handlers.PoliciesIndexInternal
-		resp      *httptest.ResponseRecorder
-		fakeStore *fakes.Store
-		logger    *lagertest.TestLogger
-		marshaler *lfakes.Marshaler
+		handler           *handlers.PoliciesIndexInternal
+		resp              *httptest.ResponseRecorder
+		fakeStore         *fakes.Store
+		fakeMetricsSender *fakes.MetricsSender
+		logger            *lagertest.TestLogger
+		marshaler         *lfakes.Marshaler
 	)
 
 	BeforeEach(func() {
@@ -48,10 +49,12 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		fakeStore = &fakes.Store{}
 		fakeStore.AllReturns(allPolicies, nil)
 		logger = lagertest.NewTestLogger("test")
+		fakeMetricsSender = &fakes.MetricsSender{}
 		handler = &handlers.PoliciesIndexInternal{
-			Logger:    logger,
-			Store:     fakeStore,
-			Marshaler: marshaler,
+			Logger:        logger,
+			Store:         fakeStore,
+			Marshaler:     marshaler,
+			MetricsSender: fakeMetricsSender,
 		}
 		resp = httptest.NewRecorder()
 	})
@@ -150,6 +153,12 @@ var _ = Describe("PoliciesIndexInternal", func() {
 			handler.ServeHTTP(resp, request)
 			Expect(logger).To(gbytes.Say("store-list-policies-failed.*banana"))
 		})
+
+		It("increments the error counter", func() {
+			handler.ServeHTTP(resp, request)
+			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
+			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("InternalPoliciesError"))
+		})
 	})
 
 	Context("when the policy cannot be marshaled", func() {
@@ -175,6 +184,12 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		It("logs the full error", func() {
 			handler.ServeHTTP(resp, request)
 			Expect(logger).To(gbytes.Say("marshal-failed.*grapes"))
+		})
+
+		It("increments the error counter", func() {
+			handler.ServeHTTP(resp, request)
+			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
+			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("InternalPoliciesError"))
 		})
 	})
 })

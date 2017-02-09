@@ -14,6 +14,7 @@ const MetricExternalUptimeDuration = "ExternalPoliciesUptimeRequestTime"
 const MetricExternalWhoAmIDuration = "ExternalPoliciesWhoAmIRequestTime"
 const MetricInternalPoliciesQueryDuration = "InternalPoliciesQueryTime"
 const MetricInternalPoliciesRequestDuration = "InternalPoliciesRequestTime"
+const MetricInternalPoliciesError = "InternalPoliciesError"
 
 //go:generate counterfeiter -o fakes/store.go --fake-name Store . store
 type store interface {

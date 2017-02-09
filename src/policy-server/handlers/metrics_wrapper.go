@@ -8,6 +8,7 @@ import (
 //go:generate counterfeiter -o fakes/metrics_sender.go --fake-name MetricsSender . metricsSender
 type metricsSender interface {
 	SendDuration(string, time.Duration)
+	IncrementCounter(string)
 }
 
 type MetricWrapper struct {
