@@ -3,14 +3,16 @@ package handlers
 import (
 	"lib/marshal"
 	"net/http"
+	"policy-server/server_metrics"
 	"policy-server/uaa_client"
 
 	"code.cloudfoundry.org/lager"
 )
 
 type WhoAmIHandler struct {
-	Logger    lager.Logger
-	Marshaler marshal.Marshaler
+	Logger        lager.Logger
+	Marshaler     marshal.Marshaler
+	MetricsSender metricsSender
 }
 
 type WhoAmIResponse struct {
@@ -25,6 +27,7 @@ func (h *WhoAmIHandler) ServeHTTP(w http.ResponseWriter, req *http.Request, toke
 	if err != nil {
 		h.Logger.Error("marshal-response", err)
 		w.WriteHeader(http.StatusInternalServerError)
+		h.MetricsSender.IncrementCounter(server_metrics.MetricExternalWhoAmIError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)

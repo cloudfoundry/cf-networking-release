@@ -5,6 +5,7 @@ import (
 	"lib/marshal"
 	"net/http"
 	"policy-server/models"
+	"policy-server/server_metrics"
 	"policy-server/uaa_client"
 
 	"code.cloudfoundry.org/lager"
@@ -19,6 +20,7 @@ type PoliciesCleanup struct {
 	Logger        lager.Logger
 	Marshaler     marshal.Marshaler
 	PolicyCleaner policyCleaner
+	MetricsSender metricsSender
 }
 
 func (h *PoliciesCleanup) ServeHTTP(w http.ResponseWriter, req *http.Request, tokenData uaa_client.CheckTokenResponse) {
@@ -27,8 +29,10 @@ func (h *PoliciesCleanup) ServeHTTP(w http.ResponseWriter, req *http.Request, to
 		h.Logger.Error("policies-cleanup", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{"error": "policies cleanup failed"}`))
+		h.MetricsSender.IncrementCounter(server_metrics.MetricExternalCleanupError)
 		return
 	}
+
 	policyCleanup := struct {
 		TotalPolicies int             `json:"total_policies"`
 		Policies      []models.Policy `json:"policies"`
@@ -43,6 +47,8 @@ func (h *PoliciesCleanup) ServeHTTP(w http.ResponseWriter, req *http.Request, to
 		h.Logger.Error("marshal-failed", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(fmt.Sprintf(`{"error": "marshal response failed"}`)))
+		h.MetricsSender.IncrementCounter(server_metrics.MetricExternalCleanupError)
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)

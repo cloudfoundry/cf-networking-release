@@ -24,6 +24,7 @@ var _ = Describe("PoliciesCleanup", func() {
 		resp              *httptest.ResponseRecorder
 		logger            *lagertest.TestLogger
 		fakePolicyCleaner *fakes.PolicyCleaner
+		fakeMetricsSender *fakes.MetricsSender
 		fakeMarshaler     *lfakes.Marshaler
 		policies          []models.Policy
 		tokenData         uaa_client.CheckTokenResponse
@@ -45,11 +46,13 @@ var _ = Describe("PoliciesCleanup", func() {
 		fakeMarshaler = &lfakes.Marshaler{}
 		fakeMarshaler.MarshalStub = json.Marshal
 		fakePolicyCleaner = &fakes.PolicyCleaner{}
+		fakeMetricsSender = &fakes.MetricsSender{}
 
 		handler = &handlers.PoliciesCleanup{
 			Logger:        logger,
 			Marshaler:     fakeMarshaler,
 			PolicyCleaner: fakePolicyCleaner,
+			MetricsSender: fakeMetricsSender,
 		}
 
 		tokenData = uaa_client.CheckTokenResponse{
@@ -113,6 +116,12 @@ var _ = Describe("PoliciesCleanup", func() {
 			handler.ServeHTTP(resp, request, tokenData)
 			Expect(logger).To(gbytes.Say("policies-cleanup.*potato"))
 		})
+
+		It("increments the counter", func() {
+			handler.ServeHTTP(resp, request, tokenData)
+			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
+			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("ExternalPoliciesCleanupError"))
+		})
 	})
 
 	Context("When marshalling the reponse fails", func() {
@@ -129,6 +138,12 @@ var _ = Describe("PoliciesCleanup", func() {
 		It("logs the full error", func() {
 			handler.ServeHTTP(resp, request, tokenData)
 			Expect(logger).To(gbytes.Say("marshal-failed.*potato"))
+		})
+
+		It("increments the counter", func() {
+			handler.ServeHTTP(resp, request, tokenData)
+			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
+			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("ExternalPoliciesCleanupError"))
 		})
 	})
 })

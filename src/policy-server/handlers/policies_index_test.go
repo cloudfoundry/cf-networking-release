@@ -20,16 +20,17 @@ import (
 
 var _ = Describe("Policies index handler", func() {
 	var (
-		allPolicies      []models.Policy
-		filteredPolicies []models.Policy
-		request          *http.Request
-		handler          *handlers.PoliciesIndex
-		resp             *httptest.ResponseRecorder
-		fakeStore        *fakes.Store
-		fakePolicyFilter *fakes.PolicyFilter
-		logger           *lagertest.TestLogger
-		marshaler        *lfakes.Marshaler
-		token            uaa_client.CheckTokenResponse
+		allPolicies       []models.Policy
+		filteredPolicies  []models.Policy
+		request           *http.Request
+		handler           *handlers.PoliciesIndex
+		resp              *httptest.ResponseRecorder
+		fakeStore         *fakes.Store
+		fakePolicyFilter  *fakes.PolicyFilter
+		fakeMetricsSender *fakes.MetricsSender
+		logger            *lagertest.TestLogger
+		marshaler         *lfakes.Marshaler
+		token             uaa_client.CheckTokenResponse
 	)
 
 	BeforeEach(func() {
@@ -83,16 +84,18 @@ var _ = Describe("Policies index handler", func() {
 
 		fakeStore = &fakes.Store{}
 		fakeStore.AllReturns(allPolicies, nil)
+		fakeMetricsSender = &fakes.MetricsSender{}
 		fakePolicyFilter = &fakes.PolicyFilter{}
 		fakePolicyFilter.FilterPoliciesStub = func(policies []models.Policy, userToken uaa_client.CheckTokenResponse) ([]models.Policy, error) {
 			return filteredPolicies, nil
 		}
 		logger = lagertest.NewTestLogger("test")
 		handler = &handlers.PoliciesIndex{
-			Logger:       logger,
-			Store:        fakeStore,
-			Marshaler:    marshaler,
-			PolicyFilter: fakePolicyFilter,
+			Logger:        logger,
+			Store:         fakeStore,
+			Marshaler:     marshaler,
+			PolicyFilter:  fakePolicyFilter,
+			MetricsSender: fakeMetricsSender,
 		}
 
 		token = uaa_client.CheckTokenResponse{
@@ -218,6 +221,12 @@ var _ = Describe("Policies index handler", func() {
 			handler.ServeHTTP(resp, request, token)
 			Expect(logger).To(gbytes.Say("store-list-policies-failed.*banana"))
 		})
+
+		It("increments the counter", func() {
+			handler.ServeHTTP(resp, request, token)
+			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
+			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("ExternalPoliciesIndexError"))
+		})
 	})
 
 	Context("when the policy cannot be marshaled", func() {
@@ -238,9 +247,15 @@ var _ = Describe("Policies index handler", func() {
 			handler.ServeHTTP(resp, request, token)
 			Expect(logger).To(gbytes.Say("marshal-failed.*grapes"))
 		})
+
+		It("increments the counter", func() {
+			handler.ServeHTTP(resp, request, token)
+			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
+			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("ExternalPoliciesIndexError"))
+		})
 	})
 
-	Context("when the policy guard throws an error", func() {
+	Context("when the policy filter throws an error", func() {
 		BeforeEach(func() {
 			fakePolicyFilter.FilterPoliciesReturns(nil, errors.New("banana"))
 		})
@@ -254,6 +269,12 @@ var _ = Describe("Policies index handler", func() {
 		It("logs the full error", func() {
 			handler.ServeHTTP(resp, request, token)
 			Expect(logger).To(gbytes.Say("filter-policies-failed.*banana"))
+		})
+
+		It("increments the counter", func() {
+			handler.ServeHTTP(resp, request, token)
+			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
+			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("ExternalPoliciesIndexError"))
 		})
 	})
 })

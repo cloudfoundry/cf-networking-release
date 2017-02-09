@@ -6,13 +6,25 @@ import (
 )
 
 const MetricExternalCleanupDuration = "ExternalPoliciesCleanupRequestTime"
+const MetricExternalCleanupError = "ExternalPoliciesCleanupError"
+
 const MetricExternalCreateDuration = "ExternalPoliciesCreateRequestTime"
+const MetricExternalCreateError = "ExternalPoliciesCreateError"
+
 const MetricExternalDeleteDuration = "ExternalPoliciesDeleteRequestTime"
+const MetricExternalDeleteError = "ExternalPoliciesDeleteError"
+
 const MetricExternalIndexDuration = "ExternalPoliciesIndexRequestTime"
+const MetricExternalIndexError = "ExternalPoliciesIndexError"
+
 const MetricExternalTagsIndexDuration = "ExternalPoliciesTagsIndexRequestTime"
+const MetricExternalTagsIndexError = "ExternalPoliciesTagsIndexError"
+
 const MetricExternalUptimeDuration = "ExternalPoliciesUptimeRequestTime"
+
 const MetricExternalWhoAmIDuration = "ExternalPoliciesWhoAmIRequestTime"
-const MetricInternalPoliciesQueryDuration = "InternalPoliciesQueryTime"
+const MetricExternalWhoAmIError = "ExternalPoliciesWhoAmIError"
+
 const MetricInternalPoliciesRequestDuration = "InternalPoliciesRequestTime"
 const MetricInternalPoliciesError = "InternalPoliciesError"
 

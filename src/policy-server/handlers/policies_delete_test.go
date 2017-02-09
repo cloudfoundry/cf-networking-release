@@ -21,17 +21,18 @@ import (
 
 var _ = Describe("PoliciesDelete", func() {
 	var (
-		requestJSON      string
-		request          *http.Request
-		handler          *handlers.PoliciesDelete
-		resp             *httptest.ResponseRecorder
-		fakeStore        *fakes.Store
-		logger           *lagertest.TestLogger
-		fakeUnmarshaler  *lfakes.Unmarshaler
-		expectedPolicies []models.Policy
-		fakeValidator    *fakes.Validator
-		fakePolicyGuard  *fakes.PolicyGuard
-		tokenData        uaa_client.CheckTokenResponse
+		requestJSON       string
+		request           *http.Request
+		handler           *handlers.PoliciesDelete
+		resp              *httptest.ResponseRecorder
+		fakeStore         *fakes.Store
+		logger            *lagertest.TestLogger
+		fakeUnmarshaler   *lfakes.Unmarshaler
+		expectedPolicies  []models.Policy
+		fakeValidator     *fakes.Validator
+		fakePolicyGuard   *fakes.PolicyGuard
+		fakeMetricsSender *fakes.MetricsSender
+		tokenData         uaa_client.CheckTokenResponse
 	)
 
 	const Route = "/networking/v0/external/policies/delete"
@@ -59,12 +60,14 @@ var _ = Describe("PoliciesDelete", func() {
 		logger = lagertest.NewTestLogger("test")
 		fakeUnmarshaler = &lfakes.Unmarshaler{}
 		fakeUnmarshaler.UnmarshalStub = json.Unmarshal
+		fakeMetricsSender = &fakes.MetricsSender{}
 		handler = &handlers.PoliciesDelete{
-			Logger:      logger,
-			Unmarshaler: fakeUnmarshaler,
-			Store:       fakeStore,
-			Validator:   fakeValidator,
-			PolicyGuard: fakePolicyGuard,
+			Logger:        logger,
+			Unmarshaler:   fakeUnmarshaler,
+			Store:         fakeStore,
+			Validator:     fakeValidator,
+			PolicyGuard:   fakePolicyGuard,
+			MetricsSender: fakeMetricsSender,
 		}
 		resp = httptest.NewRecorder()
 
@@ -136,6 +139,12 @@ var _ = Describe("PoliciesDelete", func() {
 			handler.ServeHTTP(resp, request, tokenData)
 			Expect(logger).To(gbytes.Say("check-access-failed.*banana"))
 		})
+
+		It("increments the counter", func() {
+			handler.ServeHTTP(resp, request, tokenData)
+			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
+			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("ExternalPoliciesDeleteError"))
+		})
 	})
 
 	Context("when a policy to delete includes any validation error", func() {
@@ -191,12 +200,19 @@ var _ = Describe("PoliciesDelete", func() {
 		BeforeEach(func() {
 			fakeStore.DeleteReturns(errors.New("banana"))
 		})
+
 		It("returns 500 and logs the error", func() {
 			handler.ServeHTTP(resp, request, tokenData)
 
 			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
 			Expect(resp.Body.String()).To(Equal(`{"error": "database delete failed"}`))
 			Expect(logger).To(gbytes.Say("store-delete-failed"))
+		})
+
+		It("increments the counter", func() {
+			handler.ServeHTTP(resp, request, tokenData)
+			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
+			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("ExternalPoliciesDeleteError"))
 		})
 	})
 })

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"policy-server/handlers"
+	"policy-server/handlers/fakes"
 	"policy-server/uaa_client"
 
 	"code.cloudfoundry.org/lager/lagertest"
@@ -16,13 +17,14 @@ import (
 	"github.com/onsi/gomega/gbytes"
 )
 
-var _ = Describe("UaaHandler", func() {
+var _ = Describe("Who Am I Handler", func() {
 	var (
-		request   *http.Request
-		handler   *handlers.WhoAmIHandler
-		resp      *httptest.ResponseRecorder
-		logger    *lagertest.TestLogger
-		tokenData uaa_client.CheckTokenResponse
+		request           *http.Request
+		handler           *handlers.WhoAmIHandler
+		resp              *httptest.ResponseRecorder
+		logger            *lagertest.TestLogger
+		tokenData         uaa_client.CheckTokenResponse
+		fakeMetricsSender *fakes.MetricsSender
 	)
 
 	BeforeEach(func() {
@@ -31,9 +33,11 @@ var _ = Describe("UaaHandler", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		logger = lagertest.NewTestLogger("test")
+		fakeMetricsSender = &fakes.MetricsSender{}
 		handler = &handlers.WhoAmIHandler{
-			Logger:    logger,
-			Marshaler: marshal.MarshalFunc(json.Marshal),
+			Logger:        logger,
+			Marshaler:     marshal.MarshalFunc(json.Marshal),
+			MetricsSender: fakeMetricsSender,
 		}
 		resp = httptest.NewRecorder()
 		tokenData = uaa_client.CheckTokenResponse{
@@ -68,5 +72,11 @@ var _ = Describe("UaaHandler", func() {
 			Expect(logger).To(gbytes.Say("marshal-response.*banana"))
 		})
 
+		It("increments the error counter", func() {
+			handler.ServeHTTP(resp, request, tokenData)
+
+			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
+			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("ExternalPoliciesWhoAmIError"))
+		})
 	})
 })

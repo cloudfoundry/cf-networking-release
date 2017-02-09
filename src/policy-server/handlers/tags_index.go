@@ -4,15 +4,17 @@ import (
 	"lib/marshal"
 	"net/http"
 	"policy-server/models"
+	"policy-server/server_metrics"
 	"policy-server/uaa_client"
 
 	"code.cloudfoundry.org/lager"
 )
 
 type TagsIndex struct {
-	Logger    lager.Logger
-	Store     store
-	Marshaler marshal.Marshaler
+	Logger        lager.Logger
+	Store         store
+	Marshaler     marshal.Marshaler
+	MetricsSender metricsSender
 }
 
 func (h *TagsIndex) ServeHTTP(w http.ResponseWriter, req *http.Request, _ uaa_client.CheckTokenResponse) {
@@ -21,6 +23,7 @@ func (h *TagsIndex) ServeHTTP(w http.ResponseWriter, req *http.Request, _ uaa_cl
 		h.Logger.Error("store-list-tags-failed", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{"error": "database read failed"}`))
+		h.MetricsSender.IncrementCounter(server_metrics.MetricExternalTagsIndexError)
 		return
 	}
 
@@ -32,6 +35,7 @@ func (h *TagsIndex) ServeHTTP(w http.ResponseWriter, req *http.Request, _ uaa_cl
 		h.Logger.Error("marshal-failed", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{"error": "database marshaling failed"}`))
+		h.MetricsSender.IncrementCounter(server_metrics.MetricExternalTagsIndexError)
 		return
 	}
 	w.Write(responseBytes)

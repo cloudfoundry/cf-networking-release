@@ -6,6 +6,7 @@ import (
 	"lib/marshal"
 	"net/http"
 	"policy-server/models"
+	"policy-server/server_metrics"
 	"policy-server/uaa_client"
 
 	"code.cloudfoundry.org/lager"
@@ -17,11 +18,12 @@ type policyGuard interface {
 }
 
 type PoliciesCreate struct {
-	Logger      lager.Logger
-	Store       store
-	Unmarshaler marshal.Unmarshaler
-	Validator   validator
-	PolicyGuard policyGuard
+	Logger        lager.Logger
+	Store         store
+	Unmarshaler   marshal.Unmarshaler
+	Validator     validator
+	PolicyGuard   policyGuard
+	MetricsSender metricsSender
 }
 
 func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request, tokenData uaa_client.CheckTokenResponse) {
@@ -56,6 +58,7 @@ func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request, tok
 		h.Logger.Error("check-access-failed", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(fmt.Sprintf(`{"error": "%s"}`, err)))
+		h.MetricsSender.IncrementCounter(server_metrics.MetricExternalCreateError)
 		return
 	}
 	if !authorized {
@@ -71,6 +74,7 @@ func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request, tok
 		h.Logger.Error("store-create-failed", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{"error": "database create failed"}`))
+		h.MetricsSender.IncrementCounter(server_metrics.MetricExternalCreateError)
 		return
 	}
 

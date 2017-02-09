@@ -22,16 +22,17 @@ import (
 
 var _ = Describe("PoliciesCreate", func() {
 	var (
-		requestJSON     string
-		request         *http.Request
-		handler         *handlers.PoliciesCreate
-		resp            *httptest.ResponseRecorder
-		fakeStore       *fakes.Store
-		fakeValidator   *fakes.Validator
-		fakePolicyGuard *fakes.PolicyGuard
-		logger          *lagertest.TestLogger
-		fakeUnmarshaler *lfakes.Unmarshaler
-		tokenData       uaa_client.CheckTokenResponse
+		requestJSON       string
+		request           *http.Request
+		handler           *handlers.PoliciesCreate
+		resp              *httptest.ResponseRecorder
+		fakeStore         *fakes.Store
+		fakeValidator     *fakes.Validator
+		fakePolicyGuard   *fakes.PolicyGuard
+		logger            *lagertest.TestLogger
+		fakeUnmarshaler   *lfakes.Unmarshaler
+		fakeMetricsSender *fakes.MetricsSender
+		tokenData         uaa_client.CheckTokenResponse
 	)
 
 	BeforeEach(func() {
@@ -66,13 +67,15 @@ var _ = Describe("PoliciesCreate", func() {
 		fakePolicyGuard = &fakes.PolicyGuard{}
 		logger = lagertest.NewTestLogger("test")
 		fakeUnmarshaler = &lfakes.Unmarshaler{}
+		fakeMetricsSender = &fakes.MetricsSender{}
 		fakeUnmarshaler.UnmarshalStub = json.Unmarshal
 		handler = &handlers.PoliciesCreate{
-			Logger:      logger,
-			Store:       fakeStore,
-			Unmarshaler: fakeUnmarshaler,
-			Validator:   fakeValidator,
-			PolicyGuard: fakePolicyGuard,
+			Logger:        logger,
+			Store:         fakeStore,
+			Unmarshaler:   fakeUnmarshaler,
+			Validator:     fakeValidator,
+			PolicyGuard:   fakePolicyGuard,
+			MetricsSender: fakeMetricsSender,
 		}
 		tokenData = uaa_client.CheckTokenResponse{
 			Scope:    []string{"network.admin"},
@@ -170,6 +173,12 @@ var _ = Describe("PoliciesCreate", func() {
 			handler.ServeHTTP(resp, request, tokenData)
 			Expect(logger).To(gbytes.Say("check-access-failed.*banana"))
 		})
+
+		It("increments the error counter", func() {
+			handler.ServeHTTP(resp, request, tokenData)
+			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
+			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("ExternalPoliciesCreateError"))
+		})
 	})
 
 	Context("when the store Create call returns an error", func() {
@@ -187,6 +196,12 @@ var _ = Describe("PoliciesCreate", func() {
 		It("logs the full error", func() {
 			handler.ServeHTTP(resp, request, tokenData)
 			Expect(logger).To(gbytes.Say("store-create-failed.*banana"))
+		})
+
+		It("increments the error counter", func() {
+			handler.ServeHTTP(resp, request, tokenData)
+			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
+			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("ExternalPoliciesCreateError"))
 		})
 	})
 

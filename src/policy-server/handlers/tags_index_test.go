@@ -20,14 +20,15 @@ import (
 
 var _ = Describe("Tags index handler", func() {
 	var (
-		allTags   []models.Tag
-		request   *http.Request
-		handler   *handlers.TagsIndex
-		resp      *httptest.ResponseRecorder
-		fakeStore *fakes.Store
-		logger    *lagertest.TestLogger
-		marshaler *lfakes.Marshaler
-		tokenData uaa_client.CheckTokenResponse
+		allTags           []models.Tag
+		request           *http.Request
+		handler           *handlers.TagsIndex
+		resp              *httptest.ResponseRecorder
+		fakeStore         *fakes.Store
+		fakeMetricsSender *fakes.MetricsSender
+		logger            *lagertest.TestLogger
+		marshaler         *lfakes.Marshaler
+		tokenData         uaa_client.CheckTokenResponse
 	)
 
 	BeforeEach(func() {
@@ -47,12 +48,14 @@ var _ = Describe("Tags index handler", func() {
 		marshaler.MarshalStub = json.Marshal
 
 		fakeStore = &fakes.Store{}
+		fakeMetricsSender = &fakes.MetricsSender{}
 		fakeStore.TagsReturns(allTags, nil)
 		logger = lagertest.NewTestLogger("test")
 		handler = &handlers.TagsIndex{
-			Logger:    logger,
-			Store:     fakeStore,
-			Marshaler: marshaler,
+			Logger:        logger,
+			Store:         fakeStore,
+			Marshaler:     marshaler,
+			MetricsSender: fakeMetricsSender,
 		}
 		resp = httptest.NewRecorder()
 		tokenData = uaa_client.CheckTokenResponse{}
@@ -85,6 +88,12 @@ var _ = Describe("Tags index handler", func() {
 			handler.ServeHTTP(resp, request, tokenData)
 			Expect(logger).To(gbytes.Say("store-list-tags-failed.*banana"))
 		})
+
+		It("increments the error counter", func() {
+			handler.ServeHTTP(resp, request, tokenData)
+			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
+			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("ExternalPoliciesTagsIndexError"))
+		})
 	})
 
 	Context("when the tags cannot be marshaled", func() {
@@ -104,6 +113,12 @@ var _ = Describe("Tags index handler", func() {
 		It("logs the full error", func() {
 			handler.ServeHTTP(resp, request, tokenData)
 			Expect(logger).To(gbytes.Say("marshal-failed.*grapes"))
+		})
+
+		It("increments the error counter", func() {
+			handler.ServeHTTP(resp, request, tokenData)
+			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
+			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("ExternalPoliciesTagsIndexError"))
 		})
 	})
 })

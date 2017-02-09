@@ -6,17 +6,19 @@ import (
 	"lib/marshal"
 	"net/http"
 	"policy-server/models"
+	"policy-server/server_metrics"
 	"policy-server/uaa_client"
 
 	"code.cloudfoundry.org/lager"
 )
 
 type PoliciesDelete struct {
-	Logger      lager.Logger
-	Unmarshaler marshal.Unmarshaler
-	Store       store
-	Validator   validator
-	PolicyGuard policyGuard
+	Logger        lager.Logger
+	Unmarshaler   marshal.Unmarshaler
+	Store         store
+	Validator     validator
+	PolicyGuard   policyGuard
+	MetricsSender metricsSender
 }
 
 func (h *PoliciesDelete) ServeHTTP(w http.ResponseWriter, req *http.Request, tokenData uaa_client.CheckTokenResponse) {
@@ -39,7 +41,8 @@ func (h *PoliciesDelete) ServeHTTP(w http.ResponseWriter, req *http.Request, tok
 		return
 	}
 
-	if err = h.Validator.ValidatePolicies(payload.Policies); err != nil {
+	err = h.Validator.ValidatePolicies(payload.Policies)
+	if err != nil {
 		h.Logger.Error("bad-request", err)
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf(`{"error": "%s"}`, err)))
@@ -51,6 +54,7 @@ func (h *PoliciesDelete) ServeHTTP(w http.ResponseWriter, req *http.Request, tok
 		h.Logger.Error("check-access-failed", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(fmt.Sprintf(`{"error": "%s"}`, err)))
+		h.MetricsSender.IncrementCounter(server_metrics.MetricExternalDeleteError)
 		return
 	}
 	if !authorized {
@@ -66,6 +70,7 @@ func (h *PoliciesDelete) ServeHTTP(w http.ResponseWriter, req *http.Request, tok
 		h.Logger.Error("store-delete-failed", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(`{"error": "database delete failed"}`))
+		h.MetricsSender.IncrementCounter(server_metrics.MetricExternalDeleteError)
 		return
 	}
 
