@@ -6,7 +6,6 @@ import (
 	"lib/marshal"
 	"net/http"
 	"policy-server/models"
-	"policy-server/server_metrics"
 	"policy-server/uaa_client"
 
 	"code.cloudfoundry.org/lager"
@@ -18,7 +17,7 @@ type PoliciesDelete struct {
 	Store         store
 	Validator     validator
 	PolicyGuard   policyGuard
-	MetricsSender metricsSender
+	ErrorResponse errorResponse
 }
 
 func (h *PoliciesDelete) ServeHTTP(w http.ResponseWriter, req *http.Request, tokenData uaa_client.CheckTokenResponse) {
@@ -51,10 +50,7 @@ func (h *PoliciesDelete) ServeHTTP(w http.ResponseWriter, req *http.Request, tok
 
 	authorized, err := h.PolicyGuard.CheckAccess(payload.Policies, tokenData)
 	if err != nil {
-		h.Logger.Error("check-access-failed", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(fmt.Sprintf(`{"error": "%s"}`, err)))
-		h.MetricsSender.IncrementCounter(server_metrics.MetricExternalDeleteError)
+		h.ErrorResponse.InternalServerError(w, err, "policies-delete", "check access failed")
 		return
 	}
 	if !authorized {
@@ -67,10 +63,7 @@ func (h *PoliciesDelete) ServeHTTP(w http.ResponseWriter, req *http.Request, tok
 
 	err = h.Store.Delete(payload.Policies)
 	if err != nil {
-		h.Logger.Error("store-delete-failed", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(`{"error": "database delete failed"}`))
-		h.MetricsSender.IncrementCounter(server_metrics.MetricExternalDeleteError)
+		h.ErrorResponse.InternalServerError(w, err, "policies-delete", "database delete failed")
 		return
 	}
 

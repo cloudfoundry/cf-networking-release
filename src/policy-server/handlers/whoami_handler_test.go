@@ -14,7 +14,6 @@ import (
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gbytes"
 )
 
 var _ = Describe("Who Am I Handler", func() {
@@ -24,7 +23,7 @@ var _ = Describe("Who Am I Handler", func() {
 		resp              *httptest.ResponseRecorder
 		logger            *lagertest.TestLogger
 		tokenData         uaa_client.CheckTokenResponse
-		fakeMetricsSender *fakes.MetricsSender
+		fakeErrorResponse *fakes.ErrorResponse
 	)
 
 	BeforeEach(func() {
@@ -33,11 +32,11 @@ var _ = Describe("Who Am I Handler", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		logger = lagertest.NewTestLogger("test")
-		fakeMetricsSender = &fakes.MetricsSender{}
+		fakeErrorResponse = &fakes.ErrorResponse{}
 		handler = &handlers.WhoAmIHandler{
 			Logger:        logger,
 			Marshaler:     marshal.MarshalFunc(json.Marshal),
-			MetricsSender: fakeMetricsSender,
+			ErrorResponse: fakeErrorResponse,
 		}
 		resp = httptest.NewRecorder()
 		tokenData = uaa_client.CheckTokenResponse{
@@ -60,23 +59,16 @@ var _ = Describe("Who Am I Handler", func() {
 			})
 		})
 
-		It("returns a 500 status code", func() {
+		It("calls the internal server error handler", func() {
 			handler.ServeHTTP(resp, request, tokenData)
 
-			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
-		})
+			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
-		It("logs the error", func() {
-			handler.ServeHTTP(resp, request, tokenData)
-
-			Expect(logger).To(gbytes.Say("marshal-response.*banana"))
-		})
-
-		It("increments the error counter", func() {
-			handler.ServeHTTP(resp, request, tokenData)
-
-			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
-			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("ExternalPoliciesWhoAmIError"))
+			w, err, message, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			Expect(w).To(Equal(resp))
+			Expect(err).To(MatchError("banana"))
+			Expect(message).To(Equal("who-am-i"))
+			Expect(description).To(Equal("marshaling response failed"))
 		})
 	})
 })

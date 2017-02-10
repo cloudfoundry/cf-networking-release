@@ -14,7 +14,6 @@ import (
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gbytes"
 )
 
 var _ = Describe("PoliciesCleanup", func() {
@@ -24,8 +23,8 @@ var _ = Describe("PoliciesCleanup", func() {
 		resp              *httptest.ResponseRecorder
 		logger            *lagertest.TestLogger
 		fakePolicyCleaner *fakes.PolicyCleaner
-		fakeMetricsSender *fakes.MetricsSender
 		fakeMarshaler     *lfakes.Marshaler
+		fakeErrorResponse *fakes.ErrorResponse
 		policies          []models.Policy
 		tokenData         uaa_client.CheckTokenResponse
 	)
@@ -46,13 +45,13 @@ var _ = Describe("PoliciesCleanup", func() {
 		fakeMarshaler = &lfakes.Marshaler{}
 		fakeMarshaler.MarshalStub = json.Marshal
 		fakePolicyCleaner = &fakes.PolicyCleaner{}
-		fakeMetricsSender = &fakes.MetricsSender{}
+		fakeErrorResponse = &fakes.ErrorResponse{}
 
 		handler = &handlers.PoliciesCleanup{
 			Logger:        logger,
 			Marshaler:     fakeMarshaler,
 			PolicyCleaner: fakePolicyCleaner,
-			MetricsSender: fakeMetricsSender,
+			ErrorResponse: fakeErrorResponse,
 		}
 
 		tokenData = uaa_client.CheckTokenResponse{
@@ -106,21 +105,16 @@ var _ = Describe("PoliciesCleanup", func() {
 			fakePolicyCleaner.DeleteStalePoliciesReturns(nil, errors.New("potato"))
 		})
 
-		It("responds with 500", func() {
+		It("calls the internal server error handler", func() {
 			handler.ServeHTTP(resp, request, tokenData)
-			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
-			Expect(resp.Body.String()).To(MatchJSON(`{"error": "policies cleanup failed"}`))
-		})
 
-		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request, tokenData)
-			Expect(logger).To(gbytes.Say("policies-cleanup.*potato"))
-		})
+			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
-		It("increments the counter", func() {
-			handler.ServeHTTP(resp, request, tokenData)
-			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
-			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("ExternalPoliciesCleanupError"))
+			w, err, message, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			Expect(w).To(Equal(resp))
+			Expect(err).To(MatchError("potato"))
+			Expect(message).To(Equal("policies-cleanup"))
+			Expect(description).To(Equal("policies cleanup failed"))
 		})
 	})
 
@@ -129,21 +123,16 @@ var _ = Describe("PoliciesCleanup", func() {
 			fakeMarshaler.MarshalReturns(nil, errors.New("potato"))
 		})
 
-		It("responds with 500", func() {
+		It("calls the internal server error handler", func() {
 			handler.ServeHTTP(resp, request, tokenData)
-			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
-			Expect(resp.Body.String()).To(MatchJSON(`{"error": "marshal response failed"}`))
-		})
 
-		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request, tokenData)
-			Expect(logger).To(gbytes.Say("marshal-failed.*potato"))
-		})
+			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
-		It("increments the counter", func() {
-			handler.ServeHTTP(resp, request, tokenData)
-			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
-			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("ExternalPoliciesCleanupError"))
+			w, err, message, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			Expect(w).To(Equal(resp))
+			Expect(err).To(MatchError("potato"))
+			Expect(message).To(Equal("policies-cleanup"))
+			Expect(description).To(Equal("marshal response failed"))
 		})
 	})
 })

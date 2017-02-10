@@ -25,8 +25,9 @@ func (fake *PolicyCleaner) DeleteStalePolicies() ([]models.Policy, error) {
 	fake.deleteStalePoliciesMutex.Unlock()
 	if fake.DeleteStalePoliciesStub != nil {
 		return fake.DeleteStalePoliciesStub()
+	} else {
+		return fake.deleteStalePoliciesReturns.result1, fake.deleteStalePoliciesReturns.result2
 	}
-	return fake.deleteStalePoliciesReturns.result1, fake.deleteStalePoliciesReturns.result2
 }
 
 func (fake *PolicyCleaner) DeleteStalePoliciesCallCount() int {

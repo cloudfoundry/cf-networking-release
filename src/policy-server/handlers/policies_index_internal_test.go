@@ -22,7 +22,7 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		handler           *handlers.PoliciesIndexInternal
 		resp              *httptest.ResponseRecorder
 		fakeStore         *fakes.Store
-		fakeMetricsSender *fakes.MetricsSender
+		fakeErrorResponse *fakes.ErrorResponse
 		logger            *lagertest.TestLogger
 		marshaler         *lfakes.Marshaler
 	)
@@ -49,12 +49,12 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		fakeStore = &fakes.Store{}
 		fakeStore.AllReturns(allPolicies, nil)
 		logger = lagertest.NewTestLogger("test")
-		fakeMetricsSender = &fakes.MetricsSender{}
+		fakeErrorResponse = &fakes.ErrorResponse{}
 		handler = &handlers.PoliciesIndexInternal{
 			Logger:        logger,
 			Store:         fakeStore,
 			Marshaler:     marshaler,
-			MetricsSender: fakeMetricsSender,
+			ErrorResponse: fakeErrorResponse,
 		}
 		resp = httptest.NewRecorder()
 	})
@@ -139,25 +139,20 @@ var _ = Describe("PoliciesIndexInternal", func() {
 			Expect(err).NotTo(HaveOccurred())
 			fakeStore.AllReturns(nil, errors.New("banana"))
 		})
-		It("responds with 500", func() {
+
+		It("calls the internal server error handler", func() {
 			var err error
 			request, err = http.NewRequest("GET", "/networking/v0/internal/policies", nil)
 			Expect(err).NotTo(HaveOccurred())
 			handler.ServeHTTP(resp, request)
 
-			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
-			Expect(resp.Body.String()).To(MatchJSON(`{"error": "database read failed"}`))
-		})
+			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
-		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request)
-			Expect(logger).To(gbytes.Say("store-list-policies-failed.*banana"))
-		})
-
-		It("increments the error counter", func() {
-			handler.ServeHTTP(resp, request)
-			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
-			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("InternalPoliciesError"))
+			w, err, message, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			Expect(w).To(Equal(resp))
+			Expect(err).To(MatchError("banana"))
+			Expect(message).To(Equal("policies-index-internal"))
+			Expect(description).To(Equal("database read failed"))
 		})
 	})
 
@@ -174,22 +169,16 @@ var _ = Describe("PoliciesIndexInternal", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		It("responds with 500 and returns a descriptive error", func() {
+		It("calls the internal server error handler", func() {
 			handler.ServeHTTP(resp, request)
 
-			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
-			Expect(resp.Body.String()).To(MatchJSON(`{"error": "database marshaling failed"}`))
-		})
+			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
-		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request)
-			Expect(logger).To(gbytes.Say("marshal-failed.*grapes"))
-		})
-
-		It("increments the error counter", func() {
-			handler.ServeHTTP(resp, request)
-			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
-			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("InternalPoliciesError"))
+			w, err, message, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			Expect(w).To(Equal(resp))
+			Expect(err).To(MatchError("grapes"))
+			Expect(message).To(Equal("policies-index-internal"))
+			Expect(description).To(Equal("database marshaling failed"))
 		})
 	})
 })

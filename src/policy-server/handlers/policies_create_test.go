@@ -29,9 +29,9 @@ var _ = Describe("PoliciesCreate", func() {
 		fakeStore         *fakes.Store
 		fakeValidator     *fakes.Validator
 		fakePolicyGuard   *fakes.PolicyGuard
+		fakeErrorResponse *fakes.ErrorResponse
 		logger            *lagertest.TestLogger
 		fakeUnmarshaler   *lfakes.Unmarshaler
-		fakeMetricsSender *fakes.MetricsSender
 		tokenData         uaa_client.CheckTokenResponse
 	)
 
@@ -67,7 +67,7 @@ var _ = Describe("PoliciesCreate", func() {
 		fakePolicyGuard = &fakes.PolicyGuard{}
 		logger = lagertest.NewTestLogger("test")
 		fakeUnmarshaler = &lfakes.Unmarshaler{}
-		fakeMetricsSender = &fakes.MetricsSender{}
+		fakeErrorResponse = &fakes.ErrorResponse{}
 		fakeUnmarshaler.UnmarshalStub = json.Unmarshal
 		handler = &handlers.PoliciesCreate{
 			Logger:        logger,
@@ -75,7 +75,7 @@ var _ = Describe("PoliciesCreate", func() {
 			Unmarshaler:   fakeUnmarshaler,
 			Validator:     fakeValidator,
 			PolicyGuard:   fakePolicyGuard,
-			MetricsSender: fakeMetricsSender,
+			ErrorResponse: fakeErrorResponse,
 		}
 		tokenData = uaa_client.CheckTokenResponse{
 			Scope:    []string{"network.admin"},
@@ -163,21 +163,16 @@ var _ = Describe("PoliciesCreate", func() {
 			fakePolicyGuard.CheckAccessReturns(false, errors.New("banana"))
 		})
 
-		It("responds with code 500 and a useful error", func() {
+		It("calls the internal server error handler", func() {
 			handler.ServeHTTP(resp, request, tokenData)
-			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
-			Expect(resp.Body.String()).To(MatchJSON(`{"error": "banana"}`))
-		})
 
-		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request, tokenData)
-			Expect(logger).To(gbytes.Say("check-access-failed.*banana"))
-		})
+			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
-		It("increments the error counter", func() {
-			handler.ServeHTTP(resp, request, tokenData)
-			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
-			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("ExternalPoliciesCreateError"))
+			w, err, message, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			Expect(w).To(Equal(resp))
+			Expect(err).To(MatchError("banana"))
+			Expect(message).To(Equal("policies-create"))
+			Expect(description).To(Equal("check access failed"))
 		})
 	})
 
@@ -186,22 +181,16 @@ var _ = Describe("PoliciesCreate", func() {
 			fakeStore.CreateReturns(errors.New("banana"))
 		})
 
-		It("sets a 500 error code, and returns a generic error", func() {
+		It("calls the internal server error handler", func() {
 			handler.ServeHTTP(resp, request, tokenData)
 
-			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
-			Expect(resp.Body.String()).To(MatchJSON(`{"error": "database create failed"}`))
-		})
+			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
-		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request, tokenData)
-			Expect(logger).To(gbytes.Say("store-create-failed.*banana"))
-		})
-
-		It("increments the error counter", func() {
-			handler.ServeHTTP(resp, request, tokenData)
-			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
-			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("ExternalPoliciesCreateError"))
+			w, err, message, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			Expect(w).To(Equal(resp))
+			Expect(err).To(MatchError("banana"))
+			Expect(message).To(Equal("policies-create"))
+			Expect(description).To(Equal("database create failed"))
 		})
 	})
 

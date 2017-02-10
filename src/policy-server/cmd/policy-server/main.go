@@ -209,10 +209,9 @@ func main() {
 	}
 
 	internalPoliciesHandler := &handlers.PoliciesIndexInternal{
-		Logger:        logger.Session("policies-index-internal"),
-		Store:         wrappedStore,
-		Marshaler:     marshal.MarshalFunc(json.Marshal),
-		MetricsSender: metricsSender,
+		Logger:    logger.Session("policies-index-internal"),
+		Store:     wrappedStore,
+		Marshaler: marshal.MarshalFunc(json.Marshal),
 	}
 
 	routes := rata.Routes{

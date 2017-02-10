@@ -1,11 +1,9 @@
 package handlers
 
 import (
-	"fmt"
 	"lib/marshal"
 	"net/http"
 	"policy-server/models"
-	"policy-server/server_metrics"
 	"policy-server/uaa_client"
 
 	"code.cloudfoundry.org/lager"
@@ -16,20 +14,22 @@ type policyCleaner interface {
 	DeleteStalePolicies() ([]models.Policy, error)
 }
 
+//go:generate counterfeiter -o fakes/error_response.go --fake-name ErrorResponse . errorResponse
+type errorResponse interface {
+	InternalServerError(http.ResponseWriter, error, string, string)
+}
+
 type PoliciesCleanup struct {
 	Logger        lager.Logger
 	Marshaler     marshal.Marshaler
 	PolicyCleaner policyCleaner
-	MetricsSender metricsSender
+	ErrorResponse errorResponse
 }
 
 func (h *PoliciesCleanup) ServeHTTP(w http.ResponseWriter, req *http.Request, tokenData uaa_client.CheckTokenResponse) {
 	policies, err := h.PolicyCleaner.DeleteStalePolicies()
 	if err != nil {
-		h.Logger.Error("policies-cleanup", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(`{"error": "policies cleanup failed"}`))
-		h.MetricsSender.IncrementCounter(server_metrics.MetricExternalCleanupError)
+		h.ErrorResponse.InternalServerError(w, err, "policies-cleanup", "policies cleanup failed")
 		return
 	}
 
@@ -44,10 +44,7 @@ func (h *PoliciesCleanup) ServeHTTP(w http.ResponseWriter, req *http.Request, to
 
 	bytes, err := h.Marshaler.Marshal(policyCleanup)
 	if err != nil {
-		h.Logger.Error("marshal-failed", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(fmt.Sprintf(`{"error": "marshal response failed"}`)))
-		h.MetricsSender.IncrementCounter(server_metrics.MetricExternalCleanupError)
+		h.ErrorResponse.InternalServerError(w, err, "policies-cleanup", "marshal response failed")
 		return
 	}
 

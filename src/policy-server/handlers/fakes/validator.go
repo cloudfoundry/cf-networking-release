@@ -33,8 +33,9 @@ func (fake *Validator) ValidatePolicies(policies []models.Policy) error {
 	fake.validatePoliciesMutex.Unlock()
 	if fake.ValidatePoliciesStub != nil {
 		return fake.ValidatePoliciesStub(policies)
+	} else {
+		return fake.validatePoliciesReturns.result1
 	}
-	return fake.validatePoliciesReturns.result1
 }
 
 func (fake *Validator) ValidatePoliciesCallCount() int {

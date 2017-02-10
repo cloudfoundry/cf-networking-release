@@ -15,7 +15,6 @@ import (
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gbytes"
 )
 
 var _ = Describe("Policies index handler", func() {
@@ -27,7 +26,7 @@ var _ = Describe("Policies index handler", func() {
 		resp              *httptest.ResponseRecorder
 		fakeStore         *fakes.Store
 		fakePolicyFilter  *fakes.PolicyFilter
-		fakeMetricsSender *fakes.MetricsSender
+		fakeErrorResponse *fakes.ErrorResponse
 		logger            *lagertest.TestLogger
 		marshaler         *lfakes.Marshaler
 		token             uaa_client.CheckTokenResponse
@@ -84,7 +83,7 @@ var _ = Describe("Policies index handler", func() {
 
 		fakeStore = &fakes.Store{}
 		fakeStore.AllReturns(allPolicies, nil)
-		fakeMetricsSender = &fakes.MetricsSender{}
+		fakeErrorResponse = &fakes.ErrorResponse{}
 		fakePolicyFilter = &fakes.PolicyFilter{}
 		fakePolicyFilter.FilterPoliciesStub = func(policies []models.Policy, userToken uaa_client.CheckTokenResponse) ([]models.Policy, error) {
 			return filteredPolicies, nil
@@ -95,7 +94,7 @@ var _ = Describe("Policies index handler", func() {
 			Store:         fakeStore,
 			Marshaler:     marshaler,
 			PolicyFilter:  fakePolicyFilter,
-			MetricsSender: fakeMetricsSender,
+			ErrorResponse: fakeErrorResponse,
 		}
 
 		token = uaa_client.CheckTokenResponse{
@@ -210,22 +209,17 @@ var _ = Describe("Policies index handler", func() {
 		BeforeEach(func() {
 			fakeStore.AllReturns(nil, errors.New("banana"))
 		})
-		It("responds with 500", func() {
+
+		It("calls the internal server error handler", func() {
 			handler.ServeHTTP(resp, request, token)
 
-			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
-			Expect(resp.Body.String()).To(MatchJSON(`{"error": "database read failed"}`))
-		})
+			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
-		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request, token)
-			Expect(logger).To(gbytes.Say("store-list-policies-failed.*banana"))
-		})
-
-		It("increments the counter", func() {
-			handler.ServeHTTP(resp, request, token)
-			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
-			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("ExternalPoliciesIndexError"))
+			w, err, message, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			Expect(w).To(Equal(resp))
+			Expect(err).To(MatchError("banana"))
+			Expect(message).To(Equal("policies-index"))
+			Expect(description).To(Equal("database read failed"))
 		})
 	})
 
@@ -236,22 +230,16 @@ var _ = Describe("Policies index handler", func() {
 			}
 		})
 
-		It("responds with 500 and returns a descriptive error", func() {
+		It("calls the internal server error handler", func() {
 			handler.ServeHTTP(resp, request, token)
 
-			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
-			Expect(resp.Body.String()).To(MatchJSON(`{"error": "database marshaling failed"}`))
-		})
+			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
-		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request, token)
-			Expect(logger).To(gbytes.Say("marshal-failed.*grapes"))
-		})
-
-		It("increments the counter", func() {
-			handler.ServeHTTP(resp, request, token)
-			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
-			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("ExternalPoliciesIndexError"))
+			w, err, message, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			Expect(w).To(Equal(resp))
+			Expect(err).To(MatchError("grapes"))
+			Expect(message).To(Equal("policies-index"))
+			Expect(description).To(Equal("database marshaling failed"))
 		})
 	})
 
@@ -259,22 +247,17 @@ var _ = Describe("Policies index handler", func() {
 		BeforeEach(func() {
 			fakePolicyFilter.FilterPoliciesReturns(nil, errors.New("banana"))
 		})
-		It("responds with 500", func() {
+
+		It("calls the internal server error handler", func() {
 			handler.ServeHTTP(resp, request, token)
 
-			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
-			Expect(resp.Body.String()).To(MatchJSON(`{"error": "filter policies failed"}`))
-		})
+			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
-		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request, token)
-			Expect(logger).To(gbytes.Say("filter-policies-failed.*banana"))
-		})
-
-		It("increments the counter", func() {
-			handler.ServeHTTP(resp, request, token)
-			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
-			Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("ExternalPoliciesIndexError"))
+			w, err, message, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			Expect(w).To(Equal(resp))
+			Expect(err).To(MatchError("banana"))
+			Expect(message).To(Equal("policies-index"))
+			Expect(description).To(Equal("filter policies failed"))
 		})
 	})
 })

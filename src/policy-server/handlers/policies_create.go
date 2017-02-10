@@ -6,7 +6,6 @@ import (
 	"lib/marshal"
 	"net/http"
 	"policy-server/models"
-	"policy-server/server_metrics"
 	"policy-server/uaa_client"
 
 	"code.cloudfoundry.org/lager"
@@ -23,7 +22,7 @@ type PoliciesCreate struct {
 	Unmarshaler   marshal.Unmarshaler
 	Validator     validator
 	PolicyGuard   policyGuard
-	MetricsSender metricsSender
+	ErrorResponse errorResponse
 }
 
 func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request, tokenData uaa_client.CheckTokenResponse) {
@@ -55,10 +54,7 @@ func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request, tok
 
 	authorized, err := h.PolicyGuard.CheckAccess(payload.Policies, tokenData)
 	if err != nil {
-		h.Logger.Error("check-access-failed", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(fmt.Sprintf(`{"error": "%s"}`, err)))
-		h.MetricsSender.IncrementCounter(server_metrics.MetricExternalCreateError)
+		h.ErrorResponse.InternalServerError(w, err, "policies-create", "check access failed")
 		return
 	}
 	if !authorized {
@@ -71,10 +67,7 @@ func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request, tok
 
 	err = h.Store.Create(payload.Policies)
 	if err != nil {
-		h.Logger.Error("store-create-failed", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(`{"error": "database create failed"}`))
-		h.MetricsSender.IncrementCounter(server_metrics.MetricExternalCreateError)
+		h.ErrorResponse.InternalServerError(w, err, "policies-create", "database create failed")
 		return
 	}
 

@@ -4,7 +4,6 @@ import (
 	"lib/marshal"
 	"net/http"
 	"policy-server/models"
-	"policy-server/server_metrics"
 	"policy-server/uaa_client"
 	"strings"
 
@@ -21,16 +20,13 @@ type PoliciesIndex struct {
 	Store         store
 	Marshaler     marshal.Marshaler
 	PolicyFilter  policyFilter
-	MetricsSender metricsSender
+	ErrorResponse errorResponse
 }
 
 func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request, userToken uaa_client.CheckTokenResponse) {
 	policies, err := h.Store.All()
 	if err != nil {
-		h.Logger.Error("store-list-policies-failed", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(`{"error": "database read failed"}`))
-		h.MetricsSender.IncrementCounter(server_metrics.MetricExternalIndexError)
+		h.ErrorResponse.InternalServerError(w, err, "policies-index", "database read failed")
 		return
 	}
 
@@ -43,10 +39,7 @@ func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request, user
 
 	policies, err = h.PolicyFilter.FilterPolicies(policies, userToken)
 	if err != nil {
-		h.Logger.Error("filter-policies-failed", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(`{"error": "filter policies failed"}`))
-		h.MetricsSender.IncrementCounter(server_metrics.MetricExternalIndexError)
+		h.ErrorResponse.InternalServerError(w, err, "policies-index", "filter policies failed")
 		return
 	}
 
@@ -61,10 +54,7 @@ func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request, user
 	}{len(policies), policies}
 	bytes, err := h.Marshaler.Marshal(policyResponse)
 	if err != nil {
-		h.Logger.Error("marshal-failed", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(`{"error": "database marshaling failed"}`))
-		h.MetricsSender.IncrementCounter(server_metrics.MetricExternalIndexError)
+		h.ErrorResponse.InternalServerError(w, err, "policies-index", "database marshaling failed")
 		return
 	}
 
