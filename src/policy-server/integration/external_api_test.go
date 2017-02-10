@@ -74,7 +74,7 @@ var _ = Describe("External API", func() {
 
 			Expect(resp.StatusCode).To(Equal(http.StatusUnauthorized))
 			responseString, err := ioutil.ReadAll(resp.Body)
-			Expect(responseString).To(MatchJSON(`{ "error": "missing authorization header"}`))
+			Expect(responseString).To(MatchJSON(`{ "error": "authenticator: missing authorization header"}`))
 		}
 
 		var TestBadBearerToken = func(req *http.Request) {
@@ -86,7 +86,7 @@ var _ = Describe("External API", func() {
 
 			Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
 			responseString, err := ioutil.ReadAll(resp.Body)
-			Expect(responseString).To(MatchJSON(`{ "error": "failed to verify token with uaa" }`))
+			Expect(responseString).To(MatchJSON(`{ "error": "authenticator: failed to verify token with uaa" }`))
 		}
 
 		var _ = DescribeTable("all the routes",
@@ -149,7 +149,7 @@ var _ = Describe("External API", func() {
 
 					Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
 					responseString, err := ioutil.ReadAll(resp.Body)
-					Expect(responseString).To(MatchJSON(`{ "error": "token missing allowed scopes: [network.admin network.write]"}`))
+					Expect(responseString).To(MatchJSON(`{ "error": "authenticator: provided scopes [] do not include allowed scopes [network.admin network.write]"}`))
 				})
 			})
 			Context("when one app is in spaces they do not have access to", func() {
@@ -163,7 +163,7 @@ var _ = Describe("External API", func() {
 
 					Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
 					responseString, err := ioutil.ReadAll(resp.Body)
-					Expect(responseString).To(MatchJSON(`{ "error": "one or more applications cannot be found or accessed"}`))
+					Expect(responseString).To(MatchJSON(`{ "error": "policies-create: one or more applications cannot be found or accessed"}`))
 				})
 			})
 
@@ -205,7 +205,7 @@ var _ = Describe("External API", func() {
 
 					Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
 					responseString, err := ioutil.ReadAll(resp.Body)
-					Expect(responseString).To(MatchJSON(`{ "error": "token missing allowed scopes: [network.admin network.write]"}`))
+					Expect(responseString).To(MatchJSON(`{ "error": "authenticator: provided scopes [] do not include allowed scopes [network.admin network.write]"}`))
 				})
 			})
 			Context("when one app is in spaces they do not have access to", func() {
@@ -219,7 +219,7 @@ var _ = Describe("External API", func() {
 
 					Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
 					responseString, err := ioutil.ReadAll(resp.Body)
-					Expect(responseString).To(MatchJSON(`{ "error": "one or more applications cannot be found or accessed"}`))
+					Expect(responseString).To(MatchJSON(`{ "error": "policies-delete: one or more applications cannot be found or accessed"}`))
 				})
 			})
 		})
@@ -301,7 +301,7 @@ var _ = Describe("External API", func() {
 
 					Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
 					responseString, err := ioutil.ReadAll(resp.Body)
-					Expect(responseString).To(MatchJSON(`{ "error": "token missing allowed scopes: [network.admin network.write]"}`))
+					Expect(responseString).To(MatchJSON(`{ "error": "authenticator: provided scopes [] do not include allowed scopes [network.admin network.write]"}`))
 				})
 			})
 		})

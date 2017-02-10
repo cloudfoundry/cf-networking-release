@@ -137,16 +137,23 @@ func main() {
 
 	unmarshaler := marshal.UnmarshalFunc(json.Unmarshal)
 
+	errorResponse := &handlers.ErrorResponse{
+		Logger:        logger,
+		MetricsSender: metricsSender,
+	}
+
 	authenticator := handlers.Authenticator{
-		Client: uaaClient,
-		Logger: logger,
-		Scopes: []string{"network.admin"},
+		Client:        uaaClient,
+		Logger:        logger,
+		Scopes:        []string{"network.admin"},
+		ErrorResponse: errorResponse,
 	}
 
 	networkWriteAuthenticator := handlers.Authenticator{
-		Client: uaaClient,
-		Logger: logger,
-		Scopes: []string{"network.admin", "network.write"},
+		Client:        uaaClient,
+		Logger:        logger,
+		Scopes:        []string{"network.admin", "network.write"},
+		ErrorResponse: errorResponse,
 	}
 
 	ccClient := &cc_client.Client{
@@ -165,11 +172,6 @@ func main() {
 	}
 
 	validator := &handlers.Validator{}
-
-	errorResponse := &handlers.ErrorResponse{
-		Logger:        logger,
-		MetricsSender: metricsSender,
-	}
 
 	createPolicyHandler := &handlers.PoliciesCreate{
 		Logger:        logger.Session("policies-create"),

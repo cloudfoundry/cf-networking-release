@@ -22,10 +22,11 @@ var _ = Describe("Authentication middleware", func() {
 		protected     http.Handler
 		authenticator *handlers.Authenticator
 
-		resp          *httptest.ResponseRecorder
-		uaaClient     *fakes.UAAClient
-		logger        *lagertest.TestLogger
-		tokenResponse uaa_client.CheckTokenResponse
+		resp              *httptest.ResponseRecorder
+		uaaClient         *fakes.UAAClient
+		logger            *lagertest.TestLogger
+		tokenResponse     uaa_client.CheckTokenResponse
+		fakeErrorResponse *fakes.ErrorResponse
 	)
 
 	BeforeEach(func() {
@@ -38,11 +39,13 @@ var _ = Describe("Authentication middleware", func() {
 		uaaClient = &fakes.UAAClient{}
 		logger = lagertest.NewTestLogger("test")
 		unprotected = &fakes.AuthenticatedHandler{}
+		fakeErrorResponse = &fakes.ErrorResponse{}
 
 		authenticator = &handlers.Authenticator{
-			Client: uaaClient,
-			Logger: logger,
-			Scopes: []string{"network.admin", "network.write"},
+			Client:        uaaClient,
+			Logger:        logger,
+			Scopes:        []string{"network.admin", "network.write"},
+			ErrorResponse: fakeErrorResponse,
 		}
 
 		protected = authenticator.Wrap(unprotected)
@@ -100,17 +103,16 @@ var _ = Describe("Authentication middleware", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		It("returns a 401 status code and a useful JSON error", func() {
+		It("calls the unauthorized error handler", func() {
 			protected.ServeHTTP(resp, request)
 
-			Expect(resp.Code).To(Equal(http.StatusUnauthorized))
-			Expect(resp.Body).To(MatchJSON(`{ "error": "missing authorization header" }`))
-		})
+			Expect(fakeErrorResponse.UnauthorizedCallCount()).To(Equal(1))
 
-		It("logs the error", func() {
-			protected.ServeHTTP(resp, request)
-
-			Expect(logger).To(gbytes.Say("no auth header"))
+			w, err, message, description := fakeErrorResponse.UnauthorizedArgsForCall(0)
+			Expect(w).To(Equal(resp))
+			Expect(err).To(MatchError("no auth header"))
+			Expect(message).To(Equal("authenticator"))
+			Expect(description).To(Equal("missing authorization header"))
 		})
 	})
 
@@ -123,17 +125,16 @@ var _ = Describe("Authentication middleware", func() {
 			uaaClient.CheckTokenReturns(uaa_client.CheckTokenResponse{UserName: ""}, errors.New("potato"))
 		})
 
-		It("returns a 403 status code and a useful JSON error", func() {
+		It("calls the forbidden error handler", func() {
 			protected.ServeHTTP(resp, request)
 
-			Expect(resp.Code).To(Equal(http.StatusForbidden))
-			Expect(resp.Body).To(MatchJSON(`{ "error": "failed to verify token with uaa" }`))
-		})
+			Expect(fakeErrorResponse.ForbiddenCallCount()).To(Equal(1))
 
-		It("logs the error", func() {
-			protected.ServeHTTP(resp, request)
-
-			Expect(logger).To(gbytes.Say("uaa-getname.*potato"))
+			w, err, message, description := fakeErrorResponse.ForbiddenArgsForCall(0)
+			Expect(w).To(Equal(resp))
+			Expect(err).To(MatchError("potato"))
+			Expect(message).To(Equal("authenticator"))
+			Expect(description).To(Equal("failed to verify token with uaa"))
 		})
 	})
 
@@ -145,19 +146,16 @@ var _ = Describe("Authentication middleware", func() {
 			}, nil)
 		})
 
-		It("returns a 403 status code and a useful JSON error", func() {
+		It("calls the forbidden error handler", func() {
 			protected.ServeHTTP(resp, request)
 
-			Expect(resp.Code).To(Equal(http.StatusForbidden))
-			Expect(resp.Body).To(MatchJSON(`{ "error": "token missing allowed scopes: [network.admin network.write]" }`))
-		})
+			Expect(fakeErrorResponse.ForbiddenCallCount()).To(Equal(1))
 
-		It("logs a helpful error", func() {
-			protected.ServeHTTP(resp, request)
-
-			Expect(logger).To(gbytes.Say("allowed-scopes.*network.admin.*network.write"))
-			Expect(logger).To(gbytes.Say("no allowed scopes found"))
-			Expect(logger).To(gbytes.Say("provided-scopes.*wrong.scope"))
+			w, err, message, description := fakeErrorResponse.ForbiddenArgsForCall(0)
+			Expect(w).To(Equal(resp))
+			Expect(err).To(MatchError("provided scopes [wrong.scope] do not include allowed scopes [network.admin network.write]"))
+			Expect(message).To(Equal("authenticator"))
+			Expect(description).To(Equal("provided scopes [wrong.scope] do not include allowed scopes [network.admin network.write]"))
 		})
 	})
 })

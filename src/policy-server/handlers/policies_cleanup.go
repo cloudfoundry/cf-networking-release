@@ -18,6 +18,8 @@ type policyCleaner interface {
 type errorResponse interface {
 	InternalServerError(http.ResponseWriter, error, string, string)
 	BadRequest(http.ResponseWriter, error, string, string)
+	Forbidden(http.ResponseWriter, error, string, string)
+	Unauthorized(http.ResponseWriter, error, string, string)
 }
 
 type PoliciesCleanup struct {

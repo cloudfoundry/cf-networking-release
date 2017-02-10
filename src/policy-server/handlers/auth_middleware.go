@@ -22,9 +22,10 @@ type UAAClient interface {
 }
 
 type Authenticator struct {
-	Client UAAClient
-	Logger lager.Logger
-	Scopes []string
+	Client        UAAClient
+	Logger        lager.Logger
+	Scopes        []string
+	ErrorResponse errorResponse
 }
 
 //go:generate counterfeiter -o fakes/authenticated_handler.go --fake-name AuthenticatedHandler . authenticatedHandler
@@ -38,9 +39,7 @@ func (a *Authenticator) Wrap(handle authenticatedHandler) http.Handler {
 
 		authorization := req.Header["Authorization"]
 		if len(authorization) < 1 {
-			a.Logger.Error("auth", errors.New("no auth header"))
-			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte(`{ "error": "missing authorization header" }`))
+			a.ErrorResponse.Unauthorized(w, errors.New("no auth header"), "authenticator", "missing authorization header")
 			return
 		}
 
@@ -49,21 +48,14 @@ func (a *Authenticator) Wrap(handle authenticatedHandler) http.Handler {
 		token = strings.TrimPrefix(token, "bearer ")
 		tokenData, err := a.Client.CheckToken(token)
 		if err != nil {
-			a.Logger.Error("uaa-getname", err)
-			w.WriteHeader(http.StatusForbidden)
-			w.Write([]byte(`{ "error": "failed to verify token with uaa" }`))
+			a.ErrorResponse.Forbidden(w, err, "authenticator", "failed to verify token with uaa")
 			return
 		}
 
 		a.Logger.Debug("request made with token:", lager.Data{"tokenData": tokenData})
 		if !isAuthorized(tokenData.Scope, a.Scopes) {
-			a.Logger.Error("authorization", errors.New("no allowed scopes found"),
-				lager.Data{
-					"allowed-scopes":  a.Scopes,
-					"provided-scopes": tokenData.Scope,
-				})
-			w.WriteHeader(http.StatusForbidden)
-			w.Write([]byte(fmt.Sprintf(`{ "error": "token missing allowed scopes: %s" }`, a.Scopes)))
+			err := errors.New(fmt.Sprintf("provided scopes %s do not include allowed scopes %s", tokenData.Scope, a.Scopes))
+			a.ErrorResponse.Forbidden(w, err, "authenticator", err.Error())
 			return
 		}
 

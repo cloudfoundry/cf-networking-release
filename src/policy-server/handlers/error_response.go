@@ -24,3 +24,15 @@ func (e *ErrorResponse) BadRequest(w http.ResponseWriter, err error, message, de
 	w.WriteHeader(http.StatusBadRequest)
 	w.Write([]byte(fmt.Sprintf(`{"error": "%s: %s"}`, message, description)))
 }
+
+func (e *ErrorResponse) Forbidden(w http.ResponseWriter, err error, message, description string) {
+	e.Logger.Error(fmt.Sprintf("%s: %s", message, description), err)
+	w.WriteHeader(http.StatusForbidden)
+	w.Write([]byte(fmt.Sprintf(`{"error": "%s: %s"}`, message, description)))
+}
+
+func (e *ErrorResponse) Unauthorized(w http.ResponseWriter, err error, message, description string) {
+	e.Logger.Error(fmt.Sprintf("%s: %s", message, description), err)
+	w.WriteHeader(http.StatusUnauthorized)
+	w.Write([]byte(fmt.Sprintf(`{"error": "%s: %s"}`, message, description)))
+}

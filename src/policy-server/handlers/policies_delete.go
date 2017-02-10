@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"fmt"
+	"errors"
 	"io/ioutil"
 	"lib/marshal"
 	"net/http"
@@ -48,10 +48,8 @@ func (h *PoliciesDelete) ServeHTTP(w http.ResponseWriter, req *http.Request, tok
 		return
 	}
 	if !authorized {
-		message := "one or more applications cannot be found or accessed"
-		h.Logger.Info(fmt.Sprintf("check-access-failed: %s", message))
-		w.WriteHeader(http.StatusForbidden)
-		w.Write([]byte(fmt.Sprintf(`{"error": "%s"}`, message)))
+		err := errors.New("one or more applications cannot be found or accessed")
+		h.ErrorResponse.Forbidden(w, err, "policies-delete", err.Error())
 		return
 	}
 

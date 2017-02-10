@@ -23,6 +23,22 @@ type ErrorResponse struct {
 		arg3 string
 		arg4 string
 	}
+	ForbiddenStub        func(http.ResponseWriter, error, string, string)
+	forbiddenMutex       sync.RWMutex
+	forbiddenArgsForCall []struct {
+		arg1 http.ResponseWriter
+		arg2 error
+		arg3 string
+		arg4 string
+	}
+	UnauthorizedStub        func(http.ResponseWriter, error, string, string)
+	unauthorizedMutex       sync.RWMutex
+	unauthorizedArgsForCall []struct {
+		arg1 http.ResponseWriter
+		arg2 error
+		arg3 string
+		arg4 string
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -81,6 +97,60 @@ func (fake *ErrorResponse) BadRequestArgsForCall(i int) (http.ResponseWriter, er
 	return fake.badRequestArgsForCall[i].arg1, fake.badRequestArgsForCall[i].arg2, fake.badRequestArgsForCall[i].arg3, fake.badRequestArgsForCall[i].arg4
 }
 
+func (fake *ErrorResponse) Forbidden(arg1 http.ResponseWriter, arg2 error, arg3 string, arg4 string) {
+	fake.forbiddenMutex.Lock()
+	fake.forbiddenArgsForCall = append(fake.forbiddenArgsForCall, struct {
+		arg1 http.ResponseWriter
+		arg2 error
+		arg3 string
+		arg4 string
+	}{arg1, arg2, arg3, arg4})
+	fake.recordInvocation("Forbidden", []interface{}{arg1, arg2, arg3, arg4})
+	fake.forbiddenMutex.Unlock()
+	if fake.ForbiddenStub != nil {
+		fake.ForbiddenStub(arg1, arg2, arg3, arg4)
+	}
+}
+
+func (fake *ErrorResponse) ForbiddenCallCount() int {
+	fake.forbiddenMutex.RLock()
+	defer fake.forbiddenMutex.RUnlock()
+	return len(fake.forbiddenArgsForCall)
+}
+
+func (fake *ErrorResponse) ForbiddenArgsForCall(i int) (http.ResponseWriter, error, string, string) {
+	fake.forbiddenMutex.RLock()
+	defer fake.forbiddenMutex.RUnlock()
+	return fake.forbiddenArgsForCall[i].arg1, fake.forbiddenArgsForCall[i].arg2, fake.forbiddenArgsForCall[i].arg3, fake.forbiddenArgsForCall[i].arg4
+}
+
+func (fake *ErrorResponse) Unauthorized(arg1 http.ResponseWriter, arg2 error, arg3 string, arg4 string) {
+	fake.unauthorizedMutex.Lock()
+	fake.unauthorizedArgsForCall = append(fake.unauthorizedArgsForCall, struct {
+		arg1 http.ResponseWriter
+		arg2 error
+		arg3 string
+		arg4 string
+	}{arg1, arg2, arg3, arg4})
+	fake.recordInvocation("Unauthorized", []interface{}{arg1, arg2, arg3, arg4})
+	fake.unauthorizedMutex.Unlock()
+	if fake.UnauthorizedStub != nil {
+		fake.UnauthorizedStub(arg1, arg2, arg3, arg4)
+	}
+}
+
+func (fake *ErrorResponse) UnauthorizedCallCount() int {
+	fake.unauthorizedMutex.RLock()
+	defer fake.unauthorizedMutex.RUnlock()
+	return len(fake.unauthorizedArgsForCall)
+}
+
+func (fake *ErrorResponse) UnauthorizedArgsForCall(i int) (http.ResponseWriter, error, string, string) {
+	fake.unauthorizedMutex.RLock()
+	defer fake.unauthorizedMutex.RUnlock()
+	return fake.unauthorizedArgsForCall[i].arg1, fake.unauthorizedArgsForCall[i].arg2, fake.unauthorizedArgsForCall[i].arg3, fake.unauthorizedArgsForCall[i].arg4
+}
+
 func (fake *ErrorResponse) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -88,6 +158,10 @@ func (fake *ErrorResponse) Invocations() map[string][][]interface{} {
 	defer fake.internalServerErrorMutex.RUnlock()
 	fake.badRequestMutex.RLock()
 	defer fake.badRequestMutex.RUnlock()
+	fake.forbiddenMutex.RLock()
+	defer fake.forbiddenMutex.RUnlock()
+	fake.unauthorizedMutex.RLock()
+	defer fake.unauthorizedMutex.RUnlock()
 	return fake.invocations
 }
 

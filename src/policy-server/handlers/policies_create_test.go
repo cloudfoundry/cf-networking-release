@@ -129,15 +129,16 @@ var _ = Describe("PoliciesCreate", func() {
 			fakePolicyGuard.CheckAccessReturns(false, nil)
 		})
 
-		It("responds with code 403", func() {
+		It("calls the forbidden handler", func() {
 			handler.ServeHTTP(resp, request, tokenData)
-			Expect(resp.Code).To(Equal(http.StatusForbidden))
-			Expect(resp.Body.String()).To(MatchJSON(`{"error": "one or more applications cannot be found or accessed"}`))
-		})
 
-		It("logs the failure", func() {
-			handler.ServeHTTP(resp, request, tokenData)
-			Expect(logger).To(gbytes.Say("check-access-failed.*one or more applications cannot be found or accessed"))
+			Expect(fakeErrorResponse.ForbiddenCallCount()).To(Equal(1))
+
+			w, err, message, description := fakeErrorResponse.ForbiddenArgsForCall(0)
+			Expect(w).To(Equal(resp))
+			Expect(err).To(MatchError("one or more applications cannot be found or accessed"))
+			Expect(message).To(Equal("policies-create"))
+			Expect(description).To(Equal("one or more applications cannot be found or accessed"))
 		})
 	})
 
