@@ -7,22 +7,60 @@
 0. [Mutual TLS](#mutual-tls)
 0. [SSL Certificate, Key, and Certificate Authority Rotation](#ssl-certificate-key-and-certificate-authority-rotation)
 
-### Flannel Network Configuration
-The default flannel network is `10.255.0.0/16` which will allow for a maximum of 256 cells.
+### Flannel Network IP Address Management
+The batteries-included connectivity solution uses [Flannel](https://github.com/coreos/flannel)
+with the [VXLAN backend](https://github.com/coreos/flannel#backends).
 
-The network can be configured via the bosh property `cf_networking.network`
-which is used by both the `cni-flannel` and `garden-cni` jobs.
+IP address allocation scheme is simple: the operator chooses a large contiguous address block for the
+entire VXLAN network (`cf_networking.network`).  The operator also chooses a uniform subnet size (`cf_networking.subnet_size`).
+Flannel ensures that each Diego Cell (container host) is allocated a dedicated
+a single [subnet](https://en.wikipedia.org/wiki/Subnetwork) of that size from within that large block.  And the Flannel CNI plugin
+ensures that every container receives a unique IP within its cell's subnet.
 
-For instance, to allow for up to 4096 cells, `10.240.0.0/12` could be used.
+In this way, every container in the installation receives a unique IP address.
 
-It is safe to expand the network on a subsequent deploy.
+#### BOSH properties
+To configure the global network block and the size of the per-cell subnets, two
+BOSH properties are used:
 
-However, any changes which result in an IP range that does not completely contain the current network
-must be done with the --recreate option and may result in containers being unable to reach each
-other during the deploy.
+- `cf_networking.network`: The address block for the entire VXLAN network.
+  Corresponds to the flannel configuration value `Network`.  Defaults to `10.255.0.0/16`
 
-**Note:** On bosh-lite, the network should avoid any IP addresses that include the
-10.244 or 10.254 ranges, as those are both in use by bosh components.
+- `cf_networking.subnet_size`: The size, in bits, of the mask for the per-cell subnets.
+  Corresponds to the flannel configuration value `SubnetLen`.  Defaults to `24`.
+
+**Note**: the `cf_networking.network` property is consumed by two BOSH jobs: `garden-cni` and `cni-flannel`.  If you
+intend to customize the network, you must set this property on both jobs.
+
+**Note:** On BOSH-lite, avoid using or overlapping with the `10.244.0.0/16` or `10.254.0.0/16` ranges.
+Those are both in use by BOSH-lite components and unpredictable behavior may result.
+
+#### Network size limitations
+Taken together, the two BOSH properties define upper bounds on the size of a given CF Networking installation.
+
+- let `s` be the value of `cf_networking.subnet_size`, e.g. `24` in the default case.
+- let `n` be the subnet mask length in `cf_networking.network`, e.g. `16` in the default case.
+
+Then:
+- the number of containers on a given Diego cell cannot exceed: `2^(32-s) - 2`
+- the number of Diego cells in the installation cannot exceed: `2^(s-n) - 1`
+
+For example, using the default values, the maximum number of containers per cell is `2^(32-24) - 2 = 254`
+and the maximum number of cells in the installation is `2^(24-16) - 1 = 255`
+
+Alternately, if `network` = `10.32.0.0/11` and `subnet_size` = `22` then the maximum number of
+containers per cell would be `2^(32-22) - 2 = 1022` and the maximum number of cells
+in the installation would be `2^(22-11) - 1 = 2047`.
+
+**Note**: these upper bounds are for the network only.  Other limitations may also apply to your installation,
+e.g. [`garden.max_containers`](https://github.com/cloudfoundry/garden-runc-release/blob/d67b61c/jobs/garden/spec#L106-L108).
+
+#### Changing the network
+It is safe to expand `cf_networking.network` on an existing installation.  It is not safe to modify `cf_networking.subnet_size`
+on an existing deployment.
+
+However, any changes which result in an IP range that does not completely contain the old network address block
+must be done with the --recreate option and may cause the container network to become temporarily unavailable during the deploy.
 
 
 ### Network Policy Database
