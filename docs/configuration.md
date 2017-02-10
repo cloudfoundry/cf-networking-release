@@ -67,54 +67,65 @@ and may cause the container network to become temporarily unavailable during the
 
 
 ## Network Policy Database
-Both the MySQL and PostgreSQL dialects of SQL are supported on CF Networking.
+A SQL database is required to store Network Policies.  MySQL and PostgreSQL databases are currently supported.
 
-Operators have a choice for deployment styles for both MySQL and PostgreSQL data stores.
+The database may be hosted anywhere that the Policy Server BOSH job can reach it,
+including on another BOSH-deployed VM or on a cloud-provided service.
 
-**Note:** The current scale of performance testing we have done with the
-RDS instance configurations shown below is:
+Here are a few options that we've used or explored.
+
+#### MySQL
+
+- Add a logical database to the CF-MySQL cluster that ships with
+  [CF-Deployment](https://github.com/cloudfoundry/cf-deployment).  We've written
+  is a [CF-Networking opsfile](../manifest-generation/opsfiles/cf-networking.yml)
+  to support this integration and use it in some of our automated tests, configured
+  as follows:
+
+    - Single-node (not HA)
+    - AWS m3.large VM
+    - 10GB ephemeral disk
+    - 10GB persistent disk
+
+- BOSH-deploy the [CF-MySQL release](https://github.com/cloudfoundry/cf-mysql-release)
+  to dedicated VM(s).  CF-MySQL may be deployed either as a single-node
+  or as a highly available (HA) cluster.
+
+- Use a database service provided by your cloud infrastructure provider.  For example,
+  in some of our automated tests we use an AWS RDS MySQL instance configured as follows:
+
+    - MySQL 5.7.16
+    - db.t2.medium (4 Gib)
+    - 20 GB storage
+
+**Note:** The network policy database requires MySQL version of 5.7 or higher.
+
+#### PostgreSQL
+
+- Add a logical database to the PostgreSQL instance included in cf-release,
+  (which also holds the CloudController and UAA databases).  We use this in
+  our [BOSH-lite setup](https://github.com/cloudfoundry-incubator/cf-networking-release/blob/d6ec307ba2/manifest-generation/cf-networking-bosh-lite-template.yml#L26-L35).
+
+- BOSH-deploy the [Postgres release](https://github.com/cloudfoundry/postgres-release/)
+  to a dedicated VM.
+
+- Use a database service provided by your cloud infrastructure provider.  For example,
+  in some of our automated tests we use an AWS RDS PostgreSQL instance configured as follows:
+
+  - PostgreSQL 9.5.4
+  - db.m3.medium (3.75 GiB)
+  - 20 GB storage
+
+#### Policy server scale and performance testing
+We have not done extensive performance testing of the network policy server.  However,
+we have found performance to be acceptable with the above-mentioned CF-MySQL and RDS database
+configurations when testing CF Networking features with:
+
   - 10 cells
   - 200 apps
   - 10 instances per app (i.e. 2000 app instances)
   - 4 policies per app (i.e. 800 policies)
 
-
-#### MySQL
-For MySQL, operators have at least the following options:
-  - Use the [CF-MySQL release](https://github.com/cloudfoundry/cf-mysql-release)
-  in standalone mode as a separate BOSH deployment,
-  either as a single node, or as a highly available (HA) cluster.
-  - Use an infrastructure-specific database deployment, such as an RDS MySQL
-  instance on AWS.
-  - Add a database to the MySQL cluster that comes with
-  [CF-Deployment](https://github.com/cloudfoundry/cf-deployment). There
-  is a [CF-Networking opsfile](../manifest-generation/opsfiles/cf-networking.yml)
-  that adds `network_policy` to the `seeded_databases`.
-
-For testing, we have an AWS RDS MySQL instance with these properties:
-  - Version - Dev/Test
-  - Engine - MySQL 5.7.16
-  - DB Instance Class - db.t2.medium (4 Gib)
-  - Storage - 20 GB
-
-**Note:** The network policy database requires a MySQL version of 5.7 or higher.
-
-
-#### PostgreSQL
-For PostgreSQL, operators have at least the following options:
-  - Use the PostgreSQL job from the CF release, either sharing an existing instance
-  that houses the CC and UAA databases, or deploying a separate node specifically
-  for the network policy database.
-  - Use an infrastructure-specific database deployment, such as an RDS PostgreSQL
-  instance on AWS.
-
-For testing, we have two AWS RDS PostgreSQL instances with these properties:
-  - Version - Dev/Test
-  - Engine - PostgreSQL 9.5.4 and PostgreSQL 9.6.1
-  - DB Instance Class - db.m3.medium (3.75 GiB) and db.t2.medium (4 Gib)
-  - Storage - 20 GB and 20 GB
-
-**Note:** The network policy database requires a MySQL version of 5.7 or higher.
 
 
 ## MTU
