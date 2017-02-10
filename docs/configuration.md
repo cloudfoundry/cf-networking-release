@@ -5,9 +5,8 @@
 0. [Network Policy Database](#network-policy-database)
 0. [MTU](#mtu)
 0. [Mutual TLS](#mutual-tls)
-0. [SSL Certificate, Key, and Certificate Authority Rotation](#ssl-certificate-key-and-certificate-authority-rotation)
 
-### Flannel Network IP Address Management
+## Flannel Network Configuration
 The batteries-included connectivity solution uses [Flannel](https://github.com/coreos/flannel)
 with the [VXLAN backend](https://github.com/coreos/flannel#backends).
 
@@ -46,7 +45,7 @@ Then:
 - the number of Diego cells in the installation cannot exceed: `2^(s-n) - 1`
 
 For example, using the default values, the maximum number of containers per cell is `2^(32-24) - 2 = 254`
-and the maximum number of cells in the installation is `2^(24-16) - 1 = 255`
+and the maximum number of cells in the installation is `2^(24-16) - 1 = 255`.
 
 Alternately, if `network` = `10.32.0.0/11` and `subnet_size` = `22` then the maximum number of
 containers per cell would be `2^(32-22) - 2 = 1022` and the maximum number of cells
@@ -56,14 +55,18 @@ in the installation would be `2^(22-11) - 1 = 2047`.
 e.g. [`garden.max_containers`](https://github.com/cloudfoundry/garden-runc-release/blob/d67b61c/jobs/garden/spec#L106-L108).
 
 #### Changing the network
-It is safe to expand `cf_networking.network` on an existing installation.  It is not safe to modify `cf_networking.subnet_size`
-on an existing deployment.
+It is safe to expand `cf_networking.network` on an existing deployment.
+However it is not safe to modify `cf_networking.subnet_size`.  Unpredictable behavior may result.
 
-However, any changes which result in an IP range that does not completely contain the old network address block
-must be done with the --recreate option and may cause the container network to become temporarily unavailable during the deploy.
+Any changes which result in an IP range that does not completely contain the old network address block
+must be done using
+```
+bosh deploy --recreate
+```
+and may cause the container network to become temporarily unavailable during the deploy.
 
 
-### Network Policy Database
+## Network Policy Database
 Both the MySQL and PostgreSQL dialects of SQL are supported on CF Networking.
 
 Operators have a choice for deployment styles for both MySQL and PostgreSQL data stores.
@@ -114,7 +117,7 @@ For testing, we have two AWS RDS PostgreSQL instances with these properties:
 **Note:** The network policy database requires a MySQL version of 5.7 or higher.
 
 
-### MTU
+## MTU
 Operators not using any additional encapsulation should not need to do any special configuration for MTUs.
 The CNI plugins should automatically detect the host MTU and set the container MTU appropriately,
 accounting for any overhead.
@@ -131,16 +134,28 @@ As an example, if you are using ipsec with a recommended overhead of 100 bytes, 
 you should set the MTU to 1350 (1500 - 100 for ipsec - 50 for VXLAN).
 
 
-### Mutual TLS
-The policy server exposes its internal API over mutual TLS.  We provide [a script](../scripts/generate-certs)
-to generate these certificates for you.  If you want to generate them yourself,
-ensure that the certificates support the cipher suite `TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256`.
+## Mutual TLS
+In the batteries-included networking stack, there are two different control-plane connections between system components:
+
+- Flannel is a client of etcd
+
+- The VXLAN Policy Agent is a client of the internal Policy Server API
+
+Both of these connections require Mutual TLS.
+(While etcd and flannel individually support unencrypted connections, we do not support this in CF Networking).
+
+Scripts are available to generate certificate authorities, certificates and keys for these connections:
+
+- [cf-release/scripts/generate-etcd-certs](https://github.com/cloudfoundry/cf-release/blob/master/scripts/generate-etcd-certs)
+- [cf-networking-release/scripts/generate-certs](../scripts/generate-certs)
+
+If you want to generate them yourself, ensure that the certificates for the
+Policy Server and VXLAN Policy Agent support the cipher suite `TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256`.
 The Policy Server will reject connections using any other cipher suite.
 
+Below you will find detailed instructions for rotating these certificates with minimal downtime:
 
-### SSL Certificate, Key, and Certificate Authority Rotation
-
-#### Policy Server and Vxlan Policy Agent
+### Policy Server and Vxlan Policy Agent
 To rotate your SSL certificates, keys, and certificate authorities, you must perform the following steps.
 
 0. Generate new certificates by running `./scripts/generate-certs`.
@@ -338,7 +353,7 @@ and `cf_networking_overrides.properties.cf_networking.vxlan_policy_agent.ca_cert
   ```
 
 
-#### Etcd and Flannel
+### Etcd and Flannel
 
 To rotate your SSL certificates, keys, and certificate authorities, you must perform the following steps.
 
