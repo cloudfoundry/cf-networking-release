@@ -37,9 +37,8 @@ func (fake *PolicyGuard) CheckAccess(policies []models.Policy, tokenData uaa_cli
 	fake.checkAccessMutex.Unlock()
 	if fake.CheckAccessStub != nil {
 		return fake.CheckAccessStub(policies, tokenData)
-	} else {
-		return fake.checkAccessReturns.result1, fake.checkAccessReturns.result2
 	}
+	return fake.checkAccessReturns.result1, fake.checkAccessReturns.result2
 }
 
 func (fake *PolicyGuard) CheckAccessCallCount() int {

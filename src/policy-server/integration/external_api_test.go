@@ -178,7 +178,7 @@ var _ = Describe("External API", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
 				responseString, err := ioutil.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(responseString).To(MatchJSON(`{"error": "invalid request body"}`))
+				Expect(responseString).To(MatchJSON(`{"error": "policies-create: failed reading request body"}`))
 			})
 		})
 
@@ -486,7 +486,7 @@ var _ = Describe("External API", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
 				responseString, err := ioutil.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(responseString).To(MatchJSON(`{ "error": "invalid destination protocol, specify either udp or tcp" }`))
+				Expect(responseString).To(MatchJSON(`{ "error": "policies-create: invalid destination protocol, specify either udp or tcp" }`))
 			})
 		})
 		Context("when the port is invalid", func() {
@@ -501,7 +501,7 @@ var _ = Describe("External API", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
 				responseString, err := ioutil.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(responseString).To(MatchJSON(`{ "error": "invalid destination port value 0, must be 1-65535" }`))
+				Expect(responseString).To(MatchJSON(`{ "error": "policies-create: invalid destination port value 0, must be 1-65535" }`))
 			})
 		})
 	})

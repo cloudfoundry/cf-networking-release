@@ -34,9 +34,8 @@ func (fake *UAAClient) GetToken() (string, error) {
 	fake.getTokenMutex.Unlock()
 	if fake.GetTokenStub != nil {
 		return fake.GetTokenStub()
-	} else {
-		return fake.getTokenReturns.result1, fake.getTokenReturns.result2
 	}
+	return fake.getTokenReturns.result1, fake.getTokenReturns.result2
 }
 
 func (fake *UAAClient) GetTokenCallCount() int {
@@ -62,9 +61,8 @@ func (fake *UAAClient) CheckToken(arg1 string) (uaa_client.CheckTokenResponse, e
 	fake.checkTokenMutex.Unlock()
 	if fake.CheckTokenStub != nil {
 		return fake.CheckTokenStub(arg1)
-	} else {
-		return fake.checkTokenReturns.result1, fake.checkTokenReturns.result2
 	}
+	return fake.checkTokenReturns.result1, fake.checkTokenReturns.result2
 }
 
 func (fake *UAAClient) CheckTokenCallCount() int {

@@ -144,23 +144,19 @@ var _ = Describe("PoliciesDelete", func() {
 
 	Context("when a policy to delete includes any validation error", func() {
 		BeforeEach(func() {
-			var err error
-			requestJSON = `{}`
-			request, err = http.NewRequest("POST", Route, bytes.NewBuffer([]byte(requestJSON)))
-			Expect(err).NotTo(HaveOccurred())
-
 			fakeValidator.ValidatePoliciesReturns(errors.New("banana"))
 		})
 
-		It("responds with code 400 and a useful error", func() {
+		It("calls the bad request handler", func() {
 			handler.ServeHTTP(resp, request, tokenData)
-			Expect(resp.Code).To(Equal(http.StatusBadRequest))
-			Expect(resp.Body.String()).To(MatchJSON(`{"error": "banana"}`))
-		})
 
-		It("logs the full error", func() {
-			handler.ServeHTTP(resp, request, tokenData)
-			Expect(logger).To(gbytes.Say("bad-request.*banana"))
+			Expect(fakeErrorResponse.BadRequestCallCount()).To(Equal(1))
+
+			w, err, message, description := fakeErrorResponse.BadRequestArgsForCall(0)
+			Expect(w).To(Equal(resp))
+			Expect(err).To(MatchError("banana"))
+			Expect(message).To(Equal("policies-delete"))
+			Expect(description).To(Equal("banana"))
 		})
 	})
 
@@ -169,12 +165,16 @@ var _ = Describe("PoliciesDelete", func() {
 			request.Body = &testsupport.BadReader{}
 		})
 
-		It("returns 400 and logs the error", func() {
+		It("calls the bad request handler", func() {
 			handler.ServeHTTP(resp, request, tokenData)
 
-			Expect(resp.Code).To(Equal(http.StatusBadRequest))
-			Expect(resp.Body.String()).To(Equal(`{"error": "invalid request body format passed to API should be JSON"}`))
-			Expect(logger).To(gbytes.Say("body-read-failed"))
+			Expect(fakeErrorResponse.BadRequestCallCount()).To(Equal(1))
+
+			w, err, message, description := fakeErrorResponse.BadRequestArgsForCall(0)
+			Expect(w).To(Equal(resp))
+			Expect(err).To(MatchError("banana"))
+			Expect(message).To(Equal("policies-delete"))
+			Expect(description).To(Equal("invalid request body"))
 		})
 	})
 
@@ -182,12 +182,17 @@ var _ = Describe("PoliciesDelete", func() {
 		BeforeEach(func() {
 			fakeUnmarshaler.UnmarshalReturns(errors.New("banana"))
 		})
-		It("returns 400 and logs the error", func() {
+
+		It("calls the bad request handler", func() {
 			handler.ServeHTTP(resp, request, tokenData)
 
-			Expect(resp.Code).To(Equal(http.StatusBadRequest))
-			Expect(resp.Body.String()).To(Equal(`{"error": "invalid values passed to API"}`))
-			Expect(logger).To(gbytes.Say("unmarshal-failed"))
+			Expect(fakeErrorResponse.BadRequestCallCount()).To(Equal(1))
+
+			w, err, message, description := fakeErrorResponse.BadRequestArgsForCall(0)
+			Expect(w).To(Equal(resp))
+			Expect(err).To(MatchError("banana"))
+			Expect(message).To(Equal("policies-delete"))
+			Expect(description).To(Equal("invalid values passed to API"))
 		})
 	})
 

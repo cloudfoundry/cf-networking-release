@@ -23,9 +23,7 @@ type PoliciesDelete struct {
 func (h *PoliciesDelete) ServeHTTP(w http.ResponseWriter, req *http.Request, tokenData uaa_client.CheckTokenResponse) {
 	bodyBytes, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		h.Logger.Error("body-read-failed", err)
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"error": "invalid request body format passed to API should be JSON"}`))
+		h.ErrorResponse.BadRequest(w, err, "policies-delete", "invalid request body")
 		return
 	}
 
@@ -34,17 +32,13 @@ func (h *PoliciesDelete) ServeHTTP(w http.ResponseWriter, req *http.Request, tok
 	}
 	err = h.Unmarshaler.Unmarshal(bodyBytes, &payload)
 	if err != nil {
-		h.Logger.Error("unmarshal-failed", err)
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"error": "invalid values passed to API"}`))
+		h.ErrorResponse.BadRequest(w, err, "policies-delete", "invalid values passed to API")
 		return
 	}
 
 	err = h.Validator.ValidatePolicies(payload.Policies)
 	if err != nil {
-		h.Logger.Error("bad-request", err)
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(fmt.Sprintf(`{"error": "%s"}`, err)))
+		h.ErrorResponse.BadRequest(w, err, "policies-delete", err.Error())
 		return
 	}
 

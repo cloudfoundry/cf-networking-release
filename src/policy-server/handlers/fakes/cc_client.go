@@ -77,9 +77,8 @@ func (fake *CCClient) GetAppSpaces(token string, appGUIDs []string) (map[string]
 	fake.getAppSpacesMutex.Unlock()
 	if fake.GetAppSpacesStub != nil {
 		return fake.GetAppSpacesStub(token, appGUIDs)
-	} else {
-		return fake.getAppSpacesReturns.result1, fake.getAppSpacesReturns.result2
 	}
+	return fake.getAppSpacesReturns.result1, fake.getAppSpacesReturns.result2
 }
 
 func (fake *CCClient) GetAppSpacesCallCount() int {
@@ -112,9 +111,8 @@ func (fake *CCClient) GetSpace(token string, spaceGUID string) (*models.Space, e
 	fake.getSpaceMutex.Unlock()
 	if fake.GetSpaceStub != nil {
 		return fake.GetSpaceStub(token, spaceGUID)
-	} else {
-		return fake.getSpaceReturns.result1, fake.getSpaceReturns.result2
 	}
+	return fake.getSpaceReturns.result1, fake.getSpaceReturns.result2
 }
 
 func (fake *CCClient) GetSpaceCallCount() int {
@@ -152,9 +150,8 @@ func (fake *CCClient) GetSpaceGUIDs(token string, appGUIDs []string) ([]string, 
 	fake.getSpaceGUIDsMutex.Unlock()
 	if fake.GetSpaceGUIDsStub != nil {
 		return fake.GetSpaceGUIDsStub(token, appGUIDs)
-	} else {
-		return fake.getSpaceGUIDsReturns.result1, fake.getSpaceGUIDsReturns.result2
 	}
+	return fake.getSpaceGUIDsReturns.result1, fake.getSpaceGUIDsReturns.result2
 }
 
 func (fake *CCClient) GetSpaceGUIDsCallCount() int {
@@ -188,9 +185,8 @@ func (fake *CCClient) GetUserSpace(token string, userGUID string, spaces models.
 	fake.getUserSpaceMutex.Unlock()
 	if fake.GetUserSpaceStub != nil {
 		return fake.GetUserSpaceStub(token, userGUID, spaces)
-	} else {
-		return fake.getUserSpaceReturns.result1, fake.getUserSpaceReturns.result2
 	}
+	return fake.getUserSpaceReturns.result1, fake.getUserSpaceReturns.result2
 }
 
 func (fake *CCClient) GetUserSpaceCallCount() int {
@@ -223,9 +219,8 @@ func (fake *CCClient) GetUserSpaces(token string, userGUID string) (map[string]s
 	fake.getUserSpacesMutex.Unlock()
 	if fake.GetUserSpacesStub != nil {
 		return fake.GetUserSpacesStub(token, userGUID)
-	} else {
-		return fake.getUserSpacesReturns.result1, fake.getUserSpacesReturns.result2
 	}
+	return fake.getUserSpacesReturns.result1, fake.getUserSpacesReturns.result2
 }
 
 func (fake *CCClient) GetUserSpacesCallCount() int {

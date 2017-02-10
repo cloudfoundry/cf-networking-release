@@ -28,9 +28,7 @@ type PoliciesCreate struct {
 func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request, tokenData uaa_client.CheckTokenResponse) {
 	bodyBytes, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		h.Logger.Error("body-read-failed", err)
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"error": "invalid request body"}`))
+		h.ErrorResponse.BadRequest(w, err, "policies-create", "failed reading request body")
 		return
 	}
 
@@ -39,16 +37,13 @@ func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request, tok
 	}
 	err = h.Unmarshaler.Unmarshal(bodyBytes, &payload)
 	if err != nil {
-		h.Logger.Error("unmarshal-failed", err)
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"error": "invalid values passed to API"}`))
+		h.ErrorResponse.BadRequest(w, err, "policies-create", "invalid values passed to API")
 		return
 	}
 
-	if err = h.Validator.ValidatePolicies(payload.Policies); err != nil {
-		h.Logger.Error("bad-request", err)
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(fmt.Sprintf(`{"error": "%s"}`, err)))
+	err = h.Validator.ValidatePolicies(payload.Policies)
+	if err != nil {
+		h.ErrorResponse.BadRequest(w, err, "policies-create", err.Error())
 		return
 	}
 
@@ -74,5 +69,4 @@ func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request, tok
 	h.Logger.Info("policy-create", lager.Data{"policies": payload.Policies, "userName": tokenData.UserName})
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("{}"))
-	return
 }

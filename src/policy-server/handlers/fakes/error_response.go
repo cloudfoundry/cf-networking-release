@@ -15,6 +15,14 @@ type ErrorResponse struct {
 		arg3 string
 		arg4 string
 	}
+	BadRequestStub        func(http.ResponseWriter, error, string, string)
+	badRequestMutex       sync.RWMutex
+	badRequestArgsForCall []struct {
+		arg1 http.ResponseWriter
+		arg2 error
+		arg3 string
+		arg4 string
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -46,11 +54,40 @@ func (fake *ErrorResponse) InternalServerErrorArgsForCall(i int) (http.ResponseW
 	return fake.internalServerErrorArgsForCall[i].arg1, fake.internalServerErrorArgsForCall[i].arg2, fake.internalServerErrorArgsForCall[i].arg3, fake.internalServerErrorArgsForCall[i].arg4
 }
 
+func (fake *ErrorResponse) BadRequest(arg1 http.ResponseWriter, arg2 error, arg3 string, arg4 string) {
+	fake.badRequestMutex.Lock()
+	fake.badRequestArgsForCall = append(fake.badRequestArgsForCall, struct {
+		arg1 http.ResponseWriter
+		arg2 error
+		arg3 string
+		arg4 string
+	}{arg1, arg2, arg3, arg4})
+	fake.recordInvocation("BadRequest", []interface{}{arg1, arg2, arg3, arg4})
+	fake.badRequestMutex.Unlock()
+	if fake.BadRequestStub != nil {
+		fake.BadRequestStub(arg1, arg2, arg3, arg4)
+	}
+}
+
+func (fake *ErrorResponse) BadRequestCallCount() int {
+	fake.badRequestMutex.RLock()
+	defer fake.badRequestMutex.RUnlock()
+	return len(fake.badRequestArgsForCall)
+}
+
+func (fake *ErrorResponse) BadRequestArgsForCall(i int) (http.ResponseWriter, error, string, string) {
+	fake.badRequestMutex.RLock()
+	defer fake.badRequestMutex.RUnlock()
+	return fake.badRequestArgsForCall[i].arg1, fake.badRequestArgsForCall[i].arg2, fake.badRequestArgsForCall[i].arg3, fake.badRequestArgsForCall[i].arg4
+}
+
 func (fake *ErrorResponse) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.internalServerErrorMutex.RLock()
 	defer fake.internalServerErrorMutex.RUnlock()
+	fake.badRequestMutex.RLock()
+	defer fake.badRequestMutex.RUnlock()
 	return fake.invocations
 }
 

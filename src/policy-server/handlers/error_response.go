@@ -18,3 +18,9 @@ func (e *ErrorResponse) InternalServerError(w http.ResponseWriter, err error, me
 	w.Write([]byte(fmt.Sprintf(`{"error": "%s: %s"}`, message, description)))
 	e.MetricsSender.IncrementCounter(message)
 }
+
+func (e *ErrorResponse) BadRequest(w http.ResponseWriter, err error, message, description string) {
+	e.Logger.Error(fmt.Sprintf("%s: %s", message, description), err)
+	w.WriteHeader(http.StatusBadRequest)
+	w.Write([]byte(fmt.Sprintf(`{"error": "%s: %s"}`, message, description)))
+}

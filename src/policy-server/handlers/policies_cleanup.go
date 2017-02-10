@@ -17,6 +17,7 @@ type policyCleaner interface {
 //go:generate counterfeiter -o fakes/error_response.go --fake-name ErrorResponse . errorResponse
 type errorResponse interface {
 	InternalServerError(http.ResponseWriter, error, string, string)
+	BadRequest(http.ResponseWriter, error, string, string)
 }
 
 type PoliciesCleanup struct {

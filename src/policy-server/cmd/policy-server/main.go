@@ -166,27 +166,35 @@ func main() {
 
 	validator := &handlers.Validator{}
 
+	errorResponse := &handlers.ErrorResponse{
+		Logger:        logger,
+		MetricsSender: metricsSender,
+	}
+
 	createPolicyHandler := &handlers.PoliciesCreate{
-		Logger:      logger.Session("policies-create"),
-		Store:       wrappedStore,
-		Unmarshaler: unmarshaler,
-		Validator:   validator,
-		PolicyGuard: policyGuard,
+		Logger:        logger.Session("policies-create"),
+		Store:         wrappedStore,
+		Unmarshaler:   unmarshaler,
+		Validator:     validator,
+		PolicyGuard:   policyGuard,
+		ErrorResponse: errorResponse,
 	}
 
 	deletePolicyHandler := &handlers.PoliciesDelete{
-		Logger:      logger.Session("policies-create"),
-		Store:       wrappedStore,
-		Unmarshaler: unmarshaler,
-		Validator:   validator,
-		PolicyGuard: policyGuard,
+		Logger:        logger.Session("policies-create"),
+		Store:         wrappedStore,
+		Unmarshaler:   unmarshaler,
+		Validator:     validator,
+		PolicyGuard:   policyGuard,
+		ErrorResponse: errorResponse,
 	}
 
 	policiesIndexHandler := &handlers.PoliciesIndex{
-		Logger:       logger.Session("policies-index"),
-		Store:        wrappedStore,
-		Marshaler:    marshal.MarshalFunc(json.Marshal),
-		PolicyFilter: policyFilter,
+		Logger:        logger.Session("policies-index"),
+		Store:         wrappedStore,
+		Marshaler:     marshal.MarshalFunc(json.Marshal),
+		PolicyFilter:  policyFilter,
+		ErrorResponse: errorResponse,
 	}
 
 	policyCleaner := &cleaner.PolicyCleaner{
@@ -200,18 +208,21 @@ func main() {
 		Logger:        logger.Session("policies-cleanup"),
 		Marshaler:     marshal.MarshalFunc(json.Marshal),
 		PolicyCleaner: policyCleaner,
+		ErrorResponse: errorResponse,
 	}
 
 	tagsIndexHandler := &handlers.TagsIndex{
-		Logger:    logger.Session("tags-index"),
-		Store:     wrappedStore,
-		Marshaler: marshal.MarshalFunc(json.Marshal),
+		Logger:        logger.Session("tags-index"),
+		Store:         wrappedStore,
+		Marshaler:     marshal.MarshalFunc(json.Marshal),
+		ErrorResponse: errorResponse,
 	}
 
 	internalPoliciesHandler := &handlers.PoliciesIndexInternal{
-		Logger:    logger.Session("policies-index-internal"),
-		Store:     wrappedStore,
-		Marshaler: marshal.MarshalFunc(json.Marshal),
+		Logger:        logger.Session("policies-index-internal"),
+		Store:         wrappedStore,
+		Marshaler:     marshal.MarshalFunc(json.Marshal),
+		ErrorResponse: errorResponse,
 	}
 
 	routes := rata.Routes{
