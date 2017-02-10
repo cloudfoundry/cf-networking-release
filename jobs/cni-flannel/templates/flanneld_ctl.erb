@@ -12,17 +12,17 @@ ETCD_ENDPOINT=<%= p("cf_networking.plugin.etcd_endpoints").map{|addr| "\"https:/
 <%
   require 'json'
 
-  def subnet_size
-    size = p("cf_networking.subnet_size")
+  def subnet_prefix_length
+    size = p("cf_networking.subnet_prefix_length")
     if size < 1 || size > 30
-      raise "'cf_networking.subnet_size' must be a value between 1-30"
+      raise "'cf_networking.subnet_prefix_length' must be a value between 1-30"
     end
     size
   end
 
   toRender = {
     "Network" => p("cf_networking.network"),
-    "SubnetLen" => subnet_size,
+    "SubnetLen" => subnet_prefix_length,
     "Backend" => {
       "Type" => "vxlan",
       "Port" => 8472,

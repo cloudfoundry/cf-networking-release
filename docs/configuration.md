@@ -14,7 +14,7 @@ The IP address allocation scheme is simple:
 
 - The operator chooses a large contiguous address block for the
 entire VXLAN network (`cf_networking.network`).
-- The operator also chooses a uniform [subnet](https://en.wikipedia.org/wiki/Subnetwork) size (`cf_networking.subnet_size`).
+- The operator also chooses a uniform [subnet](https://en.wikipedia.org/wiki/Subnetwork) size (`cf_networking.subnet_prefix_length`).
 - Flannel ensures that each Diego Cell (container host) is allocated a dedicated
 a single subnet of that size from within that large block.
 - The Flannel CNI plugin ensures that every container receives a unique IP within the subnet assigned to its host Cell.
@@ -28,8 +28,9 @@ BOSH properties are used:
 - `cf_networking.network`: The address block for the entire VXLAN network.
   Corresponds to the flannel configuration value `Network`.  Defaults to `10.255.0.0/16`
 
-- `cf_networking.subnet_size`: The size, in bits, of the mask for the per-cell subnets.
-  Corresponds to the flannel configuration value `SubnetLen`.  Defaults to `24`.
+- `cf_networking.subnet_prefix_length`: The length, in bits, of the mask for the per-cell subnets.
+  Corresponds to the flannel configuration value `SubnetLen`.
+  Must be less than 31 but larger than the prefix length for `network`.  Defaults to `24`.
 
 **Note**: the `cf_networking.network` property is consumed by two BOSH jobs: `garden-cni` and `cni-flannel`.  If you
 intend to customize the network, you must set this property on both jobs.
@@ -40,7 +41,7 @@ Those are both in use by BOSH-lite components and unpredictable behavior may res
 #### Network size limitations
 The size of a given CF Networking installation is limited by the values of these two BOSH properties.
 
-- let `s` be the value of `cf_networking.subnet_size`, e.g. `24` in the default case.
+- let `s` be the value of `cf_networking.subnet_prefix_length`, e.g. `24` in the default case.
 - let `n` be the prefix length in `cf_networking.network`, e.g. `16` in the default case.
 
 Then:
@@ -52,7 +53,7 @@ For example, using the default values, the maximum number of containers per cell
 the maximum number of cells in the installation is `2^(24-16) - 1 = 255`, and thus no more than `254 * 255 = 64770`
 containers total may be running at a time on the installation.
 
-Alternately, if `network` = `10.32.0.0/11` and `subnet_size` = `22` then the maximum number of
+Alternately, if `network` = `10.32.0.0/11` and `subnet_prefix_length` = `22` then the maximum number of
 containers per cell would be `2^(32-22) - 2 = 1022`, the maximum number of cells
 in the installation would be `2^(22-11) - 1 = 2047`, and no more than `1022 * 2047 = 2092034` containers
 total may be running at a time on the installation.
@@ -62,7 +63,7 @@ e.g. [`garden.max_containers`](https://github.com/cloudfoundry/garden-runc-relea
 
 #### Changing the network
 It is safe to expand `cf_networking.network` on an existing deployment.
-However it is not safe to modify `cf_networking.subnet_size`.  Unpredictable behavior may result.
+However it is not safe to modify `cf_networking.subnet_prefix_length`.  Unpredictable behavior may result.
 
 Any changes which result in an IP range that does not completely contain the old network address block
 must be done using
