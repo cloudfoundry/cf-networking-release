@@ -10,11 +10,14 @@
 The batteries-included connectivity solution uses [Flannel](https://github.com/coreos/flannel)
 with the [VXLAN backend](https://github.com/coreos/flannel#backends).
 
-IP address allocation scheme is simple: the operator chooses a large contiguous address block for the
-entire VXLAN network (`cf_networking.network`).  The operator also chooses a uniform subnet size (`cf_networking.subnet_size`).
-Flannel ensures that each Diego Cell (container host) is allocated a dedicated
-a single [subnet](https://en.wikipedia.org/wiki/Subnetwork) of that size from within that large block.  And the Flannel CNI plugin
-ensures that every container receives a unique IP within its cell's subnet.
+The IP address allocation scheme is simple:
+
+- The operator chooses a large contiguous address block for the
+entire VXLAN network (`cf_networking.network`).
+- The operator also chooses a uniform [subnet](https://en.wikipedia.org/wiki/Subnetwork) size (`cf_networking.subnet_size`).
+- Flannel ensures that each Diego Cell (container host) is allocated a dedicated
+a single subnet of that size from within that large block.
+- The Flannel CNI plugin ensures that every container receives a unique IP within the subnet assigned to its host Cell.
 
 In this way, every container in the installation receives a unique IP address.
 
@@ -35,21 +38,24 @@ intend to customize the network, you must set this property on both jobs.
 Those are both in use by BOSH-lite components and unpredictable behavior may result.
 
 #### Network size limitations
-Taken together, the two BOSH properties define upper bounds on the size of a given CF Networking installation.
+The size of a given CF Networking installation is limited by the values of these two BOSH properties.
 
 - let `s` be the value of `cf_networking.subnet_size`, e.g. `24` in the default case.
-- let `n` be the subnet mask length in `cf_networking.network`, e.g. `16` in the default case.
+- let `n` be the prefix length in `cf_networking.network`, e.g. `16` in the default case.
 
 Then:
-- the number of containers on a given Diego cell cannot exceed: `2^(32-s) - 2`
-- the number of Diego cells in the installation cannot exceed: `2^(s-n) - 1`
+- the number of containers on a given Diego cell cannot exceed `2^(32-s) - 2`
+- the number of Diego cells in the installation cannot exceed `2^(s-n) - 1`
+- the total number of containers running on the installation cannot exceed the product of the previous two numbers.
 
-For example, using the default values, the maximum number of containers per cell is `2^(32-24) - 2 = 254`
-and the maximum number of cells in the installation is `2^(24-16) - 1 = 255`.
+For example, using the default values, the maximum number of containers per cell is `2^(32-24) - 2 = 254`, 
+the maximum number of cells in the installation is `2^(24-16) - 1 = 255`, and thus no more than `254 * 255 = 64770`
+containers total may be running at a time on the installation.
 
 Alternately, if `network` = `10.32.0.0/11` and `subnet_size` = `22` then the maximum number of
-containers per cell would be `2^(32-22) - 2 = 1022` and the maximum number of cells
-in the installation would be `2^(22-11) - 1 = 2047`.
+containers per cell would be `2^(32-22) - 2 = 1022`, the maximum number of cells
+in the installation would be `2^(22-11) - 1 = 2047`, and no more than `1022 * 2047 = 2092034` containers
+total may be running at a time on the installation.
 
 **Note**: these upper bounds are for the network only.  Other limitations may also apply to your installation,
 e.g. [`garden.max_containers`](https://github.com/cloudfoundry/garden-runc-release/blob/d67b61c/jobs/garden/spec#L106-L108).
@@ -69,17 +75,18 @@ and may cause the container network to become temporarily unavailable during the
 ## Network Policy Database
 A SQL database is required to store Network Policies.  MySQL and PostgreSQL databases are currently supported.
 
-The database may be hosted anywhere that the Policy Server BOSH job can reach it,
-including on another BOSH-deployed VM or on a cloud-provided service.
-
-Here are a few options that we've used or explored.
+### Hosting options
+The database may be hosted anywhere that the Policy Server BOSH VM can reach it,
+including on another BOSH-deployed VM or on a cloud-provided service.  Here are some options:
 
 #### MySQL
 
+**Note:** The network policy database requires MySQL version of 5.7 or higher.
+
 - Add a logical database to the CF-MySQL cluster that ships with
   [CF-Deployment](https://github.com/cloudfoundry/cf-deployment).  We've written
-  is a [CF-Networking opsfile](../manifest-generation/opsfiles/cf-networking.yml)
-  to support this integration and use it in some of our automated tests, configured
+  a [CF-Networking opsfile](../manifest-generation/opsfiles/cf-networking.yml)
+  to support this integration and we use it in some of our automated tests, configured
   as follows:
 
     - Single-node (not HA)
@@ -98,7 +105,6 @@ Here are a few options that we've used or explored.
     - db.t2.medium (4 Gib)
     - 20 GB storage
 
-**Note:** The network policy database requires MySQL version of 5.7 or higher.
 
 #### PostgreSQL
 
@@ -116,8 +122,8 @@ Here are a few options that we've used or explored.
   - db.m3.medium (3.75 GiB)
   - 20 GB storage
 
-#### Policy server scale and performance testing
-We have not done extensive performance testing of the network policy server.  However,
+### Policy database scale and performance testing
+We have not done extensive performance testing of the network policy server and database.  However,
 we have found performance to be acceptable with the above-mentioned CF-MySQL and RDS database
 configurations when testing CF Networking features with:
 
