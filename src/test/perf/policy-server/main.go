@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"lib/models"
 	"lib/policy_client"
+	"math/rand"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -20,8 +21,6 @@ import (
 
 	"code.cloudfoundry.org/lager"
 )
-
-const refreshTokenTime = 5 * time.Minute
 
 var (
 	api               string
@@ -167,7 +166,7 @@ func getPoliciesForCell(logger lager.Logger, ids []string, index, numCalls int, 
 
 	_, err := policyClient.GetPoliciesByID(token, ids...)
 	if err != nil {
-		logger.Error("getting-policies-by-id", err)
+		logger.Fatal("getting-policies-by-id", err)
 	} else {
 		logger.Info(fmt.Sprintf("finished-request-from-cell-#%d-on-call-#%d", index, numCalls))
 	}
@@ -190,6 +189,13 @@ func deleteOldPolicies(logger lager.Logger, token string) {
 	logger.Info("deleted-existing-policies")
 }
 
+const refreshTokenDuration = 5 * time.Minute
+
+func jitter(baseTime time.Duration, jitterAmount time.Duration) time.Duration {
+	x := rand.Int63n(int64(jitterAmount)*2) - int64(jitterAmount)
+	return baseTime + time.Duration(x)
+}
+
 func pollPolicyServer(logger lager.Logger, ids []string, index int, cfDirs []string) {
 	token := getCurrentToken(logger, cfDirs[index])
 
@@ -197,8 +203,8 @@ func pollPolicyServer(logger lager.Logger, ids []string, index int, cfDirs []str
 	lastTokenRefresh := time.Now()
 	for {
 		select {
-		case <-time.After(pollInterval): // TODO: jitter?
-			if time.Now().Sub(lastTokenRefresh) > refreshTokenTime {
+		case <-time.After(jitter(pollInterval, 1*time.Second)):
+			if time.Now().Sub(lastTokenRefresh) > jitter(refreshTokenDuration, 1*time.Minute) {
 				lastTokenRefresh = time.Now()
 
 				token = getCurrentToken(logger, cfDirs[index])
