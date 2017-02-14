@@ -10,6 +10,7 @@ export CF_USER=admin
 export CF_PASSWORD=admin
 
 CF_HOME=~/.cf cf api "$API" --skip-ssl-validation
+CF_HOME=~/.cf cf auth "$CF_USER" "$CF_PASSWORD"
 
 echo '
 {
@@ -17,7 +18,7 @@ echo '
   "admin_user": "admin",
   "admin_password": "admin",
   "apps": 1000,
-  "create_new_policies": true,
+  "create_new_policies": false,
   "expiration": 5,
   "logs": "/tmp/perf-logs.txt",
   "num_cells": 50,

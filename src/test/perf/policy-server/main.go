@@ -14,7 +14,6 @@ import (
 	"os/exec"
 	"os/user"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
@@ -83,7 +82,6 @@ func main() {
 	defaultCfDir := filepath.Join(userDir, ".cf")
 	cfDirs := createTempCfDirs(logger, numCells, defaultCfDir)
 
-	refreshToken(logger, cfUser, cfPassword, defaultCfDir)
 	homeToken := getCurrentToken(logger, defaultCfDir)
 
 	httpClient := &http.Client{
@@ -128,6 +126,7 @@ func main() {
 	fmt.Println("Press CTRL-C to exit")
 	select {
 	case <-time.After(expiration):
+		logger.Info(fmt.Sprintf("exiting"))
 		os.Exit(0)
 	}
 }
@@ -192,7 +191,6 @@ func deleteOldPolicies(logger lager.Logger, token string) {
 }
 
 func pollPolicyServer(logger lager.Logger, ids []string, index int, cfDirs []string) {
-	refreshToken(logger, cfUser, cfPassword, cfDirs[index])
 	token := getCurrentToken(logger, cfDirs[index])
 
 	numCalls := 0
@@ -202,7 +200,6 @@ func pollPolicyServer(logger lager.Logger, ids []string, index int, cfDirs []str
 		case <-time.After(pollInterval): // TODO: jitter?
 			if time.Now().Sub(lastTokenRefresh) > refreshTokenTime {
 				lastTokenRefresh = time.Now()
-				refreshToken(logger, cfUser, cfPassword, cfDirs[index])
 
 				token = getCurrentToken(logger, cfDirs[index])
 			}
@@ -211,26 +208,6 @@ func pollPolicyServer(logger lager.Logger, ids []string, index int, cfDirs []str
 			numCalls = numCalls + 1
 			continue
 		}
-	}
-}
-
-func refreshToken(logger lager.Logger, cfUser, cfPassword, cfHomeDir string) {
-	cmd := exec.Command("cf", "auth", cfUser, cfPassword)
-	cmd.Env = os.Environ()
-	cmd.Env = append(cmd.Env, fmt.Sprintf("CF_HOME=%s", cfHomeDir))
-
-	outputBytes, err := cmd.Output()
-	if err != nil {
-		logger.Fatal("running-command-cf-auth", err)
-	}
-
-	output := string(outputBytes)
-
-	if strings.Contains(output, "FAILED") {
-		logger.Fatal("running-command-cf-auth", nil, lager.Data{
-			"cfUser":     cfUser,
-			"cfPassword": cfPassword,
-		})
 	}
 }
 
