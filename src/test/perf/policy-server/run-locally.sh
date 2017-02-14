@@ -31,7 +31,7 @@ echo "
   \"logs\": \"/tmp/perf-logs.txt\",
   \"num_cells\": 2,
   \"policies_per_app\": 3,
-  \"poll_interval\": 5,
+  \"poll_interval_seconds\": 5,
 
   \"policy_server_internal_base_url\": \"${POLICY_SERVER_INTERNAL_BASE_URL}\",
   \"ca_cert_file\": \"${POLICY_SERVER_CERTS_DIR}/ca.crt\",

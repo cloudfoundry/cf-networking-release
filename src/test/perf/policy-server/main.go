@@ -37,7 +37,7 @@ type Config struct {
 	Logs                string `json:"logs"`
 	NumCells            int    `json:"num_cells"`
 	PoliciesPerApp      int    `json:"policies_per_app"`
-	PollIntervalSeconds int    `json:"poll_interval"`
+	PollIntervalSeconds int    `json:"poll_interval_seconds"`
 
 	ServerCACertFile            string `json:"ca_cert_file" validate:"nonzero"`
 	ClientCertFile              string `json:"client_cert_file" validate:"nonzero"`
@@ -55,6 +55,10 @@ func loadTestConfig(logger lager.Logger) {
 	err = json.Unmarshal(configBytes, &config)
 	if err != nil {
 		logger.Fatal("unmarshalling-config", err)
+	}
+
+	if config.Api == "" {
+		logger.Fatal("reading-api-from-config", errors.New("API not specified in config"))
 	}
 
 	testDuration = time.Duration(config.TestDurationMinutes) * time.Minute
@@ -92,65 +96,6 @@ func getExternalPolicyClient(logger lager.Logger) *policy_client.ExternalClient 
 
 func randomAppGUID(index int) string {
 	return fmt.Sprintf("%08x", rand.Int63())
-}
-
-func main() {
-	logger := lager.NewLogger("cf-networking.policy-server-test")
-
-	loadTestConfig(logger)
-
-	file, err := os.OpenFile(config.Logs, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		logger.Fatal("writing-to-log-file", err)
-	}
-	logger.RegisterSink(lager.NewWriterSink(file, lager.INFO))
-	logger.Info("started")
-	defer logger.Info("exited")
-
-	if config.Api == "" {
-		logger.Fatal("reading-api-from-config", errors.New("API not specified in config"))
-	}
-
-	internalPolicyClient = getInternalPolicyClient(logger)
-	externalPolicyClient = getExternalPolicyClient(logger)
-
-	token := getCurrentToken(logger)
-
-	logger.Info("creating-application-guids")
-	rand.Seed(1) // always use the same random sequence
-	var guids []string
-	for i := 0; i < config.Apps; i++ {
-		guids = append(guids, randomAppGUID(i))
-	}
-	logger.Info(fmt.Sprintf("finished-creating-%d-application-guids", config.Apps))
-
-	if config.CreateNewPolicies {
-		deleteOldPolicies(logger, token)
-		token = getCurrentToken(logger)
-		addNewPolicies(logger, guids, token)
-	} else {
-		logger.Info("skipped-creating-policies")
-	}
-
-	appsPerCell := config.Apps / config.NumCells
-	var cells [][]string
-	for i := 0; i < config.NumCells; i++ {
-		cells = append(cells, guids[i*appsPerCell:(i+1)*appsPerCell])
-	}
-
-	for i := 0; i < len(cells); i++ {
-		go func(i int) {
-			logger.Info(fmt.Sprintf("cell-%d-polling-policy-server", i))
-			pollPolicyServer(logger, cells[i], i)
-		}(i)
-	}
-
-	fmt.Println("Press CTRL-C to exit")
-	select {
-	case <-time.After(testDuration):
-		logger.Info(fmt.Sprintf("exiting"))
-		os.Exit(0)
-	}
 }
 
 func addNewPolicies(logger lager.Logger, appGuids []string, token string) {
@@ -214,8 +159,6 @@ func deleteOldPolicies(logger lager.Logger, token string) {
 	logger.Info("deleted-existing-policies")
 }
 
-const refreshTokenDuration = 5 * time.Minute
-
 func jitter(baseTime time.Duration, jitterAmount time.Duration) time.Duration {
 	x := rand.Int63n(int64(jitterAmount)*2) - int64(jitterAmount)
 	return baseTime + time.Duration(x)
@@ -245,4 +188,59 @@ func getCurrentToken(logger lager.Logger) string {
 	logger.Info("parsed-cf-oauth-token", lager.Data{"token": token})
 
 	return token
+}
+
+func main() {
+	logger := lager.NewLogger("cf-networking.policy-server-test")
+
+	loadTestConfig(logger)
+
+	file, err := os.OpenFile(config.Logs, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		logger.Fatal("writing-to-log-file", err)
+	}
+	logger.RegisterSink(lager.NewWriterSink(file, lager.INFO))
+	logger.Info("started")
+	defer logger.Info("exited")
+
+	token := getCurrentToken(logger)
+
+	logger.Info("creating-application-guids")
+	rand.Seed(1) // always use the same random sequence
+	var guids []string
+	for i := 0; i < config.Apps; i++ {
+		guids = append(guids, randomAppGUID(i))
+	}
+	logger.Info(fmt.Sprintf("finished-creating-%d-application-guids", config.Apps))
+
+	internalPolicyClient = getInternalPolicyClient(logger)
+	externalPolicyClient = getExternalPolicyClient(logger)
+
+	if config.CreateNewPolicies {
+		deleteOldPolicies(logger, token)
+		token = getCurrentToken(logger)
+		addNewPolicies(logger, guids, token)
+	} else {
+		logger.Info("skipped-creating-policies")
+	}
+
+	appsPerCell := config.Apps / config.NumCells
+	var cells [][]string
+	for i := 0; i < config.NumCells; i++ {
+		cells = append(cells, guids[i*appsPerCell:(i+1)*appsPerCell])
+	}
+
+	for i := 0; i < len(cells); i++ {
+		go func(i int) {
+			logger.Info(fmt.Sprintf("cell-%d-polling-policy-server", i))
+			pollPolicyServer(logger, cells[i], i)
+		}(i)
+	}
+
+	fmt.Println("Press CTRL-C to exit")
+	select {
+	case <-time.After(testDuration):
+		logger.Info(fmt.Sprintf("exiting"))
+		os.Exit(0)
+	}
 }
