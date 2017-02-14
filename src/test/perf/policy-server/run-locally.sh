@@ -17,7 +17,7 @@ echo '
   "admin_user": "admin",
   "admin_password": "admin",
   "apps": 1000,
-  "create_new_policies": false,
+  "create_new_policies": true,
   "expiration": 5,
   "logs": "/tmp/perf-logs.txt",
   "num_cells": 50,

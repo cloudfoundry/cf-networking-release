@@ -40,17 +40,16 @@ var (
 )
 
 type Config struct {
-	Api                 string `json:"api"`
 	AdminUser           string `json:"admin_user"`
 	AdminPassword       string `json:"admin_password"`
+	Api                 string `json:"api"`
 	Apps                int    `json:"apps"`
 	CreateNewPolicies   bool   `json:"create_new_policies"`
-	Expiration          int    `json:"expiration"`
+	ExpirationMinutes   int    `json:"expiration"`
+	Logs                string `json:"logs"`
 	NumCells            int    `json:"num_cells"`
 	PoliciesPerApp      int    `json:"policies_per_app"`
 	PollIntervalSeconds int    `json:"poll_interval"`
-	Logs                string `json:"logs"`
-	ExpirationMinutes   int    `json:"expiration"`
 	SkipSslValidation   bool   `json:"skip_ssl_validation"`
 }
 
@@ -71,14 +70,6 @@ func main() {
 		logger.Fatal("reading-api-from-config", errors.New("API not specified in config"))
 	}
 
-	httpClient := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: config.SkipSslValidation,
-			},
-		},
-	}
-
 	user, err := user.Current()
 	if err != nil {
 		logger.Fatal("get-current-user", err)
@@ -90,82 +81,43 @@ func main() {
 	}
 
 	defaultCfDir := filepath.Join(userDir, ".cf")
-
 	cfDirs := createTempCfDirs(logger, numCells, defaultCfDir)
 
 	refreshToken(logger, cfUser, cfPassword, defaultCfDir)
 	homeToken := getCurrentToken(logger, defaultCfDir)
 
+	httpClient := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: config.SkipSslValidation,
+			},
+		},
+	}
+
 	policyServerAPI := fmt.Sprintf("https://%s", api)
 	policyClient = policy_client.NewExternal(logger, httpClient, policyServerAPI)
-
-	if createNewPolicies {
-		logger.Info("getting-existing-policies")
-
-		policies, err := policyClient.GetPolicies(homeToken)
-		if err != nil {
-			logger.Fatal("Failed to get policies", err)
-		}
-		logger.Info("number-of-existing-policies", lager.Data{"num-existing-policies": len(policies)})
-
-		logger.Info("deleting-existing-policies")
-		err = policyClient.DeletePolicies(homeToken, policies)
-		if err != nil {
-			logger.Fatal("deleting-policies", err)
-		}
-
-		logger.Info("finished-deleting-existing-policies")
-	} else {
-		logger.Info("skipped-deleting-existing-policies")
-	}
 
 	logger.Info("creating-application-guids")
 	var guids []string
 	for i := 0; i < apps; i++ {
-		guid := fmt.Sprintf("9cb281b-e272-4df7-b398-b6663ca-%04d", i) // TODO we should do better... indexes and what not
+		guid := fmt.Sprintf("9cb281b-e272-4df7-b398-b6663ca-%04d", i) // TODO: improve guid creation
 		guids = append(guids, guid)
 	}
 	logger.Info(fmt.Sprintf("finished-creating-%d-application-guids", apps))
 
 	if createNewPolicies {
-		logger.Info("creating-policies-for-each-application-guid")
-		policies := []models.Policy{}
-		for _, guid := range guids {
-			for i := 0; i < policiesPerApp; i++ {
-				policy := models.Policy{
-					Source: models.Source{
-						ID: guid,
-					},
-					Destination: models.Destination{
-						ID:       guid, // TODO make this random or explore other distrubutions (eg hotspot)
-						Protocol: "tcp",
-						Port:     9000 + i,
-					},
-				}
-				policies = append(policies, policy)
-			}
-		}
-
-		err := policyClient.AddPolicies(homeToken, policies)
-		if err != nil {
-			logger.Fatal("adding-policies", err)
-		}
-		logger.Info("finished-adding-policies-to-policy-server")
-
-		refreshToken(logger, cfUser, cfPassword, defaultCfDir)
-		homeToken = getCurrentToken(logger, defaultCfDir)
+		deleteOldPolicies(logger, homeToken)
+		addNewPolicies(logger, guids, homeToken)
 	} else {
 		logger.Info("skipped-creating-policies")
 	}
 
-	// simulate placing "app instances on cells" (100 cells, with 100 app guids per cell)
 	appsPerCell := apps / numCells
 	var cells [][]string
 	for i := 0; i < numCells; i++ {
 		cells = append(cells, guids[i*appsPerCell:(i+1)*appsPerCell])
 	}
 
-	// each "cell" makes requests to server for its app instances
 	for i := 0; i < len(cells); i++ {
 		go func(i int) {
 			logger.Info(fmt.Sprintf("cell-%d-polling-policy-server", i))
@@ -178,6 +130,33 @@ func main() {
 	case <-time.After(expiration):
 		os.Exit(0)
 	}
+}
+
+func addNewPolicies(logger lager.Logger, guids []string, token string) {
+	logger.Info("creating-policies-for-each-application-guid")
+	policies := []models.Policy{}
+	for _, guid := range guids {
+		for i := 0; i < policiesPerApp; i++ {
+			policy := models.Policy{
+				Source: models.Source{
+					ID: guid,
+				},
+				Destination: models.Destination{
+					ID:       guid, // TODO: randomness in policy creation and distributions (eg hotspot)
+					Protocol: "tcp",
+					Port:     9000 + i,
+				},
+			}
+			policies = append(policies, policy)
+		}
+	}
+
+	logger.Info("adding-policies")
+	err := policyClient.AddPolicies(token, policies)
+	if err != nil {
+		logger.Fatal("adding-policies", err)
+	}
+	logger.Info("finished-adding-policies-to-policy-server")
 }
 
 func getPoliciesForCell(logger lager.Logger, ids []string, index, numCalls int, token string) {
@@ -195,6 +174,25 @@ func getPoliciesForCell(logger lager.Logger, ids []string, index, numCalls int, 
 	}
 }
 
+func deleteOldPolicies(logger lager.Logger, homeToken string) {
+	logger.Info("deleting-existing-policies")
+
+	logger.Info("getting-existing-policies")
+	policies, err := policyClient.GetPolicies(homeToken)
+	if err != nil {
+		logger.Fatal("get-policies", err)
+	}
+	logger.Info("number-of-existing-policies", lager.Data{"num-existing-policies": len(policies)})
+
+	logger.Info("deleting-existing-policies")
+	err = policyClient.DeletePolicies(homeToken, policies)
+	if err != nil {
+		logger.Fatal("deleting-policies", err)
+	}
+
+	logger.Info("finished-deleting-existing-policies")
+}
+
 func pollPolicyServer(logger lager.Logger, ids []string, index int, cfDirs []string) {
 	refreshToken(logger, cfUser, cfPassword, cfDirs[index])
 	token := getCurrentToken(logger, cfDirs[index])
@@ -203,7 +201,7 @@ func pollPolicyServer(logger lager.Logger, ids []string, index int, cfDirs []str
 	lastTokenRefresh := time.Now()
 	for {
 		select {
-		case <-time.After(pollInterval): // TODO jitter?
+		case <-time.After(pollInterval): // TODO: jitter?
 			if time.Now().Sub(lastTokenRefresh) > refreshTokenTime {
 				lastTokenRefresh = time.Now()
 				refreshToken(logger, cfUser, cfPassword, cfDirs[index])
