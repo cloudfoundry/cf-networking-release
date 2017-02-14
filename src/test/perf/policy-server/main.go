@@ -54,7 +54,7 @@ type Config struct {
 }
 
 func main() {
-	logger := lager.NewLogger("container-networking.policy-server-test")
+	logger := lager.NewLogger("cf-networking.policy-server-test")
 
 	loadTestConfig(logger)
 
@@ -174,23 +174,21 @@ func getPoliciesForCell(logger lager.Logger, ids []string, index, numCalls int, 
 	}
 }
 
-func deleteOldPolicies(logger lager.Logger, homeToken string) {
-	logger.Info("deleting-existing-policies")
-
+func deleteOldPolicies(logger lager.Logger, token string) {
 	logger.Info("getting-existing-policies")
-	policies, err := policyClient.GetPolicies(homeToken)
+	policies, err := policyClient.GetPolicies(token)
 	if err != nil {
 		logger.Fatal("get-policies", err)
 	}
 	logger.Info("number-of-existing-policies", lager.Data{"num-existing-policies": len(policies)})
 
 	logger.Info("deleting-existing-policies")
-	err = policyClient.DeletePolicies(homeToken, policies)
+	err = policyClient.DeletePolicies(token, policies)
 	if err != nil {
 		logger.Fatal("deleting-policies", err)
 	}
 
-	logger.Info("finished-deleting-existing-policies")
+	logger.Info("deleted-existing-policies")
 }
 
 func pollPolicyServer(logger lager.Logger, ids []string, index int, cfDirs []string) {
