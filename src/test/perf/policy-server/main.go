@@ -90,6 +90,10 @@ func getExternalPolicyClient(logger lager.Logger) *policy_client.ExternalClient 
 	return policy_client.NewExternal(logger.Session("external-policy-client"), httpClient, policyServerAPI)
 }
 
+func randomAppGUID(index int) string {
+	return fmt.Sprintf("%08x", rand.Int63())
+}
+
 func main() {
 	logger := lager.NewLogger("cf-networking.policy-server-test")
 
@@ -113,15 +117,16 @@ func main() {
 	token := getCurrentToken(logger)
 
 	logger.Info("creating-application-guids")
+	rand.Seed(1) // always use the same random sequence
 	var guids []string
 	for i := 0; i < config.Apps; i++ {
-		guid := fmt.Sprintf("9cb281b-e272-4df7-b398-b6663ca-%04d", i) // TODO: improve guid creation
-		guids = append(guids, guid)
+		guids = append(guids, randomAppGUID(i))
 	}
 	logger.Info(fmt.Sprintf("finished-creating-%d-application-guids", config.Apps))
 
 	if config.CreateNewPolicies {
 		deleteOldPolicies(logger, token)
+		token = getCurrentToken(logger)
 		addNewPolicies(logger, guids, token)
 	} else {
 		logger.Info("skipped-creating-policies")
@@ -148,19 +153,22 @@ func main() {
 	}
 }
 
-func addNewPolicies(logger lager.Logger, guids []string, token string) {
+func addNewPolicies(logger lager.Logger, appGuids []string, token string) {
 	logger.Info("creating-policies-for-each-application-guid")
 	policies := []models.Policy{}
-	for _, guid := range guids {
+	for _ = range appGuids {
 		for i := 0; i < config.PoliciesPerApp; i++ {
+			dstGuid := appGuids[rand.Intn(len(appGuids))]
+			srcGuid := appGuids[rand.Intn(len(appGuids))]
+
 			policy := models.Policy{
 				Source: models.Source{
-					ID: guid,
+					ID: srcGuid,
 				},
 				Destination: models.Destination{
-					ID:       guid, // TODO: randomness in policy creation and distributions (eg hotspot)
+					ID:       dstGuid,
 					Protocol: "tcp",
-					Port:     9000 + i,
+					Port:     10000 + rand.Intn(10000),
 				},
 			}
 			policies = append(policies, policy)
