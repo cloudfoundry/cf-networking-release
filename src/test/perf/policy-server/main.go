@@ -73,6 +73,7 @@ func getInternalPolicyClient(logger lager.Logger) *policy_client.InternalClient 
 	clientTLSConfig.InsecureSkipVerify = true
 
 	httpClient := &http.Client{
+		Timeout: pollInterval,
 		Transport: &http.Transport{
 			TLSClientConfig: clientTLSConfig,
 		},
