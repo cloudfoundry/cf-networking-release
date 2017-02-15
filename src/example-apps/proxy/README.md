@@ -18,16 +18,3 @@ See that proxying from A to B works over both the router and overlay
 curl appa.<system-domain>/proxy/appb.<system-domain>
 curl appa.<system-domain>/proxy/<overlay-ip-of-appB>:8080
 ```
-
-Configure extra ports for the app to listen on
-```bash
-cf set-env appB USER_PORTS 4444,3333
-cf restage
-```
-
-See that appB listens on the new ports
-```bash
-curl appa.<system-domain>/proxy/<overlay-ip-of-appB>:3333
-curl appa.<system-domain>/proxy/<overlay-ip-of-appB>:4444
-```
-
