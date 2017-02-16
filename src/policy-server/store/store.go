@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"math"
 	"policy-server/models"
+	"policy-server/store/helpers"
+	"strings"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -257,21 +259,11 @@ func (s *store) deleteGroupRowIfLast(tx Transaction, group_id int) error {
 	return nil
 }
 
-func (s *store) All() ([]models.Policy, error) {
+func (s *store) policiesQuery(query string, args ...interface{}) ([]models.Policy, error) {
 	policies := []models.Policy{}
+	rebindedQuery := helpers.RebindForSQLDialect(query, s.conn.DriverName())
 
-	rows, err := s.conn.Query(`
-		select
-			src_grp.guid,
-			src_grp.id,
-			dst_grp.guid,
-			dst_grp.id,
-			destinations.port,
-			destinations.protocol
-		from policies
-		left outer join groups as src_grp on (policies.group_id = src_grp.id)
-		left outer join destinations on (destinations.id = policies.destination_id)
-		left outer join groups as dst_grp on (destinations.group_id = dst_grp.id);`)
+	rows, err := s.conn.Query(rebindedQuery, args...)
 	if err != nil {
 		return nil, fmt.Errorf("listing all: %s", err)
 	}
@@ -297,8 +289,68 @@ func (s *store) All() ([]models.Policy, error) {
 			},
 		})
 	}
-
 	return policies, nil
+}
+
+func (s *store) ByGuids(srcGuids, destGuids []string) ([]models.Policy, error) {
+	numSourceGuids := len(srcGuids)
+	numDestinationGuids := len(destGuids)
+	if numSourceGuids == 0 && numDestinationGuids == 0 {
+		return []models.Policy{}, nil
+	}
+
+	var wheres []string
+	if numSourceGuids > 0 {
+		wheres = append(wheres, fmt.Sprintf("src_grp.guid in (%s)", helpers.QuestionMarks(numSourceGuids)))
+	}
+
+	if numDestinationGuids > 0 {
+		wheres = append(wheres, fmt.Sprintf("dst_grp.guid in (%s)", helpers.QuestionMarks(numDestinationGuids)))
+	}
+
+	query := `
+		select
+			src_grp.guid,
+			src_grp.id,
+			dst_grp.guid,
+			dst_grp.id,
+			destinations.port,
+			destinations.protocol
+		from policies
+		left outer join groups as src_grp on (policies.group_id = src_grp.id)
+		left outer join destinations on (destinations.id = policies.destination_id)
+		left outer join groups as dst_grp on (destinations.group_id = dst_grp.id)`
+
+	if len(wheres) > 0 {
+		query += " where " + strings.Join(wheres, " OR ")
+	}
+	query += ";"
+
+	whereBindings := make([]interface{}, numSourceGuids+numDestinationGuids)
+	for i := 0; i < len(whereBindings); i++ {
+		if i < numSourceGuids {
+			whereBindings[i] = srcGuids[i]
+		} else {
+			whereBindings[i] = destGuids[i-numSourceGuids]
+		}
+	}
+
+	return s.policiesQuery(query, whereBindings...)
+}
+
+func (s *store) All() ([]models.Policy, error) {
+	return s.policiesQuery(`
+		select
+			src_grp.guid,
+			src_grp.id,
+			dst_grp.guid,
+			dst_grp.id,
+			destinations.port,
+			destinations.protocol
+		from policies
+		left outer join groups as src_grp on (policies.group_id = src_grp.id)
+		left outer join destinations on (destinations.id = policies.destination_id)
+		left outer join groups as dst_grp on (destinations.group_id = dst_grp.id);`)
 }
 
 func (s *store) Tags() ([]models.Tag, error) {

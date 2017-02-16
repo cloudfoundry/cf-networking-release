@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"policy-server/models"
 	"policy-server/uaa_client"
-	"strings"
 
 	"code.cloudfoundry.org/lager"
 )
@@ -24,17 +23,20 @@ type PoliciesIndex struct {
 }
 
 func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request, userToken uaa_client.CheckTokenResponse) {
-	policies, err := h.Store.All()
+	queryValues := req.URL.Query()
+	ids := parseIds(queryValues)
+
+	var policies []models.Policy
+	var err error
+	if len(ids) == 0 {
+		policies, err = h.Store.All()
+	} else {
+		policies, err = h.Store.ByGuids(ids, ids)
+	}
+
 	if err != nil {
 		h.ErrorResponse.InternalServerError(w, err, "policies-index", "database read failed")
 		return
-	}
-
-	queryValues := req.URL.Query()
-	idList, ok := queryValues["id"]
-	if ok {
-		ids := strings.Split(idList[0], ",")
-		policies = filterByID(policies, ids)
 	}
 
 	policies, err = h.PolicyFilter.FilterPolicies(policies, userToken)
@@ -60,23 +62,4 @@ func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request, user
 
 	w.WriteHeader(http.StatusOK)
 	w.Write(bytes)
-}
-
-func filterByID(policies []models.Policy, ids []string) []models.Policy {
-	filteredPolicies := []models.Policy{}
-	for _, policy := range policies {
-		if containsID(policy, ids) {
-			filteredPolicies = append(filteredPolicies, policy)
-		}
-	}
-	return filteredPolicies
-}
-
-func containsID(policy models.Policy, ids []string) bool {
-	for _, id := range ids {
-		if id == policy.Source.ID || id == policy.Destination.ID {
-			return true
-		}
-	}
-	return false
 }

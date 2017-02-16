@@ -11,6 +11,7 @@ type Store interface {
 	All() ([]models.Policy, error)
 	Delete([]models.Policy) error
 	Tags() ([]models.Tag, error)
+	ByGuids([]string, []string) ([]models.Policy, error)
 }
 
 //go:generate counterfeiter -o fakes/metrics_sender.go --fake-name MetricsSender . metricsSender
@@ -61,10 +62,21 @@ func (mw *MetricsWrapper) Delete(policies []models.Policy) error {
 func (mw *MetricsWrapper) Tags() ([]models.Tag, error) {
 	startTime := time.Now()
 	tags, err := mw.Store.Tags()
-	allTimeDuration := time.Now().Sub(startTime)
+	tagsTimeDuration := time.Now().Sub(startTime)
 	if err != nil {
 		mw.MetricsSender.IncrementCounter("StoreTagsError")
 	}
-	mw.MetricsSender.SendDuration("StoreTagsTime", allTimeDuration)
+	mw.MetricsSender.SendDuration("StoreTagsTime", tagsTimeDuration)
 	return tags, err
+}
+
+func (mw *MetricsWrapper) ByGuids(srcGuids, dstGuids []string) ([]models.Policy, error) {
+	startTime := time.Now()
+	policies, err := mw.Store.ByGuids(srcGuids, dstGuids)
+	byGuidsTimeDuration := time.Now().Sub(startTime)
+	if err != nil {
+		mw.MetricsSender.IncrementCounter("StoreByGuidsError")
+	}
+	mw.MetricsSender.SendDuration("StoreByGuidsTime", byGuidsTimeDuration)
+	return policies, err
 }

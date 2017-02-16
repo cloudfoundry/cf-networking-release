@@ -3,6 +3,7 @@ package handlers
 import (
 	"lib/marshal"
 	"net/http"
+	"net/url"
 	"policy-server/models"
 	"strings"
 
@@ -15,6 +16,7 @@ type store interface {
 	Create([]models.Policy) error
 	Delete([]models.Policy) error
 	Tags() ([]models.Tag, error)
+	ByGuids([]string, []string) ([]models.Policy, error)
 }
 
 type PoliciesIndexInternal struct {
@@ -26,18 +28,21 @@ type PoliciesIndexInternal struct {
 
 func (h *PoliciesIndexInternal) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	h.Logger.Debug("internal request made to list policies", lager.Data{"URL": req.URL, "RemoteAddr": req.RemoteAddr})
-	policies, err := h.Store.All()
+
+	queryValues := req.URL.Query()
+	ids := parseIds(queryValues)
+
+	var policies []models.Policy
+	var err error
+	if len(ids) == 0 {
+		policies, err = h.Store.All()
+	} else {
+		policies, err = h.Store.ByGuids(ids, ids)
+	}
 
 	if err != nil {
 		h.ErrorResponse.InternalServerError(w, err, "policies-index-internal", "database read failed")
 		return
-	}
-
-	queryValues := req.URL.Query()
-	idList, ok := queryValues["id"]
-	if ok {
-		ids := strings.Split(idList[0], ",")
-		policies = filterByID(policies, ids)
 	}
 
 	policyResponse := struct {
@@ -50,4 +55,13 @@ func (h *PoliciesIndexInternal) ServeHTTP(w http.ResponseWriter, req *http.Reque
 	}
 
 	w.Write(bytes)
+}
+
+func parseIds(queryValues url.Values) []string {
+	var ids []string
+	idList, ok := queryValues["id"]
+	if ok {
+		ids = strings.Split(idList[0], ",")
+	}
+	return ids
 }

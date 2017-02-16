@@ -37,6 +37,16 @@ type Store struct {
 		result1 []models.Tag
 		result2 error
 	}
+	ByGuidsStub        func([]string, []string) ([]models.Policy, error)
+	byGuidsMutex       sync.RWMutex
+	byGuidsArgsForCall []struct {
+		arg1 []string
+		arg2 []string
+	}
+	byGuidsReturns struct {
+		result1 []models.Policy
+		result2 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -165,6 +175,50 @@ func (fake *Store) TagsReturns(result1 []models.Tag, result2 error) {
 	}{result1, result2}
 }
 
+func (fake *Store) ByGuids(arg1 []string, arg2 []string) ([]models.Policy, error) {
+	var arg1Copy []string
+	if arg1 != nil {
+		arg1Copy = make([]string, len(arg1))
+		copy(arg1Copy, arg1)
+	}
+	var arg2Copy []string
+	if arg2 != nil {
+		arg2Copy = make([]string, len(arg2))
+		copy(arg2Copy, arg2)
+	}
+	fake.byGuidsMutex.Lock()
+	fake.byGuidsArgsForCall = append(fake.byGuidsArgsForCall, struct {
+		arg1 []string
+		arg2 []string
+	}{arg1Copy, arg2Copy})
+	fake.recordInvocation("ByGuids", []interface{}{arg1Copy, arg2Copy})
+	fake.byGuidsMutex.Unlock()
+	if fake.ByGuidsStub != nil {
+		return fake.ByGuidsStub(arg1, arg2)
+	}
+	return fake.byGuidsReturns.result1, fake.byGuidsReturns.result2
+}
+
+func (fake *Store) ByGuidsCallCount() int {
+	fake.byGuidsMutex.RLock()
+	defer fake.byGuidsMutex.RUnlock()
+	return len(fake.byGuidsArgsForCall)
+}
+
+func (fake *Store) ByGuidsArgsForCall(i int) ([]string, []string) {
+	fake.byGuidsMutex.RLock()
+	defer fake.byGuidsMutex.RUnlock()
+	return fake.byGuidsArgsForCall[i].arg1, fake.byGuidsArgsForCall[i].arg2
+}
+
+func (fake *Store) ByGuidsReturns(result1 []models.Policy, result2 error) {
+	fake.ByGuidsStub = nil
+	fake.byGuidsReturns = struct {
+		result1 []models.Policy
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *Store) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -176,6 +230,8 @@ func (fake *Store) Invocations() map[string][][]interface{} {
 	defer fake.deleteMutex.RUnlock()
 	fake.tagsMutex.RLock()
 	defer fake.tagsMutex.RUnlock()
+	fake.byGuidsMutex.RLock()
+	defer fake.byGuidsMutex.RUnlock()
 	return fake.invocations
 }
 

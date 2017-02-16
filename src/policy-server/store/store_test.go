@@ -544,6 +544,170 @@ var _ = Describe("Store", func() {
 		})
 	})
 
+	Describe("ByGuids", func() {
+		var allPolicies []models.Policy
+		var expectedPolicies []models.Policy
+		var err error
+
+		BeforeEach(func() {
+			allPolicies = []models.Policy{
+				models.Policy{
+					Source: models.Source{
+						ID:  "app-guid-00",
+						Tag: "01",
+					},
+					Destination: models.Destination{
+						ID:       "app-guid-01",
+						Tag:      "02",
+						Protocol: "tcp",
+						Port:     101,
+					},
+				},
+				models.Policy{
+					Source: models.Source{
+						ID:  "app-guid-01",
+						Tag: "02",
+					},
+					Destination: models.Destination{
+						ID:       "app-guid-02",
+						Tag:      "03",
+						Protocol: "tcp",
+						Port:     102,
+					},
+				},
+				models.Policy{
+					Source: models.Source{
+						ID:  "app-guid-02",
+						Tag: "03",
+					},
+					Destination: models.Destination{
+						ID:       "app-guid-00",
+						Tag:      "01",
+						Protocol: "tcp",
+						Port:     100,
+					},
+				},
+				models.Policy{
+					Source: models.Source{
+						ID:  "app-guid-03",
+						Tag: "04",
+					},
+					Destination: models.Destination{
+						ID:       "app-guid-03",
+						Tag:      "04",
+						Protocol: "tcp",
+						Port:     103,
+					},
+				},
+			}
+
+			dataStore, err = store.New(realDb, group, destination, policy, 1)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = dataStore.Create(allPolicies)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		Context("when empty args is provided", func() {
+			BeforeEach(func() {
+				dataStore, err = store.New(mockDb, group, destination, policy, 1)
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("returns an empty slice ", func() {
+				policies, err := dataStore.ByGuids(nil, nil)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(policies).To(BeEmpty())
+
+				By("not making any queries")
+				Expect(mockDb.QueryCallCount()).To(Equal(0))
+			})
+		})
+
+		Context("when srcGuids is provided", func() {
+			It("returns policies whose source is in srcGuids", func() {
+				policies, err := dataStore.ByGuids([]string{"app-guid-00", "app-guid-01"}, nil)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(policies).To(ConsistOf(allPolicies[0], allPolicies[1]))
+			})
+		})
+		Context("when destGuids is provided", func() {
+			It("returns policies whose destination is in destGuids", func() {
+				policies, err := dataStore.ByGuids(nil, []string{"app-guid-00", "app-guid-01"})
+				Expect(err).NotTo(HaveOccurred())
+				Expect(policies).To(ConsistOf(allPolicies[0], allPolicies[2]))
+			})
+		})
+		Context("when srcGuids and destGuids are provided", func() {
+			It("returns policies that satisfy either srcGuids or destGuids", func() {
+				policies, err := dataStore.ByGuids(
+					[]string{"app-guid-00", "app-guid-01"},
+					[]string{"app-guid-00", "app-guid-01"},
+				)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(policies).To(ConsistOf(
+					allPolicies[0], allPolicies[1], allPolicies[2],
+				))
+			})
+		})
+
+		Context("when the db operation fails", func() {
+			BeforeEach(func() {
+				mockDb.QueryReturns(nil, errors.New("some query error"))
+			})
+
+			It("should return a sensible error", func() {
+				store, err := store.New(mockDb, group, destination, policy, 2)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = store.ByGuids(
+					[]string{"does-not-matter"},
+					[]string{"does-not-matter"},
+				)
+				Expect(err).To(MatchError("listing all: some query error"))
+			})
+		})
+
+		Context("when the query result parsing fails", func() {
+			var rows *sql.Rows
+
+			BeforeEach(func() {
+				expectedPolicies = []models.Policy{models.Policy{
+					Source: models.Source{ID: "some-app-guid"},
+					Destination: models.Destination{
+						ID:       "some-other-app-guid",
+						Protocol: "tcp",
+						Port:     8080,
+					},
+				}}
+
+				err := dataStore.Create(expectedPolicies)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = store.New(realDb, group, destination, policy, 2)
+				Expect(err).NotTo(HaveOccurred())
+				rows, err = realDb.Query(`select * from policies`)
+				Expect(err).NotTo(HaveOccurred())
+
+				mockDb.QueryReturns(rows, nil)
+			})
+
+			AfterEach(func() {
+				rows.Close()
+			})
+
+			It("should return a sensible error", func() {
+				store, err := store.New(mockDb, group, destination, policy, 2)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = store.ByGuids(
+					[]string{"does-not-matter"},
+					[]string{"does-not-matter"},
+				)
+				Expect(err).To(MatchError(ContainSubstring("listing all: sql: expected")))
+			})
+		})
+	})
+
 	Describe("Tags", func() {
 		BeforeEach(func() {
 			var err error
