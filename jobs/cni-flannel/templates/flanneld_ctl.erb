@@ -60,6 +60,7 @@ case $1 in
     exec /var/vcap/packages/flannel/bin/flanneld \
       --log_dir=${LOG_DIR} \
       --subnet-file="/var/vcap/data/flannel/subnet.env" \
+      --subnet-lease-renew-margin=1439 \
       --etcd-cafile=${ETCD_CERTS_DIR}/ca.crt \
       --etcd-certfile=${ETCD_CERTS_DIR}/client.crt \
       --etcd-keyfile=${ETCD_CERTS_DIR}/client.key \
