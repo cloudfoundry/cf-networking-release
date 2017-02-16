@@ -2,12 +2,12 @@
 
 ## Scenarios:
 
-Scenario #1: etcd data loss while flannel continues to run
-Scenario #2: flannel restarts on one cell after etcd data loss before lease is renewed
-Scenario #3: flannel restarts on one cell while etcd is down
-Scenario #4: new cell gets added after etcd comes back after data loss
-Scenario #5: new cell gets added while etcd is down
-Scenario #6: subnet lease expires while etcd is down
+- Scenario #1: etcd data loss while flannel continues to run
+- Scenario #2: flannel restarts on one cell after etcd data loss before lease is renewed
+- Scenario #3: flannel restarts on one cell while etcd is down
+- Scenario #4: new cell gets added after etcd comes back after data loss
+- Scenario #5: new cell gets added while etcd is down
+- Scenario #6: subnet lease expires while etcd is down
 
 Details:
 
