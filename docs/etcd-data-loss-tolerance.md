@@ -1,15 +1,48 @@
 # CF Networking tolerance to etcd data loss
 
-## Scenarios:
+CF Networking's batteries included CNI plugin uses flannel, which in turn
+stores all the state for which cell has a given subnet in etcd.
+
+The etcd-release README includes a section titled
+[Failed Deploys, Upgrades, Split-Brain Scenarios, etc](https://github.com/cloudfoundry-incubator/etcd-release#failed-deploys-upgrades-split-brain-scenarios-etc).
+
+This document describes how CF Networking is impacted when the etcd goes down
+and the data directory is deleted as a recovery mechanism, or as a preventative
+measure to avoid split-brains during deploys of Cloud Foundry in the first place.
+
+We have explored scenarios where etcd data loss causes cells to lose network connectivity.
 
 - Scenario #1: etcd data loss while flannel continues to run
 - Scenario #2: flannel restarts on one cell after etcd data loss before lease is renewed
 - Scenario #3: flannel restarts on one cell while etcd is down
 - Scenario #4: new cell gets added after etcd comes back after data loss
-- Scenario #5: new cell gets added while etcd is down
-- Scenario #6: subnet lease expires while etcd is down
+- Scenario #5: subnet lease expires while etcd is down
 
-Details:
+In the five scenarios listed above, scenario 1 and 5 do not appear to be an issue.
+
+Reducing flannel's subnet lease renewal interval to 1 minute significantly reduces the likelihood of
+some of scenarios occurring.
+[This is now the default for cf-networking-release](https://github.com/cloudfoundry-incubator/cf-networking-release/commit/e9a1b5facfc56c7413e5165b1c1639b1e9e8bf77).
+Scenarios 2 and 4 are mitigated by reducing the subnet lease renewal time, though there
+remains a 1 minute time window where if flannel does not renew its lease, loss
+of network connectivity could still occur.
+
+In particular, scenario 4 may be a concern when scaling up the number of Diego
+cells in an environment. If etcd's data directory is wiped as part of the deployment
+and new cells start coming online before existing cells can renew their lease, then
+this would cause problems.
+
+Scenario 3 remains an issue. We have a [story in our backlog](https://www.pivotaltracker.com/story/show/139995465) to address this.
+
+Flannel-watchdog is a process that watches for these issues and starts failing
+when it detects inconsistencies.  It also emits a metric called `flannel_watchdog.flanneldown`
+which has a value of `1.0` when flannel-watchdog detects an issue.
+If you get into a state where
+flannel-watchdog is failing on a given cell, the cell must be recreated. See this [known
+issue](known-issues.md#flannel-watchdog-failures).
+
+## Scenarios
+
 
 ### Scenario #1: etcd data loss while flannel continues to run
 
@@ -29,14 +62,16 @@ Yes.
 2. etcd data directory is wiped out
 3. etcd starts back up
 4. flannel continues to run on all cells
-5. ... flannel does not get a chance to renew lease (default renewal time is every 23 hours)
+5. ... flannel does not get a chance to renew lease (default renewal time is now every 1 minute)
 6. flannel restarts on one cell
 
 Do existing cells keep connectivity?
 
-Connectivity between the cell where flanneld restarted and other cells is lost.
-This results in a "flannel-watchdog" failure on that cell.
-Flannel acquires a new lease on a different subnet and then bridge does not match flannel device.
+There is up to a 1 minute time window between etcd coming back up and flannel renewing it's lease.
+
+If flannel restarts on a cell before it can renew it's lease, then connectivity between the cell 
+where flanneld restarted and other cells is lost. Flannel acquires a new lease on a different subnet 
+and then bridge does not match flannel device. This results in a "flannel-watchdog" failure on that cell.
 
 Other cells remain able to connect to each other.
 
@@ -51,8 +86,10 @@ Other cells remain able to connect to each other.
 
 Do existing cells keep connectivity?
 
-At step 3, flannel will not start because it cannot reach etcd.
-Then, after step 5, the behavior the same as scenario #2.
+Connectivity between the cell where flanneld restarted and other cells is lost. Flannel acquires a new lease on a different subnet 
+and then bridge does not match flannel device. This results in a "flannel-watchdog" failure on that cell.
+
+Other cells remain able to connect to each other.
 
 
 ### Scenario #4: new cell gets added after etcd comes back after data loss
@@ -65,38 +102,13 @@ Then, after step 5, the behavior the same as scenario #2.
 
 Do existing cells keep connectivity?
 
-Yes, as long as the new cell does not "steal" an existing subnet lease.
+If the new cell comes up before the existing cells can renew their subnet leases, then there is a chance
+that the new cell will steal an existing cell's subnet lease.
 
-Does the new cell have connectivity?
+In this case, the the existing cell will lose connectivity, and the new cell, will not be able to connect
+to other cells until they do renew leases, which should happen within 1 minute.
 
-No, the sublease information for existing cells is not in etcd until they renew, which they only do every 23 hours by default.
-
-So there are two issues:
-
-  1. The new cell may take a sublease that conflicts with one of the existing cells.
-  2. The new cell cannot reach the existing cells because it has no knowledge of what subnet they have.
-
-
-### Scenario #5: new cell gets added while etcd is down
-
-1. etcd stops
-2. etcd data directory is wiped out
-3. new cell is added (flannel fails to start on new cell)
-4. etcd starts back up
-5. flannel continues to run on all existing cells
-6. flannel starts up on new cell
-
-Do existing cells keep connectivity?
-
-Yes, as long as the new cell does not "steal" an existing subnet lease.
-
-Does the new cell have connectivity?
-
-At step 3, flannel will not start because it cannot reach etcd.
-Then, after step 6, the behavior the same as scenario #4.
-
-
-### Scenario #6: subnet lease expires while etcd is down
+### Scenario #5: subnet lease expires while etcd is down
 
 1. etcd stops
 2. etcd data directory is wiped out
@@ -107,50 +119,3 @@ Then, after step 6, the behavior the same as scenario #4.
 Do existing cells keep connectivity?
 
 Yes.
-
-## Mitigations
-
-Scenario #1: etcd data loss while flannel continues to run
-
-OK: - This was already fine.
-
-Scenario #2: flannel restarts on one cell after etcd data loss before lease is renewed
-
-MIT1: Reduce lease renewal time from 23 hours to 1 minute
-From our manual tests, during the 1 minute where etcd is being re-populated by cells renewing their leases,
-it appears that connectivity among all cells remains OK.
-
-Scenario #3: flannel restarts on one cell while etcd is down
-
-MIT2 covers a spike that allows flannel to use it's local state in the subnet.env file to renew it's lease when it starts up.
-MIT1 alone does not solve this, because flannel "forgets" it's lease when it restarts,
-and then it will not find it in etcd after etcd comes back up.
-
-Scenario #4: new cell gets added after etcd comes back after data loss
-
-MIT1: Reduce lease renewal time from 23 hours to 1 minute. As long as new cell doesn't come up existing cells renew their leases,
-this should be fine. That is much less likely with a 1 minute lease renewal time.
-
-Scenario #5: new cell gets added while etcd is down
-
-MIT1: This is the same as scenario 4.
-
-Scenario #6: subnet lease expires while etcd is down
-
-OK: This was already fine.
-
-### MIT1: Reduce lease renewal time (by increasing --subnet-lease-renew-margin`)
-
-This is now done as of [this commit](https://github.com/cloudfoundry-incubator/cf-networking-release/commit/e9a1b5facfc56c7413e5165b1c1639b1e9e8bf77).
-
-An existing config option exists that can allow us to have flannel renew it's lease more frequently.
-The lease expires after 24 hours.  This is hard-coded in flannel.  But the renew margin controls when the next renewal occurs
-(backdated from the expiration date). Setting `--subnet-lease-renew-margin` to `1439` (24 hours * 60 minutes - 1) effectively
-makes flannel renew it's lease every minute.
-
-### MIT2: Use subnet.env to restore state in etcd
-
-Make PR to flannel, or add something to our own start script that puts the information from subnet.env back in etcd
-before flannel starts up again.
-
-See spikes on [wip-read-from-subnet-file](https://github.com/coreos/flannel/compare/master...cf-container-networking:wip-read-from-subnet-file).

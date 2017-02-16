@@ -79,8 +79,8 @@ The safest way to upgrade from one to the other is to run:
   bosh deploy --recreate
   ```
 
-### Flannel watchdog fails on bosh-lite
-  Flannel on bosh-lite often gets into a state where the overlay network is not functioning.
+### Flannel watchdog failures
+  Flannel can get into a state where the overlay network is not functioning. See: [etcd data loss tolerance](etcd-data-loss-tolerance.md).
   A process called `flannel-watchdog` runs on the cells and checks for this error and will cause BOSH to consider the VM unhealthy.
   If you run `bosh vms` and see output similar to this:
   ```
@@ -120,5 +120,10 @@ The safest way to upgrade from one to the other is to run:
 
   Then flannel is in an unrecoverable state and the cell job needs to be recreated:
   ```
-  bosh recreate cell_z1
+  bosh recreate cell_z1/0
+  ```
+
+  If this failure happens during a deployment, the command should include the path to the new manifest:
+  ```
+  bosh -d new-manifest.yml recreate --force
   ```
