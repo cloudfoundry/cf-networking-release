@@ -31,6 +31,7 @@ For more information about deploying CF Networking, look at our docs for [BOSH-l
 - Operation
   - [Configuration](docs/configuration.md)
   - [Known Issues](docs/known-issues.md)
+  - [etcd Data Loss Tolerance](docs/etcd-data-loss-tolerance.md)
   - [Troubleshooting](docs/troubleshooting.md)
 
 ## Project links
