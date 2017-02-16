@@ -17,7 +17,7 @@ properties:
 
   cf_networking.garden_external_networker.start_port:
     description: "Starting value for allocating host ports to containers"
-    default: 60000
+    default: 61000
 
   cf_networking.garden_external_networker.total_ports:
     description: "Total number of host ports that may be allocated to containers"
