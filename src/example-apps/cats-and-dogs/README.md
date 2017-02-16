@@ -3,7 +3,7 @@
 A sample app to demonstrate communication (HTTP and UDP) between a frontend and a backend application over the container network.
 
 We're assuming that you've [deployed to BOSH lite](../../../docs/bosh-lite.md).
-If you've [deployed to AWS](../../../docs/aws.md) or another environment,
+If you've [deployed to AWS](../../../docs/iaas.md#deploy-to-aws) or another environment,
 substitute `bosh-lite.com` below with the domain name of your installation.
 
 To configure policies you must have the CF Networking

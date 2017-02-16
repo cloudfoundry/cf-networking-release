@@ -6,7 +6,7 @@ CF Networking integrates with [Garden-runC](https://github.com/cloudfoundry/gard
 [Diego](https://github.com/cloudfoundry/diego-release) deployment.  Additionally, a VM is deployed to act as a network Policy Server.
 A [JSON API](docs/API.md) and a [CF CLI plugin](docs/CLI.md) are available to control network policies.
 
-For more information about deploying CF Networking, look at our docs for [BOSH-lite](docs/bosh-lite.md) or [AWS](docs/aws.md).
+For more information about deploying CF Networking, look at our docs for [BOSH-lite](docs/bosh-lite.md) or [AWS](docs/iaas.md#deploy-to-aws).
 
 ## Downloads
 - [BOSH release](http://bosh.io/docs/release.html) available on
@@ -17,7 +17,7 @@ For more information about deploying CF Networking, look at our docs for [BOSH-l
 ## Documentation
 - [Architecture](docs/arch.md)
 - [Deploy to BOSH-lite](docs/bosh-lite.md)
-- [Deploy to AWS](docs/aws.md)
+- [Deploy to AWS](docs/iaas.md#deploy-to-aws)
 - Configuring Policies
   - [CLI](docs/CLI.md)
   - [API](docs/API.md)

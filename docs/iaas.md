@@ -1,7 +1,13 @@
+# Deploy to GCP
+
+Follow the instructions for deploying to AWS with some differences:
+ - You have a BOSH director on GCP that was created using [bbl](https://github.com/cloudfoundry/bosh-bootloader).
+ - When you `bosh-cli deploy` the CF Deployment opsfile you will use is: `$CF_DEPLOYMENT_REPO/opsfiles/gcp.yml`.
+
+
 # Deploy to AWS
 
 You have two options.  We recommend option #1 for new deployments.
-
 
 ## Option 1: Using `cf-deployment`
 
