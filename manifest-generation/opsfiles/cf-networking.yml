@@ -141,29 +141,17 @@
           user: nats
     - name: consul_agent
       release: consul
+      consumes:
+        consul: {from: consul_server}
       properties:
         consul:
           agent:
-            mode: client
-            domain: cf.internal
-            servers:
-              lan:
-              - 10.0.31.190
-              - 10.0.47.190
-              - 10.0.63.190
             services:
               policy-server:
                 name: policy-server
                 check:
                   interval: 5s
                   script: /bin/true
-          encrypt_keys:
-          - "((consul_encrypt_key))"
-          agent_cert: "((consul_agent.certificate))"
-          agent_key: "((consul_agent.private_key))"
-          ca_cert: "((consul_agent.ca))"
-          server_cert: "((consul_server.certificate))"
-          server_key: "((consul_server.private_key))"
     - name: metron_agent
       release: loggregator
       properties:
