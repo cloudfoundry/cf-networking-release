@@ -65,16 +65,15 @@ func parseArgs(allArgs []string) error {
 }
 
 func main() {
-	if err := mainWithError(); err != nil {
-		fmt.Fprintf(os.Stderr, "error: %s", err)
+	logger := lager.NewLogger("container-networking.garden-external-networker")
+	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.INFO))
+	if err := mainWithError(logger); err != nil {
+		logger.Error("error", err)
 		os.Exit(1)
 	}
 }
 
-func mainWithError() error {
-	logger := lager.NewLogger("container-networking.garden-external-networker")
-	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.INFO))
-
+func mainWithError(logger lager.Logger) error {
 	if len(os.Args) == 1 || os.Args[1] == "-h" || os.Args[1] == "--help" {
 		fmt.Fprintf(os.Stderr, "this is a plugin for Garden-runC.  Don't run it directly.")
 		os.Exit(1)
