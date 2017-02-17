@@ -9,14 +9,14 @@ import (
 )
 
 type Delegator struct {
-	DelegateAddStub        func(delegatePlugin string, netconf []byte) (*types.Result, error)
+	DelegateAddStub        func(delegatePlugin string, netconf []byte) (types.Result, error)
 	delegateAddMutex       sync.RWMutex
 	delegateAddArgsForCall []struct {
 		delegatePlugin string
 		netconf        []byte
 	}
 	delegateAddReturns struct {
-		result1 *types.Result
+		result1 types.Result
 		result2 error
 	}
 	DelegateDelStub        func(delegatePlugin string, netconf []byte) error
@@ -32,7 +32,7 @@ type Delegator struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *Delegator) DelegateAdd(delegatePlugin string, netconf []byte) (*types.Result, error) {
+func (fake *Delegator) DelegateAdd(delegatePlugin string, netconf []byte) (types.Result, error) {
 	var netconfCopy []byte
 	if netconf != nil {
 		netconfCopy = make([]byte, len(netconf))
@@ -47,9 +47,8 @@ func (fake *Delegator) DelegateAdd(delegatePlugin string, netconf []byte) (*type
 	fake.delegateAddMutex.Unlock()
 	if fake.DelegateAddStub != nil {
 		return fake.DelegateAddStub(delegatePlugin, netconf)
-	} else {
-		return fake.delegateAddReturns.result1, fake.delegateAddReturns.result2
 	}
+	return fake.delegateAddReturns.result1, fake.delegateAddReturns.result2
 }
 
 func (fake *Delegator) DelegateAddCallCount() int {
@@ -64,10 +63,10 @@ func (fake *Delegator) DelegateAddArgsForCall(i int) (string, []byte) {
 	return fake.delegateAddArgsForCall[i].delegatePlugin, fake.delegateAddArgsForCall[i].netconf
 }
 
-func (fake *Delegator) DelegateAddReturns(result1 *types.Result, result2 error) {
+func (fake *Delegator) DelegateAddReturns(result1 types.Result, result2 error) {
 	fake.DelegateAddStub = nil
 	fake.delegateAddReturns = struct {
-		result1 *types.Result
+		result1 types.Result
 		result2 error
 	}{result1, result2}
 }
@@ -87,9 +86,8 @@ func (fake *Delegator) DelegateDel(delegatePlugin string, netconf []byte) error 
 	fake.delegateDelMutex.Unlock()
 	if fake.DelegateDelStub != nil {
 		return fake.DelegateDelStub(delegatePlugin, netconf)
-	} else {
-		return fake.delegateDelReturns.result1
 	}
+	return fake.delegateDelReturns.result1
 }
 
 func (fake *Delegator) DelegateDelCallCount() int {

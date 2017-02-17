@@ -7,13 +7,13 @@ import (
 
 //go:generate counterfeiter -o ../fakes/delegator.go --fake-name Delegator . Delegator
 type Delegator interface {
-	DelegateAdd(delegatePlugin string, netconf []byte) (*types.Result, error)
+	DelegateAdd(delegatePlugin string, netconf []byte) (types.Result, error)
 	DelegateDel(delegatePlugin string, netconf []byte) error
 }
 
 type delegator struct{}
 
-func (*delegator) DelegateAdd(delegatePlugin string, netconf []byte) (*types.Result, error) {
+func (*delegator) DelegateAdd(delegatePlugin string, netconf []byte) (types.Result, error) {
 	return invoke.DelegateAdd(delegatePlugin, netconf)
 }
 

@@ -13,7 +13,7 @@ import (
 
 	lib_fakes "lib/fakes"
 
-	"github.com/containernetworking/cni/pkg/types"
+	"github.com/containernetworking/cni/pkg/types/020"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
@@ -45,8 +45,8 @@ var _ = Describe("Manager", func() {
 		netInProvider = &fakes.NetInProvider{}
 		netOutProvider = &fakes.NetOutProvider{}
 
-		cniController.UpReturns(&types.Result{
-			IP4: &types.IPConfig{
+		cniController.UpReturns(&types020.Result{
+			IP4: &types020.IPConfig{
 				IP: net.IPNet{
 					IP:   net.ParseIP("169.254.1.2"),
 					Mask: net.IPv4Mask(255, 255, 255, 0),

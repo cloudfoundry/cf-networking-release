@@ -65,9 +65,8 @@ func (fake *NetOutProvider) Initialize(logger lager.Logger, containerHandle stri
 	fake.initializeMutex.Unlock()
 	if fake.InitializeStub != nil {
 		return fake.InitializeStub(logger, containerHandle, containerIP, overlayNetwork)
-	} else {
-		return fake.initializeReturns.result1
 	}
+	return fake.initializeReturns.result1
 }
 
 func (fake *NetOutProvider) InitializeCallCount() int {
@@ -98,9 +97,8 @@ func (fake *NetOutProvider) Cleanup(containerHandle string) error {
 	fake.cleanupMutex.Unlock()
 	if fake.CleanupStub != nil {
 		return fake.CleanupStub(containerHandle)
-	} else {
-		return fake.cleanupReturns.result1
 	}
+	return fake.cleanupReturns.result1
 }
 
 func (fake *NetOutProvider) CleanupCallCount() int {
@@ -133,9 +131,8 @@ func (fake *NetOutProvider) InsertRule(containerHandle string, rule garden.NetOu
 	fake.insertRuleMutex.Unlock()
 	if fake.InsertRuleStub != nil {
 		return fake.InsertRuleStub(containerHandle, rule, containerIP)
-	} else {
-		return fake.insertRuleReturns.result1
 	}
+	return fake.insertRuleReturns.result1
 }
 
 func (fake *NetOutProvider) InsertRuleCallCount() int {
@@ -173,9 +170,8 @@ func (fake *NetOutProvider) BulkInsertRules(containerHandle string, rules []gard
 	fake.bulkInsertRulesMutex.Unlock()
 	if fake.BulkInsertRulesStub != nil {
 		return fake.BulkInsertRulesStub(containerHandle, rules, containerIP)
-	} else {
-		return fake.bulkInsertRulesReturns.result1
 	}
+	return fake.bulkInsertRulesReturns.result1
 }
 
 func (fake *NetOutProvider) BulkInsertRulesCallCount() int {

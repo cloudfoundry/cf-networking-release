@@ -9,14 +9,33 @@ import (
 )
 
 type CNILibrary struct {
-	AddNetworkStub        func(net *libcni.NetworkConfig, rt *libcni.RuntimeConf) (*types.Result, error)
+	AddNetworkListStub        func(net *libcni.NetworkConfigList, rt *libcni.RuntimeConf) (types.Result, error)
+	addNetworkListMutex       sync.RWMutex
+	addNetworkListArgsForCall []struct {
+		net *libcni.NetworkConfigList
+		rt  *libcni.RuntimeConf
+	}
+	addNetworkListReturns struct {
+		result1 types.Result
+		result2 error
+	}
+	DelNetworkListStub        func(net *libcni.NetworkConfigList, rt *libcni.RuntimeConf) error
+	delNetworkListMutex       sync.RWMutex
+	delNetworkListArgsForCall []struct {
+		net *libcni.NetworkConfigList
+		rt  *libcni.RuntimeConf
+	}
+	delNetworkListReturns struct {
+		result1 error
+	}
+	AddNetworkStub        func(net *libcni.NetworkConfig, rt *libcni.RuntimeConf) (types.Result, error)
 	addNetworkMutex       sync.RWMutex
 	addNetworkArgsForCall []struct {
 		net *libcni.NetworkConfig
 		rt  *libcni.RuntimeConf
 	}
 	addNetworkReturns struct {
-		result1 *types.Result
+		result1 types.Result
 		result2 error
 	}
 	DelNetworkStub        func(net *libcni.NetworkConfig, rt *libcni.RuntimeConf) error
@@ -32,7 +51,74 @@ type CNILibrary struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *CNILibrary) AddNetwork(net *libcni.NetworkConfig, rt *libcni.RuntimeConf) (*types.Result, error) {
+func (fake *CNILibrary) AddNetworkList(net *libcni.NetworkConfigList, rt *libcni.RuntimeConf) (types.Result, error) {
+	fake.addNetworkListMutex.Lock()
+	fake.addNetworkListArgsForCall = append(fake.addNetworkListArgsForCall, struct {
+		net *libcni.NetworkConfigList
+		rt  *libcni.RuntimeConf
+	}{net, rt})
+	fake.recordInvocation("AddNetworkList", []interface{}{net, rt})
+	fake.addNetworkListMutex.Unlock()
+	if fake.AddNetworkListStub != nil {
+		return fake.AddNetworkListStub(net, rt)
+	}
+	return fake.addNetworkListReturns.result1, fake.addNetworkListReturns.result2
+}
+
+func (fake *CNILibrary) AddNetworkListCallCount() int {
+	fake.addNetworkListMutex.RLock()
+	defer fake.addNetworkListMutex.RUnlock()
+	return len(fake.addNetworkListArgsForCall)
+}
+
+func (fake *CNILibrary) AddNetworkListArgsForCall(i int) (*libcni.NetworkConfigList, *libcni.RuntimeConf) {
+	fake.addNetworkListMutex.RLock()
+	defer fake.addNetworkListMutex.RUnlock()
+	return fake.addNetworkListArgsForCall[i].net, fake.addNetworkListArgsForCall[i].rt
+}
+
+func (fake *CNILibrary) AddNetworkListReturns(result1 types.Result, result2 error) {
+	fake.AddNetworkListStub = nil
+	fake.addNetworkListReturns = struct {
+		result1 types.Result
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *CNILibrary) DelNetworkList(net *libcni.NetworkConfigList, rt *libcni.RuntimeConf) error {
+	fake.delNetworkListMutex.Lock()
+	fake.delNetworkListArgsForCall = append(fake.delNetworkListArgsForCall, struct {
+		net *libcni.NetworkConfigList
+		rt  *libcni.RuntimeConf
+	}{net, rt})
+	fake.recordInvocation("DelNetworkList", []interface{}{net, rt})
+	fake.delNetworkListMutex.Unlock()
+	if fake.DelNetworkListStub != nil {
+		return fake.DelNetworkListStub(net, rt)
+	}
+	return fake.delNetworkListReturns.result1
+}
+
+func (fake *CNILibrary) DelNetworkListCallCount() int {
+	fake.delNetworkListMutex.RLock()
+	defer fake.delNetworkListMutex.RUnlock()
+	return len(fake.delNetworkListArgsForCall)
+}
+
+func (fake *CNILibrary) DelNetworkListArgsForCall(i int) (*libcni.NetworkConfigList, *libcni.RuntimeConf) {
+	fake.delNetworkListMutex.RLock()
+	defer fake.delNetworkListMutex.RUnlock()
+	return fake.delNetworkListArgsForCall[i].net, fake.delNetworkListArgsForCall[i].rt
+}
+
+func (fake *CNILibrary) DelNetworkListReturns(result1 error) {
+	fake.DelNetworkListStub = nil
+	fake.delNetworkListReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *CNILibrary) AddNetwork(net *libcni.NetworkConfig, rt *libcni.RuntimeConf) (types.Result, error) {
 	fake.addNetworkMutex.Lock()
 	fake.addNetworkArgsForCall = append(fake.addNetworkArgsForCall, struct {
 		net *libcni.NetworkConfig
@@ -42,9 +128,8 @@ func (fake *CNILibrary) AddNetwork(net *libcni.NetworkConfig, rt *libcni.Runtime
 	fake.addNetworkMutex.Unlock()
 	if fake.AddNetworkStub != nil {
 		return fake.AddNetworkStub(net, rt)
-	} else {
-		return fake.addNetworkReturns.result1, fake.addNetworkReturns.result2
 	}
+	return fake.addNetworkReturns.result1, fake.addNetworkReturns.result2
 }
 
 func (fake *CNILibrary) AddNetworkCallCount() int {
@@ -59,10 +144,10 @@ func (fake *CNILibrary) AddNetworkArgsForCall(i int) (*libcni.NetworkConfig, *li
 	return fake.addNetworkArgsForCall[i].net, fake.addNetworkArgsForCall[i].rt
 }
 
-func (fake *CNILibrary) AddNetworkReturns(result1 *types.Result, result2 error) {
+func (fake *CNILibrary) AddNetworkReturns(result1 types.Result, result2 error) {
 	fake.AddNetworkStub = nil
 	fake.addNetworkReturns = struct {
-		result1 *types.Result
+		result1 types.Result
 		result2 error
 	}{result1, result2}
 }
@@ -77,9 +162,8 @@ func (fake *CNILibrary) DelNetwork(net *libcni.NetworkConfig, rt *libcni.Runtime
 	fake.delNetworkMutex.Unlock()
 	if fake.DelNetworkStub != nil {
 		return fake.DelNetworkStub(net, rt)
-	} else {
-		return fake.delNetworkReturns.result1
 	}
+	return fake.delNetworkReturns.result1
 }
 
 func (fake *CNILibrary) DelNetworkCallCount() int {
@@ -104,6 +188,10 @@ func (fake *CNILibrary) DelNetworkReturns(result1 error) {
 func (fake *CNILibrary) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.addNetworkListMutex.RLock()
+	defer fake.addNetworkListMutex.RUnlock()
+	fake.delNetworkListMutex.RLock()
+	defer fake.delNetworkListMutex.RUnlock()
 	fake.addNetworkMutex.RLock()
 	defer fake.addNetworkMutex.RUnlock()
 	fake.delNetworkMutex.RLock()

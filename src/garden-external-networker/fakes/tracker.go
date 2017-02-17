@@ -48,9 +48,8 @@ func (fake *Tracker) AcquireOne(pool *port_allocator.Pool, handle string) (int, 
 	fake.acquireOneMutex.Unlock()
 	if fake.AcquireOneStub != nil {
 		return fake.AcquireOneStub(pool, handle)
-	} else {
-		return fake.acquireOneReturns.result1, fake.acquireOneReturns.result2
 	}
+	return fake.acquireOneReturns.result1, fake.acquireOneReturns.result2
 }
 
 func (fake *Tracker) AcquireOneCallCount() int {
@@ -83,9 +82,8 @@ func (fake *Tracker) ReleaseAll(pool *port_allocator.Pool, handle string) error 
 	fake.releaseAllMutex.Unlock()
 	if fake.ReleaseAllStub != nil {
 		return fake.ReleaseAllStub(pool, handle)
-	} else {
-		return fake.releaseAllReturns.result1
 	}
+	return fake.releaseAllReturns.result1
 }
 
 func (fake *Tracker) ReleaseAllCallCount() int {
@@ -116,9 +114,8 @@ func (fake *Tracker) InRange(port int) bool {
 	fake.inRangeMutex.Unlock()
 	if fake.InRangeStub != nil {
 		return fake.InRangeStub(port)
-	} else {
-		return fake.inRangeReturns.result1
 	}
+	return fake.inRangeReturns.result1
 }
 
 func (fake *Tracker) InRangeCallCount() int {

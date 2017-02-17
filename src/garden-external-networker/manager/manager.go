@@ -9,11 +9,12 @@ import (
 	"code.cloudfoundry.org/garden"
 	"code.cloudfoundry.org/lager"
 	"github.com/containernetworking/cni/pkg/types"
+	"github.com/containernetworking/cni/pkg/types/020"
 )
 
 //go:generate counterfeiter -o ../fakes/cniController.go --fake-name CNIController . cniController
 type cniController interface {
-	Up(namespacePath, handle string, properties map[string]string) (*types.Result, error)
+	Up(namespacePath, handle string, properties map[string]string) (types.Result, error)
 	Down(namespacePath, handle string) error
 }
 
@@ -90,7 +91,13 @@ func (m *Manager) Up(containerHandle string, inputs UpInputs) (*UpOutputs, error
 	if result == nil {
 		return nil, errors.New("cni up failed: no ip allocated")
 	}
-	containerIP := result.IP4.IP.IP
+
+	result020, err := result.GetAsVersion("0.2.0")
+	if err != nil {
+		return nil, fmt.Errorf("cni plugin result version incompatible: %s", err) // not tested
+	}
+
+	containerIP := result020.(*types020.Result).IP4.IP.IP
 
 	if err := m.NetOutProvider.Initialize(m.Logger, containerHandle, containerIP, m.OverlayNetwork); err != nil {
 		return nil, fmt.Errorf("initialize net out: %s", err)

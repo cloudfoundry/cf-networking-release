@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/containernetworking/cni/pkg/types"
+	"github.com/containernetworking/cni/pkg/types/020"
 )
 
 func parseEnviron(pairs []string) (map[string]string, error) {
@@ -67,8 +67,8 @@ func main() {
 		log.Fatalf("unable to write log file: %s", err)
 	}
 
-	result := types.Result{
-		IP4: &types.IPConfig{
+	result := &types020.Result{
+		IP4: &types020.IPConfig{
 			IP: net.IPNet{
 				IP:   net.ParseIP("169.254.1.2"),
 				Mask: net.IPv4Mask(255, 255, 255, 0),

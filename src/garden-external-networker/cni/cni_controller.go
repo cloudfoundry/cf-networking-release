@@ -21,8 +21,8 @@ type CNIController struct {
 	NetworkConfigs []*libcni.NetworkConfig
 }
 
-func (c *CNIController) Up(namespacePath, handle string, properties map[string]string) (*types.Result, error) {
-	var result *types.Result
+func (c *CNIController) Up(namespacePath, handle string, properties map[string]string) (types.Result, error) {
+	var result types.Result
 	var err error
 
 	for i, networkConfig := range c.NetworkConfigs {

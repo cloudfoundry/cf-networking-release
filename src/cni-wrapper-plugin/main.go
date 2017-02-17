@@ -12,6 +12,7 @@ import (
 	"sync"
 
 	"github.com/containernetworking/cni/pkg/skel"
+	"github.com/containernetworking/cni/pkg/types/020"
 	"github.com/containernetworking/cni/pkg/version"
 	"github.com/coreos/go-iptables/iptables"
 )
@@ -29,10 +30,15 @@ func cmdAdd(args *skel.CmdArgs) error {
 
 	result, err := pluginController.DelegateAdd(n.Delegate)
 	if err != nil {
-		return fmt.Errorf("delegate call: %v", err)
+		return fmt.Errorf("delegate call: %s", err)
 	}
 
-	containerIP := result.IP4.IP.IP.String()
+	result020, err := result.GetAsVersion("0.2.0")
+	if err != nil {
+		return fmt.Errorf("cni delegate plugin result version incompatible: %s", err) // not tested
+	}
+
+	containerIP := result020.(*types020.Result).IP4.IP.IP.String()
 	err = pluginController.AddIPMasq(containerIP, n.OverlayNetwork)
 	if err != nil {
 		return fmt.Errorf("error setting up default ip masq rule: %s", err)

@@ -55,7 +55,7 @@ func getDelegateParams(netconf map[string]interface{}) (string, []byte, error) {
 	return delegateType, netconfBytes, nil
 }
 
-func (c *PluginController) DelegateAdd(netconf map[string]interface{}) (*types.Result, error) {
+func (c *PluginController) DelegateAdd(netconf map[string]interface{}) (types.Result, error) {
 	delegateType, netconfBytes, err := getDelegateParams(netconf)
 	if err != nil {
 		return nil, err

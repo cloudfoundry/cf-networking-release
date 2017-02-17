@@ -10,6 +10,7 @@ import (
 
 	"github.com/containernetworking/cni/libcni"
 	"github.com/containernetworking/cni/pkg/types"
+	"github.com/containernetworking/cni/pkg/types/020"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
@@ -22,7 +23,7 @@ var _ = Describe("CniController", func() {
 		controller     cni.CNIController
 		fakeCNILibrary *fakes.CNILibrary
 		logger         *lagertest.TestLogger
-		expectedResult *types.Result
+		expectedResult *types020.Result
 		testConfig     *libcni.NetworkConfig
 	)
 
@@ -51,7 +52,7 @@ var _ = Describe("CniController", func() {
 					"type": "some-plugin"
 				}`),
 		}
-		expectedResult = &types.Result{}
+		expectedResult = &types020.Result{}
 		fakeCNILibrary.AddNetworkReturns(expectedResult, nil)
 		fakeCNILibrary.DelNetworkReturns(nil)
 

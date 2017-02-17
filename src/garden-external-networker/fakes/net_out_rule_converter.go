@@ -44,9 +44,8 @@ func (fake *NetOutRuleConverter) Convert(rule garden.NetOutRule, containerIP str
 	fake.convertMutex.Unlock()
 	if fake.ConvertStub != nil {
 		return fake.ConvertStub(rule, containerIP, logChainName)
-	} else {
-		return fake.convertReturns.result1
 	}
+	return fake.convertReturns.result1
 }
 
 func (fake *NetOutRuleConverter) ConvertCallCount() int {
@@ -84,9 +83,8 @@ func (fake *NetOutRuleConverter) BulkConvert(rules []garden.NetOutRule, containe
 	fake.bulkConvertMutex.Unlock()
 	if fake.BulkConvertStub != nil {
 		return fake.BulkConvertStub(rules, containerIP, logChainName)
-	} else {
-		return fake.bulkConvertReturns.result1
 	}
+	return fake.bulkConvertReturns.result1
 }
 
 func (fake *NetOutRuleConverter) BulkConvertCallCount() int {

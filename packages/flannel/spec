@@ -14,11 +14,14 @@ files:
   - github.com/containernetworking/cni/pkg/ns/*.go # gosub
   - github.com/containernetworking/cni/pkg/skel/*.go # gosub
   - github.com/containernetworking/cni/pkg/types/*.go # gosub
+  - github.com/containernetworking/cni/pkg/types/020/*.go # gosub
+  - github.com/containernetworking/cni/pkg/types/current/*.go # gosub
   - github.com/containernetworking/cni/pkg/utils/*.go # gosub
   - github.com/containernetworking/cni/pkg/utils/hwaddr/*.go # gosub
   - github.com/containernetworking/cni/pkg/version/*.go # gosub
   - github.com/containernetworking/cni/plugins/ipam/host-local/*.go # gosub
   - github.com/containernetworking/cni/plugins/ipam/host-local/backend/*.go # gosub
+  - github.com/containernetworking/cni/plugins/ipam/host-local/backend/allocator/*.go # gosub
   - github.com/containernetworking/cni/plugins/ipam/host-local/backend/disk/*.go # gosub
   - github.com/containernetworking/cni/plugins/main/bridge/*.go # gosub
   - github.com/containernetworking/cni/plugins/meta/flannel/*.go # gosub

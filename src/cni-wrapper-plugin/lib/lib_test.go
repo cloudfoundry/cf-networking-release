@@ -7,6 +7,7 @@ import (
 	"net"
 
 	"github.com/containernetworking/cni/pkg/types"
+	"github.com/containernetworking/cni/pkg/types/020"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -98,13 +99,13 @@ var _ = Describe("DelegateAdd", func() {
 		input            map[string]interface{}
 		pluginController *lib.PluginController
 		fakeDelegator    *fakes.Delegator
-		expectedResult   *types.Result
+		expectedResult   types.Result
 	)
 
 	BeforeEach(func() {
 		_, expectedIPNet, _ := net.ParseCIDR("1.2.3.4/32")
-		expectedResult = &types.Result{
-			IP4: &types.IPConfig{
+		expectedResult = &types020.Result{
+			IP4: &types020.IPConfig{
 				IP: *expectedIPNet,
 			},
 		}

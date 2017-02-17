@@ -8,7 +8,7 @@ import (
 )
 
 type CNIController struct {
-	UpStub        func(namespacePath, handle string, properties map[string]string) (*types.Result, error)
+	UpStub        func(namespacePath, handle string, properties map[string]string) (types.Result, error)
 	upMutex       sync.RWMutex
 	upArgsForCall []struct {
 		namespacePath string
@@ -16,7 +16,7 @@ type CNIController struct {
 		properties    map[string]string
 	}
 	upReturns struct {
-		result1 *types.Result
+		result1 types.Result
 		result2 error
 	}
 	DownStub        func(namespacePath, handle string) error
@@ -32,7 +32,7 @@ type CNIController struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *CNIController) Up(namespacePath string, handle string, properties map[string]string) (*types.Result, error) {
+func (fake *CNIController) Up(namespacePath string, handle string, properties map[string]string) (types.Result, error) {
 	fake.upMutex.Lock()
 	fake.upArgsForCall = append(fake.upArgsForCall, struct {
 		namespacePath string
@@ -43,9 +43,8 @@ func (fake *CNIController) Up(namespacePath string, handle string, properties ma
 	fake.upMutex.Unlock()
 	if fake.UpStub != nil {
 		return fake.UpStub(namespacePath, handle, properties)
-	} else {
-		return fake.upReturns.result1, fake.upReturns.result2
 	}
+	return fake.upReturns.result1, fake.upReturns.result2
 }
 
 func (fake *CNIController) UpCallCount() int {
@@ -60,10 +59,10 @@ func (fake *CNIController) UpArgsForCall(i int) (string, string, map[string]stri
 	return fake.upArgsForCall[i].namespacePath, fake.upArgsForCall[i].handle, fake.upArgsForCall[i].properties
 }
 
-func (fake *CNIController) UpReturns(result1 *types.Result, result2 error) {
+func (fake *CNIController) UpReturns(result1 types.Result, result2 error) {
 	fake.UpStub = nil
 	fake.upReturns = struct {
-		result1 *types.Result
+		result1 types.Result
 		result2 error
 	}{result1, result2}
 }
@@ -78,9 +77,8 @@ func (fake *CNIController) Down(namespacePath string, handle string) error {
 	fake.downMutex.Unlock()
 	if fake.DownStub != nil {
 		return fake.DownStub(namespacePath, handle)
-	} else {
-		return fake.downReturns.result1
 	}
+	return fake.downReturns.result1
 }
 
 func (fake *CNIController) DownCallCount() int {
