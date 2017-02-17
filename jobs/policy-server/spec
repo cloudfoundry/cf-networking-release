@@ -6,6 +6,7 @@ templates:
   policy-server_as_vcap.erb: bin/policy-server_as_vcap
   policy-server.json.erb: config/policy-server.json
   ca.crt.erb: config/certs/ca.crt
+  uaa_ca.crt.erb: config/certs/uaa_ca.crt
   server.crt.erb: config/certs/server.crt
   server.key.erb: config/certs/server.key
 
@@ -45,6 +46,9 @@ properties:
   cf_networking.policy_server.uaa_client:
     description: "UAA client name"
     default: network-policy
+
+  cf_networking.policy_server.uaa_ca:
+    description: "Trusted CA for UAA server"
 
   cf_networking.policy_server.uaa_client_secret:
     description: "UAA client secret"

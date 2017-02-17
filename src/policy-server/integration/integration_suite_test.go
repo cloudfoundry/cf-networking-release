@@ -187,6 +187,7 @@ func DefaultTestConfig(dbConfig db.Config, metronAddress string) config.Config {
 		CACertFile:            "fixtures/netman-ca.crt",
 		ServerCertFile:        "fixtures/server.crt",
 		ServerKeyFile:         "fixtures/server.key",
+		SkipSSLValidation:     true,
 		UAAClient:             "test",
 		UAAClientSecret:       "test",
 		UAAURL:                mockUAAServer.URL,

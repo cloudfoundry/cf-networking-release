@@ -111,7 +111,7 @@
         cf_networking:
           policy_server:
             uaa_client_secret: "((uaa_clients_network_policy_secret))"
-            skip_ssl_validation: true
+            uaa_ca: "((uaa_ssl.ca))"
             ca_cert: "((network_policy_server.ca))"
             server_cert: "((network_policy_server.certificate))"
             server_key: "((network_policy_server.private_key))"

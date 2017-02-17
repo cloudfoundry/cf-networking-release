@@ -16,6 +16,7 @@ import (
 	"lib/marshal"
 	"lib/metrics"
 	"lib/mutualtls"
+	"lib/nonmutualtls"
 	"lib/poller"
 
 	"policy-server/cc_client"
@@ -56,11 +57,20 @@ func main() {
 	reconfigurableSink := initLoggerSink(logger, conf.LogLevel)
 	logger.RegisterSink(reconfigurableSink)
 
+	var tlsConfig *tls.Config
+	if conf.SkipSSLValidation {
+		tlsConfig = &tls.Config{
+			InsecureSkipVerify: conf.SkipSSLValidation,
+		}
+	} else {
+		tlsConfig, err = nonmutualtls.NewClientTLSConfig(conf.UAACA)
+		if err != nil {
+			log.Fatalf("error creating tls config: %s", err)
+		}
+	}
 	httpClient := &http.Client{
 		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				InsecureSkipVerify: conf.SkipSSLValidation,
-			},
+			TLSClientConfig: tlsConfig,
 		},
 	}
 
@@ -301,7 +311,7 @@ func main() {
 	}
 	internalAddr := fmt.Sprintf("%s:%d", conf.ListenHost, conf.InternalListenPort)
 
-	tlsConfig, err := mutualtls.NewServerTLSConfig(conf.ServerCertFile, conf.ServerKeyFile, conf.CACertFile)
+	tlsConfig, err = mutualtls.NewServerTLSConfig(conf.ServerCertFile, conf.ServerKeyFile, conf.CACertFile)
 	if err != nil {
 		log.Fatalf("mutual tls config: %s", err)
 	}
