@@ -36,6 +36,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 	const inputTemplate = `
 {
   "name": "cni-wrapper",
+	"cniVersion": "0.3.0",
   "type": "wrapper",
   "datastore": "%s",
   "iptables_lock_file": "%s",
@@ -177,7 +178,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 			session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(0))
-			Expect(session.Out.Contents()).To(MatchJSON(`{ "ip4": { "ip": "1.2.3.4/32" }, "dns":{} }`))
+			Expect(session.Out.Contents()).To(MatchJSON(`{ "ips": [{ "version": "4", "interface": -1, "address": "1.2.3.4/32" }], "dns":{} }`))
 		})
 
 		It("passes the correct stdin to the delegate plugin", func() {
@@ -196,7 +197,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 			session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(0))
-			Expect(session.Out.Contents()).To(MatchJSON(`{ "ip4": { "ip": "1.2.3.4/32" }, "dns":{} }`))
+			Expect(session.Out.Contents()).To(MatchJSON(`{ "ips": [{ "version": "4", "interface": -1, "address": "1.2.3.4/32" }], "dns":{} }`))
 			Expect(iptablesNATRules()).To(ContainSubstring("-A POSTROUTING -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j MASQUERADE"))
 		})
 
@@ -242,6 +243,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 				inputTemplate := `
 {
   "name": "cni-wrapper",
+	"cniVersion": "0.3.0",
   "type": "wrapper",
   "datastore": "%s",
 	"iptables_lock_file": "%s",

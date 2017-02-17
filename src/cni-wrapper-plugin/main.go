@@ -13,6 +13,7 @@ import (
 
 	"github.com/containernetworking/cni/pkg/skel"
 	"github.com/containernetworking/cni/pkg/types/020"
+	"github.com/containernetworking/cni/pkg/types/current"
 	"github.com/containernetworking/cni/pkg/version"
 	"github.com/coreos/go-iptables/iptables"
 )
@@ -70,7 +71,11 @@ func cmdAdd(args *skel.CmdArgs) error {
 		return storeErr
 	}
 
-	return result.Print()
+	result030, err := current.NewResultFromResult(result020)
+	if err != nil {
+		return fmt.Errorf("error converting result to 0.3.0: %s", err) // not tested
+	}
+	return result030.Print()
 }
 
 func cmdDel(args *skel.CmdArgs) error {
@@ -133,7 +138,7 @@ func newPluginController(iptablesLockFile string) (*lib.PluginController, error)
 }
 
 func main() {
-	supportedVersions := []string{"0.1.0", "0.2.0"}
+	supportedVersions := []string{"0.3.0"}
 
 	skel.PluginMain(cmdAdd, cmdDel, version.PluginSupports(supportedVersions...))
 }
