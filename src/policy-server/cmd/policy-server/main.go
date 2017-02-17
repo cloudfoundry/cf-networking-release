@@ -31,7 +31,6 @@ import (
 	"code.cloudfoundry.org/lager"
 	"github.com/cloudfoundry/dropsonde"
 	"github.com/jmoiron/sqlx"
-	"github.com/pivotal-cf-experimental/warrant"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
 	"github.com/tedsuo/ifrit/http_server"
@@ -74,18 +73,12 @@ func main() {
 		},
 	}
 
-	warrantClient := warrant.New(warrant.Config{
-		Host:          conf.UAAURL,
-		SkipVerifySSL: conf.SkipSSLValidation,
-	})
-
 	uaaClient := &uaa_client.Client{
-		BaseURL:       conf.UAAURL,
-		Name:          conf.UAAClient,
-		Secret:        conf.UAAClientSecret,
-		HTTPClient:    httpClient,
-		WarrantClient: warrantClient.Clients,
-		Logger:        logger,
+		BaseURL:    conf.UAAURL,
+		Name:       conf.UAAClient,
+		Secret:     conf.UAAClientSecret,
+		HTTPClient: httpClient,
+		Logger:     logger,
 	}
 	whoamiHandler := &handlers.WhoAmIHandler{
 		Logger:    logger.Session("external"),

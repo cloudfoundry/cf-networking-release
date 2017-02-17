@@ -20,17 +20,11 @@ func (r BadUaaResponse) Error() string {
 }
 
 type Client struct {
-	BaseURL       string
-	Name          string
-	Secret        string
-	HTTPClient    httpClient
-	WarrantClient warrantClient
-	Logger        lager.Logger
-}
-
-//go:generate counterfeiter -o fakes/warrant_client.go --fake-name WarrantClient . warrantClient
-type warrantClient interface {
-	GetToken(clientName, clientSecret string) (string, error)
+	BaseURL    string
+	Name       string
+	Secret     string
+	HTTPClient httpClient
+	Logger     lager.Logger
 }
 
 //go:generate counterfeiter -o fakes/http_client.go --fake-name HTTPClient . httpClient
@@ -45,11 +39,23 @@ type CheckTokenResponse struct {
 }
 
 func (c *Client) GetToken() (string, error) {
-	token, err := c.WarrantClient.GetToken(c.Name, c.Secret)
-	if err != nil {
-		return "", fmt.Errorf("get token failed: %s", err)
+	reqURL := fmt.Sprintf("%s/oauth/token", c.BaseURL)
+	bodyString := fmt.Sprintf("client_id=%s&grant_type=client_credentials", c.Name)
+	request, err := http.NewRequest("POST", reqURL, strings.NewReader(bodyString))
+	request.SetBasicAuth(c.Name, c.Secret)
+	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	c.Logger.Debug("get-token", lager.Data{"URL": request.URL})
+
+	type getTokenResponse struct {
+		AccessToken string `json:"access_token"`
 	}
-	return token, nil
+	response := &getTokenResponse{}
+	err = c.makeRequest(request, response)
+	if err != nil {
+		return "", err
+	}
+	return response.AccessToken, nil
 }
 
 func (c *Client) CheckToken(token string) (CheckTokenResponse, error) {
@@ -61,15 +67,24 @@ func (c *Client) CheckToken(token string) (CheckTokenResponse, error) {
 
 	c.Logger.Debug("check-token", lager.Data{"URL": request.URL})
 
+	response := &CheckTokenResponse{}
+	err = c.makeRequest(request, response)
+	if err != nil {
+		return CheckTokenResponse{}, err
+	}
+	return *response, nil
+}
+
+func (c *Client) makeRequest(request *http.Request, response interface{}) error {
 	resp, err := c.HTTPClient.Do(request)
 	if err != nil {
-		return CheckTokenResponse{}, fmt.Errorf("http client: %s", err)
+		return fmt.Errorf("http client: %s", err)
 	}
 	defer resp.Body.Close()
 
 	respBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return CheckTokenResponse{}, fmt.Errorf("read body: %s", err)
+		return fmt.Errorf("read body: %s", err)
 	}
 
 	if resp.StatusCode != 200 {
@@ -77,13 +92,12 @@ func (c *Client) CheckToken(token string) (CheckTokenResponse, error) {
 			StatusCode:      resp.StatusCode,
 			UaaResponseBody: string(respBytes),
 		}
-		return CheckTokenResponse{}, err
+		return err
 	}
 
-	responseStruct := CheckTokenResponse{}
-	err = json.Unmarshal(respBytes, &responseStruct)
+	err = json.Unmarshal(respBytes, &response)
 	if err != nil {
-		return CheckTokenResponse{}, fmt.Errorf("unmarshal json: %s", err)
+		return fmt.Errorf("unmarshal json: %s", err)
 	}
-	return responseStruct, nil
+	return nil
 }
