@@ -75,8 +75,7 @@ func main() {
 
 func mainWithError(logger lager.Logger) error {
 	if len(os.Args) == 1 || os.Args[1] == "-h" || os.Args[1] == "--help" {
-		fmt.Fprintf(os.Stderr, "this is a plugin for Garden-runC.  Don't run it directly.")
-		os.Exit(1)
+		return fmt.Errorf("this is a plugin for Garden-runC.  Don't run it directly.")
 	}
 
 	err := parseArgs(os.Args)

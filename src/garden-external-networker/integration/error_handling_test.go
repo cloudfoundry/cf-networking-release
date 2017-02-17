@@ -10,6 +10,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 )
 
@@ -64,6 +65,19 @@ var _ = Describe("Garden External Networker errors", func() {
 	})
 
 	Context("when inputs are invalid", func() {
+		Context("when there's a generic error in main", func() {
+			It("prints the error to stderr with the lager logger", func() {
+				command.Args = []string{
+					paths.PathToAdapter,
+					"invalidArg",
+				}
+				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+
+				Eventually(session).Should(gexec.Exit(1))
+				Expect(session.Err).To(gbytes.Say(".*timestamp.*source.*container-networking.garden-external-networker.*message.*container-networking.garden-external-networker.error.*log_level.*2.*data.*error.*parse args: unexpected extra args:.*invalidArg.*}.*}"))
+			})
+		})
 		Context("when stdin is not valid JSON", func() {
 			It("should exit status 1 and print an error to stderr", func() {
 				command.Stdin = strings.NewReader("{{{bad")
