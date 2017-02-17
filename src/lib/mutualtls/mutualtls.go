@@ -9,7 +9,7 @@ import (
 )
 
 func NewServerTLSConfig(certFile, keyFile, caCertFile string) (*tls.Config, error) {
-	c, err := newTLSConfig(certFile, keyFile, caCertFile)
+	c, err := newTLSConfig(certFile, keyFile)
 	if err != nil {
 		return nil, err
 	}
@@ -24,7 +24,7 @@ func NewServerTLSConfig(certFile, keyFile, caCertFile string) (*tls.Config, erro
 }
 
 func NewClientTLSConfig(certFile, keyFile, caCertFile string) (*tls.Config, error) {
-	c, err := newTLSConfig(certFile, keyFile, caCertFile)
+	c, err := newTLSConfig(certFile, keyFile)
 	if err != nil {
 		return nil, err
 	}
@@ -35,7 +35,7 @@ func NewClientTLSConfig(certFile, keyFile, caCertFile string) (*tls.Config, erro
 	return c, nil
 }
 
-func newTLSConfig(certFile, keyFile, caCertFile string) (*tls.Config, error) {
+func newTLSConfig(certFile, keyFile string) (*tls.Config, error) {
 	keyPair, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
 		return nil, fmt.Errorf("unable to load cert or key: %s", err)
