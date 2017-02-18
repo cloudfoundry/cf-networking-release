@@ -74,7 +74,7 @@ func main() {
 	}
 
 	uaaClient := &uaa_client.Client{
-		BaseURL:    conf.UAAURL,
+		BaseURL:    fmt.Sprintf("%s:%d", conf.UAAURL, conf.UAAPort),
 		Name:       conf.UAAClient,
 		Secret:     conf.UAAClientSecret,
 		HTTPClient: httpClient,

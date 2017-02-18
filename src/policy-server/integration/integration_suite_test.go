@@ -11,11 +11,13 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"netmon/integration/fakes"
 	"os"
 	"os/exec"
 	"policy-server/cc_client/fixtures"
 	"policy-server/config"
+	"strconv"
 	"strings"
 
 	. "github.com/onsi/ginkgo"
@@ -178,6 +180,8 @@ func VerifyTCPConnection(address string) error {
 }
 
 func DefaultTestConfig(dbConfig db.Config, metronAddress string) config.Config {
+	UAAHost, UAAPort := SplitUAAHostPort()
+
 	config := config.Config{
 		ListenHost:            "127.0.0.1",
 		ListenPort:            10001 + GinkgoParallelNode(),
@@ -190,7 +194,8 @@ func DefaultTestConfig(dbConfig db.Config, metronAddress string) config.Config {
 		SkipSSLValidation:     true,
 		UAAClient:             "test",
 		UAAClientSecret:       "test",
-		UAAURL:                mockUAAServer.URL,
+		UAAURL:                "http://" + UAAHost,
+		UAAPort:               UAAPort,
 		CCURL:                 mockCCServer.URL,
 		TagLength:             1,
 		Database:              dbConfig,
@@ -199,6 +204,16 @@ func DefaultTestConfig(dbConfig db.Config, metronAddress string) config.Config {
 		CCAppRequestChunkSize: 100,
 	}
 	return config
+}
+
+func SplitUAAHostPort() (string, int) {
+	url, err := url.Parse(mockUAAServer.URL)
+	Expect(err).NotTo(HaveOccurred())
+	UAAHost, UAAPortStr, err := net.SplitHostPort(url.Host)
+	Expect(err).NotTo(HaveOccurred())
+	UAAPort, err := strconv.Atoi(UAAPortStr)
+	Expect(err).NotTo(HaveOccurred())
+	return UAAHost, UAAPort
 }
 
 func WriteConfigFile(policyServerConfig config.Config) string {

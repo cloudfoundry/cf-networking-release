@@ -56,7 +56,11 @@ properties:
 
   cf_networking.policy_server.uaa_url:
     description: "Address of UAA server"
-    default: https://uaa.service.cf.internal:8443
+    default: https://uaa.service.cf.internal
+
+  cf_networking.policy_server.uaa_port:
+    description: "Port of the UAA server"
+    default: 8443
 
   cf_networking.policy_server.cc_url:
     description: "Address of Cloud Controller server"

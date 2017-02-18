@@ -121,6 +121,7 @@ cf_networking_overrides:
           type: postgres
         uaa_client_secret: network-policy-secret
         uaa_ca: (( config_from_cf.uaa.ca_cert ))
+        uaa_port: (( config_from_cf.uaa.tls_port ))
         ca_cert: |
           -----BEGIN CERTIFICATE-----
           MIIE5jCCAs6gAwIBAgIBATANBgkqhkiG9w0BAQsFADATMREwDwYDVQQDEwhuZXRt

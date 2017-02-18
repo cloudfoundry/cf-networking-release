@@ -38,6 +38,7 @@ var _ = Describe("Config", func() {
 					"uaa_client": "some-uaa-client",
 					"uaa_client_secret": "some-uaa-client-secret",
 					"uaa_url": "http://uaa.example.com",
+					"uaa_port": 8888,
 					"uaa_ca": "some/uaa/ca/file",
 					"cc_url": "http://ccapi.example.com",
 					"skip_ssl_validation": true,
@@ -63,6 +64,7 @@ var _ = Describe("Config", func() {
 				Expect(c.UAAClient).To(Equal("some-uaa-client"))
 				Expect(c.UAAClientSecret).To(Equal("some-uaa-client-secret"))
 				Expect(c.UAAURL).To(Equal("http://uaa.example.com"))
+				Expect(c.UAAPort).To(Equal(8888))
 				Expect(c.UAACA).To(Equal("some/uaa/ca/file"))
 				Expect(c.CCURL).To(Equal("http://ccapi.example.com"))
 				Expect(c.SkipSSLValidation).To(Equal(true))
@@ -118,6 +120,7 @@ var _ = Describe("Config", func() {
 					"uaa_client":           "some-uaa-client",
 					"uaa_client_secret":    "some-uaa-client-secret",
 					"uaa_url":              "http://uaa.example.com",
+					"uaa_port":             5555,
 					"cc_url":               "http://ccapi.example.com",
 					"skip_ssl_validation":  true,
 					"database": map[string]interface{}{
@@ -145,6 +148,7 @@ var _ = Describe("Config", func() {
 			Entry("missing uaa client", "uaa_client", "UAAClient: zero value"),
 			Entry("missing uaa client secret", "uaa_client_secret", "UAAClientSecret: zero value"),
 			Entry("missing uaa url", "uaa_url", "UAAURL: zero value"),
+			Entry("missing uaa port", "uaa_port", "UAAPort: zero value"),
 			Entry("missing cc url", "cc_url", "CCURL: zero value"),
 			Entry("missing tag length", "tag_length", "TagLength: zero value"),
 			Entry("missing metron address", "metron_address", "MetronAddress: zero value"),
@@ -166,6 +170,7 @@ var _ = Describe("Config", func() {
 					"uaa_client":           "some-uaa-client",
 					"uaa_client_secret":    "some-uaa-client-secret",
 					"uaa_url":              "http://uaa.example.com",
+					"uaa_port":             7777,
 					"cc_url":               "http://ccapi.example.com",
 					"skip_ssl_validation":  true,
 					"database": map[string]interface{}{
