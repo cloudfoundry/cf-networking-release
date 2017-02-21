@@ -70,7 +70,6 @@ properties:
     description: "Skip verifying ssl certs when speaking to UAA or Cloud Controller"
     default: false
 
-
   cf_networking.policy_server.database.type:
     description: "Type of database: postgres or mysql"
     default: postgres
@@ -98,8 +97,6 @@ properties:
   cf_networking.policy_server.database.name:
     description: "Name of logical database to use"
     default: ""
-
-
 
   cf_networking.policy_server.tag_length:
     description: "Length in bytes of the packet tags to generate for policy sources and destinations. Must be greater than 0 and less than 4."

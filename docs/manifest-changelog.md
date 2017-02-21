@@ -2,6 +2,19 @@
 
 See [AWS](iaas.md#deploy-to-aws) deployment docs for examples
 
+### 0.17.0
+Policy server requires a CA cert for UAA, **manifest must be generated with `diego-release` v1.7.0+**
+
+The following needs to be added to your `cf-networking` stub **even if you are skipping ssl validation of UAA**:
+
+```diff
+cf_networking_overrides:
+  properties:
+    cf_networking:
+      policy_server:
++      uaa_ca: (( config_from_cf.uaa.ca_cert ))
+```
+
 ### 0.15.0
 
 **Many breaking changes!**
