@@ -70,12 +70,10 @@ var _ = Describe("how the container network performs at scale", func() {
 			appIPs := getAppIPs(appRegistry)
 			sample := sampleIPs(appIPs, sampleSize)
 
-			for _, appProxy := range appsProxy {
-				By(fmt.Sprintf("checking that the connection fails sampling %d out of %d IPs on %d ports", len(sample), len(appIPs), len(ports)))
-				runWithTimeout("check connection failures", Timeout_Check, func() {
-					assertConnectionFails(appProxy, sample, ports, proxyInstances)
-				})
-			}
+			By(fmt.Sprintf("checking that the connection fails sampling %d out of %d IPs on %d ports", len(sample), len(appIPs), len(ports)))
+			runWithTimeout("check connection failures", Timeout_Check, func() {
+				assertConnectionFails(appsProxy, sample, ports, proxyInstances)
+			})
 
 			By(fmt.Sprintf("creating %d policies", len(appsProxy)*len(appsTest)*len(ports)))
 			for _, appProxy := range appsProxy {
@@ -86,12 +84,10 @@ var _ = Describe("how the container network performs at scale", func() {
 			time.Sleep(Policy_Update_Wait)
 
 			sample = sampleIPs(appIPs, sampleSize)
-			for _, appProxy := range appsProxy {
-				By(fmt.Sprintf("checking that the connection succeeds sampling %d out of %d IPs on %d ports to proxy", len(sample), len(appIPs), len(ports), appProxy))
-				runWithTimeout("check connection success", Timeout_Check, func() {
-					assertConnectionSucceeds(appProxy, sample, ports, proxyInstances)
-				})
-			}
+			By(fmt.Sprintf("checking that the connection succeeds sampling %d out of %d IPs on %d ports to proxy", len(sample), len(appIPs), len(ports)))
+			runWithTimeout("check connection success", Timeout_Check, func() {
+				assertConnectionSucceeds(appsProxy, sample, ports, proxyInstances)
+			})
 
 			for _, appProxy := range appsProxy {
 				By(fmt.Sprintf("dumping stats to commit to stats repo for %s", appProxy))
@@ -110,12 +106,10 @@ var _ = Describe("how the container network performs at scale", func() {
 			time.Sleep(Policy_Update_Wait)
 
 			sample = sampleIPs(appIPs, sampleSize)
-			for _, appProxy := range appsProxy {
-				By(fmt.Sprintf("checking that the connection succeeds sampling %d out of %d IPs on %d ports", len(sample), len(appIPs), len(ports)))
-				runWithTimeout("check connection failures, again", Timeout_Check, func() {
-					assertConnectionFails(appProxy, sample, ports, proxyInstances)
-				})
-			}
+			By(fmt.Sprintf("checking that the connection succeeds sampling %d out of %d IPs on %d ports", len(sample), len(appIPs), len(ports)))
+			runWithTimeout("check connection failures, again", Timeout_Check, func() {
+				assertConnectionFails(appsProxy, sample, ports, proxyInstances)
+			})
 
 			close(done)
 		}, 30*60 /* <-- overall spec timeout in seconds */)
@@ -339,24 +333,43 @@ func sampleIPs(population []string, sampleSize int) []string {
 	return sample
 }
 
-func assertConnectionSucceeds(sourceApp string, destApps []string, ports []int, nProxies int) {
+type SrcDstPair struct {
+	Source string
+	Dest   string
+}
+
+func assertConnectionSucceeds(sourceApps, destApps []string, ports []int, nProxies int) {
 	parallelRunner := &testsupport.ParallelRunner{
 		NumWorkers: 50 * nProxies,
 	}
-	parallelRunner.RunOnSliceStrings(destApps, func(appIP string) {
+	pairs := []interface{}{}
+	for _, s := range sourceApps {
+		for _, d := range destApps {
+			pairs = append(pairs, SrcDstPair{Source: s, Dest: d})
+		}
+	}
+	parallelRunner.RunOnSlice(pairs, func(obj interface{}) {
+		pair := obj.(SrcDstPair)
 		for _, port := range ports {
-			assertSingleConnection(appIP, port, sourceApp, true)
+			assertSingleConnection(pair.Dest, port, pair.Source, true)
 		}
 	})
 }
 
-func assertConnectionFails(sourceApp string, destApps []string, ports []int, nProxies int) {
+func assertConnectionFails(sourceApps, destApps []string, ports []int, nProxies int) {
 	parallelRunner := &testsupport.ParallelRunner{
 		NumWorkers: 50 * nProxies,
 	}
-	parallelRunner.RunOnSliceStrings(destApps, func(appIP string) {
+	pairs := []interface{}{}
+	for _, s := range sourceApps {
+		for _, d := range destApps {
+			pairs = append(pairs, SrcDstPair{Source: s, Dest: d})
+		}
+	}
+	parallelRunner.RunOnSlice(pairs, func(obj interface{}) {
+		pair := obj.(SrcDstPair)
 		for _, port := range ports {
-			assertSingleConnection(appIP, port, sourceApp, false)
+			assertSingleConnection(pair.Dest, port, pair.Source, false)
 		}
 	})
 }
