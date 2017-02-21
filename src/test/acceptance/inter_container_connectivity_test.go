@@ -26,14 +26,15 @@ var ports []int
 var _ = Describe("connectivity between containers on the overlay network", func() {
 	Describe("networking policy", func() {
 		var (
-			appProxy       string
-			appRegistry    string
-			appsTest       []string
-			appInstances   int
-			applications   int
-			proxyInstances int
-			prefix         string
-			orgName        string
+			appsProxy         []string
+			appRegistry       string
+			appsTest          []string
+			appInstances      int
+			applications      int
+			proxyApplications int
+			proxyInstances    int
+			prefix            string
+			orgName           string
 		)
 
 		BeforeEach(func() {
@@ -49,9 +50,12 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 
 			appInstances = testConfig.AppInstances
 			applications = testConfig.Applications
+			proxyApplications = testConfig.ProxyApplications
 			proxyInstances = testConfig.ProxyInstances
 
-			appProxy = prefix + "proxy"
+			for i := 0; i < proxyApplications; i++ {
+				appsProxy = append(appsProxy, fmt.Sprintf(prefix+"proxy-%d", i))
+			}
 			appRegistry = prefix + "registry"
 			for i := 0; i < applications; i++ {
 				appsTest = append(appsTest, fmt.Sprintf(prefix+"tick-%d", i))
@@ -64,7 +68,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 		})
 
 		AfterEach(func() {
-			appReport(appProxy, Timeout_Short)
+			appsReport(appsProxy, Timeout_Short)
 			appReport(appRegistry, Timeout_Short)
 			appsReport(appsTest, Timeout_Short)
 			Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
@@ -86,30 +90,42 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 
 			By("checking that the connection fails")
 			runWithTimeout("check connection failures", 5*time.Minute, func() {
-				assertConnectionFails(appProxy, appIPs, ports, proxyInstances)
+				for _, appProxy := range appsProxy {
+					assertConnectionFails(appProxy, appIPs, ports, proxyInstances)
+				}
 			})
 
 			By("creating policies")
-			createAllPolicies(appProxy, appsTest, ports)
+			for _, appProxy := range appsProxy {
+				createAllPolicies(appProxy, appsTest, ports)
+			}
 
 			// we should wait for minimum (pollInterval * 2)
 			By("waiting for policies to be created on cells")
 			time.Sleep(10 * time.Second)
 
-			By(fmt.Sprintf("checking that %s can reach %s", appProxy, appsTest))
-			runWithTimeout("check connection success", 5*time.Minute, func() {
-				assertConnectionSucceeds(appProxy, appIPs, ports, proxyInstances)
-			})
+			for _, appProxy := range appsProxy {
+				By(fmt.Sprintf("checking that %s can reach %s", appProxy, appsTest))
+				runWithTimeout("check connection success", 5*time.Minute, func() {
+					assertConnectionSucceeds(appProxy, appIPs, ports, proxyInstances)
+				})
+			}
 
-			dumpStats(appProxy, config.AppsDomain)
+			for _, appProxy := range appsProxy {
+				dumpStats(appProxy, config.AppsDomain)
+			}
 
 			By("deleting policies")
-			deleteAllPolicies(appProxy, appsTest, ports)
+			for _, appProxy := range appsProxy {
+				deleteAllPolicies(appProxy, appsTest, ports)
+			}
 
-			By(fmt.Sprintf("checking that %s can NOT reach %s", appProxy, appsTest))
-			runWithTimeout("check connection failures, again", 5*time.Minute, func() {
-				assertConnectionFails(appProxy, appIPs, ports, proxyInstances)
-			})
+			for _, appProxy := range appsProxy {
+				By(fmt.Sprintf("checking that %s can NOT reach %s", appProxy, appsTest))
+				runWithTimeout("check connection failures, again", 5*time.Minute, func() {
+					assertConnectionFails(appProxy, appIPs, ports, proxyInstances)
+				})
+			}
 
 			By("checking that the registry updates when apps are scaled")
 			scaleApps(appsTest, 1 /* instances */)

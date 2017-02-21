@@ -43,15 +43,20 @@ var _ = BeforeSuite(func() {
 	err = json.Unmarshal(configBytes, &pushConfig)
 	Expect(err).NotTo(HaveOccurred())
 
-	//TODO see if this property is necessary.
-	pushConfig.ProxyInstances = 1
-
 	if pushConfig.Applications <= 0 {
 		Fail("Applications count needs to be greater than 0")
 	}
 
 	if pushConfig.AppInstances <= 0 {
 		Fail("AppInstances count needs to be greater than 0")
+	}
+
+	if pushConfig.ProxyApplications <= 0 {
+		Fail("ProxyApplications count needs to be greater than 0")
+	}
+
+	if pushConfig.ProxyInstances <= 0 {
+		Fail("ProxyInstances count needs to be greater than 0")
 	}
 
 	Expect(cf.Cf("api", "--skip-ssl-validation", config.ApiEndpoint).Wait(Timeout_Short)).To(gexec.Exit(0))

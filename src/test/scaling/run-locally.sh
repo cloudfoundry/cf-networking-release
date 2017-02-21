@@ -18,6 +18,8 @@ echo '
   "use_http": true,
   "test_app_instances": 2,
   "test_applications": 4,
+  "proxy_applications": 1,
+  "proxy_instances": 1,
   "concurrency": 2,
   "prefix":"scale-"
 }

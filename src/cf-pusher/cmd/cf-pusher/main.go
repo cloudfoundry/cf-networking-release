@@ -23,8 +23,8 @@ type ScaleGroup struct {
 	TickApps       []string `json:"tick-apps"`
 	TickInstances  int      `json:"tick-instances"`
 	Registry       string   `json:"registry"`
-	ProxyApp       string   `json:"proxy-app"`
-	ProxyInstances int      `json:"proxy-instances"`
+	ProxyApps      []string `json:"proxy-apps"`
+	ProxyInstances int      `json:"proxy-instances"` // TODO This doesn't actually do anything, we always assume it's 1
 }
 
 func main() {
@@ -64,13 +64,18 @@ func main() {
 		tickApps = append(tickApps, fmt.Sprintf("%s%s-%d", prefix, "tick", i))
 	}
 
+	var proxyApps []string
+	for i := 0; i < config.ProxyApplications; i++ {
+		proxyApps = append(proxyApps, fmt.Sprintf("%s%s-%d", prefix, "proxy", i))
+	}
+
 	scaleGroup := ScaleGroup{
 		Org:            prefix + "org",
 		Space:          prefix + "space",
 		TickApps:       tickApps,
 		TickInstances:  config.AppInstances,
 		Registry:       prefix + "registry",
-		ProxyApp:       prefix + "proxy",
+		ProxyApps:      proxyApps,
 		ProxyInstances: config.ProxyInstances,
 	}
 
@@ -95,16 +100,11 @@ func main() {
 		RoutePorts:       -1,
 	}
 
-	proxyApp := cf_command.Application{
-		Name:      scaleGroup.ProxyApp,
-		Directory: filepath.Join(appsDir, "proxy"),
-	}
-
 	registryApp := cf_command.Application{
 		Name:      scaleGroup.Registry,
 		Directory: filepath.Join(appsDir, "registry"),
 	}
-	appsToPush := []cf_command.Application{proxyApp, registryApp}
+	appsToPush := []cf_command.Application{registryApp}
 
 	tickManifest := models.Manifest{
 		Applications: []models.Application{{
@@ -129,6 +129,14 @@ func main() {
 			Manifest:  tickManifest,
 		}
 		appsToPush = append(appsToPush, t)
+	}
+
+	for _, proxyApp := range scaleGroup.ProxyApps {
+		p := cf_command.Application{
+			Name:      proxyApp,
+			Directory: filepath.Join(appsDir, "proxy"),
+		}
+		appsToPush = append(appsToPush, p)
 	}
 
 	appChecker := cf_command.AppChecker{
@@ -175,12 +183,15 @@ func main() {
 
 	// declare what apps we expect
 	expectedApps := map[string]int{
-		prefix + "proxy":    1,
 		prefix + "registry": 1,
 	}
 
 	for i := 0; i < config.Applications; i++ {
 		expectedApps[fmt.Sprintf("%stick-%d", prefix, i)] = config.AppInstances
+	}
+
+	for i := 0; i < config.Applications; i++ {
+		expectedApps[fmt.Sprintf("%sproxy-%d", prefix, i)] = config.ProxyInstances
 	}
 
 	expectedASG := testsupport.BuildASG(config.ASGSize)

@@ -33,21 +33,25 @@ var ports []int
 var _ = Describe("how the container network performs at scale", func() {
 	Describe("networking policy", func() {
 		var (
-			appProxy       string
-			appRegistry    string
-			appsTest       []string
-			appInstances   int
-			applications   int
-			proxyInstances int
-			sampleSize     int
+			appsProxy         []string
+			appRegistry       string
+			appsTest          []string
+			appInstances      int
+			applications      int
+			proxyApplications int
+			proxyInstances    int
+			sampleSize        int
 		)
 
 		BeforeEach(func() {
 			appInstances = pushConfig.AppInstances
 			applications = pushConfig.Applications
+			proxyApplications = pushConfig.ProxyApplications
 			proxyInstances = pushConfig.ProxyInstances
 			sampleSize = pushConfig.SampleSize
-			appProxy = pushConfig.Prefix + "proxy"
+			for i := 0; i < proxyApplications; i++ {
+				appsProxy = append(appsProxy, fmt.Sprintf(pushConfig.Prefix+"proxy-%d", i))
+			}
 			appRegistry = pushConfig.Prefix + "registry"
 			for i := 0; i < applications; i++ {
 				appsTest = append(appsTest, fmt.Sprintf(pushConfig.Prefix+"tick-%d", i))
@@ -66,40 +70,52 @@ var _ = Describe("how the container network performs at scale", func() {
 			appIPs := getAppIPs(appRegistry)
 			sample := sampleIPs(appIPs, sampleSize)
 
-			By(fmt.Sprintf("checking that the connection fails sampling %d out of %d IPs on %d ports", len(sample), len(appIPs), len(ports)))
-			runWithTimeout("check connection failures", Timeout_Check, func() {
-				assertConnectionFails(appProxy, sample, ports, proxyInstances)
-			})
+			for _, appProxy := range appsProxy {
+				By(fmt.Sprintf("checking that the connection fails sampling %d out of %d IPs on %d ports", len(sample), len(appIPs), len(ports)))
+				runWithTimeout("check connection failures", Timeout_Check, func() {
+					assertConnectionFails(appProxy, sample, ports, proxyInstances)
+				})
+			}
 
-			By(fmt.Sprintf("creating %d policies", len(appsTest)*len(ports)))
-			doAllPolicies("create", appProxy, appsTest, ports)
+			By(fmt.Sprintf("creating %d policies", len(appsProxy)*len(appsTest)*len(ports)))
+			for _, appProxy := range appsProxy {
+				doAllPolicies("create", appProxy, appsTest, ports)
+			}
 
 			By(fmt.Sprintf("waiting %s for policies to be updated on cells", Policy_Update_Wait))
 			time.Sleep(Policy_Update_Wait)
 
 			sample = sampleIPs(appIPs, sampleSize)
-			By(fmt.Sprintf("checking that the connection succeeds sampling %d out of %d IPs on %d ports", len(sample), len(appIPs), len(ports)))
-			runWithTimeout("check connection success", Timeout_Check, func() {
-				assertConnectionSucceeds(appProxy, sample, ports, proxyInstances)
-			})
+			for _, appProxy := range appsProxy {
+				By(fmt.Sprintf("checking that the connection succeeds sampling %d out of %d IPs on %d ports to proxy", len(sample), len(appIPs), len(ports), appProxy))
+				runWithTimeout("check connection success", Timeout_Check, func() {
+					assertConnectionSucceeds(appProxy, sample, ports, proxyInstances)
+				})
+			}
 
-			By("dumping stats to commit to stats repo")
-			dumpStats(appProxy, config.AppsDomain)
+			for _, appProxy := range appsProxy {
+				By(fmt.Sprintf("dumping stats to commit to stats repo for %s", appProxy))
+				dumpStats(appProxy, config.AppsDomain)
+			}
 
 			By("sleeping for 30 seconds while policies exist")
 			time.Sleep(30 * time.Second)
 
-			By(fmt.Sprintf("deleting %d policies", len(appsTest)*len(ports)))
-			doAllPolicies("delete", appProxy, appsTest, ports)
+			By(fmt.Sprintf("deleting %d policies", len(appsProxy)*len(appsTest)*len(ports)))
+			for _, appProxy := range appsProxy {
+				doAllPolicies("delete", appProxy, appsTest, ports)
+			}
 
 			By(fmt.Sprintf("waiting %s for policies to be updated on cells", Policy_Update_Wait))
 			time.Sleep(Policy_Update_Wait)
 
 			sample = sampleIPs(appIPs, sampleSize)
-			By(fmt.Sprintf("checking that the connection succeeds sampling %d out of %d IPs on %d ports", len(sample), len(appIPs), len(ports)))
-			runWithTimeout("check connection failures, again", Timeout_Check, func() {
-				assertConnectionFails(appProxy, sample, ports, proxyInstances)
-			})
+			for _, appProxy := range appsProxy {
+				By(fmt.Sprintf("checking that the connection succeeds sampling %d out of %d IPs on %d ports", len(sample), len(appIPs), len(ports)))
+				runWithTimeout("check connection failures, again", Timeout_Check, func() {
+					assertConnectionFails(appProxy, sample, ports, proxyInstances)
+				})
+			}
 
 			close(done)
 		}, 30*60 /* <-- overall spec timeout in seconds */)

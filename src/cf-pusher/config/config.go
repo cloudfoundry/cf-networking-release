@@ -10,6 +10,7 @@ type Config struct {
 	Applications      int    `json:"test_applications"`
 	AppInstances      int    `json:"test_app_instances"`
 	ExtraListenPorts  int    `json:"extra_listen_ports"`
+	ProxyApplications int    `json:"proxy_applications"`
 	ProxyInstances    int    `json:"proxy_instances"`
 	Concurrency       int    `json:"concurrency"`
 	Prefix            string `json:"prefix"`

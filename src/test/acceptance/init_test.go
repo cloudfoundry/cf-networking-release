@@ -56,15 +56,20 @@ func TestAcceptance(t *testing.T) {
 		err = json.Unmarshal(configBytes, &testConfig)
 		Expect(err).NotTo(HaveOccurred())
 
-		//TODO see if this property is necessary.
-		testConfig.ProxyInstances = 1
-
 		if testConfig.Applications <= 0 {
 			Fail("Applications count needs to be greater than 0")
 		}
 
 		if testConfig.AppInstances <= 0 {
 			Fail("AppInstances count needs to be greater than 0")
+		}
+
+		if testConfig.ProxyApplications <= 0 {
+			Fail("ProxyApplications count needs to be greater than 0")
+		}
+
+		if testConfig.ProxyInstances <= 0 {
+			Fail("ProxyInstances count needs to be greater than 0")
 		}
 
 		Expect(cf.Cf("api", "--skip-ssl-validation", config.ApiEndpoint).Wait(Timeout_Short)).To(gexec.Exit(0))
