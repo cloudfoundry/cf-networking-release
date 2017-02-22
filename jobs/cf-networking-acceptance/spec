@@ -38,6 +38,14 @@ properties:
     description: "prefix applied to all apps, orgs and spaces created by test"
     default: netman-errand-
 
+  cf_networking.acceptance.proxy_applications:
+    description: "number of proxy applications to use in acceptance tests"
+    default: 1
+
+  cf_networking.acceptance.proxy_instances:
+    description: "number of proxy applications to use in acceptance tests"
+    default: 1
+
   cf_networking.acceptance.num_apps:
     description: "number of applications to use in acceptance tests"
     default: 2
