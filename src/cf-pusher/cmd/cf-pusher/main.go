@@ -190,7 +190,7 @@ func main() {
 		expectedApps[fmt.Sprintf("%stick-%d", prefix, i)] = config.AppInstances
 	}
 
-	for i := 0; i < config.Applications; i++ {
+	for i := 0; i < config.ProxyApplications; i++ {
 		expectedApps[fmt.Sprintf("%sproxy-%d", prefix, i)] = config.ProxyInstances
 	}
 
