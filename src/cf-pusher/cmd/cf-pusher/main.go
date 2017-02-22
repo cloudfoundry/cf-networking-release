@@ -24,7 +24,7 @@ type ScaleGroup struct {
 	TickInstances  int      `json:"tick-instances"`
 	Registry       string   `json:"registry"`
 	ProxyApps      []string `json:"proxy-apps"`
-	ProxyInstances int      `json:"proxy-instances"` // TODO This doesn't actually do anything, we always assume it's 1
+	ProxyInstances int      `json:"proxy-instances"`
 }
 
 func main() {
@@ -135,6 +135,18 @@ func main() {
 		p := cf_command.Application{
 			Name:      proxyApp,
 			Directory: filepath.Join(appsDir, "proxy"),
+			Manifest: models.Manifest{
+				Applications: []models.Application{{
+					Name:      "proxy",
+					Memory:    "32M",
+					DiskQuota: "32M",
+					BuildPack: "go_buildpack",
+					Instances: scaleGroup.ProxyInstances,
+					Env: models.ProxyEnvironment{
+						GoPackageName: "example-apps/proxy",
+					},
+				}},
+			},
 		}
 		appsToPush = append(appsToPush, p)
 	}

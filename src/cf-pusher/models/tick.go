@@ -19,3 +19,7 @@ type TickEnvironment struct {
 	StartPort       int    `yaml:"START_PORT,omitempty"`
 	ListenPorts     int    `yaml:"LISTEN_PORTS,omitempty"`
 }
+
+type ProxyEnvironment struct {
+	GoPackageName string `yaml:"GOPACKAGENAME,omitempty"`
+}
