@@ -74,9 +74,7 @@ var _ = Describe("how the container network performs at scale", func() {
 				})
 
 				By(fmt.Sprintf("%s creating %d policies", ts(), len(proxyApps)*len(tickApps)*len(ports)))
-				for _, proxyApp := range proxyApps {
-					doAllPolicies("create", proxyApp, tickApps, ports)
-				}
+				doAllPolicies("create", proxyApps, tickApps, ports)
 
 				By(fmt.Sprintf("%s waiting %s for policies to be updated on cells", ts(), Policy_Update_Wait))
 				time.Sleep(Policy_Update_Wait)
@@ -91,9 +89,7 @@ var _ = Describe("how the container network performs at scale", func() {
 				time.Sleep(30 * time.Second)
 
 				By(fmt.Sprintf("%s deleting %d policies", ts(), len(proxyApps)*len(tickApps)*len(ports)))
-				for _, proxyApp := range proxyApps {
-					doAllPolicies("delete", proxyApp, tickApps, ports)
-				}
+				doAllPolicies("delete", proxyApps, tickApps, ports)
 
 				By(fmt.Sprintf("%s waiting %s for policies to be updated on cells", ts(), Policy_Update_Wait))
 				time.Sleep(Policy_Update_Wait)
@@ -171,9 +167,9 @@ func getToken() string {
 	return strings.TrimSpace(strings.TrimPrefix(rawOutput, "bearer "))
 }
 
-func getGuids(sourceAppName string, dstAppNames []string) (string, []string) {
+func getGuids(srcAppNames, dstAppNames []string) ([]string, []string) {
+	srcGuids := []string{}
 	dstGuids := []string{}
-	sourceGuid := ""
 	token := getToken()
 	appsClient := rainmaker.NewApplicationsService(rainmaker.Config{Host: "http://" + config.ApiEndpoint})
 
@@ -182,9 +178,11 @@ func getGuids(sourceAppName string, dstAppNames []string) (string, []string) {
 
 	for {
 		for _, app := range appsList.Applications {
-			if app.Name == sourceAppName {
-				sourceGuid = app.GUID
-				continue
+			for _, proxyAppName := range srcAppNames {
+				if app.Name == proxyAppName {
+					srcGuids = append(srcGuids, app.GUID)
+					break
+				}
 			}
 			for _, tickAppName := range dstAppNames {
 				if app.Name == tickAppName {
@@ -201,48 +199,41 @@ func getGuids(sourceAppName string, dstAppNames []string) (string, []string) {
 		}
 	}
 
-	Expect(sourceGuid).NotTo(BeEmpty())
+	Expect(srcGuids).To(HaveLen(len(srcAppNames)))
 	Expect(dstGuids).To(HaveLen(len(dstAppNames)))
 
-	return sourceGuid, dstGuids
+	return srcGuids, dstGuids
 }
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
-func doAllPolicies(action string, source string, dstList []string, dstPorts []int) {
+func doAllPolicies(action string, srcList, dstList []string, dstPorts []int) {
 
 	logger := lager.NewLogger("test")
 	logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.INFO))
 
 	policyClient := policy_client.NewExternal(logger, &http.Client{}, "http://"+config.ApiEndpoint)
-	sourceGuid, dstGuids := getGuids(source, dstList)
+	srcGuids, dstGuids := getGuids(srcList, dstList)
 	policies := []models.Policy{}
-	for _, dstGuid := range dstGuids {
-		for _, port := range dstPorts {
-			policies = append(policies, models.Policy{
-				Source: models.Source{
-					ID: sourceGuid,
-				},
-				Destination: models.Destination{
-					ID:       dstGuid,
-					Port:     port,
-					Protocol: "tcp",
-				},
-			})
+	for _, srcGuid := range srcGuids {
+		for _, dstGuid := range dstGuids {
+			for _, port := range dstPorts {
+				policies = append(policies, models.Policy{
+					Source: models.Source{
+						ID: srcGuid,
+					},
+					Destination: models.Destination{
+						ID:       dstGuid,
+						Port:     port,
+						Protocol: "tcp",
+					},
+				})
+			}
 		}
 	}
 	token := getToken()
 	if action == "create" {
 		Expect(policyClient.AddPolicies(token, policies)).To(Succeed())
 	} else if action == "delete" {
-		for i := 0; i < len(policies); i += 100 {
-			Expect(policyClient.DeletePolicies(token, policies[i:min(i+100, len(policies))])).To(Succeed())
-		}
+		Expect(policyClient.DeletePolicies(token, policies)).To(Succeed())
 	}
 }
 
