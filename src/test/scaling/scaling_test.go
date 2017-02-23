@@ -332,7 +332,7 @@ type SrcDstPair struct {
 
 func assertConnectionSucceeds(sourceApps, destApps []string, ports []int, nProxies int) {
 	parallelRunner := &testsupport.ParallelRunner{
-		NumWorkers: 50 * nProxies,
+		NumWorkers: 10 * nProxies,
 	}
 	pairs := []interface{}{}
 	for _, s := range sourceApps {
@@ -343,14 +343,14 @@ func assertConnectionSucceeds(sourceApps, destApps []string, ports []int, nProxi
 	parallelRunner.RunOnSlice(pairs, func(obj interface{}) {
 		pair := obj.(SrcDstPair)
 		for _, port := range ports {
-			assertSingleConnection(pair.Dest, port, pair.Source, true)
+			assertResponseContains(pair.Dest, port, pair.Source, "application_name")
 		}
 	})
 }
 
 func assertConnectionFails(sourceApps, destApps []string, ports []int, nProxies int) {
 	parallelRunner := &testsupport.ParallelRunner{
-		NumWorkers: 50 * nProxies,
+		NumWorkers: 10 * nProxies,
 	}
 	pairs := []interface{}{}
 	for _, s := range sourceApps {
@@ -361,17 +361,9 @@ func assertConnectionFails(sourceApps, destApps []string, ports []int, nProxies 
 	parallelRunner.RunOnSlice(pairs, func(obj interface{}) {
 		pair := obj.(SrcDstPair)
 		for _, port := range ports {
-			assertSingleConnection(pair.Dest, port, pair.Source, false)
+			assertResponseContains(pair.Dest, port, pair.Source, "request failed")
 		}
 	})
-}
-
-func assertSingleConnection(destIP string, port int, sourceAppName string, shouldSucceed bool) {
-	if shouldSucceed {
-		assertResponseContains(destIP, port, sourceAppName, "application_name")
-	} else {
-		assertResponseContains(destIP, port, sourceAppName, "request failed")
-	}
 }
 
 func assertResponseContains(destIP string, port int, sourceAppName string, desiredResponse string) {
