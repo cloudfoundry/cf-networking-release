@@ -34,15 +34,21 @@ const Time_Format = "15:04:05"
 var _ = Describe("how the container network performs at scale", func() {
 	Describe("scaling tests", func() {
 		var (
-			proxyApps   []string
-			tickApps    []string
-			registryApp string
-			ports       []int
-			testConfig  pusherConfig.Config
+			proxyApps    []string
+			tickApps     []string
+			registryApp  string
+			ports        []int
+			policyClient *policy_client.ExternalClient
+			testConfig   pusherConfig.Config
 		)
 		BeforeEach(func() {
 			testConfig = pushConfig
 			registryApp = pushConfig.Prefix + "registry"
+
+			logger := lager.NewLogger("test")
+			logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.INFO))
+			policyClient = policy_client.NewExternal(logger, &http.Client{}, "http://"+config.ApiEndpoint)
+
 			By(fmt.Sprintf("%s checking that destination app instances have registered themselves", ts()))
 			checkRegistry(registryApp, 10*time.Second, 500*time.Millisecond, pushConfig.Applications*pushConfig.AppInstances)
 		})
@@ -74,7 +80,8 @@ var _ = Describe("how the container network performs at scale", func() {
 				})
 
 				By(fmt.Sprintf("%s creating %d policies", ts(), len(proxyApps)*len(tickApps)*len(ports)))
-				doAllPolicies("create", proxyApps, tickApps, ports)
+				policies := getPolicies(proxyApps, tickApps, ports)
+				Expect(policyClient.AddPolicies(getToken(), policies)).To(Succeed())
 
 				By(fmt.Sprintf("%s waiting %s for policies to be updated on cells", ts(), Policy_Update_Wait))
 				time.Sleep(Policy_Update_Wait)
@@ -89,7 +96,7 @@ var _ = Describe("how the container network performs at scale", func() {
 				time.Sleep(30 * time.Second)
 
 				By(fmt.Sprintf("%s deleting %d policies", ts(), len(proxyApps)*len(tickApps)*len(ports)))
-				doAllPolicies("delete", proxyApps, tickApps, ports)
+				Expect(policyClient.DeletePolicies(getToken(), policies)).To(Succeed())
 
 				By(fmt.Sprintf("%s waiting %s for policies to be updated on cells", ts(), Policy_Update_Wait))
 				time.Sleep(Policy_Update_Wait)
@@ -205,12 +212,7 @@ func getGuids(srcAppNames, dstAppNames []string) ([]string, []string) {
 	return srcGuids, dstGuids
 }
 
-func doAllPolicies(action string, srcList, dstList []string, dstPorts []int) {
-
-	logger := lager.NewLogger("test")
-	logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.INFO))
-
-	policyClient := policy_client.NewExternal(logger, &http.Client{}, "http://"+config.ApiEndpoint)
+func getPolicies(srcList, dstList []string, dstPorts []int) []models.Policy {
 	srcGuids, dstGuids := getGuids(srcList, dstList)
 	policies := []models.Policy{}
 	for _, srcGuid := range srcGuids {
@@ -229,12 +231,7 @@ func doAllPolicies(action string, srcList, dstList []string, dstPorts []int) {
 			}
 		}
 	}
-	token := getToken()
-	if action == "create" {
-		Expect(policyClient.AddPolicies(token, policies)).To(Succeed())
-	} else if action == "delete" {
-		Expect(policyClient.DeletePolicies(token, policies)).To(Succeed())
-	}
+	return policies
 }
 
 func runWithTimeout(operation string, timeout time.Duration, work func()) {
