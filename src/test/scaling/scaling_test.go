@@ -26,24 +26,24 @@ import (
 
 const Timeout_Check = 20 * time.Minute
 
-// 2 * poll cycle time (5s)
-const Policy_Update_Wait = 10 * time.Second
-
 const Time_Format = "15:04:05"
 
 var _ = Describe("how the container network performs at scale", func() {
 	Describe("scaling tests", func() {
 		var (
-			proxyApps    []string
-			tickApps     []string
-			registryApp  string
-			ports        []int
-			policyClient *policy_client.ExternalClient
-			testConfig   pusherConfig.Config
+			proxyApps            []string
+			tickApps             []string
+			registryApp          string
+			ports                []int
+			policyClient         *policy_client.ExternalClient
+			testConfig           pusherConfig.Config
+			policyUpdateWaitTime time.Duration
 		)
 		BeforeEach(func() {
+
 			testConfig = pushConfig
 			registryApp = pushConfig.Prefix + "registry"
+			policyUpdateWaitTime = time.Duration(testConfig.PolicyUpdateWaitSeconds) * time.Second
 
 			logger := lager.NewLogger("test")
 			logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.INFO))
@@ -83,8 +83,8 @@ var _ = Describe("how the container network performs at scale", func() {
 				policies := getPolicies(proxyApps, tickApps, ports)
 				Expect(policyClient.AddPolicies(getToken(), policies)).To(Succeed())
 
-				By(fmt.Sprintf("%s waiting %s for policies to be updated on cells", ts(), Policy_Update_Wait))
-				time.Sleep(Policy_Update_Wait)
+				By(fmt.Sprintf("%s waiting %s for policies to be updated on cells", ts(), policyUpdateWaitTime))
+				time.Sleep(policyUpdateWaitTime)
 
 				sample = sampleIPs(appIPs, testConfig.SampleSize)
 				By(fmt.Sprintf("%s checking that the connection succeeds sampling %d out of %d IPs on %d ports to proxy", ts(), len(sample), len(appIPs), len(ports)))
@@ -98,8 +98,8 @@ var _ = Describe("how the container network performs at scale", func() {
 				By(fmt.Sprintf("%s deleting %d policies", ts(), len(proxyApps)*len(tickApps)*len(ports)))
 				Expect(policyClient.DeletePolicies(getToken(), policies)).To(Succeed())
 
-				By(fmt.Sprintf("%s waiting %s for policies to be updated on cells", ts(), Policy_Update_Wait))
-				time.Sleep(Policy_Update_Wait)
+				By(fmt.Sprintf("%s waiting %s for policies to be updated on cells", ts(), policyUpdateWaitTime))
+				time.Sleep(policyUpdateWaitTime)
 
 				sample = sampleIPs(appIPs, testConfig.SampleSize)
 				By(fmt.Sprintf("%s checking that the connection fails sampling %d out of %d IPs on %d ports", ts(), len(sample), len(appIPs), len(ports)))

@@ -18,6 +18,7 @@ echo '
   "use_http": true,
   "test_app_instances": 2,
   "test_applications": 4,
+  "policy_update_wait_seconds": 10,
   "proxy_applications": 3,
   "proxy_instances": 2,
   "concurrency": 2,
