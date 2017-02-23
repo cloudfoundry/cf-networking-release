@@ -10,14 +10,13 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
-	"os"
 	"os/exec"
 	"strings"
 	"time"
 
-	pusherConfig "cf-pusher/config"
+	"code.cloudfoundry.org/lager"
 
-	"code.cloudfoundry.org/lager/lagertest"
+	pusherConfig "cf-pusher/config"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -29,6 +28,8 @@ const Timeout_Check = 20 * time.Minute
 
 // 2 * poll cycle time (5s)
 const Policy_Update_Wait = 10 * time.Second
+
+const Time_Format = "15:04:05"
 
 var _ = Describe("how the container network performs at scale", func() {
 	Describe("scaling tests", func() {
@@ -42,7 +43,7 @@ var _ = Describe("how the container network performs at scale", func() {
 		BeforeEach(func() {
 			testConfig = pushConfig
 			registryApp = pushConfig.Prefix + "registry"
-			By("checking that destination app instances have registered themselves")
+			By(fmt.Sprintf("%s checking that destination app instances have registered themselves", ts()))
 			checkRegistry(registryApp, 10*time.Second, 500*time.Millisecond, pushConfig.Applications*pushConfig.AppInstances)
 		})
 		JustBeforeEach(func() {
@@ -63,47 +64,42 @@ var _ = Describe("how the container network performs at scale", func() {
 		})
 		runScalingTest := func() {
 			It("allows the user to configure policies", func(done Done) {
-				By(fmt.Sprintf("testing with %d source apps and %d destination apps", testConfig.ProxyApplications, testConfig.Applications))
+				By(fmt.Sprintf("%s testing with %d source apps and %d destination apps", ts(), testConfig.ProxyApplications, testConfig.Applications))
 				appIPs := getAppIPs(registryApp, tickApps)
 				sample := sampleIPs(appIPs, testConfig.SampleSize)
 
-				By(fmt.Sprintf("checking that the connection fails sampling %d out of %d IPs on %d ports", len(sample), len(appIPs), len(ports)))
+				By(fmt.Sprintf("%s checking that the connection fails sampling %d out of %d IPs on %d ports", ts(), len(sample), len(appIPs), len(ports)))
 				runWithTimeout("check connection failures", Timeout_Check, func() {
 					assertConnectionFails(proxyApps, sample, ports, testConfig.ProxyInstances)
 				})
 
-				By(fmt.Sprintf("creating %d policies", len(proxyApps)*len(tickApps)*len(ports)))
+				By(fmt.Sprintf("%s creating %d policies", ts(), len(proxyApps)*len(tickApps)*len(ports)))
 				for _, proxyApp := range proxyApps {
 					doAllPolicies("create", proxyApp, tickApps, ports)
 				}
 
-				By(fmt.Sprintf("waiting %s for policies to be updated on cells", Policy_Update_Wait))
+				By(fmt.Sprintf("%s waiting %s for policies to be updated on cells", ts(), Policy_Update_Wait))
 				time.Sleep(Policy_Update_Wait)
 
 				sample = sampleIPs(appIPs, testConfig.SampleSize)
-				By(fmt.Sprintf("checking that the connection succeeds sampling %d out of %d IPs on %d ports to proxy", len(sample), len(appIPs), len(ports)))
+				By(fmt.Sprintf("%s checking that the connection succeeds sampling %d out of %d IPs on %d ports to proxy", ts(), len(sample), len(appIPs), len(ports)))
 				runWithTimeout("check connection success", Timeout_Check, func() {
 					assertConnectionSucceeds(proxyApps, sample, ports, testConfig.ProxyInstances)
 				})
 
-				for _, proxyApp := range proxyApps {
-					By(fmt.Sprintf("dumping stats to commit to stats repo for %s", proxyApp))
-					dumpStats(proxyApp, testConfig.AppsDomain)
-				}
-
-				By("sleeping for 30 seconds while policies exist")
+				By(fmt.Sprintf("%s sleeping for 30 seconds while policies exist", ts()))
 				time.Sleep(30 * time.Second)
 
-				By(fmt.Sprintf("deleting %d policies", len(proxyApps)*len(tickApps)*len(ports)))
+				By(fmt.Sprintf("%s deleting %d policies", ts(), len(proxyApps)*len(tickApps)*len(ports)))
 				for _, proxyApp := range proxyApps {
 					doAllPolicies("delete", proxyApp, tickApps, ports)
 				}
 
-				By(fmt.Sprintf("waiting %s for policies to be updated on cells", Policy_Update_Wait))
+				By(fmt.Sprintf("%s waiting %s for policies to be updated on cells", ts(), Policy_Update_Wait))
 				time.Sleep(Policy_Update_Wait)
 
 				sample = sampleIPs(appIPs, testConfig.SampleSize)
-				By(fmt.Sprintf("checking that the connection fails sampling %d out of %d IPs on %d ports", len(sample), len(appIPs), len(ports)))
+				By(fmt.Sprintf("%s checking that the connection fails sampling %d out of %d IPs on %d ports", ts(), len(sample), len(appIPs), len(ports)))
 				runWithTimeout("check connection failures, again", Timeout_Check, func() {
 					assertConnectionFails(proxyApps, sample, ports, testConfig.ProxyInstances)
 				})
@@ -219,7 +215,11 @@ func min(a, b int) int {
 }
 
 func doAllPolicies(action string, source string, dstList []string, dstPorts []int) {
-	policyClient := policy_client.NewExternal(lagertest.NewTestLogger("test"), &http.Client{}, "http://"+config.ApiEndpoint)
+
+	logger := lager.NewLogger("test")
+	logger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.INFO))
+
+	policyClient := policy_client.NewExternal(logger, &http.Client{}, "http://"+config.ApiEndpoint)
 	sourceGuid, dstGuids := getGuids(source, dstList)
 	policies := []models.Policy{}
 	for _, dstGuid := range dstGuids {
@@ -252,9 +252,9 @@ func runWithTimeout(operation string, timeout time.Duration, work func()) {
 		defer func() { close(done) }()
 		defer GinkgoRecover()
 
-		By(fmt.Sprintf("starting %s\n", operation))
+		By(fmt.Sprintf("%s starting %s\n", ts(), operation))
 		work()
-		By(fmt.Sprintf("completed %s\n", operation))
+		By(fmt.Sprintf("%s completed %s\n", ts(), operation))
 		done <- true
 	}()
 
@@ -265,16 +265,6 @@ func runWithTimeout(operation string, timeout time.Duration, work func()) {
 		}
 	case <-time.After(timeout):
 		Fail("timeout on " + operation)
-	}
-}
-
-func dumpStats(host, domain string) {
-	resp, err := httpGetBytes(fmt.Sprintf("http://%s.%s/stats", host, domain))
-	Expect(err).NotTo(HaveOccurred())
-
-	netStatsFile := os.Getenv("NETWORK_STATS_FILE")
-	if netStatsFile != "" {
-		Expect(ioutil.WriteFile(netStatsFile, resp.Body, 0600)).To(Succeed())
 	}
 }
 
@@ -435,4 +425,8 @@ func httpGetBytes(url string) (httpResp, error) {
 	}
 
 	return httpResp{resp.StatusCode, respBytes}, nil
+}
+
+func ts() string {
+	return time.Now().Format(Time_Format)
 }
