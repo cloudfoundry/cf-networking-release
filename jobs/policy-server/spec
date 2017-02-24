@@ -74,10 +74,6 @@ properties:
     description: "Type of database: postgres or mysql"
     default: postgres
 
-  cf_networking.policy_server.database.connection_string:
-    description: "DEPRECATED: please instead set username,password,host,port,name"
-    default: ""
-
   cf_networking.policy_server.database.username:
     description: "Username for database connection"
     default: ""

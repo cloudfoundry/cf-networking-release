@@ -7,9 +7,7 @@
       p(param) != ""
     end
 
-    def connection_string_from_db_params
-      return "" unless db_params.any? {|p| param_exists?(p)}
-
+    def connection_string
       unless db_params.all? {|p| param_exists?(p)}
         raise "all of the following parameters must be specified #{db_params.join(",")}"
       end
@@ -25,20 +23,6 @@
       else
         raise "unknown driver #{driver}"
       end
-    end
-
-    connection_string = p('cf_networking.policy_server.database.connection_string')
-
-    if connection_string != "" && connection_string_from_db_params != ""
-       raise "You can only specify 'cf_networking.policy_server.database.connection_string' or '#{db_params.join(",")}'"
-    end
-
-    if connection_string == ""
-       connection_string = connection_string_from_db_params
-    end
-
-    if connection_string == ""
-       raise "#{db_params.join(",")} are required fields"
     end
 
     def cleanup_interval_in_seconds
