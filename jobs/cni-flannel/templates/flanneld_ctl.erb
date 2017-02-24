@@ -67,38 +67,17 @@ case $1 in
       --etcd-endpoints=${ETCD_ENDPOINT} \
         2> >(tee -a $LOG_DIR/flanneld.stderr.log | logger -p user.error -t flanneld) \
         1> >(tee -a $LOG_DIR/flanneld.stdout.log | logger -t flanneld)
-
     ;;
 
   stop)
-
-    pid=$(cat $PIDFILE)
-
-    for i in $(seq 30); do
-      echo "sending INT to ${pid}..."
-      if kill -INT $pid; then
-        sleep 1
-      else
-        echo "exited"
-        exit 0
-      fi
-    done
-
-    echo "timed out; sending SIGQUIT followed by SIGKILL to ${pid}..."
-    if kill -QUIT $pid; then
-      sleep 5
-
-      echo "killing ${pid}..."
-      kill -9 $pid
+    if [ -f $PIDFILE ]; then
+      kill -9 `cat $PIDFILE` || true
+      rm -f $PIDFILE
     fi
-
-    echo "killed"
-
     ;;
 
   *)
     echo "Usage: $0 {start|stop}"
-
     ;;
 
 esac
