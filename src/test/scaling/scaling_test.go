@@ -70,13 +70,14 @@ var _ = Describe("how the container network performs at scale", func() {
 		})
 		runScalingTest := func() {
 			It("allows the user to configure policies", func(done Done) {
-				By(fmt.Sprintf("%s testing with %d source apps and %d destination apps", ts(), testConfig.ProxyApplications, testConfig.Applications))
+				By(fmt.Sprintf("%s testing with %d source apps and %d destination apps listening on %d ports", ts(), testConfig.ProxyApplications, testConfig.Applications, len(ports)))
 				appIPs := getAppIPs(registryApp, tickApps)
-				sample := sampleIPs(appIPs, testConfig.SampleSize)
+				conns := connections(proxyApps, appIPs, ports)
+				sample := sampleConnections(conns, testConfig.SampleSize)
 
-				By(fmt.Sprintf("%s checking that the connection fails sampling %d out of %d IPs on %d ports", ts(), len(sample), len(appIPs), len(ports)))
+				By(fmt.Sprintf("%s checking that the connection fails sampling %d out of %d connections", ts(), len(sample), len(conns)))
 				runWithTimeout("check connection failures", Timeout_Check, func() {
-					assertConnectionFails(proxyApps, sample, ports, testConfig.ProxyInstances)
+					assertConnectionFails(sample, testConfig.ProxyInstances)
 				})
 
 				By(fmt.Sprintf("%s creating %d policies", ts(), len(proxyApps)*len(tickApps)*len(ports)))
@@ -86,10 +87,10 @@ var _ = Describe("how the container network performs at scale", func() {
 				By(fmt.Sprintf("%s waiting %s for policies to be updated on cells", ts(), policyUpdateWaitTime))
 				time.Sleep(policyUpdateWaitTime)
 
-				sample = sampleIPs(appIPs, testConfig.SampleSize)
-				By(fmt.Sprintf("%s checking that the connection succeeds sampling %d out of %d IPs on %d ports to proxy", ts(), len(sample), len(appIPs), len(ports)))
+				sample = sampleConnections(conns, testConfig.SampleSize)
+				By(fmt.Sprintf("%s checking that the connection succeeds sampling %d out of %d connections", ts(), len(sample), len(conns)))
 				runWithTimeout("check connection success", Timeout_Check, func() {
-					assertConnectionSucceeds(proxyApps, sample, ports, testConfig.ProxyInstances)
+					assertConnectionSucceeds(sample, testConfig.ProxyInstances)
 				})
 
 				By(fmt.Sprintf("%s sleeping for 30 seconds while policies exist", ts()))
@@ -101,10 +102,10 @@ var _ = Describe("how the container network performs at scale", func() {
 				By(fmt.Sprintf("%s waiting %s for policies to be updated on cells", ts(), policyUpdateWaitTime))
 				time.Sleep(policyUpdateWaitTime)
 
-				sample = sampleIPs(appIPs, testConfig.SampleSize)
-				By(fmt.Sprintf("%s checking that the connection fails sampling %d out of %d IPs on %d ports", ts(), len(sample), len(appIPs), len(ports)))
+				sample = sampleConnections(conns, testConfig.SampleSize)
+				By(fmt.Sprintf("%s checking that the connection fails sampling %d out of %d connections", ts(), len(sample), len(conns)))
 				runWithTimeout("check connection failures, again", Timeout_Check, func() {
-					assertConnectionFails(proxyApps, sample, ports, testConfig.ProxyInstances)
+					assertConnectionFails(sample, testConfig.ProxyInstances)
 				})
 				close(done)
 			}, 30*60) // 30 minutes
@@ -123,14 +124,25 @@ var _ = Describe("how the container network performs at scale", func() {
 		})
 	})
 
-	Describe("sampleIPs", func() {
-		var population []string
+	Describe("sampleConnections", func() {
+		var population []Connection
 		BeforeEach(func() {
-			population = []string{"a", "b", "c", "d", "e", "f", "g", "h", "i", "j"}
+			population = []Connection{
+				{Source: "a", Dest: "da", Port: 1},
+				{Source: "b", Dest: "db", Port: 2},
+				{Source: "c", Dest: "dc", Port: 3},
+				{Source: "d", Dest: "dd", Port: 4},
+				{Source: "e", Dest: "de", Port: 5},
+				{Source: "f", Dest: "df", Port: 6},
+				{Source: "g", Dest: "dg", Port: 7},
+				{Source: "h", Dest: "dh", Port: 8},
+				{Source: "i", Dest: "di", Port: 9},
+				{Source: "j", Dest: "dj", Port: 0},
+			}
 		})
 
 		It("returns a sample of unique choices from the population", func() {
-			sample := sampleIPs(population, 9)
+			sample := sampleConnections(population, 9)
 			Expect(len(sample)).To(Equal(9))
 			for i := 0; i < len(sample); i++ {
 				for j := i + 1; j < len(sample); j++ {
@@ -140,25 +152,25 @@ var _ = Describe("how the container network performs at scale", func() {
 		})
 		Context("when the sample size is larger than the population", func() {
 			It("returns the whole population", func() {
-				sample := sampleIPs(population, 999)
+				sample := sampleConnections(population, 999)
 				Expect(sample).To(Equal(population))
 			})
 		})
 		Context("when the sample size is equal to the population size", func() {
 			It("returns the whole population", func() {
-				sample := sampleIPs(population, len(population))
+				sample := sampleConnections(population, len(population))
 				Expect(sample).To(Equal(population))
 			})
 		})
 		Context("when the sample size is zero", func() {
 			It("returns the whole population", func() {
-				sample := sampleIPs(population, 0)
+				sample := sampleConnections(population, 0)
 				Expect(sample).To(Equal(population))
 			})
 		})
 		Context("when the sample size is negative", func() {
 			It("returns the whole population", func() {
-				sample := sampleIPs(population, -1)
+				sample := sampleConnections(population, -1)
 				Expect(sample).To(Equal(population))
 			})
 		})
@@ -310,12 +322,12 @@ func getAppIPs(registry string, appNames []string) []string {
 	return ips
 }
 
-func sampleIPs(population []string, sampleSize int) []string {
+func sampleConnections(population []Connection, sampleSize int) []Connection {
 	populationSize := len(population)
 	if len(population) <= sampleSize || sampleSize < 1 {
 		return population
 	}
-	var sample = []string{}
+	var sample = []Connection{}
 	for i := 0; i < sampleSize; i++ {
 		j := rand.Intn(populationSize)
 		sample = append(sample, population[j])
@@ -325,44 +337,49 @@ func sampleIPs(population []string, sampleSize int) []string {
 	return sample
 }
 
-type SrcDstPair struct {
+type Connection struct {
 	Source string
 	Dest   string
+	Port   int
 }
 
-func assertConnectionSucceeds(sourceApps, destApps []string, ports []int, nProxies int) {
+func connections(sourceApps, destApps []string, ports []int) []Connection {
+	var conns []Connection
+	for _, s := range sourceApps {
+		for _, d := range destApps {
+			for _, p := range ports {
+				conns = append(conns, Connection{Source: s, Dest: d, Port: p})
+			}
+		}
+	}
+	return conns
+}
+
+func slice(conns []Connection) []interface{} {
+	var s []interface{}
+	for _, c := range conns {
+		s = append(s, c)
+	}
+	return s
+}
+
+func assertConnectionSucceeds(conns []Connection, nProxies int) {
 	parallelRunner := &testsupport.ParallelRunner{
 		NumWorkers: 10 * nProxies,
 	}
-	pairs := []interface{}{}
-	for _, s := range sourceApps {
-		for _, d := range destApps {
-			pairs = append(pairs, SrcDstPair{Source: s, Dest: d})
-		}
-	}
-	parallelRunner.RunOnSlice(pairs, func(obj interface{}) {
-		pair := obj.(SrcDstPair)
-		for _, port := range ports {
-			assertResponseContains(pair.Dest, port, pair.Source, "application_name")
-		}
+	parallelRunner.RunOnSlice(slice(conns), func(obj interface{}) {
+		conn := obj.(Connection)
+		assertResponseContains(conn.Dest, conn.Port, conn.Source, "application_name")
 	})
 }
 
-func assertConnectionFails(sourceApps, destApps []string, ports []int, nProxies int) {
+func assertConnectionFails(conns []Connection, nProxies int) {
 	parallelRunner := &testsupport.ParallelRunner{
 		NumWorkers: 10 * nProxies,
 	}
-	pairs := []interface{}{}
-	for _, s := range sourceApps {
-		for _, d := range destApps {
-			pairs = append(pairs, SrcDstPair{Source: s, Dest: d})
-		}
-	}
-	parallelRunner.RunOnSlice(pairs, func(obj interface{}) {
-		pair := obj.(SrcDstPair)
-		for _, port := range ports {
-			assertResponseContains(pair.Dest, port, pair.Source, "request failed")
-		}
+	parallelRunner.RunOnSlice(slice(conns), func(obj interface{}) {
+		conn := obj.(Connection)
+		assertResponseContains(conn.Dest, conn.Port, conn.Source, "request failed")
 	})
 }
 
