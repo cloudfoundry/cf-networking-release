@@ -15,6 +15,6 @@ type Config struct {
 	ProxyInstances          int    `json:"proxy_instances"`
 	Concurrency             int    `json:"concurrency"`
 	Prefix                  string `json:"prefix"`
-	SampleSize              int    `json:"sample_size"`
+	SamplePercent           int    `json:"sample_percent"`
 	ASGSize                 int    `json:"asg_size"`
 }

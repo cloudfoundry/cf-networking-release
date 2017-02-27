@@ -21,6 +21,7 @@ echo '
   "policy_update_wait_seconds": 10,
   "proxy_applications": 3,
   "proxy_instances": 2,
+  "sample_percent":20,
   "concurrency": 2,
   "prefix":"scale-"
 }

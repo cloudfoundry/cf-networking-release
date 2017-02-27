@@ -73,7 +73,7 @@ var _ = Describe("how the container network performs at scale", func() {
 				By(fmt.Sprintf("%s testing with %d source apps and %d destination apps listening on %d ports", ts(), testConfig.ProxyApplications, testConfig.Applications, len(ports)))
 				appIPs := getAppIPs(registryApp, tickApps)
 				conns := connections(proxyApps, appIPs, ports)
-				sample := sampleConnections(conns, testConfig.SampleSize)
+				sample := sampleConnections(conns, testConfig.SamplePercent)
 
 				By(fmt.Sprintf("%s checking that the connection fails sampling %d out of %d connections", ts(), len(sample), len(conns)))
 				runWithTimeout("check connection failures", Timeout_Check, func() {
@@ -87,7 +87,7 @@ var _ = Describe("how the container network performs at scale", func() {
 				By(fmt.Sprintf("%s waiting %s for policies to be updated on cells", ts(), policyUpdateWaitTime))
 				time.Sleep(policyUpdateWaitTime)
 
-				sample = sampleConnections(conns, testConfig.SampleSize)
+				sample = sampleConnections(conns, testConfig.SamplePercent)
 				By(fmt.Sprintf("%s checking that the connection succeeds sampling %d out of %d connections", ts(), len(sample), len(conns)))
 				runWithTimeout("check connection success", Timeout_Check, func() {
 					assertConnectionSucceeds(sample, testConfig.ProxyInstances)
@@ -102,7 +102,7 @@ var _ = Describe("how the container network performs at scale", func() {
 				By(fmt.Sprintf("%s waiting %s for policies to be updated on cells", ts(), policyUpdateWaitTime))
 				time.Sleep(policyUpdateWaitTime)
 
-				sample = sampleConnections(conns, testConfig.SampleSize)
+				sample = sampleConnections(conns, testConfig.SamplePercent)
 				By(fmt.Sprintf("%s checking that the connection fails sampling %d out of %d connections", ts(), len(sample), len(conns)))
 				runWithTimeout("check connection failures, again", Timeout_Check, func() {
 					assertConnectionFails(sample, testConfig.ProxyInstances)
@@ -142,7 +142,7 @@ var _ = Describe("how the container network performs at scale", func() {
 		})
 
 		It("returns a sample of unique choices from the population", func() {
-			sample := sampleConnections(population, 9)
+			sample := sampleConnections(population, 90)
 			Expect(len(sample)).To(Equal(9))
 			for i := 0; i < len(sample); i++ {
 				for j := i + 1; j < len(sample); j++ {
@@ -150,25 +150,25 @@ var _ = Describe("how the container network performs at scale", func() {
 				}
 			}
 		})
-		Context("when the sample size is larger than the population", func() {
+		Context("when the sample percent is larger than 100", func() {
 			It("returns the whole population", func() {
 				sample := sampleConnections(population, 999)
 				Expect(sample).To(Equal(population))
 			})
 		})
-		Context("when the sample size is equal to the population size", func() {
+		Context("when the sample percent is equal to 100", func() {
 			It("returns the whole population", func() {
-				sample := sampleConnections(population, len(population))
+				sample := sampleConnections(population, 100)
 				Expect(sample).To(Equal(population))
 			})
 		})
-		Context("when the sample size is zero", func() {
+		Context("when the sample percent is zero", func() {
 			It("returns the whole population", func() {
 				sample := sampleConnections(population, 0)
 				Expect(sample).To(Equal(population))
 			})
 		})
-		Context("when the sample size is negative", func() {
+		Context("when the sample percent is negative", func() {
 			It("returns the whole population", func() {
 				sample := sampleConnections(population, -1)
 				Expect(sample).To(Equal(population))
@@ -322,8 +322,9 @@ func getAppIPs(registry string, appNames []string) []string {
 	return ips
 }
 
-func sampleConnections(population []Connection, sampleSize int) []Connection {
+func sampleConnections(population []Connection, samplePercent int) []Connection {
 	populationSize := len(population)
+	sampleSize := samplePercent * populationSize / 100
 	if len(population) <= sampleSize || sampleSize < 1 {
 		return population
 	}
