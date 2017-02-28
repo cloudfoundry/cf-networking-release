@@ -99,6 +99,22 @@ func randomAppGUID(index int) string {
 	return fmt.Sprintf("%08x", rand.Int63())
 }
 
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func makeChunks(policies []models.Policy) [][]models.Policy {
+	tokenRenewalChunkSize := 1000
+	var chunks [][]models.Policy
+	for i := 0; i < len(policies); i += tokenRenewalChunkSize {
+		chunks = append(chunks, policies[i:i+min(tokenRenewalChunkSize, len(policies))])
+	}
+	return chunks
+}
+
 func addNewPolicies(logger lager.Logger, appGuids []string, token string) {
 	logger.Info("creating-policies-for-each-application-guid")
 	policies := []models.Policy{}
@@ -122,9 +138,13 @@ func addNewPolicies(logger lager.Logger, appGuids []string, token string) {
 	}
 
 	logger.Info("adding-policies")
-	err := externalPolicyClient.AddPolicies(token, policies)
-	if err != nil {
-		logger.Fatal("adding-policies", err)
+	for _, chunk := range makeChunks(policies) {
+		logger.Info("adding-policies-chunk")
+		err := externalPolicyClient.AddPolicies(token, chunk)
+		if err != nil {
+			logger.Fatal("adding-policies", err)
+		}
+		token = getCurrentToken(logger)
 	}
 	logger.Info("finished-adding-policies-to-policy-server")
 }
@@ -152,11 +172,14 @@ func deleteOldPolicies(logger lager.Logger, token string) {
 	logger.Info("number-of-existing-policies", lager.Data{"num-existing-policies": len(policies)})
 
 	logger.Info("deleting-existing-policies")
-	err = externalPolicyClient.DeletePolicies(token, policies)
-	if err != nil {
-		logger.Fatal("deleting-policies", err)
+	for _, chunk := range makeChunks(policies) {
+		logger.Info("deleting-policies-chunk")
+		err := externalPolicyClient.DeletePolicies(token, chunk)
+		if err != nil {
+			logger.Fatal("deleting-policies", err)
+		}
+		token = getCurrentToken(logger)
 	}
-
 	logger.Info("deleted-existing-policies")
 }
 
