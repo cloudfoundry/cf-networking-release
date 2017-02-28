@@ -92,7 +92,7 @@ var _ = Describe("Integration", func() {
 				Expect(responseString).To(ContainSubstring("Network policy server, up for"))
 
 				Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
-					HaveName("ExternalPoliciesUptimeRequestTime"),
+					HaveName("UptimeRequestTime"),
 				))
 			})
 
@@ -109,7 +109,7 @@ var _ = Describe("Integration", func() {
 				Expect(responseString).To(ContainSubstring("some-user"))
 
 				Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
-					HaveName("ExternalPoliciesWhoAmIRequestTime"),
+					HaveName("WhoAmIRequestTime"),
 				))
 			})
 

@@ -251,32 +251,32 @@ func main() {
 
 	handlers := rata.Handlers{
 		"uptime": metricsWrap(
-			server_metrics.MetricExternalUptimeDuration,
+			"Uptime",
 			uptimeHandler,
 		),
 
 		"create_policies": metricsWrap(
-			server_metrics.MetricExternalCreateDuration,
+			"CreatePolicies",
 			networkWriteAuthenticator.Wrap(createPolicyHandler),
 		),
 		"delete_policies": metricsWrap(
-			server_metrics.MetricExternalDeleteDuration,
+			"DeletePolicies",
 			networkWriteAuthenticator.Wrap(deletePolicyHandler),
 		),
 		"policies_index": metricsWrap(
-			server_metrics.MetricExternalIndexDuration,
+			"PoliciesIndex",
 			networkWriteAuthenticator.Wrap(policiesIndexHandler),
 		),
 		"cleanup": metricsWrap(
-			server_metrics.MetricExternalCleanupDuration,
+			"Cleanup",
 			authenticator.Wrap(policiesCleanupHandler),
 		),
 		"tags_index": metricsWrap(
-			server_metrics.MetricExternalTagsIndexDuration,
+			"TagsIndex",
 			authenticator.Wrap(tagsIndexHandler),
 		),
 		"whoami": metricsWrap(
-			server_metrics.MetricExternalWhoAmIDuration,
+			"WhoAmI",
 			authenticator.Wrap(whoamiHandler),
 		),
 	}
@@ -294,7 +294,7 @@ func main() {
 
 	internalHandlers := rata.Handlers{
 		"internal_policies": metricsWrap(
-			server_metrics.MetricInternalPoliciesRequestDuration,
+			"InternalPolicies",
 			internalPoliciesHandler,
 		),
 	}

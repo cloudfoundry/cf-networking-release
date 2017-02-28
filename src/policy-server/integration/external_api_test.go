@@ -467,7 +467,7 @@ var _ = Describe("External API", func() {
 				]}`))
 
 			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
-				HaveName("ExternalPoliciesCreateRequestTime"),
+				HaveName("CreatePoliciesRequestTime"),
 			))
 			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
 				HaveName("StoreCreateTime"),
@@ -541,7 +541,7 @@ var _ = Describe("External API", func() {
 			bodyBytes, _ := ioutil.ReadAll(resp.Body)
 			Expect(bodyBytes).To(MatchJSON(stalePoliciesStr))
 			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
-				HaveName("ExternalPoliciesCleanupRequestTime"),
+				HaveName("CleanupRequestTime"),
 			))
 			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
 				HaveName("StoreDeleteTime"),
@@ -587,7 +587,7 @@ var _ = Describe("External API", func() {
 
 				By("emitting metrics about durations")
 				Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
-					HaveName("ExternalPoliciesIndexRequestTime"),
+					HaveName("PoliciesIndexRequestTime"),
 				))
 				Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
 					HaveName("StoreAllTime"),
@@ -641,7 +641,7 @@ var _ = Describe("External API", func() {
 
 				By("emitting metrics about durations")
 				Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
-					HaveName("ExternalPoliciesDeleteRequestTime"),
+					HaveName("DeletePoliciesRequestTime"),
 				))
 				Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
 					HaveName("StoreDeleteTime"),
@@ -737,7 +737,7 @@ var _ = Describe("External API", func() {
 			] }`))
 
 			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
-				HaveName("ExternalPoliciesTagsIndexRequestTime"),
+				HaveName("TagsIndexRequestTime"),
 			))
 			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
 				HaveName("StoreTagsTime"),

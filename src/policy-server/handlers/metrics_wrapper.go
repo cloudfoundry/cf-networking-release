@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 )
@@ -20,6 +21,7 @@ func (mw *MetricWrapper) Wrap(handle http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		startTime := time.Now()
 		handle.ServeHTTP(w, req)
-		mw.MetricsSender.SendDuration(mw.Name, time.Now().Sub(startTime))
+		mw.MetricsSender.SendDuration(fmt.Sprintf("%sRequestTime", mw.Name), time.Now().Sub(startTime))
+		mw.MetricsSender.IncrementCounter(fmt.Sprintf("%sRequestCount", mw.Name))
 	})
 }

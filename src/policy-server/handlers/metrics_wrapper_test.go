@@ -40,7 +40,14 @@ var _ = Describe("MetricsWrapper", func() {
 			outerHandler.ServeHTTP(resp, request)
 			Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
 			name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
-			Expect(name).To(Equal("name"))
+			Expect(name).To(Equal("nameRequestTime"))
+		})
+
+		It("increments a request counter metric", func() {
+			outerHandler.ServeHTTP(resp, request)
+			Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
+			name := fakeMetricsSender.IncrementCounterArgsForCall(0)
+			Expect(name).To(Equal("nameRequestCount"))
 		})
 
 		It("serves the request with the provided handler", func() {

@@ -5,15 +5,6 @@ import (
 	"policy-server/models"
 )
 
-const MetricExternalCleanupDuration = "ExternalPoliciesCleanupRequestTime"
-const MetricExternalCreateDuration = "ExternalPoliciesCreateRequestTime"
-const MetricExternalDeleteDuration = "ExternalPoliciesDeleteRequestTime"
-const MetricExternalIndexDuration = "ExternalPoliciesIndexRequestTime"
-const MetricExternalTagsIndexDuration = "ExternalPoliciesTagsIndexRequestTime"
-const MetricExternalUptimeDuration = "ExternalPoliciesUptimeRequestTime"
-const MetricExternalWhoAmIDuration = "ExternalPoliciesWhoAmIRequestTime"
-const MetricInternalPoliciesRequestDuration = "InternalPoliciesRequestTime"
-
 //go:generate counterfeiter -o fakes/store.go --fake-name Store . store
 type store interface {
 	All() ([]models.Policy, error)
