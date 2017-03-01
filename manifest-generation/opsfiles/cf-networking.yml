@@ -212,7 +212,7 @@
     options:
       ca: network_policy_ca
       common_name: policy-server.service.cf.internal
-      ext_key_usage:
+      extended_key_usage:
       - server_auth
 
 - type: replace
@@ -223,5 +223,5 @@
     options:
       ca: network_policy_ca
       common_name: clientName
-      ext_key_usage:
+      extended_key_usage:
       - client_auth
