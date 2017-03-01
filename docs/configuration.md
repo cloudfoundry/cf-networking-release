@@ -123,17 +123,23 @@ including on another BOSH-deployed VM or on a cloud-provided service.  Here are 
   - db.m3.medium (3.75 GiB)
   - 20 GB storage
 
-### Policy database scale and performance testing
-We have not done extensive performance testing of the network policy server and database.  However,
-we have found performance to be acceptable with the above-mentioned CF-MySQL and RDS database
-configurations when testing CF Networking features with:
+### Policy Server DB scale and performance testing
 
-  - 10 cells
-  - 200 apps
-  - 10 instances per app (i.e. 2000 app instances)
-  - 4 policies per app (i.e. 800 policies)
+Policy server performance has been validated for deployments of 20k application
+instances, 100 cells, 60k policies, and 20 requests per second. To reach these
+numbers we deployed:
 
+  - 2 policy server instances (t2.large on AWS with 10GB ephemeral disk)
+  - 1 CF MySQL instance (r3.4xlarge on AWS)
 
+The bottleneck for performance seems to usually be the VM hosting the database.
+If you are scaling above 30k policies, we suggest deploying the VM hosting the
+database with a r3.4xlarge, a memory-intensive instance-type, if you are on
+AWS.
+
+We recommend having at least two policy server VMs for high availability. We
+saw little to no performance gain when adding two more policy server VMs during
+the above policy server scaling experiment.
 
 ## MTU
 Operators not using any additional encapsulation should not need to do any special configuration for MTUs.
