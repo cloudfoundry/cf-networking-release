@@ -125,9 +125,15 @@ including on another BOSH-deployed VM or on a cloud-provided service.  Here are 
 
 ### Policy Server DB scale and performance testing
 
-Policy server performance has been validated for deployments of 20k application
-instances, 100 cells, 60k policies, and 20 requests per second. To reach these
-numbers we deployed:
+Policy server performance has been validated for deployments with:
+
+  - 100 cells
+  - 20k applications
+  - 1 instance per app
+  - 60k policies
+  - 20 requests per second
+
+To reach these numbers we deployed:
 
   - 2 policy server instances (t2.large on AWS with 10GB ephemeral disk)
   - 1 CF MySQL instance (r3.4xlarge on AWS)
@@ -137,9 +143,9 @@ If you are scaling above 30k policies, we suggest deploying the VM hosting the
 database with a r3.4xlarge, a memory-intensive instance-type, if you are on
 AWS.
 
-We recommend having at least two policy server VMs for high availability. We
-saw little to no performance gain when adding two more policy server VMs during
-the above policy server scaling experiment.
+We recommend having at least 2 instances of the policy server for high availability. We
+saw little to no performance gain with 4 instances of the policy server for the
+above scaling tests.
 
 ## MTU
 Operators not using any additional encapsulation should not need to do any special configuration for MTUs.
