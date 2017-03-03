@@ -92,9 +92,9 @@ func main() {
 
 	quota := cf_command.Quota{
 		Name:             prefix + "quota",
-		Memory:           "100G",
+		Memory:           "1000G",
 		InstanceMemory:   -1,
-		Routes:           10000,
+		Routes:           20000,
 		ServiceInstances: 100,
 		AppInstances:     -1,
 		RoutePorts:       -1,
