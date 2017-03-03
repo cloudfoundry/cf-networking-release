@@ -68,12 +68,13 @@ case $1 in
     mkdir -p $RUN_DIR
     mkdir -p $LOG_DIR
 
+    exec 2> >(tee -a $LOG_DIR/vxlan-policy-agent.stderr.log | logger -p user.error -t vxlan-policy-agent) \
+         1> >(tee -a $LOG_DIR/vxlan-policy-agent.stdout.log | logger -t vxlan-policy-agent)
+
     echo $$ > $PIDFILE
 
     exec /var/vcap/packages/vxlan-policy-agent/bin/vxlan-policy-agent \
-      -config-file=/var/vcap/jobs/vxlan-policy-agent/config/vxlan-policy-agent.json \
-      2> >(tee -a $LOG_DIR/vxlan-policy-agent.stderr.log | logger -p user.error -t vxlan-policy-agent) \
-      1> >(tee -a $LOG_DIR/vxlan-policy-agent.stdout.log | logger -t vxlan-policy-agent)
+         -config-file=/var/vcap/jobs/vxlan-policy-agent/config/vxlan-policy-agent.json
     ;;
 
   stop)

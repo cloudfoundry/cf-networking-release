@@ -64,12 +64,13 @@ case $1 in
     mkdir -p $RUN_DIR
     mkdir -p $LOG_DIR
 
+    exec 2> >(tee -a $LOG_DIR/netmon.stderr.log | logger -p user.error -t netmon) \
+         1> >(tee -a $LOG_DIR/netmon.stdout.log | logger -t netmon)
+
     echo $$ > $PIDFILE
 
     exec /var/vcap/packages/netmon/bin/netmon \
-      -config-file=/var/vcap/jobs/netmon/config/netmon.json \
-      2> >(tee -a $LOG_DIR/netmon.stderr.log | logger -p user.error -t netmon) \
-      1> >(tee -a $LOG_DIR/netmon.stdout.log | logger -t netmon)
+         -config-file=/var/vcap/jobs/netmon/config/netmon.json
     ;;
 
   stop)
