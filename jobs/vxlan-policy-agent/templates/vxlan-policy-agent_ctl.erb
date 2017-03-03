@@ -10,6 +10,52 @@ mkdir -p /var/vcap/sys/log/monit
 exec 1>> /var/vcap/sys/log/monit/vxlan-policy-agent.out.log
 exec 2>> /var/vcap/sys/log/monit/vxlan-policy-agent.err.log
 
+function wait_pid() {
+  pid=$1
+  shift
+  max_checks=$1
+  shift
+
+  checks=$max_checks
+  while [ -e "/proc/$pid" ]; do
+    checks=$((checks - 1))
+    if [ $checks -le 0 ]; then
+      return 1
+    fi
+    sleep 0.1
+  done
+
+  return 0
+}
+
+function stop_process() {
+  local pid
+  pid=$(cat "$PIDFILE")
+
+  echo "stopping..."
+  kill -TERM "$pid"
+  if wait_pid "$pid" 100 ; then
+    rm "$PIDFILE"
+    return 0
+  fi
+
+  echo "unable to stop process using SIGTERM after 10 seconds, will now attempt to SIGQUIT"
+  kill -QUIT "$pid" || true
+  if wait_pid "$pid" 50 ; then
+    rm "$PIDFILE"
+    return 0
+  fi
+
+  echo "unable to stop process using SIGQUIT after 5 seconds, will now attempt to SIGKILL"
+  kill -KILL "$pid" || true
+  if wait_pid "$pid" 50 ; then
+    rm "$PIDFILE"
+    return 0
+  fi
+
+  echo "unable to stop process using SIGKILL after 5 seconds"
+  return 1
+}
 
 case $1 in
 
@@ -32,29 +78,7 @@ case $1 in
 
   stop)
 
-    pid=$(cat $PIDFILE)
-
-    for i in $(seq 15); do
-      echo "sending INT to ${pid}..."
-      if kill -INT $pid; then
-        sleep 1
-      else
-        echo "exited"
-        exit 0
-      fi
-    done
-
-    echo "timed out; sending SIGQUIT followed by SIGKILL to ${pid}..."
-    if kill -QUIT $pid; then
-      sleep 5
-
-      echo "killing ${pid}..."
-      kill -9 $pid || true
-      rm  -f $PIDFILE
-    fi
-
-    echo "killed"
-
+    stop_process
     ;;
 
   *)

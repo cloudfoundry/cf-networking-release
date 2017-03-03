@@ -28,7 +28,7 @@ case $1 in
 
   stop)
 
-    kill -INT $(cat $PIDFILE)
+    kill -KILL $(cat $PIDFILE)
 
     ;;
 
