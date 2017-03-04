@@ -1,0 +1,60 @@
+#!/bin/bash
+
+set -e -u
+
+REP_ADDRESS=<%= p("cf_networking.rep_listen_addr_admin") %>
+LOG_DIR=/var/vcap/sys/log/cni-flannel
+LOGFILE=$LOG_DIR/drain.log
+
+exec 3>&1
+
+exec 1>> $LOGFILE
+exec 2>> $LOGFILE
+
+ping_rep() {
+  curl --fail --silent http://$REP_ADDRESS/ping >/dev/null 2>&1
+}
+
+wait_for_rep() {
+  while ping_rep; do
+    sleep 5
+    echo "$(date): waiting for rep to exit"
+  done
+}
+
+output_for_bosh() {
+  exit_code=$?
+
+  if [ $exit_code -eq 0 ]; then
+    echo "$(date): drain success"
+  else
+    echo "$(date): drain failed"
+  fi
+
+  echo $exit_code >&3
+}
+
+bridge_exists() {
+  ip link show cni-flannel0 >/dev/null 2>&1
+}
+
+delete_bridge() {
+  ip link del cni-flannel0
+}
+
+trap output_for_bosh EXIT
+
+wait_for_rep
+
+if bridge_exists; then
+  if delete_bridge; then
+    echo "$(date): bridge deleted"
+    exit 0
+  else
+    echo "$(date): delete bridge failed"
+    exit 1
+  fi
+else
+  echo "$(date): bridge does not exist"
+  exit 0
+fi

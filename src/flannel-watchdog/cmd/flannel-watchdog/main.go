@@ -70,7 +70,7 @@ func (r *Runner) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 
 			if flannelIP != deviceIP {
 				metrics.SendValue("flannelDown", 1.0, "bool")
-				errCh <- fmt.Errorf(`This cell must be recreated.  Flannel is out of sync with the local bridge. `+
+				errCh <- fmt.Errorf(`This cell must be restarted (run "bosh restart <job>").  Flannel is out of sync with the local bridge. `+
 					`flannel (%s): %s bridge (%s): %s`, r.SubnetFile, flannelIP, r.BridgeName, deviceIP)
 				return
 			}

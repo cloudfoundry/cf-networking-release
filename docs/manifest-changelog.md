@@ -6,6 +6,10 @@ See [AWS](iaas.md#deploy-to-aws) deployment docs for examples
 The BOSH manifest property `cf_networking.policy_server.database.connection_string`
 that was deprecated in v0.10.0 has been removed.
 
+A new property `cf_networking.rep_listen_addr_admin` is added so that drain scripts can wait for rep to exit.
+It should always be the same value as `diego.rep.listen_addr_admin`.
+It defaults to 127.0.0.1:1800
+
 ### 0.17.0
 Policy server requires a CA cert for UAA, **manifest must be generated with `diego-release` v1.7.0+**
 
