@@ -16,6 +16,7 @@ type Config struct {
 	StartPort        int    `json:"start_port"`
 	TotalPorts       int    `json:"total_ports"`
 	IPTablesLockFile string `json:"iptables_lock_file"`
+	InstanceAddress  string `json:"instance_address"`
 }
 
 func New(configFilePath string) (Config, error) {
@@ -65,6 +66,10 @@ func New(configFilePath string) (Config, error) {
 
 	if cfg.IPTablesLockFile == "" {
 		return cfg, fmt.Errorf("missing required config 'iptables_lock_file'")
+	}
+
+	if cfg.InstanceAddress == "" {
+		return cfg, fmt.Errorf("missing required config 'instance_address'")
 	}
 
 	return cfg, nil

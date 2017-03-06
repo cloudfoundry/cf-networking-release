@@ -50,6 +50,7 @@ var _ = Describe("Garden External Networker errors", func() {
 			"start_port":         1234,
 			"total_ports":        56,
 			"iptables_lock_file": GlobalIPTablesLockFile,
+			"instance_address":   "1.2.3.4",
 		}
 		writeConfig(defaultConfig)
 

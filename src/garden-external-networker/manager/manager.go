@@ -46,20 +46,22 @@ type netOutProvider interface {
 }
 
 type Manager struct {
-	Logger         lager.Logger
-	CNIController  cniController
-	Mounter        mounter
-	BindMountRoot  string
-	OverlayNetwork string
-	PortAllocator  portAllocator
-	NetInProvider  netInProvider
-	NetOutProvider netOutProvider
+	Logger          lager.Logger
+	CNIController   cniController
+	Mounter         mounter
+	BindMountRoot   string
+	OverlayNetwork  string
+	InstanceAddress string
+	PortAllocator   portAllocator
+	NetInProvider   netInProvider
+	NetOutProvider  netOutProvider
 }
 
 type UpInputs struct {
 	Pid        int
 	Properties map[string]string
 	NetOut     []garden.NetOutRule `json:"netout_rules"`
+	NetIn      []garden.NetIn      `json:"netin"`
 }
 type UpOutputs struct {
 	Properties struct {
@@ -111,6 +113,13 @@ func (m *Manager) Up(containerHandle string, inputs UpInputs) (*UpOutputs, error
 
 	if err := m.NetOutProvider.BulkInsertRules(containerHandle, inputs.NetOut, containerIP.String()); err != nil {
 		return nil, fmt.Errorf("bulk insert: %s", err)
+	}
+
+	for _, netIn := range inputs.NetIn {
+		if err := m.NetInProvider.AddRule(containerHandle, int(netIn.HostPort), int(netIn.ContainerPort), m.InstanceAddress, containerIP.String()); err != nil {
+			return nil, fmt.Errorf("adding netin rule: %s", err)
+		}
+
 	}
 
 	outputs := UpOutputs{}

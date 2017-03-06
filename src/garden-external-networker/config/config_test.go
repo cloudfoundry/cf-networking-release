@@ -34,7 +34,8 @@ var _ = Describe("Config", func() {
 					"state_file": "some/path",
 					"start_port": 1234,
 					"total_ports": 56,
-					"iptables_lock_file": "/some/lock/file/path"
+					"iptables_lock_file": "/some/lock/file/path",
+					"instance_address": "1.2.3.4"
 				}`)
 				c, err := config.New(file.Name())
 				Expect(err).NotTo(HaveOccurred())
@@ -45,6 +46,7 @@ var _ = Describe("Config", func() {
 				Expect(c.StartPort).To(Equal(1234))
 				Expect(c.TotalPorts).To(Equal(56))
 				Expect(c.IPTablesLockFile).To(Equal("/some/lock/file/path"))
+				Expect(c.InstanceAddress).To(Equal("1.2.3.4"))
 			})
 		})
 
@@ -88,6 +90,7 @@ var _ = Describe("Config", func() {
 					"start_port":         50000,
 					"total_ports":        10000,
 					"iptables_lock_file": "/some/lock/file",
+					"instance_address":   "1.2.3.4",
 				}
 				delete(allData, missingFlag)
 				Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
@@ -103,6 +106,7 @@ var _ = Describe("Config", func() {
 			Entry("missing start port", "start_port"),
 			Entry("missing total ports", "total_ports"),
 			Entry("missing iptables lock file", "iptables_lock_file"),
+			Entry("missing instance address", "instance_address"),
 		)
 	})
 })

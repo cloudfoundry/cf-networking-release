@@ -9,7 +9,8 @@
       "state_file" => "/var/vcap/data/garden-cni/external-networker-state.json",
       "start_port" => p("cf_networking.garden_external_networker.start_port"),
       "total_ports" => p("cf_networking.garden_external_networker.total_ports"),
-      "iptables_lock_file" => "/var/vcap/data/garden-cni/iptables.lock"
+      "iptables_lock_file" => "/var/vcap/data/garden-cni/iptables.lock",
+      "instance_address" => spec.ip,
     }
 
     JSON.pretty_generate(toRender)

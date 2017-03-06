@@ -28,6 +28,7 @@ var _ = Describe("Manager", func() {
 		expectedExtraProperties map[string]string
 		portAllocator           *fakes.PortAllocator
 		netInProvider           *fakes.NetInProvider
+		netInRules              []garden.NetIn
 		netOutProvider          *fakes.NetOutProvider
 		netOutRules             []garden.NetOutRule
 		ipTables                *lib_fakes.IPTables
@@ -55,18 +56,29 @@ var _ = Describe("Manager", func() {
 			},
 		}, nil)
 		mgr = &manager.Manager{
-			Logger:         logger,
-			CNIController:  cniController,
-			Mounter:        mounter,
-			BindMountRoot:  "/some/fake/path",
-			OverlayNetwork: "10.255.0.0/16",
-			PortAllocator:  portAllocator,
-			NetInProvider:  netInProvider,
-			NetOutProvider: netOutProvider,
+			Logger:          logger,
+			CNIController:   cniController,
+			Mounter:         mounter,
+			BindMountRoot:   "/some/fake/path",
+			OverlayNetwork:  "10.255.0.0/16",
+			InstanceAddress: "1.2.3.4",
+			PortAllocator:   portAllocator,
+			NetInProvider:   netInProvider,
+			NetOutProvider:  netOutProvider,
 		}
 		gardenProperties = map[string]string{"policy_group_id": "some-group-id"}
 		expectedExtraProperties = map[string]string{"policy_group_id": "some-group-id"}
 
+		netInRules = []garden.NetIn{
+			{
+				HostPort:      12345,
+				ContainerPort: 7000,
+			},
+			{
+				HostPort:      23456,
+				ContainerPort: 7001,
+			},
+		}
 		netOutRules = []garden.NetOutRule{
 			garden.NetOutRule{
 				Protocol: garden.ProtocolTCP,
@@ -115,6 +127,39 @@ var _ = Describe("Manager", func() {
 			Expect(properties).To(Equal(expectedExtraProperties))
 		})
 
+		It("initializes the net in provider", func() {
+			_, err := mgr.Up(containerHandle, manager.UpInputs{Pid: 42, Properties: gardenProperties})
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(netInProvider.InitializeCallCount()).To(Equal(1))
+			Expect(netInProvider.InitializeArgsForCall(0)).To(Equal("some-container-handle"))
+		})
+
+		It("writes net in rule", func() {
+			_, err := mgr.Up(containerHandle, manager.UpInputs{
+				Pid:        42,
+				Properties: gardenProperties,
+				NetIn:      netInRules,
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(netInProvider.AddRuleCallCount()).To(Equal(2))
+
+			handle, hostPort, containerPort, hostIP, containerIP := netInProvider.AddRuleArgsForCall(0)
+			Expect(handle).To(Equal("some-container-handle"))
+			Expect(hostPort).To(Equal(12345))
+			Expect(containerPort).To(Equal(7000))
+			Expect(hostIP).To(Equal("1.2.3.4"))
+			Expect(containerIP).To(Equal("169.254.1.2"))
+
+			handle, hostPort, containerPort, hostIP, containerIP = netInProvider.AddRuleArgsForCall(1)
+			Expect(handle).To(Equal("some-container-handle"))
+			Expect(hostPort).To(Equal(23456))
+			Expect(containerPort).To(Equal(7001))
+			Expect(hostIP).To(Equal("1.2.3.4"))
+			Expect(containerIP).To(Equal("169.254.1.2"))
+		})
+
 		It("initializes the net out provider", func() {
 			_, err := mgr.Up(containerHandle, manager.UpInputs{Pid: 42, Properties: gardenProperties})
 			Expect(err).NotTo(HaveOccurred())
@@ -124,14 +169,6 @@ var _ = Describe("Manager", func() {
 			Expect(handle).To(Equal("some-container-handle"))
 			Expect(ip).To(Equal(net.ParseIP("169.254.1.2")))
 			Expect(overlay).To(Equal("10.255.0.0/16"))
-		})
-
-		It("initializes the net in provider", func() {
-			_, err := mgr.Up(containerHandle, manager.UpInputs{Pid: 42, Properties: gardenProperties})
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(netInProvider.InitializeCallCount()).To(Equal(1))
-			Expect(netInProvider.InitializeArgsForCall(0)).To(Equal("some-container-handle"))
 		})
 
 		It("writes net out rules", func() {
@@ -147,6 +184,20 @@ var _ = Describe("Manager", func() {
 			Expect(handle).To(Equal("some-container-handle"))
 			Expect(rules).To(Equal(netOutRules))
 			Expect(ip).To(Equal("169.254.1.2"))
+		})
+
+		Context("when adding netin rules fails", func() {
+			BeforeEach(func() {
+				netInProvider.AddRuleReturns(errors.New("banana"))
+			})
+			It("returns an error", func() {
+				_, err := mgr.Up(containerHandle, manager.UpInputs{
+					Pid:        42,
+					Properties: gardenProperties,
+					NetIn:      netInRules,
+				})
+				Expect(err).To(MatchError("adding netin rule: banana"))
+			})
 		})
 
 		Context("when bulk inserting rules fails", func() {

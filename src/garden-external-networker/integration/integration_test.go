@@ -145,6 +145,7 @@ var _ = Describe("Garden External Networker", func() {
 			"start_port":         60000,
 			"total_ports":        56,
 			"iptables_lock_file": GlobalIPTablesLockFile,
+			"instance_address":   "1.2.3.4",
 		}
 		configBytes, err := json.Marshal(config)
 		Expect(err).NotTo(HaveOccurred())
@@ -466,6 +467,9 @@ var _ = Describe("Garden External Networker", func() {
 			By("checking that a netin chain was created for the container")
 			Expect(AllIPTablesRules("nat")).To(ContainElement(`-N ` + netinChainName))
 			Expect(AllIPTablesRules("nat")).To(ContainElement(`-A PREROUTING -j ` + netinChainName))
+
+			By("checking that the rules passed in on the up call are written")
+			Expect(AllIPTablesRules("nat")).To(ContainElement(`-A ` + netinChainName + ` -d 1.2.3.4/32 -p tcp -m tcp --dport 12345 -j DNAT --to-destination 169.254.1.2:7000`))
 
 			By("calling netin")
 			netInSession := runAndWait(netInCommand)

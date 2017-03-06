@@ -146,14 +146,15 @@ func mainWithError(logger lager.Logger) error {
 	}
 
 	manager := &manager.Manager{
-		Logger:         logger,
-		CNIController:  cniController,
-		Mounter:        mounter,
-		BindMountRoot:  cfg.BindMountDir,
-		PortAllocator:  portAllocator,
-		OverlayNetwork: cfg.OverlayNetwork,
-		NetInProvider:  netinProvider,
-		NetOutProvider: netoutProvider,
+		Logger:          logger,
+		CNIController:   cniController,
+		Mounter:         mounter,
+		BindMountRoot:   cfg.BindMountDir,
+		PortAllocator:   portAllocator,
+		OverlayNetwork:  cfg.OverlayNetwork,
+		InstanceAddress: cfg.InstanceAddress,
+		NetInProvider:   netinProvider,
+		NetOutProvider:  netoutProvider,
 	}
 
 	mux := ipc.Mux{
