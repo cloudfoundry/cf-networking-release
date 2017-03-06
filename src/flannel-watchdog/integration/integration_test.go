@@ -117,7 +117,7 @@ var _ = Describe("Flannel Watchdog", func() {
 
 			It("exits with a nonzero status", func() {
 				expectedMsg := fmt.Sprintf(
-					`This cell must be restarted (run "bosh restart <job>").  Flannel is out of sync with the local bridge. `+
+					`This cell must be restarted (run \"bosh restart \u003cjob\u003e\").  Flannel is out of sync with the local bridge. `+
 						`flannel (%s): 10.4.13.1/24 bridge (%s): %s`, subnetFileName, bridgeName, bridgeIP)
 				Expect(string(session.Out.Contents())).To(ContainSubstring(expectedMsg))
 			})
