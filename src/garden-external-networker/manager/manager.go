@@ -59,6 +59,7 @@ type Manager struct {
 type UpInputs struct {
 	Pid        int
 	Properties map[string]string
+	NetOut     []garden.NetOutRule `json:"netout_rules"`
 }
 type UpOutputs struct {
 	Properties struct {
@@ -106,6 +107,10 @@ func (m *Manager) Up(containerHandle string, inputs UpInputs) (*UpOutputs, error
 	err = m.NetInProvider.Initialize(containerHandle)
 	if err != nil {
 		return nil, fmt.Errorf("initialize iptables for netin: %s", err)
+	}
+
+	if err := m.NetOutProvider.BulkInsertRules(containerHandle, inputs.NetOut, containerIP.String()); err != nil {
+		return nil, fmt.Errorf("bulk insert: %s", err)
 	}
 
 	outputs := UpOutputs{}

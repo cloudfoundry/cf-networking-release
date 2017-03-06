@@ -160,6 +160,30 @@ var _ = Describe("Garden External Networker", func() {
 				"some-key":        "some-value",
 				"policy_group_id": "some-group-id",
 			},
+			"netin": []map[string]int{
+				{
+					"host_port":      12345,
+					"container_port": 7000,
+				},
+			},
+			"netout_rules": []map[string]interface{}{
+				{
+					"protocol": 1,
+					"networks": []map[string]string{
+						{
+							"start": "8.8.8.8",
+							"end":   "9.9.9.9",
+						},
+					},
+					"ports": []map[string]int{
+						{
+							"start": 53,
+							"end":   54,
+						},
+					},
+					"log": true,
+				},
+			},
 		},
 		)
 		upCommand.Args = []string{
@@ -321,6 +345,9 @@ var _ = Describe("Garden External Networker", func() {
 			By("checking that the default input rules are created for that container")
 			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + inputChainName + ` -s 169.254.1.2/32 -m state --state RELATED,ESTABLISHED -j RETURN`))
 			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + inputChainName + ` -s 169.254.1.2/32 -j REJECT --reject-with icmp-port-unreachable`))
+
+			By("checking that the rules provided in the up command are written")
+			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 169.254.1.2/32 -p tcp -m iprange --dst-range 8.8.8.8-9.9.9.9 -m tcp --dport 53:54 -g ` + netoutLoggingChainName))
 
 			By("calling bulk netout")
 			bulkNetOutCommand := buildBulkNetOutCommand("169.254.1.2", someRules)

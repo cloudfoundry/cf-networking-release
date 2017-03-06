@@ -29,6 +29,7 @@ var _ = Describe("Manager", func() {
 		portAllocator           *fakes.PortAllocator
 		netInProvider           *fakes.NetInProvider
 		netOutProvider          *fakes.NetOutProvider
+		netOutRules             []garden.NetOutRule
 		ipTables                *lib_fakes.IPTables
 		logger                  *lagertest.TestLogger
 		containerHandle         string
@@ -65,6 +66,20 @@ var _ = Describe("Manager", func() {
 		}
 		gardenProperties = map[string]string{"policy_group_id": "some-group-id"}
 		expectedExtraProperties = map[string]string{"policy_group_id": "some-group-id"}
+
+		netOutRules = []garden.NetOutRule{
+			garden.NetOutRule{
+				Protocol: garden.ProtocolTCP,
+				Networks: []garden.IPRange{
+					{Start: net.ParseIP("1.1.1.1"), End: net.ParseIP("2.2.2.2")},
+					{Start: net.ParseIP("3.3.3.3"), End: net.ParseIP("4.4.4.4")},
+				},
+				Ports: []garden.PortRange{
+					{Start: 9000, End: 9999},
+					{Start: 1111, End: 2222},
+				},
+			},
+		}
 	})
 
 	Describe("Up", func() {
@@ -98,6 +113,55 @@ var _ = Describe("Manager", func() {
 			Expect(namespacePath).To(Equal(fmt.Sprintf("/some/fake/path/%s", containerHandle)))
 			Expect(handle).To(Equal(containerHandle))
 			Expect(properties).To(Equal(expectedExtraProperties))
+		})
+
+		It("initializes the net out provider", func() {
+			_, err := mgr.Up(containerHandle, manager.UpInputs{Pid: 42, Properties: gardenProperties})
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(netOutProvider.InitializeCallCount()).To(Equal(1))
+			_, handle, ip, overlay := netOutProvider.InitializeArgsForCall(0)
+			Expect(handle).To(Equal("some-container-handle"))
+			Expect(ip).To(Equal(net.ParseIP("169.254.1.2")))
+			Expect(overlay).To(Equal("10.255.0.0/16"))
+		})
+
+		It("initializes the net in provider", func() {
+			_, err := mgr.Up(containerHandle, manager.UpInputs{Pid: 42, Properties: gardenProperties})
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(netInProvider.InitializeCallCount()).To(Equal(1))
+			Expect(netInProvider.InitializeArgsForCall(0)).To(Equal("some-container-handle"))
+		})
+
+		It("writes net out rules", func() {
+			_, err := mgr.Up(containerHandle, manager.UpInputs{
+				Pid:        42,
+				Properties: gardenProperties,
+				NetOut:     netOutRules,
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(netOutProvider.BulkInsertRulesCallCount()).To(Equal(1))
+			handle, rules, ip := netOutProvider.BulkInsertRulesArgsForCall(0)
+			Expect(handle).To(Equal("some-container-handle"))
+			Expect(rules).To(Equal(netOutRules))
+			Expect(ip).To(Equal("169.254.1.2"))
+		})
+
+		Context("when bulk inserting rules fails", func() {
+			BeforeEach(func() {
+				netOutProvider.BulkInsertRulesReturns(errors.New("banana"))
+			})
+			It("returns an error", func() {
+				_, err := mgr.Up(containerHandle, manager.UpInputs{
+					Pid:        42,
+					Properties: gardenProperties,
+					NetOut:     netOutRules,
+				})
+				Expect(err).To(MatchError("bulk insert: banana"))
+			})
+
 		})
 
 		Context("when CNI up returns a nil result", func() {
