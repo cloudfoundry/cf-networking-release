@@ -1,6 +1,7 @@
 package manager
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net"
@@ -67,6 +68,7 @@ type UpOutputs struct {
 	Properties struct {
 		ContainerIP      string `json:"garden.network.container-ip"`
 		DeprecatedHostIP string `json:"garden.network.host-ip"`
+		MappedPorts      string `json:"garden.network.mapped-ports"`
 	} `json:"properties"`
 }
 
@@ -115,14 +117,27 @@ func (m *Manager) Up(containerHandle string, inputs UpInputs) (*UpOutputs, error
 		return nil, fmt.Errorf("bulk insert: %s", err)
 	}
 
+	mappedPorts := []garden.PortMapping{}
 	for _, netIn := range inputs.NetIn {
+		if netIn.HostPort == 0 {
+			hostPort, err := m.PortAllocator.AllocatePort(containerHandle, int(netIn.HostPort))
+			if err != nil {
+				return nil, fmt.Errorf("allocating port: %s", err)
+			}
+			netIn.HostPort = uint32(hostPort)
+		}
+
 		if err := m.NetInProvider.AddRule(containerHandle, int(netIn.HostPort), int(netIn.ContainerPort), m.InstanceAddress, containerIP.String()); err != nil {
 			return nil, fmt.Errorf("adding netin rule: %s", err)
 		}
-
+		mappedPorts = append(mappedPorts, garden.PortMapping{
+			HostPort:      netIn.HostPort,
+			ContainerPort: netIn.ContainerPort,
+		})
 	}
 
 	outputs := UpOutputs{}
+	outputs.Properties.MappedPorts = toJson(mappedPorts)
 	outputs.Properties.ContainerIP = containerIP.String()
 	outputs.Properties.DeprecatedHostIP = "255.255.255.255"
 	return &outputs, nil
@@ -216,4 +231,13 @@ func (m *Manager) BulkNetOut(containerHandle string, inputs BulkNetOutInputs) er
 		return fmt.Errorf("insert rule: %s", err)
 	}
 	return nil
+}
+
+func toJson(mappedPorts []garden.PortMapping) string {
+	bytes, err := json.Marshal(mappedPorts)
+	if err != nil {
+		panic(err) // untested, should never happen
+	}
+
+	return string(bytes)
 }

@@ -242,7 +242,12 @@ var _ = Describe("Garden External Networker", func() {
 	It("should call CNI ADD and DEL", func() {
 		By("calling up")
 		upSession := runAndWait(upCommand)
-		Expect(upSession.Out.Contents()).To(MatchJSON(`{ "properties": {"garden.network.container-ip": "169.254.1.2",  "garden.network.host-ip": "255.255.255.255"} }`))
+		Expect(upSession.Out.Contents()).To(MatchJSON(`{ "properties": {
+			"garden.network.container-ip": "169.254.1.2",
+			"garden.network.host-ip": "255.255.255.255",
+			"garden.network.mapped-ports": "[{\"HostPort\":12345,\"ContainerPort\":7000}]"
+			}
+		}`))
 
 		By("checking that it logs basic info on stderr")
 		Expect(upSession.Err).To(gbytes.Say("container-networking.garden-external-networker.*action.*up"))
@@ -405,7 +410,12 @@ var _ = Describe("Garden External Networker", func() {
 		It("writes NetOut rules", func() {
 			By("calling up")
 			upSession := runAndWait(upCommand)
-			Expect(upSession.Out.Contents()).To(MatchJSON(`{ "properties": {"garden.network.container-ip": "169.254.1.2",  "garden.network.host-ip": "255.255.255.255"} }`))
+			Expect(upSession.Out.Contents()).To(MatchJSON(`{ "properties": {
+				"garden.network.container-ip": "169.254.1.2",
+				"garden.network.host-ip": "255.255.255.255",
+				"garden.network.mapped-ports": "[{\"HostPort\":12345,\"ContainerPort\":7000}]"
+				}
+			}`))
 
 			By("checking that the default rules are created for that container")
 			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 169.254.1.2/32 ! -d 10.255.0.0/16 -m state --state RELATED,ESTABLISHED -j RETURN`))
@@ -462,7 +472,12 @@ var _ = Describe("Garden External Networker", func() {
 		It("writes iptables rules for NetIn", func() {
 			By("calling up")
 			upSession := runAndWait(upCommand)
-			Expect(upSession.Out.Contents()).To(MatchJSON(`{ "properties": {"garden.network.container-ip": "169.254.1.2",  "garden.network.host-ip": "255.255.255.255"} }`))
+			Expect(upSession.Out.Contents()).To(MatchJSON(`{ "properties": {
+				"garden.network.container-ip": "169.254.1.2",
+				"garden.network.host-ip": "255.255.255.255",
+				"garden.network.mapped-ports": "[{\"HostPort\":12345,\"ContainerPort\":7000}]"
+				}
+			}`))
 
 			By("checking that a netin chain was created for the container")
 			Expect(AllIPTablesRules("nat")).To(ContainElement(`-N ` + netinChainName))

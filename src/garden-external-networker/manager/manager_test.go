@@ -135,8 +135,8 @@ var _ = Describe("Manager", func() {
 			Expect(netInProvider.InitializeArgsForCall(0)).To(Equal("some-container-handle"))
 		})
 
-		It("writes net in rule", func() {
-			_, err := mgr.Up(containerHandle, manager.UpInputs{
+		It("writes net in rule and returns the mapped ports", func() {
+			out, err := mgr.Up(containerHandle, manager.UpInputs{
 				Pid:        42,
 				Properties: gardenProperties,
 				NetIn:      netInRules,
@@ -158,6 +158,44 @@ var _ = Describe("Manager", func() {
 			Expect(containerPort).To(Equal(7001))
 			Expect(hostIP).To(Equal("1.2.3.4"))
 			Expect(containerIP).To(Equal("169.254.1.2"))
+
+			Expect(out.Properties.MappedPorts).To(MatchJSON(`[
+				{"HostPort": 12345, "ContainerPort": 7000},
+				{"HostPort": 23456, "ContainerPort": 7001}
+			]`))
+		})
+
+		It("allocates a port if necessary", func() {
+			portAllocator.AllocatePortReturns(1234, nil)
+			out, err := mgr.Up(containerHandle, manager.UpInputs{
+				Pid:        42,
+				Properties: gardenProperties,
+				NetIn:      []garden.NetIn{{HostPort: 0, ContainerPort: 7000}},
+			},
+			)
+
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(portAllocator.AllocatePortCallCount()).To(Equal(1))
+			handle, port := portAllocator.AllocatePortArgsForCall(0)
+			Expect(handle).To(Equal("some-container-handle"))
+			Expect(port).To(Equal(0))
+
+			Expect(out.Properties.MappedPorts).To(MatchJSON(`[{"HostPort": 1234, "ContainerPort": 7000}]`))
+		})
+
+		Context("when the port allocation fails", func() {
+			It("returns an error", func() {
+				portAllocator.AllocatePortReturns(0, errors.New("banana"))
+				_, err := mgr.Up(containerHandle, manager.UpInputs{
+					Pid:        42,
+					Properties: gardenProperties,
+					NetIn:      []garden.NetIn{{HostPort: 0, ContainerPort: 7000}},
+				},
+				)
+
+				Expect(err).To(MatchError("allocating port: banana"))
+			})
 		})
 
 		It("initializes the net out provider", func() {
