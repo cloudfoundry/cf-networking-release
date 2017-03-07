@@ -3,3 +3,6 @@ check process policy-server
   start program "/var/vcap/jobs/policy-server/bin/policy-server_ctl start"
   stop program "/var/vcap/jobs/policy-server/bin/policy-server_ctl stop"
   group vcap
+  if failed host 127.0.0.1 port <%= p("cf_networking.policy_server.listen_port") %> protocol HTTP
+     with timeout 10 seconds
+     then restart
