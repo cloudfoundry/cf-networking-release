@@ -323,7 +323,7 @@ func getInstancesFromA8(registry string) (*RegistryInstancesResponse, error) {
 }
 
 func checkRegistry(registry string, timeout, pollingInterval time.Duration, totalInstances int) {
-	registeredApps := func() (int, error) {
+	registeredInstances := func() (int, error) {
 		instancesResponse, err := getInstancesFromA8(registry)
 		if err != nil {
 			return 0, err
@@ -331,7 +331,12 @@ func checkRegistry(registry string, timeout, pollingInterval time.Duration, tota
 		return len(instancesResponse.Instances), nil
 	}
 
-	Eventually(registeredApps, timeout, pollingInterval).Should(Equal(totalInstances))
+	threshold := totalInstances / 1000
+	Eventually(registeredInstances, timeout, pollingInterval).Should(BeNumerically("~", totalInstances, threshold))
+	actualInstances, _ := registeredInstances()
+	if actualInstances != totalInstances {
+		fmt.Printf("found %d of %d instances registered, within threshold of %d\n", actualInstances, totalInstances, threshold)
+	}
 }
 
 func getAppIPs(registry string, appNames []string) []string {
