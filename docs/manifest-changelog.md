@@ -3,12 +3,18 @@
 See [AWS](iaas.md#deploy-to-aws) deployment docs for examples
 
 ### 0.18.0
-The BOSH manifest property `cf_networking.policy_server.database.connection_string`
-that was deprecated in v0.10.0 has been removed.
 
-A new property `cf_networking.rep_listen_addr_admin` is added so that drain scripts can wait for rep to exit.
-It should always be the same value as `diego.rep.listen_addr_admin`.
-It defaults to 127.0.0.1:1800
+**New Properties**
+
+  - `cf_networking.rep_listen_addr_admin` is added so that drain scripts can wait for rep to exit.
+  It should always be the same value as `diego.rep.listen_addr_admin`. It defaults to `127.0.0.1:1800`.
+  - `cf_networking.vxlan_policy_agent.iptables_logging` is added.  When set to `true`, it enables
+  iptables logging for container-to-container traffic.  It defaults to `false`. *Note: this is already
+  [configurable at runtime](troubleshooting.md#enabling-iptables-logging).*
+
+**Removed Properties**
+
+ - `cf_networking.policy_server.database.connection_string` was deprecated in v0.10.0 and is now removed.
 
 ### 0.17.0
 Policy server requires a CA cert for UAA, **manifest must be generated with `diego-release` v1.7.0+**

@@ -127,6 +127,10 @@ func main() {
 	}
 
 	iptablesLoggingState := &planner.LoggingState{}
+	if conf.IPTablesLogging {
+		iptablesLoggingState.Enable()
+	}
+
 	dynamicPlanner := &planner.VxlanPolicyPlanner{
 		Datastore:     store,
 		PolicyClient:  policyClient,

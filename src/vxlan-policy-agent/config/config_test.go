@@ -39,7 +39,8 @@ var _ = Describe("Config", func() {
 					"iptables_lock_file":  "/var/vcap/data/lock",
 					"debug_server_host": "http://5.6.7.8",
 					"debug_server_port": 5678,
-					"log_level": "debug"
+					"log_level": "debug",
+					"iptables_logging": true
 				}`)
 				c, err := config.New(file.Name())
 				Expect(err).NotTo(HaveOccurred())
@@ -56,6 +57,7 @@ var _ = Describe("Config", func() {
 				Expect(c.DebugServerHost).To(Equal("http://5.6.7.8"))
 				Expect(c.DebugServerPort).To(Equal(5678))
 				Expect(c.LogLevel).To(Equal("debug"))
+				Expect(c.IPTablesLogging).To(Equal(true))
 			})
 		})
 

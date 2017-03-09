@@ -44,6 +44,10 @@ properties:
     description: "Logging level (debug, info, warn, error)"
     default: info
 
+  cf_networking.vxlan_policy_agent.iptables_logging:
+    description: "Enables iptables logging for container to container traffic"
+    default: false
+
   cf_networking.disable:
     description: "Disable container to container networking"
     default: false
