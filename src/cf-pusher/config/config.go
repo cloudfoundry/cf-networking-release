@@ -9,6 +9,7 @@ type Config struct {
 	SkipSSLValidation       bool   `json:"skip_ssl_validation"`
 	Applications            int    `json:"test_applications"`
 	AppInstances            int    `json:"test_app_instances"`
+	AppRegistryTTLSeconds   int    `json:"test_app_registry_ttl_seconds"`
 	ExtraListenPorts        int    `json:"extra_listen_ports"`
 	PolicyUpdateWaitSeconds int    `json:"policy_update_wait_seconds"`
 	ProxyApplications       int    `json:"proxy_applications"`

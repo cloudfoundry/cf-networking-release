@@ -114,10 +114,11 @@ func main() {
 			BuildPack: "go_buildpack",
 			Instances: scaleGroup.TickInstances,
 			Env: models.TickEnvironment{
-				GoPackageName:   "example-apps/tick",
-				RegistryBaseURL: "http://" + registryApp.Name + "." + config.AppsDomain,
-				StartPort:       7000,
-				ListenPorts:     config.ExtraListenPorts,
+				GoPackageName:      "example-apps/tick",
+				RegistryBaseURL:    "http://" + registryApp.Name + "." + config.AppsDomain,
+				RegistryTTLSeconds: config.AppRegistryTTLSeconds,
+				StartPort:          7000,
+				ListenPorts:        config.ExtraListenPorts,
 			},
 		}},
 	}

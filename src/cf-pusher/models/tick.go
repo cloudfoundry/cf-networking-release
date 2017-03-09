@@ -14,10 +14,11 @@ type Application struct {
 }
 
 type TickEnvironment struct {
-	GoPackageName   string `yaml:"GOPACKAGENAME,omitempty"`
-	RegistryBaseURL string `yaml:"REGISTRY_BASE_URL,omitempty"`
-	StartPort       int    `yaml:"START_PORT,omitempty"`
-	ListenPorts     int    `yaml:"LISTEN_PORTS,omitempty"`
+	GoPackageName      string `yaml:"GOPACKAGENAME,omitempty"`
+	RegistryBaseURL    string `yaml:"REGISTRY_BASE_URL,omitempty"`
+	RegistryTTLSeconds int    `yaml:"REGISTRY_TTL_SECONDS,omitempty"`
+	StartPort          int    `yaml:"START_PORT,omitempty"`
+	ListenPorts        int    `yaml:"LISTEN_PORTS,omitempty"`
 }
 
 type ProxyEnvironment struct {
