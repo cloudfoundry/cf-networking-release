@@ -25,10 +25,11 @@ type Environment struct {
 		InstanceIndex   int    `json:"instance_index"`
 	} `env:"VCAP_APPLICATION" env-required:"true"`
 
-	Port            string `env:"PORT"               env-required:"true"`
-	RegistryBaseURL string `env:"REGISTRY_BASE_URL"  env-required:"true"`
-	StartPort       string `env:"START_PORT"         env-required:"false"`
-	ListenPorts     string `env:"LISTEN_PORTS"       env-required:"false"`
+	Port               string `env:"PORT"               env-required:"true"`
+	RegistryBaseURL    string `env:"REGISTRY_BASE_URL"  env-required:"true"`
+	StartPort          string `env:"START_PORT"         env-required:"false"`
+	ListenPorts        string `env:"LISTEN_PORTS"       env-required:"false"`
+	RegistryTTLSeconds string `env:"REGISTRY_TTL_SECONDS"       env-required:"false"`
 }
 
 func main() {
@@ -61,24 +62,35 @@ func mainWithError() error {
 		}
 	}
 
+	var ttlSeconds int
+	if env.RegistryTTLSeconds != "" {
+		ttlSeconds, err = strconv.Atoi(env.RegistryTTLSeconds)
+		if err != nil {
+			return fmt.Errorf("invalid env var REGISTRY_TTL_SECONDS: %s", err)
+		}
+	}
+	if ttlSeconds < 10 {
+		fmt.Printf("Setting TTL to 10s because min TTL of registry is 10 seconds")
+		ttlSeconds = 10
+	}
+
 	localIP, err := localip.LocalIP()
 	if err != nil {
 		return fmt.Errorf("unable to discover local ip: %s", err)
 	}
-
-	const TTLSeconds = 10
-	const PollSeconds = 8
 
 	a8Client := &a8.Client{
 		BaseURL:            env.RegistryBaseURL,
 		HttpClient:         http.DefaultClient,
 		LocalServerAddress: fmt.Sprintf("%s:%s", localIP, env.Port),
 		ServiceName:        env.VCAPApplication.ApplicationName,
-		TTLSeconds:         TTLSeconds,
+		TTLSeconds:         ttlSeconds,
 	}
 
+	pollInterval := time.Duration(ttlSeconds*1000*4/5) * time.Millisecond
+	fmt.Printf("ttl is %d seconds, polling interval is %v\n", ttlSeconds, pollInterval)
 	poller := &Poller{
-		PollInterval: (PollSeconds * time.Second),
+		PollInterval: pollInterval,
 		Action:       a8Client.Register,
 	}
 

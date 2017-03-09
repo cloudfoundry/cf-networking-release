@@ -52,6 +52,7 @@ var _ = Describe("Tick app", func() {
 			fmt.Sprintf("LISTEN_PORTS=%d", listenPorts),
 			fmt.Sprintf("PORT=%d", tickPort),
 			fmt.Sprintf("REGISTRY_BASE_URL=http://127.0.0.1:%d", registryPort),
+			fmt.Sprintf("REGISTRY_TTL_SECONDS=%d", tickTTLSeconds),
 			fmt.Sprintf(`VCAP_APPLICATION={
 				"instance_index": 13,
 				"application_name": "my-tick-app"
@@ -76,7 +77,7 @@ var _ = Describe("Tick app", func() {
 		registryPort = 40000 + GinkgoParallelNode()
 		registryURL = fmt.Sprintf("http://127.0.0.1:%d/api/v1/instances", registryPort)
 		tickPort = 41000 + GinkgoParallelNode()
-		tickTTLSeconds = 2
+		tickTTLSeconds = 11
 		startPort = 42000 + 100*GinkgoParallelNode()
 		listenPorts = 3
 	})
