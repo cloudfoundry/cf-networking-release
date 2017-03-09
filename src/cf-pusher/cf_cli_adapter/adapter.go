@@ -26,9 +26,9 @@ func (a *Adapter) DeleteOrg(name string) error {
 	return runCommandWithTimeout(cmd)
 }
 
-func (a *Adapter) CreateSpace(name string) error {
-	fmt.Printf("running: %s create-space %s\n", a.CfCliPath, name)
-	cmd := exec.Command(a.CfCliPath, "create-space", name)
+func (a *Adapter) CreateSpace(spaceName, orgName string) error {
+	fmt.Printf("running: %s create-space %s -o %s\n", a.CfCliPath, spaceName, orgName)
+	cmd := exec.Command(a.CfCliPath, "create-space", spaceName, "-o", orgName)
 	return runCommandWithTimeout(cmd)
 }
 

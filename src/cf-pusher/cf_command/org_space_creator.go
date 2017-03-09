@@ -5,7 +5,7 @@ import "fmt"
 //go:generate counterfeiter -o ../fakes/org_space_cli.go --fake-name OrgSpaceCli . orgSpaceCli
 type orgSpaceCli interface {
 	CreateOrg(name string) error
-	CreateSpace(name string) error
+	CreateSpace(spaceName, orgName string) error
 	TargetOrg(name string) error
 	TargetSpace(name string) error
 	CreateQuota(name, memory string, instanceMemory, routes, serviceInstances, appInstances, routePorts int) error
@@ -40,7 +40,7 @@ func (c *OrgSpaceCreator) Create() error {
 		return fmt.Errorf("targeting org: %s", err)
 	}
 
-	err = c.Adapter.CreateSpace(c.Space)
+	err = c.Adapter.CreateSpace(c.Space, c.Org)
 	if err != nil {
 		return fmt.Errorf("creating space: %s", err)
 	}

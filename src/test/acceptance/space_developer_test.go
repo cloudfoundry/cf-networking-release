@@ -54,13 +54,13 @@ var _ = Describe("space developer policy configuration", func() {
 		Expect(cf.Cf("target", "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
 
 		spaceNameA = prefix + "space-A"
-		Expect(cf.Cf("create-space", spaceNameA).Wait(Timeout_Push)).To(gexec.Exit(0))
+		Expect(cf.Cf("create-space", spaceNameA, "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
 		Expect(cf.Cf("target", "-o", orgName, "-s", spaceNameA).Wait(Timeout_Push)).To(gexec.Exit(0))
 
 		pushProxy(appA)
 
 		spaceNameB = prefix + "space-B"
-		Expect(cf.Cf("create-space", spaceNameB).Wait(Timeout_Push)).To(gexec.Exit(0))
+		Expect(cf.Cf("create-space", spaceNameB, "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
 		Expect(cf.Cf("target", "-o", orgName, "-s", spaceNameB).Wait(Timeout_Push)).To(gexec.Exit(0))
 
 		pushProxy(appB)

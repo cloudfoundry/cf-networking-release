@@ -32,7 +32,7 @@ var _ = Describe("policy cleanup", func() {
 		Expect(cfCli.TargetOrg(orgName)).To(Succeed())
 
 		spaceName = "cleanup-space"
-		Expect(cfCli.CreateSpace(spaceName)).To(Succeed())
+		Expect(cfCli.CreateSpace(spaceName, orgName)).To(Succeed())
 		Expect(cfCli.TargetSpace(spaceName)).To(Succeed())
 
 		pushProxy(appA)
