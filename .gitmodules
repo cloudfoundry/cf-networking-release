@@ -33,8 +33,8 @@
 	url = https://github.com/codegangsta/cli
 [submodule "src/github.com/coreos/flannel"]
 	path = src/github.com/coreos/flannel
-	url = https://github.com/coreos/flannel
-	branch = master
+	url = https://github.com/cf-container-networking/flannel
+	branch = health-check
 [submodule "src/github.com/nu7hatch/gouuid"]
 	path = src/github.com/nu7hatch/gouuid
 	url = https://github.com/nu7hatch/gouuid
