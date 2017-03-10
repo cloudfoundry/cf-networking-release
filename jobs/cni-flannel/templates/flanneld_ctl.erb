@@ -114,7 +114,8 @@ case $1 in
       --etcd-cafile=${ETCD_CERTS_DIR}/ca.crt \
       --etcd-certfile=${ETCD_CERTS_DIR}/client.crt \
       --etcd-keyfile=${ETCD_CERTS_DIR}/client.key \
-      --etcd-endpoints=${ETCD_ENDPOINT}
+      --etcd-endpoints=${ETCD_ENDPOINT} \
+      --health-check-port=<%= p("cf_networking.plugin.health_check_port") %>
     ;;
 
   stop)

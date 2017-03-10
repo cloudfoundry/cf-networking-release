@@ -5,6 +5,9 @@ check process flanneld
   start program "/var/vcap/jobs/cni-flannel/bin/flanneld_ctl start"
   stop program "/var/vcap/jobs/cni-flannel/bin/flanneld_ctl stop"
   group vcap
+  if failed host 127.0.0.1 port <%= p("cf_networking.plugin.health_check_port") %> protocol HTTP
+    with timeout 5 seconds for 12 cycles
+    then restart
 
 check process flannel-watchdog
   with pidfile /var/vcap/sys/run/flannel-watchdog/flannel-watchdog.pid

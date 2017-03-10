@@ -35,6 +35,10 @@ properties:
     description: "PEM encoded client key"
     default: ""
 
+  cf_networking.plugin.health_check_port:
+    description: "Port for the flannel health check endpoint"
+    default: 19823
+
   cf_networking.network:
     description: "CIDR block for overlay network."
     default: "10.255.0.0/16"
