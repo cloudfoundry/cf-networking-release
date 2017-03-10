@@ -67,7 +67,7 @@
       cf_networking:
         plugin:
           etcd_endpoints:
-            - etcd.service.cf.internal
+            - cf-etcd.service.cf.internal
           etcd_client_cert: "((etcd_client.certificate))"
           etcd_client_key: "((etcd_client.private_key))"
           etcd_ca_cert: "((etcd_client.ca))"
@@ -174,7 +174,7 @@
             require_ssl: true
             ca_cert: "((etcd_server.ca))"
             machines:
-            - etcd.service.cf.internal
+            - cf-etcd.service.cf.internal
 
 # add vars
 - type: replace
