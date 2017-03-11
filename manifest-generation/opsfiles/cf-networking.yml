@@ -119,7 +119,7 @@
               type: mysql
               username: network_policy
               password: "((cf_mysql_mysql_seeded_databases_network_policy_password))"
-              host: 10.0.31.193
+              host: sql-db.service.cf.internal
               port: 3306
               name: network_policy
     - name: route_registrar
