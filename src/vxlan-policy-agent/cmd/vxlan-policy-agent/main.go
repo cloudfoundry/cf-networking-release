@@ -240,7 +240,7 @@ func initLoggerSink(logger lager.Logger, level string) *lager.ReconfigurableSink
 
 func createCustomDebugServer(listenAddress string, sink *lager.ReconfigurableSink, iptablesLoggingState *planner.LoggingState) ifrit.Runner {
 	mux := debugserver.Handler(sink).(*http.ServeMux)
-	mux.Handle("/iptables-logging", &handlers.IPTablesLogging{
+	mux.Handle("/iptables-c2c-logging", &handlers.IPTablesLogging{
 		LoggingState: iptablesLoggingState,
 	})
 	return http_server.New(listenAddress, mux)

@@ -40,7 +40,7 @@ var _ = Describe("Config", func() {
 					"debug_server_host": "http://5.6.7.8",
 					"debug_server_port": 5678,
 					"log_level": "debug",
-					"iptables_logging": true
+					"iptables_c2c_logging": true
 				}`)
 				c, err := config.New(file.Name())
 				Expect(err).NotTo(HaveOccurred())

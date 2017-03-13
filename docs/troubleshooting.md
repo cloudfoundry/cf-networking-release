@@ -46,16 +46,20 @@ NOTE: If you are having problems, first consult our [known issues doc](known-iss
   ```
   The debug server listens on port 22222 by default, it can be overridden by the manifest properties `policy-server.debug_server_port` and `vxlan-policy-agent.debug_server_port`
 
-### Enabling IPTables Logging
+### Enabling IPTables Logging for Container to Container Traffic
 
   Logging for policy iptables rules can be enabled through the VXLAN policy agent debug server. SSH to a cell VM and make this request to enable logging on the VM:
   ```
-  curl -X PUT -d '{"enabled": true}' localhost:22222/iptables-logging
+  curl -X PUT -d '{"enabled": true}' localhost:22222/iptables-c2c-logging
   ```
   To disable:
   ```
-  curl -X PUT -d '{"enabled": false}' localhost:22222/iptables-logging
+  curl -X PUT -d '{"enabled": false}' localhost:22222/iptables-c2c-logging
   ```
+
+  This can be configured at startup via the
+  `cf_networking.vxlan_policy_agent.iptables_c2c_logging` property. It defaults
+  to `false`.
 
   Logs from iptables end up in `/var/log/kern.log`.
 
