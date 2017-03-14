@@ -69,6 +69,7 @@ Follow the instructions [here](https://github.com/cloudfoundry/bosh-deployment/b
 
 This deployment option uses the new tooling:
 - the new Golang [bosh-cli](https://github.com/cloudfoundry/bosh-cli)
+- [bosh-deployment](https://github.com/cloudfoundry/bosh-deployment)
 - [cf-deployment](https://github.com/cloudfoundry/cf-deployment), refer to our [release notes](https://github.com/cloudfoundry-incubator/cf-networking-release/releases) to get information on validated versions
 
 It assumes you have a BOSH director on Virtualbox that was created using `bosh create-env`.
@@ -102,7 +103,7 @@ file containing credentials for your existing deployment.
 
 Then deploy
 ```bash
-bosh -d cf deploy ~/workspace/cf-deployment/cf-deployment.yml \
+bosh deploy ~/workspace/cf-deployment/cf-deployment.yml \
   -o ~/workspace/cf-deployment/operations/bosh-lite.yml \
   -o ~/workspace/cf-networking-release/manifest-generation/opsfiles/cf-networking-bosh-lite.yml \
   --vars-store ~/deployments/vbox/deployment-vars.yml \
