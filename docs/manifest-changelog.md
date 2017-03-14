@@ -8,6 +8,8 @@ See [AWS](iaas.md#deploy-to-aws) deployment docs for examples
 
   - `cf_networking.rep_listen_addr_admin` enables our drain scripts to wait for the Diego rep to exit.
   It should always be the same value as `diego.rep.listen_addr_admin`. It defaults to `127.0.0.1:1800`.
+  - `cf_networking.garden_external_networker.iptables_asg_logging` globally enables iptables logging for
+    all ASGs, including logging of denied packets. Defaults to false.
   - `cf_networking.vxlan_policy_agent.iptables_c2c_logging` enables iptables logging for
   container-to-container traffic.  It defaults to `false`. *Note: this is already
   [configurable at runtime](troubleshooting.md#enabling-iptables-logging-for-container-to-container-traffic).*
