@@ -346,12 +346,16 @@ var _ = Describe("Garden External Networker", func() {
 			runAndWait(upCommand)
 
 			By("checking that the default forwarding rules are created for that container")
-			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 169.254.1.2/32 ! -d 10.255.0.0/16 -m state --state RELATED,ESTABLISHED -j RETURN`))
-			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 169.254.1.2/32 ! -d 10.255.0.0/16 -j REJECT --reject-with icmp-port-unreachable`))
+			Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
+				`-A ` + netoutChainName + ` -s 169.254.1.2/32 ! -d 10.255.0.0/16 -m state --state RELATED,ESTABLISHED -j RETURN`,
+				`-A ` + netoutChainName + ` -s 169.254.1.2/32 ! -d 10.255.0.0/16 -j REJECT --reject-with icmp-port-unreachable`,
+			}))
 
 			By("checking that the default input rules are created for that container")
-			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + inputChainName + ` -s 169.254.1.2/32 -m state --state RELATED,ESTABLISHED -j RETURN`))
-			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + inputChainName + ` -s 169.254.1.2/32 -j REJECT --reject-with icmp-port-unreachable`))
+			Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
+				`-A ` + inputChainName + ` -s 169.254.1.2/32 -m state --state RELATED,ESTABLISHED -j RETURN`,
+				`-A ` + inputChainName + ` -s 169.254.1.2/32 -j REJECT --reject-with icmp-port-unreachable`,
+			}))
 
 			By("checking that the rules provided in the up command are written")
 			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 169.254.1.2/32 -p tcp -m iprange --dst-range 8.8.8.8-9.9.9.9 -m tcp --dport 53:54 -g ` + netoutLoggingChainName))
@@ -368,7 +372,7 @@ var _ = Describe("Garden External Networker", func() {
 			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 169.254.1.2/32 -p tcp -m iprange --dst-range 1.1.1.5-2.2.2.2 -m tcp --dport 9000:9999 -j RETURN`))
 
 			By("checking that it writes the logging rules")
-			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutLoggingChainName + ` -p tcp -m conntrack --ctstate INVALID,NEW,UNTRACKED -j LOG --log-prefix ` + containerHandle[:29]))
+			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutLoggingChainName + ` -p tcp -m conntrack --ctstate INVALID,NEW,UNTRACKED -j LOG --log-prefix OK_` + containerHandle[:26]))
 
 			By("calling down")
 			runAndWait(downCommand)
@@ -449,7 +453,16 @@ var _ = Describe("Garden External Networker", func() {
 					`-A ` + netoutChainName + ` -s 169.254.1.2/32 ! -d 10.255.0.0/16 -j LOG --log-prefix DENY_` + containerHandle[:24],
 					`-A ` + netoutChainName + ` -s 169.254.1.2/32 ! -d 10.255.0.0/16 -j REJECT --reject-with icmp-port-unreachable`,
 				}))
+
+				By("calling netout")
+				netOutCommand := buildNetOutCommand("169.254.1.2", someRule)
+				runAndWait(netOutCommand)
+
+				By("checking that the accept logging rule is created")
+				Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 169.254.1.2/32 -p tcp -m iprange --dst-range 1.1.1.1-2.2.2.2 -m tcp --dport 9000:9999 -g ` + netoutLoggingChainName))
+
 			})
+
 		})
 
 		It("writes NetOut rules", func() {
@@ -463,8 +476,10 @@ var _ = Describe("Garden External Networker", func() {
 			}`))
 
 			By("checking that the default rules are created for that container")
-			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 169.254.1.2/32 ! -d 10.255.0.0/16 -m state --state RELATED,ESTABLISHED -j RETURN`))
-			Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 169.254.1.2/32 ! -d 10.255.0.0/16 -j REJECT --reject-with icmp-port-unreachable`))
+			Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
+				`-A ` + netoutChainName + ` -s 169.254.1.2/32 ! -d 10.255.0.0/16 -m state --state RELATED,ESTABLISHED -j RETURN`,
+				`-A ` + netoutChainName + ` -s 169.254.1.2/32 ! -d 10.255.0.0/16 -j REJECT --reject-with icmp-port-unreachable`,
+			}))
 
 			By("calling netout")
 			netOutCommand := buildNetOutCommand("169.254.1.2", someRule)

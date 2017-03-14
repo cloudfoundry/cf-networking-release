@@ -9,22 +9,22 @@ import (
 type NetOutRuleConverter struct {
 }
 
-func (c *NetOutRuleConverter) BulkConvert(netOutRules []garden.NetOutRule, containerIP, logChainName string) []rules.IPTablesRule {
+func (c *NetOutRuleConverter) BulkConvert(netOutRules []garden.NetOutRule, containerIP, logChainName string, globalLogging bool) []rules.IPTablesRule {
 	ruleSpec := []rules.IPTablesRule{}
 	for _, rule := range netOutRules {
-		for _, t := range c.Convert(rule, containerIP, logChainName) {
+		for _, t := range c.Convert(rule, containerIP, logChainName, globalLogging) {
 			ruleSpec = append(ruleSpec, t)
 		}
 	}
 	return ruleSpec
 }
 
-func (c *NetOutRuleConverter) Convert(rule garden.NetOutRule, containerIP, logChainName string) []rules.IPTablesRule {
+func (c *NetOutRuleConverter) Convert(rule garden.NetOutRule, containerIP, logChainName string, globalLogging bool) []rules.IPTablesRule {
 	ruleSpec := []rules.IPTablesRule{}
 	for _, network := range rule.Networks {
 		if len(rule.Ports) > 0 && udpOrTcp(rule.Protocol) {
 			for _, portRange := range rule.Ports {
-				if rule.Log {
+				if rule.Log || globalLogging {
 					ruleSpec = append(ruleSpec, rules.NewNetOutWithPortsLogRule(
 						containerIP, network.Start.String(), network.End.String(),
 						int(portRange.Start), int(portRange.End), lookupProtocol(rule.Protocol), logChainName),
@@ -37,7 +37,7 @@ func (c *NetOutRuleConverter) Convert(rule garden.NetOutRule, containerIP, logCh
 				}
 			}
 		} else {
-			if rule.Log {
+			if rule.Log || globalLogging {
 				ruleSpec = append(ruleSpec, rules.NewNetOutLogRule(
 					containerIP, network.Start.String(), network.End.String(), logChainName),
 				)

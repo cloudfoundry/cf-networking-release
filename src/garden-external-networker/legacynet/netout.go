@@ -17,8 +17,8 @@ const suffixNetOutLog = "log"
 
 //go:generate counterfeiter -o ../fakes/net_out_rule_converter.go --fake-name NetOutRuleConverter . netOutRuleConverter
 type netOutRuleConverter interface {
-	Convert(rule garden.NetOutRule, containerIP, logChainName string) []rules.IPTablesRule
-	BulkConvert(rules []garden.NetOutRule, containerIP, logChainName string) []rules.IPTablesRule
+	Convert(rule garden.NetOutRule, containerIP, logChainName string, logging bool) []rules.IPTablesRule
+	BulkConvert(rules []garden.NetOutRule, containerIP, logChainName string, logging bool) []rules.IPTablesRule
 }
 
 type NetOut struct {
@@ -127,7 +127,7 @@ func (m *NetOut) InsertRule(containerHandle string, rule garden.NetOutRule, cont
 		return fmt.Errorf("getting chain name: %s", err)
 	}
 
-	ruleSpec := m.Converter.Convert(rule, containerIP, logChain)
+	ruleSpec := m.Converter.Convert(rule, containerIP, logChain, m.GlobalLogging)
 	err = m.IPTables.BulkInsert("filter", chain, 1, ruleSpec...)
 	if err != nil {
 		return fmt.Errorf("inserting net-out rule: %s", err)
@@ -143,7 +143,7 @@ func (m *NetOut) BulkInsertRules(containerHandle string, netOutRules []garden.Ne
 		return fmt.Errorf("getting chain name: %s", err)
 	}
 
-	ruleSpec := m.Converter.BulkConvert(netOutRules, containerIP, logChain)
+	ruleSpec := m.Converter.BulkConvert(netOutRules, containerIP, logChain, m.GlobalLogging)
 	err = m.IPTables.BulkInsert("filter", chain, 1, ruleSpec...)
 	if err != nil {
 		return fmt.Errorf("bulk inserting net-out rules: %s", err)

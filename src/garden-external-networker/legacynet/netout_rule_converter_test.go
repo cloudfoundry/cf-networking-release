@@ -37,7 +37,7 @@ var _ = Describe("NetOutRuleConverter", func() {
 				}
 			})
 			It("converts a netout rule to a list of iptables rules", func() {
-				ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName)
+				ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
 
 				Expect(ruleSpec).To(ConsistOf(
 					rules.IPTablesRule{"--source", "1.2.3.4",
@@ -64,6 +64,28 @@ var _ = Describe("NetOutRuleConverter", func() {
 			})
 		})
 
+		Context("when Convert is called with globalLogging set to true", func() {
+			BeforeEach(func() {
+				netOutRule = garden.NetOutRule{
+					Networks: []garden.IPRange{
+						{Start: net.ParseIP("1.1.1.1"), End: net.ParseIP("2.2.2.2")},
+						{Start: net.ParseIP("3.3.3.3"), End: net.ParseIP("4.4.4.4")},
+					},
+				}
+			})
+			It("returns IP tables rules that goto the log chain", func() {
+				ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, true)
+				Expect(ruleSpec).To(ConsistOf(
+					rules.IPTablesRule{"--source", "1.2.3.4", "-m", "iprange",
+						"--dst-range", "1.1.1.1-2.2.2.2",
+						"-g", "some-chain"},
+					rules.IPTablesRule{"--source", "1.2.3.4", "-m", "iprange",
+						"--dst-range", "3.3.3.3-4.4.4.4",
+						"-g", "some-chain"},
+				))
+			})
+		})
+
 		Context("when logging is enabled", func() {
 			BeforeEach(func() {
 				netOutRule = garden.NetOutRule{
@@ -75,7 +97,7 @@ var _ = Describe("NetOutRuleConverter", func() {
 				}
 			})
 			It("returns IP tables rules without ports or protocol", func() {
-				ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName)
+				ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
 				Expect(ruleSpec).To(ConsistOf(
 					rules.IPTablesRule{"--source", "1.2.3.4", "-m", "iprange",
 						"--dst-range", "1.1.1.1-2.2.2.2",
@@ -97,7 +119,7 @@ var _ = Describe("NetOutRuleConverter", func() {
 				}
 			})
 			It("returns IP tables rules without ports or protocol", func() {
-				ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName)
+				ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
 				Expect(ruleSpec).To(ConsistOf(
 					rules.IPTablesRule{"--source", "1.2.3.4", "-m", "iprange",
 						"--dst-range", "1.1.1.1-2.2.2.2",
@@ -136,7 +158,7 @@ var _ = Describe("NetOutRuleConverter", func() {
 			})
 
 			It("converts a netout rule to a list of iptables rules", func() {
-				ruleSpec := converter.BulkConvert(netOutRules, "1.2.3.4", logChainName)
+				ruleSpec := converter.BulkConvert(netOutRules, "1.2.3.4", logChainName, false)
 
 				Expect(ruleSpec).To(ConsistOf(
 					rules.IPTablesRule{"--source", "1.2.3.4",

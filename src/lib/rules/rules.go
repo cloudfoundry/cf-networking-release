@@ -155,7 +155,7 @@ func NewNetOutDefaultLogRule(prefix string) IPTablesRule {
 	return IPTablesRule{
 		"-p", "tcp",
 		"-m", "conntrack", "--ctstate", "INVALID,NEW,UNTRACKED",
-		"-j", "LOG", "--log-prefix", prefix,
+		"-j", "LOG", "--log-prefix", fmt.Sprintf("OK_%s", prefix),
 	}
 }
 

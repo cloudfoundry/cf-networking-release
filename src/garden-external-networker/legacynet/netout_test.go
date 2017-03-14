@@ -128,7 +128,7 @@ var _ = Describe("Netout", func() {
 			Expect(rulespec).To(Equal([]rules.IPTablesRule{
 				{"-p", "tcp",
 					"-m", "conntrack", "--ctstate", "INVALID,NEW,UNTRACKED",
-					"-j", "LOG", "--log-prefix", "some-container-handle"},
+					"-j", "LOG", "--log-prefix", "OK_some-container-handle"},
 				{"--jump", "RETURN"},
 			}))
 		})
@@ -373,10 +373,11 @@ var _ = Describe("Netout", func() {
 			Expect(suffix).To(Equal("log"))
 
 			Expect(converter.ConvertCallCount()).To(Equal(1))
-			rule, ip, logChainName := converter.ConvertArgsForCall(0)
+			rule, ip, logChainName, logging := converter.ConvertArgsForCall(0)
 			Expect(rule).To(Equal(netOutRule))
 			Expect(ip).To(Equal("1.2.3.4"))
 			Expect(logChainName).To(Equal("some-other-chain-name"))
+			Expect(logging).To(Equal(false))
 
 			Expect(ipTables.BulkInsertCallCount()).To(Equal(1))
 			table, chain, pos, rulespec := ipTables.BulkInsertArgsForCall(0)
@@ -403,6 +404,23 @@ var _ = Describe("Netout", func() {
 			It("returns an error", func() {
 				err := netOut.InsertRule("some-container-handle", netOutRule, "1.2.3.4")
 				Expect(err).To(MatchError("inserting net-out rule: potato"))
+			})
+		})
+
+		Context("when the global logging is enabled", func() {
+			BeforeEach(func() {
+				netOut.GlobalLogging = true
+			})
+			It("calls Convert with globalLogging set to true", func() {
+				err := netOut.InsertRule("some-container-handle", netOutRule, "1.2.3.4")
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(converter.ConvertCallCount()).To(Equal(1))
+				rule, ip, logChainName, logging := converter.ConvertArgsForCall(0)
+				Expect(rule).To(Equal(netOutRule))
+				Expect(ip).To(Equal("1.2.3.4"))
+				Expect(logChainName).To(Equal("some-other-chain-name"))
+				Expect(logging).To(Equal(true))
 			})
 		})
 	})
@@ -438,10 +456,11 @@ var _ = Describe("Netout", func() {
 			Expect(suffix).To(Equal("log"))
 
 			Expect(converter.BulkConvertCallCount()).To(Equal(1))
-			convertedRules, ip, logChainName := converter.BulkConvertArgsForCall(0)
+			convertedRules, ip, logChainName, logging := converter.BulkConvertArgsForCall(0)
 			Expect(convertedRules).To(Equal(netOutRules))
 			Expect(ip).To(Equal("1.2.3.4"))
 			Expect(logChainName).To(Equal("some-other-chain-name"))
+			Expect(logging).To(Equal(false))
 
 			Expect(ipTables.BulkInsertCallCount()).To(Equal(1))
 			table, chain, pos, rulespec := ipTables.BulkInsertArgsForCall(0)
@@ -469,6 +488,23 @@ var _ = Describe("Netout", func() {
 			It("returns an error", func() {
 				err := netOut.BulkInsertRules("some-container-handle", netOutRules, "1.2.3.4")
 				Expect(err).To(MatchError("bulk inserting net-out rules: potato"))
+			})
+		})
+
+		Context("when the global logging is enabled", func() {
+			BeforeEach(func() {
+				netOut.GlobalLogging = true
+			})
+			It("calls BulkConvert with globalLogging set to true", func() {
+				err := netOut.BulkInsertRules("some-container-handle", netOutRules, "1.2.3.4")
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(converter.BulkConvertCallCount()).To(Equal(1))
+				convertedRules, ip, logChainName, logging := converter.BulkConvertArgsForCall(0)
+				Expect(convertedRules).To(Equal(netOutRules))
+				Expect(ip).To(Equal("1.2.3.4"))
+				Expect(logChainName).To(Equal("some-other-chain-name"))
+				Expect(logging).To(Equal(true))
 			})
 		})
 	})
