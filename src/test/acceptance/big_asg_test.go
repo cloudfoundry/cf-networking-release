@@ -33,7 +33,7 @@ var _ = Describe("policy cleanup", func() {
 		Expect(cli.TargetOrg(orgName)).To(Succeed())
 
 		spaceName = "asg-space"
-		Expect(cli.CreateSpace(spaceName)).To(Succeed())
+		Expect(cli.CreateSpace(spaceName, orgName)).To(Succeed())
 		Expect(cli.TargetSpace(spaceName)).To(Succeed())
 	})
 
