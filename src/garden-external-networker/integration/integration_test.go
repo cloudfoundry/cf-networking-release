@@ -23,6 +23,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
+	"github.com/pivotal-cf-experimental/gomegamatchers"
 )
 
 type fakePluginLogData struct {
@@ -405,6 +406,50 @@ var _ = Describe("Garden External Networker", func() {
 				},
 				Ports: []garden.PortRange{{Start: 9000, End: 9999}},
 			}
+		})
+
+		Context("when asg iptables logging is enabled", func() {
+			BeforeEach(func() {
+				configFile, err := ioutil.TempFile("", "adapter-config-")
+				Expect(err).NotTo(HaveOccurred())
+				fakeConfigFilePath = configFile.Name()
+				config := map[string]interface{}{
+					"cni_plugin_dir":       paths.CniPluginDir,
+					"cni_config_dir":       cniConfigDir,
+					"bind_mount_dir":       bindMountRoot,
+					"overlay_network":      "10.255.0.0/16",
+					"state_file":           stateFilePath,
+					"start_port":           60000,
+					"total_ports":          56,
+					"iptables_lock_file":   GlobalIPTablesLockFile,
+					"instance_address":     "1.2.3.4",
+					"iptables_asg_logging": true,
+				}
+				configBytes, err := json.Marshal(config)
+				Expect(err).NotTo(HaveOccurred())
+				_, err = configFile.Write(configBytes)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(configFile.Close()).To(Succeed())
+
+				upCommand.Args = []string{
+					paths.PathToAdapter,
+					"--configFile", fakeConfigFilePath,
+					"--action", "up",
+					"--handle", containerHandle,
+				}
+			})
+
+			It("writes a default deny logging rule", func() {
+				By("calling up")
+				upSession := runAndWait(upCommand)
+				Eventually(upSession.Exited).Should(BeClosed())
+
+				By("checking that default deny logging rule is created")
+				Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
+					`-A ` + netoutChainName + ` -s 169.254.1.2/32 ! -d 10.255.0.0/16 -j LOG --log-prefix DENY_` + containerHandle[:24],
+					`-A ` + netoutChainName + ` -s 169.254.1.2/32 ! -d 10.255.0.0/16 -j REJECT --reject-with icmp-port-unreachable`,
+				}))
+			})
 		})
 
 		It("writes NetOut rules", func() {

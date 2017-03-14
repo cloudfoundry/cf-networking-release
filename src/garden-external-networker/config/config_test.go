@@ -35,7 +35,8 @@ var _ = Describe("Config", func() {
 					"start_port": 1234,
 					"total_ports": 56,
 					"iptables_lock_file": "/some/lock/file/path",
-					"instance_address": "1.2.3.4"
+					"instance_address": "1.2.3.4",
+					"iptables_asg_logging": true
 				}`)
 				c, err := config.New(file.Name())
 				Expect(err).NotTo(HaveOccurred())
@@ -47,6 +48,7 @@ var _ = Describe("Config", func() {
 				Expect(c.TotalPorts).To(Equal(56))
 				Expect(c.IPTablesLockFile).To(Equal("/some/lock/file/path"))
 				Expect(c.InstanceAddress).To(Equal("1.2.3.4"))
+				Expect(c.IPTablesASGLogging).To(BeTrue())
 			})
 		})
 

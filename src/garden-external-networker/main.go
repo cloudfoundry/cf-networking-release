@@ -140,9 +140,10 @@ func mainWithError(logger lager.Logger) error {
 	}
 
 	netoutProvider := &legacynet.NetOut{
-		ChainNamer: chainNamer,
-		IPTables:   lockedIPTables,
-		Converter:  &legacynet.NetOutRuleConverter{},
+		ChainNamer:    chainNamer,
+		IPTables:      lockedIPTables,
+		Converter:     &legacynet.NetOutRuleConverter{},
+		GlobalLogging: cfg.IPTablesASGLogging,
 	}
 
 	manager := &manager.Manager{

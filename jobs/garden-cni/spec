@@ -27,3 +27,7 @@ properties:
     description: "IP range used by the container network"
     default: 10.255.0.0/16
 
+  cf_networking.garden_external_networker.iptables_asg_logging:
+    description: "Enables global logging for all ASGs"
+    default: false
+

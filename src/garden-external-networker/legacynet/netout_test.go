@@ -177,6 +177,36 @@ var _ = Describe("Netout", func() {
 				Expect(err).To(MatchError("appending rule: potato"))
 			})
 		})
+
+		Context("when global logging is enabled", func() {
+			BeforeEach(func() {
+				netOut.GlobalLogging = true
+			})
+			It("writes a log rule for denies", func() {
+				err := netOut.Initialize(logger, "some-container-handle", net.ParseIP("5.6.7.8"), "9.9.0.0/16")
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(ipTables.BulkAppendCallCount()).To(Equal(3))
+
+				table, chain, rulespec := ipTables.BulkAppendArgsForCall(1)
+				Expect(table).To(Equal("filter"))
+				Expect(chain).To(Equal("netout-some-container-handle"))
+				Expect(rulespec).To(Equal([]rules.IPTablesRule{
+					{"-s", "5.6.7.8",
+						"!", "-d", "9.9.0.0/16",
+						"-m", "state", "--state", "RELATED,ESTABLISHED",
+						"--jump", "RETURN"},
+					{"-s", "5.6.7.8",
+						"!", "-d", "9.9.0.0/16",
+						"--jump", "LOG", "--log-prefix", "DENY_some-container-handle"},
+					{"-s", "5.6.7.8",
+						"!", "-d", "9.9.0.0/16",
+						"--jump", "REJECT",
+						"--reject-with", "icmp-port-unreachable"},
+				}))
+
+			})
+		})
 	})
 
 	Describe("Cleanup", func() {

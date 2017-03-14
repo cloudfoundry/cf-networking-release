@@ -22,9 +22,10 @@ type netOutRuleConverter interface {
 }
 
 type NetOut struct {
-	ChainNamer chainNamer
-	IPTables   rules.IPTablesAdapter
-	Converter  netOutRuleConverter
+	ChainNamer    chainNamer
+	IPTables      rules.IPTablesAdapter
+	Converter     netOutRuleConverter
+	GlobalLogging bool
 }
 
 func (m *NetOut) Initialize(logger lager.Logger, containerHandle string, containerIP net.IP, overlayNetwork string) error {
@@ -65,6 +66,14 @@ func (m *NetOut) Initialize(logger lager.Logger, containerHandle string, contain
 				rules.NewReturnRule(),
 			},
 		},
+	}
+
+	if m.GlobalLogging {
+		args[1].Rules = []rules.IPTablesRule{
+			rules.NewNetOutRelatedEstablishedRule(containerIP.String(), overlayNetwork),
+			rules.NewNetOutDefaultRejectLogRule(containerHandle, containerIP.String(), overlayNetwork),
+			rules.NewNetOutDefaultRejectRule(containerIP.String(), overlayNetwork),
+		}
 	}
 
 	for _, arg := range args {

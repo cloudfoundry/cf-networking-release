@@ -190,6 +190,15 @@ func NewNetOutRelatedEstablishedRule(subnet, overlayNetwork string) IPTablesRule
 	}
 }
 
+func NewNetOutDefaultRejectLogRule(containerHandle, subnet, overlayNetwork string) IPTablesRule {
+	return IPTablesRule{
+		"-s", subnet,
+		"!", "-d", overlayNetwork,
+		"--jump", "LOG",
+		"--log-prefix", fmt.Sprintf("DENY_%s", containerHandle),
+	}
+}
+
 func NewNetOutDefaultRejectRule(subnet, overlayNetwork string) IPTablesRule {
 	return IPTablesRule{
 		"-s", subnet,
