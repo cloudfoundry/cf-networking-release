@@ -199,8 +199,8 @@ var _ = Describe("VXLAN Policy Agent", func() {
 
 		It("has a log level thats configurable at runtime", func() {
 			Consistently(session).ShouldNot(gexec.Exit())
-			Expect(session.Out).To(Say("container-networking.vxlan-policy-agent"))
-			Expect(session.Out).NotTo(Say("got-containers"))
+			Eventually(session.Out).Should(Say("container-networking.vxlan-policy-agent"))
+			Consistently(session.Out).ShouldNot(Say("got-containers"))
 
 			endpoint := fmt.Sprintf("http://%s:%d/log-level", conf.DebugServerHost, conf.DebugServerPort)
 			req, err := http.NewRequest("POST", endpoint, strings.NewReader("debug"))
