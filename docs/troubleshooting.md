@@ -79,3 +79,137 @@ NOTE: If you are having problems, first consult our [known issues doc](known-iss
   -   `netmon`
   -   `vxlan_policy_agent`
   -   `policy_server`
+
+
+### Debugging c2c packets
+
+  To determine a failure on a c2c packet, `bosh ssh` onto a cell suspected of hosting an app that is not receiving failing packets.
+
+  To find relevant packets, run the following command
+  ```
+  tcpdump -T vxlan -v -XX -i <interface>
+  ```
+  where `<interface>` is the lowest level BROADCAST address found from running
+  ```
+  ip link
+  ```
+  For the example output of this command below, interface is wb39c9irmlhj-1.
+  ```
+  1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+  2: flannel.1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue state UNKNOWN mode DEFAULT group default
+    link/ether 32:58:f3:e9:3d:04 brd ff:ff:ff:ff:ff:ff
+  3: cni-flannel0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue state UP mode DEFAULT group default qlen 1000
+    link/ether 0a:58:0a:ff:47:01 brd ff:ff:ff:ff:ff:ff
+  7: vethcb647a32@cni-flannel0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue master cni-flannel0 state UP mode DEFAULT group default
+    link/ether 92:f6:4e:28:1f:e6 brd ff:ff:ff:ff:ff:ff
+  84: wb39c9irmlhj-1@if85: <BROADCAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default qlen 1
+    link/ether d6:14:07:00:22:ac brd ff:ff:ff:ff:ff:ff
+  ```
+
+  If packet capture is already set up, a packet is distinguished as VXLAN in the packet header.
+
+  C2C packets should contain `vni 1` in the header, similar to
+  ```
+  3:26:56.211447 IP (tos 0x0, ttl 64, id 60857, offset 0, flags [none], proto UDP (17), length 110)
+    cell-z1-0.node.dc1.cf.internal.57703 > cell-z1-1.node.dc1.cf.internal.8472: VXLAN, flags [I] (0x88), vni 1
+  ```
+
+  We can now use to VXLAN packet to find information about the app that sent it.
+
+  First, find the GBP tag in the body of the packet. Information concerning the GBP tag will be 4 bytes after the VXLAN Port, which is always 0x2118.
+
+  In the example below, the relevant information is 0x8800 0001. The first two bytes (0x88) tell us that a GBP tag exists. If a GBP tag does not exist, the two bytes will be 0x08.
+
+  ```
+  0x0000:  0e4e b0d2 3b72 96de b050 aa1a 0800 4500  .N..;r...P....E.
+	0x0010:  006e edb9 0000 4011 56d1 0af4 1004 0af4  .n....@.V.......
+	0x0020:  1009 e167 2118 005a 0000 8800 0001 0000  ...g!..Z........
+	0x0030:  0100 32fe ee1f 5bc6 dec2 c712 ac75 0800  ..2...[......u..
+	0x0040:  4500 003c 18dd 4000 3f06 80d4 0aff 4003  E..<..@.?.....@.
+	0x0050:  0aff 4c0a dd62 1f90 4cc9 3652 0000 0000  ..L..b..L.6R....
+	0x0060:  a002 6e28 a239 0000 0204 0582 0402 080a  ..n(.9..........
+	0x0070:  0071 2e8f 0000 0000 0103 0307            .q..........
+  ```
+
+  If there is a tag, the next six bytes represent the tag. For the same example, the tag is 0x000001.
+
+  With a GBP tag, app information can be found by running
+  ```
+  cf curl /networking/v0/external/tags
+  ```
+  and parsing the output based on the GBP tag. The associated id is the application guid.
+
+  If the VXLAN packet does not have a GBP tag, continue to examine the packet.
+
+  Twenty bytes before the VXLAN Port is the eight byte hex representation of the source ip for the cell that hosts the application. In the example above, this value is 0x0af41004.
+
+  Thirty bytes after the GBP tag (forty-six bytes after the VXLAN Port) is the eight byte hex representation of the source ip for the application. In the example above, this value is 0x0aff4c0a.
+
+  Now `bosh ssh` onto the cell with the source ip just found. Run
+  ```
+  less /var/vcap/data/container-metadata/store.json
+  ```
+  and search the resulting output for an entry with the same ip as the application source ip found. The relevant application guid can be found in the associated metadata as `app_id`.
+
+  Example of `store.json` output:
+  ```
+  {
+   "6d2131bb-fe5e-47d7-7e46-d925cf6db115" : {
+      "ip" : "10.255.64.3",
+      "metadata" : {
+         "policy_group_id" : "dc947050-d073-4a8f-8693-be10a1ae8553",
+         "org_id" : "98ad4a19-2a9f-412e-9431-54b0f9dfede1",
+         "space_id" : "756e1478-3a30-48a5-a308-93aaa1dd178f",
+         "app_id" : "dc947050-d073-4a8f-8693-be10a1ae8553"
+      },
+      "handle" : "6d2131bb-fe5e-47d7-7e46-d925cf6db115"
+   }
+  }
+  ```
+
+### Debugging non-C2C packets
+
+  If you have a packet that is not c2c (destination is an external address), and want to find information about the application, find the assigned container ip in the packet header. For the example below, the ip is 10.255.29.3.
+  ```
+  17:42:25.903326 IP (tos 0x0, ttl 64, id 1958, offset 0, flags [DF], proto TCP (6), length 40)
+    10.255.29.3.60602 > lax02s21-in-f14.1e100.net.http: Flags [.], cksum 0xd865 (incorrect -> 0xf373), ack 1, win 28200, length 0
+	0x0000:  0a58 0aff 1d01 0a58 0aff 1d03 0800 4500  .X.....X......E.
+	0x0010:  0028 07a6 4000 4006 5adf 0aff 1d03 d83a  .(..@.@.Z......:
+	0x0020:  d80e ecba 0050 7687 e94f 2109 0802 5010  .....Pv..O!...P.
+	0x0030:  6e28 d865 0000
+  ```
+
+  On the same cell which the packet was captured, run
+  ```
+  less /var/vcap/data/container-metadata/store.json | json_pp
+  ```
+  and find the entry with the ip. If no entry exists, check the `store.json` on other cells.
+
+  The associated `app_id` is the application guid.
+
+  Example of `store.json` output:
+  ```
+  {
+   "9bce657c-b92f-422b-60e0-227a66ad8b48" : {
+      "metadata" : {
+         "space_id" : "601577f3-7c2d-4d98-8029-0bd03b6a0682",
+         "app_id" : "aa4117a2-5e34-4648-9d42-8260380267cc",
+         "policy_group_id" : "aa4117a2-5e34-4648-9d42-8260380267cc",
+         "org_id" : "ff585363-1164-49b2-bbf3-55dd0cb06597"
+      },
+      "ip" : "10.255.29.4",
+      "handle" : "9bce657c-b92f-422b-60e0-227a66ad8b48"
+   },
+   "cf760bdc-ebf9-414e-4a88-29dc8820643e" : {
+      "ip" : "10.255.29.3",
+      "metadata" : {
+         "policy_group_id" : "f028b20b-7203-4743-ab96-da2bf05fae45",
+         "space_id" : "601577f3-7c2d-4d98-8029-0bd03b6a0682",
+         "app_id" : "f028b20b-7203-4743-ab96-da2bf05fae45",
+         "org_id" : "ff585363-1164-49b2-bbf3-55dd0cb06597"
+      },
+      "handle" : "cf760bdc-ebf9-414e-4a88-29dc8820643e"
+   }
+  }
+  ```
