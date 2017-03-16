@@ -3,9 +3,9 @@
   path: /releases/-
   value:
     name: cf-networking
-    sha1: 8b1d0f1f55a6256b8ce33d5588e9ef411aac9c1f
-    url: https://bosh.io/d/github.com/cloudfoundry-incubator/cf-networking-release?v=0.17.0
-    version: "0.17.0"
+    sha1: 689ff1050b49513d5fe889b9655803bcdd265824
+    url: https://bosh.io/d/github.com/cloudfoundry-incubator/cf-networking-release?v=0.18.0
+    version: "0.18.0"
 
 - type: replace
   path: /instance_groups/name=postgres/jobs/name=postgres/properties/databases/databases/-
