@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"lib/datastore"
+	"net"
 	"netmon/integration/fakes"
 	"os"
 	"os/exec"
@@ -19,12 +21,13 @@ import (
 
 var _ = Describe("Flannel Watchdog", func() {
 	var (
-		session        *gexec.Session
-		subnetFile     *os.File
-		fakeMetron     fakes.FakeMetron
-		subnetFileName string
-		bridgeName     string
-		bridgeIP       string
+		session          *gexec.Session
+		subnetFile       *os.File
+		fakeMetron       fakes.FakeMetron
+		subnetFileName   string
+		bridgeName       string
+		metadataFileName string
+		cellSubnet       string
 	)
 
 	createBridge := func() {
@@ -32,7 +35,7 @@ var _ = Describe("Flannel Watchdog", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(ipLinkSession, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
 
-		ipLinkSession, err = runCmd("ip", "addr", "add", bridgeIP, "dev", bridgeName)
+		ipLinkSession, err = runCmd("ip", "addr", "add", cellSubnet, "dev", bridgeName)
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(ipLinkSession, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
 	}
@@ -43,22 +46,43 @@ var _ = Describe("Flannel Watchdog", func() {
 		Eventually(ipLinkSession, DEFAULT_TIMEOUT).Should(gexec.Exit())
 	}
 
+	writeContainerMetadata := func() {
+		containerIP, _, err := net.ParseCIDR(cellSubnet)
+		Expect(err).NotTo(HaveOccurred())
+		data := map[string]datastore.Container{
+			"container-1": datastore.Container{
+				Handle: "some-handle",
+				IP:     containerIP.String(),
+			},
+		}
+
+		metadata, err := json.Marshal(data)
+		Expect(err).NotTo(HaveOccurred())
+
+		metadataFile, err := ioutil.TempFile("", "")
+		Expect(err).NotTo(HaveOccurred())
+		metadataFileName = metadataFile.Name()
+		err = ioutil.WriteFile(metadataFileName, metadata, os.ModePerm)
+		Expect(err).NotTo(HaveOccurred())
+	}
+
 	writeSubnetEnv := func() {
 		var err error
 		subnetFile, err = ioutil.TempFile("", "subnet.env")
 		subnetFileName = subnetFile.Name()
-		err = ioutil.WriteFile(subnetFileName, []byte(fmt.Sprintf("FLANNEL_SUBNET=%s\nFLANNEL_NETWORK=10.255.0.0/16", bridgeIP)), os.ModePerm)
+		err = ioutil.WriteFile(subnetFileName, []byte(fmt.Sprintf("FLANNEL_SUBNET=%s\nFLANNEL_NETWORK=10.255.0.0/16", cellSubnet)), os.ModePerm)
 		Expect(err).NotTo(HaveOccurred())
 	}
 
-	startFlannelWatchdog := func() {
+	startFlannelWatchdog := func(extraArgs ...string) {
 		var err error
 		configFilePath := WriteConfigFile(config.Config{
 			FlannelSubnetFile: subnetFileName,
 			BridgeName:        bridgeName,
 			MetronAddress:     fakeMetron.Address(),
+			MetadataFilename:  metadataFileName,
 		})
-		watchdogCmd := exec.Command(watchdogBinaryPath, "-config-file", configFilePath)
+		watchdogCmd := exec.Command(watchdogBinaryPath, append(extraArgs, "-config-file", configFilePath)...)
 		session, err = gexec.Start(watchdogCmd, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
 	}
@@ -68,7 +92,7 @@ var _ = Describe("Flannel Watchdog", func() {
 			fakeMetron = fakes.New()
 
 			bridgeName = fmt.Sprintf("test-bridge-%d", 100+GinkgoParallelNode())
-			bridgeIP = fmt.Sprintf("10.255.%d.1/24", GinkgoParallelNode())
+			cellSubnet = fmt.Sprintf("10.255.%d.1/24", GinkgoParallelNode())
 
 			createBridge()
 			writeSubnetEnv()
@@ -117,8 +141,7 @@ var _ = Describe("Flannel Watchdog", func() {
 
 			It("exits with a nonzero status", func() {
 				expectedMsg := fmt.Sprintf(
-					`This cell must be restarted (run \"bosh restart \u003cjob\u003e\").  Flannel is out of sync with the local bridge. `+
-						`flannel (%s): 10.4.13.1/24 bridge (%s): %s`, subnetFileName, bridgeName, bridgeIP)
+					`This cell must be restarted (run \"bosh restart \u003cjob\u003e\").  Flannel is out of sync with the local bridge.`)
 				Expect(string(session.Out.Contents())).To(ContainSubstring(expectedMsg))
 			})
 
@@ -185,7 +208,7 @@ var _ = Describe("Flannel Watchdog", func() {
 
 		Context("when the bridge device ip is not found", func() {
 			BeforeEach(func() {
-				ipDelSession, err := runCmd("ip", "addr", "del", bridgeIP, "dev", bridgeName)
+				ipDelSession, err := runCmd("ip", "addr", "del", cellSubnet, "dev", bridgeName)
 				Eventually(ipDelSession, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
 				Expect(err).NotTo(HaveOccurred())
 			})
@@ -193,7 +216,58 @@ var _ = Describe("Flannel Watchdog", func() {
 			It("exits with nonzero status code and logs the error", func() {
 				Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit(1))
 				Expect(session.Out).To(gbytes.Say(fmt.Sprintf(
-					`container-networking.flannel-watchdog.*device '%s' has no ip`, bridgeName)))
+					`container-networking.flannel-watchdog.*device '%s' does not have one address`, bridgeName)))
+			})
+		})
+	})
+
+	Context("when the no-bridge flag is provided", func() {
+		BeforeEach(func() {
+			fakeMetron = fakes.New()
+			cellSubnet = fmt.Sprintf("10.255.%d.1/22", GinkgoParallelNode())
+
+			writeContainerMetadata()
+			writeSubnetEnv()
+			startFlannelWatchdog("--no-bridge")
+		})
+
+		AfterEach(func() {
+			session.Interrupt()
+			Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit())
+		})
+
+		It("should boot and gracefully terminate", func() {
+			Consistently(session, "1.5s").ShouldNot(gexec.Exit())
+
+			session.Interrupt()
+			Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit())
+		})
+
+		Context("when the container ips and subnet env ip range are out of sync", func() {
+			BeforeEach(func() {
+				Consistently(session, "1.5s").ShouldNot(gexec.Exit())
+
+				err := ioutil.WriteFile(subnetFileName, []byte(`FLANNEL_SUBNET=10.4.13.1/24\nFLANNEL_NETWORK=10.4.0.0/16`), os.ModePerm)
+				Expect(err).NotTo(HaveOccurred())
+				Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit(1))
+			})
+
+			It("exits with a nonzero status", func() {
+				expectedMsg := fmt.Sprintf(
+					`This cell must be restarted (run \"bosh restart \u003cjob\u003e\").  Flannel is out of sync with current containers.`)
+				Expect(string(session.Out.Contents())).To(ContainSubstring(expectedMsg))
+			})
+
+			It("emits a metric indicating flannel is down", func() {
+				gatherMetricNames := func() map[string]float64 {
+					events := fakeMetron.AllEvents()
+					metrics := map[string]float64{}
+					for _, event := range events {
+						metrics[event.Name] = event.Value
+					}
+					return metrics
+				}
+				Eventually(gatherMetricNames, "5s").Should(HaveKeyWithValue("flannelDown", 1.0))
 			})
 		})
 	})
@@ -203,7 +277,7 @@ var _ = Describe("Flannel Watchdog", func() {
 			fakeMetron = fakes.New()
 
 			bridgeName = fmt.Sprintf("test-bridge-%d", 100+GinkgoParallelNode())
-			bridgeIP = fmt.Sprintf("10.255.%d.1/22", GinkgoParallelNode())
+			cellSubnet = fmt.Sprintf("10.255.%d.1/22", GinkgoParallelNode())
 
 			createBridge()
 			writeSubnetEnv()

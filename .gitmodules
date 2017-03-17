@@ -122,3 +122,9 @@
 [submodule "src/github.com/pivotal-cf-experimental/gomegamatchers"]
 	path = src/github.com/pivotal-cf-experimental/gomegamatchers
 	url = https://github.com/pivotal-cf-experimental/gomegamatchers
+[submodule "src/github.com/vishvananda/netlink"]
+	path = src/github.com/vishvananda/netlink
+	url = https://github.com/vishvananda/netlink
+[submodule "src/github.com/vishvananda/netns"]
+	path = src/github.com/vishvananda/netns
+	url = https://github.com/vishvananda/netns

@@ -8,6 +8,7 @@ files:
   - code.cloudfoundry.org/lager/*.go # gosub
   - flannel-watchdog/cmd/flannel-watchdog/*.go # gosub
   - flannel-watchdog/config/*.go # gosub
+  - flannel-watchdog/validator/*.go # gosub
   - github.com/cloudfoundry/dropsonde/*.go # gosub
   - github.com/cloudfoundry/dropsonde/emitter/*.go # gosub
   - github.com/cloudfoundry/dropsonde/envelope_sender/*.go # gosub
@@ -31,4 +32,10 @@ files:
   - github.com/tedsuo/ifrit/*.go # gosub
   - github.com/tedsuo/ifrit/grouper/*.go # gosub
   - github.com/tedsuo/ifrit/sigmon/*.go # gosub
+  - github.com/vishvananda/netlink/*.go # gosub
+  - github.com/vishvananda/netlink/nl/*.go # gosub
+  - github.com/vishvananda/netns/*.go # gosub
+  - lib/datastore/*.go # gosub
+  - lib/filelock/*.go # gosub
   - lib/flannel/*.go # gosub
+  - lib/serial/*.go # gosub

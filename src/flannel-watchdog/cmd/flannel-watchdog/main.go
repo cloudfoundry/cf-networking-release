@@ -7,13 +7,13 @@ import (
 	"io/ioutil"
 	"lib/flannel"
 	"os"
-	"os/exec"
 	"regexp"
 	"time"
 
 	"code.cloudfoundry.org/lager"
 
 	"flannel-watchdog/config"
+	"flannel-watchdog/validator"
 
 	"github.com/cloudfoundry/dropsonde"
 	"github.com/cloudfoundry/dropsonde/metrics"
@@ -26,10 +26,14 @@ const dropsondeOrigin = "flannel-watchdog"
 
 var ipAddrParseRegex = regexp.MustCompile(`((?:[0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2})`)
 
+type ipValidator interface {
+	Validate(string) error
+}
+
 type Runner struct {
 	SubnetFile string
-	BridgeName string
 	Logger     lager.Logger
+	Validator  ipValidator
 }
 
 func (r *Runner) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
@@ -37,7 +41,6 @@ func (r *Runner) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 
 	errCh := make(chan error)
 	go func() {
-		found := false
 		for {
 			time.Sleep(1 * time.Second)
 
@@ -47,31 +50,13 @@ func (r *Runner) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 			flannelIP, _, err := localSubnetter.DiscoverNetworkInfo()
 			if err != nil {
 				errCh <- fmt.Errorf("discovering flannel subnet: %s", err)
-			}
-
-			output, err := exec.Command("ip", "addr", "show", "dev", r.BridgeName).CombinedOutput()
-			if err != nil {
-				r.Logger.Info("no bridge device found")
-				found = false
-				continue
-			}
-
-			matches := ipAddrParseRegex.FindStringSubmatch(string(output))
-			if len(matches) < 2 {
-				errCh <- fmt.Errorf(`device '%s' has no ip`, r.BridgeName)
 				return
 			}
 
-			deviceIP := matches[1]
-			if !found {
-				found = true
-				r.Logger.Info("Found bridge", lager.Data{"name": r.BridgeName})
-			}
-
-			if flannelIP != deviceIP {
-				metrics.SendValue("flannelDown", 1.0, "bool")
-				errCh <- fmt.Errorf(`This cell must be restarted (run "bosh restart <job>").  Flannel is out of sync with the local bridge. `+
-					`flannel (%s): %s bridge (%s): %s`, r.SubnetFile, flannelIP, r.BridgeName, deviceIP)
+			err = r.Validator.Validate(flannelIP)
+			if err != nil {
+				fmt.Println(metrics.SendValue("flannelDown", 1.0, "bool"))
+				errCh <- err
 				return
 			}
 
@@ -90,6 +75,7 @@ func (r *Runner) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 func mainWithErr(logger lager.Logger) error {
 	conf := &config.Config{}
 	configFilePath := flag.String("config-file", "", "path to config file")
+	noBridge := flag.Bool("no-bridge", false, "run in no bridge mode")
 	flag.Parse()
 
 	config, err := ioutil.ReadFile(*configFilePath)
@@ -107,11 +93,26 @@ func mainWithErr(logger lager.Logger) error {
 		return fmt.Errorf("initializing dropsonde: %s", err)
 	}
 
+	var ipValidator ipValidator
+	if *noBridge {
+		ipValidator = &validator.NoBridge{
+			Logger:           logger,
+			MetadataFileName: conf.MetadataFilename,
+		}
+	} else {
+		ipValidator = &validator.Bridge{
+			Logger:         logger,
+			BridgeName:     conf.BridgeName,
+			NetlinkAdapter: &validator.NetlinkAdapter{},
+		}
+	}
+
 	runner := &Runner{
 		SubnetFile: conf.FlannelSubnetFile,
-		BridgeName: conf.BridgeName,
 		Logger:     logger,
+		Validator:  ipValidator,
 	}
+
 	members := grouper.Members{{"runner", runner}}
 	group := grouper.NewOrdered(os.Interrupt, members)
 	monitor := ifrit.Invoke(sigmon.New(group))
