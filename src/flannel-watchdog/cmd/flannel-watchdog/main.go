@@ -116,7 +116,7 @@ func mainWithErr(logger lager.Logger) error {
 
 	server := http_server.New(fmt.Sprintf("127.0.0.1:%d", conf.HealthCheckPort), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("The cell is healthy! The cell is configured with the correct subnet."))
+		w.Write([]byte("The cell is healthy! The cell is configured with the correct subnet.\n"))
 	}))
 
 	members := grouper.Members{

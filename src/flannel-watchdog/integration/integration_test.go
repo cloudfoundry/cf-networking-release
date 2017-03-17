@@ -150,7 +150,7 @@ var _ = Describe("Flannel Watchdog", func() {
 			resp, err := client.Get(fmt.Sprintf("http://127.0.0.1:%d", port))
 			Expect(err).NotTo(HaveOccurred())
 			responseBytes, err := ioutil.ReadAll(resp.Body)
-			Expect(string(responseBytes)).To(Equal("The cell is healthy! The cell is configured with the correct subnet."))
+			Expect(string(responseBytes)).To(Equal("The cell is healthy! The cell is configured with the correct subnet.\n"))
 		})
 
 		Context("when the subnets file and bridge get out of sync", func() {

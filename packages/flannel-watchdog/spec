@@ -31,6 +31,7 @@ files:
   - github.com/nu7hatch/gouuid/*.go # gosub
   - github.com/tedsuo/ifrit/*.go # gosub
   - github.com/tedsuo/ifrit/grouper/*.go # gosub
+  - github.com/tedsuo/ifrit/http_server/*.go # gosub
   - github.com/tedsuo/ifrit/sigmon/*.go # gosub
   - github.com/vishvananda/netlink/*.go # gosub
   - github.com/vishvananda/netlink/nl/*.go # gosub

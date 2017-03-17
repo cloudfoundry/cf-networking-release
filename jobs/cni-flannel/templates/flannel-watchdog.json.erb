@@ -4,7 +4,8 @@
     toRender = {
       "bridge_name" => "cni-flannel0",
       "flannel_subnet_file" => "/var/vcap/data/flannel/subnet.env",
-      "metron_address" => p("cf_networking.flannel_watchdog.metron_address")
+      "metron_address" => p("cf_networking.flannel_watchdog.metron_address"),
+      "health_check_port" => p("cf_networking.flannel_watchdog.health_check_port")
     }
 
     JSON.pretty_generate(toRender)
