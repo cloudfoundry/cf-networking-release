@@ -75,7 +75,6 @@ func (r *Runner) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 func mainWithErr(logger lager.Logger) error {
 	conf := &config.Config{}
 	configFilePath := flag.String("config-file", "", "path to config file")
-	noBridge := flag.Bool("no-bridge", false, "run in no bridge mode")
 	flag.Parse()
 
 	config, err := ioutil.ReadFile(*configFilePath)
@@ -94,7 +93,7 @@ func mainWithErr(logger lager.Logger) error {
 	}
 
 	var ipValidator ipValidator
-	if *noBridge {
+	if conf.NoBridge {
 		ipValidator = &validator.NoBridge{
 			Logger:           logger,
 			MetadataFileName: conf.MetadataFilename,

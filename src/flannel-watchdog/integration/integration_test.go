@@ -28,6 +28,7 @@ var _ = Describe("Flannel Watchdog", func() {
 		bridgeName       string
 		metadataFileName string
 		cellSubnet       string
+		noBridge         bool
 	)
 
 	createBridge := func() {
@@ -74,15 +75,16 @@ var _ = Describe("Flannel Watchdog", func() {
 		Expect(err).NotTo(HaveOccurred())
 	}
 
-	startFlannelWatchdog := func(extraArgs ...string) {
+	startFlannelWatchdog := func() {
 		var err error
 		configFilePath := WriteConfigFile(config.Config{
 			FlannelSubnetFile: subnetFileName,
 			BridgeName:        bridgeName,
 			MetronAddress:     fakeMetron.Address(),
 			MetadataFilename:  metadataFileName,
+			NoBridge:          noBridge,
 		})
-		watchdogCmd := exec.Command(watchdogBinaryPath, append(extraArgs, "-config-file", configFilePath)...)
+		watchdogCmd := exec.Command(watchdogBinaryPath, "-config-file", configFilePath)
 		session, err = gexec.Start(watchdogCmd, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
 	}
@@ -93,6 +95,7 @@ var _ = Describe("Flannel Watchdog", func() {
 
 			bridgeName = fmt.Sprintf("test-bridge-%d", 100+GinkgoParallelNode())
 			cellSubnet = fmt.Sprintf("10.255.%d.1/24", GinkgoParallelNode())
+			noBridge = false
 
 			createBridge()
 			writeSubnetEnv()
@@ -221,14 +224,15 @@ var _ = Describe("Flannel Watchdog", func() {
 		})
 	})
 
-	Context("when the no-bridge flag is provided", func() {
+	Context("when configured with no_bridge set to true", func() {
 		BeforeEach(func() {
 			fakeMetron = fakes.New()
 			cellSubnet = fmt.Sprintf("10.255.%d.1/22", GinkgoParallelNode())
+			noBridge = true
 
 			writeContainerMetadata()
 			writeSubnetEnv()
-			startFlannelWatchdog("--no-bridge")
+			startFlannelWatchdog()
 		})
 
 		AfterEach(func() {
@@ -278,6 +282,7 @@ var _ = Describe("Flannel Watchdog", func() {
 
 			bridgeName = fmt.Sprintf("test-bridge-%d", 100+GinkgoParallelNode())
 			cellSubnet = fmt.Sprintf("10.255.%d.1/22", GinkgoParallelNode())
+			noBridge = false
 
 			createBridge()
 			writeSubnetEnv()
