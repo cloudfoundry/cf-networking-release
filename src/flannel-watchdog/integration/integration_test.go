@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"lib/datastore"
 	"net"
+	"net/http"
 	"netmon/integration/fakes"
 	"os"
 	"os/exec"
@@ -29,6 +30,7 @@ var _ = Describe("Flannel Watchdog", func() {
 		metadataFileName string
 		cellSubnet       string
 		noBridge         bool
+		port             int
 	)
 
 	createBridge := func() {
@@ -77,12 +79,14 @@ var _ = Describe("Flannel Watchdog", func() {
 
 	startFlannelWatchdog := func() {
 		var err error
+		port = GinkgoParallelNode() + 4000
 		configFilePath := WriteConfigFile(config.Config{
 			FlannelSubnetFile: subnetFileName,
 			BridgeName:        bridgeName,
 			MetronAddress:     fakeMetron.Address(),
 			MetadataFilename:  metadataFileName,
 			NoBridge:          noBridge,
+			HealthCheckPort:   port,
 		})
 		watchdogCmd := exec.Command(watchdogBinaryPath, "-config-file", configFilePath)
 		session, err = gexec.Start(watchdogCmd, GinkgoWriter, GinkgoWriter)
@@ -133,6 +137,22 @@ var _ = Describe("Flannel Watchdog", func() {
 			Consistently(gatherMetricNames, "5s").Should(HaveKeyWithValue("flannelDown", 0.0))
 		})
 
+		It("responds with Status.OK on its health check endpoint", func() {
+			client := http.DefaultClient
+			callHealthcheck := func() (int, error) {
+				resp, err := client.Get(fmt.Sprintf("http://127.0.0.1:%d", port))
+				if resp == nil {
+					return -1, err
+				}
+				return resp.StatusCode, err
+			}
+			Eventually(callHealthcheck, "5s").Should(Equal(http.StatusOK))
+			resp, err := client.Get(fmt.Sprintf("http://127.0.0.1:%d", port))
+			Expect(err).NotTo(HaveOccurred())
+			responseBytes, err := ioutil.ReadAll(resp.Body)
+			Expect(string(responseBytes)).To(Equal("The cell is healthy! The cell is configured with the correct subnet."))
+		})
+
 		Context("when the subnets file and bridge get out of sync", func() {
 			BeforeEach(func() {
 				Consistently(session, "1.5s").ShouldNot(gexec.Exit())
@@ -158,6 +178,16 @@ var _ = Describe("Flannel Watchdog", func() {
 					return metrics
 				}
 				Eventually(gatherMetricNames, "5s").Should(HaveKeyWithValue("flannelDown", 1.0))
+			})
+
+			It("stops responding on its health check endpoint", func() {
+				client := http.DefaultClient
+				callHealthcheck := func() error {
+					_, err := client.Get(fmt.Sprintf("http://127.0.0.1:%d", port))
+					return err
+				}
+				Eventually(callHealthcheck, "5s").ShouldNot(Succeed())
+				Consistently(callHealthcheck, "2s").ShouldNot(Succeed())
 			})
 		})
 

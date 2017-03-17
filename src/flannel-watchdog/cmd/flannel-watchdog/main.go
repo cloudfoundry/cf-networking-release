@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"lib/flannel"
+	"net/http"
 	"os"
 	"regexp"
 	"time"
@@ -19,6 +20,7 @@ import (
 	"github.com/cloudfoundry/dropsonde/metrics"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
+	"github.com/tedsuo/ifrit/http_server"
 	"github.com/tedsuo/ifrit/sigmon"
 )
 
@@ -112,7 +114,15 @@ func mainWithErr(logger lager.Logger) error {
 		Validator:  ipValidator,
 	}
 
-	members := grouper.Members{{"runner", runner}}
+	server := http_server.New(fmt.Sprintf("127.0.0.1:%d", conf.HealthCheckPort), http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("The cell is healthy! The cell is configured with the correct subnet."))
+	}))
+
+	members := grouper.Members{
+		{"runner", runner},
+		{"server", server},
+	}
 	group := grouper.NewOrdered(os.Interrupt, members)
 	monitor := ifrit.Invoke(sigmon.New(group))
 

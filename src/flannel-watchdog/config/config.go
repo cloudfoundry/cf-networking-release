@@ -5,5 +5,6 @@ type Config struct {
 	BridgeName        string `json:"bridge_name"`
 	MetronAddress     string `json:"metron_address"`
 	MetadataFilename  string `json:"metadata_filename"`
+	HealthCheckPort   int    `json:"health_check_port"`
 	NoBridge          bool   `json:"no_bridge"`
 }
