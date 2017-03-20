@@ -73,6 +73,25 @@ NOTE: If you are having problems, first consult our [known issues doc](known-iss
   Jan 23 23:15:38 localhost kernel: [856311.500733] OK_0003_9edc60d3-6cc8-4dc4-82IN=flannel.1 OUT=cni-flannel0 MAC=f6:c9:e6:4e:23:5c:b6:76:98:0e:64:0c:08:00 SRC=10.255.69.132 DST=10.255.31.137 LEN=60 TOS=0x00 PREC=0x00 TTL=62 ID=9292 DF PROTO=TCP SPT=37042 DPT=8080 WINDOW=26733 RES=0x00 SYN URGP=0 MARK=0x3
   ```
 
+### Enabling IPTables Logging for ASG Traffic
+
+  Logging for ASG iptables rules can be configured at startup via the
+  `cf_networking.garden_external_networker.iptables_asg_logging` property. It defaults
+  to `false`.
+
+  Logs from iptables end up in `/var/log/kern.log`.
+
+  Example of a rejected connection, note that the prefix `DENY_b6de7d0c-4792-4614-5e51-4c` indicates that an app instance with instance guid starting with `b6de7d0c-4792-4614-5e51-4c` was not able to connect to `10.0.16.8`:
+
+  ```
+  Mar 15 23:47:36 localhost kernel: [432140.181155] DENY_b6de7d0c-4792-4614-5e51-IN=cni-flannel0 OUT=eth0 PHYSIN=veth2938968a MAC=0a:58:0a:ff:45:01:0a:58:0a:ff:45:30:08:00 SRC=10.255.69.48 DST=10.0.16.8 LEN=60 TOS=0x00 PREC=0x00 TTL=63 ID=8874 DF PROTO=TCP SPT=55198 DPT=80 WINDOW=27400 RES=0x00 SYN URGP=0 MARK=0x1
+  ```
+
+  Example of an accepted connection, note that the prefix `OK_b6de7d0c-4792-4614-5e51-4c` indicates that an app instance with an instance guid starting with `b6de7d0c-4792-4614-5e51-4c` was able to connect to `93.184.216.34`:
+  ```
+  Mar 15 23:54:00 localhost kernel: [432524.231478] OK_b6de7d0c-4792-4614-5e51-4cIN=cni-flannel0 OUT=eth0 PHYSIN=veth2938968a MAC=0a:58:0a:ff:45:01:0a:58:0a:ff:45:30:08:00 SRC=10.255.69.48 DST=93.184.216.34 LEN=60 TOS=0x00 PREC=0x00 TTL=63 ID=20981 DF PROTO=TCP SPT=34814 DPT=80 WINDOW=27400 RES=0x00 SYN URGP=0 MARK=0x1
+  ```
+
 ### Metrics
 
   CF networking components emit metrics which can be consumed from the firehose, e.g. with the datadog firehose nozzle. Relevant metrics have theses prefixes:
