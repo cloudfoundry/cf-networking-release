@@ -13,6 +13,7 @@ type WrapperConfig struct {
 	IPTablesLockFile string                 `json:"iptables_lock_file"`
 	OverlayNetwork   string                 `json:"overlay_network"`
 	Delegate         map[string]interface{} `json:"delegate"`
+	HealthCheckURL   string                 `json:"health_check_url"`
 }
 
 func LoadWrapperConfig(bytes []byte) (*WrapperConfig, error) {
@@ -31,6 +32,10 @@ func LoadWrapperConfig(bytes []byte) (*WrapperConfig, error) {
 
 	if n.OverlayNetwork == "" {
 		return nil, fmt.Errorf("missing overlay network")
+	}
+
+	if n.HealthCheckURL == "" {
+		return nil, fmt.Errorf("missing health check url")
 	}
 
 	return n, nil

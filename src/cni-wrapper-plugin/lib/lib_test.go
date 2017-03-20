@@ -3,12 +3,14 @@ package lib_test
 import (
 	"cni-wrapper-plugin/fakes"
 	"cni-wrapper-plugin/lib"
+	"encoding/json"
 	"fmt"
 	"net"
 
 	"github.com/containernetworking/cni/pkg/types"
 	"github.com/containernetworking/cni/pkg/types/020"
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 )
 
@@ -19,6 +21,7 @@ var _ = Describe("LoadWrapperConfig", func() {
 			"datastore": "/some/path",
 			"iptables_lock_file": "/some/other/path",
 			"overlay_network": "10.255.0.0/16",
+			"health_check_url": "http://127.0.0.1:10007",
 			"delegate": {
 				"some": "info"
 			}
@@ -35,6 +38,7 @@ var _ = Describe("LoadWrapperConfig", func() {
 			Delegate: map[string]interface{}{
 				"some": "info",
 			},
+			HealthCheckURL: "http://127.0.0.1:10007",
 		}))
 	})
 
@@ -49,49 +53,22 @@ var _ = Describe("LoadWrapperConfig", func() {
 		})
 	})
 
-	Context("when the datastore path is not set", func() {
-		BeforeEach(func() {
-			input = []byte(`{ "delegate": { "some": "info" } }`)
-		})
+	DescribeTable("missing required field", func(field, errMessage string) {
+		var config map[string]interface{}
+		Expect(json.Unmarshal(input, &config)).To(Succeed())
+		delete(config, field)
 
-		It("should return a useful error", func() {
-			_, err := lib.LoadWrapperConfig(input)
-			Expect(err).To(MatchError("missing datastore path"))
-		})
-	})
-
-	Context("when the iptables lock file path is not set", func() {
-		BeforeEach(func() {
-			input = []byte(`{
-				"datastore": "/some/path",
-				"delegate": {
-					"some": "info"
-				}
-			}`)
-		})
-
-		It("should return a useful error", func() {
-			_, err := lib.LoadWrapperConfig(input)
-			Expect(err).To(MatchError("missing iptables lock file path"))
-		})
-	})
-
-	Context("when the overlay network is not set", func() {
-		BeforeEach(func() {
-			input = []byte(`{
-				"datastore": "/some/path",
-				"iptables_lock_file": "/some/other/path",
-				"delegate": {
-					"some": "info"
-				}
-			}`)
-		})
-
-		It("should return a useful error", func() {
-			_, err := lib.LoadWrapperConfig(input)
-			Expect(err).To(MatchError("missing overlay network"))
-		})
-	})
+		var err error
+		input, err = json.Marshal(config)
+		Expect(err).NotTo(HaveOccurred())
+		_, err = lib.LoadWrapperConfig(input)
+		Expect(err).To(MatchError(errMessage))
+	},
+		Entry("datastore", "datastore", "missing datastore path"),
+		Entry("ip tables lock file", "iptables_lock_file", "missing iptables lock file path"),
+		Entry("overlay network", "overlay_network", "missing overlay network"),
+		Entry("health check url", "health_check_url", "missing health check url"),
+	)
 })
 
 var _ = Describe("DelegateAdd", func() {

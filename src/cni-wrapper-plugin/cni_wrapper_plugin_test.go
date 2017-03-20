@@ -1,8 +1,11 @@
 package main_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"os/exec"
 	"strings"
@@ -17,13 +20,15 @@ import (
 var _ = Describe("CniWrapperPlugin", func() {
 
 	var (
-		cmd                  *exec.Cmd
-		debugFileName        string
-		datastorePath        string
-		iptablesLockFilePath string
-		input                string
-		debug                *noop_debug.Debug
-		expectedCmdArgs      skel.CmdArgs
+		cmd                     *exec.Cmd
+		debugFileName           string
+		datastorePath           string
+		iptablesLockFilePath    string
+		input                   string
+		debug                   *noop_debug.Debug
+		expectedCmdArgs         skel.CmdArgs
+		healthCheckServer       *httptest.Server
+		healthCheckReturnStatus int
 	)
 
 	const delegateInput = `
@@ -41,6 +46,7 @@ var _ = Describe("CniWrapperPlugin", func() {
   "datastore": "%s",
   "iptables_lock_file": "%s",
   "overlay_network": "%s",
+	"health_check_url": "%s",
 
 	"metadata": {
 			"key1": "value1",
@@ -76,6 +82,11 @@ var _ = Describe("CniWrapperPlugin", func() {
 	}
 
 	BeforeEach(func() {
+		healthCheckReturnStatus = http.StatusOK
+		healthCheckServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(healthCheckReturnStatus)
+		}))
+
 		debugFile, err := ioutil.TempFile("", "cni_debug")
 		Expect(err).NotTo(HaveOccurred())
 		Expect(debugFile.Close()).To(Succeed())
@@ -97,7 +108,8 @@ var _ = Describe("CniWrapperPlugin", func() {
 		Expect(iptablesLockFile.Close()).To(Succeed())
 		iptablesLockFilePath = iptablesLockFile.Name()
 
-		input = fmt.Sprintf(inputTemplate, datastorePath, iptablesLockFilePath, "10.255.0.0/16")
+		input = fmt.Sprintf(inputTemplate, datastorePath, iptablesLockFilePath,
+			"10.255.0.0/16", healthCheckServer.URL)
 
 		expectedCmdArgs = skel.CmdArgs{
 			ContainerID: "some-container-id",
@@ -114,6 +126,8 @@ var _ = Describe("CniWrapperPlugin", func() {
 		os.Remove(debugFileName)
 		os.Remove(datastorePath)
 		os.Remove(iptablesLockFilePath)
+
+		healthCheckServer.Close()
 	})
 
 	Describe("state lifecycle", func() {
@@ -201,6 +215,38 @@ var _ = Describe("CniWrapperPlugin", func() {
 			Expect(iptablesNATRules()).To(ContainSubstring("-A POSTROUTING -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j MASQUERADE"))
 		})
 
+		Context("When the health check call returns an error", func() {
+			BeforeEach(func() {
+				healthCheckServer.Close()
+			})
+
+			It("wraps and returns the error", func() {
+				session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+				Eventually(session).Should(gexec.Exit(1))
+				var errData map[string]interface{}
+				Expect(json.Unmarshal(session.Out.Contents(), &errData)).To(Succeed())
+				Expect(errData["code"]).To(BeEquivalentTo(100))
+				Expect(errData["msg"]).To(ContainSubstring("could not call health check: Get http"))
+			})
+		})
+
+		Context("When the health check returns a non-200 status code", func() {
+			BeforeEach(func() {
+				healthCheckReturnStatus = 503
+			})
+
+			It("wraps and returns the error", func() {
+				session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+				Eventually(session).Should(gexec.Exit(1))
+				var errData map[string]interface{}
+				Expect(json.Unmarshal(session.Out.Contents(), &errData)).To(Succeed())
+				Expect(errData["code"]).To(BeEquivalentTo(100))
+				Expect(errData["msg"]).To(ContainSubstring("health check failed with 503"))
+			})
+		})
+
 		Context("When the delegate plugin returns an error", func() {
 			BeforeEach(func() {
 				debug.ReportError = "banana"
@@ -248,10 +294,11 @@ var _ = Describe("CniWrapperPlugin", func() {
   "datastore": "%s",
 	"iptables_lock_file": "%s",
   "overlay_network": "%s",
+	"health_check_url": "%s",
 	"delegate": ` +
 					delegateInput +
 					`}`
-				input = fmt.Sprintf(inputTemplate, datastorePath, iptablesLockFilePath, "10.255.0.0/16")
+				input = fmt.Sprintf(inputTemplate, datastorePath, iptablesLockFilePath, "10.255.0.0/16", healthCheckServer.URL)
 			})
 			It("succeeds and writes container IP to the datastore", func() {
 				cmd = cniCommand("ADD", input)

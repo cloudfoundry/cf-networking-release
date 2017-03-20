@@ -55,8 +55,8 @@ properties:
     description: "Disable container to container networking"
     default: false
 
-  cf_networking.flannel_watchdog.health_check_port:
-    description: "Port for the flannel-watchdog health check endpoint"
+  cf_networking.health_check_port:
+    description: "Port for the health check endpoint"
     default: 10007
 
   cf_networking.flannel_watchdog.metron_address:
