@@ -132,13 +132,6 @@
             registration_interval: 20s
             uris:
             - "api.((system_domain))/networking"
-        nats:
-          machines:
-          - 10.0.31.191
-          - 10.0.47.191
-          password: "((nats_password))"
-          port: 4222
-          user: nats
     - name: consul_agent
       release: consul
       consumes:
