@@ -104,8 +104,9 @@ file containing credentials for your existing deployment.
 Then deploy
 ```bash
 bosh deploy ~/workspace/cf-deployment/cf-deployment.yml \
+  -o ~/workspace/cf-networking-release/manifest-generation/opsfiles/cf-networking.yml \
   -o ~/workspace/cf-deployment/operations/bosh-lite.yml \
-  -o ~/workspace/cf-networking-release/manifest-generation/opsfiles/cf-networking-bosh-lite.yml \
+  -o ~/workspace/cf-networking-release/manifest-generation/opsfiles/postgres.yml \
   --vars-store ~/deployments/vbox/deployment-vars.yml \
   -v system_domain=bosh-lite.com
 ```
