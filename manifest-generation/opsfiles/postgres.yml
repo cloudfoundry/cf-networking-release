@@ -1,0 +1,25 @@
+# add network policy db to bosh-lite postgres
+- type: replace
+  path: /instance_groups/name=postgres/jobs/name=postgres/properties/databases/roles/-
+  value:
+    name: network_policy
+    password: ((seeded_databases_network_policy_password))
+    tag: admin
+
+- type: replace
+  path: /instance_groups/name=postgres/jobs/name=postgres/properties/databases/databases/-
+  value:
+    citext: false
+    name: network_policy
+    tag: networkpolicy
+
+# policy server vm
+- type: replace
+  path: /instance_groups/name=policy-server/jobs/name=policy-server/properties/cf_networking/policy_server/database
+  value:
+    type: postgres
+    username: network_policy
+    password: "((seeded_databases_network_policy_password))"
+    host: sql-db.service.cf.internal
+    port: 5524
+    name: network_policy
