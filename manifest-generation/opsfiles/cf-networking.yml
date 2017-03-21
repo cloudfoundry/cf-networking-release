@@ -9,7 +9,7 @@
   value:
     name: network_policy
     username: network_policy
-    password: "((seeded_databases_network_policy_password))"
+    password: "((cf_mysql_mysql_seeded_databases_network_policy_password))"
 
 # add users and client scopes
 - type: replace
@@ -118,7 +118,7 @@
             database:
               type: mysql
               username: network_policy
-              password: "((seeded_databases_network_policy_password))"
+              password: "((cf_mysql_mysql_seeded_databases_network_policy_password))"
               host: sql-db.service.cf.internal
               port: 3306
               name: network_policy
@@ -173,7 +173,7 @@
 - type: replace
   path: /variables/-
   value:
-    name: seeded_databases_network_policy_password
+    name: cf_mysql_mysql_seeded_databases_network_policy_password
     type: password
 
 - type: replace

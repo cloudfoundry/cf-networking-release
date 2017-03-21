@@ -3,7 +3,7 @@
   path: /instance_groups/name=postgres/jobs/name=postgres/properties/databases/roles/-
   value:
     name: network_policy
-    password: ((seeded_databases_network_policy_password))
+    password: "((network_database_password))"
     tag: admin
 
 - type: replace
@@ -19,7 +19,13 @@
   value:
     type: postgres
     username: network_policy
-    password: "((seeded_databases_network_policy_password))"
+    password: "((network_database_password))"
     host: sql-db.service.cf.internal
     port: 5524
     name: network_policy
+
+- type: replace
+  path: /variables/-
+  value:
+    name: network_database_password
+    type: password
