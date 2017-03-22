@@ -2,6 +2,14 @@
 
 ## Option 1: Using `cf-deployment`
 
+- Option 1: use the script
+  ```bash
+  pushd ~/workspace/cf-networking-release
+    ./scripts/deploy-to-bosh-lite
+  popd
+  ```
+
+- Option 2: deploy by hand
 Follow the instructions [here](https://github.com/cloudfoundry/bosh-deployment/blob/master/docs/bosh-lite-on-vbox.md) to install `bosh-lite` using `BOSH CLI v2` on your machine.
 
 This deployment option uses the new tooling:
