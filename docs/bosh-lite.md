@@ -1,6 +1,59 @@
 # Deploy to bosh-lite
 
-## Option 1: Using `cf-release` with `diego-release` tooling
+## Option 1: Using `cf-deployment`
+
+Follow the instructions [here](https://github.com/cloudfoundry/bosh-deployment/blob/master/docs/bosh-lite-on-vbox.md) to install `bosh-lite` using `BOSH CLI v2` on your machine.
+
+This deployment option uses the new tooling:
+- the new Golang [bosh-cli](https://github.com/cloudfoundry/bosh-cli)
+- [bosh-deployment](https://github.com/cloudfoundry/bosh-deployment)
+- [cf-deployment](https://github.com/cloudfoundry/cf-deployment), refer to our [release notes](https://github.com/cloudfoundry-incubator/cf-networking-release/releases) to get information on validated versions
+
+It assumes you have a BOSH director on Virtualbox that was created using `bosh create-env`.
+
+You should have a private directory in which you hold the `creds.yml` file for your bosh director
+
+```bash
+cd ~/deployments/vbox
+ls
+# creds.yml
+```
+
+```bash
+export BOSH_CA_CERT=$(bosh int ~/deployments/vbox/creds.yml --path /director_ssl/ca)
+export BOSH_CLIENT=admin
+export BOSH_CLIENT_SECRET=$(bosh int ~/deployments/vbox/creds.yml --path /admin_password)
+export BOSH_ENVIRONMENT=vbox
+export BOSH_DEPLOYMENT=cf
+```
+
+We need to enable `br_netfilter` module on the bosh-lite VM.
+
+```bash
+umask 077; touch ~/deployments/vbox/director_priv.key
+bosh int ~/deployments/vbox/creds.yml --path /jumpbox_ssh/private_key > ~/deployments/vbox/director_priv.key
+ssh jumpbox@192.168.50.6 -i ~/deployments/vbox/director_priv.key 'sudo modprobe br_netfilter && lsmod | grep br_netfilter'
+```
+
+If you are upgrading an existing `cf-deployment`, this same directory should hold your `deployment-vars.yml`
+file containing credentials for your existing deployment.
+
+Set the `cf-deployment` cloud-config:
+```
+bosh -e vbox update-cloud-config ~/workspace/cf-deployment/bosh-lite/cloud-config.yml
+```
+
+Then deploy
+```bash
+bosh deploy ~/workspace/cf-deployment/cf-deployment.yml \
+  -o ~/workspace/cf-networking-release/manifest-generation/opsfiles/cf-networking.yml \
+  -o ~/workspace/cf-deployment/operations/bosh-lite.yml \
+  -o ~/workspace/cf-networking-release/manifest-generation/opsfiles/postgres.yml \
+  --vars-store ~/deployments/vbox/deployment-vars.yml \
+  -v system_domain=bosh-lite.com
+```
+
+## Option 2 (deprecated): Using `cf-release` with `diego-release` tooling
 
 Follow the instructions [here](https://github.com/cloudfoundry/bosh-lite) to install `bosh-lite` on your machine.
 
@@ -55,53 +108,6 @@ pushd ~/workspace/cf-networking-release
 popd
 ```
 
-## Option 2: Using `cf-deployment`
-
-Follow the instructions [here](https://github.com/cloudfoundry/bosh-deployment/blob/master/docs/bosh-lite-on-vbox.md) to install `bosh-lite` using `BOSH CLI v2` on your machine.
-
-This deployment option uses the new tooling:
-- the new Golang [bosh-cli](https://github.com/cloudfoundry/bosh-cli)
-- [bosh-deployment](https://github.com/cloudfoundry/bosh-deployment)
-- [cf-deployment](https://github.com/cloudfoundry/cf-deployment), refer to our [release notes](https://github.com/cloudfoundry-incubator/cf-networking-release/releases) to get information on validated versions
-
-It assumes you have a BOSH director on Virtualbox that was created using `bosh create-env`.
-
-You should have a private directory in which you hold the `creds.yml` file for your bosh director
-
-```bash
-cd ~/deployments/vbox
-ls
-# creds.yml
-```
-
-```bash
-export BOSH_CA_CERT=$(bosh int ~/deployments/vbox/creds.yml --path /director_ssl/ca)
-export BOSH_CLIENT=admin
-export BOSH_CLIENT_SECRET=$(bosh int ~/deployments/vbox/creds.yml --path /admin_password)
-export BOSH_ENVIRONMENT=vbox
-export BOSH_DEPLOYMENT=cf
-```
-
-We need to enable `br_netfilter` module on the bosh-lite VM.
-
-```bash
-umask 077; touch ~/deployments/vbox/director_priv.key
-bosh int ~/deployments/vbox/creds.yml --path /jumpbox_ssh/private_key > ~/deployments/vbox/director_priv.key
-ssh jumpbox@192.168.50.6 -i ~/deployments/vbox/director_priv.key 'sudo modprobe br_netfilter && lsmod | grep br_netfilter'
-```
-
-If you are upgrading an existing `cf-deployment`, this same directory should hold your `deployment-vars.yml`
-file containing credentials for your existing deployment.
-
-Then deploy
-```bash
-bosh deploy ~/workspace/cf-deployment/cf-deployment.yml \
-  -o ~/workspace/cf-networking-release/manifest-generation/opsfiles/cf-networking.yml \
-  -o ~/workspace/cf-deployment/operations/bosh-lite.yml \
-  -o ~/workspace/cf-networking-release/manifest-generation/opsfiles/postgres.yml \
-  --vars-store ~/deployments/vbox/deployment-vars.yml \
-  -v system_domain=bosh-lite.com
-```
 
 # Kicking the tires
 
