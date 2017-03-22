@@ -36,12 +36,12 @@ popd
 ```
 
 Deploy:
-First acquire `cf-release`, `diego-release` and [all of its dependencies](https://github.com/cloudfoundry/diego-release/tree/develop/examples/bosh-lite).  Upload to your bosh director.
-At a minimum, you'll need to do something like
 ```
+bosh upload release https://bosh.io/d/github.com/cloudfoundry/cf-release
+bosh upload release https://bosh.io/d/github.com/cloudfoundry/diego-release
 bosh upload release https://bosh.io/d/github.com/cloudfoundry/garden-runc-release
 bosh upload release https://bosh.io/d/github.com/cloudfoundry/cflinuxfs2-rootfs-release
-bosh upload release https://bosh.io/d/github.com/cloudfoundry-incubator/etcd-release
+bosh upload release https://bosh.io/d/github.com/cloudfoundry-incubator/cf-networking-release
 ```
 
 Then
