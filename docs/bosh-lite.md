@@ -43,6 +43,11 @@ Set the `cf-deployment` cloud-config:
 bosh -e vbox update-cloud-config ~/workspace/cf-deployment/bosh-lite/cloud-config.yml
 ```
 
+Upload `cf-networking-release`, e.g.
+```
+bosh upload-release https://bosh.io/d/github.com/cloudfoundry-incubator/cf-networking-release
+```
+
 Then deploy
 ```bash
 bosh deploy ~/workspace/cf-deployment/cf-deployment.yml \
