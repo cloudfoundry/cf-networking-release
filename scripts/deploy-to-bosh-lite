@@ -12,12 +12,46 @@ error() {
     exit 1
 }
 
-target_bosh_lite() {
-    bosh target lite || error "bosh target 'lite' is unknown. Please set an alias."
+create_bosh_env() {
+bosh-cli create-env ~/workspace/bosh-deployment/bosh.yml \
+  --state "~/workspace/container-networking-deployments/environments/local/state.json" \
+  -o ~/workspace/bosh-deployment/virtualbox/cpi.yml \
+  -o ~/workspace/bosh-deployment/virtualbox/outbound-network.yml \
+  -o ~/workspace/bosh-deployment/bosh-lite.yml \
+  -o ~/workspace/bosh-deployment/bosh-lite-runc.yml \
+  -o ~/workspace/bosh-deployment/jumpbox-user.yml \
+  --vars-store "~/workspace/container-networking-deployments/environments/local/creds.yml" \
+  -v director_name="Bosh Lite Director" \
+  -v internal_ip=192.168.50.6 \
+  -v internal_gw=192.168.50.1 \
+  -v internal_cidr=192.168.50.0/24 \
+  -v outbound_network_name="NatNetwork"
+}
+
+set_bosh_env() {
+  bosh-cli -e 192.168.50.6 --ca-cert <(bosh-cli int "~/workspace/container-networking-deployments/environments/local/creds.yml" --path /director_ssl/ca) alias-env vbox
+  export BOSH_CLIENT="admin"
+  export BOSH_CLIENT_SECRET="$(bosh-cli int "~/workspace/container-networking-deployments/environments/local/creds.yml" --path /admin_password)"
+  export BOSH_ENVIRONMENT="vbox"
+  export BOSH_DEPLOYMENT="cf"
+  export BOSH_CA_CERT="$(bosh-cli int "~/workspace/container-networking-deployments/environments/local/creds.yml" --path /director_ssl/ca)"
 }
 
 upload_bosh_stemcell() {
-    bosh upload stemcell https://bosh.io/d/stemcells/bosh-warden-boshlite-ubuntu-trusty-go_agent
+  bosh-cli -e vbox upload-stemcell https://bosh.io/d/stemcells/bosh-warden-boshlite-ubuntu-trusty-go_agent
+}
+
+upload_cloud_config() {
+  bosh-cli -e vbox -n update-cloud-config ~/workspace/cf-deployment/bosh-lite/cloud-config.yml
+}
+
+deploy_cf() {
+  bosh-cli deploy -n ~/workspace/cf-deployment/cf-deployment.yml \
+  -o ~/workspace/cf-networking-release/manifest-generation/opsfiles/cf-networking.yml \
+  -o ~/workspace/cf-deployment/operations/bosh-lite.yml \
+  -o ~/workspace/cf-networking-release/manifest-generation/opsfiles/postgres.yml \
+  --vars-store ~/deployments/vbox/deployment-vars.yml \
+  -v system_domain=bosh-lite.com
 }
 
 download_release() {
@@ -54,32 +88,12 @@ checkout_and_update() {
     git pull
 }
 
-update_release() {
-    local release_name=$1
-    local branch_name=$2
-
-    verify_clone_exists ${release_name}
-
-    pushd ${workspace_dir}/${release_name}
-
-    # Example fix: git branch --set-upstream-to sykesm/another-terrible-hack
-    has_upstream || error "${release_name} is missing an upstream to pull from"
-    checkout_and_update ${branch_name}
-
-    popd
-}
-
-generate_manifests() {
-    # we need the git repos for manifest generation
-    update_release cf-release master
-    update_release diego-release master
-
-    ${workspace_dir}/cf-networking-release/scripts/generate-bosh-lite-manifests
-}
-
 update_dependencies() {
     download_release cloudfoundry-incubator etcd-release
     upload_release etcd-release
+
+    download_release cloudfoundry-incubator cf-networking-release
+    upload_release cf-networking-release
 
     download_release cloudfoundry cflinuxfs2-rootfs-release
     upload_release cflinuxfs2-rootfs-release
@@ -99,18 +113,18 @@ update_dependencies() {
 }
 
 main() {
-    target_bosh_lite
+    create_bosh_env
+    set_bosh_env
 
     if [ $upload_stemcell == true ]; then
       upload_bosh_stemcell
     fi
 
+    upload_cloud_config
+
     update_dependencies
 
-    generate_manifests
-
-    bosh -n -d ${workspace_dir}/cf-networking-release/bosh-lite/deployments/cf_networking.yml deploy
-    bosh -n -d ${workspace_dir}/cf-networking-release/bosh-lite/deployments/diego_cf_networking.yml deploy
+    deploy_cf
 }
 
 upload_stemcell=true
