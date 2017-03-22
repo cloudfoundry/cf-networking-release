@@ -34,7 +34,8 @@ set_bosh_env() {
   export BOSH_CLIENT_SECRET="$(bosh-cli int "~/workspace/container-networking-deployments/environments/local/creds.yml" --path /admin_password)"
   export BOSH_ENVIRONMENT="vbox"
   export BOSH_DEPLOYMENT="cf"
-  export BOSH_CA_CERT="$(bosh-cli int "~/workspace/container-networking-deployments/environments/local/creds.yml" --path /director_ssl/ca)"
+  export BOSH_CA_CERT="/tmp/bosh-lite-ca-cert"
+  bosh-cli int "~/workspace/container-networking-deployments/environments/local/creds.yml" --path /director_ssl/ca > ${BOSH_CA_CERT}
 }
 
 upload_bosh_stemcell() {
