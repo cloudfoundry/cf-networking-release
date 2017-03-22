@@ -81,7 +81,7 @@ NOTE: If you are having problems, first consult our [known issues doc](known-iss
 
   Logs from iptables end up in `/var/log/kern.log`.
 
-  Example of a rejected connection, note that the prefix `DENY_b6de7d0c-4792-4614-5e51-4c` indicates that an app instance with instance guid starting with `b6de7d0c-4792-4614-5e51-4c` was not able to connect to `10.0.16.8`:
+  Example of a rejected connection, note that the prefix `DENY_b6de7d0c-4792-4614-5e51-` indicates that an app instance with instance guid starting with `b6de7d0c-4792-4614-5e51-` was not able to connect to `10.0.16.8`:
 
   ```
   Mar 15 23:47:36 localhost kernel: [432140.181155] DENY_b6de7d0c-4792-4614-5e51-IN=cni-flannel0 OUT=eth0 PHYSIN=veth2938968a MAC=0a:58:0a:ff:45:01:0a:58:0a:ff:45:30:08:00 SRC=10.255.69.48 DST=10.0.16.8 LEN=60 TOS=0x00 PREC=0x00 TTL=63 ID=8874 DF PROTO=TCP SPT=55198 DPT=80 WINDOW=27400 RES=0x00 SYN URGP=0 MARK=0x1
