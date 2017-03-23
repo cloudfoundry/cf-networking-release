@@ -2,6 +2,13 @@
 
 See [AWS](iaas.md#deploy-to-aws) deployment docs for examples
 
+### 0.19.0
+
+**Changed Properties**
+
+  - The property for global ASG logging has changed from `cf_networking.garden_external_networker.iptables_asg_logging`
+    to `cf_networking.iptables_asg_logging`.
+
 ### 0.18.0
 
 **New Properties**

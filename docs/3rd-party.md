@@ -36,7 +36,11 @@ The built-in flannel CNI plugin does this.
 ## What data will my CNI plugin receive?
 The `garden-external-networker` will invoke one or more CNI plugins, according to the [CNI Spec](https://github.com/containernetworking/cni/blob/master/SPEC.md).
 It will start with the CNI config files available in the `cni_config_dir` and also inject
-some dynamic information about the container, including the CloudFoundry App, Space and Org that it belongs to.
+some dynamic information about the container. This is divided into two keys the first, `metadata`
+contains the CloudFoundry App, Space and Org that it belongs to. Another key `runtimeConfig` holds information that CNI plugins may need
+to implement legacy networking features of Cloud Foundry. It is divided into two keys, `portMappings` can be translated into port forwarding
+rules to allow the gorouter access to application containers, and `netOutRules` which are egress whitelist rules used for implementing
+application security groups. A reference implementation of these features can be seen in in the [cni-wrapper-plugin](../src/cni-wrapper-plugin).
 
 For example, in the included networking stack, we have a `wrapper` CNI plugin.
 At deploy time, its config is generated from this [template](../jobs/cni-flannel/templates/30-cni-wrapper-plugin.conf.erb),
@@ -44,30 +48,50 @@ but when the container is being created, the CNI plugin receives network config 
 
 ```json
 {
-  "name": "cni-wrapper",
-  "type": "cni-wrapper-plugin",
-  "cniVersion": "0.2.0",
-  "datastore": "/var/vcap/data/container-metadata/store.json",
-  "iptables_lock_file": "/var/vcap/data/garden-cni/iptables.lock",
-  "overlay_network": "10.255.0.0/16",
-  "delegate": {
-    "name": "cni-flannel",
-    "type": "flannel",
-    "subnetFile": "/var/vcap/data/flannel/subnet.env",
-    "dataDir": "/var/vcap/data/flannel/data",
-    "delegate": {
-      "bridge": "cni-flannel0",
-      "isDefaultGateway": true,
-      "ipMasq": false
-     }
-  },
-
-  "metadata": {
-    "policy_group_id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
-    "app_id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
-    "space_id": "4246c57d-aefc-49cc-afe0-5f734e2656e8",
-    "org_id": "2ac41bbf-8eae-4f28-abab-51ca38dea3e4"
-  }
+	"name": "cni-wrapper",
+	"type": "cni-wrapper-plugin",
+	"cniVersion": "0.2.0",
+	"datastore": "/var/vcap/data/container-metadata/store.json",
+	"iptables_lock_file": "/var/vcap/data/garden-cni/iptables.lock",
+	"overlay_network": "10.255.0.0/16",
+	"delegate": {
+		"name": "cni-flannel",
+		"type": "flannel",
+		"subnetFile": "/var/vcap/data/flannel/subnet.env",
+		"dataDir": "/var/vcap/data/flannel/data",
+		"delegate": {
+			"bridge": "cni-flannel0",
+			"isDefaultGateway": true,
+			"ipMasq": false
+		}
+	},
+	"runtimeConfig": {
+		"portMappings": [{
+			"host_port": 12345,
+			"container_port": 7000
+		}, {
+			"host_port": 60000,
+			"container_port": 7000
+		}],
+		"netOutRules": [{
+			"protocol": 1,
+			"networks": [{
+				"start": "8.8.8.8",
+				"end": "9.9.9.9"
+			}],
+			"ports": [{
+				"start": 53,
+				"end": 54
+			}],
+			"log": true
+		}],
+		"metadata": {
+			"policy_group_id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
+			"app_id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
+			"space_id": "4246c57d-aefc-49cc-afe0-5f734e2656e8",
+			"org_id": "2ac41bbf-8eae-4f28-abab-51ca38dea3e4"
+		}
+	}
 }
 ```
 
