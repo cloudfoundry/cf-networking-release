@@ -127,6 +127,8 @@ func cmdAdd(args *skel.CmdArgs) error {
 	if err != nil {
 		return fmt.Errorf("error converting result to 0.3.0: %s", err) // not tested
 	}
+
+	result030.DNS.Nameservers = n.DNSServers
 	return result030.Print()
 }
 

@@ -279,6 +279,24 @@ var _ = Describe("CniWrapperPlugin", func() {
 			Expect(AllIPTablesRules("nat")).To(ContainElement("-A POSTROUTING -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j MASQUERADE"))
 		})
 
+		Context("when DNS servers are configured", func() {
+			BeforeEach(func() {
+				inputStruct.DNSServers = []string{"1.2.3.4", "8.8.8.8"}
+				input = GetInput(inputStruct)
+
+				cmd = cniCommand("ADD", input)
+			})
+			It("returns DNS info in the output", func() {
+				session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+				Eventually(session).Should(gexec.Exit(0))
+				Expect(session.Out.Contents()).To(MatchJSON(`{
+				"ips": [{ "version": "4", "interface": -1, "address": "1.2.3.4/32" }],
+				"dns": {"nameservers": ["1.2.3.4", "8.8.8.8"]}
+			}`))
+			})
+		})
+
 		Context("when no runtime config is passed in", func() {
 			BeforeEach(func() {
 				inputStruct.RuntimeConfig = lib.RuntimeConfig{}

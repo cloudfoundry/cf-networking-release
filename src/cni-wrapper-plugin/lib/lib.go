@@ -22,6 +22,7 @@ type WrapperConfig struct {
 	Delegate           map[string]interface{} `json:"delegate"`
 	HealthCheckURL     string                 `json:"health_check_url"`
 	InstanceAddress    string                 `json:"instance_address"`
+	DNSServers         []string               `json:"dns_servers"`
 	IPTablesASGLogging bool                   `json:"iptables_asg_logging"`
 	RuntimeConfig      RuntimeConfig          `json:"runtimeConfig,omitempty"`
 }
