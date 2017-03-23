@@ -66,3 +66,8 @@ properties:
   cf_networking.rep_listen_addr_admin:
     description: "admin endpoint on diego rep"
     default: 127.0.0.1:1800
+
+  cf_networking.iptables_asg_logging:
+    description: "Enables global logging for all ASGs"
+    default: false
+

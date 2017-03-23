@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cni-wrapper-plugin/legacynet"
 	"cni-wrapper-plugin/lib"
 	"encoding/json"
 	"errors"
@@ -50,8 +51,48 @@ func cmdAdd(args *skel.CmdArgs) error {
 		return fmt.Errorf("cni delegate plugin result version incompatible: %s", err) // not tested
 	}
 
-	containerIP := result020.(*types020.Result).IP4.IP.IP.String()
-	err = pluginController.AddIPMasq(containerIP, n.OverlayNetwork)
+	containerIP := result020.(*types020.Result).IP4.IP.IP
+
+	// Initialize NetOut
+	netOutProvider := legacynet.NetOut{
+		ChainNamer: &legacynet.ChainNamer{
+			MaxLength: 28,
+		},
+		IPTables:      pluginController.IPTables,
+		Converter:     &legacynet.NetOutRuleConverter{},
+		GlobalLogging: n.IPTablesASGLogging,
+	}
+	if err := netOutProvider.Initialize(args.ContainerID, containerIP, n.OverlayNetwork); err != nil {
+		return fmt.Errorf("initialize net out: %s", err)
+	}
+
+	// Initialize NetIn
+	netinProvider := legacynet.NetIn{
+		ChainNamer: &legacynet.ChainNamer{
+			MaxLength: 28,
+		},
+		IPTables: pluginController.IPTables,
+	}
+	err = netinProvider.Initialize(args.ContainerID)
+
+	// Create port mappings
+	portMappings := n.RuntimeConfig.PortMappings
+	for _, netIn := range portMappings {
+		if netIn.HostPort <= 0 {
+			return fmt.Errorf("cannot allocate port %d", netIn.HostPort)
+		}
+		if err := netinProvider.AddRule(args.ContainerID, int(netIn.HostPort), int(netIn.ContainerPort), n.InstanceAddress, containerIP.String()); err != nil {
+			return fmt.Errorf("adding netin rule: %s", err)
+		}
+	}
+
+	// Create egress rules
+	netOutRules := n.RuntimeConfig.NetOutRules
+	if err := netOutProvider.BulkInsertRules(args.ContainerID, netOutRules, containerIP.String()); err != nil {
+		return fmt.Errorf("bulk insert: %s", err) // not tested
+	}
+
+	err = pluginController.AddIPMasq(containerIP.String(), n.OverlayNetwork)
 	if err != nil {
 		return fmt.Errorf("error setting up default ip masq rule: %s", err)
 	}
@@ -70,11 +111,11 @@ func cmdAdd(args *skel.CmdArgs) error {
 		panic(err) // not tested, this should be impossible
 	}
 
-	if err := store.Add(args.ContainerID, containerIP, cniAddData.Metadata); err != nil {
+	if err := store.Add(args.ContainerID, containerIP.String(), cniAddData.Metadata); err != nil {
 		storeErr := fmt.Errorf("store add: %s", err)
 		fmt.Fprintf(os.Stderr, "%s", storeErr)
 		fmt.Fprintf(os.Stderr, "cleaning up from error")
-		err = pluginController.DelIPMasq(containerIP, n.OverlayNetwork)
+		err = pluginController.DelIPMasq(containerIP.String(), n.OverlayNetwork)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "during cleanup: removing IP masq: %s", err)
 		}
@@ -114,6 +155,30 @@ func cmdDel(args *skel.CmdArgs) error {
 
 	if err := pluginController.DelegateDel(n.Delegate); err != nil {
 		fmt.Fprintf(os.Stderr, "delegate delete: %s", err)
+	}
+
+	netInProvider := legacynet.NetIn{
+		ChainNamer: &legacynet.ChainNamer{
+			MaxLength: 28,
+		},
+		IPTables: pluginController.IPTables,
+	}
+
+	if err = netInProvider.Cleanup(args.ContainerID); err != nil {
+		fmt.Fprintf(os.Stderr, "net in cleanup: %s", err)
+	}
+
+	netOutProvider := legacynet.NetOut{
+		ChainNamer: &legacynet.ChainNamer{
+			MaxLength: 28,
+		},
+		IPTables:      pluginController.IPTables,
+		Converter:     &legacynet.NetOutRuleConverter{},
+		GlobalLogging: n.IPTablesASGLogging,
+	}
+
+	if err = netOutProvider.Cleanup(args.ContainerID); err != nil {
+		fmt.Fprintf(os.Stderr, "net out cleanup", err)
 	}
 
 	err = pluginController.DelIPMasq(container.IP, n.OverlayNetwork)

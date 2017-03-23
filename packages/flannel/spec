@@ -7,7 +7,9 @@ dependencies:
 files:
   - github.com/coreos/flannel/**/*
   - cni-wrapper-plugin/*.go # gosub
+  - cni-wrapper-plugin/legacynet/*.go # gosub
   - cni-wrapper-plugin/lib/*.go # gosub
+  - code.cloudfoundry.org/garden/*.go # gosub
   - github.com/containernetworking/cni/pkg/invoke/*.go # gosub
   - github.com/containernetworking/cni/pkg/ip/*.go # gosub
   - github.com/containernetworking/cni/pkg/ipam/*.go # gosub
@@ -32,6 +34,8 @@ files:
   - github.com/containernetworking/cni/vendor/golang.org/x/sys/unix/*.go # gosub
   - github.com/containernetworking/cni/vendor/golang.org/x/sys/unix/*.s # gosub
   - github.com/coreos/go-iptables/iptables/*.go # gosub
+  - github.com/hashicorp/go-multierror/*.go # gosub
+  - github.com/hashicorp/go-multierror/vendor/github.com/hashicorp/errwrap/*.go # gosub
   - lib/datastore/*.go # gosub
   - lib/filelock/*.go # gosub
   - lib/rules/*.go # gosub

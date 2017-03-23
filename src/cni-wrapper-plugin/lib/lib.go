@@ -5,15 +5,25 @@ import (
 	"fmt"
 	"lib/rules"
 
+	"code.cloudfoundry.org/garden"
+
 	"github.com/containernetworking/cni/pkg/types"
 )
 
+type RuntimeConfig struct {
+	PortMappings []garden.NetIn      `json:"portMappings"`
+	NetOutRules  []garden.NetOutRule `json:"netOutRules"`
+}
+
 type WrapperConfig struct {
-	Datastore        string                 `json:"datastore"`
-	IPTablesLockFile string                 `json:"iptables_lock_file"`
-	OverlayNetwork   string                 `json:"overlay_network"`
-	Delegate         map[string]interface{} `json:"delegate"`
-	HealthCheckURL   string                 `json:"health_check_url"`
+	Datastore          string                 `json:"datastore"`
+	IPTablesLockFile   string                 `json:"iptables_lock_file"`
+	OverlayNetwork     string                 `json:"overlay_network"`
+	Delegate           map[string]interface{} `json:"delegate"`
+	HealthCheckURL     string                 `json:"health_check_url"`
+	InstanceAddress    string                 `json:"instance_address"`
+	IPTablesASGLogging bool                   `json:"iptables_asg_logging"`
+	RuntimeConfig      RuntimeConfig          `json:"runtimeConfig"`
 }
 
 func LoadWrapperConfig(bytes []byte) (*WrapperConfig, error) {
@@ -36,6 +46,10 @@ func LoadWrapperConfig(bytes []byte) (*WrapperConfig, error) {
 
 	if n.HealthCheckURL == "" {
 		return nil, fmt.Errorf("missing health check url")
+	}
+
+	if n.InstanceAddress == "" {
+		return nil, fmt.Errorf("missing instance address")
 	}
 
 	return n, nil

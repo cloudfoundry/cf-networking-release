@@ -22,6 +22,8 @@ var _ = Describe("LoadWrapperConfig", func() {
 			"iptables_lock_file": "/some/other/path",
 			"overlay_network": "10.255.0.0/16",
 			"health_check_url": "http://127.0.0.1:10007",
+			"instance_address": "10.244.20.1",
+			"iptables_asg_logging": true,
 			"delegate": {
 				"some": "info"
 			}
@@ -32,9 +34,11 @@ var _ = Describe("LoadWrapperConfig", func() {
 		result, err := lib.LoadWrapperConfig(input)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(result).To(Equal(&lib.WrapperConfig{
-			Datastore:        "/some/path",
-			IPTablesLockFile: "/some/other/path",
-			OverlayNetwork:   "10.255.0.0/16",
+			Datastore:          "/some/path",
+			IPTablesLockFile:   "/some/other/path",
+			OverlayNetwork:     "10.255.0.0/16",
+			InstanceAddress:    "10.244.20.1",
+			IPTablesASGLogging: true,
 			Delegate: map[string]interface{}{
 				"some": "info",
 			},
@@ -68,6 +72,7 @@ var _ = Describe("LoadWrapperConfig", func() {
 		Entry("ip tables lock file", "iptables_lock_file", "missing iptables lock file path"),
 		Entry("overlay network", "overlay_network", "missing overlay network"),
 		Entry("health check url", "health_check_url", "missing health check url"),
+		Entry("instance address", "instance_address", "missing instance address"),
 	)
 })
 

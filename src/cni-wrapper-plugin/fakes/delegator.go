@@ -19,6 +19,10 @@ type Delegator struct {
 		result1 types.Result
 		result2 error
 	}
+	delegateAddReturnsOnCall map[int]struct {
+		result1 types.Result
+		result2 error
+	}
 	DelegateDelStub        func(delegatePlugin string, netconf []byte) error
 	delegateDelMutex       sync.RWMutex
 	delegateDelArgsForCall []struct {
@@ -26,6 +30,9 @@ type Delegator struct {
 		netconf        []byte
 	}
 	delegateDelReturns struct {
+		result1 error
+	}
+	delegateDelReturnsOnCall map[int]struct {
 		result1 error
 	}
 	invocations      map[string][][]interface{}
@@ -39,6 +46,7 @@ func (fake *Delegator) DelegateAdd(delegatePlugin string, netconf []byte) (types
 		copy(netconfCopy, netconf)
 	}
 	fake.delegateAddMutex.Lock()
+	ret, specificReturn := fake.delegateAddReturnsOnCall[len(fake.delegateAddArgsForCall)]
 	fake.delegateAddArgsForCall = append(fake.delegateAddArgsForCall, struct {
 		delegatePlugin string
 		netconf        []byte
@@ -47,6 +55,9 @@ func (fake *Delegator) DelegateAdd(delegatePlugin string, netconf []byte) (types
 	fake.delegateAddMutex.Unlock()
 	if fake.DelegateAddStub != nil {
 		return fake.DelegateAddStub(delegatePlugin, netconf)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
 	}
 	return fake.delegateAddReturns.result1, fake.delegateAddReturns.result2
 }
@@ -71,6 +82,20 @@ func (fake *Delegator) DelegateAddReturns(result1 types.Result, result2 error) {
 	}{result1, result2}
 }
 
+func (fake *Delegator) DelegateAddReturnsOnCall(i int, result1 types.Result, result2 error) {
+	fake.DelegateAddStub = nil
+	if fake.delegateAddReturnsOnCall == nil {
+		fake.delegateAddReturnsOnCall = make(map[int]struct {
+			result1 types.Result
+			result2 error
+		})
+	}
+	fake.delegateAddReturnsOnCall[i] = struct {
+		result1 types.Result
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *Delegator) DelegateDel(delegatePlugin string, netconf []byte) error {
 	var netconfCopy []byte
 	if netconf != nil {
@@ -78,6 +103,7 @@ func (fake *Delegator) DelegateDel(delegatePlugin string, netconf []byte) error 
 		copy(netconfCopy, netconf)
 	}
 	fake.delegateDelMutex.Lock()
+	ret, specificReturn := fake.delegateDelReturnsOnCall[len(fake.delegateDelArgsForCall)]
 	fake.delegateDelArgsForCall = append(fake.delegateDelArgsForCall, struct {
 		delegatePlugin string
 		netconf        []byte
@@ -86,6 +112,9 @@ func (fake *Delegator) DelegateDel(delegatePlugin string, netconf []byte) error 
 	fake.delegateDelMutex.Unlock()
 	if fake.DelegateDelStub != nil {
 		return fake.DelegateDelStub(delegatePlugin, netconf)
+	}
+	if specificReturn {
+		return ret.result1
 	}
 	return fake.delegateDelReturns.result1
 }
@@ -105,6 +134,18 @@ func (fake *Delegator) DelegateDelArgsForCall(i int) (string, []byte) {
 func (fake *Delegator) DelegateDelReturns(result1 error) {
 	fake.DelegateDelStub = nil
 	fake.delegateDelReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *Delegator) DelegateDelReturnsOnCall(i int, result1 error) {
+	fake.DelegateDelStub = nil
+	if fake.delegateDelReturnsOnCall == nil {
+		fake.delegateDelReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.delegateDelReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }

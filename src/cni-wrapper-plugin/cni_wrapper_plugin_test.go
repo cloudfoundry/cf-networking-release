@@ -1,21 +1,34 @@
 package main_test
 
 import (
+	"cni-wrapper-plugin/lib"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"os/exec"
 	"strings"
 
-	"github.com/containernetworking/cni/pkg/skel"
+	"code.cloudfoundry.org/garden"
+
 	noop_debug "github.com/containernetworking/cni/plugins/test/noop/debug"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
+	"github.com/pivotal-cf-experimental/gomegamatchers"
 )
+
+type InputStruct struct {
+	Name       string                 `json:"name"`
+	CNIVersion string                 `json:"cniVersion"`
+	Type       string                 `json:"type"`
+	Delegate   map[string]interface{} `json:"delegate"`
+	Metadata   map[string]interface{} `json:"metadata"`
+	lib.WrapperConfig
+}
 
 var _ = Describe("CniWrapperPlugin", func() {
 
@@ -26,42 +39,21 @@ var _ = Describe("CniWrapperPlugin", func() {
 		iptablesLockFilePath    string
 		input                   string
 		debug                   *noop_debug.Debug
-		expectedCmdArgs         skel.CmdArgs
 		healthCheckServer       *httptest.Server
 		healthCheckReturnStatus int
+		inputStruct             InputStruct
+		containerID             string
+		netinChainName          string
+		netoutChainName         string
+		inputChainName          string
+		netoutLoggingChainName  string
 	)
-
-	const delegateInput = `
-{
-		"type": "noop",
-		"some": "other data"
-}
-`
-
-	const inputTemplate = `
-{
-  "name": "cni-wrapper",
-	"cniVersion": "0.3.0",
-  "type": "wrapper",
-  "datastore": "%s",
-  "iptables_lock_file": "%s",
-  "overlay_network": "%s",
-	"health_check_url": "%s",
-
-	"metadata": {
-			"key1": "value1",
-			"key2": [ "some", "data" ]
-	},
-
-	"delegate": ` +
-		delegateInput +
-		`}`
 
 	var cniCommand = func(command, input string) *exec.Cmd {
 		toReturn := exec.Command(paths.PathToPlugin)
 		toReturn.Env = []string{
 			"CNI_COMMAND=" + command,
-			"CNI_CONTAINERID=some-container-id",
+			"CNI_CONTAINERID=" + containerID,
 			"CNI_NETNS=/some/netns/path",
 			"CNI_IFNAME=some-eth0",
 			"CNI_PATH=" + paths.CNIPath,
@@ -73,12 +65,17 @@ var _ = Describe("CniWrapperPlugin", func() {
 		return toReturn
 	}
 
-	var iptablesNATRules = func() string {
-		iptCmd := exec.Command("iptables", "-w", "-t", "nat", "-S")
-		iptablesSession, err := gexec.Start(iptCmd, GinkgoWriter, GinkgoWriter)
+	AllIPTablesRules := func(tableName string) []string {
+		iptablesSession, err := gexec.Start(exec.Command("iptables", "-w", "-S", "-t", tableName), GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(iptablesSession).Should(gexec.Exit(0))
-		return string(iptablesSession.Out.Contents())
+		return strings.Split(strings.TrimSpace(string(iptablesSession.Out.Contents())), "\n")
+	}
+
+	GetInput := func(i InputStruct) string {
+		inputBytes, err := json.Marshal(i)
+		Expect(err).NotTo(HaveOccurred())
+		return string(inputBytes)
 	}
 
 	BeforeEach(func() {
@@ -108,21 +105,94 @@ var _ = Describe("CniWrapperPlugin", func() {
 		Expect(iptablesLockFile.Close()).To(Succeed())
 		iptablesLockFilePath = iptablesLockFile.Name()
 
-		input = fmt.Sprintf(inputTemplate, datastorePath, iptablesLockFilePath,
-			"10.255.0.0/16", healthCheckServer.URL)
-
-		expectedCmdArgs = skel.CmdArgs{
-			ContainerID: "some-container-id",
-			Netns:       "/some/netns/path",
-			IfName:      "some-eth0",
-			Args:        "DEBUG=" + debugFileName,
-			Path:        "/some/bin/path",
-			StdinData:   []byte(input),
+		inputStruct = InputStruct{
+			Name:       "cni-wrapper",
+			CNIVersion: "0.3.0",
+			Type:       "wrapper",
+			Delegate: map[string]interface{}{
+				"type": "noop",
+				"some": "other data",
+			},
+			Metadata: map[string]interface{}{
+				"key1": "value1",
+				"key2": []string{"some", "data"},
+			},
+			WrapperConfig: lib.WrapperConfig{
+				Datastore:        datastorePath,
+				HealthCheckURL:   healthCheckServer.URL,
+				IPTablesLockFile: iptablesLockFilePath,
+				OverlayNetwork:   "10.255.0.0/16",
+				Delegate: map[string]interface{}{
+					"type": "noop",
+					"some": "other data",
+				},
+				InstanceAddress:    "10.244.2.3",
+				IPTablesASGLogging: false,
+				RuntimeConfig: lib.RuntimeConfig{
+					PortMappings: []garden.NetIn{
+						{
+							HostPort:      1000,
+							ContainerPort: 1001,
+						},
+						{
+							HostPort:      2000,
+							ContainerPort: 2001,
+						},
+					},
+					NetOutRules: []garden.NetOutRule{
+						{
+							Protocol: 1,
+							Networks: []garden.IPRange{
+								{
+									Start: net.ParseIP("8.8.8.8"),
+									End:   net.ParseIP("9.9.9.9"),
+								},
+							},
+							Ports: []garden.PortRange{
+								{
+									Start: 53,
+									End:   54,
+								},
+							},
+						},
+					},
+				},
+			},
 		}
+
+		input = GetInput(inputStruct)
+
+		containerID = "some-container-id-that-is-long"
+		netinChainName = ("netin--" + containerID)[:28]
+		netoutChainName = ("netout--" + containerID)[:28]
+		inputChainName = ("input--" + containerID)[:28]
+		netoutLoggingChainName = fmt.Sprintf("%s--log", netoutChainName[:23])
+
 		cmd = cniCommand("ADD", input)
 	})
 
 	AfterEach(func() {
+		cmd := cniCommand("DEL", input)
+		session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+		Expect(err).NotTo(HaveOccurred())
+		Eventually(session).Should(gexec.Exit(0))
+
+		By("checking that ip masquerade rule is removed")
+		Expect(AllIPTablesRules("nat")).NotTo(ContainElement("-A POSTROUTING -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j MASQUERADE"))
+
+		By("checking that iptables netin rules are removed")
+		Expect(AllIPTablesRules("nat")).ToNot(ContainElement(`-N ` + netinChainName))
+		Expect(AllIPTablesRules("nat")).ToNot(ContainElement(`-A PREROUTING -j ` + netinChainName))
+
+		By("checking that port forwarding rules were removed from the netin chain")
+		Expect(AllIPTablesRules("nat")).ToNot(ContainElement("-A " + netinChainName + " -d 10.244.2.3/32 -p tcp -m tcp --dport 1000 -j DNAT --to-destination 1.2.3.4:1001"))
+		Expect(AllIPTablesRules("nat")).ToNot(ContainElement("-A " + netinChainName + " -d 10.244.2.3/32 -p tcp -m tcp --dport 2000 -j DNAT --to-destination 1.2.3.4:2001"))
+
+		By("checking that there are no more netout rules for this container")
+		Expect(AllIPTablesRules("filter")).NotTo(ContainElement(ContainSubstring(inputChainName)))
+		Expect(AllIPTablesRules("filter")).NotTo(ContainElement(ContainSubstring(netoutChainName)))
+		Expect(AllIPTablesRules("filter")).NotTo(ContainElement(ContainSubstring(netoutLoggingChainName)))
+
 		os.Remove(debugFileName)
 		os.Remove(datastorePath)
 		os.Remove(iptablesLockFilePath)
@@ -165,7 +235,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 			Eventually(session).Should(gexec.Exit(0))
 
 			By("check that ip masquerade rule is created")
-			Expect(iptablesNATRules()).To(ContainSubstring("-A POSTROUTING -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j MASQUERADE"))
+			Expect(AllIPTablesRules("nat")).To(ContainElement("-A POSTROUTING -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j MASQUERADE"))
 
 			By("calling DEL")
 			cmd = cniCommand("DEL", input)
@@ -174,20 +244,11 @@ var _ = Describe("CniWrapperPlugin", func() {
 			Eventually(session).Should(gexec.Exit(0))
 
 			By("check that ip masquerade rule is removed")
-			Expect(iptablesNATRules()).NotTo(ContainSubstring("-A POSTROUTING -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j MASQUERADE"))
+			Expect(AllIPTablesRules("nat")).NotTo(ContainElement("-A POSTROUTING -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j MASQUERADE"))
 		})
 	})
 
 	Context("When call with command ADD", func() {
-		AfterEach(func() {
-			cmd := cniCommand("DEL", input)
-			session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
-			Expect(err).NotTo(HaveOccurred())
-			Eventually(session).Should(gexec.Exit(0))
-
-			Expect(iptablesNATRules()).NotTo(ContainSubstring("-A POSTROUTING -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j MASQUERADE"))
-		})
-
 		It("passes the delegate result back to the caller", func() {
 			session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
@@ -204,7 +265,10 @@ var _ = Describe("CniWrapperPlugin", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(debug.Command).To(Equal("ADD"))
 
-			Expect(debug.CmdArgs.StdinData).To(MatchJSON(delegateInput))
+			Expect(debug.CmdArgs.StdinData).To(MatchJSON(`{
+				"type": "noop",
+				"some": "other data"
+			}`))
 		})
 
 		It("ensures the container masquerade rule is created", func() {
@@ -212,7 +276,120 @@ var _ = Describe("CniWrapperPlugin", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(0))
 			Expect(session.Out.Contents()).To(MatchJSON(`{ "ips": [{ "version": "4", "interface": -1, "address": "1.2.3.4/32" }], "dns":{} }`))
-			Expect(iptablesNATRules()).To(ContainSubstring("-A POSTROUTING -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j MASQUERADE"))
+			Expect(AllIPTablesRules("nat")).To(ContainElement("-A POSTROUTING -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j MASQUERADE"))
+		})
+
+		Describe("PortMapping", func() {
+			It("creates iptables portmapping rules", func() {
+				session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+				Eventually(session).Should(gexec.Exit(0))
+
+				By("checking that a netin chain was created for the container")
+				Expect(AllIPTablesRules("nat")).To(ContainElement(`-N ` + netinChainName))
+				Expect(AllIPTablesRules("nat")).To(ContainElement(`-A PREROUTING -j ` + netinChainName))
+
+				By("checking that port forwarding rules were added to the netin chain")
+				Expect(AllIPTablesRules("nat")).To(ContainElement("-A " + netinChainName + " -d 10.244.2.3/32 -p tcp -m tcp --dport 1000 -j DNAT --to-destination 1.2.3.4:1001"))
+				Expect(AllIPTablesRules("nat")).To(ContainElement("-A " + netinChainName + " -d 10.244.2.3/32 -p tcp -m tcp --dport 2000 -j DNAT --to-destination 1.2.3.4:2001"))
+			})
+
+			Context("when a port mapping with hostport 0 is given", func() {
+				BeforeEach(func() {
+					inputStruct.WrapperConfig.RuntimeConfig.PortMappings = []garden.NetIn{
+						{
+							HostPort:      0,
+							ContainerPort: 1001,
+						},
+					}
+
+					input = GetInput(inputStruct)
+				})
+				It("refuses to allocate", func() {
+					cmd = cniCommand("ADD", input)
+					session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+					Expect(err).NotTo(HaveOccurred())
+					Eventually(session).Should(gexec.Exit(1))
+				})
+			})
+
+			Context("when adding netin rule fails", func() {
+				BeforeEach(func() {
+					inputStruct.WrapperConfig.InstanceAddress = "asdf"
+					input = GetInput(inputStruct)
+				})
+				It("exit status 1", func() {
+					cmd = cniCommand("ADD", input)
+					session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+					Expect(err).NotTo(HaveOccurred())
+					Eventually(session).Should(gexec.Exit(1))
+					Expect(session.Out.Contents()).To(MatchJSON(`{ "code": 100, "msg": "adding netin rule: invalid ip: asdf" }`))
+				})
+			})
+		})
+
+		Describe("NetOutRules", func() {
+			It("creates iptables netout rules", func() {
+				session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+				Eventually(session).Should(gexec.Exit(0))
+
+				By("checking that the default forwarding rules are created for that container")
+				Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
+					`-A ` + netoutChainName + ` -s 1.2.3.4/32 ! -d 10.255.0.0/16 -m state --state RELATED,ESTABLISHED -j RETURN`,
+					`-A ` + netoutChainName + ` -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j REJECT --reject-with icmp-port-unreachable`,
+				}))
+
+				By("checking that the default input rules are created for that container")
+				Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
+					`-A ` + inputChainName + ` -s 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j RETURN`,
+					`-A ` + inputChainName + ` -s 1.2.3.4/32 -j REJECT --reject-with icmp-port-unreachable`,
+				}))
+
+				By("checking that the rules are written")
+				Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 1.2.3.4/32 -p tcp -m iprange --dst-range 8.8.8.8-9.9.9.9 -m tcp --dport 53:54 -j RETURN`))
+
+			})
+
+			Context("when iptables_asg_logging is enabled", func() {
+				BeforeEach(func() {
+					inputStruct.WrapperConfig.RuntimeConfig.NetOutRules[0].Log = false
+					inputStruct.WrapperConfig.IPTablesASGLogging = true
+					input = GetInput(inputStruct)
+				})
+				It("writes iptables asg logging rules", func() {
+					cmd = cniCommand("ADD", input)
+					session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+					Expect(err).NotTo(HaveOccurred())
+					Eventually(session).Should(gexec.Exit(0))
+
+					By("checking that the filter rule was installed and that logging can be enabled")
+					Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 1.2.3.4/32 -p tcp -m iprange --dst-range 8.8.8.8-9.9.9.9 -m tcp --dport 53:54 -g ` + netoutLoggingChainName))
+
+					By("checking that it writes the logging rules")
+					Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutLoggingChainName + ` -p tcp -m conntrack --ctstate INVALID,NEW,UNTRACKED -j LOG --log-prefix OK_` + containerID[:26]))
+				})
+			})
+
+			Context("when a rule has logging enabled", func() {
+				BeforeEach(func() {
+					inputStruct.WrapperConfig.RuntimeConfig.NetOutRules[0].Log = true
+					inputStruct.WrapperConfig.IPTablesASGLogging = false
+					input = GetInput(inputStruct)
+				})
+				It("writes iptables asg logging rules for that rule", func() {
+					cmd = cniCommand("ADD", input)
+					session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+					Expect(err).NotTo(HaveOccurred())
+					Eventually(session).Should(gexec.Exit(0))
+
+					By("checking that the filter rule was installed and that logging can be enabled")
+					Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 1.2.3.4/32 -p tcp -m iprange --dst-range 8.8.8.8-9.9.9.9 -m tcp --dport 53:54 -g ` + netoutLoggingChainName))
+
+					By("checking that it writes the logging rules")
+					Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutLoggingChainName + ` -p tcp -m conntrack --ctstate INVALID,NEW,UNTRACKED -j LOG --log-prefix OK_` + containerID[:26]))
+				})
+			})
 		})
 
 		Context("When the health check call returns an error", func() {
@@ -262,7 +439,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 			})
 		})
 
-		Context("when the datastore add fails", func() {
+		Context("when the container id is not specified", func() {
 			BeforeEach(func() {
 				cmd.Env[1] = "CNI_CONTAINERID="
 			})
@@ -272,7 +449,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Eventually(session).Should(gexec.Exit(1))
 
-				Expect(session.Out.Contents()).To(MatchJSON(`{ "code": 100, "msg": "store add: invalid handle" }`))
+				Expect(session.Out.Contents()).To(MatchJSON(`{ "code": 100, "msg": "initialize net out: invalid handle" }`))
 			})
 
 			It("does not leave any iptables rules behind", func() {
@@ -280,47 +457,30 @@ var _ = Describe("CniWrapperPlugin", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Eventually(session).Should(gexec.Exit(1))
 
-				Expect(iptablesNATRules()).NotTo(ContainSubstring("-A POSTROUTING -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j MASQUERADE"))
+				Expect(AllIPTablesRules("nat")).NotTo(ContainElement("-A POSTROUTING -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j MASQUERADE"))
 			})
 		})
 
-		Context("when the CNI call has no metadata", func() {
+		Context("when the datastore add fails", func() {
 			BeforeEach(func() {
-				inputTemplate := `
-{
-  "name": "cni-wrapper",
-	"cniVersion": "0.3.0",
-  "type": "wrapper",
-  "datastore": "%s",
-	"iptables_lock_file": "%s",
-  "overlay_network": "%s",
-	"health_check_url": "%s",
-	"delegate": ` +
-					delegateInput +
-					`}`
-				input = fmt.Sprintf(inputTemplate, datastorePath, iptablesLockFilePath, "10.255.0.0/16", healthCheckServer.URL)
+				err := ioutil.WriteFile(datastorePath, []byte("banana"), os.ModePerm)
+				Expect(err).NotTo(HaveOccurred())
 			})
-			It("succeeds and writes container IP to the datastore", func() {
-				cmd = cniCommand("ADD", input)
+
+			It("wraps and returns the error", func() {
 				session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 				Expect(err).NotTo(HaveOccurred())
-				Eventually(session).Should(gexec.Exit(0))
+				Eventually(session).Should(gexec.Exit(1))
 
-				By("check that metadata is stored")
-				stateFileBytes, err := ioutil.ReadFile(datastorePath)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(string(stateFileBytes)).To(ContainSubstring("1.2.3.4"))
+				Expect(session.Out.Contents()).To(MatchJSON(`{ "code": 100, "msg": "store add: decoding file: invalid character 'b' looking for beginning of value" }`))
+			})
 
-				By("calling DEL")
-				cmd = cniCommand("DEL", input)
-				session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+			It("does not leave any iptables rules behind", func() {
+				session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 				Expect(err).NotTo(HaveOccurred())
-				Eventually(session).Should(gexec.Exit(0))
+				Eventually(session).Should(gexec.Exit(1))
 
-				By("check that metadata is has been removed")
-				stateFileBytes, err = ioutil.ReadFile(datastorePath)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(string(stateFileBytes)).NotTo(ContainSubstring("1.2.3.4"))
+				Expect(AllIPTablesRules("nat")).NotTo(ContainElement("-A POSTROUTING -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j MASQUERADE"))
 			})
 		})
 	})
@@ -339,7 +499,10 @@ var _ = Describe("CniWrapperPlugin", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(debug.Command).To(Equal("DEL"))
 
-			Expect(debug.CmdArgs.StdinData).To(MatchJSON(delegateInput))
+			Expect(debug.CmdArgs.StdinData).To(MatchJSON(`{
+				"type": "noop",
+				"some": "other data"
+			}`))
 		})
 
 		Context("When the delegate plugin return an error", func() {
@@ -379,7 +542,10 @@ var _ = Describe("CniWrapperPlugin", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(debug.Command).To(Equal("DEL"))
 
-				Expect(debug.CmdArgs.StdinData).To(MatchJSON(delegateInput))
+				Expect(debug.CmdArgs.StdinData).To(MatchJSON(`{
+					"type": "noop",
+					"some": "other data"
+				}`))
 			})
 		})
 
