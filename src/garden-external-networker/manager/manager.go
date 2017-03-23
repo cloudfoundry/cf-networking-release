@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net"
 	"path/filepath"
 
 	"code.cloudfoundry.org/garden"
@@ -15,7 +14,7 @@ import (
 
 //go:generate counterfeiter -o ../fakes/cniController.go --fake-name CNIController . cniController
 type cniController interface {
-	Up(namespacePath, handle string, properties map[string]string) (types.Result, error)
+	Up(namespacePath, handle string, metadata map[string]interface{}, legacyNetConf map[string]interface{}) (types.Result, error)
 	Down(namespacePath, handle string) error
 }
 
@@ -31,36 +30,18 @@ type portAllocator interface {
 	ReleaseAllPorts(handle string) error
 }
 
-//go:generate counterfeiter -o ../fakes/netin_provider.go --fake-name NetInProvider . netInProvider
-type netInProvider interface {
-	Initialize(containerHandle string) error
-	Cleanup(containerHandle string) error
-	AddRule(containerHandle string, hostPort, containerPort int, hostIP, containerIP string) error
-}
-
-//go:generate counterfeiter -o ../fakes/netout_provider.go --fake-name NetOutProvider . netOutProvider
-type netOutProvider interface {
-	Initialize(logger lager.Logger, containerHandle string, containerIP net.IP, overlayNetwork string) error
-	Cleanup(containerHandle string) error
-	InsertRule(containerHandle string, rule garden.NetOutRule, containerIP string) error
-	BulkInsertRules(containerHandle string, rules []garden.NetOutRule, containerIP string) error
-}
-
 type Manager struct {
-	Logger          lager.Logger
-	CNIController   cniController
-	Mounter         mounter
-	BindMountRoot   string
-	OverlayNetwork  string
-	InstanceAddress string
-	PortAllocator   portAllocator
-	NetInProvider   netInProvider
-	NetOutProvider  netOutProvider
+	Logger         lager.Logger
+	CNIController  cniController
+	Mounter        mounter
+	BindMountRoot  string
+	OverlayNetwork string
+	PortAllocator  portAllocator
 }
 
 type UpInputs struct {
 	Pid        int
-	Properties map[string]string
+	Properties map[string]interface{}
 	NetOut     []garden.NetOutRule `json:"netout_rules"`
 	NetIn      []garden.NetIn      `json:"netin"`
 }
@@ -88,7 +69,31 @@ func (m *Manager) Up(containerHandle string, inputs UpInputs) (*UpOutputs, error
 		return nil, fmt.Errorf("failed mounting %s to %s: %s", procNsPath, bindMountPath, err)
 	}
 
-	result, err := m.CNIController.Up(bindMountPath, containerHandle, inputs.Properties)
+	mappedPorts := []garden.PortMapping{}
+	for i := range inputs.NetIn {
+		if inputs.NetIn[i].HostPort == 0 {
+			hostPort, err := m.PortAllocator.AllocatePort(containerHandle, int(inputs.NetIn[i].HostPort))
+			if err != nil {
+				return nil, fmt.Errorf("allocating port: %s", err)
+			}
+			inputs.NetIn[i].HostPort = uint32(hostPort)
+		}
+
+		mappedPorts = append(mappedPorts, garden.PortMapping{
+			HostPort:      inputs.NetIn[i].HostPort,
+			ContainerPort: inputs.NetIn[i].ContainerPort,
+		})
+	}
+
+	result, err := m.CNIController.Up(
+		bindMountPath,
+		containerHandle,
+		inputs.Properties,
+		map[string]interface{}{
+			"portMappings": inputs.NetIn,
+			"netOutRules":  inputs.NetOut,
+		},
+	)
 	if err != nil {
 		return nil, fmt.Errorf("cni up failed: %s", err)
 	}
@@ -103,38 +108,6 @@ func (m *Manager) Up(containerHandle string, inputs UpInputs) (*UpOutputs, error
 	}
 
 	containerIP := result020.(*types020.Result).IP4.IP.IP
-
-	if err := m.NetOutProvider.Initialize(m.Logger, containerHandle, containerIP, m.OverlayNetwork); err != nil {
-		return nil, fmt.Errorf("initialize net out: %s", err)
-	}
-
-	err = m.NetInProvider.Initialize(containerHandle)
-	if err != nil {
-		return nil, fmt.Errorf("initialize iptables for netin: %s", err)
-	}
-
-	if err := m.NetOutProvider.BulkInsertRules(containerHandle, inputs.NetOut, containerIP.String()); err != nil {
-		return nil, fmt.Errorf("bulk insert: %s", err)
-	}
-
-	mappedPorts := []garden.PortMapping{}
-	for _, netIn := range inputs.NetIn {
-		if netIn.HostPort == 0 {
-			hostPort, err := m.PortAllocator.AllocatePort(containerHandle, int(netIn.HostPort))
-			if err != nil {
-				return nil, fmt.Errorf("allocating port: %s", err)
-			}
-			netIn.HostPort = uint32(hostPort)
-		}
-
-		if err := m.NetInProvider.AddRule(containerHandle, int(netIn.HostPort), int(netIn.ContainerPort), m.InstanceAddress, containerIP.String()); err != nil {
-			return nil, fmt.Errorf("adding netin rule: %s", err)
-		}
-		mappedPorts = append(mappedPorts, garden.PortMapping{
-			HostPort:      netIn.HostPort,
-			ContainerPort: netIn.ContainerPort,
-		})
-	}
 
 	outputs := UpOutputs{}
 	outputs.Properties.MappedPorts = toJson(mappedPorts)
@@ -159,77 +132,10 @@ func (m *Manager) Down(containerHandle string) error {
 		m.Logger.Error("removing mount", err, lager.Data{"bind mount path": bindMountPath})
 	}
 
-	if err = m.NetOutProvider.Cleanup(containerHandle); err != nil {
-		m.Logger.Error("net out cleanup", err)
-	}
-
-	if err = m.NetInProvider.Cleanup(containerHandle); err != nil {
-		m.Logger.Error("net in cleanup", err)
-	}
-
 	if err = m.PortAllocator.ReleaseAllPorts(containerHandle); err != nil {
 		m.Logger.Error("releasing ports", err)
 	}
 
-	return nil
-}
-
-type NetOutInputs struct {
-	ContainerIP string            `json:"container_ip"`
-	NetOutRule  garden.NetOutRule `json:"netout_rule"`
-}
-
-func (m *Manager) NetOut(containerHandle string, inputs NetOutInputs) error {
-	return m.NetOutProvider.InsertRule(containerHandle, inputs.NetOutRule, inputs.ContainerIP)
-}
-
-type NetInInputs struct {
-	HostIP        string
-	HostPort      int
-	ContainerIP   string
-	ContainerPort int
-}
-
-type NetInOutputs struct {
-	HostPort      int `json:"host_port"`
-	ContainerPort int `json:"container_port"`
-}
-
-func (m *Manager) NetIn(containerHandle string, inputs NetInInputs) (*NetInOutputs, error) {
-	hostPort, err := m.PortAllocator.AllocatePort(containerHandle, inputs.HostPort)
-	if err != nil {
-		return nil, fmt.Errorf("allocate port: %s", err)
-	}
-
-	containerPort := inputs.ContainerPort
-	if containerPort == 0 {
-		containerPort = hostPort
-	}
-
-	containerIP := inputs.ContainerIP
-	hostIP := inputs.HostIP
-
-	err = m.NetInProvider.AddRule(containerHandle, hostPort, containerPort, hostIP, containerIP)
-	if err != nil {
-		return nil, fmt.Errorf("add rule: %s", err)
-	}
-
-	return &NetInOutputs{
-		HostPort:      hostPort,
-		ContainerPort: containerPort,
-	}, nil
-}
-
-type BulkNetOutInputs struct {
-	ContainerIP string              `json:"container_ip"`
-	NetOutRules []garden.NetOutRule `json:"netout_rules"`
-}
-
-func (m *Manager) BulkNetOut(containerHandle string, inputs BulkNetOutInputs) error {
-	err := m.NetOutProvider.BulkInsertRules(containerHandle, inputs.NetOutRules, inputs.ContainerIP)
-	if err != nil {
-		return fmt.Errorf("insert rule: %s", err)
-	}
 	return nil
 }
 

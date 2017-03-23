@@ -16,6 +16,10 @@ type PortAllocator struct {
 		result1 int
 		result2 error
 	}
+	allocatePortReturnsOnCall map[int]struct {
+		result1 int
+		result2 error
+	}
 	ReleaseAllPortsStub        func(handle string) error
 	releaseAllPortsMutex       sync.RWMutex
 	releaseAllPortsArgsForCall []struct {
@@ -24,12 +28,16 @@ type PortAllocator struct {
 	releaseAllPortsReturns struct {
 		result1 error
 	}
+	releaseAllPortsReturnsOnCall map[int]struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
 func (fake *PortAllocator) AllocatePort(handle string, port int) (int, error) {
 	fake.allocatePortMutex.Lock()
+	ret, specificReturn := fake.allocatePortReturnsOnCall[len(fake.allocatePortArgsForCall)]
 	fake.allocatePortArgsForCall = append(fake.allocatePortArgsForCall, struct {
 		handle string
 		port   int
@@ -38,6 +46,9 @@ func (fake *PortAllocator) AllocatePort(handle string, port int) (int, error) {
 	fake.allocatePortMutex.Unlock()
 	if fake.AllocatePortStub != nil {
 		return fake.AllocatePortStub(handle, port)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
 	}
 	return fake.allocatePortReturns.result1, fake.allocatePortReturns.result2
 }
@@ -62,8 +73,23 @@ func (fake *PortAllocator) AllocatePortReturns(result1 int, result2 error) {
 	}{result1, result2}
 }
 
+func (fake *PortAllocator) AllocatePortReturnsOnCall(i int, result1 int, result2 error) {
+	fake.AllocatePortStub = nil
+	if fake.allocatePortReturnsOnCall == nil {
+		fake.allocatePortReturnsOnCall = make(map[int]struct {
+			result1 int
+			result2 error
+		})
+	}
+	fake.allocatePortReturnsOnCall[i] = struct {
+		result1 int
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *PortAllocator) ReleaseAllPorts(handle string) error {
 	fake.releaseAllPortsMutex.Lock()
+	ret, specificReturn := fake.releaseAllPortsReturnsOnCall[len(fake.releaseAllPortsArgsForCall)]
 	fake.releaseAllPortsArgsForCall = append(fake.releaseAllPortsArgsForCall, struct {
 		handle string
 	}{handle})
@@ -71,6 +97,9 @@ func (fake *PortAllocator) ReleaseAllPorts(handle string) error {
 	fake.releaseAllPortsMutex.Unlock()
 	if fake.ReleaseAllPortsStub != nil {
 		return fake.ReleaseAllPortsStub(handle)
+	}
+	if specificReturn {
+		return ret.result1
 	}
 	return fake.releaseAllPortsReturns.result1
 }
@@ -90,6 +119,18 @@ func (fake *PortAllocator) ReleaseAllPortsArgsForCall(i int) string {
 func (fake *PortAllocator) ReleaseAllPortsReturns(result1 error) {
 	fake.ReleaseAllPortsStub = nil
 	fake.releaseAllPortsReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *PortAllocator) ReleaseAllPortsReturnsOnCall(i int, result1 error) {
+	fake.ReleaseAllPortsStub = nil
+	if fake.releaseAllPortsReturnsOnCall == nil {
+		fake.releaseAllPortsReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.releaseAllPortsReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }

@@ -8,16 +8,13 @@ import (
 )
 
 type Config struct {
-	CniPluginDir       string `json:"cni_plugin_dir"`
-	CniConfigDir       string `json:"cni_config_dir"`
-	BindMountDir       string `json:"bind_mount_dir"`
-	OverlayNetwork     string `json:"overlay_network"`
-	StateFilePath      string `json:"state_file"`
-	StartPort          int    `json:"start_port"`
-	TotalPorts         int    `json:"total_ports"`
-	IPTablesLockFile   string `json:"iptables_lock_file"`
-	InstanceAddress    string `json:"instance_address"`
-	IPTablesASGLogging bool   `json:"iptables_asg_logging"`
+	CniPluginDir   string `json:"cni_plugin_dir"`
+	CniConfigDir   string `json:"cni_config_dir"`
+	BindMountDir   string `json:"bind_mount_dir"`
+	OverlayNetwork string `json:"overlay_network"`
+	StateFilePath  string `json:"state_file"`
+	StartPort      int    `json:"start_port"`
+	TotalPorts     int    `json:"total_ports"`
 }
 
 func New(configFilePath string) (Config, error) {
@@ -63,14 +60,6 @@ func New(configFilePath string) (Config, error) {
 
 	if cfg.TotalPorts == 0 {
 		return cfg, fmt.Errorf("missing required config 'total_ports'")
-	}
-
-	if cfg.IPTablesLockFile == "" {
-		return cfg, fmt.Errorf("missing required config 'iptables_lock_file'")
-	}
-
-	if cfg.InstanceAddress == "" {
-		return cfg, fmt.Errorf("missing required config 'instance_address'")
 	}
 
 	return cfg, nil

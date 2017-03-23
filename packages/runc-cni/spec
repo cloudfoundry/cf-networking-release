@@ -13,7 +13,6 @@ files:
   - garden-external-networker/cni/*.go # gosub
   - garden-external-networker/config/*.go # gosub
   - garden-external-networker/ipc/*.go # gosub
-  - garden-external-networker/legacynet/*.go # gosub
   - garden-external-networker/manager/*.go # gosub
   - garden-external-networker/port_allocator/*.go # gosub
   - github.com/containernetworking/cni/libcni/*.go # gosub
@@ -39,11 +38,7 @@ files:
   - github.com/containernetworking/cni/vendor/github.com/vishvananda/netns/*.go # gosub
   - github.com/containernetworking/cni/vendor/golang.org/x/sys/unix/*.go # gosub
   - github.com/containernetworking/cni/vendor/golang.org/x/sys/unix/*.s # gosub
-  - github.com/coreos/go-iptables/iptables/*.go # gosub
-  - github.com/hashicorp/go-multierror/*.go # gosub
-  - github.com/hashicorp/go-multierror/vendor/github.com/hashicorp/errwrap/*.go # gosub
   - golang.org/x/sys/unix/*.go # gosub
   - golang.org/x/sys/unix/*.s # gosub
   - lib/filelock/*.go # gosub
-  - lib/rules/*.go # gosub
   - lib/serial/*.go # gosub

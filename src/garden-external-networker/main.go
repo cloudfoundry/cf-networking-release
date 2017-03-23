@@ -7,16 +7,11 @@ import (
 	"garden-external-networker/cni"
 	"garden-external-networker/config"
 	"garden-external-networker/ipc"
-	"garden-external-networker/legacynet"
 	"garden-external-networker/manager"
 	"garden-external-networker/port_allocator"
 	"lib/filelock"
-	"lib/rules"
 	"lib/serial"
 	"os"
-	"sync"
-
-	"github.com/coreos/go-iptables/iptables"
 
 	"code.cloudfoundry.org/lager"
 )
@@ -103,22 +98,6 @@ func mainWithError(logger lager.Logger) error {
 
 	mounter := &bindmount.Mounter{}
 
-	ipt, err := iptables.New()
-	if err != nil {
-		return fmt.Errorf("initialize iptables package: %s", err)
-	}
-
-	restorer := &rules.Restorer{}
-	iptLocker := &rules.IPTablesLocker{
-		FileLocker: &filelock.Locker{Path: cfg.IPTablesLockFile},
-		Mutex:      &sync.Mutex{},
-	}
-	lockedIPTables := &rules.LockedIPTables{
-		IPTables: ipt,
-		Locker:   iptLocker,
-		Restorer: restorer,
-	}
-
 	locker := &filelock.Locker{Path: cfg.StateFilePath}
 	tracker := &port_allocator.Tracker{
 		Logger:    logger,
@@ -132,38 +111,18 @@ func mainWithError(logger lager.Logger) error {
 		Locker:     locker,
 	}
 
-	chainNamer := &legacynet.ChainNamer{MaxLength: 28}
-
-	netinProvider := &legacynet.NetIn{
-		ChainNamer: chainNamer,
-		IPTables:   lockedIPTables,
-	}
-
-	netoutProvider := &legacynet.NetOut{
-		ChainNamer:    chainNamer,
-		IPTables:      lockedIPTables,
-		Converter:     &legacynet.NetOutRuleConverter{},
-		GlobalLogging: cfg.IPTablesASGLogging,
-	}
-
 	manager := &manager.Manager{
-		Logger:          logger,
-		CNIController:   cniController,
-		Mounter:         mounter,
-		BindMountRoot:   cfg.BindMountDir,
-		PortAllocator:   portAllocator,
-		OverlayNetwork:  cfg.OverlayNetwork,
-		InstanceAddress: cfg.InstanceAddress,
-		NetInProvider:   netinProvider,
-		NetOutProvider:  netoutProvider,
+		Logger:         logger,
+		CNIController:  cniController,
+		Mounter:        mounter,
+		BindMountRoot:  cfg.BindMountDir,
+		PortAllocator:  portAllocator,
+		OverlayNetwork: cfg.OverlayNetwork,
 	}
 
 	mux := ipc.Mux{
-		Up:         manager.Up,
-		Down:       manager.Down,
-		NetOut:     manager.NetOut,
-		NetIn:      manager.NetIn,
-		BulkNetOut: manager.BulkNetOut,
+		Up:   manager.Up,
+		Down: manager.Down,
 	}
 
 	return mux.Handle(action, handle, os.Stdin, os.Stdout)

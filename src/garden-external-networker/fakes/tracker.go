@@ -17,6 +17,10 @@ type Tracker struct {
 		result1 int
 		result2 error
 	}
+	acquireOneReturnsOnCall map[int]struct {
+		result1 int
+		result2 error
+	}
 	ReleaseAllStub        func(pool *port_allocator.Pool, handle string) error
 	releaseAllMutex       sync.RWMutex
 	releaseAllArgsForCall []struct {
@@ -24,6 +28,9 @@ type Tracker struct {
 		handle string
 	}
 	releaseAllReturns struct {
+		result1 error
+	}
+	releaseAllReturnsOnCall map[int]struct {
 		result1 error
 	}
 	InRangeStub        func(port int) bool
@@ -34,12 +41,16 @@ type Tracker struct {
 	inRangeReturns struct {
 		result1 bool
 	}
+	inRangeReturnsOnCall map[int]struct {
+		result1 bool
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
 func (fake *Tracker) AcquireOne(pool *port_allocator.Pool, handle string) (int, error) {
 	fake.acquireOneMutex.Lock()
+	ret, specificReturn := fake.acquireOneReturnsOnCall[len(fake.acquireOneArgsForCall)]
 	fake.acquireOneArgsForCall = append(fake.acquireOneArgsForCall, struct {
 		pool   *port_allocator.Pool
 		handle string
@@ -48,6 +59,9 @@ func (fake *Tracker) AcquireOne(pool *port_allocator.Pool, handle string) (int, 
 	fake.acquireOneMutex.Unlock()
 	if fake.AcquireOneStub != nil {
 		return fake.AcquireOneStub(pool, handle)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
 	}
 	return fake.acquireOneReturns.result1, fake.acquireOneReturns.result2
 }
@@ -72,8 +86,23 @@ func (fake *Tracker) AcquireOneReturns(result1 int, result2 error) {
 	}{result1, result2}
 }
 
+func (fake *Tracker) AcquireOneReturnsOnCall(i int, result1 int, result2 error) {
+	fake.AcquireOneStub = nil
+	if fake.acquireOneReturnsOnCall == nil {
+		fake.acquireOneReturnsOnCall = make(map[int]struct {
+			result1 int
+			result2 error
+		})
+	}
+	fake.acquireOneReturnsOnCall[i] = struct {
+		result1 int
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *Tracker) ReleaseAll(pool *port_allocator.Pool, handle string) error {
 	fake.releaseAllMutex.Lock()
+	ret, specificReturn := fake.releaseAllReturnsOnCall[len(fake.releaseAllArgsForCall)]
 	fake.releaseAllArgsForCall = append(fake.releaseAllArgsForCall, struct {
 		pool   *port_allocator.Pool
 		handle string
@@ -82,6 +111,9 @@ func (fake *Tracker) ReleaseAll(pool *port_allocator.Pool, handle string) error 
 	fake.releaseAllMutex.Unlock()
 	if fake.ReleaseAllStub != nil {
 		return fake.ReleaseAllStub(pool, handle)
+	}
+	if specificReturn {
+		return ret.result1
 	}
 	return fake.releaseAllReturns.result1
 }
@@ -105,8 +137,21 @@ func (fake *Tracker) ReleaseAllReturns(result1 error) {
 	}{result1}
 }
 
+func (fake *Tracker) ReleaseAllReturnsOnCall(i int, result1 error) {
+	fake.ReleaseAllStub = nil
+	if fake.releaseAllReturnsOnCall == nil {
+		fake.releaseAllReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.releaseAllReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *Tracker) InRange(port int) bool {
 	fake.inRangeMutex.Lock()
+	ret, specificReturn := fake.inRangeReturnsOnCall[len(fake.inRangeArgsForCall)]
 	fake.inRangeArgsForCall = append(fake.inRangeArgsForCall, struct {
 		port int
 	}{port})
@@ -114,6 +159,9 @@ func (fake *Tracker) InRange(port int) bool {
 	fake.inRangeMutex.Unlock()
 	if fake.InRangeStub != nil {
 		return fake.InRangeStub(port)
+	}
+	if specificReturn {
+		return ret.result1
 	}
 	return fake.inRangeReturns.result1
 }
@@ -133,6 +181,18 @@ func (fake *Tracker) InRangeArgsForCall(i int) int {
 func (fake *Tracker) InRangeReturns(result1 bool) {
 	fake.InRangeStub = nil
 	fake.inRangeReturns = struct {
+		result1 bool
+	}{result1}
+}
+
+func (fake *Tracker) InRangeReturnsOnCall(i int, result1 bool) {
+	fake.InRangeStub = nil
+	if fake.inRangeReturnsOnCall == nil {
+		fake.inRangeReturnsOnCall = make(map[int]struct {
+			result1 bool
+		})
+	}
+	fake.inRangeReturnsOnCall[i] = struct {
 		result1 bool
 	}{result1}
 }

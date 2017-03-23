@@ -15,6 +15,9 @@ type Mounter struct {
 	idempotentlyMountReturns struct {
 		result1 error
 	}
+	idempotentlyMountReturnsOnCall map[int]struct {
+		result1 error
+	}
 	RemoveMountStub        func(target string) error
 	removeMountMutex       sync.RWMutex
 	removeMountArgsForCall []struct {
@@ -23,12 +26,16 @@ type Mounter struct {
 	removeMountReturns struct {
 		result1 error
 	}
+	removeMountReturnsOnCall map[int]struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
 func (fake *Mounter) IdempotentlyMount(source string, target string) error {
 	fake.idempotentlyMountMutex.Lock()
+	ret, specificReturn := fake.idempotentlyMountReturnsOnCall[len(fake.idempotentlyMountArgsForCall)]
 	fake.idempotentlyMountArgsForCall = append(fake.idempotentlyMountArgsForCall, struct {
 		source string
 		target string
@@ -37,6 +44,9 @@ func (fake *Mounter) IdempotentlyMount(source string, target string) error {
 	fake.idempotentlyMountMutex.Unlock()
 	if fake.IdempotentlyMountStub != nil {
 		return fake.IdempotentlyMountStub(source, target)
+	}
+	if specificReturn {
+		return ret.result1
 	}
 	return fake.idempotentlyMountReturns.result1
 }
@@ -60,8 +70,21 @@ func (fake *Mounter) IdempotentlyMountReturns(result1 error) {
 	}{result1}
 }
 
+func (fake *Mounter) IdempotentlyMountReturnsOnCall(i int, result1 error) {
+	fake.IdempotentlyMountStub = nil
+	if fake.idempotentlyMountReturnsOnCall == nil {
+		fake.idempotentlyMountReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.idempotentlyMountReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *Mounter) RemoveMount(target string) error {
 	fake.removeMountMutex.Lock()
+	ret, specificReturn := fake.removeMountReturnsOnCall[len(fake.removeMountArgsForCall)]
 	fake.removeMountArgsForCall = append(fake.removeMountArgsForCall, struct {
 		target string
 	}{target})
@@ -69,6 +92,9 @@ func (fake *Mounter) RemoveMount(target string) error {
 	fake.removeMountMutex.Unlock()
 	if fake.RemoveMountStub != nil {
 		return fake.RemoveMountStub(target)
+	}
+	if specificReturn {
+		return ret.result1
 	}
 	return fake.removeMountReturns.result1
 }
@@ -88,6 +114,18 @@ func (fake *Mounter) RemoveMountArgsForCall(i int) string {
 func (fake *Mounter) RemoveMountReturns(result1 error) {
 	fake.RemoveMountStub = nil
 	fake.removeMountReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *Mounter) RemoveMountReturnsOnCall(i int, result1 error) {
+	fake.RemoveMountStub = nil
+	if fake.removeMountReturnsOnCall == nil {
+		fake.removeMountReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.removeMountReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }

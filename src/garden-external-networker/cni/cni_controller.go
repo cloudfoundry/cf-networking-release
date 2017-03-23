@@ -21,7 +21,7 @@ type CNIController struct {
 	NetworkConfigs []*libcni.NetworkConfig
 }
 
-func (c *CNIController) Up(namespacePath, handle string, properties map[string]string) (types.Result, error) {
+func (c *CNIController) Up(namespacePath, handle string, metadata map[string]interface{}, legacyNetConf map[string]interface{}) (types.Result, error) {
 	var result types.Result
 	var err error
 
@@ -32,10 +32,17 @@ func (c *CNIController) Up(namespacePath, handle string, properties map[string]s
 			IfName:      fmt.Sprintf("eth%d", i),
 		}
 
-		if len(properties) > 0 {
-			networkConfig, err = libcni.InjectConf(networkConfig, "metadata", properties)
-			if err != nil {
-				return nil, fmt.Errorf("adding garden properties to CNI config: %s", err)
+		extraKeys := map[string]map[string]interface{}{
+			"metadata":      metadata,
+			"runtimeConfig": legacyNetConf,
+		}
+
+		for key, data := range extraKeys {
+			if len(data) > 0 {
+				networkConfig, err = libcni.InjectConf(networkConfig, key, data)
+				if err != nil {
+					return nil, fmt.Errorf("adding extra data to CNI config: %s", err)
+				}
 			}
 		}
 
