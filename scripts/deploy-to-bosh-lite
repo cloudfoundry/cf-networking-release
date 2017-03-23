@@ -14,13 +14,13 @@ error() {
 
 create_bosh_env() {
 bosh-cli create-env ~/workspace/bosh-deployment/bosh.yml \
-  --state "~/workspace/container-networking-deployments/environments/local/state.json" \
+  --state ~/workspace/container-networking-deployments/environments/local/state.json \
   -o ~/workspace/bosh-deployment/virtualbox/cpi.yml \
   -o ~/workspace/bosh-deployment/virtualbox/outbound-network.yml \
   -o ~/workspace/bosh-deployment/bosh-lite.yml \
   -o ~/workspace/bosh-deployment/bosh-lite-runc.yml \
   -o ~/workspace/bosh-deployment/jumpbox-user.yml \
-  --vars-store "~/workspace/container-networking-deployments/environments/local/creds.yml" \
+  --vars-store ~/workspace/container-networking-deployments/environments/local/creds.yml \
   -v director_name="Bosh Lite Director" \
   -v internal_ip=192.168.50.6 \
   -v internal_gw=192.168.50.1 \
@@ -29,17 +29,17 @@ bosh-cli create-env ~/workspace/bosh-deployment/bosh.yml \
 }
 
 set_bosh_env() {
-  bosh-cli -e 192.168.50.6 --ca-cert <(bosh-cli int "~/workspace/container-networking-deployments/environments/local/creds.yml" --path /director_ssl/ca) alias-env vbox
+  bosh-cli -e 192.168.50.6 --ca-cert <(bosh-cli int ~/workspace/container-networking-deployments/environments/local/creds.yml --path /director_ssl/ca) alias-env vbox
   export BOSH_CLIENT="admin"
-  export BOSH_CLIENT_SECRET="$(bosh-cli int "~/workspace/container-networking-deployments/environments/local/creds.yml" --path /admin_password)"
+  export BOSH_CLIENT_SECRET="$(bosh-cli int ~/workspace/container-networking-deployments/environments/local/creds.yml --path /admin_password)"
   export BOSH_ENVIRONMENT="vbox"
   export BOSH_DEPLOYMENT="cf"
   export BOSH_CA_CERT="/tmp/bosh-lite-ca-cert"
-  bosh-cli int "~/workspace/container-networking-deployments/environments/local/creds.yml" --path /director_ssl/ca > ${BOSH_CA_CERT}
+  bosh-cli int ~/workspace/container-networking-deployments/environments/local/creds.yml --path /director_ssl/ca > ${BOSH_CA_CERT}
 }
 
 upload_bosh_stemcell() {
-  bosh-cli -e vbox upload-stemcell https://bosh.io/d/stemcells/bosh-warden-boshlite-ubuntu-trusty-go_agent
+  bosh -e vbox upload-stemcell https://bosh.io/d/stemcells/bosh-warden-boshlite-ubuntu-trusty-go_agent
 }
 
 upload_cloud_config() {
@@ -48,8 +48,8 @@ upload_cloud_config() {
 
 enable_br_netfilter() {
   touch ~/workspace/container-networking-deployments/environments/local/director_priv.key; chmod 600 ~/workspace/container-networking-deployments/environments/local/director_priv.key
-  bosh-cli int "~/workspace/container-networking-deployments/environments/local/creds.yml" --path /jumpbox_ssh/private_key > "~/workspace/container-networking-deployments/environments/local/director_priv.key"
-  ssh jumpbox@192.168.50.6 -i "~/workspace/container-networking-deployments/environments/local/director_priv.key" 'sudo modprobe br_netfilter && lsmod | grep br_netfilter'
+  bosh-cli int ~/workspace/container-networking-deployments/environments/local/creds.yml --path /jumpbox_ssh/private_key > ~/workspace/container-networking-deployments/environments/local/director_priv.key
+  ssh jumpbox@192.168.50.6 -i ~/workspace/container-networking-deployments/environments/local/director_priv.key 'sudo modprobe br_netfilter && lsmod | grep br_netfilter'
 }
 
 deploy_cf() {
@@ -57,7 +57,7 @@ deploy_cf() {
   -o ~/workspace/cf-networking-release/manifest-generation/opsfiles/cf-networking.yml \
   -o ~/workspace/cf-deployment/operations/bosh-lite.yml \
   -o ~/workspace/cf-networking-release/manifest-generation/opsfiles/postgres.yml \
-  --vars-store ~/workspace/cf-networking-deployments/environments/local/deployment-vars.yml \
+  --vars-store ~/workspace/container-networking-deployments/environments/local/deployment-vars.yml \
   -v system_domain=bosh-lite.com
 }
 
@@ -81,6 +81,8 @@ main() {
     upload_local_release
 
     deploy_cf
+
+    sudo route add -net 10.244.0.0/16 192.168.50.6
 }
 
 upload_stemcell=true
