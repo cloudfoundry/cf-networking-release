@@ -53,45 +53,43 @@ func cmdAdd(args *skel.CmdArgs) error {
 
 	containerIP := result020.(*types020.Result).IP4.IP.IP
 
-	if n.RuntimeConfig != nil {
-		// Initialize NetOut
-		netOutProvider := legacynet.NetOut{
-			ChainNamer: &legacynet.ChainNamer{
-				MaxLength: 28,
-			},
-			IPTables:      pluginController.IPTables,
-			Converter:     &legacynet.NetOutRuleConverter{},
-			GlobalLogging: n.IPTablesASGLogging,
-		}
-		if err := netOutProvider.Initialize(args.ContainerID, containerIP, n.OverlayNetwork); err != nil {
-			return fmt.Errorf("initialize net out: %s", err)
-		}
+	// Initialize NetOut
+	netOutProvider := legacynet.NetOut{
+		ChainNamer: &legacynet.ChainNamer{
+			MaxLength: 28,
+		},
+		IPTables:      pluginController.IPTables,
+		Converter:     &legacynet.NetOutRuleConverter{},
+		GlobalLogging: n.IPTablesASGLogging,
+	}
+	if err := netOutProvider.Initialize(args.ContainerID, containerIP, n.OverlayNetwork); err != nil {
+		return fmt.Errorf("initialize net out: %s", err)
+	}
 
-		// Initialize NetIn
-		netinProvider := legacynet.NetIn{
-			ChainNamer: &legacynet.ChainNamer{
-				MaxLength: 28,
-			},
-			IPTables: pluginController.IPTables,
-		}
-		err = netinProvider.Initialize(args.ContainerID)
+	// Initialize NetIn
+	netinProvider := legacynet.NetIn{
+		ChainNamer: &legacynet.ChainNamer{
+			MaxLength: 28,
+		},
+		IPTables: pluginController.IPTables,
+	}
+	err = netinProvider.Initialize(args.ContainerID)
 
-		// Create port mappings
-		portMappings := n.RuntimeConfig.PortMappings
-		for _, netIn := range portMappings {
-			if netIn.HostPort <= 0 {
-				return fmt.Errorf("cannot allocate port %d", netIn.HostPort)
-			}
-			if err := netinProvider.AddRule(args.ContainerID, int(netIn.HostPort), int(netIn.ContainerPort), n.InstanceAddress, containerIP.String()); err != nil {
-				return fmt.Errorf("adding netin rule: %s", err)
-			}
+	// Create port mappings
+	portMappings := n.RuntimeConfig.PortMappings
+	for _, netIn := range portMappings {
+		if netIn.HostPort <= 0 {
+			return fmt.Errorf("cannot allocate port %d", netIn.HostPort)
 		}
+		if err := netinProvider.AddRule(args.ContainerID, int(netIn.HostPort), int(netIn.ContainerPort), n.InstanceAddress, containerIP.String()); err != nil {
+			return fmt.Errorf("adding netin rule: %s", err)
+		}
+	}
 
-		// Create egress rules
-		netOutRules := n.RuntimeConfig.NetOutRules
-		if err := netOutProvider.BulkInsertRules(args.ContainerID, netOutRules, containerIP.String()); err != nil {
-			return fmt.Errorf("bulk insert: %s", err) // not tested
-		}
+	// Create egress rules
+	netOutRules := n.RuntimeConfig.NetOutRules
+	if err := netOutProvider.BulkInsertRules(args.ContainerID, netOutRules, containerIP.String()); err != nil {
+		return fmt.Errorf("bulk insert: %s", err) // not tested
 	}
 
 	err = pluginController.AddIPMasq(containerIP.String(), n.OverlayNetwork)

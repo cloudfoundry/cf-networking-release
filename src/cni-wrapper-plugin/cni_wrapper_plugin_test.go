@@ -128,7 +128,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 				},
 				InstanceAddress:    "10.244.2.3",
 				IPTablesASGLogging: false,
-				RuntimeConfig: &lib.RuntimeConfig{
+				RuntimeConfig: lib.RuntimeConfig{
 					PortMappings: []garden.NetIn{
 						{
 							HostPort:      1000,
@@ -281,26 +281,27 @@ var _ = Describe("CniWrapperPlugin", func() {
 
 		Context("when no runtime config is passed in", func() {
 			BeforeEach(func() {
-				inputStruct.RuntimeConfig = nil
+				inputStruct.RuntimeConfig = lib.RuntimeConfig{}
 				input = GetInput(inputStruct)
 
 				cmd = cniCommand("ADD", input)
 			})
-			It("does not write the default netout rules", func() {
+			It("still writes the default netout rules", func() {
 				session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 				Expect(err).NotTo(HaveOccurred())
 				Eventually(session).Should(gexec.Exit(0))
 
-				By("checking that there are no netin rules")
-				Expect(AllIPTablesRules("nat")).ToNot(ContainElement(`-N ` + netinChainName))
-				Expect(AllIPTablesRules("nat")).ToNot(ContainElement(`-A PREROUTING -j ` + netinChainName))
-				Expect(AllIPTablesRules("nat")).ToNot(ContainElement("-A " + netinChainName + " -d 10.244.2.3/32 -p tcp -m tcp --dport 1000 -j DNAT --to-destination 1.2.3.4:1001"))
-				Expect(AllIPTablesRules("nat")).ToNot(ContainElement("-A " + netinChainName + " -d 10.244.2.3/32 -p tcp -m tcp --dport 2000 -j DNAT --to-destination 1.2.3.4:2001"))
+				By("checking that the default forwarding rules are created for that container")
+				Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
+					`-A ` + netoutChainName + ` -s 1.2.3.4/32 ! -d 10.255.0.0/16 -m state --state RELATED,ESTABLISHED -j RETURN`,
+					`-A ` + netoutChainName + ` -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j REJECT --reject-with icmp-port-unreachable`,
+				}))
 
-				By("checking that there are no netout rules")
-				Expect(AllIPTablesRules("filter")).NotTo(ContainElement(ContainSubstring(inputChainName)))
-				Expect(AllIPTablesRules("filter")).NotTo(ContainElement(ContainSubstring(netoutChainName)))
-				Expect(AllIPTablesRules("filter")).NotTo(ContainElement(ContainSubstring(netoutLoggingChainName)))
+				By("checking that the default input rules are created for that container")
+				Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
+					`-A ` + inputChainName + ` -s 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j RETURN`,
+					`-A ` + inputChainName + ` -s 1.2.3.4/32 -j REJECT --reject-with icmp-port-unreachable`,
+				}))
 			})
 		})
 

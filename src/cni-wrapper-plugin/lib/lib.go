@@ -23,7 +23,7 @@ type WrapperConfig struct {
 	HealthCheckURL     string                 `json:"health_check_url"`
 	InstanceAddress    string                 `json:"instance_address"`
 	IPTablesASGLogging bool                   `json:"iptables_asg_logging"`
-	RuntimeConfig      *RuntimeConfig         `json:"runtimeConfig,omitempty"`
+	RuntimeConfig      RuntimeConfig          `json:"runtimeConfig,omitempty"`
 }
 
 func LoadWrapperConfig(bytes []byte) (*WrapperConfig, error) {
