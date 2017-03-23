@@ -8,13 +8,12 @@ import (
 )
 
 type Config struct {
-	CniPluginDir   string `json:"cni_plugin_dir"`
-	CniConfigDir   string `json:"cni_config_dir"`
-	BindMountDir   string `json:"bind_mount_dir"`
-	OverlayNetwork string `json:"overlay_network"`
-	StateFilePath  string `json:"state_file"`
-	StartPort      int    `json:"start_port"`
-	TotalPorts     int    `json:"total_ports"`
+	CniPluginDir  string `json:"cni_plugin_dir"`
+	CniConfigDir  string `json:"cni_config_dir"`
+	BindMountDir  string `json:"bind_mount_dir"`
+	StateFilePath string `json:"state_file"`
+	StartPort     int    `json:"start_port"`
+	TotalPorts    int    `json:"total_ports"`
 }
 
 func New(configFilePath string) (Config, error) {
@@ -44,10 +43,6 @@ func New(configFilePath string) (Config, error) {
 
 	if cfg.BindMountDir == "" {
 		return cfg, fmt.Errorf("missing required config 'bind_mount_dir'")
-	}
-
-	if cfg.OverlayNetwork == "" {
-		return cfg, fmt.Errorf("missing required config 'overlay_network'")
 	}
 
 	if cfg.StateFilePath == "" {

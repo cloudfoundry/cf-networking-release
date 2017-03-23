@@ -31,12 +31,11 @@ type portAllocator interface {
 }
 
 type Manager struct {
-	Logger         lager.Logger
-	CNIController  cniController
-	Mounter        mounter
-	BindMountRoot  string
-	OverlayNetwork string
-	PortAllocator  portAllocator
+	Logger        lager.Logger
+	CNIController cniController
+	Mounter       mounter
+	BindMountRoot string
+	PortAllocator portAllocator
 }
 
 type UpInputs struct {

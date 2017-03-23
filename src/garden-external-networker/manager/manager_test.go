@@ -49,12 +49,11 @@ var _ = Describe("Manager", func() {
 			},
 		}, nil)
 		mgr = &manager.Manager{
-			Logger:         logger,
-			CNIController:  cniController,
-			Mounter:        mounter,
-			BindMountRoot:  "/some/fake/path",
-			OverlayNetwork: "10.255.0.0/16",
-			PortAllocator:  portAllocator,
+			Logger:        logger,
+			CNIController: cniController,
+			Mounter:       mounter,
+			BindMountRoot: "/some/fake/path",
+			PortAllocator: portAllocator,
 		}
 
 		netInRules = []garden.NetIn{
