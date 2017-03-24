@@ -11,6 +11,7 @@
     "health_check_url" => "http://127.0.0.1:" + p('cf_networking.health_check_port').to_s,
     "instance_address" => spec.ip,
     "iptables_asg_logging" => p("cf_networking.iptables_asg_logging"),
+    "dns_servers" => p("cf_networking.dns_servers"),
     "delegate" => {
       "name" => "cni-flannel",
       "type" => "flannel",
@@ -23,10 +24,6 @@
        }
      }
   }
-
-  if_p("cf_networking.dns_servers") do |servers|
-    toRender["dns_servers"] = servers
-  end
 
   if p('cf_networking.mtu') != 0
     toRender["delegate"]["delegate"]["mtu"] = p("cf_networking.mtu")

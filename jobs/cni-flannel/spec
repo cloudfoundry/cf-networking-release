@@ -73,3 +73,4 @@ properties:
 
   cf_networking.dns_servers:
     description: "DNS servers containers will use. If set, takes precedence over DNS servers configured through garden"
+    default: []

@@ -10,6 +10,7 @@ import (
 	"lib/filelock"
 	"lib/rules"
 	"lib/serial"
+	"net"
 	"net/http"
 	"os"
 	"sync"
@@ -128,7 +129,13 @@ func cmdAdd(args *skel.CmdArgs) error {
 		return fmt.Errorf("error converting result to 0.3.0: %s", err) // not tested
 	}
 
-	result030.DNS.Nameservers = n.DNSServers
+	for _, entry := range n.DNSServers {
+		if net.ParseIP(entry) != nil {
+			result030.DNS.Nameservers = append(result030.DNS.Nameservers, entry)
+		} else {
+			return fmt.Errorf(`invalid DNS server "%s", must be valid IP address`, entry)
+		}
+	}
 	return result030.Print()
 }
 

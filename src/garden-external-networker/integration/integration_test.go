@@ -285,6 +285,26 @@ var _ = Describe("Garden External Networker", func() {
 		}
 		runAndWait(downCommand2)
 	})
+
+	Context("when the CNI plugin result DNS servers list is empty", func() {
+		BeforeEach(func() {
+			upCommand.Env = append(upCommand.Env, "CNI_ARGS=no_dns_result")
+		})
+
+		It("omits the 'dns_servers' field from the Network ('up') output", func() {
+			// this behavior is necessary in order for Garden to fall back to using
+			// the host's /etc/resolv.conf.
+			upSession := runAndWait(upCommand)
+			Expect(upSession.Out.Contents()).To(MatchJSON(`{
+			"properties": {
+				"garden.network.container-ip": "169.254.1.2",
+				"garden.network.host-ip": "255.255.255.255",
+				"garden.network.mapped-ports": "[{\"HostPort\":12345,\"ContainerPort\":7000},{\"HostPort\":60000,\"ContainerPort\":7000}]"
+			}
+		}`))
+
+		})
+	})
 })
 
 func runAndWait(cmd *exec.Cmd) *gexec.Session {

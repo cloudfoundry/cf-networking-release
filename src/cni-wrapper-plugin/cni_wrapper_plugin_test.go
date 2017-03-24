@@ -297,6 +297,25 @@ var _ = Describe("CniWrapperPlugin", func() {
 			})
 		})
 
+		Context("when some of the DNS servers are not valid IPs", func() {
+			BeforeEach(func() {
+				inputStruct.DNSServers = []string{"1.2.3.4", "banana"}
+				input = GetInput(inputStruct)
+
+				cmd = cniCommand("ADD", input)
+			})
+			It("returns an error", func() {
+				session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+				Eventually(session).Should(gexec.Exit(1))
+
+				var errData map[string]interface{}
+				Expect(json.Unmarshal(session.Out.Contents(), &errData)).To(Succeed())
+				Expect(errData["code"]).To(BeEquivalentTo(100))
+				Expect(errData["msg"]).To(ContainSubstring(`invalid DNS server "banana", must be valid IP address`))
+			})
+		})
+
 		Context("when no runtime config is passed in", func() {
 			BeforeEach(func() {
 				inputStruct.RuntimeConfig = lib.RuntimeConfig{}

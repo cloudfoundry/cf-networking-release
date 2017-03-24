@@ -68,6 +68,11 @@ func main() {
 		log.Fatalf("unable to write log file: %s", err)
 	}
 
+	nameservers := []string{"1.2.3.4"}
+	if os.Getenv("CNI_ARGS") == "no_dns_result" {
+		nameservers = []string{}
+	}
+
 	result := &types020.Result{
 		IP4: &types020.IPConfig{
 			IP: net.IPNet{
@@ -76,7 +81,7 @@ func main() {
 			},
 		},
 		DNS: types.DNS{
-			Nameservers: []string{"1.2.3.4"},
+			Nameservers: nameservers,
 		},
 	}
 
