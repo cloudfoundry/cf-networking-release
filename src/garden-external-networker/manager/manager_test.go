@@ -11,6 +11,7 @@ import (
 	"garden-external-networker/fakes"
 	"garden-external-networker/manager"
 
+	"github.com/containernetworking/cni/pkg/types"
 	"github.com/containernetworking/cni/pkg/types/020"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -46,6 +47,9 @@ var _ = Describe("Manager", func() {
 					IP:   net.ParseIP("169.254.1.2"),
 					Mask: net.IPv4Mask(255, 255, 255, 0),
 				},
+			},
+			DNS: types.DNS{
+				Nameservers: []string{"8.8.8.8"},
 			},
 		}, nil)
 		mgr = &manager.Manager{
@@ -112,6 +116,13 @@ var _ = Describe("Manager", func() {
 
 			Expect(out.Properties.ContainerIP).To(Equal("169.254.1.2"))
 			Expect(out.Properties.DeprecatedHostIP).To(Equal("255.255.255.255"))
+		})
+
+		It("should return the DNS nameservers info as a separate key in the up ouput", func() {
+			out, err := mgr.Up(containerHandle, upInputs)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(out.DNSServers).To(Equal([]string{"8.8.8.8"}))
 		})
 
 		It("should call CNI Up, passing in the bind-mounted path to the net ns", func() {

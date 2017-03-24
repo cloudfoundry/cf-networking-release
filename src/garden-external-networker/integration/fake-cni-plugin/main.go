@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/containernetworking/cni/pkg/types"
 	"github.com/containernetworking/cni/pkg/types/020"
 )
 
@@ -73,6 +74,9 @@ func main() {
 				IP:   net.ParseIP("169.254.1.2"),
 				Mask: net.IPv4Mask(255, 255, 255, 0),
 			},
+		},
+		DNS: types.DNS{
+			Nameservers: []string{"1.2.3.4"},
 		},
 	}
 

@@ -218,11 +218,15 @@ var _ = Describe("Garden External Networker", func() {
 	It("should call CNI ADD and DEL", func() {
 		By("calling up")
 		upSession := runAndWait(upCommand)
-		Expect(upSession.Out.Contents()).To(MatchJSON(`{ "properties": {
-			"garden.network.container-ip": "169.254.1.2",
-			"garden.network.host-ip": "255.255.255.255",
-			"garden.network.mapped-ports": "[{\"HostPort\":12345,\"ContainerPort\":7000},{\"HostPort\":60000,\"ContainerPort\":7000}]"
-			}
+		Expect(upSession.Out.Contents()).To(MatchJSON(`{
+			"properties": {
+				"garden.network.container-ip": "169.254.1.2",
+				"garden.network.host-ip": "255.255.255.255",
+				"garden.network.mapped-ports": "[{\"HostPort\":12345,\"ContainerPort\":7000},{\"HostPort\":60000,\"ContainerPort\":7000}]"
+			},
+			"dns_servers": [
+				"1.2.3.4"
+			]
 		}`))
 
 		By("checking that it logs basic info on stderr")

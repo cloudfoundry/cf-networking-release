@@ -50,6 +50,7 @@ type UpOutputs struct {
 		DeprecatedHostIP string `json:"garden.network.host-ip"`
 		MappedPorts      string `json:"garden.network.mapped-ports"`
 	} `json:"properties"`
+	DNSServers []string `json:"dns_servers,omitempty"`
 }
 
 func (m *Manager) Up(containerHandle string, inputs UpInputs) (*UpOutputs, error) {
@@ -112,6 +113,7 @@ func (m *Manager) Up(containerHandle string, inputs UpInputs) (*UpOutputs, error
 	outputs.Properties.MappedPorts = toJson(mappedPorts)
 	outputs.Properties.ContainerIP = containerIP.String()
 	outputs.Properties.DeprecatedHostIP = "255.255.255.255"
+	outputs.DNSServers = result020.(*types020.Result).DNS.Nameservers
 	return &outputs, nil
 }
 
