@@ -1,8 +1,0 @@
-#!/bin/bash
-
-set -e -u
-
-/var/vcap/packages/flannel-watchdog/bin/flannel-watchdog \
-  -config-file=$CONF_DIR/flannel-watchdog.json \
-  2> >(tee -a $LOG_DIR/flannel-watchdog.stderr.log | logger -p user.error -t flannel-watchdog) \
-  1> >(tee -a $LOG_DIR/flannel-watchdog.stdout.log | logger -t flannel-watchdog) & echo $! > $PIDFILE

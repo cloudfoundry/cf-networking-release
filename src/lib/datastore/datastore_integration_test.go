@@ -54,6 +54,14 @@ var _ = Describe("Datastore Lifecycle", func() {
 		os.Remove(filepath)
 	})
 
+	Context("when empty", func() {
+		It("returns an empty map", func() {
+			data, err := store.ReadAll()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(data)).To(Equal(0))
+		})
+	})
+
 	Context("when adding", func() {
 		It("can add entry to datastore", func() {
 			By("adding an entry to store")

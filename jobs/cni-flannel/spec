@@ -7,7 +7,6 @@ templates:
   flanneld_ctl.erb: bin/flanneld_ctl
   30-cni-wrapper-plugin.conf.erb: config/cni/30-cni-wrapper-plugin.conf
   flannel-watchdog_ctl.erb: bin/flannel-watchdog_ctl
-  flannel-watchdog_as_vcap.erb: bin/flannel-watchdog_as_vcap
   flannel-watchdog.json.erb: config/flannel-watchdog.json
   etcd_ca.crt.erb: config/certs/etcd/ca.crt
   etcd_client.crt.erb: config/certs/etcd/client.crt

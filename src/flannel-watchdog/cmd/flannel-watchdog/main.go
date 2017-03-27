@@ -5,7 +5,10 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"lib/datastore"
+	"lib/filelock"
 	"lib/flannel"
+	"lib/serial"
 	"net/http"
 	"os"
 	"regexp"
@@ -96,9 +99,15 @@ func mainWithErr(logger lager.Logger) error {
 
 	var ipValidator ipValidator
 	if conf.NoBridge {
+		store := &datastore.Store{
+			Serializer: &serial.Serial{},
+			Locker: &filelock.Locker{
+				Path: conf.MetadataFilename,
+			},
+		}
 		ipValidator = &validator.NoBridge{
-			Logger:           logger,
-			MetadataFileName: conf.MetadataFilename,
+			Logger: logger,
+			Store:  store,
 		}
 	} else {
 		ipValidator = &validator.Bridge{

@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e -u
+set -o pipefail
 
 export RUN_DIR=/var/vcap/sys/run/flannel-watchdog
 export LOG_DIR=/var/vcap/sys/log/flannel-watchdog
@@ -11,24 +12,70 @@ mkdir -p /var/vcap/sys/log/monit
 exec 1>> /var/vcap/sys/log/monit/flannel-watchdog.out.log
 exec 2>> /var/vcap/sys/log/monit/flannel-watchdog.err.log
 
+function wait_pid() {
+  pid=$1
+  shift
+  max_checks=$1
+  shift
+
+  checks=$max_checks
+  while [ -e "/proc/$pid" ]; do
+    checks=$((checks - 1))
+    if [ $checks -le 0 ]; then
+      return 1
+    fi
+    sleep 0.1
+  done
+
+  return 0
+}
+
+function stop_process() {
+  local pid
+  pid=$(cat "$PIDFILE")
+
+  echo "stopping..."
+  kill -TERM "$pid"
+  if wait_pid "$pid" 100 ; then
+    rm "$PIDFILE"
+    return 0
+  fi
+
+  echo "unable to stop process using SIGTERM after 10 seconds, will now attempt to SIGQUIT"
+  kill -QUIT "$pid" || true
+  if wait_pid "$pid" 50 ; then
+    rm "$PIDFILE"
+    return 0
+  fi
+
+  echo "unable to stop process using SIGQUIT after 5 seconds, will now attempt to SIGKILL"
+  kill -KILL "$pid" || true
+  if wait_pid "$pid" 50 ; then
+    rm "$PIDFILE"
+    return 0
+  fi
+
+  echo "unable to stop process using SIGKILL after 5 seconds"
+  return 1
+}
 
 case $1 in
 
   start)
 
     mkdir -p $RUN_DIR
-    chown -R vcap:vcap $RUN_DIR
     mkdir -p $LOG_DIR
-    chown -R vcap:vcap $LOG_DIR
-    chown -R vcap:vcap $CONF_DIR
 
-    exec chpst -u vcap:vcap bash -c '/var/vcap/jobs/cni-flannel/bin/flannel-watchdog_as_vcap'
+    /var/vcap/packages/flannel-watchdog/bin/flannel-watchdog \
+      -config-file=$CONF_DIR/flannel-watchdog.json \
+      2> >(tee -a $LOG_DIR/flannel-watchdog.stderr.log | logger -p user.error -t flannel-watchdog) \
+      1> >(tee -a $LOG_DIR/flannel-watchdog.stdout.log | logger -t flannel-watchdog) & echo $! > $PIDFILE
 
     ;;
 
   stop)
 
-    kill -KILL $(cat $PIDFILE)
+    stop_process
 
     ;;
 

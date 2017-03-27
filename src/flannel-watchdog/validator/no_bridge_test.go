@@ -3,16 +3,16 @@ package validator_test
 import (
 	"encoding/json"
 	"flannel-watchdog/validator"
-	"fmt"
 	"io/ioutil"
 	"lib/datastore"
+	"lib/filelock"
+	"lib/serial"
 	"os"
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gbytes"
 )
 
 var _ = Describe("NoBridge", func() {
@@ -41,9 +41,15 @@ var _ = Describe("NoBridge", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			logger = lagertest.NewTestLogger("test")
+			store := &datastore.Store{
+				Serializer: &serial.Serial{},
+				Locker: &filelock.Locker{
+					Path: metadataFileName,
+				},
+			}
 			noBridge = &validator.NoBridge{
-				Logger:           logger,
-				MetadataFileName: metadataFileName,
+				Logger: logger,
+				Store:  store,
 			}
 		})
 
@@ -61,17 +67,15 @@ var _ = Describe("NoBridge", func() {
 			})
 		})
 
-		Context("when the metadata file does not exist", func() {
+		Context("when the metadata file is empty", func() {
 			BeforeEach(func() {
-				err := os.Remove(metadataFileName)
+				err := ioutil.WriteFile(metadataFileName, []byte(""), os.ModePerm)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
-			It("logs and return nil", func() {
+			It("return nil", func() {
 				err := noBridge.Validate("10.10.40.10/24")
 				Expect(err).NotTo(HaveOccurred())
-
-				Expect(logger).To(gbytes.Say(fmt.Sprintf(`metadata file does not exist.*filename.*%s`, metadataFileName)))
 			})
 		})
 
@@ -83,7 +87,7 @@ var _ = Describe("NoBridge", func() {
 
 			It("returns an error", func() {
 				err := noBridge.Validate("10.10.40.10/24")
-				Expect(err).To(MatchError(ContainSubstring("unmarshalling metadata:")))
+				Expect(err).To(MatchError(ContainSubstring("reading metadata:")))
 			})
 		})
 
