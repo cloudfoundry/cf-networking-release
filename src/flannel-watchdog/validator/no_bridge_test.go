@@ -3,6 +3,7 @@ package validator_test
 import (
 	"encoding/json"
 	"flannel-watchdog/validator"
+	"fmt"
 	"io/ioutil"
 	"lib/datastore"
 	"os"
@@ -11,6 +12,7 @@ import (
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
 )
 
 var _ = Describe("NoBridge", func() {
@@ -59,15 +61,17 @@ var _ = Describe("NoBridge", func() {
 			})
 		})
 
-		Context("when the metadata file cannot be read", func() {
+		Context("when the metadata file does not exist", func() {
 			BeforeEach(func() {
 				err := os.Remove(metadataFileName)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
-			It("returns an error", func() {
+			It("logs and return nil", func() {
 				err := noBridge.Validate("10.10.40.10/24")
-				Expect(err).To(MatchError(ContainSubstring("reading file:")))
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(logger).To(gbytes.Say(fmt.Sprintf(`metadata file does not exist.*filename.*%s`, metadataFileName)))
 			})
 		})
 

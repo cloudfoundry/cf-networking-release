@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"lib/datastore"
 	"net"
+	"os"
 
 	"code.cloudfoundry.org/lager"
 )
@@ -19,7 +20,12 @@ type NoBridge struct {
 func (n *NoBridge) Validate(subnet string) error {
 	metadata, err := ioutil.ReadFile(n.MetadataFileName)
 	if err != nil {
-		return fmt.Errorf("reading file: %s", err)
+		if os.IsNotExist(err) {
+			n.Logger.Info("metadata file does not exist", lager.Data{"filename": n.MetadataFileName})
+			return nil
+		} else {
+			return fmt.Errorf("reading file: %s", err) // untested
+		}
 	}
 
 	var metadataStruct map[string]datastore.Container
