@@ -20,12 +20,12 @@ type Locker struct {
 // directories above it in the path.  To release the lock, Close the file.
 func (l *Locker) Open() (*os.File, error) {
 	dir := filepath.Dir(l.Path)
-	err := os.MkdirAll(dir, 0700)
+	err := os.MkdirAll(dir, 0755)
 	if err != nil {
 		panic(err)
 	}
 	const flags = os.O_RDWR | os.O_CREATE
-	file, err := os.OpenFile(l.Path, flags, 0600)
+	file, err := os.OpenFile(l.Path, flags, 0644)
 	if err != nil {
 		return nil, err
 	}

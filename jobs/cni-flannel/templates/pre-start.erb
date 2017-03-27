@@ -2,6 +2,8 @@
 
 set -e -u
 
+rm -rf /var/vcap/data/container-metadata
+
 CERTS_DIR=/var/vcap/jobs/cni-flannel/config/certs/etcd
 
 chmod 600 ${CERTS_DIR}/*
