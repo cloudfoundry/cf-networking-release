@@ -46,8 +46,6 @@ trap output_for_bosh EXIT
 
 wait_for_rep
 
-rm -rf /var/vcap/data/container-metadata
-
 if bridge_exists; then
   if delete_bridge; then
     echo "$(date): bridge deleted"
