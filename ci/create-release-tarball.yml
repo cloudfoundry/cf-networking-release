@@ -16,6 +16,6 @@ run:
   args:
   - -c
   - |
-    bosh create release --with-tarball --name $RELEASE_NAME --timestamp-version --dir cf-networking && cp cf-networking/dev_releases/$RELEASE_NAME/*.tgz tarballs
+    cd cf-networking && bosh create-release --tarball=../tarballs/${RELEASE_NAME}.tgz --name $RELEASE_NAME --timestamp-version
 params:
   RELEASE_NAME: cf-networking
