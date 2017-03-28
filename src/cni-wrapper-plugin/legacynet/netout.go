@@ -85,7 +85,8 @@ func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, overlayN
 			rules.NewInputRelatedEstablishedRule(containerIP.String()),
 		}
 		for _, dnsServer := range dnsServers {
-			args[0].Rules = append(args[0].Rules, rules.NewInputDNSRule(containerIP.String(), dnsServer))
+			args[0].Rules = append(args[0].Rules, rules.NewInputAllowRule(containerIP.String(), "tcp", dnsServer, 53))
+			args[0].Rules = append(args[0].Rules, rules.NewInputAllowRule(containerIP.String(), "udp", dnsServer, 53))
 		}
 		args[0].Rules = append(args[0].Rules, rules.NewInputDefaultRejectRule(containerIP.String()))
 	}

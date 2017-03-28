@@ -173,10 +173,11 @@ func NewInputRelatedEstablishedRule(subnet string) IPTablesRule {
 	}
 }
 
-func NewInputDNSRule(subnet string, dns string) IPTablesRule {
+func NewInputAllowRule(containerIP, protocol, destination string, destPort int) IPTablesRule {
 	return IPTablesRule{
-		"-s", subnet,
-		"-d", dns,
+		"-s", containerIP,
+		"-p", protocol,
+		"-d", destination, "--destination-port", strconv.Itoa(destPort),
 		"--jump", "RETURN",
 	}
 }

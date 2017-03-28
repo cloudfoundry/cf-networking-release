@@ -298,18 +298,28 @@ var _ = Describe("CniWrapperPlugin", func() {
 			}`))
 			})
 
-			It("writes input chain rules for DNS servers", func() {
+			It("writes input chain rules for local DNS servers", func() {
 				session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 				Expect(err).NotTo(HaveOccurred())
 				Eventually(session).Should(gexec.Exit(0))
 
-				By("checking that the rules in the container's input chain are created for each dns server")
+				By("checking that the rules in the container's input chain are created for each local dns server")
 				Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
 					"-A " + inputChainName + " -s 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j RETURN",
-					"-A " + inputChainName + " -s 1.2.3.4/32 -d 169.254.0.1/32 -j RETURN",
-					"-A " + inputChainName + " -s 1.2.3.4/32 -d 169.254.0.2/32 -j RETURN",
+					"-A " + inputChainName + " -s 1.2.3.4/32 -d 169.254.0.1/32 -p tcp -m tcp --dport 53 -j RETURN",
+					"-A " + inputChainName + " -s 1.2.3.4/32 -d 169.254.0.1/32 -p udp -m udp --dport 53 -j RETURN",
+					"-A " + inputChainName + " -s 1.2.3.4/32 -d 169.254.0.2/32 -p tcp -m tcp --dport 53 -j RETURN",
+					"-A " + inputChainName + " -s 1.2.3.4/32 -d 169.254.0.2/32 -p udp -m udp --dport 53 -j RETURN",
 					"-A " + inputChainName + " -s 1.2.3.4/32 -j REJECT --reject-with icmp-port-unreachable",
 				}))
+
+				By("checking that no rules are created for public dns servers")
+				Expect(AllIPTablesRules("filter")).NotTo(ContainElement(
+					"-A " + inputChainName + " -s 1.2.3.4/32 -d 8.8.4.4/32 -p tcp -m tcp --dport 53 -j RETURN",
+				))
+				Expect(AllIPTablesRules("filter")).NotTo(ContainElement(
+					"-A " + inputChainName + " -s 1.2.3.4/32 -d 8.8.4.4/32 -p udp -m udp --dport 53 -j RETURN",
+				))
 
 			})
 
