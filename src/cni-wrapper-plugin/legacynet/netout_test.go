@@ -195,6 +195,7 @@ var _ = Describe("Netout", func() {
 						"--jump", "RETURN"},
 					{"-s", "5.6.7.8",
 						"!", "-d", "9.9.0.0/16",
+						"-m", "limit", "--limit", "2/min",
 						"--jump", "LOG", "--log-prefix", "DENY_some-container-handle"},
 					{"-s", "5.6.7.8",
 						"!", "-d", "9.9.0.0/16",

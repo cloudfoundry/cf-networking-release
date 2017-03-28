@@ -203,6 +203,7 @@ func NewNetOutDefaultRejectLogRule(containerHandle, subnet, overlayNetwork strin
 	return IPTablesRule{
 		"-s", subnet,
 		"!", "-d", overlayNetwork,
+		"-m", "limit", "--limit", "2/min",
 		"--jump", "LOG",
 		"--log-prefix", fmt.Sprintf("DENY_%s", containerHandle),
 	}

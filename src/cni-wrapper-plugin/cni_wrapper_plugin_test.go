@@ -448,6 +448,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 					inputStruct.WrapperConfig.IPTablesASGLogging = true
 					input = GetInput(inputStruct)
 				})
+
 				It("writes iptables asg logging rules", func() {
 					cmd = cniCommand("ADD", input)
 					session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
@@ -459,6 +460,19 @@ var _ = Describe("CniWrapperPlugin", func() {
 
 					By("checking that it writes the logging rules")
 					Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutLoggingChainName + ` -p tcp -m conntrack --ctstate INVALID,NEW,UNTRACKED -j LOG --log-prefix OK_` + containerID[:26]))
+				})
+
+				It("always writes a rate limited default deny log rule", func() {
+					expectedDenyLogRule := "-A netout--some-container-id-th -s 1.2.3.4/32 ! -d 10.255.0.0/16 -m limit --limit 2/min -j LOG --log-prefix DENY_" + containerID[:24]
+
+					By("by starting the CNI plugin")
+					cmd = cniCommand("ADD", input)
+					session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+					Expect(err).NotTo(HaveOccurred())
+					Eventually(session).Should(gexec.Exit(0))
+
+					By("checking that a default deny log rule was written")
+					Expect(AllIPTablesRules("filter")).To(ContainElement(expectedDenyLogRule))
 				})
 			})
 
