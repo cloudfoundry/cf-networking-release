@@ -65,7 +65,7 @@ properties:
 
   cf_networking.flannel_watchdog.no_bridge:
     description: "Do not check bridge address"
-    default: false
+    default: true
 
   cf_networking.rep_listen_addr_admin:
     description: "admin endpoint on diego rep"
