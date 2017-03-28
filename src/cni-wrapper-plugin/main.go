@@ -55,13 +55,13 @@ func cmdAdd(args *skel.CmdArgs) error {
 	containerIP := result020.(*types020.Result).IP4.IP.IP
 
 	// Initialize dns
-	var dnsServers []string
+	var localDNSServers []string
 	for _, entry := range n.DNSServers {
 		dnsIP := net.ParseIP(entry)
 		if dnsIP == nil {
 			return fmt.Errorf(`invalid DNS server "%s", must be valid IP address`, entry)
 		} else if dnsIP.IsLinkLocalUnicast() {
-			dnsServers = append(dnsServers, entry)
+			localDNSServers = append(localDNSServers, entry)
 		}
 	}
 
@@ -74,7 +74,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 		Converter:     &legacynet.NetOutRuleConverter{},
 		GlobalLogging: n.IPTablesASGLogging,
 	}
-	if err := netOutProvider.Initialize(args.ContainerID, containerIP, n.OverlayNetwork, dnsServers); err != nil {
+	if err := netOutProvider.Initialize(args.ContainerID, containerIP, n.OverlayNetwork, localDNSServers); err != nil {
 		return fmt.Errorf("initialize net out: %s", err)
 	}
 
@@ -139,7 +139,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 	if err != nil {
 		return fmt.Errorf("error converting result to 0.3.0: %s", err) // not tested
 	}
-	result030.DNS.Nameservers = dnsServers
+	result030.DNS.Nameservers = n.DNSServers
 	return result030.Print()
 }
 

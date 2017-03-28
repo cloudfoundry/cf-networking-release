@@ -291,10 +291,10 @@ var _ = Describe("CniWrapperPlugin", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Eventually(session).Should(gexec.Exit(0))
 
-				By("returning only local DNS servers")
+				By("returning all DNS servers")
 				Expect(session.Out.Contents()).To(MatchJSON(`{
 				"ips": [{ "version": "4", "interface": -1, "address": "1.2.3.4/32" }],
-				"dns": {"nameservers": ["169.254.0.1", "169.254.0.2"]}
+				"dns": {"nameservers": ["169.254.0.1", "8.8.4.4", "169.254.0.2"]}
 			}`))
 			})
 
