@@ -1,0 +1,16 @@
+#!/bin/bash
+
+set -e
+set -u
+
+mkdir -p ${BOSH_INSTALL_TARGET}/bin
+cp -a . ${BOSH_INSTALL_TARGET}/src
+
+export GOROOT=$(readlink -nf /var/vcap/packages/golang)
+export GOPATH=$BOSH_INSTALL_TARGET
+export PATH=$GOROOT/bin:$GOPATH/bin:$PATH
+
+export GOPATH=$GOPATH:$PWD/github.com/containernetworking/cni/Godeps/_workspace
+go install github.com/containernetworking/cni/plugins/ipam/host-local
+go install -ldflags="-extldflags=-Wl,--allow-multiple-definition" github.com/cloudfoundry-incubator/silk
+go install cni-wrapper-plugin
