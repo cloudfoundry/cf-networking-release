@@ -61,7 +61,6 @@ func NewLogRule(rule IPTablesRule, name string) IPTablesRule {
 
 func NewAcceptExistingLocalRule() IPTablesRule {
 	return IPTablesRule{
-		"-i", "cni-flannel0",
 		"-m", "state", "--state", "ESTABLISHED,RELATED",
 		"--jump", "ACCEPT",
 	}
@@ -70,7 +69,6 @@ func NewAcceptExistingLocalRule() IPTablesRule {
 func NewLogLocalRejectRule(localSubnet string) IPTablesRule {
 	return NewLogRule(
 		IPTablesRule{
-			"-i", "cni-flannel0",
 			"-s", localSubnet,
 			"-d", localSubnet,
 		},
@@ -80,7 +78,6 @@ func NewLogLocalRejectRule(localSubnet string) IPTablesRule {
 
 func NewDefaultDenyLocalRule(localSubnet string) IPTablesRule {
 	return IPTablesRule{
-		"-i", "cni-flannel0",
 		"--source", localSubnet,
 		"-d", localSubnet,
 		"--jump", "REJECT",

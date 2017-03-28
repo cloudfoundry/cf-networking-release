@@ -220,8 +220,8 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		It("still writes the default rules", func() {
 			Eventually(iptablesFilterRules, "10s", "1s").Should(ContainSubstring("-i flannel.42 -m state --state RELATED,ESTABLISHED -j ACCEPT"))
 			Expect(iptablesFilterRules()).To(ContainSubstring("-i flannel.42 -j REJECT --reject-with icmp-port-unreachable"))
-			Expect(iptablesFilterRules()).To(ContainSubstring("-i cni-flannel0 -m state --state RELATED,ESTABLISHED -j ACCEPT"))
-			Expect(iptablesFilterRules()).To(ContainSubstring("-s 10.255.100.0/24 -d 10.255.100.0/24 -i cni-flannel0 -j REJECT --reject-with icmp-port-unreachable"))
+			Expect(iptablesFilterRules()).To(ContainSubstring("-m state --state RELATED,ESTABLISHED -j ACCEPT"))
+			Expect(iptablesFilterRules()).To(ContainSubstring("-s 10.255.100.0/24 -d 10.255.100.0/24 -j REJECT --reject-with icmp-port-unreachable"))
 		})
 
 		It("does not write the mark rule or enforces policies", func() {
@@ -388,11 +388,11 @@ func RemoteRulesRegexp(loggingEnabled bool) string {
 }
 
 func LocalRulesRegexp(loggingEnabled bool) string {
-	localRules := `.*-A vpa--local-[0-9]+ -i cni-flannel0 -m state --state RELATED,ESTABLISHED -j ACCEPT`
+	localRules := `.*-A vpa--local-[0-9]+ -m state --state RELATED,ESTABLISHED -j ACCEPT`
 	if loggingEnabled {
-		localRules += `\n.*-A vpa--local-[0-9]+ -s 10\.255\.100\.0/24 -d 10\.255\.100\.0/24 -i cni-flannel0 -m limit --limit 2/min -j LOG --log-prefix "REJECT_LOCAL:"`
+		localRules += `\n.*-A vpa--local-[0-9]+ -s 10\.255\.100\.0/24 -d 10\.255\.100\.0/24 -m limit --limit 2/min -j LOG --log-prefix "REJECT_LOCAL:"`
 	}
-	localRules += `\n.*-A vpa--local-[0-9]+ -s 10\.255\.100\.0/24 -d 10\.255\.100\.0/24 -i cni-flannel0 -j REJECT --reject-with icmp-port-unreachable`
+	localRules += `\n.*-A vpa--local-[0-9]+ -s 10\.255\.100\.0/24 -d 10\.255\.100\.0/24 -j REJECT --reject-with icmp-port-unreachable`
 	return localRules
 }
 
