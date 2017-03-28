@@ -7,6 +7,7 @@ platform: linux
 
 inputs:
 - name: cf-networking
+- name: version
 
 outputs:
 - name: tarballs
@@ -16,6 +17,6 @@ run:
   args:
   - -c
   - |
-    cd cf-networking && bosh create-release --tarball=../tarballs/${RELEASE_NAME}.tgz --name $RELEASE_NAME --timestamp-version
+    cd cf-networking && bosh create-release --tarball=../tarballs/${RELEASE_NAME}-$(cat ../version/number).tgz --name $RELEASE_NAME --timestamp-version
 params:
   RELEASE_NAME: cf-networking
