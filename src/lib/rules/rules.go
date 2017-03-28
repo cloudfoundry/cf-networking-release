@@ -173,6 +173,14 @@ func NewInputRelatedEstablishedRule(subnet string) IPTablesRule {
 	}
 }
 
+func NewInputDNSRule(subnet string, dns string) IPTablesRule {
+	return IPTablesRule{
+		"-s", subnet,
+		"-d", dns,
+		"--jump", "RETURN",
+	}
+}
+
 func NewInputDefaultRejectRule(subnet string) IPTablesRule {
 	return IPTablesRule{
 		"-s", subnet,

@@ -28,7 +28,7 @@ type NetOut struct {
 	GlobalLogging bool
 }
 
-func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, overlayNetwork string) error {
+func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, overlayNetwork string, dnsServers []string) error {
 	if containerHandle == "" {
 		return errors.New("invalid handle")
 	}
@@ -78,6 +78,16 @@ func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, overlayN
 			rules.NewNetOutDefaultRejectLogRule(containerHandle, containerIP.String(), overlayNetwork),
 			rules.NewNetOutDefaultRejectRule(containerIP.String(), overlayNetwork),
 		}
+	}
+
+	if len(dnsServers) > 0 {
+		args[0].Rules = []rules.IPTablesRule{
+			rules.NewInputRelatedEstablishedRule(containerIP.String()),
+		}
+		for _, dnsServer := range dnsServers {
+			args[0].Rules = append(args[0].Rules, rules.NewInputDNSRule(containerIP.String(), dnsServer))
+		}
+		args[0].Rules = append(args[0].Rules, rules.NewInputDefaultRejectRule(containerIP.String()))
 	}
 
 	for _, arg := range args {

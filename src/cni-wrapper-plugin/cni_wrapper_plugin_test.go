@@ -281,7 +281,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 
 		Context("when DNS servers are configured", func() {
 			BeforeEach(func() {
-				inputStruct.DNSServers = []string{"1.2.3.4", "8.8.8.8"}
+				inputStruct.DNSServers = []string{"169.254.0.1", "8.8.4.4", "169.254.0.2"}
 				input = GetInput(inputStruct)
 
 				cmd = cniCommand("ADD", input)
@@ -290,11 +290,29 @@ var _ = Describe("CniWrapperPlugin", func() {
 				session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 				Expect(err).NotTo(HaveOccurred())
 				Eventually(session).Should(gexec.Exit(0))
+
+				By("returning only local DNS servers")
 				Expect(session.Out.Contents()).To(MatchJSON(`{
 				"ips": [{ "version": "4", "interface": -1, "address": "1.2.3.4/32" }],
-				"dns": {"nameservers": ["1.2.3.4", "8.8.8.8"]}
+				"dns": {"nameservers": ["169.254.0.1", "169.254.0.2"]}
 			}`))
 			})
+
+			It("writes input chain rules for DNS servers", func() {
+				session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+				Eventually(session).Should(gexec.Exit(0))
+
+				By("checking that the rules in the container's input chain are created for each dns server")
+				Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
+					"-A " + inputChainName + " -s 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j RETURN",
+					"-A " + inputChainName + " -s 1.2.3.4/32 -d 169.254.0.1/32 -j RETURN",
+					"-A " + inputChainName + " -s 1.2.3.4/32 -d 169.254.0.2/32 -j RETURN",
+					"-A " + inputChainName + " -s 1.2.3.4/32 -j REJECT --reject-with icmp-port-unreachable",
+				}))
+
+			})
+
 		})
 
 		Context("when some of the DNS servers are not valid IPs", func() {
