@@ -9,17 +9,14 @@ import (
 	"lib/serial"
 	"os"
 
-	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("NoBridge", func() {
+var _ = Describe("Validator", func() {
 	Describe("Validate", func() {
 		var (
-			noBridge         *validator.NoBridge
-			logger           lager.Logger
+			subnetValidator  *validator.Validator
 			metadataFileName string
 		)
 
@@ -40,29 +37,27 @@ var _ = Describe("NoBridge", func() {
 			err = ioutil.WriteFile(metadataFileName, metadata, os.ModePerm)
 			Expect(err).NotTo(HaveOccurred())
 
-			logger = lagertest.NewTestLogger("test")
 			store := &datastore.Store{
 				Serializer: &serial.Serial{},
 				Locker: &filelock.Locker{
 					Path: metadataFileName,
 				},
 			}
-			noBridge = &validator.NoBridge{
-				Logger: logger,
-				Store:  store,
+			subnetValidator = &validator.Validator{
+				Store: store,
 			}
 		})
 
 		Context("when the container ips fall within the subnet env range", func() {
 			It("returns successfully", func() {
-				err := noBridge.Validate("10.244.40.0/12")
+				err := subnetValidator.Validate("10.244.40.0/12")
 				Expect(err).NotTo(HaveOccurred())
 			})
 		})
 
 		Context("when the container ips are outside subnet env range", func() {
 			It("returns an error", func() {
-				err := noBridge.Validate("10.10.40.10/24")
+				err := subnetValidator.Validate("10.10.40.10/24")
 				Expect(err).To(MatchError(`This cell must be restarted (run "bosh restart <job>").  Flannel is out of sync with current containers.`))
 			})
 		})
@@ -74,7 +69,7 @@ var _ = Describe("NoBridge", func() {
 			})
 
 			It("return nil", func() {
-				err := noBridge.Validate("10.10.40.10/24")
+				err := subnetValidator.Validate("10.10.40.10/24")
 				Expect(err).NotTo(HaveOccurred())
 			})
 		})
@@ -86,14 +81,14 @@ var _ = Describe("NoBridge", func() {
 			})
 
 			It("returns an error", func() {
-				err := noBridge.Validate("10.10.40.10/24")
+				err := subnetValidator.Validate("10.10.40.10/24")
 				Expect(err).To(MatchError(ContainSubstring("reading metadata:")))
 			})
 		})
 
 		Context("when the subnet cannot be parsed", func() {
 			It("returns an error", func() {
-				err := noBridge.Validate("%%%%%%%%%%%")
+				err := subnetValidator.Validate("%%%%%%%%%%%")
 				Expect(err).To(MatchError(ContainSubstring("parsing subnet:")))
 			})
 		})

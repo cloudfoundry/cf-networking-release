@@ -63,10 +63,6 @@ properties:
     description: "Forward metrics to this metron agent"
     default: 127.0.0.1:3457
 
-  cf_networking.flannel_watchdog.no_bridge:
-    description: "Do not check bridge address"
-    default: true
-
   cf_networking.rep_listen_addr_admin:
     description: "admin endpoint on diego rep"
     default: 127.0.0.1:1800

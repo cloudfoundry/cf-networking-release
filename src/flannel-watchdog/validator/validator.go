@@ -5,17 +5,14 @@ import (
 	"fmt"
 	"lib/datastore"
 	"net"
-
-	"code.cloudfoundry.org/lager"
 )
 
-type NoBridge struct {
-	Logger lager.Logger
-	Store  datastore.Datastore
+type Validator struct {
+	Store datastore.Datastore
 }
 
-func (n *NoBridge) Validate(subnet string) error {
-	metadata, err := n.Store.ReadAll()
+func (v *Validator) Validate(subnet string) error {
+	metadata, err := v.Store.ReadAll()
 	if err != nil {
 		return fmt.Errorf("reading metadata: %s", err)
 	}

@@ -98,23 +98,14 @@ func mainWithErr(logger lager.Logger) error {
 	}
 
 	var ipValidator ipValidator
-	if conf.NoBridge {
-		store := &datastore.Store{
-			Serializer: &serial.Serial{},
-			Locker: &filelock.Locker{
-				Path: conf.MetadataFilename,
-			},
-		}
-		ipValidator = &validator.NoBridge{
-			Logger: logger,
-			Store:  store,
-		}
-	} else {
-		ipValidator = &validator.Bridge{
-			Logger:         logger,
-			BridgeName:     conf.BridgeName,
-			NetlinkAdapter: &validator.NetlinkAdapter{},
-		}
+	store := &datastore.Store{
+		Serializer: &serial.Serial{},
+		Locker: &filelock.Locker{
+			Path: conf.MetadataFilename,
+		},
+	}
+	ipValidator = &validator.Validator{
+		Store: store,
 	}
 
 	runner := &Runner{
