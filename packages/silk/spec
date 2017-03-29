@@ -15,16 +15,34 @@ files:
   - github.com/cloudfoundry-incubator/silk/config/*.go # gosub
   - github.com/cloudfoundry-incubator/silk/legacy_flannel/*.go # gosub
   - github.com/cloudfoundry-incubator/silk/lib/*.go # gosub
+  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/pkg/invoke/*.go # gosub
+  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/pkg/ip/*.go # gosub
+  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/pkg/ipam/*.go # gosub
+  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/pkg/ns/*.go # gosub
+  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/pkg/skel/*.go # gosub
+  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/pkg/types/*.go # gosub
+  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/pkg/types/020/*.go # gosub
+  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/pkg/types/current/*.go # gosub
+  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/pkg/utils/hwaddr/*.go # gosub
+  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/pkg/utils/sysctl/*.go # gosub
+  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/pkg/version/*.go # gosub
+  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/vendor/github.com/coreos/go-iptables/iptables/*.go # gosub
+  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/vendor/github.com/vishvananda/netlink/*.go # gosub
+  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/vendor/github.com/vishvananda/netlink/nl/*.go # gosub
+  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/vendor/github.com/vishvananda/netns/*.go # gosub
+  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/vendor/golang.org/x/sys/unix/*.go # gosub
+  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/vendor/golang.org/x/sys/unix/*.s # gosub
+  - github.com/cloudfoundry-incubator/silk/vendor/github.com/vishvananda/netlink/*.go # gosub
+  - github.com/cloudfoundry-incubator/silk/vendor/github.com/vishvananda/netlink/nl/*.go # gosub
+  - github.com/cloudfoundry-incubator/silk/vendor/github.com/vishvananda/netns/*.go # gosub
   - github.com/containernetworking/cni/pkg/invoke/*.go # gosub
   - github.com/containernetworking/cni/pkg/ip/*.go # gosub
-  - github.com/containernetworking/cni/pkg/ipam/*.go # gosub
   - github.com/containernetworking/cni/pkg/ns/*.go # gosub
   - github.com/containernetworking/cni/pkg/skel/*.go # gosub
   - github.com/containernetworking/cni/pkg/types/*.go # gosub
   - github.com/containernetworking/cni/pkg/types/020/*.go # gosub
   - github.com/containernetworking/cni/pkg/types/current/*.go # gosub
   - github.com/containernetworking/cni/pkg/utils/hwaddr/*.go # gosub
-  - github.com/containernetworking/cni/pkg/utils/sysctl/*.go # gosub
   - github.com/containernetworking/cni/pkg/version/*.go # gosub
   - github.com/containernetworking/cni/plugins/ipam/host-local/*.go # gosub
   - github.com/containernetworking/cni/plugins/ipam/host-local/backend/*.go # gosub
@@ -39,9 +57,6 @@ files:
   - github.com/coreos/go-iptables/iptables/*.go # gosub
   - github.com/hashicorp/go-multierror/*.go # gosub
   - github.com/hashicorp/go-multierror/vendor/github.com/hashicorp/errwrap/*.go # gosub
-  - github.com/vishvananda/netlink/*.go # gosub
-  - github.com/vishvananda/netlink/nl/*.go # gosub
-  - github.com/vishvananda/netns/*.go # gosub
   - lib/datastore/*.go # gosub
   - lib/filelock/*.go # gosub
   - lib/rules/*.go # gosub
