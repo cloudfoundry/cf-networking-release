@@ -8,6 +8,7 @@ import (
 	"code.cloudfoundry.org/garden"
 
 	"github.com/containernetworking/cni/pkg/types"
+	"github.com/containernetworking/cni/pkg/version"
 )
 
 type RuntimeConfig struct {
@@ -51,6 +52,10 @@ func LoadWrapperConfig(bytes []byte) (*WrapperConfig, error) {
 
 	if n.InstanceAddress == "" {
 		return nil, fmt.Errorf("missing instance address")
+	}
+
+	if _, ok := n.Delegate["cniVersion"]; !ok {
+		n.Delegate["cniVersion"] = version.Current()
 	}
 
 	return n, nil

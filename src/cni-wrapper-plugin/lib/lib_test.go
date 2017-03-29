@@ -40,7 +40,8 @@ var _ = Describe("LoadWrapperConfig", func() {
 			InstanceAddress:    "10.244.20.1",
 			IPTablesASGLogging: true,
 			Delegate: map[string]interface{}{
-				"some": "info",
+				"cniVersion": "0.3.0",
+				"some":       "info",
 			},
 			HealthCheckURL: "http://127.0.0.1:10007",
 		}))
@@ -54,6 +55,39 @@ var _ = Describe("LoadWrapperConfig", func() {
 		It("should return a useful error", func() {
 			_, err := lib.LoadWrapperConfig(input)
 			Expect(err).To(MatchError(HavePrefix("loading wrapper config: ")))
+		})
+	})
+
+	Describe("delegate cniVersion", func() {
+		Context("when the input JSON doesn't have an explicit version on the delgate", func() {
+			BeforeEach(func() {
+				var inputData map[string]interface{}
+				Expect(json.Unmarshal(input, &inputData)).To(Succeed())
+				inputData["delegate"] = map[string]string{"some": "info"}
+				input, _ = json.Marshal(inputData)
+			})
+			It("should set the version", func() {
+				conf, err := lib.LoadWrapperConfig(input)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(conf.Delegate).To(HaveKeyWithValue("cniVersion", "0.3.0"))
+			})
+		})
+
+		Context("when the input JSON does set an explicit version on the delegate", func() {
+			BeforeEach(func() {
+				var inputData map[string]interface{}
+				Expect(json.Unmarshal(input, &inputData)).To(Succeed())
+				inputData["delegate"] = map[string]string{
+					"cniVersion": "0.99.1",
+					"some":       "info",
+				}
+				input, _ = json.Marshal(inputData)
+			})
+			It("should set the version", func() {
+				conf, err := lib.LoadWrapperConfig(input)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(conf.Delegate).To(HaveKeyWithValue("cniVersion", "0.99.1"))
+			})
 		})
 	})
 

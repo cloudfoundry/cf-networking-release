@@ -16,7 +16,6 @@ import (
 	"sync"
 
 	"github.com/containernetworking/cni/pkg/skel"
-	"github.com/containernetworking/cni/pkg/types/020"
 	"github.com/containernetworking/cni/pkg/types/current"
 	"github.com/containernetworking/cni/pkg/version"
 	"github.com/coreos/go-iptables/iptables"
@@ -47,12 +46,12 @@ func cmdAdd(args *skel.CmdArgs) error {
 		return fmt.Errorf("delegate call: %s", err)
 	}
 
-	result020, err := result.GetAsVersion("0.2.0")
+	result030, err := current.NewResultFromResult(result)
 	if err != nil {
-		return fmt.Errorf("cni delegate plugin result version incompatible: %s", err) // not tested
+		return fmt.Errorf("convering result from delegate plugin: %s", err) // not tested
 	}
 
-	containerIP := result020.(*types020.Result).IP4.IP.IP
+	containerIP := result030.IPs[0].Address.IP
 
 	// Initialize dns
 	var localDNSServers []string
@@ -135,10 +134,6 @@ func cmdAdd(args *skel.CmdArgs) error {
 		return storeErr
 	}
 
-	result030, err := current.NewResultFromResult(result020)
-	if err != nil {
-		return fmt.Errorf("error converting result to 0.3.0: %s", err) // not tested
-	}
 	result030.DNS.Nameservers = n.DNSServers
 	return result030.Print()
 }
@@ -191,7 +186,7 @@ func cmdDel(args *skel.CmdArgs) error {
 	}
 
 	if err = netOutProvider.Cleanup(args.ContainerID); err != nil {
-		fmt.Fprintf(os.Stderr, "net out cleanup", err)
+		fmt.Fprintf(os.Stderr, "net out cleanup: %s", err)
 	}
 
 	err = pluginController.DelIPMasq(container.IP, n.OverlayNetwork)

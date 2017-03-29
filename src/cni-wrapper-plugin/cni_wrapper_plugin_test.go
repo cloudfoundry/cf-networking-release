@@ -90,8 +90,8 @@ var _ = Describe("CniWrapperPlugin", func() {
 		debugFileName = debugFile.Name()
 
 		debug = &noop_debug.Debug{
-			ReportResult:         `{ "ip4": { "ip": "1.2.3.4/32" } }`,
-			ReportVersionSupport: []string{"0.1.0", "0.2.0", "0.3.0"},
+			ReportResult:         `{ "ips": [{ "version": "4", "interface": -1, "address": "1.2.3.4/32" }]}`,
+			ReportVersionSupport: []string{"0.3.0", "0.3.1"},
 		}
 		Expect(debug.WriteDebug(debugFileName)).To(Succeed())
 
@@ -266,6 +266,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 			Expect(debug.Command).To(Equal("ADD"))
 
 			Expect(debug.CmdArgs.StdinData).To(MatchJSON(`{
+				"cniVersion": "0.3.0",
 				"type": "noop",
 				"some": "other data"
 			}`))
@@ -605,6 +606,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 			Expect(debug.Command).To(Equal("DEL"))
 
 			Expect(debug.CmdArgs.StdinData).To(MatchJSON(`{
+				"cniVersion": "0.3.0",
 				"type": "noop",
 				"some": "other data"
 			}`))
@@ -648,6 +650,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 				Expect(debug.Command).To(Equal("DEL"))
 
 				Expect(debug.CmdArgs.StdinData).To(MatchJSON(`{
+					"cniVersion": "0.3.0",
 					"type": "noop",
 					"some": "other data"
 				}`))
