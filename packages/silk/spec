@@ -15,6 +15,7 @@ files:
   - github.com/cloudfoundry-incubator/silk/config/*.go # gosub
   - github.com/cloudfoundry-incubator/silk/legacy_flannel/*.go # gosub
   - github.com/cloudfoundry-incubator/silk/lib/*.go # gosub
+  - github.com/cloudfoundry-incubator/silk/vendor/code.cloudfoundry.org/lager/*.go # gosub
   - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/pkg/invoke/*.go # gosub
   - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/pkg/ip/*.go # gosub
   - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/pkg/ipam/*.go # gosub
