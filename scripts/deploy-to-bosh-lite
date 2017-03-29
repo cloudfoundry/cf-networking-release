@@ -14,20 +14,20 @@ error() {
 
 create_bosh_env() {
   ssh-keygen -R 192.168.50.6
-  rm -f /Users/pivotal/workspace/container-networking-deployments/environments/local/state.json
-bosh create-env ~/workspace/bosh-deployment/bosh.yml \
-  --state ~/workspace/container-networking-deployments/environments/local/state.json \
-  -o ~/workspace/bosh-deployment/virtualbox/cpi.yml \
-  -o ~/workspace/bosh-deployment/virtualbox/outbound-network.yml \
-  -o ~/workspace/bosh-deployment/bosh-lite.yml \
-  -o ~/workspace/bosh-deployment/bosh-lite-runc.yml \
-  -o ~/workspace/bosh-deployment/jumpbox-user.yml \
-  --vars-store ~/workspace/container-networking-deployments/environments/local/creds.yml \
-  -v director_name="Bosh Lite Director" \
-  -v internal_ip=192.168.50.6 \
-  -v internal_gw=192.168.50.1 \
-  -v internal_cidr=192.168.50.0/24 \
-  -v outbound_network_name="NatNetwork"
+  rm -f ~/workspace/container-networking-deployments/environments/local/state.json
+  bosh create-env ~/workspace/bosh-deployment/bosh.yml \
+    --state ~/workspace/container-networking-deployments/environments/local/state.json \
+    -o ~/workspace/bosh-deployment/virtualbox/cpi.yml \
+    -o ~/workspace/bosh-deployment/virtualbox/outbound-network.yml \
+    -o ~/workspace/bosh-deployment/bosh-lite.yml \
+    -o ~/workspace/bosh-deployment/bosh-lite-runc.yml \
+    -o ~/workspace/bosh-deployment/jumpbox-user.yml \
+    --vars-store ~/workspace/container-networking-deployments/environments/local/creds.yml \
+    -v director_name="Bosh Lite Director" \
+    -v internal_ip=192.168.50.6 \
+    -v internal_gw=192.168.50.1 \
+    -v internal_cidr=192.168.50.0/24 \
+    -v outbound_network_name="NatNetwork"
 }
 
 set_bosh_env() {
@@ -74,7 +74,7 @@ main() {
 
     enable_br_netfilter
 
-    if [ $upload_stemcell == true ]; then
+    if [ "$upload_stemcell" == true ]; then
       upload_bosh_stemcell
     fi
 
