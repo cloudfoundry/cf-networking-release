@@ -7,10 +7,12 @@ templates:
   flanneld_ctl.erb: bin/flanneld_ctl
   30-cni-wrapper-plugin.conf.erb: config/cni/30-cni-wrapper-plugin.conf
   flannel-watchdog_ctl.erb: bin/flannel-watchdog_ctl
+  silkd.json.erb: config/silkd.json
   flannel-watchdog.json.erb: config/flannel-watchdog.json
   etcd_ca.crt.erb: config/certs/etcd/ca.crt
   etcd_client.crt.erb: config/certs/etcd/client.crt
   etcd_client.key.erb: config/certs/etcd/client.key
+  silkd_ctl.erb: bin/silkd_ctl
 
 packages:
   - flannel
@@ -74,3 +76,4 @@ properties:
   cf_networking.dns_servers:
     description: "DNS servers containers will use. If set, takes precedence over DNS servers configured through garden"
     default: []
+

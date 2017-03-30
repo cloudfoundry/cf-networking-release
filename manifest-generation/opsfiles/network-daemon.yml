@@ -1,0 +1,32 @@
+# add network connectivity db to mysql
+- type: replace
+  path: /instance_groups/name=mysql/jobs/name=mysql/properties/cf_mysql/mysql/seeded_databases/-
+  value:
+    name: network_connectivity
+    username: network_connectivity
+    password: "((cf_mysql_mysql_seeded_databases_network_connectivity_password))"
+
+
+# add network-daemon job
+- type: replace
+  path: /instance_groups/name=diego-cell/jobs/-
+  value:
+    name: network-daemon
+    release: cf-networking
+    properties:
+      cf_networking:
+        connectivity:
+          database:
+            type: mysql
+            username: network_connectivity
+            password: "((cf_mysql_mysql_seeded_databases_network_connectivity_password))"
+            host: sql-db.service.cf.internal
+            port: 3306
+            name: network_connectivity
+
+# add var
+- type: replace
+  path: /variables/-
+  value:
+    name: cf_mysql_mysql_seeded_databases_network_connectivity_password
+    type: password

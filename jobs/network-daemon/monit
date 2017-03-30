@@ -1,0 +1,8 @@
+<% if p("cf_networking.disable") %>
+<% else %>
+check process silkd
+  with pidfile /var/vcap/sys/run/silk/silkd.pid
+  start program "/var/vcap/jobs/network-daemon/bin/silkd_ctl start"
+  stop program "/var/vcap/jobs/network-daemon/bin/silkd_ctl stop"
+  group vcap
+<% end %>

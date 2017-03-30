@@ -9,6 +9,15 @@ check process flanneld
     with timeout 5 seconds for 12 cycles
     then restart
 
+check process silkd
+  with pidfile /var/vcap/sys/run/silk/silkd.pid
+  start program "/var/vcap/jobs/cni-flannel/bin/silkd_ctl start"
+  stop program "/var/vcap/jobs/cni-flannel/bin/silkd_ctl stop"
+  group vcap
+  if failed host 127.0.0.1 port <%= p("cf_networking.plugin.health_check_port") %> protocol HTTP
+    with timeout 5 seconds for 12 cycles
+    then restart
+
 check process flannel-watchdog
   with pidfile /var/vcap/sys/run/flannel-watchdog/flannel-watchdog.pid
   start program "/var/vcap/jobs/cni-flannel/bin/flannel-watchdog_ctl start"

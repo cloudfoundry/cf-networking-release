@@ -1,0 +1,46 @@
+---
+name: network-daemon
+
+templates:
+  silkd.json.erb: config/silkd.json
+  silkd_ctl.erb: bin/silkd_ctl
+
+packages:
+  - silk
+
+properties:
+  cf_networking.network:
+    description: "CIDR block for overlay network."
+    default: "10.255.0.0/16"
+
+  cf_networking.subnet_prefix_length:
+    description: "Length, in bits, of the prefix for subnets allocated per Diego cell, e.g. '24' for a '/24' subnet."
+    default: 24
+
+  cf_networking.disable:
+    description: "Disable container to container networking"
+    default: false
+
+  cf_networking.connectivity.database.type:
+    description: "Type of database: postgres or mysql"
+    default: postgres
+
+  cf_networking.connectivity.database.username:
+    description: "Username for database connection"
+    default: ""
+
+  cf_networking.connectivity.database.password:
+    description: "Password for database connection"
+    default: ""
+
+  cf_networking.connectivity.database.host:
+    description: "Host (IP or DNS name) for database server"
+    default: ""
+
+  cf_networking.connectivity.database.port:
+    description: "Port for database server"
+    default: ""
+
+  cf_networking.connectivity.database.name:
+    description: "Name of logical database to use"
+    default: ""

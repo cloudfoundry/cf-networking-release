@@ -1,0 +1,33 @@
+# add overlay network db to postgres
+- type: replace
+  path: /instance_groups/name=postgres/jobs/name=postgres/properties/databases/roles/-
+  value:
+    name: network_connectivity
+    password: "((network_connectivity_database_password))"
+    tag: admin
+
+- type: replace
+  path: /instance_groups/name=postgres/jobs/name=postgres/properties/databases/databases/-
+  value:
+    citext: false
+    name: network_connectivity
+    tag: networkconnectivity
+
+# diego cells connection for overlay network db
+- type: replace
+  path: /instance_groups/name=diego-cell/jobs/name=network-daemon/properties/cf_networking/connectivity/database
+  value:
+    type: postgres
+    username: network_connectivity
+    password: "((network_connectivity_database_password))"
+    host: sql-db.service.cf.internal
+    port: 5524
+    name: network_connectivity
+
+# variables
+- type: replace
+  path: /variables/-
+  value:
+    name: network_connectivity_database_password
+    type: password
+

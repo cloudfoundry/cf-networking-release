@@ -4,6 +4,22 @@ See [AWS](iaas.md#deploy-to-aws) deployment docs for examples
 
 ### 0.19.0
 
+**New Properties**
+
+A networking daemon optionally runs on each cell and connects to a mysql or postgres database.
+This is preparation for a future feature and currently adds no new functionality.
+
+The following needs to be added to your `cf-networking` stub to configure the database connection:
+
+  - `cf_networking.connectivity.database.type`
+  - `cf_networking.connectivity.database.username`
+  - `cf_networking.connectivity.database.password`
+  - `cf_networking.connectivity.database.host`
+  - `cf_networking.connectivity.database.port`
+  - `cf_networking.connectivity.database.name`
+
+Descriptions for each property can be found under the `network-daemon` spec.
+
 **Changed Properties**
 
   - The property for global ASG logging has changed from `cf_networking.garden_external_networker.iptables_asg_logging`

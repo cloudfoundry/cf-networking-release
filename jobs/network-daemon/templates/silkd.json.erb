@@ -1,0 +1,49 @@
+<%=
+  require 'json'
+
+  def db_params
+    ['username', 'password', 'host', 'port', 'name'].map {|name| "cf_networking.connectivity.database.#{name}"}
+  end
+
+  def param_exists? param
+    p(param) != ""
+  end
+
+  def subnet_prefix_length
+    size = p("cf_networking.subnet_prefix_length")
+    if size < 1 || size > 30
+      raise "'cf_networking.subnet_prefix_length' must be a value between 1-30"
+    end
+    size
+  end
+
+  def connection_string
+    unless db_params.all? {|p| param_exists?(p)}
+      raise "all of the following parameters must be specified #{db_params.join(",")}"
+    end
+
+    values = db_params.map {|param| p(param)}
+    # Note: order of the params is important here, it has to be username, password, host, port, name in that order
+    driver = p("cf_networking.connectivity.database.type")
+    case driver
+    when 'mysql'
+      sprintf "%s:%s@tcp(%s:%s)/%s?parseTime=true", *values
+    when 'postgres'
+      sprintf "postgres://%s:%s@%s:%s/%s?sslmode=disable", *values
+    else
+      raise "unknown driver #{driver}"
+    end
+  end
+
+  toRender = {
+    "underlay_ip" => spec.ip,
+    "subnet_range" => p("cf_networking.network"),
+    "subnet_mask" => subnet_prefix_length,
+    "database" => {
+      "type" => p("cf_networking.connectivity.database.type"),
+      "connection_string" => connection_string,
+    },
+  }
+
+  JSON.pretty_generate(toRender)
+%>
