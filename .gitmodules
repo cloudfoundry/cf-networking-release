@@ -133,4 +133,4 @@
 	url = https://github.com/cloudfoundry-incubator/silk
 [submodule "src/code.cloudfoundry.org/go-db-helpers"]
 	path = src/code.cloudfoundry.org/go-db-helpers
-	url = https://code.cloudfoundry.org/go-db-helpers
+	url = https://github.com/cloudfoundry-incubator/go-db-helpers
