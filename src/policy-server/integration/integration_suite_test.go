@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"lib/db"
 	"math/rand"
 	"net"
 	"net/http"
@@ -19,6 +18,8 @@ import (
 	"policy-server/config"
 	"strconv"
 	"strings"
+
+	"code.cloudfoundry.org/go-db-helpers/db"
 
 	. "github.com/onsi/ginkgo"
 	ginkgoConfig "github.com/onsi/ginkgo/config"

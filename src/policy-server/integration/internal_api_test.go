@@ -5,12 +5,13 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io/ioutil"
-	"lib/testsupport"
 	"math/rand"
 	"net/http"
 	"netmon/integration/fakes"
 	"policy-server/config"
 	"strings"
+
+	"code.cloudfoundry.org/go-db-helpers/testsupport"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

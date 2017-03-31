@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"lib/db"
+
+	"code.cloudfoundry.org/go-db-helpers/db"
 
 	"gopkg.in/validator.v2"
 )

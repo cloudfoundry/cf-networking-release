@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"lib/db"
 	"lib/json_client"
 	"lib/marshal"
 	"lib/metrics"
@@ -28,6 +27,7 @@ import (
 	"policy-server/uaa_client"
 
 	"code.cloudfoundry.org/debugserver"
+	"code.cloudfoundry.org/go-db-helpers/db"
 	"code.cloudfoundry.org/lager"
 	"github.com/cloudfoundry/dropsonde"
 	"github.com/jmoiron/sqlx"

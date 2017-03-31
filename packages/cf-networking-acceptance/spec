@@ -23,11 +23,6 @@ files:
   - github.com/cloudfoundry-incubator/cf-test-helpers/cf/*.go # gosub
   - github.com/cloudfoundry-incubator/cf-test-helpers/helpers/*.go # gosub
   - github.com/cloudfoundry-incubator/cf-test-helpers/runner/*.go # gosub
-  - github.com/go-sql-driver/mysql/*.go # gosub
-  - github.com/jmoiron/sqlx/*.go # gosub
-  - github.com/jmoiron/sqlx/reflectx/*.go # gosub
-  - github.com/lib/pq/*.go # gosub
-  - github.com/lib/pq/oid/*.go # gosub
   - github.com/onsi/ginkgo/*.go # gosub
   - github.com/onsi/ginkgo/config/*.go # gosub
   - github.com/onsi/ginkgo/ginkgo/*.go # gosub
@@ -69,7 +64,6 @@ files:
   - github.com/pivotal-cf-experimental/warrant/internal/network/*.go # gosub
   - github.com/pivotal-cf-experimental/warrant/vendor/github.com/dgrijalva/jwt-go/*.go # gosub
   - gopkg.in/yaml.v2/*.go # gosub
-  - lib/db/*.go # gosub
   - lib/json_client/*.go # gosub
   - lib/marshal/*.go # gosub
   - lib/models/*.go # gosub

@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"lib/testsupport"
 	"os"
 	"strconv"
+
+	"code.cloudfoundry.org/go-db-helpers/testsupport"
 )
 
 func main() {

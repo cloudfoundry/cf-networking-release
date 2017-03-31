@@ -3,8 +3,6 @@ package integration_test
 import (
 	"fmt"
 	"io/ioutil"
-	"lib/db"
-	"lib/testsupport"
 	"math/rand"
 	"net/http"
 	"netmon/integration/fakes"
@@ -12,6 +10,9 @@ import (
 	"policy-server/config"
 	"strings"
 	"time"
+
+	"code.cloudfoundry.org/go-db-helpers/db"
+	"code.cloudfoundry.org/go-db-helpers/testsupport"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

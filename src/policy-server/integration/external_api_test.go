@@ -15,6 +15,8 @@ import (
 	"strings"
 	"sync/atomic"
 
+	dbTestSupport "code.cloudfoundry.org/go-db-helpers/testsupport"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
@@ -26,7 +28,7 @@ var _ = Describe("External API", func() {
 		sessions          []*gexec.Session
 		conf              config.Config
 		policyServerConfs []config.Config
-		testDatabase      *testsupport.TestDatabase
+		testDatabase      *dbTestSupport.TestDatabase
 
 		fakeMetron fakes.FakeMetron
 	)
@@ -35,7 +37,7 @@ var _ = Describe("External API", func() {
 		fakeMetron = fakes.New()
 
 		dbName := fmt.Sprintf("test_netman_database_%x", rand.Int())
-		dbConnectionInfo := testsupport.GetDBConnectionInfo()
+		dbConnectionInfo := dbTestSupport.GetDBConnectionInfo()
 		testDatabase = dbConnectionInfo.CreateDatabase(dbName)
 
 		template := DefaultTestConfig(testDatabase.DBConfig(), fakeMetron.Address())

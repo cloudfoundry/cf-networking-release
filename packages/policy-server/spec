@@ -6,6 +6,7 @@ dependencies:
 
 files:
   - code.cloudfoundry.org/debugserver/*.go # gosub
+  - code.cloudfoundry.org/go-db-helpers/db/*.go # gosub
   - code.cloudfoundry.org/lager/*.go # gosub
   - github.com/bmizerany/pat/*.go # gosub
   - github.com/cloudfoundry/dropsonde/*.go # gosub
@@ -39,7 +40,6 @@ files:
   - github.com/tedsuo/ifrit/sigmon/*.go # gosub
   - github.com/tedsuo/rata/*.go # gosub
   - gopkg.in/validator.v2/*.go # gosub
-  - lib/db/*.go # gosub
   - lib/json_client/*.go # gosub
   - lib/marshal/*.go # gosub
   - lib/metrics/*.go # gosub
