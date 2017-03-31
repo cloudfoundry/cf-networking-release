@@ -20,6 +20,12 @@ The following needs to be added to your `cf-networking` stub to configure the da
 
 Descriptions for each property can be found under the `network-daemon` spec.
 
+Users can specify DNS servers and access will be automatically allowed for link-local DNS servers:
+
+  - `cf_networking.dns_servers`
+
+**Note**: This property requires `garden-runc-release` >1.3.0.
+
 **Changed Properties**
 
   - The property for global ASG logging has changed from `cf_networking.garden_external_networker.iptables_asg_logging`
