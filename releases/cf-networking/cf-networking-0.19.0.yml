@@ -1,0 +1,87 @@
+name: cf-networking
+version: 0.19.0
+commit_hash: dd113dc
+uncommitted_changes: false
+jobs:
+- name: cf-networking-acceptance
+  version: 01cc98e759fc332e2354567f31034c1c129db654
+  fingerprint: 01cc98e759fc332e2354567f31034c1c129db654
+  sha1: 5e6d295e06cd52c4695ef69ff92b46f60d97a0dd
+- name: cni-flannel
+  version: c0afda8bbc7a929ac13ed5ac6f9566473ef3e1cf
+  fingerprint: c0afda8bbc7a929ac13ed5ac6f9566473ef3e1cf
+  sha1: bdc42ce85b279486600a33e8e6076e63ef2d60f9
+- name: garden-cni
+  version: f39ba52bf263c9110a1ba48289135cb760838114
+  fingerprint: f39ba52bf263c9110a1ba48289135cb760838114
+  sha1: f6d05f937db365013bc4bd3e34a2f15223425a0a
+- name: netmon
+  version: 2d6bd519e9b4ab0791cb443ce9e64d144989d3cf
+  fingerprint: 2d6bd519e9b4ab0791cb443ce9e64d144989d3cf
+  sha1: d3f14a9493b426d9aeaf1b0b94b12acefc33f612
+- name: policy-server
+  version: 1652622adeb7b0941a6e50ef6a9d244a2211e14f
+  fingerprint: 1652622adeb7b0941a6e50ef6a9d244a2211e14f
+  sha1: 33581218b155d6c5e039b90bc284531ee946fa1c
+- name: vxlan-policy-agent
+  version: 043c5b4690f8e7ac6f07f90cd4309ba81252442a
+  fingerprint: 043c5b4690f8e7ac6f07f90cd4309ba81252442a
+  sha1: 52c40f4774e128cec461d279993904e245779f7c
+packages:
+- name: cf-networking-acceptance
+  version: f14a44cb4fc358c89fb0e3138eb3c44a50ee9b10
+  fingerprint: f14a44cb4fc358c89fb0e3138eb3c44a50ee9b10
+  sha1: 19d72c7808061830a5427412b4a6ea8504180372
+  dependencies:
+  - golang
+- name: flannel
+  version: dadd1be68f15a1c419556c07944b0c83c138f6ef
+  fingerprint: dadd1be68f15a1c419556c07944b0c83c138f6ef
+  sha1: df3174d19e5593b161235b6d474a9e56fe75e0dc
+  dependencies:
+  - golang
+- name: flannel-watchdog
+  version: 2aefe45b8ec7ac223a62f449c217a633baf27874
+  fingerprint: 2aefe45b8ec7ac223a62f449c217a633baf27874
+  sha1: 1b5f57675524d3e92a7a30b12ba79cfea5f0a2ea
+  dependencies:
+  - golang
+- name: golang
+  version: 46105d4480ca083a6cafb8ca307d5e5084c655c4
+  fingerprint: 46105d4480ca083a6cafb8ca307d5e5084c655c4
+  sha1: 012497d60085d0f41f5e0629f5af1231a94b8599
+  dependencies: []
+- name: netmon
+  version: f2ec21915b4a9d6b4796cf2b07b9be214c2f524c
+  fingerprint: f2ec21915b4a9d6b4796cf2b07b9be214c2f524c
+  sha1: d2f7c59df3f8522cc0de0bf8934692e3e579907f
+  dependencies:
+  - golang
+- name: policy-server
+  version: 688137728145a0970b04ebfe10dadd9de7d05782
+  fingerprint: 688137728145a0970b04ebfe10dadd9de7d05782
+  sha1: aee7f9f6f198ffa41db20f5626a00a6192adb619
+  dependencies:
+  - golang
+- name: runc-cni
+  version: 9e6c734928b4ca457216f5358d9aab8d98ea8a57
+  fingerprint: 9e6c734928b4ca457216f5358d9aab8d98ea8a57
+  sha1: 3a8374af97ec6ab1e346f4c9491134ce4579853b
+  dependencies:
+  - golang
+- name: silk
+  version: aac7d88011f1624ed4d1e8f77ad9e11d9b4ce1df
+  fingerprint: aac7d88011f1624ed4d1e8f77ad9e11d9b4ce1df
+  sha1: 52d92d3b87c1f1eeadcba324f0966afdd5dc3e95
+  dependencies:
+  - golang
+- name: vxlan-policy-agent
+  version: ca970d7d235632ef112de8b464b829adb64d6910
+  fingerprint: ca970d7d235632ef112de8b464b829adb64d6910
+  sha1: ecc220bd25383fc32b173eccee7ab9ecccbad478
+  dependencies:
+  - golang
+license:
+  version: 423fb3ce8453b2525eb5958ff970855c805830a6
+  fingerprint: 423fb3ce8453b2525eb5958ff970855c805830a6
+  sha1: 314d7a644ef8e0bb16cccad615af5ed305afd17e
