@@ -1,12 +1,12 @@
 package manager_test
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"net"
 
 	"code.cloudfoundry.org/garden"
-	"code.cloudfoundry.org/lager/lagertest"
 
 	"garden-external-networker/fakes"
 	"garden-external-networker/manager"
@@ -15,7 +15,6 @@ import (
 	"github.com/containernetworking/cni/pkg/types/020"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gbytes"
 )
 
 var _ = Describe("Manager", func() {
@@ -30,12 +29,12 @@ var _ = Describe("Manager", func() {
 		portAllocator         *fakes.PortAllocator
 		netInRules            []garden.NetIn
 		netOutRules           []garden.NetOutRule
-		logger                *lagertest.TestLogger
+		logger                *bytes.Buffer
 		containerHandle       string
 	)
 
 	BeforeEach(func() {
-		logger = lagertest.NewTestLogger("test")
+		logger = &bytes.Buffer{}
 		containerHandle = "some-container-handle"
 		mounter = &fakes.Mounter{}
 		cniController = &fakes.CNIController{}
@@ -310,7 +309,7 @@ var _ = Describe("Manager", func() {
 				mounter.RemoveMountReturns(errors.New("boom"))
 				err := mgr.Down(containerHandle)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(logger).To(gbytes.Say(`removing mount.*bind mount path.*/some/fake/path/some-container-handle.*boom`))
+				Expect(logger.String()).To(ContainSubstring("removing bind mount /some/fake/path/some-container-handle: boom\n"))
 
 				Expect(portAllocator.ReleaseAllPortsCallCount()).To(Equal(1))
 			})
@@ -321,7 +320,7 @@ var _ = Describe("Manager", func() {
 				portAllocator.ReleaseAllPortsReturns(errors.New("potato"))
 				err := mgr.Down(containerHandle)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(logger).To(gbytes.Say(`releasing ports.*potato`))
+				Expect(logger.String()).To(ContainSubstring("releasing ports: potato\n"))
 			})
 		})
 

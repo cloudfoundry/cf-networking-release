@@ -9,11 +9,10 @@ import (
 	"garden-external-networker/ipc"
 	"garden-external-networker/manager"
 	"garden-external-networker/port_allocator"
+	"io"
 	"lib/filelock"
 	"lib/serial"
 	"os"
-
-	"code.cloudfoundry.org/lager"
 )
 
 var (
@@ -60,15 +59,13 @@ func parseArgs(allArgs []string) error {
 }
 
 func main() {
-	logger := lager.NewLogger("container-networking.garden-external-networker")
-	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.INFO))
-	if err := mainWithError(logger); err != nil {
-		logger.Error("error", err)
+	if err := mainWithError(os.Stderr); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %s\n", err)
 		os.Exit(1)
 	}
 }
 
-func mainWithError(logger lager.Logger) error {
+func mainWithError(logger io.Writer) error {
 	if len(os.Args) == 1 || os.Args[1] == "-h" || os.Args[1] == "--help" {
 		return fmt.Errorf("this is a plugin for Garden-runC.  Don't run it directly.")
 	}
@@ -77,12 +74,10 @@ func mainWithError(logger lager.Logger) error {
 	if err != nil {
 		return fmt.Errorf("parse args: %s", err)
 	}
-	logger.Info("action", lager.Data{"action": action})
 
 	cniLoader := &cni.CNILoader{
 		PluginDir: cfg.CniPluginDir,
 		ConfigDir: cfg.CniConfigDir,
-		Logger:    logger,
 	}
 
 	networks, err := cniLoader.GetNetworkConfigs()
@@ -91,7 +86,6 @@ func mainWithError(logger lager.Logger) error {
 	}
 
 	cniController := &cni.CNIController{
-		Logger:         logger,
 		CNIConfig:      cniLoader.GetCNIConfig(),
 		NetworkConfigs: networks,
 	}
@@ -100,7 +94,6 @@ func mainWithError(logger lager.Logger) error {
 
 	locker := &filelock.Locker{Path: cfg.StateFilePath}
 	tracker := &port_allocator.Tracker{
-		Logger:    logger,
 		StartPort: cfg.StartPort,
 		Capacity:  cfg.TotalPorts,
 	}

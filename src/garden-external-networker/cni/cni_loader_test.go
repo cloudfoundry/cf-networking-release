@@ -5,8 +5,6 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"code.cloudfoundry.org/lager/lagertest"
-
 	"github.com/containernetworking/cni/pkg/types"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -21,15 +19,12 @@ var _ = Describe("GetNetworkConfigs", func() {
 	)
 
 	BeforeEach(func() {
-		logger := lagertest.NewTestLogger("cniLoader")
-
 		dir, err = ioutil.TempDir("", "test-cni-dir")
 		Expect(err).NotTo(HaveOccurred())
 
 		cniLoader = &cni.CNILoader{
 			PluginDir: "",
 			ConfigDir: dir,
-			Logger:    logger,
 		}
 
 		expectedNetCfgs = []*types.NetConf{

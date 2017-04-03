@@ -7,7 +7,6 @@ dependencies:
 files:
   - github.com/containernetworking/cni/scripts/*
   - code.cloudfoundry.org/garden/*.go # gosub
-  - code.cloudfoundry.org/lager/*.go # gosub
   - garden-external-networker/*.go # gosub
   - garden-external-networker/bindmount/*.go # gosub
   - garden-external-networker/cni/*.go # gosub

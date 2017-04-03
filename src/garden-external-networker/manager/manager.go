@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"path/filepath"
 
 	"code.cloudfoundry.org/garden"
-	"code.cloudfoundry.org/lager"
 	"github.com/containernetworking/cni/pkg/types"
 	"github.com/containernetworking/cni/pkg/types/020"
 )
@@ -31,7 +31,7 @@ type portAllocator interface {
 }
 
 type Manager struct {
-	Logger        lager.Logger
+	Logger        io.Writer
 	CNIController cniController
 	Mounter       mounter
 	BindMountRoot string
@@ -130,11 +130,11 @@ func (m *Manager) Down(containerHandle string) error {
 	}
 
 	if err = m.Mounter.RemoveMount(bindMountPath); err != nil {
-		m.Logger.Error("removing mount", err, lager.Data{"bind mount path": bindMountPath})
+		fmt.Fprintf(m.Logger, "removing bind mount %s: %s\n", bindMountPath, err)
 	}
 
 	if err = m.PortAllocator.ReleaseAllPorts(containerHandle); err != nil {
-		m.Logger.Error("releasing ports", err)
+		fmt.Fprintf(m.Logger, "releasing ports: %s\n", err)
 	}
 
 	return nil

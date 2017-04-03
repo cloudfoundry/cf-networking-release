@@ -3,8 +3,6 @@ package cni
 import (
 	"fmt"
 
-	"code.cloudfoundry.org/lager"
-
 	"github.com/containernetworking/cni/libcni"
 	"github.com/containernetworking/cni/pkg/types"
 )
@@ -15,8 +13,6 @@ type cniLibrary interface {
 }
 
 type CNIController struct {
-	Logger lager.Logger
-
 	CNIConfig      libcni.CNI
 	NetworkConfigs []*libcni.NetworkConfig
 }
@@ -46,14 +42,11 @@ func (c *CNIController) Up(namespacePath, handle string, metadata map[string]int
 			}
 		}
 
-		c.Logger.Info("up-add-network-start", lager.Data{"networkConfig": string(networkConfig.Bytes), "runtimeConfig": runtimeConfig})
 		result, err = c.CNIConfig.AddNetwork(networkConfig, runtimeConfig)
 		if err != nil {
 			return nil, fmt.Errorf("add network failed: %s", err)
 		}
-		c.Logger.Info("up-add-network-result", lager.Data{"name": networkConfig.Network.Name, "type": networkConfig.Network.Type, "result": result.String()})
 	}
-	c.Logger.Info("up-complete", lager.Data{"numConfigs": len(c.NetworkConfigs)})
 
 	return result, nil
 }
@@ -67,15 +60,11 @@ func (c *CNIController) Down(namespacePath, handle string) error {
 			IfName:      fmt.Sprintf("eth%d", i),
 		}
 
-		c.Logger.Info("down-del-network-start", lager.Data{"networkConfig": string(networkConfig.Bytes), "runtimeConfig": runtimeConfig})
 		err = c.CNIConfig.DelNetwork(networkConfig, runtimeConfig)
 		if err != nil {
 			return fmt.Errorf("del network failed: %s", err)
 		}
-
-		c.Logger.Info("down-del-network-result", lager.Data{"name": networkConfig.Network.Name, "type": networkConfig.Network.Type})
 	}
-	c.Logger.Info("down-complete", lager.Data{"numConfigs": len(c.NetworkConfigs)})
 
 	return nil
 }

@@ -14,7 +14,6 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 )
 
@@ -228,9 +227,6 @@ var _ = Describe("Garden External Networker", func() {
 				"1.2.3.4"
 			]
 		}`))
-
-		By("checking that it logs basic info on stderr")
-		Expect(upSession.Err).To(gbytes.Say("container-networking.garden-external-networker.*action.*up"))
 
 		By("checking that every CNI plugin in the plugin directory got called with ADD")
 		for i := 0; i < 3; i++ {

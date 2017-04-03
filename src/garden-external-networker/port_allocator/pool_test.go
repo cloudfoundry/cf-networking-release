@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"garden-external-networker/port_allocator"
 
-	"code.cloudfoundry.org/lager/lagertest"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/types"
@@ -15,13 +13,10 @@ var _ = Describe("Tracker", func() {
 	var (
 		pool    *port_allocator.Pool
 		tracker *port_allocator.Tracker
-		logger  *lagertest.TestLogger
 	)
 	BeforeEach(func() {
-		logger = lagertest.NewTestLogger("test")
 		pool = &port_allocator.Pool{}
 		tracker = &port_allocator.Tracker{
-			Logger:    logger,
 			StartPort: 100,
 			Capacity:  10,
 		}

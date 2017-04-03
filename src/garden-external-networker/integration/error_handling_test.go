@@ -10,7 +10,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 )
 
@@ -73,7 +72,7 @@ var _ = Describe("Garden External Networker errors", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				Eventually(session).Should(gexec.Exit(1))
-				Expect(session.Err).To(gbytes.Say(".*timestamp.*source.*container-networking.garden-external-networker.*message.*container-networking.garden-external-networker.error.*log_level.*2.*data.*error.*parse args: unexpected extra args:.*invalidArg.*}.*}"))
+				Expect(session.Err.Contents()).To(ContainSubstring("error: parse args: unexpected extra args: [invalidArg]"))
 			})
 		})
 		Context("when stdin is not valid JSON", func() {

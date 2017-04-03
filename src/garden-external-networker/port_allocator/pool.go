@@ -3,8 +3,6 @@ package port_allocator
 import (
 	"encoding/json"
 	"errors"
-
-	"code.cloudfoundry.org/lager"
 )
 
 var ErrorPortPoolExhausted = errors.New("port pool exhausted")
@@ -44,7 +42,6 @@ func (p *Pool) UnmarshalJSON(bytes []byte) error {
 }
 
 type Tracker struct {
-	Logger    lager.Logger
 	StartPort int
 	Capacity  int
 }

@@ -6,15 +6,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"code.cloudfoundry.org/lager"
-
 	"github.com/containernetworking/cni/libcni"
 )
 
 type CNILoader struct {
 	PluginDir string
 	ConfigDir string
-	Logger    lager.Logger
 }
 
 func (l *CNILoader) GetCNIConfig() *libcni.CNIConfig {
@@ -42,8 +39,6 @@ func (l *CNILoader) GetNetworkConfigs() ([]*libcni.NetworkConfig, error) {
 		}
 
 		networkConfigs = append(networkConfigs, conf)
-
-		l.Logger.Info("loaded-config", lager.Data{"network": conf.Network, "raw": string(conf.Bytes)})
 		return nil
 	})
 
