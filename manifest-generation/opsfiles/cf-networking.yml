@@ -49,6 +49,12 @@
 - type: replace
   path: /instance_groups/name=diego-cell/jobs/-
   value:
+    name: garden-cni
+    release: cf-networking
+
+- type: replace
+  path: /instance_groups/name=diego-cell/jobs/-
+  value:
     name: cni-flannel
     release: cf-networking
     properties:
