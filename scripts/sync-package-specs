@@ -65,7 +65,8 @@ GOOS=linux sync_package runc-cni \
 GOOS=linux sync_package flannel &
 
 GOOS=linux sync_package silk \
-  -app github.com/cloudfoundry-incubator/silk \
+  -app code.cloudfoundry.org/silk/cmd/silk-cni \
+  -app code.cloudfoundry.org/silk/daemon \
   -app github.com/containernetworking/cni/plugins/ipam/host-local \
   -app cni-wrapper-plugin &
 

@@ -128,8 +128,8 @@
 [submodule "src/github.com/vishvananda/netns"]
 	path = src/github.com/vishvananda/netns
 	url = https://github.com/vishvananda/netns
-[submodule "src/github.com/cloudfoundry-incubator/silk"]
-	path = src/github.com/cloudfoundry-incubator/silk
+[submodule "src/code.cloudfoundry.org/silk"]
+	path = src/code.cloudfoundry.org/silk
 	url = https://github.com/cloudfoundry-incubator/silk
 [submodule "src/code.cloudfoundry.org/go-db-helpers"]
 	path = src/code.cloudfoundry.org/go-db-helpers

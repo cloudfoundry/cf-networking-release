@@ -5,37 +5,47 @@ dependencies:
   - golang
 
 files:
-  - github.com/cloudfoundry-incubator/silk/**/*
   - cni-wrapper-plugin/*.go # gosub
   - cni-wrapper-plugin/legacynet/*.go # gosub
   - cni-wrapper-plugin/lib/*.go # gosub
   - code.cloudfoundry.org/garden/*.go # gosub
-  - github.com/cloudfoundry-incubator/silk/*.go # gosub
-  - github.com/cloudfoundry-incubator/silk/adapter/*.go # gosub
-  - github.com/cloudfoundry-incubator/silk/config/*.go # gosub
-  - github.com/cloudfoundry-incubator/silk/legacy_flannel/*.go # gosub
-  - github.com/cloudfoundry-incubator/silk/lib/*.go # gosub
-  - github.com/cloudfoundry-incubator/silk/vendor/code.cloudfoundry.org/lager/*.go # gosub
-  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/pkg/invoke/*.go # gosub
-  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/pkg/ip/*.go # gosub
-  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/pkg/ipam/*.go # gosub
-  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/pkg/ns/*.go # gosub
-  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/pkg/skel/*.go # gosub
-  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/pkg/types/*.go # gosub
-  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/pkg/types/020/*.go # gosub
-  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/pkg/types/current/*.go # gosub
-  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/pkg/utils/hwaddr/*.go # gosub
-  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/pkg/utils/sysctl/*.go # gosub
-  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/pkg/version/*.go # gosub
-  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/vendor/github.com/coreos/go-iptables/iptables/*.go # gosub
-  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/vendor/github.com/vishvananda/netlink/*.go # gosub
-  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/vendor/github.com/vishvananda/netlink/nl/*.go # gosub
-  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/vendor/github.com/vishvananda/netns/*.go # gosub
-  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/vendor/golang.org/x/sys/unix/*.go # gosub
-  - github.com/cloudfoundry-incubator/silk/vendor/github.com/containernetworking/cni/vendor/golang.org/x/sys/unix/*.s # gosub
-  - github.com/cloudfoundry-incubator/silk/vendor/github.com/vishvananda/netlink/*.go # gosub
-  - github.com/cloudfoundry-incubator/silk/vendor/github.com/vishvananda/netlink/nl/*.go # gosub
-  - github.com/cloudfoundry-incubator/silk/vendor/github.com/vishvananda/netns/*.go # gosub
+  - code.cloudfoundry.org/go-db-helpers/db/*.go # gosub
+  - code.cloudfoundry.org/silk/cmd/silk-cni/*.go # gosub
+  - code.cloudfoundry.org/silk/cni/adapter/*.go # gosub
+  - code.cloudfoundry.org/silk/cni/config/*.go # gosub
+  - code.cloudfoundry.org/silk/cni/legacy_flannel/*.go # gosub
+  - code.cloudfoundry.org/silk/cni/lib/*.go # gosub
+  - code.cloudfoundry.org/silk/daemon/*.go # gosub
+  - code.cloudfoundry.org/silk/daemon/config/*.go # gosub
+  - code.cloudfoundry.org/silk/daemon/lib/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/lager/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/cni/pkg/invoke/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/cni/pkg/ip/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/cni/pkg/ipam/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/cni/pkg/ns/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/cni/pkg/skel/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/cni/pkg/types/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/cni/pkg/types/020/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/cni/pkg/types/current/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/cni/pkg/utils/hwaddr/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/cni/pkg/utils/sysctl/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/cni/pkg/version/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/cni/vendor/github.com/coreos/go-iptables/iptables/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/cni/vendor/github.com/vishvananda/netlink/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/cni/vendor/github.com/vishvananda/netlink/nl/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/cni/vendor/github.com/vishvananda/netns/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/cni/vendor/golang.org/x/sys/unix/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/cni/vendor/golang.org/x/sys/unix/*.s # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/go-sql-driver/mysql/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/lib/pq/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/lib/pq/oid/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/rubenv/sql-migrate/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/rubenv/sql-migrate/sqlparse/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/vishvananda/netlink/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/vishvananda/netlink/nl/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/vishvananda/netns/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/ziutek/utils/netaddr/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/gopkg.in/gorp.v1/*.go # gosub
   - github.com/containernetworking/cni/pkg/invoke/*.go # gosub
   - github.com/containernetworking/cni/pkg/ip/*.go # gosub
   - github.com/containernetworking/cni/pkg/ns/*.go # gosub
@@ -56,8 +66,13 @@ files:
   - github.com/containernetworking/cni/vendor/golang.org/x/sys/unix/*.go # gosub
   - github.com/containernetworking/cni/vendor/golang.org/x/sys/unix/*.s # gosub
   - github.com/coreos/go-iptables/iptables/*.go # gosub
+  - github.com/go-sql-driver/mysql/*.go # gosub
   - github.com/hashicorp/go-multierror/*.go # gosub
   - github.com/hashicorp/go-multierror/vendor/github.com/hashicorp/errwrap/*.go # gosub
+  - github.com/jmoiron/sqlx/*.go # gosub
+  - github.com/jmoiron/sqlx/reflectx/*.go # gosub
+  - github.com/lib/pq/*.go # gosub
+  - github.com/lib/pq/oid/*.go # gosub
   - lib/datastore/*.go # gosub
   - lib/filelock/*.go # gosub
   - lib/rules/*.go # gosub
