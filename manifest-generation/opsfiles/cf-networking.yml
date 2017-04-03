@@ -46,18 +46,6 @@
   path: /instance_groups/name=diego-cell/jobs/name=garden/properties/garden/network_plugin_extra_args?/-
   value: --configFile=/var/vcap/jobs/garden-cni/config/adapter.json
 
-# c2c jobs on the diego cell
-- type: replace
-  path: /instance_groups/name=diego-cell/jobs/-
-  value:
-    name: garden-cni
-    release: cf-networking
-    properties:
-      cf_networking:
-        garden_external_networker:
-          cni_plugin_dir: /var/vcap/packages/silk/bin
-          cni_config_dir: /var/vcap/jobs/cni-flannel/config/cni
-
 - type: replace
   path: /instance_groups/name=diego-cell/jobs/-
   value:

@@ -102,9 +102,6 @@ cf_networking_overrides:
           B9WMZk4y0/d25H/498grQI2cF2RcmTrppAS7Gg9+Htmf5G3uheFSIWlZgRxt8wnj
           46EI+Z6nPAkL1rFOtbJK5MtcCy0kfraAKEuTJcKmy5H0dLTsdVv7pA==
           -----END RSA PRIVATE KEY-----
-      garden_external_networker:
-        cni_plugin_dir: /var/vcap/packages/flannel/bin
-        cni_config_dir: /var/vcap/jobs/cni-flannel/config/cni
       plugin:
         etcd_endpoints:
           - (( config_from_cf.etcd.advertise_urls_dns_suffix ))

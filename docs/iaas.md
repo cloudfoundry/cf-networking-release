@@ -172,9 +172,6 @@ by using the instructions and tooling in [the diego-release repo](https://github
               -----BEGIN RSA PRIVATE KEY-----
               REPLACE_WITH_SERVER_KEY
               -----END RSA PRIVATE KEY-----
-          garden_external_networker:
-            cni_plugin_dir: /var/vcap/packages/flannel/bin
-            cni_config_dir: /var/vcap/jobs/cni-flannel/config/cni
           plugin:
             etcd_endpoints:
               - (( config_from_cf.etcd.advertise_urls_dns_suffix ))

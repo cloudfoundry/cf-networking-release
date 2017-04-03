@@ -10,11 +10,11 @@ packages:
 properties:
   cf_networking.garden_external_networker.cni_plugin_dir:
     description: "Directory containing CNI plugins."
-    default: "/var/vcap/packages/silk/bin"
+    default: /var/vcap/packages/silk/bin
 
   cf_networking.garden_external_networker.cni_config_dir:
     description: "Directory to store CNI config files.  Other jobs may write files into here."
-    default: "/var/vcap/jobs/cni-flannel/config/cni"
+    default: /var/vcap/jobs/cni-flannel/config/cni
 
   cf_networking.garden_external_networker.start_port:
     description: "Starting value for allocating host ports to containers"
