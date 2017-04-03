@@ -38,7 +38,7 @@ A new property has been added to support an upcoming feature.  Users can specify
 
   - `cf_networking.dns_servers`
 
-The new feature will require garden-runc-release versions >1.3.0.
+The new feature will require garden-runc-release versions >= 1.4.0.
 
 
 ### 0.18.0
