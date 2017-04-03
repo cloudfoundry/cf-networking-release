@@ -48,12 +48,6 @@ upload_cloud_config() {
   bosh -e vbox -n update-cloud-config ~/workspace/cf-deployment/bosh-lite/cloud-config.yml
 }
 
-enable_br_netfilter() {
-  touch ~/workspace/container-networking-deployments/environments/local/director_priv.key; chmod 600 ~/workspace/container-networking-deployments/environments/local/director_priv.key
-  bosh int ~/workspace/container-networking-deployments/environments/local/creds.yml --path /jumpbox_ssh/private_key > ~/workspace/container-networking-deployments/environments/local/director_priv.key
-  ssh jumpbox@192.168.50.6 -i ~/workspace/container-networking-deployments/environments/local/director_priv.key 'sudo modprobe br_netfilter && lsmod | grep br_netfilter'
-}
-
 deploy_cf() {
   bosh deploy -n ~/workspace/cf-deployment/cf-deployment.yml \
   -o ~/workspace/cf-networking-release/manifest-generation/opsfiles/cf-networking.yml \
@@ -71,8 +65,6 @@ upload_local_release() {
 main() {
     create_bosh_env
     set_bosh_env
-
-    enable_br_netfilter
 
     if [ "$upload_stemcell" == true ]; then
       upload_bosh_stemcell

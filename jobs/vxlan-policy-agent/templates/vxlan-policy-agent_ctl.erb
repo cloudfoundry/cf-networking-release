@@ -61,10 +61,6 @@ case $1 in
 
   start)
 
-    set +e
-    modprobe br_netfilter
-    set -e
-
     mkdir -p $RUN_DIR
     mkdir -p $LOG_DIR
 
