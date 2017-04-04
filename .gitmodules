@@ -134,3 +134,6 @@
 [submodule "src/code.cloudfoundry.org/go-db-helpers"]
 	path = src/code.cloudfoundry.org/go-db-helpers
 	url = https://github.com/cloudfoundry-incubator/go-db-helpers
+[submodule "src/golang.org/x/net"]
+	path = src/golang.org/x/net
+	url = https://go.googlesource.com/net
