@@ -34,11 +34,25 @@ Descriptions for each property can be found under the `network-daemon` spec.
 
 **New Properties**
 
-A new property has been added to support an upcoming feature.  Users can specify DNS servers and access will be automatically allowed for link-local DNS servers:
+A new property `dns_servers` has been added to enable upcoming BOSH DNS support for app containers.
+The servers (specified as a list of strings) will be used to populate the `/etc/resolv.conf` file in
+the container.  To use this feature, operators must be using garden-runc-release version >= 1.4.0.
+Set
 
-  - `cf_networking.dns_servers`
+- `cni-flannel` job, with property `cf_networking.dns_servers`
 
-The new feature will require garden-runc-release versions >= 1.4.0.
+For example:
+```yaml
+cf_networking:
+   dns_servers:
+      - 169.254.0.2
+```
+
+If a link-local address is specified (as in the example above), the iptables on the host will
+be modified to allow the container to access that address.
+
+If this property is not set (or left with its default value of `[]`) then Garden-runC will set the list
+based on its own BOSH properties.  By default, the DNS servers from the host are used.
 
 
 ### 0.18.0
