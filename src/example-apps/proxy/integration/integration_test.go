@@ -84,6 +84,17 @@ var _ = Describe("Integration", func() {
 			Expect(responseData.Port).To(Equal(listenPort))
 		})
 
+		It("should respond to /ping by pinging the provided address", func() {
+			response, err := http.DefaultClient.Get("http://" + address + "/ping/" + destinationAddress)
+			Expect(err).NotTo(HaveOccurred())
+			defer response.Body.Close()
+			Expect(response.StatusCode).To(Equal(200))
+
+			responseBytes, err := ioutil.ReadAll(response.Body)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(responseBytes).To(ContainSubstring("Ping succeeded"))
+		})
+
 		It("should respond to /proxy by proxying the request to the provided address", func() {
 			response, err := http.DefaultClient.Get("http://" + address + "/proxy/" + destinationAddress)
 			Expect(err).NotTo(HaveOccurred())
@@ -121,6 +132,17 @@ var _ = Describe("Integration", func() {
 				Expect(response.StatusCode).To(Equal(500))
 
 				Eventually(session.Err.Contents).Should(ContainSubstring("request failed: Get"))
+			})
+		})
+
+		Context("when the ping destination is invalid", func() {
+			It("logs the error", func() {
+				response, err := http.DefaultClient.Get("http://" + address + "/ping/////!!")
+				Expect(err).NotTo(HaveOccurred())
+				defer response.Body.Close()
+				Expect(response.StatusCode).To(Equal(500))
+
+				Eventually(session.Err.Contents).Should(ContainSubstring("Ping failed"))
 			})
 		})
 	})

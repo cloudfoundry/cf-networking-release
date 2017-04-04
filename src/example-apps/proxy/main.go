@@ -9,8 +9,9 @@ import (
 	"strconv"
 )
 
-func launchHandler(port int, proxyHandler, statsHandler http.Handler) {
+func launchHandler(port int, pingHandler, proxyHandler, statsHandler http.Handler) {
 	mux := http.NewServeMux()
+	mux.Handle("/ping/", pingHandler)
 	mux.Handle("/proxy/", proxyHandler)
 	mux.Handle("/stats", statsHandler)
 	mux.Handle("/", &handlers.InfoHandler{
@@ -29,6 +30,7 @@ func main() {
 	stats := &handlers.Stats{
 		Latency: []float64{},
 	}
+	pingHandler := &handlers.PingHandler{}
 	proxyHandler := &handlers.ProxyHandler{
 		Stats: stats,
 	}
@@ -36,5 +38,5 @@ func main() {
 		Stats: stats,
 	}
 
-	launchHandler(systemPort, proxyHandler, statsHandler)
+	launchHandler(systemPort, pingHandler, proxyHandler, statsHandler)
 }
