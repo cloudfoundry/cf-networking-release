@@ -105,6 +105,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 		Expect(iptablesLockFile.Close()).To(Succeed())
 		iptablesLockFilePath = iptablesLockFile.Name()
 
+		var code garden.ICMPCode = 0
 		inputStruct = InputStruct{
 			Name:       "cni-wrapper",
 			CNIVersion: "0.3.0",
@@ -141,7 +142,16 @@ var _ = Describe("CniWrapperPlugin", func() {
 					},
 					NetOutRules: []garden.NetOutRule{
 						{
-							Protocol: 1,
+							Protocol: garden.ProtocolAll,
+							Networks: []garden.IPRange{
+								{
+									Start: net.ParseIP("3.3.3.3"),
+									End:   net.ParseIP("4.4.4.4"),
+								},
+							},
+						},
+						{
+							Protocol: garden.ProtocolTCP,
 							Networks: []garden.IPRange{
 								{
 									Start: net.ParseIP("8.8.8.8"),
@@ -153,6 +163,34 @@ var _ = Describe("CniWrapperPlugin", func() {
 									Start: 53,
 									End:   54,
 								},
+							},
+						},
+						{
+							Protocol: garden.ProtocolUDP,
+							Networks: []garden.IPRange{
+								{
+									Start: net.ParseIP("11.11.11.11"),
+									End:   net.ParseIP("22.22.22.22"),
+								},
+							},
+							Ports: []garden.PortRange{
+								{
+									Start: 53,
+									End:   54,
+								},
+							},
+						},
+						{
+							Protocol: garden.ProtocolICMP,
+							Networks: []garden.IPRange{
+								{
+									Start: net.ParseIP("5.5.5.5"),
+									End:   net.ParseIP("6.6.6.6"),
+								},
+							},
+							ICMPs: &garden.ICMPControl{
+								Type: 8,
+								Code: &code,
 							},
 						},
 					},
@@ -439,7 +477,10 @@ var _ = Describe("CniWrapperPlugin", func() {
 				}))
 
 				By("checking that the rules are written")
+				Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 1.2.3.4/32 -m iprange --dst-range 3.3.3.3-4.4.4.4 -j RETURN`))
 				Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 1.2.3.4/32 -p tcp -m iprange --dst-range 8.8.8.8-9.9.9.9 -m tcp --dport 53:54 -j RETURN`))
+				Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 1.2.3.4/32 -p udp -m iprange --dst-range 11.11.11.11-22.22.22.22 -m udp --dport 53:54 -j RETURN`))
+				Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 1.2.3.4/32 -p icmp -m iprange --dst-range 5.5.5.5-6.6.6.6 -m icmp --icmp-type 8/0 -j RETURN`))
 
 			})
 
@@ -479,7 +520,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 
 			Context("when a rule has logging enabled", func() {
 				BeforeEach(func() {
-					inputStruct.WrapperConfig.RuntimeConfig.NetOutRules[0].Log = true
+					inputStruct.WrapperConfig.RuntimeConfig.NetOutRules[1].Log = true
 					inputStruct.WrapperConfig.IPTablesASGLogging = false
 					input = GetInput(inputStruct)
 				})

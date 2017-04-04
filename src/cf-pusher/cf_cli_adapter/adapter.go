@@ -199,6 +199,12 @@ func (a *Adapter) BindSecurityGroup(name, org, space string) error {
 	return runCommandWithTimeout(cmd)
 }
 
+func (a *Adapter) UnbindSecurityGroup(name, org, space string) error {
+	fmt.Printf("running cf unbind-security-group %s %s %s\n", name, org, space)
+	cmd := exec.Command("cf", "unbind-security-group", name, org, space)
+	return runCommandWithTimeout(cmd)
+}
+
 func (a *Adapter) DeleteSecurityGroup(name string) error {
 	fmt.Printf("running cf delete-security-group -f %s \n", name)
 	cmd := exec.Command("cf", "delete-security-group", "-f", name)

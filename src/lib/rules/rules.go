@@ -127,6 +127,30 @@ func NewNetOutWithPortsRule(containerIP, startIP, endIP string, startPort, endPo
 	}
 }
 
+func NewNetOutICMPRule(containerIP, startIP, endIP string, icmpType, icmpCode int) IPTablesRule {
+	return IPTablesRule{
+		"--source", containerIP,
+		"-m", "iprange",
+		"-p", "icmp",
+		"--dst-range", fmt.Sprintf("%s-%s", startIP, endIP),
+		"-m", "icmp",
+		"--icmp-type", fmt.Sprintf("%d/%d", icmpType, icmpCode),
+		"--jump", "RETURN",
+	}
+}
+
+func NewNetOutICMPLogRule(containerIP, startIP, endIP string, icmpType, icmpCode int, chain string) IPTablesRule {
+	return IPTablesRule{
+		"--source", containerIP,
+		"-m", "iprange",
+		"-p", "icmp",
+		"--dst-range", fmt.Sprintf("%s-%s", startIP, endIP),
+		"-m", "icmp",
+		"--icmp-type", fmt.Sprintf("%d/%d", icmpType, icmpCode),
+		"-g", chain,
+	}
+}
+
 func NewNetOutLogRule(containerIP, startIP, endIP, chain string) IPTablesRule {
 	return IPTablesRule{
 		"--source", containerIP,

@@ -36,7 +36,20 @@ func (c *NetOutRuleConverter) Convert(rule garden.NetOutRule, containerIP, logCh
 					)
 				}
 			}
-		} else {
+		} else if rule.ICMPs != nil && len(rule.Ports) == 0 && rule.Protocol == garden.ProtocolICMP {
+			icmpType := int(uint8(rule.ICMPs.Type))
+			icmpCode := rule.ICMPs.Code
+			icmpCodeAsUint8 := int(uint8(*icmpCode))
+			if rule.Log || globalLogging {
+				ruleSpec = append(ruleSpec, rules.NewNetOutICMPLogRule(
+					containerIP, network.Start.String(), network.End.String(), icmpType, icmpCodeAsUint8, logChainName),
+				)
+			} else {
+				ruleSpec = append(ruleSpec, rules.NewNetOutICMPRule(
+					containerIP, network.Start.String(), network.End.String(), icmpType, icmpCodeAsUint8),
+				)
+			}
+		} else if len(rule.Ports) == 0 && rule.Protocol == garden.ProtocolAll {
 			if rule.Log || globalLogging {
 				ruleSpec = append(ruleSpec, rules.NewNetOutLogRule(
 					containerIP, network.Start.String(), network.End.String(), logChainName),
@@ -61,6 +74,8 @@ func lookupProtocol(protocol garden.Protocol) string {
 		return "tcp"
 	case garden.ProtocolUDP:
 		return "udp"
+	case garden.ProtocolICMP:
+		return "icmp"
 	default:
 		return "all"
 	}
