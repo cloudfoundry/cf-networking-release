@@ -70,7 +70,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 			MaxLength: 28,
 		},
 		IPTables:      pluginController.IPTables,
-		Converter:     &legacynet.NetOutRuleConverter{},
+		Converter:     &legacynet.NetOutRuleConverter{Logger: os.Stderr},
 		GlobalLogging: n.IPTablesASGLogging,
 	}
 	if err := netOutProvider.Initialize(args.ContainerID, containerIP, n.OverlayNetwork, localDNSServers); err != nil {
@@ -181,7 +181,7 @@ func cmdDel(args *skel.CmdArgs) error {
 			MaxLength: 28,
 		},
 		IPTables:      pluginController.IPTables,
-		Converter:     &legacynet.NetOutRuleConverter{},
+		Converter:     &legacynet.NetOutRuleConverter{Logger: os.Stderr},
 		GlobalLogging: n.IPTablesASGLogging,
 	}
 

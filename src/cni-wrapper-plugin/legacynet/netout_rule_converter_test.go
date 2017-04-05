@@ -1,6 +1,7 @@
 package legacynet_test
 
 import (
+	"bytes"
 	"cni-wrapper-plugin/legacynet"
 	"lib/rules"
 	"net"
@@ -16,13 +17,15 @@ var _ = Describe("NetOutRuleConverter", func() {
 		converter    *legacynet.NetOutRuleConverter
 		netOutRule   garden.NetOutRule
 		logChainName string
+		logger       *bytes.Buffer
 	)
 	BeforeEach(func() {
 		logChainName = "some-chain"
-		converter = &legacynet.NetOutRuleConverter{}
+		logger = &bytes.Buffer{}
+		converter = &legacynet.NetOutRuleConverter{Logger: logger}
 	})
 	Describe("Convert", func() {
-		Context("when ports and protocol are specified", func() {
+		Context("when the protocol is TCP or UDP", func() {
 			BeforeEach(func() {
 				netOutRule = garden.NetOutRule{
 					Protocol: garden.ProtocolTCP,
@@ -36,9 +39,9 @@ var _ = Describe("NetOutRuleConverter", func() {
 					},
 				}
 			})
+
 			It("converts a netout rule to a list of iptables rules", func() {
 				ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
-
 				Expect(ruleSpec).To(ConsistOf(
 					rules.IPTablesRule{"--source", "1.2.3.4",
 						"-m", "iprange", "-p", "tcp",
@@ -62,50 +65,79 @@ var _ = Describe("NetOutRuleConverter", func() {
 						"--jump", "RETURN"},
 				))
 			})
-		})
 
-		Context("when Convert is called with globalLogging set to true", func() {
-			BeforeEach(func() {
-				netOutRule = garden.NetOutRule{
-					Networks: []garden.IPRange{
-						{Start: net.ParseIP("1.1.1.1"), End: net.ParseIP("2.2.2.2")},
-						{Start: net.ParseIP("3.3.3.3"), End: net.ParseIP("4.4.4.4")},
-					},
-				}
+			Context("when globalLogging is set to true", func() {
+				It("returns iptables rules that goto the log chain", func() {
+					ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, true)
+					Expect(ruleSpec).To(Equal([]rules.IPTablesRule{
+						rules.IPTablesRule{"--source", "1.2.3.4",
+							"-m", "iprange", "-p", "tcp",
+							"--dst-range", "1.1.1.1-2.2.2.2",
+							"-m", "tcp", "--destination-port", "9000:9999",
+							"-g", logChainName},
+						rules.IPTablesRule{"--source", "1.2.3.4",
+							"-m", "iprange", "-p", "tcp",
+							"--dst-range", "1.1.1.1-2.2.2.2",
+							"-m", "tcp", "--destination-port", "1111:2222",
+							"-g", logChainName},
+						rules.IPTablesRule{"--source", "1.2.3.4",
+							"-m", "iprange", "-p", "tcp",
+							"--dst-range", "3.3.3.3-4.4.4.4",
+							"-m", "tcp", "--destination-port", "9000:9999",
+							"-g", logChainName},
+						rules.IPTablesRule{"--source", "1.2.3.4",
+							"-m", "iprange", "-p", "tcp",
+							"--dst-range", "3.3.3.3-4.4.4.4",
+							"-m", "tcp", "--destination-port", "1111:2222",
+							"-g", logChainName},
+					}))
+				})
 			})
-			It("returns IP tables rules that goto the log chain", func() {
-				ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, true)
-				Expect(ruleSpec).To(ConsistOf(
-					rules.IPTablesRule{"--source", "1.2.3.4", "-m", "iprange",
-						"--dst-range", "1.1.1.1-2.2.2.2",
-						"-g", "some-chain"},
-					rules.IPTablesRule{"--source", "1.2.3.4", "-m", "iprange",
-						"--dst-range", "3.3.3.3-4.4.4.4",
-						"-g", "some-chain"},
-				))
-			})
-		})
 
-		Context("when logging is enabled", func() {
-			BeforeEach(func() {
-				netOutRule = garden.NetOutRule{
-					Networks: []garden.IPRange{
-						{Start: net.ParseIP("1.1.1.1"), End: net.ParseIP("2.2.2.2")},
-						{Start: net.ParseIP("3.3.3.3"), End: net.ParseIP("4.4.4.4")},
-					},
-					Log: true,
-				}
+			Context("when Log on the netout rule is set to true", func() {
+				BeforeEach(func() {
+					netOutRule.Log = true
+				})
+				It("returns iptables rules that goto the log chain", func() {
+					ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, true)
+					Expect(ruleSpec).To(ConsistOf(
+						rules.IPTablesRule{"--source", "1.2.3.4",
+							"-m", "iprange", "-p", "tcp",
+							"--dst-range", "1.1.1.1-2.2.2.2",
+							"-m", "tcp", "--destination-port", "9000:9999",
+							"-g", logChainName},
+						rules.IPTablesRule{"--source", "1.2.3.4",
+							"-m", "iprange", "-p", "tcp",
+							"--dst-range", "1.1.1.1-2.2.2.2",
+							"-m", "tcp", "--destination-port", "1111:2222",
+							"-g", logChainName},
+						rules.IPTablesRule{"--source", "1.2.3.4",
+							"-m", "iprange", "-p", "tcp",
+							"--dst-range", "3.3.3.3-4.4.4.4",
+							"-m", "tcp", "--destination-port", "9000:9999",
+							"-g", logChainName},
+						rules.IPTablesRule{"--source", "1.2.3.4",
+							"-m", "iprange", "-p", "tcp",
+							"--dst-range", "3.3.3.3-4.4.4.4",
+							"-m", "tcp", "--destination-port", "1111:2222",
+							"-g", logChainName},
+					))
+				})
 			})
-			It("returns IP tables rules without ports or protocol", func() {
-				ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
-				Expect(ruleSpec).To(ConsistOf(
-					rules.IPTablesRule{"--source", "1.2.3.4", "-m", "iprange",
-						"--dst-range", "1.1.1.1-2.2.2.2",
-						"-g", "some-chain"},
-					rules.IPTablesRule{"--source", "1.2.3.4", "-m", "iprange",
-						"--dst-range", "3.3.3.3-4.4.4.4",
-						"-g", "some-chain"},
-				))
+
+			Context("when the netout rule does not specify ports", func() {
+				BeforeEach(func() {
+					netOutRule.Ports = nil
+				})
+				It("adds no iptables rules", func() {
+					ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
+					Expect(ruleSpec).To(BeEmpty())
+				})
+
+				It("logs the warning", func() {
+					converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
+					Expect(logger.String()).To(ContainSubstring("UDP/TCP rule must specify ports"))
+				})
 			})
 		})
 
@@ -130,7 +162,7 @@ var _ = Describe("NetOutRuleConverter", func() {
 				}
 			})
 
-			It("returns IP tables rules with ICMP code", func() {
+			It("converts a netout rule to a list of iptables rules", func() {
 				ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
 				Expect(ruleSpec).To(ConsistOf(
 					rules.IPTablesRule{"--source", "1.2.3.4", "-m", "iprange",
@@ -144,11 +176,27 @@ var _ = Describe("NetOutRuleConverter", func() {
 				))
 			})
 
-			Context("when the logging is enabled", func() {
+			Context("when the globalLogging is set to true", func() {
+				It("returns iptables rules that goto the log chain", func() {
+					ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, true)
+					Expect(ruleSpec).To(ConsistOf(
+						rules.IPTablesRule{"--source", "1.2.3.4", "-m", "iprange",
+							"-p", "icmp",
+							"--dst-range", "3.3.3.3-4.4.4.4", "-m", "icmp", "--icmp-type", "8/0",
+							"-g", "some-chain"},
+						rules.IPTablesRule{"--source", "1.2.3.4", "-m", "iprange",
+							"-p", "icmp",
+							"--dst-range", "5.5.5.5-6.6.6.6", "-m", "icmp", "--icmp-type", "8/0",
+							"-g", "some-chain"},
+					))
+				})
+			})
+
+			Context("when Log on the netout rule is set to true", func() {
 				BeforeEach(func() {
 					netOutRule.Log = true
 				})
-				It("returns IP tables logging rules with ICMP code", func() {
+				It("returns iptables rules that goto the log chain", func() {
 					ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
 					Expect(ruleSpec).To(ConsistOf(
 						rules.IPTablesRule{"--source", "1.2.3.4", "-m", "iprange",
@@ -160,6 +208,51 @@ var _ = Describe("NetOutRuleConverter", func() {
 							"--dst-range", "5.5.5.5-6.6.6.6", "-m", "icmp", "--icmp-type", "8/0",
 							"-g", "some-chain"},
 					))
+				})
+			})
+
+			Context("when the netout rule does not specify ICMP type or code", func() {
+				BeforeEach(func() {
+					netOutRule.ICMPs = nil
+				})
+				It("adds no iptables rules", func() {
+					ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
+					Expect(ruleSpec).To(BeEmpty())
+				})
+				It("logs the warning", func() {
+					converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
+					Expect(logger.String()).To(ContainSubstring("ICMP rule must specify ICMP type/code"))
+				})
+			})
+
+			Context("when the netout rule does not specify ICMP code", func() {
+				BeforeEach(func() {
+					netOutRule.ICMPs.Code = nil
+				})
+				It("adds no iptables rules", func() {
+					ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
+					Expect(ruleSpec).To(BeEmpty())
+				})
+				It("logs the warning", func() {
+					converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
+					Expect(logger.String()).To(ContainSubstring("ICMP rule must specify ICMP type/code"))
+				})
+			})
+
+			Context("when the netout rule specifies ports", func() {
+				BeforeEach(func() {
+					netOutRule.Ports = []garden.PortRange{
+						{Start: 9000, End: 9999},
+						{Start: 1111, End: 2222},
+					}
+				})
+				It("adds no iptables rules", func() {
+					ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
+					Expect(ruleSpec).To(BeEmpty())
+				})
+				It("logs the warning", func() {
+					converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
+					Expect(logger.String()).To(ContainSubstring("ICMP rule must not specify ports"))
 				})
 			})
 		})
@@ -174,7 +267,8 @@ var _ = Describe("NetOutRuleConverter", func() {
 					},
 				}
 			})
-			It("returns IP tables rules without ports or protocol", func() {
+
+			It("converts a netout rule to a list of iptables rules", func() {
 				ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
 				Expect(ruleSpec).To(ConsistOf(
 					rules.IPTablesRule{"--source", "1.2.3.4", "-m", "iprange",
@@ -185,77 +279,54 @@ var _ = Describe("NetOutRuleConverter", func() {
 						"--jump", "RETURN"},
 				))
 			})
-		})
 
-		Context("when ports are not specified but protocol is udp/tcp", func() {
-			BeforeEach(func() {
-				netOutRule = garden.NetOutRule{
-					Protocol: garden.ProtocolUDP,
-					Networks: []garden.IPRange{
-						{Start: net.ParseIP("1.1.1.1"), End: net.ParseIP("2.2.2.2")},
-						{Start: net.ParseIP("3.3.3.3"), End: net.ParseIP("4.4.4.4")},
-					},
-				}
+			Context("when globalLogging is set to true", func() {
+				It("returns iptables rules that goto the log chain", func() {
+					ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, true)
+					Expect(ruleSpec).To(ConsistOf(
+						rules.IPTablesRule{"--source", "1.2.3.4", "-m", "iprange",
+							"--dst-range", "1.1.1.1-2.2.2.2",
+							"-g", logChainName},
+						rules.IPTablesRule{"--source", "1.2.3.4", "-m", "iprange",
+							"--dst-range", "3.3.3.3-4.4.4.4",
+							"-g", logChainName},
+					))
+				})
 			})
-			It("return no rules", func() {
-				ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
-				Expect(ruleSpec).To(BeEmpty())
-			})
-		})
 
-		Context("when ports are specified but protocol is icmp", func() {
-			BeforeEach(func() {
-				netOutRule = garden.NetOutRule{
-					Protocol: garden.ProtocolICMP,
-					Networks: []garden.IPRange{
-						{Start: net.ParseIP("1.1.1.1"), End: net.ParseIP("2.2.2.2")},
-						{Start: net.ParseIP("3.3.3.3"), End: net.ParseIP("4.4.4.4")},
-					},
-					Ports: []garden.PortRange{
+			Context("when Log on the netout rule is set to true", func() {
+				BeforeEach(func() {
+					netOutRule.Log = true
+				})
+
+				It("returns iptables rules that goto the log chain", func() {
+					ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
+					Expect(ruleSpec).To(ConsistOf(
+						rules.IPTablesRule{"--source", "1.2.3.4", "-m", "iprange",
+							"--dst-range", "1.1.1.1-2.2.2.2",
+							"-g", logChainName},
+						rules.IPTablesRule{"--source", "1.2.3.4", "-m", "iprange",
+							"--dst-range", "3.3.3.3-4.4.4.4",
+							"-g", logChainName},
+					))
+				})
+			})
+
+			Context("when the netout rule specifies ports", func() {
+				BeforeEach(func() {
+					netOutRule.Ports = []garden.PortRange{
 						{Start: 9000, End: 9999},
 						{Start: 1111, End: 2222},
-					},
-				}
-			})
-			It("return no rules", func() {
-				ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
-				Expect(ruleSpec).To(BeEmpty())
-			})
-		})
-
-		Context("when type not specified but protocol is icmp", func() {
-			BeforeEach(func() {
-				netOutRule = garden.NetOutRule{
-					Protocol: garden.ProtocolICMP,
-					Networks: []garden.IPRange{
-						{Start: net.ParseIP("1.1.1.1"), End: net.ParseIP("2.2.2.2")},
-						{Start: net.ParseIP("3.3.3.3"), End: net.ParseIP("4.4.4.4")},
-					},
-				}
-			})
-			It("return no rules", func() {
-				ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
-				Expect(ruleSpec).To(BeEmpty())
-			})
-		})
-
-		Context("when ports are specified but protocol is all", func() {
-			BeforeEach(func() {
-				netOutRule = garden.NetOutRule{
-					Protocol: garden.ProtocolAll,
-					Networks: []garden.IPRange{
-						{Start: net.ParseIP("1.1.1.1"), End: net.ParseIP("2.2.2.2")},
-						{Start: net.ParseIP("3.3.3.3"), End: net.ParseIP("4.4.4.4")},
-					},
-					Ports: []garden.PortRange{
-						{Start: 9000, End: 9999},
-						{Start: 1111, End: 2222},
-					},
-				}
-			})
-			It("return no rules", func() {
-				ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
-				Expect(ruleSpec).To(BeEmpty())
+					}
+				})
+				It("adds no iptables rules", func() {
+					ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, true)
+					Expect(ruleSpec).To(BeEmpty())
+				})
+				It("logs the warning", func() {
+					converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
+					Expect(logger.String()).To(ContainSubstring("Rule for all protocols (TCP/UDP/ICMP) must not specify ports"))
+				})
 			})
 		})
 

@@ -1,12 +1,15 @@
 package legacynet
 
 import (
+	"fmt"
+	"io"
 	"lib/rules"
 
 	"code.cloudfoundry.org/garden"
 )
 
 type NetOutRuleConverter struct {
+	Logger io.Writer
 }
 
 func (c *NetOutRuleConverter) BulkConvert(netOutRules []garden.NetOutRule, containerIP, logChainName string, globalLogging bool) []rules.IPTablesRule {
@@ -22,42 +25,52 @@ func (c *NetOutRuleConverter) BulkConvert(netOutRules []garden.NetOutRule, conta
 func (c *NetOutRuleConverter) Convert(rule garden.NetOutRule, containerIP, logChainName string, globalLogging bool) []rules.IPTablesRule {
 	ruleSpec := []rules.IPTablesRule{}
 	for _, network := range rule.Networks {
-		if len(rule.Ports) > 0 && udpOrTcp(rule.Protocol) {
+		startIP, endIP := network.Start.String(), network.End.String()
+		protocol := lookupProtocol(rule.Protocol)
+		log := rule.Log || globalLogging
+		switch rule.Protocol {
+		case garden.ProtocolTCP:
+			fallthrough
+		case garden.ProtocolUDP:
+			if len(rule.Ports) == 0 {
+				fmt.Fprintf(c.Logger, "UDP/TCP rule must specify ports: %+v\n", rule)
+				continue
+			}
 			for _, portRange := range rule.Ports {
-				if rule.Log || globalLogging {
-					ruleSpec = append(ruleSpec, rules.NewNetOutWithPortsLogRule(
-						containerIP, network.Start.String(), network.End.String(),
-						int(portRange.Start), int(portRange.End), lookupProtocol(rule.Protocol), logChainName),
-					)
+				startPort := int(portRange.Start)
+				endPort := int(portRange.End)
+				if log {
+					ruleSpec = append(ruleSpec, rules.NewNetOutWithPortsLogRule(containerIP, startIP, endIP, startPort, endPort, protocol, logChainName))
 				} else {
-					ruleSpec = append(ruleSpec, rules.NewNetOutWithPortsRule(
-						containerIP, network.Start.String(), network.End.String(),
-						int(portRange.Start), int(portRange.End), lookupProtocol(rule.Protocol)),
-					)
+					ruleSpec = append(ruleSpec, rules.NewNetOutWithPortsRule(containerIP, startIP, endIP, startPort, endPort, protocol))
 				}
 			}
-		} else if rule.ICMPs != nil && len(rule.Ports) == 0 && rule.Protocol == garden.ProtocolICMP {
-			icmpType := int(uint8(rule.ICMPs.Type))
-			icmpCode := rule.ICMPs.Code
-			icmpCodeAsUint8 := int(uint8(*icmpCode))
-			if rule.Log || globalLogging {
-				ruleSpec = append(ruleSpec, rules.NewNetOutICMPLogRule(
-					containerIP, network.Start.String(), network.End.String(), icmpType, icmpCodeAsUint8, logChainName),
-				)
-			} else {
-				ruleSpec = append(ruleSpec, rules.NewNetOutICMPRule(
-					containerIP, network.Start.String(), network.End.String(), icmpType, icmpCodeAsUint8),
-				)
+		case garden.ProtocolICMP:
+			if rule.ICMPs == nil || rule.ICMPs.Code == nil {
+				fmt.Fprintf(c.Logger, "ICMP rule must specify ICMP type/code: %+v\n", rule)
+				continue
 			}
-		} else if len(rule.Ports) == 0 && rule.Protocol == garden.ProtocolAll {
-			if rule.Log || globalLogging {
-				ruleSpec = append(ruleSpec, rules.NewNetOutLogRule(
-					containerIP, network.Start.String(), network.End.String(), logChainName),
-				)
+			if len(rule.Ports) > 0 {
+				fmt.Fprintf(c.Logger, "ICMP rule must not specify ports: %+v\n", rule)
+				continue
+			}
+			icmpType := int(uint8(rule.ICMPs.Type))
+			code := rule.ICMPs.Code
+			icmpCode := int(uint8(*code))
+			if log {
+				ruleSpec = append(ruleSpec, rules.NewNetOutICMPLogRule(containerIP, startIP, endIP, icmpType, icmpCode, logChainName))
 			} else {
-				ruleSpec = append(ruleSpec, rules.NewNetOutRule(
-					containerIP, network.Start.String(), network.End.String()),
-				)
+				ruleSpec = append(ruleSpec, rules.NewNetOutICMPRule(containerIP, startIP, endIP, icmpType, icmpCode))
+			}
+		case garden.ProtocolAll:
+			if len(rule.Ports) > 0 {
+				fmt.Fprintf(c.Logger, "Rule for all protocols (TCP/UDP/ICMP) must not specify ports: %+v\n", rule)
+				continue
+			}
+			if log {
+				ruleSpec = append(ruleSpec, rules.NewNetOutLogRule(containerIP, startIP, endIP, logChainName))
+			} else {
+				ruleSpec = append(ruleSpec, rules.NewNetOutRule(containerIP, startIP, endIP))
 			}
 		}
 	}
