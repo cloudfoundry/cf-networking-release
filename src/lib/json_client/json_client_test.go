@@ -106,6 +106,17 @@ var _ = Describe("JsonClient", func() {
 			Expect(receivedRequest.Header["Authorization"][0]).To(Equal("some-token"))
 		})
 
+		Context("when the token is empty", func() {
+			It("is a-okay", func() {
+				err := jsonClient.Do(method, route, reqData, &respData, "")
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(httpClient.DoCallCount()).To(Equal(1))
+				receivedRequest := httpClient.DoArgsForCall(0)
+				Expect(receivedRequest.Header).NotTo(HaveKey("Authorization"))
+			})
+		})
+
 		Context("when marshaling the request data to json fails", func() {
 			BeforeEach(func() {
 				fakeMarshaler.MarshalStub = nil
