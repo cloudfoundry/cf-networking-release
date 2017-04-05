@@ -47,7 +47,7 @@ var _ = Describe("TLS config for internal API server", func() {
 		group := grouper.NewOrdered(os.Interrupt, members)
 		monitor := ifrit.Invoke(sigmon.New(group))
 
-		Eventually(monitor.Ready(), "5s").Should(BeClosed())
+		Eventually(monitor.Ready(), "10s").Should(BeClosed())
 		return monitor
 	}
 
