@@ -208,56 +208,16 @@ var testASGs = map[string]string{
 	"tcp": `
 	[
 		{
-			"destination": "0.0.0.0-9.255.255.255",
+			"destination": "0.0.0.0-255.255.255.255",
 			"protocol": "tcp",
-			"ports": "80"
-		},
-		{
-			"destination": "11.0.0.0-169.253.255.255",
-			"protocol": "tcp",
-			"ports": "80"
-		},
-		{
-			"destination": "169.255.0.0-172.15.255.255",
-			"protocol": "tcp",
-			"ports": "80"
-		},
-		{
-			"destination": "172.32.0.0-192.167.255.255",
-			"protocol": "tcp",
-			"ports": "80"
-		},
-		{
-			"destination": "192.169.0.0-255.255.255.255",
-			"protocol": "tcp",
-			"ports": "80"
+			"ports": "80,443"
 		}
 	]
 	`,
 	"udp": `
 	[
 		{
-			"destination": "0.0.0.0-9.255.255.255",
-			"protocol": "udp",
-			"ports": "53"
-		},
-		{
-			"destination": "11.0.0.0-169.253.255.255",
-			"protocol": "udp",
-			"ports": "53"
-		},
-		{
-			"destination": "169.255.0.0-172.15.255.255",
-			"protocol": "udp",
-			"ports": "53"
-		},
-		{
-			"destination": "172.32.0.0-192.167.255.255",
-			"protocol": "udp",
-			"ports": "53"
-		},
-		{
-			"destination": "192.169.0.0-255.255.255.255",
+			"destination": "0.0.0.0-255.255.255.255",
 			"protocol": "udp",
 			"ports": "53"
 		}
@@ -266,31 +226,7 @@ var testASGs = map[string]string{
 	"icmp": `
 	[
 		{
-			"destination": "0.0.0.0-9.255.255.255",
-			"protocol": "icmp",
-			"type": 8,
-			"code": 0
-		},
-		{
-			"destination": "11.0.0.0-169.253.255.255",
-			"protocol": "icmp",
-			"type": 8,
-			"code": 0
-		},
-		{
-			"destination": "169.255.0.0-172.15.255.255",
-			"protocol": "icmp",
-			"type": 8,
-			"code": 0
-		},
-		{
-			"destination": "172.32.0.0-192.167.255.255",
-			"protocol": "icmp",
-			"type": 8,
-			"code": 0
-		},
-		{
-			"destination": "192.169.0.0-255.255.255.255",
+			"destination": "0.0.0.0-255.255.255.255",
 			"protocol": "icmp",
 			"type": 8,
 			"code": 0
