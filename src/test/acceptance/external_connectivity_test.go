@@ -74,42 +74,49 @@ var _ = Describe("external connectivity", func() {
 
 	Describe("basic (legacy) network behavior for an app", func() {
 		It("is reachable from the router, and can reach the internet only if allowed", func(done Done) {
-			checkRequest := func(route string, expectedStatusCode int, expectedResponseSubstring string) bool {
+			checkRequest := func(route string, expectedStatusCode int, expectedResponseSubstring string) error {
 				resp, err := http.Get(route)
-				Expect(err).NotTo(HaveOccurred())
+				if err != nil {
+					return err
+				}
 				defer resp.Body.Close()
-				Expect(resp.StatusCode).To(Equal(expectedStatusCode))
+				if resp.StatusCode != expectedStatusCode {
+					return fmt.Errorf("test http get to %s: expected response code %d but got %d", route, expectedStatusCode, resp.StatusCode)
+				}
 				respBytes, err := ioutil.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(respBytes).To(ContainSubstring(expectedResponseSubstring))
-				return true
+				respBody := string(respBytes)
+				if !strings.Contains(respBody, expectedResponseSubstring) {
+					return fmt.Errorf("test http get to %s: expected response to contain %q but instead saw:\n%s", route, expectedResponseSubstring, respBody)
+				}
+				return nil
 			}
 
-			canProxy := func() bool {
+			canProxy := func() error {
 				return checkRequest(appRoute+"proxy/example.com", 200, "Example Domain")
 			}
-			isReachable := func() bool {
+			isReachable := func() error {
 				return checkRequest(appRoute, 200, `{"ListenAddresses":[`)
 			}
-			canPing := func() bool {
+			canPing := func() error {
 				return checkRequest(appRoute+"ping/example.com", 200, "Ping succeeded")
 			}
-			cannotProxy := func() bool {
+			cannotProxy := func() error {
 				return checkRequest(appRoute+"proxy/example.com", 500, "example.com")
 			}
-			cannotPing := func() bool {
+			cannotPing := func() error {
 				return checkRequest(appRoute+"ping/example.com", 500, "Ping failed to destination: example.com")
 			}
 
 			By("checking that the app is reachable via the router")
-			Eventually(isReachable, "10s", "1s").Should(BeTrue())
-			Consistently(isReachable, "2s", "0.5s").Should(BeTrue())
+			Eventually(isReachable, "10s", "1s").Should(Succeed())
+			Consistently(isReachable, "2s", "0.5s").Should(Succeed())
 
 			By("checking that the app can reach the internet")
-			Consistently(canProxy, "2s", "0.5s").Should(BeTrue())
+			Consistently(canProxy, "2s", "0.5s").Should(Succeed())
 
 			By("checking that the app can ping the internet")
-			Consistently(canPing, "2s", "0.5s").Should(BeTrue())
+			Consistently(canPing, "2s", "0.5s").Should(Succeed())
 
 			By("removing all the original security groups")
 			for _, sg := range originalRunningSecurityGroups {
@@ -120,11 +127,11 @@ var _ = Describe("external connectivity", func() {
 			Expect(cf.Cf("restart", appA).Wait(Timeout_Push)).To(gexec.Exit(0))
 
 			By("checking that the app cannot reach the internet using http and dns")
-			Eventually(cannotProxy, "10s", "1s").Should(BeTrue())
-			Consistently(cannotProxy, "2s", "0.5s").Should(BeTrue())
+			Eventually(cannotProxy, "10s", "1s").Should(Succeed())
+			Consistently(cannotProxy, "2s", "0.5s").Should(Succeed())
 
-			By("checking that the app cannot ping the internet")
-			Consistently(cannotPing, "2s", "0.5s").Should(BeTrue())
+			By("checking that the app cannot ping the internet (first time)")
+			Consistently(cannotPing, "2s", "0.5s").Should(Succeed())
 
 			By("creating and binding a tcp and udp security group")
 			var err error
@@ -142,11 +149,11 @@ var _ = Describe("external connectivity", func() {
 			Expect(cf.Cf("restart", appA).Wait(Timeout_Push)).To(gexec.Exit(0))
 
 			By("checking that the app can use dns and http to reach the internet")
-			Eventually(canProxy, "10s", "1s").Should(BeTrue())
-			Consistently(canProxy, "2s", "0.5s").Should(BeTrue())
+			Eventually(canProxy, "10s", "1s").Should(Succeed())
+			Consistently(canProxy, "2s", "0.5s").Should(Succeed())
 
-			By("checking that the app cannot ping the internet")
-			Consistently(cannotPing, "2s", "1s").Should(BeTrue())
+			By("checking that the app cannot ping the internet (second time)")
+			Consistently(cannotPing, "2s", "1s").Should(Succeed())
 
 			By("creating and binding an icmp security group")
 			icmpASGFile, err = testsupport.CreateASGFile(icmpASG())
@@ -161,11 +168,11 @@ var _ = Describe("external connectivity", func() {
 			Expect(cf.Cf("restart", appA).Wait(Timeout_Push)).To(gexec.Exit(0))
 
 			By("checking that the app can ping the internet")
-			Eventually(canPing, "10s", "1s").Should(BeTrue())
-			Consistently(canPing, "2s", "0.5s").Should(BeTrue())
+			Eventually(canPing, "10s", "1s").Should(Succeed())
+			Consistently(canPing, "2s", "0.5s").Should(Succeed())
 
 			By("checking that the app cannot use http to reach the internet")
-			Consistently(cannotProxy, "2s", "0.5s").Should(BeTrue())
+			Consistently(cannotProxy, "2s", "0.5s").Should(Succeed())
 
 			close(done)
 		}, 180 /* <-- overall spec timeout in seconds */)
