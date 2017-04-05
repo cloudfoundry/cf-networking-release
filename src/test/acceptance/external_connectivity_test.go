@@ -25,15 +25,21 @@ var _ = Describe("external connectivity", func() {
 		prefix                        string
 		originalRunningSecurityGroups []string
 		cli                           *cf_cli_adapter.Adapter
-		tcpASGFile                    string
-		udpASGFile                    string
-		icmpASGFile                   string
 	)
 
+	createASG := func(name string, asgDefinition string) {
+		asgFile, err := testsupport.CreateASGFile(asgDefinition)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(cli.CreateSecurityGroup(name+"-asg", asgFile)).To(Succeed())
+		Expect(os.Remove(asgFile)).To(Succeed())
+	}
+
+	removeASG := func(name string) {
+		Expect(cli.DeleteSecurityGroup(name + "-asg")).To(Succeed())
+	}
+
 	BeforeEach(func() {
-		cli = &cf_cli_adapter.Adapter{
-			CfCliPath: "cf",
-		}
+		cli = &cf_cli_adapter.Adapter{CfCliPath: "cf"}
 		appA = fmt.Sprintf("appA-%d", rand.Int31())
 		prefix = testConfig.Prefix
 
@@ -47,84 +53,80 @@ var _ = Describe("external connectivity", func() {
 		Expect(cf.Cf("create-space", spaceName, "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
 		Expect(cf.Cf("target", "-o", orgName, "-s", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
 
-		pushProxy(appA)
-		appRoute = fmt.Sprintf("http://%s.%s/", appA, config.AppsDomain)
+		By("discovering all existing running ASGs")
+		originalRunningSecurityGroups = getRunningSecurityGroups()
 
-		allSecurityGroups := getAllSecurityGroups()
-		for _, sg := range allSecurityGroups {
-			Expect(cf.Cf("bind-running-security-group", sg).Wait(Timeout_Short)).To(gexec.Exit(0))
+		By("unbinding all running ASGs")
+		for _, sg := range originalRunningSecurityGroups {
+			Expect(cf.Cf("unbind-running-security-group", sg).Wait(Timeout_Short)).To(gexec.Exit(0))
 		}
 
-		originalRunningSecurityGroups = getRunningSecurityGroups()
+		By("creating test-generated ASGs")
+		for asgName, asgValue := range testASGs {
+			createASG(asgName, asgValue)
+		}
+
+		By("pushing the test app")
+		pushProxy(appA)
+		appRoute = fmt.Sprintf("http://%s.%s/", appA, config.AppsDomain)
 	})
 
 	AfterEach(func() {
 		appReport(appA, Timeout_Short)
 		Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 
-		By("adding back all the original security groups", func() {
-			for _, sg := range originalRunningSecurityGroups {
-				Expect(cf.Cf("bind-running-security-group", sg).Wait(Timeout_Short)).To(gexec.Exit(0))
-			}
-		})
-		os.Remove(tcpASGFile)
-		os.Remove(udpASGFile)
-		os.Remove(icmpASGFile)
+		By("adding back all the original running ASGs")
+		for _, sg := range originalRunningSecurityGroups {
+			Expect(cf.Cf("bind-running-security-group", sg).Wait(Timeout_Short)).To(gexec.Exit(0))
+		}
+
+		By("removing test-generated ASGs")
+		for asgName, _ := range testASGs {
+			removeASG(asgName)
+		}
 	})
 
+	checkRequest := func(route string, expectedStatusCode int, expectedResponseSubstring string) error {
+		resp, err := http.Get(route)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+
+		respBytes, err := ioutil.ReadAll(resp.Body)
+		Expect(err).NotTo(HaveOccurred())
+		respBody := string(respBytes)
+
+		if resp.StatusCode != expectedStatusCode {
+			return fmt.Errorf("test http get to %s: expected response code %d but got %d.  response body:\n%s", route, expectedStatusCode, resp.StatusCode, respBody)
+		}
+		if !strings.Contains(respBody, expectedResponseSubstring) {
+			return fmt.Errorf("test http get to %s: expected response to contain %q but instead saw:\n%s", route, expectedResponseSubstring, respBody)
+		}
+		return nil
+	}
+
+	canProxy := func() error {
+		return checkRequest(appRoute+"proxy/example.com", 200, "Example Domain")
+	}
+	isReachable := func() error {
+		return checkRequest(appRoute, 200, `{"ListenAddresses":[`)
+	}
+	canPing := func() error {
+		return checkRequest(appRoute+"ping/example.com", 200, "Ping succeeded")
+	}
+	cannotProxy := func() error {
+		return checkRequest(appRoute+"proxy/example.com", 500, "example.com")
+	}
+	cannotPing := func() error {
+		return checkRequest(appRoute+"ping/example.com", 500, "Ping failed to destination: example.com")
+	}
+
 	Describe("basic (legacy) network behavior for an app", func() {
-		It("is reachable from the router, and can reach the internet only if allowed", func(done Done) {
-			checkRequest := func(route string, expectedStatusCode int, expectedResponseSubstring string) error {
-				resp, err := http.Get(route)
-				if err != nil {
-					return err
-				}
-				defer resp.Body.Close()
-				if resp.StatusCode != expectedStatusCode {
-					return fmt.Errorf("test http get to %s: expected response code %d but got %d", route, expectedStatusCode, resp.StatusCode)
-				}
-				respBytes, err := ioutil.ReadAll(resp.Body)
-				Expect(err).NotTo(HaveOccurred())
-				respBody := string(respBytes)
-				if !strings.Contains(respBody, expectedResponseSubstring) {
-					return fmt.Errorf("test http get to %s: expected response to contain %q but instead saw:\n%s", route, expectedResponseSubstring, respBody)
-				}
-				return nil
-			}
-
-			canProxy := func() error {
-				return checkRequest(appRoute+"proxy/example.com", 200, "Example Domain")
-			}
-			isReachable := func() error {
-				return checkRequest(appRoute, 200, `{"ListenAddresses":[`)
-			}
-			canPing := func() error {
-				return checkRequest(appRoute+"ping/example.com", 200, "Ping succeeded")
-			}
-			cannotProxy := func() error {
-				return checkRequest(appRoute+"proxy/example.com", 500, "example.com")
-			}
-			cannotPing := func() error {
-				return checkRequest(appRoute+"ping/example.com", 500, "Ping failed to destination: example.com")
-			}
-
+		It("makes the app reachable from the router, and the app can reach the internet only if allowed", func(done Done) {
 			By("checking that the app is reachable via the router")
 			Eventually(isReachable, "10s", "1s").Should(Succeed())
 			Consistently(isReachable, "2s", "0.5s").Should(Succeed())
-
-			By("checking that the app can reach the internet")
-			Consistently(canProxy, "2s", "0.5s").Should(Succeed())
-
-			By("checking that the app can ping the internet")
-			Consistently(canPing, "2s", "0.5s").Should(Succeed())
-
-			By("removing all the original security groups")
-			for _, sg := range originalRunningSecurityGroups {
-				Expect(cf.Cf("unbind-running-security-group", sg).Wait(Timeout_Short)).To(gexec.Exit(0))
-			}
-
-			By("restarting the app")
-			Expect(cf.Cf("restart", appA).Wait(Timeout_Push)).To(gexec.Exit(0))
 
 			By("checking that the app cannot reach the internet using http and dns")
 			Eventually(cannotProxy, "10s", "1s").Should(Succeed())
@@ -134,15 +136,7 @@ var _ = Describe("external connectivity", func() {
 			Consistently(cannotPing, "2s", "0.5s").Should(Succeed())
 
 			By("creating and binding a tcp and udp security group")
-			var err error
-			tcpASGFile, err = testsupport.CreateASGFile(tcpASG())
-			Expect(err).NotTo(HaveOccurred())
-			Expect(cli.CreateSecurityGroup("tcp-asg", tcpASGFile)).To(Succeed())
 			Expect(cli.BindSecurityGroup("tcp-asg", orgName, spaceName)).To(Succeed())
-
-			udpASGFile, err = testsupport.CreateASGFile(udpASG())
-			Expect(err).NotTo(HaveOccurred())
-			Expect(cli.CreateSecurityGroup("udp-asg", udpASGFile)).To(Succeed())
 			Expect(cli.BindSecurityGroup("udp-asg", orgName, spaceName)).To(Succeed())
 
 			By("restarting the app")
@@ -156,9 +150,6 @@ var _ = Describe("external connectivity", func() {
 			Consistently(cannotPing, "2s", "1s").Should(Succeed())
 
 			By("creating and binding an icmp security group")
-			icmpASGFile, err = testsupport.CreateASGFile(icmpASG())
-			Expect(err).NotTo(HaveOccurred())
-			Expect(cli.CreateSecurityGroup("icmp-asg", icmpASGFile)).To(Succeed())
 			Expect(cli.BindSecurityGroup("icmp-asg", orgName, spaceName)).To(Succeed())
 
 			By("removing the tcp security groups")
@@ -213,8 +204,8 @@ func getAllSecurityGroups() []string {
 	return actualGroups
 }
 
-func tcpASG() string {
-	return `
+var testASGs = map[string]string{
+	"tcp": `
 	[
 		{
 			"destination": "0.0.0.0-9.255.255.255",
@@ -242,11 +233,8 @@ func tcpASG() string {
 			"ports": "80"
 		}
 	]
-	`
-}
-
-func udpASG() string {
-	return `
+	`,
+	"udp": `
 	[
 		{
 			"destination": "0.0.0.0-9.255.255.255",
@@ -274,11 +262,8 @@ func udpASG() string {
 			"ports": "53"
 		}
 	]
-	`
-}
-
-func icmpASG() string {
-	return `
+	`,
+	"icmp": `
 	[
 		{
 			"destination": "0.0.0.0-9.255.255.255",
@@ -311,5 +296,5 @@ func icmpASG() string {
 			"code": 0
 		}
 	]
-	`
+	`,
 }
