@@ -61,14 +61,16 @@ function bootMysql {
 	exit 1
 }
 
-if [ ${NO_DB:-"false"} = "true" ]; then
+db=${DB:-"notset"}
+if [ $db = "none" ]; then
   echo "skipping database"
-else
-  if [ ${MYSQL:-"false"} = "true" ]; then
-    bootMysql
-  else
-    bootPostgres
-  fi
+elif [ $db = "mysql" ]; then
+  bootMysql
+elif [ $db = "postgres" ]; then
+  bootPostgres
+elif [ $db = "notset" ]; then
+  echo "missing required env var DB"
+  exit 1
 fi
 
 if [ "${1:-""}" = "" ]; then
