@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"lib/testsupport"
 	"math/rand"
 	"net/http"
 	"policy-server/uaa_client"
@@ -15,6 +14,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 
+	"code.cloudfoundry.org/go-db-helpers/testsupport"
 	"code.cloudfoundry.org/lager/lagertest"
 )
 

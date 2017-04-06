@@ -6,6 +6,9 @@ dependencies:
 
 files:
   - code.cloudfoundry.org/debugserver/*.go # gosub
+  - code.cloudfoundry.org/go-db-helpers/json_client/*.go # gosub
+  - code.cloudfoundry.org/go-db-helpers/marshal/*.go # gosub
+  - code.cloudfoundry.org/go-db-helpers/mutualtls/*.go # gosub
   - code.cloudfoundry.org/lager/*.go # gosub
   - github.com/cloudfoundry/dropsonde/*.go # gosub
   - github.com/cloudfoundry/dropsonde/emitter/*.go # gosub
@@ -36,11 +39,8 @@ files:
   - lib/datastore/*.go # gosub
   - lib/filelock/*.go # gosub
   - lib/flannel/*.go # gosub
-  - lib/json_client/*.go # gosub
-  - lib/marshal/*.go # gosub
   - lib/metrics/*.go # gosub
   - lib/models/*.go # gosub
-  - lib/mutualtls/*.go # gosub
   - lib/policy_client/*.go # gosub
   - lib/poller/*.go # gosub
   - lib/rules/*.go # gosub

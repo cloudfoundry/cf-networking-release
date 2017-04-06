@@ -3,13 +3,14 @@ package handlers_test
 import (
 	"encoding/json"
 	"errors"
-	lfakes "lib/fakes"
 	"net/http"
 	"net/http/httptest"
 	"policy-server/handlers"
 	"policy-server/handlers/fakes"
 	"policy-server/models"
 	"policy-server/uaa_client"
+
+	hfakes "code.cloudfoundry.org/go-db-helpers/fakes"
 
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
@@ -23,7 +24,7 @@ var _ = Describe("PoliciesCleanup", func() {
 		resp              *httptest.ResponseRecorder
 		logger            *lagertest.TestLogger
 		fakePolicyCleaner *fakes.PolicyCleaner
-		fakeMarshaler     *lfakes.Marshaler
+		fakeMarshaler     *hfakes.Marshaler
 		fakeErrorResponse *fakes.ErrorResponse
 		policies          []models.Policy
 		tokenData         uaa_client.CheckTokenResponse
@@ -42,7 +43,7 @@ var _ = Describe("PoliciesCleanup", func() {
 
 		logger = lagertest.NewTestLogger("test")
 
-		fakeMarshaler = &lfakes.Marshaler{}
+		fakeMarshaler = &hfakes.Marshaler{}
 		fakeMarshaler.MarshalStub = json.Marshal
 		fakePolicyCleaner = &fakes.PolicyCleaner{}
 		fakeErrorResponse = &fakes.ErrorResponse{}

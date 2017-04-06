@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"lib/mutualtls"
 	"net/http"
 	"netmon/integration/fakes"
 	"os"
 	"os/exec"
 	"strings"
 	"vxlan-policy-agent/config"
+
+	"code.cloudfoundry.org/go-db-helpers/mutualtls"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

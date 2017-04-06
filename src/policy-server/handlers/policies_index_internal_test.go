@@ -9,7 +9,7 @@ import (
 	"policy-server/handlers/fakes"
 	"policy-server/models"
 
-	lfakes "lib/fakes"
+	hfakes "code.cloudfoundry.org/go-db-helpers/fakes"
 
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
@@ -24,7 +24,7 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		fakeStore         *fakes.Store
 		fakeErrorResponse *fakes.ErrorResponse
 		logger            *lagertest.TestLogger
-		marshaler         *lfakes.Marshaler
+		marshaler         *hfakes.Marshaler
 	)
 
 	BeforeEach(func() {
@@ -54,7 +54,7 @@ var _ = Describe("PoliciesIndexInternal", func() {
 			},
 		}}
 
-		marshaler = &lfakes.Marshaler{}
+		marshaler = &hfakes.Marshaler{}
 		marshaler.MarshalStub = json.Marshal
 		fakeStore = &fakes.Store{}
 		fakeStore.AllReturns(allPolicies, nil)

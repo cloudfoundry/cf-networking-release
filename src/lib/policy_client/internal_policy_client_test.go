@@ -3,9 +3,10 @@ package policy_client_test
 import (
 	"encoding/json"
 	"errors"
-	"lib/fakes"
 	"lib/models"
 	"lib/policy_client"
+
+	hfakes "code.cloudfoundry.org/go-db-helpers/fakes"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -14,11 +15,11 @@ import (
 var _ = Describe("InternalClient", func() {
 	var (
 		client     *policy_client.InternalClient
-		jsonClient *fakes.JSONClient
+		jsonClient *hfakes.JSONClient
 	)
 
 	BeforeEach(func() {
-		jsonClient = &fakes.JSONClient{}
+		jsonClient = &hfakes.JSONClient{}
 		client = &policy_client.InternalClient{
 			JsonClient: jsonClient,
 		}

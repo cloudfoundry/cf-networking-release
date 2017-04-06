@@ -17,6 +17,9 @@ type Serializer struct {
 	decodeAllReturns struct {
 		result1 error
 	}
+	decodeAllReturnsOnCall map[int]struct {
+		result1 error
+	}
 	EncodeAndOverwriteStub        func(file serial.OverwriteableFile, outData interface{}) error
 	encodeAndOverwriteMutex       sync.RWMutex
 	encodeAndOverwriteArgsForCall []struct {
@@ -26,12 +29,16 @@ type Serializer struct {
 	encodeAndOverwriteReturns struct {
 		result1 error
 	}
+	encodeAndOverwriteReturnsOnCall map[int]struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
 func (fake *Serializer) DecodeAll(file io.ReadSeeker, outData interface{}) error {
 	fake.decodeAllMutex.Lock()
+	ret, specificReturn := fake.decodeAllReturnsOnCall[len(fake.decodeAllArgsForCall)]
 	fake.decodeAllArgsForCall = append(fake.decodeAllArgsForCall, struct {
 		file    io.ReadSeeker
 		outData interface{}
@@ -40,9 +47,11 @@ func (fake *Serializer) DecodeAll(file io.ReadSeeker, outData interface{}) error
 	fake.decodeAllMutex.Unlock()
 	if fake.DecodeAllStub != nil {
 		return fake.DecodeAllStub(file, outData)
-	} else {
-		return fake.decodeAllReturns.result1
 	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.decodeAllReturns.result1
 }
 
 func (fake *Serializer) DecodeAllCallCount() int {
@@ -64,8 +73,21 @@ func (fake *Serializer) DecodeAllReturns(result1 error) {
 	}{result1}
 }
 
+func (fake *Serializer) DecodeAllReturnsOnCall(i int, result1 error) {
+	fake.DecodeAllStub = nil
+	if fake.decodeAllReturnsOnCall == nil {
+		fake.decodeAllReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.decodeAllReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *Serializer) EncodeAndOverwrite(file serial.OverwriteableFile, outData interface{}) error {
 	fake.encodeAndOverwriteMutex.Lock()
+	ret, specificReturn := fake.encodeAndOverwriteReturnsOnCall[len(fake.encodeAndOverwriteArgsForCall)]
 	fake.encodeAndOverwriteArgsForCall = append(fake.encodeAndOverwriteArgsForCall, struct {
 		file    serial.OverwriteableFile
 		outData interface{}
@@ -74,9 +96,11 @@ func (fake *Serializer) EncodeAndOverwrite(file serial.OverwriteableFile, outDat
 	fake.encodeAndOverwriteMutex.Unlock()
 	if fake.EncodeAndOverwriteStub != nil {
 		return fake.EncodeAndOverwriteStub(file, outData)
-	} else {
-		return fake.encodeAndOverwriteReturns.result1
 	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.encodeAndOverwriteReturns.result1
 }
 
 func (fake *Serializer) EncodeAndOverwriteCallCount() int {
@@ -94,6 +118,18 @@ func (fake *Serializer) EncodeAndOverwriteArgsForCall(i int) (serial.Overwriteab
 func (fake *Serializer) EncodeAndOverwriteReturns(result1 error) {
 	fake.EncodeAndOverwriteStub = nil
 	fake.encodeAndOverwriteReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *Serializer) EncodeAndOverwriteReturnsOnCall(i int, result1 error) {
+	fake.EncodeAndOverwriteStub = nil
+	if fake.encodeAndOverwriteReturnsOnCall == nil {
+		fake.encodeAndOverwriteReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.encodeAndOverwriteReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }

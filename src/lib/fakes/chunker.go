@@ -16,6 +16,9 @@ type Chunker struct {
 	chunkReturns struct {
 		result1 [][]models.Policy
 	}
+	chunkReturnsOnCall map[int]struct {
+		result1 [][]models.Policy
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -27,6 +30,7 @@ func (fake *Chunker) Chunk(allPolicies []models.Policy) [][]models.Policy {
 		copy(allPoliciesCopy, allPolicies)
 	}
 	fake.chunkMutex.Lock()
+	ret, specificReturn := fake.chunkReturnsOnCall[len(fake.chunkArgsForCall)]
 	fake.chunkArgsForCall = append(fake.chunkArgsForCall, struct {
 		allPolicies []models.Policy
 	}{allPoliciesCopy})
@@ -34,6 +38,9 @@ func (fake *Chunker) Chunk(allPolicies []models.Policy) [][]models.Policy {
 	fake.chunkMutex.Unlock()
 	if fake.ChunkStub != nil {
 		return fake.ChunkStub(allPolicies)
+	}
+	if specificReturn {
+		return ret.result1
 	}
 	return fake.chunkReturns.result1
 }
@@ -53,6 +60,18 @@ func (fake *Chunker) ChunkArgsForCall(i int) []models.Policy {
 func (fake *Chunker) ChunkReturns(result1 [][]models.Policy) {
 	fake.ChunkStub = nil
 	fake.chunkReturns = struct {
+		result1 [][]models.Policy
+	}{result1}
+}
+
+func (fake *Chunker) ChunkReturnsOnCall(i int, result1 [][]models.Policy) {
+	fake.ChunkStub = nil
+	if fake.chunkReturnsOnCall == nil {
+		fake.chunkReturnsOnCall = make(map[int]struct {
+			result1 [][]models.Policy
+		})
+	}
+	fake.chunkReturnsOnCall[i] = struct {
 		result1 [][]models.Policy
 	}{result1}
 }

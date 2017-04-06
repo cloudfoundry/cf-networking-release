@@ -11,10 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"lib/json_client"
-	"lib/marshal"
 	"lib/metrics"
-	"lib/mutualtls"
 	"lib/nonmutualtls"
 	"lib/poller"
 
@@ -28,6 +25,9 @@ import (
 
 	"code.cloudfoundry.org/debugserver"
 	"code.cloudfoundry.org/go-db-helpers/db"
+	"code.cloudfoundry.org/go-db-helpers/json_client"
+	"code.cloudfoundry.org/go-db-helpers/marshal"
+	"code.cloudfoundry.org/go-db-helpers/mutualtls"
 	"code.cloudfoundry.org/lager"
 	"github.com/cloudfoundry/dropsonde"
 	"github.com/jmoiron/sqlx"

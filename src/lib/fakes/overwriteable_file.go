@@ -16,12 +16,20 @@ type OverwriteableFile struct {
 		result1 int
 		result2 error
 	}
+	readReturnsOnCall map[int]struct {
+		result1 int
+		result2 error
+	}
 	WriteStub        func(p []byte) (n int, err error)
 	writeMutex       sync.RWMutex
 	writeArgsForCall []struct {
 		p []byte
 	}
 	writeReturns struct {
+		result1 int
+		result2 error
+	}
+	writeReturnsOnCall map[int]struct {
 		result1 int
 		result2 error
 	}
@@ -35,12 +43,19 @@ type OverwriteableFile struct {
 		result1 int64
 		result2 error
 	}
+	seekReturnsOnCall map[int]struct {
+		result1 int64
+		result2 error
+	}
 	TruncateStub        func(size int64) error
 	truncateMutex       sync.RWMutex
 	truncateArgsForCall []struct {
 		size int64
 	}
 	truncateReturns struct {
+		result1 error
+	}
+	truncateReturnsOnCall map[int]struct {
 		result1 error
 	}
 	invocations      map[string][][]interface{}
@@ -54,6 +69,7 @@ func (fake *OverwriteableFile) Read(p []byte) (n int, err error) {
 		copy(pCopy, p)
 	}
 	fake.readMutex.Lock()
+	ret, specificReturn := fake.readReturnsOnCall[len(fake.readArgsForCall)]
 	fake.readArgsForCall = append(fake.readArgsForCall, struct {
 		p []byte
 	}{pCopy})
@@ -61,9 +77,11 @@ func (fake *OverwriteableFile) Read(p []byte) (n int, err error) {
 	fake.readMutex.Unlock()
 	if fake.ReadStub != nil {
 		return fake.ReadStub(p)
-	} else {
-		return fake.readReturns.result1, fake.readReturns.result2
 	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.readReturns.result1, fake.readReturns.result2
 }
 
 func (fake *OverwriteableFile) ReadCallCount() int {
@@ -86,6 +104,20 @@ func (fake *OverwriteableFile) ReadReturns(result1 int, result2 error) {
 	}{result1, result2}
 }
 
+func (fake *OverwriteableFile) ReadReturnsOnCall(i int, result1 int, result2 error) {
+	fake.ReadStub = nil
+	if fake.readReturnsOnCall == nil {
+		fake.readReturnsOnCall = make(map[int]struct {
+			result1 int
+			result2 error
+		})
+	}
+	fake.readReturnsOnCall[i] = struct {
+		result1 int
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *OverwriteableFile) Write(p []byte) (n int, err error) {
 	var pCopy []byte
 	if p != nil {
@@ -93,6 +125,7 @@ func (fake *OverwriteableFile) Write(p []byte) (n int, err error) {
 		copy(pCopy, p)
 	}
 	fake.writeMutex.Lock()
+	ret, specificReturn := fake.writeReturnsOnCall[len(fake.writeArgsForCall)]
 	fake.writeArgsForCall = append(fake.writeArgsForCall, struct {
 		p []byte
 	}{pCopy})
@@ -100,9 +133,11 @@ func (fake *OverwriteableFile) Write(p []byte) (n int, err error) {
 	fake.writeMutex.Unlock()
 	if fake.WriteStub != nil {
 		return fake.WriteStub(p)
-	} else {
-		return fake.writeReturns.result1, fake.writeReturns.result2
 	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.writeReturns.result1, fake.writeReturns.result2
 }
 
 func (fake *OverwriteableFile) WriteCallCount() int {
@@ -125,8 +160,23 @@ func (fake *OverwriteableFile) WriteReturns(result1 int, result2 error) {
 	}{result1, result2}
 }
 
+func (fake *OverwriteableFile) WriteReturnsOnCall(i int, result1 int, result2 error) {
+	fake.WriteStub = nil
+	if fake.writeReturnsOnCall == nil {
+		fake.writeReturnsOnCall = make(map[int]struct {
+			result1 int
+			result2 error
+		})
+	}
+	fake.writeReturnsOnCall[i] = struct {
+		result1 int
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *OverwriteableFile) Seek(offset int64, whence int) (int64, error) {
 	fake.seekMutex.Lock()
+	ret, specificReturn := fake.seekReturnsOnCall[len(fake.seekArgsForCall)]
 	fake.seekArgsForCall = append(fake.seekArgsForCall, struct {
 		offset int64
 		whence int
@@ -135,9 +185,11 @@ func (fake *OverwriteableFile) Seek(offset int64, whence int) (int64, error) {
 	fake.seekMutex.Unlock()
 	if fake.SeekStub != nil {
 		return fake.SeekStub(offset, whence)
-	} else {
-		return fake.seekReturns.result1, fake.seekReturns.result2
 	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.seekReturns.result1, fake.seekReturns.result2
 }
 
 func (fake *OverwriteableFile) SeekCallCount() int {
@@ -160,8 +212,23 @@ func (fake *OverwriteableFile) SeekReturns(result1 int64, result2 error) {
 	}{result1, result2}
 }
 
+func (fake *OverwriteableFile) SeekReturnsOnCall(i int, result1 int64, result2 error) {
+	fake.SeekStub = nil
+	if fake.seekReturnsOnCall == nil {
+		fake.seekReturnsOnCall = make(map[int]struct {
+			result1 int64
+			result2 error
+		})
+	}
+	fake.seekReturnsOnCall[i] = struct {
+		result1 int64
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *OverwriteableFile) Truncate(size int64) error {
 	fake.truncateMutex.Lock()
+	ret, specificReturn := fake.truncateReturnsOnCall[len(fake.truncateArgsForCall)]
 	fake.truncateArgsForCall = append(fake.truncateArgsForCall, struct {
 		size int64
 	}{size})
@@ -169,9 +236,11 @@ func (fake *OverwriteableFile) Truncate(size int64) error {
 	fake.truncateMutex.Unlock()
 	if fake.TruncateStub != nil {
 		return fake.TruncateStub(size)
-	} else {
-		return fake.truncateReturns.result1
 	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.truncateReturns.result1
 }
 
 func (fake *OverwriteableFile) TruncateCallCount() int {
@@ -189,6 +258,18 @@ func (fake *OverwriteableFile) TruncateArgsForCall(i int) int64 {
 func (fake *OverwriteableFile) TruncateReturns(result1 error) {
 	fake.TruncateStub = nil
 	fake.truncateReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *OverwriteableFile) TruncateReturnsOnCall(i int, result1 error) {
+	fake.TruncateStub = nil
+	if fake.truncateReturnsOnCall == nil {
+		fake.truncateReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.truncateReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }

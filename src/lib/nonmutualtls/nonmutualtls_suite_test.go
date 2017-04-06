@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"lib/testsupport"
 	"math/rand"
 	"os"
 	"os/exec"
+
+	"code.cloudfoundry.org/go-db-helpers/testsupport"
 
 	. "github.com/onsi/ginkgo"
 	"github.com/onsi/ginkgo/config"

@@ -1,26 +1,5 @@
 #!/bin/bash
 set -e -u
 
-ROOT_DIR_PATH=$(cd $(dirname $0)/.. && pwd)
-cd $ROOT_DIR_PATH
-
-if [ ${MYSQL:-"false"} = "true" ]; then
-  docker run --privileged \
-     --rm \
-     -v $PWD:/cf-networking-release \
-     -e GOPATH=/cf-networking-release \
-     -e NO_DB="${NO_DB:-""}" \
-     -e MYSQL=true \
-     -w / \
-     c2cnetworking/dev-mysql \
-     /cf-networking-release/scripts/unit-and-integration-tests.sh "$@"
-else
-  docker run --privileged \
-     --rm \
-     -v $PWD:/cf-networking-release \
-     -e GOPATH=/cf-networking-release \
-     -e NO_DB="${NO_DB:-""}" \
-     -w / \
-     c2cnetworking/dev-postgres \
-     /cf-networking-release/scripts/unit-and-integration-tests.sh "$@"
-fi
+cd $(dirname $0)
+./docker-shell ./cf-networking-release/scripts/unit-and-integration-tests.sh "$@"

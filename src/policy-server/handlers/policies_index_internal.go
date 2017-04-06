@@ -1,12 +1,12 @@
 package handlers
 
 import (
-	"lib/marshal"
 	"net/http"
 	"net/url"
 	"policy-server/models"
 	"strings"
 
+	"code.cloudfoundry.org/go-db-helpers/marshal"
 	"code.cloudfoundry.org/lager"
 )
 

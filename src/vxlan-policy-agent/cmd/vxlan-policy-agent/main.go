@@ -9,7 +9,6 @@ import (
 	"lib/filelock"
 	"lib/flannel"
 	"lib/metrics"
-	"lib/mutualtls"
 	"lib/policy_client"
 	"lib/poller"
 	"lib/rules"
@@ -27,6 +26,7 @@ import (
 	"vxlan-policy-agent/planner"
 
 	"code.cloudfoundry.org/debugserver"
+	"code.cloudfoundry.org/go-db-helpers/mutualtls"
 	"code.cloudfoundry.org/lager"
 	"github.com/cloudfoundry/dropsonde"
 	"github.com/coreos/go-iptables/iptables"

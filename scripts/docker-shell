@@ -4,23 +4,20 @@ set -e -u
 ROOT_DIR_PATH=$(cd $(dirname $0)/.. && pwd)
 cd $ROOT_DIR_PATH
 
-if [ ${MYSQL:-"false"} = "true" ]; then
-  docker run --privileged \
-     --rm \
-     -it \
-     -v $PWD:/cf-networking-release \
-     -e GOPATH=/cf-networking-release \
-     -w /cf-networking-release \
-     c2cnetworking/dev-mysql \
-     /bin/bash
+db=${DB:-"postgres"} # if not set, default to postgres
 
-else
-  docker run --privileged \
-     --rm \
-     -it \
-     -v $PWD:/cf-networking-release \
-     -e GOPATH=/cf-networking-release \
-     -w /cf-networking-release \
-     c2cnetworking/dev-postgres \
-     /bin/bash
+docker_image=c2cnetworking/dev-$db
+if [ $db = "none" ]; then
+  docker_image=c2cnetworking/dev-postgres
 fi
+
+docker run \
+   --rm \
+   -it \
+   --privileged \
+   -v $PWD:/cf-networking-release \
+   -e GOPATH=/cf-networking-release \
+   -e DB=$db \
+   -w / \
+   $docker_image \
+   /bin/bash "$@"

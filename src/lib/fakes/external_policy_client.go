@@ -17,6 +17,10 @@ type ExternalPolicyClient struct {
 		result1 []models.Policy
 		result2 error
 	}
+	getPoliciesReturnsOnCall map[int]struct {
+		result1 []models.Policy
+		result2 error
+	}
 	GetPoliciesByIDStub        func(token string, ids ...string) ([]models.Policy, error)
 	getPoliciesByIDMutex       sync.RWMutex
 	getPoliciesByIDArgsForCall []struct {
@@ -24,6 +28,10 @@ type ExternalPolicyClient struct {
 		ids   []string
 	}
 	getPoliciesByIDReturns struct {
+		result1 []models.Policy
+		result2 error
+	}
+	getPoliciesByIDReturnsOnCall map[int]struct {
 		result1 []models.Policy
 		result2 error
 	}
@@ -36,6 +44,9 @@ type ExternalPolicyClient struct {
 	deletePoliciesReturns struct {
 		result1 error
 	}
+	deletePoliciesReturnsOnCall map[int]struct {
+		result1 error
+	}
 	AddPoliciesStub        func(token string, policies []models.Policy) error
 	addPoliciesMutex       sync.RWMutex
 	addPoliciesArgsForCall []struct {
@@ -45,12 +56,16 @@ type ExternalPolicyClient struct {
 	addPoliciesReturns struct {
 		result1 error
 	}
+	addPoliciesReturnsOnCall map[int]struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
 func (fake *ExternalPolicyClient) GetPolicies(token string) ([]models.Policy, error) {
 	fake.getPoliciesMutex.Lock()
+	ret, specificReturn := fake.getPoliciesReturnsOnCall[len(fake.getPoliciesArgsForCall)]
 	fake.getPoliciesArgsForCall = append(fake.getPoliciesArgsForCall, struct {
 		token string
 	}{token})
@@ -58,6 +73,9 @@ func (fake *ExternalPolicyClient) GetPolicies(token string) ([]models.Policy, er
 	fake.getPoliciesMutex.Unlock()
 	if fake.GetPoliciesStub != nil {
 		return fake.GetPoliciesStub(token)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
 	}
 	return fake.getPoliciesReturns.result1, fake.getPoliciesReturns.result2
 }
@@ -82,8 +100,23 @@ func (fake *ExternalPolicyClient) GetPoliciesReturns(result1 []models.Policy, re
 	}{result1, result2}
 }
 
+func (fake *ExternalPolicyClient) GetPoliciesReturnsOnCall(i int, result1 []models.Policy, result2 error) {
+	fake.GetPoliciesStub = nil
+	if fake.getPoliciesReturnsOnCall == nil {
+		fake.getPoliciesReturnsOnCall = make(map[int]struct {
+			result1 []models.Policy
+			result2 error
+		})
+	}
+	fake.getPoliciesReturnsOnCall[i] = struct {
+		result1 []models.Policy
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *ExternalPolicyClient) GetPoliciesByID(token string, ids ...string) ([]models.Policy, error) {
 	fake.getPoliciesByIDMutex.Lock()
+	ret, specificReturn := fake.getPoliciesByIDReturnsOnCall[len(fake.getPoliciesByIDArgsForCall)]
 	fake.getPoliciesByIDArgsForCall = append(fake.getPoliciesByIDArgsForCall, struct {
 		token string
 		ids   []string
@@ -92,6 +125,9 @@ func (fake *ExternalPolicyClient) GetPoliciesByID(token string, ids ...string) (
 	fake.getPoliciesByIDMutex.Unlock()
 	if fake.GetPoliciesByIDStub != nil {
 		return fake.GetPoliciesByIDStub(token, ids...)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
 	}
 	return fake.getPoliciesByIDReturns.result1, fake.getPoliciesByIDReturns.result2
 }
@@ -116,6 +152,20 @@ func (fake *ExternalPolicyClient) GetPoliciesByIDReturns(result1 []models.Policy
 	}{result1, result2}
 }
 
+func (fake *ExternalPolicyClient) GetPoliciesByIDReturnsOnCall(i int, result1 []models.Policy, result2 error) {
+	fake.GetPoliciesByIDStub = nil
+	if fake.getPoliciesByIDReturnsOnCall == nil {
+		fake.getPoliciesByIDReturnsOnCall = make(map[int]struct {
+			result1 []models.Policy
+			result2 error
+		})
+	}
+	fake.getPoliciesByIDReturnsOnCall[i] = struct {
+		result1 []models.Policy
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *ExternalPolicyClient) DeletePolicies(token string, policies []models.Policy) error {
 	var policiesCopy []models.Policy
 	if policies != nil {
@@ -123,6 +173,7 @@ func (fake *ExternalPolicyClient) DeletePolicies(token string, policies []models
 		copy(policiesCopy, policies)
 	}
 	fake.deletePoliciesMutex.Lock()
+	ret, specificReturn := fake.deletePoliciesReturnsOnCall[len(fake.deletePoliciesArgsForCall)]
 	fake.deletePoliciesArgsForCall = append(fake.deletePoliciesArgsForCall, struct {
 		token    string
 		policies []models.Policy
@@ -131,6 +182,9 @@ func (fake *ExternalPolicyClient) DeletePolicies(token string, policies []models
 	fake.deletePoliciesMutex.Unlock()
 	if fake.DeletePoliciesStub != nil {
 		return fake.DeletePoliciesStub(token, policies)
+	}
+	if specificReturn {
+		return ret.result1
 	}
 	return fake.deletePoliciesReturns.result1
 }
@@ -154,6 +208,18 @@ func (fake *ExternalPolicyClient) DeletePoliciesReturns(result1 error) {
 	}{result1}
 }
 
+func (fake *ExternalPolicyClient) DeletePoliciesReturnsOnCall(i int, result1 error) {
+	fake.DeletePoliciesStub = nil
+	if fake.deletePoliciesReturnsOnCall == nil {
+		fake.deletePoliciesReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.deletePoliciesReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *ExternalPolicyClient) AddPolicies(token string, policies []models.Policy) error {
 	var policiesCopy []models.Policy
 	if policies != nil {
@@ -161,6 +227,7 @@ func (fake *ExternalPolicyClient) AddPolicies(token string, policies []models.Po
 		copy(policiesCopy, policies)
 	}
 	fake.addPoliciesMutex.Lock()
+	ret, specificReturn := fake.addPoliciesReturnsOnCall[len(fake.addPoliciesArgsForCall)]
 	fake.addPoliciesArgsForCall = append(fake.addPoliciesArgsForCall, struct {
 		token    string
 		policies []models.Policy
@@ -169,6 +236,9 @@ func (fake *ExternalPolicyClient) AddPolicies(token string, policies []models.Po
 	fake.addPoliciesMutex.Unlock()
 	if fake.AddPoliciesStub != nil {
 		return fake.AddPoliciesStub(token, policies)
+	}
+	if specificReturn {
+		return ret.result1
 	}
 	return fake.addPoliciesReturns.result1
 }
@@ -188,6 +258,18 @@ func (fake *ExternalPolicyClient) AddPoliciesArgsForCall(i int) (string, []model
 func (fake *ExternalPolicyClient) AddPoliciesReturns(result1 error) {
 	fake.AddPoliciesStub = nil
 	fake.addPoliciesReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *ExternalPolicyClient) AddPoliciesReturnsOnCall(i int, result1 error) {
+	fake.AddPoliciesStub = nil
+	if fake.addPoliciesReturnsOnCall == nil {
+		fake.addPoliciesReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.addPoliciesReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }

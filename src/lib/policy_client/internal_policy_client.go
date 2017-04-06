@@ -2,10 +2,10 @@ package policy_client
 
 import (
 	"errors"
-	"lib/json_client"
 	"lib/models"
 	"strings"
 
+	"code.cloudfoundry.org/go-db-helpers/json_client"
 	"code.cloudfoundry.org/lager"
 )
 

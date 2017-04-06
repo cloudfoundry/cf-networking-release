@@ -4,11 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"lib/testsupport"
 	"math/rand"
 	"os"
 	"os/exec"
 	"vxlan-policy-agent/config"
+
+	"code.cloudfoundry.org/go-db-helpers/testsupport"
 
 	. "github.com/onsi/ginkgo"
 	ginkgoConfig "github.com/onsi/ginkgo/config"

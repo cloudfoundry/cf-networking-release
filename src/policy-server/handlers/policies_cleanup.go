@@ -1,11 +1,11 @@
 package handlers
 
 import (
-	"lib/marshal"
 	"net/http"
 	"policy-server/models"
 	"policy-server/uaa_client"
 
+	"code.cloudfoundry.org/go-db-helpers/marshal"
 	"code.cloudfoundry.org/lager"
 )
 

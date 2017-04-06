@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"lib/models"
-	"lib/mutualtls"
 	"lib/policy_client"
 	"math/rand"
 	"net/http"
@@ -18,6 +17,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
 
+	"code.cloudfoundry.org/go-db-helpers/mutualtls"
 	"code.cloudfoundry.org/lager"
 )
 

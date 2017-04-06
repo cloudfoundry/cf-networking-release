@@ -2,13 +2,13 @@ package cc_client
 
 import (
 	"fmt"
-	"lib/json_client"
 	"net/http"
 	"net/url"
 	"policy-server/models"
 	"strconv"
 	"strings"
 
+	"code.cloudfoundry.org/go-db-helpers/json_client"
 	"code.cloudfoundry.org/lager"
 )
 

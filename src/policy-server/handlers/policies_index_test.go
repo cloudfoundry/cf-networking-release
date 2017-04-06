@@ -10,7 +10,7 @@ import (
 	"policy-server/models"
 	"policy-server/uaa_client"
 
-	lfakes "lib/fakes"
+	hfakes "code.cloudfoundry.org/go-db-helpers/fakes"
 
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
@@ -29,7 +29,7 @@ var _ = Describe("Policies index handler", func() {
 		fakePolicyFilter  *fakes.PolicyFilter
 		fakeErrorResponse *fakes.ErrorResponse
 		logger            *lagertest.TestLogger
-		marshaler         *lfakes.Marshaler
+		marshaler         *hfakes.Marshaler
 		token             uaa_client.CheckTokenResponse
 	)
 
@@ -89,7 +89,7 @@ var _ = Describe("Policies index handler", func() {
 		request, err = http.NewRequest("GET", "/networking/v0/external/policies", nil)
 		Expect(err).NotTo(HaveOccurred())
 
-		marshaler = &lfakes.Marshaler{}
+		marshaler = &hfakes.Marshaler{}
 		marshaler.MarshalStub = json.Marshal
 
 		fakeStore = &fakes.Store{}

@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"lib/json_client"
 	"net/http"
 
+	"code.cloudfoundry.org/go-db-helpers/json_client"
 	"code.cloudfoundry.org/lager"
 )
 

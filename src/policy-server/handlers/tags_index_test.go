@@ -10,7 +10,7 @@ import (
 	"policy-server/models"
 	"policy-server/uaa_client"
 
-	lfakes "lib/fakes"
+	hfakes "code.cloudfoundry.org/go-db-helpers/fakes"
 
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
@@ -26,7 +26,7 @@ var _ = Describe("Tags index handler", func() {
 		fakeStore         *fakes.Store
 		fakeErrorResponse *fakes.ErrorResponse
 		logger            *lagertest.TestLogger
-		marshaler         *lfakes.Marshaler
+		marshaler         *hfakes.Marshaler
 		tokenData         uaa_client.CheckTokenResponse
 	)
 
@@ -43,7 +43,7 @@ var _ = Describe("Tags index handler", func() {
 		request, err = http.NewRequest("GET", "/networking/v0/external/tags", nil)
 		Expect(err).NotTo(HaveOccurred())
 
-		marshaler = &lfakes.Marshaler{}
+		marshaler = &hfakes.Marshaler{}
 		marshaler.MarshalStub = json.Marshal
 
 		fakeStore = &fakes.Store{}

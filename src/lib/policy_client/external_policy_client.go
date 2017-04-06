@@ -2,11 +2,11 @@ package policy_client
 
 import (
 	"fmt"
-	"lib/json_client"
 	"lib/models"
 	"net/http"
 	"strings"
 
+	"code.cloudfoundry.org/go-db-helpers/json_client"
 	"code.cloudfoundry.org/lager"
 )
 

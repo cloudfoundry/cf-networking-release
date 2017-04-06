@@ -18,6 +18,8 @@ files:
   - cli-plugin/styles/*.go # gosub
   - code.cloudfoundry.org/cli/plugin/*.go # gosub
   - code.cloudfoundry.org/cli/plugin/models/*.go # gosub
+  - code.cloudfoundry.org/go-db-helpers/json_client/*.go # gosub
+  - code.cloudfoundry.org/go-db-helpers/marshal/*.go # gosub
   - code.cloudfoundry.org/lager/*.go # gosub
   - code.cloudfoundry.org/lager/lagertest/*.go # gosub
   - github.com/cloudfoundry-incubator/cf-test-helpers/cf/*.go # gosub
@@ -64,8 +66,6 @@ files:
   - github.com/pivotal-cf-experimental/warrant/internal/network/*.go # gosub
   - github.com/pivotal-cf-experimental/warrant/vendor/github.com/dgrijalva/jwt-go/*.go # gosub
   - gopkg.in/yaml.v2/*.go # gosub
-  - lib/json_client/*.go # gosub
-  - lib/marshal/*.go # gosub
   - lib/models/*.go # gosub
   - lib/policy_client/*.go # gosub
   - lib/testsupport/*.go # gosub

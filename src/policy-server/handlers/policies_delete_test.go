@@ -4,14 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	lfakes "lib/fakes"
-	"lib/testsupport"
 	"net/http"
 	"net/http/httptest"
 	"policy-server/handlers"
 	"policy-server/handlers/fakes"
 	"policy-server/models"
 	"policy-server/uaa_client"
+
+	hfakes "code.cloudfoundry.org/go-db-helpers/fakes"
+	"code.cloudfoundry.org/go-db-helpers/testsupport"
 
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
@@ -27,7 +28,7 @@ var _ = Describe("PoliciesDelete", func() {
 		resp              *httptest.ResponseRecorder
 		fakeStore         *fakes.Store
 		logger            *lagertest.TestLogger
-		fakeUnmarshaler   *lfakes.Unmarshaler
+		fakeUnmarshaler   *hfakes.Unmarshaler
 		expectedPolicies  []models.Policy
 		fakeValidator     *fakes.Validator
 		fakePolicyGuard   *fakes.PolicyGuard
@@ -58,7 +59,7 @@ var _ = Describe("PoliciesDelete", func() {
 		fakeValidator = &fakes.Validator{}
 		fakePolicyGuard = &fakes.PolicyGuard{}
 		logger = lagertest.NewTestLogger("test")
-		fakeUnmarshaler = &lfakes.Unmarshaler{}
+		fakeUnmarshaler = &hfakes.Unmarshaler{}
 		fakeUnmarshaler.UnmarshalStub = json.Unmarshal
 		fakeErrorResponse = &fakes.ErrorResponse{}
 		handler = &handlers.PoliciesDelete{

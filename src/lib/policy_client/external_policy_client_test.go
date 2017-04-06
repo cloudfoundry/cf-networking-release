@@ -4,10 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"lib/fakes"
-	"lib/json_client"
 	"lib/models"
 	"lib/policy_client"
 	"net/http"
+
+	hfakes "code.cloudfoundry.org/go-db-helpers/fakes"
+
+	"code.cloudfoundry.org/go-db-helpers/json_client"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -17,11 +20,11 @@ var _ = Describe("ExternalClient", func() {
 	var (
 		client      *policy_client.ExternalClient
 		fakeChunker *fakes.Chunker
-		jsonClient  *fakes.JSONClient
+		jsonClient  *hfakes.JSONClient
 	)
 
 	BeforeEach(func() {
-		jsonClient = &fakes.JSONClient{}
+		jsonClient = &hfakes.JSONClient{}
 		fakeChunker = &fakes.Chunker{}
 		fakeChunker.ChunkReturns([][]models.Policy{
 			[]models.Policy{

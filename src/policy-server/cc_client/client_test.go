@@ -3,8 +3,6 @@ package cc_client_test
 import (
 	"encoding/json"
 	"errors"
-	"lib/fakes"
-	"lib/json_client"
 	"net/http"
 	"policy-server/cc_client"
 	"policy-server/cc_client/fixtures"
@@ -13,6 +11,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"code.cloudfoundry.org/go-db-helpers/fakes"
+	"code.cloudfoundry.org/go-db-helpers/json_client"
 	"code.cloudfoundry.org/lager/lagertest"
 )
 
