@@ -108,7 +108,7 @@ var _ = Describe("Garden External Networker errors", func() {
 
 				Eventually(session).Should(gexec.Exit(1))
 				Expect(session.Out.Contents()).To(BeEmpty())
-				Expect(session.Err.Contents()).To(ContainSubstring(`cannot unmarshal string into Go value of type int`))
+				Expect(session.Err.Contents()).To(MatchRegexp(`cannot unmarshal string into Go.*type int`))
 			})
 		})
 
