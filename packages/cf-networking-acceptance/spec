@@ -18,13 +18,20 @@ files:
   - cli-plugin/styles/*.go # gosub
   - code.cloudfoundry.org/cli/plugin/*.go # gosub
   - code.cloudfoundry.org/cli/plugin/models/*.go # gosub
+  - code.cloudfoundry.org/go-db-helpers/db/*.go # gosub
   - code.cloudfoundry.org/go-db-helpers/json_client/*.go # gosub
   - code.cloudfoundry.org/go-db-helpers/marshal/*.go # gosub
+  - code.cloudfoundry.org/go-db-helpers/testsupport/*.go # gosub
   - code.cloudfoundry.org/lager/*.go # gosub
   - code.cloudfoundry.org/lager/lagertest/*.go # gosub
   - github.com/cloudfoundry-incubator/cf-test-helpers/cf/*.go # gosub
   - github.com/cloudfoundry-incubator/cf-test-helpers/helpers/*.go # gosub
   - github.com/cloudfoundry-incubator/cf-test-helpers/runner/*.go # gosub
+  - github.com/go-sql-driver/mysql/*.go # gosub
+  - github.com/jmoiron/sqlx/*.go # gosub
+  - github.com/jmoiron/sqlx/reflectx/*.go # gosub
+  - github.com/lib/pq/*.go # gosub
+  - github.com/lib/pq/oid/*.go # gosub
   - github.com/onsi/ginkgo/*.go # gosub
   - github.com/onsi/ginkgo/config/*.go # gosub
   - github.com/onsi/ginkgo/ginkgo/*.go # gosub
