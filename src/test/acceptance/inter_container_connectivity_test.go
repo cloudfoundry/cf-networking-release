@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"lib/testsupport"
 	"net"
 	"net/http"
 	"os"
 	"os/exec"
 	"time"
+
+	"code.cloudfoundry.org/go-db-helpers/testsupport"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/helpers"

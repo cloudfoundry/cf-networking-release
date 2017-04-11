@@ -4,12 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"lib/testsupport"
 	"math/rand"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"time"
+
+	"code.cloudfoundry.org/go-db-helpers/testsupport"
 
 	pusherConfig "cf-pusher/config"
 

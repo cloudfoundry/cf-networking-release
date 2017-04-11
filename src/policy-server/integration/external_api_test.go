@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"lib/testsupport"
 	"math/rand"
 	"net/http"
 	"netmon/integration/fakes"
@@ -15,7 +14,7 @@ import (
 	"strings"
 	"sync/atomic"
 
-	dbTestSupport "code.cloudfoundry.org/go-db-helpers/testsupport"
+	"code.cloudfoundry.org/go-db-helpers/testsupport"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -28,7 +27,7 @@ var _ = Describe("External API", func() {
 		sessions          []*gexec.Session
 		conf              config.Config
 		policyServerConfs []config.Config
-		testDatabase      *dbTestSupport.TestDatabase
+		testDatabase      *testsupport.TestDatabase
 
 		fakeMetron fakes.FakeMetron
 	)
@@ -37,7 +36,7 @@ var _ = Describe("External API", func() {
 		fakeMetron = fakes.New()
 
 		dbName := fmt.Sprintf("test_netman_database_%x", rand.Int())
-		dbConnectionInfo := dbTestSupport.GetDBConnectionInfo()
+		dbConnectionInfo := testsupport.GetDBConnectionInfo()
 		testDatabase = dbConnectionInfo.CreateDatabase(dbName)
 
 		template := DefaultTestConfig(testDatabase.DBConfig(), fakeMetron.Address())

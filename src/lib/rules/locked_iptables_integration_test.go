@@ -4,11 +4,12 @@ import (
 	"fmt"
 	"lib/filelock"
 	"lib/rules"
-	"lib/testsupport"
 	"os/exec"
 	"runtime"
 	"strings"
 	"sync"
+
+	"code.cloudfoundry.org/go-db-helpers/testsupport"
 
 	goiptables "github.com/coreos/go-iptables/iptables"
 	. "github.com/onsi/ginkgo"

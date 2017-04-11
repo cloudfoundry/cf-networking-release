@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"lib/models"
 	"lib/policy_client"
-	"lib/testsupport"
 	"math/rand"
 	"net"
 	"net/http"
@@ -14,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"code.cloudfoundry.org/go-db-helpers/testsupport"
 	"code.cloudfoundry.org/lager"
 
 	pusherConfig "cf-pusher/config"

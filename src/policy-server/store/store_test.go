@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"lib/testsupport"
 	"math/rand"
 	"policy-server/models"
 	"policy-server/store"
@@ -13,7 +12,7 @@ import (
 	"sync/atomic"
 
 	"code.cloudfoundry.org/go-db-helpers/db"
-	dbTestSupport "code.cloudfoundry.org/go-db-helpers/testsupport"
+	"code.cloudfoundry.org/go-db-helpers/testsupport"
 
 	"github.com/jmoiron/sqlx"
 	. "github.com/onsi/ginkgo"
@@ -22,7 +21,7 @@ import (
 
 var _ = Describe("Store", func() {
 	var dataStore store.Store
-	var testDatabase *dbTestSupport.TestDatabase
+	var testDatabase *testsupport.TestDatabase
 	var realDb *sqlx.DB
 	var mockDb *fakes.Db
 	var group store.GroupRepo
@@ -33,7 +32,7 @@ var _ = Describe("Store", func() {
 		mockDb = &fakes.Db{}
 
 		dbName := fmt.Sprintf("test_netman_database_%x", rand.Int())
-		dbConnectionInfo := dbTestSupport.GetDBConnectionInfo()
+		dbConnectionInfo := testsupport.GetDBConnectionInfo()
 		testDatabase = dbConnectionInfo.CreateDatabase(dbName)
 
 		var err error

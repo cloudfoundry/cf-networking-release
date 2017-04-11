@@ -6,10 +6,11 @@ import (
 	"os"
 	"sync/atomic"
 
+	"code.cloudfoundry.org/go-db-helpers/testsupport"
+
 	"lib/datastore"
 	"lib/filelock"
 	"lib/serial"
-	"lib/testsupport"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
