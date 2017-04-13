@@ -4,27 +4,17 @@ See [AWS](iaas.md#deploy-to-aws) deployment docs for examples
 
 ### 0.20.0
 
-**New Properties**
+**Changed Properties**
 
-A networking daemon optionally runs on each cell and connects to a mysql or postgres database.
-This is preparation for a future feature and currently adds no new functionality.
-
-The following needs to be added to your `cf-networking` stub to configure the database connection:
-
-  - `cf_networking.connectivity.database.type`
-  - `cf_networking.connectivity.database.username`
-  - `cf_networking.connectivity.database.password`
-  - `cf_networking.connectivity.database.host`
-  - `cf_networking.connectivity.database.port`
-  - `cf_networking.connectivity.database.name`
-
-Descriptions for each property can be found under the `network-daemon` spec.
-
+  - The value for `cf_networking.garden_external_networker.cni_plugin_dir` now defaults to `/var/vcap/packages/silk/bin`
+    We recommend that you remove any overrides for this property, unless you are intending to use a 3rd party CNI plugin.
 
 ### 0.19.0
 
 **Changed Properties**
 
+  - The value for `cf_networking.garden_external_networker.cni_plugin_dir` **must** be updated to `/var/vcap/packages/silk/bin`
+    if you are not swapping out CNI with your own plugin. (There is no default currently, but we plan to add one in the next release)
   - The property for global ASG logging has changed from `cf_networking.garden_external_networker.iptables_asg_logging`
     to `cf_networking.iptables_asg_logging`.
 
