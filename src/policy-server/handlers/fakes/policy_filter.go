@@ -18,6 +18,10 @@ type PolicyFilter struct {
 		result1 []models.Policy
 		result2 error
 	}
+	filterPoliciesReturnsOnCall map[int]struct {
+		result1 []models.Policy
+		result2 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -29,6 +33,7 @@ func (fake *PolicyFilter) FilterPolicies(policies []models.Policy, userToken uaa
 		copy(policiesCopy, policies)
 	}
 	fake.filterPoliciesMutex.Lock()
+	ret, specificReturn := fake.filterPoliciesReturnsOnCall[len(fake.filterPoliciesArgsForCall)]
 	fake.filterPoliciesArgsForCall = append(fake.filterPoliciesArgsForCall, struct {
 		policies  []models.Policy
 		userToken uaa_client.CheckTokenResponse
@@ -37,6 +42,9 @@ func (fake *PolicyFilter) FilterPolicies(policies []models.Policy, userToken uaa
 	fake.filterPoliciesMutex.Unlock()
 	if fake.FilterPoliciesStub != nil {
 		return fake.FilterPoliciesStub(policies, userToken)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
 	}
 	return fake.filterPoliciesReturns.result1, fake.filterPoliciesReturns.result2
 }
@@ -56,6 +64,20 @@ func (fake *PolicyFilter) FilterPoliciesArgsForCall(i int) ([]models.Policy, uaa
 func (fake *PolicyFilter) FilterPoliciesReturns(result1 []models.Policy, result2 error) {
 	fake.FilterPoliciesStub = nil
 	fake.filterPoliciesReturns = struct {
+		result1 []models.Policy
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *PolicyFilter) FilterPoliciesReturnsOnCall(i int, result1 []models.Policy, result2 error) {
+	fake.FilterPoliciesStub = nil
+	if fake.filterPoliciesReturnsOnCall == nil {
+		fake.filterPoliciesReturnsOnCall = make(map[int]struct {
+			result1 []models.Policy
+			result2 error
+		})
+	}
+	fake.filterPoliciesReturnsOnCall[i] = struct {
 		result1 []models.Policy
 		result2 error
 	}{result1, result2}

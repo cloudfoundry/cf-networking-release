@@ -15,6 +15,9 @@ type Validator struct {
 	validatePoliciesReturns struct {
 		result1 error
 	}
+	validatePoliciesReturnsOnCall map[int]struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -26,6 +29,7 @@ func (fake *Validator) ValidatePolicies(policies []models.Policy) error {
 		copy(policiesCopy, policies)
 	}
 	fake.validatePoliciesMutex.Lock()
+	ret, specificReturn := fake.validatePoliciesReturnsOnCall[len(fake.validatePoliciesArgsForCall)]
 	fake.validatePoliciesArgsForCall = append(fake.validatePoliciesArgsForCall, struct {
 		policies []models.Policy
 	}{policiesCopy})
@@ -33,6 +37,9 @@ func (fake *Validator) ValidatePolicies(policies []models.Policy) error {
 	fake.validatePoliciesMutex.Unlock()
 	if fake.ValidatePoliciesStub != nil {
 		return fake.ValidatePoliciesStub(policies)
+	}
+	if specificReturn {
+		return ret.result1
 	}
 	return fake.validatePoliciesReturns.result1
 }
@@ -52,6 +59,18 @@ func (fake *Validator) ValidatePoliciesArgsForCall(i int) []models.Policy {
 func (fake *Validator) ValidatePoliciesReturns(result1 error) {
 	fake.ValidatePoliciesStub = nil
 	fake.validatePoliciesReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *Validator) ValidatePoliciesReturnsOnCall(i int, result1 error) {
+	fake.ValidatePoliciesStub = nil
+	if fake.validatePoliciesReturnsOnCall == nil {
+		fake.validatePoliciesReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.validatePoliciesReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }

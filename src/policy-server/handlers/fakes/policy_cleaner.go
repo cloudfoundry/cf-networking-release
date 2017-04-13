@@ -14,17 +14,25 @@ type PolicyCleaner struct {
 		result1 []models.Policy
 		result2 error
 	}
+	deleteStalePoliciesReturnsOnCall map[int]struct {
+		result1 []models.Policy
+		result2 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
 func (fake *PolicyCleaner) DeleteStalePolicies() ([]models.Policy, error) {
 	fake.deleteStalePoliciesMutex.Lock()
+	ret, specificReturn := fake.deleteStalePoliciesReturnsOnCall[len(fake.deleteStalePoliciesArgsForCall)]
 	fake.deleteStalePoliciesArgsForCall = append(fake.deleteStalePoliciesArgsForCall, struct{}{})
 	fake.recordInvocation("DeleteStalePolicies", []interface{}{})
 	fake.deleteStalePoliciesMutex.Unlock()
 	if fake.DeleteStalePoliciesStub != nil {
 		return fake.DeleteStalePoliciesStub()
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
 	}
 	return fake.deleteStalePoliciesReturns.result1, fake.deleteStalePoliciesReturns.result2
 }
@@ -38,6 +46,20 @@ func (fake *PolicyCleaner) DeleteStalePoliciesCallCount() int {
 func (fake *PolicyCleaner) DeleteStalePoliciesReturns(result1 []models.Policy, result2 error) {
 	fake.DeleteStalePoliciesStub = nil
 	fake.deleteStalePoliciesReturns = struct {
+		result1 []models.Policy
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *PolicyCleaner) DeleteStalePoliciesReturnsOnCall(i int, result1 []models.Policy, result2 error) {
+	fake.DeleteStalePoliciesStub = nil
+	if fake.deleteStalePoliciesReturnsOnCall == nil {
+		fake.deleteStalePoliciesReturnsOnCall = make(map[int]struct {
+			result1 []models.Policy
+			result2 error
+		})
+	}
+	fake.deleteStalePoliciesReturnsOnCall[i] = struct {
 		result1 []models.Policy
 		result2 error
 	}{result1, result2}

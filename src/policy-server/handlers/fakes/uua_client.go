@@ -14,6 +14,10 @@ type UAAClient struct {
 		result1 string
 		result2 error
 	}
+	getTokenReturnsOnCall map[int]struct {
+		result1 string
+		result2 error
+	}
 	CheckTokenStub        func(string) (uaa_client.CheckTokenResponse, error)
 	checkTokenMutex       sync.RWMutex
 	checkTokenArgsForCall []struct {
@@ -23,17 +27,25 @@ type UAAClient struct {
 		result1 uaa_client.CheckTokenResponse
 		result2 error
 	}
+	checkTokenReturnsOnCall map[int]struct {
+		result1 uaa_client.CheckTokenResponse
+		result2 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
 func (fake *UAAClient) GetToken() (string, error) {
 	fake.getTokenMutex.Lock()
+	ret, specificReturn := fake.getTokenReturnsOnCall[len(fake.getTokenArgsForCall)]
 	fake.getTokenArgsForCall = append(fake.getTokenArgsForCall, struct{}{})
 	fake.recordInvocation("GetToken", []interface{}{})
 	fake.getTokenMutex.Unlock()
 	if fake.GetTokenStub != nil {
 		return fake.GetTokenStub()
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
 	}
 	return fake.getTokenReturns.result1, fake.getTokenReturns.result2
 }
@@ -52,8 +64,23 @@ func (fake *UAAClient) GetTokenReturns(result1 string, result2 error) {
 	}{result1, result2}
 }
 
+func (fake *UAAClient) GetTokenReturnsOnCall(i int, result1 string, result2 error) {
+	fake.GetTokenStub = nil
+	if fake.getTokenReturnsOnCall == nil {
+		fake.getTokenReturnsOnCall = make(map[int]struct {
+			result1 string
+			result2 error
+		})
+	}
+	fake.getTokenReturnsOnCall[i] = struct {
+		result1 string
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *UAAClient) CheckToken(arg1 string) (uaa_client.CheckTokenResponse, error) {
 	fake.checkTokenMutex.Lock()
+	ret, specificReturn := fake.checkTokenReturnsOnCall[len(fake.checkTokenArgsForCall)]
 	fake.checkTokenArgsForCall = append(fake.checkTokenArgsForCall, struct {
 		arg1 string
 	}{arg1})
@@ -61,6 +88,9 @@ func (fake *UAAClient) CheckToken(arg1 string) (uaa_client.CheckTokenResponse, e
 	fake.checkTokenMutex.Unlock()
 	if fake.CheckTokenStub != nil {
 		return fake.CheckTokenStub(arg1)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
 	}
 	return fake.checkTokenReturns.result1, fake.checkTokenReturns.result2
 }
@@ -80,6 +110,20 @@ func (fake *UAAClient) CheckTokenArgsForCall(i int) string {
 func (fake *UAAClient) CheckTokenReturns(result1 uaa_client.CheckTokenResponse, result2 error) {
 	fake.CheckTokenStub = nil
 	fake.checkTokenReturns = struct {
+		result1 uaa_client.CheckTokenResponse
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *UAAClient) CheckTokenReturnsOnCall(i int, result1 uaa_client.CheckTokenResponse, result2 error) {
+	fake.CheckTokenStub = nil
+	if fake.checkTokenReturnsOnCall == nil {
+		fake.checkTokenReturnsOnCall = make(map[int]struct {
+			result1 uaa_client.CheckTokenResponse
+			result2 error
+		})
+	}
+	fake.checkTokenReturnsOnCall[i] = struct {
 		result1 uaa_client.CheckTokenResponse
 		result2 error
 	}{result1, result2}
