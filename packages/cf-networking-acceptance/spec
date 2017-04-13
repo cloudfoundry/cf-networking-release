@@ -72,6 +72,8 @@ files:
   - github.com/pivotal-cf-experimental/warrant/internal/documents/*.go # gosub
   - github.com/pivotal-cf-experimental/warrant/internal/network/*.go # gosub
   - github.com/pivotal-cf-experimental/warrant/vendor/github.com/dgrijalva/jwt-go/*.go # gosub
+  - github.com/square/certstrap/depot/*.go # gosub
+  - github.com/square/certstrap/pkix/*.go # gosub
   - gopkg.in/yaml.v2/*.go # gosub
   - lib/models/*.go # gosub
   - lib/policy_client/*.go # gosub

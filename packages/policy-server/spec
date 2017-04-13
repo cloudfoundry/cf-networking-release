@@ -7,6 +7,7 @@ dependencies:
 files:
   - code.cloudfoundry.org/debugserver/*.go # gosub
   - code.cloudfoundry.org/go-db-helpers/db/*.go # gosub
+  - code.cloudfoundry.org/go-db-helpers/httperror/*.go # gosub
   - code.cloudfoundry.org/go-db-helpers/json_client/*.go # gosub
   - code.cloudfoundry.org/go-db-helpers/marshal/*.go # gosub
   - code.cloudfoundry.org/go-db-helpers/mutualtls/*.go # gosub

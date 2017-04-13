@@ -2,11 +2,9 @@ package nonmutualtls_test
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"os"
-	"os/exec"
 
 	"code.cloudfoundry.org/go-db-helpers/testsupport"
 
@@ -34,18 +32,12 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	certDir, err = ioutil.TempDir("", "netman-certs")
 	Expect(err).NotTo(HaveOccurred())
 
-	certstrapBin := fmt.Sprintf("/%s/certstrap", certDir)
-	cmd := exec.Command("go", "build", "-o", certstrapBin, "github.com/square/certstrap")
-	Expect(cmd.Run()).NotTo(HaveOccurred())
-
-	certWriter := &testsupport.CertWriter{
-		BinPath:  certstrapBin,
-		CertPath: certDir,
-	}
+	certWriter, err := testsupport.NewCertWriter(certDir)
+	Expect(err).NotTo(HaveOccurred())
 
 	paths.ServerCACertPath, err = certWriter.WriteCA("server-ca")
 	Expect(err).NotTo(HaveOccurred())
-	paths.ServerCertPath, paths.ServerKeyPath, err = certWriter.WriteAndSignForServer("server", "server-ca")
+	paths.ServerCertPath, paths.ServerKeyPath, err = certWriter.WriteAndSign("server", "server-ca")
 	Expect(err).NotTo(HaveOccurred())
 
 	paths.WrongServerCACertPath, err = certWriter.WriteCA("wrong-server-ca")

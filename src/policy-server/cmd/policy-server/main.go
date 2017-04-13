@@ -25,6 +25,7 @@ import (
 
 	"code.cloudfoundry.org/debugserver"
 	"code.cloudfoundry.org/go-db-helpers/db"
+	"code.cloudfoundry.org/go-db-helpers/httperror"
 	"code.cloudfoundry.org/go-db-helpers/json_client"
 	"code.cloudfoundry.org/go-db-helpers/marshal"
 	"code.cloudfoundry.org/go-db-helpers/mutualtls"
@@ -140,7 +141,7 @@ func main() {
 
 	unmarshaler := marshal.UnmarshalFunc(json.Unmarshal)
 
-	errorResponse := &handlers.ErrorResponse{
+	errorResponse := &httperror.ErrorResponse{
 		Logger:        logger,
 		MetricsSender: metricsSender,
 	}
