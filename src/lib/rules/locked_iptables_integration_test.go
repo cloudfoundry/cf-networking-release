@@ -43,6 +43,10 @@ var _ = Describe("Locked IPTables Integration Test", func() {
 			IPTables: ipt,
 		}
 	})
+	AfterEach(func() {
+		iptablesCmd := exec.Command("iptables", "-F", "FORWARD")
+		Expect(iptablesCmd.Run()).To(Succeed())
+	})
 
 	It("bulk inserts iptables rules", func() {
 		onlyRunOnLinux()
