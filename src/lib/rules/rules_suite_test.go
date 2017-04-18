@@ -14,7 +14,10 @@ func TestRules(t *testing.T) {
 	RunSpecs(t, "Rules Suite")
 }
 
-var _ = AfterSuite(func() {
+var _ = SynchronizedAfterSuite(func() {
+	// runs once on every parallel node
+}, func() {
+	// runs only on node #1 after all parallel ones are finished
 	iptablesCmd := exec.Command("iptables", "-F", "FORWARD")
 	Expect(iptablesCmd.Run()).To(Succeed())
 })
