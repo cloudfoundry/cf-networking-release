@@ -97,7 +97,7 @@
     vm_type: t2.small
     stemcell: default
     networks:
-    - name: private
+    - name: default
     jobs:
     - name: policy-server
       release: cf-networking
