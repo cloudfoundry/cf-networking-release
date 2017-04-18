@@ -14,7 +14,7 @@ templates:
 
 packages:
   - flannel
-  - silk
+  - silk-cni
   - runc-cni
   - flannel-watchdog
 

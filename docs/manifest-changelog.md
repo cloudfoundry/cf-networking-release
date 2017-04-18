@@ -2,6 +2,13 @@
 
 See [AWS](iaas.md#deploy-to-aws) deployment docs for examples
 
+### 0.21.0
+
+**Changed Properties**
+
+  - The value for `cf_networking.garden_external_networker.cni_plugin_dir` now defaults to `/var/vcap/packages/silk-cni/bin`
+    We recommend that you remove any overrides for this property, unless you are intending to use a 3rd party CNI plugin.
+
 ### 0.20.0
 
 **Changed Properties**

@@ -1,5 +1,5 @@
 ---
-name: silk
+name: silk-cni
 
 dependencies:
   - golang

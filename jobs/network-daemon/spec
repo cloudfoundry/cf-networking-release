@@ -6,7 +6,6 @@ templates:
   silkd_ctl.erb: bin/silkd_ctl
 
 packages:
-  - silk
 
 properties:
   cf_networking.network:
