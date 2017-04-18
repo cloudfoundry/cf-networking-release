@@ -41,7 +41,9 @@ set_bosh_env() {
 }
 
 upload_bosh_stemcell() {
-  bosh -e vbox upload-stemcell https://bosh.io/d/stemcells/bosh-warden-boshlite-ubuntu-trusty-go_agent
+  STEMCELL_VERSION="$(bosh int ~/workspace/cf-deployment/cf-deployment.yml --path=/stemcells/0/version)"
+  echo "will upload stemcell ${STEMCELL_VERSION}"
+  bosh -e vbox upload-stemcell "https://bosh.io/d/stemcells/bosh-warden-boshlite-ubuntu-trusty-go_agent?v=${STEMCELL_VERSION}"
 }
 
 upload_cloud_config() {
