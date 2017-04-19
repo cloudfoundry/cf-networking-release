@@ -136,7 +136,6 @@
             services:
               policy-server:
                 name: policy-server
-                check: {}
     - name: metron_agent
       release: loggregator
       properties:

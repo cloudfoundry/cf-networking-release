@@ -1,0 +1,11 @@
+<%
+  def host
+    p("cf_networking.policy_server.listen_host")
+  end
+
+  def port
+    p("cf_networking.policy_server.listen_port")
+  end
+%>
+
+curl <%= host %>:<%= port %>

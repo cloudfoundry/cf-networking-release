@@ -9,6 +9,7 @@ templates:
   uaa_ca.crt.erb: config/certs/uaa_ca.crt
   server.crt.erb: config/certs/server.crt
   server.key.erb: config/certs/server.key
+  dns_health_check.erb: bin/dns_health_check
 
 packages:
   - policy-server
