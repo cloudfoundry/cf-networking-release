@@ -6,7 +6,6 @@
     username: network_connectivity
     password: "((cf_mysql_mysql_seeded_databases_network_connectivity_password))"
 
-
 # add connectivity-server job to the diego-bbs instance group
 - type: replace
   path: /instance_groups/name=diego-bbs/jobs/-
@@ -26,6 +25,10 @@
             host: sql-db.service.cf.internal
             port: 3306
             name: network_connectivity
+        connectivity_agent:
+          ca_cert: "((network_connectivity_client.ca))"
+          client_cert: "((network_connectivity_client.certificate))"
+          client_key: "((network_connectivity_client.private_key))"
 
 # add connectivity-agent ob to the diego-cell instance group
 - type: replace
@@ -44,7 +47,6 @@
   path: /instance_groups/name=diego-bbs/jobs/name=consul_agent/properties?/consul/agent/services/connectivity-server
   value:
     name: connectivity-server
-    check: {}
 
 # add var
 - type: replace

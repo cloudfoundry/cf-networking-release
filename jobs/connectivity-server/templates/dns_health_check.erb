@@ -1,0 +1,26 @@
+<%=
+  def host
+    p("cf_networking.connectivity_server.listen_host")
+  end
+
+  def port
+    p("cf_networking.connectivity_server.listen_port")
+  end
+
+  def ca_cert
+    "/var/vcap/jobs/connectivity-server/config/certs/client-ca.crt"
+  end
+
+  def client_cert
+    "/var/vcap/jobs/connectivity-server/config/certs/client.crt"
+  end
+
+  def client_key
+    "/var/vcap/jobs/connectivity-server/config/certs/client.key"
+  end
+%>
+
+curl <%= host %>:<%= port %>/leases \
+  --cacert <%= ca_cert %> \
+  --cert <%= client_cert %> \
+  --key <%= client_key %>

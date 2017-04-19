@@ -9,6 +9,10 @@ templates:
   ca.crt.erb: config/certs/ca.crt
   server.crt.erb: config/certs/server.crt
   server.key.erb: config/certs/server.key
+  client-ca.crt.erb: config/certs/client-ca.crt
+  client.crt.erb: config/certs/client.crt
+  client.key.erb: config/certs/client.key
+  dns_health_check.erb: bin/dns_health_check
 
 packages:
   - silk-controller
@@ -42,6 +46,15 @@ properties:
 
   cf_networking.connectivity_server.server_key:
     description: "Server key for TLS"
+
+  cf_networking.connectivity_agent.ca_cert:
+    description: "Trusted CA certificate for server"
+
+  cf_networking.connectivity_agent.client_cert:
+    description: "Client certificate for TLS"
+
+  cf_networking.connectivity_agent.client_key:
+    description: "Client key for TLS"
 
   cf_networking.connectivity_server.database.type:
     description: "Type of database: postgres or mysql"
