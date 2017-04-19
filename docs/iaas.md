@@ -193,6 +193,7 @@ by using the instructions and tooling in [the diego-release repo](https://github
           release: cf
         - name: consul_agent
           release: cf
+          consumes: {consul: nil}
         - name: metron_agent
           release: cf
         resource_pool: database_z1
