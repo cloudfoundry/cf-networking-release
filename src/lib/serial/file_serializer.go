@@ -22,8 +22,7 @@ type Serializer interface {
 type Serial struct{}
 
 func (s *Serial) DecodeAll(file io.ReadSeeker, outData interface{}) error {
-	const SeekStart = 0 // TODO: when we upgrade to Go 1.7+, replace this with io.SeekStart
-	_, err := file.Seek(0, SeekStart)
+	_, err := file.Seek(0, io.SeekStart)
 	if err != nil {
 		return err
 	}
@@ -35,8 +34,7 @@ func (s *Serial) DecodeAll(file io.ReadSeeker, outData interface{}) error {
 }
 
 func (s *Serial) EncodeAndOverwrite(file OverwriteableFile, outData interface{}) error {
-	const SeekStart = 0 // TODO: when we upgrade to Go 1.7+, replace this with io.SeekStart
-	_, err := file.Seek(0, SeekStart)
+	_, err := file.Seek(0, io.SeekStart)
 	if err != nil {
 		return err
 	}

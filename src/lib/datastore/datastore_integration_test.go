@@ -181,7 +181,9 @@ var _ = Describe("Datastore Lifecycle", func() {
 				parallelRunner.RunOnChannel(toRead, func(containerHandle interface{}) {
 					p := containerHandle.(string)
 					func(id string) {
-						//TODO. add the read case
+						contents, err := store.ReadAll(filepath)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(contents).To(HaveKey(p))
 					}(p)
 					toDelete <- p
 				})
