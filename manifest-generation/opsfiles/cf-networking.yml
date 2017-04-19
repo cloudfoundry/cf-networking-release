@@ -136,9 +136,7 @@
             services:
               policy-server:
                 name: policy-server
-                check:
-                  interval: 5s
-                  script: /bin/true
+                check: {}
     - name: metron_agent
       release: loggregator
       properties:

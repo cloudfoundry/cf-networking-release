@@ -1,0 +1,72 @@
+---
+name: connectivity-server
+
+templates:
+  pre-start.erb: bin/pre-start
+  silk-controller_ctl.erb: bin/silk-controller_ctl
+  silk-controller_as_vcap.erb: bin/silk-controller_as_vcap
+  silk-controller.json.erb: config/silk-controller.json
+  ca.crt.erb: config/certs/ca.crt
+  server.crt.erb: config/certs/server.crt
+  server.key.erb: config/certs/server.key
+
+packages:
+  - silk-controller
+
+properties:
+  cf_networking.network:
+    description: "CIDR block for overlay network."
+    default: "10.255.0.0/16"
+
+  cf_networking.subnet_prefix_length:
+    description: "Length, in bits, of the prefix for subnets allocated per Diego cell, e.g. '24' for a '/24' subnet."
+    default: 24
+
+  cf_networking.connectivity_server.debug_server_port:
+    description: "Port for the debug server"
+    default: 22222
+
+  cf_networking.connectivity_server.listen_host:
+    description: "Host where the connectivity server will serve its API"
+    default: 0.0.0.0
+
+  cf_networking.connectivity_server.listen_port:
+    description: "Port where the connectivity server will serve its external API"
+    default: 4103
+
+  cf_networking.connectivity_server.ca_cert:
+    description: "Trusted CA certificate for clients"
+
+  cf_networking.connectivity_server.server_cert:
+    description: "Server certificate for TLS"
+
+  cf_networking.connectivity_server.server_key:
+    description: "Server key for TLS"
+
+  cf_networking.connectivity_server.database.type:
+    description: "Type of database: postgres or mysql"
+    default: postgres
+
+  cf_networking.connectivity_server.database.username:
+    description: "Username for database connection"
+    default: ""
+
+  cf_networking.connectivity_server.database.password:
+    description: "Password for database connection"
+    default: ""
+
+  cf_networking.connectivity_server.database.host:
+    description: "Host (IP or DNS name) for database server"
+    default: ""
+
+  cf_networking.connectivity_server.database.port:
+    description: "Port for database server"
+    default: ""
+
+  cf_networking.connectivity_server.database.name:
+    description: "Name of logical database to use"
+    default: ""
+
+  cf_networking.disable:
+    description: "Disable container to container networking"
+    default: false

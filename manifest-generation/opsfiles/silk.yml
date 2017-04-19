@@ -1,0 +1,85 @@
+# add network connectivity db to mysql
+- type: replace
+  path: /instance_groups/name=mysql/jobs/name=mysql/properties/cf_mysql/mysql/seeded_databases/-
+  value:
+    name: network_connectivity
+    username: network_connectivity
+    password: "((cf_mysql_mysql_seeded_databases_network_connectivity_password))"
+
+
+# add connectivity-server job to the diego-bbs instance group
+- type: replace
+  path: /instance_groups/name=diego-bbs/jobs/-
+  value:
+    name: connectivity-server
+    release: cf-networking
+    properties:
+      cf_networking:
+        connectivity_server:
+          ca_cert: "((network_connectivity_server.ca))"
+          server_cert: "((network_connectivity_server.certificate))"
+          server_key: "((network_connectivity_server.private_key))"
+          database:
+            type: mysql
+            username: network_connectivity
+            password: "((cf_mysql_mysql_seeded_databases_network_connectivity_password))"
+            host: sql-db.service.cf.internal
+            port: 3306
+            name: network_connectivity
+
+# add connectivity-agent ob to the diego-cell instance group
+- type: replace
+  path: /instance_groups/name=diego-cell/jobs/-
+  value:
+    name: connectivity-agent
+    release: cf-networking
+    properties:
+      cf_networking:
+        connectivity_agent:
+          ca_cert: "((network_connectivity_client.ca))"
+          client_cert: "((network_connectivity_client.certificate))"
+          client_key: "((network_connectivity_client.private_key))"
+
+- type: replace
+  path: /instance_groups/name=diego-bbs/jobs/name=consul_agent/properties?/consul/agent/services/connectivity-server
+  value:
+    name: connectivity-server
+    check: {}
+
+# add var
+- type: replace
+  path: /variables/-
+  value:
+    name: cf_mysql_mysql_seeded_databases_network_connectivity_password
+    type: password
+
+- type: replace
+  path: /variables/-
+  value:
+    name: network_connectivity_ca
+    type: certificate
+    options:
+      is_ca: true
+      common_name: networkConnectivityCA
+
+- type: replace
+  path: /variables/-
+  value:
+    name: network_connectivity_server
+    type: certificate
+    options:
+      ca: network_connectivity_ca
+      common_name: connectivity-server.service.cf.internal
+      extended_key_usage:
+      - server_auth
+
+- type: replace
+  path: /variables/-
+  value:
+    name: network_connectivity_client
+    type: certificate
+    options:
+      ca: network_connectivity_ca
+      common_name: networkConnectivityClient
+      extended_key_usage:
+      - client_auth

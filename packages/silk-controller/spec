@@ -1,0 +1,37 @@
+---
+name: silk-controller
+
+dependencies:
+  - golang
+
+files:
+  - code.cloudfoundry.org/silk/cmd/silk-controller/*.go # gosub
+  - code.cloudfoundry.org/silk/controller/*.go # gosub
+  - code.cloudfoundry.org/silk/controller/config/*.go # gosub
+  - code.cloudfoundry.org/silk/controller/database/*.go # gosub
+  - code.cloudfoundry.org/silk/controller/handlers/*.go # gosub
+  - code.cloudfoundry.org/silk/controller/leaser/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/debugserver/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/go-db-helpers/db/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/go-db-helpers/httperror/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/go-db-helpers/json_client/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/go-db-helpers/marshal/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/go-db-helpers/metrics/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/go-db-helpers/mutualtls/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/lager/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/bmizerany/pat/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/cni/pkg/utils/hwaddr/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/go-sql-driver/mysql/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/jmoiron/sqlx/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/jmoiron/sqlx/reflectx/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/lib/pq/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/lib/pq/oid/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/rubenv/sql-migrate/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/rubenv/sql-migrate/sqlparse/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/tedsuo/ifrit/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/tedsuo/ifrit/grouper/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/tedsuo/ifrit/http_server/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/tedsuo/ifrit/sigmon/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/tedsuo/rata/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/ziutek/utils/netaddr/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/gopkg.in/gorp.v1/*.go # gosub

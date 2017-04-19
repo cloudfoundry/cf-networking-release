@@ -2,13 +2,14 @@
 
 set -e -u
 
-RUN_DIR=/var/vcap/sys/run/silk
-LOG_DIR=/var/vcap/sys/log/silk
-PIDFILE=$RUN_DIR/silkd.pid
+export RUN_DIR=/var/vcap/sys/run/silk-controller
+export LOG_DIR=/var/vcap/sys/log/silk-controller
+export PIDFILE=$RUN_DIR/silk-controller.pid
+export CONF_DIR=/var/vcap/jobs/connectivity-server/config
 
 mkdir -p /var/vcap/sys/log/monit
-exec 1>> /var/vcap/sys/log/monit/silkd.out.log
-exec 2>> /var/vcap/sys/log/monit/silkd.err.log
+exec 1>> /var/vcap/sys/log/monit/connectivity-server.out.log
+exec 2>> /var/vcap/sys/log/monit/connectivity-server.err.log
 
 function wait_pid() {
   pid=$1
@@ -60,24 +61,28 @@ function stop_process() {
 case $1 in
 
   start)
+
     mkdir -p $RUN_DIR
+    chown -R vcap:vcap $RUN_DIR
+
     mkdir -p $LOG_DIR
+    chown -R vcap:vcap $LOG_DIR
 
-    exec 2> >(tee -a $LOG_DIR/silkd.stderr.log | logger -p user.error -t silkd) \
-         1> >(tee -a $LOG_DIR/silkd.stdout.log | logger -t silkd)
+    chown -R vcap:vcap $CONF_DIR
 
-    echo $$ > $PIDFILE
+    exec chpst -u vcap:vcap bash -c '/var/vcap/jobs/connectivity-server/bin/silk-controller_as_vcap'
 
-    exec /var/vcap/packages/silk/bin/silkd \
-      --config=/var/vcap/jobs/network-daemon/config/silkd.json
     ;;
 
   stop)
+
     stop_process
+
     ;;
 
   *)
     echo "Usage: $0 {start|stop}"
+
     ;;
 
 esac

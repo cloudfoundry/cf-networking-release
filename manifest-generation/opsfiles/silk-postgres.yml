@@ -15,7 +15,7 @@
 
 # diego cells connection for overlay network db
 - type: replace
-  path: /instance_groups/name=diego-cell/jobs/name=network-daemon/properties/cf_networking/connectivity/database
+  path: /instance_groups/name=diego-bbs/jobs/name=connectivity-server/properties/cf_networking/connectivity_server/database
   value:
     type: postgres
     username: network_connectivity

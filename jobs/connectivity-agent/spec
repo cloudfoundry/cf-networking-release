@@ -1,0 +1,17 @@
+---
+name: connectivity-agent
+
+templates:
+  ca.crt.erb: config/certs/ca.crt
+  client.crt.erb: config/certs/client.crt
+  client.key.erb: config/certs/client.key
+
+properties:
+  cf_networking.connectivity_agent.ca_cert:
+    description: "Trusted CA certificate for server"
+
+  cf_networking.connectivity_agent.client_cert:
+    description: "Client certificate for TLS to access connectivity server"
+
+  cf_networking.connectivity_agent.client_key:
+    description: "Client private key for TLS to access connectivity server"
