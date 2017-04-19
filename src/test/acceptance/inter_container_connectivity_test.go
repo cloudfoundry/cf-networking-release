@@ -11,8 +11,6 @@ import (
 	"os/exec"
 	"time"
 
-	"code.cloudfoundry.org/go-db-helpers/testsupport"
-
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
 	. "github.com/onsi/ginkgo"
@@ -21,6 +19,7 @@ import (
 )
 
 const Timeout_Short = 10 * time.Second
+const PolicyWaitTime = 7 * time.Second
 
 var ports []int
 
@@ -69,9 +68,6 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 		})
 
 		AfterEach(func() {
-			appsReport(appsProxy, Timeout_Short)
-			appReport(appRegistry, Timeout_Short)
-			appsReport(appsTest, Timeout_Short)
 			Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 		})
 
@@ -90,11 +86,10 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			appIPs := getAppIPs(appRegistry)
 
 			By("checking that the connection fails")
-			runWithTimeout("check connection failures", 5*time.Minute, func() {
-				for _, appProxy := range appsProxy {
-					assertConnectionFails(appProxy, appIPs, ports, proxyInstances)
-				}
-			})
+			for _, appProxy := range appsProxy {
+				By(fmt.Sprintf("checking that %s can NOT reach %s", appProxy, appsTest))
+				assertConnectionsFail(appProxy, appIPs, ports, proxyInstances)
+			}
 
 			By("creating policies")
 			for _, appProxy := range appsProxy {
@@ -102,18 +97,13 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			}
 
 			// we should wait for minimum (pollInterval * 2)
-			By("waiting for policies to be created on cells")
-			time.Sleep(10 * time.Second)
+			By(fmt.Sprintf("waiting %s for policies to be created on cells", PolicyWaitTime))
+			time.Sleep(PolicyWaitTime)
 
+			By("checking that the connection succeeds")
 			for _, appProxy := range appsProxy {
 				By(fmt.Sprintf("checking that %s can reach %s", appProxy, appsTest))
-				runWithTimeout("check connection success", 5*time.Minute, func() {
-					assertConnectionSucceeds(appProxy, appIPs, ports, proxyInstances)
-				})
-			}
-
-			for _, appProxy := range appsProxy {
-				dumpStats(appProxy, config.AppsDomain)
+				assertConnectionsSucceed(appProxy, appIPs, ports, proxyInstances)
 			}
 
 			By("deleting policies")
@@ -121,11 +111,13 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 				deleteAllPolicies(appProxy, appsTest, ports)
 			}
 
+			By(fmt.Sprintf("waiting %s for policies to be deleted on cells", PolicyWaitTime))
+			time.Sleep(PolicyWaitTime)
+
+			By("checking that the connection fails, again")
 			for _, appProxy := range appsProxy {
 				By(fmt.Sprintf("checking that %s can NOT reach %s", appProxy, appsTest))
-				runWithTimeout("check connection failures, again", 5*time.Minute, func() {
-					assertConnectionFails(appProxy, appIPs, ports, proxyInstances)
-				})
+				assertConnectionsFail(appProxy, appIPs, ports, proxyInstances)
 			}
 
 			By("checking that the registry updates when apps are scaled")
@@ -161,34 +153,6 @@ func deleteAllPolicies(sourceApp string, dstList []string, dstPorts []int) {
 			err := cfCli.RemoveAccess(sourceApp, destApp, port, "tcp")
 			Expect(err).NotTo(HaveOccurred())
 		}
-	}
-}
-
-func runWithTimeout(operation string, timeout time.Duration, work func()) {
-	done := make(chan bool)
-	go func() {
-		fmt.Printf("starting %s\n", operation)
-		work()
-		done <- true
-	}()
-
-	select {
-	case <-done:
-		fmt.Printf("completed %s\n", operation)
-		return
-	case <-time.After(timeout):
-		Fail("timeout on " + operation)
-	}
-}
-
-func dumpStats(host, domain string) {
-	resp, err := httpGetBytes(fmt.Sprintf("http://%s.%s/stats", host, domain))
-	Expect(err).NotTo(HaveOccurred())
-
-	fmt.Printf("STATS: %s\n", string(resp.Body))
-	netStatsFile := os.Getenv("NETWORK_STATS_FILE")
-	if netStatsFile != "" {
-		Expect(ioutil.WriteFile(netStatsFile, resp.Body, 0600)).To(Succeed())
 	}
 }
 
@@ -242,26 +206,20 @@ func getAppIPs(registry string) []string {
 	return ips
 }
 
-func assertConnectionSucceeds(sourceApp string, destApps []string, ports []int, nProxies int) {
-	parallelRunner := &testsupport.ParallelRunner{
-		NumWorkers: 50 * nProxies,
-	}
-	parallelRunner.RunOnSliceStrings(destApps, func(appIP string) {
-		for _, port := range ports {
-			assertSingleConnection(appIP, port, sourceApp, true)
-		}
-	})
+func assertConnectionsSucceed(sourceApp string, destApps []string, ports []int, nProxies int) {
+	assertConnections(sourceApp, destApps, ports, nProxies, true)
 }
 
-func assertConnectionFails(sourceApp string, destApps []string, ports []int, nProxies int) {
-	parallelRunner := &testsupport.ParallelRunner{
-		NumWorkers: 50 * nProxies,
-	}
-	parallelRunner.RunOnSliceStrings(destApps, func(appIP string) {
+func assertConnectionsFail(sourceApp string, destApps []string, ports []int, nProxies int) {
+	assertConnections(sourceApp, destApps, ports, nProxies, false)
+}
+
+func assertConnections(sourceApp string, destApps []string, ports []int, nProxies int, shouldSucceed bool) {
+	for _, appIP := range destApps {
 		for _, port := range ports {
-			assertSingleConnection(appIP, port, sourceApp, false)
+			assertSingleConnection(appIP, port, sourceApp, shouldSucceed)
 		}
-	})
+	}
 }
 
 func assertSingleConnection(destIP string, port int, sourceAppName string, shouldSucceed bool) {
