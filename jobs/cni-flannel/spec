@@ -52,8 +52,12 @@ properties:
     default: false
 
   cf_networking.health_check_port:
-    description: "Port for the health check endpoint"
+    description: "Port for health-check on flannel-watchdog"
     default: 10007
+
+  cf_networking.plugin.health_check_port:
+    description: "Port for health-check on flanneld"
+    default: 19823
 
   cf_networking.flannel_watchdog.metron_address:
     description: "Forward metrics to this metron agent"
