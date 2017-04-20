@@ -1,6 +1,7 @@
 check process policy-server
   with pidfile /var/vcap/sys/run/policy-server/policy-server.pid
-  start program "/var/vcap/jobs/policy-server/bin/policy-server_ctl start"
+  start program "/usr/bin/timeout 25 /var/vcap/jobs/policy-server/bin/policy-server_ctl start"
+   with timeout 30 seconds
   stop program "/var/vcap/jobs/policy-server/bin/policy-server_ctl stop"
   group vcap
   if failed host 127.0.0.1 port <%= p("cf_networking.policy_server.listen_port") %> protocol HTTP
