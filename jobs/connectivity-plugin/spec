@@ -1,0 +1,33 @@
+---
+name: connectivity-plugin
+
+templates:
+  pre-start.erb: bin/pre-start
+  cni-wrapper-plugin.conf.erb: config/cni/cni-wrapper-plugin.conf
+  subnet.env.erb: config/subnet.env
+
+packages:
+  - silk-cni
+  - runc-cni
+
+properties:
+  cf_networking.network:
+    description: "CIDR block for overlay network."
+    default: "10.255.0.0/16"
+
+  cf_networking.mtu:
+    description: "MTU for containers"
+    default: 0
+
+  cf_networking.connectivity_agent.health_check_port:
+    description: "Port for the connectivity agent health check"
+    default: 23954
+
+  cf_networking.iptables_asg_logging:
+    description: "Enables global logging for all ASGs"
+    default: false
+
+  cf_networking.dns_servers:
+    description: "DNS servers containers will use. If set, takes precedence over DNS servers configured through garden"
+    default: []
+

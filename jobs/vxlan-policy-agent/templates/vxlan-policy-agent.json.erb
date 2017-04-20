@@ -5,7 +5,7 @@
 
     toRender = {
       "cni_datastore_path" => "/var/vcap/data/container-metadata/store.json",
-      "flannel_subnet_file" => "/var/vcap/data/flannel/subnet.env",
+      "flannel_subnet_file" => p("cf_networking.vxlan_policy_agent.subnet_file"),
       "iptables_lock_file" => "/var/vcap/data/garden-cni/iptables.lock",
 
       "policy_server_url" => p("cf_networking.vxlan_policy_agent.policy_server_url"),

@@ -1,0 +1,33 @@
+---
+name: silk-daemon
+
+dependencies:
+  - golang
+
+files:
+  - code.cloudfoundry.org/silk/client/config/*.go # gosub
+  - code.cloudfoundry.org/silk/cmd/silk-daemon/*.go # gosub
+  - code.cloudfoundry.org/silk/controller/*.go # gosub
+  - code.cloudfoundry.org/silk/daemon/planner/*.go # gosub
+  - code.cloudfoundry.org/silk/daemon/poller/*.go # gosub
+  - code.cloudfoundry.org/silk/daemon/vtep/*.go # gosub
+  - code.cloudfoundry.org/silk/lib/adapter/*.go # gosub
+  - code.cloudfoundry.org/silk/lib/datastore/*.go # gosub
+  - code.cloudfoundry.org/silk/lib/filelock/*.go # gosub
+  - code.cloudfoundry.org/silk/lib/serial/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/debugserver/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/go-db-helpers/json_client/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/go-db-helpers/marshal/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/go-db-helpers/mutualtls/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/lager/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/cni/pkg/utils/hwaddr/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/go-sql-driver/mysql/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/lib/pq/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/lib/pq/oid/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/tedsuo/ifrit/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/tedsuo/ifrit/grouper/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/tedsuo/ifrit/http_server/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/tedsuo/ifrit/sigmon/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/vishvananda/netlink/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/vishvananda/netlink/nl/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/vishvananda/netns/*.go # gosub

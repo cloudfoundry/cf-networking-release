@@ -2,11 +2,25 @@
 name: connectivity-agent
 
 templates:
+  silk-daemon_ctl.erb: bin/silk-daemon_ctl
+  pre-start.erb: bin/pre-start
   ca.crt.erb: config/certs/ca.crt
   client.crt.erb: config/certs/client.crt
   client.key.erb: config/certs/client.key
+  client-config.json.erb: config/client-config.json
+
+packages:
+  - silk-daemon
 
 properties:
+  cf_networking.network:
+    description: "CIDR block for overlay network."
+    default: "10.255.0.0/16"
+
+  cf_networking.subnet_prefix_length:
+    description: "Length, in bits, of the prefix for subnets allocated per Diego cell, e.g. '24' for a '/24' subnet."
+    default: 24
+
   cf_networking.connectivity_agent.ca_cert:
     description: "Trusted CA certificate for server"
 
@@ -15,3 +29,15 @@ properties:
 
   cf_networking.connectivity_agent.client_key:
     description: "Client private key for TLS to access connectivity server"
+
+  cf_networking.connectivity_agent.health_check_port:
+    description: "Port for the connectivity agent health check"
+    default: 23954
+
+  cf_networking.connectivity_agent.debug_server_port:
+    description: "Port for adjusting the log level of the connectivity agent"
+    default: 22233
+
+  cf_networking.connectivity_agent.connectivity_server_url:
+    description: "URL for the connectivity server"
+    default: "https://connectivity-server.service.cf.internal:4103"

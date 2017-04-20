@@ -1,0 +1,41 @@
+<%=
+  require 'json'
+
+  def param_exists? param
+    p(param) != ""
+  end
+
+  def subnet_prefix_length
+    size = p("cf_networking.subnet_prefix_length")
+    if size < 1 || size > 30
+      raise "'cf_networking.subnet_prefix_length' must be a value between 1-30"
+    end
+    size
+  end
+
+  def overlay_network_prefix_length
+    parts = p("cf_networking.network").split('/')
+    if parts.size != 2
+      raise "'cf_networking.network' must be a valid CIDR'"
+    end
+    parts[1].to_i
+  end
+
+  toRender = {
+    "underlay_ip" => spec.ip,
+    "subnet_prefix_length" => subnet_prefix_length,
+    "overlay_network_prefix_length" => overlay_network_prefix_length,
+    "health_check_port" => p("cf_networking.connectivity_agent.health_check_port"),
+    "vtep_name" => "silk-vtep",
+    "connectivity_server_url" => p("cf_networking.connectivity_agent.connectivity_server_url"),
+    "ca_cert_file" => "/var/vcap/jobs/connectivity-agent/config/certs/ca.crt",
+    "client_cert_file" => "/var/vcap/jobs/connectivity-agent/config/certs/client.crt",
+    "client_key_file" => "/var/vcap/jobs/connectivity-agent/config/certs/client.key",
+    "vni" => 1,
+    "poll_internal" => 5,
+    "debug_server_port" => p("cf_networking.connectivity_agent.debug_server_port"),
+    "datastore" => "/var/vcap/data/silk/store.json",
+  }
+
+  JSON.pretty_generate(toRender)
+%>
