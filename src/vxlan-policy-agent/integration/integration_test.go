@@ -160,17 +160,17 @@ var _ = Describe("VXLAN Policy Agent", func() {
 			setIPTablesLogging(LoggingEnabled)
 
 			By("checking that the logging rules are present")
-			Eventually(iptablesFilterRules, "2s", "0.5s").Should(MatchRegexp(RemoteRulesRegexp(LoggingEnabled)))
-			Eventually(iptablesFilterRules, "2s", "0.5s").Should(MatchRegexp(LocalRulesRegexp(LoggingEnabled)))
-			Eventually(iptablesFilterRules, "2s", "0.5s").Should(MatchRegexp(PolicyRulesRegexp(LoggingEnabled)))
+			Eventually(iptablesFilterRules, "4s", "0.5s").Should(MatchRegexp(RemoteRulesRegexp(LoggingEnabled)))
+			Eventually(iptablesFilterRules, "4s", "0.5s").Should(MatchRegexp(LocalRulesRegexp(LoggingEnabled)))
+			Eventually(iptablesFilterRules, "4s", "0.5s").Should(MatchRegexp(PolicyRulesRegexp(LoggingEnabled)))
 
 			By("disabling iptables logging")
 			setIPTablesLogging(LoggingDisabled)
 
 			By("checking that the logging rules are absent")
-			Eventually(iptablesFilterRules, "2s", "0.5s").Should(MatchRegexp(RemoteRulesRegexp(LoggingDisabled)))
-			Eventually(iptablesFilterRules, "2s", "0.5s").Should(MatchRegexp(LocalRulesRegexp(LoggingDisabled)))
-			Eventually(iptablesFilterRules, "2s", "0.5s").Should(MatchRegexp(PolicyRulesRegexp(LoggingDisabled)))
+			Eventually(iptablesFilterRules, "4s", "0.5s").Should(MatchRegexp(RemoteRulesRegexp(LoggingDisabled)))
+			Eventually(iptablesFilterRules, "4s", "0.5s").Should(MatchRegexp(LocalRulesRegexp(LoggingDisabled)))
+			Eventually(iptablesFilterRules, "4s", "0.5s").Should(MatchRegexp(PolicyRulesRegexp(LoggingDisabled)))
 		})
 
 		It("writes the mark rule and enforces policies", func() {
