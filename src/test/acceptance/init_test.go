@@ -40,6 +40,18 @@ func Auth(username, password string) {
 	Eventually(sess.Wait(Timeout_Short)).Should(gexec.Exit(0))
 }
 
+func getUAABaseURL() string {
+	sess := cf.Cf("curl", "/v2/info")
+	Eventually(sess.Wait(Timeout_Short)).Should(gexec.Exit(0))
+	var response struct {
+		TokenEndpoint string `json: "token_endpoint"`
+	}
+	err := json.Unmarshal(sess.Out.Contents(), &response)
+	Expect(err).NotTo(HaveOccurred())
+
+	return response.TokenEndpoint
+}
+
 func AuthAsAdmin() {
 	Auth(config.AdminUser, config.AdminPassword)
 }

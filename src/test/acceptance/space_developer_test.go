@@ -65,7 +65,7 @@ var _ = Describe("space developer policy configuration", func() {
 
 		pushProxy(appB)
 		w = warrant.New(warrant.Config{
-			Host:          fmt.Sprintf("https://uaa.%s", config.AppsDomain),
+			Host:          getUAABaseURL(),
 			SkipVerifySSL: true,
 		})
 
