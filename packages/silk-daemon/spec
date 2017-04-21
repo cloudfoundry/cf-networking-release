@@ -7,6 +7,7 @@ dependencies:
 files:
   - code.cloudfoundry.org/silk/client/config/*.go # gosub
   - code.cloudfoundry.org/silk/cmd/silk-daemon/*.go # gosub
+  - code.cloudfoundry.org/silk/cmd/silk-teardown/*.go # gosub
   - code.cloudfoundry.org/silk/controller/*.go # gosub
   - code.cloudfoundry.org/silk/daemon/planner/*.go # gosub
   - code.cloudfoundry.org/silk/daemon/poller/*.go # gosub

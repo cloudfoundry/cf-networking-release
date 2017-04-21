@@ -2,8 +2,9 @@
 name: connectivity-agent
 
 templates:
-  silk-daemon_ctl.erb: bin/silk-daemon_ctl
+  drain.erb: bin/drain
   pre-start.erb: bin/pre-start
+  silk-daemon_ctl.erb: bin/silk-daemon_ctl
   ca.crt.erb: config/certs/ca.crt
   client.crt.erb: config/certs/client.crt
   client.key.erb: config/certs/client.key
@@ -16,6 +17,10 @@ properties:
   cf_networking.network:
     description: "CIDR block for overlay network."
     default: "10.255.0.0/16"
+
+  cf_networking.rep_listen_addr_admin:
+    description: "admin endpoint on diego rep"
+    default: 127.0.0.1:1800
 
   cf_networking.subnet_prefix_length:
     description: "Length, in bits, of the prefix for subnets allocated per Diego cell, e.g. '24' for a '/24' subnet."

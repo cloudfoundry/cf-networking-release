@@ -11,3 +11,4 @@ export GOPATH=$BOSH_INSTALL_TARGET
 export PATH=$GOROOT/bin:$GOPATH/bin:$PATH
 
 go install code.cloudfoundry.org/silk/cmd/silk-daemon
+go install code.cloudfoundry.org/silk/cmd/silk-teardown

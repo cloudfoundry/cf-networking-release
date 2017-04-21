@@ -64,7 +64,8 @@ sync_package silk-controller \
   -app code.cloudfoundry.org/silk/cmd/silk-controller &
 
 sync_package silk-daemon \
-  -app code.cloudfoundry.org/silk/cmd/silk-daemon &
+  -app code.cloudfoundry.org/silk/cmd/silk-daemon \
+  -app code.cloudfoundry.org/silk/cmd/silk-teardown &
 
 GOOS=linux sync_package flannel &
 
