@@ -26,7 +26,6 @@ var _ = Describe("space developer policy configuration", func() {
 		spaceNameA string
 		spaceNameB string
 		prefix     string
-		w          warrant.Warrant
 
 		policyClient *policy_client.ExternalClient
 	)
@@ -42,6 +41,11 @@ var _ = Describe("space developer policy configuration", func() {
 			},
 			fmt.Sprintf("https://%s", config.ApiEndpoint),
 		)
+
+		warrantClient := warrant.New(warrant.Config{
+			Host:          getUAABaseURL(),
+			SkipVerifySSL: true,
+		})
 
 		prefix = testConfig.Prefix
 		appA = fmt.Sprintf("appA-%d", rand.Int31())
@@ -64,18 +68,14 @@ var _ = Describe("space developer policy configuration", func() {
 		Expect(cf.Cf("target", "-o", orgName, "-s", spaceNameB).Wait(Timeout_Push)).To(gexec.Exit(0))
 
 		pushProxy(appB)
-		w = warrant.New(warrant.Config{
-			Host:          getUAABaseURL(),
-			SkipVerifySSL: true,
-		})
 
-		uaaAdminClientToken, err := w.Clients.GetToken("admin", testConfig.AdminSecret)
+		uaaAdminClientToken, err := warrantClient.Clients.GetToken("admin", testConfig.AdminSecret)
 		Expect(err).NotTo(HaveOccurred())
 
-		user := ensureUserExists(w, "space-developer", "password", uaaAdminClientToken)
-		group := ensureGroupExists(w, "network.write", uaaAdminClientToken)
+		user := ensureUserExists(warrantClient, "space-developer", "password", uaaAdminClientToken)
+		group := ensureGroupExists(warrantClient, "network.write", uaaAdminClientToken)
 
-		err = w.Groups.AddMember(group.ID, user.ID, uaaAdminClientToken)
+		err = warrantClient.Groups.AddMember(group.ID, user.ID, uaaAdminClientToken)
 		Expect(err).To(Or(BeNil(), BeAssignableToTypeOf(warrant.DuplicateResourceError{})))
 	})
 

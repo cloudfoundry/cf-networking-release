@@ -44,12 +44,14 @@ func getUAABaseURL() string {
 	sess := cf.Cf("curl", "/v2/info")
 	Eventually(sess.Wait(Timeout_Short)).Should(gexec.Exit(0))
 	var response struct {
-		TokenEndpoint string `json: "token_endpoint"`
+		TokenEndpoint string `json:"token_endpoint"`
 	}
 	err := json.Unmarshal(sess.Out.Contents(), &response)
 	Expect(err).NotTo(HaveOccurred())
 
-	return response.TokenEndpoint
+	uaaBaseURL := response.TokenEndpoint
+	Expect(uaaBaseURL).To(HavePrefix("https://uaa."))
+	return uaaBaseURL
 }
 
 func AuthAsAdmin() {
