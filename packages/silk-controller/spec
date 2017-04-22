@@ -35,3 +35,4 @@ files:
   - code.cloudfoundry.org/silk/vendor/github.com/tedsuo/rata/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/ziutek/utils/netaddr/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/gopkg.in/gorp.v1/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/gopkg.in/validator.v2/*.go # gosub

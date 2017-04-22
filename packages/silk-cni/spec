@@ -14,6 +14,7 @@ files:
   - code.cloudfoundry.org/silk/cni/config/*.go # gosub
   - code.cloudfoundry.org/silk/cni/legacy_flannel/*.go # gosub
   - code.cloudfoundry.org/silk/cni/lib/*.go # gosub
+  - code.cloudfoundry.org/silk/daemon/*.go # gosub
   - code.cloudfoundry.org/silk/lib/adapter/*.go # gosub
   - code.cloudfoundry.org/silk/lib/datastore/*.go # gosub
   - code.cloudfoundry.org/silk/lib/filelock/*.go # gosub
