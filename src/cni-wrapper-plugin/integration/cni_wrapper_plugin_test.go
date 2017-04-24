@@ -318,6 +318,21 @@ var _ = Describe("CniWrapperPlugin", func() {
 			Expect(AllIPTablesRules("nat")).To(ContainElement("-A POSTROUTING -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j MASQUERADE"))
 		})
 
+		It("writes default deny input chain rules to prevent connecting to things on the host", func() {
+			session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+
+			By("checking that the input chain jumps to the container's input chain")
+			Expect(AllIPTablesRules("filter")).To(ContainElement("-A INPUT -j " + inputChainName))
+
+			By("checking that the default deny rules in the container's input chain are created")
+			Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
+				"-A " + inputChainName + " -s 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j RETURN",
+				"-A " + inputChainName + " -s 1.2.3.4/32 -j REJECT --reject-with icmp-port-unreachable",
+			}))
+		})
+
 		Context("when DNS servers are configured", func() {
 			BeforeEach(func() {
 				inputStruct.DNSServers = []string{"169.254.0.1", "8.8.4.4", "169.254.0.2"}
