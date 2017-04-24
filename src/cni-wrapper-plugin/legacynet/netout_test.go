@@ -258,7 +258,7 @@ var _ = Describe("Netout", func() {
 		})
 	})
 
-	FDescribe("Cleanup", func() {
+	Describe("Cleanup", func() {
 		It("deletes the correct jump rules from the forward chain", func() {
 			err := netOut.Cleanup("some-container-handle")
 			Expect(err).NotTo(HaveOccurred())
