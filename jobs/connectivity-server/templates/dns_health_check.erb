@@ -20,7 +20,7 @@
   end
 %>
 
-curl <%= host %>:<%= port %>/leases \
+curl https://127.0.0.1:<%= port %>/leases \
   --cacert <%= ca_cert %> \
   --cert <%= client_cert %> \
   --key <%= client_key %>

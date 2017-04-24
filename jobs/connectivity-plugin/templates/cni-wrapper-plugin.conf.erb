@@ -16,7 +16,7 @@
       "cniVersion" => "0.3.0",
       "name" => "silk",
       "type" => "silk-cni",
-      "subnetFile" => "/var/vcap/jobs/connectivity-plugin/config/subnet.env",
+      "daemonPort" => p('cf_networking.connectivity_agent.health_check_port'),
       "dataDir" => "/var/vcap/data/host-local",
       "datastore" => "/var/vcap/data/silk/store.json",
       "mtu" => p('cf_networking.mtu'),
