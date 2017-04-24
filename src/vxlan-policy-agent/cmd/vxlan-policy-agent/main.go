@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"lib/datastore"
 	"lib/filelock"
-	"lib/flannel"
 	"lib/metrics"
 	"lib/policy_client"
 	"lib/poller"
@@ -71,15 +70,6 @@ func main() {
 	pollInterval := time.Duration(conf.PollInterval) * time.Second
 	if pollInterval == 0 {
 		pollInterval = time.Second
-	}
-
-	flannelInfoReader := &flannel.NetworkInfo{
-		FlannelSubnetFilePath: conf.FlannelSubnetFile,
-	}
-
-	localSubnetCIDR, _, err := flannelInfoReader.DiscoverNetworkInfo()
-	if err != nil {
-		die(logger, "discovering network info", err)
 	}
 
 	clientTLSConfig, err := mutualtls.NewClientTLSConfig(conf.ClientCertFile, conf.ClientKeyFile, conf.ServerCACertFile)
@@ -152,28 +142,6 @@ func main() {
 		lockedIPTables,
 	)
 
-	vxlanDefaultLocalPlanner := &planner.VxlanDefaultLocalPlanner{
-		Logger:      logger,
-		LocalSubnet: localSubnetCIDR,
-		Chain: enforcer.Chain{
-			Table:       "filter",
-			ParentChain: "FORWARD",
-			Prefix:      "vpa--local-",
-		},
-		LoggingState: iptablesLoggingState,
-	}
-
-	vxlanDefaultRemotePlanner := &planner.VxlanDefaultRemotePlanner{
-		Logger: logger,
-		VNI:    conf.VNI,
-		Chain: enforcer.Chain{
-			Table:       "filter",
-			ParentChain: "FORWARD",
-			Prefix:      "vpa--remote-",
-		},
-		LoggingState: iptablesLoggingState,
-	}
-
 	err = dropsonde.Initialize(conf.MetronAddress, dropsondeOrigin)
 	if err != nil {
 		log.Fatalf("initializing dropsonde: %s", err)
@@ -187,8 +155,6 @@ func main() {
 		PollInterval: pollInterval,
 		SingleCycleFunc: (&converger.SinglePollCycle{
 			Planners: []converger.Planner{
-				vxlanDefaultLocalPlanner,
-				vxlanDefaultRemotePlanner,
 				dynamicPlanner,
 			},
 			Enforcer:      ruleEnforcer,

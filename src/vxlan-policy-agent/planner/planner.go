@@ -26,6 +26,11 @@ type metricsSender interface {
 	SendDuration(string, time.Duration)
 }
 
+//go:generate counterfeiter -o fakes/loggingStateGetter.go --fake-name LoggingStateGetter . loggingStateGetter
+type loggingStateGetter interface {
+	IsEnabled() bool
+}
+
 type VxlanPolicyPlanner struct {
 	Logger        lager.Logger
 	Datastore     dstore

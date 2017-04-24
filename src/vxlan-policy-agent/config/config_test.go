@@ -31,7 +31,6 @@ var _ = Describe("Config", func() {
 					"cni_datastore_path": "/some/datastore/path",
 					"policy_server_url": "https://some-url:1234",
 					"vni": 42,
-					"flannel_subnet_file": "/some/subnet/file",
 					"metron_address": "http://1.2.3.4:1234",
 					"ca_cert_file": "/some/ca/file",
 					"client_cert_file": "/some/client/cert/file",
@@ -48,7 +47,6 @@ var _ = Describe("Config", func() {
 				Expect(c.Datastore).To(Equal("/some/datastore/path"))
 				Expect(c.PolicyServerURL).To(Equal("https://some-url:1234"))
 				Expect(c.VNI).To(Equal(42))
-				Expect(c.FlannelSubnetFile).To(Equal("/some/subnet/file"))
 				Expect(c.MetronAddress).To(Equal("http://1.2.3.4:1234"))
 				Expect(c.ServerCACertFile).To(Equal("/some/ca/file"))
 				Expect(c.ClientCertFile).To(Equal("/some/client/cert/file"))
@@ -90,14 +88,13 @@ var _ = Describe("Config", func() {
 					"cni_datastore_path": "/some/datastore/path",
 					"policy_server_url":  "https://some-url:1234",
 					"vni":                42,
-					"flannel_subnet_file": "/some/subnet/file",
-					"metron_address":      "http://1.2.3.4:1234",
-					"ca_cert_file":        "/some/ca/file",
-					"client_cert_file":    "/some/client/cert/file",
-					"client_key_file":     "/some/client/key/file",
-					"iptables_lock_file":  "/var/vcap/data/lock",
-					"debug_server_host":   "http://5.6.7.8",
-					"debug_server_port":   5678,
+					"metron_address":     "http://1.2.3.4:1234",
+					"ca_cert_file":       "/some/ca/file",
+					"client_cert_file":   "/some/client/cert/file",
+					"client_key_file":    "/some/client/key/file",
+					"iptables_lock_file": "/var/vcap/data/lock",
+					"debug_server_host":  "http://5.6.7.8",
+					"debug_server_port":  5678,
 				}
 				delete(allData, missingFlag)
 				Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
@@ -109,7 +106,6 @@ var _ = Describe("Config", func() {
 			Entry("missing datastore path", "cni_datastore_path", "Datastore: zero value"),
 			Entry("missing policy server url", "policy_server_url", "PolicyServerURL: less than min"),
 			Entry("missing vni", "vni", "VNI: zero value"),
-			Entry("missing flannel subnet file", "flannel_subnet_file", "FlannelSubnetFile: zero value"),
 			Entry("missing metron address", "metron_address", "MetronAddress: zero value"),
 			Entry("missing ca cert", "ca_cert_file", "ServerCACertFile: zero value"),
 			Entry("missing client cert file", "client_cert_file", "ClientCertFile: zero value"),

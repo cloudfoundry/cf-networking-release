@@ -2,6 +2,12 @@
 
 See [AWS](iaas.md#deploy-to-aws) deployment docs for examples
 
+### 0.22.0
+
+**Removed Properties**
+
+  - `cf_networking.vxlan_policy_agent.subnet_file` is now removed.
+
 ### 0.21.0
 
 **Changed Properties**
