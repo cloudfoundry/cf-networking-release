@@ -13,6 +13,7 @@ import (
 
 const prefixInput = "input"
 const prefixNetOut = "netout"
+const prefixOverlay = "overlay"
 const suffixNetOutLog = "log"
 
 //go:generate counterfeiter -o ../fakes/net_out_rule_converter.go --fake-name NetOutRuleConverter . netOutRuleConverter
@@ -35,6 +36,7 @@ func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, overlayN
 
 	inputChain := m.ChainNamer.Prefix(prefixInput, containerHandle)
 	forwardChain := m.ChainNamer.Prefix(prefixNetOut, containerHandle)
+	overlayChain := m.ChainNamer.Prefix(prefixOverlay, containerHandle)
 	logChain, err := m.ChainNamer.Postfix(forwardChain, suffixNetOutLog)
 	if err != nil {
 		return fmt.Errorf("getting chain name: %s", err)
@@ -61,6 +63,14 @@ func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, overlayN
 			Rules: []rules.IPTablesRule{
 				rules.NewNetOutRelatedEstablishedRule(containerIP.String(), overlayNetwork),
 				rules.NewNetOutDefaultRejectRule(containerIP.String(), overlayNetwork),
+			},
+		},
+		{
+			ParentChain: "FORWARD",
+			Chain:       overlayChain,
+			Rules: []rules.IPTablesRule{
+				rules.NewOverlayRelatedEstablishedRule(overlayNetwork, containerIP.String()),
+				rules.NewOverlayDefaultRejectRule(overlayNetwork, containerIP.String()),
 			},
 		},
 		{
@@ -114,6 +124,7 @@ func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, overlayN
 }
 
 func (m *NetOut) Cleanup(containerHandle string) error {
+	overlayChain := m.ChainNamer.Prefix(prefixOverlay, containerHandle)
 	forwardChain := m.ChainNamer.Prefix(prefixNetOut, containerHandle)
 	inputChain := m.ChainNamer.Prefix(prefixInput, containerHandle)
 	logChain, err := m.ChainNamer.Postfix(forwardChain, suffixNetOutLog)
@@ -122,6 +133,9 @@ func (m *NetOut) Cleanup(containerHandle string) error {
 	}
 
 	var result error
+	if err := cleanupChain("filter", "FORWARD", overlayChain, m.IPTables); err != nil {
+		result = multierror.Append(result, err)
+	}
 	if err := cleanupChain("filter", "FORWARD", forwardChain, m.IPTables); err != nil {
 		result = multierror.Append(result, err)
 	}

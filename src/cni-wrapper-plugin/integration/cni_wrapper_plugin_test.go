@@ -46,6 +46,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 		netinChainName          string
 		netoutChainName         string
 		inputChainName          string
+		overlayChainName        string
 		netoutLoggingChainName  string
 	)
 
@@ -204,6 +205,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 		netinChainName = ("netin--" + containerID)[:28]
 		netoutChainName = ("netout--" + containerID)[:28]
 		inputChainName = ("input--" + containerID)[:28]
+		overlayChainName = ("overlay--" + containerID)[:28]
 		netoutLoggingChainName = fmt.Sprintf("%s--log", netoutChainName[:23])
 
 		cmd = cniCommand("ADD", input)
@@ -230,6 +232,9 @@ var _ = Describe("CniWrapperPlugin", func() {
 		Expect(AllIPTablesRules("filter")).NotTo(ContainElement(ContainSubstring(inputChainName)))
 		Expect(AllIPTablesRules("filter")).NotTo(ContainElement(ContainSubstring(netoutChainName)))
 		Expect(AllIPTablesRules("filter")).NotTo(ContainElement(ContainSubstring(netoutLoggingChainName)))
+
+		By("checking that there are no more overlay rules for this container")
+		Expect(AllIPTablesRules("filter")).NotTo(ContainElement(ContainSubstring(overlayChainName)))
 
 		os.Remove(debugFileName)
 		os.Remove(datastorePath)
@@ -330,6 +335,21 @@ var _ = Describe("CniWrapperPlugin", func() {
 			Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
 				"-A " + inputChainName + " -s 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j RETURN",
 				"-A " + inputChainName + " -s 1.2.3.4/32 -j REJECT --reject-with icmp-port-unreachable",
+			}))
+		})
+
+		It("writes default deny forward chain rules to prevent connections from things on the overlay", func() {
+			session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+			Expect(err).NotTo(HaveOccurred())
+			Eventually(session).Should(gexec.Exit(0))
+
+			By("checking that the forward chain jumps to the container's overlay chain")
+			Expect(AllIPTablesRules("filter")).To(ContainElement("-A FORWARD -j " + overlayChainName))
+
+			By("checking that the default deny rules in the container's overlay chain are created")
+			Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
+				"-A " + overlayChainName + " -s 10.255.0.0/16 -d 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j ACCEPT",
+				"-A " + overlayChainName + " -s 10.255.0.0/16 -d 1.2.3.4/32 -j REJECT --reject-with icmp-port-unreachable",
 			}))
 		})
 

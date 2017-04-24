@@ -220,6 +220,24 @@ func NewNetOutRelatedEstablishedRule(subnet, overlayNetwork string) IPTablesRule
 	}
 }
 
+func NewOverlayDefaultRejectRule(overlayNetwork, containerIP string) IPTablesRule {
+	return IPTablesRule{
+		"-s", overlayNetwork,
+		"-d", containerIP,
+		"--jump", "REJECT",
+		"--reject-with", "icmp-port-unreachable",
+	}
+}
+
+func NewOverlayRelatedEstablishedRule(overlayNetwork, containerIP string) IPTablesRule {
+	return IPTablesRule{
+		"-s", overlayNetwork,
+		"-d", containerIP,
+		"-m", "state", "--state", "RELATED,ESTABLISHED",
+		"--jump", "ACCEPT",
+	}
+}
+
 func NewNetOutDefaultRejectLogRule(containerHandle, subnet, overlayNetwork string) IPTablesRule {
 	return IPTablesRule{
 		"-s", subnet,
