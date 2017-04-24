@@ -4,7 +4,6 @@ name: connectivity-plugin
 templates:
   pre-start.erb: bin/pre-start
   cni-wrapper-plugin.conf.erb: config/cni/cni-wrapper-plugin.conf
-  subnet.env.erb: config/subnet.env
 
 packages:
   - silk-cni
