@@ -71,7 +71,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 		})
 
-		It("allows the user to configure policies", func(done Done) {
+		It("allows policies to whitelist traffic between applications", func(done Done) {
 			cmd := exec.Command("go", "run", "../../cf-pusher/cmd/cf-pusher/main.go", "--config", helpers.ConfigPath())
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
