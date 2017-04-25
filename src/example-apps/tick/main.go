@@ -87,7 +87,7 @@ func mainWithError() error {
 		TTLSeconds:         ttlSeconds,
 	}
 
-	pollInterval := time.Duration(ttlSeconds*1000*4/5) * time.Millisecond
+	pollInterval := time.Duration(ttlSeconds*1000*1/4) * time.Millisecond // we can fail twice and not lose presence in the registry
 	fmt.Printf("ttl is %d seconds, polling interval is %v\n", ttlSeconds, pollInterval)
 	poller := &Poller{
 		PollInterval: pollInterval,
