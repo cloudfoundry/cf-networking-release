@@ -24,6 +24,8 @@ files:
   - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/lager/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/cni/pkg/utils/hwaddr/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/go-sql-driver/mysql/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/hashicorp/go-multierror/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/hashicorp/go-multierror/vendor/github.com/hashicorp/errwrap/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/lib/pq/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/lib/pq/oid/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/tedsuo/ifrit/*.go # gosub
