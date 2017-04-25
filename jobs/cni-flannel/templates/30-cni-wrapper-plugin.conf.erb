@@ -11,6 +11,7 @@
     "health_check_url" => "http://127.0.0.1:" + p('cf_networking.health_check_port').to_s,
     "instance_address" => spec.ip,
     "iptables_asg_logging" => p("cf_networking.iptables_asg_logging"),
+    "iptables_c2c_logging" => p("cf_networking.iptables_c2c_logging"),
     "dns_servers" => p("cf_networking.dns_servers"),
     "delegate" => {
       "cniVersion" => "0.3.0",

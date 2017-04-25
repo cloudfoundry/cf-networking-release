@@ -201,9 +201,9 @@ var _ = Describe("Netout", func() {
 			})
 		})
 
-		Context("when global logging is enabled", func() {
+		Context("when global ASG logging is enabled", func() {
 			BeforeEach(func() {
-				netOut.GlobalLogging = true
+				netOut.ASGLogging = true
 			})
 			It("writes a log rule for denies", func() {
 				err := netOut.Initialize("some-container-handle", net.ParseIP("5.6.7.8"), "9.9.0.0/16", nil)
@@ -228,7 +228,36 @@ var _ = Describe("Netout", func() {
 						"--jump", "REJECT",
 						"--reject-with", "icmp-port-unreachable"},
 				}))
+			})
+		})
 
+		Context("when C2C logging is enabled", func() {
+			BeforeEach(func() {
+				netOut.C2CLogging = true
+			})
+			It("writes a log rule for denies", func() {
+				err := netOut.Initialize("some-container-handle", net.ParseIP("5.6.7.8"), "9.9.0.0/16", nil)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(ipTables.BulkAppendCallCount()).To(Equal(4))
+
+				table, chain, rulespec := ipTables.BulkAppendArgsForCall(2)
+				Expect(table).To(Equal("filter"))
+				Expect(chain).To(Equal("overlay-some-container-handle"))
+				Expect(rulespec).To(Equal([]rules.IPTablesRule{
+					{"-s", "9.9.0.0/16",
+						"-d", "5.6.7.8",
+						"-m", "state", "--state", "RELATED,ESTABLISHED",
+						"--jump", "ACCEPT"},
+					{"-s", "9.9.0.0/16",
+						"-d", "5.6.7.8",
+						"-m", "limit", "--limit", "2/min",
+						"--jump", "LOG", "--log-prefix", "DENY_C2C_some-container-handle"},
+					{"-s", "9.9.0.0/16",
+						"-d", "5.6.7.8",
+						"--jump", "REJECT",
+						"--reject-with", "icmp-port-unreachable"},
+				}))
 			})
 		})
 
@@ -475,7 +504,7 @@ var _ = Describe("Netout", func() {
 
 		Context("when the global logging is enabled", func() {
 			BeforeEach(func() {
-				netOut.GlobalLogging = true
+				netOut.ASGLogging = true
 			})
 			It("calls Convert with globalLogging set to true", func() {
 				err := netOut.InsertRule("some-container-handle", netOutRule, "1.2.3.4")
@@ -559,7 +588,7 @@ var _ = Describe("Netout", func() {
 
 		Context("when the global logging is enabled", func() {
 			BeforeEach(func() {
-				netOut.GlobalLogging = true
+				netOut.ASGLogging = true
 			})
 			It("calls BulkConvert with globalLogging set to true", func() {
 				err := netOut.BulkInsertRules("some-container-handle", netOutRules, "1.2.3.4")

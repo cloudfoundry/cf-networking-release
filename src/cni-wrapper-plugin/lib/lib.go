@@ -25,6 +25,7 @@ type WrapperConfig struct {
 	InstanceAddress    string                 `json:"instance_address"`
 	DNSServers         []string               `json:"dns_servers"`
 	IPTablesASGLogging bool                   `json:"iptables_asg_logging"`
+	IPTablesC2CLogging bool                   `json:"iptables_c2c_logging"`
 	RuntimeConfig      RuntimeConfig          `json:"runtimeConfig,omitempty"`
 }
 

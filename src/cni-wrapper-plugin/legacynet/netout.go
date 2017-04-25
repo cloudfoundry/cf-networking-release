@@ -23,10 +23,11 @@ type netOutRuleConverter interface {
 }
 
 type NetOut struct {
-	ChainNamer    chainNamer
-	IPTables      rules.IPTablesAdapter
-	Converter     netOutRuleConverter
-	GlobalLogging bool
+	ChainNamer chainNamer
+	IPTables   rules.IPTablesAdapter
+	Converter  netOutRuleConverter
+	ASGLogging bool
+	C2CLogging bool
 }
 
 func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, overlayNetwork string, dnsServers []string) error {
@@ -82,11 +83,19 @@ func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, overlayN
 		},
 	}
 
-	if m.GlobalLogging {
+	if m.ASGLogging {
 		args[1].Rules = []rules.IPTablesRule{
 			rules.NewNetOutRelatedEstablishedRule(containerIP.String(), overlayNetwork),
 			rules.NewNetOutDefaultRejectLogRule(containerHandle, containerIP.String(), overlayNetwork),
 			rules.NewNetOutDefaultRejectRule(containerIP.String(), overlayNetwork),
+		}
+	}
+
+	if m.C2CLogging {
+		args[2].Rules = []rules.IPTablesRule{
+			rules.NewOverlayRelatedEstablishedRule(overlayNetwork, containerIP.String()),
+			rules.NewOverlayDefaultRejectLogRule(containerHandle, overlayNetwork, containerIP.String()),
+			rules.NewOverlayDefaultRejectRule(overlayNetwork, containerIP.String()),
 		}
 	}
 
@@ -156,7 +165,7 @@ func (m *NetOut) InsertRule(containerHandle string, rule garden.NetOutRule, cont
 		return fmt.Errorf("getting chain name: %s", err)
 	}
 
-	ruleSpec := m.Converter.Convert(rule, containerIP, logChain, m.GlobalLogging)
+	ruleSpec := m.Converter.Convert(rule, containerIP, logChain, m.ASGLogging)
 	err = m.IPTables.BulkInsert("filter", chain, 1, ruleSpec...)
 	if err != nil {
 		return fmt.Errorf("inserting net-out rule: %s", err)
@@ -172,7 +181,7 @@ func (m *NetOut) BulkInsertRules(containerHandle string, netOutRules []garden.Ne
 		return fmt.Errorf("getting chain name: %s", err)
 	}
 
-	ruleSpec := m.Converter.BulkConvert(netOutRules, containerIP, logChain, m.GlobalLogging)
+	ruleSpec := m.Converter.BulkConvert(netOutRules, containerIP, logChain, m.ASGLogging)
 	err = m.IPTables.BulkInsert("filter", chain, 1, ruleSpec...)
 	if err != nil {
 		return fmt.Errorf("bulk inserting net-out rules: %s", err)

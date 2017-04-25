@@ -519,6 +519,27 @@ var _ = Describe("CniWrapperPlugin", func() {
 
 			})
 
+			Context("when iptables_c2c_logging is enabled", func() {
+				BeforeEach(func() {
+					inputStruct.WrapperConfig.IPTablesC2CLogging = true
+					input = GetInput(inputStruct)
+				})
+
+				It("writes iptables overlay logging rules", func() {
+					cmd = cniCommand("ADD", input)
+					session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+					Expect(err).NotTo(HaveOccurred())
+					Eventually(session).Should(gexec.Exit(0))
+
+					By("checking that the default deny rules in the container's overlay chain are created")
+					Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
+						"-A " + overlayChainName + " -s 10.255.0.0/16 -d 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j ACCEPT",
+						"-A " + overlayChainName + " -s 10.255.0.0/16 -d 1.2.3.4/32 -m limit --limit 2/min -j LOG --log-prefix DENY_C2C_" + containerID[:20],
+						"-A " + overlayChainName + " -s 10.255.0.0/16 -d 1.2.3.4/32 -j REJECT --reject-with icmp-port-unreachable",
+					}))
+				})
+			})
+
 			Context("when iptables_asg_logging is enabled", func() {
 				BeforeEach(func() {
 					inputStruct.WrapperConfig.RuntimeConfig.NetOutRules[0].Log = false

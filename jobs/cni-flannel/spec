@@ -71,6 +71,10 @@ properties:
     description: "Enables global logging for all ASGs"
     default: false
 
+  cf_networking.iptables_c2c_logging:
+    description: "Enables global logging for denied C2C packets"
+    default: false
+
   cf_networking.dns_servers:
     description: "DNS servers containers will use. If set, takes precedence over DNS servers configured through garden"
     default: []

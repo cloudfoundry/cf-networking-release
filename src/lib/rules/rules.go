@@ -229,6 +229,16 @@ func NewOverlayDefaultRejectRule(overlayNetwork, containerIP string) IPTablesRul
 	}
 }
 
+func NewOverlayDefaultRejectLogRule(containerHandle, overlayNetwork, containerIP string) IPTablesRule {
+	return IPTablesRule{
+		"-s", overlayNetwork,
+		"-d", containerIP,
+		"-m", "limit", "--limit", "2/min",
+		"--jump", "LOG",
+		"--log-prefix", fmt.Sprintf("DENY_C2C_%s", containerHandle),
+	}
+}
+
 func NewOverlayRelatedEstablishedRule(overlayNetwork, containerIP string) IPTablesRule {
 	return IPTablesRule{
 		"-s", overlayNetwork,
