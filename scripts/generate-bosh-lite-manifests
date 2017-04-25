@@ -46,4 +46,6 @@ popd
 
 mv ${DIEGO_MANIFESTS_DIR}/diego.yml ${CF_NETWORKING_MANIFESTS_DIR}/diego_cf_networking.yml
 
-bosh deployment ${CF_NETWORKING_DIR}/bosh-lite/deployments/diego_cf_networking.yml
+echo "deployment manifests generated. you need to do TWO deploys"
+echo "bosh deploy ${CF_NETWORKING_DIR}/bosh-lite/deployments/cf_networking.yml"
+echo "bosh deploy ${CF_NETWORKING_DIR}/bosh-lite/deployments/diego_cf_networking.yml"
