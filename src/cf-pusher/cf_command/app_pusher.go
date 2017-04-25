@@ -11,18 +11,15 @@ type manifestGenerator interface {
 }
 
 type AppPusher struct {
-	Applications      []Application
-	Adapter           pushCLIAdapter
-	ManifestGenerator manifestGenerator
-	Concurrency       int
-	ManifestPath      string
-	Directory         string
+	Applications []Application
+	Adapter      pushCLIAdapter
+	Concurrency  int
+	ManifestPath string
+	Directory    string
 }
 
 type Application struct {
-	Name      string
-	Directory string
-	Manifest  interface{}
+	Name string
 }
 
 func (a *AppPusher) Push() error {

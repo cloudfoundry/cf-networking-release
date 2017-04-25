@@ -135,9 +135,7 @@ func main() {
 	}
 	for _, tickApp := range scaleGroup.TickApps {
 		t := cf_command.Application{
-			Name:      tickApp,
-			Directory: tickAppDirectory,
-			Manifest:  tickAppManifest,
+			Name: tickApp,
 		}
 		tickApps = append(tickApps, t)
 	}
@@ -162,9 +160,7 @@ func main() {
 	}
 	for _, proxyApp := range scaleGroup.ProxyApps {
 		p := cf_command.Application{
-			Name:      proxyApp,
-			Directory: proxyAppDirectory,
-			Manifest:  proxyAppManifest,
+			Name: proxyApp,
 		}
 		proxyApps = append(proxyApps, p)
 	}
@@ -189,28 +185,25 @@ func main() {
 	}
 
 	registryAppPusher := cf_command.AppPusher{
-		Applications:      []cf_command.Application{registryApp},
-		Adapter:           adapter,
-		ManifestGenerator: manifestGenerator,
-		Concurrency:       config.Concurrency,
-		ManifestPath:      registryManifestPath,
-		Directory:         registryAppDirectory,
+		Applications: []cf_command.Application{registryApp},
+		Adapter:      adapter,
+		Concurrency:  config.Concurrency,
+		ManifestPath: registryManifestPath,
+		Directory:    registryAppDirectory,
 	}
 	tickAppPusher := cf_command.AppPusher{
-		Applications:      tickApps,
-		Adapter:           adapter,
-		ManifestGenerator: manifestGenerator,
-		Concurrency:       config.Concurrency,
-		ManifestPath:      tickManifestPath,
-		Directory:         tickAppDirectory,
+		Applications: tickApps,
+		Adapter:      adapter,
+		Concurrency:  config.Concurrency,
+		ManifestPath: tickManifestPath,
+		Directory:    tickAppDirectory,
 	}
 	proxyAppPusher := cf_command.AppPusher{
-		Applications:      proxyApps,
-		Adapter:           adapter,
-		ManifestGenerator: manifestGenerator,
-		Concurrency:       config.Concurrency,
-		ManifestPath:      proxyManifestPath,
-		Directory:         proxyAppDirectory,
+		Applications: proxyApps,
+		Adapter:      adapter,
+		Concurrency:  config.Concurrency,
+		ManifestPath: proxyManifestPath,
+		Directory:    proxyAppDirectory,
 	}
 
 	asgChecker := cf_command.ASGChecker{
