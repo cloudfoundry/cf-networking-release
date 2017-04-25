@@ -58,8 +58,8 @@ NOTE: If you are having problems, first consult our [known issues doc](known-iss
   ```
 
   This can be configured at startup via the
-  `cf_networking.vxlan_policy_agent.iptables_c2c_logging` property. It defaults
-  to `false`.
+  `cf_networking.iptables_c2c_logging` property. It defaults
+  to `false`. This property is used by the vxlan-policy-agent and the connectivity-plugin jobs.
 
   Logs from iptables end up in `/var/log/kern.log`.
 

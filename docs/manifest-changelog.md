@@ -4,6 +4,12 @@ See [AWS](iaas.md#deploy-to-aws) deployment docs for examples
 
 ### 0.22.0
 
+**Changed Properties**
+
+  - `cf_networking.vxlan_policy_agent.iptables_c2c_logging` is now just `cf_networking.iptables_c2c_logging`
+     It can be set on both the vxlan-policy-agent job for accepted packets 
+     as well as the connectivity-plugin job for denied packets and defaults to false on both.
+
 **Removed Properties**
 
   - `cf_networking.vxlan_policy_agent.subnet_file` is now removed.
