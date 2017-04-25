@@ -15,7 +15,7 @@ properties:
     default: "10.255.0.0/16"
 
   cf_networking.mtu:
-    description: "MTU for containers"
+    description: "MTU for containers.  If zero, MTU will be automatically computed based on VXLAN encap overhead and external network MTU."
     default: 0
 
   cf_networking.connectivity_agent.health_check_port:
