@@ -13,6 +13,7 @@ See [AWS](iaas.md#deploy-to-aws) deployment docs for examples
 **Removed Properties**
 
   - `cf_networking.vxlan_policy_agent.subnet_file` is now removed.
+  - `cf_networking.network` has been removed from the `garden-cni` job spec.  The property remains in use on other jobs.
 
 ### 0.21.0
 

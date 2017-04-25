@@ -24,10 +24,6 @@ properties:
     description: "Total number of host ports that may be allocated to containers"
     default: 5000
 
-  cf_networking.network:
-    description: "IP range used by the container network"
-    default: 10.255.0.0/16
-
   cf_networking.flannel_watchdog.health_check_port:
     description: "Port for the flannel-watchdog health check endpoint"
     default: 10007
