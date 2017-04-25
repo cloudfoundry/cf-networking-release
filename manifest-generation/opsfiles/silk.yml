@@ -54,11 +54,6 @@
           client_cert: "((network_connectivity_client.certificate))"
           client_key: "((network_connectivity_client.private_key))"
 
-# point policy agent at correct subnet file
-- type: replace
-  path: /instance_groups/name=diego-cell/jobs/name=vxlan-policy-agent/properties/cf_networking/vxlan_policy_agent/subnet_file?
-  value: /var/vcap/jobs/connectivity-plugin/config/subnet.env
-
 # point garden external networker at correct cni config dir
 - type: replace
   path: /instance_groups/name=diego-cell/jobs/name=garden-cni/properties?/cf_networking/garden_external_networker/cni_config_dir
