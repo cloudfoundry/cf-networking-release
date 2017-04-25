@@ -59,23 +59,23 @@ func main() {
 		prefix = config.Prefix
 	}
 
-	var tickApps []string
+	var tickAppNames []string
 	for i := 0; i < config.Applications; i++ {
-		tickApps = append(tickApps, fmt.Sprintf("%s%s-%d", prefix, "tick", i))
+		tickAppNames = append(tickAppNames, fmt.Sprintf("%s%s-%d", prefix, "tick", i))
 	}
 
-	var proxyApps []string
+	var proxyAppNames []string
 	for i := 0; i < config.ProxyApplications; i++ {
-		proxyApps = append(proxyApps, fmt.Sprintf("%s%s-%d", prefix, "proxy", i))
+		proxyAppNames = append(proxyAppNames, fmt.Sprintf("%s%s-%d", prefix, "proxy", i))
 	}
 
 	scaleGroup := ScaleGroup{
 		Org:            prefix + "org",
 		Space:          prefix + "space",
-		TickApps:       tickApps,
+		TickApps:       tickAppNames,
 		TickInstances:  config.AppInstances,
 		Registry:       prefix + "registry",
-		ProxyApps:      proxyApps,
+		ProxyApps:      proxyAppNames,
 		ProxyInstances: config.ProxyInstances,
 	}
 
@@ -100,13 +100,18 @@ func main() {
 		RoutePorts:       -1,
 	}
 
-	registryApp := cf_command.Application{
-		Name:      scaleGroup.Registry,
-		Directory: filepath.Join(appsDir, "registry"),
-	}
-	appsToPush := []cf_command.Application{registryApp}
+	manifestGenerator := &manifest_generator.ManifestGenerator{}
 
-	tickManifest := models.Manifest{
+	registryAppDirectory := filepath.Join(appsDir, "registry")
+	registryManifestPath := filepath.Join(registryAppDirectory, "manifest.yml")
+	if err != nil {
+		log.Fatal("generate manifest: %s", err)
+	}
+	registryApp := cf_command.Application{
+		Name: scaleGroup.Registry,
+	}
+
+	tickAppManifest := models.Manifest{
 		Applications: []models.Application{{
 			Name:      "tick",
 			Memory:    "32M",
@@ -122,39 +127,51 @@ func main() {
 			},
 		}},
 	}
-
+	tickApps := []cf_command.Application{}
+	tickAppDirectory := filepath.Join(appsDir, "tick")
+	tickManifestPath, err := manifestGenerator.Generate(tickAppManifest)
+	if err != nil {
+		log.Fatal("generate manifest: %s", err)
+	}
 	for _, tickApp := range scaleGroup.TickApps {
 		t := cf_command.Application{
 			Name:      tickApp,
-			Directory: filepath.Join(appsDir, "tick"),
-			Manifest:  tickManifest,
+			Directory: tickAppDirectory,
+			Manifest:  tickAppManifest,
 		}
-		appsToPush = append(appsToPush, t)
+		tickApps = append(tickApps, t)
 	}
 
+	proxyAppManifest := models.Manifest{
+		Applications: []models.Application{{
+			Name:      "proxy",
+			Memory:    "32M",
+			DiskQuota: "32M",
+			BuildPack: "go_buildpack",
+			Instances: scaleGroup.ProxyInstances,
+			Env: models.ProxyEnvironment{
+				GoPackageName: "example-apps/proxy",
+			},
+		}},
+	}
+	proxyApps := []cf_command.Application{}
+	proxyAppDirectory := filepath.Join(appsDir, "proxy")
+	proxyManifestPath, err := manifestGenerator.Generate(proxyAppManifest)
+	if err != nil {
+		log.Fatal("generate manifest: %s", err)
+	}
 	for _, proxyApp := range scaleGroup.ProxyApps {
 		p := cf_command.Application{
 			Name:      proxyApp,
-			Directory: filepath.Join(appsDir, "proxy"),
-			Manifest: models.Manifest{
-				Applications: []models.Application{{
-					Name:      "proxy",
-					Memory:    "32M",
-					DiskQuota: "32M",
-					BuildPack: "go_buildpack",
-					Instances: scaleGroup.ProxyInstances,
-					Env: models.ProxyEnvironment{
-						GoPackageName: "example-apps/proxy",
-					},
-				}},
-			},
+			Directory: proxyAppDirectory,
+			Manifest:  proxyAppManifest,
 		}
-		appsToPush = append(appsToPush, p)
+		proxyApps = append(proxyApps, p)
 	}
 
 	appChecker := cf_command.AppChecker{
 		Org:          scaleGroup.Org,
-		Applications: appsToPush,
+		Applications: append(append(proxyApps, registryApp), tickApps...),
 		Adapter:      adapter,
 	}
 
@@ -171,12 +188,29 @@ func main() {
 		Adapter: adapter,
 	}
 
-	manifestGenerator := &manifest_generator.ManifestGenerator{}
-	appPusher := cf_command.AppPusher{
-		Applications:      appsToPush,
+	registryAppPusher := cf_command.AppPusher{
+		Applications:      []cf_command.Application{registryApp},
 		Adapter:           adapter,
 		ManifestGenerator: manifestGenerator,
 		Concurrency:       config.Concurrency,
+		ManifestPath:      registryManifestPath,
+		Directory:         registryAppDirectory,
+	}
+	tickAppPusher := cf_command.AppPusher{
+		Applications:      tickApps,
+		Adapter:           adapter,
+		ManifestGenerator: manifestGenerator,
+		Concurrency:       config.Concurrency,
+		ManifestPath:      tickManifestPath,
+		Directory:         tickAppDirectory,
+	}
+	proxyAppPusher := cf_command.AppPusher{
+		Applications:      proxyApps,
+		Adapter:           adapter,
+		ManifestGenerator: manifestGenerator,
+		Concurrency:       config.Concurrency,
+		ManifestPath:      proxyManifestPath,
+		Directory:         proxyAppDirectory,
 	}
 
 	asgChecker := cf_command.ASGChecker{
@@ -236,8 +270,14 @@ func main() {
 	}
 
 	// push apps
-	if err := appPusher.Push(); err != nil {
-		log.Printf("Got an error while pushing apps: %s", err)
+	if err := registryAppPusher.Push(); err != nil {
+		log.Printf("Got an error while pushing registry: %s", err)
+	}
+	if err := tickAppPusher.Push(); err != nil {
+		log.Printf("Got an error while pushing tick apps: %s", err)
+	}
+	if err := proxyAppPusher.Push(); err != nil {
+		log.Printf("Got an error while pushing proxy apps: %s", err)
 	}
 
 	// check that apps pushed OK

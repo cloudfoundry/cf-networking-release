@@ -8,20 +8,23 @@ cd $THIS_DIR
 export CONFIG=/tmp/bosh-lite-integration-config.json
 export APPS_DIR=${GOPATH}/src/example-apps
 
-echo '
+vars_store="$HOME/workspace/container-networking-deployments/environments/local/deployment-vars.yml"
+export ADMIN_PASSWORD=$(grep scim "${vars_store}" | cut -d ' ' -f2)
+
+cat > $CONFIG <<EOF
 {
   "api": "api.bosh-lite.com",
   "admin_user": "admin",
-  "admin_password": "admin",
+  "admin_password": "$ADMIN_PASSWORD",
   "apps_domain": "bosh-lite.com",
   "skip_ssl_validation": true,
   "test_app_instances": 2,
-  "test_applications": 4,
+  "test_applications": 2,
   "proxy_applications": 1,
   "proxy_instances": 1,
   "concurrency": 2,
   "asg_size": 9
 }
-' > $CONFIG
+EOF
 
 go run ../cmd/cf-pusher/main.go --config $CONFIG
