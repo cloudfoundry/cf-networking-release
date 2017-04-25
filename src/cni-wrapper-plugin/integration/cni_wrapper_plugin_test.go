@@ -215,7 +215,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 		cmd := cniCommand("DEL", input)
 		session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
-		Eventually(session).Should(gexec.Exit(0))
+		Eventually(session, "5s").Should(gexec.Exit(0))
 
 		By("checking that ip masquerade rule is removed")
 		Expect(AllIPTablesRules("nat")).NotTo(ContainElement("-A POSTROUTING -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j MASQUERADE"))
