@@ -59,12 +59,12 @@ bootDB "${DB:-"notset"}"
 if [ "${1:-""}" = "" ]; then
   for dir in "${packages[@]}"; do
     pushd $dir
-      ginkgo -r -p --race -randomizeAllSpecs -randomizeSuites "${@:2}"
+      ginkgo -r -p --race -randomizeAllSpecs -randomizeSuites -failFast "${@:2}"
     popd
   done
   for dir in "${serial_packages[@]}"; do
     pushd $dir
-      ginkgo -r -randomizeAllSpecs -randomizeSuites "${@:2}"
+      ginkgo -r -randomizeAllSpecs -randomizeSuites -failFast "${@:2}"
     popd
   done
 else
