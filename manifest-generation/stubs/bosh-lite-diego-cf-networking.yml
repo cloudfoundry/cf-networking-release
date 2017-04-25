@@ -17,6 +17,10 @@ cf_networking_overrides:
   bbs_templates:
   - name: connectivity-server
     release: cf-networking
+  bbs_consul_properties:
+    agent:
+      services:
+        connectivity-server: {}
   properties:
     cf_networking:
       garden_external_networker:
