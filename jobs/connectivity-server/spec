@@ -80,6 +80,10 @@ properties:
     description: "Name of logical database to use"
     default: ""
 
+  cf_networking.connectivity_server.lease_expiration_time:
+    description: "Expiration time for lease, in minutes"
+    default: 1
+
   cf_networking.disable:
     description: "Disable container to container networking"
     default: false

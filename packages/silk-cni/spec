@@ -12,13 +12,15 @@ files:
   - code.cloudfoundry.org/silk/cmd/silk-cni/*.go # gosub
   - code.cloudfoundry.org/silk/cni/adapter/*.go # gosub
   - code.cloudfoundry.org/silk/cni/config/*.go # gosub
-  - code.cloudfoundry.org/silk/cni/legacy_flannel/*.go # gosub
   - code.cloudfoundry.org/silk/cni/lib/*.go # gosub
+  - code.cloudfoundry.org/silk/cni/netinfo/*.go # gosub
   - code.cloudfoundry.org/silk/daemon/*.go # gosub
   - code.cloudfoundry.org/silk/lib/adapter/*.go # gosub
   - code.cloudfoundry.org/silk/lib/datastore/*.go # gosub
   - code.cloudfoundry.org/silk/lib/filelock/*.go # gosub
   - code.cloudfoundry.org/silk/lib/serial/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/go-db-helpers/json_client/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/go-db-helpers/marshal/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/lager/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/cni/pkg/invoke/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/cni/pkg/ip/*.go # gosub
