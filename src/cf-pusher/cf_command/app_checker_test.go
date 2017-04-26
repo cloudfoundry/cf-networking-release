@@ -26,8 +26,7 @@ var _ = Describe("AppChecker", func() {
 		BeforeEach(func() {
 			appChecker.Applications = []cf_command.Application{
 				{
-					Name:      "some-name-1",
-					Directory: "some/dir",
+					Name: "some-name-1",
 				},
 			}
 			appSpec = map[string]int{}
@@ -67,8 +66,7 @@ var _ = Describe("AppChecker", func() {
 		Context("when the app name is not in the app spec", func() {
 			BeforeEach(func() {
 				appChecker.Applications = append(appChecker.Applications, cf_command.Application{
-					Name:      "banana",
-					Directory: "some/dir",
+					Name: "banana",
 				})
 				fakeAdapter.AppCountReturns(2, nil)
 			})
