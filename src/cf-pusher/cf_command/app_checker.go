@@ -18,6 +18,7 @@ type AppChecker struct {
 	Org          string
 	Applications []Application
 	Adapter      checkCLIAdapter
+	Concurrency  int
 }
 
 type AppStatus struct {
@@ -43,36 +44,59 @@ func (a *AppChecker) CheckApps(appSpec map[string]int) error {
 		return errors.New(fmt.Sprintf("app count %d does not match %d", appCount, len(a.Applications)))
 	}
 
-	for _, app := range a.Applications {
-		guid, err := a.Adapter.AppGuid(app.Name)
-		if err != nil {
-			return fmt.Errorf("checking app guid %s: %s", app.Name, err)
-		}
-		result, err := a.Adapter.CheckApp(guid)
-		if err != nil {
-			return fmt.Errorf("checking app %s: %s", app.Name, err)
-		}
-
-		s := &AppStatus{}
-		if err := json.Unmarshal(result, s); err != nil {
-			return err
-		}
-
-		if s.Instances == 0 {
-			return fmt.Errorf("checking app %s: %s", app.Name, "no instances are running")
-		}
-
-		if s.RunningInstances != s.Instances {
-			return fmt.Errorf("checking app %s: %s", app.Name, "not all instances are running")
-		}
-
-		if desiredInstances, ok := appSpec[app.Name]; ok {
-			if appSpec[app.Name] != s.RunningInstances {
-				return fmt.Errorf("checking app %s: %s, running: %d desired: %d", app.Name, "not running desired instances", s.RunningInstances, desiredInstances)
+	sem := make(chan bool, a.Concurrency)
+	errs := make(chan error, len(a.Applications))
+	for _, o := range a.Applications {
+		sem <- true
+		go func(app Application) {
+			defer func() { <-sem }()
+			guid, err := a.Adapter.AppGuid(app.Name)
+			if err != nil {
+				errs <- fmt.Errorf("checking app guid %s: %s", app.Name, err)
+				return
 			}
-		} else {
-			return fmt.Errorf("checking app %s: not found in app spec", app.Name)
-		}
+			result, err := a.Adapter.CheckApp(guid)
+			if err != nil {
+				errs <- fmt.Errorf("checking app %s: %s", app.Name, err)
+				return
+			}
+
+			s := &AppStatus{}
+			if err := json.Unmarshal(result, s); err != nil {
+				errs <- err
+				return
+			}
+
+			if s.Instances == 0 {
+				errs <- fmt.Errorf("checking app %s: %s", app.Name, "no instances are running")
+				return
+			}
+
+			if s.RunningInstances != s.Instances {
+				errs <- fmt.Errorf("checking app %s: %s", app.Name, "not all instances are running")
+				return
+			}
+
+			if desiredInstances, ok := appSpec[app.Name]; ok {
+				if appSpec[app.Name] != s.RunningInstances {
+					errs <- fmt.Errorf("checking app %s: %s, running: %d desired: %d", app.Name, "not running desired instances", s.RunningInstances, desiredInstances)
+					return
+				}
+			} else {
+				errs <- fmt.Errorf("checking app %s: not found in app spec", app.Name)
+				return
+			}
+		}(o)
 	}
+
+	for i := 0; i < cap(sem); i++ {
+		sem <- true
+	}
+
+	close(errs)
+	if err := <-errs; err != nil {
+		return err
+	}
+
 	return nil
 }

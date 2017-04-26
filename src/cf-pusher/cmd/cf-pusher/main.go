@@ -169,6 +169,7 @@ func main() {
 		Org:          scaleGroup.Org,
 		Applications: append(append(proxyApps, registryApp), tickApps...),
 		Adapter:      adapter,
+		Concurrency:  config.Concurrency,
 	}
 
 	orgDeleter := &cf_command.OrgDeleter{

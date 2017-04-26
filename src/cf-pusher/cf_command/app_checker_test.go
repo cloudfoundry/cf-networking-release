@@ -18,8 +18,9 @@ var _ = Describe("AppChecker", func() {
 	BeforeEach(func() {
 		fakeAdapter = &fakes.CheckCLIAdapter{}
 		appChecker = &cf_command.AppChecker{
-			Org:     "some-org-name",
-			Adapter: fakeAdapter,
+			Org:         "some-org-name",
+			Adapter:     fakeAdapter,
+			Concurrency: 8,
 		}
 	})
 	Describe("CheckApps", func() {
@@ -115,6 +116,7 @@ var _ = Describe("AppChecker", func() {
 				Expect(err).To(MatchError("checking app guid some-name-1: potato"))
 			})
 		})
+
 		Context("when check app fails", func() {
 			BeforeEach(func() {
 				fakeAdapter.CheckAppReturns(nil, errors.New("potato"))
@@ -124,6 +126,7 @@ var _ = Describe("AppChecker", func() {
 				Expect(err).To(MatchError("checking app some-name-1: potato"))
 			})
 		})
+
 		Context("when the json is malformed", func() {
 			BeforeEach(func() {
 				str := `{ "guid": "some-guid-1", "name": "scale-tick-1"`
