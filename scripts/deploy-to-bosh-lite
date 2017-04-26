@@ -65,6 +65,8 @@ upload_local_release() {
 }
 
 main() {
+    sudo route add -net 10.244.0.0/16 192.168.50.6
+
     create_bosh_env
     set_bosh_env
 
@@ -77,8 +79,6 @@ main() {
     upload_local_release
 
     deploy_cf
-
-    sudo route add -net 10.244.0.0/16 192.168.50.6
 }
 
 upload_stemcell=true
