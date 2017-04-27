@@ -24,9 +24,10 @@
     "client_cert_file" => "/var/vcap/jobs/connectivity-agent/config/certs/client.crt",
     "client_key_file" => "/var/vcap/jobs/connectivity-agent/config/certs/client.key",
     "vni" => 1,
-    "poll_interval" => 5,
+    "poll_interval" => 5, # in seconds
     "debug_server_port" => p("cf_networking.connectivity_agent.debug_server_port"),
     "datastore" => "/var/vcap/data/silk/store.json",
+    "lease_expiration_duration" => p("cf_networking.connectivity_agent.lease_expiration_duration") * 60 * 60, # convert hours to seconds
   }
 
   JSON.pretty_generate(toRender)
