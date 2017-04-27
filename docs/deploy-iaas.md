@@ -49,11 +49,12 @@ system_domain: mysystem.example.com
 
 Then deploy
 ```bash
-bosh-cli deploy \
-  --vars-store=vars-store.yml \
+bosh deploy \
+  $CF_DEPLOYMENT_REPO/cf-deployment.yml \
   -o $CF_DEPLOYMENT_REPO/opsfiles/change-logging-port-for-aws-elb.yml \
   -o $CF_NETWORKING_RELEASE_REPO/manifest-generation/opsfiles/cf-networking.yml \
-  $CF_DEPLOYMENT_REPO/cf-deployment.yml
+  -o $CF_NETWORKING_RELEASE_REPO/manifest-generation/opsfiles/silk.yml \
+  --vars-store=vars-store.yml
 ```
 
 Note that your `vars-store.yml` likely changed.  If you keep it in source control, commit.  But ensure it is in a private repository.  It holds credentials.
