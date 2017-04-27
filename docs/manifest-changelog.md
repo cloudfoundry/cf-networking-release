@@ -1,6 +1,6 @@
 ## Manifest property changes
 
-See [AWS](iaas.md#deploy-to-aws) deployment docs for examples
+See [deployment docs](deploy-iaas.md) for examples
 
 ### 0.22.0
 
@@ -139,7 +139,7 @@ cf_networking_overrides:
 0. `flannel.etcd.require_ssl` property has been completely removed.
 Previously it defaulted to `true` but could be overridden to `false`.
 Now SSL is required for the flannel connection to etcd.
-Refer to the [manifest generation docs](https://github.com/cloudfoundry-incubator/cf-networking-release/blob/develop/docs/iaas.md#deploy-to-aws)
+Refer to the [manifest generation docs](deploy-iaas.md#deploy-to-aws)
 for details on how to generate and configure certs and keys.
 Note, you will likely need to make similar changes to other etcd clients, e.g. loggregator.
 
