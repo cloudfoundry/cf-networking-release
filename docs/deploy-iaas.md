@@ -9,7 +9,7 @@ Follow the instructions for deploying to AWS with some differences:
 
 You have two options.  We recommend option #1 for new deployments.
 
-## Option 1: Using `cf-deployment`
+## Using `cf-deployment`
 
 This deployment option uses the new tooling:
 - [bbl](https://github.com/cloudfoundry/bosh-bootloader), the bosh bootloader
@@ -61,7 +61,9 @@ Note that your `vars-store.yml` likely changed.  If you keep it in source contro
 To kick the tires, try out our [Cats and Dogs example](../src/example-apps/cats-and-dogs) on your new deployment.
 
 
-## Option 2: Using `cf-release` with `diego-release` tooling
+## DEPRECATED: Using `cf-release` with `diego-release` tooling
+
+Note: Using this option requires the old Ruby bosh-cli to be installed and aliased as `bosh`.
 
 This deployment option assumes you already have a BOSH director on AWS where you have already successfully deployed Diego + Cloud Foundry,
 by using the instructions and tooling in [the diego-release repo](https://github.com/cloudfoundry/diego-release/tree/develop/examples/aws).
@@ -76,10 +78,14 @@ by using the instructions and tooling in [the diego-release repo](https://github
 
     ```
     REPLACE_WITH_CA_CERT
-    REPLACE_WITH_CLIENT_CERT
-    REPLACE_WITH_CLIENT_KEY
-    REPLACE_WITH_SERVER_CERT
-    REPLACE_WITH_SERVER_KEY
+    REPLACE_WITH_POLICY_CLIENT_CERT
+    REPLACE_WITH_POLICY_CLIENT_KEY
+    REPLACE_WITH_POLICY_SERVER_CERT
+    REPLACE_WITH_POLICY_SERVER_KEY
+    REPLACE_WITH_CONNECTIVITY_CLIENT_CERT
+    REPLACE_WITH_CONNECTIVITY_CLIENT_KEY
+    REPLACE_WITH_CONNECTIVITY_SERVER_CERT
+    REPLACE_WITH_CONNECTIVITY_SERVER_KEY
     ```
 
 0. Edit the CF properties stub
@@ -117,7 +123,7 @@ by using the instructions and tooling in [the diego-release repo](https://github
     ```
 
 
-0. Create a CF Networking stub `stubs/cf-networking/stub.yml`:
+0. Create a CF Networking stub file `stubs/cf-networking/stub.yml` with the following contents:
 
     ```yaml
     ---
@@ -128,14 +134,58 @@ by using the instructions and tooling in [the diego-release repo](https://github
       driver_templates:
       - name: garden-cni
         release: cf-networking
-      - name: cni-flannel
+      - name: connectivity-plugin
+        release: cf-networking
+      - name: connectivity-agent
         release: cf-networking
       - name: netmon
         release: cf-networking
       - name: vxlan-policy-agent
         release: cf-networking
+      bbs_templates:
+      - name: connectivity-server
+        release: cf-networking
+      bbs_consul_properties:
+        agent:
+          services:
+            connectivity-server: {}
       properties:
         cf_networking:
+          garden_external_networker:
+            cni_config_dir: /var/vcap/jobs/connectivity-plugin/config/cni
+          connectivity_server:
+            database:
+              type: REPLACE_WITH_DB_TYPE # must be mysql or postgres
+              username: REPLACE_WITH_USERNAME
+              password: REPLACE_WITH_PASSWORD
+              host: REPLACE_WITH_DB_HOSTNAME
+              port: REPLACE_WITH_DB_PORT # e.g. 3306 for mysql
+              name: REPLACE_WITH_DB_NAME # e.g. network_connectivity
+            ca_cert: |
+              -----BEGIN CERTIFICATE-----
+              REPLACE_WITH_CA_CERT
+              -----END CERTIFICATE-----
+            server_cert: |
+              -----BEGIN CERTIFICATE-----
+              REPLACE_WITH_CONNECTIVITY_SERVER_CERT
+              -----END CERTIFICATE-----
+            server_key: |
+              -----BEGIN RSA PRIVATE KEY-----
+              REPLACE_WITH_CONNECTIVITY_SERVER_KEY
+              -----END RSA PRIVATE KEY-----
+          connectivity_agent:
+            ca_cert: |
+              -----BEGIN CERTIFICATE-----
+              REPLACE_WITH_CA_CERT
+              -----END CERTIFICATE-----
+            client_cert: |
+              -----BEGIN CERTIFICATE-----
+              REPLACE_WITH_CONNECTIVITY_CLIENT_CERT
+              -----END CERTIFICATE-----
+            client_key: |
+              -----BEGIN RSA PRIVATE KEY-----
+              REPLACE_WITH_CONNECTIVITY_CLIENT_KEY
+              -----END RSA PRIVATE KEY-----
           vxlan_policy_agent:
             policy_server_url: https://policy-server.service.cf.internal:4003
             ca_cert: |
@@ -144,15 +194,19 @@ by using the instructions and tooling in [the diego-release repo](https://github
               -----END CERTIFICATE-----
             client_cert: |
               -----BEGIN CERTIFICATE-----
-              REPLACE_WITH_CLIENT_CERT
+              REPLACE_WITH_POLICY_CLIENT_CERT
               -----END CERTIFICATE-----
             client_key: |
               -----BEGIN RSA PRIVATE KEY-----
-              REPLACE_WITH_CLIENT_KEY
+              REPLACE_WITH_POLICY_CLIENT_KEY
               -----END RSA PRIVATE KEY-----
           policy_server:
             uaa_client_secret: REPLACE_WITH_UAA_CLIENT_SECRET
-            skip_ssl_validation: true
+            uaa_ca: |
+              -----BEGIN CERTIFICATE-----
+              REPLACE_WITH_UAA_CA_CERT
+              -----END CERTIFICATE-----
+            uaa_port: REPLACE_WITH_UAA_TLS_PORT
             database:
               type: REPLACE_WITH_DB_TYPE # must be mysql or postgres
               username: REPLACE_WITH_USERNAME
@@ -162,15 +216,15 @@ by using the instructions and tooling in [the diego-release repo](https://github
               name: REPLACE_WITH_DB_NAME # e.g. network_policy
             ca_cert: |
               -----BEGIN CERTIFICATE-----
-              REPLACE_WITH_CA_CERT
+              REPLACE_WITH_POLICY_CA_CERT
               -----END CERTIFICATE-----
             server_cert: |
               -----BEGIN CERTIFICATE-----
-              REPLACE_WITH_SERVER_CERT
+              REPLACE_WITH_POLICY_SERVER_CERT
               -----END CERTIFICATE-----
             server_key: |
               -----BEGIN RSA PRIVATE KEY-----
-              REPLACE_WITH_SERVER_KEY
+              REPLACE_WITH_POLICY_SERVER_KEY
               -----END RSA PRIVATE KEY-----
           plugin:
             etcd_endpoints:
@@ -219,10 +273,6 @@ by using the instructions and tooling in [the diego-release repo](https://github
               services:
                 policy-server:
                   name: policy-server
-                  check:
-                    interval: 5s
-                    script: /bin/true
-
     config_from_cf: (( merge ))
     ```
 

@@ -1,6 +1,11 @@
 # Deploy to bosh-lite
 
-## Option 1: Using `cf-deployment`
+## Using `cf-deployment`
+
+This deployment option uses the new tooling:
+- the new Golang [bosh-cli](https://github.com/cloudfoundry/bosh-cli)
+- [bosh-deployment](https://github.com/cloudfoundry/bosh-deployment)
+- [cf-deployment](https://github.com/cloudfoundry/cf-deployment), refer to our [release notes](https://github.com/cloudfoundry-incubator/cf-networking-release/releases) to get information on validated versions
 
 - Option 1: use the script
   ```bash
@@ -11,11 +16,6 @@
 
 - Option 2: deploy by hand
 Follow the instructions [here](https://github.com/cloudfoundry/bosh-deployment/blob/master/docs/bosh-lite-on-vbox.md) to install `bosh-lite` using `BOSH CLI v2` on your machine.
-
-This deployment option uses the new tooling:
-- the new Golang [bosh-cli](https://github.com/cloudfoundry/bosh-cli)
-- [bosh-deployment](https://github.com/cloudfoundry/bosh-deployment)
-- [cf-deployment](https://github.com/cloudfoundry/cf-deployment), refer to our [release notes](https://github.com/cloudfoundry-incubator/cf-networking-release/releases) to get information on validated versions
 
 It assumes you have a BOSH director on Virtualbox that was created using `bosh create-env`.
 
@@ -66,7 +66,9 @@ bosh deploy ~/workspace/cf-deployment/cf-deployment.yml \
   -v system_domain=bosh-lite.com
 ```
 
-## Option 2 (deprecated): Using `cf-release` with `diego-release` tooling
+## DEPRECATED: Using `cf-release` with `diego-release` tooling
+
+Note: Using this option requires the old Ruby bosh-cli to be installed and aliased as `bosh`.
 
 Follow the instructions [here](https://github.com/cloudfoundry/bosh-lite) to install `bosh-lite` on your machine.
 
@@ -81,7 +83,7 @@ or edit your `Vagrantfile` to include
 config.vm.provision "shell", inline: "sudo modprobe br_netfilter"
 ```
 
-Upload the latest `bosh-lite` stemcell 
+Upload the latest `bosh-lite` stemcell
 ```bash
 bosh upload stemcell https://bosh.io/d/stemcells/bosh-warden-boshlite-ubuntu-trusty-go_agent
 ```
@@ -92,16 +94,7 @@ curl -L -o bosh-lite-stemcell-latest.tgz https://bosh.io/d/stemcells/bosh-warden
 bosh upload stemcell bosh-lite-stemcell-latest.tgz
 ```
 
-Then grab the required releases
-```bash
-pushd ~/workspace
-  git clone https://github.com/cloudfoundry/diego-release
-  git clone https://github.com/cloudfoundry/cf-release
-  git clone https://github.com/cloudfoundry-incubator/cf-networking-release
-popd
-```
-
-Deploy:
+Upload the required releases:
 ```
 bosh upload release https://bosh.io/d/github.com/cloudfoundry/cf-release
 bosh upload release https://bosh.io/d/github.com/cloudfoundry/diego-release
@@ -110,11 +103,19 @@ bosh upload release https://bosh.io/d/github.com/cloudfoundry/cflinuxfs2-rootfs-
 bosh upload release https://bosh.io/d/github.com/cloudfoundry-incubator/cf-networking-release
 ```
 
+Clone the following repos needed to generate the manifest:
+
+```bash
+pushd ~/workspace
+  git clone https://github.com/cloudfoundry/diego-release
+  git clone https://github.com/cloudfoundry/cf-release
+  git clone https://github.com/cloudfoundry-incubator/cf-networking-release
+popd
+```
+
 Then
 ```bash
 pushd ~/workspace/cf-networking-release
-  bosh upload release releases/cf-networking-<LATEST-VERSION>.yml
-
   ./scripts/generate-bosh-lite-manifests
   bosh -d bosh-lite/deployments/cf_networking.yml deploy
   bosh -d bosh-lite/deployments/diego_cf_networking.yml deploy

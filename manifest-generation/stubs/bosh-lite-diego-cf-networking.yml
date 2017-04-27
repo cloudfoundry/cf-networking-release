@@ -408,9 +408,6 @@ cf_networking_overrides:
           services:
             policy-server:
               name: policy-server
-              check:
-                interval: 5s
-                script: /bin/true
   - name: cf-networking-acceptance
     instances: 1
     lifecycle: errand
