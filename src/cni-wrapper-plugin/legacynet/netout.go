@@ -78,7 +78,7 @@ func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, overlayN
 			Chain: logChain,
 			Rules: []rules.IPTablesRule{
 				rules.NewNetOutDefaultLogRule(containerHandle),
-				rules.NewReturnRule(),
+				rules.NewAcceptRule(),
 			},
 		},
 	}

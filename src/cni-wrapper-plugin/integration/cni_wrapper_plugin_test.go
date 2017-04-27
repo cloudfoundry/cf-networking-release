@@ -333,7 +333,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 
 			By("checking that the default deny rules in the container's input chain are created")
 			Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
-				"-A " + inputChainName + " -s 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j RETURN",
+				"-A " + inputChainName + " -s 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j ACCEPT",
 				"-A " + inputChainName + " -s 1.2.3.4/32 -j REJECT --reject-with icmp-port-unreachable",
 			}))
 		})
@@ -379,20 +379,20 @@ var _ = Describe("CniWrapperPlugin", func() {
 
 				By("checking that the rules in the container's input chain are created for each local dns server")
 				Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
-					"-A " + inputChainName + " -s 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j RETURN",
-					"-A " + inputChainName + " -s 1.2.3.4/32 -d 169.254.0.1/32 -p tcp -m tcp --dport 53 -j RETURN",
-					"-A " + inputChainName + " -s 1.2.3.4/32 -d 169.254.0.1/32 -p udp -m udp --dport 53 -j RETURN",
-					"-A " + inputChainName + " -s 1.2.3.4/32 -d 169.254.0.2/32 -p tcp -m tcp --dport 53 -j RETURN",
-					"-A " + inputChainName + " -s 1.2.3.4/32 -d 169.254.0.2/32 -p udp -m udp --dport 53 -j RETURN",
+					"-A " + inputChainName + " -s 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j ACCEPT",
+					"-A " + inputChainName + " -s 1.2.3.4/32 -d 169.254.0.1/32 -p tcp -m tcp --dport 53 -j ACCEPT",
+					"-A " + inputChainName + " -s 1.2.3.4/32 -d 169.254.0.1/32 -p udp -m udp --dport 53 -j ACCEPT",
+					"-A " + inputChainName + " -s 1.2.3.4/32 -d 169.254.0.2/32 -p tcp -m tcp --dport 53 -j ACCEPT",
+					"-A " + inputChainName + " -s 1.2.3.4/32 -d 169.254.0.2/32 -p udp -m udp --dport 53 -j ACCEPT",
 					"-A " + inputChainName + " -s 1.2.3.4/32 -j REJECT --reject-with icmp-port-unreachable",
 				}))
 
 				By("checking that no rules are created for public dns servers")
 				Expect(AllIPTablesRules("filter")).NotTo(ContainElement(
-					"-A " + inputChainName + " -s 1.2.3.4/32 -d 8.8.4.4/32 -p tcp -m tcp --dport 53 -j RETURN",
+					"-A " + inputChainName + " -s 1.2.3.4/32 -d 8.8.4.4/32 -p tcp -m tcp --dport 53 -j ACCEPT",
 				))
 				Expect(AllIPTablesRules("filter")).NotTo(ContainElement(
-					"-A " + inputChainName + " -s 1.2.3.4/32 -d 8.8.4.4/32 -p udp -m udp --dport 53 -j RETURN",
+					"-A " + inputChainName + " -s 1.2.3.4/32 -d 8.8.4.4/32 -p udp -m udp --dport 53 -j ACCEPT",
 				))
 
 			})
@@ -432,13 +432,13 @@ var _ = Describe("CniWrapperPlugin", func() {
 
 				By("checking that the default forwarding rules are created for that container")
 				Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
-					`-A ` + netoutChainName + ` -s 1.2.3.4/32 ! -d 10.255.0.0/16 -m state --state RELATED,ESTABLISHED -j RETURN`,
+					`-A ` + netoutChainName + ` -s 1.2.3.4/32 ! -d 10.255.0.0/16 -m state --state RELATED,ESTABLISHED -j ACCEPT`,
 					`-A ` + netoutChainName + ` -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j REJECT --reject-with icmp-port-unreachable`,
 				}))
 
 				By("checking that the default input rules are created for that container")
 				Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
-					`-A ` + inputChainName + ` -s 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j RETURN`,
+					`-A ` + inputChainName + ` -s 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j ACCEPT`,
 					`-A ` + inputChainName + ` -s 1.2.3.4/32 -j REJECT --reject-with icmp-port-unreachable`,
 				}))
 			})
@@ -501,21 +501,21 @@ var _ = Describe("CniWrapperPlugin", func() {
 
 				By("checking that the default forwarding rules are created for that container")
 				Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
-					`-A ` + netoutChainName + ` -s 1.2.3.4/32 ! -d 10.255.0.0/16 -m state --state RELATED,ESTABLISHED -j RETURN`,
+					`-A ` + netoutChainName + ` -s 1.2.3.4/32 ! -d 10.255.0.0/16 -m state --state RELATED,ESTABLISHED -j ACCEPT`,
 					`-A ` + netoutChainName + ` -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j REJECT --reject-with icmp-port-unreachable`,
 				}))
 
 				By("checking that the default input rules are created for that container")
 				Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
-					`-A ` + inputChainName + ` -s 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j RETURN`,
+					`-A ` + inputChainName + ` -s 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j ACCEPT`,
 					`-A ` + inputChainName + ` -s 1.2.3.4/32 -j REJECT --reject-with icmp-port-unreachable`,
 				}))
 
 				By("checking that the rules are written")
-				Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 1.2.3.4/32 -m iprange --dst-range 3.3.3.3-4.4.4.4 -j RETURN`))
-				Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 1.2.3.4/32 -p tcp -m iprange --dst-range 8.8.8.8-9.9.9.9 -m tcp --dport 53:54 -j RETURN`))
-				Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 1.2.3.4/32 -p udp -m iprange --dst-range 11.11.11.11-22.22.22.22 -m udp --dport 53:54 -j RETURN`))
-				Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 1.2.3.4/32 -p icmp -m iprange --dst-range 5.5.5.5-6.6.6.6 -m icmp --icmp-type 8/0 -j RETURN`))
+				Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 1.2.3.4/32 -m iprange --dst-range 3.3.3.3-4.4.4.4 -j ACCEPT`))
+				Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 1.2.3.4/32 -p tcp -m iprange --dst-range 8.8.8.8-9.9.9.9 -m tcp --dport 53:54 -j ACCEPT`))
+				Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 1.2.3.4/32 -p udp -m iprange --dst-range 11.11.11.11-22.22.22.22 -m udp --dport 53:54 -j ACCEPT`))
+				Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 1.2.3.4/32 -p icmp -m iprange --dst-range 5.5.5.5-6.6.6.6 -m icmp --icmp-type 8/0 -j ACCEPT`))
 
 			})
 

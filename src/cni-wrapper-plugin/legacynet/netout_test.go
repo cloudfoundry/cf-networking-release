@@ -111,7 +111,7 @@ var _ = Describe("Netout", func() {
 			Expect(rulespec).To(Equal([]rules.IPTablesRule{
 				{"-s", "5.6.7.8",
 					"-m", "state", "--state", "RELATED,ESTABLISHED",
-					"--jump", "RETURN"},
+					"--jump", "ACCEPT"},
 				{"-s", "5.6.7.8",
 					"--jump", "REJECT",
 					"--reject-with", "icmp-port-unreachable"},
@@ -124,7 +124,7 @@ var _ = Describe("Netout", func() {
 				{"-s", "5.6.7.8",
 					"!", "-d", "9.9.0.0/16",
 					"-m", "state", "--state", "RELATED,ESTABLISHED",
-					"--jump", "RETURN"},
+					"--jump", "ACCEPT"},
 				{"-s", "5.6.7.8",
 					"!", "-d", "9.9.0.0/16",
 					"--jump", "REJECT",
@@ -152,7 +152,7 @@ var _ = Describe("Netout", func() {
 				{"-p", "tcp",
 					"-m", "conntrack", "--ctstate", "INVALID,NEW,UNTRACKED",
 					"-j", "LOG", "--log-prefix", "OK_some-container-handle"},
-				{"--jump", "RETURN"},
+				{"--jump", "ACCEPT"},
 			}))
 		})
 
@@ -218,7 +218,7 @@ var _ = Describe("Netout", func() {
 					{"-s", "5.6.7.8",
 						"!", "-d", "9.9.0.0/16",
 						"-m", "state", "--state", "RELATED,ESTABLISHED",
-						"--jump", "RETURN"},
+						"--jump", "ACCEPT"},
 					{"-s", "5.6.7.8",
 						"!", "-d", "9.9.0.0/16",
 						"-m", "limit", "--limit", "2/min",
@@ -273,11 +273,11 @@ var _ = Describe("Netout", func() {
 				Expect(rulespec).To(Equal([]rules.IPTablesRule{
 					{"-s", "5.6.7.8",
 						"-m", "state", "--state", "RELATED,ESTABLISHED",
-						"--jump", "RETURN"},
-					{"-s", "5.6.7.8", "-p", "tcp", "-d", "8.8.4.4", "--destination-port", "53", "--jump", "RETURN"},
-					{"-s", "5.6.7.8", "-p", "udp", "-d", "8.8.4.4", "--destination-port", "53", "--jump", "RETURN"},
-					{"-s", "5.6.7.8", "-p", "tcp", "-d", "1.2.3.4", "--destination-port", "53", "--jump", "RETURN"},
-					{"-s", "5.6.7.8", "-p", "udp", "-d", "1.2.3.4", "--destination-port", "53", "--jump", "RETURN"},
+						"--jump", "ACCEPT"},
+					{"-s", "5.6.7.8", "-p", "tcp", "-d", "8.8.4.4", "--destination-port", "53", "--jump", "ACCEPT"},
+					{"-s", "5.6.7.8", "-p", "udp", "-d", "8.8.4.4", "--destination-port", "53", "--jump", "ACCEPT"},
+					{"-s", "5.6.7.8", "-p", "tcp", "-d", "1.2.3.4", "--destination-port", "53", "--jump", "ACCEPT"},
+					{"-s", "5.6.7.8", "-p", "udp", "-d", "1.2.3.4", "--destination-port", "53", "--jump", "ACCEPT"},
 					{"-s", "5.6.7.8",
 						"--jump", "REJECT",
 						"--reject-with", "icmp-port-unreachable"},

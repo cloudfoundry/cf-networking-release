@@ -111,7 +111,7 @@ func NewNetOutRule(containerIP, startIP, endIP string) IPTablesRule {
 		"--source", containerIP,
 		"-m", "iprange",
 		"--dst-range", fmt.Sprintf("%s-%s", startIP, endIP),
-		"--jump", "RETURN",
+		"--jump", "ACCEPT",
 	}
 }
 
@@ -123,7 +123,7 @@ func NewNetOutWithPortsRule(containerIP, startIP, endIP string, startPort, endPo
 		"--dst-range", fmt.Sprintf("%s-%s", startIP, endIP),
 		"-m", protocol,
 		"--destination-port", fmt.Sprintf("%d:%d", startPort, endPort),
-		"--jump", "RETURN",
+		"--jump", "ACCEPT",
 	}
 }
 
@@ -135,7 +135,7 @@ func NewNetOutICMPRule(containerIP, startIP, endIP string, icmpType, icmpCode in
 		"--dst-range", fmt.Sprintf("%s-%s", startIP, endIP),
 		"-m", "icmp",
 		"--icmp-type", fmt.Sprintf("%d/%d", icmpType, icmpCode),
-		"--jump", "RETURN",
+		"--jump", "ACCEPT",
 	}
 }
 
@@ -180,9 +180,9 @@ func NewNetOutDefaultLogRule(prefix string) IPTablesRule {
 	}
 }
 
-func NewReturnRule() IPTablesRule {
+func NewAcceptRule() IPTablesRule {
 	return IPTablesRule{
-		"--jump", "RETURN",
+		"--jump", "ACCEPT",
 	}
 }
 
@@ -190,7 +190,7 @@ func NewInputRelatedEstablishedRule(subnet string) IPTablesRule {
 	return IPTablesRule{
 		"-s", subnet,
 		"-m", "state", "--state", "RELATED,ESTABLISHED",
-		"--jump", "RETURN",
+		"--jump", "ACCEPT",
 	}
 }
 
@@ -199,7 +199,7 @@ func NewInputAllowRule(containerIP, protocol, destination string, destPort int) 
 		"-s", containerIP,
 		"-p", protocol,
 		"-d", destination, "--destination-port", strconv.Itoa(destPort),
-		"--jump", "RETURN",
+		"--jump", "ACCEPT",
 	}
 }
 
@@ -216,7 +216,7 @@ func NewNetOutRelatedEstablishedRule(subnet, overlayNetwork string) IPTablesRule
 		"-s", subnet,
 		"!", "-d", overlayNetwork,
 		"-m", "state", "--state", "RELATED,ESTABLISHED",
-		"--jump", "RETURN",
+		"--jump", "ACCEPT",
 	}
 }
 
