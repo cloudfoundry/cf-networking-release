@@ -13,18 +13,10 @@
     size
   end
 
-  def overlay_network_prefix_length
-    parts = p("cf_networking.network").split('/')
-    if parts.size != 2
-      raise "'cf_networking.network' must be a valid CIDR'"
-    end
-    parts[1].to_i
-  end
-
   toRender = {
     "underlay_ip" => spec.ip,
     "subnet_prefix_length" => subnet_prefix_length,
-    "overlay_network_prefix_length" => overlay_network_prefix_length,
+    "overlay_network" => p("cf_networking.network"),
     "health_check_port" => p("cf_networking.connectivity_agent.health_check_port"),
     "vtep_name" => "silk-vtep",
     "connectivity_server_url" => p("cf_networking.connectivity_agent.connectivity_server_url"),
