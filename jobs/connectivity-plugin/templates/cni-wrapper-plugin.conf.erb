@@ -1,6 +1,8 @@
 <%=
   require 'json'
 
+  VXLAN_OVERHEAD = 50
+
   toRender = {
     "name" => "cni-wrapper",
     "type" => "cni-wrapper-plugin",
@@ -20,7 +22,7 @@
       "daemonPort" => p('cf_networking.connectivity_agent.health_check_port'),
       "dataDir" => "/var/vcap/data/host-local",
       "datastore" => "/var/vcap/data/silk/store.json",
-      "mtu" => p('cf_networking.mtu'),
+      "mtu" => p('cf_networking.mtu') - VXLAN_OVERHEAD,
      }
   }
 
