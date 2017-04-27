@@ -81,8 +81,8 @@ properties:
     default: ""
 
   cf_networking.connectivity_server.lease_expiration_time:
-    description: "Expiration time for lease, in minutes"
-    default: 1
+    description: "Expiration time for lease, in hours"
+    default: 168
 
   cf_networking.disable:
     description: "Disable container to container networking"

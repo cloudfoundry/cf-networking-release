@@ -48,7 +48,7 @@
       "type" => p("cf_networking.connectivity_server.database.type"),
       "connection_string" => connection_string,
     },
-    "lease_expiration_time" => p("cf_networking.connectivity_server.lease_expiration_time") * 60,
+    "lease_expiration_seconds" => p("cf_networking.connectivity_server.lease_expiration_time") * 60 * 60,
   }
 
   JSON.pretty_generate(toRender)
