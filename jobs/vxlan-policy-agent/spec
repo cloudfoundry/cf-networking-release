@@ -44,7 +44,7 @@ properties:
     description: "Logging level (debug, info, warn, error)"
     default: info
 
-  cf_networking.iptables_c2c_logging:
+  cf_networking.iptables_logging:
     description: "Enables iptables logging for container to container traffic"
     default: false
 

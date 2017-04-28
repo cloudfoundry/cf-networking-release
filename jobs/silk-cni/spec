@@ -1,5 +1,5 @@
 ---
-name: connectivity-plugin
+name: silk-cni
 
 templates:
   pre-start.erb: bin/pre-start
@@ -18,16 +18,12 @@ properties:
     description: "MTU for containers. If zero, MTU will be automatically configured based on the external network MTU. In all cases, the actual container device MTU will be 50 bytes less to account for VXLAN encap overhead."
     default: 0
 
-  cf_networking.connectivity_agent.health_check_port:
-    description: "Port for the connectivity agent health check"
+  cf_networking.silk_daemon.listen_port:
+    description: "Silk CNI plugin connects to the silk daemon on this port"
     default: 23954
 
-  cf_networking.iptables_asg_logging:
-    description: "Enables global logging for all ASGs"
-    default: false
-
-  cf_networking.iptables_c2c_logging:
-    description: "Enables global logging for denied C2C packets"
+  cf_networking.iptables_logging:
+    description: "Enables iptables logging for overlay network policies and Application Security Groups.  Logs to the kernel log."
     default: false
 
   cf_networking.dns_servers:

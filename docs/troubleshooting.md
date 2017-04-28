@@ -8,24 +8,6 @@ NOTE: If you are having problems, first consult our [known issues doc](known-iss
 
   If container create is failing check the garden logs, located on the cell VMs at `/var/vcap/sys/log/garden/garden.stdout.log`.
   Garden logs stdout and stderr from calls to the CNI plugin, you can find any errors related to the CNI ADD/DEL there. 
-  An example of a successful container create:
-
-  ```
-  {
-    "timestamp": "1485210024.178133965",
-    "source": "guardian",
-    "message": "guardian.create.external-networker-result",
-    "log_level": 0,
-    "data": {
-      "action": "up",
-      "handle": "executor-healthcheck-e55d1832-a59c-47c8-780c-5ed4056089f3",
-      "session": "555",
-      "stderr": "{\"timestamp\":\"1485210024.090760708\",\"source\":\"container-networking.garden-external-networker\",\"message\":\"container-networking.garden-external-networker.action\",\"log_level\":1,\"data\":{\"action\":\"up\"}}\n{\"timestamp\":\"1485210024.091046810\",\"source\":\"container-networking.garden-external-networker\",\"message\":\"container-networking.garden-external-networker.loaded-config\",\"log_level\":1,\"data\":{\"network\":{\"cniVersion\":\"0.2.0\",\"name\":\"cni-wrapper\",\"type\":\"cni-wrapper-plugin\",\"ipam\":{},\"dns\":{}},\"raw\":\"{\\n  \\\"name\\\": \\\"cni-wrapper\\\",\\n  \\\"type\\\": \\\"cni-wrapper-plugin\\\",\\n  \\\"cniVersion\\\": \\\"0.2.0\\\",\\n  \\\"datastore\\\": \\\"/var/vcap/data/container-metadata/store.json\\\",\\n  \\\"iptables_lock_file\\\": \\\"/var/vcap/data/garden-cni/iptables.lock\\\",\\n  \\\"overlay_network\\\": \\\"10.255.0.0/16\\\",\\n  \\\"delegate\\\": {\\n    \\\"name\\\": \\\"cni-flannel\\\",\\n    \\\"type\\\": \\\"flannel\\\",\\n    \\\"subnetFile\\\": \\\"/var/vcap/data/flannel/subnet.env\\\",\\n    \\\"dataDir\\\": \\\"/var/vcap/data/flannel/data\\\",\\n    \\\"delegate\\\": {\\n      \\\"bridge\\\": \\\"cni-flannel0\\\",\\n      \\\"isDefaultGateway\\\": true,\\n      \\\"ipMasq\\\": false\\n     }\\n  }\\n}\\n\"}}\n{\"timestamp\":\"1485210024.094831467\",\"source\":\"container-networking.garden-external-networker\",\"message\":\"container-networking.garden-external-networker.up-add-network-start\",\"log_level\":1,\"data\":{\"networkConfig\":\"{\\n  \\\"name\\\": \\\"cni-wrapper\\\",\\n  \\\"type\\\": \\\"cni-wrapper-plugin\\\",\\n  \\\"cniVersion\\\": \\\"0.2.0\\\",\\n  \\\"datastore\\\": \\\"/var/vcap/data/container-metadata/store.json\\\",\\n  \\\"iptables_lock_file\\\": \\\"/var/vcap/data/garden-cni/iptables.lock\\\",\\n  \\\"overlay_network\\\": \\\"10.255.0.0/16\\\",\\n  \\\"delegate\\\": {\\n    \\\"name\\\": \\\"cni-flannel\\\",\\n    \\\"type\\\": \\\"flannel\\\",\\n    \\\"subnetFile\\\": \\\"/var/vcap/data/flannel/subnet.env\\\",\\n    \\\"dataDir\\\": \\\"/var/vcap/data/flannel/data\\\",\\n    \\\"delegate\\\": {\\n      \\\"bridge\\\": \\\"cni-flannel0\\\",\\n      \\\"isDefaultGateway\\\": true,\\n      \\\"ipMasq\\\": false\\n     }\\n  }\\n}\\n\",\"runtimeConfig\":{\"ContainerID\":\"executor-healthcheck-e55d1832-a59c-47c8-780c-5ed4056089f3\",\"NetNS\":\"/var/vcap/data/garden-cni/container-netns/executor-healthcheck-e55d1832-a59c-47c8-780c-5ed4056089f3\",\"IfName\":\"eth0\",\"Args\":null}}}\n{\"timestamp\":\"1485210024.152931213\",\"source\":\"container-networking.garden-external-networker\",\"message\":\"container-networking.garden-external-networker.up-add-network-result\",\"log_level\":1,\"data\":{\"name\":\"cni-wrapper\",\"result\":\"IP4:{IP:{IP:10.255.67.13 Mask:ffffff00} Gateway:10.255.67.1 Routes:[{Dst:{IP:10.255.0.0 Mask:ffff0000} GW:\\u003cnil\\u003e} {Dst:{IP:0.0.0.0 Mask:00000000} GW:10.255.67.1}]}, DNS:{Nameservers:[] Domain: Search:[] Options:[]}\",\"type\":\"cni-wrapper-plugin\"}}\n{\"timestamp\":\"1485210024.153006077\",\"source\":\"container-networking.garden-external-networker\",\"message\":\"container-networking.garden-external-networker.up-complete\",\"log_level\":1,\"data\":{\"numConfigs\":1}}\n",
-      "stdin": "{\"Pid\":19335,\"Properties\":{}}",
-      "stdout": "{\"properties\":{\"garden.network.container-ip\":\"10.255.67.13\",\"garden.network.host-ip\":\"255.255.255.255\"}}\n"
-    }
-  }
-  ```
 
   Unsuccessful create will say things like `exit status 1` in the `stderr` field of the log message.
 
@@ -58,8 +40,8 @@ NOTE: If you are having problems, first consult our [known issues doc](known-iss
   ```
 
   This can be configured at startup via the
-  `cf_networking.iptables_c2c_logging` property. It defaults
-  to `false`. This property is used by the vxlan-policy-agent and the connectivity-plugin jobs.
+  `cf_networking.iptables_logging` property. It defaults
+  to `false`. This property is used by the `vxlan-policy-agent` and the `silk-cni` jobs.
 
   Logs from iptables end up in `/var/log/kern.log`.
 
@@ -76,7 +58,7 @@ NOTE: If you are having problems, first consult our [known issues doc](known-iss
 ### Enabling IPTables Logging for ASG Traffic
 
   Logging for ASG iptables rules can be configured at startup via the
-  `cf_networking.garden_external_networker.iptables_asg_logging` property. It defaults
+  `cf_networking.iptables_logging` property. It defaults
   to `false`.
 
   Logs from iptables end up in `/var/log/kern.log`.

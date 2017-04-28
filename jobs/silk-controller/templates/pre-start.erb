@@ -1,0 +1,7 @@
+#!/bin/bash
+
+set -e -u
+
+CERTS_DIR=/var/vcap/jobs/silk-controller/config/certs
+
+chmod 600 ${CERTS_DIR}/*

@@ -83,10 +83,10 @@ by using the instructions and tooling in [the diego-release repo](https://github
     REPLACE_WITH_POLICY_CLIENT_KEY
     REPLACE_WITH_POLICY_SERVER_CERT
     REPLACE_WITH_POLICY_SERVER_KEY
-    REPLACE_WITH_CONNECTIVITY_CLIENT_CERT
-    REPLACE_WITH_CONNECTIVITY_CLIENT_KEY
-    REPLACE_WITH_CONNECTIVITY_SERVER_CERT
-    REPLACE_WITH_CONNECTIVITY_SERVER_KEY
+    REPLACE_WITH_SILK_DAEMON_CERT
+    REPLACE_WITH_SILK_DAEMON_KEY
+    REPLACE_WITH_SILK_CONTROLLER_CERT
+    REPLACE_WITH_SILK_CONTROLLER_KEY
     ```
 
 0. Edit the CF properties stub
@@ -135,26 +135,25 @@ by using the instructions and tooling in [the diego-release repo](https://github
       driver_templates:
       - name: garden-cni
         release: cf-networking
-      - name: connectivity-plugin
+      - name: silk-cni
         release: cf-networking
-      - name: connectivity-agent
+      - name: silk-daemon
         release: cf-networking
       - name: netmon
         release: cf-networking
       - name: vxlan-policy-agent
         release: cf-networking
       bbs_templates:
-      - name: connectivity-server
+      - name: silk-controller
         release: cf-networking
       bbs_consul_properties:
         agent:
           services:
-            connectivity-server: {}
+            silk-controller: {}
       properties:
         cf_networking:
-          garden_external_networker:
-            cni_config_dir: /var/vcap/jobs/connectivity-plugin/config/cni
-          connectivity_server:
+          cni_config_dir: /var/vcap/jobs/silk-cni/config/cni
+          silk_controller:
             database:
               type: REPLACE_WITH_DB_TYPE # must be mysql or postgres
               username: REPLACE_WITH_USERNAME
@@ -168,24 +167,24 @@ by using the instructions and tooling in [the diego-release repo](https://github
               -----END CERTIFICATE-----
             server_cert: |
               -----BEGIN CERTIFICATE-----
-              REPLACE_WITH_CONNECTIVITY_SERVER_CERT
+              REPLACE_WITH_SILK_CONTROLLER_CERT
               -----END CERTIFICATE-----
             server_key: |
               -----BEGIN RSA PRIVATE KEY-----
-              REPLACE_WITH_CONNECTIVITY_SERVER_KEY
+              REPLACE_WITH_SILK_CONTROLLER_KEY
               -----END RSA PRIVATE KEY-----
-          connectivity_agent:
+          silk_daemon:
             ca_cert: |
               -----BEGIN CERTIFICATE-----
               REPLACE_WITH_CA_CERT
               -----END CERTIFICATE-----
             client_cert: |
               -----BEGIN CERTIFICATE-----
-              REPLACE_WITH_CONNECTIVITY_CLIENT_CERT
+              REPLACE_WITH_SILK_DAEMON_CERT
               -----END CERTIFICATE-----
             client_key: |
               -----BEGIN RSA PRIVATE KEY-----
-              REPLACE_WITH_CONNECTIVITY_CLIENT_KEY
+              REPLACE_WITH_SILK_DAEMON_KEY
               -----END RSA PRIVATE KEY-----
           vxlan_policy_agent:
             policy_server_url: https://policy-server.service.cf.internal:4003
@@ -227,12 +226,6 @@ by using the instructions and tooling in [the diego-release repo](https://github
               -----BEGIN RSA PRIVATE KEY-----
               REPLACE_WITH_POLICY_SERVER_KEY
               -----END RSA PRIVATE KEY-----
-          plugin:
-            etcd_endpoints:
-              - (( config_from_cf.etcd.advertise_urls_dns_suffix ))
-            etcd_client_cert: (( config_from_cf.etcd.client_cert ))
-            etcd_client_key: (( config_from_cf.etcd.client_key ))
-            etcd_ca_cert: (( config_from_cf.etcd.ca_cert ))
       garden_properties:
         network_plugin: /var/vcap/packages/runc-cni/bin/garden-external-networker
         network_plugin_extra_args:

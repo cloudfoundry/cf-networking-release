@@ -1,0 +1,56 @@
+---
+name: silk-daemon
+
+templates:
+  drain.erb: bin/drain
+  pre-start.erb: bin/pre-start
+  silk-daemon_ctl.erb: bin/silk-daemon_ctl
+  ca.crt.erb: config/certs/ca.crt
+  client.crt.erb: config/certs/client.crt
+  client.key.erb: config/certs/client.key
+  client-config.json.erb: config/client-config.json
+
+packages:
+  - silk-daemon
+
+properties:
+  cf_networking.network:
+    description: "CIDR block for overlay network."
+    default: "10.255.0.0/16"
+
+  cf_networking.rep_listen_addr_admin:
+    description: "admin endpoint on diego rep"
+    default: 127.0.0.1:1800
+
+  cf_networking.subnet_prefix_length:
+    description: "Length, in bits, of the prefix for subnets allocated per Diego cell, e.g. '24' for a '/24' subnet."
+    default: 24
+
+  cf_networking.partition_tolerance_hours:
+    description: "When silk controller is unavailable, silk daemon will remain healthy and allow creation of new containers for this number of hours.  Should be no larger than cf_networking.subnet_lease_expiration_hours."
+    default: 168
+
+  cf_networking.silk_daemon.ca_cert:
+    description: "Trusted CA certificate for connecting to the silk controller"
+
+  cf_networking.silk_daemon.client_cert:
+    description: "Client certificate for TLS to access silk controller"
+
+  cf_networking.silk_daemon.client_key:
+    description: "Client private key for TLS to access silk controller"
+
+  cf_networking.silk_daemon.listen_port:
+    description: "Silk daemon serves the CNI plugin on this port"
+    default: 23954
+
+  cf_networking.silk_daemon.debug_port:
+    description: "Debug port for silk daemon.  Use this to adjust log level at runtime or dump process stats."
+    default: 22233
+
+  cf_networking.silk_controller.hostname:
+    description: "Host name for the silk controller"
+    default: "silk-controller.service.cf.internal"
+
+  cf_networking.silk_controller.listen_port:
+    description: "Listen port for the silk controller"
+    default: 4103

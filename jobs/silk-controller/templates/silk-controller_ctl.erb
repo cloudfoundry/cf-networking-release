@@ -2,14 +2,14 @@
 
 set -e -u
 
-export RUN_DIR=/var/vcap/sys/run/silk-daemon
-export LOG_DIR=/var/vcap/sys/log/silk-daemon
-export PIDFILE=$RUN_DIR/silk-daemon.pid
-export CONF_DIR=/var/vcap/jobs/connectivity-agent/config
+export RUN_DIR=/var/vcap/sys/run/silk-controller
+export LOG_DIR=/var/vcap/sys/log/silk-controller
+export PIDFILE=$RUN_DIR/silk-controller.pid
+export CONF_DIR=/var/vcap/jobs/silk-controller/config
 
 mkdir -p /var/vcap/sys/log/monit
-exec 1>> /var/vcap/sys/log/monit/connectivity-agent.out.log
-exec 2>> /var/vcap/sys/log/monit/connectivity-agent.err.log
+exec 1>> /var/vcap/sys/log/monit/silk-controller.out.log
+exec 2>> /var/vcap/sys/log/monit/silk-controller.err.log
 
 function wait_pid() {
   pid=$1
@@ -63,15 +63,14 @@ case $1 in
   start)
 
     mkdir -p $RUN_DIR
+    chown -R vcap:vcap $RUN_DIR
+
     mkdir -p $LOG_DIR
+    chown -R vcap:vcap $LOG_DIR
 
-    exec 2> >(tee -a $LOG_DIR/silk-daemon.stderr.log | logger -p user.error -t silk-daemon) \
-         1> >(tee -a $LOG_DIR/silk-daemon.stdout.log | logger -t silk-daemon)
+    chown -R vcap:vcap $CONF_DIR
 
-    echo $$ > $PIDFILE
-
-    exec /var/vcap/packages/silk-daemon/bin/silk-daemon \
-         -config=/var/vcap/jobs/connectivity-agent/config/client-config.json
+    exec chpst -u vcap:vcap bash -c '/var/vcap/jobs/silk-controller/bin/silk-controller_as_vcap'
 
     ;;
 

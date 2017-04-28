@@ -1,0 +1,40 @@
+<%=
+  require 'json'
+
+  def param_exists? param
+    p(param) != ""
+  end
+
+  def subnet_prefix_length
+    size = p("cf_networking.subnet_prefix_length")
+    if size < 1 || size > 30
+      raise "'cf_networking.subnet_prefix_length' must be a value between 1-30"
+    end
+    size
+  end
+
+  def silk_controller_url
+    hostname = p('cf_networking.silk_controller.hostname')
+    port = p('cf_networking.silk_controller.listen_port')
+    "https://#{hostname}:#{port}"
+  end
+
+  toRender = {
+    "underlay_ip" => spec.ip,
+    "subnet_prefix_length" => subnet_prefix_length,
+    "overlay_network" => p("cf_networking.network"),
+    "health_check_port" => p("cf_networking.silk_daemon.listen_port"),
+    "vtep_name" => "silk-vtep",
+    "connectivity_server_url" => silk_controller_url,
+    "ca_cert_file" => "/var/vcap/jobs/silk-daemon/config/certs/ca.crt",
+    "client_cert_file" => "/var/vcap/jobs/silk-daemon/config/certs/client.crt",
+    "client_key_file" => "/var/vcap/jobs/silk-daemon/config/certs/client.key",
+    "vni" => 1,
+    "poll_interval" => 5, # in seconds
+    "debug_server_port" => p("cf_networking.silk_daemon.debug_port"),
+    "datastore" => "/var/vcap/data/silk/store.json",
+    "lease_expiration_duration" => p("cf_networking.partition_tolerance_hours") * 60 * 60, # convert hours to seconds
+  }
+
+  JSON.pretty_generate(toRender)
+%>

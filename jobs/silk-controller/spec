@@ -1,5 +1,5 @@
 ---
-name: connectivity-server
+name: silk-controller
 
 templates:
   pre-start.erb: bin/pre-start
@@ -26,63 +26,63 @@ properties:
     description: "Length, in bits, of the prefix for subnets allocated per Diego cell, e.g. '24' for a '/24' subnet."
     default: 24
 
-  cf_networking.connectivity_server.debug_server_port:
+  cf_networking.subnet_lease_expiration_hours:
+    description: "Expiration time for subnet leases, in hours"
+    default: 168
+
+  cf_networking.silk_controller.debug_port:
     description: "Port for the debug server"
     default: 22222
 
-  cf_networking.connectivity_server.listen_host:
-    description: "Host where the connectivity server will serve its API"
+  cf_networking.silk_controller.listen_ip:
+    description: "Host where the silk controller will serve its API"
     default: 0.0.0.0
 
-  cf_networking.connectivity_server.listen_port:
-    description: "Port where the connectivity server will serve its external API"
+  cf_networking.silk_controller.listen_port:
+    description: "Port where the silk controller will serve its API"
     default: 4103
 
-  cf_networking.connectivity_server.ca_cert:
+  cf_networking.silk_controller.ca_cert:
     description: "Trusted CA certificate for clients"
 
-  cf_networking.connectivity_server.server_cert:
+  cf_networking.silk_controller.server_cert:
     description: "Server certificate for TLS"
 
-  cf_networking.connectivity_server.server_key:
+  cf_networking.silk_controller.server_key:
     description: "Server key for TLS"
 
-  cf_networking.connectivity_agent.ca_cert:
-    description: "Trusted CA certificate for server"
+  cf_networking.silk_daemon.ca_cert:
+    description: "Trusted CA certificate for connecting to the silk controller.  Used by the local health-check."
 
-  cf_networking.connectivity_agent.client_cert:
-    description: "Client certificate for TLS"
+  cf_networking.silk_daemon.client_cert:
+    description: "Client certificate for TLS to access silk controller.  Used by the local health-check."
 
-  cf_networking.connectivity_agent.client_key:
-    description: "Client key for TLS"
+  cf_networking.silk_daemon.client_key:
+    description: "Client private key for TLS to access silk controller.  Used by the local health-check."
 
-  cf_networking.connectivity_server.database.type:
+  cf_networking.silk_controller.database.type:
     description: "Type of database: postgres or mysql"
     default: postgres
 
-  cf_networking.connectivity_server.database.username:
+  cf_networking.silk_controller.database.username:
     description: "Username for database connection"
     default: ""
 
-  cf_networking.connectivity_server.database.password:
+  cf_networking.silk_controller.database.password:
     description: "Password for database connection"
     default: ""
 
-  cf_networking.connectivity_server.database.host:
+  cf_networking.silk_controller.database.host:
     description: "Host (IP or DNS name) for database server"
     default: ""
 
-  cf_networking.connectivity_server.database.port:
+  cf_networking.silk_controller.database.port:
     description: "Port for database server"
     default: ""
 
-  cf_networking.connectivity_server.database.name:
+  cf_networking.silk_controller.database.name:
     description: "Name of logical database to use"
     default: ""
-
-  cf_networking.connectivity_server.lease_expiration_time:
-    description: "Expiration time for lease, in hours"
-    default: 168
 
   cf_networking.disable:
     description: "Disable container to container networking"

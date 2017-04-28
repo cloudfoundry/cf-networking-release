@@ -4,16 +4,7 @@ See [deployment docs](deploy-iaas.md) for examples
 
 ### 0.22.0
 
-**Changed Properties**
-
-  - `cf_networking.vxlan_policy_agent.iptables_c2c_logging` is now just `cf_networking.iptables_c2c_logging`
-     It can be set on both the vxlan-policy-agent job for accepted packets 
-     as well as the connectivity-plugin job for denied packets and defaults to false on both.
-
-**Removed Properties**
-
-  - `cf_networking.vxlan_policy_agent.subnet_file` is now removed.
-  - `cf_networking.network` has been removed from the `garden-cni` job spec.  The property remains in use on other jobs.
+**This release contains many changes to properties and jobs.  Complete documentation is forthcoming.**
 
 ### 0.21.0
 

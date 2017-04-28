@@ -6,26 +6,25 @@ cf_networking_overrides:
   driver_templates:
   - name: garden-cni
     release: cf-networking
-  - name: connectivity-plugin
+  - name: silk-cni
     release: cf-networking
-  - name: connectivity-agent
+  - name: silk-daemon
     release: cf-networking
   - name: netmon
     release: cf-networking
   - name: vxlan-policy-agent
     release: cf-networking
   bbs_templates:
-  - name: connectivity-server
+  - name: silk-controller
     release: cf-networking
   bbs_consul_properties:
     agent:
       services:
-        connectivity-server: {}
+        silk-controller: {}
   properties:
     cf_networking:
-      garden_external_networker:
-        cni_config_dir: /var/vcap/jobs/connectivity-plugin/config/cni
-      connectivity_server:
+      cni_config_dir: /var/vcap/jobs/silk-cni/config/cni
+      silk_controller:
         database:
           username: networkconnectivityadmin
           password: admin
@@ -104,7 +103,7 @@ cf_networking_overrides:
           Gq1VEtBIBflT8dAruYR7q08WyKoX7pMTaP9aKjIqyaXs5eHpqYnzXzU+peYgvDNk
           wdXcknHI2xlcRNAVwlDywqM+vN6oW29S+ZPyuh18Df/ohGEyD4aO
           -----END RSA PRIVATE KEY-----
-      connectivity_agent:
+      silk_daemon:
         ca_cert: |
           -----BEGIN CERTIFICATE-----
           MIIDOjCCAiKgAwIBAgIRAJBZ/bXWlTx/DEKzNr84gs0wDQYJKoZIhvcNAQELBQAw
@@ -176,7 +175,6 @@ cf_networking_overrides:
           67LQnyJo9bfK11OT4U2R5pyx5xQ+6DEj6VmioSXbcvWUqZjhAykLrQ==
           -----END RSA PRIVATE KEY-----
       vxlan_policy_agent:
-        subnet_file: /var/vcap/jobs/connectivity-plugin/config/subnet.env
         policy_server_url: https://policy-server.service.cf.internal:4003
         garden_address: 127.0.0.1:7777
         garden_protocol: tcp
