@@ -2,6 +2,7 @@
 package fakes
 
 import (
+	"context"
 	"policy-server/models"
 	"sync"
 )
@@ -18,10 +19,11 @@ type Store struct {
 		result1 []models.Policy
 		result2 error
 	}
-	CreateStub        func([]models.Policy) error
+	CreateStub        func(context.Context, []models.Policy) error
 	createMutex       sync.RWMutex
 	createArgsForCall []struct {
-		arg1 []models.Policy
+		arg1 context.Context
+		arg2 []models.Policy
 	}
 	createReturns struct {
 		result1 error
@@ -112,21 +114,22 @@ func (fake *Store) AllReturnsOnCall(i int, result1 []models.Policy, result2 erro
 	}{result1, result2}
 }
 
-func (fake *Store) Create(arg1 []models.Policy) error {
-	var arg1Copy []models.Policy
-	if arg1 != nil {
-		arg1Copy = make([]models.Policy, len(arg1))
-		copy(arg1Copy, arg1)
+func (fake *Store) Create(arg1 context.Context, arg2 []models.Policy) error {
+	var arg2Copy []models.Policy
+	if arg2 != nil {
+		arg2Copy = make([]models.Policy, len(arg2))
+		copy(arg2Copy, arg2)
 	}
 	fake.createMutex.Lock()
 	ret, specificReturn := fake.createReturnsOnCall[len(fake.createArgsForCall)]
 	fake.createArgsForCall = append(fake.createArgsForCall, struct {
-		arg1 []models.Policy
-	}{arg1Copy})
-	fake.recordInvocation("Create", []interface{}{arg1Copy})
+		arg1 context.Context
+		arg2 []models.Policy
+	}{arg1, arg2Copy})
+	fake.recordInvocation("Create", []interface{}{arg1, arg2Copy})
 	fake.createMutex.Unlock()
 	if fake.CreateStub != nil {
-		return fake.CreateStub(arg1)
+		return fake.CreateStub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
@@ -140,10 +143,10 @@ func (fake *Store) CreateCallCount() int {
 	return len(fake.createArgsForCall)
 }
 
-func (fake *Store) CreateArgsForCall(i int) []models.Policy {
+func (fake *Store) CreateArgsForCall(i int) (context.Context, []models.Policy) {
 	fake.createMutex.RLock()
 	defer fake.createMutex.RUnlock()
-	return fake.createArgsForCall[i].arg1
+	return fake.createArgsForCall[i].arg1, fake.createArgsForCall[i].arg2
 }
 
 func (fake *Store) CreateReturns(result1 error) {

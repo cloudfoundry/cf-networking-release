@@ -1,6 +1,7 @@
 package store_test
 
 import (
+	"context"
 	"errors"
 	"policy-server/models"
 	"policy-server/store"
@@ -49,15 +50,18 @@ var _ = Describe("MetricsWrapper", func() {
 
 	Describe("Create", func() {
 		It("calls Create on the Store", func() {
-			err := metricsWrapper.Create(policies)
+			err := metricsWrapper.Create(context.Background(), policies)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeStore.CreateCallCount()).To(Equal(1))
-			Expect(fakeStore.CreateArgsForCall(0)).To(Equal(policies))
+			ctx, pol := fakeStore.CreateArgsForCall(0)
+			Expect(pol).To(Equal(policies))
+			Expect(ctx).To(Equal(context.Background()))
+
 		})
 
 		It("emits a metric", func() {
-			err := metricsWrapper.Create(policies)
+			err := metricsWrapper.Create(context.Background(), policies)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
@@ -70,7 +74,7 @@ var _ = Describe("MetricsWrapper", func() {
 				fakeStore.CreateReturns(errors.New("banana"))
 			})
 			It("emits an error metric", func() {
-				err := metricsWrapper.Create(policies)
+				err := metricsWrapper.Create(context.Background(), policies)
 				Expect(err).To(MatchError("banana"))
 
 				Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))

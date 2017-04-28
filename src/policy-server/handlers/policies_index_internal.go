@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"policy-server/models"
@@ -13,7 +14,7 @@ import (
 //go:generate counterfeiter -o fakes/store.go --fake-name Store . store
 type store interface {
 	All() ([]models.Policy, error)
-	Create([]models.Policy) error
+	Create(context.Context, []models.Policy) error
 	Delete([]models.Policy) error
 	Tags() ([]models.Tag, error)
 	ByGuids([]string, []string) ([]models.Policy, error)

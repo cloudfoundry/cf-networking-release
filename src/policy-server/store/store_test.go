@@ -1,6 +1,7 @@
 package store_test
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"policy-server/store/fakes"
 	"strings"
 	"sync/atomic"
+	"time"
 
 	"code.cloudfoundry.org/go-db-helpers/db"
 	"code.cloudfoundry.org/go-db-helpers/testsupport"
@@ -78,7 +80,7 @@ var _ = Describe("Store", func() {
 			go func() {
 				parallelRunner.RunOnSlice(policies, func(policy interface{}) {
 					p := policy.(models.Policy)
-					Expect(dataStore.Create([]models.Policy{p})).To(Succeed())
+					Expect(dataStore.Create(context.Background(), []models.Policy{p})).To(Succeed())
 					toDelete <- p
 				})
 				close(toDelete)
@@ -207,7 +209,7 @@ var _ = Describe("Store", func() {
 				},
 			}}
 
-			err := dataStore.Create(policies)
+			err := dataStore.Create(context.Background(), policies)
 			Expect(err).NotTo(HaveOccurred())
 
 			p, err := dataStore.All()
@@ -219,7 +221,7 @@ var _ = Describe("Store", func() {
 			It("does not duplicate table rows", func() {
 				policies := []models.Policy{}
 
-				err := dataStore.Create(policies)
+				err := dataStore.Create(context.Background(), policies)
 				Expect(err).NotTo(HaveOccurred())
 
 				policyDuplicate := []models.Policy{{
@@ -238,7 +240,7 @@ var _ = Describe("Store", func() {
 					},
 				}}
 
-				err = dataStore.Create(policyDuplicate)
+				err = dataStore.Create(context.Background(), policyDuplicate)
 				Expect(err).NotTo(HaveOccurred())
 
 				p, err := dataStore.All()
@@ -260,7 +262,7 @@ var _ = Describe("Store", func() {
 						},
 					})
 				}
-				err := dataStore.Create(policies)
+				err := dataStore.Create(context.Background(), policies)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(dataStore.All()).To(HaveLen(255))
 			})
@@ -274,7 +276,7 @@ var _ = Describe("Store", func() {
 					},
 				}}
 
-				err := dataStore.Create(policies)
+				err := dataStore.Create(context.Background(), policies)
 				Expect(err).To(MatchError(ContainSubstring("failed to find available tag")))
 			})
 		})
@@ -297,7 +299,7 @@ var _ = Describe("Store", func() {
 					},
 				}}
 
-				err := dataStore.Create(policies)
+				err := dataStore.Create(context.Background(), policies)
 				Expect(err).NotTo(HaveOccurred())
 
 				tags, err := dataStore.Tags()
@@ -311,7 +313,7 @@ var _ = Describe("Store", func() {
 				err = dataStore.Delete(policies[:1])
 				Expect(err).NotTo(HaveOccurred())
 
-				err = dataStore.Create([]models.Policy{{
+				err = dataStore.Create(context.Background(), []models.Policy{{
 					Source: models.Source{ID: "yet-another-app-guid"},
 					Destination: models.Destination{
 						ID:       "some-other-app-guid",
@@ -341,7 +343,7 @@ var _ = Describe("Store", func() {
 			})
 
 			It("returns an error", func() {
-				err = dataStore.Create(nil)
+				err = dataStore.Create(context.Background(), nil)
 				Expect(err).To(MatchError("begin transaction: some-db-error"))
 			})
 		})
@@ -359,7 +361,7 @@ var _ = Describe("Store", func() {
 			})
 
 			It("returns a error", func() {
-				err = dataStore.Create([]models.Policy{{
+				err = dataStore.Create(context.Background(), []models.Policy{{
 					Source: models.Source{ID: "some-app-guid"},
 					Destination: models.Destination{
 						ID:       "some-other-app-guid",
@@ -398,7 +400,7 @@ var _ = Describe("Store", func() {
 			})
 
 			It("returns the error", func() {
-				err = dataStore.Create([]models.Policy{{
+				err = dataStore.Create(context.Background(), []models.Policy{{
 					Source: models.Source{ID: "some-app-guid"},
 					Destination: models.Destination{
 						ID:       "some-other-app-guid",
@@ -424,7 +426,7 @@ var _ = Describe("Store", func() {
 			})
 
 			It("returns a error", func() {
-				err = dataStore.Create([]models.Policy{{
+				err = dataStore.Create(context.Background(), []models.Policy{{
 					Source: models.Source{ID: "some-app-guid"},
 					Destination: models.Destination{
 						ID:       "some-other-app-guid",
@@ -452,7 +454,7 @@ var _ = Describe("Store", func() {
 			})
 
 			It("returns a error", func() {
-				err = dataStore.Create([]models.Policy{{
+				err = dataStore.Create(context.Background(), []models.Policy{{
 					Source: models.Source{ID: "some-app-guid"},
 					Destination: models.Destination{
 						ID:       "some-other-app-guid",
@@ -463,6 +465,23 @@ var _ = Describe("Store", func() {
 				Expect(err).To(MatchError("creating policy: some-insert-error"))
 			})
 		})
+
+		Context("when the context gets cancelled", func() {
+			It("returns a error", func() {
+				ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+				cancel()
+				err := dataStore.Create(ctx, []models.Policy{{
+					Source: models.Source{ID: "some-app-guid"},
+					Destination: models.Destination{
+						ID:       "some-other-app-guid",
+						Protocol: "tcp",
+						Port:     8080,
+					},
+				}})
+				Expect(err).To(MatchError("context done"))
+			})
+		})
+
 	})
 
 	Describe("All", func() {
@@ -483,7 +502,7 @@ var _ = Describe("Store", func() {
 			dataStore, err = store.New(realDb, group, destination, policy, 1)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = dataStore.Create(expectedPolicies)
+			err = dataStore.Create(context.Background(), expectedPolicies)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -520,7 +539,7 @@ var _ = Describe("Store", func() {
 					},
 				}}
 
-				err := dataStore.Create(expectedPolicies)
+				err := dataStore.Create(context.Background(), expectedPolicies)
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = store.New(realDb, group, destination, policy, 2)
@@ -605,7 +624,7 @@ var _ = Describe("Store", func() {
 			dataStore, err = store.New(realDb, group, destination, policy, 1)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = dataStore.Create(allPolicies)
+			err = dataStore.Create(context.Background(), allPolicies)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -681,7 +700,7 @@ var _ = Describe("Store", func() {
 					},
 				}}
 
-				err := dataStore.Create(expectedPolicies)
+				err := dataStore.Create(context.Background(), expectedPolicies)
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = store.New(realDb, group, destination, policy, 2)
@@ -733,7 +752,7 @@ var _ = Describe("Store", func() {
 				},
 			}}
 
-			err := dataStore.Create(policies)
+			err := dataStore.Create(context.Background(), policies)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -792,7 +811,7 @@ var _ = Describe("Store", func() {
 			dataStore, err = store.New(realDb, group, destination, policy, 1)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = dataStore.Create([]models.Policy{
+			err = dataStore.Create(context.Background(), []models.Policy{
 				{
 					Source: models.Source{ID: "some-app-guid"},
 					Destination: models.Destination{

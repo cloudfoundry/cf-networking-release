@@ -16,6 +16,10 @@ type Db struct {
 		result1 *sqlx.Tx
 		result2 error
 	}
+	beginxReturnsOnCall map[int]struct {
+		result1 *sqlx.Tx
+		result2 error
+	}
 	ExecStub        func(query string, args ...interface{}) (sql.Result, error)
 	execMutex       sync.RWMutex
 	execArgsForCall []struct {
@@ -23,6 +27,10 @@ type Db struct {
 		args  []interface{}
 	}
 	execReturns struct {
+		result1 sql.Result
+		result2 error
+	}
+	execReturnsOnCall map[int]struct {
 		result1 sql.Result
 		result2 error
 	}
@@ -36,6 +44,10 @@ type Db struct {
 		result1 sql.Result
 		result2 error
 	}
+	namedExecReturnsOnCall map[int]struct {
+		result1 sql.Result
+		result2 error
+	}
 	GetStub        func(dest interface{}, query string, args ...interface{}) error
 	getMutex       sync.RWMutex
 	getArgsForCall []struct {
@@ -44,6 +56,9 @@ type Db struct {
 		args  []interface{}
 	}
 	getReturns struct {
+		result1 error
+	}
+	getReturnsOnCall map[int]struct {
 		result1 error
 	}
 	SelectStub        func(dest interface{}, query string, args ...interface{}) error
@@ -56,6 +71,9 @@ type Db struct {
 	selectReturns struct {
 		result1 error
 	}
+	selectReturnsOnCall map[int]struct {
+		result1 error
+	}
 	QueryRowStub        func(query string, args ...interface{}) *sql.Row
 	queryRowMutex       sync.RWMutex
 	queryRowArgsForCall []struct {
@@ -63,6 +81,9 @@ type Db struct {
 		args  []interface{}
 	}
 	queryRowReturns struct {
+		result1 *sql.Row
+	}
+	queryRowReturnsOnCall map[int]struct {
 		result1 *sql.Row
 	}
 	QueryStub        func(query string, args ...interface{}) (*sql.Rows, error)
@@ -75,10 +96,17 @@ type Db struct {
 		result1 *sql.Rows
 		result2 error
 	}
+	queryReturnsOnCall map[int]struct {
+		result1 *sql.Rows
+		result2 error
+	}
 	DriverNameStub        func() string
 	driverNameMutex       sync.RWMutex
 	driverNameArgsForCall []struct{}
 	driverNameReturns     struct {
+		result1 string
+	}
+	driverNameReturnsOnCall map[int]struct {
 		result1 string
 	}
 	invocations      map[string][][]interface{}
@@ -87,11 +115,15 @@ type Db struct {
 
 func (fake *Db) Beginx() (*sqlx.Tx, error) {
 	fake.beginxMutex.Lock()
+	ret, specificReturn := fake.beginxReturnsOnCall[len(fake.beginxArgsForCall)]
 	fake.beginxArgsForCall = append(fake.beginxArgsForCall, struct{}{})
 	fake.recordInvocation("Beginx", []interface{}{})
 	fake.beginxMutex.Unlock()
 	if fake.BeginxStub != nil {
 		return fake.BeginxStub()
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
 	}
 	return fake.beginxReturns.result1, fake.beginxReturns.result2
 }
@@ -110,8 +142,23 @@ func (fake *Db) BeginxReturns(result1 *sqlx.Tx, result2 error) {
 	}{result1, result2}
 }
 
+func (fake *Db) BeginxReturnsOnCall(i int, result1 *sqlx.Tx, result2 error) {
+	fake.BeginxStub = nil
+	if fake.beginxReturnsOnCall == nil {
+		fake.beginxReturnsOnCall = make(map[int]struct {
+			result1 *sqlx.Tx
+			result2 error
+		})
+	}
+	fake.beginxReturnsOnCall[i] = struct {
+		result1 *sqlx.Tx
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *Db) Exec(query string, args ...interface{}) (sql.Result, error) {
 	fake.execMutex.Lock()
+	ret, specificReturn := fake.execReturnsOnCall[len(fake.execArgsForCall)]
 	fake.execArgsForCall = append(fake.execArgsForCall, struct {
 		query string
 		args  []interface{}
@@ -120,6 +167,9 @@ func (fake *Db) Exec(query string, args ...interface{}) (sql.Result, error) {
 	fake.execMutex.Unlock()
 	if fake.ExecStub != nil {
 		return fake.ExecStub(query, args...)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
 	}
 	return fake.execReturns.result1, fake.execReturns.result2
 }
@@ -144,8 +194,23 @@ func (fake *Db) ExecReturns(result1 sql.Result, result2 error) {
 	}{result1, result2}
 }
 
+func (fake *Db) ExecReturnsOnCall(i int, result1 sql.Result, result2 error) {
+	fake.ExecStub = nil
+	if fake.execReturnsOnCall == nil {
+		fake.execReturnsOnCall = make(map[int]struct {
+			result1 sql.Result
+			result2 error
+		})
+	}
+	fake.execReturnsOnCall[i] = struct {
+		result1 sql.Result
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *Db) NamedExec(query string, arg interface{}) (sql.Result, error) {
 	fake.namedExecMutex.Lock()
+	ret, specificReturn := fake.namedExecReturnsOnCall[len(fake.namedExecArgsForCall)]
 	fake.namedExecArgsForCall = append(fake.namedExecArgsForCall, struct {
 		query string
 		arg   interface{}
@@ -154,6 +219,9 @@ func (fake *Db) NamedExec(query string, arg interface{}) (sql.Result, error) {
 	fake.namedExecMutex.Unlock()
 	if fake.NamedExecStub != nil {
 		return fake.NamedExecStub(query, arg)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
 	}
 	return fake.namedExecReturns.result1, fake.namedExecReturns.result2
 }
@@ -178,8 +246,23 @@ func (fake *Db) NamedExecReturns(result1 sql.Result, result2 error) {
 	}{result1, result2}
 }
 
+func (fake *Db) NamedExecReturnsOnCall(i int, result1 sql.Result, result2 error) {
+	fake.NamedExecStub = nil
+	if fake.namedExecReturnsOnCall == nil {
+		fake.namedExecReturnsOnCall = make(map[int]struct {
+			result1 sql.Result
+			result2 error
+		})
+	}
+	fake.namedExecReturnsOnCall[i] = struct {
+		result1 sql.Result
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *Db) Get(dest interface{}, query string, args ...interface{}) error {
 	fake.getMutex.Lock()
+	ret, specificReturn := fake.getReturnsOnCall[len(fake.getArgsForCall)]
 	fake.getArgsForCall = append(fake.getArgsForCall, struct {
 		dest  interface{}
 		query string
@@ -189,6 +272,9 @@ func (fake *Db) Get(dest interface{}, query string, args ...interface{}) error {
 	fake.getMutex.Unlock()
 	if fake.GetStub != nil {
 		return fake.GetStub(dest, query, args...)
+	}
+	if specificReturn {
+		return ret.result1
 	}
 	return fake.getReturns.result1
 }
@@ -212,8 +298,21 @@ func (fake *Db) GetReturns(result1 error) {
 	}{result1}
 }
 
+func (fake *Db) GetReturnsOnCall(i int, result1 error) {
+	fake.GetStub = nil
+	if fake.getReturnsOnCall == nil {
+		fake.getReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.getReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *Db) Select(dest interface{}, query string, args ...interface{}) error {
 	fake.selectMutex.Lock()
+	ret, specificReturn := fake.selectReturnsOnCall[len(fake.selectArgsForCall)]
 	fake.selectArgsForCall = append(fake.selectArgsForCall, struct {
 		dest  interface{}
 		query string
@@ -223,6 +322,9 @@ func (fake *Db) Select(dest interface{}, query string, args ...interface{}) erro
 	fake.selectMutex.Unlock()
 	if fake.SelectStub != nil {
 		return fake.SelectStub(dest, query, args...)
+	}
+	if specificReturn {
+		return ret.result1
 	}
 	return fake.selectReturns.result1
 }
@@ -246,8 +348,21 @@ func (fake *Db) SelectReturns(result1 error) {
 	}{result1}
 }
 
+func (fake *Db) SelectReturnsOnCall(i int, result1 error) {
+	fake.SelectStub = nil
+	if fake.selectReturnsOnCall == nil {
+		fake.selectReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.selectReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *Db) QueryRow(query string, args ...interface{}) *sql.Row {
 	fake.queryRowMutex.Lock()
+	ret, specificReturn := fake.queryRowReturnsOnCall[len(fake.queryRowArgsForCall)]
 	fake.queryRowArgsForCall = append(fake.queryRowArgsForCall, struct {
 		query string
 		args  []interface{}
@@ -256,6 +371,9 @@ func (fake *Db) QueryRow(query string, args ...interface{}) *sql.Row {
 	fake.queryRowMutex.Unlock()
 	if fake.QueryRowStub != nil {
 		return fake.QueryRowStub(query, args...)
+	}
+	if specificReturn {
+		return ret.result1
 	}
 	return fake.queryRowReturns.result1
 }
@@ -279,8 +397,21 @@ func (fake *Db) QueryRowReturns(result1 *sql.Row) {
 	}{result1}
 }
 
+func (fake *Db) QueryRowReturnsOnCall(i int, result1 *sql.Row) {
+	fake.QueryRowStub = nil
+	if fake.queryRowReturnsOnCall == nil {
+		fake.queryRowReturnsOnCall = make(map[int]struct {
+			result1 *sql.Row
+		})
+	}
+	fake.queryRowReturnsOnCall[i] = struct {
+		result1 *sql.Row
+	}{result1}
+}
+
 func (fake *Db) Query(query string, args ...interface{}) (*sql.Rows, error) {
 	fake.queryMutex.Lock()
+	ret, specificReturn := fake.queryReturnsOnCall[len(fake.queryArgsForCall)]
 	fake.queryArgsForCall = append(fake.queryArgsForCall, struct {
 		query string
 		args  []interface{}
@@ -289,6 +420,9 @@ func (fake *Db) Query(query string, args ...interface{}) (*sql.Rows, error) {
 	fake.queryMutex.Unlock()
 	if fake.QueryStub != nil {
 		return fake.QueryStub(query, args...)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
 	}
 	return fake.queryReturns.result1, fake.queryReturns.result2
 }
@@ -313,13 +447,31 @@ func (fake *Db) QueryReturns(result1 *sql.Rows, result2 error) {
 	}{result1, result2}
 }
 
+func (fake *Db) QueryReturnsOnCall(i int, result1 *sql.Rows, result2 error) {
+	fake.QueryStub = nil
+	if fake.queryReturnsOnCall == nil {
+		fake.queryReturnsOnCall = make(map[int]struct {
+			result1 *sql.Rows
+			result2 error
+		})
+	}
+	fake.queryReturnsOnCall[i] = struct {
+		result1 *sql.Rows
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *Db) DriverName() string {
 	fake.driverNameMutex.Lock()
+	ret, specificReturn := fake.driverNameReturnsOnCall[len(fake.driverNameArgsForCall)]
 	fake.driverNameArgsForCall = append(fake.driverNameArgsForCall, struct{}{})
 	fake.recordInvocation("DriverName", []interface{}{})
 	fake.driverNameMutex.Unlock()
 	if fake.DriverNameStub != nil {
 		return fake.DriverNameStub()
+	}
+	if specificReturn {
+		return ret.result1
 	}
 	return fake.driverNameReturns.result1
 }
@@ -333,6 +485,18 @@ func (fake *Db) DriverNameCallCount() int {
 func (fake *Db) DriverNameReturns(result1 string) {
 	fake.DriverNameStub = nil
 	fake.driverNameReturns = struct {
+		result1 string
+	}{result1}
+}
+
+func (fake *Db) DriverNameReturnsOnCall(i int, result1 string) {
+	fake.DriverNameStub = nil
+	if fake.driverNameReturnsOnCall == nil {
+		fake.driverNameReturnsOnCall = make(map[int]struct {
+			result1 string
+		})
+	}
+	fake.driverNameReturnsOnCall[i] = struct {
 		result1 string
 	}{result1}
 }

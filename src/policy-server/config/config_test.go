@@ -49,7 +49,8 @@ var _ = Describe("Config", func() {
 					"tag_length": 2,
 					"metron_address": "http://1.2.3.4:9999",
 					"log_level": "debug",
-					"cleanup_interval": 2
+					"cleanup_interval": 2,
+					"request_timeout": 5
 				}`)
 				c, err := config.New(file.Name())
 				Expect(err).NotTo(HaveOccurred())
@@ -74,6 +75,7 @@ var _ = Describe("Config", func() {
 				Expect(c.MetronAddress).To(Equal("http://1.2.3.4:9999"))
 				Expect(c.LogLevel).To(Equal("debug"))
 				Expect(c.CleanupInterval).To(Equal(2))
+				Expect(c.RequestTimeout).To(Equal(5))
 			})
 		})
 

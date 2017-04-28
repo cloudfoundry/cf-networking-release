@@ -63,6 +63,7 @@
       "server_cert_file" => "/var/vcap/jobs/policy-server/config/certs/server.crt",
       "server_key_file" => "/var/vcap/jobs/policy-server/config/certs/server.key",
       "uaa_ca" => "/var/vcap/jobs/policy-server/config/certs/uaa_ca.crt",
+      "request_timeout" => 5,
     }
 
     JSON.pretty_generate(toRender)

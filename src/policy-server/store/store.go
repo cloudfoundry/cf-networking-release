@@ -2,6 +2,7 @@ package store
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -129,40 +130,49 @@ func rollback(tx Transaction, err error) error {
 	return err
 }
 
-func (s *store) Create(policies []models.Policy) error {
+func (s *store) Create(ctx context.Context, policies []models.Policy) error {
+	errorChan := make(chan error, 1)
 	tx, err := s.conn.Beginx()
 	if err != nil {
 		return fmt.Errorf("begin transaction: %s", err)
 	}
+	go func() {
+		for _, policy := range policies {
+			source_group_id, err := s.group.Create(tx, policy.Source.ID)
+			if err != nil {
+				errorChan <- rollback(tx, fmt.Errorf("creating group: %s", err))
+			}
 
-	for _, policy := range policies {
-		source_group_id, err := s.group.Create(tx, policy.Source.ID)
-		if err != nil {
-			return rollback(tx, fmt.Errorf("creating group: %s", err))
+			destination_group_id, err := s.group.Create(tx, policy.Destination.ID)
+			if err != nil {
+				errorChan <- rollback(tx, fmt.Errorf("creating group: %s", err))
+			}
+
+			destination_id, err := s.destination.Create(tx, destination_group_id, policy.Destination.Port, policy.Destination.Protocol)
+			if err != nil {
+				errorChan <- rollback(tx, fmt.Errorf("creating destination: %s", err))
+			}
+
+			err = s.policy.Create(tx, source_group_id, destination_id)
+			if err != nil {
+				errorChan <- rollback(tx, fmt.Errorf("creating policy: %s", err))
+			}
 		}
 
-		destination_group_id, err := s.group.Create(tx, policy.Destination.ID)
+		err = tx.Commit()
 		if err != nil {
-			return rollback(tx, fmt.Errorf("creating group: %s", err))
+			errorChan <- fmt.Errorf("commit transaction: %s", err) // TODO untested
 		}
-
-		destination_id, err := s.destination.Create(tx, destination_group_id, policy.Destination.Port, policy.Destination.Protocol)
-		if err != nil {
-			return rollback(tx, fmt.Errorf("creating destination: %s", err))
-		}
-
-		err = s.policy.Create(tx, source_group_id, destination_id)
-		if err != nil {
-			return rollback(tx, fmt.Errorf("creating policy: %s", err))
+		errorChan <- nil
+	}()
+	for {
+		select {
+		case err := <-errorChan:
+			return err
+		case <-ctx.Done():
+			return fmt.Errorf("context done")
 		}
 	}
-
-	err = tx.Commit()
-	if err != nil {
-		return fmt.Errorf("commit transaction: %s", err) // untested
-	}
-
-	return nil
 }
 
 func (s *store) Delete(policies []models.Policy) error {

@@ -250,36 +250,19 @@ func main() {
 		return metricsWrapper.Wrap(handle)
 	}
 
-	handlers := rata.Handlers{
-		"uptime": metricsWrap(
-			"Uptime",
-			uptimeHandler,
-		),
+	contextWrapper := handlers.ContextWrapper{
+		Duration:       0 * time.Second,
+		ContextAdapter: &handlers.ContextAdapter{},
+	}
 
-		"create_policies": metricsWrap(
-			"CreatePolicies",
-			networkWriteAuthenticator.Wrap(createPolicyHandler),
-		),
-		"delete_policies": metricsWrap(
-			"DeletePolicies",
-			networkWriteAuthenticator.Wrap(deletePolicyHandler),
-		),
-		"policies_index": metricsWrap(
-			"PoliciesIndex",
-			networkWriteAuthenticator.Wrap(policiesIndexHandler),
-		),
-		"cleanup": metricsWrap(
-			"Cleanup",
-			authenticator.Wrap(policiesCleanupHandler),
-		),
-		"tags_index": metricsWrap(
-			"TagsIndex",
-			authenticator.Wrap(tagsIndexHandler),
-		),
-		"whoami": metricsWrap(
-			"WhoAmI",
-			authenticator.Wrap(whoamiHandler),
-		),
+	handlers := rata.Handlers{
+		"uptime":          metricsWrap("Uptime", uptimeHandler),
+		"create_policies": contextWrapper.Wrap(metricsWrap("CreatePolicies", networkWriteAuthenticator.Wrap(createPolicyHandler))),
+		"delete_policies": metricsWrap("DeletePolicies", networkWriteAuthenticator.Wrap(deletePolicyHandler)),
+		"policies_index":  metricsWrap("PoliciesIndex", networkWriteAuthenticator.Wrap(policiesIndexHandler)),
+		"cleanup":         metricsWrap("Cleanup", authenticator.Wrap(policiesCleanupHandler)),
+		"tags_index":      metricsWrap("TagsIndex", authenticator.Wrap(tagsIndexHandler)),
+		"whoami":          metricsWrap("WhoAmI", authenticator.Wrap(whoamiHandler)),
 	}
 	router, err := rata.NewRouter(routes, handlers)
 	if err != nil {

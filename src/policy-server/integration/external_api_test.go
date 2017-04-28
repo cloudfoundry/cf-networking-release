@@ -505,6 +505,51 @@ var _ = Describe("External API", func() {
 				Expect(responseString).To(MatchJSON(`{ "error": "policies-create: invalid destination port value 0, must be 1-65535" }`))
 			})
 		})
+
+		Context("when the port is invalid", func() {
+			It("gives a helpful error", func() {
+				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 0 } } ] }`)
+				resp := makeAndDoRequest(
+					"POST",
+					fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+					body,
+				)
+
+				Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
+				responseString, err := ioutil.ReadAll(resp.Body)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(responseString).To(MatchJSON(`{ "error": "policies-create: invalid destination port value 0, must be 1-65535" }`))
+			})
+		})
+
+		// TODO better way to test this. our request timeout should never be 0
+		FContext("when our request timeout is 0", func() {
+			BeforeEach(func() {
+				stopPolicyServers(sessions)
+
+				template := DefaultTestConfig(testDatabase.DBConfig(), fakeMetron.Address())
+				policyServerConfs = configurePolicyServers(template, 2)
+				for _, conf := range policyServerConfs {
+					conf.RequestTimeout = 0
+				}
+				sessions = startPolicyServers(policyServerConfs)
+				conf = policyServerConfs[0]
+			})
+
+			It("times out the request", func() {
+				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
+				resp := makeAndDoRequest(
+					"POST",
+					fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+					body,
+				)
+
+				Expect(resp.StatusCode).To(Equal(http.StatusInternalServerError))
+				responseString, err := ioutil.ReadAll(resp.Body)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(responseString).To(MatchJSON(`{"error": "policies-create: database create failed"}`))
+			})
+		})
 	})
 
 	Describe("cleanup policies", func() {
