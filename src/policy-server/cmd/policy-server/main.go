@@ -231,17 +231,6 @@ func main() {
 		ErrorResponse: errorResponse,
 	}
 
-	routes := rata.Routes{
-		{Name: "uptime", Method: "GET", Path: "/"},
-		{Name: "uptime", Method: "GET", Path: "/networking"},
-		{Name: "whoami", Method: "GET", Path: "/networking/v0/external/whoami"},
-		{Name: "create_policies", Method: "POST", Path: "/networking/v0/external/policies"},
-		{Name: "delete_policies", Method: "POST", Path: "/networking/v0/external/policies/delete"},
-		{Name: "policies_index", Method: "GET", Path: "/networking/v0/external/policies"},
-		{Name: "cleanup", Method: "POST", Path: "/networking/v0/external/policies/cleanup"},
-		{Name: "tags_index", Method: "GET", Path: "/networking/v0/external/tags"},
-	}
-
 	metricsWrap := func(name string, handle http.Handler) http.Handler {
 		metricsWrapper := handlers.MetricWrapper{
 			Name:          name,
@@ -255,69 +244,33 @@ func main() {
 		ContextAdapter: &handlers.ContextAdapter{},
 	}
 
-	handlers := rata.Handlers{
+	externalHandlers := rata.Handlers{
 		"uptime":          metricsWrap("Uptime", uptimeHandler),
 		"create_policies": contextWrapper.Wrap(metricsWrap("CreatePolicies", networkWriteAuthenticator.Wrap(createPolicyHandler))),
-		"delete_policies": metricsWrap("DeletePolicies", networkWriteAuthenticator.Wrap(deletePolicyHandler)),
+		"delete_policies": contextWrapper.Wrap(metricsWrap("DeletePolicies", networkWriteAuthenticator.Wrap(deletePolicyHandler))),
 		"policies_index":  metricsWrap("PoliciesIndex", networkWriteAuthenticator.Wrap(policiesIndexHandler)),
 		"cleanup":         metricsWrap("Cleanup", authenticator.Wrap(policiesCleanupHandler)),
 		"tags_index":      metricsWrap("TagsIndex", authenticator.Wrap(tagsIndexHandler)),
 		"whoami":          metricsWrap("WhoAmI", authenticator.Wrap(whoamiHandler)),
 	}
-	router, err := rata.NewRouter(routes, handlers)
-	if err != nil {
-		log.Fatalf("unable to create rata Router: %s", err) // not tested
-	}
-
-	addr := fmt.Sprintf("%s:%d", conf.ListenHost, conf.ListenPort)
-	server := http_server.New(addr, router)
-
-	internalRoutes := rata.Routes{
-		{Name: "internal_policies", Method: "GET", Path: "/networking/v0/internal/policies"},
-	}
-
-	internalHandlers := rata.Handlers{
-		"internal_policies": metricsWrap(
-			"InternalPolicies",
-			internalPoliciesHandler,
-		),
-	}
-	internalRouter, err := rata.NewRouter(internalRoutes, internalHandlers)
-	if err != nil {
-		log.Fatalf("unable to create rata Router: %s", err)
-	}
-	internalAddr := fmt.Sprintf("%s:%d", conf.ListenHost, conf.InternalListenPort)
-
-	tlsConfig, err = mutualtls.NewServerTLSConfig(conf.ServerCertFile, conf.ServerKeyFile, conf.CACertFile)
-	if err != nil {
-		log.Fatalf("mutual tls config: %s", err)
-	}
-	internalServer := http_server.NewTLSServer(internalAddr, internalRouter, tlsConfig)
 
 	err = dropsonde.Initialize(conf.MetronAddress, dropsondeOrigin)
 	if err != nil {
 		log.Fatalf("initializing dropsonde: %s", err)
 	}
 
-	totalPoliciesSource := server_metrics.NewTotalPoliciesSource(wrappedStore)
-	uptimeSource := metrics.NewUptimeSource()
-	metricsEmitter := metrics.NewMetricsEmitter(logger, emitInterval, uptimeSource, totalPoliciesSource)
+	metricsEmitter := initMetricsEmitter(logger, wrappedStore)
+	externalServer := initExternalServer(conf, externalHandlers)
+	internalServer := initInternalServer(conf, metricsWrap("InternalPolicies", internalPoliciesHandler))
+	poller := initPoller(logger, conf, policyCleaner)
+	debugServer := debugserver.Runner(fmt.Sprintf("%s:%d", conf.DebugServerHost, conf.DebugServerPort), reconfigurableSink)
 
-	pollInterval := time.Duration(conf.CleanupInterval) * time.Second
-
-	poller := &poller.Poller{
-		Logger:          logger.Session("policy-cleaner-poller"),
-		PollInterval:    pollInterval,
-		SingleCycleFunc: policyCleaner.DeleteStalePoliciesWrapper,
-	}
-
-	debugServerAddress := fmt.Sprintf("%s:%d", conf.DebugServerHost, conf.DebugServerPort)
 	members := grouper.Members{
 		{"metrics_emitter", metricsEmitter},
-		{"http_server", server},
+		{"http_server", externalServer},
 		{"internal_http_server", internalServer},
 		{"policy-cleaner-poller", poller},
-		{"debug-server", debugserver.Runner(debugServerAddress, reconfigurableSink)},
+		{"debug-server", debugServer},
 	}
 
 	logger.Info("starting external server", lager.Data{"listen-address": conf.ListenHost, "port": conf.ListenPort})
@@ -358,4 +311,64 @@ func initLoggerSink(logger lager.Logger, level string) *lager.ReconfigurableSink
 	}
 	w := lager.NewWriterSink(os.Stdout, lager.DEBUG)
 	return lager.NewReconfigurableSink(w, logLevel)
+}
+
+func initMetricsEmitter(logger lager.Logger, wrappedStore *store.MetricsWrapper) *metrics.MetricsEmitter {
+	totalPoliciesSource := server_metrics.NewTotalPoliciesSource(wrappedStore)
+	uptimeSource := metrics.NewUptimeSource()
+	return metrics.NewMetricsEmitter(logger, emitInterval, uptimeSource, totalPoliciesSource)
+}
+
+func initPoller(logger lager.Logger, conf *config.Config, policyCleaner *cleaner.PolicyCleaner) ifrit.Runner {
+	pollInterval := time.Duration(conf.CleanupInterval) * time.Second
+
+	return &poller.Poller{
+		Logger:          logger.Session("policy-cleaner-poller"),
+		PollInterval:    pollInterval,
+		SingleCycleFunc: policyCleaner.DeleteStalePoliciesWrapper,
+	}
+}
+
+func initInternalServer(conf *config.Config, internalPoliciesHandler http.Handler) ifrit.Runner {
+	routes := rata.Routes{
+		{Name: "internal_policies", Method: "GET", Path: "/networking/v0/internal/policies"},
+	}
+	handlers := rata.Handlers{
+		"internal_policies": internalPoliciesHandler,
+	}
+
+	router, err := rata.NewRouter(routes, handlers)
+	if err != nil {
+		log.Fatalf("unable to create rata Router: %s", err)
+	}
+
+	addr := fmt.Sprintf("%s:%d", conf.ListenHost, conf.InternalListenPort)
+
+	tlsConfig, err := mutualtls.NewServerTLSConfig(conf.ServerCertFile, conf.ServerKeyFile, conf.CACertFile)
+	if err != nil {
+		log.Fatalf("mutual tls config: %s", err)
+	}
+
+	return http_server.NewTLSServer(addr, router, tlsConfig)
+}
+
+func initExternalServer(conf *config.Config, externalHandlers rata.Handlers) ifrit.Runner {
+	routes := rata.Routes{
+		{Name: "uptime", Method: "GET", Path: "/"},
+		{Name: "uptime", Method: "GET", Path: "/networking"},
+		{Name: "whoami", Method: "GET", Path: "/networking/v0/external/whoami"},
+		{Name: "create_policies", Method: "POST", Path: "/networking/v0/external/policies"},
+		{Name: "delete_policies", Method: "POST", Path: "/networking/v0/external/policies/delete"},
+		{Name: "policies_index", Method: "GET", Path: "/networking/v0/external/policies"},
+		{Name: "cleanup", Method: "POST", Path: "/networking/v0/external/policies/cleanup"},
+		{Name: "tags_index", Method: "GET", Path: "/networking/v0/external/tags"},
+	}
+
+	externalRouter, err := rata.NewRouter(routes, externalHandlers)
+	if err != nil {
+		log.Fatalf("unable to create rata Router: %s", err) // not tested
+	}
+
+	addr := fmt.Sprintf("%s:%d", conf.ListenHost, conf.ListenPort)
+	return http_server.New(addr, externalRouter)
 }
