@@ -158,93 +158,108 @@ func (s *store) Create(ctx context.Context, policies []models.Policy) error {
 				errorChan <- rollback(tx, fmt.Errorf("creating policy: %s", err))
 			}
 		}
+		errorChan <- nil
+	}()
+	for {
+		select {
+		case err := <-errorChan:
+			if err != nil {
+				return err
+			}
+			err = tx.Commit()
+			if err != nil {
+				return fmt.Errorf("commit transaction: %s", err) // TODO untested
+			}
+			return nil
+		case <-ctx.Done():
+			return rollback(tx, errors.New("context done"))
+		}
+	}
+}
 
-		err = tx.Commit()
-		if err != nil {
-			errorChan <- fmt.Errorf("commit transaction: %s", err) // TODO untested
+func (s *store) Delete(ctx context.Context, policies []models.Policy) error {
+	errorChan := make(chan error, 1)
+	tx, err := s.conn.Beginx()
+	if err != nil {
+		return fmt.Errorf("begin transaction: %s", err)
+	}
+
+	go func() {
+		for _, p := range policies {
+			sourceGroupID, err := s.group.GetID(tx, p.Source.ID)
+			if err != nil {
+				if err == sql.ErrNoRows {
+					continue
+				} else {
+					errorChan <- rollback(tx, fmt.Errorf("getting source id: %s", err))
+				}
+			}
+
+			destGroupID, err := s.group.GetID(tx, p.Destination.ID)
+			if err != nil {
+				if err == sql.ErrNoRows {
+					continue
+				} else {
+					errorChan <- rollback(tx, fmt.Errorf("getting destination group id: %s", err))
+				}
+			}
+
+			destID, err := s.destination.GetID(tx, destGroupID, p.Destination.Port, p.Destination.Protocol)
+			if err != nil {
+				if err == sql.ErrNoRows {
+					continue
+				} else {
+					errorChan <- rollback(tx, fmt.Errorf("getting destination id: %s", err))
+				}
+			}
+
+			err = s.policy.Delete(tx, sourceGroupID, destID)
+			if err != nil {
+				if err == sql.ErrNoRows {
+					continue
+				} else {
+					errorChan <- rollback(tx, fmt.Errorf("deleting policy: %s", err))
+				}
+			}
+
+			destIDCount, err := s.policy.CountWhereDestinationID(tx, destID)
+			if err != nil {
+				errorChan <- rollback(tx, fmt.Errorf("counting destination id: %s", err))
+			}
+			if destIDCount == 0 {
+				err = s.destination.Delete(tx, destID)
+				if err != nil {
+					errorChan <- rollback(tx, fmt.Errorf("deleting destination: %s", err))
+				}
+			}
+
+			err = s.deleteGroupRowIfLast(tx, sourceGroupID)
+			if err != nil {
+				errorChan <- rollback(tx, fmt.Errorf("deleting group row: %s", err))
+			}
+
+			err = s.deleteGroupRowIfLast(tx, destGroupID)
+			if err != nil {
+				errorChan <- rollback(tx, fmt.Errorf("deleting group row: %s", err))
+			}
 		}
 		errorChan <- nil
 	}()
 	for {
 		select {
 		case err := <-errorChan:
-			return err
-		case <-ctx.Done():
-			return fmt.Errorf("context done")
-		}
-	}
-}
-
-func (s *store) Delete(policies []models.Policy) error {
-	tx, err := s.conn.Beginx()
-	if err != nil {
-		return fmt.Errorf("begin transaction: %s", err)
-	}
-
-	for _, p := range policies {
-		sourceGroupID, err := s.group.GetID(tx, p.Source.ID)
-		if err != nil {
-			if err == sql.ErrNoRows {
-				continue
-			} else {
-				return rollback(tx, fmt.Errorf("getting source id: %s", err))
-			}
-		}
-
-		destGroupID, err := s.group.GetID(tx, p.Destination.ID)
-		if err != nil {
-			if err == sql.ErrNoRows {
-				continue
-			} else {
-				return rollback(tx, fmt.Errorf("getting destination group id: %s", err))
-			}
-		}
-
-		destID, err := s.destination.GetID(tx, destGroupID, p.Destination.Port, p.Destination.Protocol)
-		if err != nil {
-			if err == sql.ErrNoRows {
-				continue
-			} else {
-				return rollback(tx, fmt.Errorf("getting destination id: %s", err))
-			}
-		}
-
-		err = s.policy.Delete(tx, sourceGroupID, destID)
-		if err != nil {
-			if err == sql.ErrNoRows {
-				continue
-			} else {
-				return rollback(tx, fmt.Errorf("deleting policy: %s", err))
-			}
-		}
-
-		destIDCount, err := s.policy.CountWhereDestinationID(tx, destID)
-		if err != nil {
-			return rollback(tx, fmt.Errorf("counting destination id: %s", err))
-		}
-		if destIDCount == 0 {
-			err = s.destination.Delete(tx, destID)
 			if err != nil {
-				return rollback(tx, fmt.Errorf("deleting destination: %s", err))
+				return err
 			}
-		}
-
-		err = s.deleteGroupRowIfLast(tx, sourceGroupID)
-		if err != nil {
-			return rollback(tx, fmt.Errorf("deleting group row: %s", err))
-		}
-
-		err = s.deleteGroupRowIfLast(tx, destGroupID)
-		if err != nil {
-			return rollback(tx, fmt.Errorf("deleting group row: %s", err))
+			err = tx.Commit()
+			if err != nil {
+				return fmt.Errorf("commit transaction: %s", err) // TODO untested
+			}
+			return nil
+		case <-ctx.Done():
+			return rollback(tx, errors.New("context done"))
 		}
 	}
-
-	err = tx.Commit()
-	if err != nil {
-		return fmt.Errorf("commit transaction: %s", err) // untested
-	}
-
 	return nil
 }
 

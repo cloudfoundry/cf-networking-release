@@ -10,7 +10,7 @@ import (
 type Store interface {
 	Create(context.Context, []models.Policy) error
 	All() ([]models.Policy, error)
-	Delete([]models.Policy) error
+	Delete(context.Context, []models.Policy) error
 	Tags() ([]models.Tag, error)
 	ByGuids([]string, []string) ([]models.Policy, error)
 }
@@ -48,9 +48,9 @@ func (mw *MetricsWrapper) All() ([]models.Policy, error) {
 	return policies, err
 }
 
-func (mw *MetricsWrapper) Delete(policies []models.Policy) error {
+func (mw *MetricsWrapper) Delete(ctx context.Context, policies []models.Policy) error {
 	startTime := time.Now()
-	err := mw.Store.Delete(policies)
+	err := mw.Store.Delete(ctx, policies)
 	deleteTimeDuration := time.Now().Sub(startTime)
 	if err != nil {
 		mw.MetricsSender.IncrementCounter("StoreDeleteError")

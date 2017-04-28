@@ -1,10 +1,12 @@
 package cleaner_test
 
 import (
+	"context"
 	"errors"
 	"policy-server/cleaner"
 	"policy-server/cleaner/fakes"
 	"policy-server/models"
+	"time"
 
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
@@ -14,12 +16,15 @@ import (
 
 var _ = Describe("PolicyCleaner", func() {
 	var (
-		policyCleaner *cleaner.PolicyCleaner
-		fakeStore     *fakes.Store
-		fakeUAAClient *fakes.UAAClient
-		fakeCCClient  *fakes.CCClient
-		logger        *lagertest.TestLogger
-		allPolicies   []models.Policy
+		policyCleaner      *cleaner.PolicyCleaner
+		fakeStore          *fakes.Store
+		fakeUAAClient      *fakes.UAAClient
+		fakeCCClient       *fakes.CCClient
+		fakeContextAdapter *fakes.ContextAdapter
+		fakeContext        context.Context
+		logger             *lagertest.TestLogger
+		allPolicies        []models.Policy
+		count              int
 	)
 
 	BeforeEach(func() {
@@ -52,13 +57,16 @@ var _ = Describe("PolicyCleaner", func() {
 		fakeStore = &fakes.Store{}
 		fakeUAAClient = &fakes.UAAClient{}
 		fakeCCClient = &fakes.CCClient{}
+		fakeContextAdapter = &fakes.ContextAdapter{}
 		logger = lagertest.NewTestLogger("test")
 
 		policyCleaner = &cleaner.PolicyCleaner{
-			Logger:    logger,
-			Store:     fakeStore,
-			UAAClient: fakeUAAClient,
-			CCClient:  fakeCCClient,
+			Logger:         logger,
+			Store:          fakeStore,
+			UAAClient:      fakeUAAClient,
+			CCClient:       fakeCCClient,
+			RequestTimeout: 5 * time.Second,
+			ContextAdapter: fakeContextAdapter,
 		}
 
 		fakeUAAClient.GetTokenReturns("valid-token", nil)
@@ -72,6 +80,10 @@ var _ = Describe("PolicyCleaner", func() {
 			}
 			return liveGUIDs, nil
 		}
+		fakeContext, _ = context.WithTimeout(context.Background(), 5*time.Second)
+		fakeContextAdapter.WithTimeoutReturns(fakeContext, func() {
+			count = fakeStore.DeleteCallCount()
+		})
 	})
 
 	It("Deletes policies that reference apps that do not exist", func() {
@@ -86,8 +98,17 @@ var _ = Describe("PolicyCleaner", func() {
 		Expect(guids).To(ConsistOf("live-guid", "dead-guid"))
 
 		stalePolicies := allPolicies[1:]
+
+		Expect(fakeContextAdapter.WithTimeoutCallCount()).To(Equal(1))
+		backgroundContext, requestTimeout := fakeContextAdapter.WithTimeoutArgsForCall(0)
+		Expect(backgroundContext).To(Equal(context.Background()))
+		Expect(requestTimeout).To(Equal(policyCleaner.RequestTimeout))
+		Expect(count).To(Equal(1))
+
 		Expect(fakeStore.DeleteCallCount()).To(Equal(1))
-		Expect(fakeStore.DeleteArgsForCall(0)).To(Equal(stalePolicies))
+		ctx, policies := fakeStore.DeleteArgsForCall(0)
+		Expect(ctx).To(Equal(fakeContext))
+		Expect(policies).To(Equal(stalePolicies))
 
 		Expect(logger).To(gbytes.Say("deleting stale policies:.*policies.*dead-guid.*dead-guid.*total_policies\":2"))
 		Expect(policies).To(Equal(stalePolicies))
@@ -101,6 +122,8 @@ var _ = Describe("PolicyCleaner", func() {
 				UAAClient:             fakeUAAClient,
 				CCClient:              fakeCCClient,
 				CCAppRequestChunkSize: 1,
+				RequestTimeout:        time.Duration(5) * time.Second,
+				ContextAdapter:        fakeContextAdapter,
 			}
 		})
 		It("Calls the CC server multiple times to check which policies to delete", func() {
@@ -123,8 +146,10 @@ var _ = Describe("PolicyCleaner", func() {
 			Expect(fakeStore.DeleteCallCount()).To(Equal(2))
 
 			var deleted [][]models.Policy
-			deleted = append(deleted, fakeStore.DeleteArgsForCall(0))
-			deleted = append(deleted, fakeStore.DeleteArgsForCall(1))
+			_, deletedPolicies := fakeStore.DeleteArgsForCall(0)
+			deleted = append(deleted, deletedPolicies)
+			_, deletedPolicies = fakeStore.DeleteArgsForCall(1)
+			deleted = append(deleted, deletedPolicies)
 			Expect(deleted).To(ConsistOf(stalePolicies, []models.Policy{}))
 
 			Expect(logger).To(gbytes.Say("deleting stale policies:.*policies.*dead-guid.*dead-guid.*total_policies\":2"))
@@ -198,5 +223,9 @@ var _ = Describe("PolicyCleaner", func() {
 			policyCleaner.DeleteStalePolicies()
 			Expect(logger).To(gbytes.Say("store-delete-policies-failed.*potato"))
 		})
+	})
+
+	Context("when the context times out", func() {
+		//TODO
 	})
 })

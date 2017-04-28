@@ -15,7 +15,7 @@ import (
 type store interface {
 	All() ([]models.Policy, error)
 	Create(context.Context, []models.Policy) error
-	Delete([]models.Policy) error
+	Delete(context.Context, []models.Policy) error
 	Tags() ([]models.Tag, error)
 	ByGuids([]string, []string) ([]models.Policy, error)
 }

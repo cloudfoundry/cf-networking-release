@@ -15,6 +15,7 @@ import (
 	"lib/nonmutualtls"
 	"lib/poller"
 
+	"policy-server/adapter"
 	"policy-server/cc_client"
 	"policy-server/cleaner"
 	"policy-server/config"
@@ -204,10 +205,12 @@ func main() {
 	}
 
 	policyCleaner := &cleaner.PolicyCleaner{
-		Logger:    logger.Session("policy-cleaner"),
-		Store:     wrappedStore,
-		UAAClient: uaaClient,
-		CCClient:  ccClient,
+		Logger:         logger.Session("policy-cleaner"),
+		Store:          wrappedStore,
+		UAAClient:      uaaClient,
+		CCClient:       ccClient,
+		RequestTimeout: time.Duration(5) * time.Second,
+		ContextAdapter: &adapter.ContextAdapter{},
 	}
 
 	policiesCleanupHandler := &handlers.PoliciesCleanup{
@@ -241,7 +244,7 @@ func main() {
 
 	contextWrapper := handlers.ContextWrapper{
 		Duration:       time.Duration(conf.RequestTimeout) * time.Second,
-		ContextAdapter: &handlers.ContextAdapter{},
+		ContextAdapter: &adapter.ContextAdapter{},
 	}
 
 	externalHandlers := rata.Handlers{

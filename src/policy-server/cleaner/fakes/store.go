@@ -2,6 +2,7 @@
 package fakes
 
 import (
+	"context"
 	"policy-server/models"
 	"sync"
 )
@@ -14,12 +15,20 @@ type Store struct {
 		result1 []models.Policy
 		result2 error
 	}
-	DeleteStub        func([]models.Policy) error
+	allReturnsOnCall map[int]struct {
+		result1 []models.Policy
+		result2 error
+	}
+	DeleteStub        func(context.Context, []models.Policy) error
 	deleteMutex       sync.RWMutex
 	deleteArgsForCall []struct {
-		arg1 []models.Policy
+		arg1 context.Context
+		arg2 []models.Policy
 	}
 	deleteReturns struct {
+		result1 error
+	}
+	deleteReturnsOnCall map[int]struct {
 		result1 error
 	}
 	invocations      map[string][][]interface{}
@@ -28,11 +37,15 @@ type Store struct {
 
 func (fake *Store) All() ([]models.Policy, error) {
 	fake.allMutex.Lock()
+	ret, specificReturn := fake.allReturnsOnCall[len(fake.allArgsForCall)]
 	fake.allArgsForCall = append(fake.allArgsForCall, struct{}{})
 	fake.recordInvocation("All", []interface{}{})
 	fake.allMutex.Unlock()
 	if fake.AllStub != nil {
 		return fake.AllStub()
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
 	}
 	return fake.allReturns.result1, fake.allReturns.result2
 }
@@ -51,20 +64,39 @@ func (fake *Store) AllReturns(result1 []models.Policy, result2 error) {
 	}{result1, result2}
 }
 
-func (fake *Store) Delete(arg1 []models.Policy) error {
-	var arg1Copy []models.Policy
-	if arg1 != nil {
-		arg1Copy = make([]models.Policy, len(arg1))
-		copy(arg1Copy, arg1)
+func (fake *Store) AllReturnsOnCall(i int, result1 []models.Policy, result2 error) {
+	fake.AllStub = nil
+	if fake.allReturnsOnCall == nil {
+		fake.allReturnsOnCall = make(map[int]struct {
+			result1 []models.Policy
+			result2 error
+		})
+	}
+	fake.allReturnsOnCall[i] = struct {
+		result1 []models.Policy
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *Store) Delete(arg1 context.Context, arg2 []models.Policy) error {
+	var arg2Copy []models.Policy
+	if arg2 != nil {
+		arg2Copy = make([]models.Policy, len(arg2))
+		copy(arg2Copy, arg2)
 	}
 	fake.deleteMutex.Lock()
+	ret, specificReturn := fake.deleteReturnsOnCall[len(fake.deleteArgsForCall)]
 	fake.deleteArgsForCall = append(fake.deleteArgsForCall, struct {
-		arg1 []models.Policy
-	}{arg1Copy})
-	fake.recordInvocation("Delete", []interface{}{arg1Copy})
+		arg1 context.Context
+		arg2 []models.Policy
+	}{arg1, arg2Copy})
+	fake.recordInvocation("Delete", []interface{}{arg1, arg2Copy})
 	fake.deleteMutex.Unlock()
 	if fake.DeleteStub != nil {
-		return fake.DeleteStub(arg1)
+		return fake.DeleteStub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1
 	}
 	return fake.deleteReturns.result1
 }
@@ -75,15 +107,27 @@ func (fake *Store) DeleteCallCount() int {
 	return len(fake.deleteArgsForCall)
 }
 
-func (fake *Store) DeleteArgsForCall(i int) []models.Policy {
+func (fake *Store) DeleteArgsForCall(i int) (context.Context, []models.Policy) {
 	fake.deleteMutex.RLock()
 	defer fake.deleteMutex.RUnlock()
-	return fake.deleteArgsForCall[i].arg1
+	return fake.deleteArgsForCall[i].arg1, fake.deleteArgsForCall[i].arg2
 }
 
 func (fake *Store) DeleteReturns(result1 error) {
 	fake.DeleteStub = nil
 	fake.deleteReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *Store) DeleteReturnsOnCall(i int, result1 error) {
+	fake.DeleteStub = nil
+	if fake.deleteReturnsOnCall == nil {
+		fake.deleteReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.deleteReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }

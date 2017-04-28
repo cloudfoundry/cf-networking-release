@@ -11,12 +11,6 @@ type contextAdapter interface {
 	WithTimeout(context.Context, time.Duration) (context.Context, context.CancelFunc)
 }
 
-type ContextAdapter struct{}
-
-func (*ContextAdapter) WithTimeout(ctx context.Context, duration time.Duration) (context.Context, context.CancelFunc) {
-	return context.WithTimeout(ctx, duration)
-}
-
 type ContextWrapper struct {
 	Duration       time.Duration
 	ContextAdapter contextAdapter

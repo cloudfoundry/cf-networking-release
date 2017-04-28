@@ -172,15 +172,17 @@ var _ = Describe("MetricsWrapper", func() {
 
 	Describe("Delete", func() {
 		It("calls Delete on the Store", func() {
-			err := metricsWrapper.Delete(policies)
+			err := metricsWrapper.Delete(context.Background(), policies)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeStore.DeleteCallCount()).To(Equal(1))
-			Expect(fakeStore.DeleteArgsForCall(0)).To(Equal(policies))
+			ctx, pol := fakeStore.DeleteArgsForCall(0)
+			Expect(pol).To(Equal(policies))
+			Expect(ctx).To(Equal(context.Background()))
 		})
 
 		It("emits a metric", func() {
-			err := metricsWrapper.Delete(policies)
+			err := metricsWrapper.Delete(context.Background(), policies)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
@@ -193,7 +195,7 @@ var _ = Describe("MetricsWrapper", func() {
 				fakeStore.DeleteReturns(errors.New("banana"))
 			})
 			It("emits an error metric", func() {
-				err := metricsWrapper.Delete(policies)
+				err := metricsWrapper.Delete(context.Background(), policies)
 				Expect(err).To(MatchError("banana"))
 
 				Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))

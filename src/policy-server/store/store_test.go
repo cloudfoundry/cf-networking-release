@@ -89,7 +89,7 @@ var _ = Describe("Store", func() {
 			var nDeleted int32
 			parallelRunner.RunOnChannel(toDelete, func(policy interface{}) {
 				p := policy.(models.Policy)
-				Expect(dataStore.Delete([]models.Policy{p})).To(Succeed())
+				Expect(dataStore.Delete(context.Background(), []models.Policy{p})).To(Succeed())
 				atomic.AddInt32(&nDeleted, 1)
 			})
 
@@ -310,7 +310,7 @@ var _ = Describe("Store", func() {
 					{ID: "another-app-guid", Tag: "03"},
 				}))
 
-				err = dataStore.Delete(policies[:1])
+				err = dataStore.Delete(context.Background(), policies[:1])
 				Expect(err).NotTo(HaveOccurred())
 
 				err = dataStore.Create(context.Background(), []models.Policy{{
@@ -833,7 +833,7 @@ var _ = Describe("Store", func() {
 		})
 
 		It("deletes the specified policies", func() {
-			err := dataStore.Delete([]models.Policy{{
+			err := dataStore.Delete(context.Background(), []models.Policy{{
 				Source: models.Source{ID: "some-app-guid"},
 				Destination: models.Destination{
 					ID:       "some-other-app-guid",
@@ -857,7 +857,7 @@ var _ = Describe("Store", func() {
 		})
 
 		It("deletes the tags if no longer referenced", func() {
-			err := dataStore.Delete([]models.Policy{{
+			err := dataStore.Delete(context.Background(), []models.Policy{{
 				Source: models.Source{ID: "some-app-guid"},
 				Destination: models.Destination{
 					ID:       "some-other-app-guid",
@@ -902,7 +902,7 @@ var _ = Describe("Store", func() {
 				})
 
 				It("returns an error", func() {
-					err = dataStore.Delete(nil)
+					err = dataStore.Delete(context.Background(), nil)
 					Expect(err).To(MatchError("begin transaction: some-db-error"))
 				})
 			})
@@ -919,7 +919,7 @@ var _ = Describe("Store", func() {
 					})
 
 					It("swallows the error and continues", func() {
-						err = dataStore.Delete([]models.Policy{
+						err = dataStore.Delete(context.Background(), []models.Policy{
 							models.Policy{Source: models.Source{ID: "0"}},
 							models.Policy{Source: models.Source{ID: "apple"}, Destination: models.Destination{ID: "banana"}},
 						})
@@ -942,7 +942,7 @@ var _ = Describe("Store", func() {
 						fakeGroup.GetIDReturns(-1, errors.New("some-get-error"))
 					})
 					It("returns the error", func() {
-						err = dataStore.Delete([]models.Policy{{
+						err = dataStore.Delete(context.Background(), []models.Policy{{
 							Source: models.Source{ID: "some-app-guid"},
 							Destination: models.Destination{
 								ID:       "some-other-app-guid",
@@ -967,7 +967,7 @@ var _ = Describe("Store", func() {
 					})
 
 					It("swallows the error and continues", func() {
-						err = dataStore.Delete([]models.Policy{
+						err = dataStore.Delete(context.Background(), []models.Policy{
 							models.Policy{Source: models.Source{ID: "peach"}, Destination: models.Destination{ID: "pear"}},
 							models.Policy{Source: models.Source{ID: "apple"}, Destination: models.Destination{ID: "banana"}},
 						})
@@ -1000,7 +1000,7 @@ var _ = Describe("Store", func() {
 						}
 					})
 					It("returns a error", func() {
-						err = dataStore.Delete([]models.Policy{{
+						err = dataStore.Delete(context.Background(), []models.Policy{{
 							Source: models.Source{ID: "some-app-guid"},
 							Destination: models.Destination{
 								ID:       "some-other-app-guid",
@@ -1025,7 +1025,7 @@ var _ = Describe("Store", func() {
 					})
 
 					It("swallows the error and continues", func() {
-						err = dataStore.Delete([]models.Policy{
+						err = dataStore.Delete(context.Background(), []models.Policy{
 							models.Policy{Source: models.Source{ID: "peach"}, Destination: models.Destination{ID: "pear"}},
 							models.Policy{Source: models.Source{ID: "apple"}, Destination: models.Destination{ID: "banana"}},
 						})
@@ -1040,7 +1040,7 @@ var _ = Describe("Store", func() {
 					})
 
 					It("returns a error", func() {
-						err = dataStore.Delete([]models.Policy{{
+						err = dataStore.Delete(context.Background(), []models.Policy{{
 							Source: models.Source{ID: "some-app-guid"},
 							Destination: models.Destination{
 								ID:       "some-other-app-guid",
@@ -1065,7 +1065,7 @@ var _ = Describe("Store", func() {
 					})
 
 					It("swallows the error and continues", func() {
-						err = dataStore.Delete([]models.Policy{
+						err = dataStore.Delete(context.Background(), []models.Policy{
 							models.Policy{Source: models.Source{ID: "peach"}, Destination: models.Destination{ID: "pear"}},
 							models.Policy{Source: models.Source{ID: "apple"}, Destination: models.Destination{ID: "banana"}},
 						})
@@ -1080,7 +1080,7 @@ var _ = Describe("Store", func() {
 					})
 
 					It("returns a error", func() {
-						err = dataStore.Delete([]models.Policy{{
+						err = dataStore.Delete(context.Background(), []models.Policy{{
 							Source: models.Source{ID: "some-app-guid"},
 							Destination: models.Destination{
 								ID:       "some-other-app-guid",
@@ -1099,7 +1099,7 @@ var _ = Describe("Store", func() {
 				})
 
 				It("returns a error", func() {
-					err = dataStore.Delete([]models.Policy{{
+					err = dataStore.Delete(context.Background(), []models.Policy{{
 						Source: models.Source{ID: "some-app-guid"},
 						Destination: models.Destination{
 							ID:       "some-other-app-guid",
@@ -1117,7 +1117,7 @@ var _ = Describe("Store", func() {
 				})
 
 				It("returns a error", func() {
-					err = dataStore.Delete([]models.Policy{{
+					err = dataStore.Delete(context.Background(), []models.Policy{{
 						Source: models.Source{ID: "some-app-guid"},
 						Destination: models.Destination{
 							ID:       "some-other-app-guid",
@@ -1135,7 +1135,7 @@ var _ = Describe("Store", func() {
 				})
 
 				It("returns a error", func() {
-					err = dataStore.Delete([]models.Policy{{
+					err = dataStore.Delete(context.Background(), []models.Policy{{
 						Source: models.Source{ID: "some-app-guid"},
 						Destination: models.Destination{
 							ID:       "some-other-app-guid",
@@ -1153,7 +1153,7 @@ var _ = Describe("Store", func() {
 				})
 
 				It("returns a error", func() {
-					err = dataStore.Delete([]models.Policy{{
+					err = dataStore.Delete(context.Background(), []models.Policy{{
 						Source: models.Source{ID: "some-app-guid"},
 						Destination: models.Destination{
 							ID:       "some-other-app-guid",
@@ -1171,7 +1171,7 @@ var _ = Describe("Store", func() {
 				})
 
 				It("returns a error", func() {
-					err = dataStore.Delete([]models.Policy{{
+					err = dataStore.Delete(context.Background(), []models.Policy{{
 						Source: models.Source{ID: "some-app-guid"},
 						Destination: models.Destination{
 							ID:       "some-other-app-guid",
@@ -1180,6 +1180,22 @@ var _ = Describe("Store", func() {
 						},
 					}})
 					Expect(err).To(MatchError("deleting group row: some-group-delete-error"))
+				})
+			})
+
+			Context("when the context gets cancelled", func() {
+				It("returns a error", func() {
+					ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+					cancel()
+					err := dataStore.Delete(ctx, []models.Policy{{
+						Source: models.Source{ID: "some-app-guid"},
+						Destination: models.Destination{
+							ID:       "some-other-app-guid",
+							Protocol: "tcp",
+							Port:     8080,
+						},
+					}})
+					Expect(err).To(MatchError("context done"))
 				})
 			})
 		})

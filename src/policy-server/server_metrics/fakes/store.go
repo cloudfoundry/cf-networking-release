@@ -14,17 +14,25 @@ type Store struct {
 		result1 []models.Policy
 		result2 error
 	}
+	allReturnsOnCall map[int]struct {
+		result1 []models.Policy
+		result2 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
 func (fake *Store) All() ([]models.Policy, error) {
 	fake.allMutex.Lock()
+	ret, specificReturn := fake.allReturnsOnCall[len(fake.allArgsForCall)]
 	fake.allArgsForCall = append(fake.allArgsForCall, struct{}{})
 	fake.recordInvocation("All", []interface{}{})
 	fake.allMutex.Unlock()
 	if fake.AllStub != nil {
 		return fake.AllStub()
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
 	}
 	return fake.allReturns.result1, fake.allReturns.result2
 }
@@ -38,6 +46,20 @@ func (fake *Store) AllCallCount() int {
 func (fake *Store) AllReturns(result1 []models.Policy, result2 error) {
 	fake.AllStub = nil
 	fake.allReturns = struct {
+		result1 []models.Policy
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *Store) AllReturnsOnCall(i int, result1 []models.Policy, result2 error) {
+	fake.AllStub = nil
+	if fake.allReturnsOnCall == nil {
+		fake.allReturnsOnCall = make(map[int]struct {
+			result1 []models.Policy
+			result2 error
+		})
+	}
+	fake.allReturnsOnCall[i] = struct {
 		result1 []models.Policy
 		result2 error
 	}{result1, result2}

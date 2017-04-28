@@ -1,8 +1,10 @@
 package cleaner
 
 import (
+	"context"
 	"fmt"
 	"policy-server/models"
+	"time"
 
 	"code.cloudfoundry.org/lager"
 )
@@ -20,7 +22,12 @@ type ccClient interface {
 //go:generate counterfeiter -o fakes/store.go --fake-name Store . store
 type store interface {
 	All() ([]models.Policy, error)
-	Delete([]models.Policy) error
+	Delete(context.Context, []models.Policy) error
+}
+
+//go:generate counterfeiter -o fakes/contextAdapter.go --fake-name ContextAdapter . contextAdapter
+type contextAdapter interface {
+	WithTimeout(context.Context, time.Duration) (context.Context, context.CancelFunc)
 }
 
 type PolicyCleaner struct {
@@ -29,6 +36,8 @@ type PolicyCleaner struct {
 	UAAClient             uaaClient
 	CCClient              ccClient
 	CCAppRequestChunkSize int
+	RequestTimeout        time.Duration
+	ContextAdapter        contextAdapter
 }
 
 func (p *PolicyCleaner) DeleteStalePolicies() ([]models.Policy, error) {
@@ -63,7 +72,9 @@ func (p *PolicyCleaner) DeleteStalePolicies() ([]models.Policy, error) {
 			"total_policies": len(stalePolicies),
 			"stale_policies": stalePolicies,
 		})
-		err = p.Store.Delete(toDelete)
+		ctx, cancel := p.ContextAdapter.WithTimeout(context.Background(), p.RequestTimeout)
+		defer cancel()
+		err = p.Store.Delete(ctx, toDelete)
 		if err != nil {
 			p.Logger.Error("store-delete-policies-failed", err)
 			return nil, fmt.Errorf("database write failed: %s", err)
