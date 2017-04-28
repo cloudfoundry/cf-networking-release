@@ -52,7 +52,7 @@ var _ = Describe("Context Wrapper", func() {
 		resp, req := innerHandler.ServeHTTPArgsForCall(0)
 
 		Expect(resp).To(Equal(response))
-		Expect(req).To(Equal(request.WithContext(fakeContext)))
+		Expect(req.Context()).To(Equal(fakeContext))
 
 		Expect(contextAdapter.WithTimeoutCallCount()).To(Equal(1))
 		ctx, dur := contextAdapter.WithTimeoutArgsForCall(0)
