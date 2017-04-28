@@ -251,7 +251,7 @@ func main() {
 	}
 
 	contextWrapper := handlers.ContextWrapper{
-		Duration:       0 * time.Second,
+		Duration:       time.Duration(conf.RequestTimeout) * time.Second,
 		ContextAdapter: &handlers.ContextAdapter{},
 	}
 

@@ -203,6 +203,7 @@ func DefaultTestConfig(dbConfig db.Config, metronAddress string) config.Config {
 		MetronAddress:         metronAddress,
 		CleanupInterval:       60,
 		CCAppRequestChunkSize: 100,
+		RequestTimeout:        10,
 	}
 	return config
 }

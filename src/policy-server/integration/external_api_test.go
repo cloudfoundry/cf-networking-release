@@ -523,14 +523,14 @@ var _ = Describe("External API", func() {
 		})
 
 		// TODO better way to test this. our request timeout should never be 0
-		FContext("when our request timeout is 0", func() {
+		Context("when our request timeout is 0", func() {
 			BeforeEach(func() {
 				stopPolicyServers(sessions)
 
 				template := DefaultTestConfig(testDatabase.DBConfig(), fakeMetron.Address())
 				policyServerConfs = configurePolicyServers(template, 2)
-				for _, conf := range policyServerConfs {
-					conf.RequestTimeout = 0
+				for i, _ := range policyServerConfs {
+					policyServerConfs[i].RequestTimeout = 0
 				}
 				sessions = startPolicyServers(policyServerConfs)
 				conf = policyServerConfs[0]
