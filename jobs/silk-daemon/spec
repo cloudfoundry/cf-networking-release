@@ -15,11 +15,11 @@ packages:
 
 properties:
   cf_networking.network:
-    description: "CIDR block for overlay network."
+    description: "CIDR address block for overlay network.  Subnets for each diego cell are allocated out of this network."
     default: "10.255.0.0/16"
 
   cf_networking.rep_listen_addr_admin:
-    description: "admin endpoint on diego rep"
+    description: "Admin endpoint on diego rep.  Silk daemon job drain waits for the rep to exit before tearing down the network.  See diego.rep.listen_addr_admin"
     default: 127.0.0.1:1800
 
   cf_networking.subnet_prefix_length:
@@ -31,16 +31,16 @@ properties:
     default: 168
 
   cf_networking.silk_daemon.ca_cert:
-    description: "Trusted CA certificate for connecting to the silk controller"
+    description: "Trusted CA certificate that was used to sign the silk controller server cert and key."
 
   cf_networking.silk_daemon.client_cert:
-    description: "Client certificate for TLS to access silk controller"
+    description: "Client certificate for TLS to access silk controller."
 
   cf_networking.silk_daemon.client_key:
-    description: "Client private key for TLS to access silk controller"
+    description: "Client private key for TLS to access silk controller."
 
   cf_networking.silk_daemon.listen_port:
-    description: "Silk daemon serves the CNI plugin on this port"
+    description: "Silk daemon handles requests from the CNI plugin on this localhost port."
     default: 23954
 
   cf_networking.silk_daemon.debug_port:
@@ -48,9 +48,9 @@ properties:
     default: 22233
 
   cf_networking.silk_controller.hostname:
-    description: "Host name for the silk controller"
+    description: "Host name for the silk controller.  E.g. the service advertised via Consul DNS.  Must match common name in the silk_controller.server_cert"
     default: "silk-controller.service.cf.internal"
 
   cf_networking.silk_controller.listen_port:
-    description: "Listen port for the silk controller"
+    description: "Silk controller handles requests from the silk daemon on this port."
     default: 4103

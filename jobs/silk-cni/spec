@@ -11,15 +11,15 @@ packages:
 
 properties:
   cf_networking.network:
-    description: "CIDR block for overlay network."
+    description: "CIDR address block for overlay network.  Subnets for each diego cell are allocated out of this network."
     default: "10.255.0.0/16"
 
   cf_networking.mtu:
-    description: "MTU for containers. If zero, MTU will be automatically configured based on the external network MTU. In all cases, the actual container device MTU will be 50 bytes less to account for VXLAN encap overhead."
+    description: "Pre-encapsulation MTU for containers.  If set, the network interface inside the container will have an MTU that is 50 bytes less than this value, in order to account for VXLAN encap overhead.  If zero, MTU will be automatically configured to account for the VXLAN encapsulation, but it may not account for additional network encapsulations, e.g. IPSec."
     default: 0
 
   cf_networking.silk_daemon.listen_port:
-    description: "Silk CNI plugin connects to the silk daemon on this port"
+    description: "Silk CNI plugin connects to the silk daemon on this port."
     default: 23954
 
   cf_networking.iptables_logging:
@@ -27,6 +27,6 @@ properties:
     default: false
 
   cf_networking.dns_servers:
-    description: "DNS servers containers will use. If set, takes precedence over DNS servers configured through garden"
+    description: "DNS servers that containers will use.  If set, this list takes precedence over DNS servers configured through garden."
     default: []
 
