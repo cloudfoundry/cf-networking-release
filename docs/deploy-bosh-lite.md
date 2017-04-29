@@ -35,14 +35,6 @@ export BOSH_ENVIRONMENT=vbox
 export BOSH_DEPLOYMENT=cf
 ```
 
-We need to enable `br_netfilter` module on the bosh-lite VM.
-
-```bash
-umask 077; touch ~/deployments/vbox/director_priv.key
-bosh int ~/deployments/vbox/creds.yml --path /jumpbox_ssh/private_key > ~/deployments/vbox/director_priv.key
-ssh jumpbox@192.168.50.6 -i ~/deployments/vbox/director_priv.key 'sudo modprobe br_netfilter && lsmod | grep br_netfilter'
-```
-
 If you are upgrading an existing `cf-deployment`, this same directory should hold your `deployment-vars.yml`
 file containing credentials for your existing deployment.
 

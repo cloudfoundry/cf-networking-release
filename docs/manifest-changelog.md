@@ -1,10 +1,88 @@
-## Manifest property changes
+## Manifest changelog
 
 See [deployment docs](deploy-iaas.md) for examples
 
 ### 0.22.0
 
-**This release contains many changes to properties and jobs.  Complete documentation is forthcoming.**
+This release introduces a new container networking fabric called "silk" and
+**contains significant changes to job and property names**.
+Silk will become the default networking fabric in our next release.
+
+Silk is a replacement for flannel, which uses a central controller node backed a SQL database.
+Etcd is no longer required by CF Networking Release when running Silk.
+
+When deploying with Silk, the following new jobs will be added:
+
+- On the Diego cells: `silk-cni` and `silk-daemon`
+- On the Diego BBS VM: `silk-controller`
+
+We recommend you review the spec files for these new jobs before deploying.
+
+The `cni-flannel` job will no longer be running on Diego cells.
+
+To deploy Silk with [CF Deployment](https://github.com/cloudfoundry/cf-deployment), use the
+[`silk.yml` opsfile](../manifest-generation/opsfiles/silk.yml) as documented for
+[BOSH-lite](deploy-bosh-lite.md), [GCP and AWS](deploy-iaas.md).
+
+Instructions for deploying with CF Release have also been updated in the above docs.  Your stub file
+should have a diff that resembles:
+```diff
+   driver_templates:
+   - name: garden-cni
+     release: cf-networking
+-  - name: cni-flannel
++  - name: silk-cni
++    release: cf-networking
++  - name: silk-daemon
+     release: cf-networking
+   - name: netmon
+     release: cf-networking
+   - name: vxlan-policy-agent
+     release: cf-networking
++  bbs_templates:
++  - name: silk-controller
++    release: cf-networking
++  bbs_consul_properties:
++    agent:
++      services:
++        silk-controller: {}
+   properties:
+     cf_networking:
++      cni_config_dir: /var/vcap/jobs/silk-cni/config/cni
++      silk_controller:
++        database:
++          username: networkconnectivityadmin
++          password: admin
++          host: 10.244.0.30
++          port: 5524
++          name: networkconnectivitydb
++          type: postgres
++        ca_cert: |
++          -----BEGIN CERTIFICATE-----
++          REPLACE
++          -----END CERTIFICATE-----
++        server_cert: |
++          -----BEGIN CERTIFICATE-----
++          REPLACE
++          -----END CERTIFICATE-----
++        server_key: |
++          -----BEGIN RSA PRIVATE KEY-----
++          REPLACE
++          -----END RSA PRIVATE KEY-----
++      silk_daemon:
++        ca_cert: |
++          -----BEGIN CERTIFICATE-----
++          REPLACE
++          -----END CERTIFICATE-----
++        client_cert: |
++          -----BEGIN CERTIFICATE-----
++          REPLACE
++          -----END CERTIFICATE-----
++        client_key: |
++          -----BEGIN RSA PRIVATE KEY-----
++          REPLACE
++          -----END RSA PRIVATE KEY-----
+```
 
 ### 0.21.0
 
