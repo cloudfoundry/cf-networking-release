@@ -33,7 +33,7 @@
     "poll_interval" => 5, # in seconds
     "debug_server_port" => p("cf_networking.silk_daemon.debug_port"),
     "datastore" => "/var/vcap/data/silk/store.json",
-    "lease_expiration_duration" => p("cf_networking.partition_tolerance_hours") * 60 * 60, # convert hours to seconds
+    "partition_tolerance_seconds" => p("cf_networking.partition_tolerance_hours") * 60 * 60, # convert hours to seconds
   }
 
   JSON.pretty_generate(toRender)
