@@ -80,7 +80,6 @@
     properties:
       cf_networking:
         vxlan_policy_agent:
-          policy_server_url: https://policy-server.service.cf.internal:4003
           ca_cert: "((network_policy_client.ca))"
           client_cert: "((network_policy_client.certificate))"
           client_key: "((network_policy_client.private_key))"

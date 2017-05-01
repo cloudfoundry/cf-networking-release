@@ -1,6 +1,8 @@
 #!/bin/bash -e
 
+<% unless p("cf_networking.disable") %>
 /var/vcap/packages/silk-controller/bin/silk-controller \
   -config=$CONF_DIR/silk-controller.json \
   2> >(tee -a $LOG_DIR/silk-controller.stderr.log | logger -p user.error -t silk-controller) \
   1> >(tee -a $LOG_DIR/silk-controller.stdout.log | logger -t silk-controller) & echo $! > $PIDFILE
+<% end %>

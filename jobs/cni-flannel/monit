@@ -1,5 +1,4 @@
-<% if p("cf_networking.disable") %>
-<% else %>
+<% unless p("cf_networking.disable") %>
 check process flanneld
   with pidfile /var/vcap/sys/run/flannel/flanneld.pid
   start program "/var/vcap/jobs/cni-flannel/bin/flanneld_ctl start"

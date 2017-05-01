@@ -19,21 +19,22 @@ packages:
   - flannel-watchdog
 
 properties:
+  cf_networking.disable:
+    description: "Disable container to container networking."
+    default: false
+
   cf_networking.plugin.etcd_endpoints:
     description: "List of etcd endpoints"
     default: []
 
   cf_networking.plugin.etcd_ca_cert:
     description: "PEM encoded CA cert"
-    default: ""
 
   cf_networking.plugin.etcd_client_cert:
     description: "PEM encoded client cert"
-    default: ""
 
   cf_networking.plugin.etcd_client_key:
     description: "PEM encoded client key"
-    default: ""
 
   cf_networking.network:
     description: "CIDR block for overlay network."
@@ -46,10 +47,6 @@ properties:
   cf_networking.mtu:
     description: "MTU for containers"
     default: 0
-
-  cf_networking.disable:
-    description: "Disable container to container networking"
-    default: false
 
   cf_networking.health_check_port:
     description: "Port for health-check on flannel-watchdog"
@@ -78,4 +75,3 @@ properties:
   cf_networking.dns_servers:
     description: "DNS servers containers will use. If set, takes precedence over DNS servers configured through garden"
     default: []
-

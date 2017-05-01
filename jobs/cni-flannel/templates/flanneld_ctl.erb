@@ -1,7 +1,6 @@
-#!/bin/bash
+#!/bin/bash -eu
 
-set -e -u
-
+<% unless p("cf_networking.disable") %>
 RUN_DIR=/var/vcap/sys/run/flannel
 LOG_DIR=/var/vcap/sys/log/flannel
 ETCD_CERTS_DIR=/var/vcap/jobs/cni-flannel/config/certs/etcd
@@ -127,3 +126,4 @@ case $1 in
     ;;
 
 esac
+<% end %>

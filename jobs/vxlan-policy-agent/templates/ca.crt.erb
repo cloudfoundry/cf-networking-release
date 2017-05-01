@@ -1,4 +1,3 @@
-<% if p("cf_networking.disable") %>
-<% else %>
+<% unless p("cf_networking.disable") %>
 <%= p("cf_networking.vxlan_policy_agent.ca_cert") %>
 <% end %>

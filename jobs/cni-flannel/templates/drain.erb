@@ -1,7 +1,6 @@
-#!/bin/bash
+#!/bin/bash -eu
 
-set -e -u
-
+<% unless p("cf_networking.disable") %>
 REP_ADDRESS=<%= p("cf_networking.rep_listen_addr_admin") %>
 LOG_DIR=/var/vcap/sys/log/cni-flannel
 LOGFILE=$LOG_DIR/drain.log
@@ -58,3 +57,6 @@ else
   echo "$(date): bridge does not exist"
   exit 0
 fi
+<% else %>
+  echo "0"
+<% end %>

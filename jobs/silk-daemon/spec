@@ -14,6 +14,10 @@ packages:
   - silk-daemon
 
 properties:
+  cf_networking.disable:
+    description: "Disable container to container networking."
+    default: false
+
   cf_networking.network:
     description: "CIDR address block for overlay network.  Subnets for each diego cell are allocated out of this network."
     default: "10.255.0.0/16"

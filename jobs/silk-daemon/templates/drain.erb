@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/bin/bash -eu
 
-set -e -u
+<% unless p("cf_networking.disable") %>
 set -o pipefail
 
 REP_ADDRESS=<%= p("cf_networking.rep_listen_addr_admin") %>
@@ -77,3 +77,6 @@ else
   echo "$(date): silk-daemon failed to exit, skipping teardown..."
   exit 1
 fi
+<% else %>
+  echo "0"
+<% end %>

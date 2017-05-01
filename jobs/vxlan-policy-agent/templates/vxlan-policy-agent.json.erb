@@ -1,5 +1,4 @@
-<% if p("cf_networking.disable") %>
-<% else %>
+<% unless p("cf_networking.disable") %>
 <%=
     require 'json'
 

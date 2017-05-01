@@ -1,7 +1,6 @@
-#!/bin/bash
+#!/bin/bash -eu
 
-set -e -u
-
+<% unless p("cf_networking.disable") %>
 export RUN_DIR=/var/vcap/sys/run/silk-controller
 export LOG_DIR=/var/vcap/sys/log/silk-controller
 export PIDFILE=$RUN_DIR/silk-controller.pid
@@ -86,3 +85,4 @@ case $1 in
     ;;
 
 esac
+<% end %>

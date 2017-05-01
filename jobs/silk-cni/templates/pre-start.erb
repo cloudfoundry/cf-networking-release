@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/bin/bash -eu
 
-set -e -u
-
+<% unless p("cf_networking.disable") %>
 rm -rf /var/vcap/data/container-metadata
 rm -rf /var/vcap/data/silk
+<% end %>

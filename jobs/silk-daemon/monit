@@ -1,3 +1,4 @@
+<% unless p("cf_networking.disable") %>
 check process silk-daemon
   with pidfile /var/vcap/sys/run/silk-daemon/silk-daemon.pid
   start program "/var/vcap/jobs/silk-daemon/bin/silk-daemon_ctl start"
@@ -9,3 +10,4 @@ check process silk-daemon
      protocol HTTP
      with timeout 10 seconds
      then restart
+<% end %>

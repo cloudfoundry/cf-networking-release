@@ -1,5 +1,4 @@
-<% if p("cf_networking.disable") %>
-<% else %>
+<% unless p("cf_networking.disable") %>
 check process vxlan-policy-agent
   with pidfile /var/vcap/sys/run/vxlan-policy-agent/vxlan-policy-agent.pid
   start program "/var/vcap/jobs/vxlan-policy-agent/bin/vxlan-policy-agent_ctl start"

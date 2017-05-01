@@ -1,3 +1,4 @@
+<% unless p("cf_networking.disable") %>
 <%=
     require 'json'
 
@@ -11,3 +12,4 @@
 
     JSON.pretty_generate(toRender)
 %>
+<% end %>
