@@ -132,6 +132,7 @@ var _ = Describe("Config", func() {
 					"tag_length":       2,
 					"metron_address":   "http://1.2.3.4:9999",
 					"cleanup_interval": 2,
+					"request_timeout":  5,
 				}
 				delete(allData, missingFlag)
 				Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
@@ -155,6 +156,7 @@ var _ = Describe("Config", func() {
 			Entry("missing tag length", "tag_length", "TagLength: zero value"),
 			Entry("missing metron address", "metron_address", "MetronAddress: zero value"),
 			Entry("missing cleanup interval", "cleanup_interval", "CleanupInterval: less than min"),
+			Entry("missing request timeout", "request_timeout", "RequestTimeout: less than min"),
 		)
 
 		Describe("database config", func() {
@@ -183,6 +185,7 @@ var _ = Describe("Config", func() {
 					"metron_address":   "http://1.2.3.4:9999",
 					"log_level":        "info",
 					"cleanup_interval": 2,
+					"request_timeout":  5,
 				}
 			})
 

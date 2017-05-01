@@ -521,34 +521,6 @@ var _ = Describe("External API", func() {
 				Expect(responseString).To(MatchJSON(`{ "error": "policies-create: invalid destination port value 0, must be 1-65535" }`))
 			})
 		})
-
-		Context("when our request timeout is 0", func() {
-			BeforeEach(func() {
-				stopPolicyServers(sessions)
-
-				template := DefaultTestConfig(testDatabase.DBConfig(), fakeMetron.Address())
-				policyServerConfs = configurePolicyServers(template, 2)
-				for i, _ := range policyServerConfs {
-					policyServerConfs[i].RequestTimeout = 0
-				}
-				sessions = startPolicyServers(policyServerConfs)
-				conf = policyServerConfs[0]
-			})
-
-			It("times out the request", func() {
-				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
-				resp := makeAndDoRequest(
-					"POST",
-					fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
-					body,
-				)
-
-				Expect(resp.StatusCode).To(Equal(http.StatusInternalServerError))
-				responseString, err := ioutil.ReadAll(resp.Body)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(responseString).To(MatchJSON(`{"error": "policies-create: database create failed"}`))
-			})
-		})
 	})
 
 	Describe("cleanup policies", func() {
@@ -713,53 +685,6 @@ var _ = Describe("External API", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(responseString).To(MatchJSON(`{}`))
 
-			})
-		})
-
-		Context("when our request timeout is 0", func() {
-			BeforeEach(func() {
-				stopPolicyServers(sessions)
-
-				template := DefaultTestConfig(testDatabase.DBConfig(), fakeMetron.Address())
-				policyServerConfs = configurePolicyServers(template, 2)
-				for i, _ := range policyServerConfs {
-					policyServerConfs[i].RequestTimeout = 0
-				}
-				sessions = startPolicyServers(policyServerConfs)
-				conf = policyServerConfs[0]
-			})
-
-			It("times out the request", func() {
-				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
-
-				response := makeAndDoRequest(
-					"POST",
-					fmt.Sprintf("http://%s:%d/networking/v0/external/policies/delete", conf.ListenHost, conf.ListenPort),
-					body,
-				)
-
-				Expect(response.StatusCode).To(Equal(http.StatusInternalServerError))
-				responseString, err := ioutil.ReadAll(response.Body)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(responseString).To(MatchJSON(`{"error": "policies-delete: database delete failed"}`))
-
-				response = makeAndDoRequest(
-					"GET",
-					fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
-					nil,
-				)
-
-				Expect(response.StatusCode).To(Equal(http.StatusOK))
-				responseString, err = ioutil.ReadAll(response.Body)
-				Expect(responseString).To(MatchJSON(`{
-					"total_policies": 1,
-				  "policies": [{
-						"source": { "id": "some-app-guid" },
-						"destination": {
-							"id": "some-other-app-guid", "protocol": "tcp", "port": 8090
-						}
-					}]
-				}`))
 			})
 		})
 	})

@@ -11,7 +11,6 @@ import (
 	"policy-server/store/fakes"
 	"strings"
 	"sync/atomic"
-	"time"
 
 	"code.cloudfoundry.org/go-db-helpers/db"
 	"code.cloudfoundry.org/go-db-helpers/testsupport"
@@ -465,23 +464,6 @@ var _ = Describe("Store", func() {
 				Expect(err).To(MatchError("creating policy: some-insert-error"))
 			})
 		})
-
-		Context("when the context gets cancelled", func() {
-			It("returns a error", func() {
-				ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-				cancel()
-				err := dataStore.Create(ctx, []models.Policy{{
-					Source: models.Source{ID: "some-app-guid"},
-					Destination: models.Destination{
-						ID:       "some-other-app-guid",
-						Protocol: "tcp",
-						Port:     8080,
-					},
-				}})
-				Expect(err).To(MatchError("context done"))
-			})
-		})
-
 	})
 
 	Describe("All", func() {
@@ -1180,22 +1162,6 @@ var _ = Describe("Store", func() {
 						},
 					}})
 					Expect(err).To(MatchError("deleting group row: some-group-delete-error"))
-				})
-			})
-
-			Context("when the context gets cancelled", func() {
-				It("returns a error", func() {
-					ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
-					cancel()
-					err := dataStore.Delete(ctx, []models.Policy{{
-						Source: models.Source{ID: "some-app-guid"},
-						Destination: models.Destination{
-							ID:       "some-other-app-guid",
-							Protocol: "tcp",
-							Port:     8080,
-						},
-					}})
-					Expect(err).To(MatchError("context done"))
 				})
 			})
 		})
