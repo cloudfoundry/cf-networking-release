@@ -7,13 +7,13 @@
       "cni_datastore_path" => "/var/vcap/data/container-metadata/store.json",
       "iptables_lock_file" => "/var/vcap/data/garden-cni/iptables.lock",
 
-      "policy_server_url" => p("cf_networking.vxlan_policy_agent.policy_server_url"),
-      "poll_interval" => p("cf_networking.vxlan_policy_agent.poll_interval"),
+      "policy_server_url" => "https://#{p("cf_networking.policy_server.hostname")}:#{p("cf_networking.policy_server.internal_listen_port")}",
+      "poll_interval" => p("cf_networking.policy_poll_interval_seconds"),
       "vni" => 1,
 
-      "metron_address" => p("cf_networking.vxlan_policy_agent.metron_address"),
+      "metron_address" => "127.0.0.1:#{p("cf_networking.vxlan_policy_agent.metron_port")}",
 
-      "debug_server_host" => p("cf_networking.vxlan_policy_agent.debug_server_host"),
+      "debug_server_host" => "127.0.0.1",
       "debug_server_port" => p("cf_networking.vxlan_policy_agent.debug_server_port"),
 
       "log_level" => p("cf_networking.vxlan_policy_agent.log_level"),

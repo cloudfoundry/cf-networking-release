@@ -15,98 +15,95 @@ packages:
   - policy-server
 
 properties:
-  cf_networking.policy_server.listen_host:
-    description: "Host where the policy server will serve its API"
+  cf_networking.policy_cleanup_interval:
+    description: "Clean up stale policies on this interval, in minutes."
+    default: 60
+
+  cf_networking.policy_server.listen_ip:
+    description: "IP address where the policy server will serve its API."
     default: 0.0.0.0
 
   cf_networking.policy_server.listen_port:
-    description: "Port where the policy server will serve its external API"
+    description: "Port where the policy server will serve its external API."
     default: 4002
 
-  cf_networking.policy_server.debug_server_host:
-    description: "Host for the debug server"
-    default: 127.0.0.1
-
-  cf_networking.policy_server.debug_server_port:
-    description: "Port for the debug server"
+  cf_networking.policy_server.debug_port:
+    description: "Port for the debug server. Use this to adjust log level at runtime or dump process stats."
     default: 22222
 
   cf_networking.policy_server.internal_listen_port:
-    description: "Port where the policy server will serve its internal API"
+    description: "Port where the policy server will serve its internal API."
     default: 4003
 
   cf_networking.policy_server.ca_cert:
-    description: "Trusted CA certificate for clients"
+    description: "Trusted CA certificate that was used to sign the vxlan policy agent's client cert and key."
 
   cf_networking.policy_server.server_cert:
-    description: "Server certificate for TLS"
+    description: "Server certificate for TLS. Must have common name that matches the Consul DNS name of the policy server, eg `policy-server.service.cf.internal`."
 
   cf_networking.policy_server.server_key:
-    description: "Server key for TLS"
+    description: "Server key for TLS."
 
   cf_networking.policy_server.uaa_client:
-    description: "UAA client name"
+    description: |
+      UAA client name. Must match the name of a UAA client with the following properties:
+      `authorities: uaa.resource,cloud_controller.admin_read_only`,
+      `authorities: uaa.resource,cloud_controller.admin_read_only`."
     default: network-policy
 
-  cf_networking.policy_server.uaa_ca:
-    description: "Trusted CA for UAA server"
-
   cf_networking.policy_server.uaa_client_secret:
-    description: "UAA client secret"
-    default: network-policy-secret
+    description: |
+      UAA client secret. Must match the secret of the above UAA client.
 
-  cf_networking.policy_server.uaa_url:
-    description: "Address of UAA server"
-    default: https://uaa.service.cf.internal
+  cf_networking.policy_server.uaa_ca:
+    description: "Trusted CA for UAA server."
+
+  cf_networking.policy_server.uaa_hostname:
+    description: "Host name for the UAA server.  E.g. the service advertised via Consul DNS.  Must match common name in the UAA server cert. Must be listed in `uaa.zones.internal.hostnames`."
+    default: uaa.service.cf.internal
 
   cf_networking.policy_server.uaa_port:
-    description: "Port of the UAA server"
+    description: "Port of the UAA server. Must match `uaa.ssl.port`."
     default: 8443
 
-  cf_networking.policy_server.cc_url:
-    description: "Address of Cloud Controller server"
-    default: http://cloud-controller-ng.service.cf.internal:9022
+  cf_networking.policy_server.cc_hostname:
+    description: "Host name for the Cloud Controller server.  E.g. the service advertised via Consul DNS. Must match `cc.internal_service_hostname`."
+    default: cloud-controller-ng.service.cf.internal
+
+  cf_networking.policy_server.cc_port:
+    description: "External port of Cloud Controller server. Must match `cc.external_port`."
+    default: 9022
 
   cf_networking.policy_server.skip_ssl_validation:
-    description: "Skip verifying ssl certs when speaking to UAA or Cloud Controller"
+    description: "Skip verifying ssl certs when speaking to UAA or Cloud Controller."
     default: false
 
   cf_networking.policy_server.database.type:
-    description: "Type of database: postgres or mysql"
-    default: postgres
+    description: "Type of database: postgres or mysql."
 
   cf_networking.policy_server.database.username:
-    description: "Username for database connection"
-    default: ""
+    description: "Username for database connection."
 
   cf_networking.policy_server.database.password:
-    description: "Password for database connection"
-    default: ""
+    description: "Password for database connection."
 
   cf_networking.policy_server.database.host:
-    description: "Host (IP or DNS name) for database server"
-    default: ""
+    description: "Host (IP or DNS name) for database server."
 
   cf_networking.policy_server.database.port:
-    description: "Port for database server"
-    default: ""
+    description: "Port for database server."
 
   cf_networking.policy_server.database.name:
-    description: "Name of logical database to use"
-    default: ""
+    description: "Name of logical database to use."
 
   cf_networking.policy_server.tag_length:
-    description: "Length in bytes of the packet tags to generate for policy sources and destinations. Must be greater than 0 and less than 4."
+    description: "Length in bytes of the packet tags to generate for policy sources and destinations. Must be greater than 0 and less than or equal to 4. If using VXLAN GBP, must be less than or equal to 2."
     default: 2
 
-  cf_networking.policy_server.metron_address:
-    description: "Forward metrics to this metron agent"
-    default: 127.0.0.1:3457
+  cf_networking.policy_server.metron_port:
+    description: "Port of metron agent on localhost. This is used to forward metrics."
+    default: 3457
 
   cf_networking.policy_server.log_level:
-    description: "Logging level (debug, info, warn, error)"
+    description: "Logging level (debug, info, warn, error)."
     default: info
-
-  cf_networking.policy_server.cleanup_interval:
-    description: "Clean up stale policies on this interval, in minutes"
-    default: 60

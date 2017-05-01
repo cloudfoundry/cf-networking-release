@@ -12,42 +12,43 @@ packages:
   - vxlan-policy-agent
 
 properties:
-  cf_networking.vxlan_policy_agent.policy_server_url:
-    description: "URL where the policy server can be reached"
+  cf_networking.disable:
+    description: "Disable container to container networking."
+    default: false
 
-  cf_networking.vxlan_policy_agent.poll_interval:
-    description: "Query the policy server on this interval, in seconds"
+  cf_networking.iptables_logging:
+    description: "Enables iptables logging for container to container traffic. Logs to the kernel log."
+    default: false
+
+  cf_networking.policy_server.hostname:
+    description: "Host name for the policy server.  E.g. the service advertised via Consul DNS.  Must match common name in the policy_server.server_cert"
+    default: "policy-server.service.cf.internal"
+
+  cf_networking.policy_server.internal_listen_port:
+    description: "Policy server handles requests from the vxlan policy agent on this port."
+    default: 4003
+
+  cf_networking.policy_poll_interval_seconds:
+    description: "The VXLAN policy agent queries the policy server on this interval in seconds and updates local policy rules."
     default: 5
 
   cf_networking.vxlan_policy_agent.ca_cert:
-    description: "Trusted CA certificate for server"
+    description: "Trusted CA certificate that was used to sign the policy server's server cert and key."
 
   cf_networking.vxlan_policy_agent.client_cert:
-    description: "Client certificate for TLS to access policy server"
+    description: "Client certificate for TLS to access policy server."
 
   cf_networking.vxlan_policy_agent.client_key:
-    description: "Client private key for TLS to access policy server"
+    description: "Client private key for TLS to access policy server."
 
-  cf_networking.vxlan_policy_agent.metron_address:
-    description: "Forward metrics to this metron agent"
-    default: 127.0.0.1:3457
-
-  cf_networking.vxlan_policy_agent.debug_server_host:
-    description: "Host for the debug server"
-    default: 127.0.0.1
+  cf_networking.vxlan_policy_agent.metron_port:
+    description: "Port of metron agent on localhost. This is used to forward metrics."
+    default: 3457
 
   cf_networking.vxlan_policy_agent.debug_server_port:
-    description: "Port for the debug server"
+    description: "Port for the debug server. Use this to adjust log level at runtime or dump process stats."
     default: 22222
 
   cf_networking.vxlan_policy_agent.log_level:
-    description: "Logging level (debug, info, warn, error)"
+    description: "Logging level (debug, info, warn, error)."
     default: info
-
-  cf_networking.iptables_logging:
-    description: "Enables iptables logging for container to container traffic"
-    default: false
-
-  cf_networking.disable:
-    description: "Disable container to container networking"
-    default: false

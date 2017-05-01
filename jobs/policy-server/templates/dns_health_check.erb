@@ -1,6 +1,6 @@
 <%
-  def host
-    p("cf_networking.policy_server.listen_host")
+  def ip
+    p("cf_networking.policy_server.listen_ip")
   end
 
   def port
@@ -8,4 +8,4 @@
   end
 %>
 
-curl <%= host %>:<%= port %>
+curl <%= ip %>:<%= port %>
