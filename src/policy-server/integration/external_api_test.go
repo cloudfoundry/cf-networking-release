@@ -286,7 +286,7 @@ var _ = Describe("External API", func() {
 					responseString, err := ioutil.ReadAll(resp.Body)
 					expectedResp := `{
 						"total_policies": 1,
-						"policies": [ {"source": { "id": "live-app-1-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "port": 8090 } } ] 
+						"policies": [ {"source": { "id": "live-app-1-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "port": 8090 } } ]
 					}`
 					Expect(responseString).To(MatchJSON(expectedResp))
 				})
@@ -522,7 +522,6 @@ var _ = Describe("External API", func() {
 			})
 		})
 
-		// TODO better way to test this. our request timeout should never be 0
 		Context("when our request timeout is 0", func() {
 			BeforeEach(func() {
 				stopPolicyServers(sessions)
@@ -624,7 +623,7 @@ var _ = Describe("External API", func() {
 				responseString, err = ioutil.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(responseString).To(MatchJSON(`{
-					"total_policies": 2,	
+					"total_policies": 2,
 					"policies": [
 				 {"source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "port": 8080 } },
 				 {"source": { "id": "app3" }, "destination": { "id": "app1", "protocol": "tcp", "port": 9999 } }
@@ -713,6 +712,54 @@ var _ = Describe("External API", func() {
 				responseString, err := ioutil.ReadAll(response.Body)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(responseString).To(MatchJSON(`{}`))
+
+			})
+		})
+
+		Context("when our request timeout is 0", func() {
+			BeforeEach(func() {
+				stopPolicyServers(sessions)
+
+				template := DefaultTestConfig(testDatabase.DBConfig(), fakeMetron.Address())
+				policyServerConfs = configurePolicyServers(template, 2)
+				for i, _ := range policyServerConfs {
+					policyServerConfs[i].RequestTimeout = 0
+				}
+				sessions = startPolicyServers(policyServerConfs)
+				conf = policyServerConfs[0]
+			})
+
+			It("times out the request", func() {
+				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
+
+				response := makeAndDoRequest(
+					"POST",
+					fmt.Sprintf("http://%s:%d/networking/v0/external/policies/delete", conf.ListenHost, conf.ListenPort),
+					body,
+				)
+
+				Expect(response.StatusCode).To(Equal(http.StatusInternalServerError))
+				responseString, err := ioutil.ReadAll(response.Body)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(responseString).To(MatchJSON(`{"error": "policies-delete: database delete failed"}`))
+
+				response = makeAndDoRequest(
+					"GET",
+					fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+					nil,
+				)
+
+				Expect(response.StatusCode).To(Equal(http.StatusOK))
+				responseString, err = ioutil.ReadAll(response.Body)
+				Expect(responseString).To(MatchJSON(`{
+					"total_policies": 1,
+				  "policies": [{
+						"source": { "id": "some-app-guid" },
+						"destination": {
+							"id": "some-other-app-guid", "protocol": "tcp", "port": 8090
+						}
+					}]
+				}`))
 			})
 		})
 	})

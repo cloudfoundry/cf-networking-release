@@ -121,12 +121,19 @@ func New(dbConnectionPool db, g GroupRepo, d DestinationRepo, p PolicyRepo, tl i
 	}, nil
 }
 
+func commit(tx Transaction) error {
+	err := tx.Commit()
+	if err != nil {
+		return fmt.Errorf("commit transaction: %s", err) // TODO untested
+	}
+	return nil
+}
+
 func rollback(tx Transaction, err error) error {
 	txErr := tx.Rollback()
 	if txErr != nil {
 		return fmt.Errorf("db rollback: %s (sql error: %s)", txErr, err)
 	}
-
 	return err
 }
 
@@ -140,22 +147,26 @@ func (s *store) Create(ctx context.Context, policies []models.Policy) error {
 		for _, policy := range policies {
 			source_group_id, err := s.group.Create(tx, policy.Source.ID)
 			if err != nil {
-				errorChan <- rollback(tx, fmt.Errorf("creating group: %s", err))
+				errorChan <- fmt.Errorf("creating group: %s", err)
+				return
 			}
 
 			destination_group_id, err := s.group.Create(tx, policy.Destination.ID)
 			if err != nil {
-				errorChan <- rollback(tx, fmt.Errorf("creating group: %s", err))
+				errorChan <- fmt.Errorf("creating group: %s", err)
+				return
 			}
 
 			destination_id, err := s.destination.Create(tx, destination_group_id, policy.Destination.Port, policy.Destination.Protocol)
 			if err != nil {
-				errorChan <- rollback(tx, fmt.Errorf("creating destination: %s", err))
+				errorChan <- fmt.Errorf("creating destination: %s", err)
+				return
 			}
 
 			err = s.policy.Create(tx, source_group_id, destination_id)
 			if err != nil {
-				errorChan <- rollback(tx, fmt.Errorf("creating policy: %s", err))
+				errorChan <- fmt.Errorf("creating policy: %s", err)
+				return
 			}
 		}
 		errorChan <- nil
@@ -164,15 +175,16 @@ func (s *store) Create(ctx context.Context, policies []models.Policy) error {
 		select {
 		case err := <-errorChan:
 			if err != nil {
-				return err
+				return rollback(tx, err)
+			} else {
+				return commit(tx)
 			}
-			err = tx.Commit()
-			if err != nil {
-				return fmt.Errorf("commit transaction: %s", err) // TODO untested
-			}
-			return nil
 		case <-ctx.Done():
-			return rollback(tx, errors.New("context done"))
+			defer func() {
+				err := <-errorChan
+				rollback(tx, err)
+			}()
+			return errors.New("context done")
 		}
 	}
 }
@@ -191,7 +203,8 @@ func (s *store) Delete(ctx context.Context, policies []models.Policy) error {
 				if err == sql.ErrNoRows {
 					continue
 				} else {
-					errorChan <- rollback(tx, fmt.Errorf("getting source id: %s", err))
+					errorChan <- fmt.Errorf("getting source id: %s", err)
+					return
 				}
 			}
 
@@ -200,7 +213,8 @@ func (s *store) Delete(ctx context.Context, policies []models.Policy) error {
 				if err == sql.ErrNoRows {
 					continue
 				} else {
-					errorChan <- rollback(tx, fmt.Errorf("getting destination group id: %s", err))
+					errorChan <- fmt.Errorf("getting destination group id: %s", err)
+					return
 				}
 			}
 
@@ -209,7 +223,8 @@ func (s *store) Delete(ctx context.Context, policies []models.Policy) error {
 				if err == sql.ErrNoRows {
 					continue
 				} else {
-					errorChan <- rollback(tx, fmt.Errorf("getting destination id: %s", err))
+					errorChan <- fmt.Errorf("getting destination id: %s", err)
+					return
 				}
 			}
 
@@ -218,29 +233,34 @@ func (s *store) Delete(ctx context.Context, policies []models.Policy) error {
 				if err == sql.ErrNoRows {
 					continue
 				} else {
-					errorChan <- rollback(tx, fmt.Errorf("deleting policy: %s", err))
+					errorChan <- fmt.Errorf("deleting policy: %s", err)
+					return
 				}
 			}
 
 			destIDCount, err := s.policy.CountWhereDestinationID(tx, destID)
 			if err != nil {
-				errorChan <- rollback(tx, fmt.Errorf("counting destination id: %s", err))
+				errorChan <- fmt.Errorf("counting destination id: %s", err)
+				return
 			}
 			if destIDCount == 0 {
 				err = s.destination.Delete(tx, destID)
 				if err != nil {
-					errorChan <- rollback(tx, fmt.Errorf("deleting destination: %s", err))
+					errorChan <- fmt.Errorf("deleting destination: %s", err)
+					return
 				}
 			}
 
 			err = s.deleteGroupRowIfLast(tx, sourceGroupID)
 			if err != nil {
-				errorChan <- rollback(tx, fmt.Errorf("deleting group row: %s", err))
+				errorChan <- fmt.Errorf("deleting group row: %s", err)
+				return
 			}
 
 			err = s.deleteGroupRowIfLast(tx, destGroupID)
 			if err != nil {
-				errorChan <- rollback(tx, fmt.Errorf("deleting group row: %s", err))
+				errorChan <- fmt.Errorf("deleting group row: %s", err)
+				return
 			}
 		}
 		errorChan <- nil
@@ -249,15 +269,16 @@ func (s *store) Delete(ctx context.Context, policies []models.Policy) error {
 		select {
 		case err := <-errorChan:
 			if err != nil {
-				return err
+				return rollback(tx, err)
+			} else {
+				return commit(tx)
 			}
-			err = tx.Commit()
-			if err != nil {
-				return fmt.Errorf("commit transaction: %s", err) // TODO untested
-			}
-			return nil
 		case <-ctx.Done():
-			return rollback(tx, errors.New("context done"))
+			defer func() {
+				err := <-errorChan
+				rollback(tx, err)
+			}()
+			return errors.New("context done")
 		}
 	}
 	return nil
