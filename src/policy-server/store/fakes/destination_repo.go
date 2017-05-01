@@ -2,18 +2,20 @@
 package fakes
 
 import (
+	"context"
 	"policy-server/store"
 	"sync"
 )
 
 type DestinationRepo struct {
-	CreateStub        func(store.Transaction, int, int, string) (int, error)
+	CreateStub        func(context.Context, store.Transaction, int, int, string) (int, error)
 	createMutex       sync.RWMutex
 	createArgsForCall []struct {
-		arg1 store.Transaction
-		arg2 int
+		arg1 context.Context
+		arg2 store.Transaction
 		arg3 int
-		arg4 string
+		arg4 int
+		arg5 string
 	}
 	createReturns struct {
 		result1 int
@@ -23,11 +25,12 @@ type DestinationRepo struct {
 		result1 int
 		result2 error
 	}
-	DeleteStub        func(store.Transaction, int) error
+	DeleteStub        func(context.Context, store.Transaction, int) error
 	deleteMutex       sync.RWMutex
 	deleteArgsForCall []struct {
-		arg1 store.Transaction
-		arg2 int
+		arg1 context.Context
+		arg2 store.Transaction
+		arg3 int
 	}
 	deleteReturns struct {
 		result1 error
@@ -35,13 +38,14 @@ type DestinationRepo struct {
 	deleteReturnsOnCall map[int]struct {
 		result1 error
 	}
-	GetIDStub        func(store.Transaction, int, int, string) (int, error)
+	GetIDStub        func(context.Context, store.Transaction, int, int, string) (int, error)
 	getIDMutex       sync.RWMutex
 	getIDArgsForCall []struct {
-		arg1 store.Transaction
-		arg2 int
+		arg1 context.Context
+		arg2 store.Transaction
 		arg3 int
-		arg4 string
+		arg4 int
+		arg5 string
 	}
 	getIDReturns struct {
 		result1 int
@@ -51,11 +55,12 @@ type DestinationRepo struct {
 		result1 int
 		result2 error
 	}
-	CountWhereGroupIDStub        func(store.Transaction, int) (int, error)
+	CountWhereGroupIDStub        func(context.Context, store.Transaction, int) (int, error)
 	countWhereGroupIDMutex       sync.RWMutex
 	countWhereGroupIDArgsForCall []struct {
-		arg1 store.Transaction
-		arg2 int
+		arg1 context.Context
+		arg2 store.Transaction
+		arg3 int
 	}
 	countWhereGroupIDReturns struct {
 		result1 int
@@ -69,19 +74,20 @@ type DestinationRepo struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *DestinationRepo) Create(arg1 store.Transaction, arg2 int, arg3 int, arg4 string) (int, error) {
+func (fake *DestinationRepo) Create(arg1 context.Context, arg2 store.Transaction, arg3 int, arg4 int, arg5 string) (int, error) {
 	fake.createMutex.Lock()
 	ret, specificReturn := fake.createReturnsOnCall[len(fake.createArgsForCall)]
 	fake.createArgsForCall = append(fake.createArgsForCall, struct {
-		arg1 store.Transaction
-		arg2 int
+		arg1 context.Context
+		arg2 store.Transaction
 		arg3 int
-		arg4 string
-	}{arg1, arg2, arg3, arg4})
-	fake.recordInvocation("Create", []interface{}{arg1, arg2, arg3, arg4})
+		arg4 int
+		arg5 string
+	}{arg1, arg2, arg3, arg4, arg5})
+	fake.recordInvocation("Create", []interface{}{arg1, arg2, arg3, arg4, arg5})
 	fake.createMutex.Unlock()
 	if fake.CreateStub != nil {
-		return fake.CreateStub(arg1, arg2, arg3, arg4)
+		return fake.CreateStub(arg1, arg2, arg3, arg4, arg5)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -95,10 +101,10 @@ func (fake *DestinationRepo) CreateCallCount() int {
 	return len(fake.createArgsForCall)
 }
 
-func (fake *DestinationRepo) CreateArgsForCall(i int) (store.Transaction, int, int, string) {
+func (fake *DestinationRepo) CreateArgsForCall(i int) (context.Context, store.Transaction, int, int, string) {
 	fake.createMutex.RLock()
 	defer fake.createMutex.RUnlock()
-	return fake.createArgsForCall[i].arg1, fake.createArgsForCall[i].arg2, fake.createArgsForCall[i].arg3, fake.createArgsForCall[i].arg4
+	return fake.createArgsForCall[i].arg1, fake.createArgsForCall[i].arg2, fake.createArgsForCall[i].arg3, fake.createArgsForCall[i].arg4, fake.createArgsForCall[i].arg5
 }
 
 func (fake *DestinationRepo) CreateReturns(result1 int, result2 error) {
@@ -123,17 +129,18 @@ func (fake *DestinationRepo) CreateReturnsOnCall(i int, result1 int, result2 err
 	}{result1, result2}
 }
 
-func (fake *DestinationRepo) Delete(arg1 store.Transaction, arg2 int) error {
+func (fake *DestinationRepo) Delete(arg1 context.Context, arg2 store.Transaction, arg3 int) error {
 	fake.deleteMutex.Lock()
 	ret, specificReturn := fake.deleteReturnsOnCall[len(fake.deleteArgsForCall)]
 	fake.deleteArgsForCall = append(fake.deleteArgsForCall, struct {
-		arg1 store.Transaction
-		arg2 int
-	}{arg1, arg2})
-	fake.recordInvocation("Delete", []interface{}{arg1, arg2})
+		arg1 context.Context
+		arg2 store.Transaction
+		arg3 int
+	}{arg1, arg2, arg3})
+	fake.recordInvocation("Delete", []interface{}{arg1, arg2, arg3})
 	fake.deleteMutex.Unlock()
 	if fake.DeleteStub != nil {
-		return fake.DeleteStub(arg1, arg2)
+		return fake.DeleteStub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
@@ -147,10 +154,10 @@ func (fake *DestinationRepo) DeleteCallCount() int {
 	return len(fake.deleteArgsForCall)
 }
 
-func (fake *DestinationRepo) DeleteArgsForCall(i int) (store.Transaction, int) {
+func (fake *DestinationRepo) DeleteArgsForCall(i int) (context.Context, store.Transaction, int) {
 	fake.deleteMutex.RLock()
 	defer fake.deleteMutex.RUnlock()
-	return fake.deleteArgsForCall[i].arg1, fake.deleteArgsForCall[i].arg2
+	return fake.deleteArgsForCall[i].arg1, fake.deleteArgsForCall[i].arg2, fake.deleteArgsForCall[i].arg3
 }
 
 func (fake *DestinationRepo) DeleteReturns(result1 error) {
@@ -172,19 +179,20 @@ func (fake *DestinationRepo) DeleteReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *DestinationRepo) GetID(arg1 store.Transaction, arg2 int, arg3 int, arg4 string) (int, error) {
+func (fake *DestinationRepo) GetID(arg1 context.Context, arg2 store.Transaction, arg3 int, arg4 int, arg5 string) (int, error) {
 	fake.getIDMutex.Lock()
 	ret, specificReturn := fake.getIDReturnsOnCall[len(fake.getIDArgsForCall)]
 	fake.getIDArgsForCall = append(fake.getIDArgsForCall, struct {
-		arg1 store.Transaction
-		arg2 int
+		arg1 context.Context
+		arg2 store.Transaction
 		arg3 int
-		arg4 string
-	}{arg1, arg2, arg3, arg4})
-	fake.recordInvocation("GetID", []interface{}{arg1, arg2, arg3, arg4})
+		arg4 int
+		arg5 string
+	}{arg1, arg2, arg3, arg4, arg5})
+	fake.recordInvocation("GetID", []interface{}{arg1, arg2, arg3, arg4, arg5})
 	fake.getIDMutex.Unlock()
 	if fake.GetIDStub != nil {
-		return fake.GetIDStub(arg1, arg2, arg3, arg4)
+		return fake.GetIDStub(arg1, arg2, arg3, arg4, arg5)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -198,10 +206,10 @@ func (fake *DestinationRepo) GetIDCallCount() int {
 	return len(fake.getIDArgsForCall)
 }
 
-func (fake *DestinationRepo) GetIDArgsForCall(i int) (store.Transaction, int, int, string) {
+func (fake *DestinationRepo) GetIDArgsForCall(i int) (context.Context, store.Transaction, int, int, string) {
 	fake.getIDMutex.RLock()
 	defer fake.getIDMutex.RUnlock()
-	return fake.getIDArgsForCall[i].arg1, fake.getIDArgsForCall[i].arg2, fake.getIDArgsForCall[i].arg3, fake.getIDArgsForCall[i].arg4
+	return fake.getIDArgsForCall[i].arg1, fake.getIDArgsForCall[i].arg2, fake.getIDArgsForCall[i].arg3, fake.getIDArgsForCall[i].arg4, fake.getIDArgsForCall[i].arg5
 }
 
 func (fake *DestinationRepo) GetIDReturns(result1 int, result2 error) {
@@ -226,17 +234,18 @@ func (fake *DestinationRepo) GetIDReturnsOnCall(i int, result1 int, result2 erro
 	}{result1, result2}
 }
 
-func (fake *DestinationRepo) CountWhereGroupID(arg1 store.Transaction, arg2 int) (int, error) {
+func (fake *DestinationRepo) CountWhereGroupID(arg1 context.Context, arg2 store.Transaction, arg3 int) (int, error) {
 	fake.countWhereGroupIDMutex.Lock()
 	ret, specificReturn := fake.countWhereGroupIDReturnsOnCall[len(fake.countWhereGroupIDArgsForCall)]
 	fake.countWhereGroupIDArgsForCall = append(fake.countWhereGroupIDArgsForCall, struct {
-		arg1 store.Transaction
-		arg2 int
-	}{arg1, arg2})
-	fake.recordInvocation("CountWhereGroupID", []interface{}{arg1, arg2})
+		arg1 context.Context
+		arg2 store.Transaction
+		arg3 int
+	}{arg1, arg2, arg3})
+	fake.recordInvocation("CountWhereGroupID", []interface{}{arg1, arg2, arg3})
 	fake.countWhereGroupIDMutex.Unlock()
 	if fake.CountWhereGroupIDStub != nil {
-		return fake.CountWhereGroupIDStub(arg1, arg2)
+		return fake.CountWhereGroupIDStub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -250,10 +259,10 @@ func (fake *DestinationRepo) CountWhereGroupIDCallCount() int {
 	return len(fake.countWhereGroupIDArgsForCall)
 }
 
-func (fake *DestinationRepo) CountWhereGroupIDArgsForCall(i int) (store.Transaction, int) {
+func (fake *DestinationRepo) CountWhereGroupIDArgsForCall(i int) (context.Context, store.Transaction, int) {
 	fake.countWhereGroupIDMutex.RLock()
 	defer fake.countWhereGroupIDMutex.RUnlock()
-	return fake.countWhereGroupIDArgsForCall[i].arg1, fake.countWhereGroupIDArgsForCall[i].arg2
+	return fake.countWhereGroupIDArgsForCall[i].arg1, fake.countWhereGroupIDArgsForCall[i].arg2, fake.countWhereGroupIDArgsForCall[i].arg3
 }
 
 func (fake *DestinationRepo) CountWhereGroupIDReturns(result1 int, result2 error) {

@@ -73,8 +73,8 @@ type db interface {
 }
 
 type Transaction interface {
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	QueryRow(query string, args ...interface{}) *sql.Row
+	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
+	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
 	Commit() error
 	Rollback() error
 	Rebind(string) string
@@ -144,22 +144,22 @@ func (s *store) Create(ctx context.Context, policies []models.Policy) error {
 	}
 
 	for _, policy := range policies {
-		source_group_id, err := s.group.Create(tx, policy.Source.ID)
+		source_group_id, err := s.group.Create(ctx, tx, policy.Source.ID)
 		if err != nil {
 			return rollback(tx, fmt.Errorf("creating group: %s", err))
 		}
 
-		destination_group_id, err := s.group.Create(tx, policy.Destination.ID)
+		destination_group_id, err := s.group.Create(ctx, tx, policy.Destination.ID)
 		if err != nil {
 			return rollback(tx, fmt.Errorf("creating group: %s", err))
 		}
 
-		destination_id, err := s.destination.Create(tx, destination_group_id, policy.Destination.Port, policy.Destination.Protocol)
+		destination_id, err := s.destination.Create(ctx, tx, destination_group_id, policy.Destination.Port, policy.Destination.Protocol)
 		if err != nil {
 			return rollback(tx, fmt.Errorf("creating destination: %s", err))
 		}
 
-		err = s.policy.Create(tx, source_group_id, destination_id)
+		err = s.policy.Create(ctx, tx, source_group_id, destination_id)
 		if err != nil {
 			return rollback(tx, fmt.Errorf("creating policy: %s", err))
 		}
@@ -175,7 +175,7 @@ func (s *store) Delete(ctx context.Context, policies []models.Policy) error {
 	}
 
 	for _, p := range policies {
-		sourceGroupID, err := s.group.GetID(tx, p.Source.ID)
+		sourceGroupID, err := s.group.GetID(ctx, tx, p.Source.ID)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				continue
@@ -184,7 +184,7 @@ func (s *store) Delete(ctx context.Context, policies []models.Policy) error {
 			}
 		}
 
-		destGroupID, err := s.group.GetID(tx, p.Destination.ID)
+		destGroupID, err := s.group.GetID(ctx, tx, p.Destination.ID)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				continue
@@ -193,7 +193,7 @@ func (s *store) Delete(ctx context.Context, policies []models.Policy) error {
 			}
 		}
 
-		destID, err := s.destination.GetID(tx, destGroupID, p.Destination.Port, p.Destination.Protocol)
+		destID, err := s.destination.GetID(ctx, tx, destGroupID, p.Destination.Port, p.Destination.Protocol)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				continue
@@ -202,7 +202,7 @@ func (s *store) Delete(ctx context.Context, policies []models.Policy) error {
 			}
 		}
 
-		err = s.policy.Delete(tx, sourceGroupID, destID)
+		err = s.policy.Delete(ctx, tx, sourceGroupID, destID)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				continue
@@ -211,23 +211,23 @@ func (s *store) Delete(ctx context.Context, policies []models.Policy) error {
 			}
 		}
 
-		destIDCount, err := s.policy.CountWhereDestinationID(tx, destID)
+		destIDCount, err := s.policy.CountWhereDestinationID(ctx, tx, destID)
 		if err != nil {
 			return rollback(tx, fmt.Errorf("counting destination id: %s", err))
 		}
 		if destIDCount == 0 {
-			err = s.destination.Delete(tx, destID)
+			err = s.destination.Delete(ctx, tx, destID)
 			if err != nil {
 				return rollback(tx, fmt.Errorf("deleting destination: %s", err))
 			}
 		}
 
-		err = s.deleteGroupRowIfLast(tx, sourceGroupID)
+		err = s.deleteGroupRowIfLast(ctx, tx, sourceGroupID)
 		if err != nil {
 			return rollback(tx, fmt.Errorf("deleting group row: %s", err))
 		}
 
-		err = s.deleteGroupRowIfLast(tx, destGroupID)
+		err = s.deleteGroupRowIfLast(ctx, tx, destGroupID)
 		if err != nil {
 			return rollback(tx, fmt.Errorf("deleting group row: %s", err))
 		}
@@ -235,19 +235,19 @@ func (s *store) Delete(ctx context.Context, policies []models.Policy) error {
 	return commit(tx)
 }
 
-func (s *store) deleteGroupRowIfLast(tx Transaction, group_id int) error {
-	policiesGroupIDCount, err := s.policy.CountWhereGroupID(tx, group_id)
+func (s *store) deleteGroupRowIfLast(ctx context.Context, tx Transaction, group_id int) error {
+	policiesGroupIDCount, err := s.policy.CountWhereGroupID(ctx, tx, group_id)
 	if err != nil {
 		return err
 	}
 
-	destinationsGroupIDCount, err := s.destination.CountWhereGroupID(tx, group_id)
+	destinationsGroupIDCount, err := s.destination.CountWhereGroupID(ctx, tx, group_id)
 	if err != nil {
 		return err
 	}
 
 	if policiesGroupIDCount == 0 && destinationsGroupIDCount == 0 {
-		err = s.group.Delete(tx, group_id)
+		err = s.group.Delete(ctx, tx, group_id)
 		if err != nil {
 			return err
 		}

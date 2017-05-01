@@ -2,16 +2,18 @@
 package fakes
 
 import (
+	"context"
 	"policy-server/store"
 	"sync"
 )
 
 type GroupRepo struct {
-	CreateStub        func(store.Transaction, string) (int, error)
+	CreateStub        func(context.Context, store.Transaction, string) (int, error)
 	createMutex       sync.RWMutex
 	createArgsForCall []struct {
-		arg1 store.Transaction
-		arg2 string
+		arg1 context.Context
+		arg2 store.Transaction
+		arg3 string
 	}
 	createReturns struct {
 		result1 int
@@ -21,11 +23,12 @@ type GroupRepo struct {
 		result1 int
 		result2 error
 	}
-	DeleteStub        func(store.Transaction, int) error
+	DeleteStub        func(context.Context, store.Transaction, int) error
 	deleteMutex       sync.RWMutex
 	deleteArgsForCall []struct {
-		arg1 store.Transaction
-		arg2 int
+		arg1 context.Context
+		arg2 store.Transaction
+		arg3 int
 	}
 	deleteReturns struct {
 		result1 error
@@ -33,11 +36,12 @@ type GroupRepo struct {
 	deleteReturnsOnCall map[int]struct {
 		result1 error
 	}
-	GetIDStub        func(store.Transaction, string) (int, error)
+	GetIDStub        func(context.Context, store.Transaction, string) (int, error)
 	getIDMutex       sync.RWMutex
 	getIDArgsForCall []struct {
-		arg1 store.Transaction
-		arg2 string
+		arg1 context.Context
+		arg2 store.Transaction
+		arg3 string
 	}
 	getIDReturns struct {
 		result1 int
@@ -51,17 +55,18 @@ type GroupRepo struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *GroupRepo) Create(arg1 store.Transaction, arg2 string) (int, error) {
+func (fake *GroupRepo) Create(arg1 context.Context, arg2 store.Transaction, arg3 string) (int, error) {
 	fake.createMutex.Lock()
 	ret, specificReturn := fake.createReturnsOnCall[len(fake.createArgsForCall)]
 	fake.createArgsForCall = append(fake.createArgsForCall, struct {
-		arg1 store.Transaction
-		arg2 string
-	}{arg1, arg2})
-	fake.recordInvocation("Create", []interface{}{arg1, arg2})
+		arg1 context.Context
+		arg2 store.Transaction
+		arg3 string
+	}{arg1, arg2, arg3})
+	fake.recordInvocation("Create", []interface{}{arg1, arg2, arg3})
 	fake.createMutex.Unlock()
 	if fake.CreateStub != nil {
-		return fake.CreateStub(arg1, arg2)
+		return fake.CreateStub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -75,10 +80,10 @@ func (fake *GroupRepo) CreateCallCount() int {
 	return len(fake.createArgsForCall)
 }
 
-func (fake *GroupRepo) CreateArgsForCall(i int) (store.Transaction, string) {
+func (fake *GroupRepo) CreateArgsForCall(i int) (context.Context, store.Transaction, string) {
 	fake.createMutex.RLock()
 	defer fake.createMutex.RUnlock()
-	return fake.createArgsForCall[i].arg1, fake.createArgsForCall[i].arg2
+	return fake.createArgsForCall[i].arg1, fake.createArgsForCall[i].arg2, fake.createArgsForCall[i].arg3
 }
 
 func (fake *GroupRepo) CreateReturns(result1 int, result2 error) {
@@ -103,17 +108,18 @@ func (fake *GroupRepo) CreateReturnsOnCall(i int, result1 int, result2 error) {
 	}{result1, result2}
 }
 
-func (fake *GroupRepo) Delete(arg1 store.Transaction, arg2 int) error {
+func (fake *GroupRepo) Delete(arg1 context.Context, arg2 store.Transaction, arg3 int) error {
 	fake.deleteMutex.Lock()
 	ret, specificReturn := fake.deleteReturnsOnCall[len(fake.deleteArgsForCall)]
 	fake.deleteArgsForCall = append(fake.deleteArgsForCall, struct {
-		arg1 store.Transaction
-		arg2 int
-	}{arg1, arg2})
-	fake.recordInvocation("Delete", []interface{}{arg1, arg2})
+		arg1 context.Context
+		arg2 store.Transaction
+		arg3 int
+	}{arg1, arg2, arg3})
+	fake.recordInvocation("Delete", []interface{}{arg1, arg2, arg3})
 	fake.deleteMutex.Unlock()
 	if fake.DeleteStub != nil {
-		return fake.DeleteStub(arg1, arg2)
+		return fake.DeleteStub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1
@@ -127,10 +133,10 @@ func (fake *GroupRepo) DeleteCallCount() int {
 	return len(fake.deleteArgsForCall)
 }
 
-func (fake *GroupRepo) DeleteArgsForCall(i int) (store.Transaction, int) {
+func (fake *GroupRepo) DeleteArgsForCall(i int) (context.Context, store.Transaction, int) {
 	fake.deleteMutex.RLock()
 	defer fake.deleteMutex.RUnlock()
-	return fake.deleteArgsForCall[i].arg1, fake.deleteArgsForCall[i].arg2
+	return fake.deleteArgsForCall[i].arg1, fake.deleteArgsForCall[i].arg2, fake.deleteArgsForCall[i].arg3
 }
 
 func (fake *GroupRepo) DeleteReturns(result1 error) {
@@ -152,17 +158,18 @@ func (fake *GroupRepo) DeleteReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *GroupRepo) GetID(arg1 store.Transaction, arg2 string) (int, error) {
+func (fake *GroupRepo) GetID(arg1 context.Context, arg2 store.Transaction, arg3 string) (int, error) {
 	fake.getIDMutex.Lock()
 	ret, specificReturn := fake.getIDReturnsOnCall[len(fake.getIDArgsForCall)]
 	fake.getIDArgsForCall = append(fake.getIDArgsForCall, struct {
-		arg1 store.Transaction
-		arg2 string
-	}{arg1, arg2})
-	fake.recordInvocation("GetID", []interface{}{arg1, arg2})
+		arg1 context.Context
+		arg2 store.Transaction
+		arg3 string
+	}{arg1, arg2, arg3})
+	fake.recordInvocation("GetID", []interface{}{arg1, arg2, arg3})
 	fake.getIDMutex.Unlock()
 	if fake.GetIDStub != nil {
-		return fake.GetIDStub(arg1, arg2)
+		return fake.GetIDStub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -176,10 +183,10 @@ func (fake *GroupRepo) GetIDCallCount() int {
 	return len(fake.getIDArgsForCall)
 }
 
-func (fake *GroupRepo) GetIDArgsForCall(i int) (store.Transaction, string) {
+func (fake *GroupRepo) GetIDArgsForCall(i int) (context.Context, store.Transaction, string) {
 	fake.getIDMutex.RLock()
 	defer fake.getIDMutex.RUnlock()
-	return fake.getIDArgsForCall[i].arg1, fake.getIDArgsForCall[i].arg2
+	return fake.getIDArgsForCall[i].arg1, fake.getIDArgsForCall[i].arg2, fake.getIDArgsForCall[i].arg3
 }
 
 func (fake *GroupRepo) GetIDReturns(result1 int, result2 error) {

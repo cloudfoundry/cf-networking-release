@@ -1,29 +1,30 @@
 package store
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 )
 
 //go:generate counterfeiter -o fakes/group_repo.go --fake-name GroupRepo . GroupRepo
 type GroupRepo interface {
-	Create(Transaction, string) (int, error)
-	Delete(Transaction, int) error
-	GetID(Transaction, string) (int, error)
+	Create(context.Context, Transaction, string) (int, error)
+	Delete(context.Context, Transaction, int) error
+	GetID(context.Context, Transaction, string) (int, error)
 }
 
 type Group struct {
 }
 
-func (g *Group) Create(tx Transaction, guid string) (int, error) {
-	id, err := g.findRowByGUID(tx, guid)
+func (g *Group) Create(ctx context.Context, tx Transaction, guid string) (int, error) {
+	id, err := g.findRowByGUID(ctx, tx, guid)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			id, err = g.firstBlankRow(tx)
+			id, err = g.firstBlankRow(ctx, tx)
 			if err != nil {
 				return -1, fmt.Errorf("failed to find available tag: %s", err.Error())
 			} else {
-				err = g.updateRow(tx, id, guid)
+				err = g.updateRow(ctx, tx, id, guid)
 				if err != nil {
 					return -1, err
 				}
@@ -35,9 +36,9 @@ func (g *Group) Create(tx Transaction, guid string) (int, error) {
 	return id, nil
 }
 
-func (g *Group) findRowByGUID(tx Transaction, guid string) (int, error) {
+func (g *Group) findRowByGUID(ctx context.Context, tx Transaction, guid string) (int, error) {
 	var id int
-	err := tx.QueryRow(
+	err := tx.QueryRowContext(ctx,
 		tx.Rebind(`
 		SELECT id FROM groups
 		WHERE guid = ?
@@ -47,9 +48,9 @@ func (g *Group) findRowByGUID(tx Transaction, guid string) (int, error) {
 	return id, err
 }
 
-func (g *Group) firstBlankRow(tx Transaction) (int, error) {
+func (g *Group) firstBlankRow(ctx context.Context, tx Transaction) (int, error) {
 	var id int
-	err := tx.QueryRow(`
+	err := tx.QueryRowContext(ctx, `
 		SELECT id FROM groups
 		WHERE guid is NULL
 		ORDER BY id
@@ -59,8 +60,8 @@ func (g *Group) firstBlankRow(tx Transaction) (int, error) {
 	return id, err
 }
 
-func (g *Group) updateRow(tx Transaction, id int, guid string) error {
-	_, err := tx.Exec(
+func (g *Group) updateRow(ctx context.Context, tx Transaction, id int, guid string) error {
+	_, err := tx.ExecContext(ctx,
 		tx.Rebind(`
 			UPDATE groups SET guid = ?
 			WHERE id = ?
@@ -71,17 +72,17 @@ func (g *Group) updateRow(tx Transaction, id int, guid string) error {
 	return err
 }
 
-func (g *Group) Delete(tx Transaction, id int) error {
-	_, err := tx.Exec(
+func (g *Group) Delete(ctx context.Context, tx Transaction, id int) error {
+	_, err := tx.ExecContext(ctx,
 		tx.Rebind(`UPDATE groups SET guid = NULL WHERE id = ?`),
 		id,
 	)
 	return err
 }
 
-func (g *Group) GetID(tx Transaction, guid string) (int, error) {
+func (g *Group) GetID(ctx context.Context, tx Transaction, guid string) (int, error) {
 	var id int
-	err := tx.QueryRow(
+	err := tx.QueryRowContext(ctx,
 		tx.Rebind(`SELECT id FROM groups WHERE guid = ?`),
 		guid,
 	).Scan(&id)

@@ -388,7 +388,7 @@ var _ = Describe("Store", func() {
 					{2, nil},
 					{-1, errors.New("some-insert-error")},
 				}
-				fakeGroup.CreateStub = func(t store.Transaction, guid string) (int, error) {
+				fakeGroup.CreateStub = func(ctx context.Context, t store.Transaction, guid string) (int, error) {
 					response := responses[0]
 					responses = responses[1:]
 					return response.Id, response.Err
@@ -892,7 +892,7 @@ var _ = Describe("Store", func() {
 			Context("when getting the source id fails", func() {
 				Context("when the error is because the source does not exist", func() {
 					BeforeEach(func() {
-						fakeGroup.GetIDStub = func(store.Transaction, string) (int, error) {
+						fakeGroup.GetIDStub = func(context.Context, store.Transaction, string) (int, error) {
 							if fakeGroup.GetIDCallCount() == 1 {
 								return -1, sql.ErrNoRows
 							}
@@ -908,13 +908,13 @@ var _ = Describe("Store", func() {
 						Expect(err).NotTo(HaveOccurred())
 						Expect(fakeGroup.GetIDCallCount()).To(Equal(3))
 
-						_, call0SourceID := fakeGroup.GetIDArgsForCall(0)
+						_, _, call0SourceID := fakeGroup.GetIDArgsForCall(0)
 						Expect(call0SourceID).To(Equal("0"))
 
-						_, call1SourceID := fakeGroup.GetIDArgsForCall(1)
+						_, _, call1SourceID := fakeGroup.GetIDArgsForCall(1)
 						Expect(call1SourceID).To(Equal("apple"))
 
-						_, call2SourceID := fakeGroup.GetIDArgsForCall(2)
+						_, _, call2SourceID := fakeGroup.GetIDArgsForCall(2)
 						Expect(call2SourceID).To(Equal("banana"))
 					})
 				})
@@ -940,7 +940,7 @@ var _ = Describe("Store", func() {
 			Context("when getting the destination group id fails", func() {
 				Context("when the error is because the destination group does not exist", func() {
 					BeforeEach(func() {
-						fakeGroup.GetIDStub = func(store.Transaction, string) (int, error) {
+						fakeGroup.GetIDStub = func(context.Context, store.Transaction, string) (int, error) {
 							if fakeGroup.GetIDCallCount() == 2 {
 								return -1, sql.ErrNoRows
 							}
@@ -956,16 +956,16 @@ var _ = Describe("Store", func() {
 						Expect(err).NotTo(HaveOccurred())
 						Expect(fakeGroup.GetIDCallCount()).To(Equal(4))
 
-						_, call0SourceID := fakeGroup.GetIDArgsForCall(0)
+						_, _, call0SourceID := fakeGroup.GetIDArgsForCall(0)
 						Expect(call0SourceID).To(Equal("peach"))
 
-						_, call1SourceID := fakeGroup.GetIDArgsForCall(1)
+						_, _, call1SourceID := fakeGroup.GetIDArgsForCall(1)
 						Expect(call1SourceID).To(Equal("pear"))
 
-						_, call2SourceID := fakeGroup.GetIDArgsForCall(2)
+						_, _, call2SourceID := fakeGroup.GetIDArgsForCall(2)
 						Expect(call2SourceID).To(Equal("apple"))
 
-						_, call3SourceID := fakeGroup.GetIDArgsForCall(3)
+						_, _, call3SourceID := fakeGroup.GetIDArgsForCall(3)
 						Expect(call3SourceID).To(Equal("banana"))
 
 						Expect(fakeDestination.GetIDCallCount()).To(Equal(1))
@@ -974,7 +974,7 @@ var _ = Describe("Store", func() {
 
 				Context("when the error is for any other reason", func() {
 					BeforeEach(func() {
-						fakeGroup.GetIDStub = func(store.Transaction, string) (int, error) {
+						fakeGroup.GetIDStub = func(context.Context, store.Transaction, string) (int, error) {
 							if fakeGroup.GetIDCallCount() > 1 {
 								return -1, errors.New("some-get-error")
 							}
@@ -998,7 +998,7 @@ var _ = Describe("Store", func() {
 			Context("when getting the destination id fails", func() {
 				Context("when the error is because the destination does not exist", func() {
 					BeforeEach(func() {
-						fakeDestination.GetIDStub = func(store.Transaction, int, int, string) (int, error) {
+						fakeDestination.GetIDStub = func(context.Context, store.Transaction, int, int, string) (int, error) {
 							if fakeDestination.GetIDCallCount() == 1 {
 								return -1, sql.ErrNoRows
 							}
@@ -1038,7 +1038,7 @@ var _ = Describe("Store", func() {
 			Context("when deleting the policy fails", func() {
 				Context("when the error is because the policy does not exist", func() {
 					BeforeEach(func() {
-						fakePolicy.DeleteStub = func(store.Transaction, int, int) error {
+						fakePolicy.DeleteStub = func(context.Context, store.Transaction, int, int) error {
 							if fakePolicy.DeleteCallCount() == 1 {
 								return sql.ErrNoRows
 							}
