@@ -16,7 +16,7 @@ When deploying with Silk, the following new jobs will be added:
 - On the Diego cells: `silk-cni` and `silk-daemon`
 - On the Diego BBS VM: `silk-controller`
 
-We recommend you review the spec files for these new jobs before deploying.
+We recommend you review the [spec files for these new jobs](../jobs) before deploying.
 
 The `cni-flannel` job will no longer be running on Diego cells.
 
