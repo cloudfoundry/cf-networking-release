@@ -76,7 +76,7 @@ func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, overlayN
 			Chain:       overlayChain,
 			Rules: []rules.IPTablesRule{
 				rules.NewOverlayRelatedEstablishedRule(overlayNetwork, containerIP.String()),
-				rules.NewOverlayTagAcceptRule(containerIP.String(), m.IngressTag),
+				rules.NewOverlayTagAcceptRule(overlayNetwork, containerIP.String(), m.IngressTag),
 				rules.NewOverlayDefaultRejectRule(overlayNetwork, containerIP.String()),
 			},
 		},

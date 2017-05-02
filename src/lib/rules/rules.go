@@ -238,8 +238,9 @@ func NewNetOutRelatedEstablishedRule(subnet, overlayNetwork string) IPTablesRule
 	}
 }
 
-func NewOverlayTagAcceptRule(containerIP, tag string) IPTablesRule {
+func NewOverlayTagAcceptRule(overlayNetwork, containerIP, tag string) IPTablesRule {
 	return IPTablesRule{
+		"!", "-s", overlayNetwork,
 		"-d", containerIP,
 		"-m", "mark", "--mark", fmt.Sprintf("0x%s", tag),
 		"--jump", "ACCEPT",
