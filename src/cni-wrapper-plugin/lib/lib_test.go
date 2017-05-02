@@ -24,6 +24,7 @@ var _ = Describe("LoadWrapperConfig", func() {
 			"health_check_url": "http://127.0.0.1:10007",
 			"instance_address": "10.244.20.1",
 			"iptables_asg_logging": true,
+			"ingress_tag": "ffaa0000",
 			"delegate": {
 				"some": "info"
 			}
@@ -44,6 +45,7 @@ var _ = Describe("LoadWrapperConfig", func() {
 				"some":       "info",
 			},
 			HealthCheckURL: "http://127.0.0.1:10007",
+			IngressTag:     "ffaa0000",
 		}))
 	})
 
@@ -107,6 +109,7 @@ var _ = Describe("LoadWrapperConfig", func() {
 		Entry("overlay network", "overlay_network", "missing overlay network"),
 		Entry("health check url", "health_check_url", "missing health check url"),
 		Entry("instance address", "instance_address", "missing instance address"),
+		Entry("ingress tag", "ingress_tag", "missing ingress tag"),
 	)
 })
 

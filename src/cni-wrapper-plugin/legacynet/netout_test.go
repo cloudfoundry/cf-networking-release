@@ -30,6 +30,7 @@ var _ = Describe("Netout", func() {
 			ChainNamer: chainNamer,
 			IPTables:   ipTables,
 			Converter:  converter,
+			IngressTag: "FEEDBEEF",
 		}
 		chainNamer.PrefixStub = func(prefix, handle string) string {
 			return prefix + "-" + handle
@@ -138,6 +139,9 @@ var _ = Describe("Netout", func() {
 				{"-s", "9.9.0.0/16",
 					"-d", "5.6.7.8",
 					"-m", "state", "--state", "RELATED,ESTABLISHED",
+					"--jump", "ACCEPT"},
+				{"-d", "5.6.7.8",
+					"-m", "mark", "--mark", "0xFEEDBEEF",
 					"--jump", "ACCEPT"},
 				{"-s", "9.9.0.0/16",
 					"-d", "5.6.7.8",

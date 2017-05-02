@@ -28,6 +28,14 @@ type NetOut struct {
 	Converter  netOutRuleConverter
 	ASGLogging bool
 	C2CLogging bool
+	IngressTag string
+}
+
+type fullRule struct {
+	Table       string
+	ParentChain string
+	Chain       string
+	Rules       []rules.IPTablesRule
 }
 
 func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, overlayNetwork string, dnsServers []string) error {
@@ -43,14 +51,9 @@ func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, overlayN
 		return fmt.Errorf("getting chain name: %s", err)
 	}
 
-	type rulesAndChain struct {
-		ParentChain string
-		Chain       string
-		Rules       []rules.IPTablesRule
-	}
-
-	args := []rulesAndChain{
+	args := []fullRule{
 		{
+			Table:       "filter",
 			ParentChain: "INPUT",
 			Chain:       inputChain,
 			Rules: []rules.IPTablesRule{
@@ -59,6 +62,7 @@ func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, overlayN
 			},
 		},
 		{
+			Table:       "filter",
 			ParentChain: "FORWARD",
 			Chain:       forwardChain,
 			Rules: []rules.IPTablesRule{
@@ -67,14 +71,17 @@ func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, overlayN
 			},
 		},
 		{
+			Table:       "filter",
 			ParentChain: "FORWARD",
 			Chain:       overlayChain,
 			Rules: []rules.IPTablesRule{
 				rules.NewOverlayRelatedEstablishedRule(overlayNetwork, containerIP.String()),
+				rules.NewOverlayTagAcceptRule(containerIP.String(), m.IngressTag),
 				rules.NewOverlayDefaultRejectRule(overlayNetwork, containerIP.String()),
 			},
 		},
 		{
+			Table: "filter",
 			Chain: logChain,
 			Rules: []rules.IPTablesRule{
 				rules.NewNetOutDefaultLogRule(containerHandle),
@@ -110,26 +117,7 @@ func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, overlayN
 		args[0].Rules = append(args[0].Rules, rules.NewInputDefaultRejectRule(containerIP.String()))
 	}
 
-	for _, arg := range args {
-		err = m.IPTables.NewChain("filter", arg.Chain)
-		if err != nil {
-			return fmt.Errorf("creating chain: %s", err)
-		}
-
-		if arg.ParentChain != "" {
-			err = m.IPTables.BulkInsert("filter", arg.ParentChain, 1, rules.IPTablesRule{"--jump", arg.Chain})
-			if err != nil {
-				return fmt.Errorf("inserting rule: %s", err)
-			}
-		}
-
-		err = m.IPTables.BulkAppend("filter", arg.Chain, arg.Rules...)
-		if err != nil {
-			return fmt.Errorf("appending rule: %s", err)
-		}
-	}
-
-	return nil
+	return m.applyRules(args)
 }
 
 func (m *NetOut) Cleanup(containerHandle string) error {
@@ -185,6 +173,29 @@ func (m *NetOut) BulkInsertRules(containerHandle string, netOutRules []garden.Ne
 	err = m.IPTables.BulkInsert("filter", chain, 1, ruleSpec...)
 	if err != nil {
 		return fmt.Errorf("bulk inserting net-out rules: %s", err)
+	}
+
+	return nil
+}
+
+func (m *NetOut) applyRules(args []fullRule) error {
+	for _, arg := range args {
+		err := m.IPTables.NewChain(arg.Table, arg.Chain)
+		if err != nil {
+			return fmt.Errorf("creating chain: %s", err)
+		}
+
+		if arg.ParentChain != "" {
+			err = m.IPTables.BulkInsert(arg.Table, arg.ParentChain, 1, rules.IPTablesRule{"--jump", arg.Chain})
+			if err != nil {
+				return fmt.Errorf("inserting rule: %s", err)
+			}
+		}
+
+		err = m.IPTables.BulkAppend(arg.Table, arg.Chain, arg.Rules...)
+		if err != nil {
+			return fmt.Errorf("appending rule: %s", err)
+		}
 	}
 
 	return nil

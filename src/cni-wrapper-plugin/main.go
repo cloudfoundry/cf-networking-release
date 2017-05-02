@@ -73,6 +73,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 		Converter:  &legacynet.NetOutRuleConverter{Logger: os.Stderr},
 		ASGLogging: n.IPTablesASGLogging,
 		C2CLogging: n.IPTablesC2CLogging,
+		IngressTag: n.IngressTag,
 	}
 	if err := netOutProvider.Initialize(args.ContainerID, containerIP, n.OverlayNetwork, localDNSServers); err != nil {
 		return fmt.Errorf("initialize net out: %s", err)
@@ -83,7 +84,8 @@ func cmdAdd(args *skel.CmdArgs) error {
 		ChainNamer: &legacynet.ChainNamer{
 			MaxLength: 28,
 		},
-		IPTables: pluginController.IPTables,
+		IPTables:   pluginController.IPTables,
+		IngressTag: n.IngressTag,
 	}
 	err = netinProvider.Initialize(args.ContainerID)
 
@@ -170,7 +172,8 @@ func cmdDel(args *skel.CmdArgs) error {
 		ChainNamer: &legacynet.ChainNamer{
 			MaxLength: 28,
 		},
-		IPTables: pluginController.IPTables,
+		IPTables:   pluginController.IPTables,
+		IngressTag: n.IngressTag,
 	}
 
 	if err = netInProvider.Cleanup(args.ContainerID); err != nil {

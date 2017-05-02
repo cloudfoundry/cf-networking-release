@@ -15,6 +15,24 @@ func AppendComment(rule IPTablesRule, comment string) IPTablesRule {
 	)
 }
 
+func NewPortForwardingRule(hostPort, containerPort int, hostIP, containerIP string) IPTablesRule {
+	return IPTablesRule{
+		"-d", hostIP, "-p", "tcp",
+		"-m", "tcp", "--dport", fmt.Sprintf("%d", hostPort),
+		"--jump", "DNAT",
+		"--to-destination", fmt.Sprintf("%s:%d", containerIP, containerPort),
+	}
+}
+
+func NewIngressMarkRule(hostPort int, hostIP, tag string) IPTablesRule {
+	return IPTablesRule{
+		"-d", hostIP, "-p", "tcp",
+		"-m", "tcp", "--dport", fmt.Sprintf("%d", hostPort),
+		"--jump", "MARK",
+		"--set-mark", fmt.Sprintf("0x%s", tag),
+	}
+}
+
 func NewMarkAllowRule(destinationIP, protocol string, port int, tag string, sourceAppGUID, destinationAppGUID string) IPTablesRule {
 	return AppendComment(IPTablesRule{
 		"-d", destinationIP,
@@ -216,6 +234,14 @@ func NewNetOutRelatedEstablishedRule(subnet, overlayNetwork string) IPTablesRule
 		"-s", subnet,
 		"!", "-d", overlayNetwork,
 		"-m", "state", "--state", "RELATED,ESTABLISHED",
+		"--jump", "ACCEPT",
+	}
+}
+
+func NewOverlayTagAcceptRule(containerIP, tag string) IPTablesRule {
+	return IPTablesRule{
+		"-d", containerIP,
+		"-m", "mark", "--mark", fmt.Sprintf("0x%s", tag),
 		"--jump", "ACCEPT",
 	}
 }

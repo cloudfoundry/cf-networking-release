@@ -26,6 +26,7 @@ type WrapperConfig struct {
 	DNSServers         []string               `json:"dns_servers"`
 	IPTablesASGLogging bool                   `json:"iptables_asg_logging"`
 	IPTablesC2CLogging bool                   `json:"iptables_c2c_logging"`
+	IngressTag         string                 `json:"ingress_tag"`
 	RuntimeConfig      RuntimeConfig          `json:"runtimeConfig,omitempty"`
 }
 
@@ -53,6 +54,10 @@ func LoadWrapperConfig(bytes []byte) (*WrapperConfig, error) {
 
 	if n.InstanceAddress == "" {
 		return nil, fmt.Errorf("missing instance address")
+	}
+
+	if n.IngressTag == "" {
+		return nil, fmt.Errorf("missing ingress tag")
 	}
 
 	if _, ok := n.Delegate["cniVersion"]; !ok {

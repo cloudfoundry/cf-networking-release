@@ -130,6 +130,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 				},
 				InstanceAddress:    "10.244.2.3",
 				IPTablesASGLogging: false,
+				IngressTag:         "FFFF0000",
 				RuntimeConfig: lib.RuntimeConfig{
 					PortMappings: []garden.NetIn{
 						{
@@ -218,23 +219,29 @@ var _ = Describe("CniWrapperPlugin", func() {
 		Eventually(session, "5s").Should(gexec.Exit(0))
 
 		By("checking that ip masquerade rule is removed")
-		Expect(AllIPTablesRules("nat")).NotTo(ContainElement("-A POSTROUTING -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j MASQUERADE"))
+		Expect(AllIPTablesRules("nat")).ToNot(ContainElement("-A POSTROUTING -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j MASQUERADE"))
 
 		By("checking that iptables netin rules are removed")
 		Expect(AllIPTablesRules("nat")).ToNot(ContainElement(`-N ` + netinChainName))
 		Expect(AllIPTablesRules("nat")).ToNot(ContainElement(`-A PREROUTING -j ` + netinChainName))
+		Expect(AllIPTablesRules("mangle")).ToNot(ContainElement(`-N ` + netinChainName))
+		Expect(AllIPTablesRules("mangle")).ToNot(ContainElement(`-A PREROUTING -j ` + netinChainName))
 
 		By("checking that port forwarding rules were removed from the netin chain")
 		Expect(AllIPTablesRules("nat")).ToNot(ContainElement("-A " + netinChainName + " -d 10.244.2.3/32 -p tcp -m tcp --dport 1000 -j DNAT --to-destination 1.2.3.4:1001"))
 		Expect(AllIPTablesRules("nat")).ToNot(ContainElement("-A " + netinChainName + " -d 10.244.2.3/32 -p tcp -m tcp --dport 2000 -j DNAT --to-destination 1.2.3.4:2001"))
 
+		By("checking that mark rules were removed from the netin chain")
+		Expect(AllIPTablesRules("mangle")).ToNot(ContainElement("-A " + netinChainName + " -d 10.244.2.3/32 -p tcp -m tcp --dport 1000 -j DNAT --to-destination 1.2.3.4:1001"))
+		Expect(AllIPTablesRules("mangle")).ToNot(ContainElement("-A " + netinChainName + " -d 10.244.2.3/32 -p tcp -m tcp --dport 2000 -j DNAT --to-destination 1.2.3.4:2001"))
+
 		By("checking that there are no more netout rules for this container")
-		Expect(AllIPTablesRules("filter")).NotTo(ContainElement(ContainSubstring(inputChainName)))
-		Expect(AllIPTablesRules("filter")).NotTo(ContainElement(ContainSubstring(netoutChainName)))
-		Expect(AllIPTablesRules("filter")).NotTo(ContainElement(ContainSubstring(netoutLoggingChainName)))
+		Expect(AllIPTablesRules("filter")).ToNot(ContainElement(ContainSubstring(inputChainName)))
+		Expect(AllIPTablesRules("filter")).ToNot(ContainElement(ContainSubstring(netoutChainName)))
+		Expect(AllIPTablesRules("filter")).ToNot(ContainElement(ContainSubstring(netoutLoggingChainName)))
 
 		By("checking that there are no more overlay rules for this container")
-		Expect(AllIPTablesRules("filter")).NotTo(ContainElement(ContainSubstring(overlayChainName)))
+		Expect(AllIPTablesRules("filter")).ToNot(ContainElement(ContainSubstring(overlayChainName)))
 
 		os.Remove(debugFileName)
 		os.Remove(datastorePath)
@@ -338,7 +345,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 			}))
 		})
 
-		It("writes default deny forward chain rules to prevent connections from things on the overlay", func() {
+		It("writes default deny forward chain rules to prevent ingress, but allows specially marked packets", func() {
 			session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(0))
@@ -349,6 +356,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 			By("checking that the default deny rules in the container's overlay chain are created")
 			Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
 				"-A " + overlayChainName + " -s 10.255.0.0/16 -d 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j ACCEPT",
+				"-A " + overlayChainName + " -d 1.2.3.4/32 -m mark --mark 0xffff0000 -j ACCEPT",
 				"-A " + overlayChainName + " -s 10.255.0.0/16 -d 1.2.3.4/32 -j REJECT --reject-with icmp-port-unreachable",
 			}))
 		})
@@ -457,6 +465,20 @@ var _ = Describe("CniWrapperPlugin", func() {
 				By("checking that port forwarding rules were added to the netin chain")
 				Expect(AllIPTablesRules("nat")).To(ContainElement("-A " + netinChainName + " -d 10.244.2.3/32 -p tcp -m tcp --dport 1000 -j DNAT --to-destination 1.2.3.4:1001"))
 				Expect(AllIPTablesRules("nat")).To(ContainElement("-A " + netinChainName + " -d 10.244.2.3/32 -p tcp -m tcp --dport 2000 -j DNAT --to-destination 1.2.3.4:2001"))
+			})
+
+			It("creates mark rules for each port mapping rule", func() {
+				session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+				Eventually(session).Should(gexec.Exit(0))
+
+				By("checking that a netin chain was created for the container")
+				Expect(AllIPTablesRules("mangle")).To(ContainElement(`-N ` + netinChainName))
+				Expect(AllIPTablesRules("mangle")).To(ContainElement(`-A PREROUTING -j ` + netinChainName))
+
+				By("checking that mark rules were added to the netin chain")
+				Expect(AllIPTablesRules("mangle")).To(ContainElement("-A " + netinChainName + " -d 10.244.2.3/32 -p tcp -m tcp --dport 1000 -j MARK --set-xmark 0xffff0000/0xffffffff"))
+				Expect(AllIPTablesRules("mangle")).To(ContainElement("-A " + netinChainName + " -d 10.244.2.3/32 -p tcp -m tcp --dport 2000 -j MARK --set-xmark 0xffff0000/0xffffffff"))
 			})
 
 			Context("when a port mapping with hostport 0 is given", func() {

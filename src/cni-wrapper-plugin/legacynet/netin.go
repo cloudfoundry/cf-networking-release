@@ -13,30 +13,50 @@ const prefixNetIn = "netin"
 type NetIn struct {
 	ChainNamer chainNamer
 	IPTables   rules.IPTablesAdapter
+	IngressTag string
 }
 
 func (m *NetIn) Initialize(containerHandle string) error {
 	chain := m.ChainNamer.Prefix(prefixNetIn, containerHandle)
-	err := m.IPTables.NewChain("nat", chain)
-	if err != nil {
-		return fmt.Errorf("creating chain: %s", err)
+
+	args := []fullRule{
+		{
+			Table:       "nat",
+			ParentChain: "PREROUTING",
+			Chain:       chain,
+			Rules:       []rules.IPTablesRule{},
+		},
+		{
+			Table:       "mangle",
+			ParentChain: "PREROUTING",
+			Chain:       chain,
+			Rules:       []rules.IPTablesRule{},
+		},
 	}
 
-	err = m.IPTables.BulkAppend("nat", "PREROUTING", rules.IPTablesRule{"--jump", chain})
-	if err != nil {
-		return fmt.Errorf("inserting rule: %s", err)
-	}
-	return nil
+	return m.initChains(args)
 }
 
 func (m *NetIn) Cleanup(containerHandle string) error {
 	chain := m.ChainNamer.Prefix(prefixNetIn, containerHandle)
 
-	return cleanupChain("nat", "PREROUTING", chain, m.IPTables)
+	var result error
+	err := cleanupChain("nat", "PREROUTING", chain, m.IPTables)
+	if err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	err = cleanupChain("mangle", "PREROUTING", chain, m.IPTables)
+	if err != nil {
+		result = multierror.Append(result, err)
+	}
+
+	return result
 }
 
 func (m *NetIn) AddRule(containerHandle string,
 	hostPort, containerPort int, hostIP, containerIP string) error {
+	chain := m.ChainNamer.Prefix(prefixNetIn, containerHandle)
 
 	parsedIP := net.ParseIP(hostIP)
 	if parsedIP == nil {
@@ -48,15 +68,52 @@ func (m *NetIn) AddRule(containerHandle string,
 		return fmt.Errorf("invalid ip: %s", containerIP)
 	}
 
-	chainName := m.ChainNamer.Prefix(prefixNetIn, containerHandle)
-	err := m.IPTables.BulkAppend("nat", chainName, rules.IPTablesRule{
-		"-d", hostIP, "-p", "tcp",
-		"-m", "tcp", "--dport", fmt.Sprintf("%d", hostPort),
-		"--jump", "DNAT",
-		"--to-destination", fmt.Sprintf("%s:%d", containerIP, containerPort),
-	})
-	if err != nil {
-		return fmt.Errorf("inserting rule: %s", err)
+	args := []fullRule{
+		{
+			Table:       "nat",
+			ParentChain: "PREROUTING",
+			Chain:       chain,
+			Rules: []rules.IPTablesRule{
+				rules.NewPortForwardingRule(hostPort, containerPort, hostIP, containerIP),
+			},
+		},
+		{
+			Table:       "mangle",
+			ParentChain: "PREROUTING",
+			Chain:       chain,
+			Rules: []rules.IPTablesRule{
+				rules.NewIngressMarkRule(hostPort, hostIP, m.IngressTag),
+			},
+		},
+	}
+
+	return m.applyRules(args)
+}
+
+func (m *NetIn) initChains(args []fullRule) error {
+	for _, arg := range args {
+		err := m.IPTables.NewChain(arg.Table, arg.Chain)
+		if err != nil {
+			return fmt.Errorf("creating chain: %s", err)
+		}
+
+		if arg.ParentChain != "" {
+			err = m.IPTables.BulkInsert(arg.Table, arg.ParentChain, 1, rules.IPTablesRule{"--jump", arg.Chain})
+			if err != nil {
+				return fmt.Errorf("inserting rule: %s", err)
+			}
+		}
+	}
+
+	return nil
+}
+
+func (m *NetIn) applyRules(args []fullRule) error {
+	for _, arg := range args {
+		err := m.IPTables.BulkAppend(arg.Table, arg.Chain, arg.Rules...)
+		if err != nil {
+			return fmt.Errorf("appending rule: %s", err)
+		}
 	}
 
 	return nil
