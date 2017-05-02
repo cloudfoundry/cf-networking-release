@@ -82,6 +82,12 @@ should have a diff that resembles:
 +          -----BEGIN RSA PRIVATE KEY-----
 +          REPLACE
 +          -----END RSA PRIVATE KEY-----
+-      plugin:
+-        etcd_endpoints:
+-          - (( config_from_cf.etcd.advertise_urls_dns_suffix ))
+-        etcd_client_cert: (( config_from_cf.etcd.client_cert ))
+-        etcd_client_key: (( config_from_cf.etcd.client_key ))
+-        etcd_ca_cert: (( config_from_cf.etcd.ca_cert ))
 ```
 
 ### 0.21.0
