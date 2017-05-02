@@ -265,9 +265,8 @@ func NewOverlayDefaultRejectLogRule(containerHandle, overlayNetwork, containerIP
 	}
 }
 
-func NewOverlayRelatedEstablishedRule(overlayNetwork, containerIP string) IPTablesRule {
+func NewOverlayRelatedEstablishedRule(containerIP string) IPTablesRule {
 	return IPTablesRule{
-		"-s", overlayNetwork,
 		"-d", containerIP,
 		"-m", "state", "--state", "RELATED,ESTABLISHED",
 		"--jump", "ACCEPT",

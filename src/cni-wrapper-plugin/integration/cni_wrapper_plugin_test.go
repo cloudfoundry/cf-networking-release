@@ -370,7 +370,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 
 			By("checking that the default deny rules in the container's overlay chain are created")
 			Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
-				"-A " + overlayChainName + " -s 10.255.0.0/16 -d 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j ACCEPT",
+				"-A " + overlayChainName + " -d 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j ACCEPT",
 				"-A " + overlayChainName + " -d 1.2.3.4/32 -m mark --mark 0xffff0000 -j ACCEPT",
 				"-A " + overlayChainName + " -s 10.255.0.0/16 -d 1.2.3.4/32 -j REJECT --reject-with icmp-port-unreachable",
 			}))
@@ -570,7 +570,8 @@ var _ = Describe("CniWrapperPlugin", func() {
 
 					By("checking that the default deny rules in the container's overlay chain are created")
 					Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
-						"-A " + overlayChainName + " -s 10.255.0.0/16 -d 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j ACCEPT",
+						"-A " + overlayChainName + " -d 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j ACCEPT",
+						"-A " + overlayChainName + " -d 1.2.3.4/32 -m mark --mark 0xffff0000 -j ACCEPT",
 						"-A " + overlayChainName + " -s 10.255.0.0/16 -d 1.2.3.4/32 -m limit --limit 2/min -j LOG --log-prefix DENY_C2C_" + containerID[:20],
 						"-A " + overlayChainName + " -s 10.255.0.0/16 -d 1.2.3.4/32 -j REJECT --reject-with icmp-port-unreachable",
 					}))

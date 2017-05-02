@@ -136,8 +136,7 @@ var _ = Describe("Netout", func() {
 			Expect(table).To(Equal("filter"))
 			Expect(chain).To(Equal("overlay-some-container-handle"))
 			Expect(rulespec).To(Equal([]rules.IPTablesRule{
-				{"-s", "9.9.0.0/16",
-					"-d", "5.6.7.8",
+				{"-d", "5.6.7.8",
 					"-m", "state", "--state", "RELATED,ESTABLISHED",
 					"--jump", "ACCEPT"},
 				{"-d", "5.6.7.8",
@@ -249,9 +248,11 @@ var _ = Describe("Netout", func() {
 				Expect(table).To(Equal("filter"))
 				Expect(chain).To(Equal("overlay-some-container-handle"))
 				Expect(rulespec).To(Equal([]rules.IPTablesRule{
-					{"-s", "9.9.0.0/16",
-						"-d", "5.6.7.8",
+					{"-d", "5.6.7.8",
 						"-m", "state", "--state", "RELATED,ESTABLISHED",
+						"--jump", "ACCEPT"},
+					{"-d", "5.6.7.8",
+						"-m", "mark", "--mark", "0xFEEDBEEF",
 						"--jump", "ACCEPT"},
 					{"-s", "9.9.0.0/16",
 						"-d", "5.6.7.8",

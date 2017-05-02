@@ -75,7 +75,7 @@ func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, overlayN
 			ParentChain: "FORWARD",
 			Chain:       overlayChain,
 			Rules: []rules.IPTablesRule{
-				rules.NewOverlayRelatedEstablishedRule(overlayNetwork, containerIP.String()),
+				rules.NewOverlayRelatedEstablishedRule(containerIP.String()),
 				rules.NewOverlayTagAcceptRule(containerIP.String(), m.IngressTag),
 				rules.NewOverlayDefaultRejectRule(overlayNetwork, containerIP.String()),
 			},
@@ -100,7 +100,8 @@ func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, overlayN
 
 	if m.C2CLogging {
 		args[2].Rules = []rules.IPTablesRule{
-			rules.NewOverlayRelatedEstablishedRule(overlayNetwork, containerIP.String()),
+			rules.NewOverlayRelatedEstablishedRule(containerIP.String()),
+			rules.NewOverlayTagAcceptRule(containerIP.String(), m.IngressTag),
 			rules.NewOverlayDefaultRejectLogRule(containerHandle, overlayNetwork, containerIP.String()),
 			rules.NewOverlayDefaultRejectRule(overlayNetwork, containerIP.String()),
 		}
