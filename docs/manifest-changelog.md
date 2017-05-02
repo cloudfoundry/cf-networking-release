@@ -88,6 +88,8 @@ should have a diff that resembles:
 -        etcd_client_cert: (( config_from_cf.etcd.client_cert ))
 -        etcd_client_key: (( config_from_cf.etcd.client_key ))
 -        etcd_ca_cert: (( config_from_cf.etcd.ca_cert ))
+-      garden_external_networker:
+-        cni_config_dir: /var/vcap/jobs/cni-flannel/config/cni
 ```
 
 ### 0.21.0

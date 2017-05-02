@@ -65,11 +65,11 @@ cf_networking_overrides:
           -----END CERTIFICATE-----
         client_cert: |
           -----BEGIN CERTIFICATE-----
-          REPLACE_WITH_POLICY_CLIENT_CERT
+          REPLACE_WITH_POLICY_AGENT_CERT
           -----END CERTIFICATE-----
         client_key: |
           -----BEGIN RSA PRIVATE KEY-----
-          REPLACE_WITH_POLICY_CLIENT_KEY
+          REPLACE_WITH_POLICY_AGENT_KEY
           -----END RSA PRIVATE KEY-----
       policy_server:
         uaa_client_secret: REPLACE_WITH_UAA_CLIENT_SECRET
@@ -87,7 +87,7 @@ cf_networking_overrides:
           name: REPLACE_WITH_DB_NAME # e.g. network_policy
         ca_cert: |
           -----BEGIN CERTIFICATE-----
-          REPLACE_WITH_POLICY_CA_CERT
+          REPLACE_WITH_CA_CERT
           -----END CERTIFICATE-----
         server_cert: |
           -----BEGIN CERTIFICATE-----
