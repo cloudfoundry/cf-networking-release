@@ -16,7 +16,9 @@ When deploying with Silk, the following new jobs will be added:
 - On the Diego cells: `silk-cni` and `silk-daemon`
 - On the Diego BBS VM: `silk-controller`
 
-We recommend you review the [spec files for these new jobs](../jobs) before deploying.
+These jobs require new certificates and a new (logical) database (separate from the policy server database).
+
+We recommend you review the [spec files for these new jobs](../jobs) and the diff below.
 
 The `cni-flannel` job will no longer be running on Diego cells.
 
@@ -48,6 +50,8 @@ should have a diff that resembles:
 +        silk-controller: {}
    properties:
      cf_networking:
+-      garden_external_networker:
+-        cni_config_dir: /var/vcap/jobs/cni-flannel/config/cni
 +      cni_config_dir: /var/vcap/jobs/silk-cni/config/cni
 +      silk_controller:
 +        database:
@@ -88,8 +92,6 @@ should have a diff that resembles:
 -        etcd_client_cert: (( config_from_cf.etcd.client_cert ))
 -        etcd_client_key: (( config_from_cf.etcd.client_key ))
 -        etcd_ca_cert: (( config_from_cf.etcd.ca_cert ))
--      garden_external_networker:
--        cni_config_dir: /var/vcap/jobs/cni-flannel/config/cni
 ```
 
 ### 0.21.0
