@@ -1,6 +1,8 @@
 package main
 
 import (
+	"cni-wrapper-plugin/adapter"
+	"cni-wrapper-plugin/discover"
 	"cni-wrapper-plugin/legacynet"
 	"cni-wrapper-plugin/lib"
 	"encoding/json"
@@ -79,13 +81,23 @@ func cmdAdd(args *skel.CmdArgs) error {
 		return fmt.Errorf("initialize net out: %s", err)
 	}
 
+	defaultInterface := discover.DefaultInterface{
+		NetlinkAdapter: &adapter.NetlinkAdapter{},
+		NetAdapter:     &adapter.NetAdapter{},
+	}
+	defaultIfaceName, err := defaultInterface.Name()
+	if err != nil {
+		return fmt.Errorf("discover default interface name: %s", err) // not tested
+	}
+
 	// Initialize NetIn
 	netinProvider := legacynet.NetIn{
 		ChainNamer: &legacynet.ChainNamer{
 			MaxLength: 28,
 		},
-		IPTables:   pluginController.IPTables,
-		IngressTag: n.IngressTag,
+		IPTables:          pluginController.IPTables,
+		IngressTag:        n.IngressTag,
+		HostInterfaceName: defaultIfaceName,
 	}
 	err = netinProvider.Initialize(args.ContainerID)
 

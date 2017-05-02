@@ -6,6 +6,8 @@ dependencies:
 
 files:
   - cni-wrapper-plugin/*.go # gosub
+  - cni-wrapper-plugin/adapter/*.go # gosub
+  - cni-wrapper-plugin/discover/*.go # gosub
   - cni-wrapper-plugin/legacynet/*.go # gosub
   - cni-wrapper-plugin/lib/*.go # gosub
   - code.cloudfoundry.org/garden/*.go # gosub
@@ -64,6 +66,9 @@ files:
   - github.com/coreos/go-iptables/iptables/*.go # gosub
   - github.com/hashicorp/go-multierror/*.go # gosub
   - github.com/hashicorp/go-multierror/vendor/github.com/hashicorp/errwrap/*.go # gosub
+  - github.com/vishvananda/netlink/*.go # gosub
+  - github.com/vishvananda/netlink/nl/*.go # gosub
+  - github.com/vishvananda/netns/*.go # gosub
   - lib/datastore/*.go # gosub
   - lib/filelock/*.go # gosub
   - lib/rules/*.go # gosub

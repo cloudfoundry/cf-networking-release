@@ -11,9 +11,10 @@ import (
 const prefixNetIn = "netin"
 
 type NetIn struct {
-	ChainNamer chainNamer
-	IPTables   rules.IPTablesAdapter
-	IngressTag string
+	ChainNamer        chainNamer
+	IPTables          rules.IPTablesAdapter
+	IngressTag        string
+	HostInterfaceName string
 }
 
 func (m *NetIn) Initialize(containerHandle string) error {
@@ -82,7 +83,7 @@ func (m *NetIn) AddRule(containerHandle string,
 			ParentChain: "PREROUTING",
 			Chain:       chain,
 			Rules: []rules.IPTablesRule{
-				rules.NewIngressMarkRule(hostPort, hostIP, m.IngressTag),
+				rules.NewIngressMarkRule(m.HostInterfaceName, hostPort, hostIP, m.IngressTag),
 			},
 		},
 	}

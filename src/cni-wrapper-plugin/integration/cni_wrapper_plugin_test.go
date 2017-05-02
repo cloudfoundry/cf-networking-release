@@ -19,6 +19,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 	"github.com/pivotal-cf-experimental/gomegamatchers"
+	"github.com/vishvananda/netlink"
 )
 
 type InputStruct struct {
@@ -48,6 +49,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 		inputChainName          string
 		overlayChainName        string
 		netoutLoggingChainName  string
+		defaultIface            *net.Interface
 	)
 
 	var cniCommand = func(command, input string) *exec.Cmd {
@@ -80,6 +82,19 @@ var _ = Describe("CniWrapperPlugin", func() {
 	}
 
 	BeforeEach(func() {
+		routes, err := netlink.RouteList(nil, netlink.FAMILY_V4)
+		Expect(err).NotTo(HaveOccurred())
+
+		var defaultIfaceIndex int
+		for _, r := range routes {
+			if r.Dst == nil {
+				defaultIfaceIndex = r.LinkIndex
+			}
+		}
+
+		defaultIface, err = net.InterfaceByIndex(defaultIfaceIndex)
+		Expect(err).NotTo(HaveOccurred())
+
 		healthCheckReturnStatus = http.StatusOK
 		healthCheckServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(healthCheckReturnStatus)
@@ -356,7 +371,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 			By("checking that the default deny rules in the container's overlay chain are created")
 			Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
 				"-A " + overlayChainName + " -s 10.255.0.0/16 -d 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j ACCEPT",
-				"-A " + overlayChainName + " ! -s 10.255.0.0/16 -d 1.2.3.4/32 -m mark --mark 0xffff0000 -j ACCEPT",
+				"-A " + overlayChainName + " -d 1.2.3.4/32 -m mark --mark 0xffff0000 -j ACCEPT",
 				"-A " + overlayChainName + " -s 10.255.0.0/16 -d 1.2.3.4/32 -j REJECT --reject-with icmp-port-unreachable",
 			}))
 		})
@@ -477,8 +492,8 @@ var _ = Describe("CniWrapperPlugin", func() {
 				Expect(AllIPTablesRules("mangle")).To(ContainElement(`-A PREROUTING -j ` + netinChainName))
 
 				By("checking that mark rules were added to the netin chain")
-				Expect(AllIPTablesRules("mangle")).To(ContainElement("-A " + netinChainName + " -d 10.244.2.3/32 -p tcp -m tcp --dport 1000 -j MARK --set-xmark 0xffff0000/0xffffffff"))
-				Expect(AllIPTablesRules("mangle")).To(ContainElement("-A " + netinChainName + " -d 10.244.2.3/32 -p tcp -m tcp --dport 2000 -j MARK --set-xmark 0xffff0000/0xffffffff"))
+				Expect(AllIPTablesRules("mangle")).To(ContainElement("-A " + netinChainName + " -d 10.244.2.3/32 -i " + defaultIface.Name + " -p tcp -m tcp --dport 1000 -j MARK --set-xmark 0xffff0000/0xffffffff"))
+				Expect(AllIPTablesRules("mangle")).To(ContainElement("-A " + netinChainName + " -d 10.244.2.3/32 -i " + defaultIface.Name + " -p tcp -m tcp --dport 2000 -j MARK --set-xmark 0xffff0000/0xffffffff"))
 			})
 
 			Context("when a port mapping with hostport 0 is given", func() {

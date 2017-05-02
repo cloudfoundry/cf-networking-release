@@ -24,9 +24,9 @@ func NewPortForwardingRule(hostPort, containerPort int, hostIP, containerIP stri
 	}
 }
 
-func NewIngressMarkRule(hostPort int, hostIP, tag string) IPTablesRule {
+func NewIngressMarkRule(hostInterface string, hostPort int, hostIP, tag string) IPTablesRule {
 	return IPTablesRule{
-		"-d", hostIP, "-p", "tcp",
+		"-i", hostInterface, "-d", hostIP, "-p", "tcp",
 		"-m", "tcp", "--dport", fmt.Sprintf("%d", hostPort),
 		"--jump", "MARK",
 		"--set-mark", fmt.Sprintf("0x%s", tag),
@@ -238,9 +238,8 @@ func NewNetOutRelatedEstablishedRule(subnet, overlayNetwork string) IPTablesRule
 	}
 }
 
-func NewOverlayTagAcceptRule(overlayNetwork, containerIP, tag string) IPTablesRule {
+func NewOverlayTagAcceptRule(containerIP, tag string) IPTablesRule {
 	return IPTablesRule{
-		"!", "-s", overlayNetwork,
 		"-d", containerIP,
 		"-m", "mark", "--mark", fmt.Sprintf("0x%s", tag),
 		"--jump", "ACCEPT",
