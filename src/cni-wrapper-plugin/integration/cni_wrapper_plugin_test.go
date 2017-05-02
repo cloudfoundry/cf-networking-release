@@ -227,13 +227,13 @@ var _ = Describe("CniWrapperPlugin", func() {
 		Expect(AllIPTablesRules("mangle")).ToNot(ContainElement(`-N ` + netinChainName))
 		Expect(AllIPTablesRules("mangle")).ToNot(ContainElement(`-A PREROUTING -j ` + netinChainName))
 
-		By("checking that port forwarding rules were removed from the netin chain")
-		Expect(AllIPTablesRules("nat")).ToNot(ContainElement("-A " + netinChainName + " -d 10.244.2.3/32 -p tcp -m tcp --dport 1000 -j DNAT --to-destination 1.2.3.4:1001"))
-		Expect(AllIPTablesRules("nat")).ToNot(ContainElement("-A " + netinChainName + " -d 10.244.2.3/32 -p tcp -m tcp --dport 2000 -j DNAT --to-destination 1.2.3.4:2001"))
+		By("checking that all port forwarding rules were removed from the netin chain")
+		Expect(AllIPTablesRules("nat")).ToNot(ContainElement(ContainSubstring(netinChainName)))
+		Expect(AllIPTablesRules("nat")).ToNot(ContainElement(ContainSubstring(netinChainName)))
 
-		By("checking that mark rules were removed from the netin chain")
-		Expect(AllIPTablesRules("mangle")).ToNot(ContainElement("-A " + netinChainName + " -d 10.244.2.3/32 -p tcp -m tcp --dport 1000 -j DNAT --to-destination 1.2.3.4:1001"))
-		Expect(AllIPTablesRules("mangle")).ToNot(ContainElement("-A " + netinChainName + " -d 10.244.2.3/32 -p tcp -m tcp --dport 2000 -j DNAT --to-destination 1.2.3.4:2001"))
+		By("checking that all mark rules were removed from the netin chain")
+		Expect(AllIPTablesRules("mangle")).ToNot(ContainElement(ContainSubstring(netinChainName)))
+		Expect(AllIPTablesRules("mangle")).ToNot(ContainElement(ContainSubstring(netinChainName)))
 
 		By("checking that there are no more netout rules for this container")
 		Expect(AllIPTablesRules("filter")).ToNot(ContainElement(ContainSubstring(inputChainName)))
