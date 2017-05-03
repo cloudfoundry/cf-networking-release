@@ -27,6 +27,7 @@ type WrapperConfig struct {
 	IPTablesASGLogging bool                   `json:"iptables_asg_logging"`
 	IPTablesC2CLogging bool                   `json:"iptables_c2c_logging"`
 	IngressTag         string                 `json:"ingress_tag"`
+	VTEPName           string                 `json:"vtep_name"`
 	RuntimeConfig      RuntimeConfig          `json:"runtimeConfig,omitempty"`
 }
 
@@ -58,6 +59,10 @@ func LoadWrapperConfig(bytes []byte) (*WrapperConfig, error) {
 
 	if n.IngressTag == "" {
 		return nil, fmt.Errorf("missing ingress tag")
+	}
+
+	if n.VTEPName == "" {
+		return nil, fmt.Errorf("missing vtep device name")
 	}
 
 	if _, ok := n.Delegate["cniVersion"]; !ok {

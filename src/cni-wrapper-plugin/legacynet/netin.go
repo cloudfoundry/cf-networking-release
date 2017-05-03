@@ -35,7 +35,7 @@ func (m *NetIn) Initialize(containerHandle string) error {
 		},
 	}
 
-	return m.initChains(args)
+	return initChains(m.IPTables, args)
 }
 
 func (m *NetIn) Cleanup(containerHandle string) error {
@@ -88,18 +88,18 @@ func (m *NetIn) AddRule(containerHandle string,
 		},
 	}
 
-	return m.applyRules(args)
+	return applyRules(m.IPTables, args)
 }
 
-func (m *NetIn) initChains(args []fullRule) error {
+func initChains(iptables rules.IPTablesAdapter, args []fullRule) error {
 	for _, arg := range args {
-		err := m.IPTables.NewChain(arg.Table, arg.Chain)
+		err := iptables.NewChain(arg.Table, arg.Chain)
 		if err != nil {
 			return fmt.Errorf("creating chain: %s", err)
 		}
 
 		if arg.ParentChain != "" {
-			err = m.IPTables.BulkInsert(arg.Table, arg.ParentChain, 1, rules.IPTablesRule{"--jump", arg.Chain})
+			err = iptables.BulkInsert(arg.Table, arg.ParentChain, 1, rules.IPTablesRule{"--jump", arg.Chain})
 			if err != nil {
 				return fmt.Errorf("inserting rule: %s", err)
 			}
@@ -109,9 +109,9 @@ func (m *NetIn) initChains(args []fullRule) error {
 	return nil
 }
 
-func (m *NetIn) applyRules(args []fullRule) error {
+func applyRules(iptables rules.IPTablesAdapter, args []fullRule) error {
 	for _, arg := range args {
-		err := m.IPTables.BulkAppend(arg.Table, arg.Chain, arg.Rules...)
+		err := iptables.BulkAppend(arg.Table, arg.Chain, arg.Rules...)
 		if err != nil {
 			return fmt.Errorf("appending rule: %s", err)
 		}

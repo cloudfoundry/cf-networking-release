@@ -229,10 +229,9 @@ func NewInputDefaultRejectRule(subnet string) IPTablesRule {
 	}
 }
 
-func NewNetOutRelatedEstablishedRule(subnet, overlayNetwork string) IPTablesRule {
+func NewNetOutRelatedEstablishedRule(subnet string) IPTablesRule {
 	return IPTablesRule{
 		"-s", subnet,
-		"!", "-d", overlayNetwork,
 		"-m", "state", "--state", "RELATED,ESTABLISHED",
 		"--jump", "ACCEPT",
 	}
@@ -262,6 +261,15 @@ func NewOverlayDefaultRejectLogRule(containerHandle, overlayNetwork, containerIP
 		"-m", "limit", "--limit", "2/min",
 		"--jump", "LOG",
 		"--log-prefix", fmt.Sprintf("DENY_C2C_%s", containerHandle),
+	}
+}
+
+func NewOverlayAllowEgress(deviceName, containerIP string) IPTablesRule {
+	return IPTablesRule{
+		"-s", containerIP,
+		"-o", deviceName,
+		"-m", "mark", "!", "--mark", "0x0",
+		"--jump", "ACCEPT",
 	}
 }
 

@@ -29,6 +29,7 @@ type NetOut struct {
 	ASGLogging bool
 	C2CLogging bool
 	IngressTag string
+	VTEPName   string
 }
 
 type fullRule struct {
@@ -66,7 +67,7 @@ func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, overlayN
 			ParentChain: "FORWARD",
 			Chain:       forwardChain,
 			Rules: []rules.IPTablesRule{
-				rules.NewNetOutRelatedEstablishedRule(containerIP.String(), overlayNetwork),
+				rules.NewNetOutRelatedEstablishedRule(containerIP.String()),
 				rules.NewNetOutDefaultRejectRule(containerIP.String(), overlayNetwork),
 			},
 		},
@@ -75,6 +76,7 @@ func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, overlayN
 			ParentChain: "FORWARD",
 			Chain:       overlayChain,
 			Rules: []rules.IPTablesRule{
+				rules.NewOverlayAllowEgress(m.VTEPName, containerIP.String()),
 				rules.NewOverlayRelatedEstablishedRule(containerIP.String()),
 				rules.NewOverlayTagAcceptRule(containerIP.String(), m.IngressTag),
 				rules.NewOverlayDefaultRejectRule(overlayNetwork, containerIP.String()),
@@ -92,7 +94,7 @@ func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, overlayN
 
 	if m.ASGLogging {
 		args[1].Rules = []rules.IPTablesRule{
-			rules.NewNetOutRelatedEstablishedRule(containerIP.String(), overlayNetwork),
+			rules.NewNetOutRelatedEstablishedRule(containerIP.String()),
 			rules.NewNetOutDefaultRejectLogRule(containerHandle, containerIP.String(), overlayNetwork),
 			rules.NewNetOutDefaultRejectRule(containerIP.String(), overlayNetwork),
 		}
@@ -100,6 +102,7 @@ func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, overlayN
 
 	if m.C2CLogging {
 		args[2].Rules = []rules.IPTablesRule{
+			rules.NewOverlayAllowEgress(m.VTEPName, containerIP.String()),
 			rules.NewOverlayRelatedEstablishedRule(containerIP.String()),
 			rules.NewOverlayTagAcceptRule(containerIP.String(), m.IngressTag),
 			rules.NewOverlayDefaultRejectLogRule(containerHandle, overlayNetwork, containerIP.String()),
@@ -118,7 +121,12 @@ func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, overlayN
 		args[0].Rules = append(args[0].Rules, rules.NewInputDefaultRejectRule(containerIP.String()))
 	}
 
-	return m.applyRules(args)
+	err = initChains(m.IPTables, args)
+	if err != nil {
+		return err
+	}
+
+	return applyRules(m.IPTables, args)
 }
 
 func (m *NetOut) Cleanup(containerHandle string) error {
@@ -174,29 +182,6 @@ func (m *NetOut) BulkInsertRules(containerHandle string, netOutRules []garden.Ne
 	err = m.IPTables.BulkInsert("filter", chain, 1, ruleSpec...)
 	if err != nil {
 		return fmt.Errorf("bulk inserting net-out rules: %s", err)
-	}
-
-	return nil
-}
-
-func (m *NetOut) applyRules(args []fullRule) error {
-	for _, arg := range args {
-		err := m.IPTables.NewChain(arg.Table, arg.Chain)
-		if err != nil {
-			return fmt.Errorf("creating chain: %s", err)
-		}
-
-		if arg.ParentChain != "" {
-			err = m.IPTables.BulkInsert(arg.Table, arg.ParentChain, 1, rules.IPTablesRule{"--jump", arg.Chain})
-			if err != nil {
-				return fmt.Errorf("inserting rule: %s", err)
-			}
-		}
-
-		err = m.IPTables.BulkAppend(arg.Table, arg.Chain, arg.Rules...)
-		if err != nil {
-			return fmt.Errorf("appending rule: %s", err)
-		}
 	}
 
 	return nil

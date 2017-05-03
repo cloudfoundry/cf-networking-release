@@ -146,6 +146,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 				InstanceAddress:    "10.244.2.3",
 				IPTablesASGLogging: false,
 				IngressTag:         "FFFF0000",
+				VTEPName:           "some-device",
 				RuntimeConfig: lib.RuntimeConfig{
 					PortMappings: []garden.NetIn{
 						{
@@ -368,8 +369,9 @@ var _ = Describe("CniWrapperPlugin", func() {
 			By("checking that the forward chain jumps to the container's overlay chain")
 			Expect(AllIPTablesRules("filter")).To(ContainElement("-A FORWARD -j " + overlayChainName))
 
-			By("checking that the default deny rules in the container's overlay chain are created")
+			By("checking that the default rules in the container's overlay chain are created")
 			Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
+				"-A " + overlayChainName + " -s 1.2.3.4/32 -o some-device -m mark ! --mark 0x0 -j ACCEPT",
 				"-A " + overlayChainName + " -d 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j ACCEPT",
 				"-A " + overlayChainName + " -d 1.2.3.4/32 -m mark --mark 0xffff0000 -j ACCEPT",
 				"-A " + overlayChainName + " -s 10.255.0.0/16 -d 1.2.3.4/32 -j REJECT --reject-with icmp-port-unreachable",
@@ -455,7 +457,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 
 				By("checking that the default forwarding rules are created for that container")
 				Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
-					`-A ` + netoutChainName + ` -s 1.2.3.4/32 ! -d 10.255.0.0/16 -m state --state RELATED,ESTABLISHED -j ACCEPT`,
+					`-A ` + netoutChainName + ` -s 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j ACCEPT`,
 					`-A ` + netoutChainName + ` -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j REJECT --reject-with icmp-port-unreachable`,
 				}))
 
@@ -538,7 +540,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 
 				By("checking that the default forwarding rules are created for that container")
 				Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
-					`-A ` + netoutChainName + ` -s 1.2.3.4/32 ! -d 10.255.0.0/16 -m state --state RELATED,ESTABLISHED -j ACCEPT`,
+					`-A ` + netoutChainName + ` -s 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j ACCEPT`,
 					`-A ` + netoutChainName + ` -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j REJECT --reject-with icmp-port-unreachable`,
 				}))
 
@@ -570,6 +572,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 
 					By("checking that the default deny rules in the container's overlay chain are created")
 					Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
+						"-A " + overlayChainName + " -s 1.2.3.4/32 -o some-device -m mark ! --mark 0x0 -j ACCEPT",
 						"-A " + overlayChainName + " -d 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j ACCEPT",
 						"-A " + overlayChainName + " -d 1.2.3.4/32 -m mark --mark 0xffff0000 -j ACCEPT",
 						"-A " + overlayChainName + " -s 10.255.0.0/16 -d 1.2.3.4/32 -m limit --limit 2/min -j LOG --log-prefix DENY_C2C_" + containerID[:20],
@@ -608,7 +611,11 @@ var _ = Describe("CniWrapperPlugin", func() {
 					Eventually(session).Should(gexec.Exit(0))
 
 					By("checking that a default deny log rule was written")
-					Expect(AllIPTablesRules("filter")).To(ContainElement(expectedDenyLogRule))
+					Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
+						`-A ` + netoutChainName + ` -s 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j ACCEPT`,
+						expectedDenyLogRule,
+						`-A ` + netoutChainName + ` -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j REJECT --reject-with icmp-port-unreachable`,
+					}))
 				})
 			})
 

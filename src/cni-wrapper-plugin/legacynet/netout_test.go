@@ -31,6 +31,7 @@ var _ = Describe("Netout", func() {
 			IPTables:   ipTables,
 			Converter:  converter,
 			IngressTag: "FEEDBEEF",
+			VTEPName:   "vtep-name",
 		}
 		chainNamer.PrefixStub = func(prefix, handle string) string {
 			return prefix + "-" + handle
@@ -123,7 +124,6 @@ var _ = Describe("Netout", func() {
 			Expect(chain).To(Equal("netout-some-container-handle"))
 			Expect(rulespec).To(Equal([]rules.IPTablesRule{
 				{"-s", "5.6.7.8",
-					"!", "-d", "9.9.0.0/16",
 					"-m", "state", "--state", "RELATED,ESTABLISHED",
 					"--jump", "ACCEPT"},
 				{"-s", "5.6.7.8",
@@ -136,6 +136,10 @@ var _ = Describe("Netout", func() {
 			Expect(table).To(Equal("filter"))
 			Expect(chain).To(Equal("overlay-some-container-handle"))
 			Expect(rulespec).To(Equal([]rules.IPTablesRule{
+				{"-s", "5.6.7.8",
+					"-o", "vtep-name",
+					"-m", "mark", "!", "--mark", "0x0",
+					"--jump", "ACCEPT"},
 				{"-d", "5.6.7.8",
 					"-m", "state", "--state", "RELATED,ESTABLISHED",
 					"--jump", "ACCEPT"},
@@ -219,7 +223,6 @@ var _ = Describe("Netout", func() {
 				Expect(chain).To(Equal("netout-some-container-handle"))
 				Expect(rulespec).To(Equal([]rules.IPTablesRule{
 					{"-s", "5.6.7.8",
-						"!", "-d", "9.9.0.0/16",
 						"-m", "state", "--state", "RELATED,ESTABLISHED",
 						"--jump", "ACCEPT"},
 					{"-s", "5.6.7.8",
@@ -248,6 +251,10 @@ var _ = Describe("Netout", func() {
 				Expect(table).To(Equal("filter"))
 				Expect(chain).To(Equal("overlay-some-container-handle"))
 				Expect(rulespec).To(Equal([]rules.IPTablesRule{
+					{"-s", "5.6.7.8",
+						"-o", "vtep-name",
+						"-m", "mark", "!", "--mark", "0x0",
+						"--jump", "ACCEPT"},
 					{"-d", "5.6.7.8",
 						"-m", "state", "--state", "RELATED,ESTABLISHED",
 						"--jump", "ACCEPT"},

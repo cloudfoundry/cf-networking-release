@@ -25,6 +25,7 @@ var _ = Describe("LoadWrapperConfig", func() {
 			"instance_address": "10.244.20.1",
 			"iptables_asg_logging": true,
 			"ingress_tag": "ffaa0000",
+			"vtep_name": "some-device",
 			"delegate": {
 				"some": "info"
 			}
@@ -46,6 +47,7 @@ var _ = Describe("LoadWrapperConfig", func() {
 			},
 			HealthCheckURL: "http://127.0.0.1:10007",
 			IngressTag:     "ffaa0000",
+			VTEPName:       "some-device",
 		}))
 	})
 
@@ -110,6 +112,7 @@ var _ = Describe("LoadWrapperConfig", func() {
 		Entry("health check url", "health_check_url", "missing health check url"),
 		Entry("instance address", "instance_address", "missing instance address"),
 		Entry("ingress tag", "ingress_tag", "missing ingress tag"),
+		Entry("vtep device name", "vtep_name", "missing vtep device name"),
 	)
 })
 
