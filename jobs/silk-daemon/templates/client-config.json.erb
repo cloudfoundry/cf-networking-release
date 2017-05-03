@@ -35,6 +35,7 @@
     "debug_server_port" => p("cf_networking.silk_daemon.debug_port"),
     "datastore" => "/var/vcap/data/silk/store.json",
     "partition_tolerance_seconds" => p("cf_networking.partition_tolerance_hours") * 60 * 60, # convert hours to seconds
+    "client_timeout_seconds" => 5,
   }
 
   JSON.pretty_generate(toRender)
