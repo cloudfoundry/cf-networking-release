@@ -61,10 +61,10 @@ func NewMarkSetRule(sourceIP, tag, appGUID string) IPTablesRule {
 	}, fmt.Sprintf("src:%s", appGUID))
 }
 
-func NewDefaultEgressRule(localSubnet, overlayNetwork string) IPTablesRule {
+func NewDefaultEgressRule(localSubnet, deviceName string) IPTablesRule {
 	return IPTablesRule{
 		"--source", localSubnet,
-		"!", "-d", overlayNetwork,
+		"!", "-o", deviceName,
 		"--jump", "MASQUERADE",
 	}
 }
@@ -245,18 +245,16 @@ func NewOverlayTagAcceptRule(containerIP, tag string) IPTablesRule {
 	}
 }
 
-func NewOverlayDefaultRejectRule(overlayNetwork, containerIP string) IPTablesRule {
+func NewOverlayDefaultRejectRule(containerIP string) IPTablesRule {
 	return IPTablesRule{
-		"-s", overlayNetwork,
 		"-d", containerIP,
 		"--jump", "REJECT",
 		"--reject-with", "icmp-port-unreachable",
 	}
 }
 
-func NewOverlayDefaultRejectLogRule(containerHandle, overlayNetwork, containerIP string) IPTablesRule {
+func NewOverlayDefaultRejectLogRule(containerHandle, containerIP string) IPTablesRule {
 	return IPTablesRule{
-		"-s", overlayNetwork,
 		"-d", containerIP,
 		"-m", "limit", "--limit", "2/min",
 		"--jump", "LOG",
@@ -281,20 +279,20 @@ func NewOverlayRelatedEstablishedRule(containerIP string) IPTablesRule {
 	}
 }
 
-func NewNetOutDefaultRejectLogRule(containerHandle, subnet, overlayNetwork string) IPTablesRule {
+func NewNetOutDefaultRejectLogRule(containerHandle, subnet, deviceName string) IPTablesRule {
 	return IPTablesRule{
 		"-s", subnet,
-		"!", "-d", overlayNetwork,
+		"!", "-o", deviceName,
 		"-m", "limit", "--limit", "2/min",
 		"--jump", "LOG",
 		"--log-prefix", fmt.Sprintf("DENY_%s", containerHandle),
 	}
 }
 
-func NewNetOutDefaultRejectRule(subnet, overlayNetwork string) IPTablesRule {
+func NewNetOutDefaultRejectRule(subnet, deviceName string) IPTablesRule {
 	return IPTablesRule{
 		"-s", subnet,
-		"!", "-d", overlayNetwork,
+		"!", "-o", deviceName,
 		"--jump", "REJECT",
 		"--reject-with", "icmp-port-unreachable",
 	}

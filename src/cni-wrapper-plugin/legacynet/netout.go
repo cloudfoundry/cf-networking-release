@@ -39,7 +39,7 @@ type fullRule struct {
 	Rules       []rules.IPTablesRule
 }
 
-func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, overlayNetwork string, dnsServers []string) error {
+func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, dnsServers []string) error {
 	if containerHandle == "" {
 		return errors.New("invalid handle")
 	}
@@ -68,7 +68,7 @@ func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, overlayN
 			Chain:       forwardChain,
 			Rules: []rules.IPTablesRule{
 				rules.NewNetOutRelatedEstablishedRule(containerIP.String()),
-				rules.NewNetOutDefaultRejectRule(containerIP.String(), overlayNetwork),
+				rules.NewNetOutDefaultRejectRule(containerIP.String(), m.VTEPName),
 			},
 		},
 		{
@@ -79,7 +79,7 @@ func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, overlayN
 				rules.NewOverlayAllowEgress(m.VTEPName, containerIP.String()),
 				rules.NewOverlayRelatedEstablishedRule(containerIP.String()),
 				rules.NewOverlayTagAcceptRule(containerIP.String(), m.IngressTag),
-				rules.NewOverlayDefaultRejectRule(overlayNetwork, containerIP.String()),
+				rules.NewOverlayDefaultRejectRule(containerIP.String()),
 			},
 		},
 		{
@@ -95,8 +95,8 @@ func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, overlayN
 	if m.ASGLogging {
 		args[1].Rules = []rules.IPTablesRule{
 			rules.NewNetOutRelatedEstablishedRule(containerIP.String()),
-			rules.NewNetOutDefaultRejectLogRule(containerHandle, containerIP.String(), overlayNetwork),
-			rules.NewNetOutDefaultRejectRule(containerIP.String(), overlayNetwork),
+			rules.NewNetOutDefaultRejectLogRule(containerHandle, containerIP.String(), m.VTEPName),
+			rules.NewNetOutDefaultRejectRule(containerIP.String(), m.VTEPName),
 		}
 	}
 
@@ -105,8 +105,8 @@ func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, overlayN
 			rules.NewOverlayAllowEgress(m.VTEPName, containerIP.String()),
 			rules.NewOverlayRelatedEstablishedRule(containerIP.String()),
 			rules.NewOverlayTagAcceptRule(containerIP.String(), m.IngressTag),
-			rules.NewOverlayDefaultRejectLogRule(containerHandle, overlayNetwork, containerIP.String()),
-			rules.NewOverlayDefaultRejectRule(overlayNetwork, containerIP.String()),
+			rules.NewOverlayDefaultRejectLogRule(containerHandle, containerIP.String()),
+			rules.NewOverlayDefaultRejectRule(containerIP.String()),
 		}
 	}
 

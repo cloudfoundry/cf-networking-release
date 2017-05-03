@@ -138,7 +138,6 @@ var _ = Describe("CniWrapperPlugin", func() {
 				Datastore:        datastorePath,
 				HealthCheckURL:   healthCheckServer.URL,
 				IPTablesLockFile: iptablesLockFilePath,
-				OverlayNetwork:   "10.255.0.0/16",
 				Delegate: map[string]interface{}{
 					"type": "noop",
 					"some": "other data",
@@ -235,7 +234,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 		Eventually(session, "5s").Should(gexec.Exit(0))
 
 		By("checking that ip masquerade rule is removed")
-		Expect(AllIPTablesRules("nat")).ToNot(ContainElement("-A POSTROUTING -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j MASQUERADE"))
+		Expect(AllIPTablesRules("nat")).ToNot(ContainElement("-A POSTROUTING -s 1.2.3.4/32 ! -o some-device -j MASQUERADE"))
 
 		By("checking that iptables netin rules are removed")
 		Expect(AllIPTablesRules("nat")).ToNot(ContainElement(`-N ` + netinChainName))
@@ -301,7 +300,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 			Eventually(session).Should(gexec.Exit(0))
 
 			By("check that ip masquerade rule is created")
-			Expect(AllIPTablesRules("nat")).To(ContainElement("-A POSTROUTING -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j MASQUERADE"))
+			Expect(AllIPTablesRules("nat")).To(ContainElement("-A POSTROUTING -s 1.2.3.4/32 ! -o some-device -j MASQUERADE"))
 
 			By("calling DEL")
 			cmd = cniCommand("DEL", input)
@@ -310,7 +309,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 			Eventually(session).Should(gexec.Exit(0))
 
 			By("check that ip masquerade rule is removed")
-			Expect(AllIPTablesRules("nat")).NotTo(ContainElement("-A POSTROUTING -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j MASQUERADE"))
+			Expect(AllIPTablesRules("nat")).NotTo(ContainElement("-A POSTROUTING -s 1.2.3.4/32 ! -o some-device -j MASQUERADE"))
 		})
 	})
 
@@ -343,7 +342,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(0))
 			Expect(session.Out.Contents()).To(MatchJSON(`{ "ips": [{ "version": "4", "interface": -1, "address": "1.2.3.4/32" }], "dns":{} }`))
-			Expect(AllIPTablesRules("nat")).To(ContainElement("-A POSTROUTING -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j MASQUERADE"))
+			Expect(AllIPTablesRules("nat")).To(ContainElement("-A POSTROUTING -s 1.2.3.4/32 ! -o some-device -j MASQUERADE"))
 		})
 
 		It("writes default deny input chain rules to prevent connecting to things on the host", func() {
@@ -374,7 +373,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 				"-A " + overlayChainName + " -s 1.2.3.4/32 -o some-device -m mark ! --mark 0x0 -j ACCEPT",
 				"-A " + overlayChainName + " -d 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j ACCEPT",
 				"-A " + overlayChainName + " -d 1.2.3.4/32 -m mark --mark 0xffff0000 -j ACCEPT",
-				"-A " + overlayChainName + " -s 10.255.0.0/16 -d 1.2.3.4/32 -j REJECT --reject-with icmp-port-unreachable",
+				"-A " + overlayChainName + " -d 1.2.3.4/32 -j REJECT --reject-with icmp-port-unreachable",
 			}))
 		})
 
@@ -458,7 +457,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 				By("checking that the default forwarding rules are created for that container")
 				Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
 					`-A ` + netoutChainName + ` -s 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j ACCEPT`,
-					`-A ` + netoutChainName + ` -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j REJECT --reject-with icmp-port-unreachable`,
+					`-A ` + netoutChainName + ` -s 1.2.3.4/32 ! -o some-device -j REJECT --reject-with icmp-port-unreachable`,
 				}))
 
 				By("checking that the default input rules are created for that container")
@@ -541,7 +540,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 				By("checking that the default forwarding rules are created for that container")
 				Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
 					`-A ` + netoutChainName + ` -s 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j ACCEPT`,
-					`-A ` + netoutChainName + ` -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j REJECT --reject-with icmp-port-unreachable`,
+					`-A ` + netoutChainName + ` -s 1.2.3.4/32 ! -o some-device -j REJECT --reject-with icmp-port-unreachable`,
 				}))
 
 				By("checking that the default input rules are created for that container")
@@ -575,8 +574,8 @@ var _ = Describe("CniWrapperPlugin", func() {
 						"-A " + overlayChainName + " -s 1.2.3.4/32 -o some-device -m mark ! --mark 0x0 -j ACCEPT",
 						"-A " + overlayChainName + " -d 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j ACCEPT",
 						"-A " + overlayChainName + " -d 1.2.3.4/32 -m mark --mark 0xffff0000 -j ACCEPT",
-						"-A " + overlayChainName + " -s 10.255.0.0/16 -d 1.2.3.4/32 -m limit --limit 2/min -j LOG --log-prefix DENY_C2C_" + containerID[:20],
-						"-A " + overlayChainName + " -s 10.255.0.0/16 -d 1.2.3.4/32 -j REJECT --reject-with icmp-port-unreachable",
+						"-A " + overlayChainName + " -d 1.2.3.4/32 -m limit --limit 2/min -j LOG --log-prefix DENY_C2C_" + containerID[:20],
+						"-A " + overlayChainName + " -d 1.2.3.4/32 -j REJECT --reject-with icmp-port-unreachable",
 					}))
 				})
 			})
@@ -602,7 +601,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 				})
 
 				It("always writes a rate limited default deny log rule", func() {
-					expectedDenyLogRule := "-A netout--some-container-id-th -s 1.2.3.4/32 ! -d 10.255.0.0/16 -m limit --limit 2/min -j LOG --log-prefix DENY_" + containerID[:24]
+					expectedDenyLogRule := "-A netout--some-container-id-th -s 1.2.3.4/32 ! -o some-device -m limit --limit 2/min -j LOG --log-prefix DENY_" + containerID[:24]
 
 					By("by starting the CNI plugin")
 					cmd = cniCommand("ADD", input)
@@ -614,7 +613,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 					Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
 						`-A ` + netoutChainName + ` -s 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j ACCEPT`,
 						expectedDenyLogRule,
-						`-A ` + netoutChainName + ` -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j REJECT --reject-with icmp-port-unreachable`,
+						`-A ` + netoutChainName + ` -s 1.2.3.4/32 ! -o some-device -j REJECT --reject-with icmp-port-unreachable`,
 					}))
 				})
 			})
@@ -705,7 +704,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Eventually(session).Should(gexec.Exit(1))
 
-				Expect(AllIPTablesRules("nat")).NotTo(ContainElement("-A POSTROUTING -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j MASQUERADE"))
+				Expect(AllIPTablesRules("nat")).NotTo(ContainElement("-A POSTROUTING -s 1.2.3.4/32 ! -o some-device -j MASQUERADE"))
 			})
 		})
 
@@ -728,7 +727,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Eventually(session).Should(gexec.Exit(1))
 
-				Expect(AllIPTablesRules("nat")).NotTo(ContainElement("-A POSTROUTING -s 1.2.3.4/32 ! -d 10.255.0.0/16 -j MASQUERADE"))
+				Expect(AllIPTablesRules("nat")).NotTo(ContainElement("-A POSTROUTING -s 1.2.3.4/32 ! -o some-device -j MASQUERADE"))
 			})
 		})
 	})

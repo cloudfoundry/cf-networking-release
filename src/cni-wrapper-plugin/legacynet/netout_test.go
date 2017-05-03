@@ -41,7 +41,7 @@ var _ = Describe("Netout", func() {
 
 	Describe("Initialize", func() {
 		It("creates the input chain, netout forwarding chain, and the logging chain", func() {
-			err := netOut.Initialize("some-container-handle", net.ParseIP("5.6.7.8"), "9.9.0.0/16", nil)
+			err := netOut.Initialize("some-container-handle", net.ParseIP("5.6.7.8"), nil)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(chainNamer.PrefixCallCount()).To(Equal(3))
@@ -78,7 +78,7 @@ var _ = Describe("Netout", func() {
 		})
 
 		It("inserts a jump rule for the new chains", func() {
-			err := netOut.Initialize("some-container-handle", net.ParseIP("5.6.7.8"), "9.9.0.0/16", nil)
+			err := netOut.Initialize("some-container-handle", net.ParseIP("5.6.7.8"), nil)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(ipTables.BulkInsertCallCount()).To(Equal(3))
@@ -102,7 +102,7 @@ var _ = Describe("Netout", func() {
 		})
 
 		It("writes the default netout and logging rules", func() {
-			err := netOut.Initialize("some-container-handle", net.ParseIP("5.6.7.8"), "9.9.0.0/16", nil)
+			err := netOut.Initialize("some-container-handle", net.ParseIP("5.6.7.8"), nil)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(ipTables.BulkAppendCallCount()).To(Equal(4))
@@ -127,7 +127,7 @@ var _ = Describe("Netout", func() {
 					"-m", "state", "--state", "RELATED,ESTABLISHED",
 					"--jump", "ACCEPT"},
 				{"-s", "5.6.7.8",
-					"!", "-d", "9.9.0.0/16",
+					"!", "-o", "vtep-name",
 					"--jump", "REJECT",
 					"--reject-with", "icmp-port-unreachable"},
 			}))
@@ -146,8 +146,7 @@ var _ = Describe("Netout", func() {
 				{"-d", "5.6.7.8",
 					"-m", "mark", "--mark", "0xFEEDBEEF",
 					"--jump", "ACCEPT"},
-				{"-s", "9.9.0.0/16",
-					"-d", "5.6.7.8",
+				{"-d", "5.6.7.8",
 					"--jump", "REJECT",
 					"--reject-with", "icmp-port-unreachable"},
 			}))
@@ -164,7 +163,7 @@ var _ = Describe("Netout", func() {
 		})
 
 		It("writes the logging rules", func() {
-			err := netOut.Initialize("some-container-handle", net.ParseIP("5.6.7.8"), "9.9.0.0/16", nil)
+			err := netOut.Initialize("some-container-handle", net.ParseIP("5.6.7.8"), nil)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -173,7 +172,7 @@ var _ = Describe("Netout", func() {
 				ipTables.NewChainReturns(errors.New("potata"))
 			})
 			It("returns the error", func() {
-				err := netOut.Initialize("some-container-handle", net.ParseIP("5.6.7.8"), "9.9.0.0/16", nil)
+				err := netOut.Initialize("some-container-handle", net.ParseIP("5.6.7.8"), nil)
 				Expect(err).To(MatchError("creating chain: potata"))
 			})
 		})
@@ -183,7 +182,7 @@ var _ = Describe("Netout", func() {
 				chainNamer.PostfixReturns("", errors.New("banana"))
 			})
 			It("returns the error", func() {
-				err := netOut.Initialize("some-container-handle", net.ParseIP("5.6.7.8"), "9.9.0.0/16", nil)
+				err := netOut.Initialize("some-container-handle", net.ParseIP("5.6.7.8"), nil)
 				Expect(err).To(MatchError("getting chain name: banana"))
 			})
 		})
@@ -193,7 +192,7 @@ var _ = Describe("Netout", func() {
 				ipTables.BulkInsertReturns(errors.New("potato"))
 			})
 			It("returns the error", func() {
-				err := netOut.Initialize("some-container-handle", net.ParseIP("5.6.7.8"), "9.9.0.0/16", nil)
+				err := netOut.Initialize("some-container-handle", net.ParseIP("5.6.7.8"), nil)
 				Expect(err).To(MatchError("inserting rule: potato"))
 			})
 		})
@@ -203,7 +202,7 @@ var _ = Describe("Netout", func() {
 				ipTables.BulkAppendReturns(errors.New("potato"))
 			})
 			It("returns the error", func() {
-				err := netOut.Initialize("some-container-handle", net.ParseIP("5.6.7.8"), "9.9.0.0/16", nil)
+				err := netOut.Initialize("some-container-handle", net.ParseIP("5.6.7.8"), nil)
 				Expect(err).To(MatchError("appending rule: potato"))
 			})
 		})
@@ -213,7 +212,7 @@ var _ = Describe("Netout", func() {
 				netOut.ASGLogging = true
 			})
 			It("writes a log rule for denies", func() {
-				err := netOut.Initialize("some-container-handle", net.ParseIP("5.6.7.8"), "9.9.0.0/16", nil)
+				err := netOut.Initialize("some-container-handle", net.ParseIP("5.6.7.8"), nil)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(ipTables.BulkAppendCallCount()).To(Equal(4))
@@ -226,11 +225,11 @@ var _ = Describe("Netout", func() {
 						"-m", "state", "--state", "RELATED,ESTABLISHED",
 						"--jump", "ACCEPT"},
 					{"-s", "5.6.7.8",
-						"!", "-d", "9.9.0.0/16",
+						"!", "-o", "vtep-name",
 						"-m", "limit", "--limit", "2/min",
 						"--jump", "LOG", "--log-prefix", "DENY_some-container-handle"},
 					{"-s", "5.6.7.8",
-						"!", "-d", "9.9.0.0/16",
+						"!", "-o", "vtep-name",
 						"--jump", "REJECT",
 						"--reject-with", "icmp-port-unreachable"},
 				}))
@@ -242,7 +241,7 @@ var _ = Describe("Netout", func() {
 				netOut.C2CLogging = true
 			})
 			It("writes a log rule for denies", func() {
-				err := netOut.Initialize("some-container-handle", net.ParseIP("5.6.7.8"), "9.9.0.0/16", nil)
+				err := netOut.Initialize("some-container-handle", net.ParseIP("5.6.7.8"), nil)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(ipTables.BulkAppendCallCount()).To(Equal(4))
@@ -261,12 +260,10 @@ var _ = Describe("Netout", func() {
 					{"-d", "5.6.7.8",
 						"-m", "mark", "--mark", "0xFEEDBEEF",
 						"--jump", "ACCEPT"},
-					{"-s", "9.9.0.0/16",
-						"-d", "5.6.7.8",
+					{"-d", "5.6.7.8",
 						"-m", "limit", "--limit", "2/min",
 						"--jump", "LOG", "--log-prefix", "DENY_C2C_some-container-handle"},
-					{"-s", "9.9.0.0/16",
-						"-d", "5.6.7.8",
+					{"-d", "5.6.7.8",
 						"--jump", "REJECT",
 						"--reject-with", "icmp-port-unreachable"},
 				}))
@@ -275,7 +272,7 @@ var _ = Describe("Netout", func() {
 
 		Context("when dns servers are specified", func() {
 			It("creates rules for the dns servers", func() {
-				err := netOut.Initialize("some-container-handle", net.ParseIP("5.6.7.8"), "9.9.0.0/16", []string{"8.8.4.4", "1.2.3.4"})
+				err := netOut.Initialize("some-container-handle", net.ParseIP("5.6.7.8"), []string{"8.8.4.4", "1.2.3.4"})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(ipTables.BulkAppendCallCount()).To(Equal(4))
 

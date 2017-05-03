@@ -78,7 +78,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 		IngressTag: n.IngressTag,
 		VTEPName:   n.VTEPName,
 	}
-	if err := netOutProvider.Initialize(args.ContainerID, containerIP, n.OverlayNetwork, localDNSServers); err != nil {
+	if err := netOutProvider.Initialize(args.ContainerID, containerIP, localDNSServers); err != nil {
 		return fmt.Errorf("initialize net out: %s", err)
 	}
 
@@ -119,7 +119,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 		return fmt.Errorf("bulk insert: %s", err) // not tested
 	}
 
-	err = pluginController.AddIPMasq(containerIP.String(), n.OverlayNetwork)
+	err = pluginController.AddIPMasq(containerIP.String(), n.VTEPName)
 	if err != nil {
 		return fmt.Errorf("error setting up default ip masq rule: %s", err)
 	}
@@ -142,7 +142,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 		storeErr := fmt.Errorf("store add: %s", err)
 		fmt.Fprintf(os.Stderr, "%s", storeErr)
 		fmt.Fprintf(os.Stderr, "cleaning up from error")
-		err = pluginController.DelIPMasq(containerIP.String(), n.OverlayNetwork)
+		err = pluginController.DelIPMasq(containerIP.String(), n.VTEPName)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "during cleanup: removing IP masq: %s", err)
 		}
@@ -205,7 +205,7 @@ func cmdDel(args *skel.CmdArgs) error {
 		fmt.Fprintf(os.Stderr, "net out cleanup: %s", err)
 	}
 
-	err = pluginController.DelIPMasq(container.IP, n.OverlayNetwork)
+	err = pluginController.DelIPMasq(container.IP, n.VTEPName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "removing IP masq: %s", err)
 	}

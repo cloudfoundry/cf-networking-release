@@ -14,10 +14,6 @@ properties:
     description: "Disable container to container networking."
     default: false
 
-  cf_networking.network:
-    description: "CIDR address block for overlay network.  Subnets for each diego cell are allocated out of this network."
-    default: "10.255.0.0/16"
-
   cf_networking.mtu:
     description: "Pre-encapsulation MTU for containers.  If set, the network interface inside the container will have an MTU that is 50 bytes less than this value, in order to account for VXLAN encap overhead.  If zero, MTU will be automatically configured to account for the VXLAN encapsulation, but it may not account for additional network encapsulations, e.g. IPSec."
     default: 0

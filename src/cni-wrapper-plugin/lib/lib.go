@@ -19,7 +19,6 @@ type RuntimeConfig struct {
 type WrapperConfig struct {
 	Datastore          string                 `json:"datastore"`
 	IPTablesLockFile   string                 `json:"iptables_lock_file"`
-	OverlayNetwork     string                 `json:"overlay_network"`
 	Delegate           map[string]interface{} `json:"delegate"`
 	HealthCheckURL     string                 `json:"health_check_url"`
 	InstanceAddress    string                 `json:"instance_address"`
@@ -43,10 +42,6 @@ func LoadWrapperConfig(bytes []byte) (*WrapperConfig, error) {
 
 	if n.IPTablesLockFile == "" {
 		return nil, fmt.Errorf("missing iptables lock file path")
-	}
-
-	if n.OverlayNetwork == "" {
-		return nil, fmt.Errorf("missing overlay network")
 	}
 
 	if n.HealthCheckURL == "" {
@@ -109,8 +104,8 @@ func (c *PluginController) DelegateDel(netconf map[string]interface{}) error {
 	return c.Delegator.DelegateDel(delegateType, netconfBytes)
 }
 
-func (c *PluginController) AddIPMasq(ip, overlayNetwork string) error {
-	rule := rules.NewDefaultEgressRule(ip, overlayNetwork)
+func (c *PluginController) AddIPMasq(ip, deviceName string) error {
+	rule := rules.NewDefaultEgressRule(ip, deviceName)
 
 	if err := c.IPTables.BulkAppend("nat", "POSTROUTING", rule); err != nil {
 		return err
@@ -119,8 +114,8 @@ func (c *PluginController) AddIPMasq(ip, overlayNetwork string) error {
 	return nil
 }
 
-func (c *PluginController) DelIPMasq(ip, overlayNetwork string) error {
-	rule := rules.NewDefaultEgressRule(ip, overlayNetwork)
+func (c *PluginController) DelIPMasq(ip, deviceName string) error {
+	rule := rules.NewDefaultEgressRule(ip, deviceName)
 
 	if err := c.IPTables.Delete("nat", "POSTROUTING", rule); err != nil {
 		return err
