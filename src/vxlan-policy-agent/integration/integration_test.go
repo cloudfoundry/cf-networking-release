@@ -56,7 +56,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		"handle":"some-handle",
 		"ip":"10.255.100.21",
 		"metadata": {
-			"policy_group_id":"some-app-guid"
+			"policy_group_id":"some-very-very-long-app-guid"
 		}
 	}
 }
@@ -161,12 +161,12 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		})
 
 		It("writes the mark rule and enforces policies", func() {
-			Eventually(iptablesFilterRules, "4s", "1s").Should(ContainSubstring(`-s 10.255.100.21/32 -m comment --comment "src:some-app-guid" -j MARK --set-xmark 0xa/0xffffffff`))
-			Expect(iptablesFilterRules()).To(ContainSubstring(`-d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m comment --comment "src:another-app-guid_dst:some-app-guid" -j ACCEPT`))
+			Eventually(iptablesFilterRules, "4s", "1s").Should(ContainSubstring(`-s 10.255.100.21/32 -m comment --comment "src:some-very-very-long-app-guid" -j MARK --set-xmark 0xa/0xffffffff`))
+			Expect(iptablesFilterRules()).To(ContainSubstring(`-d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m comment --comment "src:another-app-guid_dst:some-very-very-long-app-guid" -j ACCEPT`))
 		})
 
 		It("writes only one mark rule for a single container", func() {
-			Eventually(iptablesFilterRules, "4s", "1s").Should(ContainSubstring(`-s 10.255.100.21/32 -m comment --comment "src:some-app-guid" -j MARK --set-xmark 0xa/0xffffffff`))
+			Eventually(iptablesFilterRules, "4s", "1s").Should(ContainSubstring(`-s 10.255.100.21/32 -m comment --comment "src:some-very-very-long-app-guid" -j MARK --set-xmark 0xa/0xffffffff`))
 			Expect(iptablesFilterRules()).NotTo(MatchRegexp(`.*--set-xmark.*\n.*--set-xmark.*`))
 		})
 
@@ -206,14 +206,14 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		})
 
 		It("does not write the mark rule or enforces policies", func() {
-			Expect(iptablesFilterRules()).NotTo(ContainSubstring(`-s 10.255.100.21/32 -m comment --comment "src:some-app-guid" -j MARK --set-xmark 0xa/0xffffffff`))
-			Expect(iptablesFilterRules()).NotTo(ContainSubstring(`-d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m comment --comment "src:another-app-guid_dst:some-app-guid" -j ACCEPT`))
+			Expect(iptablesFilterRules()).NotTo(ContainSubstring(`-s 10.255.100.21/32 -m comment --comment "src:some-very-very-long-app-guid" -j MARK --set-xmark 0xa/0xffffffff`))
+			Expect(iptablesFilterRules()).NotTo(ContainSubstring(`-d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m comment --comment "src:another-app-guid_dst:some-very-very-long-app-guid" -j ACCEPT`))
 		})
 
 		It("writes the mark rule or enforces policies when the policy server becomes available again", func() {
 			mockPolicyServer = startServer(serverListenAddr, serverTLSConfig)
-			Eventually(iptablesFilterRules, "10s", "1s").Should(ContainSubstring(`-s 10.255.100.21/32 -m comment --comment "src:some-app-guid" -j MARK --set-xmark 0xa/0xffffffff`))
-			Expect(iptablesFilterRules()).To(ContainSubstring(`-d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m comment --comment "src:another-app-guid_dst:some-app-guid" -j ACCEPT`))
+			Eventually(iptablesFilterRules, "10s", "1s").Should(ContainSubstring(`-s 10.255.100.21/32 -m comment --comment "src:some-very-very-long-app-guid" -j MARK --set-xmark 0xa/0xffffffff`))
+			Expect(iptablesFilterRules()).To(ContainSubstring(`-d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m comment --comment "src:another-app-guid_dst:some-very-very-long-app-guid" -j ACCEPT`))
 		})
 	})
 
@@ -336,12 +336,12 @@ func startServer(serverListenAddr string, tlsConfig *tls.Config) ifrit.Process {
 		if r.URL.Path == "/networking/v0/internal/policies" {
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte(`{"policies": [
-				{"source": {"id":"some-app-guid", "tag":"A"},
+				{"source": {"id":"some-very-very-long-app-guid", "tag":"A"},
 				"destination": {"id": "some-other-app-guid", "tag":"B", "protocol":"tcp", "port":3333}},
-				{"source": {"id":"some-app-guid", "tag":"A"},
+				{"source": {"id":"some-very-very-long-app-guid", "tag":"A"},
 				"destination": {"id": "some-other-app-guid", "tag":"B", "protocol":"tcp", "port":3334}},
 				{"source": {"id":"another-app-guid", "tag":"C"},
-				"destination": {"id": "some-app-guid", "tag":"A", "protocol":"tcp", "port":9999}}
+				"destination": {"id": "some-very-very-long-app-guid", "tag":"A", "protocol":"tcp", "port":9999}}
 					]}`))
 			return
 		}
@@ -378,8 +378,8 @@ const (
 func PolicyRulesRegexp(loggingEnabled bool) string {
 	policyRules := ""
 	if loggingEnabled {
-		policyRules += `.*-A vpa--[0-9]+ -d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m limit --limit 2/min -j LOG --log-prefix OK_C_some-app-guid\n`
+		policyRules += `.*-A vpa--[0-9]+ -d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m limit --limit 2/min -j LOG --log-prefix "OK_C_some-very-very-long-app "\n`
 	}
-	policyRules += `.*-A vpa--[0-9]+ -d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m comment --comment "src:another-app-guid_dst:some-app-guid" -j ACCEPT`
+	policyRules += `.*-A vpa--[0-9]+ -d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m comment --comment "src:another-app-guid_dst:some-very-very-long-app-guid" -j ACCEPT`
 	return policyRules
 }

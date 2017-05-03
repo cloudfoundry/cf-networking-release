@@ -72,7 +72,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 		iptablesSession, err := gexec.Start(exec.Command("iptables", "-w", "-S", "-t", tableName), GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(iptablesSession).Should(gexec.Exit(0))
-		return strings.Split(strings.TrimSpace(string(iptablesSession.Out.Contents())), "\n")
+		return strings.Split(string(iptablesSession.Out.Contents()), "\n")
 	}
 
 	GetInput := func(i InputStruct) string {
@@ -574,7 +574,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 						"-A " + overlayChainName + " -s 1.2.3.4/32 -o some-device -m mark ! --mark 0x0 -j ACCEPT",
 						"-A " + overlayChainName + " -d 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j ACCEPT",
 						"-A " + overlayChainName + " -d 1.2.3.4/32 -m mark --mark 0xffff0000 -j ACCEPT",
-						"-A " + overlayChainName + " -d 1.2.3.4/32 -m limit --limit 2/min -j LOG --log-prefix DENY_C2C_" + containerID[:20],
+						"-A " + overlayChainName + ` -d 1.2.3.4/32 -m limit --limit 2/min -j LOG --log-prefix "DENY_C2C_` + containerID[:19] + ` "`,
 						"-A " + overlayChainName + " -d 1.2.3.4/32 -j REJECT --reject-with icmp-port-unreachable",
 					}))
 				})
@@ -597,11 +597,11 @@ var _ = Describe("CniWrapperPlugin", func() {
 					Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 1.2.3.4/32 -p tcp -m iprange --dst-range 8.8.8.8-9.9.9.9 -m tcp --dport 53:54 -g ` + netoutLoggingChainName))
 
 					By("checking that it writes the logging rules")
-					Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutLoggingChainName + ` -p tcp -m conntrack --ctstate INVALID,NEW,UNTRACKED -j LOG --log-prefix OK_` + containerID[:26]))
+					Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutLoggingChainName + ` -p tcp -m conntrack --ctstate INVALID,NEW,UNTRACKED -j LOG --log-prefix "OK_` + containerID[:25] + ` "`))
 				})
 
 				It("always writes a rate limited default deny log rule", func() {
-					expectedDenyLogRule := "-A netout--some-container-id-th -s 1.2.3.4/32 ! -o some-device -m limit --limit 2/min -j LOG --log-prefix DENY_" + containerID[:24]
+					expectedDenyLogRule := `-A netout--some-container-id-th -s 1.2.3.4/32 ! -o some-device -m limit --limit 2/min -j LOG --log-prefix "DENY_` + containerID[:23] + ` "`
 
 					By("by starting the CNI plugin")
 					cmd = cniCommand("ADD", input)
@@ -634,7 +634,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 					Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -s 1.2.3.4/32 -p tcp -m iprange --dst-range 8.8.8.8-9.9.9.9 -m tcp --dport 53:54 -g ` + netoutLoggingChainName))
 
 					By("checking that it writes the logging rules")
-					Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutLoggingChainName + ` -p tcp -m conntrack --ctstate INVALID,NEW,UNTRACKED -j LOG --log-prefix OK_` + containerID[:26]))
+					Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutLoggingChainName + ` -p tcp -m conntrack --ctstate INVALID,NEW,UNTRACKED -j LOG --log-prefix "OK_` + containerID[:25] + ` "`))
 				})
 			})
 		})

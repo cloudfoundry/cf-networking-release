@@ -51,7 +51,7 @@ func NewMarkLogRule(destinationIP, protocol string, port int, tag string, destin
 		"-m", "mark", "--mark", fmt.Sprintf("0x%s", tag),
 		"-m", "limit", "--limit", "2/min",
 		"--jump", "LOG", "--log-prefix",
-		fmt.Sprintf(`"OK_%s_%s"`, tag, destinationAppGUID)}
+		trimAndPad(fmt.Sprintf("OK_%s_%s", tag, destinationAppGUID))}
 }
 
 func NewMarkSetRule(sourceIP, tag, appGUID string) IPTablesRule {
@@ -73,7 +73,7 @@ func NewLogRule(rule IPTablesRule, name string) IPTablesRule {
 	return IPTablesRule(append(
 		rule, "-m", "limit", "--limit", "2/min",
 		"--jump", "LOG",
-		"--log-prefix", name,
+		"--log-prefix", trimAndPad(name),
 	))
 }
 
@@ -194,7 +194,7 @@ func NewNetOutDefaultLogRule(prefix string) IPTablesRule {
 	return IPTablesRule{
 		"-p", "tcp",
 		"-m", "conntrack", "--ctstate", "INVALID,NEW,UNTRACKED",
-		"-j", "LOG", "--log-prefix", fmt.Sprintf("OK_%s", prefix),
+		"-j", "LOG", "--log-prefix", trimAndPad(fmt.Sprintf("OK_%s", prefix)),
 	}
 }
 
@@ -258,7 +258,7 @@ func NewOverlayDefaultRejectLogRule(containerHandle, containerIP string) IPTable
 		"-d", containerIP,
 		"-m", "limit", "--limit", "2/min",
 		"--jump", "LOG",
-		"--log-prefix", fmt.Sprintf("DENY_C2C_%s", containerHandle),
+		"--log-prefix", trimAndPad(fmt.Sprintf("DENY_C2C_%s", containerHandle)),
 	}
 }
 
@@ -285,7 +285,7 @@ func NewNetOutDefaultRejectLogRule(containerHandle, subnet, deviceName string) I
 		"!", "-o", deviceName,
 		"-m", "limit", "--limit", "2/min",
 		"--jump", "LOG",
-		"--log-prefix", fmt.Sprintf("DENY_%s", containerHandle),
+		"--log-prefix", trimAndPad(fmt.Sprintf("DENY_%s", containerHandle)),
 	}
 }
 
@@ -296,4 +296,11 @@ func NewNetOutDefaultRejectRule(subnet, deviceName string) IPTablesRule {
 		"--jump", "REJECT",
 		"--reject-with", "icmp-port-unreachable",
 	}
+}
+
+func trimAndPad(name string) string {
+	if len(name) > 28 {
+		name = name[:28]
+	}
+	return fmt.Sprintf(`"%s "`, name)
 }

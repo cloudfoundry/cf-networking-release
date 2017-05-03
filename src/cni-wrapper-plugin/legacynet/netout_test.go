@@ -157,7 +157,7 @@ var _ = Describe("Netout", func() {
 			Expect(rulespec).To(Equal([]rules.IPTablesRule{
 				{"-p", "tcp",
 					"-m", "conntrack", "--ctstate", "INVALID,NEW,UNTRACKED",
-					"-j", "LOG", "--log-prefix", "OK_some-container-handle"},
+					"-j", "LOG", "--log-prefix", `"OK_some-container-handle "`},
 				{"--jump", "ACCEPT"},
 			}))
 		})
@@ -227,7 +227,7 @@ var _ = Describe("Netout", func() {
 					{"-s", "5.6.7.8",
 						"!", "-o", "vtep-name",
 						"-m", "limit", "--limit", "2/min",
-						"--jump", "LOG", "--log-prefix", "DENY_some-container-handle"},
+						"--jump", "LOG", "--log-prefix", `"DENY_some-container-handle "`},
 					{"-s", "5.6.7.8",
 						"!", "-o", "vtep-name",
 						"--jump", "REJECT",
@@ -262,7 +262,7 @@ var _ = Describe("Netout", func() {
 						"--jump", "ACCEPT"},
 					{"-d", "5.6.7.8",
 						"-m", "limit", "--limit", "2/min",
-						"--jump", "LOG", "--log-prefix", "DENY_C2C_some-container-handle"},
+						"--jump", "LOG", "--log-prefix", `"DENY_C2C_some-container-hand "`},
 					{"-d", "5.6.7.8",
 						"--jump", "REJECT",
 						"--reject-with", "icmp-port-unreachable"},
