@@ -11,7 +11,6 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
-	"time"
 	"vxlan-policy-agent/config"
 
 	"code.cloudfoundry.org/go-db-helpers/mutualtls"
@@ -67,17 +66,18 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		datastorePath = containerMetadataFile.Name()
 
 		conf = config.VxlanPolicyAgent{
-			PollInterval:     1,
-			PolicyServerURL:  fmt.Sprintf("https://%s", serverListenAddr),
-			Datastore:        datastorePath,
-			VNI:              42,
-			MetronAddress:    fakeMetron.Address(),
-			ServerCACertFile: paths.ServerCACertFile,
-			ClientCertFile:   paths.ClientCertFile,
-			ClientKeyFile:    paths.ClientKeyFile,
-			IPTablesLockFile: GlobalIPTablesLockFile,
-			DebugServerHost:  "127.0.0.1",
-			DebugServerPort:  22222 + GinkgoParallelNode(),
+			PollInterval:         1,
+			PolicyServerURL:      fmt.Sprintf("https://%s", serverListenAddr),
+			Datastore:            datastorePath,
+			VNI:                  42,
+			MetronAddress:        fakeMetron.Address(),
+			ServerCACertFile:     paths.ServerCACertFile,
+			ClientCertFile:       paths.ClientCertFile,
+			ClientKeyFile:        paths.ClientKeyFile,
+			IPTablesLockFile:     GlobalIPTablesLockFile,
+			DebugServerHost:      "127.0.0.1",
+			DebugServerPort:      22222 + GinkgoParallelNode(),
+			ClientTimeoutSeconds: 5,
 		}
 		Expect(conf.Validate()).To(Succeed())
 		configFilePath = WriteConfigFile(conf)
@@ -220,16 +220,17 @@ var _ = Describe("VXLAN Policy Agent", func() {
 	Context("when vxlan policy agent has invalid certs", func() {
 		BeforeEach(func() {
 			conf = config.VxlanPolicyAgent{
-				Datastore:        datastorePath,
-				PollInterval:     1,
-				PolicyServerURL:  "",
-				VNI:              42,
-				MetronAddress:    fakeMetron.Address(),
-				ServerCACertFile: paths.ServerCACertFile,
-				ClientCertFile:   "totally",
-				ClientKeyFile:    "not-cool",
-				DebugServerHost:  "127.0.0.1",
-				DebugServerPort:  22222 + GinkgoParallelNode(),
+				Datastore:            datastorePath,
+				PollInterval:         1,
+				PolicyServerURL:      "",
+				VNI:                  42,
+				MetronAddress:        fakeMetron.Address(),
+				ServerCACertFile:     paths.ServerCACertFile,
+				ClientCertFile:       "totally",
+				ClientKeyFile:        "not-cool",
+				DebugServerHost:      "127.0.0.1",
+				DebugServerPort:      22222 + GinkgoParallelNode(),
+				ClientTimeoutSeconds: 5,
 			}
 			configFilePath = WriteConfigFile(conf)
 		})
@@ -243,6 +244,8 @@ var _ = Describe("VXLAN Policy Agent", func() {
 
 	Context("when requests to the policy server time out", func() {
 		BeforeEach(func() {
+			conf.ClientTimeoutSeconds = 1
+			configFilePath = WriteConfigFile(conf)
 			mustSucceed("iptables", "-A", "INPUT", "-p", "tcp", "--dport", strconv.Itoa(serverListenPort), "-j", "DROP")
 		})
 
@@ -252,7 +255,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 
 		It("times out requests", func() {
 			session = startAgent(paths.VxlanPolicyAgentPath, configFilePath)
-			Eventually(session.Out.Contents, 10*time.Second).Should(MatchRegexp("vxlan-policy-agent.poll-cycle.*request canceled while waiting for connection.*Client.Timeout exceeded"))
+			Eventually(session.Out.Contents, "3s").Should(MatchRegexp("vxlan-policy-agent.poll-cycle.*request canceled while waiting for connection.*Client.Timeout exceeded"))
 			session.Kill()
 		})
 	})
@@ -260,18 +263,19 @@ var _ = Describe("VXLAN Policy Agent", func() {
 	Context("when vxlan policy agent is deployed with iptables logging enabled", func() {
 		BeforeEach(func() {
 			conf = config.VxlanPolicyAgent{
-				PollInterval:     1,
-				PolicyServerURL:  fmt.Sprintf("https://%s", serverListenAddr),
-				Datastore:        datastorePath,
-				VNI:              42,
-				MetronAddress:    fakeMetron.Address(),
-				ServerCACertFile: paths.ServerCACertFile,
-				ClientCertFile:   paths.ClientCertFile,
-				ClientKeyFile:    paths.ClientKeyFile,
-				IPTablesLockFile: GlobalIPTablesLockFile,
-				DebugServerHost:  "127.0.0.1",
-				DebugServerPort:  22222 + GinkgoParallelNode(),
-				IPTablesLogging:  true,
+				PollInterval:         1,
+				PolicyServerURL:      fmt.Sprintf("https://%s", serverListenAddr),
+				Datastore:            datastorePath,
+				VNI:                  42,
+				MetronAddress:        fakeMetron.Address(),
+				ServerCACertFile:     paths.ServerCACertFile,
+				ClientCertFile:       paths.ClientCertFile,
+				ClientKeyFile:        paths.ClientKeyFile,
+				IPTablesLockFile:     GlobalIPTablesLockFile,
+				DebugServerHost:      "127.0.0.1",
+				DebugServerPort:      22222 + GinkgoParallelNode(),
+				IPTablesLogging:      true,
+				ClientTimeoutSeconds: 5,
 			}
 			Expect(conf.Validate()).To(Succeed())
 			configFilePath = WriteConfigFile(conf)

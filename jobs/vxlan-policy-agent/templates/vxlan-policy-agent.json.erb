@@ -3,25 +3,24 @@
     require 'json'
 
     toRender = {
-      "cni_datastore_path" => "/var/vcap/data/container-metadata/store.json",
-      "iptables_lock_file" => "/var/vcap/data/garden-cni/iptables.lock",
-
-      "policy_server_url" => "https://#{p("cf_networking.policy_server.hostname")}:#{p("cf_networking.policy_server.internal_listen_port")}",
-      "poll_interval" => p("cf_networking.policy_poll_interval_seconds"),
-      "vni" => 1,
-
-      "metron_address" => "127.0.0.1:#{p("cf_networking.vxlan_policy_agent.metron_port")}",
-
-      "debug_server_host" => "127.0.0.1",
-      "debug_server_port" => p("cf_networking.vxlan_policy_agent.debug_server_port"),
-
       "log_level" => p("cf_networking.vxlan_policy_agent.log_level"),
       "iptables_c2c_logging" => p("cf_networking.iptables_logging"),
+      "poll_interval" => p("cf_networking.policy_poll_interval_seconds"),
+
+      "policy_server_url" => "https://#{p("cf_networking.policy_server.hostname")}:#{p("cf_networking.policy_server.internal_listen_port")}",
+      "metron_address" => "127.0.0.1:#{p("cf_networking.vxlan_policy_agent.metron_port")}",
+      "debug_server_port" => p("cf_networking.vxlan_policy_agent.debug_server_port"),
 
       # hard-coded values, not exposed as bosh spec properties
       "ca_cert_file" => "/var/vcap/jobs/vxlan-policy-agent/config/certs/ca.crt",
       "client_cert_file" => "/var/vcap/jobs/vxlan-policy-agent/config/certs/client.crt",
       "client_key_file" => "/var/vcap/jobs/vxlan-policy-agent/config/certs/client.key",
+
+      "cni_datastore_path" => "/var/vcap/data/container-metadata/store.json",
+      "iptables_lock_file" => "/var/vcap/data/garden-cni/iptables.lock",
+      "debug_server_host" => "127.0.0.1",
+      "client_timeout_seconds" => 5,
+      "vni" => 1,
     }
 
     JSON.pretty_generate(toRender)
