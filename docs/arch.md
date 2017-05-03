@@ -18,8 +18,8 @@ It has several components.  Some are "core" to the platform, others are "swappab
 
 ### Batteries included, but swappable
 On every Diego cell
-- [Flannel](https://github.com/coreos/flannel) [CNI plugin](https://github.com/containernetworking/cni/tree/master/plugins/meta/flannel), provides IP address management and network connectivity to app instances (containers)
-  - Uses the flannel [VXLAN backend](https://github.com/coreos/flannel/tree/master/backend/vxlan)
+- [Silk](https://github.com/cloudfoundry-incubator/silk), provides IP address management and network connectivity to app instances (containers)
+  - Uses a [VXLAN overlay](data_plane.png) for sending traffic between cells
   - Every CF app instance gets a unique IP on a shared, flat L3 network
 - VXLAN Policy Agent enforces network policy for network traffic between applications
   - Discovers desired network policies from the [Policy Server's Internal API](3rd-party.md#policy-server-internal-api)

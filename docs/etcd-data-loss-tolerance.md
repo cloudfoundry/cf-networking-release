@@ -1,5 +1,7 @@
 # CF Networking tolerance to etcd data loss
 
+**Note:** This document only applies to cf-networking-deployments that use flannel.
+
 CF Networking's batteries included CNI plugin uses flannel, which in turn
 stores all the state for which cell has a given subnet in etcd.
 

@@ -47,12 +47,12 @@ NOTE: If you are having problems, first consult our [known issues doc](known-iss
 
   Example of a rejected connection:
   ```
-  Jan 23 23:15:14 localhost kernel: [856287.885695] REJECT_REMOTE:IN=flannel.1 OUT=cni-flannel0 MAC=f6:c9:e6:4e:23:5c:b6:76:98:0e:64:0c:08:00 SRC=10.255.69.132 DST=10.255.31.137 LEN=60 TOS=0x00 PREC=0x00 TTL=62 ID=8033 DF PROTO=TCP SPT=33254 DPT=7000 WINDOW=26733 RES=0x00 SYN URGP=0
+  May  3 23:34:07 localhost kernel: [87921.493829] DENY_C2C_cb40f81e-52ce-41c5- IN=s-010255015007 OUT=s-010255015013 MAC=aa:aa:0a:ff:0f:07:ee:ee:0a:ff:0f:07:08:00 SRC=10.255.15.7 DST=10.255.15.13 LEN=60 TOS=0x00 PREC=0x00 TTL=63 ID=35889 DF PROTO=TCP SPT=36004 DPT=723 WINDOW=29200 RES=0x00 SYN URGP=0 MARK=0x2
   ```
 
   Example of an accepted connection, note that the prefix `OK_0003` indicates the packet with tag 3 was accepted:
   ```
-  Jan 23 23:15:38 localhost kernel: [856311.500733] OK_0003_9edc60d3-6cc8-4dc4-82IN=flannel.1 OUT=cni-flannel0 MAC=f6:c9:e6:4e:23:5c:b6:76:98:0e:64:0c:08:00 SRC=10.255.69.132 DST=10.255.31.137 LEN=60 TOS=0x00 PREC=0x00 TTL=62 ID=9292 DF PROTO=TCP SPT=37042 DPT=8080 WINDOW=26733 RES=0x00 SYN URGP=0 MARK=0x3
+  May  3 23:35:07 localhost kernel: [87981.320056] OK_0002_e9e8959f-3828-4136-8 IN=s-010255015007 OUT=s-010255015013 MAC=aa:aa:0a:ff:0f:07:ee:ee:0a:ff:0f:07:08:00 SRC=10.255.15.7 DST=10.255.15.13 LEN=52 TOS=0x00 PREC=0x00 TTL=63 ID=43997 DF PROTO=TCP SPT=60012 DPT=8080 WINDOW=237 RES=0x00 ACK URGP=0 MARK=0x2
   ```
 
 ### Enabling IPTables Logging for ASG Traffic
@@ -66,12 +66,12 @@ NOTE: If you are having problems, first consult our [known issues doc](known-iss
   Example of a rejected connection, note that the prefix `DENY_b6de7d0c-4792-4614-5e51-` indicates that an app instance with instance guid starting with `b6de7d0c-4792-4614-5e51-` was not able to connect to `10.0.16.8`:
 
   ```
-  Mar 15 23:47:36 localhost kernel: [432140.181155] DENY_b6de7d0c-4792-4614-5e51-IN=cni-flannel0 OUT=eth0 PHYSIN=veth2938968a MAC=0a:58:0a:ff:45:01:0a:58:0a:ff:45:30:08:00 SRC=10.255.69.48 DST=10.0.16.8 LEN=60 TOS=0x00 PREC=0x00 TTL=63 ID=8874 DF PROTO=TCP SPT=55198 DPT=80 WINDOW=27400 RES=0x00 SYN URGP=0 MARK=0x1
+  May  3 23:35:58 localhost kernel: [88032.025828] DENY_d538d169-f2f6-4587-77b1 IN=s-010255015007 OUT=eth0 MAC=aa:aa:0a:ff:0f:07:ee:ee:0a:ff:0f:07:08:00 SRC=10.255.15.7 DST=10.10.10.1 LEN=60 TOS=0x00 PREC=0x00 TTL=63 ID=61375 DF PROTO=TCP SPT=49466 DPT=80 WINDOW=29200 RES=0x00 SYN URGP=0 MARK=0x2
   ```
 
   Example of an accepted connection, note that the prefix `OK_b6de7d0c-4792-4614-5e51-4c` indicates that an app instance with an instance guid starting with `b6de7d0c-4792-4614-5e51-4c` was able to connect to `93.184.216.34`:
   ```
-  Mar 15 23:54:00 localhost kernel: [432524.231478] OK_b6de7d0c-4792-4614-5e51-4cIN=cni-flannel0 OUT=eth0 PHYSIN=veth2938968a MAC=0a:58:0a:ff:45:01:0a:58:0a:ff:45:30:08:00 SRC=10.255.69.48 DST=93.184.216.34 LEN=60 TOS=0x00 PREC=0x00 TTL=63 ID=20981 DF PROTO=TCP SPT=34814 DPT=80 WINDOW=27400 RES=0x00 SYN URGP=0 MARK=0x1
+  May  3 23:35:35 localhost kernel: [88008.920287] OK_d538d169-f2f6-4587-77b1-f IN=s-010255015007 OUT=eth0 MAC=aa:aa:0a:ff:0f:07:ee:ee:0a:ff:0f:07:08:00 SRC=10.255.15.7 DST=173.194.210.139 LEN=60 TOS=0x00 PREC=0x00 TTL=63 ID=45400 DF PROTO=TCP SPT=35236 DPT=80 WINDOW=29200 RES=0x00 SYN URGP=0 MARK=0x2
   ```
 
 ### Metrics
@@ -94,18 +94,16 @@ NOTE: If you are having problems, first consult our [known issues doc](known-iss
   ```
   ip link
   ```
-  For the example output of this command below, interface is `wb39c9irmlhj-1`.
+  For the example output of this command below, interface is `eth0`.
   ```
   1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1
-    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
-  2: flannel.1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue state UNKNOWN mode DEFAULT group default
-    link/ether 32:58:f3:e9:3d:04 brd ff:ff:ff:ff:ff:ff
-  3: cni-flannel0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue state UP mode DEFAULT group default qlen 1000
-    link/ether 0a:58:0a:ff:47:01 brd ff:ff:ff:ff:ff:ff
-  7: vethcb647a32@cni-flannel0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1450 qdisc noqueue master cni-flannel0 state UP mode DEFAULT group default
-    link/ether 92:f6:4e:28:1f:e6 brd ff:ff:ff:ff:ff:ff
-  84: wb39c9irmlhj-1@if85: <BROADCAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default qlen 1
-    link/ether d6:14:07:00:22:ac brd ff:ff:ff:ff:ff:ff
+      link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+  2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1460 qdisc mq state UP mode DEFAULT group default qlen 1000
+      link/ether 42:01:0a:00:10:0e brd ff:ff:ff:ff:ff:ff
+  349: silk-vtep: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1410 qdisc noqueue state UNKNOWN mode DEFAULT group default
+      link/ether ee:ee:0a:ff:0f:00 brd ff:ff:ff:ff:ff:ff
+  353: s-010255015002@if352: <BROADCAST,MULTICAST,NOARP,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DEFAULT group default
+      link/ether aa:aa:0a:ff:0f:02 brd ff:ff:ff:ff:ff:ff
   ```
 
   If packet capture is already set up, a packet is distinguished as VXLAN in the packet header.
