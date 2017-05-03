@@ -62,7 +62,7 @@ var schemas = map[string][]string{
 
 //go:generate counterfeiter -o fakes/db.go --fake-name Db . db
 type db interface {
-	Beginx() (*sqlx.Tx, error)
+	BeginTxx(ctx context.Context, opts *sql.TxOptions) (*sqlx.Tx, error)
 	Exec(query string, args ...interface{}) (sql.Result, error)
 	NamedExec(query string, arg interface{}) (sql.Result, error)
 	Get(dest interface{}, query string, args ...interface{}) error
@@ -138,7 +138,7 @@ func rollback(tx Transaction, err error) error {
 }
 
 func (s *store) Create(ctx context.Context, policies []models.Policy) error {
-	tx, err := s.conn.Beginx()
+	tx, err := s.conn.BeginTxx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("begin transaction: %s", err)
 	}
@@ -169,7 +169,7 @@ func (s *store) Create(ctx context.Context, policies []models.Policy) error {
 }
 
 func (s *store) Delete(ctx context.Context, policies []models.Policy) error {
-	tx, err := s.conn.Beginx()
+	tx, err := s.conn.BeginTxx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("begin transaction: %s", err)
 	}

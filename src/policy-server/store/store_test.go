@@ -11,6 +11,7 @@ import (
 	"policy-server/store/fakes"
 	"strings"
 	"sync/atomic"
+	"time"
 
 	"code.cloudfoundry.org/go-db-helpers/db"
 	"code.cloudfoundry.org/go-db-helpers/testsupport"
@@ -336,7 +337,7 @@ var _ = Describe("Store", func() {
 			var err error
 
 			BeforeEach(func() {
-				mockDb.BeginxReturns(nil, errors.New("some-db-error"))
+				mockDb.BeginTxxReturns(nil, errors.New("some-db-error"))
 				dataStore, err = store.New(mockDb, group, destination, policy, 2)
 				Expect(err).NotTo(HaveOccurred())
 			})
@@ -874,11 +875,11 @@ var _ = Describe("Store", func() {
 				Expect(err).NotTo(HaveOccurred())
 			})
 
-			Context("when a transaction create fails", func() {
+			Context("when a transaction begin fails", func() {
 				var err error
 
 				BeforeEach(func() {
-					mockDb.BeginxReturns(nil, errors.New("some-db-error"))
+					mockDb.BeginTxxReturns(nil, errors.New("some-db-error"))
 					dataStore, err = store.New(mockDb, group, destination, policy, 2)
 					Expect(err).NotTo(HaveOccurred())
 				})
@@ -1163,6 +1164,78 @@ var _ = Describe("Store", func() {
 					}})
 					Expect(err).To(MatchError("deleting group row: some-group-delete-error"))
 				})
+			})
+		})
+	})
+
+	Describe("Context cancellation", func() {
+		var (
+			ctx      context.Context
+			cancel   context.CancelFunc
+			tx       *sqlx.Tx
+			policies []models.Policy
+		)
+
+		BeforeEach(func() {
+			var err error
+			dataStore, err = store.New(realDb, group, destination, policy, 1)
+			Expect(err).NotTo(HaveOccurred())
+			policies = []models.Policy{{
+				Source:      models.Source{ID: "a"},
+				Destination: models.Destination{ID: "b", Protocol: "tcp", Port: 8080},
+			}}
+		})
+
+		Context("when the context is already cancelled", func() {
+			BeforeEach(func() {
+				ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+				cancel()
+			})
+
+			It("Create returns an error", func() {
+				err := dataStore.Create(ctx, policies)
+				Expect(err).To(MatchError(ContainSubstring("context canceled")))
+			})
+
+			It("Delete returns an error", func() {
+				err := dataStore.Delete(ctx, policies)
+				Expect(err).To(MatchError(ContainSubstring("context canceled")))
+			})
+		})
+
+		Context("when the context is cancelled after the query is called but before it completes", func() {
+			BeforeEach(func() {
+				dbType := testsupport.GetDBConnectionInfo().Type
+				if dbType == "mysql" {
+					Skip("mysql driver does not yet support Context \n https://github.com/go-sql-driver/mysql/pull/551")
+				}
+				var err error
+				ctx, cancel = context.WithTimeout(context.Background(), 250*time.Millisecond)
+				tx, err = realDb.Beginx()
+				Expect(err).NotTo(HaveOccurred())
+
+				if dbType == "postgres" {
+					_, err = tx.Exec("LOCK table groups")
+					Expect(err).NotTo(HaveOccurred())
+				} else if dbType == "mysql" {
+					_, err = tx.Exec("LOCK tables groups lock_type write")
+					Expect(err).NotTo(HaveOccurred())
+				}
+			})
+
+			AfterEach(func() {
+				err := tx.Rollback()
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("Create returns an error", func() {
+				err := dataStore.Create(ctx, policies)
+				Expect(err).To(MatchError(ContainSubstring("canceling statement due to user request")))
+			})
+
+			It("Delete returns an error", func() {
+				err := dataStore.Delete(ctx, policies)
+				Expect(err).To(MatchError(ContainSubstring("canceling statement due to user request")))
 			})
 		})
 	})
