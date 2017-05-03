@@ -81,6 +81,7 @@ func main() {
 		Transport: &http.Transport{
 			TLSClientConfig: clientTLSConfig,
 		},
+		Timeout: 5 * time.Second,
 	}
 
 	policyClient := policy_client.NewInternal(

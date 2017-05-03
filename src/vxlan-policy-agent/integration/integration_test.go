@@ -9,7 +9,9 @@ import (
 	"netmon/integration/fakes"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
+	"time"
 	"vxlan-policy-agent/config"
 
 	"code.cloudfoundry.org/go-db-helpers/mutualtls"
@@ -33,6 +35,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		configFilePath   string
 		fakeMetron       fakes.FakeMetron
 		mockPolicyServer ifrit.Process
+		serverListenPort int
 		serverListenAddr string
 		serverTLSConfig  *tls.Config
 	)
@@ -44,7 +47,8 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		serverTLSConfig, err = mutualtls.NewServerTLSConfig(paths.ServerCertFile, paths.ServerKeyFile, paths.ClientCACertFile)
 		Expect(err).NotTo(HaveOccurred())
 
-		serverListenAddr = fmt.Sprintf("127.0.0.1:%d", 40000+GinkgoParallelNode())
+		serverListenPort = 40000 + GinkgoParallelNode()
+		serverListenAddr = fmt.Sprintf("127.0.0.1:%d", serverListenPort)
 
 		containerMetadata := `
 {
@@ -237,6 +241,22 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		})
 	})
 
+	Context("when requests to the policy server time out", func() {
+		BeforeEach(func() {
+			mustSucceed("iptables", "-A", "INPUT", "-p", "tcp", "--dport", strconv.Itoa(serverListenPort), "-j", "DROP")
+		})
+
+		AfterEach(func() {
+			mustSucceed("iptables", "-D", "INPUT", "-p", "tcp", "--dport", strconv.Itoa(serverListenPort), "-j", "DROP")
+		})
+
+		It("times out requests", func() {
+			session = startAgent(paths.VxlanPolicyAgentPath, configFilePath)
+			Eventually(session.Out.Contents, 10*time.Second).Should(MatchRegexp("vxlan-policy-agent.poll-cycle.*request canceled while waiting for connection.*Client.Timeout exceeded"))
+			session.Kill()
+		})
+	})
+
 	Context("when vxlan policy agent is deployed with iptables logging enabled", func() {
 		BeforeEach(func() {
 			conf = config.VxlanPolicyAgent{
@@ -279,6 +299,14 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		})
 	})
 })
+
+func mustSucceed(binary string, args ...string) string {
+	cmd := exec.Command(binary, args...)
+	sess, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+	Expect(err).NotTo(HaveOccurred())
+	Eventually(sess, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
+	return string(sess.Out.Contents())
+}
 
 func iptablesFilterRules() string {
 	return runIptablesCommand("filter", "S")
