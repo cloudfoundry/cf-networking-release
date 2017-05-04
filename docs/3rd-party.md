@@ -9,89 +9,139 @@ CNI plugins should automatically detect the MTU settings on the host, and set th
 on container network interfaces appropriately.  For example, if the host MTU is 1500 bytes
 and the plugin encapsulates with 50 bytes of header, the plugin should ensure that the
 container MTU is no greater than 1450 bytes.  This is to ensure there is no fragmentation.
-The built-in flannel CNI plugin does this.
+The built-in silk CNI plugin does this.
 
-## To replace flannel with your own CNI plugin
+Operators may wish to override the MTU setting. In this case they will set the BOSH property `cf_networking.mtu`.
+3rd party plugins should respect this value.
+
+## To author a BOSH release with your plugin
 0. Remove the following BOSH jobs:
-  - `cni-flannel`
+  - `silk-cni`
+  - `silk-daemon`
+  - `silk-controller`
   - `vxlan-policy-agent`
 0. Remove the following BOSH packages:
-  - `flannel`
-  - `flannel-watchdog`
+  - `silk-cni`
+  - `silk-daemon`
+  - `silk-controller`
+  - `vxlan-policy-agent`
 0. Add in all packages and jobs required by your CNI plugin.  At a minimum, you must provide a CNI binary program and a CNI config file.
+   If your software requires a long-lived daemon to run on the diego cell, we recommend you deploy a separate BOSH job for that.
   - For more info on **bosh packaging scripts** read [this](http://bosh.io/docs/packages.html#create-a-packaging-script).
   - For more info on **bosh jobs** read [this](http://bosh.io/docs/jobs.html).
+
+
+## To deploy your BOSH release with Cloud Foundry
 0. Update the [deployment manifest properties](http://bosh.io/docs/deployment-manifest.html#properties)
 
   ```yaml
   properties:
     cf_networking:
-      garden_external_networker:
-        cni_plugin_dir: /var/vcap/packages/YOUR_PACKAGE/bin # directory for CNI binaries
-        cni_config_dir: /var/vcap/jobs/YOUR_JOB/config/cni  # directory for CNI config file(s)
+      cni_plugin_dir: /var/vcap/packages/YOUR_PACKAGE/bin # directory for CNI binaries
+      cni_config_dir: /var/vcap/jobs/YOUR_JOB/config/cni  # directory for CNI config file(s)
   ```
-  Remove any lingering references to `vxlan-policy-agent` in the deployment manifest, and replace the `plugin` properties
+
+  Remove any lingering references to `vxlan-policy-agent` and `silk-*` in the deployment manifest, and replace the `plugin` properties
   with any manifest properties that your bosh job requires.
+
 
 ## What data will my CNI plugin receive?
 The `garden-external-networker` will invoke one or more CNI plugins, according to the [CNI Spec](https://github.com/containernetworking/cni/blob/master/SPEC.md).
-It will start with the CNI config files available in the `cni_config_dir` and also inject
+It will start with the CNI config files available in the `cf_networking.cni_config_dir` and also inject
 some dynamic information about the container. This is divided into two keys the first, `metadata`
 contains the CloudFoundry App, Space and Org that it belongs to. Another key `runtimeConfig` holds information that CNI plugins may need
 to implement legacy networking features of Cloud Foundry. It is divided into two keys, `portMappings` can be translated into port forwarding
 rules to allow the gorouter access to application containers, and `netOutRules` which are egress whitelist rules used for implementing
-application security groups. A reference implementation of these features can be seen in in the [cni-wrapper-plugin](../src/cni-wrapper-plugin).
+application security groups.
 
-For example, in the included networking stack, we have a `wrapper` CNI plugin.
-At deploy time, its config is generated from this [template](../jobs/cni-flannel/templates/30-cni-wrapper-plugin.conf.erb),
-but when the container is being created, the CNI plugin receives network config data as JSON on standard input:
+A reference implementation of these features can be seen in in the [cni-wrapper-plugin](../src/cni-wrapper-plugin).
+
+At deploy time, Silk's CNI config is generated from this [template](../jobs/silk-cni/templates/cni-wrapper-plugin.conf.erb), and
+is stored in a file on disk at `/var/vcap/jobs/silk-cni/config/cni-wrapper-plugin.conf`, which resembles
 
 ```json
 {
-	"name": "cni-wrapper",
-	"type": "cni-wrapper-plugin",
-	"cniVersion": "0.2.0",
-	"datastore": "/var/vcap/data/container-metadata/store.json",
-	"iptables_lock_file": "/var/vcap/data/garden-cni/iptables.lock",
-	"overlay_network": "10.255.0.0/16",
-	"delegate": {
-		"name": "cni-flannel",
-		"type": "flannel",
-		"subnetFile": "/var/vcap/data/flannel/subnet.env",
-		"dataDir": "/var/vcap/data/flannel/data",
-		"delegate": {
-			"bridge": "cni-flannel0",
-			"isDefaultGateway": true,
-			"ipMasq": false
-		}
-	},
-	"runtimeConfig": {
-		"portMappings": [{
-			"host_port": 12345,
-			"container_port": 7000
-		}, {
-			"host_port": 60000,
-			"container_port": 7000
-		}],
-		"netOutRules": [{
-			"protocol": 1,
-			"networks": [{
-				"start": "8.8.8.8",
-				"end": "9.9.9.9"
-			}],
-			"ports": [{
-				"start": 53,
-				"end": 54
-			}],
-			"log": true
-		}],
-		"metadata": {
-			"policy_group_id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
-			"app_id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
-			"space_id": "4246c57d-aefc-49cc-afe0-5f734e2656e8",
-			"org_id": "2ac41bbf-8eae-4f28-abab-51ca38dea3e4"
-		}
-	}
+  "name": "cni-wrapper",
+  "type": "cni-wrapper-plugin",
+  "cniVersion": "0.3.0",
+  "datastore": "/var/vcap/data/container-metadata/store.json",
+  "iptables_lock_file": "/var/vcap/data/garden-cni/iptables.lock",
+  "overlay_network": "10.255.0.0/16",
+  "health_check_url": "http://127.0.0.1:23954",
+  "instance_address": "10.0.16.14",
+  "iptables_asg_logging": true,
+  "iptables_c2c_logging": true,
+  "ingress_tag": "ffff0000",
+  "dns_servers": [
+
+  ],
+  "delegate": {
+    "cniVersion": "0.3.0",
+    "name": "silk",
+    "type": "silk-cni",
+    "daemonPort": 23954,
+    "dataDir": "/var/vcap/data/host-local",
+    "datastore": "/var/vcap/data/silk/store.json",
+    "mtu": 0
+  }
+}
+```
+
+Then, when a container is created, the `garden-external-networker` adds additional runtime-specific data, so that
+the CNI plugin receives a final config object that resembles:
+
+```json
+{
+  "name": "cni-wrapper",
+  "type": "cni-wrapper-plugin",
+  "cniVersion": "0.3.0",
+  "datastore": "/var/vcap/data/container-metadata/store.json",
+  "iptables_lock_file": "/var/vcap/data/garden-cni/iptables.lock",
+  "overlay_network": "10.255.0.0/16",
+  "health_check_url": "http://127.0.0.1:23954",
+  "instance_address": "10.0.16.14",
+  "iptables_asg_logging": true,
+  "iptables_c2c_logging": true,
+  "ingress_tag": "ffff0000",
+  "dns_servers": [
+
+  ],
+  "delegate": {
+    "cniVersion": "0.3.0",
+    "name": "silk",
+    "type": "silk-cni",
+    "daemonPort": 23954,
+    "dataDir": "/var/vcap/data/host-local",
+    "datastore": "/var/vcap/data/silk/store.json",
+    "mtu": 0
+  },
+  "runtimeConfig": {
+    "portMappings": [{
+      "host_port": 12345,
+      "container_port": 7000
+    }, {
+      "host_port": 60000,
+      "container_port": 7000
+    }],
+    "netOutRules": [{
+      "protocol": 1,
+      "networks": [{
+        "start": "8.8.8.8",
+        "end": "9.9.9.9"
+      }],
+      "ports": [{
+        "start": 53,
+        "end": 54
+      }],
+      "log": true
+    }],
+    "metadata": {
+      "policy_group_id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
+      "app_id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
+      "space_id": "4246c57d-aefc-49cc-afe0-5f734e2656e8",
+      "org_id": "2ac41bbf-8eae-4f28-abab-51ca38dea3e4"
+    }
+  }
 }
 ```
 
@@ -101,22 +151,6 @@ Furthermore, the CNI runtime data, provided as environment variables, sets the
 
 When [Diego](https://github.com/cloudfoundry/diego-release) calls Garden, it sets that equal to the [`ActualLRP` `InstanceGuid`](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPInstanceKey).
 In this way, a 3rd-party system can relate data from CNI with data in the [Diego BBS](https://github.com/cloudfoundry/bbs/tree/master/doc).
-
-
-## To deploy a local-only (no-op) CNI plugin
-As a baseline, you can deploy using only the basic [bridge CNI plugin](https://github.com/containernetworking/cni/blob/master/Documentation/bridge.md).
-
-This plugin will provide connectivity between containers on the same Garden host (Diego cell)
-but will not provide a cross-host network.  However, it can be a useful baseline configuration for
-testing and development.
-
-```bash
-cd bosh-lite
-bosh target lite
-bosh update cloud-config cloud-config.yml
-bosh deployment local-only.yml
-bosh deploy
-```
 
 
 
