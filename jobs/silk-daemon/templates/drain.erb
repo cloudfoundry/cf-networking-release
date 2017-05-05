@@ -67,8 +67,10 @@ trap output_for_bosh EXIT
 
 wait_for_rep_to_exit
 
+set +e
 SILK_DAEMON_PID=$(cat "$PIDFILE")
 kill -TERM "${SILK_DAEMON_PID}"
+set -e
 
 if wait_for_silk_daemon_to_exit; then
   echo "$(date): silk-daemon exited, running teardown..."
