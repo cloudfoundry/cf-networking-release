@@ -4,6 +4,15 @@
 
   VXLAN_OVERHEAD = 50
 
+  def compute_mtu
+    mtu = p('cf_networking.mtu')
+    if mtu > 0
+      return mtu - VXLAN_OVERHEAD
+    else
+      return mtu
+    end
+  end
+
   toRender = {
     "name" => "cni-wrapper",
     "type" => "cni-wrapper-plugin",
@@ -24,7 +33,7 @@
       "daemonPort" => p('cf_networking.silk_daemon.listen_port'),
       "dataDir" => "/var/vcap/data/host-local",
       "datastore" => "/var/vcap/data/silk/store.json",
-      "mtu" => p('cf_networking.mtu') - VXLAN_OVERHEAD,
+      "mtu" => compute_mtu,
      }
   }
 
