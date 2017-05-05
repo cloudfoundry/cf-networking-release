@@ -9,6 +9,24 @@ mkdir -p /var/vcap/sys/log/monit
 exec 1>> /var/vcap/sys/log/monit/vxlan-policy-agent.out.log
 exec 2>> /var/vcap/sys/log/monit/vxlan-policy-agent.err.log
 
+function wait_for_server_to_become_healthy() {
+  for i in $(seq 20); do
+    set +e
+    curl 127.0.0.1:<%= p("cf_networking.vxlan_policy_agent.debug_server_port")%>/log-level
+    if [ "0" == "$?" ]; then
+      healthy=true
+      return
+    fi
+    set -e
+    sleep 1
+  done
+}
+
+function handle_orphaned_server() {
+  echo "killing vxlan-policy-agent with pid ${pid}"
+  kill "${pid}"
+}
+
 function wait_pid() {
   pid=$1
   shift
@@ -59,22 +77,33 @@ function stop_process() {
 case $1 in
 
   start)
+    trap handle_orphaned_server TERM
 
     mkdir -p $RUN_DIR
     mkdir -p $LOG_DIR
 
-    exec 2> >(tee -a $LOG_DIR/vxlan-policy-agent.stderr.log | logger -p user.error -t vxlan-policy-agent) \
-         1> >(tee -a $LOG_DIR/vxlan-policy-agent.stdout.log | logger -t vxlan-policy-agent)
+    /var/vcap/packages/vxlan-policy-agent/bin/vxlan-policy-agent \
+         -config-file=/var/vcap/jobs/vxlan-policy-agent/config/vxlan-policy-agent.json \
+    2> >(tee -a $LOG_DIR/vxlan-policy-agent.stderr.log | logger -p user.error -t vxlan-policy-agent) \
+    1> >(tee -a $LOG_DIR/vxlan-policy-agent.stdout.log | logger -t vxlan-policy-agent) &
 
-    echo $$ > $PIDFILE
+    pid=$!
 
-    exec /var/vcap/packages/vxlan-policy-agent/bin/vxlan-policy-agent \
-         -config-file=/var/vcap/jobs/vxlan-policy-agent/config/vxlan-policy-agent.json
+    healthy=false
+    wait_for_server_to_become_healthy
+
+    if ${healthy}; then
+      echo ${pid} > ${PIDFILE}
+    else
+      kill -9 ${pid}
+      exit 1
+    fi
     ;;
 
   stop)
 
     stop_process
+
     ;;
 
   *)

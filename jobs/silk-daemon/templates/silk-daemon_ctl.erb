@@ -4,11 +4,28 @@
 export RUN_DIR=/var/vcap/sys/run/silk-daemon
 export LOG_DIR=/var/vcap/sys/log/silk-daemon
 export PIDFILE=$RUN_DIR/silk-daemon.pid
-export CONF_DIR=/var/vcap/jobs/silk-daemon/config
 
 mkdir -p /var/vcap/sys/log/monit
 exec 1>> /var/vcap/sys/log/monit/silk-daemon.out.log
 exec 2>> /var/vcap/sys/log/monit/silk-daemon.err.log
+
+function wait_for_server_to_become_healthy() {
+  for i in $(seq 20); do
+    set +e
+    curl 127.0.0.1:<%= p("cf_networking.silk_daemon.listen_port") %>
+    if [ "0" == "$?" ]; then
+      healthy=true
+      return
+    fi
+    set -e
+    sleep 1
+  done
+}
+
+function handle_orphaned_server() {
+  echo "killing silk-daemon with pid ${pid}"
+  kill "${pid}"
+}
 
 function wait_pid() {
   pid=$1
@@ -60,18 +77,27 @@ function stop_process() {
 case $1 in
 
   start)
+    trap handle_orphaned_server TERM
 
     mkdir -p $RUN_DIR
     mkdir -p $LOG_DIR
 
-    exec 2> >(tee -a $LOG_DIR/silk-daemon.stderr.log | logger -p user.error -t silk-daemon) \
-         1> >(tee -a $LOG_DIR/silk-daemon.stdout.log | logger -t silk-daemon)
+    /var/vcap/packages/silk-daemon/bin/silk-daemon \
+         -config=/var/vcap/jobs/silk-daemon/config/client-config.json \
+    2> >(tee -a $LOG_DIR/silk-daemon.stderr.log | logger -p user.error -t silk-daemon) \
+    1> >(tee -a $LOG_DIR/silk-daemon.stdout.log | logger -t silk-daemon) &
 
-    echo $$ > $PIDFILE
+    pid=$!
 
-    exec /var/vcap/packages/silk-daemon/bin/silk-daemon \
-         -config=/var/vcap/jobs/silk-daemon/config/client-config.json
+    healthy=false
+    wait_for_server_to_become_healthy
 
+    if ${healthy}; then
+      echo ${pid} > ${PIDFILE}
+    else
+      kill -9 ${pid}
+      exit 1
+    fi
     ;;
 
   stop)

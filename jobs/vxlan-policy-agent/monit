@@ -4,4 +4,11 @@ check process vxlan-policy-agent
   start program "/var/vcap/jobs/vxlan-policy-agent/bin/vxlan-policy-agent_ctl start"
   stop program "/var/vcap/jobs/vxlan-policy-agent/bin/vxlan-policy-agent_ctl stop"
   group vcap
+  if failed
+     host 127.0.0.1
+     port <%= p("cf_networking.vxlan_policy_agent.debug_server_port") %>
+     protocol HTTP
+     request "/log-level"
+     with timeout 10 seconds
+     then restart
 <% end %>
