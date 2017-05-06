@@ -109,9 +109,8 @@ Get the [CF CLI](https://github.com/cloudfoundry/cli) if you don't already have 
 
 Log in to CF:
 ```bash
-cf api $CF_API_ENDPOINT # if your cert was self-signed, you'll need to add --skip-ssl-validation
-cf auth $CF_ADMIN_USER $CF_ADMIN_PASSWORD 
-# or use 'cf login' for an interactive login
+cf api api.$CF_API_ENDPOINT # if your cert was self-signed, you'll need to add --skip-ssl-validation
+cf auth $CF_ADMIN_USER $CF_ADMIN_PASSWORD # or use 'cf login' for interactive login
 ```
 
 Then try out our [Cats and Dogs example](../src/example-apps/cats-and-dogs) on your new deployment.
