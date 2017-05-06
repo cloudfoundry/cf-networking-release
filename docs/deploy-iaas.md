@@ -61,7 +61,6 @@ and identify the minimal set of ops files appropriate for your deployment.
 
 For example, if you're deploying to AWS, you'll need (as of the time of this writing)
   - `$CF_DEPLOYMENT_REPO/operations/aws.yml`
-  - `$CF_DEPLOYMENT_REPO/operations/change-logging-port-for-aws-elb.yml.yml`
 
 In addition, **to use CF Networking, you'll need to include these two files**:
 
@@ -71,7 +70,7 @@ In addition, **to use CF Networking, you'll need to include these two files**:
 
 
 ### Step 4: BOSH deploy
-Assemble and run a `bosh deploy` command that uses your ops files and `vars-store`:
+Assemble and run a `bosh deploy` command that uses the ops files and `vars-store.yml`:
 
 For example, on GCP you might do:
 ```bash
@@ -86,8 +85,7 @@ For AWS, you might do:
 ```bash
 bosh deploy \
   $CF_DEPLOYMENT_REPO/cf-deployment.yml \
-  -o $CF_DEPLOYMENT_REPO/opsfiles/aws.yml \
-  -o $CF_DEPLOYMENT_REPO/opsfiles/change-logging-port-for-aws-elb.yml \
+  -o $CF_DEPLOYMENT_REPO/operations/aws.yml \
   -o $CF_NETWORKING_RELEASE_REPO/manifest-generation/opsfiles/cf-networking.yml \
   -o $CF_NETWORKING_RELEASE_REPO/manifest-generation/opsfiles/silk.yml \
   --vars-store=vars-store.yml
