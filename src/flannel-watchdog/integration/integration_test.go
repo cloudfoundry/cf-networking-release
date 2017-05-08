@@ -7,9 +7,10 @@ import (
 	"lib/datastore"
 	"net"
 	"net/http"
-	"netmon/integration/fakes"
 	"os"
 	"os/exec"
+
+	"code.cloudfoundry.org/go-db-helpers/metrics"
 
 	"flannel-watchdog/config"
 
@@ -23,7 +24,7 @@ var _ = Describe("Flannel Watchdog", func() {
 	var (
 		session          *gexec.Session
 		subnetFile       *os.File
-		fakeMetron       fakes.FakeMetron
+		fakeMetron       metrics.FakeMetron
 		subnetFileName   string
 		metadataFileName string
 		cellSubnet       string
@@ -74,7 +75,7 @@ var _ = Describe("Flannel Watchdog", func() {
 
 	Context("when the subnet is the default /24", func() {
 		BeforeEach(func() {
-			fakeMetron = fakes.New()
+			fakeMetron = metrics.NewFakeMetron()
 			cellSubnet = fmt.Sprintf("10.255.%d.1/24", GinkgoParallelNode())
 
 			writeContainerMetadata()
@@ -181,7 +182,7 @@ var _ = Describe("Flannel Watchdog", func() {
 
 	Context("when the subnet size is set to a /22", func() {
 		BeforeEach(func() {
-			fakeMetron = fakes.New()
+			fakeMetron = metrics.NewFakeMetron()
 			cellSubnet = fmt.Sprintf("10.255.%d.1/22", GinkgoParallelNode())
 
 			writeContainerMetadata()

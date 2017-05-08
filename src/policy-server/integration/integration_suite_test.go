@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"netmon/integration/fakes"
 	"os"
 	"os/exec"
 	"policy-server/cc_client/fixtures"
@@ -20,6 +19,7 @@ import (
 	"strings"
 
 	"code.cloudfoundry.org/go-db-helpers/db"
+	"code.cloudfoundry.org/go-db-helpers/metrics"
 
 	. "github.com/onsi/ginkgo"
 	ginkgoConfig "github.com/onsi/ginkgo/config"
@@ -35,7 +35,7 @@ const DEFAULT_TIMEOUT = "5s"
 var policyServerPath string
 
 var HaveName = func(name string) types.GomegaMatcher {
-	return WithTransform(func(ev fakes.Event) string {
+	return WithTransform(func(ev metrics.Event) string {
 		return ev.Name
 	}, Equal(name))
 }

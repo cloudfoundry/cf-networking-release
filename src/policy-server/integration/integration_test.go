@@ -5,13 +5,13 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
-	"netmon/integration/fakes"
 	"os/exec"
 	"policy-server/config"
 	"strings"
 	"time"
 
 	"code.cloudfoundry.org/go-db-helpers/db"
+	"code.cloudfoundry.org/go-db-helpers/metrics"
 	"code.cloudfoundry.org/go-db-helpers/testsupport"
 
 	. "github.com/onsi/ginkgo"
@@ -31,11 +31,11 @@ var _ = Describe("Integration", func() {
 			debugAddress string
 			testDatabase *testsupport.TestDatabase
 
-			fakeMetron fakes.FakeMetron
+			fakeMetron metrics.FakeMetron
 		)
 
 		BeforeEach(func() {
-			fakeMetron = fakes.New()
+			fakeMetron = metrics.NewFakeMetron()
 
 			dbName := fmt.Sprintf("test_netman_database_%x", rand.Int())
 			dbConnectionInfo := testsupport.GetDBConnectionInfo()

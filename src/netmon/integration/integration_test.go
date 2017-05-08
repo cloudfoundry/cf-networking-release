@@ -5,6 +5,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"code.cloudfoundry.org/go-db-helpers/metrics"
 	"code.cloudfoundry.org/localip"
 
 	. "github.com/onsi/ginkgo"
@@ -14,7 +15,6 @@ import (
 	"github.com/onsi/gomega/types"
 
 	"netmon/config"
-	"netmon/integration/fakes"
 )
 
 func discoverInterfaceName() string {
@@ -38,12 +38,12 @@ var _ = Describe("Integration", func() {
 	var (
 		session    *gexec.Session
 		conf       config.Netmon
-		fakeMetron fakes.FakeMetron
+		fakeMetron metrics.FakeMetron
 		ifName     string
 	)
 
 	BeforeEach(func() {
-		fakeMetron = fakes.New()
+		fakeMetron = metrics.NewFakeMetron()
 
 		ifName = discoverInterfaceName()
 		conf = config.Netmon{
@@ -78,7 +78,7 @@ var _ = Describe("Integration", func() {
 		Expect(err).NotTo(HaveOccurred())
 		nIfaces := len(ifaces)
 
-		Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(fakes.Event{
+		Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(metrics.Event{
 			EventType: "ValueMetric",
 			Name:      "NetInterfaceCount",
 			Origin:    "netmon",
@@ -91,7 +91,7 @@ var _ = Describe("Integration", func() {
 		natRules := runAndWait("iptables", "-S", "-t", "nat")
 		totalRulesBaseline := numLines(filterRules) + numLines(natRules)
 
-		Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(fakes.Event{
+		Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(metrics.Event{
 			EventType: "ValueMetric",
 			Name:      "IPTablesRuleCount",
 			Origin:    "netmon",
@@ -100,7 +100,7 @@ var _ = Describe("Integration", func() {
 
 		runAndWait("iptables", "-w", "-A", "FORWARD", "-s", "1.1.1.1", "-d", "2.2.2.2", "-j", "ACCEPT")
 
-		Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(fakes.Event{
+		Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(metrics.Event{
 			EventType: "ValueMetric",
 			Name:      "IPTablesRuleCount",
 			Origin:    "netmon",
@@ -109,7 +109,7 @@ var _ = Describe("Integration", func() {
 	})
 
 	IsMetricWithName := func(name string) types.GomegaMatcher {
-		return WithTransform(func(e fakes.Event) bool {
+		return WithTransform(func(e metrics.Event) bool {
 			return e.Name == name
 		}, BeTrue())
 	}

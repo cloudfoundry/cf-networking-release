@@ -7,10 +7,10 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
-	"netmon/integration/fakes"
 	"policy-server/config"
 	"strings"
 
+	"code.cloudfoundry.org/go-db-helpers/metrics"
 	"code.cloudfoundry.org/go-db-helpers/testsupport"
 
 	. "github.com/onsi/ginkgo"
@@ -26,11 +26,11 @@ var _ = Describe("Internal API", func() {
 		testDatabase *testsupport.TestDatabase
 		tlsConfig    *tls.Config
 
-		fakeMetron fakes.FakeMetron
+		fakeMetron metrics.FakeMetron
 	)
 
 	BeforeEach(func() {
-		fakeMetron = fakes.New()
+		fakeMetron = metrics.NewFakeMetron()
 		dbName := fmt.Sprintf("test_netman_database_%x", rand.Int())
 		dbConnectionInfo := testsupport.GetDBConnectionInfo()
 		testDatabase = dbConnectionInfo.CreateDatabase(dbName)

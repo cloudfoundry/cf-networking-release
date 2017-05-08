@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"netmon/integration/fakes"
 	"os"
 	"os/exec"
 	"strconv"
 	"strings"
 	"vxlan-policy-agent/config"
 
+	"code.cloudfoundry.org/go-db-helpers/metrics"
 	"code.cloudfoundry.org/go-db-helpers/mutualtls"
 
 	. "github.com/onsi/ginkgo"
@@ -32,7 +32,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		datastorePath    string
 		conf             config.VxlanPolicyAgent
 		configFilePath   string
-		fakeMetron       fakes.FakeMetron
+		fakeMetron       metrics.FakeMetron
 		mockPolicyServer ifrit.Process
 		serverListenPort int
 		serverListenAddr string
@@ -41,7 +41,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 
 	BeforeEach(func() {
 		var err error
-		fakeMetron = fakes.New()
+		fakeMetron = metrics.NewFakeMetron()
 
 		serverTLSConfig, err = mutualtls.NewServerTLSConfig(paths.ServerCertFile, paths.ServerKeyFile, paths.ClientCACertFile)
 		Expect(err).NotTo(HaveOccurred())
