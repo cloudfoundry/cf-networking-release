@@ -295,7 +295,7 @@ var _ = Describe("Client", func() {
 
 			It("returns a helpful error", func() {
 				_, err := client.GetSpace("some-token", "some-space-guid")
-				Expect(err).To(MatchError(ContainSubstring("json client do: i am a teapot")))
+				Expect(err).To(MatchError(ContainSubstring("json client do: http status 418: i am a teapot")))
 			})
 		})
 	})
