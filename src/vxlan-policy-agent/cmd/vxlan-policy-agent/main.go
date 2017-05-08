@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"lib/datastore"
 	"lib/filelock"
-	"lib/metrics"
 	"lib/policy_client"
 	"lib/poller"
 	"lib/rules"
@@ -25,6 +24,7 @@ import (
 	"vxlan-policy-agent/planner"
 
 	"code.cloudfoundry.org/debugserver"
+	"code.cloudfoundry.org/go-db-helpers/metrics"
 	"code.cloudfoundry.org/go-db-helpers/mutualtls"
 	"code.cloudfoundry.org/lager"
 	"github.com/cloudfoundry/dropsonde"

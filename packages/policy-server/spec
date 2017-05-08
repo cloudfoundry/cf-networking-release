@@ -10,6 +10,7 @@ files:
   - code.cloudfoundry.org/go-db-helpers/httperror/*.go # gosub
   - code.cloudfoundry.org/go-db-helpers/json_client/*.go # gosub
   - code.cloudfoundry.org/go-db-helpers/marshal/*.go # gosub
+  - code.cloudfoundry.org/go-db-helpers/metrics/*.go # gosub
   - code.cloudfoundry.org/go-db-helpers/mutualtls/*.go # gosub
   - code.cloudfoundry.org/lager/*.go # gosub
   - github.com/bmizerany/pat/*.go # gosub
@@ -44,7 +45,6 @@ files:
   - github.com/tedsuo/ifrit/sigmon/*.go # gosub
   - github.com/tedsuo/rata/*.go # gosub
   - gopkg.in/validator.v2/*.go # gosub
-  - lib/metrics/*.go # gosub
   - lib/nonmutualtls/*.go # gosub
   - lib/poller/*.go # gosub
   - policy-server/cc_client/*.go # gosub

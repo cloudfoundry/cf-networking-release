@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"lib/metrics"
 	"lib/nonmutualtls"
 	"lib/poller"
 
@@ -28,6 +27,7 @@ import (
 	"code.cloudfoundry.org/go-db-helpers/httperror"
 	"code.cloudfoundry.org/go-db-helpers/json_client"
 	"code.cloudfoundry.org/go-db-helpers/marshal"
+	"code.cloudfoundry.org/go-db-helpers/metrics"
 	"code.cloudfoundry.org/go-db-helpers/mutualtls"
 	"code.cloudfoundry.org/lager"
 	"github.com/cloudfoundry/dropsonde"

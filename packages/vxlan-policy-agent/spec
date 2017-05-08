@@ -8,6 +8,7 @@ files:
   - code.cloudfoundry.org/debugserver/*.go # gosub
   - code.cloudfoundry.org/go-db-helpers/json_client/*.go # gosub
   - code.cloudfoundry.org/go-db-helpers/marshal/*.go # gosub
+  - code.cloudfoundry.org/go-db-helpers/metrics/*.go # gosub
   - code.cloudfoundry.org/go-db-helpers/mutualtls/*.go # gosub
   - code.cloudfoundry.org/lager/*.go # gosub
   - github.com/cloudfoundry/dropsonde/*.go # gosub
@@ -38,7 +39,6 @@ files:
   - gopkg.in/validator.v2/*.go # gosub
   - lib/datastore/*.go # gosub
   - lib/filelock/*.go # gosub
-  - lib/metrics/*.go # gosub
   - lib/models/*.go # gosub
   - lib/policy_client/*.go # gosub
   - lib/poller/*.go # gosub
