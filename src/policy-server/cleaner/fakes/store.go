@@ -2,7 +2,6 @@
 package fakes
 
 import (
-	"context"
 	"policy-server/models"
 	"sync"
 )
@@ -19,11 +18,10 @@ type Store struct {
 		result1 []models.Policy
 		result2 error
 	}
-	DeleteStub        func(context.Context, []models.Policy) error
+	DeleteStub        func([]models.Policy) error
 	deleteMutex       sync.RWMutex
 	deleteArgsForCall []struct {
-		arg1 context.Context
-		arg2 []models.Policy
+		arg1 []models.Policy
 	}
 	deleteReturns struct {
 		result1 error
@@ -78,22 +76,21 @@ func (fake *Store) AllReturnsOnCall(i int, result1 []models.Policy, result2 erro
 	}{result1, result2}
 }
 
-func (fake *Store) Delete(arg1 context.Context, arg2 []models.Policy) error {
-	var arg2Copy []models.Policy
-	if arg2 != nil {
-		arg2Copy = make([]models.Policy, len(arg2))
-		copy(arg2Copy, arg2)
+func (fake *Store) Delete(arg1 []models.Policy) error {
+	var arg1Copy []models.Policy
+	if arg1 != nil {
+		arg1Copy = make([]models.Policy, len(arg1))
+		copy(arg1Copy, arg1)
 	}
 	fake.deleteMutex.Lock()
 	ret, specificReturn := fake.deleteReturnsOnCall[len(fake.deleteArgsForCall)]
 	fake.deleteArgsForCall = append(fake.deleteArgsForCall, struct {
-		arg1 context.Context
-		arg2 []models.Policy
-	}{arg1, arg2Copy})
-	fake.recordInvocation("Delete", []interface{}{arg1, arg2Copy})
+		arg1 []models.Policy
+	}{arg1Copy})
+	fake.recordInvocation("Delete", []interface{}{arg1Copy})
 	fake.deleteMutex.Unlock()
 	if fake.DeleteStub != nil {
-		return fake.DeleteStub(arg1, arg2)
+		return fake.DeleteStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
@@ -107,10 +104,10 @@ func (fake *Store) DeleteCallCount() int {
 	return len(fake.deleteArgsForCall)
 }
 
-func (fake *Store) DeleteArgsForCall(i int) (context.Context, []models.Policy) {
+func (fake *Store) DeleteArgsForCall(i int) []models.Policy {
 	fake.deleteMutex.RLock()
 	defer fake.deleteMutex.RUnlock()
-	return fake.deleteArgsForCall[i].arg1, fake.deleteArgsForCall[i].arg2
+	return fake.deleteArgsForCall[i].arg1
 }
 
 func (fake *Store) DeleteReturns(result1 error) {

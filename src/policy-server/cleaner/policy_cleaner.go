@@ -22,7 +22,7 @@ type ccClient interface {
 //go:generate counterfeiter -o fakes/store.go --fake-name Store . store
 type store interface {
 	All() ([]models.Policy, error)
-	Delete(context.Context, []models.Policy) error
+	Delete([]models.Policy) error
 }
 
 //go:generate counterfeiter -o fakes/contextAdapter.go --fake-name ContextAdapter . contextAdapter
@@ -37,7 +37,6 @@ type PolicyCleaner struct {
 	CCClient              ccClient
 	CCAppRequestChunkSize int
 	RequestTimeout        time.Duration
-	ContextAdapter        contextAdapter
 }
 
 func (p *PolicyCleaner) DeleteStalePolicies() ([]models.Policy, error) {
@@ -72,9 +71,7 @@ func (p *PolicyCleaner) DeleteStalePolicies() ([]models.Policy, error) {
 			"total_policies": len(stalePolicies),
 			"stale_policies": stalePolicies,
 		})
-		ctx, cancel := p.ContextAdapter.WithTimeout(context.Background(), p.RequestTimeout)
-		defer cancel()
-		err = p.Store.Delete(ctx, toDelete)
+		err = p.Store.Delete(toDelete)
 		if err != nil {
 			p.Logger.Error("store-delete-policies-failed", err)
 			return nil, fmt.Errorf("database write failed: %s", err)

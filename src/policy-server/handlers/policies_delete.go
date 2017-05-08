@@ -53,7 +53,7 @@ func (h *PoliciesDelete) ServeHTTP(w http.ResponseWriter, req *http.Request, tok
 		return
 	}
 
-	err = h.Store.Delete(req.Context(), payload.Policies)
+	err = h.Store.Delete(payload.Policies)
 	if err != nil {
 		h.ErrorResponse.InternalServerError(w, err, "policies-delete", "database delete failed")
 		return

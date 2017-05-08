@@ -58,7 +58,7 @@ func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request, tok
 		return
 	}
 
-	err = h.Store.Create(req.Context(), payload.Policies)
+	err = h.Store.Create(payload.Policies)
 	if err != nil {
 		h.ErrorResponse.InternalServerError(w, err, "policies-create", "database create failed")
 		return

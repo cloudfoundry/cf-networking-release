@@ -15,7 +15,6 @@ import (
 	"lib/nonmutualtls"
 	"lib/poller"
 
-	"policy-server/adapter"
 	"policy-server/cc_client"
 	"policy-server/cleaner"
 	"policy-server/config"
@@ -210,7 +209,6 @@ func main() {
 		UAAClient:      uaaClient,
 		CCClient:       ccClient,
 		RequestTimeout: time.Duration(5) * time.Second,
-		ContextAdapter: &adapter.ContextAdapter{},
 	}
 
 	policiesCleanupHandler := &handlers.PoliciesCleanup{
@@ -242,15 +240,10 @@ func main() {
 		return metricsWrapper.Wrap(handle)
 	}
 
-	contextWrapper := handlers.ContextWrapper{
-		Duration:       time.Duration(conf.RequestTimeout) * time.Second,
-		ContextAdapter: &adapter.ContextAdapter{},
-	}
-
 	externalHandlers := rata.Handlers{
 		"uptime":          metricsWrap("Uptime", uptimeHandler),
-		"create_policies": contextWrapper.Wrap(metricsWrap("CreatePolicies", networkWriteAuthenticator.Wrap(createPolicyHandler))),
-		"delete_policies": contextWrapper.Wrap(metricsWrap("DeletePolicies", networkWriteAuthenticator.Wrap(deletePolicyHandler))),
+		"create_policies": metricsWrap("CreatePolicies", networkWriteAuthenticator.Wrap(createPolicyHandler)),
+		"delete_policies": metricsWrap("DeletePolicies", networkWriteAuthenticator.Wrap(deletePolicyHandler)),
 		"policies_index":  metricsWrap("PoliciesIndex", networkWriteAuthenticator.Wrap(policiesIndexHandler)),
 		"cleanup":         metricsWrap("Cleanup", authenticator.Wrap(policiesCleanupHandler)),
 		"tags_index":      metricsWrap("TagsIndex", authenticator.Wrap(tagsIndexHandler)),

@@ -1,7 +1,6 @@
 package store_test
 
 import (
-	"context"
 	"errors"
 	"policy-server/models"
 	"policy-server/store"
@@ -50,18 +49,15 @@ var _ = Describe("MetricsWrapper", func() {
 
 	Describe("Create", func() {
 		It("calls Create on the Store", func() {
-			err := metricsWrapper.Create(context.Background(), policies)
+			err := metricsWrapper.Create(policies)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeStore.CreateCallCount()).To(Equal(1))
-			ctx, pol := fakeStore.CreateArgsForCall(0)
-			Expect(pol).To(Equal(policies))
-			Expect(ctx).To(Equal(context.Background()))
-
+			Expect(fakeStore.CreateArgsForCall(0)).To(Equal(policies))
 		})
 
 		It("emits a metric", func() {
-			err := metricsWrapper.Create(context.Background(), policies)
+			err := metricsWrapper.Create(policies)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
@@ -74,7 +70,7 @@ var _ = Describe("MetricsWrapper", func() {
 				fakeStore.CreateReturns(errors.New("banana"))
 			})
 			It("emits an error metric", func() {
-				err := metricsWrapper.Create(context.Background(), policies)
+				err := metricsWrapper.Create(policies)
 				Expect(err).To(MatchError("banana"))
 
 				Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
@@ -172,17 +168,15 @@ var _ = Describe("MetricsWrapper", func() {
 
 	Describe("Delete", func() {
 		It("calls Delete on the Store", func() {
-			err := metricsWrapper.Delete(context.Background(), policies)
+			err := metricsWrapper.Delete(policies)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeStore.DeleteCallCount()).To(Equal(1))
-			ctx, pol := fakeStore.DeleteArgsForCall(0)
-			Expect(pol).To(Equal(policies))
-			Expect(ctx).To(Equal(context.Background()))
+			Expect(fakeStore.DeleteArgsForCall(0)).To(Equal(policies))
 		})
 
 		It("emits a metric", func() {
-			err := metricsWrapper.Delete(context.Background(), policies)
+			err := metricsWrapper.Delete(policies)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
@@ -195,7 +189,7 @@ var _ = Describe("MetricsWrapper", func() {
 				fakeStore.DeleteReturns(errors.New("banana"))
 			})
 			It("emits an error metric", func() {
-				err := metricsWrapper.Delete(context.Background(), policies)
+				err := metricsWrapper.Delete(policies)
 				Expect(err).To(MatchError("banana"))
 
 				Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))

@@ -2,7 +2,6 @@
 package fakes
 
 import (
-	"context"
 	"database/sql"
 	"sync"
 
@@ -10,17 +9,14 @@ import (
 )
 
 type Db struct {
-	BeginTxxStub        func(ctx context.Context, opts *sql.TxOptions) (*sqlx.Tx, error)
-	beginTxxMutex       sync.RWMutex
-	beginTxxArgsForCall []struct {
-		ctx  context.Context
-		opts *sql.TxOptions
-	}
-	beginTxxReturns struct {
+	BeginxStub        func() (*sqlx.Tx, error)
+	beginxMutex       sync.RWMutex
+	beginxArgsForCall []struct{}
+	beginxReturns     struct {
 		result1 *sqlx.Tx
 		result2 error
 	}
-	beginTxxReturnsOnCall map[int]struct {
+	beginxReturnsOnCall map[int]struct {
 		result1 *sqlx.Tx
 		result2 error
 	}
@@ -117,53 +113,44 @@ type Db struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *Db) BeginTxx(ctx context.Context, opts *sql.TxOptions) (*sqlx.Tx, error) {
-	fake.beginTxxMutex.Lock()
-	ret, specificReturn := fake.beginTxxReturnsOnCall[len(fake.beginTxxArgsForCall)]
-	fake.beginTxxArgsForCall = append(fake.beginTxxArgsForCall, struct {
-		ctx  context.Context
-		opts *sql.TxOptions
-	}{ctx, opts})
-	fake.recordInvocation("BeginTxx", []interface{}{ctx, opts})
-	fake.beginTxxMutex.Unlock()
-	if fake.BeginTxxStub != nil {
-		return fake.BeginTxxStub(ctx, opts)
+func (fake *Db) Beginx() (*sqlx.Tx, error) {
+	fake.beginxMutex.Lock()
+	ret, specificReturn := fake.beginxReturnsOnCall[len(fake.beginxArgsForCall)]
+	fake.beginxArgsForCall = append(fake.beginxArgsForCall, struct{}{})
+	fake.recordInvocation("Beginx", []interface{}{})
+	fake.beginxMutex.Unlock()
+	if fake.BeginxStub != nil {
+		return fake.BeginxStub()
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.beginTxxReturns.result1, fake.beginTxxReturns.result2
+	return fake.beginxReturns.result1, fake.beginxReturns.result2
 }
 
-func (fake *Db) BeginTxxCallCount() int {
-	fake.beginTxxMutex.RLock()
-	defer fake.beginTxxMutex.RUnlock()
-	return len(fake.beginTxxArgsForCall)
+func (fake *Db) BeginxCallCount() int {
+	fake.beginxMutex.RLock()
+	defer fake.beginxMutex.RUnlock()
+	return len(fake.beginxArgsForCall)
 }
 
-func (fake *Db) BeginTxxArgsForCall(i int) (context.Context, *sql.TxOptions) {
-	fake.beginTxxMutex.RLock()
-	defer fake.beginTxxMutex.RUnlock()
-	return fake.beginTxxArgsForCall[i].ctx, fake.beginTxxArgsForCall[i].opts
-}
-
-func (fake *Db) BeginTxxReturns(result1 *sqlx.Tx, result2 error) {
-	fake.BeginTxxStub = nil
-	fake.beginTxxReturns = struct {
+func (fake *Db) BeginxReturns(result1 *sqlx.Tx, result2 error) {
+	fake.BeginxStub = nil
+	fake.beginxReturns = struct {
 		result1 *sqlx.Tx
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *Db) BeginTxxReturnsOnCall(i int, result1 *sqlx.Tx, result2 error) {
-	fake.BeginTxxStub = nil
-	if fake.beginTxxReturnsOnCall == nil {
-		fake.beginTxxReturnsOnCall = make(map[int]struct {
+func (fake *Db) BeginxReturnsOnCall(i int, result1 *sqlx.Tx, result2 error) {
+	fake.BeginxStub = nil
+	if fake.beginxReturnsOnCall == nil {
+		fake.beginxReturnsOnCall = make(map[int]struct {
 			result1 *sqlx.Tx
 			result2 error
 		})
 	}
-	fake.beginTxxReturnsOnCall[i] = struct {
+	fake.beginxReturnsOnCall[i] = struct {
 		result1 *sqlx.Tx
 		result2 error
 	}{result1, result2}
@@ -517,8 +504,8 @@ func (fake *Db) DriverNameReturnsOnCall(i int, result1 string) {
 func (fake *Db) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.beginTxxMutex.RLock()
-	defer fake.beginTxxMutex.RUnlock()
+	fake.beginxMutex.RLock()
+	defer fake.beginxMutex.RUnlock()
 	fake.execMutex.RLock()
 	defer fake.execMutex.RUnlock()
 	fake.namedExecMutex.RLock()

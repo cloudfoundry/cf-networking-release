@@ -1,19 +1,9 @@
 package store
 
 import (
-	"context"
 	"policy-server/models"
 	"time"
 )
-
-//go:generate counterfeiter -o fakes/store.go --fake-name Store . Store
-type Store interface {
-	Create(context.Context, []models.Policy) error
-	All() ([]models.Policy, error)
-	Delete(context.Context, []models.Policy) error
-	Tags() ([]models.Tag, error)
-	ByGuids([]string, []string) ([]models.Policy, error)
-}
 
 //go:generate counterfeiter -o fakes/metrics_sender.go --fake-name MetricsSender . metricsSender
 type metricsSender interface {
@@ -26,9 +16,9 @@ type MetricsWrapper struct {
 	MetricsSender metricsSender
 }
 
-func (mw *MetricsWrapper) Create(ctx context.Context, policies []models.Policy) error {
+func (mw *MetricsWrapper) Create(policies []models.Policy) error {
 	startTime := time.Now()
-	err := mw.Store.Create(ctx, policies)
+	err := mw.Store.Create(policies)
 	createTimeDuration := time.Now().Sub(startTime)
 	if err != nil {
 		mw.MetricsSender.IncrementCounter("StoreCreateError")
@@ -48,9 +38,9 @@ func (mw *MetricsWrapper) All() ([]models.Policy, error) {
 	return policies, err
 }
 
-func (mw *MetricsWrapper) Delete(ctx context.Context, policies []models.Policy) error {
+func (mw *MetricsWrapper) Delete(policies []models.Policy) error {
 	startTime := time.Now()
-	err := mw.Store.Delete(ctx, policies)
+	err := mw.Store.Delete(policies)
 	deleteTimeDuration := time.Now().Sub(startTime)
 	if err != nil {
 		mw.MetricsSender.IncrementCounter("StoreDeleteError")
