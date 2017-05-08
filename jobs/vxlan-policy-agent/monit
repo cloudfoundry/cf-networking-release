@@ -9,6 +9,6 @@ check process vxlan-policy-agent
      port <%= p("cf_networking.vxlan_policy_agent.debug_server_port") %>
      protocol HTTP
      request "/log-level"
-     with timeout 10 seconds
+     with timeout 10 seconds for 6 cycles
      then restart
 <% end %>

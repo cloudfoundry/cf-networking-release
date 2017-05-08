@@ -8,6 +8,6 @@ check process silk-daemon
      host 127.0.0.1
      port <%= p("cf_networking.silk_daemon.listen_port") %>
      protocol HTTP
-     with timeout 10 seconds
+     with timeout 10 seconds for 6 cycles
      then restart
 <% end %>

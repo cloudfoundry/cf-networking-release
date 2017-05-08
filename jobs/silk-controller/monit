@@ -10,6 +10,6 @@ check process silk-controller
      port <%= p("cf_networking.silk_controller.debug_port") %>
      protocol HTTP
      request "/log-level"
-     with timeout 10 seconds
+     with timeout 10 seconds for 6 cycles
      then restart
 <% end %>
