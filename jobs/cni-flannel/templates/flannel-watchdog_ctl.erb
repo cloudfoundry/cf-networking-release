@@ -9,15 +9,15 @@ export LOG_DIR=/var/vcap/sys/log/flannel-watchdog
 export CONF_DIR=/var/vcap/jobs/cni-flannel/config
 export PIDFILE="${RUN_DIR}"/flannel-watchdog.pid
 
+mkdir -p "${RUN_DIR}"
+mkdir -p "${LOG_DIR}"
+
 exec 1>> "${LOG_DIR}"/flannel-watchdog_ctl.out.log
 exec 2>> "${LOG_DIR}"/flannel-watchdog_ctl.err.log
 
 case $1 in
 
   start)
-
-    mkdir -p "${RUN_DIR}"
-    mkdir -p "${LOG_DIR}"
 
     /var/vcap/packages/flannel-watchdog/bin/flannel-watchdog \
       -config-file="${CONF_DIR}"/flannel-watchdog.json \

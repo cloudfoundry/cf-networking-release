@@ -10,6 +10,8 @@ HEALTH_CHECK_PORT=<%= p("cf_networking.plugin.health_check_port") %>
 ETCD_ENDPOINT=<%= p("cf_networking.plugin.etcd_endpoints").map{|addr| "\"https://#{addr}:4001\""}.join(",") %>
 export PIDFILE="${RUN_DIR}"/flanneld.pid
 
+mkdir -p "${RUN_DIR}"
+mkdir -p "${LOG_DIR}"
 
 <%
   require 'json'
@@ -43,9 +45,6 @@ exec 2>> "${LOG_DIR}"/flanneld_ctl.err.log
 case $1 in
 
   start)
-    mkdir -p "${RUN_DIR}"
-    mkdir -p "${LOG_DIR}"
-
     keyURL="${ETCD_ENDPOINT}"/v2/keys/coreos.com/network/config
 
     curl -v \

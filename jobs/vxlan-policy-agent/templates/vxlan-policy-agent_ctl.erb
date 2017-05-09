@@ -10,6 +10,9 @@ LOG_DIR=/var/vcap/sys/log/vxlan-policy-agent
 TIMEOUT=20
 export PIDFILE="${RUN_DIR}"/vxlan-policy-agent.pid
 
+mkdir -p "${RUN_DIR}"
+mkdir -p "${LOG_DIR}"
+
 exec 1>> "${LOG_DIR}"/vxlan-policy-agent_ctl.out.log
 exec 2>> "${LOG_DIR}"/vxlan-policy-agent_ctl.err.log
 
@@ -19,9 +22,6 @@ case $1 in
     trap 'handle_orphaned_server vxlan-policy-agent ${pid}' TERM
 
     stop_process_on_port "${PORT}"
-
-    mkdir -p "${RUN_DIR}"
-    mkdir -p "${LOG_DIR}"
 
     /var/vcap/packages/vxlan-policy-agent/bin/vxlan-policy-agent \
          -config-file=/var/vcap/jobs/vxlan-policy-agent/config/vxlan-policy-agent.json \

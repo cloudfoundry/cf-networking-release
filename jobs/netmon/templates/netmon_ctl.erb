@@ -6,15 +6,15 @@ RUN_DIR=/var/vcap/sys/run/netmon
 LOG_DIR=/var/vcap/sys/log/netmon
 PIDFILE="${RUN_DIR}"/netmon.pid
 
+mkdir -p "${RUN_DIR}"
+mkdir -p "${LOG_DIR}"
+
 exec 1>> "${LOG_DIR}"/netmon_ctl.out.log
 exec 2>> "${LOG_DIR}"/netmon_ctl.err.log
 
 case $1 in
 
   start)
-
-    mkdir -p "${RUN_DIR}"
-    mkdir -p "${LOG_DIR}"
 
     exec 2> >(tee -a "${LOG_DIR}"/netmon.stderr.log | logger -p user.error -t netmon) \
       1> >(tee -a "${LOG_DIR}"/netmon.stdout.log | logger -t netmon)

@@ -10,6 +10,9 @@ export PORT=<%= p("cf_networking.policy_server.listen_port") %>
 export URL=127.0.0.1:"${PORT}"
 export TIMEOUT=20
 
+mkdir -p "${RUN_DIR}"
+mkdir -p "${LOG_DIR}"
+
 exec 1>> "${LOG_DIR}"/policy-server_ctl.out.log
 exec 2>> "${LOG_DIR}"/policy-server_ctl.err.log
 
@@ -19,12 +22,8 @@ case $1 in
 
     stop_process_on_port "${PORT}"
 
-    mkdir -p "${RUN_DIR}"
     chown -R vcap:vcap "${RUN_DIR}"
-
-    mkdir -p "${LOG_DIR}"
     chown -R vcap:vcap "${LOG_DIR}"
-
     chown -R vcap:vcap "${CONF_DIR}"
 
     exec chpst -u vcap:vcap bash -c "/var/vcap/jobs/policy-server/bin/policy-server_as_vcap"

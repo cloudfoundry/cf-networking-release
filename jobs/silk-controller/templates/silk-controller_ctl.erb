@@ -11,6 +11,9 @@ export PORT=<%= p("cf_networking.silk_controller.debug_port") %>
 export URL=127.0.0.1:"${PORT}"/log-level
 export TIMEOUT=20
 
+mkdir -p "${RUN_DIR}"
+mkdir -p "${LOG_DIR}"
+
 exec 1>> "${LOG_DIR}"/silk-controller_ctl.out.log
 exec 2>> "${LOG_DIR}"/silk-controller_ctl.err.log
 
@@ -20,12 +23,8 @@ case $1 in
 
     stop_process_on_port "${PORT}"
 
-    mkdir -p "${RUN_DIR}"
     chown -R vcap:vcap "${RUN_DIR}"
-
-    mkdir -p "${LOG_DIR}"
     chown -R vcap:vcap "${LOG_DIR}"
-
     chown -R vcap:vcap "${CONF_DIR}"
 
     exec chpst -u vcap:vcap bash -c "/var/vcap/jobs/silk-controller/bin/silk-controller_as_vcap"
