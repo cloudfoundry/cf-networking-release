@@ -13,6 +13,7 @@ templates:
 
 packages:
   - policy-server
+  - ctl-utils
 
 properties:
   cf_networking.policy_cleanup_interval:

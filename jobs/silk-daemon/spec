@@ -12,6 +12,7 @@ templates:
 
 packages:
   - silk-daemon
+  - ctl-utils
 
 properties:
   cf_networking.disable:

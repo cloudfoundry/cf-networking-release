@@ -1,40 +1,16 @@
 #!/bin/bash -eu
 
 set -o pipefail
+source /var/vcap/packages/ctl-utils/ctl_util.sh
 
-function wait_for_server_to_become_healthy() {
-  for i in $(seq 20); do
-    set +e
-    curl 127.0.0.1:<%= p("cf_networking.policy_server.listen_port") %>
-    if [ "0" == "$?" ]; then
-      healthy=true
-      return
-    fi
-    set -e
-    sleep 1
-  done
-}
-
-function handle_orphaned_server() {
-  echo "killing policy-server with pid ${pid}"
-  kill "${pid}"
-}
-
-trap handle_orphaned_server TERM
+trap 'handle_orphaned_server policy-server ${pid}' TERM
 
 /var/vcap/packages/policy-server/bin/policy-server \
-  -config-file=$CONF_DIR/policy-server.json \
-  2> >(tee -a $LOG_DIR/policy-server.stderr.log | logger -p user.error -t policy-server) \
-  1> >(tee -a $LOG_DIR/policy-server.stdout.log | logger -t policy-server) &
+  -config-file=${CONF_DIR}/policy-server.json \
+  2> >(tee -a ${LOG_DIR}/policy-server.stderr.log | logger -p user.error -t policy-server) \
+  1> >(tee -a ${LOG_DIR}/policy-server.stdout.log | logger -t policy-server) &
 
 pid=$!
 
-healthy=false
-wait_for_server_to_become_healthy
-
-if ${healthy}; then
-  echo ${pid} > ${PIDFILE}
-else
-  kill -9 ${pid}
-  exit 1
-fi
+healthy=$(wait_for_server_to_become_healthy ${URL} ${TIMEOUT})
+write_pid ${healthy} ${pid}

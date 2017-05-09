@@ -10,6 +10,7 @@ templates:
 
 packages:
   - vxlan-policy-agent
+  - ctl-utils
 
 properties:
   cf_networking.disable:

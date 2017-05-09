@@ -1,10 +1,12 @@
 #!/bin/bash -eu
 
 <% unless p("cf_networking.disable") %>
+source /var/vcap/packages/ctl-utils/ctl_util.sh
+
 RUN_DIR=/var/vcap/sys/run/flannel
 LOG_DIR=/var/vcap/sys/log/flannel
 ETCD_CERTS_DIR=/var/vcap/jobs/cni-flannel/config/certs/etcd
-PIDFILE=$RUN_DIR/flanneld.pid
+export PIDFILE=${RUN_DIR}/flanneld.pid
 
 ETCD_ENDPOINT=<%= p("cf_networking.plugin.etcd_endpoints").map{|addr| "\"https://#{addr}:4001\""}.join(",") %>
 
@@ -37,58 +39,11 @@ mkdir -p /var/vcap/sys/log/monit
 exec 1>> /var/vcap/sys/log/monit/flanneld.out.log
 exec 2>> /var/vcap/sys/log/monit/flanneld.err.log
 
-function wait_pid() {
-  pid=$1
-  shift
-  max_checks=$1
-  shift
-
-  checks=$max_checks
-  while [ -e "/proc/$pid" ]; do
-    checks=$((checks - 1))
-    if [ $checks -le 0 ]; then
-      return 1
-    fi
-    sleep 0.1
-  done
-
-  return 0
-}
-
-function stop_process() {
-  local pid
-  pid=$(cat "$PIDFILE")
-
-  echo "stopping..."
-  kill -TERM "$pid"
-  if wait_pid "$pid" 100 ; then
-    rm "$PIDFILE"
-    return 0
-  fi
-
-  echo "unable to stop process using SIGTERM after 10 seconds, will now attempt to SIGQUIT"
-  kill -QUIT "$pid" || true
-  if wait_pid "$pid" 50 ; then
-    rm "$PIDFILE"
-    return 0
-  fi
-
-  echo "unable to stop process using SIGQUIT after 5 seconds, will now attempt to SIGKILL"
-  kill -KILL "$pid" || true
-  if wait_pid "$pid" 50 ; then
-    rm "$PIDFILE"
-    return 0
-  fi
-
-  echo "unable to stop process using SIGKILL after 5 seconds"
-  return 1
-}
-
 case $1 in
 
   start)
-    mkdir -p $RUN_DIR
-    mkdir -p $LOG_DIR
+    mkdir -p ${RUN_DIR}
+    mkdir -p ${LOG_DIR}
 
     keyURL=${ETCD_ENDPOINT}/v2/keys/coreos.com/network/config
 
@@ -98,13 +53,13 @@ case $1 in
       --key ${ETCD_CERTS_DIR}/client.key \
       $keyURL \
       -XPUT -d value='<%= flannelConfig %>' \
-      1>>$LOG_DIR/flanneld.stdout.log \
-      2>>$LOG_DIR/flanneld.stderr.log
+      1>>${LOG_DIR}/flanneld.stdout.log \
+      2>>${LOG_DIR}/flanneld.stderr.log
 
     exec 2> >(tee -a $LOG_DIR/flanneld.stderr.log | logger -p user.error -t flanneld) \
          1> >(tee -a $LOG_DIR/flanneld.stdout.log | logger -t flanneld)
 
-    echo $$ > $PIDFILE
+         echo $$ > ${PIDFILE}
 
     exec /var/vcap/packages/flannel/bin/flanneld \
       --log_dir=${LOG_DIR} \

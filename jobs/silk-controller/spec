@@ -16,6 +16,7 @@ templates:
 
 packages:
   - silk-controller
+  - ctl-utils
 
 properties:
   cf_networking.disable:

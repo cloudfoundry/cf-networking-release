@@ -7,6 +7,7 @@ templates:
 
 packages:
   - netmon
+  - ctl-utils
 
 properties:
   cf_networking.netmon.metron_address:

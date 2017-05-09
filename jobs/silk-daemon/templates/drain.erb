@@ -6,11 +6,11 @@ set -o pipefail
 REP_ADDRESS=<%= p("cf_networking.rep_listen_addr_admin") %>
 SILK_DAEMON_HEALTH_CHECK_ADDRESS=localhost:<%= p("cf_networking.silk_daemon.listen_port") %>
 export RUN_DIR=/var/vcap/sys/run/silk-daemon
-export PIDFILE=$RUN_DIR/silk-daemon.pid
+export PIDFILE=${RUN_DIR}/silk-daemon.pid
 LOG_DIR=/var/vcap/sys/log/silk-daemon
-LOGFILE=$LOG_DIR/drain.log
+LOGFILE=${LOG_DIR}/drain.log
 
-mkdir -p $LOG_DIR
+mkdir -p ${LOG_DIR}
 
 exec 3>&1
 
@@ -18,11 +18,11 @@ exec 1>> $LOGFILE
 exec 2>> $LOGFILE
 
 ping_rep() {
-  curl --fail --silent http://$REP_ADDRESS/ping >/dev/null 2>&1
+  curl --fail --silent http://${REP_ADDRESS}/ping >/dev/null 2>&1
 }
 
 ping_silk_daemon() {
-  curl --fail --silent http://$SILK_DAEMON_HEALTH_CHECK_ADDRESS/ping >/dev/null 2>&1
+  curl --fail --silent http://${SILK_DAEMON_HEALTH_CHECK_ADDRESS}/ping >/dev/null 2>&1
 }
 
 run_teardown() {

@@ -3,40 +3,17 @@
 <% unless p("cf_networking.disable") %>
 set -o pipefail
 
-function wait_for_server_to_become_healthy() {
-  for i in $(seq 20); do
-    set +e
-    curl 127.0.0.1:<%= p("cf_networking.silk_controller.debug_port") %>/log-level
-    if [ "0" == "$?" ]; then
-      healthy=true
-      return
-    fi
-    set -e
-    sleep 1
-  done
-}
+source /var/vcap/packages/ctl-utils/ctl_util.sh
 
-function handle_orphaned_server() {
-  echo "killing policy-server with pid ${pid}"
-  kill "${pid}"
-}
-
-trap handle_orphaned_server TERM
+trap 'handle_orphaned_server silk-controller ${pid}' TERM
 
 /var/vcap/packages/silk-controller/bin/silk-controller \
-  -config=$CONF_DIR/silk-controller.json \
-  2> >(tee -a $LOG_DIR/silk-controller.stderr.log | logger -p user.error -t silk-controller) \
-  1> >(tee -a $LOG_DIR/silk-controller.stdout.log | logger -t silk-controller) &
+  -config=${CONF_DIR}/silk-controller.json \
+  2> >(tee -a ${LOG_DIR}/silk-controller.stderr.log | logger -p user.error -t silk-controller) \
+  1> >(tee -a ${LOG_DIR}/silk-controller.stdout.log | logger -t silk-controller) &
 
 pid=$!
 
-healthy=false
-wait_for_server_to_become_healthy
-
-if ${healthy}; then
-  echo ${pid} > ${PIDFILE}
-else
-  kill -9 ${pid}
-  exit 1
-fi
+healthy=$(wait_for_server_to_become_healthy ${URL} ${TIMEOUT})
+write_pid ${healthy} ${pid}
 <% end %>

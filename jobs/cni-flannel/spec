@@ -17,6 +17,7 @@ packages:
   - silk-cni
   - runc-cni
   - flannel-watchdog
+  - ctl-utils
 
 properties:
   cf_networking.disable:
