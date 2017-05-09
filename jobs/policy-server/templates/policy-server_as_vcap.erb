@@ -6,11 +6,11 @@ source /var/vcap/packages/ctl-utils/ctl_util.sh
 trap 'handle_orphaned_server policy-server ${pid}' TERM
 
 /var/vcap/packages/policy-server/bin/policy-server \
-  -config-file=${CONF_DIR}/policy-server.json \
-  2> >(tee -a ${LOG_DIR}/policy-server.stderr.log | logger -p user.error -t policy-server) \
-  1> >(tee -a ${LOG_DIR}/policy-server.stdout.log | logger -t policy-server) &
+  -config-file="${CONF_DIR}"/policy-server.json \
+  2> >(tee -a "${LOG_DIR}"/policy-server.stderr.log | logger -p user.error -t policy-server) \
+  1> >(tee -a "${LOG_DIR}"/policy-server.stdout.log | logger -t policy-server) &
 
 pid=$!
 
-healthy=$(wait_for_server_to_become_healthy ${URL} ${TIMEOUT})
-write_pid ${healthy} ${pid}
+healthy=$(wait_for_server_to_become_healthy "${URL}" "${TIMEOUT}")
+write_pid "${healthy}" "${pid}"

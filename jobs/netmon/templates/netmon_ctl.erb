@@ -4,7 +4,7 @@ source /var/vcap/packages/ctl-utils/ctl_util.sh
 
 RUN_DIR=/var/vcap/sys/run/netmon
 LOG_DIR=/var/vcap/sys/log/netmon
-PIDFILE=${RUN_DIR}/netmon.pid
+PIDFILE="${RUN_DIR}"/netmon.pid
 
 mkdir -p /var/vcap/sys/log/monit
 exec 1>> /var/vcap/sys/log/monit/netmon.out.log
@@ -14,13 +14,13 @@ case $1 in
 
   start)
 
-    mkdir -p ${RUN_DIR}
-    mkdir -p ${LOG_DIR}
+    mkdir -p "${RUN_DIR}"
+    mkdir -p "${LOG_DIR}"
 
-    exec 2> >(tee -a ${LOG_DIR}/netmon.stderr.log | logger -p user.error -t netmon) \
-      1> >(tee -a ${LOG_DIR}/netmon.stdout.log | logger -t netmon)
+    exec 2> >(tee -a "${LOG_DIR}"/netmon.stderr.log | logger -p user.error -t netmon) \
+      1> >(tee -a "${LOG_DIR}"/netmon.stdout.log | logger -t netmon)
 
-    echo $$ > $PIDFILE
+      echo $$ > "${PIDFILE}"
 
     exec /var/vcap/packages/netmon/bin/netmon \
          -config-file=/var/vcap/jobs/netmon/config/netmon.json

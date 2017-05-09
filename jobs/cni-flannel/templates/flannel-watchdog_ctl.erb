@@ -7,7 +7,7 @@ source /var/vcap/packages/ctl-utils/ctl_util.sh
 export RUN_DIR=/var/vcap/sys/run/flannel-watchdog
 export LOG_DIR=/var/vcap/sys/log/flannel-watchdog
 export CONF_DIR=/var/vcap/jobs/cni-flannel/config
-export PIDFILE=${RUN_DIR}/flannel-watchdog.pid
+export PIDFILE="${RUN_DIR}"/flannel-watchdog.pid
 
 mkdir -p /var/vcap/sys/log/monit
 exec 1>> /var/vcap/sys/log/monit/flannel-watchdog.out.log
@@ -17,13 +17,13 @@ case $1 in
 
   start)
 
-    mkdir -p ${RUN_DIR}
-    mkdir -p ${LOG_DIR}
+    mkdir -p "${RUN_DIR}"
+    mkdir -p "${LOG_DIR}"
 
     /var/vcap/packages/flannel-watchdog/bin/flannel-watchdog \
-      -config-file=${CONF_DIR}/flannel-watchdog.json \
-      2> >(tee -a ${LOG_DIR}/flannel-watchdog.stderr.log | logger -p user.error -t flannel-watchdog) \
-      1> >(tee -a ${LOG_DIR}/flannel-watchdog.stdout.log | logger -t flannel-watchdog) & echo $! > $PIDFILE
+      -config-file="${CONF_DIR}"/flannel-watchdog.json \
+      2> >(tee -a "${LOG_DIR}"/flannel-watchdog.stderr.log | logger -p user.error -t flannel-watchdog) \
+      1> >(tee -a "${LOG_DIR}"/flannel-watchdog.stdout.log | logger -t flannel-watchdog) & echo $! > "${PIDFILE}"
 
     ;;
 

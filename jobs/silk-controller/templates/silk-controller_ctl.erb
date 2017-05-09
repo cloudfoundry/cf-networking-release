@@ -5,7 +5,7 @@ source /var/vcap/packages/ctl-utils/ctl_util.sh
 
 export RUN_DIR=/var/vcap/sys/run/silk-controller
 export LOG_DIR=/var/vcap/sys/log/silk-controller
-export PIDFILE=${RUN_DIR}/silk-controller.pid
+export PIDFILE="${RUN_DIR}"/silk-controller.pid
 export CONF_DIR=/var/vcap/jobs/silk-controller/config
 export URL=127.0.0.1:<%= p("cf_networking.silk_controller.debug_port") %>/log-level
 export TIMEOUT=20
@@ -18,15 +18,15 @@ case $1 in
 
   start)
 
-    mkdir -p ${RUN_DIR}
-    chown -R vcap:vcap ${RUN_DIR}
+    mkdir -p "${RUN_DIR}"
+    chown -R vcap:vcap "${RUN_DIR}"
 
-    mkdir -p ${LOG_DIR}
-    chown -R vcap:vcap ${LOG_DIR}
+    mkdir -p "${LOG_DIR}"
+    chown -R vcap:vcap "${LOG_DIR}"
 
-    chown -R vcap:vcap ${CONF_DIR}
+    chown -R vcap:vcap "${CONF_DIR}"
 
-    exec chpst -u vcap:vcap bash -c '/var/vcap/jobs/silk-controller/bin/silk-controller_as_vcap'
+    exec chpst -u vcap:vcap bash -c "/var/vcap/jobs/silk-controller/bin/silk-controller_as_vcap"
 
     ;;
 

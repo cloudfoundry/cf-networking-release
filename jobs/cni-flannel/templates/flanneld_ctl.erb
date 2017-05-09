@@ -6,9 +6,10 @@ source /var/vcap/packages/ctl-utils/ctl_util.sh
 RUN_DIR=/var/vcap/sys/run/flannel
 LOG_DIR=/var/vcap/sys/log/flannel
 ETCD_CERTS_DIR=/var/vcap/jobs/cni-flannel/config/certs/etcd
-export PIDFILE=${RUN_DIR}/flanneld.pid
-
+HEALTH_CHECK_PORT=<%= p("cf_networking.plugin.health_check_port") %>
 ETCD_ENDPOINT=<%= p("cf_networking.plugin.etcd_endpoints").map{|addr| "\"https://#{addr}:4001\""}.join(",") %>
+export PIDFILE="${RUN_DIR}"/flanneld.pid
+
 
 <%
   require 'json'
@@ -34,6 +35,7 @@ ETCD_ENDPOINT=<%= p("cf_networking.plugin.etcd_endpoints").map{|addr| "\"https:/
 
   flannelConfig = JSON.pretty_generate(toRender)
 %>
+FLANNEL_CONFIG='<%= flannelConfig %>'
 
 mkdir -p /var/vcap/sys/log/monit
 exec 1>> /var/vcap/sys/log/monit/flanneld.out.log
@@ -42,34 +44,34 @@ exec 2>> /var/vcap/sys/log/monit/flanneld.err.log
 case $1 in
 
   start)
-    mkdir -p ${RUN_DIR}
-    mkdir -p ${LOG_DIR}
+    mkdir -p "${RUN_DIR}"
+    mkdir -p "${LOG_DIR}"
 
-    keyURL=${ETCD_ENDPOINT}/v2/keys/coreos.com/network/config
+    keyURL="${ETCD_ENDPOINT}"/v2/keys/coreos.com/network/config
 
     curl -v \
-      --cacert ${ETCD_CERTS_DIR}/ca.crt \
-      --cert ${ETCD_CERTS_DIR}/client.crt \
-      --key ${ETCD_CERTS_DIR}/client.key \
-      $keyURL \
-      -XPUT -d value='<%= flannelConfig %>' \
-      1>>${LOG_DIR}/flanneld.stdout.log \
-      2>>${LOG_DIR}/flanneld.stderr.log
+      --cacert "${ETCD_CERTS_DIR}"/ca.crt \
+      --cert "${ETCD_CERTS_DIR}"/client.crt \
+      --key "${ETCD_CERTS_DIR}"/client.key \
+      "${keyURL}" \
+      -XPUT -d value="${FLANNEL_CONFIG}" \
+      1>>"${LOG_DIR}"/flanneld.stdout.log \
+      2>>"${LOG_DIR}"/flanneld.stderr.log
 
-    exec 2> >(tee -a $LOG_DIR/flanneld.stderr.log | logger -p user.error -t flanneld) \
-         1> >(tee -a $LOG_DIR/flanneld.stdout.log | logger -t flanneld)
+    exec 2> >(tee -a "${LOG_DIR}"/flanneld.stderr.log | logger -p user.error -t flanneld) \
+         1> >(tee -a "${LOG_DIR}"/flanneld.stdout.log | logger -t flanneld)
 
-         echo $$ > ${PIDFILE}
+         echo $$ > "${PIDFILE}"
 
     exec /var/vcap/packages/flannel/bin/flanneld \
-      --log_dir=${LOG_DIR} \
+      --log_dir="${LOG_DIR}" \
       --subnet-file="/var/vcap/data/flannel/subnet.env" \
       --subnet-lease-renew-margin=1439 \
-      --etcd-cafile=${ETCD_CERTS_DIR}/ca.crt \
-      --etcd-certfile=${ETCD_CERTS_DIR}/client.crt \
-      --etcd-keyfile=${ETCD_CERTS_DIR}/client.key \
-      --etcd-endpoints=${ETCD_ENDPOINT} \
-      --health-check-port=<%= p("cf_networking.plugin.health_check_port") %>
+      --etcd-cafile="${ETCD_CERTS_DIR}"/ca.crt \
+      --etcd-certfile="${ETCD_CERTS_DIR}"/client.crt \
+      --etcd-keyfile="${ETCD_CERTS_DIR}"/client.key \
+      --etcd-endpoints="${ETCD_ENDPOINT}" \
+      --health-check-port="${HEALTH_CHECK_PORT}"
     ;;
 
   stop)
