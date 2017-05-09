@@ -20,7 +20,7 @@ import (
 	"testing"
 )
 
-const Timeout_Push = 2 * time.Minute
+const Timeout_Push = 5 * time.Minute
 
 var (
 	appsDir string
