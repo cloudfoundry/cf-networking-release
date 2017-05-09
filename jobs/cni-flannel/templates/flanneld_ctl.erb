@@ -37,9 +37,8 @@ export PIDFILE="${RUN_DIR}"/flanneld.pid
 %>
 FLANNEL_CONFIG='<%= flannelConfig %>'
 
-mkdir -p /var/vcap/sys/log/monit
-exec 1>> /var/vcap/sys/log/monit/flanneld.out.log
-exec 2>> /var/vcap/sys/log/monit/flanneld.err.log
+exec 1>> "${LOG_DIR}"/flanneld_ctl.out.log
+exec 2>> "${LOG_DIR}"/flanneld_ctl.err.log
 
 case $1 in
 

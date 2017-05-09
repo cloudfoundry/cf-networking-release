@@ -11,9 +11,8 @@ export PORT=<%= p("cf_networking.silk_controller.debug_port") %>
 export URL=127.0.0.1:"${PORT}"/log-level
 export TIMEOUT=20
 
-mkdir -p /var/vcap/sys/log/monit
-exec 1>> /var/vcap/sys/log/monit/silk-controller.out.log
-exec 2>> /var/vcap/sys/log/monit/silk-controller.err.log
+exec 1>> "${LOG_DIR}"/silk-controller_ctl.out.log
+exec 2>> "${LOG_DIR}"/silk-controller_ctl.err.log
 
 case $1 in
 

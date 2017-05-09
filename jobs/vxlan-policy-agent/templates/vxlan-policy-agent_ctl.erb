@@ -10,9 +10,8 @@ LOG_DIR=/var/vcap/sys/log/vxlan-policy-agent
 TIMEOUT=20
 export PIDFILE="${RUN_DIR}"/vxlan-policy-agent.pid
 
-mkdir -p /var/vcap/sys/log/monit
-exec 1>> /var/vcap/sys/log/monit/vxlan-policy-agent.out.log
-exec 2>> /var/vcap/sys/log/monit/vxlan-policy-agent.err.log
+exec 1>> "${LOG_DIR}"/vxlan-policy-agent_ctl.out.log
+exec 2>> "${LOG_DIR}"/vxlan-policy-agent_ctl.err.log
 
 case $1 in
 

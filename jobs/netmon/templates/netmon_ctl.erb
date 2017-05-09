@@ -6,9 +6,8 @@ RUN_DIR=/var/vcap/sys/run/netmon
 LOG_DIR=/var/vcap/sys/log/netmon
 PIDFILE="${RUN_DIR}"/netmon.pid
 
-mkdir -p /var/vcap/sys/log/monit
-exec 1>> /var/vcap/sys/log/monit/netmon.out.log
-exec 2>> /var/vcap/sys/log/monit/netmon.err.log
+exec 1>> "${LOG_DIR}"/netmon_ctl.out.log
+exec 2>> "${LOG_DIR}"/netmon_ctl.err.log
 
 case $1 in
 

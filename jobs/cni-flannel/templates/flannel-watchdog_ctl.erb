@@ -9,9 +9,8 @@ export LOG_DIR=/var/vcap/sys/log/flannel-watchdog
 export CONF_DIR=/var/vcap/jobs/cni-flannel/config
 export PIDFILE="${RUN_DIR}"/flannel-watchdog.pid
 
-mkdir -p /var/vcap/sys/log/monit
-exec 1>> /var/vcap/sys/log/monit/flannel-watchdog.out.log
-exec 2>> /var/vcap/sys/log/monit/flannel-watchdog.err.log
+exec 1>> "${LOG_DIR}"/flannel-watchdog_ctl.out.log
+exec 2>> "${LOG_DIR}"/flannel-watchdog_ctl.err.log
 
 case $1 in
 

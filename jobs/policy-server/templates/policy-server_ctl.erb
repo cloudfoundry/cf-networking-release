@@ -10,9 +10,8 @@ export PORT=<%= p("cf_networking.policy_server.listen_port") %>
 export URL=127.0.0.1:"${PORT}"
 export TIMEOUT=20
 
-mkdir -p /var/vcap/sys/log/monit
-exec 1>> /var/vcap/sys/log/monit/policy-server.out.log
-exec 2>> /var/vcap/sys/log/monit/policy-server.err.log
+exec 1>> "${LOG_DIR}"/policy-server_ctl.out.log
+exec 2>> "${LOG_DIR}"/policy-server_ctl.err.log
 
 case $1 in
 
