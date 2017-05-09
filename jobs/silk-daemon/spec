@@ -52,6 +52,10 @@ properties:
     description: "Debug port for silk daemon.  Use this to adjust log level at runtime or dump process stats."
     default: 22233
 
+  cf_networking.silk_daemon.metron_port:
+    description: "Forward metrics to this metron agent, listening on this port on localhost"
+    default: 3457
+
   cf_networking.silk_controller.hostname:
     description: "Host name for the silk controller.  E.g. the service advertised via Consul DNS.  Must match common name in the silk_controller.server_cert"
     default: "silk-controller.service.cf.internal"

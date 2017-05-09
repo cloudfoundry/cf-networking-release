@@ -20,14 +20,33 @@ files:
   - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/debugserver/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/go-db-helpers/json_client/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/go-db-helpers/marshal/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/go-db-helpers/metrics/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/go-db-helpers/mutualtls/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/lager/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/cloudfoundry/dropsonde/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/cloudfoundry/dropsonde/emitter/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/cloudfoundry/dropsonde/envelope_sender/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/cloudfoundry/dropsonde/envelopes/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/cloudfoundry/dropsonde/factories/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/cloudfoundry/dropsonde/instrumented_handler/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/cloudfoundry/dropsonde/instrumented_round_tripper/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/cloudfoundry/dropsonde/log_sender/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/cloudfoundry/dropsonde/logs/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/cloudfoundry/dropsonde/metric_sender/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/cloudfoundry/dropsonde/metricbatcher/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/cloudfoundry/dropsonde/metrics/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/cloudfoundry/dropsonde/runtime_stats/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/cloudfoundry/sonde-go/events/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/cni/pkg/utils/hwaddr/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/go-sql-driver/mysql/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/gogo/protobuf/gogoproto/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/gogo/protobuf/proto/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/gogo/protobuf/protoc-gen-gogo/descriptor/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/hashicorp/go-multierror/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/hashicorp/go-multierror/vendor/github.com/hashicorp/errwrap/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/lib/pq/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/lib/pq/oid/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/nu7hatch/gouuid/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/tedsuo/ifrit/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/tedsuo/ifrit/grouper/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/tedsuo/ifrit/http_server/*.go # gosub

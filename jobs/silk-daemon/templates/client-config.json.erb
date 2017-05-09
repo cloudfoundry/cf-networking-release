@@ -36,6 +36,7 @@
     "datastore" => "/var/vcap/data/silk/store.json",
     "partition_tolerance_seconds" => p("cf_networking.partition_tolerance_hours") * 60 * 60, # convert hours to seconds
     "client_timeout_seconds" => 5,
+    "metron_port" => p("cf_networking.silk_daemon.metron_port"),
   }
 
   JSON.pretty_generate(toRender)
