@@ -1,5 +1,10 @@
 #!/bin/bash -eu
 
+function log() {
+  local message=$1
+  echo "$(date): ${message}"
+}
+
 function wait_for_server_to_become_healthy() {
   local url=$1
   local timeout=$2
@@ -21,61 +26,61 @@ function handle_orphaned_server() {
   local job_name=$1
   local pid=$2
 
-  echo "killing ${job_name} with pid ${pid}"
+  log "killing ${job_name} with pid ${pid}"
   kill "${pid}"
 }
 
 function stop_process() {
   local pid
   pid=$(cat "${PIDFILE}")
+  log "stop called. found pid ${pid} in ${PIDFILE}"
   stop_gracefully "${pid}"
+  if [ $? -eq 0 ]; then
+    rm "${PIDFILE}"
+  fi
 }
 
 stop_process_on_port() {
   local port=$1
 
-  echo "checking for processes listening on port ${port}"
+  log "checking for processes listening on port ${port}"
   set +e
   local pids
   pids=$(lsof -t -i :"${port}")
   set -e
   if [ ! -z "${pids}" ]; then
-    echo "the following processes are listening on port ${port}"
+    log "the following processes are listening on port ${port}"
     lsof -i :"${port}"
   else
-    echo "no processes found listening on port ${port}"
+    log "no processes found listening on port ${port}"
   fi
 
   for pid in ${pids}; do
-    echo "killing process with pid ${pid}"
     stop_gracefully "${pid}"
   done
 }
 
 stop_gracefully() {
   local pid=$1
-  echo "stopping..."
+  log "stopping process with pid ${pid}"
   kill -TERM "${pid}"
   if wait_pid "${pid}" 80 ; then
-    rm "${PIDFILE}"
     return 0
   fi
 
-  echo "unable to stop process using SIGTERM after 8 seconds, will now attempt to SIGQUIT"
+  log "unable to stop process using SIGTERM after 8 seconds, will now attempt to SIGQUIT"
   kill -QUIT "${pid}" || true
   if wait_pid "${pid}" 20 ; then
-    rm "${PIDFILE}"
     return 0
   fi
 
-  echo "unable to stop process using SIGQUIT after 2 seconds, will now attempt to SIGKILL"
+  log "unable to stop process using SIGQUIT after 2 seconds, will now attempt to SIGKILL"
   kill -KILL "${pid}" || true
   if wait_pid "${pid}" 20 ; then
-    rm "${PIDFILE}"
     return 0
   fi
 
-  echo "unable to stop process using SIGKILL after 2 seconds"
+  log "unable to stop process using SIGKILL after 2 seconds"
   return 1
 }
 
@@ -85,6 +90,7 @@ function write_pid() {
 
   if [ "${healthy}" -eq 0 ]; then
     echo "${pid}" > "${PIDFILE}"
+    log "start succeeded. wrote pid ${pid} to ${PIDFILE}"
   else
     kill -9 "${pid}"
     exit 1
