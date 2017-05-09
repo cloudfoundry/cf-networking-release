@@ -3,7 +3,8 @@
 <% unless p("cf_networking.disable") %>
 source /var/vcap/packages/ctl-utils/ctl_util.sh
 
-URL=127.0.0.1:<%= p("cf_networking.silk_daemon.listen_port") %>
+PORT=<%= p("cf_networking.silk_daemon.listen_port") %>
+URL=127.0.0.1:"${PORT}"
 RUN_DIR=/var/vcap/sys/run/silk-daemon
 LOG_DIR=/var/vcap/sys/log/silk-daemon
 TIMEOUT=20
@@ -17,6 +18,8 @@ case $1 in
 
   start)
     trap 'handle_orphaned_server silk-daemon ${pid}' TERM
+
+    stop_process_on_port "${PORT}"
 
     mkdir -p "${RUN_DIR}"
     mkdir -p "${LOG_DIR}"

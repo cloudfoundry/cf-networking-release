@@ -3,7 +3,8 @@
 <% unless p("cf_networking.disable") %>
 source /var/vcap/packages/ctl-utils/ctl_util.sh
 
-URL=127.0.0.1:<%= p("cf_networking.vxlan_policy_agent.debug_server_port")%>/log-level
+PORT=<%= p("cf_networking.vxlan_policy_agent.debug_server_port")%>
+URL=127.0.0.1:"${PORT}"/log-level
 RUN_DIR=/var/vcap/sys/run/vxlan-policy-agent
 LOG_DIR=/var/vcap/sys/log/vxlan-policy-agent
 TIMEOUT=20
@@ -16,7 +17,9 @@ exec 2>> /var/vcap/sys/log/monit/vxlan-policy-agent.err.log
 case $1 in
 
   start)
-  trap 'handle_orphaned_server vxlan-policy-agent ${pid}' TERM
+    trap 'handle_orphaned_server vxlan-policy-agent ${pid}' TERM
+
+    stop_process_on_port "${PORT}"
 
     mkdir -p "${RUN_DIR}"
     mkdir -p "${LOG_DIR}"

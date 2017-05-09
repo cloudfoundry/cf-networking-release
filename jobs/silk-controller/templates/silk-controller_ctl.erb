@@ -7,7 +7,8 @@ export RUN_DIR=/var/vcap/sys/run/silk-controller
 export LOG_DIR=/var/vcap/sys/log/silk-controller
 export PIDFILE="${RUN_DIR}"/silk-controller.pid
 export CONF_DIR=/var/vcap/jobs/silk-controller/config
-export URL=127.0.0.1:<%= p("cf_networking.silk_controller.debug_port") %>/log-level
+export PORT=<%= p("cf_networking.silk_controller.debug_port") %>
+export URL=127.0.0.1:"${PORT}"/log-level
 export TIMEOUT=20
 
 mkdir -p /var/vcap/sys/log/monit
@@ -17,6 +18,8 @@ exec 2>> /var/vcap/sys/log/monit/silk-controller.err.log
 case $1 in
 
   start)
+
+    stop_process_on_port "${PORT}"
 
     mkdir -p "${RUN_DIR}"
     chown -R vcap:vcap "${RUN_DIR}"
