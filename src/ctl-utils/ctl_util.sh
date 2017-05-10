@@ -46,11 +46,11 @@ stop_process_on_port() {
   log "checking for processes listening on port ${port}"
   set +e
   local pids
-  pids=$(lsof -t -i :"${port}")
+  pids=$(lsof -t -s TCP:LISTEN -i TCP:"${port}")
   set -e
   if [ ! -z "${pids}" ]; then
     log "the following processes are listening on port ${port}"
-    lsof -i :"${port}"
+    lsof -s TCP:LISTEN -i TCP:"${port}"
   else
     log "no processes found listening on port ${port}"
   fi
