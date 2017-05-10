@@ -1,5 +1,10 @@
 # Known Issues
 
+### Compatibility with VMware NSX for vSphere 6.x
+
+  When using VMware NSX for vSphere 6.x, the default VXLAN port of 8472 used by cf-networking is not allowed.
+  To fix this issue, override the default `cf_networking.vtep_port` with another value.
+
 ### MySQL versions below 5.7
 
   When the policy server is backed by MySQL versions < 5.7, a user may see this error when trying to create a policy:
