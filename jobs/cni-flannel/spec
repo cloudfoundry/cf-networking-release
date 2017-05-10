@@ -24,6 +24,10 @@ properties:
     description: "Disable container to container networking."
     default: false
 
+  cf_networking.vtep_port:
+    description: "Host port used for sending VXLAN packets"
+    default: 8472
+
   cf_networking.plugin.etcd_endpoints:
     description: "List of etcd endpoints"
     default: []

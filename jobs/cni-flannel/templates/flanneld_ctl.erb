@@ -29,7 +29,7 @@ mkdir -p "${LOG_DIR}"
     "SubnetLen" => subnet_prefix_length,
     "Backend" => {
       "Type" => "vxlan",
-      "Port" => 8472,
+      "Port" => p("cf_networking.vtep_port"),
       "VNI" => 1,
       "GBP" => true
     },
