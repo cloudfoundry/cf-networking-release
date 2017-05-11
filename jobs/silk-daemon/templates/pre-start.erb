@@ -5,6 +5,8 @@
 (ip link del dev flannel.1 || true) 2> /dev/null
 
 # run teardown
+set +e
 /var/vcap/packages/silk-daemon/bin/silk-teardown \
   -config=/var/vcap/jobs/silk-daemon/config/client-config.json
+set -e
 <% end %>
