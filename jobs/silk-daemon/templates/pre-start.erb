@@ -3,4 +3,8 @@
 <% unless p("cf_networking.disable") %>
 # remove the old flannel vtep device if it exists
 (ip link del dev flannel.1 || true) 2> /dev/null
+
+# run teardown
+/var/vcap/packages/silk-daemon/bin/silk-teardown \
+  -config=/var/vcap/jobs/silk-daemon/config/client-config.json
 <% end %>
