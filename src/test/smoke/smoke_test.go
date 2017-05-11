@@ -119,6 +119,7 @@ func deleteAllPolicies(sourceApp string, dstList []string, dstPorts []int) {
 func runWithTimeout(operation string, timeout time.Duration, work func()) {
 	done := make(chan bool)
 	go func() {
+		defer GinkgoRecover()
 		fmt.Printf("starting %s\n", operation)
 		work()
 		done <- true
