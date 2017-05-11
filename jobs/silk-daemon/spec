@@ -23,6 +23,10 @@ properties:
     description: "CIDR address block for overlay network.  Subnets for each diego cell are allocated out of this network."
     default: "10.255.0.0/16"
 
+  cf_networking.vtep_port:
+    description: "Host port used for receiving VXLAN packets"
+    default: 4789
+
   cf_networking.rep_listen_addr_admin:
     description: "Admin endpoint on diego rep.  Silk daemon job drain waits for the rep to exit before tearing down the network.  See diego.rep.listen_addr_admin"
     default: 127.0.0.1:1800

@@ -25,7 +25,7 @@ properties:
     default: false
 
   cf_networking.vtep_port:
-    description: "Host port used for sending VXLAN packets"
+    description: "Host port used for receiving VXLAN packets"
     default: 8472
 
   cf_networking.plugin.etcd_endpoints:

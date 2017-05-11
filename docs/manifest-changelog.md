@@ -2,6 +2,13 @@
 
 See [deployment docs](deploy-iaas.md) for examples
 
+### 0.24.0
+
+**New Properties**
+
+The host port for receiving VXLAN packets is now configurable as `cf_networking.vtep_port` for flannel and silk.
+Overriding this value is optional.
+
 ### 0.22.0
 
 This release introduces a new container networking fabric called "silk" and
