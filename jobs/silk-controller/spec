@@ -18,6 +18,11 @@ packages:
   - silk-controller
   - ctl-utils
 
+consumes:
+- name: database
+  type: database
+  optional: true
+
 properties:
   cf_networking.disable:
     description: "Disable container to container networking."

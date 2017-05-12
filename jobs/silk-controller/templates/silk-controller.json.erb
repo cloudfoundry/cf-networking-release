@@ -2,12 +2,49 @@
 <%=
   require 'json'
 
-  def db_params
-    ['username', 'password', 'host', 'port', 'name'].map {|name| "cf_networking.silk_controller.database.#{name}"}
+  def db_param_path(name)
+    "cf_networking.silk_controller.database.#{name}"
   end
 
-  def param_exists? param
-    p(param) != ""
+  def db_param(name)
+    if_p(db_param_path name) do |param|
+      return param
+    end.else do
+      return nil
+    end
+  end
+
+  def require_db_param(name)
+    param = db_param name
+    return param if param.present?
+
+    raise "#{db_param_path name} must be specified"
+  end
+
+  def db_host
+    from_property = db_param 'host'
+    return from_property if from_property.present?
+
+    from_link = link("database").instances[0].address
+    return from_link if from_link.present?
+
+    raise "must provide database link or set #{db_param_path 'host'}"
+  end
+
+  def connection_string
+    user = require_db_param 'username'
+    password = require_db_param 'password'
+    port = require_db_param 'port'
+    name = require_db_param 'name'
+    driver = require_db_param 'type'
+    case driver
+    when 'mysql'
+      sprintf "%s:%s@tcp(%s:%s)/%s", user, password, db_host, port, name
+    when 'postgres'
+      sprintf "postgres://%s:%s@%s:%s/%s?sslmode=disable", user, password, db_host, port, name
+    else
+      raise "unknown driver #{driver}"
+    end
   end
 
   def subnet_prefix_length
@@ -16,24 +53,6 @@
       raise "'cf_networking.subnet_prefix_length' must be a value between 1-30"
     end
     size
-  end
-
-  def connection_string
-    unless db_params.all? {|p| param_exists?(p)}
-      raise "all of the following parameters must be specified #{db_params.join(",")}"
-    end
-
-    values = db_params.map {|param| p(param)}
-    # Note: order of the params is important here, it has to be username, password, host, port, name in that order
-    driver = p("cf_networking.silk_controller.database.type")
-    case driver
-    when 'mysql'
-      sprintf "%s:%s@tcp(%s:%s)/%s?parseTime=true", *values
-    when 'postgres'
-      sprintf "postgres://%s:%s@%s:%s/%s?sslmode=disable", *values
-    else
-      raise "unknown driver #{driver}"
-    end
   end
 
   toRender = {

@@ -15,6 +15,11 @@ packages:
   - policy-server
   - ctl-utils
 
+consumes:
+- name: database
+  type: database
+  optional: true
+
 properties:
   cf_networking.policy_cleanup_interval:
     description: "Clean up stale policies on this interval, in minutes."
