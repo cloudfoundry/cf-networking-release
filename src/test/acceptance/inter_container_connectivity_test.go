@@ -40,7 +40,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 		BeforeEach(func() {
 			prefix = testConfig.Prefix
 
-			orgName = prefix + "inter-container-connectivity-org"
+			orgName = prefix + "org"
 			Expect(cf.Cf("create-org", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
 			Expect(cf.Cf("target", "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
 
