@@ -75,6 +75,7 @@ var _ = Describe("how the container network performs at scale", func() {
 				conns := connections(proxyApps, appIPs, ports)
 
 				sample := sampleConnections(conns, testConfig.SamplePercent)
+
 				beforeCreatePolicies := make(chan string, len(sample))
 				By(fmt.Sprintf("%s checking that the connection fails sampling %d out of %d connections", ts(), len(sample), len(conns)))
 				runWithTimeout("check connection failures", Timeout_Check, func() {
@@ -90,6 +91,7 @@ var _ = Describe("how the container network performs at scale", func() {
 				time.Sleep(policyUpdateWaitTime)
 
 				sample = sampleConnections(conns, testConfig.SamplePercent)
+
 				afterCreatePolicies := make(chan string, len(sample))
 				By(fmt.Sprintf("%s checking that the connection succeeds sampling %d out of %d connections", ts(), len(sample), len(conns)))
 				runWithTimeout("check connection success", Timeout_Check, func() {
@@ -107,6 +109,7 @@ var _ = Describe("how the container network performs at scale", func() {
 				time.Sleep(policyUpdateWaitTime)
 
 				sample = sampleConnections(conns, testConfig.SamplePercent)
+
 				afterDeletePolicies := make(chan string, len(sample))
 				By(fmt.Sprintf("%s checking that the connection fails sampling %d out of %d connections", ts(), len(sample), len(conns)))
 				runWithTimeout("check connection failures, again", Timeout_Check, func() {
@@ -168,6 +171,22 @@ var _ = Describe("how the container network performs at scale", func() {
 				{Source: "i", Dest: "di", Port: 9},
 				{Source: "j", Dest: "dj", Port: 0},
 			}
+		})
+
+		It("does not modify population", func() {
+			sampleConnections(population, 90)
+			Expect(population).To(Equal([]Connection{
+				{Source: "a", Dest: "da", Port: 1},
+				{Source: "b", Dest: "db", Port: 2},
+				{Source: "c", Dest: "dc", Port: 3},
+				{Source: "d", Dest: "dd", Port: 4},
+				{Source: "e", Dest: "de", Port: 5},
+				{Source: "f", Dest: "df", Port: 6},
+				{Source: "g", Dest: "dg", Port: 7},
+				{Source: "h", Dest: "dh", Port: 8},
+				{Source: "i", Dest: "di", Port: 9},
+				{Source: "j", Dest: "dj", Port: 0},
+			}))
 		})
 
 		It("returns a sample of unique choices from the population", func() {
@@ -362,11 +381,15 @@ func sampleConnections(population []Connection, samplePercent int) []Connection 
 	if len(population) <= sampleSize || sampleSize < 1 {
 		return population
 	}
-	var sample = []Connection{}
+	shadowPopulation := []Connection{}
+	for i := 0; i < populationSize; i++ {
+		shadowPopulation = append(shadowPopulation, population[i])
+	}
+	sample := []Connection{}
 	for i := 0; i < sampleSize; i++ {
 		j := rand.Intn(populationSize)
-		sample = append(sample, population[j])
-		population = append(population[:j], population[j+1:]...)
+		sample = append(sample, shadowPopulation[j])
+		shadowPopulation = append(shadowPopulation[:j], shadowPopulation[j+1:]...)
 		populationSize--
 	}
 	return sample
@@ -419,14 +442,26 @@ func assertConnectionFails(conns []Connection, nProxies int, errs chan<- string)
 }
 
 func assertResponseContains(destIP string, port int, sourceAppName string, desiredResponse string, errs chan<- string) {
-	resp, err := httpGetBytes(fmt.Sprintf("http://%s.%s/proxy/%s:%d", sourceAppName, config.AppsDomain, destIP, port))
-	if err != nil {
-		errs <- fmt.Sprintf("req to %s:%d: got error: %s", destIP, port, err)
-		return
-	}
-	body := string(resp.Body)
-	if !strings.Contains(body, desiredResponse) {
-		errs <- fmt.Sprintf("req to %s:%d: expected %q but got %q", destIP, port, desiredResponse, body)
+	numRetries := 3
+	for i := 1; i <= numRetries; i++ {
+		resp, err := httpGetBytes(fmt.Sprintf("http://%s.%s/proxy/%s:%d", sourceAppName, config.AppsDomain, destIP, port))
+		if err != nil {
+			if i == numRetries {
+				errs <- fmt.Sprintf("req to %s:%d: got error: %s", destIP, port, err)
+				return
+			}
+		} else {
+			body := string(resp.Body)
+			if !strings.Contains(body, desiredResponse) {
+				if i == numRetries {
+					errs <- fmt.Sprintf("req to %s:%d from %s: expected %q but got %q", destIP, port, sourceAppName, desiredResponse, body)
+					return
+				}
+			} else {
+				return
+			}
+		}
+		time.Sleep(time.Second)
 	}
 }
 
