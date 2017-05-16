@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"net/http"
 	"policy-server/config"
+	"policy-server/integration/helpers"
 	"strings"
 
 	"code.cloudfoundry.org/go-db-helpers/metrics"
@@ -33,7 +34,7 @@ var _ = Describe("Automatic Stale Policy Cleanup", func() {
 		dbConnectionInfo := testsupport.GetDBConnectionInfo()
 		testDatabase = dbConnectionInfo.CreateDatabase(dbName)
 
-		template := DefaultTestConfig(testDatabase.DBConfig(), fakeMetron.Address())
+		template := helpers.DefaultTestConfig(testDatabase.DBConfig(), fakeMetron.Address(), "fixtures")
 		template.CleanupInterval = 1
 		template.CCAppRequestChunkSize = 1
 
@@ -45,7 +46,7 @@ var _ = Describe("Automatic Stale Policy Cleanup", func() {
 	AfterEach(func() {
 		for _, session := range sessions {
 			session.Interrupt()
-			Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit())
+			Eventually(session, helpers.DEFAULT_TIMEOUT).Should(gexec.Exit())
 		}
 
 		if testDatabase != nil {
@@ -63,7 +64,7 @@ var _ = Describe("Automatic Stale Policy Cleanup", func() {
 				{"source": { "id": "live-app-1-guid" }, "destination": { "id": "dead-app", "protocol": "tcp", "port": 3333 } }
 				]} `)
 
-			resp := makeAndDoRequest(
+			resp := helpers.MakeAndDoRequest(
 				"POST",
 				fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
 				body,
@@ -73,7 +74,7 @@ var _ = Describe("Automatic Stale Policy Cleanup", func() {
 
 		It("eventually cleans up stale policies stale policies", func() {
 			listPolicies := func() []byte {
-				resp := makeAndDoRequest(
+				resp := helpers.MakeAndDoRequest(
 					"GET",
 					fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
 					nil,

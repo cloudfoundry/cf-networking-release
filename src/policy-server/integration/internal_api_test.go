@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"net/http"
 	"policy-server/config"
+	"policy-server/integration/helpers"
 	"strings"
 
 	"code.cloudfoundry.org/go-db-helpers/metrics"
@@ -49,7 +50,7 @@ var _ = Describe("Internal API", func() {
 		}
 		tlsConfig.BuildNameToCertificate()
 
-		template := DefaultTestConfig(testDatabase.DBConfig(), fakeMetron.Address())
+		template := helpers.DefaultTestConfig(testDatabase.DBConfig(), fakeMetron.Address(), "fixtures")
 		template.TagLength = 2
 		policyServerConfs := configurePolicyServers(template, 1)
 		sessions = startPolicyServers(policyServerConfs)
@@ -76,13 +77,13 @@ var _ = Describe("Internal API", func() {
 				 ]}
 				`)
 
-		_ = makeAndDoRequest(
+		_ = helpers.MakeAndDoRequest(
 			"POST",
 			fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
 			body,
 		)
 
-		resp := makeAndDoHTTPSRequest(
+		resp := helpers.MakeAndDoHTTPSRequest(
 			"GET",
 			fmt.Sprintf("https://%s:%d/networking/v0/internal/policies?id=app1,app2", conf.ListenHost, conf.InternalListenPort),
 			nil,
@@ -99,7 +100,7 @@ var _ = Describe("Internal API", func() {
 	})
 
 	It("emits metrics about durations", func() {
-		resp := makeAndDoHTTPSRequest(
+		resp := helpers.MakeAndDoHTTPSRequest(
 			"GET",
 			fmt.Sprintf("https://%s:%d/networking/v0/internal/policies?id=app1,app2", conf.ListenHost, conf.InternalListenPort),
 			nil,

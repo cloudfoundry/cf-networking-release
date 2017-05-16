@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os/exec"
 	"policy-server/config"
+	"policy-server/integration/helpers"
 	"strings"
 	"time"
 
@@ -41,7 +42,7 @@ var _ = Describe("Integration", func() {
 			dbConnectionInfo := testsupport.GetDBConnectionInfo()
 			testDatabase = dbConnectionInfo.CreateDatabase(dbName)
 
-			template := DefaultTestConfig(testDatabase.DBConfig(), fakeMetron.Address())
+			template := helpers.DefaultTestConfig(testDatabase.DBConfig(), fakeMetron.Address(), "fixtures")
 			policyServerConfs := configurePolicyServers(template, 1)
 			sessions = startPolicyServers(policyServerConfs)
 			session = sessions[0]
@@ -66,7 +67,7 @@ var _ = Describe("Integration", func() {
 				Consistently(session).ShouldNot(gexec.Exit())
 
 				session.Interrupt()
-				Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit())
+				Eventually(session, helpers.DEFAULT_TIMEOUT).Should(gexec.Exit())
 			})
 
 			It("responds with uptime when accessed on the root path", func() {
@@ -98,7 +99,7 @@ var _ = Describe("Integration", func() {
 			})
 
 			It("has a whoami endpoint", func() {
-				resp := makeAndDoRequest(
+				resp := helpers.MakeAndDoRequest(
 					"GET",
 					fmt.Sprintf("http://%s:%d/networking/v0/external/whoami", conf.ListenHost, conf.ListenPort),
 					nil,
@@ -115,7 +116,7 @@ var _ = Describe("Integration", func() {
 			})
 
 			It("has a log level thats configurable at runtime", func() {
-				resp := makeAndDoRequest(
+				resp := helpers.MakeAndDoRequest(
 					"GET",
 					fmt.Sprintf("http://%s:%d/networking/v0/external/whoami", conf.ListenHost, conf.ListenPort),
 					nil,
@@ -129,13 +130,13 @@ var _ = Describe("Integration", func() {
 				Expect(session.Out).To(gbytes.Say("container-networking.policy-server"))
 				Expect(session.Out).NotTo(gbytes.Say("request made to whoami endpoint"))
 
-				_ = makeAndDoRequest(
+				_ = helpers.MakeAndDoRequest(
 					"POST",
 					fmt.Sprintf("http://%s:%d/log-level", conf.DebugServerHost, conf.DebugServerPort),
 					strings.NewReader("debug"),
 				)
 
-				resp = makeAndDoRequest(
+				resp = helpers.MakeAndDoRequest(
 					"GET",
 					fmt.Sprintf("http://%s:%d/networking/v0/external/whoami", conf.ListenHost, conf.ListenPort),
 					nil,
@@ -173,8 +174,8 @@ var _ = Describe("Integration", func() {
 				Type:             "postgres",
 				ConnectionString: "postgres://:@1.2.3.4:9999/?sslmode=disable",
 			}
-			conf := DefaultTestConfig(dbConfig, "some-address")
-			configFilePath := WriteConfigFile(conf)
+			conf := helpers.DefaultTestConfig(dbConfig, "some-address", "fixtures")
+			configFilePath := helpers.WriteConfigFile(conf)
 
 			policyServerCmd := exec.Command(policyServerPath, "-config-file", configFilePath)
 			var err error
@@ -184,7 +185,7 @@ var _ = Describe("Integration", func() {
 
 		AfterEach(func() {
 			session.Interrupt()
-			Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit())
+			Eventually(session, helpers.DEFAULT_TIMEOUT).Should(gexec.Exit())
 		})
 
 		It("should log and exit after 5 seconds", func() {
