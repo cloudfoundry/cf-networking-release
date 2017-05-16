@@ -38,7 +38,7 @@ function bootDB {
   echo -n "booting $db"
   eval "$launchDB"
   trycount=0
-  for i in `seq 1 30`; do
+  for i in `seq 1 60`; do
     set +e
     eval "$testConnection"
     exitcode=$?
