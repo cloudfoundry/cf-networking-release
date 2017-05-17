@@ -56,9 +56,11 @@ var _ = Describe("Timeout", func() {
 
 	Context("when the database is unreachable", func() {
 		BeforeEach(func() {
+			By("blocking access to port " + dbConnectionInfo.Port)
 			mustSucceed("iptables", "-A", "INPUT", "-p", "tcp", "--dport", dbConnectionInfo.Port, "-j", "DROP")
 		})
 		AfterEach(func() {
+			By("allowing access to port " + dbConnectionInfo.Port)
 			mustSucceed("iptables", "-D", "INPUT", "-p", "tcp", "--dport", dbConnectionInfo.Port, "-j", "DROP")
 		})
 
