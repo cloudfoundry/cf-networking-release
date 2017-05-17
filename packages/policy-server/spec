@@ -13,6 +13,7 @@ files:
   - code.cloudfoundry.org/go-db-helpers/metrics/*.go # gosub
   - code.cloudfoundry.org/go-db-helpers/mutualtls/*.go # gosub
   - code.cloudfoundry.org/lager/*.go # gosub
+  - github.com/Kount/pq-timeouts/*.go # gosub
   - github.com/bmizerany/pat/*.go # gosub
   - github.com/cloudfoundry/dropsonde/*.go # gosub
   - github.com/cloudfoundry/dropsonde/emitter/*.go # gosub
