@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"policy-server/config"
 	"policy-server/integration/helpers"
+	"time"
 
 	"code.cloudfoundry.org/go-db-helpers/metrics"
 	"code.cloudfoundry.org/go-db-helpers/testsupport"
@@ -31,6 +32,8 @@ var _ = Describe("Timeout", func() {
 
 		dbName := fmt.Sprintf("test_netman_database_%x", rand.Int())
 		dbConnectionInfo = testsupport.GetDBConnectionInfo()
+		dbConnectionInfo.ConnectTimeout = 1 * time.Second
+		dbConnectionInfo.ReadTimeout = 1 * time.Second
 		testDatabase = dbConnectionInfo.CreateDatabase(dbName)
 
 		conf = helpers.DefaultTestConfig(testDatabase.DBConfig(), fakeMetron.Address(), "../fixtures")
@@ -41,8 +44,8 @@ var _ = Describe("Timeout", func() {
 		defer resp.Body.Close()
 		Expect(resp.StatusCode).To(Equal(http.StatusOK))
 		Expect(ioutil.ReadAll(resp.Body)).To(MatchJSON(`{ "total_policies": 0, "policies": [] }`))
-	})
 
+	})
 	AfterEach(func() {
 		session.Interrupt()
 		Eventually(session, helpers.DEFAULT_TIMEOUT).Should(gexec.Exit())
@@ -71,8 +74,7 @@ var _ = Describe("Timeout", func() {
 			Expect(ioutil.ReadAll(resp.Body)).To(MatchJSON(`{ "error": "policies-index: database read failed" }`))
 
 			close(done)
-		}, 5 /* timeout for It block, in seconds */)
-
+		}, 3 /* timeout for It block, in seconds */)
 	})
 
 })
