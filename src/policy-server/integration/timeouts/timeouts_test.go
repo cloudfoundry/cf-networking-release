@@ -2,6 +2,7 @@ package timeouts_test
 
 import (
 	"fmt"
+	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"os/exec"
@@ -22,10 +23,10 @@ var _ = Describe("Timeout", func() {
 		testDatabase     *testsupport.TestDatabase
 		dbConnectionInfo *testsupport.DBConnectionInfo
 
-		fakeMetron metrics.FakeMetron
+		fakeMetron      metrics.FakeMetron
+		policyServerURL string
 	)
 	BeforeEach(func() {
-
 		fakeMetron = metrics.NewFakeMetron()
 
 		dbName := fmt.Sprintf("test_netman_database_%x", rand.Int())
@@ -34,6 +35,12 @@ var _ = Describe("Timeout", func() {
 
 		conf = helpers.DefaultTestConfig(testDatabase.DBConfig(), fakeMetron.Address(), "../fixtures")
 		session = helpers.StartPolicyServer(policyServerPath, conf)
+		policyServerURL = fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort)
+
+		resp := helpers.MakeAndDoRequest("GET", policyServerURL, nil)
+		defer resp.Body.Close()
+		Expect(resp.StatusCode).To(Equal(http.StatusOK))
+		Expect(ioutil.ReadAll(resp.Body)).To(MatchJSON(`{ "total_policies": 0, "policies": [] }`))
 	})
 
 	AfterEach(func() {
@@ -56,13 +63,12 @@ var _ = Describe("Timeout", func() {
 		})
 
 		PIt("times out requests", func(done Done) {
-			Expect(true).To(BeTrue())
-			By("getting the policies")
-			policyServerURL := fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort)
-			fmt.Println("starting")
 			resp := helpers.MakeAndDoRequest("GET", policyServerURL, nil)
-			fmt.Println("done")
+			defer resp.Body.Close()
 			Expect(resp.StatusCode).To(Equal(http.StatusInternalServerError))
+			Expect(ioutil.ReadAll(resp.Body)).To(MatchJSON(`{ "error": "policies-index: database read failed" }`))
+
+			close(done)
 		}, 5 /* timeout for It block, in seconds */)
 
 	})
