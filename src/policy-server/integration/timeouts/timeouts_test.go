@@ -67,7 +67,7 @@ var _ = Describe("Timeout", func() {
 			mustSucceed("iptables", "-D", "INPUT", "-p", "tcp", "--dport", dbConnectionInfo.Port, "-j", "DROP")
 		})
 
-		PIt("times out requests", func(done Done) {
+		It("times out requests", func(done Done) {
 			resp := helpers.MakeAndDoRequest("GET", policyServerURL, nil)
 			defer resp.Body.Close()
 			Expect(resp.StatusCode).To(Equal(http.StatusInternalServerError))

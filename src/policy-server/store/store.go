@@ -9,6 +9,9 @@ import (
 	"policy-server/models"
 	"policy-server/store/helpers"
 	"strings"
+	"time"
+
+	"context"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -77,6 +80,7 @@ type db interface {
 	Select(dest interface{}, query string, args ...interface{}) error
 	QueryRow(query string, args ...interface{}) *sql.Row
 	Query(query string, args ...interface{}) (*sql.Rows, error)
+	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
 	DriverName() string
 }
 
@@ -268,7 +272,9 @@ func (s *store) policiesQuery(query string, args ...interface{}) ([]models.Polic
 	policies := []models.Policy{}
 	rebindedQuery := helpers.RebindForSQLDialect(query, s.conn.DriverName())
 
-	rows, err := s.conn.Query(rebindedQuery, args...)
+	ctx := context.Background()
+	ctx, _ = context.WithTimeout(ctx, 2*time.Second)
+	rows, err := s.conn.QueryContext(ctx, rebindedQuery, args...)
 	if err != nil {
 		return nil, fmt.Errorf("listing all: %s", err)
 	}
