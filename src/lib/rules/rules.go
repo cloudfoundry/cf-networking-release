@@ -124,18 +124,16 @@ func NewDefaultDenyRemoteRule(vni int) IPTablesRule {
 	}
 }
 
-func NewNetOutRule(containerIP, startIP, endIP string) IPTablesRule {
+func NewNetOutRule(startIP, endIP string) IPTablesRule {
 	return IPTablesRule{
-		"--source", containerIP,
 		"-m", "iprange",
 		"--dst-range", fmt.Sprintf("%s-%s", startIP, endIP),
 		"--jump", "ACCEPT",
 	}
 }
 
-func NewNetOutWithPortsRule(containerIP, startIP, endIP string, startPort, endPort int, protocol string) IPTablesRule {
+func NewNetOutWithPortsRule(startIP, endIP string, startPort, endPort int, protocol string) IPTablesRule {
 	return IPTablesRule{
-		"--source", containerIP,
 		"-m", "iprange",
 		"-p", protocol,
 		"--dst-range", fmt.Sprintf("%s-%s", startIP, endIP),
@@ -145,9 +143,8 @@ func NewNetOutWithPortsRule(containerIP, startIP, endIP string, startPort, endPo
 	}
 }
 
-func NewNetOutICMPRule(containerIP, startIP, endIP string, icmpType, icmpCode int) IPTablesRule {
+func NewNetOutICMPRule(startIP, endIP string, icmpType, icmpCode int) IPTablesRule {
 	return IPTablesRule{
-		"--source", containerIP,
 		"-m", "iprange",
 		"-p", "icmp",
 		"--dst-range", fmt.Sprintf("%s-%s", startIP, endIP),
@@ -157,9 +154,8 @@ func NewNetOutICMPRule(containerIP, startIP, endIP string, icmpType, icmpCode in
 	}
 }
 
-func NewNetOutICMPLogRule(containerIP, startIP, endIP string, icmpType, icmpCode int, chain string) IPTablesRule {
+func NewNetOutICMPLogRule(startIP, endIP string, icmpType, icmpCode int, chain string) IPTablesRule {
 	return IPTablesRule{
-		"--source", containerIP,
 		"-m", "iprange",
 		"-p", "icmp",
 		"--dst-range", fmt.Sprintf("%s-%s", startIP, endIP),
@@ -169,18 +165,16 @@ func NewNetOutICMPLogRule(containerIP, startIP, endIP string, icmpType, icmpCode
 	}
 }
 
-func NewNetOutLogRule(containerIP, startIP, endIP, chain string) IPTablesRule {
+func NewNetOutLogRule(startIP, endIP, chain string) IPTablesRule {
 	return IPTablesRule{
-		"--source", containerIP,
 		"-m", "iprange",
 		"--dst-range", fmt.Sprintf("%s-%s", startIP, endIP),
 		"-g", chain,
 	}
 }
 
-func NewNetOutWithPortsLogRule(containerIP, startIP, endIP string, startPort, endPort int, protocol, chain string) IPTablesRule {
+func NewNetOutWithPortsLogRule(startIP, endIP string, startPort, endPort int, protocol, chain string) IPTablesRule {
 	return IPTablesRule{
-		"--source", containerIP,
 		"-m", "iprange",
 		"-p", protocol,
 		"--dst-range", fmt.Sprintf("%s-%s", startIP, endIP),
@@ -204,34 +198,30 @@ func NewAcceptRule() IPTablesRule {
 	}
 }
 
-func NewInputRelatedEstablishedRule(subnet string) IPTablesRule {
+func NewInputRelatedEstablishedRule() IPTablesRule {
 	return IPTablesRule{
-		"-s", subnet,
 		"-m", "state", "--state", "RELATED,ESTABLISHED",
 		"--jump", "ACCEPT",
 	}
 }
 
-func NewInputAllowRule(containerIP, protocol, destination string, destPort int) IPTablesRule {
+func NewInputAllowRule(protocol, destination string, destPort int) IPTablesRule {
 	return IPTablesRule{
-		"-s", containerIP,
 		"-p", protocol,
 		"-d", destination, "--destination-port", strconv.Itoa(destPort),
 		"--jump", "ACCEPT",
 	}
 }
 
-func NewInputDefaultRejectRule(subnet string) IPTablesRule {
+func NewInputDefaultRejectRule() IPTablesRule {
 	return IPTablesRule{
-		"-s", subnet,
 		"--jump", "REJECT",
 		"--reject-with", "icmp-port-unreachable",
 	}
 }
 
-func NewNetOutRelatedEstablishedRule(subnet string) IPTablesRule {
+func NewNetOutRelatedEstablishedRule() IPTablesRule {
 	return IPTablesRule{
-		"-s", subnet,
 		"-m", "state", "--state", "RELATED,ESTABLISHED",
 		"--jump", "ACCEPT",
 	}
@@ -279,20 +269,16 @@ func NewOverlayRelatedEstablishedRule(containerIP string) IPTablesRule {
 	}
 }
 
-func NewNetOutDefaultRejectLogRule(containerHandle, subnet, deviceName string) IPTablesRule {
+func NewNetOutDefaultRejectLogRule(containerHandle string) IPTablesRule {
 	return IPTablesRule{
-		"-s", subnet,
-		"!", "-o", deviceName,
 		"-m", "limit", "--limit", "2/min",
 		"--jump", "LOG",
 		"--log-prefix", trimAndPad(fmt.Sprintf("DENY_%s", containerHandle)),
 	}
 }
 
-func NewNetOutDefaultRejectRule(subnet, deviceName string) IPTablesRule {
+func NewNetOutDefaultRejectRule() IPTablesRule {
 	return IPTablesRule{
-		"-s", subnet,
-		"!", "-o", deviceName,
 		"--jump", "REJECT",
 		"--reject-with", "icmp-port-unreachable",
 	}

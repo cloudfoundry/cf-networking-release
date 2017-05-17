@@ -12,17 +12,17 @@ type NetOutRuleConverter struct {
 	Logger io.Writer
 }
 
-func (c *NetOutRuleConverter) BulkConvert(netOutRules []garden.NetOutRule, containerIP, logChainName string, globalLogging bool) []rules.IPTablesRule {
+func (c *NetOutRuleConverter) BulkConvert(netOutRules []garden.NetOutRule, logChainName string, globalLogging bool) []rules.IPTablesRule {
 	ruleSpec := []rules.IPTablesRule{}
 	for _, rule := range netOutRules {
-		for _, t := range c.Convert(rule, containerIP, logChainName, globalLogging) {
+		for _, t := range c.Convert(rule, logChainName, globalLogging) {
 			ruleSpec = append(ruleSpec, t)
 		}
 	}
 	return ruleSpec
 }
 
-func (c *NetOutRuleConverter) Convert(rule garden.NetOutRule, containerIP, logChainName string, globalLogging bool) []rules.IPTablesRule {
+func (c *NetOutRuleConverter) Convert(rule garden.NetOutRule, logChainName string, globalLogging bool) []rules.IPTablesRule {
 	ruleSpec := []rules.IPTablesRule{}
 	for _, network := range rule.Networks {
 		startIP, endIP := network.Start.String(), network.End.String()
@@ -40,9 +40,9 @@ func (c *NetOutRuleConverter) Convert(rule garden.NetOutRule, containerIP, logCh
 				startPort := int(portRange.Start)
 				endPort := int(portRange.End)
 				if log {
-					ruleSpec = append(ruleSpec, rules.NewNetOutWithPortsLogRule(containerIP, startIP, endIP, startPort, endPort, protocol, logChainName))
+					ruleSpec = append(ruleSpec, rules.NewNetOutWithPortsLogRule(startIP, endIP, startPort, endPort, protocol, logChainName))
 				} else {
-					ruleSpec = append(ruleSpec, rules.NewNetOutWithPortsRule(containerIP, startIP, endIP, startPort, endPort, protocol))
+					ruleSpec = append(ruleSpec, rules.NewNetOutWithPortsRule(startIP, endIP, startPort, endPort, protocol))
 				}
 			}
 		case garden.ProtocolICMP:
@@ -58,9 +58,9 @@ func (c *NetOutRuleConverter) Convert(rule garden.NetOutRule, containerIP, logCh
 			code := rule.ICMPs.Code
 			icmpCode := int(uint8(*code))
 			if log {
-				ruleSpec = append(ruleSpec, rules.NewNetOutICMPLogRule(containerIP, startIP, endIP, icmpType, icmpCode, logChainName))
+				ruleSpec = append(ruleSpec, rules.NewNetOutICMPLogRule(startIP, endIP, icmpType, icmpCode, logChainName))
 			} else {
-				ruleSpec = append(ruleSpec, rules.NewNetOutICMPRule(containerIP, startIP, endIP, icmpType, icmpCode))
+				ruleSpec = append(ruleSpec, rules.NewNetOutICMPRule(startIP, endIP, icmpType, icmpCode))
 			}
 		case garden.ProtocolAll:
 			if len(rule.Ports) > 0 {
@@ -68,9 +68,9 @@ func (c *NetOutRuleConverter) Convert(rule garden.NetOutRule, containerIP, logCh
 				continue
 			}
 			if log {
-				ruleSpec = append(ruleSpec, rules.NewNetOutLogRule(containerIP, startIP, endIP, logChainName))
+				ruleSpec = append(ruleSpec, rules.NewNetOutLogRule(startIP, endIP, logChainName))
 			} else {
-				ruleSpec = append(ruleSpec, rules.NewNetOutRule(containerIP, startIP, endIP))
+				ruleSpec = append(ruleSpec, rules.NewNetOutRule(startIP, endIP))
 			}
 		}
 	}

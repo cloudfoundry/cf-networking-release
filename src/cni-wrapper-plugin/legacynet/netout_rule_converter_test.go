@@ -41,25 +41,21 @@ var _ = Describe("NetOutRuleConverter", func() {
 			})
 
 			It("converts a netout rule to a list of iptables rules", func() {
-				ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
+				ruleSpec := converter.Convert(netOutRule, logChainName, false)
 				Expect(ruleSpec).To(ConsistOf(
-					rules.IPTablesRule{"--source", "1.2.3.4",
-						"-m", "iprange", "-p", "tcp",
+					rules.IPTablesRule{"-m", "iprange", "-p", "tcp",
 						"--dst-range", "1.1.1.1-2.2.2.2",
 						"-m", "tcp", "--destination-port", "9000:9999",
 						"--jump", "ACCEPT"},
-					rules.IPTablesRule{"--source", "1.2.3.4",
-						"-m", "iprange", "-p", "tcp",
+					rules.IPTablesRule{"-m", "iprange", "-p", "tcp",
 						"--dst-range", "1.1.1.1-2.2.2.2",
 						"-m", "tcp", "--destination-port", "1111:2222",
 						"--jump", "ACCEPT"},
-					rules.IPTablesRule{"--source", "1.2.3.4",
-						"-m", "iprange", "-p", "tcp",
+					rules.IPTablesRule{"-m", "iprange", "-p", "tcp",
 						"--dst-range", "3.3.3.3-4.4.4.4",
 						"-m", "tcp", "--destination-port", "9000:9999",
 						"--jump", "ACCEPT"},
-					rules.IPTablesRule{"--source", "1.2.3.4",
-						"-m", "iprange", "-p", "tcp",
+					rules.IPTablesRule{"-m", "iprange", "-p", "tcp",
 						"--dst-range", "3.3.3.3-4.4.4.4",
 						"-m", "tcp", "--destination-port", "1111:2222",
 						"--jump", "ACCEPT"},
@@ -68,25 +64,21 @@ var _ = Describe("NetOutRuleConverter", func() {
 
 			Context("when globalLogging is set to true", func() {
 				It("returns iptables rules that goto the log chain", func() {
-					ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, true)
+					ruleSpec := converter.Convert(netOutRule, logChainName, true)
 					Expect(ruleSpec).To(Equal([]rules.IPTablesRule{
-						rules.IPTablesRule{"--source", "1.2.3.4",
-							"-m", "iprange", "-p", "tcp",
+						rules.IPTablesRule{"-m", "iprange", "-p", "tcp",
 							"--dst-range", "1.1.1.1-2.2.2.2",
 							"-m", "tcp", "--destination-port", "9000:9999",
 							"-g", logChainName},
-						rules.IPTablesRule{"--source", "1.2.3.4",
-							"-m", "iprange", "-p", "tcp",
+						rules.IPTablesRule{"-m", "iprange", "-p", "tcp",
 							"--dst-range", "1.1.1.1-2.2.2.2",
 							"-m", "tcp", "--destination-port", "1111:2222",
 							"-g", logChainName},
-						rules.IPTablesRule{"--source", "1.2.3.4",
-							"-m", "iprange", "-p", "tcp",
+						rules.IPTablesRule{"-m", "iprange", "-p", "tcp",
 							"--dst-range", "3.3.3.3-4.4.4.4",
 							"-m", "tcp", "--destination-port", "9000:9999",
 							"-g", logChainName},
-						rules.IPTablesRule{"--source", "1.2.3.4",
-							"-m", "iprange", "-p", "tcp",
+						rules.IPTablesRule{"-m", "iprange", "-p", "tcp",
 							"--dst-range", "3.3.3.3-4.4.4.4",
 							"-m", "tcp", "--destination-port", "1111:2222",
 							"-g", logChainName},
@@ -99,25 +91,22 @@ var _ = Describe("NetOutRuleConverter", func() {
 					netOutRule.Log = true
 				})
 				It("returns iptables rules that goto the log chain", func() {
-					ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, true)
+					ruleSpec := converter.Convert(netOutRule, logChainName, true)
 					Expect(ruleSpec).To(ConsistOf(
-						rules.IPTablesRule{"--source", "1.2.3.4",
+						rules.IPTablesRule{
 							"-m", "iprange", "-p", "tcp",
 							"--dst-range", "1.1.1.1-2.2.2.2",
 							"-m", "tcp", "--destination-port", "9000:9999",
 							"-g", logChainName},
-						rules.IPTablesRule{"--source", "1.2.3.4",
-							"-m", "iprange", "-p", "tcp",
+						rules.IPTablesRule{"-m", "iprange", "-p", "tcp",
 							"--dst-range", "1.1.1.1-2.2.2.2",
 							"-m", "tcp", "--destination-port", "1111:2222",
 							"-g", logChainName},
-						rules.IPTablesRule{"--source", "1.2.3.4",
-							"-m", "iprange", "-p", "tcp",
+						rules.IPTablesRule{"-m", "iprange", "-p", "tcp",
 							"--dst-range", "3.3.3.3-4.4.4.4",
 							"-m", "tcp", "--destination-port", "9000:9999",
 							"-g", logChainName},
-						rules.IPTablesRule{"--source", "1.2.3.4",
-							"-m", "iprange", "-p", "tcp",
+						rules.IPTablesRule{"-m", "iprange", "-p", "tcp",
 							"--dst-range", "3.3.3.3-4.4.4.4",
 							"-m", "tcp", "--destination-port", "1111:2222",
 							"-g", logChainName},
@@ -130,12 +119,12 @@ var _ = Describe("NetOutRuleConverter", func() {
 					netOutRule.Ports = nil
 				})
 				It("adds no iptables rules", func() {
-					ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
+					ruleSpec := converter.Convert(netOutRule, logChainName, false)
 					Expect(ruleSpec).To(BeEmpty())
 				})
 
 				It("logs the warning", func() {
-					converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
+					converter.Convert(netOutRule, logChainName, false)
 					Expect(logger.String()).To(ContainSubstring("UDP/TCP rule must specify ports"))
 				})
 			})
@@ -163,13 +152,13 @@ var _ = Describe("NetOutRuleConverter", func() {
 			})
 
 			It("converts a netout rule to a list of iptables rules", func() {
-				ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
+				ruleSpec := converter.Convert(netOutRule, logChainName, false)
 				Expect(ruleSpec).To(ConsistOf(
-					rules.IPTablesRule{"--source", "1.2.3.4", "-m", "iprange",
+					rules.IPTablesRule{"-m", "iprange",
 						"-p", "icmp",
 						"--dst-range", "3.3.3.3-4.4.4.4", "-m", "icmp", "--icmp-type", "8/0",
 						"--jump", "ACCEPT"},
-					rules.IPTablesRule{"--source", "1.2.3.4", "-m", "iprange",
+					rules.IPTablesRule{"-m", "iprange",
 						"-p", "icmp",
 						"--dst-range", "5.5.5.5-6.6.6.6", "-m", "icmp", "--icmp-type", "8/0",
 						"--jump", "ACCEPT"},
@@ -178,13 +167,13 @@ var _ = Describe("NetOutRuleConverter", func() {
 
 			Context("when the globalLogging is set to true", func() {
 				It("returns iptables rules that goto the log chain", func() {
-					ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, true)
+					ruleSpec := converter.Convert(netOutRule, logChainName, true)
 					Expect(ruleSpec).To(ConsistOf(
-						rules.IPTablesRule{"--source", "1.2.3.4", "-m", "iprange",
+						rules.IPTablesRule{"-m", "iprange",
 							"-p", "icmp",
 							"--dst-range", "3.3.3.3-4.4.4.4", "-m", "icmp", "--icmp-type", "8/0",
 							"-g", "some-chain"},
-						rules.IPTablesRule{"--source", "1.2.3.4", "-m", "iprange",
+						rules.IPTablesRule{"-m", "iprange",
 							"-p", "icmp",
 							"--dst-range", "5.5.5.5-6.6.6.6", "-m", "icmp", "--icmp-type", "8/0",
 							"-g", "some-chain"},
@@ -197,13 +186,13 @@ var _ = Describe("NetOutRuleConverter", func() {
 					netOutRule.Log = true
 				})
 				It("returns iptables rules that goto the log chain", func() {
-					ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
+					ruleSpec := converter.Convert(netOutRule, logChainName, false)
 					Expect(ruleSpec).To(ConsistOf(
-						rules.IPTablesRule{"--source", "1.2.3.4", "-m", "iprange",
+						rules.IPTablesRule{"-m", "iprange",
 							"-p", "icmp",
 							"--dst-range", "3.3.3.3-4.4.4.4", "-m", "icmp", "--icmp-type", "8/0",
 							"-g", "some-chain"},
-						rules.IPTablesRule{"--source", "1.2.3.4", "-m", "iprange",
+						rules.IPTablesRule{"-m", "iprange",
 							"-p", "icmp",
 							"--dst-range", "5.5.5.5-6.6.6.6", "-m", "icmp", "--icmp-type", "8/0",
 							"-g", "some-chain"},
@@ -216,11 +205,11 @@ var _ = Describe("NetOutRuleConverter", func() {
 					netOutRule.ICMPs = nil
 				})
 				It("adds no iptables rules", func() {
-					ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
+					ruleSpec := converter.Convert(netOutRule, logChainName, false)
 					Expect(ruleSpec).To(BeEmpty())
 				})
 				It("logs the warning", func() {
-					converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
+					converter.Convert(netOutRule, logChainName, false)
 					Expect(logger.String()).To(ContainSubstring("ICMP rule must specify ICMP type/code"))
 				})
 			})
@@ -230,11 +219,11 @@ var _ = Describe("NetOutRuleConverter", func() {
 					netOutRule.ICMPs.Code = nil
 				})
 				It("adds no iptables rules", func() {
-					ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
+					ruleSpec := converter.Convert(netOutRule, logChainName, false)
 					Expect(ruleSpec).To(BeEmpty())
 				})
 				It("logs the warning", func() {
-					converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
+					converter.Convert(netOutRule, logChainName, false)
 					Expect(logger.String()).To(ContainSubstring("ICMP rule must specify ICMP type/code"))
 				})
 			})
@@ -247,11 +236,11 @@ var _ = Describe("NetOutRuleConverter", func() {
 					}
 				})
 				It("adds no iptables rules", func() {
-					ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
+					ruleSpec := converter.Convert(netOutRule, logChainName, false)
 					Expect(ruleSpec).To(BeEmpty())
 				})
 				It("logs the warning", func() {
-					converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
+					converter.Convert(netOutRule, logChainName, false)
 					Expect(logger.String()).To(ContainSubstring("ICMP rule must not specify ports"))
 				})
 			})
@@ -269,12 +258,12 @@ var _ = Describe("NetOutRuleConverter", func() {
 			})
 
 			It("converts a netout rule to a list of iptables rules", func() {
-				ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
+				ruleSpec := converter.Convert(netOutRule, logChainName, false)
 				Expect(ruleSpec).To(ConsistOf(
-					rules.IPTablesRule{"--source", "1.2.3.4", "-m", "iprange",
+					rules.IPTablesRule{"-m", "iprange",
 						"--dst-range", "1.1.1.1-2.2.2.2",
 						"--jump", "ACCEPT"},
-					rules.IPTablesRule{"--source", "1.2.3.4", "-m", "iprange",
+					rules.IPTablesRule{"-m", "iprange",
 						"--dst-range", "3.3.3.3-4.4.4.4",
 						"--jump", "ACCEPT"},
 				))
@@ -282,12 +271,12 @@ var _ = Describe("NetOutRuleConverter", func() {
 
 			Context("when globalLogging is set to true", func() {
 				It("returns iptables rules that goto the log chain", func() {
-					ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, true)
+					ruleSpec := converter.Convert(netOutRule, logChainName, true)
 					Expect(ruleSpec).To(ConsistOf(
-						rules.IPTablesRule{"--source", "1.2.3.4", "-m", "iprange",
+						rules.IPTablesRule{"-m", "iprange",
 							"--dst-range", "1.1.1.1-2.2.2.2",
 							"-g", logChainName},
-						rules.IPTablesRule{"--source", "1.2.3.4", "-m", "iprange",
+						rules.IPTablesRule{"-m", "iprange",
 							"--dst-range", "3.3.3.3-4.4.4.4",
 							"-g", logChainName},
 					))
@@ -300,12 +289,12 @@ var _ = Describe("NetOutRuleConverter", func() {
 				})
 
 				It("returns iptables rules that goto the log chain", func() {
-					ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
+					ruleSpec := converter.Convert(netOutRule, logChainName, false)
 					Expect(ruleSpec).To(ConsistOf(
-						rules.IPTablesRule{"--source", "1.2.3.4", "-m", "iprange",
+						rules.IPTablesRule{"-m", "iprange",
 							"--dst-range", "1.1.1.1-2.2.2.2",
 							"-g", logChainName},
-						rules.IPTablesRule{"--source", "1.2.3.4", "-m", "iprange",
+						rules.IPTablesRule{"-m", "iprange",
 							"--dst-range", "3.3.3.3-4.4.4.4",
 							"-g", logChainName},
 					))
@@ -320,11 +309,11 @@ var _ = Describe("NetOutRuleConverter", func() {
 					}
 				})
 				It("adds no iptables rules", func() {
-					ruleSpec := converter.Convert(netOutRule, "1.2.3.4", logChainName, true)
+					ruleSpec := converter.Convert(netOutRule, logChainName, true)
 					Expect(ruleSpec).To(BeEmpty())
 				})
 				It("logs the warning", func() {
-					converter.Convert(netOutRule, "1.2.3.4", logChainName, false)
+					converter.Convert(netOutRule, logChainName, false)
 					Expect(logger.String()).To(ContainSubstring("Rule for all protocols (TCP/UDP/ICMP) must not specify ports"))
 				})
 			})
@@ -358,35 +347,29 @@ var _ = Describe("NetOutRuleConverter", func() {
 			})
 
 			It("converts a netout rule to a list of iptables rules", func() {
-				ruleSpec := converter.BulkConvert(netOutRules, "1.2.3.4", logChainName, false)
+				ruleSpec := converter.BulkConvert(netOutRules, logChainName, false)
 
 				Expect(ruleSpec).To(ConsistOf(
-					rules.IPTablesRule{"--source", "1.2.3.4",
-						"-m", "iprange", "-p", "tcp",
+					rules.IPTablesRule{"-m", "iprange", "-p", "tcp",
 						"--dst-range", "1.1.1.1-2.2.2.2",
 						"-m", "tcp", "--destination-port", "9000:9999",
 						"--jump", "ACCEPT"},
-					rules.IPTablesRule{"--source", "1.2.3.4",
-						"-m", "iprange", "-p", "tcp",
+					rules.IPTablesRule{"-m", "iprange", "-p", "tcp",
 						"--dst-range", "1.1.1.1-2.2.2.2",
 						"-m", "tcp", "--destination-port", "1111:2222",
 						"--jump", "ACCEPT"},
-					rules.IPTablesRule{"--source", "1.2.3.4",
-						"-m", "iprange", "-p", "tcp",
+					rules.IPTablesRule{"-m", "iprange", "-p", "tcp",
 						"--dst-range", "3.3.3.3-4.4.4.4",
 						"-m", "tcp", "--destination-port", "9000:9999",
 						"--jump", "ACCEPT"},
-					rules.IPTablesRule{"--source", "1.2.3.4",
-						"-m", "iprange", "-p", "tcp",
+					rules.IPTablesRule{"-m", "iprange", "-p", "tcp",
 						"--dst-range", "3.3.3.3-4.4.4.4",
 						"-m", "tcp", "--destination-port", "1111:2222",
 						"--jump", "ACCEPT"},
-					rules.IPTablesRule{"--source", "1.2.3.4",
-						"-m", "iprange",
+					rules.IPTablesRule{"-m", "iprange",
 						"--dst-range", "5.5.5.5-6.6.6.6",
 						"--jump", "ACCEPT"},
-					rules.IPTablesRule{"--source", "1.2.3.4",
-						"-m", "iprange",
+					rules.IPTablesRule{"-m", "iprange",
 						"--dst-range", "7.7.7.7-8.8.8.8",
 						"--jump", "ACCEPT"},
 				))
@@ -417,26 +400,22 @@ var _ = Describe("NetOutRuleConverter", func() {
 			})
 
 			It("does not include iptables rules for invalid netout rules", func() {
-				ruleSpec := converter.BulkConvert(netOutRules, "1.2.3.4", logChainName, false)
+				ruleSpec := converter.BulkConvert(netOutRules, logChainName, false)
 
 				Expect(ruleSpec).To(ConsistOf(
-					rules.IPTablesRule{"--source", "1.2.3.4",
-						"-m", "iprange", "-p", "tcp",
+					rules.IPTablesRule{"-m", "iprange", "-p", "tcp",
 						"--dst-range", "1.1.1.1-2.2.2.2",
 						"-m", "tcp", "--destination-port", "9000:9999",
 						"--jump", "ACCEPT"},
-					rules.IPTablesRule{"--source", "1.2.3.4",
-						"-m", "iprange", "-p", "tcp",
+					rules.IPTablesRule{"-m", "iprange", "-p", "tcp",
 						"--dst-range", "1.1.1.1-2.2.2.2",
 						"-m", "tcp", "--destination-port", "1111:2222",
 						"--jump", "ACCEPT"},
-					rules.IPTablesRule{"--source", "1.2.3.4",
-						"-m", "iprange", "-p", "tcp",
+					rules.IPTablesRule{"-m", "iprange", "-p", "tcp",
 						"--dst-range", "3.3.3.3-4.4.4.4",
 						"-m", "tcp", "--destination-port", "9000:9999",
 						"--jump", "ACCEPT"},
-					rules.IPTablesRule{"--source", "1.2.3.4",
-						"-m", "iprange", "-p", "tcp",
+					rules.IPTablesRule{"-m", "iprange", "-p", "tcp",
 						"--dst-range", "3.3.3.3-4.4.4.4",
 						"-m", "tcp", "--destination-port", "1111:2222",
 						"--jump", "ACCEPT"},

@@ -55,6 +55,33 @@ func cmdAdd(args *skel.CmdArgs) error {
 
 	containerIP := result030.IPs[0].Address.IP
 
+	// Add container metadata info
+	store := &datastore.Store{
+		Serializer: &serial.Serial{},
+		Locker: &filelock.Locker{
+			Path: n.Datastore,
+		},
+	}
+
+	var cniAddData struct {
+		Metadata map[string]interface{}
+	}
+	if err := json.Unmarshal(args.StdinData, &cniAddData); err != nil {
+		panic(err) // not tested, this should be impossible
+	}
+
+	if err := store.Add(args.ContainerID, containerIP.String(), cniAddData.Metadata); err != nil {
+		storeErr := fmt.Errorf("store add: %s", err)
+		fmt.Fprintf(os.Stderr, "%s", storeErr)
+		fmt.Fprintf(os.Stderr, "cleaning up from error")
+		err = pluginController.DelIPMasq(containerIP.String(), n.VTEPName)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "during cleanup: removing IP masq: %s", err)
+		}
+
+		return storeErr
+	}
+
 	// Initialize dns
 	var localDNSServers []string
 	for _, entry := range n.DNSServers {
@@ -66,22 +93,6 @@ func cmdAdd(args *skel.CmdArgs) error {
 		}
 	}
 
-	// Initialize NetOut
-	netOutProvider := legacynet.NetOut{
-		ChainNamer: &legacynet.ChainNamer{
-			MaxLength: 28,
-		},
-		IPTables:   pluginController.IPTables,
-		Converter:  &legacynet.NetOutRuleConverter{Logger: os.Stderr},
-		ASGLogging: n.IPTablesASGLogging,
-		C2CLogging: n.IPTablesC2CLogging,
-		IngressTag: n.IngressTag,
-		VTEPName:   n.VTEPName,
-	}
-	if err := netOutProvider.Initialize(args.ContainerID, containerIP, localDNSServers); err != nil {
-		return fmt.Errorf("initialize net out: %s", err)
-	}
-
 	defaultInterface := discover.DefaultInterface{
 		NetlinkAdapter: &adapter.NetlinkAdapter{},
 		NetAdapter:     &adapter.NetAdapter{},
@@ -89,6 +100,23 @@ func cmdAdd(args *skel.CmdArgs) error {
 	defaultIfaceName, err := defaultInterface.Name()
 	if err != nil {
 		return fmt.Errorf("discover default interface name: %s", err) // not tested
+	}
+
+	// Initialize NetOut
+	netOutProvider := legacynet.NetOut{
+		ChainNamer: &legacynet.ChainNamer{
+			MaxLength: 28,
+		},
+		IPTables:          pluginController.IPTables,
+		Converter:         &legacynet.NetOutRuleConverter{Logger: os.Stderr},
+		ASGLogging:        n.IPTablesASGLogging,
+		C2CLogging:        n.IPTablesC2CLogging,
+		IngressTag:        n.IngressTag,
+		VTEPName:          n.VTEPName,
+		HostInterfaceName: defaultIfaceName,
+	}
+	if err := netOutProvider.Initialize(args.ContainerID, containerIP, localDNSServers); err != nil {
+		return fmt.Errorf("initialize net out: %s", err)
 	}
 
 	// Initialize NetIn
@@ -115,39 +143,13 @@ func cmdAdd(args *skel.CmdArgs) error {
 
 	// Create egress rules
 	netOutRules := n.RuntimeConfig.NetOutRules
-	if err := netOutProvider.BulkInsertRules(args.ContainerID, netOutRules, containerIP.String()); err != nil {
+	if err := netOutProvider.BulkInsertRules(args.ContainerID, netOutRules); err != nil {
 		return fmt.Errorf("bulk insert: %s", err) // not tested
 	}
 
 	err = pluginController.AddIPMasq(containerIP.String(), n.VTEPName)
 	if err != nil {
 		return fmt.Errorf("error setting up default ip masq rule: %s", err)
-	}
-
-	store := &datastore.Store{
-		Serializer: &serial.Serial{},
-		Locker: &filelock.Locker{
-			Path: n.Datastore,
-		},
-	}
-
-	var cniAddData struct {
-		Metadata map[string]interface{}
-	}
-	if err := json.Unmarshal(args.StdinData, &cniAddData); err != nil {
-		panic(err) // not tested, this should be impossible
-	}
-
-	if err := store.Add(args.ContainerID, containerIP.String(), cniAddData.Metadata); err != nil {
-		storeErr := fmt.Errorf("store add: %s", err)
-		fmt.Fprintf(os.Stderr, "%s", storeErr)
-		fmt.Fprintf(os.Stderr, "cleaning up from error")
-		err = pluginController.DelIPMasq(containerIP.String(), n.VTEPName)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "during cleanup: removing IP masq: %s", err)
-		}
-
-		return storeErr
 	}
 
 	result030.DNS.Nameservers = n.DNSServers
@@ -193,15 +195,25 @@ func cmdDel(args *skel.CmdArgs) error {
 		fmt.Fprintf(os.Stderr, "net in cleanup: %s", err)
 	}
 
+	defaultInterface := discover.DefaultInterface{
+		NetlinkAdapter: &adapter.NetlinkAdapter{},
+		NetAdapter:     &adapter.NetAdapter{},
+	}
+	defaultIfaceName, err := defaultInterface.Name()
+	if err != nil {
+		return fmt.Errorf("discover default interface name: %s", err) // not tested
+	}
+
 	netOutProvider := legacynet.NetOut{
 		ChainNamer: &legacynet.ChainNamer{
 			MaxLength: 28,
 		},
-		IPTables:  pluginController.IPTables,
-		Converter: &legacynet.NetOutRuleConverter{Logger: os.Stderr},
+		IPTables:          pluginController.IPTables,
+		Converter:         &legacynet.NetOutRuleConverter{Logger: os.Stderr},
+		HostInterfaceName: defaultIfaceName,
 	}
 
-	if err = netOutProvider.Cleanup(args.ContainerID); err != nil {
+	if err = netOutProvider.Cleanup(args.ContainerID, container.IP); err != nil {
 		fmt.Fprintf(os.Stderr, "net out cleanup: %s", err)
 	}
 

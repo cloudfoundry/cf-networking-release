@@ -42,12 +42,12 @@ func (m *NetIn) Cleanup(containerHandle string) error {
 	chain := m.ChainNamer.Prefix(prefixNetIn, containerHandle)
 
 	var result error
-	err := cleanupChain("nat", "PREROUTING", chain, m.IPTables)
+	err := cleanupChain("nat", "PREROUTING", chain, rules.IPTablesRule{}, m.IPTables)
 	if err != nil {
 		result = multierror.Append(result, err)
 	}
 
-	err = cleanupChain("mangle", "PREROUTING", chain, m.IPTables)
+	err = cleanupChain("mangle", "PREROUTING", chain, rules.IPTablesRule{}, m.IPTables)
 	if err != nil {
 		result = multierror.Append(result, err)
 	}
@@ -99,7 +99,8 @@ func initChains(iptables rules.IPTablesAdapter, args []fullRule) error {
 		}
 
 		if arg.ParentChain != "" {
-			err = iptables.BulkInsert(arg.Table, arg.ParentChain, 1, rules.IPTablesRule{"--jump", arg.Chain})
+			err = iptables.BulkInsert(arg.Table, arg.ParentChain, 1, append(
+				arg.JumpConditions, rules.IPTablesRule{"--jump", arg.Chain}...))
 			if err != nil {
 				return fmt.Errorf("inserting rule: %s", err)
 			}
@@ -120,10 +121,10 @@ func applyRules(iptables rules.IPTablesAdapter, args []fullRule) error {
 	return nil
 }
 
-func cleanupChain(table, parentChain, chain string, iptables rules.IPTablesAdapter) error {
+func cleanupChain(table, parentChain, chain string, jumpConditions rules.IPTablesRule, iptables rules.IPTablesAdapter) error {
 	var result error
 	if parentChain != "" {
-		if err := iptables.Delete(table, parentChain, rules.IPTablesRule{"--jump", chain}); err != nil {
+		if err := iptables.Delete(table, parentChain, append(jumpConditions, rules.IPTablesRule{"--jump", chain}...)); err != nil {
 			result = multierror.Append(result, fmt.Errorf("delete rule: %s", err))
 		}
 	}

@@ -18,25 +18,27 @@ const suffixNetOutLog = "log"
 
 //go:generate counterfeiter -o ../fakes/net_out_rule_converter.go --fake-name NetOutRuleConverter . netOutRuleConverter
 type netOutRuleConverter interface {
-	Convert(rule garden.NetOutRule, containerIP, logChainName string, logging bool) []rules.IPTablesRule
-	BulkConvert(rules []garden.NetOutRule, containerIP, logChainName string, logging bool) []rules.IPTablesRule
+	Convert(rule garden.NetOutRule, logChainName string, logging bool) []rules.IPTablesRule
+	BulkConvert(rules []garden.NetOutRule, logChainName string, logging bool) []rules.IPTablesRule
 }
 
 type NetOut struct {
-	ChainNamer chainNamer
-	IPTables   rules.IPTablesAdapter
-	Converter  netOutRuleConverter
-	ASGLogging bool
-	C2CLogging bool
-	IngressTag string
-	VTEPName   string
+	ChainNamer        chainNamer
+	IPTables          rules.IPTablesAdapter
+	Converter         netOutRuleConverter
+	ASGLogging        bool
+	C2CLogging        bool
+	IngressTag        string
+	VTEPName          string
+	HostInterfaceName string
 }
 
 type fullRule struct {
-	Table       string
-	ParentChain string
-	Chain       string
-	Rules       []rules.IPTablesRule
+	Table          string
+	ParentChain    string
+	Chain          string
+	JumpConditions rules.IPTablesRule
+	Rules          []rules.IPTablesRule
 }
 
 func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, dnsServers []string) error {
@@ -57,18 +59,25 @@ func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, dnsServe
 			Table:       "filter",
 			ParentChain: "INPUT",
 			Chain:       inputChain,
+			JumpConditions: rules.IPTablesRule{
+				"-s", containerIP.String(),
+			},
 			Rules: []rules.IPTablesRule{
-				rules.NewInputRelatedEstablishedRule(containerIP.String()),
-				rules.NewInputDefaultRejectRule(containerIP.String()),
+				rules.NewInputRelatedEstablishedRule(),
+				rules.NewInputDefaultRejectRule(),
 			},
 		},
 		{
 			Table:       "filter",
 			ParentChain: "FORWARD",
 			Chain:       forwardChain,
+			JumpConditions: rules.IPTablesRule{
+				"-s", containerIP.String(),
+				"-o", m.HostInterfaceName,
+			},
 			Rules: []rules.IPTablesRule{
-				rules.NewNetOutRelatedEstablishedRule(containerIP.String()),
-				rules.NewNetOutDefaultRejectRule(containerIP.String(), m.VTEPName),
+				rules.NewNetOutRelatedEstablishedRule(),
+				rules.NewNetOutDefaultRejectRule(),
 			},
 		},
 		{
@@ -94,9 +103,9 @@ func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, dnsServe
 
 	if m.ASGLogging {
 		args[1].Rules = []rules.IPTablesRule{
-			rules.NewNetOutRelatedEstablishedRule(containerIP.String()),
-			rules.NewNetOutDefaultRejectLogRule(containerHandle, containerIP.String(), m.VTEPName),
-			rules.NewNetOutDefaultRejectRule(containerIP.String(), m.VTEPName),
+			rules.NewNetOutRelatedEstablishedRule(),
+			rules.NewNetOutDefaultRejectLogRule(containerHandle),
+			rules.NewNetOutDefaultRejectRule(),
 		}
 	}
 
@@ -112,13 +121,13 @@ func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, dnsServe
 
 	if len(dnsServers) > 0 {
 		args[0].Rules = []rules.IPTablesRule{
-			rules.NewInputRelatedEstablishedRule(containerIP.String()),
+			rules.NewInputRelatedEstablishedRule(),
 		}
 		for _, dnsServer := range dnsServers {
-			args[0].Rules = append(args[0].Rules, rules.NewInputAllowRule(containerIP.String(), "tcp", dnsServer, 53))
-			args[0].Rules = append(args[0].Rules, rules.NewInputAllowRule(containerIP.String(), "udp", dnsServer, 53))
+			args[0].Rules = append(args[0].Rules, rules.NewInputAllowRule("tcp", dnsServer, 53))
+			args[0].Rules = append(args[0].Rules, rules.NewInputAllowRule("udp", dnsServer, 53))
 		}
-		args[0].Rules = append(args[0].Rules, rules.NewInputDefaultRejectRule(containerIP.String()))
+		args[0].Rules = append(args[0].Rules, rules.NewInputDefaultRejectRule())
 	}
 
 	err = initChains(m.IPTables, args)
@@ -129,7 +138,7 @@ func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, dnsServe
 	return applyRules(m.IPTables, args)
 }
 
-func (m *NetOut) Cleanup(containerHandle string) error {
+func (m *NetOut) Cleanup(containerHandle, containerIP string) error {
 	overlayChain := m.ChainNamer.Prefix(prefixOverlay, containerHandle)
 	forwardChain := m.ChainNamer.Prefix(prefixNetOut, containerHandle)
 	inputChain := m.ChainNamer.Prefix(prefixInput, containerHandle)
@@ -138,31 +147,57 @@ func (m *NetOut) Cleanup(containerHandle string) error {
 		return fmt.Errorf("getting chain name: %s", err)
 	}
 
-	var result error
-	if err := cleanupChain("filter", "FORWARD", overlayChain, m.IPTables); err != nil {
-		result = multierror.Append(result, err)
-	}
-	if err := cleanupChain("filter", "FORWARD", forwardChain, m.IPTables); err != nil {
-		result = multierror.Append(result, err)
-	}
-	if err := cleanupChain("filter", "INPUT", inputChain, m.IPTables); err != nil {
-		result = multierror.Append(result, err)
-	}
-	if err := cleanupChain("filter", "", logChain, m.IPTables); err != nil {
-		result = multierror.Append(result, err)
+	args := []fullRule{
+		{
+			Table:       "filter",
+			ParentChain: "FORWARD",
+			Chain:       overlayChain,
+		},
+		{
+			Table:       "filter",
+			ParentChain: "FORWARD",
+			Chain:       forwardChain,
+			JumpConditions: rules.IPTablesRule{
+				"-s", containerIP,
+				"-o", m.HostInterfaceName,
+			},
+		},
+		{
+			Table:       "filter",
+			ParentChain: "INPUT",
+			Chain:       inputChain,
+			JumpConditions: rules.IPTablesRule{
+				"-s", containerIP,
+			},
+		},
+		{
+			Table:       "filter",
+			ParentChain: "",
+			Chain:       logChain,
+		},
 	}
 
+	return cleanupChains(args, m.IPTables)
+}
+
+func cleanupChains(args []fullRule, iptables rules.IPTablesAdapter) error {
+	var result error
+	for _, arg := range args {
+		if err := cleanupChain(arg.Table, arg.ParentChain, arg.Chain, arg.JumpConditions, iptables); err != nil {
+			result = multierror.Append(result, err)
+		}
+	}
 	return result
 }
 
-func (m *NetOut) InsertRule(containerHandle string, rule garden.NetOutRule, containerIP string) error {
+func (m *NetOut) InsertRule(containerHandle string, rule garden.NetOutRule) error {
 	chain := m.ChainNamer.Prefix(prefixNetOut, containerHandle)
 	logChain, err := m.ChainNamer.Postfix(chain, suffixNetOutLog)
 	if err != nil {
 		return fmt.Errorf("getting chain name: %s", err)
 	}
 
-	ruleSpec := m.Converter.Convert(rule, containerIP, logChain, m.ASGLogging)
+	ruleSpec := m.Converter.Convert(rule, logChain, m.ASGLogging)
 	err = m.IPTables.BulkInsert("filter", chain, 1, ruleSpec...)
 	if err != nil {
 		return fmt.Errorf("inserting net-out rule: %s", err)
@@ -171,14 +206,14 @@ func (m *NetOut) InsertRule(containerHandle string, rule garden.NetOutRule, cont
 	return nil
 }
 
-func (m *NetOut) BulkInsertRules(containerHandle string, netOutRules []garden.NetOutRule, containerIP string) error {
+func (m *NetOut) BulkInsertRules(containerHandle string, netOutRules []garden.NetOutRule) error {
 	chain := m.ChainNamer.Prefix(prefixNetOut, containerHandle)
 	logChain, err := m.ChainNamer.Postfix(chain, suffixNetOutLog)
 	if err != nil {
 		return fmt.Errorf("getting chain name: %s", err)
 	}
 
-	ruleSpec := m.Converter.BulkConvert(netOutRules, containerIP, logChain, m.ASGLogging)
+	ruleSpec := m.Converter.BulkConvert(netOutRules, logChain, m.ASGLogging)
 	err = m.IPTables.BulkInsert("filter", chain, 1, ruleSpec...)
 	if err != nil {
 		return fmt.Errorf("bulk inserting net-out rules: %s", err)
