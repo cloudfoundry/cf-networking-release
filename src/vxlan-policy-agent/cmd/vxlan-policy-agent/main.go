@@ -90,6 +90,12 @@ func main() {
 		conf.PolicyServerURL,
 	)
 
+	_, err = policyClient.GetPolicies()
+
+	if err != nil {
+		die(logger, "policy-client-getpolicies", err)		
+	}
+
 	store := &datastore.Store{
 		Serializer: &serial.Serial{},
 		Locker: &filelock.Locker{
