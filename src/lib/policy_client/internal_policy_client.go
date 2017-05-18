@@ -43,3 +43,14 @@ func (c *InternalClient) GetPoliciesByID(ids ...string) ([]models.Policy, error)
 	}
 	return policies.Policies, nil
 }
+
+func (c *InternalClient) HealthCheck() (bool, error) {
+	var healthcheck struct {
+		Healthcheck bool `json:"healthcheck"`
+	}
+	err := c.JsonClient.Do("GET", "/networking/v0/internal/healthcheck", nil, &healthcheck, "")
+	if err != nil {
+		return false, err
+	}
+	return healthcheck.Healthcheck, nil
+}  
