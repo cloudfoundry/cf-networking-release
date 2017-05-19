@@ -81,6 +81,46 @@ NOTE: If you are having problems, first consult our [known issues doc](known-iss
   -   `vxlan_policy_agent`
   -   `policy_server`
 
+### Inspecting VTEP configuration
+The VXLAN tunnel endpoint can be inspected using the `ip` utility from the `iproute2` package.
+
+First, install a recent version on the stemcell:
+```
+curl -o /tmp/iproute2.deb -L http://mirrors.kernel.org/ubuntu/pool/main/i/iproute2/iproute2_4.3.0-1ubuntu3_amd64.deb
+curl -o /tmp/libmnl0.deb -L http://mirrors.kernel.org/ubuntu/pool/main/libm/libmnl/libmnl0_1.0.3-5_amd64.deb
+dpkg -i /tmp/*.deb
+```
+
+Then you can see details of the VTEP device by running
+```
+ip -d link list silk-vtep
+```
+which should resemble
+```
+250: silk-vtep: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1410 qdisc noqueue state UNKNOWN mode DEFAULT group default
+    link/ether ee:ee:0a:ff:58:00 brd ff:ff:ff:ff:ff:ff promiscuity 0
+    vxlan id 1 local 10.0.32.7 dev eth0 srcport 0 0 dstport 4800 nolearning ageing 300 gbp
+```
+
+To understand the meaning of the last line, see
+
+```
+ip link help vxlan
+Usage: ... vxlan id VNI [ { group | remote } ADDR ] [ local ADDR ]
+                 [ ttl TTL ] [ tos TOS ] [ dev PHYS_DEV ]
+                 [ dstport PORT ] [ srcport MIN MAX ]
+                 [ [no]learning ] [ [no]proxy ] [ [no]rsc ]
+                 [ [no]l2miss ] [ [no]l3miss ]
+                 [ ageing SECONDS ] [ maxaddress NUMBER ]
+                 [ [no]udpcsum ] [ [no]udp6zerocsumtx ] [ [no]udp6zerocsumrx ]
+                 [ gbp ]
+
+Where: VNI := 0-16777215
+       ADDR := { IP_ADDRESS | any }
+       TOS  := { NUMBER | inherit }
+       TTL  := { 1..255 | inherit }
+```
+
 
 ### Debugging C2C Packets
 
