@@ -209,7 +209,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 
 		It("crashes and logs a useful error message", func() {
 			Eventually(session).Should(gexec.Exit())
-			Eventually(session.Out.Contents).Should(MatchRegexp("policy-client-getpolicies.*http client do.*unsupported protocol scheme"))
+			Eventually(session.Out.Contents).Should(MatchRegexp("policy-client-get-policies.*http client do.*unsupported protocol scheme"))
 		})
 
 	})
@@ -269,7 +269,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 
 		It("times out requests", func() {
 			session = startAgent(paths.VxlanPolicyAgentPath, configFilePath)
-			Eventually(session.Out.Contents, "3s").Should(MatchRegexp("policy-client-getpolicies.*request canceled while waiting for connection.*Client.Timeout exceeded"))
+			Eventually(session.Out.Contents, "3s").Should(MatchRegexp("policy-client-get-policies.*request canceled while waiting for connection.*Client.Timeout exceeded"))
 			session.Kill()
 		})
 	})

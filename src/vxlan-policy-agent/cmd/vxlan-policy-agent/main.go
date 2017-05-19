@@ -93,7 +93,7 @@ func main() {
 	_, err = policyClient.GetPolicies()
 
 	if err != nil {
-		die(logger, "policy-client-getpolicies", err)		
+		die(logger, "policy-client-get-policies", err)
 	}
 
 	store := &datastore.Store{
