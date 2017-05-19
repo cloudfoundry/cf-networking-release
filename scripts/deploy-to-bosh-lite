@@ -14,15 +14,15 @@ error() {
 
 create_bosh_env() {
   ssh-keygen -R 192.168.50.6
-  rm -f ~/workspace/container-networking-deployments/environments/local/state.json
+  rm -f ~/workspace/cf-networking-deployments/environments/local/state.json
   bosh create-env ~/workspace/bosh-deployment/bosh.yml \
-    --state ~/workspace/container-networking-deployments/environments/local/state.json \
+    --state ~/workspace/cf-networking-deployments/environments/local/state.json \
     -o ~/workspace/bosh-deployment/virtualbox/cpi.yml \
     -o ~/workspace/bosh-deployment/virtualbox/outbound-network.yml \
     -o ~/workspace/bosh-deployment/bosh-lite.yml \
     -o ~/workspace/bosh-deployment/bosh-lite-runc.yml \
     -o ~/workspace/bosh-deployment/jumpbox-user.yml \
-    --vars-store ~/workspace/container-networking-deployments/environments/local/creds.yml \
+    --vars-store ~/workspace/cf-networking-deployments/environments/local/creds.yml \
     -v director_name="Bosh Lite Director" \
     -v internal_ip=192.168.50.6 \
     -v internal_gw=192.168.50.1 \
@@ -31,13 +31,13 @@ create_bosh_env() {
 }
 
 set_bosh_env() {
-  bosh -e 192.168.50.6 --ca-cert <(bosh int ~/workspace/container-networking-deployments/environments/local/creds.yml --path /director_ssl/ca) alias-env vbox
+  bosh -e 192.168.50.6 --ca-cert <(bosh int ~/workspace/cf-networking-deployments/environments/local/creds.yml --path /director_ssl/ca) alias-env vbox
   export BOSH_CLIENT="admin"
-  export BOSH_CLIENT_SECRET="$(bosh int ~/workspace/container-networking-deployments/environments/local/creds.yml --path /admin_password)"
+  export BOSH_CLIENT_SECRET="$(bosh int ~/workspace/cf-networking-deployments/environments/local/creds.yml --path /admin_password)"
   export BOSH_ENVIRONMENT="vbox"
   export BOSH_DEPLOYMENT="cf"
   export BOSH_CA_CERT="/tmp/bosh-lite-ca-cert"
-  bosh int ~/workspace/container-networking-deployments/environments/local/creds.yml --path /director_ssl/ca > ${BOSH_CA_CERT}
+  bosh int ~/workspace/cf-networking-deployments/environments/local/creds.yml --path /director_ssl/ca > ${BOSH_CA_CERT}
 }
 
 upload_bosh_stemcell() {
@@ -57,7 +57,7 @@ deploy_cf() {
   -o ~/workspace/cf-deployment/operations/bosh-lite.yml \
   -o ~/workspace/cf-networking-release/manifest-generation/opsfiles/postgres.yml \
   -o ~/workspace/cf-networking-release/manifest-generation/opsfiles/silk-postgres.yml \
-  --vars-store ~/workspace/container-networking-deployments/environments/local/deployment-vars.yml \
+  --vars-store ~/workspace/cf-networking-deployments/environments/local/deployment-vars.yml \
   -v system_domain=bosh-lite.com
 }
 

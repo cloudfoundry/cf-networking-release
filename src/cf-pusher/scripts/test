@@ -8,7 +8,7 @@ cd $THIS_DIR
 export CONFIG=/tmp/bosh-lite-integration-config.json
 export APPS_DIR=${GOPATH}/src/example-apps
 
-vars_store="$HOME/workspace/container-networking-deployments/environments/local/deployment-vars.yml"
+vars_store="$HOME/workspace/cf-networking-deployments/environments/local/deployment-vars.yml"
 export ADMIN_PASSWORD=$(grep scim "${vars_store}" | cut -d ' ' -f2)
 
 cat > $CONFIG <<EOF

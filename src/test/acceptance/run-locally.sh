@@ -8,7 +8,7 @@ cd $THIS_DIR
 export CONFIG=/tmp/test-config.json
 export APPS_DIR=../../example-apps
 
-VARS_STORE="$HOME/workspace/container-networking-deployments/environments/local/deployment-vars.yml"
+VARS_STORE="$HOME/workspace/cf-networking-deployments/environments/local/deployment-vars.yml"
 
 
 echo '
