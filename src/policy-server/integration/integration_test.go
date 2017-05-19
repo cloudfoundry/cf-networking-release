@@ -30,7 +30,7 @@ var _ = Describe("Integration", func() {
 			conf         config.Config
 			address      string
 			debugAddress string
-			testDatabase *testsupport.TestDatabase
+			dbConf       db.Config
 
 			fakeMetron metrics.FakeMetron
 		)
@@ -38,11 +38,11 @@ var _ = Describe("Integration", func() {
 		BeforeEach(func() {
 			fakeMetron = metrics.NewFakeMetron()
 
-			dbName := fmt.Sprintf("test_netman_database_%x", rand.Int())
-			dbConnectionInfo := testsupport.GetDBConnectionInfo()
-			testDatabase = dbConnectionInfo.CreateDatabase(dbName)
+			dbConf = testsupport.GetDBConfig()
+			dbConf.DatabaseName = fmt.Sprintf("test_%x", rand.Int())
+			testsupport.CreateDatabase(dbConf)
 
-			template := helpers.DefaultTestConfig(testDatabase.DBConfig(), fakeMetron.Address(), "fixtures")
+			template := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
 			policyServerConfs := configurePolicyServers(template, 1)
 			sessions = startPolicyServers(policyServerConfs)
 			session = sessions[0]
@@ -55,9 +55,7 @@ var _ = Describe("Integration", func() {
 		AfterEach(func() {
 			stopPolicyServers(sessions)
 
-			if testDatabase != nil {
-				testDatabase.Destroy()
-			}
+			testsupport.RemoveDatabase(dbConf)
 
 			Expect(fakeMetron.Close()).To(Succeed())
 		})
@@ -170,11 +168,16 @@ var _ = Describe("Integration", func() {
 		)
 
 		BeforeEach(func() {
-			dbConfig := db.Config{
-				Type:             "postgres",
-				ConnectionString: "postgres://:@1.2.3.4:9999/?sslmode=disable",
+			badDbConfig := db.Config{
+				Type:         "postgres",
+				User:         "invalidUser",
+				Password:     "badPassword",
+				Host:         "badHost",
+				Port:         9999,
+				DatabaseName: "nonexistentDatabase",
+				Timeout:      5,
 			}
-			conf := helpers.DefaultTestConfig(dbConfig, "some-address", "fixtures")
+			conf := helpers.DefaultTestConfig(badDbConfig, "some-address", "fixtures")
 			configFilePath := helpers.WriteConfigFile(conf)
 
 			policyServerCmd := exec.Command(policyServerPath, "-config-file", configFilePath)

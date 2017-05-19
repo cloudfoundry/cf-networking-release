@@ -9,6 +9,7 @@ import (
 	"policy-server/integration/helpers"
 	"strings"
 
+	"code.cloudfoundry.org/go-db-helpers/db"
 	"code.cloudfoundry.org/go-db-helpers/metrics"
 	"code.cloudfoundry.org/go-db-helpers/testsupport"
 
@@ -22,7 +23,7 @@ var _ = Describe("Automatic Stale Policy Cleanup", func() {
 		sessions          []*gexec.Session
 		conf              config.Config
 		policyServerConfs []config.Config
-		testDatabase      *testsupport.TestDatabase
+		dbConf            db.Config
 
 		fakeMetron metrics.FakeMetron
 	)
@@ -30,11 +31,11 @@ var _ = Describe("Automatic Stale Policy Cleanup", func() {
 	BeforeEach(func() {
 		fakeMetron = metrics.NewFakeMetron()
 
-		dbName := fmt.Sprintf("test_netman_database_%x", rand.Int())
-		dbConnectionInfo := testsupport.GetDBConnectionInfo()
-		testDatabase = dbConnectionInfo.CreateDatabase(dbName)
+		dbConf = testsupport.GetDBConfig()
+		dbConf.DatabaseName = fmt.Sprintf("test_%x", rand.Int())
+		testsupport.CreateDatabase(dbConf)
 
-		template := helpers.DefaultTestConfig(testDatabase.DBConfig(), fakeMetron.Address(), "fixtures")
+		template := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
 		template.CleanupInterval = 1
 		template.CCAppRequestChunkSize = 1
 
@@ -49,9 +50,7 @@ var _ = Describe("Automatic Stale Policy Cleanup", func() {
 			Eventually(session, helpers.DEFAULT_TIMEOUT).Should(gexec.Exit())
 		}
 
-		if testDatabase != nil {
-			testDatabase.Destroy()
-		}
+		testsupport.RemoveDatabase(dbConf)
 
 		Expect(fakeMetron.Close()).To(Succeed())
 	})

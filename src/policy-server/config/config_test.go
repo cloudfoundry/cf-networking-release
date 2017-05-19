@@ -44,7 +44,12 @@ var _ = Describe("Config", func() {
 					"skip_ssl_validation": true,
 					"database": {
 						"type": "mysql",
-						"connection_string": "some-db-connection-string"
+						"user": "root",
+						"password": "password",
+						"host": "127.0.0.1",
+						"port": 3306,
+						"timeout": 5,
+						"database_name": "network_policy"
 					},
 					"tag_length": 2,
 					"metron_address": "http://1.2.3.4:9999",
@@ -70,7 +75,12 @@ var _ = Describe("Config", func() {
 				Expect(c.CCURL).To(Equal("http://ccapi.example.com"))
 				Expect(c.SkipSSLValidation).To(Equal(true))
 				Expect(c.Database.Type).To(Equal("mysql"))
-				Expect(c.Database.ConnectionString).To(Equal("some-db-connection-string"))
+				Expect(c.Database.User).To(Equal("root"))
+				Expect(c.Database.Password).To(Equal("password"))
+				Expect(c.Database.Host).To(Equal("127.0.0.1"))
+				Expect(c.Database.Port).To(Equal(uint16(3306)))
+				Expect(c.Database.Timeout).To(Equal(5))
+				Expect(c.Database.DatabaseName).To(Equal("network_policy"))
 				Expect(c.TagLength).To(Equal(2))
 				Expect(c.MetronAddress).To(Equal("http://1.2.3.4:9999"))
 				Expect(c.LogLevel).To(Equal("debug"))
@@ -126,8 +136,13 @@ var _ = Describe("Config", func() {
 					"cc_url":               "http://ccapi.example.com",
 					"skip_ssl_validation":  true,
 					"database": map[string]interface{}{
-						"type":              "mysql",
-						"connection_string": "some-db-connection-string",
+						"type":          "mysql",
+						"user":          "root",
+						"password":      "password",
+						"host":          "127.0.0.1",
+						"port":          3306,
+						"timeout":       5,
+						"database_name": "network_policy",
 					},
 					"tag_length":       2,
 					"metron_address":   "http://1.2.3.4:9999",
@@ -178,8 +193,13 @@ var _ = Describe("Config", func() {
 					"cc_url":               "http://ccapi.example.com",
 					"skip_ssl_validation":  true,
 					"database": map[string]interface{}{
-						"type":              "mysql",
-						"connection_string": "some-db-connection-string",
+						"type":          "mysql",
+						"user":          "root",
+						"password":      "password",
+						"host":          "127.0.0.1",
+						"port":          3306,
+						"timeout":       5,
+						"database_name": "network_policy",
 					},
 					"tag_length":       2,
 					"metron_address":   "http://1.2.3.4:9999",
@@ -200,14 +220,69 @@ var _ = Describe("Config", func() {
 				})
 			})
 
-			Context("when the config file is missing a db connection string", func() {
+			Context("when the config file is missing a user", func() {
 				BeforeEach(func() {
-					delete(allData["database"].(map[string]interface{}), "connection_string")
+					delete(allData["database"].(map[string]interface{}), "user")
 					Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
 				})
 				It("returns an error", func() {
 					_, err = config.New(file.Name())
-					Expect(err).To(MatchError("invalid config: Database.ConnectionString: zero value"))
+					Expect(err).To(MatchError("invalid config: Database.User: zero value"))
+				})
+			})
+
+			Context("when the config file is missing a password", func() {
+				BeforeEach(func() {
+					delete(allData["database"].(map[string]interface{}), "password")
+					Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
+				})
+				It("does not return an error", func() {
+					_, err = config.New(file.Name())
+					Expect(err).NotTo(HaveOccurred())
+				})
+			})
+
+			Context("when the config file is missing a host", func() {
+				BeforeEach(func() {
+					delete(allData["database"].(map[string]interface{}), "host")
+					Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
+				})
+				It("returns an error", func() {
+					_, err = config.New(file.Name())
+					Expect(err).To(MatchError("invalid config: Database.Host: zero value"))
+				})
+			})
+
+			Context("when the config file is missing a port", func() {
+				BeforeEach(func() {
+					delete(allData["database"].(map[string]interface{}), "port")
+					Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
+				})
+				It("returns an error", func() {
+					_, err = config.New(file.Name())
+					Expect(err).To(MatchError("invalid config: Database.Port: zero value"))
+				})
+			})
+
+			Context("when the config file is missing a timeout", func() {
+				BeforeEach(func() {
+					delete(allData["database"].(map[string]interface{}), "timeout")
+					Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
+				})
+				It("returns an error", func() {
+					_, err = config.New(file.Name())
+					Expect(err).To(MatchError("invalid config: Database.Timeout: less than min"))
+				})
+			})
+
+			Context("when the config file is missing a database_name", func() {
+				BeforeEach(func() {
+					delete(allData["database"].(map[string]interface{}), "database_name")
+					Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
+				})
+				It("does not return an error", func() {
+					_, err = config.New(file.Name())
+					Expect(err).NotTo(HaveOccurred())
 				})
 			})
 		})

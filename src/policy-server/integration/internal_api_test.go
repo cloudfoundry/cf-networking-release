@@ -11,6 +11,7 @@ import (
 	"policy-server/integration/helpers"
 	"strings"
 
+	"code.cloudfoundry.org/go-db-helpers/db"
 	"code.cloudfoundry.org/go-db-helpers/metrics"
 	"code.cloudfoundry.org/go-db-helpers/testsupport"
 
@@ -21,20 +22,21 @@ import (
 
 var _ = Describe("Internal API", func() {
 	var (
-		sessions     []*gexec.Session
-		conf         config.Config
-		address      string
-		testDatabase *testsupport.TestDatabase
-		tlsConfig    *tls.Config
+		sessions  []*gexec.Session
+		conf      config.Config
+		address   string
+		dbConf    db.Config
+		tlsConfig *tls.Config
 
 		fakeMetron metrics.FakeMetron
 	)
 
 	BeforeEach(func() {
 		fakeMetron = metrics.NewFakeMetron()
-		dbName := fmt.Sprintf("test_netman_database_%x", rand.Int())
-		dbConnectionInfo := testsupport.GetDBConnectionInfo()
-		testDatabase = dbConnectionInfo.CreateDatabase(dbName)
+		dbConf = testsupport.GetDBConfig()
+		dbConf.DatabaseName = fmt.Sprintf("test_%x", rand.Int())
+		testsupport.CreateDatabase(dbConf)
+
 		cert, err := tls.LoadX509KeyPair("fixtures/client.crt", "fixtures/client.key")
 		Expect(err).NotTo(HaveOccurred())
 
@@ -50,7 +52,7 @@ var _ = Describe("Internal API", func() {
 		}
 		tlsConfig.BuildNameToCertificate()
 
-		template := helpers.DefaultTestConfig(testDatabase.DBConfig(), fakeMetron.Address(), "fixtures")
+		template := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
 		template.TagLength = 2
 		policyServerConfs := configurePolicyServers(template, 1)
 		sessions = startPolicyServers(policyServerConfs)
@@ -62,9 +64,7 @@ var _ = Describe("Internal API", func() {
 	AfterEach(func() {
 		stopPolicyServers(sessions)
 
-		if testDatabase != nil {
-			testDatabase.Destroy()
-		}
+		testsupport.RemoveDatabase(dbConf)
 
 		Expect(fakeMetron.Close()).To(Succeed())
 	})
