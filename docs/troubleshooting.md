@@ -81,6 +81,77 @@ NOTE: If you are having problems, first consult our [known issues doc](known-iss
   -   `vxlan_policy_agent`
   -   `policy_server`
 
+
+### Diagnosing and Recovering from Subnet Overlap
+
+	This section describes how to recover from a deploy which has an overlay network configured which conflicts with the entire CF subnet.
+
+	We set `cf_networking.network` to the same subnet as CF and BOSH (10.0.0.0/16). When we deploy we fail to bring up the first diego cell
+  ```
+  17:31:56 | Updating instance diego-cell: diego-cell/4abb639b-33a9-4d8d-8a95-21c3863c7b0c (0) (canary) (00:03:25)
+              L Error: Timed out sending 'get_state' to baa8bc66-df64-4c2f-80d0-c090559ac28d after 45 seconds
+
+  17:35:22 | Error: Timed out sending 'get_state' to baa8bc66-df64-4c2f-80d0-c090559ac28d after 45 seconds
+  ```
+
+  bosh vms shows:
+  ```
+  $ bosh vms
+  Using environment 'https://104.196.19.37:25555' as client 'admin'
+
+  Task 44. Done
+
+  Deployment 'cf'
+
+  Instance                                          Process State       AZ  IPs          VM CID                                   VM Type
+  api/45e92d63-905b-4659-8400-3df97b97850b          running             z1  10.0.16.10   vm-bd55a96c-e4b4-4a33-53d0-7297e63d5bed  m3.large
+  api/f381c70a-58b7-4972-96d0-5a717122ce1e          running             z2  10.0.32.8    vm-3579ec81-6cad-4e44-42f7-170545c11dc2  m3.large
+  blobstore/a4c314e9-1b79-46bc-b572-c57e1be563b3    running             z1  10.0.16.9    vm-6a787749-9f7b-4fb7-7565-2f0b66ed1794  m3.large
+  cc-bridge/1999c3c2-7b4c-4ac0-8b43-189561edc7d6    running             z1  10.0.16.16   vm-ee138dd7-e01c-473b-402e-2a5896746e1f  m3.medium
+  cc-bridge/fb02bc5b-5b75-4e3b-8e1c-451b4baaafe6    running             z2  10.0.32.13   vm-5ddb0e3d-6c44-4bd0-5232-04c5d28e9151  m3.medium
+  cc-clock/d2a40e2f-b93f-4821-8d9e-b5e7f2fafec5     running             z1  10.0.16.15   vm-a94c4a98-ece2-4ad5-68f5-aa53f4c988c5  m3.large
+  cc-worker/ed3655bf-0d6a-4ea7-bd21-060d7c7146b7    running             z1  10.0.16.11   vm-f5f3f577-80fe-43b9-554f-7ea55f954c82  m3.medium
+  cc-worker/feb22fc9-a701-4dff-9c44-e920a03d8520    running             z2  10.0.32.9    vm-8465f4e3-d3c5-453a-7b88-0392e3efd160  m3.medium
+  consul/00d7d425-6291-4f8a-8313-7deae2fbd3c9       running             z2  10.0.32.4    vm-d61b76e9-45ae-432b-504d-f3290f7b09e6  m3.medium
+  consul/906080b6-28d2-411f-9a96-88d1556f0d82       running             z3  10.0.48.4    vm-0ba6eed9-20fa-4375-53ac-e6911fd60b49  m3.medium
+  consul/d2c6612c-cad6-412d-bac7-ac35c08895c5       running             z1  10.0.16.4    vm-a03136b0-e769-468a-6848-2ab8347782d1  m3.medium
+  diego-bbs/800ab3a6-529a-476d-ab07-95ee5847ad8f    running             z1  10.0.16.7    vm-c96eec32-b644-4c42-7e46-90a054eb6bbb  m3.large
+  diego-bbs/c99ce96a-1e4e-4e33-b972-3add40a831db    running             z2  10.0.32.6    vm-29d36c97-d372-4b7c-4cfd-ff58e4046107  m3.large
+  diego-brain/2a81d157-3e65-4335-b661-0393f867d252  running             z2  10.0.32.11   vm-fd18327e-5044-4056-4d23-c5c8a833c172  m3.medium
+  diego-brain/9811e507-4b3e-490a-839e-147f3eaa9089  running             z1  10.0.16.13   vm-04482d80-97cc-4eb8-44e2-0756f45529e1  m3.medium
+  diego-cell/460d0ead-a1b4-40c5-9f88-70327b536aa8   running             z2  10.0.32.12   vm-de76fbd8-cd3c-44ab-6ccc-bc0755909a91  r3.xlarge
+  diego-cell/4abb639b-33a9-4d8d-8a95-21c3863c7b0c   unresponsive agent  z1  10.0.16.14   vm-323a3988-5671-4b0d-4939-622d1886185f  r3.xlarge
+  doppler/0108ae24-b3ca-4d14-9cd6-c5640ffc359c      running             z1  10.0.16.17   vm-30645eea-47cd-428c-52a7-116ce26d46e9  m3.medium
+  doppler/05d36944-d4ee-4c40-9eba-f8abce03d942      running             z2  10.0.32.14   vm-97fc113f-d0b1-4bf4-6b2c-b99a82e88c74  m3.medium
+  etcd/2bef16f1-ce6e-4049-a3b9-728966135072         running             z1  10.0.16.5    vm-0b59d1db-bf0b-4a22-43ad-d4e04edad572  m3.medium
+  etcd/ca1a776d-405c-4687-800b-ea707d015abb         running             z3  10.0.48.5    vm-b671dcea-6235-4217-6f50-8172a414fd98  m3.medium
+  etcd/f7171ac1-d760-4e79-986f-52409f22008a         running             z2  10.0.32.5    vm-268b024e-00ee-4fe0-5dd7-5cd36a975661  m3.medium
+  log-api/3e8f0f29-1dfe-4620-ba26-6d51db8254ed      running             z1  10.0.16.18   vm-29a20458-fc53-426f-47ff-293394fbf416  t2.small
+  log-api/4bc34462-5ae8-4cc1-82d2-bc74ef2866f5      running             z2  10.0.32.15   vm-560e68ef-0629-4457-41b4-fbc76b2d09e6  t2.small
+  mysql/e448ba11-5f14-46f2-876c-e0e926fef2d5        running             z1  10.0.16.6    vm-3be727a8-da1c-427a-6701-16ee19be6264  m3.large
+  nats/5fd2bb98-f384-4bbf-86b9-b5e888543b1a         running             z2  10.0.47.191  vm-5d271164-c9db-44d8-6dd2-a014ff075eaa  c3.large
+  nats/b977aa7e-ced3-4e68-8dd9-bd5bb5640dec         running             z1  10.0.31.191  vm-86297c9b-19b5-45db-5dbc-dd3ed5638d42  c3.large
+  router/40f14eb0-47f2-4b1e-831d-6f1c9620c5ef       running             z3  10.0.48.6    vm-8590c4d2-2e89-4d72-7841-6d191d36a31a  m3.medium
+  router/7a932987-5a50-4a2e-a221-c9ad1d601e6f       running             z2  10.0.32.10   vm-91df6232-7572-479f-51d8-5d0b24f8cdc3  m3.medium
+  router/a947e6e0-d814-434f-a66b-2b610e9eae93       running             z1  10.0.16.12   vm-afeed179-d644-441b-7f49-add45d73b905  m3.medium
+  uaa/15d93dba-7b04-4d25-a244-7d1a93712e47          running             z1  10.0.16.8    vm-715d445e-117d-4fd3-710a-7e92b028ec1b  m3.medium
+  uaa/4c334724-7362-47b6-917e-3502566a8fad          running             z2  10.0.32.7    vm-e8cb1c9a-02c8-4b2b-7c9c-21261cb5e5a0  m3.medium
+  ```
+
+  Trying to roll back fails since the deployment lock is still being held.
+
+  These commands get the deployment unstuck, so the operator can roll back to a previous version or correct the configuration:
+  ```
+  bosh update-resurrection off
+  bosh ignore diego-cell/4abb639b-33a9-4d8d-8a95-21c3863c7b0c
+  bosh delete-vm vm-a4f6c259-c1f8-4b35-746e-f1db3359fad6
+  ```
+
+  Once the deploy is complete run:
+  ```
+  bosh update-resurrection on
+  ```
+
 ### Inspecting VTEP configuration
 The VXLAN tunnel endpoint can be inspected using the `ip` utility from the `iproute2` package.
 

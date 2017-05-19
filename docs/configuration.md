@@ -32,6 +32,10 @@ BOSH properties are used:
 - `cf_networking.subnet_prefix_length`: The length, in bits, of the mask for the per-cell subnets.
   Must be less than 31 but larger than the prefix length for `network`.  Defaults to `24`.
 
+**Note**: The `cf_networking.network` option should be configured to not overlap with anything on the infrastructure network used by BOSH, CF or services.
+If the overlay network overlaps with anything on the underlay, traffic from the cell will not be able to reach that entity on the underlay.
+To repair a deployment that has been misconfigured, follow our [recovery steps](troubleshooting.md#diagnosing-and-recovering-from-subnet-overlap)
+
 **Note**: the `cf_networking.network` property is consumed by two BOSH jobs: `silk-daemon` and `silk-controller`.  If you
 intend to customize the network, you must set this property on both jobs.
 
