@@ -84,9 +84,8 @@ NOTE: If you are having problems, first consult our [known issues doc](known-iss
 
 ### Diagnosing and Recovering from Subnet Overlap
 
-	This section describes how to recover from a deploy which has an overlay network configured which conflicts with the entire CF subnet.
-
-	We set `cf_networking.network` to the same subnet as CF and BOSH (10.0.0.0/16). When we deploy we fail to bring up the first diego cell
+This section describes how to recover from a deploy which has an overlay network configured which conflicts with the entire CF subnet. We set `cf_networking.network` to the same subnet as CF and BOSH (10.0.0.0/16). When we deploy we fail to bring up the first diego cell
+  
   ```
   17:31:56 | Updating instance diego-cell: diego-cell/4abb639b-33a9-4d8d-8a95-21c3863c7b0c (0) (canary) (00:03:25)
               L Error: Timed out sending 'get_state' to baa8bc66-df64-4c2f-80d0-c090559ac28d after 45 seconds
