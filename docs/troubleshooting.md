@@ -149,6 +149,7 @@ This section describes how to recover from a deploy which has an overlay network
   Once the deploy is complete run:
   ```
   bosh update-resurrection on
+  bosh unignore diego-cell/4abb639b-33a9-4d8d-8a95-21c3863c7b0c
   ```
 
 ### Inspecting VTEP configuration
