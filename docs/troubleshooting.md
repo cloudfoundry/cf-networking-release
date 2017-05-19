@@ -84,7 +84,7 @@ NOTE: If you are having problems, first consult our [known issues doc](known-iss
 ### Inspecting VTEP configuration
 The VXLAN tunnel endpoint can be inspected using the `ip` utility from the `iproute2` package.
 
-First, install a recent version on the stemcell:
+From the Diego cell, install a recent version of `iproute2` and its dependency `libmnl`:
 ```
 curl -o /tmp/iproute2.deb -L http://mirrors.kernel.org/ubuntu/pool/main/i/iproute2/iproute2_4.3.0-1ubuntu3_amd64.deb
 curl -o /tmp/libmnl0.deb -L http://mirrors.kernel.org/ubuntu/pool/main/libm/libmnl/libmnl0_1.0.3-5_amd64.deb
