@@ -119,12 +119,16 @@ func main() {
 		log.Fatalf("db connect: %s", connectionResult.Err)
 	}
 
+	timeout := time.Duration(conf.Database.Timeout) * time.Second
+	timeout = timeout - time.Duration(500)*time.Millisecond
+
 	dataStore, err := store.New(
 		connectionResult.ConnectionPool,
 		storeGroup,
 		destination,
 		policy,
 		conf.TagLength,
+		timeout,
 	)
 	if err != nil {
 		log.Fatalf("failed to construct datastore: %s", err)

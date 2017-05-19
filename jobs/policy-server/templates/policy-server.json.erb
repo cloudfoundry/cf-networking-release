@@ -56,6 +56,16 @@
 <%=
     require 'json'
 
+    user = require_db_param 'username'
+    password = require_db_param 'password'
+    port = require_db_param 'port'
+    name = require_db_param 'name'
+    driver = require_db_param 'type'
+
+    unless driver == 'mysql' || driver == 'postgres'
+      raise "unknown driver  #{driver}"
+    end
+
     toRender = {
       "listen_host" => p("cf_networking.policy_server.listen_ip"),
       "listen_port" => p("cf_networking.policy_server.listen_port"),
@@ -69,8 +79,12 @@
       "cc_url" => "http://#{p("cf_networking.policy_server.cc_hostname")}:#{p("cf_networking.policy_server.cc_port")}",
       "skip_ssl_validation" => p("cf_networking.policy_server.skip_ssl_validation"),
       "database" => {
-        "type" => p("cf_networking.policy_server.database.type"),
-        "connection_string" => connection_string,
+        "type" => driver,
+        "user" => user,
+        "password" => password,
+        "host" => db_host,
+        "port" => port,
+        "timeout" => 5,
       },
       "tag_length" => p("cf_networking.policy_server.tag_length"),
       "metron_address" => "127.0.0.1:#{p("cf_networking.policy_server.metron_port")}",

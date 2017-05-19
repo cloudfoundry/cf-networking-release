@@ -74,6 +74,7 @@ type Store interface {
 //go:generate counterfeiter -o fakes/db.go --fake-name Db . db
 type db interface {
 	Beginx() (*sqlx.Tx, error)
+	BeginTxx(ctx context.Context, opts *sql.TxOptions) (*sqlx.Tx, error)
 	Exec(query string, args ...interface{}) (sql.Result, error)
 	NamedExec(query string, arg interface{}) (sql.Result, error)
 	Get(dest interface{}, query string, args ...interface{}) error
@@ -100,12 +101,13 @@ type store struct {
 	destination DestinationRepo
 	policy      PolicyRepo
 	tagLength   int
+	timeout     time.Duration
 }
 
 const MAX_TAG_LENGTH = 3
 const MIN_TAG_LENGTH = 1
 
-func New(dbConnectionPool db, g GroupRepo, d DestinationRepo, p PolicyRepo, tl int) (Store, error) {
+func New(dbConnectionPool db, g GroupRepo, d DestinationRepo, p PolicyRepo, tl int, t time.Duration) (Store, error) {
 	if tl < MIN_TAG_LENGTH || tl > MAX_TAG_LENGTH {
 		return nil, fmt.Errorf("tag length out of range (%d-%d): %d",
 			MIN_TAG_LENGTH,
@@ -130,6 +132,7 @@ func New(dbConnectionPool db, g GroupRepo, d DestinationRepo, p PolicyRepo, tl i
 		destination: d,
 		policy:      p,
 		tagLength:   tl,
+		timeout:     t,
 	}, nil
 }
 
@@ -150,7 +153,9 @@ func rollback(tx Transaction, err error) error {
 }
 
 func (s *store) Create(policies []models.Policy) error {
-	tx, err := s.conn.Beginx()
+	ctx := context.Background()
+	ctx, _ = context.WithTimeout(ctx, s.timeout) // not tested
+	tx, err := s.conn.BeginTxx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("begin transaction: %s", err)
 	}
@@ -181,7 +186,9 @@ func (s *store) Create(policies []models.Policy) error {
 }
 
 func (s *store) Delete(policies []models.Policy) error {
-	tx, err := s.conn.Beginx()
+	ctx := context.Background()
+	ctx, _ = context.WithTimeout(ctx, s.timeout) // not tested
+	tx, err := s.conn.BeginTxx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("begin transaction: %s", err)
 	}
@@ -273,7 +280,7 @@ func (s *store) policiesQuery(query string, args ...interface{}) ([]models.Polic
 	rebindedQuery := helpers.RebindForSQLDialect(query, s.conn.DriverName())
 
 	ctx := context.Background()
-	ctx, _ = context.WithTimeout(ctx, 2*time.Second)
+	ctx, _ = context.WithTimeout(ctx, s.timeout) // not tested
 	rows, err := s.conn.QueryContext(ctx, rebindedQuery, args...)
 	if err != nil {
 		return nil, fmt.Errorf("listing all: %s", err)
