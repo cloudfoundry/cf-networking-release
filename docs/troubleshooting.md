@@ -102,10 +102,15 @@ which should resemble
     vxlan id 1 local 10.0.32.7 dev eth0 srcport 0 0 dstport 4800 nolearning ageing 300 gbp
 ```
 
-To understand the meaning of the last line, see
+To parse the last line, look at:
 
 ```
 ip link help vxlan
+```
+
+which shows
+
+```
 Usage: ... vxlan id VNI [ { group | remote } ADDR ] [ local ADDR ]
                  [ ttl TTL ] [ tos TOS ] [ dev PHYS_DEV ]
                  [ dstport PORT ] [ srcport MIN MAX ]
@@ -120,6 +125,8 @@ Where: VNI := 0-16777215
        TOS  := { NUMBER | inherit }
        TTL  := { 1..255 | inherit }
 ```
+
+In particular, the `dstport PORT` value is the external UDP port used by the VTEP for all encapsulated VXLAN packets.
 
 
 ### Debugging C2C Packets
