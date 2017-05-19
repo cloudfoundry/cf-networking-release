@@ -84,80 +84,41 @@
           client_cert: "((network_policy_client.certificate))"
           client_key: "((network_policy_client.private_key))"
 
-# policy server vm
+# policy server job
 - type: replace
-  path: /instance_groups/-
+  path: /instance_groups/name=api/jobs/-
   value:
     name: policy-server
-    azs:
-    - z1
-    - z2
-    instances: 2
-    vm_type: t2.small
-    stemcell: default
-    networks:
-    - name: default
-    jobs:
-    - name: policy-server
-      release: cf-networking
-      properties:
-        cf_networking:
-          policy_server:
-            uaa_client_secret: "((uaa_clients_network_policy_secret))"
-            uaa_ca: "((uaa_ssl.ca))"
-            ca_cert: "((network_policy_server.ca))"
-            server_cert: "((network_policy_server.certificate))"
-            server_key: "((network_policy_server.private_key))"
-            database:
-              type: mysql
-              username: network_policy
-              password: "((cf_mysql_mysql_seeded_databases_network_policy_password))"
-              host: sql-db.service.cf.internal
-              port: 3306
-              name: network_policy
-    - name: route_registrar
-      release: routing
-      properties:
-        route_registrar:
-          routes:
-          - name: policy-server
-            port: 4002
-            registration_interval: 20s
-            uris:
-            - "api.((system_domain))/networking"
-    - name: consul_agent
-      release: consul
-      consumes:
-        consul: {from: consul_server}
-      properties:
-        consul:
-          agent:
-            services:
-              policy-server:
-                name: policy-server
-    - name: metron_agent
-      release: loggregator
-      properties:
-        syslog_daemon_config:
-          enable: false
-        metron_agent:
-          deployment: "((system_domain))"
-          etcd:
-            client_cert: "((etcd_client.certificate))"
-            client_key: "((etcd_client.private_key))"
-        metron_endpoint:
-          shared_secret: "((dropsonde_shared_secret))"
-        loggregator:
-          tls:
-            ca_cert: "((loggregator_ca.certificate))"
-            metron:
-              cert: "((loggregator_tls_metron.certificate))"
-              key: "((loggregator_tls_metron.private_key))"
-          etcd:
-            require_ssl: true
-            ca_cert: "((etcd_server.ca))"
-            machines:
-            - cf-etcd.service.cf.internal
+    release: cf-networking
+    properties:
+      cf_networking:
+        policy_server:
+          uaa_client_secret: "((uaa_clients_network_policy_secret))"
+          uaa_ca: "((uaa_ssl.ca))"
+          ca_cert: "((network_policy_server.ca))"
+          server_cert: "((network_policy_server.certificate))"
+          server_key: "((network_policy_server.private_key))"
+          database:
+            type: mysql
+            username: network_policy
+            password: "((cf_mysql_mysql_seeded_databases_network_policy_password))"
+            host: sql-db.service.cf.internal
+            port: 3306
+            name: network_policy
+
+- type: replace
+  path: /instance_groups/name=api/jobs/name=route_registrar/properties/route_registrar/routes/-
+  value:
+    name: policy-server
+    port: 4002
+    registration_interval: 20s
+    uris:
+    - "api.((system_domain))/networking"
+
+- type: replace
+  path: /instance_groups/name=api/jobs/name=consul_agent/properties/consul/agent/services/policy-server?
+  value:
+    name: policy-server
 
 # add vars
 - type: replace

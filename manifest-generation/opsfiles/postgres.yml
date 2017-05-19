@@ -15,7 +15,7 @@
 
 # policy server vm
 - type: replace
-  path: /instance_groups/name=policy-server/jobs/name=policy-server/properties/cf_networking/policy_server/database
+  path: /instance_groups/name=api/jobs/name=policy-server/properties/cf_networking/policy_server/database
   value:
     type: postgres
     username: network_policy
