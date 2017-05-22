@@ -374,7 +374,9 @@ func (s *store) All() ([]models.Policy, error) {
 func (s *store) Tags() ([]models.Tag, error) {
 	tags := []models.Tag{}
 
-	rows, err := s.conn.Query(`
+	ctx := context.Background()
+	ctx, _ = context.WithTimeout(ctx, s.timeout) // not tested
+	rows, err := s.conn.QueryContext(ctx, `
 		SELECT guid, id FROM groups
 		WHERE guid IS NOT NULL
 		ORDER BY id

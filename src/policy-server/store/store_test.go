@@ -749,7 +749,7 @@ var _ = Describe("Store", func() {
 
 		Context("when the db operation fails", func() {
 			BeforeEach(func() {
-				mockDb.QueryReturns(nil, errors.New("some query error"))
+				mockDb.QueryContextReturns(nil, errors.New("some query error"))
 			})
 
 			It("should return a sensible error", func() {
@@ -769,7 +769,7 @@ var _ = Describe("Store", func() {
 				rows, err = realDb.Query(`select id from groups`)
 				Expect(err).NotTo(HaveOccurred())
 
-				mockDb.QueryReturns(rows, nil)
+				mockDb.QueryContextReturns(rows, nil)
 			})
 
 			AfterEach(func() {

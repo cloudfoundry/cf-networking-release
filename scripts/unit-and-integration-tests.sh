@@ -18,6 +18,7 @@ declare -a packages=(
 declare -a serial_packages=(
   "src/cni-wrapper-plugin"
   "src/garden-external-networker"
+  "src/policy-server/integration/timeouts"
   "src/vxlan-policy-agent"
   )
 
@@ -37,8 +38,7 @@ function bootDB {
 
   echo -n "booting $db"
   eval "$launchDB"
-  trycount=0
-  for i in `seq 1 60`; do
+  for _ in $(seq 1 60); do
     set +e
     eval "$testConnection"
     exitcode=$?
@@ -58,12 +58,12 @@ bootDB "${DB:-"notset"}"
 
 if [ "${1:-""}" = "" ]; then
   for dir in "${packages[@]}"; do
-    pushd $dir
-      ginkgo -r -p --race -randomizeAllSpecs -randomizeSuites -failFast "${@:2}"
+    pushd "$dir"
+      ginkgo -r -p --race -randomizeAllSpecs -randomizeSuites -failFast "${@:2}" --skipPackage=timeouts
     popd
   done
   for dir in "${serial_packages[@]}"; do
-    pushd $dir
+    pushd "$dir"
       ginkgo -r -randomizeAllSpecs -randomizeSuites -failFast "${@:2}"
     popd
   done
