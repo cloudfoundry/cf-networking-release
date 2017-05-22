@@ -28,22 +28,6 @@
       raise "must provide database link or set #{db_param_path 'host'}"
     end
 
-    def connection_string
-      user = require_db_param 'username'
-      password = require_db_param 'password'
-      port = require_db_param 'port'
-      name = require_db_param 'name'
-      driver = require_db_param 'type'
-      case driver
-      when 'mysql'
-        sprintf "%s:%s@tcp(%s:%s)/%s", user, password, db_host, port, name
-      when 'postgres'
-        sprintf "postgres://%s:%s@%s:%s/%s?sslmode=disable", user, password, db_host, port, name
-      else
-        raise "unknown driver #{driver}"
-      end
-    end
-
     def cleanup_interval_in_seconds
       minutes = p("cf_networking.policy_cleanup_interval")
       if minutes < 1
@@ -85,6 +69,7 @@
         "host" => db_host,
         "port" => port,
         "timeout" => 5,
+        "database_name" => name,
       },
       "tag_length" => p("cf_networking.policy_server.tag_length"),
       "metron_address" => "127.0.0.1:#{p("cf_networking.policy_server.metron_port")}",
