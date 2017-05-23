@@ -103,6 +103,7 @@
   value:
     name: silk-controller
     release: cf-networking
+    consumes: {database: {from: db}}
     properties:
       cf_networking:
         silk_controller:
