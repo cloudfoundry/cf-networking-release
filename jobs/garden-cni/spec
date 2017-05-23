@@ -14,7 +14,7 @@ properties:
 
   cf_networking.cni_config_dir:
     description: "Directory to store CNI config files.  Other jobs may write files into here."
-    default: /var/vcap/jobs/cni-flannel/config/cni
+    default: /var/vcap/jobs/silk-cni/config/cni
 
   cf_networking.nat_port_range_start:
     description: "Starting value for allocating host ports to containers"

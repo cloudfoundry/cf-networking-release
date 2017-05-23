@@ -28,7 +28,7 @@ echo '
 }
 ' > ${CONFIG}
 
-ADMIN_PASSWORD=`grep uaa_scim_users_admin_password ${VARS_STORE} | cut -d' ' -f2`
+ADMIN_PASSWORD=`grep cf_admin_password ${VARS_STORE} | cut -d' ' -f2`
 sed -i -- "s/{{admin-password}}/${ADMIN_PASSWORD}/g" /tmp/test-config.json
 ADMIN_SECRET=`grep uaa_admin_client_secret ${VARS_STORE} | cut -d' ' -f2`
 sed -i -- "s/{{admin-secret}}/${ADMIN_SECRET}/g" /tmp/test-config.json

@@ -13,6 +13,21 @@
     name: network_policy
     tag: networkpolicy
 
+# add overlay network db to postgres
+- type: replace
+  path: /instance_groups/name=postgres/jobs/name=postgres/properties/databases/roles/-
+  value:
+    name: network_connectivity
+    password: "((network_connectivity_database_password))"
+    tag: admin
+
+- type: replace
+  path: /instance_groups/name=postgres/jobs/name=postgres/properties/databases/databases/-
+  value:
+    citext: false
+    name: network_connectivity
+    tag: networkconnectivity
+
 # policy server vm
 - type: replace
   path: /instance_groups/name=api/jobs/name=policy-server/properties/cf_networking/policy_server/database
@@ -24,6 +39,17 @@
     port: 5524
     name: network_policy
 
+# diego cells connection for overlay network db
+- type: replace
+  path: /instance_groups/name=diego-bbs/jobs/name=silk-controller/properties/cf_networking/silk_controller/database
+  value:
+    type: postgres
+    username: network_connectivity
+    password: "((network_connectivity_database_password))"
+    host: sql-db.service.cf.internal
+    port: 5524
+    name: network_connectivity
+
 # variables
 - type: replace
   path: /variables/-
@@ -31,3 +57,8 @@
     name: network_policy_database_password
     type: password
 
+- type: replace
+  path: /variables/-
+  value:
+    name: network_connectivity_database_password
+    type: password

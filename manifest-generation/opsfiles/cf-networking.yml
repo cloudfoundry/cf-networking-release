@@ -11,6 +11,14 @@
     username: network_policy
     password: "((cf_mysql_mysql_seeded_databases_network_policy_password))"
 
+# add network connectivity db to mysql
+- type: replace
+  path: /instance_groups/name=mysql/jobs/name=mysql/properties/cf_mysql/mysql/seeded_databases/-
+  value:
+    name: network_connectivity
+    username: network_connectivity
+    password: "((cf_mysql_mysql_seeded_databases_network_connectivity_password))"
+
 # add users and client scopes
 - type: replace
   path: /instance_groups/name=uaa/jobs/name=uaa/properties/uaa/scim/users/name=admin/groups/-
@@ -24,17 +32,16 @@
   path: /instance_groups/name=uaa/jobs/name=uaa/properties/uaa/clients/network-policy?
   value:
     authorities: uaa.resource,cloud_controller.admin_read_only
-    authorized-grant-types: client_credentials,refresh_token
+    authorized-grant-types: client_credentials
     secret: "((uaa_clients_network_policy_secret))"
 
 - type: replace
   path: /instance_groups/name=uaa/jobs/name=uaa/properties/uaa/clients/datadog-firehose-nozzle?
   value:
     access-token-validity: 1209600
-    authorized-grant-types: authorization_code,client_credentials,refresh_token
+    authorized-grant-types: client_credentials
     override: true
     secret: "((uaa_clients_datadog_firehose_nozzle_secret))"
-    scope: openid,oauth.approvals,doppler.firehose
     authorities: oauth.login,doppler.firehose
 
 # point garden to external networker
@@ -55,20 +62,6 @@
 - type: replace
   path: /instance_groups/name=diego-cell/jobs/-
   value:
-    name: cni-flannel
-    release: cf-networking
-    properties:
-      cf_networking:
-        plugin:
-          etcd_endpoints:
-            - cf-etcd.service.cf.internal
-          etcd_client_cert: "((etcd_client.certificate))"
-          etcd_client_key: "((etcd_client.private_key))"
-          etcd_ca_cert: "((etcd_client.ca))"
-
-- type: replace
-  path: /instance_groups/name=diego-cell/jobs/-
-  value:
     name: netmon
     release: cf-networking
 
@@ -84,12 +77,63 @@
           client_cert: "((network_policy_client.certificate))"
           client_key: "((network_policy_client.private_key))"
 
-# policy server job
+# add silk-daemon job to the diego-cell instance group
+- type: replace
+  path: /instance_groups/name=diego-cell/jobs/-
+  value:
+    name: silk-daemon
+    release: cf-networking
+    properties:
+      cf_networking:
+        silk_daemon:
+          ca_cert: "((silk_daemon.ca))"
+          client_cert: "((silk_daemon.certificate))"
+          client_key: "((silk_daemon.private_key))"
+
+# add silk-cni job to the diego-cell instance group
+- type: replace
+  path: /instance_groups/name=diego-cell/jobs/-
+  value:
+    name: silk-cni
+    release: cf-networking
+
+# add silk-controller job to the diego-bbs instance group
+- type: replace
+  path: /instance_groups/name=diego-bbs/jobs/-
+  value:
+    name: silk-controller
+    release: cf-networking
+    properties:
+      cf_networking:
+        silk_controller:
+          ca_cert: "((silk_controller.ca))"
+          server_cert: "((silk_controller.certificate))"
+          server_key: "((silk_controller.private_key))"
+          database:
+            type: mysql
+            username: network_connectivity
+            password: "((cf_mysql_mysql_seeded_databases_network_connectivity_password))"
+            host: sql-db.service.cf.internal
+            port: 3306
+            name: network_connectivity
+        silk_daemon:
+          ca_cert: "((silk_daemon.ca))"
+          client_cert: "((silk_daemon.certificate))"
+          client_key: "((silk_daemon.private_key))"
+
+# register silk-controller service with consul
+- type: replace
+  path: /instance_groups/name=diego-bbs/jobs/name=consul_agent/properties?/consul/agent/services/silk-controller
+  value:
+    name: silk-controller
+
+# add policy-server job to cc api instance group
 - type: replace
   path: /instance_groups/name=api/jobs/-
   value:
     name: policy-server
     release: cf-networking
+    consumes: {database: {from: db}}
     properties:
       cf_networking:
         policy_server:
@@ -130,6 +174,12 @@
 - type: replace
   path: /variables/-
   value:
+    name: cf_mysql_mysql_seeded_databases_network_connectivity_password
+    type: password
+
+- type: replace
+  path: /variables/-
+  value:
     name: uaa_clients_network_policy_secret
     type: password
 
@@ -138,6 +188,37 @@
   value:
     name: uaa_clients_datadog_firehose_nozzle_secret
     type: password
+
+- type: replace
+  path: /variables/-
+  value:
+    name: silk_ca
+    type: certificate
+    options:
+      is_ca: true
+      common_name: silk-ca
+
+- type: replace
+  path: /variables/-
+  value:
+    name: silk_controller
+    type: certificate
+    options:
+      ca: silk_ca
+      common_name: silk-controller.service.cf.internal
+      extended_key_usage:
+      - server_auth
+
+- type: replace
+  path: /variables/-
+  value:
+    name: silk_daemon
+    type: certificate
+    options:
+      ca: silk_ca
+      common_name: silk-daemon
+      extended_key_usage:
+      - client_auth
 
 - type: replace
   path: /variables/-
