@@ -35,15 +35,6 @@
     authorized-grant-types: client_credentials
     secret: "((uaa_clients_network_policy_secret))"
 
-- type: replace
-  path: /instance_groups/name=uaa/jobs/name=uaa/properties/uaa/clients/datadog-firehose-nozzle?
-  value:
-    access-token-validity: 1209600
-    authorized-grant-types: client_credentials
-    override: true
-    secret: "((uaa_clients_datadog_firehose_nozzle_secret))"
-    authorities: oauth.login,doppler.firehose
-
 # point garden to external networker
 - type: replace
   path: /instance_groups/name=diego-cell/jobs/name=garden/properties/garden/network_plugin?
@@ -182,12 +173,6 @@
   path: /variables/-
   value:
     name: uaa_clients_network_policy_secret
-    type: password
-
-- type: replace
-  path: /variables/-
-  value:
-    name: uaa_clients_datadog_firehose_nozzle_secret
     type: password
 
 - type: replace
