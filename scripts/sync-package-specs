@@ -42,9 +42,6 @@ function sync_package() {
 sync_package vxlan-policy-agent \
   -app vxlan-policy-agent/cmd/vxlan-policy-agent &
 
-sync_package flannel-watchdog \
-  -app flannel-watchdog/cmd/flannel-watchdog &
-
 sync_package policy-server \
   -app policy-server/cmd/policy-server &
 
@@ -66,8 +63,6 @@ sync_package silk-controller \
 sync_package silk-daemon \
   -app code.cloudfoundry.org/silk/cmd/silk-daemon \
   -app code.cloudfoundry.org/silk/cmd/silk-teardown &
-
-GOOS=linux sync_package flannel &
 
 GOOS=linux sync_package silk-cni \
   -app code.cloudfoundry.org/silk/cmd/silk-cni \

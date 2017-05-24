@@ -1,8 +1,0 @@
----
-name: flannel
-
-dependencies:
-  - golang
-
-files:
-  - github.com/coreos/flannel/**/*

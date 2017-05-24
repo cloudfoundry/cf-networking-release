@@ -2,6 +2,13 @@
 
 See [deployment docs](deploy-iaas.md) for examples
 
+### 0.25.0
+
+**Changed Properties**
+
+  - The value for `cf_networking.garden_external_networker.cni_config_dir` now defaults to `/var/vcap/jobs/silk-cni/config/cni`
+    We recommend that you remove any overrides for this property, unless you are intending to use a 3rd party CNI plugin.
+
 ### 0.24.0
 
 **New Properties**
