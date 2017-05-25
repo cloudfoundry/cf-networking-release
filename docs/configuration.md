@@ -8,8 +8,7 @@
 
 ## Silk Network Configuration
 The default batteries-included connectivity solution uses [Silk](https://github.com/cloudfoundry-incubator/silk).
-Previous versions used [Flannel](https://github.com/coreos/flannel). Setting up network configuration is the same
-for both.
+Previous versions used [Flannel](https://github.com/coreos/flannel), but that is no longer supported.
 
 The IP address allocation scheme is simple:
 
@@ -91,7 +90,6 @@ including on another BOSH-deployed VM or on a cloud-provided service.  Here are 
 - Add a logical database to the CF-MySQL cluster that ships with
   [CF-Deployment](https://github.com/cloudfoundry/cf-deployment).  We've written
   a [CF-Networking opsfile](../manifest-generation/opsfiles/cf-networking.yml)
-  and a [Silk opsfile](../manifest-generation/opsfiles/silk.yml)
   to support this integration and we use it in some of our automated tests, configured
   as follows:
 
@@ -184,15 +182,6 @@ The Policy Server and Silk Controller will reject connections using any other ci
 
 Below you will find detailed instructions for rotating these certificates with minimal downtime:
 
-### DEPRECATED: Flannel and etcd
-
-Another connection that requires Mutual TLS is flannel and etcd. Flannel is a client of etcd.
-
-While etcd and flannel individually support unencrypted connections, we do not support this in CF Networking.
-
-Script to generate etcd certs:
-
-- [cf-release/scripts/generate-etcd-certs](https://github.com/cloudfoundry/cf-release/blob/master/scripts/generate-etcd-certs)
 
 ### Rotating Certs
 

@@ -62,11 +62,9 @@ and identify the minimal set of ops files appropriate for your deployment.
 For example, if you're deploying to AWS, you'll need (as of the time of this writing)
   - `$CF_DEPLOYMENT_REPO/operations/aws.yml`
 
-In addition, **to use CF Networking, you'll need to include these two files**:
+In addition, **to use CF Networking, you'll need to include this ops file**:
 
   - `$CF_NETWORKING_RELEASE_REPO/manifest-generation/opsfiles/cf-networking.yml`
-
-  - `$CF_NETWORKING_RELEASE_REPO/manifest-generation/opsfiles/silk.yml`
 
 
 ### Step 4: BOSH deploy
@@ -77,7 +75,6 @@ For example, on GCP you might do:
 bosh deploy \
   $CF_DEPLOYMENT_REPO/cf-deployment.yml \
   -o $CF_NETWORKING_RELEASE_REPO/manifest-generation/opsfiles/cf-networking.yml \
-  -o $CF_NETWORKING_RELEASE_REPO/manifest-generation/opsfiles/silk.yml \
   --vars-store=vars-store.yml
 ```
 
@@ -87,7 +84,6 @@ bosh deploy \
   $CF_DEPLOYMENT_REPO/cf-deployment.yml \
   -o $CF_DEPLOYMENT_REPO/operations/aws.yml \
   -o $CF_NETWORKING_RELEASE_REPO/manifest-generation/opsfiles/cf-networking.yml \
-  -o $CF_NETWORKING_RELEASE_REPO/manifest-generation/opsfiles/silk.yml \
   --vars-store=vars-store.yml
 ```
 
