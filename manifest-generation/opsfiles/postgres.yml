@@ -35,6 +35,7 @@
     type: postgres
     username: network_policy
     password: "((network_policy_database_password))"
+    host: sql-db.service.cf.internal
     port: 5524
     name: network_policy
 
@@ -45,6 +46,7 @@
     type: postgres
     username: network_connectivity
     password: "((network_connectivity_database_password))"
+    host: sql-db.service.cf.internal
     port: 5524
     name: network_connectivity
 
