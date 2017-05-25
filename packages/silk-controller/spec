@@ -19,6 +19,7 @@ files:
   - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/go-db-helpers/metrics/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/go-db-helpers/mutualtls/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/lager/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/Kount/pq-timeouts/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/bmizerany/pat/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/cloudfoundry/dropsonde/metric_sender/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/cloudfoundry/dropsonde/metrics/*.go # gosub
