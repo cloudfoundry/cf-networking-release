@@ -39,6 +39,10 @@ properties:
     description: "When silk controller is unavailable, silk daemon will remain healthy and allow creation of new containers for this number of hours.  Should be no larger than cf_networking.subnet_lease_expiration_hours."
     default: 168
 
+  cf_networking.lease_poll_interval_seconds:
+    description: "The silk daemon queries the silk controller on this interval in seconds to renew its lease and get all routable leases."
+    default: 5
+
   cf_networking.silk_daemon.ca_cert:
     description: "Trusted CA certificate that was used to sign the silk controller server cert and key."
 

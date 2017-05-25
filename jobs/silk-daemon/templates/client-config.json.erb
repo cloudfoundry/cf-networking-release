@@ -31,7 +31,7 @@
     "client_cert_file" => "/var/vcap/jobs/silk-daemon/config/certs/client.crt",
     "client_key_file" => "/var/vcap/jobs/silk-daemon/config/certs/client.key",
     "vni" => 1,
-    "poll_interval" => 5, # in seconds
+    "poll_interval" => p("cf_networking.lease_poll_interval_seconds"),
     "debug_server_port" => p("cf_networking.silk_daemon.debug_port"),
     "datastore" => "/var/vcap/data/silk/store.json",
     "partition_tolerance_seconds" => p("cf_networking.partition_tolerance_hours") * 60 * 60, # convert hours to seconds

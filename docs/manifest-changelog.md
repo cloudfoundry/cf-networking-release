@@ -4,6 +4,11 @@ See [deployment docs](deploy-iaas.md) for examples
 
 ### 0.25.0
 
+**New Properties**
+
+  - The optional parameter `cf_networking.lease_poll_interval_seconds` has been added to allow
+    operators to override the default polling interval between silk-daemon and silk-controller.
+
 **Changed Properties**
 
   - The value for `cf_networking.garden_external_networker.cni_config_dir` now defaults to `/var/vcap/jobs/silk-cni/config/cni`
