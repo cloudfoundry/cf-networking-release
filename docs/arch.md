@@ -14,7 +14,6 @@ It has several components.  Some are "core" to the platform, others are "swappab
   - Invokes an operator-configured [CNI](https://github.com/containernetworking/cni) Plugin to set up the network for each app instance (container)
   - Forwards ports to support incoming connections from the CF [HTTP Router](https://docs.cloudfoundry.org/concepts/http-routing.html),
     [TCP Router](https://docs.cloudfoundry.org/adminguide/enabling-tcp-routing.html) and [Diego SSH Proxy](https://docs.cloudfoundry.org/concepts/diego/ssh-conceptual.html).
-  - Installs egress whitelist rules to support CF [Application Security Groups](https://docs.cloudfoundry.org/adminguide/app-sec-groups.html)
 
 ### Batteries included, but swappable
 On every Diego cell
