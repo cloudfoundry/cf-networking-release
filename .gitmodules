@@ -132,7 +132,7 @@
 	path = src/code.cloudfoundry.org/silk
 	url = https://github.com/cloudfoundry-incubator/silk
 [submodule "src/code.cloudfoundry.org/go-db-helpers"]
-	path = src/code.cloudfoundry.org/go-db-helpers
+	path = src/code.cloudfoundry.org/cf-networking-helpers
 	url = https://github.com/cloudfoundry-incubator/go-db-helpers
 [submodule "src/github.com/Kount/pq-timeouts"]
 	path = src/github.com/Kount/pq-timeouts
