@@ -58,6 +58,12 @@ bosh deploy ~/workspace/cf-deployment/cf-deployment.yml \
   -v system_domain=bosh-lite.com
 ```
 
+Try out our [Cats and Dogs example](../src/example-apps/cats-and-dogs) on your new deployment.
+
+
+----
+
+
 ## DEPRECATED: Using `cf-release` with `diego-release` tooling
 
 Note: Using this option requires the old Ruby bosh-cli to be installed and aliased as `bosh`.
@@ -114,10 +120,10 @@ pushd ~/workspace/cf-networking-release
 popd
 ```
 
-
-# Kicking the tires
-
 Try out our [Cats and Dogs example](../src/example-apps/cats-and-dogs) on your new deployment.
+
+
+---
 
 
 ## Known issues with bosh-lite
@@ -135,14 +141,4 @@ bosh deploy --recreate
 ```
 to recreate all VMs.
 
-# Syslog forwarding
-This is not specific to CF Networking, but is useful for debugging during development.
 
-To forward all logs from your bosh-lite to a syslog destination (like Papertrail),
-add the following block to `manifest-generation/stubs/bosh-lite-cf.yml`:
-```yaml
-  syslog_daemon_config:
-    address: some-syslog-host.example.com
-    port: 12345
-    transport: udp
-```
