@@ -12,12 +12,12 @@ files:
   - code.cloudfoundry.org/silk/controller/handlers/*.go # gosub
   - code.cloudfoundry.org/silk/controller/leaser/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/debugserver/*.go # gosub
-  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/go-db-helpers/db/*.go # gosub
-  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/go-db-helpers/httperror/*.go # gosub
-  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/go-db-helpers/json_client/*.go # gosub
-  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/go-db-helpers/marshal/*.go # gosub
-  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/go-db-helpers/metrics/*.go # gosub
-  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/go-db-helpers/mutualtls/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/cf-networking-helpers/db/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/cf-networking-helpers/httperror/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/cf-networking-helpers/json_client/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/cf-networking-helpers/marshal/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/cf-networking-helpers/metrics/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/cf-networking-helpers/mutualtls/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/lager/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/Kount/pq-timeouts/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/bmizerany/pat/*.go # gosub

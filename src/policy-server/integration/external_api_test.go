@@ -14,9 +14,9 @@ import (
 	"strings"
 	"sync/atomic"
 
-	"code.cloudfoundry.org/go-db-helpers/db"
-	"code.cloudfoundry.org/go-db-helpers/metrics"
-	"code.cloudfoundry.org/go-db-helpers/testsupport"
+	"code.cloudfoundry.org/cf-networking-helpers/db"
+	"code.cloudfoundry.org/cf-networking-helpers/metrics"
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"

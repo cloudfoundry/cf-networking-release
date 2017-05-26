@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"code.cloudfoundry.org/go-db-helpers/testsupport"
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 
 	pusherConfig "cf-pusher/config"
 

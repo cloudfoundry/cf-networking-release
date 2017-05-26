@@ -7,7 +7,7 @@ import (
 	"policy-server/models"
 	"policy-server/uaa_client"
 
-	"code.cloudfoundry.org/go-db-helpers/marshal"
+	"code.cloudfoundry.org/cf-networking-helpers/marshal"
 	"code.cloudfoundry.org/lager"
 )
 

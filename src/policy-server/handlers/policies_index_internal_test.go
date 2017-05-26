@@ -9,7 +9,7 @@ import (
 	"policy-server/handlers/fakes"
 	"policy-server/models"
 
-	hfakes "code.cloudfoundry.org/go-db-helpers/fakes"
+	hfakes "code.cloudfoundry.org/cf-networking-helpers/fakes"
 
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"

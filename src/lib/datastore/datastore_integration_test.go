@@ -6,7 +6,7 @@ import (
 	"os"
 	"sync/atomic"
 
-	"code.cloudfoundry.org/go-db-helpers/testsupport"
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 
 	"lib/datastore"
 	"lib/filelock"

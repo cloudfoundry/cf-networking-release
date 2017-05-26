@@ -6,10 +6,10 @@ dependencies:
 
 files:
   - code.cloudfoundry.org/debugserver/*.go # gosub
-  - code.cloudfoundry.org/go-db-helpers/json_client/*.go # gosub
-  - code.cloudfoundry.org/go-db-helpers/marshal/*.go # gosub
-  - code.cloudfoundry.org/go-db-helpers/metrics/*.go # gosub
-  - code.cloudfoundry.org/go-db-helpers/mutualtls/*.go # gosub
+  - code.cloudfoundry.org/cf-networking-helpers/json_client/*.go # gosub
+  - code.cloudfoundry.org/cf-networking-helpers/marshal/*.go # gosub
+  - code.cloudfoundry.org/cf-networking-helpers/metrics/*.go # gosub
+  - code.cloudfoundry.org/cf-networking-helpers/mutualtls/*.go # gosub
   - code.cloudfoundry.org/lager/*.go # gosub
   - github.com/cloudfoundry/dropsonde/*.go # gosub
   - github.com/cloudfoundry/dropsonde/emitter/*.go # gosub

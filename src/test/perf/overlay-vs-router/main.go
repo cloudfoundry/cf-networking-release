@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"code.cloudfoundry.org/go-db-helpers/json_client"
+	"code.cloudfoundry.org/cf-networking-helpers/json_client"
 	"code.cloudfoundry.org/lager"
 )
 

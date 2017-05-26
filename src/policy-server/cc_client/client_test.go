@@ -11,8 +11,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"code.cloudfoundry.org/go-db-helpers/fakes"
-	"code.cloudfoundry.org/go-db-helpers/json_client"
+	"code.cloudfoundry.org/cf-networking-helpers/fakes"
+	"code.cloudfoundry.org/cf-networking-helpers/json_client"
 	"code.cloudfoundry.org/lager/lagertest"
 )
 

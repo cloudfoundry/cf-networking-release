@@ -6,7 +6,7 @@ import (
 	"policy-server/models"
 	"strings"
 
-	"code.cloudfoundry.org/go-db-helpers/marshal"
+	"code.cloudfoundry.org/cf-networking-helpers/marshal"
 	"code.cloudfoundry.org/lager"
 )
 

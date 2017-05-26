@@ -3,7 +3,7 @@ package server_metrics
 import (
 	"policy-server/models"
 
-	"code.cloudfoundry.org/go-db-helpers/metrics"
+	"code.cloudfoundry.org/cf-networking-helpers/metrics"
 )
 
 //go:generate counterfeiter -o fakes/store.go --fake-name Store . store

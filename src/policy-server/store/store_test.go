@@ -12,8 +12,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"code.cloudfoundry.org/go-db-helpers/db"
-	"code.cloudfoundry.org/go-db-helpers/testsupport"
+	"code.cloudfoundry.org/cf-networking-helpers/db"
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 
 	"github.com/jmoiron/sqlx"
 	. "github.com/onsi/ginkgo"

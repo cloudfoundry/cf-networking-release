@@ -6,7 +6,7 @@ import (
 	"policy-server/config"
 	"policy-server/integration/helpers"
 
-	"code.cloudfoundry.org/go-db-helpers/metrics"
+	"code.cloudfoundry.org/cf-networking-helpers/metrics"
 
 	. "github.com/onsi/ginkgo"
 	ginkgoConfig "github.com/onsi/ginkgo/config"

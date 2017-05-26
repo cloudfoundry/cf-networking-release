@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	"code.cloudfoundry.org/go-db-helpers/testsupport"
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 
 	goiptables "github.com/coreos/go-iptables/iptables"
 	. "github.com/onsi/ginkgo"

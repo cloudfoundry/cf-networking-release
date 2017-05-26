@@ -17,7 +17,7 @@ import (
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
 
-	"code.cloudfoundry.org/go-db-helpers/mutualtls"
+	"code.cloudfoundry.org/cf-networking-helpers/mutualtls"
 	"code.cloudfoundry.org/lager"
 )
 

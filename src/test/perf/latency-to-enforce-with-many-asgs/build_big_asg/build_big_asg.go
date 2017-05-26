@@ -5,7 +5,7 @@ import (
 	"os"
 	"strconv"
 
-	"code.cloudfoundry.org/go-db-helpers/testsupport"
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 )
 
 func main() {

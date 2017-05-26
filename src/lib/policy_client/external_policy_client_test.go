@@ -8,9 +8,9 @@ import (
 	"lib/policy_client"
 	"net/http"
 
-	hfakes "code.cloudfoundry.org/go-db-helpers/fakes"
+	hfakes "code.cloudfoundry.org/cf-networking-helpers/fakes"
 
-	"code.cloudfoundry.org/go-db-helpers/json_client"
+	"code.cloudfoundry.org/cf-networking-helpers/json_client"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

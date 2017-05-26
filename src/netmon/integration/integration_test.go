@@ -5,7 +5,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"code.cloudfoundry.org/go-db-helpers/metrics"
+	"code.cloudfoundry.org/cf-networking-helpers/metrics"
 	"code.cloudfoundry.org/localip"
 
 	. "github.com/onsi/ginkgo"

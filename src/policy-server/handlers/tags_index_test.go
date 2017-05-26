@@ -10,7 +10,7 @@ import (
 	"policy-server/models"
 	"policy-server/uaa_client"
 
-	hfakes "code.cloudfoundry.org/go-db-helpers/fakes"
+	hfakes "code.cloudfoundry.org/cf-networking-helpers/fakes"
 
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"

@@ -6,7 +6,7 @@ import (
 	"lib/models"
 	"lib/policy_client"
 
-	hfakes "code.cloudfoundry.org/go-db-helpers/fakes"
+	hfakes "code.cloudfoundry.org/cf-networking-helpers/fakes"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

@@ -24,8 +24,8 @@ import (
 	"vxlan-policy-agent/planner"
 
 	"code.cloudfoundry.org/debugserver"
-	"code.cloudfoundry.org/go-db-helpers/metrics"
-	"code.cloudfoundry.org/go-db-helpers/mutualtls"
+	"code.cloudfoundry.org/cf-networking-helpers/metrics"
+	"code.cloudfoundry.org/cf-networking-helpers/mutualtls"
 	"code.cloudfoundry.org/lager"
 	"github.com/cloudfoundry/dropsonde"
 	"github.com/coreos/go-iptables/iptables"

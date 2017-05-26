@@ -10,7 +10,7 @@ import (
 	"policy-server/handlers/fakes"
 	"policy-server/uaa_client"
 
-	"code.cloudfoundry.org/go-db-helpers/marshal"
+	"code.cloudfoundry.org/cf-networking-helpers/marshal"
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

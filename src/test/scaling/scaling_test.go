@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	"code.cloudfoundry.org/go-db-helpers/testsupport"
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"code.cloudfoundry.org/lager"
 
 	pusherConfig "cf-pusher/config"

@@ -6,7 +6,7 @@ import (
 	"math/rand"
 	"os"
 
-	"code.cloudfoundry.org/go-db-helpers/testsupport"
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 
 	. "github.com/onsi/ginkgo"
 	"github.com/onsi/ginkgo/config"

@@ -21,8 +21,8 @@ files:
   - code.cloudfoundry.org/silk/lib/datastore/*.go # gosub
   - code.cloudfoundry.org/silk/lib/filelock/*.go # gosub
   - code.cloudfoundry.org/silk/lib/serial/*.go # gosub
-  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/go-db-helpers/json_client/*.go # gosub
-  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/go-db-helpers/marshal/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/cf-networking-helpers/json_client/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/cf-networking-helpers/marshal/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/lager/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/cni/pkg/invoke/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/cni/pkg/ip/*.go # gosub

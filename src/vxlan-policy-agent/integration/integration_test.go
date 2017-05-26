@@ -12,8 +12,8 @@ import (
 	"strings"
 	"vxlan-policy-agent/config"
 
-	"code.cloudfoundry.org/go-db-helpers/metrics"
-	"code.cloudfoundry.org/go-db-helpers/mutualtls"
+	"code.cloudfoundry.org/cf-networking-helpers/metrics"
+	"code.cloudfoundry.org/cf-networking-helpers/mutualtls"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

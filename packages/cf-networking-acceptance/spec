@@ -18,10 +18,10 @@ files:
   - cli-plugin/styles/*.go # gosub
   - code.cloudfoundry.org/cli/plugin/*.go # gosub
   - code.cloudfoundry.org/cli/plugin/models/*.go # gosub
-  - code.cloudfoundry.org/go-db-helpers/db/*.go # gosub
-  - code.cloudfoundry.org/go-db-helpers/json_client/*.go # gosub
-  - code.cloudfoundry.org/go-db-helpers/marshal/*.go # gosub
-  - code.cloudfoundry.org/go-db-helpers/testsupport/*.go # gosub
+  - code.cloudfoundry.org/cf-networking-helpers/db/*.go # gosub
+  - code.cloudfoundry.org/cf-networking-helpers/json_client/*.go # gosub
+  - code.cloudfoundry.org/cf-networking-helpers/marshal/*.go # gosub
+  - code.cloudfoundry.org/cf-networking-helpers/testsupport/*.go # gosub
   - code.cloudfoundry.org/lager/*.go # gosub
   - code.cloudfoundry.org/lager/lagertest/*.go # gosub
   - github.com/Kount/pq-timeouts/*.go # gosub
