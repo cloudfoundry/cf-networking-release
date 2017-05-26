@@ -31,20 +31,14 @@
     raise "must provide database link or set #{db_param_path 'host'}"
   end
 
-  def connection_string
-    user = require_db_param 'username'
-    password = require_db_param 'password'
-    port = require_db_param 'port'
-    name = require_db_param 'name'
-    driver = require_db_param 'type'
-    case driver
-    when 'mysql'
-      sprintf "%s:%s@tcp(%s:%s)/%s?parseTime=true", user, password, db_host, port, name
-    when 'postgres'
-      sprintf "postgres://%s:%s@%s:%s/%s?sslmode=disable", user, password, db_host, port, name
-    else
-      raise "unknown driver #{driver}"
-    end
+  user = require_db_param 'username'
+  password = require_db_param 'password'
+  port = require_db_param 'port'
+  name = require_db_param 'name'
+  driver = require_db_param 'type'
+
+  unless driver == 'mysql' || driver == 'postgres'
+    raise "unknown driver  #{driver}"
   end
 
   def subnet_prefix_length
@@ -65,8 +59,13 @@
     "network" => p("cf_networking.network"),
     "subnet_prefix_length" => subnet_prefix_length,
     "database" => {
-      "type" => p("cf_networking.silk_controller.database.type"),
-      "connection_string" => connection_string,
+      "type" => driver,
+      "user" => user,
+      "password" => password,
+      "host" => db_host,
+      "port" => port,
+      "timeout" => 5,
+      "database_name" => name,
     },
     "lease_expiration_seconds" => p("cf_networking.subnet_lease_expiration_hours") * 60 * 60,
   }
