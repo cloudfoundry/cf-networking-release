@@ -17,11 +17,11 @@ files:
   - code.cloudfoundry.org/silk/lib/datastore/*.go # gosub
   - code.cloudfoundry.org/silk/lib/filelock/*.go # gosub
   - code.cloudfoundry.org/silk/lib/serial/*.go # gosub
-  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/debugserver/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/cf-networking-helpers/json_client/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/cf-networking-helpers/marshal/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/cf-networking-helpers/metrics/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/cf-networking-helpers/mutualtls/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/debugserver/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/lager/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/cloudfoundry/dropsonde/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/cloudfoundry/dropsonde/emitter/*.go # gosub
