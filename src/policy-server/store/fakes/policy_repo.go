@@ -280,7 +280,11 @@ func (fake *PolicyRepo) Invocations() map[string][][]interface{} {
 	defer fake.countWhereGroupIDMutex.RUnlock()
 	fake.countWhereDestinationIDMutex.RLock()
 	defer fake.countWhereDestinationIDMutex.RUnlock()
-	return fake.invocations
+	copiedInvocations := map[string][][]interface{}{}
+	for key, value := range fake.invocations {
+		copiedInvocations[key] = value
+	}
+	return copiedInvocations
 }
 
 func (fake *PolicyRepo) recordInvocation(key string, args []interface{}) {

@@ -78,7 +78,11 @@ func (fake *MetricsSender) Invocations() map[string][][]interface{} {
 	defer fake.incrementCounterMutex.RUnlock()
 	fake.sendDurationMutex.RLock()
 	defer fake.sendDurationMutex.RUnlock()
-	return fake.invocations
+	copiedInvocations := map[string][][]interface{}{}
+	for key, value := range fake.invocations {
+		copiedInvocations[key] = value
+	}
+	return copiedInvocations
 }
 
 func (fake *MetricsSender) recordInvocation(key string, args []interface{}) {

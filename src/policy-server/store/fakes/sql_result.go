@@ -125,7 +125,11 @@ func (fake *SqlResult) Invocations() map[string][][]interface{} {
 	defer fake.lastInsertIdMutex.RUnlock()
 	fake.rowsAffectedMutex.RLock()
 	defer fake.rowsAffectedMutex.RUnlock()
-	return fake.invocations
+	copiedInvocations := map[string][][]interface{}{}
+	for key, value := range fake.invocations {
+		copiedInvocations[key] = value
+	}
+	return copiedInvocations
 }
 
 func (fake *SqlResult) recordInvocation(key string, args []interface{}) {
