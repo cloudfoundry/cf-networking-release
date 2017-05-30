@@ -353,7 +353,7 @@ var _ = Describe("Store", func() {
 			var err error
 
 			BeforeEach(func() {
-				mockDb.BeginTxxReturns(nil, errors.New("some-db-error"))
+				mockDb.BeginxReturns(nil, errors.New("some-db-error"))
 				dataStore, err = store.New(mockDb, group, destination, policy, 2, 2*time.Second)
 				Expect(err).NotTo(HaveOccurred())
 			})
@@ -513,7 +513,7 @@ var _ = Describe("Store", func() {
 
 		Context("when the db operation fails", func() {
 			BeforeEach(func() {
-				mockDb.QueryContextReturns(nil, errors.New("some query error"))
+				mockDb.QueryReturns(nil, errors.New("some query error"))
 			})
 
 			It("should return a sensible error", func() {
@@ -546,7 +546,7 @@ var _ = Describe("Store", func() {
 				rows, err = realDb.Query(`select * from policies`)
 				Expect(err).NotTo(HaveOccurred())
 
-				mockDb.QueryContextReturns(rows, nil)
+				mockDb.QueryReturns(rows, nil)
 			})
 
 			AfterEach(func() {
@@ -639,7 +639,6 @@ var _ = Describe("Store", func() {
 
 				By("not making any queries")
 				Expect(mockDb.QueryCallCount()).To(Equal(0))
-				Expect(mockDb.QueryContextCallCount()).To(Equal(0))
 			})
 		})
 
@@ -672,7 +671,7 @@ var _ = Describe("Store", func() {
 
 		Context("when the db operation fails", func() {
 			BeforeEach(func() {
-				mockDb.QueryContextReturns(nil, errors.New("some query error"))
+				mockDb.QueryReturns(nil, errors.New("some query error"))
 			})
 
 			It("should return a sensible error", func() {
@@ -708,7 +707,7 @@ var _ = Describe("Store", func() {
 				rows, err = realDb.Query(`select * from policies`)
 				Expect(err).NotTo(HaveOccurred())
 
-				mockDb.QueryContextReturns(rows, nil)
+				mockDb.QueryReturns(rows, nil)
 			})
 
 			AfterEach(func() {
@@ -768,7 +767,7 @@ var _ = Describe("Store", func() {
 
 		Context("when the db operation fails", func() {
 			BeforeEach(func() {
-				mockDb.QueryContextReturns(nil, errors.New("some query error"))
+				mockDb.QueryReturns(nil, errors.New("some query error"))
 			})
 
 			It("should return a sensible error", func() {
@@ -788,7 +787,7 @@ var _ = Describe("Store", func() {
 				rows, err = realDb.Query(`select id from groups`)
 				Expect(err).NotTo(HaveOccurred())
 
-				mockDb.QueryContextReturns(rows, nil)
+				mockDb.QueryReturns(rows, nil)
 			})
 
 			AfterEach(func() {
@@ -896,7 +895,7 @@ var _ = Describe("Store", func() {
 				var err error
 
 				BeforeEach(func() {
-					mockDb.BeginTxxReturns(nil, errors.New("some-db-error"))
+					mockDb.BeginxReturns(nil, errors.New("some-db-error"))
 					dataStore, err = store.New(mockDb, group, destination, policy, 2, 2*time.Second)
 					Expect(err).NotTo(HaveOccurred())
 				})

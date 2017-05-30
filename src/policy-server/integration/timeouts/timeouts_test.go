@@ -21,7 +21,8 @@ import (
 	"github.com/onsi/gomega/gexec"
 )
 
-var testTimeoutInSeconds = 5
+const testTimeoutInSeconds = 5
+
 var policiesBody = `{
 	"policies": [{
 		"source": { "id": "some-app-guid" },
@@ -45,7 +46,7 @@ var _ = Describe("Timeout", func() {
 		}
 
 		dbConf.DatabaseName = fmt.Sprintf("test_timeouts_%x", rand.Int())
-		dbConf.Timeout = testTimeoutInSeconds - 1
+		dbConf.Timeout = 1
 		testsupport.CreateDatabase(dbConf)
 
 		fakeMetron = metrics.NewFakeMetron()
