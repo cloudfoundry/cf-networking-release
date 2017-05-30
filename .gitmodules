@@ -131,6 +131,6 @@
 [submodule "src/code.cloudfoundry.org/silk"]
 	path = src/code.cloudfoundry.org/silk
 	url = https://github.com/cloudfoundry-incubator/silk
-[submodule "src/code.cloudfoundry.org/go-db-helpers"]
+[submodule "src/code.cloudfoundry.org/cf-networking-helpers"]
 	path = src/code.cloudfoundry.org/cf-networking-helpers
-	url = https://github.com/cloudfoundry-incubator/go-db-helpers
+	url = https://github.com/cloudfoundry-incubator/cf-networking-helpers
