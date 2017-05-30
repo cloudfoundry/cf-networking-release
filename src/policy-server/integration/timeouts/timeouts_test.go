@@ -39,13 +39,16 @@ var _ = Describe("Timeout", func() {
 		policyServerURL string
 	)
 	BeforeEach(func() {
-		fakeMetron = metrics.NewFakeMetron()
-
 		dbConf = testsupport.GetDBConfig()
-		dbConf.DatabaseName = fmt.Sprintf("test_netman_database_timeouts_%x", rand.Int())
+		if dbConf.Type == "postgres" {
+			Skip("skipping timeout tests on postgres; only supported by mysql")
+		}
 
+		dbConf.DatabaseName = fmt.Sprintf("test_timeouts_%x", rand.Int())
 		dbConf.Timeout = testTimeoutInSeconds - 1
 		testsupport.CreateDatabase(dbConf)
+
+		fakeMetron = metrics.NewFakeMetron()
 
 		conf = helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "../fixtures")
 		session = helpers.StartPolicyServer(policyServerPath, conf)
