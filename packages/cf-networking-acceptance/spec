@@ -24,7 +24,6 @@ files:
   - code.cloudfoundry.org/cli/plugin/models/*.go # gosub
   - code.cloudfoundry.org/lager/*.go # gosub
   - code.cloudfoundry.org/lager/lagertest/*.go # gosub
-  - github.com/Kount/pq-timeouts/*.go # gosub
   - github.com/cloudfoundry-incubator/cf-test-helpers/cf/*.go # gosub
   - github.com/cloudfoundry-incubator/cf-test-helpers/helpers/*.go # gosub
   - github.com/cloudfoundry-incubator/cf-test-helpers/runner/*.go # gosub
