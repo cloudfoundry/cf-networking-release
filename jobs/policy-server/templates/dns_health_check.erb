@@ -8,4 +8,5 @@
   end
 %>
 
-curl <%= ip %>:<%= port %>
+curl <%= ip %>:<%= port %> \
+  --connect-timeout <%= p("cf_networking.policy_server.connect_timeout_seconds") %>

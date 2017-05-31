@@ -44,6 +44,10 @@ properties:
     description: "Debug port for silk controller.  Use this to adjust log level at runtime or dump process stats."
     default: 22222
 
+  cf_networking.silk_controller.connect_timeout_seconds:
+    description: "Connection timeout between the silk controller and the silk database.  Also used by Consul DNS health check."
+    default: 5
+
   cf_networking.silk_controller.listen_ip:
     description: "IP address where the silk controller will serve its API."
     default: 0.0.0.0

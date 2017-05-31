@@ -2,6 +2,15 @@
 
 See [deployment docs](deploy-iaas.md) for examples
 
+### 0.26.0
+
+**New Properties**
+
+  - The following optional parameters have been added to override the timeout values for
+    database connections and DNS health checks for the silk controller and policy server:
+    - `cf_networking.silk_controller.connect_timeout_seconds`
+    - `cf_networking.policy_server.connect_timeout_seconds`
+
 ### 0.25.0
 
 **New Properties**

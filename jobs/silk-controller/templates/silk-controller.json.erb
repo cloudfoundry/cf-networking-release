@@ -64,7 +64,7 @@
       "password" => password,
       "host" => db_host,
       "port" => port,
-      "timeout" => 5,
+      "timeout" => p("cf_networking.silk_controller.connect_timeout_seconds"),
       "database_name" => name,
     },
     "lease_expiration_seconds" => p("cf_networking.subnet_lease_expiration_hours") * 60 * 60,

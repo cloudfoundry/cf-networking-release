@@ -20,5 +20,6 @@
 curl -k https://127.0.0.1:<%= port %>/leases \
   --cacert <%= ca_cert %> \
   --cert <%= client_cert %> \
-  --key <%= client_key %>
+  --key <%= client_key %> \
+  --connect-timeout <%= p("cf_networking.silk_controller.connect_timeout_seconds") %>
 <% end %>

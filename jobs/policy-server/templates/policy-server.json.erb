@@ -68,7 +68,7 @@
         "password" => password,
         "host" => db_host,
         "port" => port,
-        "timeout" => 5,
+        "timeout" => p("cf_networking.policy_server.connect_timeout_seconds"),
         "database_name" => name,
       },
       "tag_length" => p("cf_networking.policy_server.tag_length"),

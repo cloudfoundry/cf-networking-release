@@ -33,6 +33,10 @@ properties:
     description: "Port where the policy server will serve its external API."
     default: 4002
 
+  cf_networking.policy_server.connect_timeout_seconds:
+    description: "Connection timeout between the policy server and its database.  Also used by Consul DNS health check."
+    default: 5
+
   cf_networking.policy_server.debug_port:
     description: "Port for the debug server. Use this to adjust log level at runtime or dump process stats."
     default: 22222
