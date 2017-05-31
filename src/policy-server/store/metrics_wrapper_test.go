@@ -62,7 +62,7 @@ var _ = Describe("MetricsWrapper", func() {
 
 			Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
 			name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
-			Expect(name).To(Equal("StoreCreateTime"))
+			Expect(name).To(Equal("StoreCreateSuccessTime"))
 		})
 
 		Context("when there is an error", func() {
@@ -78,7 +78,7 @@ var _ = Describe("MetricsWrapper", func() {
 
 				Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
 				name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
-				Expect(name).To(Equal("StoreCreateTime"))
+				Expect(name).To(Equal("StoreCreateErrorTime"))
 			})
 		})
 	})
@@ -101,7 +101,7 @@ var _ = Describe("MetricsWrapper", func() {
 
 			Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
 			name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
-			Expect(name).To(Equal("StoreAllTime"))
+			Expect(name).To(Equal("StoreAllSuccessTime"))
 		})
 
 		Context("when there is an error", func() {
@@ -117,7 +117,7 @@ var _ = Describe("MetricsWrapper", func() {
 
 				Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
 				name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
-				Expect(name).To(Equal("StoreAllTime"))
+				Expect(name).To(Equal("StoreAllErrorTime"))
 
 			})
 		})
@@ -144,7 +144,7 @@ var _ = Describe("MetricsWrapper", func() {
 
 			Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
 			name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
-			Expect(name).To(Equal("StoreByGuidsTime"))
+			Expect(name).To(Equal("StoreByGuidsSuccessTime"))
 		})
 
 		Context("when there is an error", func() {
@@ -160,8 +160,43 @@ var _ = Describe("MetricsWrapper", func() {
 
 				Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
 				name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
-				Expect(name).To(Equal("StoreByGuidsTime"))
+				Expect(name).To(Equal("StoreByGuidsErrorTime"))
 
+			})
+		})
+	})
+
+	Describe("CheckDatabase", func() {
+		It("calls CheckDatabase on the Store", func() {
+			err := metricsWrapper.CheckDatabase()
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(fakeStore.CheckDatabaseCallCount()).To(Equal(1))
+		})
+
+		It("emits a metric", func() {
+			err := metricsWrapper.CheckDatabase()
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
+			name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
+			Expect(name).To(Equal("StoreCheckDatabaseSuccessTime"))
+		})
+
+		Context("when there is an error", func() {
+			BeforeEach(func() {
+				fakeStore.CheckDatabaseReturns(errors.New("huckleberry"))
+			})
+			It("emits an error metric", func() {
+				err := metricsWrapper.CheckDatabase()
+				Expect(err).To(MatchError("huckleberry"))
+
+				Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
+				Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("StoreCheckDatabaseError"))
+
+				Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
+				name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
+				Expect(name).To(Equal("StoreCheckDatabaseErrorTime"))
 			})
 		})
 	})
@@ -181,7 +216,7 @@ var _ = Describe("MetricsWrapper", func() {
 
 			Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
 			name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
-			Expect(name).To(Equal("StoreDeleteTime"))
+			Expect(name).To(Equal("StoreDeleteSuccessTime"))
 		})
 
 		Context("when there is an error", func() {
@@ -197,7 +232,7 @@ var _ = Describe("MetricsWrapper", func() {
 
 				Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
 				name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
-				Expect(name).To(Equal("StoreDeleteTime"))
+				Expect(name).To(Equal("StoreDeleteErrorTime"))
 			})
 		})
 	})
@@ -220,7 +255,7 @@ var _ = Describe("MetricsWrapper", func() {
 
 			Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
 			name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
-			Expect(name).To(Equal("StoreTagsTime"))
+			Expect(name).To(Equal("StoreTagsSuccessTime"))
 
 		})
 
@@ -237,7 +272,7 @@ var _ = Describe("MetricsWrapper", func() {
 
 				Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
 				name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
-				Expect(name).To(Equal("StoreTagsTime"))
+				Expect(name).To(Equal("StoreTagsErrorTime"))
 
 			})
 		})

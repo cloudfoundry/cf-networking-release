@@ -237,6 +237,11 @@ func main() {
 		ErrorResponse: errorResponse,
 	}
 
+	healthHandler := &handlers.Health{
+		Store:         wrappedStore,
+		ErrorResponse: errorResponse,
+	}
+
 	metricsWrap := func(name string, handle http.Handler) http.Handler {
 		metricsWrapper := helpershandlers.MetricWrapper{
 			Name:          name,
@@ -247,6 +252,7 @@ func main() {
 
 	externalHandlers := rata.Handlers{
 		"uptime":          metricsWrap("Uptime", uptimeHandler),
+		"health":          metricsWrap("Health", healthHandler),
 		"create_policies": metricsWrap("CreatePolicies", networkWriteAuthenticator.Wrap(createPolicyHandler)),
 		"delete_policies": metricsWrap("DeletePolicies", networkWriteAuthenticator.Wrap(deletePolicyHandler)),
 		"policies_index":  metricsWrap("PoliciesIndex", networkWriteAuthenticator.Wrap(policiesIndexHandler)),
@@ -357,6 +363,7 @@ func initExternalServer(conf *config.Config, externalHandlers rata.Handlers) ifr
 	routes := rata.Routes{
 		{Name: "uptime", Method: "GET", Path: "/"},
 		{Name: "uptime", Method: "GET", Path: "/networking"},
+		{Name: "health", Method: "GET", Path: "/health"},
 		{Name: "whoami", Method: "GET", Path: "/networking/v0/external/whoami"},
 		{Name: "create_policies", Method: "POST", Path: "/networking/v0/external/policies"},
 		{Name: "delete_policies", Method: "POST", Path: "/networking/v0/external/policies/delete"},

@@ -119,6 +119,10 @@ var _ = Describe("Timeout", func() {
 			"POST", "networking/v0/external/policies/cleanup", "",
 			`{ "error": "policies-cleanup: policies cleanup failed" }`,
 		)
+		itTimesOut("checking health",
+			"GET", "health", "",
+			`{ "error": "health: check database failed" }`,
+		)
 	})
 })
 

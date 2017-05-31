@@ -471,7 +471,7 @@ var _ = Describe("External API", func() {
 				HaveName("CreatePoliciesRequestTime"),
 			))
 			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
-				HaveName("StoreCreateTime"),
+				HaveName("StoreCreateSuccessTime"),
 			))
 		})
 
@@ -561,7 +561,7 @@ var _ = Describe("External API", func() {
 				HaveName("CleanupRequestTime"),
 			))
 			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
-				HaveName("StoreDeleteTime"),
+				HaveName("StoreDeleteSuccessTime"),
 			))
 		})
 	})
@@ -607,7 +607,7 @@ var _ = Describe("External API", func() {
 					HaveName("PoliciesIndexRequestTime"),
 				))
 				Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
-					HaveName("StoreAllTime"),
+					HaveName("StoreAllSuccessTime"),
 				))
 			})
 		})
@@ -661,7 +661,7 @@ var _ = Describe("External API", func() {
 					HaveName("DeletePoliciesRequestTime"),
 				))
 				Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
-					HaveName("StoreDeleteTime"),
+					HaveName("StoreDeleteSuccessTime"),
 				))
 			})
 
@@ -758,8 +758,48 @@ var _ = Describe("External API", func() {
 				HaveName("TagsIndexRequestTime"),
 			))
 			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
-				HaveName("StoreTagsTime"),
+				HaveName("StoreTagsSuccessTime"),
 			))
+		})
+	})
+
+	Describe("uptime", func() {
+		It("returns 200 when server is healthy", func() {
+			resp := helpers.MakeAndDoRequest(
+				"GET",
+				fmt.Sprintf("http://%s:%d/", conf.ListenHost, conf.ListenPort),
+				nil,
+			)
+
+			Expect(resp.StatusCode).To(Equal(http.StatusOK))
+		})
+
+		Context("when the database is unavailable", func() {
+			BeforeEach(func() {
+				testsupport.RemoveDatabase(dbConf)
+			})
+
+			It("still returns a 200", func() {
+				resp := helpers.MakeAndDoRequest(
+					"GET",
+					fmt.Sprintf("http://%s:%d/", conf.ListenHost, conf.ListenPort),
+					nil,
+				)
+
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
+			})
+		})
+	})
+
+	Describe("health", func() {
+		It("returns 200 when server is healthy", func() {
+			resp := helpers.MakeAndDoRequest(
+				"GET",
+				fmt.Sprintf("http://%s:%d/health", conf.ListenHost, conf.ListenPort),
+				nil,
+			)
+
+			Expect(resp.StatusCode).To(Equal(http.StatusOK))
 		})
 	})
 })

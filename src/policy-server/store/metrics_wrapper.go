@@ -22,8 +22,10 @@ func (mw *MetricsWrapper) Create(policies []models.Policy) error {
 	createTimeDuration := time.Now().Sub(startTime)
 	if err != nil {
 		mw.MetricsSender.IncrementCounter("StoreCreateError")
+		mw.MetricsSender.SendDuration("StoreCreateErrorTime", createTimeDuration)
+	} else {
+		mw.MetricsSender.SendDuration("StoreCreateSuccessTime", createTimeDuration)
 	}
-	mw.MetricsSender.SendDuration("StoreCreateTime", createTimeDuration)
 	return err
 }
 
@@ -33,8 +35,10 @@ func (mw *MetricsWrapper) All() ([]models.Policy, error) {
 	allTimeDuration := time.Now().Sub(startTime)
 	if err != nil {
 		mw.MetricsSender.IncrementCounter("StoreAllError")
+		mw.MetricsSender.SendDuration("StoreAllErrorTime", allTimeDuration)
+	} else {
+		mw.MetricsSender.SendDuration("StoreAllSuccessTime", allTimeDuration)
 	}
-	mw.MetricsSender.SendDuration("StoreAllTime", allTimeDuration)
 	return policies, err
 }
 
@@ -44,9 +48,10 @@ func (mw *MetricsWrapper) Delete(policies []models.Policy) error {
 	deleteTimeDuration := time.Now().Sub(startTime)
 	if err != nil {
 		mw.MetricsSender.IncrementCounter("StoreDeleteError")
+		mw.MetricsSender.SendDuration("StoreDeleteErrorTime", deleteTimeDuration)
+	} else {
+		mw.MetricsSender.SendDuration("StoreDeleteSuccessTime", deleteTimeDuration)
 	}
-
-	mw.MetricsSender.SendDuration("StoreDeleteTime", deleteTimeDuration)
 	return err
 }
 
@@ -56,8 +61,10 @@ func (mw *MetricsWrapper) Tags() ([]models.Tag, error) {
 	tagsTimeDuration := time.Now().Sub(startTime)
 	if err != nil {
 		mw.MetricsSender.IncrementCounter("StoreTagsError")
+		mw.MetricsSender.SendDuration("StoreTagsErrorTime", tagsTimeDuration)
+	} else {
+		mw.MetricsSender.SendDuration("StoreTagsSuccessTime", tagsTimeDuration)
 	}
-	mw.MetricsSender.SendDuration("StoreTagsTime", tagsTimeDuration)
 	return tags, err
 }
 
@@ -67,7 +74,22 @@ func (mw *MetricsWrapper) ByGuids(srcGuids, dstGuids []string) ([]models.Policy,
 	byGuidsTimeDuration := time.Now().Sub(startTime)
 	if err != nil {
 		mw.MetricsSender.IncrementCounter("StoreByGuidsError")
+		mw.MetricsSender.SendDuration("StoreByGuidsErrorTime", byGuidsTimeDuration)
+	} else {
+		mw.MetricsSender.SendDuration("StoreByGuidsSuccessTime", byGuidsTimeDuration)
 	}
-	mw.MetricsSender.SendDuration("StoreByGuidsTime", byGuidsTimeDuration)
 	return policies, err
+}
+
+func (mw *MetricsWrapper) CheckDatabase() error {
+	startTime := time.Now()
+	err := mw.Store.CheckDatabase()
+	duration := time.Now().Sub(startTime)
+	if err != nil {
+		mw.MetricsSender.IncrementCounter("StoreCheckDatabaseError")
+		mw.MetricsSender.SendDuration("StoreCheckDatabaseErrorTime", duration)
+	} else {
+		mw.MetricsSender.SendDuration("StoreCheckDatabaseSuccessTime", duration)
+	}
+	return err
 }

@@ -17,6 +17,7 @@ type store interface {
 	Delete([]models.Policy) error
 	Tags() ([]models.Tag, error)
 	ByGuids([]string, []string) ([]models.Policy, error)
+	CheckDatabase() error
 }
 
 type PoliciesIndexInternal struct {

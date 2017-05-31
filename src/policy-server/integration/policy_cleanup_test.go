@@ -92,7 +92,7 @@ var _ = Describe("Automatic Stale Policy Cleanup", func() {
 
 			By("emitting store metrics")
 			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
-				HaveName("StoreDeleteTime"),
+				HaveName("StoreDeleteSuccessTime"),
 			))
 		})
 	})

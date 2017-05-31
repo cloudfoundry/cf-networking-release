@@ -67,6 +67,7 @@ type Store interface {
 	Delete([]models.Policy) error
 	Tags() ([]models.Tag, error)
 	ByGuids([]string, []string) ([]models.Policy, error)
+	CheckDatabase() error
 }
 
 //go:generate counterfeiter -o fakes/db.go --fake-name Db . db
@@ -145,6 +146,11 @@ func rollback(tx Transaction, err error) error {
 	if txErr != nil {
 		return fmt.Errorf("db rollback: %s (sql error: %s)", txErr, err)
 	}
+	return err
+}
+
+func (s *store) CheckDatabase() error {
+	_, err := s.conn.Query("SELECT 1")
 	return err
 }
 

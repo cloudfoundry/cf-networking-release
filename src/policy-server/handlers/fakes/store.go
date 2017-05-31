@@ -65,6 +65,15 @@ type Store struct {
 		result1 []models.Policy
 		result2 error
 	}
+	CheckDatabaseStub        func() error
+	checkDatabaseMutex       sync.RWMutex
+	checkDatabaseArgsForCall []struct{}
+	checkDatabaseReturns     struct {
+		result1 error
+	}
+	checkDatabaseReturnsOnCall map[int]struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -323,6 +332,46 @@ func (fake *Store) ByGuidsReturnsOnCall(i int, result1 []models.Policy, result2 
 	}{result1, result2}
 }
 
+func (fake *Store) CheckDatabase() error {
+	fake.checkDatabaseMutex.Lock()
+	ret, specificReturn := fake.checkDatabaseReturnsOnCall[len(fake.checkDatabaseArgsForCall)]
+	fake.checkDatabaseArgsForCall = append(fake.checkDatabaseArgsForCall, struct{}{})
+	fake.recordInvocation("CheckDatabase", []interface{}{})
+	fake.checkDatabaseMutex.Unlock()
+	if fake.CheckDatabaseStub != nil {
+		return fake.CheckDatabaseStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.checkDatabaseReturns.result1
+}
+
+func (fake *Store) CheckDatabaseCallCount() int {
+	fake.checkDatabaseMutex.RLock()
+	defer fake.checkDatabaseMutex.RUnlock()
+	return len(fake.checkDatabaseArgsForCall)
+}
+
+func (fake *Store) CheckDatabaseReturns(result1 error) {
+	fake.CheckDatabaseStub = nil
+	fake.checkDatabaseReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *Store) CheckDatabaseReturnsOnCall(i int, result1 error) {
+	fake.CheckDatabaseStub = nil
+	if fake.checkDatabaseReturnsOnCall == nil {
+		fake.checkDatabaseReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.checkDatabaseReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *Store) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -336,6 +385,8 @@ func (fake *Store) Invocations() map[string][][]interface{} {
 	defer fake.tagsMutex.RUnlock()
 	fake.byGuidsMutex.RLock()
 	defer fake.byGuidsMutex.RUnlock()
+	fake.checkDatabaseMutex.RLock()
+	defer fake.checkDatabaseMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

@@ -804,6 +804,33 @@ var _ = Describe("Store", func() {
 		})
 	})
 
+	Describe("CheckDatabase", func() {
+		BeforeEach(func() {
+			var err error
+			dataStore, err = store.New(realDb, group, destination, policy, 1, 20*time.Second)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("checks that the database exists", func() {
+			err := dataStore.CheckDatabase()
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		Context("when the database connection is closed", func() {
+			BeforeEach(func() {
+				if realDb != nil {
+					Expect(realDb.Close()).To(Succeed())
+				}
+			})
+
+			It("returns an error", func() {
+				err := dataStore.CheckDatabase()
+				Expect(err).To(HaveOccurred())
+				Expect(err).To(MatchError("sql: database is closed"))
+			})
+		})
+	})
+
 	Describe("Delete", func() {
 		BeforeEach(func() {
 			var err error
