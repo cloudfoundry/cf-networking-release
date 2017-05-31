@@ -9,6 +9,6 @@
   end
 %>
 
-curl <%= ip %>:<%= port %> \
+curl <%= ip %>:<%= port %>/health \
   --connect-timeout <%= p("cf_networking.policy_server.connect_timeout_seconds") %>
 <% end %>
