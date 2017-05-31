@@ -11,8 +11,19 @@ See [deployment docs](deploy-iaas.md) for examples
     - `cf_networking.silk_controller.connect_timeout_seconds`
     - `cf_networking.policy_server.connect_timeout_seconds`
 
-  - This optional property has been added to set the metron port on the silk controller:
+  - This optional property has been added to override the metron port on the silk controller:
     - `cf_networking.silk_controller.metron_port`
+
+  - This optional property has been added to override the health check port on the silk controller:
+    - `cf_networking.silk_controller.health_check_port`
+
+**Removed Properties**
+
+  - The following properties have been removed from the silk-controller job,
+    **but still must be set on the silk-daemon job**.
+    -  `cf_networking.silk_daemon.ca_cert`
+    -  `cf_networking.silk_daemon.client_cert`
+    -  `cf_networking.silk_daemon.client_key`
 
 ### 0.25.0
 

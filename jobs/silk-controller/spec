@@ -9,9 +9,6 @@ templates:
   ca.crt.erb: config/certs/ca.crt
   server.crt.erb: config/certs/server.crt
   server.key.erb: config/certs/server.key
-  client-ca.crt.erb: config/certs/client-ca.crt
-  client.crt.erb: config/certs/client.crt
-  client.key.erb: config/certs/client.key
   dns_health_check.erb: bin/dns_health_check
 
 packages:
@@ -44,6 +41,10 @@ properties:
     description: "Debug port for silk controller.  Use this to adjust log level at runtime or dump process stats."
     default: 22222
 
+  cf_networking.silk_controller.health_check_port:
+    description: "Health check port for silk controller. Used by the Consul DNS health check."
+    default: 19683
+
   cf_networking.silk_controller.connect_timeout_seconds:
     description: "Connection timeout between the silk controller and the silk database.  Also used by Consul DNS health check."
     default: 5
@@ -64,15 +65,6 @@ properties:
 
   cf_networking.silk_controller.server_key:
     description: "Server key for TLS."
-
-  cf_networking.silk_daemon.ca_cert:
-    description: "Trusted CA certificate that was used to sign the silk controller server cert and key."
-
-  cf_networking.silk_daemon.client_cert:
-    description: "Client certificate for TLS to access silk controller."
-
-  cf_networking.silk_daemon.client_key:
-    description: "Client private key for TLS to access silk controller."
 
   cf_networking.silk_controller.metron_port:
     description: "Forward metrics to this metron agent, listening on this port on localhost"
