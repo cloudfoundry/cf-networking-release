@@ -74,6 +74,10 @@ properties:
   cf_networking.silk_daemon.client_key:
     description: "Client private key for TLS to access silk controller."
 
+  cf_networking.silk_controller.metron_port:
+    description: "Forward metrics to this metron agent, listening on this port on localhost"
+    default: 3457
+
   cf_networking.silk_controller.database.type:
     description: "Type of database: postgres or mysql"
 
