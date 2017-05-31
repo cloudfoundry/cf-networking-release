@@ -1,3 +1,4 @@
+<% unless p("cf_networking.disable") %>
 <%
     def db_param_path(name)
       "cf_networking.policy_server.database.#{name}"
@@ -86,3 +87,4 @@
 
     JSON.pretty_generate(toRender)
 %>
+<% end %>

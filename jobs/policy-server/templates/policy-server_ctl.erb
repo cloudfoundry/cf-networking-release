@@ -1,5 +1,6 @@
 #!/bin/bash -eu
 
+<% unless p("cf_networking.disable") %>
 source /var/vcap/packages/ctl-utils/ctl_util.sh
 
 export RUN_DIR=/var/vcap/sys/run/policy-server
@@ -42,3 +43,4 @@ case $1 in
     ;;
 
 esac
+<% end %>

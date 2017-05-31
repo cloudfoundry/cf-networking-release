@@ -21,6 +21,10 @@ consumes:
   optional: true
 
 properties:
+  cf_networking.disable:
+    description: "Disable container to container networking."
+    default: false
+
   cf_networking.policy_cleanup_interval:
     description: "Clean up stale policies on this interval, in minutes."
     default: 60

@@ -1,3 +1,4 @@
+<% unless p("cf_networking.disable") %>
 <%
   def ip
     p("cf_networking.policy_server.listen_ip")
@@ -10,3 +11,4 @@
 
 curl <%= ip %>:<%= port %> \
   --connect-timeout <%= p("cf_networking.policy_server.connect_timeout_seconds") %>
+<% end %>

@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/bin/bash -eu
 
-set -e -u
-
+<% unless p("cf_networking.disable") %>
 CERTS_DIR=/var/vcap/jobs/policy-server/config/certs
 
 chmod 600 "${CERTS_DIR}"/*
+<% end %>
