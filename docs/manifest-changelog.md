@@ -11,6 +11,9 @@ See [deployment docs](deploy-iaas.md) for examples
     - `cf_networking.silk_controller.connect_timeout_seconds`
     - `cf_networking.policy_server.connect_timeout_seconds`
 
+  - This optional property has been added to set the metron port on the silk controller:
+    - `cf_networking.silk_controller.metron_port`
+
 ### 0.25.0
 
 **New Properties**
