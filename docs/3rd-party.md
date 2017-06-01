@@ -117,11 +117,11 @@ the CNI plugin receives a final config object that resembles:
   },
   "runtimeConfig": {
     "portMappings": [{
-      "host_port": 12345,
-      "container_port": 7000
+      "host_port": 60001,
+      "container_port": 8080
     }, {
-      "host_port": 60000,
-      "container_port": 7000
+      "host_port": 60002,
+      "container_port": 2222
     }],
     "netOutRules": [{
       "protocol": 1,
