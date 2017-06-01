@@ -27,17 +27,6 @@ var _ = Describe("external connectivity", func() {
 		cli                           *cf_cli_adapter.Adapter
 	)
 
-	createASG := func(name string, asgDefinition string) {
-		asgFile, err := testsupport.CreateASGFile(asgDefinition)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(cli.CreateSecurityGroup(name+"-asg", asgFile)).To(Succeed())
-		Expect(os.Remove(asgFile)).To(Succeed())
-	}
-
-	removeASG := func(name string) {
-		Expect(cli.DeleteSecurityGroup(name + "-asg")).To(Succeed())
-	}
-
 	BeforeEach(func() {
 		cli = &cf_cli_adapter.Adapter{CfCliPath: "cf"}
 		appA = fmt.Sprintf("appA-%d", rand.Int31())
@@ -63,7 +52,7 @@ var _ = Describe("external connectivity", func() {
 
 		By("creating test-generated ASGs")
 		for asgName, asgValue := range testASGs {
-			createASG(asgName, asgValue)
+			createASG(cli, asgName, asgValue)
 		}
 
 		By("pushing the test app")
@@ -82,7 +71,7 @@ var _ = Describe("external connectivity", func() {
 
 		By("removing test-generated ASGs")
 		for asgName, _ := range testASGs {
-			removeASG(asgName)
+			removeASG(cli, asgName)
 		}
 	})
 
@@ -204,8 +193,19 @@ func getAllSecurityGroups() []string {
 	return actualGroups
 }
 
+func createASG(cli *cf_cli_adapter.Adapter, name string, asgDefinition string) {
+	asgFile, err := testsupport.CreateASGFile(asgDefinition)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(cli.CreateSecurityGroup(name, asgFile)).To(Succeed())
+	Expect(os.Remove(asgFile)).To(Succeed())
+}
+
+func removeASG(cli *cf_cli_adapter.Adapter, name string) {
+	Expect(cli.DeleteSecurityGroup(name)).To(Succeed())
+}
+
 var testASGs = map[string]string{
-	"tcp": `
+	"tcp-asg": `
 	[
 		{
 			"destination": "0.0.0.0-255.255.255.255",
@@ -214,7 +214,7 @@ var testASGs = map[string]string{
 		}
 	]
 	`,
-	"udp": `
+	"udp-asg": `
 	[
 		{
 			"destination": "0.0.0.0-255.255.255.255",
@@ -223,7 +223,7 @@ var testASGs = map[string]string{
 		}
 	]
 	`,
-	"icmp": `
+	"icmp-asg": `
 	[
 		{
 			"destination": "0.0.0.0-255.255.255.255",
