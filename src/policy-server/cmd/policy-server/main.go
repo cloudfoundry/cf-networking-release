@@ -151,20 +151,6 @@ func main() {
 		MetricsSender: metricsSender,
 	}
 
-	authenticator := handlers.Authenticator{
-		Client:        uaaClient,
-		Logger:        logger,
-		Scopes:        []string{"network.admin"},
-		ErrorResponse: errorResponse,
-	}
-
-	networkWriteAuthenticator := handlers.Authenticator{
-		Client:        uaaClient,
-		Logger:        logger,
-		Scopes:        []string{"network.admin", "network.write"},
-		ErrorResponse: errorResponse,
-	}
-
 	ccClient := &cc_client.Client{
 		JSONClient: json_client.New(logger.Session("cc-json-client"), httpClient, conf.CCURL),
 		Logger:     logger,
@@ -242,23 +228,50 @@ func main() {
 		ErrorResponse: errorResponse,
 	}
 
-	metricsWrap := func(name string, handle http.Handler) http.Handler {
+	metricsWrap := func(name string, handler http.Handler) http.Handler {
 		metricsWrapper := middleware.MetricWrapper{
 			Name:          name,
 			MetricsSender: metricsSender,
 		}
-		return metricsWrapper.Wrap(handle)
+		return metricsWrapper.Wrap(handler)
+	}
+
+	type loggableHandler interface {
+		ServeHTTP(logger lager.Logger, w http.ResponseWriter, r *http.Request)
+	}
+	logWrap := func(handler loggableHandler) http.Handler {
+		return middleware.LogWrap(logger, handler.ServeHTTP)
+	}
+
+	authenticator := handlers.Authenticator{
+		Client:        uaaClient,
+		Logger:        logger,
+		Scopes:        []string{"network.admin"},
+		ErrorResponse: errorResponse,
+	}
+
+	networkWriteAuthenticator := handlers.Authenticator{
+		Client:        uaaClient,
+		Logger:        logger,
+		Scopes:        []string{"network.admin", "network.write"},
+		ErrorResponse: errorResponse,
+	}
+	authAdmin := func(handler handlers.AuthenticatedHandler) http.Handler {
+		return authenticator.Wrap(handler)
+	}
+	authWrite := func(handler handlers.AuthenticatedHandler) http.Handler {
+		return networkWriteAuthenticator.Wrap(handler)
 	}
 
 	externalHandlers := rata.Handlers{
-		"uptime":          metricsWrap("Uptime", uptimeHandler),
+		"uptime":          metricsWrap("Uptime", logWrap(uptimeHandler)),
 		"health":          metricsWrap("Health", healthHandler),
-		"create_policies": metricsWrap("CreatePolicies", networkWriteAuthenticator.Wrap(createPolicyHandler)),
-		"delete_policies": metricsWrap("DeletePolicies", networkWriteAuthenticator.Wrap(deletePolicyHandler)),
-		"policies_index":  metricsWrap("PoliciesIndex", networkWriteAuthenticator.Wrap(policiesIndexHandler)),
-		"cleanup":         metricsWrap("Cleanup", authenticator.Wrap(policiesCleanupHandler)),
-		"tags_index":      metricsWrap("TagsIndex", authenticator.Wrap(tagsIndexHandler)),
-		"whoami":          metricsWrap("WhoAmI", authenticator.Wrap(whoamiHandler)),
+		"create_policies": metricsWrap("CreatePolicies", authWrite(createPolicyHandler)),
+		"delete_policies": metricsWrap("DeletePolicies", authWrite(deletePolicyHandler)),
+		"policies_index":  metricsWrap("PoliciesIndex", authWrite(policiesIndexHandler)),
+		"cleanup":         metricsWrap("Cleanup", authAdmin(policiesCleanupHandler)),
+		"tags_index":      metricsWrap("TagsIndex", authAdmin(tagsIndexHandler)),
+		"whoami":          metricsWrap("WhoAmI", authAdmin(whoamiHandler)),
 	}
 
 	err = dropsonde.Initialize(conf.MetronAddress, dropsondeOrigin)

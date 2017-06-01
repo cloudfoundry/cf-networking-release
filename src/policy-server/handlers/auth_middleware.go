@@ -29,11 +29,11 @@ type Authenticator struct {
 }
 
 //go:generate counterfeiter -o fakes/authenticated_handler.go --fake-name AuthenticatedHandler . authenticatedHandler
-type authenticatedHandler interface {
+type AuthenticatedHandler interface {
 	ServeHTTP(response http.ResponseWriter, request *http.Request, tokenData uaa_client.CheckTokenResponse)
 }
 
-func (a *Authenticator) Wrap(handle authenticatedHandler) http.Handler {
+func (a *Authenticator) Wrap(handle AuthenticatedHandler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		a.Logger.Debug("request made to policy-server", lager.Data{"URL": req.URL, "RemoteAddr": req.RemoteAddr})
 
