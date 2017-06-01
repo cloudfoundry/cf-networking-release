@@ -23,11 +23,11 @@ import (
 	"policy-server/uaa_client"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
-	helpershandlers "code.cloudfoundry.org/cf-networking-helpers/handlers"
 	"code.cloudfoundry.org/cf-networking-helpers/httperror"
 	"code.cloudfoundry.org/cf-networking-helpers/json_client"
 	"code.cloudfoundry.org/cf-networking-helpers/marshal"
 	"code.cloudfoundry.org/cf-networking-helpers/metrics"
+	"code.cloudfoundry.org/cf-networking-helpers/middleware"
 	"code.cloudfoundry.org/cf-networking-helpers/mutualtls"
 	"code.cloudfoundry.org/debugserver"
 	"code.cloudfoundry.org/lager"
@@ -243,7 +243,7 @@ func main() {
 	}
 
 	metricsWrap := func(name string, handle http.Handler) http.Handler {
-		metricsWrapper := helpershandlers.MetricWrapper{
+		metricsWrapper := middleware.MetricWrapper{
 			Name:          name,
 			MetricsSender: metricsSender,
 		}

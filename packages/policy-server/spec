@@ -6,11 +6,11 @@ dependencies:
 
 files:
   - code.cloudfoundry.org/cf-networking-helpers/db/*.go # gosub
-  - code.cloudfoundry.org/cf-networking-helpers/handlers/*.go # gosub
   - code.cloudfoundry.org/cf-networking-helpers/httperror/*.go # gosub
   - code.cloudfoundry.org/cf-networking-helpers/json_client/*.go # gosub
   - code.cloudfoundry.org/cf-networking-helpers/marshal/*.go # gosub
   - code.cloudfoundry.org/cf-networking-helpers/metrics/*.go # gosub
+  - code.cloudfoundry.org/cf-networking-helpers/middleware/*.go # gosub
   - code.cloudfoundry.org/cf-networking-helpers/mutualtls/*.go # gosub
   - code.cloudfoundry.org/debugserver/*.go # gosub
   - code.cloudfoundry.org/lager/*.go # gosub
