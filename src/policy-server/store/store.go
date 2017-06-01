@@ -150,8 +150,8 @@ func rollback(tx Transaction, err error) error {
 }
 
 func (s *store) CheckDatabase() error {
-	_, err := s.conn.Query("SELECT 1")
-	return err
+	var result int
+	return s.conn.QueryRow("SELECT 1").Scan(&result)
 }
 
 func (s *store) Create(policies []models.Policy) error {
