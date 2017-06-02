@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -152,10 +153,10 @@ func DefaultTestConfig(dbConfig db.Config, metronAddress string, fixturesPath st
 
 	config := config.Config{
 		ListenHost:            "127.0.0.1",
-		ListenPort:            10001 + GinkgoParallelNode(),
-		InternalListenPort:    20001 + GinkgoParallelNode(),
+		ListenPort:            testsupport.PickAPort(),
+		InternalListenPort:    testsupport.PickAPort(),
 		DebugServerHost:       "127.0.0.1",
-		DebugServerPort:       30001 + GinkgoParallelNode(),
+		DebugServerPort:       testsupport.PickAPort(),
 		CACertFile:            filepath.Join(fixturesPath, "netman-ca.crt"),
 		ServerCertFile:        filepath.Join(fixturesPath, "server.crt"),
 		ServerKeyFile:         filepath.Join(fixturesPath, "server.key"),

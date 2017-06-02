@@ -14,6 +14,7 @@ import (
 
 	"code.cloudfoundry.org/cf-networking-helpers/metrics"
 	"code.cloudfoundry.org/cf-networking-helpers/mutualtls"
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -46,7 +47,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		serverTLSConfig, err = mutualtls.NewServerTLSConfig(paths.ServerCertFile, paths.ServerKeyFile, paths.ClientCACertFile)
 		Expect(err).NotTo(HaveOccurred())
 
-		serverListenPort = 40000 + GinkgoParallelNode()
+		serverListenPort = testsupport.PickAPort()
 		serverListenAddr = fmt.Sprintf("127.0.0.1:%d", serverListenPort)
 
 		containerMetadata := `
@@ -76,7 +77,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 			ClientKeyFile:        paths.ClientKeyFile,
 			IPTablesLockFile:     GlobalIPTablesLockFile,
 			DebugServerHost:      "127.0.0.1",
-			DebugServerPort:      22222 + GinkgoParallelNode(),
+			DebugServerPort:      testsupport.PickAPort(),
 			ClientTimeoutSeconds: 5,
 		}
 		Expect(conf.Validate()).To(Succeed())
@@ -243,7 +244,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 				ClientCertFile:       "totally",
 				ClientKeyFile:        "not-cool",
 				DebugServerHost:      "127.0.0.1",
-				DebugServerPort:      22222 + GinkgoParallelNode(),
+				DebugServerPort:      testsupport.PickAPort(),
 				ClientTimeoutSeconds: 5,
 			}
 			configFilePath = WriteConfigFile(conf)
@@ -287,7 +288,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 				ClientKeyFile:        paths.ClientKeyFile,
 				IPTablesLockFile:     GlobalIPTablesLockFile,
 				DebugServerHost:      "127.0.0.1",
-				DebugServerPort:      22222 + GinkgoParallelNode(),
+				DebugServerPort:      testsupport.PickAPort(),
 				IPTablesLogging:      true,
 				ClientTimeoutSeconds: 5,
 			}
