@@ -14,11 +14,11 @@ import (
 
 	hfakes "code.cloudfoundry.org/cf-networking-helpers/fakes"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
+	"code.cloudfoundry.org/lager"
 
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gbytes"
 )
 
 var _ = Describe("PoliciesCreate", func() {
@@ -71,7 +71,6 @@ var _ = Describe("PoliciesCreate", func() {
 		fakeErrorResponse = &fakes.ErrorResponse{}
 		fakeUnmarshaler.UnmarshalStub = json.Unmarshal
 		handler = &handlers.PoliciesCreate{
-			Logger:        logger,
 			Store:         fakeStore,
 			Unmarshaler:   fakeUnmarshaler,
 			Validator:     fakeValidator,
@@ -103,7 +102,7 @@ var _ = Describe("PoliciesCreate", func() {
 			},
 		}}
 
-		handler.ServeHTTP(resp, request, tokenData)
+		handler.ServeHTTP(logger, resp, request, tokenData)
 
 		Expect(fakeUnmarshaler.UnmarshalCallCount()).To(Equal(1))
 		bodyBytes, _ := fakeUnmarshaler.UnmarshalArgsForCall(0)
@@ -121,8 +120,40 @@ var _ = Describe("PoliciesCreate", func() {
 	})
 
 	It("logs the policy with username and app guid", func() {
-		handler.ServeHTTP(resp, request, tokenData)
-		Expect(logger).To(gbytes.Say("policy-create.*some-app-guid.*some_user"))
+		handler.ServeHTTP(logger, resp, request, tokenData)
+
+		By("logging the success")
+		Expect(logger.Logs()).To(HaveLen(1))
+		Expect(logger.Logs()[0]).To(SatisfyAll(
+			LogsWith(lager.INFO, "test.create-policies.created-policies"),
+			HaveLogData(SatisfyAll(
+				HaveLen(3),
+				HaveKeyWithValue("policies", SatisfyAll(
+					HaveLen(2),
+					ConsistOf(
+						SatisfyAll(
+							HaveKeyWithValue("source", HaveKeyWithValue("id", "some-app-guid")),
+							HaveKeyWithValue("destination", SatisfyAll(
+								HaveKeyWithValue("id", "some-other-app-guid"),
+								HaveKeyWithValue("protocol", "tcp"),
+								HaveKeyWithValue("port", BeEquivalentTo(8080)),
+							)),
+						),
+						SatisfyAll(
+							HaveKeyWithValue("source", HaveKeyWithValue("id", "another-app-guid")),
+							HaveKeyWithValue("destination", SatisfyAll(
+								HaveKeyWithValue("id", "some-other-app-guid"),
+								HaveKeyWithValue("protocol", "udp"),
+								HaveKeyWithValue("port", BeEquivalentTo(1234)),
+							)),
+						),
+					),
+				)),
+				HaveKeyWithValue("session", "1"),
+				HaveKeyWithValue("userName", "some_user"),
+			)),
+		))
+
 	})
 
 	Context("when the policy guard returns false", func() {
@@ -131,7 +162,7 @@ var _ = Describe("PoliciesCreate", func() {
 		})
 
 		It("calls the forbidden handler", func() {
-			handler.ServeHTTP(resp, request, tokenData)
+			handler.ServeHTTP(logger, resp, request, tokenData)
 
 			Expect(fakeErrorResponse.ForbiddenCallCount()).To(Equal(1))
 
@@ -140,6 +171,17 @@ var _ = Describe("PoliciesCreate", func() {
 			Expect(err).To(MatchError("one or more applications cannot be found or accessed"))
 			Expect(message).To(Equal("policies-create"))
 			Expect(description).To(Equal("one or more applications cannot be found or accessed"))
+
+			By("logging the error")
+			Expect(logger.Logs()).To(HaveLen(1))
+			Expect(logger.Logs()[0]).To(SatisfyAll(
+				LogsWith(lager.ERROR, "test.create-policies.failed-authorizing"),
+				HaveLogData(SatisfyAll(
+					HaveLen(2),
+					HaveKeyWithValue("error", "one or more applications cannot be found or accessed"),
+					HaveKeyWithValue("session", "1"),
+				)),
+			))
 		})
 	})
 
@@ -149,7 +191,7 @@ var _ = Describe("PoliciesCreate", func() {
 		})
 
 		It("calls the bad request handler", func() {
-			handler.ServeHTTP(resp, request, tokenData)
+			handler.ServeHTTP(logger, resp, request, tokenData)
 
 			Expect(fakeErrorResponse.BadRequestCallCount()).To(Equal(1))
 
@@ -158,6 +200,17 @@ var _ = Describe("PoliciesCreate", func() {
 			Expect(err).To(MatchError("banana"))
 			Expect(message).To(Equal("policies-create"))
 			Expect(description).To(Equal("banana"))
+
+			By("logging the error")
+			Expect(logger.Logs()).To(HaveLen(1))
+			Expect(logger.Logs()[0]).To(SatisfyAll(
+				LogsWith(lager.ERROR, "test.create-policies.failed-validating-policies"),
+				HaveLogData(SatisfyAll(
+					HaveLen(2),
+					HaveKeyWithValue("error", "banana"),
+					HaveKeyWithValue("session", "1"),
+				)),
+			))
 		})
 	})
 
@@ -167,7 +220,7 @@ var _ = Describe("PoliciesCreate", func() {
 		})
 
 		It("calls the internal server error handler", func() {
-			handler.ServeHTTP(resp, request, tokenData)
+			handler.ServeHTTP(logger, resp, request, tokenData)
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
@@ -176,6 +229,17 @@ var _ = Describe("PoliciesCreate", func() {
 			Expect(err).To(MatchError("banana"))
 			Expect(message).To(Equal("policies-create"))
 			Expect(description).To(Equal("check access failed"))
+
+			By("logging the error")
+			Expect(logger.Logs()).To(HaveLen(1))
+			Expect(logger.Logs()[0]).To(SatisfyAll(
+				LogsWith(lager.ERROR, "test.create-policies.failed-checking-access"),
+				HaveLogData(SatisfyAll(
+					HaveLen(2),
+					HaveKeyWithValue("error", "banana"),
+					HaveKeyWithValue("session", "1"),
+				)),
+			))
 		})
 	})
 
@@ -185,7 +249,7 @@ var _ = Describe("PoliciesCreate", func() {
 		})
 
 		It("calls the internal server error handler", func() {
-			handler.ServeHTTP(resp, request, tokenData)
+			handler.ServeHTTP(logger, resp, request, tokenData)
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
@@ -194,6 +258,18 @@ var _ = Describe("PoliciesCreate", func() {
 			Expect(err).To(MatchError("banana"))
 			Expect(message).To(Equal("policies-create"))
 			Expect(description).To(Equal("database create failed"))
+
+			By("logging the error")
+			Expect(logger.Logs()).To(HaveLen(1))
+			Expect(logger.Logs()[0]).To(SatisfyAll(
+				LogsWith(lager.ERROR, "test.create-policies.failed-creating-in-database"),
+				HaveLogData(SatisfyAll(
+					HaveLen(2),
+					HaveKeyWithValue("error", "banana"),
+					HaveKeyWithValue("session", "1"),
+				)),
+			))
+
 		})
 	})
 
@@ -203,7 +279,7 @@ var _ = Describe("PoliciesCreate", func() {
 		})
 
 		It("calls the bad request handler", func() {
-			handler.ServeHTTP(resp, request, tokenData)
+			handler.ServeHTTP(logger, resp, request, tokenData)
 
 			Expect(fakeErrorResponse.BadRequestCallCount()).To(Equal(1))
 
@@ -212,6 +288,18 @@ var _ = Describe("PoliciesCreate", func() {
 			Expect(err).To(MatchError("banana"))
 			Expect(message).To(Equal("policies-create"))
 			Expect(description).To(Equal("failed reading request body"))
+
+			By("logging the error")
+			Expect(logger.Logs()).To(HaveLen(1))
+			Expect(logger.Logs()[0]).To(SatisfyAll(
+				LogsWith(lager.ERROR, "test.create-policies.failed-reading-request-body"),
+				HaveLogData(SatisfyAll(
+					HaveLen(2),
+					HaveKeyWithValue("error", "banana"),
+					HaveKeyWithValue("session", "1"),
+				)),
+			))
+
 		})
 	})
 
@@ -221,7 +309,7 @@ var _ = Describe("PoliciesCreate", func() {
 		})
 
 		It("calls the bad request handler", func() {
-			handler.ServeHTTP(resp, request, tokenData)
+			handler.ServeHTTP(logger, resp, request, tokenData)
 
 			Expect(fakeErrorResponse.BadRequestCallCount()).To(Equal(1))
 
@@ -230,6 +318,17 @@ var _ = Describe("PoliciesCreate", func() {
 			Expect(err).To(MatchError("banana"))
 			Expect(message).To(Equal("policies-create"))
 			Expect(description).To(Equal("invalid values passed to API"))
+
+			By("logging the error")
+			Expect(logger.Logs()).To(HaveLen(1))
+			Expect(logger.Logs()[0]).To(SatisfyAll(
+				LogsWith(lager.ERROR, "test.create-policies.failed-unmarshalling-payload"),
+				HaveLogData(SatisfyAll(
+					HaveLen(2),
+					HaveKeyWithValue("error", "banana"),
+					HaveKeyWithValue("session", "1"),
+				)),
+			))
 		})
 	})
 })

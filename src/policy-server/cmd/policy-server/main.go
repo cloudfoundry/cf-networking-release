@@ -169,7 +169,6 @@ func main() {
 	validator := &handlers.Validator{}
 
 	createPolicyHandler := &handlers.PoliciesCreate{
-		Logger:        logger.Session("policies-create"),
 		Store:         wrappedStore,
 		Unmarshaler:   unmarshaler,
 		Validator:     validator,
