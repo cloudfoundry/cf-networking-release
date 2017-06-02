@@ -109,7 +109,7 @@ var _ = Describe("Timeout", func() {
 		)
 		itTimesOut("deleting policies",
 			"POST", "networking/v0/external/policies/delete", policiesBody,
-			`{ "error": "policies-delete: database delete failed" }`,
+			`{ "error": "delete-policies: database delete failed" }`,
 		)
 		itTimesOut("getting tags",
 			"GET", "networking/v0/external/tags", "",
