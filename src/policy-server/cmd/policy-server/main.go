@@ -265,7 +265,7 @@ func main() {
 
 	externalHandlers := rata.Handlers{
 		"uptime":          metricsWrap("Uptime", logWrap(uptimeHandler)),
-		"health":          metricsWrap("Health", healthHandler),
+		"health":          metricsWrap("Health", logWrap(healthHandler)),
 		"create_policies": metricsWrap("CreatePolicies", authWrite(createPolicyHandler)),
 		"delete_policies": metricsWrap("DeletePolicies", authWrite(deletePolicyHandler)),
 		"policies_index":  metricsWrap("PoliciesIndex", authWrite(policiesIndexHandler)),
