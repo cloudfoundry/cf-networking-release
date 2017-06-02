@@ -27,8 +27,8 @@ type PoliciesIndexInternal struct {
 	ErrorResponse errorResponse
 }
 
-func (h *PoliciesIndexInternal) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	h.Logger.Debug("internal request made to list policies", lager.Data{"URL": req.URL, "RemoteAddr": req.RemoteAddr})
+func (h *PoliciesIndexInternal) ServeHTTP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+	logger = logger.Session("index-policies-internal")
 
 	queryValues := req.URL.Query()
 	ids := parseIds(queryValues)
@@ -42,6 +42,7 @@ func (h *PoliciesIndexInternal) ServeHTTP(w http.ResponseWriter, req *http.Reque
 	}
 
 	if err != nil {
+		logger.Error("failed-reading-database", err)
 		h.ErrorResponse.InternalServerError(w, err, "policies-index-internal", "database read failed")
 		return
 	}
@@ -51,7 +52,8 @@ func (h *PoliciesIndexInternal) ServeHTTP(w http.ResponseWriter, req *http.Reque
 	}{policies}
 	bytes, err := h.Marshaler.Marshal(policyResponse)
 	if err != nil {
-		h.ErrorResponse.InternalServerError(w, err, "policies-index-internal", "database marshaling failed")
+		logger.Error("failed-marshalling-policies", err)
+		h.ErrorResponse.InternalServerError(w, err, "policies-index-internal", "database marshalling failed")
 		return
 	}
 

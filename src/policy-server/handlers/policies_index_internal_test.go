@@ -10,11 +10,11 @@ import (
 	"policy-server/models"
 
 	hfakes "code.cloudfoundry.org/cf-networking-helpers/fakes"
+	"code.cloudfoundry.org/lager"
 
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gbytes"
 )
 
 var _ = Describe("PoliciesIndexInternal", func() {
@@ -88,8 +88,7 @@ var _ = Describe("PoliciesIndexInternal", func() {
 
 		request.RemoteAddr = "some-host:some-port"
 
-		handler.ServeHTTP(resp, request)
-		Expect(logger).To(gbytes.Say("internal request made to list policies.*RemoteAddr.*some-host:some-port.*URL.*/networking/v0/internal/policies"))
+		handler.ServeHTTP(logger, resp, request)
 
 		Expect(fakeStore.ByGuidsCallCount()).To(Equal(1))
 		srcGuids, dstGuids := fakeStore.ByGuidsArgsForCall(0)
@@ -125,7 +124,7 @@ var _ = Describe("PoliciesIndexInternal", func() {
 			]}`
 			request, err := http.NewRequest("GET", "/networking/v0/internal/policies", nil)
 			Expect(err).NotTo(HaveOccurred())
-			handler.ServeHTTP(resp, request)
+			handler.ServeHTTP(logger, resp, request)
 
 			Expect(fakeStore.AllCallCount()).To(Equal(1))
 			Expect(resp.Code).To(Equal(http.StatusOK))
@@ -147,7 +146,7 @@ var _ = Describe("PoliciesIndexInternal", func() {
 			var err error
 			request, err = http.NewRequest("GET", "/networking/v0/internal/policies", nil)
 			Expect(err).NotTo(HaveOccurred())
-			handler.ServeHTTP(resp, request)
+			handler.ServeHTTP(logger, resp, request)
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
@@ -156,6 +155,17 @@ var _ = Describe("PoliciesIndexInternal", func() {
 			Expect(err).To(MatchError("banana"))
 			Expect(message).To(Equal("policies-index-internal"))
 			Expect(description).To(Equal("database read failed"))
+
+			By("logging the error")
+			Expect(logger.Logs()).To(HaveLen(1))
+			Expect(logger.Logs()[0]).To(SatisfyAll(
+				LogsWith(lager.ERROR, "test.index-policies-internal.failed-reading-database"),
+				HaveLogData(SatisfyAll(
+					HaveLen(2),
+					HaveKeyWithValue("error", "banana"),
+					HaveKeyWithValue("session", "1"),
+				)),
+			))
 		})
 	})
 
@@ -173,7 +183,7 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		})
 
 		It("calls the internal server error handler", func() {
-			handler.ServeHTTP(resp, request)
+			handler.ServeHTTP(logger, resp, request)
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
@@ -181,7 +191,18 @@ var _ = Describe("PoliciesIndexInternal", func() {
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("grapes"))
 			Expect(message).To(Equal("policies-index-internal"))
-			Expect(description).To(Equal("database marshaling failed"))
+			Expect(description).To(Equal("database marshalling failed"))
+
+			By("logging the error")
+			Expect(logger.Logs()).To(HaveLen(1))
+			Expect(logger.Logs()[0]).To(SatisfyAll(
+				LogsWith(lager.ERROR, "test.index-policies-internal.failed-marshalling-policies"),
+				HaveLogData(SatisfyAll(
+					HaveLen(2),
+					HaveKeyWithValue("error", "grapes"),
+					HaveKeyWithValue("session", "1"),
+				)),
+			))
 		})
 	})
 })

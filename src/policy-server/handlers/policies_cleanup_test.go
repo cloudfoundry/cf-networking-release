@@ -11,6 +11,7 @@ import (
 	"policy-server/uaa_client"
 
 	hfakes "code.cloudfoundry.org/cf-networking-helpers/fakes"
+	"code.cloudfoundry.org/lager"
 
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
@@ -49,7 +50,6 @@ var _ = Describe("PoliciesCleanup", func() {
 		fakeErrorResponse = &fakes.ErrorResponse{}
 
 		handler = &handlers.PoliciesCleanup{
-			Logger:        logger,
 			Marshaler:     fakeMarshaler,
 			PolicyCleaner: fakePolicyCleaner,
 			ErrorResponse: fakeErrorResponse,
@@ -66,7 +66,7 @@ var _ = Describe("PoliciesCleanup", func() {
 	})
 
 	It("Cleans up stale policies for deleted apps", func() {
-		handler.ServeHTTP(resp, request, tokenData)
+		handler.ServeHTTP(logger, resp, request, tokenData)
 
 		Expect(fakePolicyCleaner.DeleteStalePoliciesCallCount()).To(Equal(1))
 		Expect(fakeMarshaler.MarshalCallCount()).To(Equal(1))
@@ -107,7 +107,7 @@ var _ = Describe("PoliciesCleanup", func() {
 		})
 
 		It("calls the internal server error handler", func() {
-			handler.ServeHTTP(resp, request, tokenData)
+			handler.ServeHTTP(logger, resp, request, tokenData)
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
@@ -116,6 +116,17 @@ var _ = Describe("PoliciesCleanup", func() {
 			Expect(err).To(MatchError("potato"))
 			Expect(message).To(Equal("policies-cleanup"))
 			Expect(description).To(Equal("policies cleanup failed"))
+
+			By("logging the error")
+			Expect(logger.Logs()).To(HaveLen(1))
+			Expect(logger.Logs()[0]).To(SatisfyAll(
+				LogsWith(lager.ERROR, "test.cleanup-policies.failed-deleting-stale-policies"),
+				HaveLogData(SatisfyAll(
+					HaveLen(2),
+					HaveKeyWithValue("error", "potato"),
+					HaveKeyWithValue("session", "1"),
+				)),
+			))
 		})
 	})
 
@@ -125,7 +136,7 @@ var _ = Describe("PoliciesCleanup", func() {
 		})
 
 		It("calls the internal server error handler", func() {
-			handler.ServeHTTP(resp, request, tokenData)
+			handler.ServeHTTP(logger, resp, request, tokenData)
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
@@ -134,6 +145,17 @@ var _ = Describe("PoliciesCleanup", func() {
 			Expect(err).To(MatchError("potato"))
 			Expect(message).To(Equal("policies-cleanup"))
 			Expect(description).To(Equal("marshal response failed"))
+
+			By("logging the error")
+			Expect(logger.Logs()).To(HaveLen(1))
+			Expect(logger.Logs()[0]).To(SatisfyAll(
+				LogsWith(lager.ERROR, "test.cleanup-policies.failed-marshalling-policies"),
+				HaveLogData(SatisfyAll(
+					HaveLen(2),
+					HaveKeyWithValue("error", "potato"),
+					HaveKeyWithValue("session", "1"),
+				)),
+			))
 		})
 	})
 })

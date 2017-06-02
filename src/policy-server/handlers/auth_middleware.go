@@ -7,6 +7,7 @@ import (
 	"policy-server/uaa_client"
 	"strings"
 
+	"code.cloudfoundry.org/cf-networking-helpers/middleware"
 	"code.cloudfoundry.org/lager"
 )
 
@@ -23,23 +24,24 @@ type UAAClient interface {
 
 type Authenticator struct {
 	Client        UAAClient
-	Logger        lager.Logger
 	Scopes        []string
 	ErrorResponse errorResponse
 }
 
-//go:generate counterfeiter -o fakes/authenticated_handler.go --fake-name AuthenticatedHandler . authenticatedHandler
+//go:generate counterfeiter -o fakes/authenticated_handler.go --fake-name AuthenticatedHandler . AuthenticatedHandler
 type AuthenticatedHandler interface {
-	ServeHTTP(response http.ResponseWriter, request *http.Request, tokenData uaa_client.CheckTokenResponse)
+	ServeHTTP(logger lager.Logger, response http.ResponseWriter, request *http.Request, tokenData uaa_client.CheckTokenResponse)
 }
 
-func (a *Authenticator) Wrap(handle AuthenticatedHandler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		a.Logger.Debug("request made to policy-server", lager.Data{"URL": req.URL, "RemoteAddr": req.RemoteAddr})
+func (a *Authenticator) Wrap(handle AuthenticatedHandler) middleware.LoggableHandlerFunc {
+	return middleware.LoggableHandlerFunc(func(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+		logger = logger.Session("authentication")
 
 		authorization := req.Header["Authorization"]
 		if len(authorization) < 1 {
-			a.ErrorResponse.Unauthorized(w, errors.New("no auth header"), "authenticator", "missing authorization header")
+			err := errors.New("no auth header")
+			logger.Error("failed-missing-authorization-header", err)
+			a.ErrorResponse.Unauthorized(w, err, "authenticator", "missing authorization header")
 			return
 		}
 
@@ -48,19 +50,20 @@ func (a *Authenticator) Wrap(handle AuthenticatedHandler) http.Handler {
 		token = strings.TrimPrefix(token, "bearer ")
 		tokenData, err := a.Client.CheckToken(token)
 		if err != nil {
+			logger.Error("failed-verifying-token-with-uaa", err)
 			a.ErrorResponse.Forbidden(w, err, "authenticator", "failed to verify token with uaa")
 			return
 		}
 
-		a.Logger.Debug("request made with token:", lager.Data{"tokenData": tokenData})
 		if !isAuthorized(tokenData.Scope, a.Scopes) {
 			err := errors.New(fmt.Sprintf("provided scopes %s do not include allowed scopes %s", tokenData.Scope, a.Scopes))
+			logger.Error("failed-authorizing-provided-scope", err)
 			a.ErrorResponse.Forbidden(w, err, "authenticator", err.Error())
 			return
 		}
 
 		req.Body = http.MaxBytesReader(w, req.Body, MAX_REQ_BODY_SIZE)
-		handle.ServeHTTP(w, req, tokenData)
+		handle.ServeHTTP(logger, w, req, tokenData)
 	})
 }
 

@@ -12,7 +12,6 @@ import (
 )
 
 type PoliciesDelete struct {
-	Logger        lager.Logger
 	Unmarshaler   marshal.Unmarshaler
 	Store         store
 	Validator     validator
@@ -20,10 +19,12 @@ type PoliciesDelete struct {
 	ErrorResponse errorResponse
 }
 
-func (h *PoliciesDelete) ServeHTTP(w http.ResponseWriter, req *http.Request, tokenData uaa_client.CheckTokenResponse) {
+func (h *PoliciesDelete) ServeHTTP(logger lager.Logger, w http.ResponseWriter, req *http.Request, tokenData uaa_client.CheckTokenResponse) {
+	logger = logger.Session("delete-policies")
 	bodyBytes, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		h.ErrorResponse.BadRequest(w, err, "policies-delete", "invalid request body")
+		logger.Error("failed-reading-request-body", err)
+		h.ErrorResponse.BadRequest(w, err, "delete-policies", "invalid request body")
 		return
 	}
 
@@ -32,34 +33,39 @@ func (h *PoliciesDelete) ServeHTTP(w http.ResponseWriter, req *http.Request, tok
 	}
 	err = h.Unmarshaler.Unmarshal(bodyBytes, &payload)
 	if err != nil {
-		h.ErrorResponse.BadRequest(w, err, "policies-delete", "invalid values passed to API")
+		logger.Error("failed-unmarshalling-payload", err)
+		h.ErrorResponse.BadRequest(w, err, "delete-policies", "invalid values passed to API")
 		return
 	}
 
 	err = h.Validator.ValidatePolicies(payload.Policies)
 	if err != nil {
-		h.ErrorResponse.BadRequest(w, err, "policies-delete", err.Error())
+		logger.Error("failed-validating-policies", err)
+		h.ErrorResponse.BadRequest(w, err, "delete-policies", err.Error())
 		return
 	}
 
 	authorized, err := h.PolicyGuard.CheckAccess(payload.Policies, tokenData)
 	if err != nil {
-		h.ErrorResponse.InternalServerError(w, err, "policies-delete", "check access failed")
+		logger.Error("failed-checking-access", err)
+		h.ErrorResponse.InternalServerError(w, err, "delete-policies", "check access failed")
 		return
 	}
 	if !authorized {
 		err := errors.New("one or more applications cannot be found or accessed")
-		h.ErrorResponse.Forbidden(w, err, "policies-delete", err.Error())
+		logger.Error("failed-authorizing-access", err)
+		h.ErrorResponse.Forbidden(w, err, "delete-policies", err.Error())
 		return
 	}
 
 	err = h.Store.Delete(payload.Policies)
 	if err != nil {
-		h.ErrorResponse.InternalServerError(w, err, "policies-delete", "database delete failed")
+		logger.Error("failed-deleting-in-database", err)
+		h.ErrorResponse.InternalServerError(w, err, "delete-policies", "database delete failed")
 		return
 	}
 
-	h.Logger.Info("policy-delete", lager.Data{"policies": payload.Policies, "userName": tokenData.UserName})
+	logger.Info("deleted-policies", lager.Data{"policies": payload.Policies, "userName": tokenData.UserName})
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{}`))
 	return

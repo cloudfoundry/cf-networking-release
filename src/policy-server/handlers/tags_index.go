@@ -10,15 +10,16 @@ import (
 )
 
 type TagsIndex struct {
-	Logger        lager.Logger
 	Store         store
 	Marshaler     marshal.Marshaler
 	ErrorResponse errorResponse
 }
 
-func (h *TagsIndex) ServeHTTP(w http.ResponseWriter, req *http.Request, _ uaa_client.CheckTokenResponse) {
+func (h *TagsIndex) ServeHTTP(logger lager.Logger, w http.ResponseWriter, req *http.Request, _ uaa_client.CheckTokenResponse) {
+	logger = logger.Session("index-tags")
 	tags, err := h.Store.Tags()
 	if err != nil {
+		logger.Error("failed-reading-database", err)
 		h.ErrorResponse.InternalServerError(w, err, "tags-index", "database read failed")
 		return
 	}
@@ -28,7 +29,8 @@ func (h *TagsIndex) ServeHTTP(w http.ResponseWriter, req *http.Request, _ uaa_cl
 	}{tags}
 	responseBytes, err := h.Marshaler.Marshal(tagsResponse)
 	if err != nil {
-		h.ErrorResponse.InternalServerError(w, err, "tags-index", "database marshaling failed")
+		logger.Error("failed-marshalling-tags", err)
+		h.ErrorResponse.InternalServerError(w, err, "tags-index", "database marshalling failed")
 		return
 	}
 

@@ -145,7 +145,7 @@ var _ = Describe("Integration", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(responseString).To(ContainSubstring("some-user"))
 
-				Expect(session.Out).To(gbytes.Say("container-networking.policy-server.*request made to policy-server"))
+				Expect(session.Out).To(gbytes.Say("container-networking.policy-server.request"))
 			})
 
 			It("should emit some metrics", func() {

@@ -23,15 +23,16 @@ type errorResponse interface {
 }
 
 type PoliciesCleanup struct {
-	Logger        lager.Logger
 	Marshaler     marshal.Marshaler
 	PolicyCleaner policyCleaner
 	ErrorResponse errorResponse
 }
 
-func (h *PoliciesCleanup) ServeHTTP(w http.ResponseWriter, req *http.Request, tokenData uaa_client.CheckTokenResponse) {
+func (h *PoliciesCleanup) ServeHTTP(logger lager.Logger, w http.ResponseWriter, req *http.Request, tokenData uaa_client.CheckTokenResponse) {
+	logger = logger.Session("cleanup-policies")
 	policies, err := h.PolicyCleaner.DeleteStalePolicies()
 	if err != nil {
+		logger.Error("failed-deleting-stale-policies", err)
 		h.ErrorResponse.InternalServerError(w, err, "policies-cleanup", "policies cleanup failed")
 		return
 	}
@@ -47,6 +48,7 @@ func (h *PoliciesCleanup) ServeHTTP(w http.ResponseWriter, req *http.Request, to
 
 	bytes, err := h.Marshaler.Marshal(policyCleanup)
 	if err != nil {
+		logger.Error("failed-marshalling-policies", err)
 		h.ErrorResponse.InternalServerError(w, err, "policies-cleanup", "marshal response failed")
 		return
 	}

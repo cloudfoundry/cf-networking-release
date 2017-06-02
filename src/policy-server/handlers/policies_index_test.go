@@ -11,6 +11,7 @@ import (
 	"policy-server/uaa_client"
 
 	hfakes "code.cloudfoundry.org/cf-networking-helpers/fakes"
+	"code.cloudfoundry.org/lager"
 
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
@@ -102,7 +103,6 @@ var _ = Describe("Policies index handler", func() {
 		}
 		logger = lagertest.NewTestLogger("test")
 		handler = &handlers.PoliciesIndex{
-			Logger:        logger,
 			Store:         fakeStore,
 			Marshaler:     marshaler,
 			PolicyFilter:  fakePolicyFilter,
@@ -132,7 +132,7 @@ var _ = Describe("Policies index handler", func() {
 				}
 			}
     ]}`
-		handler.ServeHTTP(resp, request, token)
+		handler.ServeHTTP(logger, resp, request, token)
 
 		Expect(fakeStore.AllCallCount()).To(Equal(1))
 		Expect(fakePolicyFilter.FilterPoliciesCallCount()).To(Equal(1))
@@ -148,7 +148,7 @@ var _ = Describe("Policies index handler", func() {
 		})
 
 		It("filters on only those policies returned by ByGuids", func() {
-			handler.ServeHTTP(resp, request, token)
+			handler.ServeHTTP(logger, resp, request, token)
 
 			Expect(fakeStore.ByGuidsCallCount()).To(Equal(1))
 			srcGuids, dstGuids := fakeStore.ByGuidsArgsForCall(0)
@@ -167,7 +167,7 @@ var _ = Describe("Policies index handler", func() {
 				request, err = http.NewRequest("GET", "/networking/v0/external/policies?id=", nil)
 				Expect(err).NotTo(HaveOccurred())
 
-				handler.ServeHTTP(resp, request, token)
+				handler.ServeHTTP(logger, resp, request, token)
 				Expect(fakeStore.ByGuidsCallCount()).To(Equal(1))
 				srcGuids, destGuids := fakeStore.ByGuidsArgsForCall(0)
 				Expect(srcGuids).To(Equal([]string{""}))
@@ -188,7 +188,7 @@ var _ = Describe("Policies index handler", func() {
 		})
 
 		It("calls the internal server error handler", func() {
-			handler.ServeHTTP(resp, request, token)
+			handler.ServeHTTP(logger, resp, request, token)
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
@@ -197,6 +197,17 @@ var _ = Describe("Policies index handler", func() {
 			Expect(err).To(MatchError("banana"))
 			Expect(message).To(Equal("policies-index"))
 			Expect(description).To(Equal("database read failed"))
+
+			By("logging the error")
+			Expect(logger.Logs()).To(HaveLen(1))
+			Expect(logger.Logs()[0]).To(SatisfyAll(
+				LogsWith(lager.ERROR, "test.index-policies.failed-reading-database"),
+				HaveLogData(SatisfyAll(
+					HaveLen(2),
+					HaveKeyWithValue("error", "banana"),
+					HaveKeyWithValue("session", "1"),
+				)),
+			))
 		})
 	})
 
@@ -208,7 +219,7 @@ var _ = Describe("Policies index handler", func() {
 		})
 
 		It("calls the internal server error handler", func() {
-			handler.ServeHTTP(resp, request, token)
+			handler.ServeHTTP(logger, resp, request, token)
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
@@ -216,7 +227,18 @@ var _ = Describe("Policies index handler", func() {
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("grapes"))
 			Expect(message).To(Equal("policies-index"))
-			Expect(description).To(Equal("database marshaling failed"))
+			Expect(description).To(Equal("database marshalling failed"))
+
+			By("logging the error")
+			Expect(logger.Logs()).To(HaveLen(1))
+			Expect(logger.Logs()[0]).To(SatisfyAll(
+				LogsWith(lager.ERROR, "test.index-policies.failed-marshalling-policies"),
+				HaveLogData(SatisfyAll(
+					HaveLen(2),
+					HaveKeyWithValue("error", "grapes"),
+					HaveKeyWithValue("session", "1"),
+				)),
+			))
 		})
 	})
 
@@ -226,7 +248,7 @@ var _ = Describe("Policies index handler", func() {
 		})
 
 		It("calls the internal server error handler", func() {
-			handler.ServeHTTP(resp, request, token)
+			handler.ServeHTTP(logger, resp, request, token)
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
@@ -235,6 +257,17 @@ var _ = Describe("Policies index handler", func() {
 			Expect(err).To(MatchError("banana"))
 			Expect(message).To(Equal("policies-index"))
 			Expect(description).To(Equal("filter policies failed"))
+
+			By("logging the error")
+			Expect(logger.Logs()).To(HaveLen(1))
+			Expect(logger.Logs()[0]).To(SatisfyAll(
+				LogsWith(lager.ERROR, "test.index-policies.failed-filtering-policies"),
+				HaveLogData(SatisfyAll(
+					HaveLen(2),
+					HaveKeyWithValue("error", "banana"),
+					HaveKeyWithValue("session", "1"),
+				)),
+			))
 		})
 	})
 })

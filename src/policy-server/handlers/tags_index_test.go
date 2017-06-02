@@ -11,6 +11,7 @@ import (
 	"policy-server/uaa_client"
 
 	hfakes "code.cloudfoundry.org/cf-networking-helpers/fakes"
+	"code.cloudfoundry.org/lager"
 
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
@@ -51,7 +52,6 @@ var _ = Describe("Tags index handler", func() {
 		fakeStore.TagsReturns(allTags, nil)
 		logger = lagertest.NewTestLogger("test")
 		handler = &handlers.TagsIndex{
-			Logger:        logger,
 			Store:         fakeStore,
 			Marshaler:     marshaler,
 			ErrorResponse: fakeErrorResponse,
@@ -65,7 +65,7 @@ var _ = Describe("Tags index handler", func() {
 			{ "id": "some-app-guid", "tag": "0001" },
 			{ "id": "some-other-app-guid", "tag": "0002" }
         ]}`
-		handler.ServeHTTP(resp, request, tokenData)
+		handler.ServeHTTP(logger, resp, request, tokenData)
 
 		Expect(fakeStore.TagsCallCount()).To(Equal(1))
 		Expect(resp.Code).To(Equal(http.StatusOK))
@@ -78,7 +78,7 @@ var _ = Describe("Tags index handler", func() {
 		})
 
 		It("calls the internal server error handler", func() {
-			handler.ServeHTTP(resp, request, tokenData)
+			handler.ServeHTTP(logger, resp, request, tokenData)
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
@@ -87,6 +87,17 @@ var _ = Describe("Tags index handler", func() {
 			Expect(err).To(MatchError("banana"))
 			Expect(message).To(Equal("tags-index"))
 			Expect(description).To(Equal("database read failed"))
+
+			By("logging the error")
+			Expect(logger.Logs()).To(HaveLen(1))
+			Expect(logger.Logs()[0]).To(SatisfyAll(
+				LogsWith(lager.ERROR, "test.index-tags.failed-reading-database"),
+				HaveLogData(SatisfyAll(
+					HaveLen(2),
+					HaveKeyWithValue("error", "banana"),
+					HaveKeyWithValue("session", "1"),
+				)),
+			))
 		})
 	})
 
@@ -98,7 +109,7 @@ var _ = Describe("Tags index handler", func() {
 		})
 
 		It("calls the internal server error handler", func() {
-			handler.ServeHTTP(resp, request, tokenData)
+			handler.ServeHTTP(logger, resp, request, tokenData)
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
@@ -106,7 +117,18 @@ var _ = Describe("Tags index handler", func() {
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("grapes"))
 			Expect(message).To(Equal("tags-index"))
-			Expect(description).To(Equal("database marshaling failed"))
+			Expect(description).To(Equal("database marshalling failed"))
+
+			By("logging the error")
+			Expect(logger.Logs()).To(HaveLen(1))
+			Expect(logger.Logs()[0]).To(SatisfyAll(
+				LogsWith(lager.ERROR, "test.index-tags.failed-marshalling-tags"),
+				HaveLogData(SatisfyAll(
+					HaveLen(2),
+					HaveKeyWithValue("error", "grapes"),
+					HaveKeyWithValue("session", "1"),
+				)),
+			))
 		})
 	})
 })

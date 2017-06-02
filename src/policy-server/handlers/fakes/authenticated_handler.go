@@ -3,14 +3,18 @@ package fakes
 
 import (
 	"net/http"
+	"policy-server/handlers"
 	"policy-server/uaa_client"
 	"sync"
+
+	"code.cloudfoundry.org/lager"
 )
 
 type AuthenticatedHandler struct {
-	ServeHTTPStub        func(response http.ResponseWriter, request *http.Request, tokenData uaa_client.CheckTokenResponse)
+	ServeHTTPStub        func(logger lager.Logger, response http.ResponseWriter, request *http.Request, tokenData uaa_client.CheckTokenResponse)
 	serveHTTPMutex       sync.RWMutex
 	serveHTTPArgsForCall []struct {
+		logger    lager.Logger
 		response  http.ResponseWriter
 		request   *http.Request
 		tokenData uaa_client.CheckTokenResponse
@@ -19,17 +23,18 @@ type AuthenticatedHandler struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *AuthenticatedHandler) ServeHTTP(response http.ResponseWriter, request *http.Request, tokenData uaa_client.CheckTokenResponse) {
+func (fake *AuthenticatedHandler) ServeHTTP(logger lager.Logger, response http.ResponseWriter, request *http.Request, tokenData uaa_client.CheckTokenResponse) {
 	fake.serveHTTPMutex.Lock()
 	fake.serveHTTPArgsForCall = append(fake.serveHTTPArgsForCall, struct {
+		logger    lager.Logger
 		response  http.ResponseWriter
 		request   *http.Request
 		tokenData uaa_client.CheckTokenResponse
-	}{response, request, tokenData})
-	fake.recordInvocation("ServeHTTP", []interface{}{response, request, tokenData})
+	}{logger, response, request, tokenData})
+	fake.recordInvocation("ServeHTTP", []interface{}{logger, response, request, tokenData})
 	fake.serveHTTPMutex.Unlock()
 	if fake.ServeHTTPStub != nil {
-		fake.ServeHTTPStub(response, request, tokenData)
+		fake.ServeHTTPStub(logger, response, request, tokenData)
 	}
 }
 
@@ -39,10 +44,10 @@ func (fake *AuthenticatedHandler) ServeHTTPCallCount() int {
 	return len(fake.serveHTTPArgsForCall)
 }
 
-func (fake *AuthenticatedHandler) ServeHTTPArgsForCall(i int) (http.ResponseWriter, *http.Request, uaa_client.CheckTokenResponse) {
+func (fake *AuthenticatedHandler) ServeHTTPArgsForCall(i int) (lager.Logger, http.ResponseWriter, *http.Request, uaa_client.CheckTokenResponse) {
 	fake.serveHTTPMutex.RLock()
 	defer fake.serveHTTPMutex.RUnlock()
-	return fake.serveHTTPArgsForCall[i].response, fake.serveHTTPArgsForCall[i].request, fake.serveHTTPArgsForCall[i].tokenData
+	return fake.serveHTTPArgsForCall[i].logger, fake.serveHTTPArgsForCall[i].response, fake.serveHTTPArgsForCall[i].request, fake.serveHTTPArgsForCall[i].tokenData
 }
 
 func (fake *AuthenticatedHandler) Invocations() map[string][][]interface{} {
@@ -68,3 +73,5 @@ func (fake *AuthenticatedHandler) recordInvocation(key string, args []interface{
 	}
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
+
+var _ handlers.AuthenticatedHandler = new(AuthenticatedHandler)

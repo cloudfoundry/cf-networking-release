@@ -220,7 +220,7 @@ var _ = Describe("External API", func() {
 
 					Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
 					responseString, err := ioutil.ReadAll(resp.Body)
-					Expect(responseString).To(MatchJSON(`{ "error": "policies-delete: one or more applications cannot be found or accessed"}`))
+					Expect(responseString).To(MatchJSON(`{ "error": "delete-policies: one or more applications cannot be found or accessed"}`))
 				})
 			})
 		})

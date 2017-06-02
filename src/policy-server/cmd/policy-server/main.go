@@ -82,10 +82,11 @@ func main() {
 		HTTPClient: httpClient,
 		Logger:     logger,
 	}
+
 	whoamiHandler := &handlers.WhoAmIHandler{
-		Logger:    logger.Session("external"),
 		Marshaler: marshal.MarshalFunc(json.Marshal),
 	}
+
 	uptimeHandler := &handlers.UptimeHandler{
 		StartTime: time.Now(),
 	}
@@ -177,7 +178,6 @@ func main() {
 	}
 
 	deletePolicyHandler := &handlers.PoliciesDelete{
-		Logger:        logger.Session("policies-create"),
 		Store:         wrappedStore,
 		Unmarshaler:   unmarshaler,
 		Validator:     validator,
@@ -186,7 +186,6 @@ func main() {
 	}
 
 	policiesIndexHandler := &handlers.PoliciesIndex{
-		Logger:        logger.Session("policies-index"),
 		Store:         wrappedStore,
 		Marshaler:     marshal.MarshalFunc(json.Marshal),
 		PolicyFilter:  policyFilter,
@@ -202,14 +201,12 @@ func main() {
 	}
 
 	policiesCleanupHandler := &handlers.PoliciesCleanup{
-		Logger:        logger.Session("policies-cleanup"),
 		Marshaler:     marshal.MarshalFunc(json.Marshal),
 		PolicyCleaner: policyCleaner,
 		ErrorResponse: errorResponse,
 	}
 
 	tagsIndexHandler := &handlers.TagsIndex{
-		Logger:        logger.Session("tags-index"),
 		Store:         wrappedStore,
 		Marshaler:     marshal.MarshalFunc(json.Marshal),
 		ErrorResponse: errorResponse,
@@ -244,33 +241,31 @@ func main() {
 
 	authenticator := handlers.Authenticator{
 		Client:        uaaClient,
-		Logger:        logger,
 		Scopes:        []string{"network.admin"},
 		ErrorResponse: errorResponse,
 	}
 
 	networkWriteAuthenticator := handlers.Authenticator{
 		Client:        uaaClient,
-		Logger:        logger,
 		Scopes:        []string{"network.admin", "network.write"},
 		ErrorResponse: errorResponse,
 	}
-	authAdmin := func(handler handlers.AuthenticatedHandler) http.Handler {
+	authAdmin := func(handler handlers.AuthenticatedHandler) middleware.LoggableHandlerFunc {
 		return authenticator.Wrap(handler)
 	}
-	authWrite := func(handler handlers.AuthenticatedHandler) http.Handler {
+	authWrite := func(handler handlers.AuthenticatedHandler) middleware.LoggableHandlerFunc {
 		return networkWriteAuthenticator.Wrap(handler)
 	}
 
 	externalHandlers := rata.Handlers{
 		"uptime":          metricsWrap("Uptime", logWrap(uptimeHandler)),
 		"health":          metricsWrap("Health", logWrap(healthHandler)),
-		"create_policies": metricsWrap("CreatePolicies", authWrite(createPolicyHandler)),
-		"delete_policies": metricsWrap("DeletePolicies", authWrite(deletePolicyHandler)),
-		"policies_index":  metricsWrap("PoliciesIndex", authWrite(policiesIndexHandler)),
-		"cleanup":         metricsWrap("Cleanup", authAdmin(policiesCleanupHandler)),
-		"tags_index":      metricsWrap("TagsIndex", authAdmin(tagsIndexHandler)),
-		"whoami":          metricsWrap("WhoAmI", authAdmin(whoamiHandler)),
+		"create_policies": metricsWrap("CreatePolicies", middleware.LogWrap(logger, authWrite(createPolicyHandler))),
+		"delete_policies": metricsWrap("DeletePolicies", middleware.LogWrap(logger, authWrite(deletePolicyHandler))),
+		"policies_index":  metricsWrap("PoliciesIndex", middleware.LogWrap(logger, authWrite(policiesIndexHandler))),
+		"cleanup":         metricsWrap("Cleanup", middleware.LogWrap(logger, authAdmin(policiesCleanupHandler))),
+		"tags_index":      metricsWrap("TagsIndex", middleware.LogWrap(logger, authAdmin(tagsIndexHandler))),
+		"whoami":          metricsWrap("WhoAmI", middleware.LogWrap(logger, authAdmin(whoamiHandler))),
 	}
 
 	err = dropsonde.Initialize(conf.MetronAddress, dropsondeOrigin)
@@ -280,7 +275,7 @@ func main() {
 
 	metricsEmitter := initMetricsEmitter(logger, wrappedStore)
 	externalServer := initExternalServer(conf, externalHandlers)
-	internalServer := initInternalServer(conf, metricsWrap("InternalPolicies", internalPoliciesHandler))
+	internalServer := initInternalServer(conf, metricsWrap("InternalPolicies", logWrap(internalPoliciesHandler)))
 	poller := initPoller(logger, conf, policyCleaner)
 	debugServer := debugserver.Runner(fmt.Sprintf("%s:%d", conf.DebugServerHost, conf.DebugServerPort), reconfigurableSink)
 

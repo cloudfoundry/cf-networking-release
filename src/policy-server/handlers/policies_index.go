@@ -15,14 +15,14 @@ type policyFilter interface {
 }
 
 type PoliciesIndex struct {
-	Logger        lager.Logger
 	Store         store
 	Marshaler     marshal.Marshaler
 	PolicyFilter  policyFilter
 	ErrorResponse errorResponse
 }
 
-func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request, userToken uaa_client.CheckTokenResponse) {
+func (h *PoliciesIndex) ServeHTTP(logger lager.Logger, w http.ResponseWriter, req *http.Request, userToken uaa_client.CheckTokenResponse) {
+	logger = logger.Session("index-policies")
 	queryValues := req.URL.Query()
 	ids := parseIds(queryValues)
 
@@ -35,12 +35,14 @@ func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request, user
 	}
 
 	if err != nil {
+		logger.Error("failed-reading-database", err)
 		h.ErrorResponse.InternalServerError(w, err, "policies-index", "database read failed")
 		return
 	}
 
 	policies, err = h.PolicyFilter.FilterPolicies(policies, userToken)
 	if err != nil {
+		logger.Error("failed-filtering-policies", err)
 		h.ErrorResponse.InternalServerError(w, err, "policies-index", "filter policies failed")
 		return
 	}
@@ -56,7 +58,8 @@ func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request, user
 	}{len(policies), policies}
 	bytes, err := h.Marshaler.Marshal(policyResponse)
 	if err != nil {
-		h.ErrorResponse.InternalServerError(w, err, "policies-index", "database marshaling failed")
+		logger.Error("failed-marshalling-policies", err)
+		h.ErrorResponse.InternalServerError(w, err, "policies-index", "database marshalling failed")
 		return
 	}
 

@@ -11,6 +11,7 @@ import (
 	"policy-server/uaa_client"
 
 	"code.cloudfoundry.org/cf-networking-helpers/marshal"
+	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -34,7 +35,6 @@ var _ = Describe("Who Am I Handler", func() {
 		logger = lagertest.NewTestLogger("test")
 		fakeErrorResponse = &fakes.ErrorResponse{}
 		handler = &handlers.WhoAmIHandler{
-			Logger:        logger,
 			Marshaler:     marshal.MarshalFunc(json.Marshal),
 			ErrorResponse: fakeErrorResponse,
 		}
@@ -46,7 +46,7 @@ var _ = Describe("Who Am I Handler", func() {
 	})
 
 	It("returns the username", func() {
-		handler.ServeHTTP(resp, request, tokenData)
+		handler.ServeHTTP(logger, resp, request, tokenData)
 
 		Expect(resp.Code).To(Equal(http.StatusOK))
 		Expect(resp.Body.String()).To(Equal(`{"user_name":"some_user"}`))
@@ -60,7 +60,7 @@ var _ = Describe("Who Am I Handler", func() {
 		})
 
 		It("calls the internal server error handler", func() {
-			handler.ServeHTTP(resp, request, tokenData)
+			handler.ServeHTTP(logger, resp, request, tokenData)
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
@@ -69,6 +69,17 @@ var _ = Describe("Who Am I Handler", func() {
 			Expect(err).To(MatchError("banana"))
 			Expect(message).To(Equal("who-am-i"))
 			Expect(description).To(Equal("marshaling response failed"))
+
+			By("logging the error")
+			Expect(logger.Logs()).To(HaveLen(1))
+			Expect(logger.Logs()[0]).To(SatisfyAll(
+				LogsWith(lager.ERROR, "test.who-am-i.failed-marshalling-response"),
+				HaveLogData(SatisfyAll(
+					HaveLen(2),
+					HaveKeyWithValue("error", "banana"),
+					HaveKeyWithValue("session", "1"),
+				)),
+			))
 		})
 	})
 })

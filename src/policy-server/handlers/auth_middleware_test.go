@@ -9,17 +9,18 @@ import (
 	"policy-server/handlers/fakes"
 	"policy-server/uaa_client"
 
+	"code.cloudfoundry.org/cf-networking-helpers/middleware"
+	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gbytes"
 )
 
 var _ = Describe("Authentication middleware", func() {
 	var (
 		request       *http.Request
 		unprotected   *fakes.AuthenticatedHandler
-		protected     http.Handler
+		protected     middleware.LoggableHandlerFunc
 		authenticator *handlers.Authenticator
 
 		resp              *httptest.ResponseRecorder
@@ -43,7 +44,6 @@ var _ = Describe("Authentication middleware", func() {
 
 		authenticator = &handlers.Authenticator{
 			Client:        uaaClient,
-			Logger:        logger,
 			Scopes:        []string{"network.admin", "network.write"},
 			ErrorResponse: fakeErrorResponse,
 		}
@@ -61,20 +61,18 @@ var _ = Describe("Authentication middleware", func() {
 	})
 
 	It("calls into the unprotected handler and logs the request", func() {
-		protected.ServeHTTP(resp, request)
+		protected(logger, resp, request)
 
-		Expect(logger).To(gbytes.Say("request made to policy-server.*RemoteAddr.*some-host:some-ip.*URL.*/networking/v0/whoami"))
 		Expect(unprotected.ServeHTTPCallCount()).To(Equal(1))
 
-		Expect(logger).To(gbytes.Say("request made with token:.*tokenData.*scope.*network.admin.*user_name.*some_user"))
-		unprotectedResp, unprotectedRequest, tokenData := unprotected.ServeHTTPArgsForCall(0)
+		_, unprotectedResp, unprotectedRequest, tokenData := unprotected.ServeHTTPArgsForCall(0)
 		Expect(unprotectedResp).To(Equal(resp))
 		Expect(unprotectedRequest).To(Equal(request))
 		Expect(tokenData).To(Equal(tokenResponse))
 	})
 
 	It("checks the authorization bearer token with the uaa client", func() {
-		protected.ServeHTTP(resp, request)
+		protected(logger, resp, request)
 
 		Expect(uaaClient.CheckTokenCallCount()).To(Equal(1))
 		Expect(uaaClient.CheckTokenArgsForCall(0)).To(Equal("correct-token"))
@@ -89,10 +87,11 @@ var _ = Describe("Authentication middleware", func() {
 		})
 
 		It("checks the policies for the token from UAA", func() {
-			protected.ServeHTTP(resp, request)
+			protected(logger, resp, request)
 
 			Expect(uaaClient.CheckTokenCallCount()).To(Equal(1))
 			Expect(uaaClient.CheckTokenArgsForCall(0)).To(Equal("correct-token"))
+
 		})
 	})
 
@@ -104,7 +103,7 @@ var _ = Describe("Authentication middleware", func() {
 		})
 
 		It("calls the unauthorized error handler", func() {
-			protected.ServeHTTP(resp, request)
+			protected(logger, resp, request)
 
 			Expect(fakeErrorResponse.UnauthorizedCallCount()).To(Equal(1))
 
@@ -113,6 +112,17 @@ var _ = Describe("Authentication middleware", func() {
 			Expect(err).To(MatchError("no auth header"))
 			Expect(message).To(Equal("authenticator"))
 			Expect(description).To(Equal("missing authorization header"))
+
+			By("logging the error")
+			Expect(logger.Logs()).To(HaveLen(1))
+			Expect(logger.Logs()[0]).To(SatisfyAll(
+				LogsWith(lager.ERROR, "test.authentication.failed-missing-authorization-header"),
+				HaveLogData(SatisfyAll(
+					HaveLen(2),
+					HaveKeyWithValue("error", "no auth header"),
+					HaveKeyWithValue("session", "1"),
+				)),
+			))
 		})
 	})
 
@@ -126,7 +136,7 @@ var _ = Describe("Authentication middleware", func() {
 		})
 
 		It("calls the forbidden error handler", func() {
-			protected.ServeHTTP(resp, request)
+			protected(logger, resp, request)
 
 			Expect(fakeErrorResponse.ForbiddenCallCount()).To(Equal(1))
 
@@ -135,6 +145,18 @@ var _ = Describe("Authentication middleware", func() {
 			Expect(err).To(MatchError("potato"))
 			Expect(message).To(Equal("authenticator"))
 			Expect(description).To(Equal("failed to verify token with uaa"))
+
+			By("logging the error")
+			Expect(logger.Logs()).To(HaveLen(1))
+			Expect(logger.Logs()[0]).To(SatisfyAll(
+				LogsWith(lager.ERROR, "test.authentication.failed-verifying-token-with-uaa"),
+				HaveLogData(SatisfyAll(
+					HaveLen(2),
+					HaveKeyWithValue("error", "potato"),
+					HaveKeyWithValue("session", "1"),
+				)),
+			))
+
 		})
 	})
 
@@ -147,7 +169,7 @@ var _ = Describe("Authentication middleware", func() {
 		})
 
 		It("calls the forbidden error handler", func() {
-			protected.ServeHTTP(resp, request)
+			protected(logger, resp, request)
 
 			Expect(fakeErrorResponse.ForbiddenCallCount()).To(Equal(1))
 
@@ -156,6 +178,17 @@ var _ = Describe("Authentication middleware", func() {
 			Expect(err).To(MatchError("provided scopes [wrong.scope] do not include allowed scopes [network.admin network.write]"))
 			Expect(message).To(Equal("authenticator"))
 			Expect(description).To(Equal("provided scopes [wrong.scope] do not include allowed scopes [network.admin network.write]"))
+
+			By("logging the error")
+			Expect(logger.Logs()).To(HaveLen(1))
+			Expect(logger.Logs()[0]).To(SatisfyAll(
+				LogsWith(lager.ERROR, "test.authentication.failed-authorizing-provided-scope"),
+				HaveLogData(SatisfyAll(
+					HaveLen(2),
+					HaveKeyWithValue("error", "provided scopes [wrong.scope] do not include allowed scopes [network.admin network.write]"),
+					HaveKeyWithValue("session", "1"),
+				)),
+			))
 		})
 	})
 })
