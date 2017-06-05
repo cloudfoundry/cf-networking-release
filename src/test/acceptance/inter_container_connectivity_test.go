@@ -40,11 +40,11 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 		BeforeEach(func() {
 			prefix = testConfig.Prefix
 
-			orgName = prefix + "org"
+			orgName = prefix + "org" // cf-pusher expects this name
 			Expect(cf.Cf("create-org", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
 			Expect(cf.Cf("target", "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
 
-			spaceName := prefix + "space"
+			spaceName := prefix + "space" // cf-pusher expects this name
 			Expect(cf.Cf("create-space", spaceName, "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
 			Expect(cf.Cf("target", "-o", orgName, "-s", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
 

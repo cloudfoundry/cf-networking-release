@@ -61,13 +61,13 @@ var _ = Describe("external connectivity", func() {
 	})
 
 	AfterEach(func() {
-		appReport(appA, Timeout_Short)
-		Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
-
 		By("adding back all the original running ASGs")
 		for _, sg := range originalRunningSecurityGroups {
 			Expect(cf.Cf("bind-running-security-group", sg).Wait(Timeout_Short)).To(gexec.Exit(0))
 		}
+
+		By("deleting the test org")
+		Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 
 		By("removing test-generated ASGs")
 		for asgName, _ := range testASGs {
