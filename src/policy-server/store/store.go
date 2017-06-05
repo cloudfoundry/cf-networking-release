@@ -282,6 +282,7 @@ func (s *store) policiesQuery(query string, args ...interface{}) ([]models.Polic
 		return nil, fmt.Errorf("listing all: %s", err)
 	}
 
+	defer rows.Close() // untested
 	for rows.Next() {
 		var source_id, destination_id, protocol string
 		var port, source_tag, destination_tag int
@@ -302,6 +303,10 @@ func (s *store) policiesQuery(query string, args ...interface{}) ([]models.Polic
 				Port:     port,
 			},
 		})
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, fmt.Errorf("listing all, getting next row: %s", err) // untested
 	}
 	return policies, nil
 }
@@ -379,6 +384,7 @@ func (s *store) Tags() ([]models.Tag, error) {
 		return nil, fmt.Errorf("listing tags: %s", err)
 	}
 
+	defer rows.Close() // untested
 	for rows.Next() {
 		var id string
 		var tag int
@@ -392,6 +398,10 @@ func (s *store) Tags() ([]models.Tag, error) {
 			ID:  id,
 			Tag: s.tagIntToString(tag),
 		})
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, fmt.Errorf("listing tags, getting next row: %s", err) // untested
 	}
 
 	return tags, nil
