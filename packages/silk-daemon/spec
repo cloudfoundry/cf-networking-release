@@ -37,7 +37,6 @@ files:
   - code.cloudfoundry.org/silk/vendor/github.com/cloudfoundry/dropsonde/metrics/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/cloudfoundry/dropsonde/runtime_stats/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/cloudfoundry/sonde-go/events/*.go # gosub
-  - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/cni/pkg/utils/hwaddr/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/go-sql-driver/mysql/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/gogo/protobuf/gogoproto/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/gogo/protobuf/proto/*.go # gosub
