@@ -32,8 +32,6 @@ var _ = Describe("external connectivity", func() {
 		appA = fmt.Sprintf("appA-%d", rand.Int31())
 		prefix = testConfig.Prefix
 
-		AuthAsAdmin()
-
 		orgName = prefix + "external-connectivity-org"
 		Expect(cf.Cf("create-org", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
 		Expect(cf.Cf("target", "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
