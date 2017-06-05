@@ -39,11 +39,11 @@ files:
   - gopkg.in/validator.v2/*.go # gosub
   - lib/datastore/*.go # gosub
   - lib/filelock/*.go # gosub
-  - lib/models/*.go # gosub
   - lib/policy_client/*.go # gosub
   - lib/poller/*.go # gosub
   - lib/rules/*.go # gosub
   - lib/serial/*.go # gosub
+  - policy-server/models/*.go # gosub
   - vxlan-policy-agent/cmd/vxlan-policy-agent/*.go # gosub
   - vxlan-policy-agent/config/*.go # gosub
   - vxlan-policy-agent/converger/*.go # gosub

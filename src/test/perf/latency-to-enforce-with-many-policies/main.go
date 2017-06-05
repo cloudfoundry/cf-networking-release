@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"lib/models"
 	"lib/policy_client"
 	"math/rand"
 	"net/http"
 	"os"
+	"policy-server/models"
 	"strconv"
 	"time"
 

@@ -2,7 +2,7 @@ package policy_client
 
 import (
 	"errors"
-	"lib/models"
+	"policy-server/models"
 	"strings"
 
 	"code.cloudfoundry.org/cf-networking-helpers/json_client"
@@ -53,4 +53,4 @@ func (c *InternalClient) HealthCheck() (bool, error) {
 		return false, err
 	}
 	return healthcheck.Healthcheck, nil
-}  
+}

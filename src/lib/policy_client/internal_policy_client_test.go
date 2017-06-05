@@ -3,8 +3,8 @@ package policy_client_test
 import (
 	"encoding/json"
 	"errors"
-	"lib/models"
 	"lib/policy_client"
+	"policy-server/models"
 
 	hfakes "code.cloudfoundry.org/cf-networking-helpers/fakes"
 
@@ -128,7 +128,7 @@ var _ = Describe("InternalClient", func() {
 	})
 
 	Describe("HealthCheck", func() {
-		BeforeEach(func(){
+		BeforeEach(func() {
 			jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 				respBytes := []byte(`{ "healthcheck": true }`)
 				json.Unmarshal(respBytes, respData)
@@ -136,7 +136,7 @@ var _ = Describe("InternalClient", func() {
 			}
 		})
 
-		It("Returns if the server is up", func(){
+		It("Returns if the server is up", func() {
 			health, err := client.HealthCheck()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(health).To(Equal(true))
@@ -157,7 +157,7 @@ var _ = Describe("InternalClient", func() {
 				_, err := client.HealthCheck()
 				Expect(err).To(MatchError("banana"))
 			})
-		})	
+		})
 	})
 
 })

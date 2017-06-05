@@ -2,8 +2,8 @@ package planner
 
 import (
 	"lib/datastore"
-	"lib/models"
 	"lib/rules"
+	"policy-server/models"
 	"sort"
 	"time"
 	"vxlan-policy-agent/enforcer"

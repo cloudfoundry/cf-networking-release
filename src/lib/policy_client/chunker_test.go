@@ -1,8 +1,8 @@
 package policy_client_test
 
 import (
-	"lib/models"
 	"lib/policy_client"
+	"policy-server/models"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

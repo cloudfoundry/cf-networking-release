@@ -1,7 +1,7 @@
 package models_test
 
 import (
-	"lib/models"
+	"policy-server/models"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

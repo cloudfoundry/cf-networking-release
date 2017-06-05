@@ -77,7 +77,7 @@ files:
   - github.com/square/certstrap/depot/*.go # gosub
   - github.com/square/certstrap/pkix/*.go # gosub
   - gopkg.in/yaml.v2/*.go # gosub
-  - lib/models/*.go # gosub
   - lib/policy_client/*.go # gosub
   - lib/testsupport/*.go # gosub
+  - policy-server/models/*.go # gosub
   - test/acceptance/*.go # gosub

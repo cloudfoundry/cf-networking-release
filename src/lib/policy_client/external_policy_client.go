@@ -2,8 +2,8 @@ package policy_client
 
 import (
 	"fmt"
-	"lib/models"
 	"net/http"
+	"policy-server/models"
 	"strings"
 
 	"code.cloudfoundry.org/cf-networking-helpers/json_client"

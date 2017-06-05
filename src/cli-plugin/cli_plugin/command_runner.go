@@ -6,9 +6,9 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"lib/models"
 	"lib/policy_client"
 	"log"
+	"policy-server/models"
 	"text/tabwriter"
 
 	"code.cloudfoundry.org/cli/plugin"

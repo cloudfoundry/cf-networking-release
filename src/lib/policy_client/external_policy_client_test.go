@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"lib/fakes"
-	"lib/models"
 	"lib/policy_client"
 	"net/http"
+	"policy-server/models"
 
 	hfakes "code.cloudfoundry.org/cf-networking-helpers/fakes"
 

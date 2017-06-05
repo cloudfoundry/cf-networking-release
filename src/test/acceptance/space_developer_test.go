@@ -3,10 +3,10 @@ package acceptance_test
 import (
 	"crypto/tls"
 	"fmt"
-	"lib/models"
 	"lib/policy_client"
 	"math/rand"
 	"net/http"
+	"policy-server/models"
 	"strings"
 
 	"code.cloudfoundry.org/lager/lagertest"

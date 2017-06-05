@@ -5,8 +5,8 @@ import (
 	"cli-plugin/styles"
 	"errors"
 	"lib/fakes"
-	"lib/models"
 	"log"
+	"policy-server/models"
 
 	"code.cloudfoundry.org/cli/plugin/models"
 	"code.cloudfoundry.org/cli/plugin/pluginfakes"

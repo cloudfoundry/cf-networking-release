@@ -1,6 +1,6 @@
 package policy_client
 
-import "lib/models"
+import "policy-server/models"
 
 const DefaultMaxPolicies = 100
 
