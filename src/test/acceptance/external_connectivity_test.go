@@ -22,7 +22,6 @@ var _ = Describe("external connectivity", func() {
 		orgName                       string
 		spaceName                     string
 		appRoute                      string
-		prefix                        string
 		originalRunningSecurityGroups []string
 		cli                           *cf_cli_adapter.Adapter
 	)
@@ -30,15 +29,10 @@ var _ = Describe("external connectivity", func() {
 	BeforeEach(func() {
 		cli = &cf_cli_adapter.Adapter{CfCliPath: "cf"}
 		appA = fmt.Sprintf("appA-%d", rand.Int31())
-		prefix = testConfig.Prefix
 
-		orgName = prefix + "external-connectivity-org"
-		Expect(cf.Cf("create-org", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
-		Expect(cf.Cf("target", "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
-
-		spaceName = prefix + "space"
-		Expect(cf.Cf("create-space", spaceName, "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
-		Expect(cf.Cf("target", "-o", orgName, "-s", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
+		orgName = testConfig.Prefix + "external-connectivity-org"
+		spaceName = testConfig.Prefix + "space"
+		setupOrgAndSpace(orgName, spaceName)
 
 		By("discovering all existing running ASGs")
 		originalRunningSecurityGroups = getRunningSecurityGroups()
@@ -200,6 +194,14 @@ func createASG(cli *cf_cli_adapter.Adapter, name string, asgDefinition string) {
 
 func removeASG(cli *cf_cli_adapter.Adapter, name string) {
 	Expect(cli.DeleteSecurityGroup(name)).To(Succeed())
+}
+
+func setupOrgAndSpace(orgName, spaceName string) {
+	Expect(cf.Cf("create-org", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
+	Expect(cf.Cf("target", "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
+
+	Expect(cf.Cf("create-space", spaceName, "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
+	Expect(cf.Cf("target", "-o", orgName, "-s", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
 }
 
 var testASGs = map[string]string{

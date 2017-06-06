@@ -13,34 +13,35 @@ import (
 
 var _ = Describe("ASGs and Overlay Policy interaction", func() {
 	var (
-		appProxy     string
-		appSmoke     string
-		appInstances int
-		prefix       string
-		spaceName    string
-		orgName      string
-		asgName      string
-		cli          *cf_cli_adapter.Adapter
+		spaceName string
+		orgName   string
+		cli       *cf_cli_adapter.Adapter
 	)
 
+	BeforeEach(func() {
+		cli = &cf_cli_adapter.Adapter{CfCliPath: "cf"}
+		orgName = testConfig.Prefix + "interaction-org"
+		spaceName = testConfig.Prefix + "interaction-space"
+		setupOrgAndSpace(orgName, spaceName)
+	})
+
+	AfterEach(func() {
+		By("deleting the org")
+		Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
+	})
+
 	Context("when a wide open ASG is configured", func() {
+		var (
+			asgName      string
+			appProxy     string
+			appSmoke     string
+			appInstances int
+		)
+
 		BeforeEach(func() {
-			prefix = testConfig.Prefix
-
-			orgName = prefix + "interaction-org"
-			Expect(cf.Cf("create-org", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
-			Expect(cf.Cf("target", "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
-
-			spaceName = prefix + "interaction-space"
-			Expect(cf.Cf("create-space", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
-			Expect(cf.Cf("target", "-o", orgName, "-s", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
-
 			appInstances = testConfig.AppInstances
-
-			appProxy = prefix + "proxy"
-			appSmoke = prefix + "smoke"
-
-			cli = &cf_cli_adapter.Adapter{CfCliPath: "cf"}
+			appProxy = testConfig.Prefix + "proxy"
+			appSmoke = testConfig.Prefix + "smoke"
 			asgName = "wide-open-asg"
 
 			By("creating and binding a wide open security group")
@@ -49,8 +50,6 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 		})
 
 		AfterEach(func() {
-			By("deleting the org")
-			Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 			By("deleting the security group")
 			removeASG(cli, asgName)
 		})
@@ -74,21 +73,12 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 	Context("when overlay policies are in place", func() {
 		var (
 			originalRunningSecurityGroups []string
+			appProxy                      string
 			appRoute                      string
 		)
 
 		BeforeEach(func() {
-			cli = &cf_cli_adapter.Adapter{CfCliPath: "cf"}
-			prefix = testConfig.Prefix
-			appProxy = prefix + "proxy"
-
-			orgName = prefix + "external-connectivity-org"
-			Expect(cf.Cf("create-org", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
-			Expect(cf.Cf("target", "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
-
-			spaceName = prefix + "space"
-			Expect(cf.Cf("create-space", spaceName, "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
-			Expect(cf.Cf("target", "-o", orgName, "-s", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
+			appProxy = testConfig.Prefix + "proxy"
 
 			By("discovering all existing running ASGs")
 			originalRunningSecurityGroups = getRunningSecurityGroups()
@@ -99,20 +89,18 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 			}
 
 			By("pushing the test app")
-			pushApp(appProxy, "proxy")
+			pushProxy(appProxy)
 			appRoute = fmt.Sprintf("http://%s.%s/", appProxy, config.AppsDomain)
 		})
 
 		AfterEach(func() {
-			Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
-
 			By("adding back all the original running ASGs")
 			for _, sg := range originalRunningSecurityGroups {
 				Expect(cf.Cf("bind-running-security-group", sg).Wait(Timeout_Short)).To(gexec.Exit(0))
 			}
 		})
 
-		It("continues to enforce ASGs default deny even with overlay policies in place", func() {
+		It("continues to enforce ASGs default deny", func() {
 			By("creating a policy")
 			err := cli.AllowAccess(appProxy, appProxy, 7777, "tcp")
 			Expect(err).NotTo(HaveOccurred())
