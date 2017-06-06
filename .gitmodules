@@ -31,10 +31,6 @@
 [submodule "src/github.com/codegangsta/cli"]
 	path = src/github.com/codegangsta/cli
 	url = https://github.com/codegangsta/cli
-[submodule "src/github.com/coreos/flannel"]
-	path = src/github.com/coreos/flannel
-	url = https://github.com/cf-container-networking/flannel
-	branch = health-check
 [submodule "src/github.com/nu7hatch/gouuid"]
 	path = src/github.com/nu7hatch/gouuid
 	url = https://github.com/nu7hatch/gouuid
@@ -80,12 +76,6 @@
 [submodule "src/gopkg.in/yaml.v2"]
 	path = src/gopkg.in/yaml.v2
 	url = https://gopkg.in/yaml.v2
-[submodule "src/github.com/amalgam8/amalgam8"]
-	path = src/github.com/amalgam8/amalgam8
-	url = https://github.com/amalgam8/amalgam8
-[submodule "src/github.com/ryanmoran/viron"]
-	path = src/github.com/ryanmoran/viron
-	url = https://github.com/ryanmoran/viron
 [submodule "src/example-apps/tick/vendor/github.com/ryanmoran/viron"]
 	path = src/example-apps/tick/vendor/github.com/ryanmoran/viron
 	url = https://github.com/ryanmoran/viron
@@ -104,9 +94,6 @@
 [submodule "src/github.com/square/certstrap"]
 	path = src/github.com/square/certstrap
 	url = https://github.com/square/certstrap.git
-[submodule "src/github.com/dgrijalva/jwt-go"]
-	path = src/github.com/dgrijalva/jwt-go
-	url = https://github.com/dgrijalva/jwt-go
 [submodule "src/github.com/pivotal-cf-experimental/warrant"]
 	path = src/github.com/pivotal-cf-experimental/warrant
 	url = https://github.com/pivotal-cf-experimental/warrant
