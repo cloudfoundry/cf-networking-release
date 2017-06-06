@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# inspired by diego-release/scripts/sync-submodule-config
+# but it doesn't quite work for us as is
+
+# instead, this just prints the transitive package dependency tree
+# for everything we care about to aid in manual cleanup
+
+set -e -x
+
+{
+
+GOOS=linux gosub list \
+  -app cf-pusher/cmd/cf-pusher \
+  -app cli-plugin \
+  -app cni-wrapper-plugin \
+  -app code.cloudfoundry.org/silk/... \
+  -app example-apps/... \
+  -app garden-external-networker \
+  -app github.com/containernetworking/cni/plugins/ipam/host-local \
+  -app netmon/cmd/netmon \
+  -app policy-server/cmd/policy-server \
+  -app vxlan-policy-agent/cmd/vxlan-policy-agent
+
+  # acceptance test errand uses ginkgo binary, which is not a dependency of the test
+  gosub list -app github.com/onsi/ginkgo/ginkgo
+
+  # separate these so gosub doesn't asplode
+  gosub list -test cf-pusher/...
+  gosub list -test cli-plugin/...
+  gosub list -test cni-wrapper-plugin/...
+  GOOS=linux gosub list -test code.cloudfoundry.org/silk/...
+  gosub list -test garden-external-networker/...
+  gosub list -test netmon/...
+  gosub list -test policy-server/...
+  gosub list -test test/...
+  gosub list -test vxlan-policy-agent/...
+
+
+} > /tmp/packages
+
+cat /tmp/packages | grep -v vendor | grep '\.' | cut -d '/' -f 1,2,3 | sort | uniq > /tmp/sorted
+cat /tmp/sorted
+
+# this part doesn't seem to work
+# cat /tmp/packages | xargs gosub sync
