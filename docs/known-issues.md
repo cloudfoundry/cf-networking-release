@@ -41,17 +41,12 @@
 
 
 ### Missing Feature Parity For Application Security Groups
-  Current support for application security groups in cf-networking is incomplete:
-  - The only supported protocols are `tcp` and `udp`, this means `icmp` protocol,
-    code and type are not supported
+  Logging for UDP and ICMP ASGs is currently not supported, but [this feature is on our roadmap](https://www.pivotaltracker.com/story/show/142629505).
 
 ###  Behavior Changes From Existing Application Security Groups
-  Current implementations of ASGs allow opening security groups to other containers
-  via the NATed port on the diego cell. With container networking we only support
-  direct addressing of other containers through the overlay network and app-to-app
-  policy system. Direct addressing of other containers (without going through the gorouter)
-  on the underlay is not supported and may result in undefined behavior.
-
+  Prior implementations of ASGs allowed opening security groups to other containers
+  via the NATed port on the diego cell.  With CF Networking, this is no longer supported.
+  Direct addressing of other containers is only possible through the overlay network.
 
 ### Blue/Green deploys of apps must reconfigure policies
   Following the instructions
