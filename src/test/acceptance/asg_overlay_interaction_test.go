@@ -13,16 +13,11 @@ import (
 
 var _ = Describe("ASGs and Overlay Policy interaction", func() {
 	var (
-		spaceName string
-		orgName   string
-		cli       *cf_cli_adapter.Adapter
+		cli *cf_cli_adapter.Adapter
 	)
 
 	BeforeEach(func() {
 		cli = &cf_cli_adapter.Adapter{CfCliPath: "cf"}
-		orgName = testConfig.Prefix + "interaction-org"
-		spaceName = testConfig.Prefix + "interaction-space"
-		setupOrgAndSpace(orgName, spaceName)
 	})
 
 	AfterEach(func() {
@@ -36,6 +31,8 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 			appProxy     string
 			appSmoke     string
 			appInstances int
+			spaceName    string
+			orgName      string
 		)
 
 		BeforeEach(func() {
@@ -43,6 +40,11 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 			appProxy = testConfig.Prefix + "proxy"
 			appSmoke = testConfig.Prefix + "smoke"
 			asgName = "wide-open-asg"
+
+			By("creating the org and space")
+			orgName = testConfig.Prefix + "wide-open-interaction-org"
+			spaceName = testConfig.Prefix + "wide-open-interaction-space"
+			setupOrgAndSpace(orgName, spaceName)
 
 			By("creating and binding a wide open security group")
 			createASG(cli, asgName, wideOpenASG)
@@ -75,10 +77,16 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 			originalRunningSecurityGroups []string
 			appProxy                      string
 			appRoute                      string
+			spaceName                     string
+			orgName                       string
 		)
 
 		BeforeEach(func() {
+			By("creating the org and space")
 			appProxy = testConfig.Prefix + "proxy"
+			orgName = testConfig.Prefix + "overlay-interaction-org"
+			spaceName = testConfig.Prefix + "overlay-interaction-space"
+			setupOrgAndSpace(orgName, spaceName)
 
 			By("discovering all existing running ASGs")
 			originalRunningSecurityGroups = getRunningSecurityGroups()
