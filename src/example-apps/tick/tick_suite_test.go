@@ -26,7 +26,7 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	appPath, err := gexec.Build("example-apps/tick")
 	Expect(err).NotTo(HaveOccurred())
 
-	regPath, err := gexec.Build("github.com/amalgam8/amalgam8/cmd/registry")
+	regPath, err := gexec.Build("../registry")
 	Expect(err).NotTo(HaveOccurred())
 
 	apps := testApps{
