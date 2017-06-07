@@ -6,6 +6,11 @@ See [deployment docs](deploy-iaas.md) for examples
 
 **New Properties**
 
+  - An optional parameter has benn added to configure the maximum number of policies a space
+    developer can write for a given source app. Defaults to 50 if it is not set. Does not apply to
+    users with `network.admin`:
+    - `cf_networking.max_policies_per_app_source`
+
   - The following optional parameters have been added to override the timeout values for
     database connections and DNS health checks for the silk controller and policy server:
     - `cf_networking.silk_controller.connect_timeout_seconds`

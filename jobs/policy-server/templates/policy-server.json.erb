@@ -77,6 +77,7 @@
       "metron_address" => "127.0.0.1:#{p("cf_networking.policy_server.metron_port")}",
       "log_level" => p("cf_networking.policy_server.log_level"),
       "cleanup_interval" => cleanup_interval_in_seconds,
+      "max_policies_per_app_source" => p("cf_networking.max_policies_per_app_source"),
 
       # hard-coded values, not exposed as bosh spec properties
       "ca_cert_file" => "/var/vcap/jobs/policy-server/config/certs/ca.crt",

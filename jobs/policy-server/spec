@@ -29,6 +29,10 @@ properties:
     description: "Clean up stale policies on this interval, in minutes."
     default: 60
 
+  cf_networking.max_policies_per_app_source:
+    description: "Maximum policies a space developer may configure for an application source. Does not affect admin users."
+    default: 50
+
   cf_networking.policy_server.listen_ip:
     description: "IP address where the policy server will serve its API."
     default: 0.0.0.0
