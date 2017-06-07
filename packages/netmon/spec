@@ -30,6 +30,7 @@ files:
   - github.com/tedsuo/ifrit/*.go # gosub
   - github.com/tedsuo/ifrit/grouper/*.go # gosub
   - github.com/tedsuo/ifrit/sigmon/*.go # gosub
+  - gopkg.in/validator.v2/*.go # gosub
   - netmon/cmd/netmon/*.go # gosub
   - netmon/config/*.go # gosub
   - netmon/poller/*.go # gosub

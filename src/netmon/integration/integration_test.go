@@ -51,6 +51,7 @@ var _ = Describe("Integration", func() {
 			MetronAddress: fakeMetron.Address(),
 			InterfaceName: ifName,
 			LogLevel:      "info",
+			LogPrefix:     "cfnetworking",
 		}
 		configFilePath := WriteConfigFile(conf)
 
@@ -70,7 +71,7 @@ var _ = Describe("Integration", func() {
 	})
 
 	It("should log when starting", func() {
-		Eventually(session.Out).Should(gbytes.Say("container-networking.netmon.*starting"))
+		Eventually(session.Out).Should(gbytes.Say("cfnetworking.netmon.*starting"))
 	})
 
 	It("should emit a metric of the number of network interfaces", func() {

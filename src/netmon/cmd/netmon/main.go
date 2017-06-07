@@ -1,9 +1,9 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
-	"io/ioutil"
+	"fmt"
+	"log"
 	"netmon/config"
 	"netmon/poller"
 	"os"
@@ -17,24 +17,15 @@ import (
 )
 
 func main() {
-	conf := &config.Netmon{}
-
 	configFilePath := flag.String("config-file", "", "path to config file")
 	flag.Parse()
-
-	logger := lager.NewLogger("container-networking.netmon")
+	conf, err := config.New(*configFilePath)
+	if err != nil {
+		log.Fatalf("reading config", err)
+	}
+	logger := lager.NewLogger(fmt.Sprintf("%s.netmon", conf.LogPrefix))
 	sink := lager.NewReconfigurableSink(lager.NewWriterSink(os.Stdout, lager.DEBUG), lager.DEBUG)
 	logger.RegisterSink(sink)
-
-	configBytes, err := ioutil.ReadFile(*configFilePath)
-	if err != nil {
-		logger.Fatal("reading config", err)
-	}
-
-	err = json.Unmarshal(configBytes, conf)
-	if err != nil {
-		logger.Fatal("unmarshaling config", err)
-	}
 	logger.Info("parsed-config", lager.Data{"config": conf})
 
 	logLevel, err := conf.ParseLogLevel()

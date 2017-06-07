@@ -3,6 +3,14 @@
 <%=
     require 'json'
 
-    JSON.pretty_generate(p("cf_networking.netmon"))
+  toRender = {
+    "metron_address" => p("cf_networking.netmon.metron_address"),
+    "poll_interval" => p("cf_networking.netmon.poll_interval"),
+    "interface_name" => p("cf_networking.netmon.interface_name"),
+    "log_level" => p("cf_networking.netmon.log_level"),
+    "log_prefix" => "cfnetworking",
+  }
+
+    JSON.pretty_generate(toRender)
 %>
 <% end %>
