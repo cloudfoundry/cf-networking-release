@@ -34,6 +34,7 @@ type Config struct {
 	CleanupInterval       int       `json:"cleanup_interval" validate:"min=1"`
 	CCAppRequestChunkSize int       `json:"cc_app_request_chunk_size"`
 	RequestTimeout        int       `json:"request_timeout" validate:"min=1"`
+	MaxPolicies           int       `json:"max_policies" validate:"min=1"`
 }
 
 func (c *Config) Validate() error {

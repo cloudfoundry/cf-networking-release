@@ -16,6 +16,11 @@ type policyGuard interface {
 	CheckAccess(policies []models.Policy, tokenData uaa_client.CheckTokenResponse) (bool, error)
 }
 
+//go:generate counterfeiter -o fakes/quota_guard.go --fake-name QuotaGuard . quotaGuard
+type quotaGuard interface {
+	CheckAccess(policies []models.Policy, tokenData uaa_client.CheckTokenResponse) (bool, error)
+}
+
 type PoliciesCreate struct {
 	Store         store
 	Unmarshaler   marshal.Unmarshaler
