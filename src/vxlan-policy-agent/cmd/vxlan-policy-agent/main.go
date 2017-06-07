@@ -1,10 +1,8 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"lib/datastore"
 	"lib/filelock"
 	"lib/policy_client"
@@ -23,9 +21,9 @@ import (
 	"vxlan-policy-agent/handlers"
 	"vxlan-policy-agent/planner"
 
-	"code.cloudfoundry.org/debugserver"
 	"code.cloudfoundry.org/cf-networking-helpers/metrics"
 	"code.cloudfoundry.org/cf-networking-helpers/mutualtls"
+	"code.cloudfoundry.org/debugserver"
 	"code.cloudfoundry.org/lager"
 	"github.com/cloudfoundry/dropsonde"
 	"github.com/coreos/go-iptables/iptables"
@@ -46,22 +44,15 @@ func die(logger lager.Logger, action string, err error) {
 }
 
 func main() {
-	conf := &config.VxlanPolicyAgent{}
-
 	configFilePath := flag.String("config-file", "", "path to config file")
 	flag.Parse()
 
-	configBytes, err := ioutil.ReadFile(*configFilePath)
+	conf, err := config.New(*configFilePath)
 	if err != nil {
-		log.Fatalf("error reading config: %s", err)
+		log.Fatalf("could not read config file %s", err)
 	}
 
-	err = json.Unmarshal(configBytes, conf)
-	if err != nil {
-		log.Fatalf("error unmarshalling config: %s", err)
-	}
-
-	logger := lager.NewLogger("container-networking.vxlan-policy-agent")
+	logger := lager.NewLogger(fmt.Sprintf("%s.vxlan-policy-agent", conf.LogPrefix))
 	reconfigurableSink := initLoggerSink(logger, conf.LogLevel)
 	logger.RegisterSink(reconfigurableSink)
 

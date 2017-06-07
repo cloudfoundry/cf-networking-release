@@ -23,6 +23,7 @@ type VxlanPolicyAgent struct {
 	DebugServerHost      string `json:"debug_server_host" validate:"nonzero"`
 	DebugServerPort      int    `json:"debug_server_port" validate:"nonzero"`
 	LogLevel             string `json:"log_level"`
+	LogPrefix            string `json:"log_prefix" validate:"nonzero"`
 	IPTablesLogging      bool   `json:"iptables_c2c_logging"`
 }
 

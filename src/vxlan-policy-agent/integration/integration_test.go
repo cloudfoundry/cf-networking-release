@@ -78,8 +78,10 @@ var _ = Describe("VXLAN Policy Agent", func() {
 			IPTablesLockFile:     GlobalIPTablesLockFile,
 			DebugServerHost:      "127.0.0.1",
 			DebugServerPort:      testsupport.PickAPort(),
+			LogPrefix:            "cfnetworking",
 			ClientTimeoutSeconds: 5,
 		}
+
 		Expect(conf.Validate()).To(Succeed())
 		configFilePath = WriteConfigFile(conf)
 	})
@@ -188,7 +190,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 
 		It("has a log level thats configurable at runtime", func() {
 			Consistently(session).ShouldNot(gexec.Exit())
-			Eventually(session.Out).Should(Say("container-networking.vxlan-policy-agent"))
+			Eventually(session.Out).Should(Say("cfnetworking.vxlan-policy-agent"))
 			Consistently(session.Out).ShouldNot(Say("got-containers"))
 
 			endpoint := fmt.Sprintf("http://%s:%d/log-level", conf.DebugServerHost, conf.DebugServerPort)
@@ -197,7 +199,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 			_, err = http.DefaultClient.Do(req)
 			Expect(err).NotTo(HaveOccurred())
 
-			Eventually(session.Out, "5s").Should(Say("container-networking.vxlan-policy-agent.*got-containers"))
+			Eventually(session.Out, "5s").Should(Say("cfnetworking.vxlan-policy-agent.*got-containers"))
 		})
 	})
 
@@ -234,19 +236,8 @@ var _ = Describe("VXLAN Policy Agent", func() {
 
 	Context("when vxlan policy agent has invalid certs", func() {
 		BeforeEach(func() {
-			conf = config.VxlanPolicyAgent{
-				Datastore:            datastorePath,
-				PollInterval:         1,
-				PolicyServerURL:      "",
-				VNI:                  42,
-				MetronAddress:        fakeMetron.Address(),
-				ServerCACertFile:     paths.ServerCACertFile,
-				ClientCertFile:       "totally",
-				ClientKeyFile:        "not-cool",
-				DebugServerHost:      "127.0.0.1",
-				DebugServerPort:      testsupport.PickAPort(),
-				ClientTimeoutSeconds: 5,
-			}
+			conf.ClientCertFile = "totally"
+			conf.ClientKeyFile = "not-cool"
 			configFilePath = WriteConfigFile(conf)
 		})
 
@@ -277,21 +268,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 
 	Context("when vxlan policy agent is deployed with iptables logging enabled", func() {
 		BeforeEach(func() {
-			conf = config.VxlanPolicyAgent{
-				PollInterval:         1,
-				PolicyServerURL:      fmt.Sprintf("https://%s", serverListenAddr),
-				Datastore:            datastorePath,
-				VNI:                  42,
-				MetronAddress:        fakeMetron.Address(),
-				ServerCACertFile:     paths.ServerCACertFile,
-				ClientCertFile:       paths.ClientCertFile,
-				ClientKeyFile:        paths.ClientKeyFile,
-				IPTablesLockFile:     GlobalIPTablesLockFile,
-				DebugServerHost:      "127.0.0.1",
-				DebugServerPort:      testsupport.PickAPort(),
-				IPTablesLogging:      true,
-				ClientTimeoutSeconds: 5,
-			}
+			conf.IPTablesLogging = true
 			Expect(conf.Validate()).To(Succeed())
 			configFilePath = WriteConfigFile(conf)
 			mockPolicyServer = startServer(serverListenAddr, serverTLSConfig)

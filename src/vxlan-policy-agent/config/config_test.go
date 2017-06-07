@@ -39,6 +39,7 @@ var _ = Describe("Config", func() {
 					"debug_server_host": "http://5.6.7.8",
 					"debug_server_port": 5678,
 					"log_level": "debug",
+					"log_prefix": "cfnetworking",
 					"iptables_c2c_logging": true,
 					"client_timeout_seconds":5
 				}`)
@@ -56,6 +57,7 @@ var _ = Describe("Config", func() {
 				Expect(c.DebugServerHost).To(Equal("http://5.6.7.8"))
 				Expect(c.DebugServerPort).To(Equal(5678))
 				Expect(c.LogLevel).To(Equal("debug"))
+				Expect(c.LogPrefix).To(Equal("cfnetworking"))
 				Expect(c.IPTablesLogging).To(Equal(true))
 				Expect(c.ClientTimeoutSeconds).To(Equal(5))
 			})
@@ -97,6 +99,7 @@ var _ = Describe("Config", func() {
 					"iptables_lock_file":     "/var/vcap/data/lock",
 					"debug_server_host":      "http://5.6.7.8",
 					"debug_server_port":      5678,
+					"log_prefix":             "cfnetworking",
 					"client_timeout_seconds": 5,
 				}
 				delete(allData, missingFlag)
@@ -116,6 +119,7 @@ var _ = Describe("Config", func() {
 			Entry("missing iptables lock file", "iptables_lock_file", "IPTablesLockFile: zero value"),
 			Entry("missing debug server host", "debug_server_host", "DebugServerHost: zero value"),
 			Entry("missing debug server port", "debug_server_port", "DebugServerPort: zero value"),
+			Entry("missing log prefix", "log_prefix", "LogPrefix: zero value"),
 			Entry("missing client timeout", "client_timeout_seconds", "ClientTimeoutSeconds: zero value"),
 		)
 	})
