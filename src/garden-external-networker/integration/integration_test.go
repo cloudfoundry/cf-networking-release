@@ -144,6 +144,7 @@ var _ = Describe("Garden External Networker", func() {
 			"state_file":      stateFilePath,
 			"start_port":      60000,
 			"total_ports":     56,
+			"log_prefix":      "cfnetworking",
 		}
 		configBytes, err := json.Marshal(config)
 		Expect(err).NotTo(HaveOccurred())

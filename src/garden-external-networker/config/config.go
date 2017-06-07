@@ -14,6 +14,7 @@ type Config struct {
 	StateFilePath string `json:"state_file"`
 	StartPort     int    `json:"start_port"`
 	TotalPorts    int    `json:"total_ports"`
+	LogPrefix     string `json:"log_prefix"`
 }
 
 func New(configFilePath string) (Config, error) {
@@ -55,6 +56,10 @@ func New(configFilePath string) (Config, error) {
 
 	if cfg.TotalPorts == 0 {
 		return cfg, fmt.Errorf("missing required config 'total_ports'")
+	}
+
+	if cfg.LogPrefix == "" {
+		return cfg, fmt.Errorf("missing required config 'log_prefix'")
 	}
 
 	return cfg, nil

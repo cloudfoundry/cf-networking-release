@@ -8,6 +8,7 @@
       "state_file" => "/var/vcap/data/garden-cni/external-networker-state.json",
       "start_port" => p("cf_networking.nat_port_range_start"),
       "total_ports" => p("cf_networking.nat_port_range_size"),
+      "log_prefix" => "cfnetworking",
     }
 
     JSON.pretty_generate(toRender)

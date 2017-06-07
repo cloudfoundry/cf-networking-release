@@ -32,7 +32,8 @@ var _ = Describe("Config", func() {
 					"bind_mount_dir": "baz",
 					"state_file": "some/path",
 					"start_port": 1234,
-					"total_ports": 56
+					"total_ports": 56,
+					"log_prefix": "prefix"
 				}`)
 				c, err := config.New(file.Name())
 				Expect(err).NotTo(HaveOccurred())
@@ -42,6 +43,7 @@ var _ = Describe("Config", func() {
 				Expect(c.StateFilePath).To(Equal("some/path"))
 				Expect(c.StartPort).To(Equal(1234))
 				Expect(c.TotalPorts).To(Equal(56))
+				Expect(c.LogPrefix).To(Equal("prefix"))
 			})
 		})
 
@@ -83,6 +85,7 @@ var _ = Describe("Config", func() {
 					"state_file":     "/some/state/file",
 					"start_port":     50000,
 					"total_ports":    10000,
+					"log_prefix":     "prefix",
 				}
 				delete(allData, missingFlag)
 				Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
@@ -96,6 +99,7 @@ var _ = Describe("Config", func() {
 			Entry("missing state file", "state_file"),
 			Entry("missing start port", "start_port"),
 			Entry("missing total ports", "total_ports"),
+			Entry("missing log prefix", "log_prefix"),
 		)
 	})
 })

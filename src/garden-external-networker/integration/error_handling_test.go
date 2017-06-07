@@ -47,6 +47,7 @@ var _ = Describe("Garden External Networker errors", func() {
 			"state_file":     stateFilePath.Name(),
 			"start_port":     1234,
 			"total_ports":    56,
+			"log_prefix":     "prefix",
 		}
 		writeConfig(defaultConfig)
 
@@ -62,19 +63,6 @@ var _ = Describe("Garden External Networker errors", func() {
 	})
 
 	Context("when inputs are invalid", func() {
-		Context("when there's a generic error in main", func() {
-			It("prints the error to stderr with the lager logger", func() {
-				command.Args = []string{
-					paths.PathToAdapter,
-					"invalidArg",
-				}
-				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-				Expect(err).NotTo(HaveOccurred())
-
-				Eventually(session).Should(gexec.Exit(1))
-				Expect(session.Err.Contents()).To(ContainSubstring("error: parse args: unexpected extra args: [invalidArg]"))
-			})
-		})
 		Context("when stdin is not valid JSON", func() {
 			It("should exit status 1 and print an error to stderr", func() {
 				command.Stdin = strings.NewReader("{{{bad")
@@ -84,7 +72,7 @@ var _ = Describe("Garden External Networker errors", func() {
 				Eventually(session).Should(gexec.Exit(1))
 				Expect(session.Out.Contents()).To(BeEmpty())
 				By("checking that the error was logged to stderr")
-				Expect(session.Err.Contents()).To(ContainSubstring("invalid character"))
+				Expect(string(session.Err.Contents())).To(ContainSubstring("prefix: invalid character"))
 			})
 		})
 
@@ -96,7 +84,7 @@ var _ = Describe("Garden External Networker errors", func() {
 
 				Eventually(session, "2s").Should(gexec.Exit(1))
 				Expect(session.Out.Contents()).To(BeEmpty())
-				Expect(session.Err.Contents()).To(ContainSubstring("missing pid"))
+				Expect(string(session.Err.Contents())).To(ContainSubstring("prefix: up missing pid"))
 			})
 		})
 
@@ -108,7 +96,7 @@ var _ = Describe("Garden External Networker errors", func() {
 
 				Eventually(session).Should(gexec.Exit(1))
 				Expect(session.Out.Contents()).To(BeEmpty())
-				Expect(session.Err.Contents()).To(MatchRegexp(`cannot unmarshal string into Go.*type int`))
+				Expect(string(session.Err.Contents())).To(MatchRegexp(`prefix: json: cannot unmarshal string into Go.*type int`))
 			})
 		})
 
@@ -121,7 +109,7 @@ var _ = Describe("Garden External Networker errors", func() {
 
 				Eventually(session).Should(gexec.Exit(1))
 				Expect(session.Out.Contents()).To(BeEmpty())
-				Expect(session.Err.Contents()).To(ContainSubstring(`unrecognized action: some-invalid-action`))
+				Expect(string(session.Err.Contents())).To(ContainSubstring(`prefix: unrecognized action: some-invalid-action`))
 			})
 		})
 
@@ -134,7 +122,7 @@ var _ = Describe("Garden External Networker errors", func() {
 
 				Eventually(session).Should(gexec.Exit(1))
 				Expect(session.Out.Contents()).To(BeEmpty())
-				Expect(session.Err.Contents()).To(ContainSubstring(`flag provided but not defined: -banana`))
+				Expect(string(session.Err.Contents())).To(ContainSubstring(`cfnetworking: parse args: flag provided but not defined: -banana`))
 			})
 		})
 
@@ -147,7 +135,7 @@ var _ = Describe("Garden External Networker errors", func() {
 
 				Eventually(session).Should(gexec.Exit(1))
 				Expect(session.Out.Contents()).To(BeEmpty())
-				Expect(session.Err.Contents()).To(ContainSubstring(`unexpected extra args: [something-else]`))
+				Expect(session.Err.Contents()).To(ContainSubstring(`prefix: parse args: unexpected extra args: [something-else]`))
 			})
 		})
 
@@ -163,7 +151,7 @@ var _ = Describe("Garden External Networker errors", func() {
 		}
 
 		DescribeTable("missing required arguments",
-			func(missingFlag string) {
+			func(missingFlag, prefix string) {
 				command.Args = removeArrayElement(command.Args, "--"+missingFlag)
 
 				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
@@ -174,16 +162,16 @@ var _ = Describe("Garden External Networker errors", func() {
 
 				By("checking that the error was logged to stderr")
 				Expect(session.Out.Contents()).To(BeEmpty())
-				expectedErrorString := fmt.Sprintf("missing required flag '%s'", missingFlag)
-				Expect(session.Err.Contents()).To(ContainSubstring(expectedErrorString))
+				expectedErrorString := fmt.Sprintf("%s: parse args: missing required flag '%s'", prefix, missingFlag)
+				Expect(string(session.Err.Contents())).To(ContainSubstring(expectedErrorString))
 			},
-			Entry("action", "action"),
-			Entry("handle", "handle"),
-			Entry("configFile", "configFile"),
+			Entry("action", "action", "prefix"),
+			Entry("handle", "handle", "prefix"),
+			Entry("configFile", "configFile", "cfnetworking"),
 		)
 
 		DescribeTable("missing required config",
-			func(missingKey string) {
+			func(missingKey, prefix string) {
 				delete(defaultConfig, missingKey)
 				writeConfig(defaultConfig)
 
@@ -195,12 +183,13 @@ var _ = Describe("Garden External Networker errors", func() {
 
 				By("checking that the error was logged to stderr")
 				Expect(session.Out.Contents()).To(BeEmpty())
-				expectedErrorString := fmt.Sprintf("missing required config '%s'", missingKey)
-				Expect(session.Err.Contents()).To(ContainSubstring(expectedErrorString))
+				expectedErrorString := fmt.Sprintf("%s: parse args: missing required config '%s'", prefix, missingKey)
+				Expect(string(session.Err.Contents())).To(ContainSubstring(expectedErrorString))
 			},
-			Entry("cni_plugin_dir", "cni_plugin_dir"),
-			Entry("cni_config_dir", "cni_config_dir"),
-			Entry("bind_mount_dir", "bind_mount_dir"),
+			Entry("cni_plugin_dir", "cni_plugin_dir", "prefix"),
+			Entry("cni_config_dir", "cni_config_dir", "prefix"),
+			Entry("bind_mount_dir", "bind_mount_dir", "prefix"),
+			Entry("log_prefix", "log_prefix", "cfnetworking"),
 		)
 
 		Context("when the user doesn't know what to do", func() {
@@ -214,7 +203,7 @@ var _ = Describe("Garden External Networker errors", func() {
 
 					Eventually(session).Should(gexec.Exit(1))
 					Expect(session.Out.Contents()).To(BeEmpty())
-					Expect(session.Err.Contents()).To(ContainSubstring(`this is a plugin for Garden-runC.  Don't run it directly.`))
+					Expect(session.Err.Contents()).To(ContainSubstring(`cfnetworking: this is a plugin for Garden-runC.  Don't run it directly.`))
 				},
 				Entry("no args", []string{paths.PathToAdapter}),
 				Entry("short help", []string{paths.PathToAdapter, "-h"}),

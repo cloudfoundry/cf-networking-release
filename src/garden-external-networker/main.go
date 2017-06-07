@@ -16,9 +16,10 @@ import (
 )
 
 var (
-	action string
-	handle string
-	cfg    config.Config
+	action    string
+	handle    string
+	cfg       config.Config
+	logPrefix = "cfnetworking"
 )
 
 func parseArgs(allArgs []string) error {
@@ -34,13 +35,6 @@ func parseArgs(allArgs []string) error {
 	if err != nil {
 		return err
 	}
-	if len(flagSet.Args()) > 0 {
-		return fmt.Errorf("unexpected extra args: %+v", flagSet.Args())
-	}
-
-	if handle == "" {
-		return fmt.Errorf("missing required flag 'handle'")
-	}
 
 	if configFilePath == "" {
 		return fmt.Errorf("missing required flag 'configFile'")
@@ -49,6 +43,14 @@ func parseArgs(allArgs []string) error {
 	cfg, err = config.New(configFilePath)
 	if err != nil {
 		return err
+	}
+
+	if len(flagSet.Args()) > 0 {
+		return fmt.Errorf("unexpected extra args: %+v", flagSet.Args())
+	}
+
+	if handle == "" {
+		return fmt.Errorf("missing required flag 'handle'")
 	}
 
 	if action == "" {
@@ -60,7 +62,10 @@ func parseArgs(allArgs []string) error {
 
 func main() {
 	if err := mainWithError(os.Stderr); err != nil {
-		fmt.Fprintf(os.Stderr, "error: %s\n", err)
+		if cfg.LogPrefix != "" {
+			logPrefix = cfg.LogPrefix
+		}
+		fmt.Fprintf(os.Stderr, "%s: %s\n", logPrefix, err)
 		os.Exit(1)
 	}
 }
