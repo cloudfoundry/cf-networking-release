@@ -54,7 +54,7 @@ func main() {
 		log.Fatalf("could not read config file %s", err)
 	}
 
-	logger := lager.NewLogger("container-networking.policy-server")
+	logger := lager.NewLogger(fmt.Sprintf("%s.policy-server", conf.LogPrefix))
 	reconfigurableSink := initLoggerSink(logger, conf.LogLevel)
 	logger.RegisterSink(reconfigurableSink)
 

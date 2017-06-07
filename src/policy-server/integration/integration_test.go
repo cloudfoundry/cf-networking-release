@@ -125,7 +125,7 @@ var _ = Describe("Integration", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(responseString).To(ContainSubstring("some-user"))
 
-				Expect(session.Out).To(gbytes.Say("container-networking.policy-server"))
+				Expect(session.Out).To(gbytes.Say("cfnetworking.policy-server"))
 				Expect(session.Out).NotTo(gbytes.Say("request made to whoami endpoint"))
 
 				_ = helpers.MakeAndDoRequest(
@@ -145,7 +145,7 @@ var _ = Describe("Integration", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(responseString).To(ContainSubstring("some-user"))
 
-				Expect(session.Out).To(gbytes.Say("container-networking.policy-server.request"))
+				Expect(session.Out).To(gbytes.Say("cfnetworking.policy-server.request"))
 			})
 
 			It("should emit some metrics", func() {

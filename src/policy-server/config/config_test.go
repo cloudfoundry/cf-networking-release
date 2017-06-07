@@ -29,6 +29,7 @@ var _ = Describe("Config", func() {
 				file.WriteString(`{
 					"listen_host": "http://1.2.3.4",
 					"listen_port": 1234,
+					"log_prefix": "cfnetworking",
 					"internal_listen_port": 2222,
 					"debug_server_host": "http://6.5.4.3",
 					"debug_server_port": 9999,
@@ -61,6 +62,7 @@ var _ = Describe("Config", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(c.ListenHost).To(Equal("http://1.2.3.4"))
 				Expect(c.ListenPort).To(Equal(1234))
+				Expect(c.LogPrefix).To(Equal("cfnetworking"))
 				Expect(c.InternalListenPort).To(Equal(2222))
 				Expect(c.DebugServerHost).To(Equal("http://6.5.4.3"))
 				Expect(c.DebugServerPort).To(Equal(9999))
@@ -123,6 +125,7 @@ var _ = Describe("Config", func() {
 				allData := map[string]interface{}{
 					"listen_host":          "http://1.2.3.4",
 					"listen_port":          1234,
+					"log_prefix":           "cfnetworking",
 					"internal_listen_port": 2222,
 					"debug_server_host":    "http://4.4.4.4",
 					"debug_server_port":    3333,
@@ -157,6 +160,7 @@ var _ = Describe("Config", func() {
 			},
 			Entry("missing listen host", "listen_host", "ListenHost: zero value"),
 			Entry("missing listen port", "listen_port", "ListenPort: zero value"),
+			Entry("missing log prefix", "log_prefix", "LogPrefix: zero value"),
 			Entry("missing internal listen port", "internal_listen_port", "InternalListenPort: zero value"),
 			Entry("missing debug server host", "debug_server_host", "DebugServerHost: zero value"),
 			Entry("missing debug server port", "debug_server_port", "DebugServerPort: zero value"),
@@ -180,6 +184,7 @@ var _ = Describe("Config", func() {
 				allData = map[string]interface{}{
 					"listen_host":          "http://1.2.3.4",
 					"listen_port":          1234,
+					"log_prefix":           "cfnetworking",
 					"internal_listen_port": 2222,
 					"debug_server_host":    "http://4.4.4.4",
 					"debug_server_port":    3333,
