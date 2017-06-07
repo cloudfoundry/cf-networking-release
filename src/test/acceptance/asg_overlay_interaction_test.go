@@ -3,6 +3,7 @@ package acceptance_test
 import (
 	"cf-pusher/cf_cli_adapter"
 	"fmt"
+	"math/rand"
 	"time"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
@@ -37,9 +38,9 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 
 		BeforeEach(func() {
 			appInstances = testConfig.AppInstances
-			appProxy = testConfig.Prefix + "proxy"
-			appSmoke = testConfig.Prefix + "smoke"
-			asgName = "wide-open-asg"
+			appProxy = fmt.Sprintf("%s-%s-%d", testConfig.Prefix, "proxy", rand.Int31())
+			appSmoke = fmt.Sprintf("%s-%s-%d", testConfig.Prefix, "smoke", rand.Int31())
+			asgName = fmt.Sprintf("wide-open-asg-%d", rand.Int31())
 
 			By("creating the org and space")
 			orgName = testConfig.Prefix + "wide-open-interaction-org"
@@ -82,7 +83,7 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 
 		BeforeEach(func() {
 			By("creating the org and space")
-			appProxy = testConfig.Prefix + "proxy"
+			appProxy = fmt.Sprintf("%s-%s-%d", testConfig.Prefix, "proxy", rand.Int31())
 			orgName = testConfig.Prefix + "overlay-interaction-org"
 			spaceName = testConfig.Prefix + "overlay-interaction-space"
 			setupOrgAndSpace(orgName, spaceName)

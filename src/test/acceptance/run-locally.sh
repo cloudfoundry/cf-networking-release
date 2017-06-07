@@ -24,7 +24,7 @@ echo '
   "proxy_instances": 1,
   "proxy_applications": 1,
   "extra_listen_ports": 2,
-  "prefix":"test-"
+  "prefix":"cf-networking-test-"
 }
 ' > ${CONFIG}
 
