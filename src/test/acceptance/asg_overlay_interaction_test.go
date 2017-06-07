@@ -13,7 +13,8 @@ import (
 
 var _ = Describe("ASGs and Overlay Policy interaction", func() {
 	var (
-		cli *cf_cli_adapter.Adapter
+		cli     *cf_cli_adapter.Adapter
+		orgName string
 	)
 
 	BeforeEach(func() {
@@ -32,7 +33,6 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 			appSmoke     string
 			appInstances int
 			spaceName    string
-			orgName      string
 		)
 
 		BeforeEach(func() {
@@ -78,7 +78,6 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 			appProxy                      string
 			appRoute                      string
 			spaceName                     string
-			orgName                       string
 		)
 
 		BeforeEach(func() {
