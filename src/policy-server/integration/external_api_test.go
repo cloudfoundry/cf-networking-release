@@ -133,6 +133,7 @@ var _ = Describe("External API", func() {
 				body := `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`
 				req = makeNewRequest("POST", "networking/v0/external/policies", body)
 			})
+
 			It("succeeds for developers with access to apps and network.write permission", func() {
 				resp, err := http.DefaultClient.Do(req)
 				Expect(err).NotTo(HaveOccurred())
@@ -153,6 +154,7 @@ var _ = Describe("External API", func() {
 					Expect(responseString).To(MatchJSON(`{ "error": "authenticator: provided scopes [] do not include allowed scopes [network.admin network.write]"}`))
 				})
 			})
+
 			Context("when one app is in spaces they do not have access to", func() {
 				BeforeEach(func() {
 					body := `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "app-guid-not-in-my-spaces", "protocol": "tcp", "port": 8090 } } ] }`
@@ -180,6 +182,57 @@ var _ = Describe("External API", func() {
 				responseString, err := ioutil.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(responseString).To(MatchJSON(`{"error": "policies-create: failed reading request body"}`))
+			})
+		})
+
+		Describe("Quotas", func() {
+			var (
+				req  *http.Request
+				body string
+			)
+
+			BeforeEach(func() {
+				body = `{ "policies": [
+				{"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } },
+				{"source": { "id": "some-app-guid" }, "destination": { "id": "another-app-guid", "protocol": "udp", "port": 7070 } }
+				] }`
+				req = makeNewRequest("POST", "networking/v0/external/policies", body)
+			})
+			It("rejects requests to add policies above the quota", func() {
+				By("adding the maximum allowed policies")
+				resp, err := http.DefaultClient.Do(req)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
+
+				By("seeing that adding another policy fails")
+				body = `{ "policies": [
+				{"source": { "id": "some-app-guid" }, "destination": { "id": "yet-another-other-app-guid", "protocol": "tcp", "port": 9000 } }
+				] }`
+				req = makeNewRequest("POST", "networking/v0/external/policies", body)
+				resp, err = http.DefaultClient.Do(req)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
+				responseString, err := ioutil.ReadAll(resp.Body)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(responseString).To(MatchJSON(`{"error": "policies-create: policy quota exceeded"}`))
+
+				By("deleting a policy")
+				body = `{ "policies": [
+				{"source": { "id": "some-app-guid" }, "destination": { "id": "another-app-guid", "protocol": "udp", "port": 7070 } }
+				] }`
+				req = makeNewRequest("POST", "networking/v0/external/policies/delete", body)
+				resp, err = http.DefaultClient.Do(req)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
+
+				By("seeing that adding another policy succeeds")
+				body = `{ "policies": [
+				{"source": { "id": "some-app-guid" }, "destination": { "id": "yet-another-other-app-guid", "protocol": "tcp", "port": 9000 } }
+				] }`
+				req = makeNewRequest("POST", "networking/v0/external/policies", body)
+				resp, err = http.DefaultClient.Do(req)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 			})
 		})
 

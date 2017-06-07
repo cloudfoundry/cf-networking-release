@@ -26,6 +26,7 @@ type PoliciesCreate struct {
 	Unmarshaler   marshal.Unmarshaler
 	Validator     validator
 	PolicyGuard   policyGuard
+	QuotaGuard    quotaGuard
 	ErrorResponse errorResponse
 }
 
@@ -64,6 +65,19 @@ func (h *PoliciesCreate) ServeHTTP(logger lager.Logger, w http.ResponseWriter, r
 	if !authorized {
 		err := errors.New("one or more applications cannot be found or accessed")
 		logger.Error("failed-authorizing", err)
+		h.ErrorResponse.Forbidden(w, err, "policies-create", err.Error())
+		return
+	}
+
+	authorized, err = h.QuotaGuard.CheckAccess(payload.Policies, tokenData)
+	if err != nil {
+		logger.Error("failed-checking-quota", err)
+		h.ErrorResponse.InternalServerError(w, err, "policies-create", "check quota failed")
+		return
+	}
+	if !authorized {
+		err := errors.New("policy quota exceeded")
+		logger.Error("quota-exceeded", err)
 		h.ErrorResponse.Forbidden(w, err, "policies-create", err.Error())
 		return
 	}

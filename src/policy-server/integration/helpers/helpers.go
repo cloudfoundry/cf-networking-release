@@ -173,6 +173,7 @@ func DefaultTestConfig(dbConfig db.Config, metronAddress string, fixturesPath st
 		CleanupInterval:       60,
 		CCAppRequestChunkSize: 100,
 		RequestTimeout:        10,
+		MaxPolicies:           2,
 	}
 	return config
 }

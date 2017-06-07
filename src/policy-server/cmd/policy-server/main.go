@@ -162,6 +162,11 @@ func main() {
 		CCClient:  ccClient,
 	}
 
+	quotaGuard := &handlers.QuotaGuard{
+		Store:       wrappedStore,
+		MaxPolicies: conf.MaxPolicies,
+	}
+
 	policyFilter := &handlers.PolicyFilter{
 		UAAClient: uaaClient,
 		CCClient:  ccClient,
@@ -174,6 +179,7 @@ func main() {
 		Unmarshaler:   unmarshaler,
 		Validator:     validator,
 		PolicyGuard:   policyGuard,
+		QuotaGuard:    quotaGuard,
 		ErrorResponse: errorResponse,
 	}
 

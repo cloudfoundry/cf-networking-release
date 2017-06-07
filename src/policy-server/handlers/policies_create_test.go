@@ -30,6 +30,7 @@ var _ = Describe("PoliciesCreate", func() {
 		fakeStore         *fakes.Store
 		fakeValidator     *fakes.Validator
 		fakePolicyGuard   *fakes.PolicyGuard
+		fakeQuotaGuard    *fakes.QuotaGuard
 		fakeErrorResponse *fakes.ErrorResponse
 		logger            *lagertest.TestLogger
 		fakeUnmarshaler   *hfakes.Unmarshaler
@@ -66,6 +67,7 @@ var _ = Describe("PoliciesCreate", func() {
 		fakeStore = &fakes.Store{}
 		fakeValidator = &fakes.Validator{}
 		fakePolicyGuard = &fakes.PolicyGuard{}
+		fakeQuotaGuard = &fakes.QuotaGuard{}
 		logger = lagertest.NewTestLogger("test")
 		fakeUnmarshaler = &hfakes.Unmarshaler{}
 		fakeErrorResponse = &fakes.ErrorResponse{}
@@ -75,6 +77,7 @@ var _ = Describe("PoliciesCreate", func() {
 			Unmarshaler:   fakeUnmarshaler,
 			Validator:     fakeValidator,
 			PolicyGuard:   fakePolicyGuard,
+			QuotaGuard:    fakeQuotaGuard,
 			ErrorResponse: fakeErrorResponse,
 		}
 		tokenData = uaa_client.CheckTokenResponse{
@@ -82,6 +85,7 @@ var _ = Describe("PoliciesCreate", func() {
 			UserName: "some_user",
 		}
 		fakePolicyGuard.CheckAccessReturns(true, nil)
+		fakeQuotaGuard.CheckAccessReturns(true, nil)
 		resp = httptest.NewRecorder()
 	})
 
@@ -185,6 +189,35 @@ var _ = Describe("PoliciesCreate", func() {
 		})
 	})
 
+	Context("when the quota guard returns false", func() {
+		BeforeEach(func() {
+			fakeQuotaGuard.CheckAccessReturns(false, nil)
+		})
+
+		It("calls the forbidden handler", func() {
+			handler.ServeHTTP(logger, resp, request, tokenData)
+
+			Expect(fakeErrorResponse.ForbiddenCallCount()).To(Equal(1))
+
+			w, err, message, description := fakeErrorResponse.ForbiddenArgsForCall(0)
+			Expect(w).To(Equal(resp))
+			Expect(err).To(MatchError("policy quota exceeded"))
+			Expect(message).To(Equal("policies-create"))
+			Expect(description).To(Equal("policy quota exceeded"))
+
+			By("logging the error")
+			Expect(logger.Logs()).To(HaveLen(1))
+			Expect(logger.Logs()[0]).To(SatisfyAll(
+				LogsWith(lager.ERROR, "test.create-policies.quota-exceeded"),
+				HaveLogData(SatisfyAll(
+					HaveLen(2),
+					HaveKeyWithValue("error", "policy quota exceeded"),
+					HaveKeyWithValue("session", "1"),
+				)),
+			))
+		})
+	})
+
 	Context("when the validator fails", func() {
 		BeforeEach(func() {
 			fakeValidator.ValidatePoliciesReturns(errors.New("banana"))
@@ -234,6 +267,35 @@ var _ = Describe("PoliciesCreate", func() {
 			Expect(logger.Logs()).To(HaveLen(1))
 			Expect(logger.Logs()[0]).To(SatisfyAll(
 				LogsWith(lager.ERROR, "test.create-policies.failed-checking-access"),
+				HaveLogData(SatisfyAll(
+					HaveLen(2),
+					HaveKeyWithValue("error", "banana"),
+					HaveKeyWithValue("session", "1"),
+				)),
+			))
+		})
+	})
+
+	Context("when the quota guard returns an error", func() {
+		BeforeEach(func() {
+			fakeQuotaGuard.CheckAccessReturns(false, errors.New("banana"))
+		})
+
+		It("calls the internal server error handler", func() {
+			handler.ServeHTTP(logger, resp, request, tokenData)
+
+			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
+
+			w, err, message, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			Expect(w).To(Equal(resp))
+			Expect(err).To(MatchError("banana"))
+			Expect(message).To(Equal("policies-create"))
+			Expect(description).To(Equal("check quota failed"))
+
+			By("logging the error")
+			Expect(logger.Logs()).To(HaveLen(1))
+			Expect(logger.Logs()[0]).To(SatisfyAll(
+				LogsWith(lager.ERROR, "test.create-policies.failed-checking-quota"),
 				HaveLogData(SatisfyAll(
 					HaveLen(2),
 					HaveKeyWithValue("error", "banana"),
