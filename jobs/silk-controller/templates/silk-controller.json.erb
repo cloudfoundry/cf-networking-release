@@ -72,6 +72,7 @@
     "metron_port" => p("cf_networking.silk_controller.metron_port"),
     "staleness_threshold_seconds" => 60*60,
     "metrics_emit_seconds" => 30,
+    "log_prefix" => "cfnetworking",
   }
 
   JSON.pretty_generate(toRender)
