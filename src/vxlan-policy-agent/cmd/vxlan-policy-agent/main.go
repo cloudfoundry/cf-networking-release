@@ -38,6 +38,10 @@ const (
 	emitInterval    = 30 * time.Second
 )
 
+var (
+	logPrefix = "cfnetworking"
+)
+
 func die(logger lager.Logger, action string, err error) {
 	logger.Error(action, err)
 	os.Exit(1)
@@ -49,7 +53,11 @@ func main() {
 
 	conf, err := config.New(*configFilePath)
 	if err != nil {
-		log.Fatalf("could not read config file %s", err)
+		log.Fatalf("%s: could not read config file %s", logPrefix, err)
+	}
+
+	if conf.LogPrefix != "" {
+		logPrefix = conf.LogPrefix
 	}
 
 	logger := lager.NewLogger(fmt.Sprintf("%s.vxlan-policy-agent", conf.LogPrefix))
@@ -142,7 +150,7 @@ func main() {
 
 	err = dropsonde.Initialize(conf.MetronAddress, dropsondeOrigin)
 	if err != nil {
-		log.Fatalf("initializing dropsonde: %s", err)
+		log.Fatalf("%s: initializing dropsonde: %s", logPrefix, err)
 	}
 
 	uptimeSource := metrics.NewUptimeSource()

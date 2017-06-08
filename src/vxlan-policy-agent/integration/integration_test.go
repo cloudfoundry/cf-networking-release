@@ -78,7 +78,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 			IPTablesLockFile:     GlobalIPTablesLockFile,
 			DebugServerHost:      "127.0.0.1",
 			DebugServerPort:      testsupport.PickAPort(),
-			LogPrefix:            "cfnetworking",
+			LogPrefix:            "testprefix",
 			ClientTimeoutSeconds: 5,
 		}
 
@@ -190,7 +190,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 
 		It("has a log level thats configurable at runtime", func() {
 			Consistently(session).ShouldNot(gexec.Exit())
-			Eventually(session.Out).Should(Say("cfnetworking.vxlan-policy-agent"))
+			Eventually(session.Out).Should(Say("testprefix.vxlan-policy-agent"))
 			Consistently(session.Out).ShouldNot(Say("got-containers"))
 
 			endpoint := fmt.Sprintf("http://%s:%d/log-level", conf.DebugServerHost, conf.DebugServerPort)
@@ -199,7 +199,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 			_, err = http.DefaultClient.Do(req)
 			Expect(err).NotTo(HaveOccurred())
 
-			Eventually(session.Out, "5s").Should(Say("cfnetworking.vxlan-policy-agent.*got-containers"))
+			Eventually(session.Out, "5s").Should(Say("testprefix.vxlan-policy-agent.*got-containers"))
 		})
 	})
 
@@ -292,6 +292,19 @@ var _ = Describe("VXLAN Policy Agent", func() {
 
 			By("checking that the logging rules are present")
 			Eventually(iptablesFilterRules, "2s", "0.5s").Should(MatchRegexp(PolicyRulesRegexp(LoggingEnabled)))
+		})
+	})
+
+	Context("when the config file is invalid", func() {
+		BeforeEach(func() {
+			conf.PollInterval = 0
+			configFilePath = WriteConfigFile(conf)
+
+		})
+		It("crashes and logs a useful error message", func() {
+			session = startAgent(paths.VxlanPolicyAgentPath, configFilePath)
+			Eventually(session).Should(gexec.Exit(1))
+			Eventually(session.Err).Should(Say("cfnetworking: could not read config file"))
 		})
 	})
 })

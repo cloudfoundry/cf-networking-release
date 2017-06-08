@@ -154,7 +154,7 @@ func DefaultTestConfig(dbConfig db.Config, metronAddress string, fixturesPath st
 	config := config.Config{
 		ListenHost:            "127.0.0.1",
 		ListenPort:            testsupport.PickAPort(),
-		LogPrefix:             "cfnetworking",
+		LogPrefix:             "testprefix",
 		InternalListenPort:    testsupport.PickAPort(),
 		DebugServerHost:       "127.0.0.1",
 		DebugServerPort:       testsupport.PickAPort(),

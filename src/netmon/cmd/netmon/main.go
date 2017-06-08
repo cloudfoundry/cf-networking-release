@@ -16,14 +16,23 @@ import (
 	"github.com/tedsuo/ifrit/sigmon"
 )
 
+var (
+	logPrefix = "cfnetworking"
+)
+
 func main() {
 	configFilePath := flag.String("config-file", "", "path to config file")
 	flag.Parse()
 	conf, err := config.New(*configFilePath)
 	if err != nil {
-		log.Fatalf("reading config", err)
+		log.Fatalf("%s.netmon: reading config: %s", logPrefix, err)
 	}
-	logger := lager.NewLogger(fmt.Sprintf("%s.netmon", conf.LogPrefix))
+
+	if conf.LogPrefix != "" {
+		logPrefix = conf.LogPrefix
+	}
+
+	logger := lager.NewLogger(fmt.Sprintf("%s.netmon", logPrefix))
 	sink := lager.NewReconfigurableSink(lager.NewWriterSink(os.Stdout, lager.DEBUG), lager.DEBUG)
 	logger.RegisterSink(sink)
 	logger.Info("parsed-config", lager.Data{"config": conf})

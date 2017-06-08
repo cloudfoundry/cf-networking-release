@@ -125,7 +125,7 @@ var _ = Describe("Integration", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(responseString).To(ContainSubstring("some-user"))
 
-				Expect(session.Out).To(gbytes.Say("cfnetworking.policy-server"))
+				Expect(session.Out).To(gbytes.Say("testprefix.policy-server"))
 				Expect(session.Out).NotTo(gbytes.Say("request made to whoami endpoint"))
 
 				_ = helpers.MakeAndDoRequest(
@@ -145,7 +145,7 @@ var _ = Describe("Integration", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(responseString).To(ContainSubstring("some-user"))
 
-				Expect(session.Out).To(gbytes.Say("cfnetworking.policy-server.request"))
+				Expect(session.Out).To(gbytes.Say("testprefix.policy-server.request"))
 			})
 
 			It("should emit some metrics", func() {
@@ -194,7 +194,50 @@ var _ = Describe("Integration", func() {
 		It("should log and exit after 5 seconds", func() {
 			Eventually(session, 90*time.Second).Should(gexec.Exit())
 
-			Expect(session.Err).To(gbytes.Say("db connection timeout"))
+			Expect(session.Err).To(gbytes.Say("testprefix.policy-server: db connection timeout"))
+		})
+	})
+
+	Describe("Config file errors", func() {
+		var (
+			session *gexec.Session
+		)
+		Context("when the config file is invalid", func() {
+			BeforeEach(func() {
+				badDbConfig := db.Config{
+					Type:         "",
+					User:         "",
+					Password:     "",
+					Host:         "",
+					Port:         0,
+					DatabaseName: "nonexistentDatabase",
+					Timeout:      0,
+				}
+				conf := helpers.DefaultTestConfig(badDbConfig, "some-address", "fixtures")
+				configFilePath := helpers.WriteConfigFile(conf)
+
+				policyServerCmd := exec.Command(policyServerPath, "-config-file", configFilePath)
+				var err error
+				session, err = gexec.Start(policyServerCmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+
+			})
+			It("exits and errors", func() {
+				Eventually(session).Should(gexec.Exit(1))
+				Expect(session.Err).To(gbytes.Say("cfnetworking.policy-server: could not read config file: invalid config: "))
+			})
+		})
+		Context("when the config file argument is not included", func() {
+			BeforeEach(func() {
+				policyServerCmd := exec.Command(policyServerPath)
+				var err error
+				session, err = gexec.Start(policyServerCmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+			})
+			It("exits and errors", func() {
+				Eventually(session).Should(gexec.Exit(1))
+				Expect(session.Err).To(gbytes.Say("cfnetworking.policy-server: could not read config file: reading config: open"))
+			})
 		})
 	})
 })

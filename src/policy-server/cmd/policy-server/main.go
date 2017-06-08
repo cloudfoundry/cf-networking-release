@@ -45,16 +45,24 @@ const (
 	emitInterval    = 30 * time.Second
 )
 
+var (
+	logPrefix = "cfnetworking"
+)
+
 func main() {
 	configFilePath := flag.String("config-file", "", "path to config file")
 	flag.Parse()
 
 	conf, err := config.New(*configFilePath)
 	if err != nil {
-		log.Fatalf("could not read config file %s", err)
+		log.Fatalf("%s.policy-server: could not read config file: %s", logPrefix, err)
 	}
 
-	logger := lager.NewLogger(fmt.Sprintf("%s.policy-server", conf.LogPrefix))
+	if conf.LogPrefix != "" {
+		logPrefix = conf.LogPrefix
+	}
+
+	logger := lager.NewLogger(fmt.Sprintf("%s.policy-server", logPrefix))
 	reconfigurableSink := initLoggerSink(logger, conf.LogLevel)
 	logger.RegisterSink(reconfigurableSink)
 
@@ -66,7 +74,7 @@ func main() {
 	} else {
 		tlsConfig, err = nonmutualtls.NewClientTLSConfig(conf.UAACA)
 		if err != nil {
-			log.Fatalf("error creating tls config: %s", err)
+			log.Fatalf("%s.policy-server error creating tls config: %s", logPrefix, err) // not tested
 		}
 	}
 	httpClient := &http.Client{
@@ -115,10 +123,10 @@ func main() {
 	select {
 	case connectionResult = <-channel:
 	case <-time.After(5 * time.Second):
-		log.Fatal("db connection timeout")
+		log.Fatalf("%s.policy-server: db connection timeout", logPrefix)
 	}
 	if connectionResult.Err != nil {
-		log.Fatalf("db connect: %s", connectionResult.Err)
+		log.Fatalf("%s.policy-server: db connect: %s", logPrefix, connectionResult.Err) // not tested
 	}
 
 	timeout := time.Duration(conf.Database.Timeout) * time.Second
@@ -133,7 +141,7 @@ func main() {
 		timeout,
 	)
 	if err != nil {
-		log.Fatalf("failed to construct datastore: %s", err)
+		log.Fatalf("%s.policy-server: failed to construct datastore: %s", logPrefix, err) // not tested
 	}
 
 	metricsSender := &metrics.MetricsSender{
@@ -276,7 +284,7 @@ func main() {
 
 	err = dropsonde.Initialize(conf.MetronAddress, dropsondeOrigin)
 	if err != nil {
-		log.Fatalf("initializing dropsonde: %s", err)
+		log.Fatalf("%s.policy-server: initializing dropsonde: %s", logPrefix, err)
 	}
 
 	metricsEmitter := initMetricsEmitter(logger, wrappedStore)
@@ -359,14 +367,14 @@ func initInternalServer(conf *config.Config, internalPoliciesHandler http.Handle
 
 	router, err := rata.NewRouter(routes, handlers)
 	if err != nil {
-		log.Fatalf("unable to create rata Router: %s", err)
+		log.Fatalf("%s.policy-server: unable to create rata Router: %s", logPrefix, err) // not tested
 	}
 
 	addr := fmt.Sprintf("%s:%d", conf.ListenHost, conf.InternalListenPort)
 
 	tlsConfig, err := mutualtls.NewServerTLSConfig(conf.ServerCertFile, conf.ServerKeyFile, conf.CACertFile)
 	if err != nil {
-		log.Fatalf("mutual tls config: %s", err)
+		log.Fatalf("%s.policy-server: mutual tls config: %s", logPrefix, err) // not tested
 	}
 
 	return http_server.NewTLSServer(addr, router, tlsConfig)
@@ -387,7 +395,7 @@ func initExternalServer(conf *config.Config, externalHandlers rata.Handlers) ifr
 
 	externalRouter, err := rata.NewRouter(routes, externalHandlers)
 	if err != nil {
-		log.Fatalf("unable to create rata Router: %s", err) // not tested
+		log.Fatalf("%s.policy-server: unable to create rata Router: %s", logPrefix, err) // not tested
 	}
 
 	addr := fmt.Sprintf("%s:%d", conf.ListenHost, conf.ListenPort)
