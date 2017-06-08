@@ -14,7 +14,7 @@ import (
 	"github.com/onsi/gomega/gexec"
 )
 
-var _ = Describe("policy cleanup", func() {
+var _ = Describe("Container startup time with a big ASG", func() {
 	var (
 		orgName     string
 		spaceName   string

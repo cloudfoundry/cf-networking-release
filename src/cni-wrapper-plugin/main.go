@@ -50,7 +50,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 
 	result030, err := current.NewResultFromResult(result)
 	if err != nil {
-		return fmt.Errorf("convering result from delegate plugin: %s", err) // not tested
+		return fmt.Errorf("converting result from delegate plugin: %s", err) // not tested
 	}
 
 	containerIP := result030.IPs[0].Address.IP
