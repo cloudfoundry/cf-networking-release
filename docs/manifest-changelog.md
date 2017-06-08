@@ -2,7 +2,7 @@
 
 See [deployment docs](deploy-iaas.md) for examples
 
-### 1.0.0
+### 1.1.0
 
 **New Properties**
 
@@ -10,6 +10,10 @@ See [deployment docs](deploy-iaas.md) for examples
     developer can write for a given source app. Defaults to 50 if it is not set. Does not apply to
     users with `network.admin`:
     - `cf_networking.max_policies_per_app_source`
+    
+### 1.0.0
+
+**New Properties**
 
   - The following optional parameters have been added to override the timeout values for
     database connections and DNS health checks for the silk controller and policy server:
