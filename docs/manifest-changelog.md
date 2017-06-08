@@ -2,7 +2,7 @@
 
 See [deployment docs](deploy-iaas.md) for examples
 
-### 0.26.0
+### 1.0.0
 
 **New Properties**
 
