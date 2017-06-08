@@ -250,7 +250,7 @@ func newPluginController(iptablesLockFile string) (*lib.PluginController, error)
 }
 
 func main() {
-	supportedVersions := []string{"0.3.0"}
+	supportedVersions := []string{"0.3.1"}
 
 	skel.PluginMain(cmdAdd, cmdDel, version.PluginSupports(supportedVersions...))
 }

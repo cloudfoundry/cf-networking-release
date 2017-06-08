@@ -107,7 +107,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 
 		debug = &noop_debug.Debug{
 			ReportResult:         `{ "ips": [{ "version": "4", "interface": -1, "address": "1.2.3.4/32" }]}`,
-			ReportVersionSupport: []string{"0.3.0", "0.3.1"},
+			ReportVersionSupport: []string{"0.3.1"},
 		}
 		Expect(debug.WriteDebug(debugFileName)).To(Succeed())
 
@@ -124,7 +124,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 		var code garden.ICMPCode = 0
 		inputStruct = InputStruct{
 			Name:       "cni-wrapper",
-			CNIVersion: "0.3.0",
+			CNIVersion: "0.3.1",
 			Type:       "wrapper",
 			Delegate: map[string]interface{}{
 				"type": "noop",
@@ -318,7 +318,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 			session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(0))
-			Expect(session.Out.Contents()).To(MatchJSON(`{ "ips": [{ "version": "4", "interface": -1, "address": "1.2.3.4/32" }], "dns":{} }`))
+			Expect(session.Out.Contents()).To(MatchJSON(`{ "cniVersion": "0.3.1", "ips": [{ "version": "4", "interface": -1, "address": "1.2.3.4/32" }], "dns":{} }`))
 		})
 
 		It("passes the correct stdin to the delegate plugin", func() {
@@ -331,7 +331,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 			Expect(debug.Command).To(Equal("ADD"))
 
 			Expect(debug.CmdArgs.StdinData).To(MatchJSON(`{
-				"cniVersion": "0.3.0",
+				"cniVersion": "0.3.1",
 				"type": "noop",
 				"some": "other data"
 			}`))
@@ -341,7 +341,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 			session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(session).Should(gexec.Exit(0))
-			Expect(session.Out.Contents()).To(MatchJSON(`{ "ips": [{ "version": "4", "interface": -1, "address": "1.2.3.4/32" }], "dns":{} }`))
+			Expect(session.Out.Contents()).To(MatchJSON(`{ "cniVersion": "0.3.1", "ips": [{ "version": "4", "interface": -1, "address": "1.2.3.4/32" }], "dns":{} }`))
 			Expect(AllIPTablesRules("nat")).To(ContainElement("-A POSTROUTING -s 1.2.3.4/32 ! -o some-device -j MASQUERADE"))
 		})
 
@@ -391,6 +391,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 
 				By("returning all DNS servers")
 				Expect(session.Out.Contents()).To(MatchJSON(`{
+				"cniVersion": "0.3.1",
 				"ips": [{ "version": "4", "interface": -1, "address": "1.2.3.4/32" }],
 				"dns": {"nameservers": ["169.254.0.1", "8.8.4.4", "169.254.0.2"]}
 			}`))
@@ -750,7 +751,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 			Expect(debug.Command).To(Equal("DEL"))
 
 			Expect(debug.CmdArgs.StdinData).To(MatchJSON(`{
-				"cniVersion": "0.3.0",
+				"cniVersion": "0.3.1",
 				"type": "noop",
 				"some": "other data"
 			}`))
@@ -794,7 +795,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 				Expect(debug.Command).To(Equal("DEL"))
 
 				Expect(debug.CmdArgs.StdinData).To(MatchJSON(`{
-					"cniVersion": "0.3.0",
+					"cniVersion": "0.3.1",
 					"type": "noop",
 					"some": "other data"
 				}`))

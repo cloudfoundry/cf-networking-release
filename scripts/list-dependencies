@@ -17,7 +17,7 @@ GOOS=linux gosub list \
   -app code.cloudfoundry.org/silk/... \
   -app example-apps/... \
   -app garden-external-networker \
-  -app github.com/containernetworking/cni/plugins/ipam/host-local \
+  -app github.com/containernetworking/plugins/plugins/ipam/host-local \
   -app netmon/cmd/netmon \
   -app policy-server/cmd/policy-server \
   -app vxlan-policy-agent/cmd/vxlan-policy-agent

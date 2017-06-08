@@ -285,7 +285,7 @@ var _ = Describe("Garden External Networker", func() {
 
 	Context("when the CNI plugin result DNS servers list is empty", func() {
 		BeforeEach(func() {
-			upCommand.Env = append(upCommand.Env, "CNI_ARGS=no_dns_result")
+			upCommand.Env = append(upCommand.Env, "FAKE_CNI_DEBUG=no_dns_result")
 		})
 
 		It("omits the 'dns_servers' field from the Network ('up') output", func() {

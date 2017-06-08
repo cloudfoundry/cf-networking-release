@@ -63,7 +63,7 @@ is stored in a file on disk at `/var/vcap/jobs/silk-cni/config/cni-wrapper-plugi
 {
   "name": "cni-wrapper",
   "type": "cni-wrapper-plugin",
-  "cniVersion": "0.3.0",
+  "cniVersion": "0.3.1",
   "datastore": "/var/vcap/data/container-metadata/store.json",
   "iptables_lock_file": "/var/vcap/data/garden-cni/iptables.lock",
   "overlay_network": "10.255.0.0/16",
@@ -76,7 +76,7 @@ is stored in a file on disk at `/var/vcap/jobs/silk-cni/config/cni-wrapper-plugi
 
   ],
   "delegate": {
-    "cniVersion": "0.3.0",
+    "cniVersion": "0.3.1",
     "name": "silk",
     "type": "silk-cni",
     "daemonPort": 23954,
@@ -94,7 +94,7 @@ the CNI plugin receives a final config object that resembles:
 {
   "name": "cni-wrapper",
   "type": "cni-wrapper-plugin",
-  "cniVersion": "0.3.0",
+  "cniVersion": "0.3.1",
   "datastore": "/var/vcap/data/container-metadata/store.json",
   "iptables_lock_file": "/var/vcap/data/garden-cni/iptables.lock",
   "overlay_network": "10.255.0.0/16",
@@ -107,7 +107,7 @@ the CNI plugin receives a final config object that resembles:
 
   ],
   "delegate": {
-    "cniVersion": "0.3.0",
+    "cniVersion": "0.3.1",
     "name": "silk",
     "type": "silk-cni",
     "daemonPort": 23954,

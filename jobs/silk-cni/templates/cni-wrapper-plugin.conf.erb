@@ -16,7 +16,7 @@
   toRender = {
     "name" => "cni-wrapper",
     "type" => "cni-wrapper-plugin",
-    "cniVersion" => "0.3.0",
+    "cniVersion" => "0.3.1",
     "datastore" => "/var/vcap/data/container-metadata/store.json",
     "iptables_lock_file" => "/var/vcap/data/garden-cni/iptables.lock",
     "health_check_url" => "http://127.0.0.1:" + p('cf_networking.silk_daemon.listen_port').to_s,
@@ -27,7 +27,7 @@
     "vtep_name" => "silk-vtep",
     "dns_servers" => p("cf_networking.dns_servers"),
     "delegate" => {
-      "cniVersion" => "0.3.0",
+      "cniVersion" => "0.3.1",
       "name" => "silk",
       "type" => "silk-cni",
       "daemonPort" => p('cf_networking.silk_daemon.listen_port'),

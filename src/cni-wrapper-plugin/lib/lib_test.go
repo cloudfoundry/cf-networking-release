@@ -40,7 +40,7 @@ var _ = Describe("LoadWrapperConfig", func() {
 			InstanceAddress:    "10.244.20.1",
 			IPTablesASGLogging: true,
 			Delegate: map[string]interface{}{
-				"cniVersion": "0.3.0",
+				"cniVersion": "0.3.1",
 				"some":       "info",
 			},
 			HealthCheckURL: "http://127.0.0.1:10007",
@@ -71,7 +71,7 @@ var _ = Describe("LoadWrapperConfig", func() {
 			It("should set the version", func() {
 				conf, err := lib.LoadWrapperConfig(input)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(conf.Delegate).To(HaveKeyWithValue("cniVersion", "0.3.0"))
+				Expect(conf.Delegate).To(HaveKeyWithValue("cniVersion", "0.3.1"))
 			})
 		})
 
