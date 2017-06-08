@@ -54,7 +54,7 @@ sync_package cf-networking-acceptance \
   -app cf-pusher/cmd/cf-pusher \
   -app github.com/onsi/ginkgo/ginkgo &
 
-sync_package runc-cni \
+GOOS=linux sync_package runc-cni \
   -app garden-external-networker &
 
 sync_package silk-controller \
