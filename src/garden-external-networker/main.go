@@ -97,7 +97,7 @@ func mainWithError(logger io.Writer) error {
 
 	mounter := &bindmount.Mounter{}
 
-	locker := &filelock.Locker{Path: cfg.StateFilePath}
+	locker := filelock.NewLocker(cfg.StateFilePath)
 	tracker := &port_allocator.Tracker{
 		StartPort: cfg.StartPort,
 		Capacity:  cfg.TotalPorts,

@@ -1,38 +1,45 @@
 package filelock
 
-import (
-	"os"
-	"path/filepath"
-	"syscall"
-)
+import "os"
 
 //go:generate counterfeiter -o ../fakes/file_locker.go --fake-name FileLocker . FileLocker
 type FileLocker interface {
-	Open() (*os.File, error)
+	Open() (LockedFile, error)
 }
 
-type Locker struct {
-	Path string
+type locker struct {
+	path string
 }
 
-// Open will open and lock a file.  It blocks until the lock is acquired.
-// If the file does not yet exist, it creates the file, and any missing
-// directories above it in the path.  To release the lock, Close the file.
-func (l *Locker) Open() (*os.File, error) {
-	dir := filepath.Dir(l.Path)
-	err := os.MkdirAll(dir, 0700)
-	if err != nil {
-		panic(err)
-	}
-	const flags = os.O_RDWR | os.O_CREATE
-	file, err := os.OpenFile(l.Path, flags, 0600)
-	if err != nil {
-		return nil, err
-	}
+func NewLocker(path string) FileLocker {
+	return &locker{path}
+}
 
-	err = syscall.Flock(int(file.Fd()), syscall.LOCK_EX)
-	if err != nil {
-		return nil, err
-	}
-	return file, nil
+//go:generate counterfeiter -o ../fakes/locked_file.go --fake-name LockedFile . LockedFile
+type LockedFile interface {
+	Close() error
+	Read([]byte) (int, error)
+	Truncate(int64) error
+	Write([]byte) (int, error)
+	Seek(int64, int) (int64, error)
+}
+
+type lockedFile struct {
+	file *os.File
+}
+
+func (f *lockedFile) Read(b []byte) (int, error) {
+	return f.file.Read(b)
+}
+
+func (f *lockedFile) Truncate(a int64) error {
+	return f.file.Truncate(a)
+}
+
+func (f *lockedFile) Write(b []byte) (int, error) {
+	return f.file.Write(b)
+}
+
+func (f *lockedFile) Seek(a int64, b int) (int64, error) {
+	return f.file.Seek(a, b)
 }

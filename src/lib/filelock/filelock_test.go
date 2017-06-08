@@ -33,9 +33,7 @@ var _ = Describe("Locking using a file", func() {
 
 	AssertBasicThingsWork := func(expectedInitialContents []byte) {
 		It("returns a file usable for read and write", func() {
-			lock := filelock.Locker{
-				Path: path,
-			}
+			lock := filelock.NewLocker(path)
 
 			file, err := lock.Open()
 			Expect(err).NotTo(HaveOccurred())
@@ -88,24 +86,25 @@ var _ = Describe("Locking using a file", func() {
 	})
 
 	Context("when the path has already been opened by a locker in the same OS process", func() {
-		var theFirstFileHandle *os.File
+		var theFirstFileHandle filelock.LockedFile
 
 		BeforeEach(func() {
 			By("acquiring the first lock on the file")
 			var err error
-			theFirstFileHandle, err = (&filelock.Locker{Path: path}).Open()
+			theFirstFileHandle, err = filelock.NewLocker(path).Open()
 			Expect(err).NotTo(HaveOccurred())
 
 			By("writing some data to the file")
-			theFirstFileHandle.Write([]byte("the first data"))
+			_, err = theFirstFileHandle.Write([]byte("the first data"))
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("blocks the second open until the first one is closed", func(done Done) {
-			locker := &filelock.Locker{Path: path}
+			locker := filelock.NewLocker(path)
 
 			By("attempting to acquire another lock on the same file")
 			lockAcquiredChan := make(chan struct{})
-			var secondFileHandle *os.File
+			var secondFileHandle filelock.LockedFile
 			go func() {
 				defer GinkgoRecover()
 
@@ -126,6 +125,8 @@ var _ = Describe("Locking using a file", func() {
 
 			By("validating the data written to the first lock")
 			Expect(ioutil.ReadAll(secondFileHandle)).To(Equal([]byte("the first data")))
+
+			Expect(secondFileHandle.Close()).To(Succeed())
 
 			close(done)
 		}, 5 /* max seconds allowed for this spec */)
@@ -148,10 +149,10 @@ var _ = Describe("Locking using a file", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			By("attempting to acquire the lock ourselves")
-			locker := &filelock.Locker{Path: path}
+			locker := filelock.NewLocker(path)
 
 			lockAcquiredChan := make(chan struct{})
-			var file *os.File
+			var file filelock.LockedFile
 			go func() {
 				defer GinkgoRecover()
 

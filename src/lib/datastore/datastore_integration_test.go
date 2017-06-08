@@ -40,9 +40,7 @@ var _ = Describe("Datastore Lifecycle", func() {
 		Expect(err).NotTo(HaveOccurred())
 		filepath = file.Name()
 
-		locker := &filelock.Locker{
-			Path: filepath,
-		}
+		locker := filelock.NewLocker(filepath)
 		serializer := &serial.Serial{}
 
 		store = &datastore.Store{

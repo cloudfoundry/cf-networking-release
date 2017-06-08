@@ -62,7 +62,7 @@ func main() {
 		log.Fatalf("unable to json marshal log info")
 	}
 
-	logFilePath := filepath.Join(logDir, filepath.Base(args[0])+".log")
+	logFilePath := filepath.Join(logDir, filepath.Base(strings.TrimSuffix(args[0], filepath.Ext(args[0])))+".log")
 	err = ioutil.WriteFile(logFilePath, logBytes, 0600)
 	if err != nil {
 		log.Fatalf("unable to write log file: %s", err)

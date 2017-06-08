@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"path/filepath"
 
 	"code.cloudfoundry.org/garden"
 
@@ -55,7 +56,7 @@ var _ = Describe("Manager", func() {
 			Logger:        logger,
 			CNIController: cniController,
 			Mounter:       mounter,
-			BindMountRoot: "/some/fake/path",
+			BindMountRoot: "some/fake/path",
 			PortAllocator: portAllocator,
 		}
 
@@ -106,7 +107,7 @@ var _ = Describe("Manager", func() {
 			Expect(mounter.IdempotentlyMountCallCount()).To(Equal(1))
 			source, target := mounter.IdempotentlyMountArgsForCall(0)
 			Expect(source).To(Equal("/proc/42/ns/net"))
-			Expect(target).To(Equal(fmt.Sprintf("/some/fake/path/%s", containerHandle)))
+			Expect(target).To(Equal(filepath.Join("some", "fake", "path", containerHandle)))
 		})
 
 		It("should return the IP address in the CNI result as a property", func() {
@@ -130,7 +131,7 @@ var _ = Describe("Manager", func() {
 
 			Expect(cniController.UpCallCount()).To(Equal(1))
 			namespacePath, handle, metadata, legacyNetConf := cniController.UpArgsForCall(0)
-			Expect(namespacePath).To(Equal(fmt.Sprintf("/some/fake/path/%s", containerHandle)))
+			Expect(namespacePath).To(Equal(filepath.Join("some", "fake", "path", containerHandle)))
 			Expect(handle).To(Equal(containerHandle))
 			Expect(metadata).To(Equal(expectedMetadata))
 			Expect(legacyNetConf).To(Equal(expectedLegacyNetConf))
@@ -245,7 +246,8 @@ var _ = Describe("Manager", func() {
 			It("should return the error", func() {
 				mounter.IdempotentlyMountReturns(errors.New("boom"))
 				_, err := mgr.Up(containerHandle, upInputs)
-				Expect(err).To(MatchError("failed mounting /proc/42/ns/net to /some/fake/path/some-container-handle: boom"))
+				Expect(err).To(MatchError(fmt.Sprintf("failed mounting /proc/42/ns/net to %s: boom",
+					filepath.Join("some", "fake", "path", containerHandle))))
 			})
 		})
 
@@ -263,14 +265,14 @@ var _ = Describe("Manager", func() {
 			Expect(mgr.Down(containerHandle)).To(Succeed())
 			Expect(mounter.RemoveMountCallCount()).To(Equal(1))
 
-			Expect(mounter.RemoveMountArgsForCall(0)).To(Equal("/some/fake/path/some-container-handle"))
+			Expect(mounter.RemoveMountArgsForCall(0)).To(Equal(filepath.Join("some", "fake", "path", containerHandle)))
 		})
 
 		It("should call CNI Down, passing in the bind-mounted path to the net ns", func() {
 			Expect(mgr.Down(containerHandle)).To(Succeed())
 			Expect(cniController.DownCallCount()).To(Equal(1))
 			namespacePath, handle := cniController.DownArgsForCall(0)
-			Expect(namespacePath).To(Equal("/some/fake/path/some-container-handle"))
+			Expect(namespacePath).To(Equal(filepath.Join("some", "fake", "path", containerHandle)))
 			Expect(handle).To(Equal(containerHandle))
 		})
 
@@ -309,7 +311,7 @@ var _ = Describe("Manager", func() {
 				mounter.RemoveMountReturns(errors.New("boom"))
 				err := mgr.Down(containerHandle)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(logger.String()).To(ContainSubstring("removing bind mount /some/fake/path/some-container-handle: boom\n"))
+				Expect(logger.String()).To(ContainSubstring(fmt.Sprintf("removing bind mount %s: boom\n", filepath.Join("some", "fake", "path", containerHandle))))
 
 				Expect(portAllocator.ReleaseAllPortsCallCount()).To(Equal(1))
 			})

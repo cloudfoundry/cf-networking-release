@@ -45,7 +45,7 @@ var _ = Describe("GetNetworkConfigs", func() {
 		})
 		It("returns a meaningful error", func() {
 			_, err := cniLoader.GetNetworkConfigs()
-			Expect(err).To(MatchError(HavePrefix("error loading config: lstat /thisdoesnot/exist")))
+			Expect(err).To(MatchError(HavePrefix("error loading config:")))
 		})
 	})
 

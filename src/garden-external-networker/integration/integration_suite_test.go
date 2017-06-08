@@ -43,7 +43,8 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 
 	cniPluginNames := []string{"plugin-0", "plugin-1", "plugin-2", "plugin-3"}
 	for _, name := range cniPluginNames {
-		os.Link(pathToFakeCNIPlugin, filepath.Join(paths.CniPluginDir, name))
+		err = link(pathToFakeCNIPlugin, filepath.Join(paths.CniPluginDir, name))
+		Expect(err).ToNot(HaveOccurred())
 	}
 
 	data, err := json.Marshal(paths)
