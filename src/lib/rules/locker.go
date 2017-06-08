@@ -3,13 +3,12 @@ package rules
 import (
 	"fmt"
 	"lib/filelock"
-	"os"
 	"sync"
 )
 
 type IPTablesLocker struct {
 	FileLocker filelock.FileLocker
-	f          *os.File
+	f          filelock.LockedFile
 	Mutex      *sync.Mutex
 }
 

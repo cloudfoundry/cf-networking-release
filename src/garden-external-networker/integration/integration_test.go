@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	. "github.com/onsi/ginkgo"
@@ -113,7 +114,11 @@ var _ = Describe("Garden External Networker", func() {
 
 		containerHandle = fmt.Sprintf("container-%04x-%x", GinkgoParallelNode(), rand.Int63())
 
-		sleepCmd := exec.Command("/bin/sleep", "1000")
+		sleepCmd := exec.Command("sleep", "1000")
+		if runtime.GOOS == "windows" {
+			sleepCmd = exec.Command("powershell", "Start-Sleep", "1000")
+		}
+
 		Expect(sleepCmd.Start()).To(Succeed())
 		fakeProcess = sleepCmd.Process
 
@@ -122,7 +127,7 @@ var _ = Describe("Garden External Networker", func() {
 		bindMountRoot, err = ioutil.TempDir("", "bind-mount-root")
 		Expect(err).NotTo(HaveOccurred())
 
-		expectedNetNSPath = fmt.Sprintf("%s/%s", bindMountRoot, containerHandle)
+		expectedNetNSPath = filepath.Join(bindMountRoot, containerHandle)
 
 		stateFile, err := ioutil.TempFile("", "external-networker-state.json")
 		Expect(err).NotTo(HaveOccurred())
@@ -245,8 +250,10 @@ var _ = Describe("Garden External Networker", func() {
 			Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_ARGS", ""))
 		}
 
-		By("checking that the fake process's network namespace has been bind-mounted into the filesystem")
-		Expect(sameFile(expectedNetNSPath, fmt.Sprintf("/proc/%d/ns/net", fakePid))).To(BeTrue())
+		if runtime.GOOS != "windows" {
+			By("checking that the fake process's network namespace has been bind-mounted into the filesystem")
+			Expect(sameFile(expectedNetNSPath, fmt.Sprintf("/proc/%d/ns/net", fakePid))).To(BeTrue())
+		}
 
 		By("calling down")
 		runAndWait(downCommand)
@@ -267,8 +274,10 @@ var _ = Describe("Garden External Networker", func() {
 			Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_ARGS", ""))
 		}
 
-		By("checking that the bind-mounted namespace has been removed")
-		Expect(expectedNetNSPath).NotTo(BeAnExistingFile())
+		if runtime.GOOS != "windows" {
+			By("checking that the bind-mounted namespace has been removed")
+			Expect(expectedNetNSPath).NotTo(BeAnExistingFile())
+		}
 
 		By("seeing that is succeeds when calling down again")
 		downCommand2 := exec.Command(paths.PathToAdapter)

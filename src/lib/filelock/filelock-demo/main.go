@@ -23,10 +23,10 @@ func mainWithError() error {
 		return fmt.Errorf("usage: %s <file_to_lock>", os.Args[0])
 	}
 
-	locker := filelock.Locker{Path: os.Args[1]}
+	locker := filelock.NewLocker(os.Args[1])
 
 	startTime := time.Now()
-	fmt.Fprintf(os.Stderr, "waiting to acquire lock on %s...", locker.Path)
+	fmt.Fprintf(os.Stderr, "waiting to acquire lock on %s...", os.Args[1])
 
 	file, err := locker.Open()
 	if err != nil {

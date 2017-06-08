@@ -97,9 +97,7 @@ func main() {
 
 	store := &datastore.Store{
 		Serializer: &serial.Serial{},
-		Locker: &filelock.Locker{
-			Path: conf.Datastore,
-		},
+		Locker:     filelock.NewLocker(conf.Datastore),
 	}
 
 	ipt, err := iptables.New()
@@ -108,7 +106,7 @@ func main() {
 	}
 
 	iptLocker := &rules.IPTablesLocker{
-		FileLocker: &filelock.Locker{Path: conf.IPTablesLockFile},
+		FileLocker: filelock.NewLocker(conf.IPTablesLockFile),
 		Mutex:      &sync.Mutex{},
 	}
 	restorer := &rules.Restorer{}

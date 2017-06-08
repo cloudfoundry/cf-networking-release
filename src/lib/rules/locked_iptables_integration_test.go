@@ -26,9 +26,7 @@ var _ = Describe("Locked IPTables Integration Test", func() {
 	)
 
 	BeforeEach(func() {
-		flock := &filelock.Locker{
-			Path: "/tmp/restorer.lock",
-		}
+		flock := filelock.NewLocker("/tmp/restorer.lock")
 		locker = &rules.IPTablesLocker{
 			FileLocker: flock,
 			Mutex:      &sync.Mutex{},
