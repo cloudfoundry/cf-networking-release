@@ -4,7 +4,7 @@ NOTE: If you are having problems, first consult our [known issues doc](known-iss
 
 ### Checking Logs
 
-0. Discovering All CF Networking Logs:
+* Discovering All CF Networking Logs:
 
   All cf-networking components log lines are prefixed with `cfnetworking` (no hyphen)
   followed by the component name. To find all CF Networking logs, run:
@@ -22,14 +22,14 @@ NOTE: If you are having problems, first consult our [known issues doc](known-iss
   * `garden-external-networker`: Garden will only print errors if creating a container fails.
   * `cni-wrapper-plugin`: Only stdout and stderr are printed in garden logs.
 
-0. Container Create is Failing:
+* Container Create is Failing:
 
   If container create is failing check the garden logs, located on the cell VMs at `/var/vcap/sys/log/garden/garden.stdout.log`.
   Garden logs stdout and stderr from calls to the CNI plugin, you can find any errors related to the CNI ADD/DEL there. 
 
   Unsuccessful create will say things like `exit status 1` in the `stderr` field of the log message.
 
-0. Problems Creating Policies:
+* Problems Creating Policies:
 
   Problems creating policies are usually related to issues on the policy server VM(s). Check the logs at `/var/vcap/sys/log/policy-server/policy-server.stdout.log`
 
