@@ -57,7 +57,8 @@ var _ = Describe("Config", func() {
 					"log_level": "debug",
 					"cleanup_interval": 2,
 					"request_timeout": 5,
-					"max_policies": 3
+					"max_policies": 3,
+					"enable_space_developer_self_service": true
 				}`)
 				c, err := config.New(file.Name())
 				Expect(err).NotTo(HaveOccurred())
@@ -90,6 +91,7 @@ var _ = Describe("Config", func() {
 				Expect(c.CleanupInterval).To(Equal(2))
 				Expect(c.RequestTimeout).To(Equal(5))
 				Expect(c.MaxPolicies).To(Equal(3))
+				Expect(c.EnableSpaceDeveloperSelfService).To(BeTrue())
 			})
 		})
 

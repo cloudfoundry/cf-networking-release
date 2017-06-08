@@ -257,12 +257,14 @@ func main() {
 		Client:        uaaClient,
 		Scopes:        []string{"network.admin"},
 		ErrorResponse: errorResponse,
+		ScopeChecking: true,
 	}
 
 	networkWriteAuthenticator := handlers.Authenticator{
 		Client:        uaaClient,
 		Scopes:        []string{"network.admin", "network.write"},
 		ErrorResponse: errorResponse,
+		ScopeChecking: !conf.EnableSpaceDeveloperSelfService,
 	}
 	authAdmin := func(handler handlers.AuthenticatedHandler) middleware.LoggableHandlerFunc {
 		return authenticator.Wrap(handler)

@@ -134,24 +134,45 @@ var _ = Describe("External API", func() {
 				req = makeNewRequest("POST", "networking/v0/external/policies", body)
 			})
 
-			It("succeeds for developers with access to apps and network.write permission", func() {
-				resp, err := http.DefaultClient.Do(req)
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(resp.StatusCode).To(Equal(http.StatusOK))
-			})
-
-			Context("when they do not have the network.write scope", func() {
-				BeforeEach(func() {
-					req.Header.Set("Authorization", "Bearer space-dev-token")
-				})
-				It("returns a 403 with a meaninful error", func() {
+			Context("when the network.write checking is enabled", func() {
+				It("succeeds for developers with access to apps and network.write permission", func() {
 					resp, err := http.DefaultClient.Do(req)
 					Expect(err).NotTo(HaveOccurred())
 
-					Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
-					responseString, err := ioutil.ReadAll(resp.Body)
-					Expect(responseString).To(MatchJSON(`{ "error": "authenticator: provided scopes [] do not include allowed scopes [network.admin network.write]"}`))
+					Expect(resp.StatusCode).To(Equal(http.StatusOK))
+				})
+
+				Context("when they do not have the network.write scope", func() {
+					BeforeEach(func() {
+						req.Header.Set("Authorization", "Bearer space-dev-token")
+					})
+					It("returns a 403 with a meaninful error", func() {
+						resp, err := http.DefaultClient.Do(req)
+						Expect(err).NotTo(HaveOccurred())
+
+						Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
+						responseString, err := ioutil.ReadAll(resp.Body)
+						Expect(responseString).To(MatchJSON(`{ "error": "authenticator: provided scopes [] do not include allowed scopes [network.admin network.write]"}`))
+					})
+				})
+			})
+
+			Context("when the network.write checking is disabled", func() {
+				BeforeEach(func() {
+					req.Header.Set("Authorization", "Bearer space-dev-token")
+
+					stopPolicyServers(sessions)
+
+					for i := range policyServerConfs {
+						policyServerConfs[i].EnableSpaceDeveloperSelfService = true
+					}
+					sessions = startPolicyServers(policyServerConfs)
+				})
+				It("succeeds for developers with access to apps", func() {
+					resp, err := http.DefaultClient.Do(req)
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(resp.StatusCode).To(Equal(http.StatusOK))
 				})
 			})
 

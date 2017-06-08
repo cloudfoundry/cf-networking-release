@@ -26,6 +26,7 @@ type Authenticator struct {
 	Client        UAAClient
 	Scopes        []string
 	ErrorResponse errorResponse
+	ScopeChecking bool
 }
 
 //go:generate counterfeiter -o fakes/authenticated_handler.go --fake-name AuthenticatedHandler . AuthenticatedHandler
@@ -55,7 +56,7 @@ func (a *Authenticator) Wrap(handle AuthenticatedHandler) middleware.LoggableHan
 			return
 		}
 
-		if !isAuthorized(tokenData.Scope, a.Scopes) {
+		if a.ScopeChecking && !isAuthorized(tokenData.Scope, a.Scopes) {
 			err := errors.New(fmt.Sprintf("provided scopes %s do not include allowed scopes %s", tokenData.Scope, a.Scopes))
 			logger.Error("failed-authorizing-provided-scope", err)
 			a.ErrorResponse.Forbidden(w, err, "authenticator", err.Error())

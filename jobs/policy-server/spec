@@ -33,6 +33,10 @@ properties:
     description: "Maximum policies a space developer may configure for an application source. Does not affect admin users."
     default: 50
 
+  cf_networking.enable_space_developer_self_service:
+    description: "Allows space developers to always be able to configure policies for the apps they own."
+    default: false
+
   cf_networking.policy_server.listen_ip:
     description: "IP address where the policy server will serve its API."
     default: 0.0.0.0

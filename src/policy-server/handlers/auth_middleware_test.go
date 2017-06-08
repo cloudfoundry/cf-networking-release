@@ -46,6 +46,7 @@ var _ = Describe("Authentication middleware", func() {
 			Client:        uaaClient,
 			Scopes:        []string{"network.admin", "network.write"},
 			ErrorResponse: fakeErrorResponse,
+			ScopeChecking: true,
 		}
 
 		protected = authenticator.Wrap(unprotected)
@@ -76,6 +77,34 @@ var _ = Describe("Authentication middleware", func() {
 
 		Expect(uaaClient.CheckTokenCallCount()).To(Equal(1))
 		Expect(uaaClient.CheckTokenArgsForCall(0)).To(Equal("correct-token"))
+	})
+
+	Context("when we disable scope checking", func() {
+		BeforeEach(func() {
+			authenticator = &handlers.Authenticator{
+				Client:        uaaClient,
+				Scopes:        []string{"network.admin", "network.write"},
+				ErrorResponse: fakeErrorResponse,
+				ScopeChecking: false,
+			}
+			tokenResponse = uaa_client.CheckTokenResponse{
+				Scope:    []string{},
+				UserName: "some_user",
+			}
+
+			uaaClient.CheckTokenReturns(tokenResponse, nil)
+			protected = authenticator.Wrap(unprotected)
+		})
+		It("calls the unprotected handler even when the token has no scopes", func() {
+			protected(logger, resp, request)
+
+			Expect(unprotected.ServeHTTPCallCount()).To(Equal(1))
+
+			_, unprotectedResp, unprotectedRequest, tokenData := unprotected.ServeHTTPArgsForCall(0)
+			Expect(unprotectedResp).To(Equal(resp))
+			Expect(unprotectedRequest).To(Equal(request))
+			Expect(tokenData).To(Equal(tokenResponse))
+		})
 	})
 
 	Context("when the header has a lowercase bearer token", func() {
