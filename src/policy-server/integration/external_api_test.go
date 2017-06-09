@@ -128,9 +128,12 @@ var _ = Describe("External API", func() {
 		}
 
 		Describe("Create policies", func() {
-			var req *http.Request
+			var (
+				req  *http.Request
+				body string
+			)
 			BeforeEach(func() {
-				body := `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`
+				body = `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`
 				req = makeNewRequest("POST", "networking/v0/external/policies", body)
 			})
 
@@ -159,14 +162,17 @@ var _ = Describe("External API", func() {
 
 			Context("when the network.write checking is disabled", func() {
 				BeforeEach(func() {
-					req.Header.Set("Authorization", "Bearer space-dev-token")
-
 					stopPolicyServers(sessions)
 
-					for i := range policyServerConfs {
-						policyServerConfs[i].EnableSpaceDeveloperSelfService = true
-					}
+					template := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
+					template.EnableSpaceDeveloperSelfService = true
+					policyServerConfs = configurePolicyServers(template, 2)
 					sessions = startPolicyServers(policyServerConfs)
+					conf = policyServerConfs[0]
+					sessions = startPolicyServers(policyServerConfs)
+
+					req = makeNewRequest("POST", "networking/v0/external/policies", body)
+					req.Header.Set("Authorization", "Bearer space-dev-token")
 				})
 				It("succeeds for developers with access to apps", func() {
 					resp, err := http.DefaultClient.Do(req)
@@ -178,7 +184,7 @@ var _ = Describe("External API", func() {
 
 			Context("when one app is in spaces they do not have access to", func() {
 				BeforeEach(func() {
-					body := `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "app-guid-not-in-my-spaces", "protocol": "tcp", "port": 8090 } } ] }`
+					body = `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "app-guid-not-in-my-spaces", "protocol": "tcp", "port": 8090 } } ] }`
 					req = makeNewRequest("POST", "networking/v0/external/policies", body)
 				})
 				It("returns a 403 with a meaningful error", func() {
