@@ -2,7 +2,8 @@
 
 ## Table of Contents
 0. [Silk Network Configuration](#silk-network-configuration)
-0. [Network Policy Database](#network-policy-database)
+0. [Network Policy Access Control](#network-policy-access-control)
+0. [Database Configuration](#database-configuration)
 0. [MTU](#mtu)
 0. [Mutual TLS](#mutual-tls)
 
@@ -74,6 +75,21 @@ must be done using
 bosh deploy --recreate
 ```
 and may cause the container network to become temporarily unavailable during the deploy.
+
+## Network Policy Access Control
+
+#### Network Admin Access
+Any user with the `network.admin` UAA scope may create create network policies between any two applications.
+There is no limit on the number of policies a network admin can configure.
+
+#### App Developer Access
+Application developers may be given a reduced set of permissions for configuring network policy.
+In this permission model a user may configure policies between apps that are in spaces in which this user has the
+`SpaceDeveloper` role in CloudController.  An application may be the source of only a limited number of
+policies created this way (the limit is configurable via the BOSH property `cf_networking.max_policies_per_app_source`, defaults to 50).
+
+- To grant an individual user this access, give them the `network.write` scope in UAA
+- To grant **all** users this level of access, set the BOSH property `cf_networking.enable_space_developer_self_service` to `true`
 
 
 ## Database Configuration
