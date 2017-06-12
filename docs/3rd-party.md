@@ -4,6 +4,22 @@
 
 If you have any questions or feedback, please visit the `#container-networking` channel on [Cloud Foundry Slack](http://slack.cloudfoundry.org/).
 
+## Introduction
+Basic network connectivity is configured according to the [CNI specification](https://github.com/containernetworking/cni/blob/master/SPEC.md).
+
+However, Cloud Foundry requires the networking stack to perform certain additional functions which are currently not standardized by CNI.  These are:
+
+1. Expose [container ports on the diego cell via DNAT](https://docs.run.pivotal.io/devguide/deploy-apps/environment-variable.html#CF-INSTANCE-PORTS)
+
+2. Enforce [Cloud Foundry Application Security Groups](https://docs.cloudfoundry.org/concepts/asg.html) for egress traffic from the application container 
+
+3. Enforce Container to Container Network Policies that have been configured in the [Policy Server API](API.md)
+
+Configuration for (1) and (2) is passed down via the semi-standardized `runtimeConfig` field described in the [CNI convensions document](https://github.com/containernetworking/cni/blob/master/CONVENTIONS.md).  See [What data will my CNI plugin receive](#what-data-will-my-cni-plugin-receive) below.
+
+Configuration for (3) is available via the [Policy Server Internal API](#policy-server-internal-api).
+
+
 ## MTU
 CNI plugins should automatically detect the MTU settings on the host, and set the MTU
 on container network interfaces appropriately.  For example, if the host MTU is 1500 bytes
