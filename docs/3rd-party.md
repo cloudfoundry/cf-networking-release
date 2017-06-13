@@ -19,6 +19,18 @@ Configuration for (1) and (2) is passed down via the semi-standardized `runtimeC
 
 Configuration for (3) is available via the [Policy Server Internal API](#policy-server-internal-api).
 
+## Test suites
+A Cloud Foundry system that integrates a 3rd party networking component should be able to pass the following test suites:
+
+- [CF Networking Smoke Tests](../src/test/smoke)
+- [CF Networking Acceptance Tests](../src/test/acceptance)
+- [CF Acceptance Tests (CATs)](https://github.com/cloudfoundry/cf-acceptance-tests/)
+
+The smoke tests are non-disruptive and may be run against a live, production environment.  The other tests make potentially disruptive changes and should only be run against a non-production environment.
+
+For local development, we recommend using [`cf-deployment` on BOSH-lite](deploy-bosh-lite.md).
+
+For guidance on these test suites, please reach out to our team in Slack (top of this page).
 
 ## MTU
 CNI plugins should automatically detect the MTU settings on the host, and set the MTU
