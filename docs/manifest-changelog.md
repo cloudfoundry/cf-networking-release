@@ -6,6 +6,9 @@ See [deployment docs](deploy-iaas.md) for examples
 
 **New Properties**
 
+  - An optional parameter has been added to allow all space developers to create policies (default `false`).
+    If this property is not set, a space developer must have `network.write` to create policies.
+    - `cf_networking.enable_space_developer_self_service`
   - An optional parameter has benn added to configure the maximum number of policies a space
     developer can write for a given source app. Defaults to 50 if it is not set. Does not apply to
     users with `network.admin`:
