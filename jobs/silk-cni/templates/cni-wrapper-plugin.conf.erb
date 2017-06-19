@@ -34,6 +34,10 @@
       "dataDir" => "/var/vcap/data/host-local",
       "datastore" => "/var/vcap/data/silk/store.json",
       "mtu" => compute_mtu,
+      "bandwidthLimits"=> {
+        "rate" => p('cf_networking.silk_cni.rate') * 1024,
+        "burst" => p('cf_networking.silk_cni.burst') * 1024,
+      },
      }
   }
 
