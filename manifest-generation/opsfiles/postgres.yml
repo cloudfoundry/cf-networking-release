@@ -1,3 +1,6 @@
+# Experimental opsfile. Put changes here while waiting for cf-deployment to merge in changes.
+# shipit will fail if any file in this directory contains lines other than those starting with #
+
 # add network policy db to bosh-lite postgres
 - type: replace
   path: /instance_groups/name=postgres/jobs/name=postgres/properties/databases/roles/-
