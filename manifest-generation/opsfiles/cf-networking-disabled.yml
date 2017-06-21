@@ -11,7 +11,7 @@
   value: 0
 
 - type: replace
-  path: /instance_groups/name=diego-bbs/jobs/name=silk-controller/properties/cf_networking/disable?
+  path: /instance_groups/name=diego-api/jobs/name=silk-controller/properties/cf_networking/disable?
   value: true
 
 - type: replace
