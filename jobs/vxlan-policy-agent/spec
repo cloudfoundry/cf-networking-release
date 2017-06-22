@@ -48,7 +48,7 @@ properties:
 
   cf_networking.vxlan_policy_agent.debug_server_port:
     description: "Port for the debug server. Use this to adjust log level at runtime or dump process stats."
-    default: 22222
+    default: 44151
 
   cf_networking.vxlan_policy_agent.log_level:
     description: "Logging level (debug, info, warn, error)."

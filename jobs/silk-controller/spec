@@ -39,7 +39,7 @@ properties:
 
   cf_networking.silk_controller.debug_port:
     description: "Debug port for silk controller.  Use this to adjust log level at runtime or dump process stats."
-    default: 22222
+    default: 46455
 
   cf_networking.silk_controller.health_check_port:
     description: "Health check port for silk controller. Used by the Consul DNS health check."

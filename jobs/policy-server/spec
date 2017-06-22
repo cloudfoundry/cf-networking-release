@@ -51,7 +51,7 @@ properties:
 
   cf_networking.policy_server.debug_port:
     description: "Port for the debug server. Use this to adjust log level at runtime or dump process stats."
-    default: 22222
+    default: 31821
 
   cf_networking.policy_server.internal_listen_port:
     description: "Port where the policy server will serve its internal API."
