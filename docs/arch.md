@@ -24,6 +24,7 @@ On every Diego cell
   - Discovers desired network policies from the [Policy Server's Internal API](3rd-party.md#policy-server-internal-api)
   - Updates IPTables rules on Diego cell to allow whitelisted ingress traffic
   - Egress traffic is tagged with a unique identifier per source application, using the [VXLAN GBP header](https://tools.ietf.org/html/draft-smith-vxlan-group-policy-02#section-2.1)
+  - Optionally [limit bandwidth](bandwidth-limiting.md) in and out of each container
 
 ![](data_plane.png)
 
