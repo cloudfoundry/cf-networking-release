@@ -35,8 +35,8 @@
       "datastore" => "/var/vcap/data/silk/store.json",
       "mtu" => compute_mtu,
       "bandwidthLimits"=> {
-        "rate" => p('cf_networking.silk_cni.rate') * 1024,
-        "burst" => p('cf_networking.silk_cni.burst') * 1024,
+        "rate" => p('cf_networking.rate') * 1024,
+        "burst" => p('cf_networking.burst') * 1024,
       },
      }
   }

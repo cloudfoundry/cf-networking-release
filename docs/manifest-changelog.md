@@ -2,6 +2,21 @@
 
 See [deployment docs](deploy-iaas.md) for examples
 
+### 1.2.0
+
+**New Properties**
+
+  - Optional parameters have been added to limit the bandwidth in and out of
+    containers.
+    - `cf_networking.rate` is the rate in Kbps at which traffic can leave and
+      enter a container.
+    - `cf_networking.burst` is the burst in Kb at which traffic can leave and
+      enter a container.
+  - Both of these parameters must be set in order to limit bandwidth. If
+    neither one is set, then bandwidth is not limited.
+  - The burst must high enough to support the given rate. If burst is not high
+    enough, then creating containers will fail.
+
 ### 1.1.0
 
 **New Properties**

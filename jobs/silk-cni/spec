@@ -30,11 +30,11 @@ properties:
     description: "DNS servers that containers will use.  If set, this list takes precedence over DNS servers configured through garden."
     default: []
 
-  cf_networking.silk_cni.rate:
-    description: "Bandwidth rate in Kbps for traffic through container. 0 for no limit."
+  cf_networking.rate:
+    description: "Bandwidth rate in Kbps for traffic through container. 0 for no limit. If rate is set, burst must also be set."
     default: 0
 
-  cf_networking.silk_cni.burst:
-    description: "Bandwidth burst in Kbps for traffic through container. 0 for no limit."
+  cf_networking.burst:
+    description: "Bandwidth burst in Kb for traffic through container. 0 for no limit. If burst is set, rate must also be set."
     default: 0
 
