@@ -77,16 +77,14 @@ upload_local_release() {
 }
 
 main() {
+    if [ "$(uname)" == "Darwin" ]; then
+      sudo route add -net "$ips" "$gw"
+    fi
     create_bosh_env
     set_bosh_env
 
-    if [ `uname` == "Darwin" ]; then
-        sudo route add -net $ips $gw
-    elif [ `uname` == "Linux" ]; then
-        sudo route add -net $ips gw $gw
-    else
-        echo "ERROR adding route"
-        exit 1
+    if [ "$(uname)" == "Linux" ]; then
+      sudo route add -net "$ips" gw "$gw"
     fi
 
     if [ "$upload_stemcell" == true ]; then
