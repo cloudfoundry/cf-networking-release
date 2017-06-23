@@ -5,16 +5,16 @@
 This deployment option uses the new tooling:
 - the new Golang [bosh-cli](https://github.com/cloudfoundry/bosh-cli)
 - [bosh-deployment](https://github.com/cloudfoundry/bosh-deployment)
-- [cf-deployment](https://github.com/cloudfoundry/cf-deployment), refer to our [release notes](https://github.com/cloudfoundry-incubator/cf-networking-release/releases) to get information on validated versions
+- [cf-deployment](https://github.com/cloudfoundry/cf-deployment), refer to our [release notes](https://github.com/cloudfoundry-incubator/cf-networking-release/releases) to get information on validated versions.
 
-- Option 1: use the script
+### Option 1: use the script
   ```bash
   pushd ~/workspace/cf-networking-release
     ./scripts/deploy-to-bosh-lite
   popd
   ```
 
-- Option 2: deploy by hand
+### Option 2: deploy by hand
 Follow the instructions [here](https://github.com/cloudfoundry/bosh-deployment/blob/master/docs/bosh-lite-on-vbox.md) to install `bosh-lite` using `BOSH CLI v2` on your machine.
 
 It assumes you have a BOSH director on Virtualbox that was created using `bosh create-env`.
@@ -52,8 +52,8 @@ Then deploy
 ```bash
 bosh deploy ~/workspace/cf-deployment/cf-deployment.yml \
   -o ~/workspace/cf-networking-release/manifest-generation/opsfiles/cf-networking.yml \
+  -o ~/workspace/cf-networking-release/manifest-generation/opsfiles/use-latest.yml \
   -o ~/workspace/cf-deployment/operations/bosh-lite.yml \
-  -o ~/workspace/cf-networking-release/manifest-generation/opsfiles/postgres.yml \
   --vars-store ~/deployments/vbox/deployment-vars.yml \
   -v system_domain=bosh-lite.com
 ```
