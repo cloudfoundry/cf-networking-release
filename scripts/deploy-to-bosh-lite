@@ -77,10 +77,17 @@ upload_local_release() {
 }
 
 main() {
-    sudo route add -net 10.244.0.0/16 192.168.50.6
-
     create_bosh_env
     set_bosh_env
+
+    if [ `uname` == "Darwin" ]; then
+        sudo route add -net $ips $gw
+    elif [ `uname` == "Linux" ]; then
+        sudo route add -net $ips gw $gw
+    else
+        echo "ERROR adding route"
+        exit 1
+    fi
 
     if [ "$upload_stemcell" == true ]; then
       upload_bosh_stemcell
@@ -93,6 +100,8 @@ main() {
     deploy_cf
 }
 
+ips="10.244.0.0/16"
+gw="192.168.50.6"
 upload_stemcell=true
 
 main
