@@ -28,6 +28,9 @@ func (d *Destination) Create(tx Transaction, destination_group_id int, port int,
 		port,
 		protocol,
 	)
+	if err != nil {
+		return -1, err
+	}
 	id, err := d.GetID(tx, destination_group_id, port, protocol)
 	return id, err
 }
