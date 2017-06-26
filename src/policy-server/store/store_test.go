@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"math/rand"
 	"policy-server/models"
 	"policy-server/store"
 	"policy-server/store/fakes"
@@ -34,7 +33,8 @@ var _ = Describe("Store", func() {
 		mockDb = &fakes.Db{}
 
 		dbConf = testsupport.GetDBConfig()
-		dbConf.DatabaseName = fmt.Sprintf("test_%x", rand.Int())
+		dbConf.DatabaseName = fmt.Sprintf("test_node_%d", GinkgoParallelNode())
+
 		testsupport.CreateDatabase(dbConf)
 
 		var err error
@@ -52,7 +52,7 @@ var _ = Describe("Store", func() {
 		if realDb != nil {
 			Expect(realDb.Close()).To(Succeed())
 		}
-		testsupport.RemoveDatabase(dbConf)
+		Expect(testsupport.RemoveDatabase(dbConf)).To(Succeed())
 	})
 
 	Describe("concurrent create and delete requests", func() {

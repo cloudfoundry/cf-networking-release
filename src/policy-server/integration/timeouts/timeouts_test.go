@@ -73,11 +73,11 @@ var _ = Describe("Timeout", func() {
 	Context("when the database is unreachable", func() {
 		BeforeEach(func() {
 			By("blocking access to port " + strconv.Itoa(int(dbConf.Port)))
-			mustSucceed("iptables", "-A", "INPUT", "-p", "tcp", "--dport", strconv.Itoa(int(dbConf.Port)), "-j", "DROP")
+			mustSucceed("iptables", "-w", "-A", "INPUT", "-p", "tcp", "--dport", strconv.Itoa(int(dbConf.Port)), "-j", "DROP")
 		})
 		AfterEach(func() {
 			By("allowing access to port " + strconv.Itoa(int(dbConf.Port)))
-			mustSucceed("iptables", "-D", "INPUT", "-p", "tcp", "--dport", strconv.Itoa(int(dbConf.Port)), "-j", "DROP")
+			mustSucceed("iptables", "-w", "-D", "INPUT", "-p", "tcp", "--dport", strconv.Itoa(int(dbConf.Port)), "-j", "DROP")
 		})
 
 		itTimesOut := func(description string, endpointMethod string, endpointPath string, bodyString string, failureJSON string) {

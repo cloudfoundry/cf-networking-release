@@ -201,7 +201,7 @@ func VerifyTCPConnection(address string) error {
 	return nil
 }
 
-const DEFAULT_TIMEOUT = "5s"
+const DEFAULT_TIMEOUT = "10s"
 
 func StartPolicyServer(policyServerPath string, conf config.Config) *gexec.Session {
 	configFilePath := WriteConfigFile(conf)
