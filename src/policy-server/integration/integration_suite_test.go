@@ -7,6 +7,7 @@ import (
 	"policy-server/integration/helpers"
 
 	"code.cloudfoundry.org/cf-networking-helpers/metrics"
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 
 	. "github.com/onsi/ginkgo"
 	ginkgoConfig "github.com/onsi/ginkgo/config"
@@ -53,9 +54,9 @@ func configurePolicyServers(template config.Config, instances int) []config.Conf
 	var configs []config.Config
 	for i := 0; i < instances; i++ {
 		conf := template
-		conf.ListenPort += i * 100
-		conf.InternalListenPort += i * 100
-		conf.DebugServerPort += i * 100
+		conf.ListenPort = testsupport.PickAPort()
+		conf.InternalListenPort = testsupport.PickAPort()
+		conf.DebugServerPort = testsupport.PickAPort()
 		configs = append(configs, conf)
 	}
 	return configs
