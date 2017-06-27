@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"lib/nonmutualtls"
-	"math/rand"
 	"net/http"
 	"os"
+	"time"
+
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -17,6 +19,9 @@ import (
 	"github.com/tedsuo/ifrit/http_server"
 	"github.com/tedsuo/ifrit/sigmon"
 )
+
+const START_TIMEOUT = 10 * time.Second
+const WAIT_TIMEOUT = 2 * time.Second
 
 var _ = Describe("TLS config for internal API server", func() {
 	var (
@@ -27,7 +32,9 @@ var _ = Describe("TLS config for internal API server", func() {
 
 	BeforeEach(func() {
 		var err error
-		serverListenAddr = fmt.Sprintf("127.0.0.1:%d", 40000+rand.Intn(10000))
+
+		port := testsupport.PickAPort()
+		serverListenAddr = fmt.Sprintf("127.0.0.1:%d", port)
 		clientTLSConfig, err = nonmutualtls.NewClientTLSConfig(paths.ServerCACertPath)
 		Expect(err).NotTo(HaveOccurred())
 		serverTLSConfig, err = nonmutualtls.NewServerTLSConfig(paths.ServerCertPath, paths.ServerKeyPath)
@@ -47,7 +54,7 @@ var _ = Describe("TLS config for internal API server", func() {
 		group := grouper.NewOrdered(os.Interrupt, members)
 		monitor := ifrit.Invoke(sigmon.New(group))
 
-		Eventually(monitor.Ready(), "5s").Should(BeClosed())
+		Expect(testsupport.WaitOrReady(START_TIMEOUT, monitor)).To(Succeed())
 		return monitor
 	}
 
@@ -75,7 +82,7 @@ var _ = Describe("TLS config for internal API server", func() {
 			Expect(resp.Body.Close()).To(Succeed())
 
 			server.Signal(os.Interrupt)
-			Eventually(server.Wait()).Should(Receive())
+			Eventually(server.Wait(), WAIT_TIMEOUT).Should(Receive())
 		})
 
 		Context("when the key pair cannot be created", func() {
@@ -93,7 +100,7 @@ var _ = Describe("TLS config for internal API server", func() {
 
 			AfterEach(func() {
 				server.Signal(os.Interrupt)
-				Eventually(server.Wait()).Should(Receive())
+				Eventually(server.Wait(), WAIT_TIMEOUT).Should(Receive())
 			})
 
 			Context("when the client has been configured without a CA", func() {
