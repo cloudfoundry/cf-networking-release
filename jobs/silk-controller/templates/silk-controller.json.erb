@@ -16,17 +16,17 @@
 
   def require_db_param(name)
     param = db_param name
-    return param if param.present?
+    return param if !param.nil?
 
     raise "#{db_param_path name} must be specified"
   end
 
   def db_host
     from_property = db_param 'host'
-    return from_property if from_property.present?
+    return from_property if !from_property.nil?
 
     from_link = link("database").instances[0].address
-    return from_link if from_link.present?
+    return from_link if !from_link.nil?
 
     raise "must provide database link or set #{db_param_path 'host'}"
   end
