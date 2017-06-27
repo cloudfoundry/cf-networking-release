@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
 	"policy-server/config"
 	"policy-server/integration/helpers"
@@ -38,7 +37,7 @@ var _ = Describe("External API", func() {
 		fakeMetron = metrics.NewFakeMetron()
 
 		dbConf = testsupport.GetDBConfig()
-		dbConf.DatabaseName = fmt.Sprintf("test_%x", rand.Int())
+		dbConf.DatabaseName = fmt.Sprintf("test_node_%d", GinkgoParallelNode())
 		testsupport.CreateDatabase(dbConf)
 
 		template := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
@@ -184,7 +183,6 @@ var _ = Describe("External API", func() {
 					policyServerConfs = configurePolicyServers(template, 2)
 					sessions = startPolicyServers(policyServerConfs)
 					conf = policyServerConfs[0]
-					sessions = startPolicyServers(policyServerConfs)
 
 					req = makeNewRequest("POST", "networking/v0/external/policies", body)
 					req.Header.Set("Authorization", "Bearer space-dev-token")

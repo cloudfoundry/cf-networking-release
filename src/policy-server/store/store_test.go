@@ -52,7 +52,7 @@ var _ = Describe("Store", func() {
 		if realDb != nil {
 			Expect(realDb.Close()).To(Succeed())
 		}
-		Expect(testsupport.RemoveDatabase(dbConf)).To(Succeed())
+		testsupport.RemoveDatabase(dbConf)
 	})
 
 	Describe("concurrent create and delete requests", func() {

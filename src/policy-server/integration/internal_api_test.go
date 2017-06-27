@@ -5,7 +5,6 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
 	"policy-server/config"
 	"policy-server/integration/helpers"
@@ -34,7 +33,7 @@ var _ = Describe("Internal API", func() {
 	BeforeEach(func() {
 		fakeMetron = metrics.NewFakeMetron()
 		dbConf = testsupport.GetDBConfig()
-		dbConf.DatabaseName = fmt.Sprintf("test_%x", rand.Int())
+		dbConf.DatabaseName = fmt.Sprintf("test_node_%d", GinkgoParallelNode())
 		testsupport.CreateDatabase(dbConf)
 
 		cert, err := tls.LoadX509KeyPair("fixtures/client.crt", "fixtures/client.key")

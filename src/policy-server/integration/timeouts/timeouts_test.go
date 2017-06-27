@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
 	"os/exec"
 	"policy-server/config"
@@ -45,7 +44,7 @@ var _ = Describe("Timeout", func() {
 			Skip("skipping timeout tests on postgres; only supported by mysql")
 		}
 
-		dbConf.DatabaseName = fmt.Sprintf("test_timeouts_%x", rand.Int())
+		dbConf.DatabaseName = fmt.Sprintf("test_timeouts_node_%d", GinkgoParallelNode())
 		dbConf.Timeout = 1
 		testsupport.CreateDatabase(dbConf)
 

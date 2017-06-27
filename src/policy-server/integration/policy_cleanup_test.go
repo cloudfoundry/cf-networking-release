@@ -3,7 +3,6 @@ package integration_test
 import (
 	"fmt"
 	"io/ioutil"
-	"math/rand"
 	"net/http"
 	"policy-server/config"
 	"policy-server/integration/helpers"
@@ -32,7 +31,7 @@ var _ = Describe("Automatic Stale Policy Cleanup", func() {
 		fakeMetron = metrics.NewFakeMetron()
 
 		dbConf = testsupport.GetDBConfig()
-		dbConf.DatabaseName = fmt.Sprintf("test_%x", rand.Int())
+		dbConf.DatabaseName = fmt.Sprintf("test_node_%d", GinkgoParallelNode())
 		testsupport.CreateDatabase(dbConf)
 
 		template := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
