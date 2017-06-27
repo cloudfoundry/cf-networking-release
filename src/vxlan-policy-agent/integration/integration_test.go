@@ -112,199 +112,204 @@ var _ = Describe("VXLAN Policy Agent", func() {
 	}
 
 	Describe("policy agent", func() {
-		BeforeEach(func() {
-			mockPolicyServer = startServer(serverListenAddr, serverTLSConfig)
-			session = startAgent(paths.VxlanPolicyAgentPath, configFilePath)
-		})
-
-		It("should boot and gracefully terminate", func() {
-			Consistently(session).ShouldNot(gexec.Exit())
-			session.Interrupt()
-			Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit())
-		})
-
-		getIPTablesLogging := func() (bool, error) {
-			endpoint := fmt.Sprintf("http://%s:%d/iptables-c2c-logging", conf.DebugServerHost, conf.DebugServerPort)
-			resp, err := http.DefaultClient.Get(endpoint)
-			if err != nil {
-				return false, err
+		Context("when the policy server is up and running", func() {
+			getIPTablesLogging := func() (bool, error) {
+				endpoint := fmt.Sprintf("http://%s:%d/iptables-c2c-logging", conf.DebugServerHost, conf.DebugServerPort)
+				resp, err := http.DefaultClient.Get(endpoint)
+				if err != nil {
+					return false, err
+				}
+				defer resp.Body.Close()
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
+				var respStruct struct {
+					Enabled bool `json:"enabled"`
+				}
+				Expect(json.NewDecoder(resp.Body).Decode(&respStruct)).To(Succeed())
+				return respStruct.Enabled, nil
 			}
-			defer resp.Body.Close()
-			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-			var respStruct struct {
-				Enabled bool `json:"enabled"`
-			}
-			Expect(json.NewDecoder(resp.Body).Decode(&respStruct)).To(Succeed())
-			return respStruct.Enabled, nil
-		}
 
-		Describe("the debug server", func() {
-			It("has a iptables logging endpoint", func() {
-				Eventually(getIPTablesLogging).Should(BeFalse())
+			BeforeEach(func() {
+				mockPolicyServer = startServer(serverListenAddr, serverTLSConfig)
+				session = startAgent(paths.VxlanPolicyAgentPath, configFilePath)
+
+				Eventually(func() error {
+					_, err := getIPTablesLogging()
+					return err
+				}, "5s").Should(Succeed()) // wait until vxlan-policy-agent debug server is up
+			})
+
+			It("should boot and gracefully terminate", func() {
+				Consistently(session).ShouldNot(gexec.Exit())
+				session.Interrupt()
+				Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit())
+			})
+
+			Describe("the debug server", func() {
+				It("has a iptables logging endpoint", func() {
+					Eventually(getIPTablesLogging).Should(BeFalse())
+					setIPTablesLogging(LoggingEnabled)
+					Expect(getIPTablesLogging()).To(BeTrue())
+				})
+			})
+
+			It("supports enabling/disabling iptables logging at runtime", func() {
+				By("checking that the logging rules are absent")
+				Eventually(iptablesFilterRules, "4s", "0.5s").Should(MatchRegexp(PolicyRulesRegexp(LoggingDisabled)))
+
+				By("enabling iptables logging")
 				setIPTablesLogging(LoggingEnabled)
-				Expect(getIPTablesLogging()).To(BeTrue())
+
+				By("checking that the logging rules are present")
+				Eventually(iptablesFilterRules, "4s", "0.5s").Should(MatchRegexp(PolicyRulesRegexp(LoggingEnabled)))
+
+				By("disabling iptables logging")
+				setIPTablesLogging(LoggingDisabled)
+
+				By("checking that the logging rules are absent")
+				Eventually(iptablesFilterRules, "4s", "0.5s").Should(MatchRegexp(PolicyRulesRegexp(LoggingDisabled)))
+			})
+
+			It("writes the mark rule and enforces policies", func() {
+				Eventually(iptablesFilterRules, "4s", "1s").Should(ContainSubstring(`-s 10.255.100.21/32 -m comment --comment "src:some-very-very-long-app-guid" -j MARK --set-xmark 0xa/0xffffffff`))
+				Expect(iptablesFilterRules()).To(ContainSubstring(`-d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m comment --comment "src:another-app-guid_dst:some-very-very-long-app-guid" -j ACCEPT`))
+			})
+
+			It("writes only one mark rule for a single container", func() {
+				Eventually(iptablesFilterRules, "4s", "1s").Should(ContainSubstring(`-s 10.255.100.21/32 -m comment --comment "src:some-very-very-long-app-guid" -j MARK --set-xmark 0xa/0xffffffff`))
+				Expect(iptablesFilterRules()).NotTo(MatchRegexp(`.*--set-xmark.*\n.*--set-xmark.*`))
+			})
+
+			It("emits metrics about durations", func() {
+				gatherMetricNames := func() map[string]bool {
+					events := fakeMetron.AllEvents()
+					metrics := map[string]bool{}
+					for _, event := range events {
+						metrics[event.Name] = true
+					}
+					return metrics
+				}
+				Eventually(gatherMetricNames, "5s").Should(HaveKey("iptablesEnforceTime"))
+				Eventually(gatherMetricNames, "5s").Should(HaveKey("totalPollTime"))
+				Eventually(gatherMetricNames, "5s").Should(HaveKey("containerMetadataTime"))
+				Eventually(gatherMetricNames, "5s").Should(HaveKey("policyServerPollTime"))
+			})
+
+			It("has a log level thats configurable at runtime", func() {
+				Consistently(session).ShouldNot(gexec.Exit())
+				Eventually(session.Out).Should(Say("testprefix.vxlan-policy-agent"))
+				Consistently(session.Out).ShouldNot(Say("got-containers"))
+
+				endpoint := fmt.Sprintf("http://%s:%d/log-level", conf.DebugServerHost, conf.DebugServerPort)
+				req, err := http.NewRequest("POST", endpoint, strings.NewReader("debug"))
+				Expect(err).NotTo(HaveOccurred())
+				_, err = http.DefaultClient.Do(req)
+				Expect(err).NotTo(HaveOccurred())
+
+				Eventually(session.Out, "5s").Should(Say("testprefix.vxlan-policy-agent.*got-containers"))
+			})
+		})
+		Context("when the policy server is unavailable", func() {
+			BeforeEach(func() {
+				session = startAgent(paths.VxlanPolicyAgentPath, configFilePath)
+			})
+
+			It("does not write the mark rule or enforces policies", func() {
+				Expect(iptablesFilterRules()).NotTo(ContainSubstring(`-s 10.255.100.21/32 -m comment --comment "src:some-very-very-long-app-guid" -j MARK --set-xmark 0xa/0xffffffff`))
+				Expect(iptablesFilterRules()).NotTo(ContainSubstring(`-d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m comment --comment "src:another-app-guid_dst:some-very-very-long-app-guid" -j ACCEPT`))
+			})
+
+			It("writes the mark rule or enforces policies when the policy server becomes available again", func() {
+				mockPolicyServer = startServer(serverListenAddr, serverTLSConfig)
+				Eventually(iptablesFilterRules, "10s", "1s").Should(ContainSubstring(`-s 10.255.100.21/32 -m comment --comment "src:some-very-very-long-app-guid" -j MARK --set-xmark 0xa/0xffffffff`))
+				Expect(iptablesFilterRules()).To(ContainSubstring(`-d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m comment --comment "src:another-app-guid_dst:some-very-very-long-app-guid" -j ACCEPT`))
+			})
+		})
+		Context("when requests to the policy server time out", func() {
+			BeforeEach(func() {
+				conf.ClientTimeoutSeconds = 1
+				configFilePath = WriteConfigFile(conf)
+				mustSucceed("iptables", "-A", "INPUT", "-p", "tcp", "--dport", strconv.Itoa(serverListenPort), "-j", "DROP")
+			})
+
+			AfterEach(func() {
+				mustSucceed("iptables", "-D", "INPUT", "-p", "tcp", "--dport", strconv.Itoa(serverListenPort), "-j", "DROP")
+			})
+
+			It("times out requests", func() {
+				session = startAgent(paths.VxlanPolicyAgentPath, configFilePath)
+				Eventually(session.Out.Contents, "3s").Should(MatchRegexp("policy-client-get-policies.*request canceled while waiting for connection.*Client.Timeout exceeded"))
+				session.Kill()
+			})
+		})
+		Context("when vxlan policy agent is deployed with iptables logging enabled", func() {
+			BeforeEach(func() {
+				conf.IPTablesLogging = true
+				Expect(conf.Validate()).To(Succeed())
+				configFilePath = WriteConfigFile(conf)
+				mockPolicyServer = startServer(serverListenAddr, serverTLSConfig)
+				session = startAgent(paths.VxlanPolicyAgentPath, configFilePath)
+			})
+
+			It("supports enabling/disabling iptables logging at runtime", func() {
+				Consistently(session).ShouldNot(gexec.Exit())
+
+				By("checking that the logging rules are present")
+				Eventually(iptablesFilterRules, "2s", "0.5s").Should(MatchRegexp(PolicyRulesRegexp(LoggingEnabled)))
+
+				By("disabling iptables logging")
+				setIPTablesLogging(LoggingDisabled)
+
+				By("checking that the logging rules are absent")
+				Eventually(iptablesFilterRules, "2s", "0.5s").Should(MatchRegexp(PolicyRulesRegexp(LoggingDisabled)))
+
+				By("enabling iptables logging")
+				setIPTablesLogging(LoggingEnabled)
+
+				By("checking that the logging rules are present")
+				Eventually(iptablesFilterRules, "2s", "0.5s").Should(MatchRegexp(PolicyRulesRegexp(LoggingEnabled)))
+			})
+		})
+	})
+
+	Describe("errors", func() {
+		Context("when the vxlan policy agent cannot connect to the server upon start", func() {
+			BeforeEach(func() {
+				conf.PolicyServerURL = "some-bad-url"
+				configFilePath = WriteConfigFile(conf)
+				session = startAgent(paths.VxlanPolicyAgentPath, configFilePath)
+			})
+
+			It("crashes and logs a useful error message", func() {
+				Eventually(session).Should(gexec.Exit())
+				Eventually(session.Out.Contents).Should(MatchRegexp("policy-client-get-policies.*http client do.*unsupported protocol scheme"))
 			})
 		})
 
-		It("supports enabling/disabling iptables logging at runtime", func() {
-			By("checking that the logging rules are absent")
-			Eventually(iptablesFilterRules, "4s", "0.5s").Should(MatchRegexp(PolicyRulesRegexp(LoggingDisabled)))
+		Context("when vxlan policy agent has invalid certs", func() {
+			BeforeEach(func() {
+				conf.ClientCertFile = "totally"
+				conf.ClientKeyFile = "not-cool"
+				configFilePath = WriteConfigFile(conf)
+			})
 
-			By("enabling iptables logging")
-			setIPTablesLogging(LoggingEnabled)
-
-			By("checking that the logging rules are present")
-			Eventually(iptablesFilterRules, "4s", "0.5s").Should(MatchRegexp(PolicyRulesRegexp(LoggingEnabled)))
-
-			By("disabling iptables logging")
-			setIPTablesLogging(LoggingDisabled)
-
-			By("checking that the logging rules are absent")
-			Eventually(iptablesFilterRules, "4s", "0.5s").Should(MatchRegexp(PolicyRulesRegexp(LoggingDisabled)))
+			It("does not start", func() {
+				session = startAgent(paths.VxlanPolicyAgentPath, configFilePath)
+				Eventually(session).Should(gexec.Exit(1))
+				Eventually(session.Out).Should(Say("unable to load cert or key"))
+			})
 		})
 
-		It("writes the mark rule and enforces policies", func() {
-			Eventually(iptablesFilterRules, "4s", "1s").Should(ContainSubstring(`-s 10.255.100.21/32 -m comment --comment "src:some-very-very-long-app-guid" -j MARK --set-xmark 0xa/0xffffffff`))
-			Expect(iptablesFilterRules()).To(ContainSubstring(`-d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m comment --comment "src:another-app-guid_dst:some-very-very-long-app-guid" -j ACCEPT`))
-		})
+		Context("when the config file is invalid", func() {
+			BeforeEach(func() {
+				conf.PollInterval = 0
+				configFilePath = WriteConfigFile(conf)
 
-		It("writes only one mark rule for a single container", func() {
-			Eventually(iptablesFilterRules, "4s", "1s").Should(ContainSubstring(`-s 10.255.100.21/32 -m comment --comment "src:some-very-very-long-app-guid" -j MARK --set-xmark 0xa/0xffffffff`))
-			Expect(iptablesFilterRules()).NotTo(MatchRegexp(`.*--set-xmark.*\n.*--set-xmark.*`))
-		})
-
-		It("emits metrics about durations", func() {
-			gatherMetricNames := func() map[string]bool {
-				events := fakeMetron.AllEvents()
-				metrics := map[string]bool{}
-				for _, event := range events {
-					metrics[event.Name] = true
-				}
-				return metrics
-			}
-			Eventually(gatherMetricNames, "5s").Should(HaveKey("iptablesEnforceTime"))
-			Eventually(gatherMetricNames, "5s").Should(HaveKey("totalPollTime"))
-			Eventually(gatherMetricNames, "5s").Should(HaveKey("containerMetadataTime"))
-			Eventually(gatherMetricNames, "5s").Should(HaveKey("policyServerPollTime"))
-		})
-
-		It("has a log level thats configurable at runtime", func() {
-			Consistently(session).ShouldNot(gexec.Exit())
-			Eventually(session.Out).Should(Say("testprefix.vxlan-policy-agent"))
-			Consistently(session.Out).ShouldNot(Say("got-containers"))
-
-			endpoint := fmt.Sprintf("http://%s:%d/log-level", conf.DebugServerHost, conf.DebugServerPort)
-			req, err := http.NewRequest("POST", endpoint, strings.NewReader("debug"))
-			Expect(err).NotTo(HaveOccurred())
-			_, err = http.DefaultClient.Do(req)
-			Expect(err).NotTo(HaveOccurred())
-
-			Eventually(session.Out, "5s").Should(Say("testprefix.vxlan-policy-agent.*got-containers"))
-		})
-	})
-
-	Context("when the vxlan policy agent cannot connect to the server upon start", func() {
-		BeforeEach(func() {
-			conf.PolicyServerURL = "some-bad-url"
-			configFilePath = WriteConfigFile(conf)
-			session = startAgent(paths.VxlanPolicyAgentPath, configFilePath)
-		})
-
-		It("crashes and logs a useful error message", func() {
-			Eventually(session).Should(gexec.Exit())
-			Eventually(session.Out.Contents).Should(MatchRegexp("policy-client-get-policies.*http client do.*unsupported protocol scheme"))
-		})
-
-	})
-
-	Context("when the policy server is unavailable", func() {
-		BeforeEach(func() {
-			session = startAgent(paths.VxlanPolicyAgentPath, configFilePath)
-		})
-
-		It("does not write the mark rule or enforces policies", func() {
-			Expect(iptablesFilterRules()).NotTo(ContainSubstring(`-s 10.255.100.21/32 -m comment --comment "src:some-very-very-long-app-guid" -j MARK --set-xmark 0xa/0xffffffff`))
-			Expect(iptablesFilterRules()).NotTo(ContainSubstring(`-d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m comment --comment "src:another-app-guid_dst:some-very-very-long-app-guid" -j ACCEPT`))
-		})
-
-		It("writes the mark rule or enforces policies when the policy server becomes available again", func() {
-			mockPolicyServer = startServer(serverListenAddr, serverTLSConfig)
-			Eventually(iptablesFilterRules, "10s", "1s").Should(ContainSubstring(`-s 10.255.100.21/32 -m comment --comment "src:some-very-very-long-app-guid" -j MARK --set-xmark 0xa/0xffffffff`))
-			Expect(iptablesFilterRules()).To(ContainSubstring(`-d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m comment --comment "src:another-app-guid_dst:some-very-very-long-app-guid" -j ACCEPT`))
-		})
-	})
-
-	Context("when vxlan policy agent has invalid certs", func() {
-		BeforeEach(func() {
-			conf.ClientCertFile = "totally"
-			conf.ClientKeyFile = "not-cool"
-			configFilePath = WriteConfigFile(conf)
-		})
-
-		It("does not start", func() {
-			session = startAgent(paths.VxlanPolicyAgentPath, configFilePath)
-			Eventually(session).Should(gexec.Exit(1))
-			Eventually(session.Out).Should(Say("unable to load cert or key"))
-		})
-	})
-
-	Context("when requests to the policy server time out", func() {
-		BeforeEach(func() {
-			conf.ClientTimeoutSeconds = 1
-			configFilePath = WriteConfigFile(conf)
-			mustSucceed("iptables", "-A", "INPUT", "-p", "tcp", "--dport", strconv.Itoa(serverListenPort), "-j", "DROP")
-		})
-
-		AfterEach(func() {
-			mustSucceed("iptables", "-D", "INPUT", "-p", "tcp", "--dport", strconv.Itoa(serverListenPort), "-j", "DROP")
-		})
-
-		It("times out requests", func() {
-			session = startAgent(paths.VxlanPolicyAgentPath, configFilePath)
-			Eventually(session.Out.Contents, "3s").Should(MatchRegexp("policy-client-get-policies.*request canceled while waiting for connection.*Client.Timeout exceeded"))
-			session.Kill()
-		})
-	})
-
-	Context("when vxlan policy agent is deployed with iptables logging enabled", func() {
-		BeforeEach(func() {
-			conf.IPTablesLogging = true
-			Expect(conf.Validate()).To(Succeed())
-			configFilePath = WriteConfigFile(conf)
-			mockPolicyServer = startServer(serverListenAddr, serverTLSConfig)
-			session = startAgent(paths.VxlanPolicyAgentPath, configFilePath)
-		})
-
-		It("supports enabling/disabling iptables logging at runtime", func() {
-			Consistently(session).ShouldNot(gexec.Exit())
-
-			By("checking that the logging rules are present")
-			Eventually(iptablesFilterRules, "2s", "0.5s").Should(MatchRegexp(PolicyRulesRegexp(LoggingEnabled)))
-
-			By("disabling iptables logging")
-			setIPTablesLogging(LoggingDisabled)
-
-			By("checking that the logging rules are absent")
-			Eventually(iptablesFilterRules, "2s", "0.5s").Should(MatchRegexp(PolicyRulesRegexp(LoggingDisabled)))
-
-			By("enabling iptables logging")
-			setIPTablesLogging(LoggingEnabled)
-
-			By("checking that the logging rules are present")
-			Eventually(iptablesFilterRules, "2s", "0.5s").Should(MatchRegexp(PolicyRulesRegexp(LoggingEnabled)))
-		})
-	})
-
-	Context("when the config file is invalid", func() {
-		BeforeEach(func() {
-			conf.PollInterval = 0
-			configFilePath = WriteConfigFile(conf)
-
-		})
-		It("crashes and logs a useful error message", func() {
-			session = startAgent(paths.VxlanPolicyAgentPath, configFilePath)
-			Eventually(session).Should(gexec.Exit(1))
-			Eventually(session.Err).Should(Say("cfnetworking: could not read config file"))
+			})
+			It("crashes and logs a useful error message", func() {
+				session = startAgent(paths.VxlanPolicyAgentPath, configFilePath)
+				Eventually(session).Should(gexec.Exit(1))
+				Eventually(session.Err).Should(Say("cfnetworking: could not read config file"))
+			})
 		})
 	})
 })
