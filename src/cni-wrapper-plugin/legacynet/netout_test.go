@@ -103,7 +103,6 @@ var _ = Describe("Netout", func() {
 		})
 
 		It("writes the default netout and logging rules", func() {
-			// TODO udp
 			err := netOut.Initialize("some-container-handle", net.ParseIP("5.6.7.8"), nil)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -152,7 +151,7 @@ var _ = Describe("Netout", func() {
 			Expect(table).To(Equal("filter"))
 			Expect(chain).To(Equal("some-other-chain-name"))
 			Expect(rulespec).To(Equal([]rules.IPTablesRule{
-				{"-p", "tcp",
+				{"-p", "all",
 					"-m", "conntrack", "--ctstate", "INVALID,NEW,UNTRACKED",
 					"-j", "LOG", "--log-prefix", `"OK_some-container-handle "`},
 				{"--jump", "ACCEPT"},
@@ -422,7 +421,7 @@ var _ = Describe("Netout", func() {
 		})
 	})
 
-	FDescribe("InsertRule", func() {
+	Describe("InsertRule", func() {
 		var (
 			netOutRule     garden.NetOutRule
 			convertedRules []rules.IPTablesRule
