@@ -172,6 +172,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 			It("writes the mark rule and enforces policies", func() {
 				Eventually(iptablesFilterRules, "4s", "1s").Should(ContainSubstring(`-s 10.255.100.21/32 -m comment --comment "src:some-very-very-long-app-guid" -j MARK --set-xmark 0xa/0xffffffff`))
 				Expect(iptablesFilterRules()).To(ContainSubstring(`-d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m comment --comment "src:another-app-guid_dst:some-very-very-long-app-guid" -j ACCEPT`))
+				Expect(iptablesFilterRules()).To(ContainSubstring(`-d 10.255.100.21/32 -p udp -m udp --dport 9001 -m mark --mark 0xd -m comment --comment "src:yet-another-app-guid_dst:some-very-very-long-app-guid" -j ACCEPT`))
 			})
 
 			It("writes only one mark rule for a single container", func() {
@@ -215,13 +216,15 @@ var _ = Describe("VXLAN Policy Agent", func() {
 
 			It("does not write the mark rule or enforces policies", func() {
 				Expect(iptablesFilterRules()).NotTo(ContainSubstring(`-s 10.255.100.21/32 -m comment --comment "src:some-very-very-long-app-guid" -j MARK --set-xmark 0xa/0xffffffff`))
-				Expect(iptablesFilterRules()).NotTo(ContainSubstring(`-d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m comment --comment "src:another-app-guid_dst:some-very-very-long-app-guid" -j ACCEPT`))
+				Expect(iptablesFilterRules()).NotTo(ContainSubstring(`-d 10.255.100.21/32 -p tcp -m udp --dport 9999 -m mark --mark 0xc -m comment --comment "src:another-app-guid_dst:some-very-very-long-app-guid" -j ACCEPT`))
+				Expect(iptablesFilterRules()).NotTo(ContainSubstring(`-d 10.255.100.21/32 -p udp -m tcp --dport 9001 -m mark --mark 0xd -m comment --comment "src:yet-another-app-guid_dst:some-very-very-long-app-guid" -j ACCEPT`))
 			})
 
 			It("writes the mark rule or enforces policies when the policy server becomes available again", func() {
 				mockPolicyServer = startServer(serverListenAddr, serverTLSConfig)
 				Eventually(iptablesFilterRules, "10s", "1s").Should(ContainSubstring(`-s 10.255.100.21/32 -m comment --comment "src:some-very-very-long-app-guid" -j MARK --set-xmark 0xa/0xffffffff`))
 				Expect(iptablesFilterRules()).To(ContainSubstring(`-d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m comment --comment "src:another-app-guid_dst:some-very-very-long-app-guid" -j ACCEPT`))
+				Expect(iptablesFilterRules()).To(ContainSubstring(`-d 10.255.100.21/32 -p udp -m udp --dport 9001 -m mark --mark 0xd -m comment --comment "src:yet-another-app-guid_dst:some-very-very-long-app-guid" -j ACCEPT`))
 			})
 		})
 		Context("when requests to the policy server time out", func() {
@@ -355,7 +358,9 @@ func startServer(serverListenAddr string, tlsConfig *tls.Config) ifrit.Process {
 				{"source": {"id":"some-very-very-long-app-guid", "tag":"A"},
 				"destination": {"id": "some-other-app-guid", "tag":"B", "protocol":"tcp", "port":3334}},
 				{"source": {"id":"another-app-guid", "tag":"C"},
-				"destination": {"id": "some-very-very-long-app-guid", "tag":"A", "protocol":"tcp", "port":9999}}
+				"destination": {"id": "some-very-very-long-app-guid", "tag":"A", "protocol":"tcp", "port":9999}},
+				{"source": {"id":"yet-another-app-guid", "tag":"D"},
+				"destination": {"id": "some-very-very-long-app-guid", "tag":"A", "protocol":"udp", "port":9001}}
 					]}`))
 			return
 		}
@@ -392,8 +397,12 @@ const (
 func PolicyRulesRegexp(loggingEnabled bool) string {
 	policyRules := ""
 	if loggingEnabled {
-		policyRules += `.*-A vpa--[0-9]+ -d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m limit --limit 2/min -j LOG --log-prefix "OK_C_some-very-very-long-app "\n`
+		policyRules += `.*-A vpa--[0-9]+ -d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m conntrack --ctstate INVALID,NEW,UNTRACKED -j LOG --log-prefix "OK_C_some-very-very-long-app "\n`
 	}
-	policyRules += `.*-A vpa--[0-9]+ -d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m comment --comment "src:another-app-guid_dst:some-very-very-long-app-guid" -j ACCEPT`
+	policyRules += `-A vpa--[0-9]+ -d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m comment --comment "src:another-app-guid_dst:some-very-very-long-app-guid" -j ACCEPT\n`
+	if loggingEnabled {
+		policyRules += `-A vpa--[0-9]+ -d 10.255.100.21/32 -p udp -m udp --dport 9001 -m mark --mark 0xd -m conntrack --ctstate INVALID,NEW,UNTRACKED -j LOG --log-prefix "OK_D_some-very-very-long-app "\n`
+	}
+	policyRules += `-A vpa--[0-9]+ -d 10.255.100.21/32 -p udp -m udp --dport 9001 -m mark --mark 0xd -m comment --comment "src:yet-another-app-guid_dst:some-very-very-long-app-guid" -j ACCEPT`
 	return policyRules
 }

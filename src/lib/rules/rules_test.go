@@ -30,10 +30,10 @@ var _ = Describe("Rules", func() {
 		})
 	})
 
-	Describe("NewMarkLogRule", func() {
+	Describe("NewMarkAllowLogRule", func() {
 		Context("when the log prefix is greater than 28 characters", func() {
 			It("shortens the log-prefix to 28 characters and adds a space", func() {
-				rule := rules.NewMarkLogRule("", "", 0, "", "some-very-very-very-long-app-guid")
+				rule := rules.NewMarkAllowLogRule("", "", 0, "", "some-very-very-very-long-app-guid")
 				Expect(rule).To(ContainElement(`"OK__some-very-very-very-long "`))
 			})
 		})

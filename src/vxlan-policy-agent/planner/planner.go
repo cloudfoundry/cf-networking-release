@@ -122,7 +122,7 @@ func (p *VxlanPolicyPlanner) GetRulesAndChain() (enforcer.RulesWithChain, error)
 				if iptablesLoggingEnabled {
 					filterRuleset = append(
 						filterRuleset,
-						rules.NewMarkLogRule(
+						rules.NewMarkAllowLogRule(
 							dstContainerIP,
 							policy.Destination.Protocol,
 							policy.Destination.Port,

@@ -190,7 +190,7 @@ var _ = Describe("Planner", func() {
 						"-p", "udp",
 						"--dport", "5555",
 						"-m", "mark", "--mark", "0xBB",
-						"-m", "limit", "--limit", "2/min",
+						"-m", "conntrack", "--ctstate", "INVALID,NEW,UNTRACKED",
 						"--jump", "LOG", "--log-prefix", `"OK_BB_some-other-app-guid "`,
 					},
 					// allow bb based on mark
@@ -210,7 +210,7 @@ var _ = Describe("Planner", func() {
 						"-p", "tcp",
 						"--dport", "1234",
 						"-m", "mark", "--mark", "0xAA",
-						"-m", "limit", "--limit", "2/min",
+						"-m", "conntrack", "--ctstate", "INVALID,NEW,UNTRACKED",
 						"--jump", "LOG", "--log-prefix", `"OK_AA_some-other-app-guid "`,
 					},
 					// allow aa based on mark

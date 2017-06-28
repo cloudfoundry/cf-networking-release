@@ -43,13 +43,13 @@ func NewMarkAllowRule(destinationIP, protocol string, port int, tag string, sour
 	}, fmt.Sprintf("src:%s_dst:%s", sourceAppGUID, destinationAppGUID))
 }
 
-func NewMarkLogRule(destinationIP, protocol string, port int, tag string, destinationAppGUID string) IPTablesRule {
+func NewMarkAllowLogRule(destinationIP, protocol string, port int, tag string, destinationAppGUID string) IPTablesRule {
 	return IPTablesRule{
 		"-d", destinationIP,
 		"-p", protocol,
 		"--dport", strconv.Itoa(port),
 		"-m", "mark", "--mark", fmt.Sprintf("0x%s", tag),
-		"-m", "limit", "--limit", "2/min",
+		"-m", "conntrack", "--ctstate", "INVALID,NEW,UNTRACKED",
 		"--jump", "LOG", "--log-prefix",
 		trimAndPad(fmt.Sprintf("OK_%s_%s", tag, destinationAppGUID))}
 }
