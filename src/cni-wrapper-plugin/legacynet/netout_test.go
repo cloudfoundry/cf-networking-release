@@ -103,6 +103,7 @@ var _ = Describe("Netout", func() {
 		})
 
 		It("writes the default netout and logging rules", func() {
+			// TODO udp
 			err := netOut.Initialize("some-container-handle", net.ParseIP("5.6.7.8"), nil)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -156,11 +157,6 @@ var _ = Describe("Netout", func() {
 					"-j", "LOG", "--log-prefix", `"OK_some-container-handle "`},
 				{"--jump", "ACCEPT"},
 			}))
-		})
-
-		It("writes the logging rules", func() {
-			err := netOut.Initialize("some-container-handle", net.ParseIP("5.6.7.8"), nil)
-			Expect(err).NotTo(HaveOccurred())
 		})
 
 		Context("when creating a new chain fails", func() {
@@ -426,7 +422,7 @@ var _ = Describe("Netout", func() {
 		})
 	})
 
-	Describe("InsertRule", func() {
+	FDescribe("InsertRule", func() {
 		var (
 			netOutRule     garden.NetOutRule
 			convertedRules []rules.IPTablesRule

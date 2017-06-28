@@ -163,6 +163,7 @@ func NewNetOutWithPortsLogRule(startIP, endIP string, startPort, endPort int, pr
 }
 
 func NewNetOutDefaultLogRule(prefix string) IPTablesRule {
+	// TODO make this work for udp
 	return IPTablesRule{
 		"-p", "tcp",
 		"-m", "conntrack", "--ctstate", "INVALID,NEW,UNTRACKED",
