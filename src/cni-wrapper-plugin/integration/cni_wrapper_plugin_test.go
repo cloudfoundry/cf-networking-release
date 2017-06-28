@@ -602,7 +602,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 					By("checking that the filter rule was installed and that logging can be enabled")
 					Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -p tcp -m iprange --dst-range 8.8.8.8-9.9.9.9 -m tcp --dport 53:54 -g ` + netoutLoggingChainName))
 					Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -p udp -m iprange --dst-range 11.11.11.11-22.22.22.22 -m udp --dport 53:54 -g ` + netoutLoggingChainName))
-					Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -p icmp -m iprange --dst-range 3.3.3.3-4.4.4.4 -m icmp -g ` + netoutLoggingChainName))
+					Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -p icmp -m iprange --dst-range 5.5.5.5-6.6.6.6 -m icmp --icmp-type 8/0 -g ` + netoutLoggingChainName))
 
 					By("checking that it writes the logging rules")
 					Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutLoggingChainName + ` -m conntrack --ctstate INVALID,NEW,UNTRACKED -j LOG --log-prefix "OK_` + containerID[:25] + ` "`))
@@ -647,7 +647,6 @@ var _ = Describe("CniWrapperPlugin", func() {
 			})
 
 			Context("when a UDP rule has logging enabled", func() {
-				// TODO
 				BeforeEach(func() {
 					inputStruct.WrapperConfig.RuntimeConfig.NetOutRules[2].Log = true
 					inputStruct.WrapperConfig.IPTablesASGLogging = false
@@ -662,15 +661,14 @@ var _ = Describe("CniWrapperPlugin", func() {
 					By("checking that the filter rule was installed and that logging can be enabled")
 					Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -p udp -m iprange --dst-range 11.11.11.11-22.22.22.22 -m udp --dport 53:54 -g ` + netoutLoggingChainName))
 
-					// TODO fails right now
 					By("checking that it writes the logging rules")
 					Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutLoggingChainName + ` -m conntrack --ctstate INVALID,NEW,UNTRACKED -j LOG --log-prefix "OK_` + containerID[:25] + ` "`))
 				})
 			})
 
-			Context("when a rule has logging enabled", func() {
+			Context("when an ICMP rule has logging enabled", func() {
 				BeforeEach(func() {
-					inputStruct.WrapperConfig.RuntimeConfig.NetOutRules[1].Log = true
+					inputStruct.WrapperConfig.RuntimeConfig.NetOutRules[3].Log = true
 					inputStruct.WrapperConfig.IPTablesASGLogging = false
 					input = GetInput(inputStruct)
 				})
@@ -681,27 +679,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 					Eventually(session).Should(gexec.Exit(0))
 
 					By("checking that the filter rule was installed and that logging can be enabled")
-					Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -p icmp -m iprange --dst-range 8.8.8.8-9.9.9.9 -m icmp --dport 53:54 -g ` + netoutLoggingChainName))
-
-					By("checking that it writes the logging rules")
-					Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutLoggingChainName + ` -m conntrack --ctstate INVALID,NEW,UNTRACKED -j LOG --log-prefix "OK_` + containerID[:25] + ` "`))
-				})
-			})
-
-			Context("when a rule has logging enabled", func() {
-				BeforeEach(func() {
-					inputStruct.WrapperConfig.RuntimeConfig.NetOutRules[1].Log = true
-					inputStruct.WrapperConfig.IPTablesASGLogging = false
-					input = GetInput(inputStruct)
-				})
-				It("writes iptables asg logging rules for that rule", func() {
-					cmd = cniCommand("ADD", input)
-					session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
-					Expect(err).NotTo(HaveOccurred())
-					Eventually(session).Should(gexec.Exit(0))
-
-					By("checking that the filter rule was installed and that logging can be enabled")
-					Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -p icmp -m iprange --dst-range 8.8.8.8-9.9.9.9 -m icmp --dport 53:54 -g ` + netoutLoggingChainName))
+					Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -p icmp -m iprange --dst-range 5.5.5.5-6.6.6.6 -m icmp --icmp-type 8/0 -g ` + netoutLoggingChainName))
 
 					By("checking that it writes the logging rules")
 					Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutLoggingChainName + ` -m conntrack --ctstate INVALID,NEW,UNTRACKED -j LOG --log-prefix "OK_` + containerID[:25] + ` "`))
