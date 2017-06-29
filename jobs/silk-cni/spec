@@ -38,6 +38,6 @@ properties:
     description: "Bandwidth burst in Kb for traffic through container. 0 for no limit. If burst is set, rate must also be set."
     default: 0
 
-  cf_networking.denied_logs_per_sec:
-    description: "Number of logs per second for denied packets"
+  cf_networking.iptables_denied_logs_per_sec:
+    description: "Maximum number of iptables logs per second for denied packets."
     default: 1

@@ -142,11 +142,11 @@ var _ = Describe("CniWrapperPlugin", func() {
 					"type": "noop",
 					"some": "other data",
 				},
-				InstanceAddress:    "10.244.2.3",
-				IPTablesASGLogging: false,
-				IngressTag:         "FFFF0000",
-				VTEPName:           "some-device",
-				DeniedLogsPerSec:   5,
+				InstanceAddress:          "10.244.2.3",
+				IPTablesASGLogging:       false,
+				IngressTag:               "FFFF0000",
+				VTEPName:                 "some-device",
+				IPTablesDeniedLogsPerSec: 5,
 				RuntimeConfig: lib.RuntimeConfig{
 					PortMappings: []garden.NetIn{
 						{

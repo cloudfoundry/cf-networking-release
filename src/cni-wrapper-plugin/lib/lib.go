@@ -17,18 +17,18 @@ type RuntimeConfig struct {
 }
 
 type WrapperConfig struct {
-	Datastore          string                 `json:"datastore"`
-	IPTablesLockFile   string                 `json:"iptables_lock_file"`
-	Delegate           map[string]interface{} `json:"delegate"`
-	HealthCheckURL     string                 `json:"health_check_url"`
-	InstanceAddress    string                 `json:"instance_address"`
-	DNSServers         []string               `json:"dns_servers"`
-	IPTablesASGLogging bool                   `json:"iptables_asg_logging"`
-	IPTablesC2CLogging bool                   `json:"iptables_c2c_logging"`
-	IngressTag         string                 `json:"ingress_tag"`
-	VTEPName           string                 `json:"vtep_name"`
-	RuntimeConfig      RuntimeConfig          `json:"runtimeConfig,omitempty"`
-	DeniedLogsPerSec   int                    `json:"denied_logs_per_sec" validate:"min=1"`
+	Datastore                string                 `json:"datastore"`
+	IPTablesLockFile         string                 `json:"iptables_lock_file"`
+	Delegate                 map[string]interface{} `json:"delegate"`
+	HealthCheckURL           string                 `json:"health_check_url"`
+	InstanceAddress          string                 `json:"instance_address"`
+	DNSServers               []string               `json:"dns_servers"`
+	IPTablesASGLogging       bool                   `json:"iptables_asg_logging"`
+	IPTablesC2CLogging       bool                   `json:"iptables_c2c_logging"`
+	IPTablesDeniedLogsPerSec int                    `json:"iptables_denied_logs_per_sec" validate:"min=1"`
+	IngressTag               string                 `json:"ingress_tag"`
+	VTEPName                 string                 `json:"vtep_name"`
+	RuntimeConfig            RuntimeConfig          `json:"runtimeConfig,omitempty"`
 }
 
 func LoadWrapperConfig(bytes []byte) (*WrapperConfig, error) {
@@ -61,7 +61,7 @@ func LoadWrapperConfig(bytes []byte) (*WrapperConfig, error) {
 		return nil, fmt.Errorf("missing vtep device name")
 	}
 
-	if n.DeniedLogsPerSec <= 0 {
+	if n.IPTablesDeniedLogsPerSec <= 0 {
 		return nil, fmt.Errorf("invalid denied logs per sec")
 	}
 

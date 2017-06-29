@@ -28,7 +28,7 @@ var _ = Describe("LoadWrapperConfig", func() {
 			"delegate": {
 				"some": "info"
 			},
-			"denied_logs_per_sec": 2
+			"iptables_denied_logs_per_sec": 2
 		}`)
 	})
 
@@ -44,10 +44,10 @@ var _ = Describe("LoadWrapperConfig", func() {
 				"cniVersion": "0.3.1",
 				"some":       "info",
 			},
-			HealthCheckURL:   "http://127.0.0.1:10007",
-			IngressTag:       "ffaa0000",
-			VTEPName:         "some-device",
-			DeniedLogsPerSec: 2,
+			HealthCheckURL:           "http://127.0.0.1:10007",
+			IngressTag:               "ffaa0000",
+			VTEPName:                 "some-device",
+			IPTablesDeniedLogsPerSec: 2,
 		}))
 	})
 
@@ -112,7 +112,7 @@ var _ = Describe("LoadWrapperConfig", func() {
 		Entry("instance address", "instance_address", "missing instance address"),
 		Entry("ingress tag", "ingress_tag", "missing ingress tag"),
 		Entry("vtep device name", "vtep_name", "missing vtep device name"),
-		Entry("denied logs per sec", "denied_logs_per_sec", "invalid denied logs per sec"),
+		Entry("denied logs per sec", "iptables_denied_logs_per_sec", "invalid denied logs per sec"),
 	)
 
 	DescribeTable("invalid value for field", func(field string, value interface{}, errMessage string) {
@@ -126,7 +126,7 @@ var _ = Describe("LoadWrapperConfig", func() {
 		_, err = lib.LoadWrapperConfig(input)
 		Expect(err).To(MatchError(errMessage))
 	},
-		Entry("denied logs per sec", "denied_logs_per_sec", 0, "invalid denied logs per sec"),
+		Entry("denied logs per sec", "iptables_denied_logs_per_sec", -1, "invalid denied logs per sec"),
 	)
 })
 
