@@ -146,6 +146,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 				IPTablesASGLogging: false,
 				IngressTag:         "FFFF0000",
 				VTEPName:           "some-device",
+				DeniedLogsPerSec:   5,
 				RuntimeConfig: lib.RuntimeConfig{
 					PortMappings: []garden.NetIn{
 						{
@@ -578,7 +579,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 						"-A " + overlayChainName + " -s 1.2.3.4/32 -o some-device -m mark ! --mark 0x0 -j ACCEPT",
 						"-A " + overlayChainName + " -d 1.2.3.4/32 -m state --state RELATED,ESTABLISHED -j ACCEPT",
 						"-A " + overlayChainName + " -d 1.2.3.4/32 -m mark --mark 0xffff0000 -j ACCEPT",
-						"-A " + overlayChainName + ` -d 1.2.3.4/32 -m limit --limit 2/min -j LOG --log-prefix "DENY_C2C_` + containerID[:19] + ` "`,
+						"-A " + overlayChainName + ` -d 1.2.3.4/32 -m limit --limit 5/sec -j LOG --log-prefix "DENY_C2C_` + containerID[:19] + ` "`,
 						"-A " + overlayChainName + " -d 1.2.3.4/32 -j REJECT --reject-with icmp-port-unreachable",
 					}))
 				})
@@ -609,7 +610,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 				})
 
 				It("always writes a rate limited default deny log rule", func() {
-					expectedDenyLogRule := `-A netout--some-container-id-th -m limit --limit 2/min -j LOG --log-prefix "DENY_` + containerID[:23] + ` "`
+					expectedDenyLogRule := `-A netout--some-container-id-th -m limit --limit 5/sec -j LOG --log-prefix "DENY_` + containerID[:23] + ` "`
 
 					By("by starting the CNI plugin")
 					cmd = cniCommand("ADD", input)

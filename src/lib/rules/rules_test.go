@@ -52,7 +52,8 @@ var _ = Describe("Rules", func() {
 	Describe("NewOverlayDefaultRejectLogRule", func() {
 		Context("when the log prefix is greater than 28 characters", func() {
 			It("shortens the log-prefix to 28 characters and adds a space", func() {
-				rule := rules.NewOverlayDefaultRejectLogRule("some-very-very-very-long-app-guid", "")
+				rule := rules.NewOverlayDefaultRejectLogRule("some-very-very-very-long-app-guid", "", 5)
+				Expect(rule).To(ContainElement(`5/s`))
 				Expect(rule).To(ContainElement(`"DENY_C2C_some-very-very-very "`))
 			})
 		})
@@ -61,7 +62,8 @@ var _ = Describe("Rules", func() {
 	Describe("NewNetOutDefaultRejectLogRule", func() {
 		Context("when the log prefix is greater than 28 characters", func() {
 			It("shortens the log-prefix to 28 characters and adds a space", func() {
-				rule := rules.NewNetOutDefaultRejectLogRule("some-very-very-very-long-app-guid")
+				rule := rules.NewNetOutDefaultRejectLogRule("some-very-very-very-long-app-guid", 3)
+				Expect(rule).To(ContainElement(`3/s`))
 				Expect(rule).To(ContainElement(`"DENY_some-very-very-very-lon "`))
 			})
 		})

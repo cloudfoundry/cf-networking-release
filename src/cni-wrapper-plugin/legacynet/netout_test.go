@@ -33,6 +33,7 @@ var _ = Describe("Netout", func() {
 			IngressTag:        "FEEDBEEF",
 			VTEPName:          "vtep-name",
 			HostInterfaceName: "some-device",
+			DeniedLogsPerSec:  3,
 		}
 		chainNamer.PrefixStub = func(prefix, handle string) string {
 			return prefix + "-" + handle
@@ -214,7 +215,7 @@ var _ = Describe("Netout", func() {
 				Expect(rulespec).To(Equal([]rules.IPTablesRule{
 					{"-m", "state", "--state", "RELATED,ESTABLISHED",
 						"--jump", "ACCEPT"},
-					{"-m", "limit", "--limit", "2/min",
+					{"-m", "limit", "--limit", "3/s",
 						"--jump", "LOG", "--log-prefix", `"DENY_some-container-handle "`},
 					{"--jump", "REJECT",
 						"--reject-with", "icmp-port-unreachable"},
@@ -247,7 +248,7 @@ var _ = Describe("Netout", func() {
 						"-m", "mark", "--mark", "0xFEEDBEEF",
 						"--jump", "ACCEPT"},
 					{"-d", "5.6.7.8",
-						"-m", "limit", "--limit", "2/min",
+						"-m", "limit", "--limit", "3/s",
 						"--jump", "LOG", "--log-prefix", `"DENY_C2C_some-container-hand "`},
 					{"-d", "5.6.7.8",
 						"--jump", "REJECT",

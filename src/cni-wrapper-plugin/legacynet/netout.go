@@ -31,6 +31,7 @@ type NetOut struct {
 	IngressTag        string
 	VTEPName          string
 	HostInterfaceName string
+	DeniedLogsPerSec  int
 }
 
 type fullRule struct {
@@ -104,7 +105,7 @@ func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, dnsServe
 	if m.ASGLogging {
 		args[1].Rules = []rules.IPTablesRule{
 			rules.NewNetOutRelatedEstablishedRule(),
-			rules.NewNetOutDefaultRejectLogRule(containerHandle),
+			rules.NewNetOutDefaultRejectLogRule(containerHandle, m.DeniedLogsPerSec),
 			rules.NewNetOutDefaultRejectRule(),
 		}
 	}
@@ -114,7 +115,7 @@ func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, dnsServe
 			rules.NewOverlayAllowEgress(m.VTEPName, containerIP.String()),
 			rules.NewOverlayRelatedEstablishedRule(containerIP.String()),
 			rules.NewOverlayTagAcceptRule(containerIP.String(), m.IngressTag),
-			rules.NewOverlayDefaultRejectLogRule(containerHandle, containerIP.String()),
+			rules.NewOverlayDefaultRejectLogRule(containerHandle, containerIP.String(), m.DeniedLogsPerSec),
 			rules.NewOverlayDefaultRejectRule(containerIP.String()),
 		}
 	}

@@ -28,6 +28,7 @@ type WrapperConfig struct {
 	IngressTag         string                 `json:"ingress_tag"`
 	VTEPName           string                 `json:"vtep_name"`
 	RuntimeConfig      RuntimeConfig          `json:"runtimeConfig,omitempty"`
+	DeniedLogsPerSec   int                    `json:"denied_logs_per_sec" validate:"min=1"`
 }
 
 func LoadWrapperConfig(bytes []byte) (*WrapperConfig, error) {
@@ -58,6 +59,10 @@ func LoadWrapperConfig(bytes []byte) (*WrapperConfig, error) {
 
 	if n.VTEPName == "" {
 		return nil, fmt.Errorf("missing vtep device name")
+	}
+
+	if n.DeniedLogsPerSec <= 0 {
+		return nil, fmt.Errorf("invalid denied logs per sec")
 	}
 
 	if _, ok := n.Delegate["cniVersion"]; !ok {

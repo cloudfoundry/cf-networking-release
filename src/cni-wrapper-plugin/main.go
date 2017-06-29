@@ -109,6 +109,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 		Converter:         &legacynet.NetOutRuleConverter{Logger: os.Stderr},
 		ASGLogging:        n.IPTablesASGLogging,
 		C2CLogging:        n.IPTablesC2CLogging,
+		DeniedLogsPerSec:  n.DeniedLogsPerSec,
 		IngressTag:        n.IngressTag,
 		VTEPName:          n.VTEPName,
 		HostInterfaceName: defaultIfaceName,
