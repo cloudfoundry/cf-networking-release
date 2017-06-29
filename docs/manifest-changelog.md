@@ -12,10 +12,15 @@ See [deployment docs](deploy-iaas.md) for examples
       enter a container.
     - `cf_networking.burst` is the burst in Kb at which traffic can leave and
       enter a container.
-  - Both of these parameters must be set in order to limit bandwidth. If
-    neither one is set, then bandwidth is not limited.
-  - The burst must high enough to support the given rate. If burst is not high
-    enough, then creating containers will fail.
+    - Both of these parameters must be set in order to limit bandwidth. If
+      neither one is set, then bandwidth is not limited.
+    - The burst must high enough to support the given rate. If burst is not
+      high enough, then creating containers will fail.
+  - An optional parameter has been added to configure the rate of logs by
+    iptables for denied packets. Before, this rate was hardcoded to 2 packets
+    per minute. Now, the rate defaults to 1 packet per second.
+    - `cf_networking.iptables_denied_logs_per_sec` is the maximum number of
+      denied packets logged by iptables per second.
 
 ### 1.1.0
 
