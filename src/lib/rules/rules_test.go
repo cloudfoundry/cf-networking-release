@@ -5,6 +5,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/pivotal-cf-experimental/gomegamatchers"
 )
 
 var _ = Describe("Rules", func() {
@@ -53,7 +54,9 @@ var _ = Describe("Rules", func() {
 		Context("when the log prefix is greater than 28 characters", func() {
 			It("shortens the log-prefix to 28 characters and adds a space", func() {
 				rule := rules.NewOverlayDefaultRejectLogRule("some-very-very-very-long-app-guid", "", 5)
-				Expect(rule).To(ContainElement(`5/s`))
+				Expect(rule).To(gomegamatchers.ContainSequence(rules.IPTablesRule{
+					"-m", "limit", "--limit", "5/s", "--limit-burst", "5",
+				}))
 				Expect(rule).To(ContainElement(`"DENY_C2C_some-very-very-very "`))
 			})
 		})
@@ -63,7 +66,9 @@ var _ = Describe("Rules", func() {
 		Context("when the log prefix is greater than 28 characters", func() {
 			It("shortens the log-prefix to 28 characters and adds a space", func() {
 				rule := rules.NewNetOutDefaultRejectLogRule("some-very-very-very-long-app-guid", 3)
-				Expect(rule).To(ContainElement(`3/s`))
+				Expect(rule).To(gomegamatchers.ContainSequence(rules.IPTablesRule{
+					"-m", "limit", "--limit", "3/s", "--limit-burst", "3",
+				}))
 				Expect(rule).To(ContainElement(`"DENY_some-very-very-very-lon "`))
 			})
 		})

@@ -226,6 +226,7 @@ func NewOverlayDefaultRejectLogRule(containerHandle, containerIP string, deniedL
 	return IPTablesRule{
 		"-d", containerIP,
 		"-m", "limit", "--limit", fmt.Sprintf("%d/s", deniedLogsPerSec),
+		"--limit-burst", strconv.Itoa(deniedLogsPerSec),
 		"--jump", "LOG",
 		"--log-prefix", trimAndPad(fmt.Sprintf("DENY_C2C_%s", containerHandle)),
 	}
@@ -251,6 +252,7 @@ func NewOverlayRelatedEstablishedRule(containerIP string) IPTablesRule {
 func NewNetOutDefaultRejectLogRule(containerHandle string, deniedLogsPerSec int) IPTablesRule {
 	return IPTablesRule{
 		"-m", "limit", "--limit", fmt.Sprintf("%d/s", deniedLogsPerSec),
+		"--limit-burst", strconv.Itoa(deniedLogsPerSec),
 		"--jump", "LOG",
 		"--log-prefix", trimAndPad(fmt.Sprintf("DENY_%s", containerHandle)),
 	}
