@@ -1,4 +1,5 @@
 .DS_Store
+.idea
 .blobs/
 blobs/
 config/dev.yml
