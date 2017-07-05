@@ -63,7 +63,7 @@ var _ = Describe("Plugin", func() {
 				Major: 4,
 				Minor: 10,
 				Build: 20,
-			}, nil)
+			})
 		})
 		It("sets the version", func() {
 			metadata := policyPlugin.GetMetadata()
@@ -71,21 +71,6 @@ var _ = Describe("Plugin", func() {
 			Expect(metadata.Version.Major).To(Equal(4))
 			Expect(metadata.Version.Minor).To(Equal(10))
 			Expect(metadata.Version.Build).To(Equal(20))
-		})
-		Context("when getting the version returns an error", func() {
-			BeforeEach(func() {
-				versionGetter.GetReturns(plugin.VersionType{
-					Major: 40,
-					Minor: 40,
-					Build: 40,
-				}, errors.New("banana"))
-			})
-			It("returns an empty version type", func() {
-				metadata := policyPlugin.GetMetadata()
-				Expect(metadata.Version.Major).To(Equal(0))
-				Expect(metadata.Version.Minor).To(Equal(0))
-				Expect(metadata.Version.Build).To(Equal(0))
-			})
 		})
 	})
 

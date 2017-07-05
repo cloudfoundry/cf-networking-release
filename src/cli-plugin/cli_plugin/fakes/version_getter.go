@@ -8,22 +8,20 @@ import (
 )
 
 type VersionGetter struct {
-	GetStub        func() (plugin.VersionType, error)
+	GetStub        func() plugin.VersionType
 	getMutex       sync.RWMutex
 	getArgsForCall []struct{}
 	getReturns     struct {
 		result1 plugin.VersionType
-		result2 error
 	}
 	getReturnsOnCall map[int]struct {
 		result1 plugin.VersionType
-		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *VersionGetter) Get() (plugin.VersionType, error) {
+func (fake *VersionGetter) Get() plugin.VersionType {
 	fake.getMutex.Lock()
 	ret, specificReturn := fake.getReturnsOnCall[len(fake.getArgsForCall)]
 	fake.getArgsForCall = append(fake.getArgsForCall, struct{}{})
@@ -33,9 +31,9 @@ func (fake *VersionGetter) Get() (plugin.VersionType, error) {
 		return fake.GetStub()
 	}
 	if specificReturn {
-		return ret.result1, ret.result2
+		return ret.result1
 	}
-	return fake.getReturns.result1, fake.getReturns.result2
+	return fake.getReturns.result1
 }
 
 func (fake *VersionGetter) GetCallCount() int {
@@ -44,26 +42,23 @@ func (fake *VersionGetter) GetCallCount() int {
 	return len(fake.getArgsForCall)
 }
 
-func (fake *VersionGetter) GetReturns(result1 plugin.VersionType, result2 error) {
+func (fake *VersionGetter) GetReturns(result1 plugin.VersionType) {
 	fake.GetStub = nil
 	fake.getReturns = struct {
 		result1 plugin.VersionType
-		result2 error
-	}{result1, result2}
+	}{result1}
 }
 
-func (fake *VersionGetter) GetReturnsOnCall(i int, result1 plugin.VersionType, result2 error) {
+func (fake *VersionGetter) GetReturnsOnCall(i int, result1 plugin.VersionType) {
 	fake.GetStub = nil
 	if fake.getReturnsOnCall == nil {
 		fake.getReturnsOnCall = make(map[int]struct {
 			result1 plugin.VersionType
-			result2 error
 		})
 	}
 	fake.getReturnsOnCall[i] = struct {
 		result1 plugin.VersionType
-		result2 error
-	}{result1, result2}
+	}{result1}
 }
 
 func (fake *VersionGetter) Invocations() map[string][][]interface{} {
