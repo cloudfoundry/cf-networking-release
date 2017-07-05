@@ -2,11 +2,14 @@ package cli_plugin_test
 
 import (
 	"cli-plugin/cli_plugin"
+	"cli-plugin/cli_plugin/fakes"
 	"cli-plugin/styles"
 	"errors"
-	"lib/fakes"
 	"log"
 
+	libfakes "lib/fakes"
+
+	"code.cloudfoundry.org/cli/plugin"
 	"code.cloudfoundry.org/cli/plugin/pluginfakes"
 
 	. "github.com/onsi/ginkgo"
@@ -17,15 +20,18 @@ var _ = Describe("Plugin", func() {
 	var (
 		policyPlugin      cli_plugin.Plugin
 		fakeCliConnection *pluginfakes.FakeCliConnection
-		policyClient      *fakes.ExternalPolicyClient
+		policyClient      *libfakes.ExternalPolicyClient
+		versionGetter     *fakes.VersionGetter
 	)
 
 	BeforeEach(func() {
-		policyClient = &fakes.ExternalPolicyClient{}
+		policyClient = &libfakes.ExternalPolicyClient{}
+		versionGetter = &fakes.VersionGetter{}
 		policyPlugin = cli_plugin.Plugin{
 			Styler:       styles.NewGroup(),
 			Logger:       log.New(GinkgoWriter, "", 0),
 			PolicyClient: policyClient,
+			Version:      versionGetter,
 		}
 
 		fakeCliConnection = &pluginfakes.FakeCliConnection{}
@@ -48,6 +54,38 @@ var _ = Describe("Plugin", func() {
 		It("returns the error", func() {
 			_, err := policyPlugin.RunWithErrors(fakeCliConnection, []string{"some-command"})
 			Expect(err).To(MatchError("checking if ssl disabled: banana"))
+		})
+	})
+
+	Describe("GetMetadata", func() {
+		BeforeEach(func() {
+			versionGetter.GetReturns(plugin.VersionType{
+				Major: 4,
+				Minor: 10,
+				Build: 20,
+			}, nil)
+		})
+		It("sets the version", func() {
+			metadata := policyPlugin.GetMetadata()
+			Expect(versionGetter.GetCallCount()).To(Equal(1))
+			Expect(metadata.Version.Major).To(Equal(4))
+			Expect(metadata.Version.Minor).To(Equal(10))
+			Expect(metadata.Version.Build).To(Equal(20))
+		})
+		Context("when getting the version returns an error", func() {
+			BeforeEach(func() {
+				versionGetter.GetReturns(plugin.VersionType{
+					Major: 40,
+					Minor: 40,
+					Build: 40,
+				}, errors.New("banana"))
+			})
+			It("returns an empty version type", func() {
+				metadata := policyPlugin.GetMetadata()
+				Expect(metadata.Version.Major).To(Equal(0))
+				Expect(metadata.Version.Minor).To(Equal(0))
+				Expect(metadata.Version.Build).To(Equal(0))
+			})
 		})
 	})
 

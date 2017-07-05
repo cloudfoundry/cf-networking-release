@@ -44,7 +44,7 @@ func New(path string) (*Netmon, error) {
 	}
 	jsonBytes, err := ioutil.ReadFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("reading config: %s", err)
+		return nil, fmt.Errorf("reading config: %s", err) // not tested
 	}
 
 	cfg := Netmon{}

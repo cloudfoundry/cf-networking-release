@@ -22,8 +22,14 @@ import (
 
 type Plugin struct {
 	Styler       *styles.StyleGroup
+	Version      versionGetter
 	Logger       *log.Logger
 	PolicyClient policy_client.ExternalPolicyClient
+}
+
+//go:generate counterfeiter -o fakes/version_getter.go --fake-name VersionGetter . versionGetter
+type versionGetter interface {
+	Get() (plugin.VersionType, error)
 }
 
 type ValidArgs struct {
@@ -47,12 +53,18 @@ const MaxPort = 65535
 func (p *Plugin) GetMetadata() plugin.PluginMetadata {
 	const usageTemplate = "cf %s SOURCE_APP DESTINATION_APP --protocol <tcp|udp> --port <%d-%d>"
 
-	return plugin.PluginMetadata{
-		Name: "network-policy",
-		Version: plugin.VersionType{
+	version, err := p.Version.Get()
+	if err != nil {
+		version = plugin.VersionType{
 			Major: 0,
 			Minor: 0,
-		},
+			Build: 0,
+		}
+	}
+
+	return plugin.PluginMetadata{
+		Name:    "network-policy",
+		Version: version,
 		MinCliVersion: plugin.VersionType{
 			Major: 6,
 			Minor: 15,
