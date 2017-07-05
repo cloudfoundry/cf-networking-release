@@ -301,17 +301,24 @@ var _ = Describe("Client", func() {
 	})
 
 	Describe("GetAppSpaces", func() {
-		appGUIDs := []string{}
-		expectedAppSpaces := map[string]string{
-			"live-app-1-guid": "space-1-guid",
-			"live-app-2-guid": "space-1-guid",
-			"live-app-3-guid": "space-2-guid",
-			"live-app-4-guid": "space-2-guid",
-			"live-app-5-guid": "space-3-guid",
-		}
+		var (
+			appGUIDs          []string
+			expectedAppSpaces map[string]string
+		)
 		BeforeEach(func() {
-			for key, _ := range expectedAppSpaces {
-				appGUIDs = append(appGUIDs, key)
+			appGUIDs = []string{
+				"live-app-1-guid",
+				"live-app-2-guid",
+				"live-app-3-guid",
+				"live-app-4-guid",
+				"live-app-5-guid",
+			}
+			expectedAppSpaces = map[string]string{
+				"live-app-1-guid": "space-1-guid",
+				"live-app-2-guid": "space-1-guid",
+				"live-app-3-guid": "space-2-guid",
+				"live-app-4-guid": "space-2-guid",
+				"live-app-5-guid": "space-3-guid",
 			}
 			fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 				_ = json.Unmarshal([]byte(fixtures.AppsV3), respData)
