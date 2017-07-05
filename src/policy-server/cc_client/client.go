@@ -147,6 +147,7 @@ func (c *Client) GetAppSpaces(token string, appGUIDs []string) (map[string]strin
 
 	values := url.Values{}
 	values.Add("guids", strings.Join(appGUIDs, ","))
+	values.Add("per_page", strconv.Itoa(len(appGUIDs)))
 
 	route := fmt.Sprintf("/v3/apps?%s", values.Encode())
 

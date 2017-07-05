@@ -195,7 +195,7 @@ var _ = Describe("Client", func() {
 			method, route, reqData, _, token := fakeJSONClient.DoArgsForCall(0)
 
 			Expect(method).To(Equal("GET"))
-			Expect(route).To(Equal("/v3/apps?guids=live-app-1-guid%2Clive-app-2-guid"))
+			Expect(route).To(Equal("/v3/apps?guids=live-app-1-guid%2Clive-app-2-guid&per_page=2"))
 			Expect(reqData).To(BeNil())
 			Expect(token).To(Equal("bearer some-token"))
 
@@ -332,6 +332,7 @@ var _ = Describe("Client", func() {
 			for appGuid, _ := range expectedAppSpaces {
 				Expect(route).To(ContainSubstring(appGuid))
 			}
+			Expect(route).To(ContainSubstring("per_page=5"))
 			Expect(reqData).To(BeNil())
 			Expect(token).To(Equal("bearer some-token"))
 
@@ -354,6 +355,20 @@ var _ = Describe("Client", func() {
 			It("returns a helpful error", func() {
 				_, err := client.GetAppSpaces("some-token", []string{"some-guid"})
 				Expect(err).To(MatchError(ContainSubstring("json client do: banana")))
+			})
+		})
+
+		Context("when there are multiple pages", func() {
+			BeforeEach(func() {
+				fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+					_ = json.Unmarshal([]byte(fixtures.AppsV3MultiplePages), respData)
+					return nil
+				}
+			})
+
+			It("should immediately return an error", func() {
+				_, err := client.GetAppSpaces("some-token", []string{"some-guid"})
+				Expect(err).To(MatchError("pagination support not yet implemented"))
 			})
 		})
 	})
