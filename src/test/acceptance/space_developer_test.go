@@ -137,8 +137,12 @@ var _ = Describe("space developer policy configuration", func() {
 							ID: appAGUID,
 						},
 						Destination: models.Destination{
-							ID:       appBGUID,
-							Port:     1234,
+							ID:   appBGUID,
+							Port: 1234,
+							Ports: models.Ports{
+								Start: 1234,
+								End:   1234,
+							},
 							Protocol: "tcp",
 						},
 					},

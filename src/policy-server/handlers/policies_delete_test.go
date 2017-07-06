@@ -77,6 +77,10 @@ var _ = Describe("PoliciesDelete", func() {
 				ID:       "some-other-app-guid",
 				Protocol: "tcp",
 				Port:     8080,
+				Ports: models.Ports{
+					Start: 8080,
+					End:   8080,
+				},
 			},
 		}}
 		tokenData = uaa_client.CheckTokenResponse{

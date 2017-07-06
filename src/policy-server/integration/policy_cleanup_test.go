@@ -70,7 +70,7 @@ var _ = Describe("Automatic Stale Policy Cleanup", func() {
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
 		})
 
-		It("eventually cleans up stale policies stale policies", func() {
+		It("eventually cleans up stale policies", func() {
 			listPolicies := func() []byte {
 				resp := helpers.MakeAndDoRequest(
 					"GET",
@@ -84,8 +84,8 @@ var _ = Describe("Automatic Stale Policy Cleanup", func() {
 
 			activePolicies := `{ "total_policies": 2,
 			"policies": [
-				{"source": { "id": "live-app-1-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "port": 8080 } },
-				{"source": { "id": "live-app-2-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "port": 9999 } }
+				{"source": { "id": "live-app-1-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "port": 8080, "ports": { "start": 8080, "end": 8080 } } },
+				{"source": { "id": "live-app-2-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "port": 9999, "ports": { "start": 9999, "end": 9999 } } }
 				]} `
 			Eventually(listPolicies, "5s").Should(MatchJSON(activePolicies))
 

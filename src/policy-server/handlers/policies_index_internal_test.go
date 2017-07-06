@@ -79,7 +79,11 @@ var _ = Describe("PoliciesIndexInternal", func() {
 					"destination": {
 						"id": "some-other-app-guid",
 						"protocol": "tcp",
-						"port": 8080
+						"port": 8080,
+						"ports": {
+							"start": 8080,
+							"end": 8080
+						}
 					}
 				}
 			]}`
@@ -108,7 +112,11 @@ var _ = Describe("PoliciesIndexInternal", func() {
 					"destination": {
 						"id": "some-other-app-guid",
 						"protocol": "tcp",
-						"port": 8080
+						"port": 8080,
+						"ports": {
+							"start": 8080,
+							"end": 8080
+						}
 					}
 				},
 				{
@@ -118,7 +126,11 @@ var _ = Describe("PoliciesIndexInternal", func() {
 					"destination": {
 						"id": "some-other-app-guid",
 						"protocol": "tcp",
-						"port": 1234
+						"port": 1234,
+						"ports": {
+							"start": 1234,
+							"end": 1234
+						}
 					}
 				}
 			]}`

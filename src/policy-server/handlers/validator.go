@@ -28,6 +28,9 @@ func (v *Validator) ValidatePolicies(policies []models.Policy) error {
 		if policy.Destination.Protocol != "udp" && policy.Destination.Protocol != "tcp" {
 			return errors.New("invalid destination protocol, specify either udp or tcp")
 		}
+		if policy.Destination.Ports.Start != policy.Destination.Ports.End {
+			return fmt.Errorf("invalid destination port range %d-%d, start and end must be same", policy.Destination.Ports.Start, policy.Destination.Ports.End)
+		}
 		if policy.Destination.Port < 1 || policy.Destination.Port > 65535 {
 			return fmt.Errorf("invalid destination port value %d, must be 1-65535", policy.Destination.Port)
 		}

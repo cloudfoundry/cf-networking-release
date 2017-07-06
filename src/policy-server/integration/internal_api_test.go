@@ -92,8 +92,8 @@ var _ = Describe("Internal API", func() {
 		responseString, err := ioutil.ReadAll(resp.Body)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(responseString).To(MatchJSON(`{ "policies": [
-				{"source": { "id": "app1", "tag": "0001" }, "destination": { "id": "app2", "tag": "0002", "protocol": "tcp", "port": 8080 } },
-				{"source": { "id": "app3", "tag": "0003" }, "destination": { "id": "app1", "tag": "0001", "protocol": "tcp", "port": 9999 } }
+				{"source": { "id": "app1", "tag": "0001" }, "destination": { "id": "app2", "tag": "0002", "protocol": "tcp", "port": 8080, "ports": {"start": 8080, "end": 8080 } } },
+				{"source": { "id": "app3", "tag": "0003" }, "destination": { "id": "app1", "tag": "0001", "protocol": "tcp", "port": 9999, "ports": {"start": 9999, "end": 9999 } } }
 			]}
 		`))
 	})

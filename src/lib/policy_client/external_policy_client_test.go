@@ -92,8 +92,12 @@ var _ = Describe("ExternalClient", func() {
 						ID: "some-app-guid",
 					},
 					Destination: models.Destination{
-						ID:       "some-other-app-guid",
-						Port:     8090,
+						ID:   "some-other-app-guid",
+						Port: 8090,
+						Ports: models.Ports{
+							Start: 8090,
+							End:   8090,
+						},
 						Protocol: "tcp",
 					},
 				},
@@ -147,8 +151,12 @@ var _ = Describe("ExternalClient", func() {
 						ID: "some-app-guid",
 					},
 					Destination: models.Destination{
-						ID:       "some-other-app-guid",
-						Port:     8090,
+						ID:   "some-other-app-guid",
+						Port: 8090,
+						Ports: models.Ports{
+							Start: 8090,
+							End:   8090,
+						},
 						Protocol: "tcp",
 					},
 				},

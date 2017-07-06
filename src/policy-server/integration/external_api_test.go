@@ -381,7 +381,7 @@ var _ = Describe("External API", func() {
 					responseString, err := ioutil.ReadAll(resp.Body)
 					expectedResp := `{
 						"total_policies": 1,
-						"policies": [ {"source": { "id": "live-app-1-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "port": 8090 } } ]
+						"policies": [ {"source": { "id": "live-app-1-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "port": 8090, "ports": { "start": 8090, "end": 8090 }}} ]
 					}`
 					Expect(responseString).To(MatchJSON(expectedResp))
 				})
@@ -422,8 +422,16 @@ var _ = Describe("External API", func() {
 			for i := 0; i < nPolicies; i++ {
 				appName := fmt.Sprintf("some-app-%x", i)
 				policies = append(policies, models.Policy{
-					Source:      models.Source{ID: appName},
-					Destination: models.Destination{ID: appName, Protocol: "tcp", Port: 1234},
+					Source: models.Source{ID: appName},
+					Destination: models.Destination{
+						ID:       appName,
+						Protocol: "tcp",
+						Port:     1234,
+						Ports: models.Ports{
+							Start: 1234,
+							End:   1234,
+						},
+					},
 				})
 			}
 
@@ -559,7 +567,7 @@ var _ = Describe("External API", func() {
 			Expect(responseString).To(MatchJSON(`{
 				"total_policies": 1,
 				"policies": [
-					{ "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } }
+				{ "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090, "ports": { "start": 8090, "end": 8090 } } }
 				]}`))
 
 			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
@@ -568,6 +576,61 @@ var _ = Describe("External API", func() {
 			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
 				HaveName("StoreCreateSuccessTime"),
 			))
+		})
+		Context("when using the ports field to specify one port", func() {
+			It("responds with 200 and a body of {} and we can see it in the list", func() {
+				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8090, "end": 8090 } } } ] }`)
+				resp := helpers.MakeAndDoRequest(
+					"POST",
+					fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+					body,
+				)
+
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
+				responseString, err := ioutil.ReadAll(resp.Body)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(responseString).To(MatchJSON("{}"))
+
+				resp = helpers.MakeAndDoRequest(
+					"GET",
+					fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+					nil,
+				)
+
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
+				responseString, err = ioutil.ReadAll(resp.Body)
+				Expect(responseString).To(MatchJSON(`{
+				"total_policies": 1,
+				"policies": [
+				{ "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090, "ports": { "start": 8090, "end": 8090 } } }
+				]}`))
+
+				Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
+					HaveName("CreatePoliciesRequestTime"),
+				))
+				Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
+					HaveName("StoreCreateSuccessTime"),
+				))
+			})
+
+		})
+
+		Context("when using the ports field to specify multiple ports", func() {
+			It("fails to validate the policy", func() {
+				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8080, "end": 8090 } } } ] }`)
+				resp := helpers.MakeAndDoRequest(
+					"POST",
+					fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+					body,
+				)
+
+				Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
+				responseString, err := ioutil.ReadAll(resp.Body)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(responseString).To(MatchJSON(`{ "error": "policies-create: invalid destination port range 8080-8090, start and end must be same" }`))
+
+			})
+
 		})
 
 		Context("when the protocol is invalid", func() {
@@ -645,7 +708,7 @@ var _ = Describe("External API", func() {
 			stalePoliciesStr := `{
 				"total_policies":1,
 				"policies": [
-				 {"source": { "id": "live-app-1-guid" }, "destination": { "id": "dead-app", "protocol": "tcp", "port": 3333 } }
+				{"source": { "id": "live-app-1-guid" }, "destination": { "id": "dead-app", "protocol": "tcp", "port": 3333, "ports": { "start": 3333, "end": 3333 } } }
 				 ]}
 				`
 
@@ -692,8 +755,8 @@ var _ = Describe("External API", func() {
 				Expect(responseString).To(MatchJSON(`{
 					"total_policies": 2,
 					"policies": [
-				 {"source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "port": 8080 } },
-				 {"source": { "id": "app3" }, "destination": { "id": "app1", "protocol": "tcp", "port": 9999 } }
+					{"source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "port": 8080, "ports": { "start": 8080, "end": 8080 } } },
+				 {"source": { "id": "app3" }, "destination": { "id": "app1", "protocol": "tcp", "port": 9999, "ports": { "start": 9999, "end": 9999 }} }
 				 ]}
 				`))
 
@@ -725,7 +788,7 @@ var _ = Describe("External API", func() {
 		Context("when all of the deletes succeed", func() {
 			It("responds with 200 and a body of {} and we can see it is removed from the list", func() {
 
-				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
+				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8090, "end": 8090 } } } ] }`)
 
 				response := helpers.MakeAndDoRequest(
 					"POST",
@@ -759,7 +822,34 @@ var _ = Describe("External API", func() {
 					HaveName("StoreDeleteSuccessTime"),
 				))
 			})
+			It("still works when a single port is set in the request", func() {
 
+				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port":  8090 } } ] }`)
+
+				response := helpers.MakeAndDoRequest(
+					"POST",
+					fmt.Sprintf("http://%s:%d/networking/v0/external/policies/delete", conf.ListenHost, conf.ListenPort),
+					body,
+				)
+
+				Expect(response.StatusCode).To(Equal(http.StatusOK))
+				responseString, err := ioutil.ReadAll(response.Body)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(responseString).To(MatchJSON(`{}`))
+
+				response = helpers.MakeAndDoRequest(
+					"GET",
+					fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+					nil,
+				)
+
+				Expect(response.StatusCode).To(Equal(http.StatusOK))
+				responseString, err = ioutil.ReadAll(response.Body)
+				Expect(responseString).To(MatchJSON(`{
+					"total_policies": 0,
+					"policies": []
+				}`))
+			})
 		})
 
 		Context("when one of the policies to delete does not exist", func() {

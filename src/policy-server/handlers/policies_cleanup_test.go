@@ -93,7 +93,11 @@ var _ = Describe("PoliciesCleanup", func() {
 				"destination": {
 					"id": "dead-guid",
 					"protocol": "tcp",
-					"port": 8080
+					"port": 8080,
+					"ports": {
+						"start": 8080,
+						"end": 8080
+					}
 				}
 			}
 			]

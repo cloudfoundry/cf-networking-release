@@ -47,7 +47,10 @@ var _ = Describe("PoliciesCreate", func() {
 				"destination": {
 					"id": "some-other-app-guid",
 					"protocol": "tcp",
-					"port": 8080
+					"ports": {
+						"start": 8080,
+						"end": 8080
+					}
 				}
 			},
 			{
@@ -57,7 +60,10 @@ var _ = Describe("PoliciesCreate", func() {
 				"destination": {
 					"id": "some-other-app-guid",
 					"protocol": "udp",
-					"port": 1234
+					"ports": {
+						"start": 1234,
+						"end": 1234
+					}
 				}
 			}
         ]}`
@@ -88,7 +94,6 @@ var _ = Describe("PoliciesCreate", func() {
 		fakeQuotaGuard.CheckAccessReturns(true, nil)
 		resp = httptest.NewRecorder()
 	})
-
 	It("persists a new policy rule", func() {
 		expectedPolicies := []models.Policy{{
 			Source: models.Source{ID: "some-app-guid"},
@@ -96,6 +101,10 @@ var _ = Describe("PoliciesCreate", func() {
 				ID:       "some-other-app-guid",
 				Protocol: "tcp",
 				Port:     8080,
+				Ports: models.Ports{
+					Start: 8080,
+					End:   8080,
+				},
 			},
 		}, {
 			Source: models.Source{ID: "another-app-guid"},
@@ -103,6 +112,10 @@ var _ = Describe("PoliciesCreate", func() {
 				ID:       "some-other-app-guid",
 				Protocol: "udp",
 				Port:     1234,
+				Ports: models.Ports{
+					Start: 1234,
+					End:   1234,
+				},
 			},
 		}}
 
@@ -138,17 +151,29 @@ var _ = Describe("PoliciesCreate", func() {
 						SatisfyAll(
 							HaveKeyWithValue("source", HaveKeyWithValue("id", "some-app-guid")),
 							HaveKeyWithValue("destination", SatisfyAll(
+								HaveLen(4),
 								HaveKeyWithValue("id", "some-other-app-guid"),
 								HaveKeyWithValue("protocol", "tcp"),
 								HaveKeyWithValue("port", BeEquivalentTo(8080)),
+								HaveKeyWithValue("ports", SatisfyAll(
+									HaveLen(2),
+									HaveKeyWithValue("start", BeEquivalentTo(8080)),
+									HaveKeyWithValue("end", BeEquivalentTo(8080)),
+								)),
 							)),
 						),
 						SatisfyAll(
 							HaveKeyWithValue("source", HaveKeyWithValue("id", "another-app-guid")),
 							HaveKeyWithValue("destination", SatisfyAll(
+								HaveLen(4),
 								HaveKeyWithValue("id", "some-other-app-guid"),
 								HaveKeyWithValue("protocol", "udp"),
 								HaveKeyWithValue("port", BeEquivalentTo(1234)),
+								HaveKeyWithValue("ports", SatisfyAll(
+									HaveLen(2),
+									HaveKeyWithValue("start", BeEquivalentTo(1234)),
+									HaveKeyWithValue("end", BeEquivalentTo(1234)),
+								)),
 							)),
 						),
 					),

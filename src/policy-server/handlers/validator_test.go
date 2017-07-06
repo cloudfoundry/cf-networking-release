@@ -96,6 +96,31 @@ var _ = Describe("Validator", func() {
 			})
 		})
 
+		Context("when invalid destination ports", func() {
+			It("returns a useful error", func() {
+				policies := []models.Policy{
+					models.Policy{
+						Source: models.Source{
+							ID:  "foo",
+							Tag: "",
+						},
+						Destination: models.Destination{
+							ID:       "bar",
+							Tag:      "",
+							Protocol: "tcp",
+							Ports: models.Ports{
+								Start: 1234,
+								End:   2345,
+							},
+						},
+					},
+				}
+
+				err := validator.ValidatePolicies(policies)
+				Expect(err).To(MatchError("invalid destination port range 1234-2345, start and end must be same"))
+			})
+		})
+
 		Context("when invalid destination port", func() {
 			It("returns a useful error", func() {
 				policies := []models.Policy{
