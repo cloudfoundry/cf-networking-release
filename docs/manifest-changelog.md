@@ -6,8 +6,8 @@ See [deployment docs](deploy-iaas.md) for examples
 
 **New Properties**
 
-  - Optional parameters have been added to limit the bandwidth in and out of
-    containers.
+  - Optional parameters have been added to the `silk-cni` job to limit the
+    bandwidth in and out of containers.
     - `cf_networking.rate` is the rate in Kbps at which traffic can leave and
       enter a container.
     - `cf_networking.burst` is the burst in Kb at which traffic can leave and
@@ -20,7 +20,8 @@ See [deployment docs](deploy-iaas.md) for examples
     iptables for denied packets. Before, this rate was hardcoded to 2 packets
     per minute. Now, the rate defaults to 1 packet per second.
     - `cf_networking.iptables_denied_logs_per_sec` is the maximum number of
-      denied packets logged by iptables per second.
+      denied packets logged by iptables per second, it should be configured on
+      the `silk-cni` job.
 
 ### 1.1.0
 
