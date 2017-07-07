@@ -1,8 +1,8 @@
 # Known Issues
 
-### Compatibility with VMware NSX for vSphere 6.x
+### Compatibility with VMware NSX for vSphere 6.2.3+
 
-  When using VMware NSX for vSphere 6.x, the default VXLAN port of 8472 used by cf-networking is not allowed.
+  When using VMware NSX for vSphere 6.2.3+, the default VXLAN port of 4789 used by cf-networking will not work.
   To fix this issue, override the default `cf_networking.vtep_port` with another value.
 
 ### MySQL versions below 5.7
