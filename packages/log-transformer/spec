@@ -5,4 +5,22 @@ dependencies:
   - golang
 
 files:
+  - code.cloudfoundry.org/lager/*.go # gosub
+  - github.com/hpcloud/tail/*.go # gosub
+  - github.com/hpcloud/tail/ratelimiter/*.go # gosub
+  - github.com/hpcloud/tail/util/*.go # gosub
+  - github.com/hpcloud/tail/vendor/gopkg.in/fsnotify.v1/*.go # gosub
+  - github.com/hpcloud/tail/vendor/gopkg.in/tomb.v1/*.go # gosub
+  - github.com/hpcloud/tail/watch/*.go # gosub
+  - github.com/tedsuo/ifrit/*.go # gosub
+  - gopkg.in/validator.v2/*.go # gosub
+  - lib/datastore/*.go # gosub
+  - lib/filelock/*.go # gosub
+  - lib/serial/*.go # gosub
   - log-transformer/cmd/log-transformer/*.go # gosub
+  - log-transformer/config/*.go # gosub
+  - log-transformer/merger/*.go # gosub
+  - log-transformer/parser/*.go # gosub
+  - log-transformer/repository/*.go # gosub
+  - log-transformer/rotatablesink/*.go # gosub
+  - log-transformer/runner/*.go # gosub

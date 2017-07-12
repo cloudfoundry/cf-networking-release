@@ -23,7 +23,7 @@ case $1 in
 
     echo $$ > "${PIDFILE}"
 
-    exec /var/vcap/packages/log-transformer/bin/log-transformer \ -config-file=/var/vcap/jobs/log-transformer/config/log-transformer.json
+    exec /var/vcap/packages/log-transformer/bin/log-transformer -config-file=/var/vcap/jobs/log-transformer/config/log-transformer.json
 
     ;;
 
