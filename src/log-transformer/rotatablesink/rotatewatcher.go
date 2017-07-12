@@ -60,6 +60,7 @@ func NewRotatableSink(fileToWatch string, logLevel lager.LogLevel, fileWriterFac
 					fileToWatchStatInode, err := destinationFileInfo.FileInode(fileToWatch)
 					if err != nil {
 						componentLogger.Error("register-rotated-file-sink", err)
+						continue
 					}
 					if fileToWatchStatInode != rotatableSink.fileToWatchInode {
 						err = rotatableSink.registerFileSink(fileToWatch)

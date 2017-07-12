@@ -106,6 +106,39 @@ var _ = Describe("Rotatewatcher", func() {
 				})
 			})
 
+			Context("when unable to get the file inode of the destination file that was rotated", func() {
+				BeforeEach(func() {
+					fileInodeCount := 0
+					fakeDestinationFileInfo.FileExistsReturns(true, nil)
+					fakeDestinationFileInfo.FileInodeStub = func(filename string) (uint64, error) {
+						defer func() {
+							fileInodeCount++
+						}()
+
+						switch fileInodeCount {
+						case 0:
+							return 1, nil
+						default:
+							return 1, errors.New("get file inode: watermelon")
+						}
+					}
+					fakeTestWriterFactory = &TestWriterFactory{ReturnWriter: fileToWatch}
+					var err error
+					rotatableSink, err = rotatablesink.NewRotatableSink(fileToWatchName, lager.DEBUG, fakeTestWriterFactory, fakeDestinationFileInfo, fakeLogger)
+					Expect(err).ToNot(HaveOccurred())
+				})
+
+				It("returns a sensible error and does not update the file sink", func() {
+					time.Sleep(2 * time.Second)
+					Expect(len(fakeLogger.Logs())).To(BeNumerically(">", 0))
+					Expect(fakeLogger.Logs()[0]).To(SatisfyAll(
+						LogsWith(lager.ERROR, "test.register-rotated-file-sink"),
+						HaveLogData(HaveKeyWithValue("error", "get file inode: watermelon")),
+					))
+					Expect(fakeTestWriterFactory.invocationCount).To(Equal(1))
+				})
+			})
+
 			Context("when the destination file is deleted", func() {
 				BeforeEach(func() {
 					By("deleting the file")
