@@ -1,0 +1,12 @@
+<%=
+  require 'json'
+
+
+  toRender = {
+    "kernel_log_file" => "/var/log/kern.log",
+    "container_metadata_file" => "/var/vcap/data/container-metadata/store.json",
+    "output_log_file" => "/var/vcap/sys/log/iptables-logger/iptables.log",
+  }
+
+  JSON.pretty_generate(toRender)
+%>

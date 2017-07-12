@@ -1,0 +1,26 @@
+---
+name: iptables-logger
+
+dependencies:
+  - golang
+
+files:
+  - code.cloudfoundry.org/lager/*.go # gosub
+  - github.com/hpcloud/tail/*.go # gosub
+  - github.com/hpcloud/tail/ratelimiter/*.go # gosub
+  - github.com/hpcloud/tail/util/*.go # gosub
+  - github.com/hpcloud/tail/vendor/gopkg.in/fsnotify.v1/*.go # gosub
+  - github.com/hpcloud/tail/vendor/gopkg.in/tomb.v1/*.go # gosub
+  - github.com/hpcloud/tail/watch/*.go # gosub
+  - github.com/tedsuo/ifrit/*.go # gosub
+  - gopkg.in/validator.v2/*.go # gosub
+  - iptables-logger/cmd/iptables-logger/*.go # gosub
+  - iptables-logger/config/*.go # gosub
+  - iptables-logger/merger/*.go # gosub
+  - iptables-logger/parser/*.go # gosub
+  - iptables-logger/repository/*.go # gosub
+  - iptables-logger/rotatablesink/*.go # gosub
+  - iptables-logger/runner/*.go # gosub
+  - lib/datastore/*.go # gosub
+  - lib/filelock/*.go # gosub
+  - lib/serial/*.go # gosub
