@@ -92,9 +92,16 @@ var _ = Describe("Integration", func() {
 	EGRESS_DENIED_KERNEL_LOG := "Jun 30 16:07:06 localhost kernel: [265213.303412] DENY_container-handle-1-long IN=s-010255095010 OUT=eth0 MAC=aa:aa:0a:ff:5f:0a:ee:ee:0a:ff:5f:0a:08:00 SRC=10.255.0.1 DST=10.10.10.10 LEN=30 TOS=0x00 PREC=0x00 TTL=63 ID=2535 DF PROTO=UDP SPT=45564 DPT=25555 LEN=10 MARK=0x1\n"
 
 	BeforeEach(func() {
-		kernelLogFile, _ = ioutil.TempFile("", "")
-		containerMetadataFile, _ = ioutil.TempFile("", "")
-		outputDir, _ := ioutil.TempDir("", "")
+		var err error
+		kernelLogFile, err = ioutil.TempFile("", "")
+		Expect(err).ToNot(HaveOccurred())
+
+		containerMetadataFile, err = ioutil.TempFile("", "")
+		Expect(err).ToNot(HaveOccurred())
+
+		outputDir, err := ioutil.TempDir("", "")
+		Expect(err).ToNot(HaveOccurred())
+
 		outputFile = filepath.Join(outputDir, "iptables.log")
 		conf = config.LogTransformer{
 			KernelLogFile:         kernelLogFile.Name(),
@@ -103,7 +110,6 @@ var _ = Describe("Integration", func() {
 		}
 		configFilePath = WriteConfigFile(conf)
 
-		var err error
 		logTransformerCmd := exec.Command(binaryPath, "-config-file", configFilePath)
 		session, err = gexec.Start(logTransformerCmd, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
@@ -175,6 +181,48 @@ var _ = Describe("Integration", func() {
 		Eventually(outputFile).Should(BeAnExistingFile())
 		Eventually(ReadLines, "5s").Should(ContainElement(MatchJSON(EGRESS_DENIED_JSON)))
 	})
+
+	Context("when source file is rotated", func() {
+		It("logs data about packets", func() {
+			By("logging successful egress packets")
+			go AddToKernelLog(EGRESS_ALLOWD_KERNEL_LOG, kernelLogFile)
+			Eventually(outputFile).Should(BeAnExistingFile())
+			Eventually(ReadLines, "5s").Should(ContainElement(MatchJSON(EGRESS_ALLOWED_JSON)))
+			kernelLogFilename := kernelLogFile.Name()
+
+			By("rotate source file")
+			var err error
+			Expect(os.Rename(kernelLogFile.Name(), filepath.Join(os.TempDir(), "kernel.log.backup"))).To(Succeed())
+			kernelLogFile, err = os.Create(kernelLogFilename)
+			Expect(err).ToNot(HaveOccurred())
+
+			By("logging denied egress packets")
+			go AddToKernelLog(EGRESS_DENIED_KERNEL_LOG, kernelLogFile)
+			Eventually(outputFile).Should(BeAnExistingFile())
+			Eventually(ReadLines, "5s").Should(ContainElement(MatchJSON(EGRESS_DENIED_JSON)))
+		})
+	})
+
+	Context("when source file is removed", func() {
+		It("logs data about packets", func() {
+			By("logging successful egress packets")
+			go AddToKernelLog(EGRESS_ALLOWD_KERNEL_LOG, kernelLogFile)
+			Eventually(outputFile).Should(BeAnExistingFile())
+			Eventually(ReadLines, "5s").Should(ContainElement(MatchJSON(EGRESS_ALLOWED_JSON)))
+			kernelLogFilename := kernelLogFile.Name()
+
+			By("remove source file")
+			var err error
+			Expect(os.Remove(kernelLogFile.Name())).To(Succeed())
+			kernelLogFile, err = os.Create(kernelLogFilename)
+			Expect(err).ToNot(HaveOccurred())
+
+			By("logging denied egress packets")
+			go AddToKernelLog(EGRESS_DENIED_KERNEL_LOG, kernelLogFile)
+			Eventually(outputFile).Should(BeAnExistingFile())
+			Eventually(ReadLines, "5s").Should(ContainElement(MatchJSON(EGRESS_DENIED_JSON)))
+		})
+	})
 })
 
 func AddToContainerMetadata(store *datastore.Store, containerID, containerIP string, metadata map[string]interface{}) {
@@ -186,8 +234,6 @@ func AddToKernelLog(line string, w io.Writer) {
 
 	time.Sleep(200 * time.Millisecond)
 	_, err := w.Write([]byte(line))
-	// Jun 28 18:21:24 localhost kernel: [100471.222018] OK_fc2901d5-f631-40f0-6222-8 IN=s-010255178004 OUT=eth0 MAC=aa:aa:0a:ff:b2:04:ee:ee:0a:ff:b2:04:08:00 SRC=10.255.178.4 DST=10.10.10.10 LEN=29 TOS=0x00 PREC=0x00 TTL=63 ID=2806 DF PROTO=UDP SPT=36556 DPT=11111 LEN=9
-	// Jun 28 18:21:30 localhost kernel: [100477.151949] DENY_fc2901d5-f631-40f0-6222 IN=s-010255178004 OUT=eth0 MAC=aa:aa:0a:ff:b2:04:ee:ee:0a:ff:b2:04:08:00 SRC=10.255.178.4 DST=10.10.10.10 LEN=29 TOS=0x00 PREC=0x00 TTL=63 ID=3568 DF PROTO=UDP SPT=54137 DPT=22222 LEN=9
 	Expect(err).NotTo(HaveOccurred())
 }
 

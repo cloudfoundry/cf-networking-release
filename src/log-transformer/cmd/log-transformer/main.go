@@ -48,6 +48,7 @@ func main() {
 		MustExist: true,
 		Follow:    true,
 		Poll:      true,
+		ReOpen:    true,
 	})
 	if err != nil {
 		logger.Fatal("tail-input", err)
