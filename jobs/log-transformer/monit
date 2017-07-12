@@ -1,0 +1,5 @@
+check process log-transformer
+  with pidfile /var/vcap/sys/run/log-transformer/log-transformer.pid
+  start program "/var/vcap/jobs/log-transformer/bin/log-transformer_ctl start"
+  stop program "/var/vcap/jobs/log-transformer/bin/log-transformer_ctl stop"
+  group vcap

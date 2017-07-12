@@ -1,0 +1,10 @@
+---
+name: log-transformer
+
+templates:
+  log-transformer_ctl.erb: bin/log-transformer_ctl
+  log-transformer.json.erb: config/log-transformer.json
+
+packages:
+  - log-transformer
+

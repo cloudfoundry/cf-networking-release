@@ -1,0 +1,8 @@
+---
+name: log-transformer
+
+dependencies:
+  - golang
+
+files:
+  - log-transformer/cmd/log-transformer/*.go # gosub
