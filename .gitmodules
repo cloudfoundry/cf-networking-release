@@ -124,3 +124,6 @@
 [submodule "src/github.com/containernetworking/plugins"]
 	path = src/github.com/containernetworking/plugins
 	url = https://github.com/containernetworking/plugins
+[submodule "src/github.com/hpcloud/tail"]
+	path = src/github.com/hpcloud/tail
+	url = https://github.com/hpcloud/tail
