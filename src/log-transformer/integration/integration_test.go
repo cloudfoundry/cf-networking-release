@@ -223,6 +223,48 @@ var _ = Describe("Integration", func() {
 			Eventually(ReadLines, "5s").Should(ContainElement(MatchJSON(EGRESS_DENIED_JSON)))
 		})
 	})
+
+	Context("when destination file is rotated", func() {
+		It("logs data about packets", func() {
+			By("logging successful egress packets")
+			go AddToKernelLog(EGRESS_ALLOWD_KERNEL_LOG, kernelLogFile)
+			Eventually(outputFile).Should(BeAnExistingFile())
+			Eventually(ReadLines, "5s").Should(ContainElement(MatchJSON(EGRESS_ALLOWED_JSON)))
+
+			By("rotate destination file")
+			Expect(os.Rename(outputFile, filepath.Join(os.TempDir(), "destination.log.backup"))).To(Succeed())
+			_, err := os.Create(outputFile)
+			Expect(err).ToNot(HaveOccurred())
+
+			By("waiting for the rotatable sink to pickup the new file")
+			time.Sleep(2 * time.Second)
+
+			By("logging denied egress packets")
+			go AddToKernelLog(EGRESS_DENIED_KERNEL_LOG, kernelLogFile)
+			Eventually(outputFile).Should(BeAnExistingFile())
+			Eventually(ReadLines, "5s").Should(ContainElement(MatchJSON(EGRESS_DENIED_JSON)))
+		})
+	})
+
+	Context("when destination file is removed", func() {
+		It("logs data about packets", func() {
+			By("logging successful egress packets")
+			go AddToKernelLog(EGRESS_ALLOWD_KERNEL_LOG, kernelLogFile)
+			Eventually(outputFile).Should(BeAnExistingFile())
+			Eventually(ReadLines, "5s").Should(ContainElement(MatchJSON(EGRESS_ALLOWED_JSON)))
+
+			By("remove destination file")
+			Expect(os.Remove(outputFile)).To(Succeed())
+
+			By("waiting for the rotatable sink to pickup the new file")
+			time.Sleep(2 * time.Second)
+
+			By("logging denied egress packets")
+			go AddToKernelLog(EGRESS_DENIED_KERNEL_LOG, kernelLogFile)
+			Eventually(outputFile, "5s").Should(BeAnExistingFile())
+			Eventually(ReadLines, "5s").Should(ContainElement(MatchJSON(EGRESS_DENIED_JSON)))
+		})
+	})
 })
 
 func AddToContainerMetadata(store *datastore.Store, containerID, containerIP string, metadata map[string]interface{}) {

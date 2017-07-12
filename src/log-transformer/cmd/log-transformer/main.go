@@ -18,6 +18,7 @@ import (
 	"github.com/tedsuo/ifrit"
 
 	"code.cloudfoundry.org/lager"
+	"log-transformer/rotatablesink"
 )
 
 var (
@@ -70,8 +71,20 @@ func main() {
 	if err != nil {
 		logger.Fatal("open-output-log-file", err)
 	}
-	iptablesSink := lager.NewWriterSink(outputLogFile, lager.DEBUG)
+
+	iptablesSink, err := rotatablesink.NewRotatableSink(
+		outputLogFile.Name(),
+		lager.DEBUG,
+		rotatablesink.DefaultFileWriterFunc(rotatablesink.DefaultFileWriter),
+		rotatablesink.DefaultDestinationFileInfo{},
+		logger,
+	)
+
+	if err != nil {
+		logger.Fatal("rotatable-sink", err)
+	}
 	iptablesLogger.RegisterSink(iptablesSink)
+
 	logTransformer := &runner.Runner{
 		Lines:          t.Lines,
 		Parser:         kernelLogParser,
