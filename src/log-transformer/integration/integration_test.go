@@ -37,8 +37,8 @@ var _ = Describe("Integration", func() {
 
 	EGRESS_DENIED_JSON := `{
 			"timestamp": "some-timestamp",
-			"source": "cfnetworking.iptables",
-			"message": "cfnetworking.iptables.egress-denied",
+			"source": "cfnetworking.log-forwarder",
+			"message": "cfnetworking.log-forwarder.egress-denied",
 			"log_level": 1,
 			"data": {
 				"source": {
@@ -63,8 +63,8 @@ var _ = Describe("Integration", func() {
 		}`
 	EGRESS_ALLOWED_JSON := `{
 			"timestamp": "some-timestamp",
-			"source": "cfnetworking.iptables",
-			"message": "cfnetworking.iptables.egress-allowed",
+			"source": "cfnetworking.log-forwarder",
+			"message": "cfnetworking.log-forwarder.egress-allowed",
 			"log_level": 1,
 			"data": {
 				"source": {

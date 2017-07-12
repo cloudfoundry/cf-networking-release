@@ -1,11 +1,11 @@
 package filelock
 
 import (
+	"bytes"
+	"fmt"
+	"io/ioutil"
 	"os"
 	"time"
-	"bytes"
-	"io/ioutil"
-	"fmt"
 )
 
 type CacheFileLock struct {
@@ -49,6 +49,7 @@ func (c *CacheFileLock) Open() (LockedFile, error) {
 		if err != nil {
 			return nil, fmt.Errorf("open file lock: %s", err)
 		}
+		defer lockedFile.Close()
 		lockedFileContents, err := ioutil.ReadAll(lockedFile)
 		if err != nil {
 			return nil, fmt.Errorf("read locked file: %s", err)

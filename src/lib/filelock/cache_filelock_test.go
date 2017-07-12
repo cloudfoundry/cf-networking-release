@@ -1,14 +1,15 @@
 package filelock_test
 
 import (
-	. "github.com/onsi/ginkgo"
+	"io"
 	"io/ioutil"
-	. "github.com/onsi/gomega"
-	"os"
 	"lib/fakes"
 	"lib/filelock"
-	"io"
+	"os"
+
 	"code.cloudfoundry.org/cli/cf/errors"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("CacheFilelock", func() {
@@ -68,7 +69,7 @@ var _ = Describe("CacheFilelock", func() {
 			Expect(contents).To(Equal(updatedContents))
 		})
 
-		Context("when cache file lock uses a real file", func() {
+		Context("when the cached file is out of date", func() {
 			BeforeEach(func() {
 				lockFile, err := ioutil.TempFile(os.TempDir(), "fake-lock-file")
 				Expect(ioutil.WriteFile(lockFile.Name(), []byte("dragonfruit"), os.ModePerm)).To(Succeed())
@@ -93,6 +94,22 @@ var _ = Describe("CacheFilelock", func() {
 				contents = make([]byte, 11)
 				cacheLockedFile.Read(contents)
 				Expect(contents).To(Equal(updatedContents))
+			})
+
+			Context("when the lock file is opened", func() {
+				BeforeEach(func() {
+					lockFile, err := ioutil.TempFile(os.TempDir(), "updated-lock-file")
+					Expect(err).NotTo(HaveOccurred())
+					cacheFileLock = filelock.NewCacheFileLock(fakeFileLocker, lockFile.Name())
+				})
+				It("closes the locked file", func() {
+					cacheLockedFile, err := cacheFileLock.Open()
+					Expect(err).NotTo(HaveOccurred())
+					Expect(cacheLockedFile).NotTo(BeNil())
+
+					Expect(fakeFileLocker.OpenCallCount()).To(Equal(1))
+					Expect(lockedFile.CloseCallCount()).To(Equal(1))
+				})
 			})
 		})
 

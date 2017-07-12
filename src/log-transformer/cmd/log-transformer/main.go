@@ -17,8 +17,9 @@ import (
 	"github.com/hpcloud/tail"
 	"github.com/tedsuo/ifrit"
 
-	"code.cloudfoundry.org/lager"
 	"log-transformer/rotatablesink"
+
+	"code.cloudfoundry.org/lager"
 )
 
 var (
