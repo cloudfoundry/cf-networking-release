@@ -9,6 +9,7 @@ declare -a packages=(
   "src/cf-pusher"
   "src/cli-plugin"
   "src/example-apps"
+  "src/iptables-logger"
   "src/lib"
   "src/netmon"
   "src/policy-server"

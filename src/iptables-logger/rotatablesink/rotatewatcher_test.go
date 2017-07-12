@@ -3,6 +3,7 @@ package rotatablesink_test
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"iptables-logger/fakes"
@@ -39,6 +40,10 @@ var _ = Describe("Rotatewatcher", func() {
 		fakeLogger = lagertest.NewTestLogger("test")
 		rotatableSink, err = rotatablesink.NewRotatableSink(fileToWatchName, lager.DEBUG, fakeTestWriterFactory, fakeDestinationFileInfo, fakeLogger)
 		Expect(err).NotTo(HaveOccurred())
+	})
+
+	AfterEach(func() {
+		Expect(os.Remove(fileToWatchName)).To(Succeed())
 	})
 
 	Describe("NewRotatableSink", func() {
@@ -210,18 +215,12 @@ var _ = Describe("Rotatewatcher", func() {
 	Describe("DestinationFileInfo", func() {
 		var (
 			defaultDestinationFileInfo rotatablesink.DestinationFileInfo
-			fileToWatchName            string
-			fileToWatch                *os.File
 		)
+		BeforeEach(func() {
+			defaultDestinationFileInfo = rotatablesink.DefaultDestinationFileInfo{}
+		})
 
 		Describe("FileExists", func() {
-			BeforeEach(func() {
-				var err error
-				defaultDestinationFileInfo = rotatablesink.DefaultDestinationFileInfo{}
-				fileToWatch, err = ioutil.TempFile(os.TempDir(), "")
-				Expect(err).ToNot(HaveOccurred())
-				fileToWatchName = fileToWatch.Name()
-			})
 
 			It("should return true when file exists", func() {
 				fileExists, err := defaultDestinationFileInfo.FileExists(fileToWatchName)
@@ -230,12 +229,8 @@ var _ = Describe("Rotatewatcher", func() {
 			})
 
 			Context("when the file does not exist", func() {
-				BeforeEach(func() {
-					Expect(os.Remove(fileToWatchName)).To(Succeed())
-				})
-
 				It("returns false", func() {
-					fileExists, err := defaultDestinationFileInfo.FileExists(fileToWatchName)
+					fileExists, err := defaultDestinationFileInfo.FileExists(fmt.Sprintf("%s_does_not_exist", fileToWatchName))
 					Expect(err).ToNot(HaveOccurred())
 					Expect(fileExists).ToNot(BeTrue())
 				})
