@@ -56,7 +56,7 @@ func main() {
 	kernelLogParser := &parser.KernelLogParser{}
 	store := &datastore.Store{
 		Serializer: &serial.Serial{},
-		Locker:     filelock.NewLocker(conf.ContainerMetadataFile),
+		Locker:     filelock.NewCacheFileLock(filelock.NewLocker(conf.ContainerMetadataFile), conf.ContainerMetadataFile),
 	}
 	containerRepo := &repository.ContainerRepo{
 		Store: store,

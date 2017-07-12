@@ -32,7 +32,64 @@ var _ = Describe("Integration", func() {
 		kernelLogFile         *os.File
 		containerMetadataFile *os.File
 		store                 *datastore.Store
+		configFilePath        string
 	)
+
+	EGRESS_DENIED_JSON := `{
+			"timestamp": "some-timestamp",
+			"source": "cfnetworking.iptables",
+			"message": "cfnetworking.iptables.egress-denied",
+			"log_level": 1,
+			"data": {
+				"source": {
+					"container_id": "container-handle-1-longer-than-29-chars",
+					"app_guid": "app_id_1",
+					"space_guid": "space_id_1",
+					"organization_guid": "organization_id_1"
+				},
+				"packet": {
+					"direction": "egress",
+					"allowed": false,
+					"src_ip": "10.255.0.1",
+					"src_port":45564,
+					"dst_ip": "10.10.10.10",
+					"dst_port": 25555,
+					"protocol": "UDP",
+					"mark": "0x1",
+					"icmp_code": 0,
+					"icmp_type": 0
+				}
+			}
+		}`
+	EGRESS_ALLOWED_JSON := `{
+			"timestamp": "some-timestamp",
+			"source": "cfnetworking.iptables",
+			"message": "cfnetworking.iptables.egress-allowed",
+			"log_level": 1,
+			"data": {
+				"source": {
+					"container_id": "container-handle-1-longer-than-29-chars",
+					"app_guid": "app_id_1",
+					"space_guid": "space_id_1",
+					"organization_guid": "organization_id_1"
+				},
+				"packet": {
+					"direction": "egress",
+					"allowed": true,
+					"src_ip": "10.255.0.1",
+					"src_port": 36556,
+					"dst_ip": "10.10.10.10",
+					"dst_port": 11111,
+					"protocol": "UDP",
+					"mark": "0x1",
+					"icmp_code": 0,
+					"icmp_type": 0
+				}
+			}
+		}`
+
+	EGRESS_ALLOWD_KERNEL_LOG := "Jun 28 18:21:24 localhost kernel: [100471.222018] OK_container-handle-1-longer IN=s-010255178004 OUT=eth0 MAC=aa:aa:0a:ff:b2:04:ee:ee:0a:ff:b2:04:08:00 SRC=10.255.0.1 DST=10.10.10.10 LEN=29 TOS=0x00 PREC=0x00 TTL=63 ID=2806 DF PROTO=UDP SPT=36556 DPT=11111 LEN=9 MARK=0x1\n"
+	EGRESS_DENIED_KERNEL_LOG := "Jun 30 16:07:06 localhost kernel: [265213.303412] DENY_container-handle-1-long IN=s-010255095010 OUT=eth0 MAC=aa:aa:0a:ff:5f:0a:ee:ee:0a:ff:5f:0a:08:00 SRC=10.255.0.1 DST=10.10.10.10 LEN=30 TOS=0x00 PREC=0x00 TTL=63 ID=2535 DF PROTO=UDP SPT=45564 DPT=25555 LEN=10 MARK=0x1\n"
 
 	BeforeEach(func() {
 		kernelLogFile, _ = ioutil.TempFile("", "")
@@ -44,7 +101,7 @@ var _ = Describe("Integration", func() {
 			ContainerMetadataFile: containerMetadataFile.Name(),
 			OutputLogFile:         outputFile,
 		}
-		configFilePath := WriteConfigFile(conf)
+		configFilePath = WriteConfigFile(conf)
 
 		var err error
 		logTransformerCmd := exec.Command(binaryPath, "-config-file", configFilePath)
@@ -82,43 +139,41 @@ var _ = Describe("Integration", func() {
 		Consistently(session, DEFAULT_TIMEOUT).ShouldNot(gexec.Exit())
 	})
 
-	XIt("should not truncate output log file on restart", func() {
+	It("should not truncate output log file on restart", func() {
+		go AddToKernelLog(EGRESS_ALLOWD_KERNEL_LOG, kernelLogFile)
+		Eventually(outputFile).Should(BeAnExistingFile())
+
+		Eventually(func() string {
+			bytes, err := ioutil.ReadFile(outputFile)
+			Expect(err).NotTo(HaveOccurred())
+			return string(bytes)
+		}, "5s").ShouldNot(BeEmpty())
+
+		session.Interrupt()
+		Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit())
+
+		var err error
+		logTransformerCmd := exec.Command(binaryPath, "-config-file", configFilePath)
+		session, err = gexec.Start(logTransformerCmd, GinkgoWriter, GinkgoWriter)
+		Expect(err).NotTo(HaveOccurred())
+		Eventually(outputFile).Should(BeAnExistingFile())
+
+		go AddToKernelLog(EGRESS_DENIED_KERNEL_LOG, kernelLogFile)
+
+		Eventually(ReadLines, "5s").Should(ContainElement(MatchJSON(EGRESS_DENIED_JSON)))
+		Eventually(ReadLines, "5s").Should(ContainElement(MatchJSON(EGRESS_ALLOWED_JSON)))
 	})
 
-	FIt("logs data about packets", func() {
+	It("logs data about packets", func() {
 		By("logging successful egress packets")
-		go AddToKernelLog("Jun 28 18:21:24 localhost kernel: [100471.222018] OK_container-handle-1-longer IN=s-010255178004 OUT=eth0 MAC=aa:aa:0a:ff:b2:04:ee:ee:0a:ff:b2:04:08:00 SRC=10.255.0.1 DST=10.10.10.10 LEN=29 TOS=0x00 PREC=0x00 TTL=63 ID=2806 DF PROTO=UDP SPT=36556 DPT=11111 LEN=9 MARK=0x1\n", kernelLogFile)
+		go AddToKernelLog(EGRESS_ALLOWD_KERNEL_LOG, kernelLogFile)
 		Eventually(outputFile).Should(BeAnExistingFile())
-		Eventually(ReadLines, "5s").Should(ContainElement(MatchJSON(`{
-			"timestamp": "some-timestamp",
-			"source": "cfnetworking.iptables",
-			"message": "cfnetworking.iptables.egress-allowed",
-			"log_level": 1,
-			"data": {
-				"source": {
-					"container_id": "container-handle-1-longer-than-29-chars",
-					"app_guid": "app_id_1",
-					"space_guid": "space_id_1",
-					"organization_guid": "organization_id_1"
-				},
-				"packet": {
-					"direction": "egress",
-					"allowed": true,
-					"src_ip": "10.255.0.1",
-					"src_port": 36556,
-					"dst_ip": "10.10.10.10",
-					"dst_port": 11111,
-					"protocol": "UDP",
-					"mark": "0x1",
-					"icmp_code": 0,
-					"icmp_type": 0
-				}
-			}
-		}`)))
+		Eventually(ReadLines, "5s").Should(ContainElement(MatchJSON(EGRESS_ALLOWED_JSON)))
 
 		By("logging denied egress packets")
-		// go AddToKernelLog("Jun 30 16:07:06 localhost kernel: [265213.303412] DENY_container-handle-1-long IN=s-010255095010 OUT=eth0 MAC=aa:aa:0a:ff:5f:0a:ee:ee:0a:ff:5f:0a:08:00 SRC=10.255.0.1 DST=10.10.10.10 LEN=30 TOS=0x00 PREC=0x00 TTL=63 ID=2535 DF PROTO=UDP SPT=45564 DPT=25555 LEN=10 MARK=0x1", kernelLogFile)
-
+		go AddToKernelLog(EGRESS_DENIED_KERNEL_LOG, kernelLogFile)
+		Eventually(outputFile).Should(BeAnExistingFile())
+		Eventually(ReadLines, "5s").Should(ContainElement(MatchJSON(EGRESS_DENIED_JSON)))
 	})
 })
 
