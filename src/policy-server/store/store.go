@@ -12,53 +12,8 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
+	migrate "github.com/rubenv/sql-migrate"
 )
-
-var schemas = map[string][]string{
-	"mysql": []string{
-		`CREATE TABLE IF NOT EXISTS groups (
-		id int NOT NULL AUTO_INCREMENT,
-		guid varchar(255),
-		UNIQUE (guid),
-		PRIMARY KEY (id)
-	);`,
-		`CREATE TABLE IF NOT EXISTS destinations (
-		id int NOT NULL AUTO_INCREMENT,
-		group_id int REFERENCES groups(id),
-		port int,
-		protocol varchar(255),
-		UNIQUE (group_id, port, protocol),
-		PRIMARY KEY (id)
-	);`,
-		`CREATE TABLE IF NOT EXISTS policies (
-		id int NOT NULL AUTO_INCREMENT,
-		group_id int REFERENCES groups(id),
-		destination_id int REFERENCES destinations(id),
-		UNIQUE (group_id, destination_id),
-		PRIMARY KEY (id)
-	);`,
-	},
-	"postgres": []string{
-		`CREATE TABLE IF NOT EXISTS groups (
-		id SERIAL PRIMARY KEY,
-		guid text,
-		UNIQUE (guid)
-	);`,
-		`CREATE TABLE IF NOT EXISTS destinations (
-		id SERIAL PRIMARY KEY,
-		group_id int REFERENCES groups(id),
-		port int,
-		protocol text,
-		UNIQUE (group_id, port, protocol)
-	);`,
-		`CREATE TABLE IF NOT EXISTS policies (
-		id SERIAL PRIMARY KEY,
-		group_id int REFERENCES groups(id),
-		destination_id int REFERENCES destinations(id),
-		UNIQUE (group_id, destination_id)
-	);`,
-	},
-}
 
 //go:generate counterfeiter -o fakes/store.go --fake-name Store . Store
 type Store interface {
@@ -80,6 +35,19 @@ type db interface {
 	QueryRow(query string, args ...interface{}) *sql.Row
 	Query(query string, args ...interface{}) (*sql.Rows, error)
 	DriverName() string
+}
+
+//go:generate counterfeiter -o fakes/migrationDb.go --fake-name MigrationDb . MigrationDb
+type MigrationDb interface {
+	Exec(query string, args ...interface{}) (sql.Result, error)
+	Query(query string, args ...interface{}) (*sql.Rows, error)
+	QueryRow(query string, args ...interface{}) *sql.Row
+	DriverName() string
+}
+
+//go:generate counterfeiter -o fakes/migrateAdapter.go --fake-name MigrateAdapter . migrateAdapter
+type migrateAdapter interface {
+	Exec(db MigrationDb, dialect string, m migrate.MigrationSource, dir migrate.MigrationDirection) (int, error)
 }
 
 type Transaction interface {
@@ -104,7 +72,7 @@ type store struct {
 const MAX_TAG_LENGTH = 3
 const MIN_TAG_LENGTH = 1
 
-func New(dbConnectionPool db, g GroupRepo, d DestinationRepo, p PolicyRepo, tl int, t time.Duration) (Store, error) {
+func New(dbConnectionPool db, migrator migrateAdapter, g GroupRepo, d DestinationRepo, p PolicyRepo, tl int, t time.Duration) (Store, error) {
 	if tl < MIN_TAG_LENGTH || tl > MAX_TAG_LENGTH {
 		return nil, fmt.Errorf("tag length out of range (%d-%d): %d",
 			MIN_TAG_LENGTH,
@@ -113,7 +81,7 @@ func New(dbConnectionPool db, g GroupRepo, d DestinationRepo, p PolicyRepo, tl i
 		)
 	}
 
-	err := setupTables(dbConnectionPool)
+	err := performMigrations(dbConnectionPool, migrator)
 	if err != nil {
 		return nil, fmt.Errorf("setting up tables: %s", err)
 	}
@@ -411,18 +379,26 @@ func (s *store) tagIntToString(tag int) string {
 	return fmt.Sprintf("%"+fmt.Sprintf("0%d", s.tagLength*2)+"X", tag)
 }
 
-func setupTables(dbConnectionPool db) error {
+func performMigrations(dbConnectionPool db, migrator migrateAdapter) error {
 	driverName := dbConnectionPool.DriverName()
-	schema, ok := schemas[driverName]
+	schema, ok := Schemas[driverName]
 	if !ok {
-		return errors.New("unsupported DB DriverName")
+		return fmt.Errorf("unsupported driver: %s", driverName)
 	}
 
-	for _, table := range schema {
-		_, err := dbConnectionPool.Exec(table)
-		if err != nil {
-			return err
-		}
+	migrations := migrate.MemoryMigrationSource{
+		Migrations: []*migrate.Migration{
+			&migrate.Migration{
+				Id:   "1",
+				Up:   schema,
+				Down: []string{"DROP TABLE policies", "DROP TABLE destinations", "DROP TABLE groups"},
+			},
+		},
+	}
+
+	_, err := migrator.Exec(dbConnectionPool, driverName, migrations, migrate.Up)
+	if err != nil {
+		return fmt.Errorf("executing migration: %s", err)
 	}
 	return nil
 }

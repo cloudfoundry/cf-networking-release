@@ -134,6 +134,7 @@ func main() {
 
 	dataStore, err := store.New(
 		connectionResult.ConnectionPool,
+		&store.MigrateAdapter{},
 		storeGroup,
 		destination,
 		policy,

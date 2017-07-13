@@ -17,20 +17,27 @@ import (
 	"github.com/jmoiron/sqlx"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	migrate "github.com/rubenv/sql-migrate"
 )
 
 var _ = Describe("Store", func() {
-	var dataStore store.Store
-	var dbConf db.Config
-	var realDb *sqlx.DB
-	var mockDb *fakes.Db
-	var group store.GroupRepo
-	var destination store.DestinationRepo
-	var policy store.PolicyRepo
+	var (
+		dataStore          store.Store
+		dbConf             db.Config
+		realDb             *sqlx.DB
+		mockDb             *fakes.Db
+		group              store.GroupRepo
+		destination        store.DestinationRepo
+		policy             store.PolicyRepo
+		mockMigrateAdapter *fakes.MigrateAdapter
+		realMigrateAdapter *store.MigrateAdapter
+	)
 	const NumAttempts = 5
 
 	BeforeEach(func() {
 		mockDb = &fakes.Db{}
+		mockMigrateAdapter = &fakes.MigrateAdapter{}
+		realMigrateAdapter = &store.MigrateAdapter{}
 
 		dbConf = testsupport.GetDBConfig()
 		dbConf.DatabaseName = fmt.Sprintf("test_node_%d", GinkgoParallelNode())
@@ -75,7 +82,7 @@ var _ = Describe("Store", func() {
 			return err
 		}
 		It("remains consistent", func() {
-			dataStore, err := store.New(realDb, group, destination, policy, 2, 2*time.Second)
+			dataStore, err := store.New(realDb, realMigrateAdapter, group, destination, policy, 2, 2*time.Second)
 			Expect(err).NotTo(HaveOccurred())
 
 			nPolicies := 1000
@@ -118,17 +125,62 @@ var _ = Describe("Store", func() {
 		})
 	})
 
+	Describe("Migrations", func() {
+		It("performs the migrations", func() {
+			_, err := store.New(mockDb, mockMigrateAdapter, group, destination, policy, 1, 2*time.Second)
+			Expect(err).NotTo(HaveOccurred())
+
+			By("calling the migrator")
+			Expect(mockMigrateAdapter.ExecCallCount()).To(Equal(1))
+			db, dbType, migrations, dir := mockMigrateAdapter.ExecArgsForCall(0)
+			Expect(db).To(Equal(mockDb))
+			Expect(dbType).To(Equal(mockDb.DriverName()))
+
+			Expect(migrations).To(Equal(migrate.MemoryMigrationSource{
+				Migrations: []*migrate.Migration{
+					&migrate.Migration{
+						Id:   "1",
+						Up:   store.Schemas[db.DriverName()],
+						Down: []string{"DROP TABLE policies", "DROP TABLE destinations", "DROP TABLE groups"},
+					},
+				},
+			}))
+
+			Expect(dir).To(Equal(migrate.Up))
+		})
+
+		Context("when the driver name is not mysql or postgres", func() {
+			BeforeEach(func() {
+				mockDb.DriverNameReturns("etcd")
+			})
+			It("returns an error", func() {
+				_, err := store.New(mockDb, mockMigrateAdapter, group, destination, policy, 1, 2*time.Second)
+				Expect(err).To(MatchError("setting up tables: unsupported driver: etcd"))
+			})
+		})
+
+		Context("when the migrations fail", func() {
+			BeforeEach(func() {
+				mockMigrateAdapter.ExecReturns(0, errors.New("banana"))
+			})
+			It("returns an error", func() {
+				_, err := store.New(mockDb, mockMigrateAdapter, group, destination, policy, 1, 2*time.Second)
+				Expect(err).To(MatchError("setting up tables: executing migration: banana"))
+			})
+		})
+	})
+
 	Describe("New", func() {
 		BeforeEach(func() {
 			var err error
-			dataStore, err = store.New(realDb, group, destination, policy, 1, 2*time.Second)
+			dataStore, err = store.New(realDb, realMigrateAdapter, group, destination, policy, 1, 2*time.Second)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		Describe("Connecting to the database and migrating", func() {
 			Context("when the tables already exist", func() {
 				It("succeeds", func() {
-					_, err := store.New(realDb, group, destination, policy, 2, 2*time.Second)
+					_, err := store.New(realDb, realMigrateAdapter, group, destination, policy, 2, 2*time.Second)
 					Expect(err).NotTo(HaveOccurred())
 				})
 			})
@@ -139,8 +191,8 @@ var _ = Describe("Store", func() {
 				})
 
 				It("should return a sensible error", func() {
-					_, err := store.New(mockDb, group, destination, policy, 2, 2*time.Second)
-					Expect(err).To(MatchError("setting up tables: some error"))
+					_, err := store.New(mockDb, mockMigrateAdapter, group, destination, policy, 2, 2*time.Second)
+					Expect(err).To(MatchError("populating tables: some error"))
 				})
 			})
 		})
@@ -152,7 +204,7 @@ var _ = Describe("Store", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(id).To(Equal(255))
 
-				_, err = store.New(realDb, group, destination, policy, 2, 2*time.Second)
+				_, err = store.New(realDb, realMigrateAdapter, group, destination, policy, 2, 2*time.Second)
 				Expect(err).NotTo(HaveOccurred())
 
 				err = realDb.QueryRow(`SELECT id FROM groups ORDER BY id DESC LIMIT 1`).Scan(&id)
@@ -172,14 +224,14 @@ var _ = Describe("Store", func() {
 
 		Context("when the store is instantiated with tag length > 3", func() {
 			It("returns an error", func() {
-				_, err := store.New(realDb, group, destination, policy, 4, 2*time.Second)
+				_, err := store.New(realDb, realMigrateAdapter, group, destination, policy, 4, 2*time.Second)
 				Expect(err).To(MatchError("tag length out of range (1-3): 4"))
 			})
 		})
 
 		Context("when the store is instantiated with tag length < 1", func() {
 			It("returns an error", func() {
-				_, err := store.New(realDb, group, destination, policy, 0, 2*time.Second)
+				_, err := store.New(realDb, realMigrateAdapter, group, destination, policy, 0, 2*time.Second)
 				Expect(err).To(MatchError("tag length out of range (1-3): 0"))
 			})
 		})
@@ -195,7 +247,7 @@ var _ = Describe("Store", func() {
 			})
 
 			It("returns an error", func() {
-				_, err := store.New(mockDb, group, destination, policy, 1, 2*time.Second)
+				_, err := store.New(mockDb, mockMigrateAdapter, group, destination, policy, 1, 2*time.Second)
 				Expect(err).To(MatchError("populating tables: some error"))
 			})
 		})
@@ -204,7 +256,7 @@ var _ = Describe("Store", func() {
 	Describe("Create", func() {
 		BeforeEach(func() {
 			var err error
-			dataStore, err = store.New(realDb, group, destination, policy, 1, 2*time.Second)
+			dataStore, err = store.New(realDb, realMigrateAdapter, group, destination, policy, 1, 2*time.Second)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -354,7 +406,7 @@ var _ = Describe("Store", func() {
 
 			BeforeEach(func() {
 				mockDb.BeginxReturns(nil, errors.New("some-db-error"))
-				dataStore, err = store.New(mockDb, group, destination, policy, 2, 2*time.Second)
+				dataStore, err = store.New(mockDb, mockMigrateAdapter, group, destination, policy, 2, 2*time.Second)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -372,7 +424,7 @@ var _ = Describe("Store", func() {
 				fakeGroup = &fakes.GroupRepo{}
 				fakeGroup.CreateReturns(-1, errors.New("some-insert-error"))
 
-				dataStore, err = store.New(realDb, fakeGroup, destination, policy, 2, 2*time.Second)
+				dataStore, err = store.New(realDb, realMigrateAdapter, fakeGroup, destination, policy, 2, 2*time.Second)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -411,7 +463,7 @@ var _ = Describe("Store", func() {
 					return response.Id, response.Err
 				}
 
-				dataStore, err = store.New(realDb, fakeGroup, destination, policy, 2, 2*time.Second)
+				dataStore, err = store.New(realDb, realMigrateAdapter, fakeGroup, destination, policy, 2, 2*time.Second)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -437,7 +489,7 @@ var _ = Describe("Store", func() {
 				fakeDestination = &fakes.DestinationRepo{}
 				fakeDestination.CreateReturns(-1, errors.New("some-insert-error"))
 
-				dataStore, err = store.New(realDb, group, fakeDestination, policy, 2, 2*time.Second)
+				dataStore, err = store.New(realDb, realMigrateAdapter, group, fakeDestination, policy, 2, 2*time.Second)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -465,7 +517,7 @@ var _ = Describe("Store", func() {
 				fakePolicy = &fakes.PolicyRepo{}
 				fakePolicy.CreateReturns(errors.New("some-insert-error"))
 
-				dataStore, err = store.New(realDb, group, destination, fakePolicy, 2, 2*time.Second)
+				dataStore, err = store.New(realDb, realMigrateAdapter, group, destination, fakePolicy, 2, 2*time.Second)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -498,7 +550,7 @@ var _ = Describe("Store", func() {
 				},
 			}}
 
-			dataStore, err = store.New(realDb, group, destination, policy, 1, 2*time.Second)
+			dataStore, err = store.New(realDb, realMigrateAdapter, group, destination, policy, 1, 2*time.Second)
 			Expect(err).NotTo(HaveOccurred())
 
 			err = dataStore.Create(expectedPolicies)
@@ -517,7 +569,7 @@ var _ = Describe("Store", func() {
 			})
 
 			It("should return a sensible error", func() {
-				store, err := store.New(mockDb, group, destination, policy, 2, 2*time.Second)
+				store, err := store.New(mockDb, mockMigrateAdapter, group, destination, policy, 2, 2*time.Second)
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = store.All()
@@ -541,7 +593,7 @@ var _ = Describe("Store", func() {
 				err := dataStore.Create(expectedPolicies)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = store.New(realDb, group, destination, policy, 2, 2*time.Second)
+				_, err = store.New(realDb, realMigrateAdapter, group, destination, policy, 2, 2*time.Second)
 				Expect(err).NotTo(HaveOccurred())
 				rows, err = realDb.Query(`select * from policies`)
 				Expect(err).NotTo(HaveOccurred())
@@ -554,7 +606,7 @@ var _ = Describe("Store", func() {
 			})
 
 			It("should return a sensible error", func() {
-				store, err := store.New(mockDb, group, destination, policy, 2, 2*time.Second)
+				store, err := store.New(mockDb, mockMigrateAdapter, group, destination, policy, 2, 2*time.Second)
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = store.All()
@@ -620,7 +672,7 @@ var _ = Describe("Store", func() {
 				},
 			}
 
-			dataStore, err = store.New(realDb, group, destination, policy, 1, 2*time.Second)
+			dataStore, err = store.New(realDb, realMigrateAdapter, group, destination, policy, 1, 2*time.Second)
 			Expect(err).NotTo(HaveOccurred())
 
 			err = dataStore.Create(allPolicies)
@@ -629,7 +681,7 @@ var _ = Describe("Store", func() {
 
 		Context("when empty args is provided", func() {
 			BeforeEach(func() {
-				dataStore, err = store.New(mockDb, group, destination, policy, 1, 2*time.Second)
+				dataStore, err = store.New(mockDb, mockMigrateAdapter, group, destination, policy, 1, 2*time.Second)
 				Expect(err).NotTo(HaveOccurred())
 			})
 			It("returns an empty slice ", func() {
@@ -675,7 +727,7 @@ var _ = Describe("Store", func() {
 			})
 
 			It("should return a sensible error", func() {
-				store, err := store.New(mockDb, group, destination, policy, 2, 2*time.Second)
+				store, err := store.New(mockDb, mockMigrateAdapter, group, destination, policy, 2, 2*time.Second)
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = store.ByGuids(
@@ -702,7 +754,7 @@ var _ = Describe("Store", func() {
 				err := dataStore.Create(expectedPolicies)
 				Expect(err).NotTo(HaveOccurred())
 
-				_, err = store.New(realDb, group, destination, policy, 2, 2*time.Second)
+				_, err = store.New(realDb, realMigrateAdapter, group, destination, policy, 2, 2*time.Second)
 				Expect(err).NotTo(HaveOccurred())
 				rows, err = realDb.Query(`select * from policies`)
 				Expect(err).NotTo(HaveOccurred())
@@ -715,7 +767,7 @@ var _ = Describe("Store", func() {
 			})
 
 			It("should return a sensible error", func() {
-				store, err := store.New(mockDb, group, destination, policy, 2, 2*time.Second)
+				store, err := store.New(mockDb, mockMigrateAdapter, group, destination, policy, 2, 2*time.Second)
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = store.ByGuids(
@@ -730,7 +782,7 @@ var _ = Describe("Store", func() {
 	Describe("Tags", func() {
 		BeforeEach(func() {
 			var err error
-			dataStore, err = store.New(realDb, group, destination, policy, 1, 2*time.Second)
+			dataStore, err = store.New(realDb, realMigrateAdapter, group, destination, policy, 1, 2*time.Second)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -771,7 +823,7 @@ var _ = Describe("Store", func() {
 			})
 
 			It("should return a sensible error", func() {
-				store, err := store.New(mockDb, group, destination, policy, 2, 2*time.Second)
+				store, err := store.New(mockDb, mockMigrateAdapter, group, destination, policy, 2, 2*time.Second)
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = store.Tags()
@@ -795,7 +847,7 @@ var _ = Describe("Store", func() {
 			})
 
 			It("should return a sensible error", func() {
-				store, err := store.New(mockDb, group, destination, policy, 2, 2*time.Second)
+				store, err := store.New(mockDb, mockMigrateAdapter, group, destination, policy, 2, 2*time.Second)
 				Expect(err).NotTo(HaveOccurred())
 
 				_, err = store.Tags()
@@ -807,7 +859,7 @@ var _ = Describe("Store", func() {
 	Describe("CheckDatabase", func() {
 		BeforeEach(func() {
 			var err error
-			dataStore, err = store.New(realDb, group, destination, policy, 1, 20*time.Second)
+			dataStore, err = store.New(realDb, realMigrateAdapter, group, destination, policy, 1, 20*time.Second)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -834,7 +886,7 @@ var _ = Describe("Store", func() {
 	Describe("Delete", func() {
 		BeforeEach(func() {
 			var err error
-			dataStore, err = store.New(realDb, group, destination, policy, 1, 20*time.Second)
+			dataStore, err = store.New(realDb, realMigrateAdapter, group, destination, policy, 1, 20*time.Second)
 			Expect(err).NotTo(HaveOccurred())
 
 			err = dataStore.Create([]models.Policy{
@@ -914,7 +966,7 @@ var _ = Describe("Store", func() {
 				fakeGroup = &fakes.GroupRepo{}
 				fakeDestination = &fakes.DestinationRepo{}
 				fakePolicy = &fakes.PolicyRepo{}
-				dataStore, err = store.New(realDb, fakeGroup, fakeDestination, fakePolicy, 2, 2*time.Second)
+				dataStore, err = store.New(realDb, realMigrateAdapter, fakeGroup, fakeDestination, fakePolicy, 2, 2*time.Second)
 				Expect(err).NotTo(HaveOccurred())
 			})
 
@@ -923,7 +975,7 @@ var _ = Describe("Store", func() {
 
 				BeforeEach(func() {
 					mockDb.BeginxReturns(nil, errors.New("some-db-error"))
-					dataStore, err = store.New(mockDb, group, destination, policy, 2, 2*time.Second)
+					dataStore, err = store.New(mockDb, mockMigrateAdapter, group, destination, policy, 2, 2*time.Second)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
