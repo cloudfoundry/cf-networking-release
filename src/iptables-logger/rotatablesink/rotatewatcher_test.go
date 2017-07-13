@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"code.cloudfoundry.org/lager"
@@ -35,7 +36,7 @@ var _ = Describe("Rotatewatcher", func() {
 		Expect(err).NotTo(HaveOccurred())
 		fileToWatchName = fileToWatch.Name()
 
-		fakeTestWriterFactory = &TestWriterFactory{ReturnWriter: fileToWatch}
+		fakeTestWriterFactory = NewTestWriterFactory(fileToWatch, nil)
 		fakeDestinationFileInfo = &fakes.DestinationFileInfo{}
 		fakeLogger = lagertest.NewTestLogger("test")
 		rotatableSink, err = rotatablesink.NewRotatableSink(fileToWatchName, lager.DEBUG, fakeTestWriterFactory, fakeDestinationFileInfo, fakeLogger)
@@ -50,7 +51,7 @@ var _ = Describe("Rotatewatcher", func() {
 
 		Context("when unable to open the destination file that was rotated", func() {
 			BeforeEach(func() {
-				fakeTestWriterFactory.ReturnedError = errors.New("banana")
+				fakeTestWriterFactory.SetReturnedError(errors.New("banana"))
 			})
 
 			It("returns an sensible error", func() {
@@ -66,17 +67,17 @@ var _ = Describe("Rotatewatcher", func() {
 		It("writes to output log file", func() {
 			rotatableSink.Log(lager.LogFormat{Message: "hello"})
 
-			Expect(fakeTestWriterFactory.invocationCount).To(Equal(1))
+			Expect(fakeTestWriterFactory.InvocationCount()).To(Equal(1))
 
 			Expect(ReadLines(fileToWatch.Name())).To(ContainElement(MatchJSON(`{"timestamp":"some-timestamp","source":"","message":"hello","log_level":0,"data":null}`)))
 		})
 
 		It("should only open the file when it has been rotated", func() {
 			rotatableSink.Log(lager.LogFormat{Message: "hello"})
-			Expect(fakeTestWriterFactory.invocationCount).To(Equal(1))
+			Expect(fakeTestWriterFactory.InvocationCount()).To(Equal(1))
 
 			rotatableSink.Log(lager.LogFormat{Message: "hello"})
-			Expect(fakeTestWriterFactory.invocationCount).To(Equal(1))
+			Expect(fakeTestWriterFactory.InvocationCount()).To(Equal(1))
 
 			Expect(ReadLines(fileToWatch.Name())).To(ContainElement(MatchJSON(`{"timestamp":"some-timestamp","source":"","message":"hello","log_level":0,"data":null}`)))
 		})
@@ -88,7 +89,7 @@ var _ = Describe("Rotatewatcher", func() {
 				rotatedFile, err := os.Create(fileToWatchName)
 				Expect(err).NotTo(HaveOccurred())
 
-				fakeTestWriterFactory.ReturnWriter = rotatedFile
+				fakeTestWriterFactory.SetReturnWriter(rotatedFile)
 
 				time.Sleep(2 * time.Second)
 				rotatableSink.Log(lager.LogFormat{Message: "hello2"})
@@ -101,7 +102,7 @@ var _ = Describe("Rotatewatcher", func() {
 					By("rotating the file")
 					fakeDestinationFileInfo.FileExistsReturns(true, nil)
 					fakeDestinationFileInfo.FileInodeReturns(uint64(1), nil)
-					fakeTestWriterFactory.ReturnedError = errors.New("apple")
+					fakeTestWriterFactory.SetReturnedError(errors.New("apple"))
 
 					time.Sleep(2 * time.Second)
 					Expect(len(fakeLogger.Logs())).To(BeNumerically(">", 0))
@@ -114,21 +115,10 @@ var _ = Describe("Rotatewatcher", func() {
 
 			Context("when unable to get the file inode of the destination file that was rotated", func() {
 				BeforeEach(func() {
-					fileInodeCount := 0
 					fakeDestinationFileInfo.FileExistsReturns(true, nil)
-					fakeDestinationFileInfo.FileInodeStub = func(filename string) (uint64, error) {
-						defer func() {
-							fileInodeCount++
-						}()
-
-						switch fileInodeCount {
-						case 0:
-							return 1, nil
-						default:
-							return 1, errors.New("get file inode: watermelon")
-						}
-					}
-					fakeTestWriterFactory = &TestWriterFactory{ReturnWriter: fileToWatch}
+					fakeDestinationFileInfo.FileInodeReturnsOnCall(1, 1, nil)
+					fakeDestinationFileInfo.FileInodeReturns(1, errors.New("get file inode: watermelon"))
+					fakeTestWriterFactory = NewTestWriterFactory(fileToWatch, nil)
 					var err error
 					rotatableSink, err = rotatablesink.NewRotatableSink(fileToWatchName, lager.DEBUG, fakeTestWriterFactory, fakeDestinationFileInfo, fakeLogger)
 					Expect(err).ToNot(HaveOccurred())
@@ -141,7 +131,7 @@ var _ = Describe("Rotatewatcher", func() {
 						LogsWith(lager.ERROR, "test.register-rotated-file-sink"),
 						HaveLogData(HaveKeyWithValue("error", "get file inode: watermelon")),
 					))
-					Expect(fakeTestWriterFactory.invocationCount).To(Equal(1))
+					Expect(fakeTestWriterFactory.InvocationCount()).To(Equal(1))
 				})
 			})
 
@@ -152,7 +142,7 @@ var _ = Describe("Rotatewatcher", func() {
 				})
 
 				It("returns a sensible error", func() {
-					fakeTestWriterFactory.ReturnedError = errors.New("apple")
+					fakeTestWriterFactory.SetReturnedError(errors.New("apple"))
 
 					Eventually(func() int { return len(fakeLogger.Logs()) }, "5s").Should(BeNumerically(">", 0))
 					Eventually(func() lager.LogFormat {
@@ -263,13 +253,47 @@ var _ = Describe("Rotatewatcher", func() {
 
 type TestWriterFactory struct {
 	invocationCount int
-	ReturnWriter    io.Writer
-	ReturnedError   error
+	returnWriter    io.Writer
+	returnedError   error
+	mutex           *sync.Mutex
+}
+
+func NewTestWriterFactory(w io.Writer, e error) *TestWriterFactory {
+	twf := &TestWriterFactory{
+		returnWriter:  w,
+		returnedError: e,
+		mutex:         new(sync.Mutex),
+	}
+	return twf
+}
+
+func (twf *TestWriterFactory) SetReturnWriter(w io.Writer) {
+	twf.mutex.Lock()
+	defer twf.mutex.Unlock()
+
+	twf.returnWriter = w
+}
+
+func (twf *TestWriterFactory) SetReturnedError(e error) {
+	twf.mutex.Lock()
+	defer twf.mutex.Unlock()
+
+	twf.returnedError = e
+}
+
+func (twf *TestWriterFactory) InvocationCount() int {
+	twf.mutex.Lock()
+	defer twf.mutex.Unlock()
+
+	return twf.invocationCount
 }
 
 func (twf *TestWriterFactory) NewWriter(_ string) (io.Writer, error) {
+	twf.mutex.Lock()
+	defer twf.mutex.Unlock()
+
 	twf.invocationCount++
-	return twf.ReturnWriter, twf.ReturnedError
+	return twf.returnWriter, twf.returnedError
 }
 
 func ReadLines(filename string) []string {
