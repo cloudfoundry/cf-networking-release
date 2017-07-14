@@ -143,6 +143,11 @@ var _ = Describe("Store", func() {
 						Up:   store.Schemas[db.DriverName()],
 						Down: []string{"DROP TABLE policies", "DROP TABLE destinations", "DROP TABLE groups"},
 					},
+					&migrate.Migration{
+						Id:   "2",
+						Up:   store.SchemasV1Up[db.DriverName()],
+						Down: store.SchemasV1Down[db.DriverName()],
+					},
 				},
 			}))
 
@@ -266,14 +271,20 @@ var _ = Describe("Store", func() {
 				Destination: models.Destination{
 					ID:       "some-other-app-guid",
 					Protocol: "tcp",
-					Port:     8080,
+					Ports: models.Ports{
+						Start: 8080,
+						End:   9000,
+					},
 				},
 			}, {
 				Source: models.Source{ID: "another-app-guid"},
 				Destination: models.Destination{
 					ID:       "some-other-app-guid",
 					Protocol: "udp",
-					Port:     1234,
+					Ports: models.Ports{
+						Start: 123,
+						End:   123,
+					},
 				},
 			}}
 
@@ -546,7 +557,10 @@ var _ = Describe("Store", func() {
 					ID:       "some-other-app-guid",
 					Tag:      "02",
 					Protocol: "tcp",
-					Port:     8080,
+					Ports: models.Ports{
+						Start: 5000,
+						End:   6000,
+					},
 				},
 			}}
 
@@ -632,6 +646,10 @@ var _ = Describe("Store", func() {
 						Tag:      "02",
 						Protocol: "tcp",
 						Port:     101,
+						Ports: models.Ports{
+							Start: 101,
+							End:   101,
+						},
 					},
 				},
 				models.Policy{
@@ -644,6 +662,10 @@ var _ = Describe("Store", func() {
 						Tag:      "03",
 						Protocol: "tcp",
 						Port:     102,
+						Ports: models.Ports{
+							Start: 102,
+							End:   102,
+						},
 					},
 				},
 				models.Policy{
@@ -655,7 +677,11 @@ var _ = Describe("Store", func() {
 						ID:       "app-guid-00",
 						Tag:      "01",
 						Protocol: "tcp",
-						Port:     100,
+						Port:     103,
+						Ports: models.Ports{
+							Start: 103,
+							End:   103,
+						},
 					},
 				},
 				models.Policy{
@@ -667,7 +693,11 @@ var _ = Describe("Store", func() {
 						ID:       "app-guid-03",
 						Tag:      "04",
 						Protocol: "tcp",
-						Port:     103,
+						Port:     104,
+						Ports: models.Ports{
+							Start: 104,
+							End:   104,
+						},
 					},
 				},
 			}
@@ -1094,7 +1124,7 @@ var _ = Describe("Store", func() {
 			Context("when getting the destination id fails", func() {
 				Context("when the error is because the destination does not exist", func() {
 					BeforeEach(func() {
-						fakeDestination.GetIDStub = func(store.Transaction, int, int, string) (int, error) {
+						fakeDestination.GetIDStub = func(store.Transaction, int, int, int, int, string) (int, error) {
 							if fakeDestination.GetIDCallCount() == 1 {
 								return -1, sql.ErrNoRows
 							}

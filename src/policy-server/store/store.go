@@ -139,7 +139,14 @@ func (s *store) Create(policies []models.Policy) error {
 			return rollback(tx, fmt.Errorf("creating group: %s", err))
 		}
 
-		destination_id, err := s.destination.Create(tx, destination_group_id, policy.Destination.Port, policy.Destination.Protocol)
+		destination_id, err := s.destination.Create(
+			tx,
+			destination_group_id,
+			policy.Destination.Port,
+			policy.Destination.Ports.Start,
+			policy.Destination.Ports.End,
+			policy.Destination.Protocol,
+		)
 		if err != nil {
 			return rollback(tx, fmt.Errorf("creating destination: %s", err))
 		}
@@ -178,7 +185,14 @@ func (s *store) Delete(policies []models.Policy) error {
 			}
 		}
 
-		destID, err := s.destination.GetID(tx, destGroupID, p.Destination.Port, p.Destination.Protocol)
+		destID, err := s.destination.GetID(
+			tx,
+			destGroupID,
+			p.Destination.Port,
+			p.Destination.Ports.Start,
+			p.Destination.Ports.End,
+			p.Destination.Protocol,
+		)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				continue
@@ -253,8 +267,17 @@ func (s *store) policiesQuery(query string, args ...interface{}) ([]models.Polic
 	defer rows.Close() // untested
 	for rows.Next() {
 		var source_id, destination_id, protocol string
-		var port, source_tag, destination_tag int
-		err = rows.Scan(&source_id, &source_tag, &destination_id, &destination_tag, &port, &protocol)
+		var port, startPort, endPort, source_tag, destination_tag int
+		err = rows.Scan(
+			&source_id,
+			&source_tag,
+			&destination_id,
+			&destination_tag,
+			&port,
+			&startPort,
+			&endPort,
+			&protocol,
+		)
 		if err != nil {
 			return nil, fmt.Errorf("listing all: %s", err)
 		}
@@ -269,6 +292,10 @@ func (s *store) policiesQuery(query string, args ...interface{}) ([]models.Polic
 				Tag:      s.tagIntToString(destination_tag),
 				Protocol: protocol,
 				Port:     port,
+				Ports: models.Ports{
+					Start: startPort,
+					End:   endPort,
+				},
 			},
 		})
 	}
@@ -302,6 +329,8 @@ func (s *store) ByGuids(srcGuids, destGuids []string) ([]models.Policy, error) {
 			dst_grp.guid,
 			dst_grp.id,
 			destinations.port,
+			destinations.start_port,
+			destinations.end_port,
 			destinations.protocol
 		from policies
 		left outer join groups as src_grp on (policies.group_id = src_grp.id)
@@ -333,6 +362,8 @@ func (s *store) All() ([]models.Policy, error) {
 			dst_grp.guid,
 			dst_grp.id,
 			destinations.port,
+			destinations.start_port,
+			destinations.end_port,
 			destinations.protocol
 		from policies
 		left outer join groups as src_grp on (policies.group_id = src_grp.id)
@@ -392,6 +423,11 @@ func performMigrations(dbConnectionPool db, migrator migrateAdapter) error {
 				Id:   "1",
 				Up:   schema,
 				Down: []string{"DROP TABLE policies", "DROP TABLE destinations", "DROP TABLE groups"},
+			},
+			&migrate.Migration{
+				Id:   "2",
+				Up:   SchemasV1Up[dbConnectionPool.DriverName()],
+				Down: SchemasV1Down[dbConnectionPool.DriverName()],
 			},
 		},
 	}

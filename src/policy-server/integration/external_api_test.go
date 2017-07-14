@@ -29,11 +29,15 @@ var _ = Describe("External API", func() {
 		conf              config.Config
 		policyServerConfs []config.Config
 		dbConf            db.Config
+		headers           map[string]string
 
 		fakeMetron metrics.FakeMetron
 	)
 
 	BeforeEach(func() {
+		headers = map[string]string{
+			"network-policy-api-version": "1",
+		}
 		fakeMetron = metrics.NewFakeMetron()
 
 		dbConf = testsupport.GetDBConfig()
@@ -410,7 +414,7 @@ var _ = Describe("External API", func() {
 				requestBody, _ := json.Marshal(map[string]interface{}{
 					"policies": []models.Policy{policy},
 				})
-				resp := helpers.MakeAndDoRequest("POST", policyServerUrl(policiesRoute, policyServerConfs), bytes.NewReader(requestBody))
+				resp := helpers.MakeAndDoRequest("POST", policyServerUrl(policiesRoute, policyServerConfs), headers, bytes.NewReader(requestBody))
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 				responseString, err := ioutil.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
@@ -447,7 +451,7 @@ var _ = Describe("External API", func() {
 			Expect(nAdded).To(Equal(int32(nPolicies)))
 
 			By("getting all the policies")
-			resp := helpers.MakeAndDoRequest("GET", policyServerUrl(policiesRoute, policyServerConfs), nil)
+			resp := helpers.MakeAndDoRequest("GET", policyServerUrl(policiesRoute, policyServerConfs), headers, nil)
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
 			responseBytes, err := ioutil.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
@@ -466,7 +470,7 @@ var _ = Describe("External API", func() {
 
 			By("verify tags")
 			tagsRoute := "external/tags"
-			resp = helpers.MakeAndDoRequest("GET", policyServerUrl(tagsRoute, policyServerConfs), nil)
+			resp = helpers.MakeAndDoRequest("GET", policyServerUrl(tagsRoute, policyServerConfs), headers, nil)
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
 			responseBytes, err = ioutil.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
@@ -488,7 +492,7 @@ var _ = Describe("External API", func() {
 				requestBody, _ := json.Marshal(map[string]interface{}{
 					"policies": []models.Policy{policy},
 				})
-				resp := helpers.MakeAndDoRequest(method, url, bytes.NewReader(requestBody))
+				resp := helpers.MakeAndDoRequest(method, url, headers, bytes.NewReader(requestBody))
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 				responseString, err := ioutil.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
@@ -528,7 +532,7 @@ var _ = Describe("External API", func() {
 
 			Expect(nDeleted).To(Equal(int32(nPolicies)))
 
-			resp := helpers.MakeAndDoRequest("GET", policiesUrl, nil)
+			resp := helpers.MakeAndDoRequest("GET", policiesUrl, headers, nil)
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
 			responseBytes, err := ioutil.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
@@ -548,6 +552,7 @@ var _ = Describe("External API", func() {
 			resp := helpers.MakeAndDoRequest(
 				"POST",
 				fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+				headers,
 				body,
 			)
 
@@ -559,6 +564,7 @@ var _ = Describe("External API", func() {
 			resp = helpers.MakeAndDoRequest(
 				"GET",
 				fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+				headers,
 				nil,
 			)
 
@@ -583,6 +589,7 @@ var _ = Describe("External API", func() {
 				resp := helpers.MakeAndDoRequest(
 					"POST",
 					fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+					headers,
 					body,
 				)
 
@@ -594,6 +601,7 @@ var _ = Describe("External API", func() {
 				resp = helpers.MakeAndDoRequest(
 					"GET",
 					fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+					headers,
 					nil,
 				)
 
@@ -615,30 +623,13 @@ var _ = Describe("External API", func() {
 
 		})
 
-		Context("when using the ports field to specify multiple ports", func() {
-			It("fails to validate the policy", func() {
-				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8080, "end": 8090 } } } ] }`)
-				resp := helpers.MakeAndDoRequest(
-					"POST",
-					fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
-					body,
-				)
-
-				Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
-				responseString, err := ioutil.ReadAll(resp.Body)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(responseString).To(MatchJSON(`{ "error": "policies-create: invalid destination port range 8080-8090, start and end must be same" }`))
-
-			})
-
-		})
-
 		Context("when the protocol is invalid", func() {
 			It("gives a helpful error", func() {
 				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "nope", "port": 8090 } } ] }`)
 				resp := helpers.MakeAndDoRequest(
 					"POST",
 					fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+					headers,
 					body,
 				)
 
@@ -648,35 +639,21 @@ var _ = Describe("External API", func() {
 				Expect(responseString).To(MatchJSON(`{ "error": "policies-create: invalid destination protocol, specify either udp or tcp" }`))
 			})
 		})
+
 		Context("when the port is invalid", func() {
 			It("gives a helpful error", func() {
-				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 0 } } ] }`)
+				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 0, "end": 3454 } } } ] }`)
 				resp := helpers.MakeAndDoRequest(
 					"POST",
 					fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+					headers,
 					body,
 				)
 
 				Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
 				responseString, err := ioutil.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(responseString).To(MatchJSON(`{ "error": "policies-create: invalid destination port value 0, must be 1-65535" }`))
-			})
-		})
-
-		Context("when the port is invalid", func() {
-			It("gives a helpful error", func() {
-				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 0 } } ] }`)
-				resp := helpers.MakeAndDoRequest(
-					"POST",
-					fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
-					body,
-				)
-
-				Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
-				responseString, err := ioutil.ReadAll(resp.Body)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(responseString).To(MatchJSON(`{ "error": "policies-create: invalid destination port value 0, must be 1-65535" }`))
+				Expect(responseString).To(MatchJSON(`{ "error": "policies-create: invalid start port 0, must be in range 1-65535" }`))
 			})
 		})
 	})
@@ -692,6 +669,7 @@ var _ = Describe("External API", func() {
 			resp := helpers.MakeAndDoRequest(
 				"POST",
 				fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+				headers,
 				body,
 			)
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
@@ -702,6 +680,7 @@ var _ = Describe("External API", func() {
 			resp := helpers.MakeAndDoRequest(
 				"POST",
 				fmt.Sprintf("http://%s:%d/networking/v0/external/policies/cleanup", conf.ListenHost, conf.ListenPort),
+				headers,
 				nil,
 			)
 
@@ -730,6 +709,7 @@ var _ = Describe("External API", func() {
 				resp := helpers.MakeAndDoRequest(
 					"POST",
 					fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+					headers,
 					strings.NewReader(`{ "policies": [
 						{"source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "port": 8080 } },
 						{"source": { "id": "app3" }, "destination": { "id": "app1", "protocol": "tcp", "port": 9999 } },
@@ -746,6 +726,7 @@ var _ = Describe("External API", func() {
 				resp = helpers.MakeAndDoRequest(
 					"GET",
 					fmt.Sprintf("http://%s:%d/networking/v0/external/policies?id=app1,app2", conf.ListenHost, conf.ListenPort),
+					headers,
 					nil,
 				)
 
@@ -776,6 +757,7 @@ var _ = Describe("External API", func() {
 			resp := helpers.MakeAndDoRequest(
 				"POST",
 				fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+				headers,
 				strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`),
 			)
 
@@ -793,6 +775,7 @@ var _ = Describe("External API", func() {
 				response := helpers.MakeAndDoRequest(
 					"POST",
 					fmt.Sprintf("http://%s:%d/networking/v0/external/policies/delete", conf.ListenHost, conf.ListenPort),
+					headers,
 					body,
 				)
 
@@ -804,6 +787,7 @@ var _ = Describe("External API", func() {
 				response = helpers.MakeAndDoRequest(
 					"GET",
 					fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+					headers,
 					nil,
 				)
 
@@ -829,6 +813,7 @@ var _ = Describe("External API", func() {
 				response := helpers.MakeAndDoRequest(
 					"POST",
 					fmt.Sprintf("http://%s:%d/networking/v0/external/policies/delete", conf.ListenHost, conf.ListenPort),
+					headers,
 					body,
 				)
 
@@ -840,6 +825,7 @@ var _ = Describe("External API", func() {
 				response = helpers.MakeAndDoRequest(
 					"GET",
 					fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+					headers,
 					nil,
 				)
 
@@ -862,6 +848,7 @@ var _ = Describe("External API", func() {
 				response := helpers.MakeAndDoRequest(
 					"POST",
 					fmt.Sprintf("http://%s:%d/networking/v0/external/policies/delete", conf.ListenHost, conf.ListenPort),
+					headers,
 					body,
 				)
 
@@ -871,6 +858,40 @@ var _ = Describe("External API", func() {
 				Expect(responseString).To(MatchJSON(`{}`))
 
 			})
+		})
+	})
+
+	Describe("port ranges", func() {
+		It("allows the user to create policies with port ranges", func() {
+			body := strings.NewReader(`{ "policies": [
+			{ "source": {"id": "some-app-guid"},
+			 "destination": {"id": "some-other-app-guid", "protocol": "tcp", "ports": {"start": 5000, "end": 6000}}}]}`)
+			resp := helpers.MakeAndDoRequest(
+				"POST",
+				fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+				headers,
+				body,
+			)
+
+			Expect(resp.StatusCode).To(Equal(http.StatusOK))
+			responseString, err := ioutil.ReadAll(resp.Body)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(responseString).To(MatchJSON("{}"))
+
+			resp = helpers.MakeAndDoRequest(
+				"GET",
+				fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+				headers,
+				nil,
+			)
+
+			Expect(resp.StatusCode).To(Equal(http.StatusOK))
+			responseString, err = ioutil.ReadAll(resp.Body)
+			Expect(responseString).To(MatchJSON(`{
+				"total_policies": 1,
+				"policies": [
+				{ "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 5000, "end": 6000 } } }
+				]}`))
 		})
 	})
 
@@ -884,6 +905,7 @@ var _ = Describe("External API", func() {
 			resp := helpers.MakeAndDoRequest(
 				"POST",
 				fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+				headers,
 				body,
 			)
 
@@ -898,6 +920,7 @@ var _ = Describe("External API", func() {
 			resp := helpers.MakeAndDoRequest(
 				"GET",
 				fmt.Sprintf("http://%s:%d/networking/v0/external/tags", conf.ListenHost, conf.ListenPort),
+				headers,
 				nil,
 			)
 
@@ -915,6 +938,7 @@ var _ = Describe("External API", func() {
 			resp = helpers.MakeAndDoRequest(
 				"POST",
 				fmt.Sprintf("http://%s:%d/networking/v0/external/policies/delete", conf.ListenHost, conf.ListenPort),
+				headers,
 				body,
 			)
 
@@ -922,12 +946,14 @@ var _ = Describe("External API", func() {
 			resp = helpers.MakeAndDoRequest(
 				"POST",
 				fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+				headers,
 				body,
 			)
 
 			resp = helpers.MakeAndDoRequest(
 				"GET",
 				fmt.Sprintf("http://%s:%d/networking/v0/external/tags", conf.ListenHost, conf.ListenPort),
+				headers,
 				nil,
 			)
 
@@ -953,6 +979,7 @@ var _ = Describe("External API", func() {
 			resp := helpers.MakeAndDoRequest(
 				"GET",
 				fmt.Sprintf("http://%s:%d/", conf.ListenHost, conf.ListenPort),
+				headers,
 				nil,
 			)
 
@@ -968,6 +995,7 @@ var _ = Describe("External API", func() {
 				resp := helpers.MakeAndDoRequest(
 					"GET",
 					fmt.Sprintf("http://%s:%d/", conf.ListenHost, conf.ListenPort),
+					headers,
 					nil,
 				)
 
@@ -981,6 +1009,7 @@ var _ = Describe("External API", func() {
 			resp := helpers.MakeAndDoRequest(
 				"GET",
 				fmt.Sprintf("http://%s:%d/health", conf.ListenHost, conf.ListenPort),
+				headers,
 				nil,
 			)
 

@@ -7,13 +7,15 @@ import (
 )
 
 type DestinationRepo struct {
-	CreateStub        func(store.Transaction, int, int, string) (int, error)
+	CreateStub        func(store.Transaction, int, int, int, int, string) (int, error)
 	createMutex       sync.RWMutex
 	createArgsForCall []struct {
 		arg1 store.Transaction
 		arg2 int
 		arg3 int
-		arg4 string
+		arg4 int
+		arg5 int
+		arg6 string
 	}
 	createReturns struct {
 		result1 int
@@ -35,13 +37,15 @@ type DestinationRepo struct {
 	deleteReturnsOnCall map[int]struct {
 		result1 error
 	}
-	GetIDStub        func(store.Transaction, int, int, string) (int, error)
+	GetIDStub        func(store.Transaction, int, int, int, int, string) (int, error)
 	getIDMutex       sync.RWMutex
 	getIDArgsForCall []struct {
 		arg1 store.Transaction
 		arg2 int
 		arg3 int
-		arg4 string
+		arg4 int
+		arg5 int
+		arg6 string
 	}
 	getIDReturns struct {
 		result1 int
@@ -69,19 +73,21 @@ type DestinationRepo struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *DestinationRepo) Create(arg1 store.Transaction, arg2 int, arg3 int, arg4 string) (int, error) {
+func (fake *DestinationRepo) Create(arg1 store.Transaction, arg2 int, arg3 int, arg4 int, arg5 int, arg6 string) (int, error) {
 	fake.createMutex.Lock()
 	ret, specificReturn := fake.createReturnsOnCall[len(fake.createArgsForCall)]
 	fake.createArgsForCall = append(fake.createArgsForCall, struct {
 		arg1 store.Transaction
 		arg2 int
 		arg3 int
-		arg4 string
-	}{arg1, arg2, arg3, arg4})
-	fake.recordInvocation("Create", []interface{}{arg1, arg2, arg3, arg4})
+		arg4 int
+		arg5 int
+		arg6 string
+	}{arg1, arg2, arg3, arg4, arg5, arg6})
+	fake.recordInvocation("Create", []interface{}{arg1, arg2, arg3, arg4, arg5, arg6})
 	fake.createMutex.Unlock()
 	if fake.CreateStub != nil {
-		return fake.CreateStub(arg1, arg2, arg3, arg4)
+		return fake.CreateStub(arg1, arg2, arg3, arg4, arg5, arg6)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -95,10 +101,10 @@ func (fake *DestinationRepo) CreateCallCount() int {
 	return len(fake.createArgsForCall)
 }
 
-func (fake *DestinationRepo) CreateArgsForCall(i int) (store.Transaction, int, int, string) {
+func (fake *DestinationRepo) CreateArgsForCall(i int) (store.Transaction, int, int, int, int, string) {
 	fake.createMutex.RLock()
 	defer fake.createMutex.RUnlock()
-	return fake.createArgsForCall[i].arg1, fake.createArgsForCall[i].arg2, fake.createArgsForCall[i].arg3, fake.createArgsForCall[i].arg4
+	return fake.createArgsForCall[i].arg1, fake.createArgsForCall[i].arg2, fake.createArgsForCall[i].arg3, fake.createArgsForCall[i].arg4, fake.createArgsForCall[i].arg5, fake.createArgsForCall[i].arg6
 }
 
 func (fake *DestinationRepo) CreateReturns(result1 int, result2 error) {
@@ -172,19 +178,21 @@ func (fake *DestinationRepo) DeleteReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *DestinationRepo) GetID(arg1 store.Transaction, arg2 int, arg3 int, arg4 string) (int, error) {
+func (fake *DestinationRepo) GetID(arg1 store.Transaction, arg2 int, arg3 int, arg4 int, arg5 int, arg6 string) (int, error) {
 	fake.getIDMutex.Lock()
 	ret, specificReturn := fake.getIDReturnsOnCall[len(fake.getIDArgsForCall)]
 	fake.getIDArgsForCall = append(fake.getIDArgsForCall, struct {
 		arg1 store.Transaction
 		arg2 int
 		arg3 int
-		arg4 string
-	}{arg1, arg2, arg3, arg4})
-	fake.recordInvocation("GetID", []interface{}{arg1, arg2, arg3, arg4})
+		arg4 int
+		arg5 int
+		arg6 string
+	}{arg1, arg2, arg3, arg4, arg5, arg6})
+	fake.recordInvocation("GetID", []interface{}{arg1, arg2, arg3, arg4, arg5, arg6})
 	fake.getIDMutex.Unlock()
 	if fake.GetIDStub != nil {
-		return fake.GetIDStub(arg1, arg2, arg3, arg4)
+		return fake.GetIDStub(arg1, arg2, arg3, arg4, arg5, arg6)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -198,10 +206,10 @@ func (fake *DestinationRepo) GetIDCallCount() int {
 	return len(fake.getIDArgsForCall)
 }
 
-func (fake *DestinationRepo) GetIDArgsForCall(i int) (store.Transaction, int, int, string) {
+func (fake *DestinationRepo) GetIDArgsForCall(i int) (store.Transaction, int, int, int, int, string) {
 	fake.getIDMutex.RLock()
 	defer fake.getIDMutex.RUnlock()
-	return fake.getIDArgsForCall[i].arg1, fake.getIDArgsForCall[i].arg2, fake.getIDArgsForCall[i].arg3, fake.getIDArgsForCall[i].arg4
+	return fake.getIDArgsForCall[i].arg1, fake.getIDArgsForCall[i].arg2, fake.getIDArgsForCall[i].arg3, fake.getIDArgsForCall[i].arg4, fake.getIDArgsForCall[i].arg5, fake.getIDArgsForCall[i].arg6
 }
 
 func (fake *DestinationRepo) GetIDReturns(result1 int, result2 error) {

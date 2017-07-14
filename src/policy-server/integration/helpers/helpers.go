@@ -223,10 +223,13 @@ func StartPolicyServer(policyServerPath string, conf config.Config) *gexec.Sessi
 	return session
 }
 
-func MakeAndDoRequest(method string, endpoint string, body io.Reader) *http.Response {
+func MakeAndDoRequest(method string, endpoint string, extraHeaders map[string]string, body io.Reader) *http.Response {
 	req, err := http.NewRequest(method, endpoint, body)
 	Expect(err).NotTo(HaveOccurred())
 	req.Header.Set("Authorization", "Bearer valid-token")
+	for k, v := range extraHeaders {
+		req.Header.Set(k, v)
+	}
 	resp, err := http.DefaultClient.Do(req)
 	Expect(err).NotTo(HaveOccurred())
 	return resp

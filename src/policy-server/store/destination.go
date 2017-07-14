@@ -2,36 +2,40 @@ package store
 
 //go:generate counterfeiter -o fakes/destination_repo.go --fake-name DestinationRepo . DestinationRepo
 type DestinationRepo interface {
-	Create(Transaction, int, int, string) (int, error)
+	Create(Transaction, int, int, int, int, string) (int, error)
 	Delete(Transaction, int) error
-	GetID(Transaction, int, int, string) (int, error)
+	GetID(Transaction, int, int, int, int, string) (int, error)
 	CountWhereGroupID(Transaction, int) (int, error)
 }
 
 type Destination struct {
 }
 
-func (d *Destination) Create(tx Transaction, destination_group_id int, port int, protocol string) (int, error) {
+func (d *Destination) Create(tx Transaction, destination_group_id, port, startPort, endPort int, protocol string) (int, error) {
 	_, err := tx.Exec(tx.Rebind(`
-		INSERT INTO destinations (group_id, port, protocol)
-		SELECT ?, ?, ?
+		INSERT INTO destinations (group_id, port, start_port, end_port, protocol)
+		SELECT ?, ?, ?, ?, ?
 		WHERE
 		NOT EXISTS (
 			SELECT *
 			FROM destinations
-			WHERE group_id = ? AND port = ? AND protocol = ?
+			WHERE group_id = ? AND port = ? AND start_port = ? AND end_port = ? AND protocol = ?
 		)`),
 		destination_group_id,
 		port,
+		startPort,
+		endPort,
 		protocol,
 		destination_group_id,
 		port,
+		startPort,
+		endPort,
 		protocol,
 	)
 	if err != nil {
 		return -1, err
 	}
-	id, err := d.GetID(tx, destination_group_id, port, protocol)
+	id, err := d.GetID(tx, destination_group_id, port, startPort, endPort, protocol)
 	return id, err
 }
 
@@ -43,13 +47,15 @@ func (d *Destination) Delete(tx Transaction, id int) error {
 	return err
 }
 
-func (d *Destination) GetID(tx Transaction, destination_group_id int, port int, protocol string) (int, error) {
+func (d *Destination) GetID(tx Transaction, destination_group_id, port, startPort, endPort int, protocol string) (int, error) {
 	var id int
 	err := tx.QueryRow(tx.Rebind(`
 		SELECT id FROM destinations
-		WHERE group_id = ? AND port = ? AND protocol = ? FOR UPDATE`),
+		WHERE group_id = ? AND port = ? AND start_port = ? AND end_port = ? AND protocol = ? FOR UPDATE`),
 		destination_group_id,
 		port,
+		startPort,
+		endPort,
 		protocol,
 	).Scan(&id)
 	return id, err

@@ -30,11 +30,15 @@ var _ = Describe("Integration", func() {
 			address      string
 			debugAddress string
 			dbConf       db.Config
+			headers      map[string]string
 
 			fakeMetron metrics.FakeMetron
 		)
 
 		BeforeEach(func() {
+			headers = map[string]string{
+				"network-policy-api-version": "1",
+			}
 			fakeMetron = metrics.NewFakeMetron()
 
 			dbConf = testsupport.GetDBConfig()
@@ -99,6 +103,7 @@ var _ = Describe("Integration", func() {
 				resp := helpers.MakeAndDoRequest(
 					"GET",
 					fmt.Sprintf("http://%s:%d/networking/v0/external/whoami", conf.ListenHost, conf.ListenPort),
+					headers,
 					nil,
 				)
 
@@ -116,6 +121,7 @@ var _ = Describe("Integration", func() {
 				resp := helpers.MakeAndDoRequest(
 					"GET",
 					fmt.Sprintf("http://%s:%d/networking/v0/external/whoami", conf.ListenHost, conf.ListenPort),
+					headers,
 					nil,
 				)
 
@@ -130,12 +136,14 @@ var _ = Describe("Integration", func() {
 				_ = helpers.MakeAndDoRequest(
 					"POST",
 					fmt.Sprintf("http://%s:%d/log-level", conf.DebugServerHost, conf.DebugServerPort),
+					headers,
 					strings.NewReader("debug"),
 				)
 
 				resp = helpers.MakeAndDoRequest(
 					"GET",
 					fmt.Sprintf("http://%s:%d/networking/v0/external/whoami", conf.ListenHost, conf.ListenPort),
+					headers,
 					nil,
 				)
 

@@ -26,6 +26,7 @@ var _ = Describe("Internal API", func() {
 		address   string
 		dbConf    db.Config
 		tlsConfig *tls.Config
+		headers   map[string]string
 
 		fakeMetron metrics.FakeMetron
 	)
@@ -58,6 +59,8 @@ var _ = Describe("Internal API", func() {
 		conf = policyServerConfs[0]
 
 		address = fmt.Sprintf("%s:%d", conf.ListenHost, conf.ListenPort)
+
+		headers = map[string]string{"network-policy-api-version": "1"}
 	})
 
 	AfterEach(func() {
@@ -79,6 +82,7 @@ var _ = Describe("Internal API", func() {
 		_ = helpers.MakeAndDoRequest(
 			"POST",
 			fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+			headers,
 			body,
 		)
 
