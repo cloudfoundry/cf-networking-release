@@ -298,31 +298,41 @@ var _ = Describe("Store", func() {
 
 		Context("when a policy with the same content already exists", func() {
 			It("does not duplicate table rows", func() {
-				policies := []models.Policy{}
+				policies := []models.Policy{{
+					Source: models.Source{ID: "some-app-guid"},
+					Destination: models.Destination{
+						ID:       "some-other-app-guid",
+						Protocol: "tcp",
+						Ports: models.Ports{
+							Start: 7000,
+							End:   8000,
+						},
+					},
+				}}
 
 				err := dataStore.Create(policies)
 				Expect(err).NotTo(HaveOccurred())
+
+				p, err := dataStore.All()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(p)).To(Equal(1))
 
 				policyDuplicate := []models.Policy{{
 					Source: models.Source{ID: "some-app-guid"},
 					Destination: models.Destination{
 						ID:       "some-other-app-guid",
 						Protocol: "tcp",
-						Port:     8080,
-					},
-				}, {
-					Source: models.Source{ID: "some-app-guid"},
-					Destination: models.Destination{
-						ID:       "some-other-app-guid",
-						Protocol: "tcp",
-						Port:     8080,
+						Ports: models.Ports{
+							Start: 7000,
+							End:   8000,
+						},
 					},
 				}}
 
 				err = dataStore.Create(policyDuplicate)
 				Expect(err).NotTo(HaveOccurred())
 
-				p, err := dataStore.All()
+				p, err = dataStore.All()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(p)).To(Equal(1))
 			})
