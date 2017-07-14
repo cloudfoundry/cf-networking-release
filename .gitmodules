@@ -133,3 +133,6 @@
 [submodule "src/gopkg.in/gorp.v1"]
 	path = src/gopkg.in/gorp.v1
 	url = https://gopkg.in/go-gorp/gorp.v1
+[submodule "src/github.com/cloudfoundry-incubator/network-policy-client"]
+	path = src/github.com/cloudfoundry-incubator/network-policy-client
+	url = /Users/pivotal/go/src/github.com/cloudfoundry-incubator/network-policy-client

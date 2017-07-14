@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"lib/policy_client"
 	"math/rand"
 	"net"
 	"net/http"
@@ -18,6 +17,7 @@ import (
 
 	pusherConfig "cf-pusher/config"
 
+	"github.com/cloudfoundry-incubator/network-policy-client/src/policy_client"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"

@@ -6,10 +6,11 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"lib/policy_client"
 	"log"
-	"policy-server/models"
 	"text/tabwriter"
+
+	"github.com/cloudfoundry-incubator/network-policy-client/src/models"
+	"github.com/cloudfoundry-incubator/network-policy-client/src/policy_client"
 
 	"code.cloudfoundry.org/cli/plugin"
 )

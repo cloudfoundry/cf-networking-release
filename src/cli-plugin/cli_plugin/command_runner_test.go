@@ -4,12 +4,12 @@ import (
 	"cli-plugin/cli_plugin"
 	"cli-plugin/styles"
 	"errors"
-	"lib/fakes"
 	"log"
-	"policy-server/models"
 
 	"code.cloudfoundry.org/cli/plugin/models"
 	"code.cloudfoundry.org/cli/plugin/pluginfakes"
+	"github.com/cloudfoundry-incubator/network-policy-client/src/models"
+	"github.com/cloudfoundry-incubator/network-policy-client/src/policy_client/fakes"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

@@ -3,15 +3,15 @@ package acceptance_test
 import (
 	"crypto/tls"
 	"fmt"
-	"lib/policy_client"
 	"math/rand"
 	"net/http"
-	"policy-server/models"
 	"strings"
 
 	"code.cloudfoundry.org/lager/lagertest"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
+	"github.com/cloudfoundry-incubator/network-policy-client/src/models"
+	"github.com/cloudfoundry-incubator/network-policy-client/src/policy_client"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
