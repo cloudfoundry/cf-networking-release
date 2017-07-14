@@ -16,6 +16,27 @@ var _ = Describe("Validator", func() {
 	})
 
 	Describe("ValidatePolicies", func() {
+		It("does not error for valid policies", func() {
+			policies := []models.Policy{
+				models.Policy{
+					Source: models.Source{
+						ID: "some-source-id",
+					},
+					Destination: models.Destination{
+						ID:       "some-destination-id",
+						Protocol: "tcp",
+						Ports: models.Ports{
+							Start: 42,
+							End:   123,
+						},
+					},
+				},
+			}
+
+			err := validator.ValidatePolicies(policies)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
 		Context("when the policies list is nil", func() {
 			It("returns a useful error", func() {
 				err := validator.ValidatePolicies(nil)
@@ -96,7 +117,7 @@ var _ = Describe("Validator", func() {
 			})
 		})
 
-		Context("when invalid destination ports", func() {
+		Context("when the end port is less than the start port", func() {
 			It("returns a useful error", func() {
 				policies := []models.Policy{
 					models.Policy{
@@ -109,19 +130,19 @@ var _ = Describe("Validator", func() {
 							Tag:      "",
 							Protocol: "tcp",
 							Ports: models.Ports{
-								Start: 1234,
-								End:   2345,
+								Start: 1243,
+								End:   999,
 							},
 						},
 					},
 				}
 
 				err := validator.ValidatePolicies(policies)
-				Expect(err).To(MatchError("invalid destination port range 1234-2345, start and end must be same"))
+				Expect(err).To(MatchError("invalid port range 1243-999, start must be less than or equal to end"))
 			})
 		})
 
-		Context("when invalid destination port", func() {
+		Context("when the start port is less than or equal to 0", func() {
 			It("returns a useful error", func() {
 				policies := []models.Policy{
 					models.Policy{
@@ -133,13 +154,41 @@ var _ = Describe("Validator", func() {
 							ID:       "bar",
 							Tag:      "",
 							Protocol: "tcp",
-							Port:     -1,
+							Ports: models.Ports{
+								Start: -42,
+								End:   999,
+							},
 						},
 					},
 				}
 
 				err := validator.ValidatePolicies(policies)
-				Expect(err).To(MatchError("invalid destination port value -1, must be 1-65535"))
+				Expect(err).To(MatchError("invalid start port -42, must be in range 1-65535"))
+			})
+		})
+
+		Context("when the end port is greater than 65535", func() {
+			It("returns a useful error", func() {
+				policies := []models.Policy{
+					models.Policy{
+						Source: models.Source{
+							ID:  "foo",
+							Tag: "",
+						},
+						Destination: models.Destination{
+							ID:       "bar",
+							Tag:      "",
+							Protocol: "tcp",
+							Ports: models.Ports{
+								Start: 42,
+								End:   101101,
+							},
+						},
+					},
+				}
+
+				err := validator.ValidatePolicies(policies)
+				Expect(err).To(MatchError("invalid end port 101101, must be in range 1-65535"))
 			})
 		})
 
@@ -155,7 +204,10 @@ var _ = Describe("Validator", func() {
 							ID:       "bar",
 							Tag:      "",
 							Protocol: "tcp",
-							Port:     42,
+							Ports: models.Ports{
+								Start: 123,
+								End:   456,
+							},
 						},
 					},
 				}

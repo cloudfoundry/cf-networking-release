@@ -34,6 +34,7 @@ var _ = Describe("Timeout", func() {
 		session *gexec.Session
 		conf    config.Config
 		dbConf  db.Config
+		headers map[string]string
 
 		fakeMetron      metrics.FakeMetron
 		policyServerURL string
@@ -53,8 +54,9 @@ var _ = Describe("Timeout", func() {
 		conf = helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "../fixtures")
 		session = helpers.StartPolicyServer(policyServerPath, conf)
 		policyServerURL = fmt.Sprintf("http://%s:%d", conf.ListenHost, conf.ListenPort)
+		headers = map[string]string{"network-policy-api-version": "1"}
 
-		resp := helpers.MakeAndDoRequest("GET", fmt.Sprintf("%s/%s", policyServerURL, "networking/v0/external/policies"), nil)
+		resp := helpers.MakeAndDoRequest("GET", fmt.Sprintf("%s/%s", policyServerURL, "networking/v0/external/policies"), headers, nil)
 		defer resp.Body.Close()
 		Expect(resp.StatusCode).To(Equal(http.StatusOK))
 		Expect(ioutil.ReadAll(resp.Body)).To(MatchJSON(`{ "total_policies": 0, "policies": [] }`))
@@ -88,6 +90,7 @@ var _ = Describe("Timeout", func() {
 				resp := helpers.MakeAndDoRequest(
 					endpointMethod,
 					fmt.Sprintf("%s/%s", policyServerURL, endpointPath),
+					headers,
 					body,
 				)
 				defer resp.Body.Close()

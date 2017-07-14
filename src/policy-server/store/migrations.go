@@ -45,3 +45,29 @@ var Schemas = map[string][]string{
 	);`,
 	},
 }
+
+var SchemasV1Up = map[string][]string{
+	"mysql": []string{
+		`ALTER TABLE destinations ADD COLUMN start_port int;`,
+		`ALTER TABLE destinations ADD COLUMN end_port int;`,
+		`UPDATE destinations SET start_port = port;`,
+		`UPDATE destinations SET end_port = port;`,
+	},
+	"postgres": []string{
+		`ALTER TABLE destinations ADD COLUMN start_port int;`,
+		`ALTER TABLE destinations ADD COLUMN end_port int;`,
+		`UPDATE destinations SET start_port = port;`,
+		`UPDATE destinations SET end_port = port;`,
+	},
+}
+
+var SchemasV1Down = map[string][]string{
+	"mysql": []string{
+		`ALTER TABLE destinations DROP COLUMN start_port;`,
+		`ALTER TABLE destinations DROP COLUMN end_port;`,
+	},
+	"postgres": []string{
+		`ALTER TABLE destinations DROP COLUMN start_port;`,
+		`ALTER TABLE destinations DROP COLUMN end_port;`,
+	},
+}

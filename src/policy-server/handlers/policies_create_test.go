@@ -49,7 +49,7 @@ var _ = Describe("PoliciesCreate", func() {
 					"protocol": "tcp",
 					"ports": {
 						"start": 8080,
-						"end": 8080
+						"end": 9090
 					}
 				}
 			},
@@ -103,7 +103,7 @@ var _ = Describe("PoliciesCreate", func() {
 				Port:     8080,
 				Ports: models.Ports{
 					Start: 8080,
-					End:   8080,
+					End:   9090,
 				},
 			},
 		}, {
@@ -158,7 +158,7 @@ var _ = Describe("PoliciesCreate", func() {
 								HaveKeyWithValue("ports", SatisfyAll(
 									HaveLen(2),
 									HaveKeyWithValue("start", BeEquivalentTo(8080)),
-									HaveKeyWithValue("end", BeEquivalentTo(8080)),
+									HaveKeyWithValue("end", BeEquivalentTo(9090)),
 								)),
 							)),
 						),

@@ -23,11 +23,15 @@ var _ = Describe("Automatic Stale Policy Cleanup", func() {
 		conf              config.Config
 		policyServerConfs []config.Config
 		dbConf            db.Config
+		headers           map[string]string
 
 		fakeMetron metrics.FakeMetron
 	)
 
 	BeforeEach(func() {
+		headers = map[string]string{
+			"network-policy-api-version": "1",
+		}
 		fakeMetron = metrics.NewFakeMetron()
 
 		dbConf = testsupport.GetDBConfig()
@@ -65,6 +69,7 @@ var _ = Describe("Automatic Stale Policy Cleanup", func() {
 			resp := helpers.MakeAndDoRequest(
 				"POST",
 				fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+				headers,
 				body,
 			)
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
@@ -75,6 +80,7 @@ var _ = Describe("Automatic Stale Policy Cleanup", func() {
 				resp := helpers.MakeAndDoRequest(
 					"GET",
 					fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+					headers,
 					nil,
 				)
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
