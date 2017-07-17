@@ -252,7 +252,10 @@ Response Body:
 - `policies`: list of policies
 - `policies[].destination`: the destination of the policy
 - `policies[].destination.id`: the `policy_group_id` of the destination (currently always an `app_id`)
-- `policies[].destination.port`: the `port` allowed on the destination
+- `policies[].destination.port`: the `port` allowed on the destination (deprecated: see `ports`)
+- `policies[].destination.ports`: the range of `ports` allowed on the destination (NOTE: currently start and end are always the same value, support for actual port ranges is currently in progress, see: [#134604191](https://www.pivotaltracker.com/story/show/134604191))
+- `policies[].destination.ports.start`: the first port in the port range allowed on the destination
+- `policies[].destination.ports.end`: the last port of the port range allowed on the destination
 - `policies[].destination.protocol`: the `protocol` allowed on the destination: `tcp` or `udp`
 - `policies[].destination.tag`: the `tag` of the source allowed to the destination
 - `policies[].source`: the source of the policy
@@ -278,6 +281,10 @@ curl -s \
             "destination": {
                 "id": "eb95ff20-cba8-4edc-8f4a-cf80d0669faf",
                 "port": 8080,
+                "ports": {
+                  "start": 8080,
+                  "end": 8080
+                },
                 "protocol": "tcp",
                 "tag": "0002"
             },
@@ -290,6 +297,10 @@ curl -s \
             "destination": {
                 "id": "b611f7e6-c8fe-41cb-b150-92581aafa5c2",
                 "port": 8080,
+                "ports": {
+                  "start": 8080,
+                  "end": 8080
+                },
                 "protocol": "tcp",
                 "tag": "0004"
             },
@@ -302,6 +313,10 @@ curl -s \
             "destination": {
                 "id": "8fa287c9-0d01-491e-a1d5-d6e2d8a1ef61",
                 "port": 8080,
+                "ports": {
+                  "start": 8080,
+                  "end": 8080
+                },
                 "protocol": "tcp",
                 "tag": "0005"
             },
@@ -314,6 +329,10 @@ curl -s \
             "destination": {
                 "id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
                 "port": 5555,
+                "ports": {
+                  "start": 5555,
+                  "end": 5555
+                },
                 "protocol": "tcp",
                 "tag": "0006"
             },
