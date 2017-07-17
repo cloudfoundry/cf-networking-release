@@ -2,15 +2,15 @@ package handlers
 
 import (
 	"net/http"
-	"policy-server/models"
 	"policy-server/uaa_client"
 
 	"code.cloudfoundry.org/cf-networking-helpers/marshal"
 	"code.cloudfoundry.org/lager"
+	"policy-server/api"
 )
 
 type TagsIndex struct {
-	Store         store
+	Store         dataStore
 	Marshaler     marshal.Marshaler
 	ErrorResponse errorResponse
 }
@@ -25,8 +25,8 @@ func (h *TagsIndex) ServeHTTP(logger lager.Logger, w http.ResponseWriter, req *h
 	}
 
 	tagsResponse := struct {
-		Tags []models.Tag `json:"tags"`
-	}{tags}
+		Tags []api.Tag `json:"tags"`
+	}{api.MapStoreTags(tags)}
 	responseBytes, err := h.Marshaler.Marshal(tagsResponse)
 	if err != nil {
 		logger.Error("failed-marshalling-tags", err)

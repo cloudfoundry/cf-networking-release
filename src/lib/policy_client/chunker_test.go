@@ -2,7 +2,7 @@ package policy_client_test
 
 import (
 	"lib/policy_client"
-	"policy-server/models"
+	"policy-server/api"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -11,35 +11,35 @@ import (
 var _ = Describe("SimpleChunker", func() {
 	var (
 		chunker  policy_client.SimpleChunker
-		policies []models.Policy
+		policies []api.Policy
 	)
 	BeforeEach(func() {
-		policies = []models.Policy{
+		policies = []api.Policy{
 			{
-				Source: models.Source{
+				Source: api.Source{
 					ID: "some-app-guid",
 				},
-				Destination: models.Destination{
+				Destination: api.Destination{
 					ID:       "some-other-app-guid",
 					Port:     8090,
 					Protocol: "tcp",
 				},
 			},
 			{
-				Source: models.Source{
+				Source: api.Source{
 					ID: "some-app-guid-2",
 				},
-				Destination: models.Destination{
+				Destination: api.Destination{
 					ID:       "some-other-app-guid-2",
 					Port:     8091,
 					Protocol: "tcp",
 				},
 			},
 			{
-				Source: models.Source{
+				Source: api.Source{
 					ID: "some-app-guid-3",
 				},
-				Destination: models.Destination{
+				Destination: api.Destination{
 					ID:       "some-other-app-guid-3",
 					Port:     8092,
 					Protocol: "tcp",

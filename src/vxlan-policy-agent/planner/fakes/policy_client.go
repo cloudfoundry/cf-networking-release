@@ -2,29 +2,29 @@
 package fakes
 
 import (
-	"policy-server/models"
+	"policy-server/api"
 	"sync"
 )
 
 type PolicyClient struct {
-	GetPoliciesByIDStub        func(ids ...string) ([]models.Policy, error)
+	GetPoliciesByIDStub        func(ids ...string) ([]api.Policy, error)
 	getPoliciesByIDMutex       sync.RWMutex
 	getPoliciesByIDArgsForCall []struct {
 		ids []string
 	}
 	getPoliciesByIDReturns struct {
-		result1 []models.Policy
+		result1 []api.Policy
 		result2 error
 	}
 	getPoliciesByIDReturnsOnCall map[int]struct {
-		result1 []models.Policy
+		result1 []api.Policy
 		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *PolicyClient) GetPoliciesByID(ids ...string) ([]models.Policy, error) {
+func (fake *PolicyClient) GetPoliciesByID(ids ...string) ([]api.Policy, error) {
 	fake.getPoliciesByIDMutex.Lock()
 	ret, specificReturn := fake.getPoliciesByIDReturnsOnCall[len(fake.getPoliciesByIDArgsForCall)]
 	fake.getPoliciesByIDArgsForCall = append(fake.getPoliciesByIDArgsForCall, struct {
@@ -53,24 +53,24 @@ func (fake *PolicyClient) GetPoliciesByIDArgsForCall(i int) []string {
 	return fake.getPoliciesByIDArgsForCall[i].ids
 }
 
-func (fake *PolicyClient) GetPoliciesByIDReturns(result1 []models.Policy, result2 error) {
+func (fake *PolicyClient) GetPoliciesByIDReturns(result1 []api.Policy, result2 error) {
 	fake.GetPoliciesByIDStub = nil
 	fake.getPoliciesByIDReturns = struct {
-		result1 []models.Policy
+		result1 []api.Policy
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *PolicyClient) GetPoliciesByIDReturnsOnCall(i int, result1 []models.Policy, result2 error) {
+func (fake *PolicyClient) GetPoliciesByIDReturnsOnCall(i int, result1 []api.Policy, result2 error) {
 	fake.GetPoliciesByIDStub = nil
 	if fake.getPoliciesByIDReturnsOnCall == nil {
 		fake.getPoliciesByIDReturnsOnCall = make(map[int]struct {
-			result1 []models.Policy
+			result1 []api.Policy
 			result2 error
 		})
 	}
 	fake.getPoliciesByIDReturnsOnCall[i] = struct {
-		result1 []models.Policy
+		result1 []api.Policy
 		result2 error
 	}{result1, result2}
 }

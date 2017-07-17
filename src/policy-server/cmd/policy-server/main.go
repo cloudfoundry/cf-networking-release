@@ -99,9 +99,9 @@ func main() {
 		StartTime: time.Now(),
 	}
 
-	storeGroup := &store.Group{}
-	destination := &store.Destination{}
-	policy := &store.Policy{}
+	storeGroup := &store.GroupTable{}
+	destination := &store.DestinationTable{}
+	policy := &store.PolicyTable{}
 
 	retriableConnector := db.RetriableConnector{
 		Connector:     db.GetConnectionPool,

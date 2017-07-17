@@ -8,10 +8,10 @@ type DestinationRepo interface {
 	CountWhereGroupID(Transaction, int) (int, error)
 }
 
-type Destination struct {
+type DestinationTable struct {
 }
 
-func (d *Destination) Create(tx Transaction, destination_group_id, port, startPort, endPort int, protocol string) (int, error) {
+func (d *DestinationTable) Create(tx Transaction, destination_group_id, port, startPort, endPort int, protocol string) (int, error) {
 	_, err := tx.Exec(tx.Rebind(`
 		INSERT INTO destinations (group_id, port, start_port, end_port, protocol)
 		SELECT ?, ?, ?, ?, ?
@@ -39,7 +39,7 @@ func (d *Destination) Create(tx Transaction, destination_group_id, port, startPo
 	return id, err
 }
 
-func (d *Destination) Delete(tx Transaction, id int) error {
+func (d *DestinationTable) Delete(tx Transaction, id int) error {
 	_, err := tx.Exec(
 		tx.Rebind(`DELETE FROM destinations WHERE id = ?`),
 		id,
@@ -47,7 +47,7 @@ func (d *Destination) Delete(tx Transaction, id int) error {
 	return err
 }
 
-func (d *Destination) GetID(tx Transaction, destination_group_id, port, startPort, endPort int, protocol string) (int, error) {
+func (d *DestinationTable) GetID(tx Transaction, destination_group_id, port, startPort, endPort int, protocol string) (int, error) {
 	var id int
 	err := tx.QueryRow(tx.Rebind(`
 		SELECT id FROM destinations
@@ -61,7 +61,7 @@ func (d *Destination) GetID(tx Transaction, destination_group_id, port, startPor
 	return id, err
 }
 
-func (d *Destination) CountWhereGroupID(tx Transaction, group_id int) (int, error) {
+func (d *DestinationTable) CountWhereGroupID(tx Transaction, group_id int) (int, error) {
 	var count int
 	err := tx.QueryRow(
 		tx.Rebind(`SELECT COUNT(*) FROM destinations WHERE group_id = ?`),

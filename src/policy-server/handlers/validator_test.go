@@ -2,7 +2,7 @@ package handlers_test
 
 import (
 	"policy-server/handlers"
-	"policy-server/models"
+	"policy-server/api"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -17,15 +17,15 @@ var _ = Describe("Validator", func() {
 
 	Describe("ValidatePolicies", func() {
 		It("does not error for valid policies", func() {
-			policies := []models.Policy{
-				models.Policy{
-					Source: models.Source{
+			policies := []api.Policy{
+				api.Policy{
+					Source: api.Source{
 						ID: "some-source-id",
 					},
-					Destination: models.Destination{
+					Destination: api.Destination{
 						ID:       "some-destination-id",
 						Protocol: "tcp",
-						Ports: models.Ports{
+						Ports: api.Ports{
 							Start: 42,
 							End:   123,
 						},
@@ -46,24 +46,27 @@ var _ = Describe("Validator", func() {
 
 		Context("when the policies list is empty", func() {
 			It("returns a useful error", func() {
-				err := validator.ValidatePolicies([]models.Policy{})
+				err := validator.ValidatePolicies([]api.Policy{})
 				Expect(err).To(MatchError("missing policies"))
 			})
 		})
 
 		Context("when source id is missing", func() {
 			It("returns a useful error", func() {
-				policies := []models.Policy{
-					models.Policy{
-						Source: models.Source{
+				policies := []api.Policy{
+					api.Policy{
+						Source: api.Source{
 							ID:  "",
 							Tag: "",
 						},
-						Destination: models.Destination{
+						Destination: api.Destination{
 							ID:       "some-destination-id",
 							Tag:      "",
 							Protocol: "tcp",
-							Port:     42,
+							Ports: api.Ports{
+								Start: 42,
+								End:   42,
+							},
 						},
 					},
 				}
@@ -75,17 +78,20 @@ var _ = Describe("Validator", func() {
 
 		Context("when destination id is missing", func() {
 			It("returns a useful error", func() {
-				policies := []models.Policy{
-					models.Policy{
-						Source: models.Source{
+				policies := []api.Policy{
+					api.Policy{
+						Source: api.Source{
 							ID:  "foo",
 							Tag: "",
 						},
-						Destination: models.Destination{
+						Destination: api.Destination{
 							ID:       "",
 							Tag:      "",
 							Protocol: "tcp",
-							Port:     42,
+							Ports: api.Ports{
+								Start: 42,
+								End:   42,
+							},
 						},
 					},
 				}
@@ -97,17 +103,20 @@ var _ = Describe("Validator", func() {
 
 		Context("when invalid destination protocol", func() {
 			It("returns a useful error", func() {
-				policies := []models.Policy{
-					models.Policy{
-						Source: models.Source{
+				policies := []api.Policy{
+					api.Policy{
+						Source: api.Source{
 							ID:  "foo",
 							Tag: "",
 						},
-						Destination: models.Destination{
+						Destination: api.Destination{
 							ID:       "bar",
 							Tag:      "",
 							Protocol: "banana",
-							Port:     42,
+							Ports: api.Ports{
+								Start: 42,
+								End:   42,
+							},
 						},
 					},
 				}
@@ -119,17 +128,17 @@ var _ = Describe("Validator", func() {
 
 		Context("when the end port is less than the start port", func() {
 			It("returns a useful error", func() {
-				policies := []models.Policy{
-					models.Policy{
-						Source: models.Source{
+				policies := []api.Policy{
+					api.Policy{
+						Source: api.Source{
 							ID:  "foo",
 							Tag: "",
 						},
-						Destination: models.Destination{
+						Destination: api.Destination{
 							ID:       "bar",
 							Tag:      "",
 							Protocol: "tcp",
-							Ports: models.Ports{
+							Ports: api.Ports{
 								Start: 1243,
 								End:   999,
 							},
@@ -144,17 +153,17 @@ var _ = Describe("Validator", func() {
 
 		Context("when the start port is less than or equal to 0", func() {
 			It("returns a useful error", func() {
-				policies := []models.Policy{
-					models.Policy{
-						Source: models.Source{
+				policies := []api.Policy{
+					api.Policy{
+						Source: api.Source{
 							ID:  "foo",
 							Tag: "",
 						},
-						Destination: models.Destination{
+						Destination: api.Destination{
 							ID:       "bar",
 							Tag:      "",
 							Protocol: "tcp",
-							Ports: models.Ports{
+							Ports: api.Ports{
 								Start: -42,
 								End:   999,
 							},
@@ -169,17 +178,17 @@ var _ = Describe("Validator", func() {
 
 		Context("when the end port is greater than 65535", func() {
 			It("returns a useful error", func() {
-				policies := []models.Policy{
-					models.Policy{
-						Source: models.Source{
+				policies := []api.Policy{
+					api.Policy{
+						Source: api.Source{
 							ID:  "foo",
 							Tag: "",
 						},
-						Destination: models.Destination{
+						Destination: api.Destination{
 							ID:       "bar",
 							Tag:      "",
 							Protocol: "tcp",
-							Ports: models.Ports{
+							Ports: api.Ports{
 								Start: 42,
 								End:   101101,
 							},
@@ -194,17 +203,17 @@ var _ = Describe("Validator", func() {
 
 		Context("when a tag is supplied", func() {
 			It("returns a useful error", func() {
-				policies := []models.Policy{
+				policies := []api.Policy{
 					{
-						Source: models.Source{
+						Source: api.Source{
 							ID:  "foo",
 							Tag: "some-tag",
 						},
-						Destination: models.Destination{
+						Destination: api.Destination{
 							ID:       "bar",
 							Tag:      "",
 							Protocol: "tcp",
-							Ports: models.Ports{
+							Ports: api.Ports{
 								Start: 123,
 								End:   456,
 							},

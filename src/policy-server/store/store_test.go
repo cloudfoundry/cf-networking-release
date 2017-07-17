@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"policy-server/models"
 	"policy-server/store"
 	"policy-server/store/fakes"
 	"strings"
@@ -48,9 +47,9 @@ var _ = Describe("Store", func() {
 		realDb, err = db.GetConnectionPool(dbConf)
 		Expect(err).NotTo(HaveOccurred())
 
-		group = &store.Group{}
-		destination = &store.Destination{}
-		policy = &store.Policy{}
+		group = &store.GroupTable{}
+		destination = &store.DestinationTable{}
+		policy = &store.PolicyTable{}
 
 		mockDb.DriverNameReturns(realDb.DriverName())
 	})
@@ -63,15 +62,15 @@ var _ = Describe("Store", func() {
 	})
 
 	Describe("concurrent create and delete requests", func() {
-		retry := func(dataStore store.Store, crud string, p models.Policy) error {
+		retry := func(dataStore store.Store, crud string, p store.Policy) error {
 			var err error
 			for attempt := 0; attempt < NumAttempts; attempt++ {
 				time.Sleep(time.Duration(attempt) * time.Second)
 				switch crud {
 				case "create":
-					err = dataStore.Create([]models.Policy{p})
+					err = dataStore.Create([]store.Policy{p})
 				case "delete":
-					err = dataStore.Delete([]models.Policy{p})
+					err = dataStore.Delete([]store.Policy{p})
 				}
 				if err == nil {
 					break
@@ -89,9 +88,9 @@ var _ = Describe("Store", func() {
 			policies := []interface{}{}
 			for i := 0; i < nPolicies; i++ {
 				appName := fmt.Sprintf("some-app-%x", i)
-				policies = append(policies, models.Policy{
-					Source:      models.Source{ID: appName},
-					Destination: models.Destination{ID: appName, Protocol: "tcp", Port: 1234},
+				policies = append(policies, store.Policy{
+					Source:      store.Source{ID: appName},
+					Destination: store.Destination{ID: appName, Protocol: "tcp", Port: 1234},
 				})
 			}
 
@@ -102,7 +101,7 @@ var _ = Describe("Store", func() {
 
 			go func() {
 				parallelRunner.RunOnSlice(policies, func(policy interface{}) {
-					p := policy.(models.Policy)
+					p := policy.(store.Policy)
 					Expect(retry(dataStore, "create", p)).To(Succeed())
 					toDelete <- p
 				})
@@ -111,7 +110,7 @@ var _ = Describe("Store", func() {
 
 			var nDeleted int32
 			parallelRunner.RunOnChannel(toDelete, func(policy interface{}) {
-				p := policy.(models.Policy)
+				p := policy.(store.Policy)
 				Expect(retry(dataStore, "delete", p)).To(Succeed())
 				atomic.AddInt32(&nDeleted, 1)
 			})
@@ -138,12 +137,12 @@ var _ = Describe("Store", func() {
 
 			Expect(migrations).To(Equal(migrate.MemoryMigrationSource{
 				Migrations: []*migrate.Migration{
-					&migrate.Migration{
+					{
 						Id:   "1",
 						Up:   store.Schemas[db.DriverName()],
 						Down: []string{"DROP TABLE policies", "DROP TABLE destinations", "DROP TABLE groups"},
 					},
-					&migrate.Migration{
+					{
 						Id:   "2",
 						Up:   store.SchemasV1Up[db.DriverName()],
 						Down: store.SchemasV1Down[db.DriverName()],
@@ -266,22 +265,22 @@ var _ = Describe("Store", func() {
 		})
 
 		It("saves the policies", func() {
-			policies := []models.Policy{{
-				Source: models.Source{ID: "some-app-guid"},
-				Destination: models.Destination{
+			policies := []store.Policy{{
+				Source: store.Source{ID: "some-app-guid"},
+				Destination: store.Destination{
 					ID:       "some-other-app-guid",
 					Protocol: "tcp",
-					Ports: models.Ports{
+					Ports: store.Ports{
 						Start: 8080,
 						End:   9000,
 					},
 				},
 			}, {
-				Source: models.Source{ID: "another-app-guid"},
-				Destination: models.Destination{
+				Source: store.Source{ID: "another-app-guid"},
+				Destination: store.Destination{
 					ID:       "some-other-app-guid",
 					Protocol: "udp",
-					Ports: models.Ports{
+					Ports: store.Ports{
 						Start: 123,
 						End:   123,
 					},
@@ -298,12 +297,12 @@ var _ = Describe("Store", func() {
 
 		Context("when a policy with the same content already exists", func() {
 			It("does not duplicate table rows", func() {
-				policies := []models.Policy{{
-					Source: models.Source{ID: "some-app-guid"},
-					Destination: models.Destination{
+				policies := []store.Policy{{
+					Source: store.Source{ID: "some-app-guid"},
+					Destination: store.Destination{
 						ID:       "some-other-app-guid",
 						Protocol: "tcp",
-						Ports: models.Ports{
+						Ports: store.Ports{
 							Start: 7000,
 							End:   8000,
 						},
@@ -317,12 +316,12 @@ var _ = Describe("Store", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(p)).To(Equal(1))
 
-				policyDuplicate := []models.Policy{{
-					Source: models.Source{ID: "some-app-guid"},
-					Destination: models.Destination{
+				policyDuplicate := []store.Policy{{
+					Source: store.Source{ID: "some-app-guid"},
+					Destination: store.Destination{
 						ID:       "some-other-app-guid",
 						Protocol: "tcp",
-						Ports: models.Ports{
+						Ports: store.Ports{
 							Start: 7000,
 							End:   8000,
 						},
@@ -340,11 +339,11 @@ var _ = Describe("Store", func() {
 
 		Context("when there are no tags left to allocate", func() {
 			BeforeEach(func() {
-				policies := []models.Policy{}
+				policies := []store.Policy{}
 				for i := 1; i < 256; i++ {
-					policies = append(policies, models.Policy{
-						Source: models.Source{ID: fmt.Sprintf("%d", i)},
-						Destination: models.Destination{
+					policies = append(policies, store.Policy{
+						Source: store.Source{ID: fmt.Sprintf("%d", i)},
+						Destination: store.Destination{
 							ID:       fmt.Sprintf("%d", i),
 							Protocol: "tcp",
 							Port:     8080,
@@ -356,9 +355,9 @@ var _ = Describe("Store", func() {
 				Expect(dataStore.All()).To(HaveLen(255))
 			})
 			It("returns an error", func() {
-				policies := []models.Policy{{
-					Source: models.Source{ID: "some-app-guid"},
-					Destination: models.Destination{
+				policies := []store.Policy{{
+					Source: store.Source{ID: "some-app-guid"},
+					Destination: store.Destination{
 						ID:       "some-other-app-guid",
 						Protocol: "tcp",
 						Port:     8080,
@@ -372,16 +371,16 @@ var _ = Describe("Store", func() {
 
 		Context("when a tag is freed by delete", func() {
 			It("reuses the tag", func() {
-				policies := []models.Policy{{
-					Source: models.Source{ID: "some-app-guid"},
-					Destination: models.Destination{
+				policies := []store.Policy{{
+					Source: store.Source{ID: "some-app-guid"},
+					Destination: store.Destination{
 						ID:       "some-other-app-guid",
 						Protocol: "tcp",
 						Port:     8080,
 					},
 				}, {
-					Source: models.Source{ID: "another-app-guid"},
-					Destination: models.Destination{
+					Source: store.Source{ID: "another-app-guid"},
+					Destination: store.Destination{
 						ID:       "some-other-app-guid",
 						Protocol: "udp",
 						Port:     1234,
@@ -393,7 +392,7 @@ var _ = Describe("Store", func() {
 
 				tags, err := dataStore.Tags()
 				Expect(err).NotTo(HaveOccurred())
-				Expect(tags).To(ConsistOf([]models.Tag{
+				Expect(tags).To(ConsistOf([]store.Tag{
 					{ID: "some-app-guid", Tag: "01"},
 					{ID: "some-other-app-guid", Tag: "02"},
 					{ID: "another-app-guid", Tag: "03"},
@@ -402,9 +401,9 @@ var _ = Describe("Store", func() {
 				err = dataStore.Delete(policies[:1])
 				Expect(err).NotTo(HaveOccurred())
 
-				err = dataStore.Create([]models.Policy{{
-					Source: models.Source{ID: "yet-another-app-guid"},
-					Destination: models.Destination{
+				err = dataStore.Create([]store.Policy{{
+					Source: store.Source{ID: "yet-another-app-guid"},
+					Destination: store.Destination{
 						ID:       "some-other-app-guid",
 						Protocol: "tcp",
 						Port:     8080,
@@ -414,7 +413,7 @@ var _ = Describe("Store", func() {
 
 				tags, err = dataStore.Tags()
 				Expect(err).NotTo(HaveOccurred())
-				Expect(tags).To(ConsistOf([]models.Tag{
+				Expect(tags).To(ConsistOf([]store.Tag{
 					{ID: "yet-another-app-guid", Tag: "01"},
 					{ID: "some-other-app-guid", Tag: "02"},
 					{ID: "another-app-guid", Tag: "03"},
@@ -450,9 +449,9 @@ var _ = Describe("Store", func() {
 			})
 
 			It("returns a error", func() {
-				err = dataStore.Create([]models.Policy{{
-					Source: models.Source{ID: "some-app-guid"},
-					Destination: models.Destination{
+				err = dataStore.Create([]store.Policy{{
+					Source: store.Source{ID: "some-app-guid"},
+					Destination: store.Destination{
 						ID:       "some-other-app-guid",
 						Protocol: "tcp",
 						Port:     8080,
@@ -489,9 +488,9 @@ var _ = Describe("Store", func() {
 			})
 
 			It("returns the error", func() {
-				err = dataStore.Create([]models.Policy{{
-					Source: models.Source{ID: "some-app-guid"},
-					Destination: models.Destination{
+				err = dataStore.Create([]store.Policy{{
+					Source: store.Source{ID: "some-app-guid"},
+					Destination: store.Destination{
 						ID:       "some-other-app-guid",
 						Protocol: "tcp",
 						Port:     8080,
@@ -515,9 +514,9 @@ var _ = Describe("Store", func() {
 			})
 
 			It("returns a error", func() {
-				err = dataStore.Create([]models.Policy{{
-					Source: models.Source{ID: "some-app-guid"},
-					Destination: models.Destination{
+				err = dataStore.Create([]store.Policy{{
+					Source: store.Source{ID: "some-app-guid"},
+					Destination: store.Destination{
 						ID:       "some-other-app-guid",
 						Protocol: "tcp",
 						Port:     8080,
@@ -543,9 +542,9 @@ var _ = Describe("Store", func() {
 			})
 
 			It("returns a error", func() {
-				err = dataStore.Create([]models.Policy{{
-					Source: models.Source{ID: "some-app-guid"},
-					Destination: models.Destination{
+				err = dataStore.Create([]store.Policy{{
+					Source: store.Source{ID: "some-app-guid"},
+					Destination: store.Destination{
 						ID:       "some-other-app-guid",
 						Protocol: "tcp",
 						Port:     8080,
@@ -557,17 +556,17 @@ var _ = Describe("Store", func() {
 	})
 
 	Describe("All", func() {
-		var expectedPolicies []models.Policy
+		var expectedPolicies []store.Policy
 
 		BeforeEach(func() {
 			var err error
-			expectedPolicies = []models.Policy{models.Policy{
-				Source: models.Source{ID: "some-app-guid", Tag: "01"},
-				Destination: models.Destination{
+			expectedPolicies = []store.Policy{{
+				Source: store.Source{ID: "some-app-guid", Tag: "01"},
+				Destination: store.Destination{
 					ID:       "some-other-app-guid",
 					Tag:      "02",
 					Protocol: "tcp",
-					Ports: models.Ports{
+					Ports: store.Ports{
 						Start: 5000,
 						End:   6000,
 					},
@@ -605,9 +604,9 @@ var _ = Describe("Store", func() {
 			var rows *sql.Rows
 
 			BeforeEach(func() {
-				expectedPolicies = []models.Policy{models.Policy{
-					Source: models.Source{ID: "some-app-guid"},
-					Destination: models.Destination{
+				expectedPolicies = []store.Policy{{
+					Source: store.Source{ID: "some-app-guid"},
+					Destination: store.Destination{
 						ID:       "some-other-app-guid",
 						Protocol: "tcp",
 						Port:     8080,
@@ -640,71 +639,71 @@ var _ = Describe("Store", func() {
 	})
 
 	Describe("ByGuids", func() {
-		var allPolicies []models.Policy
-		var expectedPolicies []models.Policy
+		var allPolicies []store.Policy
+		var expectedPolicies []store.Policy
 		var err error
 
 		BeforeEach(func() {
-			allPolicies = []models.Policy{
-				models.Policy{
-					Source: models.Source{
+			allPolicies = []store.Policy{
+				{
+					Source: store.Source{
 						ID:  "app-guid-00",
 						Tag: "01",
 					},
-					Destination: models.Destination{
+					Destination: store.Destination{
 						ID:       "app-guid-01",
 						Tag:      "02",
 						Protocol: "tcp",
 						Port:     101,
-						Ports: models.Ports{
+						Ports: store.Ports{
 							Start: 101,
 							End:   101,
 						},
 					},
 				},
-				models.Policy{
-					Source: models.Source{
+				{
+					Source: store.Source{
 						ID:  "app-guid-01",
 						Tag: "02",
 					},
-					Destination: models.Destination{
+					Destination: store.Destination{
 						ID:       "app-guid-02",
 						Tag:      "03",
 						Protocol: "tcp",
 						Port:     102,
-						Ports: models.Ports{
+						Ports: store.Ports{
 							Start: 102,
 							End:   102,
 						},
 					},
 				},
-				models.Policy{
-					Source: models.Source{
+				{
+					Source: store.Source{
 						ID:  "app-guid-02",
 						Tag: "03",
 					},
-					Destination: models.Destination{
+					Destination: store.Destination{
 						ID:       "app-guid-00",
 						Tag:      "01",
 						Protocol: "tcp",
 						Port:     103,
-						Ports: models.Ports{
+						Ports: store.Ports{
 							Start: 103,
 							End:   103,
 						},
 					},
 				},
-				models.Policy{
-					Source: models.Source{
+				{
+					Source: store.Source{
 						ID:  "app-guid-03",
 						Tag: "04",
 					},
-					Destination: models.Destination{
+					Destination: store.Destination{
 						ID:       "app-guid-03",
 						Tag:      "04",
 						Protocol: "tcp",
 						Port:     104,
-						Ports: models.Ports{
+						Ports: store.Ports{
 							Start: 104,
 							End:   104,
 						},
@@ -782,9 +781,9 @@ var _ = Describe("Store", func() {
 			var rows *sql.Rows
 
 			BeforeEach(func() {
-				expectedPolicies = []models.Policy{models.Policy{
-					Source: models.Source{ID: "some-app-guid"},
-					Destination: models.Destination{
+				expectedPolicies = []store.Policy{{
+					Source: store.Source{ID: "some-app-guid"},
+					Destination: store.Destination{
 						ID:       "some-other-app-guid",
 						Protocol: "tcp",
 						Port:     8080,
@@ -827,16 +826,16 @@ var _ = Describe("Store", func() {
 		})
 
 		BeforeEach(func() {
-			policies := []models.Policy{{
-				Source: models.Source{ID: "some-app-guid"},
-				Destination: models.Destination{
+			policies := []store.Policy{{
+				Source: store.Source{ID: "some-app-guid"},
+				Destination: store.Destination{
 					ID:       "some-other-app-guid",
 					Protocol: "tcp",
 					Port:     8080,
 				},
 			}, {
-				Source: models.Source{ID: "some-app-guid"},
-				Destination: models.Destination{
+				Source: store.Source{ID: "some-app-guid"},
+				Destination: store.Destination{
 					ID:       "another-app-guid",
 					Protocol: "udp",
 					Port:     5555,
@@ -850,7 +849,7 @@ var _ = Describe("Store", func() {
 		It("returns all tags that have been added", func() {
 			tags, err := dataStore.Tags()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(tags).To(ConsistOf([]models.Tag{
+			Expect(tags).To(ConsistOf([]store.Tag{
 				{ID: "some-app-guid", Tag: "01"},
 				{ID: "some-other-app-guid", Tag: "02"},
 				{ID: "another-app-guid", Tag: "03"},
@@ -929,18 +928,18 @@ var _ = Describe("Store", func() {
 			dataStore, err = store.New(realDb, realMigrateAdapter, group, destination, policy, 1, 20*time.Second)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = dataStore.Create([]models.Policy{
+			err = dataStore.Create([]store.Policy{
 				{
-					Source: models.Source{ID: "some-app-guid"},
-					Destination: models.Destination{
+					Source: store.Source{ID: "some-app-guid"},
+					Destination: store.Destination{
 						ID:       "some-other-app-guid",
 						Protocol: "tcp",
 						Port:     8080,
 					},
 				},
 				{
-					Source: models.Source{ID: "another-app-guid"},
-					Destination: models.Destination{
+					Source: store.Source{ID: "another-app-guid"},
+					Destination: store.Destination{
 						ID:       "yet-another-app-guid",
 						Protocol: "udp",
 						Port:     5555,
@@ -951,9 +950,9 @@ var _ = Describe("Store", func() {
 		})
 
 		It("deletes the specified policies", func() {
-			err := dataStore.Delete([]models.Policy{{
-				Source: models.Source{ID: "some-app-guid"},
-				Destination: models.Destination{
+			err := dataStore.Delete([]store.Policy{{
+				Source: store.Source{ID: "some-app-guid"},
+				Destination: store.Destination{
 					ID:       "some-other-app-guid",
 					Protocol: "tcp",
 					Port:     8080,
@@ -963,9 +962,9 @@ var _ = Describe("Store", func() {
 
 			policies, err := dataStore.All()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(policies).To(Equal([]models.Policy{{
-				Source: models.Source{ID: "another-app-guid", Tag: "03"},
-				Destination: models.Destination{
+			Expect(policies).To(Equal([]store.Policy{{
+				Source: store.Source{ID: "another-app-guid", Tag: "03"},
+				Destination: store.Destination{
 					ID:       "yet-another-app-guid",
 					Protocol: "udp",
 					Port:     5555,
@@ -975,9 +974,9 @@ var _ = Describe("Store", func() {
 		})
 
 		It("deletes the tags if no longer referenced", func() {
-			err := dataStore.Delete([]models.Policy{{
-				Source: models.Source{ID: "some-app-guid"},
-				Destination: models.Destination{
+			err := dataStore.Delete([]store.Policy{{
+				Source: store.Source{ID: "some-app-guid"},
+				Destination: store.Destination{
 					ID:       "some-other-app-guid",
 					Protocol: "tcp",
 					Port:     8080,
@@ -987,7 +986,7 @@ var _ = Describe("Store", func() {
 
 			policies, err := dataStore.Tags()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(policies).To(Equal([]models.Tag{{
+			Expect(policies).To(Equal([]store.Tag{{
 				ID:  "another-app-guid",
 				Tag: "03",
 			}, {
@@ -1037,9 +1036,9 @@ var _ = Describe("Store", func() {
 					})
 
 					It("swallows the error and continues", func() {
-						err = dataStore.Delete([]models.Policy{
-							models.Policy{Source: models.Source{ID: "0"}},
-							models.Policy{Source: models.Source{ID: "apple"}, Destination: models.Destination{ID: "banana"}},
+						err = dataStore.Delete([]store.Policy{
+							{Source: store.Source{ID: "0"}},
+							{Source: store.Source{ID: "apple"}, Destination: store.Destination{ID: "banana"}},
 						})
 						Expect(err).NotTo(HaveOccurred())
 						Expect(fakeGroup.GetIDCallCount()).To(Equal(3))
@@ -1060,9 +1059,9 @@ var _ = Describe("Store", func() {
 						fakeGroup.GetIDReturns(-1, errors.New("some-get-error"))
 					})
 					It("returns the error", func() {
-						err = dataStore.Delete([]models.Policy{{
-							Source: models.Source{ID: "some-app-guid"},
-							Destination: models.Destination{
+						err = dataStore.Delete([]store.Policy{{
+							Source: store.Source{ID: "some-app-guid"},
+							Destination: store.Destination{
 								ID:       "some-other-app-guid",
 								Protocol: "tcp",
 								Port:     8080,
@@ -1085,9 +1084,9 @@ var _ = Describe("Store", func() {
 					})
 
 					It("swallows the error and continues", func() {
-						err = dataStore.Delete([]models.Policy{
-							models.Policy{Source: models.Source{ID: "peach"}, Destination: models.Destination{ID: "pear"}},
-							models.Policy{Source: models.Source{ID: "apple"}, Destination: models.Destination{ID: "banana"}},
+						err = dataStore.Delete([]store.Policy{
+							{Source: store.Source{ID: "peach"}, Destination: store.Destination{ID: "pear"}},
+							{Source: store.Source{ID: "apple"}, Destination: store.Destination{ID: "banana"}},
 						})
 						Expect(err).NotTo(HaveOccurred())
 						Expect(fakeGroup.GetIDCallCount()).To(Equal(4))
@@ -1118,9 +1117,9 @@ var _ = Describe("Store", func() {
 						}
 					})
 					It("returns a error", func() {
-						err = dataStore.Delete([]models.Policy{{
-							Source: models.Source{ID: "some-app-guid"},
-							Destination: models.Destination{
+						err = dataStore.Delete([]store.Policy{{
+							Source: store.Source{ID: "some-app-guid"},
+							Destination: store.Destination{
 								ID:       "some-other-app-guid",
 								Protocol: "tcp",
 								Port:     8080,
@@ -1143,9 +1142,9 @@ var _ = Describe("Store", func() {
 					})
 
 					It("swallows the error and continues", func() {
-						err = dataStore.Delete([]models.Policy{
-							models.Policy{Source: models.Source{ID: "peach"}, Destination: models.Destination{ID: "pear"}},
-							models.Policy{Source: models.Source{ID: "apple"}, Destination: models.Destination{ID: "banana"}},
+						err = dataStore.Delete([]store.Policy{
+							{Source: store.Source{ID: "peach"}, Destination: store.Destination{ID: "pear"}},
+							{Source: store.Source{ID: "apple"}, Destination: store.Destination{ID: "banana"}},
 						})
 						Expect(err).NotTo(HaveOccurred())
 						Expect(fakePolicy.DeleteCallCount()).To(Equal(1))
@@ -1158,9 +1157,9 @@ var _ = Describe("Store", func() {
 					})
 
 					It("returns a error", func() {
-						err = dataStore.Delete([]models.Policy{{
-							Source: models.Source{ID: "some-app-guid"},
-							Destination: models.Destination{
+						err = dataStore.Delete([]store.Policy{{
+							Source: store.Source{ID: "some-app-guid"},
+							Destination: store.Destination{
 								ID:       "some-other-app-guid",
 								Protocol: "tcp",
 								Port:     8080,
@@ -1183,9 +1182,9 @@ var _ = Describe("Store", func() {
 					})
 
 					It("swallows the error and continues", func() {
-						err = dataStore.Delete([]models.Policy{
-							models.Policy{Source: models.Source{ID: "peach"}, Destination: models.Destination{ID: "pear"}},
-							models.Policy{Source: models.Source{ID: "apple"}, Destination: models.Destination{ID: "banana"}},
+						err = dataStore.Delete([]store.Policy{
+							{Source: store.Source{ID: "peach"}, Destination: store.Destination{ID: "pear"}},
+							{Source: store.Source{ID: "apple"}, Destination: store.Destination{ID: "banana"}},
 						})
 						Expect(err).NotTo(HaveOccurred())
 						Expect(fakePolicy.DeleteCallCount()).To(Equal(2))
@@ -1198,9 +1197,9 @@ var _ = Describe("Store", func() {
 					})
 
 					It("returns a error", func() {
-						err = dataStore.Delete([]models.Policy{{
-							Source: models.Source{ID: "some-app-guid"},
-							Destination: models.Destination{
+						err = dataStore.Delete([]store.Policy{{
+							Source: store.Source{ID: "some-app-guid"},
+							Destination: store.Destination{
 								ID:       "some-other-app-guid",
 								Protocol: "tcp",
 								Port:     8080,
@@ -1217,9 +1216,9 @@ var _ = Describe("Store", func() {
 				})
 
 				It("returns a error", func() {
-					err = dataStore.Delete([]models.Policy{{
-						Source: models.Source{ID: "some-app-guid"},
-						Destination: models.Destination{
+					err = dataStore.Delete([]store.Policy{{
+						Source: store.Source{ID: "some-app-guid"},
+						Destination: store.Destination{
 							ID:       "some-other-app-guid",
 							Protocol: "tcp",
 							Port:     8080,
@@ -1235,9 +1234,9 @@ var _ = Describe("Store", func() {
 				})
 
 				It("returns a error", func() {
-					err = dataStore.Delete([]models.Policy{{
-						Source: models.Source{ID: "some-app-guid"},
-						Destination: models.Destination{
+					err = dataStore.Delete([]store.Policy{{
+						Source: store.Source{ID: "some-app-guid"},
+						Destination: store.Destination{
 							ID:       "some-other-app-guid",
 							Protocol: "tcp",
 							Port:     8080,
@@ -1253,9 +1252,9 @@ var _ = Describe("Store", func() {
 				})
 
 				It("returns a error", func() {
-					err = dataStore.Delete([]models.Policy{{
-						Source: models.Source{ID: "some-app-guid"},
-						Destination: models.Destination{
+					err = dataStore.Delete([]store.Policy{{
+						Source: store.Source{ID: "some-app-guid"},
+						Destination: store.Destination{
 							ID:       "some-other-app-guid",
 							Protocol: "tcp",
 							Port:     8080,
@@ -1271,9 +1270,9 @@ var _ = Describe("Store", func() {
 				})
 
 				It("returns a error", func() {
-					err = dataStore.Delete([]models.Policy{{
-						Source: models.Source{ID: "some-app-guid"},
-						Destination: models.Destination{
+					err = dataStore.Delete([]store.Policy{{
+						Source: store.Source{ID: "some-app-guid"},
+						Destination: store.Destination{
 							ID:       "some-other-app-guid",
 							Protocol: "tcp",
 							Port:     8080,
@@ -1289,9 +1288,9 @@ var _ = Describe("Store", func() {
 				})
 
 				It("returns a error", func() {
-					err = dataStore.Delete([]models.Policy{{
-						Source: models.Source{ID: "some-app-guid"},
-						Destination: models.Destination{
+					err = dataStore.Delete([]store.Policy{{
+						Source: store.Source{ID: "some-app-guid"},
+						Destination: store.Destination{
 							ID:       "some-other-app-guid",
 							Protocol: "tcp",
 							Port:     8080,

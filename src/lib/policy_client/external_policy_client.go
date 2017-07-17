@@ -3,7 +3,7 @@ package policy_client
 import (
 	"fmt"
 	"net/http"
-	"policy-server/models"
+	"policy-server/api"
 	"strings"
 
 	"code.cloudfoundry.org/cf-networking-helpers/json_client"
@@ -12,10 +12,10 @@ import (
 
 //go:generate counterfeiter -o ../fakes/external_policy_client.go --fake-name ExternalPolicyClient . ExternalPolicyClient
 type ExternalPolicyClient interface {
-	GetPolicies(token string) ([]models.Policy, error)
-	GetPoliciesByID(token string, ids ...string) ([]models.Policy, error)
-	DeletePolicies(token string, policies []models.Policy) error
-	AddPolicies(token string, policies []models.Policy) error
+	GetPolicies(token string) ([]api.Policy, error)
+	GetPoliciesByID(token string, ids ...string) ([]api.Policy, error)
+	DeletePolicies(token string, policies []api.Policy) error
+	AddPolicies(token string, policies []api.Policy) error
 }
 
 type ExternalClient struct {
@@ -30,9 +30,9 @@ func NewExternal(logger lager.Logger, httpClient json_client.HttpClient, baseURL
 	}
 }
 
-func (c *ExternalClient) GetPolicies(token string) ([]models.Policy, error) {
+func (c *ExternalClient) GetPolicies(token string) ([]api.Policy, error) {
 	var policies struct {
-		Policies []models.Policy `json:"policies"`
+		Policies []api.Policy `json:"policies"`
 	}
 	err := c.JsonClient.Do("GET", "/networking/v0/external/policies", nil, &policies, token)
 	if err != nil {
@@ -41,9 +41,9 @@ func (c *ExternalClient) GetPolicies(token string) ([]models.Policy, error) {
 	return policies.Policies, nil
 }
 
-func (c *ExternalClient) GetPoliciesByID(token string, ids ...string) ([]models.Policy, error) {
+func (c *ExternalClient) GetPoliciesByID(token string, ids ...string) ([]api.Policy, error) {
 	var policies struct {
-		Policies []models.Policy `json:"policies"`
+		Policies []api.Policy `json:"policies"`
 	}
 	route := "/networking/v0/external/policies?id=" + strings.Join(ids, ",")
 	err := c.JsonClient.Do("GET", route, nil, &policies, token)
@@ -53,10 +53,10 @@ func (c *ExternalClient) GetPoliciesByID(token string, ids ...string) ([]models.
 	return policies.Policies, nil
 }
 
-func (c *ExternalClient) AddPolicies(token string, policies []models.Policy) error {
+func (c *ExternalClient) AddPolicies(token string, policies []api.Policy) error {
 	chunks := c.Chunker.Chunk(policies)
 	for _, chunk := range chunks {
-		reqPolicies := map[string][]models.Policy{
+		reqPolicies := map[string][]api.Policy{
 			"policies": chunk,
 		}
 		err := c.JsonClient.Do("POST", "/networking/v0/external/policies", reqPolicies, nil, token)
@@ -67,10 +67,10 @@ func (c *ExternalClient) AddPolicies(token string, policies []models.Policy) err
 	return nil
 }
 
-func (c *ExternalClient) DeletePolicies(token string, policies []models.Policy) error {
+func (c *ExternalClient) DeletePolicies(token string, policies []api.Policy) error {
 	chunks := c.Chunker.Chunk(policies)
 	for _, chunk := range chunks {
-		reqPolicies := map[string][]models.Policy{
+		reqPolicies := map[string][]api.Policy{
 			"policies": chunk,
 		}
 		err := c.JsonClient.Do("POST", "/networking/v0/external/policies/delete", reqPolicies, nil, token)

@@ -9,7 +9,7 @@ import (
 	"net"
 	"net/http"
 	"os/exec"
-	"policy-server/models"
+	"policy-server/api"
 	"strings"
 	"time"
 
@@ -272,17 +272,17 @@ func getGuids(srcAppNames, dstAppNames []string) ([]string, []string) {
 	return srcGuids, dstGuids
 }
 
-func getPolicies(srcList, dstList []string, dstPorts []int) []models.Policy {
+func getPolicies(srcList, dstList []string, dstPorts []int) []api.Policy {
 	srcGuids, dstGuids := getGuids(srcList, dstList)
-	policies := []models.Policy{}
+	policies := []api.Policy{}
 	for _, srcGuid := range srcGuids {
 		for _, dstGuid := range dstGuids {
 			for _, port := range dstPorts {
-				policies = append(policies, models.Policy{
-					Source: models.Source{
+				policies = append(policies, api.Policy{
+					Source: api.Source{
 						ID: srcGuid,
 					},
-					Destination: models.Destination{
+					Destination: api.Destination{
 						ID:       dstGuid,
 						Port:     port,
 						Protocol: "tcp",

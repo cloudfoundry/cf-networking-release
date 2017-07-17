@@ -9,7 +9,7 @@ import (
 	"net/http/httptest"
 	"policy-server/handlers"
 	"policy-server/handlers/fakes"
-	"policy-server/models"
+	"policy-server/api"
 	"policy-server/uaa_client"
 
 	hfakes "code.cloudfoundry.org/cf-networking-helpers/fakes"
@@ -19,6 +19,7 @@ import (
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"policy-server/store"
 )
 
 var _ = Describe("PoliciesCreate", func() {
@@ -27,7 +28,7 @@ var _ = Describe("PoliciesCreate", func() {
 		request           *http.Request
 		handler           *handlers.PoliciesCreate
 		resp              *httptest.ResponseRecorder
-		fakeStore         *fakes.Store
+		fakeStore         *fakes.DataStore
 		fakeValidator     *fakes.Validator
 		fakePolicyGuard   *fakes.PolicyGuard
 		fakeQuotaGuard    *fakes.QuotaGuard
@@ -70,7 +71,7 @@ var _ = Describe("PoliciesCreate", func() {
 		request, err = http.NewRequest("POST", "/networking/v0/external/policies", bytes.NewBuffer([]byte(requestJSON)))
 		Expect(err).NotTo(HaveOccurred())
 
-		fakeStore = &fakes.Store{}
+		fakeStore = &fakes.DataStore{}
 		fakeValidator = &fakes.Validator{}
 		fakePolicyGuard = &fakes.PolicyGuard{}
 		fakeQuotaGuard = &fakes.QuotaGuard{}
@@ -95,24 +96,44 @@ var _ = Describe("PoliciesCreate", func() {
 		resp = httptest.NewRecorder()
 	})
 	It("persists a new policy rule", func() {
-		expectedPolicies := []models.Policy{{
-			Source: models.Source{ID: "some-app-guid"},
-			Destination: models.Destination{
+		expectedPolicies := []api.Policy{{
+			Source: api.Source{ID: "some-app-guid"},
+			Destination: api.Destination{
 				ID:       "some-other-app-guid",
 				Protocol: "tcp",
-				Port:     8080,
-				Ports: models.Ports{
+				Ports: api.Ports{
 					Start: 8080,
 					End:   9090,
 				},
 			},
 		}, {
-			Source: models.Source{ID: "another-app-guid"},
-			Destination: models.Destination{
+			Source: api.Source{ID: "another-app-guid"},
+			Destination: api.Destination{
 				ID:       "some-other-app-guid",
 				Protocol: "udp",
-				Port:     1234,
-				Ports: models.Ports{
+				Ports: api.Ports{
+					Start: 1234,
+					End:   1234,
+				},
+			},
+		}}
+
+		expectedStorePolicies := []store.Policy{{
+			Source: store.Source{ID: "some-app-guid"},
+			Destination: store.Destination{
+				ID:       "some-other-app-guid",
+				Protocol: "tcp",
+				Ports: store.Ports{
+					Start: 8080,
+					End:   9090,
+				},
+			},
+		}, {
+			Source: store.Source{ID: "another-app-guid"},
+			Destination: store.Destination{
+				ID:       "some-other-app-guid",
+				Protocol: "udp",
+				Ports: store.Ports{
 					Start: 1234,
 					End:   1234,
 				},
@@ -131,7 +152,7 @@ var _ = Describe("PoliciesCreate", func() {
 		Expect(policies).To(Equal(expectedPolicies))
 		Expect(token).To(Equal(tokenData))
 		Expect(fakeStore.CreateCallCount()).To(Equal(1))
-		Expect(fakeStore.CreateArgsForCall(0)).To(Equal(expectedPolicies))
+		Expect(fakeStore.CreateArgsForCall(0)).To(Equal(expectedStorePolicies))
 		Expect(resp.Code).To(Equal(http.StatusOK))
 		Expect(resp.Body.String()).To(MatchJSON("{}"))
 	})
@@ -151,10 +172,9 @@ var _ = Describe("PoliciesCreate", func() {
 						SatisfyAll(
 							HaveKeyWithValue("source", HaveKeyWithValue("id", "some-app-guid")),
 							HaveKeyWithValue("destination", SatisfyAll(
-								HaveLen(4),
+								HaveLen(3),
 								HaveKeyWithValue("id", "some-other-app-guid"),
 								HaveKeyWithValue("protocol", "tcp"),
-								HaveKeyWithValue("port", BeEquivalentTo(8080)),
 								HaveKeyWithValue("ports", SatisfyAll(
 									HaveLen(2),
 									HaveKeyWithValue("start", BeEquivalentTo(8080)),
@@ -165,10 +185,9 @@ var _ = Describe("PoliciesCreate", func() {
 						SatisfyAll(
 							HaveKeyWithValue("source", HaveKeyWithValue("id", "another-app-guid")),
 							HaveKeyWithValue("destination", SatisfyAll(
-								HaveLen(4),
+								HaveLen(3),
 								HaveKeyWithValue("id", "some-other-app-guid"),
 								HaveKeyWithValue("protocol", "udp"),
-								HaveKeyWithValue("port", BeEquivalentTo(1234)),
 								HaveKeyWithValue("ports", SatisfyAll(
 									HaveLen(2),
 									HaveKeyWithValue("start", BeEquivalentTo(1234)),

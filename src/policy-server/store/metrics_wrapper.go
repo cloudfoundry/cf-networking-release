@@ -1,9 +1,6 @@
 package store
 
-import (
-	"policy-server/models"
-	"time"
-)
+import "time"
 
 //go:generate counterfeiter -o fakes/metrics_sender.go --fake-name MetricsSender . metricsSender
 type metricsSender interface {
@@ -16,7 +13,7 @@ type MetricsWrapper struct {
 	MetricsSender metricsSender
 }
 
-func (mw *MetricsWrapper) Create(policies []models.Policy) error {
+func (mw *MetricsWrapper) Create(policies []Policy) error {
 	startTime := time.Now()
 	err := mw.Store.Create(policies)
 	createTimeDuration := time.Now().Sub(startTime)
@@ -29,7 +26,7 @@ func (mw *MetricsWrapper) Create(policies []models.Policy) error {
 	return err
 }
 
-func (mw *MetricsWrapper) All() ([]models.Policy, error) {
+func (mw *MetricsWrapper) All() ([]Policy, error) {
 	startTime := time.Now()
 	policies, err := mw.Store.All()
 	allTimeDuration := time.Now().Sub(startTime)
@@ -42,7 +39,7 @@ func (mw *MetricsWrapper) All() ([]models.Policy, error) {
 	return policies, err
 }
 
-func (mw *MetricsWrapper) Delete(policies []models.Policy) error {
+func (mw *MetricsWrapper) Delete(policies []Policy) error {
 	startTime := time.Now()
 	err := mw.Store.Delete(policies)
 	deleteTimeDuration := time.Now().Sub(startTime)
@@ -55,7 +52,7 @@ func (mw *MetricsWrapper) Delete(policies []models.Policy) error {
 	return err
 }
 
-func (mw *MetricsWrapper) Tags() ([]models.Tag, error) {
+func (mw *MetricsWrapper) Tags() ([]Tag, error) {
 	startTime := time.Now()
 	tags, err := mw.Store.Tags()
 	tagsTimeDuration := time.Now().Sub(startTime)
@@ -68,7 +65,7 @@ func (mw *MetricsWrapper) Tags() ([]models.Tag, error) {
 	return tags, err
 }
 
-func (mw *MetricsWrapper) ByGuids(srcGuids, dstGuids []string) ([]models.Policy, error) {
+func (mw *MetricsWrapper) ByGuids(srcGuids, dstGuids []string) ([]Policy, error) {
 	startTime := time.Now()
 	policies, err := mw.Store.ByGuids(srcGuids, dstGuids)
 	byGuidsTimeDuration := time.Now().Sub(startTime)

@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"fmt"
-	"policy-server/models"
+	"policy-server/api"
 	"policy-server/uaa_client"
 )
 
@@ -15,9 +15,9 @@ type uaaClient interface {
 //go:generate counterfeiter -o fakes/cc_client.go --fake-name CCClient . ccClient
 type ccClient interface {
 	GetAppSpaces(token string, appGUIDs []string) (map[string]string, error)
-	GetSpace(token, spaceGUID string) (*models.Space, error)
+	GetSpace(token, spaceGUID string) (*api.Space, error)
 	GetSpaceGUIDs(token string, appGUIDs []string) ([]string, error)
-	GetUserSpace(token, userGUID string, spaces models.Space) (*models.Space, error)
+	GetUserSpace(token, userGUID string, spaces api.Space) (*api.Space, error)
 	GetUserSpaces(token, userGUID string) (map[string]struct{}, error)
 }
 
@@ -27,7 +27,7 @@ type PolicyFilter struct {
 	ChunkSize int
 }
 
-func (f *PolicyFilter) FilterPolicies(policies []models.Policy, userToken uaa_client.CheckTokenResponse) ([]models.Policy, error) {
+func (f *PolicyFilter) FilterPolicies(policies []api.Policy, userToken uaa_client.CheckTokenResponse) ([]api.Policy, error) {
 	for _, scope := range userToken.Scope {
 		if scope == "network.admin" {
 			return policies, nil
@@ -89,8 +89,8 @@ func getChunks(appGuids []string, chunkSize int) [][]string {
 	return appGuidChunks
 }
 
-func filter(policies []models.Policy, appSpaces map[string]string, userSpaces map[string]struct{}) []models.Policy {
-	filtered := []models.Policy{}
+func filter(policies []api.Policy, appSpaces map[string]string, userSpaces map[string]struct{}) []api.Policy {
+	filtered := []api.Policy{}
 
 	for _, policy := range policies {
 		_, sourceFound := userSpaces[appSpaces[policy.Source.ID]]

@@ -7,56 +7,64 @@ import (
 	"net/http/httptest"
 	"policy-server/handlers"
 	"policy-server/handlers/fakes"
-	"policy-server/models"
-
 	hfakes "code.cloudfoundry.org/cf-networking-helpers/fakes"
 	"code.cloudfoundry.org/lager"
 
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"policy-server/store"
 )
 
 var _ = Describe("PoliciesIndexInternal", func() {
 	var (
 		handler           *handlers.PoliciesIndexInternal
 		resp              *httptest.ResponseRecorder
-		fakeStore         *fakes.Store
+		fakeStore         *fakes.DataStore
 		fakeErrorResponse *fakes.ErrorResponse
 		logger            *lagertest.TestLogger
 		marshaler         *hfakes.Marshaler
 	)
 
 	BeforeEach(func() {
-		allPolicies := []models.Policy{{
-			Source: models.Source{ID: "some-app-guid"},
-			Destination: models.Destination{
+		allPolicies := []store.Policy{{
+			Source: store.Source{ID: "some-app-guid"},
+			Destination: store.Destination{
 				ID:       "some-other-app-guid",
 				Protocol: "tcp",
-				Port:     8080,
+				Ports: store.Ports{
+					Start: 8080,
+					End:   8080,
+				},
 			},
 		}, {
-			Source: models.Source{ID: "another-app-guid"},
-			Destination: models.Destination{
+			Source: store.Source{ID: "another-app-guid"},
+			Destination: store.Destination{
 				ID:       "some-other-app-guid",
 				Protocol: "tcp",
-				Port:     1234,
+				Ports: store.Ports{
+					Start: 1234,
+					End:   1234,
+				},
 			},
 		},
 		}
 
-		byGuidsPolicies := []models.Policy{{
-			Source: models.Source{ID: "some-app-guid"},
-			Destination: models.Destination{
+		byGuidsPolicies := []store.Policy{{
+			Source: store.Source{ID: "some-app-guid"},
+			Destination: store.Destination{
 				ID:       "some-other-app-guid",
 				Protocol: "tcp",
-				Port:     8080,
+				Ports: store.Ports{
+					Start: 8080,
+					End:   8080,
+				},
 			},
 		}}
 
 		marshaler = &hfakes.Marshaler{}
 		marshaler.MarshalStub = json.Marshal
-		fakeStore = &fakes.Store{}
+		fakeStore = &fakes.DataStore{}
 		fakeStore.AllReturns(allPolicies, nil)
 		fakeStore.ByGuidsReturns(byGuidsPolicies, nil)
 		logger = lagertest.NewTestLogger("test")
@@ -79,7 +87,6 @@ var _ = Describe("PoliciesIndexInternal", func() {
 					"destination": {
 						"id": "some-other-app-guid",
 						"protocol": "tcp",
-						"port": 8080,
 						"ports": {
 							"start": 8080,
 							"end": 8080
@@ -112,7 +119,6 @@ var _ = Describe("PoliciesIndexInternal", func() {
 					"destination": {
 						"id": "some-other-app-guid",
 						"protocol": "tcp",
-						"port": 8080,
 						"ports": {
 							"start": 8080,
 							"end": 8080
@@ -126,7 +132,6 @@ var _ = Describe("PoliciesIndexInternal", func() {
 					"destination": {
 						"id": "some-other-app-guid",
 						"protocol": "tcp",
-						"port": 1234,
 						"ports": {
 							"start": 1234,
 							"end": 1234

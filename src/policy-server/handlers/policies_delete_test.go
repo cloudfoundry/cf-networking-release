@@ -8,7 +8,7 @@ import (
 	"net/http/httptest"
 	"policy-server/handlers"
 	"policy-server/handlers/fakes"
-	"policy-server/models"
+	"policy-server/api"
 	"policy-server/uaa_client"
 
 	hfakes "code.cloudfoundry.org/cf-networking-helpers/fakes"
@@ -18,6 +18,7 @@ import (
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"policy-server/store"
 )
 
 var _ = Describe("PoliciesDelete", func() {
@@ -26,10 +27,11 @@ var _ = Describe("PoliciesDelete", func() {
 		request           *http.Request
 		handler           *handlers.PoliciesDelete
 		resp              *httptest.ResponseRecorder
-		fakeStore         *fakes.Store
+		fakeStore         *fakes.DataStore
 		logger            *lagertest.TestLogger
 		fakeUnmarshaler   *hfakes.Unmarshaler
-		expectedPolicies  []models.Policy
+		expectedPolicies  []api.Policy
+		expectedStorePolicies  []store.Policy
 		fakeValidator     *fakes.Validator
 		fakePolicyGuard   *fakes.PolicyGuard
 		fakeErrorResponse *fakes.ErrorResponse
@@ -48,14 +50,17 @@ var _ = Describe("PoliciesDelete", func() {
 				"destination": {
 					"id": "some-other-app-guid",
 					"protocol": "tcp",
-					"port": 8080
+					"ports": {
+					  "start": 8080,
+					  "end": 8080
+					}
 				}
 			}
         ]}`
 		request, err = http.NewRequest("POST", Route, bytes.NewBuffer([]byte(requestJSON)))
 		Expect(err).NotTo(HaveOccurred())
 
-		fakeStore = &fakes.Store{}
+		fakeStore = &fakes.DataStore{}
 		fakeValidator = &fakes.Validator{}
 		fakePolicyGuard = &fakes.PolicyGuard{}
 		logger = lagertest.NewTestLogger("test")
@@ -71,18 +76,30 @@ var _ = Describe("PoliciesDelete", func() {
 		}
 		resp = httptest.NewRecorder()
 
-		expectedPolicies = []models.Policy{{
-			Source: models.Source{ID: "some-app-guid"},
-			Destination: models.Destination{
+		expectedPolicies = []api.Policy{{
+			Source: api.Source{ID: "some-app-guid"},
+			Destination: api.Destination{
 				ID:       "some-other-app-guid",
 				Protocol: "tcp",
-				Port:     8080,
-				Ports: models.Ports{
+				Ports: api.Ports{
 					Start: 8080,
 					End:   8080,
 				},
 			},
 		}}
+
+		expectedStorePolicies = []store.Policy{{
+			Source: store.Source{ID: "some-app-guid"},
+			Destination: store.Destination{
+				ID:       "some-other-app-guid",
+				Protocol: "tcp",
+				Ports: store.Ports{
+					Start: 8080,
+					End:   8080,
+				},
+			},
+		}}
+		
 		tokenData = uaa_client.CheckTokenResponse{
 			Scope:    []string{"network.admin"},
 			UserName: "some_user",
@@ -101,7 +118,7 @@ var _ = Describe("PoliciesDelete", func() {
 		Expect(policies).To(Equal(expectedPolicies))
 		Expect(token).To(Equal(tokenData))
 		Expect(fakeStore.DeleteCallCount()).To(Equal(1))
-		Expect(fakeStore.DeleteArgsForCall(0)).To(Equal(expectedPolicies))
+		Expect(fakeStore.DeleteArgsForCall(0)).To(Equal(expectedStorePolicies))
 		Expect(resp.Code).To(Equal(http.StatusOK))
 		Expect(resp.Body.String()).To(MatchJSON("{}"))
 	})
@@ -121,7 +138,11 @@ var _ = Describe("PoliciesDelete", func() {
 							HaveKeyWithValue("destination", SatisfyAll(
 								HaveKeyWithValue("id", "some-other-app-guid"),
 								HaveKeyWithValue("protocol", "tcp"),
-								HaveKeyWithValue("port", BeEquivalentTo(8080)),
+								HaveKeyWithValue("ports", SatisfyAll(
+									HaveLen(2),
+									HaveKeyWithValue("start", BeEquivalentTo(8080)),
+									HaveKeyWithValue("end", BeEquivalentTo(8080)),
+								)),
 							)),
 						),
 					),

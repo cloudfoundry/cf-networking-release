@@ -2,27 +2,27 @@
 package fakes
 
 import (
-	"policy-server/models"
+	"policy-server/api"
 	"sync"
 )
 
 type PolicyCleaner struct {
-	DeleteStalePoliciesStub        func() ([]models.Policy, error)
+	DeleteStalePoliciesStub        func() ([]api.Policy, error)
 	deleteStalePoliciesMutex       sync.RWMutex
 	deleteStalePoliciesArgsForCall []struct{}
 	deleteStalePoliciesReturns     struct {
-		result1 []models.Policy
+		result1 []api.Policy
 		result2 error
 	}
 	deleteStalePoliciesReturnsOnCall map[int]struct {
-		result1 []models.Policy
+		result1 []api.Policy
 		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *PolicyCleaner) DeleteStalePolicies() ([]models.Policy, error) {
+func (fake *PolicyCleaner) DeleteStalePolicies() ([]api.Policy, error) {
 	fake.deleteStalePoliciesMutex.Lock()
 	ret, specificReturn := fake.deleteStalePoliciesReturnsOnCall[len(fake.deleteStalePoliciesArgsForCall)]
 	fake.deleteStalePoliciesArgsForCall = append(fake.deleteStalePoliciesArgsForCall, struct{}{})
@@ -43,24 +43,24 @@ func (fake *PolicyCleaner) DeleteStalePoliciesCallCount() int {
 	return len(fake.deleteStalePoliciesArgsForCall)
 }
 
-func (fake *PolicyCleaner) DeleteStalePoliciesReturns(result1 []models.Policy, result2 error) {
+func (fake *PolicyCleaner) DeleteStalePoliciesReturns(result1 []api.Policy, result2 error) {
 	fake.DeleteStalePoliciesStub = nil
 	fake.deleteStalePoliciesReturns = struct {
-		result1 []models.Policy
+		result1 []api.Policy
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *PolicyCleaner) DeleteStalePoliciesReturnsOnCall(i int, result1 []models.Policy, result2 error) {
+func (fake *PolicyCleaner) DeleteStalePoliciesReturnsOnCall(i int, result1 []api.Policy, result2 error) {
 	fake.DeleteStalePoliciesStub = nil
 	if fake.deleteStalePoliciesReturnsOnCall == nil {
 		fake.deleteStalePoliciesReturnsOnCall = make(map[int]struct {
-			result1 []models.Policy
+			result1 []api.Policy
 			result2 error
 		})
 	}
 	fake.deleteStalePoliciesReturnsOnCall[i] = struct {
-		result1 []models.Policy
+		result1 []api.Policy
 		result2 error
 	}{result1, result2}
 }

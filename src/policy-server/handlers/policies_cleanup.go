@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"net/http"
-	"policy-server/models"
+	"policy-server/api"
 	"policy-server/uaa_client"
 
 	"code.cloudfoundry.org/cf-networking-helpers/marshal"
@@ -11,7 +11,7 @@ import (
 
 //go:generate counterfeiter -o fakes/policy_cleaner.go --fake-name PolicyCleaner . policyCleaner
 type policyCleaner interface {
-	DeleteStalePolicies() ([]models.Policy, error)
+	DeleteStalePolicies() ([]api.Policy, error)
 }
 
 //go:generate counterfeiter -o fakes/error_response.go --fake-name ErrorResponse . errorResponse
@@ -39,7 +39,7 @@ func (h *PoliciesCleanup) ServeHTTP(logger lager.Logger, w http.ResponseWriter, 
 
 	policyCleanup := struct {
 		TotalPolicies int             `json:"total_policies"`
-		Policies      []models.Policy `json:"policies"`
+		Policies      []api.Policy `json:"policies"`
 	}{len(policies), policies}
 	for i, _ := range policyCleanup.Policies {
 		policyCleanup.Policies[i].Source.Tag = ""

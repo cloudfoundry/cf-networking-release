@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"policy-server/handlers"
 	"policy-server/handlers/fakes"
-	"policy-server/models"
+	"policy-server/api"
 	"policy-server/uaa_client"
 
 	hfakes "code.cloudfoundry.org/cf-networking-helpers/fakes"
@@ -27,18 +27,21 @@ var _ = Describe("PoliciesCleanup", func() {
 		fakePolicyCleaner *fakes.PolicyCleaner
 		fakeMarshaler     *hfakes.Marshaler
 		fakeErrorResponse *fakes.ErrorResponse
-		policies          []models.Policy
+		policies          []api.Policy
 		tokenData         uaa_client.CheckTokenResponse
 	)
 
 	BeforeEach(func() {
-		policies = []models.Policy{{
-			Source: models.Source{ID: "live-guid", Tag: "tag"},
-			Destination: models.Destination{
+		policies = []api.Policy{{
+			Source: api.Source{ID: "live-guid", Tag: "tag"},
+			Destination: api.Destination{
 				ID:       "dead-guid",
 				Tag:      "tag",
 				Protocol: "tcp",
-				Port:     8080,
+				Ports: api.Ports{
+					Start: 8080,
+					End:   8080,
+				},
 			},
 		}}
 
@@ -77,7 +80,7 @@ var _ = Describe("PoliciesCleanup", func() {
 		}
 		deletedPolicies := struct {
 			TotalPolicies int             `json:"total_policies"`
-			Policies      []models.Policy `json:"policies"`
+			Policies      []api.Policy `json:"policies"`
 		}{1, policies}
 
 		Expect(fakeMarshaler.MarshalArgsForCall(0)).To(Equal(deletedPolicies))
@@ -93,7 +96,6 @@ var _ = Describe("PoliciesCleanup", func() {
 				"destination": {
 					"id": "dead-guid",
 					"protocol": "tcp",
-					"port": 8080,
 					"ports": {
 						"start": 8080,
 						"end": 8080

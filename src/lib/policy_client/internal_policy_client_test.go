@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"lib/policy_client"
-	"policy-server/models"
+	"policy-server/api"
 
 	hfakes "code.cloudfoundry.org/cf-networking-helpers/fakes"
 
@@ -43,16 +43,16 @@ var _ = Describe("InternalClient", func() {
 			Expect(route).To(Equal("/networking/v0/internal/policies"))
 			Expect(reqData).To(BeNil())
 
-			Expect(policies).To(Equal([]models.Policy{
+			Expect(policies).To(Equal([]api.Policy{
 				{
-					Source: models.Source{
+					Source: api.Source{
 						ID:  "some-app-guid",
 						Tag: "BEEF",
 					},
-					Destination: models.Destination{
+					Destination: api.Destination{
 						ID:   "some-other-app-guid",
 						Port: 8090,
-						Ports: models.Ports{
+						Ports: api.Ports{
 							Start: 8090,
 							End:   8090,
 						},
@@ -93,16 +93,16 @@ var _ = Describe("InternalClient", func() {
 			Expect(route).To(Equal("/networking/v0/internal/policies?id=some-app-guid,some-other-app-guid"))
 			Expect(reqData).To(BeNil())
 
-			Expect(policies).To(Equal([]models.Policy{
+			Expect(policies).To(Equal([]api.Policy{
 				{
-					Source: models.Source{
+					Source: api.Source{
 						ID:  "some-app-guid",
 						Tag: "BEEF",
 					},
-					Destination: models.Destination{
+					Destination: api.Destination{
 						ID:   "some-other-app-guid",
 						Port: 8090,
-						Ports: models.Ports{
+						Ports: api.Ports{
 							Start: 8090,
 							End:   8090,
 						},

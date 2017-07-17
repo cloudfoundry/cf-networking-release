@@ -3,26 +3,27 @@ package handlers
 import (
 	"net/http"
 	"net/url"
-	"policy-server/models"
+	"policy-server/api"
+	"policy-server/store"
 	"strings"
 
 	"code.cloudfoundry.org/cf-networking-helpers/marshal"
 	"code.cloudfoundry.org/lager"
 )
 
-//go:generate counterfeiter -o fakes/store.go --fake-name Store . store
-type store interface {
-	All() ([]models.Policy, error)
-	Create([]models.Policy) error
-	Delete([]models.Policy) error
-	Tags() ([]models.Tag, error)
-	ByGuids([]string, []string) ([]models.Policy, error)
+//go:generate counterfeiter -o fakes/data_store.go --fake-name DataStore . dataStore
+type dataStore interface {
+	All() ([]store.Policy, error)
+	Create([]store.Policy) error
+	Delete([]store.Policy) error
+	Tags() ([]store.Tag, error)
+	ByGuids([]string, []string) ([]store.Policy, error)
 	CheckDatabase() error
 }
 
 type PoliciesIndexInternal struct {
 	Logger        lager.Logger
-	Store         store
+	Store         dataStore
 	Marshaler     marshal.Marshaler
 	ErrorResponse errorResponse
 }
@@ -33,7 +34,7 @@ func (h *PoliciesIndexInternal) ServeHTTP(logger lager.Logger, w http.ResponseWr
 	queryValues := req.URL.Query()
 	ids := parseIds(queryValues)
 
-	var policies []models.Policy
+	var policies []store.Policy
 	var err error
 	if len(ids) == 0 {
 		policies, err = h.Store.All()
@@ -48,8 +49,8 @@ func (h *PoliciesIndexInternal) ServeHTTP(logger lager.Logger, w http.ResponseWr
 	}
 
 	policyResponse := struct {
-		Policies []models.Policy `json:"policies"`
-	}{policies}
+		Policies []api.Policy `json:"policies"`
+	}{api.MapStorePolicies(policies)}
 	bytes, err := h.Marshaler.Marshal(policyResponse)
 	if err != nil {
 		logger.Error("failed-marshalling-policies", err)

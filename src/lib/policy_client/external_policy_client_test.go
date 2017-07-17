@@ -6,7 +6,7 @@ import (
 	"lib/fakes"
 	"lib/policy_client"
 	"net/http"
-	"policy-server/models"
+	"policy-server/api"
 
 	hfakes "code.cloudfoundry.org/cf-networking-helpers/fakes"
 
@@ -26,35 +26,35 @@ var _ = Describe("ExternalClient", func() {
 	BeforeEach(func() {
 		jsonClient = &hfakes.JSONClient{}
 		fakeChunker = &fakes.Chunker{}
-		fakeChunker.ChunkReturns([][]models.Policy{
-			[]models.Policy{
+		fakeChunker.ChunkReturns([][]api.Policy{
+			[]api.Policy{
 				{
-					Source: models.Source{
+					Source: api.Source{
 						ID: "some-app-guid",
 					},
-					Destination: models.Destination{
+					Destination: api.Destination{
 						ID:       "some-other-app-guid",
 						Port:     8090,
 						Protocol: "tcp",
 					},
 				},
 				{
-					Source: models.Source{
+					Source: api.Source{
 						ID: "some-app-guid-2",
 					},
-					Destination: models.Destination{
+					Destination: api.Destination{
 						ID:       "some-other-app-guid-2",
 						Port:     8091,
 						Protocol: "tcp",
 					},
 				},
 			},
-			[]models.Policy{
+			[]api.Policy{
 				{
-					Source: models.Source{
+					Source: api.Source{
 						ID: "some-app-guid-3",
 					},
-					Destination: models.Destination{
+					Destination: api.Destination{
 						ID:       "some-other-app-guid-3",
 						Port:     8092,
 						Protocol: "tcp",
@@ -86,15 +86,15 @@ var _ = Describe("ExternalClient", func() {
 			Expect(route).To(Equal("/networking/v0/external/policies"))
 			Expect(reqData).To(BeNil())
 
-			Expect(policies).To(Equal([]models.Policy{
+			Expect(policies).To(Equal([]api.Policy{
 				{
-					Source: models.Source{
+					Source: api.Source{
 						ID: "some-app-guid",
 					},
-					Destination: models.Destination{
+					Destination: api.Destination{
 						ID:   "some-other-app-guid",
 						Port: 8090,
-						Ports: models.Ports{
+						Ports: api.Ports{
 							Start: 8090,
 							End:   8090,
 						},
@@ -145,15 +145,15 @@ var _ = Describe("ExternalClient", func() {
 			Expect(method).To(Equal("GET"))
 			Expect(route).To(Equal("/networking/v0/external/policies?id=some-app-guid,another-app-guid"))
 			Expect(reqData).To(BeNil())
-			Expect(policies).To(Equal([]models.Policy{
+			Expect(policies).To(Equal([]api.Policy{
 				{
-					Source: models.Source{
+					Source: api.Source{
 						ID: "some-app-guid",
 					},
-					Destination: models.Destination{
+					Destination: api.Destination{
 						ID:   "some-other-app-guid",
 						Port: 8090,
-						Ports: models.Ports{
+						Ports: api.Ports{
 							Start: 8090,
 							End:   8090,
 						},
@@ -188,7 +188,7 @@ var _ = Describe("ExternalClient", func() {
 	})
 
 	Describe("AddPolicies", func() {
-		var policiesToAdd []models.Policy
+		var policiesToAdd []api.Policy
 		BeforeEach(func() {
 			jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 				respBytes := []byte(`{}`)
@@ -196,12 +196,12 @@ var _ = Describe("ExternalClient", func() {
 				return nil
 			}
 
-			policiesToAdd = []models.Policy{
+			policiesToAdd = []api.Policy{
 				{
-					Source: models.Source{
+					Source: api.Source{
 						ID: "some-app-guid",
 					},
-					Destination: models.Destination{
+					Destination: api.Destination{
 						ID:       "some-other-app-guid",
 						Port:     8090,
 						Protocol: "tcp",
@@ -220,22 +220,22 @@ var _ = Describe("ExternalClient", func() {
 			method, route, reqData, _, token := jsonClient.DoArgsForCall(0)
 			Expect(method).To(Equal("POST"))
 			Expect(route).To(Equal("/networking/v0/external/policies"))
-			Expect(reqData).To(Equal(map[string][]models.Policy{
-				"policies": []models.Policy{{
-					Source: models.Source{
+			Expect(reqData).To(Equal(map[string][]api.Policy{
+				"policies": []api.Policy{{
+					Source: api.Source{
 						ID: "some-app-guid",
 					},
-					Destination: models.Destination{
+					Destination: api.Destination{
 						ID:       "some-other-app-guid",
 						Port:     8090,
 						Protocol: "tcp",
 					},
 				},
 					{
-						Source: models.Source{
+						Source: api.Source{
 							ID: "some-app-guid-2",
 						},
-						Destination: models.Destination{
+						Destination: api.Destination{
 							ID:       "some-other-app-guid-2",
 							Port:     8091,
 							Protocol: "tcp",
@@ -248,13 +248,13 @@ var _ = Describe("ExternalClient", func() {
 			method, route, reqData, _, token = jsonClient.DoArgsForCall(1)
 			Expect(method).To(Equal("POST"))
 			Expect(route).To(Equal("/networking/v0/external/policies"))
-			Expect(reqData).To(Equal(map[string][]models.Policy{
-				"policies": []models.Policy{
+			Expect(reqData).To(Equal(map[string][]api.Policy{
+				"policies": []api.Policy{
 					{
-						Source: models.Source{
+						Source: api.Source{
 							ID: "some-app-guid-3",
 						},
-						Destination: models.Destination{
+						Destination: api.Destination{
 							ID:       "some-other-app-guid-3",
 							Port:     8092,
 							Protocol: "tcp",
@@ -289,7 +289,7 @@ var _ = Describe("ExternalClient", func() {
 	})
 
 	Describe("DeletePolicies", func() {
-		var policiesToDelete []models.Policy
+		var policiesToDelete []api.Policy
 
 		BeforeEach(func() {
 			jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
@@ -298,12 +298,12 @@ var _ = Describe("ExternalClient", func() {
 				return nil
 			}
 
-			policiesToDelete = []models.Policy{
+			policiesToDelete = []api.Policy{
 				{
-					Source: models.Source{
+					Source: api.Source{
 						ID: "some-app-guid",
 					},
-					Destination: models.Destination{
+					Destination: api.Destination{
 						ID:       "some-other-app-guid",
 						Port:     8090,
 						Protocol: "tcp",
@@ -322,22 +322,22 @@ var _ = Describe("ExternalClient", func() {
 			method, route, reqData, _, token := jsonClient.DoArgsForCall(0)
 			Expect(method).To(Equal("POST"))
 			Expect(route).To(Equal("/networking/v0/external/policies/delete"))
-			Expect(reqData).To(Equal(map[string][]models.Policy{
-				"policies": []models.Policy{{
-					Source: models.Source{
+			Expect(reqData).To(Equal(map[string][]api.Policy{
+				"policies": []api.Policy{{
+					Source: api.Source{
 						ID: "some-app-guid",
 					},
-					Destination: models.Destination{
+					Destination: api.Destination{
 						ID:       "some-other-app-guid",
 						Port:     8090,
 						Protocol: "tcp",
 					},
 				},
 					{
-						Source: models.Source{
+						Source: api.Source{
 							ID: "some-app-guid-2",
 						},
-						Destination: models.Destination{
+						Destination: api.Destination{
 							ID:       "some-other-app-guid-2",
 							Port:     8091,
 							Protocol: "tcp",
@@ -350,13 +350,13 @@ var _ = Describe("ExternalClient", func() {
 			method, route, reqData, _, token = jsonClient.DoArgsForCall(1)
 			Expect(method).To(Equal("POST"))
 			Expect(route).To(Equal("/networking/v0/external/policies/delete"))
-			Expect(reqData).To(Equal(map[string][]models.Policy{
-				"policies": []models.Policy{
+			Expect(reqData).To(Equal(map[string][]api.Policy{
+				"policies": []api.Policy{
 					{
-						Source: models.Source{
+						Source: api.Source{
 							ID: "some-app-guid-3",
 						},
-						Destination: models.Destination{
+						Destination: api.Destination{
 							ID:       "some-other-app-guid-3",
 							Port:     8092,
 							Protocol: "tcp",

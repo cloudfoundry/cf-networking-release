@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"math"
-	"policy-server/models"
 	"policy-server/store/helpers"
 	"strings"
 	"time"
@@ -17,11 +16,11 @@ import (
 
 //go:generate counterfeiter -o fakes/store.go --fake-name Store . Store
 type Store interface {
-	Create([]models.Policy) error
-	All() ([]models.Policy, error)
-	Delete([]models.Policy) error
-	Tags() ([]models.Tag, error)
-	ByGuids([]string, []string) ([]models.Policy, error)
+	Create([]Policy) error
+	All() ([]Policy, error)
+	Delete([]Policy) error
+	Tags() ([]Tag, error)
+	ByGuids([]string, []string) ([]Policy, error)
 	CheckDatabase() error
 }
 
@@ -122,7 +121,7 @@ func (s *store) CheckDatabase() error {
 	return s.conn.QueryRow("SELECT 1").Scan(&result)
 }
 
-func (s *store) Create(policies []models.Policy) error {
+func (s *store) Create(policies []Policy) error {
 	tx, err := s.conn.Beginx()
 	if err != nil {
 		return fmt.Errorf("begin transaction: %s", err)
@@ -160,7 +159,7 @@ func (s *store) Create(policies []models.Policy) error {
 	return commit(tx)
 }
 
-func (s *store) Delete(policies []models.Policy) error {
+func (s *store) Delete(policies []Policy) error {
 	tx, err := s.conn.Beginx()
 	if err != nil {
 		return fmt.Errorf("begin transaction: %s", err)
@@ -255,8 +254,8 @@ func (s *store) deleteGroupRowIfLast(tx Transaction, group_id int) error {
 	return nil
 }
 
-func (s *store) policiesQuery(query string, args ...interface{}) ([]models.Policy, error) {
-	policies := []models.Policy{}
+func (s *store) policiesQuery(query string, args ...interface{}) ([]Policy, error) {
+	policies := []Policy{}
 	rebindedQuery := helpers.RebindForSQLDialect(query, s.conn.DriverName())
 
 	rows, err := s.conn.Query(rebindedQuery, args...)
@@ -282,17 +281,17 @@ func (s *store) policiesQuery(query string, args ...interface{}) ([]models.Polic
 			return nil, fmt.Errorf("listing all: %s", err)
 		}
 
-		policies = append(policies, models.Policy{
-			Source: models.Source{
+		policies = append(policies, Policy{
+			Source: Source{
 				ID:  source_id,
 				Tag: s.tagIntToString(source_tag),
 			},
-			Destination: models.Destination{
+			Destination: Destination{
 				ID:       destination_id,
 				Tag:      s.tagIntToString(destination_tag),
 				Protocol: protocol,
 				Port:     port,
-				Ports: models.Ports{
+				Ports: Ports{
 					Start: startPort,
 					End:   endPort,
 				},
@@ -306,11 +305,11 @@ func (s *store) policiesQuery(query string, args ...interface{}) ([]models.Polic
 	return policies, nil
 }
 
-func (s *store) ByGuids(srcGuids, destGuids []string) ([]models.Policy, error) {
+func (s *store) ByGuids(srcGuids, destGuids []string) ([]Policy, error) {
 	numSourceGuids := len(srcGuids)
 	numDestinationGuids := len(destGuids)
 	if numSourceGuids == 0 && numDestinationGuids == 0 {
-		return []models.Policy{}, nil
+		return []Policy{}, nil
 	}
 
 	var wheres []string
@@ -354,7 +353,7 @@ func (s *store) ByGuids(srcGuids, destGuids []string) ([]models.Policy, error) {
 	return s.policiesQuery(query, whereBindings...)
 }
 
-func (s *store) All() ([]models.Policy, error) {
+func (s *store) All() ([]Policy, error) {
 	return s.policiesQuery(`
 		select
 			src_grp.guid,
@@ -371,8 +370,8 @@ func (s *store) All() ([]models.Policy, error) {
 		left outer join groups as dst_grp on (destinations.group_id = dst_grp.id);`)
 }
 
-func (s *store) Tags() ([]models.Tag, error) {
-	tags := []models.Tag{}
+func (s *store) Tags() ([]Tag, error) {
+	tags := []Tag{}
 
 	rows, err := s.conn.Query(`
 		SELECT guid, id FROM groups
@@ -393,7 +392,7 @@ func (s *store) Tags() ([]models.Tag, error) {
 			return nil, fmt.Errorf("listing tags: %s", err)
 		}
 
-		tags = append(tags, models.Tag{
+		tags = append(tags, Tag{
 			ID:  id,
 			Tag: s.tagIntToString(tag),
 		})

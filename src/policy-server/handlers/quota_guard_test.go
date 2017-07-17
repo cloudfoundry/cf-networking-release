@@ -3,7 +3,8 @@ package handlers_test
 import (
 	"errors"
 	"policy-server/handlers"
-	"policy-server/models"
+	"policy-server/api"
+	"policy-server/store"
 	"policy-server/store/fakes"
 	"policy-server/uaa_client"
 
@@ -15,7 +16,7 @@ var _ = Describe("QuotaGuard", func() {
 	var (
 		quotaGuard *handlers.QuotaGuard
 		fakeStore  *fakes.Store
-		policies   []models.Policy
+		policies   []api.Policy
 		tokenData  uaa_client.CheckTokenResponse
 	)
 	BeforeEach(func() {
@@ -29,21 +30,21 @@ var _ = Describe("QuotaGuard", func() {
 			UserID:   "some-developer-guid",
 			UserName: "some-developer",
 		}
-		policies = []models.Policy{
+		policies = []api.Policy{
 			{
-				Source:      models.Source{ID: "some-app-guid"},
-				Destination: models.Destination{ID: "some-other-guid"},
+				Source:      api.Source{ID: "some-app-guid"},
+				Destination: api.Destination{ID: "some-other-guid"},
 			},
 			{
-				Source:      models.Source{ID: "some-app-guid"},
-				Destination: models.Destination{ID: "yet-another-guid"},
+				Source:      api.Source{ID: "some-app-guid"},
+				Destination: api.Destination{ID: "yet-another-guid"},
 			},
 			{
-				Source:      models.Source{ID: "some-other-app-guid"},
-				Destination: models.Destination{ID: "yet-another-guid"},
+				Source:      api.Source{ID: "some-other-app-guid"},
+				Destination: api.Destination{ID: "yet-another-guid"},
 			},
 		}
-		fakeStore.ByGuidsReturns([]models.Policy{}, nil)
+		fakeStore.ByGuidsReturns([]store.Policy{}, nil)
 	})
 	Context("when the user is not an admin", func() {
 		Context("when the additional policies do not exceed the quota", func() {
@@ -56,14 +57,14 @@ var _ = Describe("QuotaGuard", func() {
 		})
 		Context("when the additional policies exceed the quota", func() {
 			BeforeEach(func() {
-				fakeStore.ByGuidsReturns([]models.Policy{
+				fakeStore.ByGuidsReturns([]store.Policy{
 					{
-						Source:      models.Source{ID: "some-other-app-guid"},
-						Destination: models.Destination{ID: "yet-another-guid"},
+						Source:      store.Source{ID: "some-other-app-guid"},
+						Destination: store.Destination{ID: "yet-another-guid"},
 					},
 					{
-						Source:      models.Source{ID: "some-other-app-guid"},
-						Destination: models.Destination{ID: "yet-another-guid"},
+						Source:      store.Source{ID: "some-other-app-guid"},
+						Destination: store.Destination{ID: "yet-another-guid"},
 					},
 				}, nil)
 			})
@@ -76,7 +77,7 @@ var _ = Describe("QuotaGuard", func() {
 		})
 		Context("when getting the policies by guid fails", func() {
 			BeforeEach(func() {
-				fakeStore.ByGuidsReturns([]models.Policy{}, errors.New("banana"))
+				fakeStore.ByGuidsReturns([]store.Policy{}, errors.New("banana"))
 			})
 			It("returns an error", func() {
 				_, err := quotaGuard.CheckAccess(policies, tokenData)
@@ -92,14 +93,14 @@ var _ = Describe("QuotaGuard", func() {
 				UserID:   "some-developer-guid",
 				UserName: "some-developer",
 			}
-			fakeStore.ByGuidsReturns([]models.Policy{
+			fakeStore.ByGuidsReturns([]store.Policy{
 				{
-					Source:      models.Source{ID: "some-other-app-guid"},
-					Destination: models.Destination{ID: "yet-another-guid"},
+					Source:      store.Source{ID: "some-other-app-guid"},
+					Destination: store.Destination{ID: "yet-another-guid"},
 				},
 				{
-					Source:      models.Source{ID: "some-other-app-guid"},
-					Destination: models.Destination{ID: "yet-another-guid"},
+					Source:      store.Source{ID: "some-other-app-guid"},
+					Destination: store.Destination{ID: "yet-another-guid"},
 				},
 			}, nil)
 		})

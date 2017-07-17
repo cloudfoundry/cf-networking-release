@@ -2,7 +2,7 @@ package policy_client
 
 import (
 	"errors"
-	"policy-server/models"
+	"policy-server/api"
 	"strings"
 
 	"code.cloudfoundry.org/cf-networking-helpers/json_client"
@@ -19,9 +19,9 @@ func NewInternal(logger lager.Logger, httpClient json_client.HttpClient, baseURL
 	}
 }
 
-func (c *InternalClient) GetPolicies() ([]models.Policy, error) {
+func (c *InternalClient) GetPolicies() ([]api.Policy, error) {
 	var policies struct {
-		Policies []models.Policy `json:"policies"`
+		Policies []api.Policy `json:"policies"`
 	}
 	err := c.JsonClient.Do("GET", "/networking/v0/internal/policies", nil, &policies, "")
 	if err != nil {
@@ -30,9 +30,9 @@ func (c *InternalClient) GetPolicies() ([]models.Policy, error) {
 	return policies.Policies, nil
 }
 
-func (c *InternalClient) GetPoliciesByID(ids ...string) ([]models.Policy, error) {
+func (c *InternalClient) GetPoliciesByID(ids ...string) ([]api.Policy, error) {
 	var policies struct {
-		Policies []models.Policy `json:"policies"`
+		Policies []api.Policy `json:"policies"`
 	}
 	if len(ids) == 0 {
 		return nil, errors.New("ids cannot be empty")

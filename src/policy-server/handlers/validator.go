@@ -3,17 +3,17 @@ package handlers
 import (
 	"errors"
 	"fmt"
-	"policy-server/models"
+	"policy-server/api"
 )
 
 //go:generate counterfeiter -o fakes/validator.go --fake-name Validator . validator
 type validator interface {
-	ValidatePolicies(policies []models.Policy) error
+	ValidatePolicies(policies []api.Policy) error
 }
 
 type Validator struct{}
 
-func (v *Validator) ValidatePolicies(policies []models.Policy) error {
+func (v *Validator) ValidatePolicies(policies []api.Policy) error {
 	if len(policies) == 0 {
 		return errors.New("missing policies")
 	}

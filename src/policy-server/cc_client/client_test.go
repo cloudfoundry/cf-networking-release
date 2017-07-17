@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"policy-server/cc_client"
 	"policy-server/cc_client/fixtures"
-	"policy-server/models"
+	"policy-server/api"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -239,7 +239,7 @@ var _ = Describe("Client", func() {
 		})
 
 		It("returns the space with the matching GUID", func() {
-			space := models.Space{
+			space := api.Space{
 				Name:    "name-2064",
 				OrgGUID: "6e1ca5aa-55f1-4110-a97f-1f3473e771b9",
 			}
@@ -420,7 +420,7 @@ var _ = Describe("Client", func() {
 	})
 
 	Describe("GetUserSpace", func() {
-		space := models.Space{
+		space := api.Space{
 			Name:    "some-space-name",
 			OrgGUID: "some-org-guid",
 		}

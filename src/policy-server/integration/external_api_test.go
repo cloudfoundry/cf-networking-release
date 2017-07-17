@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"policy-server/config"
 	"policy-server/integration/helpers"
-	"policy-server/models"
+	"policy-server/api"
 	"strings"
 	"sync/atomic"
 
@@ -346,25 +346,31 @@ var _ = Describe("External API", func() {
 
 			Context("when there are policies in spaces the user does not belong to", func() {
 				BeforeEach(func() {
-					policies := []models.Policy{}
+					policies := []api.Policy{}
 					for i := 0; i < 150; i++ {
-						policies = append(policies, models.Policy{
-							Source: models.Source{ID: "live-app-1-guid"},
-							Destination: models.Destination{ID: fmt.Sprintf("not-in-space-app-%d-guid", i),
-								Port:     8090,
+						policies = append(policies, api.Policy{
+							Source: api.Source{ID: "live-app-1-guid"},
+							Destination: api.Destination{ID: fmt.Sprintf("not-in-space-app-%d-guid", i),
+								Ports: api.Ports{
+									Start: 8090,
+									End:   8090,
+								},
 								Protocol: "tcp",
 							},
 						})
 					}
-					policies = append(policies, models.Policy{
-						Source: models.Source{ID: "live-app-1-guid"},
-						Destination: models.Destination{ID: "live-app-2-guid",
-							Port:     8090,
-							Protocol: "tcp",
+					policies = append(policies, api.Policy{
+						Source: api.Source{ID: "live-app-1-guid"},
+						Destination: api.Destination{ID: "live-app-2-guid",
+							Ports: api.Ports{
+								Start: 8090,
+								End:   8090,
+							},
+							Protocol:                    "tcp",
 						},
 					})
 
-					body := map[string][]models.Policy{
+					body := map[string][]api.Policy{
 						"policies": policies,
 					}
 					bodyBytes, err := json.Marshal(body)
@@ -410,9 +416,9 @@ var _ = Describe("External API", func() {
 	Context("when there are concurrent create requests", func() {
 		It("remains consistent", func() {
 			policiesRoute := "external/policies"
-			add := func(policy models.Policy) {
+			add := func(policy api.Policy) {
 				requestBody, _ := json.Marshal(map[string]interface{}{
-					"policies": []models.Policy{policy},
+					"policies": []api.Policy{policy},
 				})
 				resp := helpers.MakeAndDoRequest("POST", policyServerUrl(policiesRoute, policyServerConfs), headers, bytes.NewReader(requestBody))
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
@@ -425,13 +431,12 @@ var _ = Describe("External API", func() {
 			policies := []interface{}{}
 			for i := 0; i < nPolicies; i++ {
 				appName := fmt.Sprintf("some-app-%x", i)
-				policies = append(policies, models.Policy{
-					Source: models.Source{ID: appName},
-					Destination: models.Destination{
+				policies = append(policies, api.Policy{
+					Source: api.Source{ID: appName},
+					Destination: api.Destination{
 						ID:       appName,
 						Protocol: "tcp",
-						Port:     1234,
-						Ports: models.Ports{
+						Ports: api.Ports{
 							Start: 1234,
 							End:   1234,
 						},
@@ -445,7 +450,7 @@ var _ = Describe("External API", func() {
 			By("adding lots of policies concurrently")
 			var nAdded int32
 			parallelRunner.RunOnSlice(policies, func(policy interface{}) {
-				add(policy.(models.Policy))
+				add(policy.(api.Policy))
 				atomic.AddInt32(&nAdded, 1)
 			})
 			Expect(nAdded).To(Equal(int32(nPolicies)))
@@ -457,7 +462,7 @@ var _ = Describe("External API", func() {
 			Expect(err).NotTo(HaveOccurred())
 			var policiesResponse struct {
 				TotalPolicies int             `json:"total_policies"`
-				Policies      []models.Policy `json:"policies"`
+				Policies      []api.Policy `json:"policies"`
 			}
 			Expect(json.Unmarshal(responseBytes, &policiesResponse)).To(Succeed())
 
@@ -475,7 +480,7 @@ var _ = Describe("External API", func() {
 			responseBytes, err = ioutil.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 			var tagsResponse struct {
-				Tags []models.Tag `json:"tags"`
+				Tags []api.Tag `json:"tags"`
 			}
 			Expect(json.Unmarshal(responseBytes, &tagsResponse)).To(Succeed())
 			Expect(tagsResponse.Tags).To(HaveLen(nPolicies))
@@ -488,9 +493,9 @@ var _ = Describe("External API", func() {
 			policiesUrl := fmt.Sprintf("%s/networking/v0/external/policies", baseUrl)
 			policiesDeleteUrl := fmt.Sprintf("%s/networking/v0/external/policies/delete", baseUrl)
 
-			do := func(method, url string, policy models.Policy) {
+			do := func(method, url string, policy api.Policy) {
 				requestBody, _ := json.Marshal(map[string]interface{}{
-					"policies": []models.Policy{policy},
+					"policies": []api.Policy{policy},
 				})
 				resp := helpers.MakeAndDoRequest(method, url, headers, bytes.NewReader(requestBody))
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
@@ -503,9 +508,16 @@ var _ = Describe("External API", func() {
 			policies := []interface{}{}
 			for i := 0; i < nPolicies; i++ {
 				appName := fmt.Sprintf("some-app-%x", i)
-				policies = append(policies, models.Policy{
-					Source:      models.Source{ID: appName},
-					Destination: models.Destination{ID: appName, Protocol: "tcp", Port: 1234},
+				policies = append(policies, api.Policy{
+					Source:      api.Source{ID: appName},
+					Destination: api.Destination{
+						ID: appName,
+						Protocol: "tcp",
+						Ports: api.Ports{
+							Start: 8090,
+							End:   8090,
+						},
+					},
 				})
 			}
 
@@ -516,7 +528,7 @@ var _ = Describe("External API", func() {
 
 			go func() {
 				parallelRunner.RunOnSlice(policies, func(policy interface{}) {
-					p := policy.(models.Policy)
+					p := policy.(api.Policy)
 					do("POST", policiesUrl, p)
 					toDelete <- p
 				})
@@ -525,7 +537,7 @@ var _ = Describe("External API", func() {
 
 			var nDeleted int32
 			parallelRunner.RunOnChannel(toDelete, func(policy interface{}) {
-				p := policy.(models.Policy)
+				p := policy.(api.Policy)
 				do("POST", policiesDeleteUrl, p)
 				atomic.AddInt32(&nDeleted, 1)
 			})
@@ -538,7 +550,7 @@ var _ = Describe("External API", func() {
 			Expect(err).NotTo(HaveOccurred())
 			var policiesResponse struct {
 				TotalPolicies int             `json:"total_policies"`
-				Policies      []models.Policy `json:"policies"`
+				Policies      []api.Policy `json:"policies"`
 			}
 			Expect(json.Unmarshal(responseBytes, &policiesResponse)).To(Succeed())
 
@@ -862,7 +874,7 @@ var _ = Describe("External API", func() {
 	})
 
 	Describe("port ranges", func() {
-		It("allows the user to create policies with port ranges", func() {
+		It("allows the user to create, list and delete policies with port ranges", func() {
 			body := strings.NewReader(`{ "policies": [
 			{ "source": {"id": "some-app-guid"},
 			 "destination": {"id": "some-other-app-guid", "protocol": "tcp", "ports": {"start": 5000, "end": 6000}}}]}`)

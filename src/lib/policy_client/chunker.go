@@ -1,12 +1,12 @@
 package policy_client
 
-import "policy-server/models"
+import "policy-server/api"
 
 const DefaultMaxPolicies = 100
 
 //go:generate counterfeiter -o ../fakes/chunker.go --fake-name Chunker . Chunker
 type Chunker interface {
-	Chunk(allPolicies []models.Policy) [][]models.Policy
+	Chunk(allPolicies []api.Policy) [][]api.Policy
 }
 
 type SimpleChunker struct {
@@ -27,9 +27,9 @@ func min(a, b int) int {
 	return b
 }
 
-func (c *SimpleChunker) Chunk(allPolicies []models.Policy) [][]models.Policy {
+func (c *SimpleChunker) Chunk(allPolicies []api.Policy) [][]api.Policy {
 	chunkSize := c.getChunkSize()
-	chunkedPolicies := [][]models.Policy{}
+	chunkedPolicies := [][]api.Policy{}
 	for i := 0; i < len(allPolicies); i += chunkSize {
 		chunkedPolicies = append(chunkedPolicies, allPolicies[i:min(len(allPolicies), i+chunkSize)])
 	}

@@ -5,7 +5,7 @@ import (
 	"lib/datastore"
 	libfakes "lib/fakes"
 	"lib/rules"
-	"policy-server/models"
+	"policy-server/api"
 	"vxlan-policy-agent/enforcer"
 	"vxlan-policy-agent/planner"
 	"vxlan-policy-agent/planner/fakes"
@@ -22,7 +22,7 @@ var _ = Describe("Planner", func() {
 	var (
 		policyPlanner        *planner.VxlanPolicyPlanner
 		policyClient         *fakes.PolicyClient
-		policyServerResponse []models.Policy
+		policyServerResponse []api.Policy
 		store                *libfakes.Datastore
 		metricsSender        *fakes.MetricsSender
 		logger               *lagertest.TestLogger
@@ -61,9 +61,9 @@ var _ = Describe("Planner", func() {
 
 		store.ReadAllReturns(data, nil)
 
-		policyServerResponse = []models.Policy{
+		policyServerResponse = []api.Policy{
 			{
-				Source: models.Source{
+				Source: api.Source{
 					ID:  "some-app-guid",
 					Tag: "AA",
 				},
@@ -77,7 +77,7 @@ var _ = Describe("Planner", func() {
 				},
 			},
 			{
-				Source: models.Source{
+				Source: api.Source{
 					ID:  "another-app-guid",
 					Tag: "BB",
 				},
@@ -91,7 +91,7 @@ var _ = Describe("Planner", func() {
 				},
 			},
 			{
-				Source: models.Source{
+				Source: api.Source{
 					ID:  "some-other-app-guid",
 					Tag: "CC",
 				},
@@ -271,7 +271,7 @@ var _ = Describe("Planner", func() {
 		})
 
 		Context("when the policies are returned from the server in a different order", func() {
-			var reversed []models.Policy
+			var reversed []api.Policy
 			BeforeEach(func() {
 				for i, _ := range policyServerResponse {
 					reversed = append(reversed, policyServerResponse[len(policyServerResponse)-i-1])
@@ -292,9 +292,9 @@ var _ = Describe("Planner", func() {
 
 		Context("when multiple policies are defined for the same source app", func() {
 			BeforeEach(func() {
-				policyServerResponse = []models.Policy{
+				policyServerResponse = []api.Policy{
 					{
-						Source: models.Source{
+						Source: api.Source{
 							ID:  "some-app-guid",
 							Tag: "AA",
 						},
@@ -308,7 +308,7 @@ var _ = Describe("Planner", func() {
 						},
 					},
 					{
-						Source: models.Source{
+						Source: api.Source{
 							ID:  "some-app-guid",
 							Tag: "AA",
 						},
@@ -383,7 +383,7 @@ var _ = Describe("Planner", func() {
 
 		Context("when there are no policies", func() {
 			BeforeEach(func() {
-				policyClient.GetPoliciesByIDReturns([]models.Policy{}, nil)
+				policyClient.GetPoliciesByIDReturns([]api.Policy{}, nil)
 			})
 			It("returns an chain with no rules", func() {
 				rulesWithChain, err := policyPlanner.GetRulesAndChain()
