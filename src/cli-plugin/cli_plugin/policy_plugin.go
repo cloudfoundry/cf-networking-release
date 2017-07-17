@@ -6,6 +6,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"lib/policy_client"
 	"log"
 	"net"
 	"net/http"
@@ -14,8 +15,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/cloudfoundry-incubator/network-policy-client/src/policy_client"
 
 	"code.cloudfoundry.org/cli/plugin"
 	"code.cloudfoundry.org/lager"

@@ -7,7 +7,7 @@ import (
 	"errors"
 	"log"
 
-	libfakes "github.com/cloudfoundry-incubator/network-policy-client/src/policy_client/fakes"
+	libfakes "lib/fakes"
 
 	"code.cloudfoundry.org/cli/plugin"
 	"code.cloudfoundry.org/cli/plugin/pluginfakes"

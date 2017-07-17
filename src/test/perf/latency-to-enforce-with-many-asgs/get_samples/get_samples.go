@@ -5,14 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"lib/policy_client"
 	"math/rand"
 	"net/http"
 	"os"
 	"policy-server/models"
 	"strconv"
 	"time"
-
-	"github.com/cloudfoundry-incubator/network-policy-client/src/policy_client"
 
 	"code.cloudfoundry.org/lager"
 )
