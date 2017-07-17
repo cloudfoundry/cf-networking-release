@@ -7,7 +7,7 @@ import (
 )
 
 type Health struct {
-	Store         store
+	Store         dataStore
 	ErrorResponse errorResponse
 }
 

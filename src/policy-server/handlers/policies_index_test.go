@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"policy-server/handlers"
 	"policy-server/handlers/fakes"
-	"policy-server/models"
+	"policy-server/api"
 	"policy-server/uaa_client"
 
 	hfakes "code.cloudfoundry.org/cf-networking-helpers/fakes"
@@ -16,17 +16,19 @@ import (
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"policy-server/store"
 )
 
 var _ = Describe("Policies index handler", func() {
 	var (
-		allPolicies       []models.Policy
-		byGuidsPolicies   []models.Policy
-		filteredPolicies  []models.Policy
+		allPolicies       []store.Policy
+		byGuidsPolicies   []store.Policy
+		byGuidsAPIPolicies   []api.Policy
+		filteredPolicies  []api.Policy
 		request           *http.Request
 		handler           *handlers.PoliciesIndex
 		resp              *httptest.ResponseRecorder
-		fakeStore         *fakes.Store
+		fakeStore         *fakes.DataStore
 		fakePolicyFilter  *fakes.PolicyFilter
 		fakeErrorResponse *fakes.ErrorResponse
 		logger            *lagertest.TestLogger
@@ -35,54 +37,95 @@ var _ = Describe("Policies index handler", func() {
 	)
 
 	BeforeEach(func() {
-		allPolicies = []models.Policy{{
-			Source: models.Source{ID: "some-app-guid", Tag: "some-tag"},
-			Destination: models.Destination{
+		allPolicies = []store.Policy{{
+			Source: store.Source{ID: "some-app-guid", Tag: "some-tag"},
+			Destination: store.Destination{
 				ID:       "some-other-app-guid",
 				Tag:      "some-other-tag",
 				Protocol: "tcp",
-				Port:     8080,
+				Ports: store.Ports{
+					Start: 8080,
+					End:   8080,
+				},
 			},
 		}, {
-			Source: models.Source{ID: "another-app-guid"},
-			Destination: models.Destination{
+			Source: store.Source{ID: "another-app-guid"},
+			Destination: store.Destination{
 				ID:       "some-other-app-guid",
 				Protocol: "udp",
-				Port:     1234,
+				Ports: store.Ports{
+					Start: 1234,
+					End:   1234,
+				},
 			},
 		}, {
-			Source: models.Source{ID: "yet-another-app-guid"},
-			Destination: models.Destination{
+			Source: store.Source{ID: "yet-another-app-guid"},
+			Destination: store.Destination{
 				ID:       "yet-another-app-guid",
 				Protocol: "udp",
-				Port:     5555,
+				Ports: store.Ports{
+					Start: 5555,
+					End:   5555,
+				},
 			},
 		}}
 
-		byGuidsPolicies = []models.Policy{{
-			Source: models.Source{ID: "some-app-guid", Tag: "some-tag"},
-			Destination: models.Destination{
+		byGuidsPolicies = []store.Policy{{
+			Source: store.Source{ID: "some-app-guid", Tag: "some-tag"},
+			Destination: store.Destination{
 				ID:       "some-other-app-guid",
 				Tag:      "some-other-tag",
 				Protocol: "tcp",
-				Port:     8080,
+				Ports: store.Ports{
+					Start: 8080,
+					End:   8080,
+				},
 			},
 		}, {
-			Source: models.Source{ID: "another-app-guid"},
-			Destination: models.Destination{
+			Source: store.Source{ID: "another-app-guid"},
+			Destination: store.Destination{
 				ID:       "some-other-app-guid",
 				Protocol: "udp",
-				Port:     1234,
+				Ports: store.Ports{
+					Start: 1234,
+					End:   1234,
+				},
 			},
 		}}
 
-		filteredPolicies = []models.Policy{{
-			Source: models.Source{ID: "some-app-guid", Tag: "some-tag"},
-			Destination: models.Destination{
+		byGuidsAPIPolicies = []api.Policy{{
+			Source: api.Source{ID: "some-app-guid", Tag: "some-tag"},
+			Destination: api.Destination{
 				ID:       "some-other-app-guid",
 				Tag:      "some-other-tag",
 				Protocol: "tcp",
-				Port:     8080,
+				Ports: api.Ports{
+					Start: 8080,
+					End:   8080,
+				},
+			},
+		}, {
+			Source: api.Source{ID: "another-app-guid"},
+			Destination: api.Destination{
+				ID:       "some-other-app-guid",
+				Protocol: "udp",
+				Ports: api.Ports{
+					Start: 1234,
+					End:   1234,
+				},
+			},
+		}}
+
+		filteredPolicies = []api.Policy{{
+			Source: api.Source{ID: "some-app-guid", Tag: "some-tag"},
+			Destination: api.Destination{
+				ID:       "some-other-app-guid",
+				Tag:      "some-other-tag",
+				Protocol: "tcp",
+				Ports: api.Ports{
+					Start: 8080,
+					End:   8080,
+				},
 			},
 		}}
 
@@ -93,12 +136,12 @@ var _ = Describe("Policies index handler", func() {
 		marshaler = &hfakes.Marshaler{}
 		marshaler.MarshalStub = json.Marshal
 
-		fakeStore = &fakes.Store{}
+		fakeStore = &fakes.DataStore{}
 		fakeStore.AllReturns(allPolicies, nil)
 		fakeStore.ByGuidsReturns(byGuidsPolicies, nil)
 		fakeErrorResponse = &fakes.ErrorResponse{}
 		fakePolicyFilter = &fakes.PolicyFilter{}
-		fakePolicyFilter.FilterPoliciesStub = func(policies []models.Policy, userToken uaa_client.CheckTokenResponse) ([]models.Policy, error) {
+		fakePolicyFilter.FilterPoliciesStub = func(policies []api.Policy, userToken uaa_client.CheckTokenResponse) ([]api.Policy, error) {
 			return filteredPolicies, nil
 		}
 		logger = lagertest.NewTestLogger("test")
@@ -128,7 +171,6 @@ var _ = Describe("Policies index handler", func() {
 				"destination": {
 					"id": "some-other-app-guid",
 					"protocol": "tcp",
-					"port": 8080,
 					"ports": {
 						"start": 8080,
 						"end": 8080
@@ -160,7 +202,7 @@ var _ = Describe("Policies index handler", func() {
 			Expect(dstGuids).To(ConsistOf([]string{"some-app-guid", "yet-another-app-guid"}))
 			Expect(fakePolicyFilter.FilterPoliciesCallCount()).To(Equal(1))
 			policies, userToken := fakePolicyFilter.FilterPoliciesArgsForCall(0)
-			Expect(policies).To(Equal(byGuidsPolicies))
+			Expect(policies).To(Equal(byGuidsAPIPolicies))
 			Expect(userToken).To(Equal(token))
 			Expect(resp.Code).To(Equal(http.StatusOK))
 		})
@@ -178,7 +220,7 @@ var _ = Describe("Policies index handler", func() {
 				Expect(destGuids).To(Equal([]string{""}))
 				Expect(fakePolicyFilter.FilterPoliciesCallCount()).To(Equal(1))
 				policies, userToken := fakePolicyFilter.FilterPoliciesArgsForCall(0)
-				Expect(policies).To(Equal(byGuidsPolicies))
+				Expect(policies).To(Equal(byGuidsAPIPolicies))
 				Expect(userToken).To(Equal(token))
 
 				Expect(resp.Code).To(Equal(http.StatusOK))

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
-	"policy-server/models"
+	"policy-server/api"
 	"policy-server/uaa_client"
 
 	"code.cloudfoundry.org/cf-networking-helpers/marshal"
@@ -13,16 +13,16 @@ import (
 
 //go:generate counterfeiter -o fakes/policy_guard.go --fake-name PolicyGuard . policyGuard
 type policyGuard interface {
-	CheckAccess(policies []models.Policy, tokenData uaa_client.CheckTokenResponse) (bool, error)
+	CheckAccess(policies []api.Policy, tokenData uaa_client.CheckTokenResponse) (bool, error)
 }
 
 //go:generate counterfeiter -o fakes/quota_guard.go --fake-name QuotaGuard . quotaGuard
 type quotaGuard interface {
-	CheckAccess(policies []models.Policy, tokenData uaa_client.CheckTokenResponse) (bool, error)
+	CheckAccess(policies []api.Policy, tokenData uaa_client.CheckTokenResponse) (bool, error)
 }
 
 type PoliciesCreate struct {
-	Store         store
+	Store         dataStore
 	Unmarshaler   marshal.Unmarshaler
 	Validator     validator
 	PolicyGuard   policyGuard
@@ -40,7 +40,7 @@ func (h *PoliciesCreate) ServeHTTP(logger lager.Logger, w http.ResponseWriter, r
 	}
 
 	var payload struct {
-		Policies []models.Policy `json:"policies"`
+		Policies []api.Policy `json:"policies"`
 	}
 	err = h.Unmarshaler.Unmarshal(bodyBytes, &payload)
 	if err != nil {
@@ -82,7 +82,8 @@ func (h *PoliciesCreate) ServeHTTP(logger lager.Logger, w http.ResponseWriter, r
 		return
 	}
 
-	err = h.Store.Create(payload.Policies)
+	storePolicies := api.MapAPIPolicies(payload.Policies)
+	err = h.Store.Create(storePolicies)
 	if err != nil {
 		logger.Error("failed-creating-in-database", err)
 		h.ErrorResponse.InternalServerError(w, err, "policies-create", "database create failed")

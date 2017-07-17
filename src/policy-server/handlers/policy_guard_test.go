@@ -4,7 +4,7 @@ import (
 	"errors"
 	"policy-server/handlers"
 	"policy-server/handlers/fakes"
-	"policy-server/models"
+	"policy-server/api"
 	"policy-server/uaa_client"
 
 	. "github.com/onsi/ginkgo"
@@ -17,11 +17,11 @@ var _ = Describe("PolicyGuard", func() {
 		fakeCCClient  *fakes.CCClient
 		fakeUAAClient *fakes.UAAClient
 		tokenData     uaa_client.CheckTokenResponse
-		policies      []models.Policy
+		policies      []api.Policy
 		spaceGUIDs    []string
-		space1        models.Space
-		space2        models.Space
-		space3        models.Space
+		space1        api.Space
+		space2        api.Space
+		space3        api.Space
 	)
 
 	BeforeEach(func() {
@@ -31,20 +31,20 @@ var _ = Describe("PolicyGuard", func() {
 			CCClient:  fakeCCClient,
 			UAAClient: fakeUAAClient,
 		}
-		policies = []models.Policy{
+		policies = []api.Policy{
 			{
-				Source: models.Source{
+				Source: api.Source{
 					ID: "some-app-guid",
 				},
-				Destination: models.Destination{
+				Destination: api.Destination{
 					ID: "some-other-guid",
 				},
 			},
 			{
-				Source: models.Source{
+				Source: api.Source{
 					ID: "some-app-guid",
 				},
-				Destination: models.Destination{
+				Destination: api.Destination{
 					ID: "yet-another-guid",
 				},
 			},
@@ -55,22 +55,22 @@ var _ = Describe("PolicyGuard", func() {
 			UserName: "some-developer",
 		}
 		spaceGUIDs = []string{"space-guid-1", "space-guid-2", "space-guid-3"}
-		space1 = models.Space{
+		space1 = api.Space{
 			Name:    "space-1",
 			OrgGUID: "org-guid-1",
 		}
-		space2 = models.Space{
+		space2 = api.Space{
 			Name:    "space-2",
 			OrgGUID: "org-guid-2",
 		}
-		space3 = models.Space{
+		space3 = api.Space{
 			Name:    "space-3",
 			OrgGUID: "org-guid-3",
 		}
 
 		fakeUAAClient.GetTokenReturns("policy-server-token", nil)
 		fakeCCClient.GetSpaceGUIDsReturns(spaceGUIDs, nil)
-		fakeCCClient.GetSpaceStub = func(token, spaceGUID string) (*models.Space, error) {
+		fakeCCClient.GetSpaceStub = func(token, spaceGUID string) (*api.Space, error) {
 			switch spaceGUID {
 			case "space-guid-1":
 				{
@@ -90,7 +90,7 @@ var _ = Describe("PolicyGuard", func() {
 				}
 			}
 		}
-		fakeCCClient.GetUserSpaceStub = func(token, userGUID string, space models.Space) (*models.Space, error) {
+		fakeCCClient.GetUserSpaceStub = func(token, userGUID string, space api.Space) (*api.Space, error) {
 			switch space {
 			case space1:
 				{

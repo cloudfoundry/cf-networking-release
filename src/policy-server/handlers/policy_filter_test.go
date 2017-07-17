@@ -4,7 +4,7 @@ import (
 	"errors"
 	"policy-server/handlers"
 	"policy-server/handlers/fakes"
-	"policy-server/models"
+	"policy-server/api"
 	"policy-server/uaa_client"
 
 	. "github.com/onsi/ginkgo"
@@ -17,7 +17,7 @@ var _ = Describe("PolicyFilter", func() {
 		fakeCCClient  *fakes.CCClient
 		fakeUAAClient *fakes.UAAClient
 		tokenData     uaa_client.CheckTokenResponse
-		policies      []models.Policy
+		policies      []api.Policy
 	)
 
 	BeforeEach(func() {
@@ -28,20 +28,20 @@ var _ = Describe("PolicyFilter", func() {
 			UAAClient: fakeUAAClient,
 			ChunkSize: 100,
 		}
-		policies = []models.Policy{
+		policies = []api.Policy{
 			{
-				Source: models.Source{
+				Source: api.Source{
 					ID: "app-guid-1",
 				},
-				Destination: models.Destination{
+				Destination: api.Destination{
 					ID: "app-guid-2",
 				},
 			},
 			{
-				Source: models.Source{
+				Source: api.Source{
 					ID: "app-guid-3",
 				},
-				Destination: models.Destination{
+				Destination: api.Destination{
 					ID: "app-guid-4",
 				},
 			},
@@ -88,12 +88,12 @@ var _ = Describe("PolicyFilter", func() {
 			Expect(token).To(Equal("policy-server-token"))
 			Expect(userGUID).To(Equal("some-developer-guid"))
 
-			expected := []models.Policy{
+			expected := []api.Policy{
 				{
-					Source: models.Source{
+					Source: api.Source{
 						ID: "app-guid-1",
 					},
-					Destination: models.Destination{
+					Destination: api.Destination{
 						ID: "app-guid-2",
 					},
 				},
@@ -171,12 +171,12 @@ var _ = Describe("PolicyFilter", func() {
 				filtered, err := policyFilter.FilterPolicies(policies, tokenData)
 				Expect(err).NotTo(HaveOccurred())
 
-				expected := []models.Policy{
+				expected := []api.Policy{
 					{
-						Source: models.Source{
+						Source: api.Source{
 							ID: "app-guid-1",
 						},
-						Destination: models.Destination{
+						Destination: api.Destination{
 							ID: "app-guid-2",
 						},
 					},

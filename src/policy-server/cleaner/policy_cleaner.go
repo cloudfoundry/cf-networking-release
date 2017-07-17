@@ -3,10 +3,11 @@ package cleaner
 import (
 	"context"
 	"fmt"
-	"policy-server/models"
+	"policy-server/store"
 	"time"
 
 	"code.cloudfoundry.org/lager"
+	"policy-server/api"
 )
 
 //go:generate counterfeiter -o fakes/uua_client.go --fake-name UAAClient . uaaClient
@@ -19,28 +20,28 @@ type ccClient interface {
 	GetLiveAppGUIDs(token string, appGUIDs []string) (map[string]struct{}, error)
 }
 
-//go:generate counterfeiter -o fakes/store.go --fake-name Store . store
-type store interface {
-	All() ([]models.Policy, error)
-	Delete([]models.Policy) error
+//go:generate counterfeiter -o fakes/list_delete_store.go --fake-name ListDeleteStore . listDeleteStore
+type listDeleteStore interface {
+	All() ([]store.Policy, error)
+	Delete([]store.Policy) error
 }
 
-//go:generate counterfeiter -o fakes/contextAdapter.go --fake-name ContextAdapter . contextAdapter
+//go:generate counterfeiter -o fakes/context_adapter.go --fake-name ContextAdapter . contextAdapter
 type contextAdapter interface {
 	WithTimeout(context.Context, time.Duration) (context.Context, context.CancelFunc)
 }
 
 type PolicyCleaner struct {
 	Logger                lager.Logger
-	Store                 store
+	Store                 listDeleteStore
 	UAAClient             uaaClient
 	CCClient              ccClient
 	CCAppRequestChunkSize int
 	RequestTimeout        time.Duration
 }
 
-func (p *PolicyCleaner) DeleteStalePolicies() ([]models.Policy, error) {
-	policies, err := p.Store.All()
+func (p *PolicyCleaner) DeleteStalePolicies() ([]api.Policy, error) {
+	storePolicies, err := p.Store.All()
 	if err != nil {
 		p.Logger.Error("store-list-policies-failed", err)
 		return nil, fmt.Errorf("database read failed: %s", err)
@@ -51,8 +52,9 @@ func (p *PolicyCleaner) DeleteStalePolicies() ([]models.Policy, error) {
 		return nil, fmt.Errorf("get UAA token failed: %s", err)
 	}
 
-	stalePolicies := []models.Policy{}
+	stalePolicies := []api.Policy{}
 
+	policies := api.MapStorePolicies(storePolicies)
 	appGUIDs := policyAppGUIDs(policies)
 	appGUIDchunks := getChunks(appGUIDs, p.CCAppRequestChunkSize)
 
@@ -71,7 +73,7 @@ func (p *PolicyCleaner) DeleteStalePolicies() ([]models.Policy, error) {
 			"total_policies": len(stalePolicies),
 			"stale_policies": stalePolicies,
 		})
-		err = p.Store.Delete(toDelete)
+		err = p.Store.Delete(api.MapAPIPolicies(toDelete))
 		if err != nil {
 			p.Logger.Error("store-delete-policies-failed", err)
 			return nil, fmt.Errorf("database write failed: %s", err)
@@ -96,8 +98,8 @@ func getStaleAppGUIDs(liveAppGUIDs map[string]struct{}, appGUIDs []string) map[s
 	return staleAppGUIDs
 }
 
-func getStalePolicies(policyList []models.Policy, staleAppGUIDs map[string]struct{}) []models.Policy {
-	stalePolicies := []models.Policy{}
+func getStalePolicies(policyList []api.Policy, staleAppGUIDs map[string]struct{}) []api.Policy {
+	stalePolicies := []api.Policy{}
 	for _, p := range policyList {
 		_, foundSrc := staleAppGUIDs[p.Source.ID]
 		_, foundDst := staleAppGUIDs[p.Destination.ID]
@@ -108,7 +110,7 @@ func getStalePolicies(policyList []models.Policy, staleAppGUIDs map[string]struc
 	return stalePolicies
 }
 
-func policyAppGUIDs(policyList []models.Policy) []string {
+func policyAppGUIDs(policyList []api.Policy) []string {
 	appGUIDset := make(map[string]struct{})
 	for _, p := range policyList {
 		appGUIDset[p.Source.ID] = struct{}{}

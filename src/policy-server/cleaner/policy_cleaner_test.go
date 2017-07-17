@@ -4,53 +4,99 @@ import (
 	"errors"
 	"policy-server/cleaner"
 	"policy-server/cleaner/fakes"
-	"policy-server/models"
 	"time"
 
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
+	"policy-server/store"
+	"policy-server/api"
 )
 
 var _ = Describe("PolicyCleaner", func() {
 	var (
-		policyCleaner *cleaner.PolicyCleaner
-		fakeStore     *fakes.Store
-		fakeUAAClient *fakes.UAAClient
-		fakeCCClient  *fakes.CCClient
-		logger        *lagertest.TestLogger
-		allPolicies   []models.Policy
+		policyCleaner  *cleaner.PolicyCleaner
+		fakeStore      *fakes.ListDeleteStore
+		fakeUAAClient  *fakes.UAAClient
+		fakeCCClient   *fakes.CCClient
+		logger         *lagertest.TestLogger
+		allPolicies    []store.Policy
+		allAPIPolicies []api.Policy
 	)
 
 	BeforeEach(func() {
-		allPolicies = []models.Policy{{
-			Source: models.Source{ID: "live-guid", Tag: "tag"},
-			Destination: models.Destination{
+		allPolicies = []store.Policy{{
+			Source: store.Source{ID: "live-guid", Tag: "tag"},
+			Destination: store.Destination{
 				ID:       "live-guid",
 				Tag:      "tag",
 				Protocol: "tcp",
-				Port:     8080,
+				Ports: store.Ports{
+					Start: 8080,
+					End:   8080,
+				},
 			},
 		}, {
-			Source: models.Source{ID: "dead-guid", Tag: "tag"},
-			Destination: models.Destination{
+			Source: store.Source{ID: "dead-guid", Tag: "tag"},
+			Destination: store.Destination{
 				ID:       "live-guid",
 				Tag:      "tag",
 				Protocol: "udp",
-				Port:     1234,
+				Ports: store.Ports{
+					Start: 1234,
+					End:   1234,
+				},
 			},
 		}, {
-			Source: models.Source{ID: "live-guid", Tag: "tag"},
-			Destination: models.Destination{
+			Source: store.Source{ID: "live-guid", Tag: "tag"},
+			Destination: store.Destination{
 				ID:       "dead-guid",
 				Tag:      "tag",
 				Protocol: "udp",
-				Port:     1234,
+				Ports: store.Ports{
+					Start: 1234,
+					End:   1234,
+				},
+			},
+		}}
+		
+		allAPIPolicies = []api.Policy{{
+			Source: api.Source{ID: "live-guid", Tag: "tag"},
+			Destination: api.Destination{
+				ID:       "live-guid",
+				Tag:      "tag",
+				Protocol: "tcp",
+				Ports: api.Ports{
+					Start: 8080,
+					End:   8080,
+				},
+			},
+		}, {
+			Source: api.Source{ID: "dead-guid", Tag: "tag"},
+			Destination: api.Destination{
+				ID:       "live-guid",
+				Tag:      "tag",
+				Protocol: "udp",
+				Ports: api.Ports{
+					Start: 1234,
+					End:   1234,
+				},
+			},
+		}, {
+			Source: api.Source{ID: "live-guid", Tag: "tag"},
+			Destination: api.Destination{
+				ID:       "dead-guid",
+				Tag:      "tag",
+				Protocol: "udp",
+				Ports: api.Ports{
+					Start: 1234,
+					End:   1234,
+				},
 			},
 		}}
 
-		fakeStore = &fakes.Store{}
+		fakeStore = &fakes.ListDeleteStore{}
 		fakeUAAClient = &fakes.UAAClient{}
 		fakeCCClient = &fakes.CCClient{}
 		logger = lagertest.NewTestLogger("test")
@@ -93,7 +139,8 @@ var _ = Describe("PolicyCleaner", func() {
 		Expect(fakeStore.DeleteArgsForCall(0)).To(Equal(stalePolicies))
 
 		Expect(logger).To(gbytes.Say("deleting stale policies:.*policies.*dead-guid.*dead-guid.*total_policies\":2"))
-		Expect(policies).To(Equal(stalePolicies))
+		staleAPIPolicies := allAPIPolicies[1:]
+		Expect(policies).To(Equal(staleAPIPolicies))
 	})
 
 	Context("when there are more apps with policies than the CC chunk size", func() {
@@ -126,15 +173,17 @@ var _ = Describe("PolicyCleaner", func() {
 			stalePolicies := allPolicies[1:]
 			Expect(fakeStore.DeleteCallCount()).To(Equal(2))
 
-			var deleted [][]models.Policy
+			var deleted [][]store.Policy
 			deletedPolicies := fakeStore.DeleteArgsForCall(0)
 			deleted = append(deleted, deletedPolicies)
 			deletedPolicies = fakeStore.DeleteArgsForCall(1)
 			deleted = append(deleted, deletedPolicies)
-			Expect(deleted).To(ConsistOf(stalePolicies, []models.Policy{}))
+			Expect(deleted).To(ConsistOf(stalePolicies, []store.Policy{}))
 
 			Expect(logger).To(gbytes.Say("deleting stale policies:.*policies.*dead-guid.*dead-guid.*total_policies\":2"))
-			Expect(policies).To(ConsistOf(stalePolicies[0], stalePolicies[1]))
+
+			staleAPIPolicies := allAPIPolicies[1:]
+			Expect(policies).To(ConsistOf(staleAPIPolicies[0], staleAPIPolicies[1]))
 		})
 	})
 

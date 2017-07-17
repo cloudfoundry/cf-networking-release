@@ -3,7 +3,7 @@ package planner
 import (
 	"lib/datastore"
 	"lib/rules"
-	"policy-server/models"
+	"policy-server/api"
 	"sort"
 	"time"
 	"vxlan-policy-agent/enforcer"
@@ -13,7 +13,7 @@ import (
 
 //go:generate counterfeiter -o fakes/policy_client.go --fake-name PolicyClient . policyClient
 type policyClient interface {
-	GetPoliciesByID(ids ...string) ([]models.Policy, error)
+	GetPoliciesByID(ids ...string) ([]api.Policy, error)
 }
 
 //go:generate counterfeiter -o fakes/dstore.go --fake-name Dstore . dstore
@@ -91,7 +91,7 @@ func (p *VxlanPolicyPlanner) GetRulesAndChain() (enforcer.RulesWithChain, error)
 	p.Logger.Debug("got-containers", lager.Data{"containers": containers})
 
 	policyServerStartRequestTime := time.Now()
-	var policies []models.Policy
+	var policies []api.Policy
 	if len(groupIDs) > 0 {
 		policies, err = p.PolicyClient.GetPoliciesByID(groupIDs...)
 		if err != nil {
@@ -109,7 +109,7 @@ func (p *VxlanPolicyPlanner) GetRulesAndChain() (enforcer.RulesWithChain, error)
 	filterRuleset := []rules.IPTablesRule{}
 
 	iptablesLoggingEnabled := p.LoggingState.IsEnabled()
-	policySlice := models.PolicySlice(policies)
+	policySlice := api.PolicySlice(policies)
 	sort.Sort(policySlice)
 	for _, policy := range policySlice {
 		srcContainerIPs, srcOk := containers[policy.Source.ID]

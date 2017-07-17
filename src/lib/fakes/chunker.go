@@ -3,36 +3,36 @@ package fakes
 
 import (
 	"lib/policy_client"
-	"policy-server/models"
+	"policy-server/api"
 	"sync"
 )
 
 type Chunker struct {
-	ChunkStub        func(allPolicies []models.Policy) [][]models.Policy
+	ChunkStub        func(allPolicies []api.Policy) [][]api.Policy
 	chunkMutex       sync.RWMutex
 	chunkArgsForCall []struct {
-		allPolicies []models.Policy
+		allPolicies []api.Policy
 	}
 	chunkReturns struct {
-		result1 [][]models.Policy
+		result1 [][]api.Policy
 	}
 	chunkReturnsOnCall map[int]struct {
-		result1 [][]models.Policy
+		result1 [][]api.Policy
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *Chunker) Chunk(allPolicies []models.Policy) [][]models.Policy {
-	var allPoliciesCopy []models.Policy
+func (fake *Chunker) Chunk(allPolicies []api.Policy) [][]api.Policy {
+	var allPoliciesCopy []api.Policy
 	if allPolicies != nil {
-		allPoliciesCopy = make([]models.Policy, len(allPolicies))
+		allPoliciesCopy = make([]api.Policy, len(allPolicies))
 		copy(allPoliciesCopy, allPolicies)
 	}
 	fake.chunkMutex.Lock()
 	ret, specificReturn := fake.chunkReturnsOnCall[len(fake.chunkArgsForCall)]
 	fake.chunkArgsForCall = append(fake.chunkArgsForCall, struct {
-		allPolicies []models.Policy
+		allPolicies []api.Policy
 	}{allPoliciesCopy})
 	fake.recordInvocation("Chunk", []interface{}{allPoliciesCopy})
 	fake.chunkMutex.Unlock()
@@ -51,28 +51,28 @@ func (fake *Chunker) ChunkCallCount() int {
 	return len(fake.chunkArgsForCall)
 }
 
-func (fake *Chunker) ChunkArgsForCall(i int) []models.Policy {
+func (fake *Chunker) ChunkArgsForCall(i int) []api.Policy {
 	fake.chunkMutex.RLock()
 	defer fake.chunkMutex.RUnlock()
 	return fake.chunkArgsForCall[i].allPolicies
 }
 
-func (fake *Chunker) ChunkReturns(result1 [][]models.Policy) {
+func (fake *Chunker) ChunkReturns(result1 [][]api.Policy) {
 	fake.ChunkStub = nil
 	fake.chunkReturns = struct {
-		result1 [][]models.Policy
+		result1 [][]api.Policy
 	}{result1}
 }
 
-func (fake *Chunker) ChunkReturnsOnCall(i int, result1 [][]models.Policy) {
+func (fake *Chunker) ChunkReturnsOnCall(i int, result1 [][]api.Policy) {
 	fake.ChunkStub = nil
 	if fake.chunkReturnsOnCall == nil {
 		fake.chunkReturnsOnCall = make(map[int]struct {
-			result1 [][]models.Policy
+			result1 [][]api.Policy
 		})
 	}
 	fake.chunkReturnsOnCall[i] = struct {
-		result1 [][]models.Policy
+		result1 [][]api.Policy
 	}{result1}
 }
 

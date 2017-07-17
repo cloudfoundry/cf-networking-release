@@ -2,7 +2,6 @@ package store_test
 
 import (
 	"errors"
-	"policy-server/models"
 	"policy-server/store"
 	"policy-server/store/fakes"
 
@@ -13,8 +12,8 @@ import (
 var _ = Describe("MetricsWrapper", func() {
 	var (
 		metricsWrapper    *store.MetricsWrapper
-		policies          []models.Policy
-		tags              []models.Tag
+		policies          []store.Policy
+		tags              []store.Tag
 		srcGuids          []string
 		destGuids         []string
 		fakeMetricsSender *fakes.MetricsSender
@@ -28,15 +27,15 @@ var _ = Describe("MetricsWrapper", func() {
 			Store:         fakeStore,
 			MetricsSender: fakeMetricsSender,
 		}
-		policies = []models.Policy{{
-			Source: models.Source{ID: "some-app-guid"},
-			Destination: models.Destination{
+		policies = []store.Policy{{
+			Source: store.Source{ID: "some-app-guid"},
+			Destination: store.Destination{
 				ID:       "some-other-app-guid",
 				Protocol: "tcp",
 				Port:     8080,
 			},
 		}}
-		tags = []models.Tag{{
+		tags = []store.Tag{{
 			ID:  "some-app-guid",
 			Tag: "0001",
 		}, {

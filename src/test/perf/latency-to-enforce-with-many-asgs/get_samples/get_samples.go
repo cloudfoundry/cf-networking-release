@@ -9,7 +9,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
-	"policy-server/models"
+	"policy-server/api"
 	"strconv"
 	"time"
 
@@ -145,12 +145,12 @@ func (t *TestThingy) measureLatencyFor1More(destIP string) (time.Duration, error
 		return 0, fmt.Errorf("waiting for pre-state to settle: %s", err)
 	}
 
-	oneMorePolicy := []models.Policy{
-		models.Policy{
-			Source: models.Source{
+	oneMorePolicy := []api.Policy{
+		api.Policy{
+			Source: api.Source{
 				ID: t.sourceAppGUID,
 			},
-			Destination: models.Destination{
+			Destination: api.Destination{
 				ID:       t.destAppGUID,
 				Protocol: "tcp",
 				Port:     8080,

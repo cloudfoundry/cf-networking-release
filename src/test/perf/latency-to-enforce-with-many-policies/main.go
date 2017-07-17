@@ -9,7 +9,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
-	"policy-server/models"
+	"policy-server/api"
 	"strconv"
 	"time"
 
@@ -150,12 +150,12 @@ func (t *TestThingy) measureLatencyFor1More(destIP string) (time.Duration, error
 		return 0, fmt.Errorf("waiting for pre-state to settle: %s", err)
 	}
 
-	oneMorePolicy := []models.Policy{
-		models.Policy{
-			Source: models.Source{
+	oneMorePolicy := []api.Policy{
+		api.Policy{
+			Source: api.Source{
 				ID: t.sourceAppGUID,
 			},
-			Destination: models.Destination{
+			Destination: api.Destination{
 				ID:       t.destAppGUID,
 				Protocol: "tcp",
 				Port:     8080,
@@ -202,13 +202,13 @@ func (t *TestThingy) checkReachable(destIP string, desiredReachable bool) bool {
 }
 
 func (t *TestThingy) prepareExistingPolicies(numPolicies int) error {
-	allPolicies := []models.Policy{}
+	allPolicies := []api.Policy{}
 	for i := 0; i < numPolicies; i++ {
-		allPolicies = append(allPolicies, models.Policy{
-			Source: models.Source{
+		allPolicies = append(allPolicies, api.Policy{
+			Source: api.Source{
 				ID: t.sourceAppGUID,
 			},
-			Destination: models.Destination{
+			Destination: api.Destination{
 				ID:       t.destAppGUID,
 				Protocol: "tcp",
 				Port:     10000 + i,

@@ -8,10 +8,10 @@ type PolicyRepo interface {
 	CountWhereDestinationID(Transaction, int) (int, error)
 }
 
-type Policy struct {
+type PolicyTable struct {
 }
 
-func (p *Policy) Create(tx Transaction, source_group_id int, destination_id int) error {
+func (p *PolicyTable) Create(tx Transaction, source_group_id int, destination_id int) error {
 	_, err := tx.Exec(tx.Rebind(`
 		INSERT INTO policies (group_id, destination_id)
 		SELECT ?, ?
@@ -29,7 +29,7 @@ func (p *Policy) Create(tx Transaction, source_group_id int, destination_id int)
 	return err
 }
 
-func (p *Policy) Delete(tx Transaction, source_group_id int, destination_id int) error {
+func (p *PolicyTable) Delete(tx Transaction, source_group_id int, destination_id int) error {
 	_, err := tx.Exec(tx.Rebind(`DELETE FROM policies WHERE group_id = ? AND destination_id = ?`),
 		source_group_id,
 		destination_id,
@@ -37,7 +37,7 @@ func (p *Policy) Delete(tx Transaction, source_group_id int, destination_id int)
 	return err
 }
 
-func (p *Policy) CountWhereGroupID(tx Transaction, source_group_id int) (int, error) {
+func (p *PolicyTable) CountWhereGroupID(tx Transaction, source_group_id int) (int, error) {
 	var count int
 	err := tx.QueryRow(
 		tx.Rebind(`SELECT COUNT(*) FROM policies WHERE group_id = ?`),
@@ -47,7 +47,7 @@ func (p *Policy) CountWhereGroupID(tx Transaction, source_group_id int) (int, er
 	return count, err
 }
 
-func (p *Policy) CountWhereDestinationID(tx Transaction, destination_id int) (int, error) {
+func (p *PolicyTable) CountWhereDestinationID(tx Transaction, destination_id int) (int, error) {
 	var count int
 	err := tx.QueryRow(
 		tx.Rebind(`SELECT COUNT(*) FROM policies WHERE destination_id = ?`),

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
-	"policy-server/models"
+	"policy-server/api"
 	"policy-server/uaa_client"
 
 	"code.cloudfoundry.org/cf-networking-helpers/marshal"
@@ -13,7 +13,7 @@ import (
 
 type PoliciesDelete struct {
 	Unmarshaler   marshal.Unmarshaler
-	Store         store
+	Store         dataStore
 	Validator     validator
 	PolicyGuard   policyGuard
 	ErrorResponse errorResponse
@@ -29,7 +29,7 @@ func (h *PoliciesDelete) ServeHTTP(logger lager.Logger, w http.ResponseWriter, r
 	}
 
 	var payload struct {
-		Policies []models.Policy `json:"policies"`
+		Policies []api.Policy `json:"policies"`
 	}
 	err = h.Unmarshaler.Unmarshal(bodyBytes, &payload)
 	if err != nil {
@@ -58,7 +58,7 @@ func (h *PoliciesDelete) ServeHTTP(logger lager.Logger, w http.ResponseWriter, r
 		return
 	}
 
-	err = h.Store.Delete(payload.Policies)
+	err = h.Store.Delete(api.MapAPIPolicies(payload.Policies))
 	if err != nil {
 		logger.Error("failed-deleting-in-database", err)
 		h.ErrorResponse.InternalServerError(w, err, "delete-policies", "database delete failed")

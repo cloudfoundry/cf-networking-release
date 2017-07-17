@@ -1,39 +1,45 @@
 package server_metrics_test
 
 import (
-	"policy-server/models"
 	"policy-server/server_metrics"
 	"policy-server/server_metrics/fakes"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"policy-server/store"
 )
 
 var _ = Describe("NewTotalPoliciesSource", func() {
 	var (
-		allPolicies   []models.Policy
-		fakeDataStore *fakes.Store
+		allPolicies   []store.Policy
+		fakeDataStore *fakes.ListStore
 	)
 
 	BeforeEach(func() {
-		allPolicies = []models.Policy{{
-			Source: models.Source{ID: "some-app-guid", Tag: "some-tag"},
-			Destination: models.Destination{
+		allPolicies = []store.Policy{{
+			Source: store.Source{ID: "some-app-guid", Tag: "some-tag"},
+			Destination: store.Destination{
 				ID:       "some-other-app-guid",
 				Tag:      "some-other-tag",
 				Protocol: "tcp",
-				Port:     8080,
+				Ports:     store.Ports{
+					Start: 8080,
+					End:   8080,
+				},
 			},
 		}, {
-			Source: models.Source{ID: "another-app-guid"},
-			Destination: models.Destination{
+			Source: store.Source{ID: "another-app-guid"},
+			Destination: store.Destination{
 				ID:       "some-other-app-guid",
 				Protocol: "udp",
-				Port:     1234,
+				Ports:     store.Ports{
+					Start: 1234,
+					End:   1234,
+				},
 			},
 		}}
 
-		fakeDataStore = &fakes.Store{}
+		fakeDataStore = &fakes.ListStore{}
 		fakeDataStore.AllReturns(allPolicies, nil)
 	})
 

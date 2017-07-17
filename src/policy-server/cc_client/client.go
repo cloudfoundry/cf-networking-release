@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"policy-server/models"
+	"policy-server/api"
 	"strconv"
 	"strings"
 
@@ -172,7 +172,7 @@ func (c *Client) GetAppSpaces(token string, appGUIDs []string) (map[string]strin
 	return set, nil
 }
 
-func (c *Client) GetSpace(token, spaceGUID string) (*models.Space, error) {
+func (c *Client) GetSpace(token, spaceGUID string) (*api.Space, error) {
 	token = fmt.Sprintf("bearer %s", token)
 	route := fmt.Sprintf("/v2/spaces/%s", spaceGUID)
 
@@ -189,13 +189,13 @@ func (c *Client) GetSpace(token, spaceGUID string) (*models.Space, error) {
 		return nil, fmt.Errorf("json client do: %s", err)
 	}
 
-	return &models.Space{
+	return &api.Space{
 		Name:    response.Entity.Name,
 		OrgGUID: response.Entity.OrganizationGUID,
 	}, nil
 }
 
-func (c *Client) GetUserSpace(token, userGUID string, space models.Space) (*models.Space, error) {
+func (c *Client) GetUserSpace(token, userGUID string, space api.Space) (*api.Space, error) {
 	token = fmt.Sprintf("bearer %s", token)
 
 	values := url.Values{}
@@ -219,7 +219,7 @@ func (c *Client) GetUserSpace(token, userGUID string, space models.Space) (*mode
 		return nil, fmt.Errorf("found more than one matching space")
 	}
 
-	return &models.Space{
+	return &api.Space{
 		Name:    response.Resources[0].Entity.Name,
 		OrgGUID: response.Resources[0].Entity.OrganizationGUID,
 	}, nil

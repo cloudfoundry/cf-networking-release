@@ -12,7 +12,7 @@ import (
 	_ "net/http/pprof"
 	"os"
 	"os/exec"
-	"policy-server/models"
+	"policy-server/api"
 	"time"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
@@ -106,9 +106,9 @@ func min(a, b int) int {
 	return b
 }
 
-func makeChunks(policies []models.Policy) [][]models.Policy {
+func makeChunks(policies []api.Policy) [][]api.Policy {
 	tokenRenewalChunkSize := 1000
-	var chunks [][]models.Policy
+	var chunks [][]api.Policy
 	for i := 0; i < len(policies); i += tokenRenewalChunkSize {
 		chunks = append(chunks, policies[i:i+min(tokenRenewalChunkSize, len(policies))])
 	}
@@ -117,17 +117,17 @@ func makeChunks(policies []models.Policy) [][]models.Policy {
 
 func addNewPolicies(logger lager.Logger, appGuids []string, token string) {
 	logger.Info("creating-policies-for-each-application-guid")
-	policies := []models.Policy{}
+	policies := []api.Policy{}
 	for _ = range appGuids {
 		for i := 0; i < config.PoliciesPerApp; i++ {
 			dstGuid := appGuids[rand.Intn(len(appGuids))]
 			srcGuid := appGuids[rand.Intn(len(appGuids))]
 
-			policy := models.Policy{
-				Source: models.Source{
+			policy := api.Policy{
+				Source: api.Source{
 					ID: srcGuid,
 				},
-				Destination: models.Destination{
+				Destination: api.Destination{
 					ID:       dstGuid,
 					Protocol: "tcp",
 					Port:     10000 + rand.Intn(10000),

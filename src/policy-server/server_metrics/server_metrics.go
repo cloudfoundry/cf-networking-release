@@ -1,17 +1,16 @@
 package server_metrics
 
 import (
-	"policy-server/models"
-
 	"code.cloudfoundry.org/cf-networking-helpers/metrics"
+	"policy-server/store"
 )
 
-//go:generate counterfeiter -o fakes/store.go --fake-name Store . store
-type store interface {
-	All() ([]models.Policy, error)
+//go:generate counterfeiter -o fakes/list_store.go --fake-name ListStore . listStore
+type listStore interface {
+	All() ([]store.Policy, error)
 }
 
-func NewTotalPoliciesSource(lister store) metrics.MetricSource {
+func NewTotalPoliciesSource(lister listStore) metrics.MetricSource {
 	return metrics.MetricSource{
 		Name: "totalPolicies",
 		Unit: "",
