@@ -123,6 +123,7 @@ func addNewPolicies(logger lager.Logger, appGuids []string, token string) {
 			dstGuid := appGuids[rand.Intn(len(appGuids))]
 			srcGuid := appGuids[rand.Intn(len(appGuids))]
 
+			randomPort := 10000 + rand.Intn(10000)
 			policy := api.Policy{
 				Source: api.Source{
 					ID: srcGuid,
@@ -130,7 +131,10 @@ func addNewPolicies(logger lager.Logger, appGuids []string, token string) {
 				Destination: api.Destination{
 					ID:       dstGuid,
 					Protocol: "tcp",
-					Port:     10000 + rand.Intn(10000),
+					Ports: api.Ports{
+						Start: randomPort,
+						End:   randomPort + 1,
+					},
 				},
 			}
 			policies = append(policies, policy)
@@ -208,7 +212,7 @@ func getCurrentToken(logger lager.Logger) string {
 		logger.Fatal("running-command-cf-oauth-token`", err)
 	}
 
-	token := string(tokenBytes[0 : len(tokenBytes)-1]) // remove trailing \n
+	token := string(tokenBytes[0: len(tokenBytes)-1]) // remove trailing \n
 	logger.Info("parsed-cf-oauth-token", lager.Data{"token": token})
 
 	return token

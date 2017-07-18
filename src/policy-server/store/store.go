@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	migrate "github.com/rubenv/sql-migrate"
+	"policy-server/store/migrations"
 )
 
 //go:generate counterfeiter -o fakes/store.go --fake-name Store . Store
@@ -36,19 +36,6 @@ type db interface {
 	DriverName() string
 }
 
-//go:generate counterfeiter -o fakes/migrationDb.go --fake-name MigrationDb . MigrationDb
-type MigrationDb interface {
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	Query(query string, args ...interface{}) (*sql.Rows, error)
-	QueryRow(query string, args ...interface{}) *sql.Row
-	DriverName() string
-}
-
-//go:generate counterfeiter -o fakes/migrateAdapter.go --fake-name MigrateAdapter . migrateAdapter
-type migrateAdapter interface {
-	Exec(db MigrationDb, dialect string, m migrate.MigrationSource, dir migrate.MigrationDirection) (int, error)
-}
-
 type Transaction interface {
 	Exec(query string, args ...interface{}) (sql.Result, error)
 	QueryRow(query string, args ...interface{}) *sql.Row
@@ -71,7 +58,7 @@ type store struct {
 const MAX_TAG_LENGTH = 3
 const MIN_TAG_LENGTH = 1
 
-func New(dbConnectionPool db, migrator migrateAdapter, g GroupRepo, d DestinationRepo, p PolicyRepo, tl int, t time.Duration) (Store, error) {
+func New(dbConnectionPool db, migrator migrations.MigrateExecutor, g GroupRepo, d DestinationRepo, p PolicyRepo, tl int, t time.Duration) (Store, error) {
 	if tl < MIN_TAG_LENGTH || tl > MAX_TAG_LENGTH {
 		return nil, fmt.Errorf("tag length out of range (%d-%d): %d",
 			MIN_TAG_LENGTH,
@@ -80,7 +67,7 @@ func New(dbConnectionPool db, migrator migrateAdapter, g GroupRepo, d Destinatio
 		)
 	}
 
-	err := performMigrations(dbConnectionPool, migrator)
+	_, err := migrations.PerformMigrations(dbConnectionPool.DriverName(), dbConnectionPool, migrator)
 	if err != nil {
 		return nil, fmt.Errorf("setting up tables: %s", err)
 	}
@@ -407,35 +394,6 @@ func (s *store) Tags() ([]Tag, error) {
 
 func (s *store) tagIntToString(tag int) string {
 	return fmt.Sprintf("%"+fmt.Sprintf("0%d", s.tagLength*2)+"X", tag)
-}
-
-func performMigrations(dbConnectionPool db, migrator migrateAdapter) error {
-	driverName := dbConnectionPool.DriverName()
-	schema, ok := Schemas[driverName]
-	if !ok {
-		return fmt.Errorf("unsupported driver: %s", driverName)
-	}
-
-	migrations := migrate.MemoryMigrationSource{
-		Migrations: []*migrate.Migration{
-			&migrate.Migration{
-				Id:   "1",
-				Up:   schema,
-				Down: []string{"DROP TABLE policies", "DROP TABLE destinations", "DROP TABLE groups"},
-			},
-			&migrate.Migration{
-				Id:   "2",
-				Up:   SchemasV1Up[dbConnectionPool.DriverName()],
-				Down: SchemasV1Down[dbConnectionPool.DriverName()],
-			},
-		},
-	}
-
-	_, err := migrator.Exec(dbConnectionPool, driverName, migrations, migrate.Up)
-	if err != nil {
-		return fmt.Errorf("executing migration: %s", err)
-	}
-	return nil
 }
 
 func populateTables(dbConnectionPool db, tl int) error {

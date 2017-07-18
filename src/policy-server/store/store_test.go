@@ -16,7 +16,8 @@ import (
 	"github.com/jmoiron/sqlx"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	migrate "github.com/rubenv/sql-migrate"
+	migratefakes "policy-server/store/migrations/fakes"
+	"policy-server/store/migrations"
 )
 
 var _ = Describe("Store", func() {
@@ -28,15 +29,15 @@ var _ = Describe("Store", func() {
 		group              store.GroupRepo
 		destination        store.DestinationRepo
 		policy             store.PolicyRepo
-		mockMigrateAdapter *fakes.MigrateAdapter
-		realMigrateAdapter *store.MigrateAdapter
+		mockMigrateAdapter *migratefakes.MigrateExecutor
+		realMigrateAdapter *migrations.MigrateAdapter
 	)
 	const NumAttempts = 5
 
 	BeforeEach(func() {
 		mockDb = &fakes.Db{}
-		mockMigrateAdapter = &fakes.MigrateAdapter{}
-		realMigrateAdapter = &store.MigrateAdapter{}
+		mockMigrateAdapter = &migratefakes.MigrateExecutor{}
+		realMigrateAdapter = &migrations.MigrateAdapter{}
 
 		dbConf = testsupport.GetDBConfig()
 		dbConf.DatabaseName = fmt.Sprintf("test_node_%d", GinkgoParallelNode())
@@ -121,56 +122,6 @@ var _ = Describe("Store", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(allPolicies).To(BeEmpty())
-		})
-	})
-
-	Describe("Migrations", func() {
-		It("performs the migrations", func() {
-			_, err := store.New(mockDb, mockMigrateAdapter, group, destination, policy, 1, 2*time.Second)
-			Expect(err).NotTo(HaveOccurred())
-
-			By("calling the migrator")
-			Expect(mockMigrateAdapter.ExecCallCount()).To(Equal(1))
-			db, dbType, migrations, dir := mockMigrateAdapter.ExecArgsForCall(0)
-			Expect(db).To(Equal(mockDb))
-			Expect(dbType).To(Equal(mockDb.DriverName()))
-
-			Expect(migrations).To(Equal(migrate.MemoryMigrationSource{
-				Migrations: []*migrate.Migration{
-					{
-						Id:   "1",
-						Up:   store.Schemas[db.DriverName()],
-						Down: []string{"DROP TABLE policies", "DROP TABLE destinations", "DROP TABLE groups"},
-					},
-					{
-						Id:   "2",
-						Up:   store.SchemasV1Up[db.DriverName()],
-						Down: store.SchemasV1Down[db.DriverName()],
-					},
-				},
-			}))
-
-			Expect(dir).To(Equal(migrate.Up))
-		})
-
-		Context("when the driver name is not mysql or postgres", func() {
-			BeforeEach(func() {
-				mockDb.DriverNameReturns("etcd")
-			})
-			It("returns an error", func() {
-				_, err := store.New(mockDb, mockMigrateAdapter, group, destination, policy, 1, 2*time.Second)
-				Expect(err).To(MatchError("setting up tables: unsupported driver: etcd"))
-			})
-		})
-
-		Context("when the migrations fail", func() {
-			BeforeEach(func() {
-				mockMigrateAdapter.ExecReturns(0, errors.New("banana"))
-			})
-			It("returns an error", func() {
-				_, err := store.New(mockDb, mockMigrateAdapter, group, destination, policy, 1, 2*time.Second)
-				Expect(err).To(MatchError("setting up tables: executing migration: banana"))
-			})
 		})
 	})
 

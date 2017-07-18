@@ -2,17 +2,17 @@
 package fakes
 
 import (
-	"policy-server/store"
+	"policy-server/store/migrations"
 	"sync"
 
-	"github.com/rubenv/sql-migrate"
+	migrate "github.com/rubenv/sql-migrate"
 )
 
-type MigrateAdapter struct {
-	ExecStub        func(db store.MigrationDb, dialect string, m migrate.MigrationSource, dir migrate.MigrationDirection) (int, error)
+type MigrateExecutor struct {
+	ExecStub        func(db migrations.MigrationDb, dialect string, m migrate.MigrationSource, dir migrate.MigrationDirection) (int, error)
 	execMutex       sync.RWMutex
 	execArgsForCall []struct {
-		db      store.MigrationDb
+		db      migrations.MigrationDb
 		dialect string
 		m       migrate.MigrationSource
 		dir     migrate.MigrationDirection
@@ -29,11 +29,11 @@ type MigrateAdapter struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *MigrateAdapter) Exec(db store.MigrationDb, dialect string, m migrate.MigrationSource, dir migrate.MigrationDirection) (int, error) {
+func (fake *MigrateExecutor) Exec(db migrations.MigrationDb, dialect string, m migrate.MigrationSource, dir migrate.MigrationDirection) (int, error) {
 	fake.execMutex.Lock()
 	ret, specificReturn := fake.execReturnsOnCall[len(fake.execArgsForCall)]
 	fake.execArgsForCall = append(fake.execArgsForCall, struct {
-		db      store.MigrationDb
+		db      migrations.MigrationDb
 		dialect string
 		m       migrate.MigrationSource
 		dir     migrate.MigrationDirection
@@ -49,19 +49,19 @@ func (fake *MigrateAdapter) Exec(db store.MigrationDb, dialect string, m migrate
 	return fake.execReturns.result1, fake.execReturns.result2
 }
 
-func (fake *MigrateAdapter) ExecCallCount() int {
+func (fake *MigrateExecutor) ExecCallCount() int {
 	fake.execMutex.RLock()
 	defer fake.execMutex.RUnlock()
 	return len(fake.execArgsForCall)
 }
 
-func (fake *MigrateAdapter) ExecArgsForCall(i int) (store.MigrationDb, string, migrate.MigrationSource, migrate.MigrationDirection) {
+func (fake *MigrateExecutor) ExecArgsForCall(i int) (migrations.MigrationDb, string, migrate.MigrationSource, migrate.MigrationDirection) {
 	fake.execMutex.RLock()
 	defer fake.execMutex.RUnlock()
 	return fake.execArgsForCall[i].db, fake.execArgsForCall[i].dialect, fake.execArgsForCall[i].m, fake.execArgsForCall[i].dir
 }
 
-func (fake *MigrateAdapter) ExecReturns(result1 int, result2 error) {
+func (fake *MigrateExecutor) ExecReturns(result1 int, result2 error) {
 	fake.ExecStub = nil
 	fake.execReturns = struct {
 		result1 int
@@ -69,7 +69,7 @@ func (fake *MigrateAdapter) ExecReturns(result1 int, result2 error) {
 	}{result1, result2}
 }
 
-func (fake *MigrateAdapter) ExecReturnsOnCall(i int, result1 int, result2 error) {
+func (fake *MigrateExecutor) ExecReturnsOnCall(i int, result1 int, result2 error) {
 	fake.ExecStub = nil
 	if fake.execReturnsOnCall == nil {
 		fake.execReturnsOnCall = make(map[int]struct {
@@ -83,7 +83,7 @@ func (fake *MigrateAdapter) ExecReturnsOnCall(i int, result1 int, result2 error)
 	}{result1, result2}
 }
 
-func (fake *MigrateAdapter) Invocations() map[string][][]interface{} {
+func (fake *MigrateExecutor) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.execMutex.RLock()
@@ -95,7 +95,7 @@ func (fake *MigrateAdapter) Invocations() map[string][][]interface{} {
 	return copiedInvocations
 }
 
-func (fake *MigrateAdapter) recordInvocation(key string, args []interface{}) {
+func (fake *MigrateExecutor) recordInvocation(key string, args []interface{}) {
 	fake.invocationsMutex.Lock()
 	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {
@@ -106,3 +106,5 @@ func (fake *MigrateAdapter) recordInvocation(key string, args []interface{}) {
 	}
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
+
+var _ migrations.MigrateExecutor = new(MigrateExecutor)
