@@ -40,12 +40,31 @@ var _ = Describe("Rules", func() {
 		})
 	})
 
-	Describe("NewNetOutDefaultLogRule", func() {
+	Describe("NewNetOutDefaultNonUDPLogRule", func() {
 		Context("when the log prefix is greater than 28 characters", func() {
 			It("shortens the log-prefix to 28 characters and adds a space", func() {
-				rule := rules.NewNetOutDefaultLogRule("some-very-very-very-long-app-guid")
-				Expect(rule).To(ContainElement(`all`))
-				Expect(rule).To(ContainElement(`"OK_some-very-very-very-long- "`))
+				rule := rules.NewNetOutDefaultNonUDPLogRule("some-very-very-very-long-app-guid")
+				Expect(rule).To(Equal(rules.IPTablesRule{
+					"!", "-p", "udp",
+					"-m", "conntrack", "--ctstate", "INVALID,NEW,UNTRACKED",
+					"-j", "LOG", "--log-prefix", `"OK_some-very-very-very-long- "`,
+				},
+				))
+			})
+		})
+	})
+
+	Describe("NewNetOutDefaultUDPLogRule", func() {
+		Context("when the log prefix is greater than 28 characters", func() {
+			It("shortens the log-prefix to 28 characters and adds a space", func() {
+				rule := rules.NewNetOutDefaultUDPLogRule("some-very-very-very-long-app-guid", 5)
+				Expect(rule).To(Equal(rules.IPTablesRule{
+					"-p", "udp",
+					"-m", "limit",
+					"--limit", "5/s",
+					"--limit-burst", "5",
+					"-j", "LOG", "--log-prefix", `"OK_some-very-very-very-long- "`,
+				}))
 			})
 		})
 	})

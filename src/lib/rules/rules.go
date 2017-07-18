@@ -162,11 +162,19 @@ func NewNetOutWithPortsLogRule(startIP, endIP string, startPort, endPort int, pr
 	}
 }
 
-func NewNetOutDefaultLogRule(prefix string) IPTablesRule {
-	// TODO make this work for udp
+func NewNetOutDefaultNonUDPLogRule(prefix string) IPTablesRule {
 	return IPTablesRule{
-		"-p", "all",
+		"!", "-p", "udp",
 		"-m", "conntrack", "--ctstate", "INVALID,NEW,UNTRACKED",
+		"-j", "LOG", "--log-prefix", trimAndPad(fmt.Sprintf("OK_%s", prefix)),
+	}
+}
+
+func NewNetOutDefaultUDPLogRule(prefix string, acceptedUDPLogsPerSec int) IPTablesRule {
+	return IPTablesRule{
+		"-p", "udp",
+		"-m", "limit", "--limit", fmt.Sprintf("%d/s", acceptedUDPLogsPerSec),
+		"--limit-burst", strconv.Itoa(acceptedUDPLogsPerSec),
 		"-j", "LOG", "--log-prefix", trimAndPad(fmt.Sprintf("OK_%s", prefix)),
 	}
 }

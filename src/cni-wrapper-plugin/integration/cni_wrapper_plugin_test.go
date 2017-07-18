@@ -142,11 +142,12 @@ var _ = Describe("CniWrapperPlugin", func() {
 					"type": "noop",
 					"some": "other data",
 				},
-				InstanceAddress:          "10.244.2.3",
-				IPTablesASGLogging:       false,
-				IngressTag:               "FFFF0000",
-				VTEPName:                 "some-device",
-				IPTablesDeniedLogsPerSec: 5,
+				InstanceAddress:               "10.244.2.3",
+				IPTablesASGLogging:            false,
+				IngressTag:                    "FFFF0000",
+				VTEPName:                      "some-device",
+				IPTablesDeniedLogsPerSec:      5,
+				IPTablesAcceptedUDPLogsPerSec: 7,
 				RuntimeConfig: lib.RuntimeConfig{
 					PortMappings: []garden.NetIn{
 						{
@@ -606,7 +607,10 @@ var _ = Describe("CniWrapperPlugin", func() {
 					Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -p icmp -m iprange --dst-range 5.5.5.5-6.6.6.6 -m icmp --icmp-type 8/0 -g ` + netoutLoggingChainName))
 
 					By("checking that it writes the logging rules")
-					Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutLoggingChainName + ` -m conntrack --ctstate INVALID,NEW,UNTRACKED -j LOG --log-prefix "OK_` + containerID[:25] + ` "`))
+					Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
+						`-A ` + netoutLoggingChainName + ` ! -p udp -m conntrack --ctstate INVALID,NEW,UNTRACKED -j LOG --log-prefix "OK_` + containerID[:25] + ` "`,
+						`-A ` + netoutLoggingChainName + ` -p udp -m limit --limit 7/sec --limit-burst 7 -j LOG --log-prefix "OK_` + containerID[:25] + ` "`,
+					}))
 				})
 
 				It("always writes a rate limited default deny log rule", func() {
@@ -643,7 +647,10 @@ var _ = Describe("CniWrapperPlugin", func() {
 					Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -p tcp -m iprange --dst-range 8.8.8.8-9.9.9.9 -m tcp --dport 53:54 -g ` + netoutLoggingChainName))
 
 					By("checking that it writes the logging rules")
-					Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutLoggingChainName + ` -m conntrack --ctstate INVALID,NEW,UNTRACKED -j LOG --log-prefix "OK_` + containerID[:25] + ` "`))
+					Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
+						`-A ` + netoutLoggingChainName + ` ! -p udp -m conntrack --ctstate INVALID,NEW,UNTRACKED -j LOG --log-prefix "OK_` + containerID[:25] + ` "`,
+						`-A ` + netoutLoggingChainName + ` -p udp -m limit --limit 7/sec --limit-burst 7 -j LOG --log-prefix "OK_` + containerID[:25] + ` "`,
+					}))
 				})
 			})
 
@@ -663,7 +670,11 @@ var _ = Describe("CniWrapperPlugin", func() {
 					Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -p udp -m iprange --dst-range 11.11.11.11-22.22.22.22 -m udp --dport 53:54 -g ` + netoutLoggingChainName))
 
 					By("checking that it writes the logging rules")
-					Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutLoggingChainName + ` -m conntrack --ctstate INVALID,NEW,UNTRACKED -j LOG --log-prefix "OK_` + containerID[:25] + ` "`))
+					Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
+						`-A ` + netoutLoggingChainName + ` ! -p udp -m conntrack --ctstate INVALID,NEW,UNTRACKED -j LOG --log-prefix "OK_` + containerID[:25] + ` "`,
+						`-A ` + netoutLoggingChainName + ` -p udp -m limit --limit 7/sec --limit-burst 7 -j LOG --log-prefix "OK_` + containerID[:25] + ` "`,
+					}))
+
 				})
 			})
 
@@ -683,7 +694,11 @@ var _ = Describe("CniWrapperPlugin", func() {
 					Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutChainName + ` -p icmp -m iprange --dst-range 5.5.5.5-6.6.6.6 -m icmp --icmp-type 8/0 -g ` + netoutLoggingChainName))
 
 					By("checking that it writes the logging rules")
-					Expect(AllIPTablesRules("filter")).To(ContainElement(`-A ` + netoutLoggingChainName + ` -m conntrack --ctstate INVALID,NEW,UNTRACKED -j LOG --log-prefix "OK_` + containerID[:25] + ` "`))
+					Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
+						`-A ` + netoutLoggingChainName + ` ! -p udp -m conntrack --ctstate INVALID,NEW,UNTRACKED -j LOG --log-prefix "OK_` + containerID[:25] + ` "`,
+						`-A ` + netoutLoggingChainName + ` -p udp -m limit --limit 7/sec --limit-burst 7 -j LOG --log-prefix "OK_` + containerID[:25] + ` "`,
+					}))
+
 				})
 			})
 		})

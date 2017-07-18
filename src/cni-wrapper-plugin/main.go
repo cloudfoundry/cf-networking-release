@@ -105,14 +105,15 @@ func cmdAdd(args *skel.CmdArgs) error {
 		ChainNamer: &legacynet.ChainNamer{
 			MaxLength: 28,
 		},
-		IPTables:          pluginController.IPTables,
-		Converter:         &legacynet.NetOutRuleConverter{Logger: os.Stderr},
-		ASGLogging:        n.IPTablesASGLogging,
-		C2CLogging:        n.IPTablesC2CLogging,
-		DeniedLogsPerSec:  n.IPTablesDeniedLogsPerSec,
-		IngressTag:        n.IngressTag,
-		VTEPName:          n.VTEPName,
-		HostInterfaceName: defaultIfaceName,
+		IPTables:              pluginController.IPTables,
+		Converter:             &legacynet.NetOutRuleConverter{Logger: os.Stderr},
+		ASGLogging:            n.IPTablesASGLogging,
+		C2CLogging:            n.IPTablesC2CLogging,
+		DeniedLogsPerSec:      n.IPTablesDeniedLogsPerSec,
+		AcceptedUDPLogsPerSec: n.IPTablesAcceptedUDPLogsPerSec,
+		IngressTag:            n.IngressTag,
+		VTEPName:              n.VTEPName,
+		HostInterfaceName:     defaultIfaceName,
 	}
 	if err := netOutProvider.Initialize(args.ContainerID, containerIP, localDNSServers); err != nil {
 		return fmt.Errorf("initialize net out: %s", err)

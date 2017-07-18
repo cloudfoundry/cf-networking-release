@@ -41,3 +41,7 @@ properties:
   cf_networking.iptables_denied_logs_per_sec:
     description: "Maximum number of iptables logs per second for denied packets."
     default: 1
+
+  cf_networking.iptables_accepted_udp_logs_per_sec:
+    description: "Maximum number of iptables logs per second for accepted UDP packets."
+    default: 100

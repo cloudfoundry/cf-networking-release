@@ -2,6 +2,16 @@
 
 See [deployment docs](deploy-iaas.md) for examples
 
+### 1.3.0
+
+**New Properties**
+  - An optional parameter has been added to configure the rate of logs by
+    iptables for accepted UDP packets. Before, logging was done per UDP
+    connection. Now, the rate defaults to 100 packets per second.
+    - `cf_networking.iptables_accepted_udp_logs_per_sec` is the maximum number of
+      accepted udp packets logged by iptables per second, it should be
+      configured on the `silk-cni` job.
+
 ### 1.2.0
 
 **New Properties**

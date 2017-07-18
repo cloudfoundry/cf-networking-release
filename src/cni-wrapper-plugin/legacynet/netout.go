@@ -23,15 +23,16 @@ type netOutRuleConverter interface {
 }
 
 type NetOut struct {
-	ChainNamer        chainNamer
-	IPTables          rules.IPTablesAdapter
-	Converter         netOutRuleConverter
-	ASGLogging        bool
-	C2CLogging        bool
-	IngressTag        string
-	VTEPName          string
-	HostInterfaceName string
-	DeniedLogsPerSec  int
+	ChainNamer            chainNamer
+	IPTables              rules.IPTablesAdapter
+	Converter             netOutRuleConverter
+	ASGLogging            bool
+	C2CLogging            bool
+	IngressTag            string
+	VTEPName              string
+	HostInterfaceName     string
+	DeniedLogsPerSec      int
+	AcceptedUDPLogsPerSec int
 }
 
 type fullRule struct {
@@ -96,7 +97,8 @@ func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, dnsServe
 			Table: "filter",
 			Chain: logChain,
 			Rules: []rules.IPTablesRule{
-				rules.NewNetOutDefaultLogRule(containerHandle),
+				rules.NewNetOutDefaultNonUDPLogRule(containerHandle),
+				rules.NewNetOutDefaultUDPLogRule(containerHandle, m.AcceptedUDPLogsPerSec),
 				rules.NewAcceptRule(),
 			},
 		},

@@ -27,13 +27,14 @@ var _ = Describe("Netout", func() {
 		converter = &fakes.NetOutRuleConverter{}
 		ipTables = &lib_fakes.IPTablesAdapter{}
 		netOut = &legacynet.NetOut{
-			ChainNamer:        chainNamer,
-			IPTables:          ipTables,
-			Converter:         converter,
-			IngressTag:        "FEEDBEEF",
-			VTEPName:          "vtep-name",
-			HostInterfaceName: "some-device",
-			DeniedLogsPerSec:  3,
+			ChainNamer:            chainNamer,
+			IPTables:              ipTables,
+			Converter:             converter,
+			IngressTag:            "FEEDBEEF",
+			VTEPName:              "vtep-name",
+			HostInterfaceName:     "some-device",
+			DeniedLogsPerSec:      3,
+			AcceptedUDPLogsPerSec: 6,
 		}
 		chainNamer.PrefixStub = func(prefix, handle string) string {
 			return prefix + "-" + handle
@@ -152,8 +153,11 @@ var _ = Describe("Netout", func() {
 			Expect(table).To(Equal("filter"))
 			Expect(chain).To(Equal("some-other-chain-name"))
 			Expect(rulespec).To(Equal([]rules.IPTablesRule{
-				{"-p", "all",
+				{"!", "-p", "udp",
 					"-m", "conntrack", "--ctstate", "INVALID,NEW,UNTRACKED",
+					"-j", "LOG", "--log-prefix", `"OK_some-container-handle "`},
+				{"-p", "udp",
+					"-m", "limit", "--limit", "6/s", "--limit-burst", "6",
 					"-j", "LOG", "--log-prefix", `"OK_some-container-handle "`},
 				{"--jump", "ACCEPT"},
 			}))
