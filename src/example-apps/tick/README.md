@@ -3,28 +3,23 @@ Simple app that registers itself with an [a8registry](https://github.com/amalgam
 
 ## Prerequisites
 The following instructions for this example assume the following:
-- Go 1.6+
-- [cf-networking-release](http://github.com/cloudfoundry-incubator/cf-networking-release)
-  - cloned under `~/workspace/cf-networking-release`
-- Ensure GOPATH is set to cf-networking-release:
-  - export GOPATH=~/workspace/cf-networking-release
+- [This git repo](http://github.com/cloudfoundry-incubator/cf-networking-release) cloned somewhere
 - [jq](https://stedolan.github.io/jq/download/)
-- Deploying to [bosh-lite](https://github.com/cloudfoundry/bosh-lite)
-  - Cloud Foundry org and space created and targetted
-
-## Setup
-- Build and Deploy the [service registry](https://github.com/amalgam8/amalgam8/tree/master/registry)
-```bash
-cd ~/workspace/cf-networking-release/src/github.com/amalgam8/amalgam8
-GOOS=linux GOARCH=amd64 go build -o a8registry cmd/registry/main.go
-cf push registry -c './a8registry' -b binary_buildpack -d bosh-lite.com
-```
+- A Cloud Foundry deployed.  Below we assume [bosh-lite](https://github.com/cloudfoundry/bosh-lite), but you can substitute your CF domain instead.
 
 ## Example
+Starting from this directory....
+
+Push an instance of the [service registry](https://github.com/amalgam8/amalgam8/tree/master/registry)
+```bash
+cd ../registry
+cf push registry
+cd ../tick
+```
+
 Push 3 instances of `tick` app
 ```bash
-cd ~/workspace/cf-networking-release/src/example-apps/tick
-cf push tick -i 3 -m 32M --no-start
+cf push tick --no-start
 cf set-env tick REGISTRY_BASE_URL "http://registry.bosh-lite.com"
 cf start tick
 ```
