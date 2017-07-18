@@ -146,7 +146,8 @@ var _ = Describe("Rotatewatcher", func() {
 
 					Eventually(func() int { return len(fakeLogger.Logs()) }, "5s").Should(BeNumerically(">", 0))
 					Eventually(func() lager.LogFormat {
-						return fakeLogger.Logs()[len(fakeLogger.Logs())-1]
+						fakeLoggerLogs := fakeLogger.Logs()
+						return fakeLoggerLogs[len(fakeLoggerLogs)-1]
 					}).Should(SatisfyAll(
 						LogsWith(lager.ERROR, "test.register-moved-file-sink"),
 						HaveLogData(HaveKeyWithValue("error", "rotate file sink: create file writer: apple")),
@@ -161,7 +162,8 @@ var _ = Describe("Rotatewatcher", func() {
 					It("returns a sensible error", func() {
 						Eventually(func() int { return len(fakeLogger.Logs()) }, "5s").Should(BeNumerically(">", 0))
 						Eventually(func() lager.LogFormat {
-							return fakeLogger.Logs()[len(fakeLogger.Logs())-1]
+							fakeLoggerLogs := fakeLogger.Logs()
+							return fakeLoggerLogs[len(fakeLoggerLogs)-1]
 						}).Should(SatisfyAll(
 							LogsWith(lager.ERROR, "test.register-moved-file-sink"),
 							HaveLogData(HaveKeyWithValue("error", "get file inode: banana")),
@@ -176,9 +178,12 @@ var _ = Describe("Rotatewatcher", func() {
 					fakeDestinationFileInfo.FileExistsReturns(false, errors.New("pineapple"))
 
 					time.Sleep(5 * time.Second)
-					Eventually(func() int { return len(fakeLogger.Logs()) }).Should(BeNumerically(">", 0))
+					Eventually(func() int {
+						return len(fakeLogger.Logs())
+					}).Should(BeNumerically(">", 0))
 					Eventually(func() lager.LogFormat {
-						return fakeLogger.Logs()[len(fakeLogger.Logs())-1]
+						fakeLoggerLogs := fakeLogger.Logs()
+						return fakeLoggerLogs[len(fakeLoggerLogs)-1]
 					}).Should(SatisfyAll(
 						LogsWith(lager.ERROR, "test.stat-file"),
 						HaveLogData(HaveKeyWithValue("error", "stat file: pineapple")),
