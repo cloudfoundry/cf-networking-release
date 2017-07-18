@@ -97,7 +97,13 @@ func main() {
 
 	store := &datastore.Store{
 		Serializer: &serial.Serial{},
-		Locker:     filelock.NewLocker(conf.Datastore),
+		Locker: &filelock.Locker{
+			FileLocker: filelock.NewLocker(conf.Datastore + "_lock"),
+			Mutex:      new(sync.Mutex),
+		},
+		DataFilePath:    conf.Datastore,
+		VersionFilePath: conf.Datastore + "_version",
+		CacheMutex:      new(sync.RWMutex),
 	}
 
 	ipt, err := iptables.New()
@@ -105,7 +111,7 @@ func main() {
 		die(logger, "iptables-new", err)
 	}
 
-	iptLocker := &rules.IPTablesLocker{
+	iptLocker := &filelock.Locker{
 		FileLocker: filelock.NewLocker(conf.IPTablesLockFile),
 		Mutex:      &sync.Mutex{},
 	}

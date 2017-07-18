@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -87,8 +88,35 @@ var _ = Describe("Integration", func() {
 				}
 			}
 		}`
+	EGRESS_ALLOWED_CONTAINER_3_JSON := `{
+			"timestamp": "some-timestamp",
+			"source": "cfnetworking.iptables",
+			"message": "cfnetworking.iptables.egress-allowed",
+			"log_level": 1,
+			"data": {
+				"source": {
+					"container_id": "container-handle-3-longer-than-29-chars",
+					"app_guid": "app_id_3",
+					"space_guid": "space_id_3",
+					"organization_guid": "organization_id_3"
+				},
+				"packet": {
+					"direction": "egress",
+					"allowed": true,
+					"src_ip": "10.255.0.1",
+					"src_port": 36556,
+					"dst_ip": "10.10.10.10",
+					"dst_port": 11111,
+					"protocol": "UDP",
+					"mark": "0x1",
+					"icmp_code": 0,
+					"icmp_type": 0
+				}
+			}
+		}`
 
-	EGRESS_ALLOWD_KERNEL_LOG := "Jun 28 18:21:24 localhost kernel: [100471.222018] OK_container-handle-1-longer IN=s-010255178004 OUT=eth0 MAC=aa:aa:0a:ff:b2:04:ee:ee:0a:ff:b2:04:08:00 SRC=10.255.0.1 DST=10.10.10.10 LEN=29 TOS=0x00 PREC=0x00 TTL=63 ID=2806 DF PROTO=UDP SPT=36556 DPT=11111 LEN=9 MARK=0x1\n"
+	EGRESS_ALLOWED_KERNEL_LOG := "Jun 28 18:21:24 localhost kernel: [100471.222018] OK_container-handle-1-longer IN=s-010255178004 OUT=eth0 MAC=aa:aa:0a:ff:b2:04:ee:ee:0a:ff:b2:04:08:00 SRC=10.255.0.1 DST=10.10.10.10 LEN=29 TOS=0x00 PREC=0x00 TTL=63 ID=2806 DF PROTO=UDP SPT=36556 DPT=11111 LEN=9 MARK=0x1\n"
+	EGRESS_ALLOWED_CONTAINER_3 := "Jun 28 18:21:24 localhost kernel: [100471.222018] OK_container-handle-3-longer IN=s-010255178004 OUT=eth0 MAC=aa:aa:0a:ff:b2:04:ee:ee:0a:ff:b2:04:08:00 SRC=10.255.0.1 DST=10.10.10.10 LEN=29 TOS=0x00 PREC=0x00 TTL=63 ID=2806 DF PROTO=UDP SPT=36556 DPT=11111 LEN=9 MARK=0x1\n"
 	EGRESS_DENIED_KERNEL_LOG := "Jun 30 16:07:06 localhost kernel: [265213.303412] DENY_container-handle-1-long IN=s-010255095010 OUT=eth0 MAC=aa:aa:0a:ff:5f:0a:ee:ee:0a:ff:5f:0a:08:00 SRC=10.255.0.1 DST=10.10.10.10 LEN=30 TOS=0x00 PREC=0x00 TTL=63 ID=2535 DF PROTO=UDP SPT=45564 DPT=25555 LEN=10 MARK=0x1\n"
 
 	BeforeEach(func() {
@@ -116,8 +144,14 @@ var _ = Describe("Integration", func() {
 
 		store = &datastore.Store{
 			Serializer: &serial.Serial{},
-			Locker:     filelock.NewLocker(containerMetadataFile.Name()),
+			Locker: &filelock.Locker{
+				FileLocker: filelock.NewLocker(containerMetadataFile.Name() + "_lock"),
+				Mutex:      new(sync.Mutex),
+			},
+			DataFilePath:    containerMetadataFile.Name(),
+			VersionFilePath: containerMetadataFile.Name() + "_version",
 		}
+
 		AddToContainerMetadata(store, "container-handle-1-longer-than-29-chars", "10.255.0.1", map[string]interface{}{
 			"org_id":          "organization_id_1",
 			"space_id":        "space_id_1",
@@ -146,7 +180,7 @@ var _ = Describe("Integration", func() {
 	})
 
 	It("should not truncate output log file on restart", func() {
-		go AddToKernelLog(EGRESS_ALLOWD_KERNEL_LOG, kernelLogFile)
+		go AddToKernelLog(EGRESS_ALLOWED_KERNEL_LOG, kernelLogFile)
 		Eventually(outputFile).Should(BeAnExistingFile())
 
 		Eventually(func() string {
@@ -172,7 +206,7 @@ var _ = Describe("Integration", func() {
 
 	It("logs data about packets", func() {
 		By("logging successful egress packets")
-		go AddToKernelLog(EGRESS_ALLOWD_KERNEL_LOG, kernelLogFile)
+		go AddToKernelLog(EGRESS_ALLOWED_KERNEL_LOG, kernelLogFile)
 		Eventually(outputFile).Should(BeAnExistingFile())
 		Eventually(ReadLines, "5s").Should(ContainElement(MatchJSON(EGRESS_ALLOWED_JSON)))
 
@@ -185,7 +219,7 @@ var _ = Describe("Integration", func() {
 	Context("when source file is rotated", func() {
 		It("logs data about packets", func() {
 			By("logging successful egress packets")
-			go AddToKernelLog(EGRESS_ALLOWD_KERNEL_LOG, kernelLogFile)
+			go AddToKernelLog(EGRESS_ALLOWED_KERNEL_LOG, kernelLogFile)
 			Eventually(outputFile).Should(BeAnExistingFile())
 			Eventually(ReadLines, "5s").Should(ContainElement(MatchJSON(EGRESS_ALLOWED_JSON)))
 			kernelLogFilename := kernelLogFile.Name()
@@ -206,7 +240,7 @@ var _ = Describe("Integration", func() {
 	Context("when source file is removed", func() {
 		It("logs data about packets", func() {
 			By("logging successful egress packets")
-			go AddToKernelLog(EGRESS_ALLOWD_KERNEL_LOG, kernelLogFile)
+			go AddToKernelLog(EGRESS_ALLOWED_KERNEL_LOG, kernelLogFile)
 			Eventually(outputFile).Should(BeAnExistingFile())
 			Eventually(ReadLines, "5s").Should(ContainElement(MatchJSON(EGRESS_ALLOWED_JSON)))
 			kernelLogFilename := kernelLogFile.Name()
@@ -227,7 +261,7 @@ var _ = Describe("Integration", func() {
 	Context("when destination file is rotated", func() {
 		It("logs data about packets", func() {
 			By("logging successful egress packets")
-			go AddToKernelLog(EGRESS_ALLOWD_KERNEL_LOG, kernelLogFile)
+			go AddToKernelLog(EGRESS_ALLOWED_KERNEL_LOG, kernelLogFile)
 			Eventually(outputFile).Should(BeAnExistingFile())
 			Eventually(ReadLines, "5s").Should(ContainElement(MatchJSON(EGRESS_ALLOWED_JSON)))
 
@@ -249,7 +283,7 @@ var _ = Describe("Integration", func() {
 	Context("when destination file is removed", func() {
 		It("logs data about packets", func() {
 			By("logging successful egress packets")
-			go AddToKernelLog(EGRESS_ALLOWD_KERNEL_LOG, kernelLogFile)
+			go AddToKernelLog(EGRESS_ALLOWED_KERNEL_LOG, kernelLogFile)
 			Eventually(outputFile).Should(BeAnExistingFile())
 			Eventually(ReadLines, "5s").Should(ContainElement(MatchJSON(EGRESS_ALLOWED_JSON)))
 
@@ -265,12 +299,37 @@ var _ = Describe("Integration", func() {
 			Eventually(ReadLines, "5s").Should(ContainElement(MatchJSON(EGRESS_DENIED_JSON)))
 		})
 	})
+
+	Context("when the container metadata store is changed", func() {
+		It("keeps its cache up to date", func() {
+			go AddToKernelLog(EGRESS_ALLOWED_KERNEL_LOG, kernelLogFile)
+			Eventually(outputFile).Should(BeAnExistingFile())
+			Eventually(ReadLines, "5s").Should(ContainElement(MatchJSON(EGRESS_ALLOWED_JSON)))
+
+			DeleteFromContainerMetadata(store, "container-handle-1-longer-than-29-chars")
+			AddToContainerMetadata(store, "container-handle-3-longer-than-29-chars", "10.255.0.1", map[string]interface{}{
+				"org_id":          "organization_id_3",
+				"space_id":        "space_id_3",
+				"app_id":          "app_id_3",
+				"policy_group_id": "policy_group_id_3",
+			})
+			go AddToKernelLog(EGRESS_ALLOWED_CONTAINER_3, kernelLogFile)
+			Eventually(outputFile).Should(BeAnExistingFile())
+			Eventually(ReadLines, "5s").Should(ContainElement(MatchJSON(EGRESS_ALLOWED_CONTAINER_3_JSON)))
+		})
+	})
 })
 
 func AddToContainerMetadata(store *datastore.Store, containerID, containerIP string, metadata map[string]interface{}) {
 	err := store.Add(containerID, containerIP, metadata)
 	Expect(err).NotTo(HaveOccurred())
 }
+
+func DeleteFromContainerMetadata(store *datastore.Store, containerID string) {
+	_, err := store.Delete(containerID)
+	Expect(err).NotTo(HaveOccurred())
+}
+
 func AddToKernelLog(line string, w io.Writer) {
 	defer GinkgoRecover()
 

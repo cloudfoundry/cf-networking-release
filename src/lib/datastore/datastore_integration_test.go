@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"sync"
 	"sync/atomic"
 
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
@@ -18,11 +19,13 @@ import (
 
 var _ = Describe("Datastore Lifecycle", func() {
 	var (
-		handle   string
-		ip       string
-		store    *datastore.Store
-		metadata map[string]interface{}
-		filepath string
+		handle          string
+		ip              string
+		store           *datastore.Store
+		metadata        map[string]interface{}
+		dataFilePath    string
+		lockFilePath    string
+		versionFilePath string
 	)
 
 	BeforeEach(func() {
@@ -36,21 +39,32 @@ var _ = Describe("Datastore Lifecycle", func() {
 			"randomKey":     "randomValue",
 		}
 
-		file, err := ioutil.TempFile("", "")
+		lockFile, err := ioutil.TempFile("", "")
 		Expect(err).NotTo(HaveOccurred())
-		filepath = file.Name()
+		lockFilePath = lockFile.Name()
 
-		locker := filelock.NewLocker(filepath)
-		serializer := &serial.Serial{}
+		dataFile, err := ioutil.TempFile("", "")
+		Expect(err).NotTo(HaveOccurred())
+		dataFilePath = dataFile.Name()
+
+		versionFile, err := ioutil.TempFile("", "")
+		Expect(err).NotTo(HaveOccurred())
+		versionFilePath = versionFile.Name()
 
 		store = &datastore.Store{
-			Serializer: serializer,
-			Locker:     locker,
+			Serializer: &serial.Serial{},
+			Locker: &filelock.Locker{
+				FileLocker: filelock.NewLocker(lockFilePath),
+				Mutex:      new(sync.Mutex),
+			},
+			DataFilePath:    dataFilePath,
+			VersionFilePath: versionFilePath,
+			CacheMutex:      new(sync.RWMutex),
 		}
 	})
 
 	AfterEach(func() {
-		os.Remove(filepath)
+		os.Remove(dataFilePath)
 	})
 
 	Context("when empty", func() {
@@ -166,11 +180,11 @@ var _ = Describe("Datastore Lifecycle", func() {
 			go func() {
 				parallelRunner.RunOnSlice(containerHandles, func(containerHandle interface{}) {
 					p := containerHandle.(string)
-					func(id string) {
+					func(id string, toRead chan<- interface{}) {
 						err := store.Add(id, ip, metadata)
 						Expect(err).NotTo(HaveOccurred())
-					}(p)
-					toRead <- p
+						toRead <- p
+					}(p, toRead)
 				})
 				close(toRead)
 			}()
@@ -178,12 +192,12 @@ var _ = Describe("Datastore Lifecycle", func() {
 			go func() {
 				parallelRunner.RunOnChannel(toRead, func(containerHandle interface{}) {
 					p := containerHandle.(string)
-					func(id string) {
+					func(id string, toDelete chan<- interface{}) {
 						contents, err := store.ReadAll()
 						Expect(err).NotTo(HaveOccurred())
 						Expect(contents).To(HaveKey(p))
-					}(p)
-					toDelete <- p
+						toDelete <- p
+					}(p, toDelete)
 				})
 				close(toDelete)
 			}()

@@ -1,9 +1,9 @@
-package rules_test
+package filelock_test
 
 import (
 	"fmt"
 	"lib/fakes"
-	"lib/rules"
+	"lib/filelock"
 	"sync"
 
 	. "github.com/onsi/ginkgo"
@@ -12,12 +12,12 @@ import (
 
 var _ = Describe("Locker", func() {
 	var (
-		locker *rules.IPTablesLocker
+		locker *filelock.Locker
 		flock  *fakes.FileLocker
 	)
 	BeforeEach(func() {
 		flock = &fakes.FileLocker{}
-		locker = &rules.IPTablesLocker{
+		locker = &filelock.Locker{
 			FileLocker: flock,
 			Mutex:      &sync.Mutex{},
 		}

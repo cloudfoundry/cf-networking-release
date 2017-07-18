@@ -58,7 +58,13 @@ func cmdAdd(args *skel.CmdArgs) error {
 	// Add container metadata info
 	store := &datastore.Store{
 		Serializer: &serial.Serial{},
-		Locker:     filelock.NewLocker(n.Datastore),
+		Locker: &filelock.Locker{
+			FileLocker: filelock.NewLocker(n.Datastore + "_lock"),
+			Mutex:      new(sync.Mutex),
+		},
+		DataFilePath:    n.Datastore,
+		VersionFilePath: n.Datastore + "_version",
+		CacheMutex:      new(sync.RWMutex),
 	}
 
 	var cniAddData struct {
@@ -164,7 +170,13 @@ func cmdDel(args *skel.CmdArgs) error {
 
 	store := &datastore.Store{
 		Serializer: &serial.Serial{},
-		Locker:     filelock.NewLocker(n.Datastore),
+		Locker: &filelock.Locker{
+			FileLocker: filelock.NewLocker(n.Datastore + "_lock"),
+			Mutex:      new(sync.Mutex),
+		},
+		DataFilePath:    n.Datastore,
+		VersionFilePath: n.Datastore + "_version",
+		CacheMutex:      new(sync.RWMutex),
 	}
 
 	container, err := store.Delete(args.ContainerID)
@@ -229,7 +241,7 @@ func newPluginController(iptablesLockFile string) (*lib.PluginController, error)
 		return nil, err
 	}
 
-	iptLocker := &rules.IPTablesLocker{
+	iptLocker := &filelock.Locker{
 		FileLocker: filelock.NewLocker(iptablesLockFile),
 		Mutex:      &sync.Mutex{},
 	}

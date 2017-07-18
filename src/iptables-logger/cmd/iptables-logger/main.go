@@ -13,6 +13,7 @@ import (
 	"lib/serial"
 	"log"
 	"os"
+	"sync"
 
 	"github.com/hpcloud/tail"
 	"github.com/tedsuo/ifrit"
@@ -57,9 +58,16 @@ func main() {
 	}
 
 	kernelLogParser := &parser.KernelLogParser{}
+
 	store := &datastore.Store{
 		Serializer: &serial.Serial{},
-		Locker:     filelock.NewCacheFileLock(filelock.NewLocker(conf.ContainerMetadataFile), conf.ContainerMetadataFile),
+		Locker: &filelock.Locker{
+			FileLocker: filelock.NewLocker(conf.ContainerMetadataFile + "_lock"),
+			Mutex:      new(sync.Mutex),
+		},
+		DataFilePath:    conf.ContainerMetadataFile,
+		VersionFilePath: conf.ContainerMetadataFile + "_version",
+		CacheMutex:      new(sync.RWMutex),
 	}
 	containerRepo := &repository.ContainerRepo{
 		Store: store,

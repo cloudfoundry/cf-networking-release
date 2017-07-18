@@ -20,14 +20,14 @@ import (
 var _ = Describe("Locked IPTables Integration Test", func() {
 	var (
 		restorer  *rules.Restorer
-		locker    *rules.IPTablesLocker
+		locker    *filelock.Locker
 		lockedIPT *rules.LockedIPTables
 		ipt       *goiptables.IPTables
 	)
 
 	BeforeEach(func() {
 		flock := filelock.NewLocker("/tmp/restorer.lock")
-		locker = &rules.IPTablesLocker{
+		locker = &filelock.Locker{
 			FileLocker: flock,
 			Mutex:      &sync.Mutex{},
 		}
