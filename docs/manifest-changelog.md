@@ -10,7 +10,8 @@ See [deployment docs](deploy-iaas.md) for examples
     connection. Now, the rate defaults to 100 packets per second.
     - `cf_networking.iptables_accepted_udp_logs_per_sec` is the maximum number of
       accepted udp packets logged by iptables per second, it should be
-      configured on the `silk-cni` job.
+      configured on the `silk-cni` job for ASGs or on the `vxlan-policy-agent`
+      job for C2C.
 
 ### 1.2.0
 
