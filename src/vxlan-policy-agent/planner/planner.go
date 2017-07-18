@@ -32,13 +32,14 @@ type loggingStateGetter interface {
 }
 
 type VxlanPolicyPlanner struct {
-	Logger        lager.Logger
-	Datastore     dstore
-	PolicyClient  policyClient
-	VNI           int
-	MetricsSender metricsSender
-	Chain         enforcer.Chain
-	LoggingState  loggingStateGetter
+	Logger                        lager.Logger
+	Datastore                     dstore
+	PolicyClient                  policyClient
+	VNI                           int
+	MetricsSender                 metricsSender
+	Chain                         enforcer.Chain
+	LoggingState                  loggingStateGetter
+	IPTablesAcceptedUDPLogsPerSec int
 }
 
 type Container struct {
@@ -128,6 +129,7 @@ func (p *VxlanPolicyPlanner) GetRulesAndChain() (enforcer.RulesWithChain, error)
 							policy.Destination.Port,
 							policy.Source.Tag,
 							policy.Destination.ID,
+							p.IPTablesAcceptedUDPLogsPerSec,
 						),
 					)
 				}

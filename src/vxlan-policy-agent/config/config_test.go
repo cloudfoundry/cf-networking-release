@@ -41,7 +41,8 @@ var _ = Describe("Config", func() {
 					"log_level": "debug",
 					"log_prefix": "cfnetworking",
 					"iptables_c2c_logging": true,
-					"client_timeout_seconds":5
+					"client_timeout_seconds":5,
+					"iptables_accepted_udp_logs_per_sec":4
 				}`)
 				c, err := config.New(file.Name())
 				Expect(err).NotTo(HaveOccurred())
@@ -60,6 +61,7 @@ var _ = Describe("Config", func() {
 				Expect(c.LogPrefix).To(Equal("cfnetworking"))
 				Expect(c.IPTablesLogging).To(Equal(true))
 				Expect(c.ClientTimeoutSeconds).To(Equal(5))
+				Expect(c.IPTablesAcceptedUDPLogsPerSec).To(Equal(4))
 			})
 		})
 
@@ -88,19 +90,20 @@ var _ = Describe("Config", func() {
 		DescribeTable("when config file is missing a member",
 			func(missingFlag, errorMsg string) {
 				allData := map[string]interface{}{
-					"poll_interval":          1234,
-					"cni_datastore_path":     "/some/datastore/path",
-					"policy_server_url":      "https://some-url:1234",
-					"vni":                    42,
-					"metron_address":         "http://1.2.3.4:1234",
-					"ca_cert_file":           "/some/ca/file",
-					"client_cert_file":       "/some/client/cert/file",
-					"client_key_file":        "/some/client/key/file",
-					"iptables_lock_file":     "/var/vcap/data/lock",
-					"debug_server_host":      "http://5.6.7.8",
-					"debug_server_port":      5678,
-					"log_prefix":             "cfnetworking",
-					"client_timeout_seconds": 5,
+					"poll_interval":                      1234,
+					"cni_datastore_path":                 "/some/datastore/path",
+					"policy_server_url":                  "https://some-url:1234",
+					"vni":                                42,
+					"metron_address":                     "http://1.2.3.4:1234",
+					"ca_cert_file":                       "/some/ca/file",
+					"client_cert_file":                   "/some/client/cert/file",
+					"client_key_file":                    "/some/client/key/file",
+					"iptables_lock_file":                 "/var/vcap/data/lock",
+					"debug_server_host":                  "http://5.6.7.8",
+					"debug_server_port":                  5678,
+					"log_prefix":                         "cfnetworking",
+					"client_timeout_seconds":             5,
+					"iptables_accepted_udp_logs_per_sec": 4,
 				}
 				delete(allData, missingFlag)
 				Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
@@ -121,6 +124,7 @@ var _ = Describe("Config", func() {
 			Entry("missing debug server port", "debug_server_port", "DebugServerPort: zero value"),
 			Entry("missing log prefix", "log_prefix", "LogPrefix: zero value"),
 			Entry("missing client timeout", "client_timeout_seconds", "ClientTimeoutSeconds: zero value"),
+			Entry("missing iptables accepted udp logs per sec", "iptables_accepted_udp_logs_per_sec", "IPTablesAcceptedUDPLogsPerSec: less than min"),
 		)
 	})
 })

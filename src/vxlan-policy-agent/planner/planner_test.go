@@ -105,13 +105,14 @@ var _ = Describe("Planner", func() {
 		}
 
 		policyPlanner = &planner.VxlanPolicyPlanner{
-			Logger:        logger,
-			Datastore:     store,
-			PolicyClient:  policyClient,
-			VNI:           42,
-			MetricsSender: metricsSender,
-			Chain:         chain,
-			LoggingState:  loggingStateGetter,
+			Logger:                        logger,
+			Datastore:                     store,
+			PolicyClient:                  policyClient,
+			VNI:                           42,
+			MetricsSender:                 metricsSender,
+			Chain:                         chain,
+			LoggingState:                  loggingStateGetter,
+			IPTablesAcceptedUDPLogsPerSec: 3,
 		}
 	})
 
@@ -189,8 +190,11 @@ var _ = Describe("Planner", func() {
 						"-d", "10.255.1.3",
 						"-p", "udp",
 						"--dport", "5555",
-						"-m", "mark", "--mark", "0xBB",
-						"-m", "conntrack", "--ctstate", "INVALID,NEW,UNTRACKED",
+						"-m", "mark",
+						"--mark", "0xBB",
+						"-m", "limit",
+						"--limit", "3/s",
+						"--limit-burst", "3",
 						"--jump", "LOG", "--log-prefix", `"OK_BB_some-other-app-guid "`,
 					},
 					// allow bb based on mark

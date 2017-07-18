@@ -67,19 +67,20 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		datastorePath = containerMetadataFile.Name()
 
 		conf = config.VxlanPolicyAgent{
-			PollInterval:         1,
-			PolicyServerURL:      fmt.Sprintf("https://%s", serverListenAddr),
-			Datastore:            datastorePath,
-			VNI:                  42,
-			MetronAddress:        fakeMetron.Address(),
-			ServerCACertFile:     paths.ServerCACertFile,
-			ClientCertFile:       paths.ClientCertFile,
-			ClientKeyFile:        paths.ClientKeyFile,
-			IPTablesLockFile:     GlobalIPTablesLockFile,
-			DebugServerHost:      "127.0.0.1",
-			DebugServerPort:      testsupport.PickAPort(),
-			LogPrefix:            "testprefix",
-			ClientTimeoutSeconds: 5,
+			PollInterval:                  1,
+			PolicyServerURL:               fmt.Sprintf("https://%s", serverListenAddr),
+			Datastore:                     datastorePath,
+			VNI:                           42,
+			MetronAddress:                 fakeMetron.Address(),
+			ServerCACertFile:              paths.ServerCACertFile,
+			ClientCertFile:                paths.ClientCertFile,
+			ClientKeyFile:                 paths.ClientKeyFile,
+			IPTablesLockFile:              GlobalIPTablesLockFile,
+			DebugServerHost:               "127.0.0.1",
+			DebugServerPort:               testsupport.PickAPort(),
+			LogPrefix:                     "testprefix",
+			ClientTimeoutSeconds:          5,
+			IPTablesAcceptedUDPLogsPerSec: 7,
 		}
 
 		Expect(conf.Validate()).To(Succeed())
@@ -401,7 +402,7 @@ func PolicyRulesRegexp(loggingEnabled bool) string {
 	}
 	policyRules += `-A vpa--[0-9]+ -d 10.255.100.21/32 -p tcp -m tcp --dport 9999 -m mark --mark 0xc -m comment --comment "src:another-app-guid_dst:some-very-very-long-app-guid" -j ACCEPT\n`
 	if loggingEnabled {
-		policyRules += `-A vpa--[0-9]+ -d 10.255.100.21/32 -p udp -m udp --dport 9001 -m mark --mark 0xd -m conntrack --ctstate INVALID,NEW,UNTRACKED -j LOG --log-prefix "OK_D_some-very-very-long-app "\n`
+		policyRules += `-A vpa--[0-9]+ -d 10.255.100.21/32 -p udp -m udp --dport 9001 -m mark --mark 0xd -m limit --limit 7/sec --limit-burst 7 -j LOG --log-prefix "OK_D_some-very-very-long-app "\n`
 	}
 	policyRules += `-A vpa--[0-9]+ -d 10.255.100.21/32 -p udp -m udp --dport 9001 -m mark --mark 0xd -m comment --comment "src:yet-another-app-guid_dst:some-very-very-long-app-guid" -j ACCEPT`
 	return policyRules

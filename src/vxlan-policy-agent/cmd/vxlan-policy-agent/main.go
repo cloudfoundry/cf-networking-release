@@ -136,7 +136,8 @@ func main() {
 			ParentChain: "FORWARD",
 			Prefix:      "vpa--",
 		},
-		LoggingState: iptablesLoggingState,
+		LoggingState:                  iptablesLoggingState,
+		IPTablesAcceptedUDPLogsPerSec: conf.IPTablesAcceptedUDPLogsPerSec,
 	}
 
 	timestamper := &enforcer.Timestamper{}

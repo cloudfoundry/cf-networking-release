@@ -43,15 +43,28 @@ func NewMarkAllowRule(destinationIP, protocol string, port int, tag string, sour
 	}, fmt.Sprintf("src:%s_dst:%s", sourceAppGUID, destinationAppGUID))
 }
 
-func NewMarkAllowLogRule(destinationIP, protocol string, port int, tag string, destinationAppGUID string) IPTablesRule {
-	return IPTablesRule{
-		"-d", destinationIP,
-		"-p", protocol,
-		"--dport", strconv.Itoa(port),
-		"-m", "mark", "--mark", fmt.Sprintf("0x%s", tag),
-		"-m", "conntrack", "--ctstate", "INVALID,NEW,UNTRACKED",
-		"--jump", "LOG", "--log-prefix",
-		trimAndPad(fmt.Sprintf("OK_%s_%s", tag, destinationAppGUID))}
+func NewMarkAllowLogRule(destinationIP, protocol string, port int, tag string, destinationAppGUID string, acceptedUDPLogsPerSec int) IPTablesRule {
+	if protocol != "udp" {
+		return IPTablesRule{
+			"-d", destinationIP,
+			"-p", protocol,
+			"--dport", strconv.Itoa(port),
+			"-m", "mark", "--mark", fmt.Sprintf("0x%s", tag),
+			"-m", "conntrack", "--ctstate", "INVALID,NEW,UNTRACKED",
+			"--jump", "LOG", "--log-prefix",
+			trimAndPad(fmt.Sprintf("OK_%s_%s", tag, destinationAppGUID))}
+	} else {
+		return IPTablesRule{
+			"-d", destinationIP,
+			"-p", protocol,
+			"--dport", strconv.Itoa(port),
+			"-m", "mark", "--mark", fmt.Sprintf("0x%s", tag),
+			"-m", "limit",
+			"--limit", fmt.Sprintf("%d/s", acceptedUDPLogsPerSec),
+			"--limit-burst", strconv.Itoa(acceptedUDPLogsPerSec),
+			"--jump", "LOG", "--log-prefix",
+			trimAndPad(fmt.Sprintf("OK_%s_%s", tag, destinationAppGUID))}
+	}
 }
 
 func NewMarkSetRule(sourceIP, tag, appGUID string) IPTablesRule {
