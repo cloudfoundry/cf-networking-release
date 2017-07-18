@@ -38,6 +38,7 @@ import (
 	"github.com/tedsuo/ifrit/http_server"
 	"github.com/tedsuo/ifrit/sigmon"
 	"github.com/tedsuo/rata"
+	"policy-server/store/migrations"
 )
 
 const (
@@ -134,7 +135,7 @@ func main() {
 
 	dataStore, err := store.New(
 		connectionResult.ConnectionPool,
-		&store.MigrateAdapter{},
+		&migrations.MigrateAdapter{},
 		storeGroup,
 		destination,
 		policy,

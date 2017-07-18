@@ -25,7 +25,7 @@ const testTimeoutInSeconds = 5
 var policiesBody = `{
 	"policies": [{
 		"source": { "id": "some-app-guid" },
-		"destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 }
+		"destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": {"start": 8090, "end": 8090} }
 	}]
 }`
 

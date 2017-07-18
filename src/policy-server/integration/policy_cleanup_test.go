@@ -61,9 +61,9 @@ var _ = Describe("Automatic Stale Policy Cleanup", func() {
 	Describe("Automatic Stale Policy Cleanup", func() {
 		BeforeEach(func() {
 			body := strings.NewReader(`{ "policies": [
-				{"source": { "id": "live-app-1-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "port": 8080 } },
-				{"source": { "id": "live-app-2-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "port": 9999 } },
-				{"source": { "id": "live-app-1-guid" }, "destination": { "id": "dead-app", "protocol": "tcp", "port": 3333 } }
+				{"source": { "id": "live-app-1-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "ports": { "start": 8080, "end": 8080 } } },
+				{"source": { "id": "live-app-2-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "ports": { "start": 9999, "end": 9999 } } },
+				{"source": { "id": "live-app-1-guid" }, "destination": { "id": "dead-app", "protocol": "tcp", "ports": { "start": 3333, "end": 3333 } } }
 				]} `)
 
 			resp := helpers.MakeAndDoRequest(
@@ -90,8 +90,8 @@ var _ = Describe("Automatic Stale Policy Cleanup", func() {
 
 			activePolicies := `{ "total_policies": 2,
 			"policies": [
-				{"source": { "id": "live-app-1-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "port": 8080, "ports": { "start": 8080, "end": 8080 } } },
-				{"source": { "id": "live-app-2-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "port": 9999, "ports": { "start": 9999, "end": 9999 } } }
+				{"source": { "id": "live-app-1-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "ports": { "start": 8080, "end": 8080 } } },
+				{"source": { "id": "live-app-2-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "ports": { "start": 9999, "end": 9999 } } }
 				]} `
 			Eventually(listPolicies, "5s").Should(MatchJSON(activePolicies))
 

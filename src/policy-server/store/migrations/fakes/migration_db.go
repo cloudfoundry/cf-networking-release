@@ -3,7 +3,7 @@ package fakes
 
 import (
 	"database/sql"
-	"policy-server/store"
+	"policy-server/store/migrations"
 	"sync"
 )
 
@@ -284,4 +284,4 @@ func (fake *MigrationDb) recordInvocation(key string, args []interface{}) {
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ store.MigrationDb = new(MigrationDb)
+var _ migrations.MigrationDb = new(MigrationDb)
