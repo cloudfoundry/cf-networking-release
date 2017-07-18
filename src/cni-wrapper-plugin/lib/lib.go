@@ -67,7 +67,7 @@ func LoadWrapperConfig(bytes []byte) (*WrapperConfig, error) {
 	}
 
 	if n.IPTablesAcceptedUDPLogsPerSec <= 0 {
-		return nil, fmt.Errorf("invalid accepted logs per sec")
+		return nil, fmt.Errorf("invalid accepted udp logs per sec")
 	}
 
 	if _, ok := n.Delegate["cniVersion"]; !ok {

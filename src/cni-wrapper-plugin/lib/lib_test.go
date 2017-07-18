@@ -115,7 +115,7 @@ var _ = Describe("LoadWrapperConfig", func() {
 		Entry("ingress tag", "ingress_tag", "missing ingress tag"),
 		Entry("vtep device name", "vtep_name", "missing vtep device name"),
 		Entry("denied logs per sec", "iptables_denied_logs_per_sec", "invalid denied logs per sec"),
-		Entry("accepted logs per sec", "iptables_accepted_udp_logs_per_sec", "invalid accepted logs per sec"),
+		Entry("accepted udp logs per sec", "iptables_accepted_udp_logs_per_sec", "invalid accepted udp logs per sec"),
 	)
 
 	DescribeTable("invalid value for field", func(field string, value interface{}, errMessage string) {
@@ -130,7 +130,7 @@ var _ = Describe("LoadWrapperConfig", func() {
 		Expect(err).To(MatchError(errMessage))
 	},
 		Entry("denied logs per sec", "iptables_denied_logs_per_sec", -1, "invalid denied logs per sec"),
-		Entry("accepted logs per sec", "iptables_accepted_udp_logs_per_sec", -1, "invalid accepted logs per sec"),
+		Entry("accepted udp logs per sec", "iptables_accepted_udp_logs_per_sec", -1, "invalid accepted udp logs per sec"),
 	)
 })
 
