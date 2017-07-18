@@ -101,7 +101,7 @@ var _ = Describe("External API", func() {
 			Entry("POST to policies",
 				"POST",
 				"networking/v0/external/policies",
-				`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`,
+				`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8090, "end": 8090 } } } ] }`,
 			),
 			Entry("GET to policies",
 				"GET",
@@ -111,7 +111,7 @@ var _ = Describe("External API", func() {
 			Entry("POST to policies/delete",
 				"POST",
 				"networking/v0/external/policies/delete",
-				`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`,
+				`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8090, "end": 8090 } } } ] }`,
 			),
 		)
 	})
@@ -136,7 +136,7 @@ var _ = Describe("External API", func() {
 				body string
 			)
 			BeforeEach(func() {
-				body = `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`
+				body = `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8090, "end": 8090 } } } ] }`
 				req = makeNewRequest("POST", "networking/v0/external/policies", body)
 			})
 
@@ -164,7 +164,7 @@ var _ = Describe("External API", func() {
 
 				Context("when one app is in spaces they do not have access to", func() {
 					BeforeEach(func() {
-						body = `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "app-guid-not-in-my-spaces", "protocol": "tcp", "port": 8090 } } ] }`
+						body = `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "app-guid-not-in-my-spaces", "protocol": "tcp", "ports": { "start": 8090, "end": 8090 } } } ] }`
 						req = makeNewRequest("POST", "networking/v0/external/policies", body)
 					})
 					It("returns a 403 with a meaningful error", func() {
@@ -201,7 +201,7 @@ var _ = Describe("External API", func() {
 
 				Context("when one app is in spaces they do not have access to", func() {
 					BeforeEach(func() {
-						body = `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "app-guid-not-in-my-spaces", "protocol": "tcp", "port": 8090 } } ] }`
+						body = `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "app-guid-not-in-my-spaces", "protocol": "tcp", "ports": { "start": 8090, "end": 8090 } } } ] }`
 						req = makeNewRequest("POST", "networking/v0/external/policies", body)
 						req.Header.Set("Authorization", "Bearer space-dev-token")
 					})
@@ -239,8 +239,8 @@ var _ = Describe("External API", func() {
 
 			BeforeEach(func() {
 				body = `{ "policies": [
-				{"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } },
-				{"source": { "id": "some-app-guid" }, "destination": { "id": "another-app-guid", "protocol": "udp", "port": 7070 } }
+				{"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8090, "end": 8090 } } },
+				{"source": { "id": "some-app-guid" }, "destination": { "id": "another-app-guid", "protocol": "udp", "ports": { "start": 7070, "end": 7070 } } }
 				] }`
 				req = makeNewRequest("POST", "networking/v0/external/policies", body)
 			})
@@ -252,7 +252,7 @@ var _ = Describe("External API", func() {
 
 				By("seeing that adding another policy fails")
 				body = `{ "policies": [
-				{"source": { "id": "some-app-guid" }, "destination": { "id": "yet-another-other-app-guid", "protocol": "tcp", "port": 9000 } }
+				{"source": { "id": "some-app-guid" }, "destination": { "id": "yet-another-other-app-guid", "protocol": "tcp", "ports": { "start": 9000, "end": 9000 } } }
 				] }`
 				req = makeNewRequest("POST", "networking/v0/external/policies", body)
 				resp, err = http.DefaultClient.Do(req)
@@ -264,7 +264,7 @@ var _ = Describe("External API", func() {
 
 				By("deleting a policy")
 				body = `{ "policies": [
-				{"source": { "id": "some-app-guid" }, "destination": { "id": "another-app-guid", "protocol": "udp", "port": 7070 } }
+				{"source": { "id": "some-app-guid" }, "destination": { "id": "another-app-guid", "protocol": "udp", "ports": { "start": 7070, "end": 7070 } } }
 				] }`
 				req = makeNewRequest("POST", "networking/v0/external/policies/delete", body)
 				resp, err = http.DefaultClient.Do(req)
@@ -273,7 +273,7 @@ var _ = Describe("External API", func() {
 
 				By("seeing that adding another policy succeeds")
 				body = `{ "policies": [
-				{"source": { "id": "some-app-guid" }, "destination": { "id": "yet-another-other-app-guid", "protocol": "tcp", "port": 9000 } }
+				{"source": { "id": "some-app-guid" }, "destination": { "id": "yet-another-other-app-guid", "protocol": "tcp", "ports": { "start": 9000, "end": 9000 } } }
 				] }`
 				req = makeNewRequest("POST", "networking/v0/external/policies", body)
 				resp, err = http.DefaultClient.Do(req)
@@ -285,7 +285,7 @@ var _ = Describe("External API", func() {
 		Describe("Delete policies", func() {
 			var req *http.Request
 			BeforeEach(func() {
-				body := `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`
+				body := `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8090, "end": 8090 } } } ] }`
 				req = makeNewRequest("POST", "networking/v0/external/policies/delete", body)
 			})
 			It("succeeds for developers with access to apps and network.write permission", func() {
@@ -310,7 +310,7 @@ var _ = Describe("External API", func() {
 			})
 			Context("when one app is in spaces they do not have access to", func() {
 				BeforeEach(func() {
-					body := `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "app-guid-not-in-my-spaces", "protocol": "tcp", "port": 8090 } } ] }`
+					body := `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "app-guid-not-in-my-spaces", "protocol": "tcp", "ports": { "start": 8090, "end": 8090 } } } ] }`
 					req = makeNewRequest("POST", "networking/v0/external/policies/delete", body)
 				})
 				It("returns a 403 with a meaningful error", func() {
@@ -391,7 +391,7 @@ var _ = Describe("External API", func() {
 					responseString, err := ioutil.ReadAll(resp.Body)
 					expectedResp := `{
 						"total_policies": 1,
-						"policies": [ {"source": { "id": "live-app-1-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "port": 8090, "ports": { "start": 8090, "end": 8090 }}} ]
+						"policies": [ {"source": { "id": "live-app-1-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "ports": { "start": 8090, "end": 8090 }}} ]
 					}`
 					Expect(responseString).To(MatchJSON(expectedResp))
 				})
@@ -560,7 +560,7 @@ var _ = Describe("External API", func() {
 
 	Describe("adding policies", func() {
 		It("responds with 200 and a body of {} and we can see it in the list", func() {
-			body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
+			body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8090, "end": 8090 } } } ] }`)
 			resp := helpers.MakeAndDoRequest(
 				"POST",
 				fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
@@ -585,7 +585,7 @@ var _ = Describe("External API", func() {
 			Expect(responseString).To(MatchJSON(`{
 				"total_policies": 1,
 				"policies": [
-				{ "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090, "ports": { "start": 8090, "end": 8090 } } }
+				{ "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8090, "end": 8090 } } }
 				]}`))
 
 			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
@@ -622,7 +622,7 @@ var _ = Describe("External API", func() {
 				Expect(responseString).To(MatchJSON(`{
 				"total_policies": 1,
 				"policies": [
-				{ "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090, "ports": { "start": 8090, "end": 8090 } } }
+				{ "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8090, "end": 8090 } } }
 				]}`))
 
 				Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
@@ -637,7 +637,7 @@ var _ = Describe("External API", func() {
 
 		Context("when the protocol is invalid", func() {
 			It("gives a helpful error", func() {
-				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "nope", "port": 8090 } } ] }`)
+				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "nope", "ports": { "start": 8090, "end": 8090 } } } ] }`)
 				resp := helpers.MakeAndDoRequest(
 					"POST",
 					fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
@@ -673,9 +673,9 @@ var _ = Describe("External API", func() {
 	Describe("cleanup policies", func() {
 		BeforeEach(func() {
 			body := strings.NewReader(`{ "policies": [
-				{"source": { "id": "live-app-1-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "port": 8080 } },
-				{"source": { "id": "live-app-2-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "port": 9999 } },
-				{"source": { "id": "live-app-1-guid" }, "destination": { "id": "dead-app", "protocol": "tcp", "port": 3333 } }
+				{"source": { "id": "live-app-1-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "ports": { "start": 8080, "end": 8080 } } },
+				{"source": { "id": "live-app-2-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "ports": { "start": 9999, "end": 9999 } } },
+				{"source": { "id": "live-app-1-guid" }, "destination": { "id": "dead-app", "protocol": "tcp", "ports": { "start": 3333, "end": 3333 }} }
 				]} `)
 
 			resp := helpers.MakeAndDoRequest(
@@ -699,7 +699,7 @@ var _ = Describe("External API", func() {
 			stalePoliciesStr := `{
 				"total_policies":1,
 				"policies": [
-				{"source": { "id": "live-app-1-guid" }, "destination": { "id": "dead-app", "protocol": "tcp", "port": 3333, "ports": { "start": 3333, "end": 3333 } } }
+				{"source": { "id": "live-app-1-guid" }, "destination": { "id": "dead-app", "protocol": "tcp", "ports": { "start": 3333, "end": 3333 } } }
 				 ]}
 				`
 
@@ -723,9 +723,9 @@ var _ = Describe("External API", func() {
 					fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
 					headers,
 					strings.NewReader(`{ "policies": [
-						{"source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "port": 8080 } },
-						{"source": { "id": "app3" }, "destination": { "id": "app1", "protocol": "tcp", "port": 9999 } },
-						{"source": { "id": "app3" }, "destination": { "id": "app4", "protocol": "tcp", "port": 3333 } }
+						{"source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "ports": { "start": 8080, "end": 8080 } } },
+						{"source": { "id": "app3" }, "destination": { "id": "app1", "protocol": "tcp", "ports": { "start": 9999, "end": 9999 } } },
+						{"source": { "id": "app3" }, "destination": { "id": "app4", "protocol": "tcp", "ports": { "start": 3333, "end": 3333 } } }
 					]}
 					`),
 				)
@@ -748,8 +748,8 @@ var _ = Describe("External API", func() {
 				Expect(responseString).To(MatchJSON(`{
 					"total_policies": 2,
 					"policies": [
-					{"source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "port": 8080, "ports": { "start": 8080, "end": 8080 } } },
-				 {"source": { "id": "app3" }, "destination": { "id": "app1", "protocol": "tcp", "port": 9999, "ports": { "start": 9999, "end": 9999 }} }
+					{"source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "ports": { "start": 8080, "end": 8080 } } },
+				 {"source": { "id": "app3" }, "destination": { "id": "app1", "protocol": "tcp", "ports": { "start": 9999, "end": 9999 }} }
 				 ]}
 				`))
 
@@ -770,7 +770,7 @@ var _ = Describe("External API", func() {
 				"POST",
 				fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
 				headers,
-				strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`),
+				strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8090, "end": 8090 } } } ] }`),
 			)
 
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
@@ -820,7 +820,7 @@ var _ = Describe("External API", func() {
 			})
 			It("still works when a single port is set in the request", func() {
 
-				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port":  8090 } } ] }`)
+				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8090, "end": 8090 } } } ] }`)
 
 				response := helpers.MakeAndDoRequest(
 					"POST",
@@ -853,8 +853,8 @@ var _ = Describe("External API", func() {
 		Context("when one of the policies to delete does not exist", func() {
 			It("responds with status 200", func() {
 				body := strings.NewReader(`{ "policies": [
-						{"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } },
-						{"source": { "id": "some-non-existent-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } }
+						{"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8090, "end": 8090 } } },
+						{"source": { "id": "some-non-existent-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8090, "end": 8090 } } }
 					] }`)
 
 				response := helpers.MakeAndDoRequest(
@@ -904,15 +904,17 @@ var _ = Describe("External API", func() {
 				"policies": [
 				{ "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 5000, "end": 6000 } } }
 				]}`))
+
+			//TODO add delete test
 		})
 	})
 
 	Describe("listing tags", func() {
 		BeforeEach(func() {
 			body := strings.NewReader(`{ "policies": [
-			{"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } },
-			{"source": { "id": "some-app-guid" }, "destination": { "id": "another-app-guid", "protocol": "udp", "port": 6666 } },
-			{"source": { "id": "another-app-guid" }, "destination": { "id": "some-app-guid", "protocol": "tcp", "port": 3333 } }
+			{"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8090, "end": 8090 } } },
+			{"source": { "id": "some-app-guid" }, "destination": { "id": "another-app-guid", "protocol": "udp", "ports": { "start": 6666, "end": 6666 } } },
+			{"source": { "id": "another-app-guid" }, "destination": { "id": "some-app-guid", "protocol": "tcp", "ports": { "start": 3333, "end": 3333 } } }
 			] }`)
 			resp := helpers.MakeAndDoRequest(
 				"POST",
@@ -946,7 +948,7 @@ var _ = Describe("External API", func() {
 			] }`))
 
 			By("reusing tags that are no longer in use")
-			body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
+			body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8090, "end": 8090 } } } ] }`)
 			resp = helpers.MakeAndDoRequest(
 				"POST",
 				fmt.Sprintf("http://%s:%d/networking/v0/external/policies/delete", conf.ListenHost, conf.ListenPort),
@@ -954,7 +956,7 @@ var _ = Describe("External API", func() {
 				body,
 			)
 
-			body = strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "yet-another-app-guid", "protocol": "udp", "port": 4567 } } ] }`)
+			body = strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "yet-another-app-guid", "protocol": "udp", "ports": { "start": 4567, "end": 4567 } } } ] }`)
 			resp = helpers.MakeAndDoRequest(
 				"POST",
 				fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
