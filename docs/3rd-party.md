@@ -28,7 +28,7 @@ A Cloud Foundry system that integrates a 3rd party networking component should b
 
 The smoke tests are non-disruptive and may be run against a live, production environment.  The other tests make potentially disruptive changes and should only be run against a non-production environment.
 
-For local development, we recommend using [`cf-deployment` on BOSH-lite](deploy-bosh-lite.md).
+For local development, we recommend using [`cf-deployment` on BOSH-lite](https://github.com/cloudfoundry/cf-deployment).
 
 For guidance on these test suites, please reach out to our team in Slack (top of this page).
 

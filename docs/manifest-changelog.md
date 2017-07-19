@@ -1,6 +1,6 @@
 ## Manifest changelog
 
-See [deployment docs](deploy-iaas.md) for examples
+See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for examples
 
 ### 1.3.0
 
@@ -113,8 +113,7 @@ We recommend you review the [spec files for these new jobs](../jobs) and the dif
 The `cni-flannel` job will no longer be running on Diego cells.
 
 To deploy Silk with [CF Deployment](https://github.com/cloudfoundry/cf-deployment), use the
-[`silk.yml` opsfile](../manifest-generation/opsfiles/silk.yml) as documented for
-[BOSH-lite](deploy-bosh-lite.md), [GCP and AWS](deploy-iaas.md).
+[`silk.yml` opsfile](../manifest-generation/opsfiles/silk.yml) as documented for [GCP, AWS and BOSH-lite](https://github.com/cloudfoundry/cf-deployment).
 
 Instructions for deploying with CF Release have also been updated in the above docs.  Your stub file
 should have a diff that resembles:
@@ -308,7 +307,7 @@ cf_networking_overrides:
 0. `flannel.etcd.require_ssl` property has been completely removed.
 Previously it defaulted to `true` but could be overridden to `false`.
 Now SSL is required for the flannel connection to etcd.
-Refer to the [manifest generation docs](deploy-iaas.md#deploy-to-aws)
+Refer to the [cf-deployment docs](https://github.com/cloudfoundry/cf-deployment)
 for details on how to generate and configure certs and keys.
 Note, you will likely need to make similar changes to other etcd clients, e.g. loggregator.
 

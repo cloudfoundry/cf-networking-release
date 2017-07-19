@@ -2,7 +2,7 @@
 
 CF Networking provides policy-based container networking for Cloud Foundry.
 
-For information about getting started with CF Networking, look at our docs for [deploying to BOSH-lite](docs/deploy-bosh-lite.md) or [deploying to AWS or GCP](docs/deploy-iaas.md#deploy-to-aws).
+For information about getting started with CF Networking, look at our docs for [the supported mode of deploying to AWS, GCP or BOSH-lite](https://github.com/cloudfoundry/cf-deployment).
 
 ## Downloads
 - Our BOSH release is available [on bosh.io](http://bosh.io/releases/github.com/cloudfoundry-incubator/cf-networking-release)
@@ -12,8 +12,7 @@ For information about getting started with CF Networking, look at our docs for [
 ## Documentation
 - [Architecture](docs/arch.md)
 - Deploy
-  - [to BOSH-lite](docs/deploy-bosh-lite.md)
-  - [to AWS or GCP](docs/deploy-iaas.md)
+  - [to AWS, GCP or BOSH-lite](https://github.com/cloudfoundry/cf-deployment)
 - Configuring Policies
   - [CLI](docs/CLI.md)
   - [API](docs/API.md)
