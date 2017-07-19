@@ -74,6 +74,8 @@ func main() {
 	}
 	logMerger := &merger.Merger{
 		ContainerRepo: containerRepo,
+		HostIp:        conf.HostIp,
+		HostGuid:      conf.HostGuid,
 	}
 	iptablesLogger := lager.NewLogger(fmt.Sprintf("%s.iptables", logPrefix))
 	outputLogFile, err := os.OpenFile(conf.OutputLogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)

@@ -6,10 +6,12 @@ import (
 )
 
 type Container struct {
-	Handle  string `json:"container_id"`
-	AppID   string `json:"app_guid"`
-	SpaceID string `json:"space_guid"`
-	OrgID   string `json:"organization_guid"`
+	Handle   string `json:"container_id"`
+	AppID    string `json:"app_guid"`
+	SpaceID  string `json:"space_guid"`
+	OrgID    string `json:"organization_guid"`
+	HostIp   string `json:"host_ip"`
+	HostGuid string `json:"host_guid"`
 }
 
 type ContainerRepo struct {

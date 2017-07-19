@@ -6,6 +6,8 @@
     "kernel_log_file" => "/var/log/kern.log",
     "container_metadata_file" => "/var/vcap/data/container-metadata/store.json",
     "output_log_file" => "/var/vcap/sys/log/iptables-logger/iptables.log",
+    "host_ip" => spec.ip,
+    "host_guid" => spec.id,
   }
 
   JSON.pretty_generate(toRender)

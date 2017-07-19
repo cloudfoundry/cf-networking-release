@@ -20,6 +20,8 @@ type IPTablesLogData struct {
 
 type Merger struct {
 	ContainerRepo containerRepo
+	HostIp        string
+	HostGuid      string
 }
 
 func (m *Merger) Merge(parsedData parser.ParsedData) (IPTablesLogData, error) {
@@ -43,6 +45,10 @@ func (m *Merger) Merge(parsedData parser.ParsedData) (IPTablesLogData, error) {
 	if err != nil {
 		return IPTablesLogData{}, fmt.Errorf("get container by ip: %s", err)
 	}
+
+	containerData.HostIp = m.HostIp
+	containerData.HostGuid = m.HostGuid
+
 	return IPTablesLogData{
 		Message: message,
 		Data: lager.Data{

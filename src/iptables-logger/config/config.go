@@ -6,13 +6,15 @@ import (
 	"io/ioutil"
 	"os"
 
-	validator "gopkg.in/validator.v2"
+	"gopkg.in/validator.v2"
 )
 
 type Config struct {
 	KernelLogFile         string `json:"kernel_log_file" validate:"nonzero"`
 	ContainerMetadataFile string `json:"container_metadata_file" validate:"nonzero"`
 	OutputLogFile         string `json:"output_log_file" validate:"nonzero"`
+	HostIp                string `json:"host_ip" validate:"nonzero"`
+	HostGuid              string `json:"host_guid" validate:"nonzero"`
 }
 
 func New(path string) (*Config, error) {

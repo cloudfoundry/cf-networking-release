@@ -46,7 +46,9 @@ var _ = Describe("Integration", func() {
 					"container_id": "container-handle-1-longer-than-29-chars",
 					"app_guid": "app_id_1",
 					"space_guid": "space_id_1",
-					"organization_guid": "organization_id_1"
+					"organization_guid": "organization_id_1",
+					"host_ip": "1.2.3.4",
+					"host_guid": "some-guid"
 				},
 				"packet": {
 					"direction": "egress",
@@ -72,7 +74,9 @@ var _ = Describe("Integration", func() {
 					"container_id": "container-handle-1-longer-than-29-chars",
 					"app_guid": "app_id_1",
 					"space_guid": "space_id_1",
-					"organization_guid": "organization_id_1"
+					"organization_guid": "organization_id_1",
+					"host_ip": "1.2.3.4",
+					"host_guid": "some-guid"
 				},
 				"packet": {
 					"direction": "egress",
@@ -98,7 +102,9 @@ var _ = Describe("Integration", func() {
 					"container_id": "container-handle-3-longer-than-29-chars",
 					"app_guid": "app_id_3",
 					"space_guid": "space_id_3",
-					"organization_guid": "organization_id_3"
+					"organization_guid": "organization_id_3",
+					"host_ip": "1.2.3.4",
+					"host_guid": "some-guid"
 				},
 				"packet": {
 					"direction": "egress",
@@ -135,6 +141,8 @@ var _ = Describe("Integration", func() {
 			KernelLogFile:         kernelLogFile.Name(),
 			ContainerMetadataFile: containerMetadataFile.Name(),
 			OutputLogFile:         outputFile,
+			HostIp:                "1.2.3.4",
+			HostGuid:              "some-guid",
 		}
 		configFilePath = WriteConfigFile(conf)
 

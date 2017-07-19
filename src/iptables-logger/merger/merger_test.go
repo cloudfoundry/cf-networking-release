@@ -15,22 +15,36 @@ import (
 
 var _ = Describe("Merger", func() {
 	var (
-		logMerger         *merger.Merger
-		container         repository.Container
-		parsedData        parser.ParsedData
-		fakeContainerRepo *fakes.ContainerRepo
+		logMerger               *merger.Merger
+		containerReturnedByRepo repository.Container
+		expectedContainer       repository.Container
+		parsedData              parser.ParsedData
+		fakeContainerRepo       *fakes.ContainerRepo
 	)
 	BeforeEach(func() {
 		fakeContainerRepo = &fakes.ContainerRepo{}
 		logMerger = &merger.Merger{
 			ContainerRepo: fakeContainerRepo,
+			HostIp:        "1.2.3.4",
+			HostGuid:      "some-guid",
 		}
 
-		container = repository.Container{
-			Handle:  "some-handle",
-			AppID:   "some-app-id",
-			SpaceID: "some-space-id",
-			OrgID:   "some-org-id",
+		containerReturnedByRepo = repository.Container{
+			Handle:   "some-handle",
+			AppID:    "some-app-id",
+			SpaceID:  "some-space-id",
+			OrgID:    "some-org-id",
+			HostIp:   "",
+			HostGuid: "",
+		}
+
+		expectedContainer = repository.Container{
+			Handle:   "some-handle",
+			AppID:    "some-app-id",
+			SpaceID:  "some-space-id",
+			OrgID:    "some-org-id",
+			HostIp:   "1.2.3.4",
+			HostGuid: "some-guid",
 		}
 
 		parsedData = parser.ParsedData{
@@ -46,7 +60,7 @@ var _ = Describe("Merger", func() {
 			ICMPCode:        13,
 		}
 
-		fakeContainerRepo.GetByIPReturns(container, nil)
+		fakeContainerRepo.GetByIPReturns(containerReturnedByRepo, nil)
 	})
 
 	It("merges the container metadata with the kernel log data", func() {
@@ -58,7 +72,7 @@ var _ = Describe("Merger", func() {
 
 		Expect(merged).To(Equal(merger.IPTablesLogData{
 			Message: "ingress-allowed",
-			Data:    lager.Data{"destination": container, "packet": parsedData},
+			Data:    lager.Data{"destination": expectedContainer, "packet": parsedData},
 		}))
 	})
 
@@ -75,7 +89,7 @@ var _ = Describe("Merger", func() {
 
 			Expect(merged).To(Equal(merger.IPTablesLogData{
 				Message: "egress-allowed",
-				Data:    lager.Data{"source": container, "packet": parsedData},
+				Data:    lager.Data{"source": expectedContainer, "packet": parsedData},
 			}))
 		})
 	})
@@ -93,7 +107,7 @@ var _ = Describe("Merger", func() {
 
 			Expect(merged).To(Equal(merger.IPTablesLogData{
 				Message: "ingress-denied",
-				Data:    lager.Data{"destination": container, "packet": parsedData},
+				Data:    lager.Data{"destination": expectedContainer, "packet": parsedData},
 			}))
 		})
 	})
