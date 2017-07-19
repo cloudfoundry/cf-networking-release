@@ -1,14 +1,15 @@
 package migrations
 
 import (
-	"fmt"
-	"github.com/rubenv/sql-migrate"
 	"database/sql"
+	"fmt"
+
+	"github.com/rubenv/sql-migrate"
 )
 
 //go:generate counterfeiter -o fakes/migrate_executor.go --fake-name MigrateExecutor . MigrateExecutor
 type MigrateExecutor interface {
-	Exec(db MigrationDb, dialect string, m migrate.MigrationSource, dir migrate.MigrationDirection) (int, error)
+	ExecMax(db MigrationDb, dialect string, m migrate.MigrationSource, dir migrate.MigrationDirection, maxNumMigrations int) (int, error)
 }
 
 //go:generate counterfeiter -o fakes/migration_db.go --fake-name MigrationDb . MigrationDb
@@ -17,6 +18,9 @@ type MigrationDb interface {
 	Query(query string, args ...interface{}) (*sql.Rows, error)
 	QueryRow(query string, args ...interface{}) *sql.Row
 	DriverName() string
+}
+
+type Migrator struct {
 }
 
 var policyServerMigrations dbSpecificPolicyServerMigrations = dbSpecificPolicyServerMigrations{
@@ -30,25 +34,22 @@ var policyServerMigrations dbSpecificPolicyServerMigrations = dbSpecificPolicySe
 		SchemasV1Up,
 		SchemasV1Down,
 	},
-	policyServerMigration{
-		"3",
-		SchemasV2Up,
-		schemaDownNotImplemented,
-	},
 }
 
-func PerformMigrations(driverName string, migrationDb MigrationDb, migrateExecutor MigrateExecutor) (int, error) {
+func (m *Migrator) PerformMigrations(driverName string, migrationDb MigrationDb, migrateExecutor MigrateExecutor, maxNumMigrations int) (int, error) {
 	if !policyServerMigrations.supportsDatabase(driverName) {
 		return 0, fmt.Errorf("unsupported driver: %s", driverName)
 	}
 
-	numMigrations, err := migrateExecutor.Exec(
+	numMigrations, err := migrateExecutor.ExecMax(
 		migrationDb,
 		driverName,
 		migrate.MemoryMigrationSource{
 			Migrations: policyServerMigrations.asExecutorMigrations(driverName),
 		},
-		migrate.Up)
+		migrate.Up,
+		maxNumMigrations,
+	)
 
 	if err != nil {
 		return numMigrations, fmt.Errorf("executing migration: %s", err)
@@ -157,12 +158,41 @@ var SchemasV1Up = map[string][]string{
 		`ALTER TABLE destinations ADD COLUMN end_port int;`,
 		`UPDATE destinations SET start_port = port;`,
 		`UPDATE destinations SET end_port = port;`,
+		`CREATE PROCEDURE drop_destination_index()
+BEGIN
+ SELECT CONSTRAINT_NAME INTO @name
+ FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE t1
+ WHERE TABLE_NAME='destinations' AND COLUMN_NAME= 'port';
+
+ SET @query = CONCAT('ALTER TABLE destinations DROP INDEX ', @name);
+
+ PREPARE stmt FROM @query;
+
+ EXECUTE stmt;
+
+ DEALLOCATE PREPARE stmt;
+ SET @query = NULL;
+ SET @name = NULL;
+
+END;`,
+		`CALL drop_destination_index();`,
+		// TODO we cannot assume this is group_id, we should look it up
+		`ALTER TABLE destinations ADD UNIQUE key unique_destination (group_id, start_port, end_port, protocol);`,
 	},
 	"postgres": {
 		`ALTER TABLE destinations ADD COLUMN start_port int;`,
 		`ALTER TABLE destinations ADD COLUMN end_port int;`,
 		`UPDATE destinations SET start_port = port;`,
 		`UPDATE destinations SET end_port = port;`,
+		`DO $$DECLARE r record;
+		 	BEGIN
+		 		FOR r in select CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_NAME='destinations' AND COLUMN_NAME='port'
+		 		LOOP
+		 			EXECUTE 'ALTER TABLE destinations DROP CONSTRAINT ' || quote_ident(r.CONSTRAINT_NAME);
+		 		END LOOP;
+		 	END$$;
+	`,
+		`ALTER TABLE destinations ADD CONSTRAINT unique_destination UNIQUE (group_id, start_port, end_port, protocol);`,
 	},
 }
 
@@ -174,18 +204,6 @@ var SchemasV1Down = map[string][]string{
 	"postgres": {
 		`ALTER TABLE destinations DROP COLUMN start_port;`,
 		`ALTER TABLE destinations DROP COLUMN end_port;`,
-	},
-}
-
-var SchemasV2Up = map[string][]string{
-	"mysql": {
-		`alter table destinations drop index group_id`,
-		`alter table destinations add unique key destinations_group_id_start_port_end_port_protocol_key (group_id, start_port, end_port, protocol)`,
-	},
-	"postgres": {
-		`ALTER TABLE destinations
-		 DROP CONSTRAINT destinations_group_id_port_protocol_key
-         ,ADD CONSTRAINT destinations_group_id_start_port_end_port_protocol_key UNIQUE (group_id, start_port, end_port, protocol)`,
 	},
 }
 
