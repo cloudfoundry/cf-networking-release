@@ -33,22 +33,22 @@ func NewIngressMarkRule(hostInterface string, hostPort int, hostIP, tag string) 
 	}
 }
 
-func NewMarkAllowRule(destinationIP, protocol string, port int, tag string, sourceAppGUID, destinationAppGUID string) IPTablesRule {
+func NewMarkAllowRule(destinationIP, protocol string, startPort, endPort int, tag string, sourceAppGUID, destinationAppGUID string) IPTablesRule {
 	return AppendComment(IPTablesRule{
 		"-d", destinationIP,
 		"-p", protocol,
-		"--dport", strconv.Itoa(port),
+		"--dport", fmt.Sprintf("%d:%d", startPort, endPort),
 		"-m", "mark", "--mark", fmt.Sprintf("0x%s", tag),
 		"--jump", "ACCEPT",
 	}, fmt.Sprintf("src:%s_dst:%s", sourceAppGUID, destinationAppGUID))
 }
 
-func NewMarkAllowLogRule(destinationIP, protocol string, port int, tag string, destinationAppGUID string, acceptedUDPLogsPerSec int) IPTablesRule {
+func NewMarkAllowLogRule(destinationIP, protocol string, startPort, endPort int, tag string, destinationAppGUID string, acceptedUDPLogsPerSec int) IPTablesRule {
 	if protocol != "udp" {
 		return IPTablesRule{
 			"-d", destinationIP,
 			"-p", protocol,
-			"--dport", strconv.Itoa(port),
+			"--dport", fmt.Sprintf("%d:%d", startPort, endPort),
 			"-m", "mark", "--mark", fmt.Sprintf("0x%s", tag),
 			"-m", "conntrack", "--ctstate", "INVALID,NEW,UNTRACKED",
 			"--jump", "LOG", "--log-prefix",
@@ -57,7 +57,7 @@ func NewMarkAllowLogRule(destinationIP, protocol string, port int, tag string, d
 		return IPTablesRule{
 			"-d", destinationIP,
 			"-p", protocol,
-			"--dport", strconv.Itoa(port),
+			"--dport", fmt.Sprintf("%d:%d", startPort, endPort),
 			"-m", "mark", "--mark", fmt.Sprintf("0x%s", tag),
 			"-m", "limit",
 			"--limit", fmt.Sprintf("%d/s", acceptedUDPLogsPerSec),

@@ -126,7 +126,8 @@ func (p *VxlanPolicyPlanner) GetRulesAndChain() (enforcer.RulesWithChain, error)
 						rules.NewMarkAllowLogRule(
 							dstContainerIP,
 							policy.Destination.Protocol,
-							policy.Destination.Port,
+							policy.Destination.Ports.Start,
+							policy.Destination.Ports.End,
 							policy.Source.Tag,
 							policy.Destination.ID,
 							p.IPTablesAcceptedUDPLogsPerSec,
@@ -138,7 +139,8 @@ func (p *VxlanPolicyPlanner) GetRulesAndChain() (enforcer.RulesWithChain, error)
 					rules.NewMarkAllowRule(
 						dstContainerIP,
 						policy.Destination.Protocol,
-						policy.Destination.Port,
+						policy.Destination.Ports.Start,
+						policy.Destination.Ports.End,
 						policy.Source.Tag,
 						policy.Source.ID,
 						policy.Destination.ID,

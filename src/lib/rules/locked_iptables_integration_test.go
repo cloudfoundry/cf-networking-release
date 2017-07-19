@@ -54,7 +54,7 @@ var _ = Describe("Locked IPTables Integration Test", func() {
 	It("bulk appends iptables rules", func() {
 		onlyRunOnLinux()
 		err := lockedIPT.BulkAppend("filter", "FORWARD", []rules.IPTablesRule{
-			rules.NewMarkAllowRule("1.2.3.4", "tcp", 1234, "A", "some-src-app-guid", "some-dst-app-guid"),
+			rules.NewMarkAllowRule("1.2.3.4", "tcp", 1234, 1234, "A", "some-src-app-guid", "some-dst-app-guid"),
 		}...)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(AllIPTablesRules("filter")).To(ContainElement(

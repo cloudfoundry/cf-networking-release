@@ -68,8 +68,11 @@ var _ = Describe("Planner", func() {
 					Tag: "AA",
 				},
 				Destination: models.Destination{
-					ID:       "some-other-app-guid",
-					Port:     1234,
+					ID: "some-other-app-guid",
+					Ports: models.Ports{
+						Start: 1234,
+						End:   1234,
+					},
 					Protocol: "tcp",
 				},
 			},
@@ -79,8 +82,11 @@ var _ = Describe("Planner", func() {
 					Tag: "BB",
 				},
 				Destination: models.Destination{
-					ID:       "some-other-app-guid",
-					Port:     5555,
+					ID: "some-other-app-guid",
+					Ports: models.Ports{
+						Start: 5555,
+						End:   5555,
+					},
 					Protocol: "udp",
 				},
 			},
@@ -90,8 +96,11 @@ var _ = Describe("Planner", func() {
 					Tag: "CC",
 				},
 				Destination: models.Destination{
-					ID:       "yet-another-app-guid",
-					Port:     6534,
+					ID: "yet-another-app-guid",
+					Ports: models.Ports{
+						Start: 6534,
+						End:   6534,
+					},
 					Protocol: "udp",
 				},
 			},
@@ -147,7 +156,7 @@ var _ = Describe("Planner", func() {
 					{
 						"-d", "10.255.1.3",
 						"-p", "udp",
-						"--dport", "5555",
+						"--dport", "5555:5555",
 						"-m", "mark", "--mark", "0xBB",
 						"--jump", "ACCEPT",
 						"-m", "comment", "--comment", "src:another-app-guid_dst:some-other-app-guid",
@@ -155,7 +164,7 @@ var _ = Describe("Planner", func() {
 					{
 						"-d", "10.255.1.3",
 						"-p", "tcp",
-						"--dport", "1234",
+						"--dport", "1234:1234",
 						"-m", "mark", "--mark", "0xAA",
 						"--jump", "ACCEPT",
 						"-m", "comment", "--comment", "src:some-app-guid_dst:some-other-app-guid",
@@ -189,7 +198,7 @@ var _ = Describe("Planner", func() {
 					{
 						"-d", "10.255.1.3",
 						"-p", "udp",
-						"--dport", "5555",
+						"--dport", "5555:5555",
 						"-m", "mark",
 						"--mark", "0xBB",
 						"-m", "limit",
@@ -201,7 +210,7 @@ var _ = Describe("Planner", func() {
 					{
 						"-d", "10.255.1.3",
 						"-p", "udp",
-						"--dport", "5555",
+						"--dport", "5555:5555",
 						"-m", "mark", "--mark", "0xBB",
 						"--jump", "ACCEPT",
 						"-m", "comment", "--comment", "src:another-app-guid_dst:some-other-app-guid",
@@ -212,7 +221,7 @@ var _ = Describe("Planner", func() {
 					{
 						"-d", "10.255.1.3",
 						"-p", "tcp",
-						"--dport", "1234",
+						"--dport", "1234:1234",
 						"-m", "mark", "--mark", "0xAA",
 						"-m", "conntrack", "--ctstate", "INVALID,NEW,UNTRACKED",
 						"--jump", "LOG", "--log-prefix", `"OK_AA_some-other-app-guid "`,
@@ -221,7 +230,7 @@ var _ = Describe("Planner", func() {
 					{
 						"-d", "10.255.1.3",
 						"-p", "tcp",
-						"--dport", "1234",
+						"--dport", "1234:1234",
 						"-m", "mark", "--mark", "0xAA",
 						"--jump", "ACCEPT",
 						"-m", "comment", "--comment", "src:some-app-guid_dst:some-other-app-guid",
@@ -290,8 +299,11 @@ var _ = Describe("Planner", func() {
 							Tag: "AA",
 						},
 						Destination: models.Destination{
-							ID:       "some-other-app-guid",
-							Port:     1234,
+							ID: "some-other-app-guid",
+							Ports: models.Ports{
+								Start: 1234,
+								End:   1234,
+							},
 							Protocol: "tcp",
 						},
 					},
@@ -301,8 +313,11 @@ var _ = Describe("Planner", func() {
 							Tag: "AA",
 						},
 						Destination: models.Destination{
-							ID:       "some-other-app-guid",
-							Port:     1235,
+							ID: "some-other-app-guid",
+							Ports: models.Ports{
+								Start: 1235,
+								End:   1235,
+							},
 							Protocol: "tcp",
 						},
 					},

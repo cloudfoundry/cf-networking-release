@@ -35,11 +35,11 @@ var _ = Describe("Rules", func() {
 		Context("when the log prefix is greater than 28 characters", func() {
 			Context("when the protocol is not udp", func() {
 				It("shortens the log-prefix to 28 characters and adds a space", func() {
-					rule := rules.NewMarkAllowLogRule("10.255.0.1", "tcp", 80, "0", "some-very-very-very-long-app-guid", -1)
+					rule := rules.NewMarkAllowLogRule("10.255.0.1", "tcp", 80, 80, "0", "some-very-very-very-long-app-guid", -1)
 					Expect(rule).To(Equal(rules.IPTablesRule{
 						"-d", "10.255.0.1",
 						"-p", "tcp",
-						"--dport", "80",
+						"--dport", "80:80",
 						"-m", "mark", "--mark", "0x0",
 						"-m", "conntrack", "--ctstate", "INVALID,NEW,UNTRACKED",
 						"--jump", "LOG", "--log-prefix",
@@ -49,11 +49,11 @@ var _ = Describe("Rules", func() {
 			})
 			Context("when the protocol is udp", func() {
 				It("does not use conntrack", func() {
-					rule := rules.NewMarkAllowLogRule("10.255.0.1", "udp", 80, "0", "some-very-very-very-long-app-guid", 4)
+					rule := rules.NewMarkAllowLogRule("10.255.0.1", "udp", 80, 80, "0", "some-very-very-very-long-app-guid", 4)
 					Expect(rule).To(Equal(rules.IPTablesRule{
 						"-d", "10.255.0.1",
 						"-p", "udp",
-						"--dport", "80",
+						"--dport", "80:80",
 						"-m", "mark", "--mark", "0x0",
 						"-m", "limit",
 						"--limit", "4/s",
