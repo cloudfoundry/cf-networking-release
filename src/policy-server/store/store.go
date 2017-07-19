@@ -10,9 +10,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jmoiron/sqlx"
 	"policy-server/store/migrations"
+
+	"github.com/jmoiron/sqlx"
 )
+
+//go:generate counterfeiter -o fakes/migrator.go --fake-name Migrator . Migrator
+type Migrator interface {
+	PerformMigrations(driverName string, migrationDb migrations.MigrationDb, migrateExecutor migrations.MigrateExecutor, maxNumMigrations int) (int, error)
+}
 
 //go:generate counterfeiter -o fakes/store.go --fake-name Store . Store
 type Store interface {
@@ -58,7 +64,7 @@ type store struct {
 const MAX_TAG_LENGTH = 3
 const MIN_TAG_LENGTH = 1
 
-func New(dbConnectionPool db, migrator migrations.MigrateExecutor, g GroupRepo, d DestinationRepo, p PolicyRepo, tl int, t time.Duration) (Store, error) {
+func New(dbConnectionPool db, migrateExecutor migrations.MigrateExecutor, g GroupRepo, d DestinationRepo, p PolicyRepo, tl int, t time.Duration, migrator Migrator) (Store, error) {
 	if tl < MIN_TAG_LENGTH || tl > MAX_TAG_LENGTH {
 		return nil, fmt.Errorf("tag length out of range (%d-%d): %d",
 			MIN_TAG_LENGTH,
@@ -67,9 +73,9 @@ func New(dbConnectionPool db, migrator migrations.MigrateExecutor, g GroupRepo, 
 		)
 	}
 
-	_, err := migrations.PerformMigrations(dbConnectionPool.DriverName(), dbConnectionPool, migrator)
+	_, err := migrator.PerformMigrations(dbConnectionPool.DriverName(), dbConnectionPool, migrateExecutor, 0)
 	if err != nil {
-		return nil, fmt.Errorf("setting up tables: %s", err)
+		return nil, fmt.Errorf("perform migrations: %s", err)
 	}
 
 	err = populateTables(dbConnectionPool, tl)

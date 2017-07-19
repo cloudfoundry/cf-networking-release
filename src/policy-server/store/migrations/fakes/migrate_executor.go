@@ -9,19 +9,20 @@ import (
 )
 
 type MigrateExecutor struct {
-	ExecStub        func(db migrations.MigrationDb, dialect string, m migrate.MigrationSource, dir migrate.MigrationDirection) (int, error)
-	execMutex       sync.RWMutex
-	execArgsForCall []struct {
-		db      migrations.MigrationDb
-		dialect string
-		m       migrate.MigrationSource
-		dir     migrate.MigrationDirection
+	ExecMaxStub        func(db migrations.MigrationDb, dialect string, m migrate.MigrationSource, dir migrate.MigrationDirection, maxNumMigrations int) (int, error)
+	execMaxMutex       sync.RWMutex
+	execMaxArgsForCall []struct {
+		db               migrations.MigrationDb
+		dialect          string
+		m                migrate.MigrationSource
+		dir              migrate.MigrationDirection
+		maxNumMigrations int
 	}
-	execReturns struct {
+	execMaxReturns struct {
 		result1 int
 		result2 error
 	}
-	execReturnsOnCall map[int]struct {
+	execMaxReturnsOnCall map[int]struct {
 		result1 int
 		result2 error
 	}
@@ -29,55 +30,56 @@ type MigrateExecutor struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *MigrateExecutor) Exec(db migrations.MigrationDb, dialect string, m migrate.MigrationSource, dir migrate.MigrationDirection) (int, error) {
-	fake.execMutex.Lock()
-	ret, specificReturn := fake.execReturnsOnCall[len(fake.execArgsForCall)]
-	fake.execArgsForCall = append(fake.execArgsForCall, struct {
-		db      migrations.MigrationDb
-		dialect string
-		m       migrate.MigrationSource
-		dir     migrate.MigrationDirection
-	}{db, dialect, m, dir})
-	fake.recordInvocation("Exec", []interface{}{db, dialect, m, dir})
-	fake.execMutex.Unlock()
-	if fake.ExecStub != nil {
-		return fake.ExecStub(db, dialect, m, dir)
+func (fake *MigrateExecutor) ExecMax(db migrations.MigrationDb, dialect string, m migrate.MigrationSource, dir migrate.MigrationDirection, maxNumMigrations int) (int, error) {
+	fake.execMaxMutex.Lock()
+	ret, specificReturn := fake.execMaxReturnsOnCall[len(fake.execMaxArgsForCall)]
+	fake.execMaxArgsForCall = append(fake.execMaxArgsForCall, struct {
+		db               migrations.MigrationDb
+		dialect          string
+		m                migrate.MigrationSource
+		dir              migrate.MigrationDirection
+		maxNumMigrations int
+	}{db, dialect, m, dir, maxNumMigrations})
+	fake.recordInvocation("ExecMax", []interface{}{db, dialect, m, dir, maxNumMigrations})
+	fake.execMaxMutex.Unlock()
+	if fake.ExecMaxStub != nil {
+		return fake.ExecMaxStub(db, dialect, m, dir, maxNumMigrations)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.execReturns.result1, fake.execReturns.result2
+	return fake.execMaxReturns.result1, fake.execMaxReturns.result2
 }
 
-func (fake *MigrateExecutor) ExecCallCount() int {
-	fake.execMutex.RLock()
-	defer fake.execMutex.RUnlock()
-	return len(fake.execArgsForCall)
+func (fake *MigrateExecutor) ExecMaxCallCount() int {
+	fake.execMaxMutex.RLock()
+	defer fake.execMaxMutex.RUnlock()
+	return len(fake.execMaxArgsForCall)
 }
 
-func (fake *MigrateExecutor) ExecArgsForCall(i int) (migrations.MigrationDb, string, migrate.MigrationSource, migrate.MigrationDirection) {
-	fake.execMutex.RLock()
-	defer fake.execMutex.RUnlock()
-	return fake.execArgsForCall[i].db, fake.execArgsForCall[i].dialect, fake.execArgsForCall[i].m, fake.execArgsForCall[i].dir
+func (fake *MigrateExecutor) ExecMaxArgsForCall(i int) (migrations.MigrationDb, string, migrate.MigrationSource, migrate.MigrationDirection, int) {
+	fake.execMaxMutex.RLock()
+	defer fake.execMaxMutex.RUnlock()
+	return fake.execMaxArgsForCall[i].db, fake.execMaxArgsForCall[i].dialect, fake.execMaxArgsForCall[i].m, fake.execMaxArgsForCall[i].dir, fake.execMaxArgsForCall[i].maxNumMigrations
 }
 
-func (fake *MigrateExecutor) ExecReturns(result1 int, result2 error) {
-	fake.ExecStub = nil
-	fake.execReturns = struct {
+func (fake *MigrateExecutor) ExecMaxReturns(result1 int, result2 error) {
+	fake.ExecMaxStub = nil
+	fake.execMaxReturns = struct {
 		result1 int
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *MigrateExecutor) ExecReturnsOnCall(i int, result1 int, result2 error) {
-	fake.ExecStub = nil
-	if fake.execReturnsOnCall == nil {
-		fake.execReturnsOnCall = make(map[int]struct {
+func (fake *MigrateExecutor) ExecMaxReturnsOnCall(i int, result1 int, result2 error) {
+	fake.ExecMaxStub = nil
+	if fake.execMaxReturnsOnCall == nil {
+		fake.execMaxReturnsOnCall = make(map[int]struct {
 			result1 int
 			result2 error
 		})
 	}
-	fake.execReturnsOnCall[i] = struct {
+	fake.execMaxReturnsOnCall[i] = struct {
 		result1 int
 		result2 error
 	}{result1, result2}
@@ -86,8 +88,8 @@ func (fake *MigrateExecutor) ExecReturnsOnCall(i int, result1 int, result2 error
 func (fake *MigrateExecutor) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.execMutex.RLock()
-	defer fake.execMutex.RUnlock()
+	fake.execMaxMutex.RLock()
+	defer fake.execMaxMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

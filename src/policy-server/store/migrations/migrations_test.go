@@ -1,15 +1,19 @@
-package migrations
+package migrations_test
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
+	"policy-server/store/fakes"
+	"policy-server/store/migrations"
+	migrationsFakes "policy-server/store/migrations/fakes"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"github.com/jmoiron/sqlx"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/rubenv/sql-migrate"
+	migrate "github.com/rubenv/sql-migrate"
 )
 
 type columnUsage struct {
@@ -19,10 +23,17 @@ type columnUsage struct {
 
 var _ = Describe("migrations", func() {
 
-	var dbConf db.Config
-	var realDb *sqlx.DB
+	var (
+		dbConf              db.Config
+		realDb              *sqlx.DB
+		mockDb              *fakes.Db
+		realMigrateExecutor *migrations.MigrateAdapter
+		mockMigrateExecutor *migrationsFakes.MigrateExecutor
+		migrator            *migrations.Migrator
+	)
 
 	BeforeEach(func() {
+		mockDb = &fakes.Db{}
 		dbConf = testsupport.GetDBConfig()
 		dbConf.DatabaseName = fmt.Sprintf("test_node_%d", GinkgoParallelNode())
 
@@ -31,6 +42,11 @@ var _ = Describe("migrations", func() {
 		var err error
 		realDb, err = db.GetConnectionPool(dbConf)
 		Expect(err).NotTo(HaveOccurred())
+
+		realMigrateExecutor = &migrations.MigrateAdapter{}
+		mockMigrateExecutor = &migrationsFakes.MigrateExecutor{}
+
+		migrator = &migrations.Migrator{}
 	})
 
 	AfterEach(func() {
@@ -40,247 +56,215 @@ var _ = Describe("migrations", func() {
 		testsupport.RemoveDatabase(dbConf)
 	})
 
-	Describe("V1", func() {
+	Describe("PerformMigrations", func() {
+		Describe("V0", func() {
+			Context("mysql", func() {
+				BeforeEach(func() {
+					if realDb.DriverName() != "mysql" {
+						Skip("skipping mysql tests")
+					}
+				})
 
-		Context("mysql", func() {
-			BeforeEach(func() {
-				if realDb.DriverName() != "mysql" {
-					Skip("skipping mysql tests")
-				}
+				It("should migrate", func() {
+					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, realMigrateExecutor, 1)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(numMigrations).To(Equal(1))
+
+					By("checking the destinations, groups, and policies tables were created")
+
+					By("checking there's a constraint on group_id, port, protocol", func() {
+						rows, err := realDb.Query(`
+							select CONSTRAINT_NAME, COLUMN_NAME
+							from INFORMATION_SCHEMA.KEY_COLUMN_USAGE t1
+							where TABLE_NAME='destinations'
+						`)
+
+						Expect(err).NotTo(HaveOccurred())
+						actualColumnUsageRows := scanColumnUsageRows(rows)
+
+						Expect(actualColumnUsageRows).To(ConsistOf(
+							columnUsage{constraintName: "PRIMARY", columnName: "id"},
+							columnUsage{constraintName: "group_id", columnName: "group_id"},
+							columnUsage{constraintName: "group_id", columnName: "port"},
+							columnUsage{constraintName: "group_id", columnName: "protocol"},
+						))
+					})
+				})
 			})
+			Context("postgres", func() {
+				BeforeEach(func() {
+					if realDb.DriverName() != "postgres" {
+						Skip("skipping postgres tests")
+					}
+				})
 
-			It("should migrate", func() {
-				numMigrations, err := PerformMigrations(realDb.DriverName(), realDb, &testMigrateAdapter{2})
-				Expect(err).NotTo(HaveOccurred())
-				Expect(numMigrations).To(Equal(2))
+				It("should migrate", func() {
+					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, realMigrateExecutor, 1)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(numMigrations).To(Equal(1))
 
-				rows, err := realDb.Query(`
-				select CONSTRAINT_NAME, COLUMN_NAME
-				from INFORMATION_SCHEMA.KEY_COLUMN_USAGE t1
-				where TABLE_NAME='destinations'
-			`)
-				Expect(err).NotTo(HaveOccurred())
+					By("checking there's a constraint on group_id, port, protocol", func() {
+						rows, err := realDb.Query(`
+							select CONSTRAINT_NAME, COLUMN_NAME
+							from INFORMATION_SCHEMA.KEY_COLUMN_USAGE t1
+							where TABLE_NAME='destinations'
+						`)
+						Expect(err).NotTo(HaveOccurred())
 
-				By("checking there's a constraint on group_id, port, protocol")
-				actualColumnUsageRows := scanColumnUsageRows(rows)
-
-				Expect(actualColumnUsageRows).To(ConsistOf(columnUsage{
-					constraintName: "PRIMARY",
-					columnName:     "id",
-				},
-					columnUsage{
-						constraintName: "group_id",
-						columnName:     "group_id",
-					},
-					columnUsage{
-						constraintName: "group_id",
-						columnName:     "port",
-					},
-					columnUsage{
-						constraintName: "group_id",
-						columnName:     "protocol",
-					},
-				))
+						actualColumnUsageRows := scanColumnUsageRows(rows)
+						Expect(actualColumnUsageRows).To(ConsistOf(
+							columnUsage{
+								constraintName: "destinations_pkey",
+								columnName:     "id",
+							},
+							columnUsage{
+								constraintName: "destinations_group_id_port_protocol_key",
+								columnName:     "group_id",
+							},
+							columnUsage{
+								constraintName: "destinations_group_id_port_protocol_key",
+								columnName:     "port",
+							},
+							columnUsage{
+								constraintName: "destinations_group_id_port_protocol_key",
+								columnName:     "protocol",
+							},
+							columnUsage{
+								constraintName: "destinations_group_id_fkey",
+								columnName:     "group_id",
+							},
+						))
+					})
+				})
 			})
 		})
 
-		Context("postgres", func() {
-			BeforeEach(func() {
-				if realDb.DriverName() != "postgres" {
-					Skip("skipping postgres tests")
-				}
+		Describe("V1", func() {
+			Context("mysql", func() {
+				BeforeEach(func() {
+					if realDb.DriverName() != "mysql" {
+						Skip("skipping mysql tests")
+					}
+				})
+
+				It("should migrate", func() {
+					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, realMigrateExecutor, 2)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(numMigrations).To(Equal(2))
+
+					rows, err := realDb.Query(`
+						select CONSTRAINT_NAME, COLUMN_NAME
+						from INFORMATION_SCHEMA.KEY_COLUMN_USAGE t1
+						where TABLE_NAME='destinations'
+					`)
+					Expect(err).NotTo(HaveOccurred())
+
+					By("checking there's a constraint on group_id, start_port, end_port, protocol")
+					actualColumnUsageRows := scanColumnUsageRows(rows)
+
+					Expect(actualColumnUsageRows).To(ConsistOf(
+						columnUsage{
+							constraintName: "PRIMARY",
+							columnName:     "id",
+						},
+						columnUsage{
+							constraintName: "unique_destination",
+							columnName:     "group_id",
+						},
+						columnUsage{
+							constraintName: "unique_destination",
+							columnName:     "start_port",
+						},
+						columnUsage{
+							constraintName: "unique_destination",
+							columnName:     "end_port",
+						},
+						columnUsage{
+							constraintName: "unique_destination",
+							columnName:     "protocol",
+						},
+					))
+				})
 			})
 
-			It("should migrate", func() {
-				numMigrations, err := PerformMigrations(realDb.DriverName(), realDb, &testMigrateAdapter{2})
-				Expect(err).NotTo(HaveOccurred())
+			Context("postgres", func() {
+				BeforeEach(func() {
+					if realDb.DriverName() != "postgres" {
+						Skip("skipping postgres tests")
+					}
+				})
+
+				It("should migrate", func() {
+					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, realMigrateExecutor, 2)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(numMigrations).To(Equal(2))
+
+					rows, err := realDb.Query(`
+						select CONSTRAINT_NAME, COLUMN_NAME
+						from INFORMATION_SCHEMA.KEY_COLUMN_USAGE t1
+						where TABLE_NAME='destinations'
+					`)
+					Expect(err).NotTo(HaveOccurred())
+
+					By("checking there's a constraint on group_id, port, protocol")
+					actualColumnUsageRows := scanColumnUsageRows(rows)
+					Expect(actualColumnUsageRows).To(ConsistOf(columnUsage{
+						constraintName: "destinations_pkey",
+						columnName:     "id",
+					},
+						columnUsage{
+							constraintName: "unique_destination",
+							columnName:     "group_id",
+						},
+						columnUsage{
+							constraintName: "unique_destination",
+							columnName:     "start_port",
+						},
+						columnUsage{
+							constraintName: "unique_destination",
+							columnName:     "end_port",
+						},
+						columnUsage{
+							constraintName: "unique_destination",
+							columnName:     "protocol",
+						},
+						columnUsage{
+							constraintName: "destinations_group_id_fkey",
+							columnName:     "group_id",
+						},
+					))
+				})
+			})
+		})
+
+		Context("when the driver name is not mysql or postgres", func() {
+			It("returns an error", func() {
+				_, err := migrator.PerformMigrations("etcd", mockDb, realMigrateExecutor, 2)
+				Expect(err).To(MatchError("unsupported driver: etcd"))
+			})
+		})
+
+		Context("when the migrations fail", func() {
+			BeforeEach(func() {
+				mockMigrateExecutor.ExecMaxReturns(0, errors.New("banana"))
+			})
+			It("returns an error", func() {
+				_, err := migrator.PerformMigrations(realDb.DriverName(), mockDb, mockMigrateExecutor, 2)
+				Expect(err).To(MatchError("executing migration: banana"))
+				Expect(mockMigrateExecutor.ExecMaxCallCount()).To(Equal(1))
+				db, driverName, _, migrationDir, numMigrations := mockMigrateExecutor.ExecMaxArgsForCall(0)
+				Expect(db).To(Equal(mockDb))
+				Expect(driverName).To(Equal(realDb.DriverName()))
+				Expect(migrationDir).To(Equal(migrate.Up))
 				Expect(numMigrations).To(Equal(2))
-
-				rows, err := realDb.Query(`
-				select CONSTRAINT_NAME, COLUMN_NAME
-				from INFORMATION_SCHEMA.KEY_COLUMN_USAGE t1
-				where TABLE_NAME='destinations'
-			`)
-				Expect(err).NotTo(HaveOccurred())
-
-				By("checking there's a constraint on group_id, port, protocol")
-				actualColumnUsageRows := scanColumnUsageRows(rows)
-				Expect(actualColumnUsageRows).To(ConsistOf(columnUsage{
-					constraintName: "destinations_pkey",
-					columnName:     "id",
-				},
-					columnUsage{
-						constraintName: "destinations_group_id_port_protocol_key",
-						columnName:     "group_id",
-					},
-					columnUsage{
-						constraintName: "destinations_group_id_port_protocol_key",
-						columnName:     "port",
-					},
-					columnUsage{
-						constraintName: "destinations_group_id_port_protocol_key",
-						columnName:     "protocol",
-					},
-					columnUsage{
-						constraintName: "destinations_group_id_fkey",
-						columnName:     "group_id",
-					},
-				))
 			})
 		})
 	})
-
-	Describe("V2", func() {
-
-		Context("mysql", func() {
-			BeforeEach(func() {
-				if realDb.DriverName() != "mysql" {
-					Skip("skipping mysql tests")
-				}
-			})
-
-			It("should migrate", func() {
-				numMigrations, err := PerformMigrations(realDb.DriverName(), realDb, &testMigrateAdapter{3})
-				Expect(err).NotTo(HaveOccurred())
-				Expect(numMigrations).To(Equal(3))
-
-				rows, err := realDb.Query(`
-				select CONSTRAINT_NAME, COLUMN_NAME
-				from INFORMATION_SCHEMA.KEY_COLUMN_USAGE t1
-				where TABLE_NAME='destinations'
-			`)
-				Expect(err).NotTo(HaveOccurred())
-
-				By("checking there's a constraint on group_id, port, protocol")
-				actualColumnUsageRows := scanColumnUsageRows(rows)
-
-				Expect(actualColumnUsageRows).To(ConsistOf(columnUsage{
-					constraintName: "PRIMARY",
-					columnName:     "id",
-				},
-					columnUsage{
-						constraintName: "destinations_group_id_start_port_end_port_protocol_key",
-						columnName:     "group_id",
-					},
-					columnUsage{
-						constraintName: "destinations_group_id_start_port_end_port_protocol_key",
-						columnName:     "start_port",
-					},
-					columnUsage{
-						constraintName: "destinations_group_id_start_port_end_port_protocol_key",
-						columnName:     "end_port",
-					},
-					columnUsage{
-						constraintName: "destinations_group_id_start_port_end_port_protocol_key",
-						columnName:     "protocol",
-					},
-				))
-			})
-		})
-
-		Context("postgres", func() {
-			BeforeEach(func() {
-				if realDb.DriverName() != "postgres" {
-					Skip("skipping postgres tests")
-				}
-			})
-
-			It("should migrate", func() {
-				numMigrations, err := PerformMigrations(realDb.DriverName(), realDb, &testMigrateAdapter{3})
-				Expect(err).NotTo(HaveOccurred())
-				Expect(numMigrations).To(Equal(3))
-
-				rows, err := realDb.Query(`
-				select CONSTRAINT_NAME, COLUMN_NAME
-				from INFORMATION_SCHEMA.KEY_COLUMN_USAGE t1
-				where TABLE_NAME='destinations'
-			`)
-				Expect(err).NotTo(HaveOccurred())
-
-				By("checking there's a constraint on group_id, port, protocol")
-				actualColumnUsageRows := scanColumnUsageRows(rows)
-				Expect(actualColumnUsageRows).To(ConsistOf(columnUsage{
-					constraintName: "destinations_pkey",
-					columnName:     "id",
-				},
-					columnUsage{
-						constraintName: "destinations_group_id_start_port_end_port_protocol_key",
-						columnName:     "group_id",
-					},
-					columnUsage{
-						constraintName: "destinations_group_id_start_port_end_port_protocol_key",
-						columnName:     "start_port",
-					},
-					columnUsage{
-						constraintName: "destinations_group_id_start_port_end_port_protocol_key",
-						columnName:     "end_port",
-					},
-					columnUsage{
-						constraintName: "destinations_group_id_start_port_end_port_protocol_key",
-						columnName:     "protocol",
-					},
-					columnUsage{
-						constraintName: "destinations_group_id_fkey",
-						columnName:     "group_id",
-					},
-				))
-			})
-		})
-	})
-
-	//Describe("Migrations", func() {
-	//	It("performs the migrations", func() {
-	//		_, err := store.New(mockDb, mockMigrateAdapter, group, destination, policy, 1, 2*time.Second)
-	//		Expect(err).NotTo(HaveOccurred())
-	//
-	//		By("calling the migrator")
-	//		Expect(mockMigrateAdapter.ExecCallCount()).To(Equal(1))
-	//		db, dbType, migrations, dir := mockMigrateAdapter.ExecArgsForCall(0)
-	//		Expect(db).To(Equal(mockDb))
-	//		Expect(dbType).To(Equal(mockDb.DriverName()))
-	//
-	//		Expect(migrations).To(Equal(migrate.MemoryMigrationSource{
-	//			Migrations: []*migrate.Migration{
-	//				{
-	//					Id:   "1",
-	//					Up:   store.Schemas[db.DriverName()],
-	//					Down: []string{"DROP TABLE policies", "DROP TABLE destinations", "DROP TABLE groups"},
-	//				},
-	//				{
-	//					Id:   "2",
-	//					Up:   store.SchemasV1Up[db.DriverName()],
-	//					Down: store.SchemasV1Down[db.DriverName()],
-	//				},
-	//			},
-	//		}))
-	//
-	//		Expect(dir).To(Equal(migrate.Up))
-	//	})
-	//
-	//	Context("when the driver name is not mysql or postgres", func() {
-	//		BeforeEach(func() {
-	//			mockDb.DriverNameReturns("etcd")
-	//		})
-	//		It("returns an error", func() {
-	//			_, err := store.New(mockDb, mockMigrateAdapter, group, destination, policy, 1, 2*time.Second)
-	//			Expect(err).To(MatchError("setting up tables: unsupported driver: etcd"))
-	//		})
-	//	})
-	//
-	//	Context("when the migrations fail", func() {
-	//		BeforeEach(func() {
-	//			mockMigrateAdapter.ExecReturns(0, errors.New("banana"))
-	//		})
-	//		It("returns an error", func() {
-	//			_, err := store.New(mockDb, mockMigrateAdapter, group, destination, policy, 1, 2*time.Second)
-	//			Expect(err).To(MatchError("setting up tables: executing migration: banana"))
-	//		})
-	//	})
-	//})
 })
 
 func scanColumnUsageRows(rows *sql.Rows) []columnUsage {
 	actual := []columnUsage{}
+	defer rows.Close()
 	for rows.Next() {
 		var constraintName string
 		var columnName string
@@ -291,20 +275,6 @@ func scanColumnUsageRows(rows *sql.Rows) []columnUsage {
 			columnName:     columnName,
 		})
 	}
+	Expect(rows.Err()).NotTo(HaveOccurred())
 	return actual
-}
-
-type testMigrateAdapter struct {
-	migrateUpTo int
-}
-
-func (tma testMigrateAdapter) Exec(db MigrationDb, dialect string, migrationSource migrate.MigrationSource, dir migrate.MigrationDirection) (int, error) {
-	allMigrations, err := migrationSource.FindMigrations()
-	Expect(err).ToNot(HaveOccurred())
-
-	newMemoryMigrationSource := migrate.MemoryMigrationSource{
-		Migrations: allMigrations[:tma.migrateUpTo],
-	}
-
-	return migrate.Exec(db.(*sqlx.DB).DB, dialect, newMemoryMigrationSource, dir)
 }
