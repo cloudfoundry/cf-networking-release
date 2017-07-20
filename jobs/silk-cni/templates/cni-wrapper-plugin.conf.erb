@@ -19,7 +19,6 @@
     "cniVersion" => "0.3.1",
     "datastore" => "/var/vcap/data/container-metadata/store.json",
     "iptables_lock_file" => "/var/vcap/data/garden-cni/iptables.lock",
-    "health_check_url" => "http://127.0.0.1:" + p('cf_networking.silk_daemon.listen_port').to_s,
     "instance_address" => spec.ip,
     "iptables_asg_logging" => p("cf_networking.iptables_logging"),
     "iptables_c2c_logging" => p("cf_networking.iptables_logging"),
