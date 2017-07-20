@@ -17,7 +17,7 @@ import (
 
 //go:generate counterfeiter -o fakes/migrator.go --fake-name Migrator . Migrator
 type Migrator interface {
-	PerformMigrations(driverName string, migrationDb migrations.MigrationDb, migrateExecutor migrations.MigrateExecutor, maxNumMigrations int) (int, error)
+	PerformMigrations(driverName string, migrationDb migrations.MigrationDb, maxNumMigrations int) (int, error)
 }
 
 //go:generate counterfeiter -o fakes/store.go --fake-name Store . Store
@@ -64,7 +64,7 @@ type store struct {
 const MAX_TAG_LENGTH = 3
 const MIN_TAG_LENGTH = 1
 
-func New(dbConnectionPool db, migrateExecutor migrations.MigrateExecutor, g GroupRepo, d DestinationRepo, p PolicyRepo, tl int, t time.Duration, migrator Migrator) (Store, error) {
+func New(dbConnectionPool db, g GroupRepo, d DestinationRepo, p PolicyRepo, tl int, t time.Duration, migrator Migrator) (Store, error) {
 	if tl < MIN_TAG_LENGTH || tl > MAX_TAG_LENGTH {
 		return nil, fmt.Errorf("tag length out of range (%d-%d): %d",
 			MIN_TAG_LENGTH,
@@ -73,7 +73,7 @@ func New(dbConnectionPool db, migrateExecutor migrations.MigrateExecutor, g Grou
 		)
 	}
 
-	_, err := migrator.PerformMigrations(dbConnectionPool.DriverName(), dbConnectionPool, migrateExecutor, 0)
+	_, err := migrator.PerformMigrations(dbConnectionPool.DriverName(), dbConnectionPool, 0)
 	if err != nil {
 		return nil, fmt.Errorf("perform migrations: %s", err)
 	}

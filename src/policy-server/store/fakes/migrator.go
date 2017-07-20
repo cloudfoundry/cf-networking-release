@@ -8,12 +8,11 @@ import (
 )
 
 type Migrator struct {
-	PerformMigrationsStub        func(driverName string, migrationDb migrations.MigrationDb, migrateExecutor migrations.MigrateExecutor, maxNumMigrations int) (int, error)
+	PerformMigrationsStub        func(driverName string, migrationDb migrations.MigrationDb, maxNumMigrations int) (int, error)
 	performMigrationsMutex       sync.RWMutex
 	performMigrationsArgsForCall []struct {
 		driverName       string
 		migrationDb      migrations.MigrationDb
-		migrateExecutor  migrations.MigrateExecutor
 		maxNumMigrations int
 	}
 	performMigrationsReturns struct {
@@ -28,19 +27,18 @@ type Migrator struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *Migrator) PerformMigrations(driverName string, migrationDb migrations.MigrationDb, migrateExecutor migrations.MigrateExecutor, maxNumMigrations int) (int, error) {
+func (fake *Migrator) PerformMigrations(driverName string, migrationDb migrations.MigrationDb, maxNumMigrations int) (int, error) {
 	fake.performMigrationsMutex.Lock()
 	ret, specificReturn := fake.performMigrationsReturnsOnCall[len(fake.performMigrationsArgsForCall)]
 	fake.performMigrationsArgsForCall = append(fake.performMigrationsArgsForCall, struct {
 		driverName       string
 		migrationDb      migrations.MigrationDb
-		migrateExecutor  migrations.MigrateExecutor
 		maxNumMigrations int
-	}{driverName, migrationDb, migrateExecutor, maxNumMigrations})
-	fake.recordInvocation("PerformMigrations", []interface{}{driverName, migrationDb, migrateExecutor, maxNumMigrations})
+	}{driverName, migrationDb, maxNumMigrations})
+	fake.recordInvocation("PerformMigrations", []interface{}{driverName, migrationDb, maxNumMigrations})
 	fake.performMigrationsMutex.Unlock()
 	if fake.PerformMigrationsStub != nil {
-		return fake.PerformMigrationsStub(driverName, migrationDb, migrateExecutor, maxNumMigrations)
+		return fake.PerformMigrationsStub(driverName, migrationDb, maxNumMigrations)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -54,10 +52,10 @@ func (fake *Migrator) PerformMigrationsCallCount() int {
 	return len(fake.performMigrationsArgsForCall)
 }
 
-func (fake *Migrator) PerformMigrationsArgsForCall(i int) (string, migrations.MigrationDb, migrations.MigrateExecutor, int) {
+func (fake *Migrator) PerformMigrationsArgsForCall(i int) (string, migrations.MigrationDb, int) {
 	fake.performMigrationsMutex.RLock()
 	defer fake.performMigrationsMutex.RUnlock()
-	return fake.performMigrationsArgsForCall[i].driverName, fake.performMigrationsArgsForCall[i].migrationDb, fake.performMigrationsArgsForCall[i].migrateExecutor, fake.performMigrationsArgsForCall[i].maxNumMigrations
+	return fake.performMigrationsArgsForCall[i].driverName, fake.performMigrationsArgsForCall[i].migrationDb, fake.performMigrationsArgsForCall[i].maxNumMigrations
 }
 
 func (fake *Migrator) PerformMigrationsReturns(result1 int, result2 error) {
