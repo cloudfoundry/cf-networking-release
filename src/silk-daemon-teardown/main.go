@@ -6,6 +6,7 @@ import (
 	"time"
 	"flag"
 	"fmt"
+	"errors"
 )
 
 func main() {
@@ -30,18 +31,42 @@ func pingServer(url, hostType string) (int, error) {
 
 func mainWithError() error {
 	repUrl := flag.String("repUrl", "", "path to rep url")
+	repTimeout := flag.Int("repTimeout", 5, "timeout inbetween calls to rep")
+
 	silkDaemonUrl := flag.String("silkDaemonUrl", "", "path to silk daemon url")
+	silkDaemonTimeout := flag.Int("silkDaemonTimeout", 2, "timeout inbetween calls to silk daemon")
+
 	flag.Parse()
 
-	_, err := pingServer(*repUrl, "rep")
-	if err != nil {
-		return err
+	var err error
+	response := 200
+	for response == 200 {
+		response, err = pingServer(*repUrl, "rep")
+		fmt.Println( fmt.Sprintf("%s: waiting for the rep to exit", time.Now()))
+		if err != nil {
+			return err
+		}
+		time.Sleep(time.Duration(*repTimeout) * time.Second)
 	}
 
-	_, err = pingServer(*silkDaemonUrl, "silk-daemon")
-	if err != nil {
-		return err
+	response = 200
+	numberOfTimesSilkDaemonServerHit := 0
+	for response == 200 && numberOfTimesSilkDaemonServerHit < 5 {
+		response, err = pingServer(*silkDaemonUrl, "silk-daemon")
+		fmt.Println( fmt.Sprintf("%s: waiting for the silk daemon to exit", time.Now()))
+		if err != nil {
+			return err
+		}
+		time.Sleep(time.Duration(*silkDaemonTimeout) * time.Second)
+		numberOfTimesSilkDaemonServerHit++
+	}
+
+	if didSilkDaemonServerExit(numberOfTimesSilkDaemonServerHit) {
+		return errors.New("Silk Daemon Server did not exit after 5 ping attempts")
 	}
 
 	return nil
+}
+func didSilkDaemonServerExit(numberOfTimesSilkDaemonServerHit int) bool {
+	return numberOfTimesSilkDaemonServerHit == 5
 }
