@@ -53,7 +53,9 @@ var _ = Describe("Store", func() {
 
 		mockDb.DriverNameReturns(realDb.DriverName())
 
-		realMigrator = migrations.New()
+		realMigrator = &migrations.Migrator{
+			MigrateAdapter: &migrations.MigrateAdapter{},
+		}
 		mockMigrator = &fakes.Migrator{}
 	})
 
