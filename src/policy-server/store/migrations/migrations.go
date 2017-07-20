@@ -7,8 +7,8 @@ import (
 	"github.com/rubenv/sql-migrate"
 )
 
-//go:generate counterfeiter -o fakes/migrate_executor.go --fake-name MigrateExecutor . MigrateExecutor
-type MigrateExecutor interface {
+//go:generate counterfeiter -o fakes/migrate_adapter.go --fake-name MigrateAdapter . migrateAdapter
+type migrateAdapter interface {
 	ExecMax(db MigrationDb, dialect string, m migrate.MigrationSource, dir migrate.MigrationDirection, maxNumMigrations int) (int, error)
 }
 
@@ -21,27 +21,21 @@ type MigrationDb interface {
 }
 
 type Migrator struct {
+	MigrateAdapter migrateAdapter
 }
 
-var policyServerMigrations dbSpecificPolicyServerMigrations = dbSpecificPolicyServerMigrations{
-	policyServerMigration{
-		"1",
-		SchemasV0Up,
-		SchemasV0Down,
-	},
-	policyServerMigration{
-		"2",
-		SchemasV1Up,
-		SchemasV1Down,
-	},
+func New() *Migrator {
+	return &Migrator{
+		MigrateAdapter: &MigrateAdapter{},
+	}
 }
 
-func (m *Migrator) PerformMigrations(driverName string, migrationDb MigrationDb, migrateExecutor MigrateExecutor, maxNumMigrations int) (int, error) {
+func (m *Migrator) PerformMigrations(driverName string, migrationDb MigrationDb, maxNumMigrations int) (int, error) {
 	if !policyServerMigrations.supportsDatabase(driverName) {
 		return 0, fmt.Errorf("unsupported driver: %s", driverName)
 	}
 
-	numMigrations, err := migrateExecutor.ExecMax(
+	numMigrations, err := m.MigrateAdapter.ExecMax(
 		migrationDb,
 		driverName,
 		migrate.MemoryMigrationSource{
@@ -55,6 +49,19 @@ func (m *Migrator) PerformMigrations(driverName string, migrationDb MigrationDb,
 		return numMigrations, fmt.Errorf("executing migration: %s", err)
 	}
 	return numMigrations, nil
+}
+
+var policyServerMigrations dbSpecificPolicyServerMigrations = dbSpecificPolicyServerMigrations{
+	policyServerMigration{
+		"1",
+		SchemasV0Up,
+		SchemasV0Down,
+	},
+	policyServerMigration{
+		"2",
+		SchemasV1Up,
+		SchemasV1Down,
+	},
 }
 
 type dbSpecificPolicyServerMigrations []policyServerMigration
@@ -176,7 +183,6 @@ BEGIN
 
 END;`,
 		`CALL drop_destination_index();`,
-		// TODO we cannot assume this is group_id, we should look it up
 		`ALTER TABLE destinations ADD UNIQUE key unique_destination (group_id, start_port, end_port, protocol);`,
 	},
 	"postgres": {

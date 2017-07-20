@@ -24,12 +24,12 @@ type columnUsage struct {
 var _ = Describe("migrations", func() {
 
 	var (
-		dbConf              db.Config
-		realDb              *sqlx.DB
-		mockDb              *fakes.Db
-		realMigrateExecutor *migrations.MigrateAdapter
-		mockMigrateExecutor *migrationsFakes.MigrateExecutor
-		migrator            *migrations.Migrator
+		dbConf             db.Config
+		realDb             *sqlx.DB
+		mockDb             *fakes.Db
+		realMigrateAdapter *migrations.MigrateAdapter
+		mockMigrateAdapter *migrationsFakes.MigrateAdapter
+		migrator           *migrations.Migrator
 	)
 
 	BeforeEach(func() {
@@ -43,10 +43,12 @@ var _ = Describe("migrations", func() {
 		realDb, err = db.GetConnectionPool(dbConf)
 		Expect(err).NotTo(HaveOccurred())
 
-		realMigrateExecutor = &migrations.MigrateAdapter{}
-		mockMigrateExecutor = &migrationsFakes.MigrateExecutor{}
+		realMigrateAdapter = &migrations.MigrateAdapter{}
+		mockMigrateAdapter = &migrationsFakes.MigrateAdapter{}
 
-		migrator = &migrations.Migrator{}
+		migrator = &migrations.Migrator{
+			MigrateAdapter: &migrations.MigrateAdapter{},
+		}
 	})
 
 	AfterEach(func() {
@@ -66,7 +68,7 @@ var _ = Describe("migrations", func() {
 				})
 
 				It("should migrate", func() {
-					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, realMigrateExecutor, 1)
+					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 1)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(numMigrations).To(Equal(1))
 
@@ -99,7 +101,7 @@ var _ = Describe("migrations", func() {
 				})
 
 				It("should migrate", func() {
-					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, realMigrateExecutor, 1)
+					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 1)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(numMigrations).To(Equal(1))
 
@@ -148,7 +150,7 @@ var _ = Describe("migrations", func() {
 				})
 
 				It("should migrate", func() {
-					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, realMigrateExecutor, 2)
+					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 2)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(numMigrations).To(Equal(2))
 
@@ -195,7 +197,7 @@ var _ = Describe("migrations", func() {
 				})
 
 				It("should migrate", func() {
-					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, realMigrateExecutor, 2)
+					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 2)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(numMigrations).To(Equal(2))
 
@@ -239,20 +241,21 @@ var _ = Describe("migrations", func() {
 
 		Context("when the driver name is not mysql or postgres", func() {
 			It("returns an error", func() {
-				_, err := migrator.PerformMigrations("etcd", mockDb, realMigrateExecutor, 2)
+				_, err := migrator.PerformMigrations("etcd", mockDb, 2)
 				Expect(err).To(MatchError("unsupported driver: etcd"))
 			})
 		})
 
 		Context("when the migrations fail", func() {
 			BeforeEach(func() {
-				mockMigrateExecutor.ExecMaxReturns(0, errors.New("banana"))
+				migrator.MigrateAdapter = mockMigrateAdapter
+				mockMigrateAdapter.ExecMaxReturns(0, errors.New("banana"))
 			})
 			It("returns an error", func() {
-				_, err := migrator.PerformMigrations(realDb.DriverName(), mockDb, mockMigrateExecutor, 2)
+				_, err := migrator.PerformMigrations(realDb.DriverName(), mockDb, 2)
 				Expect(err).To(MatchError("executing migration: banana"))
-				Expect(mockMigrateExecutor.ExecMaxCallCount()).To(Equal(1))
-				db, driverName, _, migrationDir, numMigrations := mockMigrateExecutor.ExecMaxArgsForCall(0)
+				Expect(mockMigrateAdapter.ExecMaxCallCount()).To(Equal(1))
+				db, driverName, _, migrationDir, numMigrations := mockMigrateAdapter.ExecMaxArgsForCall(0)
 				Expect(db).To(Equal(mockDb))
 				Expect(driverName).To(Equal(realDb.DriverName()))
 				Expect(migrationDir).To(Equal(migrate.Up))
