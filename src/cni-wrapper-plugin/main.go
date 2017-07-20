@@ -6,14 +6,12 @@ import (
 	"cni-wrapper-plugin/legacynet"
 	"cni-wrapper-plugin/lib"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"lib/datastore"
 	"lib/filelock"
 	"lib/rules"
 	"lib/serial"
 	"net"
-	"net/http"
 	"os"
 	"sync"
 
@@ -27,15 +25,6 @@ func cmdAdd(args *skel.CmdArgs) error {
 	n, err := lib.LoadWrapperConfig(args.StdinData)
 	if err != nil {
 		return err
-	}
-
-	client := http.DefaultClient
-	resp, err := client.Get(n.HealthCheckURL)
-	if err != nil {
-		return fmt.Errorf("could not call health check: %s", err)
-	}
-	if resp.StatusCode != http.StatusOK {
-		return errors.New(fmt.Sprintf("health check failed with %d", resp.StatusCode))
 	}
 
 	pluginController, err := newPluginController(n.IPTablesLockFile)

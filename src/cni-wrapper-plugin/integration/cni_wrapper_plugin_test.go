@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
-	"net/http"
-	"net/http/httptest"
 	"os"
 	"os/exec"
 	"strings"
@@ -34,22 +32,20 @@ type InputStruct struct {
 var _ = Describe("CniWrapperPlugin", func() {
 
 	var (
-		cmd                     *exec.Cmd
-		debugFileName           string
-		datastorePath           string
-		iptablesLockFilePath    string
-		input                   string
-		debug                   *noop_debug.Debug
-		healthCheckServer       *httptest.Server
-		healthCheckReturnStatus int
-		inputStruct             InputStruct
-		containerID             string
-		netinChainName          string
-		netoutChainName         string
-		inputChainName          string
-		overlayChainName        string
-		netoutLoggingChainName  string
-		defaultIface            *net.Interface
+		cmd                    *exec.Cmd
+		debugFileName          string
+		datastorePath          string
+		iptablesLockFilePath   string
+		input                  string
+		debug                  *noop_debug.Debug
+		inputStruct            InputStruct
+		containerID            string
+		netinChainName         string
+		netoutChainName        string
+		inputChainName         string
+		overlayChainName       string
+		netoutLoggingChainName string
+		defaultIface           *net.Interface
 	)
 
 	var cniCommand = func(command, input string) *exec.Cmd {
@@ -95,11 +91,6 @@ var _ = Describe("CniWrapperPlugin", func() {
 		defaultIface, err = net.InterfaceByIndex(defaultIfaceIndex)
 		Expect(err).NotTo(HaveOccurred())
 
-		healthCheckReturnStatus = http.StatusOK
-		healthCheckServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(healthCheckReturnStatus)
-		}))
-
 		debugFile, err := ioutil.TempFile("", "cni_debug")
 		Expect(err).NotTo(HaveOccurred())
 		Expect(debugFile.Close()).To(Succeed())
@@ -136,7 +127,6 @@ var _ = Describe("CniWrapperPlugin", func() {
 			},
 			WrapperConfig: lib.WrapperConfig{
 				Datastore:        datastorePath,
-				HealthCheckURL:   healthCheckServer.URL,
 				IPTablesLockFile: iptablesLockFilePath,
 				Delegate: map[string]interface{}{
 					"type": "noop",
@@ -263,8 +253,6 @@ var _ = Describe("CniWrapperPlugin", func() {
 		os.Remove(debugFileName)
 		os.Remove(datastorePath)
 		os.Remove(iptablesLockFilePath)
-
-		healthCheckServer.Close()
 	})
 
 	Describe("state lifecycle", func() {
@@ -700,38 +688,6 @@ var _ = Describe("CniWrapperPlugin", func() {
 					}))
 
 				})
-			})
-		})
-
-		Context("When the health check call returns an error", func() {
-			BeforeEach(func() {
-				healthCheckServer.Close()
-			})
-
-			It("wraps and returns the error", func() {
-				session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
-				Expect(err).NotTo(HaveOccurred())
-				Eventually(session).Should(gexec.Exit(1))
-				var errData map[string]interface{}
-				Expect(json.Unmarshal(session.Out.Contents(), &errData)).To(Succeed())
-				Expect(errData["code"]).To(BeEquivalentTo(100))
-				Expect(errData["msg"]).To(ContainSubstring("could not call health check: Get http"))
-			})
-		})
-
-		Context("When the health check returns a non-200 status code", func() {
-			BeforeEach(func() {
-				healthCheckReturnStatus = 503
-			})
-
-			It("wraps and returns the error", func() {
-				session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
-				Expect(err).NotTo(HaveOccurred())
-				Eventually(session).Should(gexec.Exit(1))
-				var errData map[string]interface{}
-				Expect(json.Unmarshal(session.Out.Contents(), &errData)).To(Succeed())
-				Expect(errData["code"]).To(BeEquivalentTo(100))
-				Expect(errData["msg"]).To(ContainSubstring("health check failed with 503"))
 			})
 		})
 

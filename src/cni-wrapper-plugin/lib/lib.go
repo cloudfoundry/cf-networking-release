@@ -20,7 +20,6 @@ type WrapperConfig struct {
 	Datastore                     string                 `json:"datastore"`
 	IPTablesLockFile              string                 `json:"iptables_lock_file"`
 	Delegate                      map[string]interface{} `json:"delegate"`
-	HealthCheckURL                string                 `json:"health_check_url"`
 	InstanceAddress               string                 `json:"instance_address"`
 	DNSServers                    []string               `json:"dns_servers"`
 	IPTablesASGLogging            bool                   `json:"iptables_asg_logging"`
@@ -44,10 +43,6 @@ func LoadWrapperConfig(bytes []byte) (*WrapperConfig, error) {
 
 	if n.IPTablesLockFile == "" {
 		return nil, fmt.Errorf("missing iptables lock file path")
-	}
-
-	if n.HealthCheckURL == "" {
-		return nil, fmt.Errorf("missing health check url")
 	}
 
 	if n.InstanceAddress == "" {
