@@ -311,6 +311,9 @@ func main() {
 	monitor := ifrit.Invoke(sigmon.New(group))
 
 	err = <-monitor.Wait()
+	if connectionResult.ConnectionPool != nil {
+		connectionResult.ConnectionPool.Close()
+	}
 	if err != nil {
 		logger.Error("exited-with-failure", err)
 		os.Exit(1)
