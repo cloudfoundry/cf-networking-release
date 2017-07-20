@@ -2,6 +2,7 @@
 name: garden-cni
 
 templates:
+  pre-start.erb: bin/pre-start
   adapter.json.erb: config/adapter.json
 
 packages:
