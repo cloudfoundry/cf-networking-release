@@ -135,12 +135,14 @@ func main() {
 
 	dataStore, err := store.New(
 		connectionResult.ConnectionPool,
-		&migrations.MigrateAdapter{},
 		storeGroup,
 		destination,
 		policy,
 		conf.TagLength,
 		timeout,
+		&migrations.Migrator{
+			MigrateAdapter: &migrations.MigrateAdapter{},
+		},
 	)
 	if err != nil {
 		log.Fatalf("%s.policy-server: failed to construct datastore: %s", logPrefix, err) // not tested
