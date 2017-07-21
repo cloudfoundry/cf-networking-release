@@ -127,9 +127,6 @@
 [submodule "src/github.com/hpcloud/tail"]
 	path = src/github.com/hpcloud/tail
 	url = https://github.com/hpcloud/tail
-[submodule "src/github.com/rubenv/sql-migrate"]
-	path = src/github.com/rubenv/sql-migrate
-	url = https://github.com/rubenv/sql-migrate
-[submodule "src/gopkg.in/gorp.v1"]
-	path = src/gopkg.in/gorp.v1
-	url = https://gopkg.in/go-gorp/gorp.v1
+[submodule "src/github.com/cf-container-networking/sql-migrate"]
+	path = src/github.com/cf-container-networking/sql-migrate
+	url = https://github.com/cf-container-networking/sql-migrate.git

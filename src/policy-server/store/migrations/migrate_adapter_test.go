@@ -4,7 +4,7 @@ import (
 	"policy-server/store/migrations"
 	"policy-server/store/migrations/fakes"
 
-	"github.com/rubenv/sql-migrate"
+	"github.com/cf-container-networking/sql-migrate"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
