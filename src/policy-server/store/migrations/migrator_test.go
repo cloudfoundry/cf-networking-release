@@ -13,7 +13,8 @@ import (
 	"github.com/jmoiron/sqlx"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	migrate "github.com/rubenv/sql-migrate"
+	"github.com/cf-container-networking/sql-migrate"
+	"sync"
 )
 
 type columnUsage struct {
@@ -237,6 +238,61 @@ var _ = Describe("migrations", func() {
 					))
 				})
 			})
+		})
+
+		Context("when migrating in parallel", func() {
+			Context("mysql", func() {
+				BeforeEach(func() {
+					if realDb.DriverName() != "mysql" {
+						Skip("skipping mysql tests")
+					}
+				})
+
+				It("should migrate", func() {
+					numOfRoutines := 10
+					wg := sync.WaitGroup{}
+					wg.Add(numOfRoutines)
+
+					for i := 0; i < numOfRoutines; i++ {
+						go func() {
+							defer wg.Done()
+							defer GinkgoRecover()
+
+							_, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 0)
+							Expect(err).ToNot(HaveOccurred())
+						}()
+					}
+
+					wg.Wait()
+				}, 10)
+			})
+
+			Context("postgres", func() {
+				BeforeEach(func() {
+					if realDb.DriverName() != "postgres" {
+						Skip("skipping postgres tests")
+					}
+				})
+
+				It("should migrate", func() {
+					numOfRoutines := 10
+					wg := sync.WaitGroup{}
+					wg.Add(numOfRoutines)
+
+					for i := 0; i < numOfRoutines; i++ {
+						go func() {
+							defer wg.Done()
+							defer GinkgoRecover()
+
+							_, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 0)
+							Expect(err).ToNot(HaveOccurred())
+						}()
+					}
+
+					wg.Wait()
+				}, 10)
+			})
+
 		})
 
 		Context("when the driver name is not mysql or postgres", func() {

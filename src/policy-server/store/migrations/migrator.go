@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/rubenv/sql-migrate"
+	"github.com/cf-container-networking/sql-migrate"
 )
 
 //go:generate counterfeiter -o fakes/migrate_adapter.go --fake-name MigrateAdapter . migrateAdapter

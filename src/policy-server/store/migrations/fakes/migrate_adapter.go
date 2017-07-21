@@ -5,7 +5,7 @@ import (
 	"policy-server/store/migrations"
 	"sync"
 
-	migrate "github.com/rubenv/sql-migrate"
+	migrate "github.com/cf-container-networking/sql-migrate"
 )
 
 type MigrateAdapter struct {
