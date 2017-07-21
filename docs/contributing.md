@@ -42,3 +42,7 @@ cd src/test/acceptance
   ```bash
   ./scripts/sync-package-specs
   ```
+
+### When using bosh-lite, not finding iptable logging inside kern.log
+The linux kernel prevents iptable log targets from working inside a container.
+See [commit introducing the change](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=69b34fb996b2eee3970548cf6eb516d3ecb5eeed)
