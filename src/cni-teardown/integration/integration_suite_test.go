@@ -11,6 +11,8 @@ import (
 	"github.com/onsi/gomega/gexec"
 
 	"testing"
+	"os"
+	"path/filepath"
 )
 
 var (
@@ -33,6 +35,15 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	paths.TeardownBin, err = gexec.Build("cni-teardown")
 	fmt.Fprintf(GinkgoWriter, "done")
 	Expect(err).NotTo(HaveOccurred())
+
+	err = os.Chmod(paths.TeardownBin, 0777)
+	Expect(err).NotTo(HaveOccurred())
+
+	dir := filepath.Dir(paths.TeardownBin)
+	for ; dir != filepath.Dir(dir); {
+		Expect(os.Chmod(dir, 0777)).To(Succeed())
+		dir = filepath.Dir(dir)
+	}
 
 	data, err := json.Marshal(paths)
 	Expect(err).NotTo(HaveOccurred())

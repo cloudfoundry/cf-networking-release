@@ -16,6 +16,7 @@ declare -a packages=(
   )
 
 declare -a serial_packages=(
+  "src/cni-teardown"
   "src/cni-wrapper-plugin"
   "src/garden-external-networker"
   "src/policy-server/integration/timeouts"
