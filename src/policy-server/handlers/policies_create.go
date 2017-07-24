@@ -32,6 +32,15 @@ type PoliciesCreate struct {
 
 func (h *PoliciesCreate) ServeHTTP(logger lager.Logger, w http.ResponseWriter, req *http.Request, tokenData uaa_client.CheckTokenResponse) {
 	logger = logger.Session("create-policies")
+
+	acceptValue := req.Header.Get("Accept")
+
+	if acceptValue != "1.0.0+policy_server-json" {
+		logger.Info("failed-validating-version")
+		h.ErrorResponse.NotAcceptable(w, errors.New("version-mismatch"), "policies-create", "invalid Accept Header passed to API")
+		return
+	}
+
 	bodyBytes, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		logger.Error("failed-reading-request-body", err)

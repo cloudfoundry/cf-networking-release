@@ -23,6 +23,14 @@ type ErrorResponse struct {
 		arg3 string
 		arg4 string
 	}
+	NotAcceptableStub        func(http.ResponseWriter, error, string, string)
+	notAcceptableMutex       sync.RWMutex
+	notAcceptableArgsForCall []struct {
+		arg1 http.ResponseWriter
+		arg2 error
+		arg3 string
+		arg4 string
+	}
 	ForbiddenStub        func(http.ResponseWriter, error, string, string)
 	forbiddenMutex       sync.RWMutex
 	forbiddenArgsForCall []struct {
@@ -97,6 +105,33 @@ func (fake *ErrorResponse) BadRequestArgsForCall(i int) (http.ResponseWriter, er
 	return fake.badRequestArgsForCall[i].arg1, fake.badRequestArgsForCall[i].arg2, fake.badRequestArgsForCall[i].arg3, fake.badRequestArgsForCall[i].arg4
 }
 
+func (fake *ErrorResponse) NotAcceptable(arg1 http.ResponseWriter, arg2 error, arg3 string, arg4 string) {
+	fake.notAcceptableMutex.Lock()
+	fake.notAcceptableArgsForCall = append(fake.notAcceptableArgsForCall, struct {
+		arg1 http.ResponseWriter
+		arg2 error
+		arg3 string
+		arg4 string
+	}{arg1, arg2, arg3, arg4})
+	fake.recordInvocation("NotAcceptable", []interface{}{arg1, arg2, arg3, arg4})
+	fake.notAcceptableMutex.Unlock()
+	if fake.NotAcceptableStub != nil {
+		fake.NotAcceptableStub(arg1, arg2, arg3, arg4)
+	}
+}
+
+func (fake *ErrorResponse) NotAcceptableCallCount() int {
+	fake.notAcceptableMutex.RLock()
+	defer fake.notAcceptableMutex.RUnlock()
+	return len(fake.notAcceptableArgsForCall)
+}
+
+func (fake *ErrorResponse) NotAcceptableArgsForCall(i int) (http.ResponseWriter, error, string, string) {
+	fake.notAcceptableMutex.RLock()
+	defer fake.notAcceptableMutex.RUnlock()
+	return fake.notAcceptableArgsForCall[i].arg1, fake.notAcceptableArgsForCall[i].arg2, fake.notAcceptableArgsForCall[i].arg3, fake.notAcceptableArgsForCall[i].arg4
+}
+
 func (fake *ErrorResponse) Forbidden(arg1 http.ResponseWriter, arg2 error, arg3 string, arg4 string) {
 	fake.forbiddenMutex.Lock()
 	fake.forbiddenArgsForCall = append(fake.forbiddenArgsForCall, struct {
@@ -158,6 +193,8 @@ func (fake *ErrorResponse) Invocations() map[string][][]interface{} {
 	defer fake.internalServerErrorMutex.RUnlock()
 	fake.badRequestMutex.RLock()
 	defer fake.badRequestMutex.RUnlock()
+	fake.notAcceptableMutex.RLock()
+	defer fake.notAcceptableMutex.RUnlock()
 	fake.forbiddenMutex.RLock()
 	defer fake.forbiddenMutex.RUnlock()
 	fake.unauthorizedMutex.RLock()
