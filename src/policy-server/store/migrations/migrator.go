@@ -25,7 +25,7 @@ type Migrator struct {
 }
 
 func (m *Migrator) PerformMigrations(driverName string, migrationDb MigrationDb, maxNumMigrations int) (int, error) {
-	if !migrationsToPerform.supportsDriver(driverName) {
+	if !MigrationsToPerform.supportsDriver(driverName) {
 		return 0, fmt.Errorf("unsupported driver: %s", driverName)
 	}
 
@@ -33,7 +33,7 @@ func (m *Migrator) PerformMigrations(driverName string, migrationDb MigrationDb,
 		migrationDb,
 		driverName,
 		migrate.MemoryMigrationSource{
-			Migrations: migrationsToPerform.forDriver(driverName),
+			Migrations: MigrationsToPerform.ForDriver(driverName),
 		},
 		migrate.Up,
 		maxNumMigrations,
@@ -48,7 +48,7 @@ func (m *Migrator) PerformMigrations(driverName string, migrationDb MigrationDb,
 
 type policyServerMigrations []policyServerMigration
 
-func (s policyServerMigrations) forDriver(driverName string) []*migrate.Migration {
+func (s policyServerMigrations) ForDriver(driverName string) []*migrate.Migration {
 	migrationMapped := []*migrate.Migration{}
 
 	for _, migration := range s {

@@ -1,6 +1,6 @@
 package migrations
 
-var migrationsToPerform policyServerMigrations = policyServerMigrations{
+var MigrationsToPerform policyServerMigrations = policyServerMigrations{
 	policyServerMigration{
 		"1",
 		migration_v0001,

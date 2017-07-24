@@ -319,6 +319,35 @@ var _ = Describe("migrations", func() {
 			})
 		})
 	})
+
+	Describe("Down Migration", func() {
+		It("should no-op", func() {
+			adapter := &migrations.MigrateAdapter{}
+
+			_, err := adapter.ExecMax(
+				realDb,
+				realDb.DriverName(),
+				migrate.MemoryMigrationSource{
+					Migrations: migrations.MigrationsToPerform.ForDriver(realDb.DriverName()),
+				},
+				migrate.Up,
+				0,
+			)
+
+			numberOfMigrations, err := adapter.ExecMax(
+				realDb,
+				realDb.DriverName(),
+				migrate.MemoryMigrationSource{
+					Migrations: migrations.MigrationsToPerform.ForDriver(realDb.DriverName()),
+				},
+				migrate.Down,
+				0,
+			)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(numberOfMigrations).To(Equal(0))
+		})
+	})
 })
 
 func scanColumnUsageRows(rows *sql.Rows) []columnUsage {

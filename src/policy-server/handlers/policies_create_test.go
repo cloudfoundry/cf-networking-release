@@ -22,7 +22,7 @@ import (
 	"policy-server/store"
 )
 
-var _ = Describe("PoliciesCreate", func() {
+var _ = FDescribe("PoliciesCreate", func() {
 	var (
 		requestJSON       string
 		request           *http.Request
@@ -70,6 +70,7 @@ var _ = Describe("PoliciesCreate", func() {
         ]}`
 		request, err = http.NewRequest("POST", "/networking/v0/external/policies", bytes.NewBuffer([]byte(requestJSON)))
 		Expect(err).NotTo(HaveOccurred())
+		request.Header["Accept"] = []string{"1.0.0+policy_server-json" }
 
 		fakeStore = &fakes.DataStore{}
 		fakeValidator = &fakes.Validator{}
@@ -435,6 +436,36 @@ var _ = Describe("PoliciesCreate", func() {
 					HaveKeyWithValue("session", "1"),
 				)),
 			))
+		})
+	})
+
+	Context("when the api header version is not compatible", func() {
+		BeforeEach(func() {
+			request.Header["Accept"] = []string{"0.0.0+policy_server-toml" }
+		})
+
+		It("calls the 406 Not Acceptable handler", func() {
+			handler.ServeHTTP(logger, resp, request, tokenData)
+
+			Expect(fakeErrorResponse.NotAcceptableCallCount()).To(Equal(1))
+
+			w, err, message, description := fakeErrorResponse.NotAcceptableArgsForCall(0)
+			Expect(w).To(Equal(resp))
+			Expect(err).To(MatchError("version-mismatch"))
+			Expect(message).To(Equal("policies-create"))
+			Expect(description).To(Equal("invalid Accept Header passed to API"))
+
+			By("logging")
+			Expect(logger.Logs()).To(HaveLen(1))
+			Expect(logger.Logs()[0]).To(SatisfyAll(
+				LogsWith(lager.INFO, "test.create-policies.failed-validating-version"),
+			))
+		})
+
+		Context("when multiple accept values are provided", func() {
+			It("should return a sensible error", func() {
+				Fail("implement me")
+			})
 		})
 	})
 })

@@ -18,6 +18,7 @@ type policyCleaner interface {
 type errorResponse interface {
 	InternalServerError(http.ResponseWriter, error, string, string)
 	BadRequest(http.ResponseWriter, error, string, string)
+	NotAcceptable(http.ResponseWriter, error, string, string)
 	Forbidden(http.ResponseWriter, error, string, string)
 	Unauthorized(http.ResponseWriter, error, string, string)
 }
