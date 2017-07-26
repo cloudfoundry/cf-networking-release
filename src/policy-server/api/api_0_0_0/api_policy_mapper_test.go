@@ -1,26 +1,27 @@
-package api_test
+package api_0_0_0_test
 
 import (
 	"encoding/json"
 	"errors"
 	"policy-server/api"
+	"policy-server/api/api_0_0_0"
 	"policy-server/store"
 
 	"code.cloudfoundry.org/cf-networking-helpers/fakes"
 	"code.cloudfoundry.org/cf-networking-helpers/marshal"
+
 	. "github.com/onsi/ginkgo"
-	"github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("ApiPolicyMapper", func() {
+var _ = Describe("ApiPolicyMapper v000", func() {
 	var (
 		mapper          api.PolicyMapper
 		fakeUnmarshaler *fakes.Unmarshaler
 		fakeMarshaler   *fakes.Marshaler
 	)
 	BeforeEach(func() {
-		mapper = api.NewMapper(
+		mapper = api_0_0_0.NewMapper(
 			marshal.UnmarshalFunc(json.Unmarshal),
 			marshal.MarshalFunc(json.Marshal),
 		)
@@ -37,10 +38,7 @@ var _ = Describe("ApiPolicyMapper", func() {
 							"id": "some-dst-id",
 							"tag": "some-other-dst-tag",
 							"protocol": "some-protocol",
-							"ports": {
-								"start": 8080,
-								"end": 9090
-							}
+							"port": 8080
 						}
 					}, {
 						"source": { "id": "some-src-id-2" },
@@ -48,10 +46,7 @@ var _ = Describe("ApiPolicyMapper", func() {
 							"id": "some-dst-id-2",
 							"tag": "some-other-dst-tag-2",
 							"protocol": "some-protocol-2",
-							"ports": {
-								"start": 8080,
-								"end": 8080
-							}
+							"port": 8081
 						}
 					}]
 				}`),
@@ -64,9 +59,10 @@ var _ = Describe("ApiPolicyMapper", func() {
 						ID:       "some-dst-id",
 						Tag:      "some-other-dst-tag",
 						Protocol: "some-protocol",
+						Port:     8080,
 						Ports: store.Ports{
 							Start: 8080,
-							End:   9090,
+							End:   8080,
 						},
 					},
 				}, {
@@ -75,9 +71,10 @@ var _ = Describe("ApiPolicyMapper", func() {
 						ID:       "some-dst-id-2",
 						Tag:      "some-other-dst-tag-2",
 						Protocol: "some-protocol-2",
+						Port:     8081,
 						Ports: store.Ports{
-							Start: 8080,
-							End:   8080,
+							Start: 8081,
+							End:   8081,
 						},
 					},
 				},
@@ -86,7 +83,7 @@ var _ = Describe("ApiPolicyMapper", func() {
 		Context("when unmarshalling fails", func() {
 			BeforeEach(func() {
 				fakeUnmarshaler.UnmarshalReturns(errors.New("banana"))
-				mapper = api.NewMapper(
+				mapper = api_0_0_0.NewMapper(
 					fakeUnmarshaler,
 					marshal.MarshalFunc(json.Marshal),
 				)
@@ -107,9 +104,10 @@ var _ = Describe("ApiPolicyMapper", func() {
 						ID:       "some-dst-id",
 						Tag:      "some-other-dst-tag",
 						Protocol: "some-protocol",
+						Port:     8080,
 						Ports: store.Ports{
 							Start: 8080,
-							End:   9090,
+							End:   8080,
 						},
 					},
 				}, {
@@ -118,6 +116,7 @@ var _ = Describe("ApiPolicyMapper", func() {
 						ID:       "some-dst-id-2",
 						Tag:      "some-other-dst-tag-2",
 						Protocol: "some-protocol-2",
+						Port:     8081,
 						Ports: store.Ports{
 							Start: 8081,
 							End:   8081,
@@ -134,10 +133,7 @@ var _ = Describe("ApiPolicyMapper", func() {
 							"id": "some-dst-id",
 							"tag": "some-other-dst-tag",
 							"protocol": "some-protocol",
-							"ports": {
-								"start": 8080,
-								"end": 9090
-							}
+							"port": 8080
 						}
 					}, {
 						"source": { "id": "some-src-id-2" },
@@ -145,14 +141,41 @@ var _ = Describe("ApiPolicyMapper", func() {
 							"id": "some-dst-id-2",
 							"tag": "some-other-dst-tag-2",
 							"protocol": "some-protocol-2",
-							"ports": {
-								"start": 8081,
-								"end": 8081
-							}
+							"port": 8081
 						}
 					}]
 				}`),
 			))
+		})
+		Context("when the policy has no port but start and end port are the same", func() {
+			It("uses the value from the ports field", func() {
+				payload, err := mapper.AsBytes([]store.Policy{
+					{
+						Source: store.Source{ID: "some-src-id"},
+						Destination: store.Destination{
+							ID:       "some-dst-id",
+							Tag:      "some-other-dst-tag",
+							Protocol: "some-protocol",
+							Ports: store.Ports{
+								Start: 8080,
+								End:   8080,
+							},
+						},
+					},
+				})
+				Expect(err).NotTo(HaveOccurred())
+				Expect(payload).To(MatchJSON([]byte(`{ "policies": [
+					{
+						"source": { "id": "some-src-id" },
+						"destination": {
+							"id": "some-dst-id",
+							"tag": "some-other-dst-tag",
+							"protocol": "some-protocol",
+							"port": 8080
+						}
+					}
+				] }`)))
+			})
 		})
 		Context("when the policy has an empty tag", func() {
 			It("omits the tag field", func() {
@@ -176,19 +199,36 @@ var _ = Describe("ApiPolicyMapper", func() {
 						"destination": {
 							"id": "some-dst-id",
 							"protocol": "some-protocol",
-							"ports": {
-								"start": 8080,
-								"end": 8080
-							}
+							"port": 8080
 						}
 					}
 				] }`)))
 			})
 		})
+		Context("when the destination.StartPort does not equal destination.EndPort", func() {
+			It("ignores a store.Policy that cannot be mapped to an api.Policy", func() {
+				payload, err := mapper.AsBytes([]store.Policy{
+					{
+						Source: store.Source{ID: "some-src-id"},
+						Destination: store.Destination{
+							ID:       "some-dst-id",
+							Tag:      "some-other-dst-tag",
+							Protocol: "some-protocol",
+							Ports: store.Ports{
+								Start: 8070,
+								End:   8080,
+							},
+						},
+					},
+				})
+				Expect(err).NotTo(HaveOccurred())
+				Expect(payload).To(MatchJSON([]byte(`{ "policies": [] }`)))
+			})
+		})
 		Context("when marshalling fails", func() {
 			BeforeEach(func() {
 				fakeMarshaler.MarshalReturns(nil, errors.New("banana"))
-				mapper = api.NewMapper(
+				mapper = api_0_0_0.NewMapper(
 					marshal.UnmarshalFunc(json.Unmarshal),
 					fakeMarshaler,
 				)
@@ -199,69 +239,4 @@ var _ = Describe("ApiPolicyMapper", func() {
 			})
 		})
 	})
-
-	Describe("MapStoreTag", func() {
-		table.DescribeTable("should map store tags to api tags", func(input store.Tag, expected api.Tag) {
-			result := api.MapStoreTag(input)
-			Expect(result).To(Equal(expected))
-		},
-			table.Entry("direct translation",
-				store.Tag{
-					ID:  "some-id",
-					Tag: "some-tag",
-				},
-				api.Tag{
-					ID:  "some-id",
-					Tag: "some-tag",
-				},
-			),
-			table.Entry("direct translation",
-				store.Tag{
-					ID:  "some-other-id",
-					Tag: "some-other-tag",
-				},
-				api.Tag{
-					ID:  "some-other-id",
-					Tag: "some-other-tag",
-				},
-			),
-		)
-	})
-
-	Describe("MapStoreTags", func() {
-		table.DescribeTable("should map store tags to api tags", func(input []store.Tag, expected []api.Tag) {
-			result := api.MapStoreTags(input)
-			Expect(result).To(Equal(expected))
-		},
-			table.Entry("direct translation",
-				[]store.Tag{{
-					ID:  "some-id",
-					Tag: "some-tag",
-				}},
-				[]api.Tag{{
-					ID:  "some-id",
-					Tag: "some-tag",
-				}},
-			),
-			table.Entry("direct translation",
-				[]store.Tag{{
-					ID:  "some-id",
-					Tag: "some-tag",
-				},
-					{
-						ID:  "some-other-id",
-						Tag: "some-other-tag",
-					}},
-				[]api.Tag{{
-					ID:  "some-id",
-					Tag: "some-tag",
-				},
-					{
-						ID:  "some-other-id",
-						Tag: "some-other-tag",
-					}},
-			),
-		)
-	})
-
 })

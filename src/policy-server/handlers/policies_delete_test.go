@@ -2,36 +2,35 @@ package handlers_test
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
 	"policy-server/handlers"
 	"policy-server/handlers/fakes"
-	"policy-server/api"
 	"policy-server/uaa_client"
 
-	hfakes "code.cloudfoundry.org/cf-networking-helpers/fakes"
+	apifakes "policy-server/api/fakes"
+
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"code.cloudfoundry.org/lager"
+
+	"policy-server/store"
 
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"policy-server/store"
 )
 
 var _ = Describe("PoliciesDelete", func() {
 	var (
-		requestJSON       string
+		requestBody       string
 		request           *http.Request
 		handler           *handlers.PoliciesDelete
 		resp              *httptest.ResponseRecorder
 		fakeStore         *fakes.DataStore
+		fakeMapper        *apifakes.PolicyMapper
 		logger            *lagertest.TestLogger
-		fakeUnmarshaler   *hfakes.Unmarshaler
-		expectedPolicies  []api.Policy
-		expectedStorePolicies  []store.Policy
+		expectedPolicies  []store.Policy
 		fakeValidator     *fakes.Validator
 		fakePolicyGuard   *fakes.PolicyGuard
 		fakeErrorResponse *fakes.ErrorResponse
@@ -42,33 +41,18 @@ var _ = Describe("PoliciesDelete", func() {
 
 	BeforeEach(func() {
 		var err error
-		requestJSON = `{"policies": [
-			{
-				"source": {
-					"id": "some-app-guid"
-				},
-				"destination": {
-					"id": "some-other-app-guid",
-					"protocol": "tcp",
-					"ports": {
-					  "start": 8080,
-					  "end": 8080
-					}
-				}
-			}
-        ]}`
-		request, err = http.NewRequest("POST", Route, bytes.NewBuffer([]byte(requestJSON)))
+		requestBody = "some request body"
+		request, err = http.NewRequest("POST", Route, bytes.NewBuffer([]byte(requestBody)))
 		Expect(err).NotTo(HaveOccurred())
 
 		fakeStore = &fakes.DataStore{}
+		fakeMapper = &apifakes.PolicyMapper{}
 		fakeValidator = &fakes.Validator{}
 		fakePolicyGuard = &fakes.PolicyGuard{}
 		logger = lagertest.NewTestLogger("test")
-		fakeUnmarshaler = &hfakes.Unmarshaler{}
-		fakeUnmarshaler.UnmarshalStub = json.Unmarshal
 		fakeErrorResponse = &fakes.ErrorResponse{}
 		handler = &handlers.PoliciesDelete{
-			Unmarshaler:   fakeUnmarshaler,
+			Mapper:        fakeMapper,
 			Store:         fakeStore,
 			Validator:     fakeValidator,
 			PolicyGuard:   fakePolicyGuard,
@@ -76,19 +60,7 @@ var _ = Describe("PoliciesDelete", func() {
 		}
 		resp = httptest.NewRecorder()
 
-		expectedPolicies = []api.Policy{{
-			Source: api.Source{ID: "some-app-guid"},
-			Destination: api.Destination{
-				ID:       "some-other-app-guid",
-				Protocol: "tcp",
-				Ports: api.Ports{
-					Start: 8080,
-					End:   8080,
-				},
-			},
-		}}
-
-		expectedStorePolicies = []store.Policy{{
+		expectedPolicies = []store.Policy{{
 			Source: store.Source{ID: "some-app-guid"},
 			Destination: store.Destination{
 				ID:       "some-other-app-guid",
@@ -99,26 +71,27 @@ var _ = Describe("PoliciesDelete", func() {
 				},
 			},
 		}}
-		
+
 		tokenData = uaa_client.CheckTokenResponse{
 			Scope:    []string{"network.admin"},
 			UserName: "some_user",
 		}
+		fakeMapper.AsStorePolicyReturns(expectedPolicies, nil)
 		fakePolicyGuard.CheckAccessReturns(true, nil)
 	})
 
 	It("removes the entry from the policy server", func() {
 		handler.ServeHTTP(logger, resp, request, tokenData)
 
-		Expect(fakeUnmarshaler.UnmarshalCallCount()).To(Equal(1))
-		bodyBytes, _ := fakeUnmarshaler.UnmarshalArgsForCall(0)
-		Expect(bodyBytes).To(Equal([]byte(requestJSON)))
+		Expect(fakeMapper.AsStorePolicyCallCount()).To(Equal(1))
+		Expect(fakeMapper.AsStorePolicyArgsForCall(0)).To(Equal([]byte(requestBody)))
+
 		Expect(fakePolicyGuard.CheckAccessCallCount()).To(Equal(1))
 		policies, token := fakePolicyGuard.CheckAccessArgsForCall(0)
 		Expect(policies).To(Equal(expectedPolicies))
 		Expect(token).To(Equal(tokenData))
 		Expect(fakeStore.DeleteCallCount()).To(Equal(1))
-		Expect(fakeStore.DeleteArgsForCall(0)).To(Equal(expectedStorePolicies))
+		Expect(fakeStore.DeleteArgsForCall(0)).To(Equal(expectedPolicies))
 		Expect(resp.Code).To(Equal(http.StatusOK))
 		Expect(resp.Body.String()).To(MatchJSON("{}"))
 	})
@@ -134,14 +107,14 @@ var _ = Describe("PoliciesDelete", func() {
 					HaveLen(1),
 					ConsistOf(
 						SatisfyAll(
-							HaveKeyWithValue("source", HaveKeyWithValue("id", "some-app-guid")),
-							HaveKeyWithValue("destination", SatisfyAll(
-								HaveKeyWithValue("id", "some-other-app-guid"),
-								HaveKeyWithValue("protocol", "tcp"),
-								HaveKeyWithValue("ports", SatisfyAll(
+							HaveKeyWithValue("Source", HaveKeyWithValue("ID", "some-app-guid")),
+							HaveKeyWithValue("Destination", SatisfyAll(
+								HaveKeyWithValue("ID", "some-other-app-guid"),
+								HaveKeyWithValue("Protocol", "tcp"),
+								HaveKeyWithValue("Ports", SatisfyAll(
 									HaveLen(2),
-									HaveKeyWithValue("start", BeEquivalentTo(8080)),
-									HaveKeyWithValue("end", BeEquivalentTo(8080)),
+									HaveKeyWithValue("Start", BeEquivalentTo(8080)),
+									HaveKeyWithValue("End", BeEquivalentTo(8080)),
 								)),
 							)),
 						),
@@ -151,6 +124,34 @@ var _ = Describe("PoliciesDelete", func() {
 				HaveKeyWithValue("userName", "some_user"),
 			)),
 		))
+	})
+
+	Context("when the mapper fails to get store policies", func() {
+		BeforeEach(func() {
+			fakeMapper.AsStorePolicyReturns(nil, errors.New("banana"))
+		})
+		It("calls the bad request header, and logs the error", func() {
+			handler.ServeHTTP(logger, resp, request, tokenData)
+
+			Expect(fakeErrorResponse.BadRequestCallCount()).To(Equal(1))
+
+			w, err, message, description := fakeErrorResponse.BadRequestArgsForCall(0)
+			Expect(w).To(Equal(resp))
+			Expect(err).To(MatchError("banana"))
+			Expect(message).To(Equal("delete-policies"))
+			Expect(description).To(Equal("could not map request to store policies: banana"))
+
+			By("logging the error")
+			Expect(logger.Logs()).To(HaveLen(1))
+			Expect(logger.Logs()[0]).To(SatisfyAll(
+				LogsWith(lager.ERROR, "test.delete-policies.failed-mapping-policies"),
+				HaveLogData(SatisfyAll(
+					HaveLen(2),
+					HaveKeyWithValue("error", "banana"),
+					HaveKeyWithValue("session", "1"),
+				)),
+			))
+		})
 	})
 
 	Context("when the policy guard returns false", func() {
@@ -260,35 +261,6 @@ var _ = Describe("PoliciesDelete", func() {
 			Expect(logger.Logs()).To(HaveLen(1))
 			Expect(logger.Logs()[0]).To(SatisfyAll(
 				LogsWith(lager.ERROR, "test.delete-policies.failed-reading-request-body"),
-				HaveLogData(SatisfyAll(
-					HaveLen(2),
-					HaveKeyWithValue("error", "banana"),
-					HaveKeyWithValue("session", "1"),
-				)),
-			))
-		})
-	})
-
-	Context("when unmarshaling the json fails", func() {
-		BeforeEach(func() {
-			fakeUnmarshaler.UnmarshalReturns(errors.New("banana"))
-		})
-
-		It("calls the bad request handler", func() {
-			handler.ServeHTTP(logger, resp, request, tokenData)
-
-			Expect(fakeErrorResponse.BadRequestCallCount()).To(Equal(1))
-
-			w, err, message, description := fakeErrorResponse.BadRequestArgsForCall(0)
-			Expect(w).To(Equal(resp))
-			Expect(err).To(MatchError("banana"))
-			Expect(message).To(Equal("delete-policies"))
-			Expect(description).To(Equal("invalid values passed to API"))
-
-			By("logging the error")
-			Expect(logger.Logs()).To(HaveLen(1))
-			Expect(logger.Logs()[0]).To(SatisfyAll(
-				LogsWith(lager.ERROR, "test.delete-policies.failed-unmarshalling-payload"),
 				HaveLogData(SatisfyAll(
 					HaveLen(2),
 					HaveKeyWithValue("error", "banana"),

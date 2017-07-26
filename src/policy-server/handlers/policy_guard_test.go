@@ -2,9 +2,10 @@ package handlers_test
 
 import (
 	"errors"
+	"policy-server/api"
 	"policy-server/handlers"
 	"policy-server/handlers/fakes"
-	"policy-server/api"
+	"policy-server/store"
 	"policy-server/uaa_client"
 
 	. "github.com/onsi/ginkgo"
@@ -17,7 +18,7 @@ var _ = Describe("PolicyGuard", func() {
 		fakeCCClient  *fakes.CCClient
 		fakeUAAClient *fakes.UAAClient
 		tokenData     uaa_client.CheckTokenResponse
-		policies      []api.Policy
+		policies      []store.Policy
 		spaceGUIDs    []string
 		space1        api.Space
 		space2        api.Space
@@ -31,20 +32,20 @@ var _ = Describe("PolicyGuard", func() {
 			CCClient:  fakeCCClient,
 			UAAClient: fakeUAAClient,
 		}
-		policies = []api.Policy{
+		policies = []store.Policy{
 			{
-				Source: api.Source{
+				Source: store.Source{
 					ID: "some-app-guid",
 				},
-				Destination: api.Destination{
+				Destination: store.Destination{
 					ID: "some-other-guid",
 				},
 			},
 			{
-				Source: api.Source{
+				Source: store.Source{
 					ID: "some-app-guid",
 				},
-				Destination: api.Destination{
+				Destination: store.Destination{
 					ID: "yet-another-guid",
 				},
 			},

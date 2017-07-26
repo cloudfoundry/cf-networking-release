@@ -5,19 +5,19 @@ import (
 	"policy-server/api"
 	"policy-server/uaa_client"
 
-	"code.cloudfoundry.org/cf-networking-helpers/marshal"
-	"code.cloudfoundry.org/lager"
 	"policy-server/store"
+
+	"code.cloudfoundry.org/lager"
 )
 
 //go:generate counterfeiter -o fakes/policy_filter.go --fake-name PolicyFilter . policyFilter
 type policyFilter interface {
-	FilterPolicies(policies []api.Policy, userToken uaa_client.CheckTokenResponse) ([]api.Policy, error)
+	FilterPolicies(policies []store.Policy, userToken uaa_client.CheckTokenResponse) ([]store.Policy, error)
 }
 
 type PoliciesIndex struct {
 	Store         dataStore
-	Marshaler     marshal.Marshaler
+	Mapper        api.PolicyMapper
 	PolicyFilter  policyFilter
 	ErrorResponse errorResponse
 }
@@ -41,7 +41,7 @@ func (h *PoliciesIndex) ServeHTTP(logger lager.Logger, w http.ResponseWriter, re
 		return
 	}
 
-	policies, err := h.PolicyFilter.FilterPolicies(api.MapStorePolicies(storePolicies), userToken)
+	policies, err := h.PolicyFilter.FilterPolicies(storePolicies, userToken)
 	if err != nil {
 		logger.Error("failed-filtering-policies", err)
 		h.ErrorResponse.InternalServerError(w, err, "policies-index", "filter policies failed")
@@ -53,14 +53,10 @@ func (h *PoliciesIndex) ServeHTTP(logger lager.Logger, w http.ResponseWriter, re
 		policies[i].Destination.Tag = ""
 	}
 
-	policyResponse := struct {
-		TotalPolicies int             `json:"total_policies"`
-		Policies      []api.Policy `json:"policies"`
-	}{len(policies), policies}
-	bytes, err := h.Marshaler.Marshal(policyResponse)
+	bytes, err := h.Mapper.AsBytes(policies)
 	if err != nil {
-		logger.Error("failed-marshalling-policies", err)
-		h.ErrorResponse.InternalServerError(w, err, "policies-index", "database marshalling failed")
+		logger.Error("failed-mapping-policies-as-bytes", err)
+		h.ErrorResponse.InternalServerError(w, err, "policies-index", "map policy as bytes failed")
 		return
 	}
 

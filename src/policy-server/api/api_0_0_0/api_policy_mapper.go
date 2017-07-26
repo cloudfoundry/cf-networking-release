@@ -1,7 +1,8 @@
-package api
+package api_0_0_0
 
 import (
 	"fmt"
+	"policy-server/api"
 	"policy-server/store"
 
 	"code.cloudfoundry.org/cf-networking-helpers/marshal"
@@ -12,7 +13,7 @@ type policyMapper struct {
 	Marshaler   marshal.Marshaler
 }
 
-func NewMapper(Unmarshaler marshal.Unmarshaler, Marshaler marshal.Marshaler) PolicyMapper {
+func NewMapper(Unmarshaler marshal.Unmarshaler, Marshaler marshal.Marshaler) api.PolicyMapper {
 	return &policyMapper{
 		Unmarshaler: Unmarshaler,
 		Marshaler:   Marshaler,
@@ -32,14 +33,18 @@ func (p *policyMapper) AsStorePolicy(bytes []byte) ([]store.Policy, error) {
 	}
 	return storePolicies, nil
 }
+
 func (p *policyMapper) AsBytes(storePolicies []store.Policy) ([]byte, error) {
-	// convert store.Policy to api.Policy
+	// convert store.Policy to api_0_0_0.Policy
 	apiPolicies := []Policy{}
 	for _, policy := range storePolicies {
-		apiPolicies = append(apiPolicies, mapStorePolicy(policy))
+		policyToAdd, canMap := mapStorePolicy(policy)
+		if canMap {
+			apiPolicies = append(apiPolicies, policyToAdd)
+		}
 	}
 
-	// convert api.Policy payload to bytes
+	// convert api_0_0_0.Policy payload to bytes
 	payload := &Policies{
 		Policies: apiPolicies,
 	}
@@ -60,15 +65,19 @@ func (p *Policy) asStorePolicy() store.Policy {
 			ID:       p.Destination.ID,
 			Tag:      p.Destination.Tag,
 			Protocol: p.Destination.Protocol,
+			Port:     p.Destination.Port,
 			Ports: store.Ports{
-				Start: p.Destination.Ports.Start,
-				End:   p.Destination.Ports.End,
+				Start: p.Destination.Port,
+				End:   p.Destination.Port,
 			},
 		},
 	}
 }
 
-func mapStorePolicy(storePolicy store.Policy) Policy {
+func mapStorePolicy(storePolicy store.Policy) (Policy, bool) {
+	if storePolicy.Destination.Ports.Start != storePolicy.Destination.Ports.End {
+		return Policy{}, false
+	}
 	return Policy{
 		Source: Source{
 			ID:  storePolicy.Source.ID,
@@ -78,26 +87,7 @@ func mapStorePolicy(storePolicy store.Policy) Policy {
 			ID:       storePolicy.Destination.ID,
 			Tag:      storePolicy.Destination.Tag,
 			Protocol: storePolicy.Destination.Protocol,
-			Ports: Ports{
-				Start: storePolicy.Destination.Ports.Start,
-				End:   storePolicy.Destination.Ports.End,
-			},
+			Port:     storePolicy.Destination.Ports.Start,
 		},
-	}
-}
-
-func MapStoreTag(tag store.Tag) Tag {
-	return Tag{
-		ID:  tag.ID,
-		Tag: tag.Tag,
-	}
-}
-
-func MapStoreTags(tags []store.Tag) []Tag {
-	apiTags := []Tag{}
-
-	for _, tag := range tags {
-		apiTags = append(apiTags, MapStoreTag(tag))
-	}
-	return apiTags
+	}, true
 }

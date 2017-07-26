@@ -2,40 +2,40 @@
 package fakes
 
 import (
-	"policy-server/api"
+	"policy-server/store"
 	"policy-server/uaa_client"
 	"sync"
 )
 
 type PolicyFilter struct {
-	FilterPoliciesStub        func(policies []api.Policy, userToken uaa_client.CheckTokenResponse) ([]api.Policy, error)
+	FilterPoliciesStub        func(policies []store.Policy, userToken uaa_client.CheckTokenResponse) ([]store.Policy, error)
 	filterPoliciesMutex       sync.RWMutex
 	filterPoliciesArgsForCall []struct {
-		policies  []api.Policy
+		policies  []store.Policy
 		userToken uaa_client.CheckTokenResponse
 	}
 	filterPoliciesReturns struct {
-		result1 []api.Policy
+		result1 []store.Policy
 		result2 error
 	}
 	filterPoliciesReturnsOnCall map[int]struct {
-		result1 []api.Policy
+		result1 []store.Policy
 		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *PolicyFilter) FilterPolicies(policies []api.Policy, userToken uaa_client.CheckTokenResponse) ([]api.Policy, error) {
-	var policiesCopy []api.Policy
+func (fake *PolicyFilter) FilterPolicies(policies []store.Policy, userToken uaa_client.CheckTokenResponse) ([]store.Policy, error) {
+	var policiesCopy []store.Policy
 	if policies != nil {
-		policiesCopy = make([]api.Policy, len(policies))
+		policiesCopy = make([]store.Policy, len(policies))
 		copy(policiesCopy, policies)
 	}
 	fake.filterPoliciesMutex.Lock()
 	ret, specificReturn := fake.filterPoliciesReturnsOnCall[len(fake.filterPoliciesArgsForCall)]
 	fake.filterPoliciesArgsForCall = append(fake.filterPoliciesArgsForCall, struct {
-		policies  []api.Policy
+		policies  []store.Policy
 		userToken uaa_client.CheckTokenResponse
 	}{policiesCopy, userToken})
 	fake.recordInvocation("FilterPolicies", []interface{}{policiesCopy, userToken})
@@ -55,30 +55,30 @@ func (fake *PolicyFilter) FilterPoliciesCallCount() int {
 	return len(fake.filterPoliciesArgsForCall)
 }
 
-func (fake *PolicyFilter) FilterPoliciesArgsForCall(i int) ([]api.Policy, uaa_client.CheckTokenResponse) {
+func (fake *PolicyFilter) FilterPoliciesArgsForCall(i int) ([]store.Policy, uaa_client.CheckTokenResponse) {
 	fake.filterPoliciesMutex.RLock()
 	defer fake.filterPoliciesMutex.RUnlock()
 	return fake.filterPoliciesArgsForCall[i].policies, fake.filterPoliciesArgsForCall[i].userToken
 }
 
-func (fake *PolicyFilter) FilterPoliciesReturns(result1 []api.Policy, result2 error) {
+func (fake *PolicyFilter) FilterPoliciesReturns(result1 []store.Policy, result2 error) {
 	fake.FilterPoliciesStub = nil
 	fake.filterPoliciesReturns = struct {
-		result1 []api.Policy
+		result1 []store.Policy
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *PolicyFilter) FilterPoliciesReturnsOnCall(i int, result1 []api.Policy, result2 error) {
+func (fake *PolicyFilter) FilterPoliciesReturnsOnCall(i int, result1 []store.Policy, result2 error) {
 	fake.FilterPoliciesStub = nil
 	if fake.filterPoliciesReturnsOnCall == nil {
 		fake.filterPoliciesReturnsOnCall = make(map[int]struct {
-			result1 []api.Policy
+			result1 []store.Policy
 			result2 error
 		})
 	}
 	fake.filterPoliciesReturnsOnCall[i] = struct {
-		result1 []api.Policy
+		result1 []store.Policy
 		result2 error
 	}{result1, result2}
 }

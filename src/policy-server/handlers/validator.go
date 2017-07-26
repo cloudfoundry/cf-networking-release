@@ -4,11 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"policy-server/api"
+	"policy-server/store"
 )
 
 //go:generate counterfeiter -o fakes/validator.go --fake-name Validator . validator
 type validator interface {
-	ValidatePolicies(policies []api.Policy) error
+	ValidatePolicies(policies []store.Policy) error
 }
 
 type Validator struct{}

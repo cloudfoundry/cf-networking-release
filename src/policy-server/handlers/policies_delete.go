@@ -2,17 +2,17 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"policy-server/api"
 	"policy-server/uaa_client"
 
-	"code.cloudfoundry.org/cf-networking-helpers/marshal"
 	"code.cloudfoundry.org/lager"
 )
 
 type PoliciesDelete struct {
-	Unmarshaler   marshal.Unmarshaler
+	Mapper        api.PolicyMapper
 	Store         dataStore
 	Validator     validator
 	PolicyGuard   policyGuard
@@ -28,24 +28,21 @@ func (h *PoliciesDelete) ServeHTTP(logger lager.Logger, w http.ResponseWriter, r
 		return
 	}
 
-	var payload struct {
-		Policies []api.Policy `json:"policies"`
-	}
-	err = h.Unmarshaler.Unmarshal(bodyBytes, &payload)
+	policies, err := h.Mapper.AsStorePolicy(bodyBytes)
 	if err != nil {
-		logger.Error("failed-unmarshalling-payload", err)
-		h.ErrorResponse.BadRequest(w, err, "delete-policies", "invalid values passed to API")
+		logger.Error("failed-mapping-policies", err)
+		h.ErrorResponse.BadRequest(w, err, "delete-policies", fmt.Sprintf("could not map request to store policies: %s", err))
 		return
 	}
 
-	err = h.Validator.ValidatePolicies(payload.Policies)
+	err = h.Validator.ValidatePolicies(policies)
 	if err != nil {
 		logger.Error("failed-validating-policies", err)
 		h.ErrorResponse.BadRequest(w, err, "delete-policies", err.Error())
 		return
 	}
 
-	authorized, err := h.PolicyGuard.CheckAccess(payload.Policies, tokenData)
+	authorized, err := h.PolicyGuard.CheckAccess(policies, tokenData)
 	if err != nil {
 		logger.Error("failed-checking-access", err)
 		h.ErrorResponse.InternalServerError(w, err, "delete-policies", "check access failed")
@@ -58,14 +55,14 @@ func (h *PoliciesDelete) ServeHTTP(logger lager.Logger, w http.ResponseWriter, r
 		return
 	}
 
-	err = h.Store.Delete(api.MapAPIPolicies(payload.Policies))
+	err = h.Store.Delete(policies)
 	if err != nil {
 		logger.Error("failed-deleting-in-database", err)
 		h.ErrorResponse.InternalServerError(w, err, "delete-policies", "database delete failed")
 		return
 	}
 
-	logger.Info("deleted-policies", lager.Data{"policies": payload.Policies, "userName": tokenData.UserName})
+	logger.Info("deleted-policies", lager.Data{"policies": policies, "userName": tokenData.UserName})
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{}`))
 	return

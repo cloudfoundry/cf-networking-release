@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"fmt"
-	"policy-server/api"
+	"policy-server/store"
 	"policy-server/uaa_client"
 )
 
@@ -11,7 +11,7 @@ type PolicyGuard struct {
 	UAAClient uaaClient
 }
 
-func (g *PolicyGuard) CheckAccess(policies []api.Policy, userToken uaa_client.CheckTokenResponse) (bool, error) {
+func (g *PolicyGuard) CheckAccess(policies []store.Policy, userToken uaa_client.CheckTokenResponse) (bool, error) {
 	for _, scope := range userToken.Scope {
 		if scope == "network.admin" {
 			return true, nil
@@ -45,7 +45,7 @@ func (g *PolicyGuard) CheckAccess(policies []api.Policy, userToken uaa_client.Ch
 	return true, nil
 }
 
-func uniqueAppGUIDs(policies []api.Policy) []string {
+func uniqueAppGUIDs(policies []store.Policy) []string {
 	var set = make(map[string]struct{})
 	for _, policy := range policies {
 		set[policy.Source.ID] = struct{}{}

@@ -2,16 +2,16 @@
 package fakes
 
 import (
-	"policy-server/api"
+	"policy-server/store"
 	"policy-server/uaa_client"
 	"sync"
 )
 
 type QuotaGuard struct {
-	CheckAccessStub        func(policies []api.Policy, tokenData uaa_client.CheckTokenResponse) (bool, error)
+	CheckAccessStub        func(policies []store.Policy, tokenData uaa_client.CheckTokenResponse) (bool, error)
 	checkAccessMutex       sync.RWMutex
 	checkAccessArgsForCall []struct {
-		policies  []api.Policy
+		policies  []store.Policy
 		tokenData uaa_client.CheckTokenResponse
 	}
 	checkAccessReturns struct {
@@ -26,16 +26,16 @@ type QuotaGuard struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *QuotaGuard) CheckAccess(policies []api.Policy, tokenData uaa_client.CheckTokenResponse) (bool, error) {
-	var policiesCopy []api.Policy
+func (fake *QuotaGuard) CheckAccess(policies []store.Policy, tokenData uaa_client.CheckTokenResponse) (bool, error) {
+	var policiesCopy []store.Policy
 	if policies != nil {
-		policiesCopy = make([]api.Policy, len(policies))
+		policiesCopy = make([]store.Policy, len(policies))
 		copy(policiesCopy, policies)
 	}
 	fake.checkAccessMutex.Lock()
 	ret, specificReturn := fake.checkAccessReturnsOnCall[len(fake.checkAccessArgsForCall)]
 	fake.checkAccessArgsForCall = append(fake.checkAccessArgsForCall, struct {
-		policies  []api.Policy
+		policies  []store.Policy
 		tokenData uaa_client.CheckTokenResponse
 	}{policiesCopy, tokenData})
 	fake.recordInvocation("CheckAccess", []interface{}{policiesCopy, tokenData})
@@ -55,7 +55,7 @@ func (fake *QuotaGuard) CheckAccessCallCount() int {
 	return len(fake.checkAccessArgsForCall)
 }
 
-func (fake *QuotaGuard) CheckAccessArgsForCall(i int) ([]api.Policy, uaa_client.CheckTokenResponse) {
+func (fake *QuotaGuard) CheckAccessArgsForCall(i int) ([]store.Policy, uaa_client.CheckTokenResponse) {
 	fake.checkAccessMutex.RLock()
 	defer fake.checkAccessMutex.RUnlock()
 	return fake.checkAccessArgsForCall[i].policies, fake.checkAccessArgsForCall[i].tokenData

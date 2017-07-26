@@ -1,42 +1,44 @@
 package handlers_test
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
 	"policy-server/handlers"
 	"policy-server/handlers/fakes"
-	"policy-server/api"
 	"policy-server/uaa_client"
 
-	hfakes "code.cloudfoundry.org/cf-networking-helpers/fakes"
+	apifakes "policy-server/api/fakes"
+
 	"code.cloudfoundry.org/lager"
+
+	"policy-server/store"
 
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"policy-server/store"
 )
 
 var _ = Describe("Policies index handler", func() {
 	var (
-		allPolicies       []store.Policy
-		byGuidsPolicies   []store.Policy
-		byGuidsAPIPolicies   []api.Policy
-		filteredPolicies  []api.Policy
-		request           *http.Request
-		handler           *handlers.PoliciesIndex
-		resp              *httptest.ResponseRecorder
-		fakeStore         *fakes.DataStore
-		fakePolicyFilter  *fakes.PolicyFilter
-		fakeErrorResponse *fakes.ErrorResponse
-		logger            *lagertest.TestLogger
-		marshaler         *hfakes.Marshaler
-		token             uaa_client.CheckTokenResponse
+		allPolicies          []store.Policy
+		byGuidsPolicies      []store.Policy
+		byGuidsAPIPolicies   []store.Policy
+		expectedResponseBody []byte
+		filteredPolicies     []store.Policy
+		request              *http.Request
+		handler              *handlers.PoliciesIndex
+		resp                 *httptest.ResponseRecorder
+		fakeStore            *fakes.DataStore
+		fakePolicyFilter     *fakes.PolicyFilter
+		fakeErrorResponse    *fakes.ErrorResponse
+		fakeMapper           *apifakes.PolicyMapper
+		logger               *lagertest.TestLogger
+		token                uaa_client.CheckTokenResponse
 	)
 
 	BeforeEach(func() {
+		expectedResponseBody = []byte("some-response")
 		allPolicies = []store.Policy{{
 			Source: store.Source{ID: "some-app-guid", Tag: "some-tag"},
 			Destination: store.Destination{
@@ -93,36 +95,36 @@ var _ = Describe("Policies index handler", func() {
 			},
 		}}
 
-		byGuidsAPIPolicies = []api.Policy{{
-			Source: api.Source{ID: "some-app-guid", Tag: "some-tag"},
-			Destination: api.Destination{
+		byGuidsAPIPolicies = []store.Policy{{
+			Source: store.Source{ID: "some-app-guid", Tag: "some-tag"},
+			Destination: store.Destination{
 				ID:       "some-other-app-guid",
 				Tag:      "some-other-tag",
 				Protocol: "tcp",
-				Ports: api.Ports{
+				Ports: store.Ports{
 					Start: 8080,
 					End:   8080,
 				},
 			},
 		}, {
-			Source: api.Source{ID: "another-app-guid"},
-			Destination: api.Destination{
+			Source: store.Source{ID: "another-app-guid"},
+			Destination: store.Destination{
 				ID:       "some-other-app-guid",
 				Protocol: "udp",
-				Ports: api.Ports{
+				Ports: store.Ports{
 					Start: 1234,
 					End:   1234,
 				},
 			},
 		}}
 
-		filteredPolicies = []api.Policy{{
-			Source: api.Source{ID: "some-app-guid", Tag: "some-tag"},
-			Destination: api.Destination{
+		filteredPolicies = []store.Policy{{
+			Source: store.Source{ID: "some-app-guid", Tag: "some-tag"},
+			Destination: store.Destination{
 				ID:       "some-other-app-guid",
 				Tag:      "some-other-tag",
 				Protocol: "tcp",
-				Ports: api.Ports{
+				Ports: store.Ports{
 					Start: 8080,
 					End:   8080,
 				},
@@ -133,21 +135,20 @@ var _ = Describe("Policies index handler", func() {
 		request, err = http.NewRequest("GET", "/networking/v0/external/policies", nil)
 		Expect(err).NotTo(HaveOccurred())
 
-		marshaler = &hfakes.Marshaler{}
-		marshaler.MarshalStub = json.Marshal
-
 		fakeStore = &fakes.DataStore{}
 		fakeStore.AllReturns(allPolicies, nil)
 		fakeStore.ByGuidsReturns(byGuidsPolicies, nil)
 		fakeErrorResponse = &fakes.ErrorResponse{}
 		fakePolicyFilter = &fakes.PolicyFilter{}
-		fakePolicyFilter.FilterPoliciesStub = func(policies []api.Policy, userToken uaa_client.CheckTokenResponse) ([]api.Policy, error) {
+		fakePolicyFilter.FilterPoliciesStub = func(policies []store.Policy, userToken uaa_client.CheckTokenResponse) ([]store.Policy, error) {
 			return filteredPolicies, nil
 		}
+		fakeMapper = &apifakes.PolicyMapper{}
+		fakeMapper.AsBytesReturns(expectedResponseBody, nil)
 		logger = lagertest.NewTestLogger("test")
 		handler = &handlers.PoliciesIndex{
 			Store:         fakeStore,
-			Marshaler:     marshaler,
+			Mapper:        fakeMapper,
 			PolicyFilter:  fakePolicyFilter,
 			ErrorResponse: fakeErrorResponse,
 		}
@@ -161,29 +162,45 @@ var _ = Describe("Policies index handler", func() {
 	})
 
 	It("returns all the policies, but does not include the tags", func() {
-		expectedResponseJSON := `{
-			"total_policies": 1,
-			"policies": [
-			{
-				"source": {
-					"id": "some-app-guid"
-				},
-				"destination": {
-					"id": "some-other-app-guid",
-					"protocol": "tcp",
-					"ports": {
-						"start": 8080,
-						"end": 8080
-					}
-				}
-			}
-    ]}`
 		handler.ServeHTTP(logger, resp, request, token)
 
 		Expect(fakeStore.AllCallCount()).To(Equal(1))
 		Expect(fakePolicyFilter.FilterPoliciesCallCount()).To(Equal(1))
 		Expect(resp.Code).To(Equal(http.StatusOK))
-		Expect(resp.Body).To(MatchJSON(expectedResponseJSON))
+		Expect(resp.Body.Bytes()).To(Equal(expectedResponseBody))
+	})
+
+	Context("when rendering the policies as bytes fails", func() {
+		BeforeEach(func() {
+			var err error
+			request, err = http.NewRequest("GET", "/networking/v0/external/policies?id=some-app-guid,yet-another-app-guid", nil)
+			Expect(err).NotTo(HaveOccurred())
+
+			fakeMapper.AsBytesReturns(nil, errors.New("banana"))
+		})
+
+		It("calls the internal server error handler", func() {
+			handler.ServeHTTP(logger, resp, request, token)
+
+			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
+
+			w, err, message, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			Expect(w).To(Equal(resp))
+			Expect(err).To(MatchError("banana"))
+			Expect(message).To(Equal("policies-index"))
+			Expect(description).To(Equal("map policy as bytes failed"))
+
+			By("logging the error")
+			Expect(logger.Logs()).To(HaveLen(1))
+			Expect(logger.Logs()[0]).To(SatisfyAll(
+				LogsWith(lager.ERROR, "test.index-policies.failed-mapping-policies-as-bytes"),
+				HaveLogData(SatisfyAll(
+					HaveLen(2),
+					HaveKeyWithValue("error", "banana"),
+					HaveKeyWithValue("session", "1"),
+				)),
+			))
+		})
 	})
 
 	Context("when a list of ids is provided as a query parameter", func() {
@@ -251,37 +268,6 @@ var _ = Describe("Policies index handler", func() {
 				HaveLogData(SatisfyAll(
 					HaveLen(2),
 					HaveKeyWithValue("error", "banana"),
-					HaveKeyWithValue("session", "1"),
-				)),
-			))
-		})
-	})
-
-	Context("when the policy cannot be marshaled", func() {
-		BeforeEach(func() {
-			marshaler.MarshalStub = func(interface{}) ([]byte, error) {
-				return nil, errors.New("grapes")
-			}
-		})
-
-		It("calls the internal server error handler", func() {
-			handler.ServeHTTP(logger, resp, request, token)
-
-			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
-
-			w, err, message, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
-			Expect(w).To(Equal(resp))
-			Expect(err).To(MatchError("grapes"))
-			Expect(message).To(Equal("policies-index"))
-			Expect(description).To(Equal("database marshalling failed"))
-
-			By("logging the error")
-			Expect(logger.Logs()).To(HaveLen(1))
-			Expect(logger.Logs()[0]).To(SatisfyAll(
-				LogsWith(lager.ERROR, "test.index-policies.failed-marshalling-policies"),
-				HaveLogData(SatisfyAll(
-					HaveLen(2),
-					HaveKeyWithValue("error", "grapes"),
 					HaveKeyWithValue("session", "1"),
 				)),
 			))
