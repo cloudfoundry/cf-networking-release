@@ -2,21 +2,46 @@
 Network policies can be managed using the CF Networking CLI plugin.
 
 ## Installation
-1. Get the cf cli plugin binary
 
-  - Option 1: Download a precompiled binary of the `network-policy-plugin` for your operating system from our [GitHub Releases](https://github.com/cloudfoundry-incubator/cf-networking-release/releases)
+There are 3 ways to install the plugin.  The easiest way to get started is using option 1.
 
-  - Option 2: Build from source
+#### Option 1: Using the Community Plugin Repository
+
+1. Ensure you have a recent version of the CF CLI:
+
+   ```
+   cf version
+   ```
+
+   Should show version `6.28` or higher.
+   If not, update your CF CLI by following the [CLI installation instructions](http://docs.cloudfoundry.org/cf-cli/install-go-cli.html).
+
+2. Install the plugin from the [Cloud Foundry Community Plugins Repository](https://plugins.cloudfoundry.org/):
+
+   ```
+   cf install-plugin -r CF-Community network-policy
+   ```
+
+#### Option 2: Using a binary release from GitHub
+
+1. Download a precompiled binary of the `network-policy-plugin` for your
+   operating system from our [GitHub Releases](https://github.com/cloudfoundry-incubator/cf-networking-release/releases)
+
+2. Install the binary
 
     ```bash
-    go build -o /tmp/network-policy-plugin ./src/cli-plugin
+    chmod +x ~/Downloads/network-policy-plugin
+    cf install-plugin ~/Downloads/network-policy-plugin
     ```
 
-2. Install it
+#### Option 3: Building from source
+
+  From the root of this repository, run
 
   ```bash
-  chmod +x ~/Downloads/network-policy-plugin
-  cf install-plugin ~/Downloads/network-policy-plugin
+  direnv allow
+  go build -o /tmp/network-policy-plugin ./src/cli-plugin
+  cf install-plugin /tmp/network-policy-plugin
   ```
 
 ## Usage
