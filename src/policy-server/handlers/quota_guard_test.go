@@ -3,7 +3,6 @@ package handlers_test
 import (
 	"errors"
 	"policy-server/handlers"
-	"policy-server/api"
 	"policy-server/store"
 	"policy-server/store/fakes"
 	"policy-server/uaa_client"
@@ -16,7 +15,7 @@ var _ = Describe("QuotaGuard", func() {
 	var (
 		quotaGuard *handlers.QuotaGuard
 		fakeStore  *fakes.Store
-		policies   []api.Policy
+		policies   []store.Policy
 		tokenData  uaa_client.CheckTokenResponse
 	)
 	BeforeEach(func() {
@@ -30,18 +29,18 @@ var _ = Describe("QuotaGuard", func() {
 			UserID:   "some-developer-guid",
 			UserName: "some-developer",
 		}
-		policies = []api.Policy{
+		policies = []store.Policy{
 			{
-				Source:      api.Source{ID: "some-app-guid"},
-				Destination: api.Destination{ID: "some-other-guid"},
+				Source:      store.Source{ID: "some-app-guid"},
+				Destination: store.Destination{ID: "some-other-guid"},
 			},
 			{
-				Source:      api.Source{ID: "some-app-guid"},
-				Destination: api.Destination{ID: "yet-another-guid"},
+				Source:      store.Source{ID: "some-app-guid"},
+				Destination: store.Destination{ID: "yet-another-guid"},
 			},
 			{
-				Source:      api.Source{ID: "some-other-app-guid"},
-				Destination: api.Destination{ID: "yet-another-guid"},
+				Source:      store.Source{ID: "some-other-app-guid"},
+				Destination: store.Destination{ID: "yet-another-guid"},
 			},
 		}
 		fakeStore.ByGuidsReturns([]store.Policy{}, nil)

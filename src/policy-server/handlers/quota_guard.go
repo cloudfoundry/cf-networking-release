@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"policy-server/api"
-	"policy-server/uaa_client"
 	"fmt"
+	"policy-server/store"
+	"policy-server/uaa_client"
 )
 
 type QuotaGuard struct {
@@ -11,7 +11,7 @@ type QuotaGuard struct {
 	MaxPolicies int
 }
 
-func (g *QuotaGuard) CheckAccess(policies []api.Policy, userToken uaa_client.CheckTokenResponse) (bool, error) {
+func (g *QuotaGuard) CheckAccess(policies []store.Policy, userToken uaa_client.CheckTokenResponse) (bool, error) {
 	for _, scope := range userToken.Scope {
 		if scope == "network.admin" {
 			return true, nil
@@ -23,7 +23,7 @@ func (g *QuotaGuard) CheckAccess(policies []api.Policy, userToken uaa_client.Che
 	if err != nil {
 		return false, fmt.Errorf("getting policies: %s", err)
 	}
-	currentAppCounts := sourceCounts(api.MapStorePolicies(sourcePolicies), appGuids)
+	currentAppCounts := sourceCounts(sourcePolicies, appGuids)
 	for _, appGuid := range appGuids {
 		if currentAppCounts[appGuid]+toAddSourceCounts[appGuid] > g.MaxPolicies {
 			return false, nil
@@ -32,7 +32,7 @@ func (g *QuotaGuard) CheckAccess(policies []api.Policy, userToken uaa_client.Che
 	return true, nil
 }
 
-func sourceCounts(policies []api.Policy, knownAppGuids []string) map[string]int {
+func sourceCounts(policies []store.Policy, knownAppGuids []string) map[string]int {
 	var set = make(map[string]int)
 	for _, appGuid := range knownAppGuids {
 		set[appGuid] = 0

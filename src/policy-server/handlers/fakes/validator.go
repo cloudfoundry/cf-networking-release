@@ -2,15 +2,15 @@
 package fakes
 
 import (
-	"policy-server/api"
+	"policy-server/store"
 	"sync"
 )
 
 type Validator struct {
-	ValidatePoliciesStub        func(policies []api.Policy) error
+	ValidatePoliciesStub        func(policies []store.Policy) error
 	validatePoliciesMutex       sync.RWMutex
 	validatePoliciesArgsForCall []struct {
-		policies []api.Policy
+		policies []store.Policy
 	}
 	validatePoliciesReturns struct {
 		result1 error
@@ -22,16 +22,16 @@ type Validator struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *Validator) ValidatePolicies(policies []api.Policy) error {
-	var policiesCopy []api.Policy
+func (fake *Validator) ValidatePolicies(policies []store.Policy) error {
+	var policiesCopy []store.Policy
 	if policies != nil {
-		policiesCopy = make([]api.Policy, len(policies))
+		policiesCopy = make([]store.Policy, len(policies))
 		copy(policiesCopy, policies)
 	}
 	fake.validatePoliciesMutex.Lock()
 	ret, specificReturn := fake.validatePoliciesReturnsOnCall[len(fake.validatePoliciesArgsForCall)]
 	fake.validatePoliciesArgsForCall = append(fake.validatePoliciesArgsForCall, struct {
-		policies []api.Policy
+		policies []store.Policy
 	}{policiesCopy})
 	fake.recordInvocation("ValidatePolicies", []interface{}{policiesCopy})
 	fake.validatePoliciesMutex.Unlock()
@@ -50,7 +50,7 @@ func (fake *Validator) ValidatePoliciesCallCount() int {
 	return len(fake.validatePoliciesArgsForCall)
 }
 
-func (fake *Validator) ValidatePoliciesArgsForCall(i int) []api.Policy {
+func (fake *Validator) ValidatePoliciesArgsForCall(i int) []store.Policy {
 	fake.validatePoliciesMutex.RLock()
 	defer fake.validatePoliciesMutex.RUnlock()
 	return fake.validatePoliciesArgsForCall[i].policies

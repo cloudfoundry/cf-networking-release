@@ -2,87 +2,60 @@ package handlers_test
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"policy-server/handlers"
 	"policy-server/handlers/fakes"
-	"policy-server/api"
 	"policy-server/uaa_client"
 
-	hfakes "code.cloudfoundry.org/cf-networking-helpers/fakes"
+	apifakes "policy-server/api/fakes"
+
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"code.cloudfoundry.org/lager"
+
+	"policy-server/store"
 
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"policy-server/store"
 )
 
-var _ = FDescribe("PoliciesCreate", func() {
+var _ = Describe("PoliciesCreate", func() {
 	var (
-		requestJSON       string
-		request           *http.Request
-		handler           *handlers.PoliciesCreate
-		resp              *httptest.ResponseRecorder
-		fakeStore         *fakes.DataStore
-		fakeValidator     *fakes.Validator
-		fakePolicyGuard   *fakes.PolicyGuard
-		fakeQuotaGuard    *fakes.QuotaGuard
-		fakeErrorResponse *fakes.ErrorResponse
-		logger            *lagertest.TestLogger
-		fakeUnmarshaler   *hfakes.Unmarshaler
-		tokenData         uaa_client.CheckTokenResponse
+		requestBody            string
+		request                *http.Request
+		handler                *handlers.PoliciesCreate
+		resp                   *httptest.ResponseRecorder
+		expectedPolicies       []store.Policy
+		fakeStore              *fakes.DataStore
+		fakeMapper             *apifakes.PolicyMapper
+		fakeValidator          *fakes.Validator
+		fakePolicyGuard        *fakes.PolicyGuard
+		fakeQuotaGuard         *fakes.QuotaGuard
+		fakeErrorResponse      *fakes.ErrorResponse
+		logger                 *lagertest.TestLogger
+		tokenData              uaa_client.CheckTokenResponse
+		createPoliciesSucceeds func()
 	)
 
 	BeforeEach(func() {
 		var err error
-		requestJSON = `{"policies": [
-			{
-				"source": {
-					"id": "some-app-guid"
-				},
-				"destination": {
-					"id": "some-other-app-guid",
-					"protocol": "tcp",
-					"ports": {
-						"start": 8080,
-						"end": 9090
-					}
-				}
-			},
-			{
-				"source": {
-					"id": "another-app-guid"
-				},
-				"destination": {
-					"id": "some-other-app-guid",
-					"protocol": "udp",
-					"ports": {
-						"start": 1234,
-						"end": 1234
-					}
-				}
-			}
-        ]}`
-		request, err = http.NewRequest("POST", "/networking/v0/external/policies", bytes.NewBuffer([]byte(requestJSON)))
+		requestBody = "some request body"
+		request, err = http.NewRequest("POST", "/networking/v0/external/policies", bytes.NewBuffer([]byte(requestBody)))
 		Expect(err).NotTo(HaveOccurred())
-		request.Header["Accept"] = []string{"1.0.0+policy_server-json" }
 
 		fakeStore = &fakes.DataStore{}
+		fakeMapper = &apifakes.PolicyMapper{}
 		fakeValidator = &fakes.Validator{}
 		fakePolicyGuard = &fakes.PolicyGuard{}
 		fakeQuotaGuard = &fakes.QuotaGuard{}
 		logger = lagertest.NewTestLogger("test")
-		fakeUnmarshaler = &hfakes.Unmarshaler{}
 		fakeErrorResponse = &fakes.ErrorResponse{}
-		fakeUnmarshaler.UnmarshalStub = json.Unmarshal
 		handler = &handlers.PoliciesCreate{
 			Store:         fakeStore,
-			Unmarshaler:   fakeUnmarshaler,
+			Mapper:        fakeMapper,
 			Validator:     fakeValidator,
 			PolicyGuard:   fakePolicyGuard,
 			QuotaGuard:    fakeQuotaGuard,
@@ -92,34 +65,8 @@ var _ = FDescribe("PoliciesCreate", func() {
 			Scope:    []string{"network.admin"},
 			UserName: "some_user",
 		}
-		fakePolicyGuard.CheckAccessReturns(true, nil)
-		fakeQuotaGuard.CheckAccessReturns(true, nil)
-		resp = httptest.NewRecorder()
-	})
-	It("persists a new policy rule", func() {
-		expectedPolicies := []api.Policy{{
-			Source: api.Source{ID: "some-app-guid"},
-			Destination: api.Destination{
-				ID:       "some-other-app-guid",
-				Protocol: "tcp",
-				Ports: api.Ports{
-					Start: 8080,
-					End:   9090,
-				},
-			},
-		}, {
-			Source: api.Source{ID: "another-app-guid"},
-			Destination: api.Destination{
-				ID:       "some-other-app-guid",
-				Protocol: "udp",
-				Ports: api.Ports{
-					Start: 1234,
-					End:   1234,
-				},
-			},
-		}}
 
-		expectedStorePolicies := []store.Policy{{
+		expectedPolicies = []store.Policy{{
 			Source: store.Source{ID: "some-app-guid"},
 			Destination: store.Destination{
 				ID:       "some-other-app-guid",
@@ -140,22 +87,31 @@ var _ = FDescribe("PoliciesCreate", func() {
 				},
 			},
 		}}
+		fakeMapper.AsStorePolicyReturns(expectedPolicies, nil)
+		fakePolicyGuard.CheckAccessReturns(true, nil)
+		fakeQuotaGuard.CheckAccessReturns(true, nil)
+		resp = httptest.NewRecorder()
 
-		handler.ServeHTTP(logger, resp, request, tokenData)
+		createPoliciesSucceeds = func() {
+			handler.ServeHTTP(logger, resp, request, tokenData)
 
-		Expect(fakeUnmarshaler.UnmarshalCallCount()).To(Equal(1))
-		bodyBytes, _ := fakeUnmarshaler.UnmarshalArgsForCall(0)
-		Expect(bodyBytes).To(Equal([]byte(requestJSON)))
-		Expect(fakeValidator.ValidatePoliciesCallCount()).To(Equal(1))
-		Expect(fakeValidator.ValidatePoliciesArgsForCall(0)).To(Equal(expectedPolicies))
-		Expect(fakePolicyGuard.CheckAccessCallCount()).To(Equal(1))
-		policies, token := fakePolicyGuard.CheckAccessArgsForCall(0)
-		Expect(policies).To(Equal(expectedPolicies))
-		Expect(token).To(Equal(tokenData))
-		Expect(fakeStore.CreateCallCount()).To(Equal(1))
-		Expect(fakeStore.CreateArgsForCall(0)).To(Equal(expectedStorePolicies))
-		Expect(resp.Code).To(Equal(http.StatusOK))
-		Expect(resp.Body.String()).To(MatchJSON("{}"))
+			Expect(fakeMapper.AsStorePolicyCallCount()).To(Equal(1))
+			Expect(fakeMapper.AsStorePolicyArgsForCall(0)).To(Equal([]byte(requestBody)))
+
+			Expect(fakeValidator.ValidatePoliciesCallCount()).To(Equal(1))
+			Expect(fakeValidator.ValidatePoliciesArgsForCall(0)).To(Equal(expectedPolicies))
+			Expect(fakePolicyGuard.CheckAccessCallCount()).To(Equal(1))
+			policies, token := fakePolicyGuard.CheckAccessArgsForCall(0)
+			Expect(policies).To(Equal(expectedPolicies))
+			Expect(token).To(Equal(tokenData))
+			Expect(fakeStore.CreateCallCount()).To(Equal(1))
+			Expect(fakeStore.CreateArgsForCall(0)).To(Equal(expectedPolicies))
+			Expect(resp.Code).To(Equal(http.StatusOK))
+			Expect(resp.Body.String()).To(MatchJSON("{}"))
+		}
+	})
+	It("persists a new policy rule", func() {
+		createPoliciesSucceeds()
 	})
 
 	It("logs the policy with username and app guid", func() {
@@ -171,38 +127,61 @@ var _ = FDescribe("PoliciesCreate", func() {
 					HaveLen(2),
 					ConsistOf(
 						SatisfyAll(
-							HaveKeyWithValue("source", HaveKeyWithValue("id", "some-app-guid")),
-							HaveKeyWithValue("destination", SatisfyAll(
-								HaveLen(3),
-								HaveKeyWithValue("id", "some-other-app-guid"),
-								HaveKeyWithValue("protocol", "tcp"),
-								HaveKeyWithValue("ports", SatisfyAll(
+							HaveKeyWithValue("Source", HaveKeyWithValue("ID", "some-app-guid")),
+							HaveKeyWithValue("Destination", SatisfyAll(
+								HaveKeyWithValue("ID", "some-other-app-guid"),
+								HaveKeyWithValue("Protocol", "tcp"),
+								HaveKeyWithValue("Ports", SatisfyAll(
 									HaveLen(2),
-									HaveKeyWithValue("start", BeEquivalentTo(8080)),
-									HaveKeyWithValue("end", BeEquivalentTo(9090)),
+									HaveKeyWithValue("Start", BeEquivalentTo(8080)),
+									HaveKeyWithValue("End", BeEquivalentTo(9090)),
 								)),
 							)),
 						),
 						SatisfyAll(
-							HaveKeyWithValue("source", HaveKeyWithValue("id", "another-app-guid")),
-							HaveKeyWithValue("destination", SatisfyAll(
-								HaveLen(3),
-								HaveKeyWithValue("id", "some-other-app-guid"),
-								HaveKeyWithValue("protocol", "udp"),
-								HaveKeyWithValue("ports", SatisfyAll(
+							HaveKeyWithValue("Source", HaveKeyWithValue("ID", "another-app-guid")),
+							HaveKeyWithValue("Destination", SatisfyAll(
+								HaveKeyWithValue("ID", "some-other-app-guid"),
+								HaveKeyWithValue("Protocol", "udp"),
+								HaveKeyWithValue("Ports", SatisfyAll(
 									HaveLen(2),
-									HaveKeyWithValue("start", BeEquivalentTo(1234)),
-									HaveKeyWithValue("end", BeEquivalentTo(1234)),
+									HaveKeyWithValue("Start", BeEquivalentTo(1234)),
+									HaveKeyWithValue("End", BeEquivalentTo(1234)),
 								)),
 							)),
 						),
 					),
 				)),
-				HaveKeyWithValue("session", "1"),
-				HaveKeyWithValue("userName", "some_user"),
 			)),
 		))
+	})
 
+	Context("when the mapper fails to get store policies", func() {
+		BeforeEach(func() {
+			fakeMapper.AsStorePolicyReturns(nil, errors.New("banana"))
+		})
+		It("calls the bad request header, and logs the error", func() {
+			handler.ServeHTTP(logger, resp, request, tokenData)
+
+			Expect(fakeErrorResponse.BadRequestCallCount()).To(Equal(1))
+
+			w, err, message, description := fakeErrorResponse.BadRequestArgsForCall(0)
+			Expect(w).To(Equal(resp))
+			Expect(err).To(MatchError("banana"))
+			Expect(message).To(Equal("policies-create"))
+			Expect(description).To(Equal("could not map request to store policies: banana"))
+
+			By("logging the error")
+			Expect(logger.Logs()).To(HaveLen(1))
+			Expect(logger.Logs()[0]).To(SatisfyAll(
+				LogsWith(lager.ERROR, "test.create-policies.failed-mapping-policies"),
+				HaveLogData(SatisfyAll(
+					HaveLen(2),
+					HaveKeyWithValue("error", "banana"),
+					HaveKeyWithValue("session", "1"),
+				)),
+			))
+		})
 	})
 
 	Context("when the policy guard returns false", func() {
@@ -410,62 +389,4 @@ var _ = FDescribe("PoliciesCreate", func() {
 		})
 	})
 
-	Context("when there are errors in the request body formatting", func() {
-		BeforeEach(func() {
-			fakeUnmarshaler.UnmarshalReturns(errors.New("banana"))
-		})
-
-		It("calls the bad request handler", func() {
-			handler.ServeHTTP(logger, resp, request, tokenData)
-
-			Expect(fakeErrorResponse.BadRequestCallCount()).To(Equal(1))
-
-			w, err, message, description := fakeErrorResponse.BadRequestArgsForCall(0)
-			Expect(w).To(Equal(resp))
-			Expect(err).To(MatchError("banana"))
-			Expect(message).To(Equal("policies-create"))
-			Expect(description).To(Equal("invalid values passed to API"))
-
-			By("logging the error")
-			Expect(logger.Logs()).To(HaveLen(1))
-			Expect(logger.Logs()[0]).To(SatisfyAll(
-				LogsWith(lager.ERROR, "test.create-policies.failed-unmarshalling-payload"),
-				HaveLogData(SatisfyAll(
-					HaveLen(2),
-					HaveKeyWithValue("error", "banana"),
-					HaveKeyWithValue("session", "1"),
-				)),
-			))
-		})
-	})
-
-	Context("when the api header version is not compatible", func() {
-		BeforeEach(func() {
-			request.Header["Accept"] = []string{"0.0.0+policy_server-toml" }
-		})
-
-		It("calls the 406 Not Acceptable handler", func() {
-			handler.ServeHTTP(logger, resp, request, tokenData)
-
-			Expect(fakeErrorResponse.NotAcceptableCallCount()).To(Equal(1))
-
-			w, err, message, description := fakeErrorResponse.NotAcceptableArgsForCall(0)
-			Expect(w).To(Equal(resp))
-			Expect(err).To(MatchError("version-mismatch"))
-			Expect(message).To(Equal("policies-create"))
-			Expect(description).To(Equal("invalid Accept Header passed to API"))
-
-			By("logging")
-			Expect(logger.Logs()).To(HaveLen(1))
-			Expect(logger.Logs()[0]).To(SatisfyAll(
-				LogsWith(lager.INFO, "test.create-policies.failed-validating-version"),
-			))
-		})
-
-		Context("when multiple accept values are provided", func() {
-			It("should return a sensible error", func() {
-				Fail("implement me")
-			})
-		})
-	})
 })

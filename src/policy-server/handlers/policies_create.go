@@ -2,28 +2,29 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"policy-server/api"
+	"policy-server/store"
 	"policy-server/uaa_client"
 
-	"code.cloudfoundry.org/cf-networking-helpers/marshal"
 	"code.cloudfoundry.org/lager"
 )
 
 //go:generate counterfeiter -o fakes/policy_guard.go --fake-name PolicyGuard . policyGuard
 type policyGuard interface {
-	CheckAccess(policies []api.Policy, tokenData uaa_client.CheckTokenResponse) (bool, error)
+	CheckAccess(policies []store.Policy, tokenData uaa_client.CheckTokenResponse) (bool, error)
 }
 
 //go:generate counterfeiter -o fakes/quota_guard.go --fake-name QuotaGuard . quotaGuard
 type quotaGuard interface {
-	CheckAccess(policies []api.Policy, tokenData uaa_client.CheckTokenResponse) (bool, error)
+	CheckAccess(policies []store.Policy, tokenData uaa_client.CheckTokenResponse) (bool, error)
 }
 
 type PoliciesCreate struct {
 	Store         dataStore
-	Unmarshaler   marshal.Unmarshaler
+	Mapper        api.PolicyMapper
 	Validator     validator
 	PolicyGuard   policyGuard
 	QuotaGuard    quotaGuard
@@ -33,14 +34,6 @@ type PoliciesCreate struct {
 func (h *PoliciesCreate) ServeHTTP(logger lager.Logger, w http.ResponseWriter, req *http.Request, tokenData uaa_client.CheckTokenResponse) {
 	logger = logger.Session("create-policies")
 
-	acceptValue := req.Header.Get("Accept")
-
-	if acceptValue != "1.0.0+policy_server-json" {
-		logger.Info("failed-validating-version")
-		h.ErrorResponse.NotAcceptable(w, errors.New("version-mismatch"), "policies-create", "invalid Accept Header passed to API")
-		return
-	}
-
 	bodyBytes, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		logger.Error("failed-reading-request-body", err)
@@ -48,24 +41,21 @@ func (h *PoliciesCreate) ServeHTTP(logger lager.Logger, w http.ResponseWriter, r
 		return
 	}
 
-	var payload struct {
-		Policies []api.Policy `json:"policies"`
-	}
-	err = h.Unmarshaler.Unmarshal(bodyBytes, &payload)
+	policies, err := h.Mapper.AsStorePolicy(bodyBytes)
 	if err != nil {
-		logger.Error("failed-unmarshalling-payload", err)
-		h.ErrorResponse.BadRequest(w, err, "policies-create", "invalid values passed to API")
+		logger.Error("failed-mapping-policies", err)
+		h.ErrorResponse.BadRequest(w, err, "policies-create", fmt.Sprintf("could not map request to store policies: %s", err))
 		return
 	}
 
-	err = h.Validator.ValidatePolicies(payload.Policies)
+	err = h.Validator.ValidatePolicies(policies)
 	if err != nil {
 		logger.Error("failed-validating-policies", err)
 		h.ErrorResponse.BadRequest(w, err, "policies-create", err.Error())
 		return
 	}
 
-	authorized, err := h.PolicyGuard.CheckAccess(payload.Policies, tokenData)
+	authorized, err := h.PolicyGuard.CheckAccess(policies, tokenData)
 	if err != nil {
 		logger.Error("failed-checking-access", err)
 		h.ErrorResponse.InternalServerError(w, err, "policies-create", "check access failed")
@@ -78,7 +68,7 @@ func (h *PoliciesCreate) ServeHTTP(logger lager.Logger, w http.ResponseWriter, r
 		return
 	}
 
-	authorized, err = h.QuotaGuard.CheckAccess(payload.Policies, tokenData)
+	authorized, err = h.QuotaGuard.CheckAccess(policies, tokenData)
 	if err != nil {
 		logger.Error("failed-checking-quota", err)
 		h.ErrorResponse.InternalServerError(w, err, "policies-create", "check quota failed")
@@ -91,15 +81,14 @@ func (h *PoliciesCreate) ServeHTTP(logger lager.Logger, w http.ResponseWriter, r
 		return
 	}
 
-	storePolicies := api.MapAPIPolicies(payload.Policies)
-	err = h.Store.Create(storePolicies)
+	err = h.Store.Create(policies)
 	if err != nil {
 		logger.Error("failed-creating-in-database", err)
 		h.ErrorResponse.InternalServerError(w, err, "policies-create", "database create failed")
 		return
 	}
 
-	logger.Info("created-policies", lager.Data{"policies": payload.Policies, "userName": tokenData.UserName})
+	logger.Info("created-policies", lager.Data{"policies": policies, "userName": tokenData.UserName})
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("{}"))
 }

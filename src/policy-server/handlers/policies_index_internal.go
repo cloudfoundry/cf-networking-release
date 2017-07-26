@@ -7,7 +7,6 @@ import (
 	"policy-server/store"
 	"strings"
 
-	"code.cloudfoundry.org/cf-networking-helpers/marshal"
 	"code.cloudfoundry.org/lager"
 )
 
@@ -24,7 +23,7 @@ type dataStore interface {
 type PoliciesIndexInternal struct {
 	Logger        lager.Logger
 	Store         dataStore
-	Marshaler     marshal.Marshaler
+	Mapper        api.PolicyMapper
 	ErrorResponse errorResponse
 }
 
@@ -48,16 +47,14 @@ func (h *PoliciesIndexInternal) ServeHTTP(logger lager.Logger, w http.ResponseWr
 		return
 	}
 
-	policyResponse := struct {
-		Policies []api.Policy `json:"policies"`
-	}{api.MapStorePolicies(policies)}
-	bytes, err := h.Marshaler.Marshal(policyResponse)
+	bytes, err := h.Mapper.AsBytes(policies)
 	if err != nil {
-		logger.Error("failed-marshalling-policies", err)
-		h.ErrorResponse.InternalServerError(w, err, "policies-index-internal", "database marshalling failed")
+		logger.Error("failed-mapping-policies-as-bytes", err)
+		h.ErrorResponse.InternalServerError(w, err, "policies-index-internal", "map policy as bytes failed")
 		return
 	}
 
+	w.WriteHeader(http.StatusOK)
 	w.Write(bytes)
 }
 

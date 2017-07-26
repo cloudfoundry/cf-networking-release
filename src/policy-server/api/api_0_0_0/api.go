@@ -1,12 +1,4 @@
-package api
-
-import "policy-server/store"
-
-//go:generate counterfeiter -o fakes/policy_mapper.go --fake-name PolicyMapper . PolicyMapper
-type PolicyMapper interface {
-	AsStorePolicy([]byte) ([]store.Policy, error) // marshal
-	AsBytes([]store.Policy) ([]byte, error)       // unmarshal
-}
+package api_0_0_0
 
 type Policies struct {
 	Policies []Policy `json:"policies"`
@@ -26,7 +18,7 @@ type Destination struct {
 	ID       string `json:"id"`
 	Tag      string `json:"tag,omitempty"`
 	Protocol string `json:"protocol"`
-	Ports    Ports  `json:"ports"`
+	Port     int    `json:"port"`
 }
 
 type Ports struct {

@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"policy-server/api"
+	"policy-server/store"
 	"policy-server/uaa_client"
 )
 
@@ -27,7 +28,7 @@ type PolicyFilter struct {
 	ChunkSize int
 }
 
-func (f *PolicyFilter) FilterPolicies(policies []api.Policy, userToken uaa_client.CheckTokenResponse) ([]api.Policy, error) {
+func (f *PolicyFilter) FilterPolicies(policies []store.Policy, userToken uaa_client.CheckTokenResponse) ([]store.Policy, error) {
 	for _, scope := range userToken.Scope {
 		if scope == "network.admin" {
 			return policies, nil
@@ -89,8 +90,8 @@ func getChunks(appGuids []string, chunkSize int) [][]string {
 	return appGuidChunks
 }
 
-func filter(policies []api.Policy, appSpaces map[string]string, userSpaces map[string]struct{}) []api.Policy {
-	filtered := []api.Policy{}
+func filter(policies []store.Policy, appSpaces map[string]string, userSpaces map[string]struct{}) []store.Policy {
+	filtered := []store.Policy{}
 
 	for _, policy := range policies {
 		_, sourceFound := userSpaces[appSpaces[policy.Source.ID]]
