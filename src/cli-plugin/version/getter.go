@@ -7,7 +7,7 @@ import (
 var CurrentVersion = plugin.VersionType{
 	Major: 1,
 	Minor: 3,
-	Build: 0,
+	Build: 1,
 }
 
 type Getter struct{}
