@@ -66,31 +66,18 @@ func (s policyServerMigrations) supportsDriver(driverName string) bool {
 }
 
 type policyServerMigration struct {
-	Id   string
-	Up   map[string][]string
-	Down map[string][]string
+	Id string
+	Up map[string][]string
 }
 
 func (psm *policyServerMigration) forDriver(driverName string) *migrate.Migration {
 	return &migrate.Migration{
-		Id:   psm.Id,
-		Up:   psm.Up[driverName],
-		Down: psm.Down[driverName],
+		Id: psm.Id,
+		Up: psm.Up[driverName],
 	}
 }
 
 func (psm *policyServerMigration) supportsDriver(driverName string) bool {
 	_, foundUp := psm.Up[driverName]
-	_, foundDown := psm.Down[driverName]
-
-	return foundUp && foundDown
-}
-
-var migrationDownNotImplemented = map[string][]string{
-	"mysql": {
-		``,
-	},
-	"postgres": {
-		``,
-	},
+	return foundUp
 }

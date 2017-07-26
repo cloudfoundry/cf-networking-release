@@ -21,6 +21,13 @@ var _ = Describe("MigrateAdapter", func() {
 	})
 
 	Describe("ExecMax", func() {
+		Context("when the migration direction is down", func() {
+			It("returns an error", func() {
+				fakeMigrationDb := &fakes.MigrationDb{}
+				_, err := migrateAdapter.ExecMax(fakeMigrationDb, "some-dialect", migrate.MemoryMigrationSource{}, migrate.Down, 0)
+				Expect(err).To(MatchError("down migration not supported"))
+			})
+		})
 		Context("when the passed in database is not a sqlx.DB", func() {
 			It("returns an error", func() {
 				fakeMigrationDb := &fakes.MigrationDb{}
