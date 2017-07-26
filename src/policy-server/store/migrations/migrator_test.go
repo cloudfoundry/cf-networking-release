@@ -334,6 +334,7 @@ var _ = Describe("migrations", func() {
 				migrate.Up,
 				0,
 			)
+			Expect(err).NotTo(HaveOccurred())
 
 			numberOfMigrations, err := adapter.ExecMax(
 				realDb,
@@ -345,7 +346,7 @@ var _ = Describe("migrations", func() {
 				0,
 			)
 
-			Expect(err).NotTo(HaveOccurred())
+			Expect(err).To(MatchError("down migration not supported"))
 			Expect(numberOfMigrations).To(Equal(0))
 		})
 	})
