@@ -128,6 +128,7 @@ var _ = Describe("ApiPolicyMapper", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(payload).To(MatchJSON(
 				[]byte(`{
+					"total_policies": 2,
 					"policies": [{
 						"source": { "id": "some-src-id" },
 						"destination": {
@@ -170,19 +171,22 @@ var _ = Describe("ApiPolicyMapper", func() {
 					},
 				})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(payload).To(MatchJSON([]byte(`{ "policies": [
-					{
-						"source": { "id": "some-src-id" },
-						"destination": {
-							"id": "some-dst-id",
-							"protocol": "some-protocol",
-							"ports": {
-								"start": 8080,
-								"end": 8080
+				Expect(payload).To(MatchJSON([]byte(`{ 
+					"total_policies": 1,
+					"policies": [
+						{
+							"source": { "id": "some-src-id" },
+							"destination": {
+								"id": "some-dst-id",
+								"protocol": "some-protocol",
+								"ports": {
+									"start": 8080,
+									"end": 8080
+								}
 							}
 						}
-					}
-				] }`)))
+					]
+				}`)))
 			})
 		})
 		Context("when marshalling fails", func() {

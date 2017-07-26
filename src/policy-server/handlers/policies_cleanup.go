@@ -3,15 +3,15 @@ package handlers
 import (
 	"net/http"
 	"policy-server/api"
+	"policy-server/store"
 	"policy-server/uaa_client"
 
-	"code.cloudfoundry.org/cf-networking-helpers/marshal"
 	"code.cloudfoundry.org/lager"
 )
 
 //go:generate counterfeiter -o fakes/policy_cleaner.go --fake-name PolicyCleaner . policyCleaner
 type policyCleaner interface {
-	DeleteStalePolicies() ([]api.Policy, error)
+	DeleteStalePolicies() ([]store.Policy, error)
 }
 
 //go:generate counterfeiter -o fakes/error_response.go --fake-name ErrorResponse . errorResponse
@@ -24,7 +24,7 @@ type errorResponse interface {
 }
 
 type PoliciesCleanup struct {
-	Marshaler     marshal.Marshaler
+	Mapper        api.PolicyMapper
 	PolicyCleaner policyCleaner
 	ErrorResponse errorResponse
 }
@@ -38,19 +38,15 @@ func (h *PoliciesCleanup) ServeHTTP(logger lager.Logger, w http.ResponseWriter, 
 		return
 	}
 
-	policyCleanup := struct {
-		TotalPolicies int             `json:"total_policies"`
-		Policies      []api.Policy `json:"policies"`
-	}{len(policies), policies}
-	for i, _ := range policyCleanup.Policies {
-		policyCleanup.Policies[i].Source.Tag = ""
-		policyCleanup.Policies[i].Destination.Tag = ""
+	for i, _ := range policies {
+		policies[i].Source.Tag = ""
+		policies[i].Destination.Tag = ""
 	}
 
-	bytes, err := h.Marshaler.Marshal(policyCleanup)
+	bytes, err := h.Mapper.AsBytes(policies)
 	if err != nil {
-		logger.Error("failed-marshalling-policies", err)
-		h.ErrorResponse.InternalServerError(w, err, "policies-cleanup", "marshal response failed")
+		logger.Error("failed-mapping-policies-as-bytes", err)
+		h.ErrorResponse.InternalServerError(w, err, "policies-cleanup", "map policy as bytes failed")
 		return
 	}
 

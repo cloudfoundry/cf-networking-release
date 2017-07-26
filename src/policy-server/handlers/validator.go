@@ -3,7 +3,6 @@ package handlers
 import (
 	"errors"
 	"fmt"
-	"policy-server/api"
 	"policy-server/store"
 )
 
@@ -14,7 +13,7 @@ type validator interface {
 
 type Validator struct{}
 
-func (v *Validator) ValidatePolicies(policies []api.Policy) error {
+func (v *Validator) ValidatePolicies(policies []store.Policy) error {
 	if len(policies) == 0 {
 		return errors.New("missing policies")
 	}

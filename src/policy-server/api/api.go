@@ -9,7 +9,8 @@ type PolicyMapper interface {
 }
 
 type Policies struct {
-	Policies []Policy `json:"policies"`
+	TotalPolicies int      `json:"total_policies"`
+	Policies      []Policy `json:"policies"`
 }
 
 type Policy struct {

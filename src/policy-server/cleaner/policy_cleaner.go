@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/lager"
-	"policy-server/api"
 )
 
 //go:generate counterfeiter -o fakes/uua_client.go --fake-name UAAClient . uaaClient
@@ -40,8 +39,8 @@ type PolicyCleaner struct {
 	RequestTimeout        time.Duration
 }
 
-func (p *PolicyCleaner) DeleteStalePolicies() ([]api.Policy, error) {
-	storePolicies, err := p.Store.All()
+func (p *PolicyCleaner) DeleteStalePolicies() ([]store.Policy, error) {
+	policies, err := p.Store.All()
 	if err != nil {
 		p.Logger.Error("store-list-policies-failed", err)
 		return nil, fmt.Errorf("database read failed: %s", err)
@@ -52,9 +51,8 @@ func (p *PolicyCleaner) DeleteStalePolicies() ([]api.Policy, error) {
 		return nil, fmt.Errorf("get UAA token failed: %s", err)
 	}
 
-	stalePolicies := []api.Policy{}
+	stalePolicies := []store.Policy{}
 
-	policies := api.MapStorePolicies(storePolicies)
 	appGUIDs := policyAppGUIDs(policies)
 	appGUIDchunks := getChunks(appGUIDs, p.CCAppRequestChunkSize)
 
@@ -73,7 +71,7 @@ func (p *PolicyCleaner) DeleteStalePolicies() ([]api.Policy, error) {
 			"total_policies": len(stalePolicies),
 			"stale_policies": stalePolicies,
 		})
-		err = p.Store.Delete(api.MapAPIPolicies(toDelete))
+		err = p.Store.Delete(toDelete)
 		if err != nil {
 			p.Logger.Error("store-delete-policies-failed", err)
 			return nil, fmt.Errorf("database write failed: %s", err)
@@ -98,8 +96,8 @@ func getStaleAppGUIDs(liveAppGUIDs map[string]struct{}, appGUIDs []string) map[s
 	return staleAppGUIDs
 }
 
-func getStalePolicies(policyList []api.Policy, staleAppGUIDs map[string]struct{}) []api.Policy {
-	stalePolicies := []api.Policy{}
+func getStalePolicies(policyList []store.Policy, staleAppGUIDs map[string]struct{}) []store.Policy {
+	stalePolicies := []store.Policy{}
 	for _, p := range policyList {
 		_, foundSrc := staleAppGUIDs[p.Source.ID]
 		_, foundDst := staleAppGUIDs[p.Destination.ID]
@@ -110,7 +108,7 @@ func getStalePolicies(policyList []api.Policy, staleAppGUIDs map[string]struct{}
 	return stalePolicies
 }
 
-func policyAppGUIDs(policyList []api.Policy) []string {
+func policyAppGUIDs(policyList []store.Policy) []string {
 	appGUIDset := make(map[string]struct{})
 	for _, p := range policyList {
 		appGUIDset[p.Source.ID] = struct{}{}
