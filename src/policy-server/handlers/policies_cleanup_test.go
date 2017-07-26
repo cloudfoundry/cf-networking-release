@@ -1,16 +1,16 @@
 package handlers_test
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
 	"policy-server/handlers"
 	"policy-server/handlers/fakes"
-	"policy-server/api"
+	"policy-server/store"
 	"policy-server/uaa_client"
 
-	hfakes "code.cloudfoundry.org/cf-networking-helpers/fakes"
+	apifakes "policy-server/api/fakes"
+
 	"code.cloudfoundry.org/lager"
 
 	"code.cloudfoundry.org/lager/lagertest"
@@ -25,20 +25,20 @@ var _ = Describe("PoliciesCleanup", func() {
 		resp              *httptest.ResponseRecorder
 		logger            *lagertest.TestLogger
 		fakePolicyCleaner *fakes.PolicyCleaner
-		fakeMarshaler     *hfakes.Marshaler
+		fakeMapper        *apifakes.PolicyMapper
 		fakeErrorResponse *fakes.ErrorResponse
-		policies          []api.Policy
+		policies          []store.Policy
 		tokenData         uaa_client.CheckTokenResponse
 	)
 
 	BeforeEach(func() {
-		policies = []api.Policy{{
-			Source: api.Source{ID: "live-guid", Tag: "tag"},
-			Destination: api.Destination{
+		policies = []store.Policy{{
+			Source: store.Source{ID: "live-guid", Tag: "tag"},
+			Destination: store.Destination{
 				ID:       "dead-guid",
 				Tag:      "tag",
 				Protocol: "tcp",
-				Ports: api.Ports{
+				Ports: store.Ports{
 					Start: 8080,
 					End:   8080,
 				},
@@ -47,13 +47,12 @@ var _ = Describe("PoliciesCleanup", func() {
 
 		logger = lagertest.NewTestLogger("test")
 
-		fakeMarshaler = &hfakes.Marshaler{}
-		fakeMarshaler.MarshalStub = json.Marshal
+		fakeMapper = &apifakes.PolicyMapper{}
 		fakePolicyCleaner = &fakes.PolicyCleaner{}
 		fakeErrorResponse = &fakes.ErrorResponse{}
 
 		handler = &handlers.PoliciesCleanup{
-			Marshaler:     fakeMarshaler,
+			Mapper:        fakeMapper,
 			PolicyCleaner: fakePolicyCleaner,
 			ErrorResponse: fakeErrorResponse,
 		}
@@ -64,6 +63,7 @@ var _ = Describe("PoliciesCleanup", func() {
 		}
 
 		fakePolicyCleaner.DeleteStalePoliciesReturns(policies, nil)
+		fakeMapper.AsBytesReturns([]byte("some-bytes"), nil)
 		resp = httptest.NewRecorder()
 		request, _ = http.NewRequest("POST", "/networking/v0/external/policies/cleanup", nil)
 	})
@@ -72,39 +72,12 @@ var _ = Describe("PoliciesCleanup", func() {
 		handler.ServeHTTP(logger, resp, request, tokenData)
 
 		Expect(fakePolicyCleaner.DeleteStalePoliciesCallCount()).To(Equal(1))
-		Expect(fakeMarshaler.MarshalCallCount()).To(Equal(1))
+		Expect(fakeMapper.AsBytesCallCount()).To(Equal(1))
 
-		for i, _ := range policies {
-			policies[i].Source.Tag = ""
-			policies[i].Destination.Tag = ""
-		}
-		deletedPolicies := struct {
-			TotalPolicies int             `json:"total_policies"`
-			Policies      []api.Policy `json:"policies"`
-		}{1, policies}
-
-		Expect(fakeMarshaler.MarshalArgsForCall(0)).To(Equal(deletedPolicies))
+		Expect(fakeMapper.AsBytesArgsForCall(0)).To(Equal(policies))
 
 		Expect(resp.Code).To(Equal(http.StatusOK))
-		Expect(resp.Body.String()).To(MatchJSON(`{
-			"total_policies":1,
-			"policies": [
-			{
-				"source": {
-					"id": "live-guid"
-				},
-				"destination": {
-					"id": "dead-guid",
-					"protocol": "tcp",
-					"ports": {
-						"start": 8080,
-						"end": 8080
-					}
-				}
-			}
-			]
-		}
-			`))
+		Expect(resp.Body.String()).To(Equal(`some-bytes`))
 	})
 
 	Context("When deleting the policies fails", func() {
@@ -136,9 +109,9 @@ var _ = Describe("PoliciesCleanup", func() {
 		})
 	})
 
-	Context("When marshalling the reponse fails", func() {
+	Context("When mapping the policies to bytes", func() {
 		BeforeEach(func() {
-			fakeMarshaler.MarshalReturns(nil, errors.New("potato"))
+			fakeMapper.AsBytesReturns(nil, errors.New("potato"))
 		})
 
 		It("calls the internal server error handler", func() {
@@ -150,12 +123,12 @@ var _ = Describe("PoliciesCleanup", func() {
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("potato"))
 			Expect(message).To(Equal("policies-cleanup"))
-			Expect(description).To(Equal("marshal response failed"))
+			Expect(description).To(Equal("map policy as bytes failed"))
 
 			By("logging the error")
 			Expect(logger.Logs()).To(HaveLen(1))
 			Expect(logger.Logs()[0]).To(SatisfyAll(
-				LogsWith(lager.ERROR, "test.cleanup-policies.failed-marshalling-policies"),
+				LogsWith(lager.ERROR, "test.cleanup-policies.failed-mapping-policies-as-bytes"),
 				HaveLogData(SatisfyAll(
 					HaveLen(2),
 					HaveKeyWithValue("error", "potato"),

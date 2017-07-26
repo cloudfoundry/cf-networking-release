@@ -45,7 +45,6 @@ func (m *Migrator) PerformMigrations(driverName string, migrationDb MigrationDb,
 	return numMigrations, nil
 }
 
-
 type policyServerMigrations []policyServerMigration
 
 func (s policyServerMigrations) ForDriver(driverName string) []*migrate.Migration {

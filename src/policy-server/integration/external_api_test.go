@@ -7,9 +7,9 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"policy-server/api"
 	"policy-server/config"
 	"policy-server/integration/helpers"
-	"policy-server/api"
 	"strings"
 	"sync/atomic"
 
@@ -366,7 +366,7 @@ var _ = Describe("External API", func() {
 								Start: 8090,
 								End:   8090,
 							},
-							Protocol:                    "tcp",
+							Protocol: "tcp",
 						},
 					})
 
@@ -461,7 +461,7 @@ var _ = Describe("External API", func() {
 			responseBytes, err := ioutil.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 			var policiesResponse struct {
-				TotalPolicies int             `json:"total_policies"`
+				TotalPolicies int          `json:"total_policies"`
 				Policies      []api.Policy `json:"policies"`
 			}
 			Expect(json.Unmarshal(responseBytes, &policiesResponse)).To(Succeed())
@@ -509,9 +509,9 @@ var _ = Describe("External API", func() {
 			for i := 0; i < nPolicies; i++ {
 				appName := fmt.Sprintf("some-app-%x", i)
 				policies = append(policies, api.Policy{
-					Source:      api.Source{ID: appName},
+					Source: api.Source{ID: appName},
 					Destination: api.Destination{
-						ID: appName,
+						ID:       appName,
 						Protocol: "tcp",
 						Ports: api.Ports{
 							Start: 8090,
@@ -549,7 +549,7 @@ var _ = Describe("External API", func() {
 			responseBytes, err := ioutil.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 			var policiesResponse struct {
-				TotalPolicies int             `json:"total_policies"`
+				TotalPolicies int          `json:"total_policies"`
 				Policies      []api.Policy `json:"policies"`
 			}
 			Expect(json.Unmarshal(responseBytes, &policiesResponse)).To(Succeed())
@@ -652,7 +652,7 @@ var _ = Describe("External API", func() {
 			})
 		})
 
-		Context("when the port is invalid", func() {
+		Context("when the start port is invalid", func() {
 			It("gives a helpful error", func() {
 				body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 0, "end": 3454 } } } ] }`)
 				resp := helpers.MakeAndDoRequest(

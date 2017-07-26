@@ -14,6 +14,7 @@ import (
 	"lib/nonmutualtls"
 	"lib/poller"
 
+	"policy-server/api"
 	"policy-server/cc_client"
 	"policy-server/cleaner"
 	"policy-server/config"
@@ -21,6 +22,8 @@ import (
 	"policy-server/server_metrics"
 	"policy-server/store"
 	"policy-server/uaa_client"
+
+	"policy-server/store/migrations"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/httperror"
@@ -38,7 +41,6 @@ import (
 	"github.com/tedsuo/ifrit/http_server"
 	"github.com/tedsuo/ifrit/sigmon"
 	"github.com/tedsuo/rata"
-	"policy-server/store/migrations"
 )
 
 const (
@@ -157,8 +159,6 @@ func main() {
 		MetricsSender: metricsSender,
 	}
 
-	unmarshaler := marshal.UnmarshalFunc(json.Unmarshal)
-
 	errorResponse := &httperror.ErrorResponse{
 		Logger:        logger,
 		MetricsSender: metricsSender,
@@ -184,11 +184,13 @@ func main() {
 		CCClient:  ccClient,
 	}
 
+	policyMapperV1 := api.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal))
+
 	validator := &handlers.Validator{}
 
 	createPolicyHandler := &handlers.PoliciesCreate{
 		Store:         wrappedStore,
-		Unmarshaler:   unmarshaler,
+		Mapper:        policyMapperV1,
 		Validator:     validator,
 		PolicyGuard:   policyGuard,
 		QuotaGuard:    quotaGuard,
@@ -197,7 +199,7 @@ func main() {
 
 	deletePolicyHandler := &handlers.PoliciesDelete{
 		Store:         wrappedStore,
-		Unmarshaler:   unmarshaler,
+		Mapper:        policyMapperV1,
 		Validator:     validator,
 		PolicyGuard:   policyGuard,
 		ErrorResponse: errorResponse,
@@ -205,7 +207,7 @@ func main() {
 
 	policiesIndexHandler := &handlers.PoliciesIndex{
 		Store:         wrappedStore,
-		Marshaler:     marshal.MarshalFunc(json.Marshal),
+		Mapper:        policyMapperV1,
 		PolicyFilter:  policyFilter,
 		ErrorResponse: errorResponse,
 	}
@@ -219,7 +221,7 @@ func main() {
 	}
 
 	policiesCleanupHandler := &handlers.PoliciesCleanup{
-		Marshaler:     marshal.MarshalFunc(json.Marshal),
+		Mapper:        policyMapperV1,
 		PolicyCleaner: policyCleaner,
 		ErrorResponse: errorResponse,
 	}
@@ -233,7 +235,7 @@ func main() {
 	internalPoliciesHandler := &handlers.PoliciesIndexInternal{
 		Logger:        logger.Session("policies-index-internal"),
 		Store:         wrappedStore,
-		Marshaler:     marshal.MarshalFunc(json.Marshal),
+		Mapper:        policyMapperV1,
 		ErrorResponse: errorResponse,
 	}
 

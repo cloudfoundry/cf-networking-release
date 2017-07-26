@@ -8,13 +8,14 @@ import (
 	"policy-server/store/migrations"
 	migrationsFakes "policy-server/store/migrations/fakes"
 
+	"sync"
+
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
+	"github.com/cf-container-networking/sql-migrate"
 	"github.com/jmoiron/sqlx"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/cf-container-networking/sql-migrate"
-	"sync"
 )
 
 type columnUsage struct {

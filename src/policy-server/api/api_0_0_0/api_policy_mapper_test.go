@@ -127,6 +127,7 @@ var _ = Describe("ApiPolicyMapper v000", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(payload).To(MatchJSON(
 				[]byte(`{
+					"total_policies": 2,
 					"policies": [{
 						"source": { "id": "some-src-id" },
 						"destination": {
@@ -164,17 +165,20 @@ var _ = Describe("ApiPolicyMapper v000", func() {
 					},
 				})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(payload).To(MatchJSON([]byte(`{ "policies": [
-					{
-						"source": { "id": "some-src-id" },
-						"destination": {
-							"id": "some-dst-id",
-							"tag": "some-other-dst-tag",
-							"protocol": "some-protocol",
-							"port": 8080
+				Expect(payload).To(MatchJSON([]byte(`{
+					"total_policies": 1,
+					"policies": [
+						{
+							"source": { "id": "some-src-id" },
+							"destination": {
+								"id": "some-dst-id",
+								"tag": "some-other-dst-tag",
+								"protocol": "some-protocol",
+								"port": 8080
+							}
 						}
-					}
-				] }`)))
+					]
+				}`)))
 			})
 		})
 		Context("when the policy has an empty tag", func() {
@@ -193,16 +197,19 @@ var _ = Describe("ApiPolicyMapper v000", func() {
 					},
 				})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(payload).To(MatchJSON([]byte(`{ "policies": [
-					{
-						"source": { "id": "some-src-id" },
-						"destination": {
-							"id": "some-dst-id",
-							"protocol": "some-protocol",
-							"port": 8080
+				Expect(payload).To(MatchJSON([]byte(`{
+					"total_policies": 1,
+					"policies": [
+						{
+							"source": { "id": "some-src-id" },
+							"destination": {
+								"id": "some-dst-id",
+								"protocol": "some-protocol",
+								"port": 8080
+							}
 						}
-					}
-				] }`)))
+					]
+				}`)))
 			})
 		})
 		Context("when the destination.StartPort does not equal destination.EndPort", func() {
@@ -222,7 +229,7 @@ var _ = Describe("ApiPolicyMapper v000", func() {
 					},
 				})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(payload).To(MatchJSON([]byte(`{ "policies": [] }`)))
+				Expect(payload).To(MatchJSON([]byte(`{ "total_policies": 0, "policies": [] }`)))
 			})
 		})
 		Context("when marshalling fails", func() {

@@ -1,7 +1,8 @@
 package api_0_0_0
 
 type Policies struct {
-	Policies []Policy `json:"policies"`
+	TotalPolicies int      `json:"total_policies"`
+	Policies      []Policy `json:"policies"`
 }
 
 type Policy struct {

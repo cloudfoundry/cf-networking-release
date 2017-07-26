@@ -6,23 +6,22 @@ import (
 	"policy-server/cleaner/fakes"
 	"time"
 
+	"policy-server/store"
+
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
-	"policy-server/store"
-	"policy-server/api"
 )
 
 var _ = Describe("PolicyCleaner", func() {
 	var (
-		policyCleaner  *cleaner.PolicyCleaner
-		fakeStore      *fakes.ListDeleteStore
-		fakeUAAClient  *fakes.UAAClient
-		fakeCCClient   *fakes.CCClient
-		logger         *lagertest.TestLogger
-		allPolicies    []store.Policy
-		allAPIPolicies []api.Policy
+		policyCleaner *cleaner.PolicyCleaner
+		fakeStore     *fakes.ListDeleteStore
+		fakeUAAClient *fakes.UAAClient
+		fakeCCClient  *fakes.CCClient
+		logger        *lagertest.TestLogger
+		allPolicies   []store.Policy
 	)
 
 	BeforeEach(func() {
@@ -55,41 +54,6 @@ var _ = Describe("PolicyCleaner", func() {
 				Tag:      "tag",
 				Protocol: "udp",
 				Ports: store.Ports{
-					Start: 1234,
-					End:   1234,
-				},
-			},
-		}}
-		
-		allAPIPolicies = []api.Policy{{
-			Source: api.Source{ID: "live-guid", Tag: "tag"},
-			Destination: api.Destination{
-				ID:       "live-guid",
-				Tag:      "tag",
-				Protocol: "tcp",
-				Ports: api.Ports{
-					Start: 8080,
-					End:   8080,
-				},
-			},
-		}, {
-			Source: api.Source{ID: "dead-guid", Tag: "tag"},
-			Destination: api.Destination{
-				ID:       "live-guid",
-				Tag:      "tag",
-				Protocol: "udp",
-				Ports: api.Ports{
-					Start: 1234,
-					End:   1234,
-				},
-			},
-		}, {
-			Source: api.Source{ID: "live-guid", Tag: "tag"},
-			Destination: api.Destination{
-				ID:       "dead-guid",
-				Tag:      "tag",
-				Protocol: "udp",
-				Ports: api.Ports{
 					Start: 1234,
 					End:   1234,
 				},
@@ -139,7 +103,7 @@ var _ = Describe("PolicyCleaner", func() {
 		Expect(fakeStore.DeleteArgsForCall(0)).To(Equal(stalePolicies))
 
 		Expect(logger).To(gbytes.Say("deleting stale policies:.*policies.*dead-guid.*dead-guid.*total_policies\":2"))
-		staleAPIPolicies := allAPIPolicies[1:]
+		staleAPIPolicies := allPolicies[1:]
 		Expect(policies).To(Equal(staleAPIPolicies))
 	})
 
@@ -182,7 +146,7 @@ var _ = Describe("PolicyCleaner", func() {
 
 			Expect(logger).To(gbytes.Say("deleting stale policies:.*policies.*dead-guid.*dead-guid.*total_policies\":2"))
 
-			staleAPIPolicies := allAPIPolicies[1:]
+			staleAPIPolicies := allPolicies[1:]
 			Expect(policies).To(ConsistOf(staleAPIPolicies[0], staleAPIPolicies[1]))
 		})
 	})
