@@ -25,6 +25,9 @@ files:
   - code.cloudfoundry.org/cli/plugin/models/*.go # gosub
   - code.cloudfoundry.org/lager/*.go # gosub
   - code.cloudfoundry.org/lager/lagertest/*.go # gosub
+  - github.com/cf-container-networking/sql-migrate/*.go # gosub
+  - github.com/cf-container-networking/sql-migrate/sqlparse/*.go # gosub
+  - github.com/cf-container-networking/sql-migrate/vendor/gopkg.in/gorp.v1/*.go # gosub
   - github.com/cloudfoundry-incubator/cf-test-helpers/cf/*.go # gosub
   - github.com/cloudfoundry-incubator/cf-test-helpers/helpers/*.go # gosub
   - github.com/cloudfoundry-incubator/cf-test-helpers/runner/*.go # gosub
@@ -81,5 +84,8 @@ files:
   - gopkg.in/yaml.v2/*.go # gosub
   - lib/policy_client/*.go # gosub
   - lib/testsupport/*.go # gosub
-  - policy-server/models/*.go # gosub
+  - policy-server/api/*.go # gosub
+  - policy-server/store/*.go # gosub
+  - policy-server/store/helpers/*.go # gosub
+  - policy-server/store/migrations/*.go # gosub
   - test/acceptance/*.go # gosub

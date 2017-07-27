@@ -121,8 +121,11 @@ var _ = Describe("space developer policy configuration", func() {
 							ID: appAGUID,
 						},
 						Destination: api.Destination{
-							ID:       appBGUID,
-							Port:     1234,
+							ID: appBGUID,
+							Ports: api.Ports{
+								Start: 1234,
+								End:   2234,
+							},
 							Protocol: "tcp",
 						},
 					},
@@ -137,11 +140,10 @@ var _ = Describe("space developer policy configuration", func() {
 							ID: appAGUID,
 						},
 						Destination: api.Destination{
-							ID:   appBGUID,
-							Port: 1234,
+							ID: appBGUID,
 							Ports: api.Ports{
 								Start: 1234,
-								End:   1234,
+								End:   2234,
 							},
 							Protocol: "tcp",
 						},
@@ -159,8 +161,11 @@ var _ = Describe("space developer policy configuration", func() {
 							ID: appAGUID,
 						},
 						Destination: api.Destination{
-							ID:       appBGUID,
-							Port:     1234,
+							ID: appBGUID,
+							Ports: api.Ports{
+								Start: 1234,
+								End:   2234,
+							},
 							Protocol: "tcp",
 						},
 					},

@@ -16,6 +16,9 @@ files:
   - code.cloudfoundry.org/debugserver/*.go # gosub
   - code.cloudfoundry.org/lager/*.go # gosub
   - github.com/bmizerany/pat/*.go # gosub
+  - github.com/cf-container-networking/sql-migrate/*.go # gosub
+  - github.com/cf-container-networking/sql-migrate/sqlparse/*.go # gosub
+  - github.com/cf-container-networking/sql-migrate/vendor/gopkg.in/gorp.v1/*.go # gosub
   - github.com/cloudfoundry/dropsonde/*.go # gosub
   - github.com/cloudfoundry/dropsonde/emitter/*.go # gosub
   - github.com/cloudfoundry/dropsonde/envelope_sender/*.go # gosub
@@ -36,6 +39,7 @@ files:
   - github.com/gogo/protobuf/gogoproto/*.go # gosub
   - github.com/gogo/protobuf/proto/*.go # gosub
   - github.com/gogo/protobuf/protoc-gen-gogo/descriptor/*.go # gosub
+  - github.com/hashicorp/go-version/*.go # gosub
   - github.com/jmoiron/sqlx/*.go # gosub
   - github.com/jmoiron/sqlx/reflectx/*.go # gosub
   - github.com/lib/pq/*.go # gosub
@@ -72,8 +76,6 @@ files:
   - github.com/onsi/gomega/matchers/support/goraph/node/*.go # gosub
   - github.com/onsi/gomega/matchers/support/goraph/util/*.go # gosub
   - github.com/onsi/gomega/types/*.go # gosub
-  - github.com/rubenv/sql-migrate/*.go # gosub
-  - github.com/rubenv/sql-migrate/sqlparse/*.go # gosub
   - github.com/square/certstrap/depot/*.go # gosub
   - github.com/square/certstrap/pkix/*.go # gosub
   - github.com/tedsuo/ifrit/*.go # gosub
@@ -81,18 +83,19 @@ files:
   - github.com/tedsuo/ifrit/http_server/*.go # gosub
   - github.com/tedsuo/ifrit/sigmon/*.go # gosub
   - github.com/tedsuo/rata/*.go # gosub
-  - gopkg.in/gorp.v1/*.go # gosub
   - gopkg.in/validator.v2/*.go # gosub
   - gopkg.in/yaml.v2/*.go # gosub
   - lib/nonmutualtls/*.go # gosub
   - lib/poller/*.go # gosub
+  - policy-server/api/*.go # gosub
+  - policy-server/api/api_0_0_0/*.go # gosub
   - policy-server/cc_client/*.go # gosub
   - policy-server/cleaner/*.go # gosub
   - policy-server/cmd/policy-server/*.go # gosub
   - policy-server/config/*.go # gosub
   - policy-server/handlers/*.go # gosub
-  - policy-server/models/*.go # gosub
   - policy-server/server_metrics/*.go # gosub
   - policy-server/store/*.go # gosub
   - policy-server/store/helpers/*.go # gosub
+  - policy-server/store/migrations/*.go # gosub
   - policy-server/uaa_client/*.go # gosub
