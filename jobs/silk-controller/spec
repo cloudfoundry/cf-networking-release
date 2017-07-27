@@ -20,6 +20,13 @@ consumes:
   type: database
   optional: true
 
+provides:
+- name: cf_network
+  type: cf_network
+  properties:
+    - cf_networking.network
+    - cf_networking.subnet_prefix_length
+
 properties:
   cf_networking.disable:
     description: "Disable container to container networking."

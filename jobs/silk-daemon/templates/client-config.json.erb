@@ -20,10 +20,32 @@
     "https://#{hostname}:#{port}"
   end
 
+  def overlay_network
+    network = nil
+    # Consume cf_networking.network if it is provided, for backwards compatibility
+    if_p("cf_networking.network") { |non_linked_network| network = non_linked_network }
+    unless network
+      # Otherwise, use link provided from silk-controller
+      network = link("cf_network").p("cf_networking.network")
+    end
+    network
+  end
+
+  def subnet_prefix_length
+    prefix_length = nil
+    # Consume cf_networking.subnet_prefix_length if it is provided, for backwards compatibility
+    if_p("cf_networking.subnet_prefix_length") { |non_linked_prefix_length| prefix_length = non_linked_prefix_length }
+    unless prefix_length
+      # Otherwise, use link provided from silk-controller
+      prefix_length = link("cf_network").p("cf_networking.subnet_prefix_length")
+    end
+    prefix_length
+  end
+
   toRender = {
     "underlay_ip" => spec.ip,
     "subnet_prefix_length" => subnet_prefix_length,
-    "overlay_network" => p("cf_networking.network"),
+    "overlay_network" => overlay_network,
     "health_check_port" => p("cf_networking.silk_daemon.listen_port"),
     "vtep_name" => "silk-vtep",
     "connectivity_server_url" => silk_controller_url,

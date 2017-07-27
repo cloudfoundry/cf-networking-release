@@ -14,14 +14,14 @@ packages:
   - silk-daemon
   - ctl-utils
 
+consumes:
+- name: cf_network
+  type: cf_network
+
 properties:
   cf_networking.disable:
     description: "Disable container to container networking."
     default: false
-
-  cf_networking.network:
-    description: "CIDR address block for overlay network.  Subnets for each diego cell are allocated out of this network."
-    default: "10.255.0.0/16"
 
   cf_networking.vtep_port:
     description: "Host port used for receiving VXLAN packets"
@@ -30,10 +30,6 @@ properties:
   cf_networking.rep_listen_addr_admin:
     description: "Admin endpoint on diego rep.  Silk daemon job drain waits for the rep to exit before tearing down the network.  See diego.rep.listen_addr_admin"
     default: 127.0.0.1:1800
-
-  cf_networking.subnet_prefix_length:
-    description: "Length, in bits, of the prefix for subnets allocated per Diego cell, e.g. '24' for a '/24' subnet."
-    default: 24
 
   cf_networking.partition_tolerance_hours:
     description: "When silk controller is unavailable, silk daemon will remain healthy and allow creation of new containers for this number of hours.  Should be no larger than cf_networking.subnet_lease_expiration_hours."
