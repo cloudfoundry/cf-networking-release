@@ -52,6 +52,10 @@ func (p *policyMapper) AsBytes(storePolicies []store.Policy) ([]byte, error) {
 }
 
 func (p *Policy) asStorePolicy() store.Policy {
+	port := 0
+	if p.Destination.Ports.Start == p.Destination.Ports.End {
+		port = p.Destination.Ports.Start
+	}
 	return store.Policy{
 		Source: store.Source{
 			ID:  p.Source.ID,
@@ -61,6 +65,7 @@ func (p *Policy) asStorePolicy() store.Policy {
 			ID:       p.Destination.ID,
 			Tag:      p.Destination.Tag,
 			Protocol: p.Destination.Protocol,
+			Port:     port,
 			Ports: store.Ports{
 				Start: p.Destination.Ports.Start,
 				End:   p.Destination.Ports.End,
