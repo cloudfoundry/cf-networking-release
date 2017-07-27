@@ -13,6 +13,9 @@ files:
   - code.cloudfoundry.org/cf-networking-helpers/testsupport/*.go # gosub
   - code.cloudfoundry.org/debugserver/*.go # gosub
   - code.cloudfoundry.org/lager/*.go # gosub
+  - github.com/cf-container-networking/sql-migrate/*.go # gosub
+  - github.com/cf-container-networking/sql-migrate/sqlparse/*.go # gosub
+  - github.com/cf-container-networking/sql-migrate/vendor/gopkg.in/gorp.v1/*.go # gosub
   - github.com/cloudfoundry/dropsonde/*.go # gosub
   - github.com/cloudfoundry/dropsonde/emitter/*.go # gosub
   - github.com/cloudfoundry/dropsonde/envelope_sender/*.go # gosub
@@ -84,7 +87,10 @@ files:
   - lib/poller/*.go # gosub
   - lib/rules/*.go # gosub
   - lib/serial/*.go # gosub
-  - policy-server/models/*.go # gosub
+  - policy-server/api/*.go # gosub
+  - policy-server/store/*.go # gosub
+  - policy-server/store/helpers/*.go # gosub
+  - policy-server/store/migrations/*.go # gosub
   - vxlan-policy-agent/cmd/vxlan-policy-agent/*.go # gosub
   - vxlan-policy-agent/config/*.go # gosub
   - vxlan-policy-agent/converger/*.go # gosub
