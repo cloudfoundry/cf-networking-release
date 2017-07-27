@@ -36,9 +36,6 @@ var _ = Describe("Integration", func() {
 		)
 
 		BeforeEach(func() {
-			headers = map[string]string{
-				"network-policy-api-version": "1",
-			}
 			fakeMetron = metrics.NewFakeMetron()
 
 			dbConf = testsupport.GetDBConfig()

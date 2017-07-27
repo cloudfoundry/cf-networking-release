@@ -15,6 +15,7 @@ import (
 	"lib/poller"
 
 	"policy-server/api"
+	"policy-server/api/api_0_0_0"
 	"policy-server/cc_client"
 	"policy-server/cleaner"
 	"policy-server/config"
@@ -184,11 +185,12 @@ func main() {
 		CCClient:  ccClient,
 	}
 
+	policyMapperV0 := api_0_0_0.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal))
 	policyMapperV1 := api.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal))
 
 	validator := &handlers.Validator{}
 
-	createPolicyHandler := &handlers.PoliciesCreate{
+	createPolicyHandlerV1 := &handlers.PoliciesCreate{
 		Store:         wrappedStore,
 		Mapper:        policyMapperV1,
 		Validator:     validator,
@@ -197,7 +199,16 @@ func main() {
 		ErrorResponse: errorResponse,
 	}
 
-	deletePolicyHandler := &handlers.PoliciesDelete{
+	createPolicyHandlerV0 := &handlers.PoliciesCreate{
+		Store:         wrappedStore,
+		Mapper:        policyMapperV0,
+		Validator:     validator,
+		PolicyGuard:   policyGuard,
+		QuotaGuard:    quotaGuard,
+		ErrorResponse: errorResponse,
+	}
+
+	deletePolicyHandlerV1 := &handlers.PoliciesDelete{
 		Store:         wrappedStore,
 		Mapper:        policyMapperV1,
 		Validator:     validator,
@@ -205,9 +216,24 @@ func main() {
 		ErrorResponse: errorResponse,
 	}
 
-	policiesIndexHandler := &handlers.PoliciesIndex{
+	deletePolicyHandlerV0 := &handlers.PoliciesDelete{
+		Store:         wrappedStore,
+		Mapper:        policyMapperV0,
+		Validator:     validator,
+		PolicyGuard:   policyGuard,
+		ErrorResponse: errorResponse,
+	}
+
+	policiesIndexHandlerV1 := &handlers.PoliciesIndex{
 		Store:         wrappedStore,
 		Mapper:        policyMapperV1,
+		PolicyFilter:  policyFilter,
+		ErrorResponse: errorResponse,
+	}
+
+	policiesIndexHandlerV0 := &handlers.PoliciesIndex{
+		Store:         wrappedStore,
+		Mapper:        policyMapperV0,
 		PolicyFilter:  policyFilter,
 		ErrorResponse: errorResponse,
 	}
@@ -279,15 +305,34 @@ func main() {
 		return networkWriteAuthenticator.Wrap(handler)
 	}
 
+	checkVersionWrapper := &handlers.CheckVersionWrapper{
+		ErrorResponse: errorResponse,
+	}
+
 	externalHandlers := rata.Handlers{
-		"uptime":          metricsWrap("Uptime", logWrap(uptimeHandler)),
-		"health":          metricsWrap("Health", logWrap(healthHandler)),
-		"create_policies": metricsWrap("CreatePolicies", middleware.LogWrap(logger, authWrite(createPolicyHandler))),
-		"delete_policies": metricsWrap("DeletePolicies", middleware.LogWrap(logger, authWrite(deletePolicyHandler))),
-		"policies_index":  metricsWrap("PoliciesIndex", middleware.LogWrap(logger, authWrite(policiesIndexHandler))),
-		"cleanup":         metricsWrap("Cleanup", middleware.LogWrap(logger, authAdmin(policiesCleanupHandler))),
-		"tags_index":      metricsWrap("TagsIndex", middleware.LogWrap(logger, authAdmin(tagsIndexHandler))),
-		"whoami":          metricsWrap("WhoAmI", middleware.LogWrap(logger, authAdmin(whoamiHandler))),
+		"uptime": metricsWrap("Uptime", logWrap(uptimeHandler)),
+		"health": metricsWrap("Health", logWrap(healthHandler)),
+		"create_policies": metricsWrap("CreatePolicies", middleware.LogWrap(logger,
+			checkVersionWrapper.CheckVersion(map[string]middleware.LoggableHandlerFunc{
+				"1.0.0": authWrite(createPolicyHandlerV1),
+				"0.0.0": authWrite(createPolicyHandlerV0),
+			}),
+		)),
+		"delete_policies": metricsWrap("DeletePolicies", middleware.LogWrap(logger,
+			checkVersionWrapper.CheckVersion(map[string]middleware.LoggableHandlerFunc{
+				"1.0.0": authWrite(deletePolicyHandlerV1),
+				"0.0.0": authWrite(deletePolicyHandlerV0),
+			}),
+		)),
+		"policies_index": metricsWrap("PoliciesIndex", middleware.LogWrap(logger,
+			checkVersionWrapper.CheckVersion(map[string]middleware.LoggableHandlerFunc{
+				"1.0.0": authWrite(policiesIndexHandlerV1),
+				"0.0.0": authWrite(policiesIndexHandlerV0),
+			}),
+		)),
+		"cleanup":    metricsWrap("Cleanup", middleware.LogWrap(logger, authAdmin(policiesCleanupHandler))),
+		"tags_index": metricsWrap("TagsIndex", middleware.LogWrap(logger, authAdmin(tagsIndexHandler))),
+		"whoami":     metricsWrap("WhoAmI", middleware.LogWrap(logger, authAdmin(whoamiHandler))),
 	}
 
 	err = dropsonde.Initialize(conf.MetronAddress, dropsondeOrigin)

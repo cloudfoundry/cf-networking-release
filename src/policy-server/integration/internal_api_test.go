@@ -60,7 +60,7 @@ var _ = Describe("Internal API", func() {
 
 		address = fmt.Sprintf("%s:%d", conf.ListenHost, conf.ListenPort)
 
-		headers = map[string]string{"network-policy-api-version": "1"}
+		headers = map[string]string{"Accept": "1.0.0"}
 	})
 
 	AfterEach(func() {

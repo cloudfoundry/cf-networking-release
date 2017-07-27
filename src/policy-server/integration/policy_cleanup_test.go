@@ -17,7 +17,7 @@ import (
 	"github.com/onsi/gomega/gexec"
 )
 
-var _ = Describe("Automatic Stale Policy Cleanup", func() {
+var _ = Describe("Policy Cleanup", func() {
 	var (
 		sessions          []*gexec.Session
 		conf              config.Config
@@ -29,9 +29,7 @@ var _ = Describe("Automatic Stale Policy Cleanup", func() {
 	)
 
 	BeforeEach(func() {
-		headers = map[string]string{
-			"network-policy-api-version": "1",
-		}
+		headers = map[string]string{"Accept": "1.0.0"}
 		fakeMetron = metrics.NewFakeMetron()
 
 		dbConf = testsupport.GetDBConfig()
@@ -56,6 +54,51 @@ var _ = Describe("Automatic Stale Policy Cleanup", func() {
 		testsupport.RemoveDatabase(dbConf)
 
 		Expect(fakeMetron.Close()).To(Succeed())
+	})
+
+	Describe("Cleanup policies endpoint", func() {
+		BeforeEach(func() {
+			body := strings.NewReader(`{ "policies": [
+				{"source": { "id": "live-app-1-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "ports": { "start": 8080, "end": 8080 } } },
+				{"source": { "id": "live-app-2-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "ports": { "start": 9999, "end": 9999 } } },
+				{"source": { "id": "live-app-1-guid" }, "destination": { "id": "dead-app", "protocol": "tcp", "ports": { "start": 3333, "end": 3333 }} }
+				]} `)
+
+			resp := helpers.MakeAndDoRequest(
+				"POST",
+				fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
+				headers,
+				body,
+			)
+			Expect(resp.StatusCode).To(Equal(http.StatusOK))
+
+		})
+
+		It("responds with a 200 and lists all stale policies", func() {
+			resp := helpers.MakeAndDoRequest(
+				"POST",
+				fmt.Sprintf("http://%s:%d/networking/v0/external/policies/cleanup", conf.ListenHost, conf.ListenPort),
+				headers,
+				nil,
+			)
+
+			stalePoliciesStr := `{
+				"total_policies":1,
+				"policies": [
+				{"source": { "id": "live-app-1-guid" }, "destination": { "id": "dead-app", "protocol": "tcp", "ports": { "start": 3333, "end": 3333 } } }
+				 ]}
+				`
+
+			Expect(resp.StatusCode).To(Equal(http.StatusOK))
+			bodyBytes, _ := ioutil.ReadAll(resp.Body)
+			Expect(bodyBytes).To(MatchJSON(stalePoliciesStr))
+			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
+				HaveName("CleanupRequestTime"),
+			))
+			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
+				HaveName("StoreDeleteSuccessTime"),
+			))
+		})
 	})
 
 	Describe("Automatic Stale Policy Cleanup", func() {

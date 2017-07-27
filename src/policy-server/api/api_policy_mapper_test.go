@@ -64,6 +64,7 @@ var _ = Describe("ApiPolicyMapper", func() {
 						ID:       "some-dst-id",
 						Tag:      "some-other-dst-tag",
 						Protocol: "some-protocol",
+						Port:     0,
 						Ports: store.Ports{
 							Start: 8080,
 							End:   9090,
@@ -75,6 +76,7 @@ var _ = Describe("ApiPolicyMapper", func() {
 						ID:       "some-dst-id-2",
 						Tag:      "some-other-dst-tag-2",
 						Protocol: "some-protocol-2",
+						Port:     8080,
 						Ports: store.Ports{
 							Start: 8080,
 							End:   8080,

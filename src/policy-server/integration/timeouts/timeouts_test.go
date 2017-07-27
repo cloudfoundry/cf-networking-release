@@ -54,7 +54,6 @@ var _ = Describe("Timeout", func() {
 		conf = helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "../fixtures")
 		session = helpers.StartPolicyServer(policyServerPath, conf)
 		policyServerURL = fmt.Sprintf("http://%s:%d", conf.ListenHost, conf.ListenPort)
-		headers = map[string]string{"network-policy-api-version": "1"}
 
 		resp := helpers.MakeAndDoRequest("GET", fmt.Sprintf("%s/%s", policyServerURL, "networking/v0/external/policies"), headers, nil)
 		defer resp.Body.Close()
