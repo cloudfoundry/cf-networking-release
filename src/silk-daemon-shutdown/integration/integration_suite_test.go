@@ -30,7 +30,7 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	var err error
 
 	fmt.Fprintf(GinkgoWriter, "building binary...")
-	paths.TeardownBin, err = gexec.Build("silk-daemon-teardown")
+	paths.TeardownBin, err = gexec.Build("silk-daemon-shutdown")
 	fmt.Fprintf(GinkgoWriter, "done")
 	Expect(err).NotTo(HaveOccurred())
 

@@ -55,21 +55,19 @@ var _ = Describe("Teardown", func() {
 		fakeSilkDaemonSession, err = gexec.Start(sleepCommand, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
 
-		Expect(ioutil.WriteFile(tempPidFile.Name(), []byte(strconv.Itoa(sleepCommand.Process.Pid)), 0777)).To(Succeed())
+		Expect(ioutil.WriteFile(tempPidFile.Name(), []byte(strconv.Itoa(sleepCommand.Process.Pid)+"\n"), 0777)).To(Succeed())
 	})
 
 	Context("when the servers eventually shutdown", func() {
 		BeforeEach(func() {
 			fakeRepServer.AppendHandlers(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
 				go func() {
-					println("shutting down rep")
 					fakeRepServer.Close()
 				}()
 			}))
 
 			fakeSilkDaemonServer.AppendHandlers(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
 				go func() {
-					println("shutting down silk")
 					fakeSilkDaemonServer.Close()
 				}()
 			}))
@@ -82,6 +80,7 @@ var _ = Describe("Teardown", func() {
 			Expect(fakeRepServer.ReceivedRequests()).To(HaveLen(2))
 			Expect(session.Out).To(gbytes.Say("waiting for the rep to exit"))
 			Expect(fakeRepServer.ReceivedRequests()).To(HaveLen(2))
+			Expect(session.Out).To(gbytes.Say("sending TERM signal to silk-daemon"))
 			Expect(session.Out).To(gbytes.Say("waiting for the silk daemon to exit"))
 			Eventually(fakeSilkDaemonSession.ExitCode(), "5s").Should(Equal(143))
 		})
@@ -112,7 +111,7 @@ var _ = Describe("Teardown", func() {
 			session := runTeardown("some/bad/url", fakeSilkDaemonServer.URL(), tempPidFile.Name())
 			Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit(1))
 
-			Expect(session.Err).To(gbytes.Say("silk-daemon-teardown: parse some/bad/url: invalid URI for request"))
+			Expect(session.Err).To(gbytes.Say("silk-daemon-shutdown: parse some/bad/url: invalid URI for request"))
 		})
 	})
 
@@ -121,7 +120,7 @@ var _ = Describe("Teardown", func() {
 			session := runTeardown(fakeRepServer.URL(), "some/bad/url", tempPidFile.Name())
 			Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit(1))
 
-			Expect(session.Err).To(gbytes.Say("silk-daemon-teardown: parse some/bad/url: invalid URI for request"))
+			Expect(session.Err).To(gbytes.Say("silk-daemon-shutdown: parse some/bad/url: invalid URI for request"))
 		})
 	})
 
@@ -152,7 +151,7 @@ var _ = Describe("Teardown", func() {
 			Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit(1))
 
 			Expect(fakeSilkDaemonServer.ReceivedRequests()).To(HaveLen(5))
-			Expect(session.Err).To(gbytes.Say("silk-daemon-teardown: Silk Daemon Server did not exit after 5 ping attempts"))
+			Expect(session.Err).To(gbytes.Say("silk-daemon-shutdown: Silk Daemon Server did not exit after 5 ping attempts"))
 		})
 	})
 
@@ -176,7 +175,7 @@ var _ = Describe("Teardown", func() {
 			session := runTeardown(fakeRepServer.URL(), fakeSilkDaemonServer.URL(), "/some-invalid/file-path")
 			Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit(1))
 
-			Expect(session.Err).To(gbytes.Say("silk-daemon-teardown: open /some-invalid/file-path: no such file or directory"))
+			Expect(session.Err).To(gbytes.Say("silk-daemon-shutdown: open /some-invalid/file-path: no such file or directory"))
 		})
 	})
 
@@ -201,7 +200,7 @@ var _ = Describe("Teardown", func() {
 			session := runTeardown(fakeRepServer.URL(), fakeSilkDaemonServer.URL(), tempPidFile.Name())
 			Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit(1))
 
-			Expect(session.Err).To(gbytes.Say("silk-daemon-teardown: strconv.Atoi: parsing \"not-a-number\": invalid syntax"))
+			Expect(session.Err).To(gbytes.Say("silk-daemon-shutdown: strconv.Atoi: parsing \"not-a-number\": invalid syntax"))
 		})
 	})
 })

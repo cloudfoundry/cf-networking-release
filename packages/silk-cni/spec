@@ -5,12 +5,14 @@ dependencies:
   - golang
 
 files:
+  - cni-teardown/*.go # gosub
   - cni-wrapper-plugin/*.go # gosub
   - cni-wrapper-plugin/adapter/*.go # gosub
   - cni-wrapper-plugin/discover/*.go # gosub
   - cni-wrapper-plugin/legacynet/*.go # gosub
   - cni-wrapper-plugin/lib/*.go # gosub
   - code.cloudfoundry.org/garden/*.go # gosub
+  - code.cloudfoundry.org/lager/*.go # gosub
   - code.cloudfoundry.org/silk/cmd/silk-cni/*.go # gosub
   - code.cloudfoundry.org/silk/cni/adapter/*.go # gosub
   - code.cloudfoundry.org/silk/cni/config/*.go # gosub

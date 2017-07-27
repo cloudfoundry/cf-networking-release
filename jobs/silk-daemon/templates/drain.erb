@@ -17,38 +17,16 @@ exec 3>&1
 exec 1>> "${LOGFILE}"
 exec 2>> "${LOGFILE}"
 
-ping_rep() {
-  curl --fail --silent http://"${REP_ADDRESS}"/ping >/dev/null 2>&1
-}
-
-ping_silk_daemon() {
-  curl --fail --silent http://"${SILK_DAEMON_HEALTH_CHECK_ADDRESS}"/ping >/dev/null 2>&1
-}
-
 run_teardown() {
   /var/vcap/packages/silk-daemon/bin/silk-teardown \
     -config=/var/vcap/jobs/silk-daemon/config/client-config.json
 }
 
-wait_for_rep_to_exit() {
-  while ping_rep; do
-    sleep 5
-    echo "$(date): waiting for rep to exit"
-  done
-}
-
-wait_for_silk_daemon_to_exit() {
-  local attempts=0
-  while [ "${attempts}" -le 5 ]; do
-    if ping_silk_daemon; then
-      let attempts="${attempts}"+1
-      sleep 2
-    else
-      return 0
-    fi
-  done
-
-  return 1
+shutdown_silk_daemon() {
+  /var/vcap/packages/silk-daemon/bin/silk-daemon-shutdown \
+    --repUrl "http://${REP_ADDRESS}/ping" \
+    --silkDaemonUrl "http://${SILK_DAEMON_HEALTH_CHECK_ADDRESS}/ping" \
+    --silkDaemonPidPath "${PIDFILE}"
 }
 
 output_for_bosh() {
@@ -65,20 +43,8 @@ output_for_bosh() {
 
 trap output_for_bosh EXIT
 
-wait_for_rep_to_exit
-
-set +e
-SILK_DAEMON_PID=$(cat "${PIDFILE}")
-kill -TERM "${SILK_DAEMON_PID}"
-set -e
-
-if wait_for_silk_daemon_to_exit; then
-  echo "$(date): silk-daemon exited, running teardown..."
-  run_teardown
-else
-  echo "$(date): silk-daemon failed to exit, skipping teardown..."
-  exit 1
-fi
+shutdown_silk_daemon
+run_teardown
 <% else %>
   echo "0"
 <% end %>

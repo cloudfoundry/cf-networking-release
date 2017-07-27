@@ -12,11 +12,16 @@ import (
 	"net"
 	neturl "net/url"
 	"errors"
+	"strings"
+	"code.cloudfoundry.org/lager"
+	"os"
 )
+
+var logger lager.Logger
 
 func main() {
 	if err := mainWithError(); err != nil {
-		log.Fatalf("silk-daemon-teardown: %s", err)
+		log.Fatalf("silk-daemon-shutdown: %s", err)
 	}
 }
 
@@ -30,6 +35,9 @@ func mainWithError() error {
 
 	flag.Parse()
 
+	logger = lager.NewLogger(fmt.Sprintf("%s.silk-daemon-shutdown", "cfnetworking"))
+	logger.RegisterSink(lager.NewWriterSink(os.Stdout, lager.DEBUG))
+
 	var err error
 	repMaxAttempts := 40
 	isRepUp, err := waitForServer("rep", *repUrl, *repTimeout, repMaxAttempts, *pingServerTimeout)
@@ -38,7 +46,7 @@ func mainWithError() error {
 	}
 
 	if isRepUp {
-		fmt.Println(fmt.Sprintf("Rep Server did not exit after %d ping attempts. Continuing", repMaxAttempts))
+		logger.Debug(fmt.Sprintf("rep did not exit after %d ping attempts. Continuing", repMaxAttempts))
 	}
 
 	pidFileConents, err := ioutil.ReadFile(*silkDaemonPidPath)
@@ -46,11 +54,12 @@ func mainWithError() error {
 		return err
 	}
 
-	pid, err := strconv.Atoi(string(pidFileConents))
+	pid, err := strconv.Atoi(strings.Trim(string(pidFileConents), "\n"))
 	if err != nil {
 		return err
 	}
 
+	logger.Debug(fmt.Sprintf("sending TERM signal to silk-daemon"))
 	_ = syscall.Kill(pid, syscall.SIGTERM)
 
 	silkDaemonMaxAttempts := 5
@@ -73,7 +82,7 @@ func waitForServer(serverName string, serverUrl string, pollingTimeInSeconds int
 	currentAttempt := 0
 
 	for currentAttempt < maxAttempts {
-		fmt.Println(fmt.Sprintf("%s: waiting for the %s to exit", time.Now(), serverName))
+		logger.Debug(fmt.Sprintf("waiting for the %s to exit", serverName))
 
 		select {
 		case <-time.After(time.Duration(pollingTimeInSeconds) * time.Second):
@@ -86,10 +95,6 @@ func waitForServer(serverName string, serverUrl string, pollingTimeInSeconds int
 		}
 	}
 
-	if currentAttempt >= maxAttempts {
-		fmt.Println(fmt.Sprintf("%s: %s did not exit after %d ping attempts. closing pinger", time.Now(), serverName, maxAttempts))
-	}
-
 	return true, nil
 }
 
@@ -99,18 +104,18 @@ func checkIfServerUp(serverName string, url string) bool {
 		Timeout:   5 * time.Second,
 	}
 
-	fmt.Println(fmt.Sprintf("pinging %s", url))
+	logger.Debug(fmt.Sprintf("pinging %s", url))
 	response, err := httpClient.Get(url)
 
 	if err != nil {
 		if netErr, ok := err.(net.Error); ok {
 			if netErr.Timeout() {
-				fmt.Println(fmt.Sprintf("%s: pinging server timed out. trying again.", time.Now()))
+				logger.Debug("pinging server timed out. trying again.")
 				return true
 
 			}
 			if netErr.Temporary() {
-				fmt.Println(fmt.Sprintf("%s: pinging server returned temporary error. trying again.", time.Now()))
+				logger.Debug("pinging server returned temporary error. trying again.")
 				return true
 			}
 		}
@@ -121,6 +126,6 @@ func checkIfServerUp(serverName string, url string) bool {
 		}
 	}
 
-	fmt.Println(fmt.Sprintf("%s: could not ping %s server. Server is down", time.Now(), serverName))
+	logger.Debug(fmt.Sprintf("could not ping %s server. Server is down", serverName))
 	return false
 }

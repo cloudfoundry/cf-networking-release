@@ -12,3 +12,4 @@ export PATH=$GOROOT/bin:$GOPATH/bin:$PATH
 
 go install code.cloudfoundry.org/silk/cmd/silk-daemon
 go install code.cloudfoundry.org/silk/cmd/silk-teardown
+go install silk-daemon-shutdown

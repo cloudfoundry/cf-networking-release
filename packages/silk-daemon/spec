@@ -5,6 +5,7 @@ dependencies:
   - golang
 
 files:
+  - code.cloudfoundry.org/lager/*.go # gosub
   - code.cloudfoundry.org/silk/client/config/*.go # gosub
   - code.cloudfoundry.org/silk/cmd/silk-daemon/*.go # gosub
   - code.cloudfoundry.org/silk/cmd/silk-teardown/*.go # gosub
@@ -54,3 +55,4 @@ files:
   - code.cloudfoundry.org/silk/vendor/github.com/vishvananda/netlink/nl/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/vishvananda/netns/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/gopkg.in/validator.v2/*.go # gosub
+  - silk-daemon-shutdown/*.go # gosub

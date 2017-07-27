@@ -62,6 +62,7 @@ sync_package silk-controller \
 
 sync_package silk-daemon \
   -app code.cloudfoundry.org/silk/cmd/silk-daemon \
+  -app silk-daemon-shutdown \
   -app code.cloudfoundry.org/silk/cmd/silk-teardown &
 
 GOOS=linux sync_package silk-cni \
