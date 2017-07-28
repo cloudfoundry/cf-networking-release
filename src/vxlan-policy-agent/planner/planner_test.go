@@ -5,7 +5,7 @@ import (
 	"lib/datastore"
 	libfakes "lib/fakes"
 	"lib/rules"
-	"policy-server/api/api_0_internal"
+	"policy-server/api/api_v0_internal"
 	"vxlan-policy-agent/enforcer"
 	"vxlan-policy-agent/planner"
 	"vxlan-policy-agent/planner/fakes"
@@ -22,7 +22,7 @@ var _ = Describe("Planner", func() {
 	var (
 		policyPlanner        *planner.VxlanPolicyPlanner
 		policyClient         *fakes.PolicyClient
-		policyServerResponse []api_0_internal.Policy
+		policyServerResponse []api_v0_internal.Policy
 		store                *libfakes.Datastore
 		metricsSender        *fakes.MetricsSender
 		logger               *lagertest.TestLogger
@@ -61,15 +61,15 @@ var _ = Describe("Planner", func() {
 
 		store.ReadAllReturns(data, nil)
 
-		policyServerResponse = []api_0_internal.Policy{
+		policyServerResponse = []api_v0_internal.Policy{
 			{
-				Source: api_0_internal.Source{
+				Source: api_v0_internal.Source{
 					ID:  "some-app-guid",
 					Tag: "AA",
 				},
-				Destination: api_0_internal.Destination{
+				Destination: api_v0_internal.Destination{
 					ID: "some-other-app-guid",
-					Ports: api_0_internal.Ports{
+					Ports: api_v0_internal.Ports{
 						Start: 1234,
 						End:   1234,
 					},
@@ -77,13 +77,13 @@ var _ = Describe("Planner", func() {
 				},
 			},
 			{
-				Source: api_0_internal.Source{
+				Source: api_v0_internal.Source{
 					ID:  "another-app-guid",
 					Tag: "BB",
 				},
-				Destination: api_0_internal.Destination{
+				Destination: api_v0_internal.Destination{
 					ID: "some-other-app-guid",
-					Ports: api_0_internal.Ports{
+					Ports: api_v0_internal.Ports{
 						Start: 5555,
 						End:   5555,
 					},
@@ -91,13 +91,13 @@ var _ = Describe("Planner", func() {
 				},
 			},
 			{
-				Source: api_0_internal.Source{
+				Source: api_v0_internal.Source{
 					ID:  "some-other-app-guid",
 					Tag: "CC",
 				},
-				Destination: api_0_internal.Destination{
+				Destination: api_v0_internal.Destination{
 					ID: "yet-another-app-guid",
-					Ports: api_0_internal.Ports{
+					Ports: api_v0_internal.Ports{
 						Start: 6534,
 						End:   6534,
 					},
@@ -271,7 +271,7 @@ var _ = Describe("Planner", func() {
 		})
 
 		Context("when the policies are returned from the server in a different order", func() {
-			var reversed []api_0_internal.Policy
+			var reversed []api_v0_internal.Policy
 			BeforeEach(func() {
 				for i, _ := range policyServerResponse {
 					reversed = append(reversed, policyServerResponse[len(policyServerResponse)-i-1])
@@ -292,15 +292,15 @@ var _ = Describe("Planner", func() {
 
 		Context("when multiple policies are defined for the same source app", func() {
 			BeforeEach(func() {
-				policyServerResponse = []api_0_internal.Policy{
+				policyServerResponse = []api_v0_internal.Policy{
 					{
-						Source: api_0_internal.Source{
+						Source: api_v0_internal.Source{
 							ID:  "some-app-guid",
 							Tag: "AA",
 						},
-						Destination: api_0_internal.Destination{
+						Destination: api_v0_internal.Destination{
 							ID: "some-other-app-guid",
-							Ports: api_0_internal.Ports{
+							Ports: api_v0_internal.Ports{
 								Start: 1234,
 								End:   1234,
 							},
@@ -308,13 +308,13 @@ var _ = Describe("Planner", func() {
 						},
 					},
 					{
-						Source: api_0_internal.Source{
+						Source: api_v0_internal.Source{
 							ID:  "some-app-guid",
 							Tag: "AA",
 						},
-						Destination: api_0_internal.Destination{
+						Destination: api_v0_internal.Destination{
 							ID: "some-other-app-guid",
-							Ports: api_0_internal.Ports{
+							Ports: api_v0_internal.Ports{
 								Start: 1235,
 								End:   1235,
 							},
@@ -383,7 +383,7 @@ var _ = Describe("Planner", func() {
 
 		Context("when there are no policies", func() {
 			BeforeEach(func() {
-				policyClient.GetPoliciesByIDReturns([]api_0_internal.Policy{}, nil)
+				policyClient.GetPoliciesByIDReturns([]api_v0_internal.Policy{}, nil)
 			})
 			It("returns an chain with no rules", func() {
 				rulesWithChain, err := policyPlanner.GetRulesAndChain()

@@ -1,4 +1,4 @@
-package api_0_0_0
+package api_v0
 
 import (
 	"fmt"
@@ -35,7 +35,7 @@ func (p *policyMapper) AsStorePolicy(bytes []byte) ([]store.Policy, error) {
 }
 
 func (p *policyMapper) AsBytes(storePolicies []store.Policy) ([]byte, error) {
-	// convert store.Policy to api_0_0_0.Policy
+	// convert store.Policy to api_v0.Policy
 	apiPolicies := []Policy{}
 	for _, policy := range storePolicies {
 		policyToAdd, canMap := mapStorePolicy(policy)
@@ -44,7 +44,7 @@ func (p *policyMapper) AsBytes(storePolicies []store.Policy) ([]byte, error) {
 		}
 	}
 
-	// convert api_0_0_0.Policy payload to bytes
+	// convert api_v0.Policy payload to bytes
 	payload := &Policies{
 		TotalPolicies: len(apiPolicies),
 		Policies:      apiPolicies,

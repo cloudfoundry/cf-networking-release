@@ -8,7 +8,7 @@ import (
 	"io/ioutil"
 	"lib/policy_client"
 	"log"
-	"policy-server/api/api_0_0_0"
+	"policy-server/api/api_v0"
 	"text/tabwriter"
 
 	"code.cloudfoundry.org/cli/plugin"
@@ -54,7 +54,7 @@ func (r *CommandRunner) List() (string, error) {
 		appGuid = app.Guid
 	}
 
-	var policies []api_0_0_0.Policy
+	var policies []api_v0.Policy
 	if appGuid != "" {
 		var err error
 		policies, err = r.PolicyClient.GetPoliciesByID(accessToken, appGuid)
@@ -140,7 +140,7 @@ func (r *CommandRunner) Allow() (string, error) {
 		return "", fmt.Errorf("getting access token: %s", err)
 	}
 
-	err = r.PolicyClient.AddPolicies(token, []api_0_0_0.Policy{policy})
+	err = r.PolicyClient.AddPolicies(token, []api_v0.Policy{policy})
 	if err != nil {
 		return "", fmt.Errorf("adding policies: %s", err)
 	}
@@ -179,7 +179,7 @@ func (r *CommandRunner) Remove() (string, error) {
 		return "", fmt.Errorf("getting access token: %s", err)
 	}
 
-	err = r.PolicyClient.DeletePolicies(accessToken, []api_0_0_0.Policy{policy})
+	err = r.PolicyClient.DeletePolicies(accessToken, []api_v0.Policy{policy})
 	if err != nil {
 		return "", fmt.Errorf("deleting policies: %s", err)
 	}
@@ -187,27 +187,27 @@ func (r *CommandRunner) Remove() (string, error) {
 	return "", nil
 }
 
-func (r *CommandRunner) constructPolicy(validArgs ValidArgs) (api_0_0_0.Policy, error) {
+func (r *CommandRunner) constructPolicy(validArgs ValidArgs) (api_v0.Policy, error) {
 	srcAppModel, err := r.CliConnection.GetApp(validArgs.SourceAppName)
 	if err != nil {
-		return api_0_0_0.Policy{}, fmt.Errorf("resolving source app: %s", err)
+		return api_v0.Policy{}, fmt.Errorf("resolving source app: %s", err)
 	}
 	if srcAppModel.Guid == "" {
-		return api_0_0_0.Policy{}, fmt.Errorf("resolving source app: %s not found", validArgs.SourceAppName)
+		return api_v0.Policy{}, fmt.Errorf("resolving source app: %s not found", validArgs.SourceAppName)
 	}
 	dstAppModel, err := r.CliConnection.GetApp(validArgs.DestAppName)
 	if err != nil {
-		return api_0_0_0.Policy{}, fmt.Errorf("resolving destination app: %s", err)
+		return api_v0.Policy{}, fmt.Errorf("resolving destination app: %s", err)
 	}
 	if dstAppModel.Guid == "" {
-		return api_0_0_0.Policy{}, fmt.Errorf("resolving destination app: %s not found", validArgs.DestAppName)
+		return api_v0.Policy{}, fmt.Errorf("resolving destination app: %s not found", validArgs.DestAppName)
 	}
 
-	return api_0_0_0.Policy{
-		Source: api_0_0_0.Source{
+	return api_v0.Policy{
+		Source: api_v0.Source{
 			ID: srcAppModel.Guid,
 		},
-		Destination: api_0_0_0.Destination{
+		Destination: api_v0.Destination{
 			ID:       dstAppModel.Guid,
 			Protocol: validArgs.Protocol,
 			Port:     validArgs.Port,

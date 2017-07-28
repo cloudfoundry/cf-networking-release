@@ -87,8 +87,8 @@ files:
   - lib/nonmutualtls/*.go # gosub
   - lib/poller/*.go # gosub
   - policy-server/api/*.go # gosub
-  - policy-server/api/api_0_0_0/*.go # gosub
-  - policy-server/api/api_0_internal/*.go # gosub
+  - policy-server/api/api_v0/*.go # gosub
+  - policy-server/api/api_v0_internal/*.go # gosub
   - policy-server/cc_client/*.go # gosub
   - policy-server/cleaner/*.go # gosub
   - policy-server/cmd/policy-server/*.go # gosub
