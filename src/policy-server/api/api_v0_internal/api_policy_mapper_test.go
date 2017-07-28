@@ -1,10 +1,10 @@
-package api_0_0_0_test
+package api_v0_internal_test
 
 import (
 	"encoding/json"
 	"errors"
 	"policy-server/api"
-	"policy-server/api/api_0_0_0"
+	"policy-server/api/api_v0_internal"
 	"policy-server/store"
 
 	"code.cloudfoundry.org/cf-networking-helpers/fakes"
@@ -16,85 +16,16 @@ import (
 
 var _ = Describe("ApiPolicyMapper v000", func() {
 	var (
-		mapper          api.PolicyMapper
-		fakeUnmarshaler *fakes.Unmarshaler
-		fakeMarshaler   *fakes.Marshaler
+		mapper        api.PolicyMapper
+		fakeMarshaler *fakes.Marshaler
 	)
 	BeforeEach(func() {
-		mapper = api_0_0_0.NewMapper(
+		mapper = api_v0_internal.NewMapper(
 			marshal.UnmarshalFunc(json.Unmarshal),
 			marshal.MarshalFunc(json.Marshal),
 		)
-		fakeUnmarshaler = &fakes.Unmarshaler{}
 		fakeMarshaler = &fakes.Marshaler{}
 	})
-	Describe("AsStorePolicy", func() {
-		It("maps a payload with api.Policy to a slice of store.Policy", func() {
-			storePolicies, err := mapper.AsStorePolicy(
-				[]byte(`{
-					"policies": [{
-						"source": { "id": "some-src-id" },
-						"destination": {
-							"id": "some-dst-id",
-							"tag": "some-other-dst-tag",
-							"protocol": "some-protocol",
-							"port": 8080
-						}
-					}, {
-						"source": { "id": "some-src-id-2" },
-						"destination": {
-							"id": "some-dst-id-2",
-							"tag": "some-other-dst-tag-2",
-							"protocol": "some-protocol-2",
-							"port": 8081
-						}
-					}]
-				}`),
-			)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(storePolicies).To(Equal([]store.Policy{
-				{
-					Source: store.Source{ID: "some-src-id"},
-					Destination: store.Destination{
-						ID:       "some-dst-id",
-						Tag:      "some-other-dst-tag",
-						Protocol: "some-protocol",
-						Port:     8080,
-						Ports: store.Ports{
-							Start: 8080,
-							End:   8080,
-						},
-					},
-				}, {
-					Source: store.Source{ID: "some-src-id-2"},
-					Destination: store.Destination{
-						ID:       "some-dst-id-2",
-						Tag:      "some-other-dst-tag-2",
-						Protocol: "some-protocol-2",
-						Port:     8081,
-						Ports: store.Ports{
-							Start: 8081,
-							End:   8081,
-						},
-					},
-				},
-			}))
-		})
-		Context("when unmarshalling fails", func() {
-			BeforeEach(func() {
-				fakeUnmarshaler.UnmarshalReturns(errors.New("banana"))
-				mapper = api_0_0_0.NewMapper(
-					fakeUnmarshaler,
-					marshal.MarshalFunc(json.Marshal),
-				)
-			})
-			It("wraps and returns an error", func() {
-				_, err := mapper.AsStorePolicy([]byte("somebytes"))
-				Expect(err).To(MatchError(errors.New("unmarshal json: banana")))
-			})
-		})
-	})
-
 	Describe("AsBytes", func() {
 		It("maps a slice of store.Policy to a payload with api.Policy", func() {
 			payload, err := mapper.AsBytes([]store.Policy{
@@ -134,7 +65,8 @@ var _ = Describe("ApiPolicyMapper v000", func() {
 							"id": "some-dst-id",
 							"tag": "some-other-dst-tag",
 							"protocol": "some-protocol",
-							"port": 8080
+							"port": 8080,
+							"ports": { "start": 8080, "end": 8080 }
 						}
 					}, {
 						"source": { "id": "some-src-id-2" },
@@ -142,7 +74,8 @@ var _ = Describe("ApiPolicyMapper v000", func() {
 							"id": "some-dst-id-2",
 							"tag": "some-other-dst-tag-2",
 							"protocol": "some-protocol-2",
-							"port": 8081
+							"port": 8081,
+							"ports": { "start": 8081, "end": 8081 }
 						}
 					}]
 				}`),
@@ -174,7 +107,8 @@ var _ = Describe("ApiPolicyMapper v000", func() {
 								"id": "some-dst-id",
 								"tag": "some-other-dst-tag",
 								"protocol": "some-protocol",
-								"port": 8080
+								"port": 8080,
+							  "ports": { "start": 8080, "end": 8080 }
 							}
 						}
 					]
@@ -205,7 +139,8 @@ var _ = Describe("ApiPolicyMapper v000", func() {
 							"destination": {
 								"id": "some-dst-id",
 								"protocol": "some-protocol",
-								"port": 8080
+								"port": 8080,
+							  "ports": { "start": 8080, "end": 8080 }
 							}
 						}
 					]
@@ -235,7 +170,7 @@ var _ = Describe("ApiPolicyMapper v000", func() {
 		Context("when marshalling fails", func() {
 			BeforeEach(func() {
 				fakeMarshaler.MarshalReturns(nil, errors.New("banana"))
-				mapper = api_0_0_0.NewMapper(
+				mapper = api_v0_internal.NewMapper(
 					marshal.UnmarshalFunc(json.Unmarshal),
 					fakeMarshaler,
 				)

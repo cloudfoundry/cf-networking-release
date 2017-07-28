@@ -6,7 +6,7 @@ import (
 	"lib/policy_client"
 	"math/rand"
 	"net/http"
-	"policy-server/api/api_0_0_0"
+	"policy-server/api/api_v0"
 	"strings"
 
 	"code.cloudfoundry.org/lager/lagertest"
@@ -115,12 +115,12 @@ var _ = Describe("space developer policy configuration", func() {
 			})
 
 			By("creating a policy", func() {
-				err := policyClient.AddPolicies(spaceDevUserToken, []api_0_0_0.Policy{
-					api_0_0_0.Policy{
-						Source: api_0_0_0.Source{
+				err := policyClient.AddPolicies(spaceDevUserToken, []api_v0.Policy{
+					api_v0.Policy{
+						Source: api_v0.Source{
 							ID: appAGUID,
 						},
-						Destination: api_0_0_0.Destination{
+						Destination: api_v0.Destination{
 							ID:       appBGUID,
 							Port:     1234,
 							Protocol: "tcp",
@@ -131,12 +131,12 @@ var _ = Describe("space developer policy configuration", func() {
 			})
 
 			By("listing policies", func() {
-				expectedPolicies := []api_0_0_0.Policy{
-					api_0_0_0.Policy{
-						Source: api_0_0_0.Source{
+				expectedPolicies := []api_v0.Policy{
+					api_v0.Policy{
+						Source: api_v0.Source{
 							ID: appAGUID,
 						},
-						Destination: api_0_0_0.Destination{
+						Destination: api_v0.Destination{
 							ID:       appBGUID,
 							Port:     1234,
 							Protocol: "tcp",
@@ -149,12 +149,12 @@ var _ = Describe("space developer policy configuration", func() {
 			})
 
 			By("deleting the policy", func() {
-				err := policyClient.DeletePolicies(spaceDevUserToken, []api_0_0_0.Policy{
-					api_0_0_0.Policy{
-						Source: api_0_0_0.Source{
+				err := policyClient.DeletePolicies(spaceDevUserToken, []api_v0.Policy{
+					api_v0.Policy{
+						Source: api_v0.Source{
 							ID: appAGUID,
 						},
-						Destination: api_0_0_0.Destination{
+						Destination: api_v0.Destination{
 							ID:       appBGUID,
 							Port:     1234,
 							Protocol: "tcp",

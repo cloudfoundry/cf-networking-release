@@ -1,4 +1,4 @@
-package api_0_0_0_test
+package api_v0_internal_test
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestApi000(t *testing.T) {
+func TestApiV0Internal(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Api000 Suite")
+	RunSpecs(t, "ApiV0Internal Suite")
 }

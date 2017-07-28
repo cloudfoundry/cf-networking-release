@@ -1,4 +1,4 @@
-package api_0_internal
+package api_v0_internal
 
 import (
 	"encoding/json"

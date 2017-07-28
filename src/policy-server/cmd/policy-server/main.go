@@ -15,8 +15,8 @@ import (
 	"lib/poller"
 
 	"policy-server/api"
-	"policy-server/api/api_0_0_0"
-	"policy-server/api/api_0_internal"
+	"policy-server/api/api_v0"
+	"policy-server/api/api_v0_internal"
 	"policy-server/cc_client"
 	"policy-server/cleaner"
 	"policy-server/config"
@@ -186,8 +186,8 @@ func main() {
 		CCClient:  ccClient,
 	}
 
-	policyMapperV0 := api_0_0_0.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal))
-	policyMapperV0Internal := api_0_internal.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal))
+	policyMapperV0 := api_v0.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal))
+	policyMapperV0Internal := api_v0_internal.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal))
 	policyMapperV1 := api.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal))
 
 	validator := &handlers.Validator{}

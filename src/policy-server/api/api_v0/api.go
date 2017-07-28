@@ -1,4 +1,4 @@
-package api_0_0_0
+package api_v0
 
 type Policies struct {
 	TotalPolicies int      `json:"total_policies"`
