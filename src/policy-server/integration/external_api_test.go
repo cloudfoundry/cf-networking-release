@@ -25,13 +25,11 @@ var _ = Describe("External API", func() {
 		conf              config.Config
 		policyServerConfs []config.Config
 		dbConf            db.Config
-		headers           map[string]string
 
 		fakeMetron metrics.FakeMetron
 	)
 
 	BeforeEach(func() {
-		headers = map[string]string{"Accept": "1.0.0"}
 		fakeMetron = metrics.NewFakeMetron()
 
 		dbConf = testsupport.GetDBConfig()
@@ -53,14 +51,13 @@ var _ = Describe("External API", func() {
 	})
 
 	Describe("authentication", func() {
-		var makeNewRequest = func(method, route, bodyString, version string) *http.Request {
+		var makeNewRequest = func(method, route, bodyString string) *http.Request {
 			var body io.Reader
 			if bodyString != "" {
 				body = strings.NewReader(bodyString)
 			}
 			url := fmt.Sprintf("http://%s:%d/%s", conf.ListenHost, conf.ListenPort, route)
 			req, err := http.NewRequest(method, url, body)
-			req.Header.Set("Accept", version)
 			Expect(err).NotTo(HaveOccurred())
 
 			return req
@@ -90,22 +87,22 @@ var _ = Describe("External API", func() {
 
 		var _ = DescribeTable("all the routes",
 			func(method, route, bodyString string) {
-				TestMissingAuthHeader(makeNewRequest(method, route, bodyString, headers["Accept"]))
-				TestBadBearerToken(makeNewRequest(method, route, bodyString, headers["Accept"]))
+				TestMissingAuthHeader(makeNewRequest(method, route, bodyString))
+				TestBadBearerToken(makeNewRequest(method, route, bodyString))
 			},
 			Entry("POST to policies",
 				"POST",
-				"networking/v0/external/policies",
+				"networking/v1/external/policies",
 				`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8090, "end": 8090 } } } ] }`,
 			),
 			Entry("GET to policies",
 				"GET",
-				"networking/v0/external/policies",
+				"networking/v1/external/policies",
 				``,
 			),
 			Entry("POST to policies/delete",
 				"POST",
-				"networking/v0/external/policies/delete",
+				"networking/v1/external/policies/delete",
 				`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8090, "end": 8090 } } } ] }`,
 			),
 		)
@@ -120,8 +117,8 @@ var _ = Describe("External API", func() {
 			] }`)
 			resp := helpers.MakeAndDoRequest(
 				"POST",
-				fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
-				headers,
+				fmt.Sprintf("http://%s:%d/networking/v1/external/policies", conf.ListenHost, conf.ListenPort),
+				nil,
 				body,
 			)
 
@@ -135,8 +132,8 @@ var _ = Describe("External API", func() {
 			By("listing the current tags")
 			resp := helpers.MakeAndDoRequest(
 				"GET",
-				fmt.Sprintf("http://%s:%d/networking/v0/external/tags", conf.ListenHost, conf.ListenPort),
-				headers,
+				fmt.Sprintf("http://%s:%d/networking/v1/external/tags", conf.ListenHost, conf.ListenPort),
+				nil,
 				nil,
 			)
 
@@ -153,23 +150,23 @@ var _ = Describe("External API", func() {
 			body := strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8090, "end": 8090 } } } ] }`)
 			resp = helpers.MakeAndDoRequest(
 				"POST",
-				fmt.Sprintf("http://%s:%d/networking/v0/external/policies/delete", conf.ListenHost, conf.ListenPort),
-				headers,
+				fmt.Sprintf("http://%s:%d/networking/v1/external/policies/delete", conf.ListenHost, conf.ListenPort),
+				nil,
 				body,
 			)
 
 			body = strings.NewReader(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "yet-another-app-guid", "protocol": "udp", "ports": { "start": 4567, "end": 4567 } } } ] }`)
 			resp = helpers.MakeAndDoRequest(
 				"POST",
-				fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
-				headers,
+				fmt.Sprintf("http://%s:%d/networking/v1/external/policies", conf.ListenHost, conf.ListenPort),
+				nil,
 				body,
 			)
 
 			resp = helpers.MakeAndDoRequest(
 				"GET",
-				fmt.Sprintf("http://%s:%d/networking/v0/external/tags", conf.ListenHost, conf.ListenPort),
-				headers,
+				fmt.Sprintf("http://%s:%d/networking/v1/external/tags", conf.ListenHost, conf.ListenPort),
+				nil,
 				nil,
 			)
 
@@ -195,7 +192,7 @@ var _ = Describe("External API", func() {
 			resp := helpers.MakeAndDoRequest(
 				"GET",
 				fmt.Sprintf("http://%s:%d/", conf.ListenHost, conf.ListenPort),
-				headers,
+				nil,
 				nil,
 			)
 
@@ -211,7 +208,7 @@ var _ = Describe("External API", func() {
 				resp := helpers.MakeAndDoRequest(
 					"GET",
 					fmt.Sprintf("http://%s:%d/", conf.ListenHost, conf.ListenPort),
-					headers,
+					nil,
 					nil,
 				)
 
@@ -225,7 +222,7 @@ var _ = Describe("External API", func() {
 			resp := helpers.MakeAndDoRequest(
 				"GET",
 				fmt.Sprintf("http://%s:%d/health", conf.ListenHost, conf.ListenPort),
-				headers,
+				nil,
 				nil,
 			)
 

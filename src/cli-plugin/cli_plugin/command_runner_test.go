@@ -6,7 +6,7 @@ import (
 	"errors"
 	"lib/fakes"
 	"log"
-	"policy-server/api"
+	"policy-server/api/api_0_0_0"
 
 	"code.cloudfoundry.org/cli/plugin/models"
 	"code.cloudfoundry.org/cli/plugin/pluginfakes"
@@ -63,8 +63,8 @@ var _ = Describe("CommandRunner", func() {
 
 	Describe("List", func() {
 		BeforeEach(func() {
-			policyClient.GetPoliciesReturns([]api.Policy{
-				api.Policy{Source: api.Source{ID: "some-app-guid"}, Destination: api.Destination{ID: "some-other-app-guid", Port: 9999, Protocol: "tcp"}},
+			policyClient.GetPoliciesReturns([]api_0_0_0.Policy{
+				api_0_0_0.Policy{Source: api_0_0_0.Source{ID: "some-app-guid"}, Destination: api_0_0_0.Destination{ID: "some-other-app-guid", Port: 9999, Protocol: "tcp"}},
 			}, nil)
 			runner.Args = []string{"list-access"}
 		})
@@ -84,7 +84,7 @@ var _ = Describe("CommandRunner", func() {
 
 		Context("when there are no policies", func() {
 			BeforeEach(func() {
-				policyClient.GetPoliciesReturns([]api.Policy{}, nil)
+				policyClient.GetPoliciesReturns([]api_0_0_0.Policy{}, nil)
 			})
 			It("shows nothing", func() {
 				output, err := runner.List()
@@ -161,8 +161,8 @@ var _ = Describe("CommandRunner", func() {
 
 		Context("when the user specifies an app name", func() {
 			BeforeEach(func() {
-				policyClient.GetPoliciesByIDReturns([]api.Policy{
-					api.Policy{Source: api.Source{ID: "some-app-guid"}, Destination: api.Destination{ID: "some-other-app-guid", Port: 9999, Protocol: "tcp"}},
+				policyClient.GetPoliciesByIDReturns([]api_0_0_0.Policy{
+					api_0_0_0.Policy{Source: api_0_0_0.Source{ID: "some-app-guid"}, Destination: api_0_0_0.Destination{ID: "some-other-app-guid", Port: 9999, Protocol: "tcp"}},
 				}, nil)
 				fakeCliConnection.GetAppReturns(plugin_models.GetAppModel{
 					Guid: "some-app-guid",
@@ -242,9 +242,9 @@ var _ = Describe("CommandRunner", func() {
 				Expect(policyClient.AddPoliciesCallCount()).To(Equal(1))
 				token, policies := policyClient.AddPoliciesArgsForCall(0)
 				Expect(token).To(Equal("some-token"))
-				Expect(policies).To(ConsistOf(api.Policy{
-					Source:      api.Source{ID: "some-app-guid"},
-					Destination: api.Destination{ID: "some-other-app-guid", Port: 9999, Protocol: "tcp"}}))
+				Expect(policies).To(ConsistOf(api_0_0_0.Policy{
+					Source:      api_0_0_0.Source{ID: "some-app-guid"},
+					Destination: api_0_0_0.Destination{ID: "some-other-app-guid", Port: 9999, Protocol: "tcp"}}))
 			})
 
 			Context("when adding the policies fails", func() {
@@ -319,9 +319,9 @@ var _ = Describe("CommandRunner", func() {
 				Expect(policyClient.DeletePoliciesCallCount()).To(Equal(1))
 				token, policies := policyClient.DeletePoliciesArgsForCall(0)
 				Expect(token).To(Equal("some-token"))
-				Expect(policies).To(ConsistOf(api.Policy{
-					Source:      api.Source{ID: "some-app-guid"},
-					Destination: api.Destination{ID: "some-other-app-guid", Port: 9999, Protocol: "tcp"}}))
+				Expect(policies).To(ConsistOf(api_0_0_0.Policy{
+					Source:      api_0_0_0.Source{ID: "some-app-guid"},
+					Destination: api_0_0_0.Destination{ID: "some-other-app-guid", Port: 9999, Protocol: "tcp"}}))
 			})
 		})
 

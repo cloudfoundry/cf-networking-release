@@ -53,8 +53,8 @@ var _ = Describe("External API Deleting Policies", func() {
 		addPolicy := func(version, body string) {
 			resp := helpers.MakeAndDoRequest(
 				"POST",
-				fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
-				map[string]string{"Accept": version},
+				fmt.Sprintf("http://%s:%d/networking/%s/external/policies", conf.ListenHost, conf.ListenPort, version),
+				nil,
 				strings.NewReader(body),
 			)
 
@@ -64,17 +64,17 @@ var _ = Describe("External API Deleting Policies", func() {
 			Expect(responseString).To(MatchJSON("{}"))
 		}
 		BeforeEach(func() {
-			addPolicy("1.0.0", `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 1234, "end": 1234 } } } ] }`)
-			addPolicy("1.0.0", `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8080, "end": 8090 } } } ] }`)
-			addPolicy("0.0.0", `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 7777 } } ] }`)
+			addPolicy("v1", `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 1234, "end": 1234 } } } ] }`)
+			addPolicy("v1", `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8080, "end": 8090 } } } ] }`)
+			addPolicy("v0", `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 7777 } } ] }`)
 		})
 
-		deletePoliciesSucceeds := func(headers map[string]string, request, expectedResponse string) {
+		deletePoliciesSucceeds := func(version, request, expectedResponse string) {
 			body := strings.NewReader(request)
 			resp := helpers.MakeAndDoRequest(
 				"POST",
-				fmt.Sprintf("http://%s:%d/networking/v0/external/policies/delete", conf.ListenHost, conf.ListenPort),
-				headers,
+				fmt.Sprintf("http://%s:%d/networking/%s/external/policies/delete", conf.ListenHost, conf.ListenPort, version),
+				nil,
 				body,
 			)
 
@@ -85,8 +85,8 @@ var _ = Describe("External API Deleting Policies", func() {
 
 			resp = helpers.MakeAndDoRequest(
 				"GET",
-				fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
-				headers,
+				fmt.Sprintf("http://%s:%d/networking/%s/external/policies", conf.ListenHost, conf.ListenPort, version),
+				nil,
 				nil,
 			)
 
@@ -102,12 +102,12 @@ var _ = Describe("External API Deleting Policies", func() {
 			))
 		}
 
-		deletePoliciesFails := func(headers map[string]string, request, expectedResponse string) {
+		deletePoliciesFails := func(version, request, expectedResponse string) {
 			body := strings.NewReader(request)
 			resp := helpers.MakeAndDoRequest(
 				"POST",
-				fmt.Sprintf("http://%s:%d/networking/v0/external/policies/delete", conf.ListenHost, conf.ListenPort),
-				headers,
+				fmt.Sprintf("http://%s:%d/networking/%s/external/policies/delete", conf.ListenHost, conf.ListenPort, version),
+				nil,
 				body,
 			)
 
@@ -121,7 +121,6 @@ var _ = Describe("External API Deleting Policies", func() {
 			))
 		}
 
-		v1Header := map[string]string{"Accept": "1.0.0"}
 		v1Request := `{ "policies": [
 		  { "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8080, "end": 8090 } } },
 		  { "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 7777, "end": 7777 } } }
@@ -135,7 +134,6 @@ var _ = Describe("External API Deleting Policies", func() {
 		  { "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 7777, "end": 7777 } } }
 		]}`
 
-		v0Header := map[string]string{"Accept": "0.0.0"}
 		v0Request := `{ "policies": [
 		  {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 1234 } },
 		  {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 7777 } }
@@ -152,23 +150,18 @@ var _ = Describe("External API Deleting Policies", func() {
 		invalidProtocolResponse := `{ "error": "delete-policies: invalid destination protocol, specify either udp or tcp" }`
 
 		DescribeTable("deleting policies succeeds", deletePoliciesSucceeds,
-			Entry("v1", v1Header, v1Request, v1Response),
-			Entry("v1: no match", v1Header, v1RequestNoPolicyMatch, v1ResponseNoneDeleted),
-			Entry("v0", v0Header, v0Request, v0Response),
-			Entry("v0: no match", v0Header, v0RequestNoPolicyMatch, v0ResponseNoneDeleted),
-			Entry("no version", nil, v0Request, v0Response),
-			Entry("no version: no match", nil, v0RequestNoPolicyMatch, v0ResponseNoneDeleted),
+			Entry("v1", "v1", v1Request, v1Response),
+			Entry("v1: no match", "v1", v1RequestNoPolicyMatch, v1ResponseNoneDeleted),
+			Entry("v0", "v0", v0Request, v0Response),
+			Entry("v0: no match", "v0", v0RequestNoPolicyMatch, v0ResponseNoneDeleted),
 		)
 
 		DescribeTable("failure cases", deletePoliciesFails,
-			Entry("v1: missing ports", v1Header, v0Request, invalidStartPortResponse),
-			Entry("v1: missing protocol", v1Header, v1RequestMissingProtocol, invalidProtocolResponse),
+			Entry("v1: missing ports", "v1", v0Request, invalidStartPortResponse),
+			Entry("v1: missing protocol", "v1", v1RequestMissingProtocol, invalidProtocolResponse),
 
-			Entry("v0: missing port", v0Header, v1Request, invalidStartPortResponse),
-			Entry("v0: missing protocol", v0Header, v0RequestMissingProtocol, invalidProtocolResponse),
-
-			Entry("no version: missing port", nil, v1Request, invalidStartPortResponse),
-			Entry("no version: missing protocol", nil, v0RequestMissingProtocol, invalidProtocolResponse),
+			Entry("v0: missing port", "v0", v1Request, invalidStartPortResponse),
+			Entry("v0: missing protocol", "v0", v0RequestMissingProtocol, invalidProtocolResponse),
 		)
 	})
 })

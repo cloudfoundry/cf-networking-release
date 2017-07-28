@@ -16,6 +16,7 @@ import (
 
 	"policy-server/api"
 	"policy-server/api/api_0_0_0"
+	"policy-server/api/api_0_internal"
 	"policy-server/cc_client"
 	"policy-server/cleaner"
 	"policy-server/config"
@@ -186,6 +187,7 @@ func main() {
 	}
 
 	policyMapperV0 := api_0_0_0.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal))
+	policyMapperV0Internal := api_0_internal.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal))
 	policyMapperV1 := api.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal))
 
 	validator := &handlers.Validator{}
@@ -261,7 +263,7 @@ func main() {
 	internalPoliciesHandler := &handlers.PoliciesIndexInternal{
 		Logger:        logger.Session("policies-index-internal"),
 		Store:         wrappedStore,
-		Mapper:        policyMapperV1,
+		Mapper:        policyMapperV0Internal,
 		ErrorResponse: errorResponse,
 	}
 
@@ -314,25 +316,40 @@ func main() {
 		"health": metricsWrap("Health", logWrap(healthHandler)),
 		"create_policies": metricsWrap("CreatePolicies", middleware.LogWrap(logger,
 			checkVersionWrapper.CheckVersion(map[string]middleware.LoggableHandlerFunc{
-				"1.0.0": authWrite(createPolicyHandlerV1),
-				"0.0.0": authWrite(createPolicyHandlerV0),
+				"v1": authWrite(createPolicyHandlerV1),
+				"v0": authWrite(createPolicyHandlerV0),
 			}),
 		)),
 		"delete_policies": metricsWrap("DeletePolicies", middleware.LogWrap(logger,
 			checkVersionWrapper.CheckVersion(map[string]middleware.LoggableHandlerFunc{
-				"1.0.0": authWrite(deletePolicyHandlerV1),
-				"0.0.0": authWrite(deletePolicyHandlerV0),
+				"v1": authWrite(deletePolicyHandlerV1),
+				"v0": authWrite(deletePolicyHandlerV0),
 			}),
 		)),
 		"policies_index": metricsWrap("PoliciesIndex", middleware.LogWrap(logger,
 			checkVersionWrapper.CheckVersion(map[string]middleware.LoggableHandlerFunc{
-				"1.0.0": authWrite(policiesIndexHandlerV1),
-				"0.0.0": authWrite(policiesIndexHandlerV0),
+				"v1": authWrite(policiesIndexHandlerV1),
+				"v0": authWrite(policiesIndexHandlerV0),
 			}),
 		)),
-		"cleanup":    metricsWrap("Cleanup", middleware.LogWrap(logger, authAdmin(policiesCleanupHandler))),
-		"tags_index": metricsWrap("TagsIndex", middleware.LogWrap(logger, authAdmin(tagsIndexHandler))),
-		"whoami":     metricsWrap("WhoAmI", middleware.LogWrap(logger, authAdmin(whoamiHandler))),
+		"cleanup": metricsWrap("Cleanup", middleware.LogWrap(logger,
+			checkVersionWrapper.CheckVersion(map[string]middleware.LoggableHandlerFunc{
+				"v1": authAdmin(policiesCleanupHandler),
+				"v0": authAdmin(policiesCleanupHandler),
+			}),
+		)),
+		"tags_index": metricsWrap("TagsIndex", middleware.LogWrap(logger,
+			checkVersionWrapper.CheckVersion(map[string]middleware.LoggableHandlerFunc{
+				"v1": authAdmin(tagsIndexHandler),
+				"v0": authAdmin(tagsIndexHandler),
+			}),
+		)),
+		"whoami": metricsWrap("WhoAmI", middleware.LogWrap(logger,
+			checkVersionWrapper.CheckVersion(map[string]middleware.LoggableHandlerFunc{
+				"v1": authAdmin(whoamiHandler),
+				"v0": authAdmin(whoamiHandler),
+			}),
+		)),
 	}
 
 	err = dropsonde.Initialize(conf.MetronAddress, dropsondeOrigin)
@@ -342,7 +359,12 @@ func main() {
 
 	metricsEmitter := initMetricsEmitter(logger, wrappedStore)
 	externalServer := initExternalServer(conf, externalHandlers)
-	internalServer := initInternalServer(conf, metricsWrap("InternalPolicies", logWrap(internalPoliciesHandler)))
+	internalServer := initInternalServer(conf, metricsWrap("InternalPolicies", middleware.LogWrap(logger,
+		checkVersionWrapper.CheckVersion(map[string]middleware.LoggableHandlerFunc{
+			"v1": internalPoliciesHandler.ServeHTTP,
+			"v0": internalPoliciesHandler.ServeHTTP,
+		}),
+	)))
 	poller := initPoller(logger, conf, policyCleaner)
 	debugServer := debugserver.Runner(fmt.Sprintf("%s:%d", conf.DebugServerHost, conf.DebugServerPort), reconfigurableSink)
 
@@ -415,7 +437,7 @@ func initPoller(logger lager.Logger, conf *config.Config, policyCleaner *cleaner
 
 func initInternalServer(conf *config.Config, internalPoliciesHandler http.Handler) ifrit.Runner {
 	routes := rata.Routes{
-		{Name: "internal_policies", Method: "GET", Path: "/networking/v0/internal/policies"},
+		{Name: "internal_policies", Method: "GET", Path: "/networking/:version/internal/policies"},
 	}
 	handlers := rata.Handlers{
 		"internal_policies": internalPoliciesHandler,
@@ -441,12 +463,12 @@ func initExternalServer(conf *config.Config, externalHandlers rata.Handlers) ifr
 		{Name: "uptime", Method: "GET", Path: "/"},
 		{Name: "uptime", Method: "GET", Path: "/networking"},
 		{Name: "health", Method: "GET", Path: "/health"},
-		{Name: "whoami", Method: "GET", Path: "/networking/v0/external/whoami"},
-		{Name: "create_policies", Method: "POST", Path: "/networking/v0/external/policies"},
-		{Name: "delete_policies", Method: "POST", Path: "/networking/v0/external/policies/delete"},
-		{Name: "policies_index", Method: "GET", Path: "/networking/v0/external/policies"},
-		{Name: "cleanup", Method: "POST", Path: "/networking/v0/external/policies/cleanup"},
-		{Name: "tags_index", Method: "GET", Path: "/networking/v0/external/tags"},
+		{Name: "whoami", Method: "GET", Path: "/networking/:version/external/whoami"},
+		{Name: "create_policies", Method: "POST", Path: "/networking/:version/external/policies"},
+		{Name: "delete_policies", Method: "POST", Path: "/networking/:version/external/policies/delete"},
+		{Name: "policies_index", Method: "GET", Path: "/networking/:version/external/policies"},
+		{Name: "cleanup", Method: "POST", Path: "/networking/:version/external/policies/cleanup"},
+		{Name: "tags_index", Method: "GET", Path: "/networking/:version/external/tags"},
 	}
 
 	externalRouter, err := rata.NewRouter(routes, externalHandlers)

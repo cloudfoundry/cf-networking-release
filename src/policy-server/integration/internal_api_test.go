@@ -26,7 +26,6 @@ var _ = Describe("Internal API", func() {
 		address   string
 		dbConf    db.Config
 		tlsConfig *tls.Config
-		headers   map[string]string
 
 		fakeMetron metrics.FakeMetron
 	)
@@ -59,8 +58,6 @@ var _ = Describe("Internal API", func() {
 		conf = policyServerConfs[0]
 
 		address = fmt.Sprintf("%s:%d", conf.ListenHost, conf.ListenPort)
-
-		headers = map[string]string{"Accept": "1.0.0"}
 	})
 
 	AfterEach(func() {
@@ -75,14 +72,15 @@ var _ = Describe("Internal API", func() {
 		body := strings.NewReader(`{ "policies": [
 				 {"source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "ports": { "start": 8080, "end": 8080 } } },
 				 {"source": { "id": "app3" }, "destination": { "id": "app1", "protocol": "tcp", "ports": { "start": 9999, "end": 9999 } } },
+				 {"source": { "id": "app3" }, "destination": { "id": "app2", "protocol": "tcp", "ports": { "start": 3333, "end": 4444 } } },
 				 {"source": { "id": "app3" }, "destination": { "id": "app4", "protocol": "tcp", "ports": { "start": 3333, "end": 3333 } } }
 				 ]}
 				`)
 
 		_ = helpers.MakeAndDoRequest(
 			"POST",
-			fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
-			headers,
+			fmt.Sprintf("http://%s:%d/networking/v1/external/policies", conf.ListenHost, conf.ListenPort),
+			nil,
 			body,
 		)
 
@@ -95,11 +93,11 @@ var _ = Describe("Internal API", func() {
 		Expect(resp.StatusCode).To(Equal(http.StatusOK))
 		responseString, err := ioutil.ReadAll(resp.Body)
 		Expect(err).NotTo(HaveOccurred())
-		Expect(responseString).To(MatchJSON(`{ 
+		Expect(responseString).To(MatchJSON(`{
 			"total_policies": 2,
 			"policies": [
-				{"source": { "id": "app1", "tag": "0001" }, "destination": { "id": "app2", "tag": "0002", "protocol": "tcp", "ports": {"start": 8080, "end": 8080 } } },
-				{"source": { "id": "app3", "tag": "0003" }, "destination": { "id": "app1", "tag": "0001", "protocol": "tcp", "ports": {"start": 9999, "end": 9999 } } }
+			{"source": { "id": "app1", "tag": "0001" }, "destination": { "id": "app2", "tag": "0002", "protocol": "tcp", "port": 8080, "ports": {"start": 8080, "end": 8080 } } },
+			{"source": { "id": "app3", "tag": "0003" }, "destination": { "id": "app1", "tag": "0001", "protocol": "tcp", "port": 9999, "ports": {"start": 9999, "end": 9999 } } }
 			]}
 		`))
 	})

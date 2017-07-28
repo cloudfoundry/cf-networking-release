@@ -1,4 +1,4 @@
-package api_0_0_0
+package api_0_internal
 
 type Policies struct {
 	TotalPolicies int      `json:"total_policies"`
@@ -20,6 +20,12 @@ type Destination struct {
 	Tag      string `json:"tag,omitempty"`
 	Protocol string `json:"protocol"`
 	Port     int    `json:"port"`
+	Ports    Ports  `json:"ports"`
+}
+
+type Ports struct {
+	Start int `json:"start"`
+	End   int `json:"end"`
 }
 
 type Tag struct {

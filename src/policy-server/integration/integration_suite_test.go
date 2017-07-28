@@ -79,5 +79,5 @@ func stopPolicyServers(sessions []*gexec.Session) {
 
 func policyServerUrl(route string, confs []config.Config) string {
 	conf := confs[rand.Intn(len(confs))]
-	return fmt.Sprintf("http://%s:%d/networking/v0/%s", conf.ListenHost, conf.ListenPort, route)
+	return fmt.Sprintf("http://%s:%d/networking/v1/%s", conf.ListenHost, conf.ListenPort, route)
 }

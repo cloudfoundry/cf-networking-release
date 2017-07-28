@@ -6,7 +6,7 @@ import (
 	"lib/policy_client"
 	"math/rand"
 	"net/http"
-	"policy-server/api"
+	"policy-server/api/api_0_0_0"
 	"strings"
 
 	"code.cloudfoundry.org/lager/lagertest"
@@ -115,17 +115,14 @@ var _ = Describe("space developer policy configuration", func() {
 			})
 
 			By("creating a policy", func() {
-				err := policyClient.AddPolicies(spaceDevUserToken, []api.Policy{
-					api.Policy{
-						Source: api.Source{
+				err := policyClient.AddPolicies(spaceDevUserToken, []api_0_0_0.Policy{
+					api_0_0_0.Policy{
+						Source: api_0_0_0.Source{
 							ID: appAGUID,
 						},
-						Destination: api.Destination{
-							ID: appBGUID,
-							Ports: api.Ports{
-								Start: 1234,
-								End:   2234,
-							},
+						Destination: api_0_0_0.Destination{
+							ID:       appBGUID,
+							Port:     1234,
 							Protocol: "tcp",
 						},
 					},
@@ -134,17 +131,14 @@ var _ = Describe("space developer policy configuration", func() {
 			})
 
 			By("listing policies", func() {
-				expectedPolicies := []api.Policy{
-					api.Policy{
-						Source: api.Source{
+				expectedPolicies := []api_0_0_0.Policy{
+					api_0_0_0.Policy{
+						Source: api_0_0_0.Source{
 							ID: appAGUID,
 						},
-						Destination: api.Destination{
-							ID: appBGUID,
-							Ports: api.Ports{
-								Start: 1234,
-								End:   2234,
-							},
+						Destination: api_0_0_0.Destination{
+							ID:       appBGUID,
+							Port:     1234,
 							Protocol: "tcp",
 						},
 					},
@@ -155,17 +149,14 @@ var _ = Describe("space developer policy configuration", func() {
 			})
 
 			By("deleting the policy", func() {
-				err := policyClient.DeletePolicies(spaceDevUserToken, []api.Policy{
-					api.Policy{
-						Source: api.Source{
+				err := policyClient.DeletePolicies(spaceDevUserToken, []api_0_0_0.Policy{
+					api_0_0_0.Policy{
+						Source: api_0_0_0.Source{
 							ID: appAGUID,
 						},
-						Destination: api.Destination{
-							ID: appBGUID,
-							Ports: api.Ports{
-								Start: 1234,
-								End:   2234,
-							},
+						Destination: api_0_0_0.Destination{
+							ID:       appBGUID,
+							Port:     1234,
 							Protocol: "tcp",
 						},
 					},
