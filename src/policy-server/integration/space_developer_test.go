@@ -26,13 +26,11 @@ var _ = Describe("External API Space Developer", func() {
 		conf              config.Config
 		policyServerConfs []config.Config
 		dbConf            db.Config
-		headers           map[string]string
 
 		fakeMetron metrics.FakeMetron
 	)
 
 	BeforeEach(func() {
-		headers = map[string]string{"Accept": "1.0.0"}
 		fakeMetron = metrics.NewFakeMetron()
 
 		dbConf = testsupport.GetDBConfig()
@@ -52,7 +50,7 @@ var _ = Describe("External API Space Developer", func() {
 	})
 
 	Describe("space developer", func() {
-		var makeNewRequest = func(method, route, bodyString, version string) *http.Request {
+		makeNewRequest := func(method, route, bodyString string) *http.Request {
 			var body io.Reader
 			if bodyString != "" {
 				body = strings.NewReader(bodyString)
@@ -62,7 +60,6 @@ var _ = Describe("External API Space Developer", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			req.Header.Set("Authorization", "Bearer space-dev-with-network-write-token")
-			req.Header.Set("Accept", version)
 			return req
 		}
 
@@ -73,7 +70,7 @@ var _ = Describe("External API Space Developer", func() {
 			)
 			BeforeEach(func() {
 				body = `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8090, "end": 8090 } } } ] }`
-				req = makeNewRequest("POST", "networking/v0/external/policies", body, headers["Accept"])
+				req = makeNewRequest("POST", "networking/v1/external/policies", body)
 			})
 
 			Context("when space developer self-service is disabled", func() {
@@ -101,7 +98,7 @@ var _ = Describe("External API Space Developer", func() {
 				Context("when one app is in spaces they do not have access to", func() {
 					BeforeEach(func() {
 						body = `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "app-guid-not-in-my-spaces", "protocol": "tcp", "ports": { "start": 8090, "end": 8090 } } } ] }`
-						req = makeNewRequest("POST", "networking/v0/external/policies", body, headers["Accept"])
+						req = makeNewRequest("POST", "networking/v1/external/policies", body)
 					})
 					It("returns a 403 with a meaningful error", func() {
 						resp, err := http.DefaultClient.Do(req)
@@ -124,7 +121,7 @@ var _ = Describe("External API Space Developer", func() {
 					sessions = startPolicyServers(policyServerConfs)
 					conf = policyServerConfs[0]
 
-					req = makeNewRequest("POST", "networking/v0/external/policies", body, headers["Accept"])
+					req = makeNewRequest("POST", "networking/v1/external/policies", body)
 					req.Header.Set("Authorization", "Bearer space-dev-token")
 				})
 
@@ -138,7 +135,7 @@ var _ = Describe("External API Space Developer", func() {
 				Context("when one app is in spaces they do not have access to", func() {
 					BeforeEach(func() {
 						body = `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "app-guid-not-in-my-spaces", "protocol": "tcp", "ports": { "start": 8090, "end": 8090 } } } ] }`
-						req = makeNewRequest("POST", "networking/v0/external/policies", body, headers["Accept"])
+						req = makeNewRequest("POST", "networking/v1/external/policies", body)
 						req.Header.Set("Authorization", "Bearer space-dev-token")
 					})
 					It("returns a 403 with a meaningful error", func() {
@@ -156,7 +153,7 @@ var _ = Describe("External API Space Developer", func() {
 				elevenMB := 11 << 20
 				bytes := make([]byte, elevenMB, elevenMB)
 
-				req := makeNewRequest("POST", "networking/v0/external/policies", string(bytes), headers["Accept"])
+				req := makeNewRequest("POST", "networking/v1/external/policies", string(bytes))
 				resp, err := http.DefaultClient.Do(req)
 				Expect(err).NotTo(HaveOccurred())
 
@@ -178,7 +175,7 @@ var _ = Describe("External API Space Developer", func() {
 				{"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8090, "end": 8090 } } },
 				{"source": { "id": "some-app-guid" }, "destination": { "id": "another-app-guid", "protocol": "udp", "ports": { "start": 7070, "end": 7070 } } }
 				] }`
-				req = makeNewRequest("POST", "networking/v0/external/policies", body, headers["Accept"])
+				req = makeNewRequest("POST", "networking/v1/external/policies", body)
 			})
 			It("rejects requests to add policies above the quota", func() {
 				By("adding the maximum allowed policies")
@@ -190,7 +187,7 @@ var _ = Describe("External API Space Developer", func() {
 				body = `{ "policies": [
 				{"source": { "id": "some-app-guid" }, "destination": { "id": "yet-another-other-app-guid", "protocol": "tcp", "ports": { "start": 9000, "end": 9000 } } }
 				] }`
-				req = makeNewRequest("POST", "networking/v0/external/policies", body, headers["Accept"])
+				req = makeNewRequest("POST", "networking/v1/external/policies", body)
 				resp, err = http.DefaultClient.Do(req)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
@@ -202,7 +199,7 @@ var _ = Describe("External API Space Developer", func() {
 				body = `{ "policies": [
 				{"source": { "id": "some-app-guid" }, "destination": { "id": "another-app-guid", "protocol": "udp", "ports": { "start": 7070, "end": 7070 } } }
 				] }`
-				req = makeNewRequest("POST", "networking/v0/external/policies/delete", body, headers["Accept"])
+				req = makeNewRequest("POST", "networking/v1/external/policies/delete", body)
 				resp, err = http.DefaultClient.Do(req)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
@@ -211,7 +208,7 @@ var _ = Describe("External API Space Developer", func() {
 				body = `{ "policies": [
 				{"source": { "id": "some-app-guid" }, "destination": { "id": "yet-another-other-app-guid", "protocol": "tcp", "ports": { "start": 9000, "end": 9000 } } }
 				] }`
-				req = makeNewRequest("POST", "networking/v0/external/policies", body, headers["Accept"])
+				req = makeNewRequest("POST", "networking/v1/external/policies", body)
 				resp, err = http.DefaultClient.Do(req)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
@@ -222,7 +219,7 @@ var _ = Describe("External API Space Developer", func() {
 			var req *http.Request
 			BeforeEach(func() {
 				body := `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8090, "end": 8090 } } } ] }`
-				req = makeNewRequest("POST", "networking/v0/external/policies/delete", body, headers["Accept"])
+				req = makeNewRequest("POST", "networking/v1/external/policies/delete", body)
 			})
 			It("succeeds for developers with access to apps and network.write permission", func() {
 				resp, err := http.DefaultClient.Do(req)
@@ -247,7 +244,7 @@ var _ = Describe("External API Space Developer", func() {
 			Context("when one app is in spaces they do not have access to", func() {
 				BeforeEach(func() {
 					body := `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "app-guid-not-in-my-spaces", "protocol": "tcp", "ports": { "start": 8090, "end": 8090 } } } ] }`
-					req = makeNewRequest("POST", "networking/v0/external/policies/delete", body, headers["Accept"])
+					req = makeNewRequest("POST", "networking/v1/external/policies/delete", body)
 				})
 				It("returns a 403 with a meaningful error", func() {
 					resp, err := http.DefaultClient.Do(req)
@@ -263,7 +260,7 @@ var _ = Describe("External API Space Developer", func() {
 		Describe("List policies", func() {
 			var req *http.Request
 			BeforeEach(func() {
-				req = makeNewRequest("GET", "networking/v0/external/policies", "", headers["Accept"])
+				req = makeNewRequest("GET", "networking/v1/external/policies", "")
 			})
 
 			Context("when there are no policies", func() {
@@ -312,14 +309,14 @@ var _ = Describe("External API Space Developer", func() {
 					bodyBytes, err := json.Marshal(body)
 					Expect(err).NotTo(HaveOccurred())
 
-					req = makeNewRequest("POST", "networking/v0/external/policies", string(bodyBytes), headers["Accept"])
+					req = makeNewRequest("POST", "networking/v1/external/policies", string(bodyBytes))
 					req.Header.Set("Authorization", "Bearer valid-token")
 					_, err = http.DefaultClient.Do(req)
 					Expect(err).NotTo(HaveOccurred())
 				})
 
 				It("does not return those policies", func() {
-					req = makeNewRequest("GET", "networking/v0/external/policies", "", headers["Accept"])
+					req = makeNewRequest("GET", "networking/v1/external/policies", "")
 					resp, err := http.DefaultClient.Do(req)
 					Expect(err).NotTo(HaveOccurred())
 

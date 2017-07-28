@@ -2,7 +2,7 @@ package policy_client_test
 
 import (
 	"lib/policy_client"
-	"policy-server/api"
+	"policy-server/api/api_0_0_0"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -11,35 +11,35 @@ import (
 var _ = Describe("SimpleChunker", func() {
 	var (
 		chunker  policy_client.SimpleChunker
-		policies []api.Policy
+		policies []api_0_0_0.Policy
 	)
 	BeforeEach(func() {
-		policies = []api.Policy{
+		policies = []api_0_0_0.Policy{
 			{
-				Source: api.Source{
+				Source: api_0_0_0.Source{
 					ID: "some-app-guid",
 				},
-				Destination: api.Destination{
+				Destination: api_0_0_0.Destination{
 					ID:       "some-other-app-guid",
 					Port:     8090,
 					Protocol: "tcp",
 				},
 			},
 			{
-				Source: api.Source{
+				Source: api_0_0_0.Source{
 					ID: "some-app-guid-2",
 				},
-				Destination: api.Destination{
+				Destination: api_0_0_0.Destination{
 					ID:       "some-other-app-guid-2",
 					Port:     8091,
 					Protocol: "tcp",
 				},
 			},
 			{
-				Source: api.Source{
+				Source: api_0_0_0.Source{
 					ID: "some-app-guid-3",
 				},
-				Destination: api.Destination{
+				Destination: api_0_0_0.Destination{
 					ID:       "some-other-app-guid-3",
 					Port:     8092,
 					Protocol: "tcp",
@@ -73,5 +73,4 @@ var _ = Describe("SimpleChunker", func() {
 			Expect(chunkedPolicies[0]).To(Equal(policies))
 		})
 	})
-
 })

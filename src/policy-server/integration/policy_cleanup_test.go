@@ -23,13 +23,11 @@ var _ = Describe("Policy Cleanup", func() {
 		conf              config.Config
 		policyServerConfs []config.Config
 		dbConf            db.Config
-		headers           map[string]string
 
 		fakeMetron metrics.FakeMetron
 	)
 
 	BeforeEach(func() {
-		headers = map[string]string{"Accept": "1.0.0"}
 		fakeMetron = metrics.NewFakeMetron()
 
 		dbConf = testsupport.GetDBConfig()
@@ -66,8 +64,8 @@ var _ = Describe("Policy Cleanup", func() {
 
 			resp := helpers.MakeAndDoRequest(
 				"POST",
-				fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
-				headers,
+				fmt.Sprintf("http://%s:%d/networking/v1/external/policies", conf.ListenHost, conf.ListenPort),
+				nil,
 				body,
 			)
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
@@ -77,8 +75,8 @@ var _ = Describe("Policy Cleanup", func() {
 		It("responds with a 200 and lists all stale policies", func() {
 			resp := helpers.MakeAndDoRequest(
 				"POST",
-				fmt.Sprintf("http://%s:%d/networking/v0/external/policies/cleanup", conf.ListenHost, conf.ListenPort),
-				headers,
+				fmt.Sprintf("http://%s:%d/networking/v1/external/policies/cleanup", conf.ListenHost, conf.ListenPort),
+				nil,
 				nil,
 			)
 
@@ -111,8 +109,8 @@ var _ = Describe("Policy Cleanup", func() {
 
 			resp := helpers.MakeAndDoRequest(
 				"POST",
-				fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
-				headers,
+				fmt.Sprintf("http://%s:%d/networking/v1/external/policies", conf.ListenHost, conf.ListenPort),
+				nil,
 				body,
 			)
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
@@ -122,8 +120,8 @@ var _ = Describe("Policy Cleanup", func() {
 			listPolicies := func() []byte {
 				resp := helpers.MakeAndDoRequest(
 					"GET",
-					fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
-					headers,
+					fmt.Sprintf("http://%s:%d/networking/v1/external/policies", conf.ListenHost, conf.ListenPort),
+					nil,
 					nil,
 				)
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))

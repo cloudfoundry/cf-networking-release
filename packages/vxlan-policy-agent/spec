@@ -88,6 +88,8 @@ files:
   - lib/rules/*.go # gosub
   - lib/serial/*.go # gosub
   - policy-server/api/*.go # gosub
+  - policy-server/api/api_0_0_0/*.go # gosub
+  - policy-server/api/api_0_internal/*.go # gosub
   - policy-server/store/*.go # gosub
   - policy-server/store/helpers/*.go # gosub
   - policy-server/store/migrations/*.go # gosub

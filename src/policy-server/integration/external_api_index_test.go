@@ -53,8 +53,8 @@ var _ = Describe("External API Listing Policies", func() {
 		addPolicy := func(version, body string) {
 			resp := helpers.MakeAndDoRequest(
 				"POST",
-				fmt.Sprintf("http://%s:%d/networking/v0/external/policies", conf.ListenHost, conf.ListenPort),
-				map[string]string{"Accept": version},
+				fmt.Sprintf("http://%s:%d/networking/%s/external/policies", conf.ListenHost, conf.ListenPort, version),
+				nil,
 				strings.NewReader(body),
 			)
 
@@ -64,16 +64,16 @@ var _ = Describe("External API Listing Policies", func() {
 			Expect(responseString).To(MatchJSON("{}"))
 		}
 		BeforeEach(func() {
-			addPolicy("1.0.0", `{ "policies": [ {"source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "ports": { "start": 1234, "end": 1234 } } } ] }`)
-			addPolicy("1.0.0", `{ "policies": [ {"source": { "id": "app3" }, "destination": { "id": "app1", "protocol": "tcp", "ports": { "start": 8080, "end": 8090 } } } ] }`)
-			addPolicy("0.0.0", `{ "policies": [ {"source": { "id": "app3" }, "destination": { "id": "app4", "protocol": "tcp", "port": 7777 } } ] }`)
+			addPolicy("v1", `{ "policies": [ {"source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "ports": { "start": 1234, "end": 1234 } } } ] }`)
+			addPolicy("v1", `{ "policies": [ {"source": { "id": "app3" }, "destination": { "id": "app1", "protocol": "tcp", "ports": { "start": 8080, "end": 8090 } } } ] }`)
+			addPolicy("v0", `{ "policies": [ {"source": { "id": "app3" }, "destination": { "id": "app4", "protocol": "tcp", "port": 7777 } } ] }`)
 		})
 
-		listPolicies := func(headers map[string]string, queryString, expectedResponse string) {
+		listPolicies := func(version, queryString, expectedResponse string) {
 			resp := helpers.MakeAndDoRequest(
 				"GET",
-				fmt.Sprintf("http://%s:%d/networking/v0/external/policies%s", conf.ListenHost, conf.ListenPort, queryString),
-				headers,
+				fmt.Sprintf("http://%s:%d/networking/%s/external/policies%s", conf.ListenHost, conf.ListenPort, version, queryString),
+				nil,
 				nil,
 			)
 
@@ -87,7 +87,6 @@ var _ = Describe("External API Listing Policies", func() {
 			))
 		}
 
-		v1Header := map[string]string{"Accept": "1.0.0"}
 		v1Response := `{ "total_policies": 3, "policies": [
 		  { "source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "ports": { "start": 1234, "end": 1234 } } },
 		  { "source": { "id": "app3" }, "destination": { "id": "app1", "protocol": "tcp", "ports": { "start": 8080, "end": 8090 } } },
@@ -98,7 +97,6 @@ var _ = Describe("External API Listing Policies", func() {
 		  { "source": { "id": "app3" }, "destination": { "id": "app1", "protocol": "tcp", "ports": { "start": 8080, "end": 8090 } } }
 		]}`
 
-		v0Header := map[string]string{"Accept": "0.0.0"}
 		v0Response := `{ "total_policies": 2, "policies": [
 		  { "source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "port": 1234 } },
 		  { "source": { "id": "app3" }, "destination": { "id": "app4", "protocol": "tcp", "port": 7777 } }
@@ -108,15 +106,13 @@ var _ = Describe("External API Listing Policies", func() {
 		]}`
 
 		DescribeTable("listing all policies", listPolicies,
-			Entry("v1: all", v1Header, "", v1Response),
-			Entry("v0: all", v0Header, "", v0Response),
-			Entry("no version: all", nil, "", v0Response),
+			Entry("v1: all", "v1", "", v1Response),
+			Entry("v0: all", "v0", "", v0Response),
 		)
 
 		DescribeTable("listing policies filtered", listPolicies,
-			Entry("v1: filtered", v1Header, "?id=app1,app2", v1ResponseFiltered),
-			Entry("v0: filtered", v0Header, "?id=app1,app2", v0ResponseFiltered),
-			Entry("no version: filtered", nil, "?id=app1,app2", v0ResponseFiltered),
+			Entry("v1: filtered", "v1", "?id=app1,app2", v1ResponseFiltered),
+			Entry("v0: filtered", "v0", "?id=app1,app2", v0ResponseFiltered),
 		)
 	})
 })

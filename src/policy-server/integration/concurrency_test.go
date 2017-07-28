@@ -26,13 +26,11 @@ var _ = Describe("External API Concurrency", func() {
 		conf              config.Config
 		policyServerConfs []config.Config
 		dbConf            db.Config
-		headers           map[string]string
 
 		fakeMetron metrics.FakeMetron
 	)
 
 	BeforeEach(func() {
-		headers = map[string]string{"Accept": "1.0.0"}
 		fakeMetron = metrics.NewFakeMetron()
 
 		dbConf = testsupport.GetDBConfig()
@@ -60,7 +58,7 @@ var _ = Describe("External API Concurrency", func() {
 				requestBody, _ := json.Marshal(map[string]interface{}{
 					"policies": []api.Policy{policy},
 				})
-				resp := helpers.MakeAndDoRequest("POST", policyServerUrl(policiesRoute, policyServerConfs), headers, bytes.NewReader(requestBody))
+				resp := helpers.MakeAndDoRequest("POST", policyServerUrl(policiesRoute, policyServerConfs), nil, bytes.NewReader(requestBody))
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 				responseString, err := ioutil.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
@@ -96,7 +94,7 @@ var _ = Describe("External API Concurrency", func() {
 			Expect(nAdded).To(Equal(int32(nPolicies)))
 
 			By("getting all the policies")
-			resp := helpers.MakeAndDoRequest("GET", policyServerUrl(policiesRoute, policyServerConfs), headers, nil)
+			resp := helpers.MakeAndDoRequest("GET", policyServerUrl(policiesRoute, policyServerConfs), nil, nil)
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
 			responseBytes, err := ioutil.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
@@ -115,7 +113,7 @@ var _ = Describe("External API Concurrency", func() {
 
 			By("verify tags")
 			tagsRoute := "external/tags"
-			resp = helpers.MakeAndDoRequest("GET", policyServerUrl(tagsRoute, policyServerConfs), headers, nil)
+			resp = helpers.MakeAndDoRequest("GET", policyServerUrl(tagsRoute, policyServerConfs), nil, nil)
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
 			responseBytes, err = ioutil.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
@@ -130,14 +128,14 @@ var _ = Describe("External API Concurrency", func() {
 	Context("when these are concurrent create and delete requests", func() {
 		It("remains consistent", func() {
 			baseUrl := fmt.Sprintf("http://%s:%d", conf.ListenHost, conf.ListenPort)
-			policiesUrl := fmt.Sprintf("%s/networking/v0/external/policies", baseUrl)
-			policiesDeleteUrl := fmt.Sprintf("%s/networking/v0/external/policies/delete", baseUrl)
+			policiesUrl := fmt.Sprintf("%s/networking/v1/external/policies", baseUrl)
+			policiesDeleteUrl := fmt.Sprintf("%s/networking/v1/external/policies/delete", baseUrl)
 
 			do := func(method, url string, policy api.Policy) {
 				requestBody, _ := json.Marshal(map[string]interface{}{
 					"policies": []api.Policy{policy},
 				})
-				resp := helpers.MakeAndDoRequest(method, url, headers, bytes.NewReader(requestBody))
+				resp := helpers.MakeAndDoRequest(method, url, nil, bytes.NewReader(requestBody))
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
 				responseString, err := ioutil.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
@@ -184,7 +182,7 @@ var _ = Describe("External API Concurrency", func() {
 
 			Expect(nDeleted).To(Equal(int32(nPolicies)))
 
-			resp := helpers.MakeAndDoRequest("GET", policiesUrl, headers, nil)
+			resp := helpers.MakeAndDoRequest("GET", policiesUrl, nil, nil)
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
 			responseBytes, err := ioutil.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"lib/policy_client"
-	"policy-server/api"
+	"policy-server/api/api_0_internal"
 
 	hfakes "code.cloudfoundry.org/cf-networking-helpers/fakes"
 
@@ -28,7 +28,7 @@ var _ = Describe("InternalClient", func() {
 	Describe("GetPolicies", func() {
 		BeforeEach(func() {
 			jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
-				respBytes := []byte(`{ "policies": [ {"source": { "id": "some-app-guid", "tag": "BEEF" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
+				respBytes := []byte(`{ "policies": [ {"source": { "id": "some-app-guid", "tag": "BEEF" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090, "ports": { "start": 8090, "end": 8090 } } } ] }`)
 				json.Unmarshal(respBytes, respData)
 				return nil
 			}
@@ -43,16 +43,16 @@ var _ = Describe("InternalClient", func() {
 			Expect(route).To(Equal("/networking/v0/internal/policies"))
 			Expect(reqData).To(BeNil())
 
-			Expect(policies).To(Equal([]api.Policy{
+			Expect(policies).To(Equal([]api_0_internal.Policy{
 				{
-					Source: api.Source{
+					Source: api_0_internal.Source{
 						ID:  "some-app-guid",
 						Tag: "BEEF",
 					},
-					Destination: api.Destination{
+					Destination: api_0_internal.Destination{
 						ID:   "some-other-app-guid",
 						Port: 8090,
-						Ports: api.Ports{
+						Ports: api_0_internal.Ports{
 							Start: 8090,
 							End:   8090,
 						},
@@ -78,7 +78,7 @@ var _ = Describe("InternalClient", func() {
 	Describe("GetPoliciesByID", func() {
 		BeforeEach(func() {
 			jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
-				respBytes := []byte(`{ "policies": [ {"source": { "id": "some-app-guid", "tag": "BEEF" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
+				respBytes := []byte(`{ "policies": [ {"source": { "id": "some-app-guid", "tag": "BEEF" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090, "ports": { "start": 8090, "end": 8090 } } } ] }`)
 				json.Unmarshal(respBytes, respData)
 				return nil
 			}
@@ -93,16 +93,16 @@ var _ = Describe("InternalClient", func() {
 			Expect(route).To(Equal("/networking/v0/internal/policies?id=some-app-guid,some-other-app-guid"))
 			Expect(reqData).To(BeNil())
 
-			Expect(policies).To(Equal([]api.Policy{
+			Expect(policies).To(Equal([]api_0_internal.Policy{
 				{
-					Source: api.Source{
+					Source: api_0_internal.Source{
 						ID:  "some-app-guid",
 						Tag: "BEEF",
 					},
-					Destination: api.Destination{
+					Destination: api_0_internal.Destination{
 						ID:   "some-other-app-guid",
 						Port: 8090,
-						Ports: api.Ports{
+						Ports: api_0_internal.Ports{
 							Start: 8090,
 							End:   8090,
 						},
