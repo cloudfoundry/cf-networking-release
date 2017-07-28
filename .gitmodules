@@ -130,6 +130,3 @@
 [submodule "src/github.com/cf-container-networking/sql-migrate"]
 	path = src/github.com/cf-container-networking/sql-migrate
 	url = https://github.com/cf-container-networking/sql-migrate.git
-[submodule "src/github.com/hashicorp/go-version"]
-	path = src/github.com/hashicorp/go-version
-	url = https://github.com/hashicorp/go-version.git
