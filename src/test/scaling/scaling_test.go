@@ -9,7 +9,7 @@ import (
 	"net"
 	"net/http"
 	"os/exec"
-	"policy-server/api"
+	"policy-server/api/api_v0"
 	"strings"
 	"time"
 
@@ -272,17 +272,17 @@ func getGuids(srcAppNames, dstAppNames []string) ([]string, []string) {
 	return srcGuids, dstGuids
 }
 
-func getPolicies(srcList, dstList []string, dstPorts []int) []api.Policy {
+func getPolicies(srcList, dstList []string, dstPorts []int) []api_v0.Policy {
 	srcGuids, dstGuids := getGuids(srcList, dstList)
-	policies := []api.Policy{}
+	policies := []api_v0.Policy{}
 	for _, srcGuid := range srcGuids {
 		for _, dstGuid := range dstGuids {
 			for _, port := range dstPorts {
-				policies = append(policies, api.Policy{
-					Source: api.Source{
+				policies = append(policies, api_v0.Policy{
+					Source: api_v0.Source{
 						ID: srcGuid,
 					},
-					Destination: api.Destination{
+					Destination: api_v0.Destination{
 						ID:       dstGuid,
 						Port:     port,
 						Protocol: "tcp",
