@@ -22,7 +22,14 @@ import (
 
 const testTimeoutInSeconds = 5
 
-var policiesBody = `{
+var policiesBodyV0 = `{
+	"policies": [{
+		"source": { "id": "some-app-guid" },
+		"destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 1234 }
+	}]
+}`
+
+var policiesBodyV1 = `{
 	"policies": [{
 		"source": { "id": "some-app-guid" },
 		"destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": {"start": 8090, "end": 8090} }
@@ -55,7 +62,7 @@ var _ = Describe("Timeout", func() {
 		session = helpers.StartPolicyServer(policyServerPath, conf)
 		policyServerURL = fmt.Sprintf("http://%s:%d", conf.ListenHost, conf.ListenPort)
 
-		resp := helpers.MakeAndDoRequest("GET", fmt.Sprintf("%s/%s", policyServerURL, "networking/v0/external/policies"), headers, nil)
+		resp := helpers.MakeAndDoRequest("GET", fmt.Sprintf("%s/%s", policyServerURL, "networking/v1/external/policies"), headers, nil)
 		defer resp.Body.Close()
 		Expect(resp.StatusCode).To(Equal(http.StatusOK))
 		Expect(ioutil.ReadAll(resp.Body)).To(MatchJSON(`{ "total_policies": 0, "policies": [] }`))
@@ -100,26 +107,50 @@ var _ = Describe("Timeout", func() {
 			}, float64(testTimeoutInSeconds))
 		}
 
-		itTimesOut("getting policies",
+		// v1
+		itTimesOut("V1 getting policies",
+			"GET", "networking/v1/external/policies", "",
+			`{ "error": "policies-index: database read failed" }`,
+		)
+		itTimesOut("V1 creating policies",
+			"POST", "networking/v1/external/policies", policiesBodyV1,
+			`{ "error": "policies-create: database create failed" }`,
+		)
+		itTimesOut("V1 deleting policies",
+			"POST", "networking/v1/external/policies/delete", policiesBodyV1,
+			`{ "error": "delete-policies: database delete failed" }`,
+		)
+		itTimesOut("V1 getting tags",
+			"GET", "networking/v1/external/tags", "",
+			`{ "error": "tags-index: database read failed" }`,
+		)
+		itTimesOut("V1 cleaning up",
+			"POST", "networking/v1/external/policies/cleanup", "",
+			`{ "error": "policies-cleanup: policies cleanup failed" }`,
+		)
+
+		// v0
+		itTimesOut("V0 getting policies",
 			"GET", "networking/v0/external/policies", "",
 			`{ "error": "policies-index: database read failed" }`,
 		)
-		itTimesOut("creating policies",
-			"POST", "networking/v0/external/policies", policiesBody,
+		itTimesOut("V0 creating policies",
+			"POST", "networking/v0/external/policies", policiesBodyV0,
 			`{ "error": "policies-create: database create failed" }`,
 		)
-		itTimesOut("deleting policies",
-			"POST", "networking/v0/external/policies/delete", policiesBody,
+		itTimesOut("V0 deleting policies",
+			"POST", "networking/v0/external/policies/delete", policiesBodyV0,
 			`{ "error": "delete-policies: database delete failed" }`,
 		)
-		itTimesOut("getting tags",
+		itTimesOut("V0 getting tags",
 			"GET", "networking/v0/external/tags", "",
 			`{ "error": "tags-index: database read failed" }`,
 		)
-		itTimesOut("cleaning up",
+		itTimesOut("V0 cleaning up",
 			"POST", "networking/v0/external/policies/cleanup", "",
 			`{ "error": "policies-cleanup: policies cleanup failed" }`,
 		)
+
 		itTimesOut("checking health",
 			"GET", "health", "",
 			`{ "error": "health: check database failed" }`,
