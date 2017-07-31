@@ -11,6 +11,13 @@ type QuotaGuard struct {
 	MaxPolicies int
 }
 
+func NewQuotaGuard(store dataStore, maxPolicies int) *QuotaGuard {
+	return &QuotaGuard{
+		Store:       store,
+		MaxPolicies: maxPolicies,
+	}
+}
+
 func (g *QuotaGuard) CheckAccess(policies []store.Policy, userToken uaa_client.CheckTokenResponse) (bool, error) {
 	for _, scope := range userToken.Scope {
 		if scope == "network.admin" {

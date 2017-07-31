@@ -27,6 +27,16 @@ type PoliciesIndexInternal struct {
 	ErrorResponse errorResponse
 }
 
+func NewPoliciesIndexInternal(logger lager.Logger, store dataStore,
+	mapper api.PolicyMapper, errorResponse errorResponse) *PoliciesIndexInternal {
+	return &PoliciesIndexInternal{
+		Logger:        logger,
+		Store:         store,
+		Mapper:        mapper,
+		ErrorResponse: errorResponse,
+	}
+}
+
 func (h *PoliciesIndexInternal) ServeHTTP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	logger = logger.Session("index-policies-internal")
 

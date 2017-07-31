@@ -39,6 +39,18 @@ type PolicyCleaner struct {
 	RequestTimeout        time.Duration
 }
 
+func NewPolicyCleaner(logger lager.Logger, store listDeleteStore, uaaClient uaaClient,
+	ccClient ccClient, ccAppRequestChunkSize int, requestTimeout time.Duration) *PolicyCleaner {
+	return &PolicyCleaner{
+		Logger:                logger,
+		Store:                 store,
+		UAAClient:             uaaClient,
+		CCClient:              ccClient,
+		CCAppRequestChunkSize: ccAppRequestChunkSize,
+		RequestTimeout:        requestTimeout,
+	}
+}
+
 func (p *PolicyCleaner) DeleteStalePolicies() ([]store.Policy, error) {
 	policies, err := p.Store.All()
 	if err != nil {

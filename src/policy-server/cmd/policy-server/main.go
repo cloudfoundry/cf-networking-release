@@ -171,20 +171,9 @@ func main() {
 		Logger:     logger,
 	}
 
-	policyGuard := &handlers.PolicyGuard{
-		UAAClient: uaaClient,
-		CCClient:  ccClient,
-	}
-
-	quotaGuard := &handlers.QuotaGuard{
-		Store:       wrappedStore,
-		MaxPolicies: conf.MaxPolicies,
-	}
-
-	policyFilter := &handlers.PolicyFilter{
-		UAAClient: uaaClient,
-		CCClient:  ccClient,
-	}
+	policyGuard := handlers.NewPolicyGuard(uaaClient, ccClient)
+	quotaGuard := handlers.NewQuotaGuard(wrappedStore, conf.MaxPolicies)
+	policyFilter := handlers.NewPolicyFilter(uaaClient, ccClient, 100)
 
 	policyMapperV0 := api_v0.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal))
 	policyMapperV0Internal := api_v0_internal.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal))
@@ -192,90 +181,38 @@ func main() {
 
 	validator := &handlers.Validator{}
 
-	createPolicyHandlerV1 := &handlers.PoliciesCreate{
-		Store:         wrappedStore,
-		Mapper:        policyMapperV1,
-		Validator:     validator,
-		PolicyGuard:   policyGuard,
-		QuotaGuard:    quotaGuard,
-		ErrorResponse: errorResponse,
-	}
+	createPolicyHandlerV1 := handlers.NewPoliciesCreate(wrappedStore, policyMapperV1, validator,
+		policyGuard, quotaGuard, errorResponse)
+	createPolicyHandlerV0 := handlers.NewPoliciesCreate(wrappedStore, policyMapperV0, validator,
+		policyGuard, quotaGuard, errorResponse)
 
-	createPolicyHandlerV0 := &handlers.PoliciesCreate{
-		Store:         wrappedStore,
-		Mapper:        policyMapperV0,
-		Validator:     validator,
-		PolicyGuard:   policyGuard,
-		QuotaGuard:    quotaGuard,
-		ErrorResponse: errorResponse,
-	}
+	deletePolicyHandlerV1 := handlers.NewPoliciesDelete(wrappedStore, policyMapperV1, validator,
+		policyGuard, errorResponse)
+	deletePolicyHandlerV0 := handlers.NewPoliciesDelete(wrappedStore, policyMapperV0, validator,
+		policyGuard, errorResponse)
 
-	deletePolicyHandlerV1 := &handlers.PoliciesDelete{
-		Store:         wrappedStore,
-		Mapper:        policyMapperV1,
-		Validator:     validator,
-		PolicyGuard:   policyGuard,
-		ErrorResponse: errorResponse,
-	}
+	policiesIndexHandlerV1 := handlers.NewPoliciesIndex(wrappedStore, policyMapperV1, policyFilter, errorResponse)
+	policiesIndexHandlerV0 := handlers.NewPoliciesIndex(wrappedStore, policyMapperV0, policyFilter, errorResponse)
 
-	deletePolicyHandlerV0 := &handlers.PoliciesDelete{
-		Store:         wrappedStore,
-		Mapper:        policyMapperV0,
-		Validator:     validator,
-		PolicyGuard:   policyGuard,
-		ErrorResponse: errorResponse,
-	}
+	policyCleaner := cleaner.NewPolicyCleaner(logger.Session("policy-cleaner"), wrappedStore, uaaClient,
+		ccClient, 100, time.Duration(5)*time.Second)
 
-	policiesIndexHandlerV1 := &handlers.PoliciesIndex{
-		Store:         wrappedStore,
-		Mapper:        policyMapperV1,
-		PolicyFilter:  policyFilter,
-		ErrorResponse: errorResponse,
-	}
+	policiesCleanupHandler := handlers.NewPoliciesCleanup(policyMapperV1, policyCleaner, errorResponse)
 
-	policiesIndexHandlerV0 := &handlers.PoliciesIndex{
-		Store:         wrappedStore,
-		Mapper:        policyMapperV0,
-		PolicyFilter:  policyFilter,
-		ErrorResponse: errorResponse,
-	}
+	tagsIndexHandler := handlers.NewTagsIndex(wrappedStore, marshal.MarshalFunc(json.Marshal), errorResponse)
 
-	policyCleaner := &cleaner.PolicyCleaner{
-		Logger:         logger.Session("policy-cleaner"),
-		Store:          wrappedStore,
-		UAAClient:      uaaClient,
-		CCClient:       ccClient,
-		RequestTimeout: time.Duration(5) * time.Second,
-	}
+	internalPoliciesHandlerV0 := handlers.NewPoliciesIndexInternal(logger, wrappedStore,
+		policyMapperV0Internal, errorResponse)
+	internalPoliciesHandlerV1 := handlers.NewPoliciesIndexInternal(logger, wrappedStore,
+		policyMapperV1, errorResponse)
 
-	policiesCleanupHandler := &handlers.PoliciesCleanup{
-		Mapper:        policyMapperV1,
-		PolicyCleaner: policyCleaner,
-		ErrorResponse: errorResponse,
-	}
+	healthHandler := handlers.NewHealth(wrappedStore, errorResponse)
 
-	tagsIndexHandler := &handlers.TagsIndex{
-		Store:         wrappedStore,
-		Marshaler:     marshal.MarshalFunc(json.Marshal),
-		ErrorResponse: errorResponse,
-	}
+	authAdmin := handlers.NewAuthenticator(uaaClient, []string{"network.admin"}, errorResponse, true)
+	authWrite := handlers.NewAuthenticator(uaaClient, []string{"network.admin", "network.write"},
+		errorResponse, !conf.EnableSpaceDeveloperSelfService)
 
-	internalPoliciesHandlerV0 := &handlers.PoliciesIndexInternal{
-		Logger:        logger.Session("policies-index-internal"),
-		Store:         wrappedStore,
-		Mapper:        policyMapperV0Internal,
-		ErrorResponse: errorResponse,
-	}
-
-	internalPoliciesHandlerV1 := &handlers.PoliciesIndexInternal{
-		Logger:        logger.Session("policies-index-internal"),
-		Store:         wrappedStore,
-		Mapper:        policyMapperV1,
-		ErrorResponse: errorResponse,
-	}
-
-	healthHandler := &handlers.Health{
-		Store:         wrappedStore,
+	checkVersionWrapper := &handlers.CheckVersionWrapper{
 		ErrorResponse: errorResponse,
 	}
 
@@ -287,76 +224,33 @@ func main() {
 		return metricsWrapper.Wrap(handler)
 	}
 
-	type loggableHandler interface {
-		ServeHTTP(logger lager.Logger, w http.ResponseWriter, r *http.Request)
-	}
-	logWrap := func(handler loggableHandler) http.Handler {
-		return middleware.LogWrap(logger, handler.ServeHTTP)
+	logWrap := func(handler middleware.LoggableHandlerFunc) http.Handler {
+		return middleware.LogWrap(logger, handler)
 	}
 
-	authenticator := handlers.Authenticator{
-		Client:        uaaClient,
-		Scopes:        []string{"network.admin"},
-		ErrorResponse: errorResponse,
-		ScopeChecking: true,
-	}
-
-	networkWriteAuthenticator := handlers.Authenticator{
-		Client:        uaaClient,
-		Scopes:        []string{"network.admin", "network.write"},
-		ErrorResponse: errorResponse,
-		ScopeChecking: !conf.EnableSpaceDeveloperSelfService,
-	}
-	authAdmin := func(handler handlers.AuthenticatedHandler) middleware.LoggableHandlerFunc {
-		return authenticator.Wrap(handler)
-	}
-	authWrite := func(handler handlers.AuthenticatedHandler) middleware.LoggableHandlerFunc {
-		return networkWriteAuthenticator.Wrap(handler)
-	}
-
-	checkVersionWrapper := &handlers.CheckVersionWrapper{
-		ErrorResponse: errorResponse,
+	versionLogWrap := func(logger lager.Logger, v1Handler, v0Handler middleware.LoggableHandlerFunc) http.Handler {
+		return middleware.LogWrap(logger,
+			checkVersionWrapper.CheckVersion(map[string]middleware.LoggableHandlerFunc{
+				"v1": v1Handler,
+				"v0": v0Handler,
+			}))
 	}
 
 	externalHandlers := rata.Handlers{
-		"uptime": metricsWrap("Uptime", logWrap(uptimeHandler)),
-		"health": metricsWrap("Health", logWrap(healthHandler)),
-		"create_policies": metricsWrap("CreatePolicies", middleware.LogWrap(logger,
-			checkVersionWrapper.CheckVersion(map[string]middleware.LoggableHandlerFunc{
-				"v1": authWrite(createPolicyHandlerV1),
-				"v0": authWrite(createPolicyHandlerV0),
-			}),
-		)),
-		"delete_policies": metricsWrap("DeletePolicies", middleware.LogWrap(logger,
-			checkVersionWrapper.CheckVersion(map[string]middleware.LoggableHandlerFunc{
-				"v1": authWrite(deletePolicyHandlerV1),
-				"v0": authWrite(deletePolicyHandlerV0),
-			}),
-		)),
-		"policies_index": metricsWrap("PoliciesIndex", middleware.LogWrap(logger,
-			checkVersionWrapper.CheckVersion(map[string]middleware.LoggableHandlerFunc{
-				"v1": authWrite(policiesIndexHandlerV1),
-				"v0": authWrite(policiesIndexHandlerV0),
-			}),
-		)),
-		"cleanup": metricsWrap("Cleanup", middleware.LogWrap(logger,
-			checkVersionWrapper.CheckVersion(map[string]middleware.LoggableHandlerFunc{
-				"v1": authAdmin(policiesCleanupHandler),
-				"v0": authAdmin(policiesCleanupHandler),
-			}),
-		)),
-		"tags_index": metricsWrap("TagsIndex", middleware.LogWrap(logger,
-			checkVersionWrapper.CheckVersion(map[string]middleware.LoggableHandlerFunc{
-				"v1": authAdmin(tagsIndexHandler),
-				"v0": authAdmin(tagsIndexHandler),
-			}),
-		)),
-		"whoami": metricsWrap("WhoAmI", middleware.LogWrap(logger,
-			checkVersionWrapper.CheckVersion(map[string]middleware.LoggableHandlerFunc{
-				"v1": authAdmin(whoamiHandler),
-				"v0": authAdmin(whoamiHandler),
-			}),
-		)),
+		"uptime": metricsWrap("Uptime", logWrap(uptimeHandler.ServeHTTP)),
+		"health": metricsWrap("Health", logWrap(healthHandler.ServeHTTP)),
+		"create_policies": metricsWrap("CreatePolicies",
+			versionLogWrap(logger, authWrite.Wrap(createPolicyHandlerV1), authWrite.Wrap(createPolicyHandlerV0))),
+		"delete_policies": metricsWrap("DeletePolicies",
+			versionLogWrap(logger, authWrite.Wrap(deletePolicyHandlerV1), authWrite.Wrap(deletePolicyHandlerV0))),
+		"policies_index": metricsWrap("PoliciesIndex",
+			versionLogWrap(logger, authWrite.Wrap(policiesIndexHandlerV1), authWrite.Wrap(policiesIndexHandlerV0))),
+		"cleanup": metricsWrap("Cleanup",
+			versionLogWrap(logger, authAdmin.Wrap(policiesCleanupHandler), authAdmin.Wrap(policiesCleanupHandler))),
+		"tags_index": metricsWrap("TagsIndex",
+			versionLogWrap(logger, authAdmin.Wrap(tagsIndexHandler), authAdmin.Wrap(tagsIndexHandler))),
+		"whoami": metricsWrap("WhoAmI",
+			versionLogWrap(logger, authAdmin.Wrap(whoamiHandler), authAdmin.Wrap(whoamiHandler))),
 	}
 
 	err = dropsonde.Initialize(conf.MetronAddress, dropsondeOrigin)

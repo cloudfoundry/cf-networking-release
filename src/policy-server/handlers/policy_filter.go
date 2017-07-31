@@ -28,6 +28,14 @@ type PolicyFilter struct {
 	ChunkSize int
 }
 
+func NewPolicyFilter(uaaClient uaaClient, ccClient ccClient, chunkSize int) *PolicyFilter {
+	return &PolicyFilter{
+		CCClient:  ccClient,
+		UAAClient: uaaClient,
+		ChunkSize: chunkSize,
+	}
+}
+
 func (f *PolicyFilter) FilterPolicies(policies []store.Policy, userToken uaa_client.CheckTokenResponse) ([]store.Policy, error) {
 	for _, scope := range userToken.Scope {
 		if scope == "network.admin" {

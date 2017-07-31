@@ -29,6 +29,14 @@ type PoliciesCleanup struct {
 	ErrorResponse errorResponse
 }
 
+func NewPoliciesCleanup(mapper api.PolicyMapper, policyCleaner policyCleaner, errorResponse errorResponse) *PoliciesCleanup {
+	return &PoliciesCleanup{
+		Mapper:        mapper,
+		PolicyCleaner: policyCleaner,
+		ErrorResponse: errorResponse,
+	}
+}
+
 func (h *PoliciesCleanup) ServeHTTP(logger lager.Logger, w http.ResponseWriter, req *http.Request, tokenData uaa_client.CheckTokenResponse) {
 	logger = logger.Session("cleanup-policies")
 	policies, err := h.PolicyCleaner.DeleteStalePolicies()

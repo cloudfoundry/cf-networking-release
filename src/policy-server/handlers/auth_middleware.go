@@ -29,6 +29,15 @@ type Authenticator struct {
 	ScopeChecking bool
 }
 
+func NewAuthenticator(client UAAClient, scopes []string, errorResponse errorResponse, scopeChecking bool) *Authenticator {
+	return &Authenticator{
+		Client:        client,
+		Scopes:        scopes,
+		ErrorResponse: errorResponse,
+		ScopeChecking: scopeChecking,
+	}
+}
+
 //go:generate counterfeiter -o fakes/authenticated_handler.go --fake-name AuthenticatedHandler . AuthenticatedHandler
 type AuthenticatedHandler interface {
 	ServeHTTP(logger lager.Logger, response http.ResponseWriter, request *http.Request, tokenData uaa_client.CheckTokenResponse)

@@ -31,6 +31,18 @@ type PoliciesCreate struct {
 	ErrorResponse errorResponse
 }
 
+func NewPoliciesCreate(store dataStore, mapper api.PolicyMapper, validator validator,
+	policyGuard policyGuard, quotaGuard quotaGuard, errorResponse errorResponse) *PoliciesCreate {
+	return &PoliciesCreate{
+		Store:         store,
+		Mapper:        mapper,
+		Validator:     validator,
+		PolicyGuard:   policyGuard,
+		QuotaGuard:    quotaGuard,
+		ErrorResponse: errorResponse,
+	}
+}
+
 func (h *PoliciesCreate) ServeHTTP(logger lager.Logger, w http.ResponseWriter, req *http.Request, tokenData uaa_client.CheckTokenResponse) {
 	logger = logger.Session("create-policies")
 

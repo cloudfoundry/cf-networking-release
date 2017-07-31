@@ -11,6 +11,13 @@ type PolicyGuard struct {
 	UAAClient uaaClient
 }
 
+func NewPolicyGuard(uaaClient uaaClient, ccClient ccClient) *PolicyGuard {
+	return &PolicyGuard{
+		CCClient:  ccClient,
+		UAAClient: uaaClient,
+	}
+}
+
 func (g *PolicyGuard) CheckAccess(policies []store.Policy, userToken uaa_client.CheckTokenResponse) (bool, error) {
 	for _, scope := range userToken.Scope {
 		if scope == "network.admin" {

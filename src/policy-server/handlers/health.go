@@ -11,6 +11,13 @@ type Health struct {
 	ErrorResponse errorResponse
 }
 
+func NewHealth(store dataStore, errorResponse errorResponse) *Health {
+	return &Health{
+		Store:         store,
+		ErrorResponse: errorResponse,
+	}
+}
+
 func (h *Health) ServeHTTP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
 	logger = logger.Session("health")
 	err := h.Store.CheckDatabase()

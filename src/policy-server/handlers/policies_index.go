@@ -22,6 +22,16 @@ type PoliciesIndex struct {
 	ErrorResponse errorResponse
 }
 
+func NewPoliciesIndex(store dataStore, mapper api.PolicyMapper, policyFilter policyFilter,
+	errorResponse errorResponse) *PoliciesIndex {
+	return &PoliciesIndex{
+		Store:         store,
+		Mapper:        mapper,
+		PolicyFilter:  policyFilter,
+		ErrorResponse: errorResponse,
+	}
+}
+
 func (h *PoliciesIndex) ServeHTTP(logger lager.Logger, w http.ResponseWriter, req *http.Request, userToken uaa_client.CheckTokenResponse) {
 	logger = logger.Session("index-policies")
 	queryValues := req.URL.Query()

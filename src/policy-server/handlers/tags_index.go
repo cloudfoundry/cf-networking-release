@@ -4,15 +4,24 @@ import (
 	"net/http"
 	"policy-server/uaa_client"
 
+	"policy-server/api"
+
 	"code.cloudfoundry.org/cf-networking-helpers/marshal"
 	"code.cloudfoundry.org/lager"
-	"policy-server/api"
 )
 
 type TagsIndex struct {
 	Store         dataStore
 	Marshaler     marshal.Marshaler
 	ErrorResponse errorResponse
+}
+
+func NewTagsIndex(store dataStore, marshaler marshal.Marshaler, errorResponse errorResponse) *TagsIndex {
+	return &TagsIndex{
+		Store:         store,
+		Marshaler:     marshaler,
+		ErrorResponse: errorResponse,
+	}
 }
 
 func (h *TagsIndex) ServeHTTP(logger lager.Logger, w http.ResponseWriter, req *http.Request, _ uaa_client.CheckTokenResponse) {

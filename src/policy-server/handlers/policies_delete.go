@@ -12,11 +12,22 @@ import (
 )
 
 type PoliciesDelete struct {
-	Mapper        api.PolicyMapper
 	Store         dataStore
+	Mapper        api.PolicyMapper
 	Validator     validator
 	PolicyGuard   policyGuard
 	ErrorResponse errorResponse
+}
+
+func NewPoliciesDelete(store dataStore, mapper api.PolicyMapper, validator validator,
+	policyGuard policyGuard, errorResponse errorResponse) *PoliciesDelete {
+	return &PoliciesDelete{
+		Store:         store,
+		Mapper:        mapper,
+		Validator:     validator,
+		PolicyGuard:   policyGuard,
+		ErrorResponse: errorResponse,
+	}
 }
 
 func (h *PoliciesDelete) ServeHTTP(logger lager.Logger, w http.ResponseWriter, req *http.Request, tokenData uaa_client.CheckTokenResponse) {
