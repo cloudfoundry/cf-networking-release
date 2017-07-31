@@ -10,21 +10,38 @@ cf_networking_overrides:
     release: cf-networking
   - name: silk-daemon
     release: cf-networking
+    consumes:
+      cf_network: {from: cf_network_z1}
   - name: netmon
     release: cf-networking
   - name: vxlan-policy-agent
     release: cf-networking
-  bbs_templates:
+  bbs_templates_z1:
   - name: silk-controller
     release: cf-networking
+    provides:
+      cf_network: {as: cf_network_z1}
+  bbs_templates_z2:
+  - name: silk-controller
+    release: cf-networking
+    provides:
+      cf_network: {as: cf_network_z2}
+  bbs_templates_z3:
+  - name: silk-controller
+    release: cf-networking
+    provides:
+      cf_network: {as: cf_network_z3}
   bbs_consul_properties:
     agent:
       services:
-        silk-controller: {}
+        silk-controller:
+          name: connectivity-server
   properties:
     cf_networking:
+      network: "10.250.0.0/16"
       cni_config_dir: /var/vcap/jobs/silk-cni/config/cni
       silk_controller:
+        hostname: connectivity-server.service.cf.internal
         database:
           username: networkconnectivityadmin
           password: admin
