@@ -8,9 +8,10 @@ var migration_v0002 = map[string][]string{
 		`UPDATE destinations SET end_port = port;`,
 		`CREATE PROCEDURE drop_destination_index()
 BEGIN
+ SELECT DATABASE() FROM DUAL INTO @databaseName;
  SELECT CONSTRAINT_NAME INTO @name
  FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE t1
- WHERE TABLE_NAME='destinations' AND COLUMN_NAME= 'port';
+ WHERE TABLE_NAME='destinations' AND COLUMN_NAME= 'port' AND TABLE_SCHEMA=@databaseName;
 
  SET @query = CONCAT('ALTER TABLE destinations DROP INDEX ', @name);
 
@@ -19,6 +20,7 @@ BEGIN
  EXECUTE stmt;
 
  DEALLOCATE PREPARE stmt;
+ SET @databaseName = NULL;
  SET @query = NULL;
  SET @name = NULL;
 
@@ -42,4 +44,3 @@ END;`,
 		`ALTER TABLE destinations ADD CONSTRAINT unique_destination UNIQUE (group_id, start_port, end_port, protocol);`,
 	},
 }
-

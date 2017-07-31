@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"policy-server/store/fakes"
+	"policy-server/store/helpers"
 	"policy-server/store/migrations"
 	migrationsFakes "policy-server/store/migrations/fakes"
 
@@ -77,11 +78,11 @@ var _ = Describe("migrations", func() {
 					By("checking the destinations, groups, and policies tables were created")
 
 					By("checking there's a constraint on group_id, port, protocol", func() {
-						rows, err := realDb.Query(`
+						rows, err := realDb.Query(helpers.RebindForSQLDialect(`
 							select CONSTRAINT_NAME, COLUMN_NAME
 							from INFORMATION_SCHEMA.KEY_COLUMN_USAGE t1
-							where TABLE_NAME='destinations'
-						`)
+							where TABLE_NAME='destinations' and TABLE_SCHEMA=?
+						`, realDb.DriverName()), dbConf.DatabaseName)
 
 						Expect(err).NotTo(HaveOccurred())
 						actualColumnUsageRows := scanColumnUsageRows(rows)
@@ -156,11 +157,11 @@ var _ = Describe("migrations", func() {
 					Expect(err).NotTo(HaveOccurred())
 					Expect(numMigrations).To(Equal(2))
 
-					rows, err := realDb.Query(`
-						select CONSTRAINT_NAME, COLUMN_NAME
-						from INFORMATION_SCHEMA.KEY_COLUMN_USAGE t1
-						where TABLE_NAME='destinations'
-					`)
+					rows, err := realDb.Query(helpers.RebindForSQLDialect(`
+							select CONSTRAINT_NAME, COLUMN_NAME
+							from INFORMATION_SCHEMA.KEY_COLUMN_USAGE t1
+							where TABLE_NAME='destinations' and TABLE_SCHEMA=?
+						`, realDb.DriverName()), dbConf.DatabaseName)
 					Expect(err).NotTo(HaveOccurred())
 
 					By("checking there's a constraint on group_id, start_port, end_port, protocol")
