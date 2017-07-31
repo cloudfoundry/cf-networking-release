@@ -13,6 +13,7 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 )
@@ -72,10 +73,10 @@ var _ = Describe("Policy Cleanup", func() {
 
 		})
 
-		It("responds with a 200 and lists all stale policies", func() {
+		cleanupPoliciesSucceeds := func(version string) {
 			resp := helpers.MakeAndDoRequest(
 				"POST",
-				fmt.Sprintf("http://%s:%d/networking/v1/external/policies/cleanup", conf.ListenHost, conf.ListenPort),
+				fmt.Sprintf("http://%s:%d/networking/%s/external/policies/cleanup", conf.ListenHost, conf.ListenPort, version),
 				nil,
 				nil,
 			)
@@ -96,7 +97,12 @@ var _ = Describe("Policy Cleanup", func() {
 			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
 				HaveName("StoreDeleteSuccessTime"),
 			))
-		})
+		}
+
+		DescribeTable("cleanup policies succeeds", cleanupPoliciesSucceeds,
+			Entry("v1", "v1"),
+			Entry("v0", "v0"),
+		)
 	})
 
 	Describe("Automatic Stale Policy Cleanup", func() {
