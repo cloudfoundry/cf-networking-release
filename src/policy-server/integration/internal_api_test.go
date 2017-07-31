@@ -15,6 +15,7 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 )
@@ -58,17 +59,7 @@ var _ = Describe("Internal API", func() {
 		conf = policyServerConfs[0]
 
 		address = fmt.Sprintf("%s:%d", conf.ListenHost, conf.ListenPort)
-	})
 
-	AfterEach(func() {
-		stopPolicyServers(sessions)
-
-		testsupport.RemoveDatabase(dbConf)
-
-		Expect(fakeMetron.Close()).To(Succeed())
-	})
-
-	It("Lists policies and associated tags", func() {
 		body := strings.NewReader(`{ "policies": [
 				 {"source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "ports": { "start": 8080, "end": 8080 } } },
 				 {"source": { "id": "app3" }, "destination": { "id": "app1", "protocol": "tcp", "ports": { "start": 9999, "end": 9999 } } },
@@ -84,31 +75,27 @@ var _ = Describe("Internal API", func() {
 			body,
 		)
 
+	})
+
+	AfterEach(func() {
+		stopPolicyServers(sessions)
+
+		testsupport.RemoveDatabase(dbConf)
+
+		Expect(fakeMetron.Close()).To(Succeed())
+	})
+
+	listPoliciesAndTagsSucceeds := func(version, expectedResponse string) {
 		resp := helpers.MakeAndDoHTTPSRequest(
 			"GET",
-			fmt.Sprintf("https://%s:%d/networking/v0/internal/policies?id=app1,app2", conf.ListenHost, conf.InternalListenPort),
+			fmt.Sprintf("https://%s:%d/networking/%s/internal/policies?id=app1,app2", conf.ListenHost, conf.InternalListenPort, version),
 			nil,
 			tlsConfig,
 		)
 		Expect(resp.StatusCode).To(Equal(http.StatusOK))
 		responseString, err := ioutil.ReadAll(resp.Body)
 		Expect(err).NotTo(HaveOccurred())
-		Expect(responseString).To(MatchJSON(`{
-			"total_policies": 2,
-			"policies": [
-			{"source": { "id": "app1", "tag": "0001" }, "destination": { "id": "app2", "tag": "0002", "protocol": "tcp", "port": 8080, "ports": {"start": 8080, "end": 8080 } } },
-			{"source": { "id": "app3", "tag": "0003" }, "destination": { "id": "app1", "tag": "0001", "protocol": "tcp", "port": 9999, "ports": {"start": 9999, "end": 9999 } } }
-			]}
-		`))
-	})
-
-	It("emits metrics about durations", func() {
-		resp := helpers.MakeAndDoHTTPSRequest(
-			"GET",
-			fmt.Sprintf("https://%s:%d/networking/v0/internal/policies?id=app1,app2", conf.ListenHost, conf.InternalListenPort),
-			nil,
-			tlsConfig,
-		)
+		Expect(responseString).To(MatchJSON(expectedResponse))
 		Expect(resp.StatusCode).To(Equal(http.StatusOK))
 		Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
 			HaveName("InternalPoliciesRequestTime"),
@@ -116,5 +103,24 @@ var _ = Describe("Internal API", func() {
 		Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
 			HaveName("StoreAllSuccessTime"),
 		))
-	})
+	}
+
+	v1Response := `{"total_policies": 3,
+			"policies": [
+			{"source": { "id": "app1", "tag": "0001" }, "destination": { "id": "app2", "tag": "0002", "protocol": "tcp", "ports": {"start": 8080, "end": 8080 } } },
+			{"source": { "id": "app3", "tag": "0003" }, "destination": { "id": "app1", "tag": "0001", "protocol": "tcp", "ports": {"start": 9999, "end": 9999 } } },
+			{"source": { "id": "app3", "tag": "0003" }, "destination": { "id": "app2", "tag": "0002", "protocol": "tcp", "ports": { "start": 3333, "end": 4444 } } }
+			]}`
+
+	v0Response := `{"total_policies": 2,
+			"policies": [
+			{"source": { "id": "app1", "tag": "0001" }, "destination": { "id": "app2", "tag": "0002", "protocol": "tcp", "port": 8080, "ports": {"start": 8080, "end": 8080 } } },
+			{"source": { "id": "app3", "tag": "0003" }, "destination": { "id": "app1", "tag": "0001", "protocol": "tcp", "port": 9999, "ports": {"start": 9999, "end": 9999 } } }
+			]}`
+
+	DescribeTable("listing policies and tags succeeds", listPoliciesAndTagsSucceeds,
+		Entry("v1", "v1", v1Response),
+		Entry("v0", "v0", v0Response),
+	)
+
 })

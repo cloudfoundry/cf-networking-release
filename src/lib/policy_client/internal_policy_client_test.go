@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"lib/policy_client"
-	"policy-server/api/api_v0_internal"
+	"policy-server/api"
 
 	hfakes "code.cloudfoundry.org/cf-networking-helpers/fakes"
 
@@ -28,7 +28,7 @@ var _ = Describe("InternalClient", func() {
 	Describe("GetPolicies", func() {
 		BeforeEach(func() {
 			jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
-				respBytes := []byte(`{ "policies": [ {"source": { "id": "some-app-guid", "tag": "BEEF" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090, "ports": { "start": 8090, "end": 8090 } } } ] }`)
+				respBytes := []byte(`{ "policies": [ {"source": { "id": "some-app-guid", "tag": "BEEF" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8090, "end": 8090 } } } ] }`)
 				json.Unmarshal(respBytes, respData)
 				return nil
 			}
@@ -40,19 +40,18 @@ var _ = Describe("InternalClient", func() {
 			Expect(jsonClient.DoCallCount()).To(Equal(1))
 			method, route, reqData, _, token := jsonClient.DoArgsForCall(0)
 			Expect(method).To(Equal("GET"))
-			Expect(route).To(Equal("/networking/v0/internal/policies"))
+			Expect(route).To(Equal("/networking/v1/internal/policies"))
 			Expect(reqData).To(BeNil())
 
-			Expect(policies).To(Equal([]api_v0_internal.Policy{
+			Expect(policies).To(Equal([]api.Policy{
 				{
-					Source: api_v0_internal.Source{
+					Source: api.Source{
 						ID:  "some-app-guid",
 						Tag: "BEEF",
 					},
-					Destination: api_v0_internal.Destination{
-						ID:   "some-other-app-guid",
-						Port: 8090,
-						Ports: api_v0_internal.Ports{
+					Destination: api.Destination{
+						ID: "some-other-app-guid",
+						Ports: api.Ports{
 							Start: 8090,
 							End:   8090,
 						},
@@ -90,19 +89,18 @@ var _ = Describe("InternalClient", func() {
 			Expect(jsonClient.DoCallCount()).To(Equal(1))
 			method, route, reqData, _, token := jsonClient.DoArgsForCall(0)
 			Expect(method).To(Equal("GET"))
-			Expect(route).To(Equal("/networking/v0/internal/policies?id=some-app-guid,some-other-app-guid"))
+			Expect(route).To(Equal("/networking/v1/internal/policies?id=some-app-guid,some-other-app-guid"))
 			Expect(reqData).To(BeNil())
 
-			Expect(policies).To(Equal([]api_v0_internal.Policy{
+			Expect(policies).To(Equal([]api.Policy{
 				{
-					Source: api_v0_internal.Source{
+					Source: api.Source{
 						ID:  "some-app-guid",
 						Tag: "BEEF",
 					},
-					Destination: api_v0_internal.Destination{
-						ID:   "some-other-app-guid",
-						Port: 8090,
-						Ports: api_v0_internal.Ports{
+					Destination: api.Destination{
+						ID: "some-other-app-guid",
+						Ports: api.Ports{
 							Start: 8090,
 							End:   8090,
 						},
@@ -152,7 +150,7 @@ var _ = Describe("InternalClient", func() {
 			Expect(jsonClient.DoCallCount()).To(Equal(1))
 			method, route, reqData, _, token := jsonClient.DoArgsForCall(0)
 			Expect(method).To(Equal("GET"))
-			Expect(route).To(Equal("/networking/v0/internal/healthcheck"))
+			Expect(route).To(Equal("/networking/v1/internal/healthcheck"))
 			Expect(reqData).To(BeNil())
 			Expect(token).To(BeEmpty())
 		})
@@ -167,5 +165,4 @@ var _ = Describe("InternalClient", func() {
 			})
 		})
 	})
-
 })

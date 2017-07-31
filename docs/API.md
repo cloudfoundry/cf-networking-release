@@ -15,7 +15,7 @@ Use the `cf curl` command as admin
 
 Example
 ```sh
-$ cf curl /networking/v0/external/policies
+$ cf curl /networking/v1/external/policies
 {"total_policies":2,"policies":[{"source":{...}]}
 ```
 
@@ -25,7 +25,7 @@ When using curl the token must be explicitly provided in the `Authorization` hea
 Example
 ```sh
 $ export TOKEN=`cf oauth-token` # as CF admin
-$ curl http://api.bosh-lite.com/networking/v0/external/policies -H "Authorization: $TOKEN"
+$ curl http://api.bosh-lite.com/networking/v1/external/policies -H "Authorization: $TOKEN"
 {"total_policies":2,"policies":[{"source":{...}]}
 ```
 
@@ -33,15 +33,15 @@ $ curl http://api.bosh-lite.com/networking/v0/external/policies -H "Authorizatio
 
 | Method | Path | Arguments | Request Body | Description|
 | :----- | :--- | :-------- | :----------- | :----------- |
-| GET | /networking/v0/external/policies | [see below](#get-networkingv0externalpolicies) | - | List Policies |
-| POST | /networking/v0/external/policies | - | [see below](#post-networkingv0externalpolicies)| Create Policies |
-| POST | /networking/v0/external/policies/delete | - | [see below](#post-networkingv0externalpoliciesdelete)| Delete Policies |
-| GET | /networking/v0/external/tags | - | - | List all tag and `id` mappings |
+| GET | /networking/v1/external/policies | [see below](#get-networkingv1externalpolicies) | - | List Policies |
+| POST | /networking/v1/external/policies | - | [see below](#post-networkingv1externalpolicies)| Create Policies |
+| POST | /networking/v1/external/policies/delete | - | [see below](#post-networkingv1externalpoliciesdelete)| Delete Policies |
+| GET | /networking/v1/external/tags | - | - | List all tag and `id` mappings |
 
 Notes:
 A unique tag is assigned to a policy_group_id when policies are created.
 
-### GET /networking/v0/external/policies
+### GET /networking/v1/external/policies
 #### Arguments:
 
 [optionally] `id`: comma-separated policy_group_id values
@@ -61,7 +61,10 @@ Will return only the policies which include the given policy_group_id either as 
       "destination": {
         "id": "38f08df0-19df-4439-b4e9-61096d4301ea",
         "protocol": "tcp",
-        "port": 1234
+        "ports": {
+          "start": 1234,
+          "end": 1235
+        }
       }
     },
     {
@@ -71,14 +74,17 @@ Will return only the policies which include the given policy_group_id either as 
       "destination": {
         "id": "308e7ef1-63f1-4a6c-978c-2e527cbb1c36",
         "protocol": "tcp",
-        "port": 1234
+        "ports": {
+          "start": 1234,
+          "end": 1235
+        }
       }
     }
   ]
 }
 ```
 
-### POST /networking/v0/external/policies
+### POST /networking/v1/external/policies
 
 #### Request Body:
 
@@ -92,7 +98,10 @@ Will return only the policies which include the given policy_group_id either as 
       "destination": {
         "id": "38f08df0-19df-4439-b4e9-61096d4301ea",
         "protocol": "tcp",
-        "port": 1234
+        "ports": {
+          "start": 1234,
+          "end": 1235
+        }
       }
     },
     {
@@ -102,7 +111,10 @@ Will return only the policies which include the given policy_group_id either as 
       "destination": {
         "id": "308e7ef1-63f1-4a6c-978c-2e527cbb1c36",
         "protocol": "tcp",
-        "port": 1234
+        "ports": {
+          "start": 1234,
+          "end": 1235
+        }
       }
     }
   ]
@@ -114,13 +126,16 @@ Will return only the policies which include the given policy_group_id either as 
 | source.id | Y | The source `policy_group_id`
 | destination.id | Y | The destination `policy_group_id`
 | destination.protocol | Y | The protocol (tcp or udp)
-| destination.port | Y | The destination port (1 - 65535)
+| destination.ports | Y | The destination port range
+| destination.ports.start | Y | The destination start port (1 - 65535)
+| destination.ports.end | Y | The destination end port (1 - 65535)
 
 #### Response Status Codes:
 - 200 (successful)
 - 400 (invalid request)
+- 406 (unsupported API version)
 
-### POST /networking/v0/external/policies/delete
+### POST /networking/v1/external/policies/delete
 
 #### Request Body:
 
@@ -134,7 +149,10 @@ Will return only the policies which include the given policy_group_id either as 
       "destination": {
         "id": "38f08df0-19df-4439-b4e9-61096d4301ea",
         "protocol": "tcp",
-        "port": 1234
+        "ports": {
+          "start": 1234,
+          "end": 1235
+        }
       }
     },
     {
@@ -144,7 +162,10 @@ Will return only the policies which include the given policy_group_id either as 
       "destination": {
         "id": "308e7ef1-63f1-4a6c-978c-2e527cbb1c36",
         "protocol": "tcp",
-        "port": 1234
+        "ports": {
+          "start": 1234,
+          "end": 1235
+        }
       }
     }
   ]
@@ -156,13 +177,16 @@ Will return only the policies which include the given policy_group_id either as 
 | source.id | Y | The source `policy_group_id`
 | destination.id | Y | The destination `policy_group_id`
 | destination.protocol | Y | The protocol (tcp or udp)
-| destination.port | Y | The destination port (1 - 65535)
+| destination.ports | Y | The destination port range
+| destination.ports.start | Y | The destination start port (1 - 65535)
+| destination.ports.end | Y | The destination end port (1 - 65535)
 
 #### Response Status Codes:
 - 200 (successful)
 - 400 (invalid request)
+- 406 (unsupported API version)
 
-### GET /networking/v0/external/tags
+### GET /networking/v1/external/tags
 
 #### Response Body:
 

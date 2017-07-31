@@ -260,10 +260,17 @@ func main() {
 		ErrorResponse: errorResponse,
 	}
 
-	internalPoliciesHandler := &handlers.PoliciesIndexInternal{
+	internalPoliciesHandlerV0 := &handlers.PoliciesIndexInternal{
 		Logger:        logger.Session("policies-index-internal"),
 		Store:         wrappedStore,
 		Mapper:        policyMapperV0Internal,
+		ErrorResponse: errorResponse,
+	}
+
+	internalPoliciesHandlerV1 := &handlers.PoliciesIndexInternal{
+		Logger:        logger.Session("policies-index-internal"),
+		Store:         wrappedStore,
+		Mapper:        policyMapperV1,
 		ErrorResponse: errorResponse,
 	}
 
@@ -361,8 +368,8 @@ func main() {
 	externalServer := initExternalServer(conf, externalHandlers)
 	internalServer := initInternalServer(conf, metricsWrap("InternalPolicies", middleware.LogWrap(logger,
 		checkVersionWrapper.CheckVersion(map[string]middleware.LoggableHandlerFunc{
-			"v1": internalPoliciesHandler.ServeHTTP,
-			"v0": internalPoliciesHandler.ServeHTTP,
+			"v1": internalPoliciesHandlerV1.ServeHTTP,
+			"v0": internalPoliciesHandlerV0.ServeHTTP,
 		}),
 	)))
 	poller := initPoller(logger, conf, policyCleaner)

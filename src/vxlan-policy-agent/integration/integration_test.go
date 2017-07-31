@@ -351,7 +351,7 @@ func startAgent(binaryPath, configPath string) *gexec.Session {
 
 func startServer(serverListenAddr string, tlsConfig *tls.Config) ifrit.Process {
 	testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/networking/v0/internal/policies" {
+		if r.URL.Path == "/networking/v1/internal/policies" {
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte(`{"policies": [
 				{"source": {"id":"some-very-very-long-app-guid", "tag":"A"},
