@@ -26,6 +26,28 @@ To avoid forwarding both the kernel logs and the augmented logs from the `iptabl
 
 Doing so will ignore logs in `/var/log/kern.log` but will still forward the augmented logs produced by `iptables-logger`.
 
+## Log Volume and Performance
+
+In [our tests](https://docs.google.com/document/d/1LufBEE94d2FulPwxaP-JxeFTCxGiV68MVQV1wJmJxOc/edit), turning on IP tables logging
+had no significant impact on system performance.
+
+From our investigation, it appears that CPU capabilities are the bottleneck for application performance. Request failures start to occur at around the same request rate regardless of whether logging is enabled.
+
+Each iptables log line is approximately 630 bytes. This means 4000 log lines is roughly 2.5 MB.
+
+For example, a cell with applications that are collectively receiving 2000 requests/second will generate
+approximately 2.5 MB/second in logs, assuming each request creates two log lines (1 for DNS lookup and 1 for the actual request).
+
+## Rate Limiting
+
+### Denied logs
+Denied logs are rate-limited using the limit module of iptables. Each packet produces a log line until the rate limit for a given source/destination is reached. This rate limit is configured by `cf_networking.iptables_denied_logs_per_sec` on the `silk-cni` job.
+
+### Accepted logs
+Accepted logs use the conntrack module of iptables. A single log line exists per connection.
+
+The exception is logs for the UDP protocol, which are rate-limited using the limit module, similar to deny logs. The rate limit is configured by `iptables_accepted_udp_logs_per_sec` on the `silk-cni` and `vxlan-policy-agent` jobs.
+
 ## Sample outputs
 ### ASG allowed
 
@@ -196,14 +218,4 @@ WINDOW=27400 RES=0x00 SYN URGP=0 MARK=0x1
   }
 }
 ```
-
-## Types of logs
-
-### Denied logs
-Denied logs are rate-limited using the limit module of iptables. Each packet produces a log line until the rate limit for a given source/destination is reached. This rate limit is configured by `cf_networking.iptables_denied_logs_per_sec` on the `silk-cni` job.
-
-### Accepted logs
-Accepted logs use the conntrack module of iptables. A single log line exists per connection.
-
-The exception is logs for the UDP protocol, which are rate-limited using the limit module, similar to deny logs. The rate limit is configured by `iptables_accepted_udp_logs_per_sec` on the `silk-cni` and `vxlan-policy-agent` jobs.
 
