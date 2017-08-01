@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"os/exec"
+	"policy-server/api/api_v0"
 	"strings"
 	"time"
 
@@ -21,17 +22,11 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 	"github.com/pivotal-cf-experimental/rainmaker"
-	"policy-server/api"
 )
 
 const Timeout_Check = 20 * time.Minute
 
 const Time_Format = "15:04:05"
-
-type Ports struct {
-	StartPort  int
-	FinishPort int
-}
 
 var _ = Describe("how the container network performs at scale", func() {
 	Describe("scaling tests", func() {
@@ -39,7 +34,7 @@ var _ = Describe("how the container network performs at scale", func() {
 			proxyApps            []string
 			tickApps             []string
 			registryApp          string
-			ports                []Ports
+			ports                []int
 			policyClient         *policy_client.ExternalClient
 			testConfig           pusherConfig.Config
 			policyUpdateWaitTime time.Duration
@@ -68,12 +63,10 @@ var _ = Describe("how the container network performs at scale", func() {
 				tickApps = append(tickApps, fmt.Sprintf(testConfig.Prefix+"tick-%d", i))
 			}
 
-			ports = []Ports{
-				{8080, 8080 },
-				{7000, testConfig.ExtraListenPorts },
+			ports = []int{8080}
+			for i := 0; i < testConfig.ExtraListenPorts; i++ {
+				ports = append(ports, 7000+i)
 			}
-
-			//{"8080", fmt.Sprintf("%s-%s", "7000", strconv.Itoa(testConfig.ExtraListenPorts))}
 		})
 		runScalingTest := func() {
 			It("allows the user to configure policies", func(done Done) {
@@ -92,7 +85,7 @@ var _ = Describe("how the container network performs at scale", func() {
 
 				By(fmt.Sprintf("%s creating %d policies", ts(), len(proxyApps)*len(tickApps)*len(ports)))
 				policies := getPolicies(proxyApps, tickApps, ports)
-				Expect(policyClient.AddPolicies(getToken(), policies)).To(Succeed())
+				Expect(policyClient.AddPoliciesV0(getToken(), policies)).To(Succeed())
 
 				By(fmt.Sprintf("%s waiting %s for policies to be updated on cells", ts(), policyUpdateWaitTime))
 				time.Sleep(policyUpdateWaitTime)
@@ -110,10 +103,7 @@ var _ = Describe("how the container network performs at scale", func() {
 				time.Sleep(30 * time.Second)
 
 				By(fmt.Sprintf("%s deleting %d policies", ts(), len(proxyApps)*len(tickApps)*len(ports)))
-
-				v0Policies, err := policyClient.GetPolicies(getToken())
-				Expect(err).NotTo(HaveOccurred())
-				Expect(policyClient.DeletePolicies(getToken(), v0Policies)).To(Succeed())
+				Expect(policyClient.DeletePoliciesV0(getToken(), policies)).To(Succeed())
 
 				By(fmt.Sprintf("%s waiting %s for policies to be updated on cells", ts(), policyUpdateWaitTime))
 				time.Sleep(policyUpdateWaitTime)
@@ -170,32 +160,32 @@ var _ = Describe("how the container network performs at scale", func() {
 		var population []Connection
 		BeforeEach(func() {
 			population = []Connection{
-				{Source: "a", Dest: "da", FinishPort: 1, StartPort: 1},
-				{Source: "b", Dest: "db", FinishPort: 2, StartPort: 2},
-				{Source: "c", Dest: "dc", FinishPort: 3, StartPort: 3},
-				{Source: "d", Dest: "dd", FinishPort: 4, StartPort: 4},
-				{Source: "e", Dest: "de", FinishPort: 5, StartPort: 5},
-				{Source: "f", Dest: "df", FinishPort: 6, StartPort: 6},
-				{Source: "g", Dest: "dg", FinishPort: 7, StartPort: 7},
-				{Source: "h", Dest: "dh", FinishPort: 8, StartPort: 8},
-				{Source: "i", Dest: "di", FinishPort: 9, StartPort: 9},
-				{Source: "j", Dest: "dj", FinishPort: 0, StartPort: 0},
+				{Source: "a", Dest: "da", Port: 1},
+				{Source: "b", Dest: "db", Port: 2},
+				{Source: "c", Dest: "dc", Port: 3},
+				{Source: "d", Dest: "dd", Port: 4},
+				{Source: "e", Dest: "de", Port: 5},
+				{Source: "f", Dest: "df", Port: 6},
+				{Source: "g", Dest: "dg", Port: 7},
+				{Source: "h", Dest: "dh", Port: 8},
+				{Source: "i", Dest: "di", Port: 9},
+				{Source: "j", Dest: "dj", Port: 0},
 			}
 		})
 
 		It("does not modify population", func() {
 			sampleConnections(population, 90)
 			Expect(population).To(Equal([]Connection{
-				{Source: "a", Dest: "da", FinishPort: 1, StartPort: 1},
-				{Source: "b", Dest: "db", FinishPort: 2, StartPort: 2},
-				{Source: "c", Dest: "dc", FinishPort: 3, StartPort: 3},
-				{Source: "d", Dest: "dd", FinishPort: 4, StartPort: 4},
-				{Source: "e", Dest: "de", FinishPort: 5, StartPort: 5},
-				{Source: "f", Dest: "df", FinishPort: 6, StartPort: 6},
-				{Source: "g", Dest: "dg", FinishPort: 7, StartPort: 7},
-				{Source: "h", Dest: "dh", FinishPort: 8, StartPort: 8},
-				{Source: "i", Dest: "di", FinishPort: 9, StartPort: 9},
-				{Source: "j", Dest: "dj", FinishPort: 0, StartPort: 0},
+				{Source: "a", Dest: "da", Port: 1},
+				{Source: "b", Dest: "db", Port: 2},
+				{Source: "c", Dest: "dc", Port: 3},
+				{Source: "d", Dest: "dd", Port: 4},
+				{Source: "e", Dest: "de", Port: 5},
+				{Source: "f", Dest: "df", Port: 6},
+				{Source: "g", Dest: "dg", Port: 7},
+				{Source: "h", Dest: "dh", Port: 8},
+				{Source: "i", Dest: "di", Port: 9},
+				{Source: "j", Dest: "dj", Port: 0},
 			}))
 		})
 
@@ -282,19 +272,19 @@ func getGuids(srcAppNames, dstAppNames []string) ([]string, []string) {
 	return srcGuids, dstGuids
 }
 
-func getPolicies(srcList, dstList []string, dstPorts []Ports) []api.Policy {
+func getPolicies(srcList, dstList []string, dstPorts []int) []api_v0.Policy {
 	srcGuids, dstGuids := getGuids(srcList, dstList)
-	policies := []api.Policy{}
+	policies := []api_v0.Policy{}
 	for _, srcGuid := range srcGuids {
 		for _, dstGuid := range dstGuids {
 			for _, port := range dstPorts {
-				policies = append(policies, api.Policy{
-					Source: api.Source{
+				policies = append(policies, api_v0.Policy{
+					Source: api_v0.Source{
 						ID: srcGuid,
 					},
-					Destination: api.Destination{
+					Destination: api_v0.Destination{
 						ID:       dstGuid,
-						Ports:    api.Ports{Start: port.StartPort, End: port.FinishPort},
+						Port:     port,
 						Protocol: "tcp",
 					},
 				})
@@ -329,7 +319,7 @@ func runWithTimeout(operation string, timeout time.Duration, work func()) {
 type RegistryInstancesResponse struct {
 	Instances []struct {
 		ServiceName string `json:"service_name"`
-		Endpoint struct {
+		Endpoint    struct {
 			Value string `json:"value"`
 		} `json:"endpoint"`
 	} `json:"instances"`
@@ -406,18 +396,17 @@ func sampleConnections(population []Connection, samplePercent int) []Connection 
 }
 
 type Connection struct {
-	Source     string
-	Dest       string
-	StartPort  int
-	FinishPort int
+	Source string
+	Dest   string
+	Port   int
 }
 
-func connections(sourceApps, destApps []string, ports []Ports) []Connection {
+func connections(sourceApps, destApps []string, ports []int) []Connection {
 	var conns []Connection
 	for _, s := range sourceApps {
 		for _, d := range destApps {
 			for _, p := range ports {
-				conns = append(conns, Connection{Source: s, Dest: d, StartPort: p.StartPort, FinishPort: p.FinishPort})
+				conns = append(conns, Connection{Source: s, Dest: d, Port: p})
 			}
 		}
 	}
@@ -438,9 +427,7 @@ func assertConnectionSucceeds(conns []Connection, nProxies int, errs chan<- stri
 	}
 	parallelRunner.RunOnSlice(slice(conns), func(obj interface{}) {
 		conn := obj.(Connection)
-		for x := conn.StartPort; x < conn.FinishPort; x++ {
-			assertResponseContains(conn.Dest, x, conn.Source, "application_name", errs)
-		}
+		assertResponseContains(conn.Dest, conn.Port, conn.Source, "application_name", errs)
 	})
 }
 
@@ -450,9 +437,7 @@ func assertConnectionFails(conns []Connection, nProxies int, errs chan<- string)
 	}
 	parallelRunner.RunOnSlice(slice(conns), func(obj interface{}) {
 		conn := obj.(Connection)
-		for x := conn.StartPort; x < conn.FinishPort; x++ {
-			assertResponseContains(conn.Dest, x, conn.Source, "request failed", errs)
-		}
+		assertResponseContains(conn.Dest, conn.Port, conn.Source, "request failed", errs)
 	})
 }
 

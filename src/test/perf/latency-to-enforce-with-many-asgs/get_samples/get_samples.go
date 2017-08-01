@@ -9,7 +9,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
-	"policy-server/api"
+	"policy-server/api/api_v0"
 	"strconv"
 	"time"
 
@@ -145,23 +145,23 @@ func (t *TestThingy) measureLatencyFor1More(destIP string) (time.Duration, error
 		return 0, fmt.Errorf("waiting for pre-state to settle: %s", err)
 	}
 
-	oneMorePolicy := []api.Policy{
-		api.Policy{
-			Source: api.Source{
+	oneMorePolicy := []api_v0.Policy{
+		api_v0.Policy{
+			Source: api_v0.Source{
 				ID: t.sourceAppGUID,
 			},
-			Destination: api.Destination{
+			Destination: api_v0.Destination{
 				ID:       t.destAppGUID,
 				Protocol: "tcp",
 				Port:     8080,
 			},
 		},
 	}
-	err = t.policyClient.AddPolicies(t.token, oneMorePolicy)
+	err = t.policyClient.AddPoliciesV0(t.token, oneMorePolicy)
 	if err != nil {
 		return 0, fmt.Errorf("add policies: %s", err)
 	}
-	defer t.policyClient.DeletePolicies(t.token, oneMorePolicy)
+	defer t.policyClient.DeletePoliciesV0(t.token, oneMorePolicy)
 
 	return t.tryCheckReachable(destIP, 100, true)
 }

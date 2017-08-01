@@ -9,7 +9,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
-	"policy-server/api"
+	"policy-server/api/api_v0"
 	"strconv"
 	"time"
 
@@ -150,23 +150,23 @@ func (t *TestThingy) measureLatencyFor1More(destIP string) (time.Duration, error
 		return 0, fmt.Errorf("waiting for pre-state to settle: %s", err)
 	}
 
-	oneMorePolicy := []api.Policy{
-		api.Policy{
-			Source: api.Source{
+	oneMorePolicy := []api_v0.Policy{
+		api_v0.Policy{
+			Source: api_v0.Source{
 				ID: t.sourceAppGUID,
 			},
-			Destination: api.Destination{
+			Destination: api_v0.Destination{
 				ID:       t.destAppGUID,
 				Protocol: "tcp",
 				Port:     8080,
 			},
 		},
 	}
-	err = t.policyClient.AddPolicies(t.token, oneMorePolicy)
+	err = t.policyClient.AddPoliciesV0(t.token, oneMorePolicy)
 	if err != nil {
 		return 0, fmt.Errorf("add policies: %s", err)
 	}
-	defer t.policyClient.DeletePolicies(t.token, oneMorePolicy)
+	defer t.policyClient.DeletePoliciesV0(t.token, oneMorePolicy)
 
 	return t.tryCheckReachable(destIP, 100, true)
 }
@@ -202,13 +202,13 @@ func (t *TestThingy) checkReachable(destIP string, desiredReachable bool) bool {
 }
 
 func (t *TestThingy) prepareExistingPolicies(numPolicies int) error {
-	allPolicies := []api.Policy{}
+	allPolicies := []api_v0.Policy{}
 	for i := 0; i < numPolicies; i++ {
-		allPolicies = append(allPolicies, api.Policy{
-			Source: api.Source{
+		allPolicies = append(allPolicies, api_v0.Policy{
+			Source: api_v0.Source{
 				ID: t.sourceAppGUID,
 			},
-			Destination: api.Destination{
+			Destination: api_v0.Destination{
 				ID:       t.destAppGUID,
 				Protocol: "tcp",
 				Port:     10000 + i,
@@ -217,7 +217,7 @@ func (t *TestThingy) prepareExistingPolicies(numPolicies int) error {
 	}
 
 	t.logger.Info("applying-existing-policies", lager.Data{"num-existing-policies": numPolicies})
-	err := t.policyClient.AddPolicies(t.token, allPolicies)
+	err := t.policyClient.AddPoliciesV0(t.token, allPolicies)
 	if err != nil {
 		return fmt.Errorf("add policies: %s", err)
 	}

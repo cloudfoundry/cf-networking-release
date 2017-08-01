@@ -11,8 +11,9 @@ import (
 	"policy-server/api/api_v0"
 	"text/tabwriter"
 
-	"code.cloudfoundry.org/cli/plugin"
 	"policy-server/api"
+
+	"code.cloudfoundry.org/cli/plugin"
 )
 
 type CommandRunner struct {
@@ -64,7 +65,7 @@ func (r *CommandRunner) List() (string, error) {
 		}
 	} else {
 		var err error
-		policies, err = r.PolicyClient.GetPolicies(accessToken)
+		policies, err = r.PolicyClient.GetPoliciesV0(accessToken)
 		if err != nil {
 			return "", fmt.Errorf("getting policies: %s", err)
 		}
@@ -191,7 +192,7 @@ func (r *CommandRunner) Remove() (string, error) {
 		return "", fmt.Errorf("getting access token: %s", err)
 	}
 
-	err = r.PolicyClient.DeletePolicies(accessToken, []api_v0.Policy{policy})
+	err = r.PolicyClient.DeletePoliciesV0(accessToken, []api_v0.Policy{policy})
 	if err != nil {
 		return "", fmt.Errorf("deleting policies: %s", err)
 	}
@@ -249,7 +250,7 @@ func (r *CommandRunner) constructPolicy(validArgs ValidArgs) (api.Policy, error)
 		Destination: api.Destination{
 			ID:       dstAppModel.Guid,
 			Protocol: validArgs.Protocol,
-			Ports:    api.Ports{Start: validArgs.StartPort, End: validArgs.FinishPort },
+			Ports:    api.Ports{Start: validArgs.StartPort, End: validArgs.FinishPort},
 		},
 	}, nil
 }

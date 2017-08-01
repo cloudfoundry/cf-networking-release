@@ -77,7 +77,6 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 		var (
 			originalRunningSecurityGroups []string
 			appProxy                      string
-			appRoute                      string
 			spaceName                     string
 		)
 
@@ -98,7 +97,6 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 
 			By("pushing the test app")
 			pushProxy(appProxy)
-			appRoute = fmt.Sprintf("http://%s.%s/", appProxy, config.AppsDomain)
 		})
 
 		AfterEach(func() {

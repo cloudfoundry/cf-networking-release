@@ -16,9 +16,10 @@ import (
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
 
+	"policy-server/api/api_v0"
+
 	"code.cloudfoundry.org/cf-networking-helpers/mutualtls"
 	"code.cloudfoundry.org/lager"
-	"policy-server/api/api_v0"
 )
 
 var (
@@ -168,7 +169,7 @@ func getPoliciesForCell(logger lager.Logger, ids []string, index, numCalls int) 
 
 func deleteOldPolicies(logger lager.Logger, token string) {
 	logger.Info("getting-existing-policies")
-	policies, err := externalPolicyClient.GetPolicies(token)
+	policies, err := externalPolicyClient.GetPoliciesV0(token)
 	if err != nil {
 		logger.Fatal("get-policies", err)
 	}
@@ -177,7 +178,7 @@ func deleteOldPolicies(logger lager.Logger, token string) {
 	logger.Info("deleting-existing-policies")
 	for _, chunk := range makeChunks(policies) {
 		logger.Info("deleting-policies-chunk")
-		err := externalPolicyClient.DeletePolicies(token, chunk)
+		err := externalPolicyClient.DeletePoliciesV0(token, chunk)
 		if err != nil {
 			logger.Fatal("deleting-policies", err)
 		}
@@ -211,7 +212,7 @@ func getCurrentToken(logger lager.Logger) string {
 		logger.Fatal("running-command-cf-oauth-token`", err)
 	}
 
-	token := string(tokenBytes[0: len(tokenBytes)-1]) // remove trailing \n
+	token := string(tokenBytes[0 : len(tokenBytes)-1]) // remove trailing \n
 	logger.Info("parsed-cf-oauth-token", lager.Data{"token": token})
 
 	return token

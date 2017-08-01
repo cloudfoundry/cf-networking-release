@@ -143,13 +143,13 @@ var _ = Describe("space developer policy configuration", func() {
 						},
 					},
 				}
-				policies, err := policyClient.GetPolicies(spaceDevUserToken)
+				policies, err := policyClient.GetPoliciesV0(spaceDevUserToken)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(policies).To(Equal(expectedPolicies))
 			})
 
 			By("deleting the policy", func() {
-				err := policyClient.DeletePolicies(spaceDevUserToken, []api_v0.Policy{
+				err := policyClient.DeletePoliciesV0(spaceDevUserToken, []api_v0.Policy{
 					api_v0.Policy{
 						Source: api_v0.Source{
 							ID: appAGUID,

@@ -11,9 +11,10 @@ import (
 	"code.cloudfoundry.org/cli/plugin/models"
 	"code.cloudfoundry.org/cli/plugin/pluginfakes"
 
+	"policy-server/api"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"policy-server/api"
 )
 
 var _ = Describe("CommandRunner", func() {
@@ -64,7 +65,7 @@ var _ = Describe("CommandRunner", func() {
 
 	Describe("List", func() {
 		BeforeEach(func() {
-			policyClient.GetPoliciesReturns([]api_v0.Policy{
+			policyClient.GetPoliciesV0Returns([]api_v0.Policy{
 				api_v0.Policy{Source: api_v0.Source{ID: "some-app-guid"}, Destination: api_v0.Destination{ID: "some-other-app-guid", Port: 9999, Protocol: "tcp"}},
 			}, nil)
 			runner.Args = []string{"list-access"}
@@ -75,8 +76,8 @@ var _ = Describe("CommandRunner", func() {
 				output, err := runner.List()
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(policyClient.GetPoliciesCallCount()).To(Equal(1))
-				Expect(policyClient.GetPoliciesArgsForCall(0)).To(Equal("some-token"))
+				Expect(policyClient.GetPoliciesV0CallCount()).To(Equal(1))
+				Expect(policyClient.GetPoliciesV0ArgsForCall(0)).To(Equal("some-token"))
 				Expect(fakeCliConnection.GetAppsCallCount()).To(Equal(1))
 
 				Expect(output).To(Equal("<BOLD>Source\t\tDestination\tProtocol\tPort\n<RESET><CLR_C>some-app<RESET>\t<CLR_C>some-other-app<RESET>\ttcp\t\t9999\n"))
@@ -85,14 +86,14 @@ var _ = Describe("CommandRunner", func() {
 
 		Context("when there are no policies", func() {
 			BeforeEach(func() {
-				policyClient.GetPoliciesReturns([]api_v0.Policy{}, nil)
+				policyClient.GetPoliciesV0Returns([]api_v0.Policy{}, nil)
 			})
 			It("shows nothing", func() {
 				output, err := runner.List()
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(policyClient.GetPoliciesCallCount()).To(Equal(1))
-				Expect(policyClient.GetPoliciesArgsForCall(0)).To(Equal("some-token"))
+				Expect(policyClient.GetPoliciesV0CallCount()).To(Equal(1))
+				Expect(policyClient.GetPoliciesV0ArgsForCall(0)).To(Equal("some-token"))
 				Expect(fakeCliConnection.GetAppsCallCount()).To(Equal(1))
 
 				Expect(output).To(Equal("<BOLD>Source\tDestination\tProtocol\tPort\n<RESET>"))
@@ -111,8 +112,8 @@ var _ = Describe("CommandRunner", func() {
 				output, err := runner.List()
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(policyClient.GetPoliciesCallCount()).To(Equal(1))
-				Expect(policyClient.GetPoliciesArgsForCall(0)).To(Equal("some-token"))
+				Expect(policyClient.GetPoliciesV0CallCount()).To(Equal(1))
+				Expect(policyClient.GetPoliciesV0ArgsForCall(0)).To(Equal("some-token"))
 				Expect(fakeCliConnection.GetAppsCallCount()).To(Equal(1))
 
 				Expect(output).To(Equal("<BOLD>Source\tDestination\tProtocol\tPort\n<RESET>"))
@@ -142,7 +143,7 @@ var _ = Describe("CommandRunner", func() {
 
 		Context("when getting policies fails", func() {
 			BeforeEach(func() {
-				policyClient.GetPoliciesReturns(nil, errors.New("banana"))
+				policyClient.GetPoliciesV0Returns(nil, errors.New("banana"))
 			})
 			It("wraps the error in a more helpful message", func() {
 				_, err := runner.List()
@@ -401,8 +402,8 @@ var _ = Describe("CommandRunner", func() {
 				Expect(fakeCliConnection.GetAppArgsForCall(0)).To(Equal("some-app"))
 				Expect(fakeCliConnection.GetAppArgsForCall(1)).To(Equal("some-other-app"))
 
-				Expect(policyClient.DeletePoliciesCallCount()).To(Equal(1))
-				token, policies := policyClient.DeletePoliciesArgsForCall(0)
+				Expect(policyClient.DeletePoliciesV0CallCount()).To(Equal(1))
+				token, policies := policyClient.DeletePoliciesV0ArgsForCall(0)
 				Expect(token).To(Equal("some-token"))
 				Expect(policies).To(ConsistOf(api_v0.Policy{
 					Source:      api_v0.Source{ID: "some-app-guid"},
@@ -446,7 +447,7 @@ var _ = Describe("CommandRunner", func() {
 
 		Context("when deleting the policies fails", func() {
 			BeforeEach(func() {
-				policyClient.DeletePoliciesReturns(errors.New("banana"))
+				policyClient.DeletePoliciesV0Returns(errors.New("banana"))
 			})
 			It("wraps the error in a more helpful message", func() {
 				_, err := runner.Remove()
