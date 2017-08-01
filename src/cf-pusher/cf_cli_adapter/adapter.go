@@ -135,7 +135,7 @@ func (a *Adapter) AllowAccess(sourceApp, destApp string, port int, protocol stri
 }
 
 func (a *Adapter) RemoveAccess(sourceApp, destApp string, port int, protocol string) error {
-	portStr := fmt.Sprintf("%d", port)
+	portStr := fmt.Sprintf("%d-%d", port, port)
 	fmt.Printf("running: cf remove-access %s %s --port %s --protocol tcp\n", sourceApp, destApp, portStr)
 	cmd := exec.Command("cf", "remove-access", sourceApp, destApp, "--port", portStr, "--protocol", "tcp")
 	return runCommandWithTimeout(cmd)

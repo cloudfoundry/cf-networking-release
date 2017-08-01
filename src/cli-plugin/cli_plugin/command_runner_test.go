@@ -389,131 +389,209 @@ var _ = Describe("CommandRunner", func() {
 	})
 
 	Describe("Remove", func() {
-		BeforeEach(func() {
-			runner.Args = []string{"remove-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999"}
-		})
-
-		Context("when the policy is found", func() {
-			It("removes the policy", func() {
-				_, err := runner.Remove()
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(fakeCliConnection.GetAppCallCount()).To(Equal(2))
-				Expect(fakeCliConnection.GetAppArgsForCall(0)).To(Equal("some-app"))
-				Expect(fakeCliConnection.GetAppArgsForCall(1)).To(Equal("some-other-app"))
-
-				Expect(policyClient.DeletePoliciesV0CallCount()).To(Equal(1))
-				token, policies := policyClient.DeletePoliciesV0ArgsForCall(0)
-				Expect(token).To(Equal("some-token"))
-				Expect(policies).To(ConsistOf(api_v0.Policy{
-					Source:      api_v0.Source{ID: "some-app-guid"},
-					Destination: api_v0.Destination{ID: "some-other-app-guid", Port: 9999, Protocol: "tcp"}}))
+		Context("when using a port range", func() {
+			BeforeEach(func() {
+				runner.Args = []string{"remove-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "8888-9999"}
 			})
-		})
 
-		Context("when the user supplies incorrect arguments", func() {
-			Context("when there are too many leading positional arguments", func() {
-				It("shows usage", func() {
-					runner.Args = []string{"remove-access", "some-app", "some-other-app", "yet-another-app", "--protocol", "tcp", "--port", "9999"}
-					fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
+			Context("when the policy is found", func() {
+				It("removes the policy", func() {
 					_, err := runner.Remove()
-					Expect(err).To(MatchError("Incorrect usage. \n\nUSAGE:\nbanana"))
-					c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
-					Expect(c).To(Equal([]string{"help", "remove-access"}))
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(fakeCliConnection.GetAppCallCount()).To(Equal(2))
+					Expect(fakeCliConnection.GetAppArgsForCall(0)).To(Equal("some-app"))
+					Expect(fakeCliConnection.GetAppArgsForCall(1)).To(Equal("some-other-app"))
+
+					Expect(policyClient.DeletePoliciesCallCount()).To(Equal(1))
+					token, policies := policyClient.DeletePoliciesArgsForCall(0)
+					Expect(token).To(Equal("some-token"))
+					Expect(policies).To(ConsistOf(api.Policy{
+						Source:      api.Source{ID: "some-app-guid"},
+						Destination: api.Destination{ID: "some-other-app-guid", Ports: api.Ports{Start: 8888, End: 9999}, Protocol: "tcp"}}))
 				})
 			})
-			Context("when there are extra positional arguments after the flag args", func() {
-				It("shows usage", func() {
-					runner.Args = []string{"remove-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999", "something-else"}
-					fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
-					_, err := runner.Remove()
-					Expect(err).To(MatchError("Incorrect usage. \n\nUSAGE:\nbanana"))
-					c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
-					Expect(c).To(Equal([]string{"help", "remove-access"}))
+
+			Context("when the user supplies incorrect arguments", func() {
+				Context("when there are too many leading positional arguments", func() {
+					It("shows usage", func() {
+						runner.Args = []string{"remove-access", "some-app", "some-other-app", "yet-another-app", "--protocol", "tcp", "--port", "8888-9999"}
+						fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
+						_, err := runner.Remove()
+						Expect(err).To(MatchError("Incorrect usage. \n\nUSAGE:\nbanana"))
+						c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
+						Expect(c).To(Equal([]string{"help", "remove-access"}))
+					})
+				})
+				Context("when there are extra positional arguments after the flag args", func() {
+					It("shows usage", func() {
+						runner.Args = []string{"remove-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999", "something-else"}
+						fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
+						_, err := runner.Remove()
+						Expect(err).To(MatchError("Incorrect usage. \n\nUSAGE:\nbanana"))
+						c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
+						Expect(c).To(Equal([]string{"help", "remove-access"}))
+					})
+				})
+				Context("when one of the flags is misspelled", func() {
+					It("shows usage", func() {
+						runner.Args = []string{"remove-access", "some-app", "some-other-app", "--protocol", "tcp", "--poooort", "8888-9999"}
+						fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
+						_, err := runner.Remove()
+						Expect(err).To(MatchError("Incorrect usage. flag provided but not defined: -poooort\n\nUSAGE:\nbanana"))
+						c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
+						Expect(c).To(Equal([]string{"help", "remove-access"}))
+
+					})
 				})
 			})
-			Context("when one of the flags is misspelled", func() {
-				It("shows usage", func() {
-					runner.Args = []string{"remove-access", "some-app", "some-other-app", "--protocol", "tcp", "--poooort", "9999"}
-					fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
-					_, err := runner.Remove()
-					Expect(err).To(MatchError("Incorrect usage. flag provided but not defined: -poooort\n\nUSAGE:\nbanana"))
-					c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
-					Expect(c).To(Equal([]string{"help", "remove-access"}))
 
+			Context("when deleting the policies fails", func() {
+				BeforeEach(func() {
+					policyClient.DeletePoliciesReturns(errors.New("banana"))
+				})
+				It("wraps the error in a more helpful message", func() {
+					_, err := runner.Remove()
+					Expect(err).To(MatchError("deleting policies: banana"))
+				})
+			})
+
+			Context("when getting the access token fails", func() {
+				BeforeEach(func() {
+					fakeCliConnection.AccessTokenReturns("", errors.New("banana"))
+				})
+				It("returns the error", func() {
+					_, err := runner.Remove()
+					Expect(err).To(MatchError("getting access token: banana"))
+				})
+			})
+
+			Context("when getting the username fails", func() {
+				BeforeEach(func() {
+					fakeCliConnection.UsernameReturns("", errors.New("banana"))
+				})
+				It("returns an error", func() {
+					_, err := runner.Remove()
+					Expect(err).To(MatchError("could not resolve username: banana"))
 				})
 			})
 		})
 
-		Context("when deleting the policies fails", func() {
-			BeforeEach(func() {
-				policyClient.DeletePoliciesV0Returns(errors.New("banana"))
+		Describe("Resolving App Names to Guids", func() {
+			Context("when there are errors talking to CC", func() {
+				BeforeEach(func() {
+					runner.Args = []string{"remove-access", "bad-access", "some-other-app", "--protocol", "tcp", "--port", "8888-9999"}
+				})
+				It("returns a useful error", func() {
+					_, err := runner.Remove()
+					Expect(err).To(MatchError("resolving source app: apple"))
+				})
 			})
-			It("wraps the error in a more helpful message", func() {
-				_, err := runner.Remove()
-				Expect(err).To(MatchError("deleting policies: banana"))
+
+			Context("when the source app could not be resolved to a GUID", func() {
+				BeforeEach(func() {
+					runner.Args = []string{"remove-access", "inaccessible-app", "some-other-app", "--protocol", "tcp", "--port", "8888-9999"}
+				})
+				It("returns a useful error", func() {
+					_, err := runner.Remove()
+					Expect(err).To(MatchError("resolving source app: inaccessible-app not found"))
+				})
+			})
+
+			Context("when there are errors resolving destination app", func() {
+				BeforeEach(func() {
+					runner.Args = []string{"remove-access", "some-app", "not-some-other-app", "--protocol", "tcp", "--port", "8888-9999"}
+				})
+				It("returns a useful error", func() {
+					_, err := runner.Remove()
+					Expect(err).To(MatchError("resolving destination app: apple"))
+				})
+			})
+
+			Context("when the destination app could not be resolved to a GUID", func() {
+				BeforeEach(func() {
+					runner.Args = []string{"remove-access", "some-app", "inaccessible-app", "--protocol", "tcp", "--port", "8888-9999"}
+				})
+				It("returns a useful error", func() {
+					_, err := runner.Remove()
+					Expect(err).To(MatchError("resolving destination app: inaccessible-app not found"))
+				})
 			})
 		})
 
-		Context("when getting the access token fails", func() {
+		Context("when using a single port", func() {
 			BeforeEach(func() {
-				fakeCliConnection.AccessTokenReturns("", errors.New("banana"))
+				runner.Args = []string{"remove-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999"}
 			})
-			It("returns the error", func() {
-				_, err := runner.Remove()
-				Expect(err).To(MatchError("getting access token: banana"))
-			})
-		})
 
-		Context("when getting the username fails", func() {
-			BeforeEach(func() {
-				fakeCliConnection.UsernameReturns("", errors.New("banana"))
-			})
-			It("returns an error", func() {
-				_, err := runner.Remove()
-				Expect(err).To(MatchError("could not resolve username: banana"))
-			})
-		})
-	})
+			Context("when the policy is found", func() {
+				It("removes the policy", func() {
+					_, err := runner.Remove()
+					Expect(err).NotTo(HaveOccurred())
 
-	Describe("Resolving App Names to Guids", func() {
-		Context("when there are errors talking to CC", func() {
-			BeforeEach(func() {
-				runner.Args = []string{"remove-access", "bad-access", "some-other-app", "--protocol", "tcp", "--port", "9999"}
-			})
-			It("returns a useful error", func() {
-				_, err := runner.Remove()
-				Expect(err).To(MatchError("resolving source app: apple"))
-			})
-		})
+					Expect(fakeCliConnection.GetAppCallCount()).To(Equal(2))
+					Expect(fakeCliConnection.GetAppArgsForCall(0)).To(Equal("some-app"))
+					Expect(fakeCliConnection.GetAppArgsForCall(1)).To(Equal("some-other-app"))
 
-		Context("when the source app could not be resolved to a GUID", func() {
-			BeforeEach(func() {
-				runner.Args = []string{"remove-access", "inaccessible-app", "some-other-app", "--protocol", "tcp", "--port", "9999"}
+					Expect(policyClient.DeletePoliciesV0CallCount()).To(Equal(1))
+					token, policies := policyClient.DeletePoliciesV0ArgsForCall(0)
+					Expect(token).To(Equal("some-token"))
+					Expect(policies).To(ConsistOf(api_v0.Policy{
+						Source:      api_v0.Source{ID: "some-app-guid"},
+						Destination: api_v0.Destination{ID: "some-other-app-guid", Port: 9999, Protocol: "tcp"}}))
+				})
 			})
-			It("returns a useful error", func() {
-				_, err := runner.Remove()
-				Expect(err).To(MatchError("resolving source app: inaccessible-app not found"))
-			})
-		})
 
-		Context("when there are errors resolving destination app", func() {
-			BeforeEach(func() {
-				runner.Args = []string{"remove-access", "some-app", "not-some-other-app", "--protocol", "tcp", "--port", "9999"}
+			Context("when deleting the policies fails", func() {
+				BeforeEach(func() {
+					policyClient.DeletePoliciesV0Returns(errors.New("banana"))
+				})
+				It("wraps the error in a more helpful message", func() {
+					_, err := runner.Remove()
+					Expect(err).To(MatchError("deleting policies: banana"))
+				})
 			})
-			It("returns a useful error", func() {
-				_, err := runner.Remove()
-				Expect(err).To(MatchError("resolving destination app: apple"))
-			})
-		})
 
-		Context("when the destination app could not be resolved to a GUID", func() {
-			BeforeEach(func() {
-				runner.Args = []string{"remove-access", "some-app", "inaccessible-app", "--protocol", "tcp", "--port", "9999"}
-			})
-			It("returns a useful error", func() {
-				_, err := runner.Remove()
-				Expect(err).To(MatchError("resolving destination app: inaccessible-app not found"))
+			Describe("Resolving App Names to Guids", func() {
+				Context("when there are errors talking to CC", func() {
+					BeforeEach(func() {
+						runner.Args = []string{"remove-access", "bad-access", "some-other-app", "--protocol", "tcp", "--port", "9999"}
+					})
+					It("returns a useful error", func() {
+						_, err := runner.Remove()
+						Expect(err).To(MatchError("resolving source app: apple"))
+					})
+				})
+
+				Context("when the source app could not be resolved to a GUID", func() {
+					BeforeEach(func() {
+						runner.Args = []string{"remove-access", "inaccessible-app", "some-other-app", "--protocol", "tcp", "--port", "9999"}
+					})
+					It("returns a useful error", func() {
+						_, err := runner.Remove()
+						Expect(err).To(MatchError("resolving source app: inaccessible-app not found"))
+					})
+				})
+
+				Context("when there are errors resolving destination app", func() {
+					BeforeEach(func() {
+						runner.Args = []string{"remove-access", "some-app", "not-some-other-app", "--protocol", "tcp", "--port", "9999"}
+					})
+					It("returns a useful error", func() {
+						_, err := runner.Remove()
+						Expect(err).To(MatchError("resolving destination app: apple"))
+					})
+				})
+
+				Context("when the destination app could not be resolved to a GUID", func() {
+					BeforeEach(func() {
+						runner.Args = []string{"remove-access", "some-app", "inaccessible-app", "--protocol", "tcp", "--port", "9999"}
+					})
+					It("returns a useful error", func() {
+						_, err := runner.Remove()
+						Expect(err).To(MatchError("resolving destination app: inaccessible-app not found"))
+					})
+				})
 			})
 		})
 	})

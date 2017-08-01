@@ -182,19 +182,32 @@ func (r *CommandRunner) Remove() (string, error) {
 			" to " + r.Styler.AddStyle(validArgs.DestAppName, "cyan") +
 			" as " + r.Styler.AddStyle(username, "cyan") + "..."))
 
-	policy, err := r.constructPolicyV0(validArgs)
-	if err != nil {
-		return "", err
-	}
-
 	accessToken, err := r.CliConnection.AccessToken()
 	if err != nil {
 		return "", fmt.Errorf("getting access token: %s", err)
 	}
 
-	err = r.PolicyClient.DeletePoliciesV0(accessToken, []api_v0.Policy{policy})
-	if err != nil {
-		return "", fmt.Errorf("deleting policies: %s", err)
+	if validArgs.StartPort > 0 {
+		policy, err := r.constructPolicy(validArgs)
+		if err != nil {
+			return "", err
+		}
+
+		err = r.PolicyClient.DeletePolicies(accessToken, []api.Policy{policy})
+		if err != nil {
+			return "", fmt.Errorf("deleting policies: %s", err)
+		}
+
+	} else {
+		policy, err := r.constructPolicyV0(validArgs)
+		if err != nil {
+			return "", err
+		}
+
+		err = r.PolicyClient.DeletePoliciesV0(accessToken, []api_v0.Policy{policy})
+		if err != nil {
+			return "", fmt.Errorf("deleting policies: %s", err)
+		}
 	}
 
 	return "", nil

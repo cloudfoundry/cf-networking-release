@@ -47,7 +47,7 @@ const RemoveCommand = "remove-access"
 
 var ListUsageRegex = fmt.Sprintf(`\A%s\s*(--app(\s+|=)\S+\z|\z)`, ListCommand)
 var AllowUsageRegex = fmt.Sprintf(`\A%s\s+\S+\s+\S+\s+(--|-)\w+(\s+|=)[\w-]+\s+(--|-)\w+(\s+|=)[\w-]+\z`, AllowCommand)
-var RemoveUsageRegex = fmt.Sprintf(`\A%s\s+\S+\s+\S+\s+(--|-)\w+(\s+|=)\w+\s+(--|-)\w+(\s+|=)\w+\z`, RemoveCommand)
+var RemoveUsageRegex = fmt.Sprintf(`\A%s\s+\S+\s+\S+\s+(--|-)\w+(\s+|=)[\w-]+\s+(--|-)\w+(\s+|=)[\w-]+\z`, RemoveCommand)
 
 const MinPort = 1
 const MaxPort = 65535
