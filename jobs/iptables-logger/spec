@@ -8,3 +8,7 @@ templates:
 packages:
   - iptables-logger
 
+properties:
+  cf_networking.iptables_logger.metron_port:
+    description: "Port of metron agent on localhost. This is used to forward metrics."
+    default: 3457

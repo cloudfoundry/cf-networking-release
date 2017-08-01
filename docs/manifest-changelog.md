@@ -2,6 +2,15 @@
 
 See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for examples
 
+
+### 1.4.0
+**New Properties**
+  - An optional parameter has been added to configure the port of the metron agent for
+    the iptables_logger. This port will be used to forward metrics. Previously, no such
+    port existed.
+    - `cf_networking.iptables_logger.metron_port`
+
+
 ### 1.3.0
 
 **New Properties**

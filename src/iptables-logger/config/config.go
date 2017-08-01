@@ -13,6 +13,7 @@ type Config struct {
 	KernelLogFile         string `json:"kernel_log_file" validate:"nonzero"`
 	ContainerMetadataFile string `json:"container_metadata_file" validate:"nonzero"`
 	OutputLogFile         string `json:"output_log_file" validate:"nonzero"`
+	MetronAddress         string `json:"metron_address" validate:"nonzero"`
 	HostIp                string `json:"host_ip" validate:"nonzero"`
 	HostGuid              string `json:"host_guid" validate:"nonzero"`
 }

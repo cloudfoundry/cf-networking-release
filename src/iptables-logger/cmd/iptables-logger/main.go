@@ -14,13 +14,23 @@ import (
 	"log"
 	"os"
 	"sync"
+	"time"
 
+	"github.com/cloudfoundry/dropsonde"
 	"github.com/hpcloud/tail"
 	"github.com/tedsuo/ifrit"
+	"github.com/tedsuo/ifrit/grouper"
+	"github.com/tedsuo/ifrit/sigmon"
 
 	"iptables-logger/rotatablesink"
 
+	"code.cloudfoundry.org/cf-networking-helpers/metrics"
 	"code.cloudfoundry.org/lager"
+)
+
+const (
+	dropsondeOrigin = "iptables-logger"
+	emitInterval    = 30 * time.Second
 )
 
 var (
@@ -96,6 +106,14 @@ func main() {
 	}
 	iptablesLogger.RegisterSink(iptablesSink)
 
+	err = dropsonde.Initialize(conf.MetronAddress, dropsondeOrigin)
+	if err != nil {
+		log.Fatalf("%s: initializing dropsonde: %s", logPrefix, err)
+	}
+
+	uptimeSource := metrics.NewUptimeSource()
+	metricsEmitter := metrics.NewMetricsEmitter(logger, emitInterval, uptimeSource)
+
 	runner := &runner.Runner{
 		Lines:          t.Lines,
 		Parser:         kernelLogParser,
@@ -104,6 +122,11 @@ func main() {
 		IPTablesLogger: iptablesLogger,
 	}
 
-	monitor := ifrit.Invoke(runner)
+	members := grouper.Members{
+		{"metrics_emitter", metricsEmitter},
+		{"iptables_runner", runner},
+	}
+
+	monitor := ifrit.Invoke(sigmon.New(grouper.NewOrdered(os.Interrupt, members)))
 	<-monitor.Wait()
 }

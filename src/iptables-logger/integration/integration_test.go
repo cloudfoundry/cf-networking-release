@@ -15,16 +15,25 @@ import (
 	"sync"
 	"time"
 
+	"code.cloudfoundry.org/cf-networking-helpers/metrics"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
+	"github.com/onsi/gomega/types"
 )
 
 var (
 	outputDir  string
 	outputFile string
 )
+
+var HaveName = func(name string) types.GomegaMatcher {
+	return WithTransform(func(ev metrics.Event) string {
+		return ev.Name
+	}, Equal(name))
+}
 
 var _ = Describe("Integration", func() {
 	var (
@@ -34,6 +43,7 @@ var _ = Describe("Integration", func() {
 		containerMetadataFile *os.File
 		store                 *datastore.Store
 		configFilePath        string
+		fakeMetron            metrics.FakeMetron
 	)
 
 	EGRESS_DENIED_JSON := `{
@@ -127,6 +137,8 @@ var _ = Describe("Integration", func() {
 
 	BeforeEach(func() {
 		var err error
+		fakeMetron = metrics.NewFakeMetron()
+
 		kernelLogFile, err = ioutil.TempFile("", "")
 		Expect(err).ToNot(HaveOccurred())
 
@@ -141,6 +153,7 @@ var _ = Describe("Integration", func() {
 			KernelLogFile:         kernelLogFile.Name(),
 			ContainerMetadataFile: containerMetadataFile.Name(),
 			OutputLogFile:         outputFile,
+			MetronAddress:         fakeMetron.Address(),
 			HostIp:                "1.2.3.4",
 			HostGuid:              "some-guid",
 		}
@@ -177,6 +190,8 @@ var _ = Describe("Integration", func() {
 	AfterEach(func() {
 		session.Interrupt()
 		Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit())
+
+		Expect(fakeMetron.Close()).To(Succeed())
 	})
 
 	It("should log when starting", func() {
@@ -222,6 +237,13 @@ var _ = Describe("Integration", func() {
 		go AddToKernelLog(EGRESS_DENIED_KERNEL_LOG, kernelLogFile)
 		Eventually(outputFile).Should(BeAnExistingFile())
 		Eventually(ReadLines, "5s").Should(ContainElement(MatchJSON(EGRESS_DENIED_JSON)))
+	})
+
+	It("emits metrics about durations", func() {
+		Eventually(fakeMetron.AllEvents, "5s").Should(
+			ContainElement(
+				HaveName("uptime"),
+			))
 	})
 
 	Context("when source file is rotated", func() {

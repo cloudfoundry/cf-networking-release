@@ -30,6 +30,7 @@ var _ = Describe("Config", func() {
 					"kernel_log_file": "/var/log/kern.log",
 					"container_metadata_file": "/var/vcap/data/container-metadata/store.json",
 					"output_log_file": "/var/vcap/sys/log/iptables-logger",
+					"metron_address": "http://1.2.3.4:1234",
 					"host_ip": "1.2.3.4",
 					"host_guid": "some-guid"
 				}`)
@@ -40,6 +41,7 @@ var _ = Describe("Config", func() {
 				Expect(c.KernelLogFile).To(Equal("/var/log/kern.log"))
 				Expect(c.ContainerMetadataFile).To(Equal("/var/vcap/data/container-metadata/store.json"))
 				Expect(c.OutputLogFile).To(Equal("/var/vcap/sys/log/iptables-logger"))
+				Expect(c.MetronAddress).To(Equal("http://1.2.3.4:1234"))
 				Expect(c.HostIp).To(Equal("1.2.3.4"))
 				Expect(c.HostGuid).To(Equal("some-guid"))
 			})
@@ -73,6 +75,7 @@ var _ = Describe("Config", func() {
 					"kernel_log_file":         "/var/log/kern.log",
 					"container_metadata_file": "/var/vcap/data/container-metadata/store.json",
 					"output_log_file":         "/var/vcap/sys/log/iptables-logger",
+					"metron_address":          "http://1.2.3.4:1234",
 					"host_ip":                 "1.2.3.4",
 					"host_guid":               "some-guid",
 				}
@@ -85,6 +88,7 @@ var _ = Describe("Config", func() {
 			Entry("missing input file", "kernel_log_file", "KernelLogFile: zero value"),
 			Entry("missing container metadata file", "container_metadata_file", "ContainerMetadataFile: zero value"),
 			Entry("missing output log file", "output_log_file", "OutputLogFile: zero value"),
+			Entry("missing metron address", "metron_address", "MetronAddress: zero value"),
 			Entry("missing host ip", "host_ip", "HostIp: zero value"),
 			Entry("missing host guid", "host_guid", "HostGuid: zero value"),
 		)
