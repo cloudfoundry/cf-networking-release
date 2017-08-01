@@ -12,9 +12,14 @@ type DestinationTable struct {
 }
 
 func (d *DestinationTable) Create(tx Transaction, destination_group_id, port, startPort, endPort int, protocol string) (int, error) {
+	dualStatement := ""
+	if tx.DriverName() == "mysql" {
+		dualStatement = " FROM DUAL "
+	}
+
 	_, err := tx.Exec(tx.Rebind(`
 		INSERT INTO destinations (group_id, port, start_port, end_port, protocol)
-		SELECT ?, ?, ?, ?, ?
+		SELECT ?, ?, ?, ?, ? `+dualStatement+`
 		WHERE
 		NOT EXISTS (
 			SELECT *
