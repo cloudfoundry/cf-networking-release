@@ -12,13 +12,13 @@ import (
 	_ "net/http/pprof"
 	"os"
 	"os/exec"
-	"policy-server/api"
 	"time"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
 
 	"code.cloudfoundry.org/cf-networking-helpers/mutualtls"
 	"code.cloudfoundry.org/lager"
+	"policy-server/api/api_v0"
 )
 
 var (
@@ -95,7 +95,7 @@ func getExternalPolicyClient(logger lager.Logger) *policy_client.ExternalClient 
 	return policy_client.NewExternal(logger.Session("external-policy-client"), httpClient, policyServerAPI)
 }
 
-func randomAppGUID(index int) string {
+func randomAppGUID() string {
 	return fmt.Sprintf("%08x", rand.Int63())
 }
 
@@ -106,9 +106,9 @@ func min(a, b int) int {
 	return b
 }
 
-func makeChunks(policies []api.Policy) [][]api.Policy {
+func makeChunks(policies []api_v0.Policy) [][]api_v0.Policy {
 	tokenRenewalChunkSize := 1000
-	var chunks [][]api.Policy
+	var chunks [][]api_v0.Policy
 	for i := 0; i < len(policies); i += tokenRenewalChunkSize {
 		chunks = append(chunks, policies[i:i+min(tokenRenewalChunkSize, len(policies))])
 	}
@@ -117,27 +117,26 @@ func makeChunks(policies []api.Policy) [][]api.Policy {
 
 func addNewPolicies(logger lager.Logger, appGuids []string, token string) {
 	logger.Info("creating-policies-for-each-application-guid")
-	policies := []api.Policy{}
-	for _ = range appGuids {
+	policies := []api_v0.Policy{}
+	for range appGuids {
 		for i := 0; i < config.PoliciesPerApp; i++ {
 			dstGuid := appGuids[rand.Intn(len(appGuids))]
 			srcGuid := appGuids[rand.Intn(len(appGuids))]
 
 			randomPort := 10000 + rand.Intn(10000)
-			policy := api.Policy{
-				Source: api.Source{
+			policy := api_v0.Policy{
+				Source: api_v0.Source{
 					ID: srcGuid,
 				},
-				Destination: api.Destination{
+				Destination: api_v0.Destination{
 					ID:       dstGuid,
 					Protocol: "tcp",
-					Ports: api.Ports{
-						Start: randomPort,
-						End:   randomPort + 1,
-					},
+					Port:     randomPort,
 				},
 			}
+
 			policies = append(policies, policy)
+
 		}
 	}
 
@@ -237,7 +236,7 @@ func main() {
 	rand.Seed(1) // always use the same random sequence
 	var guids []string
 	for i := 0; i < config.Apps; i++ {
-		guids = append(guids, randomAppGUID(i))
+		guids = append(guids, randomAppGUID())
 	}
 	logger.Info(fmt.Sprintf("finished-creating-%d-application-guids", config.Apps))
 
