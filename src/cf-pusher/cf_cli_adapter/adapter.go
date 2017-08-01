@@ -128,7 +128,7 @@ func (a *Adapter) CheckApp(guid string) ([]byte, error) {
 }
 
 func (a *Adapter) AllowAccess(sourceApp, destApp string, port int, protocol string) error {
-	portStr := fmt.Sprintf("%d", port)
+	portStr := fmt.Sprintf("%d-%d", port, port)
 	fmt.Printf("running: cf allow-access %s %s --port %s --protocol tcp\n", sourceApp, destApp, portStr)
 	cmd := exec.Command("cf", "allow-access", sourceApp, destApp, "--port", portStr, "--protocol", "tcp")
 	return runCommandWithTimeout(cmd)
