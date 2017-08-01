@@ -21,7 +21,7 @@ import (
 var policyServerPath string
 
 var HaveName = func(name string) types.GomegaMatcher {
-	return WithTransform(func(ev metrics.Event) string {
+	return WithTransform(func(ev testsupport.Event) string {
 		return ev.Name
 	}, Equal(name))
 }

@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
-	"code.cloudfoundry.org/cf-networking-helpers/metrics"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 
 	. "github.com/onsi/ginkgo"
@@ -43,7 +42,7 @@ var _ = Describe("Timeout", func() {
 		dbConf  db.Config
 		headers map[string]string
 
-		fakeMetron      metrics.FakeMetron
+		fakeMetron      testsupport.FakeMetron
 		policyServerURL string
 	)
 	BeforeEach(func() {
@@ -56,7 +55,7 @@ var _ = Describe("Timeout", func() {
 		dbConf.Timeout = 1
 		testsupport.CreateDatabase(dbConf)
 
-		fakeMetron = metrics.NewFakeMetron()
+		fakeMetron = testsupport.NewFakeMetron()
 
 		conf = helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "../fixtures")
 		session = helpers.StartPolicyServer(policyServerPath, conf)

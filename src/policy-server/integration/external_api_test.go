@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
-	"code.cloudfoundry.org/cf-networking-helpers/metrics"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 
 	. "github.com/onsi/ginkgo"
@@ -26,11 +25,11 @@ var _ = Describe("External API", func() {
 		policyServerConfs []config.Config
 		dbConf            db.Config
 
-		fakeMetron metrics.FakeMetron
+		fakeMetron testsupport.FakeMetron
 	)
 
 	BeforeEach(func() {
-		fakeMetron = metrics.NewFakeMetron()
+		fakeMetron = testsupport.NewFakeMetron()
 
 		dbConf = testsupport.GetDBConfig()
 		dbConf.DatabaseName = fmt.Sprintf("test_node_%d", GinkgoParallelNode())

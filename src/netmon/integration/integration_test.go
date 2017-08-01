@@ -15,6 +15,7 @@ import (
 	"github.com/onsi/gomega/types"
 
 	"netmon/config"
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 )
 
 func discoverInterfaceName() string {
@@ -38,12 +39,12 @@ var _ = Describe("Integration", func() {
 	var (
 		session    *gexec.Session
 		conf       config.Netmon
-		fakeMetron metrics.FakeMetron
+		fakeMetron testsupport.FakeMetron
 		ifName     string
 	)
 
 	BeforeEach(func() {
-		fakeMetron = metrics.NewFakeMetron()
+		fakeMetron = testsupport.NewFakeMetron()
 
 		ifName = discoverInterfaceName()
 		conf = config.Netmon{
@@ -79,7 +80,7 @@ var _ = Describe("Integration", func() {
 		Expect(err).NotTo(HaveOccurred())
 		nIfaces := len(ifaces)
 
-		Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(metrics.Event{
+		Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(testsupport.Event{
 			EventType: "ValueMetric",
 			Name:      "NetInterfaceCount",
 			Origin:    "netmon",
@@ -92,7 +93,7 @@ var _ = Describe("Integration", func() {
 		natRules := runAndWait("iptables", "-S", "-t", "nat")
 		totalRulesBaseline := numLines(filterRules) + numLines(natRules)
 
-		Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(metrics.Event{
+		Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(testsupport.Event{
 			EventType: "ValueMetric",
 			Name:      "IPTablesRuleCount",
 			Origin:    "netmon",
@@ -101,7 +102,7 @@ var _ = Describe("Integration", func() {
 
 		runAndWait("iptables", "-w", "-A", "FORWARD", "-s", "1.1.1.1", "-d", "2.2.2.2", "-j", "ACCEPT")
 
-		Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(metrics.Event{
+		Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(testsupport.Event{
 			EventType: "ValueMetric",
 			Name:      "IPTablesRuleCount",
 			Origin:    "netmon",
@@ -110,7 +111,7 @@ var _ = Describe("Integration", func() {
 	})
 
 	IsMetricWithName := func(name string) types.GomegaMatcher {
-		return WithTransform(func(e metrics.Event) bool {
+		return WithTransform(func(e testsupport.Event) bool {
 			return e.Name == name
 		}, BeTrue())
 	}

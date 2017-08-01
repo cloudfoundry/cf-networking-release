@@ -12,7 +12,6 @@ import (
 	"strings"
 	"vxlan-policy-agent/config"
 
-	"code.cloudfoundry.org/cf-networking-helpers/metrics"
 	"code.cloudfoundry.org/cf-networking-helpers/mutualtls"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 
@@ -33,7 +32,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		datastorePath    string
 		conf             config.VxlanPolicyAgent
 		configFilePath   string
-		fakeMetron       metrics.FakeMetron
+		fakeMetron       testsupport.FakeMetron
 		mockPolicyServer ifrit.Process
 		serverListenPort int
 		serverListenAddr string
@@ -42,7 +41,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 
 	BeforeEach(func() {
 		var err error
-		fakeMetron = metrics.NewFakeMetron()
+		fakeMetron = testsupport.NewFakeMetron()
 
 		serverTLSConfig, err = mutualtls.NewServerTLSConfig(paths.ServerCertFile, paths.ServerKeyFile, paths.ClientCACertFile)
 		Expect(err).NotTo(HaveOccurred())
