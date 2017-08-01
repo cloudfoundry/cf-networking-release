@@ -143,7 +143,7 @@ func addNewPolicies(logger lager.Logger, appGuids []string, token string) {
 	logger.Info("adding-policies")
 	for _, chunk := range makeChunks(policies) {
 		logger.Info("adding-policies-chunk")
-		err := externalPolicyClient.AddPolicies(token, chunk)
+		err := externalPolicyClient.AddPoliciesV0(token, chunk)
 		if err != nil {
 			logger.Fatal("adding-policies", err)
 		}

@@ -88,6 +88,21 @@ var _ = Describe("Plugin", func() {
 			}))
 		})
 
+		It("returns a struct with validated and converted args with port range", func() {
+			argStruct, err := cli_plugin.ValidateArgs(fakeCliConnection, []string{
+				"command-arg", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9876-9999",
+			})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(argStruct).To(Equal(cli_plugin.ValidArgs{
+				SourceAppName: "some-app",
+				DestAppName:   "some-other-app",
+				Protocol:      "tcp",
+				Port:          0,
+				StartPort:     9876,
+				FinishPort:    9999,
+			}))
+		})
+
 		Context("when the flags are in different order", func() {
 			It("returns a struct with validated and converted args", func() {
 				argStruct, err := cli_plugin.ValidateArgs(fakeCliConnection, []string{
@@ -120,6 +135,16 @@ var _ = Describe("Plugin", func() {
 				fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
 				_, err := cli_plugin.ValidateArgs(fakeCliConnection, []string{
 					"command-arg", "some-app", "some-other-app", "--protocol", "tcp", "--port", "0",
+				})
+				Expect(err).To(MatchError("Incorrect usage. Port is not valid. Must be in range <1-65535>.\n\nUSAGE:\nbanana"))
+				c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
+				Expect(c).To(Equal([]string{"help", "command-arg"}))
+			})
+
+			It("returns a useful error", func() {
+				fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
+				_, err := cli_plugin.ValidateArgs(fakeCliConnection, []string{
+					"command-arg", "some-app", "some-other-app", "--protocol", "tcp", "--port", "0-1",
 				})
 				Expect(err).To(MatchError("Incorrect usage. Port is not valid. Must be in range <1-65535>.\n\nUSAGE:\nbanana"))
 				c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)

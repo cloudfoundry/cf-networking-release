@@ -14,6 +14,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"policy-server/api"
 )
 
 var _ = Describe("ExternalClient", func() {
@@ -179,7 +180,7 @@ var _ = Describe("ExternalClient", func() {
 		})
 	})
 
-	Describe("AddPolicies", func() {
+	Describe("AddPoliciesV0", func() {
 		var policiesToAdd []api_v0.Policy
 		BeforeEach(func() {
 			jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
@@ -202,7 +203,7 @@ var _ = Describe("ExternalClient", func() {
 			}
 		})
 		It("does the right json http client request and passes the authorization token", func() {
-			err := client.AddPolicies("some-token", policiesToAdd)
+			err := client.AddPoliciesV0("some-token", policiesToAdd)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeChunker.ChunkCallCount()).To(Equal(1))
@@ -254,6 +255,95 @@ var _ = Describe("ExternalClient", func() {
 					},
 				},
 			},
+			))
+			Expect(token).To(Equal("some-token"))
+		})
+		Context("when the json client fails", func() {
+			BeforeEach(func() {
+				jsonClient.DoReturns(errors.New("banana"))
+			})
+			It("returns the error", func() {
+				err := client.AddPoliciesV0("some-token", policiesToAdd)
+				Expect(err).To(MatchError("banana"))
+			})
+		})
+		Context("when the json client gets a bad status code", func() {
+			BeforeEach(func() {
+				jsonClient.DoReturns(&json_client.HttpResponseCodeError{
+					StatusCode: http.StatusTeapot,
+					Message:    "some-error",
+				})
+			})
+			It("parses out the error body", func() {
+				err := client.AddPoliciesV0("some-token", policiesToAdd)
+				Expect(err).To(MatchError("418 I'm a teapot: some-error"))
+			})
+		})
+	})
+
+	Describe("AddPolicies", func() {
+		var policiesToAdd []api.Policy
+		BeforeEach(func() {
+			jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+				respBytes := []byte(`{}`)
+				json.Unmarshal(respBytes, respData)
+				return nil
+			}
+
+			policiesToAdd = []api.Policy{{
+				Source: api.Source{
+					ID: "some-app-guid",
+				},
+				Destination: api.Destination{
+					ID:       "some-other-app-guid",
+					Ports:    api.Ports{Start: 8080, End: 8090},
+					Protocol: "tcp",
+				},
+			},
+				{
+					Source: api.Source{
+						ID: "some-app-guid-2",
+					},
+					Destination: api.Destination{
+						ID:       "some-other-app-guid-2",
+						Ports:    api.Ports{Start: 8091, End: 8100},
+						Protocol: "tcp",
+					},
+				},
+			}
+		})
+		It("does the right json http client request and passes the authorization token", func() {
+			err := client.AddPolicies("some-token", policiesToAdd)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(fakeChunker.ChunkCallCount()).To(Equal(0))
+
+			Expect(jsonClient.DoCallCount()).To(Equal(1))
+			method, route, reqData, _, token := jsonClient.DoArgsForCall(0)
+			Expect(method).To(Equal("POST"))
+			Expect(route).To(Equal("/networking/v1/external/policies"))
+			Expect(reqData).To(Equal(map[string][]api.Policy{
+				"policies": []api.Policy{{
+					Source: api.Source{
+						ID: "some-app-guid",
+					},
+					Destination: api.Destination{
+						ID:       "some-other-app-guid",
+						Ports:    api.Ports{Start: 8080, End: 8090},
+						Protocol: "tcp",
+					},
+				},
+					{
+						Source: api.Source{
+							ID: "some-app-guid-2",
+						},
+						Destination: api.Destination{
+							ID:       "some-other-app-guid-2",
+							Ports:    api.Ports{Start: 8091, End: 8100},
+							Protocol: "tcp",
+						},
+					},
+				}},
 			))
 			Expect(token).To(Equal("some-token"))
 		})

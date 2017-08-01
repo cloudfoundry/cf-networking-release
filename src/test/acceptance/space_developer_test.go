@@ -115,7 +115,7 @@ var _ = Describe("space developer policy configuration", func() {
 			})
 
 			By("creating a policy", func() {
-				err := policyClient.AddPolicies(spaceDevUserToken, []api_v0.Policy{
+				err := policyClient.AddPoliciesV0(spaceDevUserToken, []api_v0.Policy{
 					api_v0.Policy{
 						Source: api_v0.Source{
 							ID: appAGUID,

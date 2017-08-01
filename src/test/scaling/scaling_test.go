@@ -85,7 +85,7 @@ var _ = Describe("how the container network performs at scale", func() {
 
 				By(fmt.Sprintf("%s creating %d policies", ts(), len(proxyApps)*len(tickApps)*len(ports)))
 				policies := getPolicies(proxyApps, tickApps, ports)
-				Expect(policyClient.AddPolicies(getToken(), policies)).To(Succeed())
+				Expect(policyClient.AddPoliciesV0(getToken(), policies)).To(Succeed())
 
 				By(fmt.Sprintf("%s waiting %s for policies to be updated on cells", ts(), policyUpdateWaitTime))
 				time.Sleep(policyUpdateWaitTime)

@@ -37,6 +37,8 @@ type ValidArgs struct {
 	DestAppName   string
 	Protocol      string
 	Port          int
+	StartPort     int
+	FinishPort    int
 }
 
 const AllowCommand = "allow-access"
@@ -44,7 +46,7 @@ const ListCommand = "list-access"
 const RemoveCommand = "remove-access"
 
 var ListUsageRegex = fmt.Sprintf(`\A%s\s*(--app(\s+|=)\S+\z|\z)`, ListCommand)
-var AllowUsageRegex = fmt.Sprintf(`\A%s\s+\S+\s+\S+\s+(--|-)\w+(\s+|=)\w+\s+(--|-)\w+(\s+|=)\w+\z`, AllowCommand)
+var AllowUsageRegex = fmt.Sprintf(`\A%s\s+\S+\s+\S+\s+(--|-)\w+(\s+|=)\w+\s+(--|-)\w+(\s+|=)[0-9-]+\z`, AllowCommand)
 var RemoveUsageRegex = fmt.Sprintf(`\A%s\s+\S+\s+\S+\s+(--|-)\w+(\s+|=)\w+\s+(--|-)\w+(\s+|=)\w+\z`, RemoveCommand)
 
 const MinPort = 1
@@ -183,12 +185,27 @@ func ValidateArgs(cliConnection plugin.CliConnection, args []string) (ValidArgs,
 		return ValidArgs{}, errorWithUsage(err.Error(), args[0], cliConnection)
 	}
 
-	port, err := strconv.Atoi(*portString)
-	if err != nil {
+	ports := strings.Split(*portString, "-")
+	if len(ports) == 1 {
+		port, err := validatePort(*portString)
+		if err != nil {
+			return ValidArgs{}, errorWithUsage(err.Error(), args[0], cliConnection)
+		}
+		validArgs.Port = port
+	} else if len(ports) == 2 {
+		port, err := validatePort(ports[0])
+		if err != nil {
+			return ValidArgs{}, errorWithUsage(err.Error(), args[0], cliConnection)
+		}
+		validArgs.StartPort = port
+
+		port, err = validatePort(ports[1])
+		if err != nil {
+			return ValidArgs{}, errorWithUsage(err.Error(), args[0], cliConnection)
+		}
+		validArgs.FinishPort = port
+	} else {
 		return ValidArgs{}, errorWithUsage(fmt.Sprintf("Port is not valid: %s", *portString), args[0], cliConnection)
-	}
-	if port < MinPort || port > MaxPort {
-		return ValidArgs{}, errorWithUsage(fmt.Sprintf("Port is not valid. Must be in range <%d-%d>.", MinPort, MaxPort), args[0], cliConnection)
 	}
 
 	if *protocol != "tcp" && *protocol != "udp" {
@@ -198,7 +215,6 @@ func ValidateArgs(cliConnection plugin.CliConnection, args []string) (ValidArgs,
 	validArgs.SourceAppName = srcAppName
 	validArgs.DestAppName = dstAppName
 	validArgs.Protocol = *protocol
-	validArgs.Port = port
 
 	return validArgs, nil
 }
@@ -209,4 +225,16 @@ func errorWithUsage(errorString, cmd string, cliConnection plugin.CliConnection)
 		return fmt.Errorf("cf cli error: %s", err)
 	}
 	return fmt.Errorf("Incorrect usage. %s\n\n%s", errorString, strings.Join(output, "\n"))
+}
+
+func validatePort(portStr string) (int, error) {
+	port, err := strconv.Atoi(portStr)
+	if err != nil {
+		return port, fmt.Errorf("Port is not valid: %s", portStr)
+	}
+	if port < MinPort || port > MaxPort {
+		return port, fmt.Errorf("Port is not valid. Must be in range <%d-%d>.", MinPort, MaxPort)
+	}
+
+	return port, nil
 }

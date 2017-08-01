@@ -12,6 +12,7 @@ import (
 	"text/tabwriter"
 
 	"code.cloudfoundry.org/cli/plugin"
+	"policy-server/api"
 )
 
 type CommandRunner struct {
@@ -130,19 +131,30 @@ func (r *CommandRunner) Allow() (string, error) {
 			" to " + r.Styler.AddStyle(validArgs.DestAppName, "cyan") +
 			" as " + r.Styler.AddStyle(username, "cyan") + "..."))
 
-	policy, err := r.constructPolicy(validArgs)
-	if err != nil {
-		return "", err
-	}
-
 	token, err := r.CliConnection.AccessToken()
 	if err != nil {
 		return "", fmt.Errorf("getting access token: %s", err)
 	}
 
-	err = r.PolicyClient.AddPolicies(token, []api_v0.Policy{policy})
-	if err != nil {
-		return "", fmt.Errorf("adding policies: %s", err)
+	if validArgs.StartPort > 0 {
+		policy, err := r.constructPolicy(validArgs)
+		if err != nil {
+			return "", err
+		}
+		err = r.PolicyClient.AddPolicies(token, []api.Policy{policy})
+		if err != nil {
+			return "", fmt.Errorf("adding policies: %s", err)
+		}
+	} else {
+		policy, err := r.constructPolicyV0(validArgs)
+		if err != nil {
+			return "", err
+		}
+
+		err = r.PolicyClient.AddPoliciesV0(token, []api_v0.Policy{policy})
+		if err != nil {
+			return "", fmt.Errorf("adding policies: %s", err)
+		}
 	}
 
 	return "", nil
@@ -169,7 +181,7 @@ func (r *CommandRunner) Remove() (string, error) {
 			" to " + r.Styler.AddStyle(validArgs.DestAppName, "cyan") +
 			" as " + r.Styler.AddStyle(username, "cyan") + "..."))
 
-	policy, err := r.constructPolicy(validArgs)
+	policy, err := r.constructPolicyV0(validArgs)
 	if err != nil {
 		return "", err
 	}
@@ -187,7 +199,7 @@ func (r *CommandRunner) Remove() (string, error) {
 	return "", nil
 }
 
-func (r *CommandRunner) constructPolicy(validArgs ValidArgs) (api_v0.Policy, error) {
+func (r *CommandRunner) constructPolicyV0(validArgs ValidArgs) (api_v0.Policy, error) {
 	srcAppModel, err := r.CliConnection.GetApp(validArgs.SourceAppName)
 	if err != nil {
 		return api_v0.Policy{}, fmt.Errorf("resolving source app: %s", err)
@@ -211,6 +223,33 @@ func (r *CommandRunner) constructPolicy(validArgs ValidArgs) (api_v0.Policy, err
 			ID:       dstAppModel.Guid,
 			Protocol: validArgs.Protocol,
 			Port:     validArgs.Port,
+		},
+	}, nil
+}
+func (r *CommandRunner) constructPolicy(validArgs ValidArgs) (api.Policy, error) {
+	srcAppModel, err := r.CliConnection.GetApp(validArgs.SourceAppName)
+	if err != nil {
+		return api.Policy{}, fmt.Errorf("resolving source app: %s", err)
+	}
+	if srcAppModel.Guid == "" {
+		return api.Policy{}, fmt.Errorf("resolving source app: %s not found", validArgs.SourceAppName)
+	}
+	dstAppModel, err := r.CliConnection.GetApp(validArgs.DestAppName)
+	if err != nil {
+		return api.Policy{}, fmt.Errorf("resolving destination app: %s", err)
+	}
+	if dstAppModel.Guid == "" {
+		return api.Policy{}, fmt.Errorf("resolving destination app: %s not found", validArgs.DestAppName)
+	}
+
+	return api.Policy{
+		Source: api.Source{
+			ID: srcAppModel.Guid,
+		},
+		Destination: api.Destination{
+			ID:       dstAppModel.Guid,
+			Protocol: validArgs.Protocol,
+			Ports:    api.Ports{Start: validArgs.StartPort, End: validArgs.FinishPort },
 		},
 	}, nil
 }

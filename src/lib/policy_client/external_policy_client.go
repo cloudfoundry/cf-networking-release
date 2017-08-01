@@ -8,6 +8,7 @@ import (
 
 	"code.cloudfoundry.org/cf-networking-helpers/json_client"
 	"code.cloudfoundry.org/lager"
+	"policy-server/api"
 )
 
 //go:generate counterfeiter -o ../fakes/external_policy_client.go --fake-name ExternalPolicyClient . ExternalPolicyClient
@@ -15,7 +16,8 @@ type ExternalPolicyClient interface {
 	GetPolicies(token string) ([]api_v0.Policy, error)
 	GetPoliciesByID(token string, ids ...string) ([]api_v0.Policy, error)
 	DeletePolicies(token string, policies []api_v0.Policy) error
-	AddPolicies(token string, policies []api_v0.Policy) error
+	AddPolicies(token string, policies []api.Policy) error
+	AddPoliciesV0(token string, policies []api_v0.Policy) error
 }
 
 type ExternalClient struct {
@@ -53,7 +55,20 @@ func (c *ExternalClient) GetPoliciesByID(token string, ids ...string) ([]api_v0.
 	return policies.Policies, nil
 }
 
-func (c *ExternalClient) AddPolicies(token string, policies []api_v0.Policy) error {
+func (c *ExternalClient) AddPolicies(token string, policies []api.Policy) error {
+	reqPolicies := map[string][]api.Policy{
+		"policies": policies,
+	}
+
+	err := c.JsonClient.Do("POST", "/networking/v1/external/policies", reqPolicies, nil, token)
+	if err != nil {
+		return parseHttpError(err)
+	}
+
+	return nil
+}
+
+func (c *ExternalClient) AddPoliciesV0(token string, policies []api_v0.Policy) error {
 	chunks := c.Chunker.Chunk(policies)
 	for _, chunk := range chunks {
 		reqPolicies := map[string][]api_v0.Policy{

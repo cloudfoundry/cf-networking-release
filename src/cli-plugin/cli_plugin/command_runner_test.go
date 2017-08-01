@@ -13,6 +13,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"policy-server/api"
 )
 
 var _ = Describe("CommandRunner", func() {
@@ -226,77 +227,161 @@ var _ = Describe("CommandRunner", func() {
 	})
 
 	Describe("Allow", func() {
-		BeforeEach(func() {
-			runner.Args = []string{"allow-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999"}
-		})
-
-		Context("when the command is allow-access", func() {
-			It("translates the app names to app guids", func() {
-				_, err := runner.Allow()
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(fakeCliConnection.GetAppCallCount()).To(Equal(2))
-				Expect(fakeCliConnection.GetAppArgsForCall(0)).To(Equal("some-app"))
-				Expect(fakeCliConnection.GetAppArgsForCall(1)).To(Equal("some-other-app"))
-
-				Expect(policyClient.AddPoliciesCallCount()).To(Equal(1))
-				token, policies := policyClient.AddPoliciesArgsForCall(0)
-				Expect(token).To(Equal("some-token"))
-				Expect(policies).To(ConsistOf(api_v0.Policy{
-					Source:      api_v0.Source{ID: "some-app-guid"},
-					Destination: api_v0.Destination{ID: "some-other-app-guid", Port: 9999, Protocol: "tcp"}}))
+		Context("when using a port range", func() {
+			BeforeEach(func() {
+				runner.Args = []string{"allow-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9998-9999"}
 			})
 
-			Context("when adding the policies fails", func() {
-				BeforeEach(func() {
-					policyClient.AddPoliciesReturns(errors.New("banana"))
-				})
-				It("wraps the error in a more helpful message", func() {
+			Context("when the command is allow-access", func() {
+				It("translates the app names to app guids", func() {
 					_, err := runner.Allow()
-					Expect(err).To(MatchError("adding policies: banana"))
-				})
-			})
+					Expect(err).NotTo(HaveOccurred())
 
-			Context("when getting the access token fails", func() {
-				BeforeEach(func() {
-					fakeCliConnection.AccessTokenReturns("", errors.New("banana"))
-				})
-				It("returns the error", func() {
-					_, err := runner.Allow()
-					Expect(err).To(MatchError("getting access token: banana"))
-				})
-			})
+					Expect(fakeCliConnection.GetAppCallCount()).To(Equal(2))
+					Expect(fakeCliConnection.GetAppArgsForCall(0)).To(Equal("some-app"))
+					Expect(fakeCliConnection.GetAppArgsForCall(1)).To(Equal("some-other-app"))
 
-			Context("when the user supplies incorrect arguments", func() {
-				BeforeEach(func() {
-					runner.Args = []string{"allow-access", "some-app", "--protocol", "tcp", "some-other-app", "--port", "9999"}
-				})
-				It("shows usage", func() {
-					fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
-					_, err := runner.Allow()
-					Expect(err).To(MatchError("Incorrect usage. \n\nUSAGE:\nbanana"))
-					c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
-					Expect(c).To(Equal([]string{"help", "allow-access"}))
+					Expect(policyClient.AddPoliciesCallCount()).To(Equal(1))
+					token, policies := policyClient.AddPoliciesArgsForCall(0)
+					Expect(token).To(Equal("some-token"))
+					Expect(policies).To(ConsistOf(api.Policy{
+						Source: api.Source{ID: "some-app-guid"},
+						Destination: api.Destination{
+							ID: "some-other-app-guid",
+							Ports: api.Ports{
+								Start: 9998,
+								End:   9999,
+							},
+							Protocol: "tcp"}}))
 				})
 
-				Context("and then when the cf cli command fails", func() {
+				Context("when adding the policies fails", func() {
 					BeforeEach(func() {
-						fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{}, errors.New("banana"))
+						policyClient.AddPoliciesReturns(errors.New("banana"))
+					})
+					It("wraps the error in a more helpful message", func() {
+						_, err := runner.Allow()
+						Expect(err).To(MatchError("adding policies: banana"))
+					})
+				})
+
+				Context("when getting the access token fails", func() {
+					BeforeEach(func() {
+						fakeCliConnection.AccessTokenReturns("", errors.New("banana"))
 					})
 					It("returns the error", func() {
 						_, err := runner.Allow()
-						Expect(err).To(MatchError("cf cli error: banana"))
+						Expect(err).To(MatchError("getting access token: banana"))
+					})
+				})
+
+				Context("when the user supplies incorrect arguments", func() {
+					BeforeEach(func() {
+						runner.Args = []string{"allow-access", "some-app", "--protocol", "tcp", "some-other-app", "--port", "9998-9999"}
+					})
+					It("shows usage", func() {
+						fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
+						_, err := runner.Allow()
+						Expect(err).To(MatchError("Incorrect usage. \n\nUSAGE:\nbanana"))
+						c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
+						Expect(c).To(Equal([]string{"help", "allow-access"}))
+					})
+
+					Context("and then when the cf cli command fails", func() {
+						BeforeEach(func() {
+							fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{}, errors.New("banana"))
+						})
+						It("returns the error", func() {
+							_, err := runner.Allow()
+							Expect(err).To(MatchError("cf cli error: banana"))
+						})
+					})
+				})
+
+				Context("when getting the username fails", func() {
+					BeforeEach(func() {
+						fakeCliConnection.UsernameReturns("", errors.New("banana"))
+					})
+					It("returns an error", func() {
+						_, err := runner.Allow()
+						Expect(err).To(MatchError("could not resolve username: banana"))
 					})
 				})
 			})
+		})
+		Context("when using a single port", func() {
+			BeforeEach(func() {
+				runner.Args = []string{"allow-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999"}
+			})
 
-			Context("when getting the username fails", func() {
-				BeforeEach(func() {
-					fakeCliConnection.UsernameReturns("", errors.New("banana"))
-				})
-				It("returns an error", func() {
+			Context("when the command is allow-access", func() {
+				It("translates the app names to app guids", func() {
 					_, err := runner.Allow()
-					Expect(err).To(MatchError("could not resolve username: banana"))
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(fakeCliConnection.GetAppCallCount()).To(Equal(2))
+					Expect(fakeCliConnection.GetAppArgsForCall(0)).To(Equal("some-app"))
+					Expect(fakeCliConnection.GetAppArgsForCall(1)).To(Equal("some-other-app"))
+
+					Expect(policyClient.AddPoliciesV0CallCount()).To(Equal(1))
+					token, policies := policyClient.AddPoliciesV0ArgsForCall(0)
+					Expect(token).To(Equal("some-token"))
+					Expect(policies).To(ConsistOf(api_v0.Policy{
+						Source:      api_v0.Source{ID: "some-app-guid"},
+						Destination: api_v0.Destination{ID: "some-other-app-guid", Port: 9999, Protocol: "tcp"}}))
+				})
+
+				Context("when adding the policies fails", func() {
+					BeforeEach(func() {
+						policyClient.AddPoliciesV0Returns(errors.New("banana"))
+					})
+					It("wraps the error in a more helpful message", func() {
+						_, err := runner.Allow()
+						Expect(err).To(MatchError("adding policies: banana"))
+					})
+				})
+
+				Context("when getting the access token fails", func() {
+					BeforeEach(func() {
+						fakeCliConnection.AccessTokenReturns("", errors.New("banana"))
+					})
+					It("returns the error", func() {
+						_, err := runner.Allow()
+						Expect(err).To(MatchError("getting access token: banana"))
+					})
+				})
+
+				Context("when the user supplies incorrect arguments", func() {
+					BeforeEach(func() {
+						runner.Args = []string{"allow-access", "some-app", "--protocol", "tcp", "some-other-app", "--port", "9999"}
+					})
+					It("shows usage", func() {
+						fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{"USAGE:", "banana"}, nil)
+						_, err := runner.Allow()
+						Expect(err).To(MatchError("Incorrect usage. \n\nUSAGE:\nbanana"))
+						c := fakeCliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)
+						Expect(c).To(Equal([]string{"help", "allow-access"}))
+					})
+
+					Context("and then when the cf cli command fails", func() {
+						BeforeEach(func() {
+							fakeCliConnection.CliCommandWithoutTerminalOutputReturns([]string{}, errors.New("banana"))
+						})
+						It("returns the error", func() {
+							_, err := runner.Allow()
+							Expect(err).To(MatchError("cf cli error: banana"))
+						})
+					})
+				})
+
+				Context("when getting the username fails", func() {
+					BeforeEach(func() {
+						fakeCliConnection.UsernameReturns("", errors.New("banana"))
+					})
+					It("returns an error", func() {
+						_, err := runner.Allow()
+						Expect(err).To(MatchError("could not resolve username: banana"))
+					})
 				})
 			})
 		})
