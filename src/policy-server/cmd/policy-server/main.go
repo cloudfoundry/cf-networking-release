@@ -175,20 +175,18 @@ func main() {
 	quotaGuard := handlers.NewQuotaGuard(wrappedStore, conf.MaxPolicies)
 	policyFilter := handlers.NewPolicyFilter(uaaClient, ccClient, 100)
 
-	policyMapperV0 := api_v0.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal))
+	policyMapperV0 := api_v0.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal), &api_v0.Validator{})
 	policyMapperV0Internal := api_v0_internal.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal))
-	policyMapperV1 := api.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal))
+	policyMapperV1 := api.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal), &api.Validator{})
 
-	validator := &handlers.Validator{}
-
-	createPolicyHandlerV1 := handlers.NewPoliciesCreate(wrappedStore, policyMapperV1, validator,
+	createPolicyHandlerV1 := handlers.NewPoliciesCreate(wrappedStore, policyMapperV1,
 		policyGuard, quotaGuard, errorResponse)
-	createPolicyHandlerV0 := handlers.NewPoliciesCreate(wrappedStore, policyMapperV0, validator,
+	createPolicyHandlerV0 := handlers.NewPoliciesCreate(wrappedStore, policyMapperV0,
 		policyGuard, quotaGuard, errorResponse)
 
-	deletePolicyHandlerV1 := handlers.NewPoliciesDelete(wrappedStore, policyMapperV1, validator,
+	deletePolicyHandlerV1 := handlers.NewPoliciesDelete(wrappedStore, policyMapperV1,
 		policyGuard, errorResponse)
-	deletePolicyHandlerV0 := handlers.NewPoliciesDelete(wrappedStore, policyMapperV0, validator,
+	deletePolicyHandlerV0 := handlers.NewPoliciesDelete(wrappedStore, policyMapperV0,
 		policyGuard, errorResponse)
 
 	policiesIndexHandlerV1 := handlers.NewPoliciesIndex(wrappedStore, policyMapperV1, policyFilter, errorResponse)

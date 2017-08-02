@@ -145,8 +145,10 @@ var _ = Describe("External API Deleting Policies", func() {
 		  { "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 7777 } }
 		]}`
 
-		invalidStartPortResponse := `{ "error": "delete-policies: invalid start port 0, must be in range 1-65535" }`
-		invalidProtocolResponse := `{ "error": "delete-policies: invalid destination protocol, specify either udp or tcp" }`
+		missingStartPortResponse := `{ "error": "delete-policies: mapper: validate policies: missing start port" }`
+
+		missingPortResponse := `{ "error": "delete-policies: mapper: validate policies: missing port" }`
+		invalidProtocolResponse := `{ "error": "delete-policies: mapper: validate policies: invalid destination protocol, specify either udp or tcp" }`
 
 		DescribeTable("deleting policies succeeds", deletePoliciesSucceeds,
 			Entry("v1", "v1", v1Request, v1Response),
@@ -156,10 +158,10 @@ var _ = Describe("External API Deleting Policies", func() {
 		)
 
 		DescribeTable("failure cases", deletePoliciesFails,
-			Entry("v1: missing ports", "v1", v0Request, invalidStartPortResponse),
+			Entry("v1: missing ports", "v1", v0Request, missingStartPortResponse),
 			Entry("v1: missing protocol", "v1", v1RequestMissingProtocol, invalidProtocolResponse),
 
-			Entry("v0: missing port", "v0", v1Request, invalidStartPortResponse),
+			Entry("v0: missing port", "v0", v1Request, missingPortResponse),
 			Entry("v0: missing protocol", "v0", v0RequestMissingProtocol, invalidProtocolResponse),
 		)
 	})

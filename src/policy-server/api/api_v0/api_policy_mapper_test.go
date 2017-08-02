@@ -5,9 +5,10 @@ import (
 	"errors"
 	"policy-server/api"
 	"policy-server/api/api_v0"
+	"policy-server/api/api_v0/fakes"
 	"policy-server/store"
 
-	"code.cloudfoundry.org/cf-networking-helpers/fakes"
+	hfakes "code.cloudfoundry.org/cf-networking-helpers/fakes"
 	"code.cloudfoundry.org/cf-networking-helpers/marshal"
 
 	. "github.com/onsi/ginkgo"
@@ -17,16 +18,19 @@ import (
 var _ = Describe("ApiPolicyMapper v000", func() {
 	var (
 		mapper          api.PolicyMapper
-		fakeUnmarshaler *fakes.Unmarshaler
-		fakeMarshaler   *fakes.Marshaler
+		fakeUnmarshaler *hfakes.Unmarshaler
+		fakeMarshaler   *hfakes.Marshaler
+		fakeValidator   *fakes.Validator
 	)
 	BeforeEach(func() {
+		fakeValidator = &fakes.Validator{}
 		mapper = api_v0.NewMapper(
 			marshal.UnmarshalFunc(json.Unmarshal),
 			marshal.MarshalFunc(json.Marshal),
+			fakeValidator,
 		)
-		fakeUnmarshaler = &fakes.Unmarshaler{}
-		fakeMarshaler = &fakes.Marshaler{}
+		fakeUnmarshaler = &hfakes.Unmarshaler{}
+		fakeMarshaler = &hfakes.Marshaler{}
 	})
 	Describe("AsStorePolicy", func() {
 		It("maps a payload with api.Policy to a slice of store.Policy", func() {
@@ -52,6 +56,28 @@ var _ = Describe("ApiPolicyMapper v000", func() {
 				}`),
 			)
 			Expect(err).NotTo(HaveOccurred())
+			Expect(fakeValidator.ValidatePoliciesCallCount()).To(Equal(1))
+			Expect(fakeValidator.ValidatePoliciesArgsForCall(0)).To(Equal([]api_v0.Policy{
+				{
+					Source: api_v0.Source{ID: "some-src-id", Tag: ""},
+					Destination: api_v0.Destination{
+						ID:       "some-dst-id",
+						Tag:      "some-other-dst-tag",
+						Protocol: "some-protocol",
+						Port:     8080,
+					},
+				},
+				{
+					Source: api_v0.Source{ID: "some-src-id-2", Tag: ""},
+					Destination: api_v0.Destination{
+						ID:       "some-dst-id-2",
+						Tag:      "some-other-dst-tag-2",
+						Protocol: "some-protocol-2",
+						Port:     8081,
+					},
+				},
+			}))
+
 			Expect(storePolicies).To(Equal([]store.Policy{
 				{
 					Source: store.Source{ID: "some-src-id"},
@@ -86,11 +112,22 @@ var _ = Describe("ApiPolicyMapper v000", func() {
 				mapper = api_v0.NewMapper(
 					fakeUnmarshaler,
 					marshal.MarshalFunc(json.Marshal),
+					fakeValidator,
 				)
 			})
 			It("wraps and returns an error", func() {
 				_, err := mapper.AsStorePolicy([]byte("somebytes"))
 				Expect(err).To(MatchError(errors.New("unmarshal json: banana")))
+			})
+		})
+
+		Context("when validating the policies fails", func() {
+			BeforeEach(func() {
+				fakeValidator.ValidatePoliciesReturns(errors.New("apple"))
+			})
+			It("wraps and returns an error", func() {
+				_, err := mapper.AsStorePolicy([]byte("{}"))
+				Expect(err).To(MatchError(errors.New("validate policies: apple")))
 			})
 		})
 	})
@@ -238,6 +275,7 @@ var _ = Describe("ApiPolicyMapper v000", func() {
 				mapper = api_v0.NewMapper(
 					marshal.UnmarshalFunc(json.Unmarshal),
 					fakeMarshaler,
+					fakeValidator,
 				)
 			})
 			It("wraps and returns an error", func() {

@@ -14,17 +14,15 @@ import (
 type PoliciesDelete struct {
 	Store         dataStore
 	Mapper        api.PolicyMapper
-	Validator     validator
 	PolicyGuard   policyGuard
 	ErrorResponse errorResponse
 }
 
-func NewPoliciesDelete(store dataStore, mapper api.PolicyMapper, validator validator,
+func NewPoliciesDelete(store dataStore, mapper api.PolicyMapper,
 	policyGuard policyGuard, errorResponse errorResponse) *PoliciesDelete {
 	return &PoliciesDelete{
 		Store:         store,
 		Mapper:        mapper,
-		Validator:     validator,
 		PolicyGuard:   policyGuard,
 		ErrorResponse: errorResponse,
 	}
@@ -42,14 +40,7 @@ func (h *PoliciesDelete) ServeHTTP(logger lager.Logger, w http.ResponseWriter, r
 	policies, err := h.Mapper.AsStorePolicy(bodyBytes)
 	if err != nil {
 		logger.Error("failed-mapping-policies", err)
-		h.ErrorResponse.BadRequest(w, err, "delete-policies", fmt.Sprintf("could not map request to store policies: %s", err))
-		return
-	}
-
-	err = h.Validator.ValidatePolicies(policies)
-	if err != nil {
-		logger.Error("failed-validating-policies", err)
-		h.ErrorResponse.BadRequest(w, err, "delete-policies", err.Error())
+		h.ErrorResponse.BadRequest(w, err, "delete-policies", fmt.Sprintf("mapper: %s", err))
 		return
 	}
 

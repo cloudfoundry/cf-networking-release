@@ -31,7 +31,6 @@ var _ = Describe("PoliciesCreate", func() {
 		expectedPolicies       []store.Policy
 		fakeStore              *fakes.DataStore
 		fakeMapper             *apifakes.PolicyMapper
-		fakeValidator          *fakes.Validator
 		fakePolicyGuard        *fakes.PolicyGuard
 		fakeQuotaGuard         *fakes.QuotaGuard
 		fakeErrorResponse      *fakes.ErrorResponse
@@ -48,7 +47,6 @@ var _ = Describe("PoliciesCreate", func() {
 
 		fakeStore = &fakes.DataStore{}
 		fakeMapper = &apifakes.PolicyMapper{}
-		fakeValidator = &fakes.Validator{}
 		fakePolicyGuard = &fakes.PolicyGuard{}
 		fakeQuotaGuard = &fakes.QuotaGuard{}
 		logger = lagertest.NewTestLogger("test")
@@ -56,7 +54,6 @@ var _ = Describe("PoliciesCreate", func() {
 		handler = &handlers.PoliciesCreate{
 			Store:         fakeStore,
 			Mapper:        fakeMapper,
-			Validator:     fakeValidator,
 			PolicyGuard:   fakePolicyGuard,
 			QuotaGuard:    fakeQuotaGuard,
 			ErrorResponse: fakeErrorResponse,
@@ -98,8 +95,6 @@ var _ = Describe("PoliciesCreate", func() {
 			Expect(fakeMapper.AsStorePolicyCallCount()).To(Equal(1))
 			Expect(fakeMapper.AsStorePolicyArgsForCall(0)).To(Equal([]byte(requestBody)))
 
-			Expect(fakeValidator.ValidatePoliciesCallCount()).To(Equal(1))
-			Expect(fakeValidator.ValidatePoliciesArgsForCall(0)).To(Equal(expectedPolicies))
 			Expect(fakePolicyGuard.CheckAccessCallCount()).To(Equal(1))
 			policies, token := fakePolicyGuard.CheckAccessArgsForCall(0)
 			Expect(policies).To(Equal(expectedPolicies))
@@ -169,7 +164,7 @@ var _ = Describe("PoliciesCreate", func() {
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("banana"))
 			Expect(message).To(Equal("policies-create"))
-			Expect(description).To(Equal("could not map request to store policies: banana"))
+			Expect(description).To(Equal("mapper: banana"))
 
 			By("logging the error")
 			Expect(logger.Logs()).To(HaveLen(1))
@@ -236,35 +231,6 @@ var _ = Describe("PoliciesCreate", func() {
 				HaveLogData(SatisfyAll(
 					HaveLen(2),
 					HaveKeyWithValue("error", "policy quota exceeded"),
-					HaveKeyWithValue("session", "1"),
-				)),
-			))
-		})
-	})
-
-	Context("when the validator fails", func() {
-		BeforeEach(func() {
-			fakeValidator.ValidatePoliciesReturns(errors.New("banana"))
-		})
-
-		It("calls the bad request handler", func() {
-			handler.ServeHTTP(logger, resp, request, tokenData)
-
-			Expect(fakeErrorResponse.BadRequestCallCount()).To(Equal(1))
-
-			w, err, message, description := fakeErrorResponse.BadRequestArgsForCall(0)
-			Expect(w).To(Equal(resp))
-			Expect(err).To(MatchError("banana"))
-			Expect(message).To(Equal("policies-create"))
-			Expect(description).To(Equal("banana"))
-
-			By("logging the error")
-			Expect(logger.Logs()).To(HaveLen(1))
-			Expect(logger.Logs()[0]).To(SatisfyAll(
-				LogsWith(lager.ERROR, "test.create-policies.failed-validating-policies"),
-				HaveLogData(SatisfyAll(
-					HaveLen(2),
-					HaveKeyWithValue("error", "banana"),
 					HaveKeyWithValue("session", "1"),
 				)),
 			))

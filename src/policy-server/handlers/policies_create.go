@@ -25,18 +25,16 @@ type quotaGuard interface {
 type PoliciesCreate struct {
 	Store         dataStore
 	Mapper        api.PolicyMapper
-	Validator     validator
 	PolicyGuard   policyGuard
 	QuotaGuard    quotaGuard
 	ErrorResponse errorResponse
 }
 
-func NewPoliciesCreate(store dataStore, mapper api.PolicyMapper, validator validator,
+func NewPoliciesCreate(store dataStore, mapper api.PolicyMapper,
 	policyGuard policyGuard, quotaGuard quotaGuard, errorResponse errorResponse) *PoliciesCreate {
 	return &PoliciesCreate{
 		Store:         store,
 		Mapper:        mapper,
-		Validator:     validator,
 		PolicyGuard:   policyGuard,
 		QuotaGuard:    quotaGuard,
 		ErrorResponse: errorResponse,
@@ -56,14 +54,7 @@ func (h *PoliciesCreate) ServeHTTP(logger lager.Logger, w http.ResponseWriter, r
 	policies, err := h.Mapper.AsStorePolicy(bodyBytes)
 	if err != nil {
 		logger.Error("failed-mapping-policies", err)
-		h.ErrorResponse.BadRequest(w, err, "policies-create", fmt.Sprintf("could not map request to store policies: %s", err))
-		return
-	}
-
-	err = h.Validator.ValidatePolicies(policies)
-	if err != nil {
-		logger.Error("failed-validating-policies", err)
-		h.ErrorResponse.BadRequest(w, err, "policies-create", err.Error())
+		h.ErrorResponse.BadRequest(w, err, "policies-create", fmt.Sprintf("mapper: %s", err))
 		return
 	}
 

@@ -31,7 +31,6 @@ var _ = Describe("PoliciesDelete", func() {
 		fakeMapper        *apifakes.PolicyMapper
 		logger            *lagertest.TestLogger
 		expectedPolicies  []store.Policy
-		fakeValidator     *fakes.Validator
 		fakePolicyGuard   *fakes.PolicyGuard
 		fakeErrorResponse *fakes.ErrorResponse
 		tokenData         uaa_client.CheckTokenResponse
@@ -47,14 +46,12 @@ var _ = Describe("PoliciesDelete", func() {
 
 		fakeStore = &fakes.DataStore{}
 		fakeMapper = &apifakes.PolicyMapper{}
-		fakeValidator = &fakes.Validator{}
 		fakePolicyGuard = &fakes.PolicyGuard{}
 		logger = lagertest.NewTestLogger("test")
 		fakeErrorResponse = &fakes.ErrorResponse{}
 		handler = &handlers.PoliciesDelete{
 			Mapper:        fakeMapper,
 			Store:         fakeStore,
-			Validator:     fakeValidator,
 			PolicyGuard:   fakePolicyGuard,
 			ErrorResponse: fakeErrorResponse,
 		}
@@ -139,7 +136,7 @@ var _ = Describe("PoliciesDelete", func() {
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("banana"))
 			Expect(message).To(Equal("delete-policies"))
-			Expect(description).To(Equal("could not map request to store policies: banana"))
+			Expect(description).To(Equal("mapper: banana"))
 
 			By("logging the error")
 			Expect(logger.Logs()).To(HaveLen(1))
@@ -203,35 +200,6 @@ var _ = Describe("PoliciesDelete", func() {
 			Expect(logger.Logs()).To(HaveLen(1))
 			Expect(logger.Logs()[0]).To(SatisfyAll(
 				LogsWith(lager.ERROR, "test.delete-policies.failed-checking-access"),
-				HaveLogData(SatisfyAll(
-					HaveLen(2),
-					HaveKeyWithValue("error", "banana"),
-					HaveKeyWithValue("session", "1"),
-				)),
-			))
-		})
-	})
-
-	Context("when a policy to delete includes any validation error", func() {
-		BeforeEach(func() {
-			fakeValidator.ValidatePoliciesReturns(errors.New("banana"))
-		})
-
-		It("calls the bad request handler", func() {
-			handler.ServeHTTP(logger, resp, request, tokenData)
-
-			Expect(fakeErrorResponse.BadRequestCallCount()).To(Equal(1))
-
-			w, err, message, description := fakeErrorResponse.BadRequestArgsForCall(0)
-			Expect(w).To(Equal(resp))
-			Expect(err).To(MatchError("banana"))
-			Expect(message).To(Equal("delete-policies"))
-			Expect(description).To(Equal("banana"))
-
-			By("logging the error")
-			Expect(logger.Logs()).To(HaveLen(1))
-			Expect(logger.Logs()[0]).To(SatisfyAll(
-				LogsWith(lager.ERROR, "test.delete-policies.failed-validating-policies"),
 				HaveLogData(SatisfyAll(
 					HaveLen(2),
 					HaveKeyWithValue("error", "banana"),
