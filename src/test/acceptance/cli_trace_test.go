@@ -41,7 +41,7 @@ var _ = Describe("trace logging for the plugin", func() {
 		It("does not log the HTTP request or response", func() {
 			listAccess := cf.Cf("list-access")
 			Expect(listAccess.Wait(Timeout_Push)).To(gexec.Exit(0))
-			Expect(string(listAccess.Out.Contents())).NotTo(ContainSubstring("GET /networking/v0/external/policies"))
+			Expect(string(listAccess.Out.Contents())).NotTo(ContainSubstring("GET /networking/v1/external/policies"))
 		})
 	})
 
@@ -62,7 +62,7 @@ var _ = Describe("trace logging for the plugin", func() {
 			Expect(listAccess.Wait(Timeout_Push)).To(gexec.Exit(0))
 
 			By("printing trace info", func() {
-				Expect(string(listAccess.Out.Contents())).To(ContainSubstring("GET /networking/v0/external/policies"))
+				Expect(string(listAccess.Out.Contents())).To(ContainSubstring("GET /networking/v1/external/policies"))
 			})
 
 			By("not printing private data", func() {

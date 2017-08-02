@@ -65,8 +65,15 @@ var _ = Describe("CommandRunner", func() {
 
 	Describe("List", func() {
 		BeforeEach(func() {
-			policyClient.GetPoliciesV0Returns([]api_v0.Policy{
-				api_v0.Policy{Source: api_v0.Source{ID: "some-app-guid"}, Destination: api_v0.Destination{ID: "some-other-app-guid", Port: 9999, Protocol: "tcp"}},
+			policyClient.GetPoliciesReturns([]api.Policy{
+				api.Policy{
+					Source: api.Source{ID: "some-app-guid"},
+					Destination: api.Destination{
+						ID:       "some-other-app-guid",
+						Ports:    api.Ports{Start: 9999, End: 1000},
+						Protocol: "tcp",
+					},
+				},
 			}, nil)
 			runner.Args = []string{"list-access"}
 		})
@@ -76,27 +83,27 @@ var _ = Describe("CommandRunner", func() {
 				output, err := runner.List()
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(policyClient.GetPoliciesV0CallCount()).To(Equal(1))
-				Expect(policyClient.GetPoliciesV0ArgsForCall(0)).To(Equal("some-token"))
+				Expect(policyClient.GetPoliciesCallCount()).To(Equal(1))
+				Expect(policyClient.GetPoliciesArgsForCall(0)).To(Equal("some-token"))
 				Expect(fakeCliConnection.GetAppsCallCount()).To(Equal(1))
 
-				Expect(output).To(Equal("<BOLD>Source\t\tDestination\tProtocol\tPort\n<RESET><CLR_C>some-app<RESET>\t<CLR_C>some-other-app<RESET>\ttcp\t\t9999\n"))
+				Expect(output).To(Equal("<BOLD>Source\t\tDestination\tProtocol\tPorts\n<RESET><CLR_C>some-app<RESET>\t<CLR_C>some-other-app<RESET>\ttcp\t\t9999-1000\n"))
 			})
 		})
 
 		Context("when there are no policies", func() {
 			BeforeEach(func() {
-				policyClient.GetPoliciesV0Returns([]api_v0.Policy{}, nil)
+				policyClient.GetPoliciesReturns([]api.Policy{}, nil)
 			})
 			It("shows nothing", func() {
 				output, err := runner.List()
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(policyClient.GetPoliciesV0CallCount()).To(Equal(1))
-				Expect(policyClient.GetPoliciesV0ArgsForCall(0)).To(Equal("some-token"))
+				Expect(policyClient.GetPoliciesCallCount()).To(Equal(1))
+				Expect(policyClient.GetPoliciesArgsForCall(0)).To(Equal("some-token"))
 				Expect(fakeCliConnection.GetAppsCallCount()).To(Equal(1))
 
-				Expect(output).To(Equal("<BOLD>Source\tDestination\tProtocol\tPort\n<RESET>"))
+				Expect(output).To(Equal("<BOLD>Source\tDestination\tProtocol\tPorts\n<RESET>"))
 			})
 		})
 
@@ -112,11 +119,11 @@ var _ = Describe("CommandRunner", func() {
 				output, err := runner.List()
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(policyClient.GetPoliciesV0CallCount()).To(Equal(1))
-				Expect(policyClient.GetPoliciesV0ArgsForCall(0)).To(Equal("some-token"))
+				Expect(policyClient.GetPoliciesCallCount()).To(Equal(1))
+				Expect(policyClient.GetPoliciesArgsForCall(0)).To(Equal("some-token"))
 				Expect(fakeCliConnection.GetAppsCallCount()).To(Equal(1))
 
-				Expect(output).To(Equal("<BOLD>Source\tDestination\tProtocol\tPort\n<RESET>"))
+				Expect(output).To(Equal("<BOLD>Source\tDestination\tProtocol\tPorts\n<RESET>"))
 			})
 		})
 
@@ -143,7 +150,7 @@ var _ = Describe("CommandRunner", func() {
 
 		Context("when getting policies fails", func() {
 			BeforeEach(func() {
-				policyClient.GetPoliciesV0Returns(nil, errors.New("banana"))
+				policyClient.GetPoliciesReturns(nil, errors.New("banana"))
 			})
 			It("wraps the error in a more helpful message", func() {
 				_, err := runner.List()
@@ -163,8 +170,8 @@ var _ = Describe("CommandRunner", func() {
 
 		Context("when the user specifies an app name", func() {
 			BeforeEach(func() {
-				policyClient.GetPoliciesByIDReturns([]api_v0.Policy{
-					api_v0.Policy{Source: api_v0.Source{ID: "some-app-guid"}, Destination: api_v0.Destination{ID: "some-other-app-guid", Port: 9999, Protocol: "tcp"}},
+				policyClient.GetPoliciesByIDReturns([]api.Policy{
+					api.Policy{Source: api.Source{ID: "some-app-guid"}, Destination: api.Destination{ID: "some-other-app-guid", Ports: api.Ports{Start: 9999, End: 1000}, Protocol: "tcp"}},
 				}, nil)
 				fakeCliConnection.GetAppReturns(plugin_models.GetAppModel{
 					Guid: "some-app-guid",
@@ -179,7 +186,7 @@ var _ = Describe("CommandRunner", func() {
 			It("filters the call to the policy server", func() {
 				output, err := runner.List()
 				Expect(err).NotTo(HaveOccurred())
-				Expect(output).To(Equal("<BOLD>Source\t\tDestination\tProtocol\tPort\n<RESET><CLR_C>some-app<RESET>\t<CLR_C>some-other-app<RESET>\ttcp\t\t9999\n"))
+				Expect(output).To(Equal("<BOLD>Source\t\tDestination\tProtocol\tPorts\n<RESET><CLR_C>some-app<RESET>\t<CLR_C>some-other-app<RESET>\ttcp\t\t9999-1000\n"))
 
 				Expect(fakeCliConnection.GetAppCallCount()).To(Equal(1))
 				Expect(fakeCliConnection.GetAppArgsForCall(0)).To(Equal("some-app"))

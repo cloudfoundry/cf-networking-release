@@ -129,6 +129,64 @@ var _ = Describe("ExternalClient", func() {
 		})
 	})
 
+	Describe("GetPoliciesByID", func() {
+		BeforeEach(func() {
+			jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+				respBytes := []byte(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8090, "end": 8100 } } } ] }`)
+				json.Unmarshal(respBytes, respData)
+				return nil
+			}
+		})
+		It("does the right json http client request", func() {
+			policies, err := client.GetPoliciesByID("some-token", "some-app-guid", "another-app-guid")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(jsonClient.DoCallCount()).To(Equal(1))
+			method, route, reqData, _, token := jsonClient.DoArgsForCall(0)
+			Expect(method).To(Equal("GET"))
+			Expect(route).To(Equal("/networking/v1/external/policies?id=some-app-guid,another-app-guid"))
+			Expect(reqData).To(BeNil())
+			Expect(policies).To(Equal([]api.Policy{
+				{
+					Source: api.Source{
+						ID: "some-app-guid",
+					},
+					Destination: api.Destination{
+						ID: "some-other-app-guid",
+						Ports: api.Ports{
+							Start: 8090,
+							End:   8100,
+						},
+						Protocol: "tcp",
+					},
+				},
+			},
+			))
+			Expect(token).To(Equal("some-token"))
+		})
+		Context("when the json client fails", func() {
+			BeforeEach(func() {
+				jsonClient.DoReturns(errors.New("banana"))
+			})
+			It("returns the error", func() {
+				_, err := client.GetPoliciesByID("some-token", "some-id")
+				Expect(err).To(MatchError("banana"))
+			})
+		})
+		Context("when the json client gets a bad status code", func() {
+			BeforeEach(func() {
+				jsonClient.DoReturns(&json_client.HttpResponseCodeError{
+					StatusCode: http.StatusTeapot,
+					Message:    "some-error",
+				})
+			})
+			It("parses out the error body", func() {
+				_, err := client.GetPoliciesByID("some-token", "some-id")
+				Expect(err).To(MatchError("418 I'm a teapot: some-error"))
+			})
+		})
+	})
+
 	Describe("GetPoliciesV0", func() {
 		BeforeEach(func() {
 			jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
@@ -185,7 +243,7 @@ var _ = Describe("ExternalClient", func() {
 		})
 	})
 
-	Describe("GetPoliciesByID", func() {
+	Describe("GetPoliciesV0ByID", func() {
 		BeforeEach(func() {
 			jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 				respBytes := []byte(`{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8090 } } ] }`)
@@ -194,7 +252,7 @@ var _ = Describe("ExternalClient", func() {
 			}
 		})
 		It("does the right json http client request", func() {
-			policies, err := client.GetPoliciesByID("some-token", "some-app-guid", "another-app-guid")
+			policies, err := client.GetPoliciesV0ByID("some-token", "some-app-guid", "another-app-guid")
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(jsonClient.DoCallCount()).To(Equal(1))
@@ -222,7 +280,7 @@ var _ = Describe("ExternalClient", func() {
 				jsonClient.DoReturns(errors.New("banana"))
 			})
 			It("returns the error", func() {
-				_, err := client.GetPoliciesByID("some-token", "some-id")
+				_, err := client.GetPoliciesV0ByID("some-token", "some-id")
 				Expect(err).To(MatchError("banana"))
 			})
 		})
@@ -234,7 +292,7 @@ var _ = Describe("ExternalClient", func() {
 				})
 			})
 			It("parses out the error body", func() {
-				_, err := client.GetPoliciesByID("some-token", "some-id")
+				_, err := client.GetPoliciesV0ByID("some-token", "some-id")
 				Expect(err).To(MatchError("418 I'm a teapot: some-error"))
 			})
 		})

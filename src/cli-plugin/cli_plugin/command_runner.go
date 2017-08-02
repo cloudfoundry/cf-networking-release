@@ -56,7 +56,7 @@ func (r *CommandRunner) List() (string, error) {
 		appGuid = app.Guid
 	}
 
-	var policies []api_v0.Policy
+	var policies []api.Policy
 	if appGuid != "" {
 		var err error
 		policies, err = r.PolicyClient.GetPoliciesByID(accessToken, appGuid)
@@ -65,7 +65,7 @@ func (r *CommandRunner) List() (string, error) {
 		}
 	} else {
 		var err error
-		policies, err = r.PolicyClient.GetPoliciesV0(accessToken)
+		policies, err = r.PolicyClient.GetPolicies(accessToken)
 		if err != nil {
 			return "", fmt.Errorf("getting policies: %s", err)
 		}
@@ -78,7 +78,7 @@ func (r *CommandRunner) List() (string, error) {
 
 	buffer := &bytes.Buffer{}
 	tabWriter := tabwriter.NewWriter(buffer, 0, 8, 2, '\t', tabwriter.FilterHTML)
-	fmt.Fprintf(tabWriter, r.Styler.AddStyle("Source\tDestination\tProtocol\tPort\n", "bold"))
+	fmt.Fprintf(tabWriter, r.Styler.AddStyle("Source\tDestination\tProtocol\tPorts\n", "bold"))
 
 	for _, policy := range policies {
 		srcName := ""
@@ -92,11 +92,12 @@ func (r *CommandRunner) List() (string, error) {
 			}
 		}
 		if srcName != "" && dstName != "" {
-			fmt.Fprintf(tabWriter, "%s\t%s\t%s\t%d\n",
+			fmt.Fprintf(tabWriter, "%s\t%s\t%s\t%d-%d\n",
 				r.Styler.AddStyle(srcName, "cyan"),
 				r.Styler.AddStyle(dstName, "cyan"),
 				policy.Destination.Protocol,
-				policy.Destination.Port,
+				policy.Destination.Ports.Start,
+				policy.Destination.Ports.End,
 			)
 		}
 	}
