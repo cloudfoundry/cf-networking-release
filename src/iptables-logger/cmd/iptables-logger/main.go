@@ -26,6 +26,7 @@ import (
 
 	"code.cloudfoundry.org/cf-networking-helpers/metrics"
 	"code.cloudfoundry.org/lager"
+	"io"
 )
 
 const (
@@ -56,7 +57,7 @@ func main() {
 	t, err := tail.TailFile(conf.KernelLogFile, tail.Config{
 		Location: &tail.SeekInfo{
 			Offset: 0,
-			Whence: os.SEEK_END,
+			Whence: io.SeekEnd,
 		},
 		MustExist: true,
 		Follow:    true,
@@ -66,6 +67,8 @@ func main() {
 	if err != nil {
 		logger.Fatal("tail-input", err)
 	}
+
+	logger.Info("started tailing file")
 
 	kernelLogParser := &parser.KernelLogParser{}
 

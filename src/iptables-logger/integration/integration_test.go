@@ -162,6 +162,9 @@ var _ = Describe("Integration", func() {
 		session, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
 
+		Eventually(session).Should(gbytes.Say("cfnetworking.iptables-logger.*starting"))
+		Eventually(session, 5).Should(gbytes.Say("started tailing file"))
+
 		store = &datastore.Store{
 			Serializer: &serial.Serial{},
 			Locker: &filelock.Locker{
@@ -193,10 +196,6 @@ var _ = Describe("Integration", func() {
 		Expect(fakeMetron.Close()).To(Succeed())
 	})
 
-	It("should log when starting", func() {
-		Eventually(session.Out).Should(gbytes.Say("cfnetworking.iptables-logger.*starting"))
-	})
-
 	It("should run as a daemon", func() {
 		Consistently(session, DEFAULT_TIMEOUT).ShouldNot(gexec.Exit())
 	})
@@ -220,6 +219,7 @@ var _ = Describe("Integration", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Eventually(outputFile).Should(BeAnExistingFile())
 
+		Eventually(session, 5).Should(gbytes.Say("started tailing file"))
 		go AddToKernelLog(EGRESS_DENIED_KERNEL_LOG, kernelLogFile)
 
 		Eventually(ReadLines, "5s").Should(ContainElement(MatchJSON(EGRESS_DENIED_JSON)))
