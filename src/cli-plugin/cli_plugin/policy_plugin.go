@@ -53,7 +53,7 @@ const MinPort = 1
 const MaxPort = 65535
 
 func (p *Plugin) GetMetadata() plugin.PluginMetadata {
-	const usageTemplate = "cf %s SOURCE_APP DESTINATION_APP --protocol <tcp|udp> --port <%d-%d>"
+	const usageTemplate = "cf %s SOURCE_APP DESTINATION_APP --protocol <tcp|udp> --port <%d-%d>-<%d-%d>"
 
 	return plugin.PluginMetadata{
 		Name:    "network-policy",
@@ -67,10 +67,10 @@ func (p *Plugin) GetMetadata() plugin.PluginMetadata {
 				Name:     AllowCommand,
 				HelpText: "Allow direct network traffic from one app to another",
 				UsageDetails: plugin.Usage{
-					Usage: fmt.Sprintf(usageTemplate, AllowCommand, MinPort, MaxPort),
+					Usage: fmt.Sprintf(usageTemplate, AllowCommand, MinPort, MaxPort, MinPort, MaxPort),
 					Options: map[string]string{
 						"-protocol": "Protocol to connect apps with. (required)",
-						"-port":     "Port to connect to destination app with. (required)",
+						"-port":     "Port(s) to connect to destination app with. (required)",
 					},
 				},
 			},
@@ -86,10 +86,10 @@ func (p *Plugin) GetMetadata() plugin.PluginMetadata {
 				Name:     RemoveCommand,
 				HelpText: "Remove policy and deny direct network traffic from one app to another",
 				UsageDetails: plugin.Usage{
-					Usage: fmt.Sprintf(usageTemplate, RemoveCommand, MinPort, MaxPort),
+					Usage: fmt.Sprintf(usageTemplate, RemoveCommand, MinPort, MaxPort, MinPort, MaxPort),
 					Options: map[string]string{
 						"-protocol": "Protocol to connect apps with. (required)",
-						"-port":     "Port to connect to destination app with. (required)",
+						"-port":     "Port(s) to connect to destination app with. (required)",
 					},
 				},
 			},
