@@ -32,32 +32,6 @@ var (
 	testConfig pusherConfig.Config
 )
 
-func Auth(username, password string) {
-	By("authenticating as " + username)
-	cmd := exec.Command("cf", "auth", username, password)
-	sess, err := gexec.Start(cmd, nil, nil)
-	Expect(err).NotTo(HaveOccurred())
-	Eventually(sess.Wait(Timeout_Short)).Should(gexec.Exit(0))
-}
-
-func getUAABaseURL() string {
-	sess := cf.Cf("curl", "/v2/info")
-	Eventually(sess.Wait(Timeout_Short)).Should(gexec.Exit(0))
-	var response struct {
-		TokenEndpoint string `json:"token_endpoint"`
-	}
-	err := json.Unmarshal(sess.Out.Contents(), &response)
-	Expect(err).NotTo(HaveOccurred())
-
-	uaaBaseURL := response.TokenEndpoint
-	Expect(uaaBaseURL).To(HavePrefix("https://uaa."))
-	return uaaBaseURL
-}
-
-func AuthAsAdmin() {
-	Auth(config.AdminUser, config.AdminPassword)
-}
-
 func TestAcceptance(t *testing.T) {
 	RegisterFailHandler(Fail)
 
@@ -97,6 +71,32 @@ func TestAcceptance(t *testing.T) {
 	})
 
 	RunSpecs(t, "Acceptance Suite")
+}
+
+func Auth(username, password string) {
+	By("authenticating as " + username)
+	cmd := exec.Command("cf", "auth", username, password)
+	sess, err := gexec.Start(cmd, nil, nil)
+	Expect(err).NotTo(HaveOccurred())
+	Eventually(sess.Wait(Timeout_Short)).Should(gexec.Exit(0))
+}
+
+func getUAABaseURL() string {
+	sess := cf.Cf("curl", "/v2/info")
+	Eventually(sess.Wait(Timeout_Short)).Should(gexec.Exit(0))
+	var response struct {
+		TokenEndpoint string `json:"token_endpoint"`
+	}
+	err := json.Unmarshal(sess.Out.Contents(), &response)
+	Expect(err).NotTo(HaveOccurred())
+
+	uaaBaseURL := response.TokenEndpoint
+	Expect(uaaBaseURL).To(HavePrefix("https://uaa."))
+	return uaaBaseURL
+}
+
+func AuthAsAdmin() {
+	Auth(config.AdminUser, config.AdminPassword)
 }
 
 func appDir(appType string) string {

@@ -75,9 +75,8 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 
 	Context("when overlay policies are in place", func() {
 		var (
-			originalRunningSecurityGroups []string
-			appProxy                      string
-			spaceName                     string
+			appProxy  string
+			spaceName string
 		)
 
 		BeforeEach(func() {
@@ -87,11 +86,8 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 			spaceName = testConfig.Prefix + "overlay-interaction-space"
 			setupOrgAndSpace(orgName, spaceName)
 
-			By("discovering all existing running ASGs")
-			originalRunningSecurityGroups = getRunningSecurityGroups()
-
 			By("unbinding all running ASGs")
-			for _, sg := range originalRunningSecurityGroups {
+			for _, sg := range testConfig.DefaultSecurityGroups {
 				Expect(cf.Cf("unbind-running-security-group", sg).Wait(Timeout_Short)).To(gexec.Exit(0))
 			}
 
@@ -101,7 +97,7 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 
 		AfterEach(func() {
 			By("adding back all the original running ASGs")
-			for _, sg := range originalRunningSecurityGroups {
+			for _, sg := range testConfig.DefaultSecurityGroups {
 				Expect(cf.Cf("bind-running-security-group", sg).Wait(Timeout_Short)).To(gexec.Exit(0))
 			}
 		})

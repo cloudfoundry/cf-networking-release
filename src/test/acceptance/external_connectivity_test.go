@@ -16,14 +16,13 @@ import (
 	"github.com/onsi/gomega/gexec"
 )
 
-var _ = Describe("external connectivity", func() {
+var _ = FDescribe("external connectivity", func() {
 	var (
-		appA                          string
-		orgName                       string
-		spaceName                     string
-		appRoute                      string
-		originalRunningSecurityGroups []string
-		cli                           *cf_cli_adapter.Adapter
+		appA      string
+		orgName   string
+		spaceName string
+		appRoute  string
+		cli       *cf_cli_adapter.Adapter
 	)
 
 	BeforeEach(func() {
@@ -34,11 +33,8 @@ var _ = Describe("external connectivity", func() {
 		spaceName = testConfig.Prefix + "space"
 		setupOrgAndSpace(orgName, spaceName)
 
-		By("discovering all existing running ASGs")
-		originalRunningSecurityGroups = getRunningSecurityGroups()
-
 		By("unbinding all running ASGs")
-		for _, sg := range originalRunningSecurityGroups {
+		for _, sg := range testConfig.DefaultSecurityGroups {
 			Expect(cf.Cf("unbind-running-security-group", sg).Wait(Timeout_Short)).To(gexec.Exit(0))
 		}
 
@@ -54,7 +50,7 @@ var _ = Describe("external connectivity", func() {
 
 	AfterEach(func() {
 		By("adding back all the original running ASGs")
-		for _, sg := range originalRunningSecurityGroups {
+		for _, sg := range testConfig.DefaultSecurityGroups {
 			Expect(cf.Cf("bind-running-security-group", sg).Wait(Timeout_Short)).To(gexec.Exit(0))
 		}
 
@@ -150,40 +146,6 @@ var _ = Describe("external connectivity", func() {
 		}, 180 /* <-- overall spec timeout in seconds */)
 	})
 })
-
-func getRunningSecurityGroups() []string {
-	session := cf.Cf("running-security-groups")
-	Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
-
-	candidateGroups := strings.Split(string(session.Out.Contents()), "\n")[3:]
-	actualGroups := []string{}
-	for _, l := range candidateGroups {
-		trimmed := strings.TrimSpace(l)
-		if trimmed != "" {
-			actualGroups = append(actualGroups, trimmed)
-		}
-	}
-	return actualGroups
-}
-
-func getAllSecurityGroups() []string {
-	session := cf.Cf("security-groups")
-	Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
-
-	candidateGroups := strings.Split(string(session.Out.Contents()), "\n")[4:]
-	actualGroups := []string{}
-	for _, l := range candidateGroups {
-		fields := strings.Fields(l)
-		if len(fields) < 2 {
-			continue
-		}
-		trimmed := strings.TrimSpace(fields[1])
-		if trimmed != "" {
-			actualGroups = append(actualGroups, trimmed)
-		}
-	}
-	return actualGroups
-}
 
 func createASG(cli *cf_cli_adapter.Adapter, name string, asgDefinition string) {
 	asgFile, err := testsupport.CreateASGFile(asgDefinition)
