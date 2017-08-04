@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e -u
+set -e -u -x
 
 cd cf-networking-release
 export GOPATH=$PWD
@@ -75,5 +75,12 @@ if [ "${1:-""}" = "" ]; then
     popd
   done
 else
-  ginkgo -r -randomizeAllSpecs -randomizeSuites "${@}"
+  dir=${@: -1}
+  for package in "${serial_packages[@]}"; do
+    if [ "$dir" = "$package" ] || [ "$dir" = "$package"/ ]; then
+      ginkgo -r -randomizeAllSpecs -randomizeSuites "${@}"
+      exit $?
+    fi
+  done
+  ginkgo -r -p -randomizeAllSpecs -randomizeSuites "${@}"
 fi
