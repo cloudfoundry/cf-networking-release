@@ -1,23 +1,26 @@
 #!/bin/bash
 set -e -u
 
-ROOT_DIR_PATH=$(cd $(dirname $0)/.. && pwd)
-cd $ROOT_DIR_PATH
+ROOT_DIR_PATH="$(cd $(dirname $0)/.. && pwd)"
+cd ${ROOT_DIR_PATH}
 
 db=${DB:-"postgres"} # if not set, default to postgres
 
+kernelversion="$(docker run -t -i alpine:latest uname -r | tr -d '\r\n' | tr -d '\-moby')"
 docker_image=c2cnetworking/dev-$db
-if [ $db = "none" ]; then
-  docker_image=c2cnetworking/dev-postgres
+if [ $db = "none" ] || [ $db = "postgres" ]; then
+  docker_image=c2cnetworking/dev-postgres-ifb:$kernelversion
 fi
 
 docker run \
    --rm \
    -it \
    --privileged \
-   -v $PWD:/cf-networking-release \
+   -v ${PWD}:/cf-networking-release \
+   -v /var/run:/var/run:rw \
    -e GOPATH=/cf-networking-release \
    -e DB=$db \
+   --cap-add ALL \
    -w / \
    $docker_image \
    /bin/bash "$@"

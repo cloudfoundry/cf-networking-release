@@ -23,6 +23,11 @@ declare -a serial_packages=(
   "src/vxlan-policy-agent"
   )
 
+function loadIFB {
+  depmod $(uname -r)
+  modprobe ifb
+}
+
 function bootDB {
   db=$1
 
@@ -55,6 +60,7 @@ function bootDB {
   exit 1
 }
 
+loadIFB
 bootDB "${DB:-"notset"}"
 
 if [ "${1:-""}" = "" ]; then
