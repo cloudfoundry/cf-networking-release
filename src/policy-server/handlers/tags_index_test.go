@@ -8,7 +8,6 @@ import (
 	"policy-server/handlers"
 	"policy-server/handlers/fakes"
 	"policy-server/store"
-	"policy-server/uaa_client"
 
 	hfakes "code.cloudfoundry.org/cf-networking-helpers/fakes"
 	"code.cloudfoundry.org/lager"
@@ -28,7 +27,6 @@ var _ = Describe("Tags index handler", func() {
 		fakeErrorResponse *fakes.ErrorResponse
 		logger            *lagertest.TestLogger
 		marshaler         *hfakes.Marshaler
-		tokenData         uaa_client.CheckTokenResponse
 	)
 
 	BeforeEach(func() {
@@ -57,7 +55,6 @@ var _ = Describe("Tags index handler", func() {
 			ErrorResponse: fakeErrorResponse,
 		}
 		resp = httptest.NewRecorder()
-		tokenData = uaa_client.CheckTokenResponse{}
 	})
 
 	It("returns all the tags", func() {
@@ -65,11 +62,27 @@ var _ = Describe("Tags index handler", func() {
 			{ "id": "some-app-guid", "tag": "0001" },
 			{ "id": "some-other-app-guid", "tag": "0002" }
         ]}`
-		handler.ServeHTTP(logger, resp, request, tokenData)
+		MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
 
 		Expect(fakeStore.TagsCallCount()).To(Equal(1))
 		Expect(resp.Code).To(Equal(http.StatusOK))
 		Expect(resp.Body).To(MatchJSON(expectedResponseJSON))
+	})
+
+	Context("when the logger isn't on the request context", func() {
+		BeforeEach(func() {
+			logger = nil
+		})
+		It("still works", func() {
+			expectedResponseJSON := `{"tags": [
+			{ "id": "some-app-guid", "tag": "0001" },
+			{ "id": "some-other-app-guid", "tag": "0002" }
+        ]}`
+			handler.ServeHTTP(resp, request)
+
+			Expect(resp.Code).To(Equal(http.StatusOK))
+			Expect(resp.Body).To(MatchJSON(expectedResponseJSON))
+		})
 	})
 
 	Context("when the store throws an error", func() {
@@ -78,7 +91,7 @@ var _ = Describe("Tags index handler", func() {
 		})
 
 		It("calls the internal server error handler", func() {
-			handler.ServeHTTP(logger, resp, request, tokenData)
+			MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
@@ -109,7 +122,7 @@ var _ = Describe("Tags index handler", func() {
 		})
 
 		It("calls the internal server error handler", func() {
-			handler.ServeHTTP(logger, resp, request, tokenData)
+			MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 

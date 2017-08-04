@@ -162,12 +162,33 @@ var _ = Describe("Policies index handler", func() {
 	})
 
 	It("returns all the policies, but does not include the tags", func() {
-		handler.ServeHTTP(logger, resp, request, token)
+		MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
 
 		Expect(fakeStore.AllCallCount()).To(Equal(1))
 		Expect(fakePolicyFilter.FilterPoliciesCallCount()).To(Equal(1))
 		Expect(resp.Code).To(Equal(http.StatusOK))
 		Expect(resp.Body.Bytes()).To(Equal(expectedResponseBody))
+	})
+
+	Context("when the logger isn't on the request context", func() {
+		It("still works", func() {
+			MakeRequestWithAuth(handler.ServeHTTP, resp, request, token)
+
+			Expect(resp.Code).To(Equal(http.StatusOK))
+			Expect(resp.Body.Bytes()).To(Equal(expectedResponseBody))
+		})
+	})
+
+	Context("when the token isn't on the request context", func() {
+		It("still works", func() {
+			MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
+
+			Expect(fakePolicyFilter.FilterPoliciesCallCount()).To(Equal(1))
+			_, filterToken := fakePolicyFilter.FilterPoliciesArgsForCall(0)
+			Expect(filterToken).To(Equal(uaa_client.CheckTokenResponse{}))
+			Expect(resp.Code).To(Equal(http.StatusOK))
+			Expect(resp.Body.Bytes()).To(Equal(expectedResponseBody))
+		})
 	})
 
 	Context("when rendering the policies as bytes fails", func() {
@@ -180,7 +201,7 @@ var _ = Describe("Policies index handler", func() {
 		})
 
 		It("calls the internal server error handler", func() {
-			handler.ServeHTTP(logger, resp, request, token)
+			MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
@@ -211,7 +232,7 @@ var _ = Describe("Policies index handler", func() {
 		})
 
 		It("filters on only those policies returned by ByGuids", func() {
-			handler.ServeHTTP(logger, resp, request, token)
+			MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
 
 			Expect(fakeStore.ByGuidsCallCount()).To(Equal(1))
 			srcGuids, dstGuids := fakeStore.ByGuidsArgsForCall(0)
@@ -230,7 +251,7 @@ var _ = Describe("Policies index handler", func() {
 				request, err = http.NewRequest("GET", "/networking/v0/external/policies?id=", nil)
 				Expect(err).NotTo(HaveOccurred())
 
-				handler.ServeHTTP(logger, resp, request, token)
+				MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
 				Expect(fakeStore.ByGuidsCallCount()).To(Equal(1))
 				srcGuids, destGuids := fakeStore.ByGuidsArgsForCall(0)
 				Expect(srcGuids).To(Equal([]string{""}))
@@ -251,7 +272,7 @@ var _ = Describe("Policies index handler", func() {
 		})
 
 		It("calls the internal server error handler", func() {
-			handler.ServeHTTP(logger, resp, request, token)
+			MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
@@ -280,7 +301,7 @@ var _ = Describe("Policies index handler", func() {
 		})
 
 		It("calls the internal server error handler", func() {
-			handler.ServeHTTP(logger, resp, request, token)
+			MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 

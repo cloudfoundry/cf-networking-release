@@ -41,8 +41,10 @@ func NewPoliciesCreate(store dataStore, mapper api.PolicyMapper,
 	}
 }
 
-func (h *PoliciesCreate) ServeHTTP(logger lager.Logger, w http.ResponseWriter, req *http.Request, tokenData uaa_client.CheckTokenResponse) {
+func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	logger := getLogger(req)
 	logger = logger.Session("create-policies")
+	tokenData := getTokenData(req)
 
 	bodyBytes, err := ioutil.ReadAll(req.Body)
 	if err != nil {

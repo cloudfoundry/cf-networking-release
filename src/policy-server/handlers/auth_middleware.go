@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -10,6 +11,10 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/middleware"
 	"code.cloudfoundry.org/lager"
 )
+
+type Key string
+
+const TokenDataKey = Key("tokenData")
 
 const MAX_REQ_BODY_SIZE = 10 << 20 // 10 MB
 
@@ -29,22 +34,27 @@ type Authenticator struct {
 	ScopeChecking bool
 }
 
-func NewAuthenticator(client UAAClient, scopes []string, errorResponse errorResponse, scopeChecking bool) *Authenticator {
-	return &Authenticator{
-		Client:        client,
-		Scopes:        scopes,
-		ErrorResponse: errorResponse,
-		ScopeChecking: scopeChecking,
+func getLogger(req *http.Request) lager.Logger {
+	if v := req.Context().Value(middleware.Key("logger")); v != nil {
+		if logger, ok := v.(lager.Logger); ok {
+			return logger
+		}
 	}
+	return lager.NewLogger("cfnetworking.policy-server")
 }
 
-//go:generate counterfeiter -o fakes/authenticated_handler.go --fake-name AuthenticatedHandler . AuthenticatedHandler
-type AuthenticatedHandler interface {
-	ServeHTTP(logger lager.Logger, response http.ResponseWriter, request *http.Request, tokenData uaa_client.CheckTokenResponse)
+func getTokenData(req *http.Request) uaa_client.CheckTokenResponse {
+	if v := req.Context().Value(TokenDataKey); v != nil {
+		if logger, ok := v.(uaa_client.CheckTokenResponse); ok {
+			return logger
+		}
+	}
+	return uaa_client.CheckTokenResponse{}
 }
 
-func (a *Authenticator) Wrap(handle AuthenticatedHandler) middleware.LoggableHandlerFunc {
-	return middleware.LoggableHandlerFunc(func(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+func (a *Authenticator) Wrap(handle http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		logger := getLogger(req)
 		logger = logger.Session("authentication")
 
 		authorization := req.Header["Authorization"]
@@ -73,8 +83,11 @@ func (a *Authenticator) Wrap(handle AuthenticatedHandler) middleware.LoggableHan
 		}
 
 		req.Body = http.MaxBytesReader(w, req.Body, MAX_REQ_BODY_SIZE)
-		handle.ServeHTTP(logger, w, req, tokenData)
-	})
+
+		contextWithTokenData := context.WithValue(req.Context(), TokenDataKey, tokenData)
+		req = req.WithContext(contextWithTokenData)
+		handle.ServeHTTP(w, req)
+	}
 }
 
 func isAuthorized(scopes, allowedScopes []string) bool {

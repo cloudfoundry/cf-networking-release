@@ -8,7 +8,6 @@ import (
 	"policy-server/handlers"
 	"policy-server/handlers/fakes"
 
-	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -20,11 +19,11 @@ import (
 
 var _ = Describe("CheckVersionWrapper", func() {
 	var (
-		checkVersionHandler middleware.LoggableHandlerFunc
+		checkVersionHandler http.HandlerFunc
 		checkVersionWrapper *handlers.CheckVersionWrapper
-		fakeHandlerv0       middleware.LoggableHandlerFunc
-		fakeHandlerv1       middleware.LoggableHandlerFunc
-		handlerMap          map[string]middleware.LoggableHandlerFunc
+		fakeHandlerv0       http.HandlerFunc
+		fakeHandlerv1       http.HandlerFunc
+		handlerMap          map[string]http.HandlerFunc
 		server              *httptest.Server
 		logger              *lagertest.TestLogger
 		fakeErrorResponse   *fakes.ErrorResponse
@@ -35,19 +34,19 @@ var _ = Describe("CheckVersionWrapper", func() {
 	)
 
 	BeforeEach(func() {
-		fakeHandlerv0 = func(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+		fakeHandlerv0 = func(w http.ResponseWriter, req *http.Request) {
 			v0Count++
 			logger.Info("v0")
 			w.Write([]byte("v0"))
 		}
 
-		fakeHandlerv1 = func(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+		fakeHandlerv1 = func(w http.ResponseWriter, req *http.Request) {
 			v1Count++
 			logger.Info("v1")
 			w.Write([]byte("v1"))
 		}
 
-		handlerMap = map[string]middleware.LoggableHandlerFunc{
+		handlerMap = map[string]http.HandlerFunc{
 			"v0": fakeHandlerv0,
 			"v1": fakeHandlerv1,
 		}

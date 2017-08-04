@@ -4,9 +4,6 @@ import (
 	"net/http"
 	"policy-server/api"
 	"policy-server/store"
-	"policy-server/uaa_client"
-
-	"code.cloudfoundry.org/lager"
 )
 
 //go:generate counterfeiter -o fakes/policy_cleaner.go --fake-name PolicyCleaner . policyCleaner
@@ -37,8 +34,10 @@ func NewPoliciesCleanup(mapper api.PolicyMapper, policyCleaner policyCleaner, er
 	}
 }
 
-func (h *PoliciesCleanup) ServeHTTP(logger lager.Logger, w http.ResponseWriter, req *http.Request, tokenData uaa_client.CheckTokenResponse) {
+func (h *PoliciesCleanup) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	logger := getLogger(req)
 	logger = logger.Session("cleanup-policies")
+
 	policies, err := h.PolicyCleaner.DeleteStalePolicies()
 	if err != nil {
 		logger.Error("failed-deleting-stale-policies", err)

@@ -7,7 +7,6 @@ import (
 	"policy-server/handlers"
 	"policy-server/handlers/fakes"
 	"policy-server/store"
-	"policy-server/uaa_client"
 
 	apifakes "policy-server/api/fakes"
 
@@ -28,7 +27,6 @@ var _ = Describe("PoliciesCleanup", func() {
 		fakeMapper        *apifakes.PolicyMapper
 		fakeErrorResponse *fakes.ErrorResponse
 		policies          []store.Policy
-		tokenData         uaa_client.CheckTokenResponse
 	)
 
 	BeforeEach(func() {
@@ -57,11 +55,6 @@ var _ = Describe("PoliciesCleanup", func() {
 			ErrorResponse: fakeErrorResponse,
 		}
 
-		tokenData = uaa_client.CheckTokenResponse{
-			Scope:    []string{"network.admin"},
-			UserName: "some_user",
-		}
-
 		fakePolicyCleaner.DeleteStalePoliciesReturns(policies, nil)
 		fakeMapper.AsBytesReturns([]byte("some-bytes"), nil)
 		resp = httptest.NewRecorder()
@@ -69,7 +62,7 @@ var _ = Describe("PoliciesCleanup", func() {
 	})
 
 	It("Cleans up stale policies for deleted apps", func() {
-		handler.ServeHTTP(logger, resp, request, tokenData)
+		MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
 
 		Expect(fakePolicyCleaner.DeleteStalePoliciesCallCount()).To(Equal(1))
 		Expect(fakeMapper.AsBytesCallCount()).To(Equal(1))
@@ -80,13 +73,21 @@ var _ = Describe("PoliciesCleanup", func() {
 		Expect(resp.Body.String()).To(Equal(`some-bytes`))
 	})
 
+	Context("when the logger isn't on the request context", func() {
+		It("returns all the policies, but does not include the tags", func() {
+			handler.ServeHTTP(resp, request)
+			Expect(resp.Code).To(Equal(http.StatusOK))
+			Expect(resp.Body.String()).To(Equal(`some-bytes`))
+		})
+	})
+
 	Context("When deleting the policies fails", func() {
 		BeforeEach(func() {
 			fakePolicyCleaner.DeleteStalePoliciesReturns(nil, errors.New("potato"))
 		})
 
 		It("calls the internal server error handler", func() {
-			handler.ServeHTTP(logger, resp, request, tokenData)
+			MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
@@ -115,7 +116,7 @@ var _ = Describe("PoliciesCleanup", func() {
 		})
 
 		It("calls the internal server error handler", func() {
-			handler.ServeHTTP(logger, resp, request, tokenData)
+			MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 

@@ -90,7 +90,7 @@ var _ = Describe("PoliciesCreate", func() {
 		resp = httptest.NewRecorder()
 
 		createPoliciesSucceeds = func() {
-			handler.ServeHTTP(logger, resp, request, tokenData)
+			MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, tokenData)
 
 			Expect(fakeMapper.AsStorePolicyCallCount()).To(Equal(1))
 			Expect(fakeMapper.AsStorePolicyArgsForCall(0)).To(Equal([]byte(requestBody)))
@@ -110,7 +110,7 @@ var _ = Describe("PoliciesCreate", func() {
 	})
 
 	It("logs the policy with username and app guid", func() {
-		handler.ServeHTTP(logger, resp, request, tokenData)
+		MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, tokenData)
 
 		By("logging the success")
 		Expect(logger.Logs()).To(HaveLen(1))
@@ -151,12 +151,36 @@ var _ = Describe("PoliciesCreate", func() {
 		))
 	})
 
+	Context("when the logger isn't on the request context", func() {
+		BeforeEach(func() {
+			logger = nil
+		})
+		It("still works", func() {
+			MakeRequestWithAuth(handler.ServeHTTP, resp, request, tokenData)
+
+			Expect(resp.Code).To(Equal(http.StatusOK))
+			Expect(resp.Body.Bytes()).To(MatchJSON("{}"))
+		})
+	})
+
+	Context("when the token isn't on the request context", func() {
+		BeforeEach(func() {
+			tokenData = uaa_client.CheckTokenResponse{}
+		})
+		It("still works", func() {
+			MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
+
+			Expect(resp.Code).To(Equal(http.StatusOK))
+			Expect(resp.Body.Bytes()).To(MatchJSON("{}"))
+		})
+	})
+
 	Context("when the mapper fails to get store policies", func() {
 		BeforeEach(func() {
 			fakeMapper.AsStorePolicyReturns(nil, errors.New("banana"))
 		})
 		It("calls the bad request header, and logs the error", func() {
-			handler.ServeHTTP(logger, resp, request, tokenData)
+			MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, tokenData)
 
 			Expect(fakeErrorResponse.BadRequestCallCount()).To(Equal(1))
 
@@ -185,7 +209,7 @@ var _ = Describe("PoliciesCreate", func() {
 		})
 
 		It("calls the forbidden handler", func() {
-			handler.ServeHTTP(logger, resp, request, tokenData)
+			MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, tokenData)
 
 			Expect(fakeErrorResponse.ForbiddenCallCount()).To(Equal(1))
 
@@ -214,7 +238,7 @@ var _ = Describe("PoliciesCreate", func() {
 		})
 
 		It("calls the forbidden handler", func() {
-			handler.ServeHTTP(logger, resp, request, tokenData)
+			MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, tokenData)
 
 			Expect(fakeErrorResponse.ForbiddenCallCount()).To(Equal(1))
 
@@ -243,7 +267,7 @@ var _ = Describe("PoliciesCreate", func() {
 		})
 
 		It("calls the internal server error handler", func() {
-			handler.ServeHTTP(logger, resp, request, tokenData)
+			MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, tokenData)
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
@@ -272,7 +296,7 @@ var _ = Describe("PoliciesCreate", func() {
 		})
 
 		It("calls the internal server error handler", func() {
-			handler.ServeHTTP(logger, resp, request, tokenData)
+			MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, tokenData)
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
@@ -301,7 +325,7 @@ var _ = Describe("PoliciesCreate", func() {
 		})
 
 		It("calls the internal server error handler", func() {
-			handler.ServeHTTP(logger, resp, request, tokenData)
+			MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, tokenData)
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
@@ -331,7 +355,7 @@ var _ = Describe("PoliciesCreate", func() {
 		})
 
 		It("calls the bad request handler", func() {
-			handler.ServeHTTP(logger, resp, request, tokenData)
+			MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, tokenData)
 
 			Expect(fakeErrorResponse.BadRequestCallCount()).To(Equal(1))
 

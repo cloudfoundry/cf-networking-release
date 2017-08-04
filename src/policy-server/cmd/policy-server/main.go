@@ -206,10 +206,6 @@ func main() {
 
 	healthHandler := handlers.NewHealth(wrappedStore, errorResponse)
 
-	authAdmin := handlers.NewAuthenticator(uaaClient, []string{"network.admin"}, errorResponse, true)
-	authWrite := handlers.NewAuthenticator(uaaClient, []string{"network.admin", "network.write"},
-		errorResponse, !conf.EnableSpaceDeveloperSelfService)
-
 	checkVersionWrapper := &handlers.CheckVersionWrapper{
 		ErrorResponse: errorResponse,
 	}
@@ -222,33 +218,58 @@ func main() {
 		return metricsWrapper.Wrap(handler)
 	}
 
-	logWrap := func(handler middleware.LoggableHandlerFunc) http.Handler {
+	logWrap := func(handler http.HandlerFunc) http.HandlerFunc {
 		return middleware.LogWrap(logger, handler)
 	}
 
-	versionLogWrap := func(logger lager.Logger, v1Handler, v0Handler middleware.LoggableHandlerFunc) http.Handler {
-		return middleware.LogWrap(logger,
-			checkVersionWrapper.CheckVersion(map[string]middleware.LoggableHandlerFunc{
-				"v1": v1Handler,
-				"v0": v0Handler,
-			}))
+	versionWrap := func(v1Handler, v0Handler http.HandlerFunc) http.HandlerFunc {
+		return checkVersionWrapper.CheckVersion(map[string]http.HandlerFunc{
+			"v1": v1Handler,
+			"v0": v0Handler,
+		})
+	}
+
+	authAdminWrap := func(handler http.HandlerFunc) http.HandlerFunc {
+		networkAdminAuthenticator := handlers.Authenticator{
+			Client:        uaaClient,
+			Scopes:        []string{"network.admin"},
+			ErrorResponse: errorResponse,
+			ScopeChecking: true,
+		}
+		return networkAdminAuthenticator.Wrap(handler)
+	}
+
+	authWriteWrap := func(handler http.HandlerFunc) http.HandlerFunc {
+		networkWriteAuthenticator := handlers.Authenticator{
+			Client:        uaaClient,
+			Scopes:        []string{"network.admin", "network.write"},
+			ErrorResponse: errorResponse,
+			ScopeChecking: !conf.EnableSpaceDeveloperSelfService,
+		}
+		return networkWriteAuthenticator.Wrap(handler)
 	}
 
 	externalHandlers := rata.Handlers{
 		"uptime": metricsWrap("Uptime", logWrap(uptimeHandler.ServeHTTP)),
 		"health": metricsWrap("Health", logWrap(healthHandler.ServeHTTP)),
+
 		"create_policies": metricsWrap("CreatePolicies",
-			versionLogWrap(logger, authWrite.Wrap(createPolicyHandlerV1), authWrite.Wrap(createPolicyHandlerV0))),
+			logWrap(versionWrap(authWriteWrap(createPolicyHandlerV1.ServeHTTP), authWriteWrap(createPolicyHandlerV0.ServeHTTP)))),
+
 		"delete_policies": metricsWrap("DeletePolicies",
-			versionLogWrap(logger, authWrite.Wrap(deletePolicyHandlerV1), authWrite.Wrap(deletePolicyHandlerV0))),
+			logWrap(versionWrap(authWriteWrap(deletePolicyHandlerV1.ServeHTTP), authWriteWrap(deletePolicyHandlerV0.ServeHTTP)))),
+
 		"policies_index": metricsWrap("PoliciesIndex",
-			versionLogWrap(logger, authWrite.Wrap(policiesIndexHandlerV1), authWrite.Wrap(policiesIndexHandlerV0))),
+			logWrap(versionWrap(authWriteWrap(policiesIndexHandlerV1.ServeHTTP), authWriteWrap(policiesIndexHandlerV0.ServeHTTP)))),
+
 		"cleanup": metricsWrap("Cleanup",
-			versionLogWrap(logger, authAdmin.Wrap(policiesCleanupHandler), authAdmin.Wrap(policiesCleanupHandler))),
+			logWrap(versionWrap(authAdminWrap(policiesCleanupHandler.ServeHTTP), authAdminWrap(policiesCleanupHandler.ServeHTTP)))),
+
 		"tags_index": metricsWrap("TagsIndex",
-			versionLogWrap(logger, authAdmin.Wrap(tagsIndexHandler), authAdmin.Wrap(tagsIndexHandler))),
+			logWrap(versionWrap(authAdminWrap(tagsIndexHandler.ServeHTTP), authAdminWrap(tagsIndexHandler.ServeHTTP)))),
+
 		"whoami": metricsWrap("WhoAmI",
-			versionLogWrap(logger, authAdmin.Wrap(whoamiHandler), authAdmin.Wrap(whoamiHandler))),
+			logWrap(versionWrap(authAdminWrap(whoamiHandler.ServeHTTP), authAdminWrap(whoamiHandler.ServeHTTP)))),
 	}
 
 	err = dropsonde.Initialize(conf.MetronAddress, dropsondeOrigin)
@@ -258,11 +279,8 @@ func main() {
 
 	metricsEmitter := initMetricsEmitter(logger, wrappedStore)
 	externalServer := initExternalServer(conf, externalHandlers)
-	internalServer := initInternalServer(conf, metricsWrap("InternalPolicies", middleware.LogWrap(logger,
-		checkVersionWrapper.CheckVersion(map[string]middleware.LoggableHandlerFunc{
-			"v1": internalPoliciesHandlerV1.ServeHTTP,
-			"v0": internalPoliciesHandlerV0.ServeHTTP,
-		}),
+	internalServer := initInternalServer(conf, metricsWrap("InternalPolicies", logWrap(
+		versionWrap(internalPoliciesHandlerV1.ServeHTTP, internalPoliciesHandlerV0.ServeHTTP),
 	)))
 	poller := initPoller(logger, conf, policyCleaner)
 	debugServer := debugserver.Runner(fmt.Sprintf("%s:%d", conf.DebugServerHost, conf.DebugServerPort), reconfigurableSink)

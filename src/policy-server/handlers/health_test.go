@@ -42,9 +42,19 @@ var _ = Describe("Health handler", func() {
 	})
 
 	It("checks the database is up and returns a 200", func() {
-		handler.ServeHTTP(logger, resp, request)
+		MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
+
 		Expect(fakeStore.CheckDatabaseCallCount()).To(Equal(1))
 		Expect(resp.Code).To(Equal(http.StatusOK))
+	})
+
+	Context("when the logger is not provided", func() {
+		It("still works", func() {
+			handler.ServeHTTP(resp, request)
+
+			Expect(fakeStore.CheckDatabaseCallCount()).To(Equal(1))
+			Expect(resp.Code).To(Equal(http.StatusOK))
+		})
 	})
 
 	Context("when the database returns an error", func() {
@@ -53,7 +63,8 @@ var _ = Describe("Health handler", func() {
 		})
 
 		It("calls the internal server error handler", func() {
-			handler.ServeHTTP(logger, resp, request)
+			MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
+
 			Expect(fakeStore.CheckDatabaseCallCount()).To(Equal(1))
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 

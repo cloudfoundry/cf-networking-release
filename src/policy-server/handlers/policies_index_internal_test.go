@@ -85,10 +85,7 @@ var _ = Describe("PoliciesIndexInternal", func() {
 	It("it returns the policies returned by ByGuids", func() {
 		request, err := http.NewRequest("GET", "/networking/v0/internal/policies?id=some-app-guid", nil)
 		Expect(err).NotTo(HaveOccurred())
-
-		request.RemoteAddr = "some-host:some-port"
-
-		handler.ServeHTTP(logger, resp, request)
+		MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
 
 		Expect(fakeStore.ByGuidsCallCount()).To(Equal(1))
 		srcGuids, dstGuids := fakeStore.ByGuidsArgsForCall(0)
@@ -98,11 +95,22 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		Expect(resp.Body.Bytes()).To(Equal(expectedResponseBody))
 	})
 
+	Context("when the logger isn't on the request context", func() {
+		It("still works", func() {
+			request, err := http.NewRequest("GET", "/networking/v0/internal/policies?id=some-app-guid", nil)
+			Expect(err).NotTo(HaveOccurred())
+			handler.ServeHTTP(resp, request)
+
+			Expect(resp.Code).To(Equal(http.StatusOK))
+			Expect(resp.Body.Bytes()).To(Equal(expectedResponseBody))
+		})
+	})
+
 	Context("when there are policies and no ids are passed", func() {
 		It("returns all of them", func() {
 			request, err := http.NewRequest("GET", "/networking/v0/internal/policies", nil)
 			Expect(err).NotTo(HaveOccurred())
-			handler.ServeHTTP(logger, resp, request)
+			MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
 
 			Expect(fakeStore.AllCallCount()).To(Equal(1))
 			Expect(resp.Code).To(Equal(http.StatusOK))
@@ -111,17 +119,14 @@ var _ = Describe("PoliciesIndexInternal", func() {
 	})
 
 	Context("when rendering the policies as bytes fails", func() {
-		var request *http.Request
-
 		BeforeEach(func() {
 			fakeMapper.AsBytesReturns(nil, errors.New("banana"))
 		})
 
 		It("calls the internal server error handler", func() {
-			var err error
-			request, err = http.NewRequest("GET", "/networking/v0/internal/policies", nil)
+			request, err := http.NewRequest("GET", "/networking/v0/internal/policies", nil)
 			Expect(err).NotTo(HaveOccurred())
-			handler.ServeHTTP(logger, resp, request)
+			MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
@@ -145,20 +150,15 @@ var _ = Describe("PoliciesIndexInternal", func() {
 	})
 
 	Context("when the store throws an error", func() {
-		var request *http.Request
 
 		BeforeEach(func() {
-			var err error
-			request, err = http.NewRequest("GET", "/networking/v0/internal/policies", nil)
-			Expect(err).NotTo(HaveOccurred())
 			fakeStore.AllReturns(nil, errors.New("banana"))
 		})
 
 		It("calls the internal server error handler", func() {
-			var err error
-			request, err = http.NewRequest("GET", "/networking/v0/internal/policies", nil)
+			request, err := http.NewRequest("GET", "/networking/v0/internal/policies", nil)
 			Expect(err).NotTo(HaveOccurred())
-			handler.ServeHTTP(logger, resp, request)
+			MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 

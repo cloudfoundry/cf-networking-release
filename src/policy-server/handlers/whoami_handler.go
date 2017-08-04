@@ -2,10 +2,8 @@ package handlers
 
 import (
 	"net/http"
-	"policy-server/uaa_client"
 
 	"code.cloudfoundry.org/cf-networking-helpers/marshal"
-	"code.cloudfoundry.org/lager"
 )
 
 type WhoAmIHandler struct {
@@ -17,8 +15,10 @@ type WhoAmIResponse struct {
 	UserName string `json:"user_name"`
 }
 
-func (h *WhoAmIHandler) ServeHTTP(logger lager.Logger, w http.ResponseWriter, req *http.Request, tokenData uaa_client.CheckTokenResponse) {
+func (h *WhoAmIHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	logger := getLogger(req)
 	logger = logger.Session("who-am-i")
+	tokenData := getTokenData(req)
 	whoAmIResponse := WhoAmIResponse{
 		UserName: tokenData.UserName,
 	}

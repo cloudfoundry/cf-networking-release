@@ -2,8 +2,6 @@ package handlers
 
 import (
 	"net/http"
-
-	"code.cloudfoundry.org/lager"
 )
 
 type Health struct {
@@ -18,7 +16,8 @@ func NewHealth(store dataStore, errorResponse errorResponse) *Health {
 	}
 }
 
-func (h *Health) ServeHTTP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+func (h *Health) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	logger := getLogger(req)
 	logger = logger.Session("health")
 	err := h.Store.CheckDatabase()
 	if err != nil {

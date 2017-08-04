@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"policy-server/api"
-	"policy-server/uaa_client"
 
 	"code.cloudfoundry.org/lager"
 )
@@ -28,8 +27,11 @@ func NewPoliciesDelete(store dataStore, mapper api.PolicyMapper,
 	}
 }
 
-func (h *PoliciesDelete) ServeHTTP(logger lager.Logger, w http.ResponseWriter, req *http.Request, tokenData uaa_client.CheckTokenResponse) {
+func (h *PoliciesDelete) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	logger := getLogger(req)
 	logger = logger.Session("delete-policies")
+	tokenData := getTokenData(req)
+
 	bodyBytes, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		logger.Error("failed-reading-request-body", err)

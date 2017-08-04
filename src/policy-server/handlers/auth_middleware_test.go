@@ -2,6 +2,7 @@ package handlers_test
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -19,15 +20,16 @@ import (
 var _ = Describe("Authentication middleware", func() {
 	var (
 		request       *http.Request
-		unprotected   *fakes.AuthenticatedHandler
-		protected     middleware.LoggableHandlerFunc
+		unprotected   http.HandlerFunc
+		protected     http.Handler
 		authenticator *handlers.Authenticator
 
-		resp              *httptest.ResponseRecorder
-		uaaClient         *fakes.UAAClient
-		logger            *lagertest.TestLogger
-		tokenResponse     uaa_client.CheckTokenResponse
-		fakeErrorResponse *fakes.ErrorResponse
+		resp                 *httptest.ResponseRecorder
+		uaaClient            *fakes.UAAClient
+		logger               *lagertest.TestLogger
+		tokenResponse        uaa_client.CheckTokenResponse
+		fakeErrorResponse    *fakes.ErrorResponse
+		unprotectedCallCount = 0
 	)
 
 	BeforeEach(func() {
@@ -39,7 +41,16 @@ var _ = Describe("Authentication middleware", func() {
 
 		uaaClient = &fakes.UAAClient{}
 		logger = lagertest.NewTestLogger("test")
-		unprotected = &fakes.AuthenticatedHandler{}
+		unprotected = func(w http.ResponseWriter, r *http.Request) {
+			unprotectedCallCount += 1
+			By("passing the token data to the unprotected request")
+			data := r.Context().Value(handlers.TokenDataKey)
+			Expect(data).ToNot(BeNil())
+			Expect(data).To(Equal(tokenResponse))
+
+			Expect(w).To(Equal(resp))
+		}
+		unprotectedCallCount = 0
 		fakeErrorResponse = &fakes.ErrorResponse{}
 
 		authenticator = &handlers.Authenticator{
@@ -61,22 +72,37 @@ var _ = Describe("Authentication middleware", func() {
 
 	})
 
-	It("calls into the unprotected handler and logs the request", func() {
-		protected(logger, resp, request)
+	makeRequest := func() {
+		// Put logger on request
+		if logger != nil {
+			contextWithLogger := context.WithValue(request.Context(), middleware.Key("logger"), logger)
+			request = request.WithContext(contextWithLogger)
+		}
+		protected.ServeHTTP(resp, request)
 
-		Expect(unprotected.ServeHTTPCallCount()).To(Equal(1))
+	}
 
-		_, unprotectedResp, unprotectedRequest, tokenData := unprotected.ServeHTTPArgsForCall(0)
-		Expect(unprotectedResp).To(Equal(resp))
-		Expect(unprotectedRequest).To(Equal(request))
-		Expect(tokenData).To(Equal(tokenResponse))
+	It("calls into the unprotected handler", func() {
+		makeRequest()
+		Expect(unprotectedCallCount).To(Equal(1))
 	})
 
 	It("checks the authorization bearer token with the uaa client", func() {
-		protected(logger, resp, request)
+		makeRequest()
+		Expect(unprotectedCallCount).To(Equal(1))
 
 		Expect(uaaClient.CheckTokenCallCount()).To(Equal(1))
 		Expect(uaaClient.CheckTokenArgsForCall(0)).To(Equal("correct-token"))
+	})
+
+	Context("when the logger isn't on the request", func() {
+		BeforeEach(func() {
+			logger = nil
+		})
+		It("still works", func() {
+			makeRequest()
+			Expect(unprotectedCallCount).To(Equal(1))
+		})
 	})
 
 	Context("when we disable scope checking", func() {
@@ -96,14 +122,8 @@ var _ = Describe("Authentication middleware", func() {
 			protected = authenticator.Wrap(unprotected)
 		})
 		It("calls the unprotected handler even when the token has no scopes", func() {
-			protected(logger, resp, request)
-
-			Expect(unprotected.ServeHTTPCallCount()).To(Equal(1))
-
-			_, unprotectedResp, unprotectedRequest, tokenData := unprotected.ServeHTTPArgsForCall(0)
-			Expect(unprotectedResp).To(Equal(resp))
-			Expect(unprotectedRequest).To(Equal(request))
-			Expect(tokenData).To(Equal(tokenResponse))
+			makeRequest()
+			Expect(unprotectedCallCount).To(Equal(1))
 		})
 	})
 
@@ -116,7 +136,8 @@ var _ = Describe("Authentication middleware", func() {
 		})
 
 		It("checks the policies for the token from UAA", func() {
-			protected(logger, resp, request)
+			makeRequest()
+			Expect(unprotectedCallCount).To(Equal(1))
 
 			Expect(uaaClient.CheckTokenCallCount()).To(Equal(1))
 			Expect(uaaClient.CheckTokenArgsForCall(0)).To(Equal("correct-token"))
@@ -132,7 +153,8 @@ var _ = Describe("Authentication middleware", func() {
 		})
 
 		It("calls the unauthorized error handler", func() {
-			protected(logger, resp, request)
+			makeRequest()
+			Expect(unprotectedCallCount).To(Equal(0))
 
 			Expect(fakeErrorResponse.UnauthorizedCallCount()).To(Equal(1))
 
@@ -165,7 +187,8 @@ var _ = Describe("Authentication middleware", func() {
 		})
 
 		It("calls the forbidden error handler", func() {
-			protected(logger, resp, request)
+			makeRequest()
+			Expect(unprotectedCallCount).To(Equal(0))
 
 			Expect(fakeErrorResponse.ForbiddenCallCount()).To(Equal(1))
 
@@ -198,7 +221,8 @@ var _ = Describe("Authentication middleware", func() {
 		})
 
 		It("calls the forbidden error handler", func() {
-			protected(logger, resp, request)
+			makeRequest()
+			Expect(unprotectedCallCount).To(Equal(0))
 
 			Expect(fakeErrorResponse.ForbiddenCallCount()).To(Equal(1))
 

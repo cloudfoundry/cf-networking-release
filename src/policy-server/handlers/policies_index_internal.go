@@ -37,7 +37,8 @@ func NewPoliciesIndexInternal(logger lager.Logger, store dataStore,
 	}
 }
 
-func (h *PoliciesIndexInternal) ServeHTTP(logger lager.Logger, w http.ResponseWriter, req *http.Request) {
+func (h *PoliciesIndexInternal) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	logger := getLogger(req)
 	logger = logger.Session("index-policies-internal")
 
 	queryValues := req.URL.Query()

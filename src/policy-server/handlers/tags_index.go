@@ -2,12 +2,10 @@ package handlers
 
 import (
 	"net/http"
-	"policy-server/uaa_client"
 
 	"policy-server/api"
 
 	"code.cloudfoundry.org/cf-networking-helpers/marshal"
-	"code.cloudfoundry.org/lager"
 )
 
 type TagsIndex struct {
@@ -24,7 +22,8 @@ func NewTagsIndex(store dataStore, marshaler marshal.Marshaler, errorResponse er
 	}
 }
 
-func (h *TagsIndex) ServeHTTP(logger lager.Logger, w http.ResponseWriter, req *http.Request, _ uaa_client.CheckTokenResponse) {
+func (h *TagsIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	logger := getLogger(req)
 	logger = logger.Session("index-tags")
 	tags, err := h.Store.Tags()
 	if err != nil {

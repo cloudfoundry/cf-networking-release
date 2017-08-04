@@ -46,10 +46,28 @@ var _ = Describe("Who Am I Handler", func() {
 	})
 
 	It("returns the username", func() {
-		handler.ServeHTTP(logger, resp, request, tokenData)
+		MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, tokenData)
 
 		Expect(resp.Code).To(Equal(http.StatusOK))
 		Expect(resp.Body.String()).To(Equal(`{"user_name":"some_user"}`))
+	})
+
+	Context("when the logger isn't on the request context", func() {
+		It("still works", func() {
+			MakeRequestWithAuth(handler.ServeHTTP, resp, request, tokenData)
+
+			Expect(resp.Code).To(Equal(http.StatusOK))
+			Expect(resp.Body.String()).To(Equal(`{"user_name":"some_user"}`))
+		})
+	})
+
+	Context("when the token data isn't on the request context", func() {
+		It("still works", func() {
+			MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
+
+			Expect(resp.Code).To(Equal(http.StatusOK))
+			Expect(resp.Body.String()).To(Equal(`{"user_name":""}`))
+		})
 	})
 
 	Context("when json marshaling the response fails", func() {
@@ -60,7 +78,7 @@ var _ = Describe("Who Am I Handler", func() {
 		})
 
 		It("calls the internal server error handler", func() {
-			handler.ServeHTTP(logger, resp, request, tokenData)
+			MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, tokenData)
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 

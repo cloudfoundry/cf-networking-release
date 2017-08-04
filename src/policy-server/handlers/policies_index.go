@@ -6,8 +6,6 @@ import (
 	"policy-server/uaa_client"
 
 	"policy-server/store"
-
-	"code.cloudfoundry.org/lager"
 )
 
 //go:generate counterfeiter -o fakes/policy_filter.go --fake-name PolicyFilter . policyFilter
@@ -32,8 +30,10 @@ func NewPoliciesIndex(store dataStore, mapper api.PolicyMapper, policyFilter pol
 	}
 }
 
-func (h *PoliciesIndex) ServeHTTP(logger lager.Logger, w http.ResponseWriter, req *http.Request, userToken uaa_client.CheckTokenResponse) {
+func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	logger := getLogger(req)
 	logger = logger.Session("index-policies")
+	userToken := getTokenData(req)
 	queryValues := req.URL.Query()
 	ids := parseIds(queryValues)
 
