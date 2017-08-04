@@ -218,18 +218,18 @@ func main() {
 		return metricsWrapper.Wrap(handler)
 	}
 
-	logWrap := func(handler http.HandlerFunc) http.HandlerFunc {
+	logWrap := func(handler http.Handler) http.Handler {
 		return middleware.LogWrap(logger, handler)
 	}
 
-	versionWrap := func(v1Handler, v0Handler http.HandlerFunc) http.HandlerFunc {
-		return checkVersionWrapper.CheckVersion(map[string]http.HandlerFunc{
+	versionWrap := func(v1Handler, v0Handler http.Handler) http.Handler {
+		return checkVersionWrapper.CheckVersion(map[string]http.Handler{
 			"v1": v1Handler,
 			"v0": v0Handler,
 		})
 	}
 
-	authAdminWrap := func(handler http.HandlerFunc) http.HandlerFunc {
+	authAdminWrap := func(handler http.Handler) http.Handler {
 		networkAdminAuthenticator := handlers.Authenticator{
 			Client:        uaaClient,
 			Scopes:        []string{"network.admin"},
@@ -239,7 +239,7 @@ func main() {
 		return networkAdminAuthenticator.Wrap(handler)
 	}
 
-	authWriteWrap := func(handler http.HandlerFunc) http.HandlerFunc {
+	authWriteWrap := func(handler http.Handler) http.Handler {
 		networkWriteAuthenticator := handlers.Authenticator{
 			Client:        uaaClient,
 			Scopes:        []string{"network.admin", "network.write"},
@@ -250,26 +250,26 @@ func main() {
 	}
 
 	externalHandlers := rata.Handlers{
-		"uptime": metricsWrap("Uptime", logWrap(uptimeHandler.ServeHTTP)),
-		"health": metricsWrap("Health", logWrap(healthHandler.ServeHTTP)),
+		"uptime": metricsWrap("Uptime", logWrap(uptimeHandler)),
+		"health": metricsWrap("Health", logWrap(healthHandler)),
 
 		"create_policies": metricsWrap("CreatePolicies",
-			logWrap(versionWrap(authWriteWrap(createPolicyHandlerV1.ServeHTTP), authWriteWrap(createPolicyHandlerV0.ServeHTTP)))),
+			logWrap(versionWrap(authWriteWrap(createPolicyHandlerV1), authWriteWrap(createPolicyHandlerV0)))),
 
 		"delete_policies": metricsWrap("DeletePolicies",
-			logWrap(versionWrap(authWriteWrap(deletePolicyHandlerV1.ServeHTTP), authWriteWrap(deletePolicyHandlerV0.ServeHTTP)))),
+			logWrap(versionWrap(authWriteWrap(deletePolicyHandlerV1), authWriteWrap(deletePolicyHandlerV0)))),
 
 		"policies_index": metricsWrap("PoliciesIndex",
-			logWrap(versionWrap(authWriteWrap(policiesIndexHandlerV1.ServeHTTP), authWriteWrap(policiesIndexHandlerV0.ServeHTTP)))),
+			logWrap(versionWrap(authWriteWrap(policiesIndexHandlerV1), authWriteWrap(policiesIndexHandlerV0)))),
 
 		"cleanup": metricsWrap("Cleanup",
-			logWrap(versionWrap(authAdminWrap(policiesCleanupHandler.ServeHTTP), authAdminWrap(policiesCleanupHandler.ServeHTTP)))),
+			logWrap(versionWrap(authAdminWrap(policiesCleanupHandler), authAdminWrap(policiesCleanupHandler)))),
 
 		"tags_index": metricsWrap("TagsIndex",
-			logWrap(versionWrap(authAdminWrap(tagsIndexHandler.ServeHTTP), authAdminWrap(tagsIndexHandler.ServeHTTP)))),
+			logWrap(versionWrap(authAdminWrap(tagsIndexHandler), authAdminWrap(tagsIndexHandler)))),
 
 		"whoami": metricsWrap("WhoAmI",
-			logWrap(versionWrap(authAdminWrap(whoamiHandler.ServeHTTP), authAdminWrap(whoamiHandler.ServeHTTP)))),
+			logWrap(versionWrap(authAdminWrap(whoamiHandler), authAdminWrap(whoamiHandler)))),
 	}
 
 	err = dropsonde.Initialize(conf.MetronAddress, dropsondeOrigin)
@@ -280,7 +280,7 @@ func main() {
 	metricsEmitter := initMetricsEmitter(logger, wrappedStore)
 	externalServer := initExternalServer(conf, externalHandlers)
 	internalServer := initInternalServer(conf, metricsWrap("InternalPolicies", logWrap(
-		versionWrap(internalPoliciesHandlerV1.ServeHTTP, internalPoliciesHandlerV0.ServeHTTP),
+		versionWrap(internalPoliciesHandlerV1, internalPoliciesHandlerV0),
 	)))
 	poller := initPoller(logger, conf, policyCleaner)
 	debugServer := debugserver.Runner(fmt.Sprintf("%s:%d", conf.DebugServerHost, conf.DebugServerPort), reconfigurableSink)

@@ -19,11 +19,11 @@ import (
 
 var _ = Describe("CheckVersionWrapper", func() {
 	var (
-		checkVersionHandler http.HandlerFunc
+		checkVersionHandler http.Handler
 		checkVersionWrapper *handlers.CheckVersionWrapper
-		fakeHandlerv0       http.HandlerFunc
-		fakeHandlerv1       http.HandlerFunc
-		handlerMap          map[string]http.HandlerFunc
+		fakeHandlerv0       http.Handler
+		fakeHandlerv1       http.Handler
+		handlerMap          map[string]http.Handler
 		server              *httptest.Server
 		logger              *lagertest.TestLogger
 		fakeErrorResponse   *fakes.ErrorResponse
@@ -34,19 +34,19 @@ var _ = Describe("CheckVersionWrapper", func() {
 	)
 
 	BeforeEach(func() {
-		fakeHandlerv0 = func(w http.ResponseWriter, req *http.Request) {
+		fakeHandlerv0 = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			v0Count++
 			logger.Info("v0")
 			w.Write([]byte("v0"))
-		}
+		})
 
-		fakeHandlerv1 = func(w http.ResponseWriter, req *http.Request) {
+		fakeHandlerv1 = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			v1Count++
 			logger.Info("v1")
 			w.Write([]byte("v1"))
-		}
+		})
 
-		handlerMap = map[string]http.HandlerFunc{
+		handlerMap = map[string]http.Handler{
 			"v0": fakeHandlerv0,
 			"v1": fakeHandlerv1,
 		}

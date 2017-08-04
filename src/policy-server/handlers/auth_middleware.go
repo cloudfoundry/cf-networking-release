@@ -45,15 +45,15 @@ func getLogger(req *http.Request) lager.Logger {
 
 func getTokenData(req *http.Request) uaa_client.CheckTokenResponse {
 	if v := req.Context().Value(TokenDataKey); v != nil {
-		if logger, ok := v.(uaa_client.CheckTokenResponse); ok {
-			return logger
+		if token, ok := v.(uaa_client.CheckTokenResponse); ok {
+			return token
 		}
 	}
 	return uaa_client.CheckTokenResponse{}
 }
 
-func (a *Authenticator) Wrap(handle http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, req *http.Request) {
+func (a *Authenticator) Wrap(handle http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		logger := getLogger(req)
 		logger = logger.Session("authentication")
 
@@ -87,7 +87,7 @@ func (a *Authenticator) Wrap(handle http.HandlerFunc) http.HandlerFunc {
 		contextWithTokenData := context.WithValue(req.Context(), TokenDataKey, tokenData)
 		req = req.WithContext(contextWithTokenData)
 		handle.ServeHTTP(w, req)
-	}
+	})
 }
 
 func isAuthorized(scopes, allowedScopes []string) bool {
