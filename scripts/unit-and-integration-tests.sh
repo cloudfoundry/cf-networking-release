@@ -24,8 +24,10 @@ declare -a serial_packages=(
   )
 
 function loadIFB {
-  depmod $(uname -r)
-  modprobe ifb
+  set +e
+    depmod $(uname -r)
+    modprobe ifb
+  set -e
 }
 
 function bootDB {
