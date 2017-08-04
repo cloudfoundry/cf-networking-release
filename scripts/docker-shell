@@ -17,7 +17,6 @@ docker run \
    -it \
    --privileged \
    -v ${PWD}:/cf-networking-release \
-   -v /var/run:/var/run:rw \
    -e GOPATH=/cf-networking-release \
    -e DB=$db \
    --cap-add ALL \
