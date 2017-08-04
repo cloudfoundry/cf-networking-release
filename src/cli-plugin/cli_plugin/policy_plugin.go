@@ -53,7 +53,7 @@ const MinPort = 1
 const MaxPort = 65535
 
 func (p *Plugin) GetMetadata() plugin.PluginMetadata {
-	const usageTemplate = "cf %s SOURCE_APP DESTINATION_APP --protocol <tcp|udp> --port <%d-%d>-<%d-%d>"
+	const usageTemplate = "cf %s SOURCE_APP DESTINATION_APP --protocol <tcp|udp> --port <%d-%d>[-<%d-%d>]"
 
 	return plugin.PluginMetadata{
 		Name:    "network-policy",
