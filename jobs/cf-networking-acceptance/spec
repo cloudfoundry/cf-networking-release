@@ -34,6 +34,10 @@ properties:
   cf_networking.acceptance.admin_secret:
     description: "uaa admin client secret"
 
+  cf_networking.acceptance.default_security_groups:
+    description: "expected default security groups"
+    default: [ "dns", "public_networks" ]
+
   cf_networking.acceptance.prefix:
     description: "prefix applied to all apps, orgs and spaces created by test"
     default: cf-networking-test-
