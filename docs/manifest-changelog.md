@@ -3,6 +3,12 @@
 See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for examples
 
 
+### 1.5.0
+**New Properties**
+  - An optional parameter has been added to configure the path to the iptables kernel log for
+    the iptables_logger.
+    - `cf_networking.iptables_logger.kernel_log_file`
+
 ### 1.4.0
 **New Properties**
   - An optional parameter has been added to configure the port of the metron agent for
