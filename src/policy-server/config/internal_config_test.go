@@ -12,8 +12,8 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Config", func() {
-	Describe("New", func() {
+var _ = Describe("InternalConfig", func() {
+	Describe("NewInternal", func() {
 		var (
 			file *os.File
 			err  error
@@ -27,19 +27,14 @@ var _ = Describe("Config", func() {
 		Context("when the config file is valid", func() {
 			It("returns the config", func() {
 				file.WriteString(`{
-					"listen_host": "http://1.2.3.4",
-					"listen_port": 1234,
 					"log_prefix": "cfnetworking",
+					"listen_host": "http://1.2.3.4",
 					"internal_listen_port": 2222,
 					"debug_server_host": "http://6.5.4.3",
 					"debug_server_port": 9999,
-					"uaa_client": "some-uaa-client",
-					"uaa_client_secret": "some-uaa-client-secret",
-					"uaa_url": "http://uaa.example.com",
-					"uaa_port": 8888,
-					"uaa_ca": "some/uaa/ca/file",
-					"cc_url": "http://ccapi.example.com",
-					"skip_ssl_validation": true,
+					"ca_cert_file": "some/ca/cert/file",
+					"server_cert_file": "some/server/cert/file",
+					"server_key_file": "some/server/key/file",
 					"database": {
 						"type": "mysql",
 						"user": "root",
@@ -52,25 +47,18 @@ var _ = Describe("Config", func() {
 					"tag_length": 2,
 					"metron_address": "http://1.2.3.4:9999",
 					"log_level": "debug",
-					"cleanup_interval": 2,
-					"request_timeout": 5,
-					"max_policies": 3,
-					"enable_space_developer_self_service": true
+					"request_timeout": 5
 				}`)
-				c, err := config.New(file.Name())
+				c, err := config.NewInternal(file.Name())
 				Expect(err).NotTo(HaveOccurred())
-				Expect(c.ListenHost).To(Equal("http://1.2.3.4"))
-				Expect(c.ListenPort).To(Equal(1234))
 				Expect(c.LogPrefix).To(Equal("cfnetworking"))
+				Expect(c.ListenHost).To(Equal("http://1.2.3.4"))
+				Expect(c.InternalListenPort).To(Equal(2222))
 				Expect(c.DebugServerHost).To(Equal("http://6.5.4.3"))
 				Expect(c.DebugServerPort).To(Equal(9999))
-				Expect(c.UAAClient).To(Equal("some-uaa-client"))
-				Expect(c.UAAClientSecret).To(Equal("some-uaa-client-secret"))
-				Expect(c.UAAURL).To(Equal("http://uaa.example.com"))
-				Expect(c.UAAPort).To(Equal(8888))
-				Expect(c.UAACA).To(Equal("some/uaa/ca/file"))
-				Expect(c.CCURL).To(Equal("http://ccapi.example.com"))
-				Expect(c.SkipSSLValidation).To(Equal(true))
+				Expect(c.CACertFile).To(Equal("some/ca/cert/file"))
+				Expect(c.ServerCertFile).To(Equal("some/server/cert/file"))
+				Expect(c.ServerKeyFile).To(Equal("some/server/key/file"))
 				Expect(c.Database.Type).To(Equal("mysql"))
 				Expect(c.Database.User).To(Equal("root"))
 				Expect(c.Database.Password).To(Equal("password"))
@@ -81,23 +69,20 @@ var _ = Describe("Config", func() {
 				Expect(c.TagLength).To(Equal(2))
 				Expect(c.MetronAddress).To(Equal("http://1.2.3.4:9999"))
 				Expect(c.LogLevel).To(Equal("debug"))
-				Expect(c.CleanupInterval).To(Equal(2))
 				Expect(c.RequestTimeout).To(Equal(5))
-				Expect(c.MaxPolicies).To(Equal(3))
-				Expect(c.EnableSpaceDeveloperSelfService).To(BeTrue())
 			})
 		})
 
 		Context("when the config file path does not exist", func() {
 			It("returns a meaningful error", func() {
-				_, err := config.New("/some/bad/filepath")
+				_, err := config.NewInternal("/some/bad/filepath")
 				Expect(err).To(MatchError(HavePrefix("reading config: open /some/bad/filepath:")))
 			})
 		})
 
 		Context("when config file contents are blank", func() {
 			It("returns the error", func() {
-				_, err = config.New(file.Name())
+				_, err = config.NewInternal(file.Name())
 				Expect(err).To(MatchError(ContainSubstring("parsing config")))
 			})
 		})
@@ -112,7 +97,7 @@ var _ = Describe("Config", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(configFile.Close()).To(Succeed())
 
-				_, err = config.New(configFile.Name())
+				_, err = config.NewInternal(configFile.Name())
 				Expect(err).To(MatchError("parsing config: unexpected end of JSON input"))
 			})
 		})
@@ -120,17 +105,14 @@ var _ = Describe("Config", func() {
 		DescribeTable("when config file is missing a member",
 			func(missingFlag, errorMsg string) {
 				allData := map[string]interface{}{
-					"listen_host":         "http://1.2.3.4",
-					"listen_port":         1234,
-					"log_prefix":          "cfnetworking",
-					"debug_server_host":   "http://4.4.4.4",
-					"debug_server_port":   3333,
-					"uaa_client":          "some-uaa-client",
-					"uaa_client_secret":   "some-uaa-client-secret",
-					"uaa_url":             "http://uaa.example.com",
-					"uaa_port":            5555,
-					"cc_url":              "http://ccapi.example.com",
-					"skip_ssl_validation": true,
+					"log_prefix":           "cfnetworking",
+					"listen_host":          "http://1.2.3.4",
+					"internal_listen_port": 2222,
+					"debug_server_host":    "http://4.4.4.4",
+					"debug_server_port":    3333,
+					"ca_cert_file":         "some/ca/cert/file",
+					"server_cert_file":     "some/server/cert/file",
+					"server_key_file":      "some/server/key/file",
 					"database": map[string]interface{}{
 						"type":          "mysql",
 						"user":          "root",
@@ -140,33 +122,27 @@ var _ = Describe("Config", func() {
 						"timeout":       5,
 						"database_name": "network_policy",
 					},
-					"tag_length":       2,
-					"metron_address":   "http://1.2.3.4:9999",
-					"cleanup_interval": 2,
-					"request_timeout":  5,
-					"max_policies":     3,
+					"tag_length":      2,
+					"metron_address":  "http://1.2.3.4:9999",
+					"request_timeout": 5,
 				}
 				delete(allData, missingFlag)
 				Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
 
-				_, err = config.New(file.Name())
+				_, err = config.NewInternal(file.Name())
 				Expect(err).To(MatchError(fmt.Sprintf("invalid config: %s", errorMsg)))
 			},
-			Entry("missing listen host", "listen_host", "ListenHost: zero value"),
-			Entry("missing listen port", "listen_port", "ListenPort: zero value"),
 			Entry("missing log prefix", "log_prefix", "LogPrefix: zero value"),
+			Entry("missing listen host", "listen_host", "ListenHost: zero value"),
+			Entry("missing internal listen port", "internal_listen_port", "InternalListenPort: zero value"),
 			Entry("missing debug server host", "debug_server_host", "DebugServerHost: zero value"),
 			Entry("missing debug server port", "debug_server_port", "DebugServerPort: zero value"),
-			Entry("missing uaa client", "uaa_client", "UAAClient: zero value"),
-			Entry("missing uaa client secret", "uaa_client_secret", "UAAClientSecret: zero value"),
-			Entry("missing uaa url", "uaa_url", "UAAURL: zero value"),
-			Entry("missing uaa port", "uaa_port", "UAAPort: zero value"),
-			Entry("missing cc url", "cc_url", "CCURL: zero value"),
+			Entry("missing ca cert file", "ca_cert_file", "CACertFile: zero value"),
+			Entry("missing server cert file", "server_cert_file", "ServerCertFile: zero value"),
+			Entry("missing server key file", "server_key_file", "ServerKeyFile: zero value"),
 			Entry("missing tag length", "tag_length", "TagLength: zero value"),
 			Entry("missing metron address", "metron_address", "MetronAddress: zero value"),
-			Entry("missing cleanup interval", "cleanup_interval", "CleanupInterval: less than min"),
 			Entry("missing request timeout", "request_timeout", "RequestTimeout: less than min"),
-			Entry("missing max policies", "max_policies", "MaxPolicies: less than min"),
 		)
 
 		Describe("database config", func() {
@@ -212,7 +188,7 @@ var _ = Describe("Config", func() {
 					Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
 				})
 				It("returns an error", func() {
-					_, err = config.New(file.Name())
+					_, err = config.NewInternal(file.Name())
 					Expect(err).To(MatchError("invalid config: Database.Type: zero value"))
 				})
 			})
@@ -223,7 +199,7 @@ var _ = Describe("Config", func() {
 					Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
 				})
 				It("returns an error", func() {
-					_, err = config.New(file.Name())
+					_, err = config.NewInternal(file.Name())
 					Expect(err).To(MatchError("invalid config: Database.User: zero value"))
 				})
 			})
@@ -234,7 +210,7 @@ var _ = Describe("Config", func() {
 					Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
 				})
 				It("does not return an error", func() {
-					_, err = config.New(file.Name())
+					_, err = config.NewInternal(file.Name())
 					Expect(err).NotTo(HaveOccurred())
 				})
 			})
@@ -245,7 +221,7 @@ var _ = Describe("Config", func() {
 					Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
 				})
 				It("returns an error", func() {
-					_, err = config.New(file.Name())
+					_, err = config.NewInternal(file.Name())
 					Expect(err).To(MatchError("invalid config: Database.Host: zero value"))
 				})
 			})
@@ -256,7 +232,7 @@ var _ = Describe("Config", func() {
 					Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
 				})
 				It("returns an error", func() {
-					_, err = config.New(file.Name())
+					_, err = config.NewInternal(file.Name())
 					Expect(err).To(MatchError("invalid config: Database.Port: zero value"))
 				})
 			})
@@ -267,7 +243,7 @@ var _ = Describe("Config", func() {
 					Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
 				})
 				It("returns an error", func() {
-					_, err = config.New(file.Name())
+					_, err = config.NewInternal(file.Name())
 					Expect(err).To(MatchError("invalid config: Database.Timeout: less than min"))
 				})
 			})
@@ -278,7 +254,7 @@ var _ = Describe("Config", func() {
 					Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
 				})
 				It("does not return an error", func() {
-					_, err = config.New(file.Name())
+					_, err = config.NewInternal(file.Name())
 					Expect(err).NotTo(HaveOccurred())
 				})
 			})

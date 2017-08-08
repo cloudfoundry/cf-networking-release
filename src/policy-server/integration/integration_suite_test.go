@@ -1,6 +1,7 @@
 package integration_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"policy-server/config"
@@ -17,7 +18,15 @@ import (
 	"testing"
 )
 
-var policyServerPath string
+var (
+	policyServerPath         string
+	policyServerInternalPath string
+)
+
+type policyServerPaths struct {
+	Internal string
+	External string
+}
 
 var HaveName = func(name string) types.GomegaMatcher {
 	return WithTransform(func(ev testsupport.Event) string {
@@ -34,14 +43,29 @@ func TestIntegration(t *testing.T) {
 }
 
 var _ = SynchronizedBeforeSuite(func() []byte {
-	fmt.Fprintf(GinkgoWriter, "building binary...")
-	policyServerPath, err := gexec.Build("policy-server/cmd/policy-server", "-race")
+	var err error
+	paths := policyServerPaths{}
+	fmt.Fprintf(GinkgoWriter, "building policy-server binary...")
+	paths.External, err = gexec.Build("policy-server/cmd/policy-server", "-race")
 	fmt.Fprintf(GinkgoWriter, "done")
 	Expect(err).NotTo(HaveOccurred())
 
-	return []byte(policyServerPath)
+	fmt.Fprintf(GinkgoWriter, "building policy-server-internal binary...")
+	paths.Internal, err = gexec.Build("policy-server/cmd/policy-server-internal", "-race")
+	fmt.Fprintf(GinkgoWriter, "done")
+	Expect(err).NotTo(HaveOccurred())
+
+	data, err := json.Marshal(paths)
+	Expect(err).NotTo(HaveOccurred())
+	return data
 }, func(data []byte) {
-	policyServerPath = string(data)
+	var paths policyServerPaths
+	err := json.Unmarshal(data, &paths)
+	Expect(err).NotTo(HaveOccurred())
+
+	policyServerPath = paths.External
+	policyServerInternalPath = paths.Internal
+
 	rand.Seed(ginkgoConfig.GinkgoConfig.RandomSeed + int64(GinkgoParallelNode()))
 })
 
@@ -54,6 +78,16 @@ func configurePolicyServers(template config.Config, instances int) []config.Conf
 	for i := 0; i < instances; i++ {
 		conf := template
 		conf.ListenPort = testsupport.PickAPort()
+		conf.DebugServerPort = testsupport.PickAPort()
+		configs = append(configs, conf)
+	}
+	return configs
+}
+
+func configureInternalPolicyServers(template config.InternalConfig, instances int) []config.InternalConfig {
+	var configs []config.InternalConfig
+	for i := 0; i < instances; i++ {
+		conf := template
 		conf.InternalListenPort = testsupport.PickAPort()
 		conf.DebugServerPort = testsupport.PickAPort()
 		configs = append(configs, conf)
@@ -62,9 +96,17 @@ func configurePolicyServers(template config.Config, instances int) []config.Conf
 }
 
 func startPolicyServers(configs []config.Config) []*gexec.Session {
+	return startPolicyAndInternalServers(configs, nil)
+}
+
+func startPolicyAndInternalServers(configs []config.Config, internalConfigs []config.InternalConfig) []*gexec.Session {
 	var sessions []*gexec.Session
 	for _, conf := range configs {
 		sessions = append(sessions, helpers.StartPolicyServer(policyServerPath, conf))
+	}
+
+	for _, conf := range internalConfigs {
+		sessions = append(sessions, helpers.StartInternalPolicyServer(policyServerInternalPath, conf))
 	}
 	return sessions
 }

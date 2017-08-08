@@ -1,19 +1,24 @@
 ---
 name: policy-server
 templates:
-  pre-start.erb: bin/pre-start
   policy-server_ctl.erb: bin/policy-server_ctl
   policy-server_as_vcap.erb: bin/policy-server_as_vcap
   policy-server.json.erb: config/policy-server.json
-  ca.crt.erb: config/certs/ca.crt
   uaa_ca.crt.erb: config/certs/uaa_ca.crt
-  server.crt.erb: config/certs/server.crt
-  server.key.erb: config/certs/server.key
-  dns_health_check.erb: bin/dns_health_check
 
 packages:
   - policy-server
   - ctl-utils
+
+provides:
+- name: dbconn
+  type: dbconn
+  properties:
+  - cf_networking.policy_server.database.type
+  - cf_networking.policy_server.database.username
+  - cf_networking.policy_server.database.password
+  - cf_networking.policy_server.database.port
+  - cf_networking.policy_server.database.name
 
 consumes:
 - name: database

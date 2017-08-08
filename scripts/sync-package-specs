@@ -43,7 +43,8 @@ sync_package vxlan-policy-agent \
   -app vxlan-policy-agent/cmd/vxlan-policy-agent &
 
 sync_package policy-server \
-  -app policy-server/cmd/policy-server &
+  -app policy-server/cmd/policy-server \
+  -app policy-server/cmd/policy-server-internal &
 
 sync_package netmon \
   -app netmon/cmd/netmon &

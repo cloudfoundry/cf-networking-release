@@ -36,7 +36,7 @@ var _ = Describe("External API Space Developer", func() {
 		dbConf.DatabaseName = fmt.Sprintf("test_node_%d", GinkgoParallelNode())
 		testsupport.CreateDatabase(dbConf)
 
-		template := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
+		template, _ := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
 		policyServerConfs = configurePolicyServers(template, 2)
 		sessions = startPolicyServers(policyServerConfs)
 		conf = policyServerConfs[0]
@@ -114,7 +114,7 @@ var _ = Describe("External API Space Developer", func() {
 				BeforeEach(func() {
 					stopPolicyServers(sessions)
 
-					template := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
+					template, _ := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
 					template.EnableSpaceDeveloperSelfService = true
 					policyServerConfs = configurePolicyServers(template, 2)
 					sessions = startPolicyServers(policyServerConfs)

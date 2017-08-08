@@ -41,7 +41,7 @@ var _ = Describe("Integration", func() {
 			dbConf.DatabaseName = fmt.Sprintf("test_node_%d", GinkgoParallelNode())
 			testsupport.CreateDatabase(dbConf)
 
-			template := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
+			template, _ := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
 			policyServerConfs := configurePolicyServers(template, 1)
 			sessions = startPolicyServers(policyServerConfs)
 			session = sessions[0]
@@ -180,7 +180,7 @@ var _ = Describe("Integration", func() {
 				DatabaseName: "nonexistentDatabase",
 				Timeout:      5,
 			}
-			conf := helpers.DefaultTestConfig(badDbConfig, "some-address", "fixtures")
+			conf, _ := helpers.DefaultTestConfig(badDbConfig, "some-address", "fixtures")
 			configFilePath := helpers.WriteConfigFile(conf)
 
 			policyServerCmd := exec.Command(policyServerPath, "-config-file", configFilePath)
@@ -216,7 +216,7 @@ var _ = Describe("Integration", func() {
 					DatabaseName: "nonexistentDatabase",
 					Timeout:      0,
 				}
-				conf := helpers.DefaultTestConfig(badDbConfig, "some-address", "fixtures")
+				conf, _ := helpers.DefaultTestConfig(badDbConfig, "some-address", "fixtures")
 				configFilePath := helpers.WriteConfigFile(conf)
 
 				policyServerCmd := exec.Command(policyServerPath, "-config-file", configFilePath)

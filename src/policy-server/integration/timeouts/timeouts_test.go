@@ -57,7 +57,7 @@ var _ = Describe("Timeout", func() {
 
 		fakeMetron = testsupport.NewFakeMetron()
 
-		conf = helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "../fixtures")
+		conf, _ = helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "../fixtures")
 		session = helpers.StartPolicyServer(policyServerPath, conf)
 		policyServerURL = fmt.Sprintf("http://%s:%d", conf.ListenHost, conf.ListenPort)
 

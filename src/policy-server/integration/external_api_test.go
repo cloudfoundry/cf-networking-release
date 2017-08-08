@@ -35,7 +35,7 @@ var _ = Describe("External API", func() {
 		dbConf.DatabaseName = fmt.Sprintf("test_node_%d", GinkgoParallelNode())
 		testsupport.CreateDatabase(dbConf)
 
-		template := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
+		template, _ := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
 		policyServerConfs = configurePolicyServers(template, 2)
 		sessions = startPolicyServers(policyServerConfs)
 		conf = policyServerConfs[0]

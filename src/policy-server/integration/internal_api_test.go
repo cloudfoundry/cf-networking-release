@@ -21,11 +21,12 @@ import (
 
 var _ = Describe("Internal API", func() {
 	var (
-		sessions  []*gexec.Session
-		conf      config.Config
-		address   string
-		dbConf    db.Config
-		tlsConfig *tls.Config
+		sessions     []*gexec.Session
+		conf         config.Config
+		internalConf config.InternalConfig
+		address      string
+		dbConf       db.Config
+		tlsConfig    *tls.Config
 
 		fakeMetron testsupport.FakeMetron
 	)
@@ -51,11 +52,14 @@ var _ = Describe("Internal API", func() {
 		}
 		tlsConfig.BuildNameToCertificate()
 
-		template := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
+		template, internalTemplate := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
 		template.TagLength = 2
+		internalTemplate.TagLength = 2
 		policyServerConfs := configurePolicyServers(template, 1)
-		sessions = startPolicyServers(policyServerConfs)
+		policyServerInternalConfs := configureInternalPolicyServers(internalTemplate, 1)
+		sessions = startPolicyAndInternalServers(policyServerConfs, policyServerInternalConfs)
 		conf = policyServerConfs[0]
+		internalConf = policyServerInternalConfs[0]
 
 		address = fmt.Sprintf("%s:%d", conf.ListenHost, conf.ListenPort)
 
@@ -87,7 +91,7 @@ var _ = Describe("Internal API", func() {
 	listPoliciesAndTagsSucceeds := func(version, expectedResponse string) {
 		resp := helpers.MakeAndDoHTTPSRequest(
 			"GET",
-			fmt.Sprintf("https://%s:%d/networking/%s/internal/policies?id=app1,app2", conf.ListenHost, conf.InternalListenPort, version),
+			fmt.Sprintf("https://%s:%d/networking/%s/internal/policies?id=app1,app2", internalConf.ListenHost, internalConf.InternalListenPort, version),
 			nil,
 			tlsConfig,
 		)

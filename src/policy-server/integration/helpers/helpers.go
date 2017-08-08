@@ -148,19 +148,15 @@ func SplitUAAHostPort() (string, int) {
 	return UAAHost, UAAPort
 }
 
-func DefaultTestConfig(dbConfig db.Config, metronAddress string, fixturesPath string) config.Config {
+func DefaultTestConfig(dbConfig db.Config, metronAddress string, fixturesPath string) (config.Config, config.InternalConfig) {
 	UAAHost, UAAPort := SplitUAAHostPort()
 
-	config := config.Config{
+	externalConfig := config.Config{
 		ListenHost:                      "127.0.0.1",
 		ListenPort:                      testsupport.PickAPort(),
 		LogPrefix:                       "testprefix",
-		InternalListenPort:              testsupport.PickAPort(),
 		DebugServerHost:                 "127.0.0.1",
 		DebugServerPort:                 testsupport.PickAPort(),
-		CACertFile:                      filepath.Join(fixturesPath, "netman-ca.crt"),
-		ServerCertFile:                  filepath.Join(fixturesPath, "server.crt"),
-		ServerKeyFile:                   filepath.Join(fixturesPath, "server.key"),
 		SkipSSLValidation:               true,
 		UAAClient:                       "test",
 		UAAClientSecret:                 "test",
@@ -176,10 +172,25 @@ func DefaultTestConfig(dbConfig db.Config, metronAddress string, fixturesPath st
 		MaxPolicies:                     2,
 		EnableSpaceDeveloperSelfService: false,
 	}
-	return config
+
+	internalConfig := config.InternalConfig{
+		ListenHost:         "127.0.0.1",
+		InternalListenPort: testsupport.PickAPort(),
+		LogPrefix:          "testprefix",
+		DebugServerHost:    "127.0.0.1",
+		DebugServerPort:    testsupport.PickAPort(),
+		CACertFile:         filepath.Join(fixturesPath, "netman-ca.crt"),
+		ServerCertFile:     filepath.Join(fixturesPath, "server.crt"),
+		ServerKeyFile:      filepath.Join(fixturesPath, "server.key"),
+		TagLength:          1,
+		Database:           dbConfig,
+		MetronAddress:      metronAddress,
+		RequestTimeout:     10,
+	}
+	return externalConfig, internalConfig
 }
 
-func WriteConfigFile(policyServerConfig config.Config) string {
+func WriteConfigFile(policyServerConfig interface{}) string {
 	configFile, err := ioutil.TempFile("", "test-config")
 	Expect(err).NotTo(HaveOccurred())
 
@@ -203,14 +214,34 @@ func VerifyTCPConnection(address string) error {
 
 const DEFAULT_TIMEOUT = "10s"
 
-func StartPolicyServer(policyServerPath string, conf config.Config) *gexec.Session {
+func StartPolicyServer(pathToBinary string, conf config.Config) *gexec.Session {
 	configFilePath := WriteConfigFile(conf)
 
-	policyServerCmd := exec.Command(policyServerPath, "-config-file", configFilePath)
-	session, err := gexec.Start(policyServerCmd, GinkgoWriter, GinkgoWriter)
+	startCmd := exec.Command(pathToBinary, "-config-file", configFilePath)
+	session, err := gexec.Start(startCmd, GinkgoWriter, GinkgoWriter)
 	Expect(err).NotTo(HaveOccurred())
 
 	address := fmt.Sprintf("%s:%d", conf.ListenHost, conf.ListenPort)
+	serverIsAvailable := func() error {
+		return VerifyTCPConnection(address)
+	}
+	debugAddress := fmt.Sprintf("%s:%d", conf.DebugServerHost, conf.DebugServerPort)
+	debugServerIsAvailable := func() error {
+		return VerifyTCPConnection(debugAddress)
+	}
+	Eventually(serverIsAvailable, DEFAULT_TIMEOUT).Should(Succeed())
+	Eventually(debugServerIsAvailable, DEFAULT_TIMEOUT).Should(Succeed())
+	return session
+}
+
+func StartInternalPolicyServer(pathToBinary string, conf config.InternalConfig) *gexec.Session {
+	configFilePath := WriteConfigFile(conf)
+
+	startCmd := exec.Command(pathToBinary, "-config-file", configFilePath)
+	session, err := gexec.Start(startCmd, GinkgoWriter, GinkgoWriter)
+	Expect(err).NotTo(HaveOccurred())
+
+	address := fmt.Sprintf("%s:%d", conf.ListenHost, conf.InternalListenPort)
 	serverIsAvailable := func() error {
 		return VerifyTCPConnection(address)
 	}

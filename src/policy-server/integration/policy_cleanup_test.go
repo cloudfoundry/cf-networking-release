@@ -34,7 +34,7 @@ var _ = Describe("Policy Cleanup", func() {
 		dbConf.DatabaseName = fmt.Sprintf("test_node_%d", GinkgoParallelNode())
 		testsupport.CreateDatabase(dbConf)
 
-		template := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
+		template, _ := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
 		template.CleanupInterval = 1
 		template.CCAppRequestChunkSize = 1
 

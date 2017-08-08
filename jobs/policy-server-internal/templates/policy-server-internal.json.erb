@@ -1,7 +1,7 @@
 <% unless p("cf_networking.disable") %>
 <%
     def db_param_path(name)
-      "cf_networking.policy_server.database.#{name}"
+      "cf_networking.policy_server_internal.database.#{name}"
     end
 
     def db_param(name)
@@ -52,35 +52,28 @@
     end
 
     toRender = {
-      "listen_host" => p("cf_networking.policy_server.listen_ip"),
-      "listen_port" => p("cf_networking.policy_server.listen_port"),
+      "listen_host" => p("cf_networking.policy_server_internal.listen_ip"),
       "log_prefix" => "cfnetworking",
       "debug_server_host" => "127.0.0.1",
-      "debug_server_port" => p("cf_networking.policy_server.debug_port"),
-      "uaa_client" => p("cf_networking.policy_server.uaa_client"),
-      "uaa_client_secret" => p("cf_networking.policy_server.uaa_client_secret"),
-      "uaa_url" => "https://#{p("cf_networking.policy_server.uaa_hostname")}",
-      "uaa_port" => p("cf_networking.policy_server.uaa_port"),
-      "cc_url" => "http://#{p("cf_networking.policy_server.cc_hostname")}:#{p("cf_networking.policy_server.cc_port")}",
-      "skip_ssl_validation" => p("cf_networking.policy_server.skip_ssl_validation"),
+      "debug_server_port" => p("cf_networking.policy_server_internal.debug_port"),
+      "internal_listen_port" => p("cf_networking.policy_server_internal.internal_listen_port"),
       "database" => {
-        "type" => driver,
-        "user" => user,
-        "password" => password,
+        "type" => link("database").p("cf_networking.policy_server.database.type"),
+        "user" => link("database").p("cf_networking.policy_server.database.username"),
+        "password" => link("database").p("cf_networking.policy_server.database.password"),
+        "port" => link("database").p("cf_networking.policy_server.database.port"),
+        "database_name" => link("database").p("cf_networking.policy_server.database.name"),
         "host" => db_host,
-        "port" => port,
-        "timeout" => p("cf_networking.policy_server.connect_timeout_seconds"),
-        "database_name" => name,
+        "timeout" => p("cf_networking.policy_server_internal.connect_timeout_seconds"),
       },
-      "tag_length" => p("cf_networking.policy_server.tag_length"),
-      "metron_address" => "127.0.0.1:#{p("cf_networking.policy_server.metron_port")}",
-      "log_level" => p("cf_networking.policy_server.log_level"),
-      "cleanup_interval" => cleanup_interval_in_seconds,
-      "max_policies" => p("cf_networking.max_policies_per_app_source"),
-      "enable_space_developer_self_service" => p("cf_networking.enable_space_developer_self_service"),
+      "tag_length" => p("cf_networking.policy_server_internal.tag_length"),
+      "metron_address" => "127.0.0.1:#{p("cf_networking.policy_server_internal.metron_port")}",
+      "log_level" => p("cf_networking.policy_server_internal.log_level"),
 
       # hard-coded values, not exposed as bosh spec properties
-      "uaa_ca" => "/var/vcap/jobs/policy-server/config/certs/uaa_ca.crt",
+      "ca_cert_file" => "/var/vcap/jobs/policy-server/config/certs/ca.crt",
+      "server_cert_file" => "/var/vcap/jobs/policy-server/config/certs/server.crt",
+      "server_key_file" => "/var/vcap/jobs/policy-server/config/certs/server.key",
       "request_timeout" => 5,
     }
 

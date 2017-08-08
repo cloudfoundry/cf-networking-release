@@ -1,0 +1,46 @@
+#!/bin/bash -eu
+
+<% unless p("cf_networking.disable") %>
+source /var/vcap/packages/ctl-utils/ctl_util.sh
+
+export RUN_DIR=/var/vcap/sys/run/policy-server-internal
+export LOG_DIR=/var/vcap/sys/log/policy-server-internal
+export PIDFILE="${RUN_DIR}"/policy-server-internal.pid
+export CONF_DIR=/var/vcap/jobs/policy-server-internal/config
+export PORT=<%= p("cf_networking.policy_server_internal.internal_listen_port") %>
+export URL=127.0.0.1:"${PORT}"
+export TIMEOUT=20
+
+mkdir -p "${RUN_DIR}"
+mkdir -p "${LOG_DIR}"
+
+exec 1>> "${LOG_DIR}"/policy-server-internal_ctl.out.log
+exec 2>> "${LOG_DIR}"/policy-server-internal_ctl.err.log
+
+case $1 in
+
+  start)
+
+    stop_process_on_port "${PORT}"
+
+    chown -R vcap:vcap "${RUN_DIR}"
+    chown -R vcap:vcap "${LOG_DIR}"
+    chown -R vcap:vcap "${CONF_DIR}"
+
+    exec chpst -u vcap:vcap bash -c "/var/vcap/jobs/policy-server-internal/bin/policy-server-internal_as_vcap"
+
+    ;;
+
+  stop)
+
+    stop_process
+
+    ;;
+
+  *)
+    echo "Usage: $0 {start|stop}"
+
+    ;;
+
+esac
+<% end %>
