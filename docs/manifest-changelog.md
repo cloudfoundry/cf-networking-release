@@ -10,6 +10,17 @@ See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for example
     - `cf_networking.iptables_logger.kernel_log_file`
 
 ### 1.4.0
+**Links Enabled**
+The `silk-controller` job now provides two properties via links which the `silk-daemon` job consumes:
+
+- `cf_networking.network`
+- `cf_networking.subnet_prefix_length`
+** This means you are able to remove the properties (listed above) from the `silk-daemon` job. **
+
+If your deployment contains more than a single instance group that has the `silk-controller` job,
+then you will need to explicitly name the `cf_network` link. For more information,
+[see the documentation](https://bosh.io/docs/links.html#deployment).
+
 **New Properties**
   - An optional parameter has been added to configure the port of the metron agent for
     the iptables_logger. This port will be used to forward metrics. Previously, no such
