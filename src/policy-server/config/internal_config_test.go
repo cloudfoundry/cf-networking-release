@@ -32,6 +32,7 @@ var _ = Describe("InternalConfig", func() {
 					"internal_listen_port": 2222,
 					"debug_server_host": "http://6.5.4.3",
 					"debug_server_port": 9999,
+					"health_check_port": 9443,
 					"ca_cert_file": "some/ca/cert/file",
 					"server_cert_file": "some/server/cert/file",
 					"server_key_file": "some/server/key/file",
@@ -56,6 +57,7 @@ var _ = Describe("InternalConfig", func() {
 				Expect(c.InternalListenPort).To(Equal(2222))
 				Expect(c.DebugServerHost).To(Equal("http://6.5.4.3"))
 				Expect(c.DebugServerPort).To(Equal(9999))
+				Expect(c.HealthCheckPort).To(Equal(9443))
 				Expect(c.CACertFile).To(Equal("some/ca/cert/file"))
 				Expect(c.ServerCertFile).To(Equal("some/server/cert/file"))
 				Expect(c.ServerKeyFile).To(Equal("some/server/key/file"))
@@ -110,6 +112,7 @@ var _ = Describe("InternalConfig", func() {
 					"internal_listen_port": 2222,
 					"debug_server_host":    "http://4.4.4.4",
 					"debug_server_port":    3333,
+					"health_check_port":    4444,
 					"ca_cert_file":         "some/ca/cert/file",
 					"server_cert_file":     "some/server/cert/file",
 					"server_key_file":      "some/server/key/file",
@@ -137,6 +140,7 @@ var _ = Describe("InternalConfig", func() {
 			Entry("missing internal listen port", "internal_listen_port", "InternalListenPort: zero value"),
 			Entry("missing debug server host", "debug_server_host", "DebugServerHost: zero value"),
 			Entry("missing debug server port", "debug_server_port", "DebugServerPort: zero value"),
+			Entry("missing health check port", "health_check_port", "HealthCheckPort: zero value"),
 			Entry("missing ca cert file", "ca_cert_file", "CACertFile: zero value"),
 			Entry("missing server cert file", "server_cert_file", "ServerCertFile: zero value"),
 			Entry("missing server key file", "server_key_file", "ServerKeyFile: zero value"),
@@ -155,6 +159,7 @@ var _ = Describe("InternalConfig", func() {
 					"internal_listen_port": 2222,
 					"debug_server_host":    "http://4.4.4.4",
 					"debug_server_port":    3333,
+					"health_check_port":    3333,
 					"ca_cert_file":         "some/ca/cert/file",
 					"server_cert_file":     "some/server/cert/file",
 					"server_key_file":      "some/server/key/file",

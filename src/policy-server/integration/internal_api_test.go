@@ -16,6 +16,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 )
 
@@ -126,4 +127,79 @@ var _ = Describe("Internal API", func() {
 		Entry("v0", "v0", v0Response),
 	)
 
+	Describe("boring server behavior", func() {
+		var (
+			headers map[string]string
+			session *gexec.Session
+		)
+
+		BeforeEach(func() {
+			Expect(len(sessions)).To(Equal(2))
+			session = sessions[1]
+		})
+
+		It("should boot and gracefully terminate", func() {
+			Consistently(session).ShouldNot(gexec.Exit())
+
+			session.Interrupt()
+			Eventually(session, helpers.DEFAULT_TIMEOUT).Should(gexec.Exit())
+		})
+
+		It("responds with uptime when accessed on the root path", func() {
+			req, err := http.NewRequest("GET", fmt.Sprintf("http://%s:%d/", internalConf.ListenHost, internalConf.HealthCheckPort), nil)
+			Expect(err).NotTo(HaveOccurred())
+
+			resp, err := http.DefaultClient.Do(req)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(resp.StatusCode).To(Equal(http.StatusOK))
+			responseString, err := ioutil.ReadAll(resp.Body)
+			Expect(responseString).To(ContainSubstring("Network policy server, up for"))
+		})
+
+		It("has a log level thats configurable at runtime", func() {
+			resp := helpers.MakeAndDoHTTPSRequest(
+				"GET",
+				fmt.Sprintf("https://%s:%d/networking/v1/internal/policies", internalConf.ListenHost, internalConf.InternalListenPort),
+				nil,
+				tlsConfig,
+			)
+
+			Expect(resp.StatusCode).To(Equal(http.StatusOK))
+
+			Expect(session.Out).To(gbytes.Say("testprefix.policy-server-internal"))
+			Expect(session.Out).NotTo(gbytes.Say("request"))
+
+			_ = helpers.MakeAndDoRequest(
+				"POST",
+				fmt.Sprintf("http://%s:%d/log-level", internalConf.DebugServerHost, internalConf.DebugServerPort),
+				headers,
+				strings.NewReader("debug"),
+			)
+
+			resp = helpers.MakeAndDoHTTPSRequest(
+				"GET",
+				fmt.Sprintf("https://%s:%d/networking/v1/internal/policies", internalConf.ListenHost, internalConf.InternalListenPort),
+				nil,
+				tlsConfig,
+			)
+
+			Expect(resp.StatusCode).To(Equal(http.StatusOK))
+
+			Expect(session.Out).To(gbytes.Say("testprefix.policy-server-internal.request"))
+		})
+	})
+
+	Describe("health", func() {
+		It("returns 200 when server is healthy", func() {
+			resp := helpers.MakeAndDoRequest(
+				"GET",
+				fmt.Sprintf("http://%s:%d/health", internalConf.ListenHost, internalConf.HealthCheckPort),
+				nil,
+				nil,
+			)
+
+			Expect(resp.StatusCode).To(Equal(http.StatusOK))
+		})
+	})
 })

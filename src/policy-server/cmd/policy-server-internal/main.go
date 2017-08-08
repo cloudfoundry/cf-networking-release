@@ -166,10 +166,24 @@ func main() {
 	)))
 	debugServer := debugserver.Runner(fmt.Sprintf("%s:%d", conf.DebugServerHost, conf.DebugServerPort), reconfigurableSink)
 
+	uptimeHandler := &handlers.UptimeHandler{
+		StartTime: time.Now(),
+	}
+	healthHandler := handlers.NewHealth(wrappedStore, errorResponse)
+
+	healthCheckServer := initHTTPServer(
+		conf,
+		rata.Handlers{
+			"uptime": metricsWrap("Uptime", logWrap(uptimeHandler)),
+			"health": metricsWrap("Health", logWrap(healthHandler)),
+		},
+	)
+
 	members := grouper.Members{
-		{"metrics_emitter", metricsEmitter},
-		{"internal_http_server", internalServer},
+		{"metrics-emitter", metricsEmitter},
+		{"internal-http-server", internalServer},
 		{"debug-server", debugServer},
+		{"health-check-server", healthCheckServer},
 	}
 
 	logger.Info("starting internal server", lager.Data{"listen-address": conf.ListenHost, "port": conf.InternalListenPort})
@@ -241,4 +255,19 @@ func initInternalServer(conf *config.InternalConfig, internalPoliciesHandler htt
 	}
 
 	return http_server.NewTLSServer(addr, router, tlsConfig)
+}
+
+func initHTTPServer(conf *config.InternalConfig, handlers rata.Handlers) ifrit.Runner {
+	routes := rata.Routes{
+		{Name: "uptime", Method: "GET", Path: "/"},
+		{Name: "health", Method: "GET", Path: "/health"},
+	}
+
+	router, err := rata.NewRouter(routes, handlers)
+	if err != nil {
+		log.Fatalf("%s.%s: unable to create rata Router: %s", logPrefix, jobPrefix, err) // not tested
+	}
+
+	addr := fmt.Sprintf("%s:%d", conf.ListenHost, conf.HealthCheckPort)
+	return http_server.New(addr, router)
 }

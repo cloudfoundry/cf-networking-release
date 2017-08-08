@@ -19,6 +19,10 @@ provides:
   - cf_networking.policy_server.database.password
   - cf_networking.policy_server.database.port
   - cf_networking.policy_server.database.name
+- name: tag_length
+  type: tag_length
+  properties:
+  - cf_networking.policy_server.tag_length
 
 consumes:
 - name: database

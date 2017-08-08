@@ -1,9 +1,9 @@
 <% unless p("cf_networking.disable") %>
-check process policy-server
+check process policy-server-internal
   with pidfile /var/vcap/sys/run/policy-server-internal/policy-server-internal.pid
-  start program "/usr/bin/timeout 25 /var/vcap/jobs/policy-server/bin/policy-server-internal_ctl start"
+  start program "/usr/bin/timeout 25 /var/vcap/jobs/policy-server-internal/bin/policy-server-internal_ctl start"
    with timeout 30 seconds
-  stop program "/var/vcap/jobs/policy-server/bin/policy-server-internal_ctl stop"
+  stop program "/var/vcap/jobs/policy-server-internal/bin/policy-server-internal_ctl stop"
   group vcap
   if failed
      host 127.0.0.1

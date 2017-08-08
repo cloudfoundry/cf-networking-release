@@ -90,6 +90,7 @@ func configureInternalPolicyServers(template config.InternalConfig, instances in
 		conf := template
 		conf.InternalListenPort = testsupport.PickAPort()
 		conf.DebugServerPort = testsupport.PickAPort()
+		conf.HealthCheckPort = testsupport.PickAPort()
 		configs = append(configs, conf)
 	}
 	return configs

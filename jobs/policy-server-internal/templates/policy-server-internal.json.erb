@@ -12,13 +12,6 @@
       end
     end
 
-    def require_db_param(name)
-      param = db_param name
-      return param if !param.nil?
-
-      raise "#{db_param_path name} must be specified"
-    end
-
     def db_host
       from_property = db_param 'host'
       return from_property if !from_property.nil?
@@ -41,39 +34,30 @@
 <%=
     require 'json'
 
-    user = require_db_param 'username'
-    password = require_db_param 'password'
-    port = require_db_param 'port'
-    name = require_db_param 'name'
-    driver = require_db_param 'type'
-
-    unless driver == 'mysql' || driver == 'postgres'
-      raise "unknown driver  #{driver}"
-    end
-
     toRender = {
       "listen_host" => p("cf_networking.policy_server_internal.listen_ip"),
       "log_prefix" => "cfnetworking",
       "debug_server_host" => "127.0.0.1",
       "debug_server_port" => p("cf_networking.policy_server_internal.debug_port"),
+      "health_check_port" => p("cf_networking.policy_server_internal.health_check_port"),
       "internal_listen_port" => p("cf_networking.policy_server_internal.internal_listen_port"),
       "database" => {
-        "type" => link("database").p("cf_networking.policy_server.database.type"),
-        "user" => link("database").p("cf_networking.policy_server.database.username"),
-        "password" => link("database").p("cf_networking.policy_server.database.password"),
-        "port" => link("database").p("cf_networking.policy_server.database.port"),
-        "database_name" => link("database").p("cf_networking.policy_server.database.name"),
+        "user" => link("dbconn").p("cf_networking.policy_server.database.username"),
+        "type" => link("dbconn").p("cf_networking.policy_server.database.type"),
+        "password" => link("dbconn").p("cf_networking.policy_server.database.password"),
+        "port" => link("dbconn").p("cf_networking.policy_server.database.port"),
+        "database_name" => link("dbconn").p("cf_networking.policy_server.database.name"),
         "host" => db_host,
         "timeout" => p("cf_networking.policy_server_internal.connect_timeout_seconds"),
       },
-      "tag_length" => p("cf_networking.policy_server_internal.tag_length"),
+      "tag_length" => link("tag_length").p("cf_networking.policy_server.tag_length"),
       "metron_address" => "127.0.0.1:#{p("cf_networking.policy_server_internal.metron_port")}",
       "log_level" => p("cf_networking.policy_server_internal.log_level"),
 
       # hard-coded values, not exposed as bosh spec properties
-      "ca_cert_file" => "/var/vcap/jobs/policy-server/config/certs/ca.crt",
-      "server_cert_file" => "/var/vcap/jobs/policy-server/config/certs/server.crt",
-      "server_key_file" => "/var/vcap/jobs/policy-server/config/certs/server.key",
+      "ca_cert_file" => "/var/vcap/jobs/policy-server-internal/config/certs/ca.crt",
+      "server_cert_file" => "/var/vcap/jobs/policy-server-internal/config/certs/server.crt",
+      "server_key_file" => "/var/vcap/jobs/policy-server-internal/config/certs/server.key",
       "request_timeout" => 5,
     }
 
