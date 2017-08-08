@@ -54,9 +54,13 @@ func (d *DestinationTable) Delete(tx Transaction, id int) error {
 
 func (d *DestinationTable) GetID(tx Transaction, destination_group_id, port, startPort, endPort int, protocol string) (int, error) {
 	var id int
+	lockStatement := " FOR UPDATE "
+	if tx.DriverName() == "mysql"{
+		lockStatement = " LOCK IN SHARE MODE "
+	}
 	err := tx.QueryRow(tx.Rebind(`
 		SELECT id FROM destinations
-		WHERE group_id = ? AND port = ? AND start_port = ? AND end_port = ? AND protocol = ? FOR UPDATE`),
+		WHERE group_id = ? AND port = ? AND start_port = ? AND end_port = ? AND protocol = ? ` + lockStatement),
 		destination_group_id,
 		port,
 		startPort,
