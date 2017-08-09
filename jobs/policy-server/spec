@@ -63,19 +63,6 @@ properties:
     description: "Port for the debug server. Use this to adjust log level at runtime or dump process stats."
     default: 31821
 
-  cf_networking.policy_server.internal_listen_port:
-    description: "Port where the policy server will serve its internal API."
-    default: 4003
-
-  cf_networking.policy_server.ca_cert:
-    description: "Trusted CA certificate that was used to sign the vxlan policy agent's client cert and key."
-
-  cf_networking.policy_server.server_cert:
-    description: "Server certificate for TLS. Must have common name that matches the Consul DNS name of the policy server, eg `policy-server.service.cf.internal`."
-
-  cf_networking.policy_server.server_key:
-    description: "Server key for TLS."
-
   cf_networking.policy_server.uaa_client:
     description: |
       UAA client name. Must match the name of a UAA client with the following properties:

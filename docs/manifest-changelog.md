@@ -5,9 +5,25 @@ See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for example
 
 ### 1.5.0
 **New Properties**
+  - REQUIRED: A new job `policy-server-internal` has been added. This job requires the following properties:
+    - `cf_networking.policy_server_internal.ca_cert`
+    - `cf_networking.policy_server_internal.server_cert`
+    - `cf_networking.policy_server_internal.server_key`
+    There are additional optional paramaters that can be set and are viewable in [the spec file](../jobs/policy-server-internal/spec)
   - An optional parameter has been added to configure the path to the iptables kernel log for
     the iptables_logger.
     - `cf_networking.iptables_logger.kernel_log_file`
+
+**Removed Properties**
+  - The `policy-server` job has removed the following properties:
+    - `cf_networking.policy_server.internal_listen_port`
+    - `cf_networking.policy_server.ca_cert`
+    - `cf_networking.policy_server.server_cert`
+    - `cf_networking.policy_server.server_key`
+
+**Changed Properties**
+  - The `consul.agent.services.policy-server` property for the `consul_agent` job on the `api` instance group
+    should be renamed to `consul.agent.services.policy-server-internal`.
 
 ### 1.4.0
 **Links Enabled**
