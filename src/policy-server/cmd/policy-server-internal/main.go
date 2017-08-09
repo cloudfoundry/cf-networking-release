@@ -83,7 +83,7 @@ func main() {
 	select {
 	case connectionResult = <-channel:
 	case <-time.After(5 * time.Second):
-		log.Fatalf("%s.%s: db connection timeout", logPrefix)
+		log.Fatalf("%s.%s: db connection timeout", logPrefix, jobPrefix)
 	}
 	if connectionResult.Err != nil {
 		log.Fatalf("%s.%s: db connect: %s", logPrefix, jobPrefix, connectionResult.Err) // not tested

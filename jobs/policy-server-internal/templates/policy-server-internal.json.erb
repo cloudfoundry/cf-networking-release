@@ -1,33 +1,13 @@
 <% unless p("cf_networking.disable") %>
 <%
-    def db_param_path(name)
-      "cf_networking.policy_server_internal.database.#{name}"
-    end
-
-    def db_param(name)
-      if_p(db_param_path name) do |param|
-        return param
-      end.else do
-        return nil
-      end
-    end
-
     def db_host
-      from_property = db_param 'host'
-      return from_property if !from_property.nil?
+      from_dbconn_link = link("dbconn").p("cf_networking.policy_server.database.host")
+      return from_dbconn_link if !from_dbconn_link.nil?
 
-      from_link = link("database").instances[0].address
-      return from_link if !from_link.nil?
+      from_database_link = link("database").instances[0].address
+      return from_database_link if !from_database_link.nil?
 
-      raise "must provide database link or set #{db_param_path 'host'}"
-    end
-
-    def cleanup_interval_in_seconds
-      minutes = p("cf_networking.policy_cleanup_interval")
-      if minutes < 1
-        raise "'cf_networking.policy_cleanup_interval' must be at least 1 minute"
-      end
-      minutes * 60
+      raise "must provide dbconn link or database link"
     end
 %>
 
