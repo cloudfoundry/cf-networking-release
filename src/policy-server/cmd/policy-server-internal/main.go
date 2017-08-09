@@ -7,14 +7,13 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	"policy-server/api"
 	"policy-server/api/api_v0_internal"
+	"policy-server/cmd/common"
 	"policy-server/config"
 	"policy-server/handlers"
-	"policy-server/server_metrics"
 	"policy-server/store"
 
 	"policy-server/store/migrations"
@@ -31,14 +30,12 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
-	"github.com/tedsuo/ifrit/http_server"
 	"github.com/tedsuo/ifrit/sigmon"
 	"github.com/tedsuo/rata"
 )
 
 const (
-	jobPrefix    = "policy-server-internal"
-	emitInterval = 30 * time.Second
+	jobPrefix = "policy-server-internal"
 )
 
 var (
@@ -59,7 +56,7 @@ func main() {
 	}
 
 	logger := lager.NewLogger(fmt.Sprintf("%s.%s", logPrefix, jobPrefix))
-	reconfigurableSink := initLoggerSink(logger, conf.LogLevel)
+	reconfigurableSink := common.InitLoggerSink(logger, conf.LogLevel)
 	logger.RegisterSink(reconfigurableSink)
 
 	storeGroup := &store.GroupTable{}
@@ -160,10 +157,23 @@ func main() {
 		log.Fatalf("%s.%s: initializing dropsonde: %s", logPrefix, jobPrefix, err)
 	}
 
-	metricsEmitter := initMetricsEmitter(logger, wrappedStore)
-	internalServer := initInternalServer(conf, metricsWrap("InternalPolicies", logWrap(
-		versionWrap(internalPoliciesHandlerV1, internalPoliciesHandlerV0),
-	)))
+	metricsEmitter := common.InitMetricsEmitter(logger, wrappedStore)
+
+	internalRoutes := rata.Routes{
+		{Name: "internal_policies", Method: "GET", Path: "/networking/:version/internal/policies"},
+	}
+	internalHandlers := rata.Handlers{
+		"internal_policies": metricsWrap("InternalPolicies", logWrap(
+			versionWrap(internalPoliciesHandlerV1, internalPoliciesHandlerV0),
+		)),
+	}
+
+	tlsConfig, err := mutualtls.NewServerTLSConfig(conf.ServerCertFile, conf.ServerKeyFile, conf.CACertFile)
+	if err != nil {
+		log.Fatalf("%s.%s: mutual tls config: %s", logPrefix, jobPrefix, err) // not tested
+	}
+
+	internalServer := common.InitServer(logger, tlsConfig, conf.ListenHost, conf.InternalListenPort, internalHandlers, internalRoutes)
 	debugServer := debugserver.Runner(fmt.Sprintf("%s:%d", conf.DebugServerHost, conf.DebugServerPort), reconfigurableSink)
 
 	uptimeHandler := &handlers.UptimeHandler{
@@ -171,13 +181,18 @@ func main() {
 	}
 	healthHandler := handlers.NewHealth(wrappedStore, errorResponse)
 
-	healthCheckServer := initHTTPServer(
-		conf,
-		rata.Handlers{
-			"uptime": metricsWrap("Uptime", logWrap(uptimeHandler)),
-			"health": metricsWrap("Health", logWrap(healthHandler)),
-		},
-	)
+	healthRoutes := rata.Routes{
+		{Name: "uptime", Method: "GET", Path: "/"},
+		{Name: "health", Method: "GET", Path: "/health"},
+	}
+
+	healthHandlers := rata.Handlers{
+		"uptime": metricsWrap("Uptime", logWrap(uptimeHandler)),
+		"health": metricsWrap("Health", logWrap(healthHandler)),
+	}
+
+	healthCheckServer := common.InitServer(logger, nil, conf.ListenHost,
+		conf.HealthCheckPort, healthHandlers, healthRoutes)
 
 	members := grouper.Members{
 		{"metrics-emitter", metricsEmitter},
@@ -201,73 +216,4 @@ func main() {
 	}
 
 	logger.Info("exited")
-}
-
-const (
-	DEBUG = "debug"
-	INFO  = "info"
-	ERROR = "error"
-	FATAL = "fatal"
-)
-
-func initLoggerSink(logger lager.Logger, level string) *lager.ReconfigurableSink {
-	var logLevel lager.LogLevel
-	switch strings.ToLower(level) {
-	case DEBUG:
-		logLevel = lager.DEBUG
-	case INFO:
-		logLevel = lager.INFO
-	case ERROR:
-		logLevel = lager.ERROR
-	case FATAL:
-		logLevel = lager.FATAL
-	default:
-		logLevel = lager.INFO
-	}
-	w := lager.NewWriterSink(os.Stdout, lager.DEBUG)
-	return lager.NewReconfigurableSink(w, logLevel)
-}
-
-func initMetricsEmitter(logger lager.Logger, wrappedStore *store.MetricsWrapper) *metrics.MetricsEmitter {
-	totalPoliciesSource := server_metrics.NewTotalPoliciesSource(wrappedStore)
-	uptimeSource := metrics.NewUptimeSource()
-	return metrics.NewMetricsEmitter(logger, emitInterval, uptimeSource, totalPoliciesSource)
-}
-
-func initInternalServer(conf *config.InternalConfig, internalPoliciesHandler http.Handler) ifrit.Runner {
-	routes := rata.Routes{
-		{Name: "internal_policies", Method: "GET", Path: "/networking/:version/internal/policies"},
-	}
-	handlers := rata.Handlers{
-		"internal_policies": internalPoliciesHandler,
-	}
-
-	router, err := rata.NewRouter(routes, handlers)
-	if err != nil {
-		log.Fatalf("%s.%s: unable to create rata Router: %s", logPrefix, jobPrefix, err) // not tested
-	}
-
-	addr := fmt.Sprintf("%s:%d", conf.ListenHost, conf.InternalListenPort)
-
-	tlsConfig, err := mutualtls.NewServerTLSConfig(conf.ServerCertFile, conf.ServerKeyFile, conf.CACertFile)
-	if err != nil {
-		log.Fatalf("%s.%s: mutual tls config: %s", logPrefix, jobPrefix, err) // not tested
-	}
-
-	return http_server.NewTLSServer(addr, router, tlsConfig)
-}
-
-func initHTTPServer(conf *config.InternalConfig, handlers rata.Handlers) ifrit.Runner {
-	routes := rata.Routes{
-		{Name: "uptime", Method: "GET", Path: "/"},
-		{Name: "health", Method: "GET", Path: "/health"},
-	}
-
-	router, err := rata.NewRouter(routes, handlers)
-	if err != nil {
-		log.Fatalf("%s.%s: unable to create rata Router: %s", logPrefix, jobPrefix, err) // not tested
-	}
-
-	addr := fmt.Sprintf("%s:%d", conf.ListenHost, conf.HealthCheckPort)
-	return http_server.New(addr, router)
 }

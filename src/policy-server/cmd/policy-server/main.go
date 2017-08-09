@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	"lib/nonmutualtls"
@@ -18,9 +17,9 @@ import (
 	"policy-server/api/api_v0"
 	"policy-server/cc_client"
 	"policy-server/cleaner"
+	"policy-server/cmd/common"
 	"policy-server/config"
 	"policy-server/handlers"
-	"policy-server/server_metrics"
 	"policy-server/store"
 	"policy-server/uaa_client"
 
@@ -38,7 +37,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
-	"github.com/tedsuo/ifrit/http_server"
 	"github.com/tedsuo/ifrit/sigmon"
 	"github.com/tedsuo/rata"
 )
@@ -46,7 +44,6 @@ import (
 const (
 	jobPrefix       = "policy-server"
 	dropsondeOrigin = "policy-server"
-	emitInterval    = 30 * time.Second
 )
 
 var (
@@ -67,7 +64,7 @@ func main() {
 	}
 
 	logger := lager.NewLogger(fmt.Sprintf("%s.%s", logPrefix, jobPrefix))
-	reconfigurableSink := initLoggerSink(logger, conf.LogLevel)
+	reconfigurableSink := common.InitLoggerSink(logger, conf.LogLevel)
 	logger.RegisterSink(reconfigurableSink)
 
 	var tlsConfig *tls.Config
@@ -265,13 +262,25 @@ func main() {
 			logWrap(versionWrap(authAdminWrap(whoamiHandler), authAdminWrap(whoamiHandler)))),
 	}
 
+	externalRoutes := rata.Routes{
+		{Name: "uptime", Method: "GET", Path: "/"},
+		{Name: "uptime", Method: "GET", Path: "/networking"},
+		{Name: "health", Method: "GET", Path: "/health"},
+		{Name: "whoami", Method: "GET", Path: "/networking/:version/external/whoami"},
+		{Name: "create_policies", Method: "POST", Path: "/networking/:version/external/policies"},
+		{Name: "delete_policies", Method: "POST", Path: "/networking/:version/external/policies/delete"},
+		{Name: "policies_index", Method: "GET", Path: "/networking/:version/external/policies"},
+		{Name: "cleanup", Method: "POST", Path: "/networking/:version/external/policies/cleanup"},
+		{Name: "tags_index", Method: "GET", Path: "/networking/:version/external/tags"},
+	}
+
 	err = dropsonde.Initialize(conf.MetronAddress, dropsondeOrigin)
 	if err != nil {
 		log.Fatalf("%s.%s: initializing dropsonde: %s", logPrefix, jobPrefix, err)
 	}
 
-	metricsEmitter := initMetricsEmitter(logger, wrappedStore)
-	externalServer := initExternalServer(conf, externalHandlers)
+	metricsEmitter := common.InitMetricsEmitter(logger, wrappedStore)
+	externalServer := common.InitServer(logger, nil, conf.ListenHost, conf.ListenPort, externalHandlers, externalRoutes)
 	poller := initPoller(logger, conf, policyCleaner)
 	debugServer := debugserver.Runner(fmt.Sprintf("%s:%d", conf.DebugServerHost, conf.DebugServerPort), reconfigurableSink)
 
@@ -299,37 +308,6 @@ func main() {
 	logger.Info("exited")
 }
 
-const (
-	DEBUG = "debug"
-	INFO  = "info"
-	ERROR = "error"
-	FATAL = "fatal"
-)
-
-func initLoggerSink(logger lager.Logger, level string) *lager.ReconfigurableSink {
-	var logLevel lager.LogLevel
-	switch strings.ToLower(level) {
-	case DEBUG:
-		logLevel = lager.DEBUG
-	case INFO:
-		logLevel = lager.INFO
-	case ERROR:
-		logLevel = lager.ERROR
-	case FATAL:
-		logLevel = lager.FATAL
-	default:
-		logLevel = lager.INFO
-	}
-	w := lager.NewWriterSink(os.Stdout, lager.DEBUG)
-	return lager.NewReconfigurableSink(w, logLevel)
-}
-
-func initMetricsEmitter(logger lager.Logger, wrappedStore *store.MetricsWrapper) *metrics.MetricsEmitter {
-	totalPoliciesSource := server_metrics.NewTotalPoliciesSource(wrappedStore)
-	uptimeSource := metrics.NewUptimeSource()
-	return metrics.NewMetricsEmitter(logger, emitInterval, uptimeSource, totalPoliciesSource)
-}
-
 func initPoller(logger lager.Logger, conf *config.Config, policyCleaner *cleaner.PolicyCleaner) ifrit.Runner {
 	pollInterval := time.Duration(conf.CleanupInterval) * time.Second
 
@@ -338,26 +316,4 @@ func initPoller(logger lager.Logger, conf *config.Config, policyCleaner *cleaner
 		PollInterval:    pollInterval,
 		SingleCycleFunc: policyCleaner.DeleteStalePoliciesWrapper,
 	}
-}
-
-func initExternalServer(conf *config.Config, externalHandlers rata.Handlers) ifrit.Runner {
-	routes := rata.Routes{
-		{Name: "uptime", Method: "GET", Path: "/"},
-		{Name: "uptime", Method: "GET", Path: "/networking"},
-		{Name: "health", Method: "GET", Path: "/health"},
-		{Name: "whoami", Method: "GET", Path: "/networking/:version/external/whoami"},
-		{Name: "create_policies", Method: "POST", Path: "/networking/:version/external/policies"},
-		{Name: "delete_policies", Method: "POST", Path: "/networking/:version/external/policies/delete"},
-		{Name: "policies_index", Method: "GET", Path: "/networking/:version/external/policies"},
-		{Name: "cleanup", Method: "POST", Path: "/networking/:version/external/policies/cleanup"},
-		{Name: "tags_index", Method: "GET", Path: "/networking/:version/external/tags"},
-	}
-
-	externalRouter, err := rata.NewRouter(routes, externalHandlers)
-	if err != nil {
-		log.Fatalf("%s.%s: unable to create rata Router: %s", logPrefix, jobPrefix, err) // not tested
-	}
-
-	addr := fmt.Sprintf("%s:%d", conf.ListenHost, conf.ListenPort)
-	return http_server.New(addr, externalRouter)
 }
