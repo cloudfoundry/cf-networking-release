@@ -57,16 +57,12 @@ var _ = PDescribe("task connectivity on the overlay network", func() {
 			Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 		})
 
-		// It("allows tasks to talk to tasks", func(done Done) {
-		// })
-
-		// It("allows app instances to talk to tasks", func(done Done) {
-		// 	// Run proxy1 task that talks to itself through proxy2 via router
-		// })
+		It("allows app instances to talk to tasks", func(done Done) {
+			// Run proxy1 task that talks to itself through proxy2 via router
+		})
 
 		It("allows tasks to talk to app instances", func(done Done) {
-
-			// Get overlay ip of proxy2
+			By("getting the overlay ip of proxy2")
 			cmd := exec.Command("curl", "--fail", proxy2+".bosh-lite.com")
 			sess, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
@@ -75,7 +71,7 @@ var _ = PDescribe("task connectivity on the overlay network", func() {
 			Expect(json.Unmarshal(sess.Out.Contents(), &proxy2Response)).To(Succeed())
 			Expect(proxy2Response.ListenAddresses).To(HaveLen(2))
 
-			// Run proxy1 task that talks to proxy2 on overlay
+			By("Checking that the task associated with proxy1 can connect to proxy2")
 			Expect(cf.Cf("run-task", proxy1, `
 			while true; do
 				if curl --fail "`+proxy2Response.ListenAddresses[1]+`:`+strconv.Itoa(proxy2Response.Port)+`" ; then
