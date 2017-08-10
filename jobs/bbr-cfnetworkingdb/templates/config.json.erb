@@ -1,0 +1,13 @@
+<%=
+    require 'json'
+    toRender = {
+      "username" => link('cfnetworkingdbconn').p('cf_networking.policy_server.database.username'),
+      "password" => link('cfnetworkingdbconn').p('cf_networking.policy_server.database.password'),
+      "host" => link('cfnetworkingdbconn').p('cf_networking.policy_server.database.host'),
+      "port" => link('cfnetworkingdbconn').p('cf_networking.policy_server.database.port'),
+      "database" => link('cfnetworkingdbconn').p('cf_networking.policy_server.database.name'),
+      "adapter" => link('cfnetworkingdbconn').p('cf_networking.policy_server.database.type'),
+    }
+
+    JSON.pretty_generate(toRender)
+%>

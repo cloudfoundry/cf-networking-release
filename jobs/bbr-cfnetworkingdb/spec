@@ -1,0 +1,15 @@
+---
+name: bbr-cfnetworkingdb
+
+templates:
+  config.json.erb: config/config.json
+  backup.sh.erb: bin/bbr/backup
+  restore.sh.erb: bin/bbr/restore
+
+packages: []
+
+consumes:
+- name: cfnetworkingdbconn
+  type: dbconn
+
+properties: {}
