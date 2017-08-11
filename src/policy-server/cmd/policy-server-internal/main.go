@@ -94,6 +94,7 @@ func main() {
 
 	dataStore, err := store.New(
 		connectionResult.ConnectionPool,
+		connectionResult.ConnectionPool,
 		storeGroup,
 		destination,
 		policy,

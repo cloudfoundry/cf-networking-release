@@ -17,6 +17,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"time"
 )
 
 type columnUsage struct {
@@ -38,8 +39,8 @@ var _ = Describe("migrations", func() {
 	BeforeEach(func() {
 		mockDb = &fakes.Db{}
 		dbConf = testsupport.GetDBConfig()
-		dbConf.DatabaseName = fmt.Sprintf("test_node_%d", GinkgoParallelNode())
-
+		dbConf.DatabaseName = fmt.Sprintf("migrator_test_node_%d", time.Now().UnixNano())
+		dbConf.Timeout = 30
 		testsupport.CreateDatabase(dbConf)
 
 		var err error

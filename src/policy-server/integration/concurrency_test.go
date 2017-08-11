@@ -17,6 +17,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
+	"time"
 )
 
 var _ = Describe("External API Concurrency", func() {
@@ -33,7 +34,7 @@ var _ = Describe("External API Concurrency", func() {
 		fakeMetron = testsupport.NewFakeMetron()
 
 		dbConf = testsupport.GetDBConfig()
-		dbConf.DatabaseName = fmt.Sprintf("test_node_%d", GinkgoParallelNode())
+		dbConf.DatabaseName = fmt.Sprintf("concurrency_test_node_%d", time.Now().UnixNano())
 		testsupport.CreateDatabase(dbConf)
 
 		template, _ := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")

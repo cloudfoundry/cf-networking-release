@@ -38,7 +38,8 @@ var _ = Describe("Integration", func() {
 			fakeMetron = testsupport.NewFakeMetron()
 
 			dbConf = testsupport.GetDBConfig()
-			dbConf.DatabaseName = fmt.Sprintf("test_node_%d", GinkgoParallelNode())
+			dbConf.DatabaseName = fmt.Sprintf("integration_test_test_node_%d", time.Now().UnixNano())
+			dbConf.Timeout = 30
 			testsupport.CreateDatabase(dbConf)
 
 			template, _ := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")

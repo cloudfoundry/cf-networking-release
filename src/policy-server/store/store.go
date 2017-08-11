@@ -65,7 +65,7 @@ type store struct {
 const MAX_TAG_LENGTH = 3
 const MIN_TAG_LENGTH = 1
 
-func New(dbConnectionPool db, g GroupRepo, d DestinationRepo, p PolicyRepo, tl int, t time.Duration, migrator Migrator) (Store, error) {
+func New(dbConnectionPool db, migrationDbConnectionPool db, g GroupRepo, d DestinationRepo, p PolicyRepo, tl int, t time.Duration, migrator Migrator) (Store, error) {
 	if tl < MIN_TAG_LENGTH || tl > MAX_TAG_LENGTH {
 		return nil, fmt.Errorf("tag length out of range (%d-%d): %d",
 			MIN_TAG_LENGTH,
@@ -74,7 +74,7 @@ func New(dbConnectionPool db, g GroupRepo, d DestinationRepo, p PolicyRepo, tl i
 		)
 	}
 
-	_, err := migrator.PerformMigrations(dbConnectionPool.DriverName(), dbConnectionPool, 0)
+	_, err := migrator.PerformMigrations(migrationDbConnectionPool.DriverName(), migrationDbConnectionPool, 0)
 	if err != nil {
 		return nil, fmt.Errorf("perform migrations: %s", err)
 	}

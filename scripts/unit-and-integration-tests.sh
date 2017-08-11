@@ -20,6 +20,7 @@ declare -a serial_packages=(
   "src/cni-wrapper-plugin"
   "src/garden-external-networker"
   "src/policy-server/integration/timeouts"
+  "src/policy-server/integration"
   "src/vxlan-policy-agent"
   )
 

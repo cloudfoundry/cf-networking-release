@@ -17,6 +17,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
+	"time"
 )
 
 const testTimeoutInSeconds = 5
@@ -51,7 +52,7 @@ var _ = Describe("Timeout", func() {
 			Skip("skipping timeout tests on postgres; only supported by mysql")
 		}
 
-		dbConf.DatabaseName = fmt.Sprintf("test_timeouts_node_%d", GinkgoParallelNode())
+		dbConf.DatabaseName = fmt.Sprintf("test_timeouts_node_%d", time.Now().UnixNano())
 		dbConf.Timeout = 1
 		testsupport.CreateDatabase(dbConf)
 

@@ -18,6 +18,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
+	"time"
 )
 
 var _ = Describe("Internal API", func() {
@@ -35,7 +36,8 @@ var _ = Describe("Internal API", func() {
 	BeforeEach(func() {
 		fakeMetron = testsupport.NewFakeMetron()
 		dbConf = testsupport.GetDBConfig()
-		dbConf.DatabaseName = fmt.Sprintf("test_node_%d", GinkgoParallelNode())
+		dbConf.Timeout = 5
+		dbConf.DatabaseName = fmt.Sprintf("internal_api_test_node_%d", time.Now().UnixNano())
 		testsupport.CreateDatabase(dbConf)
 
 		cert, err := tls.LoadX509KeyPair("fixtures/client.crt", "fixtures/client.key")

@@ -104,37 +104,15 @@ func main() {
 	destination := &store.DestinationTable{}
 	policy := &store.PolicyTable{}
 
-	retriableConnector := db.RetriableConnector{
-		Connector:     db.GetConnectionPool,
-		Sleeper:       db.SleeperFunc(time.Sleep),
-		RetryInterval: 3 * time.Second,
-		MaxRetries:    10,
-	}
-
-	type dbConnection struct {
-		ConnectionPool *sqlx.DB
-		Err            error
-	}
-	channel := make(chan dbConnection)
-	go func() {
-		connection, err := retriableConnector.GetConnectionPool(conf.Database)
-		channel <- dbConnection{connection, err}
-	}()
-	var connectionResult dbConnection
-	select {
-	case connectionResult = <-channel:
-	case <-time.After(5 * time.Second):
-		log.Fatalf("%s.%s: db connection timeout", logPrefix, jobPrefix)
-	}
-	if connectionResult.Err != nil {
-		log.Fatalf("%s.%s: db connect: %s", logPrefix, jobPrefix, connectionResult.Err) // not tested
-	}
+	migrationConnectionResult := getMigrationDbConnection(*conf)
+	connectionResult := getDbConnection(*conf)
 
 	timeout := time.Duration(conf.Database.Timeout) * time.Second
 	timeout = timeout - time.Duration(500)*time.Millisecond
 
 	dataStore, err := store.New(
 		connectionResult.ConnectionPool,
+		migrationConnectionResult.ConnectionPool,
 		storeGroup,
 		destination,
 		policy,
@@ -306,6 +284,40 @@ func main() {
 	}
 
 	logger.Info("exited")
+}
+func getMigrationDbConnection(c config.Config) dbConnection {
+	c.Database.Timeout = 60
+	return getDbConnection(c)
+}
+
+type dbConnection struct {
+	ConnectionPool *sqlx.DB
+	Err            error
+}
+
+func getDbConnection(conf config.Config) dbConnection {
+	retriableConnector := db.RetriableConnector{
+		Connector:     db.GetConnectionPool,
+		Sleeper:       db.SleeperFunc(time.Sleep),
+		RetryInterval: 3 * time.Second,
+		MaxRetries:    10,
+	}
+
+	channel := make(chan dbConnection)
+	go func() {
+		connection, err := retriableConnector.GetConnectionPool(conf.Database)
+		channel <- dbConnection{connection, err}
+	}()
+	var connectionResult dbConnection
+	select {
+	case connectionResult = <-channel:
+	case <-time.After(5 * time.Second):
+		log.Fatalf("%s.policy-server: db connection timeout", logPrefix)
+	}
+	if connectionResult.Err != nil {
+		log.Fatalf("%s.policy-server: db connect: %s", logPrefix, connectionResult.Err) // not tested
+	}
+	return connectionResult
 }
 
 func initPoller(logger lager.Logger, conf *config.Config, policyCleaner *cleaner.PolicyCleaner) ifrit.Runner {
