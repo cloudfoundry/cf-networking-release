@@ -35,6 +35,7 @@ var _ = Describe("PoliciesCreate", func() {
 		fakeQuotaGuard         *fakes.QuotaGuard
 		fakeErrorResponse      *fakes.ErrorResponse
 		logger                 *lagertest.TestLogger
+		expectedLogger         lager.Logger
 		tokenData              uaa_client.CheckTokenResponse
 		createPoliciesSucceeds func()
 	)
@@ -50,6 +51,11 @@ var _ = Describe("PoliciesCreate", func() {
 		fakePolicyGuard = &fakes.PolicyGuard{}
 		fakeQuotaGuard = &fakes.QuotaGuard{}
 		logger = lagertest.NewTestLogger("test")
+		expectedLogger = lager.NewLogger("test").Session("create-policies")
+
+		testSink := lagertest.NewTestSink()
+		expectedLogger.RegisterSink(testSink)
+		expectedLogger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 		fakeErrorResponse = &fakes.ErrorResponse{}
 		handler = &handlers.PoliciesCreate{
 			Store:         fakeStore,
@@ -184,22 +190,11 @@ var _ = Describe("PoliciesCreate", func() {
 
 			Expect(fakeErrorResponse.BadRequestCallCount()).To(Equal(1))
 
-			w, err, message, description := fakeErrorResponse.BadRequestArgsForCall(0)
+			l, w, err, description := fakeErrorResponse.BadRequestArgsForCall(0)
+			Expect(l).To(Equal(expectedLogger))
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("banana"))
-			Expect(message).To(Equal("policies-create"))
 			Expect(description).To(Equal("mapper: banana"))
-
-			By("logging the error")
-			Expect(logger.Logs()).To(HaveLen(1))
-			Expect(logger.Logs()[0]).To(SatisfyAll(
-				LogsWith(lager.ERROR, "test.create-policies.failed-mapping-policies"),
-				HaveLogData(SatisfyAll(
-					HaveLen(2),
-					HaveKeyWithValue("error", "banana"),
-					HaveKeyWithValue("session", "1"),
-				)),
-			))
 		})
 	})
 
@@ -213,22 +208,11 @@ var _ = Describe("PoliciesCreate", func() {
 
 			Expect(fakeErrorResponse.ForbiddenCallCount()).To(Equal(1))
 
-			w, err, message, description := fakeErrorResponse.ForbiddenArgsForCall(0)
+			l, w, err, description := fakeErrorResponse.ForbiddenArgsForCall(0)
+			Expect(l).To(Equal(expectedLogger))
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("one or more applications cannot be found or accessed"))
-			Expect(message).To(Equal("policies-create"))
 			Expect(description).To(Equal("one or more applications cannot be found or accessed"))
-
-			By("logging the error")
-			Expect(logger.Logs()).To(HaveLen(1))
-			Expect(logger.Logs()[0]).To(SatisfyAll(
-				LogsWith(lager.ERROR, "test.create-policies.failed-authorizing"),
-				HaveLogData(SatisfyAll(
-					HaveLen(2),
-					HaveKeyWithValue("error", "one or more applications cannot be found or accessed"),
-					HaveKeyWithValue("session", "1"),
-				)),
-			))
 		})
 	})
 
@@ -242,22 +226,11 @@ var _ = Describe("PoliciesCreate", func() {
 
 			Expect(fakeErrorResponse.ForbiddenCallCount()).To(Equal(1))
 
-			w, err, message, description := fakeErrorResponse.ForbiddenArgsForCall(0)
+			l, w, err, description := fakeErrorResponse.ForbiddenArgsForCall(0)
+			Expect(l).To(Equal(expectedLogger))
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("policy quota exceeded"))
-			Expect(message).To(Equal("policies-create"))
 			Expect(description).To(Equal("policy quota exceeded"))
-
-			By("logging the error")
-			Expect(logger.Logs()).To(HaveLen(1))
-			Expect(logger.Logs()[0]).To(SatisfyAll(
-				LogsWith(lager.ERROR, "test.create-policies.quota-exceeded"),
-				HaveLogData(SatisfyAll(
-					HaveLen(2),
-					HaveKeyWithValue("error", "policy quota exceeded"),
-					HaveKeyWithValue("session", "1"),
-				)),
-			))
 		})
 	})
 
@@ -271,22 +244,11 @@ var _ = Describe("PoliciesCreate", func() {
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
-			w, err, message, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			l, w, err, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			Expect(l).To(Equal(expectedLogger))
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("banana"))
-			Expect(message).To(Equal("policies-create"))
 			Expect(description).To(Equal("check access failed"))
-
-			By("logging the error")
-			Expect(logger.Logs()).To(HaveLen(1))
-			Expect(logger.Logs()[0]).To(SatisfyAll(
-				LogsWith(lager.ERROR, "test.create-policies.failed-checking-access"),
-				HaveLogData(SatisfyAll(
-					HaveLen(2),
-					HaveKeyWithValue("error", "banana"),
-					HaveKeyWithValue("session", "1"),
-				)),
-			))
 		})
 	})
 
@@ -300,22 +262,11 @@ var _ = Describe("PoliciesCreate", func() {
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
-			w, err, message, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			l, w, err, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			Expect(l).To(Equal(expectedLogger))
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("banana"))
-			Expect(message).To(Equal("policies-create"))
 			Expect(description).To(Equal("check quota failed"))
-
-			By("logging the error")
-			Expect(logger.Logs()).To(HaveLen(1))
-			Expect(logger.Logs()[0]).To(SatisfyAll(
-				LogsWith(lager.ERROR, "test.create-policies.failed-checking-quota"),
-				HaveLogData(SatisfyAll(
-					HaveLen(2),
-					HaveKeyWithValue("error", "banana"),
-					HaveKeyWithValue("session", "1"),
-				)),
-			))
 		})
 	})
 
@@ -329,23 +280,11 @@ var _ = Describe("PoliciesCreate", func() {
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
-			w, err, message, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			l, w, err, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			Expect(l).To(Equal(expectedLogger))
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("banana"))
-			Expect(message).To(Equal("policies-create"))
 			Expect(description).To(Equal("database create failed"))
-
-			By("logging the error")
-			Expect(logger.Logs()).To(HaveLen(1))
-			Expect(logger.Logs()[0]).To(SatisfyAll(
-				LogsWith(lager.ERROR, "test.create-policies.failed-creating-in-database"),
-				HaveLogData(SatisfyAll(
-					HaveLen(2),
-					HaveKeyWithValue("error", "banana"),
-					HaveKeyWithValue("session", "1"),
-				)),
-			))
-
 		})
 	})
 
@@ -359,23 +298,11 @@ var _ = Describe("PoliciesCreate", func() {
 
 			Expect(fakeErrorResponse.BadRequestCallCount()).To(Equal(1))
 
-			w, err, message, description := fakeErrorResponse.BadRequestArgsForCall(0)
+			l, w, err, description := fakeErrorResponse.BadRequestArgsForCall(0)
+			Expect(l).To(Equal(expectedLogger))
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("banana"))
-			Expect(message).To(Equal("policies-create"))
 			Expect(description).To(Equal("failed reading request body"))
-
-			By("logging the error")
-			Expect(logger.Logs()).To(HaveLen(1))
-			Expect(logger.Logs()[0]).To(SatisfyAll(
-				LogsWith(lager.ERROR, "test.create-policies.failed-reading-request-body"),
-				HaveLogData(SatisfyAll(
-					HaveLen(2),
-					HaveKeyWithValue("error", "banana"),
-					HaveKeyWithValue("session", "1"),
-				)),
-			))
-
 		})
 	})
 

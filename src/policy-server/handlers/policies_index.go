@@ -46,15 +46,13 @@ func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if err != nil {
-		logger.Error("failed-reading-database", err)
-		h.ErrorResponse.InternalServerError(w, err, "policies-index", "database read failed")
+		h.ErrorResponse.InternalServerError(logger, w, err, "database read failed")
 		return
 	}
 
 	policies, err := h.PolicyFilter.FilterPolicies(storePolicies, userToken)
 	if err != nil {
-		logger.Error("failed-filtering-policies", err)
-		h.ErrorResponse.InternalServerError(w, err, "policies-index", "filter policies failed")
+		h.ErrorResponse.InternalServerError(logger, w, err, "filter policies failed")
 		return
 	}
 
@@ -65,8 +63,7 @@ func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	bytes, err := h.Mapper.AsBytes(policies)
 	if err != nil {
-		logger.Error("failed-mapping-policies-as-bytes", err)
-		h.ErrorResponse.InternalServerError(w, err, "policies-index", "map policy as bytes failed")
+		h.ErrorResponse.InternalServerError(logger, w, err, "map policy as bytes failed")
 		return
 	}
 

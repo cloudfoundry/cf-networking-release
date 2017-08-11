@@ -23,6 +23,7 @@ var _ = Describe("PoliciesCleanup", func() {
 		handler           *handlers.PoliciesCleanup
 		resp              *httptest.ResponseRecorder
 		logger            *lagertest.TestLogger
+		expectedLogger    lager.Logger
 		fakePolicyCleaner *fakes.PolicyCleaner
 		fakeMapper        *apifakes.PolicyMapper
 		fakeErrorResponse *fakes.ErrorResponse
@@ -44,6 +45,11 @@ var _ = Describe("PoliciesCleanup", func() {
 		}}
 
 		logger = lagertest.NewTestLogger("test")
+		expectedLogger = lager.NewLogger("test").Session("cleanup-policies")
+
+		testSink := lagertest.NewTestSink()
+		expectedLogger.RegisterSink(testSink)
+		expectedLogger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 
 		fakeMapper = &apifakes.PolicyMapper{}
 		fakePolicyCleaner = &fakes.PolicyCleaner{}
@@ -91,22 +97,11 @@ var _ = Describe("PoliciesCleanup", func() {
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
-			w, err, message, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			l, w, err, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			Expect(l).To(Equal(expectedLogger))
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("potato"))
-			Expect(message).To(Equal("policies-cleanup"))
 			Expect(description).To(Equal("policies cleanup failed"))
-
-			By("logging the error")
-			Expect(logger.Logs()).To(HaveLen(1))
-			Expect(logger.Logs()[0]).To(SatisfyAll(
-				LogsWith(lager.ERROR, "test.cleanup-policies.failed-deleting-stale-policies"),
-				HaveLogData(SatisfyAll(
-					HaveLen(2),
-					HaveKeyWithValue("error", "potato"),
-					HaveKeyWithValue("session", "1"),
-				)),
-			))
 		})
 	})
 
@@ -120,22 +115,11 @@ var _ = Describe("PoliciesCleanup", func() {
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
-			w, err, message, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			l, w, err, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			Expect(l).To(Equal(expectedLogger))
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("potato"))
-			Expect(message).To(Equal("policies-cleanup"))
 			Expect(description).To(Equal("map policy as bytes failed"))
-
-			By("logging the error")
-			Expect(logger.Logs()).To(HaveLen(1))
-			Expect(logger.Logs()[0]).To(SatisfyAll(
-				LogsWith(lager.ERROR, "test.cleanup-policies.failed-mapping-policies-as-bytes"),
-				HaveLogData(SatisfyAll(
-					HaveLen(2),
-					HaveKeyWithValue("error", "potato"),
-					HaveKeyWithValue("session", "1"),
-				)),
-			))
 		})
 	})
 })

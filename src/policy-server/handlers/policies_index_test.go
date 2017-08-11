@@ -34,6 +34,7 @@ var _ = Describe("Policies index handler", func() {
 		fakeErrorResponse    *fakes.ErrorResponse
 		fakeMapper           *apifakes.PolicyMapper
 		logger               *lagertest.TestLogger
+		expectedLogger       lager.Logger
 		token                uaa_client.CheckTokenResponse
 	)
 
@@ -159,6 +160,12 @@ var _ = Describe("Policies index handler", func() {
 			UserName: "some-user",
 		}
 		resp = httptest.NewRecorder()
+
+		expectedLogger = lager.NewLogger("test").Session("index-policies")
+
+		testSink := lagertest.NewTestSink()
+		expectedLogger.RegisterSink(testSink)
+		expectedLogger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 	})
 
 	It("returns all the policies, but does not include the tags", func() {
@@ -205,22 +212,11 @@ var _ = Describe("Policies index handler", func() {
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
-			w, err, message, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			l, w, err, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			Expect(l).To(Equal(expectedLogger))
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("banana"))
-			Expect(message).To(Equal("policies-index"))
 			Expect(description).To(Equal("map policy as bytes failed"))
-
-			By("logging the error")
-			Expect(logger.Logs()).To(HaveLen(1))
-			Expect(logger.Logs()[0]).To(SatisfyAll(
-				LogsWith(lager.ERROR, "test.index-policies.failed-mapping-policies-as-bytes"),
-				HaveLogData(SatisfyAll(
-					HaveLen(2),
-					HaveKeyWithValue("error", "banana"),
-					HaveKeyWithValue("session", "1"),
-				)),
-			))
 		})
 	})
 
@@ -276,22 +272,11 @@ var _ = Describe("Policies index handler", func() {
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
-			w, err, message, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			l, w, err, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			Expect(l).To(Equal(expectedLogger))
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("banana"))
-			Expect(message).To(Equal("policies-index"))
 			Expect(description).To(Equal("database read failed"))
-
-			By("logging the error")
-			Expect(logger.Logs()).To(HaveLen(1))
-			Expect(logger.Logs()[0]).To(SatisfyAll(
-				LogsWith(lager.ERROR, "test.index-policies.failed-reading-database"),
-				HaveLogData(SatisfyAll(
-					HaveLen(2),
-					HaveKeyWithValue("error", "banana"),
-					HaveKeyWithValue("session", "1"),
-				)),
-			))
 		})
 	})
 
@@ -305,22 +290,11 @@ var _ = Describe("Policies index handler", func() {
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
-			w, err, message, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			l, w, err, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			Expect(l).To(Equal(expectedLogger))
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("banana"))
-			Expect(message).To(Equal("policies-index"))
 			Expect(description).To(Equal("filter policies failed"))
-
-			By("logging the error")
-			Expect(logger.Logs()).To(HaveLen(1))
-			Expect(logger.Logs()[0]).To(SatisfyAll(
-				LogsWith(lager.ERROR, "test.index-policies.failed-filtering-policies"),
-				HaveLogData(SatisfyAll(
-					HaveLen(2),
-					HaveKeyWithValue("error", "banana"),
-					HaveKeyWithValue("session", "1"),
-				)),
-			))
 		})
 	})
 })

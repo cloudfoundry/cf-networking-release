@@ -1,20 +1,16 @@
 package handlers_test
 
 import (
-	"fmt"
-	"io/ioutil"
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"policy-server/handlers"
 	"policy-server/handlers/fakes"
 
+	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
-	"github.com/tedsuo/rata"
-
-	"code.cloudfoundry.org/cf-networking-helpers/middleware"
 )
 
 var _ = Describe("CheckVersionWrapper", func() {
@@ -24,16 +20,28 @@ var _ = Describe("CheckVersionWrapper", func() {
 		fakeHandlerv0       http.Handler
 		fakeHandlerv1       http.Handler
 		handlerMap          map[string]http.Handler
-		server              *httptest.Server
 		logger              *lagertest.TestLogger
+		expectedLogger      lager.Logger
 		fakeErrorResponse   *fakes.ErrorResponse
-		client              *http.Client
+		fakeRataAdapter     *fakes.RataAdapter
+		request             *http.Request
+		resp                *httptest.ResponseRecorder
 
 		v0Count int
 		v1Count int
 	)
 
 	BeforeEach(func() {
+		logger = lagertest.NewTestLogger("test")
+
+		expectedLogger = lager.NewLogger("test").Session("check-version")
+		testSink := lagertest.NewTestSink()
+		expectedLogger.RegisterSink(testSink)
+		expectedLogger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
+
+		resp = httptest.NewRecorder()
+		request, _ = http.NewRequest("POST", "/some/vwhatever/versioned/resource", nil)
+
 		fakeHandlerv0 = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			v0Count++
 			logger.Info("v0")
@@ -52,22 +60,13 @@ var _ = Describe("CheckVersionWrapper", func() {
 		}
 
 		fakeErrorResponse = &fakes.ErrorResponse{}
+		fakeRataAdapter = &fakes.RataAdapter{}
 
-		logger = lagertest.NewTestLogger("test")
-
-		checkVersionWrapper = &handlers.CheckVersionWrapper{ErrorResponse: fakeErrorResponse}
+		checkVersionWrapper = &handlers.CheckVersionWrapper{
+			ErrorResponse: fakeErrorResponse,
+			RataAdapter:   fakeRataAdapter,
+		}
 		checkVersionHandler = checkVersionWrapper.CheckVersion(handlerMap)
-		routes := rata.Routes{
-			{Name: "some_resource", Method: "GET", Path: "/networking/:version/some/resource"},
-		}
-		handlers := rata.Handlers{
-			"some_resource": middleware.LogWrap(logger, checkVersionHandler),
-		}
-		router, err := rata.NewRouter(routes, handlers)
-		Expect(err).NotTo(HaveOccurred())
-
-		server = httptest.NewServer(router)
-		client = http.DefaultClient
 	})
 
 	AfterEach(func() {
@@ -75,36 +74,38 @@ var _ = Describe("CheckVersionWrapper", func() {
 		v1Count = 0
 	})
 
-	It("should delegate to handler of the requested version", func() {
-		resp, err := client.Get(fmt.Sprintf("%s/networking/v1/some/resource", server.URL))
-		Expect(err).NotTo(HaveOccurred())
+	Context("when the request has a supported version", func() {
+		BeforeEach(func() {
+			fakeRataAdapter.ParamReturns("v1")
+		})
+		It("should delegate to handler of the requested version", func() {
+			MakeRequestWithLogger(checkVersionHandler.ServeHTTP, resp, request, logger)
 
-		bytes, err := ioutil.ReadAll(resp.Body)
-		Expect(err).NotTo(HaveOccurred())
-
-		Expect(v0Count).To(Equal(0))
-		Expect(v1Count).To(Equal(1))
-		Expect(string(bytes)).To(Equal("v1"))
-		Expect(len(logger.Logs())).To(BeNumerically(">", 1))
-		Expect(logger.Logs()[1].Message).To(ContainSubstring("v1"))
+			Expect(v0Count).To(Equal(0))
+			Expect(v1Count).To(Equal(1))
+			Expect(fakeRataAdapter.ParamCallCount()).To(Equal(1))
+			req, paramName := fakeRataAdapter.ParamArgsForCall(0)
+			Expect(req.WithContext(context.Background())).To(Equal(request.WithContext(context.Background())))
+			Expect(paramName).To(Equal("version"))
+			Expect(len(logger.Logs())).To(Equal(1))
+			Expect(logger.Logs()[0].Message).To(ContainSubstring("v1"))
+		})
 	})
 
 	Context("when the version requested does not match any of the handlers", func() {
+		BeforeEach(func() {
+			fakeRataAdapter.ParamReturns("v100")
+		})
 		It("Rejects the request with a 406 status code", func() {
-			resp, err := client.Get(fmt.Sprintf("%s/networking/v100/some/resource", server.URL))
-			Expect(err).NotTo(HaveOccurred())
-
-			bytes, err := ioutil.ReadAll(resp.Body)
-			Expect(err).NotTo(HaveOccurred())
+			MakeRequestWithLogger(checkVersionHandler.ServeHTTP, resp, request, logger)
 
 			Expect(v0Count).To(Equal(0))
 			Expect(v1Count).To(Equal(0))
-			Expect(bytes).To(BeEmpty())
 
 			Expect(fakeErrorResponse.NotAcceptableCallCount()).To(Equal(1))
-			_, err, message, desc := fakeErrorResponse.NotAcceptableArgsForCall(0)
+			l, _, err, desc := fakeErrorResponse.NotAcceptableArgsForCall(0)
+			Expect(l).To(Equal(expectedLogger))
 			Expect(err).To(BeNil())
-			Expect(message).To(Equal("check api version"))
 			Expect(desc).To(Equal("api version 'v100' not supported"))
 		})
 	})

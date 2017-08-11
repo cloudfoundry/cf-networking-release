@@ -30,6 +30,7 @@ var _ = Describe("PoliciesDelete", func() {
 		fakeStore         *fakes.DataStore
 		fakeMapper        *apifakes.PolicyMapper
 		logger            *lagertest.TestLogger
+		expectedLogger    lager.Logger
 		expectedPolicies  []store.Policy
 		fakePolicyGuard   *fakes.PolicyGuard
 		fakeErrorResponse *fakes.ErrorResponse
@@ -48,6 +49,11 @@ var _ = Describe("PoliciesDelete", func() {
 		fakeMapper = &apifakes.PolicyMapper{}
 		fakePolicyGuard = &fakes.PolicyGuard{}
 		logger = lagertest.NewTestLogger("test")
+		expectedLogger = lager.NewLogger("test").Session("delete-policies")
+
+		testSink := lagertest.NewTestSink()
+		expectedLogger.RegisterSink(testSink)
+		expectedLogger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 		fakeErrorResponse = &fakes.ErrorResponse{}
 		handler = &handlers.PoliciesDelete{
 			Mapper:        fakeMapper,
@@ -158,22 +164,11 @@ var _ = Describe("PoliciesDelete", func() {
 
 			Expect(fakeErrorResponse.BadRequestCallCount()).To(Equal(1))
 
-			w, err, message, description := fakeErrorResponse.BadRequestArgsForCall(0)
+			l, w, err, description := fakeErrorResponse.BadRequestArgsForCall(0)
+			Expect(l).To(Equal(expectedLogger))
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("banana"))
-			Expect(message).To(Equal("delete-policies"))
 			Expect(description).To(Equal("mapper: banana"))
-
-			By("logging the error")
-			Expect(logger.Logs()).To(HaveLen(1))
-			Expect(logger.Logs()[0]).To(SatisfyAll(
-				LogsWith(lager.ERROR, "test.delete-policies.failed-mapping-policies"),
-				HaveLogData(SatisfyAll(
-					HaveLen(2),
-					HaveKeyWithValue("error", "banana"),
-					HaveKeyWithValue("session", "1"),
-				)),
-			))
 		})
 	})
 
@@ -187,22 +182,11 @@ var _ = Describe("PoliciesDelete", func() {
 
 			Expect(fakeErrorResponse.ForbiddenCallCount()).To(Equal(1))
 
-			w, err, message, description := fakeErrorResponse.ForbiddenArgsForCall(0)
+			l, w, err, description := fakeErrorResponse.ForbiddenArgsForCall(0)
+			Expect(l).To(Equal(expectedLogger))
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("one or more applications cannot be found or accessed"))
-			Expect(message).To(Equal("delete-policies"))
 			Expect(description).To(Equal("one or more applications cannot be found or accessed"))
-
-			By("logging the error")
-			Expect(logger.Logs()).To(HaveLen(1))
-			Expect(logger.Logs()[0]).To(SatisfyAll(
-				LogsWith(lager.ERROR, "test.delete-policies.failed-authorizing-access"),
-				HaveLogData(SatisfyAll(
-					HaveLen(2),
-					HaveKeyWithValue("error", "one or more applications cannot be found or accessed"),
-					HaveKeyWithValue("session", "1"),
-				)),
-			))
 		})
 	})
 
@@ -216,22 +200,11 @@ var _ = Describe("PoliciesDelete", func() {
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
-			w, err, message, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			l, w, err, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			Expect(l).To(Equal(expectedLogger))
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("banana"))
-			Expect(message).To(Equal("delete-policies"))
 			Expect(description).To(Equal("check access failed"))
-
-			By("logging the error")
-			Expect(logger.Logs()).To(HaveLen(1))
-			Expect(logger.Logs()[0]).To(SatisfyAll(
-				LogsWith(lager.ERROR, "test.delete-policies.failed-checking-access"),
-				HaveLogData(SatisfyAll(
-					HaveLen(2),
-					HaveKeyWithValue("error", "banana"),
-					HaveKeyWithValue("session", "1"),
-				)),
-			))
 		})
 	})
 
@@ -245,22 +218,11 @@ var _ = Describe("PoliciesDelete", func() {
 
 			Expect(fakeErrorResponse.BadRequestCallCount()).To(Equal(1))
 
-			w, err, message, description := fakeErrorResponse.BadRequestArgsForCall(0)
+			l, w, err, description := fakeErrorResponse.BadRequestArgsForCall(0)
+			Expect(l).To(Equal(expectedLogger))
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("banana"))
-			Expect(message).To(Equal("delete-policies"))
 			Expect(description).To(Equal("invalid request body"))
-
-			By("logging the error")
-			Expect(logger.Logs()).To(HaveLen(1))
-			Expect(logger.Logs()[0]).To(SatisfyAll(
-				LogsWith(lager.ERROR, "test.delete-policies.failed-reading-request-body"),
-				HaveLogData(SatisfyAll(
-					HaveLen(2),
-					HaveKeyWithValue("error", "banana"),
-					HaveKeyWithValue("session", "1"),
-				)),
-			))
 		})
 	})
 
@@ -274,22 +236,11 @@ var _ = Describe("PoliciesDelete", func() {
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
-			w, err, message, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			l, w, err, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			Expect(l).To(Equal(expectedLogger))
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("banana"))
-			Expect(message).To(Equal("delete-policies"))
 			Expect(description).To(Equal("database delete failed"))
-
-			By("logging the error")
-			Expect(logger.Logs()).To(HaveLen(1))
-			Expect(logger.Logs()[0]).To(SatisfyAll(
-				LogsWith(lager.ERROR, "test.delete-policies.failed-deleting-in-database"),
-				HaveLogData(SatisfyAll(
-					HaveLen(2),
-					HaveKeyWithValue("error", "banana"),
-					HaveKeyWithValue("session", "1"),
-				)),
-			))
 		})
 	})
 })

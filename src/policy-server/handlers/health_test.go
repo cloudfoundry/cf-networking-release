@@ -22,6 +22,7 @@ var _ = Describe("Health handler", func() {
 		fakeErrorResponse *fakes.ErrorResponse
 		resp              *httptest.ResponseRecorder
 		logger            *lagertest.TestLogger
+		expectedLogger    lager.Logger
 	)
 
 	BeforeEach(func() {
@@ -39,6 +40,11 @@ var _ = Describe("Health handler", func() {
 		resp = httptest.NewRecorder()
 
 		logger = lagertest.NewTestLogger("test-logger")
+		expectedLogger = lager.NewLogger("test-logger").Session("health")
+
+		testSink := lagertest.NewTestSink()
+		expectedLogger.RegisterSink(testSink)
+		expectedLogger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 	})
 
 	It("checks the database is up and returns a 200", func() {
@@ -68,22 +74,11 @@ var _ = Describe("Health handler", func() {
 			Expect(fakeStore.CheckDatabaseCallCount()).To(Equal(1))
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
-			w, err, message, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			l, w, err, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			Expect(l).To(Equal(expectedLogger))
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("pineapple"))
-			Expect(message).To(Equal("health"))
 			Expect(description).To(Equal("check database failed"))
-
-			By("logging the error")
-			Expect(logger.Logs()).To(HaveLen(1))
-			Expect(logger.Logs()[0]).To(SatisfyAll(
-				LogsWith(lager.ERROR, "test-logger.health.failed-checking-database"),
-				HaveLogData(SatisfyAll(
-					HaveLen(2),
-					HaveKeyWithValue("error", "pineapple"),
-					HaveKeyWithValue("session", "1"),
-				)),
-			))
 		})
 	})
 })

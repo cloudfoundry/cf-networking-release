@@ -24,8 +24,7 @@ func (h *WhoAmIHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 	responseJSON, err := h.Marshaler.Marshal(whoAmIResponse)
 	if err != nil {
-		logger.Error("failed-marshalling-response", err)
-		h.ErrorResponse.InternalServerError(w, err, "who-am-i", "marshaling response failed")
+		h.ErrorResponse.InternalServerError(logger, w, err, "marshaling response failed")
 		return
 	}
 

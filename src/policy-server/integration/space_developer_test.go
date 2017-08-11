@@ -91,7 +91,7 @@ var _ = Describe("External API Space Developer", func() {
 
 						Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
 						responseString, err := ioutil.ReadAll(resp.Body)
-						Expect(responseString).To(MatchJSON(`{ "error": "authenticator: provided scopes [] do not include allowed scopes [network.admin network.write]"}`))
+						Expect(responseString).To(MatchJSON(`{ "error": "provided scopes [] do not include allowed scopes [network.admin network.write]"}`))
 					})
 				})
 
@@ -106,7 +106,7 @@ var _ = Describe("External API Space Developer", func() {
 
 						Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
 						responseString, err := ioutil.ReadAll(resp.Body)
-						Expect(responseString).To(MatchJSON(`{ "error": "policies-create: one or more applications cannot be found or accessed"}`))
+						Expect(responseString).To(MatchJSON(`{ "error": "one or more applications cannot be found or accessed"}`))
 					})
 				})
 			})
@@ -144,7 +144,7 @@ var _ = Describe("External API Space Developer", func() {
 
 						Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
 						responseString, err := ioutil.ReadAll(resp.Body)
-						Expect(responseString).To(MatchJSON(`{ "error": "policies-create: one or more applications cannot be found or accessed"}`))
+						Expect(responseString).To(MatchJSON(`{ "error": "one or more applications cannot be found or accessed"}`))
 					})
 				})
 			})
@@ -160,7 +160,7 @@ var _ = Describe("External API Space Developer", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
 				responseString, err := ioutil.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(responseString).To(MatchJSON(`{"error": "policies-create: failed reading request body"}`))
+				Expect(responseString).To(MatchJSON(`{"error": "failed reading request body"}`))
 			})
 		})
 
@@ -193,7 +193,7 @@ var _ = Describe("External API Space Developer", func() {
 				Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
 				responseString, err := ioutil.ReadAll(resp.Body)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(responseString).To(MatchJSON(`{"error": "policies-create: policy quota exceeded"}`))
+				Expect(responseString).To(MatchJSON(`{"error": "policy quota exceeded"}`))
 
 				By("deleting a policy")
 				body = `{ "policies": [
@@ -238,7 +238,7 @@ var _ = Describe("External API Space Developer", func() {
 
 					Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
 					responseString, err := ioutil.ReadAll(resp.Body)
-					Expect(responseString).To(MatchJSON(`{ "error": "authenticator: provided scopes [] do not include allowed scopes [network.admin network.write]"}`))
+					Expect(responseString).To(MatchJSON(`{ "error": "provided scopes [] do not include allowed scopes [network.admin network.write]"}`))
 				})
 			})
 			Context("when one app is in spaces they do not have access to", func() {
@@ -252,7 +252,7 @@ var _ = Describe("External API Space Developer", func() {
 
 					Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
 					responseString, err := ioutil.ReadAll(resp.Body)
-					Expect(responseString).To(MatchJSON(`{ "error": "delete-policies: one or more applications cannot be found or accessed"}`))
+					Expect(responseString).To(MatchJSON(`{ "error": "one or more applications cannot be found or accessed"}`))
 				})
 			})
 		})
@@ -340,7 +340,7 @@ var _ = Describe("External API Space Developer", func() {
 
 					Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
 					responseString, err := ioutil.ReadAll(resp.Body)
-					Expect(responseString).To(MatchJSON(`{ "error": "authenticator: provided scopes [] do not include allowed scopes [network.admin network.write]"}`))
+					Expect(responseString).To(MatchJSON(`{ "error": "provided scopes [] do not include allowed scopes [network.admin network.write]"}`))
 				})
 			})
 		})

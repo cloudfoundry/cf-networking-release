@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"policy-server/api"
 	"policy-server/store"
+
+	"code.cloudfoundry.org/lager"
 )
 
 //go:generate counterfeiter -o fakes/policy_cleaner.go --fake-name PolicyCleaner . policyCleaner
@@ -13,11 +15,11 @@ type policyCleaner interface {
 
 //go:generate counterfeiter -o fakes/error_response.go --fake-name ErrorResponse . errorResponse
 type errorResponse interface {
-	InternalServerError(http.ResponseWriter, error, string, string)
-	BadRequest(http.ResponseWriter, error, string, string)
-	NotAcceptable(http.ResponseWriter, error, string, string)
-	Forbidden(http.ResponseWriter, error, string, string)
-	Unauthorized(http.ResponseWriter, error, string, string)
+	InternalServerError(lager.Logger, http.ResponseWriter, error, string)
+	BadRequest(lager.Logger, http.ResponseWriter, error, string)
+	NotAcceptable(lager.Logger, http.ResponseWriter, error, string)
+	Forbidden(lager.Logger, http.ResponseWriter, error, string)
+	Unauthorized(lager.Logger, http.ResponseWriter, error, string)
 }
 
 type PoliciesCleanup struct {
@@ -40,8 +42,7 @@ func (h *PoliciesCleanup) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	policies, err := h.PolicyCleaner.DeleteStalePolicies()
 	if err != nil {
-		logger.Error("failed-deleting-stale-policies", err)
-		h.ErrorResponse.InternalServerError(w, err, "policies-cleanup", "policies cleanup failed")
+		h.ErrorResponse.InternalServerError(logger, w, err, "policies cleanup failed")
 		return
 	}
 
@@ -52,8 +53,7 @@ func (h *PoliciesCleanup) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	bytes, err := h.Mapper.AsBytes(policies)
 	if err != nil {
-		logger.Error("failed-mapping-policies-as-bytes", err)
-		h.ErrorResponse.InternalServerError(w, err, "policies-cleanup", "map policy as bytes failed")
+		h.ErrorResponse.InternalServerError(logger, w, err, "map policy as bytes failed")
 		return
 	}
 

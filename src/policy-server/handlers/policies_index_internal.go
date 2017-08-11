@@ -53,15 +53,13 @@ func (h *PoliciesIndexInternal) ServeHTTP(w http.ResponseWriter, req *http.Reque
 	}
 
 	if err != nil {
-		logger.Error("failed-reading-database", err)
-		h.ErrorResponse.InternalServerError(w, err, "policies-index-internal", "database read failed")
+		h.ErrorResponse.InternalServerError(logger, w, err, "database read failed")
 		return
 	}
 
 	bytes, err := h.Mapper.AsBytes(policies)
 	if err != nil {
-		logger.Error("failed-mapping-policies-as-bytes", err)
-		h.ErrorResponse.InternalServerError(w, err, "policies-index-internal", "map policy as bytes failed")
+		h.ErrorResponse.InternalServerError(logger, w, err, "map policy as bytes failed")
 		return
 	}
 

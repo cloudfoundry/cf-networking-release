@@ -27,6 +27,7 @@ var _ = Describe("Authentication middleware", func() {
 		resp                 *httptest.ResponseRecorder
 		uaaClient            *fakes.UAAClient
 		logger               *lagertest.TestLogger
+		expectedLogger       lager.Logger
 		tokenResponse        uaa_client.CheckTokenResponse
 		fakeErrorResponse    *fakes.ErrorResponse
 		unprotectedCallCount = 0
@@ -41,6 +42,12 @@ var _ = Describe("Authentication middleware", func() {
 
 		uaaClient = &fakes.UAAClient{}
 		logger = lagertest.NewTestLogger("test")
+
+		expectedLogger = lager.NewLogger("test").Session("authentication")
+
+		testSink := lagertest.NewTestSink()
+		expectedLogger.RegisterSink(testSink)
+		expectedLogger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 		unprotected = func(w http.ResponseWriter, r *http.Request) {
 			unprotectedCallCount += 1
 			By("passing the token data to the unprotected request")
@@ -158,22 +165,11 @@ var _ = Describe("Authentication middleware", func() {
 
 			Expect(fakeErrorResponse.UnauthorizedCallCount()).To(Equal(1))
 
-			w, err, message, description := fakeErrorResponse.UnauthorizedArgsForCall(0)
+			l, w, err, description := fakeErrorResponse.UnauthorizedArgsForCall(0)
+			Expect(l).To(Equal(expectedLogger))
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("no auth header"))
-			Expect(message).To(Equal("authenticator"))
 			Expect(description).To(Equal("missing authorization header"))
-
-			By("logging the error")
-			Expect(logger.Logs()).To(HaveLen(1))
-			Expect(logger.Logs()[0]).To(SatisfyAll(
-				LogsWith(lager.ERROR, "test.authentication.failed-missing-authorization-header"),
-				HaveLogData(SatisfyAll(
-					HaveLen(2),
-					HaveKeyWithValue("error", "no auth header"),
-					HaveKeyWithValue("session", "1"),
-				)),
-			))
 		})
 	})
 
@@ -192,23 +188,11 @@ var _ = Describe("Authentication middleware", func() {
 
 			Expect(fakeErrorResponse.ForbiddenCallCount()).To(Equal(1))
 
-			w, err, message, description := fakeErrorResponse.ForbiddenArgsForCall(0)
+			l, w, err, description := fakeErrorResponse.ForbiddenArgsForCall(0)
+			Expect(l).To(Equal(expectedLogger))
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("potato"))
-			Expect(message).To(Equal("authenticator"))
 			Expect(description).To(Equal("failed to verify token with uaa"))
-
-			By("logging the error")
-			Expect(logger.Logs()).To(HaveLen(1))
-			Expect(logger.Logs()[0]).To(SatisfyAll(
-				LogsWith(lager.ERROR, "test.authentication.failed-verifying-token-with-uaa"),
-				HaveLogData(SatisfyAll(
-					HaveLen(2),
-					HaveKeyWithValue("error", "potato"),
-					HaveKeyWithValue("session", "1"),
-				)),
-			))
-
 		})
 	})
 
@@ -226,22 +210,11 @@ var _ = Describe("Authentication middleware", func() {
 
 			Expect(fakeErrorResponse.ForbiddenCallCount()).To(Equal(1))
 
-			w, err, message, description := fakeErrorResponse.ForbiddenArgsForCall(0)
+			l, w, err, description := fakeErrorResponse.ForbiddenArgsForCall(0)
+			Expect(l).To(Equal(expectedLogger))
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("provided scopes [wrong.scope] do not include allowed scopes [network.admin network.write]"))
-			Expect(message).To(Equal("authenticator"))
 			Expect(description).To(Equal("provided scopes [wrong.scope] do not include allowed scopes [network.admin network.write]"))
-
-			By("logging the error")
-			Expect(logger.Logs()).To(HaveLen(1))
-			Expect(logger.Logs()[0]).To(SatisfyAll(
-				LogsWith(lager.ERROR, "test.authentication.failed-authorizing-provided-scope"),
-				HaveLogData(SatisfyAll(
-					HaveLen(2),
-					HaveKeyWithValue("error", "provided scopes [wrong.scope] do not include allowed scopes [network.admin network.write]"),
-					HaveKeyWithValue("session", "1"),
-				)),
-			))
 		})
 	})
 })

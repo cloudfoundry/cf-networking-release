@@ -60,8 +60,7 @@ func (a *Authenticator) Wrap(handle http.Handler) http.Handler {
 		authorization := req.Header["Authorization"]
 		if len(authorization) < 1 {
 			err := errors.New("no auth header")
-			logger.Error("failed-missing-authorization-header", err)
-			a.ErrorResponse.Unauthorized(w, err, "authenticator", "missing authorization header")
+			a.ErrorResponse.Unauthorized(logger, w, err, "missing authorization header")
 			return
 		}
 
@@ -70,15 +69,13 @@ func (a *Authenticator) Wrap(handle http.Handler) http.Handler {
 		token = strings.TrimPrefix(token, "bearer ")
 		tokenData, err := a.Client.CheckToken(token)
 		if err != nil {
-			logger.Error("failed-verifying-token-with-uaa", err)
-			a.ErrorResponse.Forbidden(w, err, "authenticator", "failed to verify token with uaa")
+			a.ErrorResponse.Forbidden(logger, w, err, "failed to verify token with uaa")
 			return
 		}
 
 		if a.ScopeChecking && !isAuthorized(tokenData.Scope, a.Scopes) {
 			err := errors.New(fmt.Sprintf("provided scopes %s do not include allowed scopes %s", tokenData.Scope, a.Scopes))
-			logger.Error("failed-authorizing-provided-scope", err)
-			a.ErrorResponse.Forbidden(w, err, "authenticator", err.Error())
+			a.ErrorResponse.Forbidden(logger, w, err, err.Error())
 			return
 		}
 

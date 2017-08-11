@@ -146,10 +146,10 @@ var _ = Describe("External API Deleting Policies", func() {
 		  { "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 7777 } }
 		]}`
 
-		missingStartPortResponse := `{ "error": "delete-policies: mapper: validate policies: missing start port" }`
+		missingStartPortResponse := `{ "error": "mapper: validate policies: missing start port" }`
 
-		missingPortResponse := `{ "error": "delete-policies: mapper: validate policies: missing port" }`
-		invalidProtocolResponse := `{ "error": "delete-policies: mapper: validate policies: invalid destination protocol, specify either udp or tcp" }`
+		missingPortResponse := `{ "error": "mapper: validate policies: missing port" }`
+		invalidProtocolResponse := `{ "error": "mapper: validate policies: invalid destination protocol, specify either udp or tcp" }`
 
 		DescribeTable("deleting policies succeeds", deletePoliciesSucceeds,
 			Entry("v1", "v1", v1Request, v1Response),

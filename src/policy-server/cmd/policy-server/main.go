@@ -13,6 +13,7 @@ import (
 	"lib/nonmutualtls"
 	"lib/poller"
 
+	"policy-server/adapter"
 	"policy-server/api"
 	"policy-server/api/api_v0"
 	"policy-server/cc_client"
@@ -136,7 +137,6 @@ func main() {
 	}
 
 	errorResponse := &httperror.ErrorResponse{
-		Logger:        logger,
 		MetricsSender: metricsSender,
 	}
 
@@ -176,6 +176,7 @@ func main() {
 
 	checkVersionWrapper := &handlers.CheckVersionWrapper{
 		ErrorResponse: errorResponse,
+		RataAdapter:   adapter.RataAdapter{},
 	}
 
 	metricsWrap := func(name string, handler http.Handler) http.Handler {

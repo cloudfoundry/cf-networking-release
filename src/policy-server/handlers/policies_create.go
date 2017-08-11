@@ -48,48 +48,41 @@ func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	bodyBytes, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		logger.Error("failed-reading-request-body", err)
-		h.ErrorResponse.BadRequest(w, err, "policies-create", "failed reading request body")
+		h.ErrorResponse.BadRequest(logger, w, err, "failed reading request body")
 		return
 	}
 
 	policies, err := h.Mapper.AsStorePolicy(bodyBytes)
 	if err != nil {
-		logger.Error("failed-mapping-policies", err)
-		h.ErrorResponse.BadRequest(w, err, "policies-create", fmt.Sprintf("mapper: %s", err))
+		h.ErrorResponse.BadRequest(logger, w, err, fmt.Sprintf("mapper: %s", err))
 		return
 	}
 
 	authorized, err := h.PolicyGuard.CheckAccess(policies, tokenData)
 	if err != nil {
-		logger.Error("failed-checking-access", err)
-		h.ErrorResponse.InternalServerError(w, err, "policies-create", "check access failed")
+		h.ErrorResponse.InternalServerError(logger, w, err, "check access failed")
 		return
 	}
 	if !authorized {
 		err := errors.New("one or more applications cannot be found or accessed")
-		logger.Error("failed-authorizing", err)
-		h.ErrorResponse.Forbidden(w, err, "policies-create", err.Error())
+		h.ErrorResponse.Forbidden(logger, w, err, err.Error())
 		return
 	}
 
 	authorized, err = h.QuotaGuard.CheckAccess(policies, tokenData)
 	if err != nil {
-		logger.Error("failed-checking-quota", err)
-		h.ErrorResponse.InternalServerError(w, err, "policies-create", "check quota failed")
+		h.ErrorResponse.InternalServerError(logger, w, err, "check quota failed")
 		return
 	}
 	if !authorized {
 		err := errors.New("policy quota exceeded")
-		logger.Error("quota-exceeded", err)
-		h.ErrorResponse.Forbidden(w, err, "policies-create", err.Error())
+		h.ErrorResponse.Forbidden(logger, w, err, err.Error())
 		return
 	}
 
 	err = h.Store.Create(policies)
 	if err != nil {
-		logger.Error("failed-creating-in-database", err)
-		h.ErrorResponse.InternalServerError(w, err, "policies-create", "database create failed")
+		h.ErrorResponse.InternalServerError(logger, w, err, "database create failed")
 		return
 	}
 

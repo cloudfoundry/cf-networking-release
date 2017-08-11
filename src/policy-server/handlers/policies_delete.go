@@ -34,35 +34,30 @@ func (h *PoliciesDelete) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	bodyBytes, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		logger.Error("failed-reading-request-body", err)
-		h.ErrorResponse.BadRequest(w, err, "delete-policies", "invalid request body")
+		h.ErrorResponse.BadRequest(logger, w, err, "invalid request body")
 		return
 	}
 
 	policies, err := h.Mapper.AsStorePolicy(bodyBytes)
 	if err != nil {
-		logger.Error("failed-mapping-policies", err)
-		h.ErrorResponse.BadRequest(w, err, "delete-policies", fmt.Sprintf("mapper: %s", err))
+		h.ErrorResponse.BadRequest(logger, w, err, fmt.Sprintf("mapper: %s", err))
 		return
 	}
 
 	authorized, err := h.PolicyGuard.CheckAccess(policies, tokenData)
 	if err != nil {
-		logger.Error("failed-checking-access", err)
-		h.ErrorResponse.InternalServerError(w, err, "delete-policies", "check access failed")
+		h.ErrorResponse.InternalServerError(logger, w, err, "check access failed")
 		return
 	}
 	if !authorized {
 		err := errors.New("one or more applications cannot be found or accessed")
-		logger.Error("failed-authorizing-access", err)
-		h.ErrorResponse.Forbidden(w, err, "delete-policies", err.Error())
+		h.ErrorResponse.Forbidden(logger, w, err, err.Error())
 		return
 	}
 
 	err = h.Store.Delete(policies)
 	if err != nil {
-		logger.Error("failed-deleting-in-database", err)
-		h.ErrorResponse.InternalServerError(w, err, "delete-policies", "database delete failed")
+		h.ErrorResponse.InternalServerError(logger, w, err, "database delete failed")
 		return
 	}
 

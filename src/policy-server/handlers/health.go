@@ -21,8 +21,7 @@ func (h *Health) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	logger = logger.Session("health")
 	err := h.Store.CheckDatabase()
 	if err != nil {
-		logger.Error("failed-checking-database", err)
-		h.ErrorResponse.InternalServerError(w, err, "health", "check database failed")
+		h.ErrorResponse.InternalServerError(logger, w, err, "check database failed")
 		return
 	}
 }

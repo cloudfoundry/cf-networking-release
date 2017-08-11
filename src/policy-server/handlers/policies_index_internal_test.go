@@ -25,6 +25,7 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		fakeStore            *fakes.DataStore
 		fakeErrorResponse    *fakes.ErrorResponse
 		logger               *lagertest.TestLogger
+		expectedLogger       lager.Logger
 		fakeMapper           *apifakes.PolicyMapper
 		expectedResponseBody []byte
 	)
@@ -72,6 +73,11 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		fakeStore.ByGuidsReturns(byGuidsPolicies, nil)
 		fakeMapper.AsBytesReturns(expectedResponseBody, nil)
 		logger = lagertest.NewTestLogger("test")
+		expectedLogger = lager.NewLogger("test").Session("index-policies-internal")
+
+		testSink := lagertest.NewTestSink()
+		expectedLogger.RegisterSink(testSink)
+		expectedLogger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 		fakeErrorResponse = &fakes.ErrorResponse{}
 		handler = &handlers.PoliciesIndexInternal{
 			Logger:        logger,
@@ -130,22 +136,11 @@ var _ = Describe("PoliciesIndexInternal", func() {
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
-			w, err, message, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			l, w, err, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			Expect(l).To(Equal(expectedLogger))
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("banana"))
-			Expect(message).To(Equal("policies-index-internal"))
 			Expect(description).To(Equal("map policy as bytes failed"))
-
-			By("logging the error")
-			Expect(logger.Logs()).To(HaveLen(1))
-			Expect(logger.Logs()[0]).To(SatisfyAll(
-				LogsWith(lager.ERROR, "test.index-policies-internal.failed-mapping-policies-as-bytes"),
-				HaveLogData(SatisfyAll(
-					HaveLen(2),
-					HaveKeyWithValue("error", "banana"),
-					HaveKeyWithValue("session", "1"),
-				)),
-			))
 		})
 	})
 
@@ -162,22 +157,11 @@ var _ = Describe("PoliciesIndexInternal", func() {
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
-			w, err, message, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			l, w, err, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			Expect(l).To(Equal(expectedLogger))
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("banana"))
-			Expect(message).To(Equal("policies-index-internal"))
 			Expect(description).To(Equal("database read failed"))
-
-			By("logging the error")
-			Expect(logger.Logs()).To(HaveLen(1))
-			Expect(logger.Logs()[0]).To(SatisfyAll(
-				LogsWith(lager.ERROR, "test.index-policies-internal.failed-reading-database"),
-				HaveLogData(SatisfyAll(
-					HaveLen(2),
-					HaveKeyWithValue("error", "banana"),
-					HaveKeyWithValue("session", "1"),
-				)),
-			))
 		})
 	})
 

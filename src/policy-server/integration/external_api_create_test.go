@@ -110,9 +110,9 @@ var _ = Describe("External API Adding Policies", func() {
 		v0RequestMissingProtocol := `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "port": 8080 } } ] }`
 		v0Response := `{ "total_policies": 1, "policies": [ { "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 8080 } } ]}`
 
-		missingStartPortResponse := `{ "error": "policies-create: mapper: validate policies: missing start port" }`
-		missingPortResponse := `{ "error": "policies-create: mapper: validate policies: missing port" }`
-		invalidProtocolResponse := `{ "error": "policies-create: mapper: validate policies: invalid destination protocol, specify either udp or tcp" }`
+		missingStartPortResponse := `{ "error": "mapper: validate policies: missing start port" }`
+		missingPortResponse := `{ "error": "mapper: validate policies: missing port" }`
+		invalidProtocolResponse := `{ "error": "mapper: validate policies: invalid destination protocol, specify either udp or tcp" }`
 
 		DescribeTable("adding policies succeeds", addPoliciesSucceeds,
 			Entry("v1", "v1", v1Request, v1Response),

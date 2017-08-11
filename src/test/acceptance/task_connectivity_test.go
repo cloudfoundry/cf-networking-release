@@ -57,10 +57,6 @@ var _ = PDescribe("task connectivity on the overlay network", func() {
 			Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 		})
 
-		It("allows app instances to talk to tasks", func(done Done) {
-			// Run proxy1 task that talks to itself through proxy2 via router
-		})
-
 		It("allows tasks to talk to app instances", func(done Done) {
 			By("getting the overlay ip of proxy2")
 			cmd := exec.Command("curl", "--fail", proxy2+".bosh-lite.com")

@@ -4,23 +4,29 @@ import (
 	"net/http"
 
 	"fmt"
-
-	"github.com/tedsuo/rata"
 )
+
+//go:generate counterfeiter -o fakes/rata_adapter.go --fake-name RataAdapter . rataAdapter
+type rataAdapter interface {
+	Param(*http.Request, string) string
+}
 
 type CheckVersionWrapper struct {
 	ErrorResponse errorResponse
+	RataAdapter   rataAdapter
 }
 
 func (c *CheckVersionWrapper) CheckVersion(handlers map[string]http.Handler) http.Handler {
 	return http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		version := rata.Param(req, "version")
+		version := c.RataAdapter.Param(req, "version")
 		handler, ok := handlers[version]
 		if ok {
 			handler.ServeHTTP(rw, req)
 			return
 		}
 
-		c.ErrorResponse.NotAcceptable(rw, nil, "check api version", fmt.Sprintf("api version '%s' not supported", version))
+		logger := getLogger(req)
+		logger = logger.Session("check-version")
+		c.ErrorResponse.NotAcceptable(logger, rw, nil, fmt.Sprintf("api version '%s' not supported", version))
 	})
 }

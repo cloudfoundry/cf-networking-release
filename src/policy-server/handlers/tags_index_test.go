@@ -26,6 +26,7 @@ var _ = Describe("Tags index handler", func() {
 		fakeStore         *fakes.DataStore
 		fakeErrorResponse *fakes.ErrorResponse
 		logger            *lagertest.TestLogger
+		expectedLogger    lager.Logger
 		marshaler         *hfakes.Marshaler
 	)
 
@@ -49,6 +50,11 @@ var _ = Describe("Tags index handler", func() {
 		fakeErrorResponse = &fakes.ErrorResponse{}
 		fakeStore.TagsReturns(allTags, nil)
 		logger = lagertest.NewTestLogger("test")
+		expectedLogger = lager.NewLogger("test").Session("index-tags")
+
+		testSink := lagertest.NewTestSink()
+		expectedLogger.RegisterSink(testSink)
+		expectedLogger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 		handler = &handlers.TagsIndex{
 			Store:         fakeStore,
 			Marshaler:     marshaler,
@@ -95,22 +101,11 @@ var _ = Describe("Tags index handler", func() {
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
-			w, err, message, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			l, w, err, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			Expect(l).To(Equal(expectedLogger))
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("banana"))
-			Expect(message).To(Equal("tags-index"))
 			Expect(description).To(Equal("database read failed"))
-
-			By("logging the error")
-			Expect(logger.Logs()).To(HaveLen(1))
-			Expect(logger.Logs()[0]).To(SatisfyAll(
-				LogsWith(lager.ERROR, "test.index-tags.failed-reading-database"),
-				HaveLogData(SatisfyAll(
-					HaveLen(2),
-					HaveKeyWithValue("error", "banana"),
-					HaveKeyWithValue("session", "1"),
-				)),
-			))
 		})
 	})
 
@@ -126,22 +121,11 @@ var _ = Describe("Tags index handler", func() {
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
-			w, err, message, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			l, w, err, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			Expect(l).To(Equal(expectedLogger))
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("grapes"))
-			Expect(message).To(Equal("tags-index"))
 			Expect(description).To(Equal("database marshalling failed"))
-
-			By("logging the error")
-			Expect(logger.Logs()).To(HaveLen(1))
-			Expect(logger.Logs()[0]).To(SatisfyAll(
-				LogsWith(lager.ERROR, "test.index-tags.failed-marshalling-tags"),
-				HaveLogData(SatisfyAll(
-					HaveLen(2),
-					HaveKeyWithValue("error", "grapes"),
-					HaveKeyWithValue("session", "1"),
-				)),
-			))
 		})
 	})
 })

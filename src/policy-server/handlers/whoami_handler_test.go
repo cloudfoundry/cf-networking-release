@@ -23,6 +23,7 @@ var _ = Describe("Who Am I Handler", func() {
 		handler           *handlers.WhoAmIHandler
 		resp              *httptest.ResponseRecorder
 		logger            *lagertest.TestLogger
+		expectedLogger    lager.Logger
 		tokenData         uaa_client.CheckTokenResponse
 		fakeErrorResponse *fakes.ErrorResponse
 	)
@@ -33,6 +34,11 @@ var _ = Describe("Who Am I Handler", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		logger = lagertest.NewTestLogger("test")
+		expectedLogger = lager.NewLogger("test").Session("who-am-i")
+
+		testSink := lagertest.NewTestSink()
+		expectedLogger.RegisterSink(testSink)
+		expectedLogger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 		fakeErrorResponse = &fakes.ErrorResponse{}
 		handler = &handlers.WhoAmIHandler{
 			Marshaler:     marshal.MarshalFunc(json.Marshal),
@@ -82,22 +88,11 @@ var _ = Describe("Who Am I Handler", func() {
 
 			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
 
-			w, err, message, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			l, w, err, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			Expect(l).To(Equal(expectedLogger))
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("banana"))
-			Expect(message).To(Equal("who-am-i"))
 			Expect(description).To(Equal("marshaling response failed"))
-
-			By("logging the error")
-			Expect(logger.Logs()).To(HaveLen(1))
-			Expect(logger.Logs()[0]).To(SatisfyAll(
-				LogsWith(lager.ERROR, "test.who-am-i.failed-marshalling-response"),
-				HaveLogData(SatisfyAll(
-					HaveLen(2),
-					HaveKeyWithValue("error", "banana"),
-					HaveKeyWithValue("session", "1"),
-				)),
-			))
 		})
 	})
 })

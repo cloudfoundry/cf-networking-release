@@ -4,59 +4,61 @@ package fakes
 import (
 	"net/http"
 	"sync"
+
+	"code.cloudfoundry.org/lager"
 )
 
 type ErrorResponse struct {
-	InternalServerErrorStub        func(http.ResponseWriter, error, string, string)
+	InternalServerErrorStub        func(lager.Logger, http.ResponseWriter, error, string)
 	internalServerErrorMutex       sync.RWMutex
 	internalServerErrorArgsForCall []struct {
-		arg1 http.ResponseWriter
-		arg2 error
-		arg3 string
+		arg1 lager.Logger
+		arg2 http.ResponseWriter
+		arg3 error
 		arg4 string
 	}
-	BadRequestStub        func(http.ResponseWriter, error, string, string)
+	BadRequestStub        func(lager.Logger, http.ResponseWriter, error, string)
 	badRequestMutex       sync.RWMutex
 	badRequestArgsForCall []struct {
-		arg1 http.ResponseWriter
-		arg2 error
-		arg3 string
+		arg1 lager.Logger
+		arg2 http.ResponseWriter
+		arg3 error
 		arg4 string
 	}
-	NotAcceptableStub        func(http.ResponseWriter, error, string, string)
+	NotAcceptableStub        func(lager.Logger, http.ResponseWriter, error, string)
 	notAcceptableMutex       sync.RWMutex
 	notAcceptableArgsForCall []struct {
-		arg1 http.ResponseWriter
-		arg2 error
-		arg3 string
+		arg1 lager.Logger
+		arg2 http.ResponseWriter
+		arg3 error
 		arg4 string
 	}
-	ForbiddenStub        func(http.ResponseWriter, error, string, string)
+	ForbiddenStub        func(lager.Logger, http.ResponseWriter, error, string)
 	forbiddenMutex       sync.RWMutex
 	forbiddenArgsForCall []struct {
-		arg1 http.ResponseWriter
-		arg2 error
-		arg3 string
+		arg1 lager.Logger
+		arg2 http.ResponseWriter
+		arg3 error
 		arg4 string
 	}
-	UnauthorizedStub        func(http.ResponseWriter, error, string, string)
+	UnauthorizedStub        func(lager.Logger, http.ResponseWriter, error, string)
 	unauthorizedMutex       sync.RWMutex
 	unauthorizedArgsForCall []struct {
-		arg1 http.ResponseWriter
-		arg2 error
-		arg3 string
+		arg1 lager.Logger
+		arg2 http.ResponseWriter
+		arg3 error
 		arg4 string
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *ErrorResponse) InternalServerError(arg1 http.ResponseWriter, arg2 error, arg3 string, arg4 string) {
+func (fake *ErrorResponse) InternalServerError(arg1 lager.Logger, arg2 http.ResponseWriter, arg3 error, arg4 string) {
 	fake.internalServerErrorMutex.Lock()
 	fake.internalServerErrorArgsForCall = append(fake.internalServerErrorArgsForCall, struct {
-		arg1 http.ResponseWriter
-		arg2 error
-		arg3 string
+		arg1 lager.Logger
+		arg2 http.ResponseWriter
+		arg3 error
 		arg4 string
 	}{arg1, arg2, arg3, arg4})
 	fake.recordInvocation("InternalServerError", []interface{}{arg1, arg2, arg3, arg4})
@@ -72,18 +74,18 @@ func (fake *ErrorResponse) InternalServerErrorCallCount() int {
 	return len(fake.internalServerErrorArgsForCall)
 }
 
-func (fake *ErrorResponse) InternalServerErrorArgsForCall(i int) (http.ResponseWriter, error, string, string) {
+func (fake *ErrorResponse) InternalServerErrorArgsForCall(i int) (lager.Logger, http.ResponseWriter, error, string) {
 	fake.internalServerErrorMutex.RLock()
 	defer fake.internalServerErrorMutex.RUnlock()
 	return fake.internalServerErrorArgsForCall[i].arg1, fake.internalServerErrorArgsForCall[i].arg2, fake.internalServerErrorArgsForCall[i].arg3, fake.internalServerErrorArgsForCall[i].arg4
 }
 
-func (fake *ErrorResponse) BadRequest(arg1 http.ResponseWriter, arg2 error, arg3 string, arg4 string) {
+func (fake *ErrorResponse) BadRequest(arg1 lager.Logger, arg2 http.ResponseWriter, arg3 error, arg4 string) {
 	fake.badRequestMutex.Lock()
 	fake.badRequestArgsForCall = append(fake.badRequestArgsForCall, struct {
-		arg1 http.ResponseWriter
-		arg2 error
-		arg3 string
+		arg1 lager.Logger
+		arg2 http.ResponseWriter
+		arg3 error
 		arg4 string
 	}{arg1, arg2, arg3, arg4})
 	fake.recordInvocation("BadRequest", []interface{}{arg1, arg2, arg3, arg4})
@@ -99,18 +101,18 @@ func (fake *ErrorResponse) BadRequestCallCount() int {
 	return len(fake.badRequestArgsForCall)
 }
 
-func (fake *ErrorResponse) BadRequestArgsForCall(i int) (http.ResponseWriter, error, string, string) {
+func (fake *ErrorResponse) BadRequestArgsForCall(i int) (lager.Logger, http.ResponseWriter, error, string) {
 	fake.badRequestMutex.RLock()
 	defer fake.badRequestMutex.RUnlock()
 	return fake.badRequestArgsForCall[i].arg1, fake.badRequestArgsForCall[i].arg2, fake.badRequestArgsForCall[i].arg3, fake.badRequestArgsForCall[i].arg4
 }
 
-func (fake *ErrorResponse) NotAcceptable(arg1 http.ResponseWriter, arg2 error, arg3 string, arg4 string) {
+func (fake *ErrorResponse) NotAcceptable(arg1 lager.Logger, arg2 http.ResponseWriter, arg3 error, arg4 string) {
 	fake.notAcceptableMutex.Lock()
 	fake.notAcceptableArgsForCall = append(fake.notAcceptableArgsForCall, struct {
-		arg1 http.ResponseWriter
-		arg2 error
-		arg3 string
+		arg1 lager.Logger
+		arg2 http.ResponseWriter
+		arg3 error
 		arg4 string
 	}{arg1, arg2, arg3, arg4})
 	fake.recordInvocation("NotAcceptable", []interface{}{arg1, arg2, arg3, arg4})
@@ -126,18 +128,18 @@ func (fake *ErrorResponse) NotAcceptableCallCount() int {
 	return len(fake.notAcceptableArgsForCall)
 }
 
-func (fake *ErrorResponse) NotAcceptableArgsForCall(i int) (http.ResponseWriter, error, string, string) {
+func (fake *ErrorResponse) NotAcceptableArgsForCall(i int) (lager.Logger, http.ResponseWriter, error, string) {
 	fake.notAcceptableMutex.RLock()
 	defer fake.notAcceptableMutex.RUnlock()
 	return fake.notAcceptableArgsForCall[i].arg1, fake.notAcceptableArgsForCall[i].arg2, fake.notAcceptableArgsForCall[i].arg3, fake.notAcceptableArgsForCall[i].arg4
 }
 
-func (fake *ErrorResponse) Forbidden(arg1 http.ResponseWriter, arg2 error, arg3 string, arg4 string) {
+func (fake *ErrorResponse) Forbidden(arg1 lager.Logger, arg2 http.ResponseWriter, arg3 error, arg4 string) {
 	fake.forbiddenMutex.Lock()
 	fake.forbiddenArgsForCall = append(fake.forbiddenArgsForCall, struct {
-		arg1 http.ResponseWriter
-		arg2 error
-		arg3 string
+		arg1 lager.Logger
+		arg2 http.ResponseWriter
+		arg3 error
 		arg4 string
 	}{arg1, arg2, arg3, arg4})
 	fake.recordInvocation("Forbidden", []interface{}{arg1, arg2, arg3, arg4})
@@ -153,18 +155,18 @@ func (fake *ErrorResponse) ForbiddenCallCount() int {
 	return len(fake.forbiddenArgsForCall)
 }
 
-func (fake *ErrorResponse) ForbiddenArgsForCall(i int) (http.ResponseWriter, error, string, string) {
+func (fake *ErrorResponse) ForbiddenArgsForCall(i int) (lager.Logger, http.ResponseWriter, error, string) {
 	fake.forbiddenMutex.RLock()
 	defer fake.forbiddenMutex.RUnlock()
 	return fake.forbiddenArgsForCall[i].arg1, fake.forbiddenArgsForCall[i].arg2, fake.forbiddenArgsForCall[i].arg3, fake.forbiddenArgsForCall[i].arg4
 }
 
-func (fake *ErrorResponse) Unauthorized(arg1 http.ResponseWriter, arg2 error, arg3 string, arg4 string) {
+func (fake *ErrorResponse) Unauthorized(arg1 lager.Logger, arg2 http.ResponseWriter, arg3 error, arg4 string) {
 	fake.unauthorizedMutex.Lock()
 	fake.unauthorizedArgsForCall = append(fake.unauthorizedArgsForCall, struct {
-		arg1 http.ResponseWriter
-		arg2 error
-		arg3 string
+		arg1 lager.Logger
+		arg2 http.ResponseWriter
+		arg3 error
 		arg4 string
 	}{arg1, arg2, arg3, arg4})
 	fake.recordInvocation("Unauthorized", []interface{}{arg1, arg2, arg3, arg4})
@@ -180,7 +182,7 @@ func (fake *ErrorResponse) UnauthorizedCallCount() int {
 	return len(fake.unauthorizedArgsForCall)
 }
 
-func (fake *ErrorResponse) UnauthorizedArgsForCall(i int) (http.ResponseWriter, error, string, string) {
+func (fake *ErrorResponse) UnauthorizedArgsForCall(i int) (lager.Logger, http.ResponseWriter, error, string) {
 	fake.unauthorizedMutex.RLock()
 	defer fake.unauthorizedMutex.RUnlock()
 	return fake.unauthorizedArgsForCall[i].arg1, fake.unauthorizedArgsForCall[i].arg2, fake.unauthorizedArgsForCall[i].arg3, fake.unauthorizedArgsForCall[i].arg4

@@ -27,8 +27,7 @@ func (h *TagsIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	logger = logger.Session("index-tags")
 	tags, err := h.Store.Tags()
 	if err != nil {
-		logger.Error("failed-reading-database", err)
-		h.ErrorResponse.InternalServerError(w, err, "tags-index", "database read failed")
+		h.ErrorResponse.InternalServerError(logger, w, err, "database read failed")
 		return
 	}
 
@@ -37,8 +36,7 @@ func (h *TagsIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}{api.MapStoreTags(tags)}
 	responseBytes, err := h.Marshaler.Marshal(tagsResponse)
 	if err != nil {
-		logger.Error("failed-marshalling-tags", err)
-		h.ErrorResponse.InternalServerError(w, err, "tags-index", "database marshalling failed")
+		h.ErrorResponse.InternalServerError(logger, w, err, "database marshalling failed")
 		return
 	}
 
