@@ -14,10 +14,11 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 
+	"time"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
-	"time"
 )
 
 const testTimeoutInSeconds = 5
@@ -110,50 +111,50 @@ var _ = Describe("Timeout", func() {
 		// v1
 		itTimesOut("V1 getting policies",
 			"GET", "networking/v1/external/policies", "",
-			`{ "error": "policies-index: database read failed" }`,
+			`{ "error": "database read failed" }`,
 		)
 		itTimesOut("V1 creating policies",
 			"POST", "networking/v1/external/policies", policiesBodyV1,
-			`{ "error": "policies-create: database create failed" }`,
+			`{ "error": "database create failed" }`,
 		)
 		itTimesOut("V1 deleting policies",
 			"POST", "networking/v1/external/policies/delete", policiesBodyV1,
-			`{ "error": "delete-policies: database delete failed" }`,
+			`{ "error": "database delete failed" }`,
 		)
 		itTimesOut("V1 getting tags",
 			"GET", "networking/v1/external/tags", "",
-			`{ "error": "tags-index: database read failed" }`,
+			`{ "error": "database read failed" }`,
 		)
 		itTimesOut("V1 cleaning up",
 			"POST", "networking/v1/external/policies/cleanup", "",
-			`{ "error": "policies-cleanup: policies cleanup failed" }`,
+			`{ "error": "policies cleanup failed" }`,
 		)
 
 		// v0
 		itTimesOut("V0 getting policies",
 			"GET", "networking/v0/external/policies", "",
-			`{ "error": "policies-index: database read failed" }`,
+			`{ "error": "database read failed" }`,
 		)
 		itTimesOut("V0 creating policies",
 			"POST", "networking/v0/external/policies", policiesBodyV0,
-			`{ "error": "policies-create: database create failed" }`,
+			`{ "error": "database create failed" }`,
 		)
 		itTimesOut("V0 deleting policies",
 			"POST", "networking/v0/external/policies/delete", policiesBodyV0,
-			`{ "error": "delete-policies: database delete failed" }`,
+			`{ "error": "database delete failed" }`,
 		)
 		itTimesOut("V0 getting tags",
 			"GET", "networking/v0/external/tags", "",
-			`{ "error": "tags-index: database read failed" }`,
+			`{ "error": "database read failed" }`,
 		)
 		itTimesOut("V0 cleaning up",
 			"POST", "networking/v0/external/policies/cleanup", "",
-			`{ "error": "policies-cleanup: policies cleanup failed" }`,
+			`{ "error": "policies cleanup failed" }`,
 		)
 
 		itTimesOut("checking health",
 			"GET", "health", "",
-			`{ "error": "health: check database failed" }`,
+			`{ "error": "check database failed" }`,
 		)
 	})
 })
