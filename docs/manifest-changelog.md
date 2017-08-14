@@ -4,6 +4,15 @@ See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for example
 
 
 ### 1.5.0
+**Links Enabled**
+The `policy-server` now provides database connection info via a link which the new `policy-server-internal` job consumes:
+  - `cf_networking.policy_server.database.type`
+  - `cf_networking.policy_server.database.username`
+  - `cf_networking.policy_server.database.password`
+  - `cf_networking.policy_server.database.port`
+  - `cf_networking.policy_server.database.name`
+  - `cf_networking.policy_server.database.host`
+
 **New Properties**
   - REQUIRED: A new job `policy-server-internal` has been added. This job requires the following properties:
     - `cf_networking.policy_server_internal.ca_cert`
