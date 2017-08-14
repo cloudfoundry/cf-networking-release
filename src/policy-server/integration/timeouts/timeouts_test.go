@@ -14,8 +14,6 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 
-	"time"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
@@ -52,8 +50,7 @@ var _ = Describe("Timeout", func() {
 		if dbConf.Type == "postgres" {
 			Skip("skipping timeout tests on postgres; only supported by mysql")
 		}
-
-		dbConf.DatabaseName = fmt.Sprintf("test_timeouts_node_%d", time.Now().UnixNano())
+		dbConf.DatabaseName = fmt.Sprintf("test_timeouts_node_%d", testsupport.PickAPort())
 		dbConf.Timeout = 1
 		testsupport.CreateDatabase(dbConf)
 
