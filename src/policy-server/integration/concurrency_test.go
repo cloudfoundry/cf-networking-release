@@ -17,7 +17,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
-	"time"
 )
 
 var _ = Describe("External API Concurrency", func() {
@@ -34,8 +33,7 @@ var _ = Describe("External API Concurrency", func() {
 		fakeMetron = testsupport.NewFakeMetron()
 
 		dbConf = testsupport.GetDBConfig()
-		dbConf.DatabaseName = fmt.Sprintf("concurrency_test_node_%d", time.Now().UnixNano())
-		testsupport.CreateDatabase(dbConf)
+		dbConf.DatabaseName = fmt.Sprintf("concurrency_test_node_%d", testsupport.PickAPort())
 
 		template, _ := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
 		policyServerConfs = configurePolicyServers(template, 2)
@@ -44,9 +42,7 @@ var _ = Describe("External API Concurrency", func() {
 	})
 
 	AfterEach(func() {
-		stopPolicyServers(sessions)
-
-		testsupport.RemoveDatabase(dbConf)
+		stopPolicyServers(sessions, policyServerConfs, nil)
 
 		Expect(fakeMetron.Close()).To(Succeed())
 	})

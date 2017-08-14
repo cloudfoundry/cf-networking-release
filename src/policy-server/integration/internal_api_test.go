@@ -18,27 +18,26 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
-	"time"
 )
 
 var _ = Describe("Internal API", func() {
 	var (
-		sessions     []*gexec.Session
-		conf         config.Config
-		internalConf config.InternalConfig
-		address      string
-		dbConf       db.Config
-		tlsConfig    *tls.Config
-
-		fakeMetron testsupport.FakeMetron
+		sessions                  []*gexec.Session
+		conf                      config.Config
+		internalConf              config.InternalConfig
+		address                   string
+		dbConf                    db.Config
+		tlsConfig                 *tls.Config
+		policyServerConfs         []config.Config
+		policyServerInternalConfs []config.InternalConfig
+		fakeMetron                testsupport.FakeMetron
 	)
 
 	BeforeEach(func() {
 		fakeMetron = testsupport.NewFakeMetron()
 		dbConf = testsupport.GetDBConfig()
 		dbConf.Timeout = 5
-		dbConf.DatabaseName = fmt.Sprintf("internal_api_test_node_%d", time.Now().UnixNano())
-		testsupport.CreateDatabase(dbConf)
+		dbConf.DatabaseName = fmt.Sprintf("internal_api_test_node_%d", testsupport.PickAPort())
 
 		cert, err := tls.LoadX509KeyPair("fixtures/client.crt", "fixtures/client.key")
 		Expect(err).NotTo(HaveOccurred())
@@ -58,8 +57,8 @@ var _ = Describe("Internal API", func() {
 		template, internalTemplate := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
 		template.TagLength = 2
 		internalTemplate.TagLength = 2
-		policyServerConfs := configurePolicyServers(template, 1)
-		policyServerInternalConfs := configureInternalPolicyServers(internalTemplate, 1)
+		policyServerConfs = configurePolicyServers(template, 1)
+		policyServerInternalConfs = configureInternalPolicyServers(internalTemplate, 1)
 		sessions = startPolicyAndInternalServers(policyServerConfs, policyServerInternalConfs)
 		conf = policyServerConfs[0]
 		internalConf = policyServerInternalConfs[0]
@@ -84,9 +83,7 @@ var _ = Describe("Internal API", func() {
 	})
 
 	AfterEach(func() {
-		stopPolicyServers(sessions)
-
-		testsupport.RemoveDatabase(dbConf)
+		stopPolicyServers(sessions, policyServerConfs, policyServerInternalConfs)
 
 		Expect(fakeMetron.Close()).To(Succeed())
 	})

@@ -23,27 +23,25 @@ var _ = Describe("Integration", func() {
 
 	Context("with a database", func() {
 		var (
-			session      *gexec.Session
-			sessions     []*gexec.Session
-			conf         config.Config
-			address      string
-			debugAddress string
-			dbConf       db.Config
-			headers      map[string]string
-
-			fakeMetron testsupport.FakeMetron
+			session           *gexec.Session
+			sessions          []*gexec.Session
+			conf              config.Config
+			address           string
+			debugAddress      string
+			dbConf            db.Config
+			headers           map[string]string
+			policyServerConfs []config.Config
+			fakeMetron        testsupport.FakeMetron
 		)
 
 		BeforeEach(func() {
 			fakeMetron = testsupport.NewFakeMetron()
 
 			dbConf = testsupport.GetDBConfig()
-			dbConf.DatabaseName = fmt.Sprintf("integration_test_test_node_%d", time.Now().UnixNano())
-			dbConf.Timeout = 30
-			testsupport.CreateDatabase(dbConf)
+			dbConf.DatabaseName = fmt.Sprintf("integration_test_node_%d", testsupport.PickAPort())
 
 			template, _ := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
-			policyServerConfs := configurePolicyServers(template, 1)
+			policyServerConfs = configurePolicyServers(template, 1)
 			sessions = startPolicyServers(policyServerConfs)
 			session = sessions[0]
 			conf = policyServerConfs[0]
@@ -53,9 +51,7 @@ var _ = Describe("Integration", func() {
 		})
 
 		AfterEach(func() {
-			stopPolicyServers(sessions)
-
-			testsupport.RemoveDatabase(dbConf)
+			stopPolicyServers(sessions, policyServerConfs, nil)
 
 			Expect(fakeMetron.Close()).To(Succeed())
 		})

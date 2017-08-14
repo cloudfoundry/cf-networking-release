@@ -15,7 +15,6 @@ import (
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
-	"time"
 )
 
 var _ = Describe("Policy Cleanup", func() {
@@ -32,8 +31,7 @@ var _ = Describe("Policy Cleanup", func() {
 		fakeMetron = testsupport.NewFakeMetron()
 
 		dbConf = testsupport.GetDBConfig()
-		dbConf.DatabaseName = fmt.Sprintf("policy_cleanup_test_node_%d", time.Now().UnixNano())
-		testsupport.CreateDatabase(dbConf)
+		dbConf.DatabaseName = fmt.Sprintf("policy_cleanup_test_node_%d", testsupport.PickAPort())
 
 		template, _ := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
 		template.CleanupInterval = 1
