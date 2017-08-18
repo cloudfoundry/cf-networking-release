@@ -57,24 +57,6 @@ properties:
   cf_networking.policy_server_internal.server_key:
     description: "Server key for TLS."
 
-  cf_networking.policy_server_internal.database.type:
-    description: "Type of database: postgres or mysql."
-
-  cf_networking.policy_server_internal.database.username:
-    description: "Username for database connection."
-
-  cf_networking.policy_server_internal.database.password:
-    description: "Password for database connection."
-
-  cf_networking.policy_server_internal.database.host:
-    description: "Host (IP or DNS name) for database server."
-
-  cf_networking.policy_server_internal.database.port:
-    description: "Port for database server."
-
-  cf_networking.policy_server_internal.database.name:
-    description: "Name of logical database to use."
-
   cf_networking.policy_server_internal.tag_length:
     description: "Length in bytes of the packet tags to generate for policy sources and destinations. Must be greater than 0 and less than or equal to 4. If using VXLAN GBP, must be less than or equal to 2."
 

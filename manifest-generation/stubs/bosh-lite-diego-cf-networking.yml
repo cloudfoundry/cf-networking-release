@@ -285,17 +285,7 @@ cf_networking_overrides:
         etcd_client_cert: (( config_from_cf.etcd.client_cert ))
         etcd_client_key: (( config_from_cf.etcd.client_key ))
         etcd_ca_cert: (( config_from_cf.etcd.ca_cert ))
-      policy_server:
-        database:
-          username: networkpolicyadmin
-          password: admin
-          host: 10.244.0.30
-          port: 5524
-          name: networkpolicydb
-          type: postgres
-        uaa_client_secret: network-policy-secret
-        uaa_ca: (( config_from_cf.uaa.ca_cert ))
-        uaa_port: (( config_from_cf.uaa.tls_port ))
+      policy_server_internal:
         ca_cert: |
           -----BEGIN CERTIFICATE-----
           MIIE5jCCAs6gAwIBAgIBATANBgkqhkiG9w0BAQsFADATMREwDwYDVQQDEwhuZXRt
@@ -382,6 +372,17 @@ cf_networking_overrides:
           L8Bd8wLWM1t4rHO3YdtKt9ruVFLUg3UjWUwkmSsojipHRM4z8iYyvcWJ6Dk3gcl3
           mJLZ528wY3OTJT0GCZTdlOebhNHGSzstcd+fj6XCOqurHrrVG4nd6w==
           -----END RSA PRIVATE KEY-----
+      policy_server:
+        database:
+          username: networkpolicyadmin
+          password: admin
+          host: 10.244.0.30
+          port: 5524
+          name: networkpolicydb
+          type: postgres
+        uaa_client_secret: network-policy-secret
+        uaa_ca: (( config_from_cf.uaa.ca_cert ))
+        uaa_port: (( config_from_cf.uaa.tls_port ))
   garden_properties:
     network_plugin: /var/vcap/packages/runc-cni/bin/garden-external-networker
     network_plugin_extra_args:
@@ -393,9 +394,16 @@ cf_networking_overrides:
     templates:
     - name: policy-server
       release: cf-networking
+      provides:
+        dbconn: {as: dbconn_z1}
+    - name: policy-server-internal
+      release: cf-networking
+      consumes:
+        dbconn: {from: dbconn_z1}
     - name: route_registrar
       release: cf
     - name: consul_agent
+      consumes: {consul: nil, consul_client: nil, consul_server: nil, consul_common: nil}
       release: cf
     - name: metron_agent
       release: cf
@@ -421,8 +429,11 @@ cf_networking_overrides:
       consul:
         agent:
           services:
-            policy-server:
+            policy-server-internal:
               name: policy-server
+              check:
+                interval: 5s
+                script: /bin/true
   - name: cf-networking-acceptance
     instances: 1
     lifecycle: errand
