@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os/exec"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
@@ -25,6 +26,7 @@ var _ = PDescribe("task connectivity on the overlay network", func() {
 	Describe("networking policy", func() {
 		var (
 			prefix  string
+			domain  string
 			orgName string
 			cfCli   *cf_cli_adapter.Adapter
 			proxy1  string
@@ -34,6 +36,7 @@ var _ = PDescribe("task connectivity on the overlay network", func() {
 		BeforeEach(func() {
 			cfCli = &cf_cli_adapter.Adapter{CfCliPath: "cf"}
 			prefix = testConfig.Prefix
+			domain = config.AppsDomain
 
 			orgName = prefix + "task-org"
 			Expect(cf.Cf("create-org", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
@@ -59,18 +62,18 @@ var _ = PDescribe("task connectivity on the overlay network", func() {
 
 		It("allows tasks to talk to app instances", func(done Done) {
 			By("getting the overlay ip of proxy2")
-			cmd := exec.Command("curl", "--fail", proxy2+".bosh-lite.com")
+			cmd := exec.Command("curl", "--fail", proxy2+"."+domain)
 			sess, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
 			Eventually(sess, 5*time.Second).Should(gexec.Exit(0))
 			var proxy2Response ProxyResponse
 			Expect(json.Unmarshal(sess.Out.Contents(), &proxy2Response)).To(Succeed())
-			Expect(proxy2Response.ListenAddresses).To(HaveLen(2))
+			containerIP := getContainerIP(proxy2Response.ListenAddresses)
 
 			By("Checking that the task associated with proxy1 can connect to proxy2")
 			Expect(cf.Cf("run-task", proxy1, `
 			while true; do
-				if curl --fail "`+proxy2Response.ListenAddresses[1]+`:`+strconv.Itoa(proxy2Response.Port)+`" ; then
+				if curl --fail "`+containerIP+`:`+strconv.Itoa(proxy2Response.Port)+`" ; then
 					exit 0
 				fi
 			done;
@@ -85,3 +88,13 @@ var _ = PDescribe("task connectivity on the overlay network", func() {
 		}, 30*60 /* <-- overall spec timeout in seconds */)
 	})
 })
+
+func getContainerIP(listenAddresses []string) string {
+	for _, listenAddr := range listenAddresses {
+		if strings.HasPrefix(listenAddr, "10.255") {
+			return listenAddr
+		}
+	}
+
+	return ""
+}
