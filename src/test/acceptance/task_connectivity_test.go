@@ -22,7 +22,7 @@ type ProxyResponse struct {
 	Port            int
 }
 
-var _ = PDescribe("task connectivity on the overlay network", func() {
+var _ = Describe("task connectivity on the overlay network", func() {
 	Describe("networking policy", func() {
 		var (
 			prefix  string
