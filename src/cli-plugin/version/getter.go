@@ -6,7 +6,7 @@ import (
 
 var CurrentVersion = plugin.VersionType{
 	Major: 1,
-	Minor: 5,
+	Minor: 6,
 	Build: 0,
 }
 
