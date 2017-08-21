@@ -11,6 +11,7 @@ files:
   - code.cloudfoundry.org/cf-networking-helpers/marshal/*.go # gosub
   - code.cloudfoundry.org/cf-networking-helpers/metrics/*.go # gosub
   - code.cloudfoundry.org/cf-networking-helpers/middleware/*.go # gosub
+  - code.cloudfoundry.org/cf-networking-helpers/middleware/adapter/*.go # gosub
   - code.cloudfoundry.org/cf-networking-helpers/mutualtls/*.go # gosub
   - code.cloudfoundry.org/debugserver/*.go # gosub
   - code.cloudfoundry.org/lager/*.go # gosub

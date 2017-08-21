@@ -32,6 +32,7 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/marshal"
 	"code.cloudfoundry.org/cf-networking-helpers/metrics"
 	"code.cloudfoundry.org/cf-networking-helpers/middleware"
+	middleware_adapter "code.cloudfoundry.org/cf-networking-helpers/middleware/adapter"
 	"code.cloudfoundry.org/debugserver"
 	"code.cloudfoundry.org/lager"
 	"github.com/cloudfoundry/dropsonde"
@@ -187,8 +188,12 @@ func main() {
 		return metricsWrapper.Wrap(handler)
 	}
 
+	logWrapper := middleware.LogWrapper{
+		UUIDGenerator: &middleware_adapter.UUIDAdapter{},
+	}
+
 	logWrap := func(handler http.Handler) http.Handler {
-		return middleware.LogWrap(logger, handler)
+		return logWrapper.LogWrap(logger, handler)
 	}
 
 	versionWrap := func(v1Handler, v0Handler http.Handler) http.Handler {
