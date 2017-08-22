@@ -1,5 +1,6 @@
 # CLI
-Network policies can be managed using the CF Networking CLI plugin.
+Network policies can be managed using the CF Networking CLI plugin. Policies are currently configured between applications.
+Any tasks that are created will receive the same policies that the app it is associated with has.
 
 ## Installation
 
