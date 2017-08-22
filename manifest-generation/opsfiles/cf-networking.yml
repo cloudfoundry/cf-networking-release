@@ -1,21 +1,2 @@
 # Opsfile for pending cf-networking manifest changes that are not yet included in cf-deployment.
 # shipit will fail if any file in this directory contains lines other than those starting with #
-- type: replace
-  path: /instance_groups/name=api/jobs/-
-  value:
-    name: policy-server-internal
-    release: cf-networking
-    properties:
-      cf_networking:
-        policy_server_internal:
-          ca_cert: ((network_policy_server.ca))
-          server_cert: ((network_policy_server.certificate))
-          server_key: ((network_policy_server.private_key))
-
-- type: remove
-  path: /instance_groups/name=api/jobs/name=consul_agent/properties/consul/agent/services/policy-server
-
-- type: replace
-  path: /instance_groups/name=api/jobs/name=consul_agent/properties/consul/agent/services/policy-server-internal?
-  value:
-    name: policy-server
