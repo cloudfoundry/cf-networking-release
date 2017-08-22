@@ -1,0 +1,6 @@
+#!/bin/bash -eu
+
+<% unless p("cf_networking.disable") %>
+/var/vcap/packages/cni/bin/cni-teardown \
+  --config /var/vcap/jobs/cni/config/cni/cni-wrapper-plugin.conf
+<% end %>

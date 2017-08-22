@@ -1,2 +1,8 @@
 # Opsfile for pending cf-networking manifest changes that are not yet included in cf-deployment.
 # shipit will fail if any file in this directory contains lines other than those starting with #
+
+- type: replace
+  path: /instance_groups/name=diego-cell/jobs/name=silk-cni?
+  value:
+    name: cni
+    release: cf-networking

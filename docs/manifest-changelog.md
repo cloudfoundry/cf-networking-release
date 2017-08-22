@@ -3,6 +3,14 @@
 See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for examples
 
 
+### 1.6.0
+
+**Changed Properties**
+
+  - The value for `cf_networking.garden_external_networker.cni_plugin_dir` now defaults to `/var/vcap/packages/cni/bin`
+  - The value for `cf_networking.garden_external_networker.cni_config_dir` now defaults to `/var/vcap/jobs/cni/config/cni`
+
+
 ### 1.5.0
 **Links Enabled**
 The `policy-server` now provides database connection info via a link which the new `policy-server-internal` job consumes:

@@ -2,6 +2,9 @@
 
 *If you want to integrate your own CNI plugin with Cloud Foundry, review the component diagrams on the [architecture page](arch.md) and read this document.*
 
+If you want to integrate using the default values for the `cni_config_dir` and `cni_plugin_dir`, the package for the CNI plugin *must* be named `cni`
+and the job for the CNI plugin *must* be named `cni`.
+
 If you have any questions or feedback, please visit the `#container-networking` channel on [Cloud Foundry Slack](http://slack.cloudfoundry.org/).
 
 ## Introduction
