@@ -1,3 +1,4 @@
+<% if p("release_level_backup") %>
 <%=
     require 'json'
     toRender = {
@@ -11,3 +12,4 @@
 
     JSON.pretty_generate(toRender)
 %>
+<% end %>

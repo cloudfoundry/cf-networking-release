@@ -12,4 +12,7 @@ consumes:
 - name: cfnetworkingdbconn
   type: dbconn
 
-properties: {}
+properties:
+  release_level_backup:
+    description: "Opt-in to backup and restore of policy-server"
+    default: false
