@@ -22,7 +22,7 @@ var _ = Describe("Getter", func() {
 		It("gets the current version", func() {
 			Expect(getter.Get()).To(Equal(plugin.VersionType{
 				Major: 1,
-				Minor: 6,
+				Minor: 7,
 				Build: 0,
 			}))
 		})
