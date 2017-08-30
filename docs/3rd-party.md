@@ -47,11 +47,13 @@ Operators may wish to override the MTU setting. In this case they will set the B
 
 ## To author a BOSH release with your plugin
 0. Remove the following BOSH jobs:
+  - `netmon`
   - `silk-cni`
   - `silk-daemon`
   - `silk-controller`
   - `vxlan-policy-agent`
 0. Remove the following BOSH packages:
+  - `netmon`
   - `silk-cni`
   - `silk-daemon`
   - `silk-controller`
