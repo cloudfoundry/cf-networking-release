@@ -10,13 +10,6 @@ export PATH=$GOROOT/bin:$GOPATH/bin:$PATH
 DATA_DIR=/var/vcap/data/cf-networking-acceptance
 export CF_HOME=$DATA_DIR/cf-home
 mkdir -p $CF_HOME
-export CF_PLUGIN_HOME=$DATA_DIR/cf-plugin-home
-mkdir -p $CF_PLUGIN_HOME
-
-cf uninstall-plugin network-policy || true
-
-go build -o $GOPATH/bin/cli-plugin cli-plugin
-cf install-plugin -f $GOPATH/bin/cli-plugin
 
 export CONFIG=/var/vcap/jobs/cf-networking-acceptance/config.json
 export APPS_DIR=$GOPATH/src/example-apps

@@ -7,7 +7,6 @@ export GOPATH=$PWD
 
 declare -a packages=(
   "src/cf-pusher"
-  "src/cli-plugin"
   "src/example-apps"
   "src/iptables-logger"
   "src/lib"
