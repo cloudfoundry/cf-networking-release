@@ -6,8 +6,7 @@ We're assuming that you've [deployed to BOSH lite](https://github.com/cloudfound
 If you've [deployed to AWS](https://github.com/cloudfoundry/cf-deployment) or another environment,
 substitute `bosh-lite.com` below with the domain name of your installation.
 
-To configure policies you must have the CF Networking
-[CLI plugin](https://github.com/cloudfoundry-incubator/cf-networking-release/blob/develop/docs/CLI.md) installed.
+To configure policies you use the [CF CLI](https://github.com/cloudfoundry/cli).
 
 
 ## Frontend
@@ -85,7 +84,7 @@ configured to allow connections from the frontend to the backend.
 Now allow access:
 
 ```
-cf allow-access frontend backend --port 7007 --protocol tcp
+cf add-network-policy frontend --destination-app backend --port 7007 --protocol tcp
 ```
 
 Now if you try again from the frontend:
@@ -107,7 +106,7 @@ configured to allow connections from the frontend to the backend.
 Now allow access:
 
 ```
-cf allow-access frontend backend --port 9003 --protocol udp
+cf add-network-policy frontend --destination-app backend --port 9003 --protocol udp
 ```
 
 Now if you try again from the frontend:

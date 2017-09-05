@@ -42,7 +42,7 @@ accessing it via the `go-router`. In order for the `zuul-proxy` or the
 ### Allow access from frontend to backend
 
 ```
-cf allow-access frontend backend --protocol tcp --port 8080
+cf add-network-policy frontend --destination-app backend --protocol tcp --port 8080
 ```
 
 http://frontend.bosh-lite.com/
@@ -60,7 +60,7 @@ should have the same response:
 ### Allow access from zuul-proxy to backend
 
 ```
-cf allow-access zuul-proxy backend --protocol tcp --port 8080
+cf add-network-policy zuul-proxy --destination-app backend --protocol tcp --port 8080
 ```
 
 http://zuul-proxy.bosh-lite.com/backend/whoami
@@ -84,8 +84,8 @@ In addition to the `/whoami`, the following actuator endpoints are also availabl
 ### Remove access
 
 ```
-cf remove-access zuul-proxy backend --protocol tcp --port 8080
-cf remove-access frontend backend --protocol tcp --port 8080
+cf remove-network-policy zuul-proxy --destination-app backend --protocol tcp --port 8080
+cf remove-network-policy frontend --destination-app backend --protocol tcp --port 8080
 ```
 
 ## More Details
