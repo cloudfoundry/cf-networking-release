@@ -45,7 +45,7 @@ var _ = Describe("policy cleanup", func() {
 	Describe("policies/cleanup endpoint", func() {
 		It("cleans up stale policies for deleted apps", func() {
 			By("creating a policy")
-			Expect(cfCli.AllowAccess(appA, appA, 1234, "tcp")).To(Succeed())
+			Expect(cfCli.AddNetworkPolicy(appA, appA, 1234, "tcp")).To(Succeed())
 
 			appAGuid, err := cfCli.AppGuid(appA)
 			Expect(err).NotTo(HaveOccurred())

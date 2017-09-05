@@ -127,17 +127,19 @@ func (a *Adapter) CheckApp(guid string) ([]byte, error) {
 	return bytes, err
 }
 
-func (a *Adapter) AllowAccess(sourceApp, destApp string, port int, protocol string) error {
+func (a *Adapter) AddNetworkPolicy(sourceApp, destApp string, port int, protocol string) error {
 	portStr := fmt.Sprintf("%d-%d", port, port)
-	fmt.Printf("running: cf allow-access %s %s --port %s --protocol tcp\n", sourceApp, destApp, portStr)
-	cmd := exec.Command("cf", "allow-access", sourceApp, destApp, "--port", portStr, "--protocol", "tcp")
+	commandArgs := []string{"add-network-policy", sourceApp, "--destination-app", destApp, "--port", portStr, "--protocol", "tcp"}
+	fmt.Printf("running: cf %v \n", commandArgs)
+	cmd := exec.Command("cf", commandArgs...)
 	return runCommandWithTimeout(cmd)
 }
 
-func (a *Adapter) RemoveAccess(sourceApp, destApp string, port int, protocol string) error {
+func (a *Adapter) RemoveNetworkPolicy(sourceApp, destApp string, port int, protocol string) error {
 	portStr := fmt.Sprintf("%d-%d", port, port)
-	fmt.Printf("running: cf remove-access %s %s --port %s --protocol tcp\n", sourceApp, destApp, portStr)
-	cmd := exec.Command("cf", "remove-access", sourceApp, destApp, "--port", portStr, "--protocol", "tcp")
+	commandArgs := []string{"remove-network-policy", sourceApp, "--destination-app", destApp, "--port", portStr, "--protocol", "tcp"}
+	fmt.Printf("running: cf %v \n", commandArgs)
+	cmd := exec.Command("cf", commandArgs...)
 	return runCommandWithTimeout(cmd)
 }
 

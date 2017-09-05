@@ -98,7 +98,7 @@ func createAllPolicies(sourceApp string, dstList []string, dstPorts []int) {
 	}
 	for _, destApp := range dstList {
 		for _, port := range dstPorts {
-			err := cfCli.AllowAccess(sourceApp, destApp, port, "tcp")
+			err := cfCli.AddNetworkPolicy(sourceApp, destApp, port, "tcp")
 			Expect(err).NotTo(HaveOccurred())
 		}
 	}
@@ -110,7 +110,7 @@ func deleteAllPolicies(sourceApp string, dstList []string, dstPorts []int) {
 	}
 	for _, destApp := range dstList {
 		for _, port := range dstPorts {
-			err := cfCli.RemoveAccess(sourceApp, destApp, port, "tcp")
+			err := cfCli.RemoveNetworkPolicy(sourceApp, destApp, port, "tcp")
 			Expect(err).NotTo(HaveOccurred())
 		}
 	}

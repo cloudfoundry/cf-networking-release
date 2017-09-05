@@ -104,7 +104,7 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 
 		It("continues to enforce ASGs default deny", func() {
 			By("creating a policy")
-			err := cli.AllowAccess(appProxy, appProxy, 7777, "tcp")
+			err := cli.AddNetworkPolicy(appProxy, appProxy, 7777, "tcp")
 			Expect(err).NotTo(HaveOccurred())
 
 			By("checking that default deny is still enforced")
