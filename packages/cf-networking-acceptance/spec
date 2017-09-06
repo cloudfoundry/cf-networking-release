@@ -5,7 +5,7 @@ dependencies:
   - golang
 
 files:
-  - cli/cf-cli_6.23.0_linux_x86-64.tgz
+  - cli/cf-cli_6.30.0_linux_x86-64.tgz
   - example-apps/**/*  # need manifest files in addition golang source
   - cf-pusher/cf_cli_adapter/*.go # gosub
   - cf-pusher/cf_command/*.go # gosub

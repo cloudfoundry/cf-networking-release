@@ -8,6 +8,6 @@ export GOROOT=$(readlink -nf /var/vcap/packages/golang)
 export GOPATH=$BOSH_INSTALL_TARGET
 export PATH=$GOROOT/bin:$GOPATH/bin:$PATH
 
-tar xzf cli/cf-cli_6.23.0_linux_x86-64.tgz
+tar xzf cli/cf-cli_6.30.0_linux_x86-64.tgz
 mkdir -p $GOPATH/bin
 cp cf $GOPATH/bin/
