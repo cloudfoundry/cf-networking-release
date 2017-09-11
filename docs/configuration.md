@@ -22,6 +22,15 @@ a single subnet of that size from within that large block.
 
 In this way, every container in the installation receives a unique IP address.
 
+**Note**: by default, the `cf-deployment` will enable garden to use the Silk CNI plugin.
+If you are not using `cf-deployment`, please add the following two properties to the `garden` job:
+```
+garden:
+  network_plugin: /var/vcap/packages/runc-cni/bin/garden-external-networker
+  network_plugin_extra_args:
+  - --configFile=/var/vcap/jobs/garden-cni/config/adapter.json
+```
+
 #### BOSH properties
 To configure the global network block and the size of the per-cell subnets, two
 BOSH properties are used:
@@ -53,7 +62,7 @@ Then:
 - the number of Diego cells in the installation cannot exceed `2^(s-n) - 1`
 - the total number of containers running on the installation cannot exceed the product of the previous two numbers.
 
-For example, using the default values, the maximum number of containers per cell is `2^(32-24) - 2 = 254`, 
+For example, using the default values, the maximum number of containers per cell is `2^(32-24) - 2 = 254`,
 the maximum number of cells in the installation is `2^(24-16) - 1 = 255`, and thus no more than `254 * 255 = 64770`
 containers total may be running at a time on the installation.
 
