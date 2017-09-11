@@ -7,7 +7,6 @@ For information about getting started with CF Networking, look at our docs for [
 ## Downloads
 - Our BOSH release is available [on bosh.io](http://bosh.io/releases/github.com/cloudfoundry-incubator/cf-networking-release)
   and [on our GitHub Releases page](https://github.com/cloudfoundry-incubator/cf-networking-release/releases)
-- Our CF CLI Plugin is [on our GitHub Releases page](https://github.com/cloudfoundry-incubator/cf-networking-release/releases)
 
 ## Documentation
 - [Architecture](docs/arch.md)
