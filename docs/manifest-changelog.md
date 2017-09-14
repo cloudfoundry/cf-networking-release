@@ -5,6 +5,9 @@ See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for example
 
 ### 1.7.0
 **New Properties**
+  - An optional parameter has been added to turn on bosh backup and restore.
+    By default, this property is set to false and backup and restore is turned off.
+    - `release_level_backup`
   - An optional parameter has been added to configure the max number of
     open and idle connections to the silk-controller database.
     - `cf_networking.silk_controller.max_open_connections`
