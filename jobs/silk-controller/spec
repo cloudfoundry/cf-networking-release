@@ -94,3 +94,11 @@ properties:
 
   cf_networking.silk_controller.database.name:
     description: "Name of logical database to use."
+
+  cf_networking.silk_controller.max_open_connections:
+    description: "Maximum number of open connections to the SQL database"
+    default: 0
+
+  cf_networking.silk_controller.max_idle_connections:
+    description: "Maximum number of idle connections to the SQL database"
+    default: 0

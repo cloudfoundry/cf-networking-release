@@ -3,6 +3,13 @@
 See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for examples
 
 
+### 1.7.0
+**New Properties**
+  - An optional parameter has been added to configure the max number of
+    open and idle connections to the silk-controller database.
+    - `cf_networking.silk_controller.max_open_connections`
+    - `cf_networking.silk_controller.max_idle_connections`
+
 ### 1.6.0
 
 **Changed Properties**
