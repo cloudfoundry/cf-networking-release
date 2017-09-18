@@ -6,6 +6,7 @@
 0. [Database Configuration](#database-configuration)
 0. [MTU](#mtu)
 0. [Mutual TLS](#mutual-tls)
+0. [Max Open/Idle Connections](#max-openidle-connections)
 
 ## Silk Network Configuration
 The default batteries-included connectivity solution uses [Silk](https://github.com/cloudfoundry-incubator/silk).
@@ -408,3 +409,11 @@ but the same procedure can be used to rotate the certs for the `silk-daemon` and
                 -----END RSA PRIVATE KEY-----
             ...
       ```
+
+## Max Open/Idle Connections
+
+In order to limit the number of open or idle connections between the silk daemon and silk controller, the following properties can be set.
+- `cf_networking.silk_controller.max_open_connections`
+- `cf_networking.silk_controller.max_idle_connections`
+
+By default there is no limit to the number of open or idle connections.
