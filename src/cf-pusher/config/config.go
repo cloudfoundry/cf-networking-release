@@ -13,6 +13,7 @@ type Config struct {
 	Concurrency             int      `json:"concurrency"`
 	DefaultSecurityGroups   []string `json:"default_security_groups"`
 	ExtraListenPorts        int      `json:"extra_listen_ports"`
+	Internetless            bool     `json:"internetless"`
 	PolicyUpdateWaitSeconds int      `json:"policy_update_wait_seconds"`
 	Prefix                  string   `json:"prefix"`
 	ProxyApplications       int      `json:"proxy_applications"`

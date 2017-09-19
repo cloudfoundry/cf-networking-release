@@ -26,6 +26,10 @@ var _ = Describe("external connectivity", func() {
 	)
 
 	BeforeEach(func() {
+		if testConfig.Internetless {
+			Skip("skipping external connectivity tests")
+		}
+
 		cli = &cf_cli_adapter.Adapter{CfCliPath: "cf"}
 		appA = fmt.Sprintf("appA-%d", rand.Int31())
 
