@@ -115,12 +115,6 @@
 [submodule "src/github.com/vishvananda/netns"]
 	path = src/github.com/vishvananda/netns
 	url = https://github.com/vishvananda/netns
-[submodule "src/code.cloudfoundry.org/silk"]
-	path = src/code.cloudfoundry.org/silk
-	url = https://github.com/cloudfoundry-incubator/silk
-[submodule "src/code.cloudfoundry.org/cf-networking-helpers"]
-	path = src/code.cloudfoundry.org/cf-networking-helpers
-	url = https://github.com/cloudfoundry-incubator/cf-networking-helpers
 [submodule "src/github.com/containernetworking/plugins"]
 	path = src/github.com/containernetworking/plugins
 	url = https://github.com/containernetworking/plugins
@@ -136,3 +130,9 @@
 [submodule "src/github.com/cf-container-networking/sql-migrate"]
 	path = src/github.com/cf-container-networking/sql-migrate
 	url = https://github.com/cf-container-networking/sql-migrate.git
+[submodule "src/code.cloudfoundry.org/cf-networking-helpers"]
+	path = src/code.cloudfoundry.org/cf-networking-helpers
+	url = https://github.com/cloudfoundry/cf-networking-helpers
+[submodule "src/code.cloudfoundry.org/silk"]
+	path = src/code.cloudfoundry.org/silk
+	url = https://github.com/cloudfoundry/silk
