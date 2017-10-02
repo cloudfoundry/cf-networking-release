@@ -102,6 +102,8 @@ eureka.instance.nonSecurePort=${PORT}
 This causes the backend instance to report its own address as the internal container-network address and port
 (not the external, NAT'ed address that the router uses to reach it).
 
+Note that Diego always assigns $PORT to 8080 (see [doc](https://docs.cloudfoundry.org/devguide/deploy-apps/routes-domains.html#http-vs-tcp-routes)), making it possible for application developers to predict this port, and assign it statically in the backend network policies. 
+
 
 The `backend` reaches the registry at the public address `registry.bosh-lite.com`.
 The `zuul-proxy` is also configured to look up
