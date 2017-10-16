@@ -14,8 +14,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
-
 	"code.cloudfoundry.org/cli/plugin"
 	"code.cloudfoundry.org/lager"
 )
@@ -115,10 +113,10 @@ func (p *Plugin) RunWithErrors(cliConnection plugin.CliConnection, args []string
 	}
 
 	tracingEnabled := (os.Getenv("CF_TRACE") == "true")
-
+	provider := dialTimeoutProvider{}
 	httpTransport := &http.Transport{
 		Dial: (&net.Dialer{
-			Timeout: 3 * time.Second,
+			Timeout: provider.Get(),
 		}).Dial,
 		TLSClientConfig: &tls.Config{
 			InsecureSkipVerify: skipSSL,
