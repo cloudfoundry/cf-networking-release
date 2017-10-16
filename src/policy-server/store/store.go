@@ -91,6 +91,7 @@ type Transaction interface {
 	Commit() error
 	Rollback() error
 	Rebind(string) string
+	DriverName() string
 }
 
 var RecordNotFoundError = errors.New("record not found")

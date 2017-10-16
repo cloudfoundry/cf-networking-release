@@ -12,9 +12,14 @@ type Policy struct {
 }
 
 func (p *Policy) Create(tx Transaction, source_group_id int, destination_id int) error {
+	dualStatement := ""
+	if tx.DriverName() == "mysql" {
+		dualStatement = " FROM DUAL "
+	}
+
 	_, err := tx.Exec(tx.Rebind(`
 		INSERT INTO policies (group_id, destination_id)
-		SELECT ?, ?
+		SELECT ?, ? `+dualStatement+`
 		WHERE
 		NOT EXISTS (
 			SELECT *
