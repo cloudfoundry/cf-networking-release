@@ -1,9 +1,12 @@
 package policy_client
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"policy-server/api/api_v0"
+	"regexp"
+	"strconv"
 	"strings"
 
 	"policy-server/api"
@@ -14,6 +17,7 @@ import (
 
 //go:generate counterfeiter -o ../fakes/external_policy_client.go --fake-name ExternalPolicyClient . ExternalPolicyClient
 type ExternalPolicyClient interface {
+	GetAPIVersion() (int, error)
 	GetPolicies(token string) ([]api.Policy, error)
 	GetPoliciesByID(token string, ids ...string) ([]api.Policy, error)
 	GetPoliciesV0(token string) ([]api_v0.Policy, error)
@@ -34,6 +38,40 @@ func NewExternal(logger lager.Logger, httpClient json_client.HttpClient, baseURL
 		JsonClient: json_client.New(logger, httpClient, baseURL),
 		Chunker:    &SimpleChunker{ChunkSize: DefaultMaxPolicies},
 	}
+}
+
+func (c *ExternalClient) GetAPIVersion() (int, error) {
+	var versionResp struct {
+		Links struct {
+			NetworkPolicy struct {
+				Href string `json:"href"`
+			} `json:"network_policy"`
+		} `json:"links"`
+	}
+
+	err := c.JsonClient.Do("GET", "/", nil, &versionResp, "")
+	if err != nil {
+		return 0, parseHttpError(err)
+	}
+
+	networkingUrl := versionResp.Links.NetworkPolicy.Href
+	pattern, err := regexp.Compile("(?i)\\/v(\\d+)/")
+	if err != nil {
+		// not tested
+		return -1, err
+	}
+	groups := pattern.FindStringSubmatch(networkingUrl)
+	if len(groups) < 2 {
+		return -1, errors.New("Could not get a valid networking policy server version from the configured url")
+	}
+
+	version, err := strconv.Atoi(groups[1])
+	if err != nil {
+		// not tested, regexp should never allow this
+		return -1, err
+	}
+
+	return version, nil
 }
 
 func (c *ExternalClient) GetPolicies(token string) ([]api.Policy, error) {

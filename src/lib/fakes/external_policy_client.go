@@ -9,6 +9,17 @@ import (
 )
 
 type ExternalPolicyClient struct {
+	GetAPIVersionStub        func() (int, error)
+	getAPIVersionMutex       sync.RWMutex
+	getAPIVersionArgsForCall []struct{}
+	getAPIVersionReturns     struct {
+		result1 int
+		result2 error
+	}
+	getAPIVersionReturnsOnCall map[int]struct {
+		result1 int
+		result2 error
+	}
 	GetPoliciesStub        func(token string) ([]api.Policy, error)
 	getPoliciesMutex       sync.RWMutex
 	getPoliciesArgsForCall []struct {
@@ -113,6 +124,49 @@ type ExternalPolicyClient struct {
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
+}
+
+func (fake *ExternalPolicyClient) GetAPIVersion() (int, error) {
+	fake.getAPIVersionMutex.Lock()
+	ret, specificReturn := fake.getAPIVersionReturnsOnCall[len(fake.getAPIVersionArgsForCall)]
+	fake.getAPIVersionArgsForCall = append(fake.getAPIVersionArgsForCall, struct{}{})
+	fake.recordInvocation("GetAPIVersion", []interface{}{})
+	fake.getAPIVersionMutex.Unlock()
+	if fake.GetAPIVersionStub != nil {
+		return fake.GetAPIVersionStub()
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.getAPIVersionReturns.result1, fake.getAPIVersionReturns.result2
+}
+
+func (fake *ExternalPolicyClient) GetAPIVersionCallCount() int {
+	fake.getAPIVersionMutex.RLock()
+	defer fake.getAPIVersionMutex.RUnlock()
+	return len(fake.getAPIVersionArgsForCall)
+}
+
+func (fake *ExternalPolicyClient) GetAPIVersionReturns(result1 int, result2 error) {
+	fake.GetAPIVersionStub = nil
+	fake.getAPIVersionReturns = struct {
+		result1 int
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *ExternalPolicyClient) GetAPIVersionReturnsOnCall(i int, result1 int, result2 error) {
+	fake.GetAPIVersionStub = nil
+	if fake.getAPIVersionReturnsOnCall == nil {
+		fake.getAPIVersionReturnsOnCall = make(map[int]struct {
+			result1 int
+			result2 error
+		})
+	}
+	fake.getAPIVersionReturnsOnCall[i] = struct {
+		result1 int
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *ExternalPolicyClient) GetPolicies(token string) ([]api.Policy, error) {
@@ -540,6 +594,8 @@ func (fake *ExternalPolicyClient) AddPoliciesV0ReturnsOnCall(i int, result1 erro
 func (fake *ExternalPolicyClient) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.getAPIVersionMutex.RLock()
+	defer fake.getAPIVersionMutex.RUnlock()
 	fake.getPoliciesMutex.RLock()
 	defer fake.getPoliciesMutex.RUnlock()
 	fake.getPoliciesByIDMutex.RLock()

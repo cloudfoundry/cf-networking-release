@@ -70,6 +70,81 @@ var _ = Describe("ExternalClient", func() {
 		}
 	})
 
+	Describe("GetAPIVersion", func() {
+		BeforeEach(func() {
+			jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+				respBytes := []byte(`{
+   "links": {
+      "network_policy": {
+         "href": "https://v1api.bosh-lite.com/networking/v0/external"
+      }
+   }
+}
+`)
+				json.Unmarshal(respBytes, respData)
+				return nil
+			}
+		})
+
+		It("does the right json http client request", func() {
+			version, err := client.GetAPIVersion()
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(jsonClient.DoCallCount()).To(Equal(1))
+			method, route, reqData, _, token := jsonClient.DoArgsForCall(0)
+			Expect(method).To(Equal("GET"))
+			Expect(route).To(Equal("/"))
+			Expect(reqData).To(BeNil())
+			Expect(token).To(BeEmpty())
+
+			Expect(version).To(Equal(0))
+		})
+
+		Context("when the json client fails", func() {
+			BeforeEach(func() {
+				jsonClient.DoReturns(errors.New("banana"))
+			})
+			It("returns the error", func() {
+				_, err := client.GetAPIVersion()
+				Expect(err).To(MatchError("banana"))
+			})
+		})
+
+		Context("when the policy server href does not contain a valid version", func() {
+			BeforeEach(func() {
+				jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+					respBytes := []byte(`{
+   "links": {
+      "network_policy": {
+         "href": "https://v1api.bosh-lite.com/networking/not-a-valid-version/external"
+      }
+		}
+}
+`)
+					json.Unmarshal(respBytes, respData)
+					return nil
+				}
+			})
+
+			It("should fail with a useful error message", func() {
+				_, err := client.GetAPIVersion()
+				Expect(err).To(MatchError("Could not get a valid networking policy server version from the configured url"))
+			})
+		})
+
+		Context("when the json client gets a bad status code", func() {
+			BeforeEach(func() {
+				jsonClient.DoReturns(&json_client.HttpResponseCodeError{
+					StatusCode: http.StatusTeapot,
+					Message:    "some-error",
+				})
+			})
+			It("parses out the error body", func() {
+				_, err := client.GetAPIVersion()
+				Expect(err).To(MatchError("418 I'm a teapot: some-error"))
+			})
+		})
+	})
 	Describe("GetPolicies", func() {
 		BeforeEach(func() {
 			jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
