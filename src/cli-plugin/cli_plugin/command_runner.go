@@ -149,6 +149,74 @@ func (r *CommandRunner) List() (string, error) {
 				)
 			}
 		}
+
+	case -1:
+		var policies []api.Policy
+
+		if appGuid == "" {
+			policies, err = r.PolicyClient.GetPolicies(accessToken)
+		} else {
+			policies, err = r.PolicyClient.GetPoliciesByID(accessToken, appGuid)
+		}
+
+		if err != nil {
+			var policiesV0 []api_v0.Policy
+			if appGuid == "" {
+				policiesV0, err = r.PolicyClient.GetPoliciesV0(accessToken)
+			} else {
+				policiesV0, err = r.PolicyClient.GetPoliciesV0ByID(accessToken, appGuid)
+			}
+
+			if err != nil {
+				return "", fmt.Errorf("getting policies: %s", err)
+			}
+			fmt.Fprintf(tabWriter, r.Styler.AddStyle("Source\tDestination\tProtocol\tPort\n", "bold"))
+			for _, policy := range policiesV0 {
+				srcName := ""
+				dstName := ""
+				for _, app := range apps {
+					if policy.Source.ID == app.Guid {
+						srcName = app.Name
+					}
+					if policy.Destination.ID == app.Guid {
+						dstName = app.Name
+					}
+				}
+				if srcName != "" && dstName != "" {
+					fmt.Fprintf(tabWriter, "%s\t%s\t%s\t%d\n",
+						r.Styler.AddStyle(srcName, "cyan"),
+						r.Styler.AddStyle(dstName, "cyan"),
+						policy.Destination.Protocol,
+						policy.Destination.Port,
+					)
+				}
+			}
+		} else {
+			fmt.Fprintf(tabWriter, r.Styler.AddStyle("Source\tDestination\tProtocol\tPorts\n", "bold"))
+
+			for _, policy := range policies {
+				srcName := ""
+				dstName := ""
+				for _, app := range apps {
+					if policy.Source.ID == app.Guid {
+						srcName = app.Name
+					}
+					if policy.Destination.ID == app.Guid {
+						dstName = app.Name
+					}
+				}
+				if srcName != "" && dstName != "" {
+					fmt.Fprintf(tabWriter, "%s\t%s\t%s\t%d-%d\n",
+						r.Styler.AddStyle(srcName, "cyan"),
+						r.Styler.AddStyle(dstName, "cyan"),
+						policy.Destination.Protocol,
+						policy.Destination.Ports.Start,
+						policy.Destination.Ports.End,
+					)
+				}
+			}
+		}
+
 	default:
 		return "", fmt.Errorf("networking API version %d not supported. consider using cf-cli native commands.", version)
 	}
@@ -211,15 +279,51 @@ func (r *CommandRunner) Allow() (string, error) {
 		}
 
 	case 1:
-		policy, err := r.constructPolicy(validArgs)
-		if err != nil {
-			return "", err
-		}
-		err = r.PolicyClient.AddPolicies(token, []api.Policy{policy})
-		if err != nil {
-			return "", fmt.Errorf("adding policies: %s", err)
-		}
+		if validArgs.StartPort > 0 {
+			policy, err := r.constructPolicy(validArgs)
+			if err != nil {
+				return "", err
+			}
+			err = r.PolicyClient.AddPolicies(token, []api.Policy{policy})
 
+			if err != nil {
+				return "", fmt.Errorf("adding policies: %s", err)
+			}
+		} else {
+			policy, err := r.constructPolicyV0(validArgs)
+			if err != nil {
+				return "", err
+			}
+
+			err = r.PolicyClient.AddPoliciesV0(token, []api_v0.Policy{policy})
+
+			if err != nil {
+				return "", fmt.Errorf("adding policies: %s", err)
+			}
+		}
+	case -1:
+		if validArgs.StartPort > 0 {
+			policy, err := r.constructPolicy(validArgs)
+			if err != nil {
+				return "", err
+			}
+			err = r.PolicyClient.AddPolicies(token, []api.Policy{policy})
+
+			if err != nil {
+				return "", fmt.Errorf("adding policies: %s (Adding policies with port ranges requires cf-networking release version 1.4.0+. Try using single ports instead.)", err)
+			}
+		} else {
+			policy, err := r.constructPolicyV0(validArgs)
+			if err != nil {
+				return "", err
+			}
+
+			err = r.PolicyClient.AddPoliciesV0(token, []api_v0.Policy{policy})
+
+			if err != nil {
+				return "", fmt.Errorf("adding policies: %s", err)
+			}
+		}
 	default:
 		return "", fmt.Errorf("networking API version %d not supported. consider using cf-cli native commands.", apiVersion)
 	}
@@ -274,14 +378,48 @@ func (r *CommandRunner) Remove() (string, error) {
 			return "", fmt.Errorf("deleting policies: %s", err)
 		}
 	case 1:
-		policy, err := r.constructPolicy(validArgs)
-		if err != nil {
-			return "", err
-		}
+		if validArgs.StartPort > 0 {
+			policy, err := r.constructPolicy(validArgs)
+			if err != nil {
+				return "", err
+			}
 
-		err = r.PolicyClient.DeletePolicies(accessToken, []api.Policy{policy})
-		if err != nil {
-			return "", fmt.Errorf("deleting policies: %s", err)
+			err = r.PolicyClient.DeletePolicies(accessToken, []api.Policy{policy})
+			if err != nil {
+				return "", fmt.Errorf("deleting policies: %s", err)
+			}
+		} else {
+			policy, err := r.constructPolicyV0(validArgs)
+			if err != nil {
+				return "", err
+			}
+
+			err = r.PolicyClient.DeletePoliciesV0(accessToken, []api_v0.Policy{policy})
+			if err != nil {
+				return "", fmt.Errorf("removing policies: %s", err)
+			}
+		}
+	case -1:
+		if validArgs.StartPort > 0 {
+			policy, err := r.constructPolicy(validArgs)
+			if err != nil {
+				return "", err
+			}
+
+			err = r.PolicyClient.DeletePolicies(accessToken, []api.Policy{policy})
+			if err != nil {
+				return "", fmt.Errorf("removing policies: %s (Removing policies with port ranges requires cf-networking release version 1.4.0+. Try using single ports instead.)", err)
+			}
+		} else {
+			policy, err := r.constructPolicyV0(validArgs)
+			if err != nil {
+				return "", err
+			}
+
+			err = r.PolicyClient.DeletePoliciesV0(accessToken, []api_v0.Policy{policy})
+			if err != nil {
+				return "", fmt.Errorf("removing policies: %s", err)
+			}
 		}
 	default:
 		return "", fmt.Errorf("networking API version %d not supported. consider using cf-cli native commands.", apiVersion)

@@ -16,6 +16,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	. "github.com/onsi/ginkgo/extensions/table"
 )
 
 var _ = Describe("ExternalClient", func() {
@@ -29,7 +30,7 @@ var _ = Describe("ExternalClient", func() {
 		jsonClient = &hfakes.JSONClient{}
 		fakeChunker = &fakes.Chunker{}
 		fakeChunker.ChunkReturns([][]api_v0.Policy{
-			[]api_v0.Policy{
+			{
 				{
 					Source: api_v0.Source{
 						ID: "some-app-guid",
@@ -51,7 +52,7 @@ var _ = Describe("ExternalClient", func() {
 					},
 				},
 			},
-			[]api_v0.Policy{
+			{
 				{
 					Source: api_v0.Source{
 						ID: "some-app-guid-3",
@@ -71,22 +72,12 @@ var _ = Describe("ExternalClient", func() {
 	})
 
 	Describe("GetAPIVersion", func() {
-		BeforeEach(func() {
+		DescribeTable("when getting version succeeds", func(ccRootEndpointJson string, expectedVersion int) {
 			jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
-				respBytes := []byte(`{
-   "links": {
-      "network_policy": {
-         "href": "https://v1api.bosh-lite.com/networking/v0/external"
-      }
-   }
-}
-`)
+				respBytes := []byte(ccRootEndpointJson)
 				json.Unmarshal(respBytes, respData)
 				return nil
 			}
-		})
-
-		It("does the right json http client request", func() {
 			version, err := client.GetAPIVersion()
 			Expect(err).NotTo(HaveOccurred())
 
@@ -97,8 +88,30 @@ var _ = Describe("ExternalClient", func() {
 			Expect(reqData).To(BeNil())
 			Expect(token).To(BeEmpty())
 
-			Expect(version).To(Equal(0))
-		})
+			Expect(version).To(Equal(expectedVersion))
+		},
+			Entry("when key is 'network_policy' (old capi)", `{
+			   "links": {
+				  "network_policy": {
+					 "href": "https://api.bosh-lite.com/networking/v0/external"
+				  }
+			   }
+			}
+			`, 0),
+			Entry("when no networking key is present at all (old old capi)",
+				`{"links": { }}`, -1),
+			Entry("when keys are 'network_policy_v0' and 'network_policy_v1' (newer capi)", `{
+			   "links": {
+				  "network_policy_v0": {
+					 "href": "https://api.bosh-lite.com/networking/v0/external"
+				  },
+				  "network_policy_v1": {
+					 "href": "https://api.bosh-lite.com/networking/v1/external"
+				  }
+			   }
+			}
+			`, 1),
+		)
 
 		Context("when the json client fails", func() {
 			BeforeEach(func() {
@@ -107,28 +120,6 @@ var _ = Describe("ExternalClient", func() {
 			It("returns the error", func() {
 				_, err := client.GetAPIVersion()
 				Expect(err).To(MatchError("banana"))
-			})
-		})
-
-		Context("when the policy server href does not contain a valid version", func() {
-			BeforeEach(func() {
-				jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
-					respBytes := []byte(`{
-   "links": {
-      "network_policy": {
-         "href": "https://v1api.bosh-lite.com/networking/not-a-valid-version/external"
-      }
-		}
-}
-`)
-					json.Unmarshal(respBytes, respData)
-					return nil
-				}
-			})
-
-			It("should fail with a useful error message", func() {
-				_, err := client.GetAPIVersion()
-				Expect(err).To(MatchError("Could not get a valid networking policy server version from the configured url"))
 			})
 		})
 
@@ -145,6 +136,7 @@ var _ = Describe("ExternalClient", func() {
 			})
 		})
 	})
+
 	Describe("GetPolicies", func() {
 		BeforeEach(func() {
 			jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {

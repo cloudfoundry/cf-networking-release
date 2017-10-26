@@ -351,16 +351,172 @@ var _ = Describe("CommandRunner", func() {
 				})
 			})
 		})
+
+		Context("when environment version is unknown from the client side", func() {
+			BeforeEach(func() {
+				policyClient.GetAPIVersionReturns(-1, nil)
+			})
+
+			Context("when the actual environment is v1", func() {
+				BeforeEach(func() {
+					policyClient.GetPoliciesReturns([]api.Policy{
+						api.Policy{
+							Source: api.Source{ID: "some-app-guid"},
+							Destination: api.Destination{
+								ID:       "some-other-app-guid",
+								Ports:    api.Ports{Start: 9999, End: 1000},
+								Protocol: "tcp",
+							},
+						},
+					}, nil)
+				})
+
+				It("uses v1 endpoint", func() {
+					output, err := runner.List()
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(policyClient.GetPoliciesCallCount()).To(Equal(1))
+					Expect(policyClient.GetPoliciesArgsForCall(0)).To(Equal("some-token"))
+					Expect(fakeCliConnection.GetAppsCallCount()).To(Equal(1))
+
+					Expect(output).To(Equal("<BOLD>Source\t\tDestination\tProtocol\tPorts\n<RESET><CLR_C>some-app<RESET>\t<CLR_C>some-other-app<RESET>\ttcp\t\t9999-1000\n"))
+				})
+
+				Context("when the user specifies an app name", func() {
+					BeforeEach(func() {
+						policyClient.GetPoliciesByIDReturns([]api.Policy{
+							{
+								Source: api.Source{ID: "some-app-guid"},
+								Destination: api.Destination{
+									ID:       "some-other-app-guid",
+									Ports:    api.Ports{Start: 9999, End: 1000},
+									Protocol: "tcp",
+								},
+							},
+						}, nil)
+						fakeCliConnection.GetAppReturns(plugin_models.GetAppModel{
+							Guid: "some-app-guid",
+							Name: "some-app",
+						}, nil)
+						fakeCliConnection.GetAppsReturns([]plugin_models.GetAppsModel{
+							{Guid: "some-app-guid", Name: "some-app"},
+							{Guid: "some-other-app-guid", Name: "some-other-app"},
+						}, nil)
+						runner.Args = []string{"list-access", "--app", "some-app"}
+					})
+
+					It("filters the call to the policy server", func() {
+						output, err := runner.List()
+						Expect(err).NotTo(HaveOccurred())
+
+						Expect(policyClient.GetPoliciesV0ByIDCallCount()).To(Equal(0))
+						Expect(policyClient.GetPoliciesByIDCallCount()).To(Equal(1))
+						Expect(output).To(Equal("<BOLD>Source\t\tDestination\tProtocol\tPorts\n<RESET><CLR_C>some-app<RESET>\t<CLR_C>some-other-app<RESET>\ttcp\t\t9999-1000\n"))
+
+						Expect(fakeCliConnection.GetAppCallCount()).To(Equal(1))
+						Expect(fakeCliConnection.GetAppArgsForCall(0)).To(Equal("some-app"))
+						Expect(fakeCliConnection.GetAppsCallCount()).To(Equal(1))
+
+						token, ids := policyClient.GetPoliciesByIDArgsForCall(0)
+						Expect(token).To(Equal("some-token"))
+						Expect(ids).To(ConsistOf("some-app-guid"))
+					})
+				})
+			})
+
+			Context("when the actual environment is v0", func() {
+				BeforeEach(func() {
+					policyClient.GetPoliciesReturns(nil, errors.New("404 no such endpoint"))
+					policyClient.GetPoliciesByIDReturns(nil, errors.New("404 no such endpoint"))
+					policyClient.GetPoliciesV0Returns([]api_v0.Policy{
+						{
+							Source: api_v0.Source{ID: "some-app-guid"},
+							Destination: api_v0.Destination{
+								ID:       "some-other-app-guid",
+								Port:     9999,
+								Protocol: "tcp",
+							},
+						},
+					}, nil)
+				})
+
+				It("uses falls back to the v0 endpoint", func() {
+					output, err := runner.List()
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(policyClient.GetPoliciesCallCount()).To(Equal(1))
+					Expect(policyClient.GetPoliciesV0CallCount()).To(Equal(1))
+
+					Expect(policyClient.GetPoliciesArgsForCall(0)).To(Equal("some-token"))
+					Expect(policyClient.GetPoliciesV0ArgsForCall(0)).To(Equal("some-token"))
+					Expect(fakeCliConnection.GetAppsCallCount()).To(Equal(1))
+
+					Expect(output).To(Equal("<BOLD>Source\t\tDestination\tProtocol\tPort\n<RESET><CLR_C>some-app<RESET>\t<CLR_C>some-other-app<RESET>\ttcp\t\t9999\n"))
+				})
+
+				Context("when the user specifies an app name", func() {
+					BeforeEach(func() {
+						policyClient.GetPoliciesV0ByIDReturns([]api_v0.Policy{
+							{
+								Source: api_v0.Source{ID: "some-app-guid"},
+								Destination: api_v0.Destination{
+									ID:       "some-other-app-guid",
+									Port:     9999,
+									Protocol: "tcp",
+								},
+							},
+						}, nil)
+						fakeCliConnection.GetAppReturns(plugin_models.GetAppModel{
+							Guid: "some-app-guid",
+							Name: "some-app",
+						}, nil)
+						fakeCliConnection.GetAppsReturns([]plugin_models.GetAppsModel{
+							{Guid: "some-app-guid", Name: "some-app"},
+							{Guid: "some-other-app-guid", Name: "some-other-app"},
+						}, nil)
+						runner.Args = []string{"list-access", "--app", "some-app"}
+					})
+					It("filters the call to the policy server", func() {
+						output, err := runner.List()
+						Expect(err).NotTo(HaveOccurred())
+
+						Expect(policyClient.GetPoliciesByIDCallCount()).To(Equal(1))
+						Expect(output).To(Equal("<BOLD>Source\t\tDestination\tProtocol\tPort\n<RESET><CLR_C>some-app<RESET>\t<CLR_C>some-other-app<RESET>\ttcp\t\t9999\n"))
+
+						Expect(fakeCliConnection.GetAppCallCount()).To(Equal(1))
+						Expect(fakeCliConnection.GetAppArgsForCall(0)).To(Equal("some-app"))
+						Expect(fakeCliConnection.GetAppsCallCount()).To(Equal(1))
+
+						Expect(policyClient.GetPoliciesV0ByIDCallCount()).To(Equal(1))
+						token, ids := policyClient.GetPoliciesV0ByIDArgsForCall(0)
+						Expect(token).To(Equal("some-token"))
+						Expect(ids).To(ConsistOf("some-app-guid"))
+					})
+				})
+
+				Context("when failing to get policies from the v0 endpoint", func() {
+					BeforeEach(func() {
+						policyClient.GetPoliciesV0Returns(nil, errors.New("server error"))
+					})
+
+					It("returns an error", func() {
+						_, err := runner.List()
+						Expect(err).To(HaveOccurred())
+						Expect(err).To(MatchError("getting policies: server error"))
+					})
+				})
+			})
+		})
 	})
 
 	Describe("Allow", func() {
 		Context("when using a port range", func() {
-			BeforeEach(func() {
-				policyClient.GetAPIVersionReturns(1, nil)
-				runner.Args = []string{"allow-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9998-9999"}
-			})
-
 			Context("when the command is allow-access", func() {
+				BeforeEach(func() {
+					policyClient.GetAPIVersionReturns(1, nil)
+					runner.Args = []string{"allow-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9998-9999"}
+				})
+
 				It("translates the app names to app guids", func() {
 					_, err := runner.Allow()
 					Expect(err).NotTo(HaveOccurred())
@@ -448,6 +604,51 @@ var _ = Describe("CommandRunner", func() {
 					})
 				})
 			})
+
+			Context("when api version is unknown from the client side", func() {
+				BeforeEach(func() {
+					policyClient.GetAPIVersionReturns(-1, nil)
+					runner.Args = []string{"allow-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9998-9999"}
+				})
+
+				It("translates the app names to app guids", func() {
+					_, err := runner.Allow()
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(fakeCliConnection.GetAppCallCount()).To(Equal(2))
+					Expect(fakeCliConnection.GetAppArgsForCall(0)).To(Equal("some-app"))
+					Expect(fakeCliConnection.GetAppArgsForCall(1)).To(Equal("some-other-app"))
+
+					Expect(policyClient.GetAPIVersionCallCount()).To(Equal(1))
+					Expect(policyClient.AddPoliciesCallCount()).To(Equal(1))
+					token, policies := policyClient.AddPoliciesArgsForCall(0)
+					Expect(token).To(Equal("some-token"))
+					Expect(policies).To(ConsistOf(api.Policy{
+						Source: api.Source{ID: "some-app-guid"},
+						Destination: api.Destination{
+							ID: "some-other-app-guid",
+							Ports: api.Ports{
+								Start: 9998,
+								End:   9999,
+							},
+							Protocol: "tcp"}}))
+				})
+
+				Context("when the targeted env is actually v0", func() {
+					BeforeEach(func() {
+						policyClient.AddPoliciesReturns(errors.New("404 no such endpoint"))
+					})
+
+					It("returns a useful error message", func() {
+						_, err := runner.Allow()
+
+						Expect(policyClient.AddPoliciesCallCount()).To(Equal(1))
+						Expect(policyClient.AddPoliciesV0CallCount()).To(Equal(0))
+
+						Expect(err).To(MatchError("adding policies: 404 no such endpoint (Adding policies with port ranges requires cf-networking release version 1.4.0+. Try using single ports instead.)"))
+					})
+				})
+			})
 		})
 
 		Context("when using a single port", func() {
@@ -477,12 +678,17 @@ var _ = Describe("CommandRunner", func() {
 					BeforeEach(func() {
 						policyClient.GetAPIVersionReturns(1, nil)
 					})
-					It("uses the v1 endpoint", func() {
+					It("uses the v0 endpoint", func() {
 						_, err := runner.Allow()
 						Expect(err).NotTo(HaveOccurred())
 
-						Expect(policyClient.AddPoliciesCallCount()).To(Equal(1))
-						Expect(policyClient.AddPoliciesV0CallCount()).To(Equal(0))
+						Expect(policyClient.AddPoliciesCallCount()).To(Equal(0))
+						Expect(policyClient.AddPoliciesV0CallCount()).To(Equal(1))
+						token, policies := policyClient.AddPoliciesV0ArgsForCall(0)
+						Expect(token).To(Equal("some-token"))
+						Expect(policies).To(ConsistOf(api_v0.Policy{
+							Source:      api_v0.Source{ID: "some-app-guid"},
+							Destination: api_v0.Destination{ID: "some-other-app-guid", Port: 9999, Protocol: "tcp"}}))
 					})
 				})
 
@@ -562,6 +768,51 @@ var _ = Describe("CommandRunner", func() {
 					_, err := runner.Allow()
 					Expect(err).To(MatchError("networking API version 2 not supported. consider using cf-cli native commands."))
 				})
+			})
+
+			Context("when api version is unknown from the client side", func() {
+				BeforeEach(func() {
+					policyClient.GetAPIVersionReturns(-1, nil)
+					runner.Args = []string{"allow-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9998"}
+				})
+
+				It("translates the app names to app guids using api v0, regardless of what version is actually running server side", func() {
+					_, err := runner.Allow()
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(fakeCliConnection.GetAppCallCount()).To(Equal(2))
+					Expect(fakeCliConnection.GetAppArgsForCall(0)).To(Equal("some-app"))
+					Expect(fakeCliConnection.GetAppArgsForCall(1)).To(Equal("some-other-app"))
+
+					Expect(policyClient.GetAPIVersionCallCount()).To(Equal(1))
+					Expect(policyClient.AddPoliciesV0CallCount()).To(Equal(1))
+					token, policies := policyClient.AddPoliciesV0ArgsForCall(0)
+					Expect(token).To(Equal("some-token"))
+					Expect(policies).To(ConsistOf(api_v0.Policy{
+						Source: api_v0.Source{ID: "some-app-guid"},
+						Destination: api_v0.Destination{
+							ID:       "some-other-app-guid",
+							Port:     9998,
+							Protocol: "tcp",
+						},
+					}))
+				})
+
+				Context("when policy-server returns an error", func() {
+					BeforeEach(func() {
+						policyClient.AddPoliciesV0Returns(errors.New("unable to allow policy"))
+					})
+
+					It("returns a useful error message", func() {
+						_, err := runner.Allow()
+
+						Expect(policyClient.AddPoliciesV0CallCount()).To(Equal(1))
+						Expect(policyClient.AddPoliciesCallCount()).To(Equal(0))
+
+						Expect(err).To(MatchError("adding policies: unable to allow policy"))
+					})
+				})
+
 			})
 		})
 	})
@@ -666,6 +917,52 @@ var _ = Describe("CommandRunner", func() {
 					Expect(err).To(MatchError("could not resolve username: banana"))
 				})
 			})
+
+			Context("when api version is unknown from the client side", func() {
+				BeforeEach(func() {
+					policyClient.GetAPIVersionReturns(-1, nil)
+					runner.Args = []string{"remove-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9998-9999"}
+				})
+
+				It("translates the app names to app guids", func() {
+					_, err := runner.Remove()
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(fakeCliConnection.GetAppCallCount()).To(Equal(2))
+					Expect(fakeCliConnection.GetAppArgsForCall(0)).To(Equal("some-app"))
+					Expect(fakeCliConnection.GetAppArgsForCall(1)).To(Equal("some-other-app"))
+
+					Expect(policyClient.GetAPIVersionCallCount()).To(Equal(1))
+					Expect(policyClient.DeletePoliciesCallCount()).To(Equal(1))
+					token, policies := policyClient.DeletePoliciesArgsForCall(0)
+					Expect(token).To(Equal("some-token"))
+					Expect(policies).To(ConsistOf(api.Policy{
+						Source: api.Source{ID: "some-app-guid"},
+						Destination: api.Destination{
+							ID: "some-other-app-guid",
+							Ports: api.Ports{
+								Start: 9998,
+								End:   9999,
+							},
+							Protocol: "tcp"}}))
+				})
+
+				Context("when the targeted env is actually v0", func() {
+					BeforeEach(func() {
+						policyClient.DeletePoliciesReturns(errors.New("404 no such endpoint"))
+					})
+
+					It("returns a useful error message", func() {
+						_, err := runner.Remove()
+
+						Expect(policyClient.DeletePoliciesCallCount()).To(Equal(1))
+						Expect(policyClient.DeletePoliciesV0CallCount()).To(Equal(0))
+
+						Expect(err).To(MatchError("removing policies: 404 no such endpoint (Removing policies with port ranges requires cf-networking release version 1.4.0+. Try using single ports instead.)"))
+					})
+				})
+			})
+
 		})
 
 		Describe("Resolving App Names to Guids", func() {
@@ -725,12 +1022,18 @@ var _ = Describe("CommandRunner", func() {
 					policyClient.GetAPIVersionReturns(1, nil)
 					runner.Args = []string{"remove-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9999"}
 				})
-				It("uses the v1 endpoint", func() {
+
+				It("uses the v0 endpoint", func() {
 					_, err := runner.Remove()
 					Expect(err).NotTo(HaveOccurred())
 
-					Expect(policyClient.DeletePoliciesCallCount()).To(Equal(1))
-					Expect(policyClient.DeletePoliciesV0CallCount()).To(Equal(0))
+					Expect(policyClient.DeletePoliciesV0CallCount()).To(Equal(1))
+					Expect(policyClient.DeletePoliciesCallCount()).To(Equal(0))
+					token, policies := policyClient.DeletePoliciesV0ArgsForCall(0)
+					Expect(token).To(Equal("some-token"))
+					Expect(policies).To(ConsistOf(api_v0.Policy{
+						Source:      api_v0.Source{ID: "some-app-guid"},
+						Destination: api_v0.Destination{ID: "some-other-app-guid", Port: 9999, Protocol: "tcp"}}))
 				})
 			})
 
@@ -826,6 +1129,50 @@ var _ = Describe("CommandRunner", func() {
 			It("returns a useful error message", func() {
 				_, err := runner.Remove()
 				Expect(err).To(MatchError("networking API version 2 not supported. consider using cf-cli native commands."))
+			})
+		})
+
+		Context("when api version is unknown from the client side", func() {
+			BeforeEach(func() {
+				policyClient.GetAPIVersionReturns(-1, nil)
+				runner.Args = []string{"remove-access", "some-app", "some-other-app", "--protocol", "tcp", "--port", "9998"}
+			})
+
+			It("translates the app names to app guids using api v0, regardless of what version is actually running server side", func() {
+				_, err := runner.Remove()
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(fakeCliConnection.GetAppCallCount()).To(Equal(2))
+				Expect(fakeCliConnection.GetAppArgsForCall(0)).To(Equal("some-app"))
+				Expect(fakeCliConnection.GetAppArgsForCall(1)).To(Equal("some-other-app"))
+
+				Expect(policyClient.GetAPIVersionCallCount()).To(Equal(1))
+				Expect(policyClient.DeletePoliciesV0CallCount()).To(Equal(1))
+				token, policies := policyClient.DeletePoliciesV0ArgsForCall(0)
+				Expect(token).To(Equal("some-token"))
+				Expect(policies).To(ConsistOf(api_v0.Policy{
+					Source: api_v0.Source{ID: "some-app-guid"},
+					Destination: api_v0.Destination{
+						ID:       "some-other-app-guid",
+						Port:     9998,
+						Protocol: "tcp",
+					},
+				}))
+			})
+
+			Context("when policy-server returns an error", func() {
+				BeforeEach(func() {
+					policyClient.DeletePoliciesV0Returns(errors.New("unable to remove policy"))
+				})
+
+				It("returns a useful error message", func() {
+					_, err := runner.Remove()
+
+					Expect(policyClient.DeletePoliciesV0CallCount()).To(Equal(1))
+					Expect(policyClient.DeletePoliciesCallCount()).To(Equal(0))
+
+					Expect(err).To(MatchError("removing policies: unable to remove policy"))
+				})
 			})
 		})
 	})

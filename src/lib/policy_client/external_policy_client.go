@@ -1,12 +1,9 @@
 package policy_client
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"policy-server/api/api_v0"
-	"regexp"
-	"strconv"
 	"strings"
 
 	"policy-server/api"
@@ -46,6 +43,12 @@ func (c *ExternalClient) GetAPIVersion() (int, error) {
 			NetworkPolicy struct {
 				Href string `json:"href"`
 			} `json:"network_policy"`
+			NetworkPolicyV0 struct {
+				Href string `json:"href"`
+			} `json:"network_policy_v0"`
+			NetworkPolicyV1 struct {
+				Href string `json:"href"`
+			} `json:"network_policy_v1"`
 		} `json:"links"`
 	}
 
@@ -54,24 +57,17 @@ func (c *ExternalClient) GetAPIVersion() (int, error) {
 		return 0, parseHttpError(err)
 	}
 
-	networkingUrl := versionResp.Links.NetworkPolicy.Href
-	pattern, err := regexp.Compile("(?i)\\/v(\\d+)/")
-	if err != nil {
-		// not tested
-		return -1, err
-	}
-	groups := pattern.FindStringSubmatch(networkingUrl)
-	if len(groups) < 2 {
-		return -1, errors.New("Could not get a valid networking policy server version from the configured url")
+	// This commit allows us to simplify how we determine policy server api version
+	// https://github.com/cloudfoundry/cloud_controller_ng/commit/ea8277b806c7b3290682ce22df7566e44136e55e#diff-313d9acd8a9482431178d1d5ba7e7f82
+	if versionResp.Links.NetworkPolicy.Href != "" {
+		return 0, nil
 	}
 
-	version, err := strconv.Atoi(groups[1])
-	if err != nil {
-		// not tested, regexp should never allow this
-		return -1, err
+	if versionResp.Links.NetworkPolicyV1.Href != "" {
+		return 1, nil
 	}
 
-	return version, nil
+	return -1, nil
 }
 
 func (c *ExternalClient) GetPolicies(token string) ([]api.Policy, error) {
