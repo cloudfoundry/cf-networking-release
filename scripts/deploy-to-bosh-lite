@@ -47,7 +47,7 @@ upload_bosh_stemcell() {
 }
 
 upload_cloud_config() {
-  bosh -e vbox -n update-cloud-config ~/workspace/cf-deployment/bosh-lite/cloud-config.yml
+  bosh -e vbox -n update-cloud-config ~/workspace/cf-deployment/iaas-support/bosh-lite/cloud-config.yml
 }
 
 deploy_cf() {
@@ -55,7 +55,6 @@ deploy_cf() {
   -o ~/workspace/cf-networking-release/manifest-generation/opsfiles/cf-networking.yml \
   -o ~/workspace/cf-networking-release/manifest-generation/opsfiles/use-latest.yml \
   -o ~/workspace/cf-deployment/operations/bosh-lite.yml \
-  -o ~/workspace/cf-deployment/operations/experimental/disable-etcd.yml \
   -o ~/workspace/cf-networking-deployments/environments/local/instance-count-overrides.yml \
   --vars-store ~/workspace/cf-networking-deployments/environments/local/deployment-vars.yml \
   -v system_domain=bosh-lite.com
