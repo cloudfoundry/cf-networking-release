@@ -1,0 +1,20 @@
+---
+image_resource:
+  type: docker-image
+  source: { repository: c2cnetworking/small-git }
+
+platform: linux
+
+inputs:
+  - name: cf-networking-release-ci
+  - name: cf-networking-master
+
+outputs:
+  - name: release-notes
+
+run:
+  path: cf-networking-release-ci/ci/tasks/build-release-notes
+
+params:
+  SOURCE_DIR: cf-networking-master
+  OUTPUT_DIR: release-notes

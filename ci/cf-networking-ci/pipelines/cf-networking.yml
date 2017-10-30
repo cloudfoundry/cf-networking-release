@@ -1,0 +1,509 @@
+groups:
+- name: cf-networking
+  jobs:
+  - mysql-tests
+  - mysql-5.6-tests
+  - postgres-tests
+  - windows-tests
+  - unit-and-integration-tests
+  - beanie-deploy
+  - beanie-test
+  - ship-what
+  - shipit
+  - bump-patch-version
+  - update-cli-plugin-repo
+- name: beanie
+  jobs:
+  - beanie-bbl-up
+  - beanie-bbl-destroy
+  - beanie-deploy
+  - beanie-test
+  - beanie-deploy-firehose-nozzle
+  - delete-beanie-deployment
+- name: bbl
+  jobs:
+  - beanie-bbl-up
+  - beanie-bbl-destroy
+- name: cleanup
+  jobs:
+  - delete-beanie-deployment
+- name: version
+  jobs:
+  - major-bump
+  - minor-bump
+  - patch-bump
+
+resources:
+  ###### Control plane
+  - name: cf-networking-release-ci
+    type: git
+    source:
+      uri: https://github.com/cloudfoundry-incubator/cf-networking-release
+      paths: [ ci ]
+      branch: v1.6.x
+  - name: cf-networking-deployments
+    type: git
+    source:
+      uri: "git@github.com:cloudfoundry/cf-networking-deployments.git"
+      branch: master
+      private_key: {{cf-networking-deployments-push-key}}
+  - name: cats-concourse-task
+    type: git
+    source:
+      uri: https://github.com/cloudfoundry/cats-concourse-task
+      branch: master
+  - name: cf-deployment-concourse-tasks
+    type: git
+    source:
+      uri: https://github.com/cloudfoundry/cf-deployment-concourse-tasks
+      branch: master
+  - name: cf-deployment
+    type: git
+    source:
+      branch: release-candidate
+      uri: https://github.com/cloudfoundry/cf-deployment.git
+  ###### bosh.io releases
+  - name: concourse
+    type: bosh-io-release
+    source:
+      repository: concourse/concourse
+  - name: datadog-firehose-nozzle-release
+    type: bosh-io-release
+    source:
+      repository: cloudfoundry-incubator/datadog-firehose-nozzle-release
+  ###### BOSH release repos
+  - name: cf-networking-dev
+    type: git
+    source:
+      uri: git@github.com:cloudfoundry-incubator/cf-networking-release.git
+      branch: v1.6.x
+      ignore_paths:
+        - docs
+      private_key: {{cf-networking-deploy-key}}
+  - name: cf-networking-master
+    type: git
+    source:
+      uri: git@github.com:cloudfoundry-incubator/cf-networking-release.git
+      branch: v1.6.x
+      private_key: {{cf-networking-deploy-key}}
+
+  ####### Timers
+  - name: every-half-hour
+    type: time
+    source:
+      interval: 30m
+  - name: every-fifteen-minutes
+    type: time
+    source:
+      interval: 15m
+  ####### Tests
+  - name: cf-acceptance-tests
+    type: git
+    source:
+      branch: master
+      uri: git://github.com/cloudfoundry/cf-acceptance-tests.git
+  #######  Release management
+  - name: version
+    type: semver
+    source:
+      bucket: {{cf-networking-s3-bucket}}
+      region_name: us-west-2
+      initial_version: 0.2.0-rc.1
+      key: releases/current-version
+      access_key_id: {{aws-access-key-id}}
+      secret_access_key: {{aws-secret-access-key}}
+  - name: cf-networking-tarball
+    type: s3
+    source:
+      bucket: {{cf-networking-candidate-s3-bucket}}
+      region_name: us-west-2
+      regexp: releases/cf-networking-(.*).tgz
+      access_key_id: {{aws-access-key-id}}
+      secret_access_key: {{aws-secret-access-key}}
+  # Github release
+  - name: cf-networking-github-release
+    type: github-release
+    source:
+      user: cloudfoundry-incubator
+      repository: cf-networking-release
+      access_token: {{github-access-token}}
+
+jobs:
+  - name: postgres-tests
+    public: true
+    plan:
+    - aggregate:
+      - get: cf-networking-dev
+        trigger: true
+      - get: cf-networking-release-ci
+    - task: unit-and-integration-tests
+      file: cf-networking-release-ci/tasks/postgres-tests.yml
+      privileged: true
+      input_mapping:
+        cf-networking-release: cf-networking-dev
+
+  - name: mysql-tests
+    public: true
+    plan:
+    - aggregate:
+      - get: cf-networking-dev
+        trigger: true
+      - get: cf-networking-release-ci
+    - task: unit-and-integration-tests
+      file: cf-networking-release-ci/tasks/mysql-tests.yml
+      privileged: true
+      input_mapping:
+        cf-networking-release: cf-networking-dev
+
+  - name: mysql-5.6-tests
+    public: true
+    plan:
+    - aggregate:
+      - get: cf-networking-dev
+        trigger: true
+      - get: cf-networking-release-ci
+    - task: unit-and-integration-tests
+      file: cf-networking-release-ci/tasks/mysql-5.6-tests.yml
+      privileged: true
+      input_mapping:
+        cf-networking-release: cf-networking-dev
+
+  - name: windows-tests
+    public: true
+    plan:
+    - aggregate:
+      - get: cf-networking-dev
+        trigger: true
+      - get: cf-networking-release-ci
+    - task: garden-external-networker-windows
+      file: cf-networking-release-ci/tasks/garden-external-networker-windows.yml
+      input_mapping:
+        cf-networking-release: cf-networking-dev
+        ci: cf-networking-release-ci
+
+  - name: unit-and-integration-tests
+    public: true
+    plan:
+    - get: cf-networking-dev
+      passed: [postgres-tests, mysql-tests, mysql-5.6-tests, windows-tests]
+      trigger: true
+
+  - name: beanie-bbl-up
+    serial_groups: [beanie]
+    plan:
+    - aggregate:
+      - get: cf-deployment-concourse-tasks
+      - get: cf-networking-deployments
+    - task: bbl-up
+      file: cf-deployment-concourse-tasks/bbl-up/task.yml
+      params:
+        BBL_GCP_SERVICE_ACCOUNT_KEY: ../gcp/service-account.key.json
+        BBL_GCP_PROJECT_ID: cf-container-networking-gcp
+        BBL_GCP_REGION: us-east1
+        BBL_GCP_ZONE: us-east1-b
+        BBL_STATE_DIR: environments/beanie/
+        BBL_IAAS: gcp
+        BBL_LB_CERT: {{beanie-lb-cert}}
+        BBL_LB_KEY: {{beanie-lb-key}}
+        LB_DOMAIN: beanie.c2c.cf-app.com
+        BBL_ENV_NAME: beanie
+      input_mapping:
+        bbl-state: cf-networking-deployments
+        ops-files: cf-networking-deployments
+      ensure:
+        put: cf-networking-deployments
+        params:
+          repository: updated-bbl-state
+          rebase: true
+
+  - name: beanie-bbl-destroy
+    serial_groups: [beanie]
+    plan:
+    - aggregate:
+      - get: cf-deployment-concourse-tasks
+      - get: cf-networking-deployments
+    - task: bbl-destroy
+      file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
+      params:
+        BBL_STATE_DIR: environments/beanie/
+      input_mapping:
+        bbl-state: cf-networking-deployments
+      ensure:
+        put: cf-networking-deployments
+        params:
+          repository: updated-bbl-state
+          rebase: true
+
+  - name: beanie-deploy
+    serial_groups: [beanie]
+    plan:
+    - aggregate:
+      - get: cf-networking-release-ci
+      - get: cf-deployment-concourse-tasks
+      - get: cf-networking-deployments
+      - get: cf-deployment
+        trigger: true
+      - get: cf-networking-dev
+        trigger: true
+        passed: [unit-and-integration-tests]
+    - task: upload-stemcell
+      file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
+      params:
+        BBL_STATE_DIR: environments/beanie/
+      input_mapping:
+        bbl-state: cf-networking-deployments
+    - task: collect-ops-files
+      file: cf-networking-release-ci/tasks/collect-ops-files.yml
+      params:
+        ENVIRONMENT_NAME: beanie
+      input_mapping:
+        cf-networking-release: cf-networking-dev
+        deployments-repo: cf-networking-deployments
+    - task: deploy-cf
+      file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
+      params:
+        BBL_STATE_DIR: environments/beanie/
+        SYSTEM_DOMAIN: beanie.c2c.cf-app.com
+        OPS_FILES: gcp.yml use-3-azs-for-router.yml use-compiled-releases.yml bypass-cc-bridge.yml datadog.yml cf-networking.yml opsfile.yml
+        VARS_STORE_FILE: environments/beanie/vars-store.yml
+      input_mapping:
+        bbl-state: cf-networking-deployments
+        release: cf-networking-dev
+        vars-files: cf-networking-deployments
+        vars-store: cf-networking-deployments
+      ensure:
+        put: cf-networking-deployments
+        params:
+          repository: updated-vars-store
+          rebase: true
+    - task: bosh-cleanup
+      file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
+      params:
+        BBL_STATE_DIR: environments/beanie/
+        CLEAN_ALL: false
+      input_mapping:
+        bbl-state: cf-networking-deployments
+
+  - name: beanie-test
+    serial_groups: [beanie]
+    plan:
+    - aggregate:
+      - get: cf-networking-release-ci
+      - get: cf-networking-deployments
+        passed: [beanie-deploy]
+      - get: cf-deployment
+        passed: [beanie-deploy]
+      - get: cf-networking-dev
+        passed: [beanie-deploy]
+        trigger: true
+    - task: acceptance-tests
+      file: cf-networking-release-ci/tasks/acceptance-tests.yml
+      input_mapping:
+        cf-networking: cf-networking-dev
+        test-config: cf-networking-deployments
+        vars-store: cf-networking-deployments
+      params:
+        ENVIRONMENT_NAME: beanie
+
+
+  - name: beanie-smoke
+    serial_groups: [beanie-test-group]
+    plan:
+    - aggregate:
+      - get: every-fifteen-minutes
+        trigger: true
+      - get: cf-networking-deployments
+      - get: cf-networking-dev
+        passed: [beanie-test]
+        trigger: true
+      - get: cf-networking-release-ci
+      - get: cf-deployment
+        passed: [beanie-test]
+        trigger: true
+    - task: smoke-tests
+      file: cf-networking-release-ci/tasks/smoke-tests.yml
+      params:
+        ENVIRONMENT_NAME: beanie
+        ENVIRONMENT_TAG: beanie.c2c.cf-app.com
+        DATADOG_API_KEY: {{datadog_api_key}}
+      input_mapping:
+        test-config: cf-networking-deployments
+        cf-networking: cf-networking-dev
+
+  - name: beanie-cats
+    serial_groups: [beanie-test-group, beanie-deploy-group]
+    plan:
+    - aggregate:
+      - get: cf-networking-release-ci
+      - get: cf-acceptance-tests
+      - get: cats-concourse-task
+      - get: cf-networking-dev
+        passed: [beanie-test]
+        trigger: true
+      - get: cf-deployment
+        passed: [beanie-test]
+        trigger: true
+      - get: cf-networking-deployments
+      - get: cf-networking-tarball
+        passed: [beanie-test]
+      - get: version
+        passed: [beanie-test]
+    - task: copy-config
+      file: cf-networking-release-ci/tasks/copy-config.yml
+      params:
+        ENVIRONMENT: beanie
+    - task: cats
+      file: cats-concourse-task/task.yml
+      params:
+        NODES: 8
+
+##### Human-triggered utilities
+
+  - name: delete-beanie-deployment
+    public: true
+    serial_groups: [beanie]
+    plan:
+    - aggregate:
+      - get: cf-networking-deployments
+      - get: cf-deployment-concourse-tasks
+    - task: delete-deployment
+      file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
+      params:
+        BBL_STATE_DIR: environments/beanie/
+      input_mapping:
+        bbl-state: cf-networking-deployments
+
+  - name: ship-what
+    serial_groups: [version]
+    plan:
+    - do:
+      - aggregate:
+        - get: version
+          passed: [beanie-drats]
+        - get: cf-networking-dev
+          params:
+            fetch: [master]
+            submodules: none
+          passed: [beanie-drats, trucker-test-upgrade, sombrero-test-upgrade, beanie-acceptance-errand, beanie-smoke]
+          trigger: true
+        - get: cf-deployment
+          passed: [beanie-drats]
+        - get: cf-networking-tarball
+          passed: [beanie-drats, beanie-acceptance-errand]
+
+  - name: shipit
+    serial_groups: [version]
+    plan:
+    - do:
+      - aggregate:
+        - get: cf-networking-deployments
+        - get: cf-networking-release-ci
+        - get: version
+          params:
+            bump: final
+          passed: [ship-what]
+        - get: cf-networking-dev
+          params:
+            fetch: [master]
+            submodules: none
+          passed: [ship-what]
+        - get: cf-deployment
+          passed: [ship-what]
+        - get: cf-networking-tarball
+          passed: [ship-what]
+        - get: cli-plugin-fork
+        - get: cli-plugin-master
+      - task: shipit
+        file: cf-networking-release-ci/tasks/shipit.yml
+        input_mapping:
+          cf-networking: cf-networking-dev
+      - task: build-cli
+        file: cf-networking-release-ci/tasks/build-cli.yml
+        input_mapping:
+          cf-networking: cf-networking-dev
+      - put: version
+        params: {file: version/number}
+      - put: cf-networking-master
+        params:
+          repository: release/master
+          tag: version/number
+          tag_prefix: v
+      - put: cf-networking-tarball
+        params:
+          file: final-release/cf-networking-*.tgz
+      - task: build-release-notes
+        file: cf-networking-release-ci/tasks/build-release-notes.yml
+      - put: cf-networking-github-release
+        params:
+          name: version/number
+          tag: version/number
+          body: release-notes/notes.md
+          tag_prefix: v
+          globs:
+          - final-release/cf-networking-*.tgz
+          - binaries/network-policy-plugin-*
+
+  # bump minor version (i.e. 0.1.0 -> 0.2.0)
+  - name: bump-patch-version
+    serial_groups: [version]
+    plan:
+    - aggregate:
+      - get: version
+        trigger: true
+        passed: [shipit]
+        params: {bump: minor, pre: rc}
+    - put: version
+      params: {file: version/number}
+
+
+  - name: update-cli-plugin-repo
+    plan:
+    - do:
+      - aggregate:
+        - get: cf-networking-release-ci
+        - get: cli-plugin-fork
+        - get: cli-plugin-master
+        - get: cf-networking-github-release
+          params:
+            globs:
+            - network-policy-plugin-*
+        - get: cf-networking-master
+          params:  # just here for a dependency/trigger, so keep it light
+            submodules: none
+            depth: 1
+          passed: [merge-master]
+      - task: update-plugin-repo
+        file: cf-networking-release-ci/tasks/update-plugin-repo.yml
+      - put: cli-plugin-fork
+        params:
+          repository: fork-merged
+          force: true
+      - task: create-plugin-pr
+        file: cf-networking-release-ci/tasks/create-plugin-pr.yml
+        params:
+          GITHUB_TOKEN: {{github-access-token}}
+
+  # versioning
+  - name: patch-bump
+    serial_groups: [version]
+    plan:
+    - get: version
+      params: {bump: patch}
+    - put: version
+      params: {file: version/number}
+
+  - name: minor-bump
+    serial_groups: [version]
+    plan:
+    - get: version
+      params: {bump: minor}
+    - put: version
+      params: {file: version/number}
+
+  - name: major-bump
+    serial_groups: [version]
+    plan:
+    - get: version
+      params: {bump: major}
+    - put: version
+      params: {file: version/number}

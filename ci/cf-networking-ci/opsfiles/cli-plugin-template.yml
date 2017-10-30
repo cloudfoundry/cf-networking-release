@@ -1,0 +1,23 @@
+---
+- type: replace
+  path: /plugins/name=network-policy?
+  value:
+    name: network-policy
+    description: Allow the user to manage application network policies
+    version: ((version))
+    created: 2017-07-10T00:00:00Z
+    updated: ((update_time))
+    company: Pivotal
+    authors:
+      - name: CF Networking Team
+    homepage: https://github.com/cloudfoundry-incubator/cf-networking-release
+    binaries:
+      - platform: osx
+        url: https://github.com/cloudfoundry-incubator/cf-networking-release/releases/download/v((version))/network-policy-plugin-darwin64
+        checksum: ((osx_checksum))
+      - platform: win64
+        url: https://github.com/cloudfoundry-incubator/cf-networking-release/releases/download/v((version))/network-policy-plugin-windows64.exe
+        checksum: ((win64_checksum))
+      - platform: linux64
+        url: https://github.com/cloudfoundry-incubator/cf-networking-release/releases/download/v((version))/network-policy-plugin-linux64
+        checksum: ((linux64_checksum))

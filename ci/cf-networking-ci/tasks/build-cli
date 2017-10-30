@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -e -u
+
+cd cf-networking
+git submodule update --init --recursive
+
+mkdir -p ../binaries
+export GOPATH=$PWD
+
+GOOS=linux GOARCH=amd64 go build -o ../binaries/network-policy-plugin-linux64 ./src/cli-plugin
+GOOS=darwin GOARCH=amd64 go build -o ../binaries/network-policy-plugin-darwin64 ./src/cli-plugin
+GOOS=windows GOARCH=amd64 go build -o ../binaries/network-policy-plugin-windows64.exe ./src/cli-plugin

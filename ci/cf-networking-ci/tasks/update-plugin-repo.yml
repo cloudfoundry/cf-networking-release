@@ -1,0 +1,18 @@
+---
+image_resource:
+  type: docker-image
+  source: { repository: c2cnetworking/deploy }
+
+platform: linux
+
+inputs:
+  - name: cf-networking-release-ci
+  - name: cli-plugin-fork
+  - name: cli-plugin-master
+  - name: cf-networking-github-release
+
+outputs:
+  - name: fork-merged
+
+run:
+  path: cf-networking-release-ci/ci/tasks/update-plugin-repo

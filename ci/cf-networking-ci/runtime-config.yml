@@ -1,0 +1,16 @@
+releases:
+- name: syslog
+  url: https://bosh.io/d/github.com/cloudfoundry/syslog-release?v=8
+  version: 8
+  sha1: 3b7465ea58a4e7afebfe84c4e0c5263e783e3947
+
+addons:
+- name: logs
+  jobs:
+  - name: syslog_forwarder
+    release: syslog
+  properties:
+    syslog:
+      address: ((syslog_address))
+      port: ((syslog_port))
+      transport: ((syslog_transport))

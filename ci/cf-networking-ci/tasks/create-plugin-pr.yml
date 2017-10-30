@@ -1,0 +1,13 @@
+---
+image_resource:
+  type: docker-image
+  source: { repository: c2cnetworking/deploy }
+
+platform: linux
+
+inputs:
+  - name: cf-networking-release-ci
+  - name: cli-plugin-fork
+
+run:
+  path: cf-networking-release-ci/ci/tasks/create-plugin-pr

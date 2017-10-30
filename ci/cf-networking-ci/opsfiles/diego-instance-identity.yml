@@ -1,0 +1,35 @@
+# Diego will generate a unique certificate in each app container
+# The certificate will include:
+# - container id
+# - container ip
+# - CF app id
+# for example
+#    cf ssh proxy -c 'openssl x509 -noout -text -in $CF_INSTANCE_CERT' | grep -A1 Subject
+#             Subject: OU=app:e1805c45-f04e-43f5-ae65-914caf1eb2ee, CN=93d82c38-0c49-4165-568c-427b
+#             Subject Public Key Info:
+#                 Public Key Algorithm: rsaEncryption
+#     --
+#                 X509v3 Subject Alternative Name:
+#                     IP Address:10.255.1.6
+# for more details, see https://www.pivotaltracker.com/n/projects/1003146/stories/140171589
+
+- type: replace
+  path: /instance_groups/name=diego-cell/jobs/name=rep/properties/diego/executor?/instance_identity_ca_cert
+  value: "((diego_instance_identity_ca.ca))"
+
+- type: replace
+  path: /instance_groups/name=diego-cell/jobs/name=rep/properties/diego/executor?/instance_identity_key
+  value: "((diego_instance_identity_ca.private_key))"
+
+- type: replace
+  path: /variables/-
+  value:
+    name: diego_instance_identity_ca
+    type: certificate
+    options:
+      is_ca: true
+      common_name: diegoInstanceIdentityCA
+
+- type: replace
+  path: /instance_groups/name=api/jobs/name=cloud_controller_ng/properties?/cc/diego/temporary_local_apps
+  value: true
