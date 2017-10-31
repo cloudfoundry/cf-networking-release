@@ -11,4 +11,4 @@ run:
     - "-ExecutionPolicy"
     - "Bypass"
     - "-File"
-    - ci/tasks/garden-external-networker-windows.ps1
+    - ci/ci/cf-networking-ci/tasks/garden-external-networker-windows.ps1
