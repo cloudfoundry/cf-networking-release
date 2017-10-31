@@ -71,7 +71,8 @@ resources:
   - name: cf-deployment
     type: git
     source:
-      branch: release-candidate
+      branch: master
+      tag_filter: v0.34.0
       uri: https://github.com/cloudfoundry/cf-deployment.git
   ###### BOSH release repos
   - name: cf-networking-dev
@@ -236,7 +237,7 @@ jobs:
       - get: cf-networking-deployments
       - get: cf-deployment
         trigger: true
-        version: {ref: 7fee5006379f50083b377152989f693b44c98a3b}
+        version: {ref: v0.34.0}
       - get: cf-networking-dev
         trigger: true
         passed: [unit-and-integration-tests]
@@ -302,7 +303,7 @@ jobs:
         passed: [beanie-deploy]
       - get: cf-deployment
         passed: [beanie-deploy]
-        version: {ref: 7fee5006379f50083b377152989f693b44c98a3b}
+        version: {ref: v0.34.0}
       - get: cf-networking-dev
         passed: [beanie-deploy]
         trigger: true
@@ -328,7 +329,7 @@ jobs:
       - get: cf-deployment
         passed: [beanie-test]
         trigger: true
-        version: {ref: 7fee5006379f50083b377152989f693b44c98a3b}
+        version: {ref: v0.34.0}
     - task: smoke-tests
       file: cf-networking-release-ci/ci/cf-networking-ci/tasks/smoke-tests.yml
       params:
@@ -352,7 +353,7 @@ jobs:
       - get: cf-deployment
         passed: [beanie-test]
         trigger: true
-        version: {ref: 7fee5006379f50083b377152989f693b44c98a3b}
+        version: {ref: v0.34.0}
       - get: cf-networking-deployments
       - get: cf-networking-tarball
         passed: [beanie-test]
@@ -398,7 +399,7 @@ jobs:
           trigger: true
         - get: cf-deployment
           passed: [beanie-test]
-          version: {ref: 7fee5006379f50083b377152989f693b44c98a3b}
+          version: {ref: v0.34.0}
         - get: cf-networking-tarball
           passed: [beanie-test]
 
@@ -420,7 +421,7 @@ jobs:
           passed: [ship-what]
         - get: cf-deployment
           passed: [ship-what]
-          version: {ref: 7fee5006379f50083b377152989f693b44c98a3b}
+          version: {ref: v0.34.0}
         - get: cf-networking-tarball
           passed: [ship-what]
         - get: cli-plugin-fork
