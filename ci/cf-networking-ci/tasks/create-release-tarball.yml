@@ -8,13 +8,13 @@ platform: linux
 inputs:
 - name: cf-networking
 - name: version
-- name: cf-networking-ci
+- name: cf-networking-release-ci
 
 outputs:
 - name: tarballs
 
 run:
-  path: cf-networking-ci/ci/cf-networking-ci/tasks/create-release-tarball
+  path: cf-networking-release-ci/ci/cf-networking-ci/tasks/create-release-tarball
 
 params:
   RELEASE_NAME: cf-networking
