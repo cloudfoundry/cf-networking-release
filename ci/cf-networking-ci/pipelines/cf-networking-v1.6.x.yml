@@ -18,7 +18,6 @@ groups:
   - beanie-bbl-destroy
   - beanie-deploy
   - beanie-test
-  - beanie-deploy-firehose-nozzle
   - delete-beanie-deployment
 - name: bbl
   jobs:
@@ -34,6 +33,18 @@ groups:
   - patch-bump
 
 resources:
+  - name: cli-plugin-fork
+    type: git
+    source:
+      uri: "git@github.com:cf-container-networking/cli-plugin-repo.git"
+      private_key: {{cli-plugin-fork-push-key}}
+      branch: update-networking-plugin
+  - name: cli-plugin-master
+    type: git
+    source:
+      uri: "https://github.com/cloudfoundry-incubator/cli-plugin-repo.git"
+      branch: master
+
   ###### Control plane
   - name: cf-networking-release-ci
     type: git
@@ -62,15 +73,6 @@ resources:
     source:
       branch: release-candidate
       uri: https://github.com/cloudfoundry/cf-deployment.git
-  ###### bosh.io releases
-  - name: concourse
-    type: bosh-io-release
-    source:
-      repository: concourse/concourse
-  - name: datadog-firehose-nozzle-release
-    type: bosh-io-release
-    source:
-      repository: cloudfoundry-incubator/datadog-firehose-nozzle-release
   ###### BOSH release repos
   - name: cf-networking-dev
     type: git
@@ -87,15 +89,6 @@ resources:
       branch: v1.6.x
       private_key: {{cf-networking-deploy-key}}
 
-  ####### Timers
-  - name: every-half-hour
-    type: time
-    source:
-      interval: 30m
-  - name: every-fifteen-minutes
-    type: time
-    source:
-      interval: 15m
   ####### Tests
   - name: cf-acceptance-tests
     type: git
@@ -106,16 +99,16 @@ resources:
   - name: version
     type: semver
     source:
-      bucket: {{cf-networking-s3-bucket}}
+      bucket: cf-networking-v1.6.x-release-semver
       region_name: us-west-2
-      initial_version: 0.2.0-rc.1
+      initial_version: 1.6.1
       key: releases/current-version
       access_key_id: {{aws-access-key-id}}
       secret_access_key: {{aws-secret-access-key}}
   - name: cf-networking-tarball
     type: s3
     source:
-      bucket: {{cf-networking-candidate-s3-bucket}}
+      bucket: cf-networking-v1.6.x-candidate-tarballs
       region_name: us-west-2
       regexp: releases/cf-networking-(.*).tgz
       access_key_id: {{aws-access-key-id}}
@@ -137,7 +130,7 @@ jobs:
         trigger: true
       - get: cf-networking-release-ci
     - task: unit-and-integration-tests
-      file: cf-networking-release-ci/tasks/postgres-tests.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/postgres-tests.yml
       privileged: true
       input_mapping:
         cf-networking-release: cf-networking-dev
@@ -150,7 +143,7 @@ jobs:
         trigger: true
       - get: cf-networking-release-ci
     - task: unit-and-integration-tests
-      file: cf-networking-release-ci/tasks/mysql-tests.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/mysql-tests.yml
       privileged: true
       input_mapping:
         cf-networking-release: cf-networking-dev
@@ -163,7 +156,7 @@ jobs:
         trigger: true
       - get: cf-networking-release-ci
     - task: unit-and-integration-tests
-      file: cf-networking-release-ci/tasks/mysql-5.6-tests.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/mysql-5.6-tests.yml
       privileged: true
       input_mapping:
         cf-networking-release: cf-networking-dev
@@ -176,7 +169,7 @@ jobs:
         trigger: true
       - get: cf-networking-release-ci
     - task: garden-external-networker-windows
-      file: cf-networking-release-ci/tasks/garden-external-networker-windows.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/garden-external-networker-windows.yml
       input_mapping:
         cf-networking-release: cf-networking-dev
         ci: cf-networking-release-ci
@@ -243,9 +236,13 @@ jobs:
       - get: cf-networking-deployments
       - get: cf-deployment
         trigger: true
+        version: {ref: 7fee5006379f50083b377152989f693b44c98a3b}
       - get: cf-networking-dev
         trigger: true
         passed: [unit-and-integration-tests]
+      - get: version
+        params:
+          pre: rc
     - task: upload-stemcell
       file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
       params:
@@ -253,7 +250,7 @@ jobs:
       input_mapping:
         bbl-state: cf-networking-deployments
     - task: collect-ops-files
-      file: cf-networking-release-ci/tasks/collect-ops-files.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/collect-ops-files.yml
       params:
         ENVIRONMENT_NAME: beanie
       input_mapping:
@@ -276,6 +273,15 @@ jobs:
         params:
           repository: updated-vars-store
           rebase: true
+    - task: create-release-tarball
+      file: cf-networking-ci/tasks/create-release-tarball.yml
+      input_mapping:
+        cf-networking: cf-networking-dev
+    - put: cf-networking-tarball
+      params:
+        file: tarballs/cf-networking-*.tgz
+    - put: version
+      params: {file: version/number}
     - task: bosh-cleanup
       file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
       params:
@@ -288,16 +294,20 @@ jobs:
     serial_groups: [beanie]
     plan:
     - aggregate:
+      - get: cf-networking-tarball
+      - get: version
+        passed: [beanie-deploy]
       - get: cf-networking-release-ci
       - get: cf-networking-deployments
         passed: [beanie-deploy]
       - get: cf-deployment
         passed: [beanie-deploy]
+        version: {ref: 7fee5006379f50083b377152989f693b44c98a3b}
       - get: cf-networking-dev
         passed: [beanie-deploy]
         trigger: true
     - task: acceptance-tests
-      file: cf-networking-release-ci/tasks/acceptance-tests.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/acceptance-tests.yml
       input_mapping:
         cf-networking: cf-networking-dev
         test-config: cf-networking-deployments
@@ -310,8 +320,6 @@ jobs:
     serial_groups: [beanie-test-group]
     plan:
     - aggregate:
-      - get: every-fifteen-minutes
-        trigger: true
       - get: cf-networking-deployments
       - get: cf-networking-dev
         passed: [beanie-test]
@@ -320,8 +328,9 @@ jobs:
       - get: cf-deployment
         passed: [beanie-test]
         trigger: true
+        version: {ref: 7fee5006379f50083b377152989f693b44c98a3b}
     - task: smoke-tests
-      file: cf-networking-release-ci/tasks/smoke-tests.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/smoke-tests.yml
       params:
         ENVIRONMENT_NAME: beanie
         ENVIRONMENT_TAG: beanie.c2c.cf-app.com
@@ -343,13 +352,14 @@ jobs:
       - get: cf-deployment
         passed: [beanie-test]
         trigger: true
+        version: {ref: 7fee5006379f50083b377152989f693b44c98a3b}
       - get: cf-networking-deployments
       - get: cf-networking-tarball
         passed: [beanie-test]
       - get: version
         passed: [beanie-test]
     - task: copy-config
-      file: cf-networking-release-ci/tasks/copy-config.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/copy-config.yml
       params:
         ENVIRONMENT: beanie
     - task: cats
@@ -379,17 +389,18 @@ jobs:
     - do:
       - aggregate:
         - get: version
-          passed: [beanie-drats]
+          passed: [beanie-test]
         - get: cf-networking-dev
           params:
             fetch: [master]
             submodules: none
-          passed: [beanie-drats, trucker-test-upgrade, sombrero-test-upgrade, beanie-acceptance-errand, beanie-smoke]
+          passed: [beanie-smoke]
           trigger: true
         - get: cf-deployment
-          passed: [beanie-drats]
+          passed: [beanie-test]
+          version: {ref: 7fee5006379f50083b377152989f693b44c98a3b}
         - get: cf-networking-tarball
-          passed: [beanie-drats, beanie-acceptance-errand]
+          passed: [beanie-test]
 
   - name: shipit
     serial_groups: [version]
@@ -409,16 +420,17 @@ jobs:
           passed: [ship-what]
         - get: cf-deployment
           passed: [ship-what]
+          version: {ref: 7fee5006379f50083b377152989f693b44c98a3b}
         - get: cf-networking-tarball
           passed: [ship-what]
         - get: cli-plugin-fork
         - get: cli-plugin-master
       - task: shipit
-        file: cf-networking-release-ci/tasks/shipit.yml
+        file: cf-networking-release-ci/ci/cf-networking-ci/tasks/shipit.yml
         input_mapping:
           cf-networking: cf-networking-dev
       - task: build-cli
-        file: cf-networking-release-ci/tasks/build-cli.yml
+        file: cf-networking-release-ci/ci/cf-networking-ci/tasks/build-cli.yml
         input_mapping:
           cf-networking: cf-networking-dev
       - put: version
@@ -432,7 +444,7 @@ jobs:
         params:
           file: final-release/cf-networking-*.tgz
       - task: build-release-notes
-        file: cf-networking-release-ci/tasks/build-release-notes.yml
+        file: cf-networking-release-ci/ci/cf-networking-ci/tasks/build-release-notes.yml
       - put: cf-networking-github-release
         params:
           name: version/number
@@ -443,7 +455,7 @@ jobs:
           - final-release/cf-networking-*.tgz
           - binaries/network-policy-plugin-*
 
-  # bump minor version (i.e. 0.1.0 -> 0.2.0)
+  # bump patch version (i.e. 0.1.0 -> 0.1.1)
   - name: bump-patch-version
     serial_groups: [version]
     plan:
@@ -451,7 +463,7 @@ jobs:
       - get: version
         trigger: true
         passed: [shipit]
-        params: {bump: minor, pre: rc}
+        params: {bump: patch, pre: rc}
     - put: version
       params: {file: version/number}
 
@@ -471,15 +483,15 @@ jobs:
           params:  # just here for a dependency/trigger, so keep it light
             submodules: none
             depth: 1
-          passed: [merge-master]
+          passed: [shipit]
       - task: update-plugin-repo
-        file: cf-networking-release-ci/tasks/update-plugin-repo.yml
+        file: cf-networking-release-ci/ci/cf-networking-ci/tasks/update-plugin-repo.yml
       - put: cli-plugin-fork
         params:
           repository: fork-merged
           force: true
       - task: create-plugin-pr
-        file: cf-networking-release-ci/tasks/create-plugin-pr.yml
+        file: cf-networking-release-ci/ci/cf-networking-ci/tasks/create-plugin-pr.yml
         params:
           GITHUB_TOKEN: {{github-access-token}}
 

@@ -15,4 +15,4 @@ outputs:
   - name: fork-merged
 
 run:
-  path: cf-networking-release-ci/ci/tasks/update-plugin-repo
+  path: cf-networking-release-ci/ci/cf-networking-ci/tasks/update-plugin-repo

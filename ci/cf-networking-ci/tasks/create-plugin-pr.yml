@@ -10,4 +10,4 @@ inputs:
   - name: cli-plugin-fork
 
 run:
-  path: cf-networking-release-ci/ci/tasks/create-plugin-pr
+  path: cf-networking-release-ci/ci/cf-networking-ci/tasks/create-plugin-pr

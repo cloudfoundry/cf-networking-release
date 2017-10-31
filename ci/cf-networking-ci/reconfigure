@@ -6,5 +6,5 @@ export TARGET=c2c
 
 fly -t $TARGET \
   set-pipeline -p $PIPELINE \
-  -c $HOME/workspace/cf-networking-release-ci/ci/pipelines/$PIPELINE.yml \
+  -c $HOME/workspace/cf-networking-release/ci/cf-networking-ci/pipelines/$PIPELINE.yml \
   -l $HOME/workspace/cf-networking-deployments/pipeline-credentials.yml

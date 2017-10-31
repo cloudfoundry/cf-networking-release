@@ -15,7 +15,7 @@ outputs:
   - name: ops-files
 
 run:
-  path: cf-networking-release-ci/ci/tasks/collect-ops-files
+  path: cf-networking-release-ci/ci/cf-networking-ci/tasks/collect-ops-files
 
 params:
   ENVIRONMENT_NAME: ~

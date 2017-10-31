@@ -13,4 +13,4 @@ outputs:
   - name: binaries
 
 run:
-  path: cf-networking-release-ci/ci/tasks/build-cli
+  path: cf-networking-release-ci/ci/cf-networking-ci/tasks/build-cli
