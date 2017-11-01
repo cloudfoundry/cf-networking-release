@@ -11,6 +11,7 @@ inputs:
   - name: cf-networking-deployments
   - name: cf-networking-tarball
   - name: cf-networking
+  - name: cf-networking-master
 
 outputs:
   - name: final-release
