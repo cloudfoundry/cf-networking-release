@@ -12,11 +12,11 @@ fi
 cp cf-networking-deployments/config/private.yml cf-networking/config/private.yml
 
 CANDIDATE_DIR=$PWD/cf-networking-tarball
-cd cf-networking
 
 git config --global user.email "container-networking+ci@pivotal.io"
 git config --global user.name "Container Networking Bot"
 
+cd cf-networking-master
 RELEASE_YML=$PWD/releases/cf-networking/cf-networking-${VERSION}.yml
 
 if [ -e ${RELEASE_YML} ]; then
