@@ -8,6 +8,8 @@ groups:
   - unit-and-integration-tests
   - beanie-deploy
   - beanie-test
+  - beanie-smoke
+  - beanie-cats
   - ship-what
   - shipit
   - bump-patch-version
@@ -61,8 +63,8 @@ resources:
   - name: cats-concourse-task
     type: git
     source:
-      uri: https://github.com/cloudfoundry/cats-concourse-task
-      branch: master
+      uri: https://github.com/cf-container-networking/cats-concourse-task
+      branch: v1.6.x
   - name: cf-deployment-concourse-tasks
     type: git
     source:
@@ -72,7 +74,7 @@ resources:
     type: git
     source:
       branch: master
-      tag_filter: v0.34.0
+      tag_filter: v0.24.0
       uri: https://github.com/cloudfoundry/cf-deployment.git
   ###### BOSH release repos
   - name: cf-networking-dev
@@ -87,14 +89,14 @@ resources:
     type: git
     source:
       uri: git@github.com:cloudfoundry-incubator/cf-networking-release.git
-      branch: v1.6.x
+      branch: master
       private_key: {{cf-networking-deploy-key}}
 
   ####### Tests
   - name: cf-acceptance-tests
     type: git
     source:
-      branch: master
+      branch: cf0.22
       uri: git://github.com/cloudfoundry/cf-acceptance-tests.git
   #######  Release management
   - name: version
@@ -237,7 +239,7 @@ jobs:
       - get: cf-networking-deployments
       - get: cf-deployment
         trigger: true
-        version: {ref: v0.34.0}
+        version: {ref: v0.24.0}
       - get: cf-networking-dev
         trigger: true
         passed: [unit-and-integration-tests]
@@ -275,7 +277,7 @@ jobs:
           repository: updated-vars-store
           rebase: true
     - task: create-release-tarball
-      file: cf-networking-ci/tasks/create-release-tarball.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/create-release-tarball.yml
       input_mapping:
         cf-networking: cf-networking-dev
     - put: cf-networking-tarball
@@ -303,7 +305,7 @@ jobs:
         passed: [beanie-deploy]
       - get: cf-deployment
         passed: [beanie-deploy]
-        version: {ref: v0.34.0}
+        version: {ref: v0.24.0}
       - get: cf-networking-dev
         passed: [beanie-deploy]
         trigger: true
@@ -329,7 +331,7 @@ jobs:
       - get: cf-deployment
         passed: [beanie-test]
         trigger: true
-        version: {ref: v0.34.0}
+        version: {ref: v0.24.0}
     - task: smoke-tests
       file: cf-networking-release-ci/ci/cf-networking-ci/tasks/smoke-tests.yml
       params:
@@ -353,7 +355,7 @@ jobs:
       - get: cf-deployment
         passed: [beanie-test]
         trigger: true
-        version: {ref: v0.34.0}
+        version: {ref: v0.24.0}
       - get: cf-networking-deployments
       - get: cf-networking-tarball
         passed: [beanie-test]
@@ -365,6 +367,8 @@ jobs:
         ENVIRONMENT: beanie
     - task: cats
       file: cats-concourse-task/task.yml
+      input_mapping:
+        cf-networking-release: cf-networking-dev
       params:
         NODES: 8
 
@@ -393,13 +397,12 @@ jobs:
           passed: [beanie-test]
         - get: cf-networking-dev
           params:
-            fetch: [master]
             submodules: none
           passed: [beanie-smoke]
           trigger: true
         - get: cf-deployment
           passed: [beanie-test]
-          version: {ref: v0.34.0}
+          version: {ref: v0.24.0}
         - get: cf-networking-tarball
           passed: [beanie-test]
 
@@ -414,14 +417,16 @@ jobs:
           params:
             bump: final
           passed: [ship-what]
+        - get: cf-networking-master
+          params:
+            submodules: none
         - get: cf-networking-dev
           params:
-            fetch: [master]
             submodules: none
           passed: [ship-what]
         - get: cf-deployment
           passed: [ship-what]
-          version: {ref: v0.34.0}
+          version: {ref: v0.24.0}
         - get: cf-networking-tarball
           passed: [ship-what]
         - get: cli-plugin-fork
