@@ -20,7 +20,10 @@ pushd cf-networking
     cf install-plugin -f /tmp/bin/network-policy-plugin
 popd
 
-cd cf-networking-tests/src/test/smoke
+cd cf-networking-tests
+export GOPATH=$PWD
+
+cd src/test/smoke
 export APPS_DIR=../../example-apps
 set +e
 ginkgo -r -v
