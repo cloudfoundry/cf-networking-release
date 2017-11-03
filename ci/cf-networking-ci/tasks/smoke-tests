@@ -13,13 +13,14 @@ export CONFIG=${PWD}/${CONFIG:-"${ENVIRONMENT_PATH}"}
 
 echo "$CONFIG"
 
-cd cf-networking
-export GOPATH=$PWD
+pushd cf-networking
+    export GOPATH=$PWD
 
-go build -o /tmp/bin/network-policy-plugin ./src/cli-plugin
-cf install-plugin -f /tmp/bin/network-policy-plugin
+    go build -o /tmp/bin/network-policy-plugin ./src/cli-plugin
+    cf install-plugin -f /tmp/bin/network-policy-plugin
+popd
 
-cd src/test/smoke
+cd cf-networking-tests/src/test/smoke
 export APPS_DIR=../../example-apps
 set +e
 ginkgo -r -v

@@ -9,6 +9,7 @@ inputs:
   - name: cf-networking-release-ci
   - name: test-config
   - name: cf-networking
+  - name: cf-networking-tests
 
 params:
     ENVIRONMENT_NAME: ~
