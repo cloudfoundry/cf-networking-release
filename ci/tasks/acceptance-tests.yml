@@ -1,0 +1,22 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source: { repository: c2cnetworking/dev-postgres }
+
+inputs:
+  - name: cf-networking-ci
+  - name: test-config
+  - name: vars-store
+  - name: cf-networking
+
+outputs:
+  - name: network-stats
+
+params:
+    ENVIRONMENT_NAME: ~
+    CONFIG: ~
+
+run:
+  path: cf-networking-ci/ci/tasks/acceptance-tests

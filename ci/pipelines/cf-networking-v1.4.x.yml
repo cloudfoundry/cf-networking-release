@@ -1,0 +1,624 @@
+groups:
+- name: cf-networking-v1.4.x
+  jobs:
+  - mysql-tests
+  - mysql-5.6-tests
+  - postgres-tests
+  - windows-tests
+  - unit-and-integration-tests
+  - caubeen-deploy
+  - caubeen-test
+  - montera-deploy
+  - montera-test
+  - montera-smoke
+  - montera-cats
+  - ship-what
+  - shipit
+  - bump-patch-version
+  - merge-master
+- name: caubeen
+  jobs:
+  - caubeen-bbl-up
+  - caubeen-bbl-destroy
+  - caubeen-deploy
+  - caubeen-test
+  - delete-caubeen-deployment
+- name: montera
+  jobs:
+  - montera-bbl-up
+  - montera-bbl-destroy
+  - montera-deploy
+  - montera-test
+  - montera-smoke
+  - montera-cats
+  - delete-deployment-montera-cf
+- name: bbl
+  jobs:
+  - caubeen-bbl-up
+  - montera-bbl-up
+  - caubeen-bbl-destroy
+  - montera-bbl-destroy
+- name: cleanup
+  jobs:
+  - delete-deployment-montera-cf
+  - delete-caubeen-deployment
+
+resources:
+  ###### Control plane
+  - name: cf-networking-ci
+    type: git
+    source:
+      uri: git@github.com:cloudfoundry/cf-networking-release.git
+      branch: v1.4.x
+      ignore_paths:
+        - docs
+      private_key: {{cf-networking-deploy-key}}
+  - name: cf-networking-deployments
+    type: git
+    source:
+      uri: "git@github.com:cloudfoundry/cf-networking-deployments.git"
+      branch: master
+      private_key: {{cf-networking-deployments-push-key}}
+  - name: cats-concourse-task
+    type: git
+    source:
+      uri: https://github.com/cf-container-networking/cats-concourse-task
+      branch: v1.4.x
+  - name: cf-deployment-concourse-tasks
+    type: git
+    source:
+      uri: https://github.com/cloudfoundry/cf-deployment-concourse-tasks
+      branch: master
+  - name: cf-deployment
+    type: git
+    source:
+      branch: master
+      uri: https://github.com/cloudfoundry/cf-deployment.git
+      tag_filter: v0.20.0
+  ###### BOSH release repos
+  - name: cf-networking-v.1.4.x
+    type: git
+    source:
+      uri: git@github.com:cloudfoundry/cf-networking-release.git
+      branch: v1.4.x
+      ignore_paths:
+        - docs
+      private_key: {{cf-networking-deploy-key}}
+  - name: cf-networking-dev
+    type: git
+    source:
+      uri: git@github.com:cloudfoundry/cf-networking-release.git
+      branch: develop
+      ignore_paths:
+        - docs
+      private_key: {{cf-networking-deploy-key}}
+  - name: cf-networking-master
+    type: git
+    source:
+      uri: git@github.com:cloudfoundry/cf-networking-release.git
+      branch: master
+      private_key: {{cf-networking-deploy-key}}
+  ####### Tests
+  - name: cf-acceptance-tests
+    type: git
+    source:
+      branch: cf0.20
+      uri: git://github.com/cloudfoundry/cf-acceptance-tests.git
+  #######  Release management
+  - name: version
+    type: semver
+    source:
+      bucket: cf-networking-v1.4.x-release-semver
+      region_name: us-west-2
+      initial_version: 1.4.2
+      key: releases/current-version
+      access_key_id: {{aws-access-key-id}}
+      secret_access_key: {{aws-secret-access-key}}
+  - name: cf-networking-tarball
+    type: s3
+    source:
+      bucket: cf-networking-v1.4.x-candidate-tarballs
+      region_name: us-west-2
+      regexp: releases/cf-networking-(.*).tgz
+      access_key_id: {{aws-access-key-id}}
+      secret_access_key: {{aws-secret-access-key}}
+  # Github release
+  - name: cf-networking-github-release
+    type: github-release
+    source:
+      user: cloudfoundry
+      repository: cf-networking-release
+      access_token: {{github-access-token}}
+
+jobs:
+  - name: postgres-tests
+    public: true
+    plan:
+    - aggregate:
+      - get: cf-networking-v.1.4.x
+        trigger: true
+      - get: cf-networking-ci
+    - task: unit-and-integration-tests
+      file: cf-networking-ci/ci/tasks/postgres-tests.yml
+      privileged: true
+      input_mapping:
+        cf-networking-release: cf-networking-v.1.4.x
+
+  - name: mysql-tests
+    public: true
+    plan:
+    - aggregate:
+      - get: cf-networking-v.1.4.x
+        trigger: true
+      - get: cf-networking-ci
+    - task: unit-and-integration-tests
+      file: cf-networking-ci/ci/tasks/mysql-tests.yml
+      privileged: true
+      input_mapping:
+        cf-networking-release: cf-networking-v.1.4.x
+
+  - name: mysql-5.6-tests
+    public: true
+    plan:
+    - aggregate:
+      - get: cf-networking-v.1.4.x
+        trigger: true
+      - get: cf-networking-ci
+    - task: unit-and-integration-tests
+      file: cf-networking-ci/ci/tasks/mysql-5.6-tests.yml
+      privileged: true
+      input_mapping:
+        cf-networking-release: cf-networking-v.1.4.x
+
+  - name: windows-tests
+    public: true
+    plan:
+    - aggregate:
+      - get: cf-networking-v.1.4.x
+        trigger: true
+      - get: cf-networking-ci
+    - task: garden-external-networker-windows
+      file: cf-networking-ci/ci/tasks/garden-external-networker-windows.yml
+      input_mapping:
+        cf-networking-release: cf-networking-v.1.4.x
+        ci: cf-networking-ci
+
+  - name: unit-and-integration-tests
+    public: true
+    plan:
+    - get: cf-networking-v.1.4.x
+      passed: [postgres-tests, mysql-tests, mysql-5.6-tests, windows-tests]
+      trigger: true
+
+  - name: caubeen-bbl-up
+    serial_groups: [caubeen]
+    plan:
+    - aggregate:
+      - get: cf-deployment-concourse-tasks
+      - get: cf-networking-deployments
+    - task: bbl-up
+      file: cf-deployment-concourse-tasks/bbl-up/task.yml
+      params:
+        BBL_GCP_SERVICE_ACCOUNT_KEY: ../gcp/service-account.key.json
+        BBL_GCP_PROJECT_ID: cf-container-networking-gcp
+        BBL_GCP_REGION: us-east1
+        BBL_GCP_ZONE: us-east1-b
+        BBL_STATE_DIR: environments/caubeen/
+        BBL_IAAS: gcp
+        BBL_LB_CERT: {{caubeen-lb-cert}}
+        BBL_LB_KEY: {{caubeen-lb-key}}
+        LB_DOMAIN: caubeen.c2c.cf-app.com
+        BBL_ENV_NAME: caubeen
+      input_mapping:
+        bbl-state: cf-networking-deployments
+      ensure:
+        put: cf-networking-deployments
+        params:
+          repository: updated-bbl-state
+          rebase: true
+
+  - name: caubeen-bbl-destroy
+    serial_groups: [caubeen]
+    plan:
+    - aggregate:
+      - get: cf-deployment-concourse-tasks
+      - get: cf-networking-deployments
+    - task: bbl-destroy
+      file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
+      params:
+        BBL_STATE_DIR: environments/caubeen/
+      input_mapping:
+        bbl-state: cf-networking-deployments
+      ensure:
+        put: cf-networking-deployments
+        params:
+          repository: updated-bbl-state
+          rebase: true
+
+  - name: caubeen-deploy
+    serial_groups: [caubeen]
+    plan:
+    - aggregate:
+      - get: cf-networking-ci
+      - get: cf-deployment-concourse-tasks
+      - get: cf-networking-deployments
+      - get: cf-deployment
+        version: {ref: v0.20.0}
+        trigger: true
+      - get: cf-networking-v.1.4.x
+        trigger: true
+        passed: [unit-and-integration-tests]
+    - task: upload-stemcell
+      file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
+      params:
+        BBL_STATE_DIR: environments/caubeen/
+      input_mapping:
+        bbl-state: cf-networking-deployments
+    - task: collect-ops-files
+      file: cf-networking-ci/ci/tasks/collect-ops-files.yml
+      params:
+        ENVIRONMENT_NAME: caubeen
+      input_mapping:
+        cf-networking-release: cf-networking-v.1.4.x
+        deployments-repo: cf-networking-deployments
+    - task: deploy-cf
+      file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
+      params:
+        BBL_STATE_DIR: environments/caubeen/
+        SYSTEM_DOMAIN: caubeen.c2c.cf-app.com
+        OPS_FILES: gcp.yml use-3-azs-for-router.yml use-compiled-releases.yml cf-networking.yml opsfile.yml
+        VARS_STORE_FILE: environments/caubeen/vars-store.yml
+      input_mapping:
+        bbl-state: cf-networking-deployments
+        release: cf-networking-v.1.4.x
+        vars-files: cf-networking-deployments
+        vars-store: cf-networking-deployments
+      ensure:
+        put: cf-networking-deployments
+        params:
+          repository: updated-vars-store
+          rebase: true
+    - task: bosh-cleanup
+      file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
+      params:
+        BBL_STATE_DIR: environments/caubeen/
+        CLEAN_ALL: false
+      input_mapping:
+        bbl-state: cf-networking-deployments
+
+  - name: caubeen-test
+    serial_groups: [caubeen]
+    plan:
+    - aggregate:
+      - get: cf-networking-ci
+      - get: cf-networking-deployments
+        passed: [caubeen-deploy]
+      - get: cf-deployment
+        version: {ref: v0.20.0}
+        passed: [caubeen-deploy]
+      - get: cf-networking-v.1.4.x
+        passed: [caubeen-deploy]
+        trigger: true
+    - task: acceptance-tests
+      file: cf-networking-ci/ci/tasks/acceptance-tests.yml
+      input_mapping:
+        cf-networking: cf-networking-v.1.4.x
+        test-config: cf-networking-deployments
+        vars-store: cf-networking-deployments
+      params:
+        ENVIRONMENT_NAME: caubeen
+
+  - name: montera-bbl-up
+    serial_groups: [montera-test-group, montera-deploy-group]
+    plan:
+    - aggregate:
+      - get: cf-deployment-concourse-tasks
+      - get: cf-networking-deployments
+    - task: bbl-up
+      file: cf-deployment-concourse-tasks/bbl-up/task.yml
+      params:
+        BBL_GCP_SERVICE_ACCOUNT_KEY: ../gcp/service-account.key.json
+        BBL_GCP_PROJECT_ID: cf-container-networking-gcp
+        BBL_GCP_REGION: us-east1
+        BBL_GCP_ZONE: us-east1-b
+        BBL_STATE_DIR: environments/montera/
+        BBL_IAAS: gcp
+        BBL_LB_CERT: {{montera-lb-cert}}
+        BBL_LB_KEY: {{montera-lb-key}}
+        LB_DOMAIN: montera.c2c.cf-app.com
+        BBL_ENV_NAME: montera
+      input_mapping:
+        bbl-state: cf-networking-deployments
+      ensure:
+        put: cf-networking-deployments
+        params:
+          repository: updated-bbl-state
+          rebase: true
+
+  - name: montera-bbl-destroy
+    serial_groups: [montera-deploy-group]
+    plan:
+    - aggregate:
+      - get: cf-deployment-concourse-tasks
+      - get: cf-networking-deployments
+    - task: bbl-destroy
+      file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
+      params:
+        BBL_STATE_DIR: environments/montera/
+      input_mapping:
+        bbl-state: cf-networking-deployments
+      ensure:
+        put: cf-networking-deployments
+        params:
+          repository: updated-bbl-state
+          rebase: true
+
+  - name: montera-deploy
+    serial_groups: [montera-deploy-group, version]
+    plan:
+    - aggregate:
+      - get: cf-networking-ci
+      - get: cf-deployment-concourse-tasks
+      - get: cf-networking-deployments
+      - get: cf-deployment
+        version: {ref: v0.20.0}
+        passed: [caubeen-test]
+        trigger: true
+      - get: cf-networking-v.1.4.x
+        trigger: true
+        passed: [caubeen-test]
+      - get: version
+        params:
+          pre: rc
+    - task: upload-stemcell
+      file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
+      params:
+        BBL_STATE_DIR: environments/montera/
+      input_mapping:
+        bbl-state: cf-networking-deployments
+    - task: collect-ops-files
+      file: cf-networking-ci/ci/tasks/collect-ops-files.yml
+      params:
+        ENVIRONMENT_NAME: montera
+      input_mapping:
+        cf-networking-release: cf-networking-v.1.4.x
+        deployments-repo: cf-networking-deployments
+    - task: deploy-cf
+      file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
+      params:
+        BBL_STATE_DIR: environments/montera/
+        SYSTEM_DOMAIN: montera.c2c.cf-app.com
+        OPS_FILES: gcp.yml use-3-azs-for-router.yml use-compiled-releases.yml cf-networking.yml opsfile.yml custom-apps-domain.yml enable-iptables-logger.yml
+        VARS_STORE_FILE: environments/montera/vars-store.yml
+      input_mapping:
+        bbl-state: cf-networking-deployments
+        vars-store: cf-networking-deployments
+        vars-files: cf-networking-deployments
+        release: cf-networking-v.1.4.x
+      ensure:
+        put: cf-networking-deployments
+        params:
+          repository: updated-vars-store
+          rebase: true
+    - task: create-release-tarball
+      file: cf-networking-ci/ci/tasks/create-release-tarball.yml
+      input_mapping:
+        cf-networking: cf-networking-v.1.4.x
+    - put: cf-networking-tarball
+      params:
+        file: tarballs/cf-networking-*.tgz
+    - put: version
+      params: {file: version/number}
+    - task: bosh-cleanup
+      file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
+      params:
+        BBL_STATE_DIR: environments/montera/
+        CLEAN_ALL: false
+      input_mapping:
+        bbl-state: cf-networking-deployments
+
+  - name: montera-test
+    serial_groups: [montera-test-group, montera-deploy-group]
+    plan:
+    - aggregate:
+      - get: cf-networking-deployments
+        passed: [montera-deploy]
+      - get: cf-networking-v.1.4.x
+        passed: [montera-deploy]
+        trigger: true
+      - get: cf-networking-tarball
+        passed: [montera-deploy]
+      - get: version
+        passed: [montera-deploy]
+      - get: cf-networking-ci
+      - get: cf-deployment
+        version: {ref: v0.20.0}
+        passed: [montera-deploy]
+        trigger: true
+    - task: acceptance-tests
+      file: cf-networking-ci/ci/tasks/acceptance-tests.yml
+      input_mapping:
+        cf-networking: cf-networking-v.1.4.x
+        test-config: cf-networking-deployments
+        vars-store: cf-networking-deployments
+      params:
+        ENVIRONMENT_NAME: montera
+
+  - name: montera-smoke
+    serial_groups: [montera-test-group]
+    plan:
+    - aggregate:
+      - get: cf-networking-deployments
+      - get: cf-networking-v.1.4.x
+        passed: [montera-test]
+        trigger: true
+      - get: cf-networking-ci
+      - get: cf-deployment
+        version: {ref: v0.20.0}
+        passed: [montera-test]
+        trigger: true
+    - task: smoke-tests
+      file: cf-networking-ci/ci/tasks/smoke-tests.yml
+      params:
+        ENVIRONMENT_NAME: montera
+        ENVIRONMENT_TAG: montera.c2c.cf-app.com
+      input_mapping:
+        test-config: cf-networking-deployments
+        cf-networking: cf-networking-v.1.4.x
+
+  - name: montera-cats
+    serial_groups: [montera-test-group, montera-deploy-group]
+    plan:
+    - aggregate:
+      - get: cf-networking-ci
+      - get: cf-acceptance-tests
+      - get: cats-concourse-task
+      - get: cf-networking-v.1.4.x
+        passed: [montera-test]
+        trigger: true
+      - get: cf-deployment
+        version: {ref: v0.20.0}
+        passed: [montera-test]
+        trigger: true
+      - get: cf-networking-deployments
+      - get: cf-networking-tarball
+        passed: [montera-test]
+      - get: version
+        passed: [montera-test]
+    - task: copy-config
+      file: cf-networking-ci/ci/tasks/copy-config.yml
+      params:
+        ENVIRONMENT: montera
+    - task: cats
+      file: cats-concourse-task/task.yml
+      params:
+        NODES: 8
+
+##### Human-triggered utilities
+
+  - name: delete-caubeen-deployment
+    public: true
+    serial_groups: [caubeen]
+    plan:
+    - aggregate:
+      - get: cf-networking-deployments
+      - get: cf-deployment-concourse-tasks
+    - task: delete-deployment
+      file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
+      params:
+        BBL_STATE_DIR: environments/caubeen/
+      input_mapping:
+        bbl-state: cf-networking-deployments
+
+  - name: delete-deployment-montera-cf
+    public: true
+    serial_groups: [montera-test-group, montera-deploy-group]
+    plan:
+    - aggregate:
+      - get: cf-networking-deployments
+      - get: cf-deployment-concourse-tasks
+    - task: delete-deployment
+      file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
+      params:
+        BBL_STATE_DIR: environments/montera/
+      input_mapping:
+        bbl-state: cf-networking-deployments
+
+  - name: ship-what
+    serial_groups: [version]
+    plan:
+    - do:
+      - aggregate:
+        - get: version
+          passed: [montera-cats]
+        - get: cf-networking-v.1.4.x
+          params:
+            fetch: [master]
+            submodules: none
+          passed: [montera-cats, montera-smoke]
+          trigger: true
+        - get: cf-deployment
+          version: {ref: v0.20.0}
+          passed: [montera-cats]
+        - get: cf-networking-tarball
+          passed: [montera-cats]
+
+  - name: shipit
+    serial_groups: [version]
+    plan:
+    - do:
+      - aggregate:
+        - get: cf-networking-deployments
+        - get: cf-networking-ci
+        - get: version
+          params:
+            bump: final
+          passed: [ship-what]
+        - get: cf-networking-master
+          params:
+            submodules: none
+        - get: cf-networking-v1.4.x
+          params:
+            submodules: none
+          passed: [ship-what]
+        - get: cf-deployment
+          version: {ref: v0.20.0}
+          passed: [ship-what]
+        - get: cf-networking-tarball
+          passed: [ship-what]
+      - task: shipit
+        file: cf-networking-ci/ci/tasks/shipit.yml
+        input_mapping:
+          cf-networking: cf-networking-v1.4.x
+      - put: version
+        params: {file: version/number}
+      - put: cf-networking-v1.4.x
+        params:
+          repository: release/master
+          tag: version/number
+          tag_prefix: v
+      - put: cf-networking-tarball
+        params:
+          file: final-release/cf-networking-*.tgz
+      - task: build-release-notes
+        file: cf-networking-ci/ci/tasks/build-release-notes.yml
+        input_mapping:
+          cf-networking: cf-networking-v1.4.x
+      - put: cf-networking-github-release
+        params:
+          name: version/number
+          tag: version/number
+          body: release-notes/notes.md
+          tag_prefix: v
+          globs:
+          - final-release/cf-networking-*.tgz
+
+  # bump patch version (i.e. 0.1.0 -> 0.2.0)
+  - name: bump-patch-version
+    serial_groups: [version]
+    plan:
+    - aggregate:
+      - get: version
+        trigger: true
+        passed: [shipit]
+        params: {bump: patch, pre: rc}
+    - put: version
+      params: {file: version/number}
+
+  # merge master back to develop
+  - name: merge-master
+    plan:
+    - do:
+      - aggregate:
+        - get: cf-networking-ci
+        - get: cf-networking-master
+          params:
+            submodules: none
+          passed: [shipit]
+          trigger: true
+        - get: cf-networking-dev
+          params: {submodules: none}
+      - task: merge-master
+        file: cf-networking-ci/ci/tasks/merge-master.yml
+      - put: cf-networking-dev
+        params: {repository: release-merged}

@@ -1,0 +1,16 @@
+#!/bin/bash
+
+set -e -u
+
+pushd "deployments-repo/environments/${ENVIRONMENT_NAME}"
+  BOSH_CA_CERT="$(bbl director-ca-cert)"
+  export BOSH_CA_CERT
+  BOSH_ENVIRONMENT=$(bbl director-address)
+  export BOSH_ENVIRONMENT
+  BOSH_CLIENT=$(bbl director-username)
+  export BOSH_CLIENT
+  BOSH_CLIENT_SECRET=$(bbl director-password)
+  export BOSH_CLIENT_SECRET
+popd
+
+bosh upload-release tarballs/*.tgz
