@@ -76,7 +76,7 @@ resources:
       uri: https://github.com/cloudfoundry/cf-deployment.git
       tag_filter: v0.20.0
   ###### BOSH release repos
-  - name: cf-networking-v.1.4.x
+  - name: cf-networking-v1.4.x
     type: git
     source:
       uri: git@github.com:cloudfoundry/cf-networking-release.git
@@ -135,58 +135,58 @@ jobs:
     public: true
     plan:
     - aggregate:
-      - get: cf-networking-v.1.4.x
+      - get: cf-networking-v1.4.x
         trigger: true
       - get: cf-networking-ci
     - task: unit-and-integration-tests
       file: cf-networking-ci/ci/tasks/postgres-tests.yml
       privileged: true
       input_mapping:
-        cf-networking-release: cf-networking-v.1.4.x
+        cf-networking-release: cf-networking-v1.4.x
 
   - name: mysql-tests
     public: true
     plan:
     - aggregate:
-      - get: cf-networking-v.1.4.x
+      - get: cf-networking-v1.4.x
         trigger: true
       - get: cf-networking-ci
     - task: unit-and-integration-tests
       file: cf-networking-ci/ci/tasks/mysql-tests.yml
       privileged: true
       input_mapping:
-        cf-networking-release: cf-networking-v.1.4.x
+        cf-networking-release: cf-networking-v1.4.x
 
   - name: mysql-5.6-tests
     public: true
     plan:
     - aggregate:
-      - get: cf-networking-v.1.4.x
+      - get: cf-networking-v1.4.x
         trigger: true
       - get: cf-networking-ci
     - task: unit-and-integration-tests
       file: cf-networking-ci/ci/tasks/mysql-5.6-tests.yml
       privileged: true
       input_mapping:
-        cf-networking-release: cf-networking-v.1.4.x
+        cf-networking-release: cf-networking-v1.4.x
 
   - name: windows-tests
     public: true
     plan:
     - aggregate:
-      - get: cf-networking-v.1.4.x
+      - get: cf-networking-v1.4.x
         trigger: true
       - get: cf-networking-ci
     - task: garden-external-networker-windows
       file: cf-networking-ci/ci/tasks/garden-external-networker-windows.yml
       input_mapping:
-        cf-networking-release: cf-networking-v.1.4.x
+        cf-networking-release: cf-networking-v1.4.x
         ci: cf-networking-ci
 
   - name: unit-and-integration-tests
     public: true
     plan:
-    - get: cf-networking-v.1.4.x
+    - get: cf-networking-v1.4.x
       passed: [postgres-tests, mysql-tests, mysql-5.6-tests, windows-tests]
       trigger: true
 
@@ -211,6 +211,7 @@ jobs:
         BBL_ENV_NAME: caubeen
       input_mapping:
         bbl-state: cf-networking-deployments
+        ops-files: cf-networking-deployments
       ensure:
         put: cf-networking-deployments
         params:
@@ -245,7 +246,7 @@ jobs:
       - get: cf-deployment
         version: {ref: v0.20.0}
         trigger: true
-      - get: cf-networking-v.1.4.x
+      - get: cf-networking-v1.4.x
         trigger: true
         passed: [unit-and-integration-tests]
     - task: upload-stemcell
@@ -259,7 +260,7 @@ jobs:
       params:
         ENVIRONMENT_NAME: caubeen
       input_mapping:
-        cf-networking-release: cf-networking-v.1.4.x
+        cf-networking-release: cf-networking-v1.4.x
         deployments-repo: cf-networking-deployments
     - task: deploy-cf
       file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
@@ -270,7 +271,7 @@ jobs:
         VARS_STORE_FILE: environments/caubeen/vars-store.yml
       input_mapping:
         bbl-state: cf-networking-deployments
-        release: cf-networking-v.1.4.x
+        release: cf-networking-v1.4.x
         vars-files: cf-networking-deployments
         vars-store: cf-networking-deployments
       ensure:
@@ -296,13 +297,13 @@ jobs:
       - get: cf-deployment
         version: {ref: v0.20.0}
         passed: [caubeen-deploy]
-      - get: cf-networking-v.1.4.x
+      - get: cf-networking-v1.4.x
         passed: [caubeen-deploy]
         trigger: true
     - task: acceptance-tests
       file: cf-networking-ci/ci/tasks/acceptance-tests.yml
       input_mapping:
-        cf-networking: cf-networking-v.1.4.x
+        cf-networking: cf-networking-v1.4.x
         test-config: cf-networking-deployments
         vars-store: cf-networking-deployments
       params:
@@ -329,6 +330,7 @@ jobs:
         BBL_ENV_NAME: montera
       input_mapping:
         bbl-state: cf-networking-deployments
+        ops-files: cf-networking-deployments
       ensure:
         put: cf-networking-deployments
         params:
@@ -364,7 +366,7 @@ jobs:
         version: {ref: v0.20.0}
         passed: [caubeen-test]
         trigger: true
-      - get: cf-networking-v.1.4.x
+      - get: cf-networking-v1.4.x
         trigger: true
         passed: [caubeen-test]
       - get: version
@@ -381,7 +383,7 @@ jobs:
       params:
         ENVIRONMENT_NAME: montera
       input_mapping:
-        cf-networking-release: cf-networking-v.1.4.x
+        cf-networking-release: cf-networking-v1.4.x
         deployments-repo: cf-networking-deployments
     - task: deploy-cf
       file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
@@ -394,7 +396,7 @@ jobs:
         bbl-state: cf-networking-deployments
         vars-store: cf-networking-deployments
         vars-files: cf-networking-deployments
-        release: cf-networking-v.1.4.x
+        release: cf-networking-v1.4.x
       ensure:
         put: cf-networking-deployments
         params:
@@ -403,7 +405,7 @@ jobs:
     - task: create-release-tarball
       file: cf-networking-ci/ci/tasks/create-release-tarball.yml
       input_mapping:
-        cf-networking: cf-networking-v.1.4.x
+        cf-networking: cf-networking-v1.4.x
     - put: cf-networking-tarball
       params:
         file: tarballs/cf-networking-*.tgz
@@ -423,7 +425,7 @@ jobs:
     - aggregate:
       - get: cf-networking-deployments
         passed: [montera-deploy]
-      - get: cf-networking-v.1.4.x
+      - get: cf-networking-v1.4.x
         passed: [montera-deploy]
         trigger: true
       - get: cf-networking-tarball
@@ -438,7 +440,7 @@ jobs:
     - task: acceptance-tests
       file: cf-networking-ci/ci/tasks/acceptance-tests.yml
       input_mapping:
-        cf-networking: cf-networking-v.1.4.x
+        cf-networking: cf-networking-v1.4.x
         test-config: cf-networking-deployments
         vars-store: cf-networking-deployments
       params:
@@ -449,7 +451,7 @@ jobs:
     plan:
     - aggregate:
       - get: cf-networking-deployments
-      - get: cf-networking-v.1.4.x
+      - get: cf-networking-v1.4.x
         passed: [montera-test]
         trigger: true
       - get: cf-networking-ci
@@ -464,7 +466,7 @@ jobs:
         ENVIRONMENT_TAG: montera.c2c.cf-app.com
       input_mapping:
         test-config: cf-networking-deployments
-        cf-networking: cf-networking-v.1.4.x
+        cf-networking: cf-networking-v1.4.x
 
   - name: montera-cats
     serial_groups: [montera-test-group, montera-deploy-group]
@@ -473,7 +475,7 @@ jobs:
       - get: cf-networking-ci
       - get: cf-acceptance-tests
       - get: cats-concourse-task
-      - get: cf-networking-v.1.4.x
+      - get: cf-networking-v1.4.x
         passed: [montera-test]
         trigger: true
       - get: cf-deployment
@@ -531,7 +533,7 @@ jobs:
       - aggregate:
         - get: version
           passed: [montera-cats]
-        - get: cf-networking-v.1.4.x
+        - get: cf-networking-v1.4.x
           params:
             fetch: [master]
             submodules: none
