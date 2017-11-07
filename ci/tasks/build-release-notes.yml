@@ -7,7 +7,6 @@ platform: linux
 
 inputs:
   - name: cf-networking-ci
-  - name: cf-networking
 
 outputs:
   - name: release-notes
@@ -16,5 +15,4 @@ run:
   path: cf-networking-ci/ci/tasks/build-release-notes
 
 params:
-  SOURCE_DIR: cf-networking
   OUTPUT_DIR: release-notes

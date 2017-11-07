@@ -493,6 +493,8 @@ jobs:
         ENVIRONMENT: montera
     - task: cats
       file: cats-concourse-task/task.yml
+      input_mapping:
+        cf-networking-release: cf-networking-v1.4.x
       params:
         NODES: 8
 
@@ -584,8 +586,6 @@ jobs:
           file: final-release/cf-networking-*.tgz
       - task: build-release-notes
         file: cf-networking-ci/ci/tasks/build-release-notes.yml
-        input_mapping:
-          cf-networking: cf-networking-v1.4.x
       - put: cf-networking-github-release
         params:
           name: version/number
