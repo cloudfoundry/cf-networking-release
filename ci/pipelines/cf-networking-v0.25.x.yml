@@ -1,0 +1,611 @@
+groups:
+- name: cf-networking
+  jobs:
+  - mysql-tests
+  - mysql-5.6-tests
+  - postgres-tests
+  - unit-and-integration-tests
+  - panama-deploy
+  - panama-test
+  - kofia-deploy
+  - kofia-test
+  - kofia-smoke
+  - kofia-cats
+  - ship-what
+  - shipit
+  - bump-patch-version
+  - merge-master
+- name: panama
+  jobs:
+  - panama-bbl-up
+  - panama-bbl-destroy
+  - panama-deploy
+  - panama-test
+  - delete-panama-deployment
+- name: kofia
+  jobs:
+  - kofia-bbl-up
+  - kofia-bbl-destroy
+  - kofia-deploy
+  - kofia-test
+  - kofia-smoke
+  - kofia-cats
+  - delete-deployment-kofia-cf
+- name: bbl
+  jobs:
+  - panama-bbl-up
+  - kofia-bbl-up
+  - panama-bbl-destroy
+  - kofia-bbl-destroy
+- name: cleanup
+  jobs:
+  - delete-deployment-kofia-cf
+  - delete-panama-deployment
+
+resources:
+  ###### Control plane
+  - name: cf-networking-ci
+    type: git
+    source:
+      uri: git@github.com:cloudfoundry/cf-networking-release.git
+      branch: v0.25.x
+      ignore_paths:
+        - docs
+      private_key: {{cf-networking-deploy-key}}
+  - name: cf-networking-deployments
+    type: git
+    source:
+      uri: "git@github.com:cloudfoundry/cf-networking-deployments.git"
+      branch: master
+      private_key: {{cf-networking-deployments-push-key}}
+  - name: cats-concourse-task
+    type: git
+    source:
+      uri: https://github.com/cf-container-networking/cats-concourse-task
+      branch: v0.25.x
+  - name: cf-deployment-concourse-tasks
+    type: git
+    source:
+      uri: https://github.com/cloudfoundry/cf-deployment-concourse-tasks
+      branch: master
+  - name: cf-deployment
+    type: git
+    source:
+      branch: master
+      uri: https://github.com/cloudfoundry/cf-deployment.git
+      tag_filter: v0.4.0
+  ###### BOSH release repos
+  - name: cf-networking-v0.25.x
+    type: git
+    source:
+      uri: git@github.com:cloudfoundry/cf-networking-release.git
+      branch: v0.25.x
+      ignore_paths:
+        - docs
+      private_key: {{cf-networking-deploy-key}}
+  - name: cf-networking-dev
+    type: git
+    source:
+      uri: git@github.com:cloudfoundry/cf-networking-release.git
+      branch: develop
+      ignore_paths:
+        - docs
+      private_key: {{cf-networking-deploy-key}}
+  - name: cf-networking-master
+    type: git
+    source:
+      uri: git@github.com:cloudfoundry/cf-networking-release.git
+      branch: master
+      private_key: {{cf-networking-deploy-key}}
+  ####### Tests
+  - name: cf-acceptance-tests
+    type: git
+    source:
+      branch: v0.25.x
+      uri: https://github.com/cf-container-networking/cf-acceptance-tests.git
+  #######  Release management
+  - name: version
+    type: semver
+    source:
+      bucket: cf-networking-v0.25.x-release-semver
+      region_name: us-west-2
+      initial_version: 0.25.2
+      key: releases/current-version
+      access_key_id: {{aws-access-key-id}}
+      secret_access_key: {{aws-secret-access-key}}
+  - name: cf-networking-tarball
+    type: s3
+    source:
+      bucket: cf-networking-v0.25.x-candidate-tarballs
+      region_name: us-west-2
+      regexp: releases/cf-networking-(.*).tgz
+      access_key_id: {{aws-access-key-id}}
+      secret_access_key: {{aws-secret-access-key}}
+  # Github release
+  - name: cf-networking-github-release
+    type: github-release
+    source:
+      user: cloudfoundry
+      repository: cf-networking-release
+      access_token: {{github-access-token}}
+      drafts: true
+
+jobs:
+  - name: postgres-tests
+    public: true
+    plan:
+    - aggregate:
+      - get: cf-networking-v0.25.x
+        trigger: true
+      - get: cf-networking-ci
+    - task: unit-and-integration-tests
+      file: cf-networking-ci/ci/tasks/postgres-tests.yml
+      privileged: true
+      input_mapping:
+        cf-networking-release: cf-networking-v0.25.x
+
+  - name: mysql-tests
+    public: true
+    plan:
+    - aggregate:
+      - get: cf-networking-v0.25.x
+        trigger: true
+      - get: cf-networking-ci
+    - task: unit-and-integration-tests
+      file: cf-networking-ci/ci/tasks/mysql-tests.yml
+      privileged: true
+      input_mapping:
+        cf-networking-release: cf-networking-v0.25.x
+
+  - name: mysql-5.6-tests
+    public: true
+    plan:
+    - aggregate:
+      - get: cf-networking-v0.25.x
+        trigger: true
+      - get: cf-networking-ci
+    - task: unit-and-integration-tests
+      file: cf-networking-ci/ci/tasks/mysql-5.6-tests.yml
+      privileged: true
+      input_mapping:
+        cf-networking-release: cf-networking-v0.25.x
+
+  - name: unit-and-integration-tests
+    public: true
+    plan:
+    - get: cf-networking-v0.25.x
+      passed: [postgres-tests, mysql-tests, mysql-5.6-tests]
+      trigger: true
+
+
+  - name: panama-bbl-up
+    serial_groups: [panama]
+    plan:
+    - aggregate:
+      - get: cf-deployment-concourse-tasks
+      - get: cf-networking-deployments
+    - task: bbl-up
+      file: cf-deployment-concourse-tasks/bbl-up/task.yml
+      params:
+        BBL_GCP_SERVICE_ACCOUNT_KEY: ../gcp/service-account.key.json
+        BBL_GCP_PROJECT_ID: cf-container-networking-gcp
+        BBL_GCP_REGION: us-east1
+        BBL_GCP_ZONE: us-east1-b
+        BBL_STATE_DIR: environments/panama/
+        BBL_IAAS: gcp
+        BBL_LB_CERT: {{panama-lb-cert}}
+        BBL_LB_KEY: {{panama-lb-key}}
+        LB_DOMAIN: panama.c2c.cf-app.com
+        BBL_ENV_NAME: panama
+      input_mapping:
+        bbl-state: cf-networking-deployments
+      ensure:
+        put: cf-networking-deployments
+        params:
+          repository: updated-bbl-state
+          rebase: true
+
+  - name: panama-bbl-destroy
+    serial_groups: [panama]
+    plan:
+    - aggregate:
+      - get: cf-deployment-concourse-tasks
+      - get: cf-networking-deployments
+    - task: bbl-destroy
+      file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
+      params:
+        BBL_STATE_DIR: environments/panama/
+      input_mapping:
+        bbl-state: cf-networking-deployments
+      ensure:
+        put: cf-networking-deployments
+        params:
+          repository: updated-bbl-state
+          rebase: true
+
+  - name: panama-deploy
+    serial_groups: [panama]
+    plan:
+    - aggregate:
+      - get: cf-networking-ci
+      - get: cf-deployment-concourse-tasks
+      - get: cf-networking-deployments
+      - get: cf-deployment
+        version: {ref: v0.4.0}
+        trigger: true
+      - get: cf-networking-v0.25.x
+        trigger: true
+        passed: [postgres-tests, mysql-tests]
+    - task: upload-stemcell
+      file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
+      params:
+        BBL_STATE_DIR: environments/panama/
+      input_mapping:
+        bbl-state: cf-networking-deployments
+    - task: collect-ops-files
+      file: cf-networking-ci/ci/tasks/collect-ops-files.yml
+      params:
+        ENVIRONMENT_NAME: panama
+      input_mapping:
+        cf-networking-release: cf-networking-v0.25.x
+        deployments-repo: cf-networking-deployments
+    - task: deploy-cf
+      file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
+      params:
+        BBL_STATE_DIR: environments/panama/
+        SYSTEM_DOMAIN: panama.c2c.cf-app.com
+        OPS_FILES: gcp.yml use-3-azs-for-router.yml use-compiled-releases.yml cf-networking.yml opsfile.yml
+        VARS_STORE_FILE: environments/panama/vars-store.yml
+      input_mapping:
+        bbl-state: cf-networking-deployments
+        release: cf-networking-v0.25.x
+        vars-files: cf-networking-deployments
+        vars-store: cf-networking-deployments
+      ensure:
+        put: cf-networking-deployments
+        params:
+          repository: updated-vars-store
+          rebase: true
+    - task: bosh-cleanup
+      file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
+      params:
+        BBL_STATE_DIR: environments/panama/
+        CLEAN_ALL: false
+      input_mapping:
+        bbl-state: cf-networking-deployments
+
+  - name: panama-test
+    serial_groups: [panama]
+    plan:
+    - aggregate:
+      - get: cf-networking-ci
+      - get: cf-networking-deployments
+        passed: [panama-deploy]
+      - get: cf-deployment
+        version: {ref: v0.4.0}
+        passed: [panama-deploy]
+      - get: cf-networking-v0.25.x
+        passed: [panama-deploy]
+        trigger: true
+    - task: acceptance-tests
+      file: cf-networking-ci/ci/tasks/acceptance-tests.yml
+      input_mapping:
+        cf-networking: cf-networking-v0.25.x
+        test-config: cf-networking-deployments
+        vars-store: cf-networking-deployments
+      params:
+        ENVIRONMENT_NAME: panama
+
+  - name: kofia-bbl-up
+    serial_groups: [kofia-test-group, kofia-deploy-group]
+    plan:
+    - aggregate:
+      - get: cf-deployment-concourse-tasks
+      - get: cf-networking-deployments
+    - task: bbl-up
+      file: cf-deployment-concourse-tasks/bbl-up/task.yml
+      params:
+        BBL_GCP_SERVICE_ACCOUNT_KEY: ../gcp/service-account.key.json
+        BBL_GCP_PROJECT_ID: cf-container-networking-gcp
+        BBL_GCP_REGION: us-east1
+        BBL_GCP_ZONE: us-east1-b
+        BBL_STATE_DIR: environments/kofia/
+        BBL_IAAS: gcp
+        BBL_LB_CERT: {{kofia-lb-cert}}
+        BBL_LB_KEY: {{kofia-lb-key}}
+        LB_DOMAIN: kofia.c2c.cf-app.com
+        BBL_ENV_NAME: kofia
+      input_mapping:
+        bbl-state: cf-networking-deployments
+      ensure:
+        put: cf-networking-deployments
+        params:
+          repository: updated-bbl-state
+          rebase: true
+
+  - name: kofia-bbl-destroy
+    serial_groups: [kofia-deploy-group]
+    plan:
+    - aggregate:
+      - get: cf-deployment-concourse-tasks
+      - get: cf-networking-deployments
+    - task: bbl-destroy
+      file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
+      params:
+        BBL_STATE_DIR: environments/kofia/
+      input_mapping:
+        bbl-state: cf-networking-deployments
+      ensure:
+        put: cf-networking-deployments
+        params:
+          repository: updated-bbl-state
+          rebase: true
+
+  - name: kofia-deploy
+    serial_groups: [kofia-deploy-group, version]
+    plan:
+    - aggregate:
+      - get: cf-networking-ci
+      - get: cf-deployment-concourse-tasks
+      - get: cf-networking-deployments
+      - get: cf-deployment
+        version: {ref: v0.4.0}
+        passed: [panama-test]
+        trigger: true
+      - get: cf-networking-v0.25.x
+        trigger: true
+        passed: [panama-test]
+      - get: version
+        params:
+          pre: rc
+    - task: upload-stemcell
+      file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
+      params:
+        BBL_STATE_DIR: environments/kofia/
+      input_mapping:
+        bbl-state: cf-networking-deployments
+    - task: collect-ops-files
+      file: cf-networking-ci/ci/tasks/collect-ops-files.yml
+      params:
+        ENVIRONMENT_NAME: kofia
+      input_mapping:
+        cf-networking-release: cf-networking-v0.25.x
+        deployments-repo: cf-networking-deployments
+    - task: deploy-cf
+      file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
+      params:
+        BBL_STATE_DIR: environments/kofia/
+        SYSTEM_DOMAIN: kofia.c2c.cf-app.com
+        OPS_FILES: gcp.yml use-3-azs-for-router.yml use-compiled-releases.yml cf-networking.yml opsfile.yml custom-apps-domain.yml
+        VARS_STORE_FILE: environments/kofia/vars-store.yml
+      input_mapping:
+        bbl-state: cf-networking-deployments
+        vars-store: cf-networking-deployments
+        vars-files: cf-networking-deployments
+        release: cf-networking-v0.25.x
+      ensure:
+        put: cf-networking-deployments
+        params:
+          repository: updated-vars-store
+          rebase: true
+    - task: create-release-tarball
+      file: cf-networking-ci/ci/tasks/create-release-tarball.yml
+      input_mapping:
+        cf-networking: cf-networking-v0.25.x
+    - put: cf-networking-tarball
+      params:
+        file: tarballs/cf-networking-*.tgz
+    - put: version
+      params: {file: version/number}
+    - task: bosh-cleanup
+      file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
+      params:
+        BBL_STATE_DIR: environments/kofia/
+        CLEAN_ALL: false
+      input_mapping:
+        bbl-state: cf-networking-deployments
+
+  - name: kofia-test
+    serial_groups: [kofia-test-group, kofia-deploy-group]
+    plan:
+    - aggregate:
+      - get: cf-networking-deployments
+        passed: [kofia-deploy]
+      - get: cf-networking-v0.25.x
+        passed: [kofia-deploy]
+        trigger: true
+      - get: cf-networking-tarball
+        passed: [kofia-deploy]
+      - get: version
+        passed: [kofia-deploy]
+      - get: cf-networking-ci
+      - get: cf-deployment
+        version: {ref: v0.4.0}
+        passed: [kofia-deploy]
+        trigger: true
+    - task: acceptance-tests
+      file: cf-networking-ci/ci/tasks/acceptance-tests.yml
+      input_mapping:
+        cf-networking: cf-networking-v0.25.x
+        test-config: cf-networking-deployments
+        vars-store: cf-networking-deployments
+      params:
+        ENVIRONMENT_NAME: kofia
+
+  - name: kofia-smoke
+    serial_groups: [kofia-test-group]
+    plan:
+    - aggregate:
+      - get: cf-networking-deployments
+      - get: cf-networking-v0.25.x
+        passed: [kofia-test]
+        trigger: true
+      - get: cf-networking-ci
+      - get: cf-deployment
+        version: {ref: v0.4.0}
+        passed: [kofia-test]
+        trigger: true
+    - task: smoke-tests
+      file: cf-networking-ci/ci/tasks/smoke-tests.yml
+      params:
+        ENVIRONMENT_NAME: kofia
+        ENVIRONMENT_TAG: kofia.c2c.cf-app.com
+      input_mapping:
+        test-config: cf-networking-deployments
+        cf-networking: cf-networking-v0.25.x
+
+  - name: kofia-cats
+    serial_groups: [kofia-test-group, kofia-deploy-group]
+    plan:
+    - aggregate:
+      - get: cf-networking-ci
+      - get: cf-acceptance-tests
+      - get: cats-concourse-task
+      - get: cf-networking-v0.25.x
+        passed: [kofia-test]
+        trigger: true
+      - get: cf-deployment
+        version: {ref: v0.4.0}
+        passed: [kofia-test]
+        trigger: true
+      - get: cf-networking-deployments
+      - get: cf-networking-tarball
+        passed: [kofia-test]
+      - get: version
+        passed: [kofia-test]
+    - task: copy-config
+      file: cf-networking-ci/ci/tasks/copy-config.yml
+      params:
+        ENVIRONMENT: kofia
+    - task: cats
+      file: cats-concourse-task/task.yml
+      input_mapping:
+        cf-networking-release: cf-networking-v0.25.x
+      params:
+        NODES: 8
+
+##### Human-triggered utilities
+
+  - name: delete-panama-deployment
+    public: true
+    serial_groups: [panama]
+    plan:
+    - aggregate:
+      - get: cf-networking-deployments
+      - get: cf-deployment-concourse-tasks
+    - task: delete-deployment
+      file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
+      params:
+        BBL_STATE_DIR: environments/panama/
+      input_mapping:
+        bbl-state: cf-networking-deployments
+
+  - name: delete-deployment-kofia-cf
+    public: true
+    serial_groups: [kofia-test-group, kofia-deploy-group]
+    plan:
+    - aggregate:
+      - get: cf-networking-deployments
+      - get: cf-deployment-concourse-tasks
+    - task: delete-deployment
+      file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
+      params:
+        BBL_STATE_DIR: environments/kofia/
+      input_mapping:
+        bbl-state: cf-networking-deployments
+
+  - name: ship-what
+    serial_groups: [version]
+    plan:
+    - do:
+      - aggregate:
+        - get: version
+          passed: [kofia-cats]
+        - get: cf-networking-v0.25.x
+          params:
+            fetch: [master]
+            submodules: none
+          passed: [kofia-cats, kofia-smoke]
+          trigger: true
+        - get: cf-deployment
+          version: {ref: v0.4.0}
+          passed: [kofia-cats]
+        - get: cf-networking-tarball
+          passed: [kofia-cats]
+
+  - name: shipit
+    serial_groups: [version]
+    plan:
+    - do:
+      - aggregate:
+        - get: cf-networking-deployments
+        - get: cf-networking-ci
+        - get: version
+          params:
+            bump: final
+          passed: [ship-what]
+        - get: cf-networking-master
+          params:
+            submodules: none
+        - get: cf-networking-v0.25.x
+          params:
+            submodules: none
+          passed: [ship-what]
+        - get: cf-deployment
+          version: {ref: v0.4.0}
+          passed: [ship-what]
+        - get: cf-networking-tarball
+          passed: [ship-what]
+      - task: shipit
+        file: cf-networking-ci/ci/tasks/shipit.yml
+      - put: version
+        params: {file: version/number}
+      - put: cf-networking-v0.25.x
+        params:
+          repository: release/master
+          tag: version/number
+          tag_prefix: v
+      - put: cf-networking-tarball
+        params:
+          file: final-release/cf-networking-*.tgz
+      - task: build-release-notes
+        file: cf-networking-ci/ci/tasks/build-release-notes.yml
+      - put: cf-networking-github-release
+        params:
+          name: version/number
+          tag: version/number
+          body: release-notes/notes.md
+          tag_prefix: v
+          globs:
+          - final-release/cf-networking-*.tgz
+          - binaries/network-policy-plugin-*
+
+  # bump minor version (i.e. 0.1.0 -> 0.2.0)
+  - name: bump-patch-version
+    serial_groups: [version]
+    plan:
+    - aggregate:
+      - get: version
+        trigger: true
+        passed: [shipit]
+        params: {bump: patch, pre: rc}
+    - put: version
+      params: {file: version/number}
+
+  # merge master back to develop
+  - name: merge-master
+    plan:
+    - do:
+      - aggregate:
+        - get: cf-networking-ci
+        - get: cf-networking-master
+          params:
+            submodules: none
+          passed: [shipit]
+          trigger: true
+        - get: cf-networking-dev
+          params: {submodules: none}
+      - task: merge-master
+        file: cf-networking-ci/ci/tasks/merge-master.yml
+      - put: cf-networking-dev
+        params: {repository: release-merged}

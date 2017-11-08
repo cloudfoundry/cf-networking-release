@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -e -u
+set -o pipefail
+
+
+echo "update release notes please" > $OUTPUT_DIR/notes.md
+
+echo "built: "
+cat $OUTPUT_DIR/notes.md
+

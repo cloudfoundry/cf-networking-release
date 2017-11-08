@@ -1,0 +1,22 @@
+# Override apps domain seed value
+# Note: this is just a seed which only takes effect on a fresh deployment.
+# Changing it on an existing deployment will only append the domain, not replace old ones.
+
+- type: replace
+  path: /instance_groups/name=api/jobs/name=cloud_controller_ng/properties/app_domains?
+  value:
+  - "((apps_domain))"
+
+- type: replace
+  path: /instance_groups/name=cc-worker/jobs/name=cloud_controller_worker/properties/app_domains?
+  value:
+  - "((apps_domain))"
+
+- type: replace
+  path: /instance_groups/name=cc-clock/jobs/name=cloud_controller_clock/properties/app_domains?
+  value:
+  - "((apps_domain))"
+
+- type: replace
+  path: /instance_groups/name=smoke-tests/jobs/name=smoke_tests/properties/smoke_tests/apps_domain?
+  value: "((apps_domain))"

@@ -1,0 +1,153 @@
+resources:
+- name: dev-postgres-dockerfile
+  type: git
+  source:
+    uri: git://github.com/cloudfoundry-incubator/cf-networking-ci
+    branch: master
+    paths:
+      - dockerfiles/dev-postgres
+
+- name: dev-postgres-image
+  type: docker-image
+  source:
+    username: {{dockerhub_username}}
+    password: {{dockerhub_password}}
+    email: {{dockerhub_email}}
+    repository: c2cnetworking/dev-postgres
+
+- name: dev-mysql-dockerfile
+  type: git
+  source:
+    uri: git://github.com/cloudfoundry-incubator/cf-networking-ci
+    branch: master
+    paths:
+      - dockerfiles/dev-mysql
+
+- name: dev-mysql-image
+  type: docker-image
+  source:
+    username: {{dockerhub_username}}
+    password: {{dockerhub_password}}
+    email: {{dockerhub_email}}
+    repository: c2cnetworking/dev-mysql
+
+- name: deploy-dockerfile
+  type: git
+  source:
+    uri: git://github.com/cloudfoundry-incubator/cf-networking-ci
+    branch: master
+    paths:
+      - dockerfiles/deploy
+
+- name: deploy-image
+  type: docker-image
+  source:
+    username: {{dockerhub_username}}
+    password: {{dockerhub_password}}
+    email: {{dockerhub_email}}
+    repository: c2cnetworking/deploy
+
+- name: small-git-dockerfile
+  type: git
+  source:
+    uri: git://github.com/cloudfoundry-incubator/cf-networking-ci
+    branch: master
+    paths:
+      - dockerfiles/small-git
+
+- name: small-git-image
+  type: docker-image
+  source:
+    username: {{dockerhub_username}}
+    password: {{dockerhub_password}}
+    email: {{dockerhub_email}}
+    repository: c2cnetworking/small-git
+
+- name: deploy-light-dockerfile
+  type: git
+  source:
+    uri: git://github.com/cloudfoundry-incubator/cf-networking-ci
+    branch: master
+    paths:
+      - dockerfiles/deploy-light
+
+- name: deploy-light-image
+  type: docker-image
+  source:
+    username: {{dockerhub_username}}
+    password: {{dockerhub_password}}
+    email: {{dockerhub_email}}
+    repository: c2cnetworking/deploy-light
+
+- name: golang-1.x-tarball
+  type: s3
+  source:
+    endpoint: storage.googleapis.com
+    bucket: golang
+    regexp: 'go(1\.\d+(\.\d+)?)\.linux-amd64\.tar.gz'
+
+- name: cf-networking-ci
+  type: git
+  source:
+    uri: https://github.com/cloudfoundry-incubator/cf-networking-ci
+
+jobs:
+- name: build-dev-postgres-image
+  plan:
+  - aggregate:
+    - get: cf-networking-ci
+    - get: dev-postgres-dockerfile
+      trigger: true
+    - get: golang-1.x-tarball
+      trigger: true
+  - task: add-golang
+    file: cf-networking-ci/tasks/add-golang-to-docker-context.yml
+    input_mapping:
+      dockerfile: dev-postgres-dockerfile
+    params:
+      INPUT_DOCKERFILE_PATH: dockerfile/dockerfiles/dev-postgres/Dockerfile
+  - put: dev-postgres-image
+    params:
+      build: docker-build-context
+
+- name: build-dev-mysql-image
+  plan:
+  - aggregate:
+    - get: cf-networking-ci
+    - get: dev-mysql-dockerfile
+      trigger: true
+    - get: golang-1.x-tarball
+      trigger: true
+  - task: add-golang
+    file: cf-networking-ci/tasks/add-golang-to-docker-context.yml
+    input_mapping:
+      dockerfile: dev-mysql-dockerfile
+    params:
+      INPUT_DOCKERFILE_PATH: dockerfile/dockerfiles/dev-mysql/Dockerfile
+  - put: dev-mysql-image
+    params:
+      build: docker-build-context
+
+- name: build-deploy-image
+  plan:
+  - get: deploy-dockerfile
+    trigger: true
+  - put: deploy-image
+    params:
+      build: deploy-dockerfile/dockerfiles/deploy
+
+- name: build-small-git-image
+  plan:
+  - get: small-git-dockerfile
+    trigger: true
+  - put: small-git-image
+    params:
+      build: small-git-dockerfile/dockerfiles/small-git
+
+- name: build-deploy-light-image
+  plan:
+  - get: deploy-light-dockerfile
+    trigger: true
+  - put: deploy-light-image
+    params:
+      build: deploy-light-dockerfile/dockerfiles/deploy-light
