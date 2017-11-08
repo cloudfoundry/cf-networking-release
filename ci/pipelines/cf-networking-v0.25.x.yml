@@ -1,5 +1,5 @@
 groups:
-- name: cf-networking
+- name: cf-networking-v0.25.x
   jobs:
   - mysql-tests
   - mysql-5.6-tests
@@ -199,6 +199,7 @@ jobs:
         BBL_ENV_NAME: panama
       input_mapping:
         bbl-state: cf-networking-deployments
+        ops-files: cf-networking-deployments
       ensure:
         put: cf-networking-deployments
         params:
@@ -235,7 +236,7 @@ jobs:
         trigger: true
       - get: cf-networking-v0.25.x
         trigger: true
-        passed: [postgres-tests, mysql-tests]
+        passed: [unit-and-integration-tests]
     - task: upload-stemcell
       file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
       params:
@@ -317,6 +318,7 @@ jobs:
         BBL_ENV_NAME: kofia
       input_mapping:
         bbl-state: cf-networking-deployments
+        ops-files: cf-networking-deployments
       ensure:
         put: cf-networking-deployments
         params:
