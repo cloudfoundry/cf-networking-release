@@ -69,7 +69,7 @@ func main() {
 	}
 
 	nameservers := []string{"1.2.3.4"}
-	if os.Getenv("CNI_ARGS") == "no_dns_result" {
+	if os.Getenv("FAKE_CNI_ARGS") == "no_dns_result" {
 		nameservers = []string{}
 	}
 
