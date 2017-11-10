@@ -40,6 +40,9 @@ var _ = Describe("Timeout", func() {
 		policyServerURL string
 	)
 	BeforeEach(func() {
+		if dbConf.Type == "postgres" {
+			Skip("skipping timeout tests on postgres; only supported by mysql")
+		}
 		fakeMetron = metrics.NewFakeMetron()
 
 		dbConf = testsupport.GetDBConfig()
