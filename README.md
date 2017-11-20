@@ -33,3 +33,4 @@ For information about getting started with CF Networking, look at our docs for [
 - Chat with us at the `#container-networking` channel on [Cloud Foundry Slack](http://slack.cloudfoundry.org/)
 - [CI dashboard](http://dashboard.c2c.cf-app.com) and [config](https://github.com/cloudfoundry-incubator/cf-networking-ci)
 - [Documentation](./docs)
+- [CF App Service Discovery Release](https://github.com/cloudfoundry/cf-app-sd-release)
