@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -e -u
+
+environment_path="${PWD}/test-config/environments/${ENVIRONMENT_NAME}"
+export CONFIG=$environment_path/test-config.json
+export APPS_DIR=${PWD}/cf-networking/src/example-apps
+
+cd cf-networking
+export GOPATH=$PWD
+
+go run src/cf-pusher/cmd/cf-pusher/main.go --config "${CONFIG}"

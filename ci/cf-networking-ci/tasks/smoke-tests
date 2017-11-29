@@ -1,0 +1,38 @@
+#!/bin/bash
+
+set -e
+
+# replace admin password and secret in test config
+pushd test-config/environments/"${ENVIRONMENT_NAME}"
+SMOKE_PASSWORD=$(grep cf_networking_smoke_user_password vars-store.yml  | cut -d' ' -f2)
+  sed -i -- "s/{{smoke-password}}/${SMOKE_PASSWORD}/g" smoke-config.json
+popd
+
+ENVIRONMENT_PATH="test-config/environments/${ENVIRONMENT_NAME}/smoke-config.json"
+export CONFIG=${PWD}/${CONFIG:-"${ENVIRONMENT_PATH}"}
+
+echo "$CONFIG"
+
+cd cf-networking
+export GOPATH=$PWD
+
+cd src/test/smoke
+export APPS_DIR=../../example-apps
+set +e
+ginkgo -r -v
+EXIT_STATUS=$?
+set -e
+
+CURRENT_TIME=$(date +%s)
+
+curl -X POST -H "Content-type: application/json" \
+  -d "{ \"series\" :
+         [{\"metric\":\"cf-networking-smoke.status\",
+          \"points\":[[$CURRENT_TIME, $EXIT_STATUS]],
+          \"type\":\"gauge\",
+          \"tags\":[\"deployment:$ENVIRONMENT_TAG\"]
+        }]
+      }" \
+"https://app.datadoghq.com/api/v1/series?api_key=${DATADOG_API_KEY}"
+
+exit $EXIT_STATUS

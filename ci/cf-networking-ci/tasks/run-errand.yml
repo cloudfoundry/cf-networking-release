@@ -1,0 +1,17 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source: { repository: c2cnetworking/deploy-light }
+
+inputs:
+  - name: cf-networking-release
+  - name: deployments-repo
+
+params:
+  ERRAND: ~
+  ENVIRONMENT_NAME: ~
+
+run:
+  path: cf-networking-release/ci/cf-networking-ci/tasks/run-errand
