@@ -180,6 +180,7 @@ resources:
     source:
       branch: pinned
       uri: https://github.com/cf-container-networking/cf-deployment.git
+#When we pin 1.4.0, use the correct branch from the cf-networking-release repo, not the ci repo.
   - name: cf-networking-ci-pinned
     type: git
     source:
