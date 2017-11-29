@@ -1,5 +1,0 @@
-#!/bin/bash -eu
-
-cat <<EOF > docker-image-tag-path/tag
-${TAG}
-EOF

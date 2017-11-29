@@ -1,9 +1,0 @@
-#!/bin/bash
-
-set -eu
-
-VERSION=$(cat ./version/number)
-
-pushd cf-networking > /dev/null
-  bosh create-release --tarball=../tarballs/${RELEASE_NAME}-${VERSION}.tgz --name $RELEASE_NAME --timestamp-version
-popd > /dev/null
