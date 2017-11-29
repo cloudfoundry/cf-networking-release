@@ -104,6 +104,7 @@ resources:
     type: git
     source:
       uri: https://github.com/cloudfoundry/cf-networking-release
+      branch: develop
       paths:
         - ci
   - name: cf-networking-deployments
