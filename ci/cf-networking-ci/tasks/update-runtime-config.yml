@@ -7,12 +7,12 @@ platform: linux
 
 inputs:
   - name: bbl-state
-  - name: cf-networking-release
+  - name: cf-networking-release-ci
   - name: runtime-config
   - name: vars-store
 
 run:
-  path: cf-networking-release/ci/cf-networking-ci/tasks/update-runtime-config
+  path: cf-networking-release-ci/ci/cf-networking-ci/tasks/update-runtime-config
 
 params:
   RUNTIME_CONFIG_FILE: ~

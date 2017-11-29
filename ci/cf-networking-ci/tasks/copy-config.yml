@@ -9,11 +9,11 @@ params:
   ENVIRONMENT: ~
 
 inputs:
-  - name: cf-networking-release
+  - name: cf-networking-release-ci
   - name: cf-networking-deployments
 
 outputs:
   - name: integration-config
 
 run:
-  path: cf-networking-release/ci/cf-networking-ci/tasks/copy-config
+  path: cf-networking-release-ci/ci/cf-networking-ci/tasks/copy-config

@@ -20,7 +20,7 @@ Container networking performance tests will be conducted on the following enviro
           - aggregate:
                # omit for brevity
             - task: generate-toque-manifests
-              file: cf-networking-release/ci/cf-networking-ci/tasks/generate-deployment-manifests.yml
+              file: cf-networking-release-ci/ci/cf-networking-ci/tasks/generate-deployment-manifests.yml
               params:
                 ENVIRONMENT_NAME: toque
                 CELL_COUNT: 5

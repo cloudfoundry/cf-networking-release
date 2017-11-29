@@ -6,7 +6,7 @@ image_resource:
 platform: linux
 
 inputs:
-  - name: cf-networking-release
+  - name: cf-networking-release-ci
   - name: cf-networking-dev
   - name: cf-networking-master
 
@@ -14,4 +14,4 @@ outputs:
   - name: release-merged
 
 run:
-  path: cf-networking-release/ci/cf-networking-ci/tasks/merge-master
+  path: cf-networking-release-ci/ci/cf-networking-ci/tasks/merge-master

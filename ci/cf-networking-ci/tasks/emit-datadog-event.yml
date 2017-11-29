@@ -5,10 +5,10 @@ image_resource:
   source: { repository: c2cnetworking/deploy }
 
 inputs:
-  - name: cf-networking-release
+  - name: cf-networking-release-ci
 
 run:
-  path: cf-networking-release/ci/cf-networking-ci/tasks/emit-datadog-event
+  path: cf-networking-release-ci/ci/cf-networking-ci/tasks/emit-datadog-event
 
 params:
   TITLE:

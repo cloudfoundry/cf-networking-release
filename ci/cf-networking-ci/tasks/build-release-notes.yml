@@ -6,14 +6,14 @@ image_resource:
 platform: linux
 
 inputs:
-  - name: cf-networking-release
+  - name: cf-networking-release-ci
   - name: cf-networking-master
 
 outputs:
   - name: release-notes
 
 run:
-  path: cf-networking-release/ci/cf-networking-ci/tasks/build-release-notes
+  path: cf-networking-release-ci/ci/cf-networking-ci/tasks/build-release-notes
 
 params:
   SOURCE_DIR: cf-networking-master

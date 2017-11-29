@@ -5,7 +5,7 @@ image_resource:
   source: { repository: c2cnetworking/deploy }
 
 inputs:
-  - name: cf-networking-release
+  - name: cf-networking-release-ci
   - name: deployments-repo
   - name: scaling-test-params
 
@@ -16,4 +16,4 @@ params:
   ENVIRONMENT_NAME: ~
 
 run:
-  path: cf-networking-release/ci/cf-networking-ci/tasks/set-scaling-test-params
+  path: cf-networking-release-ci/ci/cf-networking-ci/tasks/set-scaling-test-params

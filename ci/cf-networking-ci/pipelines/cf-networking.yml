@@ -317,7 +317,7 @@ jobs:
       input_mapping:
         bbl-state: cf-networking-deployments
     - task: collect-ops-files
-      file: cf-networking-release/ci/cf-networking-ci/tasks/collect-ops-files.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/collect-ops-files.yml
       params:
         ENVIRONMENT_NAME: trucker
       input_mapping:
@@ -365,7 +365,7 @@ jobs:
             cf push proxy
             curl -v -f http://proxy.${ENVIRONMENT}.c2c.cf-app.com
     - task: collect-ops-files
-      file: cf-networking-release/ci/cf-networking-ci/tasks/collect-ops-files.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/collect-ops-files.yml
       params:
         ENVIRONMENT_NAME: trucker
       input_mapping:
@@ -508,7 +508,7 @@ jobs:
         cf-deployment: cf-deployment-pinned
         cf-deployment-concourse-tasks: cf-deployment-concourse-tasks-pinned
     - task: collect-ops-files
-      file: cf-networking-release/ci/cf-networking-ci/tasks/collect-ops-files.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/collect-ops-files.yml
       params:
         ENVIRONMENT_NAME: sombrero
       input_mapping:
@@ -540,7 +540,7 @@ jobs:
       params:
         ENVIRONMENT_NAME: sombrero
     - task: collect-ops-files
-      file: cf-networking-release/ci/cf-networking-ci/tasks/collect-ops-files.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/collect-ops-files.yml
       params:
         ENVIRONMENT_NAME: sombrero
       input_mapping:
@@ -565,7 +565,7 @@ jobs:
         vars-files: updated-vars-store
         bbl-state: cf-networking-deployments
     - task: acceptance-tests
-      file: cf-networking-release/ci/cf-networking-ci/tasks/acceptance-tests.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/acceptance-tests.yml
       input_mapping:
         cf-networking: cf-networking-dev
         test-config: cf-networking-deployments
@@ -614,7 +614,7 @@ jobs:
         trigger: true
       - get: cf-networking-release-ci
     - task: unit-and-integration-tests
-      file: cf-networking-release/ci/cf-networking-ci/tasks/postgres-tests.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/postgres-tests.yml
       privileged: true
       input_mapping:
         cf-networking-release: cf-networking-dev
@@ -627,7 +627,7 @@ jobs:
         trigger: true
       - get: cf-networking-release-ci
     - task: unit-and-integration-tests
-      file: cf-networking-release/ci/cf-networking-ci/tasks/mysql-tests.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/mysql-tests.yml
       privileged: true
       input_mapping:
         cf-networking-release: cf-networking-dev
@@ -640,7 +640,7 @@ jobs:
         trigger: true
       - get: cf-networking-release-ci
     - task: unit-and-integration-tests
-      file: cf-networking-release/ci/cf-networking-ci/tasks/mysql-5.6-tests.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/mysql-5.6-tests.yml
       privileged: true
       input_mapping:
         cf-networking-release: cf-networking-dev
@@ -653,10 +653,10 @@ jobs:
         trigger: true
       - get: cf-networking-release-ci
     - task: garden-external-networker-windows
-      file: cf-networking-release/ci/cf-networking-ci/tasks/garden-external-networker-windows.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/garden-external-networker-windows.yml
       input_mapping:
         cf-networking-release: cf-networking-dev
-        ci: cf-networking-ci
+        ci: cf-networking-release-ci
 
   - name: unit-and-integration-tests
     public: true
@@ -730,7 +730,7 @@ jobs:
       input_mapping:
         bbl-state: cf-networking-deployments
     - task: collect-ops-files
-      file: cf-networking-release/ci/cf-networking-ci/tasks/collect-ops-files.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/collect-ops-files.yml
       params:
         ENVIRONMENT_NAME: pickelhelm
       input_mapping:
@@ -771,7 +771,7 @@ jobs:
         passed: [pickelhelm-deploy]
       - get: datadog-firehose-nozzle-release
     - task: upload-datadog-firehose-nozzle-release
-      file: cf-networking-release/ci/cf-networking-ci/tasks/upload-release-tarball.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/upload-release-tarball.yml
       input_mapping:
         deployments-repo: cf-networking-deployments
         tarballs: datadog-firehose-nozzle-release
@@ -806,7 +806,7 @@ jobs:
         passed: [pickelhelm-deploy]
         trigger: true
     - task: acceptance-tests
-      file: cf-networking-release/ci/cf-networking-ci/tasks/acceptance-tests.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/acceptance-tests.yml
       input_mapping:
         cf-networking: cf-networking-dev
         test-config: cf-networking-deployments
@@ -884,10 +884,10 @@ jobs:
       input_mapping:
         bbl-state: cf-networking-deployments
     - task: update-runtime-config
-      file: cf-networking-release/ci/cf-networking-ci/tasks/update-runtime-config.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/update-runtime-config.yml
       input_mapping:
         bbl-state: cf-networking-deployments
-        cf-networking-ci: cf-networking-ci
+        cf-networking-ci: cf-networking-release-ci
         runtime-config: cf-networking-deployments
         vars-store: cf-networking-deployments
       params:
@@ -895,7 +895,7 @@ jobs:
         VARS_STORE_FILE: environments/mitre/vars-store.yml
         RUNTIME_CONFIG_FILE: syslog-addon.yml
     - task: collect-ops-files
-      file: cf-networking-release/ci/cf-networking-ci/tasks/collect-ops-files.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/collect-ops-files.yml
       params:
         ENVIRONMENT_NAME: mitre
       input_mapping:
@@ -919,20 +919,20 @@ jobs:
           repository: updated-vars-store
           rebase: true
     - task: upload-concourse-release
-      file: cf-networking-release/ci/cf-networking-ci/tasks/upload-release-tarball.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/upload-release-tarball.yml
       input_mapping:
         deployments-repo: cf-networking-deployments
         tarballs: concourse
       params:
         ENVIRONMENT_NAME: mitre
     - task: deploy-bbr-concourse-worker
-      file: cf-networking-release/ci/cf-networking-ci/tasks/deploy-bbr-concourse-worker.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/deploy-bbr-concourse-worker.yml
       params:
         ENVIRONMENT_NAME: mitre
       input_mapping:
         deployments-repo: cf-networking-deployments
     - task: create-release-tarball
-      file: cf-networking-release/ci/cf-networking-ci/tasks/create-release-tarball.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/create-release-tarball.yml
       input_mapping:
         cf-networking: cf-networking-dev
     - put: cf-networking-tarball
@@ -966,7 +966,7 @@ jobs:
         passed: [mitre-deploy]
         trigger: true
     - task: acceptance-tests
-      file: cf-networking-release/ci/cf-networking-ci/tasks/acceptance-tests.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/acceptance-tests.yml
       input_mapping:
         cf-networking: cf-networking-dev
         test-config: cf-networking-deployments
@@ -984,7 +984,7 @@ jobs:
         passed: [mitre-deploy]
       - get: datadog-firehose-nozzle-release
     - task: upload-datadog-firehose-nozzle-release
-      file: cf-networking-release/ci/cf-networking-ci/tasks/upload-release-tarball.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/upload-release-tarball.yml
       input_mapping:
         deployments-repo: cf-networking-deployments
         tarballs: datadog-firehose-nozzle-release
@@ -1017,7 +1017,7 @@ jobs:
         passed: [mitre-test]
         trigger: true
     - task: run-errand
-      file: cf-networking-release/ci/cf-networking-ci/tasks/run-errand.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/run-errand.yml
       params:
         ENVIRONMENT_NAME: mitre
         ERRAND: cf-networking-acceptance
@@ -1039,7 +1039,7 @@ jobs:
         passed: [mitre-test]
         trigger: true
     - task: smoke-tests
-      file: cf-networking-release/ci/cf-networking-ci/tasks/smoke-tests.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/smoke-tests.yml
       params:
         ENVIRONMENT_NAME: mitre
         ENVIRONMENT_TAG: mitre.c2c.cf-app.com
@@ -1067,7 +1067,7 @@ jobs:
       - get: version
         passed: [mitre-test]
     - task: copy-config
-      file: cf-networking-release/ci/cf-networking-ci/tasks/copy-config.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/copy-config.yml
       params:
         ENVIRONMENT: mitre
     - task: cats
@@ -1095,7 +1095,7 @@ jobs:
     - task: run-drats
       tags:
       - mitre-bbr
-      file: cf-networking-release/ci/cf-networking-ci/tasks/run-drats.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/run-drats.yml
       input_mapping:
         deployments-repo: cf-networking-deployments
       params:
@@ -1177,7 +1177,7 @@ jobs:
       params:
         BBL_STATE_DIR: environments/toque/
     - task: collect-ops-files
-      file: cf-networking-release/ci/cf-networking-ci/tasks/collect-ops-files.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/collect-ops-files.yml
       params:
         ENVIRONMENT_NAME: toque
       input_mapping:
@@ -1219,7 +1219,7 @@ jobs:
         passed: [toque-deploy]
       - get: datadog-firehose-nozzle-release
     - task: upload-datadog-firehose-nozzle-release
-      file: cf-networking-release/ci/cf-networking-ci/tasks/upload-release-tarball.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/upload-release-tarball.yml
       input_mapping:
         deployments-repo: cf-networking-deployments
         tarballs: datadog-firehose-nozzle-release
@@ -1253,14 +1253,14 @@ jobs:
       - get: toque-scaling-test-params
         trigger: true
     - task: set-scaling-test-params
-      file: cf-networking-release/ci/cf-networking-ci/tasks/set-scaling-test-params.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/set-scaling-test-params.yml
       params:
         ENVIRONMENT_NAME: toque
       input_mapping:
         deployments-repo: cf-networking-deployments
         scaling-test-params: toque-scaling-test-params
     - task: push-apps
-      file: cf-networking-release/ci/cf-networking-ci/tasks/push-apps.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/push-apps.yml
       params:
         ENVIRONMENT_NAME: toque
       input_mapping:
@@ -1282,14 +1282,14 @@ jobs:
       - get: cf-networking-deployments
         passed: [toque-push]
     - task: set-scaling-test-params
-      file: cf-networking-release/ci/cf-networking-ci/tasks/set-scaling-test-params.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/set-scaling-test-params.yml
       params:
         ENVIRONMENT_NAME: toque
       input_mapping:
         deployments-repo: cf-networking-deployments
         scaling-test-params: toque-scaling-test-params
     - task: emit-datadog-test-start
-      file: cf-networking-release/ci/cf-networking-ci/tasks/emit-datadog-event.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/emit-datadog-event.yml
       params:
         TITLE: test_start
         TEXT: test_start
@@ -1297,7 +1297,7 @@ jobs:
         AWS_ENV: toque.c2c.cf-app.com
         DATADOG_API_KEY: {{datadog_api_key}}
     - task: test-scalability
-      file: cf-networking-release/ci/cf-networking-ci/tasks/test-scalability.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/test-scalability.yml
       params:
         ENVIRONMENT_NAME: toque
       input_mapping:
@@ -1305,7 +1305,7 @@ jobs:
         test-config: test-config
       ensure:
         task: emit-datadog-test-stop
-        file: cf-networking-release/ci/cf-networking-ci/tasks/emit-datadog-event.yml
+        file: cf-networking-release-ci/ci/cf-networking-ci/tasks/emit-datadog-event.yml
         params:
           TITLE: test_end
           TEXT: test_end
@@ -1377,7 +1377,7 @@ jobs:
       params:
         BBL_STATE_DIR: environments/slouch
     - task: collect-ops-files
-      file: cf-networking-release/ci/cf-networking-ci/tasks/collect-ops-files.yml
+      file: cf-networking-release-ci/ci/cf-networking-ci/tasks/collect-ops-files.yml
       params:
         ENVIRONMENT_NAME: slouch
       input_mapping:
@@ -1500,7 +1500,7 @@ jobs:
           passed: [mitre-drats, trucker-test-upgrade, sombrero-test-upgrade, mitre-acceptance-errand, mitre-smoke]
           trigger: true
       - task: check-empty-networking-opsfile
-        file: cf-networking-release/ci/cf-networking-ci/tasks/check-empty-networking-opsfile.yml
+        file: cf-networking-release-ci/ci/cf-networking-ci/tasks/check-empty-networking-opsfile.yml
         input_mapping:
           cf-networking: cf-networking-dev
 
@@ -1524,7 +1524,7 @@ jobs:
         - get: cf-networking-tarball
           passed: [ship-what]
       - task: shipit
-        file: cf-networking-release/ci/cf-networking-ci/tasks/shipit.yml
+        file: cf-networking-release-ci/ci/cf-networking-ci/tasks/shipit.yml
         input_mapping:
           cf-networking: cf-networking-dev
       - put: version
@@ -1538,7 +1538,7 @@ jobs:
         params:
           file: final-release/cf-networking-*.tgz
       - task: build-release-notes
-        file: cf-networking-release/ci/cf-networking-ci/tasks/build-release-notes.yml
+        file: cf-networking-release-ci/ci/cf-networking-ci/tasks/build-release-notes.yml
       - put: cf-networking-github-release
         params:
           name: version/number
@@ -1575,7 +1575,7 @@ jobs:
         - get: cf-networking-dev
           params: {submodules: none}
       - task: merge-master
-        file: cf-networking-release/ci/cf-networking-ci/tasks/merge-master.yml
+        file: cf-networking-release-ci/ci/cf-networking-ci/tasks/merge-master.yml
       - put: cf-networking-dev
         params: {repository: release-merged}
 

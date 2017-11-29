@@ -7,11 +7,11 @@ platform: linux
 
 inputs:
   - name: tarballs
-  - name: cf-networking-release
+  - name: cf-networking-release-ci
   - name: deployments-repo
 
 run:
-  path: cf-networking-release/ci/cf-networking-ci/tasks/upload-release-tarball
+  path: cf-networking-release-ci/ci/cf-networking-ci/tasks/upload-release-tarball
 
 params:
   ENVIRONMENT_NAME: ~

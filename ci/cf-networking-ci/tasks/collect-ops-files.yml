@@ -6,7 +6,7 @@ image_resource:
 platform: linux
 
 inputs:
-  - name: cf-networking-release
+  - name: cf-networking-release-ci
   - name: cf-deployment
   - name: deployments-repo
   - name: cf-networking-release
@@ -15,7 +15,7 @@ outputs:
   - name: ops-files
 
 run:
-  path: cf-networking-release/ci/cf-networking-ci/tasks/collect-ops-files
+  path: cf-networking-release-ci/ci/cf-networking-ci/tasks/collect-ops-files
 
 params:
   ENVIRONMENT_NAME: ~

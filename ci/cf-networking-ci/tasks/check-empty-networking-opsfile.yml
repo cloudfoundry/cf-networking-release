@@ -6,8 +6,8 @@ image_resource:
   source: { repository: c2cnetworking/deploy-light }
 
 inputs:
-  - name: cf-networking-release
+  - name: cf-networking-release-ci
   - name: cf-networking
 
 run:
-  path: cf-networking-release/ci/cf-networking-ci/tasks/check-empty-networking-opsfile
+  path: cf-networking-release-ci/ci/cf-networking-ci/tasks/check-empty-networking-opsfile

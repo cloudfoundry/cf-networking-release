@@ -6,7 +6,7 @@ image_resource:
   source: { repository: c2cnetworking/dev-postgres }
 
 inputs:
-  - name: cf-networking-release
+  - name: cf-networking-release-ci
   - name: test-config
   - name: cf-networking
 
@@ -14,4 +14,4 @@ params:
     ENVIRONMENT_NAME: ~
 
 run:
-  path: cf-networking-release/ci/cf-networking-ci/tasks/push-apps
+  path: cf-networking-release-ci/ci/cf-networking-ci/tasks/push-apps

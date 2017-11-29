@@ -6,7 +6,7 @@ image_resource:
   source: { repository: c2cnetworking/small-git }
 
 inputs:
-  - name: cf-networking-release
+  - name: cf-networking-release-ci
 
 outputs:
   - name: docker-image-tag-path
@@ -15,5 +15,5 @@ params:
   TAG: latest
 
 run:
-  path: cf-networking-release/ci/cf-networking-ci/tasks/set-docker-image-tag
+  path: cf-networking-release-ci/ci/cf-networking-ci/tasks/set-docker-image-tag
 
