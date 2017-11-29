@@ -1,0 +1,12 @@
+#!/bin/bash -eu
+
+pushd deployments-repo/environments/$ENVIRONMENT_NAME
+  export BOSH_ENVIRONMENT=$(bbl director-address)
+  export BOSH_CLIENT_SECRET=$(bbl director-password)
+  export BOSH_CLIENT=$(bbl director-username)
+  bbl director-ca-cert > /tmp/ca.crt
+  export BOSH_CA_CERT=/tmp/ca.crt
+  export BOSH_DEPLOYMENT=concourse
+
+  bosh -n deploy concourse.yml
+popd

@@ -1,0 +1,20 @@
+#!/bin/bash
+
+set -euo pipefail
+
+# set bosh target
+function setup_bosh_env_vars() {
+  pushd "bbl-state/${BBL_STATE_DIR}"
+    export BOSH_CA_CERT="$(bbl director-ca-cert)"
+    export BOSH_ENVIRONMENT=$(bbl director-address)
+    export BOSH_CLIENT=$(bbl director-username)
+    export BOSH_CLIENT_SECRET=$(bbl director-password)
+  popd
+}
+
+setup_bosh_env_vars
+
+runtime_config="runtime-config/${RUNTIME_CONFIG_FILE}"
+vars_store="vars-store/${VARS_STORE_FILE}"
+
+bosh update-runtime-config -n --vars-store "$vars_store" "$runtime_config"

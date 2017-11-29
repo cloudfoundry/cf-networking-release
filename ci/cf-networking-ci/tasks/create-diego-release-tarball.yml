@@ -1,0 +1,22 @@
+---
+image_resource:
+  type: docker-image
+  source: { repository: c2cnetworking/deploy }
+
+platform: linux
+
+params: {}
+
+inputs:
+  - name: diego-release
+
+outputs:
+  - name: diego-release-tarball
+
+run:
+  path: bash
+  args:
+    - -c
+    - |
+      bosh create-release --timestamp-version --tarball=diego-release/dev_releases/diego/diego-release.tgz --name diego --dir diego-release \
+       && cp diego-release/dev_releases/diego/*.tgz diego-release-tarball

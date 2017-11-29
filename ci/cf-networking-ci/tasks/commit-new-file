@@ -1,0 +1,20 @@
+#!/bin/bash
+
+set -e -x -u
+
+pwd
+ls
+
+git clone input_repo output_repo
+
+timestamp="$(date +'%Y-%m-%d-%H-%M-%S')"
+ls -la source
+cp "source/${SOURCE_FILE}" "output_repo/${timestamp}.$DEST_SUFFIX"
+
+cd output_repo
+git config --global user.email "container-networking+ci@pivotal.io"
+git config --global user.name "Container Networking CI Bot"
+
+git add .
+git commit -m "Added new file"
+
