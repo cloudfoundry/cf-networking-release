@@ -8,7 +8,7 @@ pushd deployments-repo/environments/$ENVIRONMENT_NAME
   export BOSH_CLIENT=$(bbl director-username)
   bbl director-ca-cert > /tmp/ca.crt
   export BOSH_CA_CERT=/tmp/ca.crt
-  export BOSH_DEPLOYMENT=cf
+  export BOSH_DEPLOYMENT=${ENVIRONMENT_NAME}.c2c.cf-app.com
 popd
 
 bosh run-errand "${ERRAND}"
