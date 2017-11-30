@@ -16,4 +16,4 @@ params:
   ENVIRONMENT_NAME: ~
 
 run:
-  path: cf-networking-release-ci/ci/cf-networking-ci/tasks/set-scaling-test-params
+  path: cf-networking-release-ci/ci/tasks/set-scaling-test-params

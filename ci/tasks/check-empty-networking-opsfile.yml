@@ -10,4 +10,4 @@ inputs:
   - name: cf-networking
 
 run:
-  path: cf-networking-release-ci/ci/cf-networking-ci/tasks/check-empty-networking-opsfile
+  path: cf-networking-release-ci/ci/tasks/check-empty-networking-opsfile

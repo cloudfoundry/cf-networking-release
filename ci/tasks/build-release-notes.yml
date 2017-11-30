@@ -13,7 +13,7 @@ outputs:
   - name: release-notes
 
 run:
-  path: cf-networking-release-ci/ci/cf-networking-ci/tasks/build-release-notes
+  path: cf-networking-release-ci/ci/tasks/build-release-notes
 
 params:
   SOURCE_DIR: cf-networking-master

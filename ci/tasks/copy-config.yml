@@ -5,13 +5,15 @@ image_resource:
 
 platform: linux
 
+params:
+  ENVIRONMENT: ~
+
 inputs:
   - name: cf-networking-release-ci
-  - name: cf-networking-dev
-  - name: cf-networking-master
+  - name: cf-networking-deployments
 
 outputs:
-  - name: release-merged
+  - name: integration-config
 
 run:
-  path: cf-networking-release-ci/ci/cf-networking-ci/tasks/merge-master
+  path: cf-networking-release-ci/ci/tasks/copy-config

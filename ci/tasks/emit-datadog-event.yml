@@ -8,7 +8,7 @@ inputs:
   - name: cf-networking-release-ci
 
 run:
-  path: cf-networking-release-ci/ci/cf-networking-ci/tasks/emit-datadog-event
+  path: cf-networking-release-ci/ci/tasks/emit-datadog-event
 
 params:
   TITLE:

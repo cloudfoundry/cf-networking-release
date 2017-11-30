@@ -8,11 +8,10 @@ image_resource:
 inputs:
   - name: cf-networking-release-ci
   - name: deployments-repo
-  - name: disaster-recovery-acceptance-tests
-    path: go/src/github.com/cloudfoundry-incubator/disaster-recovery-acceptance-tests
 
 params:
+  ERRAND: ~
   ENVIRONMENT_NAME: ~
 
 run:
-  path: cf-networking-release-ci/ci/cf-networking-ci/tasks/run-drats
+  path: cf-networking-release-ci/ci/tasks/run-errand

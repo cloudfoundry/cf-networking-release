@@ -10,11 +10,8 @@ inputs:
   - name: test-config
   - name: cf-networking
 
-outputs:
-  - name: network-stats
-
 params:
     ENVIRONMENT_NAME: ~
 
 run:
-  path: cf-networking-release-ci/ci/cf-networking-ci/tasks/test-scalability
+  path: cf-networking-release-ci/ci/tasks/push-apps

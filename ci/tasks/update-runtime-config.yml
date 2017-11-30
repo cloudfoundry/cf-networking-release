@@ -12,7 +12,7 @@ inputs:
   - name: vars-store
 
 run:
-  path: cf-networking-release-ci/ci/cf-networking-ci/tasks/update-runtime-config
+  path: cf-networking-release-ci/ci/tasks/update-runtime-config
 
 params:
   RUNTIME_CONFIG_FILE: ~

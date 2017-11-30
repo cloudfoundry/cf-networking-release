@@ -17,4 +17,4 @@ outputs:
   - name: release
 
 run:
-  path: cf-networking-release-ci/ci/cf-networking-ci/tasks/shipit
+  path: cf-networking-release-ci/ci/tasks/shipit

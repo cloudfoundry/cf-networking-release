@@ -14,7 +14,7 @@ outputs:
 - name: tarballs
 
 run:
-  path: cf-networking-release-ci/ci/cf-networking-ci/tasks/create-release-tarball
+  path: cf-networking-release-ci/ci/tasks/create-release-tarball
 
 params:
   RELEASE_NAME: cf-networking

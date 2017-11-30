@@ -10,11 +10,11 @@ inputs:
   - name: test-config
   - name: cf-networking
 
+outputs:
+  - name: network-stats
+
 params:
     ENVIRONMENT_NAME: ~
-    ENVIRONMENT_TAG: ~
-    CONFIG: ~
-    DATADOG_API_KEY: ~
 
 run:
-  path: cf-networking-release-ci/ci/cf-networking-ci/tasks/smoke-tests
+  path: cf-networking-release-ci/ci/tasks/test-scalability
