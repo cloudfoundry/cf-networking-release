@@ -8,7 +8,6 @@ For more information on integrating a 3rd-party networking solution, [see here](
 ![](diagram.png)
 
 ### Core components
-- [CF CLI plugin](usage.md) enables administrators to control network access policies between CF applications
 - Policy Server, a central management node, exposes a JSON REST API used by the CLI plugin
 - [Garden External Networker](../src/garden-external-networker), a [Garden-runC](https://github.com/cloudfoundry/garden-runc-release) add-on deployed to every Diego cell
   - Invokes an operator-configured [CNI](https://github.com/containernetworking/cni) Plugin to set up the network for each app instance (container)

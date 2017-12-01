@@ -11,7 +11,7 @@ https://spring.io/guides/gs/service-registration-and-discovery/
 - `maven` installed (`brew install maven`)
 - CF deployed with [cf-networking-release](https://github.com/cloudfoundry-incubator/cf-networking-release)
   (The examples assume a bosh-lite deployment)
-- `cf` cli installed with [`network-policy-plugin`](https://github.com/cloudfoundry-incubator/cf-networking-release/blob/develop/docs/usage.md)
+- [CF CLI](https://github.com/cloudfoundry/cli) installed, using version `6.30.0` or higher.
 
 ## Build the applications
 
