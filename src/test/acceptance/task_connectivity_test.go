@@ -91,7 +91,7 @@ var _ = Describe("task connectivity on the overlay network", func() {
 
 func getContainerIP(listenAddresses []string) string {
 	for _, listenAddr := range listenAddresses {
-		if strings.HasPrefix(listenAddr, "10.255") {
+		if !strings.HasPrefix(listenAddr, "127.0.0.1") {
 			return listenAddr
 		}
 	}
