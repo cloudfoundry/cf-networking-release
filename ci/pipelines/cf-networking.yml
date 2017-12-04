@@ -861,6 +861,7 @@ jobs:
     plan:
     - aggregate:
       - get: concourse
+        version: {version: 3.6.0}
       - get: cf-networking-release-ci
       - get: cf-deployment-concourse-tasks
       - get: cf-networking-deployments
