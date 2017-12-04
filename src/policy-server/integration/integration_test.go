@@ -12,6 +12,8 @@ import (
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics"
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -31,14 +33,14 @@ var _ = Describe("Integration", func() {
 			dbConf            db.Config
 			headers           map[string]string
 			policyServerConfs []config.Config
-			fakeMetron        testsupport.FakeMetron
+			fakeMetron        metrics.FakeMetron
 		)
 
 		BeforeEach(func() {
-			fakeMetron = testsupport.NewFakeMetron()
+			fakeMetron = metrics.NewFakeMetron()
 
 			dbConf = testsupport.GetDBConfig()
-			dbConf.DatabaseName = fmt.Sprintf("integration_test_node_%d", testsupport.PickAPort())
+			dbConf.DatabaseName = fmt.Sprintf("integration_test_node_%d", ports.PickAPort())
 
 			template, _ := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
 			policyServerConfs = configurePolicyServers(template, 1)

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -33,7 +34,7 @@ var _ = Describe("TLS config for internal API server", func() {
 	BeforeEach(func() {
 		var err error
 
-		port := testsupport.PickAPort()
+		port := ports.PickAPort()
 		serverListenAddr = fmt.Sprintf("127.0.0.1:%d", port)
 		clientTLSConfig, err = nonmutualtls.NewClientTLSConfig(paths.ServerCACertPath)
 		Expect(err).NotTo(HaveOccurred())

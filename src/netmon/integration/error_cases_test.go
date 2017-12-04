@@ -4,22 +4,23 @@ import (
 	"netmon/config"
 	"os/exec"
 
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
-	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 )
 
 var _ = Describe("Integration", func() {
 	var (
 		session        *gexec.Session
 		conf           config.Netmon
-		fakeMetron     testsupport.FakeMetron
+		fakeMetron     metrics.FakeMetron
 		ifName         string
 		configFilePath string
 	)
 	BeforeEach(func() {
-		fakeMetron = testsupport.NewFakeMetron()
+		fakeMetron = metrics.NewFakeMetron()
 
 		ifName = discoverInterfaceName()
 		conf = config.Netmon{

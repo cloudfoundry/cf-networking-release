@@ -13,7 +13,8 @@ import (
 	"vxlan-policy-agent/config"
 
 	"code.cloudfoundry.org/cf-networking-helpers/mutualtls"
-	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics"
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -32,7 +33,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 		datastorePath    string
 		conf             config.VxlanPolicyAgent
 		configFilePath   string
-		fakeMetron       testsupport.FakeMetron
+		fakeMetron       metrics.FakeMetron
 		mockPolicyServer ifrit.Process
 		serverListenPort int
 		serverListenAddr string
@@ -41,12 +42,12 @@ var _ = Describe("VXLAN Policy Agent", func() {
 
 	BeforeEach(func() {
 		var err error
-		fakeMetron = testsupport.NewFakeMetron()
+		fakeMetron = metrics.NewFakeMetron()
 
 		serverTLSConfig, err = mutualtls.NewServerTLSConfig(paths.ServerCertFile, paths.ServerKeyFile, paths.ClientCACertFile)
 		Expect(err).NotTo(HaveOccurred())
 
-		serverListenPort = testsupport.PickAPort()
+		serverListenPort = ports.PickAPort()
 		serverListenAddr = fmt.Sprintf("127.0.0.1:%d", serverListenPort)
 
 		containerMetadata := `
@@ -76,7 +77,7 @@ var _ = Describe("VXLAN Policy Agent", func() {
 			ClientKeyFile:                 paths.ClientKeyFile,
 			IPTablesLockFile:              GlobalIPTablesLockFile,
 			DebugServerHost:               "127.0.0.1",
-			DebugServerPort:               testsupport.PickAPort(),
+			DebugServerPort:               ports.PickAPort(),
 			LogPrefix:                     "testprefix",
 			ClientTimeoutSeconds:          5,
 			IPTablesAcceptedUDPLogsPerSec: 7,

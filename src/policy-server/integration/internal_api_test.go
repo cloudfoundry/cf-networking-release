@@ -12,6 +12,8 @@ import (
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics"
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -30,14 +32,14 @@ var _ = Describe("Internal API", func() {
 		tlsConfig                 *tls.Config
 		policyServerConfs         []config.Config
 		policyServerInternalConfs []config.InternalConfig
-		fakeMetron                testsupport.FakeMetron
+		fakeMetron                metrics.FakeMetron
 	)
 
 	BeforeEach(func() {
-		fakeMetron = testsupport.NewFakeMetron()
+		fakeMetron = metrics.NewFakeMetron()
 		dbConf = testsupport.GetDBConfig()
 		dbConf.Timeout = 5
-		dbConf.DatabaseName = fmt.Sprintf("internal_api_test_node_%d", testsupport.PickAPort())
+		dbConf.DatabaseName = fmt.Sprintf("internal_api_test_node_%d", ports.PickAPort())
 
 		cert, err := tls.LoadX509KeyPair("fixtures/client.crt", "fixtures/client.key")
 		Expect(err).NotTo(HaveOccurred())

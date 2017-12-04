@@ -13,6 +13,8 @@ import (
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics"
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -42,7 +44,7 @@ var _ = Describe("Timeout", func() {
 		dbConf  db.Config
 		headers map[string]string
 
-		fakeMetron      testsupport.FakeMetron
+		fakeMetron      metrics.FakeMetron
 		policyServerURL string
 	)
 	BeforeEach(func() {
@@ -50,11 +52,11 @@ var _ = Describe("Timeout", func() {
 		if dbConf.Type == "postgres" {
 			Skip("skipping timeout tests on postgres; only supported by mysql")
 		}
-		dbConf.DatabaseName = fmt.Sprintf("test_timeouts_node_%d", testsupport.PickAPort())
+		dbConf.DatabaseName = fmt.Sprintf("test_timeouts_node_%d", ports.PickAPort())
 		dbConf.Timeout = 1
 		testsupport.CreateDatabase(dbConf)
 
-		fakeMetron = testsupport.NewFakeMetron()
+		fakeMetron = metrics.NewFakeMetron()
 
 		conf, _ = helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "../fixtures")
 		session = helpers.StartPolicyServer(policyServerPath, conf)

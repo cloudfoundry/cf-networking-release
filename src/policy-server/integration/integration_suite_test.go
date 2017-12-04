@@ -8,6 +8,8 @@ import (
 	"policy-server/integration/helpers"
 
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics"
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
 
 	. "github.com/onsi/ginkgo"
 	ginkgoConfig "github.com/onsi/ginkgo/config"
@@ -29,7 +31,7 @@ type policyServerPaths struct {
 }
 
 var HaveName = func(name string) types.GomegaMatcher {
-	return WithTransform(func(ev testsupport.Event) string {
+	return WithTransform(func(ev metrics.Event) string {
 		return ev.Name
 	}, Equal(name))
 }
@@ -77,8 +79,8 @@ func configurePolicyServers(template config.Config, instances int) []config.Conf
 	var configs []config.Config
 	for i := 0; i < instances; i++ {
 		conf := template
-		conf.ListenPort = testsupport.PickAPort()
-		conf.DebugServerPort = testsupport.PickAPort()
+		conf.ListenPort = ports.PickAPort()
+		conf.DebugServerPort = ports.PickAPort()
 		configs = append(configs, conf)
 	}
 	return configs
@@ -88,9 +90,9 @@ func configureInternalPolicyServers(template config.InternalConfig, instances in
 	var configs []config.InternalConfig
 	for i := 0; i < instances; i++ {
 		conf := template
-		conf.InternalListenPort = testsupport.PickAPort()
-		conf.DebugServerPort = testsupport.PickAPort()
-		conf.HealthCheckPort = testsupport.PickAPort()
+		conf.InternalListenPort = ports.PickAPort()
+		conf.DebugServerPort = ports.PickAPort()
+		conf.HealthCheckPort = ports.PickAPort()
 		configs = append(configs, conf)
 	}
 	return configs

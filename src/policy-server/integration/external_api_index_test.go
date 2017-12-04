@@ -10,6 +10,8 @@ import (
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics"
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -24,14 +26,14 @@ var _ = Describe("External API Listing Policies", func() {
 		policyServerConfs []config.Config
 		dbConf            db.Config
 
-		fakeMetron testsupport.FakeMetron
+		fakeMetron metrics.FakeMetron
 	)
 
 	BeforeEach(func() {
-		fakeMetron = testsupport.NewFakeMetron()
+		fakeMetron = metrics.NewFakeMetron()
 
 		dbConf = testsupport.GetDBConfig()
-		dbConf.DatabaseName = fmt.Sprintf("external_api_index_test_node_%d", testsupport.PickAPort())
+		dbConf.DatabaseName = fmt.Sprintf("external_api_index_test_node_%d", ports.PickAPort())
 
 		template, _ := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
 		policyServerConfs = configurePolicyServers(template, 2)

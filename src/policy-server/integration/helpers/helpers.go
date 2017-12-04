@@ -19,7 +19,7 @@ import (
 	"strings"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
-	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -153,10 +153,10 @@ func DefaultTestConfig(dbConfig db.Config, metronAddress string, fixturesPath st
 
 	externalConfig := config.Config{
 		ListenHost:                      "127.0.0.1",
-		ListenPort:                      testsupport.PickAPort(),
+		ListenPort:                      ports.PickAPort(),
 		LogPrefix:                       "testprefix",
 		DebugServerHost:                 "127.0.0.1",
-		DebugServerPort:                 testsupport.PickAPort(),
+		DebugServerPort:                 ports.PickAPort(),
 		SkipSSLValidation:               true,
 		UAAClient:                       "test",
 		UAAClientSecret:                 "test",
@@ -175,10 +175,10 @@ func DefaultTestConfig(dbConfig db.Config, metronAddress string, fixturesPath st
 
 	internalConfig := config.InternalConfig{
 		ListenHost:         "127.0.0.1",
-		InternalListenPort: testsupport.PickAPort(),
+		InternalListenPort: ports.PickAPort(),
 		LogPrefix:          "testprefix",
 		DebugServerHost:    "127.0.0.1",
-		DebugServerPort:    testsupport.PickAPort(),
+		DebugServerPort:    ports.PickAPort(),
 		CACertFile:         filepath.Join(fixturesPath, "netman-ca.crt"),
 		ServerCertFile:     filepath.Join(fixturesPath, "server.crt"),
 		ServerKeyFile:      filepath.Join(fixturesPath, "server.key"),

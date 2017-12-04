@@ -15,12 +15,13 @@ import (
 	"sync"
 	"time"
 
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 	"github.com/onsi/gomega/types"
-	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 )
 
 var (
@@ -29,7 +30,7 @@ var (
 )
 
 var HaveName = func(name string) types.GomegaMatcher {
-	return WithTransform(func(ev testsupport.Event) string {
+	return WithTransform(func(ev metrics.Event) string {
 		return ev.Name
 	}, Equal(name))
 }
@@ -42,7 +43,7 @@ var _ = Describe("Integration", func() {
 		containerMetadataFile *os.File
 		store                 *datastore.Store
 		configFilePath        string
-		fakeMetron            testsupport.FakeMetron
+		fakeMetron            metrics.FakeMetron
 	)
 
 	EGRESS_DENIED_JSON := `{
@@ -136,7 +137,7 @@ var _ = Describe("Integration", func() {
 
 	BeforeEach(func() {
 		var err error
-		fakeMetron = testsupport.NewFakeMetron()
+		fakeMetron = metrics.NewFakeMetron()
 
 		kernelLogFile, err = ioutil.TempFile("", "")
 		Expect(err).ToNot(HaveOccurred())
