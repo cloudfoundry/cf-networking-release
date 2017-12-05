@@ -251,6 +251,7 @@ var httpClient = &http.Client{
 			KeepAlive: 0,
 		}).Dial,
 	},
+	Timeout: 20 * time.Second,
 }
 
 type httpResp struct {

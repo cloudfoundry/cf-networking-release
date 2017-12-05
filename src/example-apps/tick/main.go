@@ -79,9 +79,13 @@ func mainWithError() error {
 		return fmt.Errorf("unable to discover local ip: %s", err)
 	}
 
+	client := &http.Client{
+		Timeout: 20 * time.Second,
+	}
+
 	a8Client := &a8.Client{
 		BaseURL:            env.RegistryBaseURL,
-		HttpClient:         http.DefaultClient,
+		HttpClient:         client,
 		LocalServerAddress: fmt.Sprintf("%s:%s", localIP, env.Port),
 		ServiceName:        env.VCAPApplication.ApplicationName,
 		TTLSeconds:         ttlSeconds,
