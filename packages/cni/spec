@@ -36,6 +36,9 @@ files:
   - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/plugins/pkg/ns/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/plugins/pkg/utils/hwaddr/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/plugins/pkg/utils/sysctl/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/plugins/vendor/github.com/containernetworking/cni/pkg/types/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/plugins/vendor/github.com/containernetworking/cni/pkg/types/020/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/plugins/vendor/github.com/containernetworking/cni/pkg/types/current/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/plugins/vendor/github.com/coreos/go-iptables/iptables/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/plugins/vendor/github.com/vishvananda/netlink/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/plugins/vendor/github.com/vishvananda/netlink/nl/*.go # gosub
