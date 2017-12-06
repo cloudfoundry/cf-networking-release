@@ -47,22 +47,6 @@ resources:
     email: {{dockerhub_email}}
     repository: c2cnetworking/dev-mysql
 
-- name: dev-mysql-ifb-dockerfile
-  type: git
-  source:
-    uri: git://github.com/cloudfoundry/cf-networking-ci
-    branch: master
-    paths:
-      - dockerfiles/dev-mysql-ifb
-
-- name: dev-mysql-ifb-image
-  type: docker-image
-  source:
-    username: {{dockerhub_username}}
-    password: {{dockerhub_password}}
-    email: {{dockerhub_email}}
-    repository: c2cnetworking/dev-mysql-ifb
-
 - name: dev-mysql-5.6-dockerfile
   type: git
   source:
@@ -192,22 +176,6 @@ jobs:
   - put: dev-mysql-image
     params:
       build: docker-build-context
-
-- name: build-dev-mysql-ifb-image
-  plan:
-  - aggregate:
-    - get: cf-networking-release-ci
-    - get: dev-mysql-ifb-dockerfile
-      trigger: true
-  - task: set-docker-image-tag
-    file: cf-networking-release-ci/ci/tasks/set-docker-image-tag.yml
-    params:
-      TAG: {{docker_ifb_kernel_version}}-moby
-  - put: dev-mysql-ifb-image
-    params:
-      build_args:
-        KERNELVER: {{docker_ifb_kernel_version}}
-      tag: docker-image-tag-path/tag
 
 - name: build-dev-mysql-5.6-image
   plan:
