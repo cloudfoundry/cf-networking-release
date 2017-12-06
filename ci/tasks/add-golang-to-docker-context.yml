@@ -13,12 +13,12 @@ outputs:
 - name: docker-build-context
 
 params:
-  INPUT_DOCKERFILE_PATH: Dockerfile
+  INPUT_DOCKERIMAGE_PATH: Dockerfile
 
 run:
   path: sh
   args:
   - -exuc
   - |
-    cp $INPUT_DOCKERFILE_PATH docker-build-context
+    cp $INPUT_DOCKERIMAGE_PATH/* docker-build-context
     cp golang-1.x-tarball/go* docker-build-context

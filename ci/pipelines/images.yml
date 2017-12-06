@@ -140,7 +140,7 @@ jobs:
     input_mapping:
       dockerfile: dev-postgres-dockerfile
     params:
-      INPUT_DOCKERFILE_PATH: dockerfile/ci/dockerfiles/dev-postgres/Dockerfile
+      INPUT_DOCKERIMAGE_PATH: dockerfile/ci/dockerfiles/dev-postgres
   - put: dev-postgres-image
     params:
       build: docker-build-context
@@ -159,13 +159,13 @@ jobs:
     input_mapping:
       dockerfile: dev-postgres-ifb-dockerfile
     params:
-      TAG: 4.9.36
+      TAG: 4.9.49
   - task: add-golang
     file: cf-networking-release-ci/ci/tasks/add-golang-to-docker-context.yml
     input_mapping:
       dockerfile: dev-postgres-ifb-dockerfile
     params:
-      INPUT_DOCKERFILE_PATH: dockerfile/ci/dockerfiles/dev-postgres-ifb/Dockerfile
+      INPUT_DOCKERIMAGE_PATH: dockerfile/ci/dockerfiles/dev-postgres-ifb
   - put: dev-postgres-ifb-image
     params:
       build: docker-build-context
@@ -186,7 +186,7 @@ jobs:
     input_mapping:
       dockerfile: dev-mysql-dockerfile
     params:
-      INPUT_DOCKERFILE_PATH: dockerfile/ci/dockerfiles/dev-mysql/Dockerfile
+      INPUT_DOCKERIMAGE_PATH: dockerfile/ci/dockerfiles/dev-mysql
   - put: dev-mysql-image
     params:
       build: docker-build-context
@@ -204,7 +204,7 @@ jobs:
     input_mapping:
       dockerfile: dev-mysql-5.6-dockerfile
     params:
-      INPUT_DOCKERFILE_PATH: dockerfile/ci/dockerfiles/dev-mysql-5.6/Dockerfile
+      INPUT_DOCKERIMAGE_PATH: dockerfile/ci/dockerfiles/dev-mysql-5.6
   - put: dev-mysql-5.6-image
     params:
       build: docker-build-context
