@@ -581,13 +581,15 @@ jobs:
           passed: [ship-what]
       - task: shipit
         file: cf-networking-ci/ci/tasks/shipit.yml
-        input_mapping:
-          cf-networking: cf-networking-v1.4.x
       - put: version
         params: {file: version/number}
-      - put: cf-networking-v1.4.x
+      - put: cf-networking-master
         params:
           repository: release/master
+      - put: cf-networking-v1.4.x
+        params:
+          repository: cf-networking-v1.4.x
+          only_tag: true
           tag: version/number
           tag_prefix: v
       - put: cf-networking-tarball
