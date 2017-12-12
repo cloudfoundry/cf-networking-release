@@ -1422,7 +1422,7 @@ jobs:
       file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
       params:
         BBL_STATE_DIR: environments/pickelhelm/
-        DEPLOYMENT_NAME: pickelhelm.c2c.cf-app.com
+        DEPLOYMENT_NAME: cf
       input_mapping:
         bbl-state: cf-networking-deployments
 
@@ -1437,7 +1437,7 @@ jobs:
       file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
       params:
         BBL_STATE_DIR: environments/mitre/
-        DEPLOYMENT_NAME: mitre.c2c.cf-app.com
+        DEPLOYMENT_NAME: cf
       input_mapping:
         bbl-state: cf-networking-deployments
 
@@ -1452,7 +1452,7 @@ jobs:
       file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
       params:
         BBL_STATE_DIR: environments/toque/
-        DEPLOYMENT_NAME: toque.c2c.cf-app.com
+        DEPLOYMENT_NAME: cf
       input_mapping:
         bbl-state: cf-networking-deployments
 
