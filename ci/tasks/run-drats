@@ -21,7 +21,7 @@ pushd deployments-repo/environments/$ENVIRONMENT_NAME > /dev/null
   export BOSH_CLIENT_SECRET=$(bbl director-password)
   export BOSH_CLIENT=$(bbl director-username)
   bbl director-ca-cert > /tmp/ca.crt
-  export BOSH_CERT_PATH=/tmp/ca.crt
+  export BOSH_CA_CERT=/tmp/ca.crt
   export BBR_BUILD_PATH=/tmp/releases/bbr
   export FOCUSED_SUITE_NAME="cf-networking"
 popd
