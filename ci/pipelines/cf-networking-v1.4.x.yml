@@ -235,6 +235,7 @@ jobs:
     - task: bbl-destroy
       file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
       params:
+        BBL_GCP_SERVICE_ACCOUNT_KEY: ../gcp/service-account.key.json
         BBL_STATE_DIR: environments/caubeen/
       input_mapping:
         bbl-state: cf-networking-deployments
@@ -354,6 +355,7 @@ jobs:
     - task: bbl-destroy
       file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
       params:
+        BBL_GCP_SERVICE_ACCOUNT_KEY: ../gcp/service-account.key.json
         BBL_STATE_DIR: environments/montera/
       input_mapping:
         bbl-state: cf-networking-deployments
