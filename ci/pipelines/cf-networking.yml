@@ -253,9 +253,7 @@ jobs:
       file: cf-deployment-concourse-tasks/bbl-up/task.yml
       params:
         BBL_GCP_SERVICE_ACCOUNT_KEY: ../gcp/service-account.key.json
-        BBL_GCP_PROJECT_ID: cf-container-networking-gcp
         BBL_GCP_REGION: us-east1
-        BBL_GCP_ZONE: us-east1-c
         BBL_STATE_DIR: environments/trucker/
         BBL_IAAS: gcp
         BBL_LB_CERT: {{trucker-lb-cert}}
@@ -281,6 +279,7 @@ jobs:
       file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
       params:
         BBL_STATE_DIR: environments/trucker/
+        BBL_GCP_SERVICE_ACCOUNT_KEY: ../gcp/service-account.key.json
       input_mapping:
         bbl-state: cf-networking-deployments
       ensure:
@@ -436,9 +435,7 @@ jobs:
       file: cf-deployment-concourse-tasks/bbl-up/task.yml
       params:
         BBL_GCP_SERVICE_ACCOUNT_KEY: ../gcp/service-account.key.json
-        BBL_GCP_PROJECT_ID: cf-container-networking-gcp
         BBL_GCP_REGION: us-east1
-        BBL_GCP_ZONE: us-east1-c
         BBL_STATE_DIR: environments/sombrero/
         BBL_IAAS: gcp
         BBL_LB_CERT: {{sombrero-lb-cert}}
@@ -464,6 +461,7 @@ jobs:
       file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
       params:
         BBL_STATE_DIR: environments/sombrero/
+        BBL_GCP_SERVICE_ACCOUNT_KEY: ../gcp/service-account.key.json
       input_mapping:
         bbl-state: cf-networking-deployments
       ensure:
@@ -671,9 +669,7 @@ jobs:
       file: cf-deployment-concourse-tasks/bbl-up/task.yml
       params:
         BBL_GCP_SERVICE_ACCOUNT_KEY: ../gcp/service-account.key.json
-        BBL_GCP_PROJECT_ID: cf-container-networking-gcp
         BBL_GCP_REGION: us-east1
-        BBL_GCP_ZONE: us-east1-b
         BBL_STATE_DIR: environments/pickelhelm/
         BBL_IAAS: gcp
         BBL_LB_CERT: {{pickelhelm-lb-cert}}
@@ -699,6 +695,7 @@ jobs:
       file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
       params:
         BBL_STATE_DIR: environments/pickelhelm/
+        BBL_GCP_SERVICE_ACCOUNT_KEY: ../gcp/service-account.key.json
       input_mapping:
         bbl-state: cf-networking-deployments
       ensure:
@@ -820,9 +817,7 @@ jobs:
       file: cf-deployment-concourse-tasks/bbl-up/task.yml
       params:
         BBL_GCP_SERVICE_ACCOUNT_KEY: ../gcp/service-account.key.json
-        BBL_GCP_PROJECT_ID: cf-container-networking-gcp
         BBL_GCP_REGION: us-east1
-        BBL_GCP_ZONE: us-east1-b
         BBL_STATE_DIR: environments/mitre/
         BBL_IAAS: gcp
         BBL_LB_CERT: {{mitre-lb-cert}}
@@ -848,6 +843,7 @@ jobs:
       file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
       params:
         BBL_STATE_DIR: environments/mitre/
+        BBL_GCP_SERVICE_ACCOUNT_KEY: ../gcp/service-account.key.json
       input_mapping:
         bbl-state: cf-networking-deployments
       ensure:
@@ -1108,9 +1104,7 @@ jobs:
       file: cf-deployment-concourse-tasks/bbl-up/task.yml
       params:
         BBL_GCP_SERVICE_ACCOUNT_KEY: ../gcp/service-account.key.json
-        BBL_GCP_PROJECT_ID: cf-container-networking-gcp
         BBL_GCP_REGION: us-east1
-        BBL_GCP_ZONE: us-east1-b
         BBL_STATE_DIR: environments/toque/
         BBL_IAAS: gcp
         BBL_LB_CERT: {{toque-lb-cert}}
@@ -1136,6 +1130,7 @@ jobs:
       file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
       params:
         BBL_STATE_DIR: environments/toque/
+        BBL_GCP_SERVICE_ACCOUNT_KEY: ../gcp/service-account.key.json
       input_mapping:
         bbl-state: cf-networking-deployments
       ensure:
@@ -1310,9 +1305,7 @@ jobs:
       file: cf-deployment-concourse-tasks/bbl-up/task.yml
       params:
         BBL_GCP_SERVICE_ACCOUNT_KEY: ../gcp/service-account.key.json
-        BBL_GCP_PROJECT_ID: cf-container-networking-gcp
         BBL_GCP_REGION: us-east1
-        BBL_GCP_ZONE: us-east1-b
         BBL_STATE_DIR: environments/slouch/
         BBL_IAAS: gcp
         BBL_LB_CERT: {{slouch-lb-cert}}
@@ -1338,6 +1331,7 @@ jobs:
       file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
       params:
         BBL_STATE_DIR: environments/slouch/
+        BBL_GCP_SERVICE_ACCOUNT_KEY: ../gcp/service-account.key.json
       input_mapping:
         bbl-state: cf-networking-deployments
       ensure:
