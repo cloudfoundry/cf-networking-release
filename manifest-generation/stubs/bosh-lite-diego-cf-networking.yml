@@ -6,7 +6,7 @@ cf_networking_overrides:
   driver_templates:
   - name: garden-cni
     release: cf-networking
-  - name: silk-cni
+  - name: cni
     release: cf-networking
   - name: silk-daemon
     release: cf-networking
@@ -39,7 +39,7 @@ cf_networking_overrides:
   properties:
     cf_networking:
       network: "10.250.0.0/16"
-      cni_config_dir: /var/vcap/jobs/silk-cni/config/cni
+      cni_config_dir: /var/vcap/jobs/cni/config/cni
       silk_controller:
         hostname: connectivity-server.service.cf.internal
         database:
