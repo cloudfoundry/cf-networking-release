@@ -4,3 +4,7 @@
 - type: replace
   path: /addons/name=metron_agent/jobs/name=metron_agent/properties/metron_agent?/tags
   value: {"deployment": "((system_domain))"}
+
+- type: replace
+  path: /addons/name=metron_agent/jobs/name=metron_agent/properties/metron_agent?/deployment
+  value: ((system_domain))
