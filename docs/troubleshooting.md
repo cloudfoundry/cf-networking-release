@@ -328,7 +328,21 @@ In particular, the `dstport PORT` value is the external UDP port used by the VTE
 
 ### Debugging Non-C2C Packets
 
-  If you have a packet that is not c2c (destination is an external address), and want to find information about the application,
+  To capture non-c2c packets (destination is an external address), run the following:
+
+  ```
+  tcpdump -v -XX -i any
+  ```
+
+  The packets that you are interested in will be packets with the source ip being in the container network.
+
+  To filter by destination address, you may add `-n dst host <destination-ip>` to the `tcpdump` command. For example:
+
+  ```
+  tcpdump -v -XX -i any -n dst host 96.126.115.72
+  ```
+
+  Once you have a packet and want to find information about the application,
   find the assigned container ip in the packet header. For the example below, the ip is 10.255.29.3.
   ```
   18:49:04.749158 IP (tos 0x0, ttl 64, id 25116, offset 0, flags [DF], proto TCP (6), length 114)
