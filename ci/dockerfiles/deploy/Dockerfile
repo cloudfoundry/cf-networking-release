@@ -7,16 +7,16 @@ RUN curl -L https://github.com/github/hub/releases/download/v2.2.9/hub-linux-amd
 
 # bbl and dependencies
 RUN \
-  wget https://github.com/cloudfoundry/bosh-bootloader/releases/download/v3.2.6/bbl-v3.2.6_linux_x86-64 -P /tmp && \
+  wget https://github.com/cloudfoundry/bosh-bootloader/releases/download/v5.10.1/bbl-v5.10.1_linux_x86-64 -P /tmp && \
   mv /tmp/bbl-* /usr/local/bin/bbl && \
   cd /usr/local/bin && \
-  echo "0393afe06f5ca1664553895f41c0f3d6186f191b bbl" | sha1sum -c - && \
+  echo "0417d7b4ad626011eaaa8747fa0e794fb54be19a bbl" | sha1sum -c - && \
   chmod +x bbl
 RUN \
-  wget https://releases.hashicorp.com/terraform/0.9.7/terraform_0.9.7_linux_amd64.zip -P /tmp && \
+  wget https://releases.hashicorp.com/terraform/0.11.1/terraform_0.11.1_linux_amd64.zip -P /tmp && \
   cd /tmp && \
-  echo "f7d9d2110acccb5b24fec86f2651f3f07af493c9 terraform_0.9.7_linux_amd64.zip" | sha1sum -c - && \
-  unzip /tmp/terraform_0.9.7_linux_amd64.zip -d /tmp && \
+  echo "fcf9e6aadc002be1905f94ecefaff2f505d4ef38  terraform_0.11.1_linux_amd64.zip" | sha1sum -c - && \
+  unzip /tmp/terraform_0.11.1_linux_amd64.zip -d /tmp && \
   mv /tmp/terraform /usr/local/bin/terraform && \
   cd /usr/local/bin && \
   chmod +x terraform && \
