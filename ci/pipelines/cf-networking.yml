@@ -1,3 +1,6 @@
+pinned-versions: &cf-deployment-concourse-task-version
+  ref: 4156e1fbdf62ae6636146b671334ef10e76e0b0e
+
 groups:
 - name: cf-networking
   jobs:
@@ -248,11 +251,12 @@ jobs:
     plan:
     - aggregate:
       - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
       - get: cf-networking-deployments
     - task: bbl-up
       file: cf-deployment-concourse-tasks/bbl-up/task.yml
       params:
-        BBL_GCP_SERVICE_ACCOUNT_KEY: ../gcp/service-account.key.json
+        BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
         BBL_GCP_REGION: us-east1
         BBL_STATE_DIR: environments/trucker/
         BBL_IAAS: gcp
@@ -261,12 +265,12 @@ jobs:
         LB_DOMAIN: trucker.c2c.cf-app.com
         BBL_ENV_NAME: trucker
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
         ops-files: cf-networking-deployments
       ensure:
         put: cf-networking-deployments
         params:
-          repository: updated-bbl-state
+          repository: updated-env-repo
           rebase: true
 
   - name: trucker-bbl-destroy
@@ -274,18 +278,19 @@ jobs:
     plan:
     - aggregate:
       - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
       - get: cf-networking-deployments
     - task: bbl-destroy
       file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
       params:
         BBL_STATE_DIR: environments/trucker/
-        BBL_GCP_SERVICE_ACCOUNT_KEY: ../gcp/service-account.key.json
+        BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
       ensure:
         put: cf-networking-deployments
         params:
-          repository: updated-bbl-state
+          repository: updated-env-repo
           rebase: true
 
   - name: trucker-test-upgrade
@@ -294,6 +299,7 @@ jobs:
     - aggregate:
       - get: cf-networking-release-ci
       - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
       - get: cf-networking-deployments
       - get: cf-deployment
       - get: cf-networking-dev
@@ -304,13 +310,13 @@ jobs:
       params:
         BBL_STATE_DIR: environments/trucker/
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
     - task: upload-stemcell
       file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
       params:
         BBL_STATE_DIR: environments/trucker/
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
     - task: collect-ops-files
       file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
       params:
@@ -329,7 +335,7 @@ jobs:
       input_mapping:
         vars-store: cf-networking-deployments
         vars-files: cf-networking-deployments
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
     - task: push-app
       config:
         platform: linux
@@ -377,7 +383,7 @@ jobs:
         release: cf-networking-dev
         vars-store: updated-vars-store
         vars-files: updated-vars-store
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
     - task: ping-app
       config:
         platform: linux
@@ -398,14 +404,14 @@ jobs:
       params:
         BBL_STATE_DIR: environments/trucker/
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
     - task: bosh-cleanup
       file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
       params:
         BBL_STATE_DIR: environments/trucker/
         CLEAN_ALL: false
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
 
   - name: delete-trucker-deployment
     serial_groups: [trucker]
@@ -415,6 +421,7 @@ jobs:
         passed: [trucker-test-upgrade]
         trigger: true
       - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
       - get: cf-networking-dev
         passed: [trucker-test-upgrade]
         trigger: true
@@ -423,18 +430,19 @@ jobs:
       params:
         BBL_STATE_DIR: environments/trucker/
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
 
   - name: sombrero-bbl-up
     serial_groups: [sombrero]
     plan:
     - aggregate:
       - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
       - get: cf-networking-deployments
     - task: bbl-up
       file: cf-deployment-concourse-tasks/bbl-up/task.yml
       params:
-        BBL_GCP_SERVICE_ACCOUNT_KEY: ../gcp/service-account.key.json
+        BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
         BBL_GCP_REGION: us-east1
         BBL_STATE_DIR: environments/sombrero/
         BBL_IAAS: gcp
@@ -443,12 +451,12 @@ jobs:
         LB_DOMAIN: sombrero.c2c.cf-app.com
         BBL_ENV_NAME: sombrero
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
         ops-files: cf-networking-deployments
       ensure:
         put: cf-networking-deployments
         params:
-          repository: updated-bbl-state
+          repository: updated-env-repo
           rebase: true
 
   - name: sombrero-bbl-destroy
@@ -456,18 +464,19 @@ jobs:
     plan:
     - aggregate:
       - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
       - get: cf-networking-deployments
     - task: bbl-destroy
       file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
       params:
         BBL_STATE_DIR: environments/sombrero/
-        BBL_GCP_SERVICE_ACCOUNT_KEY: ../gcp/service-account.key.json
+        BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
       ensure:
         put: cf-networking-deployments
         params:
-          repository: updated-bbl-state
+          repository: updated-env-repo
           rebase: true
 
   - name: sombrero-test-upgrade
@@ -481,6 +490,7 @@ jobs:
       - get: cf-deployment
       - get: cf-deployment-pinned
       - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
       - get: cf-deployment-concourse-tasks-pinned
       - get: cf-networking-pinned
       - get: cf-networking-dev
@@ -545,7 +555,7 @@ jobs:
       params:
         BBL_STATE_DIR: environments/sombrero/
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
     - task: deploy-upgrade
       file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
       params:
@@ -557,7 +567,7 @@ jobs:
         release: cf-networking-dev
         vars-store: updated-vars-store
         vars-files: updated-vars-store
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
     - task: acceptance-tests
       file: cf-networking-release-ci/ci/tasks/acceptance-tests.yml
       input_mapping:
@@ -571,7 +581,7 @@ jobs:
       params:
         BBL_STATE_DIR: environments/sombrero/
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
         cf-networking-release: cf-networking-dev
     - task: bosh-cleanup
       file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
@@ -579,7 +589,7 @@ jobs:
         BBL_STATE_DIR: environments/sombrero/
         CLEAN_ALL: false
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
 
   - name: delete-sombrero-deployment
     serial_groups:
@@ -588,6 +598,7 @@ jobs:
     - aggregate:
       - get: cf-networking-deployments
       - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
       - get: cf-networking-dev
         passed:
         - sombrero-test-upgrade
@@ -597,7 +608,7 @@ jobs:
       params:
         BBL_STATE_DIR: environments/sombrero/
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
         cf-networking-release: cf-networking-dev
 
   - name: postgres-tests
@@ -664,11 +675,12 @@ jobs:
     plan:
     - aggregate:
       - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
       - get: cf-networking-deployments
     - task: bbl-up
       file: cf-deployment-concourse-tasks/bbl-up/task.yml
       params:
-        BBL_GCP_SERVICE_ACCOUNT_KEY: ../gcp/service-account.key.json
+        BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
         BBL_GCP_REGION: us-east1
         BBL_STATE_DIR: environments/pickelhelm/
         BBL_IAAS: gcp
@@ -677,12 +689,12 @@ jobs:
         LB_DOMAIN: pickelhelm.c2c.cf-app.com
         BBL_ENV_NAME: pickelhelm
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
         ops-files: cf-networking-deployments
       ensure:
         put: cf-networking-deployments
         params:
-          repository: updated-bbl-state
+          repository: updated-env-repo
           rebase: true
 
   - name: pickelhelm-bbl-destroy
@@ -690,18 +702,19 @@ jobs:
     plan:
     - aggregate:
       - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
       - get: cf-networking-deployments
     - task: bbl-destroy
       file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
       params:
         BBL_STATE_DIR: environments/pickelhelm/
-        BBL_GCP_SERVICE_ACCOUNT_KEY: ../gcp/service-account.key.json
+        BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
       ensure:
         put: cf-networking-deployments
         params:
-          repository: updated-bbl-state
+          repository: updated-env-repo
           rebase: true
 
   - name: pickelhelm-deploy
@@ -721,7 +734,7 @@ jobs:
       params:
         BBL_STATE_DIR: environments/pickelhelm/
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
     - task: collect-ops-files
       file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
       params:
@@ -737,7 +750,7 @@ jobs:
         OPS_FILES: use-compiled-releases.yml datadog.yml cf-networking.yml use-system-domain-as-metron-deployment-name.yml opsfile.yml
         VARS_STORE_FILE: environments/pickelhelm/vars-store.yml
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
         release: cf-networking-dev
         vars-files: cf-networking-deployments
         vars-store: cf-networking-deployments
@@ -752,13 +765,14 @@ jobs:
         BBL_STATE_DIR: environments/pickelhelm/
         CLEAN_ALL: false
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
 
   - name: pickelhelm-deploy-firehose-nozzle
     serial_groups: [pickelhelm]
     plan:
     - aggregate:
       - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
       - get: cf-networking-release-ci
       - get: cf-networking-deployments
         passed: [pickelhelm-deploy]
@@ -773,7 +787,7 @@ jobs:
     - task: deploy-datadog-firehose-nozzle
       file: cf-deployment-concourse-tasks/bosh-deploy/task.yml
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
         cf-deployment: cf-networking-deployments
         ops-files: cf-networking-deployments
         vars-files: cf-networking-deployments
@@ -812,11 +826,12 @@ jobs:
     plan:
     - aggregate:
       - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
       - get: cf-networking-deployments
     - task: bbl-up
       file: cf-deployment-concourse-tasks/bbl-up/task.yml
       params:
-        BBL_GCP_SERVICE_ACCOUNT_KEY: ../gcp/service-account.key.json
+        BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
         BBL_GCP_REGION: us-east1
         BBL_STATE_DIR: environments/mitre/
         BBL_IAAS: gcp
@@ -825,12 +840,12 @@ jobs:
         LB_DOMAIN: mitre.c2c.cf-app.com
         BBL_ENV_NAME: mitre
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
         ops-files: cf-networking-deployments
       ensure:
         put: cf-networking-deployments
         params:
-          repository: updated-bbl-state
+          repository: updated-env-repo
           rebase: true
 
   - name: mitre-bbl-destroy
@@ -838,18 +853,19 @@ jobs:
     plan:
     - aggregate:
       - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
       - get: cf-networking-deployments
     - task: bbl-destroy
       file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
       params:
         BBL_STATE_DIR: environments/mitre/
-        BBL_GCP_SERVICE_ACCOUNT_KEY: ../gcp/service-account.key.json
+        BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
       ensure:
         put: cf-networking-deployments
         params:
-          repository: updated-bbl-state
+          repository: updated-env-repo
           rebase: true
 
   - name: mitre-deploy
@@ -860,6 +876,7 @@ jobs:
         version: {version: 3.6.0}
       - get: cf-networking-release-ci
       - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
       - get: cf-networking-deployments
       - get: cf-deployment
         passed: [pickelhelm-test]
@@ -875,11 +892,11 @@ jobs:
       params:
         BBL_STATE_DIR: environments/mitre/
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
     - task: update-runtime-config
       file: cf-networking-release-ci/ci/tasks/update-runtime-config.yml
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
         cf-networking-ci: cf-networking-release-ci
         runtime-config: cf-networking-deployments
         vars-store: cf-networking-deployments
@@ -902,7 +919,7 @@ jobs:
         OPS_FILES: enable-iptables-logger.yml use-compiled-releases.yml datadog.yml custom-apps-domain.yml cf-networking.yml use-system-domain-as-metron-deployment-name.yml opsfile.yml
         VARS_STORE_FILE: environments/mitre/vars-store.yml
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
         vars-store: cf-networking-deployments
         vars-files: cf-networking-deployments
         release: cf-networking-dev
@@ -939,7 +956,7 @@ jobs:
         BBL_STATE_DIR: environments/mitre/
         CLEAN_ALL: false
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
 
   - name: mitre-test
     serial_groups: [mitre-test-group, mitre-deploy-group]
@@ -972,6 +989,7 @@ jobs:
     plan:
     - aggregate:
       - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
       - get: cf-networking-release-ci
       - get: cf-networking-deployments
         passed: [mitre-deploy]
@@ -988,7 +1006,7 @@ jobs:
       input_mapping:
         cf-deployment: cf-networking-deployments
         vars-store: cf-networking-deployments
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
         vars-files: cf-networking-deployments
         ops-files: cf-networking-deployments
       params:
@@ -1099,11 +1117,12 @@ jobs:
     plan:
     - aggregate:
       - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
       - get: cf-networking-deployments
     - task: bbl-up
       file: cf-deployment-concourse-tasks/bbl-up/task.yml
       params:
-        BBL_GCP_SERVICE_ACCOUNT_KEY: ../gcp/service-account.key.json
+        BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
         BBL_GCP_REGION: us-east1
         BBL_STATE_DIR: environments/toque/
         BBL_IAAS: gcp
@@ -1112,12 +1131,12 @@ jobs:
         LB_DOMAIN: toque.c2c.cf-app.com
         BBL_ENV_NAME: toque
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
         ops-files: cf-networking-deployments
       ensure:
         put: cf-networking-deployments
         params:
-          repository: updated-bbl-state
+          repository: updated-env-repo
           rebase: true
 
   - name: toque-bbl-destroy
@@ -1125,18 +1144,19 @@ jobs:
     plan:
     - aggregate:
       - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
       - get: cf-networking-deployments
     - task: bbl-destroy
       file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
       params:
         BBL_STATE_DIR: environments/toque/
-        BBL_GCP_SERVICE_ACCOUNT_KEY: ../gcp/service-account.key.json
+        BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
       ensure:
         put: cf-networking-deployments
         params:
-          repository: updated-bbl-state
+          repository: updated-env-repo
           rebase: true
 
   - name: toque-deploy
@@ -1144,6 +1164,7 @@ jobs:
     plan:
     - aggregate:
       - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
       - get: cf-deployment
       - get: cf-networking-release-ci
       - get: cf-networking-deployments
@@ -1154,7 +1175,7 @@ jobs:
     - task: upload-stemcell
       file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
         cf-deployment: cf-deployment
       params:
         BBL_STATE_DIR: environments/toque
@@ -1173,7 +1194,7 @@ jobs:
         OPS_FILES: use-compiled-releases.yml datadog.yml cf-networking.yml use-system-domain-as-metron-deployment-name.yml opsfile.yml
         VARS_STORE_FILE: environments/toque/vars-store.yml
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
         cf-deployment: cf-deployment
         release: cf-networking-dev
         vars-files: cf-networking-deployments
@@ -1189,13 +1210,14 @@ jobs:
         BBL_STATE_DIR: environments/toque/
         CLEAN_ALL: false
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
 
   - name: toque-deploy-firehose-nozzle
     serial_groups: [toque]
     plan:
     - aggregate:
       - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
       - get: cf-networking-release-ci
       - get: cf-networking-deployments
         passed: [toque-deploy]
@@ -1212,7 +1234,7 @@ jobs:
       input_mapping:
         cf-deployment: cf-networking-deployments
         vars-store: cf-networking-deployments
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
         vars-files: cf-networking-deployments
         ops-files: cf-networking-deployments
       params:
@@ -1300,11 +1322,12 @@ jobs:
     plan:
     - aggregate:
       - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
       - get: cf-networking-deployments
     - task: bbl-up
       file: cf-deployment-concourse-tasks/bbl-up/task.yml
       params:
-        BBL_GCP_SERVICE_ACCOUNT_KEY: ../gcp/service-account.key.json
+        BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
         BBL_GCP_REGION: us-east1
         BBL_STATE_DIR: environments/slouch/
         BBL_IAAS: gcp
@@ -1313,12 +1336,12 @@ jobs:
         LB_DOMAIN: slouch.c2c.cf-app.com
         BBL_ENV_NAME: slouch
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
         ops-files: cf-networking-deployments
       ensure:
         put: cf-networking-deployments
         params:
-          repository: updated-bbl-state
+          repository: updated-env-repo
           rebase: true
 
   - name: slouch-bbl-destroy
@@ -1326,18 +1349,19 @@ jobs:
     plan:
     - aggregate:
       - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
       - get: cf-networking-deployments
     - task: bbl-destroy
       file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
       params:
         BBL_STATE_DIR: environments/slouch/
-        BBL_GCP_SERVICE_ACCOUNT_KEY: ../gcp/service-account.key.json
+        BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
       ensure:
         put: cf-networking-deployments
         params:
-          repository: updated-bbl-state
+          repository: updated-env-repo
           rebase: true
 
   - name: slouch-deploy
@@ -1345,6 +1369,7 @@ jobs:
     plan:
     - aggregate:
       - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
       - get: cf-deployment
       - get: cf-networking-release-ci
       - get: cf-networking-deployments
@@ -1354,7 +1379,7 @@ jobs:
     - task: upload-stemcell
       file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
       params:
         BBL_STATE_DIR: environments/slouch
     - task: collect-ops-files
@@ -1372,7 +1397,7 @@ jobs:
         OPS_FILES: use-compiled-releases.yml cf-networking.yml opsfile.yml
         VARS_STORE_FILE: environments/slouch/vars-store.yml
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
         release: cf-networking-dev
         vars-store: cf-networking-deployments
         vars-files: cf-networking-deployments
@@ -1387,7 +1412,7 @@ jobs:
         BBL_STATE_DIR: environments/slouch/
         CLEAN_ALL: false
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
 
   - name: delete-slouch-deployment
     public: true
@@ -1396,12 +1421,13 @@ jobs:
     - aggregate:
       - get: cf-networking-deployments
       - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
     - task: delete-deployment
       file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
       params:
         BBL_STATE_DIR: environments/slouch/
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
 
 ##### Human-triggered utilities
 
@@ -1412,13 +1438,14 @@ jobs:
     - aggregate:
       - get: cf-networking-deployments
       - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
     - task: delete-deployment
       file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
       params:
         BBL_STATE_DIR: environments/pickelhelm/
         DEPLOYMENT_NAME: cf
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
 
   - name: delete-deployment-mitre-cf
     public: true
@@ -1427,13 +1454,14 @@ jobs:
     - aggregate:
       - get: cf-networking-deployments
       - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
     - task: delete-deployment
       file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
       params:
         BBL_STATE_DIR: environments/mitre/
         DEPLOYMENT_NAME: cf
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
 
   - name: delete-toque-deployment
     public: true
@@ -1442,13 +1470,14 @@ jobs:
     - aggregate:
       - get: cf-networking-deployments
       - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
     - task: delete-deployment
       file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
       params:
         BBL_STATE_DIR: environments/toque/
         DEPLOYMENT_NAME: cf
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
 
   - name: ship-what
     serial_groups: [version]
