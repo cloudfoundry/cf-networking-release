@@ -2,13 +2,16 @@
 
 set -euo pipefail
 
+function cleanup() {
+  pkill ssh || true
+}
+
+trap 'cleanup' EXIT
+
 # set bosh target
 function setup_bosh_env_vars() {
-  pushd "bbl-state/${BBL_STATE_DIR}"
-    export BOSH_CA_CERT="$(bbl director-ca-cert)"
-    export BOSH_ENVIRONMENT=$(bbl director-address)
-    export BOSH_CLIENT=$(bbl director-username)
-    export BOSH_CLIENT_SECRET=$(bbl director-password)
+  pushd "env-repo/${BBL_STATE_DIR}"
+    eval "$(bbl print-env)"
   popd
 }
 
