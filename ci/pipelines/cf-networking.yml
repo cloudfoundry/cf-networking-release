@@ -766,7 +766,6 @@ jobs:
       file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
       params:
         BBL_STATE_DIR: environments/pickelhelm/
-        CLEAN_ALL: false
       input_mapping:
         env-repo: cf-networking-deployments
 
@@ -958,7 +957,6 @@ jobs:
       file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
       params:
         BBL_STATE_DIR: environments/mitre/
-        CLEAN_ALL: false
       input_mapping:
         env-repo: cf-networking-deployments
 
@@ -1213,7 +1211,6 @@ jobs:
       file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
       params:
         BBL_STATE_DIR: environments/toque/
-        CLEAN_ALL: false
       input_mapping:
         env-repo: cf-networking-deployments
 
@@ -1416,7 +1413,6 @@ jobs:
       file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
       params:
         BBL_STATE_DIR: environments/slouch/
-        CLEAN_ALL: false
       input_mapping:
         env-repo: cf-networking-deployments
 
