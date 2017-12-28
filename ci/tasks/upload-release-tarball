@@ -2,15 +2,19 @@
 
 set -e -u
 
+function cleanup() {
+  pkill ssh || true
+}
+
+trap 'cleanup' EXIT
+
+# set bosh target
+function setup_bosh_env_vars() {
 pushd "deployments-repo/environments/${ENVIRONMENT_NAME}"
-  BOSH_CA_CERT="$(bbl director-ca-cert)"
-  export BOSH_CA_CERT
-  BOSH_ENVIRONMENT=$(bbl director-address)
-  export BOSH_ENVIRONMENT
-  BOSH_CLIENT=$(bbl director-username)
-  export BOSH_CLIENT
-  BOSH_CLIENT_SECRET=$(bbl director-password)
-  export BOSH_CLIENT_SECRET
-popd
+    eval "$(bbl print-env)"
+  popd
+}
+
+setup_bosh_env_vars
 
 bosh upload-release tarballs/*.tgz

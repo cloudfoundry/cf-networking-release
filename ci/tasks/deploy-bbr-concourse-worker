@@ -1,12 +1,12 @@
 #!/bin/bash -eu
 
-pushd deployments-repo/environments/$ENVIRONMENT_NAME
-  export BOSH_ENVIRONMENT=$(bbl director-address)
-  export BOSH_CLIENT_SECRET=$(bbl director-password)
-  export BOSH_CLIENT=$(bbl director-username)
-  bbl director-ca-cert > /tmp/ca.crt
-  export BOSH_CA_CERT=/tmp/ca.crt
-  export BOSH_DEPLOYMENT=concourse
+function cleanup() {
+  pkill ssh || true
+}
 
+trap 'cleanup' EXIT
+
+pushd deployments-repo/environments/$ENVIRONMENT_NAME
+  eval "$(bbl print-env)"
   bosh -n deploy concourse.yml
 popd
