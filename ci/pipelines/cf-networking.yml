@@ -167,8 +167,6 @@ resources:
     source:
       uri: https://github.com/cloudfoundry/cf-networking-release.git
       branch: pinned
-      paths:
-        - ci
   - name: cf-deployment-concourse-tasks-pinned
     type: git
     source:
@@ -185,7 +183,8 @@ resources:
     source:
       uri: https://github.com/cloudfoundry/cf-networking-ci
       branch: pinned
-
+      paths:
+        - ci
   - name: cf-networking-deployments-pinned
     type: git
     source:
