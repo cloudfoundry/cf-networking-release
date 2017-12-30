@@ -1,0 +1,656 @@
+---
+pinned-versions: &cf-deployment-concourse-task-version
+  ref: 4156e1fbdf62ae6636146b671334ef10e76e0b0e
+
+groups:
+- name: cf-networking-v1.8.x
+  jobs:
+  - mysql-tests
+  - mysql-5.6-tests
+  - postgres-tests
+  - windows-tests
+  - unit-and-integration-tests
+  - cloche-deploy
+  - cloche-test
+  - deerstalker-deploy
+  - deerstalker-test
+  - deerstalker-smoke
+  - deerstalker-cats
+  - deerstalker-drats
+  - ship-what
+  - shipit
+  - bump-patch-version
+- name: cloche
+  jobs:
+  - cloche-bbl-up
+  - cloche-bbl-destroy
+  - cloche-deploy
+  - cloche-test
+  - delete-cloche-deployment
+- name: deerstalker
+  jobs:
+  - deerstalker-bbl-up
+  - deerstalker-bbl-destroy
+  - deerstalker-deploy
+  - deerstalker-test
+  - deerstalker-smoke
+  - deerstalker-cats
+  - deerstalker-drats
+  - delete-deployment-deerstalker-cf
+- name: bbl
+  jobs:
+  - cloche-bbl-up
+  - deerstalker-bbl-up
+  - cloche-bbl-destroy
+  - deerstalker-bbl-destroy
+- name: cleanup
+  jobs:
+  - delete-deployment-deerstalker-cf
+  - delete-cloche-deployment
+
+resources:
+  ###### Control plane
+  - name: cf-networking-release-ci
+    type: git
+    source:
+      uri: https://github.com/cloudfoundry/cf-networking-release
+      branch: v1.8.x
+      paths:
+        - ci
+  - name: cf-networking-deployments
+    type: git
+    source:
+      uri: "git@github.com:cloudfoundry/cf-networking-deployments.git"
+      branch: master
+      private_key: {{cf-networking-deployments-push-key}}
+  - name: cats-concourse-task
+    type: git
+    source:
+      uri: https://github.com/cf-container-networking/cats-concourse-task
+      branch: v1.8.x
+  - name: cf-deployment-concourse-tasks
+    type: git
+    source:
+      uri: https://github.com/cloudfoundry/cf-deployment-concourse-tasks
+      branch: master
+  - name: cf-deployment
+    type: git
+    source:
+      branch: master
+      uri: https://github.com/cloudfoundry/cf-deployment.git
+      tag_filter: v1.3.1
+  - name: disaster-recovery-acceptance-tests
+    type: git
+    source:
+      branch: v.1.8.x
+      uri: https://github.com/cf-container-networking/disaster-recovery-acceptance-tests
+  ###### BOSH release repos
+  - name: cf-networking-v1.8.x
+    type: git
+    source:
+      uri: git@github.com:cloudfoundry/cf-networking-release.git
+      branch: v1.8.x
+      ignore_paths:
+        - docs
+        - ci
+      private_key: {{cf-networking-deploy-key}}
+  ####### Tests
+  - name: cf-acceptance-tests
+    type: git
+    source:
+      branch: cf0.31
+      uri: git://github.com/cloudfoundry/cf-acceptance-tests.git
+  #######  Release management
+  - name: version
+    type: semver
+    source:
+      bucket: cf-networking-v1.8.x-release-semver
+      region_name: us-west-2
+      initial_version: 1.8.2
+      key: releases/current-version
+      access_key_id: {{aws-access-key-id}}
+      secret_access_key: {{aws-secret-access-key}}
+  - name: cf-networking-tarball
+    type: s3
+    source:
+      bucket: cf-networking-v1.8.x-candidate-tarballs
+      region_name: us-west-2
+      regexp: releases/cf-networking-(.*).tgz
+      access_key_id: {{aws-access-key-id}}
+      secret_access_key: {{aws-secret-access-key}}
+  # Github release
+  - name: cf-networking-github-release
+    type: github-release
+    source:
+      user: cloudfoundry
+      repository: cf-networking-release
+      access_token: {{github-access-token}}
+
+jobs:
+  - name: postgres-tests
+    public: true
+    plan:
+    - aggregate:
+      - get: cf-networking-v1.8.x
+        trigger: true
+      - get: cf-networking-release-ci
+    - task: unit-and-integration-tests
+      file: cf-networking-release-ci/ci/tasks/postgres-tests.yml
+      privileged: true
+      input_mapping:
+        cf-networking-release: cf-networking-v1.8.x
+
+  - name: mysql-tests
+    public: true
+    plan:
+    - aggregate:
+      - get: cf-networking-v1.8.x
+        trigger: true
+      - get: cf-networking-release-ci
+    - task: unit-and-integration-tests
+      file: cf-networking-release-ci/ci/tasks/mysql-tests.yml
+      privileged: true
+      input_mapping:
+        cf-networking-release: cf-networking-v1.8.x
+
+  - name: mysql-5.6-tests
+    public: true
+    plan:
+    - aggregate:
+      - get: cf-networking-v1.8.x
+        trigger: true
+      - get: cf-networking-release-ci
+    - task: unit-and-integration-tests
+      file: cf-networking-release-ci/ci/tasks/mysql-5.6-tests.yml
+      privileged: true
+      input_mapping:
+        cf-networking-release: cf-networking-v1.8.x
+
+  - name: windows-tests
+    public: true
+    plan:
+    - aggregate:
+      - get: cf-networking-v1.8.x
+        trigger: true
+      - get: cf-networking-release-ci
+    - task: garden-external-networker-windows
+      file: cf-networking-release-ci/ci/tasks/garden-external-networker-windows.yml
+      input_mapping:
+        cf-networking-release: cf-networking-v1.8.x
+        ci: cf-networking-release-ci
+
+  - name: unit-and-integration-tests
+    public: true
+    plan:
+    - get: cf-networking-v1.8.x
+      passed: [postgres-tests, mysql-tests, mysql-5.6-tests, windows-tests]
+      trigger: true
+
+  - name: cloche-bbl-up
+    serial_groups: [cloche]
+    plan:
+    - aggregate:
+      - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
+        trigger: true
+      - get: cf-networking-deployments
+    - task: bbl-up
+      file: cf-deployment-concourse-tasks/bbl-up/task.yml
+      params:
+        BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
+        BBL_GCP_REGION: us-east1
+        BBL_STATE_DIR: environments/cloche/
+        BBL_IAAS: gcp
+        BBL_LB_CERT: {{cloche-lb-cert}}
+        BBL_LB_KEY: {{cloche-lb-key}}
+        LB_DOMAIN: cloche.c2c.cf-app.com
+        BBL_ENV_NAME: cloche
+      input_mapping:
+        env-repo: cf-networking-deployments
+        ops-files: cf-networking-deployments
+      ensure:
+        put: cf-networking-deployments
+        params:
+          repository: updated-env-repo
+          rebase: true
+
+  - name: cloche-bbl-destroy
+    serial_groups: [cloche]
+    plan:
+    - aggregate:
+      - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
+      - get: cf-networking-deployments
+    - task: bbl-destroy
+      file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
+      params:
+        BBL_STATE_DIR: environments/cloche/
+        BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
+      input_mapping:
+        env-repo: cf-networking-deployments
+      ensure:
+        put: cf-networking-deployments
+        params:
+          repository: updated-env-repo
+          rebase: true
+
+  - name: cloche-deploy
+    serial_groups: [cloche]
+    plan:
+    - aggregate:
+      - get: cf-networking-release-ci
+      - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
+      - get: cf-networking-deployments
+      - get: cf-deployment
+        version: {ref: v1.3.1}
+        trigger: true
+      - get: cf-networking-v1.8.x
+        trigger: true
+        passed: [unit-and-integration-tests]
+    - task: upload-stemcell
+      file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
+      params:
+        BBL_STATE_DIR: environments/cloche/
+      input_mapping:
+        env-repo: cf-networking-deployments
+    - task: collect-ops-files
+      file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
+      params:
+        ENVIRONMENT_NAME: cloche
+      input_mapping:
+        cf-networking-release: cf-networking-v1.8.x
+        deployments-repo: cf-networking-deployments
+    - task: deploy-cf
+      file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
+      params:
+        BBL_STATE_DIR: environments/cloche/
+        SYSTEM_DOMAIN: cloche.c2c.cf-app.com
+        OPS_FILES: use-compiled-releases.yml cf-networking.yml opsfile.yml
+        VARS_STORE_FILE: environments/cloche/vars-store.yml
+      input_mapping:
+        env-repo: cf-networking-deployments
+        release: cf-networking-v1.8.x
+        vars-files: cf-networking-deployments
+        vars-store: cf-networking-deployments
+      ensure:
+        put: cf-networking-deployments
+        params:
+          repository: updated-vars-store
+          rebase: true
+    - task: bosh-cleanup
+      file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
+      params:
+        BBL_STATE_DIR: environments/cloche/
+      input_mapping:
+        env-repo: cf-networking-deployments
+
+  - name: cloche-test
+    serial_groups: [cloche]
+    plan:
+    - aggregate:
+      - get: cf-networking-release-ci
+      - get: cf-networking-deployments
+        passed: [cloche-deploy]
+      - get: cf-deployment
+        version: {ref: v1.3.1}
+        passed: [cloche-deploy]
+      - get: cf-networking-v1.8.x
+        passed: [cloche-deploy]
+        trigger: true
+    - task: acceptance-tests
+      file: cf-networking-release-ci/ci/tasks/acceptance-tests.yml
+      input_mapping:
+        cf-networking: cf-networking-v1.8.x
+        test-config: cf-networking-deployments
+        vars-store: cf-networking-deployments
+      params:
+        ENVIRONMENT_NAME: cloche
+
+  - name: deerstalker-bbl-up
+    serial_groups: [deerstalker-test-group, deerstalker-deploy-group]
+    plan:
+    - aggregate:
+      - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
+      - get: cf-networking-deployments
+    - task: bbl-up
+      file: cf-deployment-concourse-tasks/bbl-up/task.yml
+      params:
+        BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
+        BBL_GCP_REGION: us-east1
+        BBL_STATE_DIR: environments/deerstalker/
+        BBL_IAAS: gcp
+        BBL_LB_CERT: {{deerstalker-lb-cert}}
+        BBL_LB_KEY: {{deerstalker-lb-key}}
+        LB_DOMAIN: deerstalker.c2c.cf-app.com
+        BBL_ENV_NAME: deerstalker
+      input_mapping:
+        env-repo: cf-networking-deployments
+        ops-files: cf-networking-deployments
+      ensure:
+        put: cf-networking-deployments
+        params:
+          repository: updated-env-repo
+          rebase: true
+
+  - name: deerstalker-bbl-destroy
+    serial_groups: [deerstalker-deploy-group]
+    plan:
+    - aggregate:
+      - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
+      - get: cf-networking-deployments
+    - task: bbl-destroy
+      file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
+      params:
+        BBL_STATE_DIR: environments/deerstalker/
+        BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
+      input_mapping:
+        env-repo: cf-networking-deployments
+      ensure:
+        put: cf-networking-deployments
+        params:
+          repository: updated-env-repo
+          rebase: true
+
+  - name: deerstalker-deploy
+    serial_groups: [deerstalker-deploy-group, version]
+    plan:
+    - aggregate:
+      - get: concourse
+        version: {version: 3.6.0}
+      - get: cf-networking-release-ci
+      - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
+      - get: cf-networking-deployments
+      - get: cf-deployment
+        version: {ref: v1.3.1}
+        passed: [cloche-test]
+        trigger: true
+      - get: cf-networking-v1.8.x
+        trigger: true
+        passed: [cloche-test]
+      - get: version
+        params:
+          pre: rc
+    - task: upload-stemcell
+      file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
+      params:
+        BBL_STATE_DIR: environments/deerstalker/
+      input_mapping:
+        env-repo: cf-networking-deployments
+    - task: update-runtime-config
+      file: cf-networking-release-ci/ci/tasks/update-runtime-config.yml
+      input_mapping:
+        env-repo: cf-networking-deployments
+        cf-networking-ci: cf-networking-release-ci
+        runtime-config: cf-networking-deployments
+        vars-store: cf-networking-deployments
+      params:
+        BBL_STATE_DIR: environments/deerstalker/
+        VARS_STORE_FILE: environments/deerstalker/vars-store.yml
+        RUNTIME_CONFIG_FILE: syslog-addon.yml
+    - task: collect-ops-files
+      file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
+      params:
+        ENVIRONMENT_NAME: deerstalker
+      input_mapping:
+        cf-networking-release: cf-networking-v1.8.x
+        deployments-repo: cf-networking-deployments
+    - task: deploy-cf
+      file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
+      params:
+        BBL_STATE_DIR: environments/deerstalker/
+        SYSTEM_DOMAIN: deerstalker.c2c.cf-app.com
+        OPS_FILES: enable-iptables-logger.yml use-compiled-releases.yml custom-apps-domain.yml cf-networking.yml opsfile.yml
+        VARS_STORE_FILE: environments/deerstalker/vars-store.yml
+      input_mapping:
+        env-repo: cf-networking-deployments
+        vars-store: cf-networking-deployments
+        vars-files: cf-networking-deployments
+        release: cf-networking-v1.8.x
+      ensure:
+        put: cf-networking-deployments
+        params:
+          repository: updated-vars-store
+          rebase: true
+    - task: upload-concourse-release
+      file: cf-networking-release-ci/ci/tasks/upload-release-tarball.yml
+      input_mapping:
+        deployments-repo: cf-networking-deployments
+        tarballs: concourse
+      params:
+        ENVIRONMENT_NAME: deerstalker
+    - task: deploy-bbr-concourse-worker
+      file: cf-networking-release-ci/ci/tasks/deploy-bbr-concourse-worker.yml
+      params:
+        ENVIRONMENT_NAME: deerstalker
+      input_mapping:
+        deployments-repo: cf-networking-deployments
+    - task: create-release-tarball
+      file: cf-networking-release-ci/ci/tasks/create-release-tarball.yml
+      input_mapping:
+        cf-networking: cf-networking-v1.8.x
+    - put: cf-networking-tarball
+      params:
+        file: tarballs/cf-networking-*.tgz
+    - put: version
+      params: {file: version/number}
+    - task: bosh-cleanup
+      file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
+      params:
+        BBL_STATE_DIR: environments/deerstalker/
+      input_mapping:
+        env-repo: cf-networking-deployments
+
+  - name: deerstalker-test
+    serial_groups: [deerstalker-test-group, deerstalker-deploy-group]
+    plan:
+    - aggregate:
+      - get: cf-networking-deployments
+        passed: [deerstalker-deploy]
+      - get: cf-networking-v1.8.x
+        passed: [deerstalker-deploy]
+        trigger: true
+      - get: cf-networking-tarball
+        passed: [deerstalker-deploy]
+      - get: version
+        passed: [deerstalker-deploy]
+      - get: cf-networking-release-ci
+      - get: cf-deployment
+        version: {ref: v1.3.1}
+        passed: [deerstalker-deploy]
+        trigger: true
+    - task: acceptance-tests
+      file: cf-networking-release-ci/ci/tasks/acceptance-tests.yml
+      input_mapping:
+        cf-networking: cf-networking-v1.8.x
+        test-config: cf-networking-deployments
+        vars-store: cf-networking-deployments
+      params:
+        ENVIRONMENT_NAME: deerstalker
+
+  - name: deerstalker-smoke
+    serial_groups: [deerstalker-test-group]
+    plan:
+    - aggregate:
+      - get: cf-networking-deployments
+      - get: cf-networking-v1.8.x
+        passed: [deerstalker-test]
+        trigger: true
+      - get: cf-networking-release-ci
+      - get: cf-deployment
+        version: {ref: v1.3.1}
+        passed: [deerstalker-test]
+        trigger: true
+    - task: smoke-tests
+      file: cf-networking-release-ci/ci/tasks/smoke-tests.yml
+      params:
+        ENVIRONMENT_NAME: deerstalker
+        ENVIRONMENT_TAG: deerstalker.c2c.cf-app.com
+      input_mapping:
+        test-config: cf-networking-deployments
+        cf-networking: cf-networking-v1.8.x
+
+  - name: deerstalker-cats
+    serial_groups: [deerstalker-test-group, deerstalker-deploy-group]
+    plan:
+    - aggregate:
+      - get: cf-networking-release-ci
+      - get: cf-acceptance-tests
+      - get: cats-concourse-task
+      - get: cf-networking-v1.8.x
+        passed: [deerstalker-test]
+        trigger: true
+      - get: cf-deployment
+        version: {ref: v1.3.1}
+        passed: [deerstalker-test]
+        trigger: true
+      - get: cf-networking-deployments
+      - get: cf-networking-tarball
+        passed: [deerstalker-test]
+      - get: version
+        passed: [deerstalker-test]
+    - task: copy-config
+      file: cf-networking-release-ci/ci/tasks/copy-config.yml
+      params:
+        ENVIRONMENT: deerstalker
+    - task: cats
+      file: cats-concourse-task/task.yml
+      params:
+        NODES: 8
+
+  - name: deerstalker-drats
+    serial_groups: [deerstalker-test-group, deerstalker-deploy-group]
+    plan:
+    - aggregate:
+      - get: cf-networking-release-ci
+      - get: cf-networking-v1.8.x
+        passed: [deerstalker-cats]
+        trigger: true
+      - get: cf-deployment
+        version: {ref: v1.3.1}
+        passed: [deerstalker-cats]
+        trigger: true
+      - get: cf-networking-deployments
+      - get: cf-networking-tarball
+        passed: [deerstalker-cats]
+      - get: version
+        passed: [deerstalker-cats]
+      - get: disaster-recovery-acceptance-tests
+    - task: run-drats
+      tags:
+      - deerstalker-bbr
+      file: cf-networking-release-ci/ci/tasks/run-drats.yml
+      input_mapping:
+        deployments-repo: cf-networking-deployments
+      params:
+        ENVIRONMENT_NAME: deerstalker
+
+##### Human-triggered utilities
+
+  - name: delete-cloche-deployment
+    public: true
+    serial_groups: [cloche]
+    plan:
+    - aggregate:
+      - get: cf-networking-deployments
+      - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
+    - task: delete-deployment
+      file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
+      params:
+        BBL_STATE_DIR: environments/cloche/
+        DEPLOYMENT_NAME: cf
+      input_mapping:
+        env-repo: cf-networking-deployments
+
+  - name: delete-deployment-deerstalker-cf
+    public: true
+    serial_groups: [deerstalker-test-group, deerstalker-deploy-group]
+    plan:
+    - aggregate:
+      - get: cf-networking-deployments
+      - get: cf-deployment-concourse-tasks
+        version: *cf-deployment-concourse-task-version
+    - task: delete-deployment
+      file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
+      params:
+        BBL_STATE_DIR: environments/deerstalker/
+        DEPLOYMENT_NAME: cf
+      input_mapping:
+        env-repo: cf-networking-deployments
+
+  - name: ship-what
+    serial_groups: [version]
+    plan:
+    - do:
+      - aggregate:
+        - get: version
+          passed: [deerstalker-drats]
+        - get: cf-networking-v1.8.x
+          params:
+            submodules: none
+          passed: [deerstalker-drats, deerstalker-smoke]
+          trigger: true
+        - get: cf-deployment
+          passed: [deerstalker-drats]
+        - get: cf-networking-tarball
+          passed: [deerstalker-drats]
+
+  - name: shipit
+    serial_groups: [version]
+    plan:
+    - do:
+      - aggregate:
+        - get: cf-networking-deployments
+        - get: cf-networking-release-ci
+        - get: version
+          params:
+            bump: final
+          passed: [ship-what]
+        - get: cf-networking-v1.8.x
+          params:
+            submodules: none
+          passed: [ship-what]
+        - get: cf-deployment
+          version: {ref: v1.3.1}
+          passed: [ship-what]
+        - get: cf-networking-tarball
+          passed: [ship-what]
+      - task: shipit
+        file: cf-networking-release-ci/ci/tasks/shipit.yml
+        input_mapping:
+          cf-networking: cf-networking-v1.8.x
+      - put: version
+        params: {file: version/number}
+      - put: cf-networking-master
+        params:
+          repository: release/master
+          tag: version/number
+          tag_prefix: v
+      - put: cf-networking-tarball
+        params:
+          file: final-release/cf-networking-*.tgz
+      - task: build-release-notes
+        file: cf-networking-release-ci/ci/tasks/build-release-notes.yml
+      - put: cf-networking-github-release
+        params:
+          name: version/number
+          tag: version/number
+          body: release-notes/notes.md
+          tag_prefix: v
+          globs:
+          - final-release/cf-networking-*.tgz
+
+  - name: bump-patch-version
+    serial_groups: [version]
+    plan:
+    - aggregate:
+      - get: version
+        trigger: true
+        passed: [shipit]
+        params: {bump: patch, pre: rc}
+    - put: version
+      params: {file: version/number}

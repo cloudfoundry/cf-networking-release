@@ -1,0 +1,20 @@
+#!/bin/bash
+
+set -e -u
+
+function cleanup() {
+  pkill ssh || true
+}
+
+trap 'cleanup' EXIT
+
+# set bosh target
+function setup_bosh_env_vars() {
+pushd "deployments-repo/environments/${ENVIRONMENT_NAME}"
+    eval "$(bbl print-env)"
+  popd
+}
+
+setup_bosh_env_vars
+
+bosh run-errand "${ERRAND}"

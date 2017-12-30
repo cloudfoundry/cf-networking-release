@@ -1,0 +1,20 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source: { repository: c2cnetworking/dev-postgres }
+
+inputs:
+  - name: cf-networking-release-ci
+  - name: test-config
+  - name: cf-networking
+
+params:
+    ENVIRONMENT_NAME: ~
+    ENVIRONMENT_TAG: ~
+    CONFIG: ~
+    DATADOG_API_KEY: ~
+
+run:
+  path: cf-networking-release-ci/ci/tasks/smoke-tests

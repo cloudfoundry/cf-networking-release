@@ -1,0 +1,12 @@
+#!/bin/bash -eu
+
+function cleanup() {
+  pkill ssh || true
+}
+
+trap 'cleanup' EXIT
+
+pushd deployments-repo/environments/$ENVIRONMENT_NAME
+  eval "$(bbl print-env)"
+  bosh -n deploy -d concourse concourse.yml
+popd

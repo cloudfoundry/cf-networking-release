@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -e -u
+set -o pipefail
+
+# replace admin password in test config
+pushd cf-networking-deployments/environments/${ENVIRONMENT}
+  ADMIN_PASSWORD=`grep cf_admin_password vars-store.yml  | cut -d' ' -f2`
+  sed -i -- "s/{{admin-password}}/${ADMIN_PASSWORD}/g" integration_config.json
+popd
+
+cp cf-networking-deployments/environments/${ENVIRONMENT}/integration_config.json integration-config/

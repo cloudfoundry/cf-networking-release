@@ -1,0 +1,17 @@
+---
+image_resource:
+  type: docker-image
+  source: { repository: c2cnetworking/deploy-light }
+
+platform: linux
+
+inputs:
+  - name: tarballs
+  - name: cf-networking-release-ci
+  - name: deployments-repo
+
+run:
+  path: cf-networking-release-ci/ci/tasks/upload-release-tarball
+
+params:
+  ENVIRONMENT_NAME: ~

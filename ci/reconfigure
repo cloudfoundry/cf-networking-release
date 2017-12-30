@@ -1,0 +1,10 @@
+#!/bin/bash
+
+set -e -u
+export PIPELINE="cf-networking-v1.8.x"
+export TARGET=c2c
+
+fly -t $TARGET \
+  set-pipeline -p $PIPELINE \
+  -c $HOME/workspace/cf-networking-release/ci/pipelines/$PIPELINE.yml \
+  -l $HOME/workspace/cf-networking-deployments/pipeline-credentials.yml

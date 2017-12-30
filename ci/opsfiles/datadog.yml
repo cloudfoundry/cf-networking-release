@@ -1,0 +1,15 @@
+- type: replace
+  path: /instance_groups/name=uaa/jobs/name=uaa/properties/uaa/clients/datadog-firehose-nozzle?
+  value:
+    access-token-validity: 1209600
+    authorized-grant-types: client_credentials
+    override: true
+    secret: "((uaa_clients_datadog_firehose_nozzle_secret))"
+    authorities: oauth.login,doppler.firehose
+
+- type: replace
+  path: /variables/-
+  value:
+    name: uaa_clients_datadog_firehose_nozzle_secret
+    type: password
+
