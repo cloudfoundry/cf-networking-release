@@ -84,6 +84,11 @@ resources:
     source:
       branch: v.1.8.x
       uri: https://github.com/cf-container-networking/disaster-recovery-acceptance-tests
+  ###### bosh.io releases
+  - name: concourse
+    type: bosh-io-release
+    source:
+      repository: concourse/concourse
   ###### BOSH release repos
   - name: cf-networking-v1.8.x
     type: git
@@ -359,7 +364,7 @@ jobs:
     plan:
     - aggregate:
       - get: concourse
-        version: {version: 3.6.0}
+        version: {version: 3.8.0}
       - get: cf-networking-release-ci
       - get: cf-deployment-concourse-tasks
         version: *cf-deployment-concourse-task-version

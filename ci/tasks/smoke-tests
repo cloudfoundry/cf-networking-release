@@ -18,21 +18,4 @@ export GOPATH=$PWD
 
 cd src/test/smoke
 export APPS_DIR=../../example-apps
-set +e
 ginkgo -r -v
-EXIT_STATUS=$?
-set -e
-
-CURRENT_TIME=$(date +%s)
-
-curl -X POST -H "Content-type: application/json" \
-  -d "{ \"series\" :
-         [{\"metric\":\"cf-networking-smoke.status\",
-          \"points\":[[$CURRENT_TIME, $EXIT_STATUS]],
-          \"type\":\"gauge\",
-          \"tags\":[\"deployment:$ENVIRONMENT_TAG\"]
-        }]
-      }" \
-"https://app.datadoghq.com/api/v1/series?api_key=${DATADOG_API_KEY}"
-
-exit $EXIT_STATUS
