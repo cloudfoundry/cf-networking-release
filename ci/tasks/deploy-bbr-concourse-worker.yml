@@ -11,6 +11,7 @@ inputs:
 
 params:
   ENVIRONMENT_NAME: ~
+  VARS_STORE: "../ci/vars-store.yml"
 
 run:
   path: cf-networking-release-ci/ci/tasks/deploy-bbr-concourse-worker
