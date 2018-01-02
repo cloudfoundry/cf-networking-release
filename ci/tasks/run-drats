@@ -4,7 +4,8 @@ curl -L https://github.com/cloudfoundry-incubator/bosh-backup-and-restore/releas
    --output /tmp/bbr.tar && tar -xvf /tmp/bbr.tar -C /tmp
 
 export GOPATH=${PWD}/go
-export PATH=$GOPATH/bin:$PATH
+export PATH=${GOPATH}/bin:${PATH}
+export ENV_PATH=${PWD}
 
 export CF_VARS_STORE_PATH="vars-store.yml"
 export BBR_BUILD_PATH=/tmp/releases/bbr
@@ -15,6 +16,6 @@ curl -L -o /usr/local/bin/dep https://github.com/golang/dep/releases/download/v0
 
 curl -L -o /usr/local/bin/bosh-cli https://s3.amazonaws.com/bosh-cli-artifacts/bosh-cli-2.0.17-linux-amd64 && chmod +x /usr/local/bin/bosh-cli
 
-pushd $GOPATH/src/github.com/cloudfoundry-incubator/disaster-recovery-acceptance-tests > /dev/null
-  ./scripts/run_acceptance_tests_with_bbl_env.sh deployments-repo/environments/${ENVIRONMENT_NAME}
+pushd ${GOPATH}/src/github.com/cloudfoundry-incubator/disaster-recovery-acceptance-tests > /dev/null
+  ./scripts/run_acceptance_tests_with_bbl_env.sh ${ENV_PATH}/deployments-repo/environments/${ENVIRONMENT_NAME}
 popd
