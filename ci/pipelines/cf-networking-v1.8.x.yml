@@ -82,7 +82,7 @@ resources:
   - name: disaster-recovery-acceptance-tests
     type: git
     source:
-      branch: v.1.8.x
+      branch: v1.8.x
       uri: https://github.com/cf-container-networking/disaster-recovery-acceptance-tests
   ###### bosh.io releases
   - name: concourse
@@ -630,11 +630,6 @@ jobs:
           cf-networking: cf-networking-v1.8.x
       - put: version
         params: {file: version/number}
-      - put: cf-networking-master
-        params:
-          repository: release/master
-          tag: version/number
-          tag_prefix: v
       - put: cf-networking-tarball
         params:
           file: final-release/cf-networking-*.tgz
