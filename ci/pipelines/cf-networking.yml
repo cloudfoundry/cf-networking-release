@@ -167,11 +167,6 @@ resources:
     source:
       uri: https://github.com/cloudfoundry/cf-networking-release.git
       branch: pinned
-  - name: cf-deployment-concourse-tasks-pinned
-    type: git
-    source:
-      uri: https://github.com/cf-container-networking/cf-deployment-concourse-tasks.git
-      branch: pinned
   - name: cf-deployment-pinned
     type: git
     source:
@@ -492,26 +487,25 @@ jobs:
       - get: cf-deployment-pinned
       - get: cf-deployment-concourse-tasks
         version: *cf-deployment-concourse-task-version
-      - get: cf-deployment-concourse-tasks-pinned
       - get: cf-networking-pinned
       - get: cf-networking-dev
         passed: [unit-and-integration-tests]
         trigger: true
     - task: delete-deployment
-      file: cf-deployment-concourse-tasks-pinned/bosh-delete-deployment/task.yml
+      file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
       params:
         BBL_STATE_DIR: environments/sombrero/
       input_mapping:
-        bbl-state: cf-networking-deployments
-        cf-deployment-concourse-tasks: cf-deployment-concourse-tasks-pinned
+        env-repo: cf-networking-deployments
+        cf-deployment-concourse-tasks: cf-deployment-concourse-tasks
     - task: upload-stemcell
-      file: cf-deployment-concourse-tasks-pinned/bosh-upload-stemcell-from-cf-deployment/task.yml
+      file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
       params:
         BBL_STATE_DIR: environments/sombrero/
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
         cf-deployment: cf-deployment-pinned
-        cf-deployment-concourse-tasks: cf-deployment-concourse-tasks-pinned
+        cf-deployment-concourse-tasks: cf-deployment-concourse-tasks
     - task: collect-ops-files
       file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
       params:
@@ -521,7 +515,7 @@ jobs:
         cf-networking-release: cf-networking-pinned
         deployments-repo: cf-networking-deployments
     - task: deploy-oldest-compatible-version
-      file: cf-deployment-concourse-tasks-pinned/bosh-deploy-with-created-release/task.yml
+      file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
       params:
         BBL_STATE_DIR: environments/sombrero/
         OPS_FILES: cf-networking.yml opsfile-before.yml
@@ -529,9 +523,9 @@ jobs:
         VARS_STORE_FILE: environments/sombrero/vars-store.yml
         REGENERATE_VARS_STORE: true
       input_mapping:
-        bbl-state: cf-networking-deployments
+        env-repo: cf-networking-deployments
         cf-deployment: cf-deployment-pinned
-        cf-deployment-concourse-tasks: cf-deployment-concourse-tasks-pinned
+        cf-deployment-concourse-tasks: cf-deployment-concourse-tasks
         release: cf-networking-pinned
         vars-store: cf-networking-deployments
         vars-files: cf-networking-deployments
