@@ -12,7 +12,8 @@ trap 'cleanup' EXIT
 function setup_bosh_env_vars() {
 pushd "deployments-repo/environments/${ENVIRONMENT_NAME}"
     eval "$(bbl print-env)"
-  popd
+    export BOSH_DEPLOYMENT="cf"
+popd
 }
 
 setup_bosh_env_vars
