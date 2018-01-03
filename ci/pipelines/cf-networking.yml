@@ -161,6 +161,11 @@ resources:
       uri: git@github.com:cloudfoundry/cf-networking-release.git
       branch: master
       private_key: {{cf-networking-deploy-key}}
+  - name: bbr-binary-release
+    type: github-release
+    source:
+      owner: cloudfoundry-incubator
+      repository: bosh-backup-and-restore
   ###### Pinned versions
   - name: cf-networking-pinned
     type: git
@@ -1097,14 +1102,18 @@ jobs:
       - get: version
         passed: [mitre-cats]
       - get: disaster-recovery-acceptance-tests
+      - get: bbr-binary-release
+    - task: create-drats-config
+      file: cf-networking-release-ci/ci/tasks/create-drats-config.yml
+      input_mapping:
+        test-config: cf-networking-deployments
+        vars-store: cf-networking-deployments
+      params:
+        ENVIRONMENT_NAME: mitre
     - task: run-drats
       tags:
       - mitre-bbr
-      file: cf-networking-release-ci/ci/tasks/run-drats.yml
-      input_mapping:
-        deployments-repo: cf-networking-deployments
-      params:
-        ENVIRONMENT_NAME: mitre
+      file: disaster-recovery-acceptance-tests/ci/drats-with-integration-config/task.yml
 
   - name: toque-bbl-up
     serial_groups: [toque]

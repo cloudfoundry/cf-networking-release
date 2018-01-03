@@ -1,0 +1,29 @@
+#!/bin/bash
+
+set -e
+
+# replace secrets in test config
+VARS_STORE=${PWD}/vars-store/environments/${ENVIRONMENT_NAME}/vars-store.yml
+pushd test-config/environments/${ENVIRONMENT_NAME}
+  ADMIN_PASSWORD=`grep cf_admin_password ${VARS_STORE} | cut -d' ' -f2`
+  sed -i -- "s/{{admin-password}}/${ADMIN_PASSWORD}/g" drats_integration_config.json
+
+  PROXY_PRIVATE_KEY=`bbl ssh-key`
+  sed -i -- "s/{{ssh-proxy-private-key}}/${PROXY_PRIVATE_KEY}/g" drats_integration_config.json
+
+  BOSH_CLIENT_SECRET=`bbl director-password`
+  sed -i -- "s/{{bosh-client-secret}}/${BOSH_CLIENT_SECRET}/g" drats_integration_config.json
+
+  BOSH_CA_CERT=`bbl director-ca-cert`
+  sed -i -- "s/{{bosh-ca-cert}}/${BOSH_CA_CERT}/g" drats_integration_config.json
+popd
+
+JUMPBOX_VARS=${PWD}/vars-store/environments/${ENVIRONMENT_NAME}/vars/jumpbox-vars-file.yml
+pushd test-config/environments/${ENVIRONMENT_NAME}/vars
+  PROXY_HOST=`grep external_ip ${JUMPBOX_VARS} | cut -d' ' -f2`
+  sed -i -- "s/{{ssh-proxy-host}}/${PROXY_HOST}/g" drats_integration_config.json
+popd
+
+cp test-config/environments/${ENVIRONMENT}/drats_integration_config.json drats-integration-config/
+
+
