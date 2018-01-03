@@ -385,17 +385,6 @@ jobs:
         BBL_STATE_DIR: environments/deerstalker/
       input_mapping:
         env-repo: cf-networking-deployments
-    - task: update-runtime-config
-      file: cf-networking-release-ci/ci/tasks/update-runtime-config.yml
-      input_mapping:
-        env-repo: cf-networking-deployments
-        cf-networking-ci: cf-networking-release-ci
-        runtime-config: cf-networking-deployments
-        vars-store: cf-networking-deployments
-      params:
-        BBL_STATE_DIR: environments/deerstalker/
-        VARS_STORE_FILE: environments/deerstalker/vars-store.yml
-        RUNTIME_CONFIG_FILE: syslog-addon.yml
     - task: collect-ops-files
       file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
       params:
