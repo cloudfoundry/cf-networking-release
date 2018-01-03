@@ -8,5 +8,5 @@ trap 'cleanup' EXIT
 
 pushd deployments-repo/environments/$ENVIRONMENT_NAME
   eval "$(bbl print-env)"
-  bosh -n deploy -d concourse concourse.yml
+  bosh -n deploy -d concourse concourse.yml --vars-store=${VARS_STORE}
 popd
