@@ -1,11 +1,11 @@
 #!/bin/bash
 
-set -e
+set -eu
 
 # replace secrets in test config
 VARS_STORE=${PWD}/vars-store/environments/${ENVIRONMENT_NAME}/vars-store.yml
 pushd test-config/environments/${ENVIRONMENT_NAME}
-  admin_password=`grep cf_admin_password ${VARS_STORE} | cut -d' ' -f2`
+  cf_admin_password=`grep cf_admin_password ${VARS_STORE} | cut -d' ' -f2`
   ssh_proxy_private_key=`bbl ssh-key`
   bosh_client_secret=`bbl director-password`
   bosh_ca_cert=`bbl director-ca-cert`
@@ -16,7 +16,7 @@ pushd test-config/environments/${ENVIRONMENT_NAME}/vars
   ssh_proxy_host=`grep external_ip ${JUMPBOX_VARS} | cut -d' ' -f2`
 popd
 
-configs=( admin_password
+configs=( cf_admin_password
           bosh_client_secret
           bosh_ca_cert
           ssh_proxy_host
