@@ -5,25 +5,28 @@ set -e
 # replace secrets in test config
 VARS_STORE=${PWD}/vars-store/environments/${ENVIRONMENT_NAME}/vars-store.yml
 pushd test-config/environments/${ENVIRONMENT_NAME}
-  ADMIN_PASSWORD=`grep cf_admin_password ${VARS_STORE} | cut -d' ' -f2`
-  sed -i -- "s/{{admin-password}}/${ADMIN_PASSWORD}/g" drats_integration_config.json
-
-  PROXY_PRIVATE_KEY=`bbl ssh-key`
-  sed -i -- "s/{{ssh-proxy-private-key}}/${PROXY_PRIVATE_KEY}/g" drats_integration_config.json
-
-  BOSH_CLIENT_SECRET=`bbl director-password`
-  sed -i -- "s/{{bosh-client-secret}}/${BOSH_CLIENT_SECRET}/g" drats_integration_config.json
-
-  BOSH_CA_CERT=`bbl director-ca-cert`
-  sed -i -- "s/{{bosh-ca-cert}}/${BOSH_CA_CERT}/g" drats_integration_config.json
+  admin_password=`grep cf_admin_password ${VARS_STORE} | cut -d' ' -f2`
+  ssh_proxy_private_key=`bbl ssh-key`
+  bosh_client_secret=`bbl director-password`
+  bosh_ca_cert=`bbl director-ca-cert`
 popd
 
 JUMPBOX_VARS=${PWD}/vars-store/environments/${ENVIRONMENT_NAME}/vars/jumpbox-vars-file.yml
 pushd test-config/environments/${ENVIRONMENT_NAME}/vars
-  PROXY_HOST=`grep external_ip ${JUMPBOX_VARS} | cut -d' ' -f2`
-  sed -i -- "s/{{ssh-proxy-host}}/${PROXY_HOST}/g" drats_integration_config.json
+  ssh_proxy_host=`grep external_ip ${JUMPBOX_VARS} | cut -d' ' -f2`
 popd
 
-cp test-config/environments/${ENVIRONMENT}/drats_integration_config.json drats-integration-config/
+configs=( admin_password
+          bosh_client_secret
+          bosh_ca_cert
+          ssh_proxy_host
+          ssh_proxy_private_key )
 
+integration_config=`cat integration-configs/${INTEGRATION_CONFIG_FILE_PATH}`
 
+for config in "${configs[@]}"
+do
+  integration_config=$(echo ${integration_config} | jq ".${config}=\"${!config}\"")
+done
+
+echo "${integration_config}" > drats-integration-configs/drats_integration_config.json
