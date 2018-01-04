@@ -102,10 +102,10 @@ eureka.instance.nonSecurePort=${PORT}
 This causes the backend instance to report its own address as the internal container-network address and port
 (not the external, NAT'ed address that the router uses to reach it).
 
-
 The `backend` reaches the registry at the public address `registry.bosh-lite.com`.
 The `zuul-proxy` is also configured to look up
 services registered in eureka at this address. Edit this address if deploying
 to a CF on a different domain.
 
+Note that the apps are using the default, Diego-assigned port 8080.
 
