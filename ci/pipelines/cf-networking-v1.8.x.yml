@@ -123,6 +123,14 @@ resources:
       regexp: releases/cf-networking-(.*).tgz
       access_key_id: {{aws-access-key-id}}
       secret_access_key: {{aws-secret-access-key}}
+  - name: cf-cli
+    type: s3
+    source:
+      bucket: cf-networking-cli
+      region_name: us-east-1
+      regexp: cf_(.*)_linux_x86-64
+      access_key_id: {{aws-access-key-id}}
+      secret_access_key: {{aws-secret-access-key}}
 
 jobs:
   - name: postgres-tests
@@ -487,6 +495,7 @@ jobs:
       - get: cf-networking-release-ci
       - get: cf-acceptance-tests
       - get: cats-concourse-task
+      - get: cf-cli
       - get: cf-networking-v1.8.x
         passed: [deerstalker-test]
         trigger: true
@@ -504,7 +513,7 @@ jobs:
       params:
         ENVIRONMENT: deerstalker
     - task: cats
-      file: cats-concourse-task/task.yml
+      file: cats-concourse-task/run-cats-with-provided-cli/task.yml
       params:
         NODES: 8
 
