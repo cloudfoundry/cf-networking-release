@@ -7,11 +7,14 @@ image_resource:
 
 inputs:
   - name: cf-networking-release-ci
-  - name: deployments-repo
+  - name: test-config
+  - name: vars-store
+
+outputs:
+  - name: drats-integration-config
 
 params:
   ENVIRONMENT_NAME: ~
-  VARS_STORE: "../ci/vars-store.yml"
 
 run:
-  path: cf-networking-release-ci/ci/tasks/deploy-bbr-concourse-worker
+  path: cf-networking-release-ci/ci/tasks/create-drats-config
