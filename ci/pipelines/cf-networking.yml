@@ -935,12 +935,6 @@ jobs:
         tarballs: concourse
       params:
         ENVIRONMENT_NAME: mitre
-    - task: deploy-bbr-concourse-worker
-      file: cf-networking-release-ci/ci/tasks/deploy-bbr-concourse-worker.yml
-      params:
-        ENVIRONMENT_NAME: mitre
-      input_mapping:
-        deployments-repo: cf-networking-deployments
     - task: create-release-tarball
       file: cf-networking-release-ci/ci/tasks/create-release-tarball.yml
       input_mapping:
@@ -1111,8 +1105,6 @@ jobs:
       params:
         ENVIRONMENT_NAME: mitre
     - task: run-drats
-      tags:
-      - mitre-bbr
       privileged: true
       file: disaster-recovery-acceptance-tests/ci/drats-with-integration-config/task.yml
 
