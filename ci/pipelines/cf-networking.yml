@@ -1113,6 +1113,7 @@ jobs:
     - task: run-drats
       tags:
       - mitre-bbr
+      privileged: true
       file: disaster-recovery-acceptance-tests/ci/drats-with-integration-config/task.yml
 
   - name: toque-bbl-up
