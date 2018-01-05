@@ -38,11 +38,12 @@ var stylesheet template.HTML = template.HTML(`
 `)
 
 type PublicPage struct {
-	Stylesheet    template.HTML
-	OverlayIP     string
-	InstanceIndex string
-	UserPorts     string
-	UDPPorts      string
+	Stylesheet       template.HTML
+	OverlayIP        string
+	InternalHostname string
+	InstanceIndex    string
+	UserPorts        string
+	UDPPorts         string
 }
 
 var publicPageTemplate string = `
@@ -64,6 +65,7 @@ var publicPageTemplate string = `
 			</div>
 			<div class="jumbotron">
 				<h1>My overlay IP is: {{.OverlayIP}}</h1>
+				<h1>My internal hostname is: {{.InternalHostname}}</h1>
 				<h3>My instance index is: {{.InstanceIndex}}</h3>
 				<p class="lead">I'm serving cats on TCP ports {{.UserPorts}}</p>
 				<p class="lead">I'm also serving a UDP echo server on UDP ports {{.UDPPorts}}</p>
@@ -112,13 +114,16 @@ func (h *InfoHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	instanceIndex := os.Getenv("CF_INSTANCE_INDEX")
 
 	overlayIP := os.Getenv("CF_INSTANCE_INTERNAL_IP")
+	appGuid := os.Getenv("APP_GUID")
+	internalHostname := fmt.Sprintf("%s.apps.internal", appGuid)
 	template := template.Must(template.New("publicPage").Parse(publicPageTemplate))
 	err := template.Execute(resp, PublicPage{
-		Stylesheet:    stylesheet,
-		OverlayIP:     overlayIP,
-		InstanceIndex: instanceIndex,
-		UserPorts:     h.UserPorts,
-		UDPPorts:      h.UDPPorts,
+		Stylesheet:       stylesheet,
+		OverlayIP:        overlayIP,
+		InternalHostname: internalHostname,
+		InstanceIndex:    instanceIndex,
+		UserPorts:        h.UserPorts,
+		UDPPorts:         h.UDPPorts,
 	})
 	if err != nil {
 		panic(err)
