@@ -379,6 +379,7 @@ jobs:
         OPS_FILES: use-compiled-releases.yml cf-networking.yml opsfile.yml
         SYSTEM_DOMAIN: trucker.c2c.cf-app.com
         VARS_STORE_FILE: environments/trucker/vars-store.yml
+        VARS: ""
       input_mapping:
         release: cf-networking-dev
         vars-store: updated-vars-store
@@ -527,6 +528,7 @@ jobs:
         SYSTEM_DOMAIN: sombrero.c2c.cf-app.com
         VARS_STORE_FILE: environments/sombrero/vars-store.yml
         REGENERATE_VARS_STORE: true
+        VARS: ""
       input_mapping:
         env-repo: cf-networking-deployments
         cf-deployment: cf-deployment-pinned
@@ -563,6 +565,7 @@ jobs:
         OPS_FILES: use-compiled-releases.yml cf-networking.yml opsfile-after.yml
         SYSTEM_DOMAIN: sombrero.c2c.cf-app.com
         VARS_STORE_FILE: environments/sombrero/vars-store.yml
+        VARS: ""
       input_mapping:
         release: cf-networking-dev
         vars-store: updated-vars-store
@@ -750,6 +753,7 @@ jobs:
         SYSTEM_DOMAIN: pickelhelm.c2c.cf-app.com
         OPS_FILES: use-compiled-releases.yml datadog.yml cf-networking.yml use-system-domain-as-metron-deployment-name.yml opsfile.yml
         VARS_STORE_FILE: environments/pickelhelm/vars-store.yml
+        VARS: ""
       input_mapping:
         env-repo: cf-networking-deployments
         release: cf-networking-dev
@@ -918,6 +922,7 @@ jobs:
         SYSTEM_DOMAIN: mitre.c2c.cf-app.com
         OPS_FILES: enable-iptables-logger.yml use-compiled-releases.yml datadog.yml custom-apps-domain.yml cf-networking.yml use-system-domain-as-metron-deployment-name.yml opsfile.yml
         VARS_STORE_FILE: environments/mitre/vars-store.yml
+        VARS: ""
       input_mapping:
         env-repo: cf-networking-deployments
         vars-store: cf-networking-deployments
@@ -1190,6 +1195,7 @@ jobs:
         SYSTEM_DOMAIN: toque.c2c.cf-app.com
         OPS_FILES: use-compiled-releases.yml datadog.yml cf-networking.yml use-system-domain-as-metron-deployment-name.yml opsfile.yml
         VARS_STORE_FILE: environments/toque/vars-store.yml
+        VARS: ""
       input_mapping:
         env-repo: cf-networking-deployments
         cf-deployment: cf-deployment
@@ -1393,6 +1399,7 @@ jobs:
         SYSTEM_DOMAIN: slouch.c2c.cf-app.com
         OPS_FILES: use-compiled-releases.yml cf-networking.yml opsfile.yml
         VARS_STORE_FILE: environments/slouch/vars-store.yml
+        VARS: ""
       input_mapping:
         env-repo: cf-networking-deployments
         release: cf-networking-dev
