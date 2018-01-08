@@ -64,8 +64,8 @@ var publicPageTemplate string = `
 				</div>
 			</div>
 			<div class="jumbotron">
-				<h1>My overlay IP is: {{.OverlayIP}}</h1>
-				<h1>My internal hostname is: {{.InternalHostname}}</h1>
+				<h3>My overlay IP is: {{.OverlayIP}}</h1>
+				<h3>My internal hostname is: {{.InternalHostname}}</h1>
 				<h3>My instance index is: {{.InstanceIndex}}</h3>
 				<p class="lead">I'm serving cats on TCP ports {{.UserPorts}}</p>
 				<p class="lead">I'm also serving a UDP echo server on UDP ports {{.UDPPorts}}</p>
