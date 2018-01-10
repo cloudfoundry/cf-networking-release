@@ -1,7 +1,7 @@
 FROM ruby
 
 RUN apt-get update -y && apt-get install -y jq unzip
-RUN curl -L -o /usr/local/bin/bosh https://s3.amazonaws.com/bosh-cli-artifacts/bosh-cli-2.0.45-linux-amd64 && shasum /usr/local/bin/bosh | grep '0045668aa6582ddd518cfb2b6134eba439bbb94d' && chmod +x /usr/local/bin/bosh
+RUN curl -L -o /usr/local/bin/bosh https://s3.amazonaws.com/bosh-cli-artifacts/bosh-cli-2.0.45-linux-amd64 && echo "bf04be72daa7da0c9bbeda16fda7fc7b2b8af51e  /usr/local/bin/bosh" | shasum -c - && chmod +x /usr/local/bin/bosh
 RUN curl -L "https://cli.run.pivotal.io/stable?release=linux64-binary&source=github" | tar -zx && mv cf /usr/local/bin/cf
 RUN curl -L https://github.com/github/hub/releases/download/v2.2.9/hub-linux-amd64-2.2.9.tgz | tar -zx && mv hub-linux-amd64-2.2.9/bin/hub /usr/local/bin/hub
 
