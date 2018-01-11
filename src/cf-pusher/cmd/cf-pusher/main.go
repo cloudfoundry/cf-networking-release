@@ -172,10 +172,8 @@ func main() {
 		Concurrency:  config.Concurrency,
 	}
 
-	orgDeleter := &cf_command.OrgDeleter{
-		Org:     scaleGroup.Org,
-		Quota:   quota,
-		Adapter: adapter,
+	orgChecker := &cf_command.OrgChecker{
+		Org: scaleGroup.Org,
 	}
 
 	orgSpaceCreator := &cf_command.OrgSpaceCreator{
@@ -186,25 +184,28 @@ func main() {
 	}
 
 	registryAppPusher := cf_command.AppPusher{
-		Applications: []cf_command.Application{registryApp},
-		Adapter:      adapter,
-		Concurrency:  config.Concurrency,
-		ManifestPath: registryManifestPath,
-		Directory:    registryAppDirectory,
+		Applications:  []cf_command.Application{registryApp},
+		Adapter:       adapter,
+		Concurrency:   config.Concurrency,
+		ManifestPath:  registryManifestPath,
+		Directory:     registryAppDirectory,
+		SkipIfPresent: true,
 	}
 	tickAppPusher := cf_command.AppPusher{
-		Applications: tickApps,
-		Adapter:      adapter,
-		Concurrency:  config.Concurrency,
-		ManifestPath: tickManifestPath,
-		Directory:    tickAppDirectory,
+		Applications:  tickApps,
+		Adapter:       adapter,
+		Concurrency:   config.Concurrency,
+		ManifestPath:  tickManifestPath,
+		Directory:     tickAppDirectory,
+		SkipIfPresent: true,
 	}
 	proxyAppPusher := cf_command.AppPusher{
-		Applications: proxyApps,
-		Adapter:      adapter,
-		Concurrency:  config.Concurrency,
-		ManifestPath: proxyManifestPath,
-		Directory:    proxyAppDirectory,
+		Applications:  proxyApps,
+		Adapter:       adapter,
+		Concurrency:   config.Concurrency,
+		ManifestPath:  proxyManifestPath,
+		Directory:     proxyAppDirectory,
+		SkipIfPresent: true,
 	}
 
 	asgChecker := cf_command.ASGChecker{
@@ -250,12 +251,10 @@ func main() {
 		return
 	}
 
-	// re-create org and space
-	if err = orgDeleter.Delete(); err != nil {
-		log.Fatalf("deleting org: %s", err)
-	}
-	if err = orgSpaceCreator.Create(); err != nil {
-		log.Fatalf("creating org and space: %s", err)
+	if !orgChecker.CheckOrgExists() {
+		if err = orgSpaceCreator.Create(); err != nil {
+			log.Fatalf("creating org and space: %s", err)
+		}
 	}
 
 	// install ASG

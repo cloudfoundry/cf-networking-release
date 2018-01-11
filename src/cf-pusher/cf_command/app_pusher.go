@@ -2,6 +2,7 @@ package cf_command
 
 //go:generate counterfeiter -o ../fakes/push_cli_adapter.go --fake-name PushCLIAdapter . pushCLIAdapter
 type pushCLIAdapter interface {
+	AppGuid(name string) (string, error)
 	Push(name, directory, manifestFile string) error
 }
 
@@ -11,15 +12,26 @@ type manifestGenerator interface {
 }
 
 type AppPusher struct {
-	Applications []Application
-	Adapter      pushCLIAdapter
-	Concurrency  int
-	ManifestPath string
-	Directory    string
+	Applications  []Application
+	Adapter       pushCLIAdapter
+	Concurrency   int
+	ManifestPath  string
+	Directory     string
+	SkipIfPresent bool
 }
 
 type Application struct {
 	Name string
+}
+
+func (a *AppPusher) shouldPushApp(name string) bool {
+	if a.SkipIfPresent {
+		_, err := a.Adapter.AppGuid(name)
+		if err == nil {
+			return false
+		}
+	}
+	return true
 }
 
 func (a *AppPusher) Push() error {
@@ -30,10 +42,14 @@ func (a *AppPusher) Push() error {
 		sem <- true
 		go func(o Application, m string) {
 			defer func() { <-sem }()
-			err := a.Adapter.Push(o.Name, a.Directory, m)
-			if err != nil {
-				errs <- err
+
+			if a.shouldPushApp(o.Name) {
+				err := a.Adapter.Push(o.Name, a.Directory, m)
+				if err != nil {
+					errs <- err
+				}
 			}
+
 		}(app, a.ManifestPath)
 	}
 

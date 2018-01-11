@@ -53,9 +53,10 @@ var _ = Describe("AppPusher", func() {
 					appPusher.Applications = append(appPusher.Applications, app)
 				}
 			})
-			It("calls push for each app", func() {
+			It("calls check and then push for each app", func() {
 				err := appPusher.Push()
 				Expect(err).NotTo(HaveOccurred())
+				Expect(fakeAdapter.AppGuidCallCount()).To(Equal(0))
 				Expect(fakeAdapter.PushCallCount()).To(Equal(10))
 			})
 			Context("when pushing an app fails", func() {
@@ -82,6 +83,36 @@ var _ = Describe("AppPusher", func() {
 					err := appPusher.Push()
 					Expect(err).To(MatchError("potato"))
 				})
+			})
+		})
+		Context("when SkipIfPresent is true", func() {
+			BeforeEach(func() {
+				appPusher.Applications = []cf_command.Application{
+					{
+						Name: "some-name",
+					}, {
+						Name: "some-name-2",
+					},
+				}
+				appPusher.SkipIfPresent = true
+				fakeAdapter.AppGuidStub = func(name string) (string, error) {
+					if name == "some-name" {
+						return "", errors.New("banana")
+					}
+					return "", nil
+				}
+			})
+			It("doesn't push apps that already exist", func() {
+				err := appPusher.Push()
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(fakeAdapter.AppGuidCallCount()).To(Equal(2))
+
+				Expect(fakeAdapter.PushCallCount()).To(Equal(1))
+				pushedApp, dir, manifest := fakeAdapter.PushArgsForCall(0)
+				Expect(pushedApp).To(Equal("some-name"))
+				Expect(dir).To(Equal("some/dir"))
+				Expect(manifest).To(Equal("some/tmp/dir/manifest.yml"))
 			})
 		})
 	})
