@@ -1,7 +1,4 @@
 ---
-pinned-versions: &cf-deployment-concourse-task-version
-  ref: 4156e1fbdf62ae6636146b671334ef10e76e0b0e
-
 groups:
 - name: cf-networking-v1.8.x
   jobs:
@@ -73,6 +70,7 @@ resources:
     source:
       uri: https://github.com/cloudfoundry/cf-deployment-concourse-tasks
       branch: master
+      tag_filter: "v*"
   - name: cf-deployment
     type: git
     source:
@@ -202,7 +200,6 @@ jobs:
     plan:
     - aggregate:
       - get: cf-deployment-concourse-tasks
-        version: *cf-deployment-concourse-task-version
         trigger: true
       - get: cf-networking-deployments
     - task: bbl-up
@@ -230,7 +227,6 @@ jobs:
     plan:
     - aggregate:
       - get: cf-deployment-concourse-tasks
-        version: *cf-deployment-concourse-task-version
       - get: cf-networking-deployments
     - task: bbl-destroy
       file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
@@ -251,7 +247,6 @@ jobs:
     - aggregate:
       - get: cf-networking-release-ci
       - get: cf-deployment-concourse-tasks
-        version: *cf-deployment-concourse-task-version
       - get: cf-networking-deployments
       - get: cf-deployment
         version: {ref: v1.3.1}
@@ -323,7 +318,6 @@ jobs:
     plan:
     - aggregate:
       - get: cf-deployment-concourse-tasks
-        version: *cf-deployment-concourse-task-version
       - get: cf-networking-deployments
     - task: bbl-up
       file: cf-deployment-concourse-tasks/bbl-up/task.yml
@@ -350,7 +344,6 @@ jobs:
     plan:
     - aggregate:
       - get: cf-deployment-concourse-tasks
-        version: *cf-deployment-concourse-task-version
       - get: cf-networking-deployments
     - task: bbl-destroy
       file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
@@ -373,7 +366,6 @@ jobs:
         version: {version: 3.8.0}
       - get: cf-networking-release-ci
       - get: cf-deployment-concourse-tasks
-        version: *cf-deployment-concourse-task-version
       - get: cf-networking-deployments
       - get: cf-deployment
         version: {ref: v1.3.1}
@@ -555,7 +547,6 @@ jobs:
     - aggregate:
       - get: cf-networking-deployments
       - get: cf-deployment-concourse-tasks
-        version: *cf-deployment-concourse-task-version
     - task: delete-deployment
       file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
       params:
@@ -571,7 +562,6 @@ jobs:
     - aggregate:
       - get: cf-networking-deployments
       - get: cf-deployment-concourse-tasks
-        version: *cf-deployment-concourse-task-version
     - task: delete-deployment
       file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
       params:
