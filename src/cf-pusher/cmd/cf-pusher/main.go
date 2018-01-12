@@ -173,7 +173,8 @@ func main() {
 	}
 
 	orgChecker := &cf_command.OrgChecker{
-		Org: scaleGroup.Org,
+		Org:     scaleGroup.Org,
+		Adapter: adapter,
 	}
 
 	orgSpaceCreator := &cf_command.OrgSpaceCreator{
