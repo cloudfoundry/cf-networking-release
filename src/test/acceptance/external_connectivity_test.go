@@ -113,6 +113,9 @@ var _ = Describe("external connectivity", func() {
 			Eventually(cannotProxy, "10s", "1s").Should(Succeed())
 			Consistently(cannotProxy, "2s", "0.5s").Should(Succeed())
 
+			By("checking that the app cannot ping the internet (first time)")
+			Consistently(cannotPing, "2s", "0.5s").Should(Succeed())
+
 			By("creating and binding a tcp and udp security group")
 			Expect(cli.BindSecurityGroup("tcp-asg", orgName, spaceName)).To(Succeed())
 			Expect(cli.BindSecurityGroup("udp-asg", orgName, spaceName)).To(Succeed())
@@ -123,6 +126,9 @@ var _ = Describe("external connectivity", func() {
 			By("checking that the app can use dns and http to reach the internet")
 			Eventually(canProxy, "10s", "1s").Should(Succeed())
 			Consistently(canProxy, "2s", "0.5s").Should(Succeed())
+
+			By("checking that the app cannot ping the internet (second time)")
+			Consistently(cannotPing, "2s", "1s").Should(Succeed())
 
 			By("removing the tcp security groups")
 			Expect(cli.UnbindSecurityGroup("tcp-asg", orgName, spaceName)).To(Succeed())
