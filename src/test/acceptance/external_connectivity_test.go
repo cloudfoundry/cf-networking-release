@@ -130,11 +130,28 @@ var _ = Describe("external connectivity", func() {
 			By("checking that the app cannot ping the internet (second time)")
 			Consistently(cannotPing, "2s", "1s").Should(Succeed())
 
-			By("creating and binding an icmp security group")
-			Expect(cli.BindSecurityGroup("icmp-asg", orgName, spaceName)).To(Succeed())
-
 			By("removing the tcp security groups")
 			Expect(cli.UnbindSecurityGroup("tcp-asg", orgName, spaceName)).To(Succeed())
+
+			By("restarting the app")
+			Expect(cf.Cf("restart", appA).Wait(Timeout_Push)).To(gexec.Exit(0))
+
+			By("checking that the app cannot use http to reach the internet")
+			Consistently(cannotProxy, "2s", "0.5s").Should(Succeed())
+
+			close(done)
+		}, 180 /* <-- overall spec timeout in seconds */)
+
+		It("allows outbound ICMP only if allowed", func(done Done) {
+			if testConfig.SkipICMPTests {
+				Skip("Test config has 'skip_icmp_test: true', skipping ICMP connectivity tests")
+			}
+
+			By("checking that the app cannot ping the internet")
+			Consistently(cannotPing, "2s", "0.5s").Should(Succeed())
+
+			By("creating and binding an icmp security group")
+			Expect(cli.BindSecurityGroup("icmp-asg", orgName, spaceName)).To(Succeed())
 
 			By("restarting the app")
 			Expect(cf.Cf("restart", appA).Wait(Timeout_Push)).To(gexec.Exit(0))
@@ -142,9 +159,6 @@ var _ = Describe("external connectivity", func() {
 			By("checking that the app can ping the internet")
 			Eventually(canPing, "10s", "1s").Should(Succeed())
 			Consistently(canPing, "2s", "0.5s").Should(Succeed())
-
-			By("checking that the app cannot use http to reach the internet")
-			Consistently(cannotProxy, "2s", "0.5s").Should(Succeed())
 
 			close(done)
 		}, 180 /* <-- overall spec timeout in seconds */)
