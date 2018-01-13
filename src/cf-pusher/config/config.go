@@ -19,5 +19,6 @@ type Config struct {
 	ProxyApplications       int      `json:"proxy_applications"`
 	ProxyInstances          int      `json:"proxy_instances"`
 	SamplePercent           int      `json:"sample_percent"`
+	SkipICMPTests           bool     `json:"skip_icmp_tests"`
 	SkipSSLValidation       bool     `json:"skip_ssl_validation"`
 }
