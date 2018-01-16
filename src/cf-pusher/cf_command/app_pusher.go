@@ -1,7 +1,12 @@
 package cf_command
 
+import (
+	"encoding/json"
+)
+
 //go:generate counterfeiter -o ../fakes/push_cli_adapter.go --fake-name PushCLIAdapter . pushCLIAdapter
 type pushCLIAdapter interface {
+	CheckApp(guid string) ([]byte, error)
 	AppGuid(name string) (string, error)
 	Push(name, directory, manifestFile string) error
 }
@@ -12,12 +17,13 @@ type manifestGenerator interface {
 }
 
 type AppPusher struct {
-	Applications  []Application
-	Adapter       pushCLIAdapter
-	Concurrency   int
-	ManifestPath  string
-	Directory     string
-	SkipIfPresent bool
+	Applications            []Application
+	Adapter                 pushCLIAdapter
+	Concurrency             int
+	ManifestPath            string
+	Directory               string
+	SkipIfPresent           bool
+	DesiredRunningInstances int
 }
 
 type Application struct {
@@ -26,10 +32,27 @@ type Application struct {
 
 func (a *AppPusher) shouldPushApp(name string) bool {
 	if a.SkipIfPresent {
-		_, err := a.Adapter.AppGuid(name)
-		if err == nil {
-			return false
+		guid, err := a.Adapter.AppGuid(name)
+		if err != nil {
+			// App is not pushed yet
+			return true
 		}
+
+		appBytes, err := a.Adapter.CheckApp(guid)
+		if err != nil {
+			// Error getting app summary
+			return true
+		}
+
+		s := &AppStatus{}
+		err = json.Unmarshal(appBytes, s)
+		if err != nil || s.RunningInstances < a.DesiredRunningInstances {
+			// Error unmarshalling response
+			return true
+		}
+
+		return false
+
 	}
 	return true
 }

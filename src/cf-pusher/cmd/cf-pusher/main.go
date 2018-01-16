@@ -185,28 +185,31 @@ func main() {
 	}
 
 	registryAppPusher := cf_command.AppPusher{
-		Applications:  []cf_command.Application{registryApp},
-		Adapter:       adapter,
-		Concurrency:   config.Concurrency,
-		ManifestPath:  registryManifestPath,
-		Directory:     registryAppDirectory,
-		SkipIfPresent: true,
+		Applications:            []cf_command.Application{registryApp},
+		Adapter:                 adapter,
+		Concurrency:             config.Concurrency,
+		ManifestPath:            registryManifestPath,
+		Directory:               registryAppDirectory,
+		SkipIfPresent:           true,
+		DesiredRunningInstances: 1,
 	}
 	tickAppPusher := cf_command.AppPusher{
-		Applications:  tickApps,
-		Adapter:       adapter,
-		Concurrency:   config.Concurrency,
-		ManifestPath:  tickManifestPath,
-		Directory:     tickAppDirectory,
-		SkipIfPresent: true,
+		Applications:            tickApps,
+		Adapter:                 adapter,
+		Concurrency:             config.Concurrency,
+		ManifestPath:            tickManifestPath,
+		Directory:               tickAppDirectory,
+		SkipIfPresent:           true,
+		DesiredRunningInstances: scaleGroup.TickInstances,
 	}
 	proxyAppPusher := cf_command.AppPusher{
-		Applications:  proxyApps,
-		Adapter:       adapter,
-		Concurrency:   config.Concurrency,
-		ManifestPath:  proxyManifestPath,
-		Directory:     proxyAppDirectory,
-		SkipIfPresent: true,
+		Applications:            proxyApps,
+		Adapter:                 adapter,
+		Concurrency:             config.Concurrency,
+		ManifestPath:            proxyManifestPath,
+		Directory:               proxyAppDirectory,
+		SkipIfPresent:           true,
+		DesiredRunningInstances: scaleGroup.ProxyInstances,
 	}
 
 	asgChecker := cf_command.ASGChecker{
@@ -243,24 +246,20 @@ func main() {
 		log.Fatalf("creating asg file: %s", err)
 	}
 
-	// check Apps and ASG and exit if both OK
-	asgName := fmt.Sprintf("%sasg", prefix)
-	appsErr := appChecker.CheckApps(expectedApps)
-	asgErr := asgChecker.CheckASG(asgName, expectedASG)
-	if appsErr == nil && (asgErr == nil) {
-		success(scaleGroup)
-		return
-	}
-
 	if !orgChecker.CheckOrgExists() {
 		if err = orgSpaceCreator.Create(); err != nil {
 			log.Fatalf("creating org and space: %s", err)
 		}
 	}
 
-	// install ASG
-	if err = asgInstaller.InstallASG(asgName, asgFile, scaleGroup.Org, scaleGroup.Space); err != nil {
-		log.Fatalf("install asg: %s", err)
+	// check ASG and install if not OK
+	asgName := fmt.Sprintf("%sasg", prefix)
+	asgErr := asgChecker.CheckASG(asgName, expectedASG)
+	if asgErr != nil {
+		// install ASG
+		if err = asgInstaller.InstallASG(asgName, asgFile, scaleGroup.Org, scaleGroup.Space); err != nil {
+			log.Fatalf("install asg: %s", err)
+		}
 	}
 
 	// push apps

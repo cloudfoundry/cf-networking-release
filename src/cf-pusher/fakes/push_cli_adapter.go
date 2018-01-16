@@ -6,6 +6,19 @@ import (
 )
 
 type PushCLIAdapter struct {
+	CheckAppStub        func(guid string) ([]byte, error)
+	checkAppMutex       sync.RWMutex
+	checkAppArgsForCall []struct {
+		guid string
+	}
+	checkAppReturns struct {
+		result1 []byte
+		result2 error
+	}
+	checkAppReturnsOnCall map[int]struct {
+		result1 []byte
+		result2 error
+	}
 	AppGuidStub        func(name string) (string, error)
 	appGuidMutex       sync.RWMutex
 	appGuidArgsForCall []struct {
@@ -34,6 +47,57 @@ type PushCLIAdapter struct {
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
+}
+
+func (fake *PushCLIAdapter) CheckApp(guid string) ([]byte, error) {
+	fake.checkAppMutex.Lock()
+	ret, specificReturn := fake.checkAppReturnsOnCall[len(fake.checkAppArgsForCall)]
+	fake.checkAppArgsForCall = append(fake.checkAppArgsForCall, struct {
+		guid string
+	}{guid})
+	fake.recordInvocation("CheckApp", []interface{}{guid})
+	fake.checkAppMutex.Unlock()
+	if fake.CheckAppStub != nil {
+		return fake.CheckAppStub(guid)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.checkAppReturns.result1, fake.checkAppReturns.result2
+}
+
+func (fake *PushCLIAdapter) CheckAppCallCount() int {
+	fake.checkAppMutex.RLock()
+	defer fake.checkAppMutex.RUnlock()
+	return len(fake.checkAppArgsForCall)
+}
+
+func (fake *PushCLIAdapter) CheckAppArgsForCall(i int) string {
+	fake.checkAppMutex.RLock()
+	defer fake.checkAppMutex.RUnlock()
+	return fake.checkAppArgsForCall[i].guid
+}
+
+func (fake *PushCLIAdapter) CheckAppReturns(result1 []byte, result2 error) {
+	fake.CheckAppStub = nil
+	fake.checkAppReturns = struct {
+		result1 []byte
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *PushCLIAdapter) CheckAppReturnsOnCall(i int, result1 []byte, result2 error) {
+	fake.CheckAppStub = nil
+	if fake.checkAppReturnsOnCall == nil {
+		fake.checkAppReturnsOnCall = make(map[int]struct {
+			result1 []byte
+			result2 error
+		})
+	}
+	fake.checkAppReturnsOnCall[i] = struct {
+		result1 []byte
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *PushCLIAdapter) AppGuid(name string) (string, error) {
@@ -140,6 +204,8 @@ func (fake *PushCLIAdapter) PushReturnsOnCall(i int, result1 error) {
 func (fake *PushCLIAdapter) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.checkAppMutex.RLock()
+	defer fake.checkAppMutex.RUnlock()
 	fake.appGuidMutex.RLock()
 	defer fake.appGuidMutex.RUnlock()
 	fake.pushMutex.RLock()
