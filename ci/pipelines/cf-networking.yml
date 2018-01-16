@@ -603,6 +603,7 @@ jobs:
         passed: [pickelhelm-deploy]
       - get: cf-deployment
         passed: [pickelhelm-deploy]
+        trigger: true
       - get: cf-networking-dev
         passed: [pickelhelm-deploy]
         trigger: true
