@@ -31,6 +31,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			prefix = config.Prefix
 			orgName = config.SmokeOrg
 
+			Expect(cf.Cf("create-org", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
 			Expect(cf.Cf("target", "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
 			spaceName = prefix + "inter-container-connectivity"
 			Expect(cf.Cf("create-space", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
