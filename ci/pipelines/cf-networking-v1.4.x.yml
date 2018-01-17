@@ -584,9 +584,6 @@ jobs:
           only_tag: true
           tag: version/number
           tag_prefix: v
-      - put: cf-networking-tarball
-        params:
-          file: final-release/cf-networking-*.tgz
 
   # bump patch version (i.e. 1.4.1 -> 1.4.2)
   - name: bump-patch-version
