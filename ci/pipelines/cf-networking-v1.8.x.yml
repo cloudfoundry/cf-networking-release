@@ -596,7 +596,7 @@ jobs:
         - get: cf-networking-release-ci
         - get: version
           params:
-            bump: patch
+            bump: final
           passed: [ship-what]
         - get: cf-networking-v1.8.x
           params:
