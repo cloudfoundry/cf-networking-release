@@ -131,13 +131,6 @@ resources:
       regexp: cf_(.*)_linux_x86-64
       access_key_id: {{aws-access-key-id}}
       secret_access_key: {{aws-secret-access-key}}
-  # Github release
-  - name: cf-networking-github-release
-    type: github-release
-    source:
-      user: cloudfoundry
-      repository: cf-networking-release
-      access_token: {{github-access-token}}
 
 jobs:
   - name: postgres-tests
@@ -594,18 +587,8 @@ jobs:
       - put: cf-networking-tarball
         params:
           file: final-release/cf-networking-*.tgz
-      - task: build-release-notes
-        file: cf-networking-ci/ci/tasks/build-release-notes.yml
-      - put: cf-networking-github-release
-        params:
-          name: version/number
-          tag: version/number
-          body: release-notes/notes.md
-          tag_prefix: v
-          globs:
-          - final-release/cf-networking-*.tgz
 
-  # bump patch version (i.e. 0.1.0 -> 0.2.0)
+  # bump patch version (i.e. 1.4.1 -> 1.4.2)
   - name: bump-patch-version
     serial_groups: [version]
     plan:

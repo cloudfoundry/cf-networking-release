@@ -8,13 +8,7 @@ platform: linux
 inputs:
   - name: version
   - name: cf-networking-ci
-  - name: cf-networking-deployments
-  - name: cf-networking-tarball
   - name: cf-networking-master
-
-outputs:
-  - name: final-release
-  - name: release
 
 run:
   path: cf-networking-ci/ci/tasks/shipit

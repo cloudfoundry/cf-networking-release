@@ -9,26 +9,10 @@ if [ -z "$VERSION" ]; then
   exit 1
 fi
 
-cp cf-networking-deployments/config/private.yml cf-networking-master/config/private.yml
 
 CANDIDATE_DIR=$PWD/cf-networking-tarball
 
 git config --global user.email "container-networking+ci@pivotal.io"
 git config --global user.name "Container Networking Bot"
 
-cd cf-networking-master
-RELEASE_YML=$PWD/releases/cf-networking/cf-networking-${VERSION}.yml
-
-if [ -e ${RELEASE_YML} ]; then
-  echo "release already created; making tarball..."
-  bosh -n create-release --tarball=../final-release/cf-networking-${VERSION}.tgz ${RELEASE_YML}
-else
-  echo "finalizing release"
-  bosh -n finalize-release --version="$VERSION" ${CANDIDATE_DIR}/cf-networking-*.tgz
-  git add -A
-  git commit -m "Release v${VERSION}"
-  bosh create-release --tarball ../final-release/cf-networking-${VERSION}.tgz releases/cf-networking/cf-networking-${VERSION}.yml
-fi
-
-cp -r . ../release/master
 
