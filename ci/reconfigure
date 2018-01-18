@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -e -u
-export PIPELINE=$1
+export PIPELINE="cf-networking-v1.4.x"
 export TARGET=c2c
 
 fly -t $TARGET \
