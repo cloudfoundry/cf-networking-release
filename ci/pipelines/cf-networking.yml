@@ -1205,7 +1205,7 @@ jobs:
       params:
         BBL_STATE_DIR: environments/slouch
         SYSTEM_DOMAIN: slouch.c2c.cf-app.com
-        OPS_FILES: use-compiled-releases.yml cf-networking.yml opsfile.yml
+        OPS_FILES: use-compiled-releases.yml scale-to-one-az.yml cf-networking.yml opsfile.yml
         VARS_STORE_FILE: environments/slouch/vars-store.yml
       input_mapping:
         env-repo: cf-networking-deployments
