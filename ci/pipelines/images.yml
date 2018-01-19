@@ -224,6 +224,7 @@ jobs:
     params:
       build: docker-build-context
       tag: dev-postgres-image-version/version
+      tag_as_latest: true
   - put: dev-postgres-image-version
     params: {file: dev-postgres-image-version/version}
 
@@ -250,6 +251,7 @@ jobs:
       build_args:
         KERNELVER: 4.9.36
       tag: dev-postgres-ifb-image-version/version
+      tag_as_latest: true
   - put: dev-postgres-ifb-image-version
     params: {file: dev-postgres-ifb-image-version/version}
 
@@ -273,6 +275,7 @@ jobs:
     params:
       build: docker-build-context
       tag: dev-mysql-image-version/version
+      tag_as_latest: true
   - put: dev-mysql-image-version
     params: {file: dev-mysql-image-version/version}
 
@@ -296,6 +299,7 @@ jobs:
     params:
       build: docker-build-context
       tag: dev-mysql-5.6-image-version/version
+      tag_as_latest: true
   - put: dev-mysql-5.6-image-version
     params: {file: dev-mysql-5.6-image-version/version}
 
@@ -309,6 +313,7 @@ jobs:
     params:
       build: deploy-dockerfile/ci/dockerfiles/deploy
       tag: image-version/version
+      tag_as_latest: true
   - put: image-version
     params: {file: image-version/version}
 
@@ -322,6 +327,7 @@ jobs:
     params:
       build: small-git-dockerfile/ci/dockerfiles/small-git
       tag: small-git-image-version/version
+      tag_as_latest: true
   - put: small-git-image-version
     params: {file: small-git-image-version/version}
 
@@ -335,5 +341,6 @@ jobs:
     params:
       build: deploy-light-dockerfile/ci/dockerfiles/deploy-light
       tag: light-image-version/version
+      tag_as_latest: true
   - put: light-image-version
     params: {file: light-image-version/version}
