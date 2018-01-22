@@ -1,5 +1,4 @@
-
-#!/bin/bash -eu
+#!/bin/bash -exu
 
 export RUN_DIR=/var/vcap/sys/run/test-server
 export LOG_DIR=/var/vcap/sys/log/test-server
@@ -15,19 +14,32 @@ case $1 in
 
   start)
 
+    NC_PID="$(lsof -n -i4TCP:8898 | grep LISTEN | awk '{ print $2 }')"
+    if [ ! -z "$NC_PID" ]; then
+      kill -9 "$NC_PID"
+    fi
+
     exec 2> >(tee -a "${LOG_DIR}"/test-server.stderr.log | logger -p user.error -t test-server) \
           1> >(tee -a "${LOG_DIR}"/test-server.stdout.log | logger -t test-server)
 
     echo $$ > "${PIDFILE}"
 
-    echo "Hello world!!" > /tmp/index.html
-    exec "while true; do nc -l 8888 < /tmp/index.html; done"
+    echo "Hello world!!" > ${RUN_DIR}/index.html
+    while : ; do
+      nc -l 8898 < ${RUN_DIR}/index.html
+    done
 
     ;;
 
   stop)
 
-    kill -9 ${PIDFILE}
+    kill -9 $(cat ${PIDFILE})
+
+    NC_PID="$(lsof -n -i4TCP:8898 | grep LISTEN | awk '{ print $2 }')"
+    if [ ! -z "$NC_PID" ]; then
+      kill -9 "$NC_PID"
+    fi
+
 
     ;;
 

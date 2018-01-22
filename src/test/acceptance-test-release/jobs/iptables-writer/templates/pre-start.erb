@@ -1,9 +1,9 @@
 #!/bin/bash -u
 
 
-sudo iptables -C INPUT -s <%= link('cf_network').p('cf_networking.network') %> -p tcp -m tcp --destination <%= spec.ip %> --dport 8888 -j ACCEPT
+sudo iptables -C INPUT -s <%= link('cf_network').p('cf_networking.network') %> -p tcp -m tcp --destination <%= spec.ip %> --dport 8898 -j ACCEPT
 if [ "$?" -eq 1 ]
 then
-  sudo iptables -I INPUT 1 -s <%= link('cf_network').p('cf_networking.network') %> -p tcp -m tcp --destination <%= spec.ip %> --dport 8888 -j ACCEPT
+  sudo iptables -I INPUT 1 -s <%= link('cf_network').p('cf_networking.network') %> -p tcp -m tcp --destination <%= spec.ip %> --dport 8898 -j ACCEPT
 fi
 
