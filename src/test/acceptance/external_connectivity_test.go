@@ -153,8 +153,6 @@ var _ = Describe("external connectivity", func() {
 			By("creating and binding an icmp security group")
 			Expect(cli.BindSecurityGroup("icmp-asg", orgName, spaceName)).To(Succeed())
 
-			Expect(cli.BindSecurityGroup("udp-asg", orgName, spaceName)).To(Succeed())
-
 			By("restarting the app")
 			Expect(cf.Cf("restart", appA).Wait(Timeout_Push)).To(gexec.Exit(0))
 
