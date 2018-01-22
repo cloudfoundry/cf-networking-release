@@ -1,0 +1,17 @@
+!/bin/bash
+set -xeu
+
+# this is needed for when we upgraded to bbl 5.10
+function cleanup() {
+  pkill ssh || true
+}
+trap 'cleanup' EXIT
+
+source cf-deployment-concourse-tasks/shared-functions
+
+setup_bosh_env_vars
+
+pushd cf-networking-dev/src/test/acceptance-test-release
+  bosh create-release --force
+  bosh upload-release --rebase
+popd

@@ -3,10 +3,12 @@ package acceptance_test
 import (
 	"fmt"
 	"math/rand"
+	"time"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 )
 
@@ -40,16 +42,11 @@ var _ = Describe("external connectivity", func() {
 	Describe("when a custom iptables rule is added and a new app is pushed", func() {
 		It("still applies the iptable rule to the new app", func(done Done) {
 			By("checking that the app can reach the process running on the host")
-			Expect(cf.Cf("ssh", appName, "-c", "curl $CF_INSTANCE_IP:8898")).To(ContainSubstring("Hello world!!"))
+			session := cf.Cf("ssh", appName, "-c", "curl $CF_INSTANCE_IP:8898").Wait(5 * time.Second)
+			Eventually(session).Should(gexec.Exit(0))
+			Expect(session.Out).To(gbytes.Say("Hello world!!"))
+
 			close(done)
 		}, 180 /* <-- overall spec timeout in seconds */)
 	})
 })
-
-func setupOrgAndSpace(orgName, spaceName string) {
-	Expect(cf.Cf("create-org", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
-	Expect(cf.Cf("target", "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
-
-	Expect(cf.Cf("create-space", spaceName, "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
-	Expect(cf.Cf("target", "-o", orgName, "-s", spaceName).Wait(Timeout_Push)).To(gexec.Exit(0))
-}

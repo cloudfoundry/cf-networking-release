@@ -1,0 +1,13 @@
+---
+# acceptance-test jobs
+- type: replace
+  path: /instance_groups/name=diego-cell/jobs/-
+  value:
+    name: iptables-writer
+    release: acceptance-test
+
+- type: replace
+  path: /instance_groups/name=diego-cell/jobs/-
+  value:
+    name: test-server
+    release: acceptance-test

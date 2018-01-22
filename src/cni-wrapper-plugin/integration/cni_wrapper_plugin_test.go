@@ -367,6 +367,30 @@ var _ = Describe("CniWrapperPlugin", func() {
 			}))
 		})
 
+		Context("when an iptables rule is already present on the INPUT chain", func() {
+			BeforeEach(func() {
+				iptablesSession, err := gexec.Start(exec.Command("iptables", "-I", "INPUT", "1", "--destination", "127.0.0.1", "-j", "ACCEPT"), GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+				Eventually(iptablesSession).Should(gexec.Exit(0))
+			})
+			AfterEach(func() {
+				iptablesSession, err := gexec.Start(exec.Command("iptables", "-D", "INPUT", "--destination", "127.0.0.1", "-j", "ACCEPT"), GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+				Eventually(iptablesSession).Should(gexec.Exit(0))
+			})
+			It("appends to the INPUT chain", func() {
+				session, err := gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+				Eventually(session).Should(gexec.Exit(0))
+
+				By("checking that the container's input chain comes after the already present iptables rule")
+				Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{
+					"-A INPUT -d 127.0.0.1/32 -j ACCEPT",
+					"-A INPUT -s 1.2.3.4/32 -j " + inputChainName,
+				}))
+			})
+		})
+
 		Context("when DNS servers are configured", func() {
 			BeforeEach(func() {
 				inputStruct.DNSServers = []string{"169.254.0.1", "8.8.4.4", "169.254.0.2"}

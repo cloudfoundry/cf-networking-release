@@ -1,0 +1,19 @@
+---
+image_resource:
+  type: docker-image
+  source:
+    repository: c2cnetworking/deploy
+    tag: latest
+
+platform: linux
+
+inputs:
+  - name: env-repo
+  - name: cf-networking-dev
+  - name: cf-deployment-concourse-tasks
+
+run:
+  path: cf-networking-dev/ci/tasks/upload-acceptance-test-release
+
+params:
+  BBL_STATE_DIR:
