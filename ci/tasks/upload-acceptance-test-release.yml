@@ -13,7 +13,7 @@ inputs:
   - name: cf-deployment-concourse-tasks
 
 run:
-  path: cf-networking-dev/ci/tasks/upload-acceptance-test-release
+  path: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release
 
 params:
   BBL_STATE_DIR:

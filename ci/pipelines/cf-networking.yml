@@ -551,7 +551,7 @@ jobs:
         cf-networking-release: cf-networking-dev
         deployments-repo: cf-networking-deployments
     - task: upload-acceptance-test-release
-      file: cf-networking-release-ci/tasks/upload-acceptance-test-release.yml
+      file: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release.yml
       params:
         ENVIRONMENT_NAME: pickelhelm
       input_mapping:
@@ -563,7 +563,7 @@ jobs:
       params:
         BBL_STATE_DIR: environments/pickelhelm/
         SYSTEM_DOMAIN: pickelhelm.c2c.cf-app.com
-        OPS_FILES: use-compiled-releases.yml datadog.yml scale-to-one-az.yml smaller-footprint.yml cf-networking.yml use-system-domain-as-metron-deployment-name.yml opsfile.yml
+        OPS_FILES: use-compiled-releases.yml datadog.yml scale-to-one-az.yml smaller-footprint.yml cf-networking.yml use-system-domain-as-metron-deployment-name.yml add-acceptance-test-jobs.yml opsfile.yml
         VARS_STORE_FILE: environments/pickelhelm/vars-store.yml
       input_mapping:
         env-repo: cf-networking-deployments
