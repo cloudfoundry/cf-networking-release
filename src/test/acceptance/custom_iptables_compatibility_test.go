@@ -12,7 +12,7 @@ import (
 	"github.com/onsi/gomega/gexec"
 )
 
-var _ = Describe("external connectivity", func() {
+var _ = Describe("Custom iptables compatibility", func() {
 	var (
 		appName   string
 		orgName   string
