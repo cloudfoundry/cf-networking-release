@@ -11,3 +11,9 @@
   value:
     name: test-server
     release: acceptance-test
+
+- type: replace
+  path: /releases/-
+  value:
+    name: acceptance-test
+    version: latest
