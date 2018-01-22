@@ -8,9 +8,10 @@ image_resource:
 platform: linux
 
 inputs:
-  - name: env-repo
-  - name: cf-networking-dev
   - name: cf-deployment-concourse-tasks
+  - name: cf-networking-dev
+  - name: cf-networking-release-ci
+  - name: env-repo
 
 run:
   path: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release
