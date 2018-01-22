@@ -1,0 +1,14 @@
+---
+name: iptables-writer
+
+templates:
+  pre-start.erb: bin/pre-start
+
+packages: []
+
+consumes:
+- name: cf_network
+  type: cf_network
+
+
+properties: {}

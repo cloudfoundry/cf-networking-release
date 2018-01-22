@@ -1,0 +1,9 @@
+---
+name: test-server
+
+templates:
+  test-server_ctl.erb: bin/test-server_ctl
+
+packages: []
+
+properties: {}

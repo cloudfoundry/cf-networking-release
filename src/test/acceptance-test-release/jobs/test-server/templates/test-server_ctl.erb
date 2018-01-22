@@ -1,0 +1,39 @@
+
+#!/bin/bash -eu
+
+export RUN_DIR=/var/vcap/sys/run/test-server
+export LOG_DIR=/var/vcap/sys/log/test-server
+export PIDFILE="${RUN_DIR}"/test-server.pid
+
+mkdir -p "${RUN_DIR}"
+mkdir -p "${LOG_DIR}"
+
+exec 1>> "${LOG_DIR}"/test-server_ctl.out.log
+exec 2>> "${LOG_DIR}"/test-server_ctl.err.log
+
+case $1 in
+
+  start)
+
+    exec 2> >(tee -a "${LOG_DIR}"/test-server.stderr.log | logger -p user.error -t test-server) \
+          1> >(tee -a "${LOG_DIR}"/test-server.stdout.log | logger -t test-server)
+
+    echo $$ > "${PIDFILE}"
+
+    echo "Hello world!!" > /tmp/index.html
+    exec "while true; do nc -l 8888 < /tmp/index.html; done"
+
+    ;;
+
+  stop)
+
+    kill -9 ${PIDFILE}
+
+    ;;
+
+  *)
+    echo "Usage: $0 {start|stop}"
+
+    ;;
+
+esac
