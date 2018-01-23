@@ -94,13 +94,13 @@ var _ = Describe("external connectivity", func() {
 		return checkRequest(appRoute, 200, `{"ListenAddresses":[`)
 	}
 	canPing := func() error {
-		return checkRequest(appRoute+"ping/example.com", 200, "Ping succeeded")
+		return checkRequest(appRoute+"ping/8.8.8.8", 200, "Ping succeeded")
 	}
 	cannotProxy := func() error {
 		return checkRequest(appRoute+"proxy/example.com", 500, "example.com")
 	}
 	cannotPing := func() error {
-		return checkRequest(appRoute+"ping/example.com", 500, "Ping failed to destination: example.com")
+		return checkRequest(appRoute+"ping/8.8.8.8", 500, "Ping failed to destination: 8.8.8.8")
 	}
 
 	Describe("basic (legacy) network behavior for an app", func() {
@@ -152,8 +152,6 @@ var _ = Describe("external connectivity", func() {
 
 			By("creating and binding an icmp security group")
 			Expect(cli.BindSecurityGroup("icmp-asg", orgName, spaceName)).To(Succeed())
-
-			Expect(cli.BindSecurityGroup("udp-asg", orgName, spaceName)).To(Succeed())
 
 			By("restarting the app")
 			Expect(cf.Cf("restart", appA).Wait(Timeout_Push)).To(gexec.Exit(0))
