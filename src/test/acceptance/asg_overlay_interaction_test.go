@@ -88,7 +88,7 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 
 			By("unbinding all running ASGs")
 			for _, sg := range testConfig.DefaultSecurityGroups {
-				Expect(cf.Cf("unbind-running-security-group", sg).Wait(Timeout_Short)).To(gexec.Exit(0))
+				Expect(cf.Cf("unbind-running-security-group", sg).Wait(Timeout_Short)).To(gexec.Exit())
 			}
 
 			By("pushing the test app")
@@ -98,7 +98,7 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 		AfterEach(func() {
 			By("adding back all the original running ASGs")
 			for _, sg := range testConfig.DefaultSecurityGroups {
-				Expect(cf.Cf("bind-running-security-group", sg).Wait(Timeout_Short)).To(gexec.Exit(0))
+				Expect(cf.Cf("bind-running-security-group", sg).Wait(Timeout_Short)).To(gexec.Exit())
 			}
 		})
 
