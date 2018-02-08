@@ -10,6 +10,7 @@ inputs:
   - name: cf-deployment
   - name: deployments-repo
   - name: cf-networking-release
+  - name: silk-release
 
 outputs:
   - name: ops-files
