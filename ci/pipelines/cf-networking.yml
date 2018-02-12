@@ -5,6 +5,9 @@ groups:
   - mysql-5.6-tests
   - postgres-tests
   - windows-tests
+  - silk-postgres-tests
+  - silk-mysql-tests
+  - silk-mysql-5.6-tests
   - unit-and-integration-tests
   - pickelhelm-deploy
   - pickelhelm-test
@@ -134,6 +137,14 @@ resources:
     source:
       repository: cloudfoundry-incubator/datadog-firehose-nozzle-release
   ###### BOSH release repos
+  - name: silk-dev
+    type: git
+    source:
+      uri: git@github.com:cloudfoundry/silk-release.git
+      branch: develop
+      ignore_paths:
+        - docs
+      private_key: {{cf-networking-deploy-key}}
   - name: cf-networking-dev
     type: git
     source:
@@ -300,6 +311,9 @@ jobs:
       - get: cf-networking-dev
         passed: [unit-and-integration-tests]
         trigger: true
+      - get: silk-dev
+        passed: [unit-and-integration-tests]
+        trigger: true
     - task: delete-deployment
       file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
       params:
@@ -323,6 +337,7 @@ jobs:
         cf-deployment: cf-deployment-pinned
         cf-networking-release: cf-networking-pinned
         deployments-repo: cf-networking-deployments
+        silk-release: silk-dev
     - task: deploy-oldest-compatible-version
       file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
       params:
@@ -354,6 +369,7 @@ jobs:
       input_mapping:
         cf-networking-release: cf-networking-dev
         deployments-repo: cf-networking-deployments
+        silk-release: silk-dev
     - task: upload-stemcell
       file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
       params:
@@ -466,11 +482,50 @@ jobs:
         cf-networking-release: cf-networking-dev
         ci: cf-networking-release-ci
 
+  - name: silk-postgres-tests
+    public: true
+    plan:
+    - aggregate:
+      - get: silk-dev
+        trigger: true
+    - task: test-postgres
+      file: silk-dev/ci/test-postgres.yml
+      privileged: true
+      input_mapping:
+        silk: silk-dev
+
+  - name: silk-mysql-tests
+    public: true
+    plan:
+    - aggregate:
+      - get: silk-dev
+        trigger: true
+    - task: test-mysql
+      file: silk-dev/ci/test-mysql.yml
+      privileged: true
+      input_mapping:
+        silk: silk-dev
+
+  - name: silk-mysql-5.6-tests
+    public: true
+    plan:
+    - aggregate:
+      - get: silk-dev
+        trigger: true
+    - task: test-mysql-5.6
+      file: silk-dev/ci/test-mysql-5.6.yml
+      privileged: true
+      input_mapping:
+        silk: silk-dev
+
   - name: unit-and-integration-tests
     public: true
     plan:
     - get: cf-networking-dev
       passed: [postgres-tests, mysql-tests, mysql-5.6-tests, windows-tests]
+      trigger: true
+    - get: silk-dev
+      passed: [silk-postgres-tests, silk-mysql-tests, silk-mysql-5.6-tests]
       trigger: true
 
   - name: pickelhelm-bbl-up
@@ -537,6 +592,9 @@ jobs:
       - get: cf-networking-dev
         trigger: true
         passed: [unit-and-integration-tests]
+      - get: silk-dev
+        trigger: true
+        passed: [unit-and-integration-tests]
     - task: upload-stemcell
       file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
       params:
@@ -550,6 +608,7 @@ jobs:
       input_mapping:
         cf-networking-release: cf-networking-dev
         deployments-repo: cf-networking-deployments
+        silk-release: silk-dev
     - task: upload-acceptance-test-release
       file: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release.yml
       params:
@@ -627,6 +686,9 @@ jobs:
       - get: cf-networking-dev
         passed: [pickelhelm-deploy]
         trigger: true
+      - get: silk-dev
+        passed: [pickelhelm-deploy]
+        trigger: true
     - task: acceptance-tests
       file: cf-networking-release-ci/ci/tasks/acceptance-tests.yml
       input_mapping:
@@ -702,6 +764,9 @@ jobs:
       - get: cf-networking-dev
         trigger: true
         passed: [pickelhelm-test]
+      - get: silk-dev
+        trigger: true
+        passed: [pickelhelm-test]
       - get: version
         params:
           pre: rc
@@ -729,6 +794,7 @@ jobs:
       input_mapping:
         cf-networking-release: cf-networking-dev
         deployments-repo: cf-networking-deployments
+        silk-release: silk-dev
     - task: upload-acceptance-test-release
       file: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release.yml
       params:
@@ -996,6 +1062,9 @@ jobs:
       - get: cf-networking-dev
         passed: [unit-and-integration-tests]
         trigger: true
+      - get: silk-dev
+        passed: [unit-and-integration-tests]
+        trigger: true
       - get: datadog-firehose-nozzle-release
     - task: upload-stemcell
       file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
@@ -1011,6 +1080,7 @@ jobs:
       input_mapping:
         deployments-repo: cf-networking-deployments
         cf-networking-release: cf-networking-dev
+        silk-release: silk-dev
     - task: deploy-cf
       file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
       params:
@@ -1201,6 +1271,9 @@ jobs:
       - get: cf-networking-release-ci
       - get: cf-networking-deployments
       - get: cf-networking-dev
+        passed:
+        - unit-and-integration-tests
+      - get: silk-dev
         passed: [unit-and-integration-tests]
       - get: datadog-firehose-nozzle-release
     - task: upload-stemcell
@@ -1209,6 +1282,14 @@ jobs:
         env-repo: cf-networking-deployments
       params:
         BBL_STATE_DIR: environments/slouch
+    - task: upload-acceptance-test-release
+      file: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release.yml
+      params:
+        ENVIRONMENT_NAME: slouch
+      input_mapping:
+        env-repo: cf-networking-deployments
+      params:
+        BBL_STATE_DIR: environments/slouch/
     - task: collect-ops-files
       file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
       params:
@@ -1216,12 +1297,20 @@ jobs:
       input_mapping:
         cf-networking-release: cf-networking-dev
         deployments-repo: cf-networking-deployments
+        silk-release: silk-dev
+    - task: upload-local-silk-release
+      file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+      input_mapping:
+        env-repo: cf-networking-deployments
+        local-release: silk-dev
+      params:
+        BBL_STATE_DIR: environments/slouch/
     - task: deploy-cf
       file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
       params:
         BBL_STATE_DIR: environments/slouch
         SYSTEM_DOMAIN: slouch.c2c.cf-app.com
-        OPS_FILES: use-compiled-releases.yml scale-to-one-az.yml smaller-footprint.yml cf-networking.yml opsfile.yml
+        OPS_FILES: use-compiled-releases.yml scale-to-one-az.yml smaller-footprint.yml cf-networking.yml use-silk-release.yml add-acceptance-test-jobs.yml opsfile.yml
         VARS_STORE_FILE: environments/slouch/vars-store.yml
       input_mapping:
         env-repo: cf-networking-deployments
