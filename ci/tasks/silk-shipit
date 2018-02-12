@@ -1,0 +1,33 @@
+#!/bin/bash
+# vim: set ft=sh
+
+set -e -x
+
+VERSION=$(cat ./silk-version/number)
+if [ -z "$VERSION" ]; then
+  echo "missing version number"
+  exit 1
+fi
+
+cp cf-networking-deployments/config/private.yml silk/config/private.yml
+
+CANDIDATE_DIR=$PWD/silk-tarball
+cd silk
+
+git config --global user.email "container-networking+ci@pivotal.io"
+git config --global user.name "Container Networking Bot"
+
+RELEASE_YML=$PWD/releases/silk/silk-${VERSION}.yml
+
+if [ -e ${RELEASE_YML} ]; then
+  echo "release already created; making tarball..."
+  bosh -n create-release --tarball=${CANDIDATE_DIR}/silk-$(date +%s).tgz ${RELEASE_YML}
+else
+  echo "finalizing release"
+  bosh -n finalize-release --version="$VERSION" ${CANDIDATE_DIR}/silk-*.tgz
+  git add -A
+  git commit -m "Release v${VERSION}"
+  bosh create-release --tarball ../final-release/silk-${VERSION}.tgz releases/silk/silk-${VERSION}.yml
+fi
+
+cp -r . ../release/master

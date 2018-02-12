@@ -153,6 +153,12 @@ resources:
       ignore_paths:
         - docs
       private_key: {{cf-networking-deploy-key}}
+  - name: silk-master
+    type: git
+    source:
+      uri: git@github.com:cloudfoundry/silk-release.git
+      branch: master
+      private_key: {{cf-networking-deploy-key}}
   - name: cf-networking-dev
     type: git
     source:
@@ -266,6 +272,12 @@ resources:
     source:
       user: cloudfoundry
       repository: cf-networking-release
+      access_token: {{github-access-token}}
+  - name: silk-github-release
+    type: github-release
+    source:
+      user: cloudfoundry
+      repository: silk-release
       access_token: {{github-access-token}}
 
 jobs:
@@ -883,6 +895,9 @@ jobs:
       params:
         RELEASE_NAME: cf-networking
         VERSION_NAME: version
+    - put: cf-networking-tarball
+      params:
+        file: tarballs/cf-networking-*.tgz
     - task: create-silk-release-tarball
       file: cf-networking-release-ci/ci/tasks/create-release-tarball.yml
       input_mapping:
@@ -890,9 +905,6 @@ jobs:
       params:
         RELEASE_NAME: silk
         VERSION_NAME: silk-version
-    - put: cf-networking-tarball
-      params:
-        file: tarballs/cf-networking-*.tgz
     - put: silk-tarball
       params:
         file: tarballs/silk-*.tgz
@@ -1569,6 +1581,8 @@ jobs:
           file: final-release/cf-networking-*.tgz
       - task: build-release-notes
         file: cf-networking-release-ci/ci/tasks/build-release-notes.yml
+        input_mapping:
+          master-release: cf-networking-master
       - put: cf-networking-github-release
         params:
           name: version/number
@@ -1653,6 +1667,32 @@ jobs:
           passed: [ship-what]
         - get: silk-tarball
           passed: [ship-what]
+    - task: silk-shipit
+      file: cf-networking-release-ci/ci/tasks/silk-shipit.yml
+      input_mapping:
+        silk: silk-dev
+    - put: silk-version
+      params: {file: silk-version/number}
+    - put: silk-master
+      params:
+        repository: release/master
+        tag: silk-version/number
+        tag_prefix: v
+    - put: silk-tarball
+      params:
+        file: final-release/silk-*.tgz
+    - task: build-release-notes
+      file: cf-networking-release-ci/ci/tasks/build-release-notes.yml
+      input_mapping:
+        master-release: silk-master
+    - put: silk-github-release
+      params:
+        name: silk-version/number
+        tag: silk-version/number
+        body: release-notes/notes.md
+        tag_prefix: v
+        globs:
+        - final-release/silk-*.tgz
 
   # bump silk minor version (i.e. 0.1.0 -> 0.2.0)
   - name: silk-bump-minor-version
