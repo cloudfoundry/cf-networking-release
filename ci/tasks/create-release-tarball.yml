@@ -6,7 +6,7 @@ image_resource:
 platform: linux
 
 inputs:
-- name: cf-networking
+- name: my-release
 - name: version
 - name: cf-networking-release-ci
 

@@ -2,8 +2,8 @@
 
 set -eu
 
-VERSION=$(cat ./version/number)
+VERSION=$(cat ./${VERSION_NAME}/number)
 
-pushd cf-networking > /dev/null
+pushd my-release > /dev/null
   bosh create-release --tarball=../tarballs/${RELEASE_NAME}-${VERSION}.tgz --name $RELEASE_NAME --timestamp-version
 popd > /dev/null

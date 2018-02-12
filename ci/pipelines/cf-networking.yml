@@ -21,7 +21,10 @@ groups:
   - ship-what
   - shipit
   - bump-minor-version
+  - silk-shipit
+  - silk-bump-minor-version
   - merge-master
+  # - silk-merge-master
   - toque-deploy
   - toque-push
   - toque-test
@@ -90,6 +93,11 @@ groups:
   - major-bump
   - minor-bump
   - patch-bump
+- name: silk-version
+  jobs:
+  - silk-major-bump
+  - silk-minor-bump
+  - silk-patch-bump
 
 resources:
   ###### Control plane
@@ -235,6 +243,23 @@ resources:
       regexp: releases/cf-networking-(.*).tgz
       access_key_id: {{aws-access-key-id}}
       secret_access_key: {{aws-secret-access-key}}
+  - name: silk-version
+    type: semver
+    source:
+      bucket: {{silk-s3-bucket}}
+      region_name: us-west-2
+      initial_version: 0.1.0-rc.1
+      key: releases/current-version
+      access_key_id: {{aws-access-key-id}}
+      secret_access_key: {{aws-secret-access-key}}
+  - name: silk-tarball
+    type: s3
+    source:
+      bucket: {{silk-candidate-s3-bucket}}
+      region_name: us-west-2
+      regexp: releases/silk-(.*).tgz
+      access_key_id: {{aws-access-key-id}}
+      secret_access_key: {{aws-secret-access-key}}
   # Github release
   - name: cf-networking-github-release
     type: github-release
@@ -376,11 +401,18 @@ jobs:
         BBL_STATE_DIR: environments/sombrero/
       input_mapping:
         env-repo: cf-networking-deployments
+    - task: upload-local-silk-release
+      file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+      input_mapping:
+        env-repo: cf-networking-deployments
+        local-release: silk-dev
+      params:
+        BBL_STATE_DIR: environments/sombrero/
     - task: deploy-upgrade
       file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
       params:
         BBL_STATE_DIR: environments/sombrero/
-        OPS_FILES: use-compiled-releases.yml scale-to-one-az.yml cf-networking.yml opsfile-after.yml
+        OPS_FILES: use-compiled-releases.yml scale-to-one-az.yml cf-networking.yml use-silk-release.yml opsfile-after.yml
         SYSTEM_DOMAIN: sombrero.c2c.cf-app.com
         VARS_STORE_FILE: environments/sombrero/vars-store.yml
       input_mapping:
@@ -609,6 +641,13 @@ jobs:
         cf-networking-release: cf-networking-dev
         deployments-repo: cf-networking-deployments
         silk-release: silk-dev
+    - task: upload-local-silk-release
+      file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+      input_mapping:
+        env-repo: cf-networking-deployments
+        local-release: silk-dev
+      params:
+        BBL_STATE_DIR: environments/pickelhelm/
     - task: upload-acceptance-test-release
       file: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release.yml
       params:
@@ -622,7 +661,7 @@ jobs:
       params:
         BBL_STATE_DIR: environments/pickelhelm/
         SYSTEM_DOMAIN: pickelhelm.c2c.cf-app.com
-        OPS_FILES: use-compiled-releases.yml datadog.yml scale-to-one-az.yml smaller-footprint.yml cf-networking.yml use-system-domain-as-metron-deployment-name.yml add-acceptance-test-jobs.yml opsfile.yml
+        OPS_FILES: use-compiled-releases.yml datadog.yml scale-to-one-az.yml smaller-footprint.yml cf-networking.yml use-system-domain-as-metron-deployment-name.yml use-silk-release.yml add-acceptance-test-jobs.yml opsfile.yml
         VARS_STORE_FILE: environments/pickelhelm/vars-store.yml
       input_mapping:
         env-repo: cf-networking-deployments
@@ -770,6 +809,9 @@ jobs:
       - get: version
         params:
           pre: rc
+      - get: silk-version
+        params:
+          pre: rc
     - task: upload-stemcell
       file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
       params:
@@ -795,6 +837,13 @@ jobs:
         cf-networking-release: cf-networking-dev
         deployments-repo: cf-networking-deployments
         silk-release: silk-dev
+    - task: upload-local-silk-release
+      file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+      input_mapping:
+        env-repo: cf-networking-deployments
+        local-release: silk-dev
+      params:
+        BBL_STATE_DIR: environments/mitre/
     - task: upload-acceptance-test-release
       file: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release.yml
       params:
@@ -808,7 +857,7 @@ jobs:
       params:
         BBL_STATE_DIR: environments/mitre/
         SYSTEM_DOMAIN: mitre.c2c.cf-app.com
-        OPS_FILES: enable-iptables-logger.yml use-compiled-releases.yml datadog.yml custom-apps-domain.yml scale-to-one-az.yml smaller-footprint.yml cf-networking.yml use-system-domain-as-metron-deployment-name.yml add-acceptance-test-jobs.yml opsfile.yml
+        OPS_FILES: enable-iptables-logger.yml use-compiled-releases.yml datadog.yml custom-apps-domain.yml scale-to-one-az.yml smaller-footprint.yml cf-networking.yml use-system-domain-as-metron-deployment-name.yml use-silk-release.yml add-acceptance-test-jobs.yml opsfile.yml
         VARS_STORE_FILE: environments/mitre/vars-store.yml
       input_mapping:
         env-repo: cf-networking-deployments
@@ -830,12 +879,27 @@ jobs:
     - task: create-release-tarball
       file: cf-networking-release-ci/ci/tasks/create-release-tarball.yml
       input_mapping:
-        cf-networking: cf-networking-dev
+        my-release: cf-networking-dev
+      params:
+        RELEASE_NAME: cf-networking
+        VERSION_NAME: version
+    - task: create-silk-release-tarball
+      file: cf-networking-release-ci/ci/tasks/create-release-tarball.yml
+      input_mapping:
+        my-release: silk-dev
+      params:
+        RELEASE_NAME: silk
+        VERSION_NAME: silk-version
     - put: cf-networking-tarball
       params:
         file: tarballs/cf-networking-*.tgz
+    - put: silk-tarball
+      params:
+        file: tarballs/silk-*.tgz
     - put: version
       params: {file: version/number}
+    - put: silk-version
+      params: {file: silk-version/number}
     - task: bosh-cleanup
       file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
       params:
@@ -860,6 +924,13 @@ jobs:
       - get: cf-deployment
         passed: [mitre-deploy]
         trigger: true
+      - get: silk-dev
+        passed: [mitre-deploy]
+        trigger: true
+      - get: silk-tarball
+        passed: [mitre-deploy]
+      - get: silk-version
+        passed: [mitre-deploy]
     - task: acceptance-tests
       file: cf-networking-release-ci/ci/tasks/acceptance-tests.yml
       input_mapping:
@@ -911,6 +982,11 @@ jobs:
       - get: cf-networking-tarball
         passed: [mitre-test]
         trigger: true
+      - get: silk-dev
+        passed: [mitre-test]
+      - get: silk-tarball
+        passed: [mitre-test]
+        trigger: true
     - task: run-errand
       file: cf-networking-release-ci/ci/tasks/run-errand.yml
       params:
@@ -931,6 +1007,9 @@ jobs:
         trigger: true
       - get: cf-networking-release-ci
       - get: cf-deployment
+        passed: [mitre-test]
+        trigger: true
+      - get: silk-dev
         passed: [mitre-test]
         trigger: true
     - task: smoke-tests
@@ -959,7 +1038,14 @@ jobs:
       - get: cf-networking-deployments
       - get: cf-networking-tarball
         passed: [mitre-test]
+      - get: silk-dev
+        passed: [mitre-test]
+        trigger: true
+      - get: silk-tarball
+        passed: [mitre-test]
       - get: version
+        passed: [mitre-test]
+      - get: silk-version
         passed: [mitre-test]
     - task: copy-config
       file: cf-networking-release-ci/ci/tasks/copy-config.yml
@@ -988,6 +1074,13 @@ jobs:
         passed: [mitre-cats]
       - get: disaster-recovery-acceptance-tests
       - get: bbr-binary-release
+      - get: silk-dev
+        passed: [mitre-cats]
+        trigger: true
+      - get: silk-tarball
+        passed: [mitre-cats]
+      - get: silk-version
+        passed: [mitre-cats]
     - task: create-drats-config
       file: cf-networking-release-ci/ci/tasks/create-drats-config.yml
       input_mapping:
@@ -1081,12 +1174,19 @@ jobs:
         deployments-repo: cf-networking-deployments
         cf-networking-release: cf-networking-dev
         silk-release: silk-dev
+    - task: upload-local-silk-release
+      file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+      input_mapping:
+        env-repo: cf-networking-deployments
+        local-release: silk-dev
+      params:
+        BBL_STATE_DIR: environments/toque/
     - task: deploy-cf
       file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
       params:
         BBL_STATE_DIR: environments/toque
         SYSTEM_DOMAIN: toque.c2c.cf-app.com
-        OPS_FILES: use-compiled-releases.yml datadog.yml scale-to-one-az.yml smaller-footprint.yml cf-networking.yml use-system-domain-as-metron-deployment-name.yml opsfile.yml
+        OPS_FILES: use-compiled-releases.yml datadog.yml scale-to-one-az.yml smaller-footprint.yml cf-networking.yml use-silk-release.yml use-system-domain-as-metron-deployment-name.yml opsfile.yml
         VARS_STORE_FILE: environments/toque/vars-store.yml
       input_mapping:
         env-repo: cf-networking-deployments
@@ -1391,13 +1491,20 @@ jobs:
         env-repo: cf-networking-deployments
 
   - name: ship-what
-    serial_groups: [version]
+    serial_groups: [version, silk-version]
     plan:
     - do:
       - aggregate:
         - get: version
           passed: [mitre-drats]
+        - get: silk-version
+          passed: [mitre-drats]
         - get: cf-networking-dev
+          params:
+            submodules: none
+          passed: [mitre-drats, sombrero-test-upgrade, mitre-acceptance-errand, mitre-smoke]
+          trigger: true
+        - get: silk-dev
           params:
             submodules: none
           passed: [mitre-drats, sombrero-test-upgrade, mitre-acceptance-errand, mitre-smoke]
@@ -1405,6 +1512,8 @@ jobs:
         - get: cf-deployment
           passed: [mitre-drats]
         - get: cf-networking-tarball
+          passed: [mitre-drats, mitre-acceptance-errand]
+        - get: silk-tarball
           passed: [mitre-drats, mitre-acceptance-errand]
 
   - name: check-empty-networking-opsfile
@@ -1523,4 +1632,61 @@ jobs:
     - get: version
       params: {bump: major}
     - put: version
+      params: {file: version/number}
+
+  - name: silk-shipit
+    serial_groups: [silk-version]
+    plan:
+    - do:
+      - aggregate:
+        - get: cf-networking-deployments
+        - get: cf-networking-release-ci
+        - get: silk-version
+          params:
+            bump: final
+          passed: [ship-what]
+        - get: silk-dev
+          params:
+            submodules: none
+          passed: [ship-what]
+        - get: cf-deployment
+          passed: [ship-what]
+        - get: silk-tarball
+          passed: [ship-what]
+
+  # bump silk minor version (i.e. 0.1.0 -> 0.2.0)
+  - name: silk-bump-minor-version
+    serial_groups: [silk-version]
+    plan:
+    - aggregate:
+      - get: silk-version
+        trigger: true
+        passed: [silk-shipit]
+        params: {bump: minor, pre: rc}
+    # - put: silk-version
+    #   params: {file: version/number}
+
+  # silk versioning
+  - name: silk-patch-bump
+    serial_groups: [silk-version]
+    plan:
+    - get: silk-version
+      params: {bump: patch}
+    - put: silk-version
+      params: {file: version/number}
+
+  - name: silk-minor-bump
+    serial_groups: [silk-version]
+    plan:
+    - get: silk-version
+      params: {bump: minor}
+    - put: silk-version
+      params: {file: version/number}
+
+  - name: silk-major-bump
+    serial_groups: [silk-version]
+    plan:
+    - get: silk-version
+      params: {bump: major}
+    - put: silk-version
       params: {file: version/number}
