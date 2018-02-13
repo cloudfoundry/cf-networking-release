@@ -2,6 +2,8 @@
 
 A sample app to demonstrate communication (HTTP and UDP) between a frontend and a backend application over the container network.
 
+To see a visual representation of the steps taken in this demo, [see here](diagrams/diagrams.md).
+
 This app also demonstrates how to use service discovery with container networking.
 To see this, you must also deploy with [service discovery](https://github.com/cloudfoundry/cf-app-sd-release) enabled.
 
@@ -52,7 +54,7 @@ the domain provided set to the reserved internal domain of `apps.internal`.
 We will also create a third internal route that maps to both apps. When queried, the route should return both apps
 as possible destinations.
 
-### Deploying
+### Deploying (Diagrams 1 and 2)
 Backend-A
 ```
 cd cf-networking-release/src/example-apps/cats-and-dogs-with-service-discovery/backend-a
@@ -97,7 +99,7 @@ Message: [....] [ Submit ]
 ```
 
 
-### Usage with HTTP
+### Usage with HTTP (Diagrams 3-7)
 
 In `Backend HTTP URL` enter backend-a's internal hostname and a cats port (`backend-a.apps.internal:7007`).
 Hit submit.
