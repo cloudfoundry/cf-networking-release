@@ -23,6 +23,8 @@ done < $tmp_dir/stories.raw > $tmp_dir/stories.json
 
 cat $tmp_dir/stories.json | jq -r '"- ["+.name+"]("+.url+")"' > $OUTPUT_DIR/notes.md
 
+echo "- Tested with [$OTHER_RELEASE_NAME](https://code.cloudfoundry.org/$OTHER_RELEASE_NAME) v$(cat other-release-version/number)" >> $OUTPUT_DIR/notes.md
+
 echo "built: "
 cat $OUTPUT_DIR/notes.md
 

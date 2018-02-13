@@ -1592,6 +1592,9 @@ jobs:
         file: cf-networking-release-ci/ci/tasks/build-release-notes.yml
         input_mapping:
           master-release: cf-networking-master
+          other-release-version: silk-version
+        params:
+          OTHER_RELEASE_NAME: silk-release
       - put: cf-networking-github-release
         params:
           name: version/number
@@ -1614,10 +1617,13 @@ jobs:
       - put: silk-tarball
         params:
           file: final-release/silk-*.tgz
-      - task: build-release-notes
+      - task: silk-build-release-notes
         file: cf-networking-release-ci/ci/tasks/build-release-notes.yml
         input_mapping:
           master-release: silk-master
+          other-release-version: version
+        params:
+          OTHER_RELEASE_NAME: cf-networking-release
       - put: silk-github-release
         params:
           name: silk-version/number

@@ -8,6 +8,7 @@ platform: linux
 inputs:
   - name: cf-networking-release-ci
   - name: master-release
+  - name: other-release-version
 
 outputs:
   - name: release-notes
@@ -18,3 +19,4 @@ run:
 params:
   SOURCE_DIR: master-release
   OUTPUT_DIR: release-notes
+  OTHER_RELEASE_NAME: silk-release
