@@ -1,0 +1,17 @@
+---
+image_resource:
+  type: docker-image
+  source: { repository: c2cnetworking/deploy }
+
+platform: linux
+
+inputs:
+  - name: cf-networking-release-ci
+  - name: silk-dev
+  - name: silk-master
+
+outputs:
+  - name: release-merged
+
+run:
+  path: cf-networking-release-ci/ci/tasks/silk-merge-master

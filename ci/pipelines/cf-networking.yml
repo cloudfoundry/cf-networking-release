@@ -24,7 +24,7 @@ groups:
   - silk-shipit
   - silk-bump-minor-version
   - merge-master
-  # - silk-merge-master
+  - silk-merge-master
   - toque-deploy
   - toque-push
   - toque-test
@@ -1703,8 +1703,26 @@ jobs:
         trigger: true
         passed: [silk-shipit]
         params: {bump: minor, pre: rc}
-    # - put: silk-version
-    #   params: {file: version/number}
+    - put: silk-version
+      params: {file: silk-version/number}
+
+  # merge silk-master back to silk-develop
+  - name: silk-merge-master
+    plan:
+    - do:
+      - aggregate:
+        - get: cf-networking-release-ci
+        - get: silk-master
+          params:
+            submodules: none
+          passed: [silk-shipit]
+          trigger: true
+        - get: silk-dev
+          params: {submodules: none}
+      - task: silk-merge-master
+        file: cf-networking-release-ci/ci/tasks/silk-merge-master.yml
+      - put: silk-dev
+        params: {repository: release-merged}
 
   # silk versioning
   - name: silk-patch-bump
@@ -1713,7 +1731,7 @@ jobs:
     - get: silk-version
       params: {bump: patch}
     - put: silk-version
-      params: {file: version/number}
+      params: {file: silk-version/number}
 
   - name: silk-minor-bump
     serial_groups: [silk-version]
@@ -1721,7 +1739,7 @@ jobs:
     - get: silk-version
       params: {bump: minor}
     - put: silk-version
-      params: {file: version/number}
+      params: {file: silk-version/number}
 
   - name: silk-major-bump
     serial_groups: [silk-version]
@@ -1729,4 +1747,4 @@ jobs:
     - get: silk-version
       params: {bump: major}
     - put: silk-version
-      params: {file: version/number}
+      params: {file: silk-version/number}
