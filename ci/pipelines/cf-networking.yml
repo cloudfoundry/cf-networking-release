@@ -19,9 +19,8 @@ groups:
   - mitre-drats
   - check-empty-networking-opsfile
   - ship-what
-  - shipit
   - bump-minor-version
-  - silk-shipit
+  - ship-cf-networking-and-silk
   - silk-bump-minor-version
   - merge-master
   - silk-merge-master
@@ -1546,8 +1545,8 @@ jobs:
         input_mapping:
           cf-networking: cf-networking-dev
 
-  - name: shipit
-    serial_groups: [version]
+  - name: ship-cf-networking-and-silk
+    serial_groups: [version, silk-version]
     plan:
     - do:
       - aggregate:
@@ -1557,13 +1556,23 @@ jobs:
           params:
             bump: final
           passed: [ship-what]
+        - get: silk-version
+          params:
+            bump: final
+          passed: [ship-what]
         - get: cf-networking-dev
+          params:
+            submodules: none
+          passed: [ship-what]
+        - get: silk-dev
           params:
             submodules: none
           passed: [ship-what]
         - get: cf-deployment
           passed: [ship-what]
         - get: cf-networking-tarball
+          passed: [ship-what]
+        - get: silk-tarball
           passed: [ship-what]
       - task: shipit
         file: cf-networking-release-ci/ci/tasks/shipit.yml
@@ -1591,7 +1600,32 @@ jobs:
           tag_prefix: v
           globs:
           - final-release/cf-networking-*.tgz
-          # - binaries/network-policy-plugin-*
+      - task: silk-shipit
+        file: cf-networking-release-ci/ci/tasks/silk-shipit.yml
+        input_mapping:
+          silk: silk-dev
+      - put: silk-version
+        params: {file: silk-version/number}
+      - put: silk-master
+        params:
+          repository: release/master
+          tag: silk-version/number
+          tag_prefix: v
+      - put: silk-tarball
+        params:
+          file: final-release/silk-*.tgz
+      - task: build-release-notes
+        file: cf-networking-release-ci/ci/tasks/build-release-notes.yml
+        input_mapping:
+          master-release: silk-master
+      - put: silk-github-release
+        params:
+          name: silk-version/number
+          tag: silk-version/number
+          body: release-notes/notes.md
+          tag_prefix: v
+          globs:
+          - final-release/silk-*.tgz
 
   # bump minor version (i.e. 0.1.0 -> 0.2.0)
   - name: bump-minor-version
@@ -1600,7 +1634,7 @@ jobs:
     - aggregate:
       - get: version
         trigger: true
-        passed: [shipit]
+        passed: [ship-cf-networking-and-silk]
         params: {bump: minor, pre: rc}
     - put: version
       params: {file: version/number}
@@ -1614,7 +1648,7 @@ jobs:
         - get: cf-networking-master
           params:
             submodules: none
-          passed: [shipit]
+          passed: [ship-cf-networking-and-silk]
           trigger: true
         - get: cf-networking-dev
           params: {submodules: none}
@@ -1648,52 +1682,6 @@ jobs:
     - put: version
       params: {file: version/number}
 
-  - name: silk-shipit
-    serial_groups: [silk-version]
-    plan:
-    - do:
-      - aggregate:
-        - get: cf-networking-deployments
-        - get: cf-networking-release-ci
-        - get: silk-version
-          params:
-            bump: final
-          passed: [ship-what]
-        - get: silk-dev
-          params:
-            submodules: none
-          passed: [ship-what]
-        - get: cf-deployment
-          passed: [ship-what]
-        - get: silk-tarball
-          passed: [ship-what]
-    - task: silk-shipit
-      file: cf-networking-release-ci/ci/tasks/silk-shipit.yml
-      input_mapping:
-        silk: silk-dev
-    - put: silk-version
-      params: {file: silk-version/number}
-    - put: silk-master
-      params:
-        repository: release/master
-        tag: silk-version/number
-        tag_prefix: v
-    - put: silk-tarball
-      params:
-        file: final-release/silk-*.tgz
-    - task: build-release-notes
-      file: cf-networking-release-ci/ci/tasks/build-release-notes.yml
-      input_mapping:
-        master-release: silk-master
-    - put: silk-github-release
-      params:
-        name: silk-version/number
-        tag: silk-version/number
-        body: release-notes/notes.md
-        tag_prefix: v
-        globs:
-        - final-release/silk-*.tgz
-
   # bump silk minor version (i.e. 0.1.0 -> 0.2.0)
   - name: silk-bump-minor-version
     serial_groups: [silk-version]
@@ -1701,7 +1689,7 @@ jobs:
     - aggregate:
       - get: silk-version
         trigger: true
-        passed: [silk-shipit]
+        passed: [ship-cf-networking-and-silk]
         params: {bump: minor, pre: rc}
     - put: silk-version
       params: {file: silk-version/number}
@@ -1715,7 +1703,7 @@ jobs:
         - get: silk-master
           params:
             submodules: none
-          passed: [silk-shipit]
+          passed: [ship-cf-networking-and-silk]
           trigger: true
         - get: silk-dev
           params: {submodules: none}
