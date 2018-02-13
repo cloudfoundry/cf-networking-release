@@ -1,0 +1,10 @@
+---
+applications:
+  - name: backend-a
+    memory: 32M
+    disk_quota: 32M
+    buildpack: go_buildpack
+    env:
+      GOPACKAGENAME: example-apps/cats-and-dogs-with-service-discovery/backend-a
+      CATS_PORTS: 7007,7008,7009
+      UDP_PORTS: 9001,9002,9003

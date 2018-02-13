@@ -17,6 +17,7 @@ For information about getting started with CF Networking, look at our docs for [
   - [API](docs/API.md)
 - [Examples](src/example-apps)
   - [Cats & Dogs](src/example-apps/cats-and-dogs)
+  - [Cats & Dogs With Service Discovery](src/example-apps/cats-and-dogs-with-service-discovery)
   - [Eureka](src/example-apps/eureka)
   - [Proxy](src/example-apps/proxy)
   - [Tick](src/example-apps/tick)
