@@ -20,7 +20,7 @@ var _ = Describe("Custom iptables compatibility", func() {
 	)
 
 	BeforeEach(func() {
-		if testConfig.SkipCustomIPTablesCompatibilityTest {
+		if !testConfig.RunCustomIPTablesCompatibilityTest {
 			Skip("skipping custom iptables compatibility tests")
 		}
 
