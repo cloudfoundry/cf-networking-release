@@ -1,18 +1,33 @@
 # Cats and Dogs
 
-A sample app to demonstrate communication (HTTP and UDP) between a frontend and a backend application over the container network.
+A sample app to demonstrate communication (HTTP and UDP) between a frontend and a backend application using service discovery over the container network.
 
 To see a visual representation of the steps taken in this demo, [see here](diagrams/diagrams.md).
 
-This app also demonstrates how to use service discovery with container networking.
-To see this, you must also deploy with [service discovery](https://github.com/cloudfoundry/cf-app-sd-release) enabled.
 
 We're assuming that you've [deployed to BOSH lite](https://github.com/cloudfoundry/cf-deployment).
 If you've [deployed to AWS](https://github.com/cloudfoundry/cf-deployment) or another environment,
 substitute `bosh-lite.com` below with the domain name of your installation.
 
-To configure policies and create internal routes you use the [CF CLI](https://github.com/cloudfoundry/cli).
 
+## Prerequisites
+You have [service discovery](https://github.com/cloudfoundry/cf-app-sd-release) enabled in your deployment.
+
+You have downloaded and installed the [CF CLI](https://github.com/cloudfoundry/cli)
+in order to configure policies and create internal routes.
+
+## Preparing to push your apps
+To prepare to push your apps, you will want to target your CF org and space.
+```
+cf api api.bosh-lite.com --skip-ssl-validation
+cf auth admin admin
+cf create-org cats-and-dogs
+cf target -o cats-and-dogs
+cf create-space cats
+cf target -o cats-and-dogs -s cats
+```
+
+Then clone the `cf-networking-release` repo into a directory. Set this directory as the `$DIR` env variable.
 
 ## Frontend
 The frontend serves a form at `http://frontend.bosh-lite.com/`.
@@ -27,18 +42,12 @@ In either case, the response from the backend to the frontend will be rendered a
 
 ### Deploying
 ```
-cd cf-networking-release/src/example-apps/cats-and-dogs-with-service-discovery/frontend
-cf api api.bosh-lite.com --skip-ssl-validation
-cf auth admin admin
-cf create-org cats-and-dogs
-cf target -o cats-and-dogs
-cf create-space cats
-cf target -o cats-and-dogs -s cats
+cd $DIR/cf-networking-release/src/example-apps/cats-and-dogs-with-service-discovery/frontend
 cf push frontend
 ```
 
-
-## Backends
+## Use Case 1: Frontend Connects to Single Backend
+### Backend
 The backend will be pushed with no external route and therefore should not be accessible via the public internet.
 
 Backend-A serves a picture of a typing cat on the TCP ports specified in the environment variable `CATS_PORTS`,
@@ -51,13 +60,10 @@ We will give both backends internal hostnames that will map to the app's contain
 via container-to-container networking. An internal hostname is configured via the CF CLI `map-route` command, with
 the domain provided set to the reserved internal domain of `apps.internal`.
 
-We will also create a third internal route that maps to both apps. When queried, the route should return both apps
-as possible destinations.
-
-### Deploying (Diagrams 1 and 2)
+#### Deploying (Diagram 1)
 Backend-A
 ```
-cd cf-networking-release/src/example-apps/cats-and-dogs-with-service-discovery/backend-a
+cd $DIR/cf-networking-release/src/example-apps/cats-and-dogs-with-service-discovery/backend-a
 cf push backend-a --no-start --no-route
 cf map-route backend-a apps.internal --hostname backend-a
 cf set-env backend-a CATS_PORTS "7007,7008"
@@ -75,14 +81,7 @@ cf set-env backend-b UDP_PORTS "9003,9004"
 cf start backend-b
 ```
 
-Creating an internal route shared across both backends
-```
-cf create-route cats apps.internal --hostname backend
-cf map-route backend-a apps.internal --hostname backend
-cf map-route backend-b apps.internal --hostname backend
-```
-
-## Usage
+#### Usage
 
 After both frontend and backend apps have been deployed, you can visit `http://frontend.bosh-lite.com/`
 in a browser. You should see something like:
@@ -99,7 +98,7 @@ Message: [....] [ Submit ]
 ```
 
 
-### Usage with HTTP (Diagrams 3-7)
+#### Usage with HTTP (Diagrams 3-6)
 
 In `Backend HTTP URL` enter backend-a's internal hostname and a cats port (`backend-a.apps.internal:7007`).
 Hit submit.
@@ -124,16 +123,7 @@ Hello from the backend, port: 7007
 
 Doing the same thing with backend-b should result in a different cat (namely, a party cat) being shown.
 
-When policy is configured for the frontend to reach both backend-a and backend-b on the same port, entering
-the shared internal hostname and port (`backend.apps.internal:7007`) will show
-```
-[GIF OF CAT]
-Hello from the backend, port: 7007
-```
-
-Trying this multiple times should result in seeing both cat gifs returned (as both apps are routed via that hostname).
-
-### Usage with UDP
+#### Usage with UDP
 
 In `Backend UDP Server Address` enter the backend's internal hostname and UDP port
 (`backend-a.apps.internal:9003`) and a message. Hit submit.
@@ -154,3 +144,43 @@ You sent the message: hello world
 
 Backend UDP server replied: HELLO WORLD
 ```
+
+## Use Case 2: Frontend Connects to Multiple Backends
+### Backend
+We will use the two apps pushed in Use Case 1 and also create a third internal route that maps to both apps. When queried, the route should return both apps
+as possible destinations.
+
+#### Creating Route (Diagram 2)
+Creating an internal route shared across both backends
+```
+cf create-route cats apps.internal --hostname backend
+cf map-route backend-a apps.internal --hostname backend
+cf map-route backend-b apps.internal --hostname backend
+```
+
+#### Usage
+
+After both frontend and backend apps have been deployed, you can visit `http://frontend.bosh-lite.com/`
+in a browser. You should see something like:
+
+```
+Frontend Sample App
+
+HTTP Test
+Backend HTTP URL: [....] [ Submit ]
+
+UDP Test
+Backend UDP Server Address: [....]
+Message: [....] [ Submit ]
+```
+
+
+#### Usage with HTTP (Diagram 7)
+When policy is configured for the frontend to reach both backend-a and backend-b on the same port, entering
+the shared internal hostname and port (`backend.apps.internal:7007`) in `Backend HTTP URL` field will show
+```
+[GIF OF CAT]
+Hello from the backend, port: 7007
+```
+
+Trying this multiple times should result in seeing both cat gifs returned (as both apps are routed via that hostname).
