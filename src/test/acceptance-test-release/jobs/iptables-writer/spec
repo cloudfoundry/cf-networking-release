@@ -9,6 +9,9 @@ packages: []
 consumes:
 - name: cf_network
   type: cf_network
+  optional: true
 
 
-properties: {}
+properties:
+  cf_network.network:
+    description: "Overlay network used for containers"
