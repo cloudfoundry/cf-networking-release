@@ -389,13 +389,47 @@ jobs:
         release: cf-networking-pinned
         vars-store: cf-networking-deployments
         vars-files: cf-networking-deployments
+    - task: push-app
+      config:
+        platform: linux
+        image_resource:
+          type: docker-image
+          source: {repository: c2cnetworking/deploy-light}
+        inputs:
+          - name: cf-networking-deployments
+          - name: cf-networking-dev
+          - name: updated-vars-store
+        outputs:
+          - name: new-updated-vars-store
+        params:
+          ENVIRONMENT: sombrero
+        run:
+          path: /bin/bash
+          args:
+          - -ceu
+          - |
+            set -o pipefail
+            cf api api.${ENVIRONMENT}.c2c.cf-app.com --skip-ssl-validation
+            pushd updated-vars-store/environments/${ENVIRONMENT}
+              ADMIN_PASSWORD=$(grep cf_admin_password vars-store.yml  | cut -d ' ' -f2)
+            popd
+            pushd cf-networking-dev/src/example-apps/proxy
+              cf auth admin ${ADMIN_PASSWORD}
+              cf create-org push-app-test-org || true
+              cf target -o push-app-test-org
+              cf create-space push-app-test-space || true
+              cf target -s push-app-test-space
+              cf push push-app-proxy
+              curl -v -f http://push-app-proxy.${ENVIRONMENT}.c2c.cf-app.com
+            popd
+            mv updated-vars-store/* new-updated-vars-store
     - task: acceptance-tests
       file: cf-networking-ci-pinned/tasks/acceptance-tests.yml
       input_mapping:
         cf-networking: cf-networking-pinned
         cf-networking-ci: cf-networking-ci-pinned
         test-config: cf-networking-deployments-pinned
-        vars-store: updated-vars-store
+        vars-store: new-updated-vars-store
       params:
         ENVIRONMENT_NAME: sombrero
     - task: collect-ops-files
@@ -431,12 +465,32 @@ jobs:
         vars-store: updated-vars-store
         vars-files: updated-vars-store
         env-repo: cf-networking-deployments
+    - task: curl-app
+      config:
+        platform: linux
+        image_resource:
+          type: docker-image
+          source: {repository: c2cnetworking/deploy-light}
+        inputs:
+          - name: updated-vars-store
+        outputs:
+          - name: new-updated-vars-store
+        params:
+          ENVIRONMENT: sombrero
+        run:
+          path: /bin/bash
+          args:
+          - -ceu
+          - |
+            set -o pipefail
+            curl -f -v http://push-app-proxy.${ENVIRONMENT}.c2c.cf-app.com
+            mv updated-vars-store/* new-updated-vars-store
     - task: acceptance-tests
       file: cf-networking-release-ci/ci/tasks/acceptance-tests.yml
       input_mapping:
         cf-networking: cf-networking-dev
         test-config: cf-networking-deployments
-        vars-store: updated-vars-store
+        vars-store: new-updated-vars-store
       params:
         ENVIRONMENT_NAME: sombrero
     - task: delete-deployment
