@@ -922,7 +922,7 @@ jobs:
       params:
         BBL_STATE_DIR: environments/mitre/
         SYSTEM_DOMAIN: mitre.c2c.cf-app.com
-        OPS_FILES: enable-iptables-logger.yml use-compiled-releases.yml datadog.yml custom-apps-domain.yml scale-to-one-az.yml smaller-footprint.yml cf-networking.yml use-system-domain-as-metron-deployment-name.yml use-silk-release.yml add-acceptance-test-jobs.yml opsfile.yml
+        OPS_FILES: enable-iptables-logger.yml use-compiled-releases.yml datadog.yml custom-apps-domain.yml scale-to-one-az.yml smaller-footprint.yml cf-networking.yml use-system-domain-as-metron-deployment-name.yml use-silk-release.yml enable-iptables-logger-silk.yml add-acceptance-test-jobs.yml opsfile.yml
         VARS_STORE_FILE: environments/mitre/vars-store.yml
       input_mapping:
         env-repo: cf-networking-deployments
