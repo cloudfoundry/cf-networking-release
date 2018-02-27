@@ -39,6 +39,9 @@ properties:
     description: "The silk daemon queries the silk controller on this interval in seconds to renew its lease and get all routable leases."
     default: 5
 
+  cf_networking.silk_daemon.vxlan_interface:
+    description: "Name of network interface which container traffic is sent to. If empty, the default network interface is used."
+
   cf_networking.silk_daemon.ca_cert:
     description: "Trusted CA certificate that was used to sign the silk controller server cert and key."
 
