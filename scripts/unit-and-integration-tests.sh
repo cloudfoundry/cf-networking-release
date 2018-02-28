@@ -8,19 +8,13 @@ export GOPATH=$PWD
 declare -a packages=(
   "src/cf-pusher"
   "src/example-apps"
-  "src/iptables-logger"
-  "src/lib"
-  "src/netmon"
   "src/policy-server"
   )
 
 declare -a serial_packages=(
-  "src/cni-teardown"
-  "src/cni-wrapper-plugin"
   "src/garden-external-networker"
   "src/policy-server/integration/timeouts"
   "src/policy-server/integration"
-  "src/vxlan-policy-agent"
   )
 
 function loadIFB {
