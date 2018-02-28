@@ -553,7 +553,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 				Eventually(session).Should(gexec.Exit(0))
 
 				By("checking that the jump rules are created for that container's netout chain")
-				Expect(AllIPTablesRules("filter")).To(ContainElement("-A FORWARD -s 1.2.3.4/32 -o " + defaultIface.Name + " -j " + netoutChainName))
+				Expect(AllIPTablesRules("filter")).To(ContainElement("-A FORWARD -s 1.2.3.4/32 ! -o some-device -j " + netoutChainName))
 
 				By("checking that the default forwarding rules are created for that container")
 				Expect(AllIPTablesRules("filter")).To(gomegamatchers.ContainSequence([]string{

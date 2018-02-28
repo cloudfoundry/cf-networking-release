@@ -108,7 +108,6 @@ func cmdAdd(args *skel.CmdArgs) error {
 		AcceptedUDPLogsPerSec: n.IPTablesAcceptedUDPLogsPerSec,
 		IngressTag:            n.IngressTag,
 		VTEPName:              n.VTEPName,
-		HostInterfaceName:     defaultIfaceName,
 	}
 	if err := netOutProvider.Initialize(args.ContainerID, containerIP, localDNSServers); err != nil {
 		return fmt.Errorf("initialize net out: %s", err)
@@ -194,22 +193,13 @@ func cmdDel(args *skel.CmdArgs) error {
 		fmt.Fprintf(os.Stderr, "net in cleanup: %s", err)
 	}
 
-	defaultInterface := discover.DefaultInterface{
-		NetlinkAdapter: &adapter.NetlinkAdapter{},
-		NetAdapter:     &adapter.NetAdapter{},
-	}
-	defaultIfaceName, err := defaultInterface.Name()
-	if err != nil {
-		return fmt.Errorf("discover default interface name: %s", err) // not tested
-	}
-
 	netOutProvider := legacynet.NetOut{
 		ChainNamer: &legacynet.ChainNamer{
 			MaxLength: 28,
 		},
-		IPTables:          pluginController.IPTables,
-		Converter:         &legacynet.NetOutRuleConverter{Logger: os.Stderr},
-		HostInterfaceName: defaultIfaceName,
+		IPTables:  pluginController.IPTables,
+		Converter: &legacynet.NetOutRuleConverter{Logger: os.Stderr},
+		VTEPName:  n.VTEPName,
 	}
 
 	if err = netOutProvider.Cleanup(args.ContainerID, container.IP); err != nil {
