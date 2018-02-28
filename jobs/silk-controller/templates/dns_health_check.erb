@@ -1,4 +1,0 @@
-<% unless p("cf_networking.disable") %>
-curl http://127.0.0.1:<%= p("cf_networking.silk_controller.health_check_port") %>/health \
-  --connect-timeout <%= p("cf_networking.silk_controller.connect_timeout_seconds") %>
-<% end %>

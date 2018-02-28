@@ -1,5 +1,0 @@
-check process iptables-logger
-  with pidfile /var/vcap/sys/run/iptables-logger/iptables-logger.pid
-  start program "/var/vcap/jobs/iptables-logger/bin/iptables-logger_ctl start"
-  stop program "/var/vcap/jobs/iptables-logger/bin/iptables-logger_ctl stop"
-  group vcap

@@ -1,7 +1,0 @@
-#!/bin/bash -eu
-
-<% unless p("cf_networking.disable") %>
-CERTS_DIR=/var/vcap/jobs/silk-controller/config/certs
-
-chmod 600 "${CERTS_DIR}"/*
-<% end %>
