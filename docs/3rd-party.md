@@ -46,19 +46,8 @@ Operators may wish to override the MTU setting. In this case they will set the B
 3rd party plugins should respect this value.
 
 ## To author a BOSH release with your plugin
-0. Remove the following BOSH jobs:
-  - `netmon`
-  - `silk-cni`
-  - `silk-daemon`
-  - `silk-controller`
-  - `vxlan-policy-agent`
-0. Remove the following BOSH packages:
-  - `netmon`
-  - `silk-cni`
-  - `silk-daemon`
-  - `silk-controller`
-  - `vxlan-policy-agent`
-0. Add in all packages and jobs required by your CNI plugin.  At a minimum, you must provide a CNI binary program and a CNI config file.
+0. Create a new release with all packages and jobs required by your CNI plugin.  At a minimum, you must provide
+a CNI binary program and a CNI config file.
    If your software requires a long-lived daemon to run on the diego cell, we recommend you deploy a separate BOSH job for that.
   - For more info on **bosh packaging scripts** read [this](http://bosh.io/docs/packages.html#create-a-packaging-script).
   - For more info on **bosh jobs** read [this](http://bosh.io/docs/jobs.html).
@@ -74,7 +63,7 @@ Operators may wish to override the MTU setting. In this case they will set the B
       cni_config_dir: /var/vcap/jobs/YOUR_JOB/config/cni  # directory for CNI config file(s)
   ```
 
-  Remove any lingering references to `vxlan-policy-agent` and `silk-*` in the deployment manifest, and replace the `plugin` properties
+  Remove any lingering references to jobs that are from [`silk-release`](code.cloudfoundry.org/silk-release) in the deployment manifest, and replace the `plugin` properties
   with any manifest properties that your bosh job requires.
 
 
@@ -182,7 +171,6 @@ Furthermore, the CNI runtime data, provided as environment variables, sets the
 
 When [Diego](https://github.com/cloudfoundry/diego-release) calls Garden, it sets that equal to the [`ActualLRP` `InstanceGuid`](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPInstanceKey).
 In this way, a 3rd-party system can relate data from CNI with data in the [Diego BBS](https://github.com/cloudfoundry/bbs/tree/master/doc).
-
 
 
 ## Policy Server Internal API

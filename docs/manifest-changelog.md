@@ -2,6 +2,9 @@
 
 See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for examples
 
+### 2.0.0
+**Changed Properties**
+TODO
 
 ### 1.7.0
 **New Properties**
