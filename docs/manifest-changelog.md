@@ -4,7 +4,84 @@ See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for example
 
 ### 2.0.0
 **Changed Properties**
-TODO
+The following jobs `cni`, `iptables-logger`, `silk-controller`,
+`vxlan-policy-agent`, `silk-daemon`, `netmon` have been moved to
+[silk-release](code.cloudfoundry.org/silk-release). As a result, the properties for those jobs have been moved also:
+- Job `cni`
+  - `cf_networking.disable` -> Does not exist in silk-release
+  - `cf_networking.mtu` -> `mtu`
+  - `cf_networking.silk_daemon.listen_port` -> `silk_daemon.listen_port`
+  - `cf_networking.iptables_logging` -> `iptables_logging`
+  - `cf_networking.dns_servers` -> `dns_servers`
+  - `cf_networking.rate` -> `rate`
+  - `cf_networking.burst` -> `burst`
+  - `cf_networking.iptables_denied_logs_per_sec` -> `iptables_denied_logs_per_sec`
+  - `cf_networking.iptables_accepted_udp_logs_per_sec` -> `iptables_accepted_udp_logs_per_sec`
+- Job `iptables-logger`
+  - `cf_networking.iptables_logger.kernel_log_file` -> `kernel_log_file`
+  - `cf_networking.iptables_logger.metron_port` -> `metron_port`
+- Job `silk-controller`
+  - `cf_networking.silk_controller.metron_address` -> `metron_address`
+  - `cf_networking.silk_controller.poll_interval` -> `poll_interval`
+  - `cf_networking.silk_controller.interface_name` -> `interface_name`
+  - `cf_networking.silk_controller.log_level` -> `log_level`
+  - `cf_networking.silk_controller.disable` -> Does not exist in silk-release
+- Job `silk-controller`
+  - `cf_networking.disable` -> Does not exist in silk-release
+  - `cf_networking.network` -> `network`
+  - `cf_networking.subnet_prefix_length` -> `subnet_prefix_length`
+  - `cf_networking.subnet_lease_expiration_hours` -> `subnet_lease_expiration_hours`
+  - `cf_networking.silk_controller.debug_port` -> `debug_port`
+  - `cf_networking.silk_controller.health_check_port` -> `health_check_port`
+  - `cf_networking.silk_controller.connect_timeout_seconds` -> `connect_timeout_seconds`
+  - `cf_networking.silk_controller.listen_ip` -> `listen_ip`
+  - `cf_networking.silk_controller.listen_port` -> `listen_port`
+  - `cf_networking.silk_controller.ca_cert` -> `ca_cert`
+  - `cf_networking.silk_controller.server_cert` -> `server_cert`
+  - `cf_networking.silk_controller.server_key` -> `server_key`
+  - `cf_networking.silk_controller.metron_port` -> `metron_port`
+  - `cf_networking.silk_controller.database.type` -> `type`
+  - `cf_networking.silk_controller.database.username` -> `username`
+  - `cf_networking.silk_controller.database.password` -> `password`
+  - `cf_networking.silk_controller.database.host` -> `host`
+  - `cf_networking.silk_controller.database.port` -> `port`
+  - `cf_networking.silk_controller.database.name` -> `name`
+  - `cf_networking.silk_controller.max_open_connections` -> `max_open_connections`
+  - `cf_networking.silk_controller.max_idle_connections` -> `max_idle_connections`
+- Job `silk-daemon`
+  - `cf_networking.disable` -> Does not exist in silk-release
+  - `cf_networking.vtep_port` -> `vtep_port`
+  - `cf_networking.rep_listen_addr_admin` -> `rep_listen_addr_admin`
+  - `cf_networking.partition_tolerance_hours` -> `partition_tolerance_hours`
+  - `cf_networking.lease_poll_interval_seconds` -> `lease_poll_interval_seconds`
+  - `cf_networking.silk_daemon.vxlan_interface` -> `vxlan_interface`
+  - `cf_networking.silk_daemon.ca_cert` -> `ca_cert`
+  - `cf_networking.silk_daemon.client_cert` -> `client_cert`
+  - `cf_networking.silk_daemon.client_key` -> `client_key`
+  - `cf_networking.silk_daemon.listen_port` -> `listen_port`
+  - `cf_networking.silk_daemon.debug_port` -> `debug_port`
+  - `cf_networking.silk_daemon.metron_port` -> `metron_port`
+  - `cf_networking.silk_controller.hostname` -> `silk_controller.hostname`
+  - `cf_networking.silk_controller.listen_port` -> `silk_controller.listen_port`
+- Job `vxlan_policy_agent`
+  - `cf_networking.disable` -> Does not exist in silk-release
+  - `cf_networking.iptables_logging` -> `iptables_logging`
+  - `cf_networking.policy_server.hostname` -> `policy_server.hostname`
+  - `cf_networking.policy_server.internal_listen_port` -> `policy_server.internal_listen_port`
+  - `cf_networking.policy_poll_interval_seconds` -> `policy_poll_interval_seconds`
+  - `cf_networking.vxlan_policy_agent.ca_cert` -> `ca_cert`
+  - `cf_networking.vxlan_policy_agent.client_cert` -> `client_cert`
+  - `cf_networking.vxlan_policy_agent.client_key` -> `client_key`
+  - `cf_networking.vxlan_policy_agent.metron_port` -> `metron_port`
+  - `cf_networking.vxlan_policy_agent.debug_server_port` -> `debug_server_port`
+  - `cf_networking.vxlan_policy_agent.log_level` -> `log_level`
+  - `cf_networking.iptables_accepted_udp_logs_per_sec` -> `iptables_accepted_udp_logs_per_sec`
+- Job `netmon`
+  - `cf_networking.disable` -> Does not exist in silk-release
+  - `cf_networking.netmon.metron_address` -> `metron_address`
+  - `cf_networking.netmon.poll_interval` -> `poll_interval`
+  - `cf_networking.netmon.interface_name` -> `interface_name`
+  - `cf_networking.netmon.log_level` -> `log_level`
 
 ### 1.7.0
 **New Properties**
