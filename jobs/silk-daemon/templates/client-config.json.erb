@@ -16,9 +16,18 @@
     "https://#{hostname}:#{port}"
   end
 
+  underlay_ip = nil
+  if_p('cf_networking.silk_daemon.vxlan_network') do |net_name|
+    networks_hash = spec.networks.to_h
+    underlay_network = networks_hash[net_name.to_sym]
+    raise "requested vxlan_network '#{net_name}' not found in available networks [#{networks_hash.keys.join(', ')}] " if underlay_network.nil?
+    underlay_ip = underlay_network.ip
+  end.else do
+    underlay_ip = spec.ip
+  end
+
   toRender = {
-    "underlay_ip" => spec.ip,
-    "underlay_ips" => spec.networks.to_h.map { |name, net| net.ip },
+    "underlay_ip" => underlay_ip,
     "subnet_prefix_length" => subnet_prefix_length,
     "overlay_network" => link("cf_network").p("cf_networking.network"),
     "health_check_port" => p("cf_networking.silk_daemon.listen_port"),
@@ -36,7 +45,6 @@
     "metron_port" => p("cf_networking.silk_daemon.metron_port"),
     "vtep_port" => p("cf_networking.vtep_port"),
     "log_prefix" => "cfnetworking",
-    "custom_underlay_interface_name" => p("cf_networking.silk_daemon.vxlan_interface", ""),
   }
 
   JSON.pretty_generate(toRender)
