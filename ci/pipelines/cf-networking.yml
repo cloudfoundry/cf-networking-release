@@ -151,13 +151,13 @@ resources:
       branch: develop
       ignore_paths:
         - docs
-      private_key: {{cf-networking-deploy-key}}
+      private_key: {{silk-release-deploy-key}}
   - name: silk-master
     type: git
     source:
       uri: git@github.com:cloudfoundry/silk-release.git
       branch: master
-      private_key: {{cf-networking-deploy-key}}
+      private_key: {{silk-release-deploy-key}}
   - name: cf-networking-dev
     type: git
     source:
