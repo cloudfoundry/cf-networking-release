@@ -54,7 +54,7 @@ properties:
 
   cf_networking.silk_controller.connect_timeout_seconds:
     description: "Connection timeout between the silk controller and the silk database.  Also used by Consul DNS health check."
-    default: 5
+    default: 120
 
   cf_networking.silk_controller.listen_ip:
     description: "IP address where the silk controller will serve its API."

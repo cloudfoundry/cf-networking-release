@@ -2,6 +2,11 @@
 
 See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for examples
 
+### 1.11.0
+**Changed Properties**
+  - `cf_networking.silk_controller.connect_timeout_seconds` now defaults to 120.
+  - `cf_networking.policy_server.connect_timeout_seconds` now defaults to 120.
+  - `cf_networking.policy_server_internal.connect_timeout_seconds` now defaults to 120.
 
 ### 1.7.0
 **New Properties**
