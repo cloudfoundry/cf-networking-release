@@ -6,7 +6,7 @@ image_resource:
 platform: linux
 
 inputs:
-  - name: env-repo
+  - name: bbl-state
   - name: cf-networking-release-ci
   - name: runtime-config
   - name: vars-store

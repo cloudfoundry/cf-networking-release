@@ -11,7 +11,7 @@ inputs:
   - name: cf-deployment-concourse-tasks
   - name: cf-networking-dev
   - name: cf-networking-release-ci
-  - name: env-repo
+  - name: bbl-state
 
 run:
   path: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release
