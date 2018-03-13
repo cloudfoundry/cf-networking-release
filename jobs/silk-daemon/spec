@@ -39,6 +39,9 @@ properties:
     description: "The silk daemon queries the silk controller on this interval in seconds to renew its lease and get all routable leases."
     default: 5
 
+  cf_networking.silk_daemon.temporary_vxlan_interface:
+    description: "Not recommended. Use vxlan_network instead. Name of network interface which container traffic is sent to. If empty, the default network interface is used. This cannot be set when vxlan_network is set."
+
   cf_networking.silk_daemon.vxlan_network:
     description: "The name of the bosh network which container traffic is sent over. If empty, the default gateway network is used."
 

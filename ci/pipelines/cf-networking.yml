@@ -1,6 +1,7 @@
 groups:
 - name: cf-networking
   jobs:
+  - template-tests
   - mysql-tests
   - mysql-5.6-tests
   - postgres-tests
@@ -540,6 +541,18 @@ jobs:
       input_mapping:
         cf-networking-release: cf-networking-dev
 
+  - name: template-tests
+    public: true
+    plan:
+    - aggregate:
+      - get: cf-networking-dev
+        trigger: true
+      - get: cf-networking-release-ci
+    - task: template-tests
+      file: cf-networking-release-ci/ci/tasks/template-tests.yml
+      input_mapping:
+        cf-networking-release: cf-networking-dev
+
   - name: mysql-tests
     public: true
     plan:
@@ -619,7 +632,7 @@ jobs:
     public: true
     plan:
     - get: cf-networking-dev
-      passed: [postgres-tests, mysql-tests, mysql-5.6-tests, windows-tests]
+      passed: [postgres-tests, mysql-tests, mysql-5.6-tests, windows-tests, template-tests]
       trigger: true
     - get: silk-dev
       passed: [silk-postgres-tests, silk-mysql-tests, silk-mysql-5.6-tests]

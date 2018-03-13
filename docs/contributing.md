@@ -5,6 +5,7 @@ We welcome contributions from the community.  Here are guidelines for developmen
 
 ```bash
 ~/workspace/cf-networking-release/scripts/docker-test
+~/workspace/cf-networking-release/scripts/template-tests
 ```
 
 ### Running the full acceptance test on bosh-lite

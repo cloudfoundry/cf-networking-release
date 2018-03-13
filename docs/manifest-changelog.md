@@ -8,6 +8,16 @@ See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for example
   - `cf_networking.policy_server.connect_timeout_seconds` now defaults to 120.
   - `cf_networking.policy_server_internal.connect_timeout_seconds` now defaults to 120.
 
+**New Properties**
+  - An optional parameter has been added to determine what interface the silk-vtep should
+    attach to based on BOSH network name. If not set, we use the network that the BOSH spec
+    defaults to. You cannot set this property and the `temporary_vxlan_interface` property together.
+    - `cf_networking.silk_daemon.vxlan_network`
+  - An optional parameter has been added to determine what interface the silk-vtep should
+    attach to based on interface name. We do not recommend using this parameter and it is
+    temporary. You cannot set this property and the `vxlan_network` property together.
+    - `cf_networking.silk_daemon.temporary_vxlan_interface`
+
 ### 1.7.0
 **New Properties**
   - An optional parameter has been added to turn on bosh backup and restore.

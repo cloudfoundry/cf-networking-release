@@ -16,6 +16,10 @@
     "https://#{hostname}:#{port}"
   end
 
+  if_p('cf_networking.silk_daemon.temporary_vxlan_interface', 'cf_networking.silk_daemon.vxlan_network') do |interface_name, net_name|
+    raise "Cannot specify both 'temporary_vxlan_interface' and 'vxlan_network' properties."
+  end
+
   underlay_ip = nil
   if_p('cf_networking.silk_daemon.vxlan_network') do |net_name|
     networks_hash = spec.networks.to_h
@@ -45,6 +49,7 @@
     "metron_port" => p("cf_networking.silk_daemon.metron_port"),
     "vtep_port" => p("cf_networking.vtep_port"),
     "log_prefix" => "cfnetworking",
+    "vxlan_interface_name" => p("cf_networking.silk_daemon.temporary_vxlan_interface", ""),
   }
 
   JSON.pretty_generate(toRender)

@@ -1,0 +1,6 @@
+#!/bin/bash -exu
+
+ROOT_DIR_PATH="$(cd $(dirname $0)/.. && pwd)"
+
+bundle install
+rspec "${ROOT_DIR_PATH}/spec"
