@@ -7,10 +7,10 @@ RUN curl -L https://github.com/github/hub/releases/download/v2.2.9/hub-linux-amd
 
 # bbl and dependencies
 RUN \
-  wget https://github.com/cloudfoundry/bosh-bootloader/releases/download/v5.10.1/bbl-v5.10.1_linux_x86-64 -P /tmp && \
+  wget https://github.com/cloudfoundry/bosh-bootloader/releases/download/v6.3.0/bbl-v6.3.0_linux_x86-64 -P /tmp && \
   mv /tmp/bbl-* /usr/local/bin/bbl && \
   cd /usr/local/bin && \
-  echo "0417d7b4ad626011eaaa8747fa0e794fb54be19a bbl" | sha1sum -c - && \
+  echo "978c7c01f2a719dfd854b1b633f0f76390aebb3a4360d794dfa296c6b4edb7ac bbl" | sha1sum -c - && \
   chmod +x bbl
 RUN \
   wget https://releases.hashicorp.com/terraform/0.11.1/terraform_0.11.1_linux_amd64.zip -P /tmp && \
