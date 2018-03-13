@@ -214,7 +214,7 @@ jobs:
         LB_DOMAIN: cloche.c2c.cf-app.com
         BBL_ENV_NAME: cloche
       input_mapping:
-        env-repo: cf-networking-deployments
+        bbl-state: cf-networking-deployments
         ops-files: cf-networking-deployments
       ensure:
         put: cf-networking-deployments
@@ -233,14 +233,14 @@ jobs:
       params:
         BBL_STATE_DIR: environments/cloche/
       input_mapping:
-        env-repo: cf-networking-deployments
+        bbl-state: cf-networking-deployments
     - task: bbl-destroy
       file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
       params:
         BBL_STATE_DIR: environments/cloche/
         BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
       input_mapping:
-        env-repo: cf-networking-deployments
+        bbl-state: cf-networking-deployments
       ensure:
         put: cf-networking-deployments
         params:
@@ -265,7 +265,7 @@ jobs:
       params:
         BBL_STATE_DIR: environments/cloche/
       input_mapping:
-        env-repo: cf-networking-deployments
+        bbl-state: cf-networking-deployments
     - task: collect-ops-files
       file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
       params:
@@ -281,7 +281,7 @@ jobs:
         OPS_FILES: use-compiled-releases.yml cf-networking.yml opsfile.yml
         VARS_STORE_FILE: environments/cloche/vars-store.yml
       input_mapping:
-        env-repo: cf-networking-deployments
+        bbl-state: cf-networking-deployments
         release: cf-networking-v1.8.x
         vars-files: cf-networking-deployments
         vars-store: cf-networking-deployments
@@ -295,7 +295,7 @@ jobs:
       params:
         BBL_STATE_DIR: environments/cloche/
       input_mapping:
-        env-repo: cf-networking-deployments
+        bbl-state: cf-networking-deployments
 
   - name: cloche-test
     serial_groups: [cloche]
@@ -337,7 +337,7 @@ jobs:
         LB_DOMAIN: deerstalker.c2c.cf-app.com
         BBL_ENV_NAME: deerstalker
       input_mapping:
-        env-repo: cf-networking-deployments
+        bbl-state: cf-networking-deployments
         ops-files: cf-networking-deployments
       ensure:
         put: cf-networking-deployments
@@ -356,14 +356,14 @@ jobs:
       params:
         BBL_STATE_DIR: environments/deerstalker/
       input_mapping:
-        env-repo: cf-networking-deployments
+        bbl-state: cf-networking-deployments
     - task: bbl-destroy
       file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
       params:
         BBL_STATE_DIR: environments/deerstalker/
         BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
       input_mapping:
-        env-repo: cf-networking-deployments
+        bbl-state: cf-networking-deployments
       ensure:
         put: cf-networking-deployments
         params:
@@ -394,7 +394,7 @@ jobs:
       params:
         BBL_STATE_DIR: environments/deerstalker/
       input_mapping:
-        env-repo: cf-networking-deployments
+        bbl-state: cf-networking-deployments
     - task: collect-ops-files
       file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
       params:
@@ -410,7 +410,7 @@ jobs:
         OPS_FILES: enable-iptables-logger.yml use-compiled-releases.yml custom-apps-domain.yml cf-networking.yml opsfile.yml
         VARS_STORE_FILE: environments/deerstalker/vars-store.yml
       input_mapping:
-        env-repo: cf-networking-deployments
+        bbl-state: cf-networking-deployments
         vars-store: cf-networking-deployments
         vars-files: cf-networking-deployments
         release: cf-networking-v1.8.x
@@ -440,7 +440,7 @@ jobs:
       params:
         BBL_STATE_DIR: environments/deerstalker/
       input_mapping:
-        env-repo: cf-networking-deployments
+        bbl-state: cf-networking-deployments
 
   - name: deerstalker-test
     serial_groups: [deerstalker-test-group, deerstalker-deploy-group]
@@ -565,7 +565,7 @@ jobs:
         BBL_STATE_DIR: environments/cloche/
         DEPLOYMENT_NAME: cf
       input_mapping:
-        env-repo: cf-networking-deployments
+        bbl-state: cf-networking-deployments
 
   - name: delete-deployment-deerstalker-cf
     public: true
@@ -580,7 +580,7 @@ jobs:
         BBL_STATE_DIR: environments/deerstalker/
         DEPLOYMENT_NAME: cf
       input_mapping:
-        env-repo: cf-networking-deployments
+        bbl-state: cf-networking-deployments
 
   - name: ship-what
     serial_groups: [version]
