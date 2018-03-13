@@ -2,7 +2,7 @@ platform: linux
 
 image_resource:
   type: docker-image
-  source: { repository: c2cnetworking/deploy }
+  source: { repository: c2cnetworking/deploy, tag: '0.4.0'  }
 
 inputs:
   - name: cf-networking-release-ci

@@ -3,7 +3,7 @@ platform: linux
 
 image_resource:
   type: docker-image
-  source: { repository: c2cnetworking/dev-postgres }
+  source: { repository: c2cnetworking/dev-postgres, tag: '0.7.0' }
 
 inputs:
   - name: cf-networking-release-ci

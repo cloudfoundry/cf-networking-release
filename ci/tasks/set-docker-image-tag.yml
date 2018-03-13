@@ -3,7 +3,7 @@ platform: linux
 
 image_resource:
   type: docker-image
-  source: { repository: c2cnetworking/small-git }
+  source: { repository: c2cnetworking/small-git, tag: '0.4.0' }
 
 inputs:
   - name: cf-networking-release-ci

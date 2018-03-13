@@ -1,7 +1,7 @@
 ---
 image_resource:
   type: docker-image
-  source: { repository: c2cnetworking/dev-mysql-5.6 }
+  source: { repository: c2cnetworking/dev-mysql-5.6, tag: '0.7.0'  }
 
 platform: linux
 
