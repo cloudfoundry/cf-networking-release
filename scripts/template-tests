@@ -2,5 +2,7 @@
 
 ROOT_DIR_PATH="$(cd $(dirname $0)/.. && pwd)"
 
-bundle install
-rspec "${ROOT_DIR_PATH}/spec"
+pushd "${ROOT_DIR_PATH}" > /dev/null
+  bundle install
+  rspec spec
+popd > /dev/null
