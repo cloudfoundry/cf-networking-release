@@ -6,82 +6,49 @@ groups:
   - postgres-tests
   - windows-tests
   - unit-and-integration-tests
-  - pickelhelm-deploy
-  - pickelhelm-test
-  - mitre-deploy
-  - mitre-test
-  - mitre-acceptance-errand
-  - mitre-smoke
-  - mitre-cats
-  - mitre-drats
+  - regent-deploy
+  - regent-test
+  - wellington-deploy
+  - wellington-test
+  - wellington-acceptance-errand
+  - wellington-smoke
+  - wellington-cats
+  - wellington-drats
   - check-empty-networking-opsfile
   - ship-what
   - shipit
   - bump-minor-version
   - merge-master
-  - toque-deploy
-  - toque-push
-  - toque-test
-  - sombrero-test-upgrade
-- name: pickelhelm
+- name: regent
   jobs:
-  - pickelhelm-bbl-up
-  - pickelhelm-bbl-destroy
-  - pickelhelm-deploy
-  - pickelhelm-test
-  - pickelhelm-deploy-firehose-nozzle
-  - delete-pickelhelm-deployment
-- name: mitre
+  - regent-bbl-up
+  - regent-bbl-destroy
+  - regent-deploy
+  - regent-test
+  - regent-deploy-firehose-nozzle
+  - delete-regent-deployment
+- name: wellington
   jobs:
-  - mitre-bbl-up
-  - mitre-bbl-destroy
-  - mitre-deploy
-  - mitre-test
-  - mitre-acceptance-errand
-  - mitre-smoke
-  - mitre-cats
-  - mitre-drats
-  - mitre-deploy-firehose-nozzle
-  - delete-deployment-mitre-cf
-- name: sombrero
-  jobs:
-  - sombrero-bbl-up
-  - sombrero-bbl-destroy
-  - sombrero-test-upgrade
-  - delete-sombrero-deployment
-- name: toque
-  jobs:
-  - toque-bbl-up
-  - toque-bbl-destroy
-  - toque-deploy
-  - toque-push
-  - toque-test
-  - toque-deploy-firehose-nozzle
-  - delete-toque-deployment
-- name: slouch
-  jobs:
-  - slouch-bbl-up
-  - slouch-deploy
-  - delete-slouch-deployment
+  - wellington-bbl-up
+  - wellington-bbl-destroy
+  - wellington-deploy
+  - wellington-test
+  - wellington-acceptance-errand
+  - wellington-smoke
+  - wellington-cats
+  - wellington-drats
+  - wellington-deploy-firehose-nozzle
+  - delete-deployment-wellington-cf
 - name: bbl
   jobs:
-  - pickelhelm-bbl-up
-  - mitre-bbl-up
-  - toque-bbl-up
-  - sombrero-bbl-up
-  - slouch-bbl-up
-  - pickelhelm-bbl-destroy
-  - mitre-bbl-destroy
-  - toque-bbl-destroy
-  - sombrero-bbl-destroy
-  - slouch-bbl-destroy
+  - regent-bbl-up
+  - wellington-bbl-up
+  - regent-bbl-destroy
+  - wellington-bbl-destroy
 - name: cleanup
   jobs:
-  - delete-deployment-mitre-cf
-  - delete-pickelhelm-deployment
-  - delete-toque-deployment
-  - delete-sombrero-deployment
-  - delete-slouch-deployment
+  - delete-deployment-wellington-cf
+  - delete-regent-deployment
 - name: version
   jobs:
   - major-bump
@@ -94,7 +61,7 @@ resources:
     type: git
     source:
       uri: https://github.com/cloudfoundry/cf-networking-release
-      branch: develop
+      branch: v1.10.x
       paths:
         - ci
   - name: cf-networking-deployments
@@ -179,13 +146,6 @@ resources:
       uri: "git@github.com:cloudfoundry/cf-networking-deployments.git"
       private_key: {{cf-networking-deployments-push-key}}
       branch: pinned
-  ####### Stats
-  - name: toque-stats
-    type: git
-    source:
-      uri: "git@github.com:cf-container-networking/toque-stats.git"
-      branch: master
-      private_key: {{container-networking-bot-key}}
   ####### Timers
   - name: every-half-hour
     type: time
@@ -201,11 +161,6 @@ resources:
     source:
       branch: master
       uri: git://github.com/cloudfoundry/cf-acceptance-tests.git
-  - name: toque-scaling-test-params
-    type: git
-    source:
-      uri: https://github.com/cf-container-networking/toque-scaling
-      paths: [ test-params ]
   #######  Release management
   - name: version
     type: semver
@@ -231,188 +186,6 @@ resources:
       user: cloudfoundry
       repository: cf-networking-release
       access_token: {{github-access-token}}
-
-jobs:
-  - name: sombrero-bbl-up
-    serial_groups: [sombrero]
-    plan:
-    - aggregate:
-      - get: cf-deployment-concourse-tasks
-        trigger: true
-      - get: cf-networking-deployments
-    - task: bbl-up
-      file: cf-deployment-concourse-tasks/bbl-up/task.yml
-      params:
-        BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
-        BBL_GCP_REGION: us-east1
-        BBL_STATE_DIR: environments/sombrero/
-        BBL_IAAS: gcp
-        BBL_LB_CERT: {{sombrero-lb-cert}}
-        BBL_LB_KEY: {{sombrero-lb-key}}
-        LB_DOMAIN: sombrero.c2c.cf-app.com
-        BBL_ENV_NAME: sombrero
-      input_mapping:
-        env-repo: cf-networking-deployments
-        ops-files: cf-networking-deployments
-      ensure:
-        put: cf-networking-deployments
-        params:
-          repository: updated-env-repo
-          rebase: true
-
-  - name: sombrero-bbl-destroy
-    serial_groups: [sombrero]
-    plan:
-    - aggregate:
-      - get: cf-deployment-concourse-tasks
-      - get: cf-networking-deployments
-    - task: bosh-cleanup
-      file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
-      params:
-        BBL_STATE_DIR: environments/sombrero/
-      input_mapping:
-        env-repo: cf-networking-deployments
-    - task: bbl-destroy
-      file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
-      params:
-        BBL_STATE_DIR: environments/sombrero/
-        BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
-      input_mapping:
-        env-repo: cf-networking-deployments
-      ensure:
-        put: cf-networking-deployments
-        params:
-          repository: updated-env-repo
-          rebase: true
-
-  - name: sombrero-test-upgrade
-    serial_groups: [sombrero]
-    plan:
-    - aggregate:
-      - get: cf-networking-release-ci
-      - get: cf-networking-ci-pinned
-      - get: cf-networking-deployments
-      - get: cf-networking-deployments-pinned
-      - get: cf-deployment
-      - get: cf-deployment-pinned
-      - get: cf-deployment-concourse-tasks
-      - get: cf-networking-pinned
-      - get: cf-networking-dev
-        passed: [unit-and-integration-tests]
-        trigger: true
-    - task: delete-deployment
-      file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
-      params:
-        BBL_STATE_DIR: environments/sombrero/
-      input_mapping:
-        env-repo: cf-networking-deployments
-        cf-deployment-concourse-tasks: cf-deployment-concourse-tasks
-    - task: upload-stemcell
-      file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
-      params:
-        BBL_STATE_DIR: environments/sombrero/
-      input_mapping:
-        env-repo: cf-networking-deployments
-        cf-deployment: cf-deployment-pinned
-        cf-deployment-concourse-tasks: cf-deployment-concourse-tasks
-    - task: collect-ops-files
-      file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
-      params:
-        ENVIRONMENT_NAME: sombrero
-      input_mapping:
-        cf-deployment: cf-deployment-pinned
-        cf-networking-release: cf-networking-pinned
-        deployments-repo: cf-networking-deployments
-    - task: deploy-oldest-compatible-version
-      file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
-      params:
-        BBL_STATE_DIR: environments/sombrero/
-        OPS_FILES: scale-to-one-az.yml cf-networking.yml opsfile-before.yml
-        SYSTEM_DOMAIN: sombrero.c2c.cf-app.com
-        VARS_STORE_FILE: environments/sombrero/vars-store.yml
-        REGENERATE_VARS_STORE: true
-      input_mapping:
-        env-repo: cf-networking-deployments
-        cf-deployment: cf-deployment-pinned
-        cf-deployment-concourse-tasks: cf-deployment-concourse-tasks
-        release: cf-networking-pinned
-        vars-store: cf-networking-deployments
-        vars-files: cf-networking-deployments
-    - task: acceptance-tests
-      file: cf-networking-ci-pinned/tasks/acceptance-tests.yml
-      input_mapping:
-        cf-networking: cf-networking-pinned
-        cf-networking-ci: cf-networking-ci-pinned
-        test-config: cf-networking-deployments-pinned
-        vars-store: updated-vars-store
-      params:
-        ENVIRONMENT_NAME: sombrero
-    - task: collect-ops-files
-      file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
-      params:
-        ENVIRONMENT_NAME: sombrero
-      input_mapping:
-        cf-networking-release: cf-networking-dev
-        deployments-repo: cf-networking-deployments
-    - task: upload-stemcell
-      file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
-      params:
-        BBL_STATE_DIR: environments/sombrero/
-      input_mapping:
-        env-repo: cf-networking-deployments
-    - task: deploy-upgrade
-      file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
-      params:
-        BBL_STATE_DIR: environments/sombrero/
-        OPS_FILES: use-compiled-releases.yml scale-to-one-az.yml cf-networking.yml opsfile-after.yml
-        SYSTEM_DOMAIN: sombrero.c2c.cf-app.com
-        VARS_STORE_FILE: environments/sombrero/vars-store.yml
-      input_mapping:
-        release: cf-networking-dev
-        vars-store: updated-vars-store
-        vars-files: updated-vars-store
-        env-repo: cf-networking-deployments
-    - task: acceptance-tests
-      file: cf-networking-release-ci/ci/tasks/acceptance-tests.yml
-      input_mapping:
-        cf-networking: cf-networking-dev
-        test-config: cf-networking-deployments
-        vars-store: updated-vars-store
-      params:
-        ENVIRONMENT_NAME: sombrero
-    - task: delete-deployment
-      file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
-      params:
-        BBL_STATE_DIR: environments/sombrero/
-      input_mapping:
-        env-repo: cf-networking-deployments
-        cf-networking-release: cf-networking-dev
-    - task: bosh-cleanup
-      file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
-      params:
-        BBL_STATE_DIR: environments/sombrero/
-        CLEAN_ALL: false
-      input_mapping:
-        env-repo: cf-networking-deployments
-
-  - name: delete-sombrero-deployment
-    serial_groups:
-    - sombrero
-    plan:
-    - aggregate:
-      - get: cf-networking-deployments
-      - get: cf-deployment-concourse-tasks
-      - get: cf-networking-dev
-        passed:
-        - sombrero-test-upgrade
-        trigger: true
-    - task: delete-deployment
-      file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
-      params:
-        BBL_STATE_DIR: environments/sombrero/
-      input_mapping:
-        env-repo: cf-networking-deployments
-        cf-networking-release: cf-networking-dev
 
   - name: postgres-tests
     public: true
@@ -473,8 +246,8 @@ jobs:
       passed: [postgres-tests, mysql-tests, mysql-5.6-tests, windows-tests]
       trigger: true
 
-  - name: pickelhelm-bbl-up
-    serial_groups: [pickelhelm]
+  - name: regent-bbl-up
+    serial_groups: [regent]
     plan:
     - aggregate:
       - get: cf-deployment-concourse-tasks
@@ -485,12 +258,12 @@ jobs:
       params:
         BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
         BBL_GCP_REGION: us-east1
-        BBL_STATE_DIR: environments/pickelhelm/
+        BBL_STATE_DIR: environments/regent/
         BBL_IAAS: gcp
-        BBL_LB_CERT: {{pickelhelm-lb-cert}}
-        BBL_LB_KEY: {{pickelhelm-lb-key}}
-        LB_DOMAIN: pickelhelm.c2c.cf-app.com
-        BBL_ENV_NAME: pickelhelm
+        BBL_LB_CERT: {{regent-lb-cert}}
+        BBL_LB_KEY: {{regent-lb-key}}
+        LB_DOMAIN: regent.c2c.cf-app.com
+        BBL_ENV_NAME: regent
       input_mapping:
         env-repo: cf-networking-deployments
         ops-files: cf-networking-deployments
@@ -500,8 +273,8 @@ jobs:
           repository: updated-env-repo
           rebase: true
 
-  - name: pickelhelm-bbl-destroy
-    serial_groups: [pickelhelm]
+  - name: regent-bbl-destroy
+    serial_groups: [regent]
     plan:
     - aggregate:
       - get: cf-deployment-concourse-tasks
@@ -509,13 +282,13 @@ jobs:
     - task: bosh-cleanup
       file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
       params:
-        BBL_STATE_DIR: environments/pickelhelm/
+        BBL_STATE_DIR: environments/regent/
       input_mapping:
         env-repo: cf-networking-deployments
     - task: bbl-destroy
       file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
       params:
-        BBL_STATE_DIR: environments/pickelhelm/
+        BBL_STATE_DIR: environments/regent/
         BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
       input_mapping:
         env-repo: cf-networking-deployments
@@ -525,8 +298,8 @@ jobs:
           repository: updated-env-repo
           rebase: true
 
-  - name: pickelhelm-deploy
-    serial_groups: [pickelhelm]
+  - name: regent-deploy
+    serial_groups: [regent]
     plan:
     - aggregate:
       - get: cf-networking-release-ci
@@ -540,31 +313,31 @@ jobs:
     - task: upload-stemcell
       file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
       params:
-        BBL_STATE_DIR: environments/pickelhelm/
+        BBL_STATE_DIR: environments/regent/
       input_mapping:
         env-repo: cf-networking-deployments
     - task: collect-ops-files
       file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
       params:
-        ENVIRONMENT_NAME: pickelhelm
+        ENVIRONMENT_NAME: regent
       input_mapping:
         cf-networking-release: cf-networking-dev
         deployments-repo: cf-networking-deployments
     - task: upload-acceptance-test-release
       file: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release.yml
       params:
-        ENVIRONMENT_NAME: pickelhelm
+        ENVIRONMENT_NAME: regent
       input_mapping:
         env-repo: cf-networking-deployments
       params:
-        BBL_STATE_DIR: environments/pickelhelm/
+        BBL_STATE_DIR: environments/regent/
     - task: deploy-cf
       file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
       params:
-        BBL_STATE_DIR: environments/pickelhelm/
-        SYSTEM_DOMAIN: pickelhelm.c2c.cf-app.com
+        BBL_STATE_DIR: environments/regent/
+        SYSTEM_DOMAIN: regent.c2c.cf-app.com
         OPS_FILES: use-compiled-releases.yml datadog.yml scale-to-one-az.yml smaller-footprint.yml cf-networking.yml use-system-domain-as-metron-deployment-name.yml add-acceptance-test-jobs.yml opsfile.yml
-        VARS_STORE_FILE: environments/pickelhelm/vars-store.yml
+        VARS_STORE_FILE: environments/regent/vars-store.yml
       input_mapping:
         env-repo: cf-networking-deployments
         release: cf-networking-dev
@@ -578,18 +351,18 @@ jobs:
     - task: bosh-cleanup
       file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
       params:
-        BBL_STATE_DIR: environments/pickelhelm/
+        BBL_STATE_DIR: environments/regent/
       input_mapping:
         env-repo: cf-networking-deployments
 
-  - name: pickelhelm-deploy-firehose-nozzle
-    serial_groups: [pickelhelm]
+  - name: regent-deploy-firehose-nozzle
+    serial_groups: [regent]
     plan:
     - aggregate:
       - get: cf-deployment-concourse-tasks
       - get: cf-networking-release-ci
       - get: cf-networking-deployments
-        passed: [pickelhelm-deploy]
+        passed: [regent-deploy]
       - get: datadog-firehose-nozzle-release
     - task: upload-datadog-firehose-nozzle-release
       file: cf-networking-release-ci/ci/tasks/upload-release-tarball.yml
@@ -597,7 +370,7 @@ jobs:
         deployments-repo: cf-networking-deployments
         tarballs: datadog-firehose-nozzle-release
       params:
-        ENVIRONMENT_NAME: pickelhelm
+        ENVIRONMENT_NAME: regent
     - task: deploy-datadog-firehose-nozzle
       file: cf-deployment-concourse-tasks/bosh-deploy/task.yml
       input_mapping:
@@ -607,25 +380,25 @@ jobs:
         vars-files: cf-networking-deployments
         vars-store: cf-networking-deployments
       params:
-        BBL_STATE_DIR: environments/pickelhelm
+        BBL_STATE_DIR: environments/regent
         MANIFEST_FILE: firehose-nozzles.yml
         OPS_FILES: ""
-        SYSTEM_DOMAIN: pickelhelm.c2c.cf-app.com
-        VARS_STORE_FILE: environments/pickelhelm/vars-store.yml
+        SYSTEM_DOMAIN: regent.c2c.cf-app.com
+        VARS_STORE_FILE: environments/regent/vars-store.yml
 
 
-  - name: pickelhelm-test
-    serial_groups: [pickelhelm]
+  - name: regent-test
+    serial_groups: [regent]
     plan:
     - aggregate:
       - get: cf-networking-release-ci
       - get: cf-networking-deployments
-        passed: [pickelhelm-deploy]
+        passed: [regent-deploy]
       - get: cf-deployment
-        passed: [pickelhelm-deploy]
+        passed: [regent-deploy]
         trigger: true
       - get: cf-networking-dev
-        passed: [pickelhelm-deploy]
+        passed: [regent-deploy]
         trigger: true
     - task: acceptance-tests
       file: cf-networking-release-ci/ci/tasks/acceptance-tests.yml
@@ -634,10 +407,10 @@ jobs:
         test-config: cf-networking-deployments
         vars-store: cf-networking-deployments
       params:
-        ENVIRONMENT_NAME: pickelhelm
+        ENVIRONMENT_NAME: regent
 
-  - name: mitre-bbl-up
-    serial_groups: [mitre-test-group, mitre-deploy-group]
+  - name: wellington-bbl-up
+    serial_groups: [wellington-test-group, wellington-deploy-group]
     plan:
     - aggregate:
       - get: cf-deployment-concourse-tasks
@@ -648,12 +421,12 @@ jobs:
       params:
         BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
         BBL_GCP_REGION: us-east1
-        BBL_STATE_DIR: environments/mitre/
+        BBL_STATE_DIR: environments/wellington/
         BBL_IAAS: gcp
-        BBL_LB_CERT: {{mitre-lb-cert}}
-        BBL_LB_KEY: {{mitre-lb-key}}
-        LB_DOMAIN: mitre.c2c.cf-app.com
-        BBL_ENV_NAME: mitre
+        BBL_LB_CERT: {{wellington-lb-cert}}
+        BBL_LB_KEY: {{wellington-lb-key}}
+        LB_DOMAIN: wellington.c2c.cf-app.com
+        BBL_ENV_NAME: wellington
       input_mapping:
         env-repo: cf-networking-deployments
         ops-files: cf-networking-deployments
@@ -663,8 +436,8 @@ jobs:
           repository: updated-env-repo
           rebase: true
 
-  - name: mitre-bbl-destroy
-    serial_groups: [mitre-deploy-group]
+  - name: wellington-bbl-destroy
+    serial_groups: [wellington-deploy-group]
     plan:
     - aggregate:
       - get: cf-deployment-concourse-tasks
@@ -672,13 +445,13 @@ jobs:
     - task: bosh-cleanup
       file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
       params:
-        BBL_STATE_DIR: environments/mitre/
+        BBL_STATE_DIR: environments/wellington/
       input_mapping:
         env-repo: cf-networking-deployments
     - task: bbl-destroy
       file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
       params:
-        BBL_STATE_DIR: environments/mitre/
+        BBL_STATE_DIR: environments/wellington/
         BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
       input_mapping:
         env-repo: cf-networking-deployments
@@ -688,8 +461,8 @@ jobs:
           repository: updated-env-repo
           rebase: true
 
-  - name: mitre-deploy
-    serial_groups: [mitre-deploy-group, version]
+  - name: wellington-deploy
+    serial_groups: [wellington-deploy-group, version]
     plan:
     - aggregate:
       - get: concourse
@@ -697,18 +470,18 @@ jobs:
       - get: cf-deployment-concourse-tasks
       - get: cf-networking-deployments
       - get: cf-deployment
-        passed: [pickelhelm-test]
+        passed: [regent-test]
         trigger: true
       - get: cf-networking-dev
         trigger: true
-        passed: [pickelhelm-test]
+        passed: [regent-test]
       - get: version
         params:
           pre: rc
     - task: upload-stemcell
       file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
       params:
-        BBL_STATE_DIR: environments/mitre/
+        BBL_STATE_DIR: environments/wellington/
       input_mapping:
         env-repo: cf-networking-deployments
     - task: update-runtime-config
@@ -719,31 +492,31 @@ jobs:
         runtime-config: cf-networking-deployments
         vars-store: cf-networking-deployments
       params:
-        BBL_STATE_DIR: environments/mitre/
-        VARS_STORE_FILE: environments/mitre/vars-store.yml
+        BBL_STATE_DIR: environments/wellington/
+        VARS_STORE_FILE: environments/wellington/vars-store.yml
         RUNTIME_CONFIG_FILE: syslog-addon.yml
     - task: collect-ops-files
       file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
       params:
-        ENVIRONMENT_NAME: mitre
+        ENVIRONMENT_NAME: wellington
       input_mapping:
         cf-networking-release: cf-networking-dev
         deployments-repo: cf-networking-deployments
     - task: upload-acceptance-test-release
       file: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release.yml
       params:
-        ENVIRONMENT_NAME: mitre
+        ENVIRONMENT_NAME: wellington
       input_mapping:
         env-repo: cf-networking-deployments
       params:
-        BBL_STATE_DIR: environments/mitre/
+        BBL_STATE_DIR: environments/wellington/
     - task: deploy-cf
       file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
       params:
-        BBL_STATE_DIR: environments/mitre/
-        SYSTEM_DOMAIN: mitre.c2c.cf-app.com
+        BBL_STATE_DIR: environments/wellington/
+        SYSTEM_DOMAIN: wellington.c2c.cf-app.com
         OPS_FILES: enable-iptables-logger.yml use-compiled-releases.yml datadog.yml custom-apps-domain.yml scale-to-one-az.yml smaller-footprint.yml cf-networking.yml use-system-domain-as-metron-deployment-name.yml add-acceptance-test-jobs.yml opsfile.yml
-        VARS_STORE_FILE: environments/mitre/vars-store.yml
+        VARS_STORE_FILE: environments/wellington/vars-store.yml
       input_mapping:
         env-repo: cf-networking-deployments
         vars-store: cf-networking-deployments
@@ -760,7 +533,7 @@ jobs:
         deployments-repo: cf-networking-deployments
         tarballs: concourse
       params:
-        ENVIRONMENT_NAME: mitre
+        ENVIRONMENT_NAME: wellington
     - task: create-release-tarball
       file: cf-networking-release-ci/ci/tasks/create-release-tarball.yml
       input_mapping:
@@ -773,26 +546,26 @@ jobs:
     - task: bosh-cleanup
       file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
       params:
-        BBL_STATE_DIR: environments/mitre/
+        BBL_STATE_DIR: environments/wellington/
       input_mapping:
         env-repo: cf-networking-deployments
 
-  - name: mitre-test
-    serial_groups: [mitre-test-group, mitre-deploy-group]
+  - name: wellington-test
+    serial_groups: [wellington-test-group, wellington-deploy-group]
     plan:
     - aggregate:
       - get: cf-networking-deployments
-        passed: [mitre-deploy]
+        passed: [wellington-deploy]
       - get: cf-networking-dev
-        passed: [mitre-deploy]
+        passed: [wellington-deploy]
         trigger: true
       - get: cf-networking-tarball
-        passed: [mitre-deploy]
+        passed: [wellington-deploy]
       - get: version
-        passed: [mitre-deploy]
+        passed: [wellington-deploy]
       - get: cf-networking-release-ci
       - get: cf-deployment
-        passed: [mitre-deploy]
+        passed: [wellington-deploy]
         trigger: true
     - task: acceptance-tests
       file: cf-networking-release-ci/ci/tasks/acceptance-tests.yml
@@ -801,16 +574,16 @@ jobs:
         test-config: cf-networking-deployments
         vars-store: cf-networking-deployments
       params:
-        ENVIRONMENT_NAME: mitre
+        ENVIRONMENT_NAME: wellington
 
-  - name: mitre-deploy-firehose-nozzle
-    serial_groups: [mitre-test-group, mitre-deploy-group]
+  - name: wellington-deploy-firehose-nozzle
+    serial_groups: [wellington-test-group, wellington-deploy-group]
     plan:
     - aggregate:
       - get: cf-deployment-concourse-tasks
       - get: cf-networking-release-ci
       - get: cf-networking-deployments
-        passed: [mitre-deploy]
+        passed: [wellington-deploy]
       - get: datadog-firehose-nozzle-release
     - task: upload-datadog-firehose-nozzle-release
       file: cf-networking-release-ci/ci/tasks/upload-release-tarball.yml
@@ -818,7 +591,7 @@ jobs:
         deployments-repo: cf-networking-deployments
         tarballs: datadog-firehose-nozzle-release
       params:
-        ENVIRONMENT_NAME: mitre
+        ENVIRONMENT_NAME: wellington
     - task: deploy-datadog-firehose-nozzle
       file: cf-deployment-concourse-tasks/bosh-deploy/task.yml
       input_mapping:
@@ -828,98 +601,98 @@ jobs:
         vars-files: cf-networking-deployments
         ops-files: cf-networking-deployments
       params:
-        BBL_STATE_DIR: environments/mitre
+        BBL_STATE_DIR: environments/wellington
         MANIFEST_FILE: firehose-nozzles.yml
         OPS_FILES: ""
-        SYSTEM_DOMAIN: mitre.c2c.cf-app.com
-        VARS_STORE_FILE: environments/mitre/vars-store.yml
+        SYSTEM_DOMAIN: wellington.c2c.cf-app.com
+        VARS_STORE_FILE: environments/wellington/vars-store.yml
 
-  - name: mitre-acceptance-errand
-    serial_groups: [mitre-test-group, mitre-deploy-group]
+  - name: wellington-acceptance-errand
+    serial_groups: [wellington-test-group, wellington-deploy-group]
     plan:
     - aggregate:
       - get: cf-networking-release-ci
       - get: cf-networking-dev
-        passed: [mitre-test]
+        passed: [wellington-test]
       - get: cf-networking-deployments
       - get: cf-networking-tarball
-        passed: [mitre-test]
+        passed: [wellington-test]
         trigger: true
     - task: run-errand
       file: cf-networking-release-ci/ci/tasks/run-errand.yml
       params:
-        ENVIRONMENT_NAME: mitre
+        ENVIRONMENT_NAME: wellington
         ERRAND: cf-networking-acceptance
       input_mapping:
         deployments-repo: cf-networking-deployments
 
-  - name: mitre-smoke
-    serial_groups: [mitre-test-group]
+  - name: wellington-smoke
+    serial_groups: [wellington-test-group]
     plan:
     - aggregate:
       - get: every-fifteen-minutes
         trigger: true
       - get: cf-networking-deployments
       - get: cf-networking-dev
-        passed: [mitre-test]
+        passed: [wellington-test]
         trigger: true
       - get: cf-networking-release-ci
       - get: cf-deployment
-        passed: [mitre-test]
+        passed: [wellington-test]
         trigger: true
     - task: smoke-tests
       file: cf-networking-release-ci/ci/tasks/smoke-tests.yml
       params:
-        ENVIRONMENT_NAME: mitre
-        ENVIRONMENT_TAG: mitre.c2c.cf-app.com
+        ENVIRONMENT_NAME: wellington
+        ENVIRONMENT_TAG: wellington.c2c.cf-app.com
         DATADOG_API_KEY: {{datadog_api_key}}
       input_mapping:
         test-config: cf-networking-deployments
         cf-networking: cf-networking-dev
 
-  - name: mitre-cats
-    serial_groups: [mitre-test-group, mitre-deploy-group]
+  - name: wellington-cats
+    serial_groups: [wellington-test-group, wellington-deploy-group]
     plan:
     - aggregate:
       - get: cf-networking-release-ci
       - get: cf-acceptance-tests
       - get: cats-concourse-task
       - get: cf-networking-dev
-        passed: [mitre-test]
+        passed: [wellington-test]
         trigger: true
       - get: cf-deployment
-        passed: [mitre-test]
+        passed: [wellington-test]
         trigger: true
       - get: cf-networking-deployments
       - get: cf-networking-tarball
-        passed: [mitre-test]
+        passed: [wellington-test]
       - get: version
-        passed: [mitre-test]
+        passed: [wellington-test]
     - task: copy-config
       file: cf-networking-release-ci/ci/tasks/copy-config.yml
       params:
-        ENVIRONMENT: mitre
+        ENVIRONMENT: wellington
     - task: cats
       file: cats-concourse-task/task.yml
       params:
         NODES: 8
 
-  - name: mitre-drats
-    serial_groups: [mitre-test-group, mitre-deploy-group]
+  - name: wellington-drats
+    serial_groups: [wellington-test-group, wellington-deploy-group]
     plan:
     - aggregate:
       - get: cf-networking-release-ci
       - get: cf-networking-dev
-        passed: [mitre-cats]
+        passed: [wellington-cats]
         trigger: true
       - get: cf-deployment
-        passed: [mitre-cats]
+        passed: [wellington-cats]
         trigger: true
       - get: cf-networking-deployments
       - get: cf-networking-tarball
-        passed: [mitre-cats]
+        passed: [wellington-cats]
       - get: version
-        passed: [mitre-cats]
+        passed: [wellington-cats]
       - get: disaster-recovery-acceptance-tests
       - get: bbr-binary-release
     - task: create-drats-config
@@ -928,337 +701,16 @@ jobs:
         test-config: cf-networking-deployments
         vars-store: cf-networking-deployments
       params:
-        ENVIRONMENT_NAME: mitre
+        ENVIRONMENT_NAME: wellington
     - task: run-drats
       privileged: true
       file: disaster-recovery-acceptance-tests/ci/drats-with-integration-config/task.yml
 
-  - name: toque-bbl-up
-    serial_groups: [toque]
-    plan:
-    - aggregate:
-      - get: cf-deployment-concourse-tasks
-        trigger: true
-      - get: cf-networking-deployments
-    - task: bbl-up
-      file: cf-deployment-concourse-tasks/bbl-up/task.yml
-      params:
-        BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
-        BBL_GCP_REGION: us-east1
-        BBL_STATE_DIR: environments/toque/
-        BBL_IAAS: gcp
-        BBL_LB_CERT: {{toque-lb-cert}}
-        BBL_LB_KEY: {{toque-lb-key}}
-        LB_DOMAIN: toque.c2c.cf-app.com
-        BBL_ENV_NAME: toque
-      input_mapping:
-        env-repo: cf-networking-deployments
-        ops-files: cf-networking-deployments
-      ensure:
-        put: cf-networking-deployments
-        params:
-          repository: updated-env-repo
-          rebase: true
-
-  - name: toque-bbl-destroy
-    serial_groups: [toque]
-    plan:
-    - aggregate:
-      - get: cf-deployment-concourse-tasks
-      - get: cf-networking-deployments
-    - task: bosh-cleanup
-      file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
-      params:
-        BBL_STATE_DIR: environments/toque/
-      input_mapping:
-        env-repo: cf-networking-deployments
-    - task: bbl-destroy
-      file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
-      params:
-        BBL_STATE_DIR: environments/toque/
-        BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
-      input_mapping:
-        env-repo: cf-networking-deployments
-      ensure:
-        put: cf-networking-deployments
-        params:
-          repository: updated-env-repo
-          rebase: true
-
-  - name: toque-deploy
-    serial_groups: [toque]
-    plan:
-    - aggregate:
-      - get: cf-deployment-concourse-tasks
-      - get: cf-deployment
-      - get: cf-networking-release-ci
-      - get: cf-networking-deployments
-      - get: cf-networking-dev
-        passed: [unit-and-integration-tests]
-        trigger: true
-      - get: datadog-firehose-nozzle-release
-    - task: upload-stemcell
-      file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
-      input_mapping:
-        env-repo: cf-networking-deployments
-        cf-deployment: cf-deployment
-      params:
-        BBL_STATE_DIR: environments/toque
-    - task: collect-ops-files
-      file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
-      params:
-        ENVIRONMENT_NAME: toque
-      input_mapping:
-        deployments-repo: cf-networking-deployments
-        cf-networking-release: cf-networking-dev
-    - task: deploy-cf
-      file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
-      params:
-        BBL_STATE_DIR: environments/toque
-        SYSTEM_DOMAIN: toque.c2c.cf-app.com
-        OPS_FILES: use-compiled-releases.yml datadog.yml scale-to-one-az.yml smaller-footprint.yml cf-networking.yml use-system-domain-as-metron-deployment-name.yml opsfile.yml
-        VARS_STORE_FILE: environments/toque/vars-store.yml
-      input_mapping:
-        env-repo: cf-networking-deployments
-        cf-deployment: cf-deployment
-        release: cf-networking-dev
-        vars-files: cf-networking-deployments
-        vars-store: cf-networking-deployments
-      ensure:
-        put: cf-networking-deployments
-        params:
-          repository: updated-vars-store
-          rebase: true
-    - task: bosh-cleanup
-      file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
-      params:
-        BBL_STATE_DIR: environments/toque/
-      input_mapping:
-        env-repo: cf-networking-deployments
-
-  - name: toque-deploy-firehose-nozzle
-    serial_groups: [toque]
-    plan:
-    - aggregate:
-      - get: cf-deployment-concourse-tasks
-      - get: cf-networking-release-ci
-      - get: cf-networking-deployments
-        passed: [toque-deploy]
-      - get: datadog-firehose-nozzle-release
-    - task: upload-datadog-firehose-nozzle-release
-      file: cf-networking-release-ci/ci/tasks/upload-release-tarball.yml
-      input_mapping:
-        deployments-repo: cf-networking-deployments
-        tarballs: datadog-firehose-nozzle-release
-      params:
-        ENVIRONMENT_NAME: toque
-    - task: deploy-datadog-firehose-nozzle
-      file: cf-deployment-concourse-tasks/bosh-deploy/task.yml
-      input_mapping:
-        cf-deployment: cf-networking-deployments
-        vars-store: cf-networking-deployments
-        env-repo: cf-networking-deployments
-        vars-files: cf-networking-deployments
-        ops-files: cf-networking-deployments
-      params:
-        BBL_STATE_DIR: environments/toque
-        MANIFEST_FILE: firehose-nozzles.yml
-        OPS_FILES: ""
-        SYSTEM_DOMAIN: toque.c2c.cf-app.com
-        VARS_STORE_FILE: environments/toque/vars-store.yml
-
-  - name: toque-push
-    serial_groups: [toque]
-    plan:
-    - aggregate:
-      - get: cf-networking-release-ci
-      - get: cf-networking-deployments
-        passed: [toque-deploy]
-      - get: cf-networking-dev
-        passed: [toque-deploy]
-        trigger: true
-      - get: toque-scaling-test-params
-        trigger: true
-    - task: set-scaling-test-params
-      file: cf-networking-release-ci/ci/tasks/set-scaling-test-params.yml
-      params:
-        ENVIRONMENT_NAME: toque
-      input_mapping:
-        deployments-repo: cf-networking-deployments
-        scaling-test-params: toque-scaling-test-params
-    - task: push-apps
-      file: cf-networking-release-ci/ci/tasks/push-apps.yml
-      params:
-        ENVIRONMENT_NAME: toque
-      input_mapping:
-        cf-networking: cf-networking-dev
-        test-config: test-config
-
-  - name: toque-test
-    serial_groups: [toque]
-    plan:
-    - aggregate:
-      - get: every-half-hour
-        trigger: true
-      - get: cf-networking-dev
-        passed: [toque-push]
-      - get: cf-networking-release-ci
-      - get: toque-scaling-test-params
-        passed: [toque-push]
-      - get: toque-stats
-      - get: cf-networking-deployments
-        passed: [toque-push]
-    - task: set-scaling-test-params
-      file: cf-networking-release-ci/ci/tasks/set-scaling-test-params.yml
-      params:
-        ENVIRONMENT_NAME: toque
-      input_mapping:
-        deployments-repo: cf-networking-deployments
-        scaling-test-params: toque-scaling-test-params
-    - task: emit-datadog-test-start
-      file: cf-networking-release-ci/ci/tasks/emit-datadog-event.yml
-      params:
-        TITLE: test_start
-        TEXT: test_start
-        PRIORITY: normal
-        AWS_ENV: toque.c2c.cf-app.com
-        DATADOG_API_KEY: {{datadog_api_key}}
-    - task: test-scalability
-      file: cf-networking-release-ci/ci/tasks/test-scalability.yml
-      params:
-        ENVIRONMENT_NAME: toque
-      input_mapping:
-        cf-networking: cf-networking-dev
-        test-config: test-config
-      ensure:
-        task: emit-datadog-test-stop
-        file: cf-networking-release-ci/ci/tasks/emit-datadog-event.yml
-        params:
-          TITLE: test_end
-          TEXT: test_end
-          PRIORITY: normal
-          AWS_ENV: toque.c2c.cf-app.com
-          DATADOG_API_KEY: {{datadog_api_key}}
-
-  - name: slouch-bbl-up
-    serial_groups: [slouch]
-    plan:
-    - aggregate:
-      - get: cf-deployment-concourse-tasks
-        trigger: true
-      - get: cf-networking-deployments
-    - task: bbl-up
-      file: cf-deployment-concourse-tasks/bbl-up/task.yml
-      params:
-        BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
-        BBL_GCP_REGION: us-east1
-        BBL_STATE_DIR: environments/slouch/
-        BBL_IAAS: gcp
-        BBL_LB_CERT: {{slouch-lb-cert}}
-        BBL_LB_KEY: {{slouch-lb-key}}
-        LB_DOMAIN: slouch.c2c.cf-app.com
-        BBL_ENV_NAME: slouch
-      input_mapping:
-        env-repo: cf-networking-deployments
-        ops-files: cf-networking-deployments
-      ensure:
-        put: cf-networking-deployments
-        params:
-          repository: updated-env-repo
-          rebase: true
-
-  - name: slouch-bbl-destroy
-    serial_groups: [slouch]
-    plan:
-    - aggregate:
-      - get: cf-deployment-concourse-tasks
-      - get: cf-networking-deployments
-    - task: bosh-cleanup
-      file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
-      params:
-        BBL_STATE_DIR: environments/slouch/
-      input_mapping:
-        env-repo: cf-networking-deployments
-    - task: bbl-destroy
-      file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
-      params:
-        BBL_STATE_DIR: environments/slouch/
-        BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
-      input_mapping:
-        env-repo: cf-networking-deployments
-      ensure:
-        put: cf-networking-deployments
-        params:
-          repository: updated-env-repo
-          rebase: true
-
-  - name: slouch-deploy
-    serial_groups: [slouch]
-    plan:
-    - aggregate:
-      - get: cf-deployment-concourse-tasks
-      - get: cf-deployment
-      - get: cf-networking-release-ci
-      - get: cf-networking-deployments
-      - get: cf-networking-dev
-        passed: [unit-and-integration-tests]
-      - get: datadog-firehose-nozzle-release
-    - task: upload-stemcell
-      file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
-      input_mapping:
-        env-repo: cf-networking-deployments
-      params:
-        BBL_STATE_DIR: environments/slouch
-    - task: collect-ops-files
-      file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
-      params:
-        ENVIRONMENT_NAME: slouch
-      input_mapping:
-        cf-networking-release: cf-networking-dev
-        deployments-repo: cf-networking-deployments
-    - task: deploy-cf
-      file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
-      params:
-        BBL_STATE_DIR: environments/slouch
-        SYSTEM_DOMAIN: slouch.c2c.cf-app.com
-        OPS_FILES: use-compiled-releases.yml scale-to-one-az.yml smaller-footprint.yml cf-networking.yml opsfile.yml
-        VARS_STORE_FILE: environments/slouch/vars-store.yml
-      input_mapping:
-        env-repo: cf-networking-deployments
-        release: cf-networking-dev
-        vars-store: cf-networking-deployments
-        vars-files: cf-networking-deployments
-      ensure:
-        put: cf-networking-deployments
-        params:
-          repository: updated-vars-store
-          rebase: true
-    - task: bosh-cleanup
-      file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
-      params:
-        BBL_STATE_DIR: environments/slouch/
-      input_mapping:
-        env-repo: cf-networking-deployments
-
-  - name: delete-slouch-deployment
-    public: true
-    serial_groups: [slouch]
-    plan:
-    - aggregate:
-      - get: cf-networking-deployments
-      - get: cf-deployment-concourse-tasks
-    - task: delete-deployment
-      file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
-      params:
-        BBL_STATE_DIR: environments/slouch/
-      input_mapping:
-        env-repo: cf-networking-deployments
-
 ##### Human-triggered utilities
 
-  - name: delete-pickelhelm-deployment
+  - name: delete-regent-deployment
     public: true
-    serial_groups: [pickelhelm]
+    serial_groups: [regent]
     plan:
     - aggregate:
       - get: cf-networking-deployments
@@ -1266,14 +718,14 @@ jobs:
     - task: delete-deployment
       file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
       params:
-        BBL_STATE_DIR: environments/pickelhelm/
+        BBL_STATE_DIR: environments/regent/
         DEPLOYMENT_NAME: cf
       input_mapping:
         env-repo: cf-networking-deployments
 
-  - name: delete-deployment-mitre-cf
+  - name: delete-deployment-wellington-cf
     public: true
-    serial_groups: [mitre-test-group, mitre-deploy-group]
+    serial_groups: [wellington-test-group, wellington-deploy-group]
     plan:
     - aggregate:
       - get: cf-networking-deployments
@@ -1281,22 +733,7 @@ jobs:
     - task: delete-deployment
       file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
       params:
-        BBL_STATE_DIR: environments/mitre/
-        DEPLOYMENT_NAME: cf
-      input_mapping:
-        env-repo: cf-networking-deployments
-
-  - name: delete-toque-deployment
-    public: true
-    serial_groups: [toque]
-    plan:
-    - aggregate:
-      - get: cf-networking-deployments
-      - get: cf-deployment-concourse-tasks
-    - task: delete-deployment
-      file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
-      params:
-        BBL_STATE_DIR: environments/toque/
+        BBL_STATE_DIR: environments/wellington/
         DEPLOYMENT_NAME: cf
       input_mapping:
         env-repo: cf-networking-deployments
@@ -1307,16 +744,16 @@ jobs:
     - do:
       - aggregate:
         - get: version
-          passed: [mitre-drats]
+          passed: [wellington-drats]
         - get: cf-networking-dev
           params:
             submodules: none
-          passed: [mitre-drats, sombrero-test-upgrade, mitre-acceptance-errand, mitre-smoke]
+          passed: [wellington-drats, wellington-acceptance-errand, wellington-smoke]
           trigger: true
         - get: cf-deployment
-          passed: [mitre-drats]
+          passed: [wellington-drats]
         - get: cf-networking-tarball
-          passed: [mitre-drats, mitre-acceptance-errand]
+          passed: [wellington-drats, wellington-acceptance-errand]
 
   - name: check-empty-networking-opsfile
     serial_groups: [version]
@@ -1325,11 +762,11 @@ jobs:
       - aggregate:
         - get: cf-networking-release-ci
         - get: version
-          passed: [mitre-drats]
+          passed: [wellington-drats]
         - get: cf-networking-dev
           params:
             submodules: none
-          passed: [mitre-drats, sombrero-test-upgrade, mitre-acceptance-errand, mitre-smoke]
+          passed: [wellington-drats, wellington-acceptance-errand, wellington-smoke]
           trigger: true
       - task: check-empty-networking-opsfile
         file: cf-networking-release-ci/ci/tasks/check-empty-networking-opsfile.yml
