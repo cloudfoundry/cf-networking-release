@@ -268,11 +268,11 @@ jobs:
         deployments-repo: cf-networking-deployments
     - task: upload-acceptance-test-release
       file: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release.yml
-      params:
-        ENVIRONMENT_NAME: regent
       input_mapping:
         bbl-state: cf-networking-deployments
+        cf-networking-dev: cf-networking-v1.10.x
       params:
+        ENVIRONMENT_NAME: regent
         BBL_STATE_DIR: environments/regent/
     - task: deploy-cf
       file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
@@ -416,11 +416,11 @@ jobs:
         deployments-repo: cf-networking-deployments
     - task: upload-acceptance-test-release
       file: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release.yml
-      params:
-        ENVIRONMENT_NAME: wellington
       input_mapping:
         bbl-state: cf-networking-deployments
+        cf-networking-dev: cf-networking-v1.10.x
       params:
+        ENVIRONMENT_NAME: wellington
         BBL_STATE_DIR: environments/wellington/
     - task: deploy-cf
       file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
