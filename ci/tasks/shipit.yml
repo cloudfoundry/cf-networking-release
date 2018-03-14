@@ -1,7 +1,7 @@
 ---
 image_resource:
   type: docker-image
-  source: { repository: c2cnetworking/deploy, tag: '0.6.0'  }
+  source: { repository: c2cnetworking/deploy, tag: '0.7.0'  }
 
 platform: linux
 
