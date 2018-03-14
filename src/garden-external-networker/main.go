@@ -115,6 +115,7 @@ func mainWithError(logger io.Writer) error {
 		Mounter:       mounter,
 		BindMountRoot: cfg.BindMountDir,
 		PortAllocator: portAllocator,
+		SearchDomains: cfg.SearchDomains,
 	}
 
 	mux := ipc.Mux{

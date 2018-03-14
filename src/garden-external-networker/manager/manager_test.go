@@ -58,6 +58,7 @@ var _ = Describe("Manager", func() {
 			Mounter:       mounter,
 			BindMountRoot: "some/fake/path",
 			PortAllocator: portAllocator,
+			SearchDomains: []string{"pivotal.io", "foo.bar", "baz.me"},
 		}
 
 		netInRules = []garden.NetIn{
@@ -123,6 +124,13 @@ var _ = Describe("Manager", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(out.DNSServers).To(Equal([]string{"8.8.8.8"}))
+		})
+
+		It("should return the search domains info as a separate key in the up ouput", func() {
+			out, err := mgr.Up(containerHandle, upInputs)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(out.SearchDomains).To(Equal([]string{"pivotal.io", "foo.bar", "baz.me"}))
 		})
 
 		It("should call CNI Up, passing in the bind-mounted path to the net ns", func() {

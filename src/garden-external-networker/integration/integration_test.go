@@ -150,6 +150,11 @@ var _ = Describe("Garden External Networker", func() {
 			"start_port":      60000,
 			"total_ports":     56,
 			"log_prefix":      "cfnetworking",
+			"search_domains": []string{
+				"pivotal.io",
+				"foo.bar",
+				"baz.me",
+			},
 		}
 		configBytes, err := json.Marshal(config)
 		Expect(err).NotTo(HaveOccurred())
@@ -231,6 +236,11 @@ var _ = Describe("Garden External Networker", func() {
 			},
 			"dns_servers": [
 				"1.2.3.4"
+			],
+			"search_domains": [
+				"pivotal.io",
+				"foo.bar",
+				"baz.me"
 			]
 		}`))
 
@@ -306,7 +316,12 @@ var _ = Describe("Garden External Networker", func() {
 				"garden.network.container-ip": "169.254.1.2",
 				"garden.network.host-ip": "255.255.255.255",
 				"garden.network.mapped-ports": "[{\"HostPort\":12345,\"ContainerPort\":7000},{\"HostPort\":60000,\"ContainerPort\":7000}]"
-			}
+			},
+			"search_domains": [
+				"pivotal.io",
+				"foo.bar",
+				"baz.me"
+			]
 		}`))
 
 		})

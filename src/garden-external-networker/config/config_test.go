@@ -33,7 +33,12 @@ var _ = Describe("Config", func() {
 					"state_file": "some/path",
 					"start_port": 1234,
 					"total_ports": 56,
-					"log_prefix": "prefix"
+					"log_prefix": "prefix",
+					"search_domains": [
+						"pivotal.io",
+						"foo.bar",
+						"baz.me"
+					]
 				}`)
 				c, err := config.New(file.Name())
 				Expect(err).NotTo(HaveOccurred())
@@ -44,6 +49,7 @@ var _ = Describe("Config", func() {
 				Expect(c.StartPort).To(Equal(1234))
 				Expect(c.TotalPorts).To(Equal(56))
 				Expect(c.LogPrefix).To(Equal("prefix"))
+				Expect(c.SearchDomains).Should(ConsistOf("pivotal.io", "foo.bar", "baz.me"))
 			})
 		})
 

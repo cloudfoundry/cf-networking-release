@@ -8,13 +8,14 @@ import (
 )
 
 type Config struct {
-	CniPluginDir  string `json:"cni_plugin_dir"`
-	CniConfigDir  string `json:"cni_config_dir"`
-	BindMountDir  string `json:"bind_mount_dir"`
-	StateFilePath string `json:"state_file"`
-	StartPort     int    `json:"start_port"`
-	TotalPorts    int    `json:"total_ports"`
-	LogPrefix     string `json:"log_prefix"`
+	CniPluginDir  string   `json:"cni_plugin_dir"`
+	CniConfigDir  string   `json:"cni_config_dir"`
+	BindMountDir  string   `json:"bind_mount_dir"`
+	StateFilePath string   `json:"state_file"`
+	StartPort     int      `json:"start_port"`
+	TotalPorts    int      `json:"total_ports"`
+	LogPrefix     string   `json:"log_prefix"`
+	SearchDomains []string `json:"search_domains"`
 }
 
 func New(configFilePath string) (Config, error) {

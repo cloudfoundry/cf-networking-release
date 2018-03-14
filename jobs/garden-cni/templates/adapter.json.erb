@@ -9,6 +9,7 @@
       "start_port" => p("cf_networking.nat_port_range_start"),
       "total_ports" => p("cf_networking.nat_port_range_size"),
       "log_prefix" => "cfnetworking",
+      "search_domains" => p("cf_networking.search_domains"),
     }
 
     JSON.pretty_generate(toRender)
