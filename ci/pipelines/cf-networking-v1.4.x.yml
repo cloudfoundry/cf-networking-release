@@ -210,12 +210,13 @@ jobs:
         LB_DOMAIN: caubeen.c2c.cf-app.com
         BBL_ENV_NAME: caubeen
       input_mapping:
-        env-repo: cf-networking-deployments
+        bbl-state: cf-networking-deployments
+        bbl-config: cf-networking-deployments
         ops-files: cf-networking-deployments
       ensure:
         put: cf-networking-deployments
         params:
-          repository: updated-env-repo
+          repository: updated-bbl-state
           rebase: true
 
   - name: caubeen-bbl-destroy
@@ -229,18 +230,18 @@ jobs:
       params:
         BBL_STATE_DIR: environments/caubeen/
       input_mapping:
-        env-repo: cf-networking-deployments
+        bbl-state: cf-networking-deployments
     - task: bbl-destroy
       file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
       params:
         BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
         BBL_STATE_DIR: environments/caubeen/
       input_mapping:
-        env-repo: cf-networking-deployments
+        bbl-state: cf-networking-deployments
       ensure:
         put: cf-networking-deployments
         params:
-          repository: updated-env-repo
+          repository: updated-bbl-state
           rebase: true
 
   - name: caubeen-deploy
@@ -261,7 +262,7 @@ jobs:
       params:
         BBL_STATE_DIR: environments/caubeen/
       input_mapping:
-        env-repo: cf-networking-deployments
+        bbl-state: cf-networking-deployments
     - task: collect-ops-files
       file: cf-networking-ci/ci/tasks/collect-ops-files.yml
       params:
@@ -277,7 +278,7 @@ jobs:
         OPS_FILES: gcp.yml use-3-azs-for-router.yml use-compiled-releases.yml cf-networking.yml opsfile.yml
         VARS_STORE_FILE: environments/caubeen/vars-store.yml
       input_mapping:
-        env-repo: cf-networking-deployments
+        bbl-state: cf-networking-deployments
         release: cf-networking-v1.4.x
         vars-files: cf-networking-deployments
         vars-store: cf-networking-deployments
@@ -292,7 +293,7 @@ jobs:
         BBL_STATE_DIR: environments/caubeen/
         CLEAN_ALL: false
       input_mapping:
-        env-repo: cf-networking-deployments
+        bbl-state: cf-networking-deployments
 
   - name: caubeen-test
     serial_groups: [caubeen]
@@ -334,12 +335,13 @@ jobs:
         LB_DOMAIN: montera.c2c.cf-app.com
         BBL_ENV_NAME: montera
       input_mapping:
-        env-repo: cf-networking-deployments
+        bbl-state: cf-networking-deployments
+        bbl-config: cf-networking-deployments
         ops-files: cf-networking-deployments
       ensure:
         put: cf-networking-deployments
         params:
-          repository: updated-env-repo
+          repository: updated-bbl-state
           rebase: true
 
   - name: montera-bbl-destroy
@@ -353,18 +355,18 @@ jobs:
       params:
         BBL_STATE_DIR: environments/montera/
       input_mapping:
-        env-repo: cf-networking-deployments
+        bbl-state: cf-networking-deployments
     - task: bbl-destroy
       file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
       params:
         BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
         BBL_STATE_DIR: environments/montera/
       input_mapping:
-        env-repo: cf-networking-deployments
+        bbl-state: cf-networking-deployments
       ensure:
         put: cf-networking-deployments
         params:
-          repository: updated-env-repo
+          repository: updated-bbl-state
           rebase: true
 
   - name: montera-deploy
@@ -389,7 +391,7 @@ jobs:
       params:
         BBL_STATE_DIR: environments/montera/
       input_mapping:
-        env-repo: cf-networking-deployments
+        bbl-state: cf-networking-deployments
     - task: collect-ops-files
       file: cf-networking-ci/ci/tasks/collect-ops-files.yml
       params:
@@ -405,7 +407,7 @@ jobs:
         OPS_FILES: gcp.yml use-3-azs-for-router.yml use-compiled-releases.yml cf-networking.yml opsfile.yml custom-apps-domain.yml enable-iptables-logger.yml
         VARS_STORE_FILE: environments/montera/vars-store.yml
       input_mapping:
-        env-repo: cf-networking-deployments
+        bbl-state: cf-networking-deployments
         vars-store: cf-networking-deployments
         vars-files: cf-networking-deployments
         release: cf-networking-v1.4.x
@@ -429,7 +431,7 @@ jobs:
         BBL_STATE_DIR: environments/montera/
         CLEAN_ALL: false
       input_mapping:
-        env-repo: cf-networking-deployments
+        bbl-state: cf-networking-deployments
 
   - name: montera-test
     serial_groups: [montera-test-group, montera-deploy-group]
@@ -525,7 +527,7 @@ jobs:
       params:
         BBL_STATE_DIR: environments/caubeen/
       input_mapping:
-        env-repo: cf-networking-deployments
+        bbl-state: cf-networking-deployments
 
   - name: delete-deployment-montera-cf
     public: true
@@ -539,7 +541,7 @@ jobs:
       params:
         BBL_STATE_DIR: environments/montera/
       input_mapping:
-        env-repo: cf-networking-deployments
+        bbl-state: cf-networking-deployments
 
   - name: ship-what
     serial_groups: [version]
