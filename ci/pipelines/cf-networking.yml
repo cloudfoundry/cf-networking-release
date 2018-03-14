@@ -114,11 +114,6 @@ resources:
       uri: "git@github.com:cloudfoundry/cf-networking-deployments.git"
       branch: master
       private_key: {{cf-networking-deployments-push-key}}
-  - name: cats-concourse-task
-    type: git
-    source:
-      uri: https://github.com/cloudfoundry/cats-concourse-task
-      branch: master
   - name: cf-deployment-concourse-tasks
     type: git
     source:
@@ -301,11 +296,12 @@ jobs:
         BBL_ENV_NAME: sombrero
       input_mapping:
         bbl-state: cf-networking-deployments
+        bbl-config: cf-networking-deployments
         ops-files: cf-networking-deployments
       ensure:
         put: cf-networking-deployments
         params:
-          repository: updated-env-repo
+          repository: updated-bbl-state
           rebase: true
 
   - name: sombrero-bbl-destroy
@@ -330,7 +326,7 @@ jobs:
       ensure:
         put: cf-networking-deployments
         params:
-          repository: updated-env-repo
+          repository: updated-bbl-state
           rebase: true
 
   - name: sombrero-test-upgrade
@@ -658,11 +654,12 @@ jobs:
         BBL_ENV_NAME: pickelhelm
       input_mapping:
         bbl-state: cf-networking-deployments
+        bbl-config: cf-networking-deployments
         ops-files: cf-networking-deployments
       ensure:
         put: cf-networking-deployments
         params:
-          repository: updated-env-repo
+          repository: updated-bbl-state
           rebase: true
 
   - name: pickelhelm-bbl-destroy
@@ -687,7 +684,7 @@ jobs:
       ensure:
         put: cf-networking-deployments
         params:
-          repository: updated-env-repo
+          repository: updated-bbl-state
           rebase: true
 
   - name: pickelhelm-deploy
@@ -835,11 +832,12 @@ jobs:
         BBL_ENV_NAME: mitre
       input_mapping:
         bbl-state: cf-networking-deployments
+        bbl-config: cf-networking-deployments
         ops-files: cf-networking-deployments
       ensure:
         put: cf-networking-deployments
         params:
-          repository: updated-env-repo
+          repository: updated-bbl-state
           rebase: true
 
   - name: mitre-bbl-destroy
@@ -864,7 +862,7 @@ jobs:
       ensure:
         put: cf-networking-deployments
         params:
-          repository: updated-env-repo
+          repository: updated-bbl-state
           rebase: true
 
   - name: mitre-deploy
@@ -1105,8 +1103,8 @@ jobs:
     plan:
     - aggregate:
       - get: cf-networking-release-ci
+      - get: cf-deployment-concourse-tasks
       - get: cf-acceptance-tests
-      - get: cats-concourse-task
       - get: cf-networking-dev
         passed: [mitre-test]
         trigger: true
@@ -1130,7 +1128,7 @@ jobs:
       params:
         ENVIRONMENT: mitre
     - task: cats
-      file: cats-concourse-task/task.yml
+      file: cf-deployment-concourse-tasks/run-cats/task.yml
       params:
         NODES: 8
 
@@ -1190,11 +1188,12 @@ jobs:
         BBL_ENV_NAME: toque
       input_mapping:
         bbl-state: cf-networking-deployments
+        bbl-config: cf-networking-deployments
         ops-files: cf-networking-deployments
       ensure:
         put: cf-networking-deployments
         params:
-          repository: updated-env-repo
+          repository: updated-bbl-state
           rebase: true
 
   - name: toque-bbl-destroy
@@ -1219,7 +1218,7 @@ jobs:
       ensure:
         put: cf-networking-deployments
         params:
-          repository: updated-env-repo
+          repository: updated-bbl-state
           rebase: true
 
   - name: toque-deploy
@@ -1408,11 +1407,12 @@ jobs:
         BBL_ENV_NAME: slouch
       input_mapping:
         bbl-state: cf-networking-deployments
+        bbl-config: cf-networking-deployments
         ops-files: cf-networking-deployments
       ensure:
         put: cf-networking-deployments
         params:
-          repository: updated-env-repo
+          repository: updated-bbl-state
           rebase: true
 
   - name: slouch-bbl-destroy
@@ -1437,7 +1437,7 @@ jobs:
       ensure:
         put: cf-networking-deployments
         params:
-          repository: updated-env-repo
+          repository: updated-bbl-state
           rebase: true
 
   - name: slouch-deploy
