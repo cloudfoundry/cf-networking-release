@@ -326,6 +326,49 @@ var _ = Describe("Garden External Networker", func() {
 
 		})
 	})
+
+	Context("when the configuration search_domains list is empty", func() {
+		BeforeEach(func() {
+			config := map[string]interface{}{
+				"cni_plugin_dir":  paths.CniPluginDir,
+				"cni_config_dir":  cniConfigDir,
+				"bind_mount_dir":  bindMountRoot,
+				"overlay_network": "10.255.0.0/16",
+				"state_file":      stateFilePath,
+				"start_port":      60000,
+				"total_ports":     56,
+				"log_prefix":      "cfnetworking",
+			}
+			configBytes, err := json.Marshal(config)
+			Expect(err).NotTo(HaveOccurred())
+			err = ioutil.WriteFile(fakeConfigFilePath, configBytes, 0644)
+			Expect(err).NotTo(HaveOccurred())
+
+			upCommand.Args = []string{
+				paths.PathToAdapter,
+				"--configFile", fakeConfigFilePath,
+				"--action", "up",
+				"--handle", containerHandle,
+			}
+		})
+
+		It("omits the 'search_domains' field from the Network ('up') output", func() {
+			// this behavior is necessary in order for Garden to fall back to using
+			// the host's /etc/resolv.conf.
+			upSession := runAndWait(upCommand)
+			Expect(upSession.Out.Contents()).To(MatchJSON(`{
+			"properties": {
+				"garden.network.container-ip": "169.254.1.2",
+				"garden.network.host-ip": "255.255.255.255",
+				"garden.network.mapped-ports": "[{\"HostPort\":12345,\"ContainerPort\":7000},{\"HostPort\":60000,\"ContainerPort\":7000}]"
+			},
+			"dns_servers": [
+				"1.2.3.4"
+			]
+		}`))
+
+		})
+	})
 })
 
 func runAndWait(cmd *exec.Cmd) *gexec.Session {
