@@ -215,11 +215,12 @@ jobs:
         BBL_ENV_NAME: cloche
       input_mapping:
         bbl-state: cf-networking-deployments
+        bbl-config: cf-networking-deployments
         ops-files: cf-networking-deployments
       ensure:
         put: cf-networking-deployments
         params:
-          repository: updated-env-repo
+          repository: updated-bbl-state
           rebase: true
 
   - name: cloche-bbl-destroy
@@ -244,7 +245,7 @@ jobs:
       ensure:
         put: cf-networking-deployments
         params:
-          repository: updated-env-repo
+          repository: updated-bbl-state
           rebase: true
 
   - name: cloche-deploy
@@ -338,11 +339,12 @@ jobs:
         BBL_ENV_NAME: deerstalker
       input_mapping:
         bbl-state: cf-networking-deployments
+        bbl-config: cf-networking-deployments
         ops-files: cf-networking-deployments
       ensure:
         put: cf-networking-deployments
         params:
-          repository: updated-env-repo
+          repository: updated-bbl-state
           rebase: true
 
   - name: deerstalker-bbl-destroy
@@ -367,7 +369,7 @@ jobs:
       ensure:
         put: cf-networking-deployments
         params:
-          repository: updated-env-repo
+          repository: updated-bbl-state
           rebase: true
 
   - name: deerstalker-deploy
