@@ -25,6 +25,6 @@ properties:
     description: "Total number of host ports that may be allocated to containers"
     default: 5000
 
-  cf_networking.search_domains
+  cf_networking.search_domains:
     description: "An array of search domains for DNS on the containers"
     default: []
