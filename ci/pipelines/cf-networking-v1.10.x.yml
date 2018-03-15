@@ -14,7 +14,6 @@ groups:
   - wellington-smoke
   - wellington-cats
   - wellington-drats
-  - check-empty-networking-opsfile
   - ship-what
   - shipit
 - name: regent
@@ -632,24 +631,6 @@ jobs:
           passed: [wellington-drats]
         - get: cf-networking-tarball
           passed: [wellington-drats, wellington-acceptance-errand]
-
-  - name: check-empty-networking-opsfile
-    serial_groups: [version]
-    plan:
-    - do:
-      - aggregate:
-        - get: cf-networking-release-ci
-        - get: version
-          passed: [wellington-drats]
-        - get: cf-networking-v1.10.x
-          params:
-            submodules: none
-          passed: [wellington-drats, wellington-acceptance-errand, wellington-smoke]
-          trigger: true
-      - task: check-empty-networking-opsfile
-        file: cf-networking-release-ci/ci/tasks/check-empty-networking-opsfile.yml
-        input_mapping:
-          cf-networking: cf-networking-v1.10.x
 
   - name: shipit
     serial_groups: [version]
