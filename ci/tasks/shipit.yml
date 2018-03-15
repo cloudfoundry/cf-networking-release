@@ -10,8 +10,5 @@ inputs:
   - name: cf-networking-release-ci
   - name: cf-networking
 
-outputs:
-  - name: cf-networking-tagged
-
 run:
   path: cf-networking-release-ci/ci/tasks/shipit

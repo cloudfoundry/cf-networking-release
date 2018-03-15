@@ -629,8 +629,10 @@ jobs:
         params: {file: version/number}
       - put: cf-networking-v1.8.x
         params:
-          repository: cf-networking-tagged
+          repository: cf-networking-v1.8.x
           only_tag: true
+          tag: version/number
+          tag_prefix: v
 
   - name: bump-patch-version
     serial_groups: [version]
