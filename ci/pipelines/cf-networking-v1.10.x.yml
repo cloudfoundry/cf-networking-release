@@ -643,5 +643,8 @@ jobs:
         params: {file: version/number}
       - put: cf-networking-v1.10.x
         params:
-          repository: cf-networking-tagged
+          repository: cf-networking-v1.10.x
           only_tag: true
+          tag: version/number
+          tag_prefix: v
+
