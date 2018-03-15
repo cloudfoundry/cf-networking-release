@@ -60,17 +60,12 @@ resources:
       uri: "git@github.com:cloudfoundry/cf-networking-deployments.git"
       branch: master
       private_key: {{cf-networking-deployments-push-key}}
-  - name: cats-concourse-task
-    type: git
-    source:
-      uri: https://github.com/cf-container-networking/cats-concourse-task
-      branch: v1.10.x
   - name: cf-deployment-concourse-tasks
     type: git
     source:
       uri: https://github.com/cloudfoundry/cf-deployment-concourse-tasks
       branch: master
-      tag_filter: "v*"
+      tag_filter: v6.1
   - name: cf-deployment
     type: git
     source:
@@ -192,6 +187,7 @@ jobs:
     plan:
     - aggregate:
       - get: cf-deployment-concourse-tasks
+        version: {ref: v6.1}
         trigger: true
       - get: cf-networking-deployments
     - task: bbl-up
@@ -220,6 +216,7 @@ jobs:
     plan:
     - aggregate:
       - get: cf-deployment-concourse-tasks
+        version: {ref: v6.1}
       - get: cf-networking-deployments
     - task: bosh-cleanup
       file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
@@ -246,8 +243,10 @@ jobs:
     - aggregate:
       - get: cf-networking-release-ci
       - get: cf-deployment-concourse-tasks
+        version: {ref: v6.1}
       - get: cf-networking-deployments
       - get: cf-deployment
+        version: {ref: v1.16.0}
         trigger: true
       - get: cf-networking-v1.10.x
         trigger: true
@@ -305,6 +304,7 @@ jobs:
       - get: cf-networking-deployments
         passed: [regent-deploy]
       - get: cf-deployment
+        version: {ref: v1.16.0}
         passed: [regent-deploy]
         trigger: true
       - get: cf-networking-v1.10.x
@@ -324,6 +324,7 @@ jobs:
     plan:
     - aggregate:
       - get: cf-deployment-concourse-tasks
+        version: {ref: v6.1}
         trigger: true
       - get: cf-networking-deployments
     - task: bbl-up
@@ -352,6 +353,7 @@ jobs:
     plan:
     - aggregate:
       - get: cf-deployment-concourse-tasks
+        version: {ref: v6.1}
       - get: cf-networking-deployments
     - task: bosh-cleanup
       file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
@@ -379,8 +381,10 @@ jobs:
       - get: concourse
       - get: cf-networking-release-ci
       - get: cf-deployment-concourse-tasks
+        version: {ref: v6.1}
       - get: cf-networking-deployments
       - get: cf-deployment
+        version: {ref: v1.16.0}
         passed: [regent-test]
         trigger: true
       - get: cf-networking-v1.10.x
@@ -465,6 +469,7 @@ jobs:
         passed: [wellington-deploy]
       - get: cf-networking-release-ci
       - get: cf-deployment
+        version: {ref: v1.16.0}
         passed: [wellington-deploy]
         trigger: true
     - task: acceptance-tests
@@ -505,6 +510,7 @@ jobs:
         trigger: true
       - get: cf-networking-release-ci
       - get: cf-deployment
+        version: {ref: v1.16.0}
         passed: [wellington-test]
         trigger: true
     - task: smoke-tests
@@ -522,11 +528,13 @@ jobs:
     - aggregate:
       - get: cf-networking-release-ci
       - get: cf-acceptance-tests
-      - get: cats-concourse-task
+      - get: cf-deployment-concourse-tasks
+        version: {ref: v6.1}
       - get: cf-networking-v1.10.x
         passed: [wellington-test]
         trigger: true
       - get: cf-deployment
+        version: {ref: v1.16.0}
         passed: [wellington-test]
         trigger: true
       - get: cf-networking-deployments
@@ -539,7 +547,7 @@ jobs:
       params:
         ENVIRONMENT: wellington
     - task: cats
-      file: cats-concourse-task/task.yml
+      file: cf-deployment-concourse-tasks/run-cats/task.yml
       params:
         NODES: 8
 
@@ -552,6 +560,7 @@ jobs:
         passed: [wellington-cats]
         trigger: true
       - get: cf-deployment
+        version: {ref: v1.16.0}
         passed: [wellington-cats]
         trigger: true
       - get: cf-networking-deployments
@@ -581,6 +590,7 @@ jobs:
     - aggregate:
       - get: cf-networking-deployments
       - get: cf-deployment-concourse-tasks
+        version: {ref: v6.1}
     - task: delete-deployment
       file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
       params:
@@ -596,6 +606,7 @@ jobs:
     - aggregate:
       - get: cf-networking-deployments
       - get: cf-deployment-concourse-tasks
+        version: {ref: v6.1}
     - task: delete-deployment
       file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
       params:
@@ -618,6 +629,7 @@ jobs:
           trigger: true
         - get: cf-deployment
           passed: [wellington-drats]
+          version: {ref: v1.16.0}
         - get: cf-networking-tarball
           passed: [wellington-drats, wellington-acceptance-errand]
 
