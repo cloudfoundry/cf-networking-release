@@ -16,3 +16,5 @@ git config --global user.email "container-networking+ci@pivotal.io"
 git config --global user.name "Container Networking Bot"
 
 git tag -a "v${VERSION}" -m "tagging branch version"
+
+cp -r . ../cf-networking-tagged
