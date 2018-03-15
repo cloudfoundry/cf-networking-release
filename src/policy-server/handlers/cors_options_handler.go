@@ -8,8 +8,8 @@ import (
 )
 
 type CORSOptionsWrapper struct {
-	RataRoutes       rata.Routes
-	AllowCORSDomains []string
+	RataRoutes         rata.Routes
+	AllowedCORSDomains []string
 }
 
 func (c CORSOptionsWrapper) Wrap(handler http.Handler) http.Handler {
@@ -25,7 +25,7 @@ func (c CORSOptionsWrapper) Wrap(handler http.Handler) http.Handler {
 			w.Header().Set("Access-Control-Allow-Methods", strings.Join(methods, ","))
 		}
 
-		w.Header().Set("Access-Control-Allow-Origin", strings.Join(c.AllowCORSDomains, ","))
+		w.Header().Set("Access-Control-Allow-Origin", strings.Join(c.AllowedCORSDomains, ","))
 		handler.ServeHTTP(w, req)
 	})
 }

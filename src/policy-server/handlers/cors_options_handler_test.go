@@ -41,8 +41,8 @@ var _ = Describe("CORS Option Handler", func() {
 			})
 
 			corsOptionsWrapper = handlers.CORSOptionsWrapper{
-				RataRoutes:       rataRoutes,
-				AllowCORSDomains: allowedCORSDomains,
+				RataRoutes:         rataRoutes,
+				AllowedCORSDomains: allowedCORSDomains,
 			}
 
 			corsOptionsHandler = corsOptionsWrapper.Wrap(fakeHandler)

@@ -56,7 +56,7 @@ var _ = Describe("Config", func() {
 					"request_timeout": 5,
 					"max_policies": 3,
 					"enable_space_developer_self_service": true,
-					"allow_cors_domains": ["https://foo.bar", "https://bar.foo"]
+					"allowed_cors_domains": ["https://foo.bar", "https://bar.foo"]
 				}`)
 				c, err := config.New(file.Name())
 				Expect(err).NotTo(HaveOccurred())
@@ -86,7 +86,7 @@ var _ = Describe("Config", func() {
 				Expect(c.RequestTimeout).To(Equal(5))
 				Expect(c.MaxPolicies).To(Equal(3))
 				Expect(c.EnableSpaceDeveloperSelfService).To(BeTrue())
-				Expect(c.AllowCORSDomains).To(Equal([]string{
+				Expect(c.AllowedCORSDomains).To(Equal([]string{
 					"https://foo.bar",
 					"https://bar.foo",
 				}))

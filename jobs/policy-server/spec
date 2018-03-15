@@ -128,3 +128,7 @@ properties:
   cf_networking.policy_server.log_level:
     description: "Logging level (debug, info, warn, error)."
     default: info
+
+  cf_networking.policy_server.allowed_cors_domains:
+    description: "List of domains (including scheme) from which Cross-Origin requests will be accepted, a * can be used as a wildcard for any part of a domain"
+    default: []

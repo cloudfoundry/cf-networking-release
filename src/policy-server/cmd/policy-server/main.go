@@ -241,8 +241,8 @@ func main() {
 
 	corsOptionsWrapper := func(handler http.Handler) http.Handler {
 		wrapper := handlers.CORSOptionsWrapper{
-			RataRoutes:       externalRoutesWithOptions,
-			AllowCORSDomains: conf.AllowCORSDomains,
+			RataRoutes:         externalRoutesWithOptions,
+			AllowedCORSDomains: conf.AllowedCORSDomains,
 		}
 		return wrapper.Wrap(handler)
 	}

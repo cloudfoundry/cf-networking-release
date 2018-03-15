@@ -82,6 +82,7 @@
       # hard-coded values, not exposed as bosh spec properties
       "uaa_ca" => "/var/vcap/jobs/policy-server/config/certs/uaa_ca.crt",
       "request_timeout" => 5,
+      "allowed_cors_domains" => p("cf_networking.policy_server.allowed_cors_domains"),
     }
 
     JSON.pretty_generate(toRender)
