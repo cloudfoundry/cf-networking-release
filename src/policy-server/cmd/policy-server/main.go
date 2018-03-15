@@ -21,6 +21,7 @@ import (
 	"policy-server/cmd/common"
 	"policy-server/config"
 	"policy-server/handlers"
+	psmiddleware "policy-server/middleware"
 	"policy-server/store"
 	"policy-server/uaa_client"
 
@@ -223,29 +224,6 @@ func main() {
 		return networkWriteAuthenticator.Wrap(handler)
 	}
 
-	externalHandlers := rata.Handlers{
-		"uptime": metricsWrap("Uptime", logWrap(uptimeHandler)),
-		"health": metricsWrap("Health", logWrap(healthHandler)),
-
-		"create_policies": metricsWrap("CreatePolicies",
-			logWrap(versionWrap(authWriteWrap(createPolicyHandlerV1), authWriteWrap(createPolicyHandlerV0)))),
-
-		"delete_policies": metricsWrap("DeletePolicies",
-			logWrap(versionWrap(authWriteWrap(deletePolicyHandlerV1), authWriteWrap(deletePolicyHandlerV0)))),
-
-		"policies_index": metricsWrap("PoliciesIndex",
-			logWrap(versionWrap(authWriteWrap(policiesIndexHandlerV1), authWriteWrap(policiesIndexHandlerV0)))),
-
-		"cleanup": metricsWrap("Cleanup",
-			logWrap(versionWrap(authAdminWrap(policiesCleanupHandler), authAdminWrap(policiesCleanupHandler)))),
-
-		"tags_index": metricsWrap("TagsIndex",
-			logWrap(versionWrap(authAdminWrap(tagsIndexHandler), authAdminWrap(tagsIndexHandler)))),
-
-		"whoami": metricsWrap("WhoAmI",
-			logWrap(versionWrap(authAdminWrap(whoamiHandler), authAdminWrap(whoamiHandler)))),
-	}
-
 	externalRoutes := rata.Routes{
 		{Name: "uptime", Method: "GET", Path: "/"},
 		{Name: "uptime", Method: "GET", Path: "/networking"},
@@ -258,13 +236,49 @@ func main() {
 		{Name: "tags_index", Method: "GET", Path: "/networking/:version/external/tags"},
 	}
 
+	corsMiddleware := psmiddleware.CORS{}
+	externalRoutesWithOptions := corsMiddleware.AddOptionsRoutes("options", externalRoutes)
+
+	corsOptionsWrapper := func(handler http.Handler) http.Handler {
+		wrapper := handlers.CORSOptionsWrapper{
+			RataRoutes:       externalRoutesWithOptions,
+			AllowCORSDomains: conf.AllowCORSDomains,
+		}
+		return wrapper.Wrap(handler)
+	}
+
+	externalHandlers := rata.Handlers{
+		"options": corsOptionsWrapper(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		})),
+		"uptime": corsOptionsWrapper(metricsWrap("Uptime", logWrap(uptimeHandler))),
+		"health": corsOptionsWrapper(metricsWrap("Health", logWrap(healthHandler))),
+
+		"create_policies": corsOptionsWrapper(metricsWrap("CreatePolicies",
+			logWrap(versionWrap(authWriteWrap(createPolicyHandlerV1), authWriteWrap(createPolicyHandlerV0))))),
+
+		"delete_policies": corsOptionsWrapper(metricsWrap("DeletePolicies",
+			logWrap(versionWrap(authWriteWrap(deletePolicyHandlerV1), authWriteWrap(deletePolicyHandlerV0))))),
+
+		"policies_index": corsOptionsWrapper(metricsWrap("PoliciesIndex",
+			logWrap(versionWrap(authWriteWrap(policiesIndexHandlerV1), authWriteWrap(policiesIndexHandlerV0))))),
+
+		"cleanup": corsOptionsWrapper(metricsWrap("Cleanup",
+			logWrap(versionWrap(authAdminWrap(policiesCleanupHandler), authAdminWrap(policiesCleanupHandler))))),
+
+		"tags_index": corsOptionsWrapper(metricsWrap("TagsIndex",
+			logWrap(versionWrap(authAdminWrap(tagsIndexHandler), authAdminWrap(tagsIndexHandler))))),
+
+		"whoami": corsOptionsWrapper(metricsWrap("WhoAmI",
+			logWrap(versionWrap(authAdminWrap(whoamiHandler), authAdminWrap(whoamiHandler))))),
+	}
+
 	err = dropsonde.Initialize(conf.MetronAddress, dropsondeOrigin)
 	if err != nil {
 		log.Fatalf("%s.%s: initializing dropsonde: %s", logPrefix, jobPrefix, err)
 	}
 
 	metricsEmitter := common.InitMetricsEmitter(logger, wrappedStore)
-	externalServer := common.InitServer(logger, nil, conf.ListenHost, conf.ListenPort, externalHandlers, externalRoutes)
+	externalServer := common.InitServer(logger, nil, conf.ListenHost, conf.ListenPort, externalHandlers, externalRoutesWithOptions)
 	poller := initPoller(logger, conf, policyCleaner)
 	debugServer := debugserver.Runner(fmt.Sprintf("%s:%d", conf.DebugServerHost, conf.DebugServerPort), reconfigurableSink)
 
