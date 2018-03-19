@@ -17,6 +17,7 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
   netcat \
   kmod \
   iproute2 \
+  iputils-ping \
   &&  apt-get autoremove -yqq \
   &&  apt-get clean \
   &&  rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
