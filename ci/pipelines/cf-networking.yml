@@ -161,7 +161,6 @@ resources:
       branch: develop
       ignore_paths:
         - docs
-        - ci
       private_key: {{cf-networking-deploy-key}}
   - name: cf-networking-master
     type: git
