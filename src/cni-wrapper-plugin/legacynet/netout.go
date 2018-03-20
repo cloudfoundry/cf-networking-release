@@ -30,6 +30,7 @@ type NetOut struct {
 	C2CLogging            bool
 	IngressTag            string
 	VTEPName              string
+	HostInterfaceName     string
 	DeniedLogsPerSec      int
 	AcceptedUDPLogsPerSec int
 }
@@ -74,7 +75,7 @@ func (m *NetOut) Initialize(containerHandle string, containerIP net.IP, dnsServe
 			Chain:       forwardChain,
 			JumpConditions: rules.IPTablesRule{
 				"-s", containerIP.String(),
-				"!", "-o", m.VTEPName,
+				"-o", m.HostInterfaceName,
 			},
 			Rules: []rules.IPTablesRule{
 				rules.NewNetOutRelatedEstablishedRule(),
@@ -161,7 +162,7 @@ func (m *NetOut) Cleanup(containerHandle, containerIP string) error {
 			Chain:       forwardChain,
 			JumpConditions: rules.IPTablesRule{
 				"-s", containerIP,
-				"!", "-o", m.VTEPName,
+				"-o", m.HostInterfaceName,
 			},
 		},
 		{

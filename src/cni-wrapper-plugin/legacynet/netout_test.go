@@ -32,6 +32,7 @@ var _ = Describe("Netout", func() {
 			Converter:             converter,
 			IngressTag:            "FEEDBEEF",
 			VTEPName:              "vtep-name",
+			HostInterfaceName:     "some-device",
 			DeniedLogsPerSec:      3,
 			AcceptedUDPLogsPerSec: 6,
 		}
@@ -88,7 +89,7 @@ var _ = Describe("Netout", func() {
 			Expect(table).To(Equal("filter"))
 			Expect(chain).To(Equal("FORWARD"))
 			Expect(position).To(Equal(1))
-			Expect(rulespec).To(Equal([]rules.IPTablesRule{{"-s", "5.6.7.8", "!", "-o", "vtep-name", "--jump", "netout-some-container-handle"}}))
+			Expect(rulespec).To(Equal([]rules.IPTablesRule{{"-s", "5.6.7.8", "-o", "some-device", "--jump", "netout-some-container-handle"}}))
 
 			table, chain, position, rulespec = ipTables.BulkInsertArgsForCall(1)
 			Expect(table).To(Equal("filter"))
@@ -336,7 +337,7 @@ var _ = Describe("Netout", func() {
 			table, chain, extraArgs = ipTables.DeleteArgsForCall(1)
 			Expect(table).To(Equal("filter"))
 			Expect(chain).To(Equal("FORWARD"))
-			Expect(extraArgs).To(Equal(rules.IPTablesRule{"-s", "5.6.7.8", "!", "-o", "vtep-name", "--jump", "netout-some-container-handle"}))
+			Expect(extraArgs).To(Equal(rules.IPTablesRule{"-s", "5.6.7.8", "-o", "some-device", "--jump", "netout-some-container-handle"}))
 
 			table, chain, extraArgs = ipTables.DeleteArgsForCall(2)
 			Expect(table).To(Equal("filter"))
