@@ -12,10 +12,11 @@ import (
 
 var _ = Describe("GetNetworkConfigs", func() {
 	var (
-		cniLoader       *cni.CNILoader
-		dir             string
-		err             error
-		expectedNetCfgs []*types.NetConf
+		cniLoader             *cni.CNILoader
+		dir                   string
+		err                   error
+		expectedBridgeNetwork *types.NetConf
+		expectedVxlanNetwork  *types.NetConf
 	)
 
 	BeforeEach(func() {
@@ -27,15 +28,13 @@ var _ = Describe("GetNetworkConfigs", func() {
 			ConfigDir: dir,
 		}
 
-		expectedNetCfgs = []*types.NetConf{
-			{
-				Name: "mynet",
-				Type: "bridge",
-			},
-			{
-				Name: "mynet2",
-				Type: "vxlan",
-			},
+		expectedBridgeNetwork = &types.NetConf{
+			Name: "mynet",
+			Type: "bridge",
+		}
+		expectedVxlanNetwork = &types.NetConf{
+			Name: "mynet2",
+			Type: "vxlan",
 		}
 	})
 
@@ -51,9 +50,9 @@ var _ = Describe("GetNetworkConfigs", func() {
 
 	Context("when no config files exist in dir", func() {
 		It("does not load any netconfig", func() {
-			netCfgs, err := cniLoader.GetNetworkConfigs()
+			netListCfgs, err := cniLoader.GetNetworkConfigs()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(netCfgs).To(HaveLen(0))
+			Expect(netListCfgs).To(HaveLen(0))
 		})
 	})
 
@@ -63,27 +62,57 @@ var _ = Describe("GetNetworkConfigs", func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 		It("loads a single network config", func() {
-			netCfgs, err := cniLoader.GetNetworkConfigs()
+			netListCfgs, err := cniLoader.GetNetworkConfigs()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(netCfgs).To(HaveLen(1))
-			Expect(netCfgs[0].Network).To(Equal(expectedNetCfgs[0]))
+			Expect(netListCfgs).To(HaveLen(1))
+			Expect(netListCfgs[0].Name).To(Equal("mynet"))
+			Expect(netListCfgs[0].Plugins).To(HaveLen(1))
+			Expect(*netListCfgs[0].Plugins[0].Network).To(Equal(*expectedBridgeNetwork))
 		})
 	})
 
-	Context("when multple valid config files exists", func() {
+	Context("when a valid config list files exists", func() {
 		BeforeEach(func() {
-			err = ioutil.WriteFile(filepath.Join(dir, "foo.conf"), []byte(`{ "name": "mynet", "type": "bridge" }`), 0600)
-			Expect(err).NotTo(HaveOccurred())
-			err = ioutil.WriteFile(filepath.Join(dir, "bar.conf"), []byte(`{ "name": "mynet2", "type": "vxlan" }`), 0600)
+			err = ioutil.WriteFile(filepath.Join(dir, "foo.conflist"), []byte(`{
+				"name": "mynetlist",
+				"plugins": [
+			    { "name": "mynet2", "type": "vxlan" },
+			    { "name" : "mynet", "type" : "bridge" }
+			  ]
+			}`), 0600)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("loads all network configs", func() {
-			netCfgs, err := cniLoader.GetNetworkConfigs()
+			netListCfgs, err := cniLoader.GetNetworkConfigs()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(netCfgs).To(HaveLen(2))
-			Expect(netCfgs[0].Network).To(Equal(expectedNetCfgs[1]))
-			Expect(netCfgs[1].Network).To(Equal(expectedNetCfgs[0]))
+			Expect(netListCfgs).To(HaveLen(1))
+			Expect(netListCfgs[0].Name).To(Equal("mynetlist"))
+			Expect(netListCfgs[0].Plugins).To(HaveLen(2))
+			Expect(*netListCfgs[0].Plugins[0].Network).To(Equal(*expectedVxlanNetwork))
+			Expect(*netListCfgs[0].Plugins[1].Network).To(Equal(*expectedBridgeNetwork))
+		})
+	})
+
+	Context("when multiple valid config and config list files exists", func() {
+		BeforeEach(func() {
+			err = ioutil.WriteFile(filepath.Join(dir, "foo.conf"), []byte(`{ "name": "mynet", "type": "bridge" }`), 0600)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = ioutil.WriteFile(filepath.Join(dir, "foo.conflist"), []byte(`{ "name": "mynetlist", "plugins": [{ "name": "mynet2", "type": "vxlan" }] }`), 0600)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("loads all network configs", func() {
+			netListCfgs, err := cniLoader.GetNetworkConfigs()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(netListCfgs).To(HaveLen(2))
+			Expect(netListCfgs[0].Name).To(Equal("mynet"))
+			Expect(netListCfgs[0].Plugins).To(HaveLen(1))
+			Expect(*netListCfgs[0].Plugins[0].Network).To(Equal(*expectedBridgeNetwork))
+			Expect(netListCfgs[1].Name).To(Equal("mynetlist"))
+			Expect(netListCfgs[1].Plugins).To(HaveLen(1))
+			Expect(*netListCfgs[1].Plugins[0].Network).To(Equal(*expectedVxlanNetwork))
 		})
 	})
 })

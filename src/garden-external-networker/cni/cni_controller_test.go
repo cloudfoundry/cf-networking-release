@@ -17,29 +17,32 @@ var _ = Describe("CniController", func() {
 		controller     cni.CNIController
 		fakeCNILibrary *fakes.CNILibrary
 		expectedResult *types020.Result
-		testConfig     *libcni.NetworkConfig
+		testConfig     *libcni.NetworkConfigList
 	)
 
 	BeforeEach(func() {
 		fakeCNILibrary = &fakes.CNILibrary{}
 
-		testConfig = &libcni.NetworkConfig{
-			Network: &types.NetConf{
-				CNIVersion: "some-version",
-				Type:       "some-plugin",
+		testConfig = &libcni.NetworkConfigList{
+			Name:       "net-list-name",
+			CNIVersion: "some-version",
+			Plugins: []*libcni.NetworkConfig{
+				{
+					Network: &types.NetConf{
+						CNIVersion: "some-version",
+						Type:       "some-plugin",
+					},
+					Bytes: []byte(`{"cniVersion":"some-version", "type": "some-plugin"}`),
+				},
 			},
-			Bytes: []byte(`{
-					"cniVersion":"some-version",
-					"type": "some-plugin"
-				}`),
 		}
 		expectedResult = &types020.Result{}
-		fakeCNILibrary.AddNetworkReturns(expectedResult, nil)
-		fakeCNILibrary.DelNetworkReturns(nil)
+		fakeCNILibrary.AddNetworkListReturns(expectedResult, nil)
+		fakeCNILibrary.DelNetworkListReturns(nil)
 
 		controller = cni.CNIController{
 			CNIConfig: fakeCNILibrary,
-			NetworkConfigs: []*libcni.NetworkConfig{
+			NetworkConfigLists: []*libcni.NetworkConfigList{
 				testConfig, testConfig,
 			},
 		}
@@ -72,21 +75,24 @@ var _ = Describe("CniController", func() {
 			}
 		})
 
-		It("returns the result from the CNI AddNetwork call", func() {
+		It("returns the result from the CNI AddNetworkList call", func() {
 			result, err := controller.Up("/some/namespace/path", "some-handle", metadata, legacyNetConf)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(result).To(BeIdenticalTo(expectedResult))
 
-			Expect(fakeCNILibrary.AddNetworkCallCount()).To(Equal(2))
-			netc, runc := fakeCNILibrary.AddNetworkArgsForCall(0)
+			Expect(fakeCNILibrary.AddNetworkListCallCount()).To(Equal(2))
+			netc, runc := fakeCNILibrary.AddNetworkListArgsForCall(0)
 			Expect(runc.ContainerID).To(Equal("some-handle"))
-			Expect(netc.Network.Type).To(Equal("some-plugin"))
-			Expect(netc.Bytes).To(MatchJSON(expectedNetConfBytes))
+			Expect(netc.Name).To(Equal("net-list-name"))
+			Expect(netc.CNIVersion).To(Equal("some-version"))
+			Expect(netc.Plugins).To(HaveLen(1))
+			Expect(netc.Plugins[0].Network.Type).To(Equal("some-plugin"))
+			Expect(netc.Plugins[0].Bytes).To(MatchJSON(expectedNetConfBytes))
 		})
 
 		Context("when injecting the metadata fails", func() {
 			It("return a meaningful error", func() {
-				controller.NetworkConfigs[0].Bytes = []byte(`not valid json`)
+				controller.NetworkConfigLists[0].Plugins[0].Bytes = []byte(`not valid json`)
 
 				_, err := controller.Up("/some/namespace/path", "some-handle", metadata, legacyNetConf)
 				Expect(err).To(MatchError(HavePrefix("adding extra data to CNI config: unmarshal")))
@@ -107,18 +113,18 @@ var _ = Describe("CniController", func() {
 				_, err := controller.Up("/some/namespace/path", "some-handle", metadata, nil)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(fakeCNILibrary.AddNetworkCallCount()).To(Equal(2))
-				netc, _ := fakeCNILibrary.AddNetworkArgsForCall(0)
-				Expect(netc.Bytes).To(MatchJSON(expectedNetConfBytes))
+				Expect(fakeCNILibrary.AddNetworkListCallCount()).To(Equal(2))
+				netc, _ := fakeCNILibrary.AddNetworkListArgsForCall(0)
+				Expect(netc.Plugins[0].Bytes).To(MatchJSON(expectedNetConfBytes))
 			})
 		})
 
-		Context("when the AddNetwork returns an error", func() {
+		Context("when the AddNetworkList returns an error", func() {
 			It("return a meaningful error", func() {
-				fakeCNILibrary.AddNetworkReturns(nil, fmt.Errorf("patato"))
+				fakeCNILibrary.AddNetworkListReturns(nil, fmt.Errorf("patato"))
 
 				_, err := controller.Up("/some/namespace/path", "some-handle", metadata, legacyNetConf)
-				Expect(err).To(MatchError("add network failed: patato"))
+				Expect(err).To(MatchError("add network list failed: patato"))
 			})
 		})
 	})
@@ -128,15 +134,16 @@ var _ = Describe("CniController", func() {
 			err := controller.Down("/some/namespace/path", "some-handle")
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(fakeCNILibrary.DelNetworkCallCount()).To(Equal(2))
-			netc, runc := fakeCNILibrary.DelNetworkArgsForCall(0)
+			Expect(fakeCNILibrary.DelNetworkListCallCount()).To(Equal(2))
+			netc, runc := fakeCNILibrary.DelNetworkListArgsForCall(0)
 			Expect(runc.ContainerID).To(Equal("some-handle"))
-			Expect(netc.Network.Type).To(Equal("some-plugin"))
+			Expect(netc.Plugins).To(HaveLen(1))
+			Expect(netc.Plugins[0].Network.Type).To(Equal("some-plugin"))
 		})
 
 		Context("when the DelNetwork returns an error", func() {
 			It("return a meaningful error", func() {
-				fakeCNILibrary.DelNetworkReturns(fmt.Errorf("patato"))
+				fakeCNILibrary.DelNetworkListReturns(fmt.Errorf("patato"))
 
 				err := controller.Down("/some/namespace/path", "some-handle")
 				Expect(err).To(MatchError("del network failed: patato"))
