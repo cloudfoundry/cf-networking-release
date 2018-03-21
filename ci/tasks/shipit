@@ -9,6 +9,18 @@ if [ -z "$VERSION" ]; then
   exit 1
 fi
 
+git fetch --tags
+if [[ -n "$(git tag | grep -E "^${VERSION}$")" ]]; then
+  echo "git tag ${VERSION} already exists. Nothing has been tagged or commited. Fast failing..."
+  exit 1
+fi
+
+git fetch origin master
+if [[ -n "$(git rev-list HEAD..master)" ]]; then
+  echo "Master branch contains commits not on HEAD. Nothing has been tagged or commited. Fast failing..."
+  exit 1
+fi
+
 cp cf-networking-deployments/config/private.yml cf-networking/config/private.yml
 
 CANDIDATE_DIR=$PWD/cf-networking-tarball
