@@ -993,6 +993,7 @@ jobs:
         trigger: true
       - get: cf-networking-tarball
         passed: [mitre-deploy]
+        trigger: true
       - get: version
         passed: [mitre-deploy]
       - get: cf-networking-release-ci
@@ -1112,6 +1113,7 @@ jobs:
         trigger: true
       - get: cf-networking-deployments
       - get: cf-networking-tarball
+        trigger: true
         passed: [mitre-test]
       - get: silk-dev
         passed: [mitre-test]
@@ -1145,6 +1147,7 @@ jobs:
       - get: cf-networking-deployments
       - get: cf-networking-tarball
         passed: [mitre-cats]
+        trigger: true
       - get: version
         passed: [mitre-cats]
       - get: disaster-recovery-acceptance-tests
@@ -1590,6 +1593,7 @@ jobs:
           passed: [mitre-drats]
         - get: cf-networking-tarball
           passed: [mitre-drats, mitre-acceptance-errand]
+          trigger: true
         - get: silk-tarball
           passed: [mitre-drats, mitre-acceptance-errand]
 
