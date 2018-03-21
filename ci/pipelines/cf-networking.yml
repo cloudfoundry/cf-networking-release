@@ -69,6 +69,7 @@ groups:
   - slouch-bbl-up
   - slouch-deploy
   - delete-slouch-deployment
+  - slouch-bbl-destroy
 - name: bbl
   jobs:
   - pickelhelm-bbl-up
