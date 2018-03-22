@@ -2,6 +2,13 @@
 
 See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for examples
 
+### 1.12.0
+**New Properties**
+  - An optional parameter has been added to list domains from which Cross-Origin
+    requests will be accepted, a * can be used as a wildcard for any part of a
+    domain.
+    - `cf_networking.policy_server.allowed_cors_domains`
+
 ### 1.11.0
 **Changed Properties**
   - `cf_networking.silk_controller.connect_timeout_seconds` now defaults to 120.
