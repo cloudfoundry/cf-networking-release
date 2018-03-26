@@ -2,7 +2,7 @@
 name: iptables-logger
 
 dependencies:
-  - golang
+  - golang-1.10-linux
 
 files:
   - code.cloudfoundry.org/cf-networking-helpers/metrics/*.go # gosub

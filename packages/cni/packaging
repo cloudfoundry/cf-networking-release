@@ -3,14 +3,12 @@
 set -e
 set -u
 
-mkdir -p "${BOSH_INSTALL_TARGET}/bin"
-cp -a . "${BOSH_INSTALL_TARGET}/src"
+mkdir ../src && cp -a * ../src/ && mv ../src ./src
+mkdir -p $BOSH_INSTALL_TARGET/bin
 
-export GOROOT="$(readlink -nf /var/vcap/packages/golang)"
-export GOPATH=$BOSH_INSTALL_TARGET
-export PATH=$GOROOT/bin:$GOPATH/bin:$PATH
+source /var/vcap/packages/golang-1.10-linux/bosh/compile.env
 
-go install github.com/containernetworking/plugins/plugins/ipam/host-local
-go install -ldflags="-extldflags=-Wl,--allow-multiple-definition" code.cloudfoundry.org/silk/cmd/silk-cni
-go install cni-wrapper-plugin
-go install cni-teardown
+go build -o "${BOSH_INSTALL_TARGET}/bin/host-local" github.com/containernetworking/plugins/plugins/ipam/host-local
+go build -o "${BOSH_INSTALL_TARGET}/bin/silk-cni" -ldflags="-extldflags=-Wl,--allow-multiple-definition" code.cloudfoundry.org/silk/cmd/silk-cni
+go build -o "${BOSH_INSTALL_TARGET}/bin/cni-wrapper-plugin" cni-wrapper-plugin
+go build -o "${BOSH_INSTALL_TARGET}/bin/cni-teardown" cni-teardown

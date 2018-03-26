@@ -2,11 +2,11 @@
 set -e -u
 
 mkdir -p ${BOSH_INSTALL_TARGET}/src
-cp -a . ${BOSH_INSTALL_TARGET}/src
+mkdir ../src && cp -a * ../src/ && mv ../src ./src
 
-export GOROOT=$(readlink -nf /var/vcap/packages/golang)
 export GOPATH=$BOSH_INSTALL_TARGET
-export PATH=$GOROOT/bin:$GOPATH/bin:$PATH
+
+source /var/vcap/packages/golang-1.10-linux/bosh/compile.env
 
 tar xzf cli/cf-cli_6.30.0_linux_x86-64.tgz
 mkdir -p $GOPATH/bin

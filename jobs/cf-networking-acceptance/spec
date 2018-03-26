@@ -6,7 +6,7 @@ templates:
   config.json.erb: config.json
 
 packages:
-  - golang
+  - golang-1.10-linux
   - cf-networking-acceptance
 
 properties:

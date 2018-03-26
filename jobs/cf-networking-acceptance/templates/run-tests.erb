@@ -3,9 +3,7 @@
 set -e -u
 set -o pipefail
 
-export GOROOT=$(readlink -nf /var/vcap/packages/golang)
-export GOPATH=/var/vcap/packages/cf-networking-acceptance
-export PATH=$GOROOT/bin:$GOPATH/bin:$PATH
+source /var/vcap/packages/golang-1.10-linux/bosh/compile.env
 
 DATA_DIR=/var/vcap/data/cf-networking-acceptance
 export CF_HOME=$DATA_DIR/cf-home
@@ -14,7 +12,7 @@ mkdir -p $CF_HOME
 export CONFIG=/var/vcap/jobs/cf-networking-acceptance/config.json
 export APPS_DIR=$GOPATH/src/example-apps
 
-go install github.com/onsi/ginkgo/ginkgo
+go build -o "{BOSH_INSTALL_TARGET}/bin/ginkgo" github.com/onsi/ginkgo/ginkgo
 
 cd $GOPATH/src/test/acceptance
 ginkgo -r -v
