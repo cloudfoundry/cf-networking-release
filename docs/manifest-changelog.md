@@ -2,6 +2,20 @@
 
 See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for examples
 
+### 1.13.0
+**New Properties**
+  - An optional parameter has been added to the `garden-cni` job to
+    specify search domains. These domains will be configured in containers' /etc/resolv.conf.
+    - `cf_networking.search_domains`
+  - An optional parameter has been added to the `silk-daemon` job to configure which network
+    container traffic should be sent over based on network interface name. This property is
+    not recommended for use and is temporary. If empty, the default network is used.
+    - `cf_networking.silk_daemon.temporary_vxlan_interface`
+  - An optional parameter has been added to the `silk-daemon` job to configure which network
+    container traffic should be sent over based on bosh network name. If empty, the default
+    gateway network is used.
+    - `cf_networking.silk_daemon.vxlan_network`
+
 ### 1.12.0
 **New Properties**
   - An optional parameter has been added to list domains from which Cross-Origin
