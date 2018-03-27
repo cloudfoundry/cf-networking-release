@@ -15,12 +15,8 @@ See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for example
     container traffic should be sent over based on bosh network name. If empty, the default
     gateway network is used.
     - `cf_networking.silk_daemon.vxlan_network`
-
-### 1.12.0
-**New Properties**
   - An optional parameter has been added to list domains from which Cross-Origin
-    requests will be accepted, a * can be used as a wildcard for any part of a
-    domain.
+    requests will be accepted.
     - `cf_networking.policy_server.allowed_cors_domains`
 
 ### 1.11.0

@@ -33,8 +33,8 @@ var _ = Describe("Cross Origin Resource Sharing", func() {
 
 		template, _ := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
 		template.AllowedCORSDomains = []string{
-			"foo.bar",
-			"bar.foo",
+			"https://www.google.com",
+			"https://www.mozilla.org",
 		}
 		policyServerConfs = configurePolicyServers(template, 2)
 		sessions = startPolicyServers(policyServerConfs)
@@ -51,13 +51,16 @@ var _ = Describe("Cross Origin Resource Sharing", func() {
 		It("returns cors headers", func() {
 			resp := helpers.MakeAndDoRequest(
 				"OPTIONS",
-				fmt.Sprintf("http://%s:%d/", conf.ListenHost, conf.ListenPort),
-				nil,
+				fmt.Sprintf("http://%s:%d/networking/v1/external/policies", conf.ListenHost, conf.ListenPort),
+				map[string]string{
+					"origin": "https://www.google.com",
+				},
 				nil,
 			)
 
-			Expect(resp.Header["Access-Control-Allow-Origin"]).To(ContainElement("foo.bar,bar.foo"))
-			Expect(resp.Header["Access-Control-Allow-Methods"]).To(ContainElement("GET,OPTIONS"))
+			Expect(resp.Header["Access-Control-Allow-Origin"]).To(ContainElement("https://www.google.com"))
+			Expect(resp.Header["Access-Control-Allow-Methods"]).To(ContainElement("POST,GET,OPTIONS"))
+			Expect(resp.Header["Access-Control-Allow-Headers"]).To(ContainElement("authorization"))
 		})
 	})
 
@@ -65,12 +68,14 @@ var _ = Describe("Cross Origin Resource Sharing", func() {
 		It("returns cors allow origin header", func() {
 			resp := helpers.MakeAndDoRequest(
 				"GET",
-				fmt.Sprintf("http://%s:%d/", conf.ListenHost, conf.ListenPort),
-				nil,
+				fmt.Sprintf("http://%s:%d/networking/v1/external/policies", conf.ListenHost, conf.ListenPort),
+				map[string]string{
+					"origin": "https://www.mozilla.org",
+				},
 				nil,
 			)
 
-			Expect(resp.Header["Access-Control-Allow-Origin"]).To(ContainElement("foo.bar,bar.foo"))
+			Expect(resp.Header["Access-Control-Allow-Origin"]).To(ContainElement("https://www.mozilla.org"))
 		})
 	})
 })
