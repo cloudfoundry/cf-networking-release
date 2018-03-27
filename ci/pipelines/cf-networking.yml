@@ -220,7 +220,7 @@ resources:
   - name: cf-acceptance-tests
     type: git
     source:
-      branch: vendor-proxy
+      branch: task-asg-#155800937
       uri: git://github.com/cf-container-networking/cf-acceptance-tests.git
   - name: toque-scaling-test-params
     type: git
