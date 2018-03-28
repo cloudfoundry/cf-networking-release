@@ -6,6 +6,7 @@ dependencies:
 
 files:
   - code.cloudfoundry.org/cf-networking-helpers/metrics/*.go # gosub
+  - code.cloudfoundry.org/filelock/*.go # gosub
   - code.cloudfoundry.org/lager/*.go # gosub
   - github.com/cloudfoundry/dropsonde/*.go # gosub
   - github.com/cloudfoundry/dropsonde/emitter/*.go # gosub
@@ -45,5 +46,4 @@ files:
   - iptables-logger/rotatablesink/*.go # gosub
   - iptables-logger/runner/*.go # gosub
   - lib/datastore/*.go # gosub
-  - lib/filelock/*.go # gosub
   - lib/serial/*.go # gosub

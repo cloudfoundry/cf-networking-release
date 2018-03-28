@@ -11,6 +11,7 @@ files:
   - cni-wrapper-plugin/discover/*.go # gosub
   - cni-wrapper-plugin/legacynet/*.go # gosub
   - cni-wrapper-plugin/lib/*.go # gosub
+  - code.cloudfoundry.org/filelock/*.go # gosub
   - code.cloudfoundry.org/garden/*.go # gosub
   - code.cloudfoundry.org/lager/*.go # gosub
   - code.cloudfoundry.org/silk/cmd/silk-cni/*.go # gosub
@@ -21,7 +22,6 @@ files:
   - code.cloudfoundry.org/silk/daemon/*.go # gosub
   - code.cloudfoundry.org/silk/lib/adapter/*.go # gosub
   - code.cloudfoundry.org/silk/lib/datastore/*.go # gosub
-  - code.cloudfoundry.org/silk/lib/filelock/*.go # gosub
   - code.cloudfoundry.org/silk/lib/serial/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/cf-networking-helpers/json_client/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/cf-networking-helpers/marshal/*.go # gosub
@@ -82,6 +82,5 @@ files:
   - github.com/vishvananda/netlink/nl/*.go # gosub
   - github.com/vishvananda/netns/*.go # gosub
   - lib/datastore/*.go # gosub
-  - lib/filelock/*.go # gosub
   - lib/rules/*.go # gosub
   - lib/serial/*.go # gosub

@@ -5,6 +5,7 @@ dependencies:
   - golang-1.10-linux
 
 files:
+  - code.cloudfoundry.org/filelock/*.go # gosub
   - code.cloudfoundry.org/lager/*.go # gosub
   - code.cloudfoundry.org/silk/client/config/*.go # gosub
   - code.cloudfoundry.org/silk/cmd/silk-daemon/*.go # gosub
@@ -16,7 +17,6 @@ files:
   - code.cloudfoundry.org/silk/daemon/vtep/*.go # gosub
   - code.cloudfoundry.org/silk/lib/adapter/*.go # gosub
   - code.cloudfoundry.org/silk/lib/datastore/*.go # gosub
-  - code.cloudfoundry.org/silk/lib/filelock/*.go # gosub
   - code.cloudfoundry.org/silk/lib/serial/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/cf-networking-helpers/json_client/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/cf-networking-helpers/marshal/*.go # gosub

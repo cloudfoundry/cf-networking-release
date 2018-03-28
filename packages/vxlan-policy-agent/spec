@@ -10,6 +10,7 @@ files:
   - code.cloudfoundry.org/cf-networking-helpers/metrics/*.go # gosub
   - code.cloudfoundry.org/cf-networking-helpers/mutualtls/*.go # gosub
   - code.cloudfoundry.org/debugserver/*.go # gosub
+  - code.cloudfoundry.org/filelock/*.go # gosub
   - code.cloudfoundry.org/lager/*.go # gosub
   - github.com/cf-container-networking/sql-migrate/*.go # gosub
   - github.com/cf-container-networking/sql-migrate/sqlparse/*.go # gosub
@@ -43,7 +44,6 @@ files:
   - github.com/tedsuo/ifrit/sigmon/*.go # gosub
   - gopkg.in/validator.v2/*.go # gosub
   - lib/datastore/*.go # gosub
-  - lib/filelock/*.go # gosub
   - lib/policy_client/*.go # gosub
   - lib/poller/*.go # gosub
   - lib/rules/*.go # gosub
