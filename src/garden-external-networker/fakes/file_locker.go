@@ -2,8 +2,10 @@
 package fakes
 
 import (
-	"lib/filelock"
+	"garden-external-networker/port_allocator"
 	"sync"
+
+	"code.cloudfoundry.org/filelock"
 )
 
 type FileLocker struct {
@@ -89,4 +91,4 @@ func (fake *FileLocker) recordInvocation(key string, args []interface{}) {
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ filelock.FileLocker = new(FileLocker)
+var _ port_allocator.FileLocker = new(FileLocker)

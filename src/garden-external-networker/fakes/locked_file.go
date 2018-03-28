@@ -2,7 +2,7 @@
 package fakes
 
 import (
-	"lib/filelock"
+	"garden-external-networker/port_allocator"
 	"sync"
 )
 
@@ -355,4 +355,4 @@ func (fake *LockedFile) recordInvocation(key string, args []interface{}) {
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ filelock.LockedFile = new(LockedFile)
+var _ port_allocator.LockedFile = new(LockedFile)

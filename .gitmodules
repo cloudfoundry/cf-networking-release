@@ -136,3 +136,6 @@
 [submodule "src/code.cloudfoundry.org/silk"]
 	path = src/code.cloudfoundry.org/silk
 	url = https://github.com/cloudfoundry/silk
+[submodule "src/code.cloudfoundry.org/filelock"]
+	path = src/code.cloudfoundry.org/filelock
+	url = https://github.com/cloudfoundry/filelock.git

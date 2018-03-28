@@ -17,13 +17,13 @@ var _ = Describe("PortAllocator", func() {
 		portAllocator *port_allocator.PortAllocator
 		tracker       *fakes.Tracker
 		serializer    *libfakes.Serializer
-		locker        *libfakes.FileLocker
+		locker        *fakes.FileLocker
 		lockedFile    *os.File
 	)
 	BeforeEach(func() {
 		serializer = &libfakes.Serializer{}
 		tracker = &fakes.Tracker{}
-		locker = &libfakes.FileLocker{}
+		locker = &fakes.FileLocker{}
 		serializer.DecodeAllReturns(nil)
 		tracker.AcquireOneReturns(111, nil)
 

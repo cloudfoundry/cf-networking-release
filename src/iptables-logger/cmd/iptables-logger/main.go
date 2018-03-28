@@ -9,7 +9,6 @@ import (
 	"iptables-logger/repository"
 	"iptables-logger/runner"
 	"lib/datastore"
-	"lib/filelock"
 	"lib/serial"
 	"log"
 	"os"
@@ -24,9 +23,11 @@ import (
 
 	"iptables-logger/rotatablesink"
 
-	"code.cloudfoundry.org/cf-networking-helpers/metrics"
-	"code.cloudfoundry.org/lager"
 	"io"
+
+	"code.cloudfoundry.org/cf-networking-helpers/metrics"
+	"code.cloudfoundry.org/filelock"
+	"code.cloudfoundry.org/lager"
 )
 
 const (

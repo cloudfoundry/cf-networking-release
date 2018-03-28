@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"iptables-logger/config"
 	"lib/datastore"
-	"lib/filelock"
 	"lib/serial"
 	"os"
 	"os/exec"
@@ -16,6 +15,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics"
+	"code.cloudfoundry.org/filelock"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

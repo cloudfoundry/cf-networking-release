@@ -8,9 +8,9 @@ import (
 	"sync/atomic"
 
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
+	"code.cloudfoundry.org/filelock"
 
 	"lib/datastore"
-	"lib/filelock"
 	"lib/serial"
 
 	. "github.com/onsi/ginkgo"

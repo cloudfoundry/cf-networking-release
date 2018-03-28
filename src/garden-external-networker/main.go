@@ -10,9 +10,10 @@ import (
 	"garden-external-networker/manager"
 	"garden-external-networker/port_allocator"
 	"io"
-	"lib/filelock"
 	"lib/serial"
 	"os"
+
+	"code.cloudfoundry.org/filelock"
 )
 
 var (

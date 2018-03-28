@@ -2,7 +2,6 @@ package rules_test
 
 import (
 	"fmt"
-	"lib/filelock"
 	"lib/rules"
 	"os/exec"
 	"runtime"
@@ -10,6 +9,7 @@ import (
 	"sync"
 
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
+	"code.cloudfoundry.org/filelock"
 
 	goiptables "github.com/coreos/go-iptables/iptables"
 	. "github.com/onsi/ginkgo"
