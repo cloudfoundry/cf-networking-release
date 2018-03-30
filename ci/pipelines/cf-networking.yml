@@ -269,12 +269,14 @@ resources:
       user: cloudfoundry
       repository: cf-networking-release
       access_token: {{github-access-token}}
+      drafts: true
   - name: silk-github-release
     type: github-release
     source:
       user: cloudfoundry
       repository: silk-release
       access_token: {{github-access-token}}
+      drafts: true
 
 jobs:
   - name: sombrero-bbl-up
