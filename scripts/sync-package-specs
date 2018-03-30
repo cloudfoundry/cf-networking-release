@@ -65,7 +65,7 @@ sync_package silk-daemon \
   -app silk-daemon-shutdown \
   -app code.cloudfoundry.org/silk/cmd/silk-teardown &
 
-GOOS=linux sync_package cni \
+GOOS=linux sync_package silk-cni \
   -app code.cloudfoundry.org/silk/cmd/silk-cni \
   -app github.com/containernetworking/plugins/plugins/ipam/host-local \
   -app cni-wrapper-plugin \
