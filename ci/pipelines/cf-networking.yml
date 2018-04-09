@@ -9,6 +9,7 @@ groups:
   - silk-postgres-tests
   - silk-mysql-tests
   - silk-mysql-5.6-tests
+  - silk-template-tests
   - unit-and-integration-tests
   - pickelhelm-deploy
   - pickelhelm-test
@@ -551,10 +552,6 @@ jobs:
       file: cf-networking-release-ci/ci/tasks/template-tests.yml
       input_mapping:
         cf-networking-release: cf-networking-dev
-    - task: template-tests
-      file: cf-networking-release-ci/ci/tasks/silk-template-tests.yml
-      input_mapping:
-        silk-release: silk-dev
 
   - name: mysql-tests
     public: true
@@ -631,6 +628,18 @@ jobs:
       input_mapping:
         silk: silk-dev
 
+  - name: silk-template-tests
+    public: true
+    plan:
+    - aggregate:
+      - get: silk-dev
+        trigger: true
+      - get: cf-networking-release-ci
+    - task: template-tests
+      file: cf-networking-release-ci/ci/tasks/silk-template-tests.yml
+      input_mapping:
+        silk-release: silk-dev
+
   - name: unit-and-integration-tests
     public: true
     plan:
@@ -638,7 +647,7 @@ jobs:
       passed: [postgres-tests, mysql-tests, mysql-5.6-tests, windows-tests, template-tests]
       trigger: true
     - get: silk-dev
-      passed: [silk-postgres-tests, silk-mysql-tests, silk-mysql-5.6-tests]
+      passed: [silk-postgres-tests, silk-mysql-tests, silk-mysql-5.6-tests, silk-template-tests]
       trigger: true
 
   - name: pickelhelm-bbl-up
