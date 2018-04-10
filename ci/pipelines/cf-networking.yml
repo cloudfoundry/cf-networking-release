@@ -551,6 +551,10 @@ jobs:
       file: cf-networking-release-ci/ci/tasks/template-tests.yml
       input_mapping:
         cf-networking-release: cf-networking-dev
+    - task: template-tests
+      file: cf-networking-release-ci/ci/tasks/silk-template-tests.yml
+      input_mapping:
+        silk-release: silk-dev
 
   - name: mysql-tests
     public: true
