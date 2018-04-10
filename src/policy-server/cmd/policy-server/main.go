@@ -316,10 +316,11 @@ type dbConnection struct {
 }
 
 func getDbConnection(conf config.Config) dbConnection {
+	retryInterval := 3
 	retriableConnector := db.RetriableConnector{
 		Connector:     db.GetConnectionPool,
 		Sleeper:       db.SleeperFunc(time.Sleep),
-		RetryInterval: 3 * time.Second,
+		RetryInterval: time.Duration(retryInterval) * time.Second,
 		MaxRetries:    10,
 	}
 
@@ -329,9 +330,10 @@ func getDbConnection(conf config.Config) dbConnection {
 		channel <- dbConnection{connection, err}
 	}()
 	var connectionResult dbConnection
+	timeout := time.Duration((retryInterval + conf.Database.Timeout) * retriableConnector.MaxRetries)
 	select {
 	case connectionResult = <-channel:
-	case <-time.After(5 * time.Second):
+	case <-time.After(timeout * time.Second):
 		log.Fatalf("%s.policy-server: db connection timeout", logPrefix)
 	}
 	if connectionResult.Err != nil {
