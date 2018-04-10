@@ -1,0 +1,15 @@
+---
+name: proxy-plugin
+
+templates: {}
+
+packages: []
+
+consumes:
+  - name: cf_network
+    type: cf_network
+
+properties:
+  proxy_port:
+    description: "Port that Envoy proxy is listening on. Redirect NAT rules will be created to transparently pass packets to the proxy."
+    default: 62001
