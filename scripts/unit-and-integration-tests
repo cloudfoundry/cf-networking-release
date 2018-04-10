@@ -12,7 +12,7 @@ declare -a packages=(
   "src/lib"
   "src/netmon"
   "src/policy-server"
-  )
+)
 
 declare -a serial_packages=(
   "src/cni-teardown"
@@ -21,7 +21,8 @@ declare -a serial_packages=(
   "src/policy-server/integration/timeouts"
   "src/policy-server/integration"
   "src/vxlan-policy-agent"
-  )
+  "src/proxy-plugin/integration"
+)
 
 function loadIFB {
   set +e
