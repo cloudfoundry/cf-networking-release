@@ -178,7 +178,7 @@ var _ = Describe("Integration", func() {
 				Host:         "badHost",
 				Port:         9999,
 				DatabaseName: "nonexistentDatabase",
-				Timeout:      5,
+				Timeout:      1,
 			}
 			conf, _ := helpers.DefaultTestConfig(badDbConfig, "some-address", "fixtures")
 			configFilePath := helpers.WriteConfigFile(conf)
@@ -194,10 +194,10 @@ var _ = Describe("Integration", func() {
 			Eventually(session, helpers.DEFAULT_TIMEOUT).Should(gexec.Exit())
 		})
 
-		It("should log and exit after 5 seconds", func() {
+		It("should log and exit after 40 seconds", func() {
 			Eventually(session, 90*time.Second).Should(gexec.Exit())
 
-			Expect(session.Err).To(gbytes.Say("testprefix.policy-server: db connection timeout"))
+			Expect(session.Err).To(gbytes.Say("testprefix.policy-server: db connect: unable to ping"))
 		})
 	})
 

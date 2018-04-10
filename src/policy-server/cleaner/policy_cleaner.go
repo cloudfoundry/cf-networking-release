@@ -1,7 +1,6 @@
 package cleaner
 
 import (
-	"context"
 	"fmt"
 	"policy-server/store"
 	"time"
@@ -23,11 +22,6 @@ type ccClient interface {
 type listDeleteStore interface {
 	All() ([]store.Policy, error)
 	Delete([]store.Policy) error
-}
-
-//go:generate counterfeiter -o fakes/context_adapter.go --fake-name ContextAdapter . contextAdapter
-type contextAdapter interface {
-	WithTimeout(context.Context, time.Duration) (context.Context, context.CancelFunc)
 }
 
 type PolicyCleaner struct {
