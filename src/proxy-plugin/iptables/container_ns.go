@@ -1,16 +1,17 @@
-package lib
+package iptables
 
 import (
 	"fmt"
 	"lib/rules"
+	"proxy-plugin/lib"
 )
 
-type ContainerNSIPTables struct {
-	CommandRunner      CommandRunner
+type ContainerNS struct {
+	CommandRunner      lib.CommandRunner
 	ContainerNameSpace string
 }
 
-func (c ContainerNSIPTables) NewChain(table, chain string) error {
+func (c ContainerNS) NewChain(table, chain string) error {
 	args := append(c.baseArgs(), "-t", table, "-N", chain)
 	output, err := c.CommandRunner.Exec("ip", args...)
 	if err != nil {
@@ -19,7 +20,7 @@ func (c ContainerNSIPTables) NewChain(table, chain string) error {
 	return nil
 }
 
-func (c ContainerNSIPTables) BulkAppend(table, chain string, rulespecs ...rules.IPTablesRule) error {
+func (c ContainerNS) BulkAppend(table, chain string, rulespecs ...rules.IPTablesRule) error {
 	for _, rulespec := range rulespecs {
 		args := append(c.baseArgs(), "-t", table, "-A")
 		args = append(args, rulespec...)
@@ -31,7 +32,7 @@ func (c ContainerNSIPTables) BulkAppend(table, chain string, rulespecs ...rules.
 	return nil
 }
 
-func (c ContainerNSIPTables) DeleteChain(table, chain string) error {
+func (c ContainerNS) DeleteChain(table, chain string) error {
 	args := append(c.baseArgs(), "-t", table, "-X", chain)
 	output, err := c.CommandRunner.Exec("ip", args...)
 	if err != nil {
@@ -40,7 +41,7 @@ func (c ContainerNSIPTables) DeleteChain(table, chain string) error {
 	return nil
 }
 
-func (c ContainerNSIPTables) Delete(table, chain string, rulespec rules.IPTablesRule) error {
+func (c ContainerNS) Delete(table, chain string, rulespec rules.IPTablesRule) error {
 	args := append(c.baseArgs(), "-t", table, "-D")
 	args = append(args, rulespec...)
 	output, err := c.CommandRunner.Exec("ip", args...)
@@ -50,22 +51,22 @@ func (c ContainerNSIPTables) Delete(table, chain string, rulespec rules.IPTables
 	return nil
 }
 
-func (c ContainerNSIPTables) Exists(table, chain string, rulespec rules.IPTablesRule) (bool, error) {
+func (c ContainerNS) Exists(table, chain string, rulespec rules.IPTablesRule) (bool, error) {
 	panic("not implemented")
 }
 
-func (c ContainerNSIPTables) List(table, chain string) ([]string, error) {
+func (c ContainerNS) List(table, chain string) ([]string, error) {
 	panic("not implemented")
 }
 
-func (c ContainerNSIPTables) ClearChain(table, chain string) error {
+func (c ContainerNS) ClearChain(table, chain string) error {
 	panic("not implemented")
 }
 
-func (c ContainerNSIPTables) BulkInsert(table, chain string, pos int, rulespec ...rules.IPTablesRule) error {
+func (c ContainerNS) BulkInsert(table, chain string, pos int, rulespec ...rules.IPTablesRule) error {
 	panic("not implemented")
 }
 
-func (c ContainerNSIPTables) baseArgs() []string {
+func (c ContainerNS) baseArgs() []string {
 	return []string{"netns", "exec", c.ContainerNameSpace, "iptables"}
 }

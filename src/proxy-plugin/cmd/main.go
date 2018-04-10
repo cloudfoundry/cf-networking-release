@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"proxy-plugin/lib"
 	"proxy-plugin/rules"
+	"proxy-plugin/iptables"
 )
 
 func main() {
@@ -36,7 +37,7 @@ func cmdDel(args *skel.CmdArgs) error {
 }
 
 func proxyRules(containerNetNS, overlayNetwork string, proxyPort int) rules.Proxy {
-	ipTables := lib.ContainerNSIPTables{
+	ipTables := iptables.ContainerNS{
 		CommandRunner:      lib.RealCommandRunner{},
 		ContainerNameSpace: filepath.Base(containerNetNS),
 	}

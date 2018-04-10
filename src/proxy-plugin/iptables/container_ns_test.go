@@ -1,22 +1,22 @@
-package lib_test
+package iptables_test
 
 import (
 	"errors"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"lib/rules"
-	"proxy-plugin/lib"
+	"proxy-plugin/iptables"
 	"proxy-plugin/lib/fakes"
 )
 
-var _ = Describe("ContainerNSIPTables", func() {
+var _ = Describe("ContainerNS", func() {
 	var (
 		commandRunner       *fakes.CommandRunner
-		containerNSIPTables lib.ContainerNSIPTables
+		containerNSIPTables iptables.ContainerNS
 	)
 	BeforeEach(func() {
 		commandRunner = &fakes.CommandRunner{}
-		containerNSIPTables = lib.ContainerNSIPTables{
+		containerNSIPTables = iptables.ContainerNS{
 			CommandRunner:      commandRunner,
 			ContainerNameSpace: "delightfuldweeb",
 		}
