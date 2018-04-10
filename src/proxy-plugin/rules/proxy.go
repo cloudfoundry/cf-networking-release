@@ -1,4 +1,4 @@
-package lib
+package rules
 
 import (
 	"lib/rules"
@@ -6,13 +6,13 @@ import (
 	"fmt"
 )
 
-type ProxyRules struct {
+type Proxy struct {
 	IPTables rules.IPTablesAdapter
 	ProxyPort int
 	OverlayNetwork string
 }
 
-func (p *ProxyRules) Add(proxyChainName string) error {
+func (p *Proxy) Add(proxyChainName string) error {
 	err := p.IPTables.NewChain("nat", proxyChainName)
 	if err != nil {
 		return fmt.Errorf("creating new chain: %s", err)
@@ -27,7 +27,7 @@ func (p *ProxyRules) Add(proxyChainName string) error {
 	return nil
 }
 
-func (p *ProxyRules) Del(proxyChainName string) error {
+func (p *Proxy) Del(proxyChainName string) error {
 	chainRules := p.chainRules(proxyChainName)
 	for _, rule := range chainRules {
 		err := p.IPTables.Delete("nat", proxyChainName, rule)
@@ -44,7 +44,7 @@ func (p *ProxyRules) Del(proxyChainName string) error {
 	return nil
 }
 
-func (p *ProxyRules) chainRules(proxyChainName string) []rules.IPTablesRule {
+func (p *Proxy) chainRules(proxyChainName string) []rules.IPTablesRule {
 	return []rules.IPTablesRule{
 		{"OUTPUT", "-j", proxyChainName},
 		{proxyChainName, "-m", "owner", "!", "--uid-owner", "1000", "-j", "RETURN"},

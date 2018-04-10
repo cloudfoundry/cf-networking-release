@@ -1,4 +1,4 @@
-package lib_test
+package rules
 
 import (
 	"errors"
@@ -6,18 +6,17 @@ import (
 	. "github.com/onsi/gomega"
 	"lib/fakes"
 	"lib/rules"
-	"proxy-plugin/lib"
 )
 
-var _ = Describe("ProxyRules", func() {
+var _ = Describe("Proxy", func() {
 	var (
-		proxyRules lib.ProxyRules
+		proxyRules Proxy
 		ipTables   *fakes.IPTablesAdapter
 	)
 
 	BeforeEach(func() {
 		ipTables = &fakes.IPTablesAdapter{}
-		proxyRules = lib.ProxyRules{
+		proxyRules = Proxy{
 			IPTables:       ipTables,
 			ProxyPort:      8090,
 			OverlayNetwork: "10.255.0.0/16",

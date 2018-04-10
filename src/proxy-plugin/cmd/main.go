@@ -5,6 +5,7 @@ import (
 	"github.com/containernetworking/cni/pkg/version"
 	"path/filepath"
 	"proxy-plugin/lib"
+	"proxy-plugin/rules"
 )
 
 func main() {
@@ -34,12 +35,12 @@ func cmdDel(args *skel.CmdArgs) error {
 	return proxyRules.Del(proxyChainName)
 }
 
-func proxyRules(containerNetNS, overlayNetwork string, proxyPort int) lib.ProxyRules {
+func proxyRules(containerNetNS, overlayNetwork string, proxyPort int) rules.Proxy {
 	ipTables := lib.ContainerNSIPTables{
 		CommandRunner:      lib.RealCommandRunner{},
 		ContainerNameSpace: filepath.Base(containerNetNS),
 	}
-	return lib.ProxyRules{
+	return rules.Proxy{
 		IPTables:       ipTables,
 		OverlayNetwork: overlayNetwork,
 		ProxyPort:      proxyPort,

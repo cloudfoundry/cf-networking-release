@@ -1,4 +1,4 @@
-package lib_test
+package rules_test
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -8,5 +8,5 @@ import (
 
 func TestConfig(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Lib Suite")
+	RunSpecs(t, "Proxy Suite")
 }
