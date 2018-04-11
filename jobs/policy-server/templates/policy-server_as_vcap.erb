@@ -13,6 +13,5 @@ trap 'handle_orphaned_server policy-server ${pid}' TERM
 
 pid=$!
 
-healthy=$(wait_for_server_to_become_healthy "${URL}" "${TIMEOUT}")
-write_pid "${healthy}" "${pid}"
+write_pid "0" "${pid}"
 <% end %>

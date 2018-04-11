@@ -1,0 +1,14 @@
+#!/bin/bash -eu
+
+<% unless p("cf_networking.disable") %>
+set -o pipefail
+source /var/vcap/packages/ctl-utils/ctl_util.sh
+
+export PORT=<%= p("cf_networking.policy_server.listen_port") %>
+export URL=127.0.0.1:"${PORT}"
+export TIMEOUT=<%= p("cf_networking.policy_server.connect_timeout_seconds") %>
+
+healthy=$(wait_for_server_to_become_healthy "${URL}" "${TIMEOUT}")
+
+exit "${healthy}"
+<% end %>

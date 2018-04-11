@@ -65,10 +65,11 @@ func main() {
 	destination := &store.DestinationTable{}
 	policy := &store.PolicyTable{}
 
+	retryInterval := 3
 	retriableConnector := db.RetriableConnector{
 		Connector:     db.GetConnectionPool,
 		Sleeper:       db.SleeperFunc(time.Sleep),
-		RetryInterval: 3 * time.Second,
+		RetryInterval: time.Duration(retryInterval) * time.Second,
 		MaxRetries:    10,
 	}
 
@@ -82,9 +83,10 @@ func main() {
 		channel <- dbConnection{connection, err}
 	}()
 	var connectionResult dbConnection
+	connectionChannelTimeout := time.Duration((retryInterval + conf.Database.Timeout) * retriableConnector.MaxRetries)
 	select {
 	case connectionResult = <-channel:
-	case <-time.After(5 * time.Second):
+	case <-time.After(connectionChannelTimeout * time.Second):
 		log.Fatalf("%s.%s: db connection timeout", logPrefix, jobPrefix)
 	}
 	if connectionResult.Err != nil {
@@ -92,7 +94,6 @@ func main() {
 	}
 
 	timeout := time.Duration(conf.Database.Timeout) * time.Second
-	timeout = timeout - time.Duration(500)*time.Millisecond
 
 	dataStore, err := store.New(
 		connectionResult.ConnectionPool,
