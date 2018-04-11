@@ -13,7 +13,7 @@ consumes:
 properties:
   proxy_port:
     description: "Port that Envoy proxy is listening on. Redirect NAT rules will be created to transparently pass packets to the proxy."
-    default: 66222
+    default: 5610
 
   proxy_range:
     description: |
