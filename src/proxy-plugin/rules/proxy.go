@@ -12,14 +12,15 @@ type Proxy struct {
 	OverlayNetwork string
 }
 
-func (p *Proxy) Add(proxyChainName string) error {
-	err := p.IPTables.NewChain("nat", proxyChainName)
+func (p *Proxy) Add(chainName string) error {
+	name := proxyChainName(chainName)
+	err := p.IPTables.NewChain("nat", name)
 	if err != nil {
 		return fmt.Errorf("creating new chain: %s", err)
 	}
 
-	chainRules := p.chainRules(proxyChainName)
-	err = p.IPTables.BulkAppend("nat", proxyChainName, chainRules...)
+	chainRules := p.chainRules(name)
+	err = p.IPTables.BulkAppend("nat", name, chainRules...)
 	if err != nil {
 		return fmt.Errorf("appending rules: %s", err)
 	}
@@ -27,16 +28,17 @@ func (p *Proxy) Add(proxyChainName string) error {
 	return nil
 }
 
-func (p *Proxy) Del(proxyChainName string) error {
-	chainRules := p.chainRules(proxyChainName)
+func (p *Proxy) Del(chainName string) error {
+	name := proxyChainName(chainName)
+	chainRules := p.chainRules(name)
 	for _, rule := range chainRules {
-		err := p.IPTables.Delete("nat", proxyChainName, rule)
+		err := p.IPTables.Delete("nat", name, rule)
 		if err != nil {
 			return fmt.Errorf("deleting rule: %s", err)
 		}
 	}
 
-	err := p.IPTables.DeleteChain("nat", proxyChainName)
+	err := p.IPTables.DeleteChain("nat", name)
 	if err != nil {
 		return fmt.Errorf("deleting chain: %s", err)
 	}
@@ -50,4 +52,8 @@ func (p *Proxy) chainRules(proxyChainName string) []rules.IPTablesRule {
 		{proxyChainName, "-m", "owner", "!", "--uid-owner", "1000", "-j", "RETURN"},
 		{proxyChainName, "-d", p.OverlayNetwork, "-p", "tcp", "-j", "REDIRECT", "--to-ports", string(strconv.Itoa(p.ProxyPort))},
 	}
+}
+
+func proxyChainName(containerID string) string {
+	return ("proxy--" + containerID)[:28]
 }

@@ -21,8 +21,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 	}
 
 	proxyRules := proxyRules(args.Netns, config.ProxyRange, config.ProxyPort)
-	proxyChainName := proxyChainName(args.ContainerID)
-	return proxyRules.Add(proxyChainName)
+	return proxyRules.Add(args.ContainerID)
 }
 
 func cmdDel(args *skel.CmdArgs) error {
@@ -32,8 +31,7 @@ func cmdDel(args *skel.CmdArgs) error {
 	}
 
 	proxyRules := proxyRules(args.Netns, config.ProxyRange, config.ProxyPort)
-	proxyChainName := proxyChainName(args.ContainerID)
-	return proxyRules.Del(proxyChainName)
+	return proxyRules.Del(args.ContainerID)
 }
 
 func proxyRules(containerNetNS, overlayNetwork string, proxyPort int) rules.Proxy {
@@ -46,8 +44,4 @@ func proxyRules(containerNetNS, overlayNetwork string, proxyPort int) rules.Prox
 		OverlayNetwork: overlayNetwork,
 		ProxyPort:      proxyPort,
 	}
-}
-
-func proxyChainName(containerID string) string {
-	return ("proxy--" + containerID)[:28]
 }
