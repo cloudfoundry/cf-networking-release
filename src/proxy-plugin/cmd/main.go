@@ -4,9 +4,9 @@ import (
 	"github.com/containernetworking/cni/pkg/skel"
 	"github.com/containernetworking/cni/pkg/version"
 	"path/filepath"
+	"proxy-plugin/iptables"
 	"proxy-plugin/lib"
 	"proxy-plugin/rules"
-	"proxy-plugin/iptables"
 )
 
 func main() {
@@ -20,7 +20,7 @@ func cmdAdd(args *skel.CmdArgs) error {
 		return err
 	}
 
-	proxyRules := proxyRules(args.Netns, config.OverlayNetwork, config.ProxyPort)
+	proxyRules := proxyRules(args.Netns, config.ProxyRange, config.ProxyPort)
 	proxyChainName := proxyChainName(args.ContainerID)
 	return proxyRules.Add(proxyChainName)
 }
@@ -31,7 +31,7 @@ func cmdDel(args *skel.CmdArgs) error {
 		return err
 	}
 
-	proxyRules := proxyRules(args.Netns, config.OverlayNetwork, config.ProxyPort)
+	proxyRules := proxyRules(args.Netns, config.ProxyRange, config.ProxyPort)
 	proxyChainName := proxyChainName(args.ContainerID)
 	return proxyRules.Del(proxyChainName)
 }

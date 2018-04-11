@@ -6,8 +6,8 @@ import (
 )
 
 type ProxyConfig struct {
-	OverlayNetwork string `json:"overlay_network"`
-	ProxyPort      int    `json:"proxy_port"`
+	ProxyRange string `json:"proxy_range"`
+	ProxyPort  int    `json:"proxy_port"`
 }
 
 func LoadProxyConfig(bytes []byte) (*ProxyConfig, error) {

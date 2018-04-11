@@ -11,13 +11,13 @@ var _ = Describe("ProxyConfig", func() {
 		It("should parse a valid config", func() {
 			input := []byte(`{
 				"proxy_port": 6868,
-				"overlay_network": "10.255.0.0/16"
+				"proxy_range": "10.255.0.0/16"
 			}`)
 			result, err := lib.LoadProxyConfig(input)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(result).To(Equal(&lib.ProxyConfig{
-				ProxyPort: 6868,
-				OverlayNetwork: "10.255.0.0/16",
+				ProxyPort:  6868,
+				ProxyRange: "10.255.0.0/16",
 			}))
 		})
 

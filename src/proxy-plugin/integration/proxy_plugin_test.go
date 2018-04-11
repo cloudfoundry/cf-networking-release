@@ -76,8 +76,8 @@ var _ = Describe("CniWrapperPlugin", func() {
 			CNIVersion: "0.3.1",
 			Type:       "proxy-plugin",
 			ProxyConfig: lib.ProxyConfig{
-				OverlayNetwork: "10.255.0.0/16",
-				ProxyPort:      8675, //randomize for parallel execution
+				ProxyRange: "10.255.0.0/16",
+				ProxyPort:  8675, //randomize for parallel execution
 			},
 		}
 
@@ -109,7 +109,7 @@ var _ = Describe("CniWrapperPlugin", func() {
 			Expect(ContainerIPTablesRules(containerNSShortName, "nat")).To(ContainElement(fmt.Sprintf("-A %s -m owner ! --uid-owner 1000 -j RETURN", proxyChainName)))
 
 			By("checking that the envoy chain redirects to the proxy port")
-			Expect(ContainerIPTablesRules(containerNSShortName, "nat")).To(ContainElement(fmt.Sprintf("-A %s -d %s -p tcp -j REDIRECT --to-ports %d", proxyChainName, inputStruct.OverlayNetwork, inputStruct.ProxyPort)))
+			Expect(ContainerIPTablesRules(containerNSShortName, "nat")).To(ContainElement(fmt.Sprintf("-A %s -d %s -p tcp -j REDIRECT --to-ports %d", proxyChainName, inputStruct.ProxyRange, inputStruct.ProxyPort)))
 		})
 	})
 
