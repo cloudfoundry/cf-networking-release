@@ -111,7 +111,6 @@ func main() {
 	connectionResult := getDbConnection(*conf)
 
 	timeout := time.Duration(conf.Database.Timeout) * time.Second
-	timeout = timeout - time.Duration(500)*time.Millisecond
 
 	dataStore, err := store.New(
 		connectionResult.ConnectionPool,
