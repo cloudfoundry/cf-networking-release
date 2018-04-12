@@ -93,8 +93,6 @@ func main() {
 		log.Fatalf("%s.%s: db connect: %s", logPrefix, jobPrefix, connectionResult.Err) // not tested
 	}
 
-	timeout := time.Duration(conf.Database.Timeout) * time.Second
-
 	dataStore, err := store.New(
 		connectionResult.ConnectionPool,
 		connectionResult.ConnectionPool,
@@ -102,7 +100,6 @@ func main() {
 		destination,
 		policy,
 		conf.TagLength,
-		timeout,
 		&migrations.Migrator{
 			MigrateAdapter: &migrations.MigrateAdapter{},
 		},

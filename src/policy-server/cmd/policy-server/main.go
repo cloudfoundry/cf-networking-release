@@ -110,8 +110,6 @@ func main() {
 	migrationConnectionResult := getMigrationDbConnection(*conf)
 	connectionResult := getDbConnection(*conf)
 
-	timeout := time.Duration(conf.Database.Timeout) * time.Second
-
 	dataStore, err := store.New(
 		connectionResult.ConnectionPool,
 		migrationConnectionResult.ConnectionPool,
@@ -119,7 +117,6 @@ func main() {
 		destination,
 		policy,
 		conf.TagLength,
-		timeout,
 		&migrations.Migrator{
 			MigrateAdapter: &migrations.MigrateAdapter{},
 		},
