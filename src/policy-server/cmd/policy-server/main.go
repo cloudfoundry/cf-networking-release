@@ -305,7 +305,6 @@ func main() {
 	logger.Info("exited")
 }
 func getMigrationDbConnection(c config.Config) dbConnection {
-	c.Database.Timeout = 60
 	return getDbConnection(c)
 }
 
