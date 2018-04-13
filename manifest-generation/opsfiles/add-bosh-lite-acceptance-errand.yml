@@ -14,15 +14,13 @@
     - name: cf-networking-acceptance
       release: cf-networking
       properties:
-        cf_networking:
-          acceptance:
-            system_domain: "((system_domain))"
-            apps_domain: "((system_domain))"
-            skip_ssl_validation: true
-            admin_user: admin
-            admin_password: "((cf_admin_password))"
-            admin_client: admin
-            admin_secret: "((uaa_admin_client_secret))"
+        system_domain: "((system_domain))"
+        apps_domain: "((system_domain))"
+        skip_ssl_validation: true
+        admin_user: admin
+        admin_password: "((cf_admin_password))"
+        admin_client: admin
+        admin_secret: "((uaa_admin_client_secret))"
     networks:
     - name: default
     vm_type: m3.medium

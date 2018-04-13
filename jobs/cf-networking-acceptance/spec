@@ -10,51 +10,51 @@ packages:
   - cf-networking-acceptance
 
 properties:
-  cf_networking.acceptance.system_domain:
+  system_domain:
     description: "cf system domain, e.g. bosh-lite.com"
 
-  cf_networking.acceptance.apps_domain:
+  apps_domain:
     description: "cf apps domain, e.g. bosh-lite.com"
 
-  cf_networking.acceptance.skip_ssl_validation:
+  skip_ssl_validation:
     description: "Skip ssl validation when connecting to apis"
     default: false
 
-  cf_networking.acceptance.admin_user:
+  admin_user:
     description: "cf admin user name"
     default: admin
 
-  cf_networking.acceptance.admin_password:
+  admin_password:
     description: "cf admin user password"
 
-  cf_networking.acceptance.admin_client:
+  admin_client:
     description: "uaa admin client name"
     default: "admin"
 
-  cf_networking.acceptance.admin_secret:
+  admin_secret:
     description: "uaa admin client secret"
 
-  cf_networking.acceptance.default_security_groups:
+  default_security_groups:
     description: "expected default security groups"
     default: [ "dns", "public_networks" ]
 
-  cf_networking.acceptance.prefix:
+  prefix:
     description: "prefix applied to all apps, orgs and spaces created by test"
     default: cf-networking-test-
 
-  cf_networking.acceptance.proxy_applications:
+  proxy_applications:
     description: "number of proxy applications to use in acceptance tests"
     default: 1
 
-  cf_networking.acceptance.proxy_instances:
+  proxy_instances:
     description: "number of proxy applications to use in acceptance tests"
     default: 1
 
-  cf_networking.acceptance.num_apps:
+  num_apps:
     description: "number of applications to use in acceptance tests"
     default: 2
 
-  cf_networking.acceptance.num_app_instances:
+  num_app_instances:
     description: "number of app instances to use in acceptance tests"
     default: 2
 
