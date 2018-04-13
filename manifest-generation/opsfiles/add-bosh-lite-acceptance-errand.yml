@@ -23,5 +23,5 @@
         admin_secret: "((uaa_admin_client_secret))"
     networks:
     - name: default
-    vm_type: m3.medium
+    vm_type: default
 
