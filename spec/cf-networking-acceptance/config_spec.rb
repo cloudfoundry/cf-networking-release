@@ -27,7 +27,7 @@ module Bosh::Template::Test
         }
       end
 
-      describe 'cf-networking-acceptance/config.json job' do
+      describe 'cf-networking-acceptance job' do
         let(:job) {release.job('cf-networking-acceptance')}
 
         describe 'config.json' do
