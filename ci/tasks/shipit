@@ -14,6 +14,7 @@ cp cf-networking-deployments/config/private.yml cf-networking/config/private.yml
 CANDIDATE_DIR=$PWD/cf-networking-tarball
 cd cf-networking
 
+mkdir ~/.ssh
 ssh-keyscan github.com >> ~/.ssh/known_hosts
 
 git fetch --tags

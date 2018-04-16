@@ -14,6 +14,7 @@ cp cf-networking-deployments/config/private.yml silk/config/private.yml
 CANDIDATE_DIR=$PWD/silk-tarball
 cd silk
 
+mkdir ~/.ssh
 ssh-keyscan github.com >> ~/.ssh/known_hosts
 
 git fetch --tags
