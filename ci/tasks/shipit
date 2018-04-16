@@ -14,6 +14,8 @@ cp cf-networking-deployments/config/private.yml cf-networking/config/private.yml
 CANDIDATE_DIR=$PWD/cf-networking-tarball
 cd cf-networking
 
+ssh-keyscan github.com >> ~/.ssh/known_hosts'
+
 git fetch --tags
 if [[ -n "$(git tag | grep -E "^${VERSION}$")" ]]; then
   echo "git tag ${VERSION} already exists. Nothing has been tagged or commited. Fast failing..."
