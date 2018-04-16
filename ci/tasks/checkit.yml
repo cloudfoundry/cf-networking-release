@@ -7,6 +7,7 @@ platform: linux
 
 inputs:
   - name: version
+  - name: cf-networking-release-ci
   - name: master-repo
   - name: dev-repo
 
