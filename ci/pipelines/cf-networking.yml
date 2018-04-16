@@ -1661,6 +1661,16 @@ jobs:
           passed: [ship-what]
         - get: silk-tarball
           passed: [ship-what]
+      - task: checkit
+        file: cf-networking-release-ci/ci/tasks/checkit.yml
+        input_mapping:
+          dev-repo: cf-networking-dev
+          master-repo: cf-networking-master
+      - task: checkit-silk
+        file: cf-networking-release-ci/ci/tasks/checkit.yml
+        input_mapping:
+          dev-repo: silk-dev
+          master-repo: silk-master
       - task: shipit
         file: cf-networking-release-ci/ci/tasks/shipit.yml
         input_mapping:
