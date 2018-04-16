@@ -14,7 +14,7 @@ cp cf-networking-deployments/config/private.yml silk/config/private.yml
 CANDIDATE_DIR=$PWD/silk-tarball
 cd silk
 
-ssh-keyscan github.com >> ~/.ssh/known_hosts'
+ssh-keyscan github.com >> ~/.ssh/known_hosts
 
 git fetch --tags
 if [[ -n "$(git tag | grep -E "^${VERSION}$")" ]]; then
