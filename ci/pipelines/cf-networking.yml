@@ -1637,6 +1637,7 @@ jobs:
     plan:
     - do:
       - aggregate:
+        - get: cf-networking-master
         - get: cf-networking-deployments
         - get: cf-networking-release-ci
         - get: version
