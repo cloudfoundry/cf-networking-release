@@ -1638,6 +1638,7 @@ jobs:
     - do:
       - aggregate:
         - get: cf-networking-master
+        - get: silk-master
         - get: cf-networking-deployments
         - get: cf-networking-release-ci
         - get: version

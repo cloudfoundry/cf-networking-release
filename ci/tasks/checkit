@@ -14,7 +14,7 @@ cd dev-repo
 git remote add master-repo ../master-repo
 git fetch master-repo
 
-if [[ -n "$(git tag | grep -E "^${VERSION}$")" ]]; then
+if [[ -n "$(git tag | grep -E "^v${VERSION}$")" ]]; then
   echo "git tag ${VERSION} already exists. Nothing has been tagged or commited. Fast failing..."
   exit 1
 fi
