@@ -17,16 +17,16 @@ provides:
 - name: dbconn
   type: dbconn
   properties:
-  - cf_networking.policy_server.database.type
-  - cf_networking.policy_server.database.username
-  - cf_networking.policy_server.database.password
-  - cf_networking.policy_server.database.port
-  - cf_networking.policy_server.database.name
-  - cf_networking.policy_server.database.host
+  - database.type
+  - database.username
+  - database.password
+  - database.port
+  - database.name
+  - database.host
 - name: tag_length
   type: tag_length
   properties:
-  - cf_networking.policy_server.tag_length
+  - tag_length
 
 consumes:
 - name: database
@@ -34,102 +34,102 @@ consumes:
   optional: true
 
 properties:
-  cf_networking.disable:
+  disable:
     description: "Disable container to container networking."
     default: false
 
-  cf_networking.policy_cleanup_interval:
+  policy_cleanup_interval:
     description: "Clean up stale policies on this interval, in minutes."
     default: 60
 
-  cf_networking.max_policies_per_app_source:
+  max_policies_per_app_source:
     description: "Maximum policies a space developer may configure for an application source. Does not affect admin users."
     default: 50
 
-  cf_networking.enable_space_developer_self_service:
+  enable_space_developer_self_service:
     description: "Allows space developers to always be able to configure policies for the apps they own."
     default: false
 
-  cf_networking.policy_server.listen_ip:
+  listen_ip:
     description: "IP address where the policy server will serve its API."
     default: 0.0.0.0
 
-  cf_networking.policy_server.listen_port:
+  listen_port:
     description: "Port where the policy server will serve its external API."
     default: 4002
 
-  cf_networking.policy_server.connect_timeout_seconds:
+  connect_timeout_seconds:
     description: "Connection timeout between the policy server and its database. Also used for policy server health check timeout."
     default: 120
 
-  cf_networking.policy_server.debug_port:
+  debug_port:
     description: "Port for the debug server. Use this to adjust log level at runtime or dump process stats."
     default: 31821
 
-  cf_networking.policy_server.uaa_client:
+  uaa_client:
     description: |
       UAA client name. Must match the name of a UAA client with the following properties:
       `authorities: uaa.resource,cloud_controller.admin_read_only`,
       `authorities: uaa.resource,cloud_controller.admin_read_only`."
     default: network-policy
 
-  cf_networking.policy_server.uaa_client_secret:
+  uaa_client_secret:
     description: |
       UAA client secret. Must match the secret of the above UAA client.
 
-  cf_networking.policy_server.uaa_ca:
+  uaa_ca:
     description: "Trusted CA for UAA server."
 
-  cf_networking.policy_server.uaa_hostname:
+  uaa_hostname:
     description: "Host name for the UAA server.  E.g. the service advertised via Consul DNS.  Must match common name in the UAA server cert. Must be listed in `uaa.zones.internal.hostnames`."
     default: uaa.service.cf.internal
 
-  cf_networking.policy_server.uaa_port:
+  uaa_port:
     description: "Port of the UAA server. Must match `uaa.ssl.port`."
     default: 8443
 
-  cf_networking.policy_server.cc_hostname:
+  cc_hostname:
     description: "Host name for the Cloud Controller server.  E.g. the service advertised via Consul DNS. Must match `cc.internal_service_hostname`."
     default: cloud-controller-ng.service.cf.internal
 
-  cf_networking.policy_server.cc_port:
+  cc_port:
     description: "External port of Cloud Controller server. Must match `cc.external_port`."
     default: 9022
 
-  cf_networking.policy_server.skip_ssl_validation:
+  skip_ssl_validation:
     description: "Skip verifying ssl certs when speaking to UAA or Cloud Controller."
     default: false
 
-  cf_networking.policy_server.database.type:
+  database.type:
     description: "Type of database: postgres or mysql."
 
-  cf_networking.policy_server.database.username:
+  database.username:
     description: "Username for database connection."
 
-  cf_networking.policy_server.database.password:
+  database.password:
     description: "Password for database connection."
 
-  cf_networking.policy_server.database.host:
+  database.host:
     description: "Host (IP or DNS name) for database server."
 
-  cf_networking.policy_server.database.port:
+  database.port:
     description: "Port for database server."
 
-  cf_networking.policy_server.database.name:
+  database.name:
     description: "Name of logical database to use."
 
-  cf_networking.policy_server.tag_length:
+  tag_length:
     description: "Length in bytes of the packet tags to generate for policy sources and destinations. Must be greater than 0 and less than or equal to 4. If using VXLAN GBP, must be less than or equal to 2."
     default: 2
 
-  cf_networking.policy_server.metron_port:
+  metron_port:
     description: "Port of metron agent on localhost. This is used to forward metrics."
     default: 3457
 
-  cf_networking.policy_server.log_level:
+  log_level:
     description: "Logging level (debug, info, warn, error)."
     default: info
 
-  cf_networking.policy_server.allowed_cors_domains:
+  allowed_cors_domains:
     description: "List of domains (including scheme) from which Cross-Origin requests will be accepted."
     default: []
