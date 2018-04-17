@@ -1,13 +1,13 @@
 #!/bin/bash -eu
 
-<% unless p("cf_networking.disable") %>
+<% unless p("disable") %>
 source /var/vcap/packages/ctl-utils/ctl_util.sh
 
 export RUN_DIR=/var/vcap/sys/run/silk-controller
 export LOG_DIR=/var/vcap/sys/log/silk-controller
 export PIDFILE="${RUN_DIR}"/silk-controller.pid
 export CONF_DIR=/var/vcap/jobs/silk-controller/config
-export PORT=<%= p("cf_networking.silk_controller.debug_port") %>
+export PORT=<%= p("debug_port") %>
 export URL=127.0.0.1:"${PORT}"/log-level
 export TIMEOUT=20
 

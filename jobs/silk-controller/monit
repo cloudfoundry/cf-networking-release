@@ -1,4 +1,4 @@
-<% if p("cf_networking.disable") %>
+<% if p("disable") %>
 <% else %>
 check process silk-controller
   with pidfile /var/vcap/sys/run/silk-controller/silk-controller.pid
@@ -7,7 +7,7 @@ check process silk-controller
   group vcap
   if failed
      host 127.0.0.1
-     port <%= p("cf_networking.silk_controller.debug_port") %>
+     port <%= p("debug_port") %>
      protocol HTTP
      request "/log-level"
      with timeout 10 seconds for 6 cycles

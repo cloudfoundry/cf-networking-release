@@ -24,81 +24,81 @@ provides:
 - name: cf_network
   type: cf_network
   properties:
-    - cf_networking.network
-    - cf_networking.subnet_prefix_length
+    - network
+    - subnet_prefix_length
 
 properties:
-  cf_networking.disable:
+  disable:
     description: "Disable container to container networking."
     default: false
 
-  cf_networking.network:
+  network:
     description: "CIDR address block for overlay network.  Subnets for each diego cell are allocated out of this network."
     default: "10.255.0.0/16"
 
-  cf_networking.subnet_prefix_length:
+  subnet_prefix_length:
     description: "Length, in bits, of the prefix for subnets allocated per Diego cell, e.g. '24' for a '/24' subnet."
     default: 24
 
-  cf_networking.subnet_lease_expiration_hours:
+  subnet_lease_expiration_hours:
     description: "Expiration time for subnet leases, in hours.  If a cell is not gracefully stopped, its lease may be reclaimed after this duration.  Diego cells that are partitioned from the silk controller for longer than this duration will be removed from the network."
     default: 168
 
-  cf_networking.silk_controller.debug_port:
+  debug_port:
     description: "Debug port for silk controller.  Use this to adjust log level at runtime or dump process stats."
     default: 46455
 
-  cf_networking.silk_controller.health_check_port:
+  health_check_port:
     description: "Health check port for silk controller. Used by the Consul DNS health check."
     default: 19683
 
-  cf_networking.silk_controller.connect_timeout_seconds:
+  connect_timeout_seconds:
     description: "Connection timeout between the silk controller and the silk database.  Also used by Consul DNS health check."
     default: 120
 
-  cf_networking.silk_controller.listen_ip:
+  listen_ip:
     description: "IP address where the silk controller will serve its API."
     default: 0.0.0.0
 
-  cf_networking.silk_controller.listen_port:
+  listen_port:
     description: "Port where the silk controller will serve its API.   Silk daemon connects to this port."
     default: 4103
 
-  cf_networking.silk_controller.ca_cert:
+  ca_cert:
     description: "Trusted CA certificate that was used to sign the silk daemon client cert and key."
 
-  cf_networking.silk_controller.server_cert:
+  server_cert:
     description: "Server certificate for TLS. Must have common name that matches the Consul DNS name of the silk controller, eg silk-controller.service.cf.internal"
 
-  cf_networking.silk_controller.server_key:
+  server_key:
     description: "Server key for TLS."
 
-  cf_networking.silk_controller.metron_port:
+  metron_port:
     description: "Forward metrics to this metron agent, listening on this port on localhost"
     default: 3457
 
-  cf_networking.silk_controller.database.type:
+  database.type:
     description: "Type of database: postgres or mysql"
 
-  cf_networking.silk_controller.database.username:
+  database.username:
     description: "Username for database connection."
 
-  cf_networking.silk_controller.database.password:
+  database.password:
     description: "Password for database connection."
 
-  cf_networking.silk_controller.database.host:
+  database.host:
     description: "Host (IP or DNS name) for database server."
 
-  cf_networking.silk_controller.database.port:
+  database.port:
     description: "Port for database server."
 
-  cf_networking.silk_controller.database.name:
+  database.name:
     description: "Name of logical database to use."
 
-  cf_networking.silk_controller.max_open_connections:
+  max_open_connections:
     description: "Maximum number of open connections to the SQL database"
     default: 0
 
-  cf_networking.silk_controller.max_idle_connections:
+  max_idle_connections:
     description: "Maximum number of idle connections to the SQL database"
     default: 0
