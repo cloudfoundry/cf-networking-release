@@ -379,7 +379,10 @@ jobs:
       file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
       params:
         BBL_STATE_DIR: environments/sombrero/
-        OPS_FILES: scale-to-one-az.yml cf-networking.yml opsfile-before.yml
+        OPS_FILES: |
+          scale-to-one-az.yml
+          cf-networking.yml
+          opsfile-before.yml
         SYSTEM_DOMAIN: sombrero.c2c.cf-app.com
         VARS_STORE_FILE: environments/sombrero/vars-store.yml
         REGENERATE_VARS_STORE: true
@@ -458,7 +461,13 @@ jobs:
       file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
       params:
         BBL_STATE_DIR: environments/sombrero/
-        OPS_FILES: use-compiled-releases.yml scale-to-one-az.yml cf-networking.yml use-silk-release.yml enable-routing-integrity.yml opsfile-after.yml
+        OPS_FILES: |
+          use-compiled-releases.yml
+          scale-to-one-az.yml
+          cf-networking.yml
+          use-silk-release.yml
+          enable-routing-integrity.yml
+          opsfile-after.yml
         SYSTEM_DOMAIN: sombrero.c2c.cf-app.com
         VARS_STORE_FILE: environments/sombrero/vars-store.yml
       input_mapping:
@@ -752,7 +761,17 @@ jobs:
       params:
         BBL_STATE_DIR: environments/pickelhelm/
         SYSTEM_DOMAIN: pickelhelm.c2c.cf-app.com
-        OPS_FILES: use-compiled-releases.yml datadog.yml scale-to-one-az.yml smaller-footprint.yml cf-networking.yml use-system-domain-as-metron-deployment-name.yml enable-routing-integrity.yml use-silk-release.yml add-acceptance-test-jobs.yml opsfile.yml
+        OPS_FILES: |
+          use-compiled-releases.yml
+          datadog.yml
+          scale-to-one-az.yml
+          smaller-footprint.yml
+          cf-networking.yml
+          use-system-domain-as-metron-deployment-name.yml
+          enable-routing-integrity.yml
+          use-silk-release.yml
+          add-acceptance-test-jobs.yml
+          opsfile.yml
         VARS_STORE_FILE: environments/pickelhelm/vars-store.yml
       input_mapping:
         bbl-state: cf-networking-deployments
@@ -949,7 +968,20 @@ jobs:
       params:
         BBL_STATE_DIR: environments/mitre/
         SYSTEM_DOMAIN: mitre.c2c.cf-app.com
-        OPS_FILES: enable-iptables-logger.yml use-compiled-releases.yml datadog.yml custom-apps-domain.yml scale-to-one-az.yml smaller-footprint.yml cf-networking.yml use-system-domain-as-metron-deployment-name.yml enable-routing-integrity.yml use-silk-release.yml enable-iptables-logger-silk.yml add-acceptance-test-jobs.yml opsfile.yml
+        OPS_FILES: |
+          enable-iptables-logger.yml
+          use-compiled-releases.yml
+          datadog.yml
+          use-system-domain-as-metron-deployment-name.yml
+          custom-apps-domain.yml
+          scale-to-one-az.yml
+          smaller-footprint.yml
+          cf-networking.yml
+          enable-routing-integrity.yml
+          use-silk-release.yml
+          enable-iptables-logger-silk.yml
+          add-acceptance-test-jobs.yml
+          opsfile.yml
         VARS_STORE_FILE: environments/mitre/vars-store.yml
       input_mapping:
         bbl-state: cf-networking-deployments
@@ -1282,7 +1314,16 @@ jobs:
       params:
         BBL_STATE_DIR: environments/toque
         SYSTEM_DOMAIN: toque.c2c.cf-app.com
-        OPS_FILES: use-compiled-releases.yml datadog.yml scale-to-one-az.yml smaller-footprint.yml cf-networking.yml enable-routing-integrity.yml use-silk-release.yml use-system-domain-as-metron-deployment-name.yml opsfile.yml
+        OPS_FILES: |
+          use-compiled-releases.yml
+          datadog.yml
+          use-system-domain-as-metron-deployment-name.yml
+          scale-to-one-az.yml
+          smaller-footprint.yml
+          cf-networking.yml
+          enable-routing-integrity.yml
+          use-silk-release.yml
+          opsfile.yml
         VARS_STORE_FILE: environments/toque/vars-store.yml
       input_mapping:
         bbl-state: cf-networking-deployments
@@ -1507,7 +1548,15 @@ jobs:
       params:
         BBL_STATE_DIR: environments/slouch
         SYSTEM_DOMAIN: slouch.c2c.cf-app.com
-        OPS_FILES: use-compiled-releases.yml scale-to-one-az.yml smaller-footprint.yml cf-networking.yml use-silk-release.yml add-acceptance-test-jobs.yml opsfile.yml
+        OPS_FILES: |
+          use-compiled-releases.yml
+          scale-to-one-az.yml
+          use-system-domain-as-metron-deployment-name.yml
+          smaller-footprint.yml
+          cf-networking.yml
+          use-silk-release.yml
+          add-acceptance-test-jobs.yml
+          opsfile.yml
         VARS_STORE_FILE: environments/slouch/vars-store.yml
       input_mapping:
         bbl-state: cf-networking-deployments
