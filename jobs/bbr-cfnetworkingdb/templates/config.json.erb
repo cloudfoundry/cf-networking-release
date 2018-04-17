@@ -2,12 +2,12 @@
 <%=
     require 'json'
     toRender = {
-      "username" => link('cfnetworkingdbconn').p('cf_networking.policy_server.database.username'),
-      "password" => link('cfnetworkingdbconn').p('cf_networking.policy_server.database.password'),
-      "host" => link('cfnetworkingdbconn').p('cf_networking.policy_server.database.host'),
-      "port" => link('cfnetworkingdbconn').p('cf_networking.policy_server.database.port'),
-      "database" => link('cfnetworkingdbconn').p('cf_networking.policy_server.database.name'),
-      "adapter" => link('cfnetworkingdbconn').p('cf_networking.policy_server.database.type'),
+      "username" => link('cfnetworkingdbconn').p('database.username'),
+      "password" => link('cfnetworkingdbconn').p('database.password'),
+      "host" => link('cfnetworkingdbconn').p('database.host'),
+      "port" => link('cfnetworkingdbconn').p('database.port'),
+      "database" => link('cfnetworkingdbconn').p('database.name'),
+      "adapter" => link('cfnetworkingdbconn').p('database.type'),
     }
 
     JSON.pretty_generate(toRender)
