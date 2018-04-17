@@ -1,4 +1,4 @@
-<% unless p("cf_networking.disable") %>
+<% unless p("disable") %>
 check process policy-server
   with pidfile /var/vcap/sys/run/policy-server/policy-server.pid
   start program "/usr/bin/timeout 25 /var/vcap/jobs/policy-server/bin/policy-server_ctl start"
@@ -7,7 +7,7 @@ check process policy-server
   group vcap
   if failed
      host 127.0.0.1
-     port <%= p("cf_networking.policy_server.listen_port") %>
+     port <%= p("listen_port") %>
      protocol HTTP
      with timeout 10 seconds for 6 cycles
      then restart

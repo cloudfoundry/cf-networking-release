@@ -1,13 +1,13 @@
 #!/bin/bash -eu
 
-<% unless p("cf_networking.disable") %>
+<% unless p("disable") %>
 source /var/vcap/packages/ctl-utils/ctl_util.sh
 
 export RUN_DIR=/var/vcap/sys/run/policy-server-internal
 export LOG_DIR=/var/vcap/sys/log/policy-server-internal
 export PIDFILE="${RUN_DIR}"/policy-server-internal.pid
 export CONF_DIR=/var/vcap/jobs/policy-server-internal/config
-export PORT=<%= p("cf_networking.policy_server_internal.internal_listen_port") %>
+export PORT=<%= p("internal_listen_port") %>
 export URL=127.0.0.1:"${PORT}"
 export TIMEOUT=20
 
