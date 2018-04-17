@@ -1,13 +1,11 @@
-<% unless p("disable") %>
+<% unless p("cf_networking.disable") %>
 <%
     def db_host
-      link("dbconn").if_p("database.host") do |host|
-        return host
-      end
+      from_dbconn_link = link("dbconn").p("cf_networking.policy_server.database.host")
+      return from_dbconn_link if !from_dbconn_link.nil?
 
-      if_link("database") do |database_link|
-        return database_link.instances[0].address
-      end
+      from_database_link = link("database").instances[0].address
+      return from_database_link if !from_database_link.nil?
 
       raise "must provide dbconn link or database link"
     end
@@ -17,24 +15,24 @@
     require 'json'
 
     toRender = {
-      "listen_host" => p("listen_ip"),
+      "listen_host" => p("cf_networking.policy_server_internal.listen_ip"),
       "log_prefix" => "cfnetworking",
       "debug_server_host" => "127.0.0.1",
-      "debug_server_port" => p("debug_port"),
-      "health_check_port" => p("health_check_port"),
-      "internal_listen_port" => p("internal_listen_port"),
+      "debug_server_port" => p("cf_networking.policy_server_internal.debug_port"),
+      "health_check_port" => p("cf_networking.policy_server_internal.health_check_port"),
+      "internal_listen_port" => p("cf_networking.policy_server_internal.internal_listen_port"),
       "database" => {
-        "user" => link("dbconn").p("database.username"),
-        "type" => link("dbconn").p("database.type"),
-        "password" => link("dbconn").p("database.password"),
-        "port" => link("dbconn").p("database.port"),
-        "database_name" => link("dbconn").p("database.name"),
+        "user" => link("dbconn").p("cf_networking.policy_server.database.username"),
+        "type" => link("dbconn").p("cf_networking.policy_server.database.type"),
+        "password" => link("dbconn").p("cf_networking.policy_server.database.password"),
+        "port" => link("dbconn").p("cf_networking.policy_server.database.port"),
+        "database_name" => link("dbconn").p("cf_networking.policy_server.database.name"),
         "host" => db_host,
-        "timeout" => p("connect_timeout_seconds"),
+        "timeout" => p("cf_networking.policy_server_internal.connect_timeout_seconds"),
       },
-      "tag_length" => link("tag_length").p("tag_length"),
-      "metron_address" => "127.0.0.1:#{p("metron_port")}",
-      "log_level" => p("log_level"),
+      "tag_length" => link("tag_length").p("cf_networking.policy_server.tag_length"),
+      "metron_address" => "127.0.0.1:#{p("cf_networking.policy_server_internal.metron_port")}",
+      "log_level" => p("cf_networking.policy_server_internal.log_level"),
 
       # hard-coded values, not exposed as bosh spec properties
       "ca_cert_file" => "/var/vcap/jobs/policy-server-internal/config/certs/ca.crt",

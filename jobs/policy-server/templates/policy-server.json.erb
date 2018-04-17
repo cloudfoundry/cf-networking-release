@@ -1,7 +1,7 @@
-<% unless p("disable") %>
+<% unless p("cf_networking.disable") %>
 <%
     def db_param_path(name)
-      "database.#{name}"
+      "cf_networking.policy_server.database.#{name}"
     end
 
     def db_param(name)
@@ -30,9 +30,9 @@
     end
 
     def cleanup_interval_in_seconds
-      minutes = p("policy_cleanup_interval")
+      minutes = p("cf_networking.policy_cleanup_interval")
       if minutes < 1
-        raise "policy_cleanup_interval must be at least 1 minute"
+        raise "'cf_networking.policy_cleanup_interval' must be at least 1 minute"
       end
       minutes * 60
     end
@@ -48,41 +48,41 @@
     driver = require_db_param 'type'
 
     unless driver == 'mysql' || driver == 'postgres'
-      raise "unknown driver #{driver}"
+      raise "unknown driver  #{driver}"
     end
 
     toRender = {
-      "listen_host" => p("listen_ip"),
-      "listen_port" => p("listen_port"),
+      "listen_host" => p("cf_networking.policy_server.listen_ip"),
+      "listen_port" => p("cf_networking.policy_server.listen_port"),
       "log_prefix" => "cfnetworking",
       "debug_server_host" => "127.0.0.1",
-      "debug_server_port" => p("debug_port"),
-      "uaa_client" => p("uaa_client"),
-      "uaa_client_secret" => p("uaa_client_secret"),
-      "uaa_url" => "https://#{p("uaa_hostname")}",
-      "uaa_port" => p("uaa_port"),
-      "cc_url" => "http://#{p("cc_hostname")}:#{p("cc_port")}",
-      "skip_ssl_validation" => p("skip_ssl_validation"),
+      "debug_server_port" => p("cf_networking.policy_server.debug_port"),
+      "uaa_client" => p("cf_networking.policy_server.uaa_client"),
+      "uaa_client_secret" => p("cf_networking.policy_server.uaa_client_secret"),
+      "uaa_url" => "https://#{p("cf_networking.policy_server.uaa_hostname")}",
+      "uaa_port" => p("cf_networking.policy_server.uaa_port"),
+      "cc_url" => "http://#{p("cf_networking.policy_server.cc_hostname")}:#{p("cf_networking.policy_server.cc_port")}",
+      "skip_ssl_validation" => p("cf_networking.policy_server.skip_ssl_validation"),
       "database" => {
         "type" => driver,
         "user" => user,
         "password" => password,
         "host" => db_host,
         "port" => port,
-        "timeout" => p("connect_timeout_seconds"),
+        "timeout" => p("cf_networking.policy_server.connect_timeout_seconds"),
         "database_name" => name,
       },
-      "tag_length" => p("tag_length"),
-      "metron_address" => "127.0.0.1:#{p("metron_port")}",
-      "log_level" => p("log_level"),
+      "tag_length" => p("cf_networking.policy_server.tag_length"),
+      "metron_address" => "127.0.0.1:#{p("cf_networking.policy_server.metron_port")}",
+      "log_level" => p("cf_networking.policy_server.log_level"),
       "cleanup_interval" => cleanup_interval_in_seconds,
-      "max_policies" => p("max_policies_per_app_source"),
-      "enable_space_developer_self_service" => p("enable_space_developer_self_service"),
-      "allowed_cors_domains" => p("allowed_cors_domains"),
+      "max_policies" => p("cf_networking.max_policies_per_app_source"),
+      "enable_space_developer_self_service" => p("cf_networking.enable_space_developer_self_service"),
 
       # hard-coded values, not exposed as bosh spec properties
       "uaa_ca" => "/var/vcap/jobs/policy-server/config/certs/uaa_ca.crt",
       "request_timeout" => 5,
+      "allowed_cors_domains" => p("cf_networking.policy_server.allowed_cors_domains"),
     }
 
     JSON.pretty_generate(toRender)

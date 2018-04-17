@@ -4,7 +4,7 @@ set -eu
 
 source /var/vcap/packages/ctl-utils/ctl_util.sh
 
-HEALTHCHECK_ENDPOINT=localhost:<%= p("listen_port") %>/health
+HEALTHCHECK_ENDPOINT=localhost:<%= p("cf_networking.policy_server.listen_port") %>/health
 PATH="/var/vcap/bosh/bin:$PATH"
 
 monit start policy-server

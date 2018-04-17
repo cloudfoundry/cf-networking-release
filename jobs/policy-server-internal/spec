@@ -25,43 +25,46 @@ consumes:
   type: tag_length
 
 properties:
-  disable:
+  cf_networking.disable:
     description: "Disable container to container networking."
     default: false
 
-  listen_ip:
+  cf_networking.policy_server_internal.listen_ip:
     description: "IP address where the policy server will serve its API."
     default: 0.0.0.0
 
-  connect_timeout_seconds:
+  cf_networking.policy_server_internal.connect_timeout_seconds:
     description: "Connection timeout between the policy server and its database. Also used for policy server health check timeout."
     default: 120
 
-  debug_port:
+  cf_networking.policy_server_internal.debug_port:
     description: "Port for the debug server. Use this to adjust log level at runtime or dump process stats."
     default: 31945
 
-  health_check_port:
+  cf_networking.policy_server_internal.health_check_port:
     description: "Port for the debug server. Use this to adjust log level at runtime or dump process stats."
     default: 31946
 
-  internal_listen_port:
+  cf_networking.policy_server_internal.internal_listen_port:
     description: "Port where the policy server will serve its internal API."
     default: 4003
 
-  ca_cert:
+  cf_networking.policy_server_internal.ca_cert:
     description: "Trusted CA certificate that was used to sign the vxlan policy agent's client cert and key."
 
-  server_cert:
+  cf_networking.policy_server_internal.server_cert:
     description: "Server certificate for TLS. Must have common name that matches the Consul DNS name of the policy server, eg `policy-server.service.cf.internal`."
 
-  server_key:
+  cf_networking.policy_server_internal.server_key:
     description: "Server key for TLS."
 
-  metron_port:
+  cf_networking.policy_server_internal.tag_length:
+    description: "Length in bytes of the packet tags to generate for policy sources and destinations. Must be greater than 0 and less than or equal to 4. If using VXLAN GBP, must be less than or equal to 2."
+
+  cf_networking.policy_server_internal.metron_port:
     description: "Port of metron agent on localhost. This is used to forward metrics."
     default: 3457
 
-  log_level:
+  cf_networking.policy_server_internal.log_level:
     description: "Logging level (debug, info, warn, error)."
     default: info
