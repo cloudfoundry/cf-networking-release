@@ -2,6 +2,15 @@
 
 See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for examples
 
+### 2.0.0
+**Changed Properties**
+  - All properties from all jobs have had their namespaces removed.
+    The `cf_networking.<job_name>` prefixes are no longer necessary given bosh
+    supports job level properties.
+  - Removed `policy-server-internal.tag_length`, this property is retrieved via bosh links from
+    `tag_length is used by link to policy-server.tag_length`.
+
+
 ### 1.13.0
 **New Properties**
   - An optional parameter has been added to the `garden-cni` job to
