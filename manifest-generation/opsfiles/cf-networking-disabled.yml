@@ -19,7 +19,7 @@
   value: true
 
 - type: replace
-  path: /instance_groups/name=diego-cell/jobs/name=garden-cni/properties/cf_networking/disable?
+  path: /instance_groups/name=diego-cell/jobs/name=garden-cni/properties/disable?
   value: true
 
 - type: replace
