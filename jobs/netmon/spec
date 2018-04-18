@@ -10,22 +10,22 @@ packages:
   - ctl-utils
 
 properties:
-  cf_networking.netmon.metron_address:
+  metron_address:
     description: "Forward metrics to this metron agent"
     default: 127.0.0.1:3457
 
-  cf_networking.netmon.poll_interval:
+  poll_interval:
     description: "Gather and report metrics at this interval, in seconds"
     default: 30
 
-  cf_networking.netmon.interface_name:
+  interface_name:
     description: "Report tx/rx bytes on the interface with this name"
     default: silk-vtep
 
-  cf_networking.netmon.log_level:
+  log_level:
     description: "Log level"
     default: info
 
-  cf_networking.disable:
+  disable:
     description: "disable container to container networking"
     default: false

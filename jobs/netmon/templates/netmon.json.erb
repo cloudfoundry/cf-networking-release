@@ -1,14 +1,13 @@
-<% if p("cf_networking.disable") %>
+<% if p('disable') %>
 <% else %>
 <%=
-    require 'json'
-
+  require 'json'
   toRender = {
-    "metron_address" => p("cf_networking.netmon.metron_address"),
-    "poll_interval" => p("cf_networking.netmon.poll_interval"),
-    "interface_name" => p("cf_networking.netmon.interface_name"),
-    "log_level" => p("cf_networking.netmon.log_level"),
-    "log_prefix" => "cfnetworking",
+    'metron_address' => p('metron_address'),
+    'poll_interval' => p('poll_interval'),
+    'interface_name' => p('interface_name'),
+    'log_level' => p('log_level'),
+    'log_prefix' => 'cfnetworking',
   }
 
     JSON.pretty_generate(toRender)
