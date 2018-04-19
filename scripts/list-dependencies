@@ -12,27 +12,18 @@ set -e -x
 
 GOOS=linux gosub list \
   -app cf-pusher/cmd/cf-pusher \
-  -app cni-wrapper-plugin \
-  -app code.cloudfoundry.org/silk/... \
   -app example-apps/... \
   -app garden-external-networker \
-  -app github.com/containernetworking/plugins/plugins/ipam/host-local \
-  -app netmon/cmd/netmon \
   -app policy-server/cmd/policy-server \
-  -app vxlan-policy-agent/cmd/vxlan-policy-agent
 
   # acceptance test errand uses ginkgo binary, which is not a dependency of the test
   gosub list -app github.com/onsi/ginkgo/ginkgo
 
   # separate these so gosub doesn't asplode
   gosub list -test cf-pusher/...
-  gosub list -test cni-wrapper-plugin/...
-  GOOS=linux gosub list -test code.cloudfoundry.org/silk/...
   gosub list -test garden-external-networker/...
-  gosub list -test netmon/...
   gosub list -test policy-server/...
   gosub list -test test/...
-  gosub list -test vxlan-policy-agent/...
 
 
 } > /tmp/packages

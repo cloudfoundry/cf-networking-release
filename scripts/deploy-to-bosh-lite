@@ -56,6 +56,7 @@ deploy_cf() {
   -o ~/workspace/cf-networking-release/manifest-generation/opsfiles/use-latest.yml \
   -o ~/workspace/cf-deployment/operations/bosh-lite.yml \
   -o ~/workspace/cf-networking-deployments/environments/local/instance-count-overrides.yml \
+  -o ~/workspace/silk-release/opsfiles/use-silk-release.yml \
   --vars-store ~/workspace/cf-networking-deployments/environments/local/deployment-vars.yml \
   -v system_domain=bosh-lite.com
 }

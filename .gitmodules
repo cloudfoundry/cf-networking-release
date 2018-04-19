@@ -115,12 +115,6 @@
 [submodule "src/github.com/vishvananda/netns"]
 	path = src/github.com/vishvananda/netns
 	url = https://github.com/vishvananda/netns
-[submodule "src/github.com/containernetworking/plugins"]
-	path = src/github.com/containernetworking/plugins
-	url = https://github.com/containernetworking/plugins
-[submodule "src/github.com/hpcloud/tail"]
-	path = src/github.com/hpcloud/tail
-	url = https://github.com/hpcloud/tail
 [submodule "src/gopkg.in/gorp.v1"]
 	path = src/gopkg.in/gorp.v1
 	url = https://gopkg.in/go-gorp/gorp.v1
@@ -133,9 +127,3 @@
 [submodule "src/code.cloudfoundry.org/cf-networking-helpers"]
 	path = src/code.cloudfoundry.org/cf-networking-helpers
 	url = https://github.com/cloudfoundry/cf-networking-helpers
-[submodule "src/code.cloudfoundry.org/silk"]
-	path = src/code.cloudfoundry.org/silk
-	url = https://github.com/cloudfoundry/silk
-[submodule "src/code.cloudfoundry.org/filelock"]
-	path = src/code.cloudfoundry.org/filelock
-	url = https://github.com/cloudfoundry/filelock.git

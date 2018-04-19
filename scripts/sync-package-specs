@@ -39,15 +39,9 @@ function sync_package() {
 ## add a -app line or -test line to include a particular app or test
 ## along with all of its dependencies
 
-sync_package vxlan-policy-agent \
-  -app vxlan-policy-agent/cmd/vxlan-policy-agent &
-
 sync_package policy-server \
   -app policy-server/cmd/policy-server \
   -app policy-server/cmd/policy-server-internal &
-
-sync_package netmon \
-  -app netmon/cmd/netmon &
 
 sync_package cf-networking-acceptance \
   -test test/acceptance \
@@ -56,23 +50,6 @@ sync_package cf-networking-acceptance \
 
 GOOS=linux sync_package runc-cni \
   -app garden-external-networker &
-
-sync_package silk-controller \
-  -app code.cloudfoundry.org/silk/cmd/silk-controller &
-
-sync_package silk-daemon \
-  -app code.cloudfoundry.org/silk/cmd/silk-daemon \
-  -app silk-daemon-shutdown \
-  -app code.cloudfoundry.org/silk/cmd/silk-teardown &
-
-GOOS=linux sync_package cni \
-  -app code.cloudfoundry.org/silk/cmd/silk-cni \
-  -app github.com/containernetworking/plugins/plugins/ipam/host-local \
-  -app cni-wrapper-plugin \
-  -app cni-teardown &
-
-GOOS=linux sync_package iptables-logger \
-  -app iptables-logger/cmd/iptables-logger &
 
 wait
 
