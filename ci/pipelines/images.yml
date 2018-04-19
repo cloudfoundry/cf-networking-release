@@ -116,7 +116,7 @@ resources:
   source:
     endpoint: storage.googleapis.com
     bucket: golang
-    regexp: 'go(1\.9(\.\d+)?)\.linux-amd64\.tar.gz'
+    regexp: 'go(1\.\d+(\.\d+)?)\.linux-amd64\.tar.gz'
 
 - name: cf-networking-release-ci
   type: git
@@ -203,11 +203,21 @@ resources:
     secret_access_key: {{aws-secret-access-key}}
     initial_version: 0.0.1
 
+- name: every-week
+  type: time
+  source:
+    location: America/Tijuana
+    start: 12:00 PM
+    stop: 1:00 PM
+    days: [Monday]
+
 jobs:
 - name: build-dev-postgres-image
   plan:
   - aggregate:
     - get: cf-networking-release-ci
+    - get: every-week
+      trigger: true
     - get: dev-postgres-image-version
       params: {bump: minor}
     - get: dev-postgres-dockerfile
@@ -233,6 +243,8 @@ jobs:
   plan:
   - aggregate:
     - get: cf-networking-release-ci
+    - get: every-week
+      trigger: true
     - get: dev-postgres-ifb-image-version
       params: {bump: minor}
     - get: dev-postgres-ifb-dockerfile
@@ -259,6 +271,8 @@ jobs:
   plan:
   - aggregate:
     - get: cf-networking-release-ci
+    - get: every-week
+      trigger: true
     - get: dev-mysql-image-version
       params: {bump: minor}
     - get: dev-mysql-dockerfile
@@ -283,6 +297,8 @@ jobs:
   plan:
   - aggregate:
     - get: cf-networking-release-ci
+    - get: every-week
+      trigger: true
     - get: dev-mysql-5.6-image-version
       params: {bump: minor}
     - get: dev-mysql-5.6-dockerfile
@@ -305,6 +321,8 @@ jobs:
 
 - name: build-deploy-image
   plan:
+  - get: every-week
+    trigger: true
   - get: deploy-dockerfile
     trigger: true
   - get: image-version
@@ -319,6 +337,8 @@ jobs:
 
 - name: build-small-git-image
   plan:
+  - get: every-week
+    trigger: true
   - get: small-git-dockerfile
     trigger: true
   - get: small-git-image-version
@@ -333,6 +353,8 @@ jobs:
 
 - name: build-deploy-light-image
   plan:
+  - get: every-week
+    trigger: true
   - get: light-image-version
     params: {bump: minor}
   - get: deploy-light-dockerfile

@@ -3,9 +3,20 @@ package port_allocator
 import (
 	"errors"
 	"fmt"
-	"lib/filelock"
 	"lib/serial"
+
+	"code.cloudfoundry.org/filelock"
 )
+
+//go:generate counterfeiter -o ../fakes/file_locker.go --fake-name FileLocker . FileLocker
+type FileLocker interface {
+	filelock.FileLocker
+}
+
+//go:generate counterfeiter -o ../fakes/locked_file.go --fake-name LockedFile . LockedFile
+type LockedFile interface {
+	filelock.LockedFile
+}
 
 //go:generate counterfeiter -o ../fakes/tracker.go --fake-name Tracker . tracker
 type tracker interface {

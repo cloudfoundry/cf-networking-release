@@ -5,6 +5,7 @@ templates:
   policy-server-internal_ctl.erb: bin/policy-server-internal_ctl
   policy-server-internal_as_vcap.erb: bin/policy-server-internal_as_vcap
   policy-server-internal.json.erb: config/policy-server-internal.json
+  post-start.erb: bin/post-start
   ca.crt.erb: config/certs/ca.crt
   server.crt.erb: config/certs/server.crt
   server.key.erb: config/certs/server.key
@@ -24,46 +25,43 @@ consumes:
   type: tag_length
 
 properties:
-  cf_networking.disable:
+  disable:
     description: "Disable container to container networking."
     default: false
 
-  cf_networking.policy_server_internal.listen_ip:
+  listen_ip:
     description: "IP address where the policy server will serve its API."
     default: 0.0.0.0
 
-  cf_networking.policy_server_internal.connect_timeout_seconds:
-    description: "Connection timeout between the policy server and its database.  Also used by Consul DNS health check."
-    default: 5
+  connect_timeout_seconds:
+    description: "Connection timeout between the policy server and its database. Also used for policy server health check timeout."
+    default: 120
 
-  cf_networking.policy_server_internal.debug_port:
+  debug_port:
     description: "Port for the debug server. Use this to adjust log level at runtime or dump process stats."
     default: 31945
 
-  cf_networking.policy_server_internal.health_check_port:
+  health_check_port:
     description: "Port for the debug server. Use this to adjust log level at runtime or dump process stats."
     default: 31946
 
-  cf_networking.policy_server_internal.internal_listen_port:
+  internal_listen_port:
     description: "Port where the policy server will serve its internal API."
     default: 4003
 
-  cf_networking.policy_server_internal.ca_cert:
+  ca_cert:
     description: "Trusted CA certificate that was used to sign the vxlan policy agent's client cert and key."
 
-  cf_networking.policy_server_internal.server_cert:
+  server_cert:
     description: "Server certificate for TLS. Must have common name that matches the Consul DNS name of the policy server, eg `policy-server.service.cf.internal`."
 
-  cf_networking.policy_server_internal.server_key:
+  server_key:
     description: "Server key for TLS."
 
-  cf_networking.policy_server_internal.tag_length:
-    description: "Length in bytes of the packet tags to generate for policy sources and destinations. Must be greater than 0 and less than or equal to 4. If using VXLAN GBP, must be less than or equal to 2."
-
-  cf_networking.policy_server_internal.metron_port:
+  metron_port:
     description: "Port of metron agent on localhost. This is used to forward metrics."
     default: 3457
 
-  cf_networking.policy_server_internal.log_level:
+  log_level:
     description: "Logging level (debug, info, warn, error)."
     default: info

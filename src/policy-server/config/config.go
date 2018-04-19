@@ -32,6 +32,7 @@ type Config struct {
 	RequestTimeout                  int       `json:"request_timeout" validate:"min=1"`
 	MaxPolicies                     int       `json:"max_policies" validate:"min=1"`
 	EnableSpaceDeveloperSelfService bool      `json:"enable_space_developer_self_service"`
+	AllowedCORSDomains              []string  `json:"allowed_cors_domains"`
 }
 
 func (c *Config) Validate() error {

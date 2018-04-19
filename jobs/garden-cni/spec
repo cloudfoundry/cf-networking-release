@@ -9,18 +9,22 @@ packages:
   - runc-cni
 
 properties:
-  cf_networking.cni_plugin_dir:
+  cni_plugin_dir:
     description: "Directory containing CNI plugins."
     default: /var/vcap/packages/cni/bin
 
-  cf_networking.cni_config_dir:
+  cni_config_dir:
     description: "Directory to store CNI config files.  Other jobs may write files into here."
     default: /var/vcap/jobs/cni/config/cni
 
-  cf_networking.nat_port_range_start:
+  nat_port_range_start:
     description: "Starting value for allocating host ports to containers"
     default: 61000
 
-  cf_networking.nat_port_range_size:
+  nat_port_range_size:
     description: "Total number of host ports that may be allocated to containers"
     default: 5000
+
+  search_domains:
+    description: "An array of search domains for DNS on the containers"
+    default: []

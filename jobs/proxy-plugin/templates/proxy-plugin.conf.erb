@@ -1,0 +1,26 @@
+<%=
+  require 'json'
+
+  def proxy_range
+    if_p("proxy_range") do
+      return p("proxy_range")
+     end
+
+    if_link("cf_network") do |cfnet|
+      cfnet.if_p("cf_networking.network") do
+        return cfnet.p("cf_networking.network")
+      end
+    end
+
+    raise "Must specify `proxy_range` property, or have it provided from the property `cf_networking.network` via bosh links"
+  end
+
+  toRender = {
+    "name" => "proxy",
+    "type" => "proxy-plugin",
+    "cniVersion" => "0.3.1",
+    "proxy_range" => proxy_range
+  }
+
+  JSON.pretty_generate(toRender)
+%>

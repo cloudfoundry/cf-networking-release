@@ -1,16 +1,16 @@
 FROM ruby
 
 RUN apt-get update -y && apt-get install -y jq unzip
-RUN curl -L -o /usr/local/bin/bosh https://s3.amazonaws.com/bosh-cli-artifacts/bosh-cli-2.0.45-linux-amd64 && echo "bf04be72daa7da0c9bbeda16fda7fc7b2b8af51e  /usr/local/bin/bosh" | shasum -c - && chmod +x /usr/local/bin/bosh
+RUN curl -L -o /usr/local/bin/bosh https://s3.amazonaws.com/bosh-cli-artifacts/bosh-cli-3.0.1-linux-amd64 && echo "ccc893bab8b219e9e4a628ed044ebca6c6de9ca0  /usr/local/bin/bosh" | shasum -c - && chmod +x /usr/local/bin/bosh
 RUN curl -L "https://cli.run.pivotal.io/stable?release=linux64-binary&source=github" | tar -zx && mv cf /usr/local/bin/cf
 RUN curl -L https://github.com/github/hub/releases/download/v2.2.9/hub-linux-amd64-2.2.9.tgz | tar -zx && mv hub-linux-amd64-2.2.9/bin/hub /usr/local/bin/hub
 
 # bbl and dependencies
 RUN \
-  wget https://github.com/cloudfoundry/bosh-bootloader/releases/download/v5.10.1/bbl-v5.10.1_linux_x86-64 -P /tmp && \
+  wget https://github.com/cloudfoundry/bosh-bootloader/releases/download/v6.3.0/bbl-v6.3.0_linux_x86-64 -P /tmp && \
   mv /tmp/bbl-* /usr/local/bin/bbl && \
   cd /usr/local/bin && \
-  echo "0417d7b4ad626011eaaa8747fa0e794fb54be19a bbl" | sha1sum -c - && \
+  echo "8a5902bf66fe721dbb78f57c2ea4e9f04ab5b0e7  bbl" | sha1sum -c - && \
   chmod +x bbl
 RUN \
   wget https://releases.hashicorp.com/terraform/0.11.1/terraform_0.11.1_linux_amd64.zip -P /tmp && \

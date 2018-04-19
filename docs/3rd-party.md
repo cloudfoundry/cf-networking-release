@@ -1,60 +1,115 @@
 # 3rd Party Plugin Development for Container Networking
 
-*If you want to integrate your own CNI plugin with Cloud Foundry, review the component diagrams on the [architecture page](arch.md) and read this document.*
+## Table of Contents
 
-If you want to integrate using the default values for the `cni_config_dir` and `cni_plugin_dir`, the package for the CNI plugin *must* be named `cni`
-and the job for the CNI plugin *must* be named `cni`.
+<!--ts-->
+* [Introduction](#introduction)
+* [Architecture](#architecture)
+* [Mandatory features](#mandatory-features)
+  * [NetOut](#netout)
+  * [NetIn](#netin)
+  * [Policy Configuration](#policy-configuration)
+  * [MTU](#mtu)
+  * [Your CNI plugin is a bosh release](#your-cni-plugin-is-a-bosh-release)
+    * [To author a BOSH release with your plugin](#to-author-a-bosh-release-with-your-plugin)
+    * [To deploy your BOSH release with Cloud Foundry](#to-deploy-your-bosh-release-with-cloud-foundry)
+* [Optional capabilities](#optional-capabilities)
+  * [Per ASG Logging](#per-asg-logging)
+  * [Global ASG and Container-to-Container Logging](#global-asg-and-container-to-container-logging)
+  * [Bosh Backup and Restore](#bosh-backup-and-restore)
+  * [Bosh DNS](#bosh-dns)
+* [Getting Data from CF](#getting-data-from-cf)
+  * [From Config](#from-config)
+  * [Information from Internal Policy Server](#information-from-internal-policy-server)
+  * [Information from CAPI](#information-from-capi)
+    * [Poll for Cloud Controller for ASGs or events](#poll-for-cloud-controller-for-asgs-or-events)
+  * [From Diego](#from-diego)
+    * [Subscribe to BBS event stream for receiving LRP events](#subscribe-to-bbs-event-stream-for-receiving-lrp-events)
+    * [Registering container IPs instead of port mappings with the RE](#registering-container-ips-instead-of-port-mappings-with-the-re)
+* [Tests](#tests)
+* [Common Gotchas](#common-gotchas)
+* [Feedback](#feedback)
+<!--te-->
 
-If you have any questions or feedback, please visit the `#container-networking` channel on [Cloud Foundry Slack](http://slack.cloudfoundry.org/).
 
 ## Introduction
-Basic network connectivity is configured according to the [CNI specification](https://github.com/containernetworking/cni/blob/master/SPEC.md).
 
-However, Cloud Foundry requires the networking stack to perform certain additional functions which are currently not standardized by CNI.  These are:
+So you want to create your own CNI plugin with Cloud Foundry?
 
-1. Expose [container ports on the diego cell via DNAT](https://docs.run.pivotal.io/devguide/deploy-apps/environment-variable.html#CF-INSTANCE-PORTS)
+First, all CNI plugins are required to implement [this set of features](https://github.com/containernetworking/cni/blob/master/SPEC.md).
 
-2. Enforce [Cloud Foundry Application Security Groups](https://docs.cloudfoundry.org/concepts/asg.html) for egress traffic from the application container 
+Cloud Foundry requires the networking stack to perform certain additional functions which are currently not standardized by CNI. These are spelled out later in this doc in more detail [here](#mandatory-features).
 
-3. Enforce Container to Container Network Policies that have been configured in the [Policy Server API](API.md)
+There are also associated [tests](#tests) to confirm the plugin implementation is correct.
 
-Configuration for (1) and (2) is passed down via the semi-standardized `runtimeConfig` field described in the [CNI convensions document](https://github.com/containernetworking/cni/blob/master/CONVENTIONS.md).  See [What data will my CNI plugin receive](#what-data-will-my-cni-plugin-receive) below.
+## Architecture
 
-Configuration for (3) is available via the [Policy Server Internal API](#policy-server-internal-api).
+*If you want to integrate your own CNI plugin with Cloud Foundry, begin by reviewing the component diagrams on the [architecture page](arch.md). Note that your plugin would replace the components in red, and take on the responsibilities of these components.*
 
-## Test suites
-A Cloud Foundry system that integrates a 3rd party networking component should be able to pass the following test suites:
+## Mandatory features
 
-- [CF Networking Smoke Tests](../src/test/smoke)
-- [CF Networking Acceptance Tests](../src/test/acceptance)
-- [CF Acceptance Tests (CATs)](https://github.com/cloudfoundry/cf-acceptance-tests/)
+In addition to the features listed in the [CNI
+spec](https://github.com/containernetworking/cni/blob/master/SPEC.md), the
+following features are required.
 
-The smoke tests are non-disruptive and may be run against a live, production environment.  The other tests make potentially disruptive changes and should only be run against a non-production environment.
+- NetOut
+- NetIn
+- Policy configuration
+- MTU
+- Your CNI plugin is a bosh release
 
-For local development, we recommend using [`cf-deployment` on BOSH-lite](https://github.com/cloudfoundry/cf-deployment).
+### NetOut
+**Spec**: Operators can configure ASGs at the CF or space level to allow traffic from apps and tasks to CIDR ranges.
 
-For guidance on these test suites, please reach out to our team in Slack (top of this page).
+**Description**: Networking layer provides IP addressing and connectivity for containers. The networking layer sets up firewall rules to allow traffic based on ASG configuration. For more information on ASGs, see [these docs](https://docs.cloudfoundry.org/concepts/asg.html).
 
-## MTU
-CNI plugins should automatically detect the MTU settings on the host, and set the MTU
-on container network interfaces appropriately.  For example, if the host MTU is 1500 bytes
+**CF Information Needed**: ASG information can be pulled from the config passed in from the garden external networker. See `runtimeConfig.netOutRules` under [Getting Data From CF](#getting-data-from-cf). The ASG information provided will be only for the ASGs that are currently applied to the app. If you want information about new ASGs has been added through Cloud Controller, see [Information from CAPI](#information-from-capi).
+
+### NetIn
+**Spec**: External entities can reach applications through the GoRouter.
+
+**Description**: Networking layer sets up firewall rules to allow ingress traffic from GoRouter, TCP router and SSH proxy.
+
+**CF Information Needed**: In order for the GoRouter, TCP router, and SSH proxy to be able to access your app, ports listed in `portMappings` need to be exposed via DNAT. For example, the cni-wrapper-plugin in silk-release - see `runtimeConfig.portMappings` under [Getting Data From CF](#getting-data-from-cf) - gets this data from the [garden-cni](http://bosh.io/jobs/garden-cni?source=github.com/cloudfoundry/cf-networking-release) job. These can also be retreived from [environment variables](https://docs.run.pivotal.io/devguide/deploy-apps/environment-variable.html#CF-INSTANCE-PORTS)
+
+### Policy Configuration
+**Spec**: App-to-app policies between app containers and task containers for those apps
+
+**Description**: The networking layer sets up firewall rules to allow container-to-container traffic based on policy  (v1 of policy API must be supported).
+
+**CF Information Needed**: You need to have an agent running that is polling the internal policy server. For example, [VXLAN Policy Agent](https://bosh.io/jobs/vxlan-policy-agent?source=github.com/cloudfoundry/silk-release) in [silk-release](https://code.cloudfoundry.org/silk-release) polls the [internal policy server](#information-from-internal-policy-server).
+
+### MTU
+
+**Spec**: operators can override the MTU on the interface
+
+**Description**: CNI plugins should automatically detect the MTU settings on the host, and set the MTU
+on container network interfaces appropriately. For example, if the host MTU is 1500 bytes
 and the plugin encapsulates with 50 bytes of header, the plugin should ensure that the
-container MTU is no greater than 1450 bytes.  This is to ensure there is no fragmentation.
+container MTU is no greater than 1450 bytes. This is to ensure there is no fragmentation.
 The built-in silk CNI plugin does this.
 
-Operators may wish to override the MTU setting. In this case they will set the BOSH property `cf_networking.mtu`.
-3rd party plugins should respect this value.
+Operators may wish to override the MTU setting. It is recommended to expose MTU as a Bosh property on your CNI job, as the [cni](http://bosh.io/jobs/cni?source=github.com/cloudfoundry/silk-release#p=mtu) job in [silk-release](https://code.cloudfoundry.org/silk-release).
 
-## To author a BOSH release with your plugin
-0. Create a new release with all packages and jobs required by your CNI plugin.  At a minimum, you must provide
-a CNI binary program and a CNI config file.
+**CF Information Needed**: None.
+
+### Your CNI plugin is a bosh release
+
+#### To author a BOSH release with your plugin
+
+Your CNI plugin will need to be packaged as a [BOSH release](http://bosh.io/docs#release).
+
+Add in all packages and jobs required by your CNI plugin.  At a minimum, you must provide a CNI binary program and a CNI config file.
    If your software requires a long-lived daemon to run on the diego cell, we recommend you deploy a separate BOSH job for that.
   - For more info on **bosh packaging scripts** read [this](http://bosh.io/docs/packages.html#create-a-packaging-script).
   - For more info on **bosh jobs** read [this](http://bosh.io/docs/jobs.html).
 
+Use the [silk-release](http://github.com/cloudfoundry/silk-release) as inspiration.
 
-## To deploy your BOSH release with Cloud Foundry
-0. Update the [deployment manifest properties](http://bosh.io/docs/deployment-manifest.html#properties)
+#### To deploy your BOSH release with Cloud Foundry
+
+Update the [deployment manifest properties](http://bosh.io/docs/deployment-manifest.html#properties)
+    - The [garden-cni](http://bosh.io/jobs/garden-cni?source=github.com/cloudfoundry/cf-networking-release) job properties must be configured to point to your plugin's paths.
 
   ```yaml
   properties:
@@ -62,23 +117,65 @@ a CNI binary program and a CNI config file.
       cni_plugin_dir: /var/vcap/packages/YOUR_PACKAGE/bin # directory for CNI binaries
       cni_config_dir: /var/vcap/jobs/YOUR_JOB/config/cni  # directory for CNI config file(s)
   ```
+The above properties are configured on the garden-cni job: [`cni_config_dir`](http://bosh.io/jobs/garden-cni?source=github.com/cloudfoundry/cf-networking-release#p=cf_networking.cni_config_dir) and [`cni_plugin_dir`](http://bosh.io/jobs/garden-cni?source=github.com/cloudfoundry/cf-networking-release#p=cf_networking.cni_plugin_dir)
 
-  Remove any lingering references to jobs that are from [`silk-release`](code.cloudfoundry.org/silk-release) in the deployment manifest, and replace the `plugin` properties
-  with any manifest properties that your bosh job requires.
+Your CNI plugin must at a minimum expose these properties:
+- [`mtu`](https://bosh.io/jobs/cni?source=github.com/cloudfoundry/silk-release#p=mtu)
 
+## Optional capabilities
+The following features are optional for your CNI plugin:
+- Per ASG logging
+- Global ASG and container-to-container logging
+- Bosh backup and restore (BBR)
 
-## What data will my CNI plugin receive?
+### Per ASG Logging
+**Spec**: Operaters can configure `"log": true` in ASG config per ASG.
+
+**Description**: The networking layer logs all accepted/denied packets for the ASG with `"log": true` set.
+
+**CF Information Needed**: ASG information can be pulled from the config passed in from the garden external networker. See `runtimeConfig.netOutRules` under [Getting Data From CF](#getting-data-from-cf).
+
+### Global ASG and Container-to-Container Logging
+**Spec**: Operators can enable global logging for ASGs or containers.
+
+**Description**: The networking layer logs all accepted/denied ASG and container-to-container packets.
+
+**CF Information Needed**: None. For example, the [vxlan-policy-agent job](https://bosh.io/jobs/vxlan-policy-agent?source=github.com/cloudfoundry/silk-release) directly exposes [a Bosh property](https://bosh.io/jobs/vxlan-policy-agent?source=github.com/cloudfoundry/silk-release#p=iptables_logging) for operators to set to write C2C iptables logs, and the [cni job](https://bosh.io/jobs/cni?source=github.com/cloudfoundry/silk-release) exposes [a Bosh property](http://bosh.io/jobs/cni?source=github.com/cloudfoundry/silk-release#p=iptables_logging) for operators to set to write ASG iptables logs.
+
+### Bosh Backup and Restore
+**Spec**: Operators can backup and restore Bosh deployments.
+
+**Description**: Add support for [BBR](https://code.cloudfoundry.org/bosh-backup-and-restore) if there is data that must be retained after a backup and restore operation.
+
+**CF Information Needed**: None. For inspiration on conforming to BBR, see the [bbr-cfnetworkingdb](https://bosh.io/jobs/bbr-cfnetworkingdb?source=github.com/cloudfoundry-incubator/cf-networking-release) job and the backup script templates for the [policy server job](https://bosh.io/jobs/policy-server?source=github.com/cloudfoundry/cf-networking-release).
+
+[silk-release](https://code.cloudfoundry.org/silk-release), on the other hand, is built in a way that it is resilient to data loss in the silk-controller.
+
+### Bosh DNS
+**Spec**: Apps can connect to services using [Bosh DNS](https://bosh.io/jobs/bosh-dns?source=github.com/cloudfoundry/dns-release).
+
+**Description**: The networking layer allows containers to reach Bosh DNS on the cell at `169.254.0.2`.
+
+**CF Information Needed**: None. [silk-release](https://code.cloudfoundry.org/silk-release) exposes [this Bosh property](http://bosh.io/jobs/cni?source=github.com/cloudfoundry/silk-release#p=dns_servers) for an operator to set to `- 169.254.0.2`, that will allow containers to reach Bosh DNS on the cell. Setting this property causes the silk plugin to add dns nameserver information in the response back to the garden external networker. This has the notable side effect of causing the `/etc/resolv.conf` to have only the nameservers specified by this property, and nothing else. If this property is omitted, the `/etc/resolv.conf` in the container will have a close resemblance to the host vm's `/etc/resolv.conf`. 
+
+## Getting Data from CF
+### From Config
+
+This config is described in the [CNI conventions document](https://github.com/containernetworking/cni/blob/master/CONVENTIONS.md).
+
 The `garden-external-networker` will invoke one or more CNI plugins, according to the [CNI Spec](https://github.com/containernetworking/cni/blob/master/SPEC.md).
-It will start with the CNI config files available in the `cf_networking.cni_config_dir` and also inject
+It will start with the CNI config files available in the [`cni_config_dir`](http://bosh.io/jobs/garden-cni?source=github.com/cloudfoundry/cf-networking-release#p=cf_networking.cni_config_dir) and also inject
 some dynamic information about the container. This is divided into two keys the first, `metadata`
-contains the CloudFoundry App, Space and Org that it belongs to. Another key `runtimeConfig` holds information that CNI plugins may need
+contains the CloudFoundry App, Space and Org that it belongs to.
+
+Another key `runtimeConfig` holds information that CNI plugins may need
 to implement legacy networking features of Cloud Foundry. It is divided into two keys, `portMappings` can be translated into port forwarding
 rules to allow the gorouter access to application containers, and `netOutRules` which are egress whitelist rules used for implementing
 application security groups.
 
-A reference implementation of these features can be seen in in the [cni-wrapper-plugin](../src/cni-wrapper-plugin).
+A reference implementation of these features can be seen in the [cni-wrapper-plugin](https://github.com/cloudfoundry/silk-release/tree/develop/src/cni-wrapper-plugin).
 
-At deploy time, Silk's CNI config is generated from this [template](../jobs/silk-cni/templates/cni-wrapper-plugin.conf.erb), and
+For example, at deploy time, Silk's CNI config is generated from this [template](https://github.com/cloudfoundry/silk-release/tree/develop/jobs/cni/templates/cni-wrapper-plugin.conf.erb), and
 is stored in a file on disk at `/var/vcap/jobs/silk-cni/config/cni-wrapper-plugin.conf`, which resembles
 
 ```json
@@ -172,211 +269,54 @@ Furthermore, the CNI runtime data, provided as environment variables, sets the
 When [Diego](https://github.com/cloudfoundry/diego-release) calls Garden, it sets that equal to the [`ActualLRP` `InstanceGuid`](https://godoc.org/code.cloudfoundry.org/bbs/models#ActualLRPInstanceKey).
 In this way, a 3rd-party system can relate data from CNI with data in the [Diego BBS](https://github.com/cloudfoundry/bbs/tree/master/doc).
 
+### Information from Internal Policy Server
 
-## Policy Server Internal API
-If you are replacing the built-in "VXLAN Policy Agent" with your own Policy Enforcement implementation,
-you can use the Policy Server's internal API to retrieve policy information.
+If you are replacing the built-in "VXLAN Policy Agent" with your own policy enforcement implementation, you can use the Policy Server's internal API to retrieve policy information.
 
-There is a single endpoint to retrieve policies:
+3rd party components replacing the VXLAN policy agent should implement the features necessary to allow application containers to access on another. The policies that are created by CF users are retrieved from the Internal Policy Server. Clients to this api will need to poll this api to ensure the changes to the policies are honored.
 
-`GET https://policy-server.service.cf.internal:4003/networking/v1/internal/policies`
+3rd party integrators should expect the internal policy server component will be present in a standard CF deploy.
 
-Additionally, you can use the `id` query parameter to filter the response to include
-only policies with a source or destination that match any of the comma-separated
-`group_policy_id`'s that are included.
+For how to use the Internal Policy Server API, [read here](API.md).
 
-### TLS configuration
-The Policy Server internal API requires Mutual TLS.  All connections must use a client certificate
-that is signed by a trusted certificate authority.  The certs and keys should be configured via BOSH manifest
-properties on the Policy Server and on your custom policy client, e.g.
+### Information from CAPI
+#### Poll for Cloud Controller for ASGs or events
 
-```yaml
-properties:
-  cf_networking:
-    policy_server:
-      ca_cert: |
-        -----BEGIN CERTIFICATE-----
-        REPLACE_WITH_CA_CERT
-        -----END CERTIFICATE-----
-      server_cert: |
-        -----BEGIN CERTIFICATE-----
-        REPLACE_WITH_SERVER_CERT
-        -----END CERTIFICATE-----
-      server_key: |
-        -----BEGIN RSA PRIVATE KEY-----
-        REPLACE_WITH_SERVER_KEY
-        -----END RSA PRIVATE KEY-----
+None of silk-release communicates directly with CAPI. Information about ASGs are passed in on container creation.
+If you want information about new ASGs that have been added through Cloud Controller, but that haven't been passed through on the config because the app has not been restarted, you can [poll CAPI](https://apidocs.cloudfoundry.org/280/security_groups/list_all_security_groups.html).
 
-  your_networking_provider:
-    your_policy_client:
-      ca_cert: |
-        -----BEGIN CERTIFICATE-----
-        REPLACE_WITH_CA_CERT
-        -----END CERTIFICATE-----
-      client_cert: |
-        -----BEGIN CERTIFICATE-----
-        REPLACE_WITH_CLIENT_CERT
-        -----END CERTIFICATE-----
-      client_key: |
-        -----BEGIN RSA PRIVATE KEY-----
-        REPLACE_WITH_CLIENT_KEY
-        -----END RSA PRIVATE KEY-----
-```
+If you want information on org, space, app events for use by your CNI plugin, see [the CF API docs](https://apidocs.cloudfoundry.org/280).
 
-The server requires that connections use the TLS cipher suite
-`TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256`.  Your client must support this cipher suite.
+### From Diego
 
-We provide [a script](../scripts/generate-certs) to generate all required certs & keys.
+#### Subscribe to BBS event stream for receiving LRP events
 
-### Policy Server Internal API Details
+None of silk-release communicates directly with the BBS. For inspiration on how to subscribe to the BBS event stream, see the [route-emitter job](https://bosh.io/jobs/route_emitter?source=github.com/cloudfoundry/diego-release) and [code](https://code.cloudfoundry.org/route-emitter).
 
-`GET /networking/v1/internal/policies`
+#### Registering container IPs instead of port mappings with the RE
 
-List all policies optionally filtered to match requested  `policy_group_id`'s
+Set [`register_direct_instance_routes` property on the route_emitter](https://bosh.io/jobs/route_emitter?source=github.com/cloudfoundry/diego-release#p=register_direct_instance_routes) to true in order to register container IPs instead of port mappings.
 
-Query Parameters (optional):
+## Tests
 
-- `id`: comma-separated `policy_group_id` values
+A Cloud Foundry system that integrates a 3rd party networking component should be able to pass the following test suites:
 
-Response Body:
+- [CF Networking Smoke Tests](../src/test/smoke)
+- [CF Networking Acceptance Tests](../src/test/acceptance)
+- [CF Acceptance Tests (CATs)](https://github.com/cloudfoundry/cf-acceptance-tests/)
+- [CF Routing Acceptance Tests (RATS)](https://github.com/cloudfoundry-incubator/routing-acceptance-tests)
+- Optional - [CF Disaster Recovery Acceptance Tests (DRATS)](https://github.com/cloudfoundry-incubator/disaster-recovery-acceptance-tests)
 
-- `policies`: list of policies
-- `policies[].destination`: the destination of the policy
-- `policies[].destination.id`: the `policy_group_id` of the destination (currently always an `app_id`)
-- `policies[].destination.ports`: the range of `ports` allowed on the destination
-- `policies[].destination.ports.start`: the first port in the port range allowed on the destination
-- `policies[].destination.ports.end`: the last port of the port range allowed on the destination
-- `policies[].destination.protocol`: the `protocol` allowed on the destination: `tcp` or `udp`
-- `policies[].destination.tag`: the `tag` of the source allowed to the destination
-- `policies[].source`: the source of the policy
-- `policies[].source.id`: the `policy_group_id` of the source (currently always an `app_id`)
-- `policies[].source.tag`: the `tag` of the source allowed to the destination
+Only the `CF Networking Smoke Tests` are non-disruptive and may be run against a live, production environment. The other tests make potentially disruptive changes and should only be run against a non-production environment.
 
-### Examples Requests and Responses
+For local development, we recommend using [`cf-deployment` on BOSH-lite](https://github.com/cloudfoundry/cf-deployment).
 
-#### Get all policies
+For guidance on these test suites, please reach out to our team in Slack (bottom of this page).
 
-```bash
-curl -s \
-  --cacert certs/ca.crt \
-  --cert certs/client.crt \
-  --key certs/client.key \
-  https://policy-server.service.cf.internal:4003/networking/v1/internal/policies
-```
+## Common Gotchas
 
-```json
-  {
-      "policies": [
-        {
-            "destination": {
-                "id": "eb95ff20-cba8-4edc-8f4a-cf80d0669faf",
-                "ports": {
-                  "start": 8080,
-                  "end": 8090
-                },
-                "protocol": "tcp",
-                "tag": "0002"
-            },
-            "source": {
-                "id": "4a2d3627-0b8c-42d1-9563-22696eedc05d",
-                "tag": "0001"
-            }
-        },
-        {
-            "destination": {
-                "id": "b611f7e6-c8fe-41cb-b150-92581aafa5c2",
-                "ports": {
-                  "start": 8080,
-                  "end": 8080
-                },
-                "protocol": "tcp",
-                "tag": "0004"
-            },
-            "source": {
-                "id": "3b348978-a3cb-487c-a277-58fdc3e2c678",
-                "tag": "0003"
-            }
-        },
-        {
-            "destination": {
-                "id": "8fa287c9-0d01-491e-a1d5-d6e2d8a1ef61",
-                "ports": {
-                  "start": 8080,
-                  "end": 8080
-                },
-                "protocol": "tcp",
-                "tag": "0005"
-            },
-            "source": {
-                "id": "8fa287c9-0d01-491e-a1d5-d6e2d8a1ef61",
-                "tag": "0005"
-            }
-        },
-        {
-            "destination": {
-                "id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
-                "ports": {
-                  "start": 5555,
-                  "end": 6666
-                },
-                "protocol": "tcp",
-                "tag": "0006"
-            },
-            "source": {
-                "id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
-                "tag": "0006"
-            }
-        }
-    ]
-}
-```
+If you want to integrate using the default values for the [`cni_config_dir`](http://bosh.io/jobs/garden-cni?source=github.com/cloudfoundry/cf-networking-release#p=cf_networking.cni_config_dir) and [`cni_plugin_dir`](http://bosh.io/jobs/garden-cni?source=github.com/cloudfoundry/cf-networking-release#p=cf_networking.cni_plugin_dir), your BOSH package for the CNI plugin *must* be named `cni` and the BOSH job for the CNI plugin *must* be named `cni`.
 
-#### Get filtered policies
 
-Returns all policies with source or destination id's that match any of the
-included `policy_group_id`'s.
-
-```bash
-curl -s \
---cacert certs/ca.crt \
---cert certs/client.crt \
---key certs/client.key \
-https://policy-server.service.cf.internal:4003/networking/v1/internal/policies?id=5351a742-6704-46df-8de0-1a376adab65c,d5bbc5ed-886a-44e6-945d-67df1013fa16
-```
-
-```json
-{
-    "policies": [
-        {
-            "destination": {
-                "id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
-                "ports": {
-                  "start": 5555,
-                  "end": 6666
-                },
-                "protocol": "tcp",
-                "tag": "0006"
-            },
-            "source": {
-                "id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
-                "tag": "0006"
-            }
-        },
-        {
-            "destination": {
-                "id": "5351a742-6704-46df-8de0-1a376adab65c",
-                "ports": {
-                  "start": 5555,
-                  "end": 6666
-                },
-                "protocol": "tcp",
-                "tag": "0007"
-            },
-            "source": {
-                "id": "5351a742-6704-46df-8de0-1a376adab65c",
-                "tag": "0007"
-            }
-        }
-    ]
-}
-```
+## Feedback
+If you have any questions or feedback, please visit the `#container-networking` channel on [Cloud Foundry Slack](http://slack.cloudfoundry.org/).

@@ -10,9 +10,10 @@ import (
 	"garden-external-networker/manager"
 	"garden-external-networker/port_allocator"
 	"io"
-	"lib/filelock"
 	"lib/serial"
 	"os"
+
+	"code.cloudfoundry.org/filelock"
 )
 
 var (
@@ -85,14 +86,14 @@ func mainWithError(logger io.Writer) error {
 		ConfigDir: cfg.CniConfigDir,
 	}
 
-	networks, err := cniLoader.GetNetworkConfigs()
+	networkLists, err := cniLoader.GetNetworkConfigs()
 	if err != nil {
 		return fmt.Errorf("load cni config: %s", err)
 	}
 
 	cniController := &cni.CNIController{
-		CNIConfig:      cniLoader.GetCNIConfig(),
-		NetworkConfigs: networks,
+		CNIConfig:          cniLoader.GetCNIConfig(),
+		NetworkConfigLists: networkLists,
 	}
 
 	mounter := &bindmount.Mounter{}
@@ -115,6 +116,7 @@ func mainWithError(logger io.Writer) error {
 		Mounter:       mounter,
 		BindMountRoot: cfg.BindMountDir,
 		PortAllocator: portAllocator,
+		SearchDomains: cfg.SearchDomains,
 	}
 
 	mux := ipc.Mux{

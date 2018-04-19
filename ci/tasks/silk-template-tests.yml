@@ -1,0 +1,12 @@
+---
+image_resource:
+  type: docker-image
+  source: { repository: ruby }
+
+platform: linux
+
+inputs:
+- name: silk-release
+
+run:
+  path: silk-release/scripts/template-tests

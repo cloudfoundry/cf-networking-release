@@ -2,10 +2,11 @@
 name: runc-cni
 
 dependencies:
-  - golang
+  - golang-1.10-linux
 
 files:
   - github.com/containernetworking/cni/scripts/*
+  - code.cloudfoundry.org/filelock/*.go # gosub
   - code.cloudfoundry.org/garden/*.go # gosub
   - garden-external-networker/*.go # gosub
   - garden-external-networker/bindmount/*.go # gosub
@@ -22,5 +23,4 @@ files:
   - github.com/containernetworking/cni/pkg/version/*.go # gosub
   - golang.org/x/sys/unix/*.go # gosub
   - golang.org/x/sys/unix/*.s # gosub
-  - lib/filelock/*.go # gosub
   - lib/serial/*.go # gosub

@@ -124,6 +124,17 @@ var _ = Describe("Integration", func() {
 			Expect(len(statsJSON.Latency)).To(BeNumerically(">=", 1))
 		})
 
+		It("echos the source ip", func() {
+			response, err := http.DefaultClient.Get("http://" + address + "/echosourceip")
+			Expect(err).NotTo(HaveOccurred())
+			defer response.Body.Close()
+			Expect(response.StatusCode).To(Equal(200))
+
+			responseBytes, err := ioutil.ReadAll(response.Body)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(responseBytes).To(ContainSubstring("127.0.0.1"))
+		})
+
 		Context("when the proxy destination is invalid", func() {
 			It("logs the error", func() {
 				response, err := http.DefaultClient.Get("http://" + address + "/proxy/////!!")

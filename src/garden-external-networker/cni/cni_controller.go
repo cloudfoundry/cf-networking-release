@@ -13,15 +13,15 @@ type cniLibrary interface {
 }
 
 type CNIController struct {
-	CNIConfig      libcni.CNI
-	NetworkConfigs []*libcni.NetworkConfig
+	CNIConfig          libcni.CNI
+	NetworkConfigLists []*libcni.NetworkConfigList
 }
 
 func (c *CNIController) Up(namespacePath, handle string, metadata map[string]interface{}, legacyNetConf map[string]interface{}) (types.Result, error) {
 	var result types.Result
 	var err error
 
-	for i, networkConfig := range c.NetworkConfigs {
+	for i, networkConfigList := range c.NetworkConfigLists {
 		runtimeConfig := &libcni.RuntimeConf{
 			ContainerID: handle,
 			NetNS:       namespacePath,
@@ -36,14 +36,17 @@ func (c *CNIController) Up(namespacePath, handle string, metadata map[string]int
 			extraKeys["runtimeConfig"] = legacyNetConf
 		}
 
-		networkConfig, err = libcni.InjectConf(networkConfig, extraKeys)
-		if err != nil {
-			return nil, fmt.Errorf("adding extra data to CNI config: %s", err)
+		for i, networkConfig := range networkConfigList.Plugins {
+			networkConfig, err = libcni.InjectConf(networkConfig, extraKeys)
+			if err != nil {
+				return nil, fmt.Errorf("adding extra data to CNI config: %s", err)
+			}
+			networkConfigList.Plugins[i] = networkConfig
 		}
 
-		result, err = c.CNIConfig.AddNetwork(networkConfig, runtimeConfig)
+		result, err = c.CNIConfig.AddNetworkList(networkConfigList, runtimeConfig)
 		if err != nil {
-			return nil, fmt.Errorf("add network failed: %s", err)
+			return nil, fmt.Errorf("add network list failed: %s", err)
 		}
 	}
 
@@ -52,14 +55,14 @@ func (c *CNIController) Up(namespacePath, handle string, metadata map[string]int
 
 func (c *CNIController) Down(namespacePath, handle string) error {
 	var err error
-	for i, networkConfig := range c.NetworkConfigs {
+	for i, networkConfigList := range c.NetworkConfigLists {
 		runtimeConfig := &libcni.RuntimeConf{
 			ContainerID: handle,
 			NetNS:       namespacePath,
 			IfName:      fmt.Sprintf("eth%d", i),
 		}
 
-		err = c.CNIConfig.DelNetwork(networkConfig, runtimeConfig)
+		err = c.CNIConfig.DelNetworkList(networkConfigList, runtimeConfig)
 		if err != nil {
 			return fmt.Errorf("del network failed: %s", err)
 		}

@@ -2,7 +2,7 @@
 name: cf-networking-acceptance
 
 dependencies:
-  - golang
+  - golang-1.10-linux
 
 files:
   - cli/cf-cli_6.30.0_linux_x86-64.tgz

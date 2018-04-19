@@ -82,6 +82,45 @@ The following jobs `cni`, `iptables-logger`, `silk-controller`,
   - `cf_networking.netmon.poll_interval` -> `poll_interval`
   - `cf_networking.netmon.interface_name` -> `interface_name`
   - `cf_networking.netmon.log_level` -> `log_level`
+- All properties from all jobs have had their namespaces removed.
+  The `cf_networking.<job_name>` prefixes are no longer necessary given bosh
+  supports job level properties.
+- Removed `policy-server-internal.tag_length`, this property is retrieved via bosh links from
+  `tag_length is used by link to policy-server.tag_length`.
+
+### 1.13.0
+**New Properties**
+  - An optional parameter has been added to the `garden-cni` job to
+    specify search domains. These domains will be configured in containers' /etc/resolv.conf.
+    - `cf_networking.search_domains`
+  - An optional parameter has been added to the `silk-daemon` job to configure which network
+    container traffic should be sent over based on network interface name. This property is
+    not recommended for use and is temporary. If empty, the default network is used.
+    - `cf_networking.silk_daemon.temporary_vxlan_interface`
+  - An optional parameter has been added to the `silk-daemon` job to configure which network
+    container traffic should be sent over based on bosh network name. If empty, the default
+    gateway network is used.
+    - `cf_networking.silk_daemon.vxlan_network`
+  - An optional parameter has been added to list domains from which Cross-Origin
+    requests will be accepted.
+    - `cf_networking.policy_server.allowed_cors_domains`
+
+### 1.11.0
+**Changed Properties**
+  - `cf_networking.silk_controller.connect_timeout_seconds` now defaults to 120.
+  - `cf_networking.policy_server.connect_timeout_seconds` now defaults to 120.
+  - `cf_networking.policy_server_internal.connect_timeout_seconds` now defaults to 120.
+
+**New Properties**
+  - An optional parameter has been added to determine what interface the silk-vtep should
+    attach to based on BOSH network name. If not set, we use the network that the BOSH spec
+    defaults to. You cannot set this property and the `temporary_vxlan_interface` property together.
+    - `cf_networking.silk_daemon.vxlan_network`
+  - An optional parameter has been added to determine what interface the silk-vtep should
+    attach to based on interface name. We do not recommend using this parameter and it is
+    temporary. You cannot set this property and the `vxlan_network` property together.
+    - `cf_networking.silk_daemon.temporary_vxlan_interface`
+>>>>>>> develop
 
 ### 1.7.0
 **New Properties**

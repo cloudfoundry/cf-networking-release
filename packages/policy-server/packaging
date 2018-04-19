@@ -1,11 +1,10 @@
 #!/bin/bash
 set -eu
 
-mkdir -p ${BOSH_INSTALL_TARGET}/src
-cp -a . ${BOSH_INSTALL_TARGET}/src
+mkdir ../src && cp -a * ../src/ && mv ../src ./src
+mkdir -p $BOSH_INSTALL_TARGET/bin
 
-export GOROOT=$(readlink -nf /var/vcap/packages/golang)
-export GOPATH=$BOSH_INSTALL_TARGET
-export PATH=$GOROOT/bin:$GOPATH/bin:$PATH
+source /var/vcap/packages/golang-1.10-linux/bosh/compile.env
 
-go install policy-server/cmd/...
+go build -o "${BOSH_INSTALL_TARGET}/bin/policy-server" policy-server/cmd/policy-server
+go build -o "${BOSH_INSTALL_TARGET}/bin/policy-server-internal" policy-server/cmd/policy-server-internal

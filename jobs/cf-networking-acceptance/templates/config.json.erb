@@ -2,20 +2,20 @@
     require 'json'
 
     toRender = {
-      "api" => "api." + p("cf_networking.acceptance.system_domain"),
-      "apps_domain" => p("cf_networking.acceptance.apps_domain"),
-      "skip_ssl_validation" => p("cf_networking.acceptance.skip_ssl_validation"),
-      "admin_user" => p("cf_networking.acceptance.admin_user"),
-      "admin_password" => p("cf_networking.acceptance.admin_password"),
-      "admin_client" => p("cf_networking.acceptance.admin_client"),
-      "admin_secret" => p("cf_networking.acceptance.admin_secret"),
-      "default_security_groups" => p("cf_networking.acceptance.default_security_groups"),
-      "proxy_applications" => p("cf_networking.acceptance.proxy_applications"),
-      "proxy_instances" => p("cf_networking.acceptance.proxy_instances"),
-      "test_applications" => p("cf_networking.acceptance.num_apps"),
-      "test_app_instances" => p("cf_networking.acceptance.num_app_instances"),
+      "api" => "api." + p("system_domain"),
+      "apps_domain" => p("apps_domain"),
+      "skip_ssl_validation" => p("skip_ssl_validation"),
+      "admin_user" => p("admin_user"),
+      "admin_password" => p("admin_password"),
+      "admin_client" => p("admin_client"),
+      "admin_secret" => p("admin_secret"),
+      "default_security_groups" => p("default_security_groups"),
+      "proxy_applications" => p("proxy_applications"),
+      "proxy_instances" => p("proxy_instances"),
+      "test_applications" => p("num_apps"),
+      "test_app_instances" => p("num_app_instances"),
       "extra_listen_ports" => 2,
-      "prefix" => p("cf_networking.acceptance.prefix"),
+      "prefix" => p("prefix"),
     }
 
     JSON.pretty_generate(toRender)

@@ -2,7 +2,7 @@
 name: policy-server
 
 dependencies:
-  - golang
+  - golang-1.10-linux
 
 files:
   - code.cloudfoundry.org/cf-networking-helpers/db/*.go # gosub
@@ -63,6 +63,7 @@ files:
   - policy-server/cmd/policy-server-internal/*.go # gosub
   - policy-server/config/*.go # gosub
   - policy-server/handlers/*.go # gosub
+  - policy-server/middleware/*.go # gosub
   - policy-server/server_metrics/*.go # gosub
   - policy-server/store/*.go # gosub
   - policy-server/store/helpers/*.go # gosub

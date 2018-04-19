@@ -2,13 +2,14 @@
     require 'json'
 
     toRender = {
-      "cni_plugin_dir" => p("cf_networking.cni_plugin_dir"),
-      "cni_config_dir" => p("cf_networking.cni_config_dir"),
+      "cni_plugin_dir" => p("cni_plugin_dir"),
+      "cni_config_dir" => p("cni_config_dir"),
       "bind_mount_dir" => "/var/vcap/data/garden-cni/container-netns",
       "state_file" => "/var/vcap/data/garden-cni/external-networker-state.json",
-      "start_port" => p("cf_networking.nat_port_range_start"),
-      "total_ports" => p("cf_networking.nat_port_range_size"),
+      "start_port" => p("nat_port_range_start"),
+      "total_ports" => p("nat_port_range_size"),
       "log_prefix" => "cfnetworking",
+      "search_domains" => p("search_domains"),
     }
 
     JSON.pretty_generate(toRender)

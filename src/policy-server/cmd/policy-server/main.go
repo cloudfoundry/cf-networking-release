@@ -21,6 +21,7 @@ import (
 	"policy-server/cmd/common"
 	"policy-server/config"
 	"policy-server/handlers"
+	psmiddleware "policy-server/middleware"
 	"policy-server/store"
 	"policy-server/uaa_client"
 
@@ -109,9 +110,6 @@ func main() {
 	migrationConnectionResult := getMigrationDbConnection(*conf)
 	connectionResult := getDbConnection(*conf)
 
-	timeout := time.Duration(conf.Database.Timeout) * time.Second
-	timeout = timeout - time.Duration(500)*time.Millisecond
-
 	dataStore, err := store.New(
 		connectionResult.ConnectionPool,
 		migrationConnectionResult.ConnectionPool,
@@ -119,7 +117,6 @@ func main() {
 		destination,
 		policy,
 		conf.TagLength,
-		timeout,
 		&migrations.Migrator{
 			MigrateAdapter: &migrations.MigrateAdapter{},
 		},
@@ -223,29 +220,6 @@ func main() {
 		return networkWriteAuthenticator.Wrap(handler)
 	}
 
-	externalHandlers := rata.Handlers{
-		"uptime": metricsWrap("Uptime", logWrap(uptimeHandler)),
-		"health": metricsWrap("Health", logWrap(healthHandler)),
-
-		"create_policies": metricsWrap("CreatePolicies",
-			logWrap(versionWrap(authWriteWrap(createPolicyHandlerV1), authWriteWrap(createPolicyHandlerV0)))),
-
-		"delete_policies": metricsWrap("DeletePolicies",
-			logWrap(versionWrap(authWriteWrap(deletePolicyHandlerV1), authWriteWrap(deletePolicyHandlerV0)))),
-
-		"policies_index": metricsWrap("PoliciesIndex",
-			logWrap(versionWrap(authWriteWrap(policiesIndexHandlerV1), authWriteWrap(policiesIndexHandlerV0)))),
-
-		"cleanup": metricsWrap("Cleanup",
-			logWrap(versionWrap(authAdminWrap(policiesCleanupHandler), authAdminWrap(policiesCleanupHandler)))),
-
-		"tags_index": metricsWrap("TagsIndex",
-			logWrap(versionWrap(authAdminWrap(tagsIndexHandler), authAdminWrap(tagsIndexHandler)))),
-
-		"whoami": metricsWrap("WhoAmI",
-			logWrap(versionWrap(authAdminWrap(whoamiHandler), authAdminWrap(whoamiHandler)))),
-	}
-
 	externalRoutes := rata.Routes{
 		{Name: "uptime", Method: "GET", Path: "/"},
 		{Name: "uptime", Method: "GET", Path: "/networking"},
@@ -258,13 +232,49 @@ func main() {
 		{Name: "tags_index", Method: "GET", Path: "/networking/:version/external/tags"},
 	}
 
+	corsMiddleware := psmiddleware.CORS{}
+	externalRoutesWithOptions := corsMiddleware.AddOptionsRoutes("options", externalRoutes)
+
+	corsOptionsWrapper := func(handler http.Handler) http.Handler {
+		wrapper := handlers.CORSOptionsWrapper{
+			RataRoutes:         externalRoutesWithOptions,
+			AllowedCORSDomains: conf.AllowedCORSDomains,
+		}
+		return wrapper.Wrap(handler)
+	}
+
+	externalHandlers := rata.Handlers{
+		"options": corsOptionsWrapper(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		})),
+		"uptime": corsOptionsWrapper(metricsWrap("Uptime", logWrap(uptimeHandler))),
+		"health": corsOptionsWrapper(metricsWrap("Health", logWrap(healthHandler))),
+
+		"create_policies": corsOptionsWrapper(metricsWrap("CreatePolicies",
+			logWrap(versionWrap(authWriteWrap(createPolicyHandlerV1), authWriteWrap(createPolicyHandlerV0))))),
+
+		"delete_policies": corsOptionsWrapper(metricsWrap("DeletePolicies",
+			logWrap(versionWrap(authWriteWrap(deletePolicyHandlerV1), authWriteWrap(deletePolicyHandlerV0))))),
+
+		"policies_index": corsOptionsWrapper(metricsWrap("PoliciesIndex",
+			logWrap(versionWrap(authWriteWrap(policiesIndexHandlerV1), authWriteWrap(policiesIndexHandlerV0))))),
+
+		"cleanup": corsOptionsWrapper(metricsWrap("Cleanup",
+			logWrap(versionWrap(authAdminWrap(policiesCleanupHandler), authAdminWrap(policiesCleanupHandler))))),
+
+		"tags_index": corsOptionsWrapper(metricsWrap("TagsIndex",
+			logWrap(versionWrap(authAdminWrap(tagsIndexHandler), authAdminWrap(tagsIndexHandler))))),
+
+		"whoami": corsOptionsWrapper(metricsWrap("WhoAmI",
+			logWrap(versionWrap(authAdminWrap(whoamiHandler), authAdminWrap(whoamiHandler))))),
+	}
+
 	err = dropsonde.Initialize(conf.MetronAddress, dropsondeOrigin)
 	if err != nil {
 		log.Fatalf("%s.%s: initializing dropsonde: %s", logPrefix, jobPrefix, err)
 	}
 
 	metricsEmitter := common.InitMetricsEmitter(logger, wrappedStore)
-	externalServer := common.InitServer(logger, nil, conf.ListenHost, conf.ListenPort, externalHandlers, externalRoutes)
+	externalServer := common.InitServer(logger, nil, conf.ListenHost, conf.ListenPort, externalHandlers, externalRoutesWithOptions)
 	poller := initPoller(logger, conf, policyCleaner)
 	debugServer := debugserver.Runner(fmt.Sprintf("%s:%d", conf.DebugServerHost, conf.DebugServerPort), reconfigurableSink)
 
@@ -292,7 +302,6 @@ func main() {
 	logger.Info("exited")
 }
 func getMigrationDbConnection(c config.Config) dbConnection {
-	c.Database.Timeout = 60
 	return getDbConnection(c)
 }
 
@@ -302,10 +311,11 @@ type dbConnection struct {
 }
 
 func getDbConnection(conf config.Config) dbConnection {
+	retryInterval := 3
 	retriableConnector := db.RetriableConnector{
 		Connector:     db.GetConnectionPool,
 		Sleeper:       db.SleeperFunc(time.Sleep),
-		RetryInterval: 3 * time.Second,
+		RetryInterval: time.Duration(retryInterval) * time.Second,
 		MaxRetries:    10,
 	}
 
@@ -315,9 +325,10 @@ func getDbConnection(conf config.Config) dbConnection {
 		channel <- dbConnection{connection, err}
 	}()
 	var connectionResult dbConnection
+	timeout := time.Duration((retryInterval + conf.Database.Timeout) * retriableConnector.MaxRetries)
 	select {
 	case connectionResult = <-channel:
-	case <-time.After(5 * time.Second):
+	case <-time.After(timeout * time.Second):
 		log.Fatalf("%s.policy-server: db connection timeout", logPrefix)
 	}
 	if connectionResult.Err != nil {

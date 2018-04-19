@@ -1,0 +1,26 @@
+---
+name: proxy-plugin
+
+templates:
+  proxy-plugin.conf.erb: config/proxy-plugin.json
+
+packages: []
+
+consumes:
+  - name: cf_network
+    type: cf_network
+
+properties:
+  proxy_port:
+    description: "Port that Envoy proxy is listening on. Redirect NAT rules will be created to transparently pass packets to the proxy."
+    default: 5610
+
+  proxy_range:
+    description: |
+      CIDR of the application container network.
+      Traffic destined for this range will be proxied through Envoy.
+      If using silk release, or any release that provides a `cf_network` link
+      with `cf_network.network` property, this is optional.
+      If no link is provided, this property is required.
+      Specifying this property supersedes a provided link value.
+    example: "10.255.0.0/16"
