@@ -127,3 +127,9 @@
 [submodule "src/code.cloudfoundry.org/cf-networking-helpers"]
 	path = src/code.cloudfoundry.org/cf-networking-helpers
 	url = https://github.com/cloudfoundry/cf-networking-helpers
+[submodule "src/github.com/containernetworking/plugins"]
+	path = src/github.com/containernetworking/plugins
+	url = https://github.com/containernetworking/plugins
+[submodule "src/code.cloudfoundry.org/filelock"]
+	path = src/code.cloudfoundry.org/filelock
+	url = https://github.com/cloudfoundry/filelock.git
