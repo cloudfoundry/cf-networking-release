@@ -21,7 +21,6 @@ declare -a serial_packages=(
   "src/policy-server/integration/timeouts"
   "src/policy-server/integration"
   "src/vxlan-policy-agent"
-  "src/proxy-plugin/integration"
 )
 
 function loadIFB {
