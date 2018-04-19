@@ -41,13 +41,17 @@ var _ = Describe("Garden External Networker errors", func() {
 
 		fakeConfigFilePath = configFile.Name()
 		defaultConfig = map[string]interface{}{
-			"cni_plugin_dir": dir,
-			"cni_config_dir": dir,
-			"bind_mount_dir": dir,
-			"state_file":     stateFilePath.Name(),
-			"start_port":     1234,
-			"total_ports":    56,
-			"log_prefix":     "prefix",
+			"cni_plugin_dir":      dir,
+			"cni_config_dir":      dir,
+			"bind_mount_dir":      dir,
+			"state_file":          stateFilePath.Name(),
+			"start_port":          1234,
+			"total_ports":         56,
+			"log_prefix":          "prefix",
+			"iptables_lock_file":  GlobalIPTablesLockFile,
+			"proxy_redirect_cidr": "",
+			"proxy_port":          9999,
+			"proxy_uid":           42,
 		}
 		writeConfig(defaultConfig)
 

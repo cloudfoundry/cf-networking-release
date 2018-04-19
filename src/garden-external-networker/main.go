@@ -3,15 +3,21 @@ package main
 import (
 	"flag"
 	"fmt"
+	"garden-external-networker/adapter"
 	"garden-external-networker/bindmount"
 	"garden-external-networker/cni"
 	"garden-external-networker/config"
 	"garden-external-networker/ipc"
 	"garden-external-networker/manager"
 	"garden-external-networker/port_allocator"
+	"garden-external-networker/proxy"
 	"io"
+	"lib/rules"
 	"lib/serial"
 	"os"
+	"sync"
+
+	"github.com/coreos/go-iptables/iptables"
 
 	"code.cloudfoundry.org/filelock"
 )
@@ -110,10 +116,37 @@ func mainWithError(logger io.Writer) error {
 		Locker:     locker,
 	}
 
+	ipt, err := iptables.New()
+	if err != nil {
+		panic(err)
+	}
+
+	iptLocker := &filelock.Locker{
+		FileLocker: filelock.NewLocker(cfg.IPTablesLockFile),
+		Mutex:      &sync.Mutex{},
+	}
+	restorer := &rules.Restorer{}
+	lockedIPTables := &rules.LockedIPTables{
+		IPTables: ipt,
+		Locker:   iptLocker,
+		Restorer: restorer,
+	}
+
+	namespaceAdapter := &adapter.NamespaceAdapter{}
+
+	proxyRedirect := &proxy.Redirect{
+		IPTables:         lockedIPTables,
+		NamespaceAdapter: namespaceAdapter,
+		RedirectCIDR:     cfg.ProxyRedirectCIDR,
+		ProxyPort:        cfg.ProxyPort,
+		ProxyUID:         *cfg.ProxyUID,
+	}
+
 	manager := &manager.Manager{
 		Logger:        logger,
 		CNIController: cniController,
 		Mounter:       mounter,
+		ProxyRedirect: proxyRedirect,
 		BindMountRoot: cfg.BindMountDir,
 		PortAllocator: portAllocator,
 		SearchDomains: cfg.SearchDomains,

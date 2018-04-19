@@ -28,3 +28,7 @@ properties:
   search_domains:
     description: "An array of search domains for DNS on the containers"
     default: []
+
+  experimental_proxy_redirect_cidr:
+    description: "CIDR range to transparently redirect to a proxy process in the container namespace.  If empty (default), will not redirect any traffic."
+    default: ""

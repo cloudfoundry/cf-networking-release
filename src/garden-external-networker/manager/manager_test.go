@@ -23,6 +23,7 @@ var _ = Describe("Manager", func() {
 		mgr                   *manager.Manager
 		upInputs              manager.UpInputs
 		cniController         *fakes.CNIController
+		proxyRedirect         *fakes.ProxyRedirect
 		mounter               *fakes.Mounter
 		gardenProperties      map[string]interface{}
 		expectedMetadata      map[string]interface{}
@@ -40,6 +41,7 @@ var _ = Describe("Manager", func() {
 		mounter = &fakes.Mounter{}
 		cniController = &fakes.CNIController{}
 		portAllocator = &fakes.PortAllocator{}
+		proxyRedirect = &fakes.ProxyRedirect{}
 
 		cniController.UpReturns(&types020.Result{
 			IP4: &types020.IPConfig{
@@ -52,6 +54,7 @@ var _ = Describe("Manager", func() {
 				Nameservers: []string{"8.8.8.8"},
 			},
 		}, nil)
+
 		mgr = &manager.Manager{
 			Logger:        logger,
 			CNIController: cniController,
@@ -59,6 +62,7 @@ var _ = Describe("Manager", func() {
 			BindMountRoot: "some/fake/path",
 			PortAllocator: portAllocator,
 			SearchDomains: []string{"pivotal.io", "foo.bar", "baz.me"},
+			ProxyRedirect: proxyRedirect,
 		}
 
 		netInRules = []garden.NetIn{
@@ -109,6 +113,15 @@ var _ = Describe("Manager", func() {
 			source, target := mounter.IdempotentlyMountArgsForCall(0)
 			Expect(source).To(Equal("/proc/42/ns/net"))
 			Expect(target).To(Equal(filepath.Join("some", "fake", "path", containerHandle)))
+		})
+
+		It("should create proxy redirect rules in the container namespace", func() {
+			_, err := mgr.Up(containerHandle, upInputs)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(proxyRedirect.ApplyCallCount()).To(Equal(1))
+			actualContainerNamespace := proxyRedirect.ApplyArgsForCall(0)
+			Expect(actualContainerNamespace).To(Equal(filepath.Join("some", "fake", "path", containerHandle)))
 		})
 
 		It("should return the IP address in the CNI result as a property", func() {
@@ -264,6 +277,14 @@ var _ = Describe("Manager", func() {
 				cniController.UpReturns(nil, errors.New("bang"))
 				_, err := mgr.Up(containerHandle, upInputs)
 				Expect(err).To(MatchError("cni up failed: bang"))
+			})
+		})
+
+		Context("when the proxy redirect fails", func() {
+			It("should return the error", func() {
+				proxyRedirect.ApplyReturns(errors.New("bang"))
+				_, err := mgr.Up(containerHandle, upInputs)
+				Expect(err).To(MatchError("proxy redirect apply: bang"))
 			})
 		})
 	})

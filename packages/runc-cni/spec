@@ -9,18 +9,25 @@ files:
   - code.cloudfoundry.org/filelock/*.go # gosub
   - code.cloudfoundry.org/garden/*.go # gosub
   - garden-external-networker/*.go # gosub
+  - garden-external-networker/adapter/*.go # gosub
   - garden-external-networker/bindmount/*.go # gosub
   - garden-external-networker/cni/*.go # gosub
   - garden-external-networker/config/*.go # gosub
   - garden-external-networker/ipc/*.go # gosub
   - garden-external-networker/manager/*.go # gosub
   - garden-external-networker/port_allocator/*.go # gosub
+  - garden-external-networker/proxy/*.go # gosub
   - github.com/containernetworking/cni/libcni/*.go # gosub
   - github.com/containernetworking/cni/pkg/invoke/*.go # gosub
   - github.com/containernetworking/cni/pkg/types/*.go # gosub
   - github.com/containernetworking/cni/pkg/types/020/*.go # gosub
   - github.com/containernetworking/cni/pkg/types/current/*.go # gosub
   - github.com/containernetworking/cni/pkg/version/*.go # gosub
+  - github.com/containernetworking/plugins/pkg/ns/*.go # gosub
+  - github.com/containernetworking/plugins/vendor/golang.org/x/sys/unix/*.go # gosub
+  - github.com/containernetworking/plugins/vendor/golang.org/x/sys/unix/*.s # gosub
+  - github.com/coreos/go-iptables/iptables/*.go # gosub
   - golang.org/x/sys/unix/*.go # gosub
   - golang.org/x/sys/unix/*.s # gosub
+  - lib/rules/*.go # gosub
   - lib/serial/*.go # gosub

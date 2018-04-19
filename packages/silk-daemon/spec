@@ -5,7 +5,6 @@ dependencies:
   - golang-1.10-linux
 
 files:
-  - code.cloudfoundry.org/filelock/*.go # gosub
   - code.cloudfoundry.org/lager/*.go # gosub
   - code.cloudfoundry.org/silk/client/config/*.go # gosub
   - code.cloudfoundry.org/silk/cmd/silk-daemon/*.go # gosub
@@ -23,6 +22,7 @@ files:
   - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/cf-networking-helpers/metrics/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/cf-networking-helpers/mutualtls/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/debugserver/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/filelock/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/code.cloudfoundry.org/lager/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/cloudfoundry/dropsonde/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/cloudfoundry/dropsonde/emitter/*.go # gosub
@@ -38,6 +38,7 @@ files:
   - code.cloudfoundry.org/silk/vendor/github.com/cloudfoundry/dropsonde/metrics/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/cloudfoundry/dropsonde/runtime_stats/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/cloudfoundry/sonde-go/events/*.go # gosub
+  - code.cloudfoundry.org/silk/vendor/github.com/containernetworking/plugins/pkg/ns/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/go-sql-driver/mysql/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/gogo/protobuf/gogoproto/*.go # gosub
   - code.cloudfoundry.org/silk/vendor/github.com/gogo/protobuf/proto/*.go # gosub

@@ -34,6 +34,10 @@ var _ = Describe("Config", func() {
 					"start_port": 1234,
 					"total_ports": 56,
 					"log_prefix": "prefix",
+					"iptables_lock_file": "some-lock-file",
+					"proxy_redirect_cidr": "some-cidr",
+					"proxy_port": 1111,
+					"proxy_uid": 1,
 					"search_domains": [
 						"pivotal.io",
 						"foo.bar",
@@ -50,6 +54,10 @@ var _ = Describe("Config", func() {
 				Expect(c.TotalPorts).To(Equal(56))
 				Expect(c.LogPrefix).To(Equal("prefix"))
 				Expect(c.SearchDomains).Should(ConsistOf("pivotal.io", "foo.bar", "baz.me"))
+				Expect(c.IPTablesLockFile).To(Equal("some-lock-file"))
+				Expect(c.ProxyRedirectCIDR).To(Equal("some-cidr"))
+				Expect(c.ProxyPort).To(Equal(1111))
+				Expect(*c.ProxyUID).To(Equal(1))
 			})
 		})
 
@@ -85,13 +93,17 @@ var _ = Describe("Config", func() {
 		DescribeTable("when config file is missing a member",
 			func(missingFlag string) {
 				allData := map[string]interface{}{
-					"cni_plugin_dir": "/some/plugin/dir",
-					"cni_config_dir": "/some/config/dir",
-					"bind_mount_dir": "/some/mount/dir",
-					"state_file":     "/some/state/file",
-					"start_port":     50000,
-					"total_ports":    10000,
-					"log_prefix":     "prefix",
+					"cni_plugin_dir":      "/some/plugin/dir",
+					"cni_config_dir":      "/some/config/dir",
+					"bind_mount_dir":      "/some/mount/dir",
+					"state_file":          "/some/state/file",
+					"start_port":          50000,
+					"total_ports":         10000,
+					"log_prefix":          "prefix",
+					"iptables_lock_file":  "some-lock-file",
+					"proxy_redirect_cidr": "some-cidr", // optional
+					"proxy_port":          1111,
+					"proxy_uid":           1,
 				}
 				delete(allData, missingFlag)
 				Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
@@ -106,6 +118,9 @@ var _ = Describe("Config", func() {
 			Entry("missing start port", "start_port"),
 			Entry("missing total ports", "total_ports"),
 			Entry("missing log prefix", "log_prefix"),
+			Entry("missing iptables_lock_file", "iptables_lock_file"),
+			Entry("missing proxy_port", "proxy_port"),
+			Entry("missing proxy_uid", "proxy_uid"),
 		)
 	})
 })

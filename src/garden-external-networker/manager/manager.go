@@ -12,6 +12,11 @@ import (
 	"github.com/containernetworking/cni/pkg/types/020"
 )
 
+//go:generate counterfeiter -o ../fakes/proxyRedirect.go --fake-name ProxyRedirect . proxyRedirect
+type proxyRedirect interface {
+	Apply(containerNamespace string) error
+}
+
 //go:generate counterfeiter -o ../fakes/cniController.go --fake-name CNIController . cniController
 type cniController interface {
 	Up(namespacePath, handle string, metadata map[string]interface{}, legacyNetConf map[string]interface{}) (types.Result, error)
@@ -37,6 +42,7 @@ type Manager struct {
 	BindMountRoot string
 	PortAllocator portAllocator
 	SearchDomains []string
+	ProxyRedirect proxyRedirect
 }
 
 type UpInputs struct {
@@ -107,6 +113,11 @@ func (m *Manager) Up(containerHandle string, inputs UpInputs) (*UpOutputs, error
 	result020, err := result.GetAsVersion("0.2.0")
 	if err != nil {
 		return nil, fmt.Errorf("cni plugin result version incompatible: %s", err) // not tested
+	}
+
+	err = m.ProxyRedirect.Apply(bindMountPath)
+	if err != nil {
+		return nil, fmt.Errorf("proxy redirect apply: %s", err)
 	}
 
 	containerIP := result020.(*types020.Result).IP4.IP.IP

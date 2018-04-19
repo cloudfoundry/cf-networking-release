@@ -13,6 +13,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/containernetworking/plugins/pkg/ns"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
@@ -90,8 +91,16 @@ func buildStdin(inputs interface{}) io.Reader {
 	return bytes.NewReader(jsonBytes)
 }
 
+func containerIPTablesRules(containerNetns string, tableName string) []string {
+	iptablesSession, err := gexec.Start(exec.Command("ip", "netns", "exec", containerNetns, "iptables", "-w", "-S", "-t", tableName), GinkgoWriter, GinkgoWriter)
+	Expect(err).NotTo(HaveOccurred())
+	Eventually(iptablesSession).Should(gexec.Exit(0))
+	return strings.Split(string(iptablesSession.Out.Contents()), "\n")
+}
+
 var _ = Describe("Garden External Networker", func() {
 	var (
+		config                 map[string]interface{}
 		cniConfigDir           string
 		fakePid                int
 		fakeLogDir             string
@@ -99,6 +108,9 @@ var _ = Describe("Garden External Networker", func() {
 		bindMountRoot          string
 		stateFilePath          string
 		containerHandle        string
+		containerNetNS         ns.NetNS
+		containerNSShortName   string
+		proxyRedirectCIDR      string
 		fakeProcess            *os.Process
 		fakeConfigFilePath     string
 		upCommand, downCommand *exec.Cmd
@@ -119,8 +131,14 @@ var _ = Describe("Garden External Networker", func() {
 			sleepCmd = exec.Command("powershell", "Start-Sleep", "1000")
 		}
 
-		Expect(sleepCmd.Start()).To(Succeed())
-		fakeProcess = sleepCmd.Process
+		containerNetNS = createNetworkNamespace()
+		containerNSShortName = filepath.Base(containerNetNS.Path())
+
+		Expect(containerNetNS.Do(func(_ ns.NetNS) error {
+			err := sleepCmd.Start()
+			fakeProcess = sleepCmd.Process
+			return err
+		})).To(Succeed())
 
 		fakePid = fakeProcess.Pid
 
@@ -141,15 +159,20 @@ var _ = Describe("Garden External Networker", func() {
 		configFile, err := ioutil.TempFile("", "adapter-config-")
 		Expect(err).NotTo(HaveOccurred())
 		fakeConfigFilePath = configFile.Name()
-		config := map[string]interface{}{
-			"cni_plugin_dir":  paths.CniPluginDir,
-			"cni_config_dir":  cniConfigDir,
-			"bind_mount_dir":  bindMountRoot,
-			"overlay_network": "10.255.0.0/16",
-			"state_file":      stateFilePath,
-			"start_port":      60000,
-			"total_ports":     56,
-			"log_prefix":      "cfnetworking",
+		proxyRedirectCIDR = "10.255.0.0/16"
+
+		config = map[string]interface{}{
+			"cni_plugin_dir":      paths.CniPluginDir,
+			"cni_config_dir":      cniConfigDir,
+			"bind_mount_dir":      bindMountRoot,
+			"iptables_lock_file":  GlobalIPTablesLockFile,
+			"proxy_redirect_cidr": "",
+			"proxy_port":          9999,
+			"proxy_uid":           42,
+			"state_file":          stateFilePath,
+			"start_port":          60000,
+			"total_ports":         56,
+			"log_prefix":          "cfnetworking",
 			"search_domains": []string{
 				"pivotal.io",
 				"foo.bar",
@@ -219,10 +242,36 @@ var _ = Describe("Garden External Networker", func() {
 	})
 
 	AfterEach(func() {
+		removeNetworkNamespace(containerNetNS)
+
 		Expect(os.Remove(fakeConfigFilePath)).To(Succeed())
 		Expect(os.RemoveAll(cniConfigDir)).To(Succeed())
 		Expect(os.RemoveAll(fakeLogDir)).To(Succeed())
 		Expect(fakeProcess.Kill()).To(Succeed())
+	})
+
+	Context("when proxy_redirect_cidr is empty", func() {
+		It("does not write iptables rules in the container", func() {
+			runAndWait(upCommand)
+
+			Expect(containerIPTablesRules(containerNSShortName, "nat")).NotTo(ContainElement(ContainSubstring("REDIRECT")))
+		})
+	})
+
+	Context("when the proxy_redirect_cidr is set", func() {
+		BeforeEach(func() {
+			config["proxy_redirect_cidr"] = proxyRedirectCIDR
+			configBytes, err := json.Marshal(config)
+			Expect(err).NotTo(HaveOccurred())
+			err = ioutil.WriteFile(fakeConfigFilePath, configBytes, 0644)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("should setup proxy iptable rules inside the container network namespace", func() {
+			runAndWait(upCommand)
+
+			Expect(containerIPTablesRules(containerNSShortName, "nat")).To(ContainElement("-A OUTPUT -d 10.255.0.0/16 -p tcp -m owner ! --uid-owner 42 -j REDIRECT --to-ports 9999"))
+		})
 	})
 
 	It("should call CNI ADD and DEL", func() {
@@ -329,27 +378,11 @@ var _ = Describe("Garden External Networker", func() {
 
 	Context("when the configuration search_domains list is empty", func() {
 		BeforeEach(func() {
-			config := map[string]interface{}{
-				"cni_plugin_dir":  paths.CniPluginDir,
-				"cni_config_dir":  cniConfigDir,
-				"bind_mount_dir":  bindMountRoot,
-				"overlay_network": "10.255.0.0/16",
-				"state_file":      stateFilePath,
-				"start_port":      60000,
-				"total_ports":     56,
-				"log_prefix":      "cfnetworking",
-			}
+			delete(config, "search_domains")
 			configBytes, err := json.Marshal(config)
 			Expect(err).NotTo(HaveOccurred())
 			err = ioutil.WriteFile(fakeConfigFilePath, configBytes, 0644)
 			Expect(err).NotTo(HaveOccurred())
-
-			upCommand.Args = []string{
-				paths.PathToAdapter,
-				"--configFile", fakeConfigFilePath,
-				"--action", "up",
-				"--handle", containerHandle,
-			}
 		})
 
 		It("omits the 'search_domains' field from the Network ('up') output", func() {
@@ -376,4 +409,14 @@ func runAndWait(cmd *exec.Cmd) *gexec.Session {
 	Expect(err).NotTo(HaveOccurred())
 	Eventually(session, DEFAULT_TIMEOUT).Should(gexec.Exit(0))
 	return session
+}
+
+func createNetworkNamespace() ns.NetNS {
+	networkNS, err := ns.NewNS()
+	Expect(err).ToNot(HaveOccurred())
+	return networkNS
+}
+
+func removeNetworkNamespace(containerNetNs ns.NetNS) {
+	Expect(containerNetNs.Close()).To(Succeed())
 }
