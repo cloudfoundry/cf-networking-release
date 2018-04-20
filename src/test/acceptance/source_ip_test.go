@@ -61,8 +61,12 @@ var _ = Describe("c2c traffic source ip", func() {
 })
 
 func pushApps(appName string, appCount int) []AppInstance {
-	pushProxy(appName)
-	scaleApp(appName, appCount)
+	Expect(cf.Cf(
+		"push", appName,
+		"-p", appDir("proxy"),
+		"-i", fmt.Sprintf("%d", appCount),
+		"-f", defaultManifest("proxy"),
+	).Wait(Timeout_Push)).To(gexec.Exit(0))
 
 	apps := make([]AppInstance, appCount)
 	for i := 0; i < appCount; i++ {
