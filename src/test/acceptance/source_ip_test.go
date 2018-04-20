@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"strings"
+	"time"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	. "github.com/onsi/ginkgo"
@@ -44,6 +45,9 @@ var _ = Describe("c2c traffic source ip", func() {
 
 		By("adding a network policy")
 		Expect(cf.Cf("add-network-policy", appName, "--destination-app", appName).Wait(Timeout_Push)).To(gexec.Exit(0))
+
+		By(fmt.Sprintf("waiting %s for policies to be created on cells", time.Duration(PolicyWaitTime)))
+		time.Sleep(PolicyWaitTime)
 	})
 
 	AfterEach(func() {
