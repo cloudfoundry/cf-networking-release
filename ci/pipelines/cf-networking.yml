@@ -468,6 +468,7 @@ jobs:
           scale-to-one-az.yml
           cf-networking.yml
           use-silk-release.yml
+          use-latest-silk.yml
           enable-routing-integrity.yml
           opsfile-after.yml
         SYSTEM_DOMAIN: sombrero.c2c.cf-app.com
@@ -772,6 +773,7 @@ jobs:
           use-system-domain-as-metron-deployment-name.yml
           enable-routing-integrity.yml
           use-silk-release.yml
+          use-latest-silk.yml
           add-acceptance-test-jobs.yml
           opsfile.yml
         VARS_STORE_FILE: environments/pickelhelm/vars-store.yml
@@ -981,6 +983,7 @@ jobs:
           cf-networking.yml
           enable-routing-integrity.yml
           use-silk-release.yml
+          use-latest-silk.yml
           enable-iptables-logger-silk.yml
           add-acceptance-test-jobs.yml
           opsfile.yml
@@ -1325,6 +1328,7 @@ jobs:
           cf-networking.yml
           enable-routing-integrity.yml
           use-silk-release.yml
+          use-latest-silk.yml
           opsfile.yml
         VARS_STORE_FILE: environments/toque/vars-store.yml
       input_mapping:
@@ -1557,6 +1561,7 @@ jobs:
           smaller-footprint.yml
           cf-networking.yml
           use-silk-release.yml
+          use-latest-silk.yml
           add-acceptance-test-jobs.yml
           enable-routing-integrity.yml
           use-bosh-dns.yml
