@@ -23,7 +23,6 @@ groups:
   - ship-what
   - bump-minor-version
   - ship-cf-networking-and-silk
-  - silk-bump-minor-version
   - merge-master
   - silk-merge-master
   - toque-deploy
@@ -95,11 +94,6 @@ groups:
   - major-bump
   - minor-bump
   - patch-bump
-- name: silk-version
-  jobs:
-  - silk-major-bump
-  - silk-minor-bump
-  - silk-patch-bump
 
 resources:
   ###### Control plane
@@ -246,15 +240,6 @@ resources:
       bucket: {{cf-networking-candidate-s3-bucket}}
       region_name: us-west-2
       regexp: releases/cf-networking-(.*).tgz
-      access_key_id: {{aws-access-key-id}}
-      secret_access_key: {{aws-secret-access-key}}
-  - name: silk-version
-    type: semver
-    source:
-      bucket: {{silk-s3-bucket}}
-      region_name: us-west-2
-      initial_version: 0.1.0-rc.1
-      key: releases/current-version
       access_key_id: {{aws-access-key-id}}
       secret_access_key: {{aws-secret-access-key}}
   - name: silk-tarball
@@ -924,9 +909,6 @@ jobs:
       - get: version
         params:
           pre: rc
-      - get: silk-version
-        params:
-          pre: rc
     - task: upload-stemcell
       file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
       params:
@@ -1021,14 +1003,12 @@ jobs:
         my-release: silk-dev
       params:
         RELEASE_NAME: silk
-        VERSION_NAME: silk-version
+        VERSION_NAME: version
     - put: silk-tarball
       params:
         file: tarballs/silk-*.tgz
     - put: version
       params: {file: version/number}
-    - put: silk-version
-      params: {file: silk-version/number}
     - task: bosh-cleanup
       file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
       params:
@@ -1058,8 +1038,6 @@ jobs:
         passed: [mitre-deploy]
         trigger: true
       - get: silk-tarball
-        passed: [mitre-deploy]
-      - get: silk-version
         passed: [mitre-deploy]
     - task: acceptance-tests
       file: cf-networking-release-ci/ci/tasks/acceptance-tests.yml
@@ -1176,8 +1154,6 @@ jobs:
         passed: [mitre-test]
       - get: version
         passed: [mitre-test]
-      - get: silk-version
-        passed: [mitre-test]
     - task: copy-config
       file: cf-networking-release-ci/ci/tasks/copy-config.yml
       params:
@@ -1210,8 +1186,6 @@ jobs:
         passed: [mitre-cats]
         trigger: true
       - get: silk-tarball
-        passed: [mitre-cats]
-      - get: silk-version
         passed: [mitre-cats]
     - task: create-drats-config
       file: cf-networking-release-ci/ci/tasks/create-drats-config.yml
@@ -1648,13 +1622,11 @@ jobs:
         bbl-state: cf-networking-deployments
 
   - name: ship-what
-    serial_groups: [version, silk-version]
+    serial_groups: [version]
     plan:
     - do:
       - aggregate:
         - get: version
-          passed: [mitre-drats]
-        - get: silk-version
           passed: [mitre-drats]
         - get: cf-networking-dev
           params:
@@ -1693,7 +1665,7 @@ jobs:
           cf-networking: cf-networking-dev
 
   - name: ship-cf-networking-and-silk
-    serial_groups: [version, silk-version]
+    serial_groups: [version]
     plan:
     - do:
       - aggregate:
@@ -1702,10 +1674,6 @@ jobs:
         - get: cf-networking-deployments
         - get: cf-networking-release-ci
         - get: version
-          params:
-            bump: final
-          passed: [ship-what]
-        - get: silk-version
           params:
             bump: final
           passed: [ship-what]
@@ -1751,7 +1719,7 @@ jobs:
         file: cf-networking-release-ci/ci/tasks/build-release-notes.yml
         input_mapping:
           master-release: cf-networking-master
-          other-release-version: silk-version
+          other-release-version: version
         params:
           OTHER_RELEASE_NAME: silk-release
       - put: cf-networking-github-release
@@ -1766,12 +1734,10 @@ jobs:
         file: cf-networking-release-ci/ci/tasks/silk-shipit.yml
         input_mapping:
           silk: silk-dev
-      - put: silk-version
-        params: {file: silk-version/number}
       - put: silk-master
         params:
           repository: release/master
-          tag: silk-version/number
+          tag: version/number
           tag_prefix: v
       - put: silk-tarball
         params:
@@ -1785,8 +1751,8 @@ jobs:
           OTHER_RELEASE_NAME: cf-networking-release
       - put: silk-github-release
         params:
-          name: silk-version/number
-          tag: silk-version/number
+          name: version/number
+          tag: version/number
           body: release-notes/notes.md
           tag_prefix: v
           globs:
@@ -1847,18 +1813,6 @@ jobs:
     - put: version
       params: {file: version/number}
 
-  # bump silk minor version (i.e. 0.1.0 -> 0.2.0)
-  - name: silk-bump-minor-version
-    serial_groups: [silk-version]
-    plan:
-    - aggregate:
-      - get: silk-version
-        trigger: true
-        passed: [ship-cf-networking-and-silk]
-        params: {bump: minor, pre: rc}
-    - put: silk-version
-      params: {file: silk-version/number}
-
   # merge silk-master back to silk-develop
   - name: silk-merge-master
     plan:
@@ -1876,28 +1830,3 @@ jobs:
         file: cf-networking-release-ci/ci/tasks/silk-merge-master.yml
       - put: silk-dev
         params: {repository: release-merged}
-
-  # silk versioning
-  - name: silk-patch-bump
-    serial_groups: [silk-version]
-    plan:
-    - get: silk-version
-      params: {bump: patch}
-    - put: silk-version
-      params: {file: silk-version/number}
-
-  - name: silk-minor-bump
-    serial_groups: [silk-version]
-    plan:
-    - get: silk-version
-      params: {bump: minor}
-    - put: silk-version
-      params: {file: silk-version/number}
-
-  - name: silk-major-bump
-    serial_groups: [silk-version]
-    plan:
-    - get: silk-version
-      params: {bump: major}
-    - put: silk-version
-      params: {file: silk-version/number}

@@ -6,7 +6,7 @@ image_resource:
 platform: linux
 
 inputs:
-  - name: silk-version
+  - name: version
   - name: cf-networking-release-ci
   - name: cf-networking-deployments
   - name: silk-tarball

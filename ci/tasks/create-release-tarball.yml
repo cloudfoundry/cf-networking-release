@@ -8,7 +8,6 @@ platform: linux
 inputs:
 - name: my-release
 - name: version
-- name: silk-version
 - name: cf-networking-release-ci
 
 outputs:
