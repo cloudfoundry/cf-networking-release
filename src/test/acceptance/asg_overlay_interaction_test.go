@@ -2,8 +2,10 @@ package acceptance_test
 
 import (
 	"cf-pusher/cf_cli_adapter"
+	"errors"
 	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
@@ -31,15 +33,12 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 		var (
 			asgName      string
 			appProxy     string
-			appSmoke     string
-			appInstances int
 			spaceName    string
+			appInstances []AppInstance
 		)
 
 		BeforeEach(func() {
-			appInstances = testConfig.AppInstances
 			appProxy = fmt.Sprintf("%s-%s-%d", testConfig.Prefix, "proxy", rand.Int31())
-			appSmoke = fmt.Sprintf("%s-%s-%d", testConfig.Prefix, "smoke", rand.Int31())
 			asgName = fmt.Sprintf("wide-open-asg-%d", rand.Int31())
 
 			By("creating the org and space")
@@ -47,9 +46,16 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 			spaceName = testConfig.Prefix + "wide-open-interaction-space"
 			setupOrgAndSpace(orgName, spaceName)
 
-			By("creating and binding a wide open security group")
+			By("pushing proxy app with 5 instances")
+			pushApps(appProxy, 5)
+
+			By("create a wide open ASG")
 			createASG(cli, asgName, wideOpenASG)
 			Expect(cli.BindSecurityGroup(asgName, orgName, spaceName)).To(Succeed())
+
+			By("restage proxy app")
+			restage(appProxy)
+			appInstances = getAppInstances(appProxy, 5)
 		})
 
 		AfterEach(func() {
@@ -57,19 +63,49 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 			removeASG(cli, asgName)
 		})
 
-		It("does not allow traffic on the overlay network without policies", func() {
-			By("pushing the proxy and smoke test apps")
-			pushApp(appProxy, "proxy")
-			pushApp(appSmoke, "smoke", "--no-start")
-			setEnv(appSmoke, "PROXY_APP_URL", fmt.Sprintf("http://%s.%s", appProxy, config.AppsDomain))
-			start(appSmoke)
+		Context("when no policies are added", func() {
+			It("does not allow traffic on the overlay network", func() {
+				By("checking connectivity fails between two instances on the same cell")
+				app1, app2 := findTwoInstancesOnTheSameHost(appInstances)
 
-			scaleApp(appSmoke, appInstances)
+				app2Curl := fmt.Sprintf("curl --fail http://%s:8080/echosourceip", app2.internalIP)
+				session := cf.Cf("ssh", appProxy, "-i", app1.index, "-c", app2Curl)
+				Expect(session.Wait(Timeout_Push)).ToNot(gexec.Exit(0))
 
-			appsSmoke := []string{appSmoke}
+				By("checking connectivity fails between two instances on the different cells")
+				app1, app2 = findTwoInstancesOnTheDifferentHost(appInstances)
 
-			By(fmt.Sprintf("checking that %s can NOT reach %s", appProxy, appsSmoke))
-			assertSelfProxyConnectionFails(appSmoke, appInstances)
+				app2Curl = fmt.Sprintf("curl --fail http://%s:8080/echosourceip", app2.internalIP)
+				session = cf.Cf("ssh", appProxy, "-i", app1.index, "-c", app2Curl)
+				Expect(session.Wait(Timeout_Push)).ToNot(gexec.Exit(0))
+			})
+		})
+
+		Context("when a policy is added", func() {
+			BeforeEach(func() {
+				By("creating a policy")
+				err := cli.AddNetworkPolicy(appProxy, appProxy, 8080, "tcp")
+				Expect(err).NotTo(HaveOccurred())
+
+				By(fmt.Sprintf("waiting %s for policies to be created on cells", time.Duration(PolicyWaitTime)))
+				time.Sleep(PolicyWaitTime)
+			})
+
+			It("does allow traffic on the overlay network", func() {
+				By("checking connectivity fails between two instances on the same cell")
+				app1, app2 := findTwoInstancesOnTheSameHost(appInstances)
+
+				app2Curl := fmt.Sprintf("curl --fail http://%s:8080/echosourceip", app2.internalIP)
+				session := cf.Cf("ssh", appProxy, "-i", app1.index, "-c", app2Curl)
+				Expect(session.Wait(Timeout_Push)).To(gexec.Exit(0))
+
+				By("checking connectivity fails between two instances on the different cells")
+				app1, app2 = findTwoInstancesOnTheDifferentHost(appInstances)
+
+				app2Curl = fmt.Sprintf("curl --fail http://%s:8080/echosourceip", app2.internalIP)
+				session = cf.Cf("ssh", appProxy, "-i", app1.index, "-c", app2Curl)
+				Expect(session.Wait(Timeout_Push)).To(gexec.Exit(0))
+			})
 		})
 	})
 
@@ -115,17 +151,18 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 
 func assertSelfProxyConnectionFails(sourceApp string, appInstances int) {
 	for i := 0; i < appInstances; i++ {
-		assertSelfProxyResponseContains(sourceApp, "FAILED")
+		assertSelfProxyResponseContains(sourceApp, i, "FAILED")
 	}
 }
 
-func assertSelfProxyResponseContains(sourceAppName, desiredResponse string) {
+func assertSelfProxyResponseContains(sourceAppName string, index int, desiredResponse string) {
 	proxyTest := func() (string, error) {
-		resp, err := httpGetBytes(fmt.Sprintf("http://%s.%s/selfproxy", sourceAppName, config.AppsDomain))
-		if err != nil {
-			return "", err
+		session := cf.Cf("ssh", sourceAppName, "-i", fmt.Sprintf("%d", index), "-c", "curl --silent http://localhost:8080/selfproxy").Wait(Timeout_Push)
+		if session.ExitCode() != 0 {
+			return "", fmt.Errorf("proxy test exit code: %s\n%s", session.ExitCode(), string(session.Err.Contents()))
 		}
-		return string(resp.Body), nil
+
+		return string(session.Out.Contents()), nil
 	}
 	Eventually(proxyTest, 10*time.Second, 500*time.Millisecond).Should(ContainSubstring(desiredResponse))
 }
@@ -150,6 +187,47 @@ func start(appName string) {
 	Expect(cf.Cf(
 		"start", appName,
 	).Wait(Timeout_Push)).To(gexec.Exit(0))
+}
+
+func restage(appName string) {
+	Expect(cf.Cf(
+		"restage", appName,
+	).Wait(Timeout_Push)).To(gexec.Exit(0))
+}
+
+func getAppInstances(appName string, instances int) []AppInstance {
+	apps := make([]AppInstance, instances)
+	for i := 0; i < instances; i++ {
+		session := cf.Cf("ssh", appName, "-i", fmt.Sprintf("%d", i), "-c", "env | grep CF_INSTANCE")
+		Expect(session.Wait(Timeout_Push)).To(gexec.Exit(0))
+
+		env := strings.Split(string(session.Out.Contents()), "\n")
+		var app AppInstance
+		for _, envVar := range env {
+			kv := strings.Split(envVar, "=")
+			switch kv[0] {
+			case "CF_INSTANCE_IP":
+				app.hostIdentifier = kv[1]
+			case "CF_INSTANCE_INDEX":
+				app.index = kv[1]
+			case "CF_INSTANCE_INTERNAL_IP":
+				app.internalIP = kv[1]
+			}
+		}
+		apps[i] = app
+	}
+	return apps
+}
+
+func findTwoInstancesOnTheDifferentHost(apps []AppInstance) (AppInstance, AppInstance) {
+	for _, app := range apps[1:] {
+		if apps[0].hostIdentifier != app.hostIdentifier {
+			return apps[0], app
+		}
+	}
+
+	Expect(errors.New("Failed to find two instances on different host")).ToNot(HaveOccurred())
+	return AppInstance{}, AppInstance{}
 }
 
 var wideOpenASG string = `

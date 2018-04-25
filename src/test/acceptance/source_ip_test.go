@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
-	"strings"
 	"time"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
@@ -38,10 +37,9 @@ var _ = Describe("c2c traffic source ip", func() {
 		setupOrgAndSpace(orgName, spaceName)
 
 		By("pushing the test app")
-		apps := pushApps(appName, APP_COUNT)
-		var err error
-		app1, app2, err = findTwoInstancesOnTheSameHost(apps)
-		Expect(err).NotTo(HaveOccurred())
+		pushApps(appName, APP_COUNT)
+		apps := getAppInstances(appName, APP_COUNT)
+		app1, app2 = findTwoInstancesOnTheSameHost(apps)
 
 		By("adding a network policy")
 		Expect(cf.Cf("add-network-policy", appName, "--destination-app", appName).Wait(Timeout_Push)).To(gexec.Exit(0))
@@ -64,47 +62,25 @@ var _ = Describe("c2c traffic source ip", func() {
 	})
 })
 
-func pushApps(appName string, appCount int) []AppInstance {
+func pushApps(appName string, appCount int) {
 	Expect(cf.Cf(
 		"push", appName,
 		"-p", appDir("proxy"),
 		"-i", fmt.Sprintf("%d", appCount),
 		"-f", defaultManifest("proxy"),
 	).Wait(Timeout_Push)).To(gexec.Exit(0))
-
-	apps := make([]AppInstance, appCount)
-	for i := 0; i < appCount; i++ {
-		session := cf.Cf("ssh", appName, "-i", fmt.Sprintf("%d", i), "-c", "env | grep CF_INSTANCE")
-		Expect(session.Wait(Timeout_Push)).To(gexec.Exit(0))
-
-		env := strings.Split(string(session.Out.Contents()), "\n")
-		var app AppInstance
-		for _, envVar := range env {
-			kv := strings.Split(envVar, "=")
-			switch kv[0] {
-			case "CF_INSTANCE_IP":
-				app.hostIdentifier = kv[1]
-			case "CF_INSTANCE_INDEX":
-				app.index = kv[1]
-			case "CF_INSTANCE_INTERNAL_IP":
-				app.internalIP = kv[1]
-			}
-		}
-		apps[i] = app
-	}
-	return apps
 }
 
-func findTwoInstancesOnTheSameHost(apps []AppInstance) (AppInstance, AppInstance, error) {
+func findTwoInstancesOnTheSameHost(apps []AppInstance) (AppInstance, AppInstance) {
 	hostsToApps := map[string]AppInstance{}
 
 	for _, app := range apps {
 		foundApp, ok := hostsToApps[app.hostIdentifier]
 		if ok {
-			return foundApp, app, nil
+			return foundApp, app
 		}
 		hostsToApps[app.hostIdentifier] = app
 	}
-
-	return AppInstance{}, AppInstance{}, errors.New("Failed to find two instances on the same host")
+	Expect(errors.New("Failed to find two instances on the same host")).ToNot(HaveOccurred())
+	return AppInstance{}, AppInstance{}
 }
