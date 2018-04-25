@@ -9,7 +9,7 @@ export PIDFILE="${RUN_DIR}"/policy-server.pid
 export CONF_DIR=/var/vcap/jobs/policy-server/config
 export PORT=<%= p("listen_port") %>
 export URL=127.0.0.1:"${PORT}"
-export TIMEOUT=20
+export TIMEOUT=25
 
 mkdir -p "${RUN_DIR}"
 mkdir -p "${LOG_DIR}"

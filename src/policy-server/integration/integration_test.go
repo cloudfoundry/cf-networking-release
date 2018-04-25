@@ -165,7 +165,7 @@ var _ = Describe("Integration", func() {
 		})
 	})
 
-	Context("when the database is down", func() {
+	Context("when connection to the database times out", func() {
 		var (
 			session *gexec.Session
 		)
@@ -194,10 +194,9 @@ var _ = Describe("Integration", func() {
 			Eventually(session, helpers.DEFAULT_TIMEOUT).Should(gexec.Exit())
 		})
 
-		It("should log and exit after 40 seconds", func() {
-			Eventually(session, 90*time.Second).Should(gexec.Exit())
-
-			Expect(session.Err).To(gbytes.Say("testprefix.policy-server: db connect: unable to ping"))
+		It("should log and exit after 1 second", func() {
+			Eventually(session, 2*time.Second).Should(gexec.Exit())
+			Expect(session.Err).To(gbytes.Say("testprefix.policy-server: db connection timeout"))
 		})
 	})
 

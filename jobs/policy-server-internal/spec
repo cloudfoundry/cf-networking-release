@@ -5,7 +5,6 @@ templates:
   policy-server-internal_ctl.erb: bin/policy-server-internal_ctl
   policy-server-internal_as_vcap.erb: bin/policy-server-internal_as_vcap
   policy-server-internal.json.erb: config/policy-server-internal.json
-  post-start.erb: bin/post-start
   ca.crt.erb: config/certs/ca.crt
   server.crt.erb: config/certs/server.crt
   server.key.erb: config/certs/server.key

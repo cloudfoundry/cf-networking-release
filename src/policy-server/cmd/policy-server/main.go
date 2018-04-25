@@ -107,8 +107,13 @@ func main() {
 	destination := &store.DestinationTable{}
 	policy := &store.PolicyTable{}
 
+	logger.Info("getting migration db connection", lager.Data{})
 	migrationConnectionResult := getMigrationDbConnection(*conf)
+	logger.Info("migration db connection retrieved", lager.Data{})
+
+	logger.Info("getting db connection", lager.Data{})
 	connectionResult := getDbConnection(*conf)
+	logger.Info("db connection retrieved", lager.Data{})
 
 	dataStore, err := store.New(
 		connectionResult.ConnectionPool,
@@ -311,11 +316,10 @@ type dbConnection struct {
 }
 
 func getDbConnection(conf config.Config) dbConnection {
-	retryInterval := 3
 	retriableConnector := db.RetriableConnector{
 		Connector:     db.GetConnectionPool,
 		Sleeper:       db.SleeperFunc(time.Sleep),
-		RetryInterval: time.Duration(retryInterval) * time.Second,
+		RetryInterval: time.Duration(3) * time.Second,
 		MaxRetries:    10,
 	}
 
@@ -325,14 +329,13 @@ func getDbConnection(conf config.Config) dbConnection {
 		channel <- dbConnection{connection, err}
 	}()
 	var connectionResult dbConnection
-	timeout := time.Duration((retryInterval + conf.Database.Timeout) * retriableConnector.MaxRetries)
 	select {
 	case connectionResult = <-channel:
-	case <-time.After(timeout * time.Second):
+	case <-time.After(time.Duration(conf.Database.Timeout) * time.Second):
 		log.Fatalf("%s.policy-server: db connection timeout", logPrefix)
 	}
 	if connectionResult.Err != nil {
-		log.Fatalf("%s.policy-server: db connect: %s", logPrefix, connectionResult.Err) // not tested
+		log.Fatalf("%s.policy-server: db connect: %s", logPrefix, connectionResult.Err)
 	}
 	return connectionResult
 }
