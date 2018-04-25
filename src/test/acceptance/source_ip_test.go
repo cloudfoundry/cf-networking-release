@@ -1,7 +1,6 @@
 package acceptance_test
 
 import (
-	"errors"
 	"fmt"
 	"math/rand"
 	"time"
@@ -12,21 +11,12 @@ import (
 	"github.com/onsi/gomega/gexec"
 )
 
-type AppInstance struct {
-	hostIdentifier string
-	index          string
-	internalIP     string
-}
-
-const APP_COUNT = 5
-
 var _ = Describe("c2c traffic source ip", func() {
 	var (
 		appName   string
 		orgName   string
 		spaceName string
-		app1      AppInstance
-		app2      AppInstance
+		apps      []AppInstance
 	)
 
 	BeforeEach(func() {
@@ -36,10 +26,10 @@ var _ = Describe("c2c traffic source ip", func() {
 		spaceName = testConfig.Prefix + "space"
 		setupOrgAndSpace(orgName, spaceName)
 
+		appCount := 5
 		By("pushing the test app")
-		pushApps(appName, APP_COUNT)
-		apps := getAppInstances(appName, APP_COUNT)
-		app1, app2 = findTwoInstancesOnTheSameHost(apps)
+		pushAppWithInstanceCount(appName, appCount)
+		apps = getAppInstances(appName, appCount)
 
 		By("adding a network policy")
 		Expect(cf.Cf("add-network-policy", appName, "--destination-app", appName).Wait(Timeout_Push)).To(gexec.Exit(0))
@@ -54,33 +44,20 @@ var _ = Describe("c2c traffic source ip", func() {
 	})
 
 	It("should be the container's ip", func() {
+		By("checking when the apps instances are on the same host")
+		app1, app2 := findTwoInstancesOnTheSameHost(apps)
 		app2Curl := fmt.Sprintf("curl --fail http://%s:8080/echosourceip", app2.internalIP)
 
 		session := cf.Cf("ssh", appName, "-i", app1.index, "-c", app2Curl)
 		Expect(session.Wait(Timeout_Push)).To(gexec.Exit(0))
 		Expect(string(session.Out.Contents())).To(ContainSubstring(app1.internalIP))
+
+		By("checking when the apps instances are on different same hosts")
+		app1, app2 = findTwoInstancesOnDifferentHosts(apps)
+		app2Curl = fmt.Sprintf("curl --fail http://%s:8080/echosourceip", app2.internalIP)
+
+		session = cf.Cf("ssh", appName, "-i", app1.index, "-c", app2Curl)
+		Expect(session.Wait(Timeout_Push)).To(gexec.Exit(0))
+		Expect(string(session.Out.Contents())).To(ContainSubstring(app1.internalIP))
 	})
 })
-
-func pushApps(appName string, appCount int) {
-	Expect(cf.Cf(
-		"push", appName,
-		"-p", appDir("proxy"),
-		"-i", fmt.Sprintf("%d", appCount),
-		"-f", defaultManifest("proxy"),
-	).Wait(Timeout_Push)).To(gexec.Exit(0))
-}
-
-func findTwoInstancesOnTheSameHost(apps []AppInstance) (AppInstance, AppInstance) {
-	hostsToApps := map[string]AppInstance{}
-
-	for _, app := range apps {
-		foundApp, ok := hostsToApps[app.hostIdentifier]
-		if ok {
-			return foundApp, app
-		}
-		hostsToApps[app.hostIdentifier] = app
-	}
-	Expect(errors.New("Failed to find two instances on the same host")).ToNot(HaveOccurred())
-	return AppInstance{}, AppInstance{}
-}

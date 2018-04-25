@@ -1,12 +1,11 @@
 package acceptance_test
 
 import (
-	"cf-pusher/cf_cli_adapter"
-	"errors"
 	"fmt"
 	"math/rand"
-	"strings"
 	"time"
+
+	"cf-pusher/cf_cli_adapter"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	. "github.com/onsi/ginkgo"
@@ -46,16 +45,17 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 			spaceName = testConfig.Prefix + "wide-open-interaction-space"
 			setupOrgAndSpace(orgName, spaceName)
 
-			By("pushing proxy app with 5 instances")
-			pushApps(appProxy, 5)
+			appCount := 5
+			By(fmt.Sprintf("pushing proxy app with %d instances", appCount))
+			pushAppWithInstanceCount(appProxy, appCount)
 
 			By("create a wide open ASG")
-			createASG(cli, asgName, wideOpenASG)
+			createASG(cli, asgName, `[{"destination":"0.0.0.0/0","protocol":"all"}]`)
 			Expect(cli.BindSecurityGroup(asgName, orgName, spaceName)).To(Succeed())
 
 			By("restage proxy app")
 			restage(appProxy)
-			appInstances = getAppInstances(appProxy, 5)
+			appInstances = getAppInstances(appProxy, appCount)
 		})
 
 		AfterEach(func() {
@@ -73,7 +73,7 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 				Expect(session.Wait(Timeout_Push)).ToNot(gexec.Exit(0))
 
 				By("checking connectivity fails between two instances on the different cells")
-				app1, app2 = findTwoInstancesOnTheDifferentHost(appInstances)
+				app1, app2 = findTwoInstancesOnDifferentHosts(appInstances)
 
 				app2Curl = fmt.Sprintf("curl --fail http://%s:8080/echosourceip", app2.internalIP)
 				session = cf.Cf("ssh", appProxy, "-i", app1.index, "-c", app2Curl)
@@ -100,7 +100,7 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 				Expect(session.Wait(Timeout_Push)).To(gexec.Exit(0))
 
 				By("checking connectivity fails between two instances on the different cells")
-				app1, app2 = findTwoInstancesOnTheDifferentHost(appInstances)
+				app1, app2 = findTwoInstancesOnDifferentHosts(appInstances)
 
 				app2Curl = fmt.Sprintf("curl --fail http://%s:8080/echosourceip", app2.internalIP)
 				session = cf.Cf("ssh", appProxy, "-i", app1.index, "-c", app2Curl)
@@ -148,93 +148,3 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 		})
 	})
 })
-
-func assertSelfProxyConnectionFails(sourceApp string, appInstances int) {
-	for i := 0; i < appInstances; i++ {
-		assertSelfProxyResponseContains(sourceApp, i, "FAILED")
-	}
-}
-
-func assertSelfProxyResponseContains(sourceAppName string, index int, desiredResponse string) {
-	proxyTest := func() (string, error) {
-		session := cf.Cf("ssh", sourceAppName, "-i", fmt.Sprintf("%d", index), "-c", "curl --silent http://localhost:8080/selfproxy").Wait(Timeout_Push)
-		if session.ExitCode() != 0 {
-			return "", fmt.Errorf("proxy test exit code: %s\n%s", session.ExitCode(), string(session.Err.Contents()))
-		}
-
-		return string(session.Out.Contents()), nil
-	}
-	Eventually(proxyTest, 10*time.Second, 500*time.Millisecond).Should(ContainSubstring(desiredResponse))
-}
-
-func pushApp(appName, kind string, extraArgs ...string) {
-	args := append([]string{
-		"push", appName,
-		"-p", appDir(kind),
-		"-f", defaultManifest(kind),
-	}, extraArgs...)
-	Expect(cf.Cf(args...).Wait(Timeout_Push)).To(gexec.Exit(0))
-}
-
-func setEnv(appName, envVar, value string) {
-	Expect(cf.Cf(
-		"set-env", appName,
-		envVar, value,
-	).Wait(Timeout_Short)).To(gexec.Exit(0))
-}
-
-func start(appName string) {
-	Expect(cf.Cf(
-		"start", appName,
-	).Wait(Timeout_Push)).To(gexec.Exit(0))
-}
-
-func restage(appName string) {
-	Expect(cf.Cf(
-		"restage", appName,
-	).Wait(Timeout_Push)).To(gexec.Exit(0))
-}
-
-func getAppInstances(appName string, instances int) []AppInstance {
-	apps := make([]AppInstance, instances)
-	for i := 0; i < instances; i++ {
-		session := cf.Cf("ssh", appName, "-i", fmt.Sprintf("%d", i), "-c", "env | grep CF_INSTANCE")
-		Expect(session.Wait(Timeout_Push)).To(gexec.Exit(0))
-
-		env := strings.Split(string(session.Out.Contents()), "\n")
-		var app AppInstance
-		for _, envVar := range env {
-			kv := strings.Split(envVar, "=")
-			switch kv[0] {
-			case "CF_INSTANCE_IP":
-				app.hostIdentifier = kv[1]
-			case "CF_INSTANCE_INDEX":
-				app.index = kv[1]
-			case "CF_INSTANCE_INTERNAL_IP":
-				app.internalIP = kv[1]
-			}
-		}
-		apps[i] = app
-	}
-	return apps
-}
-
-func findTwoInstancesOnTheDifferentHost(apps []AppInstance) (AppInstance, AppInstance) {
-	for _, app := range apps[1:] {
-		if apps[0].hostIdentifier != app.hostIdentifier {
-			return apps[0], app
-		}
-	}
-
-	Expect(errors.New("Failed to find two instances on different host")).ToNot(HaveOccurred())
-	return AppInstance{}, AppInstance{}
-}
-
-var wideOpenASG string = `
-[
-		{
-			"destination": "0.0.0.0/0",
-			"protocol": "all"
-		}
-	]
-`

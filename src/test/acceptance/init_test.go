@@ -2,12 +2,15 @@ package acceptance_test
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
+	"testing"
 	"time"
 
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
@@ -20,8 +23,6 @@ import (
 	ginkgoConfig "github.com/onsi/ginkgo/config"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
-
-	"testing"
 )
 
 const Timeout_Push = 2 * time.Minute
@@ -115,18 +116,6 @@ func defaultManifest(appType string) string {
 	return filepath.Join(appDir(appType), "manifest.yml")
 }
 
-func appsReport(appNames []string, timeout time.Duration) {
-	for _, app := range appNames {
-		appReport(app, timeout)
-	}
-}
-
-func appReport(appName string, timeout time.Duration) {
-	By(fmt.Sprintf("reporting app %s", appName))
-	Eventually(cf.Cf("app", appName, "--guid"), timeout).Should(gexec.Exit())
-	Eventually(cf.Cf("logs", appName, "--recent"), timeout).Should(gexec.Exit())
-}
-
 func scaleApps(apps []string, instances int) {
 	parallelRunner := &testsupport.ParallelRunner{
 		NumWorkers: 16,
@@ -141,4 +130,75 @@ func scaleApp(appName string, instances int) {
 		"scale", appName,
 		"-i", fmt.Sprintf("%d", instances),
 	).Wait(Timeout_Short)).To(gexec.Exit(0))
+}
+
+func pushAppWithInstanceCount(appName string, appCount int) {
+	Expect(cf.Cf(
+		"push", appName,
+		"-p", appDir("proxy"),
+		"-i", fmt.Sprintf("%d", appCount),
+		"-f", defaultManifest("proxy"),
+	).Wait(Timeout_Push)).To(gexec.Exit(0))
+}
+
+func restage(appName string) {
+	Expect(cf.Cf(
+		"restage", appName,
+	).Wait(Timeout_Push)).To(gexec.Exit(0))
+}
+
+type AppInstance struct {
+	hostIdentifier string
+	index          string
+	internalIP     string
+}
+
+func getAppInstances(appName string, instances int) []AppInstance {
+	apps := make([]AppInstance, instances)
+	for i := 0; i < instances; i++ {
+		session := cf.Cf("ssh", appName, "-i", fmt.Sprintf("%d", i), "-c", "env | grep CF_INSTANCE")
+		Expect(session.Wait(Timeout_Push)).To(gexec.Exit(0))
+
+		env := strings.Split(string(session.Out.Contents()), "\n")
+		var app AppInstance
+		for _, envVar := range env {
+			kv := strings.Split(envVar, "=")
+			switch kv[0] {
+			case "CF_INSTANCE_IP":
+				app.hostIdentifier = kv[1]
+			case "CF_INSTANCE_INDEX":
+				app.index = kv[1]
+			case "CF_INSTANCE_INTERNAL_IP":
+				app.internalIP = kv[1]
+			}
+		}
+		apps[i] = app
+	}
+	return apps
+}
+
+func findTwoInstancesOnTheSameHost(apps []AppInstance) (AppInstance, AppInstance) {
+	hostsToApps := map[string]AppInstance{}
+
+	for _, app := range apps {
+		foundApp, ok := hostsToApps[app.hostIdentifier]
+		if ok {
+			return foundApp, app
+		}
+		hostsToApps[app.hostIdentifier] = app
+	}
+
+	Expect(errors.New("failed to find two instances on the same host")).ToNot(HaveOccurred())
+	return AppInstance{}, AppInstance{}
+}
+
+func findTwoInstancesOnDifferentHosts(apps []AppInstance) (AppInstance, AppInstance) {
+	for _, app := range apps[1:] {
+		if apps[0].hostIdentifier != app.hostIdentifier {
+			return apps[0], app
+		}
+	}
+
+	Expect(errors.New("failed to find two instances on different hosts")).ToNot(HaveOccurred())
+	return AppInstance{}, AppInstance{}
 }
