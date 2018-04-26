@@ -48,6 +48,12 @@ sync_package cf-networking-acceptance \
   -app cf-pusher/cmd/cf-pusher \
   -app github.com/onsi/ginkgo/ginkgo &
 
+sync_package bosh-dns-adapter \
+  -app bosh-dns-adapter &
+
+sync_package service-discovery-controller \
+  -app service-discovery-controller &
+
 GOOS=linux sync_package runc-cni \
   -app garden-external-networker &
 

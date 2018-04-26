@@ -133,9 +133,6 @@
 [submodule "src/code.cloudfoundry.org/filelock"]
 	path = src/code.cloudfoundry.org/filelock
 	url = https://github.com/cloudfoundry/filelock.git
-[submodule "src/github.com/mailru/easyjson"]
-	path = src/github.com/mailru/easyjson
-	url = https://github.com/mailru/easyjson
 [submodule "src/golang.org/x/net"]
 	path = src/golang.org/x/net
 	url = https://go.googlesource.com/net
