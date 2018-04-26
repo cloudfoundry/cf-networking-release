@@ -1,0 +1,47 @@
+#!/bin/bash -eu
+
+source /var/vcap/packages/sd-ctl-utils/ctl_util.sh
+
+export RUN_DIR=/var/vcap/sys/run/service-discovery-controller
+export LOG_DIR=/var/vcap/sys/log/service-discovery-controller
+export PIDFILE="${RUN_DIR}"/service-discovery-controller.pid
+export CONF_DIR=/var/vcap/jobs/service-discovery-controller/config
+export PORT=<%= p('port') %>
+export ADDRESS=<%= p('address') %>
+export URL="${ADDRESS}":"${PORT}"
+export TIMEOUT=20
+
+
+mkdir -p "${RUN_DIR}"
+mkdir -p "${LOG_DIR}"
+
+exec 1>> "${LOG_DIR}"/service-discovery-controller_ctl.out.log
+exec 2>> "${LOG_DIR}"/service-discovery-controller_ctl.err.log
+
+case $1 in
+
+  start)
+
+    stop_process_on_port "${PORT}"
+
+    chown -R vcap:vcap "${RUN_DIR}"
+    chown -R vcap:vcap "${LOG_DIR}"
+    chown -R vcap:vcap "${CONF_DIR}"
+
+    exec chpst -u vcap:vcap bash -c "/var/vcap/jobs/service-discovery-controller/bin/service-discovery-controller_as_vcap"
+
+    ;;
+
+  stop)
+
+    stop_process
+
+    ;;
+
+  *)
+    echo "Usage: $0 {start|stop}"
+
+    ;;
+
+esac
+

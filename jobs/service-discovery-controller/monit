@@ -1,0 +1,6 @@
+check process service-discovery-controller
+  with pidfile /var/vcap/sys/run/service-discovery-controller/service-discovery-controller.pid
+  start program "/usr/bin/timeout 25 /var/vcap/jobs/service-discovery-controller/bin/service-discovery-controller_ctl start"
+   with timeout 30 seconds
+  stop program "/var/vcap/jobs/service-discovery-controller/bin/service-discovery-controller_ctl stop"
+  group vcap

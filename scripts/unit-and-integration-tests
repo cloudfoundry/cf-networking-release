@@ -10,6 +10,7 @@ declare -a packages=(
   "src/example-apps"
   "src/policy-server"
   "src/bosh-dns-adapter"
+  "src/service-discovery-controller"
 )
 
 declare -a serial_packages=(

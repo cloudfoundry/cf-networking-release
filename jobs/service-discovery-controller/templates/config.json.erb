@@ -1,0 +1,64 @@
+<%=
+
+raise 'route_emitter_interval_seconds value must be greater than 0' if p('route_emitter_interval_seconds') <= 0
+
+route_emitter_interval_seconds = p('route_emitter_interval_seconds')
+staleness_threshold = p("staleness_threshold_seconds")
+if staleness_threshold <= route_emitter_interval_seconds
+  raise "'staleness_threshold_seconds' must be a value greater than 'route_emitter_interval_seconds' which is set to " + route_emitter_interval_seconds.to_s
+end
+
+config = {
+    'address' => p('address'),
+    'port' => "#{p('port')}",
+    'index' => "#{spec.index}",
+    'log_level_address' => "#{p('log_level_address')}",
+    'log_level_port' => p('log_level_port'),
+    'server_cert' => '/var/vcap/jobs/service-discovery-controller/config/certs/server.crt',
+    'server_key' => '/var/vcap/jobs/service-discovery-controller/config/certs/server.key',
+    'ca_cert' => '/var/vcap/jobs/service-discovery-controller/config/certs/client_ca.crt',
+    'metron_port' => p('metron_port'),
+    'staleness_threshold_seconds' => staleness_threshold,
+    'pruning_interval_seconds' => route_emitter_interval_seconds,
+    'metrics_emit_seconds' => 10,
+    'resume_pruning_delay_seconds' => route_emitter_interval_seconds,
+    'warm_duration_seconds' => route_emitter_interval_seconds
+}
+
+nats_machines = nil
+if_p('nats.machines') do |ips|
+  nats_machines = ips.compact
+end.else do
+  nats_machines = link('nats').instances.map { |instance| instance.address }
+end
+nats_port = nil
+if_p('nats.port') do |prop|
+  nats_port = prop
+end.else do
+  nats_port = link('nats').p('nats.port')
+end
+nats_user = nil
+if_p('nats.user') do |prop|
+  nats_user = prop
+end.else do
+  nats_user = link('nats').p('nats.user')
+end
+nats_password = nil
+if_p('nats.password') do |prop|
+  nats_password = prop
+end.else do
+  nats_password = link('nats').p('nats.password')
+end
+
+config['nats'] = nats_machines.map do |nats_machine|
+    {
+     'host' => nats_machine,
+     'port' => nats_port,
+     'user' => nats_user,
+     'pass' => nats_password
+    }
+end
+
+require 'json'
+JSON.dump(config)
+%>

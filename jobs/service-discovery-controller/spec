@@ -1,0 +1,75 @@
+---
+name: service-discovery-controller
+
+templates:
+  service-discovery-controller_ctl.erb:     bin/service-discovery-controller_ctl
+  service-discovery-controller_as_vcap.erb: bin/service-discovery-controller_as_vcap
+  post-start.erb:                           bin/post-start
+  config.json.erb:                          config/config.json
+  server.crt.erb:                           config/certs/server.crt
+  server.key.erb:                           config/certs/server.key
+  client_ca.crt.erb:                        config/certs/client_ca.crt
+
+packages:
+  - service-discovery-controller
+  - sd-ctl-utils
+
+provides:
+- name: service-discovery-controller
+  type: service-discovery-controller
+  properties:
+  - address
+  - port
+
+consumes:
+- name: nats
+  type: nats
+  optional: true
+
+properties:
+  metron_port:
+    description: "Forward metrics to this metron agent, listening on this port on localhost"
+    default: 3457
+
+  address:
+    description: "Address which service-discovery-controller will listen on."
+    default: 0.0.0.0
+
+  port:
+    description: "Port which service-discovery-controller will listen on."
+    default: 8054
+
+  staleness_threshold_seconds:
+    description: "Staleness threshold in seconds for routes. If the service-discovery-controller does not receive a message about a route within this threshold, the route will be pruned from the table. This value is recommended to be three times the value of route_emitter_interval_seconds"
+    default: 180
+
+  route_emitter_interval_seconds:
+    description: "Interval in seconds for which the route emitter is told to emit all routes. This value should be less than the staleness_threshold_seconds"
+    default: 60
+
+  dnshttps.server.tls:
+    description: "Server-side mutual TLS configuration for dns over http"
+  dnshttps.client.ca:
+    description: "client-side mutual TLS configuration for dns over http"
+
+  log_level_port:
+    description: "Port which log level endpoint listens on"
+    default: 8055
+  log_level_address:
+    description: "Address which log level endpoint listens on"
+    default: 127.0.0.1
+
+  nats.user:
+    description: User name for NATS authentication
+    example: nats
+  nats.password:
+    description: Password for NATS authentication
+    example: natSpa55w0rd
+  nats.port:
+    description: TCP port of NATS servers
+    example: 4222
+  nats.machines:
+    description: IPs of each NATS cluster member
+    example: |
+      - 192.168.50.123
+      - 192.168.52.123

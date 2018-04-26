@@ -1,0 +1,17 @@
+#!/bin/bash -eu
+
+set -o pipefail
+source /var/vcap/packages/sd-ctl-utils/ctl_util.sh
+
+trap 'handle_orphaned_server service-discovery-controller ${pid}' TERM
+
+/var/vcap/packages/service-discovery-controller/bin/service-discovery-controller -c "${CONF_DIR}"/config.json \
+  2> >(tee -a "${LOG_DIR}"/service-discovery-controller.stderr.log | logger -p user.error -t service-discovery-controller) \
+  1> >(tee -a "${LOG_DIR}"/service-discovery-controller.stdout.log | logger -t service-discovery-controller) &
+
+pid=$!
+echo "${pid}" > "${PIDFILE}"
+
+# healthy=$(wait_for_server_to_become_healthy "${URL}" "${TIMEOUT}")
+# write_pid "${healthy}" "${pid}"
+

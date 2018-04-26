@@ -142,3 +142,24 @@
 [submodule "src/github.com/pkg/errors"]
 	path = src/github.com/pkg/errors
 	url = https://github.com/pkg/errors
+[submodule "src/code.cloudfoundry.org/clock"]
+	path = src/code.cloudfoundry.org/clock
+	url = https://github.com/cloudfoundry/clock
+[submodule "src/github.com/nats-io/go-nats"]
+	path = src/github.com/nats-io/go-nats
+	url = https://github.com/nats-io/go-nats
+[submodule "src/github.com/nats-io/nats"]
+	path = src/github.com/nats-io/nats
+	url = https://github.com/nats-io/nats
+[submodule "src/github.com/nats-io/nuid"]
+	path = src/github.com/nats-io/nuid
+	url = https://github.com/nats-io/nuid
+[submodule "src/github.com/pivotal-cf/paraphernalia"]
+	path = src/github.com/pivotal-cf/paraphernalia
+	url = https://github.com/pivotal-cf/paraphernalia
+[submodule "src/github.com/nats-io/gnatsd"]
+	path = src/github.com/nats-io/gnatsd
+	url = https://github.com/nats-io/gnatsd
+[submodule "src/github.com/st3v/glager"]
+	path = src/github.com/st3v/glager
+	url = https://github.com/st3v/glager
