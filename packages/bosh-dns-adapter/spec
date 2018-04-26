@@ -1,0 +1,42 @@
+---
+name: bosh-dns-adapter
+
+dependencies:
+  - golang-1.10-linux
+
+files:
+  - bosh-dns-adapter/*.go # gosub
+  - bosh-dns-adapter/config/*.go # gosub
+  - bosh-dns-adapter/sdcclient/*.go # gosub
+  - code.cloudfoundry.org/cf-networking-helpers/lagerlevel/*.go # gosub
+  - code.cloudfoundry.org/cf-networking-helpers/metrics/*.go # gosub
+  - code.cloudfoundry.org/cf-networking-helpers/middleware/*.go # gosub
+  - code.cloudfoundry.org/lager/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/emitter/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/envelope_sender/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/envelopes/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/factories/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/instrumented_handler/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/instrumented_round_tripper/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/log_sender/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/logs/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/metric_sender/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/metricbatcher/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/metrics/*.go # gosub
+  - github.com/cloudfoundry/dropsonde/runtime_stats/*.go # gosub
+  - github.com/cloudfoundry/sonde-go/events/*.go # gosub
+  - github.com/gogo/protobuf/gogoproto/*.go # gosub
+  - github.com/gogo/protobuf/proto/*.go # gosub
+  - github.com/gogo/protobuf/protoc-gen-gogo/descriptor/*.go # gosub
+  - github.com/mailru/easyjson/*.go # gosub
+  - github.com/mailru/easyjson/buffer/*.go # gosub
+  - github.com/mailru/easyjson/jlexer/*.go # gosub
+  - github.com/mailru/easyjson/jwriter/*.go # gosub
+  - github.com/nu7hatch/gouuid/*.go # gosub
+  - github.com/pkg/errors/*.go # gosub
+  - github.com/tedsuo/ifrit/*.go # gosub
+  - github.com/tedsuo/ifrit/grouper/*.go # gosub
+  - github.com/tedsuo/ifrit/sigmon/*.go # gosub
+  - golang.org/x/net/dns/dnsmessage/*.go # gosub
+  - gopkg.in/validator.v2/*.go # gosub

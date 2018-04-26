@@ -1,0 +1,27 @@
+<% if p("cf_app_sd_disable") %>
+<%=
+
+  config = []
+
+require 'json'
+JSON.dump(config)
+%>
+<% else %>
+ <%=
+
+config = [
+  {
+    "domain" => "apps.internal.",
+    "cache" => {"enabled" => false},
+    "source" => {
+      "type" => "http",
+      "url" => "http://127.0.0.1:8053"
+    }
+  }
+]
+
+require 'json'
+JSON.dump(config)
+%>
+
+<% end %>

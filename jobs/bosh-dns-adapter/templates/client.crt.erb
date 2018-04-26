@@ -1,0 +1,3 @@
+<% unless p("cf_app_sd_disable") %>
+<% if_p('dnshttps.client.tls') do |tls| %><%= tls['certificate'] %><% end %>
+<% end %>

@@ -1,0 +1,20 @@
+<% unless p("cf_app_sd_disable") %>
+<%=
+require 'json'
+config = {
+    "address" => p('address'),
+    "port" => "#{p('port')}",
+    "service_discovery_controller_address" => "service-discovery-controller.service.cf.internal",
+    "service_discovery_controller_port" => "#{link('service-discovery-controller').p('port')}",
+    "client_cert" => "/var/vcap/jobs/bosh-dns-adapter/config/certs/client.crt",
+    "client_key" => "/var/vcap/jobs/bosh-dns-adapter/config/certs/client.key",
+    "ca_cert" => "/var/vcap/jobs/bosh-dns-adapter/config/certs/server_ca.crt",
+    "metron_port" => p("metron_port"),
+    "metrics_emit_seconds" => 10,
+    "log_level_address" => p("log_level_address"),
+    "log_level_port" => p("log_level_port")
+}
+
+JSON.dump(config)
+%>
+<% end %>

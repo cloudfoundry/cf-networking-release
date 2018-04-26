@@ -9,6 +9,7 @@ declare -a packages=(
   "src/cf-pusher"
   "src/example-apps"
   "src/policy-server"
+  "src/bosh-dns-adapter"
 )
 
 declare -a serial_packages=(

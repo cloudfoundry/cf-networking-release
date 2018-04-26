@@ -1,0 +1,7 @@
+<% if p("cf_app_sd_disable") %>
+{}
+<% else %>
+{
+    "service-discovery-controller.service.cf.internal": [ "<%= link('service-discovery-controller').address %>" ]
+}
+<% end %>

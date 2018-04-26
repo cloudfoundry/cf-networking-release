@@ -1,0 +1,52 @@
+---
+name: bosh-dns-adapter
+
+templates:
+  aliases.json.erb:             dns/aliases.json
+  bosh-dns-adapter_as_vcap.erb: bin/bosh-dns-adapter_as_vcap
+  bosh-dns-adapter_ctl.erb:     bin/bosh-dns-adapter_ctl
+  client.crt.erb:               config/certs/client.crt
+  client.key.erb:               config/certs/client.key
+  config.json.erb:              config/config.json
+  handlers.json.erb:            dns/handlers.json
+  server_ca.crt.erb:            config/certs/server_ca.crt
+
+packages:
+  - bosh-dns-adapter
+  - sd-ctl-utils
+
+consumes:
+  - name: service-discovery-controller
+    type: service-discovery-controller
+
+
+properties:
+  cf_app_sd_disable:
+    description: "Disable c2c service discovery for apps."
+    default: false
+
+  address:
+    description: "Address which bosh-dns-adapter will listen on."
+    default: 127.0.0.1
+
+  port:
+    description: "Port which bosh-dns-adapter will listen on."
+    default: 8053
+
+  dnshttps.client.tls:
+    description: "Client-side mutual TLS configuration for dns over http"
+
+  dnshttps.server.ca:
+    description: "server-side mutual TLS configuration for dns over http"
+
+  metron_port:
+    description: "Forward metrics to this metron agent, listening on this port on localhost"
+    default: 3457
+
+  log_level_port:
+    description: "Port which log level endpoint listens on"
+    default: 8066
+
+  log_level_address:
+    description: "Address which log level endpoint listens on"
+    default: 127.0.0.1

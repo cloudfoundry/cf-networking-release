@@ -1,0 +1,12 @@
+set -e
+
+pushd ${BOSH_INSTALL_TARGET} > /dev/null
+  source /var/vcap/packages/golang-1.10-linux/bosh/compile.env
+popd > /dev/null
+
+mkdir -p ${BOSH_INSTALL_TARGET}/src
+cp -a . ${BOSH_INSTALL_TARGET}/src
+
+go install bosh-dns-adapter/...
+
+rm -rf ${BOSH_INSTALL_TARGET}/src ${BOSH_INSTALL_TARGET}/pkg
