@@ -1,0 +1,16 @@
+<%=
+    require 'json'
+
+    toRender = {
+      "nats_url" => link('nats').instances[0].address,
+      "nats_username" => link('nats').p("nats.user"),
+      "nats_password" => link('nats').p("nats.password"),
+      "nats_port" => link('nats').p("nats.port"),
+      "nats_monitoring_port" => 8222,
+      "num_messages" => 10,
+      "num_publishers" => 10,
+    }
+
+    JSON.pretty_generate(toRender)
+%>
+

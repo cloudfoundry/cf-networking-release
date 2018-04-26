@@ -1,0 +1,17 @@
+---
+name: performance-tests
+
+templates:
+  run-tests.erb: bin/run
+  config.json.erb: config.json
+
+packages:
+  - golang-1.10-linux
+  - performance-tests
+
+consumes:
+- name: nats
+  type: nats
+  optional: true
+
+properties: {}

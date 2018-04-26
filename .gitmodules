@@ -160,3 +160,12 @@
 [submodule "src/github.com/st3v/glager"]
 	path = src/github.com/st3v/glager
 	url = https://github.com/st3v/glager
+[submodule "src/github.com/montanaflynn/stats"]
+	path = src/github.com/montanaflynn/stats
+	url = https://github.com/montanaflynn/stats
+[submodule "src/github.com/nats-io/nats-top"]
+	path = src/github.com/nats-io/nats-top
+	url = https://github.com/nats-io/nats-top
+[submodule "src/golang.org/x/text"]
+	path = src/golang.org/x/text
+	url = https://go.googlesource.com/text
