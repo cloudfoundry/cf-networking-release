@@ -1,0 +1,52 @@
+---
+name: route_populator
+
+dependencies:
+  - golang-1.10-linux
+
+files:
+  - route_populator/*.go # gosub
+  - route_populator/publisher/*.go # gosub
+  - route_populator/publisher/fakes/*.go # gosub
+  - route_populator/runner/*.go # gosub
+  - route_populator/vendor/github.com/nats-io/nats/*.go # gosub
+  - route_populator/vendor/github.com/nats-io/nats/encoders/builtin/*.go # gosub
+  - route_populator/vendor/github.com/nats-io/nuid/*.go # gosub
+  - route_populator/vendor/github.com/onsi/ginkgo/*.go # gosub
+  - route_populator/vendor/github.com/onsi/ginkgo/config/*.go # gosub
+  - route_populator/vendor/github.com/onsi/ginkgo/ginkgo/*.go # gosub
+  - route_populator/vendor/github.com/onsi/ginkgo/ginkgo/convert/*.go # gosub
+  - route_populator/vendor/github.com/onsi/ginkgo/ginkgo/interrupthandler/*.go # gosub
+  - route_populator/vendor/github.com/onsi/ginkgo/ginkgo/nodot/*.go # gosub
+  - route_populator/vendor/github.com/onsi/ginkgo/ginkgo/testrunner/*.go # gosub
+  - route_populator/vendor/github.com/onsi/ginkgo/ginkgo/testsuite/*.go # gosub
+  - route_populator/vendor/github.com/onsi/ginkgo/ginkgo/watch/*.go # gosub
+  - route_populator/vendor/github.com/onsi/ginkgo/internal/codelocation/*.go # gosub
+  - route_populator/vendor/github.com/onsi/ginkgo/internal/containernode/*.go # gosub
+  - route_populator/vendor/github.com/onsi/ginkgo/internal/failer/*.go # gosub
+  - route_populator/vendor/github.com/onsi/ginkgo/internal/leafnodes/*.go # gosub
+  - route_populator/vendor/github.com/onsi/ginkgo/internal/remote/*.go # gosub
+  - route_populator/vendor/github.com/onsi/ginkgo/internal/spec/*.go # gosub
+  - route_populator/vendor/github.com/onsi/ginkgo/internal/specrunner/*.go # gosub
+  - route_populator/vendor/github.com/onsi/ginkgo/internal/suite/*.go # gosub
+  - route_populator/vendor/github.com/onsi/ginkgo/internal/testingtproxy/*.go # gosub
+  - route_populator/vendor/github.com/onsi/ginkgo/internal/writer/*.go # gosub
+  - route_populator/vendor/github.com/onsi/ginkgo/reporters/*.go # gosub
+  - route_populator/vendor/github.com/onsi/ginkgo/reporters/stenographer/*.go # gosub
+  - route_populator/vendor/github.com/onsi/ginkgo/types/*.go # gosub
+  - route_populator/vendor/github.com/onsi/gomega/*.go # gosub
+  - route_populator/vendor/github.com/onsi/gomega/format/*.go # gosub
+  - route_populator/vendor/github.com/onsi/gomega/gbytes/*.go # gosub
+  - route_populator/vendor/github.com/onsi/gomega/gexec/*.go # gosub
+  - route_populator/vendor/github.com/onsi/gomega/internal/assertion/*.go # gosub
+  - route_populator/vendor/github.com/onsi/gomega/internal/asyncassertion/*.go # gosub
+  - route_populator/vendor/github.com/onsi/gomega/internal/oraclematcher/*.go # gosub
+  - route_populator/vendor/github.com/onsi/gomega/internal/testingtsupport/*.go # gosub
+  - route_populator/vendor/github.com/onsi/gomega/matchers/*.go # gosub
+  - route_populator/vendor/github.com/onsi/gomega/matchers/support/goraph/bipartitegraph/*.go # gosub
+  - route_populator/vendor/github.com/onsi/gomega/matchers/support/goraph/edge/*.go # gosub
+  - route_populator/vendor/github.com/onsi/gomega/matchers/support/goraph/node/*.go # gosub
+  - route_populator/vendor/github.com/onsi/gomega/matchers/support/goraph/util/*.go # gosub
+  - route_populator/vendor/github.com/onsi/gomega/types/*.go # gosub
+  - route_populator/vendor/golang.org/x/sys/unix/*.go # gosub
+  - route_populator/vendor/gopkg.in/yaml.v2/*.go # gosub
