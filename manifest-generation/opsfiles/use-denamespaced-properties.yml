@@ -1,5 +1,5 @@
 - type: replace
-  path: /instance_groups/name=diego-api/jobs/name=policy-server/properties
+  path: /instance_groups/name=api/jobs/name=policy-server/properties
   value:
     uaa_client_secret: ((uaa_clients_network_policy_secret))
     uaa_ca: ((uaa_ca.certificate))
@@ -11,15 +11,9 @@
       port: 3306
       name: network_policy
 
-- type: remove
-  path: /instance_groups/name=diego-api/jobs/name=policy-server/properties/cf_networking
-
 - type: replace
-  path: /instance_groups/name=diego-api/jobs/name=policy-server-internal/properties
+  path: /instance_groups/name=api/jobs/name=policy-server-internal/properties
   value:
     ca_cert: ((network_policy_ca.certificate))
     server_cert: ((network_policy_server.certificate))
     server_key: ((network_policy_server.private_key))
-
-- type: remove
-  path: /instance_groups/name=diego-api/jobs/name=policy-server-internal/properties/cf_networking
