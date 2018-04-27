@@ -17,3 +17,24 @@
     ca_cert: ((network_policy_ca.certificate))
     server_cert: ((network_policy_server.certificate))
     server_key: ((network_policy_server.private_key))
+
+- type: replace
+  path: /instance_groups/name=diego-cell/jobs/name=garden-cni/properties?/cni_plugin_dir
+  value: /var/vcap/packages/silk-cni/bin
+
+- type: replace
+  path: /instance_groups/name=diego-cell/jobs/name=garden-cni/properties?/cni_config_dir
+  value: /var/vcap/jobs/silk-cni/config/cni
+
+- type: replace
+  path: /releases/name=silk/version
+  value: latest
+
+- type: replace
+  path: /instance_groups/name=diego-cell/jobs/-
+  value:
+    name: silk-cni
+    release: silk
+
+- type: remove
+  path: /instance_groups/name=diego-cell/jobs/name=cni
