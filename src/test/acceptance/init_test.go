@@ -139,6 +139,35 @@ func pushAppWithInstanceCount(appName string, appCount int) {
 		"-i", fmt.Sprintf("%d", appCount),
 		"-f", defaultManifest("proxy"),
 	).Wait(Timeout_Push)).To(gexec.Exit(0))
+
+	appGuidSession := cf.Cf("app", appName, "--guid")
+	Expect(appGuidSession.Wait(Timeout_Short)).To(gexec.Exit(0))
+
+	capiURL := fmt.Sprintf("v2/apps/%s/instances", strings.TrimSpace(string(appGuidSession.Out.Contents())))
+
+	type instanceInfo struct {
+		State string `json:"state"`
+	}
+
+	instances := make(map[string]instanceInfo, appCount)
+
+	allInstancesRunning := func() bool {
+		session := cf.Cf("curl", capiURL)
+		Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
+
+		json.Unmarshal(session.Out.Contents(), &instances)
+		Expect(len(instances)).To(Equal(appCount))
+
+		for _, instance := range instances {
+			if instance.State != "RUNNING" {
+				return false
+			}
+		}
+		return true
+	}
+
+	Eventually(allInstancesRunning).Should(Equal(true), "not all instances running")
+
 }
 
 func restage(appName string) {
