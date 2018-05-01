@@ -969,7 +969,6 @@ jobs:
           use-silk-release.yml
           use-latest-silk.yml
           use-cf-deployment-deltas.yml
-          enable-iptables-logger-silk.yml
           add-acceptance-test-jobs.yml
           opsfile.yml
         VARS_STORE_FILE: environments/mitre/vars-store.yml
