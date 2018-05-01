@@ -4,11 +4,11 @@ See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for example
 
 ### 2.0.0
 **Changed Properties**
-The following jobs `cni`, `iptables-logger`, `silk-controller`,
+The following jobs `cni (renamed: silk-cni)`, `iptables-logger`, `silk-controller`,
 `vxlan-policy-agent`, `silk-daemon`, `netmon` have been moved to
 [silk-release](code.cloudfoundry.org/silk-release). As a result, the properties for those jobs have been moved also:
-- Job `cni`
-  - `cf_networking.disable` -> Does not exist in silk-release
+- Job `cni` -> Renamed to `silk-cni`
+  - `cf_networking.disable` -> `disable`
   - `cf_networking.mtu` -> `mtu`
   - `cf_networking.silk_daemon.listen_port` -> `silk_daemon.listen_port`
   - `cf_networking.iptables_logging` -> `iptables_logging`
@@ -25,9 +25,9 @@ The following jobs `cni`, `iptables-logger`, `silk-controller`,
   - `cf_networking.silk_controller.poll_interval` -> `poll_interval`
   - `cf_networking.silk_controller.interface_name` -> `interface_name`
   - `cf_networking.silk_controller.log_level` -> `log_level`
-  - `cf_networking.silk_controller.disable` -> Does not exist in silk-release
+  - `cf_networking.silk_controller.disable` -> `disable`
 - Job `silk-controller`
-  - `cf_networking.disable` -> Does not exist in silk-release
+  - `cf_networking.disable` -> `disable`
   - `cf_networking.network` -> `network`
   - `cf_networking.subnet_prefix_length` -> `subnet_prefix_length`
   - `cf_networking.subnet_lease_expiration_hours` -> `subnet_lease_expiration_hours`
@@ -49,7 +49,7 @@ The following jobs `cni`, `iptables-logger`, `silk-controller`,
   - `cf_networking.silk_controller.max_open_connections` -> `max_open_connections`
   - `cf_networking.silk_controller.max_idle_connections` -> `max_idle_connections`
 - Job `silk-daemon`
-  - `cf_networking.disable` -> Does not exist in silk-release
+  - `cf_networking.disable` -> `disable`
   - `cf_networking.vtep_port` -> `vtep_port`
   - `cf_networking.rep_listen_addr_admin` -> `rep_listen_addr_admin`
   - `cf_networking.partition_tolerance_hours` -> `partition_tolerance_hours`
@@ -64,7 +64,7 @@ The following jobs `cni`, `iptables-logger`, `silk-controller`,
   - `cf_networking.silk_controller.hostname` -> `silk_controller.hostname`
   - `cf_networking.silk_controller.listen_port` -> `silk_controller.listen_port`
 - Job `vxlan_policy_agent`
-  - `cf_networking.disable` -> Does not exist in silk-release
+  - `cf_networking.disable` -> `disable`
   - `cf_networking.iptables_logging` -> `iptables_logging`
   - `cf_networking.policy_server.hostname` -> `policy_server.hostname`
   - `cf_networking.policy_server.internal_listen_port` -> `policy_server.internal_listen_port`
@@ -77,7 +77,7 @@ The following jobs `cni`, `iptables-logger`, `silk-controller`,
   - `cf_networking.vxlan_policy_agent.log_level` -> `log_level`
   - `cf_networking.iptables_accepted_udp_logs_per_sec` -> `iptables_accepted_udp_logs_per_sec`
 - Job `netmon`
-  - `cf_networking.disable` -> Does not exist in silk-release
+  - `cf_networking.disable` -> `disable`
   - `cf_networking.netmon.metron_address` -> `metron_address`
   - `cf_networking.netmon.poll_interval` -> `poll_interval`
   - `cf_networking.netmon.interface_name` -> `interface_name`
