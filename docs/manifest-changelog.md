@@ -87,6 +87,10 @@ The following jobs `cni (renamed: silk-cni)`, `iptables-logger`, `silk-controlle
   supports job level properties.
 - Removed `policy-server-internal.tag_length`, this property is retrieved via bosh links from
   `tag_length is used by link to policy-server.tag_length`.
+- To support the change to `silk-cni` the `cni_plugin_dir` and `cni_config_dir` on the `garden-cni`
+  job must be explicitly set in the manifest as follows:
+  - `cni_plugin_dir: /var/vcap/packages/silk-cni/bin`
+  - `cni_config_dir: /var/vcap/jobs/silk-cni/config/cni`
 
 ### 1.13.0
 **New Properties**
