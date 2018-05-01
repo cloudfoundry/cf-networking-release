@@ -1539,11 +1539,11 @@ jobs:
           cf-networking.yml
           use-silk-release.yml
           use-latest-silk.yml
-          use-cf-deployment-deltas.yml
           add-acceptance-test-jobs.yml
           enable-routing-integrity.yml
           use-bosh-dns.yml
           use-bosh-dns-for-containers-with-silk-release.yml
+          use-cf-deployment-deltas.yml
           enable-service-discovery.yml
           opsfile.yml
         VARS_STORE_FILE: environments/slouch/vars-store.yml
