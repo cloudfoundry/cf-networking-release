@@ -454,7 +454,7 @@ jobs:
           cf-networking.yml
           use-silk-release.yml
           use-latest-silk.yml
-          rename-cni-to-silk-cni.yml
+          use-cf-deployment-deltas.yml
           enable-routing-integrity.yml
           opsfile-after.yml
         SYSTEM_DOMAIN: sombrero.c2c.cf-app.com
@@ -760,7 +760,7 @@ jobs:
           enable-routing-integrity.yml
           use-silk-release.yml
           use-latest-silk.yml
-          rename-cni-to-silk-cni.yml
+          use-cf-deployment-deltas.yml
           add-acceptance-test-jobs.yml
           opsfile.yml
         VARS_STORE_FILE: environments/pickelhelm/vars-store.yml
@@ -968,7 +968,7 @@ jobs:
           enable-routing-integrity.yml
           use-silk-release.yml
           use-latest-silk.yml
-          rename-cni-to-silk-cni.yml
+          use-cf-deployment-deltas.yml
           enable-iptables-logger-silk.yml
           add-acceptance-test-jobs.yml
           opsfile.yml
@@ -1306,7 +1306,7 @@ jobs:
           enable-routing-integrity.yml
           use-silk-release.yml
           use-latest-silk.yml
-          rename-cni-to-silk-cni.yml
+          use-cf-deployment-deltas.yml
           opsfile.yml
         VARS_STORE_FILE: environments/toque/vars-store.yml
       input_mapping:
@@ -1540,7 +1540,7 @@ jobs:
           cf-networking.yml
           use-silk-release.yml
           use-latest-silk.yml
-          rename-cni-to-silk-cni.yml
+          use-cf-deployment-deltas.yml
           add-acceptance-test-jobs.yml
           enable-routing-integrity.yml
           use-bosh-dns.yml
