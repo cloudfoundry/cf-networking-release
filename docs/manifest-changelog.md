@@ -91,6 +91,9 @@ The following jobs `cni (renamed: silk-cni)`, `iptables-logger`, `silk-controlle
   job must be explicitly set in the manifest as follows:
   - `cni_plugin_dir: /var/vcap/packages/silk-cni/bin`
   - `cni_config_dir: /var/vcap/jobs/silk-cni/config/cni`
+- `connect_timeout_seconds` on the `policy-server` and `policy-server-internal` jobs now affects
+  how long it takes for a db connection to be established when the policy server starts. Before
+  this was hardcoded to a timeout of 5 seconds.
 
 ### 1.13.0
 **New Properties**
@@ -124,7 +127,6 @@ The following jobs `cni (renamed: silk-cni)`, `iptables-logger`, `silk-controlle
     attach to based on interface name. We do not recommend using this parameter and it is
     temporary. You cannot set this property and the `vxlan_network` property together.
     - `cf_networking.silk_daemon.temporary_vxlan_interface`
->>>>>>> develop
 
 ### 1.7.0
 **New Properties**
