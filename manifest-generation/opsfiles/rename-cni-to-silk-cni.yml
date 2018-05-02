@@ -1,5 +1,0 @@
-- type: replace
-  path: /instance_groups/name=diego-cell/jobs/name=cni
-  value:
-    name: silk-cni
-    release: silk

@@ -1,3 +1,4 @@
+# use this with cf-deployment to use cf-networking 2.0
 - type: replace
   path: /instance_groups/name=api/jobs/name=policy-server/properties
   value:
@@ -31,10 +32,7 @@
   value: latest
 
 - type: replace
-  path: /instance_groups/name=diego-cell/jobs/-
+  path: /instance_groups/name=diego-cell/jobs/name=cni
   value:
     name: silk-cni
     release: silk
-
-- type: remove
-  path: /instance_groups/name=diego-cell/jobs/name=cni

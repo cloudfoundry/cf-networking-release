@@ -454,7 +454,7 @@ jobs:
           cf-networking.yml
           use-silk-release.yml
           use-latest-silk.yml
-          use-cf-deployment-deltas.yml
+          use-cf-networking-2.yml
           enable-routing-integrity.yml
           opsfile-after.yml
         SYSTEM_DOMAIN: sombrero.c2c.cf-app.com
@@ -760,7 +760,7 @@ jobs:
           enable-routing-integrity.yml
           use-silk-release.yml
           use-latest-silk.yml
-          use-cf-deployment-deltas.yml
+          use-cf-networking-2.yml
           add-acceptance-test-jobs.yml
           opsfile.yml
         VARS_STORE_FILE: environments/pickelhelm/vars-store.yml
@@ -968,7 +968,7 @@ jobs:
           enable-routing-integrity.yml
           use-silk-release.yml
           use-latest-silk.yml
-          use-cf-deployment-deltas.yml
+          use-cf-networking-2.yml
           add-acceptance-test-jobs.yml
           opsfile.yml
         VARS_STORE_FILE: environments/mitre/vars-store.yml
@@ -1305,7 +1305,7 @@ jobs:
           enable-routing-integrity.yml
           use-silk-release.yml
           use-latest-silk.yml
-          use-cf-deployment-deltas.yml
+          use-cf-networking-2.yml
           opsfile.yml
         VARS_STORE_FILE: environments/toque/vars-store.yml
       input_mapping:
@@ -1543,7 +1543,7 @@ jobs:
           enable-routing-integrity.yml
           use-bosh-dns.yml
           use-bosh-dns-for-containers-with-silk-release.yml
-          use-cf-deployment-deltas.yml
+          use-cf-networking-2.yml
           enable-service-discovery.yml
           opsfile.yml
         VARS_STORE_FILE: environments/slouch/vars-store.yml
