@@ -5,6 +5,7 @@ See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for example
 ### 2.0.0
 
 **Silk No Longer Included in cf-networking-release**
+
 The following jobs `cni (renamed: silk-cni)`, `iptables-logger`, `silk-controller`,
 `vxlan-policy-agent`, `silk-daemon`, `netmon` have been moved to
 [silk-release](code.cloudfoundry.org/silk-release). As a result, the properties for those jobs have been moved also:
