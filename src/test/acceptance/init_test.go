@@ -130,6 +130,8 @@ func scaleApp(appName string, instances int) {
 		"scale", appName,
 		"-i", fmt.Sprintf("%d", instances),
 	).Wait(Timeout_Short)).To(gexec.Exit(0))
+
+	waitForAllInstancesToBeRunning(appName)
 }
 
 func pushAppWithInstanceCount(appName string, appCount int) {
@@ -140,6 +142,10 @@ func pushAppWithInstanceCount(appName string, appCount int) {
 		"-f", defaultManifest("proxy"),
 	).Wait(Timeout_Push)).To(gexec.Exit(0))
 
+	waitForAllInstancesToBeRunning(appName)
+}
+
+func waitForAllInstancesToBeRunning(appName string) {
 	appGuidSession := cf.Cf("app", appName, "--guid")
 	Expect(appGuidSession.Wait(Timeout_Short)).To(gexec.Exit(0))
 
@@ -149,14 +155,14 @@ func pushAppWithInstanceCount(appName string, appCount int) {
 		State string `json:"state"`
 	}
 
-	instances := make(map[string]instanceInfo, appCount)
+	instances := make(map[string]instanceInfo)
 
 	allInstancesRunning := func() bool {
 		session := cf.Cf("curl", capiURL)
 		Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
 
 		json.Unmarshal(session.Out.Contents(), &instances)
-		Expect(len(instances)).To(Equal(appCount))
+		Expect(len(instances)).To(Not(BeEmpty()))
 
 		for _, instance := range instances {
 			if instance.State != "RUNNING" {
@@ -174,6 +180,8 @@ func restage(appName string) {
 	Expect(cf.Cf(
 		"restage", appName,
 	).Wait(Timeout_Push)).To(gexec.Exit(0))
+
+	waitForAllInstancesToBeRunning(appName)
 }
 
 type AppInstance struct {
