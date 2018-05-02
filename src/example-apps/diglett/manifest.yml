@@ -1,0 +1,9 @@
+---
+applications:
+  - name: diglett
+    memory: 32M
+    disk_quota: 32M
+    buildpack: go_buildpack
+    env:
+      GOPACKAGENAME: example-apps/diglett
+      DIGLETT_FREQUENCY_MS: 100

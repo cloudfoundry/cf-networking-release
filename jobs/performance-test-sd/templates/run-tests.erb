@@ -4,19 +4,19 @@ set -exu
 set -o pipefail
 
 
-pushd /var/vcap/packages/performance-tests > /dev/null
+pushd /var/vcap/packages/performance-test-sd > /dev/null
   source /var/vcap/packages/golang-1.10-linux/bosh/compile.env
 popd > /dev/null
 
-DATA_DIR=/var/vcap/data/performance-tests
+DATA_DIR=/var/vcap/data/performance-test-sd
 export CF_HOME=$DATA_DIR/cf-home
 mkdir -p $CF_HOME
 
-export CONFIG=/var/vcap/jobs/performance-tests/config.json
+export CONFIG=/var/vcap/jobs/performance-test-sd/config.json
 export APPS_DIR=$GOPATH/src/example-apps
 
 go install github.com/onsi/ginkgo/ginkgo
 
-cd $GOPATH/src/performance
+cd $GOPATH/src/test/performance-sd
 ginkgo -r -v
 

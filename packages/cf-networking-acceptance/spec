@@ -25,8 +25,7 @@ files:
   - github.com/cloudfoundry-incubator/cf-test-helpers/cf/*.go # gosub
   - github.com/cloudfoundry-incubator/cf-test-helpers/commandreporter/*.go # gosub
   - github.com/cloudfoundry-incubator/cf-test-helpers/commandstarter/*.go # gosub
-  - github.com/cloudfoundry-incubator/cf-test-helpers/helpers/*.go # gosub
-  - github.com/cloudfoundry-incubator/cf-test-helpers/helpers/internal/*.go # gosub
+  - github.com/cloudfoundry-incubator/cf-test-helpers/config/*.go # gosub
   - github.com/cloudfoundry-incubator/cf-test-helpers/internal/*.go # gosub
   - github.com/go-sql-driver/mysql/*.go # gosub
   - github.com/jmoiron/sqlx/*.go # gosub

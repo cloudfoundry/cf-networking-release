@@ -1,5 +1,5 @@
 ---
-name: performance-tests
+name: performance-test-sd
 
 templates:
   run-tests.erb: bin/run
@@ -7,7 +7,7 @@ templates:
 
 packages:
   - golang-1.10-linux
-  - performance-tests
+  - performance-test-sd
 
 consumes:
 - name: nats

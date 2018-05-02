@@ -18,7 +18,7 @@ import (
 	pusherConfig "cf-pusher/config"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
-	"github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
+	helpers "github.com/cloudfoundry-incubator/cf-test-helpers/config"
 	. "github.com/onsi/ginkgo"
 	ginkgoConfig "github.com/onsi/ginkgo/config"
 	. "github.com/onsi/gomega"
@@ -29,7 +29,7 @@ const Timeout_Push = 2 * time.Minute
 
 var (
 	appsDir    string
-	config     helpers.Config
+	config     *helpers.Config
 	testConfig pusherConfig.Config
 )
 

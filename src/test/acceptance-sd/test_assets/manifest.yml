@@ -1,0 +1,43 @@
+---
+name: acceptance
+
+update:
+  canaries: 2
+  canary_watch_time: 1000-60000
+  max_in_flight: 1
+  serial: false
+  update_watch_time: 1000-60000
+
+instance_groups:
+- name: cell
+  azs: [z1]
+  instances: 1
+  vm_type: default
+  stemcell: default
+  networks:
+  - name: default
+  jobs:
+  - name: bosh-dns-adapter
+    release: cf-app-sd
+    properties:
+      port: 8055
+  - name: service-discovery-controller
+    release: cf-app-sd
+    properties:
+      address: 127.0.0.1
+      port: 8054
+  - name: bosh-dns
+    release: bosh-dns
+    properties:
+      address: 0.0.0.0
+
+releases:
+- name: cf-app-sd
+  version: latest
+- name: bosh-dns
+  version: latest
+
+stemcells:
+- alias: default
+  os: ubuntu-trusty
+  version: latest

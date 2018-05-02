@@ -55,8 +55,11 @@ deploy_cf() {
   -o ~/workspace/cf-networking-release/manifest-generation/opsfiles/cf-networking.yml \
   -o ~/workspace/cf-networking-release/manifest-generation/opsfiles/use-latest.yml \
   -o ~/workspace/cf-deployment/operations/bosh-lite.yml \
+  -o ~/workspace/cf-deployment/operations/experimental/use-bosh-dns-for-containers.yml \
+  -o ~/workspace/cf-deployment/operations/experimental/use-bosh-dns.yml \
+  -o ~/workspace/cf-deployment/operations/experimental/enable-service-discovery.yml \
   -o ~/workspace/cf-networking-deployments/environments/local/instance-count-overrides.yml \
-  -o ~/workspace/silk-release/opsfiles/use-silk-release.yml \
+  -o ~/workspace/cf-deployment/operations/experimental/use-silk-release.yml \
   --vars-store ~/workspace/cf-networking-deployments/environments/local/deployment-vars.yml \
   -v system_domain=bosh-lite.com
 }
@@ -74,7 +77,7 @@ main() {
     set_bosh_env
 
     if [ "$(uname)" == "Linux" ]; then
-      sudo route add -net "$ips" gw "$gw"
+      sudo ip route add "$ips" via "$gw"
     fi
 
     if [ "$upload_stemcell" == true ]; then

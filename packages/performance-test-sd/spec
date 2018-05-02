@@ -1,5 +1,5 @@
 ---
-name: performance-tests
+name: performance-test-sd
 
 files:
   - github.com/cloudfoundry-incubator/cf-test-helpers/config/*.go # gosub
@@ -59,4 +59,4 @@ files:
   - github.com/onsi/gomega/matchers/support/goraph/util/*.go # gosub
   - github.com/onsi/gomega/types/*.go # gosub
   - gopkg.in/yaml.v2/*.go # gosub
-  - performance/*.go # gosub
+  - test/performance-sd/*.go # gosub
