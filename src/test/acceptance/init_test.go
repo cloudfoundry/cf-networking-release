@@ -130,8 +130,6 @@ func scaleApp(appName string, instances int) {
 		"scale", appName,
 		"-i", fmt.Sprintf("%d", instances),
 	).Wait(Timeout_Short)).To(gexec.Exit(0))
-
-	waitForAllInstancesToBeRunning(appName)
 }
 
 func pushAppWithInstanceCount(appName string, appCount int) {
@@ -173,7 +171,6 @@ func waitForAllInstancesToBeRunning(appName string) {
 	}
 
 	Eventually(allInstancesRunning).Should(Equal(true), "not all instances running")
-
 }
 
 func restage(appName string) {
