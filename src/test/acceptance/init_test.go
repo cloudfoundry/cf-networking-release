@@ -162,7 +162,7 @@ func waitForAllInstancesToBeRunning(appName string) {
 		Expect(session.Wait(Timeout_Short)).To(gexec.Exit(0))
 
 		json.Unmarshal(session.Out.Contents(), &instances)
-		Expect(len(instances)).To(Not(BeEmpty()))
+		Expect(instances).To(Not(BeEmpty()))
 
 		for _, instance := range instances {
 			if instance.State != "RUNNING" {
