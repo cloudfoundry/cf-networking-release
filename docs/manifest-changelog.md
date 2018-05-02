@@ -3,7 +3,8 @@
 See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for examples
 
 ### 2.0.0
-**Changed Properties**
+
+**Silk No Longer Included in cf-networking-release**
 The following jobs `cni (renamed: silk-cni)`, `iptables-logger`, `silk-controller`,
 `vxlan-policy-agent`, `silk-daemon`, `netmon` have been moved to
 [silk-release](code.cloudfoundry.org/silk-release). As a result, the properties for those jobs have been moved also:
@@ -82,15 +83,18 @@ The following jobs `cni (renamed: silk-cni)`, `iptables-logger`, `silk-controlle
   - `cf_networking.netmon.poll_interval` -> `poll_interval`
   - `cf_networking.netmon.interface_name` -> `interface_name`
   - `cf_networking.netmon.log_level` -> `log_level`
-- All properties from all jobs have had their namespaces removed.
-  The `cf_networking.<job_name>` prefixes are no longer necessary given bosh
-  supports job level properties.
-- Removed `policy-server-internal.tag_length`, this property is retrieved via bosh links from
+
+**Changed Properties**
+- ALL properties from ALL jobs in this release have had their namespaces removed.
+  The `cf_networking.<job_name>` prefixes are no longer necessary given bosh supports job level properties.
+- Removed `policy-server-internal.tag_length` property from `policy-server-internal` job, this property is retrieved via bosh links from
   `tag_length is used by link to policy-server.tag_length`.
-- To support the change to `silk-cni` the `cni_plugin_dir` and `cni_config_dir` on the `garden-cni`
-  job must be explicitly set in the manifest as follows:
-  - `cni_plugin_dir: /var/vcap/packages/silk-cni/bin`
-  - `cni_config_dir: /var/vcap/jobs/silk-cni/config/cni`
+- To support third party integrators we have changed the cni job in `silk-release` to `silk-cni`
+  - To continue using `silk` the `cni_plugin_dir` and `cni_config_dir` on the `garden-cni`
+    job must be explicitly set in the manifest as follows:
+    - `cni_plugin_dir: /var/vcap/packages/silk-cni/bin`
+    - `cni_config_dir: /var/vcap/jobs/silk-cni/config/cni`
+  - Third party integrators should continue using the default values for these properties
 - `connect_timeout_seconds` on the `policy-server` and `policy-server-internal` jobs now affects
   how long it takes for a db connection to be established when the policy server starts. Before
   this was hardcoded to a timeout of 5 seconds.
