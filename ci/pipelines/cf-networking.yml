@@ -492,6 +492,14 @@ jobs:
         vars-store: new-updated-vars-store
       params:
         ENVIRONMENT_NAME: sombrero
+    - task: acceptance-tests-sd
+      file: cf-networking-release-ci/ci/tasks/test-acceptance-sd.yml
+      input_mapping:
+        cf-networking: cf-networking-dev
+        test-config: cf-networking-deployments
+        vars-store: new-updated-vars-store
+      params:
+        ENVIRONMENT_NAME: sombrero
     - task: delete-deployment
       file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
       params:
@@ -755,6 +763,8 @@ jobs:
           datadog.yml
           scale-to-one-az.yml
           smaller-footprint.yml
+          enable-service-discovery.yml
+          use-service-discovery-from-cf-networking.yml
           cf-networking.yml
           use-system-domain-as-metron-deployment-name.yml
           enable-routing-integrity.yml
@@ -831,6 +841,14 @@ jobs:
         trigger: true
     - task: acceptance-tests
       file: cf-networking-release-ci/ci/tasks/acceptance-tests.yml
+      input_mapping:
+        cf-networking: cf-networking-dev
+        test-config: cf-networking-deployments
+        vars-store: cf-networking-deployments
+      params:
+        ENVIRONMENT_NAME: pickelhelm
+    - task: acceptance-tests-sd
+      file: cf-networking-release-ci/ci/tasks/test-acceptance-sd.yml
       input_mapping:
         cf-networking: cf-networking-dev
         test-config: cf-networking-deployments
@@ -964,6 +982,8 @@ jobs:
           custom-apps-domain.yml
           scale-to-one-az.yml
           smaller-footprint.yml
+          enable-service-discovery.yml
+          use-service-discovery-from-cf-networking.yml
           cf-networking.yml
           enable-routing-integrity.yml
           use-silk-release.yml
@@ -1043,6 +1063,15 @@ jobs:
         passed: [mitre-deploy]
     - task: acceptance-tests
       file: cf-networking-release-ci/ci/tasks/acceptance-tests.yml
+      input_mapping:
+        cf-networking: cf-networking-dev
+        test-config: cf-networking-deployments
+        vars-store: cf-networking-deployments
+      params:
+        ENVIRONMENT_NAME: mitre
+    - task: acceptance-tests-sd
+      privileged: true
+      file: cf-networking-release-ci/ci/tasks/test-acceptance-sd.yml
       input_mapping:
         cf-networking: cf-networking-dev
         test-config: cf-networking-deployments
@@ -1131,6 +1160,16 @@ jobs:
       input_mapping:
         test-config: cf-networking-deployments
         cf-networking: cf-networking-dev
+    - task: smoke-tests-sd
+      privileged: true
+      file: cf-networking-release-ci/ci/tasks/smoke-tests-sd.yml
+      input_mapping:
+        test-config: cf-networking-deployments
+        cf-networking: cf-networking-dev
+      params:
+        ENVIRONMENT_NAME: mitre
+        ENVIRONMENT_TAG: mitre.c2c.cf-app.com
+        DATADOG_API_KEY: {{datadog_api_key}}
 
   - name: mitre-cats
     serial_groups: [mitre-test-group, mitre-deploy-group]
@@ -1301,6 +1340,8 @@ jobs:
           use-system-domain-as-metron-deployment-name.yml
           scale-to-one-az.yml
           smaller-footprint.yml
+          enable-service-discovery.yml
+          use-service-discovery-from-cf-networking.yml
           cf-networking.yml
           enable-routing-integrity.yml
           use-silk-release.yml
@@ -1536,6 +1577,8 @@ jobs:
           scale-to-one-az.yml
           use-system-domain-as-metron-deployment-name.yml
           smaller-footprint.yml
+          enable-service-discovery.yml
+          use-service-discovery-from-cf-networking.yml
           cf-networking.yml
           use-silk-release.yml
           use-latest-silk.yml

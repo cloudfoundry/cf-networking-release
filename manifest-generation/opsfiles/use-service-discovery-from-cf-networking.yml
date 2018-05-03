@@ -1,0 +1,7 @@
+- type: replace
+  path: /instance_groups/name=diego-cell/jobs/name=bosh-dns-adapter/release
+  value: cf-networking
+
+- type: replace
+  path: /instance_groups/name=service-discovery/jobs/name=service-discovery-controller/release
+  value: cf-networking

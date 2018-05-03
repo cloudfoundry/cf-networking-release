@@ -1,0 +1,17 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: c2cnetworking/deploy-light
+
+inputs:
+  - name: cf-app-sd-release
+  - name: deployments-repo
+
+params:
+  ENVIRONMENT_NAME: ~
+
+run:
+  path: cf-app-sd-release/ci/tasks/test-nats-performance
