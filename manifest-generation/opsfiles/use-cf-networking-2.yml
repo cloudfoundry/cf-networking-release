@@ -36,3 +36,23 @@
   value:
     name: silk-cni
     release: silk
+
+- type: replace
+  path: /releases/name=cf-networking/version
+  value: latest
+
+- type: remove
+  path: /releases/name=cf-networking/url?
+
+- type: remove
+  path: /releases/name=cf-networking/sha1?
+
+- type: replace
+  path: /releases/name=silk/version
+  value: latest
+
+- type: remove
+  path: /releases/name=silk/url?
+
+- type: remove
+  path: /releases/name=silk/sha1?
