@@ -116,7 +116,7 @@ var _ = Describe("space developer policy configuration", func() {
 
 			By("creating a policy", func() {
 				err := policyClient.AddPoliciesV0(spaceDevUserToken, []api_v0.Policy{
-					api_v0.Policy{
+					{
 						Source: api_v0.Source{
 							ID: appAGUID,
 						},
@@ -132,7 +132,7 @@ var _ = Describe("space developer policy configuration", func() {
 
 			By("listing policies", func() {
 				expectedPolicies := []api_v0.Policy{
-					api_v0.Policy{
+					{
 						Source: api_v0.Source{
 							ID: appAGUID,
 						},
@@ -150,7 +150,7 @@ var _ = Describe("space developer policy configuration", func() {
 
 			By("deleting the policy", func() {
 				err := policyClient.DeletePoliciesV0(spaceDevUserToken, []api_v0.Policy{
-					api_v0.Policy{
+					{
 						Source: api_v0.Source{
 							ID: appAGUID,
 						},

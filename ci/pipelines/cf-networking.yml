@@ -764,6 +764,8 @@ jobs:
           scale-to-one-az.yml
           smaller-footprint.yml
           enable-service-discovery.yml
+          use-bosh-dns-for-containers.yml
+          use-bosh-dns.yml
           use-service-discovery-from-cf-networking.yml
           cf-networking.yml
           use-system-domain-as-metron-deployment-name.yml
@@ -983,6 +985,8 @@ jobs:
           scale-to-one-az.yml
           smaller-footprint.yml
           enable-service-discovery.yml
+          use-bosh-dns-for-containers.yml
+          use-bosh-dns.yml
           use-service-discovery-from-cf-networking.yml
           cf-networking.yml
           enable-routing-integrity.yml
@@ -1341,6 +1345,8 @@ jobs:
           scale-to-one-az.yml
           smaller-footprint.yml
           enable-service-discovery.yml
+          use-bosh-dns-for-containers.yml
+          use-bosh-dns.yml
           use-service-discovery-from-cf-networking.yml
           cf-networking.yml
           enable-routing-integrity.yml
@@ -1578,6 +1584,8 @@ jobs:
           use-system-domain-as-metron-deployment-name.yml
           smaller-footprint.yml
           enable-service-discovery.yml
+          use-bosh-dns-for-containers.yml
+          use-bosh-dns.yml
           use-service-discovery-from-cf-networking.yml
           cf-networking.yml
           use-silk-release.yml
@@ -1587,7 +1595,6 @@ jobs:
           use-bosh-dns.yml
           use-bosh-dns-for-containers-with-silk-release.yml
           use-cf-networking-2.yml
-          enable-service-discovery.yml
           opsfile.yml
         VARS_STORE_FILE: environments/slouch/vars-store.yml
       input_mapping:

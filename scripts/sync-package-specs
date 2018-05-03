@@ -58,7 +58,6 @@ sync_package performance-test-sd \
   -test test/performance-sd \
   -app github.com/onsi/ginkgo/ginkgo &
 
-
 GOOS=linux sync_package runc-cni \
   -app garden-external-networker &
 
