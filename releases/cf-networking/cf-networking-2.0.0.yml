@@ -1,0 +1,58 @@
+name: cf-networking
+version: 2.0.0
+commit_hash: 4f06fd25
+uncommitted_changes: false
+jobs:
+- name: bbr-cfnetworkingdb
+  version: d11aa9ec1aaf8c7bb50f7aa2737a5b6189c57427
+  fingerprint: d11aa9ec1aaf8c7bb50f7aa2737a5b6189c57427
+  sha1: 802d0a871874451b9ad762abd2b0377908ddbe0a
+- name: cf-networking-acceptance
+  version: 1fcadfacf6218be888380a1799a017c606ae4f07
+  fingerprint: 1fcadfacf6218be888380a1799a017c606ae4f07
+  sha1: acb33d63738beb23523ce5940779a041fa6f2096
+- name: garden-cni
+  version: 7a026dddb789f0ab3eb11e6881c13705f14e6b52
+  fingerprint: 7a026dddb789f0ab3eb11e6881c13705f14e6b52
+  sha1: b1bfad9c4f3d92ebf5dafaffde5a20464caa5321
+- name: policy-server
+  version: 527787f7a375ab40c4b89a9622f7a8351aafe81b
+  fingerprint: 527787f7a375ab40c4b89a9622f7a8351aafe81b
+  sha1: c1a774f7198c2cea6a6234e796a8292dc41f87a6
+- name: policy-server-internal
+  version: 22b4d049839d9367b5a9e2e88bdb0f11715f3a36
+  fingerprint: 22b4d049839d9367b5a9e2e88bdb0f11715f3a36
+  sha1: c443f6d96bb5f4ad1a874e6eff9e436bfe99b673
+packages:
+- name: cf-networking-acceptance
+  version: 2d01d38e4c3ff0c90182bdfe59af4d8047caf3f9
+  fingerprint: 2d01d38e4c3ff0c90182bdfe59af4d8047caf3f9
+  sha1: 1f358569ed2af1cd0976f40576f06cfefa65b40c
+  dependencies:
+  - golang-1.10-linux
+- name: ctl-utils
+  version: 6f7ad2b0405b1c66e1a27fcd6a065af74135c4a2
+  fingerprint: 6f7ad2b0405b1c66e1a27fcd6a065af74135c4a2
+  sha1: 1e3e537225e9bd5e67be20a1671f2ccfd0088bc1
+  dependencies: []
+- name: golang-1.10-linux
+  version: 48c842421b6f05acf88dc6ec17f7574dade28a86
+  fingerprint: 48c842421b6f05acf88dc6ec17f7574dade28a86
+  sha1: e9a18aebf2c407ce17423c22c913b6612cf4b75f
+  dependencies: []
+- name: policy-server
+  version: 7d89b67d6cb462d8bb51335792c09b52a4c22688
+  fingerprint: 7d89b67d6cb462d8bb51335792c09b52a4c22688
+  sha1: 49223cd7901cd3e2b739098b6b3c9e24c19d4958
+  dependencies:
+  - golang-1.10-linux
+- name: runc-cni
+  version: 3fcd5369a1b607e7635dfae6e25eef36a6dc68b0
+  fingerprint: 3fcd5369a1b607e7635dfae6e25eef36a6dc68b0
+  sha1: 13d3232e514991bbe7f002dbcff18c29aa0b6302
+  dependencies:
+  - golang-1.10-linux
+license:
+  version: 423fb3ce8453b2525eb5958ff970855c805830a6
+  fingerprint: 423fb3ce8453b2525eb5958ff970855c805830a6
+  sha1: 314d7a644ef8e0bb16cccad615af5ed305afd17e
