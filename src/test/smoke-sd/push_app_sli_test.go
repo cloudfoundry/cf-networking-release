@@ -108,16 +108,16 @@ func appDir(appType string) string {
 func pushProxy(appName string) {
 	Expect(cf.Cf(
 		"push", appName,
-		"-p", appDir("proxy-sd"),
-		"-f", defaultManifest("proxy-sd"),
+		"-p", appDir("proxy"),
+		"-f", defaultManifest("proxy"),
 	).Wait(Timeout_Cf)).To(gexec.Exit(0))
 }
 
 func pushProxyWithInternalRoute(appName string) {
 	Expect(cf.Cf(
 		"push", appName,
-		"-p", appDir("proxy-sd"),
-		"-f", internalRouteManifest("proxy-sd"),
+		"-p", appDir("proxy"),
+		"-f", internalRouteManifest("proxy"),
 	).Wait(Timeout_Cf)).To(gexec.Exit(0))
 }
 

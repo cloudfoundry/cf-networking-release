@@ -114,8 +114,8 @@ func appDir(appType string) string {
 func pushApp(appName string, instances int) {
 	Expect(cf.Cf(
 		"push", appName,
-		"-p", appDir("proxy-sd"),
-		"-f", defaultManifest("proxy-sd"),
+		"-p", appDir("proxy"),
+		"-f", defaultManifest("proxy"),
 		"-i", strconv.Itoa(instances),
 	).Wait(Timeout_Cf)).To(gexec.Exit(0))
 }
