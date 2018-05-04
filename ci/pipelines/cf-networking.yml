@@ -842,16 +842,16 @@ jobs:
       - get: silk-dev
         passed: [pickelhelm-deploy]
         trigger: true
-    - task: acceptance-tests
-      file: cf-networking-release-ci/ci/tasks/acceptance-tests.yml
+    - task: acceptance-tests-sd
+      file: cf-networking-release-ci/ci/tasks/test-acceptance-sd.yml
       input_mapping:
         cf-networking: cf-networking-dev
         test-config: cf-networking-deployments
         vars-store: cf-networking-deployments
       params:
         ENVIRONMENT_NAME: pickelhelm
-    - task: acceptance-tests-sd
-      file: cf-networking-release-ci/ci/tasks/test-acceptance-sd.yml
+    - task: acceptance-tests
+      file: cf-networking-release-ci/ci/tasks/acceptance-tests.yml
       input_mapping:
         cf-networking: cf-networking-dev
         test-config: cf-networking-deployments
