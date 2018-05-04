@@ -14,4 +14,4 @@ params:
   ENVIRONMENT_NAME: ~
 
 run:
-  path: cf-networking/ci/tasks/test-nats-performance
+  path: cf-networking-release-ci/ci/tasks/test-nats-performance
