@@ -15,6 +15,7 @@ groups:
   - pickelhelm-test
   - mitre-deploy
   - mitre-test
+  - mitre-perf-tests
   - mitre-acceptance-errand
   - mitre-smoke
   - mitre-cats
@@ -43,6 +44,7 @@ groups:
   - mitre-bbl-destroy
   - mitre-deploy
   - mitre-test
+  - mitre-perf-tests
   - mitre-acceptance-errand
   - mitre-smoke
   - mitre-cats
@@ -1045,7 +1047,6 @@ jobs:
     plan:
     - aggregate:
       - get: cf-networking-deployments
-        passed: [mitre-deploy]
       - get: cf-networking-dev
         passed: [mitre-deploy]
         trigger: true
@@ -1136,6 +1137,38 @@ jobs:
       input_mapping:
         deployments-repo: cf-networking-deployments
 
+  - name: mitre-perf-tests
+    serial_groups: [mitre-test-group, mitre-deploy-group]
+    plan:
+    - aggregate:
+      - get: cf-networking-deployments
+      - get: cf-networking-dev
+        passed: [mitre-deploy]
+        trigger: true
+      - get: cf-networking-tarball
+        passed: [mitre-deploy]
+        trigger: true
+      - get: version
+        passed: [mitre-deploy]
+      - get: cf-networking-release-ci
+      - get: cf-deployment
+        passed: [mitre-deploy]
+        trigger: true
+      - get: silk-dev
+        passed: [mitre-deploy]
+        trigger: true
+      - get: silk-tarball
+        passed: [mitre-deploy]
+    - task: mitre-perf-tests
+      privileged: true
+      file: cf-networking-release-ci/ci/tasks/test-nats-performance.yml
+      input_mapping:
+        cf-networking: cf-networking-dev
+        test-config: cf-networking-deployments
+        deployments-repo: cf-networking-deployments
+      params:
+        ENVIRONMENT_NAME: mitre
+
   - name: mitre-smoke
     serial_groups: [mitre-test-group]
     plan:
@@ -1144,14 +1177,14 @@ jobs:
         trigger: true
       - get: cf-networking-deployments
       - get: cf-networking-dev
-        passed: [mitre-test]
+        passed: [mitre-test, mitre-perf-tests]
         trigger: true
       - get: cf-networking-release-ci
       - get: cf-deployment
-        passed: [mitre-test]
+        passed: [mitre-test, mitre-perf-tests]
         trigger: true
       - get: silk-dev
-        passed: [mitre-test]
+        passed: [mitre-test, mitre-perf-tests]
         trigger: true
     - task: smoke-tests
       file: cf-networking-release-ci/ci/tasks/smoke-tests.yml
@@ -1181,22 +1214,22 @@ jobs:
       - get: cf-deployment-concourse-tasks
       - get: cf-acceptance-tests
       - get: cf-networking-dev
-        passed: [mitre-test]
+        passed: [mitre-test, mitre-perf-tests]
         trigger: true
       - get: cf-deployment
-        passed: [mitre-test]
+        passed: [mitre-test, mitre-perf-tests]
         trigger: true
       - get: cf-networking-deployments
       - get: cf-networking-tarball
         trigger: true
-        passed: [mitre-test]
+        passed: [mitre-test, mitre-perf-tests]
       - get: silk-dev
-        passed: [mitre-test]
+        passed: [mitre-test, mitre-perf-tests]
         trigger: true
       - get: silk-tarball
-        passed: [mitre-test]
+        passed: [mitre-test, mitre-perf-tests]
       - get: version
-        passed: [mitre-test]
+        passed: [mitre-test, mitre-perf-tests]
     - task: copy-config
       file: cf-networking-release-ci/ci/tasks/copy-config.yml
       params:

@@ -7,11 +7,11 @@ image_resource:
     repository: c2cnetworking/deploy-light
 
 inputs:
-  - name: cf-app-sd-release
+  - name: cf-networking
   - name: deployments-repo
 
 params:
   ENVIRONMENT_NAME: ~
 
 run:
-  path: cf-app-sd-release/ci/tasks/test-nats-performance
+  path: cf-networking/ci/tasks/test-nats-performance
