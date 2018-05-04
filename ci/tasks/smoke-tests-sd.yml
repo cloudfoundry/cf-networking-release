@@ -16,4 +16,4 @@ params:
     DATADOG_API_KEY: ~
 
 run:
-  path: cf-networking/ci/tasks/smoke-tests-sd
+  path: cf-networking-release-ci/ci/tasks/smoke-tests-sd
