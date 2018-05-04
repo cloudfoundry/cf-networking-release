@@ -7,6 +7,7 @@ image_resource:
 
 inputs:
   - name: cf-networking
+  - name: cf-networking-release-ci
   - name: test-config
 
 params:
