@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
-	"github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
+	helpersConfig "github.com/cloudfoundry-incubator/cf-test-helpers/config"
 	. "github.com/onsi/ginkgo"
 	ginkgoConfig "github.com/onsi/ginkgo/config"
 	. "github.com/onsi/gomega"
@@ -49,7 +49,7 @@ func TestSmoke(t *testing.T) {
 	RegisterFailHandler(Fail)
 
 	BeforeSuite(func() {
-		configPath := helpers.ConfigPath()
+		configPath := helpersConfig.ConfigPath()
 		configBytes, err := ioutil.ReadFile(configPath)
 		Expect(err).NotTo(HaveOccurred())
 
