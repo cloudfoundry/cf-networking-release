@@ -16,7 +16,6 @@ groups:
   - mitre-deploy
   - mitre-test
   - mitre-perf-tests
-  - mitre-acceptance-errand
   - mitre-smoke
   - mitre-cats
   - mitre-drats
@@ -45,7 +44,6 @@ groups:
   - mitre-deploy
   - mitre-test
   - mitre-perf-tests
-  - mitre-acceptance-errand
   - mitre-smoke
   - mitre-cats
   - mitre-drats
@@ -1113,30 +1111,6 @@ jobs:
         SYSTEM_DOMAIN: mitre.c2c.cf-app.com
         VARS_STORE_FILE: environments/mitre/vars-store.yml
 
-  - name: mitre-acceptance-errand
-    serial_groups: [mitre-test-group, mitre-deploy-group]
-    plan:
-    - aggregate:
-      - get: cf-networking-release-ci
-      - get: cf-networking-dev
-        passed: [mitre-test]
-      - get: cf-networking-deployments
-      - get: cf-networking-tarball
-        passed: [mitre-test]
-        trigger: true
-      - get: silk-dev
-        passed: [mitre-test]
-      - get: silk-tarball
-        passed: [mitre-test]
-        trigger: true
-    - task: run-errand
-      file: cf-networking-release-ci/ci/tasks/run-errand.yml
-      params:
-        ENVIRONMENT_NAME: mitre
-        ERRAND: cf-networking-acceptance
-      input_mapping:
-        deployments-repo: cf-networking-deployments
-
   - name: mitre-perf-tests
     serial_groups: [mitre-test-group, mitre-deploy-group]
     plan:
@@ -1713,20 +1687,20 @@ jobs:
         - get: cf-networking-dev
           params:
             submodules: none
-          passed: [mitre-drats, sombrero-test-upgrade, mitre-acceptance-errand, mitre-smoke]
+          passed: [mitre-drats, sombrero-test-upgrade, mitre-smoke]
           trigger: true
         - get: silk-dev
           params:
             submodules: none
-          passed: [mitre-drats, sombrero-test-upgrade, mitre-acceptance-errand, mitre-smoke]
+          passed: [mitre-drats, sombrero-test-upgrade, mitre-smoke]
           trigger: true
         - get: cf-deployment
           passed: [mitre-drats]
         - get: cf-networking-tarball
-          passed: [mitre-drats, mitre-acceptance-errand]
+          passed: [mitre-drats]
           trigger: true
         - get: silk-tarball
-          passed: [mitre-drats, mitre-acceptance-errand]
+          passed: [mitre-drats]
 
   - name: check-empty-networking-opsfile
     serial_groups: [version]
@@ -1739,7 +1713,7 @@ jobs:
         - get: cf-networking-dev
           params:
             submodules: none
-          passed: [mitre-drats, sombrero-test-upgrade, mitre-acceptance-errand, mitre-smoke]
+          passed: [mitre-drats, sombrero-test-upgrade, mitre-smoke]
           trigger: true
       - task: check-empty-networking-opsfile
         file: cf-networking-release-ci/ci/tasks/check-empty-networking-opsfile.yml
