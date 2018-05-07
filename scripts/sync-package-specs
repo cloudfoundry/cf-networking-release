@@ -43,11 +43,6 @@ sync_package policy-server \
   -app policy-server/cmd/policy-server \
   -app policy-server/cmd/policy-server-internal &
 
-sync_package cf-networking-acceptance \
-  -test test/acceptance \
-  -app cf-pusher/cmd/cf-pusher \
-  -app github.com/onsi/ginkgo/ginkgo &
-
 sync_package bosh-dns-adapter \
   -app bosh-dns-adapter &
 
