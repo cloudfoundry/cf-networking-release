@@ -11,23 +11,6 @@
   When using VMware NSX for vSphere 6.2.3+, the default VXLAN port of 4789 used by cf-networking will not work.
   To fix this issue, override the default `cf_networking.vtep_port` with another value.
 
-### MySQL versions below 5.7
-
-  When the policy server is backed by MySQL versions < 5.7, a user may see this error when trying to create a policy:
-
-  ```
-  FAILED
-  adding policies: failed to make request to policy server
-  ```
-
-  An operator inspecting the logs of the `policy-server` BOSH job may see this error:
-
-  > creating destination: Error 1064: You have an error in your SQL syntax;
-  check the manual that corresponds to your MySQL server version for the right
-  syntax to use near 'WHERE\n\t\tNOT EXISTS (\n\t\t\tSELECT *\n\t\t\tFROM destinations\n\t\t\tWHERE group_id = ? AND '
-
-  This issue can be resolved by upgrading your MySQL server to version 5.7+
-
 ### Container network access may require a one-time app restage
   Apps which were last pushed or restaged on older versions of CloudController
   may need to be restaged on a newer version of CloudController in order to
@@ -44,7 +27,6 @@
   ```
 
   To resolve this, simply `cf restage MYAPP`.
-
 
 ### Missing Feature Parity For Application Security Groups
   Logging for UDP and ICMP ASGs is currently not supported, but [this feature is on our roadmap](https://www.pivotaltracker.com/story/show/142629505).
