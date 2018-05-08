@@ -28,9 +28,6 @@
 
   To resolve this, simply `cf restage MYAPP`.
 
-### Missing Feature Parity For Application Security Groups
-  Logging for UDP and ICMP ASGs is currently not supported, but [this feature is on our roadmap](https://www.pivotaltracker.com/story/show/142629505).
-
 ###  Behavior Changes From Existing Application Security Groups
   Prior implementations of ASGs allowed opening security groups to other containers
   via the NATed port on the diego cell.  With CF Networking, this is no longer supported.
