@@ -452,6 +452,9 @@ jobs:
           use-compiled-releases.yml
           scale-to-one-az.yml
           cf-networking.yml
+          use-bosh-dns.yml
+          enable-service-discovery.yml
+          use-service-discovery-from-cf-networking.yml
           use-silk-release.yml
           use-latest-silk.yml
           use-cf-networking-2.yml
@@ -1596,7 +1599,6 @@ jobs:
           use-cf-networking-2.yml
           enable-service-discovery.yml
           use-service-discovery-from-cf-networking.yml
-          add-acceptance-test-jobs.yml
           opsfile.yml
         VARS_STORE_FILE: environments/slouch/vars-store.yml
       input_mapping:
