@@ -452,10 +452,10 @@ jobs:
           use-compiled-releases.yml
           scale-to-one-az.yml
           cf-networking.yml
+          use-cf-networking-2.yml
           use-bosh-dns.yml
           enable-service-discovery.yml
           use-service-discovery-from-cf-networking.yml
-          use-cf-networking-2.yml
           use-latest-silk.yml
           enable-routing-integrity.yml
           opsfile-after.yml
