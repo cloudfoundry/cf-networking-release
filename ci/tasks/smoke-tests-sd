@@ -4,8 +4,8 @@ set -e
 
 # replace admin password and secret in test config
 pushd test-config/environments/"${ENVIRONMENT_NAME}"
-ADMIN_PASSWORD=$(grep cf_admin_password vars-store.yml  | cut -d' ' -f2)
-  sed -i -- "s/{{admin-password}}/${ADMIN_PASSWORD}/g" smoke-config.json
+SMOKE_PASSWORD=$(grep cf_networking_smoke_user_password vars-store.yml  | cut -d' ' -f2)
+  sed -i -- "s/{{smoke-password}}/${SMOKE_PASSWORD}/g" smoke-config.json
 popd
 
 ENVIRONMENT_PATH="test-config/environments/${ENVIRONMENT_NAME}/smoke-config.json"
