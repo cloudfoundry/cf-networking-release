@@ -33,8 +33,8 @@ properties:
     default: 0.0.0.0
 
   cf_networking.policy_server_internal.connect_timeout_seconds:
-    description: "Connection timeout between the policy server and its database.  Also used by Consul DNS health check."
-    default: 5
+    description: "Connection timeout between the policy server and its database. Also used for policy server health check timeout."
+    default: 120
 
   cf_networking.policy_server_internal.debug_port:
     description: "Port for the debug server. Use this to adjust log level at runtime or dump process stats."
