@@ -2,61 +2,66 @@
 
 set -e
 
-# replace admin password and secret in test config
-pushd test-config/environments/"${ENVIRONMENT_NAME}"
-SMOKE_PASSWORD=$(grep cf_networking_smoke_user_password vars-store.yml  | cut -d' ' -f2)
-  sed -i -- "s/{{smoke-password}}/${SMOKE_PASSWORD}/g" smoke-config.json
-popd
+ROOT="$(cd "$(dirname $0)/../../.." && pwd)"
 
-ENVIRONMENT_PATH="test-config/environments/${ENVIRONMENT_NAME}/smoke-config.json"
-export CONFIG=${PWD}/${CONFIG:-"${ENVIRONMENT_PATH}"}
+export CONFIG="${ROOT}/${CONFIG:-"test-config/environments/${ENVIRONMENT_NAME}/smoke-config.json"}"
+export GOPATH="${ROOT}/cf-networking"
+export APPS_DIR="${ROOT}/cf-networking/src/example-apps"
 
-echo "$CONFIG"
+function main() {
+  local exit_status
 
-cd cf-networking
-export GOPATH=$PWD
+  interpolate_smoke_password
 
-cd src/test/smoke-sd
-export APPS_DIR=../example-apps
+  echo "${CONFIG}"
+  pushd "${ROOT}/cf-networking/src/test/smoke-sd" > /dev/null
+    # Push App Smoke
+    set +e
+    ginkgo -r -v --focus="Push App Smoke"
+    exit_status="$?"
+    set -e
 
-# Push App Smoke
-set +e
-ginkgo -r -v --focus="Push App Smoke"
-EXIT_STATUS=$?
-set -e
+    report_smoke_metric_to_datadog "cf-app-sd-smoke.ResolveAddSuccess" "${exit_status}"
 
-CURRENT_TIME=$(date +%s)
+    if [[ "${exit_status}" -ne 0 ]]; then
+      exit "${exit_status}"
+    fi
 
-curl -X POST -H "Content-type: application/json" \
-  -d "{ \"series\" :
-         [{\"metric\":\"cf-app-sd-smoke.ResolveAddSuccess\",
-          \"points\":[[$CURRENT_TIME, $EXIT_STATUS]],
-          \"type\":\"gauge\",
-          \"tags\":[\"deployment:$ENVIRONMENT_TAG\"]
-        }]
-      }" \
-"https://app.datadoghq.com/api/v1/series?api_key=${DATADOG_API_KEY}"
+    # Delete App Smoke
+    set +e
+    ginkgo -r -v --focus="Delete App Smoke"
+    exit_status="$?"
+    set -e
 
-if [ $EXIT_STATUS -ne 0 ]; then
-  exit $EXIT_STATUS
-fi
+    report_smoke_metric_to_datadog "cf-app-sd-smoke.ResolveDeleteSuccess" "${exit_status}"
+    exit "${exit_status}"
+  popd > /dev/null
+}
 
-# Delete App Smoke
-set +e
-ginkgo -r -v --focus="Delete App Smoke"
-EXIT_STATUS=$?
-set -e
+function report_smoke_metric_to_datadog() {
+  local metric="${1}"
+  local exit_status="${2}"
+  local current_time
+  current_time="$(date +%s)"
 
-CURRENT_TIME=$(date +%s)
+  curl -X POST -H "Content-type: application/json" \
+    -d "{ \"series\" :
+           [{\"metric\":\"${metric}\",
+            \"points\":[[${current_time}, ${exit_status}]],
+            \"type\":\"gauge\",
+            \"tags\":[\"deployment:${ENVIRONMENT_TAG}\"]
+          }]
+        }" \
+  "https://app.datadoghq.com/api/v1/series?api_key=${DATADOG_API_KEY}"
+}
 
-curl -X POST -H "Content-type: application/json" \
-  -d "{ \"series\" :
-         [{\"metric\":\"cf-app-sd-smoke.ResolveDeleteSuccess\",
-          \"points\":[[$CURRENT_TIME, $EXIT_STATUS]],
-          \"type\":\"gauge\",
-          \"tags\":[\"deployment:$ENVIRONMENT_TAG\"]
-        }]
-      }" \
-"https://app.datadoghq.com/api/v1/series?api_key=${DATADOG_API_KEY}"
+function interpolate_smoke_password() {
+  # replace admin password and secret in test config
+  pushd "${ROOT}/test-config/environments/${ENVIRONMENT_NAME}" > /dev/null
+    local smoke_password
+    smoke_password="$(grep cf_networking_smoke_user_password vars-store.yml  | cut -d' ' -f2)"
+    sed -i -- "s/{{smoke-password}}/${smoke_password}/g" smoke-config.json
+  popd > /dev/null
+}
 
-exit $EXIT_STATUS
+main
