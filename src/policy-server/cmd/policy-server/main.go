@@ -106,11 +106,15 @@ func main() {
 	destination := &store.DestinationTable{}
 	policy := &store.PolicyTable{}
 
+	logger.Info("getting migration db connection", lager.Data{})
 	migrationConnectionResult := getMigrationDbConnection(*conf)
-	connectionResult := getDbConnection(*conf)
+	logger.Info("migration db connection retrieved", lager.Data{})
 
 	timeout := time.Duration(conf.Database.Timeout) * time.Second
-	timeout = timeout - time.Duration(500)*time.Millisecond
+
+	logger.Info("getting db connection", lager.Data{})
+	connectionResult := getDbConnection(*conf)
+	logger.Info("db connection retrieved", lager.Data{})
 
 	dataStore, err := store.New(
 		connectionResult.ConnectionPool,
@@ -292,7 +296,6 @@ func main() {
 	logger.Info("exited")
 }
 func getMigrationDbConnection(c config.Config) dbConnection {
-	c.Database.Timeout = 60
 	return getDbConnection(c)
 }
 
@@ -317,7 +320,7 @@ func getDbConnection(conf config.Config) dbConnection {
 	var connectionResult dbConnection
 	select {
 	case connectionResult = <-channel:
-	case <-time.After(5 * time.Second):
+	case <-time.After(time.Duration(conf.Database.Timeout) * time.Second):
 		log.Fatalf("%s.policy-server: db connection timeout", logPrefix)
 	}
 	if connectionResult.Err != nil {

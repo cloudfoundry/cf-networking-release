@@ -68,10 +68,11 @@ func main() {
 	retriableConnector := db.RetriableConnector{
 		Connector:     db.GetConnectionPool,
 		Sleeper:       db.SleeperFunc(time.Sleep),
-		RetryInterval: 3 * time.Second,
+		RetryInterval: time.Duration(3) * time.Second,
 		MaxRetries:    10,
 	}
 
+	logger.Info("getting db connection", lager.Data{})
 	type dbConnection struct {
 		ConnectionPool *sqlx.DB
 		Err            error
@@ -84,7 +85,7 @@ func main() {
 	var connectionResult dbConnection
 	select {
 	case connectionResult = <-channel:
-	case <-time.After(5 * time.Second):
+	case <-time.After(time.Duration(conf.Database.Timeout) * time.Second):
 		log.Fatalf("%s.%s: db connection timeout", logPrefix, jobPrefix)
 	}
 	if connectionResult.Err != nil {
@@ -92,7 +93,8 @@ func main() {
 	}
 
 	timeout := time.Duration(conf.Database.Timeout) * time.Second
-	timeout = timeout - time.Duration(500)*time.Millisecond
+
+	logger.Info("db connection retrived", lager.Data{})
 
 	dataStore, err := store.New(
 		connectionResult.ConnectionPool,
