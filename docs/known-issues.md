@@ -1,11 +1,5 @@
 # Known Issues
 
-### IPTables Logging
-
-  We are investigating known issues with iptables logging. It is currently non-functional.
-  This work can be followed on [tracker](https://www.pivotaltracker.com/story/show/156589146).
-  Changes to the syslog-release are incompatible with the way that logs are generated.
-
 ### Compatibility with VMware NSX for vSphere 6.2.3+
 
   When using VMware NSX for vSphere 6.2.3+, the default VXLAN port of 4789 used by cf-networking will not work.
