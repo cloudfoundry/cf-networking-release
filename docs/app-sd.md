@@ -45,7 +45,7 @@ For example usage, please reference our [repo of example apps](https://github.co
 ## Architecture
 
 ### Architecture Diagram
-![](docs/architecture-diagram.png)
+![](architecture-diagram.png)
 
 ## Deployment Instructions
 
