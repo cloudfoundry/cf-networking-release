@@ -23,6 +23,7 @@ For information about getting started with CF Networking, look at our docs for [
   - [Tick](src/example-apps/tick)
 - [3rd Party Plugin Development](docs/3rd-party.md)
 - [Contributing to CF Networking](docs/contributing.md)
+- [Service Discovery](docs/app-sd.md)
 - Operation
   - [Configuration](docs/configuration.md)
   - [Known Issues](docs/known-issues.md)
@@ -34,4 +35,3 @@ For information about getting started with CF Networking, look at our docs for [
 - Chat with us at the `#container-networking` channel on [Cloud Foundry Slack](http://slack.cloudfoundry.org/)
 - [CI dashboard](http://dashboard.c2c.cf-app.com) and [config](https://github.com/cloudfoundry-incubator/cf-networking-ci)
 - [Documentation](./docs)
-- [CF App Service Discovery Release](https://github.com/cloudfoundry/cf-app-sd-release)

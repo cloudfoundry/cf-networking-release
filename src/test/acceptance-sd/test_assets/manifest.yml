@@ -18,11 +18,11 @@ instance_groups:
   - name: default
   jobs:
   - name: bosh-dns-adapter
-    release: cf-app-sd
+    release: cf-networking
     properties:
       port: 8055
   - name: service-discovery-controller
-    release: cf-app-sd
+    release: cf-networking
     properties:
       address: 127.0.0.1
       port: 8054
@@ -32,7 +32,7 @@ instance_groups:
       address: 0.0.0.0
 
 releases:
-- name: cf-app-sd
+- name: cf-networking
   version: latest
 - name: bosh-dns
   version: latest

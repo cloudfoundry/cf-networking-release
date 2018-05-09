@@ -24,7 +24,7 @@ instance_groups:
   jobs:
   - name: performance-tests
     properties: {}
-    release: cf-app-sd
+    release: cf-networking
   lifecycle: errand
   name: performance
   networks:
@@ -73,7 +73,7 @@ instance_groups:
             private_key: ((service_discovery_client_tls.private_key))
         server:
           ca: ((service_discovery_ca.ca))
-    release: cf-app-sd
+    release: cf-networking
   - name: service-discovery-controller
     properties:
       dnshttps:
@@ -84,7 +84,7 @@ instance_groups:
             ca: ((service_discovery_ca.ca))
             certificate: ((service_discovery_server_tls.certificate))
             private_key: ((service_discovery_server_tls.private_key))
-    release: cf-app-sd
+    release: cf-networking
   name: cf-app-sd
   networks:
   - name: default
@@ -100,7 +100,7 @@ releases:
   version: latest
 - name: bosh-dns
   version: latest
-- name: cf-app-sd
+- name: cf-networking
   version: latest
 stemcells:
 - alias: default
