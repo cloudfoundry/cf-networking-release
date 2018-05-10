@@ -114,6 +114,7 @@ func main() {
 		RetryInterval: 3 * time.Second,
 		MaxRetries:    10,
 	}
+	logger.Info("getting db connection", lager.Data{})
 
 	type dbConnection struct {
 		ConnectionPool *sqlx.DB
@@ -127,7 +128,7 @@ func main() {
 	var connectionResult dbConnection
 	select {
 	case connectionResult = <-channel:
-	case <-time.After(5 * time.Second):
+	case <-time.After(time.Duration(conf.Database.Timeout) * time.Second):
 		log.Fatalf("%s.policy-server: db connection timeout", logPrefix)
 	}
 	if connectionResult.Err != nil {
@@ -135,7 +136,8 @@ func main() {
 	}
 
 	timeout := time.Duration(conf.Database.Timeout) * time.Second
-	timeout = timeout - time.Duration(500)*time.Millisecond
+
+	logger.Info("db connection retrieved", lager.Data{})
 
 	dataStore, err := store.New(
 		connectionResult.ConnectionPool,
