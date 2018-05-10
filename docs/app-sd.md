@@ -1,4 +1,4 @@
-# CF App Service Discovery Release (EXPERIMENTAL)
+# CF App Service Discovery (EXPERIMENTAL)
 
 - [High Level Overview](#high-level-overview)
     - [Problem we are trying to solve](#problem-we-are-trying-to-solve)
