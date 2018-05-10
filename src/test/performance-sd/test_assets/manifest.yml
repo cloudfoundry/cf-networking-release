@@ -22,7 +22,7 @@ instance_groups:
   - z2
   instances: 1
   jobs:
-  - name: performance-tests
+  - name: performance-test-sd
     properties: {}
     release: cf-networking
   lifecycle: errand
