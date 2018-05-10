@@ -597,9 +597,6 @@ jobs:
         file: cf-networking-ci/ci/tasks/shipit.yml
       - put: version
         params: {file: version/number}
-      - put: cf-networking-master
-        params:
-          repository: release/master
       - put: cf-networking-v1.4.x
         params:
           repository: cf-networking-v1.4.x
