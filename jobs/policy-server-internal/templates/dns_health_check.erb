@@ -10,5 +10,5 @@
 %>
 
 curl <%= ip %>:<%= port %>/health \
-  --connect-timeout <%= p("connect_timeout_seconds") %>
+  --connect-timeout 5
 <% end %>
