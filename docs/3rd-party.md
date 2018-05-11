@@ -279,7 +279,7 @@ If you are replacing the built-in "VXLAN Policy Agent" with your own policy enfo
 
 For how to use the Internal Policy Server API, [read here](policy-server-internal-api.md).
 
-## Information from the External Policy Server
+### Information from the External Policy Server
 
 For how to use the External Policy Server API, [read here](policy-server-external-api.md).
 
