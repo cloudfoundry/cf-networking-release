@@ -277,7 +277,11 @@ If you are replacing the built-in "VXLAN Policy Agent" with your own policy enfo
 
 3rd party integrators should expect the internal policy server component will be present in a standard CF deploy.
 
-For how to use the Internal Policy Server API, [read here](API.md).
+For how to use the Internal Policy Server API, [read here](policy-server-internal-api.md).
+
+## Information from the External Policy Server
+
+For how to use the External Policy Server API, [read here](policy-server-external-api.md).
 
 ### Information from CAPI
 #### Poll for Cloud Controller for ASGs or events

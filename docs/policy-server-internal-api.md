@@ -1,0 +1,164 @@
+# Policy Server Internal API
+If you are replacing the built-in "VXLAN Policy Agent" with your own Policy Enforcement implementation,
+you can use the Policy Server's internal API to retrieve policy information.
+
+There is a single endpoint to retrieve policies:
+
+`GET https://policy-server.service.cf.internal:4003/networking/v1/internal/policies`
+
+Additionally, you can use the `id` query parameter to filter the response to include
+only policies with a source or destination that match any of the comma-separated
+`group_policy_id`'s that are included.
+
+### Policy Server Internal API Details
+
+`GET /networking/v1/internal/policies`
+
+List all policies optionally filtered to match requested  `policy_group_id`'s
+
+Query Parameters (optional):
+
+- `id`: comma-separated `policy_group_id` values
+
+Response Body:
+
+- `policies`: list of policies
+- `policies[].destination`: the destination of the policy
+- `policies[].destination.id`: the `policy_group_id` of the destination (currently always an `app_id`)
+- `policies[].destination.ports`: the range of `ports` allowed on the destination
+- `policies[].destination.ports.start`: the first port in the port range allowed on the destination
+- `policies[].destination.ports.end`: the last port of the port range allowed on the destination
+- `policies[].destination.protocol`: the `protocol` allowed on the destination: `tcp` or `udp`
+- `policies[].destination.tag`: the `tag` of the source allowed to the destination
+- `policies[].source`: the source of the policy
+- `policies[].source.id`: the `policy_group_id` of the source (currently always an `app_id`)
+- `policies[].source.tag`: the `tag` of the source allowed to the destination
+
+### Examples Requests and Responses
+
+#### Get all policies
+
+```bash
+curl -s \
+  --cacert certs/ca.crt \
+  --cert certs/client.crt \
+  --key certs/client.key \
+  https://policy-server.service.cf.internal:4003/networking/v1/internal/policies
+```
+
+```json
+  {
+      "policies": [
+        {
+            "destination": {
+                "id": "eb95ff20-cba8-4edc-8f4a-cf80d0669faf",
+                "ports": {
+                  "start": 8080,
+                  "end": 8090
+                },
+                "protocol": "tcp",
+                "tag": "0002"
+            },
+            "source": {
+                "id": "4a2d3627-0b8c-42d1-9563-22696eedc05d",
+                "tag": "0001"
+            }
+        },
+        {
+            "destination": {
+                "id": "b611f7e6-c8fe-41cb-b150-92581aafa5c2",
+                "ports": {
+                  "start": 8080,
+                  "end": 8080
+                },
+                "protocol": "tcp",
+                "tag": "0004"
+            },
+            "source": {
+                "id": "3b348978-a3cb-487c-a277-58fdc3e2c678",
+                "tag": "0003"
+            }
+        },
+        {
+            "destination": {
+                "id": "8fa287c9-0d01-491e-a1d5-d6e2d8a1ef61",
+                "ports": {
+                  "start": 8080,
+                  "end": 8080
+                },
+                "protocol": "tcp",
+                "tag": "0005"
+            },
+            "source": {
+                "id": "8fa287c9-0d01-491e-a1d5-d6e2d8a1ef61",
+                "tag": "0005"
+            }
+        },
+        {
+            "destination": {
+                "id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
+                "ports": {
+                  "start": 5555,
+                  "end": 6666
+                },
+                "protocol": "tcp",
+                "tag": "0006"
+            },
+            "source": {
+                "id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
+                "tag": "0006"
+            }
+        }
+    ]
+}
+```
+
+#### Get filtered policies
+
+Returns all policies with source or destination id's that match any of the
+included `policy_group_id`'s.
+
+```bash
+curl -s \
+--cacert certs/ca.crt \
+--cert certs/client.crt \
+--key certs/client.key \
+https://policy-server.service.cf.internal:4003/networking/v1/internal/policies?id=5351a742-6704-46df-8de0-1a376adab65c,d5bbc5ed-886a-44e6-945d-67df1013fa16
+```
+
+```json
+{
+    "policies": [
+        {
+            "destination": {
+                "id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
+                "ports": {
+                  "start": 5555,
+                  "end": 6666
+                },
+                "protocol": "tcp",
+                "tag": "0006"
+            },
+            "source": {
+                "id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
+                "tag": "0006"
+            }
+        },
+        {
+            "destination": {
+                "id": "5351a742-6704-46df-8de0-1a376adab65c",
+                "ports": {
+                  "start": 5555,
+                  "end": 6666
+                },
+                "protocol": "tcp",
+                "tag": "0007"
+            },
+            "source": {
+                "id": "5351a742-6704-46df-8de0-1a376adab65c",
+                "tag": "0007"
+            }
+        }
+    ]
+}
+```

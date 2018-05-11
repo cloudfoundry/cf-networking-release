@@ -14,7 +14,8 @@ For information about getting started with CF Networking, look at our docs for [
   - [to AWS, GCP or BOSH-lite](https://github.com/cloudfoundry/cf-deployment)
 - Configuring Policies
   - [CLI](docs/CLI.md)
-  - [API](docs/API.md)
+  - [Policy Server API](docs/policy-server-external-api.md)
+  - [Policy Server Internal API](docs/policy-server-internal-api.md)
 - [Examples](src/example-apps)
   - [Cats & Dogs](https://github.com/cloudfoundry/cf-networking-examples/blob/master/docs/c2c-no-service-discovery.md)
   - [Cats & Dogs With Service Discovery](https://github.com/cloudfoundry/cf-networking-examples/blob/master/docs/c2c-with-service-discovery.md)
