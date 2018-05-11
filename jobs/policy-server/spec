@@ -58,7 +58,7 @@ properties:
     default: 4002
 
   connect_timeout_seconds:
-    description: "Connection timeout between the policy server and its database. Also used for policy server health check timeout."
+    description: "Connection timeout between the policy server and its database."
     default: 120
 
   debug_port:
