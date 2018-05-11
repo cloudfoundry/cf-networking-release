@@ -937,17 +937,6 @@ jobs:
         BBL_STATE_DIR: environments/mitre/
       input_mapping:
         bbl-state: cf-networking-deployments
-    - task: update-runtime-config
-      file: cf-networking-release-ci/ci/tasks/update-runtime-config.yml
-      input_mapping:
-        bbl-state: cf-networking-deployments
-        cf-networking-ci: cf-networking-release-ci
-        runtime-config: cf-networking-deployments
-        vars-store: cf-networking-deployments
-      params:
-        BBL_STATE_DIR: environments/mitre/
-        VARS_STORE_FILE: environments/mitre/vars-store.yml
-        RUNTIME_CONFIG_FILE: syslog-addon.yml
     - task: collect-ops-files
       file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
       params:
