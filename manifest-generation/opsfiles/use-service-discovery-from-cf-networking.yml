@@ -6,10 +6,5 @@
   path: /instance_groups/name=service-discovery/jobs/name=service-discovery-controller/release
   value: cf-networking
 
-- type: replace
-  path: /instance_groups/name=diego-cell/jobs/name=silk-cni/properties?/dns_servers
-  value:
-  - 169.254.0.2
-
 - type: remove
   path: /releases/name=cf-app-sd

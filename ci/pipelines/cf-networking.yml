@@ -119,10 +119,8 @@ resources:
   - name: cf-deployment
     type: git
     source:
-      # branch: release-candidate
-      # uri: https://github.com/cloudfoundry/cf-deployment.git
-      branch: cf-networking-2
-      uri: https://github.com/cf-container-networking/cf-deployment.git
+      branch: release-candidate
+      uri: https://github.com/cloudfoundry/cf-deployment.git
   - name: disaster-recovery-acceptance-tests
     type: git
     source:
@@ -455,6 +453,7 @@ jobs:
           use-cf-networking-2.yml
           use-bosh-dns.yml
           enable-service-discovery.yml
+          use-bosh-dns-for-containers-with-networking-2.yml
           use-service-discovery-from-cf-networking.yml
           use-latest-silk.yml
           enable-routing-integrity.yml
@@ -770,6 +769,7 @@ jobs:
           use-system-domain-as-metron-deployment-name.yml
           enable-routing-integrity.yml
           use-cf-networking-2.yml
+          use-bosh-dns-for-containers-with-networking-2.yml
           use-latest-silk.yml
           enable-service-discovery.yml
           use-service-discovery-from-cf-networking.yml
@@ -977,7 +977,6 @@ jobs:
         BBL_STATE_DIR: environments/mitre/
         SYSTEM_DOMAIN: mitre.c2c.cf-app.com
         OPS_FILES: |
-          enable-iptables-logger.yml
           use-compiled-releases.yml
           datadog.yml
           use-system-domain-as-metron-deployment-name.yml
@@ -988,6 +987,8 @@ jobs:
           cf-networking.yml
           enable-routing-integrity.yml
           use-cf-networking-2.yml
+          use-bosh-dns-for-containers-with-networking-2.yml
+          enable-iptables-logger-with-networking-2.yml
           use-latest-silk.yml
           enable-service-discovery.yml
           use-service-discovery-from-cf-networking.yml
@@ -1353,6 +1354,7 @@ jobs:
           cf-networking.yml
           enable-routing-integrity.yml
           use-cf-networking-2.yml
+          use-bosh-dns-for-containers-with-networking-2.yml
           use-latest-silk.yml
           enable-service-discovery.yml
           use-service-discovery-from-cf-networking.yml
@@ -1582,7 +1584,6 @@ jobs:
         BBL_STATE_DIR: environments/slouch
         SYSTEM_DOMAIN: slouch.c2c.cf-app.com
         OPS_FILES: |
-          enable-iptables-logger.yml
           use-compiled-releases.yml
           use-system-domain-as-metron-deployment-name.yml
           scale-to-one-az.yml
@@ -1591,6 +1592,8 @@ jobs:
           cf-networking.yml
           enable-routing-integrity.yml
           use-cf-networking-2.yml
+          use-bosh-dns-for-containers-with-networking-2.yml
+          enable-iptables-logger-with-networking-2.yml
           use-latest-silk.yml
           enable-service-discovery.yml
           use-service-discovery-from-cf-networking.yml
