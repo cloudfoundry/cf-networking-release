@@ -7,6 +7,7 @@ templates:
   pre-backup-lock.sh.erb: bin/bbr/pre-backup-lock
   post-backup-unlock.sh.erb: bin/bbr/post-backup-unlock
   uaa_ca.crt.erb: config/certs/uaa_ca.crt
+  database_ca.crt.erb: config/certs/database_ca.crt
 
 packages:
   - policy-server
@@ -22,6 +23,8 @@ provides:
   - database.port
   - database.name
   - database.host
+  - database.require_ssl
+  - database.ca_cert
 - name: tag_length
   type: tag_length
   properties:
@@ -116,6 +119,14 @@ properties:
 
   database.name:
     description: "Name of logical database to use."
+
+  database.require_ssl:
+    description: "Require ssl db connectivity when true"
+    default: false
+
+  database.ca_cert:
+    description: "ca cert for db connectivity. Requires 'database.require_ssl' to be true."
+    default: ~
 
   tag_length:
     description: "Length in bytes of the packet tags to generate for policy sources and destinations. Must be greater than 0 and less than or equal to 4. If using VXLAN GBP, must be less than or equal to 2."

@@ -47,7 +47,9 @@ var _ = Describe("Config", func() {
 						"host": "127.0.0.1",
 						"port": 3306,
 						"timeout": 5,
-						"database_name": "network_policy"
+						"database_name": "network_policy",
+						"require_ssl": true,
+						"ca_cert": "/some/ca/cert/path"
 					},
 					"tag_length": 2,
 					"metron_address": "http://1.2.3.4:9999",
@@ -79,6 +81,8 @@ var _ = Describe("Config", func() {
 				Expect(c.Database.Port).To(Equal(uint16(3306)))
 				Expect(c.Database.Timeout).To(Equal(5))
 				Expect(c.Database.DatabaseName).To(Equal("network_policy"))
+				Expect(c.Database.RequireSSL).To(Equal(true))
+				Expect(c.Database.CACert).To(Equal("/some/ca/cert/path"))
 				Expect(c.TagLength).To(Equal(2))
 				Expect(c.MetronAddress).To(Equal("http://1.2.3.4:9999"))
 				Expect(c.LogLevel).To(Equal("debug"))

@@ -71,6 +71,8 @@
         "port" => port,
         "timeout" => p("connect_timeout_seconds"),
         "database_name" => name,
+        "require_ssl" => p("database.require_ssl"),
+        "ca_cert" => '/var/vcap/jobs/policy-server/config/certs/database_ca.crt',
       },
       "tag_length" => p("tag_length"),
       "metron_address" => "127.0.0.1:#{p("metron_port")}",

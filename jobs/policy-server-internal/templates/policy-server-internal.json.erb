@@ -31,6 +31,8 @@
         "database_name" => link("dbconn").p("database.name"),
         "host" => db_host,
         "timeout" => p("connect_timeout_seconds"),
+        "require_ssl" => link("dbconn").p("database.require_ssl"),
+        "ca_cert" => '/var/vcap/jobs/policy-server-internal/config/certs/database_ca.crt',
       },
       "tag_length" => link("tag_length").p("tag_length"),
       "metron_address" => "127.0.0.1:#{p("metron_port")}",
