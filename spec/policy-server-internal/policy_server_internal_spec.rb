@@ -34,6 +34,8 @@ module Bosh::Template::Test
         'port' => 4321,
         'name' => 'some-database-name',
         'host' => dbconn_host,
+        'require_ssl' => true,
+        'ca_cert' => 'some ca cert',
       }
     end
 
@@ -57,6 +59,14 @@ module Bosh::Template::Test
 
     let(:links) {[dbconn_link, tag_link, db_link]}
 
+    describe 'database_ca.crt' do
+      let(:template) {job.template('config/certs/database_ca.crt')}
+      it 'renders the cert' do
+        cert = template.render(merged_manifest_properties, consumes: links)
+        expect(cert).to eq('some ca cert')
+      end
+    end
+
     describe 'policy-server-internal.json' do
       let(:template) {job.template('config/policy-server-internal.json')}
 
@@ -74,7 +84,9 @@ module Bosh::Template::Test
             'port' => 4321,
             'database_name' => 'some-database-name',
             'host' => 'some-database-host',
-            'timeout' => 30
+            'timeout' => 30,
+            'require_ssl' => true,
+            'ca_cert' => '/var/vcap/jobs/policy-server-internal/config/certs/database_ca.crt',
           },
           'tag_length' => 1,
           'metron_address' => '127.0.0.1:4567',
@@ -88,13 +100,6 @@ module Bosh::Template::Test
           'server_key_file' => '/var/vcap/jobs/policy-server-internal/config/certs/server.key',
           'request_timeout' => 5
           })
-      end
-
-      context 'when dbconn requires ssl' do
-        before do
-          db_properties['require_ssl'] = true
-          db_properties['']
-        end
       end
 
       context 'when dbconn does not have host' do
