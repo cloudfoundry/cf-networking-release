@@ -1,12 +1,12 @@
 ---
-name: cni
+name: silk-cni
 
 templates:
   pre-start.erb: bin/pre-start
   cni-wrapper-plugin.conf.erb: config/cni/cni-wrapper-plugin.conf
 
 packages:
-  - cni
+  - silk-cni
   - runc-cni
 
 properties:
