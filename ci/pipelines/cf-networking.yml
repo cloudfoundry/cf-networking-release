@@ -981,6 +981,8 @@ jobs:
           use-latest-silk.yml
           enable-service-discovery.yml
           use-service-discovery-from-cf-networking.yml
+          use-pxc.yml
+          use-mysql-tls.yml
           add-acceptance-test-jobs.yml
           opsfile.yml
         VARS_STORE_FILE: environments/mitre/vars-store.yml
