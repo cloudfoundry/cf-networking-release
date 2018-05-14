@@ -10,7 +10,7 @@ import (
 	pusherConfig "cf-pusher/config"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
-	"github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
+	helpers "github.com/cloudfoundry-incubator/cf-test-helpers/config"
 	. "github.com/onsi/ginkgo"
 	ginkgoConfig "github.com/onsi/ginkgo/config"
 	. "github.com/onsi/gomega"
@@ -22,7 +22,7 @@ import (
 const Timeout_Short = 20 * time.Second
 
 var (
-	config     helpers.Config
+	config     *helpers.Config
 	pushConfig pusherConfig.Config
 )
 
