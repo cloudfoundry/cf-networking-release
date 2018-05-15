@@ -282,7 +282,11 @@ jobs:
       params:
         BBL_STATE_DIR: environments/cloche/
         SYSTEM_DOMAIN: cloche.c2c.cf-app.com
-        OPS_FILES: use-compiled-releases.yml cf-networking.yml opsfile.yml
+        OPS_FILES: |
+          use-compiled-releases.yml
+          cf-networking.yml
+          rename-cni-to-silk-cni.yml
+          opsfile.yml
         VARS_STORE_FILE: environments/cloche/vars-store.yml
       input_mapping:
         bbl-state: cf-networking-deployments
