@@ -2,6 +2,14 @@
 
 See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for examples
 
+### 2.2.0
+**New Properties**
+  - A set of new optional properties have been added to the `policy-server` and `policy-server-internal` jobs to support the `pxc-release`.
+    They requires using `pxc-release`. Both values *must* be set in the `policy-server` job to use TLS connections to the pxc database.
+    `policy-server-internal` will get these values from `policy-server` via BOSH links.
+    - `database.require_ssl` is a boolean flag for requiring TLS on the database connections.
+    - `database.ca_cert` is the ca of the `pxc-release` database job.
+
 ### 2.0.0
 
 **Silk No Longer Included in cf-networking-release**
