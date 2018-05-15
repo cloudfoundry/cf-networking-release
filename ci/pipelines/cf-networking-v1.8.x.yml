@@ -419,7 +419,13 @@ jobs:
       params:
         BBL_STATE_DIR: environments/deerstalker/
         SYSTEM_DOMAIN: deerstalker.c2c.cf-app.com
-        OPS_FILES: enable-iptables-logger.yml use-compiled-releases.yml custom-apps-domain.yml cf-networking.yml opsfile.yml
+        OPS_FILES: |
+          enable-iptables-logger.yml
+          use-compiled-releases.yml
+          custom-apps-domain.yml
+          cf-networking.yml
+          rename-cni-to-silk-cni.yml
+          opsfile.yml
         VARS_STORE_FILE: environments/deerstalker/vars-store.yml
       input_mapping:
         bbl-state: cf-networking-deployments
