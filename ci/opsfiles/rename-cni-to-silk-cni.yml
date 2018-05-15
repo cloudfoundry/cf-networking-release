@@ -2,7 +2,7 @@
   path: /instance_groups/name=diego-cell/jobs/name=cni
   value:
     name: silk-cni
-    release: silk
+    release: cf-networking
 
 - type: replace
   path: /instance_groups/name=diego-cell/jobs/name=garden-cni/properties?/cni_plugin_dir
