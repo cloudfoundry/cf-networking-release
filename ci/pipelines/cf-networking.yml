@@ -981,9 +981,6 @@ jobs:
           use-latest-silk.yml
           enable-service-discovery.yml
           use-service-discovery-from-cf-networking.yml
-          use-pxc.yml
-          use-mysql-tls.yml
-          use-mysql-tls-for-silk-controller.yml
           add-acceptance-test-jobs.yml
           opsfile.yml
         VARS_STORE_FILE: environments/mitre/vars-store.yml
@@ -1350,6 +1347,9 @@ jobs:
           use-latest-silk.yml
           enable-service-discovery.yml
           use-service-discovery-from-cf-networking.yml
+          use-pxc.yml
+          use-mysql-tls.yml
+          use-mysql-tls-for-silk-controller.yml
           opsfile.yml
         VARS_STORE_FILE: environments/toque/vars-store.yml
       input_mapping:
