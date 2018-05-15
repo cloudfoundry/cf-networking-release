@@ -21,5 +21,6 @@ type Config struct {
 	SamplePercent                      int      `json:"sample_percent"`
 	SkipICMPTests                      bool     `json:"skip_icmp_tests"`
 	RunCustomIPTablesCompatibilityTest bool     `json:"run_custom_iptables_compatibility_test"`
+	SkipSearchDomainTests              bool     `json:"skip_search_domain_tests"`
 	SkipSSLValidation                  bool     `json:"skip_ssl_validation"`
 }

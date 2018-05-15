@@ -457,6 +457,7 @@ jobs:
           use-service-discovery-from-cf-networking.yml
           use-latest-silk.yml
           enable-routing-integrity.yml
+          add-apps-internal-search-domain.yml
           opsfile-after.yml
         SYSTEM_DOMAIN: sombrero.c2c.cf-app.com
         VARS_STORE_FILE: environments/sombrero/vars-store.yml
@@ -773,6 +774,7 @@ jobs:
           use-latest-silk.yml
           enable-service-discovery.yml
           use-service-discovery-from-cf-networking.yml
+          add-apps-internal-search-domain.yml
           add-acceptance-test-jobs.yml
           opsfile.yml
         VARS_STORE_FILE: environments/pickelhelm/vars-store.yml
@@ -981,6 +983,7 @@ jobs:
           use-latest-silk.yml
           enable-service-discovery.yml
           use-service-discovery-from-cf-networking.yml
+          add-apps-internal-search-domain.yml
           add-acceptance-test-jobs.yml
           opsfile.yml
         VARS_STORE_FILE: environments/mitre/vars-store.yml
@@ -1350,6 +1353,7 @@ jobs:
           use-pxc.yml
           use-mysql-tls.yml
           use-mysql-tls-for-silk-controller.yml
+          add-apps-internal-search-domain.yml
           opsfile.yml
         VARS_STORE_FILE: environments/toque/vars-store.yml
       input_mapping:
@@ -1589,6 +1593,7 @@ jobs:
           use-latest-silk.yml
           enable-service-discovery.yml
           use-service-discovery-from-cf-networking.yml
+          add-apps-internal-search-domain.yml
           opsfile.yml
         VARS_STORE_FILE: environments/slouch/vars-store.yml
       input_mapping:
