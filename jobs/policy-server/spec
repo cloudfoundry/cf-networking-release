@@ -121,7 +121,7 @@ properties:
     description: "Name of logical database to use."
 
   database.require_ssl:
-    description: "Require ssl db connectivity when true"
+    description: "Require ssl db connectivity when true. Must be used in conjuncture with a release that is configured with ssl."
     default: false
 
   database.ca_cert:
