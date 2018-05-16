@@ -116,7 +116,7 @@ resources:
   source:
     endpoint: storage.googleapis.com
     bucket: golang
-    regexp: 'go(1\.\d+(\.\d+)?)\.linux-amd64\.tar.gz'
+    regexp: 'go(1\.9(\.\d+)?)\.linux-amd64\.tar.gz'
 
 - name: cf-networking-release-ci
   type: git
