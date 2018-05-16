@@ -39,6 +39,6 @@ var _ = Describe("search domains", func() {
 	It("/etc/resolv.conf contains apps.internal", func() {
 		session := cf.Cf("ssh", appName, "-c", "cat /etc/resolv.conf")
 		Expect(session.Wait(Timeout_Push)).To(gexec.Exit(0))
-		Expect(string(session.Out.Contents())).To(ContainSubstring("search.*apps.internal"))
+		Expect(string(session.Out.Contents())).To(MatchRegexp("search.*apps/.internal"))
 	})
 })
