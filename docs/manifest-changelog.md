@@ -2,7 +2,7 @@
 
 See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for examples
 
-### 2.2.0
+### 2.2.0 CF-Networking-Release
 **New Properties**
   - A set of new optional properties have been added to the `policy-server` and `policy-server-internal` jobs to support the `pxc-release`.
     They requires using `pxc-release`. Both values *must* be set in the `policy-server` job to use TLS connections to the pxc database.
@@ -10,7 +10,20 @@ See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for example
     - `database.require_ssl` is a boolean flag for requiring TLS on the database connections.
     - `database.ca_cert` is the ca of the `pxc-release` database job.
 
-### 2.0.0
+### 2.2.0 Silk-Release
+**New Properties**
+  - A set of new optional properties have been added to the `silk-controller` job to support the `pxc-release`.
+    They requires using `pxc-release`. Both values *must* be set to use TLS connections to the pxc database.
+    - `database.require_ssl` is a boolean flag for requiring TLS on the database connections.
+    - `database.ca_cert` is the ca of the `pxc-release` database job.
+
+### 2.1.0 Silk-Release
+**New Properties**
+  - An optional parameter `host_tcp_services` has been added to the `silk-cni` job to specify TCP addresses
+    running on the BOSH VM that should be accessible from containers. The address must not be in the 127.0.0.0/8
+    range. The `silk-cni` plugin will install an iptables INPUT rule for each service.
+
+### 2.0.0 CF-Networking-Release
 
 **Silk No Longer Included in cf-networking-release**
 
@@ -108,7 +121,20 @@ The following jobs `cni (renamed: silk-cni)`, `iptables-logger`, `silk-controlle
   how long it takes for a db connection to be established when the policy server starts. Before
   this was hardcoded to a timeout of 5 seconds.
 
-### 1.13.0
+### 2.0.0 Silk-Release
+**New Properties**
+  - An optional parameter `no_masquerade_cidr_range` has been added to the `silk-cni` job to specify which destination
+    CIDR to exempt MASQUERADEing traffic from containers.
+    If this is left unset and the bosh link `cf_network` is available with the property `network` set, it will use that value.
+    Otherwise, an empty default value will be applied. If empty it will not exclude any ranges.
+  - Add `disable` property to all jobs. When it is set to true the job will not start.
+  - To support third party integrators we have changed the `cni` job in `silk-release` to `silk-cni`
+    - To continue using `silk` the `cni_plugin_dir` and `cni_config_dir` on the `garden-cni`
+      job must be explicitly set in the manifest as follows:
+      - `cni_plugin_dir: /var/vcap/packages/silk-cni/bin`
+      - `cni_config_dir: /var/vcap/jobs/silk-cni/config/cni`
+
+### 1.13.0 CF-Networking-Release
 **New Properties**
   - An optional parameter has been added to the `garden-cni` job to
     specify search domains. These domains will be configured in containers' /etc/resolv.conf.
@@ -125,7 +151,17 @@ The following jobs `cni (renamed: silk-cni)`, `iptables-logger`, `silk-controlle
     requests will be accepted.
     - `cf_networking.policy_server.allowed_cors_domains`
 
-### 1.11.0
+### 0.2.0 Silk-Release (Tested with CF-Networking-Release v1.12.0)
+**New Properties**
+  - An optional parameter has been added to the `silk-daemon` job to specify which bosh network should be used by the
+    vxlan adapter.
+    The property value is expected to be the name of a bosh network that is attached to the instance group where the
+    `silk-daemon` is running.
+    This is useful when running multi-homed vms. If this property is not specified, the bosh network that is the default
+    gateway will be chosen.
+    - `vxlan_network`
+
+### 1.11.0 CF-Networking-Release
 **Changed Properties**
   - `cf_networking.silk_controller.connect_timeout_seconds` now defaults to 120.
   - `cf_networking.policy_server.connect_timeout_seconds` now defaults to 120.
@@ -141,7 +177,11 @@ The following jobs `cni (renamed: silk-cni)`, `iptables-logger`, `silk-controlle
     temporary. You cannot set this property and the `vxlan_network` property together.
     - `cf_networking.silk_daemon.temporary_vxlan_interface`
 
-### 1.7.0
+### 0.1.0 Silk-Release (Tested with CF-Networking-Release v1.11.0)
+  - This release was extracted from [cf-networking-release](github.com/cloudfoundry/cf-networking-release).
+    Refer to that release for prior changes.
+
+### 1.7.0 CF-Networking-Release
 **New Properties**
   - An optional parameter has been added to turn on bosh backup and restore.
     By default, this property is set to false and backup and restore is turned off.
@@ -151,7 +191,7 @@ The following jobs `cni (renamed: silk-cni)`, `iptables-logger`, `silk-controlle
     - `cf_networking.silk_controller.max_open_connections`
     - `cf_networking.silk_controller.max_idle_connections`
 
-### 1.6.0
+### 1.6.0 CF-Networking-Release
 
 **Changed Properties**
 
@@ -159,7 +199,7 @@ The following jobs `cni (renamed: silk-cni)`, `iptables-logger`, `silk-controlle
   - The value for `cf_networking.garden_external_networker.cni_config_dir` now defaults to `/var/vcap/jobs/cni/config/cni`
 
 
-### 1.5.0
+### 1.5.0 CF-Networking-Release
 **Links Enabled**
 The `policy-server` now provides database connection info via a link which the new `policy-server-internal` job consumes:
   - `cf_networking.policy_server.database.type`
@@ -190,7 +230,7 @@ The `policy-server` now provides database connection info via a link which the n
   - The `consul.agent.services.policy-server` property for the `consul_agent` job on the `api` instance group
     should be renamed to `consul.agent.services.policy-server-internal`.
 
-### 1.4.0
+### 1.4.0 CF-Networking-Release
 **Links Enabled**
 The `silk-controller` job now provides two properties via links which the `silk-daemon` job consumes:
 
@@ -209,7 +249,7 @@ then you will need to explicitly name the `cf_network` link. For more informatio
     - `cf_networking.iptables_logger.metron_port`
 
 
-### 1.3.0
+### 1.3.0 CF-Networking-Release
 
 **New Properties**
   - An optional parameter has been added to configure the rate of logs by
@@ -220,7 +260,7 @@ then you will need to explicitly name the `cf_network` link. For more informatio
       configured on the `silk-cni` job for ASGs or on the `vxlan-policy-agent`
       job for C2C.
 
-### 1.2.0
+### 1.2.0 CF-Networking-Release
 
 **New Properties**
 
@@ -241,7 +281,7 @@ then you will need to explicitly name the `cf_network` link. For more informatio
       denied packets logged by iptables per second, it should be configured on
       the `silk-cni` job.
 
-### 1.1.0
+### 1.1.0 CF-Networking-Release
 
 **New Properties**
 
@@ -253,7 +293,7 @@ then you will need to explicitly name the `cf_network` link. For more informatio
     users with `network.admin`:
     - `cf_networking.max_policies_per_app_source`
     
-### 1.0.0
+### 1.0.0 CF-Networking-Release
 
 **New Properties**
 
@@ -276,7 +316,7 @@ then you will need to explicitly name the `cf_network` link. For more informatio
     -  `cf_networking.silk_daemon.client_cert`
     -  `cf_networking.silk_daemon.client_key`
 
-### 0.25.0
+### 0.25.0 CF-Networking-Release
 
 **New Properties**
 
@@ -292,14 +332,14 @@ then you will need to explicitly name the `cf_network` link. For more informatio
 
 Since silk is now deployed by default, there is no more `silk.yml` ops file.  Deploying with flannel is no longer supported.
 
-### 0.24.0
+### 0.24.0 CF-Networking-Release
 
 **New Properties**
 
 The host port for receiving VXLAN packets is now configurable as `cf_networking.vtep_port` for flannel and silk.
 Overriding this value is optional.
 
-### 0.22.0
+### 0.22.0 CF-Networking-Release
 
 This release introduces a new container networking fabric called "silk" and
 **contains significant changes to job and property names**.
@@ -390,21 +430,21 @@ should have a diff that resembles:
 -        etcd_ca_cert: (( config_from_cf.etcd.ca_cert ))
 ```
 
-### 0.21.0
+### 0.21.0 CF-Networking-Release
 
 **Changed Properties**
 
   - The value for `cf_networking.garden_external_networker.cni_plugin_dir` now defaults to `/var/vcap/packages/silk-cni/bin`
     We recommend that you remove any overrides for this property, unless you are intending to use a 3rd party CNI plugin.
 
-### 0.20.0
+### 0.20.0 CF-Networking-Release
 
 **Changed Properties**
 
   - The value for `cf_networking.garden_external_networker.cni_plugin_dir` now defaults to `/var/vcap/packages/silk/bin`
     We recommend that you remove any overrides for this property, unless you are intending to use a 3rd party CNI plugin.
 
-### 0.19.0
+### 0.19.0 CF-Networking-Release
 
 **Changed Properties**
 
@@ -440,7 +480,7 @@ If this property is not set (or left with its default value of `[]`) then Garden
 based on its own BOSH properties.  By default, the DNS servers from the host are used.
 
 
-### 0.18.0
+### 0.18.0 CF-Networking-Release
 
 **New Properties**
 
@@ -458,7 +498,7 @@ based on its own BOSH properties.  By default, the DNS servers from the host are
 
  - `cf_networking.policy_server.database.connection_string` was deprecated in v0.10.0 and is now removed.
 
-### 0.17.0
+### 0.17.0 CF-Networking-Release
 Policy server requires a CA cert for UAA, **manifest must be generated with `diego-release` v1.7.0+**
 
 The following needs to be added to your `cf-networking` stub **even if you are skipping ssl validation of UAA**:
@@ -471,7 +511,7 @@ cf_networking_overrides:
 +      uaa_ca: (( config_from_cf.uaa.ca_cert ))
 ```
 
-### 0.15.0
+### 0.15.0 CF-Networking-Release
 
 **Many breaking changes!**
 
@@ -520,7 +560,7 @@ Note, you will likely need to make similar changes to other etcd clients, e.g. l
 
 0. In the stub file, `netman_overrides` renamed to `cf_networking_overrides`
 
-### 0.12.0
+### 0.12.0 CF-Networking-Release
 
 In the CF properties stub:
 
@@ -529,7 +569,7 @@ In the CF properties stub:
     +   scope: cloud_controller.read,cloud_controller.write,openid,password.write,cloud_controller.admin,scim.read,scim.write,doppler.firehose,uaa.user,routing.router_groups.read,network.admin,network.write
 ```
 
-###  0.10.0
+###  0.10.0 CF-Networking-Release
 Policy Server database connection is now expressed as a set of config options, not a single connection string
 
 In the CF Networking stub:
@@ -546,7 +586,7 @@ In the CF Networking stub:
 +      name: REPLACE_WITH_DB_NAME # e.g. network_policy
 ```
 
-###  0.7.0
+###  0.7.0 CF-Networking-Release
 
 CF Networking stub
 
