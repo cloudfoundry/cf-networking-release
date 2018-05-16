@@ -68,14 +68,14 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 				By("checking connectivity fails between two instances on the same cell")
 				app1, app2 := findTwoInstancesOnTheSameHost(appInstances)
 
-				app2Curl := fmt.Sprintf("curl --fail http://%s:8080/echosourceip", app2.internalIP)
+				app2Curl := fmt.Sprintf("curl --fail --connect-timeout 10 http://%s:8080/echosourceip", app2.internalIP)
 				session := cf.Cf("ssh", appProxy, "-i", app1.index, "-c", app2Curl)
 				Expect(session.Wait(Timeout_Push)).ToNot(gexec.Exit(0))
 
 				By("checking connectivity fails between two instances on the different cells")
 				app1, app2 = findTwoInstancesOnDifferentHosts(appInstances)
 
-				app2Curl = fmt.Sprintf("curl --fail http://%s:8080/echosourceip", app2.internalIP)
+				app2Curl = fmt.Sprintf("curl --fail --connect-timeout 10 http://%s:8080/echosourceip", app2.internalIP)
 				session = cf.Cf("ssh", appProxy, "-i", app1.index, "-c", app2Curl)
 				Expect(session.Wait(Timeout_Push)).ToNot(gexec.Exit(0))
 			})
