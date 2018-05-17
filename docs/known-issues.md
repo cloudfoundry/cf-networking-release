@@ -33,3 +33,8 @@
   when the green app is deployed it will have a different app guid than blue,
   meaning any container to container policies that blue has configured will need
   to be configured for green as well.
+
+### Silk-Release IPTables logging not effective in BOSH Lite
+  When using BOSH Lite, iptables logging between deployed applications on the same diego-cell
+  does not log to `/var/log/kern.log`. Due to this, the iptables-logger job is unable to read
+  and generate the logging statements in `/var/vcap/sys/log/iptables-logger/iptables.log`.
