@@ -2,7 +2,7 @@
 name: runc-cni
 
 dependencies:
-  - golang-1.9-linux
+  - golang-1.10-linux
 
 files:
   - github.com/containernetworking/cni/scripts/*
