@@ -4,6 +4,7 @@
 0. [Network Policy Access Control](#network-policy-access-control)
 0. [Database Configuration](#database-configuration)
 0. [Mutual TLS](#mutual-tls)
+0. [Max Open/Idle Connections](#max-openidle-connections)
 
 ## Network Policy Access Control
 
@@ -91,3 +92,12 @@ This connection requires Mutual TLS.
 If you want to generate them yourself, ensure that all certificates
 support the cipher suite `TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256`.
 The Policy Server will reject connections using any other cipher suite.
+
+## Max Open/Idle Connections
+
+In order to limit the number of open or idle connections between the policy-server and database, the following properties can be set.
+On both the `policy-server` and `policy-server-internal` jobs.
+- `max_open_connections`
+- `max_idle_connections`
+
+By default there is no limit to the number of open or idle connections.

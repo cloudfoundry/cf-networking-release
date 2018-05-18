@@ -25,6 +25,8 @@ type InternalConfig struct {
 	MetronAddress      string    `json:"metron_address" validate:"nonzero"`
 	LogLevel           string    `json:"log_level"`
 	RequestTimeout     int       `json:"request_timeout" validate:"min=1"`
+	MaxIdleConnections int       `json:"max_idle_connections" validate:"min=0"`
+	MaxOpenConnections int       `json:"max_open_connections" validate:"min=0"`
 }
 
 func (c *InternalConfig) Validate() error {

@@ -45,6 +45,8 @@ var _ = Describe("InternalConfig", func() {
 						"timeout": 5,
 						"database_name": "network_policy"
 					},
+					"max_idle_connections": 4,
+					"max_open_connections": 5,
 					"tag_length": 2,
 					"metron_address": "http://1.2.3.4:9999",
 					"log_level": "debug",
@@ -72,6 +74,8 @@ var _ = Describe("InternalConfig", func() {
 				Expect(c.MetronAddress).To(Equal("http://1.2.3.4:9999"))
 				Expect(c.LogLevel).To(Equal("debug"))
 				Expect(c.RequestTimeout).To(Equal(5))
+				Expect(c.MaxIdleConnections).To(Equal(4))
+				Expect(c.MaxOpenConnections).To(Equal(5))
 			})
 		})
 
@@ -250,6 +254,30 @@ var _ = Describe("InternalConfig", func() {
 				It("returns an error", func() {
 					_, err = config.NewInternal(file.Name())
 					Expect(err).To(MatchError("invalid config: Database.Timeout: less than min"))
+				})
+			})
+
+			Context("when the max idle connections is less than 0", func() {
+				BeforeEach(func() {
+					allData["max_idle_connections"] = -1
+					Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
+				})
+
+				It("returns an error", func() {
+					_, err = config.NewInternal(file.Name())
+					Expect(err).To(MatchError("invalid config: MaxIdleConnections: less than min"))
+				})
+			})
+
+			Context("when the max open connections is less than 0", func() {
+				BeforeEach(func() {
+					allData["max_open_connections"] = -1
+					Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
+				})
+
+				It("returns an error", func() {
+					_, err = config.NewInternal(file.Name())
+					Expect(err).To(MatchError("invalid config: MaxOpenConnections: less than min"))
 				})
 			})
 

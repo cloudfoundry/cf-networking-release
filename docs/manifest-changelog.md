@@ -2,6 +2,13 @@
 
 See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for examples
 
+### 2.3.0 CF-Networking-Release
+**New Properties**
+  - An optional parameter has been added to the `policy-server` and `policy-server-internal` jobs to configure the max number of
+    open and idle connections to the policy-server database.
+    - `max_open_connections`
+    - `max_idle_connections`
+
 ### 2.2.0 CF-Networking-Release
 **New Properties**
   - A set of new optional properties have been added to the `policy-server` and `policy-server-internal` jobs to support the `pxc-release`.

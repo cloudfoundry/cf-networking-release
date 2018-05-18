@@ -337,6 +337,8 @@ func getDbConnection(conf config.Config) dbConnection {
 	if connectionResult.Err != nil {
 		log.Fatalf("%s.policy-server: db connect: %s", logPrefix, connectionResult.Err)
 	}
+	connectionResult.ConnectionPool.SetMaxOpenConns(conf.MaxOpenConnections)
+	connectionResult.ConnectionPool.SetMaxIdleConns(conf.MaxIdleConnections)
 	return connectionResult
 }
 

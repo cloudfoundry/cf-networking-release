@@ -37,6 +37,8 @@ module Bosh::Template::Test
           'require_ssl' => true,
           'ca_cert' => 'some-ca-cert'
         },
+        'max_idle_connections' => 4,
+        'max_open_connections' => 5,
         'tag_length' => 4,
         'metron_port' => 6789,
         'log_level' => 'debug',
@@ -80,6 +82,8 @@ module Bosh::Template::Test
             'require_ssl' => true,
             'ca_cert' => '/var/vcap/jobs/policy-server/config/certs/database_ca.crt'
           },
+          'max_idle_connections' => 4,
+          'max_open_connections' => 5,
           'tag_length' => 4,
           'metron_address' => '127.0.0.1:6789',
           'log_level' => 'debug',

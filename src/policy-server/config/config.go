@@ -33,6 +33,8 @@ type Config struct {
 	MaxPolicies                     int       `json:"max_policies" validate:"min=1"`
 	EnableSpaceDeveloperSelfService bool      `json:"enable_space_developer_self_service"`
 	AllowedCORSDomains              []string  `json:"allowed_cors_domains"`
+	MaxIdleConnections              int       `json:"max_idle_connections" validate:"min=0"`
+	MaxOpenConnections              int       `json:"max_open_connections" validate:"min=0"`
 }
 
 func (c *Config) Validate() error {

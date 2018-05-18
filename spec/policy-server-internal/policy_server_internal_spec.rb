@@ -20,7 +20,9 @@ module Bosh::Template::Test
         'ca_cert' => 'meow-a-real-cert',
         'server_key' => 'password-please',
         'metron_port' => 4567,
-        'log_level' => 'error'
+        'log_level' => 'error',
+        'max_idle_connections' => 4,
+        'max_open_connections' => 5
       }
     end
 
@@ -88,6 +90,8 @@ module Bosh::Template::Test
             'require_ssl' => true,
             'ca_cert' => '/var/vcap/jobs/policy-server-internal/config/certs/database_ca.crt',
           },
+          'max_idle_connections' => 4,
+          'max_open_connections' => 5,
           'tag_length' => 1,
           'metron_address' => '127.0.0.1:4567',
           'log_level' => 'error',

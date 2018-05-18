@@ -91,6 +91,8 @@ func main() {
 	if connectionResult.Err != nil {
 		log.Fatalf("%s.%s: db connect: %s", logPrefix, jobPrefix, connectionResult.Err) // not tested
 	}
+	connectionResult.ConnectionPool.SetMaxOpenConns(conf.MaxOpenConnections)
+	connectionResult.ConnectionPool.SetMaxIdleConns(conf.MaxIdleConnections)
 	logger.Info("db connection retrived", lager.Data{})
 
 	dataStore, err := store.New(
