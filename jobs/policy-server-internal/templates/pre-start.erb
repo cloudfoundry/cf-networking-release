@@ -1,7 +1,7 @@
 #!/bin/bash -eu
 
 <% unless p("disable") %>
-CERTS_DIR=/var/vcap/jobs/policy-server/config/certs
+CERTS_DIR=/var/vcap/jobs/policy-server-internal/config/certs
 
 chmod 600 "${CERTS_DIR}"/*
 <% end %>
