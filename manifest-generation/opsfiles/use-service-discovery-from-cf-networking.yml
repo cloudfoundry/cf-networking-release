@@ -3,7 +3,7 @@
   value: cf-networking
 
 - type: replace
-  path: /instance_groups/name=service-discovery/jobs/name=service-discovery-controller/release
+  path: /instance_groups/name=scheduler/jobs/name=service-discovery-controller/release
   value: cf-networking
 
 - type: remove
