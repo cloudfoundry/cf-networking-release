@@ -1,6 +1,7 @@
 package cni_test
 
 import (
+	"bytes"
 	"garden-external-networker/cni"
 	"io/ioutil"
 	"path/filepath"
@@ -10,22 +11,25 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("GetNetworkConfigs", func() {
+var _ = Describe("GetNetworkConfig", func() {
 	var (
 		cniLoader             *cni.CNILoader
 		dir                   string
 		err                   error
 		expectedBridgeNetwork *types.NetConf
 		expectedVxlanNetwork  *types.NetConf
+		logger                *bytes.Buffer
 	)
 
 	BeforeEach(func() {
 		dir, err = ioutil.TempDir("", "test-cni-dir")
 		Expect(err).NotTo(HaveOccurred())
+		logger = &bytes.Buffer{}
 
 		cniLoader = &cni.CNILoader{
 			PluginDir: "",
 			ConfigDir: dir,
+			Logger:    logger,
 		}
 
 		expectedBridgeNetwork = &types.NetConf{
@@ -42,17 +46,18 @@ var _ = Describe("GetNetworkConfigs", func() {
 		BeforeEach(func() {
 			cniLoader.ConfigDir = "/thisdoesnot/exist"
 		})
+
 		It("returns a meaningful error", func() {
-			_, err := cniLoader.GetNetworkConfigs()
+			_, err := cniLoader.GetNetworkConfig()
 			Expect(err).To(MatchError(HavePrefix("error loading config:")))
 		})
 	})
 
 	Context("when no config files exist in dir", func() {
 		It("does not load any netconfig", func() {
-			netListCfgs, err := cniLoader.GetNetworkConfigs()
+			netListCfgs, err := cniLoader.GetNetworkConfig()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(netListCfgs).To(HaveLen(0))
+			Expect(netListCfgs).To(BeNil())
 		})
 	})
 
@@ -61,13 +66,13 @@ var _ = Describe("GetNetworkConfigs", func() {
 			err = ioutil.WriteFile(filepath.Join(dir, "foo.conf"), []byte(`{ "name": "mynet", "type": "bridge" }`), 0600)
 			Expect(err).NotTo(HaveOccurred())
 		})
+
 		It("loads a single network config", func() {
-			netListCfgs, err := cniLoader.GetNetworkConfigs()
+			netListCfg, err := cniLoader.GetNetworkConfig()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(netListCfgs).To(HaveLen(1))
-			Expect(netListCfgs[0].Name).To(Equal("mynet"))
-			Expect(netListCfgs[0].Plugins).To(HaveLen(1))
-			Expect(*netListCfgs[0].Plugins[0].Network).To(Equal(*expectedBridgeNetwork))
+			Expect(netListCfg.Name).To(Equal("mynet"))
+			Expect(netListCfg.Plugins).To(HaveLen(1))
+			Expect(*netListCfg.Plugins[0].Network).To(Equal(*expectedBridgeNetwork))
 		})
 	})
 
@@ -84,35 +89,42 @@ var _ = Describe("GetNetworkConfigs", func() {
 		})
 
 		It("loads all network configs", func() {
-			netListCfgs, err := cniLoader.GetNetworkConfigs()
+			netListCfg, err := cniLoader.GetNetworkConfig()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(netListCfgs).To(HaveLen(1))
-			Expect(netListCfgs[0].Name).To(Equal("mynetlist"))
-			Expect(netListCfgs[0].Plugins).To(HaveLen(2))
-			Expect(*netListCfgs[0].Plugins[0].Network).To(Equal(*expectedVxlanNetwork))
-			Expect(*netListCfgs[0].Plugins[1].Network).To(Equal(*expectedBridgeNetwork))
+			Expect(netListCfg.Name).To(Equal("mynetlist"))
+			Expect(netListCfg.Plugins).To(HaveLen(2))
+			Expect(*netListCfg.Plugins[0].Network).To(Equal(*expectedVxlanNetwork))
+			Expect(*netListCfg.Plugins[1].Network).To(Equal(*expectedBridgeNetwork))
 		})
 	})
 
 	Context("when multiple valid config and config list files exists", func() {
 		BeforeEach(func() {
-			err = ioutil.WriteFile(filepath.Join(dir, "foo.conf"), []byte(`{ "name": "mynet", "type": "bridge" }`), 0600)
+			err = ioutil.WriteFile(filepath.Join(dir, "aaa.conf"), []byte(`{ "name": "mynet", "type": "bridge" }`), 0600)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = ioutil.WriteFile(filepath.Join(dir, "foo.conflist"), []byte(`{ "name": "mynetlist", "plugins": [{ "name": "mynet2", "type": "vxlan" }] }`), 0600)
+			err = ioutil.WriteFile(filepath.Join(dir, "zzz.conf"), []byte(`{ "name": "barnet", "type": "dummy" }`), 0600)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = ioutil.WriteFile(filepath.Join(dir, "ccc.conflist"), []byte(`{ "name": "nopelist", "plugins": [{ "name": "badnet", "type": "bridge" }] }`), 0600)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = ioutil.WriteFile(filepath.Join(dir, "bbb.conflist"), []byte(`{ "name": "mynetlist", "plugins": [{ "name": "mynet2", "type": "vxlan" }] }`), 0600)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		It("loads all network configs", func() {
-			netListCfgs, err := cniLoader.GetNetworkConfigs()
+		It("prefers the first sorted conflist over other lists or conf files", func() {
+			netListCfg, err := cniLoader.GetNetworkConfig()
 			Expect(err).NotTo(HaveOccurred())
-			Expect(netListCfgs).To(HaveLen(2))
-			Expect(netListCfgs[0].Name).To(Equal("mynet"))
-			Expect(netListCfgs[0].Plugins).To(HaveLen(1))
-			Expect(*netListCfgs[0].Plugins[0].Network).To(Equal(*expectedBridgeNetwork))
-			Expect(netListCfgs[1].Name).To(Equal("mynetlist"))
-			Expect(netListCfgs[1].Plugins).To(HaveLen(1))
-			Expect(*netListCfgs[1].Plugins[0].Network).To(Equal(*expectedVxlanNetwork))
+			Expect(netListCfg.Name).To(Equal("mynetlist"))
+			Expect(netListCfg.Plugins).To(HaveLen(1))
+			Expect(*netListCfg.Plugins[0].Network).To(Equal(*expectedVxlanNetwork))
+		})
+
+		It("logs warning for the skipped files", func() {
+			_, err := cniLoader.GetNetworkConfig()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(logger.String()).To(ContainSubstring("Only one CNI config file or conflist (chain) will be executed"))
 		})
 	})
 })

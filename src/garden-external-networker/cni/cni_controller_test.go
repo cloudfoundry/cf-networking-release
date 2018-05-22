@@ -42,9 +42,7 @@ var _ = Describe("CniController", func() {
 
 		controller = cni.CNIController{
 			CNIConfig: fakeCNILibrary,
-			NetworkConfigLists: []*libcni.NetworkConfigList{
-				testConfig, testConfig,
-			},
+			NetworkConfigList: testConfig,
 		}
 	})
 
@@ -80,7 +78,7 @@ var _ = Describe("CniController", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(result).To(BeIdenticalTo(expectedResult))
 
-			Expect(fakeCNILibrary.AddNetworkListCallCount()).To(Equal(2))
+			Expect(fakeCNILibrary.AddNetworkListCallCount()).To(Equal(1))
 			netc, runc := fakeCNILibrary.AddNetworkListArgsForCall(0)
 			Expect(runc.ContainerID).To(Equal("some-handle"))
 			Expect(netc.Name).To(Equal("net-list-name"))
@@ -92,7 +90,7 @@ var _ = Describe("CniController", func() {
 
 		Context("when injecting the metadata fails", func() {
 			It("return a meaningful error", func() {
-				controller.NetworkConfigLists[0].Plugins[0].Bytes = []byte(`not valid json`)
+				controller.NetworkConfigList.Plugins[0].Bytes = []byte(`not valid json`)
 
 				_, err := controller.Up("/some/namespace/path", "some-handle", metadata, legacyNetConf)
 				Expect(err).To(MatchError(HavePrefix("adding extra data to CNI config: unmarshal")))
@@ -113,7 +111,7 @@ var _ = Describe("CniController", func() {
 				_, err := controller.Up("/some/namespace/path", "some-handle", metadata, nil)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(fakeCNILibrary.AddNetworkListCallCount()).To(Equal(2))
+				Expect(fakeCNILibrary.AddNetworkListCallCount()).To(Equal(1))
 				netc, _ := fakeCNILibrary.AddNetworkListArgsForCall(0)
 				Expect(netc.Plugins[0].Bytes).To(MatchJSON(expectedNetConfBytes))
 			})
@@ -134,7 +132,7 @@ var _ = Describe("CniController", func() {
 			err := controller.Down("/some/namespace/path", "some-handle")
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(fakeCNILibrary.DelNetworkListCallCount()).To(Equal(2))
+			Expect(fakeCNILibrary.DelNetworkListCallCount()).To(Equal(1))
 			netc, runc := fakeCNILibrary.DelNetworkListArgsForCall(0)
 			Expect(runc.ContainerID).To(Equal("some-handle"))
 			Expect(netc.Plugins).To(HaveLen(1))

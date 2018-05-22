@@ -293,21 +293,19 @@ var _ = Describe("Garden External Networker", func() {
 			]
 		}`))
 
-		By("checking that every CNI plugin in the plugin directory got called with ADD")
-		for i := 0; i < 3; i++ {
-			logFileContents, err := ioutil.ReadFile(filepath.Join(fakeLogDir, fmt.Sprintf("plugin-%d.log", i)))
-			Expect(err).NotTo(HaveOccurred())
-			var pluginCallInfo fakePluginLogData
-			Expect(json.Unmarshal(logFileContents, &pluginCallInfo)).To(Succeed())
+		By("checking that the first CNI plugin in the plugin directory got called with ADD")
+		logFileContents, err := ioutil.ReadFile(filepath.Join(fakeLogDir, "plugin-0.log"))
+		Expect(err).NotTo(HaveOccurred())
+		var pluginCallInfo fakePluginLogData
+		Expect(json.Unmarshal(logFileContents, &pluginCallInfo)).To(Succeed())
 
-			Expect(pluginCallInfo.Stdin).To(MatchJSON(expectedStdin_CNI_ADD(i)))
-			Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_COMMAND", "ADD"))
-			Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_CONTAINERID", containerHandle))
-			Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_IFNAME", fmt.Sprintf("eth%d", i)))
-			Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_PATH", paths.CniPluginDir))
-			Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_NETNS", expectedNetNSPath))
-			Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_ARGS", ""))
-		}
+		Expect(pluginCallInfo.Stdin).To(MatchJSON(expectedStdin_CNI_ADD(0)))
+		Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_COMMAND", "ADD"))
+		Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_CONTAINERID", containerHandle))
+		Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_IFNAME", "eth0"))
+		Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_PATH", paths.CniPluginDir))
+		Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_NETNS", expectedNetNSPath))
+		Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_ARGS", ""))
 
 		if runtime.GOOS != "windows" {
 			By("checking that the fake process's network namespace has been bind-mounted into the filesystem")
@@ -317,21 +315,18 @@ var _ = Describe("Garden External Networker", func() {
 		By("calling down")
 		runAndWait(downCommand)
 
-		By("checking that every CNI plugin in the plugin directory got called with DEL")
-		for i := 0; i < 3; i++ {
-			logFileContents, err := ioutil.ReadFile(filepath.Join(fakeLogDir, fmt.Sprintf("plugin-%d.log", i)))
-			Expect(err).NotTo(HaveOccurred())
-			var pluginCallInfo fakePluginLogData
-			Expect(json.Unmarshal(logFileContents, &pluginCallInfo)).To(Succeed())
+		By("checking that the first CNI plugin in the plugin directory got called with DEL")
+		logFileContents, err = ioutil.ReadFile(filepath.Join(fakeLogDir, "plugin-0.log"))
+		Expect(err).NotTo(HaveOccurred())
+		Expect(json.Unmarshal(logFileContents, &pluginCallInfo)).To(Succeed())
 
-			Expect(pluginCallInfo.Stdin).To(MatchJSON(expectedStdin_CNI_DEL(i)))
-			Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_COMMAND", "DEL"))
-			Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_CONTAINERID", containerHandle))
-			Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_IFNAME", fmt.Sprintf("eth%d", i)))
-			Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_PATH", paths.CniPluginDir))
-			Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_NETNS", expectedNetNSPath))
-			Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_ARGS", ""))
-		}
+		Expect(pluginCallInfo.Stdin).To(MatchJSON(expectedStdin_CNI_DEL(0)))
+		Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_COMMAND", "DEL"))
+		Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_CONTAINERID", containerHandle))
+		Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_IFNAME", "eth0"))
+		Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_PATH", paths.CniPluginDir))
+		Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_NETNS", expectedNetNSPath))
+		Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_ARGS", ""))
 
 		if runtime.GOOS != "windows" {
 			By("checking that the bind-mounted namespace has been removed")

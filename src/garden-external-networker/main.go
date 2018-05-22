@@ -90,16 +90,17 @@ func mainWithError(logger io.Writer) error {
 	cniLoader := &cni.CNILoader{
 		PluginDir: cfg.CniPluginDir,
 		ConfigDir: cfg.CniConfigDir,
+		Logger: logger,
 	}
 
-	networkLists, err := cniLoader.GetNetworkConfigs()
+	networkConfigList, err := cniLoader.GetNetworkConfig()
 	if err != nil {
 		return fmt.Errorf("load cni config: %s", err)
 	}
 
 	cniController := &cni.CNIController{
 		CNIConfig:          cniLoader.GetCNIConfig(),
-		NetworkConfigLists: networkLists,
+		NetworkConfigList: networkConfigList,
 	}
 
 	mounter := &bindmount.Mounter{}

@@ -13,41 +13,43 @@ type cniLibrary interface {
 }
 
 type CNIController struct {
-	CNIConfig          libcni.CNI
-	NetworkConfigLists []*libcni.NetworkConfigList
+	CNIConfig         libcni.CNI
+	NetworkConfigList *libcni.NetworkConfigList
 }
 
 func (c *CNIController) Up(namespacePath, handle string, metadata map[string]interface{}, legacyNetConf map[string]interface{}) (types.Result, error) {
 	var result types.Result
 	var err error
 
-	for i, networkConfigList := range c.NetworkConfigLists {
-		runtimeConfig := &libcni.RuntimeConf{
-			ContainerID: handle,
-			NetNS:       namespacePath,
-			IfName:      fmt.Sprintf("eth%d", i),
-		}
+	if c.NetworkConfigList == nil {
+		return result, nil
+	}
 
-		extraKeys := map[string]interface{}{}
-		if len(metadata) > 0 {
-			extraKeys["metadata"] = metadata
-		}
-		if len(legacyNetConf) > 0 {
-			extraKeys["runtimeConfig"] = legacyNetConf
-		}
+	runtimeConfig := &libcni.RuntimeConf{
+		ContainerID: handle,
+		NetNS:       namespacePath,
+		IfName:      "eth0",
+	}
 
-		for i, networkConfig := range networkConfigList.Plugins {
-			networkConfig, err = libcni.InjectConf(networkConfig, extraKeys)
-			if err != nil {
-				return nil, fmt.Errorf("adding extra data to CNI config: %s", err)
-			}
-			networkConfigList.Plugins[i] = networkConfig
-		}
+	extraKeys := map[string]interface{}{}
+	if len(metadata) > 0 {
+		extraKeys["metadata"] = metadata
+	}
+	if len(legacyNetConf) > 0 {
+		extraKeys["runtimeConfig"] = legacyNetConf
+	}
 
-		result, err = c.CNIConfig.AddNetworkList(networkConfigList, runtimeConfig)
+	for i, networkConfig := range c.NetworkConfigList.Plugins {
+		networkConfig, err = libcni.InjectConf(networkConfig, extraKeys)
 		if err != nil {
-			return nil, fmt.Errorf("add network list failed: %s", err)
+			return nil, fmt.Errorf("adding extra data to CNI config: %s", err)
 		}
+		c.NetworkConfigList.Plugins[i] = networkConfig
+	}
+
+	result, err = c.CNIConfig.AddNetworkList(c.NetworkConfigList, runtimeConfig)
+	if err != nil {
+		return nil, fmt.Errorf("add network list failed: %s", err)
 	}
 
 	return result, nil
@@ -55,17 +57,17 @@ func (c *CNIController) Up(namespacePath, handle string, metadata map[string]int
 
 func (c *CNIController) Down(namespacePath, handle string) error {
 	var err error
-	for i, networkConfigList := range c.NetworkConfigLists {
-		runtimeConfig := &libcni.RuntimeConf{
-			ContainerID: handle,
-			NetNS:       namespacePath,
-			IfName:      fmt.Sprintf("eth%d", i),
-		}
 
-		err = c.CNIConfig.DelNetworkList(networkConfigList, runtimeConfig)
-		if err != nil {
-			return fmt.Errorf("del network failed: %s", err)
-		}
+	runtimeConfig := &libcni.RuntimeConf{
+		ContainerID: handle,
+		NetNS:       namespacePath,
+		IfName:      "eth0",
+	}
+
+	err = c.CNIConfig.DelNetworkList(c.NetworkConfigList, runtimeConfig)
+
+	if err != nil {
+		return fmt.Errorf("del network failed: %s", err)
 	}
 
 	return nil
