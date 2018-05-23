@@ -11,6 +11,8 @@ See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for example
   - An optional parameter has been added to the `policy-server-internal` job to configure the consul dns health check timeout.
     Defaults to 5 seconds.
     - `health_check_timeout_seconds`
+
+**Changed Properties**
   - Namespaced the `connect_timeout_seconds` under `database` in the `policy-server` and `policy-server-internal` jobs.
 
 ### 2.3.0 Silk-Release
@@ -18,6 +20,8 @@ See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for example
   - An optional parameter has been added to the `silk-controller` job to configure the consul dns health check timeout. Defaults
     to 5 seconds.
     - `health_check_timeout_seconds`
+
+**Changed Properties**
   - Namespaced the `connect_timeout_seconds` under `database` in the `silk-controller` job.
 
 ### 2.2.0 CF-Networking-Release
