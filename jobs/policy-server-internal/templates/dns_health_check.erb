@@ -1,14 +1,4 @@
 <% unless p("disable") %>
-<%
-  def ip
-    p("listen_ip")
-  end
-
-  def port
-    p("health_check_port")
-  end
-%>
-
-curl <%= ip %>:<%= port %>/health \
-  --connect-timeout 5
+curl <%= p("listen_ip") %>:<%= p("health_check_port") %>/health \
+  --connect-timeout <%= p("health_check_timeout_seconds") %>
 <% end %>

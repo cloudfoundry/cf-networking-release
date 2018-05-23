@@ -45,6 +45,10 @@ properties:
     description: "Port for the debug server. Use this to adjust log level at runtime or dump process stats."
     default: 31946
 
+  health_check_timeout_seconds:
+    description: "Health check timeout for Consul DNS."
+    default: 5
+
   internal_listen_port:
     description: "Port where the policy server will serve its internal API."
     default: 4003
