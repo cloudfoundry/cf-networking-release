@@ -8,6 +8,17 @@ See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for example
     open and idle connections to the policy-server database.
     - `max_open_connections`
     - `max_idle_connections`
+  - An optional parameter has been added to the `policy-server-internal` job to configure the consul dns health check timeout.
+    Defaults to 5 seconds.
+    - `health_check_timeout_seconds`
+  - Namespaced the `connect_timeout_seconds` under `database` in the `policy-server` and `policy-server-internal` jobs.
+
+### 2.3.0 Silk-Release
+**New Properties**
+  - An optional parameter has been added to the `silk-controller` job to configure the consul dns health check timeout. Defaults
+    to 5 seconds.
+    - `health_check_timeout_seconds`
+  - Namespaced the `connect_timeout_seconds` under `database` in the `silk-controller` job.
 
 ### 2.2.0 CF-Networking-Release
 **New Properties**
