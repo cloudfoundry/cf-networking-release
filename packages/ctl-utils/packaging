@@ -1,3 +1,0 @@
-set -eux
-
-cp -a ctl-utils/ctl_util.sh ${BOSH_INSTALL_TARGET}

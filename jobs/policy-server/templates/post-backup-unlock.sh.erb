@@ -2,7 +2,7 @@
 
 set -eu
 
-source /var/vcap/packages/ctl-utils/ctl_util.sh
+source /var/vcap/packages/networking-ctl-utils/ctl_util.sh
 
 HEALTHCHECK_ENDPOINT=localhost:<%= p("listen_port") %>/health
 PATH="/var/vcap/bosh/bin:$PATH"

@@ -11,7 +11,7 @@ templates:
 
 packages:
   - policy-server
-  - ctl-utils
+  - networking-ctl-utils
 
 provides:
 - name: dbconn
