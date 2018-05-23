@@ -69,7 +69,7 @@
         "password" => password,
         "host" => db_host,
         "port" => port,
-        "timeout" => p("connect_timeout_seconds"),
+        "timeout" => p("database.connect_timeout_seconds"),
         "database_name" => name,
         "require_ssl" => p("database.require_ssl"),
         "ca_cert" => '/var/vcap/jobs/policy-server/config/certs/database_ca.crt',

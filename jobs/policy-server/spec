@@ -60,10 +60,6 @@ properties:
     description: "Port where the policy server will serve its external API."
     default: 4002
 
-  connect_timeout_seconds:
-    description: "Connection timeout between the policy server and its database."
-    default: 120
-
   debug_port:
     description: "Port for the debug server. Use this to adjust log level at runtime or dump process stats."
     default: 31821
@@ -119,6 +115,10 @@ properties:
 
   database.name:
     description: "Name of logical database to use."
+
+  database.connect_timeout_seconds:
+    description: "Connection timeout between the policy server and its database."
+    default: 120
 
   database.require_ssl:
     description: "Require ssl db connectivity when true. Must be used in conjuncture with a release that is configured with ssl."

@@ -17,7 +17,6 @@ module Bosh::Template::Test
         'enable_space_developer_self_service' => true,
         'listen_ip' => '111.11.11.1',
         'listen_port' => 1234,
-        'connect_timeout_seconds' => 3,
         'debug_port' => 2345,
         'uaa_client' => 'some-uaa-client',
         'uaa_client_secret' => 'some-uaa-client-secret',
@@ -35,7 +34,8 @@ module Bosh::Template::Test
           'port' => 5678,
           'name' => 'some-database-name',
           'require_ssl' => true,
-          'ca_cert' => 'some-ca-cert'
+          'ca_cert' => 'some-ca-cert',
+          'connect_timeout_seconds' => 3,
         },
         'max_idle_connections' => 4,
         'max_open_connections' => 5,
