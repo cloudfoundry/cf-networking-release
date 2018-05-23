@@ -30,7 +30,7 @@
         "port" => link("dbconn").p("database.port"),
         "database_name" => link("dbconn").p("database.name"),
         "host" => db_host,
-        "timeout" => p("connect_timeout_seconds"),
+        "timeout" => p("database.connect_timeout_seconds"),
         "require_ssl" => link("dbconn").p("database.require_ssl"),
         "ca_cert" => '/var/vcap/jobs/policy-server-internal/config/certs/database_ca.crt',
       },

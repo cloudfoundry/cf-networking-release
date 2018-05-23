@@ -13,7 +13,6 @@ module Bosh::Template::Test
       {
         'disable' => false,
         'listen_ip' => '111.11.11.1',
-        'connect_timeout_seconds' => 30,
         'debug_port' => 1234,
         'health_check_port' => 2345,
         'internal_listen_port' => 3456,
@@ -21,6 +20,9 @@ module Bosh::Template::Test
         'server_key' => 'password-please',
         'metron_port' => 4567,
         'log_level' => 'error',
+        'database' => {
+          'connect_timeout_seconds' => 30,
+        },
         'max_idle_connections' => 4,
         'max_open_connections' => 5
       }

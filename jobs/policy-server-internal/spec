@@ -33,10 +33,6 @@ properties:
     description: "IP address where the policy server will serve its API."
     default: 0.0.0.0
 
-  connect_timeout_seconds:
-    description: "Connection timeout between the policy server and its database."
-    default: 120
-
   debug_port:
     description: "Port for the debug server. Use this to adjust log level at runtime or dump process stats."
     default: 31945
@@ -69,6 +65,10 @@ properties:
   log_level:
     description: "Logging level (debug, info, warn, error)."
     default: info
+
+  database.connect_timeout_seconds:
+    description: "Connection timeout between the policy server and its database."
+    default: 120
 
   max_open_connections:
     description: "Maximum number of open connections to the SQL database"
