@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"net/http"
+	"net/url"
 	"policy-server/api"
 	"policy-server/uaa_client"
+	"strings"
 
 	"policy-server/store"
 )
@@ -36,13 +38,16 @@ func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	userToken := getTokenData(req)
 	queryValues := req.URL.Query()
 	ids := parseIds(queryValues)
+	sourceIDs := parseSourceIds(queryValues)
 
 	var storePolicies []store.Policy
 	var err error
-	if len(ids) == 0 {
-		storePolicies, err = h.Store.All()
-	} else {
+	if len(ids) > 0 {
 		storePolicies, err = h.Store.ByGuids(ids, ids)
+	} else if len(sourceIDs) > 0 {
+		storePolicies, err = h.Store.ByGuids(sourceIDs, []string{})
+	} else {
+		storePolicies, err = h.Store.All()
 	}
 
 	if err != nil {
@@ -69,4 +74,13 @@ func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	w.Write(bytes)
+}
+
+func parseSourceIds(queryValues url.Values) []string {
+	var ids []string
+	idList, ok := queryValues["source_id"]
+	if ok {
+		ids = strings.Split(idList[0], ",")
+	}
+	return ids
 }

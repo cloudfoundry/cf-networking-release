@@ -94,12 +94,18 @@ var _ = Describe("External API Listing Policies", func() {
 		  { "source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "ports": { "start": 1234, "end": 1234 } } },
 		  { "source": { "id": "app3" }, "destination": { "id": "app1", "protocol": "tcp", "ports": { "start": 8080, "end": 8090 } } }
 		]}`
+		v1ResponseSourceFiltered := `{ "total_policies": 1, "policies": [
+		  { "source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "ports": { "start": 1234, "end": 1234 } } }
+		]}`
 
 		v0Response := `{ "total_policies": 2, "policies": [
 		  { "source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "port": 1234 } },
 		  { "source": { "id": "app3" }, "destination": { "id": "app4", "protocol": "tcp", "port": 7777 } }
 		]}`
 		v0ResponseFiltered := `{ "total_policies": 1, "policies": [
+		  { "source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "port": 1234 } }
+		]}`
+		v0ResponseSourceFiltered := `{ "total_policies": 1, "policies": [
 		  { "source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "port": 1234 } }
 		]}`
 
@@ -111,6 +117,8 @@ var _ = Describe("External API Listing Policies", func() {
 		DescribeTable("listing policies filtered", listPolicies,
 			Entry("v1: filtered", "v1", "?id=app1,app2", v1ResponseFiltered),
 			Entry("v0: filtered", "v0", "?id=app1,app2", v0ResponseFiltered),
+			Entry("v1: filtered", "v1", "?source_id=app1,app2", v1ResponseSourceFiltered),
+			Entry("v0: filtered", "v0", "?source_id=app1,app2", v0ResponseSourceFiltered),
 		)
 	})
 })
