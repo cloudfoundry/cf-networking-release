@@ -697,8 +697,9 @@ var _ = Describe("Store", func() {
 				dataStore, err = store.New(mockDb, mockDb, group, destination, policy, 1, mockMigrator)
 				Expect(err).NotTo(HaveOccurred())
 			})
+
 			It("returns an empty slice ", func() {
-				policies, err := dataStore.ByGuids(nil, nil)
+				policies, err := dataStore.ByGuids(nil, nil, false)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(policies).To(BeEmpty())
 
@@ -709,27 +710,44 @@ var _ = Describe("Store", func() {
 
 		Context("when srcGuids is provided", func() {
 			It("returns policies whose source is in srcGuids", func() {
-				policies, err := dataStore.ByGuids([]string{"app-guid-00", "app-guid-01"}, nil)
+				policies, err := dataStore.ByGuids([]string{"app-guid-00", "app-guid-01"}, nil, false)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(policies).To(ConsistOf(allPolicies[0], allPolicies[1]))
 			})
 		})
+
 		Context("when destGuids is provided", func() {
 			It("returns policies whose destination is in destGuids", func() {
-				policies, err := dataStore.ByGuids(nil, []string{"app-guid-00", "app-guid-01"})
+				policies, err := dataStore.ByGuids(nil, []string{"app-guid-00", "app-guid-01"}, false)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(policies).To(ConsistOf(allPolicies[0], allPolicies[2]))
 			})
 		})
+
 		Context("when srcGuids and destGuids are provided", func() {
 			It("returns policies that satisfy either srcGuids or destGuids", func() {
 				policies, err := dataStore.ByGuids(
 					[]string{"app-guid-00", "app-guid-01"},
 					[]string{"app-guid-00", "app-guid-01"},
+					false,
 				)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(policies).To(ConsistOf(
 					allPolicies[0], allPolicies[1], allPolicies[2],
+				))
+			})
+		})
+
+		Context("when inSourceAndDest is true", func() {
+			It("returns policies that are in srcGuids and destGuids", func() {
+				policies, err := dataStore.ByGuids(
+					[]string{"app-guid-00", "app-guid-01"},
+					[]string{"app-guid-00", "app-guid-01"},
+					true,
+				)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(policies).To(ConsistOf(
+					allPolicies[0],
 				))
 			})
 		})
@@ -746,6 +764,7 @@ var _ = Describe("Store", func() {
 				_, err = store.ByGuids(
 					[]string{"does-not-matter"},
 					[]string{"does-not-matter"},
+					false,
 				)
 				Expect(err).To(MatchError("listing all: some query error"))
 			})
@@ -786,6 +805,7 @@ var _ = Describe("Store", func() {
 				_, err = store.ByGuids(
 					[]string{"does-not-matter"},
 					[]string{"does-not-matter"},
+					true,
 				)
 				Expect(err).To(MatchError(ContainSubstring("listing all: sql: expected")))
 			})

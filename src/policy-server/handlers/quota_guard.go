@@ -26,7 +26,7 @@ func (g *QuotaGuard) CheckAccess(policies []store.Policy, userToken uaa_client.C
 	}
 	appGuids := uniqueAppGUIDs(policies)
 	toAddSourceCounts := sourceCounts(policies, appGuids)
-	sourcePolicies, err := g.Store.ByGuids(appGuids, []string{})
+	sourcePolicies, err := g.Store.ByGuids(appGuids, []string{}, false)
 	if err != nil {
 		return false, fmt.Errorf("getting policies: %s", err)
 	}

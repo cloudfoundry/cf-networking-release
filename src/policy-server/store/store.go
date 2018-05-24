@@ -25,7 +25,7 @@ type Store interface {
 	All() ([]Policy, error)
 	Delete([]Policy) error
 	Tags() ([]Tag, error)
-	ByGuids([]string, []string) ([]Policy, error)
+	ByGuids([]string, []string, bool) ([]Policy, error)
 	CheckDatabase() error
 }
 
@@ -296,7 +296,7 @@ func (s *store) policiesQuery(query string, args ...interface{}) ([]Policy, erro
 	return policies, nil
 }
 
-func (s *store) ByGuids(srcGuids, destGuids []string) ([]Policy, error) {
+func (s *store) ByGuids(srcGuids, destGuids []string, inSourceAndDest bool) ([]Policy, error) {
 	numSourceGuids := len(srcGuids)
 	numDestinationGuids := len(destGuids)
 	if numSourceGuids == 0 && numDestinationGuids == 0 {
@@ -328,7 +328,11 @@ func (s *store) ByGuids(srcGuids, destGuids []string) ([]Policy, error) {
 		left outer join groups as dst_grp on (destinations.group_id = dst_grp.id)`
 
 	if len(wheres) > 0 {
-		query += " where " + strings.Join(wheres, " OR ")
+		andOr := " OR "
+		if inSourceAndDest {
+			andOr = " AND "
+		}
+		query += " where " + strings.Join(wheres, andOr)
 	}
 	query += ";"
 

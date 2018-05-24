@@ -127,18 +127,19 @@ var _ = Describe("MetricsWrapper", func() {
 			fakeStore.ByGuidsReturns(policies, nil)
 		})
 		It("returns the result of ByGuids on the Store", func() {
-			returnedPolicies, err := metricsWrapper.ByGuids(srcGuids, destGuids)
+			returnedPolicies, err := metricsWrapper.ByGuids(srcGuids, destGuids, true)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(returnedPolicies).To(Equal(policies))
 
 			Expect(fakeStore.ByGuidsCallCount()).To(Equal(1))
-			returnedSrcGuids, returnedDestGuids := fakeStore.ByGuidsArgsForCall(0)
+			returnedSrcGuids, returnedDestGuids, inSourceAndDest := fakeStore.ByGuidsArgsForCall(0)
 			Expect(returnedSrcGuids).To(Equal(srcGuids))
 			Expect(returnedDestGuids).To(Equal(destGuids))
+			Expect(inSourceAndDest).To(BeTrue())
 		})
 
 		It("emits a metric", func() {
-			_, err := metricsWrapper.ByGuids(srcGuids, destGuids)
+			_, err := metricsWrapper.ByGuids(srcGuids, destGuids, true)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
@@ -151,7 +152,7 @@ var _ = Describe("MetricsWrapper", func() {
 				fakeStore.ByGuidsReturns(nil, errors.New("banana"))
 			})
 			It("emits an error metric", func() {
-				_, err := metricsWrapper.ByGuids(srcGuids, destGuids)
+				_, err := metricsWrapper.ByGuids(srcGuids, destGuids, true)
 				Expect(err).To(MatchError("banana"))
 
 				Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))

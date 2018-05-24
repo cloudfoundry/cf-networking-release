@@ -39,13 +39,18 @@ func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	queryValues := req.URL.Query()
 	ids := parseIds(queryValues)
 	sourceIDs := parseSourceIds(queryValues)
+	destIDs := parseDestIds(queryValues)
 
 	var storePolicies []store.Policy
 	var err error
 	if len(ids) > 0 {
-		storePolicies, err = h.Store.ByGuids(ids, ids)
+		storePolicies, err = h.Store.ByGuids(ids, ids, false)
+	} else if len(sourceIDs) > 0 && len(destIDs) > 0 {
+		storePolicies, err = h.Store.ByGuids(sourceIDs, destIDs, true)
 	} else if len(sourceIDs) > 0 {
-		storePolicies, err = h.Store.ByGuids(sourceIDs, []string{})
+		storePolicies, err = h.Store.ByGuids(sourceIDs, []string{}, false)
+	} else if len(destIDs) > 0 {
+		storePolicies, err = h.Store.ByGuids([]string{}, destIDs, false)
 	} else {
 		storePolicies, err = h.Store.All()
 	}
@@ -79,6 +84,15 @@ func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 func parseSourceIds(queryValues url.Values) []string {
 	var ids []string
 	idList, ok := queryValues["source_id"]
+	if ok {
+		ids = strings.Split(idList[0], ",")
+	}
+	return ids
+}
+
+func parseDestIds(queryValues url.Values) []string {
+	var ids []string
+	idList, ok := queryValues["dest_id"]
 	if ok {
 		ids = strings.Split(idList[0], ",")
 	}

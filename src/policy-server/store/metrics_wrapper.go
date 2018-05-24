@@ -65,9 +65,9 @@ func (mw *MetricsWrapper) Tags() ([]Tag, error) {
 	return tags, err
 }
 
-func (mw *MetricsWrapper) ByGuids(srcGuids, dstGuids []string) ([]Policy, error) {
+func (mw *MetricsWrapper) ByGuids(srcGuids, dstGuids []string, inSourceAndDest bool) ([]Policy, error) {
 	startTime := time.Now()
-	policies, err := mw.Store.ByGuids(srcGuids, dstGuids)
+	policies, err := mw.Store.ByGuids(srcGuids, dstGuids, inSourceAndDest)
 	byGuidsTimeDuration := time.Now().Sub(startTime)
 	if err != nil {
 		mw.MetricsSender.IncrementCounter("StoreByGuidsError")

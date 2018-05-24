@@ -21,22 +21,21 @@ import (
 
 var _ = Describe("Policies index handler", func() {
 	var (
-		allPolicies              []store.Policy
-		byGuidsPolicies          []store.Policy
-		byGuidsAPIPolicies       []store.Policy
-		bySourceGuidsAPIPolicies []store.Policy
-		expectedResponseBody     []byte
-		filteredPolicies         []store.Policy
-		request                  *http.Request
-		handler                  *handlers.PoliciesIndex
-		resp                     *httptest.ResponseRecorder
-		fakeStore                *fakes.DataStore
-		fakePolicyFilter         *fakes.PolicyFilter
-		fakeErrorResponse        *fakes.ErrorResponse
-		fakeMapper               *apifakes.PolicyMapper
-		logger                   *lagertest.TestLogger
-		expectedLogger           lager.Logger
-		token                    uaa_client.CheckTokenResponse
+		allPolicies          []store.Policy
+		byGuidsPolicies      []store.Policy
+		byGuidsAPIPolicies   []store.Policy
+		expectedResponseBody []byte
+		filteredPolicies     []store.Policy
+		request              *http.Request
+		handler              *handlers.PoliciesIndex
+		resp                 *httptest.ResponseRecorder
+		fakeStore            *fakes.DataStore
+		fakePolicyFilter     *fakes.PolicyFilter
+		fakeErrorResponse    *fakes.ErrorResponse
+		fakeMapper           *apifakes.PolicyMapper
+		logger               *lagertest.TestLogger
+		expectedLogger       lager.Logger
+		token                uaa_client.CheckTokenResponse
 	)
 
 	BeforeEach(func() {
@@ -98,29 +97,6 @@ var _ = Describe("Policies index handler", func() {
 		}}
 
 		byGuidsAPIPolicies = []store.Policy{{
-			Source: store.Source{ID: "some-app-guid", Tag: "some-tag"},
-			Destination: store.Destination{
-				ID:       "some-other-app-guid",
-				Tag:      "some-other-tag",
-				Protocol: "tcp",
-				Ports: store.Ports{
-					Start: 8080,
-					End:   8080,
-				},
-			},
-		}, {
-			Source: store.Source{ID: "another-app-guid"},
-			Destination: store.Destination{
-				ID:       "some-other-app-guid",
-				Protocol: "udp",
-				Ports: store.Ports{
-					Start: 1234,
-					End:   1234,
-				},
-			},
-		}}
-
-		bySourceGuidsAPIPolicies = []store.Policy{{
 			Source: store.Source{ID: "some-app-guid", Tag: "some-tag"},
 			Destination: store.Destination{
 				ID:       "some-other-app-guid",
@@ -255,9 +231,10 @@ var _ = Describe("Policies index handler", func() {
 			MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
 
 			Expect(fakeStore.ByGuidsCallCount()).To(Equal(1))
-			srcGuids, dstGuids := fakeStore.ByGuidsArgsForCall(0)
+			srcGuids, destGuids, inSourceAndDest := fakeStore.ByGuidsArgsForCall(0)
 			Expect(srcGuids).To(ConsistOf([]string{"some-app-guid", "yet-another-app-guid"}))
-			Expect(dstGuids).To(ConsistOf([]string{"some-app-guid", "yet-another-app-guid"}))
+			Expect(destGuids).To(ConsistOf([]string{"some-app-guid", "yet-another-app-guid"}))
+			Expect(inSourceAndDest).To(BeFalse())
 			Expect(fakePolicyFilter.FilterPoliciesCallCount()).To(Equal(1))
 			policies, userToken := fakePolicyFilter.FilterPoliciesArgsForCall(0)
 			Expect(policies).To(Equal(byGuidsAPIPolicies))
@@ -273,14 +250,58 @@ var _ = Describe("Policies index handler", func() {
 
 				MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
 				Expect(fakeStore.ByGuidsCallCount()).To(Equal(1))
-				srcGuids, destGuids := fakeStore.ByGuidsArgsForCall(0)
+				srcGuids, destGuids, inSourceAndDest := fakeStore.ByGuidsArgsForCall(0)
 				Expect(srcGuids).To(Equal([]string{""}))
 				Expect(destGuids).To(Equal([]string{""}))
+				Expect(inSourceAndDest).To(BeFalse())
 				Expect(fakePolicyFilter.FilterPoliciesCallCount()).To(Equal(1))
 				policies, userToken := fakePolicyFilter.FilterPoliciesArgsForCall(0)
 				Expect(policies).To(Equal(byGuidsAPIPolicies))
 				Expect(userToken).To(Equal(token))
 
+				Expect(resp.Code).To(Equal(http.StatusOK))
+			})
+		})
+	})
+
+	Context("when dest_id is provided as a query parameter", func() {
+		BeforeEach(func() {
+			var err error
+			request, err = http.NewRequest("GET", "/networking/v0/external/policies?dest_id=not-a-real-app-guid,some-other-app-guid", nil)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("filters on those policies with provided dest_id", func() {
+			MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
+
+			Expect(fakeStore.ByGuidsCallCount()).To(Equal(1))
+			srcGuids, destGuids, inSourceAndDest := fakeStore.ByGuidsArgsForCall(0)
+			Expect(srcGuids).To(ConsistOf([]string{}))
+			Expect(destGuids).To(ConsistOf([]string{"not-a-real-app-guid", "some-other-app-guid"}))
+			Expect(inSourceAndDest).To(BeFalse())
+			Expect(fakePolicyFilter.FilterPoliciesCallCount()).To(Equal(1))
+			policies, userToken := fakePolicyFilter.FilterPoliciesArgsForCall(0)
+			Expect(policies).To(Equal(byGuidsAPIPolicies))
+			Expect(userToken).To(Equal(token))
+			Expect(resp.Code).To(Equal(http.StatusOK))
+		})
+
+		Context("when the dest_id list is empty", func() {
+			It("filters on only those policies returned by ByGuids", func() {
+				var err error
+				request, err = http.NewRequest("GET", "/networking/v0/external/policies?dest_id=", nil)
+				Expect(err).NotTo(HaveOccurred())
+
+				MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
+				Expect(fakeStore.ByGuidsCallCount()).To(Equal(1))
+				srcGuids, destGuids, inSourceAndDest := fakeStore.ByGuidsArgsForCall(0)
+				Expect(srcGuids).To(Equal([]string{}))
+				Expect(destGuids).To(Equal([]string{""}))
+				Expect(inSourceAndDest).To(BeFalse())
+				Expect(fakePolicyFilter.FilterPoliciesCallCount()).To(Equal(1))
+				policies, userToken := fakePolicyFilter.FilterPoliciesArgsForCall(0)
+				Expect(policies).To(Equal(byGuidsAPIPolicies))
+				Expect(userToken).To(Equal(token))
 				Expect(resp.Code).To(Equal(http.StatusOK))
 			})
 		})
@@ -297,12 +318,13 @@ var _ = Describe("Policies index handler", func() {
 			MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
 
 			Expect(fakeStore.ByGuidsCallCount()).To(Equal(1))
-			srcGuids, dstGuids := fakeStore.ByGuidsArgsForCall(0)
+			srcGuids, destGuids, inSourceAndDest := fakeStore.ByGuidsArgsForCall(0)
 			Expect(srcGuids).To(ConsistOf([]string{"some-app-guid", "yet-another-app-guid", "some-other-app-guid"}))
-			Expect(dstGuids).To(ConsistOf([]string{}))
+			Expect(destGuids).To(ConsistOf([]string{}))
+			Expect(inSourceAndDest).To(BeFalse())
 			Expect(fakePolicyFilter.FilterPoliciesCallCount()).To(Equal(1))
 			policies, userToken := fakePolicyFilter.FilterPoliciesArgsForCall(0)
-			Expect(policies).To(Equal(bySourceGuidsAPIPolicies))
+			Expect(policies).To(Equal(byGuidsAPIPolicies))
 			Expect(userToken).To(Equal(token))
 			Expect(resp.Code).To(Equal(http.StatusOK))
 		})
@@ -315,9 +337,10 @@ var _ = Describe("Policies index handler", func() {
 
 				MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
 				Expect(fakeStore.ByGuidsCallCount()).To(Equal(1))
-				srcGuids, destGuids := fakeStore.ByGuidsArgsForCall(0)
+				srcGuids, destGuids, inSourceAndDest := fakeStore.ByGuidsArgsForCall(0)
 				Expect(srcGuids).To(Equal([]string{""}))
 				Expect(destGuids).To(Equal([]string{}))
+				Expect(inSourceAndDest).To(BeFalse())
 				Expect(fakePolicyFilter.FilterPoliciesCallCount()).To(Equal(1))
 				policies, userToken := fakePolicyFilter.FilterPoliciesArgsForCall(0)
 				Expect(policies).To(Equal(byGuidsAPIPolicies))
@@ -325,6 +348,29 @@ var _ = Describe("Policies index handler", func() {
 
 				Expect(resp.Code).To(Equal(http.StatusOK))
 			})
+		})
+	})
+
+	Context("when dest_id and source_id is provided as a query parameter", func() {
+		BeforeEach(func() {
+			var err error
+			request, err = http.NewRequest("GET", "/networking/v0/external/policies?source_id=some-app-guid,meow&dest_id=not-a-real-app-guid,some-other-app-guid", nil)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("filters on those policies with provided source_id and dest_id", func() {
+			MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
+
+			Expect(fakeStore.ByGuidsCallCount()).To(Equal(1))
+			srcGuids, destGuids, inSourceAndDest := fakeStore.ByGuidsArgsForCall(0)
+			Expect(srcGuids).To(ConsistOf([]string{"some-app-guid", "meow"}))
+			Expect(destGuids).To(ConsistOf([]string{"not-a-real-app-guid", "some-other-app-guid"}))
+			Expect(inSourceAndDest).To(BeTrue())
+			Expect(fakePolicyFilter.FilterPoliciesCallCount()).To(Equal(1))
+			policies, userToken := fakePolicyFilter.FilterPoliciesArgsForCall(0)
+			Expect(policies).To(Equal(byGuidsAPIPolicies))
+			Expect(userToken).To(Equal(token))
+			Expect(resp.Code).To(Equal(http.StatusOK))
 		})
 	})
 

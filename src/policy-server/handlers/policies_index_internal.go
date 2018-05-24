@@ -16,7 +16,7 @@ type dataStore interface {
 	Create([]store.Policy) error
 	Delete([]store.Policy) error
 	Tags() ([]store.Tag, error)
-	ByGuids([]string, []string) ([]store.Policy, error)
+	ByGuids([]string, []string, bool) ([]store.Policy, error)
 	CheckDatabase() error
 }
 
@@ -49,7 +49,7 @@ func (h *PoliciesIndexInternal) ServeHTTP(w http.ResponseWriter, req *http.Reque
 	if len(ids) == 0 {
 		policies, err = h.Store.All()
 	} else {
-		policies, err = h.Store.ByGuids(ids, ids)
+		policies, err = h.Store.ByGuids(ids, ids, false)
 	}
 
 	if err != nil {

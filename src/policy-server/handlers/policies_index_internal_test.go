@@ -94,9 +94,10 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
 
 		Expect(fakeStore.ByGuidsCallCount()).To(Equal(1))
-		srcGuids, dstGuids := fakeStore.ByGuidsArgsForCall(0)
+		srcGuids, dstGuids, inSourceAndDest := fakeStore.ByGuidsArgsForCall(0)
 		Expect(srcGuids).To(Equal([]string{"some-app-guid"}))
 		Expect(dstGuids).To(Equal([]string{"some-app-guid"}))
+		Expect(inSourceAndDest).To(BeFalse())
 		Expect(resp.Code).To(Equal(http.StatusOK))
 		Expect(resp.Body.Bytes()).To(Equal(expectedResponseBody))
 	})

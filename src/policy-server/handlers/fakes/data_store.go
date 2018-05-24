@@ -51,11 +51,12 @@ type DataStore struct {
 		result1 []store.Tag
 		result2 error
 	}
-	ByGuidsStub        func([]string, []string) ([]store.Policy, error)
+	ByGuidsStub        func([]string, []string, bool) ([]store.Policy, error)
 	byGuidsMutex       sync.RWMutex
 	byGuidsArgsForCall []struct {
 		arg1 []string
 		arg2 []string
+		arg3 bool
 	}
 	byGuidsReturns struct {
 		result1 []store.Policy
@@ -270,7 +271,7 @@ func (fake *DataStore) TagsReturnsOnCall(i int, result1 []store.Tag, result2 err
 	}{result1, result2}
 }
 
-func (fake *DataStore) ByGuids(arg1 []string, arg2 []string) ([]store.Policy, error) {
+func (fake *DataStore) ByGuids(arg1 []string, arg2 []string, arg3 bool) ([]store.Policy, error) {
 	var arg1Copy []string
 	if arg1 != nil {
 		arg1Copy = make([]string, len(arg1))
@@ -286,11 +287,12 @@ func (fake *DataStore) ByGuids(arg1 []string, arg2 []string) ([]store.Policy, er
 	fake.byGuidsArgsForCall = append(fake.byGuidsArgsForCall, struct {
 		arg1 []string
 		arg2 []string
-	}{arg1Copy, arg2Copy})
-	fake.recordInvocation("ByGuids", []interface{}{arg1Copy, arg2Copy})
+		arg3 bool
+	}{arg1Copy, arg2Copy, arg3})
+	fake.recordInvocation("ByGuids", []interface{}{arg1Copy, arg2Copy, arg3})
 	fake.byGuidsMutex.Unlock()
 	if fake.ByGuidsStub != nil {
-		return fake.ByGuidsStub(arg1, arg2)
+		return fake.ByGuidsStub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -304,10 +306,10 @@ func (fake *DataStore) ByGuidsCallCount() int {
 	return len(fake.byGuidsArgsForCall)
 }
 
-func (fake *DataStore) ByGuidsArgsForCall(i int) ([]string, []string) {
+func (fake *DataStore) ByGuidsArgsForCall(i int) ([]string, []string, bool) {
 	fake.byGuidsMutex.RLock()
 	defer fake.byGuidsMutex.RUnlock()
-	return fake.byGuidsArgsForCall[i].arg1, fake.byGuidsArgsForCall[i].arg2
+	return fake.byGuidsArgsForCall[i].arg1, fake.byGuidsArgsForCall[i].arg2, fake.byGuidsArgsForCall[i].arg3
 }
 
 func (fake *DataStore) ByGuidsReturns(result1 []store.Policy, result2 error) {
