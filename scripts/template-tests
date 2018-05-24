@@ -4,5 +4,5 @@ ROOT_DIR_PATH="$(cd $(dirname $0)/.. && pwd)"
 
 pushd "${ROOT_DIR_PATH}" > /dev/null
   bundle install
-  rspec spec
+  bundle exec rspec spec
 popd > /dev/null
