@@ -72,8 +72,8 @@ properties:
 
   max_open_connections:
     description: "Maximum number of open connections to the SQL database"
-    default: 0
+    default: 200
 
   max_idle_connections:
     description: "Maximum number of idle connections to the SQL database"
-    default: 0
+    default: 200
