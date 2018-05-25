@@ -39,6 +39,16 @@ var _ = Describe("MetricsRecorder", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(time).To(Equal(float64(0)))
 	})
+
+	It("should return the correct number of register messages received", func() {
+		recorder.RecordRegisterMessageReceived()
+		Expect(recorder.GetRegisterMessagesReceived()).To(Equal(float64(1)))
+
+		recorder.RecordRegisterMessageReceived()
+		recorder.RecordRegisterMessageReceived()
+		recorder.RecordRegisterMessageReceived()
+		Expect(recorder.GetRegisterMessagesReceived()).To(Equal(float64(4)))
+	})
 })
 
 func secondToNanosecond(sec int) int64 {

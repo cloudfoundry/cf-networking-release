@@ -9,8 +9,9 @@ import (
 
 type MetricsRecorder struct {
 	sync.RWMutex
-	currentMax time.Duration
-	Clock      clock.Clock
+	currentMax               time.Duration
+	Clock                    clock.Clock
+	registerMessagesReceived int
 }
 
 func NewMetricsRecorder(clock clock.Clock) *MetricsRecorder {
@@ -38,4 +39,10 @@ func (r *MetricsRecorder) RecordMessageTransitTime(unixTimeNS int64) {
 		r.currentMax = diff
 	}
 	r.Unlock()
+}
+func (r *MetricsRecorder) RecordRegisterMessageReceived() {
+	r.registerMessagesReceived++
+}
+func (r *MetricsRecorder) GetRegisterMessagesReceived() (float64, error) {
+	return float64(r.registerMessagesReceived), nil
 }

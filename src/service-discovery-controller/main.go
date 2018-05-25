@@ -78,12 +78,19 @@ func mainWithError() error {
 		Getter: routeMessageRecorder.GetMaxSinceLastInterval,
 	}
 
+	registerMessagesReceivedSource := metrics.MetricSource{
+		Name:   "registerMessagesReceived",
+		Unit:   "ms",
+		Getter: routeMessageRecorder.GetRegisterMessagesReceived,
+	}
+
 	metricsEmitter := metrics.NewMetricsEmitter(
 		logger,
 		time.Duration(conf.MetricsEmitSeconds)*time.Second,
 		metrics.NewUptimeSource(),
 		dnsRequestSource,
 		routeMessageSource,
+		registerMessagesReceivedSource,
 	)
 
 	metricsSender := &metrics.MetricsSender{
@@ -125,10 +132,10 @@ func mainWithError() error {
 	logger.Info("server-started")
 
 	select {
-	case signal := <-signalChannel:
+	case stopSignal := <-signalChannel:
 		subscriber.Close()
 		addressTable.Shutdown()
-		monitor.Signal(signal)
+		monitor.Signal(stopSignal)
 		logger.Info("server-stopped")
 		return nil
 	}
@@ -192,14 +199,10 @@ func buildSubscriber(conf *config.Config, addressTable *addresstable.AddressTabl
 		return &mbus.Subscriber{}, err
 	}
 
-	metricsSender := &metrics.MetricsSender{
-		Logger: logger.Session("metrics"),
-	}
-
-	clock := clock.NewClock()
+	newClock := clock.NewClock()
 	warmDuration := time.Duration(conf.WarmDurationSeconds) * time.Second
 
 	subscriber := mbus.NewSubscriber(provider, subOpts, warmDuration, addressTable,
-		localIP, routeMessageRecorder, logger.Session("mbus"), metricsSender, clock)
+		localIP, routeMessageRecorder, logger.Session("mbus"), newClock)
 	return subscriber, nil
 }

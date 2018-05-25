@@ -61,7 +61,6 @@ type Subscriber struct {
 	localIP          string
 	natsClient       NatsConn
 	once             sync.Once
-	metricsSender    metricsSender
 	clock            clock.Clock
 }
 
@@ -79,14 +78,10 @@ type NatsConnProvider interface {
 	Connection(opts ...nats.Option) (NatsConn, error)
 }
 
-//go:generate counterfeiter -o fakes/metrics_sender.go --fake-name MetricsSender . metricsSender
-type metricsSender interface {
-	IncrementCounter(string)
-}
-
 //go:generate counterfeiter -o fakes/route_message_recorder.go --fake-name RouteMessageRecorder . routeMessageRecorder
 type routeMessageRecorder interface {
 	RecordMessageTransitTime(time int64)
+	RecordRegisterMessageReceived()
 }
 
 func NewSubscriber(
@@ -97,7 +92,6 @@ func NewSubscriber(
 	localIP string,
 	recorder routeMessageRecorder,
 	logger lager.Logger,
-	metricsSender metricsSender,
 	clock clock.Clock,
 ) *Subscriber {
 	return &Subscriber{
@@ -108,7 +102,6 @@ func NewSubscriber(
 		recorder:         recorder,
 		logger:           logger,
 		localIP:          localIP,
-		metricsSender:    metricsSender,
 		clock:            clock,
 	}
 }
@@ -137,11 +130,11 @@ func (s *Subscriber) RunOnce() error {
 		natsClient, err = s.natsConnProvider.Connection(
 			nats.ReconnectHandler(nats.ConnHandler(func(conn *nats.Conn) {
 				{
-					url, err := url.Parse(conn.ConnectedUrl())
+					connectedUrl, err := url.Parse(conn.ConnectedUrl())
 					if err == nil {
 						s.logger.Info(
 							"ReconnectHandler reconnected to nats server",
-							lager.Data{"nats_host": url.Scheme + "://" + url.Host}, //don't leak creds
+							lager.Data{"nats_host": connectedUrl.Scheme + "://" + connectedUrl.Host}, //don't leak creds
 						)
 					}
 				}
@@ -175,11 +168,11 @@ func (s *Subscriber) RunOnce() error {
 		s.natsClient = natsClient
 
 		{
-			url, err := url.Parse(natsClient.ConnectedUrl())
+			connectedUrl, err := url.Parse(natsClient.ConnectedUrl())
 			if err == nil {
 				s.logger.Info(
 					"Connected to NATS server",
-					lager.Data{"nats_host": url.Scheme + "://" + url.Host},
+					lager.Data{"nats_host": connectedUrl.Scheme + "://" + connectedUrl.Host},
 				)
 			}
 		}
@@ -278,7 +271,7 @@ func (s *Subscriber) setupAddressMessageHandler() error {
 		}
 
 		s.recorder.RecordMessageTransitTime(registryMessage.EndpointUpdatedAt)
-		s.metricsSender.IncrementCounter(registerMessagesReceived)
+		s.recorder.RecordRegisterMessageReceived()
 
 		s.logger.Debug("AddressMessageHandler register msg received", lager.Data(map[string]interface{}{
 			"msgJson": string(msg.Data),

@@ -11,8 +11,11 @@ type RouteMessageRecorder struct {
 	recordMessageTransitTimeArgsForCall []struct {
 		time int64
 	}
-	invocations      map[string][][]interface{}
-	invocationsMutex sync.RWMutex
+	RecordRegisterMessageReceivedStub        func()
+	recordRegisterMessageReceivedMutex       sync.RWMutex
+	recordRegisterMessageReceivedArgsForCall []struct{}
+	invocations                              map[string][][]interface{}
+	invocationsMutex                         sync.RWMutex
 }
 
 func (fake *RouteMessageRecorder) RecordMessageTransitTime(time int64) {
@@ -39,11 +42,29 @@ func (fake *RouteMessageRecorder) RecordMessageTransitTimeArgsForCall(i int) int
 	return fake.recordMessageTransitTimeArgsForCall[i].time
 }
 
+func (fake *RouteMessageRecorder) RecordRegisterMessageReceived() {
+	fake.recordRegisterMessageReceivedMutex.Lock()
+	fake.recordRegisterMessageReceivedArgsForCall = append(fake.recordRegisterMessageReceivedArgsForCall, struct{}{})
+	fake.recordInvocation("RecordRegisterMessageReceived", []interface{}{})
+	fake.recordRegisterMessageReceivedMutex.Unlock()
+	if fake.RecordRegisterMessageReceivedStub != nil {
+		fake.RecordRegisterMessageReceivedStub()
+	}
+}
+
+func (fake *RouteMessageRecorder) RecordRegisterMessageReceivedCallCount() int {
+	fake.recordRegisterMessageReceivedMutex.RLock()
+	defer fake.recordRegisterMessageReceivedMutex.RUnlock()
+	return len(fake.recordRegisterMessageReceivedArgsForCall)
+}
+
 func (fake *RouteMessageRecorder) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.recordMessageTransitTimeMutex.RLock()
 	defer fake.recordMessageTransitTimeMutex.RUnlock()
+	fake.recordRegisterMessageReceivedMutex.RLock()
+	defer fake.recordRegisterMessageReceivedMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
