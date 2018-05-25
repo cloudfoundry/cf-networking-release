@@ -109,10 +109,8 @@ resources:
   - name: cf-deployment
     type: git
     source:
-      # branch: release-candidate
-      # uri: https://github.com/cloudfoundry/cf-deployment.git
-      branch: colocate-service-discovery-on-scheduler
-      uri: https://github.com/cf-container-networking/cf-deployment.git
+      branch: release-candidate
+      uri: https://github.com/cloudfoundry/cf-deployment.git
   - name: disaster-recovery-acceptance-tests
     type: git
     source:
