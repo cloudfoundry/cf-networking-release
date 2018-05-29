@@ -44,8 +44,8 @@ A unique tag is assigned to a policy_group_id when policies are created.
 ### GET /networking/v0/external/policies
 #### Arguments:
 
-[optionally] `id`: comma-separated app id values
-[optionally] `source_id`: comma-separated source app id values
+[optionally] `id`: comma-separated app id values\
+[optionally] `source_id`: comma-separated source app id values\
 [optionally] `dest_id`: comma-separated destination app id values
 
 Will return only the policies which include the given policy_group_id either as source id or destination id.
