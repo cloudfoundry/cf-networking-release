@@ -104,7 +104,7 @@ Add in all packages and jobs required by your CNI plugin.  At a minimum, you mus
   - For more info on **bosh packaging scripts** read [this](http://bosh.io/docs/packages.html#create-a-packaging-script).
   - For more info on **bosh jobs** read [this](http://bosh.io/docs/jobs.html).
 
-Only one configuration file will be executed. If a conf and conflist file are both present, then the conflist will be executed. If multiple are present, then behavior is undefined.
+Only one configuration file will be executed. If a conf and conflist file are both present, then the conflist will be executed. If multiple are present, then behavior is undefined. An example [conflist file](https://github.com/cloudfoundry/silk-release/blob/develop/jobs/silk-cni/templates/cni-wrapper-plugin.conflist.erb) can be found in the silk release
 
 Use the [silk-release](http://github.com/cloudfoundry/silk-release) as inspiration.
 
