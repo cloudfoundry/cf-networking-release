@@ -39,14 +39,15 @@ $ curl http://api.bosh-lite.com/networking/v0/external/policies -H "Authorizatio
 | GET | /networking/v0/external/tags | - | - | List all tag and `id` mappings |
 
 Notes:
-A unique tag is assigned to a policy_group_id when policies are created.
+- A policy_group_id is a generic way to identify a policy, but currently it is also the same as the app guid
+- A unique tag is assigned to a policy_group_id when policies are created.
 
 ### GET /networking/v0/external/policies
 #### Arguments:
 
-[optionally] `id`: comma-separated app id values\
-[optionally] `source_id`: comma-separated source app id values\
-[optionally] `dest_id`: comma-separated destination app id values
+[optionally] `id`: comma-separated policy_group_id values\
+[optionally] `source_id`: comma-separated source policy_group_id values\
+[optionally] `dest_id`: comma-separated destination policy_group_id values
 
 Will return only the policies which include the given policy_group_id either as source id or destination id.
 
