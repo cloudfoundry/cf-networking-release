@@ -1462,7 +1462,6 @@ jobs:
         params:
           repository: release/master
           tag: version/number
-          tag_prefix: v
       - put: cf-networking-tarball
         params:
           file: final-release/cf-networking-*.tgz
@@ -1478,7 +1477,6 @@ jobs:
           name: version/number
           tag: version/number
           body: release-notes/notes.md
-          tag_prefix: v
           globs:
           - final-release/cf-networking-*.tgz
       - task: silk-shipit
@@ -1489,7 +1487,6 @@ jobs:
         params:
           repository: release/master
           tag: version/number
-          tag_prefix: v
       - put: silk-tarball
         params:
           file: final-release/silk-*.tgz
@@ -1505,7 +1502,6 @@ jobs:
           name: version/number
           tag: version/number
           body: release-notes/notes.md
-          tag_prefix: v
           globs:
           - final-release/silk-*.tgz
 
