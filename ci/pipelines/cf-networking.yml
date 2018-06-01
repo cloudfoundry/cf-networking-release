@@ -851,15 +851,6 @@ jobs:
       - get: silk-dev
         passed: [mitre-test, mitre-perf-tests]
         trigger: true
-    - task: smoke-tests
-      file: cf-networking-release-ci/ci/tasks/smoke-tests.yml
-      params:
-        ENVIRONMENT_NAME: mitre
-        ENVIRONMENT_TAG: mitre.c2c.cf-app.com
-        DATADOG_API_KEY: {{datadog_api_key}}
-      input_mapping:
-        test-config: cf-networking-deployments
-        cf-networking: cf-networking-dev
     - task: setup-smoke-config
       file: cf-networking-release-ci/ci/tasks/setup-sd-smoke-config.yml
       params:
@@ -873,6 +864,15 @@ jobs:
       params:
         ENVIRONMENT_TAG: mitre.c2c.cf-app.com
         DATADOG_API_KEY: {{datadog_api_key}}
+    - task: smoke-tests
+      file: cf-networking-release-ci/ci/tasks/smoke-tests.yml
+      params:
+        ENVIRONMENT_NAME: mitre
+        ENVIRONMENT_TAG: mitre.c2c.cf-app.com
+        DATADOG_API_KEY: {{datadog_api_key}}
+      input_mapping:
+        test-config: cf-networking-deployments
+        cf-networking: cf-networking-dev
 
   - name: mitre-cats
     serial_groups: [mitre-test-group, mitre-deploy-group]
