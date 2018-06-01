@@ -237,6 +237,8 @@ jobs:
       - get: cf-networking-dev
         trigger: true
       - get: cf-networking-release-ci
+        params:
+          submodules: none
     - task: unit-and-integration-tests
       file: cf-networking-release-ci/ci/tasks/postgres-tests.yml
       privileged: true
@@ -250,6 +252,8 @@ jobs:
       - get: cf-networking-dev
         trigger: true
       - get: cf-networking-release-ci
+        params:
+          submodules: none
     - task: template-tests
       file: cf-networking-release-ci/ci/tasks/template-tests.yml
       input_mapping:
@@ -262,6 +266,8 @@ jobs:
       - get: cf-networking-dev
         trigger: true
       - get: cf-networking-release-ci
+        params:
+          submodules: none
     - task: unit-and-integration-tests
       file: cf-networking-release-ci/ci/tasks/mysql-tests.yml
       privileged: true
@@ -275,6 +281,8 @@ jobs:
       - get: cf-networking-dev
         trigger: true
       - get: cf-networking-release-ci
+        params:
+          submodules: none
     - task: unit-and-integration-tests
       file: cf-networking-release-ci/ci/tasks/mysql-5.6-tests.yml
       privileged: true
@@ -288,6 +296,8 @@ jobs:
       - get: cf-networking-dev
         trigger: true
       - get: cf-networking-release-ci
+        params:
+          submodules: none
     - task: garden-external-networker-windows
       file: cf-networking-release-ci/ci/tasks/garden-external-networker-windows.yml
       input_mapping:
@@ -337,6 +347,8 @@ jobs:
       - get: silk-dev
         trigger: true
       - get: cf-networking-release-ci
+        params:
+          submodules: none
     - task: template-tests
       file: cf-networking-release-ci/ci/tasks/silk-template-tests.yml
       input_mapping:
@@ -410,6 +422,8 @@ jobs:
     plan:
     - aggregate:
       - get: cf-networking-release-ci
+        params:
+          submodules: none
       - get: cf-deployment-concourse-tasks
       - get: cf-networking-deployments
       - get: cf-deployment
@@ -495,6 +509,8 @@ jobs:
     - aggregate:
       - get: cf-deployment-concourse-tasks
       - get: cf-networking-release-ci
+        params:
+          submodules: none
       - get: cf-networking-deployments
         passed: [pickelhelm-deploy]
       - get: datadog-firehose-nozzle-release
@@ -526,6 +542,8 @@ jobs:
     plan:
     - aggregate:
       - get: cf-networking-release-ci
+        params:
+          submodules: none
       - get: cf-networking-deployments
         passed: [pickelhelm-deploy]
       - get: cf-deployment
@@ -613,6 +631,8 @@ jobs:
     - aggregate:
       - get: concourse
       - get: cf-networking-release-ci
+        params:
+          submodules: none
       - get: cf-deployment-concourse-tasks
       - get: cf-networking-deployments
       - get: cf-deployment
@@ -745,6 +765,8 @@ jobs:
       - get: version
         passed: [mitre-deploy]
       - get: cf-networking-release-ci
+        params:
+          submodules: none
       - get: cf-deployment
         passed: [mitre-deploy]
         trigger: true
@@ -777,6 +799,8 @@ jobs:
     - aggregate:
       - get: cf-deployment-concourse-tasks
       - get: cf-networking-release-ci
+        params:
+          submodules: none
       - get: cf-networking-deployments
         passed: [mitre-deploy]
       - get: datadog-firehose-nozzle-release
@@ -816,6 +840,8 @@ jobs:
       - get: version
         passed: [mitre-deploy]
       - get: cf-networking-release-ci
+        params:
+          submodules: none
       - get: cf-deployment
         passed: [mitre-deploy]
         trigger: true
@@ -845,6 +871,8 @@ jobs:
         passed: [mitre-test, mitre-perf-tests]
         trigger: true
       - get: cf-networking-release-ci
+        params:
+          submodules: none
       - get: cf-deployment
         passed: [mitre-test, mitre-perf-tests]
         trigger: true
@@ -879,6 +907,8 @@ jobs:
     plan:
     - aggregate:
       - get: cf-networking-release-ci
+        params:
+          submodules: none
       - get: cf-deployment-concourse-tasks
       - get: cf-acceptance-tests
       - get: cf-networking-dev
@@ -912,6 +942,8 @@ jobs:
     plan:
     - aggregate:
       - get: cf-networking-release-ci
+        params:
+          submodules: none
       - get: cf-networking-dev
         passed: [mitre-cats]
         trigger: true
@@ -1002,6 +1034,8 @@ jobs:
       - get: cf-deployment-concourse-tasks
       - get: cf-deployment
       - get: cf-networking-release-ci
+        params:
+          submodules: none
       - get: cf-networking-deployments
       - get: cf-networking-dev
         passed: [unit-and-integration-tests]
@@ -1081,6 +1115,8 @@ jobs:
     - aggregate:
       - get: cf-deployment-concourse-tasks
       - get: cf-networking-release-ci
+        params:
+          submodules: none
       - get: cf-networking-deployments
         passed: [toque-deploy]
       - get: datadog-firehose-nozzle-release
@@ -1111,6 +1147,8 @@ jobs:
     plan:
     - aggregate:
       - get: cf-networking-release-ci
+        params:
+          submodules: none
       - get: cf-networking-deployments
         passed: [toque-deploy]
       - get: cf-networking-dev
@@ -1142,6 +1180,8 @@ jobs:
       - get: cf-networking-dev
         passed: [toque-push]
       - get: cf-networking-release-ci
+        params:
+          submodules: none
       - get: toque-scaling-test-params
         passed: [toque-push]
       - get: toque-stats
@@ -1239,6 +1279,8 @@ jobs:
       - get: cf-deployment-concourse-tasks
       - get: cf-deployment
       - get: cf-networking-release-ci
+        params:
+          submodules: none
       - get: cf-networking-deployments
       - get: cf-networking-dev
         passed:
@@ -1406,6 +1448,8 @@ jobs:
     - do:
       - aggregate:
         - get: cf-networking-release-ci
+          params:
+            submodules: none
         - get: version
           passed: [mitre-drats]
         - get: cf-networking-dev
@@ -1427,6 +1471,8 @@ jobs:
         - get: silk-master
         - get: cf-networking-deployments
         - get: cf-networking-release-ci
+          params:
+            submodules: none
         - get: version
           params:
             bump: final
@@ -1526,6 +1572,8 @@ jobs:
     - do:
       - aggregate:
         - get: cf-networking-release-ci
+          params:
+            submodules: none
         - get: cf-networking-master
           params:
             submodules: none
@@ -1569,6 +1617,8 @@ jobs:
     - do:
       - aggregate:
         - get: cf-networking-release-ci
+          params:
+            submodules: none
         - get: silk-master
           params:
             submodules: none
