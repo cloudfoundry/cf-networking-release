@@ -6,4 +6,8 @@ root="$(cd "$(dirname "$0")/../../.." && pwd)"
 env_dir="${root}/cf-networking-deployments/environments/${ENVIRONMENT_NAME}"
 config="${env_dir}/smoke-config.json"
 
-bosh int "${config}" --vars-file "${env_dir}/vars-store.yml" > smoke-config/smoke-config.json
+# replace admin password and secret in test config
+smoke_password="$(grep cf_networking_smoke_user_password "${env_dir}/vars-store.yml" | cut -d' ' -f2)"
+sed -i -- "s/{{smoke-password}}/${smoke_password}/g" "${config}"
+
+mv "${config}" smoke-config/smoke-config.json
