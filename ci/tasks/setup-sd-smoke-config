@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -e
+
+root="$(cd "$(dirname "$0")/../../.." && pwd)"
+
+config="${root}/cf-networking-deployments/environments/${ENVIRONMENT_NAME}/smoke-config.json"
+
+bosh int "${config}" --vars-file vars-store.yml > smoke-config/smoke-config.json

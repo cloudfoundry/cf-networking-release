@@ -860,6 +860,10 @@ jobs:
       input_mapping:
         test-config: cf-networking-deployments
         cf-networking: cf-networking-dev
+    - task: setup-smoke-config
+      file: cf-networking-release-ci/ci/tasks/setup-sd-smoke-config.yml
+      params:
+        ENVIRONMENT_NAME: mitre
     - task: smoke-tests-sd
       privileged: true
       file: cf-networking-release-ci/ci/tasks/smoke-tests-sd.yml
@@ -867,7 +871,6 @@ jobs:
         test-config: cf-networking-deployments
         cf-networking: cf-networking-dev
       params:
-        ENVIRONMENT_NAME: mitre
         ENVIRONMENT_TAG: mitre.c2c.cf-app.com
         DATADOG_API_KEY: {{datadog_api_key}}
 

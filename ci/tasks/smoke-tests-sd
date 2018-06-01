@@ -4,14 +4,12 @@ set -e
 
 ROOT="$(cd "$(dirname $0)/../../.." && pwd)"
 
-export CONFIG="${ROOT}/${CONFIG:-"test-config/environments/${ENVIRONMENT_NAME}/smoke-config.json"}"
+export CONFIG="${ROOT}/smoke-config/smoke-config.json"
 export GOPATH="${ROOT}/cf-networking"
 export APPS_DIR="${ROOT}/cf-networking/src/example-apps"
 
 function main() {
   local exit_status
-
-  interpolate_smoke_password
 
   echo "${CONFIG}"
   pushd "${ROOT}/cf-networking/src/test/smoke-sd" > /dev/null
@@ -53,15 +51,6 @@ function report_smoke_metric_to_datadog() {
           }]
         }" \
   "https://app.datadoghq.com/api/v1/series?api_key=${DATADOG_API_KEY}"
-}
-
-function interpolate_smoke_password() {
-  # replace admin password and secret in test config
-  pushd "${ROOT}/test-config/environments/${ENVIRONMENT_NAME}" > /dev/null
-    local smoke_password
-    smoke_password="$(grep cf_networking_smoke_user_password vars-store.yml  | cut -d' ' -f2)"
-    sed -i -- "s/{{smoke-password}}/${smoke_password}/g" smoke-config.json
-  popd > /dev/null
 }
 
 main

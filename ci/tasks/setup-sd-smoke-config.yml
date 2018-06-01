@@ -1,0 +1,19 @@
+---
+platform: linux
+
+image_resources:
+  type: docker-image
+  source: { repository: c2cnetworking/deploy-light }
+
+inputs:
+  - name: cf-networking-release-ci
+  - name: cf-networking-deployments
+
+params:
+  ENVIRONMENT_NAME: ~
+
+outputs:
+  - name: smoke-config
+
+run:
+  path: cf-networking-release-ci/ci/tasks/setup-sd-smoke-config
