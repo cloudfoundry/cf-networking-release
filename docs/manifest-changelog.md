@@ -5,7 +5,8 @@ See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for example
 ### 2.3.0 CF-Networking-Release
 **New Properties**
   - An optional parameter has been added to the `policy-server` and `policy-server-internal` jobs to configure the max number of
-    open and idle connections to the policy-server database.
+    open and idle connections to the policy-server database. Before making these configurable both properties were set to have no effective
+    maximum. They now both default to 200 connections.
     - `max_open_connections`
     - `max_idle_connections`
   - An optional parameter has been added to the `policy-server-internal` job to configure the consul dns health check timeout.
