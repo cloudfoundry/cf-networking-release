@@ -4,7 +4,7 @@ set -e
 
 root="$(cd "$(dirname "$0")/../../.." && pwd)"
 env_dir="${root}/cf-networking-deployments/environments/${ENVIRONMENT_NAME}"
-config="${env_dir}/smoke-config.json"
+config="${env_dir}/smoke-config${CONFIG_POSTFIX}.json"
 
 # replace admin password and secret in test config
 smoke_password="$(grep cf_networking_smoke_user_password "${env_dir}/vars-store.yml" | cut -d' ' -f2)"

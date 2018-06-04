@@ -11,6 +11,7 @@ inputs:
 
 params:
   ENVIRONMENT_NAME: ~
+  CONFIG_POSTFIX: ~
 
 outputs:
   - name: smoke-config
