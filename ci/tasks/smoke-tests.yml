@@ -6,14 +6,12 @@ image_resource:
   source: { repository: c2cnetworking/dev-postgres }
 
 inputs:
-  - name: cf-networking-release-ci
-  - name: test-config
   - name: cf-networking
+  - name: cf-networking-release-ci
+  - name: smoke-config
 
 params:
-    ENVIRONMENT_NAME: ~
     ENVIRONMENT_TAG: ~
-    CONFIG: ~
     DATADOG_API_KEY: ~
 
 run:

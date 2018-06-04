@@ -880,7 +880,7 @@ jobs:
         passed: [mitre-test, mitre-perf-tests]
         trigger: true
     - task: setup-smoke-config
-      file: cf-networking-release-ci/ci/tasks/setup-sd-smoke-config.yml
+      file: cf-networking-release-ci/ci/tasks/setup-smoke-config.yml
       params:
         ENVIRONMENT_NAME: mitre
     - task: smoke-tests-sd

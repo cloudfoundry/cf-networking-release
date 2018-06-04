@@ -16,4 +16,4 @@ outputs:
   - name: smoke-config
 
 run:
-  path: cf-networking-release-ci/ci/tasks/setup-sd-smoke-config
+  path: cf-networking-release-ci/ci/tasks/setup-smoke-config
