@@ -146,7 +146,7 @@ var _ = Describe("Service Discovery Controller process", func() {
 				respBody, err := ioutil.ReadAll(resp.Body)
 				Expect(err).ToNot(HaveOccurred())
 				return string(respBody)
-			}, 5*time.Second).Should(MatchJSON(`{
+			}).Should(MatchJSON(`{
 				"env": "",
 				"hosts": [
 				{
