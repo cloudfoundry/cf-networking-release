@@ -125,8 +125,8 @@ var _ = Describe("Integration", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(responseString).To(ContainSubstring("some-user"))
 
-				Expect(session.Out, 2*time.Second).To(gbytes.Say("testprefix.policy-server"))
-				Expect(session.Out, 2*time.Second).NotTo(gbytes.Say("request made to whoami endpoint"))
+				Expect(session.Out).To(gbytes.Say("testprefix.policy-server"))
+				Expect(session.Out).NotTo(gbytes.Say("request made to whoami endpoint"))
 
 				_ = helpers.MakeAndDoRequest(
 					"POST",
@@ -147,8 +147,8 @@ var _ = Describe("Integration", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(responseString).To(ContainSubstring("some-user"))
 
-				Expect(session.Out, 2*time.Second).To(gbytes.Say("testprefix.policy-server.request_.*serving"))
-				Expect(session.Out, 2*time.Second).To(gbytes.Say("testprefix.policy-server.request_.*done"))
+				Expect(session.Out).To(gbytes.Say("testprefix.policy-server.request_.*serving"))
+				Expect(session.Out).To(gbytes.Say("testprefix.policy-server.request_.*done"))
 			})
 
 			It("should emit some metrics", func() {
