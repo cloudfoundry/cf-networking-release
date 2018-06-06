@@ -99,7 +99,7 @@ resources:
     source:
       uri: "git@github.com:cloudfoundry/cf-networking-deployments.git"
       branch: master
-      private_key: {{cf-networking-deployments-push-key}}
+      private_key: ((cf-networking-deployments-push-key.private_key))
   - name: cf-deployment-concourse-tasks
     type: git
     source:
@@ -133,13 +133,13 @@ resources:
       branch: develop
       ignore_paths:
         - docs
-      private_key: {{silk-release-deploy-key}}
+      private_key: ((silk-release-deploy-key.private_key))
   - name: silk-master
     type: git
     source:
       uri: git@github.com:cloudfoundry/silk-release.git
       branch: master
-      private_key: {{silk-release-deploy-key}}
+      private_key: ((silk-release-deploy-key.private_key))
   - name: cf-networking-dev
     type: git
     source:
@@ -148,13 +148,13 @@ resources:
       ignore_paths:
         - docs
         - ci
-      private_key: {{cf-networking-deploy-key}}
+      private_key: ((cf-networking-deploy-key.private_key))
   - name: cf-networking-master
     type: git
     source:
       uri: git@github.com:cloudfoundry/cf-networking-release.git
       branch: master
-      private_key: {{cf-networking-deploy-key}}
+      private_key: ((cf-networking-deploy-key.private_key))
   - name: bbr-binary-release
     type: github-release
     source:
@@ -166,7 +166,7 @@ resources:
     source:
       uri: "git@github.com:cf-container-networking/toque-stats.git"
       branch: master
-      private_key: {{container-networking-bot-key}}
+      private_key: ((container-networking-bot-key.private_key))
   ####### Timers
   - name: every-half-hour
     type: time
@@ -191,42 +191,42 @@ resources:
   - name: version
     type: semver
     source:
-      bucket: {{cf-networking-s3-bucket}}
+      bucket: ((cf-networking-s3-bucket))
       region_name: us-west-2
       initial_version: 0.2.0-rc.1
       key: releases/current-version
-      access_key_id: {{aws-access-key-id}}
-      secret_access_key: {{aws-secret-access-key}}
+      access_key_id: ((aws-access-key-id))
+      secret_access_key: ((aws-secret-access-key))
   - name: cf-networking-tarball
     type: s3
     source:
-      bucket: {{cf-networking-candidate-s3-bucket}}
+      bucket: ((cf-networking-candidate-s3-bucket))
       region_name: us-west-2
       regexp: releases/cf-networking-(.*).tgz
-      access_key_id: {{aws-access-key-id}}
-      secret_access_key: {{aws-secret-access-key}}
+      access_key_id: ((aws-access-key-id))
+      secret_access_key: ((aws-secret-access-key))
   - name: silk-tarball
     type: s3
     source:
-      bucket: {{silk-candidate-s3-bucket}}
+      bucket: ((silk-candidate-s3-bucket))
       region_name: us-west-2
       regexp: releases/silk-(.*).tgz
-      access_key_id: {{aws-access-key-id}}
-      secret_access_key: {{aws-secret-access-key}}
+      access_key_id: ((aws-access-key-id))
+      secret_access_key: ((aws-secret-access-key))
   # Github release
   - name: cf-networking-github-release
     type: github-release
     source:
       user: cloudfoundry
       repository: cf-networking-release
-      access_token: {{github-access-token}}
+      access_token: ((github-access-token))
       drafts: true
   - name: silk-github-release
     type: github-release
     source:
       user: cloudfoundry
       repository: silk-release
-      access_token: {{github-access-token}}
+      access_token: ((github-access-token))
       drafts: true
 
 jobs:
@@ -378,8 +378,8 @@ jobs:
         BBL_GCP_REGION: us-east1
         BBL_STATE_DIR: environments/pickelhelm/
         BBL_IAAS: gcp
-        BBL_LB_CERT: {{pickelhelm-lb-cert}}
-        BBL_LB_KEY: {{pickelhelm-lb-key}}
+        BBL_LB_CERT: ((pickelhelm-lb-cert.certificate))
+        BBL_LB_KEY: ((pickelhelm-lb-key.private_key))
         LB_DOMAIN: pickelhelm.c2c.cf-app.com
         BBL_ENV_NAME: pickelhelm
       input_mapping:
@@ -586,8 +586,8 @@ jobs:
         BBL_GCP_REGION: us-east1
         BBL_STATE_DIR: environments/mitre/
         BBL_IAAS: gcp
-        BBL_LB_CERT: {{mitre-lb-cert}}
-        BBL_LB_KEY: {{mitre-lb-key}}
+        BBL_LB_CERT: ((mitre-lb-cert.certificate))
+        BBL_LB_KEY: ((mitre-lb-key.private_key))
         LB_DOMAIN: mitre.c2c.cf-app.com
         BBL_ENV_NAME: mitre
       input_mapping:
@@ -891,13 +891,13 @@ jobs:
         cf-networking: cf-networking-dev
       params:
         ENVIRONMENT_TAG: mitre.c2c.cf-app.com
-        DATADOG_API_KEY: {{datadog_api_key}}
+        DATADOG_API_KEY: ((datadog_api_key))
     - task: smoke-tests
       file: cf-networking-release-ci/ci/tasks/smoke-tests.yml
       params:
         ENVIRONMENT_NAME: mitre
         ENVIRONMENT_TAG: mitre.c2c.cf-app.com
-        DATADOG_API_KEY: {{datadog_api_key}}
+        DATADOG_API_KEY: ((datadog_api_key))
       input_mapping:
         test-config: cf-networking-deployments
         cf-networking: cf-networking-dev
@@ -988,8 +988,8 @@ jobs:
         BBL_GCP_REGION: us-east1
         BBL_STATE_DIR: environments/toque/
         BBL_IAAS: gcp
-        BBL_LB_CERT: {{toque-lb-cert}}
-        BBL_LB_KEY: {{toque-lb-key}}
+        BBL_LB_CERT: ((toque-lb-cert.certificate))
+        BBL_LB_KEY: ((toque-lb-key.private_key))
         LB_DOMAIN: toque.c2c.cf-app.com
         BBL_ENV_NAME: toque
       input_mapping:
@@ -1201,7 +1201,7 @@ jobs:
         TEXT: test_start
         PRIORITY: normal
         AWS_ENV: toque.c2c.cf-app.com
-        DATADOG_API_KEY: {{datadog_api_key}}
+        DATADOG_API_KEY: ((datadog_api_key))
     - task: test-scalability
       file: cf-networking-release-ci/ci/tasks/test-scalability.yml
       params:
@@ -1217,7 +1217,7 @@ jobs:
           TEXT: test_end
           PRIORITY: normal
           AWS_ENV: toque.c2c.cf-app.com
-          DATADOG_API_KEY: {{datadog_api_key}}
+          DATADOG_API_KEY: ((datadog_api_key))
 
   - name: slouch-bbl-up
     serial_groups: [slouch]
@@ -1233,8 +1233,8 @@ jobs:
         BBL_GCP_REGION: us-east1
         BBL_STATE_DIR: environments/slouch/
         BBL_IAAS: gcp
-        BBL_LB_CERT: {{slouch-lb-cert}}
-        BBL_LB_KEY: {{slouch-lb-key}}
+        BBL_LB_CERT: ((slouch-lb-cert.certificate))
+        BBL_LB_KEY: ((slouch-lb-key.private_key))
         LB_DOMAIN: slouch.c2c.cf-app.com
         BBL_ENV_NAME: slouch
       input_mapping:
