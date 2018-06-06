@@ -10,9 +10,9 @@ resources:
 - name: dev-postgres-image
   type: docker-image
   source:
-    username: {{dockerhub_username}}
-    password: {{dockerhub_password}}
-    email: {{dockerhub_email}}
+    username: ((dockerhub_username))
+    password: ((dockerhub_password))
+    email: ((dockerhub_email))
     repository: c2cnetworking/dev-postgres
 
 - name: dev-postgres-ifb-dockerfile
@@ -26,9 +26,9 @@ resources:
 - name: dev-postgres-ifb-image
   type: docker-image
   source:
-    username: {{dockerhub_username}}
-    password: {{dockerhub_password}}
-    email: {{dockerhub_email}}
+    username: ((dockerhub_username))
+    password: ((dockerhub_password))
+    email: ((dockerhub_email))
     repository: c2cnetworking/dev-postgres-ifb
 
 - name: dev-mysql-dockerfile
@@ -42,9 +42,9 @@ resources:
 - name: dev-mysql-image
   type: docker-image
   source:
-    username: {{dockerhub_username}}
-    password: {{dockerhub_password}}
-    email: {{dockerhub_email}}
+    username: ((dockerhub_username))
+    password: ((dockerhub_password))
+    email: ((dockerhub_email))
     repository: c2cnetworking/dev-mysql
 
 - name: dev-mysql-5.6-dockerfile
@@ -58,9 +58,9 @@ resources:
 - name: dev-mysql-5.6-image
   type: docker-image
   source:
-    username: {{dockerhub_username}}
-    password: {{dockerhub_password}}
-    email: {{dockerhub_email}}
+    username: ((dockerhub_username))
+    password: ((dockerhub_password))
+    email: ((dockerhub_email))
     repository: c2cnetworking/dev-mysql-5.6
 
 - name: deploy-dockerfile
@@ -74,9 +74,9 @@ resources:
 - name: deploy-image
   type: docker-image
   source:
-    username: {{dockerhub_username}}
-    password: {{dockerhub_password}}
-    email: {{dockerhub_email}}
+    username: ((dockerhub_username))
+    password: ((dockerhub_password))
+    email: ((dockerhub_email))
     repository: c2cnetworking/deploy
 
 - name: small-git-dockerfile
@@ -90,9 +90,9 @@ resources:
 - name: small-git-image
   type: docker-image
   source:
-    username: {{dockerhub_username}}
-    password: {{dockerhub_password}}
-    email: {{dockerhub_email}}
+    username: ((dockerhub_username))
+    password: ((dockerhub_password))
+    email: ((dockerhub_email))
     repository: c2cnetworking/small-git
 
 - name: deploy-light-dockerfile
@@ -106,9 +106,9 @@ resources:
 - name: deploy-light-image
   type: docker-image
   source:
-    username: {{dockerhub_username}}
-    password: {{dockerhub_password}}
-    email: {{dockerhub_email}}
+    username: ((dockerhub_username))
+    password: ((dockerhub_password))
+    email: ((dockerhub_email))
     repository: c2cnetworking/deploy-light
 
 - name: golang-1.x-tarball
@@ -133,8 +133,8 @@ resources:
     region_name: us-west-2
     bucket: docker-image-versions
     key: dev-mysql-image/version
-    access_key_id: {{aws-access-key-id}}
-    secret_access_key: {{aws-secret-access-key}}
+    access_key_id: ((aws-access-key-id))
+    secret_access_key: ((aws-secret-access-key))
     initial_version: 0.0.1
 
 - name: dev-postgres-image-version
@@ -144,8 +144,8 @@ resources:
     region_name: us-west-2
     bucket: docker-image-versions
     key: dev-postgres-image/version
-    access_key_id: {{aws-access-key-id}}
-    secret_access_key: {{aws-secret-access-key}}
+    access_key_id: ((aws-access-key-id))
+    secret_access_key: ((aws-secret-access-key))
     initial_version: 0.0.1
 
 - name: dev-postgres-ifb-image-version
@@ -155,8 +155,8 @@ resources:
     region_name: us-west-2
     bucket: docker-image-versions
     key: dev-postgres-ifb-image/version
-    access_key_id: {{aws-access-key-id}}
-    secret_access_key: {{aws-secret-access-key}}
+    access_key_id: ((aws-access-key-id))
+    secret_access_key: ((aws-secret-access-key))
     initial_version: 4.9.49
 
 - name: dev-mysql-5.6-image-version
@@ -166,8 +166,8 @@ resources:
     region_name: us-west-2
     bucket: docker-image-versions
     key: dev-mysql-5.6-image/version
-    access_key_id: {{aws-access-key-id}}
-    secret_access_key: {{aws-secret-access-key}}
+    access_key_id: ((aws-access-key-id))
+    secret_access_key: ((aws-secret-access-key))
     initial_version: 0.0.1
 
 - name: light-image-version
@@ -177,8 +177,8 @@ resources:
     region_name: us-west-2
     bucket: docker-image-versions
     key: light-image/version
-    access_key_id: {{aws-access-key-id}}
-    secret_access_key: {{aws-secret-access-key}}
+    access_key_id: ((aws-access-key-id))
+    secret_access_key: ((aws-secret-access-key))
     initial_version: 0.0.1
 
 - name: image-version
@@ -188,8 +188,8 @@ resources:
     region_name: us-west-2
     bucket: docker-image-versions
     key: image/version
-    access_key_id: {{aws-access-key-id}}
-    secret_access_key: {{aws-secret-access-key}}
+    access_key_id: ((aws-access-key-id))
+    secret_access_key: ((aws-secret-access-key))
     initial_version: 0.0.1
 
 - name: small-git-image-version
@@ -199,8 +199,8 @@ resources:
     region_name: us-west-2
     bucket: docker-image-versions
     key: small-git-image/version
-    access_key_id: {{aws-access-key-id}}
-    secret_access_key: {{aws-secret-access-key}}
+    access_key_id: ((aws-access-key-id))
+    secret_access_key: ((aws-secret-access-key))
     initial_version: 0.0.1
 
 - name: every-week
