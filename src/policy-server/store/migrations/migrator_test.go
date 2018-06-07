@@ -11,18 +11,19 @@ import (
 
 	"sync"
 
+	"time"
+
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"github.com/cf-container-networking/sql-migrate"
 	"github.com/jmoiron/sqlx"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"time"
 )
 
 type columnUsage struct {
-	constraintName string
-	columnName     string
+	value      string
+	columnName string
 }
 
 var _ = Describe("migrations", func() {
@@ -63,7 +64,7 @@ var _ = Describe("migrations", func() {
 	})
 
 	Describe("PerformMigrations", func() {
-		Describe("V0", func() {
+		Describe("V1", func() {
 			Context("mysql", func() {
 				BeforeEach(func() {
 					if realDb.DriverName() != "mysql" {
@@ -89,10 +90,10 @@ var _ = Describe("migrations", func() {
 						actualColumnUsageRows := scanColumnUsageRows(rows)
 
 						Expect(actualColumnUsageRows).To(ConsistOf(
-							columnUsage{constraintName: "PRIMARY", columnName: "id"},
-							columnUsage{constraintName: "group_id", columnName: "group_id"},
-							columnUsage{constraintName: "group_id", columnName: "port"},
-							columnUsage{constraintName: "group_id", columnName: "protocol"},
+							columnUsage{value: "PRIMARY", columnName: "id"},
+							columnUsage{value: "group_id", columnName: "group_id"},
+							columnUsage{value: "group_id", columnName: "port"},
+							columnUsage{value: "group_id", columnName: "protocol"},
 						))
 					})
 				})
@@ -120,24 +121,24 @@ var _ = Describe("migrations", func() {
 						actualColumnUsageRows := scanColumnUsageRows(rows)
 						Expect(actualColumnUsageRows).To(ConsistOf(
 							columnUsage{
-								constraintName: "destinations_pkey",
-								columnName:     "id",
+								value:      "destinations_pkey",
+								columnName: "id",
 							},
 							columnUsage{
-								constraintName: "destinations_group_id_port_protocol_key",
-								columnName:     "group_id",
+								value:      "destinations_group_id_port_protocol_key",
+								columnName: "group_id",
 							},
 							columnUsage{
-								constraintName: "destinations_group_id_port_protocol_key",
-								columnName:     "port",
+								value:      "destinations_group_id_port_protocol_key",
+								columnName: "port",
 							},
 							columnUsage{
-								constraintName: "destinations_group_id_port_protocol_key",
-								columnName:     "protocol",
+								value:      "destinations_group_id_port_protocol_key",
+								columnName: "protocol",
 							},
 							columnUsage{
-								constraintName: "destinations_group_id_fkey",
-								columnName:     "group_id",
+								value:      "destinations_group_id_fkey",
+								columnName: "group_id",
 							},
 						))
 					})
@@ -145,7 +146,7 @@ var _ = Describe("migrations", func() {
 			})
 		})
 
-		Describe("V1", func() {
+		Describe("V2", func() {
 			Context("mysql", func() {
 				BeforeEach(func() {
 					if realDb.DriverName() != "mysql" {
@@ -170,24 +171,24 @@ var _ = Describe("migrations", func() {
 
 					Expect(actualColumnUsageRows).To(ConsistOf(
 						columnUsage{
-							constraintName: "PRIMARY",
-							columnName:     "id",
+							value:      "PRIMARY",
+							columnName: "id",
 						},
 						columnUsage{
-							constraintName: "unique_destination",
-							columnName:     "group_id",
+							value:      "unique_destination",
+							columnName: "group_id",
 						},
 						columnUsage{
-							constraintName: "unique_destination",
-							columnName:     "start_port",
+							value:      "unique_destination",
+							columnName: "start_port",
 						},
 						columnUsage{
-							constraintName: "unique_destination",
-							columnName:     "end_port",
+							value:      "unique_destination",
+							columnName: "end_port",
 						},
 						columnUsage{
-							constraintName: "unique_destination",
-							columnName:     "protocol",
+							value:      "unique_destination",
+							columnName: "protocol",
 						},
 					))
 				})
@@ -215,28 +216,158 @@ var _ = Describe("migrations", func() {
 					By("checking there's a constraint on group_id, port, protocol")
 					actualColumnUsageRows := scanColumnUsageRows(rows)
 					Expect(actualColumnUsageRows).To(ConsistOf(columnUsage{
-						constraintName: "destinations_pkey",
-						columnName:     "id",
+						value:      "destinations_pkey",
+						columnName: "id",
 					},
 						columnUsage{
-							constraintName: "unique_destination",
-							columnName:     "group_id",
+							value:      "unique_destination",
+							columnName: "group_id",
 						},
 						columnUsage{
-							constraintName: "unique_destination",
-							columnName:     "start_port",
+							value:      "unique_destination",
+							columnName: "start_port",
 						},
 						columnUsage{
-							constraintName: "unique_destination",
-							columnName:     "end_port",
+							value:      "unique_destination",
+							columnName: "end_port",
 						},
 						columnUsage{
-							constraintName: "unique_destination",
-							columnName:     "protocol",
+							value:      "unique_destination",
+							columnName: "protocol",
 						},
 						columnUsage{
-							constraintName: "destinations_group_id_fkey",
-							columnName:     "group_id",
+							value:      "destinations_group_id_fkey",
+							columnName: "group_id",
+						},
+					))
+				})
+			})
+		})
+
+		Describe("V3", func() {
+			Context("mysql", func() {
+				BeforeEach(func() {
+					if realDb.DriverName() != "mysql" {
+						Skip("skipping mysql tests")
+					}
+				})
+
+				It("should migrate", func() {
+					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 2) //v1, v2
+					Expect(err).NotTo(HaveOccurred())
+					Expect(numMigrations).To(Equal(2))
+
+					By("inserting existing data")
+					_, err = realDb.Exec(`insert into groups (guid) values ("some-guid")`)
+					Expect(err).NotTo(HaveOccurred())
+
+					By("performing migration")
+					numMigrations, err = migrator.PerformMigrations(realDb.DriverName(), realDb, 1) //v3
+					Expect(err).NotTo(HaveOccurred())
+					Expect(numMigrations).To(Equal(1))
+
+					By("verifying existing rows have type 'app'")
+					rows, err := realDb.Query(`
+							SELECT count(*)
+							FROM groups
+							WHERE type = 'app' AND guid = 'some-guid'
+						`)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(scanCountRow(rows)).To(Equal(1))
+
+					By("inserting new data")
+					_, err = realDb.Exec(`insert into groups (guid) values ("some-new-guid")`)
+					Expect(err).NotTo(HaveOccurred())
+
+					By("verifying new row defaults to type 'app'")
+					rows, err = realDb.Query(`
+							SELECT count(*)
+							FROM groups
+							WHERE type = 'app' AND guid = 'some-new-guid'
+						`)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(scanCountRow(rows)).To(Equal(1))
+
+					By("inserting new data with a type")
+					_, err = realDb.Exec(`insert into groups (guid, type) values ("some-new-guid-router", "router")`)
+					Expect(err).NotTo(HaveOccurred())
+
+					By("verifying new row has correct type")
+					rows, err = realDb.Query(`
+							SELECT count(*)
+							FROM groups
+							WHERE type = 'router' AND guid = 'some-new-guid-router'
+					`)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(scanCountRow(rows)).To(Equal(1))
+				})
+
+				It("has an index on the group.type column", func() {
+					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 3)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(numMigrations).To(Equal(3))
+
+					rows, err := realDb.Query(`
+							SELECT DISTINCT INDEX_NAME, COLUMN_NAME
+							FROM INFORMATION_SCHEMA.STATISTICS
+							WHERE TABLE_NAME='groups'
+					`)
+					Expect(err).NotTo(HaveOccurred())
+
+					By("checking there's an index")
+					actualColumnUsageRows := scanColumnUsageRows(rows)
+					Expect(actualColumnUsageRows).To(ConsistOf(
+						columnUsage{columnName:"id", value: "PRIMARY"},
+						columnUsage{columnName:"guid", value: "guid"},
+						columnUsage{columnName:"type", value: "idx_type"},
+					))
+				})
+			})
+
+			PContext("postgres", func() {
+				BeforeEach(func() {
+					if realDb.DriverName() != "postgres" {
+						Skip("skipping postgres tests")
+					}
+				})
+
+				It("should migrate", func() {
+					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 2)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(numMigrations).To(Equal(2))
+
+					rows, err := realDb.Query(`
+						select *
+						from INFORMATION_SCHEMA t1
+						where TABLE_NAME='destinations'
+					`)
+					Expect(err).NotTo(HaveOccurred())
+
+					By("checking there's a constraint on group_id, port, protocol")
+					actualColumnUsageRows := scanColumnUsageRows(rows)
+					Expect(actualColumnUsageRows).To(ConsistOf(columnUsage{
+						value:      "destinations_pkey",
+						columnName: "id",
+					},
+						columnUsage{
+							value:      "unique_destination",
+							columnName: "group_id",
+						},
+						columnUsage{
+							value:      "unique_destination",
+							columnName: "start_port",
+						},
+						columnUsage{
+							value:      "unique_destination",
+							columnName: "end_port",
+						},
+						columnUsage{
+							value:      "unique_destination",
+							columnName: "protocol",
+						},
+						columnUsage{
+							value:      "destinations_group_id_fkey",
+							columnName: "group_id",
 						},
 					))
 				})
@@ -363,10 +494,19 @@ func scanColumnUsageRows(rows *sql.Rows) []columnUsage {
 
 		Expect(rows.Scan(&constraintName, &columnName)).To(Succeed())
 		actual = append(actual, columnUsage{
-			constraintName: constraintName,
-			columnName:     columnName,
+			value:      constraintName,
+			columnName: columnName,
 		})
 	}
 	Expect(rows.Err()).NotTo(HaveOccurred())
 	return actual
+}
+
+func scanCountRow(rows *sql.Rows) int {
+	defer rows.Close()
+	count := 0
+	for rows.Next() {
+		Expect(rows.Scan(&count)).To(Succeed())
+	}
+	return count
 }
