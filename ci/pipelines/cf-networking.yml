@@ -464,7 +464,7 @@ jobs:
       params:
         BBL_STATE_DIR: environments/pickelhelm/
     - task: deploy-cf
-      file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
+      file: cf-deployment-concourse-tasks/credhub-compatible/bosh-deploy-with-created-release/task.yml
       params:
         BBL_STATE_DIR: environments/pickelhelm/
         SYSTEM_DOMAIN: pickelhelm.c2c.cf-app.com
@@ -485,7 +485,6 @@ jobs:
           add-apps-internal-search-domain.yml
           add-acceptance-test-jobs.yml
           opsfile.yml
-        VARS_STORE_FILE: environments/pickelhelm/vars-store.yml
       input_mapping:
         bbl-state: cf-networking-deployments
         release: cf-networking-dev
@@ -522,7 +521,7 @@ jobs:
       params:
         ENVIRONMENT_NAME: pickelhelm
     - task: deploy-datadog-firehose-nozzle
-      file: cf-deployment-concourse-tasks/bosh-deploy/task.yml
+      file: cf-deployment-concourse-tasks/credhub-compatible/bosh-deploy/task.yml
       input_mapping:
         bbl-state: cf-networking-deployments
         cf-deployment: cf-networking-deployments
@@ -534,7 +533,6 @@ jobs:
         MANIFEST_FILE: firehose-nozzles.yml
         OPS_FILES: ""
         SYSTEM_DOMAIN: pickelhelm.c2c.cf-app.com
-        VARS_STORE_FILE: environments/pickelhelm/vars-store.yml
 
 
   - name: pickelhelm-test
@@ -677,7 +675,7 @@ jobs:
       params:
         BBL_STATE_DIR: environments/mitre/
     - task: deploy-cf
-      file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
+      file: cf-deployment-concourse-tasks/credhub-compatible/bosh-deploy-with-created-release/task.yml
       params:
         BBL_STATE_DIR: environments/mitre/
         SYSTEM_DOMAIN: mitre.c2c.cf-app.com
@@ -704,7 +702,6 @@ jobs:
           use-mysql-tls-for-silk-controller.yml
           enable-backup-restore.yml
           opsfile.yml
-        VARS_STORE_FILE: environments/mitre/vars-store.yml
       input_mapping:
         bbl-state: cf-networking-deployments
         vars-store: cf-networking-deployments
@@ -812,7 +809,7 @@ jobs:
       params:
         ENVIRONMENT_NAME: mitre
     - task: deploy-datadog-firehose-nozzle
-      file: cf-deployment-concourse-tasks/bosh-deploy/task.yml
+      file: cf-deployment-concourse-tasks/credhub-compatible/bosh-deploy/task.yml
       input_mapping:
         cf-deployment: cf-networking-deployments
         vars-store: cf-networking-deployments
@@ -824,7 +821,6 @@ jobs:
         MANIFEST_FILE: firehose-nozzles.yml
         OPS_FILES: ""
         SYSTEM_DOMAIN: mitre.c2c.cf-app.com
-        VARS_STORE_FILE: environments/mitre/vars-store.yml
 
   - name: mitre-perf-tests
     serial_groups: [mitre-test-group, mitre-deploy-group]
@@ -1067,7 +1063,7 @@ jobs:
       params:
         BBL_STATE_DIR: environments/toque/
     - task: deploy-cf
-      file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
+      file: cf-deployment-concourse-tasks/credhub-compatible/bosh-deploy-with-created-release/task.yml
       params:
         BBL_STATE_DIR: environments/toque
         SYSTEM_DOMAIN: toque.c2c.cf-app.com
@@ -1090,7 +1086,6 @@ jobs:
           use-mysql-tls-for-silk-controller.yml
           add-apps-internal-search-domain.yml
           opsfile.yml
-        VARS_STORE_FILE: environments/toque/vars-store.yml
       input_mapping:
         bbl-state: cf-networking-deployments
         cf-deployment: cf-deployment
@@ -1128,7 +1123,7 @@ jobs:
       params:
         ENVIRONMENT_NAME: toque
     - task: deploy-datadog-firehose-nozzle
-      file: cf-deployment-concourse-tasks/bosh-deploy/task.yml
+      file: cf-deployment-concourse-tasks/credhub-compatible/bosh-deploy/task.yml
       input_mapping:
         cf-deployment: cf-networking-deployments
         vars-store: cf-networking-deployments
@@ -1140,7 +1135,6 @@ jobs:
         MANIFEST_FILE: firehose-nozzles.yml
         OPS_FILES: ""
         SYSTEM_DOMAIN: toque.c2c.cf-app.com
-        VARS_STORE_FILE: environments/toque/vars-store.yml
 
   - name: toque-push
     serial_groups: [toque]
@@ -1318,7 +1312,7 @@ jobs:
       params:
         BBL_STATE_DIR: environments/slouch/
     - task: deploy-cf
-      file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
+      file: cf-deployment-concourse-tasks/credhub-compatible/bosh-deploy-with-created-release/task.yml
       params:
         BBL_STATE_DIR: environments/slouch
         SYSTEM_DOMAIN: slouch.c2c.cf-app.com
@@ -1338,7 +1332,6 @@ jobs:
           use-service-discovery-from-cf-networking.yml
           add-apps-internal-search-domain.yml
           opsfile.yml
-        VARS_STORE_FILE: environments/slouch/vars-store.yml
       input_mapping:
         bbl-state: cf-networking-deployments
         release: cf-networking-dev
