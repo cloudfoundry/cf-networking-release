@@ -17,6 +17,7 @@ declare -a serial_packages=(
   "src/garden-external-networker"
   "src/policy-server/integration/timeouts"
   "src/policy-server/integration"
+  "src/policy-server/store/migrations"
 )
 
 function loadIFB {
