@@ -276,7 +276,7 @@ var _ = Describe("migrations", func() {
 					Expect(scanCountRow(rows)).To(Equal(1))
 
 					By("inserting new data")
-					_, err = realDb.Exec(`insert into groups (guid) values ("some-new-guid")`)
+					_, err = realDb.Exec(`insert into groups (guid) values ('some-new-guid')`)
 					Expect(err).NotTo(HaveOccurred())
 
 					By("verifying new row defaults to type 'app'")
@@ -289,7 +289,7 @@ var _ = Describe("migrations", func() {
 					Expect(scanCountRow(rows)).To(Equal(1))
 
 					By("inserting new data with a type")
-					_, err = realDb.Exec(`insert into groups (guid, type) values ("some-new-guid-router", "router")`)
+					_, err = realDb.Exec(`insert into groups (guid, type) values ('some-new-guid-router', 'router')`)
 					Expect(err).NotTo(HaveOccurred())
 
 					By("verifying new row has correct type")
