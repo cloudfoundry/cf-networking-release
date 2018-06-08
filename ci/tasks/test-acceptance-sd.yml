@@ -7,6 +7,7 @@ image_resource:
     repository: c2cnetworking/deploy-light
 
 inputs:
+  - name: cf-networking-release-ci
   - name: cf-networking
   - name: test-config
   - name: variables
@@ -15,4 +16,4 @@ params:
   ENVIRONMENT_NAME: ~
 
 run:
-  path: cf-networking/ci/tasks/test-acceptance-sd
+  path: cf-networking-release-ci/ci/tasks/test-acceptance-sd
