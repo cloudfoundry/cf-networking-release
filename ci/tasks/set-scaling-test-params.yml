@@ -8,6 +8,7 @@ inputs:
   - name: cf-networking-release-ci
   - name: deployments-repo
   - name: scaling-test-params
+  - name: variables
 
 outputs:
   - name: test-config

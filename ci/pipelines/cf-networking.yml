@@ -1153,6 +1153,14 @@ jobs:
         trigger: true
       - get: toque-scaling-test-params
         trigger: true
+    - task: get-credhub-vars
+      file: cf-networking-release-ci/ci/tasks/get-credhub-vars.yml
+      input_mapping:
+        bbl-state: cf-networking-deployments
+      params:
+        BBL_STATE_DIR: environments/toque
+        VARIABLES: |
+          /bosh-toque/cf/cf_admin_password
     - task: set-scaling-test-params
       file: cf-networking-release-ci/ci/tasks/set-scaling-test-params.yml
       params:
