@@ -1,4 +1,4 @@
-#!/bin/bash -exu
+#!/bin/bash -eu
 
 ROOT="$(cd "$(dirname $0)/../../.." && pwd)"
 

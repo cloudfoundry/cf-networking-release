@@ -3,10 +3,12 @@
 set -e
 
 # replace admin password and secret in test config
-ADMIN_PASSWORD="$(bosh int --path /cf_admin_password variables/variables.yml)"
-sed -i -- "s/{{admin-password}}/${ADMIN_PASSWORD}/g" test-config.json
-ADMIN_SECRET="$(bosh int --path /uaa_admin_client_secret variables/variables.yml)"
-sed -i -- "s/{{admin-secret}}/${ADMIN_SECRET}/g" test-config.json
+pushd "test-config/environments/${ENVIRONMENT_NAME}" > /dev/null
+  ADMIN_PASSWORD="$(bosh int --path /cf_admin_password variables/variables.yml)"
+  sed -i -- "s/{{admin-password}}/${ADMIN_PASSWORD}/g" test-config.json
+  ADMIN_SECRET="$(bosh int --path /uaa_admin_client_secret variables/variables.yml)"
+  sed -i -- "s/{{admin-secret}}/${ADMIN_SECRET}/g" test-config.json
+popd > /dev/null
 
 ENVIRONMENT_PATH="test-config/environments/${ENVIRONMENT_NAME}/test-config.json"
 export CONFIG=${PWD}/${CONFIG:-"${ENVIRONMENT_PATH}"}
@@ -15,9 +17,11 @@ echo $CONFIG
 
 export NETWORK_STATS_FILE=$PWD/network-stats/stats.json
 
-cd cf-networking
-export GOPATH=$PWD
+pushd cf-networking > /dev/null
+  export GOPATH=$PWD
 
-cd src/test/acceptance
-export APPS_DIR=../../example-apps
-ginkgo -r -v
+  pushd src/test/acceptance > /dev/null
+    export APPS_DIR=../../example-apps
+    ginkgo -r -v
+  popd > /dev/null
+popd > /dev/null

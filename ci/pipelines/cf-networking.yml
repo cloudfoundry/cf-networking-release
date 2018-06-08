@@ -548,6 +548,15 @@ jobs:
       - get: silk-dev
         passed: [pickelhelm-deploy]
         trigger: true
+    - task: get-credhub-vars
+      file: cf-networking-release-ci/ci/tasks/get-credhub-vars.yml
+      input_mapping:
+        bbl-state: cf-networking-deployments
+      params:
+        BBL_STATE_DIR: environments/pickelhelm
+        VARIABLES: |
+          /bosh-pickelhelm/cf/cf_admin_password
+          /bosh-pickelhelm/cf/uaa_admin_client_secret
     - task: acceptance-tests-sd
       file: cf-networking-release-ci/ci/tasks/test-acceptance-sd.yml
       input_mapping:
@@ -762,6 +771,15 @@ jobs:
         trigger: true
       - get: silk-tarball
         passed: [mitre-deploy]
+    - task: get-credhub-vars
+      file: cf-networking-release-ci/ci/tasks/get-credhub-vars.yml
+      input_mapping:
+        bbl-state: cf-networking-deployments
+      params:
+        BBL_STATE_DIR: environments/mitre
+        VARIABLES: |
+          /bosh-mitre/cf/cf_admin_password
+          /bosh-mitre/cf/uaa_admin_client_secret
     - task: acceptance-tests
       file: cf-networking-release-ci/ci/tasks/acceptance-tests.yml
       input_mapping:
