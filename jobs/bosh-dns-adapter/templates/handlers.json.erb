@@ -1,4 +1,4 @@
-<% if p("cf_app_sd_disable") %>
+<% if p('cf_app_sd_disable') %>
 <%=
 
   config = []
@@ -9,16 +9,16 @@ JSON.dump(config)
 <% else %>
  <%=
 
-config = [
-  {
-    "domain" => "apps.internal.",
-    "cache" => {"enabled" => false},
-    "source" => {
-      "type" => "http",
-      "url" => "http://127.0.0.1:8053"
+config = p('internal_domains').map{
+  |domain| {
+    'domain' => domain,
+    'cache' => {'enabled' => false},
+    'source' => {
+      'type' => 'http',
+      'url' => 'http://127.0.0.1:8053'
     }
   }
-]
+}
 
 require 'json'
 JSON.dump(config)

@@ -2,6 +2,14 @@
 
 See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for examples
 
+### 2.5.0 CF-Networking-Release
+**New Properties
+  - An optional paramater has been added to the `bosh-dns-adapter` job to configure custom internal domains. Defaults to `[apps.internal.]`
+    - `internal_domains`
+
+### 2.4.0 CF-Networking-Release
+**No Manifest Changes**
+
 ### 2.3.0 CF-Networking-Release
 **New Properties**
   - An optional parameter has been added to the `policy-server` and `policy-server-internal` jobs to configure the max number of

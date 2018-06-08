@@ -50,3 +50,8 @@ properties:
   log_level_address:
     description: "Address which log level endpoint listens on"
     default: 127.0.0.1
+
+  internal_domains:
+    description: "TLD for internal app resolution with service discovery."
+    example: ["apps.internal.", "my.apps.internal."]
+    default: ["apps.internal."]
