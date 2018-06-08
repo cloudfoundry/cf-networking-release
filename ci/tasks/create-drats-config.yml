@@ -9,6 +9,7 @@ inputs:
   - name: cf-networking-release-ci
   - name: test-config
   - name: vars-store
+  - name: variables
 
 outputs:
   - name: drats-integration-config

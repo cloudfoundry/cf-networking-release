@@ -2,10 +2,11 @@
 
 set -eu
 
+ROOT="$(cd "$(dirname $0)/../../.." && pwd)"
+
 # replace secrets in test config
-VARS_STORE=${PWD}/vars-store/environments/${ENVIRONMENT_NAME}/vars-store.yml
 pushd test-config/environments/${ENVIRONMENT_NAME}
-  cf_admin_password=`grep cf_admin_password ${VARS_STORE} | cut -d' ' -f2`
+  cf_admin_password=`grep cf_admin_password ${ROOT}/variables/variables.yml | cut -d' ' -f2`
   ssh_proxy_private_key=`bbl ssh-key`
   bosh_client_secret=`bbl director-password`
   bosh_ca_cert=`bbl director-ca-cert`

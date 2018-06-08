@@ -983,6 +983,14 @@ jobs:
         trigger: true
       - get: silk-tarball
         passed: [mitre-cats]
+    - task: get-credhub-vars
+      file: cf-networking-release-ci/ci/tasks/get-credhub-vars.yml
+      input_mapping:
+        bbl-state: cf-networking-deployments
+      params:
+        BBL_STATE_DIR: environments/mitre
+        VARIABLES: |
+          /bosh-mitre/cf/cf_admin_password
     - task: create-drats-config
       file: cf-networking-release-ci/ci/tasks/create-drats-config.yml
       input_mapping:
