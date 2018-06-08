@@ -9,8 +9,4 @@ var MigrationsToPerform policyServerMigrations = policyServerMigrations{
 		"2",
 		migration_v0002,
 	},
-	policyServerMigration{
-		"3",
-		migration_v0003,
-	},
 }
