@@ -8,6 +8,8 @@ image_resource:
 inputs:
   - name: cf-networking-release-ci
   - name: cf-networking-deployments
+  - name: variables
+    optional: true
 
 params:
   ENVIRONMENT_NAME: ~

@@ -883,6 +883,14 @@ jobs:
       - get: silk-dev
         passed: [mitre-test, mitre-perf-tests]
         trigger: true
+    - task: get-credhub-vars
+      file: cf-networking-release-ci/ci/tasks/get-credhub-vars.yml
+      input_mapping:
+        bbl-state: cf-networking-deployments
+      params:
+        BBL_STATE_DIR: environments/mitre
+        VARIABLES: |
+          /bosh-mitre/cf/cf_networking_smoke_user_password
     - task: setup-smoke-config
       file: cf-networking-release-ci/ci/tasks/setup-smoke-config.yml
       params:
