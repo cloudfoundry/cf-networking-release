@@ -8,4 +8,4 @@
 
 - type: replace
   path: /instance_groups/name=api/jobs/name=policy-server/properties/database?/ca_cert
-  value: ((pxc_server_ca.ca))
+  value: ((pxc_server_ca.certificate))
