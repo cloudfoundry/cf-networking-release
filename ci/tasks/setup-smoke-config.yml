@@ -12,6 +12,7 @@ inputs:
 params:
   ENVIRONMENT_NAME: ~
   CONFIG_POSTFIX: ~
+  SMOKE_PASSWORD: ~
 
 outputs:
   - name: smoke-config
