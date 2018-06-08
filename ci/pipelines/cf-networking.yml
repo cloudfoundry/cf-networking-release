@@ -932,6 +932,14 @@ jobs:
         passed: [mitre-test, mitre-perf-tests]
       - get: version
         passed: [mitre-test, mitre-perf-tests]
+    - task: get-credhub-vars
+      file: cf-networking-release-ci/ci/tasks/get-credhub-vars.yml
+      input_mapping:
+        bbl-state: cf-networking-deployments
+      params:
+        BBL_STATE_DIR: environments/mitre
+        VARIABLES: |
+          /bosh-mitre/cf/cf_admin_password
     - task: copy-config
       file: cf-networking-release-ci/ci/tasks/copy-config.yml
       params:

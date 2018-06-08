@@ -11,6 +11,7 @@ params:
 inputs:
   - name: cf-networking-release-ci
   - name: cf-networking-deployments
+  - name: variables
 
 outputs:
   - name: integration-config
