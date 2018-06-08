@@ -4,10 +4,8 @@ set -e -u
 set -o pipefail
 
 # replace admin password in test config
-pushd ${PWD}/deployments-repo/environments/${ENVIRONMENT_NAME}
-  ADMIN_PASSWORD=`grep cf_admin_password vars-store.yml  | cut -d' ' -f2`
-  sed -i -- "s/{{admin-password}}/${ADMIN_PASSWORD}/g" test-config.json
-popd
+ADMIN_PASSWORD=`grep cf_admin_password variables/variables.yml | cut -d' ' -f2`
+sed -i -- "s/{{admin-password}}/${ADMIN_PASSWORD}/g" ${PWD}/deployments-repo/environments/${ENVIRONMENT_NAME}/test-config.json
 
 mkdir -p ${PWD}/test-config/environments/${ENVIRONMENT_NAME}
 input_test_params=${PWD}/scaling-test-params/test-params/params.json

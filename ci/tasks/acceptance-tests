@@ -6,9 +6,9 @@ ROOT="$(cd "$(dirname $0)/../../.." && pwd)"
 
 # replace admin password and secret in test config
 pushd "${ROOT}/test-config/environments/${ENVIRONMENT_NAME}" > /dev/null
-  ADMIN_PASSWORD="$(bosh int --path /cf_admin_password ${ROOT}/variables/variables.yml)"
+  ADMIN_PASSWORD="$(grep '^cf_admin_password:' ${ROOT}/variables/variables.yml | cut -d" " -f2)"
   sed -i -- "s/{{admin-password}}/${ADMIN_PASSWORD}/g" test-config.json
-  ADMIN_SECRET="$(bosh int --path /uaa_admin_client_secret ${ROOT}/variables/variables.yml)"
+  ADMIN_SECRET="$(grep '^uaa_admin_client_secret:' ${ROOT}/variables/variables.yml | cut -d" " -f2)"
   sed -i -- "s/{{admin-secret}}/${ADMIN_SECRET}/g" test-config.json
 popd > /dev/null
 
