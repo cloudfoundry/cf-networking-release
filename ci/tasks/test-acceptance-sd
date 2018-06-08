@@ -13,7 +13,7 @@ pushd "${ROOT}/test-config/environments/${ENVIRONMENT_NAME}" > /dev/null
 popd > /dev/null
 
 ENVIRONMENT_PATH="${ROOT}/test-config/environments/${ENVIRONMENT_NAME}/test-config.json"
-export CONFIG="${ROOT}/${CONFIG:-"${ENVIRONMENT_PATH}"}"
+export CONFIG="${CONFIG:-"${ENVIRONMENT_PATH}"}"
 export NETWORK_STATS_FILE="${ROOT}/network-stats/stats.json"
 export GOPATH="${ROOT}/cf-networking"
 export APPS_DIR="${ROOT}/cf-networking/src/example-apps"
