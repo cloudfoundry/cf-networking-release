@@ -1,27 +1,19 @@
-#!/bin/bash
+#!/usr/bin/env bash -eu
 
-set -e
+ROOT="$(cd "$(dirname $0)/../../.." && pwd)"
 
 # replace admin password and secret in test config
-pushd "test-config/environments/${ENVIRONMENT_NAME}" > /dev/null
-  ADMIN_PASSWORD="$(bosh int --path /cf_admin_password variables/variables.yml)"
+pushd "${ROOT}/test-config/environments/${ENVIRONMENT_NAME}" > /dev/null
+  ADMIN_PASSWORD="$(bosh int --path /cf_admin_password ${ROOT}/variables/variables.yml)"
   sed -i -- "s/{{admin-password}}/${ADMIN_PASSWORD}/g" test-config.json
-  ADMIN_SECRET="$(bosh int --path /uaa_admin_client_secret variables/variables.yml)"
+  ADMIN_SECRET="$(bosh int --path /uaa_admin_client_secret ${ROOT}/variables/variables.yml)"
   sed -i -- "s/{{admin-secret}}/${ADMIN_SECRET}/g" test-config.json
 popd > /dev/null
 
-ENVIRONMENT_PATH="test-config/environments/${ENVIRONMENT_NAME}/test-config.json"
-export CONFIG=${PWD}/${CONFIG:-"${ENVIRONMENT_PATH}"}
+ENVIRONMENT_PATH="${ROOT}/test-config/environments/${ENVIRONMENT_NAME}/test-config.json"
+export CONFIG="${ROOT}/${CONFIG:-"${ENVIRONMENT_PATH}"}"
+export NETWORK_STATS_FILE="${ROOT}/network-stats/stats.json"
+export GOPATH="${ROOT}/cf-networking"
+export APPS_DIR="${ROOT}/cf-networking/src/example-apps"
 
-echo $CONFIG
-
-export NETWORK_STATS_FILE=$PWD/network-stats/stats.json
-
-pushd cf-networking > /dev/null
-  export GOPATH=$PWD
-
-  pushd src/test/acceptance > /dev/null
-    export APPS_DIR=../../example-apps
-    ginkgo -r -v
-  popd > /dev/null
-popd > /dev/null
+ginkgo -r -v "${ROOT}/cf-networking/src/test/acceptance"

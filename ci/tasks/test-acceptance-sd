@@ -2,24 +2,20 @@
 
 set -eu
 
-export GOPATH=$PWD/cf-networking
-export PATH="${GOPATH}/bin":$PATH
-export APPS_DIR=$PWD/cf-networking/src/example-apps
-
-go install github.com/onsi/ginkgo/ginkgo
+ROOT="$(cd "$(dirname $0)/../../.." && pwd)"
 
 # replace admin password and secret in test config
-pushd "test-config/environments/${ENVIRONMENT_NAME}" > /dev/null
-  ADMIN_PASSWORD="$(bosh int --path /cf_admin_password variables/variables.yml)"
+pushd "${ROOT}/test-config/environments/${ENVIRONMENT_NAME}" > /dev/null
+  ADMIN_PASSWORD="$(bosh int --path /cf_admin_password ${ROOT}/variables/variables.yml)"
   sed -i -- "s/{{admin-password}}/${ADMIN_PASSWORD}/g" test-config.json
-  ADMIN_SECRET="$(bosh int --path /uaa_admin_client_secret variables/variables.yml)"
+  ADMIN_SECRET="$(bosh int --path /uaa_admin_client_secret ${ROOT}/variables/variables.yml)"
   sed -i -- "s/{{admin-secret}}/${ADMIN_SECRET}/g" test-config.json
 popd > /dev/null
 
-ENVIRONMENT_PATH="test-config/environments/${ENVIRONMENT_NAME}/test-config.json"
-export CONFIG=${PWD}/${CONFIG:-"${ENVIRONMENT_PATH}"}
+ENVIRONMENT_PATH="${ROOT}/test-config/environments/${ENVIRONMENT_NAME}/test-config.json"
+export CONFIG="${ROOT}/${CONFIG:-"${ENVIRONMENT_PATH}"}"
+export NETWORK_STATS_FILE="${ROOT}/network-stats/stats.json"
+export GOPATH="${ROOT}/cf-networking"
+export APPS_DIR="${ROOT}/cf-networking/src/example-apps"
 
-
-pushd $GOPATH/src/test/acceptance-sd
-    ginkgo -keepGoing -randomizeAllSpecs -randomizeSuites -race .
-popd
+ginkgo -keepGoing -randomizeAllSpecs -randomizeSuites -race "${ROOT}/cf-networking/src/test/acceptance-sd"
