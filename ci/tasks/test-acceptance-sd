@@ -17,5 +17,8 @@ export CONFIG="${ROOT}/${CONFIG:-"${ENVIRONMENT_PATH}"}"
 export NETWORK_STATS_FILE="${ROOT}/network-stats/stats.json"
 export GOPATH="${ROOT}/cf-networking"
 export APPS_DIR="${ROOT}/cf-networking/src/example-apps"
+export PATH="${GOPATH}/bin:${PATH}"
+
+go install github.com/onsi/ginkgo/ginkgo
 
 ginkgo -keepGoing -randomizeAllSpecs -randomizeSuites -race "${ROOT}/cf-networking/src/test/acceptance-sd"
