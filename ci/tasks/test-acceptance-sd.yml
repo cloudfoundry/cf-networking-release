@@ -9,7 +9,7 @@ image_resource:
 inputs:
   - name: cf-networking
   - name: test-config
-  - name: vars-store
+  - name: variables
 
 params:
   ENVIRONMENT_NAME: ~

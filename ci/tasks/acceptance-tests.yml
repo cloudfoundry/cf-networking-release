@@ -8,8 +8,8 @@ image_resource:
 inputs:
   - name: cf-networking-release-ci
   - name: test-config
-  - name: vars-store
   - name: cf-networking
+  - name: variables
 
 outputs:
   - name: network-stats

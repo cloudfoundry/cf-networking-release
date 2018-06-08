@@ -1,0 +1,21 @@
+#!/bin/bash -exu
+
+ROOT="$(cd "$(dirname $0)/../../.." && pwd)"
+
+function main() {
+  eval "$(bbl --state-dir "${ROOT}/bbl-state/${BBL_STATE_DIR}" print-env)"
+
+  for var in ${VARIABLES}; do
+    interpolate "${var}" "${ROOT}/variables/variables.yml"
+  done
+}
+
+function interpolate() {
+  var="${1}"
+  file="${2}"
+  value="$(credhub get -n "${var}" -j | jq -r .value)"
+
+  echo "$(basename ${var}): ${value}" >> "${file}"
+}
+
+main
