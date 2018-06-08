@@ -4,12 +4,12 @@
     access-token-validity: 1209600
     authorized-grant-types: client_credentials
     override: true
-    secret: "((uaa_clients_datadog_firehose_nozzle_secret))"
+    secret: "((/uaa_clients_datadog_firehose_nozzle_secret))"
     authorities: oauth.login,doppler.firehose
 
 - type: replace
   path: /variables/-
   value:
-    name: uaa_clients_datadog_firehose_nozzle_secret
+    name: /uaa_clients_datadog_firehose_nozzle_secret
     type: password
 
