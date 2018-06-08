@@ -490,11 +490,6 @@ jobs:
         release: cf-networking-dev
         vars-files: cf-networking-deployments
         vars-store: cf-networking-deployments
-      ensure:
-        put: cf-networking-deployments
-        params:
-          repository: updated-vars-store
-          rebase: true
     - task: bosh-cleanup
       file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
       params:
@@ -707,11 +702,6 @@ jobs:
         vars-store: cf-networking-deployments
         vars-files: cf-networking-deployments
         release: cf-networking-dev
-      ensure:
-        put: cf-networking-deployments
-        params:
-          repository: updated-vars-store
-          rebase: true
     - task: upload-concourse-release
       file: cf-networking-release-ci/ci/tasks/upload-release-tarball.yml
       input_mapping:
@@ -1092,11 +1082,6 @@ jobs:
         release: cf-networking-dev
         vars-files: cf-networking-deployments
         vars-store: cf-networking-deployments
-      ensure:
-        put: cf-networking-deployments
-        params:
-          repository: updated-vars-store
-          rebase: true
     - task: bosh-cleanup
       file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
       params:
@@ -1337,11 +1322,6 @@ jobs:
         release: cf-networking-dev
         vars-store: cf-networking-deployments
         vars-files: cf-networking-deployments
-      ensure:
-        put: cf-networking-deployments
-        params:
-          repository: updated-vars-store
-          rebase: true
     - task: bosh-cleanup
       file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
       params:
