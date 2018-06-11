@@ -3,21 +3,22 @@ package fakes
 
 import (
 	"database/sql"
+	"policy-server/db"
 	"sync"
 
 	"github.com/jmoiron/sqlx"
 )
 
 type Db struct {
-	BeginxStub        func() (*sqlx.Tx, error)
+	BeginxStub        func() (db.Transaction, error)
 	beginxMutex       sync.RWMutex
 	beginxArgsForCall []struct{}
 	beginxReturns     struct {
-		result1 *sqlx.Tx
+		result1 db.Transaction
 		result2 error
 	}
 	beginxReturnsOnCall map[int]struct {
-		result1 *sqlx.Tx
+		result1 db.Transaction
 		result2 error
 	}
 	ExecStub        func(query string, args ...interface{}) (sql.Result, error)
@@ -109,11 +110,20 @@ type Db struct {
 	driverNameReturnsOnCall map[int]struct {
 		result1 string
 	}
+	RawConnectionStub        func() *sqlx.DB
+	rawConnectionMutex       sync.RWMutex
+	rawConnectionArgsForCall []struct{}
+	rawConnectionReturns     struct {
+		result1 *sqlx.DB
+	}
+	rawConnectionReturnsOnCall map[int]struct {
+		result1 *sqlx.DB
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *Db) Beginx() (*sqlx.Tx, error) {
+func (fake *Db) Beginx() (db.Transaction, error) {
 	fake.beginxMutex.Lock()
 	ret, specificReturn := fake.beginxReturnsOnCall[len(fake.beginxArgsForCall)]
 	fake.beginxArgsForCall = append(fake.beginxArgsForCall, struct{}{})
@@ -134,24 +144,24 @@ func (fake *Db) BeginxCallCount() int {
 	return len(fake.beginxArgsForCall)
 }
 
-func (fake *Db) BeginxReturns(result1 *sqlx.Tx, result2 error) {
+func (fake *Db) BeginxReturns(result1 db.Transaction, result2 error) {
 	fake.BeginxStub = nil
 	fake.beginxReturns = struct {
-		result1 *sqlx.Tx
+		result1 db.Transaction
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *Db) BeginxReturnsOnCall(i int, result1 *sqlx.Tx, result2 error) {
+func (fake *Db) BeginxReturnsOnCall(i int, result1 db.Transaction, result2 error) {
 	fake.BeginxStub = nil
 	if fake.beginxReturnsOnCall == nil {
 		fake.beginxReturnsOnCall = make(map[int]struct {
-			result1 *sqlx.Tx
+			result1 db.Transaction
 			result2 error
 		})
 	}
 	fake.beginxReturnsOnCall[i] = struct {
-		result1 *sqlx.Tx
+		result1 db.Transaction
 		result2 error
 	}{result1, result2}
 }
@@ -501,6 +511,46 @@ func (fake *Db) DriverNameReturnsOnCall(i int, result1 string) {
 	}{result1}
 }
 
+func (fake *Db) RawConnection() *sqlx.DB {
+	fake.rawConnectionMutex.Lock()
+	ret, specificReturn := fake.rawConnectionReturnsOnCall[len(fake.rawConnectionArgsForCall)]
+	fake.rawConnectionArgsForCall = append(fake.rawConnectionArgsForCall, struct{}{})
+	fake.recordInvocation("RawConnection", []interface{}{})
+	fake.rawConnectionMutex.Unlock()
+	if fake.RawConnectionStub != nil {
+		return fake.RawConnectionStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.rawConnectionReturns.result1
+}
+
+func (fake *Db) RawConnectionCallCount() int {
+	fake.rawConnectionMutex.RLock()
+	defer fake.rawConnectionMutex.RUnlock()
+	return len(fake.rawConnectionArgsForCall)
+}
+
+func (fake *Db) RawConnectionReturns(result1 *sqlx.DB) {
+	fake.RawConnectionStub = nil
+	fake.rawConnectionReturns = struct {
+		result1 *sqlx.DB
+	}{result1}
+}
+
+func (fake *Db) RawConnectionReturnsOnCall(i int, result1 *sqlx.DB) {
+	fake.RawConnectionStub = nil
+	if fake.rawConnectionReturnsOnCall == nil {
+		fake.rawConnectionReturnsOnCall = make(map[int]struct {
+			result1 *sqlx.DB
+		})
+	}
+	fake.rawConnectionReturnsOnCall[i] = struct {
+		result1 *sqlx.DB
+	}{result1}
+}
+
 func (fake *Db) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -520,6 +570,8 @@ func (fake *Db) Invocations() map[string][][]interface{} {
 	defer fake.queryMutex.RUnlock()
 	fake.driverNameMutex.RLock()
 	defer fake.driverNameMutex.RUnlock()
+	fake.rawConnectionMutex.RLock()
+	defer fake.rawConnectionMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

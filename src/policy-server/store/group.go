@@ -3,19 +3,20 @@ package store
 import (
 	"database/sql"
 	"fmt"
+	"policy-server/db"
 )
 
 //go:generate counterfeiter -o fakes/group_repo.go --fake-name GroupRepo . GroupRepo
 type GroupRepo interface {
-	Create(Transaction, string) (int, error)
-	Delete(Transaction, int) error
-	GetID(Transaction, string) (int, error)
+	Create(db.Transaction, string) (int, error)
+	Delete(db.Transaction, int) error
+	GetID(db.Transaction, string) (int, error)
 }
 
 type GroupTable struct {
 }
 
-func (g *GroupTable) Create(tx Transaction, guid string) (int, error) {
+func (g *GroupTable) Create(tx db.Transaction, guid string) (int, error) {
 	id, err := g.findRowByGUID(tx, guid)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -35,7 +36,7 @@ func (g *GroupTable) Create(tx Transaction, guid string) (int, error) {
 	return id, nil
 }
 
-func (g *GroupTable) findRowByGUID(tx Transaction, guid string) (int, error) {
+func (g *GroupTable) findRowByGUID(tx db.Transaction, guid string) (int, error) {
 	var id int
 	err := tx.QueryRow(
 		tx.Rebind(`
@@ -47,7 +48,7 @@ func (g *GroupTable) findRowByGUID(tx Transaction, guid string) (int, error) {
 	return id, err
 }
 
-func (g *GroupTable) firstBlankRow(tx Transaction) (int, error) {
+func (g *GroupTable) firstBlankRow(tx db.Transaction) (int, error) {
 	var id int
 	err := tx.QueryRow(
 		`SELECT id FROM groups
@@ -59,7 +60,7 @@ func (g *GroupTable) firstBlankRow(tx Transaction) (int, error) {
 	return id, err
 }
 
-func (g *GroupTable) updateRow(tx Transaction, id int, guid string) error {
+func (g *GroupTable) updateRow(tx db.Transaction, id int, guid string) error {
 	_, err := tx.Exec(
 		tx.Rebind(`
 			UPDATE groups SET guid = ?
@@ -71,7 +72,7 @@ func (g *GroupTable) updateRow(tx Transaction, id int, guid string) error {
 	return err
 }
 
-func (g *GroupTable) Delete(tx Transaction, id int) error {
+func (g *GroupTable) Delete(tx db.Transaction, id int) error {
 	_, err := tx.Exec(
 		tx.Rebind(`UPDATE groups SET guid = NULL WHERE id = ?`),
 		id,
@@ -79,7 +80,7 @@ func (g *GroupTable) Delete(tx Transaction, id int) error {
 	return err
 }
 
-func (g *GroupTable) GetID(tx Transaction, guid string) (int, error) {
+func (g *GroupTable) GetID(tx db.Transaction, guid string) (int, error) {
 	var id int
 	err := tx.QueryRow(
 		tx.Rebind(`SELECT id FROM groups WHERE guid = ?`),

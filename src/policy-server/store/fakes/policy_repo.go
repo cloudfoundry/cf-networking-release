@@ -2,15 +2,16 @@
 package fakes
 
 import (
+	"policy-server/db"
 	"policy-server/store"
 	"sync"
 )
 
 type PolicyRepo struct {
-	CreateStub        func(store.Transaction, int, int) error
+	CreateStub        func(db.Transaction, int, int) error
 	createMutex       sync.RWMutex
 	createArgsForCall []struct {
-		arg1 store.Transaction
+		arg1 db.Transaction
 		arg2 int
 		arg3 int
 	}
@@ -20,10 +21,10 @@ type PolicyRepo struct {
 	createReturnsOnCall map[int]struct {
 		result1 error
 	}
-	DeleteStub        func(store.Transaction, int, int) error
+	DeleteStub        func(db.Transaction, int, int) error
 	deleteMutex       sync.RWMutex
 	deleteArgsForCall []struct {
-		arg1 store.Transaction
+		arg1 db.Transaction
 		arg2 int
 		arg3 int
 	}
@@ -33,10 +34,10 @@ type PolicyRepo struct {
 	deleteReturnsOnCall map[int]struct {
 		result1 error
 	}
-	CountWhereGroupIDStub        func(store.Transaction, int) (int, error)
+	CountWhereGroupIDStub        func(db.Transaction, int) (int, error)
 	countWhereGroupIDMutex       sync.RWMutex
 	countWhereGroupIDArgsForCall []struct {
-		arg1 store.Transaction
+		arg1 db.Transaction
 		arg2 int
 	}
 	countWhereGroupIDReturns struct {
@@ -47,10 +48,10 @@ type PolicyRepo struct {
 		result1 int
 		result2 error
 	}
-	CountWhereDestinationIDStub        func(store.Transaction, int) (int, error)
+	CountWhereDestinationIDStub        func(db.Transaction, int) (int, error)
 	countWhereDestinationIDMutex       sync.RWMutex
 	countWhereDestinationIDArgsForCall []struct {
-		arg1 store.Transaction
+		arg1 db.Transaction
 		arg2 int
 	}
 	countWhereDestinationIDReturns struct {
@@ -65,11 +66,11 @@ type PolicyRepo struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *PolicyRepo) Create(arg1 store.Transaction, arg2 int, arg3 int) error {
+func (fake *PolicyRepo) Create(arg1 db.Transaction, arg2 int, arg3 int) error {
 	fake.createMutex.Lock()
 	ret, specificReturn := fake.createReturnsOnCall[len(fake.createArgsForCall)]
 	fake.createArgsForCall = append(fake.createArgsForCall, struct {
-		arg1 store.Transaction
+		arg1 db.Transaction
 		arg2 int
 		arg3 int
 	}{arg1, arg2, arg3})
@@ -90,7 +91,7 @@ func (fake *PolicyRepo) CreateCallCount() int {
 	return len(fake.createArgsForCall)
 }
 
-func (fake *PolicyRepo) CreateArgsForCall(i int) (store.Transaction, int, int) {
+func (fake *PolicyRepo) CreateArgsForCall(i int) (db.Transaction, int, int) {
 	fake.createMutex.RLock()
 	defer fake.createMutex.RUnlock()
 	return fake.createArgsForCall[i].arg1, fake.createArgsForCall[i].arg2, fake.createArgsForCall[i].arg3
@@ -115,11 +116,11 @@ func (fake *PolicyRepo) CreateReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *PolicyRepo) Delete(arg1 store.Transaction, arg2 int, arg3 int) error {
+func (fake *PolicyRepo) Delete(arg1 db.Transaction, arg2 int, arg3 int) error {
 	fake.deleteMutex.Lock()
 	ret, specificReturn := fake.deleteReturnsOnCall[len(fake.deleteArgsForCall)]
 	fake.deleteArgsForCall = append(fake.deleteArgsForCall, struct {
-		arg1 store.Transaction
+		arg1 db.Transaction
 		arg2 int
 		arg3 int
 	}{arg1, arg2, arg3})
@@ -140,7 +141,7 @@ func (fake *PolicyRepo) DeleteCallCount() int {
 	return len(fake.deleteArgsForCall)
 }
 
-func (fake *PolicyRepo) DeleteArgsForCall(i int) (store.Transaction, int, int) {
+func (fake *PolicyRepo) DeleteArgsForCall(i int) (db.Transaction, int, int) {
 	fake.deleteMutex.RLock()
 	defer fake.deleteMutex.RUnlock()
 	return fake.deleteArgsForCall[i].arg1, fake.deleteArgsForCall[i].arg2, fake.deleteArgsForCall[i].arg3
@@ -165,11 +166,11 @@ func (fake *PolicyRepo) DeleteReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *PolicyRepo) CountWhereGroupID(arg1 store.Transaction, arg2 int) (int, error) {
+func (fake *PolicyRepo) CountWhereGroupID(arg1 db.Transaction, arg2 int) (int, error) {
 	fake.countWhereGroupIDMutex.Lock()
 	ret, specificReturn := fake.countWhereGroupIDReturnsOnCall[len(fake.countWhereGroupIDArgsForCall)]
 	fake.countWhereGroupIDArgsForCall = append(fake.countWhereGroupIDArgsForCall, struct {
-		arg1 store.Transaction
+		arg1 db.Transaction
 		arg2 int
 	}{arg1, arg2})
 	fake.recordInvocation("CountWhereGroupID", []interface{}{arg1, arg2})
@@ -189,7 +190,7 @@ func (fake *PolicyRepo) CountWhereGroupIDCallCount() int {
 	return len(fake.countWhereGroupIDArgsForCall)
 }
 
-func (fake *PolicyRepo) CountWhereGroupIDArgsForCall(i int) (store.Transaction, int) {
+func (fake *PolicyRepo) CountWhereGroupIDArgsForCall(i int) (db.Transaction, int) {
 	fake.countWhereGroupIDMutex.RLock()
 	defer fake.countWhereGroupIDMutex.RUnlock()
 	return fake.countWhereGroupIDArgsForCall[i].arg1, fake.countWhereGroupIDArgsForCall[i].arg2
@@ -217,11 +218,11 @@ func (fake *PolicyRepo) CountWhereGroupIDReturnsOnCall(i int, result1 int, resul
 	}{result1, result2}
 }
 
-func (fake *PolicyRepo) CountWhereDestinationID(arg1 store.Transaction, arg2 int) (int, error) {
+func (fake *PolicyRepo) CountWhereDestinationID(arg1 db.Transaction, arg2 int) (int, error) {
 	fake.countWhereDestinationIDMutex.Lock()
 	ret, specificReturn := fake.countWhereDestinationIDReturnsOnCall[len(fake.countWhereDestinationIDArgsForCall)]
 	fake.countWhereDestinationIDArgsForCall = append(fake.countWhereDestinationIDArgsForCall, struct {
-		arg1 store.Transaction
+		arg1 db.Transaction
 		arg2 int
 	}{arg1, arg2})
 	fake.recordInvocation("CountWhereDestinationID", []interface{}{arg1, arg2})
@@ -241,7 +242,7 @@ func (fake *PolicyRepo) CountWhereDestinationIDCallCount() int {
 	return len(fake.countWhereDestinationIDArgsForCall)
 }
 
-func (fake *PolicyRepo) CountWhereDestinationIDArgsForCall(i int) (store.Transaction, int) {
+func (fake *PolicyRepo) CountWhereDestinationIDArgsForCall(i int) (db.Transaction, int) {
 	fake.countWhereDestinationIDMutex.RLock()
 	defer fake.countWhereDestinationIDMutex.RUnlock()
 	return fake.countWhereDestinationIDArgsForCall[i].arg1, fake.countWhereDestinationIDArgsForCall[i].arg2

@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"policy-server/api"
 	"policy-server/cc_client"
 	"policy-server/cc_client/fixtures"
-	"policy-server/api"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

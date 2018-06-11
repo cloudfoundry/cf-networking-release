@@ -13,12 +13,13 @@ import (
 
 	"time"
 
-	"code.cloudfoundry.org/cf-networking-helpers/db"
+	dbHelper "code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
+	"code.cloudfoundry.org/lager"
 	"github.com/cf-container-networking/sql-migrate"
-	"github.com/jmoiron/sqlx"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"policy-server/db"
 )
 
 type columnUsage struct {
@@ -29,8 +30,8 @@ type columnUsage struct {
 var _ = Describe("migrations", func() {
 
 	var (
-		dbConf             db.Config
-		realDb             *sqlx.DB
+		dbConf             dbHelper.Config
+		realDb             *db.ConnWrapper
 		mockDb             *fakes.Db
 		realMigrateAdapter *migrations.MigrateAdapter
 		mockMigrateAdapter *migrationsFakes.MigrateAdapter
@@ -44,8 +45,10 @@ var _ = Describe("migrations", func() {
 		dbConf.Timeout = 30
 		testsupport.CreateDatabase(dbConf)
 
+		logger := lager.NewLogger("Migrations Test")
+
 		var err error
-		realDb, err = db.GetConnectionPool(dbConf)
+		realDb = db.NewConnectionPool(dbConf, 200, 200, "Store Test", "Store Test", logger)
 		Expect(err).NotTo(HaveOccurred())
 
 		realMigrateAdapter = &migrations.MigrateAdapter{}
@@ -317,9 +320,9 @@ var _ = Describe("migrations", func() {
 					By("checking there's an index")
 					actualColumnUsageRows := scanColumnUsageRows(rows)
 					Expect(actualColumnUsageRows).To(ConsistOf(
-						columnUsage{columnName:"id", value: "PRIMARY"},
-						columnUsage{columnName:"guid", value: "guid"},
-						columnUsage{columnName:"type", value: "idx_type"},
+						columnUsage{columnName: "id", value: "PRIMARY"},
+						columnUsage{columnName: "guid", value: "guid"},
+						columnUsage{columnName: "type", value: "idx_type"},
 					))
 				})
 			})
@@ -391,13 +394,12 @@ var _ = Describe("migrations", func() {
 					`)
 					Expect(err).NotTo(HaveOccurred())
 
-
 					By("checking there's an index")
 					actualColumnUsageRows := scanColumnUsageRows(rows)
 					Expect(actualColumnUsageRows).To(ConsistOf(
-						columnUsage{columnName:"groups_pkey", value: "CREATE UNIQUE INDEX groups_pkey ON groups USING btree (id)"},
-						columnUsage{columnName:"groups_guid_key", value: "CREATE UNIQUE INDEX groups_guid_key ON groups USING btree (guid)"},
-						columnUsage{columnName:"idx_type", value: "CREATE INDEX idx_type ON groups USING btree (type)"},
+						columnUsage{columnName: "groups_pkey", value: "CREATE UNIQUE INDEX groups_pkey ON groups USING btree (id)"},
+						columnUsage{columnName: "groups_guid_key", value: "CREATE UNIQUE INDEX groups_guid_key ON groups USING btree (guid)"},
+						columnUsage{columnName: "idx_type", value: "CREATE INDEX idx_type ON groups USING btree (type)"},
 					))
 				})
 			})

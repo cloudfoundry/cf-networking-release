@@ -45,4 +45,3 @@ var migration_v0001 = map[string][]string{
 	);`,
 	},
 }
-

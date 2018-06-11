@@ -19,21 +19,20 @@ import (
 
 	"policy-server/store/migrations"
 
-	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/httperror"
 	"code.cloudfoundry.org/cf-networking-helpers/marshal"
 	"code.cloudfoundry.org/cf-networking-helpers/metrics"
 	"code.cloudfoundry.org/cf-networking-helpers/middleware"
-	middleware_adapter "code.cloudfoundry.org/cf-networking-helpers/middleware/adapter"
+	middlewareAdapter "code.cloudfoundry.org/cf-networking-helpers/middleware/adapter"
 	"code.cloudfoundry.org/cf-networking-helpers/mutualtls"
 	"code.cloudfoundry.org/debugserver"
 	"code.cloudfoundry.org/lager"
 	"github.com/cloudfoundry/dropsonde"
-	"github.com/jmoiron/sqlx"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
 	"github.com/tedsuo/ifrit/sigmon"
 	"github.com/tedsuo/rata"
+	"policy-server/db"
 )
 
 const (
@@ -61,46 +60,21 @@ func main() {
 	reconfigurableSink := common.InitLoggerSink(logger, conf.LogLevel)
 	logger.RegisterSink(reconfigurableSink)
 
-	storeGroup := &store.GroupTable{}
-	destination := &store.DestinationTable{}
-	policy := &store.PolicyTable{}
-
-	retriableConnector := db.RetriableConnector{
-		Connector:     db.GetConnectionPool,
-		Sleeper:       db.SleeperFunc(time.Sleep),
-		RetryInterval: time.Duration(3) * time.Second,
-		MaxRetries:    10,
-	}
-
-	logger.Info("getting db connection", lager.Data{})
-	type dbConnection struct {
-		ConnectionPool *sqlx.DB
-		Err            error
-	}
-	channel := make(chan dbConnection)
-	go func() {
-		connection, err := retriableConnector.GetConnectionPool(conf.Database)
-		channel <- dbConnection{connection, err}
-	}()
-	var connectionResult dbConnection
-	select {
-	case connectionResult = <-channel:
-	case <-time.After(time.Duration(conf.Database.Timeout) * time.Second):
-		log.Fatalf("%s.%s: db connection timeout", logPrefix, jobPrefix)
-	}
-	if connectionResult.Err != nil {
-		log.Fatalf("%s.%s: db connect: %s", logPrefix, jobPrefix, connectionResult.Err) // not tested
-	}
-	connectionResult.ConnectionPool.SetMaxOpenConns(conf.MaxOpenConnections)
-	connectionResult.ConnectionPool.SetMaxIdleConns(conf.MaxIdleConnections)
-	logger.Info("db connection retrived", lager.Data{})
+	connectionPool := db.NewConnectionPool(
+		conf.Database,
+		conf.MaxOpenConnections,
+		conf.MaxIdleConnections,
+		logPrefix,
+		jobPrefix,
+		logger,
+	)
 
 	dataStore, err := store.New(
-		connectionResult.ConnectionPool,
-		connectionResult.ConnectionPool,
-		storeGroup,
-		destination,
-		policy,
+		connectionPool,
+		connectionPool,
+		&store.GroupTable{},
+		&store.DestinationTable{},
+		&store.PolicyTable{},
 		conf.TagLength,
 		&migrations.Migrator{
 			MigrateAdapter: &migrations.MigrateAdapter{},
@@ -145,7 +119,7 @@ func main() {
 	}
 
 	logWrapper := middleware.LogWrapper{
-		UUIDGenerator: &middleware_adapter.UUIDAdapter{},
+		UUIDGenerator: &middlewareAdapter.UUIDAdapter{},
 	}
 
 	logWrap := func(handler http.Handler) http.Handler {
@@ -214,8 +188,8 @@ func main() {
 	monitor := ifrit.Invoke(sigmon.New(group))
 
 	err = <-monitor.Wait()
-	if connectionResult.ConnectionPool != nil {
-		connectionResult.ConnectionPool.Close()
+	if connectionPool != nil {
+		connectionPool.Close()
 	}
 	if err != nil {
 		logger.Error("exited-with-failure", err)

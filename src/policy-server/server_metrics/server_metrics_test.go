@@ -22,7 +22,7 @@ var _ = Describe("NewTotalPoliciesSource", func() {
 				ID:       "some-other-app-guid",
 				Tag:      "some-other-tag",
 				Protocol: "tcp",
-				Ports:     store.Ports{
+				Ports: store.Ports{
 					Start: 8080,
 					End:   8080,
 				},
@@ -32,7 +32,7 @@ var _ = Describe("NewTotalPoliciesSource", func() {
 			Destination: store.Destination{
 				ID:       "some-other-app-guid",
 				Protocol: "udp",
-				Ports:     store.Ports{
+				Ports: store.Ports{
 					Start: 1234,
 					End:   1234,
 				},

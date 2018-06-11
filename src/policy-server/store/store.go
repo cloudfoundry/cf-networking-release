@@ -3,12 +3,12 @@ package store
 import (
 	"bytes"
 	"database/sql"
-	"errors"
 	"fmt"
 	"math"
 	"policy-server/store/helpers"
 	"strings"
 
+	"policy-server/db"
 	"policy-server/store/migrations"
 
 	"github.com/jmoiron/sqlx"
@@ -22,6 +22,7 @@ type Migrator interface {
 //go:generate counterfeiter -o fakes/store.go --fake-name Store . Store
 type Store interface {
 	Create([]Policy) error
+	CreateTag(string, string) (int, error)
 	All() ([]Policy, error)
 	Delete([]Policy) error
 	Tags() ([]Tag, error)
@@ -29,9 +30,9 @@ type Store interface {
 	CheckDatabase() error
 }
 
-//go:generate counterfeiter -o fakes/db.go --fake-name Db . db
-type db interface {
-	Beginx() (*sqlx.Tx, error)
+//go:generate counterfeiter -o fakes/database.go --fake-name Db . database
+type database interface {
+	Beginx() (db.Transaction, error)
 	Exec(query string, args ...interface{}) (sql.Result, error)
 	NamedExec(query string, arg interface{}) (sql.Result, error)
 	Get(dest interface{}, query string, args ...interface{}) error
@@ -39,35 +40,25 @@ type db interface {
 	QueryRow(query string, args ...interface{}) *sql.Row
 	Query(query string, args ...interface{}) (*sql.Rows, error)
 	DriverName() string
+	RawConnection() *sqlx.DB
 }
-
-type Transaction interface {
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	QueryRow(query string, args ...interface{}) *sql.Row
-	Commit() error
-	Rollback() error
-	Rebind(string) string
-	DriverName() string
-}
-
-var RecordNotFoundError = errors.New("record not found")
 
 type store struct {
-	conn        db
+	conn        database
 	group       GroupRepo
 	destination DestinationRepo
 	policy      PolicyRepo
 	tagLength   int
 }
 
-const MAX_TAG_LENGTH = 3
-const MIN_TAG_LENGTH = 1
+const MaxTagLength = 3
+const MinTagLength = 1
 
-func New(dbConnectionPool db, migrationDbConnectionPool db, g GroupRepo, d DestinationRepo, p PolicyRepo, tl int, migrator Migrator) (Store, error) {
-	if tl < MIN_TAG_LENGTH || tl > MAX_TAG_LENGTH {
+func New(dbConnectionPool database, migrationDbConnectionPool database, g GroupRepo, d DestinationRepo, p PolicyRepo, tl int, migrator Migrator) (Store, error) {
+	if tl < MinTagLength || tl > MaxTagLength {
 		return nil, fmt.Errorf("tag length out of range (%d-%d): %d",
-			MIN_TAG_LENGTH,
-			MAX_TAG_LENGTH,
+			MinTagLength,
+			MaxTagLength,
 			tl,
 		)
 	}
@@ -91,7 +82,7 @@ func New(dbConnectionPool db, migrationDbConnectionPool db, g GroupRepo, d Desti
 	}, nil
 }
 
-func commit(tx Transaction) error {
+func commit(tx db.Transaction) error {
 	err := tx.Commit()
 	if err != nil {
 		return fmt.Errorf("commit transaction: %s", err) // TODO untested
@@ -99,10 +90,10 @@ func commit(tx Transaction) error {
 	return nil
 }
 
-func rollback(tx Transaction, err error) error {
+func rollback(tx db.Transaction, err error) error {
 	txErr := tx.Rollback()
 	if txErr != nil {
-		return fmt.Errorf("db rollback: %s (sql error: %s)", txErr, err)
+		return fmt.Errorf("database rollback: %s (sql error: %s)", txErr, err)
 	}
 	return err
 }
@@ -112,6 +103,24 @@ func (s *store) CheckDatabase() error {
 	return s.conn.QueryRow("SELECT 1").Scan(&result)
 }
 
+func (s *store) CreateTag(groupGuid, groupType string) (int, error) {
+	tx, err := s.conn.Beginx()
+	if err != nil {
+		return -1, fmt.Errorf("begin transaction: %s", err)
+	}
+
+	tag, err := s.group.Create(tx, groupGuid)
+	if err != nil {
+		return -1, rollback(tx, err)
+	}
+
+	err = commit(tx)
+	if err != nil {
+		return -1, rollback(tx, err)
+	}
+	return tag, nil
+}
+
 func (s *store) Create(policies []Policy) error {
 	tx, err := s.conn.Beginx()
 	if err != nil {
@@ -119,19 +128,19 @@ func (s *store) Create(policies []Policy) error {
 	}
 
 	for _, policy := range policies {
-		source_group_id, err := s.group.Create(tx, policy.Source.ID)
+		sourceGroupId, err := s.group.Create(tx, policy.Source.ID)
 		if err != nil {
 			return rollback(tx, fmt.Errorf("creating group: %s", err))
 		}
 
-		destination_group_id, err := s.group.Create(tx, policy.Destination.ID)
+		destinationGroupId, err := s.group.Create(tx, policy.Destination.ID)
 		if err != nil {
 			return rollback(tx, fmt.Errorf("creating group: %s", err))
 		}
 
-		destination_id, err := s.destination.Create(
+		destinationId, err := s.destination.Create(
 			tx,
-			destination_group_id,
+			destinationGroupId,
 			policy.Destination.Port,
 			policy.Destination.Ports.Start,
 			policy.Destination.Ports.End,
@@ -141,7 +150,7 @@ func (s *store) Create(policies []Policy) error {
 			return rollback(tx, fmt.Errorf("creating destination: %s", err))
 		}
 
-		err = s.policy.Create(tx, source_group_id, destination_id)
+		err = s.policy.Create(tx, sourceGroupId, destinationId)
 		if err != nil {
 			return rollback(tx, fmt.Errorf("creating policy: %s", err))
 		}
@@ -224,19 +233,19 @@ func (s *store) Delete(policies []Policy) error {
 	return commit(tx)
 }
 
-func (s *store) deleteGroupRowIfLast(tx Transaction, group_id int) error {
-	policiesGroupIDCount, err := s.policy.CountWhereGroupID(tx, group_id)
+func (s *store) deleteGroupRowIfLast(tx db.Transaction, groupId int) error {
+	policiesGroupIDCount, err := s.policy.CountWhereGroupID(tx, groupId)
 	if err != nil {
 		return err
 	}
 
-	destinationsGroupIDCount, err := s.destination.CountWhereGroupID(tx, group_id)
+	destinationsGroupIDCount, err := s.destination.CountWhereGroupID(tx, groupId)
 	if err != nil {
 		return err
 	}
 
 	if policiesGroupIDCount == 0 && destinationsGroupIDCount == 0 {
-		err = s.group.Delete(tx, group_id)
+		err = s.group.Delete(tx, groupId)
 		if err != nil {
 			return err
 		}
@@ -246,7 +255,7 @@ func (s *store) deleteGroupRowIfLast(tx Transaction, group_id int) error {
 }
 
 func (s *store) policiesQuery(query string, args ...interface{}) ([]Policy, error) {
-	policies := []Policy{}
+	var policies []Policy
 	rebindedQuery := helpers.RebindForSQLDialect(query, s.conn.DriverName())
 
 	rows, err := s.conn.Query(rebindedQuery, args...)
@@ -256,13 +265,13 @@ func (s *store) policiesQuery(query string, args ...interface{}) ([]Policy, erro
 
 	defer rows.Close() // untested
 	for rows.Next() {
-		var source_id, destination_id, protocol string
-		var port, startPort, endPort, source_tag, destination_tag int
+		var sourceId, destinationId, protocol string
+		var port, startPort, endPort, sourceTag, destinationTag int
 		err = rows.Scan(
-			&source_id,
-			&source_tag,
-			&destination_id,
-			&destination_tag,
+			&sourceId,
+			&sourceTag,
+			&destinationId,
+			&destinationTag,
 			&port,
 			&startPort,
 			&endPort,
@@ -274,12 +283,12 @@ func (s *store) policiesQuery(query string, args ...interface{}) ([]Policy, erro
 
 		policies = append(policies, Policy{
 			Source: Source{
-				ID:  source_id,
-				Tag: s.tagIntToString(source_tag),
+				ID:  sourceId,
+				Tag: s.tagIntToString(sourceTag),
 			},
 			Destination: Destination{
-				ID:       destination_id,
-				Tag:      s.tagIntToString(destination_tag),
+				ID:       destinationId,
+				Tag:      s.tagIntToString(destinationTag),
 				Protocol: protocol,
 				Port:     port,
 				Ports: Ports{
@@ -366,7 +375,7 @@ func (s *store) All() ([]Policy, error) {
 }
 
 func (s *store) Tags() ([]Tag, error) {
-	tags := []Tag{}
+	var tags []Tag
 
 	rows, err := s.conn.Query(`
 		SELECT guid, id FROM groups
@@ -404,7 +413,7 @@ func (s *store) tagIntToString(tag int) string {
 	return fmt.Sprintf("%"+fmt.Sprintf("0%d", s.tagLength*2)+"X", tag)
 }
 
-func populateTables(dbConnectionPool db, tl int) error {
+func populateTables(dbConnectionPool database, tl int) error {
 	var err error
 	row := dbConnectionPool.QueryRow(`SELECT COUNT(*) FROM groups`)
 	if row != nil {
