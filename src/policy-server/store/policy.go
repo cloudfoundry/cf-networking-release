@@ -1,17 +1,19 @@
 package store
 
+import "policy-server/db"
+
 //go:generate counterfeiter -o fakes/policy_repo.go --fake-name PolicyRepo . PolicyRepo
 type PolicyRepo interface {
-	Create(Transaction, int, int) error
-	Delete(Transaction, int, int) error
-	CountWhereGroupID(Transaction, int) (int, error)
-	CountWhereDestinationID(Transaction, int) (int, error)
+	Create(db.Transaction, int, int) error
+	Delete(db.Transaction, int, int) error
+	CountWhereGroupID(db.Transaction, int) (int, error)
+	CountWhereDestinationID(db.Transaction, int) (int, error)
 }
 
 type PolicyTable struct {
 }
 
-func (p *PolicyTable) Create(tx Transaction, source_group_id int, destination_id int) error {
+func (p *PolicyTable) Create(tx db.Transaction, sourceGroupId int, destinationId int) error {
 	dualStatement := ""
 	if tx.DriverName() == "mysql" {
 		dualStatement = " FROM DUAL "
@@ -26,37 +28,37 @@ func (p *PolicyTable) Create(tx Transaction, source_group_id int, destination_id
 			FROM policies
 			WHERE group_id = ? AND destination_id = ?
 		)`),
-		source_group_id,
-		destination_id,
-		source_group_id,
-		destination_id,
+		sourceGroupId,
+		destinationId,
+		sourceGroupId,
+		destinationId,
 	)
 	return err
 }
 
-func (p *PolicyTable) Delete(tx Transaction, source_group_id int, destination_id int) error {
+func (p *PolicyTable) Delete(tx db.Transaction, sourceGroupId int, destinationId int) error {
 	_, err := tx.Exec(tx.Rebind(`DELETE FROM policies WHERE group_id = ? AND destination_id = ?`),
-		source_group_id,
-		destination_id,
+		sourceGroupId,
+		destinationId,
 	)
 	return err
 }
 
-func (p *PolicyTable) CountWhereGroupID(tx Transaction, source_group_id int) (int, error) {
+func (p *PolicyTable) CountWhereGroupID(tx db.Transaction, sourceGroupId int) (int, error) {
 	var count int
 	err := tx.QueryRow(
 		tx.Rebind(`SELECT COUNT(*) FROM policies WHERE group_id = ?`),
-		source_group_id,
+		sourceGroupId,
 	).Scan(&count)
 
 	return count, err
 }
 
-func (p *PolicyTable) CountWhereDestinationID(tx Transaction, destination_id int) (int, error) {
+func (p *PolicyTable) CountWhereDestinationID(tx db.Transaction, destinationId int) (int, error) {
 	var count int
 	err := tx.QueryRow(
 		tx.Rebind(`SELECT COUNT(*) FROM policies WHERE destination_id = ?`),
-		destination_id,
+		destinationId,
 	).Scan(&count)
 
 	return count, err

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/cf-container-networking/sql-migrate"
+	"github.com/jmoiron/sqlx"
 )
 
 //go:generate counterfeiter -o fakes/migrate_adapter.go --fake-name MigrateAdapter . migrateAdapter
@@ -18,6 +19,7 @@ type MigrationDb interface {
 	Query(query string, args ...interface{}) (*sql.Rows, error)
 	QueryRow(query string, args ...interface{}) *sql.Row
 	DriverName() string
+	RawConnection() *sqlx.DB
 }
 
 type Migrator struct {

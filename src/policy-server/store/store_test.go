@@ -4,27 +4,29 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	dbFakes "policy-server/db/fakes"
 	"policy-server/store"
 	"policy-server/store/fakes"
 	"strings"
 	"sync/atomic"
 	"time"
 
-	"code.cloudfoundry.org/cf-networking-helpers/db"
+	dbHelper "code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 
 	"policy-server/store/migrations"
 
-	"github.com/jmoiron/sqlx"
+	"code.cloudfoundry.org/lager"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"policy-server/db"
 )
 
 var _ = Describe("Store", func() {
 	var (
 		dataStore   store.Store
-		dbConf      db.Config
-		realDb      *sqlx.DB
+		dbConf      dbHelper.Config
+		realDb      *db.ConnWrapper
 		mockDb      *fakes.Db
 		group       store.GroupRepo
 		destination store.DestinationRepo
@@ -43,8 +45,10 @@ var _ = Describe("Store", func() {
 
 		testsupport.CreateDatabase(dbConf)
 
+		logger := lager.NewLogger("Store Test")
+
 		var err error
-		realDb, err = db.GetConnectionPool(dbConf)
+		realDb = db.NewConnectionPool(dbConf, 200, 200, "Store Test", "Store Test", logger)
 		Expect(err).NotTo(HaveOccurred())
 
 		group = &store.GroupTable{}
@@ -90,7 +94,7 @@ var _ = Describe("Store", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			nPolicies := 1000
-			policies := []interface{}{}
+			var policies []interface{}
 			for i := 0; i < nPolicies; i++ {
 				appName := fmt.Sprintf("some-app-%x", i)
 				policies = append(policies, store.Policy{
@@ -102,7 +106,7 @@ var _ = Describe("Store", func() {
 			parallelRunner := &testsupport.ParallelRunner{
 				NumWorkers: 4,
 			}
-			toDelete := make(chan (interface{}), nPolicies)
+			toDelete := make(chan interface{}, nPolicies)
 
 			go func() {
 				parallelRunner.RunOnSlice(policies, func(policy interface{}) {
@@ -313,7 +317,7 @@ var _ = Describe("Store", func() {
 
 		Context("when there are no tags left to allocate", func() {
 			BeforeEach(func() {
-				policies := []store.Policy{}
+				var policies []store.Policy
 				for i := 1; i < 256; i++ {
 					policies = append(policies, store.Policy{
 						Source: store.Source{ID: fmt.Sprintf("%d", i)},
@@ -451,7 +455,7 @@ var _ = Describe("Store", func() {
 					{2, nil},
 					{-1, errors.New("some-insert-error")},
 				}
-				fakeGroup.CreateStub = func(t store.Transaction, guid string) (int, error) {
+				fakeGroup.CreateStub = func(t db.Transaction, guid string) (int, error) {
 					response := responses[0]
 					responses = responses[1:]
 					return response.Id, response.Err
@@ -525,6 +529,107 @@ var _ = Describe("Store", func() {
 					},
 				}})
 				Expect(err).To(MatchError("creating policy: some-insert-error"))
+			})
+		})
+	})
+
+	Describe("CreateTag", func() {
+		var (
+			groupGuid string
+			groupType string
+		)
+
+		BeforeEach(func() {
+			var err error
+			dataStore, err = store.New(realDb, realDb, group, destination, policy, 1, realMigrator)
+			Expect(err).NotTo(HaveOccurred())
+			groupGuid, groupType = "meow-guid", "meow-type"
+		})
+
+		It("saves the group", func() {
+			tag, err := dataStore.CreateTag(groupGuid, groupType)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(tag).To(Equal(1))
+
+			t, err := dataStore.Tags()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(t)).To(Equal(1))
+		})
+
+		Context("when a group with the same type and guid exists", func() {
+			var expectedTag int
+
+			BeforeEach(func() {
+				var err error
+				expectedTag, err = dataStore.CreateTag(groupGuid, groupType)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("should get the same tag", func() {
+				tag, err := dataStore.CreateTag(groupGuid, groupType)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(tag).To(Equal(expectedTag))
+
+				t, err := dataStore.Tags()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(len(t)).To(Equal(1))
+			})
+		})
+
+		Context("when there are no tags left to allocate", func() {
+			var (
+				mockTx    *dbFakes.Transaction
+				mockGroup *fakes.GroupRepo
+			)
+
+			BeforeEach(func() {
+				mockGroup = &fakes.GroupRepo{}
+				mockGroup.CreateReturns(-1, errors.New("failed to find available tag"))
+				mockTx = &dbFakes.Transaction{}
+				mockDb.BeginxReturns(mockTx, nil)
+
+				var err error
+				dataStore, err = store.New(mockDb, mockDb, mockGroup, destination, policy, 1, mockMigrator)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("returns an error", func() {
+				_, err := dataStore.CreateTag(groupGuid, groupType)
+				Expect(err).To(MatchError(ContainSubstring("failed to find available tag")))
+			})
+
+			It("rolls back the transaction", func() {
+				dataStore.CreateTag(groupGuid, groupType)
+				Expect(mockTx.RollbackCallCount()).To(Equal(1))
+			})
+		})
+
+		Context("when a transaction commit fails", func() {
+			var (
+				mockTx    *dbFakes.Transaction
+				mockGroup *fakes.GroupRepo
+			)
+
+			BeforeEach(func() {
+				mockGroup = &fakes.GroupRepo{}
+				mockGroup.CreateReturns(1, nil)
+				mockTx = &dbFakes.Transaction{}
+				mockTx.CommitReturns(errors.New("transaction commit failed"))
+				mockDb.BeginxReturns(mockTx, nil)
+
+				var err error
+				dataStore, err = store.New(mockDb, mockDb, mockGroup, destination, policy, 1, mockMigrator)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			It("returns an error", func() {
+				_, err := dataStore.CreateTag(groupGuid, groupType)
+				Expect(err).To(MatchError(ContainSubstring("transaction commit failed")))
+			})
+
+			It("rolls back the transaction", func() {
+				dataStore.CreateTag(groupGuid, groupType)
+				Expect(mockTx.RollbackCallCount()).To(Equal(1))
 			})
 		})
 	})
@@ -1021,7 +1126,7 @@ var _ = Describe("Store", func() {
 			Context("when getting the source id fails", func() {
 				Context("when the error is because the source does not exist", func() {
 					BeforeEach(func() {
-						fakeGroup.GetIDStub = func(store.Transaction, string) (int, error) {
+						fakeGroup.GetIDStub = func(db.Transaction, string) (int, error) {
 							if fakeGroup.GetIDCallCount() == 1 {
 								return -1, sql.ErrNoRows
 							}
@@ -1069,7 +1174,7 @@ var _ = Describe("Store", func() {
 			Context("when getting the destination group id fails", func() {
 				Context("when the error is because the destination group does not exist", func() {
 					BeforeEach(func() {
-						fakeGroup.GetIDStub = func(store.Transaction, string) (int, error) {
+						fakeGroup.GetIDStub = func(db.Transaction, string) (int, error) {
 							if fakeGroup.GetIDCallCount() == 2 {
 								return -1, sql.ErrNoRows
 							}
@@ -1103,7 +1208,7 @@ var _ = Describe("Store", func() {
 
 				Context("when the error is for any other reason", func() {
 					BeforeEach(func() {
-						fakeGroup.GetIDStub = func(store.Transaction, string) (int, error) {
+						fakeGroup.GetIDStub = func(db.Transaction, string) (int, error) {
 							if fakeGroup.GetIDCallCount() > 1 {
 								return -1, errors.New("some-get-error")
 							}
@@ -1127,7 +1232,7 @@ var _ = Describe("Store", func() {
 			Context("when getting the destination id fails", func() {
 				Context("when the error is because the destination does not exist", func() {
 					BeforeEach(func() {
-						fakeDestination.GetIDStub = func(store.Transaction, int, int, int, int, string) (int, error) {
+						fakeDestination.GetIDStub = func(db.Transaction, int, int, int, int, string) (int, error) {
 							if fakeDestination.GetIDCallCount() == 1 {
 								return -1, sql.ErrNoRows
 							}
@@ -1167,7 +1272,7 @@ var _ = Describe("Store", func() {
 			Context("when deleting the policy fails", func() {
 				Context("when the error is because the policy does not exist", func() {
 					BeforeEach(func() {
-						fakePolicy.DeleteStub = func(store.Transaction, int, int) error {
+						fakePolicy.DeleteStub = func(db.Transaction, int, int) error {
 							if fakePolicy.DeleteCallCount() == 1 {
 								return sql.ErrNoRows
 							}
