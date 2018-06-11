@@ -13,6 +13,7 @@ files:
   - github.com/nats-io/gnatsd/vendor/golang.org/x/crypto/bcrypt/*.go # gosub
   - github.com/nats-io/gnatsd/vendor/golang.org/x/crypto/blowfish/*.go # gosub
   - github.com/nats-io/go-nats/*.go # gosub
+  - github.com/nats-io/go-nats/bench/*.go # gosub
   - github.com/nats-io/go-nats/encoders/builtin/*.go # gosub
   - github.com/nats-io/go-nats/util/*.go # gosub
   - github.com/nats-io/nats-top/util/*.go # gosub
@@ -20,7 +21,6 @@ files:
   - github.com/nats-io/nats-top/vendor/github.com/nats-io/gnatsd/server/*.go # gosub
   - github.com/nats-io/nats-top/vendor/github.com/nats-io/gnatsd/server/pse/*.go # gosub
   - github.com/nats-io/nats-top/vendor/github.com/nats-io/gnatsd/vendor/github.com/nats-io/nuid/*.go # gosub
-  - github.com/nats-io/nats/bench/*.go # gosub
   - github.com/nats-io/nuid/*.go # gosub
   - github.com/onsi/ginkgo/*.go # gosub
   - github.com/onsi/ginkgo/config/*.go # gosub

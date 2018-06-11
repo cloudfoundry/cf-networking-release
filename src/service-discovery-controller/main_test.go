@@ -19,7 +19,7 @@ import (
 
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
 	"github.com/nats-io/gnatsd/server"
-	"github.com/nats-io/nats"
+	"github.com/nats-io/go-nats"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"

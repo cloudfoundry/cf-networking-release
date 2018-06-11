@@ -28,12 +28,5 @@ var _ = Describe("MigrateAdapter", func() {
 				Expect(err).To(MatchError("down migration not supported"))
 			})
 		})
-		Context("when the passed in database is not a sqlx.DB", func() {
-			It("returns an error", func() {
-				fakeMigrationDb := &fakes.MigrationDb{}
-				_, err := migrateAdapter.ExecMax(fakeMigrationDb, "some-dialect", migrate.MemoryMigrationSource{}, migrate.Up, 0)
-				Expect(err).To(MatchError("unable to adapt for db migration"))
-			})
-		})
 	})
 })

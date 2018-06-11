@@ -11,7 +11,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/nats-io/nats"
+	"github.com/nats-io/go-nats"
 )
 
 var natsEndpoint = flag.String(

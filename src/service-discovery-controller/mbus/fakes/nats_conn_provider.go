@@ -5,7 +5,7 @@ import (
 	"service-discovery-controller/mbus"
 	"sync"
 
-	"github.com/nats-io/nats"
+	"github.com/nats-io/go-nats"
 )
 
 type NatsConnProvider struct {

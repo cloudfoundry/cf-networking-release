@@ -10,8 +10,8 @@ import (
 	"github.com/montanaflynn/stats"
 	"github.com/nats-io/gnatsd/server"
 	"github.com/nats-io/go-nats"
+	"github.com/nats-io/go-nats/bench"
 	"github.com/nats-io/nats-top/util"
-	"github.com/nats-io/nats/bench"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

@@ -62,6 +62,7 @@ files:
   - policy-server/cmd/policy-server/*.go # gosub
   - policy-server/cmd/policy-server-internal/*.go # gosub
   - policy-server/config/*.go # gosub
+  - policy-server/db/*.go # gosub
   - policy-server/handlers/*.go # gosub
   - policy-server/middleware/*.go # gosub
   - policy-server/server_metrics/*.go # gosub

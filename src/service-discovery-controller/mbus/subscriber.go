@@ -14,12 +14,8 @@ import (
 
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/lager"
-	"github.com/nats-io/nats"
+	"github.com/nats-io/go-nats"
 	"github.com/pkg/errors"
-)
-
-const (
-	registerMessagesReceived = "registerMessagesReceived"
 )
 
 type ServiceDiscoveryStartMessage struct {

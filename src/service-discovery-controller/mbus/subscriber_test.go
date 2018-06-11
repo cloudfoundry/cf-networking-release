@@ -13,7 +13,7 @@ import (
 	"code.cloudfoundry.org/clock/fakeclock"
 	"code.cloudfoundry.org/lager"
 	"github.com/nats-io/gnatsd/server"
-	"github.com/nats-io/nats"
+	"github.com/nats-io/go-nats"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
