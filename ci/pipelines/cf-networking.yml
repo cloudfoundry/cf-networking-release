@@ -126,6 +126,11 @@ resources:
     source:
       repository: cloudfoundry-incubator/datadog-firehose-nozzle-release
   ###### BOSH release repos
+  - name: capi-ci-passed
+    type: git
+    source:
+      uri: https://github.com/cloudfoundry/capi-release.git
+      branch: ci-passed
   - name: silk-dev
     type: git
     source:
@@ -421,6 +426,7 @@ jobs:
     serial_groups: [pickelhelm]
     plan:
     - aggregate:
+      - get: capi-ci-passed
       - get: cf-networking-release-ci
         params:
           submodules: none
@@ -448,6 +454,13 @@ jobs:
         cf-networking-release: cf-networking-dev
         deployments-repo: cf-networking-deployments
         silk-release: silk-dev
+    - task: upload-local-capi-release
+      file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+      input_mapping:
+        bbl-state: cf-networking-deployments
+        local-release: capi-ci-passed
+      params:
+        BBL_STATE_DIR: environments/pickelhelm/
     - task: upload-local-silk-release
       file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
       input_mapping:
@@ -480,6 +493,7 @@ jobs:
           use-cf-networking-2.yml
           use-bosh-dns-for-containers-with-networking-2.yml
           use-latest-silk.yml
+          use-latest-capi.yml
           enable-service-discovery.yml
           use-service-discovery-from-cf-networking.yml
           add-apps-internal-search-domain.yml
@@ -632,6 +646,7 @@ jobs:
     plan:
     - aggregate:
       - get: concourse
+      - get: capi-ci-passed
       - get: cf-networking-release-ci
         params:
           submodules: none
@@ -663,6 +678,13 @@ jobs:
         cf-networking-release: cf-networking-dev
         deployments-repo: cf-networking-deployments
         silk-release: silk-dev
+    - task: upload-local-capi-release
+      file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+      input_mapping:
+        bbl-state: cf-networking-deployments
+        local-release: capi-ci-passed
+      params:
+        BBL_STATE_DIR: environments/mitre/
     - task: upload-local-silk-release
       file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
       input_mapping:
@@ -697,6 +719,7 @@ jobs:
           use-bosh-dns-for-containers-with-networking-2.yml
           enable-iptables-logger-with-networking-2.yml
           use-latest-silk.yml
+          use-latest-capi.yml
           enable-service-discovery.yml
           use-service-discovery-from-cf-networking.yml
           add-apps-internal-search-domain.yml
