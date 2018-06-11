@@ -397,9 +397,9 @@ var _ = Describe("migrations", func() {
 					By("checking there's an index")
 					actualColumnUsageRows := scanColumnUsageRows(rows)
 					Expect(actualColumnUsageRows).To(ConsistOf(
-						columnUsage{columnName: "groups_pkey", value: "CREATE UNIQUE INDEX groups_pkey ON groups USING btree (id)"},
-						columnUsage{columnName: "groups_guid_key", value: "CREATE UNIQUE INDEX groups_guid_key ON groups USING btree (guid)"},
-						columnUsage{columnName: "idx_type", value: "CREATE INDEX idx_type ON groups USING btree (type)"},
+						columnUsage{columnName: "groups_pkey", value: "CREATE UNIQUE INDEX groups_pkey ON public.groups USING btree (id)"},
+						columnUsage{columnName: "groups_guid_key", value: "CREATE UNIQUE INDEX groups_guid_key ON public.groups USING btree (guid)"},
+						columnUsage{columnName: "idx_type", value: "CREATE INDEX idx_type ON public.groups USING btree (type)"},
 					))
 				})
 			})
