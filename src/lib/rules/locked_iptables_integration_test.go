@@ -2,8 +2,6 @@ package rules_test
 
 import (
 	"fmt"
-	"lib/filelock"
-	"lib/rules"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -15,6 +13,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
+	"code.cloudfoundry.org/filelock"
+	"lib/rules"
 )
 
 var _ = Describe("Locked IPTables Integration Test", func() {
