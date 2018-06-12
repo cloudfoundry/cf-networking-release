@@ -18,6 +18,7 @@ import (
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
+	"test-helpers"
 )
 
 var _ = Describe("External API", func() {
@@ -43,7 +44,7 @@ var _ = Describe("External API", func() {
 	})
 
 	AfterEach(func() {
-		stopPolicyServers(sessions, policyServerConfs, nil)
+		stopPolicyServers(sessions, policyServerConfs)
 
 		Expect(fakeMetron.Close()).To(Succeed())
 	})

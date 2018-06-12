@@ -48,7 +48,7 @@ var _ = Describe("External API Listing Policies", func() {
 	})
 
 	AfterEach(func() {
-		stopPolicyServers(sessions, policyServerConfs, nil)
+		stopPolicyServers(sessions, policyServerConfs)
 
 		Expect(fakeMetron.Close()).To(Succeed())
 	})

@@ -53,7 +53,7 @@ var _ = Describe("Integration", func() {
 		})
 
 		AfterEach(func() {
-			stopPolicyServers(sessions, policyServerConfs, nil)
+			stopPolicyServers(sessions, policyServerConfs)
 
 			Expect(fakeMetron.Close()).To(Succeed())
 		})

@@ -42,7 +42,7 @@ var _ = Describe("Cross Origin Resource Sharing", func() {
 	})
 
 	AfterEach(func() {
-		stopPolicyServers(sessions, policyServerConfs, nil)
+		stopPolicyServers(sessions, policyServerConfs)
 
 		Expect(fakeMetron.Close()).To(Succeed())
 	})

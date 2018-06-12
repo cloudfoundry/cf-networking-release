@@ -85,7 +85,7 @@ var _ = Describe("Internal API", func() {
 	})
 
 	AfterEach(func() {
-		stopPolicyServers(sessions, policyServerConfs, policyServerInternalConfs)
+		stopPolicyServers(sessions, policyServerConfs)
 
 		Expect(fakeMetron.Close()).To(Succeed())
 	})

@@ -59,7 +59,7 @@ var _ = Describe("External API Tags", func() {
 	})
 
 	AfterEach(func() {
-		stopPolicyServers(sessions, policyServerConfs, nil)
+		stopPolicyServers(sessions, policyServerConfs)
 
 		Expect(fakeMetron.Close()).To(Succeed())
 	})

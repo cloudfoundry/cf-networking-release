@@ -7,7 +7,6 @@ import (
 	"policy-server/config"
 	"policy-server/integration/helpers"
 
-	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
 
@@ -18,6 +17,7 @@ import (
 	"github.com/onsi/gomega/types"
 
 	"testing"
+	"test-helpers"
 )
 
 var (
@@ -36,8 +36,8 @@ var HaveName = func(name string) types.GomegaMatcher {
 	}, Equal(name))
 }
 
-var mockCCServer = helpers.MockCCServer
-var mockUAAServer = helpers.MockUAAServer
+var _ = helpers.MockCCServer
+var _ = helpers.MockUAAServer
 
 func TestIntegration(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -47,14 +47,14 @@ func TestIntegration(t *testing.T) {
 var _ = SynchronizedBeforeSuite(func() []byte {
 	var err error
 	paths := policyServerPaths{}
-	fmt.Fprintf(GinkgoWriter, "building policy-server binary...")
+	fmt.Fprint(GinkgoWriter, "building policy-server binary...")
 	paths.External, err = gexec.Build("policy-server/cmd/policy-server", "-race")
-	fmt.Fprintf(GinkgoWriter, "done")
+	fmt.Fprint(GinkgoWriter, "done")
 	Expect(err).NotTo(HaveOccurred())
 
-	fmt.Fprintf(GinkgoWriter, "building policy-server-internal binary...")
+	fmt.Fprint(GinkgoWriter, "building policy-server-internal binary...")
 	paths.Internal, err = gexec.Build("policy-server/cmd/policy-server-internal", "-race")
-	fmt.Fprintf(GinkgoWriter, "done")
+	fmt.Fprint(GinkgoWriter, "done")
 	Expect(err).NotTo(HaveOccurred())
 
 	data, err := json.Marshal(paths)
@@ -115,7 +115,7 @@ func startPolicyAndInternalServers(configs []config.Config, internalConfigs []co
 	return sessions
 }
 
-func stopPolicyServers(sessions []*gexec.Session, configs []config.Config, internalConfigs []config.InternalConfig) {
+func stopPolicyServers(sessions []*gexec.Session, configs []config.Config) {
 	for _, session := range sessions {
 		session.Interrupt()
 		Eventually(session, helpers.DEFAULT_TIMEOUT).Should(gexec.Exit())

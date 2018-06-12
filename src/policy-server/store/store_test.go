@@ -20,6 +20,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"policy-server/db"
+	"test-helpers"
 )
 
 var _ = Describe("Store", func() {

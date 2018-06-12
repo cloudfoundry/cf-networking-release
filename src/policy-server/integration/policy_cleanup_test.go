@@ -17,6 +17,7 @@ import (
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
+	"test-helpers"
 )
 
 var _ = Describe("Policy Cleanup", func() {

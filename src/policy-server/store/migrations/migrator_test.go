@@ -20,6 +20,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"policy-server/db"
+	"test-helpers"
 )
 
 type columnUsage struct {
@@ -517,7 +518,7 @@ var _ = Describe("migrations", func() {
 })
 
 func scanColumnUsageRows(rows *sql.Rows) []columnUsage {
-	actual := []columnUsage{}
+	var actual []columnUsage
 	defer rows.Close()
 	for rows.Next() {
 		var constraintName string

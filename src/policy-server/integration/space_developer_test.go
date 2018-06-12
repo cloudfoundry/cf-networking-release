@@ -44,7 +44,7 @@ var _ = Describe("External API Space Developer", func() {
 	})
 
 	AfterEach(func() {
-		stopPolicyServers(sessions, policyServerConfs, nil)
+		stopPolicyServers(sessions, policyServerConfs)
 		Expect(fakeMetron.Close()).To(Succeed())
 	})
 
@@ -112,7 +112,7 @@ var _ = Describe("External API Space Developer", func() {
 
 			Context("when space developer self-service is enabled", func() {
 				BeforeEach(func() {
-					stopPolicyServers(sessions, policyServerConfs, nil)
+					stopPolicyServers(sessions, policyServerConfs)
 
 					template, _ := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
 					template.EnableSpaceDeveloperSelfService = true
