@@ -1,13 +1,13 @@
 ---
 name: policy-server
 templates:
-  policy-server_ctl.erb: bin/policy-server_ctl
-  policy-server_as_vcap.erb: bin/policy-server_as_vcap
+  bpm.yml.erb: config/bpm.yml
   policy-server.json.erb: config/policy-server.json
   pre-backup-lock.sh.erb: bin/bbr/pre-backup-lock
   post-backup-unlock.sh.erb: bin/bbr/post-backup-unlock
   uaa_ca.crt.erb: config/certs/uaa_ca.crt
   database_ca.crt.erb: config/certs/database_ca.crt
+  post-start.erb: bin/post-start
 
 packages:
   - policy-server

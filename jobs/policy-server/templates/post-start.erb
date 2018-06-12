@@ -1,0 +1,10 @@
+#!/bin/bash -exu
+
+source /var/vcap/packages/networking-ctl-utils/ctl_util.sh
+
+export URL="127.0.0.1:<%= p("listen_port") %>"
+export TIMEOUT=25
+
+healthy=$(wait_for_server_to_become_healthy "${URL}" "${TIMEOUT}")
+
+echo "${healthy}"
