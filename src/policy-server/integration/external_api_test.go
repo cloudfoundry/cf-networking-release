@@ -120,7 +120,7 @@ var _ = Describe("External API", func() {
 
 		Context("when the database is unavailable", func() {
 			BeforeEach(func() {
-				testsupport.RemoveDatabase(dbConf)
+				testhelpers.RemoveDatabase(dbConf)
 			})
 
 			It("still returns a 200", func() {

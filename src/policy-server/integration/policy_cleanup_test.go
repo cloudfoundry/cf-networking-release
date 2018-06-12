@@ -50,7 +50,7 @@ var _ = Describe("Policy Cleanup", func() {
 			Eventually(session, helpers.DEFAULT_TIMEOUT).Should(gexec.Exit())
 		}
 
-		testsupport.RemoveDatabase(dbConf)
+		testhelpers.RemoveDatabase(dbConf)
 
 		Expect(fakeMetron.Close()).To(Succeed())
 	})

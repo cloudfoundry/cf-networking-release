@@ -11,7 +11,6 @@ import (
 	"strconv"
 	"strings"
 
-	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
@@ -19,6 +18,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
+	"test-helpers"
+	"code.cloudfoundry.org/cf-networking-helpers/db"
 )
 
 const testTimeoutInSeconds = 5
@@ -54,7 +55,7 @@ var _ = Describe("Timeout", func() {
 		}
 		dbConf.DatabaseName = fmt.Sprintf("test_timeouts_node_%d", ports.PickAPort())
 		dbConf.Timeout = 1
-		testsupport.CreateDatabase(dbConf)
+		testhelpers.CreateDatabase(dbConf)
 
 		fakeMetron = metrics.NewFakeMetron()
 
@@ -72,7 +73,7 @@ var _ = Describe("Timeout", func() {
 		session.Interrupt()
 		Eventually(session, helpers.DEFAULT_TIMEOUT).Should(gexec.Exit())
 
-		testsupport.RemoveDatabase(dbConf)
+		testhelpers.RemoveDatabase(dbConf)
 
 		Expect(fakeMetron.Close()).To(Succeed())
 	})

@@ -103,7 +103,7 @@ func startPolicyServers(configs []config.Config) []*gexec.Session {
 }
 
 func startPolicyAndInternalServers(configs []config.Config, internalConfigs []config.InternalConfig) []*gexec.Session {
-	testsupport.CreateDatabase(configs[0].Database)
+	testhelpers.CreateDatabase(configs[0].Database)
 	var sessions []*gexec.Session
 	for _, conf := range configs {
 		sessions = append(sessions, helpers.StartPolicyServer(policyServerPath, conf))
@@ -120,7 +120,7 @@ func stopPolicyServers(sessions []*gexec.Session, configs []config.Config, inter
 		session.Interrupt()
 		Eventually(session, helpers.DEFAULT_TIMEOUT).Should(gexec.Exit())
 	}
-	testsupport.RemoveDatabase(configs[0].Database)
+	testhelpers.RemoveDatabase(configs[0].Database)
 }
 
 func policyServerUrl(route string, confs []config.Config) string {

@@ -43,7 +43,7 @@ var _ = Describe("Store", func() {
 		dbConf = testsupport.GetDBConfig()
 		dbConf.DatabaseName = fmt.Sprintf("store_test_node_%d", time.Now().UnixNano())
 
-		testsupport.CreateDatabase(dbConf)
+		testhelpers.CreateDatabase(dbConf)
 
 		logger := lager.NewLogger("Store Test")
 
@@ -67,7 +67,7 @@ var _ = Describe("Store", func() {
 		if realDb != nil {
 			Expect(realDb.Close()).To(Succeed())
 		}
-		testsupport.RemoveDatabase(dbConf)
+		testhelpers.RemoveDatabase(dbConf)
 	})
 
 	Describe("concurrent create and delete requests", func() {

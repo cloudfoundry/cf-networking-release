@@ -43,7 +43,7 @@ var _ = Describe("migrations", func() {
 		dbConf = testsupport.GetDBConfig()
 		dbConf.DatabaseName = fmt.Sprintf("migrator_test_node_%d", time.Now().UnixNano())
 		dbConf.Timeout = 30
-		testsupport.CreateDatabase(dbConf)
+		testhelpers.CreateDatabase(dbConf)
 
 		logger := lager.NewLogger("Migrations Test")
 
@@ -63,7 +63,7 @@ var _ = Describe("migrations", func() {
 		if realDb != nil {
 			Expect(realDb.Close()).To(Succeed())
 		}
-		testsupport.RemoveDatabase(dbConf)
+		testhelpers.RemoveDatabase(dbConf)
 	})
 
 	Describe("PerformMigrations", func() {
