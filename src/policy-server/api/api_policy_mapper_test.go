@@ -255,22 +255,26 @@ var _ = Describe("ApiPolicyMapper", func() {
 		},
 			table.Entry("direct translation",
 				store.Tag{
-					ID:  "some-id",
-					Tag: "some-tag",
+					ID:   "some-id",
+					Tag:  "some-tag",
+					Type: "some-type",
 				},
 				api.Tag{
-					ID:  "some-id",
-					Tag: "some-tag",
+					ID:   "some-id",
+					Tag:  "some-tag",
+					Type: "some-type",
 				},
 			),
 			table.Entry("direct translation",
 				store.Tag{
-					ID:  "some-other-id",
-					Tag: "some-other-tag",
+					ID:   "some-other-id",
+					Tag:  "some-other-tag",
+					Type: "some-other-type",
 				},
 				api.Tag{
-					ID:  "some-other-id",
-					Tag: "some-other-tag",
+					ID:   "some-other-id",
+					Tag:  "some-other-tag",
+					Type: "some-other-type",
 				},
 			),
 		)
@@ -283,33 +287,38 @@ var _ = Describe("ApiPolicyMapper", func() {
 		},
 			table.Entry("direct translation",
 				[]store.Tag{{
-					ID:  "some-id",
-					Tag: "some-tag",
+					ID:   "some-id",
+					Tag:  "some-tag",
+					Type: "some-type",
 				}},
 				[]api.Tag{{
-					ID:  "some-id",
-					Tag: "some-tag",
+					ID:   "some-id",
+					Tag:  "some-tag",
+					Type: "some-type",
 				}},
 			),
 			table.Entry("direct translation",
 				[]store.Tag{{
-					ID:  "some-id",
-					Tag: "some-tag",
+					ID:   "some-id",
+					Tag:  "some-tag",
+					Type: "some-type",
 				},
 					{
-						ID:  "some-other-id",
-						Tag: "some-other-tag",
+						ID:   "some-other-id",
+						Tag:  "some-other-tag",
+						Type: "some-other-type",
 					}},
 				[]api.Tag{{
-					ID:  "some-id",
-					Tag: "some-tag",
+					ID:   "some-id",
+					Tag:  "some-tag",
+					Type: "some-type",
 				},
 					{
-						ID:  "some-other-id",
-						Tag: "some-other-tag",
+						ID:   "some-other-id",
+						Tag:  "some-other-tag",
+						Type: "some-other-type",
 					}},
 			),
 		)
 	})
-
 })

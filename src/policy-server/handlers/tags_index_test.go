@@ -34,9 +34,11 @@ var _ = Describe("Tags index handler", func() {
 		allTags = []store.Tag{{
 			ID:  "some-app-guid",
 			Tag: "0001",
+			Type: "app",
 		}, {
 			ID:  "some-other-app-guid",
 			Tag: "0002",
+			Type: "app",
 		}}
 
 		var err error
@@ -65,8 +67,8 @@ var _ = Describe("Tags index handler", func() {
 
 	It("returns all the tags", func() {
 		expectedResponseJSON := `{"tags": [
-			{ "id": "some-app-guid", "tag": "0001" },
-			{ "id": "some-other-app-guid", "tag": "0002" }
+			{ "id": "some-app-guid", "tag": "0001", "type": "app" },
+			{ "id": "some-other-app-guid", "tag": "0002", "type": "app" }
         ]}`
 		MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
 
@@ -81,8 +83,8 @@ var _ = Describe("Tags index handler", func() {
 		})
 		It("still works", func() {
 			expectedResponseJSON := `{"tags": [
-			{ "id": "some-app-guid", "tag": "0001" },
-			{ "id": "some-other-app-guid", "tag": "0002" }
+			{ "id": "some-app-guid", "tag": "0001", "type": "app" },
+			{ "id": "some-other-app-guid", "tag": "0002", "type": "app" }
         ]}`
 			handler.ServeHTTP(resp, request)
 

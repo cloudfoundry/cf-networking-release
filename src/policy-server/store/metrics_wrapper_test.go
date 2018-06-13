@@ -82,6 +82,58 @@ var _ = Describe("MetricsWrapper", func() {
 		})
 	})
 
+	Describe("CreateTag", func() {
+		var (
+			tag store.Tag
+		)
+		BeforeEach(func() {
+			tag = store.Tag{
+				ID:   "guid",
+				Tag:  "tag",
+				Type: "type",
+			}
+			fakeStore.CreateTagReturns(tag, nil)
+		})
+
+		It("calls CreateTag on the Store", func() {
+			tag, err := metricsWrapper.CreateTag("guid", "type")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(tag).To(Equal(tag))
+
+			Expect(fakeStore.CreateTagCallCount()).To(Equal(1))
+			groupGuid, groupType := fakeStore.CreateTagArgsForCall(0)
+			Expect(groupGuid).To(Equal("guid"))
+			Expect(groupType).To(Equal("type"))
+		})
+
+		It("emits a metric", func() {
+			_, err := metricsWrapper.CreateTag("guid", "type")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
+			name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
+			Expect(name).To(Equal("StoreCreateTagSuccessTime"))
+		})
+
+		Context("when there is an error", func() {
+			BeforeEach(func() {
+				fakeStore.CreateTagReturns(store.Tag{}, errors.New("banana"))
+			})
+			It("emits an error metric", func() {
+				_, err := metricsWrapper.CreateTag("guid", "type")
+				Expect(err).To(MatchError("banana"))
+
+				Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
+				Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("StoreCreateTagError"))
+
+				Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
+				name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
+				Expect(name).To(Equal("StoreCreateTagErrorTime"))
+			})
+		})
+	})
+
 	Describe("All", func() {
 		BeforeEach(func() {
 			fakeStore.AllReturns(policies, nil)

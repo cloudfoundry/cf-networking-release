@@ -38,9 +38,10 @@ type Ports struct {
 type Tag struct {
 	ID  string `json:"id"`
 	Tag string `json:"tag"`
+	Type string `json:"type"`
 }
 
 type Space struct {
-	Name    string `json:name`
-	OrgGUID string `json:organization_guid`
+	Name    string `json:"name"`
+	OrgGUID string `json:"organization_guid"`
 }

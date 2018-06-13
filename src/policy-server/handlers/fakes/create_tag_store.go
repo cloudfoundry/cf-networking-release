@@ -2,29 +2,30 @@
 package fakes
 
 import (
+	"policy-server/store"
 	"sync"
 )
 
 type CreateTagDataStore struct {
-	CreateTagStub        func(string, string) (string, error)
+	CreateTagStub        func(string, string) (store.Tag, error)
 	createTagMutex       sync.RWMutex
 	createTagArgsForCall []struct {
 		arg1 string
 		arg2 string
 	}
 	createTagReturns struct {
-		result1 string
+		result1 store.Tag
 		result2 error
 	}
 	createTagReturnsOnCall map[int]struct {
-		result1 string
+		result1 store.Tag
 		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *CreateTagDataStore) CreateTag(arg1 string, arg2 string) (string, error) {
+func (fake *CreateTagDataStore) CreateTag(arg1 string, arg2 string) (store.Tag, error) {
 	fake.createTagMutex.Lock()
 	ret, specificReturn := fake.createTagReturnsOnCall[len(fake.createTagArgsForCall)]
 	fake.createTagArgsForCall = append(fake.createTagArgsForCall, struct {
@@ -54,24 +55,24 @@ func (fake *CreateTagDataStore) CreateTagArgsForCall(i int) (string, string) {
 	return fake.createTagArgsForCall[i].arg1, fake.createTagArgsForCall[i].arg2
 }
 
-func (fake *CreateTagDataStore) CreateTagReturns(result1 string, result2 error) {
+func (fake *CreateTagDataStore) CreateTagReturns(result1 store.Tag, result2 error) {
 	fake.CreateTagStub = nil
 	fake.createTagReturns = struct {
-		result1 string
+		result1 store.Tag
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *CreateTagDataStore) CreateTagReturnsOnCall(i int, result1 string, result2 error) {
+func (fake *CreateTagDataStore) CreateTagReturnsOnCall(i int, result1 store.Tag, result2 error) {
 	fake.CreateTagStub = nil
 	if fake.createTagReturnsOnCall == nil {
 		fake.createTagReturnsOnCall = make(map[int]struct {
-			result1 string
+			result1 store.Tag
 			result2 error
 		})
 	}
 	fake.createTagReturnsOnCall[i] = struct {
-		result1 string
+		result1 store.Tag
 		result2 error
 	}{result1, result2}
 }

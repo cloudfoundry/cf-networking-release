@@ -22,7 +22,7 @@ type Migrator interface {
 //go:generate counterfeiter -o fakes/store.go --fake-name Store . Store
 type Store interface {
 	Create([]Policy) error
-	CreateTag(string, string) (int, error)
+	CreateTag(string, string) (Tag, error)
 	All() ([]Policy, error)
 	Delete([]Policy) error
 	Tags() ([]Tag, error)
@@ -103,22 +103,27 @@ func (s *store) CheckDatabase() error {
 	return s.conn.QueryRow("SELECT 1").Scan(&result)
 }
 
-func (s *store) CreateTag(groupGuid, groupType string) (int, error) {
+func (s *store) CreateTag(groupGuid, groupType string) (Tag, error) {
 	tx, err := s.conn.Beginx()
 	if err != nil {
-		return -1, fmt.Errorf("begin transaction: %s", err)
+		return Tag{}, fmt.Errorf("begin transaction: %s", err)
 	}
 
-	tag, err := s.group.Create(tx, groupGuid)
+	tagID, err := s.group.Create(tx, groupGuid, groupType)
 	if err != nil {
-		return -1, rollback(tx, err)
+		return Tag{}, rollback(tx, err)
 	}
 
 	err = commit(tx)
 	if err != nil {
-		return -1, rollback(tx, err)
+		return Tag{}, rollback(tx, err)
 	}
-	return tag, nil
+
+	return Tag{
+		ID:   groupGuid,
+		Tag:  s.tagIntToString(tagID),
+		Type: groupType,
+	}, nil
 }
 
 func (s *store) Create(policies []Policy) error {
@@ -128,12 +133,12 @@ func (s *store) Create(policies []Policy) error {
 	}
 
 	for _, policy := range policies {
-		sourceGroupId, err := s.group.Create(tx, policy.Source.ID)
+		sourceGroupId, err := s.group.Create(tx, policy.Source.ID, "app")
 		if err != nil {
 			return rollback(tx, fmt.Errorf("creating group: %s", err))
 		}
 
-		destinationGroupId, err := s.group.Create(tx, policy.Destination.ID)
+		destinationGroupId, err := s.group.Create(tx, policy.Destination.ID, "app")
 		if err != nil {
 			return rollback(tx, fmt.Errorf("creating group: %s", err))
 		}
@@ -378,7 +383,7 @@ func (s *store) Tags() ([]Tag, error) {
 	var tags []Tag
 
 	rows, err := s.conn.Query(`
-		SELECT guid, id FROM groups
+		SELECT guid, id, type FROM groups
 		WHERE guid IS NOT NULL
 		ORDER BY id
 	`)
@@ -390,8 +395,9 @@ func (s *store) Tags() ([]Tag, error) {
 	for rows.Next() {
 		var id string
 		var tag int
+		var groupType string
 
-		err = rows.Scan(&id, &tag)
+		err = rows.Scan(&id, &tag, &groupType)
 		if err != nil {
 			return nil, fmt.Errorf("listing tags: %s", err)
 		}
@@ -399,6 +405,7 @@ func (s *store) Tags() ([]Tag, error) {
 		tags = append(tags, Tag{
 			ID:  id,
 			Tag: s.tagIntToString(tag),
+			Type: groupType,
 		})
 	}
 	err = rows.Err()

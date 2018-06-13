@@ -105,6 +105,11 @@ func main() {
 	internalPoliciesHandlerV1 := handlers.NewPoliciesIndexInternal(logger, wrappedStore,
 		policyMapperV1, errorResponse)
 
+	createTagsHandlerV1 := &handlers.TagsCreate{
+		Store:         wrappedStore,
+		ErrorResponse: errorResponse,
+	}
+
 	checkVersionWrapper := &handlers.CheckVersionWrapper{
 		ErrorResponse: errorResponse,
 		RataAdapter:   adapter.RataAdapter{},
@@ -142,11 +147,13 @@ func main() {
 
 	internalRoutes := rata.Routes{
 		{Name: "internal_policies", Method: "GET", Path: "/networking/:version/internal/policies"},
+		{Name: "create_tags", Method: "PUT", Path: "/networking/v1/internal/tags"},
 	}
 	internalHandlers := rata.Handlers{
 		"internal_policies": metricsWrap("InternalPolicies", logWrap(
 			versionWrap(internalPoliciesHandlerV1, internalPoliciesHandlerV0),
 		)),
+		"create_tags": metricsWrap("CreateTags", logWrap(createTagsHandlerV1)),
 	}
 
 	tlsConfig, err := mutualtls.NewServerTLSConfig(conf.ServerCertFile, conf.ServerKeyFile, conf.CACertFile)

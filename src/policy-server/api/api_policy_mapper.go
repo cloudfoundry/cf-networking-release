@@ -103,6 +103,7 @@ func MapStoreTag(tag store.Tag) Tag {
 	return Tag{
 		ID:  tag.ID,
 		Tag: tag.Tag,
+		Type: tag.Type,
 	}
 }
 

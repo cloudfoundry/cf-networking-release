@@ -2,14 +2,16 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
+	"policy-server/store"
+	"policy-server/api"
+	"fmt"
 )
 
 //go:generate counterfeiter -o fakes/create_tag_store.go --fake-name CreateTagDataStore . createTagDataStore
 type createTagDataStore interface {
-	CreateTag(string, string) (string, error)
+	CreateTag(string, string) (store.Tag, error)
 }
 
 type TagsCreate struct {
@@ -19,7 +21,7 @@ type TagsCreate struct {
 
 type Group struct {
 	GroupType string `json:"type"`
-	GroupGuid string `json:"guid"`
+	GroupGuid string `json:"id"`
 }
 
 func (h *TagsCreate) ServeHTTP(w http.ResponseWriter, req *http.Request) {
@@ -46,6 +48,11 @@ func (h *TagsCreate) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	tagJSON, err := json.Marshal(api.MapStoreTag(tag))
+	if err != nil {
+		h.ErrorResponse.InternalServerError(logger, w, err, fmt.Sprintf("failed to marshal tag with id: %s, type: %s, and tag: %s", tag.ID, tag.Type, tag.Tag))
+		return
+	}
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf(`{ "tag": "%s" }`, tag)))
+	w.Write(tagJSON)
 }

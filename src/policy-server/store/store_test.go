@@ -371,9 +371,9 @@ var _ = Describe("Store", func() {
 				tags, err := dataStore.Tags()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(tags).To(ConsistOf([]store.Tag{
-					{ID: "some-app-guid", Tag: "01"},
-					{ID: "some-other-app-guid", Tag: "02"},
-					{ID: "another-app-guid", Tag: "03"},
+					{ID: "some-app-guid", Tag: "01", Type: "app"},
+					{ID: "some-other-app-guid", Tag: "02", Type: "app"},
+					{ID: "another-app-guid", Tag: "03", Type: "app"},
 				}))
 
 				err = dataStore.Delete(policies[:1])
@@ -392,9 +392,9 @@ var _ = Describe("Store", func() {
 				tags, err = dataStore.Tags()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(tags).To(ConsistOf([]store.Tag{
-					{ID: "yet-another-app-guid", Tag: "01"},
-					{ID: "some-other-app-guid", Tag: "02"},
-					{ID: "another-app-guid", Tag: "03"},
+					{ID: "yet-another-app-guid", Tag: "01", Type: "app"},
+					{ID: "some-other-app-guid", Tag: "02", Type: "app"},
+					{ID: "another-app-guid", Tag: "03", Type: "app"},
 				}))
 			})
 		})
@@ -455,7 +455,7 @@ var _ = Describe("Store", func() {
 					{2, nil},
 					{-1, errors.New("some-insert-error")},
 				}
-				fakeGroup.CreateStub = func(t db.Transaction, guid string) (int, error) {
+				fakeGroup.CreateStub = func(t db.Transaction, guid, groupType string) (int, error) {
 					response := responses[0]
 					responses = responses[1:]
 					return response.Id, response.Err
@@ -549,7 +549,7 @@ var _ = Describe("Store", func() {
 		It("saves the group", func() {
 			tag, err := dataStore.CreateTag(groupGuid, groupType)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(tag).To(Equal(1))
+			Expect(tag).To(Equal(store.Tag{ID: "meow-guid", Type: "meow-type", Tag: "01"}))
 
 			t, err := dataStore.Tags()
 			Expect(err).NotTo(HaveOccurred())
@@ -557,7 +557,7 @@ var _ = Describe("Store", func() {
 		})
 
 		Context("when a group with the same type and guid exists", func() {
-			var expectedTag int
+			var expectedTag store.Tag
 
 			BeforeEach(func() {
 				var err error
@@ -949,9 +949,9 @@ var _ = Describe("Store", func() {
 			tags, err := dataStore.Tags()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(tags).To(ConsistOf([]store.Tag{
-				{ID: "some-app-guid", Tag: "01"},
-				{ID: "some-other-app-guid", Tag: "02"},
-				{ID: "another-app-guid", Tag: "03"},
+				{ID: "some-app-guid", Tag: "01", Type: "app"},
+				{ID: "some-other-app-guid", Tag: "02", Type: "app"},
+				{ID: "another-app-guid", Tag: "03", Type: "app"},
 			}))
 		})
 
@@ -1088,9 +1088,11 @@ var _ = Describe("Store", func() {
 			Expect(policies).To(Equal([]store.Tag{{
 				ID:  "another-app-guid",
 				Tag: "03",
+				Type: "app",
 			}, {
 				ID:  "yet-another-app-guid",
 				Tag: "04",
+				Type: "app",
 			}}))
 		})
 

@@ -1,6 +1,8 @@
 package store
 
-import "time"
+import (
+	"time"
+)
 
 //go:generate counterfeiter -o fakes/metrics_sender.go --fake-name MetricsSender . metricsSender
 type metricsSender interface {
@@ -63,6 +65,19 @@ func (mw *MetricsWrapper) Tags() ([]Tag, error) {
 		mw.MetricsSender.SendDuration("StoreTagsSuccessTime", tagsTimeDuration)
 	}
 	return tags, err
+}
+
+func (mw *MetricsWrapper) CreateTag(groupGuid, groupType string) (Tag, error) {
+	startTime := time.Now()
+	tag, err := mw.Store.CreateTag(groupGuid, groupType)
+	tagsTimeDuration := time.Now().Sub(startTime)
+	if err != nil {
+		mw.MetricsSender.IncrementCounter("StoreCreateTagError")
+		mw.MetricsSender.SendDuration("StoreCreateTagErrorTime", tagsTimeDuration)
+	} else {
+		mw.MetricsSender.SendDuration("StoreCreateTagSuccessTime", tagsTimeDuration)
+	}
+	return tag, err
 }
 
 func (mw *MetricsWrapper) ByGuids(srcGuids, dstGuids []string, inSourceAndDest bool) ([]Policy, error) {
