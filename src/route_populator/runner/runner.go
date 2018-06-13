@@ -9,6 +9,8 @@ import (
 )
 
 type Runner struct {
+	sync.Mutex
+
 	stopped bool
 
 	cc  publisher.ConnectionCreator
@@ -45,7 +47,6 @@ func (r *Runner) Start() error {
 	numRoutes := r.job.EndRange - r.job.StartRange
 	rangeSize := numRoutes / r.numGoRoutines
 	ranges := PartitionRange(r.job.StartRange, r.job.EndRange, rangeSize)
-
 	for i := 0; i < r.numGoRoutines; i += 1 {
 		r.wg.Add(1)
 		go func(id int) {
@@ -98,10 +99,12 @@ func (r *Runner) Wait() error {
 }
 
 func (r *Runner) Stop() {
+	r.Lock()
 	if r.stopped == false {
 		r.stopped = true
 		close(r.quitChan)
 	}
+	r.Unlock()
 }
 
 func min(a, b int) int {

@@ -13,9 +13,6 @@ import (
 )
 
 var _ = Describe("Runner", func() {
-	BeforeEach(func() {
-		Skip("Data races and failing tests when run with the new script, needs fixing")
-	})
 
 	numGoRoutines := 2
 
@@ -54,7 +51,7 @@ var _ = Describe("Runner", func() {
 			r.Stop()
 			err = r.Wait()
 			Expect(err).ToNot(HaveOccurred())
-			Expect(c.PublishCallCount()).To(Equal(5))
+			Expect(c.PublishCallCount()).To(Equal(10))
 			for i := validJob.StartRange; i < validJob.EndRange; i += 1 {
 				Expect(allMessages).To(ContainSubstring("some-app-%d.apps.com", i))
 			}
@@ -73,7 +70,7 @@ var _ = Describe("Runner", func() {
 			r.Stop()
 			err = r.Wait()
 			Expect(err).ToNot(HaveOccurred())
-			Expect(c.PublishCallCount()).Should(Equal(10))
+			Expect(c.PublishCallCount()).Should(Equal(20))
 		}, 2)
 	})
 	Describe("Wait", func() {

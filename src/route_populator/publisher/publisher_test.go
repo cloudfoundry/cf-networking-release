@@ -52,8 +52,6 @@ var _ = Describe("Worker", func() {
 
 	Describe("PublishRouteRegistrations", func() {
 		It("correctly publishes (endrange - startrange) register messages", func() {
-			Skip("failing and since it wasn't being run as part of the pipeline before I'm okay with this for now")
-
 			w := publisher.NewPublisher(validJob, publishDelay)
 			c := &fakes.FakePublishingConnection{}
 			createConnection := func(endpoint string) (publisher.PublishingConnection, error) {
@@ -66,11 +64,15 @@ var _ = Describe("Worker", func() {
 			err = w.PublishRouteRegistrations()
 			Expect(err).ToNot(HaveOccurred())
 
-			Expect(c.PublishCallCount()).To(Equal(5))
-			for i := 0; i < 5; i += 1 {
+			Expect(c.PublishCallCount()).To(Equal(10))
+			for i := 0; i < 10; i += 1 {
 				msg, data := c.PublishArgsForCall(i)
-				Expect(msg).To(Equal("router.register"))
-				Expect(data).To(BeEquivalentTo(fmt.Sprintf("{\"host\":\"1.2.3.4\",\"port\":1234,\"uris\":[\"some-app-%d.apps.com\"]}", 500+i)))
+				Expect(data).To(BeEquivalentTo(fmt.Sprintf("{\"host\":\"1.2.3.4\",\"port\":1234,\"uris\":[\"some-app-%d.apps.com\"]}", 500+(i/2))))
+				if i % 2 == 0 {
+					Expect(msg).To(Equal("router.register"))
+				} else {
+					Expect(msg).To(Equal("service-discovery.register"))
+				}
 			}
 		})
 
