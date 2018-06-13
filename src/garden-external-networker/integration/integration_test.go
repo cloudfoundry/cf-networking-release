@@ -114,6 +114,7 @@ var _ = Describe("Garden External Networker", func() {
 		fakeProcess            *os.Process
 		fakeConfigFilePath     string
 		upCommand, downCommand *exec.Cmd
+		cniPluginDir           string
 	)
 
 	BeforeEach(func() {
@@ -161,8 +162,17 @@ var _ = Describe("Garden External Networker", func() {
 		fakeConfigFilePath = configFile.Name()
 		proxyRedirectCIDR = "10.255.0.0/16"
 
+		cniPluginDir, err = ioutil.TempDir("", "cni-plugin-")
+		Expect(err).NotTo(HaveOccurred())
+
+		cniPluginNames := []string{"plugin-0", "plugin-1", "plugin-2", "plugin-3"}
+		for _, name := range cniPluginNames {
+			err = link(paths.PathToFakeCNIPlugin, filepath.Join(cniPluginDir, name))
+			Expect(err).ToNot(HaveOccurred())
+		}
+
 		config = map[string]interface{}{
-			"cni_plugin_dir":      paths.CniPluginDir,
+			"cni_plugin_dir":      cniPluginDir,
 			"cni_config_dir":      cniConfigDir,
 			"bind_mount_dir":      bindMountRoot,
 			"iptables_lock_file":  GlobalIPTablesLockFile,
@@ -246,6 +256,7 @@ var _ = Describe("Garden External Networker", func() {
 
 		Expect(os.Remove(fakeConfigFilePath)).To(Succeed())
 		Expect(os.RemoveAll(cniConfigDir)).To(Succeed())
+		Expect(os.RemoveAll(cniPluginDir)).To(Succeed())
 		Expect(os.RemoveAll(fakeLogDir)).To(Succeed())
 		Expect(fakeProcess.Kill()).To(Succeed())
 	})
@@ -303,7 +314,7 @@ var _ = Describe("Garden External Networker", func() {
 		Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_COMMAND", "ADD"))
 		Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_CONTAINERID", containerHandle))
 		Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_IFNAME", "eth0"))
-		Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_PATH", paths.CniPluginDir))
+		Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_PATH", cniPluginDir))
 		Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_NETNS", expectedNetNSPath))
 		Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_ARGS", ""))
 
@@ -324,7 +335,7 @@ var _ = Describe("Garden External Networker", func() {
 		Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_COMMAND", "DEL"))
 		Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_CONTAINERID", containerHandle))
 		Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_IFNAME", "eth0"))
-		Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_PATH", paths.CniPluginDir))
+		Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_PATH", cniPluginDir))
 		Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_NETNS", expectedNetNSPath))
 		Expect(pluginCallInfo.Env).To(HaveKeyWithValue("CNI_ARGS", ""))
 
