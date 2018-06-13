@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"policy-server/handlers"
 	"policy-server/handlers/fakes"
+	storeFakes "policy-server/store/fakes"
 
 	apifakes "policy-server/api/fakes"
 
@@ -22,7 +23,7 @@ var _ = Describe("PoliciesIndexInternal", func() {
 	var (
 		handler              *handlers.PoliciesIndexInternal
 		resp                 *httptest.ResponseRecorder
-		fakeStore            *fakes.DataStore
+		fakeStore         	 *storeFakes.Store
 		fakeErrorResponse    *fakes.ErrorResponse
 		logger               *lagertest.TestLogger
 		expectedLogger       lager.Logger
@@ -68,7 +69,7 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		expectedResponseBody = []byte("some-response")
 
 		fakeMapper = &apifakes.PolicyMapper{}
-		fakeStore = &fakes.DataStore{}
+		fakeStore = &storeFakes.Store{}
 		fakeStore.AllReturns(allPolicies, nil)
 		fakeStore.ByGuidsReturns(byGuidsPolicies, nil)
 		fakeMapper.AsBytesReturns(expectedResponseBody, nil)

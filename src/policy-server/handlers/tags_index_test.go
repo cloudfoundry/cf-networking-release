@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"policy-server/handlers"
 	"policy-server/handlers/fakes"
+	storeFakes "policy-server/store/fakes"
 	"policy-server/store"
 
 	hfakes "code.cloudfoundry.org/cf-networking-helpers/fakes"
@@ -23,7 +24,7 @@ var _ = Describe("Tags index handler", func() {
 		request           *http.Request
 		handler           *handlers.TagsIndex
 		resp              *httptest.ResponseRecorder
-		fakeStore         *fakes.DataStore
+		fakeStore         *storeFakes.TagStore
 		fakeErrorResponse *fakes.ErrorResponse
 		logger            *lagertest.TestLogger
 		expectedLogger    lager.Logger
@@ -48,7 +49,7 @@ var _ = Describe("Tags index handler", func() {
 		marshaler = &hfakes.Marshaler{}
 		marshaler.MarshalStub = json.Marshal
 
-		fakeStore = &fakes.DataStore{}
+		fakeStore = &storeFakes.TagStore{}
 		fakeErrorResponse = &fakes.ErrorResponse{}
 		fakeStore.TagsReturns(allTags, nil)
 		logger = lagertest.NewTestLogger("test")

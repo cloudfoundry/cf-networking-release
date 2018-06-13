@@ -6,6 +6,8 @@ import (
 	"net/http/httptest"
 	"policy-server/handlers"
 	"policy-server/handlers/fakes"
+	storeFakes "policy-server/store/fakes"
+
 	"policy-server/uaa_client"
 
 	apifakes "policy-server/api/fakes"
@@ -29,7 +31,7 @@ var _ = Describe("Policies index handler", func() {
 		request              *http.Request
 		handler              *handlers.PoliciesIndex
 		resp                 *httptest.ResponseRecorder
-		fakeStore            *fakes.DataStore
+		fakeStore            *storeFakes.Store
 		fakePolicyFilter     *fakes.PolicyFilter
 		fakeErrorResponse    *fakes.ErrorResponse
 		fakeMapper           *apifakes.PolicyMapper
@@ -136,7 +138,7 @@ var _ = Describe("Policies index handler", func() {
 		request, err = http.NewRequest("GET", "/networking/v0/external/policies", nil)
 		Expect(err).NotTo(HaveOccurred())
 
-		fakeStore = &fakes.DataStore{}
+		fakeStore = &storeFakes.Store{}
 		fakeStore.AllReturns(allPolicies, nil)
 		fakeStore.ByGuidsReturns(byGuidsPolicies, nil)
 		fakeErrorResponse = &fakes.ErrorResponse{}

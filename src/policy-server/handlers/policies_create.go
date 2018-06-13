@@ -23,14 +23,14 @@ type quotaGuard interface {
 }
 
 type PoliciesCreate struct {
-	Store         dataStore
+	Store         store.Store
 	Mapper        api.PolicyMapper
 	PolicyGuard   policyGuard
 	QuotaGuard    quotaGuard
 	ErrorResponse errorResponse
 }
 
-func NewPoliciesCreate(store dataStore, mapper api.PolicyMapper,
+func NewPoliciesCreate(store store.Store, mapper api.PolicyMapper,
 	policyGuard policyGuard, quotaGuard quotaGuard, errorResponse errorResponse) *PoliciesCreate {
 	return &PoliciesCreate{
 		Store:         store,

@@ -18,13 +18,16 @@ var _ = Describe("MetricsWrapper", func() {
 		destGuids         []string
 		fakeMetricsSender *fakes.MetricsSender
 		fakeStore         *fakes.Store
+		fakeTagStore	  *fakes.TagStore
 	)
 
 	BeforeEach(func() {
 		fakeStore = &fakes.Store{}
+		fakeTagStore = &fakes.TagStore{}
 		fakeMetricsSender = &fakes.MetricsSender{}
 		metricsWrapper = &store.MetricsWrapper{
 			Store:         fakeStore,
+			TagStore:      fakeTagStore,
 			MetricsSender: fakeMetricsSender,
 		}
 		policies = []store.Policy{{
@@ -92,7 +95,7 @@ var _ = Describe("MetricsWrapper", func() {
 				Tag:  "tag",
 				Type: "type",
 			}
-			fakeStore.CreateTagReturns(tag, nil)
+			fakeTagStore.CreateTagReturns(tag, nil)
 		})
 
 		It("calls CreateTag on the Store", func() {
@@ -101,8 +104,8 @@ var _ = Describe("MetricsWrapper", func() {
 
 			Expect(tag).To(Equal(tag))
 
-			Expect(fakeStore.CreateTagCallCount()).To(Equal(1))
-			groupGuid, groupType := fakeStore.CreateTagArgsForCall(0)
+			Expect(fakeTagStore.CreateTagCallCount()).To(Equal(1))
+			groupGuid, groupType := fakeTagStore.CreateTagArgsForCall(0)
 			Expect(groupGuid).To(Equal("guid"))
 			Expect(groupType).To(Equal("type"))
 		})
@@ -118,7 +121,7 @@ var _ = Describe("MetricsWrapper", func() {
 
 		Context("when there is an error", func() {
 			BeforeEach(func() {
-				fakeStore.CreateTagReturns(store.Tag{}, errors.New("banana"))
+				fakeTagStore.CreateTagReturns(store.Tag{}, errors.New("banana"))
 			})
 			It("emits an error metric", func() {
 				_, err := metricsWrapper.CreateTag("guid", "type")
@@ -291,14 +294,14 @@ var _ = Describe("MetricsWrapper", func() {
 
 	Describe("Tags", func() {
 		BeforeEach(func() {
-			fakeStore.TagsReturns(tags, nil)
+			fakeTagStore.TagsReturns(tags, nil)
 		})
 		It("calls Tags on the Store", func() {
 			returnedTags, err := metricsWrapper.Tags()
 			Expect(err).NotTo(HaveOccurred())
 			Expect(returnedTags).To(Equal(tags))
 
-			Expect(fakeStore.TagsCallCount()).To(Equal(1))
+			Expect(fakeTagStore.TagsCallCount()).To(Equal(1))
 		})
 
 		It("emits a metric", func() {
@@ -313,7 +316,7 @@ var _ = Describe("MetricsWrapper", func() {
 
 		Context("when there is an error", func() {
 			BeforeEach(func() {
-				fakeStore.TagsReturns(nil, errors.New("banana"))
+				fakeTagStore.TagsReturns(nil, errors.New("banana"))
 			})
 			It("emits an error metric", func() {
 				_, err := metricsWrapper.Tags()

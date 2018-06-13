@@ -143,12 +143,27 @@ func main() {
 		log.Fatalf("%s.%s: failed to construct datastore: %s", logPrefix, jobPrefix, err) // not tested
 	}
 
+
+	tagDataStore, err := store.NewTagStore(
+		connectionPool,
+		connectionPool,
+		&store.GroupTable{},
+		conf.TagLength,
+		&migrations.Migrator{
+			MigrateAdapter: &migrations.MigrateAdapter{},
+		},
+	)
+	if err != nil {
+		log.Fatalf("%s.%s: failed to construct datastore: %s", logPrefix, jobPrefix, err) // not tested
+	}
+
 	metricsSender := &metrics.MetricsSender{
 		Logger: logger.Session("time-metric-emitter"),
 	}
 
 	wrappedStore := &store.MetricsWrapper{
 		Store:         dataStore,
+		TagStore:      tagDataStore,
 		MetricsSender: metricsSender,
 	}
 

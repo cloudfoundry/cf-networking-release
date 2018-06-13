@@ -2,14 +2,15 @@ package handlers
 
 import (
 	"net/http"
+	"policy-server/store"
 )
 
 type Health struct {
-	Store         dataStore
+	Store         store.Store
 	ErrorResponse errorResponse
 }
 
-func NewHealth(store dataStore, errorResponse errorResponse) *Health {
+func NewHealth(store store.Store, errorResponse errorResponse) *Health {
 	return &Health{
 		Store:         store,
 		ErrorResponse: errorResponse,

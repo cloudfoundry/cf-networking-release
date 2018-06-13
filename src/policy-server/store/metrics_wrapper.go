@@ -12,6 +12,7 @@ type metricsSender interface {
 
 type MetricsWrapper struct {
 	Store         Store
+	TagStore	  TagStore
 	MetricsSender metricsSender
 }
 
@@ -56,7 +57,7 @@ func (mw *MetricsWrapper) Delete(policies []Policy) error {
 
 func (mw *MetricsWrapper) Tags() ([]Tag, error) {
 	startTime := time.Now()
-	tags, err := mw.Store.Tags()
+	tags, err := mw.TagStore.Tags()
 	tagsTimeDuration := time.Now().Sub(startTime)
 	if err != nil {
 		mw.MetricsSender.IncrementCounter("StoreTagsError")
@@ -69,7 +70,7 @@ func (mw *MetricsWrapper) Tags() ([]Tag, error) {
 
 func (mw *MetricsWrapper) CreateTag(groupGuid, groupType string) (Tag, error) {
 	startTime := time.Now()
-	tag, err := mw.Store.CreateTag(groupGuid, groupType)
+	tag, err := mw.TagStore.CreateTag(groupGuid, groupType)
 	tagsTimeDuration := time.Now().Sub(startTime)
 	if err != nil {
 		mw.MetricsSender.IncrementCounter("StoreCreateTagError")

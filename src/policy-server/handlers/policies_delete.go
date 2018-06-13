@@ -8,16 +8,17 @@ import (
 	"policy-server/api"
 
 	"code.cloudfoundry.org/lager"
+	"policy-server/store"
 )
 
 type PoliciesDelete struct {
-	Store         dataStore
+	Store         store.Store
 	Mapper        api.PolicyMapper
 	PolicyGuard   policyGuard
 	ErrorResponse errorResponse
 }
 
-func NewPoliciesDelete(store dataStore, mapper api.PolicyMapper,
+func NewPoliciesDelete(store store.Store, mapper api.PolicyMapper,
 	policyGuard policyGuard, errorResponse errorResponse) *PoliciesDelete {
 	return &PoliciesDelete{
 		Store:         store,

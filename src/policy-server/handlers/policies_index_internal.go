@@ -10,24 +10,14 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-//go:generate counterfeiter -o fakes/data_store.go --fake-name DataStore . dataStore
-type dataStore interface {
-	All() ([]store.Policy, error)
-	Create([]store.Policy) error
-	Delete([]store.Policy) error
-	Tags() ([]store.Tag, error)
-	ByGuids([]string, []string, bool) ([]store.Policy, error)
-	CheckDatabase() error
-}
-
 type PoliciesIndexInternal struct {
 	Logger        lager.Logger
-	Store         dataStore
+	Store         store.Store
 	Mapper        api.PolicyMapper
 	ErrorResponse errorResponse
 }
 
-func NewPoliciesIndexInternal(logger lager.Logger, store dataStore,
+func NewPoliciesIndexInternal(logger lager.Logger, store store.Store,
 	mapper api.PolicyMapper, errorResponse errorResponse) *PoliciesIndexInternal {
 	return &PoliciesIndexInternal{
 		Logger:        logger,
