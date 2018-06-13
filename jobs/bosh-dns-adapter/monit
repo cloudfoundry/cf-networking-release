@@ -1,8 +1,7 @@
 <% unless p("cf_app_sd_disable") %>
 check process bosh-dns-adapter
-  with pidfile /var/vcap/sys/run/bosh-dns-adapter/bosh-dns-adapter.pid
-  start program "/usr/bin/timeout 25 /var/vcap/jobs/bosh-dns-adapter/bin/bosh-dns-adapter_ctl start"
-   with timeout 30 seconds
-  stop program "/var/vcap/jobs/bosh-dns-adapter/bin/bosh-dns-adapter_ctl stop"
+  with pidfile /var/vcap/sys/run/bpm/bosh-dns-adapter/bosh-dns-adapter.pid
+  start program "/var/vcap/jobs/bpm/bin/bpm start bosh-dns-adapter"
+  stop program "/var/vcap/jobs/bpm/bin/bpm stop bosh-dns-adapter"
   group vcap
 <% end %>

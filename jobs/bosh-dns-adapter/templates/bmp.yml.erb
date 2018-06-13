@@ -1,0 +1,7 @@
+---
+processes:
+  - name: bosh-dns-adapter
+    executable: /var/vcap/packages/bosh-dns-adapter/bin/bosh-dns-adapter
+    args:
+      - -c
+      - /var/vcap/jobs/bosh-dns-adapter/config/config.json

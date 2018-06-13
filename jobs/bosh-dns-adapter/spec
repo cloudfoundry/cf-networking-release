@@ -2,9 +2,8 @@
 name: bosh-dns-adapter
 
 templates:
+  bpm.yml.erb:                  config/bpm.yml
   aliases.json.erb:             dns/aliases.json
-  bosh-dns-adapter_as_vcap.erb: bin/bosh-dns-adapter_as_vcap
-  bosh-dns-adapter_ctl.erb:     bin/bosh-dns-adapter_ctl
   client.crt.erb:               config/certs/client.crt
   client.key.erb:               config/certs/client.key
   config.json.erb:              config/config.json
