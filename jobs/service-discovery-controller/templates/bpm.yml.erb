@@ -1,0 +1,7 @@
+---
+processes:
+  - name: service-discovery-controller
+    executable: /var/vcap/packages/service-discovery-controller/bin/service-discovery-controller
+    args:
+      - -c
+      - /var/vcap/jobs/service-discovery-controller/config/config.json

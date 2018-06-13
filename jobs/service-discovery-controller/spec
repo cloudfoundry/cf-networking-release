@@ -2,8 +2,7 @@
 name: service-discovery-controller
 
 templates:
-  service-discovery-controller_ctl.erb:     bin/service-discovery-controller_ctl
-  service-discovery-controller_as_vcap.erb: bin/service-discovery-controller_as_vcap
+  bpm.yml.erb:                              config/bpm.yml
   post-start.erb:                           bin/post-start
   config.json.erb:                          config/config.json
   server.crt.erb:                           config/certs/server.crt
