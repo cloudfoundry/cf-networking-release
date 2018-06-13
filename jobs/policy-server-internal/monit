@@ -1,9 +1,8 @@
 <% unless p("disable") %>
 check process policy-server-internal
-  with pidfile /var/vcap/sys/run/policy-server-internal/policy-server-internal.pid
-  start program "/usr/bin/timeout 25 /var/vcap/jobs/policy-server-internal/bin/policy-server-internal_ctl start"
-   with timeout 30 seconds
-  stop program "/var/vcap/jobs/policy-server-internal/bin/policy-server-internal_ctl stop"
+  with pidfile /var/vcap/sys/run/bpm/policy-server-internal/policy-server-internal.pid
+  start program "/var/vcap/jobs/bpm/bin/bpm start policy-server-internal"
+  stop program "/var/vcap/jobs/bpm/bin/bpm stop policy-server-internal"
   group vcap
   if failed
      host 127.0.0.1
