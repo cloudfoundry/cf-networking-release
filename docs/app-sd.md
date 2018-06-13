@@ -71,7 +71,27 @@ To add service discovery to cf-deployment, include the following experimental op
 bosh manifest > /tmp/cf-manifest.yml
 ```
 
-* Update your deployment with the ops files 
+* Create an internal domain.
+Note: this step may not be neccessary if service discovery was already enabled.
+CAPI previously seeded the `apps.internal` domain. As of CAPI 1.61.0, the `apps.internal` domain is no longer seeded in the database.
+Fresh installs need to run the following command:
+```
+cf curl /v2/shared_domains -d '{
+  "name": "apps.internal",
+  "internal": true
+}'
+```
+
+* Use the following command to list the domains, and to verify which of the domains are `'internal': true`
+```
+cf curl /v2/shared_domains
+```
+
+* Update the `internal_domains` job property on the `bosh-dns-adapter` job if the internal domain is not `apps.internal`. The list of
+domains should match the internal domains that have been configured in the prior step.
+The `internal_domains` job property defaults to `['apps.internal']`.
+
+* Update your deployment with the ops files
 ``` bash
 bosh deploy /tmp/cf-manifest.yml \
   -o ~/workspace/cf-deployment/operations/experimental/use-bosh-dns-for-containers.yml \
