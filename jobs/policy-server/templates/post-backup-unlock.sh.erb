@@ -4,9 +4,7 @@ set -eu
 
 source /var/vcap/packages/networking-ctl-utils/ctl_util.sh
 
-HEALTHCHECK_ENDPOINT=localhost:<%= p("listen_port") %>/health
-PATH="/var/vcap/bosh/bin:$PATH"
-
-monit start policy-server
+HEALTHCHECK_ENDPOINT="localhost:<%= p("listen_port") %>/health"
+/var/vcap/bosh/bin/monit start policy-server
 
 wait_for_server_to_become_healthy "$HEALTHCHECK_ENDPOINT" 30

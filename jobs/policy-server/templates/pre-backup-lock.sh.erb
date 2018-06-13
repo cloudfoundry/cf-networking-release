@@ -2,6 +2,4 @@
 
 set -eu
 
-PATH="/var/vcap/bosh/bin:$PATH"
-monit unmonitor policy-server
-/var/vcap/jobs/policy-server/bin/policy-server_ctl stop
+/var/vcap/bosh/bin/monit stop policy-server
