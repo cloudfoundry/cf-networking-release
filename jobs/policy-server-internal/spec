@@ -1,9 +1,8 @@
 ---
 name: policy-server-internal
 templates:
-  pre-start.erb: bin/pre-start
-  policy-server-internal_ctl.erb: bin/policy-server-internal_ctl
-  policy-server-internal_as_vcap.erb: bin/policy-server-internal_as_vcap
+  bpm.yml.erb: config/bpm.yml
+  post-start.erb: bin/post-start
   policy-server-internal.json.erb: config/policy-server-internal.json
   ca.crt.erb: config/certs/ca.crt
   server.crt.erb: config/certs/server.crt
