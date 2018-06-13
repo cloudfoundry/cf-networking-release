@@ -42,7 +42,7 @@ var _ = BeforeSuite(func() {
 	AuthAsAdmin()
 
 	appsDir = os.Getenv("APPS_DIR")
-	Expect(appsDir).NotTo(BeEmpty())
+	Expect(appsDir).NotTo(BeEmpty(), "APPS_DIR is not set")
 })
 
 type instanceInfo struct {
