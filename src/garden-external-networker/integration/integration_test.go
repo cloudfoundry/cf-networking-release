@@ -94,7 +94,7 @@ func buildStdin(inputs interface{}) io.Reader {
 func containerIPTablesRules(containerNetns string, tableName string) []string {
 	iptablesSession, err := gexec.Start(exec.Command("ip", "netns", "exec", containerNetns, "iptables", "-w", "-S", "-t", tableName), GinkgoWriter, GinkgoWriter)
 	Expect(err).NotTo(HaveOccurred())
-	Eventually(iptablesSession).Should(gexec.Exit(0))
+	Eventually(iptablesSession, "5s").Should(gexec.Exit(0))
 	return strings.Split(string(iptablesSession.Out.Contents()), "\n")
 }
 
