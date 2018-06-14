@@ -1,7 +1,7 @@
 ---
 name: route_populator
 templates:
-  ctl.erb: bin/ctl
+  bpm.yml.erb: config/bpm.yml
 
 packages:
   - route_populator
