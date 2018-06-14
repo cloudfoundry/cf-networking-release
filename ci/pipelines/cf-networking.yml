@@ -490,8 +490,7 @@ jobs:
           cf-networking.yml
           use-system-domain-as-metron-deployment-name.yml
           enable-routing-integrity.yml
-          use-cf-networking-2.yml
-          use-bosh-dns-for-containers-with-networking-2.yml
+          use-bosh-dns-for-containers.yml
           use-latest-silk.yml
           use-latest-capi.yml
           enable-service-discovery.yml
