@@ -494,7 +494,6 @@ jobs:
           use-latest-silk.yml
           use-latest-capi.yml
           enable-service-discovery.yml
-          use-service-discovery-from-cf-networking.yml
           add-apps-internal-search-domain.yml
           add-acceptance-test-jobs.yml
           opsfile.yml
@@ -707,20 +706,18 @@ jobs:
         OPS_FILES: |
           use-compiled-releases.yml
           datadog.yml
-          use-system-domain-as-metron-deployment-name.yml
-          custom-apps-domain.yml
           scale-to-one-az.yml
           smaller-footprint.yml
           use-bosh-dns.yml
           cf-networking.yml
+          use-system-domain-as-metron-deployment-name.yml
+          custom-apps-domain.yml
           enable-routing-integrity.yml
-          use-cf-networking-2.yml
-          use-bosh-dns-for-containers-with-networking-2.yml
-          enable-iptables-logger-with-networking-2.yml
+          use-bosh-dns-for-containers.yml
+          enable-iptables-logger.yml
           use-latest-silk.yml
           use-latest-capi.yml
           enable-service-discovery.yml
-          use-service-discovery-from-cf-networking.yml
           add-apps-internal-search-domain.yml
           add-acceptance-test-jobs.yml
           use-pxc.yml
@@ -1124,17 +1121,15 @@ jobs:
         OPS_FILES: |
           use-compiled-releases.yml
           datadog.yml
-          use-system-domain-as-metron-deployment-name.yml
           scale-to-one-az.yml
           smaller-footprint.yml
           use-bosh-dns.yml
           cf-networking.yml
+          use-system-domain-as-metron-deployment-name.yml
           enable-routing-integrity.yml
-          use-cf-networking-2.yml
-          use-bosh-dns-for-containers-with-networking-2.yml
+          use-bosh-dns-for-containers.yml
           use-latest-silk.yml
           enable-service-discovery.yml
-          use-service-discovery-from-cf-networking.yml
           use-pxc.yml
           use-mysql-tls.yml
           use-mysql-tls-for-silk-controller.yml
@@ -1383,18 +1378,16 @@ jobs:
         SYSTEM_DOMAIN: slouch.c2c.cf-app.com
         OPS_FILES: |
           use-compiled-releases.yml
-          use-system-domain-as-metron-deployment-name.yml
           scale-to-one-az.yml
           smaller-footprint.yml
           use-bosh-dns.yml
           cf-networking.yml
+          use-system-domain-as-metron-deployment-name.yml
           enable-routing-integrity.yml
-          use-cf-networking-2.yml
-          use-bosh-dns-for-containers-with-networking-2.yml
-          enable-iptables-logger-with-networking-2.yml
+          use-bosh-dns-for-containers.yml
+          enable-iptables-logger.yml
           use-latest-silk.yml
           enable-service-discovery.yml
-          use-service-discovery-from-cf-networking.yml
           add-apps-internal-search-domain.yml
           opsfile.yml
       input_mapping:
