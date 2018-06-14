@@ -7,4 +7,4 @@
   value: cf-networking
 
 - type: remove
-  path: /releases/name=cf-app-sd
+  path: /releases/name=cf-app-sd?
