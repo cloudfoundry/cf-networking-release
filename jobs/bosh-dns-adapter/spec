@@ -12,7 +12,6 @@ templates:
 
 packages:
   - bosh-dns-adapter
-  - sd-ctl-utils
 
 consumes:
   - name: service-discovery-controller
