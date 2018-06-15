@@ -16,8 +16,8 @@ import (
 	"github.com/onsi/gomega/gexec"
 	"github.com/onsi/gomega/types"
 
-	"testing"
 	"test-helpers"
+	"testing"
 )
 
 var (
@@ -113,6 +113,15 @@ func startPolicyAndInternalServers(configs []config.Config, internalConfigs []co
 		sessions = append(sessions, helpers.StartInternalPolicyServer(policyServerInternalPath, conf))
 	}
 	return sessions
+}
+
+func stopPolicyServerExternalAndInternal(sessions []*gexec.Session, externalConfs []config.Config, internalConfs []config.InternalConfig) {
+	for _, session := range sessions {
+		session.Interrupt()
+		Eventually(session, helpers.DEFAULT_TIMEOUT).Should(gexec.Exit())
+	}
+	testhelpers.RemoveDatabase(externalConfs[0].Database)
+	testhelpers.RemoveDatabase(internalConfs[0].Database)
 }
 
 func stopPolicyServers(sessions []*gexec.Session, configs []config.Config) {

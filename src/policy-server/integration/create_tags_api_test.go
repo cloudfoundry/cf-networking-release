@@ -1,10 +1,6 @@
 package integration_test
 
 import (
-	"code.cloudfoundry.org/cf-networking-helpers/db"
-	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
-	"code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics"
-	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
@@ -12,9 +8,15 @@ import (
 	"policy-server/config"
 	"policy-server/integration/helpers"
 
-	"github.com/onsi/gomega/gexec"
+	"code.cloudfoundry.org/cf-networking-helpers/db"
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics"
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
+
 	"net/http"
 	"strings"
+
+	"github.com/onsi/gomega/gexec"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -64,7 +66,7 @@ var _ = Describe("Create Tags API", func() {
 	})
 
 	AfterEach(func() {
-		stopPolicyServers(sessions, policyServerConfs, policyServerInternalConfs)
+		stopPolicyServerExternalAndInternal(sessions, policyServerConfs, policyServerInternalConfs)
 		Expect(fakeMetron.Close()).To(Succeed())
 	})
 
