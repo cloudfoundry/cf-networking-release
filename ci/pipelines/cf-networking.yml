@@ -124,7 +124,7 @@ resources:
   - name: datadog-firehose-nozzle-release
     type: bosh-io-release
     source:
-      repository: cloudfoundry-incubator/datadog-firehose-nozzle-release
+      repository: DataDog/datadog-firehose-nozzle-release
   ###### BOSH release repos
   - name: capi-ci-passed
     type: git
@@ -839,7 +839,6 @@ jobs:
       file: cf-deployment-concourse-tasks/credhub-compatible/bosh-deploy/task.yml
       input_mapping:
         cf-deployment: cf-networking-deployments
-        vars-store: cf-networking-deployments
         bbl-state: cf-networking-deployments
         vars-files: cf-networking-deployments
         ops-files: cf-networking-deployments
