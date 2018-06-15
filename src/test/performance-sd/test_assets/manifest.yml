@@ -25,6 +25,8 @@ instance_groups:
   - name: performance-test-sd
     properties: {}
     release: cf-networking
+  - name: bpm
+    release: bpm
   lifecycle: errand
   name: performance
   networks:
@@ -51,6 +53,8 @@ instance_groups:
         as: nats
         shared: true
     release: nats
+  - name: bpm
+    release: bpm
   name: nats
   networks:
   - name: default
@@ -85,6 +89,8 @@ instance_groups:
             certificate: ((service_discovery_server_tls.certificate))
             private_key: ((service_discovery_server_tls.private_key))
     release: cf-networking
+  - name: bpm
+    release: bpm
   name: cf-app-sd
   networks:
   - name: default
@@ -101,6 +107,8 @@ releases:
 - name: bosh-dns
   version: latest
 - name: cf-networking
+  version: latest
+- name: bpm
   version: latest
 stemcells:
 - alias: default
