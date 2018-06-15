@@ -10,7 +10,32 @@ Additionally, you can use the `id` query parameter to filter the response to inc
 only policies with a source or destination that match any of the comma-separated
 `group_policy_id`'s that are included.
 
-### Policy Server Internal API Details
+## Policy Server Internal API Details
+
+`PUT /networking/v1/internal/tags`
+
+Create a new tag for a given `type` and `id`
+Noop and returns existing tag if present
+
+If a request is made for an existing `id` with a new `type`, the request will fail. `id` is a unique constraint.
+
+Json Parameters (required):
+- `id`: a unique identifier for the resource or group of resources; e.g. `INGRESS_ROUTER`
+- `type`: the type of the group being requested for; e.g. `router`
+
+Example Request Body:
+```json
+{
+  "id": "INGRESS_ROUTER",
+  "type": "router"
+}
+```
+
+Response Body:
+
+- `ID`: the id supplied in the request
+- `Type`: the type supplied in the request
+- `Tag`: the tag assigned to the group
 
 `GET /networking/v1/internal/policies`
 
@@ -34,7 +59,29 @@ Response Body:
 - `policies[].source.id`: the `policy_group_id` of the source (currently always an `app_id`)
 - `policies[].source.tag`: the `tag` of the source allowed to the destination
 
-### Examples Requests and Responses
+### Example Put Tags Request and Response
+
+#### Create a new tag
+
+```bash
+curl \
+  --cacert ca.crt \
+  --cert client.crt \
+  --key client.key \
+  https://policy-server.service.cf.internal:4003/networking/v1/internal/tags \
+  -X PUT \
+  -d '{ "id": "router", "type": "fakeType" }'
+```
+
+```json
+{
+  "id": "router",
+  "type": "fakeType",
+  "tag": "0004"
+}
+```
+
+### Example Get Policy Request and Response
 
 #### Get all policies
 
