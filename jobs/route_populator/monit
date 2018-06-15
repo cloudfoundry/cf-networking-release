@@ -1,5 +1,0 @@
-check process route_populator
-  with pidfile /var/vcap/sys/run/bpm/route_populator/route_populator.pid
-  start program "/var/vcap/jobs/bpm/bin/bpm start route_populator"
-  stop program "/var/vcap/jobs/bpm/bin/bpm stop route_populator"
-  group vcap
