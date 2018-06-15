@@ -15,6 +15,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"io/ioutil"
+	"policy-server/store"
 )
 
 var _ = Describe("Tags index handler", func() {
@@ -35,7 +36,7 @@ var _ = Describe("Tags index handler", func() {
 		expectedGroupType = "router-type"
 		expectedGroupGuid = "router-guid"
 		var err error
-		requestBody = fmt.Sprintf(`{"type": "%s", "guid": "%s"}`, expectedGroupType, expectedGroupGuid)
+		requestBody = fmt.Sprintf(`{"type": "%s", "id": "%s"}`, expectedGroupType, expectedGroupGuid)
 		request, err = http.NewRequest("POST", "/networking/v0/tags", bytes.NewBuffer([]byte(requestBody)))
 		Expect(err).NotTo(HaveOccurred())
 
@@ -54,7 +55,7 @@ var _ = Describe("Tags index handler", func() {
 		}
 		resp = httptest.NewRecorder()
 
-		fakeStore.CreateTagReturns("0001", nil)
+		fakeStore.CreateTagReturns(store.Tag{ID: expectedGroupGuid, Tag: "0001", Type: "router"}, nil)
 	})
 
 	It("runs", func() {
@@ -69,7 +70,7 @@ var _ = Describe("Tags index handler", func() {
 
 		body, err := ioutil.ReadAll(resp.Body)
 		Expect(err).NotTo(HaveOccurred())
-		Expect(string(body)).To(Equal(`{ "tag": "0001" }`))
+		Expect(string(body)).To(Equal(`{"id":"router-guid","tag":"0001","type":"router"}`))
 	})
 
 	Context("when there are errors reading the body bytes", func() {
@@ -113,7 +114,7 @@ var _ = Describe("Tags index handler", func() {
 
 	Context("when CreateTag fails", func() {
 		BeforeEach(func() {
-			fakeStore.CreateTagReturns("", errors.New("meow meow"))
+			fakeStore.CreateTagReturns(store.Tag{}, errors.New("meow meow"))
 		})
 
 		It("returns an error message", func() {

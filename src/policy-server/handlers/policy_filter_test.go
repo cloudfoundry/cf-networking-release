@@ -60,9 +60,9 @@ var _ = Describe("PolicyFilter", func() {
 		}
 
 		userSpaces := map[string]struct{}{
-			"space-1": struct{}{},
-			"space-2": struct{}{},
-			"space-3": struct{}{},
+			"space-1": {},
+			"space-2": {},
+			"space-3": {},
 		}
 
 		fakeUAAClient.GetTokenReturns("policy-server-token", nil)
@@ -184,7 +184,7 @@ var _ = Describe("PolicyFilter", func() {
 
 				Expect(fakeCCClient.GetAppSpacesCallCount()).To(Equal(4))
 
-				appGUIDs := []string{}
+				var appGUIDs []string
 				for i := 0; i < 4; i++ {
 					_, guids := fakeCCClient.GetAppSpacesArgsForCall(i)
 					appGUIDs = append(appGUIDs, guids...)

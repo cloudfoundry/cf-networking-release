@@ -6,15 +6,16 @@ import (
 	"policy-server/api"
 
 	"code.cloudfoundry.org/cf-networking-helpers/marshal"
+	"policy-server/store"
 )
 
 type TagsIndex struct {
-	Store         dataStore
+	Store         store.TagStore
 	Marshaler     marshal.Marshaler
 	ErrorResponse errorResponse
 }
 
-func NewTagsIndex(store dataStore, marshaler marshal.Marshaler, errorResponse errorResponse) *TagsIndex {
+func NewTagsIndex(store store.TagStore, marshaler marshal.Marshaler, errorResponse errorResponse) *TagsIndex {
 	return &TagsIndex{
 		Store:         store,
 		Marshaler:     marshaler,

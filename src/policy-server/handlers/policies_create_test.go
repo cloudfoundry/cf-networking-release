@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"policy-server/handlers"
 	"policy-server/handlers/fakes"
+	storeFakes "policy-server/store/fakes"
 	"policy-server/uaa_client"
 
 	apifakes "policy-server/api/fakes"
@@ -29,7 +30,7 @@ var _ = Describe("PoliciesCreate", func() {
 		handler                *handlers.PoliciesCreate
 		resp                   *httptest.ResponseRecorder
 		expectedPolicies       []store.Policy
-		fakeStore              *fakes.DataStore
+		fakeStore              *storeFakes.Store
 		fakeMapper             *apifakes.PolicyMapper
 		fakePolicyGuard        *fakes.PolicyGuard
 		fakeQuotaGuard         *fakes.QuotaGuard
@@ -46,7 +47,7 @@ var _ = Describe("PoliciesCreate", func() {
 		request, err = http.NewRequest("POST", "/networking/v0/external/policies", bytes.NewBuffer([]byte(requestBody)))
 		Expect(err).NotTo(HaveOccurred())
 
-		fakeStore = &fakes.DataStore{}
+		fakeStore = &storeFakes.Store{}
 		fakeMapper = &apifakes.PolicyMapper{}
 		fakePolicyGuard = &fakes.PolicyGuard{}
 		fakeQuotaGuard = &fakes.QuotaGuard{}

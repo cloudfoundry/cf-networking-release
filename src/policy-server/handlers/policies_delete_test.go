@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"policy-server/handlers"
 	"policy-server/handlers/fakes"
+	storeFakes "policy-server/store/fakes"
 	"policy-server/uaa_client"
 
 	apifakes "policy-server/api/fakes"
@@ -27,7 +28,7 @@ var _ = Describe("PoliciesDelete", func() {
 		request           *http.Request
 		handler           *handlers.PoliciesDelete
 		resp              *httptest.ResponseRecorder
-		fakeStore         *fakes.DataStore
+		fakeStore         *storeFakes.Store
 		fakeMapper        *apifakes.PolicyMapper
 		logger            *lagertest.TestLogger
 		expectedLogger    lager.Logger
@@ -45,7 +46,7 @@ var _ = Describe("PoliciesDelete", func() {
 		request, err = http.NewRequest("POST", Route, bytes.NewBuffer([]byte(requestBody)))
 		Expect(err).NotTo(HaveOccurred())
 
-		fakeStore = &fakes.DataStore{}
+		fakeStore = &storeFakes.Store{}
 		fakeMapper = &apifakes.PolicyMapper{}
 		fakePolicyGuard = &fakes.PolicyGuard{}
 		logger = lagertest.NewTestLogger("test")

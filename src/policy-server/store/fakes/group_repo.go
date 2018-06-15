@@ -8,11 +8,12 @@ import (
 )
 
 type GroupRepo struct {
-	CreateStub        func(db.Transaction, string) (int, error)
+	CreateStub        func(db.Transaction, string, string) (int, error)
 	createMutex       sync.RWMutex
 	createArgsForCall []struct {
 		arg1 db.Transaction
 		arg2 string
+		arg3 string
 	}
 	createReturns struct {
 		result1 int
@@ -52,17 +53,18 @@ type GroupRepo struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *GroupRepo) Create(arg1 db.Transaction, arg2 string) (int, error) {
+func (fake *GroupRepo) Create(arg1 db.Transaction, arg2 string, arg3 string) (int, error) {
 	fake.createMutex.Lock()
 	ret, specificReturn := fake.createReturnsOnCall[len(fake.createArgsForCall)]
 	fake.createArgsForCall = append(fake.createArgsForCall, struct {
 		arg1 db.Transaction
 		arg2 string
-	}{arg1, arg2})
-	fake.recordInvocation("Create", []interface{}{arg1, arg2})
+		arg3 string
+	}{arg1, arg2, arg3})
+	fake.recordInvocation("Create", []interface{}{arg1, arg2, arg3})
 	fake.createMutex.Unlock()
 	if fake.CreateStub != nil {
-		return fake.CreateStub(arg1, arg2)
+		return fake.CreateStub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -76,10 +78,10 @@ func (fake *GroupRepo) CreateCallCount() int {
 	return len(fake.createArgsForCall)
 }
 
-func (fake *GroupRepo) CreateArgsForCall(i int) (db.Transaction, string) {
+func (fake *GroupRepo) CreateArgsForCall(i int) (db.Transaction, string, string) {
 	fake.createMutex.RLock()
 	defer fake.createMutex.RUnlock()
-	return fake.createArgsForCall[i].arg1, fake.createArgsForCall[i].arg2
+	return fake.createArgsForCall[i].arg1, fake.createArgsForCall[i].arg2, fake.createArgsForCall[i].arg3
 }
 
 func (fake *GroupRepo) CreateReturns(result1 int, result2 error) {

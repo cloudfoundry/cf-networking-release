@@ -7,11 +7,11 @@ import (
 )
 
 type QuotaGuard struct {
-	Store       dataStore
+	Store       store.Store
 	MaxPolicies int
 }
 
-func NewQuotaGuard(store dataStore, maxPolicies int) *QuotaGuard {
+func NewQuotaGuard(store store.Store, maxPolicies int) *QuotaGuard {
 	return &QuotaGuard{
 		Store:       store,
 		MaxPolicies: maxPolicies,

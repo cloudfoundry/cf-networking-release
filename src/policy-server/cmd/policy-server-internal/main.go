@@ -80,8 +80,23 @@ func main() {
 			MigrateAdapter: &migrations.MigrateAdapter{},
 		},
 	)
+
 	if err != nil {
 		log.Fatalf("%s.%s: failed to construct datastore: %s", logPrefix, jobPrefix, err) // not tested
+	}
+
+	tagDataStore, err := store.NewTagStore(
+		connectionPool,
+		connectionPool,
+		&store.GroupTable{},
+		conf.TagLength,
+		&migrations.Migrator{
+			MigrateAdapter: &migrations.MigrateAdapter{},
+		},
+	)
+
+	if err != nil {
+		log.Fatalf("%s.%s: failed to construct tag datastore: %s", logPrefix, jobPrefix, err) // not tested
 	}
 
 	metricsSender := &metrics.MetricsSender{
@@ -90,6 +105,7 @@ func main() {
 
 	wrappedStore := &store.MetricsWrapper{
 		Store:         dataStore,
+		TagStore:      tagDataStore,
 		MetricsSender: metricsSender,
 	}
 
@@ -104,6 +120,11 @@ func main() {
 		policyMapperV0Internal, errorResponse)
 	internalPoliciesHandlerV1 := handlers.NewPoliciesIndexInternal(logger, wrappedStore,
 		policyMapperV1, errorResponse)
+
+	createTagsHandlerV1 := &handlers.TagsCreate{
+		Store:         wrappedStore,
+		ErrorResponse: errorResponse,
+	}
 
 	checkVersionWrapper := &handlers.CheckVersionWrapper{
 		ErrorResponse: errorResponse,
@@ -142,11 +163,13 @@ func main() {
 
 	internalRoutes := rata.Routes{
 		{Name: "internal_policies", Method: "GET", Path: "/networking/:version/internal/policies"},
+		{Name: "create_tags", Method: "PUT", Path: "/networking/v1/internal/tags"},
 	}
 	internalHandlers := rata.Handlers{
 		"internal_policies": metricsWrap("InternalPolicies", logWrap(
 			versionWrap(internalPoliciesHandlerV1, internalPoliciesHandlerV0),
 		)),
+		"create_tags": metricsWrap("CreateTags", logWrap(createTagsHandlerV1)),
 	}
 
 	tlsConfig, err := mutualtls.NewServerTLSConfig(conf.ServerCertFile, conf.ServerKeyFile, conf.CACertFile)

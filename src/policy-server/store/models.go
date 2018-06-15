@@ -24,6 +24,7 @@ type Ports struct {
 }
 
 type Tag struct {
-	ID  string
-	Tag string
+	ID   string
+	Tag  string
+	Type string
 }

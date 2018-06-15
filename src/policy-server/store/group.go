@@ -8,7 +8,7 @@ import (
 
 //go:generate counterfeiter -o fakes/group_repo.go --fake-name GroupRepo . GroupRepo
 type GroupRepo interface {
-	Create(db.Transaction, string) (int, error)
+	Create(db.Transaction, string, string) (int, error)
 	Delete(db.Transaction, int) error
 	GetID(db.Transaction, string) (int, error)
 }
@@ -16,15 +16,15 @@ type GroupRepo interface {
 type GroupTable struct {
 }
 
-func (g *GroupTable) Create(tx db.Transaction, guid string) (int, error) {
-	id, err := g.findRowByGUID(tx, guid)
+func (g *GroupTable) Create(tx db.Transaction, guid, groupType string) (int, error) {
+	id, err := g.findRowByGUID(tx, guid, groupType)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			id, err = g.firstBlankRow(tx)
 			if err != nil {
 				return -1, fmt.Errorf("failed to find available tag: %s", err.Error())
 			} else {
-				err = g.updateRow(tx, id, guid)
+				err = g.updateRow(tx, id, guid, groupType)
 				if err != nil {
 					return -1, err
 				}
@@ -36,14 +36,15 @@ func (g *GroupTable) Create(tx db.Transaction, guid string) (int, error) {
 	return id, nil
 }
 
-func (g *GroupTable) findRowByGUID(tx db.Transaction, guid string) (int, error) {
+func (g *GroupTable) findRowByGUID(tx db.Transaction, guid, groupType string) (int, error) {
 	var id int
 	err := tx.QueryRow(
 		tx.Rebind(`
 		SELECT id FROM groups
-		WHERE guid = ?
+		WHERE guid = ? AND type = ?
 		`),
 		guid,
+		groupType,
 	).Scan(&id)
 	return id, err
 }
@@ -60,13 +61,14 @@ func (g *GroupTable) firstBlankRow(tx db.Transaction) (int, error) {
 	return id, err
 }
 
-func (g *GroupTable) updateRow(tx db.Transaction, id int, guid string) error {
+func (g *GroupTable) updateRow(tx db.Transaction, id int, guid, groupType string) error {
 	_, err := tx.Exec(
 		tx.Rebind(`
-			UPDATE groups SET guid = ?
+			UPDATE groups SET guid = ?, type =  ?
 			WHERE id = ?
 		`),
 		guid,
+		groupType,
 		id,
 	)
 	return err
@@ -74,7 +76,7 @@ func (g *GroupTable) updateRow(tx db.Transaction, id int, guid string) error {
 
 func (g *GroupTable) Delete(tx db.Transaction, id int) error {
 	_, err := tx.Exec(
-		tx.Rebind(`UPDATE groups SET guid = NULL WHERE id = ?`),
+		tx.Rebind(`UPDATE groups SET guid = NULL, type = NULL WHERE id = ?`),
 		id,
 	)
 	return err

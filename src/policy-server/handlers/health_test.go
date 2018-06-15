@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"policy-server/handlers"
 	"policy-server/handlers/fakes"
+	storeFakes "policy-server/store/fakes"
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
@@ -18,7 +19,7 @@ var _ = Describe("Health handler", func() {
 	var (
 		handler           *handlers.Health
 		request           *http.Request
-		fakeStore         *fakes.DataStore
+		fakeStore         *storeFakes.Store
 		fakeErrorResponse *fakes.ErrorResponse
 		resp              *httptest.ResponseRecorder
 		logger            *lagertest.TestLogger
@@ -30,7 +31,7 @@ var _ = Describe("Health handler", func() {
 		request, err = http.NewRequest("GET", "/health", nil)
 		Expect(err).NotTo(HaveOccurred())
 
-		fakeStore = &fakes.DataStore{}
+		fakeStore = &storeFakes.Store{}
 		fakeErrorResponse = &fakes.ErrorResponse{}
 
 		handler = &handlers.Health{

@@ -16,13 +16,13 @@ type policyFilter interface {
 }
 
 type PoliciesIndex struct {
-	Store         dataStore
+	Store         store.Store
 	Mapper        api.PolicyMapper
 	PolicyFilter  policyFilter
 	ErrorResponse errorResponse
 }
 
-func NewPoliciesIndex(store dataStore, mapper api.PolicyMapper, policyFilter policyFilter,
+func NewPoliciesIndex(store store.Store, mapper api.PolicyMapper, policyFilter policyFilter,
 	errorResponse errorResponse) *PoliciesIndex {
 	return &PoliciesIndex{
 		Store:         store,

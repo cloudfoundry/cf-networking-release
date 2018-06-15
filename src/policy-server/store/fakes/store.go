@@ -18,20 +18,6 @@ type Store struct {
 	createReturnsOnCall map[int]struct {
 		result1 error
 	}
-	CreateTagStub        func(string, string) (int, error)
-	createTagMutex       sync.RWMutex
-	createTagArgsForCall []struct {
-		arg1 string
-		arg2 string
-	}
-	createTagReturns struct {
-		result1 int
-		result2 error
-	}
-	createTagReturnsOnCall map[int]struct {
-		result1 int
-		result2 error
-	}
 	AllStub        func() ([]store.Policy, error)
 	allMutex       sync.RWMutex
 	allArgsForCall []struct{}
@@ -53,17 +39,6 @@ type Store struct {
 	}
 	deleteReturnsOnCall map[int]struct {
 		result1 error
-	}
-	TagsStub        func() ([]store.Tag, error)
-	tagsMutex       sync.RWMutex
-	tagsArgsForCall []struct{}
-	tagsReturns     struct {
-		result1 []store.Tag
-		result2 error
-	}
-	tagsReturnsOnCall map[int]struct {
-		result1 []store.Tag
-		result2 error
 	}
 	ByGuidsStub        func([]string, []string, bool) ([]store.Policy, error)
 	byGuidsMutex       sync.RWMutex
@@ -144,58 +119,6 @@ func (fake *Store) CreateReturnsOnCall(i int, result1 error) {
 	fake.createReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
-}
-
-func (fake *Store) CreateTag(arg1 string, arg2 string) (int, error) {
-	fake.createTagMutex.Lock()
-	ret, specificReturn := fake.createTagReturnsOnCall[len(fake.createTagArgsForCall)]
-	fake.createTagArgsForCall = append(fake.createTagArgsForCall, struct {
-		arg1 string
-		arg2 string
-	}{arg1, arg2})
-	fake.recordInvocation("CreateTag", []interface{}{arg1, arg2})
-	fake.createTagMutex.Unlock()
-	if fake.CreateTagStub != nil {
-		return fake.CreateTagStub(arg1, arg2)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.createTagReturns.result1, fake.createTagReturns.result2
-}
-
-func (fake *Store) CreateTagCallCount() int {
-	fake.createTagMutex.RLock()
-	defer fake.createTagMutex.RUnlock()
-	return len(fake.createTagArgsForCall)
-}
-
-func (fake *Store) CreateTagArgsForCall(i int) (string, string) {
-	fake.createTagMutex.RLock()
-	defer fake.createTagMutex.RUnlock()
-	return fake.createTagArgsForCall[i].arg1, fake.createTagArgsForCall[i].arg2
-}
-
-func (fake *Store) CreateTagReturns(result1 int, result2 error) {
-	fake.CreateTagStub = nil
-	fake.createTagReturns = struct {
-		result1 int
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *Store) CreateTagReturnsOnCall(i int, result1 int, result2 error) {
-	fake.CreateTagStub = nil
-	if fake.createTagReturnsOnCall == nil {
-		fake.createTagReturnsOnCall = make(map[int]struct {
-			result1 int
-			result2 error
-		})
-	}
-	fake.createTagReturnsOnCall[i] = struct {
-		result1 int
-		result2 error
-	}{result1, result2}
 }
 
 func (fake *Store) All() ([]store.Policy, error) {
@@ -292,49 +215,6 @@ func (fake *Store) DeleteReturnsOnCall(i int, result1 error) {
 	fake.deleteReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
-}
-
-func (fake *Store) Tags() ([]store.Tag, error) {
-	fake.tagsMutex.Lock()
-	ret, specificReturn := fake.tagsReturnsOnCall[len(fake.tagsArgsForCall)]
-	fake.tagsArgsForCall = append(fake.tagsArgsForCall, struct{}{})
-	fake.recordInvocation("Tags", []interface{}{})
-	fake.tagsMutex.Unlock()
-	if fake.TagsStub != nil {
-		return fake.TagsStub()
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.tagsReturns.result1, fake.tagsReturns.result2
-}
-
-func (fake *Store) TagsCallCount() int {
-	fake.tagsMutex.RLock()
-	defer fake.tagsMutex.RUnlock()
-	return len(fake.tagsArgsForCall)
-}
-
-func (fake *Store) TagsReturns(result1 []store.Tag, result2 error) {
-	fake.TagsStub = nil
-	fake.tagsReturns = struct {
-		result1 []store.Tag
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *Store) TagsReturnsOnCall(i int, result1 []store.Tag, result2 error) {
-	fake.TagsStub = nil
-	if fake.tagsReturnsOnCall == nil {
-		fake.tagsReturnsOnCall = make(map[int]struct {
-			result1 []store.Tag
-			result2 error
-		})
-	}
-	fake.tagsReturnsOnCall[i] = struct {
-		result1 []store.Tag
-		result2 error
-	}{result1, result2}
 }
 
 func (fake *Store) ByGuids(arg1 []string, arg2 []string, arg3 bool) ([]store.Policy, error) {
@@ -445,14 +325,10 @@ func (fake *Store) Invocations() map[string][][]interface{} {
 	defer fake.invocationsMutex.RUnlock()
 	fake.createMutex.RLock()
 	defer fake.createMutex.RUnlock()
-	fake.createTagMutex.RLock()
-	defer fake.createTagMutex.RUnlock()
 	fake.allMutex.RLock()
 	defer fake.allMutex.RUnlock()
 	fake.deleteMutex.RLock()
 	defer fake.deleteMutex.RUnlock()
-	fake.tagsMutex.RLock()
-	defer fake.tagsMutex.RUnlock()
 	fake.byGuidsMutex.RLock()
 	defer fake.byGuidsMutex.RUnlock()
 	fake.checkDatabaseMutex.RLock()

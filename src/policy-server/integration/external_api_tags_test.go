@@ -78,9 +78,9 @@ var _ = Describe("External API Tags", func() {
 			responseString, err := ioutil.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(responseString).To(MatchJSON(`{ "tags": [
-				{ "id": "some-app-guid", "tag": "01" },
-				{ "id": "some-other-app-guid", "tag": "02" },
-				{ "id": "another-app-guid", "tag": "03" }
+				{ "id": "some-app-guid", "tag": "01", "type": "app" },
+				{ "id": "some-other-app-guid", "tag": "02", "type": "app" },
+				{ "id": "another-app-guid", "tag": "03", "type": "app" }
 			] }`))
 
 			By("reusing tags that are no longer in use")
@@ -110,9 +110,9 @@ var _ = Describe("External API Tags", func() {
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
 			responseString, err = ioutil.ReadAll(resp.Body)
 			Expect(responseString).To(MatchJSON(`{ "tags": [
-				{ "id": "some-app-guid", "tag": "01" },
-				{ "id": "yet-another-app-guid", "tag": "02" },
-				{ "id": "another-app-guid", "tag": "03" }
+				{ "id": "some-app-guid", "tag": "01", "type": "app" },
+				{ "id": "yet-another-app-guid", "tag": "02", "type": "app" },
+				{ "id": "another-app-guid", "tag": "03", "type": "app" }
 			] }`))
 
 			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
