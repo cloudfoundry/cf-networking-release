@@ -35,6 +35,7 @@ NOTE: If you are having problems, first consult our [known issues doc](known-iss
   Problems creating policies are usually related to issues on the policy server VM(s). Check the logs at `/var/vcap/sys/log/policy-server/policy-server.stdout.log`
 
   If a policy is successfully created you will see a log line created with the message `created-policies` along with other relevant data.
+  
   If a policy is successfully deleted you will see a log line created with the message `deleted-policies` along with other relevant data.
 
 ### Enabling Debug Logging
