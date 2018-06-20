@@ -1,4 +1,4 @@
-# CF App Service Discovery (EXPERIMENTAL)
+# CF App Service Discovery
 
 - [High Level Overview](#high-level-overview)
     - [Problem we are trying to solve](#problem-we-are-trying-to-solve)
@@ -9,7 +9,7 @@
     - [Architecture Diagram](#architecture-diagram)
 - [Deployment Instructions](#deployment-instructions)
     - [BOSH-lite](#bosh-lite)
-    - [Experimental Ops File for cf-deployment](#experimental-ops-file-for-cf-deployment)
+    - [All other platforms](#all-other-platforms)
 - [Logging](#logging)
     - [Debugging problems](#debugging-problems)
 - [Metrics](#metrics)
@@ -59,10 +59,10 @@ To deploy you will need [cf-networking-release](https://github.com/cloudfoundry/
 
 ### All other platforms
 
-To add service discovery to cf-deployment, include the following experimental ops-files:
-- [Service Discovery ops file](https://github.com/cloudfoundry/cf-deployment/blob/release-candidate/operations/experimental/enable-service-discovery.yml)
-- [BOSH DNS ops file](https://github.com/cloudfoundry/cf-deployment/blob/release-candidate/operations/experimental/use-bosh-dns.yml)
-- [BOSH DNS for containers ops file](https://github.com/cloudfoundry/cf-deployment/blob/release-candidate/operations/experimental/use-bosh-dns-for-containers.yml)
+To add service discovery to cf-deployment, include the following ops-files:
+- [Service Discovery ops file](https://github.com/cloudfoundry/cf-deployment/blob/release-candidate/operations/enable-service-discovery.yml)
+- [BOSH DNS ops file](https://github.com/cloudfoundry/cf-deployment/blob/release-candidate/operations/use-bosh-dns.yml)
+- [BOSH DNS for containers ops file](https://github.com/cloudfoundry/cf-deployment/blob/release-candidate/operations/use-bosh-dns-for-containers.yml)
 
 #### Example steps 
 ***Assumes you're running a recent environment from cf-deployment***
@@ -94,9 +94,9 @@ The `internal_domains` job property defaults to `['apps.internal']`.
 * Update your deployment with the ops files
 ``` bash
 bosh deploy /tmp/cf-manifest.yml \
-  -o ~/workspace/cf-deployment/operations/experimental/use-bosh-dns-for-containers.yml \
-  -o ~/workspace/cf-deployment/operations/experimental/use-bosh-dns.yml \
-  -o ~/workspace/cf-deployment/operations/experimental/enable-service-discovery.yml \
+  -o ~/workspace/cf-deployment/operations/use-bosh-dns-for-containers.yml \
+  -o ~/workspace/cf-deployment/operations/use-bosh-dns.yml \
+  -o ~/workspace/cf-deployment/operations/enable-service-discovery.yml \
   --vars-store path/to/vars-store.yml
   # The --var-store flag will cause cli variable generation, and
   # your secrets will be stored in the supplied file path. This is probably not what you 
