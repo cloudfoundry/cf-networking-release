@@ -145,6 +145,12 @@ resources:
       uri: git@github.com:cloudfoundry/silk-release.git
       branch: master
       private_key: ((silk-release-deploy-key.private_key))
+  - name: cf-networking-dev-full
+    type: git
+    source:
+      uri: git@github.com:cloudfoundry/cf-networking-release.git
+      branch: develop
+      private_key: ((cf-networking-deploy-key.private_key))
   - name: cf-networking-dev
     type: git
     source:
@@ -1625,10 +1631,11 @@ jobs:
           passed: [ship-cf-networking-and-silk]
           trigger: true
         - get: cf-networking-dev
+          resource: cf-networking-dev-full
           params: {submodules: none}
       - task: merge-master
         file: cf-networking-release-ci/ci/tasks/merge-master.yml
-      - put: cf-networking-dev
+      - put: cf-networking-dev-full
         params: {repository: release-merged}
 
   # versioning
