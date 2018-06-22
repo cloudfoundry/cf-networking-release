@@ -502,6 +502,7 @@ jobs:
           enable-service-discovery.yml
           add-apps-internal-search-domain.yml
           add-acceptance-test-jobs.yml
+          add-fake-istio-router-on-overlay.yml
           opsfile.yml
       input_mapping:
         bbl-state: cf-networking-deployments
@@ -729,6 +730,7 @@ jobs:
           use-pxc.yml
           use-mysql-tls.yml
           use-mysql-tls-for-silk-controller.yml
+          add-fake-istio-router-on-overlay.yml
           enable-backup-restore.yml
           opsfile.yml
       input_mapping:
@@ -1394,6 +1396,7 @@ jobs:
           use-latest-silk.yml
           enable-service-discovery.yml
           add-apps-internal-search-domain.yml
+          add-fake-istio-router-on-overlay.yml
           opsfile.yml
       input_mapping:
         bbl-state: cf-networking-deployments
