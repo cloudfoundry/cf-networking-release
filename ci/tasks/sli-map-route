@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+
+set -eu
+
+ROOT="$(cd "$(dirname $0)/../../.." && pwd)"
+
+APP_URL="${SLI_APP_NAME}".apps."${ENVIRONMENT_TAG}"
+
+function main() {
+    cf_login
+    map_route
+
+    start=$(now_in_ms)
+    dig_app_until_resolved
+    end=$(now_in_ms)
+
+    time_to_resolve=$(( $end - $start ))
+    printf "Time to resolve route: ${time_to_resolve}\n"
+    report_timing_to_datadog "${time_to_resolve}"
+
+    unmap_route
+}
+
+function cf_login() {
+    local admin_password="$(bosh int --path /cf_admin_password ${ROOT}/variables/variables.yml)"
+
+    cf api api."${ENVIRONMENT_TAG}" --skip-ssl-validation
+    cf auth admin "${admin_password}"
+    cf target -o "${SLI_ORG}" -s "${SLI_SPACE}"
+}
+
+function map_route() {
+    cf map-route "${SLI_APP_NAME}" apps.internal --hostname "${SLI_APP_NAME}"
+}
+
+function unmap_route() {
+    cf unmap-route "${SLI_APP_NAME}" apps.internal --hostname "${SLI_APP_NAME}"
+}
+
+function now_in_ms() {
+    echo $(($(gdate +%s%N)/1000000))
+}
+
+function dig_app_until_resolved() {
+    until $(curl --output /dev/null --silent --head --fail "${APP_URL}"/dig/"${SLI_APP_NAME}".apps.internal); do
+        printf '.'
+    done
+}
+
+function report_to_datadog() {
+    time_to_resolve="${1}"
+
+    curl -X POST -H "Content-type: application/json" \
+    -d "{ \"series\" :
+           [{\"metric\":\"sli-map-route-time\",
+            \"points\":[[$(now_in_ms), ${time_to_resolve}]],
+            \"type\":\"gauge\",
+            \"tags\":[\"deployment:${ENVIRONMENT_TAG}\"]
+          }]
+        }" \
+      "https://app.datadoghq.com/api/v1/series?api_key=${DATADOG_API_KEY}"
+}
+
+main

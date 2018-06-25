@@ -1028,6 +1028,30 @@ jobs:
       privileged: true
       file: disaster-recovery-acceptance-tests/ci/drats-with-integration-config/task.yml
 
+  - name: mitre-sli-map-route
+    serial_groups: [mitre-test-group]
+    plan:
+    - aggregate:
+      - get: cf-networking-release-ci
+        params:
+          submodules: none
+      - get: cf-networking-deployments
+    - task: get-credhub-vars
+      file: cf-networking-release-ci/ci/tasks/get-credhub-vars.yml
+      input_mapping:
+        bbl-state: cf-networking-deployments
+      params:
+        BBL_STATE_DIR: environments/mitre
+        VARIABLES: |
+          /bosh-mitre/cf/cf_admin_password
+    - task: sli-map-route
+      params:
+        ENVIRONMENT_TAG: mitre.c2c.cf-app.com
+        DATADOG_API_KEY: ((datadog_api_key))
+        SLI_ORG: sli-map-route
+        SLI_SPACE: sli-map-route
+        SLI_APP_NAME: sli-map-route
+
   - name: toque-bbl-up
     serial_groups: [toque]
     plan:
