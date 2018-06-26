@@ -47,6 +47,7 @@ groups:
   - mitre-cats
   - mitre-drats
   - mitre-deploy-firehose-nozzle
+  - mitre-sli-map-route
   - delete-deployment-mitre-cf
 - name: toque
   jobs:
@@ -1045,6 +1046,7 @@ jobs:
         VARIABLES: |
           /bosh-mitre/cf/cf_admin_password
     - task: sli-map-route
+      file: cf-networking-release-ci/ci/tasks/sli-map-route.yml
       params:
         ENVIRONMENT_TAG: mitre.c2c.cf-app.com
         DATADOG_API_KEY: ((datadog_api_key))
