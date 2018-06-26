@@ -38,7 +38,7 @@ function unmap_route() {
 }
 
 function now_in_ms() {
-    echo $(($(gdate +%s%N)/1000000))
+    echo $(($(date +%s%N)/1000000))
 }
 
 function dig_app_until_resolved() {
