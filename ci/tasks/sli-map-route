@@ -37,6 +37,10 @@ function unmap_route() {
     cf unmap-route "${SLI_APP_NAME}" apps.internal --hostname "${SLI_APP_NAME}"
 }
 
+function now_in_ms() {
+    echo $(($(date +%s%N)/1000000))
+}
+
 function dig_app_until_resolved() {
     until $(curl --output /dev/null --silent --head --fail "${APP_URL}"/dig/"${SLI_APP_NAME}".apps.internal); do
         printf '.'
