@@ -188,6 +188,10 @@ resources:
     type: time
     source:
       interval: 15m
+  - name: every-minute
+    type: time
+    source:
+      interval: 1m
   ####### Tests
   - name: cf-acceptance-tests
     type: git
@@ -1030,9 +1034,10 @@ jobs:
       file: disaster-recovery-acceptance-tests/ci/drats-with-integration-config/task.yml
 
   - name: mitre-sli-map-route
-    serial_groups: [mitre-test-group]
     plan:
     - aggregate:
+      - get: every-minute
+        trigger: true
       - get: cf-networking-release-ci
         params:
           submodules: none
