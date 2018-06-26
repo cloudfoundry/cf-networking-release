@@ -22,7 +22,7 @@ function main() {
 }
 
 function cf_login() {
-    local admin_password="$(bosh int --path /cf_admin_password ${ROOT}/variables/variables.yml)"
+    local admin_password="$(grep '^cf_admin_password:' ${ROOT}/variables/variables.yml | cut -d" " -f2)"
 
     cf api api."${ENVIRONMENT_TAG}" --skip-ssl-validation
     cf auth admin "${admin_password}"
