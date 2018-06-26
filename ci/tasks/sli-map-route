@@ -22,11 +22,17 @@ function main() {
 }
 
 function cf_login() {
-    local admin_password="$(grep '^cf_admin_password:' ${ROOT}/variables/variables.yml | cut -d" " -f2)"
+    local cf_username="${CF_USERNAME:-admin}"
+    local cf_password="${CF_PASSWORD:-$(get_var_from_yml cf_admin_password)}"
 
     cf api api."${ENVIRONMENT_TAG}" --skip-ssl-validation
-    cf auth admin "${admin_password}"
+    cf auth "${cf_username}" "${cf_password}"
     cf target -o "${SLI_ORG}" -s "${SLI_SPACE}"
+}
+
+function get_var_from_yml() {
+  local name="${1}"
+  grep "^${name}:" ${ROOT}/variables/variables.yml | cut -d" " -f2
 }
 
 function map_route() {
