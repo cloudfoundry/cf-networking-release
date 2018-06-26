@@ -37,10 +37,6 @@ function unmap_route() {
     cf unmap-route "${SLI_APP_NAME}" apps.internal --hostname "${SLI_APP_NAME}"
 }
 
-function now_in_ms() {
-    echo $(($(date +%s%N)/1000000))
-}
-
 function dig_app_until_resolved() {
     until $(curl --output /dev/null --silent --head --fail "${APP_URL}"/dig/"${SLI_APP_NAME}".apps.internal); do
         printf '.'
@@ -52,8 +48,8 @@ function report_timing_to_datadog() {
 
     curl -X POST -H "Content-type: application/json" \
     -d "{ \"series\" :
-           [{\"metric\":\"sli-map-route-time\",
-            \"points\":[[$(now_in_ms), ${time_to_resolve}]],
+           [{\"metric\":\"cf_networking_sli.MapRouteTime\",
+            \"points\":[[$(date +%s), ${time_to_resolve}]],
             \"type\":\"gauge\",
             \"tags\":[\"deployment:${ENVIRONMENT_TAG}\"]
           }]
