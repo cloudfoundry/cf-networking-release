@@ -1034,6 +1034,7 @@ jobs:
       file: disaster-recovery-acceptance-tests/ci/drats-with-integration-config/task.yml
 
   - name: mitre-sli-map-route
+    build_logs_to_retain: 1000
     plan:
     - aggregate:
       - get: every-minute
