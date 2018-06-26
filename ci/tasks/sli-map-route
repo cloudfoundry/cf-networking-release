@@ -47,7 +47,7 @@ function dig_app_until_resolved() {
     done
 }
 
-function report_to_datadog() {
+function report_timing_to_datadog() {
     time_to_resolve="${1}"
 
     curl -X POST -H "Content-type: application/json" \
