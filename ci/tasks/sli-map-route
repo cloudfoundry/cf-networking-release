@@ -65,6 +65,21 @@ function report_timing_to_datadog() {
           }]
         }" \
       "https://app.datadoghq.com/api/v1/series?api_key=${DATADOG_API_KEY}"
+
+    status=0
+    if [[ ${time_to_resolve} -le 10000 ]]; then
+      status=1
+    fi
+
+    curl -f -X POST -H "Content-type: application/json" \
+    -d "{ \"series\" :
+           [{\"metric\":\"cf_networking_sli.MapRouteStatus\",
+            \"points\":[[$(date +%s), ${status}]],
+            \"type\":\"gauge\",
+            \"tags\":[\"deployment:${ENVIRONMENT_TAG}\"]
+          }]
+        }" \
+      "https://app.datadoghq.com/api/v1/series?api_key=${DATADOG_API_KEY}"
 }
 
 main
