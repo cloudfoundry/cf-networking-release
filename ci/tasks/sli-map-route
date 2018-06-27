@@ -17,6 +17,7 @@ function main() {
     time_to_resolve=$(( $end - $start ))
     printf "Time to resolve route: ${time_to_resolve}\n"
     report_timing_to_datadog "${time_to_resolve}"
+    report_status_to_datadog
 
     unmap_route
 }
@@ -65,7 +66,9 @@ function report_timing_to_datadog() {
           }]
         }" \
       "https://app.datadoghq.com/api/v1/series?api_key=${DATADOG_API_KEY}"
+}
 
+function report_status_to_datadog() {
     status=0
     if [[ ${time_to_resolve} -le 10000 ]]; then
       status=1

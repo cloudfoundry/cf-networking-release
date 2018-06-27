@@ -16,6 +16,8 @@ function main() {
     time_to_resolve=$(( $end - $start ))
     printf "Time to resolve route: ${time_to_resolve}\n"
     report_timing_to_datadog "${time_to_resolve}"
+    report_status_to_datadog "50"
+    report_status_to_datadog "200"
 }
 
 function cf_login() {
@@ -49,6 +51,24 @@ function report_timing_to_datadog() {
     -d "{ \"series\" :
            [{\"metric\":\"cf_networking_sli.ResolveRouteTime\",
             \"points\":[[$(date +%s), ${time_to_resolve}]],
+            \"type\":\"gauge\",
+            \"tags\":[\"deployment:${ENVIRONMENT_TAG}\"]
+          }]
+        }" \
+      "https://app.datadoghq.com/api/v1/series?api_key=${DATADOG_API_KEY}"
+}
+
+function report_status_to_datadog() {
+    local time_threshold="${1}"
+    status=0
+    if [[ ${time_to_resolve} -le ${time_threshold} ]]; then
+      status=1
+    fi
+
+    curl -f -X POST -H "Content-type: application/json" \
+    -d "{ \"series\" :
+           [{\"metric\":\"cf_networking_sli.ResolveRoute${time_threshold}msStatus\",
+            \"points\":[[$(date +%s), ${status}]],
             \"type\":\"gauge\",
             \"tags\":[\"deployment:${ENVIRONMENT_TAG}\"]
           }]
