@@ -60,9 +60,9 @@ function report_timing_to_datadog() {
 
 function report_status_to_datadog() {
     local time_threshold="${1}"
-    status=1
+    status=0
     if [[ ${time_to_resolve} -le ${time_threshold} ]]; then
-      status=0
+      status=1
     fi
 
     curl -f -X POST -H "Content-type: application/json" \
