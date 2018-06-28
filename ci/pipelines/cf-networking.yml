@@ -181,6 +181,13 @@ resources:
       branch: master
       private_key: ((container-networking-bot-key.private_key))
   ####### Timers
+  - name: every-monday-morning
+    type: time
+    source:
+      start: 8:00 AM
+      stop: 9:00 AM
+      location: America/Los_Angeles
+      days: [Monday]
   - name: every-half-hour
     type: time
     source:
@@ -526,6 +533,8 @@ jobs:
     serial_groups: [pickelhelm]
     plan:
     - aggregate:
+      - get: every-monday-morning
+        trigger: true
       - get: cf-deployment-concourse-tasks
       - get: cf-networking-release-ci
         params:
@@ -835,6 +844,8 @@ jobs:
     serial_groups: [mitre-test-group, mitre-deploy-group]
     plan:
     - aggregate:
+      - get: every-monday-morning
+        trigger: true
       - get: cf-deployment-concourse-tasks
       - get: cf-networking-release-ci
         params:
@@ -1219,6 +1230,8 @@ jobs:
     serial_groups: [toque]
     plan:
     - aggregate:
+      - get: every-monday-morning
+        trigger: true
       - get: cf-deployment-concourse-tasks
       - get: cf-networking-release-ci
         params:
