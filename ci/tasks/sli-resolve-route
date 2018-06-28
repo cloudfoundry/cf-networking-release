@@ -9,15 +9,12 @@ APP_URL="${APP_URL:-${SLI_APP_NAME}.apps.${ENVIRONMENT_TAG}}"
 function main() {
     cf_login
 
-    start=$(now_in_ms)
-    dig_app_until_resolved
-    end=$(now_in_ms)
+    local time_to_resolve=$(time_dig_internal_route)
 
-    time_to_resolve=$(( $end - $start ))
     printf "Time to resolve route: ${time_to_resolve}\n"
     report_timing_to_datadog "${time_to_resolve}"
-    report_status_to_datadog "50"
-    report_status_to_datadog "200"
+    report_status_to_datadog "${time_to_resolve}" "50"
+    report_status_to_datadog "${time_to_resolve}" "200"
 }
 
 function cf_login() {
@@ -38,14 +35,12 @@ function now_in_ms() {
     echo $(($(date +%s%N)/1000000))
 }
 
-function dig_app_until_resolved() {
-    until $(curl --output /dev/null --silent --head --fail "${APP_URL}"/dig/"${SLI_APP_NAME}".apps.internal); do
-        printf '.'
-    done
+function time_dig_internal_route() {
+  curl --silent --fail "${APP_URL}"/timed_dig/"${SLI_APP_NAME}".apps.internal | jq .lookup_time_ms
 }
 
 function report_timing_to_datadog() {
-    time_to_resolve="${1}"
+    local time_to_resolve="${1}"
 
     curl -f -X POST -H "Content-type: application/json" \
     -d "{ \"series\" :
@@ -59,8 +54,10 @@ function report_timing_to_datadog() {
 }
 
 function report_status_to_datadog() {
-    local time_threshold="${1}"
-    status=0
+    local time_to_resolve="${1}"
+    local time_threshold="${2}"
+    local status=0
+
     if [[ ${time_to_resolve} -le ${time_threshold} ]]; then
       status=1
     fi
