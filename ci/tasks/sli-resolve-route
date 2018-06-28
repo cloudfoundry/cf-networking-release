@@ -36,7 +36,7 @@ function now_in_ms() {
 }
 
 function time_dig_internal_route() {
-  curl --silent --fail "${APP_URL}"/timed_dig/"${SLI_APP_NAME}".apps.internal | jq .lookup_time_ms
+  curl --silent --fail "${APP_URL}"/timed_dig/"${SLI_APP_NAME}".apps.internal | jq -e .lookup_time_ms
 }
 
 function report_timing_to_datadog() {
