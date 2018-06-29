@@ -45,7 +45,7 @@ With capi-release versions 1.49.0-1.60.0:
 
 With capi-release versions >= 1.61.0:
 
-- The `apps.internal` internal domain is seeded and must be created using the CAPI api. See the [Example steps](#example-steps) section for instructions.
+- The `apps.internal` internal domain is no longer seeded and must be created using the CAPI api. See the [Example steps](#example-steps) section for instructions.
 - A custom domain name may be used when creating an internal domain name, but note that the bosh-dns-adapter job's `internal_domains` property must be updated too. The default value for this property is 'apps.internal'.
 
 ### Example usage
