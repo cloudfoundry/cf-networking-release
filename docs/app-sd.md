@@ -4,6 +4,7 @@
     - [Problem we are trying to solve](#problem-we-are-trying-to-solve)
     - [App Developer Experience](#app-developer-experience)
     - [Interaction with Policy](#interaction-with-policy)
+    - [Internal domain creation](#internal-domain-creation)
     - [Example usage](#example-usage)
 - [Architecture](#architecture)
     - [Architecture Diagram](#architecture-diagram)
@@ -30,13 +31,22 @@ In order to support all types of apps, languages and frameworks, we plan to buil
 
 ### App Developer Experience
 
-With capi-release version greater than 1.49.0:
-
-The internal domain `apps.internal` is automatically created for you. You can run `map-route` with the internal domain to create and map an internal route for your app.
+You can run `map-route` with the internal domain to create and map an internal route for your app.
 
 ### Interaction with Policy
 
 By default, apps cannot talk to each other over cf networking. In order for an app to talk to another app, you must still set a policy allowing access. 
+
+### Internal domain creation
+
+With capi-release versions 1.49.0-1.60.0:
+
+- The internal domain `apps.internal` is automatically created for you. 
+
+With capi-release versions >= 1.61.0:
+
+- The `apps.internal` internal domain is seeded and must be created using the CAPI api. See the [Example steps](#example-steps) section for instructions.
+- A custom domain name may be used when creating an internal domain name, but note that the bosh-dns-adapter job's `internal_domains` property must be updated too. The default value for this property is 'apps.internal'.
 
 ### Example usage
 
