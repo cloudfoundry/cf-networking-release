@@ -20,6 +20,7 @@ import (
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	helpers_config "github.com/cloudfoundry-incubator/cf-test-helpers/config"
 	"github.com/onsi/gomega/gexec"
+	"fmt"
 )
 
 func TestAcceptance(t *testing.T) {
@@ -86,8 +87,10 @@ func digForNumberOfIPs(hostName string, expectedLength int) []string {
 	proxyIPs := []string{}
 	Eventually(func() []string {
 		resp, err := http.Get(hostName)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(resp.StatusCode).To(Equal(http.StatusOK))
+		if err != nil || resp.StatusCode != http.StatusOK {
+			fmt.Printf("proxy app request failed, error was: %s\nresponse: %v\n", err, resp)
+			return []string{}
+		}
 
 		ipsJson, err := ioutil.ReadAll(resp.Body)
 		Expect(err).NotTo(HaveOccurred())
