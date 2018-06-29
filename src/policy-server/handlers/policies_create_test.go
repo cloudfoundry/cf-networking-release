@@ -8,7 +8,6 @@ import (
 	"net/http/httptest"
 	"policy-server/handlers"
 	"policy-server/handlers/fakes"
-	storeFakes "policy-server/store/fakes"
 	"policy-server/uaa_client"
 
 	apifakes "policy-server/api/fakes"
@@ -25,20 +24,20 @@ import (
 
 var _ = Describe("PoliciesCreate", func() {
 	var (
-		requestBody            string
-		request                *http.Request
-		handler                *handlers.PoliciesCreate
-		resp                   *httptest.ResponseRecorder
-		expectedPolicies       []store.Policy
-		fakeStore              *storeFakes.Store
-		fakeMapper             *apifakes.PolicyMapper
-		fakePolicyGuard        *fakes.PolicyGuard
-		fakeQuotaGuard         *fakes.QuotaGuard
-		fakeErrorResponse      *fakes.ErrorResponse
-		logger                 *lagertest.TestLogger
-		expectedLogger         lager.Logger
-		tokenData              uaa_client.CheckTokenResponse
-		createPoliciesSucceeds func()
+		requestBody              string
+		request                  *http.Request
+		handler                  *handlers.PoliciesCreate
+		resp                     *httptest.ResponseRecorder
+		expectedPolicyCollection store.PolicyCollection
+		fakeStore                *fakes.PolicyCollectionStore
+		fakeMapper               *apifakes.PolicyMapper
+		fakePolicyGuard          *fakes.PolicyGuard
+		fakeQuotaGuard           *fakes.QuotaGuard
+		fakeErrorResponse        *fakes.ErrorResponse
+		logger                   *lagertest.TestLogger
+		expectedLogger           lager.Logger
+		tokenData                uaa_client.CheckTokenResponse
+		createPoliciesSucceeds   func()
 	)
 
 	BeforeEach(func() {
@@ -47,7 +46,7 @@ var _ = Describe("PoliciesCreate", func() {
 		request, err = http.NewRequest("POST", "/networking/v0/external/policies", bytes.NewBuffer([]byte(requestBody)))
 		Expect(err).NotTo(HaveOccurred())
 
-		fakeStore = &storeFakes.Store{}
+		fakeStore = &fakes.PolicyCollectionStore{}
 		fakeMapper = &apifakes.PolicyMapper{}
 		fakePolicyGuard = &fakes.PolicyGuard{}
 		fakeQuotaGuard = &fakes.QuotaGuard{}
@@ -70,28 +69,32 @@ var _ = Describe("PoliciesCreate", func() {
 			UserName: "some_user",
 		}
 
-		expectedPolicies = []store.Policy{{
-			Source: store.Source{ID: "some-app-guid"},
-			Destination: store.Destination{
-				ID:       "some-other-app-guid",
-				Protocol: "tcp",
-				Ports: store.Ports{
-					Start: 8080,
-					End:   9090,
+		expectedPolicyCollection = store.PolicyCollection{
+			Policies: []store.Policy{
+				{
+					Source: store.Source{ID: "some-app-guid"},
+					Destination: store.Destination{
+						ID:       "some-other-app-guid",
+						Protocol: "tcp",
+						Ports: store.Ports{
+							Start: 8080,
+							End:   9090,
+						},
+					},
+				}, {
+					Source: store.Source{ID: "another-app-guid"},
+					Destination: store.Destination{
+						ID:       "some-other-app-guid",
+						Protocol: "udp",
+						Ports: store.Ports{
+							Start: 1234,
+							End:   1234,
+						},
+					},
 				},
 			},
-		}, {
-			Source: store.Source{ID: "another-app-guid"},
-			Destination: store.Destination{
-				ID:       "some-other-app-guid",
-				Protocol: "udp",
-				Ports: store.Ports{
-					Start: 1234,
-					End:   1234,
-				},
-			},
-		}}
-		fakeMapper.AsStorePolicyReturns(expectedPolicies, nil)
+		}
+		fakeMapper.AsStorePolicyReturns(expectedPolicyCollection, nil)
 		fakePolicyGuard.CheckAccessReturns(true, nil)
 		fakeQuotaGuard.CheckAccessReturns(true, nil)
 		resp = httptest.NewRecorder()
@@ -104,10 +107,10 @@ var _ = Describe("PoliciesCreate", func() {
 
 			Expect(fakePolicyGuard.CheckAccessCallCount()).To(Equal(1))
 			policies, token := fakePolicyGuard.CheckAccessArgsForCall(0)
-			Expect(policies).To(Equal(expectedPolicies))
+			Expect(policies).To(Equal(expectedPolicyCollection))
 			Expect(token).To(Equal(tokenData))
 			Expect(fakeStore.CreateCallCount()).To(Equal(1))
-			Expect(fakeStore.CreateArgsForCall(0)).To(Equal(expectedPolicies))
+			Expect(fakeStore.CreateArgsForCall(0)).To(Equal(expectedPolicyCollection))
 			Expect(resp.Code).To(Equal(http.StatusOK))
 			Expect(resp.Body.String()).To(MatchJSON("{}"))
 		}
@@ -184,7 +187,7 @@ var _ = Describe("PoliciesCreate", func() {
 
 	Context("when the mapper fails to get store policies", func() {
 		BeforeEach(func() {
-			fakeMapper.AsStorePolicyReturns(nil, errors.New("banana"))
+			fakeMapper.AsStorePolicyReturns(store.PolicyCollection{}, errors.New("banana"))
 		})
 		It("calls the bad request header, and logs the error", func() {
 			MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, tokenData)

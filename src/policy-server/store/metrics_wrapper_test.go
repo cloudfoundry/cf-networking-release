@@ -2,6 +2,8 @@ package store_test
 
 import (
 	"errors"
+	"policy-server/db"
+	dbfakes "policy-server/db/fakes"
 	"policy-server/store"
 	"policy-server/store/fakes"
 
@@ -18,10 +20,12 @@ var _ = Describe("MetricsWrapper", func() {
 		destGuids         []string
 		fakeMetricsSender *fakes.MetricsSender
 		fakeStore         *fakes.Store
-		fakeTagStore	  *fakes.TagStore
+		fakeTagStore      *fakes.TagStore
+		tx                db.Transaction
 	)
 
 	BeforeEach(func() {
+		tx = &dbfakes.Transaction{}
 		fakeStore = &fakes.Store{}
 		fakeTagStore = &fakes.TagStore{}
 		fakeMetricsSender = &fakes.MetricsSender{}
@@ -81,6 +85,44 @@ var _ = Describe("MetricsWrapper", func() {
 				Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
 				name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
 				Expect(name).To(Equal("StoreCreateErrorTime"))
+			})
+		})
+	})
+
+	Describe("CreateWithTx", func() {
+		It("calls CreateWithTx on the Store", func() {
+			err := metricsWrapper.CreateWithTx(tx, policies)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(fakeStore.CreateWithTxCallCount()).To(Equal(1))
+			passedTx, passedPolicies := fakeStore.CreateWithTxArgsForCall(0)
+			Expect(passedPolicies).To(Equal(policies))
+			Expect(passedTx).To(Equal(tx))
+		})
+
+		It("emits a metric", func() {
+			err := metricsWrapper.CreateWithTx(tx, policies)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
+			name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
+			Expect(name).To(Equal("StoreCreateWithTxSuccessTime"))
+		})
+
+		Context("when there is an error", func() {
+			BeforeEach(func() {
+				fakeStore.CreateWithTxReturns(errors.New("banana"))
+			})
+			It("emits an error metric", func() {
+				err := metricsWrapper.CreateWithTx(tx, policies)
+				Expect(err).To(MatchError("banana"))
+
+				Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
+				Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("StoreCreateWithTxError"))
+
+				Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
+				name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
+				Expect(name).To(Equal("StoreCreateWithTxErrorTime"))
 			})
 		})
 	})
@@ -288,6 +330,44 @@ var _ = Describe("MetricsWrapper", func() {
 				Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
 				name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
 				Expect(name).To(Equal("StoreDeleteErrorTime"))
+			})
+		})
+	})
+
+	Describe("DeleteWithTx", func() {
+		It("calls DeleteWithTx on the Store", func() {
+			err := metricsWrapper.DeleteWithTx(tx, policies)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(fakeStore.DeleteWithTxCallCount()).To(Equal(1))
+			passedTx, passedPolicies := fakeStore.DeleteWithTxArgsForCall(0)
+			Expect(passedTx).To(Equal(tx))
+			Expect(passedPolicies).To(Equal(policies))
+		})
+
+		It("emits a metric", func() {
+			err := metricsWrapper.DeleteWithTx(tx, policies)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
+			name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
+			Expect(name).To(Equal("StoreDeleteWithTxSuccessTime"))
+		})
+
+		Context("when there is an error", func() {
+			BeforeEach(func() {
+				fakeStore.DeleteWithTxReturns(errors.New("banana"))
+			})
+			It("emits an error metric", func() {
+				err := metricsWrapper.DeleteWithTx(tx, policies)
+				Expect(err).To(MatchError("banana"))
+
+				Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
+				Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("StoreDeleteWithTxError"))
+
+				Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
+				name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
+				Expect(name).To(Equal("StoreDeleteWithTxErrorTime"))
 			})
 		})
 	})

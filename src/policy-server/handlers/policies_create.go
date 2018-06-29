@@ -14,23 +14,29 @@ import (
 
 //go:generate counterfeiter -o fakes/policy_guard.go --fake-name PolicyGuard . policyGuard
 type policyGuard interface {
-	CheckAccess(policies []store.Policy, tokenData uaa_client.CheckTokenResponse) (bool, error)
+	CheckAccess(policyCollection store.PolicyCollection, tokenData uaa_client.CheckTokenResponse) (bool, error)
 }
 
 //go:generate counterfeiter -o fakes/quota_guard.go --fake-name QuotaGuard . quotaGuard
 type quotaGuard interface {
-	CheckAccess(policies []store.Policy, tokenData uaa_client.CheckTokenResponse) (bool, error)
+	CheckAccess(policyCollection store.PolicyCollection, tokenData uaa_client.CheckTokenResponse) (bool, error)
+}
+
+//go:generate counterfeiter -o fakes/policy_collection_store.go --fake-name PolicyCollectionStore . policyCollectionStore
+type policyCollectionStore interface {
+	Create(store.PolicyCollection) error
+	Delete(store.PolicyCollection) error
 }
 
 type PoliciesCreate struct {
-	Store         store.Store
+	Store         policyCollectionStore
 	Mapper        api.PolicyMapper
 	PolicyGuard   policyGuard
 	QuotaGuard    quotaGuard
 	ErrorResponse errorResponse
 }
 
-func NewPoliciesCreate(store store.Store, mapper api.PolicyMapper,
+func NewPoliciesCreate(store policyCollectionStore, mapper api.PolicyMapper,
 	policyGuard policyGuard, quotaGuard quotaGuard, errorResponse errorResponse) *PoliciesCreate {
 	return &PoliciesCreate{
 		Store:         store,
@@ -86,7 +92,7 @@ func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	logger.Info("created-policies", lager.Data{"policies": policies, "userName": tokenData.UserName})
+	logger.Info("created-policies", lager.Data{"policies": policies.Policies, "userName": tokenData.UserName})
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("{}"))
 }

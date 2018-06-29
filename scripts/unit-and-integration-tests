@@ -9,6 +9,7 @@ declare -a serial_packages=(
   "src/policy-server/integration/timeouts"
   "src/policy-server/integration"
   "src/policy-server/store/migrations"
+  "src/policy-server/store"
 )
 
 # smoke/perf/acceptance/scaling tests should be skipped

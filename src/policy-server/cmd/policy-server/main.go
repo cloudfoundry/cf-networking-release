@@ -27,6 +27,8 @@ import (
 
 	"policy-server/store/migrations"
 
+	"policy-server/db"
+
 	"code.cloudfoundry.org/cf-networking-helpers/httperror"
 	"code.cloudfoundry.org/cf-networking-helpers/json_client"
 	"code.cloudfoundry.org/cf-networking-helpers/marshal"
@@ -40,7 +42,6 @@ import (
 	"github.com/tedsuo/ifrit/grouper"
 	"github.com/tedsuo/ifrit/sigmon"
 	"github.com/tedsuo/rata"
-	"policy-server/db"
 )
 
 const (
@@ -143,7 +144,6 @@ func main() {
 		log.Fatalf("%s.%s: failed to construct datastore: %s", logPrefix, jobPrefix, err) // not tested
 	}
 
-
 	tagDataStore, err := store.NewTagStore(
 		connectionPool,
 		connectionPool,
@@ -167,6 +167,16 @@ func main() {
 		MetricsSender: metricsSender,
 	}
 
+	policyCollectionStore := &store.PolicyCollectionStore{
+		Conn:        connectionPool,
+		PolicyStore: dataStore,
+	}
+
+	wrappedPolicyCollectionStore := &store.PolicyCollectionMetricsWrapper{
+		Store:         policyCollectionStore,
+		MetricsSender: metricsSender,
+	}
+
 	errorResponse := &httperror.ErrorResponse{
 		MetricsSender: metricsSender,
 	}
@@ -180,17 +190,18 @@ func main() {
 	quotaGuard := handlers.NewQuotaGuard(wrappedStore, conf.MaxPolicies)
 	policyFilter := handlers.NewPolicyFilter(uaaClient, ccClient, 100)
 
+	payloadValidator := &api.PayloadValidator{PolicyValidator: &api.Validator{}, EgressPolicyValidator: &api.EgressValidator{}}
 	policyMapperV0 := api_v0.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal), &api_v0.Validator{})
-	policyMapperV1 := api.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal), &api.Validator{})
+	policyMapperV1 := api.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal), payloadValidator)
 
-	createPolicyHandlerV1 := handlers.NewPoliciesCreate(wrappedStore, policyMapperV1,
+	createPolicyHandlerV1 := handlers.NewPoliciesCreate(wrappedPolicyCollectionStore, policyMapperV1,
 		policyGuard, quotaGuard, errorResponse)
-	createPolicyHandlerV0 := handlers.NewPoliciesCreate(wrappedStore, policyMapperV0,
+	createPolicyHandlerV0 := handlers.NewPoliciesCreate(wrappedPolicyCollectionStore, policyMapperV0,
 		policyGuard, quotaGuard, errorResponse)
 
-	deletePolicyHandlerV1 := handlers.NewPoliciesDelete(wrappedStore, policyMapperV1,
+	deletePolicyHandlerV1 := handlers.NewPoliciesDelete(wrappedPolicyCollectionStore, policyMapperV1,
 		policyGuard, errorResponse)
-	deletePolicyHandlerV0 := handlers.NewPoliciesDelete(wrappedStore, policyMapperV0,
+	deletePolicyHandlerV0 := handlers.NewPoliciesDelete(wrappedPolicyCollectionStore, policyMapperV0,
 		policyGuard, errorResponse)
 
 	policiesIndexHandlerV1 := handlers.NewPoliciesIndex(wrappedStore, policyMapperV1, policyFilter, errorResponse)

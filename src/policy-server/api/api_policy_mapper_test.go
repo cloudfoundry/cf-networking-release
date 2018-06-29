@@ -20,10 +20,10 @@ var _ = Describe("ApiPolicyMapper", func() {
 		mapper          api.PolicyMapper
 		fakeUnmarshaler *hfakes.Unmarshaler
 		fakeMarshaler   *hfakes.Marshaler
-		fakeValidator   *fakes.Validator
+		fakeValidator   *fakes.PayloadValidator
 	)
 	BeforeEach(func() {
-		fakeValidator = &fakes.Validator{}
+		fakeValidator = &fakes.PayloadValidator{}
 		mapper = api.NewMapper(
 			marshal.UnmarshalFunc(json.Unmarshal),
 			marshal.MarshalFunc(json.Marshal),
@@ -34,7 +34,7 @@ var _ = Describe("ApiPolicyMapper", func() {
 	})
 	Describe("AsStorePolicy", func() {
 		It("maps a payload with api.Policy to a slice of store.Policy", func() {
-			storePolicies, err := mapper.AsStorePolicy(
+			policyCollection, err := mapper.AsStorePolicy(
 				[]byte(`{
 					"policies": [{
 						"source": { "id": "some-src-id" },
@@ -62,29 +62,32 @@ var _ = Describe("ApiPolicyMapper", func() {
 				}`),
 			)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(fakeValidator.ValidatePoliciesCallCount()).To(Equal(1))
-			Expect(fakeValidator.ValidatePoliciesArgsForCall(0)).To(Equal(
-				[]api.Policy{
-					{
-						Source: api.Source{ID: "some-src-id", Tag: ""},
-						Destination: api.Destination{
-							ID:       "some-dst-id",
-							Tag:      "some-other-dst-tag",
-							Protocol: "some-protocol",
-							Ports:    api.Ports{Start: 8080, End: 9090},
+			Expect(fakeValidator.ValidatePayloadCallCount()).To(Equal(1))
+			Expect(fakeValidator.ValidatePayloadArgsForCall(0)).To(Equal(
+				&api.PoliciesPayload{
+					Policies: []api.Policy{
+						{
+							Source: api.Source{ID: "some-src-id", Tag: ""},
+							Destination: api.Destination{
+								ID:       "some-dst-id",
+								Tag:      "some-other-dst-tag",
+								Protocol: "some-protocol",
+								Ports:    api.Ports{Start: 8080, End: 9090},
+							},
 						},
-					},
-					{
-						Source: api.Source{ID: "some-src-id-2", Tag: ""},
-						Destination: api.Destination{
-							ID:       "some-dst-id-2",
-							Tag:      "some-other-dst-tag-2",
-							Protocol: "some-protocol-2",
-							Ports:    api.Ports{Start: 8080, End: 8080},
+						{
+							Source: api.Source{ID: "some-src-id-2", Tag: ""},
+							Destination: api.Destination{
+								ID:       "some-dst-id-2",
+								Tag:      "some-other-dst-tag-2",
+								Protocol: "some-protocol-2",
+								Ports:    api.Ports{Start: 8080, End: 8080},
+							},
 						},
 					},
 				},
 			))
+			storePolicies := policyCollection.Policies
 			Expect(storePolicies).To(Equal([]store.Policy{
 				{
 					Source: store.Source{ID: "some-src-id"},
@@ -114,6 +117,62 @@ var _ = Describe("ApiPolicyMapper", func() {
 			}))
 		})
 
+		Context("when mapping an egress policy", func() {
+			It("maps a payload with api.Policy to a slice of store.Policy", func() {
+				policyCollection, err := mapper.AsStorePolicy(
+					[]byte(`{
+					"egress_policies": [{
+						"source": { "id": "some-src-id" },
+						"destination": {
+							"protocol": "some-protocol",
+							"ips": [{
+								"start": "1.2.3.4",
+								"end": "1.2.3.5"
+							}]
+						}
+					}]
+				}`),
+				)
+				storePolicies := policyCollection.Policies
+				Expect(err).NotTo(HaveOccurred())
+				Expect(fakeValidator.ValidatePayloadCallCount()).To(Equal(1))
+				Expect(fakeValidator.ValidatePayloadArgsForCall(0)).To(Equal(
+					&api.PoliciesPayload{
+						EgressPolicies: []api.EgressPolicy{
+							{
+								Source: &api.EgressSource{
+									ID: "some-src-id",
+								},
+								Destination: &api.EgressDestination{
+									Protocol: "some-protocol",
+									IPRanges: []api.IPRange{
+										{Start: "1.2.3.4", End: "1.2.3.5"},
+									},
+								},
+							},
+						},
+					},
+				))
+
+				Expect(storePolicies).To(BeEmpty())
+				storeEgressPolicies := policyCollection.EgressPolicies
+				Expect(storeEgressPolicies).To(Equal([]store.EgressPolicy{
+					{
+						Source: store.EgressSource{ID: "some-src-id"},
+						Destination: store.EgressDestination{
+							Protocol: "some-protocol",
+							IPRanges: []store.IPRange{
+								{
+									Start: "1.2.3.4",
+									End:   "1.2.3.5",
+								},
+							},
+						},
+					},
+				}))
+			})
+		})
+
 		Context("when unmarshalling fails", func() {
 			BeforeEach(func() {
 				fakeUnmarshaler.UnmarshalReturns(errors.New("banana"))
@@ -131,7 +190,7 @@ var _ = Describe("ApiPolicyMapper", func() {
 
 		Context("when a policy to includes a validation error", func() {
 			BeforeEach(func() {
-				fakeValidator.ValidatePoliciesReturns(errors.New("banana"))
+				fakeValidator.ValidatePayloadReturns(errors.New("banana"))
 			})
 
 			It("calls the bad request handler", func() {
@@ -214,7 +273,7 @@ var _ = Describe("ApiPolicyMapper", func() {
 					},
 				})
 				Expect(err).NotTo(HaveOccurred())
-				Expect(payload).To(MatchJSON([]byte(`{ 
+				Expect(payload).To(MatchJSON([]byte(`{
 					"total_policies": 1,
 					"policies": [
 						{

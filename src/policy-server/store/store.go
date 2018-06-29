@@ -22,8 +22,10 @@ type Migrator interface {
 //go:generate counterfeiter -o fakes/store.go --fake-name Store . Store
 type Store interface {
 	Create([]Policy) error
+	CreateWithTx(db.Transaction, []Policy) error
 	All() ([]Policy, error)
 	Delete([]Policy) error
+	DeleteWithTx(db.Transaction, []Policy) error
 	ByGuids([]string, []string, bool) ([]Policy, error)
 	CheckDatabase() error
 }
@@ -83,7 +85,7 @@ func New(dbConnectionPool database, migrationDbConnectionPool database, g GroupR
 func commit(tx db.Transaction) error {
 	err := tx.Commit()
 	if err != nil {
-		return fmt.Errorf("commit transaction: %s", err) // TODO untested
+		return fmt.Errorf("commit transaction: %s", err)
 	}
 	return nil
 }
@@ -107,6 +109,15 @@ func (s *store) Create(policies []Policy) error {
 		return fmt.Errorf("begin transaction: %s", err)
 	}
 
+	err = s.CreateWithTx(tx, policies)
+	if err != nil {
+		return err
+	}
+
+	return commit(tx)
+}
+
+func (s *store) CreateWithTx(tx db.Transaction, policies []Policy) error {
 	for _, policy := range policies {
 		sourceGroupId, err := s.group.Create(tx, policy.Source.ID, "app")
 		if err != nil {
@@ -135,8 +146,7 @@ func (s *store) Create(policies []Policy) error {
 			return rollback(tx, fmt.Errorf("creating policy: %s", err))
 		}
 	}
-
-	return commit(tx)
+	return nil
 }
 
 func (s *store) Delete(policies []Policy) error {
@@ -145,6 +155,15 @@ func (s *store) Delete(policies []Policy) error {
 		return fmt.Errorf("begin transaction: %s", err)
 	}
 
+	err = s.DeleteWithTx(tx, policies)
+	if err != nil {
+		return err
+	}
+
+	return commit(tx)
+}
+
+func (s *store) DeleteWithTx(tx db.Transaction, policies []Policy) error {
 	for _, p := range policies {
 		sourceGroupID, err := s.group.GetID(tx, p.Source.ID)
 		if err != nil {
@@ -210,7 +229,7 @@ func (s *store) Delete(policies []Policy) error {
 			return rollback(tx, fmt.Errorf("deleting group row: %s", err))
 		}
 	}
-	return commit(tx)
+	return nil
 }
 
 func (s *store) deleteGroupRowIfLast(tx db.Transaction, groupId int) error {

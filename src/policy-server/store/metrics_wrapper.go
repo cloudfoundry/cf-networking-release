@@ -1,6 +1,7 @@
 package store
 
 import (
+	"policy-server/db"
 	"time"
 )
 
@@ -12,7 +13,7 @@ type metricsSender interface {
 
 type MetricsWrapper struct {
 	Store         Store
-	TagStore	  TagStore
+	TagStore      TagStore
 	MetricsSender metricsSender
 }
 
@@ -25,6 +26,19 @@ func (mw *MetricsWrapper) Create(policies []Policy) error {
 		mw.MetricsSender.SendDuration("StoreCreateErrorTime", createTimeDuration)
 	} else {
 		mw.MetricsSender.SendDuration("StoreCreateSuccessTime", createTimeDuration)
+	}
+	return err
+}
+
+func (mw *MetricsWrapper) CreateWithTx(tx db.Transaction, policies []Policy) error {
+	startTime := time.Now()
+	err := mw.Store.CreateWithTx(tx, policies)
+	createTimeDuration := time.Now().Sub(startTime)
+	if err != nil {
+		mw.MetricsSender.IncrementCounter("StoreCreateWithTxError")
+		mw.MetricsSender.SendDuration("StoreCreateWithTxErrorTime", createTimeDuration)
+	} else {
+		mw.MetricsSender.SendDuration("StoreCreateWithTxSuccessTime", createTimeDuration)
 	}
 	return err
 }
@@ -51,6 +65,19 @@ func (mw *MetricsWrapper) Delete(policies []Policy) error {
 		mw.MetricsSender.SendDuration("StoreDeleteErrorTime", deleteTimeDuration)
 	} else {
 		mw.MetricsSender.SendDuration("StoreDeleteSuccessTime", deleteTimeDuration)
+	}
+	return err
+}
+
+func (mw *MetricsWrapper) DeleteWithTx(tx db.Transaction, policies []Policy) error {
+	startTime := time.Now()
+	err := mw.Store.DeleteWithTx(tx, policies)
+	deleteTimeDuration := time.Now().Sub(startTime)
+	if err != nil {
+		mw.MetricsSender.IncrementCounter("StoreDeleteWithTxError")
+		mw.MetricsSender.SendDuration("StoreDeleteWithTxErrorTime", deleteTimeDuration)
+	} else {
+		mw.MetricsSender.SendDuration("StoreDeleteWithTxSuccessTime", deleteTimeDuration)
 	}
 	return err
 }

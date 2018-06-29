@@ -7,7 +7,6 @@ import (
 	"net/http/httptest"
 	"policy-server/handlers"
 	"policy-server/handlers/fakes"
-	storeFakes "policy-server/store/fakes"
 	"policy-server/uaa_client"
 
 	apifakes "policy-server/api/fakes"
@@ -24,18 +23,18 @@ import (
 
 var _ = Describe("PoliciesDelete", func() {
 	var (
-		requestBody       string
-		request           *http.Request
-		handler           *handlers.PoliciesDelete
-		resp              *httptest.ResponseRecorder
-		fakeStore         *storeFakes.Store
-		fakeMapper        *apifakes.PolicyMapper
-		logger            *lagertest.TestLogger
-		expectedLogger    lager.Logger
-		expectedPolicies  []store.Policy
-		fakePolicyGuard   *fakes.PolicyGuard
-		fakeErrorResponse *fakes.ErrorResponse
-		tokenData         uaa_client.CheckTokenResponse
+		requestBody              string
+		request                  *http.Request
+		handler                  *handlers.PoliciesDelete
+		resp                     *httptest.ResponseRecorder
+		fakeStore                *fakes.PolicyCollectionStore
+		fakeMapper               *apifakes.PolicyMapper
+		logger                   *lagertest.TestLogger
+		expectedLogger           lager.Logger
+		expectedPolicyCollection store.PolicyCollection
+		fakePolicyGuard          *fakes.PolicyGuard
+		fakeErrorResponse        *fakes.ErrorResponse
+		tokenData                uaa_client.CheckTokenResponse
 	)
 
 	const Route = "/networking/v0/external/policies/delete"
@@ -46,7 +45,7 @@ var _ = Describe("PoliciesDelete", func() {
 		request, err = http.NewRequest("POST", Route, bytes.NewBuffer([]byte(requestBody)))
 		Expect(err).NotTo(HaveOccurred())
 
-		fakeStore = &storeFakes.Store{}
+		fakeStore = &fakes.PolicyCollectionStore{}
 		fakeMapper = &apifakes.PolicyMapper{}
 		fakePolicyGuard = &fakes.PolicyGuard{}
 		logger = lagertest.NewTestLogger("test")
@@ -64,23 +63,27 @@ var _ = Describe("PoliciesDelete", func() {
 		}
 		resp = httptest.NewRecorder()
 
-		expectedPolicies = []store.Policy{{
-			Source: store.Source{ID: "some-app-guid"},
-			Destination: store.Destination{
-				ID:       "some-other-app-guid",
-				Protocol: "tcp",
-				Ports: store.Ports{
-					Start: 8080,
-					End:   8080,
+		expectedPolicyCollection = store.PolicyCollection{
+			Policies: []store.Policy{
+				{
+					Source: store.Source{ID: "some-app-guid"},
+					Destination: store.Destination{
+						ID:       "some-other-app-guid",
+						Protocol: "tcp",
+						Ports: store.Ports{
+							Start: 8080,
+							End:   8080,
+						},
+					},
 				},
 			},
-		}}
+		}
 
 		tokenData = uaa_client.CheckTokenResponse{
 			Scope:    []string{"network.admin"},
 			UserName: "some_user",
 		}
-		fakeMapper.AsStorePolicyReturns(expectedPolicies, nil)
+		fakeMapper.AsStorePolicyReturns(expectedPolicyCollection, nil)
 		fakePolicyGuard.CheckAccessReturns(true, nil)
 	})
 
@@ -92,10 +95,10 @@ var _ = Describe("PoliciesDelete", func() {
 
 		Expect(fakePolicyGuard.CheckAccessCallCount()).To(Equal(1))
 		policies, token := fakePolicyGuard.CheckAccessArgsForCall(0)
-		Expect(policies).To(Equal(expectedPolicies))
+		Expect(policies).To(Equal(expectedPolicyCollection))
 		Expect(token).To(Equal(tokenData))
 		Expect(fakeStore.DeleteCallCount()).To(Equal(1))
-		Expect(fakeStore.DeleteArgsForCall(0)).To(Equal(expectedPolicies))
+		Expect(fakeStore.DeleteArgsForCall(0)).To(Equal(expectedPolicyCollection))
 		Expect(resp.Code).To(Equal(http.StatusOK))
 		Expect(resp.Body.String()).To(MatchJSON("{}"))
 	})
@@ -158,7 +161,7 @@ var _ = Describe("PoliciesDelete", func() {
 
 	Context("when the mapper fails to get store policies", func() {
 		BeforeEach(func() {
-			fakeMapper.AsStorePolicyReturns(nil, errors.New("banana"))
+			fakeMapper.AsStorePolicyReturns(store.PolicyCollection{}, errors.New("banana"))
 		})
 		It("calls the bad request header, and logs the error", func() {
 			MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, tokenData)

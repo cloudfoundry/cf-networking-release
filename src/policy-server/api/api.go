@@ -4,13 +4,14 @@ import "policy-server/store"
 
 //go:generate counterfeiter -o fakes/policy_mapper.go --fake-name PolicyMapper . PolicyMapper
 type PolicyMapper interface {
-	AsStorePolicy([]byte) ([]store.Policy, error) // marshal
-	AsBytes([]store.Policy) ([]byte, error)       // unmarshal
+	AsStorePolicy([]byte) (store.PolicyCollection, error) // marshal
+	AsBytes([]store.Policy) ([]byte, error)               // unmarshal
 }
 
-type Policies struct {
-	TotalPolicies int      `json:"total_policies"`
-	Policies      []Policy `json:"policies"`
+type PoliciesPayload struct {
+	TotalPolicies  int            `json:"total_policies"`
+	Policies       []Policy       `json:"policies"`
+	EgressPolicies []EgressPolicy `json:"egress_policies,omitempty"`
 }
 
 type Policy struct {
@@ -18,16 +19,38 @@ type Policy struct {
 	Destination Destination `json:"destination"`
 }
 
+type EgressPolicy struct {
+	Source      *EgressSource      `json:"source"`
+	Destination *EgressDestination `json:"destination"`
+}
+
+type EgressSource struct {
+	ID string `json:"id"`
+}
+
+type EgressDestination struct {
+	Protocol string    `json:"protocol"`
+	IPRanges []IPRange `json:"ips"`
+}
+
 type Source struct {
-	ID  string `json:"id"`
-	Tag string `json:"tag,omitempty"`
+	ID   string `json:"id"`
+	Tag  string `json:"tag,omitempty"`
+	Type string `json:"type,omitempty"`
 }
 
 type Destination struct {
-	ID       string `json:"id"`
-	Tag      string `json:"tag,omitempty"`
-	Protocol string `json:"protocol"`
-	Ports    Ports  `json:"ports"`
+	ID       string    `json:"id"`
+	Tag      string    `json:"tag,omitempty"`
+	Protocol string    `json:"protocol"`
+	Ports    Ports     `json:"ports"`
+	Type     string    `json:"type,omitempty"`
+	IPs      []IPRange `json:"ips,omitempty"`
+}
+
+type IPRange struct {
+	Start string `json:"start"`
+	End   string `json:"end"`
 }
 
 type Ports struct {
@@ -36,8 +59,8 @@ type Ports struct {
 }
 
 type Tag struct {
-	ID  string `json:"id"`
-	Tag string `json:"tag"`
+	ID   string `json:"id"`
+	Tag  string `json:"tag"`
 	Type string `json:"type"`
 }
 

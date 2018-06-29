@@ -22,23 +22,27 @@ func NewMapper(unmarshaler marshal.Unmarshaler, marshaler marshal.Marshaler, val
 	}
 }
 
-func (p *policyMapper) AsStorePolicy(bytes []byte) ([]store.Policy, error) {
+func (p *policyMapper) AsStorePolicy(bytes []byte) (store.PolicyCollection, error) {
 	payload := &Policies{}
 	err := p.Unmarshaler.Unmarshal(bytes, payload)
 	if err != nil {
-		return nil, fmt.Errorf("unmarshal json: %s", err)
+		return store.PolicyCollection{}, fmt.Errorf("unmarshal json: %s", err)
 	}
 
 	err = p.Validator.ValidatePolicies(payload.Policies)
 	if err != nil {
-		return nil, fmt.Errorf("validate policies: %s", err)
+		return store.PolicyCollection{}, fmt.Errorf("validate policies: %s", err)
 	}
 
 	storePolicies := []store.Policy{}
 	for _, policy := range payload.Policies {
 		storePolicies = append(storePolicies, policy.asStorePolicy())
 	}
-	return storePolicies, nil
+
+	return store.PolicyCollection{
+		Policies: storePolicies,
+	}, nil
+
 }
 
 func (p *policyMapper) AsBytes(storePolicies []store.Policy) ([]byte, error) {

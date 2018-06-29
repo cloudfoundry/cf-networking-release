@@ -20,7 +20,7 @@ func NewMapper(Unmarshaler marshal.Unmarshaler, Marshaler marshal.Marshaler) api
 	}
 }
 
-func (p *policyMapper) AsStorePolicy(bytes []byte) ([]store.Policy, error) {
+func (p *policyMapper) AsStorePolicy(bytes []byte) (store.PolicyCollection, error) {
 	// this function should never be used
 	panic("as store policy was called for internal api")
 }

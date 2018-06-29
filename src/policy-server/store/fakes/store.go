@@ -2,6 +2,7 @@
 package fakes
 
 import (
+	"policy-server/db"
 	"policy-server/store"
 	"sync"
 )
@@ -16,6 +17,18 @@ type Store struct {
 		result1 error
 	}
 	createReturnsOnCall map[int]struct {
+		result1 error
+	}
+	CreateWithTxStub        func(db.Transaction, []store.Policy) error
+	createWithTxMutex       sync.RWMutex
+	createWithTxArgsForCall []struct {
+		arg1 db.Transaction
+		arg2 []store.Policy
+	}
+	createWithTxReturns struct {
+		result1 error
+	}
+	createWithTxReturnsOnCall map[int]struct {
 		result1 error
 	}
 	AllStub        func() ([]store.Policy, error)
@@ -38,6 +51,18 @@ type Store struct {
 		result1 error
 	}
 	deleteReturnsOnCall map[int]struct {
+		result1 error
+	}
+	DeleteWithTxStub        func(db.Transaction, []store.Policy) error
+	deleteWithTxMutex       sync.RWMutex
+	deleteWithTxArgsForCall []struct {
+		arg1 db.Transaction
+		arg2 []store.Policy
+	}
+	deleteWithTxReturns struct {
+		result1 error
+	}
+	deleteWithTxReturnsOnCall map[int]struct {
 		result1 error
 	}
 	ByGuidsStub        func([]string, []string, bool) ([]store.Policy, error)
@@ -117,6 +142,60 @@ func (fake *Store) CreateReturnsOnCall(i int, result1 error) {
 		})
 	}
 	fake.createReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *Store) CreateWithTx(arg1 db.Transaction, arg2 []store.Policy) error {
+	var arg2Copy []store.Policy
+	if arg2 != nil {
+		arg2Copy = make([]store.Policy, len(arg2))
+		copy(arg2Copy, arg2)
+	}
+	fake.createWithTxMutex.Lock()
+	ret, specificReturn := fake.createWithTxReturnsOnCall[len(fake.createWithTxArgsForCall)]
+	fake.createWithTxArgsForCall = append(fake.createWithTxArgsForCall, struct {
+		arg1 db.Transaction
+		arg2 []store.Policy
+	}{arg1, arg2Copy})
+	fake.recordInvocation("CreateWithTx", []interface{}{arg1, arg2Copy})
+	fake.createWithTxMutex.Unlock()
+	if fake.CreateWithTxStub != nil {
+		return fake.CreateWithTxStub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.createWithTxReturns.result1
+}
+
+func (fake *Store) CreateWithTxCallCount() int {
+	fake.createWithTxMutex.RLock()
+	defer fake.createWithTxMutex.RUnlock()
+	return len(fake.createWithTxArgsForCall)
+}
+
+func (fake *Store) CreateWithTxArgsForCall(i int) (db.Transaction, []store.Policy) {
+	fake.createWithTxMutex.RLock()
+	defer fake.createWithTxMutex.RUnlock()
+	return fake.createWithTxArgsForCall[i].arg1, fake.createWithTxArgsForCall[i].arg2
+}
+
+func (fake *Store) CreateWithTxReturns(result1 error) {
+	fake.CreateWithTxStub = nil
+	fake.createWithTxReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *Store) CreateWithTxReturnsOnCall(i int, result1 error) {
+	fake.CreateWithTxStub = nil
+	if fake.createWithTxReturnsOnCall == nil {
+		fake.createWithTxReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.createWithTxReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }
@@ -213,6 +292,60 @@ func (fake *Store) DeleteReturnsOnCall(i int, result1 error) {
 		})
 	}
 	fake.deleteReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *Store) DeleteWithTx(arg1 db.Transaction, arg2 []store.Policy) error {
+	var arg2Copy []store.Policy
+	if arg2 != nil {
+		arg2Copy = make([]store.Policy, len(arg2))
+		copy(arg2Copy, arg2)
+	}
+	fake.deleteWithTxMutex.Lock()
+	ret, specificReturn := fake.deleteWithTxReturnsOnCall[len(fake.deleteWithTxArgsForCall)]
+	fake.deleteWithTxArgsForCall = append(fake.deleteWithTxArgsForCall, struct {
+		arg1 db.Transaction
+		arg2 []store.Policy
+	}{arg1, arg2Copy})
+	fake.recordInvocation("DeleteWithTx", []interface{}{arg1, arg2Copy})
+	fake.deleteWithTxMutex.Unlock()
+	if fake.DeleteWithTxStub != nil {
+		return fake.DeleteWithTxStub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.deleteWithTxReturns.result1
+}
+
+func (fake *Store) DeleteWithTxCallCount() int {
+	fake.deleteWithTxMutex.RLock()
+	defer fake.deleteWithTxMutex.RUnlock()
+	return len(fake.deleteWithTxArgsForCall)
+}
+
+func (fake *Store) DeleteWithTxArgsForCall(i int) (db.Transaction, []store.Policy) {
+	fake.deleteWithTxMutex.RLock()
+	defer fake.deleteWithTxMutex.RUnlock()
+	return fake.deleteWithTxArgsForCall[i].arg1, fake.deleteWithTxArgsForCall[i].arg2
+}
+
+func (fake *Store) DeleteWithTxReturns(result1 error) {
+	fake.DeleteWithTxStub = nil
+	fake.deleteWithTxReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *Store) DeleteWithTxReturnsOnCall(i int, result1 error) {
+	fake.DeleteWithTxStub = nil
+	if fake.deleteWithTxReturnsOnCall == nil {
+		fake.deleteWithTxReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.deleteWithTxReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }
@@ -325,10 +458,14 @@ func (fake *Store) Invocations() map[string][][]interface{} {
 	defer fake.invocationsMutex.RUnlock()
 	fake.createMutex.RLock()
 	defer fake.createMutex.RUnlock()
+	fake.createWithTxMutex.RLock()
+	defer fake.createWithTxMutex.RUnlock()
 	fake.allMutex.RLock()
 	defer fake.allMutex.RUnlock()
 	fake.deleteMutex.RLock()
 	defer fake.deleteMutex.RUnlock()
+	fake.deleteWithTxMutex.RLock()
+	defer fake.deleteWithTxMutex.RUnlock()
 	fake.byGuidsMutex.RLock()
 	defer fake.byGuidsMutex.RUnlock()
 	fake.checkDatabaseMutex.RLock()

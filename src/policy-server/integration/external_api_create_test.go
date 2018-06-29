@@ -47,7 +47,7 @@ var _ = Describe("External API Adding Policies", func() {
 		Expect(fakeMetron.Close()).To(Succeed())
 	})
 
-	Describe("adding policies", func() {
+	Describe("adding app-to-app policies", func() {
 		addPoliciesSucceeds := func(version, request, expectedResponse string) {
 			body := strings.NewReader(request)
 			resp := helpers.MakeAndDoRequest(
@@ -123,6 +123,65 @@ var _ = Describe("External API Adding Policies", func() {
 
 			Entry("v0: missing port", "v0", v1Request, missingPortResponse),
 			Entry("v0: missing protocol", "v0", v0RequestMissingProtocol, invalidProtocolResponse),
+		)
+	})
+
+	Describe("adding egress policies", func() {
+		addPoliciesSucceeds := func(version, request, expectedResponse string) {
+			body := strings.NewReader(request)
+			resp := helpers.MakeAndDoRequest(
+				"POST",
+				fmt.Sprintf("http://%s:%d/networking/%s/external/policies", conf.ListenHost, conf.ListenPort, version),
+				nil,
+				body,
+			)
+
+			Expect(resp.StatusCode).To(Equal(http.StatusOK))
+			responseString, err := ioutil.ReadAll(resp.Body)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(responseString).To(MatchJSON("{}"))
+
+			resp = helpers.MakeAndDoRequest(
+				"GET",
+				fmt.Sprintf("http://%s:%d/networking/%s/external/policies", conf.ListenHost, conf.ListenPort, version),
+				nil,
+				nil,
+			)
+
+			Expect(resp.StatusCode).To(Equal(http.StatusOK))
+			responseString, err = ioutil.ReadAll(resp.Body)
+			Expect(responseString).To(MatchJSON(expectedResponse))
+
+			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
+				HaveName("CreatePoliciesRequestTime"),
+			))
+			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
+				HaveName("StoreCreateSuccessTime"),
+			))
+		}
+
+		v1Request := `{
+			"policies": [],
+			"egress_policies": [
+				{
+					"source": {
+						"id": "some-app-guid"
+					},
+					"destination": {
+						"ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}],
+						"protocol": "tcp"
+					}
+				}
+			]
+		}`
+
+		v1ExpectedResponse := `{
+			"total_policies": 0,
+			"policies": []
+		}`
+
+		DescribeTable("adding policies succeeds", addPoliciesSucceeds,
+			Entry("v1", "v1", v1Request, v1ExpectedResponse),
 		)
 	})
 })

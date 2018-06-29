@@ -18,14 +18,19 @@ func NewQuotaGuard(store store.Store, maxPolicies int) *QuotaGuard {
 	}
 }
 
-func (g *QuotaGuard) CheckAccess(policies []store.Policy, userToken uaa_client.CheckTokenResponse) (bool, error) {
+func (g *QuotaGuard) CheckAccess(policyCollection store.PolicyCollection, userToken uaa_client.CheckTokenResponse) (bool, error) {
 	for _, scope := range userToken.Scope {
 		if scope == "network.admin" {
 			return true, nil
 		}
 	}
-	appGuids := uniqueAppGUIDs(policies)
-	toAddSourceCounts := sourceCounts(policies, appGuids)
+
+	if len(policyCollection.EgressPolicies) > 0 {
+		return false, nil
+	}
+
+	appGuids := uniqueAppGUIDs(policyCollection.Policies)
+	toAddSourceCounts := sourceCounts(policyCollection.Policies, appGuids)
 	sourcePolicies, err := g.Store.ByGuids(appGuids, []string{}, false)
 	if err != nil {
 		return false, fmt.Errorf("getting policies: %s", err)

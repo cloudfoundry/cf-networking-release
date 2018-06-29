@@ -8,17 +8,16 @@ import (
 	"policy-server/api"
 
 	"code.cloudfoundry.org/lager"
-	"policy-server/store"
 )
 
 type PoliciesDelete struct {
-	Store         store.Store
+	Store         policyCollectionStore
 	Mapper        api.PolicyMapper
 	PolicyGuard   policyGuard
 	ErrorResponse errorResponse
 }
 
-func NewPoliciesDelete(store store.Store, mapper api.PolicyMapper,
+func NewPoliciesDelete(store policyCollectionStore, mapper api.PolicyMapper,
 	policyGuard policyGuard, errorResponse errorResponse) *PoliciesDelete {
 	return &PoliciesDelete{
 		Store:         store,
@@ -62,7 +61,7 @@ func (h *PoliciesDelete) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	logger.Info("deleted-policies", lager.Data{"policies": policies, "userName": tokenData.UserName})
+	logger.Info("deleted-policies", lager.Data{"policies": policies.Policies, "userName": tokenData.UserName})
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{}`))
 	return
