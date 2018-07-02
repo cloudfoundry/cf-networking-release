@@ -80,18 +80,6 @@ var _ = Describe("Garden External Networker errors", func() {
 			})
 		})
 
-		Context("when the stdin JSON is missing a pid field", func() {
-			It("should exit status 1 and print an error to stderr", func() {
-				command.Stdin = strings.NewReader(`{ "something": 12 }`)
-				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
-				Expect(err).NotTo(HaveOccurred())
-
-				Eventually(session, "2s").Should(gexec.Exit(1))
-				Expect(session.Out.Contents()).To(BeEmpty())
-				Expect(string(session.Err.Contents())).To(ContainSubstring("prefix: up missing pid"))
-			})
-		})
-
 		Context("when the provided pid is not an integer", func() {
 			It("should exit status 1 and print an error to stderr", func() {
 				command.Stdin = strings.NewReader(`{ "pid": "not-a-number"  }`)
@@ -114,6 +102,18 @@ var _ = Describe("Garden External Networker errors", func() {
 				Eventually(session).Should(gexec.Exit(1))
 				Expect(session.Out.Contents()).To(BeEmpty())
 				Expect(string(session.Err.Contents())).To(ContainSubstring(`prefix: unrecognized action: some-invalid-action`))
+			})
+		})
+
+		Context("when neither a valid pid or fd3 are provided", func() {
+			It("should exit status 1 and print an error to stderr", func() {
+				command.Stdin = strings.NewReader(`{ "pid": 0 }`)
+				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+				Expect(err).NotTo(HaveOccurred())
+
+				Eventually(session).Should(gexec.Exit(1))
+				Expect(session.Out.Contents()).To(BeEmpty())
+				Expect(session.Err.Contents()).NotTo(BeEmpty())
 			})
 		})
 
