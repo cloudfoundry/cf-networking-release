@@ -1065,6 +1065,7 @@ jobs:
           /bosh-mitre/cf/cf_admin_password
     - task: sli-map-route
       file: cf-networking-release-ci/ci/tasks/sli-map-route.yml
+      timeout: 1m
       params:
         ENVIRONMENT_TAG: mitre.c2c.cf-app.com
         DATADOG_API_KEY: ((datadog_api_key))
@@ -1092,6 +1093,7 @@ jobs:
           /bosh-mitre/cf/cf_admin_password
     - task: sli-resolve-route
       file: cf-networking-release-ci/ci/tasks/sli-resolve-route.yml
+      timeout: 1m
       params:
         ENVIRONMENT_TAG: mitre.c2c.cf-app.com
         DATADOG_API_KEY: ((datadog_api_key))
