@@ -62,14 +62,15 @@ type UpOutputs struct {
 }
 
 func (m *Manager) Up(containerHandle string, inputs UpInputs) (*UpOutputs, error) {
-	if inputs.Pid == 0 {
-		return nil, errors.New("up missing pid")
-	}
 	if containerHandle == "" {
 		return nil, errors.New("up missing container handle")
 	}
 
 	procNsPath := fmt.Sprintf("/proc/%d/ns/net", inputs.Pid)
+	if inputs.Pid == 0 {
+		procNsPath = fmt.Sprintf("/proc/self/fd/3")
+	}
+
 	bindMountPath := filepath.Join(m.BindMountRoot, containerHandle)
 
 	err := m.Mounter.IdempotentlyMount(procNsPath, bindMountPath)
