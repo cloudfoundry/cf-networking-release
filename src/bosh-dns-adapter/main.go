@@ -116,7 +116,9 @@ func main() {
 				return
 			}
 
+			start := time.Now()
 			ips, err := sdcClient.IPs(name)
+			duration := time.Now().Sub(start).Nanoseconds()
 			if err != nil {
 				wrappedErr := errors.New(fmt.Sprintf("Error querying Service Discover Controller: %s", err))
 				writeErrorResponse(resp, wrappedErr, logger)
@@ -135,6 +137,7 @@ func main() {
 			requestLogger.Debug("success", lager.Data{
 				"ips":          strings.Join(ips, ","),
 				"service-name": name,
+				"duration-ns":  duration,
 			})
 		})))
 	}()
