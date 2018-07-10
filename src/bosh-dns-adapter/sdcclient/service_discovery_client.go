@@ -9,7 +9,6 @@ import (
 	"io"
 	"io/ioutil"
 	"math/rand"
-	"net"
 	"net/http"
 	"time"
 )
@@ -52,15 +51,11 @@ func NewServiceDiscoveryClient(serverURL, caPath, clientCertPath, clientKeyPath 
 	tlsConfig.BuildNameToCertificate()
 
 	tr := &http.Transport{
-		TLSClientConfig: tlsConfig,
-		Dial: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).Dial,
-		IdleConnTimeout:       90 * time.Second,
-		MaxIdleConns:          100,
+		TLSClientConfig:       tlsConfig,
+		IdleConnTimeout:       0,
+		MaxIdleConns:          50,
+		MaxIdleConnsPerHost:   50,
 		TLSHandshakeTimeout:   5 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second,
 	}
 
 	client := &http.Client{
