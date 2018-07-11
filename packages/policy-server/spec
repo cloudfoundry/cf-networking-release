@@ -59,6 +59,7 @@ files:
   - policy-server/cc_client/*.go # gosub
   - policy-server/cleaner/*.go # gosub
   - policy-server/cmd/common/*.go # gosub
+  - policy-server/cmd/migrate-db/*.go # gosub
   - policy-server/cmd/policy-server/*.go # gosub
   - policy-server/cmd/policy-server-internal/*.go # gosub
   - policy-server/config/*.go # gosub

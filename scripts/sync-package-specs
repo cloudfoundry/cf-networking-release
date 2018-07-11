@@ -41,7 +41,8 @@ function sync_package() {
 
 sync_package policy-server \
   -app policy-server/cmd/policy-server \
-  -app policy-server/cmd/policy-server-internal &
+  -app policy-server/cmd/policy-server-internal \
+  -app policy-server/cmd/migrate-db &
 
 sync_package bosh-dns-adapter \
   -app bosh-dns-adapter &

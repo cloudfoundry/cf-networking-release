@@ -8,3 +8,4 @@ source /var/vcap/packages/golang-1.10-linux/bosh/compile.env
 
 go build -o "${BOSH_INSTALL_TARGET}/bin/policy-server" policy-server/cmd/policy-server
 go build -o "${BOSH_INSTALL_TARGET}/bin/policy-server-internal" policy-server/cmd/policy-server-internal
+go build -o "${BOSH_INSTALL_TARGET}/bin/migrate-db" policy-server/cmd/migrate-db

@@ -47,9 +47,9 @@ func (m *Migrator) PerformMigrations(driverName string, migrationDb MigrationDb,
 	return numMigrations, nil
 }
 
-type policyServerMigrations []policyServerMigration
+type PolicyServerMigrations []PolicyServerMigration
 
-func (s policyServerMigrations) ForDriver(driverName string) []*migrate.Migration {
+func (s PolicyServerMigrations) ForDriver(driverName string) []*migrate.Migration {
 	migrationMapped := []*migrate.Migration{}
 
 	for _, migration := range s {
@@ -58,7 +58,7 @@ func (s policyServerMigrations) ForDriver(driverName string) []*migrate.Migratio
 	return migrationMapped
 }
 
-func (s policyServerMigrations) supportsDriver(driverName string) bool {
+func (s PolicyServerMigrations) supportsDriver(driverName string) bool {
 	for _, migration := range s {
 		if !migration.supportsDriver(driverName) {
 			return false
@@ -67,19 +67,19 @@ func (s policyServerMigrations) supportsDriver(driverName string) bool {
 	return true
 }
 
-type policyServerMigration struct {
+type PolicyServerMigration struct {
 	Id string
 	Up map[string][]string
 }
 
-func (psm *policyServerMigration) forDriver(driverName string) *migrate.Migration {
+func (psm *PolicyServerMigration) forDriver(driverName string) *migrate.Migration {
 	return &migrate.Migration{
 		Id: psm.Id,
 		Up: psm.Up[driverName],
 	}
 }
 
-func (psm *policyServerMigration) supportsDriver(driverName string) bool {
+func (psm *PolicyServerMigration) supportsDriver(driverName string) bool {
 	_, foundUp := psm.Up[driverName]
 	return foundUp
 }

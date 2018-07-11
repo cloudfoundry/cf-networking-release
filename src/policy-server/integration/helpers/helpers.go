@@ -279,3 +279,12 @@ func MakeAndDoHTTPSRequest(method string, endpoint string, body io.Reader, c *tl
 	Expect(err).NotTo(HaveOccurred())
 	return resp
 }
+
+func RunMigrations(pathToMigrationBinary string, conf config.Config) *gexec.Session {
+	configFilePath := WriteConfigFile(conf)
+
+	startCmd := exec.Command(pathToMigrationBinary, "-config-file", configFilePath)
+	session, err := gexec.Start(startCmd, GinkgoWriter, GinkgoWriter)
+	Expect(err).NotTo(HaveOccurred())
+	return session
+}

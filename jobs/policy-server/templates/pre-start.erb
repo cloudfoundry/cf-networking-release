@@ -1,0 +1,11 @@
+#!/bin/bash -exu
+
+<% if spec.bootstrap %>
+
+# ensure bosh-dns is up and running
+/var/vcap/jobs/bosh-dns/bin/wait
+
+/var/vcap/packages/policy-server/bin/migrate-db \
+  -config-file=/var/vcap/jobs/policy-server/config/policy-server.json
+
+<% end %>

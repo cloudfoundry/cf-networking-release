@@ -691,6 +691,13 @@ var _ = Describe("Store", func() {
 				},
 			}
 
+			//migrator := &migrations.Migrator{
+			//	MigrateAdapter: &migrations.MigrateAdapter{},
+			//}
+			//
+			//_, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 0)
+			//Expect(err).ToNot(HaveOccurred())
+
 			dataStore, err = store.New(realDb, realDb, group, destination, policy, 1, realMigrator)
 			Expect(err).NotTo(HaveOccurred())
 
