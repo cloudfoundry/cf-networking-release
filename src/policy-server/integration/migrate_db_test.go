@@ -64,12 +64,4 @@ var _ = Describe("Migrate DB Binary", func() {
 		conn.QueryRow("SELECT COUNT(*) FROM groups").Scan(&groupCount)
 		Expect(groupCount).To(Equal(int(math.Exp2(float64(conf.TagLength*8)))-1))
 	})
-
-	Context("when the tag length is invalid", func() {
-		It("should exit non zero", func() {
-			conf.TagLength = 5
-			session := helpers.RunMigrations(migrateDbPath, conf)
-			Eventually(session.Wait(TimeoutShort)).Should(gexec.Exit(1))
-		})
-	})
 })

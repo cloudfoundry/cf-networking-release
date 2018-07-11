@@ -39,7 +39,7 @@ module Bosh::Template::Test
         },
         'max_idle_connections' => 4,
         'max_open_connections' => 5,
-        'tag_length' => 4,
+        'tag_length' => 2,
         'metron_port' => 6789,
         'log_level' => 'debug',
         'allowed_cors_domains' => ['some-cors-domain'],
@@ -84,7 +84,7 @@ module Bosh::Template::Test
           },
           'max_idle_connections' => 4,
           'max_open_connections' => 5,
-          'tag_length' => 4,
+          'tag_length' => 2,
           'metron_address' => '127.0.0.1:6789',
           'log_level' => 'debug',
           'cleanup_interval' => 60,
@@ -94,6 +94,33 @@ module Bosh::Template::Test
           'uaa_ca' => '/var/vcap/jobs/policy-server/config/certs/uaa_ca.crt',
           'request_timeout' => 5,
         })
+      end
+
+      context 'when tag length is valid' do
+
+        [1, 2, 3].each do |i|
+          it "does not raise when tag length is #{i}" do
+            merged_manifest_properties['tag_length'] = i
+            expect {
+              JSON.parse(template.render(merged_manifest_properties))
+            }.to_not raise_error
+          end
+        end
+
+      end
+
+      it 'raises an error when the tag length is too high' do
+        merged_manifest_properties['tag_length'] = 4
+        expect {
+          JSON.parse(template.render(merged_manifest_properties))
+        }.to raise_error('tag length must be greater than 0 and less than 4')
+      end
+
+      it 'raises an error when the tag length is too low' do
+        merged_manifest_properties['tag_length'] = 0
+        expect {
+          JSON.parse(template.render(merged_manifest_properties))
+        }.to raise_error('tag length must be greater than 0 and less than 4')
       end
 
       it 'raises an error when the driver (type) is unknown' do

@@ -17,8 +17,6 @@ import (
 const (
 	jobPrefix    = "policy-server-migrate-db"
 	logPrefix    = "cfnetworking"
-	MaxTagLength = 3
-	MinTagLength = 1
 )
 
 func main() {
@@ -37,15 +35,6 @@ func mainWithError() error {
 	if err != nil {
 		log.Fatalf("%s.%s: could not read config file: %s", logPrefix, jobPrefix, err)
 		return err
-	}
-
-	//move this validation to the config struct or template rendering
-	if conf.TagLength < MinTagLength || conf.TagLength > MaxTagLength {
-		return fmt.Errorf("tag length out of range (%d-%d): %d",
-			MinTagLength,
-			MaxTagLength,
-			conf.TagLength,
-		)
 	}
 
 	logger := lager.NewLogger(fmt.Sprintf("%s.%s", logPrefix, jobPrefix))
