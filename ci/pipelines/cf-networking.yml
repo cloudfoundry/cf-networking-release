@@ -908,7 +908,6 @@ jobs:
         ENVIRONMENT_NAME: mitre
 
   - name: mitre-smoke
-    serial_groups: [mitre-test-group]
     plan:
     - aggregate:
       - get: every-fifteen-minutes
