@@ -24,6 +24,7 @@ type Config struct {
 	CCURL                           string    `json:"cc_url" validate:"nonzero"`
 	SkipSSLValidation               bool      `json:"skip_ssl_validation"`
 	Database                        db.Config `json:"database" validate:"nonzero"`
+	DatabaseMigrationTimeout        int       `json:"database_migration_timeout" validate:"min=1"`
 	TagLength                       int       `json:"tag_length" validate:"nonzero"`
 	MetronAddress                   string    `json:"metron_address" validate:"nonzero"`
 	LogLevel                        string    `json:"log_level"`

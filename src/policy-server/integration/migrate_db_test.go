@@ -33,7 +33,6 @@ var _ = Describe("Migrate DB Binary", func() {
 
 		conf, _ = helpers.DefaultTestConfig(dbConf, "unused", "fixtures")
 		conf.Database = dbConf
-
 	})
 
 	Context("when the db is available", func() {

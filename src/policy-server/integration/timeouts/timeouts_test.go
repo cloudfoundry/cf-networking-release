@@ -176,23 +176,15 @@ func mustSucceed(binary string, args ...string) string {
 }
 
 func migrateAndPopulateTags(dbConf db.Config) {
-
 	logger := lager.NewLogger("Timeout Test")
 
-	var err error
-	realDb := policyServerDb.NewConnectionPool(dbConf, 200, 200, "Store Test", "Store Test", logger)
-	Expect(err).NotTo(HaveOccurred())
+	realDb := policyServerDb.NewConnectionPool(dbConf, 200, 200, "Timeout Test", "Timeout Test", logger)
 
-	migrator := &migrations.Migrator{
-		MigrateAdapter: &migrations.MigrateAdapter{},
-	}
-
-	_, err = migrator.PerformMigrations(realDb.DriverName(), realDb, 0)
+	migrator := &migrations.Migrator{MigrateAdapter: &migrations.MigrateAdapter{}}
+	_, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 0)
 	Expect(err).ToNot(HaveOccurred())
 
-	tagPopulator := &store.TagPopulator{
-		DBConnection: realDb,
-	}
+	tagPopulator := &store.TagPopulator{DBConnection: realDb}
 	err = tagPopulator.PopulateTables(1)
 	Expect(err).NotTo(HaveOccurred())
 }

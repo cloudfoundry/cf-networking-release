@@ -171,6 +171,7 @@ func DefaultTestConfig(dbConfig db.Config, metronAddress string, fixturesPath st
 		RequestTimeout:                  10,
 		MaxPolicies:                     2,
 		EnableSpaceDeveloperSelfService: false,
+		DatabaseMigrationTimeout:        600,
 	}
 
 	internalConfig := config.InternalConfig{

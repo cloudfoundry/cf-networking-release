@@ -80,6 +80,7 @@
         'require_ssl' => p('database.require_ssl'),
         'ca_cert' => '/var/vcap/jobs/policy-server/config/certs/database_ca.crt',
       },
+      'database_migration_timeout' => 600,
       'max_idle_connections' => p('max_idle_connections'),
       'max_open_connections' => p('max_open_connections'),
       'tag_length' => tag_length,

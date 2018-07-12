@@ -51,6 +51,7 @@ var _ = Describe("Config", func() {
 						"require_ssl": true,
 						"ca_cert": "/some/ca/cert/path"
 					},
+					"database_migration_timeout": 88,
 					"max_idle_connections": 4,
 					"max_open_connections": 5,
 					"tag_length": 2,
@@ -85,6 +86,7 @@ var _ = Describe("Config", func() {
 				Expect(c.Database.DatabaseName).To(Equal("network_policy"))
 				Expect(c.Database.RequireSSL).To(Equal(true))
 				Expect(c.Database.CACert).To(Equal("/some/ca/cert/path"))
+				Expect(c.DatabaseMigrationTimeout).To(Equal(88))
 				Expect(c.MaxIdleConnections).To(Equal(4))
 				Expect(c.MaxOpenConnections).To(Equal(5))
 				Expect(c.TagLength).To(Equal(2))
@@ -153,11 +155,12 @@ var _ = Describe("Config", func() {
 						"timeout":       5,
 						"database_name": "network_policy",
 					},
-					"tag_length":       2,
-					"metron_address":   "http://1.2.3.4:9999",
-					"cleanup_interval": 2,
-					"request_timeout":  5,
-					"max_policies":     3,
+					"database_migration_timeout": 88,
+					"tag_length":                 2,
+					"metron_address":             "http://1.2.3.4:9999",
+					"cleanup_interval":           2,
+					"request_timeout":            5,
+					"max_policies":               3,
 				}
 				delete(allData, missingFlag)
 				Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
@@ -180,6 +183,7 @@ var _ = Describe("Config", func() {
 			Entry("missing cleanup interval", "cleanup_interval", "CleanupInterval: less than min"),
 			Entry("missing request timeout", "request_timeout", "RequestTimeout: less than min"),
 			Entry("missing max policies", "max_policies", "MaxPolicies: less than min"),
+			Entry("missing database migration timeout", "database_migration_timeout", "DatabaseMigrationTimeout: less than min"),
 		)
 
 		Describe("database config", func() {
@@ -210,12 +214,13 @@ var _ = Describe("Config", func() {
 						"timeout":       5,
 						"database_name": "network_policy",
 					},
-					"tag_length":       2,
-					"metron_address":   "http://1.2.3.4:9999",
-					"log_level":        "info",
-					"cleanup_interval": 2,
-					"request_timeout":  5,
-					"max_policies":     3,
+					"database_migration_timeout": 88,
+					"tag_length":                 2,
+					"metron_address":             "http://1.2.3.4:9999",
+					"log_level":                  "info",
+					"cleanup_interval":           2,
+					"request_timeout":            5,
+					"max_policies":               3,
 				}
 			})
 

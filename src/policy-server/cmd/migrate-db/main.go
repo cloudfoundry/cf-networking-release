@@ -4,13 +4,14 @@ import (
 	"code.cloudfoundry.org/lager"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"policy-server/cmd/common"
 	"policy-server/config"
 	"policy-server/db"
 	"policy-server/store"
 	"policy-server/store/migrations"
-	"log"
+	"time"
 )
 
 const (
@@ -28,6 +29,23 @@ func main() {
 
 func mainWithError() error {
 	conf := parseConfig()
+	c := make(chan error, 1)
+	go func() {
+		err := migrateAndPopulateGroupsTable(conf)
+		c <- err
+	}()
+
+	timeoutDuration := time.Duration(conf.DatabaseMigrationTimeout) * time.Second
+	select {
+	case err := <-c:
+		return err
+	case <-time.After(timeoutDuration):
+		return fmt.Errorf("migrations and groups table population timed out after %d seconds", conf.DatabaseMigrationTimeout)
+	}
+}
+
+func migrateAndPopulateGroupsTable(conf *config.Config) error {
+
 	logger := logger()
 	dbConn := dbConnection(conf, logger)
 
@@ -83,7 +101,7 @@ func populateGroupsTable(dbConn *db.ConnWrapper, tagLength int, logger lager.Log
 	return err
 }
 
-func parseConfig() (*config.Config) {
+func parseConfig() *config.Config {
 	configFilePath := flag.String("config-file", "", "path to config file")
 	flag.Parse()
 

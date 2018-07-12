@@ -82,6 +82,7 @@ module Bosh::Template::Test
             'require_ssl' => true,
             'ca_cert' => '/var/vcap/jobs/policy-server/config/certs/database_ca.crt'
           },
+          'database_migration_timeout' => 600,
           'max_idle_connections' => 4,
           'max_open_connections' => 5,
           'tag_length' => 2,
