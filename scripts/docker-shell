@@ -7,7 +7,9 @@ cd ${ROOT_DIR_PATH}
 db=${DB:-"postgres"} # if not set, default to postgres
 
 kernelversion="$(docker run -t -i alpine:latest uname -r | tr -d '\r\n' | tr -d '\-moby')"
-docker_image=c2cnetworking/dev-$db
+if [ $db = "mysql" ]; then
+  docker_image=c2cnetworking/dev-mysql:0.18.0
+fi
 if [ $db = "none" ] || [ $db = "postgres" ]; then
   docker_image=c2cnetworking/dev-postgres-ifb
 fi

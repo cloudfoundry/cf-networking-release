@@ -76,6 +76,10 @@ func main() {
 		conf.TagLength,
 	)
 
+	egressDataStore := &store.EgressPolicyStore{
+		EgressPolicyRepo: &store.EgressPolicyTable{},
+	}
+
 	tagDataStore := store.NewTagStore(connectionPool, &store.GroupTable{}, conf.TagLength)
 
 	metricsSender := &metrics.MetricsSender{
@@ -95,10 +99,10 @@ func main() {
 	policyMapperV0Internal := api_v0_internal.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal))
 	policyMapperV1 := api.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal), payloadValidator)
 
-	internalPoliciesHandlerV0 := handlers.NewPoliciesIndexInternal(logger, wrappedStore,
-		policyMapperV0Internal, errorResponse)
-	internalPoliciesHandlerV1 := handlers.NewPoliciesIndexInternal(logger, wrappedStore,
-		policyMapperV1, errorResponse)
+	internalPoliciesHandlerV0 := handlers.NewPoliciesIndexInternal(logger, connectionPool, wrappedStore,
+		egressDataStore, policyMapperV0Internal, errorResponse)
+	internalPoliciesHandlerV1 := handlers.NewPoliciesIndexInternal(logger, connectionPool, wrappedStore,
+		egressDataStore, policyMapperV1, errorResponse)
 
 	createTagsHandlerV1 := &handlers.TagsCreate{
 		Store:         wrappedStore,

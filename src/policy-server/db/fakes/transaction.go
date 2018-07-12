@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"policy-server/db"
 	"sync"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type Transaction struct {
@@ -33,6 +35,20 @@ type Transaction struct {
 	}
 	queryRowReturnsOnCall map[int]struct {
 		result1 *sql.Row
+	}
+	QueryxStub        func(query string, args ...interface{}) (*sqlx.Rows, error)
+	queryxMutex       sync.RWMutex
+	queryxArgsForCall []struct {
+		query string
+		args  []interface{}
+	}
+	queryxReturns struct {
+		result1 *sqlx.Rows
+		result2 error
+	}
+	queryxReturnsOnCall map[int]struct {
+		result1 *sqlx.Rows
+		result2 error
 	}
 	CommitStub        func() error
 	commitMutex       sync.RWMutex
@@ -175,6 +191,58 @@ func (fake *Transaction) QueryRowReturnsOnCall(i int, result1 *sql.Row) {
 	fake.queryRowReturnsOnCall[i] = struct {
 		result1 *sql.Row
 	}{result1}
+}
+
+func (fake *Transaction) Queryx(query string, args ...interface{}) (*sqlx.Rows, error) {
+	fake.queryxMutex.Lock()
+	ret, specificReturn := fake.queryxReturnsOnCall[len(fake.queryxArgsForCall)]
+	fake.queryxArgsForCall = append(fake.queryxArgsForCall, struct {
+		query string
+		args  []interface{}
+	}{query, args})
+	fake.recordInvocation("Queryx", []interface{}{query, args})
+	fake.queryxMutex.Unlock()
+	if fake.QueryxStub != nil {
+		return fake.QueryxStub(query, args...)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.queryxReturns.result1, fake.queryxReturns.result2
+}
+
+func (fake *Transaction) QueryxCallCount() int {
+	fake.queryxMutex.RLock()
+	defer fake.queryxMutex.RUnlock()
+	return len(fake.queryxArgsForCall)
+}
+
+func (fake *Transaction) QueryxArgsForCall(i int) (string, []interface{}) {
+	fake.queryxMutex.RLock()
+	defer fake.queryxMutex.RUnlock()
+	return fake.queryxArgsForCall[i].query, fake.queryxArgsForCall[i].args
+}
+
+func (fake *Transaction) QueryxReturns(result1 *sqlx.Rows, result2 error) {
+	fake.QueryxStub = nil
+	fake.queryxReturns = struct {
+		result1 *sqlx.Rows
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *Transaction) QueryxReturnsOnCall(i int, result1 *sqlx.Rows, result2 error) {
+	fake.QueryxStub = nil
+	if fake.queryxReturnsOnCall == nil {
+		fake.queryxReturnsOnCall = make(map[int]struct {
+			result1 *sqlx.Rows
+			result2 error
+		})
+	}
+	fake.queryxReturnsOnCall[i] = struct {
+		result1 *sqlx.Rows
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *Transaction) Commit() error {
@@ -352,6 +420,8 @@ func (fake *Transaction) Invocations() map[string][][]interface{} {
 	defer fake.execMutex.RUnlock()
 	fake.queryRowMutex.RLock()
 	defer fake.queryRowMutex.RUnlock()
+	fake.queryxMutex.RLock()
+	defer fake.queryxMutex.RUnlock()
 	fake.commitMutex.RLock()
 	defer fake.commitMutex.RUnlock()
 	fake.rollbackMutex.RLock()

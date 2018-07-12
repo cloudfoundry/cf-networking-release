@@ -14,7 +14,7 @@ import (
 type CNILoader struct {
 	PluginDir string
 	ConfigDir string
-	Logger io.Writer
+	Logger    io.Writer
 }
 
 func (l *CNILoader) GetCNIConfig() *libcni.CNIConfig {

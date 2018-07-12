@@ -15,13 +15,17 @@ type PoliciesIndexInternal struct {
 	Store         store.Store
 	Mapper        api.PolicyMapper
 	ErrorResponse errorResponse
+	EgressStore   egressPolicyStore
+	Conn          database
 }
 
-func NewPoliciesIndexInternal(logger lager.Logger, store store.Store,
+func NewPoliciesIndexInternal(logger lager.Logger, conn database, store store.Store, egressStore egressPolicyStore,
 	mapper api.PolicyMapper, errorResponse errorResponse) *PoliciesIndexInternal {
 	return &PoliciesIndexInternal{
 		Logger:        logger,
+		Conn:          conn,
 		Store:         store,
+		EgressStore:   egressStore,
 		Mapper:        mapper,
 		ErrorResponse: errorResponse,
 	}
@@ -47,7 +51,20 @@ func (h *PoliciesIndexInternal) ServeHTTP(w http.ResponseWriter, req *http.Reque
 		return
 	}
 
-	bytes, err := h.Mapper.AsBytes(policies)
+	tx, _ := h.Conn.Beginx() // TODO: Close this???
+	var egressPolicies []store.EgressPolicy
+	if len(ids) == 0 {
+		egressPolicies, err = h.EgressStore.AllWithTx(tx)
+	} else {
+		egressPolicies, err = h.EgressStore.ByGuidsWithTx(tx, ids)
+	}
+
+	if err != nil {
+		h.ErrorResponse.InternalServerError(logger, w, err, "egress database read failed")
+		return
+	}
+
+	bytes, err := h.Mapper.AsBytes(policies, egressPolicies)
 	if err != nil {
 		h.ErrorResponse.InternalServerError(logger, w, err, "map policy as bytes failed")
 		return

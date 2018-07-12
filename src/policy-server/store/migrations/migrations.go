@@ -13,4 +13,36 @@ var MigrationsToPerform = PolicyServerMigrations{
 		"3",
 		migration_v0003,
 	},
+	PolicyServerMigration{
+		"4",
+		migration_v0004,
+	},
+	PolicyServerMigration{
+		"5",
+		migration_v0005,
+	},
+	PolicyServerMigration{
+		"6",
+		migration_v0006,
+	},
+	PolicyServerMigration{
+		"7",
+		migration_v0007,
+	},
+	PolicyServerMigration{
+		"8",
+		migration_v0008,
+	},
+	PolicyServerMigration{
+		"9",
+		migration_v0009,
+	},
+	PolicyServerMigration{
+		"10",
+		migration_v0010,
+	},
+	PolicyServerMigration{
+		"11",
+		migration_v0011,
+	},
 }
