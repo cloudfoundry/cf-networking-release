@@ -20,6 +20,12 @@ import (
 	"github.com/onsi/gomega/gexec"
 	"test-helpers"
 	"code.cloudfoundry.org/cf-networking-helpers/db"
+	"policy-server/store/migrations"
+	"policy-server/store"
+
+	policyServerDb "policy-server/db"
+
+	"code.cloudfoundry.org/lager"
 )
 
 const testTimeoutInSeconds = 5
@@ -56,6 +62,8 @@ var _ = Describe("Timeout", func() {
 		dbConf.DatabaseName = fmt.Sprintf("test_timeouts_node_%d", ports.PickAPort())
 		dbConf.Timeout = 1
 		testhelpers.CreateDatabase(dbConf)
+
+		migrateAndPopulateTags(dbConf)
 
 		fakeMetron = metrics.NewFakeMetron()
 
@@ -165,4 +173,26 @@ func mustSucceed(binary string, args ...string) string {
 	Expect(err).NotTo(HaveOccurred())
 	Eventually(sess, helpers.DEFAULT_TIMEOUT).Should(gexec.Exit(0))
 	return string(sess.Out.Contents())
+}
+
+func migrateAndPopulateTags(dbConf db.Config) {
+
+	logger := lager.NewLogger("Timeout Test")
+
+	var err error
+	realDb := policyServerDb.NewConnectionPool(dbConf, 200, 200, "Store Test", "Store Test", logger)
+	Expect(err).NotTo(HaveOccurred())
+
+	migrator := &migrations.Migrator{
+		MigrateAdapter: &migrations.MigrateAdapter{},
+	}
+
+	_, err = migrator.PerformMigrations(realDb.DriverName(), realDb, 0)
+	Expect(err).ToNot(HaveOccurred())
+
+	tagPopulator := &store.TagPopulator{
+		DBConnection: realDb,
+	}
+	err = tagPopulator.PopulateTables(1)
+	Expect(err).NotTo(HaveOccurred())
 }
