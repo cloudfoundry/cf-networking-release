@@ -116,7 +116,7 @@ func main() {
 	)
 	logger.Info("db connection retrieved", lager.Data{})
 
-	dataStore:= store.New(connectionPool, storeGroup, destination, policy, conf.TagLength )
+	dataStore := store.New(connectionPool, storeGroup, destination, policy, conf.TagLength)
 
 	tagDataStore := store.NewTagStore(connectionPool, &store.GroupTable{}, conf.TagLength)
 
