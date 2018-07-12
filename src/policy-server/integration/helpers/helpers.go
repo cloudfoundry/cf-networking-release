@@ -280,7 +280,7 @@ func MakeAndDoHTTPSRequest(method string, endpoint string, body io.Reader, c *tl
 	return resp
 }
 
-func RunMigrations(pathToMigrationBinary string, conf config.Config) *gexec.Session {
+func RunMigrationsPreStartBinary(pathToMigrationBinary string, conf config.Config) *gexec.Session {
 	configFilePath := WriteConfigFile(conf)
 
 	startCmd := exec.Command(pathToMigrationBinary, "-config-file", configFilePath)

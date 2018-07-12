@@ -23,31 +23,32 @@ import (
 var _ = Describe("TagStore", func() {
 	var (
 		dataStore store.Store
-		tagStore store.TagStore
 		dbConf   dbHelper.Config
 		realDb   *db.ConnWrapper
 		mockDb   *fakes.Db
 		group    store.GroupRepo
 		destination  store.DestinationRepo
 		policy       store.PolicyRepo
-
 		realMigrator *migrations.Migrator
-		mockMigrator *fakes.Migrator
+
+		tagStore store.TagStore
+		tagLength int
 	)
-	const NumAttempts = 5
 
 	BeforeEach(func() {
+
+		tagLength = 1
 		mockDb = &fakes.Db{}
 
 		dbConf = testsupport.GetDBConfig()
-		dbConf.DatabaseName = fmt.Sprintf("store_test_node_%d", time.Now().UnixNano())
+		dbConf.DatabaseName = fmt.Sprintf("tag_store_test_node_%d", time.Now().UnixNano())
 
 		testsupport.CreateDatabase(dbConf)
 
-		logger := lager.NewLogger("Store Test")
+		logger := lager.NewLogger("Tag Store Test")
 
 		var err error
-		realDb = db.NewConnectionPool(dbConf, 200, 200, "Store Test", "Store Test", logger)
+		realDb = db.NewConnectionPool(dbConf, 200, 200, "Tag Store Test", "Tag Store Test", logger)
 		Expect(err).NotTo(HaveOccurred())
 
 		group = &store.GroupTable{}
@@ -56,10 +57,11 @@ var _ = Describe("TagStore", func() {
 
 		mockDb.DriverNameReturns(realDb.DriverName())
 
-		realMigrator = &migrations.Migrator{
-			MigrateAdapter: &migrations.MigrateAdapter{},
-		}
-		mockMigrator = &fakes.Migrator{}
+		realMigrator = &migrations.Migrator{MigrateAdapter: &migrations.MigrateAdapter{}}
+		realMigrator.PerformMigrations(realDb.DriverName(), realDb, 0)
+
+		tagPopulator := &store.TagPopulator{DBConnection: realDb}
+		tagPopulator.PopulateTables(tagLength)
 	})
 
 	AfterEach(func() {
@@ -76,9 +78,7 @@ var _ = Describe("TagStore", func() {
 		)
 
 		BeforeEach(func() {
-			var err error
-			tagStore, err = store.NewTagStore(realDb, realDb, group, 1, realMigrator)
-			Expect(err).NotTo(HaveOccurred())
+			tagStore = store.NewTagStore(realDb, group, tagLength)
 			groupGuid, groupType = "meow-guid", "meow-type"
 		})
 
@@ -124,9 +124,7 @@ var _ = Describe("TagStore", func() {
 				mockTx = &dbFakes.Transaction{}
 				mockDb.BeginxReturns(mockTx, nil)
 
-				var err error
-				tagStore, err = store.NewTagStore(mockDb, mockDb, mockGroup,1, mockMigrator)
-				Expect(err).NotTo(HaveOccurred())
+				tagStore = store.NewTagStore(mockDb, mockGroup, tagLength)
 			})
 
 			It("returns an error", func() {
@@ -153,9 +151,7 @@ var _ = Describe("TagStore", func() {
 				mockTx.CommitReturns(errors.New("transaction commit failed"))
 				mockDb.BeginxReturns(mockTx, nil)
 
-				var err error
-				tagStore, err = store.NewTagStore(mockDb, mockDb, mockGroup, 1, mockMigrator)
-				Expect(err).NotTo(HaveOccurred())
+				tagStore = store.NewTagStore(mockDb, mockGroup, tagLength)
 			})
 
 			It("returns an error", func() {
@@ -172,10 +168,8 @@ var _ = Describe("TagStore", func() {
 
 	Describe("Tags", func() {
 		BeforeEach(func() {
-			var err error
-			tagStore, err = store.NewTagStore(realDb, realDb, group, 1, realMigrator)
-			dataStore, err = store.New(realDb, realDb, group, destination, policy, 1, realMigrator)
-			Expect(err).NotTo(HaveOccurred())
+			tagStore = store.NewTagStore(realDb, group, tagLength)
+			dataStore = store.New(realDb, group, destination, policy, 1)
 		})
 
 		BeforeEach(func() {
@@ -215,10 +209,9 @@ var _ = Describe("TagStore", func() {
 			})
 
 			It("should return a sensible error", func() {
-				store, err := store.NewTagStore(mockDb, mockDb, group,2, mockMigrator)
-				Expect(err).NotTo(HaveOccurred())
+				store := store.NewTagStore(mockDb, group, tagLength)
 
-				_, err = store.Tags()
+				_, err := store.Tags()
 				Expect(err).To(MatchError("listing tags: some query error"))
 			})
 		})
@@ -239,10 +232,9 @@ var _ = Describe("TagStore", func() {
 			})
 
 			It("should return a sensible error", func() {
-				store, err := store.NewTagStore(mockDb, mockDb, group,2, mockMigrator)
-				Expect(err).NotTo(HaveOccurred())
+				store := store.NewTagStore(mockDb, group, tagLength)
 
-				_, err = store.Tags()
+				_, err := store.Tags()
 				Expect(err).To(MatchError(ContainSubstring("listing tags: sql: expected")))
 			})
 		})

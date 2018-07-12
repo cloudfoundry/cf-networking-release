@@ -10,33 +10,21 @@ type TagStore interface {
 	Tags() ([]Tag, error)
 }
 
-func NewTagStore(dbConnectionPool database, migrationDbConnectionPool database, g GroupRepo, tl int, migrator Migrator) (TagStore, error) {
-	if tl < MinTagLength || tl > MaxTagLength {
-		return nil, fmt.Errorf("tag length out of range (%d-%d): %d",
-			MinTagLength,
-			MaxTagLength,
-			tl,
-		)
-	}
-
-	_, err := migrator.PerformMigrations(migrationDbConnectionPool.DriverName(), migrationDbConnectionPool, 0)
-	if err != nil {
-		return nil, fmt.Errorf("perform migrations: %s", err)
-	}
-
-	err = populateTables(dbConnectionPool, tl)
-	if err != nil {
-		return nil, fmt.Errorf("populating tables: %s", err)
-	}
-
-	return &store{
-		conn:      dbConnectionPool,
-		group:     g,
-		tagLength: tl,
-	}, nil
+type tagStore struct {
+	conn      database
+	group     GroupRepo
+	tagLength int
 }
 
-func (s *store) CreateTag(groupGuid, groupType string) (Tag, error) {
+func NewTagStore(dbConnectionPool database, groupRepo GroupRepo, tagLength int) *tagStore {
+	return &tagStore{
+		conn:      dbConnectionPool,
+		group:     groupRepo,
+		tagLength: tagLength,
+	}
+}
+
+func (s *tagStore) CreateTag(groupGuid, groupType string) (Tag, error) {
 	tx, err := s.conn.Beginx()
 	if err != nil {
 		return Tag{}, fmt.Errorf("begin transaction: %s", err)
@@ -59,7 +47,7 @@ func (s *store) CreateTag(groupGuid, groupType string) (Tag, error) {
 	}, nil
 }
 
-func (s *store) Tags() ([]Tag, error) {
+func (s *tagStore) Tags() ([]Tag, error) {
 	var tags []Tag
 
 	rows, err := s.conn.Query(`
@@ -94,4 +82,8 @@ func (s *store) Tags() ([]Tag, error) {
 	}
 
 	return tags, nil
+}
+
+func (s *tagStore) tagIntToString(tag int) string {
+	return fmt.Sprintf("%"+fmt.Sprintf("0%d", s.tagLength*2)+"X", tag)
 }

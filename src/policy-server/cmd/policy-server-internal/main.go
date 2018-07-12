@@ -17,8 +17,6 @@ import (
 	"policy-server/handlers"
 	"policy-server/store"
 
-	"policy-server/store/migrations"
-
 	"policy-server/db"
 
 	"code.cloudfoundry.org/cf-networking-helpers/httperror"
@@ -70,35 +68,15 @@ func main() {
 		logger,
 	)
 
-	dataStore, err := store.New(
-		connectionPool,
+	dataStore := store.New(
 		connectionPool,
 		&store.GroupTable{},
 		&store.DestinationTable{},
 		&store.PolicyTable{},
 		conf.TagLength,
-		&migrations.Migrator{
-			MigrateAdapter: &migrations.MigrateAdapter{},
-		},
 	)
 
-	if err != nil {
-		log.Fatalf("%s.%s: failed to construct datastore: %s", logPrefix, jobPrefix, err) // not tested
-	}
-
-	tagDataStore, err := store.NewTagStore(
-		connectionPool,
-		connectionPool,
-		&store.GroupTable{},
-		conf.TagLength,
-		&migrations.Migrator{
-			MigrateAdapter: &migrations.MigrateAdapter{},
-		},
-	)
-
-	if err != nil {
-		log.Fatalf("%s.%s: failed to construct tag datastore: %s", logPrefix, jobPrefix, err) // not tested
-	}
+	tagDataStore := store.NewTagStore(connectionPool, &store.GroupTable{}, conf.TagLength)
 
 	metricsSender := &metrics.MetricsSender{
 		Logger: logger.Session("time-metric-emitter"),

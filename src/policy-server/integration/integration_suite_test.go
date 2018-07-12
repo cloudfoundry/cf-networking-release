@@ -113,7 +113,7 @@ func startPolicyServers(configs []config.Config) []*gexec.Session {
 func startPolicyAndInternalServers(configs []config.Config, internalConfigs []config.InternalConfig) []*gexec.Session {
 	testhelpers.CreateDatabase(configs[0].Database)
 
-	session := helpers.RunMigrations(migrateDbPath, configs[0])
+	session := helpers.RunMigrationsPreStartBinary(migrateDbPath, configs[0])
 	Eventually(session.Wait(TimeoutShort)).Should(gexec.Exit(0))
 
 	var sessions []*gexec.Session

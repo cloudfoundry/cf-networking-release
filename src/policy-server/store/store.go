@@ -1,10 +1,8 @@
 package store
 
 import (
-	"bytes"
 	"database/sql"
 	"fmt"
-	"math"
 	"policy-server/store/helpers"
 	"strings"
 
@@ -51,35 +49,14 @@ type store struct {
 	tagLength   int
 }
 
-const MaxTagLength = 3
-const MinTagLength = 1
-
-func New(dbConnectionPool database, migrationDbConnectionPool database, g GroupRepo, d DestinationRepo, p PolicyRepo, tl int, migrator Migrator) (Store, error) {
-	if tl < MinTagLength || tl > MaxTagLength {
-		return nil, fmt.Errorf("tag length out of range (%d-%d): %d",
-			MinTagLength,
-			MaxTagLength,
-			tl,
-		)
-	}
-
-	_, err := migrator.PerformMigrations(migrationDbConnectionPool.DriverName(), migrationDbConnectionPool, 0)
-	if err != nil {
-		return nil, fmt.Errorf("perform migrations: %s", err)
-	}
-
-	err = populateTables(dbConnectionPool, tl)
-	if err != nil {
-		return nil, fmt.Errorf("populating tables: %s", err)
-	}
-
+func New(dbConnectionPool database, g GroupRepo, d DestinationRepo, p PolicyRepo, tl int) (Store) {
 	return &store{
 		conn:        dbConnectionPool,
 		group:       g,
 		destination: d,
 		policy:      p,
 		tagLength:   tl,
-	}, nil
+	}
 }
 
 func commit(tx db.Transaction) error {
@@ -375,39 +352,4 @@ func (s *store) All() ([]Policy, error) {
 
 func (s *store) tagIntToString(tag int) string {
 	return fmt.Sprintf("%"+fmt.Sprintf("0%d", s.tagLength*2)+"X", tag)
-}
-
-func populateTables(dbConnectionPool database, tl int) error {
-	var err error
-	row := dbConnectionPool.QueryRow(`SELECT COUNT(*) FROM groups`)
-	if row != nil {
-		var count int
-		err = row.Scan(&count)
-		if err != nil {
-			return err
-		}
-		if count > 0 {
-			return nil
-		}
-	}
-
-	var b bytes.Buffer
-	_, err = b.WriteString("INSERT INTO groups (guid) VALUES (NULL)")
-	if err != nil {
-		return err
-	}
-
-	for i := 1; i < int(math.Exp2(float64(tl*8)))-1; i++ {
-		_, err = b.WriteString(", (NULL)")
-		if err != nil {
-			return err
-		}
-	}
-
-	_, err = dbConnectionPool.Exec(b.String())
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

@@ -5,7 +5,14 @@
 # ensure bosh-dns is up and running
 /var/vcap/jobs/bosh-dns/bin/wait
 
-/var/vcap/packages/policy-server/bin/migrate-db \
-  -config-file=/var/vcap/jobs/policy-server/config/policy-server.json
+exit_code=$(/var/vcap/packages/policy-server/bin/migrate-db \
+  -config-file=/var/vcap/jobs/policy-server/config/policy-server.json)
+
+if [ ! ${exit_code} -eq 0 ]
+then
+    echo "policy server failed to start within ${TIMEOUT} seconds"
+fi
+
+exit ${exit_code}
 
 <% end %>

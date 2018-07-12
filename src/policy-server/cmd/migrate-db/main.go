@@ -1,22 +1,21 @@
 package main
 
 import (
-	"bytes"
 	"code.cloudfoundry.org/lager"
 	"flag"
 	"fmt"
-	"log"
-	"math"
 	"os"
 	"policy-server/cmd/common"
 	"policy-server/config"
 	"policy-server/db"
+	"policy-server/store"
 	"policy-server/store/migrations"
+	"log"
 )
 
 const (
-	jobPrefix    = "policy-server-migrate-db"
-	logPrefix    = "cfnetworking"
+	jobPrefix = "policy-server-migrate-db"
+	logPrefix = "cfnetworking"
 )
 
 func main() {
@@ -28,18 +27,25 @@ func main() {
 }
 
 func mainWithError() error {
-	configFilePath := flag.String("config-file", "", "path to config file")
-	flag.Parse()
+	conf := parseConfig()
+	logger := logger()
+	dbConn := dbConnection(conf, logger)
 
-	conf, err := config.New(*configFilePath)
+	err := migrateDb(dbConn, logger)
 	if err != nil {
-		log.Fatalf("%s.%s: could not read config file: %s", logPrefix, jobPrefix, err)
-		return err
+		return fmt.Errorf("perform migrations: %s", err)
 	}
 
+	return populateGroupsTable(dbConn, conf.TagLength, logger)
+}
+
+func logger() lager.Logger {
 	logger := lager.NewLogger(fmt.Sprintf("%s.%s", logPrefix, jobPrefix))
 	logger.RegisterSink(common.InitLoggerSink(logger, "DEBUG"))
+	return logger
+}
 
+func dbConnection(conf *config.Config, logger lager.Logger) *db.ConnWrapper {
 	logger.Info("getting migration db connection", lager.Data{})
 	dbConn := db.NewConnectionPool(
 		conf.Database,
@@ -50,59 +56,41 @@ func mainWithError() error {
 		logger,
 	)
 	logger.Info("migration db connection retrieved", lager.Data{})
+	return dbConn
+}
 
-	migrator := &migrations.Migrator{
-		MigrateAdapter: &migrations.MigrateAdapter{},
-	}
-
+func migrateDb(dbConn *db.ConnWrapper, logger lager.Logger) error {
 	logger.Info("running migrations", lager.Data{})
+	migrator := &migrations.Migrator{MigrateAdapter: &migrations.MigrateAdapter{}}
 	numMigrationsRun, err := migrator.PerformMigrations(dbConn.DriverName(), dbConn, 0)
 	if err != nil {
-		return fmt.Errorf("perform migrations: %s", err)
+		return err
 	}
 
 	logger.Info("finished running migrations", lager.Data{
 		"num-migrations-completed": numMigrationsRun,
 	})
+	return nil
+}
 
+func populateGroupsTable(dbConn *db.ConnWrapper, tagLength int, logger lager.Logger) error {
 	logger.Info("populating groups table", lager.Data{})
-	err = populateGroupsTable(dbConn, conf.TagLength)
-	logger.Info("finished populating groups table", lager.Data{})
 
+	tagPopulator := &store.TagPopulator{DBConnection: dbConn}
+	err := tagPopulator.PopulateTables(tagLength)
+
+	logger.Info("finished populating groups table", lager.Data{})
 	return err
 }
 
-func populateGroupsTable(dbConn *db.ConnWrapper, tagLength int) error {
-	var err error
-	row := dbConn.QueryRow(`SELECT COUNT(*) FROM groups`)
-	if row != nil {
-		var count int
-		err = row.Scan(&count)
-		if err != nil {
-			return err
-		}
-		if count > 0 {
-			return nil
-		}
-	}
+func parseConfig() (*config.Config) {
+	configFilePath := flag.String("config-file", "", "path to config file")
+	flag.Parse()
 
-	var b bytes.Buffer
-	_, err = b.WriteString("INSERT INTO groups (guid) VALUES (NULL)")
+	conf, err := config.New(*configFilePath)
 	if err != nil {
-		return err
+		log.Fatalf("%s.%s: could not read config file: %s", logPrefix, jobPrefix, err)
 	}
 
-	for i := 1; i < int(math.Exp2(float64(tagLength*8)))-1; i++ {
-		_, err = b.WriteString(", (NULL)")
-		if err != nil {
-			return err
-		}
-	}
-
-	_, err = dbConn.Exec(b.String())
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return conf
 }

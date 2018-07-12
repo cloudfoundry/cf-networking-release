@@ -25,8 +25,6 @@ import (
 	"policy-server/store"
 	"policy-server/uaa_client"
 
-	"policy-server/store/migrations"
-
 	"policy-server/db"
 
 	"code.cloudfoundry.org/cf-networking-helpers/httperror"
@@ -107,17 +105,6 @@ func main() {
 	destination := &store.DestinationTable{}
 	policy := &store.PolicyTable{}
 
-	logger.Info("getting migration db connection", lager.Data{})
-	migrationConnectionPool := db.NewConnectionPool(
-		conf.Database,
-		conf.MaxOpenConnections,
-		conf.MaxIdleConnections,
-		logPrefix,
-		jobPrefix,
-		logger,
-	)
-	logger.Info("migration db connection retrieved", lager.Data{})
-
 	logger.Info("getting db connection", lager.Data{})
 	connectionPool := db.NewConnectionPool(
 		conf.Database,
@@ -129,33 +116,9 @@ func main() {
 	)
 	logger.Info("db connection retrieved", lager.Data{})
 
-	dataStore, err := store.New(
-		connectionPool,
-		migrationConnectionPool,
-		storeGroup,
-		destination,
-		policy,
-		conf.TagLength,
-		&migrations.Migrator{
-			MigrateAdapter: &migrations.MigrateAdapter{},
-		},
-	)
-	if err != nil {
-		log.Fatalf("%s.%s: failed to construct datastore: %s", logPrefix, jobPrefix, err) // not tested
-	}
+	dataStore:= store.New(connectionPool, storeGroup, destination, policy, conf.TagLength )
 
-	tagDataStore, err := store.NewTagStore(
-		connectionPool,
-		connectionPool,
-		&store.GroupTable{},
-		conf.TagLength,
-		&migrations.Migrator{
-			MigrateAdapter: &migrations.MigrateAdapter{},
-		},
-	)
-	if err != nil {
-		log.Fatalf("%s.%s: failed to construct datastore: %s", logPrefix, jobPrefix, err) // not tested
-	}
+	tagDataStore := store.NewTagStore(connectionPool, &store.GroupTable{}, conf.TagLength)
 
 	metricsSender := &metrics.MetricsSender{
 		Logger: logger.Session("time-metric-emitter"),
