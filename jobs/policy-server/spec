@@ -8,6 +8,7 @@ templates:
   uaa_ca.crt.erb: config/certs/uaa_ca.crt
   database_ca.crt.erb: config/certs/database_ca.crt
   post-start.erb: bin/post-start
+  pre-start.erb: bin/pre-start
 
 packages:
   - policy-server
