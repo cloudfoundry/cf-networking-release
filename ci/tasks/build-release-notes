@@ -11,7 +11,7 @@ pushd $SOURCE_DIR > /dev/null
   old_version=$(git tag --sort=version:refname | grep "^\d\.\d\.\d$" | tail -2 | head -1)
   diff_string="$old_version...$new_version"
   echo "comparing $diff_string:"
-  git log $diff_string | egrep -o '\[\#(\d+)' | cut -d# -f2 | sort | uniq > $tmp_dir/stories.raw
+  git log $diff_string | { egrep -o '\[\#(\d+)' || true; } | cut -d# -f2 | sort | uniq > $tmp_dir/stories.raw
   echo "found: "
   cat $tmp_dir/stories.raw
 popd > /dev/null
