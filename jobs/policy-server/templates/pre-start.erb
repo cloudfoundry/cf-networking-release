@@ -2,8 +2,11 @@
 
 <% if spec.bootstrap %>
 
-# ensure bosh-dns is up and running
-/var/vcap/jobs/bosh-dns/bin/wait
+# can remove this check once bosh-dns is in cf-deployment :)
+if [ -f /var/vcap/jobs/bosh-dns/bin/wait ]; then
+    # ensure bosh-dns is up and running
+    /var/vcap/jobs/bosh-dns/bin/wait
+fi
 
 /var/vcap/packages/policy-server/bin/migrate-db \
   -config-file=/var/vcap/jobs/policy-server/config/policy-server.json
