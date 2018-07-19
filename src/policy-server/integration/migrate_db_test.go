@@ -3,7 +3,15 @@ package integration_test
 import (
 	"fmt"
 	"math"
+	"os"
+	"strings"
 	"time"
+
+	"policy-server/config"
+	"policy-server/db"
+	"policy-server/integration/helpers"
+	"policy-server/store/migrations"
+	"test-helpers"
 
 	dbHelper "code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
@@ -12,11 +20,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
-	"policy-server/config"
-	"policy-server/db"
-	"policy-server/integration/helpers"
-	"policy-server/store/migrations"
-	"test-helpers"
 )
 
 const TimeoutShort = 20 * time.Second
@@ -60,7 +63,7 @@ var _ = Describe("Migrate DB Binary", func() {
 			lastMigration := m[len(m)-1]
 
 			var highestID string
-			conn.QueryRow("SELECT MAX(ID) FROM gorp_migrations LIMIT 1").Scan(&highestID)
+			conn.QueryRow(fmt.Sprintf("SELECT MAX(CAST(ID AS %s)) AS ID FROM gorp_migrations LIMIT 1", getDBNumberType())).Scan(&highestID)
 			Expect(highestID).To(Equal(lastMigration.Id))
 
 			var groupCount int
@@ -85,3 +88,16 @@ var _ = Describe("Migrate DB Binary", func() {
 		})
 	})
 })
+
+func getDBNumberType() string {
+	dbEnv := os.Getenv("DB")
+	switch {
+	case strings.HasPrefix(dbEnv, "mysql"):
+		return "SIGNED"
+	case strings.HasPrefix(dbEnv, "postgres"):
+		return "INT"
+	default:
+		panic("unable to determine database to use.  Set environment variable DB")
+	}
+	return ""
+}
