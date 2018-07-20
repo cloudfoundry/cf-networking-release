@@ -49,17 +49,24 @@ func (p *policyMapper) AsStorePolicy(bytes []byte) (store.PolicyCollection, erro
 	}, nil
 }
 
-func (p *policyMapper) AsBytes(storePolicies []store.Policy) ([]byte, error) {
+func (p *policyMapper) AsBytes(storePolicies []store.Policy, storeEgressPolicies []store.EgressPolicy) ([]byte, error) {
 	// convert store.Policy to api.Policy
-	apiPolicies := []Policy{}
-	for _, policy := range storePolicies {
-		apiPolicies = append(apiPolicies, mapStorePolicy(policy))
+	apiPolicies := make([]Policy, len(storePolicies))
+	for i, policy := range storePolicies {
+		apiPolicies[i] = mapStorePolicy(policy)
+	}
+
+	apiEgressPolicies := make([]EgressPolicy, len(storeEgressPolicies))
+	for i, egressPolicy := range storeEgressPolicies {
+		apiEgressPolicies[i] = mapStoreEgressPolicy(egressPolicy)
 	}
 
 	// convert api.Policy payload to bytes
 	payload := &PoliciesPayload{
 		TotalPolicies: len(apiPolicies),
 		Policies:      apiPolicies,
+		TotalEgressPolicies: len(apiEgressPolicies),
+		EgressPolicies: apiEgressPolicies,
 	}
 	bytes, err := p.Marshaler.Marshal(payload)
 	if err != nil {
@@ -109,7 +116,21 @@ func (p *Policy) asStorePolicy() store.Policy {
 		},
 	}
 }
-
+func mapStoreEgressPolicy(storeEgressPolicy store.EgressPolicy) EgressPolicy {
+	firstIPRange := storeEgressPolicy.Destination.IPRanges[0]
+	return EgressPolicy{
+		Source: &EgressSource{
+			ID: storeEgressPolicy.Source.ID,
+		},
+		Destination: &EgressDestination{
+			Protocol: storeEgressPolicy.Destination.Protocol,
+			IPRanges: []IPRange{{
+				Start: firstIPRange.Start,
+				End: firstIPRange.End,
+			}},
+		},
+	}
+}
 func mapStorePolicy(storePolicy store.Policy) Policy {
 	return Policy{
 		Source: Source{

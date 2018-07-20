@@ -41,7 +41,7 @@ var _ = Describe("CniController", func() {
 		fakeCNILibrary.DelNetworkListReturns(nil)
 
 		controller = cni.CNIController{
-			CNIConfig: fakeCNILibrary,
+			CNIConfig:         fakeCNILibrary,
 			NetworkConfigList: testConfig,
 		}
 	})

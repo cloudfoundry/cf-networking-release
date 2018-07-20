@@ -49,7 +49,7 @@ type store struct {
 	tagLength   int
 }
 
-func New(dbConnectionPool database, g GroupRepo, d DestinationRepo, p PolicyRepo, tl int) (Store) {
+func New(dbConnectionPool database, g GroupRepo, d DestinationRepo, p PolicyRepo, tl int) Store {
 	return &store{
 		conn:        dbConnectionPool,
 		group:       g,
@@ -80,7 +80,7 @@ func (s *store) CheckDatabase() error {
 	return s.conn.QueryRow("SELECT 1").Scan(&result)
 }
 
-func (s *store) Create(policies []Policy) error {
+func (s *store) Create(policies []Policy) error { //TODO should go away, replace with CreateWithTransaction
 	tx, err := s.conn.Beginx()
 	if err != nil {
 		return fmt.Errorf("begin transaction: %s", err)
@@ -88,7 +88,7 @@ func (s *store) Create(policies []Policy) error {
 
 	err = s.CreateWithTx(tx, policies)
 	if err != nil {
-		return err
+		return rollback(tx, err)
 	}
 
 	return commit(tx)
@@ -98,12 +98,12 @@ func (s *store) CreateWithTx(tx db.Transaction, policies []Policy) error {
 	for _, policy := range policies {
 		sourceGroupId, err := s.group.Create(tx, policy.Source.ID, "app")
 		if err != nil {
-			return rollback(tx, fmt.Errorf("creating group: %s", err))
+			return fmt.Errorf("creating group: %s", err)
 		}
 
 		destinationGroupId, err := s.group.Create(tx, policy.Destination.ID, "app")
 		if err != nil {
-			return rollback(tx, fmt.Errorf("creating group: %s", err))
+			return fmt.Errorf("creating group: %s", err)
 		}
 
 		destinationId, err := s.destination.Create(
@@ -115,12 +115,12 @@ func (s *store) CreateWithTx(tx db.Transaction, policies []Policy) error {
 			policy.Destination.Protocol,
 		)
 		if err != nil {
-			return rollback(tx, fmt.Errorf("creating destination: %s", err))
+			return fmt.Errorf("creating destination: %s", err)
 		}
 
 		err = s.policy.Create(tx, sourceGroupId, destinationId)
 		if err != nil {
-			return rollback(tx, fmt.Errorf("creating policy: %s", err))
+			return fmt.Errorf("creating policy: %s", err)
 		}
 	}
 	return nil

@@ -56,6 +56,15 @@ func (g *PolicyGuard) CheckAccess(policyCollection store.PolicyCollection, userT
 	}
 	return true, nil
 }
+func (g *PolicyGuard) CheckEgressPolicyListAccess(userToken uaa_client.CheckTokenResponse) bool {
+	for _, scope := range userToken.Scope {
+		if scope == "network.admin" {
+			return true
+		}
+	}
+
+	return false
+}
 
 func uniqueAppGUIDs(policies []store.Policy) []string {
 	var set = make(map[string]struct{})

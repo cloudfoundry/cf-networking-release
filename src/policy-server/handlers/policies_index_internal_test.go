@@ -23,9 +23,11 @@ var _ = Describe("PoliciesIndexInternal", func() {
 	var (
 		handler              *handlers.PoliciesIndexInternal
 		resp                 *httptest.ResponseRecorder
-		fakeStore         	 *storeFakes.Store
+		fakeStore            *storeFakes.Store
+		fakeEgressStore      *fakes.EgressPolicyStore
 		fakeErrorResponse    *fakes.ErrorResponse
 		logger               *lagertest.TestLogger
+		fakeConn             *storeFakes.Db
 		expectedLogger       lager.Logger
 		fakeMapper           *apifakes.PolicyMapper
 		expectedResponseBody []byte
@@ -66,11 +68,23 @@ var _ = Describe("PoliciesIndexInternal", func() {
 				},
 			},
 		}}
+
+		allEgressPolicies := []store.EgressPolicy{{
+			Source: store.EgressSource{ID: "some-egress-app-guid"},
+			Destination: store.EgressDestination{
+				Protocol: "tcp",
+				IPRanges: []store.IPRange{{Start: "8.0.8.0", End: "8.0.8.0"}},
+			},
+		}}
+
 		expectedResponseBody = []byte("some-response")
 
+		fakeConn = &storeFakes.Db{}
 		fakeMapper = &apifakes.PolicyMapper{}
 		fakeStore = &storeFakes.Store{}
 		fakeStore.AllReturns(allPolicies, nil)
+		fakeEgressStore = &fakes.EgressPolicyStore{}
+		fakeEgressStore.ByGuidsWithTxReturns(allEgressPolicies, nil)
 		fakeStore.ByGuidsReturns(byGuidsPolicies, nil)
 		fakeMapper.AsBytesReturns(expectedResponseBody, nil)
 		logger = lagertest.NewTestLogger("test")
@@ -82,7 +96,9 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		fakeErrorResponse = &fakes.ErrorResponse{}
 		handler = &handlers.PoliciesIndexInternal{
 			Logger:        logger,
+			Conn:          fakeConn,
 			Store:         fakeStore,
+			EgressStore:   fakeEgressStore,
 			Mapper:        fakeMapper,
 			ErrorResponse: fakeErrorResponse,
 		}
@@ -95,6 +111,7 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
 
 		Expect(fakeStore.ByGuidsCallCount()).To(Equal(1))
+		Expect(fakeEgressStore.ByGuidsWithTxCallCount()).To(Equal(1))
 		srcGuids, dstGuids, inSourceAndDest := fakeStore.ByGuidsArgsForCall(0)
 		Expect(srcGuids).To(Equal([]string{"some-app-guid"}))
 		Expect(dstGuids).To(Equal([]string{"some-app-guid"}))
@@ -121,6 +138,7 @@ var _ = Describe("PoliciesIndexInternal", func() {
 			MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
 
 			Expect(fakeStore.AllCallCount()).To(Equal(1))
+			Expect(fakeEgressStore.AllWithTxCallCount()).To(Equal(1))
 			Expect(resp.Code).To(Equal(http.StatusOK))
 			Expect(resp.Body.Bytes()).To(Equal(expectedResponseBody))
 		})
@@ -146,7 +164,7 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		})
 	})
 
-	Context("when the store throws an error", func() {
+	Context("when store.All() throws an error", func() {
 
 		BeforeEach(func() {
 			fakeStore.AllReturns(nil, errors.New("banana"))
@@ -167,4 +185,68 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		})
 	})
 
+	Context("when store.ByGuids() throws an error", func() {
+
+		BeforeEach(func() {
+			fakeStore.ByGuidsReturns(nil, errors.New("banana"))
+		})
+
+		It("calls the internal server error handler", func() {
+			request, err := http.NewRequest("GET", "/networking/v0/internal/policies?id=some-app-guid", nil)
+			Expect(err).NotTo(HaveOccurred())
+			MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
+
+			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
+
+			l, w, err, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			Expect(l).To(Equal(expectedLogger))
+			Expect(w).To(Equal(resp))
+			Expect(err).To(MatchError("banana"))
+			Expect(description).To(Equal("database read failed"))
+		})
+	})
+
+	Context("when egressStore.AllWithTx() throws an error", func() {
+
+		BeforeEach(func() {
+			fakeEgressStore.AllWithTxReturns(nil, errors.New("banana"))
+		})
+
+		It("calls the internal server error handler", func() {
+			request, err := http.NewRequest("GET", "/networking/v0/internal/policies", nil)
+			Expect(err).NotTo(HaveOccurred())
+			MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
+
+			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
+
+			l, w, err, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			Expect(l).To(Equal(expectedLogger))
+			Expect(w).To(Equal(resp))
+			Expect(err).To(MatchError("banana"))
+			Expect(description).To(Equal("egress database read failed"))
+		})
+
+	})
+
+	Context("when egressStore.ByGuids() throws an error", func() {
+
+		BeforeEach(func() {
+			fakeEgressStore.ByGuidsWithTxReturns(nil, errors.New("banana"))
+		})
+
+		It("calls the internal server error handler", func() {
+			request, err := http.NewRequest("GET", "/networking/v0/internal/policies?id=meowmeow", nil)
+			Expect(err).NotTo(HaveOccurred())
+			MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
+
+			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
+
+			l, w, err, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
+			Expect(l).To(Equal(expectedLogger))
+			Expect(w).To(Equal(resp))
+			Expect(err).To(MatchError("banana"))
+			Expect(description).To(Equal("egress database read failed"))
+		})
+
+	})
 })

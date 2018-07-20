@@ -1,10 +1,20 @@
 package store
 
-import "fmt"
+import (
+	"fmt"
+	"policy-server/db"
+)
+
+//go:generate counterfeiter -o fakes/egress_policy_store.go --fake-name EgressPolicyStore . egressPolicyStore
+type egressPolicyStore interface {
+	CreateWithTx(db.Transaction, []EgressPolicy) error
+	DeleteWithTx(db.Transaction, []EgressPolicy) error
+}
 
 type PolicyCollectionStore struct {
-	Conn        database
-	PolicyStore Store
+	Conn              database
+	PolicyStore       Store
+	EgressPolicyStore egressPolicyStore
 }
 
 func (p *PolicyCollectionStore) Create(policyCollection PolicyCollection) error {
@@ -13,9 +23,14 @@ func (p *PolicyCollectionStore) Create(policyCollection PolicyCollection) error 
 		return fmt.Errorf("begin transaction: %s", err)
 	}
 
-	err = p.PolicyStore.CreateWithTx(tx, policyCollection.Policies)
+	err = p.PolicyStore.CreateWithTx(tx, policyCollection.Policies) // TODO: Move rollback up to this level
 	if err != nil {
-		return err
+		return rollback(tx, err)
+	}
+
+	err = p.EgressPolicyStore.CreateWithTx(tx, policyCollection.EgressPolicies)
+	if err != nil {
+		return rollback(tx, err)
 	}
 
 	return commit(tx)

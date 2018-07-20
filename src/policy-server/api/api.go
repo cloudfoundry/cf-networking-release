@@ -4,14 +4,15 @@ import "policy-server/store"
 
 //go:generate counterfeiter -o fakes/policy_mapper.go --fake-name PolicyMapper . PolicyMapper
 type PolicyMapper interface {
-	AsStorePolicy([]byte) (store.PolicyCollection, error) // marshal
-	AsBytes([]store.Policy) ([]byte, error)               // unmarshal
+	AsStorePolicy([]byte) (store.PolicyCollection, error)         // marshal
+	AsBytes([]store.Policy, []store.EgressPolicy) ([]byte, error) // unmarshal
 }
 
 type PoliciesPayload struct {
-	TotalPolicies  int            `json:"total_policies"`
-	Policies       []Policy       `json:"policies"`
-	EgressPolicies []EgressPolicy `json:"egress_policies,omitempty"`
+	TotalPolicies       int            `json:"total_policies"`
+	Policies            []Policy       `json:"policies"`
+	TotalEgressPolicies int            `json:"total_egress_policies,omitempty"`
+	EgressPolicies      []EgressPolicy `json:"egress_policies,omitempty"`
 }
 
 type Policy struct {

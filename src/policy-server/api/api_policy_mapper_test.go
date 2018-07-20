@@ -156,7 +156,7 @@ var _ = Describe("ApiPolicyMapper", func() {
 
 				Expect(storePolicies).To(BeEmpty())
 				storeEgressPolicies := policyCollection.EgressPolicies
-				Expect(storeEgressPolicies).To(Equal([]store.EgressPolicy{
+				Expect(storeEgressPolicies).To(Equal([]store. EgressPolicy{
 					{
 						Source: store.EgressSource{ID: "some-src-id"},
 						Destination: store.EgressDestination{
@@ -202,7 +202,7 @@ var _ = Describe("ApiPolicyMapper", func() {
 
 	Describe("AsBytes", func() {
 		It("maps a slice of store.Policy to a payload with api.Policy", func() {
-			payload, err := mapper.AsBytes([]store.Policy{
+			policies := []store.Policy{
 				{
 					Source: store.Source{ID: "some-src-id"},
 					Destination: store.Destination{
@@ -226,7 +226,32 @@ var _ = Describe("ApiPolicyMapper", func() {
 						},
 					},
 				},
-			})
+			}
+
+			egressPolicies := []store.EgressPolicy{
+				{
+					Source: store.EgressSource{ID: "egress-source-id"},
+					Destination: store.EgressDestination{
+						Protocol: "tcp",
+						IPRanges: []store.IPRange{{
+							Start: "1.2.3.4",
+							End:   "1.2.3.5",
+						}},
+					},
+				},
+				{
+					Source: store.EgressSource{ID: "egress-source-id-2"},
+					Destination: store.EgressDestination{
+						Protocol: "udp",
+						IPRanges: []store.IPRange{{
+							Start: "1.2.3.7",
+							End:   "1.2.3.8",
+						}},
+					},
+				},
+			}
+
+			payload, err := mapper.AsBytes(policies, egressPolicies)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(payload).To(MatchJSON(
 				[]byte(`{
@@ -253,6 +278,27 @@ var _ = Describe("ApiPolicyMapper", func() {
 								"end": 8081
 							}
 						}
+					}],
+
+					"total_egress_policies": 2,
+					"egress_policies": [{
+						"source": { "id": "egress-source-id" },
+						"destination": {
+							"protocol": "tcp",
+							"ips": [{
+								"start": "1.2.3.4",
+								"end": "1.2.3.5"
+							}]
+						}
+					}, {
+						"source": { "id": "egress-source-id-2" },
+						"destination": {
+							"protocol": "udp",
+							"ips": [{
+								"start": "1.2.3.7",
+								"end": "1.2.3.8"
+							}]
+						}
 					}]
 				}`),
 			))
@@ -271,7 +317,7 @@ var _ = Describe("ApiPolicyMapper", func() {
 							},
 						},
 					},
-				})
+				}, []store.EgressPolicy{})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(payload).To(MatchJSON([]byte(`{
 					"total_policies": 1,
@@ -301,7 +347,7 @@ var _ = Describe("ApiPolicyMapper", func() {
 				)
 			})
 			It("wraps and returns an error", func() {
-				_, err := mapper.AsBytes([]store.Policy{})
+				_, err := mapper.AsBytes([]store.Policy{}, []store.EgressPolicy{})
 				Expect(err).To(MatchError(errors.New("marshal json: banana")))
 			})
 		})
