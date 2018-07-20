@@ -93,33 +93,6 @@ Will return only the policies which include the given policy_group_id either as 
 }
 ```
 
-### GET /networking/v1/external/policies for Egress Policies (Experimental)
-#### Arguments:
-No arguments are supported at this time.
-
-This endpoint will return the `total_egress_policies`, `egress_policies` keys only if egress policies exist.
-
-#### Response Body:
-
-```json
-{
-  "total_policies": 0,
-  "policies": [],
-  "total_egress_policies": 1,
-  "egress_policies": [
-      {
-      "source": {
-        "id": "1081ceac-f5c4-47a8-95e8-88e1e302efb5"
-      },
-      "destination": {
-        "protocol":"tcp",
-        "ips": [{"start": "1.2.3.4", "end": "1.2.3.5"}]
-      }
-    }
-  ]
-}
-```
-
 ### POST /networking/v1/external/policies
 
 #### Request Body:
@@ -159,41 +132,12 @@ This endpoint will return the `total_egress_policies`, `egress_policies` keys on
 
 | Field | Required? | Description |
 | :---- | :-------: | :------ |
-| policies.source.id | Y | The source `policy_group_id`
-| policies.destination.id | Y | The destination `policy_group_id`
-| policies.destination.protocol | Y | The protocol (tcp or udp)
-| policies.destination.ports | Y | The destination port range
-| policies.destination.ports.start | Y | The destination start port (1 - 65535)
-| policies.destination.ports.end | Y | The destination end port (1 - 65535)
-
-### POST /networking/v1/external/policies for Egress Policy (Experimental)
-
-#### Request Body:
-
-```json
-{
-  "egress_policies": [
-    {
-      "source": {
-        "id": "1081ceac-f5c4-47a8-95e8-88e1e302efb5"
-      },
-      "destination": {
-        "protocol":"tcp",
-        "ips": [{"start": "1.2.3.4", "end": "1.2.3.5"}]
-      }
-    }
-  ]
-}
-```
-
-| Field | Required? | Description |
-| :---- | :-------: | :------ |
-| egress_policies.source.id | Y | The source `policy_group_id`
-| egress_policies.destination.protocol | Y | The protocol (tcp or udp)
-| egress_policies.destination.ips.start | Y | The start of the destination ip range
-| egress_policies.destination.ips.end | Y | The end of the destination ip range. For one ip, set this equal to the ` egress_policies.destination.ips.start` value.
-
-
+| source.id | Y | The source `policy_group_id`
+| destination.id | Y | The destination `policy_group_id`
+| destination.protocol | Y | The protocol (tcp or udp)
+| destination.ports | Y | The destination port range
+| destination.ports.start | Y | The destination start port (1 - 65535)
+| destination.ports.end | Y | The destination end port (1 - 65535)
 
 #### Response Status Codes:
 - 200 (successful)
@@ -239,12 +183,12 @@ This endpoint will return the `total_egress_policies`, `egress_policies` keys on
 
 | Field | Required? | Description |
 | :---- | :-------: | :------ |
-| policies.source.id | Y | The source `policy_group_id`
-| policies.destination.id | Y | The destination `policy_group_id`
-| policies.destination.protocol | Y | The protocol (tcp or udp)
-| policies.destination.ports | Y | The destination port range
-| policies.destination.ports.start | Y | The destination start port (1 - 65535)
-| policies.destination.ports.end | Y | The destination end port (1 - 65535)
+| source.id | Y | The source `policy_group_id`
+| destination.id | Y | The destination `policy_group_id`
+| destination.protocol | Y | The protocol (tcp or udp)
+| destination.ports | Y | The destination port range
+| destination.ports.start | Y | The destination start port (1 - 65535)
+| destination.ports.end | Y | The destination end port (1 - 65535)
 
 #### Response Status Codes:
 - 200 (successful)
