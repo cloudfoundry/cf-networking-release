@@ -36,6 +36,13 @@ var _ = Describe("Egress Validator", func() {
 			Expect(validator.ValidateEgressPolicies(egressPolicies)).To(Succeed())
 		})
 
+		It("requires exactly one egress policy", func() {
+			var egressPolicies []api.EgressPolicy
+
+			err := validator.ValidateEgressPolicies(egressPolicies)
+			Expect(err).To(MatchError("expected exactly one egress policy"))
+		})
+
 		It("requires a source", func() {
 			egressPolicies[0].Source = nil
 
@@ -103,43 +110,6 @@ var _ = Describe("Egress Validator", func() {
 
 			err = validator.ValidateEgressPolicies(egressPolicies)
 			Expect(err).To(MatchError("invalid ipv4 end ip address for ip range: 2001:db8:85a3:0:0:8a2e:370:7334"))
-		})
-
-		It("fails on first bad record", func() {
-			egressPolicies = []api.EgressPolicy{
-				{
-					Source: &api.EgressSource{
-						ID: "good-record",
-					},
-					Destination: &api.EgressDestination{
-						IPRanges: []api.IPRange{
-							{Start: "1.2.3.4", End: "5.6.7.8"},
-						},
-						Protocol: "tcp",
-					},
-				},
-				{
-					Source: &api.EgressSource{
-						ID: "bad-record",
-					},
-					Destination: &api.EgressDestination{
-					},
-				},
-				{
-					Source: &api.EgressSource{
-						ID: "another-good-record",
-					},
-					Destination: &api.EgressDestination{
-						IPRanges: []api.IPRange{
-							{Start: "1.2.3.4", End: "5.6.7.8"},
-						},
-						Protocol: "tcp",
-					},
-				},
-			}
-
-			err := validator.ValidateEgressPolicies(egressPolicies)
-			Expect(err).To(MatchError("missing egress destination protocol"))
 		})
 	})
 })

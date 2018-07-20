@@ -73,9 +73,7 @@ var _ = Describe("PoliciesCleanup", func() {
 		Expect(fakePolicyCleaner.DeleteStalePoliciesCallCount()).To(Equal(1))
 		Expect(fakeMapper.AsBytesCallCount()).To(Equal(1))
 
-		policyArg, _ := fakeMapper.AsBytesArgsForCall(0)
-
-		Expect(policyArg).To(Equal(policies))
+		Expect(fakeMapper.AsBytesArgsForCall(0)).To(Equal(policies))
 
 		Expect(resp.Code).To(Equal(http.StatusOK))
 		Expect(resp.Body.String()).To(Equal(`some-bytes`))

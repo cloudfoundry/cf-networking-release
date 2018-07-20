@@ -116,21 +116,7 @@ func main() {
 	)
 	logger.Info("db connection retrieved", lager.Data{})
 
-	egressDataStore := &store.EgressPolicyStore{
-		EgressPolicyRepo: &store.EgressPolicyTable{},
-	}
-
-	dataStore := store.New(
-		connectionPool,
-		storeGroup,
-		destination,
-		policy,
-		conf.TagLength,
-	)
-
-	if err != nil {
-		log.Fatalf("%s.%s: failed to construct datastore: %s", logPrefix, jobPrefix, err) // not tested
-	}
+	dataStore := store.New(connectionPool, storeGroup, destination, policy, conf.TagLength)
 
 	tagDataStore := store.NewTagStore(connectionPool, &store.GroupTable{}, conf.TagLength)
 
@@ -145,9 +131,8 @@ func main() {
 	}
 
 	policyCollectionStore := &store.PolicyCollectionStore{
-		Conn:              connectionPool,
-		PolicyStore:       wrappedStore,
-		EgressPolicyStore: egressDataStore, //TODO wrap this datastore
+		Conn:        connectionPool,
+		PolicyStore: dataStore,
 	}
 
 	wrappedPolicyCollectionStore := &store.PolicyCollectionMetricsWrapper{
@@ -182,8 +167,8 @@ func main() {
 	deletePolicyHandlerV0 := handlers.NewPoliciesDelete(wrappedPolicyCollectionStore, policyMapperV0,
 		policyGuard, errorResponse)
 
-	policiesIndexHandlerV1 := handlers.NewPoliciesIndex(wrappedStore, egressDataStore, policyMapperV1, policyFilter, errorResponse, connectionPool)
-	policiesIndexHandlerV0 := handlers.NewPoliciesIndex(wrappedStore, egressDataStore, policyMapperV0, policyFilter, errorResponse, connectionPool)
+	policiesIndexHandlerV1 := handlers.NewPoliciesIndex(wrappedStore, policyMapperV1, policyFilter, errorResponse)
+	policiesIndexHandlerV0 := handlers.NewPoliciesIndex(wrappedStore, policyMapperV0, policyFilter, errorResponse)
 
 	policyCleaner := cleaner.NewPolicyCleaner(logger.Session("policy-cleaner"), wrappedStore, uaaClient,
 		ccClient, 100, time.Duration(5)*time.Second)

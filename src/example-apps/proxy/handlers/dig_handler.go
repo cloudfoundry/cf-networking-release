@@ -1,12 +1,12 @@
 package handlers
 
 import (
-	"encoding/json"
-	"fmt"
 	"net"
 	"net/http"
-	"os"
 	"strings"
+	"encoding/json"
+	"fmt"
+	"os"
 )
 
 type DigHandler struct {
@@ -36,6 +36,7 @@ func (h *DigHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 
 	resp.Write(ip4Json)
 }
+
 
 func handleDigError(err error, destination string, resp http.ResponseWriter) {
 	msg := fmt.Sprintf("Failed to dig: %s: %s", destination, err)

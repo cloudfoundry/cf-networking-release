@@ -4,7 +4,6 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
-	dbFakes "policy-server/db/fakes"
 	"policy-server/handlers"
 	"policy-server/handlers/fakes"
 	storeFakes "policy-server/store/fakes"
@@ -24,25 +23,21 @@ import (
 
 var _ = Describe("Policies index handler", func() {
 	var (
-		allPolicies           []store.Policy
-		allEgressPolicies     []store.EgressPolicy
-		byGuidsPolicies       []store.Policy
-		byGuidsAPIPolicies    []store.Policy
-		expectedResponseBody  []byte
-		filteredPolicies      []store.Policy
-		request               *http.Request
-		handler               *handlers.PoliciesIndex
-		resp                  *httptest.ResponseRecorder
-		fakeStore             *storeFakes.Store
-		fakeEgressPolicyStore *fakes.EgressPolicyStore
-		fakePolicyFilter      *fakes.PolicyFilter
-		fakeErrorResponse     *fakes.ErrorResponse
-		fakeMapper            *apifakes.PolicyMapper
-		logger                *lagertest.TestLogger
-		expectedLogger        lager.Logger
-		token                 uaa_client.CheckTokenResponse
-		fakeDb                *storeFakes.Db
-		fakeTx                *dbFakes.Transaction
+		allPolicies          []store.Policy
+		byGuidsPolicies      []store.Policy
+		byGuidsAPIPolicies   []store.Policy
+		expectedResponseBody []byte
+		filteredPolicies     []store.Policy
+		request              *http.Request
+		handler              *handlers.PoliciesIndex
+		resp                 *httptest.ResponseRecorder
+		fakeStore            *storeFakes.Store
+		fakePolicyFilter     *fakes.PolicyFilter
+		fakeErrorResponse    *fakes.ErrorResponse
+		fakeMapper           *apifakes.PolicyMapper
+		logger               *lagertest.TestLogger
+		expectedLogger       lager.Logger
+		token                uaa_client.CheckTokenResponse
 	)
 
 	BeforeEach(func() {
@@ -77,14 +72,6 @@ var _ = Describe("Policies index handler", func() {
 					Start: 5555,
 					End:   5555,
 				},
-			},
-		}}
-
-		allEgressPolicies = []store.EgressPolicy{{
-			Source: store.EgressSource{ID: "some-egress-app-guid"},
-			Destination: store.EgressDestination{
-				Protocol: "tcp",
-				IPRanges: []store.IPRange{{Start: "8.0.8.0", End: "8.0.8.0"}},
 			},
 		}}
 
@@ -151,17 +138,9 @@ var _ = Describe("Policies index handler", func() {
 		request, err = http.NewRequest("GET", "/networking/v0/external/policies", nil)
 		Expect(err).NotTo(HaveOccurred())
 
-		fakeTx = &dbFakes.Transaction{}
-		fakeDb = &storeFakes.Db{}
-		fakeDb.BeginxReturns(fakeTx, nil)
-
 		fakeStore = &storeFakes.Store{}
 		fakeStore.AllReturns(allPolicies, nil)
 		fakeStore.ByGuidsReturns(byGuidsPolicies, nil)
-
-		fakeEgressPolicyStore = &fakes.EgressPolicyStore{}
-		fakeEgressPolicyStore.AllWithTxReturns(allEgressPolicies, nil)
-
 		fakeErrorResponse = &fakes.ErrorResponse{}
 		fakePolicyFilter = &fakes.PolicyFilter{}
 		fakePolicyFilter.FilterPoliciesStub = func(policies []store.Policy, userToken uaa_client.CheckTokenResponse) ([]store.Policy, error) {
@@ -172,11 +151,9 @@ var _ = Describe("Policies index handler", func() {
 		logger = lagertest.NewTestLogger("test")
 		handler = &handlers.PoliciesIndex{
 			Store:         fakeStore,
-			EgressStore:   fakeEgressPolicyStore,
 			Mapper:        fakeMapper,
 			PolicyFilter:  fakePolicyFilter,
 			ErrorResponse: fakeErrorResponse,
-			Conn:          fakeDb,
 		}
 
 		token = uaa_client.CheckTokenResponse{
@@ -200,80 +177,6 @@ var _ = Describe("Policies index handler", func() {
 		Expect(fakePolicyFilter.FilterPoliciesCallCount()).To(Equal(1))
 		Expect(resp.Code).To(Equal(http.StatusOK))
 		Expect(resp.Body.Bytes()).To(Equal(expectedResponseBody))
-	})
-
-	Context("when there are egress policies", func() {
-
-		Context("when the user is a network admin", func() {
-			BeforeEach(func() {
-				token = uaa_client.CheckTokenResponse{
-					Scope:    []string{"some-scope", "network.admin"},
-					UserID:   "some-user-id",
-					UserName: "some-user",
-				}
-			})
-
-			It("returns all egress policies", func() {
-				MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
-
-				Expect(fakeEgressPolicyStore.AllWithTxCallCount()).To(Equal(1))
-				Expect(fakeEgressPolicyStore.AllWithTxArgsForCall(0)).To(Equal(fakeTx))
-				_, egressPolicies := fakeMapper.AsBytesArgsForCall(0)
-				Expect(egressPolicies).To(Equal(allEgressPolicies))
-				Expect(resp.Code).To(Equal(http.StatusOK))
-				Expect(resp.Body.Bytes()).To(Equal(expectedResponseBody))
-			})
-
-			Context("when creating a new transaction fails", func() {
-				BeforeEach(func() {
-					fakeDb.BeginxReturns(nil, errors.New("I am an error from outer space"))
-				})
-
-				It("should call internal server error response", func() {
-					MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
-
-					Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
-
-					l, w, err, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
-					Expect(l).To(Equal(expectedLogger))
-					Expect(w).To(Equal(resp))
-					Expect(err).To(MatchError("I am an error from outer space"))
-					Expect(description).To(Equal("getting connection to db failed"))
-				})
-			})
-
-			Context("when egressPolicyStore.AllWithTx returns an error", func() {
-				BeforeEach(func() {
-					fakeEgressPolicyStore.AllWithTxReturns([]store.EgressPolicy{}, errors.New("I am an error from All"))
-				})
-
-				It("returns a nice error", func() {
-					MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
-
-					Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
-
-					l, w, err, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
-					Expect(l).To(Equal(expectedLogger))
-					Expect(w).To(Equal(resp))
-					Expect(err).To(MatchError("I am an error from All"))
-					Expect(description).To(Equal("getting egress policies failed"))
-				})
-			})
-		})
-
-		Context("when the user is not a network admin", func() {
-			It("does not return any egress policies", func() {
-				MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
-
-				var emptyEgressPolicies []store.EgressPolicy
-
-				Expect(fakeEgressPolicyStore.AllWithTxCallCount()).To(Equal(0))
-				_, egressPolicies := fakeMapper.AsBytesArgsForCall(0)
-				Expect(egressPolicies).To(Equal(emptyEgressPolicies))
-				Expect(resp.Code).To(Equal(http.StatusOK))
-				Expect(resp.Body.Bytes()).To(Equal(expectedResponseBody))
-			})
-		})
 	})
 
 	Context("when the logger isn't on the request context", func() {

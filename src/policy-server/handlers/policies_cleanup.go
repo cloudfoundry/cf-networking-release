@@ -51,7 +51,7 @@ func (h *PoliciesCleanup) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		policies[i].Destination.Tag = ""
 	}
 
-	bytes, err := h.Mapper.AsBytes(policies, []store.EgressPolicy{})
+	bytes, err := h.Mapper.AsBytes(policies)
 	if err != nil {
 		h.ErrorResponse.InternalServerError(logger, w, err, "map policy as bytes failed")
 		return

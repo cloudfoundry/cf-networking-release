@@ -54,7 +54,7 @@ var _ = Describe("ApiPolicyMapper v000", func() {
 						},
 					},
 				},
-			}, []store.EgressPolicy{})
+			})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(payload).To(MatchJSON(
 				[]byte(`{
@@ -96,7 +96,7 @@ var _ = Describe("ApiPolicyMapper v000", func() {
 							},
 						},
 					},
-				}, []store.EgressPolicy{})
+				})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(payload).To(MatchJSON([]byte(`{
 					"total_policies": 1,
@@ -129,7 +129,7 @@ var _ = Describe("ApiPolicyMapper v000", func() {
 							},
 						},
 					},
-				}, []store.EgressPolicy{})
+				})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(payload).To(MatchJSON([]byte(`{
 					"total_policies": 1,
@@ -162,7 +162,7 @@ var _ = Describe("ApiPolicyMapper v000", func() {
 							},
 						},
 					},
-				}, []store.EgressPolicy{})
+				})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(payload).To(MatchJSON([]byte(`{ "total_policies": 0, "policies": [] }`)))
 			})
@@ -176,7 +176,7 @@ var _ = Describe("ApiPolicyMapper v000", func() {
 				)
 			})
 			It("wraps and returns an error", func() {
-				_, err := mapper.AsBytes([]store.Policy{}, []store.EgressPolicy{})
+				_, err := mapper.AsBytes([]store.Policy{})
 				Expect(err).To(MatchError(errors.New("marshal json: banana")))
 			})
 		})

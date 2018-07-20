@@ -22,17 +22,6 @@ type PolicyGuard struct {
 		result1 bool
 		result2 error
 	}
-	CheckEgressPolicyListAccessStub        func(userToken uaa_client.CheckTokenResponse) bool
-	checkEgressPolicyListAccessMutex       sync.RWMutex
-	checkEgressPolicyListAccessArgsForCall []struct {
-		userToken uaa_client.CheckTokenResponse
-	}
-	checkEgressPolicyListAccessReturns struct {
-		result1 bool
-	}
-	checkEgressPolicyListAccessReturnsOnCall map[int]struct {
-		result1 bool
-	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -89,61 +78,11 @@ func (fake *PolicyGuard) CheckAccessReturnsOnCall(i int, result1 bool, result2 e
 	}{result1, result2}
 }
 
-func (fake *PolicyGuard) CheckEgressPolicyListAccess(userToken uaa_client.CheckTokenResponse) bool {
-	fake.checkEgressPolicyListAccessMutex.Lock()
-	ret, specificReturn := fake.checkEgressPolicyListAccessReturnsOnCall[len(fake.checkEgressPolicyListAccessArgsForCall)]
-	fake.checkEgressPolicyListAccessArgsForCall = append(fake.checkEgressPolicyListAccessArgsForCall, struct {
-		userToken uaa_client.CheckTokenResponse
-	}{userToken})
-	fake.recordInvocation("CheckEgressPolicyListAccess", []interface{}{userToken})
-	fake.checkEgressPolicyListAccessMutex.Unlock()
-	if fake.CheckEgressPolicyListAccessStub != nil {
-		return fake.CheckEgressPolicyListAccessStub(userToken)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.checkEgressPolicyListAccessReturns.result1
-}
-
-func (fake *PolicyGuard) CheckEgressPolicyListAccessCallCount() int {
-	fake.checkEgressPolicyListAccessMutex.RLock()
-	defer fake.checkEgressPolicyListAccessMutex.RUnlock()
-	return len(fake.checkEgressPolicyListAccessArgsForCall)
-}
-
-func (fake *PolicyGuard) CheckEgressPolicyListAccessArgsForCall(i int) uaa_client.CheckTokenResponse {
-	fake.checkEgressPolicyListAccessMutex.RLock()
-	defer fake.checkEgressPolicyListAccessMutex.RUnlock()
-	return fake.checkEgressPolicyListAccessArgsForCall[i].userToken
-}
-
-func (fake *PolicyGuard) CheckEgressPolicyListAccessReturns(result1 bool) {
-	fake.CheckEgressPolicyListAccessStub = nil
-	fake.checkEgressPolicyListAccessReturns = struct {
-		result1 bool
-	}{result1}
-}
-
-func (fake *PolicyGuard) CheckEgressPolicyListAccessReturnsOnCall(i int, result1 bool) {
-	fake.CheckEgressPolicyListAccessStub = nil
-	if fake.checkEgressPolicyListAccessReturnsOnCall == nil {
-		fake.checkEgressPolicyListAccessReturnsOnCall = make(map[int]struct {
-			result1 bool
-		})
-	}
-	fake.checkEgressPolicyListAccessReturnsOnCall[i] = struct {
-		result1 bool
-	}{result1}
-}
-
 func (fake *PolicyGuard) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.checkAccessMutex.RLock()
 	defer fake.checkAccessMutex.RUnlock()
-	fake.checkEgressPolicyListAccessMutex.RLock()
-	defer fake.checkEgressPolicyListAccessMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

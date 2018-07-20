@@ -15,7 +15,6 @@ import (
 //go:generate counterfeiter -o fakes/policy_guard.go --fake-name PolicyGuard . policyGuard
 type policyGuard interface {
 	CheckAccess(policyCollection store.PolicyCollection, tokenData uaa_client.CheckTokenResponse) (bool, error)
-	CheckEgressPolicyListAccess(userToken uaa_client.CheckTokenResponse) bool
 }
 
 //go:generate counterfeiter -o fakes/quota_guard.go --fake-name QuotaGuard . quotaGuard

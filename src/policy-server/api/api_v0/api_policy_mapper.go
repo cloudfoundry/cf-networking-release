@@ -45,7 +45,7 @@ func (p *policyMapper) AsStorePolicy(bytes []byte) (store.PolicyCollection, erro
 
 }
 
-func (p *policyMapper) AsBytes(storePolicies []store.Policy, _ []store.EgressPolicy) ([]byte, error) {
+func (p *policyMapper) AsBytes(storePolicies []store.Policy) ([]byte, error) {
 	// convert store.Policy to api_v0.Policy
 	apiPolicies := []Policy{}
 	for _, policy := range storePolicies {

@@ -15,13 +15,13 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
 
-	"code.cloudfoundry.org/cf-networking-helpers/db"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
-	"policy-server/store"
-	"policy-server/store/migrations"
 	"test-helpers"
+	"code.cloudfoundry.org/cf-networking-helpers/db"
+	"policy-server/store/migrations"
+	"policy-server/store"
 
 	policyServerDb "policy-server/db"
 

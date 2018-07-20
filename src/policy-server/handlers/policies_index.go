@@ -7,7 +7,6 @@ import (
 	"policy-server/uaa_client"
 	"strings"
 
-	"policy-server/db"
 	"policy-server/store"
 )
 
@@ -16,35 +15,20 @@ type policyFilter interface {
 	FilterPolicies(policies []store.Policy, userToken uaa_client.CheckTokenResponse) ([]store.Policy, error)
 }
 
-//go:generate counterfeiter -o fakes/egress_policy_store.go --fake-name EgressPolicyStore . egressPolicyStore
-type egressPolicyStore interface {
-	AllWithTx(tx db.Transaction) ([]store.EgressPolicy, error)
-	ByGuidsWithTx(tx db.Transaction, ids []string) ([]store.EgressPolicy, error)
-}
-
-//go:generate counterfeiter -o fakes/database.go --fake-name Db . database
-type database interface {
-	Beginx() (db.Transaction, error)
-}
-
 type PoliciesIndex struct {
 	Store         store.Store
-	EgressStore   egressPolicyStore
 	Mapper        api.PolicyMapper
 	PolicyFilter  policyFilter
 	ErrorResponse errorResponse
-	Conn          database
 }
 
-func NewPoliciesIndex(store store.Store, egressStore egressPolicyStore,
-	mapper api.PolicyMapper, policyFilter policyFilter, errorResponse errorResponse, conn database) *PoliciesIndex {
+func NewPoliciesIndex(store store.Store, mapper api.PolicyMapper, policyFilter policyFilter,
+	errorResponse errorResponse) *PoliciesIndex {
 	return &PoliciesIndex{
 		Store:         store,
-		EgressStore:   egressStore,
 		Mapper:        mapper,
 		PolicyFilter:  policyFilter,
 		ErrorResponse: errorResponse,
-		Conn:          conn,
 	}
 }
 
@@ -82,29 +66,12 @@ func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	for i := range policies {
+	for i, _ := range policies {
 		policies[i].Source.Tag = ""
 		policies[i].Destination.Tag = ""
 	}
 
-	var egressPolicies []store.EgressPolicy
-
-	if policyGuard.CheckEgressPolicyListAccess(&PolicyGuard{}, userToken) {
-
-		tx, err := h.Conn.Beginx()
-		if err != nil {
-			h.ErrorResponse.InternalServerError(logger, w, err, "getting connection to db failed")
-			return
-		}
-
-		egressPolicies, err = h.EgressStore.AllWithTx(tx)
-		if err != nil {
-			h.ErrorResponse.InternalServerError(logger, w, err, "getting egress policies failed")
-			return
-		}
-	}
-
-	bytes, err := h.Mapper.AsBytes(policies, egressPolicies)
+	bytes, err := h.Mapper.AsBytes(policies)
 	if err != nil {
 		h.ErrorResponse.InternalServerError(logger, w, err, "map policy as bytes failed")
 		return

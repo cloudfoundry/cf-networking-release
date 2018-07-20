@@ -90,7 +90,7 @@ func mainWithError(logger io.Writer) error {
 	cniLoader := &cni.CNILoader{
 		PluginDir: cfg.CniPluginDir,
 		ConfigDir: cfg.CniConfigDir,
-		Logger:    logger,
+		Logger: logger,
 	}
 
 	networkConfigList, err := cniLoader.GetNetworkConfig()
@@ -99,7 +99,7 @@ func mainWithError(logger io.Writer) error {
 	}
 
 	cniController := &cni.CNIController{
-		CNIConfig:         cniLoader.GetCNIConfig(),
+		CNIConfig:          cniLoader.GetCNIConfig(),
 		NetworkConfigList: networkConfigList,
 	}
 

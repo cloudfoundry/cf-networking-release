@@ -177,19 +177,7 @@ var _ = Describe("External API Adding Policies", func() {
 
 		v1ExpectedResponse := `{
 			"total_policies": 0,
-			"policies": [],
-			"total_egress_policies": 1,
-			"egress_policies": [
-				{
-					"source": {
-						"id": "some-app-guid"
-					},
-					"destination": {
-						"ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}],
-						"protocol": "tcp"
-					}
-				}
-			]
+			"policies": []
 		}`
 
 		DescribeTable("adding policies succeeds", addPoliciesSucceeds,

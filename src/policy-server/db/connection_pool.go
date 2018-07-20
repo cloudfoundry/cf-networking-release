@@ -17,7 +17,6 @@ type ConnWrapper struct {
 type Transaction interface {
 	Exec(query string, args ...interface{}) (sql.Result, error)
 	QueryRow(query string, args ...interface{}) *sql.Row
-	Queryx(query string, args ...interface{}) (*sqlx.Rows, error)
 	Commit() error
 	Rollback() error
 	Rebind(string) string
