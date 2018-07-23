@@ -5,6 +5,7 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"code.cloudfoundry.org/lager"
 	"database/sql"
+	"errors"
 	"fmt"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -15,7 +16,6 @@ import (
 	"strings"
 	"test-helpers"
 	"time"
-	"errors"
 )
 
 var _ = Describe("Tag Populator", func() {

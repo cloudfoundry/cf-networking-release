@@ -122,8 +122,7 @@ var _ = Describe("Egress Validator", func() {
 					Source: &api.EgressSource{
 						ID: "bad-record",
 					},
-					Destination: &api.EgressDestination{
-					},
+					Destination: &api.EgressDestination{},
 				},
 				{
 					Source: &api.EgressSource{

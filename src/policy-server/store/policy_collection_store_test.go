@@ -17,7 +17,7 @@ var _ = Describe("PolicyCollectionStore", func() {
 		tx                    *dbfakes.Transaction
 		policyCollectionStore store.PolicyCollectionStore
 		egressPolicyStore     *fakes.EgressPolicyStore
-		policyCollection store.PolicyCollection
+		policyCollection      store.PolicyCollection
 	)
 
 	BeforeEach(func() {
@@ -27,15 +27,15 @@ var _ = Describe("PolicyCollectionStore", func() {
 		tx = &dbfakes.Transaction{}
 
 		policyCollectionStore = store.PolicyCollectionStore{
-			Conn:        mockDB,
-			PolicyStore: policyStore,
+			Conn:              mockDB,
+			PolicyStore:       policyStore,
 			EgressPolicyStore: egressPolicyStore,
 		}
 
 		mockDB.BeginxReturns(tx, nil)
 
 		policyCollection = store.PolicyCollection{
-			Policies: []store.Policy{},
+			Policies:       []store.Policy{},
 			EgressPolicies: []store.EgressPolicy{},
 		}
 	})

@@ -156,7 +156,7 @@ var _ = Describe("ApiPolicyMapper", func() {
 
 				Expect(storePolicies).To(BeEmpty())
 				storeEgressPolicies := policyCollection.EgressPolicies
-				Expect(storeEgressPolicies).To(Equal([]store. EgressPolicy{
+				Expect(storeEgressPolicies).To(Equal([]store.EgressPolicy{
 					{
 						Source: store.EgressSource{ID: "some-src-id"},
 						Destination: store.EgressDestination{

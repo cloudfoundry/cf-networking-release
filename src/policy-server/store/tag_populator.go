@@ -2,8 +2,8 @@ package store
 
 import (
 	"bytes"
-	"math"
 	"fmt"
+	"math"
 )
 
 type TagPopulator struct {

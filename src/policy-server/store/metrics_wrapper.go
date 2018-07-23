@@ -1,8 +1,8 @@
 package store
 
 import (
-	"time"
 	"policy-server/db"
+	"time"
 )
 
 //go:generate counterfeiter -o fakes/metrics_sender.go --fake-name MetricsSender . metricsSender

@@ -7,8 +7,8 @@ import (
 	"net/http/httptest"
 	"policy-server/handlers"
 	"policy-server/handlers/fakes"
-	storeFakes "policy-server/store/fakes"
 	"policy-server/store"
+	storeFakes "policy-server/store/fakes"
 
 	hfakes "code.cloudfoundry.org/cf-networking-helpers/fakes"
 	"code.cloudfoundry.org/lager"
@@ -33,12 +33,12 @@ var _ = Describe("Tags index handler", func() {
 
 	BeforeEach(func() {
 		allTags = []store.Tag{{
-			ID:  "some-app-guid",
-			Tag: "0001",
+			ID:   "some-app-guid",
+			Tag:  "0001",
 			Type: "app",
 		}, {
-			ID:  "some-other-app-guid",
-			Tag: "0002",
+			ID:   "some-other-app-guid",
+			Tag:  "0002",
 			Type: "app",
 		}}
 

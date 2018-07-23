@@ -454,7 +454,6 @@ var _ = Describe("Store", func() {
 			migrateAndPopulateTags(realDb, 1)
 			dataStore = store.New(realDb, group, destination, policy, 1)
 
-
 			err = createPolicies(realDb, dataStore, expectedPolicies)
 			Expect(err).NotTo(HaveOccurred())
 

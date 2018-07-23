@@ -63,10 +63,10 @@ func (p *policyMapper) AsBytes(storePolicies []store.Policy, storeEgressPolicies
 
 	// convert api.Policy payload to bytes
 	payload := &PoliciesPayload{
-		TotalPolicies: len(apiPolicies),
-		Policies:      apiPolicies,
+		TotalPolicies:       len(apiPolicies),
+		Policies:            apiPolicies,
 		TotalEgressPolicies: len(apiEgressPolicies),
-		EgressPolicies: apiEgressPolicies,
+		EgressPolicies:      apiEgressPolicies,
 	}
 	bytes, err := p.Marshaler.Marshal(payload)
 	if err != nil {
@@ -126,7 +126,7 @@ func mapStoreEgressPolicy(storeEgressPolicy store.EgressPolicy) EgressPolicy {
 			Protocol: storeEgressPolicy.Destination.Protocol,
 			IPRanges: []IPRange{{
 				Start: firstIPRange.Start,
-				End: firstIPRange.End,
+				End:   firstIPRange.End,
 			}},
 		},
 	}

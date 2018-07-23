@@ -22,16 +22,16 @@ import (
 
 var _ = Describe("TagStore", func() {
 	var (
-		dataStore store.Store
-		dbConf   dbHelper.Config
-		realDb   *db.ConnWrapper
-		mockDb   *fakes.Db
-		group    store.GroupRepo
+		dataStore    store.Store
+		dbConf       dbHelper.Config
+		realDb       *db.ConnWrapper
+		mockDb       *fakes.Db
+		group        store.GroupRepo
 		destination  store.DestinationRepo
 		policy       store.PolicyRepo
 		realMigrator *migrations.Migrator
 
-		tagStore store.TagStore
+		tagStore  store.TagStore
 		tagLength int
 	)
 

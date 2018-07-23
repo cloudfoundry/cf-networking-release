@@ -91,7 +91,6 @@ var _ = Describe("MetricsWrapper", func() {
 		})
 	})
 
-
 	Describe("CreateTag", func() {
 		var (
 			tag store.Tag

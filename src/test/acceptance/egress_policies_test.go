@@ -12,9 +12,10 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
+	"os"
 )
 
-var _ = PDescribe("external connectivity", func() {
+var _ = Describe("external connectivity", func() {
 	var (
 		appA      string
 		orgName   string
@@ -113,6 +114,9 @@ func createEgressPolicy(cli *cf_cli_adapter.Adapter, payload string) {
 	Expect(err).NotTo(HaveOccurred())
 
 	_, err = cli.Curl("POST", "/networking/v1/external/policies", payloadFile.Name())
+	Expect(err).NotTo(HaveOccurred())
+
+	err = os.Remove(payloadFile.Name())
 	Expect(err).NotTo(HaveOccurred())
 }
 

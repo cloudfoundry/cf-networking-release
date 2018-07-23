@@ -2,11 +2,11 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
-	"policy-server/store"
 	"policy-server/api"
-	"fmt"
+	"policy-server/store"
 )
 
 //go:generate counterfeiter -o fakes/create_tag_store.go --fake-name CreateTagDataStore . createTagDataStore
