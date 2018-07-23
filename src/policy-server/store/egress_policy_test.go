@@ -236,7 +236,7 @@ var _ = Describe("Egress Policy Table", func() {
 
 		Context("when the query fails", func() {
 			It("returns an error", func() {
-				mockDb.QueryxReturns(nil, errors.New("some error that sql would return"))
+				mockDb.QueryReturns(nil, errors.New("some error that sql would return"))
 
 				egressPolicyTable = &store.EgressPolicyTable{
 					Conn: mockDb,
@@ -321,7 +321,7 @@ var _ = Describe("Egress Policy Table", func() {
 
 		Context("when the query fails", func() {
 			It("returns an error", func() {
-				mockDb.QueryxReturns(nil, errors.New("some error that sql would return"))
+				mockDb.QueryReturns(nil, errors.New("some error that sql would return"))
 
 				egressPolicyTable = &store.EgressPolicyTable{
 					Conn: mockDb,

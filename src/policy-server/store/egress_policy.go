@@ -169,7 +169,7 @@ func (e *EgressPolicyTable) GetTerminalByAppGUID(tx db.Transaction, appGUID stri
 }
 
 func (e *EgressPolicyTable) GetAllPolicies() ([]EgressPolicy, error) {
-	rows, err := e.Conn.Queryx(`
+	rows, err := e.Conn.Query(`
 		SELECT
 			apps.app_guid,
 			ip_ranges.protocol,
@@ -230,7 +230,7 @@ func (e *EgressPolicyTable) GetByGuids(ids []string) ([]EgressPolicy, error) {
 		LEFT OUTER JOIN apps on (egress_policies.source_id = apps.terminal_id)
 		LEFT OUTER JOIN ip_ranges on (egress_policies.destination_id = ip_ranges.terminal_id)
 		WHERE apps.app_guid IN (%s);`, strings.Join(ids, ","))
-	rows, err := e.Conn.Queryx(query)
+	rows, err := e.Conn.Query(query)
 	if err != nil {
 		return foundPolicies, err
 	}

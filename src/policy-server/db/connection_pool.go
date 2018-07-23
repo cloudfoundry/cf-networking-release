@@ -18,7 +18,6 @@ type ConnWrapper struct {
 type Transaction interface {
 	Exec(query string, args ...interface{}) (sql.Result, error)
 	QueryRow(query string, args ...interface{}) *sql.Row
-	Queryx(query string, args ...interface{}) (*sqlx.Rows, error)
 	Commit() error
 	Rollback() error
 	Rebind(string) string
@@ -51,10 +50,6 @@ func (c *ConnWrapper) QueryRow(query string, args ...interface{}) *sql.Row {
 
 func (c *ConnWrapper) Query(query string, args ...interface{}) (*sql.Rows, error) {
 	return c.sqlxDB.Query(query, args...)
-}
-
-func (c *ConnWrapper) Queryx(query string, args ...interface{}) (*sqlx.Rows, error) {
-	return c.sqlxDB.Queryx(query, args...)
 }
 
 func (c *ConnWrapper) Rebind(query string) string {

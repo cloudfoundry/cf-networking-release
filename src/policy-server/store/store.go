@@ -36,7 +36,6 @@ type Database interface {
 	Select(dest interface{}, query string, args ...interface{}) error
 	QueryRow(query string, args ...interface{}) *sql.Row
 	Query(query string, args ...interface{}) (*sql.Rows, error)
-	Queryx(query string, args ...interface{}) (*sqlx.Rows, error)
 	DriverName() string
 	RawConnection() *sqlx.DB
 	Rebind(string) string

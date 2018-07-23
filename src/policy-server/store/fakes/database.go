@@ -102,20 +102,6 @@ type Db struct {
 		result1 *sql.Rows
 		result2 error
 	}
-	QueryxStub        func(query string, args ...interface{}) (*sqlx.Rows, error)
-	queryxMutex       sync.RWMutex
-	queryxArgsForCall []struct {
-		query string
-		args  []interface{}
-	}
-	queryxReturns struct {
-		result1 *sqlx.Rows
-		result2 error
-	}
-	queryxReturnsOnCall map[int]struct {
-		result1 *sqlx.Rows
-		result2 error
-	}
 	DriverNameStub        func() string
 	driverNameMutex       sync.RWMutex
 	driverNameArgsForCall []struct{}
@@ -497,58 +483,6 @@ func (fake *Db) QueryReturnsOnCall(i int, result1 *sql.Rows, result2 error) {
 	}{result1, result2}
 }
 
-func (fake *Db) Queryx(query string, args ...interface{}) (*sqlx.Rows, error) {
-	fake.queryxMutex.Lock()
-	ret, specificReturn := fake.queryxReturnsOnCall[len(fake.queryxArgsForCall)]
-	fake.queryxArgsForCall = append(fake.queryxArgsForCall, struct {
-		query string
-		args  []interface{}
-	}{query, args})
-	fake.recordInvocation("Queryx", []interface{}{query, args})
-	fake.queryxMutex.Unlock()
-	if fake.QueryxStub != nil {
-		return fake.QueryxStub(query, args...)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.queryxReturns.result1, fake.queryxReturns.result2
-}
-
-func (fake *Db) QueryxCallCount() int {
-	fake.queryxMutex.RLock()
-	defer fake.queryxMutex.RUnlock()
-	return len(fake.queryxArgsForCall)
-}
-
-func (fake *Db) QueryxArgsForCall(i int) (string, []interface{}) {
-	fake.queryxMutex.RLock()
-	defer fake.queryxMutex.RUnlock()
-	return fake.queryxArgsForCall[i].query, fake.queryxArgsForCall[i].args
-}
-
-func (fake *Db) QueryxReturns(result1 *sqlx.Rows, result2 error) {
-	fake.QueryxStub = nil
-	fake.queryxReturns = struct {
-		result1 *sqlx.Rows
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *Db) QueryxReturnsOnCall(i int, result1 *sqlx.Rows, result2 error) {
-	fake.QueryxStub = nil
-	if fake.queryxReturnsOnCall == nil {
-		fake.queryxReturnsOnCall = make(map[int]struct {
-			result1 *sqlx.Rows
-			result2 error
-		})
-	}
-	fake.queryxReturnsOnCall[i] = struct {
-		result1 *sqlx.Rows
-		result2 error
-	}{result1, result2}
-}
-
 func (fake *Db) DriverName() string {
 	fake.driverNameMutex.Lock()
 	ret, specificReturn := fake.driverNameReturnsOnCall[len(fake.driverNameArgsForCall)]
@@ -694,8 +628,6 @@ func (fake *Db) Invocations() map[string][][]interface{} {
 	defer fake.queryRowMutex.RUnlock()
 	fake.queryMutex.RLock()
 	defer fake.queryMutex.RUnlock()
-	fake.queryxMutex.RLock()
-	defer fake.queryxMutex.RUnlock()
 	fake.driverNameMutex.RLock()
 	defer fake.driverNameMutex.RUnlock()
 	fake.rawConnectionMutex.RLock()
