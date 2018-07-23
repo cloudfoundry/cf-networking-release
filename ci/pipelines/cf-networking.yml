@@ -1210,8 +1210,6 @@ jobs:
           use-latest-silk.yml
           enable-service-discovery.yml
           use-pxc.yml
-          use-mysql-tls.yml
-          use-mysql-tls-for-silk-controller.yml
           add-apps-internal-search-domain.yml
           opsfile.yml
       input_mapping:
