@@ -66,11 +66,11 @@ func (e *EgressPolicyStore) DeleteWithTx(_ db.Transaction, _ []EgressPolicy) err
 	panic("not implemented")
 }
 
-func (e *EgressPolicyStore) AllWithTx() ([]EgressPolicy, error) {
+func (e *EgressPolicyStore) All() ([]EgressPolicy, error) {
 	return e.EgressPolicyRepo.GetAllPolicies()
 }
 
-func (e *EgressPolicyStore) ByGuidsWithTx(ids []string) ([]EgressPolicy, error) {
+func (e *EgressPolicyStore) ByGuids(ids []string) ([]EgressPolicy, error) {
 	policies, err := e.EgressPolicyRepo.GetByGuids(ids)
 	if err != nil {
 		return []EgressPolicy{}, fmt.Errorf("failed to get policies by guids: %s", err)

@@ -53,9 +53,9 @@ func (h *PoliciesIndexInternal) ServeHTTP(w http.ResponseWriter, req *http.Reque
 
 	var egressPolicies []store.EgressPolicy
 	if len(ids) == 0 {
-		egressPolicies, err = h.EgressStore.AllWithTx()
+		egressPolicies, err = h.EgressStore.All()
 	} else {
-		egressPolicies, err = h.EgressStore.ByGuidsWithTx(ids)
+		egressPolicies, err = h.EgressStore.ByGuids(ids)
 	}
 
 	if err != nil {

@@ -84,7 +84,7 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		fakeStore = &storeFakes.Store{}
 		fakeStore.AllReturns(allPolicies, nil)
 		fakeEgressStore = &fakes.EgressPolicyStore{}
-		fakeEgressStore.ByGuidsWithTxReturns(allEgressPolicies, nil)
+		fakeEgressStore.ByGuidsReturns(allEgressPolicies, nil)
 		fakeStore.ByGuidsReturns(byGuidsPolicies, nil)
 		fakeMapper.AsBytesReturns(expectedResponseBody, nil)
 		logger = lagertest.NewTestLogger("test")
@@ -111,7 +111,7 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
 
 		Expect(fakeStore.ByGuidsCallCount()).To(Equal(1))
-		Expect(fakeEgressStore.ByGuidsWithTxCallCount()).To(Equal(1))
+		Expect(fakeEgressStore.ByGuidsCallCount()).To(Equal(1))
 		srcGuids, dstGuids, inSourceAndDest := fakeStore.ByGuidsArgsForCall(0)
 		Expect(srcGuids).To(Equal([]string{"some-app-guid"}))
 		Expect(dstGuids).To(Equal([]string{"some-app-guid"}))
@@ -138,7 +138,7 @@ var _ = Describe("PoliciesIndexInternal", func() {
 			MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
 
 			Expect(fakeStore.AllCallCount()).To(Equal(1))
-			Expect(fakeEgressStore.AllWithTxCallCount()).To(Equal(1))
+			Expect(fakeEgressStore.AllCallCount()).To(Equal(1))
 			Expect(resp.Code).To(Equal(http.StatusOK))
 			Expect(resp.Body.Bytes()).To(Equal(expectedResponseBody))
 		})
@@ -206,10 +206,10 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		})
 	})
 
-	Context("when egressStore.AllWithTx() throws an error", func() {
+	Context("when egressStore.All() throws an error", func() {
 
 		BeforeEach(func() {
-			fakeEgressStore.AllWithTxReturns(nil, errors.New("banana"))
+			fakeEgressStore.AllReturns(nil, errors.New("banana"))
 		})
 
 		It("calls the internal server error handler", func() {
@@ -231,7 +231,7 @@ var _ = Describe("PoliciesIndexInternal", func() {
 	Context("when egressStore.ByGuids() throws an error", func() {
 
 		BeforeEach(func() {
-			fakeEgressStore.ByGuidsWithTxReturns(nil, errors.New("banana"))
+			fakeEgressStore.ByGuidsReturns(nil, errors.New("banana"))
 		})
 
 		It("calls the internal server error handler", func() {

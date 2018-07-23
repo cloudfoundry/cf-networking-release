@@ -187,21 +187,21 @@ var _ = Describe("EgressPolicyStore", func() {
 			})
 
 			It("should return a list of all policies", func() {
-				policies, err := egressPolicyStore.AllWithTx()
+				policies, err := egressPolicyStore.All()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(policies).To(Equal(egressPolicies))
 			})
 		})
 	})
 
-	Describe("ByGuidsWithTx", func() {
+	Describe("ByGuids", func() {
 		Context("when called with ids", func() {
 			BeforeEach(func() {
 				egressPolicyRepo.GetByGuidsReturns(egressPolicies, nil)
 			})
 
 			It("calls egressPolicyRepo.GetByGuid", func() {
-				policies, err := egressPolicyStore.ByGuidsWithTx([]string{"meow"})
+				policies, err := egressPolicyStore.ByGuids([]string{"meow"})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(policies).To(Equal(egressPolicies))
 
@@ -216,7 +216,7 @@ var _ = Describe("EgressPolicyStore", func() {
 			})
 
 			It("calls egressPolicyRepo.GetByGuid", func() {
-				_, err := egressPolicyStore.ByGuidsWithTx([]string{"meow"})
+				_, err := egressPolicyStore.ByGuids([]string{"meow"})
 				Expect(err).To(MatchError("failed to get policies by guids: bark bark"))
 			})
 		})

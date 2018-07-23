@@ -4,6 +4,7 @@ package fakes
 import (
 	"database/sql"
 	"policy-server/db"
+	"policy-server/store"
 	"sync"
 
 	"github.com/jmoiron/sqlx"
@@ -719,3 +720,5 @@ func (fake *Db) recordInvocation(key string, args []interface{}) {
 	}
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
+
+var _ store.Database = new(Db)

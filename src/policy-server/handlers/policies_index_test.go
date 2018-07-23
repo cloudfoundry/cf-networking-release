@@ -160,7 +160,7 @@ var _ = Describe("Policies index handler", func() {
 		fakeStore.ByGuidsReturns(byGuidsPolicies, nil)
 
 		fakeEgressPolicyStore = &fakes.EgressPolicyStore{}
-		fakeEgressPolicyStore.AllWithTxReturns(allEgressPolicies, nil)
+		fakeEgressPolicyStore.AllReturns(allEgressPolicies, nil)
 
 		fakeErrorResponse = &fakes.ErrorResponse{}
 		fakePolicyFilter = &fakes.PolicyFilter{}
@@ -216,16 +216,16 @@ var _ = Describe("Policies index handler", func() {
 			It("returns all egress policies", func() {
 				MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
 
-				Expect(fakeEgressPolicyStore.AllWithTxCallCount()).To(Equal(1))
+				Expect(fakeEgressPolicyStore.AllCallCount()).To(Equal(1))
 				_, egressPolicies := fakeMapper.AsBytesArgsForCall(0)
 				Expect(egressPolicies).To(Equal(allEgressPolicies))
 				Expect(resp.Code).To(Equal(http.StatusOK))
 				Expect(resp.Body.Bytes()).To(Equal(expectedResponseBody))
 			})
 
-			Context("when egressPolicyStore.AllWithTx returns an error", func() {
+			Context("when egressPolicyStore.All returns an error", func() {
 				BeforeEach(func() {
-					fakeEgressPolicyStore.AllWithTxReturns([]store.EgressPolicy{}, errors.New("I am an error from All"))
+					fakeEgressPolicyStore.AllReturns([]store.EgressPolicy{}, errors.New("I am an error from All"))
 				})
 
 				It("returns a nice error", func() {
@@ -248,7 +248,7 @@ var _ = Describe("Policies index handler", func() {
 
 				var emptyEgressPolicies []store.EgressPolicy
 
-				Expect(fakeEgressPolicyStore.AllWithTxCallCount()).To(Equal(0))
+				Expect(fakeEgressPolicyStore.AllCallCount()).To(Equal(0))
 				_, egressPolicies := fakeMapper.AsBytesArgsForCall(0)
 				Expect(egressPolicies).To(Equal(emptyEgressPolicies))
 				Expect(resp.Code).To(Equal(http.StatusOK))

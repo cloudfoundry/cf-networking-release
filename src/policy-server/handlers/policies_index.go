@@ -18,8 +18,8 @@ type policyFilter interface {
 
 //go:generate counterfeiter -o fakes/egress_policy_store.go --fake-name EgressPolicyStore . egressPolicyStore
 type egressPolicyStore interface {
-	AllWithTx() ([]store.EgressPolicy, error)
-	ByGuidsWithTx(ids []string) ([]store.EgressPolicy, error)
+	All() ([]store.EgressPolicy, error)
+	ByGuids(ids []string) ([]store.EgressPolicy, error)
 }
 
 //go:generate counterfeiter -o fakes/database.go --fake-name Db . database
@@ -91,7 +91,7 @@ func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	if policyGuard.CheckEgressPolicyListAccess(&PolicyGuard{}, userToken) {
 
-		egressPolicies, err = h.EgressStore.AllWithTx()
+		egressPolicies, err = h.EgressStore.All()
 		if err != nil {
 			h.ErrorResponse.InternalServerError(logger, w, err, "getting egress policies failed")
 			return
