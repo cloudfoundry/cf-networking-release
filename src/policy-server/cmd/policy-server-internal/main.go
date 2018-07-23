@@ -101,9 +101,9 @@ func main() {
 	policyMapperV0Internal := api_v0_internal.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal))
 	policyMapperV1 := api.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal), payloadValidator)
 
-	internalPoliciesHandlerV0 := handlers.NewPoliciesIndexInternal(logger, connectionPool, wrappedStore,
+	internalPoliciesHandlerV0 := handlers.NewPoliciesIndexInternal(logger, wrappedStore,
 		egressDataStore, policyMapperV0Internal, errorResponse)
-	internalPoliciesHandlerV1 := handlers.NewPoliciesIndexInternal(logger, connectionPool, wrappedStore,
+	internalPoliciesHandlerV1 := handlers.NewPoliciesIndexInternal(logger, wrappedStore,
 		egressDataStore, policyMapperV1, errorResponse)
 
 	createTagsHandlerV1 := &handlers.TagsCreate{

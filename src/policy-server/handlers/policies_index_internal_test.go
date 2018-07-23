@@ -27,7 +27,6 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		fakeEgressStore      *fakes.EgressPolicyStore
 		fakeErrorResponse    *fakes.ErrorResponse
 		logger               *lagertest.TestLogger
-		fakeConn             *storeFakes.Db
 		expectedLogger       lager.Logger
 		fakeMapper           *apifakes.PolicyMapper
 		expectedResponseBody []byte
@@ -79,7 +78,6 @@ var _ = Describe("PoliciesIndexInternal", func() {
 
 		expectedResponseBody = []byte("some-response")
 
-		fakeConn = &storeFakes.Db{}
 		fakeMapper = &apifakes.PolicyMapper{}
 		fakeStore = &storeFakes.Store{}
 		fakeStore.AllReturns(allPolicies, nil)
@@ -96,7 +94,6 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		fakeErrorResponse = &fakes.ErrorResponse{}
 		handler = &handlers.PoliciesIndexInternal{
 			Logger:        logger,
-			Conn:          fakeConn,
 			Store:         fakeStore,
 			EgressStore:   fakeEgressStore,
 			Mapper:        fakeMapper,

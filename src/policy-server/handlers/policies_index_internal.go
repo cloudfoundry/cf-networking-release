@@ -16,14 +16,12 @@ type PoliciesIndexInternal struct {
 	Mapper        api.PolicyMapper
 	ErrorResponse errorResponse
 	EgressStore   egressPolicyStore
-	Conn          database
 }
 
-func NewPoliciesIndexInternal(logger lager.Logger, conn database, store store.Store, egressStore egressPolicyStore,
+func NewPoliciesIndexInternal(logger lager.Logger, store store.Store, egressStore egressPolicyStore,
 	mapper api.PolicyMapper, errorResponse errorResponse) *PoliciesIndexInternal {
 	return &PoliciesIndexInternal{
 		Logger:        logger,
-		Conn:          conn,
 		Store:         store,
 		EgressStore:   egressStore,
 		Mapper:        mapper,
