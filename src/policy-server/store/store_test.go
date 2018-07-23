@@ -78,7 +78,7 @@ var _ = Describe("Store", func() {
 				time.Sleep(time.Duration(attempt) * time.Second)
 				switch crud {
 				case "create":
-					err = dataStore.Create([]store.Policy{p})
+					err = createPolicies(realDb, dataStore, []store.Policy{p})
 				case "delete":
 					err = dataStore.Delete([]store.Policy{p})
 				}
@@ -165,7 +165,7 @@ var _ = Describe("Store", func() {
 				},
 			}}
 
-			err := dataStore.Create(policies)
+			err := createPolicies(realDb, dataStore, policies)
 			Expect(err).NotTo(HaveOccurred())
 
 			p, err := dataStore.All()
@@ -187,7 +187,7 @@ var _ = Describe("Store", func() {
 					},
 				}}
 
-				err := dataStore.Create(policies)
+				err := createPolicies(realDb, dataStore, policies)
 				Expect(err).NotTo(HaveOccurred())
 
 				p, err := dataStore.All()
@@ -206,7 +206,7 @@ var _ = Describe("Store", func() {
 					},
 				}}
 
-				err = dataStore.Create(policyDuplicate)
+				err = createPolicies(realDb, dataStore, policyDuplicate)
 				Expect(err).NotTo(HaveOccurred())
 
 				p, err = dataStore.All()
@@ -228,8 +228,9 @@ var _ = Describe("Store", func() {
 						},
 					})
 				}
-				err := dataStore.Create(policies)
+				err := createPolicies(realDb, dataStore, policies)
 				Expect(err).NotTo(HaveOccurred())
+
 				Expect(dataStore.All()).To(HaveLen(255))
 			})
 			It("returns an error", func() {
@@ -242,7 +243,7 @@ var _ = Describe("Store", func() {
 					},
 				}}
 
-				err := dataStore.Create(policies)
+				err := createPolicies(realDb, dataStore, policies)
 				Expect(err).To(MatchError(ContainSubstring("failed to find available tag")))
 			})
 		})
@@ -265,7 +266,7 @@ var _ = Describe("Store", func() {
 					},
 				}}
 
-				err := dataStore.Create(policies)
+				err := createPolicies(realDb, dataStore, policies)
 				Expect(err).NotTo(HaveOccurred())
 
 				tags, err := tagDataStore.Tags()
@@ -279,14 +280,18 @@ var _ = Describe("Store", func() {
 				err = dataStore.Delete(policies[:1])
 				Expect(err).NotTo(HaveOccurred())
 
-				err = dataStore.Create([]store.Policy{{
+				newPolicies := []store.Policy{{
 					Source: store.Source{ID: "yet-another-app-guid"},
 					Destination: store.Destination{
 						ID:       "some-other-app-guid",
 						Protocol: "tcp",
 						Port:     8080,
 					},
-				}})
+				}}
+
+				err = createPolicies(realDb, dataStore, newPolicies)
+				Expect(err).NotTo(HaveOccurred())
+
 				Expect(err).NotTo(HaveOccurred())
 
 				tags, err = tagDataStore.Tags()
@@ -296,18 +301,6 @@ var _ = Describe("Store", func() {
 					{ID: "some-other-app-guid", Tag: "02", Type: "app"},
 					{ID: "another-app-guid", Tag: "03", Type: "app"},
 				}))
-			})
-		})
-
-		Context("when a transaction create fails", func() {
-			BeforeEach(func() {
-				mockDb.BeginxReturns(nil, errors.New("some-db-error"))
-				dataStore = store.New(mockDb, group, destination, policy, 2)
-			})
-
-			It("returns an error", func() {
-				err := dataStore.Create(nil)
-				Expect(err).To(MatchError("begin transaction: some-db-error"))
 			})
 		})
 
@@ -324,14 +317,17 @@ var _ = Describe("Store", func() {
 			})
 
 			It("returns a error", func() {
-				err = dataStore.Create([]store.Policy{{
+				policies := []store.Policy{{
 					Source: store.Source{ID: "some-app-guid"},
 					Destination: store.Destination{
 						ID:       "some-other-app-guid",
 						Protocol: "tcp",
 						Port:     8080,
 					},
-				}})
+				}}
+
+				err = createPolicies(realDb, dataStore, policies)
+
 				Expect(err).To(MatchError("creating group: some-insert-error"))
 			})
 
@@ -363,14 +359,16 @@ var _ = Describe("Store", func() {
 			})
 
 			It("returns the error", func() {
-				err = dataStore.Create([]store.Policy{{
+				policies := []store.Policy{{
 					Source: store.Source{ID: "some-app-guid"},
 					Destination: store.Destination{
 						ID:       "some-other-app-guid",
 						Protocol: "tcp",
 						Port:     8080,
 					},
-				}})
+				}}
+
+				err = createPolicies(realDb, dataStore, policies)
 
 				Expect(err).To(MatchError("creating group: some-insert-error"))
 			})
@@ -389,14 +387,17 @@ var _ = Describe("Store", func() {
 			})
 
 			It("returns a error", func() {
-				err = dataStore.Create([]store.Policy{{
+				policies := []store.Policy{{
 					Source: store.Source{ID: "some-app-guid"},
 					Destination: store.Destination{
 						ID:       "some-other-app-guid",
 						Protocol: "tcp",
 						Port:     8080,
 					},
-				}})
+				}}
+
+				err = createPolicies(realDb, dataStore, policies)
+
 				Expect(err).To(MatchError("creating destination: some-insert-error"))
 				var groupsCount int
 				err = realDb.QueryRow(`SELECT count(*) FROM groups WHERE guid IS NOT NULL`).Scan(&groupsCount)
@@ -417,14 +418,17 @@ var _ = Describe("Store", func() {
 			})
 
 			It("returns a error", func() {
-				err = dataStore.Create([]store.Policy{{
+				policies := []store.Policy{{
 					Source: store.Source{ID: "some-app-guid"},
 					Destination: store.Destination{
 						ID:       "some-other-app-guid",
 						Protocol: "tcp",
 						Port:     8080,
 					},
-				}})
+				}}
+
+				err = createPolicies(realDb, dataStore, policies)
+
 				Expect(err).To(MatchError("creating policy: some-insert-error"))
 			})
 		})
@@ -450,8 +454,10 @@ var _ = Describe("Store", func() {
 			migrateAndPopulateTags(realDb, 1)
 			dataStore = store.New(realDb, group, destination, policy, 1)
 
-			err = dataStore.Create(expectedPolicies)
+
+			err = createPolicies(realDb, dataStore, expectedPolicies)
 			Expect(err).NotTo(HaveOccurred())
+
 		})
 
 		It("returns all containers that have been added", func() {
@@ -486,7 +492,7 @@ var _ = Describe("Store", func() {
 					},
 				}}
 
-				err := dataStore.Create(expectedPolicies)
+				err := createPolicies(realDb, dataStore, expectedPolicies)
 				Expect(err).NotTo(HaveOccurred())
 
 				store.New(realDb, group, destination, policy, 2)
@@ -586,7 +592,7 @@ var _ = Describe("Store", func() {
 
 			dataStore = store.New(realDb, group, destination, policy, 1)
 
-			err = dataStore.Create(allPolicies)
+			err := createPolicies(realDb, dataStore, allPolicies)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -679,7 +685,7 @@ var _ = Describe("Store", func() {
 					},
 				}}
 
-				err := dataStore.Create(expectedPolicies)
+				err := createPolicies(realDb, dataStore, expectedPolicies)
 				Expect(err).NotTo(HaveOccurred())
 
 				store.New(realDb, group, destination, policy, 2)
@@ -739,7 +745,7 @@ var _ = Describe("Store", func() {
 			dataStore = store.New(realDb, group, destination, policy, tagLength)
 			tagDataStore = store.NewTagStore(realDb, group, tagLength)
 
-			err := dataStore.Create([]store.Policy{
+			policies := []store.Policy{
 				{
 					Source: store.Source{ID: "some-app-guid"},
 					Destination: store.Destination{
@@ -756,7 +762,9 @@ var _ = Describe("Store", func() {
 						Port:     5555,
 					},
 				},
-			})
+			}
+
+			err := createPolicies(realDb, dataStore, policies)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -1123,4 +1131,17 @@ func migrateAndPopulateTags(realDb *db.ConnWrapper, tl int) {
 	tagPopulator := &store.TagPopulator{DBConnection: realDb}
 	err = tagPopulator.PopulateTables(tl)
 	Expect(err).NotTo(HaveOccurred())
+}
+
+func createPolicies(realDb store.Database, dataStore store.Store, policies []store.Policy) error {
+	tx, err := realDb.Beginx()
+	if err != nil {
+		return err
+	}
+
+	err = dataStore.CreateWithTx(tx, policies)
+	if err != nil {
+		return err
+	}
+	return tx.Commit()
 }

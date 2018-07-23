@@ -19,7 +19,6 @@ type Migrator interface {
 
 //go:generate counterfeiter -o fakes/store.go --fake-name Store . Store
 type Store interface {
-	Create([]Policy) error
 	CreateWithTx(db.Transaction, []Policy) error
 	All() ([]Policy, error)
 	Delete([]Policy) error
@@ -28,8 +27,8 @@ type Store interface {
 	CheckDatabase() error
 }
 
-//go:generate counterfeiter -o fakes/database.go --fake-name Db . database
-type database interface {
+//go:generate counterfeiter -o fakes/database.go --fake-name Db . Database
+type Database interface {
 	Beginx() (db.Transaction, error)
 	Exec(query string, args ...interface{}) (sql.Result, error)
 	NamedExec(query string, arg interface{}) (sql.Result, error)
@@ -37,19 +36,21 @@ type database interface {
 	Select(dest interface{}, query string, args ...interface{}) error
 	QueryRow(query string, args ...interface{}) *sql.Row
 	Query(query string, args ...interface{}) (*sql.Rows, error)
+	Queryx(query string, args ...interface{}) (*sqlx.Rows, error)
 	DriverName() string
 	RawConnection() *sqlx.DB
+	Rebind(string) string
 }
 
 type store struct {
-	conn        database
+	conn        Database
 	group       GroupRepo
 	destination DestinationRepo
 	policy      PolicyRepo
 	tagLength   int
 }
 
-func New(dbConnectionPool database, g GroupRepo, d DestinationRepo, p PolicyRepo, tl int) Store {
+func New(dbConnectionPool Database, g GroupRepo, d DestinationRepo, p PolicyRepo, tl int) Store {
 	return &store{
 		conn:        dbConnectionPool,
 		group:       g,
@@ -78,20 +79,6 @@ func rollback(tx db.Transaction, err error) error {
 func (s *store) CheckDatabase() error {
 	var result int
 	return s.conn.QueryRow("SELECT 1").Scan(&result)
-}
-
-func (s *store) Create(policies []Policy) error { //TODO should go away, replace with CreateWithTransaction
-	tx, err := s.conn.Beginx()
-	if err != nil {
-		return fmt.Errorf("begin transaction: %s", err)
-	}
-
-	err = s.CreateWithTx(tx, policies)
-	if err != nil {
-		return rollback(tx, err)
-	}
-
-	return commit(tx)
 }
 
 func (s *store) CreateWithTx(tx db.Transaction, policies []Policy) error {

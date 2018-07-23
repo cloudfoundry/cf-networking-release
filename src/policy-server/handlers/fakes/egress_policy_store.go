@@ -2,18 +2,15 @@
 package fakes
 
 import (
-	"policy-server/db"
 	"policy-server/store"
 	"sync"
 )
 
 type EgressPolicyStore struct {
-	AllWithTxStub        func(tx db.Transaction) ([]store.EgressPolicy, error)
+	AllWithTxStub        func() ([]store.EgressPolicy, error)
 	allWithTxMutex       sync.RWMutex
-	allWithTxArgsForCall []struct {
-		tx db.Transaction
-	}
-	allWithTxReturns struct {
+	allWithTxArgsForCall []struct{}
+	allWithTxReturns     struct {
 		result1 []store.EgressPolicy
 		result2 error
 	}
@@ -21,10 +18,9 @@ type EgressPolicyStore struct {
 		result1 []store.EgressPolicy
 		result2 error
 	}
-	ByGuidsWithTxStub        func(tx db.Transaction, ids []string) ([]store.EgressPolicy, error)
+	ByGuidsWithTxStub        func(ids []string) ([]store.EgressPolicy, error)
 	byGuidsWithTxMutex       sync.RWMutex
 	byGuidsWithTxArgsForCall []struct {
-		tx  db.Transaction
 		ids []string
 	}
 	byGuidsWithTxReturns struct {
@@ -39,16 +35,14 @@ type EgressPolicyStore struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *EgressPolicyStore) AllWithTx(tx db.Transaction) ([]store.EgressPolicy, error) {
+func (fake *EgressPolicyStore) AllWithTx() ([]store.EgressPolicy, error) {
 	fake.allWithTxMutex.Lock()
 	ret, specificReturn := fake.allWithTxReturnsOnCall[len(fake.allWithTxArgsForCall)]
-	fake.allWithTxArgsForCall = append(fake.allWithTxArgsForCall, struct {
-		tx db.Transaction
-	}{tx})
-	fake.recordInvocation("AllWithTx", []interface{}{tx})
+	fake.allWithTxArgsForCall = append(fake.allWithTxArgsForCall, struct{}{})
+	fake.recordInvocation("AllWithTx", []interface{}{})
 	fake.allWithTxMutex.Unlock()
 	if fake.AllWithTxStub != nil {
-		return fake.AllWithTxStub(tx)
+		return fake.AllWithTxStub()
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -60,12 +54,6 @@ func (fake *EgressPolicyStore) AllWithTxCallCount() int {
 	fake.allWithTxMutex.RLock()
 	defer fake.allWithTxMutex.RUnlock()
 	return len(fake.allWithTxArgsForCall)
-}
-
-func (fake *EgressPolicyStore) AllWithTxArgsForCall(i int) db.Transaction {
-	fake.allWithTxMutex.RLock()
-	defer fake.allWithTxMutex.RUnlock()
-	return fake.allWithTxArgsForCall[i].tx
 }
 
 func (fake *EgressPolicyStore) AllWithTxReturns(result1 []store.EgressPolicy, result2 error) {
@@ -90,7 +78,7 @@ func (fake *EgressPolicyStore) AllWithTxReturnsOnCall(i int, result1 []store.Egr
 	}{result1, result2}
 }
 
-func (fake *EgressPolicyStore) ByGuidsWithTx(tx db.Transaction, ids []string) ([]store.EgressPolicy, error) {
+func (fake *EgressPolicyStore) ByGuidsWithTx(ids []string) ([]store.EgressPolicy, error) {
 	var idsCopy []string
 	if ids != nil {
 		idsCopy = make([]string, len(ids))
@@ -99,13 +87,12 @@ func (fake *EgressPolicyStore) ByGuidsWithTx(tx db.Transaction, ids []string) ([
 	fake.byGuidsWithTxMutex.Lock()
 	ret, specificReturn := fake.byGuidsWithTxReturnsOnCall[len(fake.byGuidsWithTxArgsForCall)]
 	fake.byGuidsWithTxArgsForCall = append(fake.byGuidsWithTxArgsForCall, struct {
-		tx  db.Transaction
 		ids []string
-	}{tx, idsCopy})
-	fake.recordInvocation("ByGuidsWithTx", []interface{}{tx, idsCopy})
+	}{idsCopy})
+	fake.recordInvocation("ByGuidsWithTx", []interface{}{idsCopy})
 	fake.byGuidsWithTxMutex.Unlock()
 	if fake.ByGuidsWithTxStub != nil {
-		return fake.ByGuidsWithTxStub(tx, ids)
+		return fake.ByGuidsWithTxStub(ids)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -119,10 +106,10 @@ func (fake *EgressPolicyStore) ByGuidsWithTxCallCount() int {
 	return len(fake.byGuidsWithTxArgsForCall)
 }
 
-func (fake *EgressPolicyStore) ByGuidsWithTxArgsForCall(i int) (db.Transaction, []string) {
+func (fake *EgressPolicyStore) ByGuidsWithTxArgsForCall(i int) []string {
 	fake.byGuidsWithTxMutex.RLock()
 	defer fake.byGuidsWithTxMutex.RUnlock()
-	return fake.byGuidsWithTxArgsForCall[i].tx, fake.byGuidsWithTxArgsForCall[i].ids
+	return fake.byGuidsWithTxArgsForCall[i].ids
 }
 
 func (fake *EgressPolicyStore) ByGuidsWithTxReturns(result1 []store.EgressPolicy, result2 error) {

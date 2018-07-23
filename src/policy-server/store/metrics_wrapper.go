@@ -1,8 +1,8 @@
 package store
 
 import (
-	"policy-server/db"
 	"time"
+	"policy-server/db"
 )
 
 //go:generate counterfeiter -o fakes/metrics_sender.go --fake-name MetricsSender . metricsSender
@@ -15,19 +15,6 @@ type MetricsWrapper struct {
 	Store         Store
 	TagStore      TagStore
 	MetricsSender metricsSender
-}
-
-func (mw *MetricsWrapper) Create(policies []Policy) error {
-	startTime := time.Now()
-	err := mw.Store.Create(policies)
-	createTimeDuration := time.Now().Sub(startTime)
-	if err != nil {
-		mw.MetricsSender.IncrementCounter("StoreCreateError")
-		mw.MetricsSender.SendDuration("StoreCreateErrorTime", createTimeDuration)
-	} else {
-		mw.MetricsSender.SendDuration("StoreCreateSuccessTime", createTimeDuration)
-	}
-	return err
 }
 
 func (mw *MetricsWrapper) CreateWithTx(tx db.Transaction, policies []Policy) error {

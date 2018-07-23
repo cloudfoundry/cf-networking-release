@@ -101,6 +101,20 @@ type Db struct {
 		result1 *sql.Rows
 		result2 error
 	}
+	QueryxStub        func(query string, args ...interface{}) (*sqlx.Rows, error)
+	queryxMutex       sync.RWMutex
+	queryxArgsForCall []struct {
+		query string
+		args  []interface{}
+	}
+	queryxReturns struct {
+		result1 *sqlx.Rows
+		result2 error
+	}
+	queryxReturnsOnCall map[int]struct {
+		result1 *sqlx.Rows
+		result2 error
+	}
 	DriverNameStub        func() string
 	driverNameMutex       sync.RWMutex
 	driverNameArgsForCall []struct{}
@@ -118,6 +132,17 @@ type Db struct {
 	}
 	rawConnectionReturnsOnCall map[int]struct {
 		result1 *sqlx.DB
+	}
+	RebindStub        func(string) string
+	rebindMutex       sync.RWMutex
+	rebindArgsForCall []struct {
+		arg1 string
+	}
+	rebindReturns struct {
+		result1 string
+	}
+	rebindReturnsOnCall map[int]struct {
+		result1 string
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
@@ -471,6 +496,58 @@ func (fake *Db) QueryReturnsOnCall(i int, result1 *sql.Rows, result2 error) {
 	}{result1, result2}
 }
 
+func (fake *Db) Queryx(query string, args ...interface{}) (*sqlx.Rows, error) {
+	fake.queryxMutex.Lock()
+	ret, specificReturn := fake.queryxReturnsOnCall[len(fake.queryxArgsForCall)]
+	fake.queryxArgsForCall = append(fake.queryxArgsForCall, struct {
+		query string
+		args  []interface{}
+	}{query, args})
+	fake.recordInvocation("Queryx", []interface{}{query, args})
+	fake.queryxMutex.Unlock()
+	if fake.QueryxStub != nil {
+		return fake.QueryxStub(query, args...)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.queryxReturns.result1, fake.queryxReturns.result2
+}
+
+func (fake *Db) QueryxCallCount() int {
+	fake.queryxMutex.RLock()
+	defer fake.queryxMutex.RUnlock()
+	return len(fake.queryxArgsForCall)
+}
+
+func (fake *Db) QueryxArgsForCall(i int) (string, []interface{}) {
+	fake.queryxMutex.RLock()
+	defer fake.queryxMutex.RUnlock()
+	return fake.queryxArgsForCall[i].query, fake.queryxArgsForCall[i].args
+}
+
+func (fake *Db) QueryxReturns(result1 *sqlx.Rows, result2 error) {
+	fake.QueryxStub = nil
+	fake.queryxReturns = struct {
+		result1 *sqlx.Rows
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *Db) QueryxReturnsOnCall(i int, result1 *sqlx.Rows, result2 error) {
+	fake.QueryxStub = nil
+	if fake.queryxReturnsOnCall == nil {
+		fake.queryxReturnsOnCall = make(map[int]struct {
+			result1 *sqlx.Rows
+			result2 error
+		})
+	}
+	fake.queryxReturnsOnCall[i] = struct {
+		result1 *sqlx.Rows
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *Db) DriverName() string {
 	fake.driverNameMutex.Lock()
 	ret, specificReturn := fake.driverNameReturnsOnCall[len(fake.driverNameArgsForCall)]
@@ -551,6 +628,54 @@ func (fake *Db) RawConnectionReturnsOnCall(i int, result1 *sqlx.DB) {
 	}{result1}
 }
 
+func (fake *Db) Rebind(arg1 string) string {
+	fake.rebindMutex.Lock()
+	ret, specificReturn := fake.rebindReturnsOnCall[len(fake.rebindArgsForCall)]
+	fake.rebindArgsForCall = append(fake.rebindArgsForCall, struct {
+		arg1 string
+	}{arg1})
+	fake.recordInvocation("Rebind", []interface{}{arg1})
+	fake.rebindMutex.Unlock()
+	if fake.RebindStub != nil {
+		return fake.RebindStub(arg1)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.rebindReturns.result1
+}
+
+func (fake *Db) RebindCallCount() int {
+	fake.rebindMutex.RLock()
+	defer fake.rebindMutex.RUnlock()
+	return len(fake.rebindArgsForCall)
+}
+
+func (fake *Db) RebindArgsForCall(i int) string {
+	fake.rebindMutex.RLock()
+	defer fake.rebindMutex.RUnlock()
+	return fake.rebindArgsForCall[i].arg1
+}
+
+func (fake *Db) RebindReturns(result1 string) {
+	fake.RebindStub = nil
+	fake.rebindReturns = struct {
+		result1 string
+	}{result1}
+}
+
+func (fake *Db) RebindReturnsOnCall(i int, result1 string) {
+	fake.RebindStub = nil
+	if fake.rebindReturnsOnCall == nil {
+		fake.rebindReturnsOnCall = make(map[int]struct {
+			result1 string
+		})
+	}
+	fake.rebindReturnsOnCall[i] = struct {
+		result1 string
+	}{result1}
+}
+
 func (fake *Db) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -568,10 +693,14 @@ func (fake *Db) Invocations() map[string][][]interface{} {
 	defer fake.queryRowMutex.RUnlock()
 	fake.queryMutex.RLock()
 	defer fake.queryMutex.RUnlock()
+	fake.queryxMutex.RLock()
+	defer fake.queryxMutex.RUnlock()
 	fake.driverNameMutex.RLock()
 	defer fake.driverNameMutex.RUnlock()
 	fake.rawConnectionMutex.RLock()
 	defer fake.rawConnectionMutex.RUnlock()
+	fake.rebindMutex.RLock()
+	defer fake.rebindMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

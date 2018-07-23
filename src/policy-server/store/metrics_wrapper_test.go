@@ -53,42 +53,6 @@ var _ = Describe("MetricsWrapper", func() {
 		destGuids = []string{"some-other-app-guid"}
 	})
 
-	Describe("Create", func() {
-		It("calls Create on the Store", func() {
-			err := metricsWrapper.Create(policies)
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(fakeStore.CreateCallCount()).To(Equal(1))
-			Expect(fakeStore.CreateArgsForCall(0)).To(Equal(policies))
-		})
-
-		It("emits a metric", func() {
-			err := metricsWrapper.Create(policies)
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
-			name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
-			Expect(name).To(Equal("StoreCreateSuccessTime"))
-		})
-
-		Context("when there is an error", func() {
-			BeforeEach(func() {
-				fakeStore.CreateReturns(errors.New("banana"))
-			})
-			It("emits an error metric", func() {
-				err := metricsWrapper.Create(policies)
-				Expect(err).To(MatchError("banana"))
-
-				Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
-				Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("StoreCreateError"))
-
-				Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
-				name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
-				Expect(name).To(Equal("StoreCreateErrorTime"))
-			})
-		})
-	})
-
 	Describe("CreateWithTx", func() {
 		It("calls CreateWithTx on the Store", func() {
 			err := metricsWrapper.CreateWithTx(tx, policies)
@@ -126,6 +90,7 @@ var _ = Describe("MetricsWrapper", func() {
 			})
 		})
 	})
+
 
 	Describe("CreateTag", func() {
 		var (

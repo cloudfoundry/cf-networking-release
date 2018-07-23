@@ -12,7 +12,7 @@ type egressPolicyStore interface {
 }
 
 type PolicyCollectionStore struct {
-	Conn              database
+	Conn              Database
 	PolicyStore       Store
 	EgressPolicyStore egressPolicyStore
 }
@@ -23,7 +23,7 @@ func (p *PolicyCollectionStore) Create(policyCollection PolicyCollection) error 
 		return fmt.Errorf("begin transaction: %s", err)
 	}
 
-	err = p.PolicyStore.CreateWithTx(tx, policyCollection.Policies) // TODO: Move rollback up to this level
+	err = p.PolicyStore.CreateWithTx(tx, policyCollection.Policies)
 	if err != nil {
 		return rollback(tx, err)
 	}

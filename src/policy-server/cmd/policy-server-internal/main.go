@@ -77,7 +77,9 @@ func main() {
 	)
 
 	egressDataStore := &store.EgressPolicyStore{
-		EgressPolicyRepo: &store.EgressPolicyTable{},
+		EgressPolicyRepo: &store.EgressPolicyTable{
+			Conn: connectionPool,
+		},
 	}
 
 	tagDataStore := store.NewTagStore(connectionPool, &store.GroupTable{}, conf.TagLength)

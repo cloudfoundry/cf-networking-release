@@ -4,23 +4,27 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	dbHelper "code.cloudfoundry.org/cf-networking-helpers/db"
-	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
-	"code.cloudfoundry.org/lager"
+	"errors"
 	"fmt"
 	"policy-server/db"
-	"policy-server/db/fakes"
 	"policy-server/store"
+	"policy-server/store/fakes"
 	"policy-server/store/migrations"
 	"test-helpers"
 	"time"
-	"errors"
+
+	dbfakes "policy-server/db/fakes"
+
+	dbHelper "code.cloudfoundry.org/cf-networking-helpers/db"
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
+	"code.cloudfoundry.org/lager"
 )
 
 var _ = Describe("Egress Policy Table", func() {
 	var (
 		dbConf            dbHelper.Config
 		realDb            *db.ConnWrapper
+		mockDb            *fakes.Db
 		migrator          *migrations.Migrator
 		egressPolicyTable *store.EgressPolicyTable
 		tx                db.Transaction
@@ -29,6 +33,7 @@ var _ = Describe("Egress Policy Table", func() {
 
 	BeforeEach(func() {
 		var err error
+		mockDb = &fakes.Db{}
 
 		dbConf = testsupport.GetDBConfig()
 		dbConf.DatabaseName = fmt.Sprintf("store_test_node_%d", time.Now().UnixNano())
@@ -44,7 +49,9 @@ var _ = Describe("Egress Policy Table", func() {
 		_, err = migrator.PerformMigrations(realDb.DriverName(), realDb, 0)
 		Expect(err).NotTo(HaveOccurred())
 
-		egressPolicyTable = &store.EgressPolicyTable{}
+		egressPolicyTable = &store.EgressPolicyTable{
+			Conn: realDb,
+		}
 
 		egressStore = store.EgressPolicyStore{
 			EgressPolicyRepo: egressPolicyTable,
@@ -70,7 +77,7 @@ var _ = Describe("Egress Policy Table", func() {
 		})
 
 		It("should return an error if the driver is not supported", func() {
-			fakeTx := &fakes.Transaction{}
+			fakeTx := &dbfakes.Transaction{}
 
 			fakeTx.DriverNameReturns("db2")
 
@@ -97,7 +104,7 @@ var _ = Describe("Egress Policy Table", func() {
 		})
 
 		It("should return an error if the driver is not supported", func() {
-			fakeTx := &fakes.Transaction{}
+			fakeTx := &dbfakes.Transaction{}
 
 			fakeTx.DriverNameReturns("db2")
 
@@ -126,7 +133,7 @@ var _ = Describe("Egress Policy Table", func() {
 		})
 
 		It("should return an error if the driver is not supported", func() {
-			fakeTx := &fakes.Transaction{}
+			fakeTx := &dbfakes.Transaction{}
 
 			fakeTx.DriverNameReturns("db2")
 
@@ -183,7 +190,7 @@ var _ = Describe("Egress Policy Table", func() {
 	Context("GetAllPolicies", func() {
 		var egressPolicies []store.EgressPolicy
 
-		BeforeEach(func(){
+		BeforeEach(func() {
 			egressPolicies = []store.EgressPolicy{
 				{
 					Source: store.EgressSource{
@@ -216,30 +223,35 @@ var _ = Describe("Egress Policy Table", func() {
 			}
 			err := egressStore.CreateWithTx(tx, egressPolicies)
 			Expect(err).ToNot(HaveOccurred())
+
+			err = tx.Commit()
+			Expect(err).ToNot(HaveOccurred())
 		})
 
-		It("returns policies", func(){
-			listedPolicies, err := egressPolicyTable.GetAllPolicies(tx)
+		It("returns policies", func() {
+			listedPolicies, err := egressPolicyTable.GetAllPolicies()
 			Expect(err).ToNot(HaveOccurred())
 			Expect(listedPolicies).To(Equal(egressPolicies))
 		})
 
 		Context("when the query fails", func() {
 			It("returns an error", func() {
-				fakeTx := &fakes.Transaction{}
+				mockDb.QueryxReturns(nil, errors.New("some error that sql would return"))
 
-				fakeTx.QueryxReturns(nil, errors.New("some error that sql would return"))
+				egressPolicyTable = &store.EgressPolicyTable{
+					Conn: mockDb,
+				}
 
-				_, err := egressPolicyTable.GetAllPolicies(fakeTx)
+				_, err := egressPolicyTable.GetAllPolicies()
 				Expect(err).To(MatchError("some error that sql would return"))
 			})
 		})
 	})
 
-	Context("GetByGuids", func(){
+	Context("GetByGuids", func() {
 		var egressPolicies []store.EgressPolicy
 
-		BeforeEach(func(){
+		BeforeEach(func() {
 			egressPolicies = []store.EgressPolicy{
 				{
 					Source: store.EgressSource{
@@ -286,19 +298,22 @@ var _ = Describe("Egress Policy Table", func() {
 			}
 			err := egressStore.CreateWithTx(tx, egressPolicies)
 			Expect(err).ToNot(HaveOccurred())
+
+			err = tx.Commit()
+			Expect(err).ToNot(HaveOccurred())
 		})
 
-		Context("when there are policies with the given id", func(){
-			It("returns egress policies", func(){
-				policies, err := egressPolicyTable.GetByGuids(tx, []string{"some-app-guid", "different-app-guid"})
+		Context("when there are policies with the given id", func() {
+			It("returns egress policies", func() {
+				policies, err := egressPolicyTable.GetByGuids([]string{"some-app-guid", "different-app-guid"})
 				Expect(err).ToNot(HaveOccurred())
 				Expect(policies).To(Equal(egressPolicies[:2]))
 			})
 		})
 
-		Context("when there are no policies with the given id", func(){
-			It("returns no egress policies", func(){
-				policies, err := egressPolicyTable.GetByGuids(tx, []string{"meow-this-is-a-bogus-app-guid"})
+		Context("when there are no policies with the given id", func() {
+			It("returns no egress policies", func() {
+				policies, err := egressPolicyTable.GetByGuids([]string{"meow-this-is-a-bogus-app-guid"})
 				Expect(err).ToNot(HaveOccurred())
 				Expect(policies).To(Equal([]store.EgressPolicy{}))
 			})
@@ -306,15 +321,16 @@ var _ = Describe("Egress Policy Table", func() {
 
 		Context("when the query fails", func() {
 			It("returns an error", func() {
-				fakeTx := &fakes.Transaction{}
+				mockDb.QueryxReturns(nil, errors.New("some error that sql would return"))
 
-				fakeTx.QueryxReturns(nil, errors.New("some error that sql would return"))
+				egressPolicyTable = &store.EgressPolicyTable{
+					Conn: mockDb,
+				}
 
-				_, err := egressPolicyTable.GetByGuids(fakeTx, []string{"id-does-not-matter"})
+				_, err := egressPolicyTable.GetByGuids([]string{"id-does-not-matter"})
 				Expect(err).To(MatchError("some error that sql would return"))
 			})
 		})
-
 
 	})
 })

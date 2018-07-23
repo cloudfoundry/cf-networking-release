@@ -7,7 +7,7 @@ import (
 )
 
 type TagPopulator struct {
-	DBConnection database
+	DBConnection Database
 }
 
 func (t *TagPopulator) PopulateTables(tl int) error {

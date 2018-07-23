@@ -117,7 +117,9 @@ func main() {
 	logger.Info("db connection retrieved", lager.Data{})
 
 	egressDataStore := &store.EgressPolicyStore{
-		EgressPolicyRepo: &store.EgressPolicyTable{},
+		EgressPolicyRepo: &store.EgressPolicyTable{
+			Conn: connectionPool,
+		},
 	}
 
 	dataStore := store.New(
@@ -146,8 +148,8 @@ func main() {
 
 	policyCollectionStore := &store.PolicyCollectionStore{
 		Conn:              connectionPool,
-		PolicyStore:       wrappedStore,
-		EgressPolicyStore: egressDataStore, //TODO wrap this datastore
+		PolicyStore:       dataStore,
+		EgressPolicyStore: egressDataStore,
 	}
 
 	wrappedPolicyCollectionStore := &store.PolicyCollectionMetricsWrapper{

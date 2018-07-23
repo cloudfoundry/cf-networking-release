@@ -1,12 +1,13 @@
 package db
 
 import (
-	"code.cloudfoundry.org/cf-networking-helpers/db"
-	"code.cloudfoundry.org/lager"
 	"database/sql"
-	"github.com/jmoiron/sqlx"
 	"log"
 	"time"
+
+	"code.cloudfoundry.org/cf-networking-helpers/db"
+	"code.cloudfoundry.org/lager"
+	"github.com/jmoiron/sqlx"
 )
 
 type ConnWrapper struct {
@@ -50,6 +51,14 @@ func (c *ConnWrapper) QueryRow(query string, args ...interface{}) *sql.Row {
 
 func (c *ConnWrapper) Query(query string, args ...interface{}) (*sql.Rows, error) {
 	return c.sqlxDB.Query(query, args...)
+}
+
+func (c *ConnWrapper) Queryx(query string, args ...interface{}) (*sqlx.Rows, error) {
+	return c.sqlxDB.Queryx(query, args...)
+}
+
+func (c *ConnWrapper) Rebind(query string) string {
+	return c.sqlxDB.Rebind(query)
 }
 
 func (c *ConnWrapper) DriverName() string {

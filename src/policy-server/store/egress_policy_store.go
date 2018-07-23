@@ -1,8 +1,8 @@
 package store
 
 import (
-	"policy-server/db"
 	"fmt"
+	"policy-server/db"
 )
 
 //go:generate counterfeiter -o fakes/egress_policy_repo.go --fake-name EgressPolicyRepo . egressPolicyRepo
@@ -12,8 +12,8 @@ type egressPolicyRepo interface {
 	CreateIPRange(tx db.Transaction, destinationTerminalID int64, startIP, endIP, protocol string) (int64, error)
 	CreateEgressPolicy(tx db.Transaction, sourceTerminalID, destinationTerminalID int64) (int64, error)
 	GetTerminalByAppGUID(tx db.Transaction, appGUID string) (int64, error)
-	GetAllPolicies(tx db.Transaction) ([]EgressPolicy, error)
-	GetByGuids(tx db.Transaction, ids []string) ([]EgressPolicy, error)
+	GetAllPolicies() ([]EgressPolicy, error)
+	GetByGuids(ids []string) ([]EgressPolicy, error)
 }
 
 type EgressPolicyStore struct {
@@ -66,12 +66,12 @@ func (e *EgressPolicyStore) DeleteWithTx(_ db.Transaction, _ []EgressPolicy) err
 	panic("not implemented")
 }
 
-func (e *EgressPolicyStore) AllWithTx(tx db.Transaction) ([]EgressPolicy, error) {
-	return e.EgressPolicyRepo.GetAllPolicies(tx)
+func (e *EgressPolicyStore) AllWithTx() ([]EgressPolicy, error) {
+	return e.EgressPolicyRepo.GetAllPolicies()
 }
 
-func (e *EgressPolicyStore)	ByGuidsWithTx(tx db.Transaction, ids []string) ([]EgressPolicy, error){
-	policies, err := e.EgressPolicyRepo.GetByGuids(tx, ids)
+func (e *EgressPolicyStore) ByGuidsWithTx(ids []string) ([]EgressPolicy, error) {
+	policies, err := e.EgressPolicyRepo.GetByGuids(ids)
 	if err != nil {
 		return []EgressPolicy{}, fmt.Errorf("failed to get policies by guids: %s", err)
 	}

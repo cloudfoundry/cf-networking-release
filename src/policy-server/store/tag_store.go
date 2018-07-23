@@ -11,12 +11,12 @@ type TagStore interface {
 }
 
 type tagStore struct {
-	conn      database
+	conn      Database
 	group     GroupRepo
 	tagLength int
 }
 
-func NewTagStore(dbConnectionPool database, groupRepo GroupRepo, tagLength int) *tagStore {
+func NewTagStore(dbConnectionPool Database, groupRepo GroupRepo, tagLength int) *tagStore {
 	return &tagStore{
 		conn:      dbConnectionPool,
 		group:     groupRepo,

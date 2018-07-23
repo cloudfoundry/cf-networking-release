@@ -1,13 +1,14 @@
 package store
 
 import (
+	"database/sql"
 	"fmt"
 	"policy-server/db"
-	"database/sql"
 	"strings"
 )
 
 type EgressPolicyTable struct {
+	Conn Database
 }
 
 func (e *EgressPolicyTable) CreateTerminal(tx db.Transaction) (int64, error) {
@@ -42,8 +43,8 @@ func (e *EgressPolicyTable) CreateApp(tx db.Transaction, sourceTerminalID int64,
 			INSERT INTO apps (terminal_id, app_guid) 
 			VALUES (?,?)
 		`),
-		sourceTerminalID,
-		appGUID,
+			sourceTerminalID,
+			appGUID,
 		)
 		if err != nil {
 			return -1, err
@@ -167,13 +168,13 @@ func (e *EgressPolicyTable) GetTerminalByAppGUID(tx db.Transaction, appGUID stri
 	}
 }
 
-func (e *EgressPolicyTable) GetAllPolicies(tx db.Transaction) ([]EgressPolicy, error) {
-	rows, err := tx.Queryx(`
-		SELECT 
+func (e *EgressPolicyTable) GetAllPolicies() ([]EgressPolicy, error) {
+	rows, err := e.Conn.Queryx(`
+		SELECT
 			apps.app_guid,
-			ip_ranges.protocol, 
-			ip_ranges.start_ip, 
-			ip_ranges.end_ip 
+			ip_ranges.protocol,
+			ip_ranges.start_ip,
+			ip_ranges.end_ip
 		from egress_policies
 		LEFT OUTER JOIN apps on (egress_policies.source_id = apps.terminal_id)
 		LEFT OUTER JOIN ip_ranges on (egress_policies.destination_id = ip_ranges.terminal_id);`)
@@ -202,7 +203,7 @@ func (e *EgressPolicyTable) GetAllPolicies(tx db.Transaction) ([]EgressPolicy, e
 				IPRanges: []IPRange{
 					{
 						Start: startIP,
-						End: endIP,
+						End:   endIP,
 					},
 				},
 			},
@@ -212,25 +213,24 @@ func (e *EgressPolicyTable) GetAllPolicies(tx db.Transaction) ([]EgressPolicy, e
 	return foundPolicies, nil
 }
 
-func (e *EgressPolicyTable) GetByGuids(tx db.Transaction, ids []string) ([]EgressPolicy, error){
+func (e *EgressPolicyTable) GetByGuids(ids []string) ([]EgressPolicy, error) {
+	foundPolicies := []EgressPolicy{}
+
 	for i, id := range ids {
 		ids[i] = fmt.Sprintf("'%s'", id)
 	}
 
 	query := fmt.Sprintf(`
-		SELECT 
+		SELECT
 			apps.app_guid,
-			ip_ranges.protocol, 
-			ip_ranges.start_ip, 
-			ip_ranges.end_ip 
+			ip_ranges.protocol,
+			ip_ranges.start_ip,
+			ip_ranges.end_ip
 		from egress_policies
 		LEFT OUTER JOIN apps on (egress_policies.source_id = apps.terminal_id)
 		LEFT OUTER JOIN ip_ranges on (egress_policies.destination_id = ip_ranges.terminal_id)
 		WHERE apps.app_guid IN (%s);`, strings.Join(ids, ","))
-	rows, err := tx.Queryx(query)
-
-	foundPolicies := []EgressPolicy{}
-
+	rows, err := e.Conn.Queryx(query)
 	if err != nil {
 		return foundPolicies, err
 	}
@@ -254,7 +254,7 @@ func (e *EgressPolicyTable) GetByGuids(tx db.Transaction, ids []string) ([]Egres
 				IPRanges: []IPRange{
 					{
 						Start: startIP,
-						End: endIP,
+						End:   endIP,
 					},
 				},
 			},
@@ -263,4 +263,3 @@ func (e *EgressPolicyTable) GetByGuids(tx db.Transaction, ids []string) ([]Egres
 
 	return foundPolicies, nil
 }
-

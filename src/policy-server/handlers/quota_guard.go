@@ -7,11 +7,15 @@ import (
 )
 
 type QuotaGuard struct {
-	Store       store.Store
+	Store       policyStore
 	MaxPolicies int
 }
 
-func NewQuotaGuard(store store.Store, maxPolicies int) *QuotaGuard {
+type policyStore interface {
+	ByGuids([]string, []string, bool) ([]store.Policy, error)
+}
+
+func NewQuotaGuard(store policyStore, maxPolicies int) *QuotaGuard {
 	return &QuotaGuard{
 		Store:       store,
 		MaxPolicies: maxPolicies,

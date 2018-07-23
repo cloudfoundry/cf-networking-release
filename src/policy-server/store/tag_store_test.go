@@ -189,7 +189,7 @@ var _ = Describe("TagStore", func() {
 				},
 			}}
 
-			err := dataStore.Create(policies)
+			err := createPolicies(realDb, dataStore, policies)
 			Expect(err).NotTo(HaveOccurred())
 		})
 

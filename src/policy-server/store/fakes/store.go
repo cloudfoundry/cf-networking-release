@@ -8,17 +8,6 @@ import (
 )
 
 type Store struct {
-	CreateStub        func([]store.Policy) error
-	createMutex       sync.RWMutex
-	createArgsForCall []struct {
-		arg1 []store.Policy
-	}
-	createReturns struct {
-		result1 error
-	}
-	createReturnsOnCall map[int]struct {
-		result1 error
-	}
 	CreateWithTxStub        func(db.Transaction, []store.Policy) error
 	createWithTxMutex       sync.RWMutex
 	createWithTxArgsForCall []struct {
@@ -91,59 +80,6 @@ type Store struct {
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
-}
-
-func (fake *Store) Create(arg1 []store.Policy) error {
-	var arg1Copy []store.Policy
-	if arg1 != nil {
-		arg1Copy = make([]store.Policy, len(arg1))
-		copy(arg1Copy, arg1)
-	}
-	fake.createMutex.Lock()
-	ret, specificReturn := fake.createReturnsOnCall[len(fake.createArgsForCall)]
-	fake.createArgsForCall = append(fake.createArgsForCall, struct {
-		arg1 []store.Policy
-	}{arg1Copy})
-	fake.recordInvocation("Create", []interface{}{arg1Copy})
-	fake.createMutex.Unlock()
-	if fake.CreateStub != nil {
-		return fake.CreateStub(arg1)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.createReturns.result1
-}
-
-func (fake *Store) CreateCallCount() int {
-	fake.createMutex.RLock()
-	defer fake.createMutex.RUnlock()
-	return len(fake.createArgsForCall)
-}
-
-func (fake *Store) CreateArgsForCall(i int) []store.Policy {
-	fake.createMutex.RLock()
-	defer fake.createMutex.RUnlock()
-	return fake.createArgsForCall[i].arg1
-}
-
-func (fake *Store) CreateReturns(result1 error) {
-	fake.CreateStub = nil
-	fake.createReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *Store) CreateReturnsOnCall(i int, result1 error) {
-	fake.CreateStub = nil
-	if fake.createReturnsOnCall == nil {
-		fake.createReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.createReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
 }
 
 func (fake *Store) CreateWithTx(arg1 db.Transaction, arg2 []store.Policy) error {
@@ -456,8 +392,6 @@ func (fake *Store) CheckDatabaseReturnsOnCall(i int, result1 error) {
 func (fake *Store) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.createMutex.RLock()
-	defer fake.createMutex.RUnlock()
 	fake.createWithTxMutex.RLock()
 	defer fake.createWithTxMutex.RUnlock()
 	fake.allMutex.RLock()

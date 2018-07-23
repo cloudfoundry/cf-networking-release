@@ -51,12 +51,11 @@ func (h *PoliciesIndexInternal) ServeHTTP(w http.ResponseWriter, req *http.Reque
 		return
 	}
 
-	tx, _ := h.Conn.Beginx() // TODO: Close this???
 	var egressPolicies []store.EgressPolicy
 	if len(ids) == 0 {
-		egressPolicies, err = h.EgressStore.AllWithTx(tx)
+		egressPolicies, err = h.EgressStore.AllWithTx()
 	} else {
-		egressPolicies, err = h.EgressStore.ByGuidsWithTx(tx, ids)
+		egressPolicies, err = h.EgressStore.ByGuidsWithTx(ids)
 	}
 
 	if err != nil {

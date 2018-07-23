@@ -217,29 +217,10 @@ var _ = Describe("Policies index handler", func() {
 				MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
 
 				Expect(fakeEgressPolicyStore.AllWithTxCallCount()).To(Equal(1))
-				Expect(fakeEgressPolicyStore.AllWithTxArgsForCall(0)).To(Equal(fakeTx))
 				_, egressPolicies := fakeMapper.AsBytesArgsForCall(0)
 				Expect(egressPolicies).To(Equal(allEgressPolicies))
 				Expect(resp.Code).To(Equal(http.StatusOK))
 				Expect(resp.Body.Bytes()).To(Equal(expectedResponseBody))
-			})
-
-			Context("when creating a new transaction fails", func() {
-				BeforeEach(func() {
-					fakeDb.BeginxReturns(nil, errors.New("I am an error from outer space"))
-				})
-
-				It("should call internal server error response", func() {
-					MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
-
-					Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
-
-					l, w, err, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
-					Expect(l).To(Equal(expectedLogger))
-					Expect(w).To(Equal(resp))
-					Expect(err).To(MatchError("I am an error from outer space"))
-					Expect(description).To(Equal("getting connection to db failed"))
-				})
 			})
 
 			Context("when egressPolicyStore.AllWithTx returns an error", func() {

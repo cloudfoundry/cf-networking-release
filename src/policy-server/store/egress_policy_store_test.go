@@ -178,8 +178,6 @@ var _ = Describe("EgressPolicyStore", func() {
 			err := egressPolicyStore.CreateWithTx(tx, egressPolicies)
 			Expect(err).To(MatchError("failed to get terminal by app guid: OMG WHY DID THIS FAIL"))
 		})
-
-		// TODO: Think about deduplication of ENDPOINT <-> IP_RANGE associatons
 	})
 
 	Describe("All", func() {
@@ -189,36 +187,36 @@ var _ = Describe("EgressPolicyStore", func() {
 			})
 
 			It("should return a list of all policies", func() {
-				policies, err := egressPolicyStore.AllWithTx(tx)
+				policies, err := egressPolicyStore.AllWithTx()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(policies).To(Equal(egressPolicies))
 			})
 		})
 	})
 
-	Describe("ByGuidsWithTx", func(){
-		Context("when called with ids", func(){
+	Describe("ByGuidsWithTx", func() {
+		Context("when called with ids", func() {
 			BeforeEach(func() {
 				egressPolicyRepo.GetByGuidsReturns(egressPolicies, nil)
 			})
 
-			It("calls egressPolicyRepo.GetByGuid", func(){
-				policies, err := egressPolicyStore.ByGuidsWithTx(tx, []string{"meow"})
+			It("calls egressPolicyRepo.GetByGuid", func() {
+				policies, err := egressPolicyStore.ByGuidsWithTx([]string{"meow"})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(policies).To(Equal(egressPolicies))
 
-				_, ids := egressPolicyRepo.GetByGuidsArgsForCall(0)
+				ids := egressPolicyRepo.GetByGuidsArgsForCall(0)
 				Expect(ids).To(Equal([]string{"meow"}))
 			})
 		})
 
-		Context("when an error is returned from the repo", func(){
+		Context("when an error is returned from the repo", func() {
 			BeforeEach(func() {
 				egressPolicyRepo.GetByGuidsReturns(nil, errors.New("bark bark"))
 			})
 
-			It("calls egressPolicyRepo.GetByGuid", func(){
-				_, err := egressPolicyStore.ByGuidsWithTx(tx, []string{"meow"})
+			It("calls egressPolicyRepo.GetByGuid", func() {
+				_, err := egressPolicyStore.ByGuidsWithTx([]string{"meow"})
 				Expect(err).To(MatchError("failed to get policies by guids: bark bark"))
 			})
 		})

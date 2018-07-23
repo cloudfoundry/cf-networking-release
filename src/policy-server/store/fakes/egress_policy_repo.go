@@ -82,12 +82,10 @@ type EgressPolicyRepo struct {
 		result1 int64
 		result2 error
 	}
-	GetAllPoliciesStub        func(tx db.Transaction) ([]store.EgressPolicy, error)
+	GetAllPoliciesStub        func() ([]store.EgressPolicy, error)
 	getAllPoliciesMutex       sync.RWMutex
-	getAllPoliciesArgsForCall []struct {
-		tx db.Transaction
-	}
-	getAllPoliciesReturns struct {
+	getAllPoliciesArgsForCall []struct{}
+	getAllPoliciesReturns     struct {
 		result1 []store.EgressPolicy
 		result2 error
 	}
@@ -95,10 +93,9 @@ type EgressPolicyRepo struct {
 		result1 []store.EgressPolicy
 		result2 error
 	}
-	GetByGuidsStub        func(tx db.Transaction, ids []string) ([]store.EgressPolicy, error)
+	GetByGuidsStub        func(ids []string) ([]store.EgressPolicy, error)
 	getByGuidsMutex       sync.RWMutex
 	getByGuidsArgsForCall []struct {
-		tx  db.Transaction
 		ids []string
 	}
 	getByGuidsReturns struct {
@@ -377,16 +374,14 @@ func (fake *EgressPolicyRepo) GetTerminalByAppGUIDReturnsOnCall(i int, result1 i
 	}{result1, result2}
 }
 
-func (fake *EgressPolicyRepo) GetAllPolicies(tx db.Transaction) ([]store.EgressPolicy, error) {
+func (fake *EgressPolicyRepo) GetAllPolicies() ([]store.EgressPolicy, error) {
 	fake.getAllPoliciesMutex.Lock()
 	ret, specificReturn := fake.getAllPoliciesReturnsOnCall[len(fake.getAllPoliciesArgsForCall)]
-	fake.getAllPoliciesArgsForCall = append(fake.getAllPoliciesArgsForCall, struct {
-		tx db.Transaction
-	}{tx})
-	fake.recordInvocation("GetAllPolicies", []interface{}{tx})
+	fake.getAllPoliciesArgsForCall = append(fake.getAllPoliciesArgsForCall, struct{}{})
+	fake.recordInvocation("GetAllPolicies", []interface{}{})
 	fake.getAllPoliciesMutex.Unlock()
 	if fake.GetAllPoliciesStub != nil {
-		return fake.GetAllPoliciesStub(tx)
+		return fake.GetAllPoliciesStub()
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -398,12 +393,6 @@ func (fake *EgressPolicyRepo) GetAllPoliciesCallCount() int {
 	fake.getAllPoliciesMutex.RLock()
 	defer fake.getAllPoliciesMutex.RUnlock()
 	return len(fake.getAllPoliciesArgsForCall)
-}
-
-func (fake *EgressPolicyRepo) GetAllPoliciesArgsForCall(i int) db.Transaction {
-	fake.getAllPoliciesMutex.RLock()
-	defer fake.getAllPoliciesMutex.RUnlock()
-	return fake.getAllPoliciesArgsForCall[i].tx
 }
 
 func (fake *EgressPolicyRepo) GetAllPoliciesReturns(result1 []store.EgressPolicy, result2 error) {
@@ -428,7 +417,7 @@ func (fake *EgressPolicyRepo) GetAllPoliciesReturnsOnCall(i int, result1 []store
 	}{result1, result2}
 }
 
-func (fake *EgressPolicyRepo) GetByGuids(tx db.Transaction, ids []string) ([]store.EgressPolicy, error) {
+func (fake *EgressPolicyRepo) GetByGuids(ids []string) ([]store.EgressPolicy, error) {
 	var idsCopy []string
 	if ids != nil {
 		idsCopy = make([]string, len(ids))
@@ -437,13 +426,12 @@ func (fake *EgressPolicyRepo) GetByGuids(tx db.Transaction, ids []string) ([]sto
 	fake.getByGuidsMutex.Lock()
 	ret, specificReturn := fake.getByGuidsReturnsOnCall[len(fake.getByGuidsArgsForCall)]
 	fake.getByGuidsArgsForCall = append(fake.getByGuidsArgsForCall, struct {
-		tx  db.Transaction
 		ids []string
-	}{tx, idsCopy})
-	fake.recordInvocation("GetByGuids", []interface{}{tx, idsCopy})
+	}{idsCopy})
+	fake.recordInvocation("GetByGuids", []interface{}{idsCopy})
 	fake.getByGuidsMutex.Unlock()
 	if fake.GetByGuidsStub != nil {
-		return fake.GetByGuidsStub(tx, ids)
+		return fake.GetByGuidsStub(ids)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -457,10 +445,10 @@ func (fake *EgressPolicyRepo) GetByGuidsCallCount() int {
 	return len(fake.getByGuidsArgsForCall)
 }
 
-func (fake *EgressPolicyRepo) GetByGuidsArgsForCall(i int) (db.Transaction, []string) {
+func (fake *EgressPolicyRepo) GetByGuidsArgsForCall(i int) []string {
 	fake.getByGuidsMutex.RLock()
 	defer fake.getByGuidsMutex.RUnlock()
-	return fake.getByGuidsArgsForCall[i].tx, fake.getByGuidsArgsForCall[i].ids
+	return fake.getByGuidsArgsForCall[i].ids
 }
 
 func (fake *EgressPolicyRepo) GetByGuidsReturns(result1 []store.EgressPolicy, result2 error) {
