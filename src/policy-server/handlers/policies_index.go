@@ -33,18 +33,16 @@ type PoliciesIndex struct {
 	Mapper        api.PolicyMapper
 	PolicyFilter  policyFilter
 	ErrorResponse errorResponse
-	Conn          database
 }
 
 func NewPoliciesIndex(store store.Store, egressStore egressPolicyStore,
-	mapper api.PolicyMapper, policyFilter policyFilter, errorResponse errorResponse, conn database) *PoliciesIndex {
+	mapper api.PolicyMapper, policyFilter policyFilter, errorResponse errorResponse) *PoliciesIndex {
 	return &PoliciesIndex{
 		Store:         store,
 		EgressStore:   egressStore,
 		Mapper:        mapper,
 		PolicyFilter:  policyFilter,
 		ErrorResponse: errorResponse,
-		Conn:          conn,
 	}
 }
 

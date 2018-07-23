@@ -4,7 +4,6 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
-	dbFakes "policy-server/db/fakes"
 	"policy-server/handlers"
 	"policy-server/handlers/fakes"
 	storeFakes "policy-server/store/fakes"
@@ -41,8 +40,6 @@ var _ = Describe("Policies index handler", func() {
 		logger                *lagertest.TestLogger
 		expectedLogger        lager.Logger
 		token                 uaa_client.CheckTokenResponse
-		fakeDb                *storeFakes.Db
-		fakeTx                *dbFakes.Transaction
 	)
 
 	BeforeEach(func() {
@@ -151,10 +148,6 @@ var _ = Describe("Policies index handler", func() {
 		request, err = http.NewRequest("GET", "/networking/v0/external/policies", nil)
 		Expect(err).NotTo(HaveOccurred())
 
-		fakeTx = &dbFakes.Transaction{}
-		fakeDb = &storeFakes.Db{}
-		fakeDb.BeginxReturns(fakeTx, nil)
-
 		fakeStore = &storeFakes.Store{}
 		fakeStore.AllReturns(allPolicies, nil)
 		fakeStore.ByGuidsReturns(byGuidsPolicies, nil)
@@ -176,7 +169,6 @@ var _ = Describe("Policies index handler", func() {
 			Mapper:        fakeMapper,
 			PolicyFilter:  fakePolicyFilter,
 			ErrorResponse: fakeErrorResponse,
-			Conn:          fakeDb,
 		}
 
 		token = uaa_client.CheckTokenResponse{
@@ -203,7 +195,6 @@ var _ = Describe("Policies index handler", func() {
 	})
 
 	Context("when there are egress policies", func() {
-
 		Context("when the user is a network admin", func() {
 			BeforeEach(func() {
 				token = uaa_client.CheckTokenResponse{

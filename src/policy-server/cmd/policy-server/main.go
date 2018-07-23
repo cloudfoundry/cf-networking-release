@@ -184,8 +184,8 @@ func main() {
 	deletePolicyHandlerV0 := handlers.NewPoliciesDelete(wrappedPolicyCollectionStore, policyMapperV0,
 		policyGuard, errorResponse)
 
-	policiesIndexHandlerV1 := handlers.NewPoliciesIndex(wrappedStore, egressDataStore, policyMapperV1, policyFilter, errorResponse, connectionPool)
-	policiesIndexHandlerV0 := handlers.NewPoliciesIndex(wrappedStore, egressDataStore, policyMapperV0, policyFilter, errorResponse, connectionPool)
+	policiesIndexHandlerV1 := handlers.NewPoliciesIndex(wrappedStore, egressDataStore, policyMapperV1, policyFilter, errorResponse)
+	policiesIndexHandlerV0 := handlers.NewPoliciesIndex(wrappedStore, egressDataStore, policyMapperV0, policyFilter, errorResponse)
 
 	policyCleaner := cleaner.NewPolicyCleaner(logger.Session("policy-cleaner"), wrappedStore, uaaClient,
 		ccClient, 100, time.Duration(5)*time.Second)
