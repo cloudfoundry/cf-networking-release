@@ -743,8 +743,6 @@ jobs:
           add-apps-internal-search-domain.yml
           add-acceptance-test-jobs.yml
           use-pxc.yml
-          use-mysql-tls.yml
-          use-mysql-tls-for-silk-controller.yml
           add-fake-istio-router-on-overlay.yml
           enable-backup-restore.yml
           opsfile.yml
