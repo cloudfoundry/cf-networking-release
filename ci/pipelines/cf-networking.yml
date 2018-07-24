@@ -505,11 +505,9 @@ jobs:
           datadog.yml
           scale-to-one-az.yml
           smaller-footprint.yml
-          use-bosh-dns.yml
           cf-networking.yml
           use-system-domain-as-metron-deployment-name.yml
           enable-routing-integrity.yml
-          use-bosh-dns-for-containers.yml
           use-latest-silk.yml
           use-latest-capi.yml
           enable-service-discovery.yml
@@ -730,12 +728,10 @@ jobs:
           datadog.yml
           scale-to-one-az.yml
           smaller-footprint.yml
-          use-bosh-dns.yml
           cf-networking.yml
           use-system-domain-as-metron-deployment-name.yml
           custom-apps-domain.yml
           enable-routing-integrity.yml
-          use-bosh-dns-for-containers.yml
           enable-iptables-logger.yml
           use-latest-silk.yml
           use-latest-capi.yml
@@ -1200,11 +1196,9 @@ jobs:
           datadog.yml
           scale-to-one-az.yml
           smaller-footprint.yml
-          use-bosh-dns.yml
           cf-networking.yml
           use-system-domain-as-metron-deployment-name.yml
           enable-routing-integrity.yml
-          use-bosh-dns-for-containers.yml
           use-latest-silk.yml
           enable-service-discovery.yml
           use-pxc.yml
@@ -1457,11 +1451,9 @@ jobs:
           use-compiled-releases.yml
           scale-to-one-az.yml
           smaller-footprint.yml
-          use-bosh-dns.yml
           cf-networking.yml
           use-system-domain-as-metron-deployment-name.yml
           enable-routing-integrity.yml
-          use-bosh-dns-for-containers.yml
           enable-iptables-logger.yml
           use-latest-silk.yml
           enable-service-discovery.yml
