@@ -106,7 +106,7 @@ CAPI previously seeded the `apps.internal` domain. As of CAPI 1.61.0, the `apps.
 Fresh installs need to run the following command:
 ```
 cf curl /v2/shared_domains -d '{
-  "name": "apps.internal",
+  "name": "CUSTOM_INTERNAL_DOMAIN_NAME",
   "internal": true
 }'
 ```
