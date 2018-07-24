@@ -4,7 +4,7 @@
     - [Problem we are trying to solve](#problem-we-are-trying-to-solve)
     - [App Developer Experience](#app-developer-experience)
     - [Interaction with Policy](#interaction-with-policy)
-    - [Internal domain creation](#internal-domain-creation)
+- [Internal Domains](#internal-domains)
     - [Example usage](#example-usage)
 - [Architecture](#architecture)
     - [Architecture Diagram](#architecture-diagram)
@@ -37,7 +37,26 @@ You can run `map-route` with the internal domain to create and map an internal r
 
 By default, apps cannot talk to each other over cf networking. In order for an app to talk to another app, you must still set a policy allowing access. 
 
-### Internal domain creation
+## Internal Domains
+
+### Updating to cf-networking-release v2.11.0 or later
+
+Before v2.11.0, the internal domain `apps.internal` was the default bosh property for the `internal_domains` property on the `bosh-dns-adapter` job. Starting in v2.11.0 this will no longer be the case. It will need to be set on that property in order for `apps.internal` to continue working.  
+
+### Configuring Custom Internal Domains 
+
+Creating your own internal domain is a two step process. 
+1. Add the custom internal domain name(s) to the `internal_domains` property on the `bosh-dns-adapter` job and deploy
+2. Create the internal domain(s) through the Cloud Controller API: 
+```
+cf curl /v2/shared_domains -d '{
+  "name": "apps.internal",
+  "internal": true
+}'
+```
+These steps can be done in either order, but the internal domain will not work until both are done.
+
+### Historical Docs
 
 With capi-release versions 1.49.0-1.60.0:
 
