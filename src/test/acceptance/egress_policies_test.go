@@ -121,16 +121,21 @@ func createEgressPolicy(cli *cf_cli_adapter.Adapter, payload string) {
 }
 
 var testEgressPolicies = `
-	"egress_policies": [
-		{
-			"source": {"id": %q},
-			"destination": {
-				"protocol": "tcp",
-				"ips": [
-					"start": "0.0.0.0",
-					"end": "255.255.255.255",
-				]
-			}
-		}
-	]
-`
+{
+  "egress_policies": [
+    {
+      "source": {
+        "id": %q
+      },
+      "destination": {
+        "protocol": "tcp",
+        "ips": [
+          {
+            "start": "0.0.0.0",
+            "end": "255.255.255.255"
+          }
+        ]
+      }
+    }
+  ]
+}`
