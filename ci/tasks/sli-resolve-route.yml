@@ -3,7 +3,7 @@ platform: linux
 
 image_resource:
   type: docker-image
-  source: { repository: c2cnetworking/dev-postgres }
+  source: { repository: c2cnetworking/deploy-light }
 
 inputs:
   - name: variables
