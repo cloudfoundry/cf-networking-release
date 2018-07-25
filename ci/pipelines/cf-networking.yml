@@ -1622,7 +1622,6 @@ jobs:
           cf-networking: cf-networking-dev
 
   - name: ship-cf-networking-and-silk
-    serial_groups: [version]
     plan:
     - do:
       - aggregate:
