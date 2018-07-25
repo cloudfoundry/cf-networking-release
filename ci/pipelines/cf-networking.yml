@@ -1557,6 +1557,16 @@ jobs:
           trigger: true
         - get: silk-tarball
           passed: [mitre-drats]
+        - get: cf-networking-release-ci
+          params:
+            submodules: none
+      - task: build-release-notes
+        file: cf-networking-release-ci/ci/tasks/build-release-notes.yml
+        input_mapping:
+          master-release: cf-networking-dev
+          other-release-version: version
+        params:
+          OTHER_RELEASE_NAME: silk-release
 
   - name: check-empty-networking-opsfile
     serial_groups: [version]
