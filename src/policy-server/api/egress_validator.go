@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"net"
@@ -42,6 +43,10 @@ func (v *EgressValidator) ValidateEgressPolicies(policies []EgressPolicy) error 
 		parsedEndIP := net.ParseIP(endIP)
 		if parsedEndIP == nil || parsedEndIP.To4() == nil {
 			return fmt.Errorf("invalid ipv4 end ip address for ip range: %v", endIP)
+		}
+
+		if bytes.Compare(parsedStartIP, parsedEndIP) > 0 {
+			return fmt.Errorf("start ip address should be before end ip address: start: %v end: %v", startIP, endIP)
 		}
 	}
 

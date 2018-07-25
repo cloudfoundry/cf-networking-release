@@ -105,6 +105,14 @@ var _ = Describe("Egress Validator", func() {
 			Expect(err).To(MatchError("invalid ipv4 end ip address for ip range: 2001:db8:85a3:0:0:8a2e:370:7334"))
 		})
 
+		It("requires start ip address to be before end", func() {
+			egressPolicies[0].Destination.IPRanges[0].Start = "1.2.3.4"
+			egressPolicies[0].Destination.IPRanges[0].End = "1.2.3.3"
+
+			err := validator.ValidateEgressPolicies(egressPolicies)
+			Expect(err).To(MatchError("start ip address should be before end ip address: start: 1.2.3.4 end: 1.2.3.3"))
+		})
+
 		It("fails on first bad record", func() {
 			egressPolicies = []api.EgressPolicy{
 				{
