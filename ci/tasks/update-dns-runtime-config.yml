@@ -1,0 +1,17 @@
+---
+image_resource:
+  type: docker-image
+  source: { repository: c2cnetworking/deploy }
+
+platform: linux
+
+inputs:
+  - name: bosh-deployment
+  - name: bbl-state
+  - name: cf-deployment-concourse-tasks
+
+run:
+  path: cf-networking-release-ci/ci/tasks/update-dns-runtime-config
+
+params:
+  BBL_STATE_DIR:

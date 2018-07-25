@@ -113,6 +113,11 @@ resources:
     source:
       branch: release-candidate
       uri: https://github.com/cloudfoundry/cf-deployment.git
+  - name: bosh-deployment
+    type: git
+    source:
+      branch: master
+      uri: https://github.com/cloudfoundry/bosh-deployment.git
   - name: disaster-recovery-acceptance-tests
     type: git
     source:
@@ -449,6 +454,7 @@ jobs:
       - get: cf-networking-release-ci
         params:
           submodules: none
+      - get: bosh-deployment
       - get: cf-deployment-concourse-tasks
       - get: cf-networking-deployments
       - get: cf-deployment
@@ -491,6 +497,12 @@ jobs:
       file: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release.yml
       params:
         ENVIRONMENT_NAME: pickelhelm
+      input_mapping:
+        bbl-state: cf-networking-deployments
+      params:
+        BBL_STATE_DIR: environments/pickelhelm/
+    - task: update-dns-runtime-config
+      file: cf-networking-release-ci/ci/tasks/update-dns-runtime-config.yml
       input_mapping:
         bbl-state: cf-networking-deployments
       params:
