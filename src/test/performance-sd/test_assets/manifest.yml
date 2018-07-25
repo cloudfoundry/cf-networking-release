@@ -1,21 +1,6 @@
 ---
 name: performance
 
-addons:
-- include:
-    stemcell:
-    - os: ubuntu-trusty
-  jobs:
-  - name: bosh-dns
-    release: bosh-dns
-    properties:
-      api:
-        client:
-          tls: ((dns_api_client_tls))
-        server:
-          tls: ((dns_api_server_tls))
-  name: bosh-dns
-
 instance_groups:
 - azs:
   - z1
