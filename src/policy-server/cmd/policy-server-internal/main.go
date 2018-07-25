@@ -94,6 +94,11 @@ func main() {
 		MetricsSender: metricsSender,
 	}
 
+	wrappedEgressStore := &store.EgressPolicyMetricsWrapper{
+		Store:         egressDataStore,
+		MetricsSender: metricsSender,
+	}
+
 	errorResponse := &httperror.ErrorResponse{
 		MetricsSender: metricsSender,
 	}
@@ -102,9 +107,9 @@ func main() {
 	policyMapperV1 := api.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal), payloadValidator)
 
 	internalPoliciesHandlerV0 := handlers.NewPoliciesIndexInternal(logger, wrappedStore,
-		egressDataStore, policyMapperV0Internal, errorResponse)
+		wrappedEgressStore, policyMapperV0Internal, errorResponse)
 	internalPoliciesHandlerV1 := handlers.NewPoliciesIndexInternal(logger, wrappedStore,
-		egressDataStore, policyMapperV1, errorResponse)
+		wrappedEgressStore, policyMapperV1, errorResponse)
 
 	createTagsHandlerV1 := &handlers.TagsCreate{
 		Store:         wrappedStore,

@@ -32,6 +32,30 @@ type EgressPolicyStore struct {
 	deleteWithTxReturnsOnCall map[int]struct {
 		result1 error
 	}
+	AllStub        func() ([]store.EgressPolicy, error)
+	allMutex       sync.RWMutex
+	allArgsForCall []struct{}
+	allReturns     struct {
+		result1 []store.EgressPolicy
+		result2 error
+	}
+	allReturnsOnCall map[int]struct {
+		result1 []store.EgressPolicy
+		result2 error
+	}
+	ByGuidsStub        func(srcGuids []string) ([]store.EgressPolicy, error)
+	byGuidsMutex       sync.RWMutex
+	byGuidsArgsForCall []struct {
+		srcGuids []string
+	}
+	byGuidsReturns struct {
+		result1 []store.EgressPolicy
+		result2 error
+	}
+	byGuidsReturnsOnCall map[int]struct {
+		result1 []store.EgressPolicy
+		result2 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -144,6 +168,105 @@ func (fake *EgressPolicyStore) DeleteWithTxReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
+func (fake *EgressPolicyStore) All() ([]store.EgressPolicy, error) {
+	fake.allMutex.Lock()
+	ret, specificReturn := fake.allReturnsOnCall[len(fake.allArgsForCall)]
+	fake.allArgsForCall = append(fake.allArgsForCall, struct{}{})
+	fake.recordInvocation("All", []interface{}{})
+	fake.allMutex.Unlock()
+	if fake.AllStub != nil {
+		return fake.AllStub()
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.allReturns.result1, fake.allReturns.result2
+}
+
+func (fake *EgressPolicyStore) AllCallCount() int {
+	fake.allMutex.RLock()
+	defer fake.allMutex.RUnlock()
+	return len(fake.allArgsForCall)
+}
+
+func (fake *EgressPolicyStore) AllReturns(result1 []store.EgressPolicy, result2 error) {
+	fake.AllStub = nil
+	fake.allReturns = struct {
+		result1 []store.EgressPolicy
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *EgressPolicyStore) AllReturnsOnCall(i int, result1 []store.EgressPolicy, result2 error) {
+	fake.AllStub = nil
+	if fake.allReturnsOnCall == nil {
+		fake.allReturnsOnCall = make(map[int]struct {
+			result1 []store.EgressPolicy
+			result2 error
+		})
+	}
+	fake.allReturnsOnCall[i] = struct {
+		result1 []store.EgressPolicy
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *EgressPolicyStore) ByGuids(srcGuids []string) ([]store.EgressPolicy, error) {
+	var srcGuidsCopy []string
+	if srcGuids != nil {
+		srcGuidsCopy = make([]string, len(srcGuids))
+		copy(srcGuidsCopy, srcGuids)
+	}
+	fake.byGuidsMutex.Lock()
+	ret, specificReturn := fake.byGuidsReturnsOnCall[len(fake.byGuidsArgsForCall)]
+	fake.byGuidsArgsForCall = append(fake.byGuidsArgsForCall, struct {
+		srcGuids []string
+	}{srcGuidsCopy})
+	fake.recordInvocation("ByGuids", []interface{}{srcGuidsCopy})
+	fake.byGuidsMutex.Unlock()
+	if fake.ByGuidsStub != nil {
+		return fake.ByGuidsStub(srcGuids)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.byGuidsReturns.result1, fake.byGuidsReturns.result2
+}
+
+func (fake *EgressPolicyStore) ByGuidsCallCount() int {
+	fake.byGuidsMutex.RLock()
+	defer fake.byGuidsMutex.RUnlock()
+	return len(fake.byGuidsArgsForCall)
+}
+
+func (fake *EgressPolicyStore) ByGuidsArgsForCall(i int) []string {
+	fake.byGuidsMutex.RLock()
+	defer fake.byGuidsMutex.RUnlock()
+	return fake.byGuidsArgsForCall[i].srcGuids
+}
+
+func (fake *EgressPolicyStore) ByGuidsReturns(result1 []store.EgressPolicy, result2 error) {
+	fake.ByGuidsStub = nil
+	fake.byGuidsReturns = struct {
+		result1 []store.EgressPolicy
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *EgressPolicyStore) ByGuidsReturnsOnCall(i int, result1 []store.EgressPolicy, result2 error) {
+	fake.ByGuidsStub = nil
+	if fake.byGuidsReturnsOnCall == nil {
+		fake.byGuidsReturnsOnCall = make(map[int]struct {
+			result1 []store.EgressPolicy
+			result2 error
+		})
+	}
+	fake.byGuidsReturnsOnCall[i] = struct {
+		result1 []store.EgressPolicy
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *EgressPolicyStore) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -151,6 +274,10 @@ func (fake *EgressPolicyStore) Invocations() map[string][][]interface{} {
 	defer fake.createWithTxMutex.RUnlock()
 	fake.deleteWithTxMutex.RLock()
 	defer fake.deleteWithTxMutex.RUnlock()
+	fake.allMutex.RLock()
+	defer fake.allMutex.RUnlock()
+	fake.byGuidsMutex.RLock()
+	defer fake.byGuidsMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
