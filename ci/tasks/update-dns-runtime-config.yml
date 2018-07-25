@@ -9,6 +9,7 @@ inputs:
   - name: bosh-deployment
   - name: bbl-state
   - name: cf-deployment-concourse-tasks
+  - name: cf-networking-release-ci
 
 run:
   path: cf-networking-release-ci/ci/tasks/update-dns-runtime-config
