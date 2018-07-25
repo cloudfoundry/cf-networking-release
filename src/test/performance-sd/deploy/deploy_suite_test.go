@@ -45,15 +45,9 @@ func TestPerformance(t *testing.T) {
 		Expect(err).NotTo(HaveOccurred())
 
 		By("deploying bosh-dns, bosh-dns-adapter, and service-discovery-controller, nats", func() {
-			tempVarsStore, err := ioutil.TempFile("", "")
-			Expect(err).ToNot(HaveOccurred())
-
-			_, err = tempVarsStore.Write([]byte(fmt.Sprintf(
-				`nats_password: %s
-nats_ip: %s`, config.NatsPassword, config.NatsURL)))
-			Expect(err).ToNot(HaveOccurred())
-
-			cmd := exec.Command("bosh", "deploy", "-n", "-d", "performance", "../test_assets/manifest.yml", "--vars-store", tempVarsStore.Name())
+			cmd := exec.Command("bosh", "deploy", "-n", "-d", "performance", "../test_assets/manifest.yml",
+				"-v", fmt.Sprintf("nats_password=%s", config.NatsPassword),
+				"-v", fmt.Sprintf("nats_ip=%s", config.NatsURL))
 			session, err := gexec.Start(cmd, os.Stdout, os.Stderr)
 			Expect(err).ToNot(HaveOccurred())
 
