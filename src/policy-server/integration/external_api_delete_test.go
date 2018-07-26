@@ -61,9 +61,11 @@ var _ = Describe("External API Deleting Policies", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(responseString).To(MatchJSON("{}"))
 		}
+
 		BeforeEach(func() {
 			addPolicy("v1", `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 1234, "end": 1234 } } } ] }`)
 			addPolicy("v1", `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8080, "end": 8090 } } } ] }`)
+			addPolicy("v1", `{ "egress_policies": [ {"source": { "id": "some-app-guid" }, "destination": { "protocol": "tcp", "ips": [ {"start": "23.96.32.148", "end": "23.96.32.149" } ] } } ] }`)
 			addPolicy("v0", `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 7777 } } ] }`)
 		})
 
@@ -125,13 +127,27 @@ var _ = Describe("External API Deleting Policies", func() {
 		] }`
 		v1RequestNoPolicyMatch := `{ "policies": [ { "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8080, "end": 9999 } } } ] }`
 		v1RequestMissingProtocol := `{ "policies": [ { "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "ports": { "start": 8080, "end": 8080 } } } ] }`
-		v1Response := `{ "total_policies": 1, "policies": [ { "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 1234, "end": 1234 } } } ]}`
+		v1Response := `{
+			"total_policies": 1,
+			"policies": [ { "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 1234, "end": 1234 } } } ],
+			"total_egress_policies": 1,
+			"egress_policies": [ {"source": { "id": "some-app-guid" }, "destination": { "protocol": "tcp", "ips": [ {"start": "23.96.32.148", "end": "23.96.32.149" } ] } } ]
+		}`
 		v1ResponseNoneDeleted := `{ "total_policies": 3, "policies": [
 		  { "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 1234, "end": 1234 } } },
 		  { "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8080, "end": 8090 } } },
-		  { "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 7777, "end": 7777 } } }
-		]}`
+		  { "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 7777, "end": 7777 } } }],
+			"total_egress_policies": 1,
+			"egress_policies": [ {"source": { "id": "some-app-guid" }, "destination": { "protocol": "tcp", "ips": [ {"start": "23.96.32.148", "end": "23.96.32.149" } ] } } ]
+		}`
 
+		v1EgressRequest := `{"egress_policies": [ {"source": { "id": "some-app-guid" }, "destination": { "protocol": "tcp", "ips": [ {"start": "23.96.32.148", "end": "23.96.32.149" } ] } } ] }`
+
+		v1EgressResponse := `{ "total_policies": 3, "policies": [
+		  { "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 1234, "end": 1234 } } },
+		  { "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8080, "end": 8090 } } },
+		  { "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 7777, "end": 7777 } } }]
+		}`
 		v0Request := `{ "policies": [
 		  {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 1234 } },
 		  {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 7777 } }
@@ -152,6 +168,7 @@ var _ = Describe("External API Deleting Policies", func() {
 		DescribeTable("deleting policies succeeds", deletePoliciesSucceeds,
 			Entry("v1", "v1", v1Request, v1Response),
 			Entry("v1: no match", "v1", v1RequestNoPolicyMatch, v1ResponseNoneDeleted),
+			Entry("v1Egress", "v1", v1EgressRequest, v1EgressResponse),
 			Entry("v0", "v0", v0Request, v0Response),
 			Entry("v0: no match", "v0", v0RequestNoPolicyMatch, v0ResponseNoneDeleted),
 		)

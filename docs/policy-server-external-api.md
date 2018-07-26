@@ -251,6 +251,39 @@ This endpoint will return the `total_egress_policies`, `egress_policies` keys on
 - 400 (invalid request)
 - 406 (unsupported API version)
 
+### POST /networking/v1/external/policies/delete for Egress Policies (Experimental)
+
+#### Request Body:
+
+```json
+{
+  "egress_policies": [
+      {
+      "source": {
+        "id": "1081ceac-f5c4-47a8-95e8-88e1e302efb5"
+      },
+      "destination": {
+        "protocol":"tcp",
+        "ips": [{"start": "1.2.3.4", "end": "1.2.3.5"}]
+      }
+    }
+  ]
+}
+```
+
+| Field | Required? | Description |
+| :---- | :-------: | :------ |
+| egress_policies.source.id | Y | The source `policy_group_id`
+| egress_policies.destination.protocol | Y | The protocol (tcp or udp)
+| egress_policies.destination.ips | Y | The destination ip range (currently only supports one element)
+| egress_policies.destination.ips.start | Y | The destination start ip
+| egress_policies.destination.ips.end | Y | The destination end ip
+
+#### Response Status Codes:
+- 200 (successful)
+- 400 (invalid request)
+- 406 (unsupported API version)
+
 ### GET /networking/v1/external/tags
 
 #### Response Body:

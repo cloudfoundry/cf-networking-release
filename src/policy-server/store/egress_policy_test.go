@@ -168,6 +168,252 @@ var _ = Describe("Egress Policy Table", func() {
 		})
 	})
 
+	Context("DeleteEgressPolicy", func() {
+		var (
+			egressPolicyID int64
+		)
+
+		BeforeEach(func() {
+			sourceTerminalId, err := egressPolicyTable.CreateTerminal(tx)
+			Expect(err).ToNot(HaveOccurred())
+			destinationTerminalId, err := egressPolicyTable.CreateTerminal(tx)
+			Expect(err).ToNot(HaveOccurred())
+
+			egressPolicyID, err = egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalId, destinationTerminalId)
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		It("deletes the policy", func() {
+			err := egressPolicyTable.DeleteEgressPolicy(tx, egressPolicyID)
+			Expect(err).ToNot(HaveOccurred())
+
+			var policyCount int
+			row := tx.QueryRow(`SELECT COUNT(id) FROM egress_policies WHERE id = 1`)
+			err = row.Scan(&policyCount)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(policyCount).To(Equal(0))
+		})
+
+		It("should return the sql error", func() {
+			fakeTx := &dbfakes.Transaction{}
+			fakeTx.ExecReturns(nil, errors.New("broke"))
+
+			err := egressPolicyTable.DeleteEgressPolicy(fakeTx, 2)
+			Expect(err).To(MatchError("broke"))
+		})
+	})
+
+	Context("DeleteIPRange", func() {
+		var (
+			ipRangeID int64
+		)
+
+		BeforeEach(func() {
+			ipRangeTerminalID, err := egressPolicyTable.CreateTerminal(tx)
+			Expect(err).ToNot(HaveOccurred())
+
+			ipRangeID, err = egressPolicyTable.CreateIPRange(tx, ipRangeTerminalID, "1.1.1.1", "2.2.2.2", "tcp")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(ipRangeID).To(Equal(int64(1)))
+		})
+
+		It("deletes the ip range", func() {
+			err := egressPolicyTable.DeleteIPRange(tx, ipRangeID)
+			Expect(err).ToNot(HaveOccurred())
+
+			var ipRangeCount int
+			row := tx.QueryRow(`SELECT COUNT(id) FROM ip_ranges WHERE id = 1`)
+			err = row.Scan(&ipRangeCount)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(ipRangeCount).To(Equal(0))
+		})
+
+		It("should return the sql error", func() {
+			fakeTx := &dbfakes.Transaction{}
+			fakeTx.ExecReturns(nil, errors.New("broke"))
+
+			err := egressPolicyTable.DeleteIPRange(fakeTx, 2)
+			Expect(err).To(MatchError("broke"))
+		})
+	})
+
+	Context("DeleteTerminal", func() {
+		var (
+			terminalID int64
+		)
+
+		BeforeEach(func() {
+			var err error
+			terminalID, err = egressPolicyTable.CreateTerminal(tx)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(terminalID).To(Equal(int64(1)))
+		})
+
+		It("deletes the terminal", func() {
+			err := egressPolicyTable.DeleteTerminal(tx, terminalID)
+			Expect(err).ToNot(HaveOccurred())
+
+			var terminalCount int
+			row := tx.QueryRow(`SELECT COUNT(id) FROM terminals WHERE id = 1`)
+			err = row.Scan(&terminalCount)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(terminalCount).To(Equal(0))
+		})
+
+		It("should return the sql error", func() {
+			fakeTx := &dbfakes.Transaction{}
+			fakeTx.ExecReturns(nil, errors.New("broke"))
+
+			err := egressPolicyTable.DeleteTerminal(fakeTx, 2)
+			Expect(err).To(MatchError("broke"))
+		})
+	})
+
+	Context("DeleteApp", func() {
+		var (
+			appID int64
+		)
+
+		BeforeEach(func() {
+			appTerminalID, err := egressPolicyTable.CreateTerminal(tx)
+			Expect(err).ToNot(HaveOccurred())
+
+			appID, err = egressPolicyTable.CreateApp(tx, appTerminalID, "some-app-guid")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(appID).To(Equal(int64(1)))
+
+		})
+
+		It("deletes the app", func() {
+			err := egressPolicyTable.DeleteApp(tx, appID)
+			Expect(err).ToNot(HaveOccurred())
+
+			var appCount int
+			row := tx.QueryRow(`SELECT COUNT(id) FROM apps WHERE id = 1`)
+			err = row.Scan(&appCount)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(appCount).To(Equal(0))
+		})
+
+		It("should return the sql error", func() {
+			fakeTx := &dbfakes.Transaction{}
+			fakeTx.ExecReturns(nil, errors.New("broke"))
+
+			err := egressPolicyTable.DeleteApp(fakeTx, 2)
+			Expect(err).To(MatchError("broke"))
+		})
+	})
+
+	Context("IsTerminalInUse", func() {
+		var (
+			sourceTerminalID int64
+		)
+
+		BeforeEach(func() {
+			destinationTerminalID, err := egressPolicyTable.CreateTerminal(tx)
+			Expect(err).ToNot(HaveOccurred())
+			sourceTerminalID, err = egressPolicyTable.CreateTerminal(tx)
+			Expect(err).ToNot(HaveOccurred())
+
+			_, err = egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalID, destinationTerminalID)
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		It("returns true if the terminal is in use by an egress policy", func() {
+			inUse, err := egressPolicyTable.IsTerminalInUse(tx, sourceTerminalID)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(inUse).To(BeTrue())
+		})
+
+		It("returns false if the terminal is not in use by an egress policy", func() {
+			inUse, err := egressPolicyTable.IsTerminalInUse(tx, 42)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(inUse).To(BeFalse())
+		})
+	})
+
+	Context("GetIDsByEgressPolicy", func() {
+		var (
+			egressPolicy          store.EgressPolicy
+			sourceTerminalID      int64
+			destinationTerminalID int64
+			egressPolicyID        int64
+			appID                 int64
+			ipRangeID             int64
+		)
+
+		BeforeEach(func() {
+			var err error
+			egressPolicy = store.EgressPolicy{
+				Source: store.EgressSource{
+					ID: "some-app-guid",
+				},
+				Destination: store.EgressDestination{
+					Protocol: "tcp",
+					IPRanges: []store.IPRange{
+						{
+							Start: "1.1.1.1",
+							End:   "2.2.2.2",
+						},
+					},
+				},
+			}
+
+			sourceTerminalID, err = egressPolicyTable.CreateTerminal(tx)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(sourceTerminalID).To(Equal(int64(1)))
+
+			destinationTerminalID, err = egressPolicyTable.CreateTerminal(tx)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(destinationTerminalID).To(Equal(int64(2)))
+
+			egressPolicyID, err = egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalID, destinationTerminalID)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(egressPolicyID).To(Equal(int64(1)))
+
+			appID, err = egressPolicyTable.CreateApp(tx, sourceTerminalID, "some-app-guid")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(appID).To(Equal(int64(1)))
+
+			ipRangeID, err = egressPolicyTable.CreateIPRange(tx, destinationTerminalID, "1.1.1.1", "2.2.2.2", "tcp")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(ipRangeID).To(Equal(int64(1)))
+		})
+
+		It("should return all the ids for an egress policy", func() {
+			ids, err := egressPolicyTable.GetIDsByEgressPolicy(tx, egressPolicy)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(ids).To(Equal(store.EgressPolicyIDCollection{
+				EgressPolicyID:        egressPolicyID,
+				DestinationTerminalID: destinationTerminalID,
+				DestinationIPRangeID:  ipRangeID,
+				SourceTerminalID:      sourceTerminalID,
+				SourceAppID:           appID,
+			}))
+		})
+
+		Context("when it can't find a matching egress policy", func() {
+			It("returns an error", func() {
+				otherEgressPolicy := store.EgressPolicy{
+					Source: store.EgressSource{
+						ID: "some-other-app-guid",
+					},
+					Destination: store.EgressDestination{
+						Protocol: "udp",
+						IPRanges: []store.IPRange{
+							{
+								Start: "1.1.1.1",
+								End:   "2.2.2.2",
+							},
+						},
+					},
+				}
+				_, err := egressPolicyTable.GetIDsByEgressPolicy(tx, otherEgressPolicy)
+				Expect(err).To(MatchError("sql: no rows in result set"))
+			})
+		})
+	})
+
 	Context("GetTerminalByAppGUID", func() {
 		It("should return the terminal id for an app if it exists", func() {
 			terminalId, err := egressPolicyTable.CreateTerminal(tx)

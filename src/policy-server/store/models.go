@@ -52,3 +52,11 @@ type IPRange struct {
 	Start string
 	End   string
 }
+
+type EgressPolicyIDCollection struct {
+	EgressPolicyID        int64
+	DestinationTerminalID int64
+	DestinationIPRangeID  int64
+	SourceTerminalID      int64
+	SourceAppID           int64
+}

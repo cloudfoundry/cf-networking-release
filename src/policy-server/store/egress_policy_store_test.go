@@ -180,6 +180,223 @@ var _ = Describe("EgressPolicyStore", func() {
 		})
 	})
 
+	Describe("DeleteWithTx", func() {
+		var (
+			egressPoliciesToDelete   []store.EgressPolicy
+			egressPolicyIDCollection store.EgressPolicyIDCollection
+			egressPolicyID           int64
+			ipRangeID                int64
+			destTerminalID           int64
+			appID                    int64
+			srcTerminalID            int64
+		)
+		BeforeEach(func() {
+			egressPoliciesToDelete = []store.EgressPolicy{
+				{
+					Source: store.EgressSource{
+						ID: "some-app-guid",
+					},
+					Destination: store.EgressDestination{
+						Protocol: "tcp",
+						IPRanges: []store.IPRange{
+							{
+								Start: "1.2.3.4",
+								End:   "1.2.3.5",
+							},
+						},
+					},
+				},
+			}
+
+			egressPolicyID = 6
+			ipRangeID = 9
+			destTerminalID = 12
+			appID = 21
+			srcTerminalID = 22
+
+			egressPolicyIDCollection = store.EgressPolicyIDCollection{
+				EgressPolicyID:        egressPolicyID,
+				DestinationIPRangeID:  ipRangeID,
+				DestinationTerminalID: destTerminalID,
+				SourceAppID:           appID,
+				SourceTerminalID:      srcTerminalID,
+			}
+			egressPolicyRepo.GetIDsByEgressPolicyReturns(egressPolicyIDCollection, nil)
+		})
+
+		It("deletes the egress policy", func() {
+			err := egressPolicyStore.DeleteWithTx(tx, egressPoliciesToDelete)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(egressPolicyRepo.GetIDsByEgressPolicyCallCount()).To(Equal(1))
+			passedTx, passedEgressPolicy := egressPolicyRepo.GetIDsByEgressPolicyArgsForCall(0)
+			Expect(passedTx).To(Equal(tx))
+			Expect(passedEgressPolicy).To(Equal(egressPoliciesToDelete[0]))
+
+			Expect(egressPolicyRepo.DeleteEgressPolicyCallCount()).To(Equal(1))
+			passedTx, passedEgressPolicyID := egressPolicyRepo.DeleteEgressPolicyArgsForCall(0)
+			Expect(passedTx).To(Equal(tx))
+			Expect(passedEgressPolicyID).To(Equal(egressPolicyID))
+
+			Expect(egressPolicyRepo.DeleteIPRangeCallCount()).To(Equal(1))
+			passedTx, passedIPRangeID := egressPolicyRepo.DeleteIPRangeArgsForCall(0)
+			Expect(passedTx).To(Equal(tx))
+			Expect(passedIPRangeID).To(Equal(ipRangeID))
+
+			Expect(egressPolicyRepo.DeleteTerminalCallCount()).To(Equal(2))
+			passedTx, passedDestTerminalID := egressPolicyRepo.DeleteTerminalArgsForCall(0)
+			Expect(passedTx).To(Equal(tx))
+			Expect(passedDestTerminalID).To(Equal(destTerminalID))
+
+			Expect(egressPolicyRepo.DeleteAppCallCount()).To(Equal(1))
+			passedTx, passedAppID := egressPolicyRepo.DeleteAppArgsForCall(0)
+			Expect(passedTx).To(Equal(tx))
+			Expect(passedAppID).To(Equal(appID))
+
+			passedTx, passedSrcTerminalID := egressPolicyRepo.DeleteTerminalArgsForCall(1)
+			Expect(passedTx).To(Equal(tx))
+			Expect(passedSrcTerminalID).To(Equal(srcTerminalID))
+		})
+
+		Context("when there are multiple egress policies", func() {
+			BeforeEach(func() {
+				egressPoliciesToDelete = append(egressPoliciesToDelete, store.EgressPolicy{
+					Source: store.EgressSource{
+						ID: "some-other-app-guid",
+					},
+					Destination: store.EgressDestination{
+						Protocol: "tcp",
+						IPRanges: []store.IPRange{
+							{
+								Start: "1.2.3.4",
+								End:   "1.2.3.6",
+							},
+						},
+					},
+				})
+			})
+
+			It("deletes all the egress policies", func() {
+				err := egressPolicyStore.DeleteWithTx(tx, egressPoliciesToDelete)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(egressPolicyRepo.GetIDsByEgressPolicyCallCount()).To(Equal(2))
+				passedTx, passedEgressPolicy := egressPolicyRepo.GetIDsByEgressPolicyArgsForCall(0)
+				Expect(passedTx).To(Equal(tx))
+				Expect(passedEgressPolicy).To(Equal(egressPoliciesToDelete[0]))
+
+				passedTx, passedEgressPolicy = egressPolicyRepo.GetIDsByEgressPolicyArgsForCall(1)
+				Expect(passedTx).To(Equal(tx))
+				Expect(passedEgressPolicy).To(Equal(egressPoliciesToDelete[1]))
+
+				Expect(egressPolicyRepo.DeleteEgressPolicyCallCount()).To(Equal(2))
+				Expect(egressPolicyRepo.DeleteIPRangeCallCount()).To(Equal(2))
+				Expect(egressPolicyRepo.DeleteTerminalCallCount()).To(Equal(4))
+				Expect(egressPolicyRepo.DeleteAppCallCount()).To(Equal(2))
+			})
+		})
+
+		Context("when app is referenced by another egress policy", func() {
+			BeforeEach(func() {
+				egressPolicyRepo.IsTerminalInUseReturns(true, nil)
+			})
+
+			It("doesn't delete the source terminal or source app", func() {
+				err := egressPolicyStore.DeleteWithTx(tx, egressPoliciesToDelete)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(egressPolicyRepo.IsTerminalInUseCallCount()).To(Equal(1))
+				passedTx, passedTerminalID := egressPolicyRepo.IsTerminalInUseArgsForCall(0)
+				Expect(passedTx).To(Equal(tx))
+				Expect(passedTerminalID).To(Equal(srcTerminalID))
+
+				Expect(egressPolicyRepo.DeleteAppCallCount()).To(Equal(0))
+
+				Expect(egressPolicyRepo.DeleteTerminalCallCount()).To(Equal(1))
+				passedTx, passedDestTerminalID := egressPolicyRepo.DeleteTerminalArgsForCall(0)
+				Expect(passedTx).To(Equal(tx))
+				Expect(passedDestTerminalID).To(Equal(destTerminalID))
+			})
+		})
+
+		Context("when the EgressPolicyRepo.GetIDsByEgressPolicy fails", func() {
+			BeforeEach(func() {
+				egressPolicyRepo.GetIDsByEgressPolicyReturns(store.EgressPolicyIDCollection{}, errors.New("ther's a bug"))
+			})
+
+			It("returns an error", func() {
+				err := egressPolicyStore.DeleteWithTx(tx, egressPoliciesToDelete)
+				Expect(err).To(MatchError("failed to find egress policy: ther's a bug"))
+			})
+		})
+
+		Context("when the EgressPolicyRepo.DeleteEgressPolicy fails", func() {
+			BeforeEach(func() {
+				egressPolicyRepo.DeleteEgressPolicyReturns(errors.New("ther's a bug"))
+			})
+
+			It("returns an error", func() {
+				err := egressPolicyStore.DeleteWithTx(tx, egressPoliciesToDelete)
+				Expect(err).To(MatchError("failed to delete egress policy: ther's a bug"))
+			})
+		})
+
+		Context("when the EgressPolicyRepo.DeleteIPRange fails", func() {
+			BeforeEach(func() {
+				egressPolicyRepo.DeleteIPRangeReturns(errors.New("ther's a bug"))
+			})
+
+			It("returns an error", func() {
+				err := egressPolicyStore.DeleteWithTx(tx, egressPoliciesToDelete)
+				Expect(err).To(MatchError("failed to delete destination ip range: ther's a bug"))
+			})
+		})
+
+		Context("when the EgressPolicyRepo.DeleteTerminal fails", func() {
+			BeforeEach(func() {
+				egressPolicyRepo.DeleteTerminalReturns(errors.New("ther's a bug"))
+			})
+
+			It("returns an error", func() {
+				err := egressPolicyStore.DeleteWithTx(tx, egressPoliciesToDelete)
+				Expect(err).To(MatchError("failed to delete destination terminal: ther's a bug"))
+			})
+		})
+
+		Context("when the EgressPolicyRepo.IsTerminalInUse fails", func() {
+			BeforeEach(func() {
+				egressPolicyRepo.IsTerminalInUseReturns(false, errors.New("ther's a bug"))
+			})
+
+			It("returns an error", func() {
+				err := egressPolicyStore.DeleteWithTx(tx, egressPoliciesToDelete)
+				Expect(err).To(MatchError("failed to check if source terminal is in use: ther's a bug"))
+			})
+		})
+
+		Context("when the EgressPolicyRepo.DeleteApp fails", func() {
+			BeforeEach(func() {
+				egressPolicyRepo.DeleteAppReturns(errors.New("ther's a bug"))
+			})
+
+			It("returns an error", func() {
+				err := egressPolicyStore.DeleteWithTx(tx, egressPoliciesToDelete)
+				Expect(err).To(MatchError("failed to delete source app: ther's a bug"))
+			})
+		})
+
+		Context("when the EgressPolicyRepo.DeleteTerminal fails", func() {
+			BeforeEach(func() {
+				egressPolicyRepo.DeleteTerminalReturnsOnCall(1, errors.New("ther's a bug"))
+			})
+
+			It("returns an error", func() {
+				err := egressPolicyStore.DeleteWithTx(tx, egressPoliciesToDelete)
+				Expect(err).To(MatchError("failed to delete source terminal: ther's a bug"))
+			})
+		})
+	})
+
 	Describe("All", func() {
 		Context("when there are policies created", func() {
 			BeforeEach(func() {

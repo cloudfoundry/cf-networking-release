@@ -152,6 +152,75 @@ func (e *EgressPolicyTable) CreateEgressPolicy(tx db.Transaction, sourceTerminal
 	return -1, fmt.Errorf("unknown driver: %s", driverName)
 }
 
+func (e *EgressPolicyTable) DeleteEgressPolicy(tx db.Transaction, egressPolicyID int64) error {
+	_, err := tx.Exec(tx.Rebind(`DELETE FROM egress_policies WHERE id = ?`), egressPolicyID)
+	return err
+}
+
+func (e *EgressPolicyTable) DeleteIPRange(tx db.Transaction, ipRangeID int64) error {
+	_, err := tx.Exec(tx.Rebind(`DELETE FROM ip_ranges WHERE id = ?`), ipRangeID)
+	return err
+}
+
+func (e *EgressPolicyTable) DeleteTerminal(tx db.Transaction, terminalID int64) error {
+	_, err := tx.Exec(tx.Rebind(`DELETE FROM terminals WHERE id = ?`), terminalID)
+	return err
+}
+
+func (e *EgressPolicyTable) DeleteApp(tx db.Transaction, appID int64) error {
+	_, err := tx.Exec(tx.Rebind(`DELETE FROM apps WHERE id = ?`), appID)
+	return err
+}
+
+func (e *EgressPolicyTable) IsTerminalInUse(tx db.Transaction, terminalID int64) (bool, error) {
+	var count int64
+	err := tx.QueryRow(tx.Rebind(`SELECT COUNT(id) FROM egress_policies WHERE source_id = ? OR destination_id = ?`), terminalID, terminalID).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+func (e *EgressPolicyTable) GetIDsByEgressPolicy(tx db.Transaction, egressPolicy EgressPolicy) (EgressPolicyIDCollection, error) {
+	var egressPolicyID, sourceTerminalID, destinationTerminalID, appID, ipRangeID int64
+
+	err := tx.QueryRow(tx.Rebind(`
+		SELECT
+			egress_policies.id,
+			egress_policies.source_id,
+			egress_policies.destination_id,
+			apps.id,
+			ip_ranges.id
+		from egress_policies
+		JOIN apps on (egress_policies.source_id = apps.terminal_id)
+		JOIN ip_ranges on (egress_policies.destination_id = ip_ranges.terminal_id)
+		WHERE apps.app_guid = ? AND
+		      ip_ranges.protocol = ? AND
+					ip_ranges.start_ip = ? AND
+					ip_ranges.end_ip = ?
+		;`),
+		egressPolicy.Source.ID,
+		egressPolicy.Destination.Protocol,
+		egressPolicy.Destination.IPRanges[0].Start,
+		egressPolicy.Destination.IPRanges[0].End).
+		Scan(&egressPolicyID, &sourceTerminalID, &destinationTerminalID, &appID, &ipRangeID)
+
+	var policyIDs EgressPolicyIDCollection
+	if err != nil {
+		return policyIDs, err
+	}
+
+	policyIDs = EgressPolicyIDCollection{
+		EgressPolicyID:        egressPolicyID,
+		DestinationTerminalID: destinationTerminalID,
+		DestinationIPRangeID:  ipRangeID,
+		SourceTerminalID:      sourceTerminalID,
+		SourceAppID:           appID,
+	}
+
+	return policyIDs, nil
+}
+
 func (e *EgressPolicyTable) GetTerminalByAppGUID(tx db.Transaction, appGUID string) (int64, error) {
 	var id int64
 

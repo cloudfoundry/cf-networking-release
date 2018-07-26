@@ -35,8 +35,51 @@ var _ = Describe("PolicyCollectionStore", func() {
 		mockDB.BeginxReturns(tx, nil)
 
 		policyCollection = store.PolicyCollection{
-			Policies:       []store.Policy{},
-			EgressPolicies: []store.EgressPolicy{},
+			Policies: []store.Policy{
+				{
+					Source: store.Source{ID: "some-app-guid"},
+					Destination: store.Destination{
+						ID:       "some-other-app-guid",
+						Protocol: "tcp",
+						Ports: store.Ports{
+							Start: 8080,
+							End:   9090,
+						},
+					},
+				}, {
+					Source: store.Source{ID: "another-app-guid"},
+					Destination: store.Destination{
+						ID:       "some-other-app-guid",
+						Protocol: "udp",
+						Ports: store.Ports{
+							Start: 1234,
+							End:   1234,
+						},
+					},
+				},
+			},
+			EgressPolicies: []store.EgressPolicy{
+				{
+					Source: store.EgressSource{ID: "egress-source-id"},
+					Destination: store.EgressDestination{
+						Protocol: "tcp",
+						IPRanges: []store.IPRange{{
+							Start: "1.2.3.4",
+							End:   "1.2.3.5",
+						}},
+					},
+				},
+				{
+					Source: store.EgressSource{ID: "egress-source-id-2"},
+					Destination: store.EgressDestination{
+						Protocol: "udp",
+						IPRanges: []store.IPRange{{
+							Start: "1.2.3.7",
+							End:   "1.2.3.8",
+						}},
+					},
+				},
+			},
 		}
 	})
 
@@ -131,13 +174,18 @@ var _ = Describe("PolicyCollectionStore", func() {
 	})
 
 	Describe("Delete", func() {
-		It("starts a transaction, defers to the policy store, then commits", func() {
+		It("starts a transaction, defers to the policy store and egress policy store, then commits", func() {
 			Expect(policyCollectionStore.Delete(policyCollection)).To(Succeed())
 			Expect(policyStore.DeleteWithTxCallCount()).To(Equal(1))
 			passedTx, passedPolicies := policyStore.DeleteWithTxArgsForCall(0)
 			Expect(passedTx).To(Equal(tx))
 			Expect(passedPolicies).To(Equal(policyCollection.Policies))
 			Expect(tx.CommitCallCount()).To(Equal(1))
+
+			passedTx, passedEgressPolicies := egressPolicyStore.DeleteWithTxArgsForCall(0)
+			Expect(passedTx).To(Equal(tx))
+			Expect(passedEgressPolicies).To(Equal(policyCollection.EgressPolicies))
+
 		})
 
 		Context("when the transaction fails to begin", func() {
@@ -160,6 +208,18 @@ var _ = Describe("PolicyCollectionStore", func() {
 
 			It("does not commit the transaction", func() {
 				policyStore.DeleteWithTxReturns(errors.New("failed to delete policy"))
+				Expect(tx.CommitCallCount()).To(Equal(0))
+			})
+		})
+
+		Context("when the egress policy store fails to delete", func() {
+			It("returns an error", func() {
+				egressPolicyStore.DeleteWithTxReturns(errors.New("failed to delete egress policy"))
+				Expect(policyCollectionStore.Delete(policyCollection)).To(MatchError("failed to delete egress policy"))
+			})
+
+			It("does not commit the transaction", func() {
+				egressPolicyStore.DeleteWithTxReturns(errors.New("failed to delete egress policy"))
 				Expect(tx.CommitCallCount()).To(Equal(0))
 			})
 		})

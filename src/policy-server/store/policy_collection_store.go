@@ -49,5 +49,10 @@ func (p *PolicyCollectionStore) Delete(policyCollection PolicyCollection) error 
 		return err
 	}
 
+	err = p.EgressPolicyStore.DeleteWithTx(tx, policyCollection.EgressPolicies)
+	if err != nil {
+		return err
+	}
+
 	return commit(tx)
 }
