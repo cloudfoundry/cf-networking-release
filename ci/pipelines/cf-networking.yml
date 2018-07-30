@@ -19,6 +19,8 @@ groups:
   - mitre-smoke
   - mitre-cats
   - mitre-drats
+  - mitre-sli-map-route
+  - mitre-sli-resolve-route
   - check-empty-networking-opsfile
   - ship-what
   - bump-minor-version
@@ -201,10 +203,10 @@ resources:
     type: time
     source:
       interval: 15m
-  - name: every-minute
+  - name: every-two-minutes
     type: time
     source:
-      interval: 1m
+      interval: 2m
   ####### Tests
   - name: cf-acceptance-tests
     type: git
@@ -921,6 +923,7 @@ jobs:
         ENVIRONMENT_NAME: mitre
 
   - name: mitre-smoke
+    serial_groups: [mitre-drats-group]
     plan:
     - aggregate:
       - get: every-fifteen-minutes
@@ -1013,7 +1016,7 @@ jobs:
         NODES: 8
 
   - name: mitre-drats
-    serial_groups: [mitre-test-group, mitre-deploy-group]
+    serial_groups: [mitre-drats-group, mitre-test-group, mitre-deploy-group]
     plan:
     - aggregate:
       - get: cf-networking-release-ci
@@ -1058,10 +1061,11 @@ jobs:
       file: disaster-recovery-acceptance-tests/ci/drats-with-integration-config/task.yml
 
   - name: mitre-sli-map-route
+    serial: true
     build_logs_to_retain: 1000
     plan:
     - aggregate:
-      - get: every-minute
+      - get: every-two-minutes
         trigger: true
       - get: cf-networking-release-ci
         params:
@@ -1077,7 +1081,7 @@ jobs:
           /bosh-mitre/cf/cf_admin_password
     - task: sli-map-route
       file: cf-networking-release-ci/ci/tasks/sli-map-route.yml
-      timeout: 1m
+      timeout: 5m
       params:
         ENVIRONMENT_TAG: mitre.c2c.cf-app.com
         DATADOG_API_KEY: ((datadog_api_key))
@@ -1086,10 +1090,11 @@ jobs:
         SLI_APP_NAME: sli-map-route
 
   - name: mitre-sli-resolve-route
+    serial: true
     build_logs_to_retain: 1000
     plan:
     - aggregate:
-      - get: every-minute
+      - get: every-two-minutes
         trigger: true
       - get: cf-networking-release-ci
         params:
@@ -1105,7 +1110,7 @@ jobs:
           /bosh-mitre/cf/cf_admin_password
     - task: sli-resolve-route
       file: cf-networking-release-ci/ci/tasks/sli-resolve-route.yml
-      timeout: 1m
+      timeout: 5m
       params:
         ENVIRONMENT_TAG: mitre.c2c.cf-app.com
         DATADOG_API_KEY: ((datadog_api_key))
