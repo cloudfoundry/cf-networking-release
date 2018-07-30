@@ -37,7 +37,7 @@ properties:
     default: 31945
 
   health_check_port:
-    description: "Port for the debug server. Use this to adjust log level at runtime or dump process stats."
+    description: "The port for the health endpoint"
     default: 31946
 
   health_check_timeout_seconds:
