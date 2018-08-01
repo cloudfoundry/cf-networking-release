@@ -58,7 +58,7 @@ func migrateAndPopulateGroupsTable(conf *config.Config) error {
 	if err != nil {
 		return fmt.Errorf("populating groups table: %s, and close db error: %s", err, dbConn.Close())
 	}
-	
+
 	return dbConn.Close()
 }
 

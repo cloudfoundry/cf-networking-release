@@ -137,7 +137,7 @@ var _ = Describe("EgressPolicyMetricsWrapper", func() {
 			Expect(returnedPolicies).To(Equal(policies))
 
 			Expect(fakeStore.ByGuidsCallCount()).To(Equal(1))
-			returnedSrcGuids  := fakeStore.ByGuidsArgsForCall(0)
+			returnedSrcGuids := fakeStore.ByGuidsArgsForCall(0)
 			Expect(returnedSrcGuids).To(Equal(srcGuids))
 		})
 
@@ -168,7 +168,6 @@ var _ = Describe("EgressPolicyMetricsWrapper", func() {
 			})
 		})
 	})
-
 
 	Describe("DeleteWithTx", func() {
 		It("calls DeleteWithTx on the Store", func() {

@@ -30,7 +30,7 @@ type columnUsage struct {
 	columnName string
 }
 
-var _ = FDescribe("migrations", func() {
+var _ = Describe("migrations", func() {
 
 	var (
 		dbConf                     dbHelper.Config

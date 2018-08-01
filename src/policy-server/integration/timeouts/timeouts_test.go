@@ -180,7 +180,14 @@ func migrateAndPopulateTags(dbConf db.Config) {
 
 	realDb := policyServerDb.NewConnectionPool(dbConf, 200, 200, "Timeout Test", "Timeout Test", logger)
 
-	migrator := &migrations.Migrator{MigrateAdapter: &migrations.MigrateAdapter{}}
+	migrator := &migrations.Migrator{
+		MigrateAdapter: &migrations.MigrateAdapter{},
+		MigrationsProvider: &migrations.MigrationsProvider{
+			Store: &store.MigrationsStore{
+				DBConn: realDb,
+			},
+		},
+	}
 	_, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 0)
 	Expect(err).ToNot(HaveOccurred())
 

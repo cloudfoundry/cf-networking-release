@@ -49,7 +49,6 @@ func (mw *EgressPolicyMetricsWrapper) DeleteWithTx(tx db.Transaction, egressPoli
 	return err
 }
 
-
 func (mw *EgressPolicyMetricsWrapper) ByGuids(srcGuids []string) ([]EgressPolicy, error) {
 	startTime := time.Now()
 	egressPolicies, err := mw.Store.ByGuids(srcGuids)
