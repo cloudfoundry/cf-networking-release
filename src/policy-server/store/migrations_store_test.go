@@ -52,6 +52,13 @@ var _ = Describe("MigrationsStore", func() {
 		}
 	})
 
+	AfterEach(func() {
+		if realDb != nil {
+			Expect(realDb.Close()).To(Succeed())
+		}
+		testhelpers.RemoveDatabase(dbConf)
+	})
+
 	Describe("HasV1MigrationOccurred", func() {
 		Context("when v1 migrations has occurred", func() {
 			BeforeEach(func() {

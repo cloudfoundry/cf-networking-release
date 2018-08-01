@@ -57,7 +57,14 @@ var _ = Describe("TagStore", func() {
 
 		mockDb.DriverNameReturns(realDb.DriverName())
 
-		realMigrator = &migrations.Migrator{MigrateAdapter: &migrations.MigrateAdapter{}}
+		realMigrator = &migrations.Migrator{
+			MigrateAdapter: &migrations.MigrateAdapter{},
+			MigrationsProvider: &migrations.MigrationsProvider{
+				Store: &store.MigrationsStore{
+					DBConn: realDb,
+				},
+			},
+		}
 		realMigrator.PerformMigrations(realDb.DriverName(), realDb, 0)
 
 		tagPopulator := &store.TagPopulator{DBConnection: realDb}

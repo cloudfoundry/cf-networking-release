@@ -57,6 +57,8 @@ var _ = Describe("Migrate DB Binary", func() {
 				lagertest.NewTestLogger("test"),
 			)
 
+			defer conn.Close()
+
 			numMigrations := len(migrations.V1ModifiedMigrationsToPerform) +
 				len(migrations.V2ModifiedMigrationsToPerform) +
 				len(migrations.V3ModifiedMigrationsToPerform) +

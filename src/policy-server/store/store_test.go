@@ -1123,7 +1123,14 @@ var _ = Describe("Store", func() {
 })
 
 func migrateAndPopulateTags(realDb *db.ConnWrapper, tl int) {
-	migrator := &migrations.Migrator{MigrateAdapter: &migrations.MigrateAdapter{}}
+	migrator := &migrations.Migrator{
+		MigrateAdapter: &migrations.MigrateAdapter{},
+		MigrationsProvider: &migrations.MigrationsProvider{
+			Store: &store.MigrationsStore{
+				DBConn: realDb,
+			},
+		},
+	}
 	_, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 0)
 	Expect(err).ToNot(HaveOccurred())
 
