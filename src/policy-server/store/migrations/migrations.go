@@ -1,48 +1,155 @@
 package migrations
 
+var empty_migration = map[string][]string{
+	"mysql":    {},
+	"postgres": {},
+}
+
+var V1LegacyMigrationsToPerform = PolicyServerMigrations{
+	PolicyServerMigration{
+		Id: "1",
+		Up: migration_v0001,
+	},
+	PolicyServerMigration{
+		Id: "1a",
+		Up: empty_migration,
+	},
+	PolicyServerMigration{
+		Id: "1b",
+		Up: empty_migration,
+	},
+}
+
+var V1ModifiedMigrationsToPerform = PolicyServerMigrations{
+	PolicyServerMigration{
+		Id: "1",
+		Up: migration_modified_v0001,
+	},
+	PolicyServerMigration{
+		Id: "1a",
+		Up: migration_modified_v0001a,
+	},
+	PolicyServerMigration{
+		Id: "1b",
+		Up: migration_modified_v0001b,
+	},
+}
+
+var V2LegacyMigrationsToPerform = PolicyServerMigrations{
+	PolicyServerMigration{
+		Id: "2",
+		Up: migration_v0002,
+	},
+	PolicyServerMigration{
+		Id: "2a",
+		Up: empty_migration,
+	},
+	PolicyServerMigration{
+		Id: "2b",
+		Up: empty_migration,
+	},
+	PolicyServerMigration{
+		Id: "2c",
+		Up: empty_migration,
+	},
+	PolicyServerMigration{
+		Id: "2d",
+		Up: empty_migration,
+	},
+	PolicyServerMigration{
+		Id: "2e",
+		Up: empty_migration,
+	},
+	PolicyServerMigration{
+		Id: "2f",
+		Up: empty_migration,
+	},
+}
+
+var V2ModifiedMigrationsToPerform = PolicyServerMigrations{
+	PolicyServerMigration{
+		Id: "2",
+		Up: migration_modified_v0002,
+	},
+	PolicyServerMigration{
+		Id: "2a",
+		Up: migration_modified_v0002a,
+	},
+	PolicyServerMigration{
+		Id: "2b",
+		Up: migration_modified_v0002b,
+	},
+	PolicyServerMigration{
+		Id: "2c",
+		Up: migration_modified_v0002c,
+	},
+	PolicyServerMigration{
+		Id: "2d",
+		Up: migration_modified_v0002d,
+	},
+	PolicyServerMigration{
+		Id: "2e",
+		Up: migration_modified_v0002e,
+	},
+	PolicyServerMigration{
+		Id: "2f",
+		Up: migration_modified_v0002f,
+	},
+}
+
+var V3LegacyMigrationsToPerform = PolicyServerMigrations{
+	PolicyServerMigration{
+		Id: "3",
+		Up: migration_v0003,
+	},
+	PolicyServerMigration{
+		Id: "3a",
+		Up: empty_migration,
+	},
+}
+
+var V3ModifiedMigrationsToPerform = PolicyServerMigrations{
+	PolicyServerMigration{
+		Id: "3",
+		Up: migration_modified_v0003,
+	},
+	PolicyServerMigration{
+		Id: "3a",
+		Up: migration_modified_v0003a,
+	},
+}
+
 var MigrationsToPerform = PolicyServerMigrations{
 	PolicyServerMigration{
-		"1",
-		migration_v0001,
+		Id: "4",
+		Up: migration_v0004,
 	},
 	PolicyServerMigration{
-		"2",
-		migration_v0002,
+		Id: "5",
+		Up: migration_v0005,
 	},
 	PolicyServerMigration{
-		"3",
-		migration_v0003,
+		Id: "6",
+		Up: migration_v0006,
 	},
 	PolicyServerMigration{
-		"4",
-		migration_v0004,
+		Id: "7",
+		Up: migration_v0007,
 	},
 	PolicyServerMigration{
-		"5",
-		migration_v0005,
+		Id: "8",
+		Up: migration_v0008,
 	},
 	PolicyServerMigration{
-		"6",
-		migration_v0006,
+		Id: "9",
+		Up: migration_v0009,
 	},
 	PolicyServerMigration{
-		"7",
-		migration_v0007,
+		Id: "10",
+		Up: migration_v0010,
 	},
 	PolicyServerMigration{
-		"8",
-		migration_v0008,
-	},
-	PolicyServerMigration{
-		"9",
-		migration_v0009,
-	},
-	PolicyServerMigration{
-		"10",
-		migration_v0010,
-	},
-	PolicyServerMigration{
-		"11",
-		migration_v0011,
+		Id: "11",
+		Up: migration_v0011,
 	},
 }

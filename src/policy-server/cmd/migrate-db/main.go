@@ -51,10 +51,15 @@ func migrateAndPopulateGroupsTable(conf *config.Config) error {
 
 	err := migrateDb(dbConn, logger)
 	if err != nil {
-		return fmt.Errorf("perform migrations: %s", err)
+		return fmt.Errorf("perform migrations: %s, and close db error: %s", err, dbConn.Close())
 	}
 
-	return populateGroupsTable(dbConn, conf.TagLength, logger)
+	err = populateGroupsTable(dbConn, conf.TagLength, logger)
+	if err != nil {
+		return fmt.Errorf("populating groups table: %s, and close db error: %s", err, dbConn.Close())
+	}
+	
+	return dbConn.Close()
 }
 
 func logger() lager.Logger {
@@ -79,7 +84,14 @@ func dbConnection(conf *config.Config, logger lager.Logger) *db.ConnWrapper {
 
 func migrateDb(dbConn *db.ConnWrapper, logger lager.Logger) error {
 	logger.Info("running migrations", lager.Data{})
-	migrator := &migrations.Migrator{MigrateAdapter: &migrations.MigrateAdapter{}}
+	migrator := &migrations.Migrator{
+		MigrateAdapter: &migrations.MigrateAdapter{},
+		MigrationsProvider: &migrations.MigrationsProvider{
+			Store: &store.MigrationsStore{
+				DBConn: dbConn,
+			},
+		},
+	}
 	numMigrationsRun, err := migrator.PerformMigrations(dbConn.DriverName(), dbConn, 0)
 	if err != nil {
 		return err

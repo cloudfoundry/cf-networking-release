@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"policy-server/store"
 	"policy-server/store/fakes"
 	"policy-server/store/helpers"
 	"policy-server/store/migrations"
@@ -13,14 +14,15 @@ import (
 
 	"time"
 
+	"policy-server/db"
+	"test-helpers"
+
 	dbHelper "code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"code.cloudfoundry.org/lager"
 	"github.com/cf-container-networking/sql-migrate"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"policy-server/db"
-	"test-helpers"
 )
 
 type columnUsage struct {
@@ -28,14 +30,18 @@ type columnUsage struct {
 	columnName string
 }
 
-var _ = Describe("migrations", func() {
+var _ = FDescribe("migrations", func() {
 
 	var (
-		dbConf             dbHelper.Config
-		realDb             *db.ConnWrapper
-		mockDb             *fakes.Db
-		mockMigrateAdapter *migrationsFakes.MigrateAdapter
-		migrator           *migrations.Migrator
+		dbConf                     dbHelper.Config
+		realDb                     *db.ConnWrapper
+		mockDb                     *fakes.Db
+		mockMigrateAdapter         *migrationsFakes.MigrateAdapter
+		legacyMigrations           migrations.PolicyServerMigrations
+		legacyMigrationsProvider   *migrationsFakes.MigrationsProvider
+		modifiedMigrationsProvider *migrations.MigrationsProvider
+		legacyMigrator             *migrations.Migrator
+		migrator                   *migrations.Migrator
 	)
 
 	BeforeEach(func() {
@@ -51,8 +57,37 @@ var _ = Describe("migrations", func() {
 
 		mockMigrateAdapter = &migrationsFakes.MigrateAdapter{}
 
+		legacyMigrations = append(
+			migrations.V1LegacyMigrationsToPerform,
+			migrations.V2LegacyMigrationsToPerform[0],
+			migrations.V2LegacyMigrationsToPerform[1], //a
+			migrations.V2LegacyMigrationsToPerform[2], //b
+			migrations.V2LegacyMigrationsToPerform[3], //c
+			migrations.V2LegacyMigrationsToPerform[4], //d
+			migrations.V2LegacyMigrationsToPerform[5], //e
+			migrations.V2LegacyMigrationsToPerform[6], //f
+			migrations.V3LegacyMigrationsToPerform[0],
+			migrations.V3LegacyMigrationsToPerform[1], //a
+		)
+		legacyMigrations = append(legacyMigrations,
+			migrations.MigrationsToPerform...)
+
+		legacyMigrationsProvider = &migrationsFakes.MigrationsProvider{}
+		legacyMigrationsProvider.MigrationsToPerformReturns(legacyMigrations, nil)
+
+		legacyMigrator = &migrations.Migrator{
+			MigrateAdapter:     &migrations.MigrateAdapter{},
+			MigrationsProvider: legacyMigrationsProvider,
+		}
+		modifiedMigrationsProvider = &migrations.MigrationsProvider{
+			Store: &store.MigrationsStore{
+				DBConn: realDb,
+			},
+		}
+
 		migrator = &migrations.Migrator{
-			MigrateAdapter: &migrations.MigrateAdapter{},
+			MigrateAdapter:     &migrations.MigrateAdapter{},
+			MigrationsProvider: modifiedMigrationsProvider,
 		}
 	})
 
@@ -72,10 +107,10 @@ var _ = Describe("migrations", func() {
 					}
 				})
 
-				It("should migrate", func() {
-					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 1)
+				It("should migrate 1, 1a, 1b", func() {
+					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 3)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(numMigrations).To(Equal(1))
+					Expect(numMigrations).To(Equal(3))
 
 					By("checking the destinations, groups, and policies tables were created")
 
@@ -97,7 +132,46 @@ var _ = Describe("migrations", func() {
 						))
 					})
 				})
+
+				Context("when legacy migration v1 has already run", func() {
+					BeforeEach(func() {
+						numMigrations, err := legacyMigrator.PerformMigrations(realDb.DriverName(), realDb, 1)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(numMigrations).To(Equal(1))
+					})
+
+					It("should migrate with empty 1a, 1b", func() {
+						numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 2)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(numMigrations).To(Equal(2))
+
+						By("checking the destinations, groups, and policies tables were created")
+
+						By("checking there's a constraint on group_id, port, protocol", func() {
+							rows, err := realDb.Query(helpers.RebindForSQLDialect(`
+							select CONSTRAINT_NAME, COLUMN_NAME
+							from INFORMATION_SCHEMA.KEY_COLUMN_USAGE t1
+							where TABLE_NAME='destinations' and TABLE_SCHEMA=?
+						`, realDb.DriverName()), dbConf.DatabaseName)
+
+							Expect(err).NotTo(HaveOccurred())
+							actualColumnUsageRows := scanColumnUsageRows(rows)
+
+							Expect(actualColumnUsageRows).To(ConsistOf(
+								columnUsage{value: "PRIMARY", columnName: "id"},
+								columnUsage{value: "group_id", columnName: "group_id"},
+								columnUsage{value: "group_id", columnName: "port"},
+								columnUsage{value: "group_id", columnName: "protocol"},
+							))
+						})
+
+						By("checking the gorp_migrations table for 1b and 1c", func() {
+							expectMigrations(realDb, []string{"1", "1a", "1b"})
+						})
+					})
+				})
 			})
+
 			Context("postgres", func() {
 				BeforeEach(func() {
 					if realDb.DriverName() != "postgres" {
@@ -106,9 +180,9 @@ var _ = Describe("migrations", func() {
 				})
 
 				It("should migrate", func() {
-					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 1)
+					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 3)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(numMigrations).To(Equal(1))
+					Expect(numMigrations).To(Equal(3))
 
 					By("checking there's a constraint on group_id, port, protocol", func() {
 						rows, err := realDb.Query(`
@@ -143,6 +217,59 @@ var _ = Describe("migrations", func() {
 						))
 					})
 				})
+
+				Context("when legacy migration v1 has already run", func() {
+					BeforeEach(func() {
+						numMigrations, err := legacyMigrator.PerformMigrations(realDb.DriverName(), realDb, 1)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(numMigrations).To(Equal(1))
+					})
+
+					It("should migrate with empty 1a, 1b", func() {
+						numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 2)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(numMigrations).To(Equal(2))
+
+						By("checking the destinations, groups, and policies tables were created")
+
+						By("checking there's a constraint on group_id, port, protocol", func() {
+							rows, err := realDb.Query(`
+							select CONSTRAINT_NAME, COLUMN_NAME
+							from INFORMATION_SCHEMA.KEY_COLUMN_USAGE t1
+							where TABLE_NAME='destinations'
+							`)
+							Expect(err).NotTo(HaveOccurred())
+
+							actualColumnUsageRows := scanColumnUsageRows(rows)
+							Expect(actualColumnUsageRows).To(ConsistOf(
+								columnUsage{
+									value:      "destinations_pkey",
+									columnName: "id",
+								},
+								columnUsage{
+									value:      "destinations_group_id_port_protocol_key",
+									columnName: "group_id",
+								},
+								columnUsage{
+									value:      "destinations_group_id_port_protocol_key",
+									columnName: "port",
+								},
+								columnUsage{
+									value:      "destinations_group_id_port_protocol_key",
+									columnName: "protocol",
+								},
+								columnUsage{
+									value:      "destinations_group_id_fkey",
+									columnName: "group_id",
+								},
+							))
+						})
+
+						By("checking the gorp_migrations table for 1b and 1c", func() {
+							expectMigrations(realDb, []string{"1", "1a", "1b"})
+						})
+					})
+				})
 			})
 		})
 
@@ -155,9 +282,9 @@ var _ = Describe("migrations", func() {
 				})
 
 				It("should migrate", func() {
-					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 2)
+					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 10)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(numMigrations).To(Equal(2))
+					Expect(numMigrations).To(Equal(10))
 
 					rows, err := realDb.Query(helpers.RebindForSQLDialect(`
 							select CONSTRAINT_NAME, COLUMN_NAME
@@ -192,6 +319,57 @@ var _ = Describe("migrations", func() {
 						},
 					))
 				})
+
+				Context("when legacy migration v2 has already run", func() {
+					BeforeEach(func() {
+						numMigrations, err := legacyMigrator.PerformMigrations(realDb.DriverName(), realDb, 4)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(numMigrations).To(Equal(4))
+					})
+
+					It("should migrate with empty 2a-2f", func() {
+						numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 6)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(numMigrations).To(Equal(6))
+
+						rows, err := realDb.Query(helpers.RebindForSQLDialect(`
+							select CONSTRAINT_NAME, COLUMN_NAME
+							from INFORMATION_SCHEMA.KEY_COLUMN_USAGE t1
+							where TABLE_NAME='destinations' and TABLE_SCHEMA=?
+						`, realDb.DriverName()), dbConf.DatabaseName)
+						Expect(err).NotTo(HaveOccurred())
+
+						By("checking there's a constraint on group_id, start_port, end_port, protocol")
+						actualColumnUsageRows := scanColumnUsageRows(rows)
+
+						Expect(actualColumnUsageRows).To(ConsistOf(
+							columnUsage{
+								value:      "PRIMARY",
+								columnName: "id",
+							},
+							columnUsage{
+								value:      "unique_destination",
+								columnName: "group_id",
+							},
+							columnUsage{
+								value:      "unique_destination",
+								columnName: "start_port",
+							},
+							columnUsage{
+								value:      "unique_destination",
+								columnName: "end_port",
+							},
+							columnUsage{
+								value:      "unique_destination",
+								columnName: "protocol",
+							},
+						))
+
+						By("checking the gorp_migrations table for 2a-2f", func() {
+							expectMigrations(realDb, []string{"1", "1a", "1b", "2", "2a", "2b", "2c", "2d", "2e", "2f"})
+						})
+					})
+				})
 			})
 
 			Context("postgres", func() {
@@ -202,9 +380,9 @@ var _ = Describe("migrations", func() {
 				})
 
 				It("should migrate", func() {
-					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 2)
+					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 10)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(numMigrations).To(Equal(2))
+					Expect(numMigrations).To(Equal(10))
 
 					rows, err := realDb.Query(`
 						select CONSTRAINT_NAME, COLUMN_NAME
@@ -241,6 +419,59 @@ var _ = Describe("migrations", func() {
 						},
 					))
 				})
+
+				Context("when legacy migration v2 has already run", func() {
+					BeforeEach(func() {
+						numMigrations, err := legacyMigrator.PerformMigrations(realDb.DriverName(), realDb, 4)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(numMigrations).To(Equal(4))
+					})
+
+					It("should migrate with empty 2a-2f", func() {
+						numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 6)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(numMigrations).To(Equal(6))
+
+						rows, err := realDb.Query(`
+						select CONSTRAINT_NAME, COLUMN_NAME
+						from INFORMATION_SCHEMA.KEY_COLUMN_USAGE t1
+						where TABLE_NAME='destinations'
+					`)
+						Expect(err).NotTo(HaveOccurred())
+
+						By("checking there's a constraint on group_id, port, protocol")
+						actualColumnUsageRows := scanColumnUsageRows(rows)
+						Expect(actualColumnUsageRows).To(ConsistOf(columnUsage{
+							value:      "destinations_pkey",
+							columnName: "id",
+						},
+							columnUsage{
+								value:      "unique_destination",
+								columnName: "group_id",
+							},
+							columnUsage{
+								value:      "unique_destination",
+								columnName: "start_port",
+							},
+							columnUsage{
+								value:      "unique_destination",
+								columnName: "end_port",
+							},
+							columnUsage{
+								value:      "unique_destination",
+								columnName: "protocol",
+							},
+							columnUsage{
+								value:      "destinations_group_id_fkey",
+								columnName: "group_id",
+							},
+						))
+
+						By("checking the gorp_migrations table for 2a-2f", func() {
+							expectMigrations(realDb, []string{"1", "1a", "1b", "2", "2a", "2b", "2c", "2d", "2e", "2f"})
+						})
+					})
+				})
 			})
 		})
 
@@ -253,18 +484,18 @@ var _ = Describe("migrations", func() {
 				})
 
 				It("should migrate", func() {
-					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 2) //v1, v2
+					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 10) //v1, v2
 					Expect(err).NotTo(HaveOccurred())
-					Expect(numMigrations).To(Equal(2))
+					Expect(numMigrations).To(Equal(10))
 
 					By("inserting existing data")
 					_, err = realDb.Exec(`insert into groups (guid) values ("some-guid")`)
 					Expect(err).NotTo(HaveOccurred())
 
 					By("performing migration")
-					numMigrations, err = migrator.PerformMigrations(realDb.DriverName(), realDb, 1) //v3
+					numMigrations, err = migrator.PerformMigrations(realDb.DriverName(), realDb, 2) //v3
 					Expect(err).NotTo(HaveOccurred())
-					Expect(numMigrations).To(Equal(1))
+					Expect(numMigrations).To(Equal(2))
 
 					By("verifying existing rows have type 'app'")
 					rows, err := realDb.Query(`
@@ -303,9 +534,9 @@ var _ = Describe("migrations", func() {
 				})
 
 				It("has an index on the group.type column", func() {
-					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 3)
+					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 12) //v1, v2, v3
 					Expect(err).NotTo(HaveOccurred())
-					Expect(numMigrations).To(Equal(3))
+					Expect(numMigrations).To(Equal(12))
 
 					rows, err := realDb.Query(`
 							SELECT DISTINCT INDEX_NAME, COLUMN_NAME
@@ -322,6 +553,39 @@ var _ = Describe("migrations", func() {
 						columnUsage{columnName: "type", value: "idx_type"},
 					))
 				})
+
+				Context("when legacy migration v3 has already run", func() {
+					BeforeEach(func() {
+						numMigrations, err := legacyMigrator.PerformMigrations(realDb.DriverName(), realDb, 11)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(numMigrations).To(Equal(11))
+					})
+
+					It("should migrate with empty 3a", func() {
+						numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 1)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(numMigrations).To(Equal(1))
+
+						rows, err := realDb.Query(`
+							SELECT DISTINCT INDEX_NAME, COLUMN_NAME
+							FROM INFORMATION_SCHEMA.STATISTICS
+							WHERE TABLE_NAME='groups'
+						`)
+						Expect(err).NotTo(HaveOccurred())
+
+						By("checking there's an index")
+						actualColumnUsageRows := scanColumnUsageRows(rows)
+						Expect(actualColumnUsageRows).To(ConsistOf(
+							columnUsage{columnName: "id", value: "PRIMARY"},
+							columnUsage{columnName: "guid", value: "guid"},
+							columnUsage{columnName: "type", value: "idx_type"},
+						))
+
+						By("checking the gorp_migrations table for 3a", func() {
+							expectMigrations(realDb, []string{"1", "1a", "1b", "2", "2a", "2b", "2c", "2d", "2e", "2f", "3", "3a"})
+						})
+					})
+				})
 			})
 
 			Context("postgres", func() {
@@ -332,18 +596,18 @@ var _ = Describe("migrations", func() {
 				})
 
 				It("should migrate", func() {
-					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 2) //v1, v2
+					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 10) //v1, v2
 					Expect(err).NotTo(HaveOccurred())
-					Expect(numMigrations).To(Equal(2))
+					Expect(numMigrations).To(Equal(10))
 
 					By("inserting existing data")
-					_, err = realDb.Query(`INSERT INTO groups (guid) VALUES ('some-guid')`) // must be single quotes
+					_, err = realDb.Exec(`insert into groups (guid) values ('some-guid')`)
 					Expect(err).NotTo(HaveOccurred())
 
 					By("performing migration")
-					numMigrations, err = migrator.PerformMigrations(realDb.DriverName(), realDb, 1) //v3
+					numMigrations, err = migrator.PerformMigrations(realDb.DriverName(), realDb, 2) //v3
 					Expect(err).NotTo(HaveOccurred())
-					Expect(numMigrations).To(Equal(1))
+					Expect(numMigrations).To(Equal(2))
 
 					By("verifying existing rows have type 'app'")
 					rows, err := realDb.Query(`
@@ -382,9 +646,9 @@ var _ = Describe("migrations", func() {
 				})
 
 				It("has an index on the group.type column", func() {
-					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 3)
+					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 12)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(numMigrations).To(Equal(3))
+					Expect(numMigrations).To(Equal(12))
 
 					rows, err := realDb.Query(`
 						SELECT indexdef, indexname FROM pg_indexes WHERE tablename = 'groups'
@@ -399,6 +663,37 @@ var _ = Describe("migrations", func() {
 						columnUsage{columnName: "idx_type", value: "CREATE INDEX idx_type ON public.groups USING btree (type)"},
 					))
 				})
+
+				Context("when legacy migration v3 has already run", func() {
+					BeforeEach(func() {
+						numMigrations, err := legacyMigrator.PerformMigrations(realDb.DriverName(), realDb, 11)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(numMigrations).To(Equal(11))
+					})
+
+					It("should migrate with empty 3a", func() {
+						numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 1)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(numMigrations).To(Equal(1))
+
+						rows, err := realDb.Query(`
+						SELECT indexdef, indexname FROM pg_indexes WHERE tablename = 'groups'
+						`)
+						Expect(err).NotTo(HaveOccurred())
+
+						By("checking there's an index")
+						actualColumnUsageRows := scanColumnUsageRows(rows)
+						Expect(actualColumnUsageRows).To(ConsistOf(
+							columnUsage{columnName: "groups_pkey", value: "CREATE UNIQUE INDEX groups_pkey ON public.groups USING btree (id)"},
+							columnUsage{columnName: "groups_guid_key", value: "CREATE UNIQUE INDEX groups_guid_key ON public.groups USING btree (guid)"},
+							columnUsage{columnName: "idx_type", value: "CREATE INDEX idx_type ON public.groups USING btree (type)"},
+						))
+
+						By("checking the gorp_migrations table for 3a", func() {
+							expectMigrations(realDb, []string{"1", "1a", "1b", "2", "2a", "2b", "2c", "2d", "2e", "2f", "3", "3a"})
+						})
+					})
+				})
 			})
 		})
 
@@ -412,9 +707,9 @@ var _ = Describe("migrations", func() {
 
 				It("should migrate", func() {
 					By("performing migration")
-					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 4) //v1, v2, v3, v4
+					numMigrationsPerformed, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 13) //v1, v2, v3, v4
 					Expect(err).NotTo(HaveOccurred())
-					Expect(numMigrations).To(Equal(4))
+					Expect(numMigrationsPerformed).To(Equal(13))
 
 					By("verifying there are no rows")
 					rows, err := realDb.Query(`
@@ -447,9 +742,9 @@ var _ = Describe("migrations", func() {
 				})
 
 				It("should migrate", func() {
-					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 4) //v1, v2, v3, v4
+					numMigrationsPerformed, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 13) //v1, v2, v3, v4
 					Expect(err).NotTo(HaveOccurred())
-					Expect(numMigrations).To(Equal(4))
+					Expect(numMigrationsPerformed).To(Equal(13))
 
 					By("verifying there are no rows")
 					rows, err := realDb.Query(`
@@ -482,9 +777,9 @@ var _ = Describe("migrations", func() {
 					}
 
 					By("performing migration")
-					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 5) //v1...v5
+					numMigrationsPerformed, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 14) //v1, v2, v3, v4
 					Expect(err).NotTo(HaveOccurred())
-					Expect(numMigrations).To(Equal(5))
+					Expect(numMigrationsPerformed).To(Equal(14))
 				})
 
 				It("should migrate", func() {
@@ -500,13 +795,13 @@ var _ = Describe("migrations", func() {
 
 					By("inserting new data")
 					_, err = realDb.Exec(`
-						INSERT INTO egress_policies (source_id, destination_id) 
+						INSERT INTO egress_policies (source_id, destination_id)
 						VALUES (?, ?)`, terminalId, terminalId)
 					Expect(err).NotTo(HaveOccurred())
 
 					By("verifying new row exists")
 					rows, err = realDb.Query(`
-						SELECT id FROM egress_policies 
+						SELECT id FROM egress_policies
 						WHERE source_id = 1 AND destination_id = 1`)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(scanCountRow(rows)).To(Equal(1))
@@ -514,7 +809,7 @@ var _ = Describe("migrations", func() {
 
 				It("constrains the terminal id to existing rows", func() {
 					_, err := realDb.Exec(`
-						INSERT INTO egress_policies (source_id, destination_id) 
+						INSERT INTO egress_policies (source_id, destination_id)
 						VALUES (42, 23)`)
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(ContainSubstring("foreign key constraint fails"))
@@ -528,9 +823,9 @@ var _ = Describe("migrations", func() {
 					}
 
 					By("performing migration")
-					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 5) //v1...v5
+					numMigrationsPerformed, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 14) //v1, v2, v3, v4
 					Expect(err).NotTo(HaveOccurred())
-					Expect(numMigrations).To(Equal(5))
+					Expect(numMigrationsPerformed).To(Equal(14))
 				})
 
 				It("should migrate", func() {
@@ -576,9 +871,9 @@ var _ = Describe("migrations", func() {
 					}
 
 					By("performing migration")
-					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 6)
+					numMigrationsPerformed, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 15) //v1, v2, v3, v4
 					Expect(err).NotTo(HaveOccurred())
-					Expect(numMigrations).To(Equal(6))
+					Expect(numMigrationsPerformed).To(Equal(15))
 				})
 
 				It("should migrate", func() {
@@ -622,9 +917,9 @@ var _ = Describe("migrations", func() {
 					}
 
 					By("performing migration")
-					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 6)
+					numMigrationsPerformed, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 15) //v1, v2, v3, v4
 					Expect(err).NotTo(HaveOccurred())
-					Expect(numMigrations).To(Equal(6))
+					Expect(numMigrationsPerformed).To(Equal(15))
 				})
 
 				It("should migrate", func() {
@@ -670,9 +965,9 @@ var _ = Describe("migrations", func() {
 					}
 
 					By("performing migration")
-					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 7)
+					numMigrationsPerformed, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 16) //v1, v2, v3, v4
 					Expect(err).NotTo(HaveOccurred())
-					Expect(numMigrations).To(Equal(7))
+					Expect(numMigrationsPerformed).To(Equal(16))
 				})
 
 				It("should migrate", func() {
@@ -711,9 +1006,9 @@ var _ = Describe("migrations", func() {
 					}
 
 					By("performing migration")
-					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 7)
+					numMigrationsPerformed, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 16) //v1, v2, v3, v4
 					Expect(err).NotTo(HaveOccurred())
-					Expect(numMigrations).To(Equal(7))
+					Expect(numMigrationsPerformed).To(Equal(16))
 				})
 
 				It("should migrate", func() {
@@ -754,9 +1049,9 @@ var _ = Describe("migrations", func() {
 						Skip("skipping mysql tests")
 					}
 
-					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 11)
+					numMigrationsPerformed, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 20) //v1, v2, v3, v4
 					Expect(err).NotTo(HaveOccurred())
-					Expect(numMigrations).To(Equal(11))
+					Expect(numMigrationsPerformed).To(Equal(20))
 				})
 
 				It("should have indexes on foreign keys", func() {
@@ -847,6 +1142,14 @@ var _ = Describe("migrations", func() {
 
 		})
 
+		Context("when getting migrations to perform fails", func() {
+			It("returns a meaningful error message", func() {
+				legacyMigrationsProvider.MigrationsToPerformReturns(nil, errors.New("mark mark mark"))
+				_, err := legacyMigrator.PerformMigrations(realDb.DriverName(), realDb, 0)
+				Expect(err).To(MatchError("error retrieving migrations to perform: mark mark mark"))
+			})
+		})
+
 		Context("when the driver name is not mysql or postgres", func() {
 			It("returns an error", func() {
 				_, err := migrator.PerformMigrations("etcd", mockDb, 2)
@@ -902,6 +1205,21 @@ var _ = Describe("migrations", func() {
 		})
 	})
 })
+
+func expectMigrations(realDb *db.ConnWrapper, expectedMigrations []string) {
+	rows, err := realDb.Query(`select ID from gorp_migrations`)
+	defer rows.Close()
+	Expect(err).NotTo(HaveOccurred())
+	var actual []string
+	for rows.Next() {
+		var id string
+
+		Expect(rows.Scan(&id)).To(Succeed())
+		actual = append(actual, id)
+	}
+	Expect(rows.Err()).NotTo(HaveOccurred())
+	Expect(actual).To(Equal(expectedMigrations))
+}
 
 func scanColumnUsageRows(rows *sql.Rows) []columnUsage {
 	var actual []columnUsage

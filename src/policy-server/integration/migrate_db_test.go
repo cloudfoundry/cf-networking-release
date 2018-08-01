@@ -3,8 +3,6 @@ package integration_test
 import (
 	"fmt"
 	"math"
-	"os"
-	"strings"
 	"time"
 
 	"policy-server/config"
@@ -59,12 +57,14 @@ var _ = Describe("Migrate DB Binary", func() {
 				lagertest.NewTestLogger("test"),
 			)
 
-			m := migrations.MigrationsToPerform
-			lastMigration := m[len(m)-1]
+			numMigrations := len(migrations.V1ModifiedMigrationsToPerform) +
+				len(migrations.V2ModifiedMigrationsToPerform) +
+				len(migrations.V3ModifiedMigrationsToPerform) +
+				len(migrations.MigrationsToPerform)
 
-			var highestID string
-			conn.QueryRow(fmt.Sprintf("SELECT MAX(CAST(ID AS %s)) AS ID FROM gorp_migrations LIMIT 1", getDBNumberType())).Scan(&highestID)
-			Expect(highestID).To(Equal(lastMigration.Id))
+			var migrationCount int
+			conn.QueryRow("SELECT COUNT(*) FROM gorp_migrations").Scan(&migrationCount)
+			Expect(migrationCount).To(Equal(numMigrations))
 
 			var groupCount int
 			conn.QueryRow("SELECT COUNT(*) FROM groups").Scan(&groupCount)
@@ -88,16 +88,3 @@ var _ = Describe("Migrate DB Binary", func() {
 		})
 	})
 })
-
-func getDBNumberType() string {
-	dbEnv := os.Getenv("DB")
-	switch {
-	case strings.HasPrefix(dbEnv, "mysql"):
-		return "SIGNED"
-	case strings.HasPrefix(dbEnv, "postgres"):
-		return "INT"
-	default:
-		panic("unable to determine database to use.  Set environment variable DB")
-	}
-	return ""
-}

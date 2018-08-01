@@ -22,12 +22,23 @@ type MigrationDb interface {
 	RawConnection() *sqlx.DB
 }
 
+//go:generate counterfeiter -o fakes/migrations_provider.go --fake-name MigrationsProvider . migrationsProvider
+type migrationsProvider interface {
+	MigrationsToPerform() (PolicyServerMigrations, error)
+}
+
 type Migrator struct {
-	MigrateAdapter migrateAdapter
+	MigrateAdapter     migrateAdapter
+	MigrationsProvider migrationsProvider
 }
 
 func (m *Migrator) PerformMigrations(driverName string, migrationDb MigrationDb, maxNumMigrations int) (int, error) {
-	if !MigrationsToPerform.supportsDriver(driverName) {
+	migrationsToPerform, err := m.MigrationsProvider.MigrationsToPerform()
+	if err != nil {
+		return 0, fmt.Errorf("error retrieving migrations to perform: %s", err)
+	}
+
+	if !migrationsToPerform.supportsDriver(driverName) {
 		return 0, fmt.Errorf("unsupported driver: %s", driverName)
 	}
 
@@ -35,7 +46,7 @@ func (m *Migrator) PerformMigrations(driverName string, migrationDb MigrationDb,
 		migrationDb,
 		driverName,
 		migrate.MemoryMigrationSource{
-			Migrations: MigrationsToPerform.ForDriver(driverName),
+			Migrations: migrationsToPerform.ForDriver(driverName),
 		},
 		migrate.Up,
 		maxNumMigrations,
