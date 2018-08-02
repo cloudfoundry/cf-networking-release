@@ -92,10 +92,11 @@ func (m *MigrationsStore) HasV3MigrationOccurred() (bool, error) {
 }
 
 func (m *MigrationsStore) tableExists(tableName string) bool {
-	_, err := m.DBConn.Query(fmt.Sprintf("SELECT 1 FROM %s LIMIT 1", tableName))
+	rows, err := m.DBConn.Query(fmt.Sprintf("SELECT 1 FROM %s LIMIT 1", tableName))
 	if err != nil {
 		return false
 	}
+	rows.Close()
 	return true
 }
 
