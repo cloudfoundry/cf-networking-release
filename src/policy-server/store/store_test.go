@@ -1147,6 +1147,7 @@ func createPolicies(realDb store.Database, dataStore store.Store, policies []sto
 
 	err = dataStore.CreateWithTx(tx, policies)
 	if err != nil {
+		tx.Rollback()
 		return err
 	}
 	return tx.Commit()
