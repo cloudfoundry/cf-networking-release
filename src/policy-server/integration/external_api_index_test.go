@@ -70,6 +70,8 @@ var _ = Describe("External API Listing Policies", func() {
 		BeforeEach(func() {
 			addPolicy("v1", `{ "policies": [ {"source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "ports": { "start": 1234, "end": 1234 } } } ] }`)
 			addPolicy("v1", `{ "policies": [ {"source": { "id": "app3" }, "destination": { "id": "app1", "protocol": "tcp", "ports": { "start": 8080, "end": 8090 } } } ] }`)
+			addPolicy("v1", `{ "egress_policies": [ {"source": { "id": "some-app-guid" }, "destination": { "protocol": "tcp", "ips": [ {"start": "23.96.32.148", "end": "23.96.32.149" } ] } } ] }`)
+			addPolicy("v1", `{ "egress_policies": [ {"source": { "id": "some-app-guid" }, "destination": { "protocol": "tcp", "ports": [{"start": 8080, "end": 8081}], "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] } } ] }`)
 			addPolicy("v0", `{ "policies": [ {"source": { "id": "app3" }, "destination": { "id": "app4", "protocol": "tcp", "port": 7777 } } ] }`)
 		})
 
@@ -101,42 +103,48 @@ var _ = Describe("External API Listing Policies", func() {
 		}
 
 		v1Response := `{ "total_policies": 3, "policies": [
-		  { "source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "ports": { "start": 1234, "end": 1234 } } },
-		  { "source": { "id": "app3" }, "destination": { "id": "app1", "protocol": "tcp", "ports": { "start": 8080, "end": 8090 } } },
-		  { "source": { "id": "app3" }, "destination": { "id": "app4", "protocol": "tcp", "ports": { "start": 7777, "end": 7777 } } }
-		]}`
+				{ "source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "ports": { "start": 1234, "end": 1234 } } },
+				{ "source": { "id": "app3" }, "destination": { "id": "app1", "protocol": "tcp", "ports": { "start": 8080, "end": 8090 } } },
+				{ "source": { "id": "app3" }, "destination": { "id": "app4", "protocol": "tcp", "ports": { "start": 7777, "end": 7777 } } }
+			],
+			"total_egress_policies": 2,
+			"egress_policies": [
+				{"source": { "id": "some-app-guid" }, "destination": { "protocol": "tcp", "ips": [ {"start": "23.96.32.148", "end": "23.96.32.149" } ] } },
+				{"source": { "id": "some-app-guid" }, "destination": { "protocol": "tcp", "ports": [{"start": 8080, "end": 8081}], "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] } }
+			]
+		}`
 		v1ResponseFiltered := `{ "total_policies": 2, "policies": [
-		  { "source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "ports": { "start": 1234, "end": 1234 } } },
-		  { "source": { "id": "app3" }, "destination": { "id": "app1", "protocol": "tcp", "ports": { "start": 8080, "end": 8090 } } }
+			{ "source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "ports": { "start": 1234, "end": 1234 } } },
+			{ "source": { "id": "app3" }, "destination": { "id": "app1", "protocol": "tcp", "ports": { "start": 8080, "end": 8090 } } }
 		]}`
 		v1ResponseSourceFiltered := `{ "total_policies": 1, "policies": [
-		  { "source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "ports": { "start": 1234, "end": 1234 } } }
+			{ "source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "ports": { "start": 1234, "end": 1234 } } }
 		]}`
 		v1ResponseDestFiltered := `{ "total_policies": 2, "policies": [
 			{ "source": { "id": "app3" }, "destination": { "id": "app4", "protocol": "tcp", "ports": { "start": 7777, "end": 7777 } } },
-		  { "source": { "id": "app3" }, "destination": { "id": "app1", "protocol": "tcp", "ports": { "start": 8080, "end": 8090 } } }
+			{ "source": { "id": "app3" }, "destination": { "id": "app1", "protocol": "tcp", "ports": { "start": 8080, "end": 8090 } } }
 		]}`
 		v1ResponseSourceAndDestFiltered := `{ "total_policies": 2, "policies": [
 			{ "source": { "id": "app3" }, "destination": { "id": "app4", "protocol": "tcp", "ports": { "start": 7777, "end": 7777 } } },
-		  { "source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "ports": { "start": 1234, "end": 1234 } } }
+			{ "source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "ports": { "start": 1234, "end": 1234 } } }
 		]}`
 
 		v0Response := `{ "total_policies": 2, "policies": [
-		  { "source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "port": 1234 } },
-		  { "source": { "id": "app3" }, "destination": { "id": "app4", "protocol": "tcp", "port": 7777 } }
+			{ "source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "port": 1234 } },
+			{ "source": { "id": "app3" }, "destination": { "id": "app4", "protocol": "tcp", "port": 7777 } }
 		]}`
 		v0ResponseFiltered := `{ "total_policies": 1, "policies": [
-		  { "source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "port": 1234 } }
+			{ "source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "port": 1234 } }
 		]}`
 		v0ResponseSourceFiltered := `{ "total_policies": 1, "policies": [
-		  { "source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "port": 1234 } }
+			{ "source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "port": 1234 } }
 		]}`
 		v0ResponseDestFiltered := `{ "total_policies": 1, "policies": [
-		  { "source": { "id": "app3" }, "destination": { "id": "app4", "protocol": "tcp", "port": 7777 } }
+			{ "source": { "id": "app3" }, "destination": { "id": "app4", "protocol": "tcp", "port": 7777 } }
 		]}`
 		v0ResponseSourceAndDestFiltered := `{ "total_policies": 2, "policies": [
 			{ "source": { "id": "app3" }, "destination": { "id": "app4", "protocol": "tcp", "port": 7777 } },
-		  { "source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "port": 1234 } }
+			{ "source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "port": 1234 } }
 		]}`
 
 		DescribeTable("listing all policies", listPolicies,
