@@ -189,9 +189,13 @@ This endpoint will return the `total_egress_policies`, `egress_policies` keys on
 | Field | Required? | Description |
 | :---- | :-------: | :------ |
 | egress_policies.source.id | Y | The source `policy_group_id`
-| egress_policies.destination.protocol | Y | The protocol (tcp or udp)
+| egress_policies.destination.protocol | Y | The protocol (tcp, udp, or icmp)
 | egress_policies.destination.ips.start | Y | The start of the destination ip range
 | egress_policies.destination.ips.end | Y | The end of the destination ip range. For one ip, set this equal to the ` egress_policies.destination.ips.start` value.
+| egress_policies.destination.ports.start | N | The start of the destination port range. Only for tcp and udp protocols.
+| egress_policies.destination.ports.end | N | The end of the destination port range. Only for tcp and udp protocols.
+| egress_policies.destination.type | N | The icmp type. -1 for all icmp types. Only for icmp protocol.
+| egress_policies.destination.code | N | The icmp code. -1 for all icmp codes. Only for icmp protocol.
 
 
 
@@ -274,10 +278,14 @@ This endpoint will return the `total_egress_policies`, `egress_policies` keys on
 | Field | Required? | Description |
 | :---- | :-------: | :------ |
 | egress_policies.source.id | Y | The source `policy_group_id`
-| egress_policies.destination.protocol | Y | The protocol (tcp or udp)
+| egress_policies.destination.protocol | Y | The protocol (tcp, udp, or icmp)
 | egress_policies.destination.ips | Y | The destination ip range (currently only supports one element)
 | egress_policies.destination.ips.start | Y | The destination start ip
 | egress_policies.destination.ips.end | Y | The destination end ip
+| egress_policies.destination.ports.start | N | The start of the destination port range. Only for tcp and udp protocols.
+| egress_policies.destination.ports.end | N | The end of the destination port range. Only for tcp and udp protocols.
+| egress_policies.destination.type | N | The icmp type. -1 for all icmp types. Only for icmp protocol.
+| egress_policies.destination.code | N | The icmp code. -1 for all icmp codes. Only for icmp protocol.
 
 #### Response Status Codes:
 - 200 (successful)
