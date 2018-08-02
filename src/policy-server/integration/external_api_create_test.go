@@ -169,6 +169,7 @@ var _ = Describe("External API Adding Policies", func() {
 					},
 					"destination": {
 						"ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}],
+						"ports": [{"start": 8080, "end": 8081}],
 						"protocol": "tcp"
 					}
 				}
@@ -176,6 +177,39 @@ var _ = Describe("External API Adding Policies", func() {
 		}`
 
 		v1ExpectedResponse := `{
+			"total_policies": 0,
+			"policies": [],
+			"total_egress_policies": 1,
+			"egress_policies": [
+				{
+					"source": {
+						"id": "some-app-guid"
+					},
+					"destination": {
+						"ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}],
+						"ports": [{"start": 8080, "end": 8081}],
+						"protocol": "tcp"
+					}
+				}
+			]
+		}`
+
+		v1RequestNoPorts := `{
+			"policies": [],
+			"egress_policies": [
+				{
+					"source": {
+						"id": "some-app-guid"
+					},
+					"destination": {
+						"ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}],
+						"protocol": "tcp"
+					}
+				}
+			]
+		}`
+
+		v1ExpectedResponseNoPorts := `{
 			"total_policies": 0,
 			"policies": [],
 			"total_egress_policies": 1,
@@ -194,6 +228,7 @@ var _ = Describe("External API Adding Policies", func() {
 
 		DescribeTable("adding policies succeeds", addPoliciesSucceeds,
 			Entry("v1", "v1", v1Request, v1ExpectedResponse),
+			Entry("v1 no ports", "v1", v1RequestNoPorts, v1ExpectedResponseNoPorts),
 		)
 	})
 })

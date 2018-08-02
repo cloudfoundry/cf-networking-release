@@ -33,6 +33,12 @@ var _ = Describe("EgressPolicyStore", func() {
 				},
 				Destination: store.EgressDestination{
 					Protocol: "tcp",
+					Ports: []store.Ports{
+						{
+							Start: 8080,
+							End:   8081,
+						},
+					},
 					IPRanges: []store.IPRange{
 						{
 							Start: "1.2.3.4",
@@ -112,16 +118,20 @@ var _ = Describe("EgressPolicyStore", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(egressPolicyRepo.CreateIPRangeCallCount()).To(Equal(2))
 
-			argTx, destinationID, startIP, endIP, protocol := egressPolicyRepo.CreateIPRangeArgsForCall(0)
+			argTx, destinationID, startIP, endIP, protocol, startPort, endPort := egressPolicyRepo.CreateIPRangeArgsForCall(0)
 			Expect(argTx).To(Equal(tx))
 			Expect(destinationID).To(Equal(int64(42)))
+			Expect(startPort).To(Equal(int64(8080)))
+			Expect(endPort).To(Equal(int64(8081)))
 			Expect(startIP).To(Equal("1.2.3.4"))
 			Expect(endIP).To(Equal("1.2.3.5"))
 			Expect(protocol).To(Equal("tcp"))
 
-			argTx, destinationID, startIP, endIP, protocol = egressPolicyRepo.CreateIPRangeArgsForCall(1)
+			argTx, destinationID, startIP, endIP, protocol, startPort, endPort = egressPolicyRepo.CreateIPRangeArgsForCall(1)
 			Expect(argTx).To(Equal(tx))
 			Expect(destinationID).To(Equal(int64(24)))
+			Expect(startPort).To(Equal(int64(0)))
+			Expect(endPort).To(Equal(int64(0)))
 			Expect(startIP).To(Equal("2.2.3.4"))
 			Expect(endIP).To(Equal("2.2.3.5"))
 			Expect(protocol).To(Equal("udp"))
@@ -198,6 +208,12 @@ var _ = Describe("EgressPolicyStore", func() {
 					},
 					Destination: store.EgressDestination{
 						Protocol: "tcp",
+						Ports: []store.Ports{
+							{
+								Start: 8080,
+								End:   8081,
+							},
+						},
 						IPRanges: []store.IPRange{
 							{
 								Start: "1.2.3.4",
@@ -266,6 +282,12 @@ var _ = Describe("EgressPolicyStore", func() {
 					},
 					Destination: store.EgressDestination{
 						Protocol: "tcp",
+						Ports: []store.Ports{
+							{
+								Start: 8080,
+								End:   8081,
+							},
+						},
 						IPRanges: []store.IPRange{
 							{
 								Start: "1.2.3.4",

@@ -125,9 +125,22 @@ var _ = Describe("ApiPolicyMapper", func() {
 						"source": { "id": "some-src-id" },
 						"destination": {
 							"protocol": "some-protocol",
+							"ports": [{
+								"start": 8080,
+								"end": 8081
+							}],
 							"ips": [{
 								"start": "1.2.3.4",
 								"end": "1.2.3.5"
+							}]
+						}
+					},{
+						"source": { "id": "some-src-id-2" },
+						"destination": {
+							"protocol": "some-protocol",
+							"ips": [{
+								"start": "2.2.3.4",
+								"end": "2.2.3.5"
 							}]
 						}
 					}]
@@ -145,8 +158,22 @@ var _ = Describe("ApiPolicyMapper", func() {
 								},
 								Destination: &api.EgressDestination{
 									Protocol: "some-protocol",
+									Ports: []api.Ports{
+										{Start: 8080, End: 8081},
+									},
 									IPRanges: []api.IPRange{
 										{Start: "1.2.3.4", End: "1.2.3.5"},
+									},
+								},
+							},
+							{
+								Source: &api.EgressSource{
+									ID: "some-src-id-2",
+								},
+								Destination: &api.EgressDestination{
+									Protocol: "some-protocol",
+									IPRanges: []api.IPRange{
+										{Start: "2.2.3.4", End: "2.2.3.5"},
 									},
 								},
 							},
@@ -161,10 +188,26 @@ var _ = Describe("ApiPolicyMapper", func() {
 						Source: store.EgressSource{ID: "some-src-id"},
 						Destination: store.EgressDestination{
 							Protocol: "some-protocol",
+							Ports: []store.Ports{
+								{Start: 8080, End: 8081},
+							},
 							IPRanges: []store.IPRange{
 								{
 									Start: "1.2.3.4",
 									End:   "1.2.3.5",
+								},
+							},
+						},
+					},
+					{
+						Source: store.EgressSource{ID: "some-src-id-2"},
+						Destination: store.EgressDestination{
+							Protocol: "some-protocol",
+							Ports:    []store.Ports{},
+							IPRanges: []store.IPRange{
+								{
+									Start: "2.2.3.4",
+									End:   "2.2.3.5",
 								},
 							},
 						},
@@ -233,6 +276,10 @@ var _ = Describe("ApiPolicyMapper", func() {
 					Source: store.EgressSource{ID: "egress-source-id"},
 					Destination: store.EgressDestination{
 						Protocol: "tcp",
+						Ports: []store.Ports{{
+							Start: 8080,
+							End:   8081,
+						}},
 						IPRanges: []store.IPRange{{
 							Start: "1.2.3.4",
 							End:   "1.2.3.5",
@@ -285,6 +332,10 @@ var _ = Describe("ApiPolicyMapper", func() {
 						"source": { "id": "egress-source-id" },
 						"destination": {
 							"protocol": "tcp",
+							"ports": [{
+								"start": 8080,
+								"end": 8081
+							}],
 							"ips": [{
 								"start": "1.2.3.4",
 								"end": "1.2.3.5"

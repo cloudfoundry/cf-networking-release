@@ -1090,6 +1090,123 @@ var _ = Describe("migrations", func() {
 			})
 		})
 
+		Describe("V12-V15 IP Range Ports", func() {
+			Context("mysql", func() {
+				BeforeEach(func() {
+					if realDb.DriverName() != "mysql" {
+						Skip("skipping mysql tests")
+					}
+
+					By("performing migration")
+					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 20)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(numMigrations).To(Equal(20))
+
+					By("inserting data")
+					result, err := realDb.Exec("INSERT INTO terminals (id) VALUES (NULL)")
+					Expect(err).NotTo(HaveOccurred())
+					terminalId, err := result.LastInsertId()
+					Expect(err).NotTo(HaveOccurred())
+
+					_, err = realDb.Exec(`
+						INSERT INTO ip_ranges (protocol, start_ip, end_ip, terminal_id)
+						VALUES (?, ?, ?, ?)`, "tcp", "1.2.3.4", "1.2.3.5", terminalId)
+					Expect(err).NotTo(HaveOccurred())
+
+					By("performing migration for ip range ports")
+					numMigrations, err = migrator.PerformMigrations(realDb.DriverName(), realDb, 4)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(numMigrations).To(Equal(4))
+				})
+
+				It("should migrate", func() {
+					rows, err := realDb.Query(helpers.RebindForSQLDialect(`
+							select COLUMN_NAME
+							from INFORMATION_SCHEMA.COLUMNS t1
+							where TABLE_NAME='ip_ranges' and TABLE_SCHEMA=?
+						`, realDb.DriverName()), dbConf.DatabaseName)
+					Expect(err).NotTo(HaveOccurred())
+
+					By("verifying the start and end port columns exist", func() {
+						var columns []string
+						defer rows.Close()
+						for rows.Next() {
+							var columnName string
+							Expect(rows.Scan(&columnName)).To(Succeed())
+							columns = append(columns, columnName)
+						}
+						Expect(columns).To(ContainElement("start_port"))
+						Expect(columns).To(ContainElement("end_port"))
+					})
+
+					By("verifying that old rows have a default value of 0 for start/end ports", func() {
+						var startPort, endPort int64
+						err := realDb.QueryRow(`SELECT start_port, end_port FROM ip_ranges`).Scan(&startPort, &endPort)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(startPort).To(Equal(int64(0)))
+						Expect(startPort).To(Equal(int64(0)))
+					})
+				})
+			})
+
+			Context("postgres", func() {
+				BeforeEach(func() {
+					if realDb.DriverName() != "postgres" {
+						Skip("skipping postgres tests")
+					}
+
+					By("performing migration")
+					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 20)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(numMigrations).To(Equal(20))
+
+					By("inserting data")
+					var terminalId int64
+					err = realDb.QueryRow("INSERT INTO terminals DEFAULT VALUES RETURNING id").Scan(&terminalId)
+					Expect(err).NotTo(HaveOccurred())
+
+					_, err = realDb.Exec(realDb.RawConnection().Rebind(`
+						INSERT INTO ip_ranges (protocol, start_ip, end_ip, terminal_id)
+						VALUES (?, ?, ?, ?)`), "tcp", "1.2.3.4", "1.2.3.5", terminalId)
+					Expect(err).NotTo(HaveOccurred())
+
+					By("performing migration for ip range ports")
+					numMigrations, err = migrator.PerformMigrations(realDb.DriverName(), realDb, 4)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(numMigrations).To(Equal(4))
+				})
+
+				It("should migrate", func() {
+					rows, err := realDb.Query(helpers.RebindForSQLDialect(`
+							select COLUMN_NAME
+							from INFORMATION_SCHEMA.COLUMNS t1
+							where TABLE_NAME='ip_ranges'
+						`, realDb.DriverName()))
+					Expect(err).NotTo(HaveOccurred())
+
+					By("verifying the start and end port columns exist", func() {
+						var columns []string
+						defer rows.Close()
+						for rows.Next() {
+							var columnName string
+							Expect(rows.Scan(&columnName)).To(Succeed())
+							columns = append(columns, columnName)
+						}
+						Expect(columns).To(ContainElement("start_port"))
+						Expect(columns).To(ContainElement("end_port"))
+					})
+
+					By("verifying that old rows have a default value of 0 for start/end ports", func() {
+						var startPort, endPort int64
+						err := realDb.QueryRow(`SELECT start_port, end_port FROM ip_ranges`).Scan(&startPort, &endPort)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(startPort).To(Equal(int64(0)))
+						Expect(startPort).To(Equal(int64(0)))
+					})
+				})
+			})
+		})
+
 		Context("when migrating in parallel", func() {
 			Context("mysql", func() {
 				BeforeEach(func() {

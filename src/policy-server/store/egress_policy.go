@@ -72,17 +72,19 @@ func (e *EgressPolicyTable) CreateApp(tx db.Transaction, sourceTerminalID int64,
 	return -1, fmt.Errorf("unknown driver: %s", driverName)
 }
 
-func (e *EgressPolicyTable) CreateIPRange(tx db.Transaction, destinationTerminalID int64, startIP, endIP, protocol string) (int64, error) {
+func (e *EgressPolicyTable) CreateIPRange(tx db.Transaction, destinationTerminalID int64, startIP, endIP, protocol string, startPort, endPort int64) (int64, error) {
 	driverName := tx.DriverName()
 	if driverName == "mysql" {
 		result, err := tx.Exec(tx.Rebind(`
-			INSERT INTO ip_ranges (protocol, start_ip, end_ip, terminal_id) 
-			VALUES (?,?,?,?)
+			INSERT INTO ip_ranges (protocol, start_ip, end_ip, terminal_id, start_port, end_port)
+			VALUES (?,?,?,?,?,?)
 			`),
 			protocol,
 			startIP,
 			endIP,
 			destinationTerminalID,
+			startPort,
+			endPort,
 		)
 
 		if err != nil {
@@ -94,14 +96,16 @@ func (e *EgressPolicyTable) CreateIPRange(tx db.Transaction, destinationTerminal
 		var id int64
 
 		err := tx.QueryRow(tx.Rebind(`
-			INSERT INTO ip_ranges (protocol, start_ip, end_ip, terminal_id) 
-			VALUES (?,?,?,?)
+			INSERT INTO ip_ranges (protocol, start_ip, end_ip, terminal_id, start_port, end_port)
+			VALUES (?,?,?,?,?,?)
  			RETURNING id
 			`),
 			protocol,
 			startIP,
 			endIP,
 			destinationTerminalID,
+			startPort,
+			endPort,
 		).Scan(&id)
 
 		if err != nil {
@@ -184,6 +188,12 @@ func (e *EgressPolicyTable) IsTerminalInUse(tx db.Transaction, terminalID int64)
 func (e *EgressPolicyTable) GetIDsByEgressPolicy(tx db.Transaction, egressPolicy EgressPolicy) (EgressPolicyIDCollection, error) {
 	var egressPolicyID, sourceTerminalID, destinationTerminalID, appID, ipRangeID int64
 
+	var startPort, endPort int64
+	if len(egressPolicy.Destination.Ports) > 0 {
+		startPort = int64(egressPolicy.Destination.Ports[0].Start)
+		endPort = int64(egressPolicy.Destination.Ports[0].End)
+	}
+
 	err := tx.QueryRow(tx.Rebind(`
 		SELECT
 			egress_policies.id,
@@ -197,12 +207,17 @@ func (e *EgressPolicyTable) GetIDsByEgressPolicy(tx db.Transaction, egressPolicy
 		WHERE apps.app_guid = ? AND
 		      ip_ranges.protocol = ? AND
 					ip_ranges.start_ip = ? AND
-					ip_ranges.end_ip = ?
+					ip_ranges.end_ip = ? AND
+					ip_ranges.start_port = ? AND
+					ip_ranges.end_port = ?
 		;`),
 		egressPolicy.Source.ID,
 		egressPolicy.Destination.Protocol,
 		egressPolicy.Destination.IPRanges[0].Start,
-		egressPolicy.Destination.IPRanges[0].End).
+		egressPolicy.Destination.IPRanges[0].End,
+		startPort,
+		endPort,
+	).
 		Scan(&egressPolicyID, &sourceTerminalID, &destinationTerminalID, &appID, &ipRangeID)
 
 	var policyIDs EgressPolicyIDCollection
@@ -243,7 +258,9 @@ func (e *EgressPolicyTable) GetAllPolicies() ([]EgressPolicy, error) {
 			apps.app_guid,
 			ip_ranges.protocol,
 			ip_ranges.start_ip,
-			ip_ranges.end_ip
+			ip_ranges.end_ip,
+			ip_ranges.start_port,
+			ip_ranges.end_port
 		from egress_policies
 		LEFT OUTER JOIN apps on (egress_policies.source_id = apps.terminal_id)
 		LEFT OUTER JOIN ip_ranges on (egress_policies.destination_id = ip_ranges.terminal_id);`)
@@ -257,10 +274,21 @@ func (e *EgressPolicyTable) GetAllPolicies() ([]EgressPolicy, error) {
 	for rows.Next() {
 
 		var sourceAppGUID, protocol, startIP, endIP string
+		var startPort, endPort int
 
-		err = rows.Scan(&sourceAppGUID, &protocol, &startIP, &endIP)
+		err = rows.Scan(&sourceAppGUID, &protocol, &startIP, &endIP, &startPort, &endPort)
 		if err != nil {
 			return []EgressPolicy{}, err
+		}
+
+		var ports []Ports
+		if startPort != 0 && endPort != 0 {
+			ports = []Ports{
+				{
+					Start: startPort,
+					End:   endPort,
+				},
+			}
 		}
 
 		foundPolicies = append(foundPolicies, EgressPolicy{
@@ -269,6 +297,7 @@ func (e *EgressPolicyTable) GetAllPolicies() ([]EgressPolicy, error) {
 			},
 			Destination: EgressDestination{
 				Protocol: protocol,
+				Ports:    ports,
 				IPRanges: []IPRange{
 					{
 						Start: startIP,
@@ -294,7 +323,9 @@ func (e *EgressPolicyTable) GetByGuids(ids []string) ([]EgressPolicy, error) {
 			apps.app_guid,
 			ip_ranges.protocol,
 			ip_ranges.start_ip,
-			ip_ranges.end_ip
+			ip_ranges.end_ip,
+			ip_ranges.start_port,
+			ip_ranges.end_port
 		from egress_policies
 		LEFT OUTER JOIN apps on (egress_policies.source_id = apps.terminal_id)
 		LEFT OUTER JOIN ip_ranges on (egress_policies.destination_id = ip_ranges.terminal_id)
@@ -308,10 +339,21 @@ func (e *EgressPolicyTable) GetByGuids(ids []string) ([]EgressPolicy, error) {
 	for rows.Next() {
 
 		var sourceAppGUID, protocol, startIP, endIP string
+		var startPort, endPort int64
 
-		err = rows.Scan(&sourceAppGUID, &protocol, &startIP, &endIP)
+		err = rows.Scan(&sourceAppGUID, &protocol, &startIP, &endIP, &startPort, &endPort)
 		if err != nil {
 			return foundPolicies, err
+		}
+
+		var ports []Ports
+		if startPort != 0 && endPort != 0 {
+			ports = []Ports{
+				{
+					Start: int(startPort),
+					End:   int(endPort),
+				},
+			}
 		}
 
 		foundPolicies = append(foundPolicies, EgressPolicy{
@@ -320,6 +362,7 @@ func (e *EgressPolicyTable) GetByGuids(ids []string) ([]EgressPolicy, error) {
 			},
 			Destination: EgressDestination{
 				Protocol: protocol,
+				Ports:    ports,
 				IPRanges: []IPRange{
 					{
 						Start: startIP,

@@ -45,6 +45,7 @@ type EgressSource struct {
 
 type EgressDestination struct {
 	Protocol string
+	Ports    []Ports
 	IPRanges []IPRange
 }
 

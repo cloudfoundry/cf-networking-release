@@ -123,15 +123,18 @@ var _ = Describe("Egress Policy Table", func() {
 			ipRangeTerminalID, err := egressPolicyTable.CreateTerminal(tx)
 			Expect(err).ToNot(HaveOccurred())
 
-			id, err := egressPolicyTable.CreateIPRange(tx, ipRangeTerminalID, "1.1.1.1", "2.2.2.2", "tcp")
+			id, err := egressPolicyTable.CreateIPRange(tx, ipRangeTerminalID, "1.1.1.1", "2.2.2.2", "tcp", 8080, 8081)
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(id).To(Equal(int64(1)))
 
 			var startIP, endIP, protocol string
-			row := tx.QueryRow(`SELECT start_ip, end_ip, protocol FROM ip_ranges WHERE id = 1`)
-			err = row.Scan(&startIP, &endIP, &protocol)
+			var startPort, endPort int64
+			row := tx.QueryRow(`SELECT start_ip, end_ip, protocol, start_port, end_port FROM ip_ranges WHERE id = 1`)
+			err = row.Scan(&startIP, &endIP, &protocol, &startPort, &endPort)
 			Expect(err).ToNot(HaveOccurred())
+			Expect(startPort).To(Equal(int64(8080)))
+			Expect(endPort).To(Equal(int64(8081)))
 			Expect(startIP).To(Equal("1.1.1.1"))
 			Expect(endIP).To(Equal("2.2.2.2"))
 			Expect(protocol).To(Equal("tcp"))
@@ -142,7 +145,7 @@ var _ = Describe("Egress Policy Table", func() {
 
 			fakeTx.DriverNameReturns("db2")
 
-			_, err := egressPolicyTable.CreateIPRange(fakeTx, 1, "1.1.1.1", "2.2.2.2", "tcp")
+			_, err := egressPolicyTable.CreateIPRange(fakeTx, 1, "1.1.1.1", "2.2.2.2", "tcp", 8080, 8081)
 			Expect(err).To(MatchError("unknown driver: db2"))
 		})
 	})
@@ -217,7 +220,7 @@ var _ = Describe("Egress Policy Table", func() {
 			ipRangeTerminalID, err := egressPolicyTable.CreateTerminal(tx)
 			Expect(err).ToNot(HaveOccurred())
 
-			ipRangeID, err = egressPolicyTable.CreateIPRange(tx, ipRangeTerminalID, "1.1.1.1", "2.2.2.2", "tcp")
+			ipRangeID, err = egressPolicyTable.CreateIPRange(tx, ipRangeTerminalID, "1.1.1.1", "2.2.2.2", "tcp", 8080, 8081)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(ipRangeID).To(Equal(int64(1)))
 		})
@@ -355,6 +358,12 @@ var _ = Describe("Egress Policy Table", func() {
 				},
 				Destination: store.EgressDestination{
 					Protocol: "tcp",
+					Ports: []store.Ports{
+						{
+							Start: 8080,
+							End:   8081,
+						},
+					},
 					IPRanges: []store.IPRange{
 						{
 							Start: "1.1.1.1",
@@ -380,7 +389,7 @@ var _ = Describe("Egress Policy Table", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(appID).To(Equal(int64(1)))
 
-			ipRangeID, err = egressPolicyTable.CreateIPRange(tx, destinationTerminalID, "1.1.1.1", "2.2.2.2", "tcp")
+			ipRangeID, err = egressPolicyTable.CreateIPRange(tx, destinationTerminalID, "1.1.1.1", "2.2.2.2", "tcp", 8080, 8081)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(ipRangeID).To(Equal(int64(1)))
 		})
@@ -395,6 +404,58 @@ var _ = Describe("Egress Policy Table", func() {
 				SourceTerminalID:      sourceTerminalID,
 				SourceAppID:           appID,
 			}))
+		})
+
+		Context("when no port is provided", func() {
+			BeforeEach(func() {
+				var err error
+				egressPolicy = store.EgressPolicy{
+					Source: store.EgressSource{
+						ID: "some-app-guid-2",
+					},
+					Destination: store.EgressDestination{
+						Protocol: "tcp",
+						IPRanges: []store.IPRange{
+							{
+								Start: "1.1.1.1",
+								End:   "2.2.2.2",
+							},
+						},
+					},
+				}
+
+				sourceTerminalID, err = egressPolicyTable.CreateTerminal(tx)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(sourceTerminalID).To(Equal(int64(3)))
+
+				destinationTerminalID, err = egressPolicyTable.CreateTerminal(tx)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(destinationTerminalID).To(Equal(int64(4)))
+
+				egressPolicyID, err = egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalID, destinationTerminalID)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(egressPolicyID).To(Equal(int64(2)))
+
+				appID, err = egressPolicyTable.CreateApp(tx, sourceTerminalID, "some-app-guid-2")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(appID).To(Equal(int64(2)))
+
+				ipRangeID, err = egressPolicyTable.CreateIPRange(tx, destinationTerminalID, "1.1.1.1", "2.2.2.2", "tcp", 0, 0)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(ipRangeID).To(Equal(int64(2)))
+			})
+
+			It("should returns the ids for the egress policy with port values of 0", func() {
+				ids, err := egressPolicyTable.GetIDsByEgressPolicy(tx, egressPolicy)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ids).To(Equal(store.EgressPolicyIDCollection{
+					EgressPolicyID:        egressPolicyID,
+					DestinationTerminalID: destinationTerminalID,
+					DestinationIPRangeID:  ipRangeID,
+					SourceTerminalID:      sourceTerminalID,
+					SourceAppID:           appID,
+				}))
+			})
 		})
 
 		Context("when it can't find a matching egress policy", func() {
@@ -449,6 +510,12 @@ var _ = Describe("Egress Policy Table", func() {
 					},
 					Destination: store.EgressDestination{
 						Protocol: "tcp",
+						Ports: []store.Ports{
+							{
+								Start: 8080,
+								End:   8081,
+							},
+						},
 						IPRanges: []store.IPRange{
 							{
 								Start: "1.2.3.4",
@@ -510,6 +577,12 @@ var _ = Describe("Egress Policy Table", func() {
 					},
 					Destination: store.EgressDestination{
 						Protocol: "tcp",
+						Ports: []store.Ports{
+							{
+								Start: 8080,
+								End:   8081,
+							},
+						},
 						IPRanges: []store.IPRange{
 							{
 								Start: "1.2.3.4",

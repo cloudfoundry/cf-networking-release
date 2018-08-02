@@ -83,12 +83,20 @@ func (p *EgressPolicy) asStoreEgressPolicy() store.EgressPolicy {
 			End:   apiIPRange.End,
 		})
 	}
+	ports := []store.Ports{}
+	for _, apiPorts := range p.Destination.Ports {
+		ports = append(ports, store.Ports{
+			Start: apiPorts.Start,
+			End:   apiPorts.End,
+		})
+	}
 	return store.EgressPolicy{
 		Source: store.EgressSource{
 			ID: p.Source.ID,
 		},
 		Destination: store.EgressDestination{
 			Protocol: p.Destination.Protocol,
+			Ports:    ports,
 			IPRanges: ipRanges,
 		},
 	}
@@ -118,12 +126,24 @@ func (p *Policy) asStorePolicy() store.Policy {
 }
 func mapStoreEgressPolicy(storeEgressPolicy store.EgressPolicy) EgressPolicy {
 	firstIPRange := storeEgressPolicy.Destination.IPRanges[0]
+
+	var ports []Ports
+	if len(storeEgressPolicy.Destination.Ports) > 0 {
+		ports = []Ports{
+			{
+				Start: storeEgressPolicy.Destination.Ports[0].Start,
+				End:   storeEgressPolicy.Destination.Ports[0].End,
+			},
+		}
+	}
+
 	return EgressPolicy{
 		Source: &EgressSource{
 			ID: storeEgressPolicy.Source.ID,
 		},
 		Destination: &EgressDestination{
 			Protocol: storeEgressPolicy.Destination.Protocol,
+			Ports:    ports,
 			IPRanges: []IPRange{{
 				Start: firstIPRange.Start,
 				End:   firstIPRange.End,
