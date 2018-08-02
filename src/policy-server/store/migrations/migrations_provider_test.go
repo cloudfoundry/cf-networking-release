@@ -47,6 +47,10 @@ var _ = Describe("Migrations Provider", func() {
 			migrations.MigrationsToPerform[5],
 			migrations.MigrationsToPerform[6],
 			migrations.MigrationsToPerform[7],
+			migrations.MigrationsToPerform[8],
+			migrations.MigrationsToPerform[9],
+			migrations.MigrationsToPerform[10],
+			migrations.MigrationsToPerform[11],
 		}))
 	})
 
@@ -100,6 +104,10 @@ var _ = Describe("Migrations Provider", func() {
 				migrations.MigrationsToPerform[5],
 				migrations.MigrationsToPerform[6],
 				migrations.MigrationsToPerform[7],
+				migrations.MigrationsToPerform[8],
+				migrations.MigrationsToPerform[9],
+				migrations.MigrationsToPerform[10],
+				migrations.MigrationsToPerform[11],
 			}))
 		})
 	})
@@ -130,6 +138,10 @@ var _ = Describe("Migrations Provider", func() {
 				migrations.MigrationsToPerform[5],
 				migrations.MigrationsToPerform[6],
 				migrations.MigrationsToPerform[7],
+				migrations.MigrationsToPerform[8],
+				migrations.MigrationsToPerform[9],
+				migrations.MigrationsToPerform[10],
+				migrations.MigrationsToPerform[11],
 			}))
 		})
 	})
@@ -153,6 +165,10 @@ var _ = Describe("Migrations Provider", func() {
 				migrations.MigrationsToPerform[5],
 				migrations.MigrationsToPerform[6],
 				migrations.MigrationsToPerform[7],
+				migrations.MigrationsToPerform[8],
+				migrations.MigrationsToPerform[9],
+				migrations.MigrationsToPerform[10],
+				migrations.MigrationsToPerform[11],
 			}))
 		})
 	})
