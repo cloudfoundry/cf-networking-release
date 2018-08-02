@@ -1207,6 +1207,123 @@ var _ = Describe("migrations", func() {
 			})
 		})
 
+		Describe("V16-V18 ICMP Range", func() {
+			Context("mysql", func() {
+				BeforeEach(func() {
+					if realDb.DriverName() != "mysql" {
+						Skip("skipping mysql tests")
+					}
+
+					By("performing migration")
+					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 24)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(numMigrations).To(Equal(24))
+
+					By("inserting data")
+					result, err := realDb.Exec("INSERT INTO terminals (id) VALUES (NULL)")
+					Expect(err).NotTo(HaveOccurred())
+					terminalId, err := result.LastInsertId()
+					Expect(err).NotTo(HaveOccurred())
+
+					_, err = realDb.Exec(`
+						INSERT INTO ip_ranges (protocol, start_ip, end_ip, terminal_id, start_port, end_port)
+						VALUES (?, ?, ?, ?, ?, ?)`, "tcp", "1.2.3.4", "1.2.3.5", terminalId, 8080, 8081)
+					Expect(err).NotTo(HaveOccurred())
+
+					By("performing migration for icmp type/code")
+					numMigrations, err = migrator.PerformMigrations(realDb.DriverName(), realDb, 2)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(numMigrations).To(Equal(2))
+				})
+
+				It("should migrate", func() {
+					rows, err := realDb.Query(helpers.RebindForSQLDialect(`
+							select COLUMN_NAME
+							from INFORMATION_SCHEMA.COLUMNS t1
+							where TABLE_NAME='ip_ranges' and TABLE_SCHEMA=?
+						`, realDb.DriverName()), dbConf.DatabaseName)
+					Expect(err).NotTo(HaveOccurred())
+
+					By("verifying the icmp type and icmp code columns exist", func() {
+						var columns []string
+						defer rows.Close()
+						for rows.Next() {
+							var columnName string
+							Expect(rows.Scan(&columnName)).To(Succeed())
+							columns = append(columns, columnName)
+						}
+						Expect(columns).To(ContainElement("icmp_type"))
+						Expect(columns).To(ContainElement("icmp_code"))
+					})
+
+					By("verifying that old rows have a default value of 0 for start/end ports", func() {
+						var icmpType, icmpCode int64
+						err := realDb.QueryRow(`SELECT icmp_type, icmp_code FROM ip_ranges`).Scan(&icmpType, &icmpCode)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(icmpType).To(Equal(int64(0)))
+						Expect(icmpCode).To(Equal(int64(0)))
+					})
+				})
+			})
+
+			Context("postgres", func() {
+				BeforeEach(func() {
+					if realDb.DriverName() != "postgres" {
+						Skip("skipping postgres tests")
+					}
+
+					By("performing migration")
+					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 24)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(numMigrations).To(Equal(24))
+
+					By("inserting data")
+					var terminalId int64
+					err = realDb.QueryRow("INSERT INTO terminals DEFAULT VALUES RETURNING id").Scan(&terminalId)
+					Expect(err).NotTo(HaveOccurred())
+
+					_, err = realDb.Exec(realDb.RawConnection().Rebind(`
+						INSERT INTO ip_ranges (protocol, start_ip, end_ip, terminal_id, start_port, end_port)
+						VALUES (?, ?, ?, ?, ?, ?)`), "tcp", "1.2.3.4", "1.2.3.5", terminalId, 8080, 8081)
+					Expect(err).NotTo(HaveOccurred())
+
+					By("performing migration for icmp type/code")
+					numMigrations, err = migrator.PerformMigrations(realDb.DriverName(), realDb, 2)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(numMigrations).To(Equal(2))
+				})
+
+				It("should migrate", func() {
+					rows, err := realDb.Query(helpers.RebindForSQLDialect(`
+							select COLUMN_NAME
+							from INFORMATION_SCHEMA.COLUMNS t1
+							where TABLE_NAME='ip_ranges'
+						`, realDb.DriverName()))
+					Expect(err).NotTo(HaveOccurred())
+
+					By("verifying the icmp type and icmp code columns exist", func() {
+						var columns []string
+						defer rows.Close()
+						for rows.Next() {
+							var columnName string
+							Expect(rows.Scan(&columnName)).To(Succeed())
+							columns = append(columns, columnName)
+						}
+						Expect(columns).To(ContainElement("icmp_type"))
+						Expect(columns).To(ContainElement("icmp_code"))
+					})
+
+					By("verifying that old rows have a default value of 0 for icmp type/code", func() {
+						var icmpType, icmpCode int64
+						err := realDb.QueryRow(`SELECT icmp_type, icmp_code FROM ip_ranges`).Scan(&icmpType, &icmpCode)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(icmpType).To(Equal(int64(0)))
+						Expect(icmpCode).To(Equal(int64(0)))
+					})
+				})
+			})
+		})
+
 		Context("when migrating in parallel", func() {
 			Context("mysql", func() {
 				BeforeEach(func() {

@@ -172,6 +172,17 @@ var _ = Describe("External API Adding Policies", func() {
 						"ports": [{"start": 8080, "end": 8081}],
 						"protocol": "tcp"
 					}
+				},
+				{
+					"source": {
+						"id": "some-app-guid"
+					},
+					"destination": {
+						"ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}],
+						"protocol": "icmp",
+						"type": 4,
+						"code": 3
+					}
 				}
 			]
 		}`
@@ -179,7 +190,7 @@ var _ = Describe("External API Adding Policies", func() {
 		v1ExpectedResponse := `{
 			"total_policies": 0,
 			"policies": [],
-			"total_egress_policies": 1,
+			"total_egress_policies": 2,
 			"egress_policies": [
 				{
 					"source": {
@@ -189,6 +200,17 @@ var _ = Describe("External API Adding Policies", func() {
 						"ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}],
 						"ports": [{"start": 8080, "end": 8081}],
 						"protocol": "tcp"
+					}
+				},
+				{
+					"source": {
+						"id": "some-app-guid"
+					},
+					"destination": {
+						"ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}],
+						"protocol": "icmp",
+						"type": 4,
+						"code": 3
 					}
 				}
 			]

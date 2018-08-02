@@ -64,6 +64,47 @@ var _ = Describe("Egress Validator", func() {
 			Expect(err).To(MatchError("missing egress destination protocol"))
 		})
 
+		It("requires protocol to be tcp, udp, or icmp", func() {
+			egressPolicies[0].Destination.Protocol = "invalid"
+
+			err := validator.ValidateEgressPolicies(egressPolicies)
+			Expect(err).To(MatchError("protocol must be tcp, udp, or icmp"))
+		})
+
+		Context("when protocol is icmp", func() {
+			BeforeEach(func() {
+				egressPolicies[0].Destination.Protocol = "icmp"
+			})
+
+			It("requires icmp type", func() {
+				err := validator.ValidateEgressPolicies(egressPolicies)
+				Expect(err).To(MatchError("missing icmp type"))
+			})
+
+			It("requires icmp code", func() {
+				i := 2
+				egressPolicies[0].Destination.ICMPType = &i
+
+				err := validator.ValidateEgressPolicies(egressPolicies)
+				Expect(err).To(MatchError("missing icmp code"))
+			})
+
+			It("does not allow ports to be defined", func() {
+				i := 2
+				egressPolicies[0].Destination.ICMPType = &i
+				egressPolicies[0].Destination.ICMPCode = &i
+				egressPolicies[0].Destination.Ports = []api.Ports{
+					{
+						Start: 11,
+						End:   12,
+					},
+				}
+
+				err := validator.ValidateEgressPolicies(egressPolicies)
+				Expect(err).To(MatchError("ports can not be defined with icmp"))
+			})
+		})
+
 		It("requires ip range", func() {
 			egressPolicies[0].Destination.IPRanges = []api.IPRange{}
 

@@ -47,6 +47,8 @@ type EgressDestination struct {
 	Protocol string
 	Ports    []Ports
 	IPRanges []IPRange
+	ICMPType int
+	ICMPCode int
 }
 
 type IPRange struct {

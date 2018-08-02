@@ -90,7 +90,8 @@ func (p *EgressPolicy) asStoreEgressPolicy() store.EgressPolicy {
 			End:   apiPorts.End,
 		})
 	}
-	return store.EgressPolicy{
+
+	egressPolicy := store.EgressPolicy{
 		Source: store.EgressSource{
 			ID: p.Source.ID,
 		},
@@ -100,6 +101,13 @@ func (p *EgressPolicy) asStoreEgressPolicy() store.EgressPolicy {
 			IPRanges: ipRanges,
 		},
 	}
+
+	if p.Destination.Protocol == "icmp" {
+		egressPolicy.Destination.ICMPType = *p.Destination.ICMPType
+		egressPolicy.Destination.ICMPCode = *p.Destination.ICMPCode
+	}
+
+	return egressPolicy
 }
 
 func (p *Policy) asStorePolicy() store.Policy {
@@ -137,7 +145,7 @@ func mapStoreEgressPolicy(storeEgressPolicy store.EgressPolicy) EgressPolicy {
 		}
 	}
 
-	return EgressPolicy{
+	egressPolicy := EgressPolicy{
 		Source: &EgressSource{
 			ID: storeEgressPolicy.Source.ID,
 		},
@@ -150,7 +158,15 @@ func mapStoreEgressPolicy(storeEgressPolicy store.EgressPolicy) EgressPolicy {
 			}},
 		},
 	}
+
+	if storeEgressPolicy.Destination.Protocol == "icmp" {
+		egressPolicy.Destination.ICMPType = &storeEgressPolicy.Destination.ICMPType
+		egressPolicy.Destination.ICMPCode = &storeEgressPolicy.Destination.ICMPCode
+	}
+
+	return egressPolicy
 }
+
 func mapStorePolicy(storePolicy store.Policy) Policy {
 	return Policy{
 		Source: Source{

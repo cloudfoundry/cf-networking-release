@@ -9,7 +9,7 @@ import (
 type egressPolicyRepo interface {
 	CreateTerminal(tx db.Transaction) (int64, error)
 	CreateApp(tx db.Transaction, sourceTerminalID int64, appGUID string) (int64, error)
-	CreateIPRange(tx db.Transaction, destinationTerminalID int64, startIP, endIP, protocol string, startPort, endPort int64) (int64, error)
+	CreateIPRange(tx db.Transaction, destinationTerminalID int64, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) (int64, error)
 	CreateEgressPolicy(tx db.Transaction, sourceTerminalID, destinationTerminalID int64) (int64, error)
 	GetTerminalByAppGUID(tx db.Transaction, appGUID string) (int64, error)
 	GetAllPolicies() ([]EgressPolicy, error)
@@ -64,6 +64,8 @@ func (e *EgressPolicyStore) CreateWithTx(tx db.Transaction, policies []EgressPol
 			policy.Destination.Protocol,
 			startPort,
 			endPort,
+			int64(policy.Destination.ICMPType),
+			int64(policy.Destination.ICMPCode),
 		)
 		if err != nil {
 			return fmt.Errorf("failed to create ip range: %s", err)

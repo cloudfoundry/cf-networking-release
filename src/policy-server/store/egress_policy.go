@@ -72,12 +72,12 @@ func (e *EgressPolicyTable) CreateApp(tx db.Transaction, sourceTerminalID int64,
 	return -1, fmt.Errorf("unknown driver: %s", driverName)
 }
 
-func (e *EgressPolicyTable) CreateIPRange(tx db.Transaction, destinationTerminalID int64, startIP, endIP, protocol string, startPort, endPort int64) (int64, error) {
+func (e *EgressPolicyTable) CreateIPRange(tx db.Transaction, destinationTerminalID int64, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) (int64, error) {
 	driverName := tx.DriverName()
 	if driverName == "mysql" {
 		result, err := tx.Exec(tx.Rebind(`
-			INSERT INTO ip_ranges (protocol, start_ip, end_ip, terminal_id, start_port, end_port)
-			VALUES (?,?,?,?,?,?)
+			INSERT INTO ip_ranges (protocol, start_ip, end_ip, terminal_id, start_port, end_port, icmp_type, icmp_code)
+			VALUES (?,?,?,?,?,?,?,?)
 			`),
 			protocol,
 			startIP,
@@ -85,6 +85,8 @@ func (e *EgressPolicyTable) CreateIPRange(tx db.Transaction, destinationTerminal
 			destinationTerminalID,
 			startPort,
 			endPort,
+			icmpType,
+			icmpCode,
 		)
 
 		if err != nil {
@@ -96,8 +98,8 @@ func (e *EgressPolicyTable) CreateIPRange(tx db.Transaction, destinationTerminal
 		var id int64
 
 		err := tx.QueryRow(tx.Rebind(`
-			INSERT INTO ip_ranges (protocol, start_ip, end_ip, terminal_id, start_port, end_port)
-			VALUES (?,?,?,?,?,?)
+			INSERT INTO ip_ranges (protocol, start_ip, end_ip, terminal_id, start_port, end_port, icmp_type, icmp_code)
+			VALUES (?,?,?,?,?,?,?,?)
  			RETURNING id
 			`),
 			protocol,
@@ -106,6 +108,8 @@ func (e *EgressPolicyTable) CreateIPRange(tx db.Transaction, destinationTerminal
 			destinationTerminalID,
 			startPort,
 			endPort,
+			icmpType,
+			icmpCode,
 		).Scan(&id)
 
 		if err != nil {
@@ -209,7 +213,9 @@ func (e *EgressPolicyTable) GetIDsByEgressPolicy(tx db.Transaction, egressPolicy
 					ip_ranges.start_ip = ? AND
 					ip_ranges.end_ip = ? AND
 					ip_ranges.start_port = ? AND
-					ip_ranges.end_port = ?
+					ip_ranges.end_port = ? AND
+					ip_ranges.icmp_type = ? AND
+					ip_ranges.icmp_code = ?
 		;`),
 		egressPolicy.Source.ID,
 		egressPolicy.Destination.Protocol,
@@ -217,6 +223,8 @@ func (e *EgressPolicyTable) GetIDsByEgressPolicy(tx db.Transaction, egressPolicy
 		egressPolicy.Destination.IPRanges[0].End,
 		startPort,
 		endPort,
+		egressPolicy.Destination.ICMPType,
+		egressPolicy.Destination.ICMPCode,
 	).
 		Scan(&egressPolicyID, &sourceTerminalID, &destinationTerminalID, &appID, &ipRangeID)
 
@@ -260,7 +268,9 @@ func (e *EgressPolicyTable) GetAllPolicies() ([]EgressPolicy, error) {
 			ip_ranges.start_ip,
 			ip_ranges.end_ip,
 			ip_ranges.start_port,
-			ip_ranges.end_port
+			ip_ranges.end_port,
+			ip_ranges.icmp_type,
+			ip_ranges.icmp_code
 		from egress_policies
 		LEFT OUTER JOIN apps on (egress_policies.source_id = apps.terminal_id)
 		LEFT OUTER JOIN ip_ranges on (egress_policies.destination_id = ip_ranges.terminal_id);`)
@@ -274,9 +284,9 @@ func (e *EgressPolicyTable) GetAllPolicies() ([]EgressPolicy, error) {
 	for rows.Next() {
 
 		var sourceAppGUID, protocol, startIP, endIP string
-		var startPort, endPort int
+		var startPort, endPort, icmpType, icmpCode int
 
-		err = rows.Scan(&sourceAppGUID, &protocol, &startIP, &endIP, &startPort, &endPort)
+		err = rows.Scan(&sourceAppGUID, &protocol, &startIP, &endIP, &startPort, &endPort, &icmpType, &icmpCode)
 		if err != nil {
 			return []EgressPolicy{}, err
 		}
@@ -304,6 +314,8 @@ func (e *EgressPolicyTable) GetAllPolicies() ([]EgressPolicy, error) {
 						End:   endIP,
 					},
 				},
+				ICMPType: icmpType,
+				ICMPCode: icmpCode,
 			},
 		})
 	}
@@ -325,7 +337,9 @@ func (e *EgressPolicyTable) GetByGuids(ids []string) ([]EgressPolicy, error) {
 			ip_ranges.start_ip,
 			ip_ranges.end_ip,
 			ip_ranges.start_port,
-			ip_ranges.end_port
+			ip_ranges.end_port,
+			ip_ranges.icmp_type,
+			ip_ranges.icmp_code
 		from egress_policies
 		LEFT OUTER JOIN apps on (egress_policies.source_id = apps.terminal_id)
 		LEFT OUTER JOIN ip_ranges on (egress_policies.destination_id = ip_ranges.terminal_id)
@@ -339,9 +353,9 @@ func (e *EgressPolicyTable) GetByGuids(ids []string) ([]EgressPolicy, error) {
 	for rows.Next() {
 
 		var sourceAppGUID, protocol, startIP, endIP string
-		var startPort, endPort int64
+		var startPort, endPort, icmpType, icmpCode int
 
-		err = rows.Scan(&sourceAppGUID, &protocol, &startIP, &endIP, &startPort, &endPort)
+		err = rows.Scan(&sourceAppGUID, &protocol, &startIP, &endIP, &startPort, &endPort, &icmpType, &icmpCode)
 		if err != nil {
 			return foundPolicies, err
 		}
@@ -369,6 +383,8 @@ func (e *EgressPolicyTable) GetByGuids(ids []string) ([]EgressPolicy, error) {
 						End:   endIP,
 					},
 				},
+				ICMPType: icmpType,
+				ICMPCode: icmpCode,
 			},
 		})
 	}

@@ -143,10 +143,23 @@ var _ = Describe("ApiPolicyMapper", func() {
 								"end": "2.2.3.5"
 							}]
 						}
+					},{
+						"source": { "id": "some-src-id-2" },
+						"destination": {
+							"protocol": "icmp",
+							"ips": [{
+								"start": "2.2.3.4",
+								"end": "2.2.3.5"
+							}],
+							"type": 1,
+							"code": 2
+						}
 					}]
 				}`),
 				)
 				storePolicies := policyCollection.Policies
+				icmpType := 1
+				icmpCode := 2
 				Expect(err).NotTo(HaveOccurred())
 				Expect(fakeValidator.ValidatePayloadCallCount()).To(Equal(1))
 				Expect(fakeValidator.ValidatePayloadArgsForCall(0)).To(Equal(
@@ -175,6 +188,19 @@ var _ = Describe("ApiPolicyMapper", func() {
 									IPRanges: []api.IPRange{
 										{Start: "2.2.3.4", End: "2.2.3.5"},
 									},
+								},
+							},
+							{
+								Source: &api.EgressSource{
+									ID: "some-src-id-2",
+								},
+								Destination: &api.EgressDestination{
+									Protocol: "icmp",
+									IPRanges: []api.IPRange{
+										{Start: "2.2.3.4", End: "2.2.3.5"},
+									},
+									ICMPType: &icmpType,
+									ICMPCode: &icmpCode,
 								},
 							},
 						},
@@ -210,6 +236,21 @@ var _ = Describe("ApiPolicyMapper", func() {
 									End:   "2.2.3.5",
 								},
 							},
+						},
+					},
+					{
+						Source: store.EgressSource{ID: "some-src-id-2"},
+						Destination: store.EgressDestination{
+							Protocol: "icmp",
+							Ports:    []store.Ports{},
+							IPRanges: []store.IPRange{
+								{
+									Start: "2.2.3.4",
+									End:   "2.2.3.5",
+								},
+							},
+							ICMPType: 1,
+							ICMPCode: 2,
 						},
 					},
 				}))
@@ -296,6 +337,18 @@ var _ = Describe("ApiPolicyMapper", func() {
 						}},
 					},
 				},
+				{
+					Source: store.EgressSource{ID: "egress-source-id-2"},
+					Destination: store.EgressDestination{
+						Protocol: "icmp",
+						IPRanges: []store.IPRange{{
+							Start: "1.2.3.7",
+							End:   "1.2.3.8",
+						}},
+						ICMPType: 1,
+						ICMPCode: 6,
+					},
+				},
 			}
 
 			payload, err := mapper.AsBytes(policies, egressPolicies)
@@ -327,7 +380,7 @@ var _ = Describe("ApiPolicyMapper", func() {
 						}
 					}],
 
-					"total_egress_policies": 2,
+					"total_egress_policies": 3,
 					"egress_policies": [{
 						"source": { "id": "egress-source-id" },
 						"destination": {
@@ -349,6 +402,17 @@ var _ = Describe("ApiPolicyMapper", func() {
 								"start": "1.2.3.7",
 								"end": "1.2.3.8"
 							}]
+						}
+					}, {
+						"source": { "id": "egress-source-id-2" },
+						"destination": {
+							"protocol": "icmp",
+							"ips": [{
+								"start": "1.2.3.7",
+								"end": "1.2.3.8"
+							}],
+							"type": 1,
+							"code": 6
 						}
 					}]
 				}`),

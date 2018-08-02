@@ -26,7 +26,7 @@ var _ = Describe("Migrations Provider", func() {
 	It("returns a list of migrations to perform", func() {
 		migrationsToPerform, err := migrationsProvider.MigrationsToPerform()
 		Expect(err).ToNot(HaveOccurred())
-		Expect(migrationsToPerform).To(Equal(migrations.PolicyServerMigrations{
+		expectedMigrations := migrations.PolicyServerMigrations{
 			migrations.V1ModifiedMigrationsToPerform[0],
 			migrations.V1ModifiedMigrationsToPerform[1],
 			migrations.V1ModifiedMigrationsToPerform[2],
@@ -39,19 +39,9 @@ var _ = Describe("Migrations Provider", func() {
 			migrations.V2ModifiedMigrationsToPerform[6],
 			migrations.V3ModifiedMigrationsToPerform[0],
 			migrations.V3ModifiedMigrationsToPerform[1],
-			migrations.MigrationsToPerform[0],
-			migrations.MigrationsToPerform[1],
-			migrations.MigrationsToPerform[2],
-			migrations.MigrationsToPerform[3],
-			migrations.MigrationsToPerform[4],
-			migrations.MigrationsToPerform[5],
-			migrations.MigrationsToPerform[6],
-			migrations.MigrationsToPerform[7],
-			migrations.MigrationsToPerform[8],
-			migrations.MigrationsToPerform[9],
-			migrations.MigrationsToPerform[10],
-			migrations.MigrationsToPerform[11],
-		}))
+		}
+		expectedMigrations = append(expectedMigrations, migrations.MigrationsToPerform...)
+		Expect(migrationsToPerform).To(Equal(expectedMigrations))
 	})
 
 	It("returns a helpful error message for V1MigrationOccurred errors", func() {
@@ -83,7 +73,7 @@ var _ = Describe("Migrations Provider", func() {
 		It("returns a legacy v1 migration in the list of migrations to perform", func() {
 			migrationsToPerform, err := migrationsProvider.MigrationsToPerform()
 			Expect(err).ToNot(HaveOccurred())
-			Expect(migrationsToPerform).To(Equal(migrations.PolicyServerMigrations{
+			expectedMigrations := migrations.PolicyServerMigrations{
 				migrations.V1LegacyMigrationsToPerform[0],
 				migrations.V1LegacyMigrationsToPerform[1],
 				migrations.V1LegacyMigrationsToPerform[2],
@@ -96,19 +86,9 @@ var _ = Describe("Migrations Provider", func() {
 				migrations.V2ModifiedMigrationsToPerform[6],
 				migrations.V3ModifiedMigrationsToPerform[0],
 				migrations.V3ModifiedMigrationsToPerform[1],
-				migrations.MigrationsToPerform[0],
-				migrations.MigrationsToPerform[1],
-				migrations.MigrationsToPerform[2],
-				migrations.MigrationsToPerform[3],
-				migrations.MigrationsToPerform[4],
-				migrations.MigrationsToPerform[5],
-				migrations.MigrationsToPerform[6],
-				migrations.MigrationsToPerform[7],
-				migrations.MigrationsToPerform[8],
-				migrations.MigrationsToPerform[9],
-				migrations.MigrationsToPerform[10],
-				migrations.MigrationsToPerform[11],
-			}))
+			}
+			expectedMigrations = append(expectedMigrations, migrations.MigrationsToPerform...)
+			Expect(migrationsToPerform).To(Equal(expectedMigrations))
 		})
 	})
 
@@ -120,7 +100,7 @@ var _ = Describe("Migrations Provider", func() {
 		It("returns a legacy v2 migration in the list of migrations to perform", func() {
 			migrationsToPerform, err := migrationsProvider.MigrationsToPerform()
 			Expect(err).ToNot(HaveOccurred())
-			Expect(migrationsToPerform).To(gmmatchers.ContainSequence(migrations.PolicyServerMigrations{
+			expectedMigrations := migrations.PolicyServerMigrations{
 				migrations.V2LegacyMigrationsToPerform[0],
 				migrations.V2LegacyMigrationsToPerform[1],
 				migrations.V2LegacyMigrationsToPerform[2],
@@ -130,19 +110,9 @@ var _ = Describe("Migrations Provider", func() {
 				migrations.V2LegacyMigrationsToPerform[6],
 				migrations.V3ModifiedMigrationsToPerform[0],
 				migrations.V3ModifiedMigrationsToPerform[1],
-				migrations.MigrationsToPerform[0],
-				migrations.MigrationsToPerform[1],
-				migrations.MigrationsToPerform[2],
-				migrations.MigrationsToPerform[3],
-				migrations.MigrationsToPerform[4],
-				migrations.MigrationsToPerform[5],
-				migrations.MigrationsToPerform[6],
-				migrations.MigrationsToPerform[7],
-				migrations.MigrationsToPerform[8],
-				migrations.MigrationsToPerform[9],
-				migrations.MigrationsToPerform[10],
-				migrations.MigrationsToPerform[11],
-			}))
+			}
+			expectedMigrations = append(expectedMigrations, migrations.MigrationsToPerform...)
+			Expect(migrationsToPerform).To(gmmatchers.ContainSequence(expectedMigrations))
 		})
 	})
 
@@ -154,22 +124,12 @@ var _ = Describe("Migrations Provider", func() {
 		It("returns a legacy v3 migration in the list of migrations to perform", func() {
 			migrationsToPerform, err := migrationsProvider.MigrationsToPerform()
 			Expect(err).ToNot(HaveOccurred())
-			Expect(migrationsToPerform).To(gmmatchers.ContainSequence(migrations.PolicyServerMigrations{
+			expectedMigrations := migrations.PolicyServerMigrations{
 				migrations.V3LegacyMigrationsToPerform[0],
 				migrations.V3LegacyMigrationsToPerform[1],
-				migrations.MigrationsToPerform[0],
-				migrations.MigrationsToPerform[1],
-				migrations.MigrationsToPerform[2],
-				migrations.MigrationsToPerform[3],
-				migrations.MigrationsToPerform[4],
-				migrations.MigrationsToPerform[5],
-				migrations.MigrationsToPerform[6],
-				migrations.MigrationsToPerform[7],
-				migrations.MigrationsToPerform[8],
-				migrations.MigrationsToPerform[9],
-				migrations.MigrationsToPerform[10],
-				migrations.MigrationsToPerform[11],
-			}))
+			}
+			expectedMigrations = append(expectedMigrations, migrations.MigrationsToPerform...)
+			Expect(migrationsToPerform).To(gmmatchers.ContainSequence(expectedMigrations))
 		})
 	})
 })

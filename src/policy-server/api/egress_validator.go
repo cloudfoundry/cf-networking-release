@@ -48,6 +48,22 @@ func (v *EgressValidator) ValidateEgressPolicies(policies []EgressPolicy) error 
 		if bytes.Compare(parsedStartIP, parsedEndIP) > 0 {
 			return fmt.Errorf("start ip address should be before end ip address: start: %v end: %v", startIP, endIP)
 		}
+
+		if policy.Destination.Protocol != "icmp" && policy.Destination.Protocol != "tcp" && policy.Destination.Protocol != "udp" {
+			return fmt.Errorf("protocol must be tcp, udp, or icmp")
+		}
+
+		if policy.Destination.Protocol == "icmp" {
+			if policy.Destination.ICMPType == nil {
+				return fmt.Errorf("missing icmp type")
+			}
+			if policy.Destination.ICMPCode == nil {
+				return fmt.Errorf("missing icmp code")
+			}
+			if policy.Destination.Ports != nil {
+				return fmt.Errorf("ports can not be defined with icmp")
+			}
+		}
 	}
 
 	return nil

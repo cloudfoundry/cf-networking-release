@@ -61,6 +61,22 @@ var _ = Describe("EgressPolicyStore", func() {
 					},
 				},
 			},
+			{
+				Source: store.EgressSource{
+					ID: "different-app-guid",
+				},
+				Destination: store.EgressDestination{
+					Protocol: "icmp",
+					IPRanges: []store.IPRange{
+						{
+							Start: "2.2.3.4",
+							End:   "2.2.3.5",
+						},
+					},
+					ICMPType: 1,
+					ICMPCode: 2,
+				},
+			},
 		}
 
 		egressPolicyRepo.GetTerminalByAppGUIDReturns(-1, nil)
@@ -70,7 +86,7 @@ var _ = Describe("EgressPolicyStore", func() {
 		It("creates a source and destination terminal", func() {
 			err := egressPolicyStore.CreateWithTx(tx, egressPolicies)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(egressPolicyRepo.CreateTerminalCallCount()).To(Equal(4))
+			Expect(egressPolicyRepo.CreateTerminalCallCount()).To(Equal(6))
 			Expect(egressPolicyRepo.CreateTerminalArgsForCall(0)).To(Equal(tx))
 			Expect(egressPolicyRepo.CreateTerminalArgsForCall(1)).To(Equal(tx))
 			Expect(egressPolicyRepo.CreateTerminalArgsForCall(2)).To(Equal(tx))
@@ -91,7 +107,7 @@ var _ = Describe("EgressPolicyStore", func() {
 			err := egressPolicyStore.CreateWithTx(tx, egressPolicies)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(egressPolicyRepo.CreateAppCallCount()).To(Equal(2))
+			Expect(egressPolicyRepo.CreateAppCallCount()).To(Equal(3))
 			argTx, argSourceTerminalId, argAppGUID := egressPolicyRepo.CreateAppArgsForCall(0)
 			Expect(argTx).To(Equal(tx))
 			Expect(argSourceTerminalId).To(Equal(int64(42)))
@@ -113,12 +129,13 @@ var _ = Describe("EgressPolicyStore", func() {
 		It("creates an ip range with the destinationTerminalID", func() {
 			egressPolicyRepo.CreateTerminalReturnsOnCall(1, 42, nil)
 			egressPolicyRepo.CreateTerminalReturnsOnCall(3, 24, nil)
+			egressPolicyRepo.CreateTerminalReturnsOnCall(5, 44, nil)
 
 			err := egressPolicyStore.CreateWithTx(tx, egressPolicies)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(egressPolicyRepo.CreateIPRangeCallCount()).To(Equal(2))
+			Expect(egressPolicyRepo.CreateIPRangeCallCount()).To(Equal(3))
 
-			argTx, destinationID, startIP, endIP, protocol, startPort, endPort := egressPolicyRepo.CreateIPRangeArgsForCall(0)
+			argTx, destinationID, startIP, endIP, protocol, startPort, endPort, icmpType, icmpCode := egressPolicyRepo.CreateIPRangeArgsForCall(0)
 			Expect(argTx).To(Equal(tx))
 			Expect(destinationID).To(Equal(int64(42)))
 			Expect(startPort).To(Equal(int64(8080)))
@@ -126,8 +143,10 @@ var _ = Describe("EgressPolicyStore", func() {
 			Expect(startIP).To(Equal("1.2.3.4"))
 			Expect(endIP).To(Equal("1.2.3.5"))
 			Expect(protocol).To(Equal("tcp"))
+			Expect(icmpType).To(Equal(int64(0)))
+			Expect(icmpCode).To(Equal(int64(0)))
 
-			argTx, destinationID, startIP, endIP, protocol, startPort, endPort = egressPolicyRepo.CreateIPRangeArgsForCall(1)
+			argTx, destinationID, startIP, endIP, protocol, startPort, endPort, icmpType, icmpCode = egressPolicyRepo.CreateIPRangeArgsForCall(1)
 			Expect(argTx).To(Equal(tx))
 			Expect(destinationID).To(Equal(int64(24)))
 			Expect(startPort).To(Equal(int64(0)))
@@ -135,6 +154,19 @@ var _ = Describe("EgressPolicyStore", func() {
 			Expect(startIP).To(Equal("2.2.3.4"))
 			Expect(endIP).To(Equal("2.2.3.5"))
 			Expect(protocol).To(Equal("udp"))
+			Expect(icmpType).To(Equal(int64(0)))
+			Expect(icmpCode).To(Equal(int64(0)))
+
+			argTx, destinationID, startIP, endIP, protocol, startPort, endPort, icmpType, icmpCode = egressPolicyRepo.CreateIPRangeArgsForCall(2)
+			Expect(argTx).To(Equal(tx))
+			Expect(destinationID).To(Equal(int64(44)))
+			Expect(startPort).To(Equal(int64(0)))
+			Expect(endPort).To(Equal(int64(0)))
+			Expect(startIP).To(Equal("2.2.3.4"))
+			Expect(endIP).To(Equal("2.2.3.5"))
+			Expect(protocol).To(Equal("icmp"))
+			Expect(icmpType).To(Equal(int64(1)))
+			Expect(icmpCode).To(Equal(int64(2)))
 		})
 
 		It("returns an error when the CreateIPRange fails", func() {
@@ -152,7 +184,7 @@ var _ = Describe("EgressPolicyStore", func() {
 
 			err := egressPolicyStore.CreateWithTx(tx, egressPolicies)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(egressPolicyRepo.CreateEgressPolicyCallCount()).To(Equal(2))
+			Expect(egressPolicyRepo.CreateEgressPolicyCallCount()).To(Equal(3))
 
 			argTx, sourceID, destinationID := egressPolicyRepo.CreateEgressPolicyArgsForCall(0)
 			Expect(argTx).To(Equal(tx))
