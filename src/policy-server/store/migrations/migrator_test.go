@@ -74,11 +74,11 @@ var _ = Describe("migrations", func() {
 
 		legacyMigrationsProvider = &migrationsFakes.MigrationsProvider{}
 		legacyMigrationsProvider.MigrationsToPerformReturns(legacyMigrations, nil)
-
 		legacyMigrator = &migrations.Migrator{
 			MigrateAdapter:     &migrations.MigrateAdapter{},
 			MigrationsProvider: legacyMigrationsProvider,
 		}
+
 		modifiedMigrationsProvider = &migrations.MigrationsProvider{
 			Store: &store.MigrationsStore{
 				DBConn: realDb,
@@ -422,22 +422,25 @@ var _ = Describe("migrations", func() {
 
 				Context("when legacy migration v2 has already run", func() {
 					BeforeEach(func() {
-						numMigrations, err := legacyMigrator.PerformMigrations(realDb.DriverName(), realDb, 4)
+						numToRun := len(migrations.V1LegacyMigrationsToPerform) + 1
+						numMigrations, err := legacyMigrator.PerformMigrations(realDb.DriverName(), realDb, numToRun)
 						Expect(err).NotTo(HaveOccurred())
-						Expect(numMigrations).To(Equal(4))
+						Expect(numMigrations).To(Equal(numToRun))
 					})
 
 					It("should migrate with empty 2a-2f", func() {
-						numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 6)
+						numToRun := len(migrations.V2ModifiedMigrationsToPerform) - 1
+						numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, numToRun)
 						Expect(err).NotTo(HaveOccurred())
-						Expect(numMigrations).To(Equal(6))
+						Expect(numMigrations).To(Equal(numToRun))
 
 						rows, err := realDb.Query(`
-						select CONSTRAINT_NAME, COLUMN_NAME
-						from INFORMATION_SCHEMA.KEY_COLUMN_USAGE t1
-						where TABLE_NAME='destinations'
-					`)
+							select CONSTRAINT_NAME, COLUMN_NAME
+							from INFORMATION_SCHEMA.KEY_COLUMN_USAGE t1
+							where TABLE_NAME='destinations'
+						`)
 						Expect(err).NotTo(HaveOccurred())
+						defer rows.Close()
 
 						By("checking there's a constraint on group_id, port, protocol")
 						actualColumnUsageRows := scanColumnUsageRows(rows)

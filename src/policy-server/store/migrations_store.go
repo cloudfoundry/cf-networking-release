@@ -40,23 +40,29 @@ func (m *MigrationsStore) HasV2MigrationOccurred() (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("failed to query migration id: %s", err)
 	}
+
 	if !migrationIDExists {
 		return false, nil
 	}
 
-	var columnName string
+	//This constraint is added as the last step of the V2 migration(s)
+	query := `SELECT constraint_name FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+				WHERE constraint_name = 'unique_destination'
+					AND table_name = 'destinations'
+			    LIMIT 1`
 
-	query := `SELECT column_name FROM information_schema.columns WHERE column_name = 'end_port' AND table_name = 'destinations'`
-
-	err = m.DBConn.QueryRow(query).Scan(&columnName)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return false, nil
+	rows, err := m.DBConn.Query(query)
+	defer func() {
+		if rows != nil {
+			rows.Close()
 		}
-		return false, fmt.Errorf("failed to query column: %s", err)
+	}()
+
+	if err != nil {
+		return false, fmt.Errorf("failed to query constraint: %s", err)
 	}
 
-	return true, nil
+	return rows.Next(), nil
 }
 
 func (m *MigrationsStore) HasV3MigrationOccurred() (bool, error) {

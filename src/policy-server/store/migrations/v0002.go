@@ -120,7 +120,7 @@ var migration_modified_v0002e = map[string][]string{
 		`CALL drop_destination_index();`,
 	},
 	"postgres": {
-		`ALTER TABLE destinations ADD CONSTRAINT unique_destination UNIQUE (group_id, start_port, end_port, protocol);`,
+
 	},
 }
 
@@ -128,5 +128,7 @@ var migration_modified_v0002f = map[string][]string{
 	"mysql": {
 		`ALTER TABLE destinations ADD UNIQUE key unique_destination (group_id, start_port, end_port, protocol);`,
 	},
-	"postgres": {},
+	"postgres": {
+		`ALTER TABLE destinations ADD CONSTRAINT unique_destination UNIQUE (group_id, start_port, end_port, protocol);`,
+	},
 }

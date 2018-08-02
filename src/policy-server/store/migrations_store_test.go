@@ -60,7 +60,25 @@ var _ = Describe("MigrationsStore", func() {
 	})
 
 	Describe("HasV1MigrationOccurred", func() {
-		Context("when v1 migrations has occurred", func() {
+		Context("when modified v1 and v1a, but not v1b have run", func() {
+			BeforeEach(func() {
+				m := migrations.V1ModifiedMigrationsToPerform[0:2]
+				migrationsProvider.MigrationsToPerformReturns(m, nil)
+
+
+				numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 0)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(numMigrations).To(Equal(2))
+			})
+
+			It("returns false", func() {
+				hasOccurred, err := migrationsStore.HasV1MigrationOccurred()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(hasOccurred).To(BeFalse())
+			})
+		})
+
+		Context("when v1 migrations have occurred", func() {
 			BeforeEach(func() {
 				m := append(migrations.V1LegacyMigrationsToPerform,
 					migrations.MigrationsToPerform...)
@@ -112,9 +130,29 @@ var _ = Describe("MigrationsStore", func() {
 
 		Context("when v2 migration has not occurred", func() {
 			BeforeEach(func() {
-				numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 1)
+				numV1Migrations := len(migrations.V1LegacyMigrationsToPerform)
+				numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, numV1Migrations)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(numMigrations).To(Equal(1))
+				Expect(numMigrations).To(Equal(numMigrations))
+			})
+
+			It("returns false", func() {
+				hasOccurred, err := migrationsStore.HasV2MigrationOccurred()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(hasOccurred).To(BeFalse())
+			})
+		})
+
+		Context("when modified v2 through v2e, but not v2f have run", func() {
+			BeforeEach(func() {
+				m := append(migrations.V1ModifiedMigrationsToPerform,
+					migrations.V2ModifiedMigrationsToPerform...)
+				m = m[0:len(m)-1]
+				migrationsProvider.MigrationsToPerformReturns(m, nil)
+
+				numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 0)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(numMigrations).To(Equal(9))
 			})
 
 			It("returns false", func() {
