@@ -172,9 +172,10 @@ var _ = Describe("External API Deleting Policies", func() {
 				{ "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8080, "end": 8090 } } },
 				{ "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 7777, "end": 7777 } } }
 			],
-			"total_egress_policies": 1,
+			"total_egress_policies": 2,
 			"egress_policies": [
-				{"source": { "id": "some-app-guid" }, "destination": { "protocol": "tcp", "ips": [ {"start": "23.96.32.148", "end": "23.96.32.149" } ] } }
+				{"source": { "id": "some-app-guid" }, "destination": { "protocol": "tcp", "ips": [ {"start": "23.96.32.148", "end": "23.96.32.149" } ] } },
+				{"source": { "id": "some-app-guid" }, "destination": { "protocol": "icmp", "type": 1, "code": 2, "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] } }
 			]
 		}`
 
