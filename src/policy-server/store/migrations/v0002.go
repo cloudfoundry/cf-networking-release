@@ -119,9 +119,7 @@ var migration_modified_v0002e = map[string][]string{
 	"mysql": {
 		`CALL drop_destination_index();`,
 	},
-	"postgres": {
-
-	},
+	"postgres": {},
 }
 
 var migration_modified_v0002f = map[string][]string{

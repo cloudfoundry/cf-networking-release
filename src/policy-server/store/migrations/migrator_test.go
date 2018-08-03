@@ -1442,7 +1442,7 @@ var _ = Describe("migrations", func() {
 		})
 	})
 	Describe("Migrations should be atomic", func() {
-		FIt("should contain a single statement per migration", func() {
+		It("should contain a single statement per migration", func() {
 			for _, migration := range migrations.MigrationsToPerform {
 				for dbType, statements := range migration.Up {
 					if len(statements) > 1 {

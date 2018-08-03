@@ -65,7 +65,6 @@ var _ = Describe("MigrationsStore", func() {
 				m := migrations.V1ModifiedMigrationsToPerform[0:2]
 				migrationsProvider.MigrationsToPerformReturns(m, nil)
 
-
 				numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 0)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(numMigrations).To(Equal(2))
@@ -147,7 +146,7 @@ var _ = Describe("MigrationsStore", func() {
 			BeforeEach(func() {
 				m := append(migrations.V1ModifiedMigrationsToPerform,
 					migrations.V2ModifiedMigrationsToPerform...)
-				m = m[0:len(m)-1]
+				m = m[0 : len(m)-1]
 				migrationsProvider.MigrationsToPerformReturns(m, nil)
 
 				numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 0)
