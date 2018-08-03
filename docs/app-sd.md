@@ -56,16 +56,30 @@ cf curl /v2/shared_domains -d '{
 ```
 These steps can be done in either order, but the internal domain will not work until both are done.
 
+
+To delete a shared domain, run one of the following commands:
+```
+cf curl -X DELETE /v2/shared_domains/<SHARED DOMAIN GUID>
+```
+```
+cf delete-shared-domain <DOMAIN> [-f]
+```
+
 ### Historical Docs
 
 With capi-release versions 1.49.0-1.60.0:
 
 - The internal domain `apps.internal` is automatically created for you. 
 
-With capi-release versions >= 1.61.0:
+With capi-release versions 1.61.0-1.63.0:
 
 - The `apps.internal` internal domain is no longer seeded and must be created using the CAPI api. See the [Example steps](#example-steps) section for instructions.
 - A custom domain name may be used when creating an internal domain name, but note that the bosh-dns-adapter job's `internal_domains` property must be updated too. The default value for this property is 'apps.internal'.
+
+With capi-release versions >= 1.63.0:
+
+- The `apps.internal` internal domain is included by default with the [enable-service-discovery opsfile](https://github.com/cloudfoundry/cf-deployment/blob/master/operations/enable-service-discovery.yml).
+- A custom domain name may be used and the `apps.internal` domain may be deleted using the API.
 
 ### Example usage
 
@@ -101,9 +115,8 @@ bosh manifest > /tmp/cf-manifest.yml
 ```
 
 * Create an internal domain.
-Note: this step may not be neccessary if service discovery was already enabled.
-CAPI previously seeded the `apps.internal` domain. As of CAPI 1.61.0, the `apps.internal` domain is no longer seeded in the database.
-Fresh installs need to run the following command:
+Note: this step is not neccessary if using the [enable-service-discovery opsfile](https://github.com/cloudfoundry/cf-deployment/blob/master/operations/enable-service-discovery.yml) unless you wish to create a different internal shared domain.
+
 ```
 cf curl /v2/shared_domains -d '{
   "name": "CUSTOM_INTERNAL_DOMAIN_NAME",
