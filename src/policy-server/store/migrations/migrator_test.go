@@ -1441,6 +1441,19 @@ var _ = Describe("migrations", func() {
 			Expect(numberOfMigrations).To(Equal(0))
 		})
 	})
+	Describe("Migrations should be atomic", func() {
+		FIt("should contain a single statement per migration", func() {
+			for _, migration := range migrations.MigrationsToPerform {
+				for dbType, statements := range migration.Up {
+					if len(statements) > 1 {
+						Fail(fmt.Sprintf("Migration %s for %s has %d statements. Expected a single statement per migration.",
+							migration.Id, dbType, len(statements)))
+					}
+				}
+
+			}
+		})
+	})
 })
 
 func expectMigrations(realDb *db.ConnWrapper, expectedMigrations []string) {
