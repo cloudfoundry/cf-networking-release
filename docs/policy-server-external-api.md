@@ -194,8 +194,8 @@ This endpoint will return the `total_egress_policies`, `egress_policies` keys on
 | egress_policies.destination.ips.end | Y | The end of the destination ip range. For one ip, set this equal to the ` egress_policies.destination.ips.start` value.
 | egress_policies.destination.ports.start | N | The start of the destination port range. Only for tcp and udp protocols.
 | egress_policies.destination.ports.end | N | The end of the destination port range. Only for tcp and udp protocols.
-| egress_policies.destination.type | N | The icmp type. -1 for all icmp types. Only for icmp protocol.
-| egress_policies.destination.code | N | The icmp code. -1 for all icmp codes. Only for icmp protocol.
+| egress_policies.destination.type | N | The icmp type. Use -1 for all icmp types. Only for icmp protocol. Required for icmp.
+| egress_policies.destination.code | N | The icmp code. Use -1 for all icmp codes. Only for icmp protocol. Required for icmp.
 
 
 
@@ -284,8 +284,8 @@ This endpoint will return the `total_egress_policies`, `egress_policies` keys on
 | egress_policies.destination.ips.end | Y | The destination end ip
 | egress_policies.destination.ports.start | N | The start of the destination port range. Only for tcp and udp protocols.
 | egress_policies.destination.ports.end | N | The end of the destination port range. Only for tcp and udp protocols.
-| egress_policies.destination.type | N | The icmp type. -1 for all icmp types. Only for icmp protocol.
-| egress_policies.destination.code | N | The icmp code. -1 for all icmp codes. Only for icmp protocol.
+| egress_policies.destination.type | N | The icmp type. Use -1 for all icmp types. Only for icmp protocol. Required for icmp.
+| egress_policies.destination.code | N | The icmp code. Use -1 for all icmp codes. Only for icmp protocol. Required for icmp.
 
 #### Response Status Codes:
 - 200 (successful)
