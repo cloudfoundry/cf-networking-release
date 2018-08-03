@@ -115,11 +115,6 @@ resources:
     source:
       branch: release-candidate
       uri: https://github.com/cloudfoundry/cf-deployment.git
-  - name: bosh-deployment
-    type: git
-    source:
-      branch: master
-      uri: https://github.com/cloudfoundry/bosh-deployment.git
   - name: disaster-recovery-acceptance-tests
     type: git
     source:
@@ -456,7 +451,6 @@ jobs:
       - get: cf-networking-release-ci
         params:
           submodules: none
-      - get: bosh-deployment
       - get: cf-deployment-concourse-tasks
       - get: cf-networking-deployments
       - get: cf-deployment
@@ -499,12 +493,6 @@ jobs:
       file: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release.yml
       params:
         ENVIRONMENT_NAME: pickelhelm
-      input_mapping:
-        bbl-state: cf-networking-deployments
-      params:
-        BBL_STATE_DIR: environments/pickelhelm/
-    - task: update-dns-runtime-config
-      file: cf-networking-release-ci/ci/tasks/update-dns-runtime-config.yml
       input_mapping:
         bbl-state: cf-networking-deployments
       params:
@@ -684,7 +672,6 @@ jobs:
           submodules: none
       - get: cf-deployment-concourse-tasks
       - get: cf-networking-deployments
-      - get: bosh-deployment
       - get: cf-deployment
         passed: [pickelhelm-test]
         trigger: true
@@ -729,12 +716,6 @@ jobs:
       file: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release.yml
       params:
         ENVIRONMENT_NAME: mitre
-      input_mapping:
-        bbl-state: cf-networking-deployments
-      params:
-        BBL_STATE_DIR: environments/mitre/
-    - task: update-dns-runtime-config
-      file: cf-networking-release-ci/ci/tasks/update-dns-runtime-config.yml
       input_mapping:
         bbl-state: cf-networking-deployments
       params:
@@ -1177,7 +1158,6 @@ jobs:
     - aggregate:
       - get: cf-deployment-concourse-tasks
       - get: cf-deployment
-      - get: bosh-deployment
       - get: cf-networking-release-ci
         params:
           submodules: none
@@ -1209,12 +1189,6 @@ jobs:
       input_mapping:
         bbl-state: cf-networking-deployments
         local-release: silk-dev
-      params:
-        BBL_STATE_DIR: environments/toque/
-    - task: update-dns-runtime-config
-      file: cf-networking-release-ci/ci/tasks/update-dns-runtime-config.yml
-      input_mapping:
-        bbl-state: cf-networking-deployments
       params:
         BBL_STATE_DIR: environments/toque/
     - task: deploy-cf
@@ -1434,7 +1408,6 @@ jobs:
     - aggregate:
       - get: cf-deployment-concourse-tasks
       - get: cf-deployment
-      - get: bosh-deployment
       - get: cf-networking-release-ci
         params:
           submodules: none
@@ -1472,12 +1445,6 @@ jobs:
       input_mapping:
         bbl-state: cf-networking-deployments
         local-release: silk-dev
-      params:
-        BBL_STATE_DIR: environments/slouch/
-    - task: update-dns-runtime-config
-      file: cf-networking-release-ci/ci/tasks/update-dns-runtime-config.yml
-      input_mapping:
-        bbl-state: cf-networking-deployments
       params:
         BBL_STATE_DIR: environments/slouch/
     - task: deploy-cf

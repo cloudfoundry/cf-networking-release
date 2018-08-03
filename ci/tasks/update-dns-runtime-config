@@ -1,8 +1,0 @@
-#!/bin/bash
-set -xeu
-
-source cf-deployment-concourse-tasks/shared-functions
-
-setup_bosh_env_vars
-
-bosh -n update-runtime-config bosh-deployment/runtime-configs/dns.yml --name=dns
