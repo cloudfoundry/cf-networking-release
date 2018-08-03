@@ -151,8 +151,8 @@ var _ = Describe("ApiPolicyMapper", func() {
 								"start": "2.2.3.4",
 								"end": "2.2.3.5"
 							}],
-							"type": 1,
-							"code": 2
+							"icmp_type": 1,
+							"icmp_code": 2
 						}
 					}]
 				}`),
@@ -411,8 +411,8 @@ var _ = Describe("ApiPolicyMapper", func() {
 								"start": "1.2.3.7",
 								"end": "1.2.3.8"
 							}],
-							"type": 1,
-							"code": 6
+							"icmp_type": 1,
+							"icmp_code": 6
 						}
 					}]
 				}`),

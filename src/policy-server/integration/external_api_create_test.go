@@ -180,8 +180,8 @@ var _ = Describe("External API Adding Policies", func() {
 					"destination": {
 						"ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}],
 						"protocol": "icmp",
-						"type": 4,
-						"code": 3
+						"icmp_type": 4,
+						"icmp_code": 3
 					}
 				}
 			]
@@ -209,8 +209,8 @@ var _ = Describe("External API Adding Policies", func() {
 					"destination": {
 						"ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}],
 						"protocol": "icmp",
-						"type": 4,
-						"code": 3
+						"icmp_type": 4,
+						"icmp_code": 3
 					}
 				}
 			]

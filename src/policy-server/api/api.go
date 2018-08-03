@@ -33,8 +33,8 @@ type EgressDestination struct {
 	Protocol string    `json:"protocol"`
 	Ports    []Ports   `json:"ports,omitempty"`
 	IPRanges []IPRange `json:"ips"`
-	ICMPType *int      `json:"type,omitempty"`
-	ICMPCode *int      `json:"code,omitempty"`
+	ICMPType *int      `json:"icmp_type,omitempty"`
+	ICMPCode *int      `json:"icmp_code,omitempty"`
 }
 
 type Source struct {
