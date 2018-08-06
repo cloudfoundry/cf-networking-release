@@ -45,17 +45,23 @@ Before v2.11.0, the internal domain `apps.internal` was the default bosh propert
 
 ### Configuring Custom Internal Domains 
 
-Creating your own internal domain is a two step process. 
-1. Add the custom internal domain name(s) to the `internal_domains` property on the `bosh-dns-adapter` job and deploy
-2. Create the internal domain(s) through the Cloud Controller API: 
+Creating your own internal domain requires [enable-service-discovery opsfile](https://github.com/cloudfoundry/cf-deployment/blob/master/operations/enable-service-discovery.yml) and the following two operations:
+1. Add the custom internal domain name(s) to the `internal_domains` property on the `bosh-dns-adapter` job.
 ```
-cf curl /v2/shared_domains -d '{
-  "name": "apps.internal",
-  "internal": true
-}'
+- type: replace
+  path: /instance_groups/name=diego-cell/jobs/name=bosh-dns-adapter/properties/internal_domains?
+  value: ["apps.internal."]
 ```
-These steps can be done in either order, but the internal domain will not work until both are done.
 
+2. Add the custom internal domain to the `apps_domains` property on `cloud_controller_ng` job.
+```
+- type: replace
+  path: /instance_groups/name=api/jobs/name=cloud_controller_ng/properties/app_domains/-
+  value:
+    name: apps.internal
+    internal: true
+```
+3. Deploy.
 
 To delete a shared domain, run one of the following commands:
 ```
