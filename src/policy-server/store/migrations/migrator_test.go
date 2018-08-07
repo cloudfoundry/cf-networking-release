@@ -1324,6 +1324,78 @@ var _ = Describe("migrations", func() {
 			})
 		})
 
+		Describe("V18 - spaces", func() {
+			Context("mysql", func() {
+				BeforeEach(func() {
+					if realDb.DriverName() != "mysql" {
+						Skip("skipping mysql tests")
+					}
+				})
+
+				It("should migrate", func() {
+					By("performing migration")
+					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 27)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(numMigrations).To(Equal(27))
+
+					rows, err := realDb.Query(helpers.RebindForSQLDialect(`
+							select COLUMN_NAME
+							from INFORMATION_SCHEMA.COLUMNS t1
+							where TABLE_NAME='spaces'
+						`, realDb.DriverName()))
+					Expect(err).NotTo(HaveOccurred())
+
+					By("verifying the terminal_id column exists", func() {
+						var columns []string
+						defer rows.Close()
+						for rows.Next() {
+							var columnName string
+							Expect(rows.Scan(&columnName)).To(Succeed())
+							columns = append(columns, columnName)
+						}
+						Expect(columns).To(ContainElement("terminal_id"))
+						Expect(columns).To(ContainElement("space_guid"))
+					})
+
+				})
+			})
+
+			Context("postgres", func() {
+				BeforeEach(func() {
+					if realDb.DriverName() != "postgres" {
+						Skip("skipping postgres tests")
+					}
+				})
+
+				It("should migrate", func() {
+					By("performing migration")
+					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 27)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(numMigrations).To(Equal(27))
+
+					rows, err := realDb.Query(helpers.RebindForSQLDialect(`
+							select COLUMN_NAME
+							from INFORMATION_SCHEMA.COLUMNS t1
+							where TABLE_NAME='spaces'
+						`, realDb.DriverName()))
+					Expect(err).NotTo(HaveOccurred())
+
+					By("verifying the terminal_id column exists", func() {
+						var columns []string
+						defer rows.Close()
+						for rows.Next() {
+							var columnName string
+							Expect(rows.Scan(&columnName)).To(Succeed())
+							columns = append(columns, columnName)
+						}
+						Expect(columns).To(ContainElement("terminal_id"))
+						Expect(columns).To(ContainElement("space_guid"))
+					})
+
+				})
+			})
+		})
+
 		Context("when migrating in parallel", func() {
 			Context("mysql", func() {
 				BeforeEach(func() {

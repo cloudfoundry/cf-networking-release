@@ -11,7 +11,9 @@ type egressPolicyRepo interface {
 	CreateApp(tx db.Transaction, sourceTerminalID int64, appGUID string) (int64, error)
 	CreateIPRange(tx db.Transaction, destinationTerminalID int64, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) (int64, error)
 	CreateEgressPolicy(tx db.Transaction, sourceTerminalID, destinationTerminalID int64) (int64, error)
+	CreateSpace(tx db.Transaction, sourceTerminalID int64, spaceGUID string) (int64, error)
 	GetTerminalByAppGUID(tx db.Transaction, appGUID string) (int64, error)
+	GetTerminalBySpaceGUID(tx db.Transaction, appGUID string) (int64, error)
 	GetAllPolicies() ([]EgressPolicy, error)
 	GetByGuids(ids []string) ([]EgressPolicy, error)
 	GetIDsByEgressPolicy(tx db.Transaction, egressPolicy EgressPolicy) (EgressPolicyIDCollection, error)
@@ -28,20 +30,43 @@ type EgressPolicyStore struct {
 
 func (e *EgressPolicyStore) CreateWithTx(tx db.Transaction, policies []EgressPolicy) error {
 	for _, policy := range policies {
-		sourceTerminalID, err := e.EgressPolicyRepo.GetTerminalByAppGUID(tx, policy.Source.ID)
-		if err != nil {
-			return fmt.Errorf("failed to get terminal by app guid: %s", err)
-		}
+		var sourceTerminalID int64
+		var err error
 
-		if sourceTerminalID == -1 {
-			sourceTerminalID, err = e.EgressPolicyRepo.CreateTerminal(tx)
+		switch policy.Source.Type {
+		case "space":
+			sourceTerminalID, err = e.EgressPolicyRepo.GetTerminalBySpaceGUID(tx, policy.Source.ID)
 			if err != nil {
-				return fmt.Errorf("failed to create source terminal: %s", err)
+				return fmt.Errorf("failed to get terminal by space guid: %s", err)
 			}
 
-			_, err = e.EgressPolicyRepo.CreateApp(tx, sourceTerminalID, policy.Source.ID)
+			if sourceTerminalID == -1 {
+				sourceTerminalID, err = e.EgressPolicyRepo.CreateTerminal(tx)
+				if err != nil {
+					return fmt.Errorf("failed to create source terminal: %s", err)
+				}
+
+				_, err = e.EgressPolicyRepo.CreateSpace(tx, sourceTerminalID, policy.Source.ID)
+				if err != nil {
+					return fmt.Errorf("failed to create space: %s", err)
+				}
+			}
+		default:
+			sourceTerminalID, err = e.EgressPolicyRepo.GetTerminalByAppGUID(tx, policy.Source.ID)
 			if err != nil {
-				return fmt.Errorf("failed to create source app: %s", err)
+				return fmt.Errorf("failed to get terminal by app guid: %s", err)
+			}
+
+			if sourceTerminalID == -1 {
+				sourceTerminalID, err = e.EgressPolicyRepo.CreateTerminal(tx)
+				if err != nil {
+					return fmt.Errorf("failed to create source terminal: %s", err)
+				}
+
+				_, err = e.EgressPolicyRepo.CreateApp(tx, sourceTerminalID, policy.Source.ID)
+				if err != nil {
+					return fmt.Errorf("failed to create source app: %s", err)
+				}
 			}
 		}
 

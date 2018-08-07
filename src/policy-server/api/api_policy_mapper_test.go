@@ -154,6 +154,18 @@ var _ = Describe("ApiPolicyMapper", func() {
 							"icmp_type": 1,
 							"icmp_code": 2
 						}
+					},{
+						"source": {
+							"type": "space",
+							"id": "some-space"
+						},
+						"destination": {
+							"protocol": "udp",
+							"ips": [{
+								"start": "3.3.3.3",
+								"end": "4.4.4.4"
+							}]
+						}
 					}]
 				}`),
 				)
@@ -201,6 +213,18 @@ var _ = Describe("ApiPolicyMapper", func() {
 									},
 									ICMPType: &icmpType,
 									ICMPCode: &icmpCode,
+								},
+							},
+							{
+								Source: &api.EgressSource{
+									ID:   "some-space",
+									Type: "space",
+								},
+								Destination: &api.EgressDestination{
+									Protocol: "udp",
+									IPRanges: []api.IPRange{
+										{Start: "3.3.3.3", End: "4.4.4.4"},
+									},
 								},
 							},
 						},
@@ -251,6 +275,19 @@ var _ = Describe("ApiPolicyMapper", func() {
 							},
 							ICMPType: 1,
 							ICMPCode: 2,
+						},
+					},
+					{
+						Source: store.EgressSource{
+							ID:   "some-space",
+							Type: "space",
+						},
+						Destination: store.EgressDestination{
+							Protocol: "udp",
+							Ports:    []store.Ports{},
+							IPRanges: []store.IPRange{
+								{Start: "3.3.3.3", End: "4.4.4.4"},
+							},
 						},
 					},
 				}))
@@ -349,6 +386,25 @@ var _ = Describe("ApiPolicyMapper", func() {
 						ICMPCode: 6,
 					},
 				},
+				{
+					Source: store.EgressSource{
+						ID:   "space-source-id-1",
+						Type: "space",
+					},
+					Destination: store.EgressDestination{
+						Protocol: "udp",
+						Ports: []store.Ports{
+							{
+								Start: 8080,
+								End:   8081,
+							},
+						},
+						IPRanges: []store.IPRange{{
+							Start: "2.2.3.7",
+							End:   "2.2.3.8",
+						}},
+					},
+				},
 			}
 
 			payload, err := mapper.AsBytes(policies, egressPolicies)
@@ -380,7 +436,7 @@ var _ = Describe("ApiPolicyMapper", func() {
 						}
 					}],
 
-					"total_egress_policies": 3,
+					"total_egress_policies": 4,
 					"egress_policies": [{
 						"source": { "id": "egress-source-id" },
 						"destination": {
@@ -413,6 +469,22 @@ var _ = Describe("ApiPolicyMapper", func() {
 							}],
 							"icmp_type": 1,
 							"icmp_code": 6
+						}
+					}, {
+						"source": {
+							"id": "space-source-id-1",
+							"type": "space"
+						},
+						"destination": {
+							"protocol": "udp",
+							"ports": [{
+								"start": 8080,
+								"end": 8081
+							}],
+							"ips": [{
+								"start": "2.2.3.7",
+								"end": "2.2.3.8"
+							}]
 						}
 					}]
 				}`),

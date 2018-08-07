@@ -80,7 +80,6 @@ var _ = Describe("External API Adding Policies", func() {
 				HaveName("StoreCreateSuccessTime"),
 			))
 		}
-
 		addPoliciesFails := func(version, request, expectedResponse string) {
 			body := strings.NewReader(request)
 			resp := helpers.MakeAndDoRequest(
@@ -248,9 +247,46 @@ var _ = Describe("External API Adding Policies", func() {
 			]
 		}`
 
+		v1RequestSpaceEgress := `{
+			"policies": [],
+			"egress_policies": [
+				{
+					"source": {
+						"type": "space",
+						"id": "some-space-guid"
+					},
+					"destination": {
+						"ips": [{"start": "10.27.2.1", "end": "10.27.2.2"}],
+						"ports": [{"start": 8083, "end": 8086}],
+						"protocol": "udp"
+					}
+				}
+			]	
+		}`
+
+		v1ExpectedResponseSpaceEgress := `{
+			"total_policies": 0,
+			"policies": [],
+			"total_egress_policies": 1,
+			"egress_policies": [
+				{
+					"source": {
+						"type": "space",
+						"id": "some-space-guid"
+					},
+					"destination": {
+						"ips": [{"start": "10.27.2.1", "end": "10.27.2.2"}],
+						"ports": [{"start": 8083, "end": 8086}],
+						"protocol": "udp"
+					}
+				}
+			]	
+		}`
+
 		DescribeTable("adding policies succeeds", addPoliciesSucceeds,
 			Entry("v1", "v1", v1Request, v1ExpectedResponse),
 			Entry("v1 no ports", "v1", v1RequestNoPorts, v1ExpectedResponseNoPorts),
+			Entry("v1 space egress", "v1", v1RequestSpaceEgress, v1ExpectedResponseSpaceEgress),
 		)
 	})
 })

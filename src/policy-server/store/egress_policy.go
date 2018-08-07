@@ -40,7 +40,7 @@ func (e *EgressPolicyTable) CreateApp(tx db.Transaction, sourceTerminalID int64,
 
 	if driverName == "mysql" {
 		result, err := tx.Exec(tx.Rebind(`
-			INSERT INTO apps (terminal_id, app_guid) 
+			INSERT INTO apps (terminal_id, app_guid)
 			VALUES (?,?)
 		`),
 			sourceTerminalID,
@@ -55,10 +55,10 @@ func (e *EgressPolicyTable) CreateApp(tx db.Transaction, sourceTerminalID int64,
 		var id int64
 
 		err := tx.QueryRow(tx.Rebind(`
-			INSERT INTO apps (terminal_id, app_guid) 
+			INSERT INTO apps (terminal_id, app_guid)
 			VALUES (?,?)
- 			RETURNING id
-			`),
+			RETURNING id
+		`),
 			sourceTerminalID,
 			appGUID,
 		).Scan(&id)
@@ -78,7 +78,7 @@ func (e *EgressPolicyTable) CreateIPRange(tx db.Transaction, destinationTerminal
 		result, err := tx.Exec(tx.Rebind(`
 			INSERT INTO ip_ranges (protocol, start_ip, end_ip, terminal_id, start_port, end_port, icmp_type, icmp_code)
 			VALUES (?,?,?,?,?,?,?,?)
-			`),
+		`),
 			protocol,
 			startIP,
 			endIP,
@@ -100,8 +100,8 @@ func (e *EgressPolicyTable) CreateIPRange(tx db.Transaction, destinationTerminal
 		err := tx.QueryRow(tx.Rebind(`
 			INSERT INTO ip_ranges (protocol, start_ip, end_ip, terminal_id, start_port, end_port, icmp_type, icmp_code)
 			VALUES (?,?,?,?,?,?,?,?)
- 			RETURNING id
-			`),
+			RETURNING id
+		`),
 			protocol,
 			startIP,
 			endIP,
@@ -126,9 +126,9 @@ func (e *EgressPolicyTable) CreateEgressPolicy(tx db.Transaction, sourceTerminal
 	driverName := tx.DriverName()
 	if driverName == "mysql" {
 		result, err := tx.Exec(tx.Rebind(`
-			INSERT INTO egress_policies (source_id, destination_id) 
+			INSERT INTO egress_policies (source_id, destination_id)
 			VALUES (?,?)
-			`),
+		`),
 			sourceTerminalID,
 			destinationTerminalID,
 		)
@@ -142,10 +142,10 @@ func (e *EgressPolicyTable) CreateEgressPolicy(tx db.Transaction, sourceTerminal
 		var id int64
 
 		err := tx.QueryRow(tx.Rebind(`
-			INSERT INTO egress_policies (source_id, destination_id) 
+			INSERT INTO egress_policies (source_id, destination_id)
 			VALUES (?,?)
- 			RETURNING id
-			`),
+			RETURNING id
+		`),
 			sourceTerminalID,
 			destinationTerminalID,
 		).Scan(&id)
@@ -157,6 +157,43 @@ func (e *EgressPolicyTable) CreateEgressPolicy(tx db.Transaction, sourceTerminal
 		return id, nil
 	}
 
+	return -1, fmt.Errorf("unknown driver: %s", driverName)
+}
+
+func (e *EgressPolicyTable) CreateSpace(tx db.Transaction, sourceTerminalID int64, spaceGUID string) (int64, error) {
+	driverName := tx.DriverName()
+
+	if driverName == "mysql" {
+		result, err := tx.Exec(tx.Rebind(`
+			INSERT INTO spaces (terminal_id, space_guid)
+			VALUES (?,?)
+		`),
+			sourceTerminalID,
+			spaceGUID,
+		)
+		if err != nil {
+			return -1, err
+		}
+
+		return result.LastInsertId()
+	} else if driverName == "postgres" {
+		var id int64
+
+		err := tx.QueryRow(tx.Rebind(`
+			INSERT INTO spaces (terminal_id, space_guid)
+			VALUES (?,?)
+			RETURNING id
+		`),
+			sourceTerminalID,
+			spaceGUID,
+		).Scan(&id)
+
+		if err != nil {
+			return -1, fmt.Errorf("error inserting space: %s", err)
+		}
+
+		return id, nil
+	}
 	return -1, fmt.Errorf("unknown driver: %s", driverName)
 }
 
@@ -199,24 +236,24 @@ func (e *EgressPolicyTable) GetIDsByEgressPolicy(tx db.Transaction, egressPolicy
 	}
 
 	err := tx.QueryRow(tx.Rebind(`
-		SELECT
-			egress_policies.id,
-			egress_policies.source_id,
-			egress_policies.destination_id,
-			apps.id,
-			ip_ranges.id
-		from egress_policies
-		JOIN apps on (egress_policies.source_id = apps.terminal_id)
-		JOIN ip_ranges on (egress_policies.destination_id = ip_ranges.terminal_id)
-		WHERE apps.app_guid = ? AND
-		      ip_ranges.protocol = ? AND
-					ip_ranges.start_ip = ? AND
-					ip_ranges.end_ip = ? AND
-					ip_ranges.start_port = ? AND
-					ip_ranges.end_port = ? AND
-					ip_ranges.icmp_type = ? AND
-					ip_ranges.icmp_code = ?
-		;`),
+	SELECT
+		egress_policies.id,
+		egress_policies.source_id,
+		egress_policies.destination_id,
+		apps.id,
+		ip_ranges.id
+	FROM egress_policies
+	JOIN apps on (egress_policies.source_id = apps.terminal_id)
+	JOIN ip_ranges on (egress_policies.destination_id = ip_ranges.terminal_id)
+	WHERE apps.app_guid = ? AND
+		ip_ranges.protocol = ? AND
+		ip_ranges.start_ip = ? AND
+		ip_ranges.end_ip = ? AND
+		ip_ranges.start_port = ? AND
+		ip_ranges.end_port = ? AND
+		ip_ranges.icmp_type = ? AND
+		ip_ranges.icmp_code = ?
+	;`),
 		egressPolicy.Source.ID,
 		egressPolicy.Destination.Protocol,
 		egressPolicy.Destination.IPRanges[0].Start,
@@ -248,7 +285,7 @@ func (e *EgressPolicyTable) GetTerminalByAppGUID(tx db.Transaction, appGUID stri
 	var id int64
 
 	err := tx.QueryRow(tx.Rebind(`
-		SELECT terminal_id FROM apps WHERE app_guid = ?
+	SELECT terminal_id FROM apps WHERE app_guid = ?
 	`),
 		appGUID,
 	).Scan(&id)
@@ -260,20 +297,38 @@ func (e *EgressPolicyTable) GetTerminalByAppGUID(tx db.Transaction, appGUID stri
 	}
 }
 
+func (e *EgressPolicyTable) GetTerminalBySpaceGUID(tx db.Transaction, spaceGUID string) (int64, error) {
+	var id int64
+
+	err := tx.QueryRow(tx.Rebind(`
+	SELECT terminal_id FROM spaces WHERE space_guid = ?
+	`),
+		spaceGUID,
+	).Scan(&id)
+
+	if err != nil && err == sql.ErrNoRows {
+		return -1, nil
+	} else {
+		return id, err
+	}
+}
+
 func (e *EgressPolicyTable) GetAllPolicies() ([]EgressPolicy, error) {
 	rows, err := e.Conn.Query(`
-		SELECT
-			apps.app_guid,
-			ip_ranges.protocol,
-			ip_ranges.start_ip,
-			ip_ranges.end_ip,
-			ip_ranges.start_port,
-			ip_ranges.end_port,
-			ip_ranges.icmp_type,
-			ip_ranges.icmp_code
-		from egress_policies
-		LEFT OUTER JOIN apps on (egress_policies.source_id = apps.terminal_id)
-		LEFT OUTER JOIN ip_ranges on (egress_policies.destination_id = ip_ranges.terminal_id);`)
+	SELECT
+		apps.app_guid,
+		spaces.space_guid,
+		ip_ranges.protocol,
+		ip_ranges.start_ip,
+		ip_ranges.end_ip,
+		ip_ranges.start_port,
+		ip_ranges.end_port,
+		ip_ranges.icmp_type,
+		ip_ranges.icmp_code
+	FROM egress_policies
+	LEFT OUTER JOIN apps on (egress_policies.source_id = apps.terminal_id)
+	LEFT OUTER JOIN spaces on (egress_policies.source_id = spaces.terminal_id)
+	LEFT OUTER JOIN ip_ranges on (egress_policies.destination_id = ip_ranges.terminal_id);`)
 
 	var foundPolicies []EgressPolicy
 	if err != nil {
@@ -283,10 +338,10 @@ func (e *EgressPolicyTable) GetAllPolicies() ([]EgressPolicy, error) {
 	defer rows.Close()
 	for rows.Next() {
 
-		var sourceAppGUID, protocol, startIP, endIP string
+		var sourceAppGUID, sourceSpaceGUID, protocol, startIP, endIP *string
 		var startPort, endPort, icmpType, icmpCode int
 
-		err = rows.Scan(&sourceAppGUID, &protocol, &startIP, &endIP, &startPort, &endPort, &icmpType, &icmpCode)
+		err = rows.Scan(&sourceAppGUID, &sourceSpaceGUID, &protocol, &startIP, &endIP, &startPort, &endPort, &icmpType, &icmpCode)
 		if err != nil {
 			return []EgressPolicy{}, err
 		}
@@ -301,17 +356,29 @@ func (e *EgressPolicyTable) GetAllPolicies() ([]EgressPolicy, error) {
 			}
 		}
 
+		var source EgressSource
+
+		switch {
+		case sourceSpaceGUID != nil:
+			source = EgressSource{
+				ID:   *sourceSpaceGUID,
+				Type: "space",
+			}
+		default:
+			source = EgressSource{
+				ID: *sourceAppGUID,
+			}
+		}
+
 		foundPolicies = append(foundPolicies, EgressPolicy{
-			Source: EgressSource{
-				ID: sourceAppGUID,
-			},
+			Source: source,
 			Destination: EgressDestination{
-				Protocol: protocol,
+				Protocol: *protocol,
 				Ports:    ports,
 				IPRanges: []IPRange{
 					{
-						Start: startIP,
-						End:   endIP,
+						Start: *startIP,
+						End:   *endIP,
 					},
 				},
 				ICMPType: icmpType,
@@ -331,19 +398,21 @@ func (e *EgressPolicyTable) GetByGuids(ids []string) ([]EgressPolicy, error) {
 	}
 
 	query := fmt.Sprintf(`
-		SELECT
-			apps.app_guid,
-			ip_ranges.protocol,
-			ip_ranges.start_ip,
-			ip_ranges.end_ip,
-			ip_ranges.start_port,
-			ip_ranges.end_port,
-			ip_ranges.icmp_type,
-			ip_ranges.icmp_code
-		from egress_policies
-		LEFT OUTER JOIN apps on (egress_policies.source_id = apps.terminal_id)
-		LEFT OUTER JOIN ip_ranges on (egress_policies.destination_id = ip_ranges.terminal_id)
-		WHERE apps.app_guid IN (%s);`, strings.Join(ids, ","))
+	SELECT
+		apps.app_guid,
+		spaces.space_guid,
+		ip_ranges.protocol,
+		ip_ranges.start_ip,
+		ip_ranges.end_ip,
+		ip_ranges.start_port,
+		ip_ranges.end_port,
+		ip_ranges.icmp_type,
+		ip_ranges.icmp_code
+	FROM egress_policies
+	LEFT OUTER JOIN apps on (egress_policies.source_id = apps.terminal_id)
+	LEFT OUTER JOIN spaces on (egress_policies.source_id = spaces.terminal_id)
+	LEFT OUTER JOIN ip_ranges on (egress_policies.destination_id = ip_ranges.terminal_id)
+	WHERE apps.app_guid IN (%s) OR spaces.space_guid IN (%s);`, strings.Join(ids, ","), strings.Join(ids, ","))
 	rows, err := e.Conn.Query(query)
 	if err != nil {
 		return foundPolicies, err
@@ -352,10 +421,10 @@ func (e *EgressPolicyTable) GetByGuids(ids []string) ([]EgressPolicy, error) {
 	defer rows.Close()
 	for rows.Next() {
 
-		var sourceAppGUID, protocol, startIP, endIP string
+		var sourceAppGUID, sourceSpaceGUID, protocol, startIP, endIP *string
 		var startPort, endPort, icmpType, icmpCode int
 
-		err = rows.Scan(&sourceAppGUID, &protocol, &startIP, &endIP, &startPort, &endPort, &icmpType, &icmpCode)
+		err = rows.Scan(&sourceAppGUID, &sourceSpaceGUID, &protocol, &startIP, &endIP, &startPort, &endPort, &icmpType, &icmpCode)
 		if err != nil {
 			return foundPolicies, err
 		}
@@ -370,17 +439,29 @@ func (e *EgressPolicyTable) GetByGuids(ids []string) ([]EgressPolicy, error) {
 			}
 		}
 
+		var source EgressSource
+
+		switch {
+		case sourceSpaceGUID != nil:
+			source = EgressSource{
+				ID:   *sourceSpaceGUID,
+				Type: "space",
+			}
+		default:
+			source = EgressSource{
+				ID: *sourceAppGUID,
+			}
+		}
+
 		foundPolicies = append(foundPolicies, EgressPolicy{
-			Source: EgressSource{
-				ID: sourceAppGUID,
-			},
+			Source: source,
 			Destination: EgressDestination{
-				Protocol: protocol,
+				Protocol: *protocol,
 				Ports:    ports,
 				IPRanges: []IPRange{
 					{
-						Start: startIP,
-						End:   endIP,
+						Start: *startIP,
+						End:   *endIP,
 					},
 				},
 				ICMPType: icmpType,

@@ -72,6 +72,21 @@ type EgressPolicyRepo struct {
 		result1 int64
 		result2 error
 	}
+	CreateSpaceStub        func(tx db.Transaction, sourceTerminalID int64, spaceGUID string) (int64, error)
+	createSpaceMutex       sync.RWMutex
+	createSpaceArgsForCall []struct {
+		tx               db.Transaction
+		sourceTerminalID int64
+		spaceGUID        string
+	}
+	createSpaceReturns struct {
+		result1 int64
+		result2 error
+	}
+	createSpaceReturnsOnCall map[int]struct {
+		result1 int64
+		result2 error
+	}
 	GetTerminalByAppGUIDStub        func(tx db.Transaction, appGUID string) (int64, error)
 	getTerminalByAppGUIDMutex       sync.RWMutex
 	getTerminalByAppGUIDArgsForCall []struct {
@@ -83,6 +98,20 @@ type EgressPolicyRepo struct {
 		result2 error
 	}
 	getTerminalByAppGUIDReturnsOnCall map[int]struct {
+		result1 int64
+		result2 error
+	}
+	GetTerminalBySpaceGUIDStub        func(tx db.Transaction, appGUID string) (int64, error)
+	getTerminalBySpaceGUIDMutex       sync.RWMutex
+	getTerminalBySpaceGUIDArgsForCall []struct {
+		tx      db.Transaction
+		appGUID string
+	}
+	getTerminalBySpaceGUIDReturns struct {
+		result1 int64
+		result2 error
+	}
+	getTerminalBySpaceGUIDReturnsOnCall map[int]struct {
 		result1 int64
 		result2 error
 	}
@@ -406,6 +435,59 @@ func (fake *EgressPolicyRepo) CreateEgressPolicyReturnsOnCall(i int, result1 int
 	}{result1, result2}
 }
 
+func (fake *EgressPolicyRepo) CreateSpace(tx db.Transaction, sourceTerminalID int64, spaceGUID string) (int64, error) {
+	fake.createSpaceMutex.Lock()
+	ret, specificReturn := fake.createSpaceReturnsOnCall[len(fake.createSpaceArgsForCall)]
+	fake.createSpaceArgsForCall = append(fake.createSpaceArgsForCall, struct {
+		tx               db.Transaction
+		sourceTerminalID int64
+		spaceGUID        string
+	}{tx, sourceTerminalID, spaceGUID})
+	fake.recordInvocation("CreateSpace", []interface{}{tx, sourceTerminalID, spaceGUID})
+	fake.createSpaceMutex.Unlock()
+	if fake.CreateSpaceStub != nil {
+		return fake.CreateSpaceStub(tx, sourceTerminalID, spaceGUID)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.createSpaceReturns.result1, fake.createSpaceReturns.result2
+}
+
+func (fake *EgressPolicyRepo) CreateSpaceCallCount() int {
+	fake.createSpaceMutex.RLock()
+	defer fake.createSpaceMutex.RUnlock()
+	return len(fake.createSpaceArgsForCall)
+}
+
+func (fake *EgressPolicyRepo) CreateSpaceArgsForCall(i int) (db.Transaction, int64, string) {
+	fake.createSpaceMutex.RLock()
+	defer fake.createSpaceMutex.RUnlock()
+	return fake.createSpaceArgsForCall[i].tx, fake.createSpaceArgsForCall[i].sourceTerminalID, fake.createSpaceArgsForCall[i].spaceGUID
+}
+
+func (fake *EgressPolicyRepo) CreateSpaceReturns(result1 int64, result2 error) {
+	fake.CreateSpaceStub = nil
+	fake.createSpaceReturns = struct {
+		result1 int64
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *EgressPolicyRepo) CreateSpaceReturnsOnCall(i int, result1 int64, result2 error) {
+	fake.CreateSpaceStub = nil
+	if fake.createSpaceReturnsOnCall == nil {
+		fake.createSpaceReturnsOnCall = make(map[int]struct {
+			result1 int64
+			result2 error
+		})
+	}
+	fake.createSpaceReturnsOnCall[i] = struct {
+		result1 int64
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *EgressPolicyRepo) GetTerminalByAppGUID(tx db.Transaction, appGUID string) (int64, error) {
 	fake.getTerminalByAppGUIDMutex.Lock()
 	ret, specificReturn := fake.getTerminalByAppGUIDReturnsOnCall[len(fake.getTerminalByAppGUIDArgsForCall)]
@@ -453,6 +535,58 @@ func (fake *EgressPolicyRepo) GetTerminalByAppGUIDReturnsOnCall(i int, result1 i
 		})
 	}
 	fake.getTerminalByAppGUIDReturnsOnCall[i] = struct {
+		result1 int64
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *EgressPolicyRepo) GetTerminalBySpaceGUID(tx db.Transaction, appGUID string) (int64, error) {
+	fake.getTerminalBySpaceGUIDMutex.Lock()
+	ret, specificReturn := fake.getTerminalBySpaceGUIDReturnsOnCall[len(fake.getTerminalBySpaceGUIDArgsForCall)]
+	fake.getTerminalBySpaceGUIDArgsForCall = append(fake.getTerminalBySpaceGUIDArgsForCall, struct {
+		tx      db.Transaction
+		appGUID string
+	}{tx, appGUID})
+	fake.recordInvocation("GetTerminalBySpaceGUID", []interface{}{tx, appGUID})
+	fake.getTerminalBySpaceGUIDMutex.Unlock()
+	if fake.GetTerminalBySpaceGUIDStub != nil {
+		return fake.GetTerminalBySpaceGUIDStub(tx, appGUID)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.getTerminalBySpaceGUIDReturns.result1, fake.getTerminalBySpaceGUIDReturns.result2
+}
+
+func (fake *EgressPolicyRepo) GetTerminalBySpaceGUIDCallCount() int {
+	fake.getTerminalBySpaceGUIDMutex.RLock()
+	defer fake.getTerminalBySpaceGUIDMutex.RUnlock()
+	return len(fake.getTerminalBySpaceGUIDArgsForCall)
+}
+
+func (fake *EgressPolicyRepo) GetTerminalBySpaceGUIDArgsForCall(i int) (db.Transaction, string) {
+	fake.getTerminalBySpaceGUIDMutex.RLock()
+	defer fake.getTerminalBySpaceGUIDMutex.RUnlock()
+	return fake.getTerminalBySpaceGUIDArgsForCall[i].tx, fake.getTerminalBySpaceGUIDArgsForCall[i].appGUID
+}
+
+func (fake *EgressPolicyRepo) GetTerminalBySpaceGUIDReturns(result1 int64, result2 error) {
+	fake.GetTerminalBySpaceGUIDStub = nil
+	fake.getTerminalBySpaceGUIDReturns = struct {
+		result1 int64
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *EgressPolicyRepo) GetTerminalBySpaceGUIDReturnsOnCall(i int, result1 int64, result2 error) {
+	fake.GetTerminalBySpaceGUIDStub = nil
+	if fake.getTerminalBySpaceGUIDReturnsOnCall == nil {
+		fake.getTerminalBySpaceGUIDReturnsOnCall = make(map[int]struct {
+			result1 int64
+			result2 error
+		})
+	}
+	fake.getTerminalBySpaceGUIDReturnsOnCall[i] = struct {
 		result1 int64
 		result2 error
 	}{result1, result2}
@@ -868,8 +1002,12 @@ func (fake *EgressPolicyRepo) Invocations() map[string][][]interface{} {
 	defer fake.createIPRangeMutex.RUnlock()
 	fake.createEgressPolicyMutex.RLock()
 	defer fake.createEgressPolicyMutex.RUnlock()
+	fake.createSpaceMutex.RLock()
+	defer fake.createSpaceMutex.RUnlock()
 	fake.getTerminalByAppGUIDMutex.RLock()
 	defer fake.getTerminalByAppGUIDMutex.RUnlock()
+	fake.getTerminalBySpaceGUIDMutex.RLock()
+	defer fake.getTerminalBySpaceGUIDMutex.RUnlock()
 	fake.getAllPoliciesMutex.RLock()
 	defer fake.getAllPoliciesMutex.RUnlock()
 	fake.getByGuidsMutex.RLock()

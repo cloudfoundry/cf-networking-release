@@ -93,7 +93,8 @@ func (p *EgressPolicy) asStoreEgressPolicy() store.EgressPolicy {
 
 	egressPolicy := store.EgressPolicy{
 		Source: store.EgressSource{
-			ID: p.Source.ID,
+			ID:   p.Source.ID,
+			Type: p.Source.Type,
 		},
 		Destination: store.EgressDestination{
 			Protocol: p.Destination.Protocol,
@@ -147,7 +148,8 @@ func mapStoreEgressPolicy(storeEgressPolicy store.EgressPolicy) EgressPolicy {
 
 	egressPolicy := EgressPolicy{
 		Source: &EgressSource{
-			ID: storeEgressPolicy.Source.ID,
+			ID:   storeEgressPolicy.Source.ID,
+			Type: storeEgressPolicy.Source.Type,
 		},
 		Destination: &EgressDestination{
 			Protocol: storeEgressPolicy.Destination.Protocol,

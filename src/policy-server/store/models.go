@@ -40,7 +40,8 @@ type EgressPolicy struct {
 }
 
 type EgressSource struct {
-	ID string
+	ID   string
+	Type string
 }
 
 type EgressDestination struct {

@@ -118,6 +118,33 @@ var _ = Describe("Egress Policy Table", func() {
 		})
 	})
 
+	Context("CreateSpace", func() {
+		It("should create a space and return the ID", func() {
+			spaceTerminalID, err := egressPolicyTable.CreateTerminal(tx)
+			Expect(err).ToNot(HaveOccurred())
+
+			id, err := egressPolicyTable.CreateSpace(tx, spaceTerminalID, "some-space-guid")
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(id).To(Equal(int64(1)))
+
+			var foundSpaceGuid string
+			row := tx.QueryRow(`SELECT space_guid FROM spaces WHERE id = 1`)
+			err = row.Scan(&foundSpaceGuid)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(foundSpaceGuid).To(Equal("some-space-guid"))
+		})
+
+		It("should return an error if the driver is not supported", func() {
+			fakeTx := &dbfakes.Transaction{}
+
+			fakeTx.DriverNameReturns("db2")
+
+			_, err := egressPolicyTable.CreateSpace(fakeTx, 1, "some-space-guid")
+			Expect(err).To(MatchError("unknown driver: db2"))
+		})
+	})
+
 	Context("CreateIPRange", func() {
 		It("should create an iprange and return the ID", func() {
 			ipRangeTerminalID, err := egressPolicyTable.CreateTerminal(tx)
@@ -592,6 +619,25 @@ var _ = Describe("Egress Policy Table", func() {
 		})
 	})
 
+	Context("GetTerminalBySpaceGUID", func() {
+		It("should return the terminal id for a space if it exists", func() {
+			terminalId, err := egressPolicyTable.CreateTerminal(tx)
+			Expect(err).ToNot(HaveOccurred())
+			spacesId, err := egressPolicyTable.CreateSpace(tx, terminalId, "some-space-guid")
+			Expect(err).ToNot(HaveOccurred())
+
+			foundID, err := egressPolicyTable.GetTerminalBySpaceGUID(tx, "some-space-guid")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(foundID).To(Equal(spacesId))
+		})
+
+		It("should -1 and no error if the space is not found", func() {
+			foundID, err := egressPolicyTable.GetTerminalBySpaceGUID(tx, "some-space-guid")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(foundID).To(Equal(int64(-1)))
+		})
+	})
+
 	Context("GetAllPolicies", func() {
 		var egressPolicies []store.EgressPolicy
 
@@ -634,6 +680,23 @@ var _ = Describe("Egress Policy Table", func() {
 				{
 					Source: store.EgressSource{
 						ID: "different-app-guid",
+					},
+					Destination: store.EgressDestination{
+						Protocol: "icmp",
+						ICMPType: 1,
+						ICMPCode: 2,
+						IPRanges: []store.IPRange{
+							{
+								Start: "2.2.3.4",
+								End:   "2.2.3.5",
+							},
+						},
+					},
+				},
+				{
+					Source: store.EgressSource{
+						ID:   "space-guid",
+						Type: "space",
 					},
 					Destination: store.EgressDestination{
 						Protocol: "icmp",
@@ -732,6 +795,27 @@ var _ = Describe("Egress Policy Table", func() {
 				},
 				{
 					Source: store.EgressSource{
+						ID:   "some-space-guid",
+						Type: "space",
+					},
+					Destination: store.EgressDestination{
+						Protocol: "udp",
+						Ports: []store.Ports{
+							{
+								Start: 8080,
+								End:   8081,
+							},
+						},
+						IPRanges: []store.IPRange{
+							{
+								Start: "3.2.3.4",
+								End:   "3.2.3.5",
+							},
+						},
+					},
+				},
+				{
+					Source: store.EgressSource{
 						ID: "never-referenced-app-guid",
 					},
 					Destination: store.EgressDestination{
@@ -754,9 +838,9 @@ var _ = Describe("Egress Policy Table", func() {
 
 		Context("when there are policies with the given id", func() {
 			It("returns egress policies", func() {
-				policies, err := egressPolicyTable.GetByGuids([]string{"some-app-guid", "different-app-guid"})
+				policies, err := egressPolicyTable.GetByGuids([]string{"some-app-guid", "different-app-guid", "some-space-guid"})
 				Expect(err).ToNot(HaveOccurred())
-				Expect(policies).To(Equal(egressPolicies[:3]))
+				Expect(policies).To(ConsistOf(egressPolicies[:4]))
 			})
 		})
 

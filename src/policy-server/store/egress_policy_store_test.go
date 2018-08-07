@@ -17,6 +17,7 @@ var _ = Describe("EgressPolicyStore", func() {
 
 		tx             *dbfakes.Transaction
 		egressPolicies []store.EgressPolicy
+		spacePolicy    store.EgressPolicy
 	)
 
 	BeforeEach(func() {
@@ -79,6 +80,24 @@ var _ = Describe("EgressPolicyStore", func() {
 			},
 		}
 
+		spacePolicy = store.EgressPolicy{
+			Source: store.EgressSource{
+				Type: "space",
+				ID:   "space-guid",
+			},
+			Destination: store.EgressDestination{
+				Protocol: "icmp",
+				IPRanges: []store.IPRange{
+					{
+						Start: "3.2.3.4",
+						End:   "3.2.3.5",
+					},
+				},
+				ICMPType: 2,
+				ICMPCode: 3,
+			},
+		}
+
 		egressPolicyRepo.GetTerminalByAppGUIDReturns(-1, nil)
 	})
 
@@ -117,6 +136,8 @@ var _ = Describe("EgressPolicyStore", func() {
 			Expect(argTx).To(Equal(tx))
 			Expect(argSourceTerminalId).To(Equal(int64(24)))
 			Expect(argAppGUID).To(Equal("different-app-guid"))
+
+			Expect(egressPolicyRepo.CreateSpaceCallCount()).To(Equal(0))
 		})
 
 		It("returns an error when the CreateApp fails", func() {
@@ -124,6 +145,19 @@ var _ = Describe("EgressPolicyStore", func() {
 
 			err := egressPolicyStore.CreateWithTx(tx, egressPolicies)
 			Expect(err).To(MatchError("failed to create source app: OMG WHY DID THIS FAIL"))
+		})
+
+		It("creates a space with a sourceTerminalID", func() {
+			egressPolicyRepo.GetTerminalBySpaceGUIDReturns(-1, nil)
+			egressPolicyRepo.CreateTerminalReturns(66, nil)
+			err := egressPolicyStore.CreateWithTx(tx, []store.EgressPolicy{spacePolicy})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(egressPolicyRepo.CreateSpaceCallCount()).To(Equal(1))
+			Expect(egressPolicyRepo.CreateAppCallCount()).To(Equal(0))
+			argTx, argSourceTerminalID, argSpaceGUID := egressPolicyRepo.CreateSpaceArgsForCall(0)
+			Expect(argTx).To(Equal(tx))
+			Expect(argSourceTerminalID).To(Equal(int64(66)))
+			Expect(argSpaceGUID).To(Equal("space-guid"))
 		})
 
 		It("creates an ip range with the destinationTerminalID", func() {
@@ -212,6 +246,39 @@ var _ = Describe("EgressPolicyStore", func() {
 			Expect(egressPolicyRepo.CreateAppCallCount()).To(Equal(0))
 			_, sourceID, _ := egressPolicyRepo.CreateEgressPolicyArgsForCall(0)
 			Expect(sourceID).To(Equal(int64(66)))
+		})
+
+		It("uses the existing space terminal id when it exists", func() {
+			egressPolicyRepo.GetTerminalBySpaceGUIDReturns(55, nil)
+
+			err := egressPolicyStore.CreateWithTx(tx, []store.EgressPolicy{spacePolicy})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(egressPolicyRepo.CreateSpaceCallCount()).To(Equal(0))
+			_, sourceID, _ := egressPolicyRepo.CreateEgressPolicyArgsForCall(0)
+			Expect(sourceID).To(Equal(int64(55)))
+		})
+
+		It("returns an error when the CreateTerminal fails for space", func() {
+			egressPolicyRepo.GetTerminalBySpaceGUIDReturns(-1, nil)
+			egressPolicyRepo.CreateTerminalReturns(-1, errors.New("OMG WHY DID THIS FAIL"))
+
+			err := egressPolicyStore.CreateWithTx(tx, []store.EgressPolicy{spacePolicy})
+			Expect(err).To(MatchError("failed to create source terminal: OMG WHY DID THIS FAIL"))
+		})
+
+		It("returns an error when the CreateSpace fails", func() {
+			egressPolicyRepo.GetTerminalBySpaceGUIDReturns(-1, nil)
+			egressPolicyRepo.CreateSpaceReturns(-1, errors.New("OMG WHY DID THIS FAIL"))
+
+			err := egressPolicyStore.CreateWithTx(tx, []store.EgressPolicy{spacePolicy})
+			Expect(err).To(MatchError("failed to create space: OMG WHY DID THIS FAIL"))
+		})
+
+		It("returns an error when the GetTerminalBySpaceGUID fails", func() {
+			egressPolicyRepo.GetTerminalBySpaceGUIDReturns(-1, errors.New("OMG WHY DID THIS FAIL"))
+
+			err := egressPolicyStore.CreateWithTx(tx, []store.EgressPolicy{spacePolicy})
+			Expect(err).To(MatchError("failed to get terminal by space guid: OMG WHY DID THIS FAIL"))
 		})
 
 		It("returns an error when the GetTerminalByAppGUID fails", func() {

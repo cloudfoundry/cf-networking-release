@@ -68,15 +68,16 @@ var _ = Describe("Internal API", func() {
 		address = fmt.Sprintf("%s:%d", conf.ListenHost, conf.ListenPort)
 
 		body := strings.NewReader(`{ "policies": [
-				 {"source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "ports": { "start": 8080, "end": 8080 } } },
-				 {"source": { "id": "app3" }, "destination": { "id": "app1", "protocol": "tcp", "ports": { "start": 9999, "end": 9999 } } },
-				 {"source": { "id": "app3" }, "destination": { "id": "app2", "protocol": "tcp", "ports": { "start": 3333, "end": 4444 } } },
-				 {"source": { "id": "app3" }, "destination": { "id": "app4", "protocol": "tcp", "ports": { "start": 3333, "end": 3333 } } }
-				 ],
-                 "egress_policies": [ 
-                  { "source": { "id": "app1" }, "destination": { "ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}], "protocol": "tcp" } }, 
-                  { "source": { "id": "never-searched-for" }, "destination": { "ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}], "protocol": "tcp" } } 
-                 ]}`)
+			{"source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "ports": { "start": 8080, "end": 8080 } } },
+			{"source": { "id": "app3" }, "destination": { "id": "app1", "protocol": "tcp", "ports": { "start": 9999, "end": 9999 } } },
+			{"source": { "id": "app3" }, "destination": { "id": "app2", "protocol": "tcp", "ports": { "start": 3333, "end": 4444 } } },
+			{"source": { "id": "app3" }, "destination": { "id": "app4", "protocol": "tcp", "ports": { "start": 3333, "end": 3333 } } }
+		],
+		"egress_policies": [
+			{ "source": { "id": "app1" }, "destination": { "ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}], "protocol": "tcp" } },
+			{ "source": { "id": "space1", "type": "space" }, "destination": { "ips": [{"start": "10.27.1.3", "end": "10.27.1.3"}], "protocol": "tcp" } },
+			{ "source": { "id": "never-searched-for" }, "destination": { "ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}], "protocol": "tcp" } }
+		]}`)
 		_ = helpers.MakeAndDoRequest(
 			"POST",
 			fmt.Sprintf("http://%s:%d/networking/v1/external/policies", conf.ListenHost, conf.ListenPort),
@@ -94,7 +95,7 @@ var _ = Describe("Internal API", func() {
 	listPoliciesAndTagsSucceeds := func(version, expectedResponse string) {
 		resp := helpers.MakeAndDoHTTPSRequest(
 			"GET",
-			fmt.Sprintf("https://%s:%d/networking/%s/internal/policies?id=app1,app2", internalConf.ListenHost, internalConf.InternalListenPort, version),
+			fmt.Sprintf("https://%s:%d/networking/%s/internal/policies?id=app1,app2,space1", internalConf.ListenHost, internalConf.InternalListenPort, version),
 			nil,
 			tlsConfig,
 		)
@@ -112,20 +113,22 @@ var _ = Describe("Internal API", func() {
 	}
 
 	v1Response := `{"total_policies": 3,
-			"policies": [
+		"policies": [
 			{"source": { "id": "app1", "tag": "0001" }, "destination": { "id": "app2", "tag": "0002", "protocol": "tcp", "ports": {"start": 8080, "end": 8080 } } },
 			{"source": { "id": "app3", "tag": "0003" }, "destination": { "id": "app1", "tag": "0001", "protocol": "tcp", "ports": {"start": 9999, "end": 9999 } } },
 			{"source": { "id": "app3", "tag": "0003" }, "destination": { "id": "app2", "tag": "0002", "protocol": "tcp", "ports": { "start": 3333, "end": 4444 } } }],
-			"total_egress_policies": 1,
-            "egress_policies": [
-	        { "source": { "id": "app1" }, "destination": { "ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}], "protocol": "tcp" } }
-            ]}`
+		"total_egress_policies": 2,
+		"egress_policies": [
+			{ "source": { "id": "app1" }, "destination": { "ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}], "protocol": "tcp" } },
+			{ "source": { "id": "space1", "type": "space" }, "destination": { "ips": [{"start": "10.27.1.3", "end": "10.27.1.3"}], "protocol": "tcp" } }
+		]
+	}`
 
 	v0Response := `{"total_policies": 2,
-			"policies": [
-			{"source": { "id": "app1", "tag": "0001" }, "destination": { "id": "app2", "tag": "0002", "protocol": "tcp", "port": 8080, "ports": {"start": 8080, "end": 8080 } } },
-			{"source": { "id": "app3", "tag": "0003" }, "destination": { "id": "app1", "tag": "0001", "protocol": "tcp", "port": 9999, "ports": {"start": 9999, "end": 9999 } } }
-			]}`
+	"policies": [
+		{"source": { "id": "app1", "tag": "0001" }, "destination": { "id": "app2", "tag": "0002", "protocol": "tcp", "port": 8080, "ports": {"start": 8080, "end": 8080 } } },
+		{"source": { "id": "app3", "tag": "0003" }, "destination": { "id": "app1", "tag": "0001", "protocol": "tcp", "port": 9999, "ports": {"start": 9999, "end": 9999 } } }
+	]}`
 
 	DescribeTable("listing policies and tags succeeds", listPoliciesAndTagsSucceeds,
 		Entry("v1", "v1", v1Response),
