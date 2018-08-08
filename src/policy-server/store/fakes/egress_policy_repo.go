@@ -201,6 +201,18 @@ type EgressPolicyRepo struct {
 	deleteAppReturnsOnCall map[int]struct {
 		result1 error
 	}
+	DeleteSpaceStub        func(tx db.Transaction, spaceID int64) error
+	deleteSpaceMutex       sync.RWMutex
+	deleteSpaceArgsForCall []struct {
+		tx      db.Transaction
+		spaceID int64
+	}
+	deleteSpaceReturns struct {
+		result1 error
+	}
+	deleteSpaceReturnsOnCall map[int]struct {
+		result1 error
+	}
 	IsTerminalInUseStub        func(tx db.Transaction, terminalID int64) (bool, error)
 	isTerminalInUseMutex       sync.RWMutex
 	isTerminalInUseArgsForCall []struct {
@@ -939,6 +951,55 @@ func (fake *EgressPolicyRepo) DeleteAppReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
+func (fake *EgressPolicyRepo) DeleteSpace(tx db.Transaction, spaceID int64) error {
+	fake.deleteSpaceMutex.Lock()
+	ret, specificReturn := fake.deleteSpaceReturnsOnCall[len(fake.deleteSpaceArgsForCall)]
+	fake.deleteSpaceArgsForCall = append(fake.deleteSpaceArgsForCall, struct {
+		tx      db.Transaction
+		spaceID int64
+	}{tx, spaceID})
+	fake.recordInvocation("DeleteSpace", []interface{}{tx, spaceID})
+	fake.deleteSpaceMutex.Unlock()
+	if fake.DeleteSpaceStub != nil {
+		return fake.DeleteSpaceStub(tx, spaceID)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.deleteSpaceReturns.result1
+}
+
+func (fake *EgressPolicyRepo) DeleteSpaceCallCount() int {
+	fake.deleteSpaceMutex.RLock()
+	defer fake.deleteSpaceMutex.RUnlock()
+	return len(fake.deleteSpaceArgsForCall)
+}
+
+func (fake *EgressPolicyRepo) DeleteSpaceArgsForCall(i int) (db.Transaction, int64) {
+	fake.deleteSpaceMutex.RLock()
+	defer fake.deleteSpaceMutex.RUnlock()
+	return fake.deleteSpaceArgsForCall[i].tx, fake.deleteSpaceArgsForCall[i].spaceID
+}
+
+func (fake *EgressPolicyRepo) DeleteSpaceReturns(result1 error) {
+	fake.DeleteSpaceStub = nil
+	fake.deleteSpaceReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *EgressPolicyRepo) DeleteSpaceReturnsOnCall(i int, result1 error) {
+	fake.DeleteSpaceStub = nil
+	if fake.deleteSpaceReturnsOnCall == nil {
+		fake.deleteSpaceReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.deleteSpaceReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *EgressPolicyRepo) IsTerminalInUse(tx db.Transaction, terminalID int64) (bool, error) {
 	fake.isTerminalInUseMutex.Lock()
 	ret, specificReturn := fake.isTerminalInUseReturnsOnCall[len(fake.isTerminalInUseArgsForCall)]
@@ -1022,6 +1083,8 @@ func (fake *EgressPolicyRepo) Invocations() map[string][][]interface{} {
 	defer fake.deleteTerminalMutex.RUnlock()
 	fake.deleteAppMutex.RLock()
 	defer fake.deleteAppMutex.RUnlock()
+	fake.deleteSpaceMutex.RLock()
+	defer fake.deleteSpaceMutex.RUnlock()
 	fake.isTerminalInUseMutex.RLock()
 	defer fake.isTerminalInUseMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}

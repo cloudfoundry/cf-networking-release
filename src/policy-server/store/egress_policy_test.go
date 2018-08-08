@@ -364,6 +364,41 @@ var _ = Describe("Egress Policy Table", func() {
 		})
 	})
 
+	Context("DeleteSpace", func() {
+		var (
+			spaceID int64
+		)
+
+		BeforeEach(func() {
+			spaceTerminalID, err := egressPolicyTable.CreateTerminal(tx)
+			Expect(err).ToNot(HaveOccurred())
+
+			spaceID, err = egressPolicyTable.CreateSpace(tx, spaceTerminalID, "some-space-guid")
+			Expect(err).ToNot(HaveOccurred())
+			Expect(spaceID).To(Equal(int64(1)))
+
+		})
+
+		It("deletes the space", func() {
+			err := egressPolicyTable.DeleteSpace(tx, spaceID)
+			Expect(err).ToNot(HaveOccurred())
+
+			var spaceCount int
+			row := tx.QueryRow(`SELECT COUNT(id) FROM spaces WHERE id = 1`)
+			err = row.Scan(&spaceCount)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(spaceCount).To(Equal(0))
+		})
+
+		It("should return the sql error", func() {
+			fakeTx := &dbfakes.Transaction{}
+			fakeTx.ExecReturns(nil, errors.New("broke"))
+
+			err := egressPolicyTable.DeleteSpace(fakeTx, 2)
+			Expect(err).To(MatchError("broke"))
+		})
+	})
+
 	Context("IsTerminalInUse", func() {
 		var (
 			sourceTerminalID int64
@@ -455,7 +490,67 @@ var _ = Describe("Egress Policy Table", func() {
 				DestinationIPRangeID:  ipRangeID,
 				SourceTerminalID:      sourceTerminalID,
 				SourceAppID:           appID,
+				SourceSpaceID:         -1,
 			}))
+		})
+
+		Context("when source terminal is attached to a space", func() {
+			var (
+				spaceSourceTerminalID int64
+				spaceEgressPolicyID   int64
+				spaceID               int64
+				spaceEgressPolicy     store.EgressPolicy
+			)
+
+			BeforeEach(func() {
+				spaceEgressPolicy = store.EgressPolicy{
+					Source: store.EgressSource{
+						ID:   "some-space-guid",
+						Type: "space",
+					},
+					Destination: store.EgressDestination{
+						Protocol: "tcp",
+						Ports: []store.Ports{
+							{
+								Start: 8080,
+								End:   8081,
+							},
+						},
+						IPRanges: []store.IPRange{
+							{
+								Start: "1.1.1.1",
+								End:   "2.2.2.2",
+							},
+						},
+					},
+				}
+
+				var err error
+				spaceSourceTerminalID, err = egressPolicyTable.CreateTerminal(tx)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(spaceSourceTerminalID).To(Equal(int64(3)))
+
+				spaceID, err = egressPolicyTable.CreateSpace(tx, spaceSourceTerminalID, "some-space-guid")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(spaceID).To(Equal(int64(1)))
+
+				spaceEgressPolicyID, err = egressPolicyTable.CreateEgressPolicy(tx, spaceSourceTerminalID, destinationTerminalID)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(spaceEgressPolicyID).To(Equal(int64(2)))
+			})
+
+			It("returns all the space id and sets app id to -1", func() {
+				ids, err := egressPolicyTable.GetIDsByEgressPolicy(tx, spaceEgressPolicy)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ids).To(Equal(store.EgressPolicyIDCollection{
+					EgressPolicyID:        spaceEgressPolicyID,
+					DestinationTerminalID: destinationTerminalID,
+					DestinationIPRangeID:  ipRangeID,
+					SourceTerminalID:      spaceSourceTerminalID,
+					SourceSpaceID:         spaceID,
+					SourceAppID:           -1,
+				}))
+			})
 		})
 
 		Context("when no port is provided", func() {
@@ -506,6 +601,7 @@ var _ = Describe("Egress Policy Table", func() {
 					DestinationIPRangeID:  ipRangeID,
 					SourceTerminalID:      sourceTerminalID,
 					SourceAppID:           appID,
+					SourceSpaceID:         -1,
 				}))
 			})
 		})
@@ -574,6 +670,7 @@ var _ = Describe("Egress Policy Table", func() {
 					DestinationIPRangeID:  ipRangeID,
 					SourceTerminalID:      sourceTerminalID,
 					SourceAppID:           appID,
+					SourceSpaceID:         -1,
 				}))
 			})
 		})

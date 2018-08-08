@@ -217,6 +217,11 @@ func (e *EgressPolicyTable) DeleteApp(tx db.Transaction, appID int64) error {
 	return err
 }
 
+func (e *EgressPolicyTable) DeleteSpace(tx db.Transaction, spaceID int64) error {
+	_, err := tx.Exec(tx.Rebind(`DELETE FROM spaces WHERE id = ?`), spaceID)
+	return err
+}
+
 func (e *EgressPolicyTable) IsTerminalInUse(tx db.Transaction, terminalID int64) (bool, error) {
 	var count int64
 	err := tx.QueryRow(tx.Rebind(`SELECT COUNT(id) FROM egress_policies WHERE source_id = ? OR destination_id = ?`), terminalID, terminalID).Scan(&count)
@@ -227,7 +232,7 @@ func (e *EgressPolicyTable) IsTerminalInUse(tx db.Transaction, terminalID int64)
 }
 
 func (e *EgressPolicyTable) GetIDsByEgressPolicy(tx db.Transaction, egressPolicy EgressPolicy) (EgressPolicyIDCollection, error) {
-	var egressPolicyID, sourceTerminalID, destinationTerminalID, appID, ipRangeID int64
+	var egressPolicyID, sourceTerminalID, destinationTerminalID, sourceID, appID, spaceID, ipRangeID int64
 
 	var startPort, endPort int64
 	if len(egressPolicy.Destination.Ports) > 0 {
@@ -235,25 +240,35 @@ func (e *EgressPolicyTable) GetIDsByEgressPolicy(tx db.Transaction, egressPolicy
 		endPort = int64(egressPolicy.Destination.Ports[0].End)
 	}
 
-	err := tx.QueryRow(tx.Rebind(`
-	SELECT
-		egress_policies.id,
-		egress_policies.source_id,
-		egress_policies.destination_id,
-		apps.id,
-		ip_ranges.id
-	FROM egress_policies
-	JOIN apps on (egress_policies.source_id = apps.terminal_id)
-	JOIN ip_ranges on (egress_policies.destination_id = ip_ranges.terminal_id)
-	WHERE apps.app_guid = ? AND
-		ip_ranges.protocol = ? AND
-		ip_ranges.start_ip = ? AND
-		ip_ranges.end_ip = ? AND
-		ip_ranges.start_port = ? AND
-		ip_ranges.end_port = ? AND
-		ip_ranges.icmp_type = ? AND
-		ip_ranges.icmp_code = ?
-	;`),
+	var sourceTable, sourceGUIDColumn string
+	switch egressPolicy.Source.Type {
+	case "space":
+		sourceTable = "spaces"
+		sourceGUIDColumn = "space_guid"
+	default:
+		sourceTable = "apps"
+		sourceGUIDColumn = "app_guid"
+	}
+
+	err := tx.QueryRow(tx.Rebind(fmt.Sprintf(`
+		SELECT
+			egress_policies.id,
+			egress_policies.source_id,
+			egress_policies.destination_id,
+			%s.id,
+			ip_ranges.id
+		FROM egress_policies
+		JOIN %[1]s on (egress_policies.source_id = %[1]s.terminal_id)
+		JOIN ip_ranges on (egress_policies.destination_id = ip_ranges.terminal_id)
+		WHERE %[1]s.%[2]s = ? AND
+			ip_ranges.protocol = ? AND
+			ip_ranges.start_ip = ? AND
+			ip_ranges.end_ip = ? AND
+			ip_ranges.start_port = ? AND
+			ip_ranges.end_port = ? AND
+			ip_ranges.icmp_type = ? AND
+			ip_ranges.icmp_code = ?
+		;`, sourceTable, sourceGUIDColumn)),
 		egressPolicy.Source.ID,
 		egressPolicy.Destination.Protocol,
 		egressPolicy.Destination.IPRanges[0].Start,
@@ -262,20 +277,27 @@ func (e *EgressPolicyTable) GetIDsByEgressPolicy(tx db.Transaction, egressPolicy
 		endPort,
 		egressPolicy.Destination.ICMPType,
 		egressPolicy.Destination.ICMPCode,
-	).
-		Scan(&egressPolicyID, &sourceTerminalID, &destinationTerminalID, &appID, &ipRangeID)
-
-	var policyIDs EgressPolicyIDCollection
+	).Scan(&egressPolicyID, &sourceTerminalID, &destinationTerminalID, &sourceID, &ipRangeID)
 	if err != nil {
-		return policyIDs, err
+		return EgressPolicyIDCollection{}, err
 	}
 
-	policyIDs = EgressPolicyIDCollection{
+	switch egressPolicy.Source.Type {
+	case "space":
+		appID = -1
+		spaceID = sourceID
+	default:
+		spaceID = -1
+		appID = sourceID
+	}
+
+	policyIDs := EgressPolicyIDCollection{
 		EgressPolicyID:        egressPolicyID,
 		DestinationTerminalID: destinationTerminalID,
 		DestinationIPRangeID:  ipRangeID,
 		SourceTerminalID:      sourceTerminalID,
 		SourceAppID:           appID,
+		SourceSpaceID:         spaceID,
 	}
 
 	return policyIDs, nil

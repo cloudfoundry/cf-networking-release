@@ -21,6 +21,7 @@ type egressPolicyRepo interface {
 	DeleteIPRange(tx db.Transaction, ipRangeID int64) error
 	DeleteTerminal(tx db.Transaction, terminalID int64) error
 	DeleteApp(tx db.Transaction, appID int64) error
+	DeleteSpace(tx db.Transaction, spaceID int64) error
 	IsTerminalInUse(tx db.Transaction, terminalID int64) (bool, error)
 }
 
@@ -132,9 +133,18 @@ func (e *EgressPolicyStore) DeleteWithTx(tx db.Transaction, egressPolicies []Egr
 		}
 
 		if !terminalInUse {
-			err = e.EgressPolicyRepo.DeleteApp(tx, egressPolicyIDs.SourceAppID)
-			if err != nil {
-				return fmt.Errorf("failed to delete source app: %s", err)
+			if egressPolicyIDs.SourceAppID != -1 {
+				err = e.EgressPolicyRepo.DeleteApp(tx, egressPolicyIDs.SourceAppID)
+				if err != nil {
+					return fmt.Errorf("failed to delete source app: %s", err)
+				}
+			}
+
+			if egressPolicyIDs.SourceSpaceID != -1 {
+				err = e.EgressPolicyRepo.DeleteSpace(tx, egressPolicyIDs.SourceSpaceID)
+				if err != nil {
+					return fmt.Errorf("failed to delete source space: %s", err)
+				}
 			}
 
 			err = e.EgressPolicyRepo.DeleteTerminal(tx, egressPolicyIDs.SourceTerminalID)

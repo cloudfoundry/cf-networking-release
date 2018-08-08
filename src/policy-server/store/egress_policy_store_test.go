@@ -334,6 +334,7 @@ var _ = Describe("EgressPolicyStore", func() {
 				DestinationIPRangeID:  ipRangeID,
 				DestinationTerminalID: destTerminalID,
 				SourceAppID:           appID,
+				SourceSpaceID:         -1,
 				SourceTerminalID:      srcTerminalID,
 			}
 			egressPolicyRepo.GetIDsByEgressPolicyReturns(egressPolicyIDCollection, nil)
@@ -371,6 +372,43 @@ var _ = Describe("EgressPolicyStore", func() {
 			passedTx, passedSrcTerminalID := egressPolicyRepo.DeleteTerminalArgsForCall(1)
 			Expect(passedTx).To(Equal(tx))
 			Expect(passedSrcTerminalID).To(Equal(srcTerminalID))
+
+			Expect(egressPolicyRepo.DeleteSpaceCallCount()).To(Equal(0))
+		})
+
+		Context("when the source terminal is attached to a space", func() {
+			var (
+				spaceID int64
+			)
+
+			BeforeEach(func() {
+				spaceID = 23
+				egressPolicyIDCollection.SourceAppID = -1
+				egressPolicyIDCollection.SourceSpaceID = spaceID
+				egressPolicyRepo.GetIDsByEgressPolicyReturns(egressPolicyIDCollection, nil)
+			})
+
+			It("deletes the space", func() {
+				err := egressPolicyStore.DeleteWithTx(tx, egressPoliciesToDelete)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(egressPolicyRepo.DeleteAppCallCount()).To(Equal(0))
+				Expect(egressPolicyRepo.DeleteSpaceCallCount()).To(Equal(1))
+				passedTx, passedSpaceID := egressPolicyRepo.DeleteSpaceArgsForCall(0)
+				Expect(passedTx).To(Equal(tx))
+				Expect(passedSpaceID).To(Equal(spaceID))
+			})
+
+			Context("when the EgressPolicyRepo.DeleteSpace fails", func() {
+				BeforeEach(func() {
+					egressPolicyRepo.DeleteSpaceReturns(errors.New("ther's a bug"))
+				})
+
+				It("returns an error", func() {
+					err := egressPolicyStore.DeleteWithTx(tx, egressPoliciesToDelete)
+					Expect(err).To(MatchError("failed to delete source space: ther's a bug"))
+				})
+			})
 		})
 
 		Context("when there are multiple egress policies", func() {

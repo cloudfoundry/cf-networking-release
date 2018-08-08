@@ -63,4 +63,5 @@ type EgressPolicyIDCollection struct {
 	DestinationIPRangeID  int64
 	SourceTerminalID      int64
 	SourceAppID           int64
+	SourceSpaceID         int64
 }
