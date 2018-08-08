@@ -52,4 +52,4 @@ properties:
   internal_domains:
     description: "TLD for internal app resolution with service discovery."
     example: ["apps.internal.", "my.apps.internal."]
-    default: ["apps.internal."]
+    default: []

@@ -43,24 +43,6 @@ module Bosh::Template::Test
         ])
       end
 
-      context 'when internal_domains is not set' do
-        let(:merged_manifest_properties) { {} }
-
-        it 'should render a json file with default apps.internal domain' do
-          config = JSON.parse(template.render(merged_manifest_properties))
-          expect(config).to eq([
-            {
-              'domain' => 'apps.internal.',
-              'cache' => {'enabled' => false},
-              'source' => {
-                'type' => 'http',
-                'url' => 'http://127.0.0.1:8053'
-              }
-            },
-          ])
-        end
-      end
-
       context 'when cf_app_sd_disable is true' do
         let(:disabled_manifest_properties) do
         {
