@@ -170,6 +170,18 @@ resources:
       uri: git@github.com:cloudfoundry/cf-networking-release.git
       branch: master
       private_key: ((cf-networking-deploy-key.private_key))
+  - name: cf-networking-release-candidate
+    type: git
+    source:
+      uri: git@github.com:cloudfoundry/cf-networking-release.git
+      branch: release-candidate
+      private_key: ((cf-networking-deploy-key.private_key))
+  - name: silk-release-candidate
+    type: git
+    source:
+      uri: git@github.com:cloudfoundry/silk-release.git
+      branch: release-candidate
+      private_key: ((silk-release-deploy-key.private_key))
   - name: bbr-binary-release
     type: github-release
     source:
@@ -1572,6 +1584,12 @@ jobs:
           other-release-version: version
         params:
           OTHER_RELEASE_NAME: silk-release
+      - put: cf-networking-release-candidate
+        params:
+          repository: cf-networking-dev
+      - put: silk-release-candidate
+        params:
+          repository: silk-dev
 
   - name: check-empty-networking-opsfile
     serial_groups: [version]
