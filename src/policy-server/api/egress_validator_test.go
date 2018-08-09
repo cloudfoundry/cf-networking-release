@@ -43,6 +43,19 @@ var _ = Describe("Egress Validator", func() {
 			Expect(err).To(MatchError("missing egress source"))
 		})
 
+		It("type must be app, space or empty", func() {
+			egressPolicies[0].Source.Type = "invalid"
+
+			err := validator.ValidateEgressPolicies(egressPolicies)
+			Expect(err).To(MatchError("source type must be app or space"))
+
+			for _, validType := range []string{"app", "space", ""} {
+				egressPolicies[0].Source.Type = validType
+				err := validator.ValidateEgressPolicies(egressPolicies)
+				Expect(err).NotTo(HaveOccurred())
+			}
+		})
+
 		It("requires a source guid", func() {
 			egressPolicies[0].Source.ID = ""
 

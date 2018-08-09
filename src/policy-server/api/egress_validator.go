@@ -22,6 +22,9 @@ func (v *EgressValidator) ValidateEgressPolicies(policies []EgressPolicy) error 
 		if policy.Source.ID == "" {
 			return errors.New("missing egress source ID")
 		}
+		if policy.Source.Type != "" && policy.Source.Type != "app" && policy.Source.Type != "space" {
+			return errors.New("source type must be app or space")
+		}
 		if policy.Destination == nil {
 			return errors.New("missing egress destination")
 		}
