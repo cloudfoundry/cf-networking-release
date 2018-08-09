@@ -742,7 +742,8 @@ var _ = Describe("Egress Policy Table", func() {
 			egressPolicies = []store.EgressPolicy{
 				{
 					Source: store.EgressSource{
-						ID: "some-app-guid",
+						ID:   "some-app-guid",
+						Type: "app",
 					},
 					Destination: store.EgressDestination{
 						Protocol: "tcp",
@@ -762,7 +763,8 @@ var _ = Describe("Egress Policy Table", func() {
 				},
 				{
 					Source: store.EgressSource{
-						ID: "different-app-guid",
+						ID:   "different-app-guid",
+						Type: "app",
 					},
 					Destination: store.EgressDestination{
 						Protocol: "udp",
@@ -776,7 +778,8 @@ var _ = Describe("Egress Policy Table", func() {
 				},
 				{
 					Source: store.EgressSource{
-						ID: "different-app-guid",
+						ID:   "different-app-guid",
+						Type: "app",
 					},
 					Destination: store.EgressDestination{
 						Protocol: "icmp",
@@ -842,7 +845,8 @@ var _ = Describe("Egress Policy Table", func() {
 			egressPolicies = []store.EgressPolicy{
 				{
 					Source: store.EgressSource{
-						ID: "some-app-guid",
+						ID:   "some-app-guid",
+						Type: "app",
 					},
 					Destination: store.EgressDestination{
 						Protocol: "tcp",
@@ -862,7 +866,8 @@ var _ = Describe("Egress Policy Table", func() {
 				},
 				{
 					Source: store.EgressSource{
-						ID: "different-app-guid",
+						ID:   "different-app-guid",
+						Type: "app",
 					},
 					Destination: store.EgressDestination{
 						Protocol: "udp",
@@ -876,7 +881,8 @@ var _ = Describe("Egress Policy Table", func() {
 				},
 				{
 					Source: store.EgressSource{
-						ID: "different-app-guid",
+						ID:   "different-app-guid",
+						Type: "app",
 					},
 					Destination: store.EgressDestination{
 						Protocol: "icmp",

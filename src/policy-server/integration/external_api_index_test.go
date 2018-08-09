@@ -110,9 +110,9 @@ var _ = Describe("External API Listing Policies", func() {
 			],
 			"total_egress_policies": 3,
 			"egress_policies": [
-				{"source": { "id": "some-app-guid" }, "destination": { "protocol": "tcp", "ips": [ {"start": "23.96.32.148", "end": "23.96.32.149" } ] } },
-				{"source": { "id": "some-app-guid" }, "destination": { "protocol": "tcp", "ports": [{"start": 8080, "end": 8081}], "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] } },
-				{"source": { "id": "some-app-guid" }, "destination": { "protocol": "icmp", "icmp_type": 1, "icmp_code": 2, "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] } }
+				{"source": { "id": "some-app-guid", "type": "app" }, "destination": { "protocol": "tcp", "ips": [ {"start": "23.96.32.148", "end": "23.96.32.149" } ] } },
+				{"source": { "id": "some-app-guid", "type": "app" }, "destination": { "protocol": "tcp", "ports": [{"start": 8080, "end": 8081}], "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] } },
+				{"source": { "id": "some-app-guid", "type": "app" }, "destination": { "protocol": "icmp", "icmp_type": 1, "icmp_code": 2, "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] } }
 			]
 		}`
 		v1ResponseFiltered := `{ "total_policies": 2, "policies": [

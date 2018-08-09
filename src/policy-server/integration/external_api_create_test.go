@@ -174,7 +174,8 @@ var _ = Describe("External API Adding Policies", func() {
 				},
 				{
 					"source": {
-						"id": "some-app-guid"
+						"id": "some-app-guid",
+						"type": "app"
 					},
 					"destination": {
 						"ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}],
@@ -193,7 +194,8 @@ var _ = Describe("External API Adding Policies", func() {
 			"egress_policies": [
 				{
 					"source": {
-						"id": "some-app-guid"
+						"id": "some-app-guid",
+						"type": "app"
 					},
 					"destination": {
 						"ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}],
@@ -203,7 +205,8 @@ var _ = Describe("External API Adding Policies", func() {
 				},
 				{
 					"source": {
-						"id": "some-app-guid"
+						"id": "some-app-guid",
+						"type": "app"
 					},
 					"destination": {
 						"ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}],
@@ -237,7 +240,8 @@ var _ = Describe("External API Adding Policies", func() {
 			"egress_policies": [
 				{
 					"source": {
-						"id": "some-app-guid"
+						"id": "some-app-guid",
+						"type": "app"
 					},
 					"destination": {
 						"ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}],

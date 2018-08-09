@@ -388,7 +388,8 @@ func (e *EgressPolicyTable) GetAllPolicies() ([]EgressPolicy, error) {
 			}
 		default:
 			source = EgressSource{
-				ID: *sourceAppGUID,
+				ID:   *sourceAppGUID,
+				Type: "app",
 			}
 		}
 
@@ -471,7 +472,8 @@ func (e *EgressPolicyTable) GetByGuids(ids []string) ([]EgressPolicy, error) {
 			}
 		default:
 			source = EgressSource{
-				ID: *sourceAppGUID,
+				ID:   *sourceAppGUID,
+				Type: "app",
 			}
 		}
 
