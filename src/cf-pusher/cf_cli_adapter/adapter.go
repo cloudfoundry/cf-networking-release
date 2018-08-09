@@ -91,6 +91,12 @@ func (a *Adapter) AppGuid(name string) (string, error) {
 	return strings.TrimSpace(string(bytes)), err
 }
 
+func (a *Adapter) SpaceGuid(name string) (string, error) {
+	fmt.Printf("running: %s space %s --guid\n", a.CfCliPath, name)
+	bytes, err := exec.Command(a.CfCliPath, "space", name, "--guid").CombinedOutput()
+	return strings.TrimSpace(string(bytes)), err
+}
+
 type Apps struct {
 	TotalResults int `json:"total_results"`
 }

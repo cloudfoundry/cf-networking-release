@@ -85,30 +85,59 @@ var _ = Describe("external connectivity", func() {
 	}
 
 	Describe("egress policy connectivity", func() {
-		It("the app can reach the internet when egress policy is present", func(done Done) {
-			By("checking that the app cannot reach the internet using http and dns")
-			Eventually(cannotProxy, "10s", "1s").Should(Succeed())
-			Consistently(cannotProxy, "2s", "0.5s").Should(Succeed())
+		Context("when the egress policy is for the app", func() {
+			It("the app can reach the internet when egress policy is present", func(done Done) {
+				By("checking that the app cannot reach the internet using http and dns")
+				Eventually(cannotProxy, "10s", "1s").Should(Succeed())
+				Consistently(cannotProxy, "2s", "0.5s").Should(Succeed())
 
-			By("creating egress policy")
-			appAGuid, err := cli.AppGuid(appA)
-			Expect(err).NotTo(HaveOccurred())
-			createEgressPolicy(cli, fmt.Sprintf(testEgressPolicies, appAGuid))
+				By("creating egress policy")
+				appAGuid, err := cli.AppGuid(appA)
+				Expect(err).NotTo(HaveOccurred())
+				createEgressPolicy(cli, fmt.Sprintf(testEgressPolicies, appAGuid, "app"))
 
-			By("checking that the app can use dns and http to reach the internet")
-			Eventually(canProxy, "10s", "1s").Should(Succeed())
-			Consistently(canProxy, "2s", "0.5s").Should(Succeed())
+				By("checking that the app can use dns and http to reach the internet")
+				Eventually(canProxy, "10s", "1s").Should(Succeed())
+				Consistently(canProxy, "2s", "0.5s").Should(Succeed())
 
-			By("deleting egress policy")
-			Expect(err).NotTo(HaveOccurred())
-			deleteEgressPolicy(cli, fmt.Sprintf(testEgressPolicies, appAGuid))
+				By("deleting egress policy")
+				Expect(err).NotTo(HaveOccurred())
+				deleteEgressPolicy(cli, fmt.Sprintf(testEgressPolicies, appAGuid, "app"))
 
-			By("checking that the app cannot reach the internet using http and dns")
-			Eventually(cannotProxy, "10s", "1s").Should(Succeed())
-			Consistently(cannotProxy, "2s", "0.5s").Should(Succeed())
+				By("checking that the app cannot reach the internet using http and dns")
+				Eventually(cannotProxy, "10s", "1s").Should(Succeed())
+				Consistently(cannotProxy, "2s", "0.5s").Should(Succeed())
 
-			close(done)
-		}, 180 /* <-- overall spec timeout in seconds */)
+				close(done)
+			}, 180 /* <-- overall spec timeout in seconds */)
+		})
+
+		Context("when the egress policy is for the space", func() {
+			It("the app in the space can reach the internet when egress policy is present", func(done Done) {
+				By("checking that the space cannot reach the internet using http and dns")
+				Eventually(cannotProxy, "10s", "1s").Should(Succeed())
+				Consistently(cannotProxy, "2s", "0.5s").Should(Succeed())
+
+				By("creating egress policy")
+				spaceGuid, err := cli.SpaceGuid(spaceName)
+				Expect(err).NotTo(HaveOccurred())
+				createEgressPolicy(cli, fmt.Sprintf(testEgressPolicies, spaceGuid, "space"))
+
+				By("checking that the app can use dns and http to reach the internet")
+				Eventually(canProxy, "10s", "1s").Should(Succeed())
+				Consistently(canProxy, "2s", "0.5s").Should(Succeed())
+
+				By("deleting egress policy")
+				Expect(err).NotTo(HaveOccurred())
+				deleteEgressPolicy(cli, fmt.Sprintf(testEgressPolicies, spaceGuid, "space"))
+
+				By("checking that the app cannot reach the internet using http and dns")
+				Eventually(cannotProxy, "10s", "1s").Should(Succeed())
+				Consistently(cannotProxy, "2s", "0.5s").Should(Succeed())
+
+				close(done)
+			}, 180 /* <-- overall spec timeout in seconds */)
+		})
 	})
 })
 
@@ -153,7 +182,8 @@ var testEgressPolicies = `
   "egress_policies": [
     {
       "source": {
-        "id": %q
+        "id": %q,
+        "type": %q
       },
       "destination": {
         "protocol": "tcp",
