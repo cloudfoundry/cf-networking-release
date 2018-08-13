@@ -231,4 +231,31 @@ var _ = Describe("PolicyCollectionStore", func() {
 			})
 		})
 	})
+
+	Describe("All", func() {
+		BeforeEach(func() {
+			policyStore.AllReturns(policyCollection.Policies, nil)
+			egressPolicyStore.AllReturns(policyCollection.EgressPolicies, nil)
+		})
+
+		It("aggregates calls to the policy store and egress policy store", func() {
+			allPolicies, err := policyCollectionStore.All()
+			Expect(err).ToNot(HaveOccurred())
+			Expect(allPolicies).To(Equal(policyCollection))
+		})
+
+		It("returns the error from policy store", func() {
+			policyStore.AllReturns(nil, errors.New("foxtrot"))
+
+			_, err := policyCollectionStore.All()
+			Expect(err).To(MatchError("foxtrot"))
+		})
+
+		It("returns the error from egress policy store", func() {
+			egressPolicyStore.AllReturns(nil, errors.New("whiskey"))
+
+			_, err := policyCollectionStore.All()
+			Expect(err).To(MatchError("whiskey"))
+		})
+	})
 })

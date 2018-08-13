@@ -20,8 +20,8 @@ type ccClient interface {
 
 //go:generate counterfeiter -o fakes/list_delete_store.go --fake-name ListDeleteStore . listDeleteStore
 type listDeleteStore interface {
-	All() ([]store.Policy, error)
-	Delete([]store.Policy) error
+	All() (store.PolicyCollection, error)
+	Delete(store.PolicyCollection) error
 }
 
 type PolicyCleaner struct {
@@ -45,19 +45,21 @@ func NewPolicyCleaner(logger lager.Logger, store listDeleteStore, uaaClient uaaC
 	}
 }
 
-func (p *PolicyCleaner) DeleteStalePolicies() ([]store.Policy, error) {
-	policies, err := p.Store.All()
+func (p *PolicyCleaner) DeleteStalePolicies() (store.PolicyCollection, error) {
+	allPolicies, err := p.Store.All()
 	if err != nil {
 		p.Logger.Error("store-list-policies-failed", err)
-		return nil, fmt.Errorf("database read failed: %s", err)
+		return store.PolicyCollection{}, fmt.Errorf("database read failed: %s", err)
 	}
 	token, err := p.UAAClient.GetToken()
 	if err != nil {
 		p.Logger.Error("get-uaa-token-failed", err)
-		return nil, fmt.Errorf("get UAA token failed: %s", err)
+		return store.PolicyCollection{}, fmt.Errorf("get UAA token failed: %s", err)
 	}
 
-	stalePolicies := []store.Policy{}
+	policies := allPolicies.Policies
+
+	var stalePolicies []store.Policy
 
 	appGUIDs := policyAppGUIDs(policies)
 	appGUIDchunks := getChunks(appGUIDs, p.CCAppRequestChunkSize)
@@ -66,7 +68,7 @@ func (p *PolicyCleaner) DeleteStalePolicies() ([]store.Policy, error) {
 		liveAppGUIDs, err := p.CCClient.GetLiveAppGUIDs(token, appGUIDchunk)
 		if err != nil {
 			p.Logger.Error("cc-get-app-guids-failed", err)
-			return nil, fmt.Errorf("get app guids from Cloud-Controller failed: %s", err)
+			return store.PolicyCollection{}, fmt.Errorf("get app guids from Cloud-Controller failed: %s", err)
 		}
 
 		staleAppGUIDs := getStaleAppGUIDs(liveAppGUIDs, appGUIDchunk)
@@ -77,14 +79,14 @@ func (p *PolicyCleaner) DeleteStalePolicies() ([]store.Policy, error) {
 			"total_policies": len(stalePolicies),
 			"stale_policies": stalePolicies,
 		})
-		err = p.Store.Delete(toDelete)
+		err = p.Store.Delete(store.PolicyCollection{Policies: toDelete})
 		if err != nil {
 			p.Logger.Error("store-delete-policies-failed", err)
-			return nil, fmt.Errorf("database write failed: %s", err)
+			return store.PolicyCollection{}, fmt.Errorf("database write failed: %s", err)
 		}
 	}
 
-	return stalePolicies, nil
+	return store.PolicyCollection{Policies: stalePolicies}, nil
 }
 
 func (p *PolicyCleaner) DeleteStalePoliciesWrapper() error {
@@ -103,7 +105,7 @@ func getStaleAppGUIDs(liveAppGUIDs map[string]struct{}, appGUIDs []string) map[s
 }
 
 func getStalePolicies(policyList []store.Policy, staleAppGUIDs map[string]struct{}) []store.Policy {
-	stalePolicies := []store.Policy{}
+	var stalePolicies []store.Policy
 	for _, p := range policyList {
 		_, foundSrc := staleAppGUIDs[p.Source.ID]
 		_, foundDst := staleAppGUIDs[p.Destination.ID]
@@ -121,7 +123,7 @@ func policyAppGUIDs(policyList []store.Policy) []string {
 		appGUIDset[p.Destination.ID] = struct{}{}
 	}
 	var appGUIDs []string
-	for guid, _ := range appGUIDset {
+	for guid := range appGUIDset {
 		appGUIDs = append(appGUIDs, guid)
 	}
 	return appGUIDs

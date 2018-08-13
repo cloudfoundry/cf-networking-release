@@ -187,7 +187,7 @@ func main() {
 	policiesIndexHandlerV1 := handlers.NewPoliciesIndex(wrappedStore, egressDataStore, policyMapperV1, policyFilter, errorResponse)
 	policiesIndexHandlerV0 := handlers.NewPoliciesIndex(wrappedStore, egressDataStore, policyMapperV0, policyFilter, errorResponse)
 
-	policyCleaner := cleaner.NewPolicyCleaner(logger.Session("policy-cleaner"), wrappedStore, uaaClient,
+	policyCleaner := cleaner.NewPolicyCleaner(logger.Session("policy-cleaner"), wrappedPolicyCollectionStore, uaaClient,
 		ccClient, 100, time.Duration(5)*time.Second)
 
 	policiesCleanupHandler := handlers.NewPoliciesCleanup(policyMapperV1, policyCleaner, errorResponse)

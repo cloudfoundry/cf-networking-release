@@ -6,6 +6,7 @@ import "time"
 type policyCollectionStore interface {
 	Create(policyCollection PolicyCollection) error
 	Delete(policyCollection PolicyCollection) error
+	All() (PolicyCollection, error)
 }
 
 type PolicyCollectionMetricsWrapper struct {
@@ -37,4 +38,17 @@ func (p *PolicyCollectionMetricsWrapper) Delete(policyCollection PolicyCollectio
 		p.MetricsSender.SendDuration("StoreDeleteSuccessTime", createDuration)
 	}
 	return err
+}
+
+func (p *PolicyCollectionMetricsWrapper) All() (PolicyCollection, error) {
+	startTime := time.Now()
+	collection, err := p.Store.All()
+	allDuration := time.Now().Sub(startTime)
+	if err != nil {
+		p.MetricsSender.IncrementCounter("StoreAllError")
+		p.MetricsSender.SendDuration("StoreAllErrorTime", allDuration)
+	} else {
+		p.MetricsSender.SendDuration("StoreAllSuccessTime", allDuration)
+	}
+	return collection, err
 }

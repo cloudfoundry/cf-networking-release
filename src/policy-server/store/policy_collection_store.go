@@ -56,3 +56,17 @@ func (p *PolicyCollectionStore) Delete(policyCollection PolicyCollection) error 
 
 	return commit(tx)
 }
+
+func (p *PolicyCollectionStore) All() (PolicyCollection, error) {
+	c2cPolicies, err := p.PolicyStore.All()
+	if err != nil {
+		return PolicyCollection{}, err
+	}
+
+	egressPolicies, err := p.EgressPolicyStore.All()
+	if err != nil {
+		return PolicyCollection{}, err
+	}
+
+	return PolicyCollection{Policies:c2cPolicies, EgressPolicies: egressPolicies}, nil
+}

@@ -10,7 +10,7 @@ import (
 
 //go:generate counterfeiter -o fakes/policy_cleaner.go --fake-name PolicyCleaner . policyCleaner
 type policyCleaner interface {
-	DeleteStalePolicies() ([]store.Policy, error)
+	DeleteStalePolicies() (store.PolicyCollection, error)
 }
 
 //go:generate counterfeiter -o fakes/error_response.go --fake-name ErrorResponse . errorResponse
@@ -40,18 +40,20 @@ func (h *PoliciesCleanup) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	logger := getLogger(req)
 	logger = logger.Session("cleanup-policies")
 
-	policies, err := h.PolicyCleaner.DeleteStalePolicies()
+	policyCollection, err := h.PolicyCleaner.DeleteStalePolicies()
 	if err != nil {
 		h.ErrorResponse.InternalServerError(logger, w, err, "policies cleanup failed")
 		return
 	}
 
-	for i, _ := range policies {
+	policies := policyCollection.Policies
+
+	for i := range policies {
 		policies[i].Source.Tag = ""
 		policies[i].Destination.Tag = ""
 	}
 
-	bytes, err := h.Mapper.AsBytes(policies, []store.EgressPolicy{})
+	bytes, err := h.Mapper.AsBytes(policies, policyCollection.EgressPolicies)
 	if err != nil {
 		h.ErrorResponse.InternalServerError(logger, w, err, "map policy as bytes failed")
 		return

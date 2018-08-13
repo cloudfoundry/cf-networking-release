@@ -74,7 +74,7 @@ var _ = Describe("PolicyCleaner", func() {
 		}
 
 		fakeUAAClient.GetTokenReturns("valid-token", nil)
-		fakeStore.AllReturns(allPolicies, nil)
+		fakeStore.AllReturns(store.PolicyCollection{Policies: allPolicies}, nil)
 		fakeCCClient.GetLiveAppGUIDsStub = func(token string, appGUIDs []string) (map[string]struct{}, error) {
 			liveGUIDs := make(map[string]struct{})
 			for _, guid := range appGUIDs {
@@ -87,7 +87,7 @@ var _ = Describe("PolicyCleaner", func() {
 	})
 
 	It("Deletes policies that reference apps that do not exist", func() {
-		policies, err := policyCleaner.DeleteStalePolicies()
+		deletedPolicyCollection, err := policyCleaner.DeleteStalePolicies()
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(fakeStore.AllCallCount()).To(Equal(1))
@@ -99,12 +99,14 @@ var _ = Describe("PolicyCleaner", func() {
 
 		stalePolicies := allPolicies[1:]
 
+		expectedCollection := store.PolicyCollection{Policies: stalePolicies}
+
 		Expect(fakeStore.DeleteCallCount()).To(Equal(1))
-		Expect(fakeStore.DeleteArgsForCall(0)).To(Equal(stalePolicies))
+		Expect(fakeStore.DeleteArgsForCall(0)).To(Equal(expectedCollection))
 
 		Expect(logger).To(gbytes.Say("deleting stale policies:.*policies.*dead-guid.*dead-guid.*total_policies\":2"))
 		staleAPIPolicies := allPolicies[1:]
-		Expect(policies).To(Equal(staleAPIPolicies))
+		Expect(deletedPolicyCollection).To(Equal(store.PolicyCollection{Policies: staleAPIPolicies}))
 	})
 
 	Context("when there are more apps with policies than the CC chunk size", func() {
@@ -119,7 +121,7 @@ var _ = Describe("PolicyCleaner", func() {
 			}
 		})
 		It("Calls the CC server multiple times to check which policies to delete", func() {
-			policies, err := policyCleaner.DeleteStalePolicies()
+			returnedPolicyCollection, err := policyCleaner.DeleteStalePolicies()
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeStore.AllCallCount()).To(Equal(1))
@@ -138,28 +140,27 @@ var _ = Describe("PolicyCleaner", func() {
 			Expect(fakeStore.DeleteCallCount()).To(Equal(2))
 
 			var deleted [][]store.Policy
-			deletedPolicies := fakeStore.DeleteArgsForCall(0)
-			deleted = append(deleted, deletedPolicies)
-			deletedPolicies = fakeStore.DeleteArgsForCall(1)
-			deleted = append(deleted, deletedPolicies)
+			deletedPolicyCollection := fakeStore.DeleteArgsForCall(0)
+			deleted = append(deleted, deletedPolicyCollection.Policies)
+			deletedPolicyCollection = fakeStore.DeleteArgsForCall(1)
+			deleted = append(deleted, deletedPolicyCollection.Policies)
 			Expect(deleted).To(ConsistOf(stalePolicies, []store.Policy{}))
 
 			Expect(logger).To(gbytes.Say("deleting stale policies:.*policies.*dead-guid.*dead-guid.*total_policies\":2"))
 
 			staleAPIPolicies := allPolicies[1:]
-			Expect(policies).To(ConsistOf(staleAPIPolicies[0], staleAPIPolicies[1]))
+			Expect(returnedPolicyCollection.Policies).To(ConsistOf(staleAPIPolicies[0], staleAPIPolicies[1]))
 		})
 	})
 
 	Context("When retrieving policies from the db fails", func() {
 		BeforeEach(func() {
-			fakeStore.AllReturns(nil, errors.New("potato"))
+			fakeStore.AllReturns(store.PolicyCollection{}, errors.New("potato"))
 		})
 
 		It("returns a meaningful error", func() {
-			policies, err := policyCleaner.DeleteStalePolicies()
+			_, err := policyCleaner.DeleteStalePolicies()
 			Expect(err).To(MatchError("database read failed: potato"))
-			Expect(policies).To(BeNil())
 		})
 
 		It("logs the error", func() {
@@ -174,9 +175,8 @@ var _ = Describe("PolicyCleaner", func() {
 		})
 
 		It("returns a meaningful error", func() {
-			policies, err := policyCleaner.DeleteStalePolicies()
+			_, err := policyCleaner.DeleteStalePolicies()
 			Expect(err).To(MatchError("get UAA token failed: potato"))
-			Expect(policies).To(BeNil())
 		})
 
 		It("logs the full error", func() {
@@ -191,9 +191,8 @@ var _ = Describe("PolicyCleaner", func() {
 		})
 
 		It("returns a meaningful error", func() {
-			policies, err := policyCleaner.DeleteStalePolicies()
+			_, err := policyCleaner.DeleteStalePolicies()
 			Expect(err).To(MatchError("get app guids from Cloud-Controller failed: potato"))
-			Expect(policies).To(BeNil())
 		})
 
 		It("logs the full error", func() {
@@ -208,9 +207,8 @@ var _ = Describe("PolicyCleaner", func() {
 		})
 
 		It("returns a meaningful error", func() {
-			policies, err := policyCleaner.DeleteStalePolicies()
+			_, err := policyCleaner.DeleteStalePolicies()
 			Expect(err).To(MatchError("database write failed: potato"))
-			Expect(policies).To(BeNil())
 		})
 
 		It("logs the full error", func() {

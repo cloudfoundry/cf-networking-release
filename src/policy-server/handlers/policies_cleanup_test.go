@@ -61,7 +61,7 @@ var _ = Describe("PoliciesCleanup", func() {
 			ErrorResponse: fakeErrorResponse,
 		}
 
-		fakePolicyCleaner.DeleteStalePoliciesReturns(policies, nil)
+		fakePolicyCleaner.DeleteStalePoliciesReturns(store.PolicyCollection{Policies: policies}, nil)
 		fakeMapper.AsBytesReturns([]byte("some-bytes"), nil)
 		resp = httptest.NewRecorder()
 		request, _ = http.NewRequest("POST", "/networking/v0/external/policies/cleanup", nil)
@@ -91,7 +91,7 @@ var _ = Describe("PoliciesCleanup", func() {
 
 	Context("When deleting the policies fails", func() {
 		BeforeEach(func() {
-			fakePolicyCleaner.DeleteStalePoliciesReturns(nil, errors.New("potato"))
+			fakePolicyCleaner.DeleteStalePoliciesReturns(store.PolicyCollection{}, errors.New("potato"))
 		})
 
 		It("calls the internal server error handler", func() {

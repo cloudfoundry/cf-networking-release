@@ -94,4 +94,38 @@ var _ = Describe("PolicyCollectionMetricsWrapper", func() {
 			Expect(name).To(Equal("StoreDeleteErrorTime"))
 		})
 	})
+
+	Describe("All", func() {
+		It("should call all on PolicyCollectionStore", func() {
+			collectionStore.AllReturns(policyCollection, nil)
+			returnedPolicies, err := metricsWrapper.All()
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(collectionStore.AllCallCount()).To(Equal(1))
+			Expect(returnedPolicies).To(Equal(policyCollection))
+		})
+
+		It("should emit metrics", func() {
+			_, err := metricsWrapper.All()
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(metricsSender.SendDurationCallCount()).To(Equal(1))
+			name, _ := metricsSender.SendDurationArgsForCall(0)
+			Expect(name).To(Equal("StoreAllSuccessTime"))
+		})
+
+		It("should emit error metrics when delete fails", func() {
+			expectedErr := errors.New("oh no it failed, how sad")
+			collectionStore.AllReturns(store.PolicyCollection{}, expectedErr)
+
+			_, err := metricsWrapper.All()
+			Expect(err).To(Equal(expectedErr))
+
+			Expect(metricsSender.IncrementCounterCallCount()).To(Equal(1))
+			Expect(metricsSender.IncrementCounterArgsForCall(0)).To(Equal("StoreAllError"))
+			Expect(metricsSender.SendDurationCallCount()).To(Equal(1))
+			name, _ := metricsSender.SendDurationArgsForCall(0)
+			Expect(name).To(Equal("StoreAllErrorTime"))
+		})
+	})
 })

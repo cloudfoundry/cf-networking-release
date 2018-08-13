@@ -29,6 +29,17 @@ type PolicyCollectionStore struct {
 	deleteReturnsOnCall map[int]struct {
 		result1 error
 	}
+	AllStub        func() (store.PolicyCollection, error)
+	allMutex       sync.RWMutex
+	allArgsForCall []struct{}
+	allReturns     struct {
+		result1 store.PolicyCollection
+		result2 error
+	}
+	allReturnsOnCall map[int]struct {
+		result1 store.PolicyCollection
+		result2 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -129,6 +140,49 @@ func (fake *PolicyCollectionStore) DeleteReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
+func (fake *PolicyCollectionStore) All() (store.PolicyCollection, error) {
+	fake.allMutex.Lock()
+	ret, specificReturn := fake.allReturnsOnCall[len(fake.allArgsForCall)]
+	fake.allArgsForCall = append(fake.allArgsForCall, struct{}{})
+	fake.recordInvocation("All", []interface{}{})
+	fake.allMutex.Unlock()
+	if fake.AllStub != nil {
+		return fake.AllStub()
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.allReturns.result1, fake.allReturns.result2
+}
+
+func (fake *PolicyCollectionStore) AllCallCount() int {
+	fake.allMutex.RLock()
+	defer fake.allMutex.RUnlock()
+	return len(fake.allArgsForCall)
+}
+
+func (fake *PolicyCollectionStore) AllReturns(result1 store.PolicyCollection, result2 error) {
+	fake.AllStub = nil
+	fake.allReturns = struct {
+		result1 store.PolicyCollection
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *PolicyCollectionStore) AllReturnsOnCall(i int, result1 store.PolicyCollection, result2 error) {
+	fake.AllStub = nil
+	if fake.allReturnsOnCall == nil {
+		fake.allReturnsOnCall = make(map[int]struct {
+			result1 store.PolicyCollection
+			result2 error
+		})
+	}
+	fake.allReturnsOnCall[i] = struct {
+		result1 store.PolicyCollection
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *PolicyCollectionStore) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -136,6 +190,8 @@ func (fake *PolicyCollectionStore) Invocations() map[string][][]interface{} {
 	defer fake.createMutex.RUnlock()
 	fake.deleteMutex.RLock()
 	defer fake.deleteMutex.RUnlock()
+	fake.allMutex.RLock()
+	defer fake.allMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
