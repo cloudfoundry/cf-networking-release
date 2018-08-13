@@ -1,8 +1,8 @@
 package testhelpers
 
 import (
-	"crypto/x509"
 	"crypto/tls"
+	"crypto/x509"
 	"net/http"
 )
 
@@ -22,5 +22,3 @@ func NewClient(caCertPool *x509.CertPool, cert tls.Certificate) *http.Client {
 
 	return &http.Client{Transport: tr}
 }
-
-

@@ -98,8 +98,8 @@ func (p *PolicyCleaner) DeleteStalePolicies() (store.PolicyCollection, error) {
 	allPoliciesToDelete.EgressPolicies = getStaleEgressSpacePolicies(spaceEgressPolicy, liveSpaceGUIDs)
 
 	p.Logger.Info("deleting stale policies:", lager.Data{
-		"total_c2c_policies": len(allPoliciesToDelete.Policies),
-		"stale_c2c_policies": allPoliciesToDelete.Policies,
+		"total_c2c_policies":    len(allPoliciesToDelete.Policies),
+		"stale_c2c_policies":    allPoliciesToDelete.Policies,
 		"total_egress_policies": len(allPoliciesToDelete.EgressPolicies),
 		"stale_egress_policies": allPoliciesToDelete.EgressPolicies,
 	})

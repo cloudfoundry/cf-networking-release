@@ -9,11 +9,11 @@ import (
 
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 
+	"code.cloudfoundry.org/filelock"
 	goiptables "github.com/coreos/go-iptables/iptables"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
-	"code.cloudfoundry.org/filelock"
 	"lib/rules"
 )
 

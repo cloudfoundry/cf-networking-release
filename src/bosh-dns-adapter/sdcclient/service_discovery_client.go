@@ -51,11 +51,11 @@ func NewServiceDiscoveryClient(serverURL, caPath, clientCertPath, clientKeyPath 
 	tlsConfig.BuildNameToCertificate()
 
 	tr := &http.Transport{
-		TLSClientConfig:       tlsConfig,
-		IdleConnTimeout:       0,
-		MaxIdleConns:          50,
-		MaxIdleConnsPerHost:   50,
-		TLSHandshakeTimeout:   5 * time.Second,
+		TLSClientConfig:     tlsConfig,
+		IdleConnTimeout:     0,
+		MaxIdleConns:        50,
+		MaxIdleConnsPerHost: 50,
+		TLSHandshakeTimeout: 5 * time.Second,
 	}
 
 	client := &http.Client{

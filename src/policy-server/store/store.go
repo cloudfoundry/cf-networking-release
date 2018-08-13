@@ -21,7 +21,6 @@ type Migrator interface {
 type Store interface {
 	CreateWithTx(db.Transaction, []Policy) error
 	All() ([]Policy, error)
-	Delete([]Policy) error
 	DeleteWithTx(db.Transaction, []Policy) error
 	ByGuids([]string, []string, bool) ([]Policy, error)
 	CheckDatabase() error
@@ -57,22 +56,6 @@ func New(dbConnectionPool Database, g GroupRepo, d DestinationRepo, p PolicyRepo
 		policy:      p,
 		tagLength:   tl,
 	}
-}
-
-func commit(tx db.Transaction) error {
-	err := tx.Commit()
-	if err != nil {
-		return fmt.Errorf("commit transaction: %s", err)
-	}
-	return nil
-}
-
-func rollback(tx db.Transaction, err error) error {
-	txErr := tx.Rollback()
-	if txErr != nil {
-		return fmt.Errorf("database rollback: %s (sql error: %s)", txErr, err)
-	}
-	return err
 }
 
 func (s *store) CheckDatabase() error {
@@ -112,20 +95,6 @@ func (s *store) CreateWithTx(tx db.Transaction, policies []Policy) error {
 	return nil
 }
 
-func (s *store) Delete(policies []Policy) error {
-	tx, err := s.conn.Beginx()
-	if err != nil {
-		return fmt.Errorf("begin transaction: %s", err)
-	}
-
-	err = s.DeleteWithTx(tx, policies)
-	if err != nil {
-		return err
-	}
-
-	return commit(tx)
-}
-
 func (s *store) DeleteWithTx(tx db.Transaction, policies []Policy) error {
 	for _, p := range policies {
 		sourceGroupID, err := s.group.GetID(tx, p.Source.ID)
@@ -133,7 +102,7 @@ func (s *store) DeleteWithTx(tx db.Transaction, policies []Policy) error {
 			if err == sql.ErrNoRows {
 				continue
 			} else {
-				return rollback(tx, fmt.Errorf("getting source id: %s", err))
+				return fmt.Errorf("getting source id: %s", err)
 			}
 		}
 
@@ -142,7 +111,7 @@ func (s *store) DeleteWithTx(tx db.Transaction, policies []Policy) error {
 			if err == sql.ErrNoRows {
 				continue
 			} else {
-				return rollback(tx, fmt.Errorf("getting destination group id: %s", err))
+				return fmt.Errorf("getting destination group id: %s", err)
 			}
 		}
 
@@ -158,7 +127,7 @@ func (s *store) DeleteWithTx(tx db.Transaction, policies []Policy) error {
 			if err == sql.ErrNoRows {
 				continue
 			} else {
-				return rollback(tx, fmt.Errorf("getting destination id: %s", err))
+				return fmt.Errorf("getting destination id: %s", err)
 			}
 		}
 
@@ -167,29 +136,29 @@ func (s *store) DeleteWithTx(tx db.Transaction, policies []Policy) error {
 			if err == sql.ErrNoRows {
 				continue
 			} else {
-				return rollback(tx, fmt.Errorf("deleting policy: %s", err))
+				return fmt.Errorf("deleting policy: %s", err)
 			}
 		}
 
 		destIDCount, err := s.policy.CountWhereDestinationID(tx, destID)
 		if err != nil {
-			return rollback(tx, fmt.Errorf("counting destination id: %s", err))
+			return fmt.Errorf("counting destination id: %s", err)
 		}
 		if destIDCount == 0 {
 			err = s.destination.Delete(tx, destID)
 			if err != nil {
-				return rollback(tx, fmt.Errorf("deleting destination: %s", err))
+				return fmt.Errorf("deleting destination: %s", err)
 			}
 		}
 
 		err = s.deleteGroupRowIfLast(tx, sourceGroupID)
 		if err != nil {
-			return rollback(tx, fmt.Errorf("deleting group row: %s", err))
+			return fmt.Errorf("deleting group row: %s", err)
 		}
 
 		err = s.deleteGroupRowIfLast(tx, destGroupID)
 		if err != nil {
-			return rollback(tx, fmt.Errorf("deleting group row: %s", err))
+			return fmt.Errorf("deleting group row: %s", err)
 		}
 	}
 	return nil

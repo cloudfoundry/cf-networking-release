@@ -80,7 +80,7 @@ var _ = Describe("Store", func() {
 				case "create":
 					err = createPolicies(realDb, dataStore, []store.Policy{p})
 				case "delete":
-					err = dataStore.Delete([]store.Policy{p})
+					err = deletePolicies(realDb, dataStore, []store.Policy{p})
 				}
 				if err == nil {
 					break
@@ -277,7 +277,7 @@ var _ = Describe("Store", func() {
 					{ID: "another-app-guid", Tag: "03", Type: "app"},
 				}))
 
-				err = dataStore.Delete(policies[:1])
+				err = deletePolicies(realDb, dataStore, policies[:1])
 				Expect(err).NotTo(HaveOccurred())
 
 				newPolicies := []store.Policy{{
@@ -768,7 +768,7 @@ var _ = Describe("Store", func() {
 		})
 
 		It("deletes the specified policies", func() {
-			err := dataStore.Delete([]store.Policy{{
+			err := deletePolicies(realDb, dataStore, []store.Policy{{
 				Source: store.Source{ID: "some-app-guid"},
 				Destination: store.Destination{
 					ID:       "some-other-app-guid",
@@ -792,7 +792,7 @@ var _ = Describe("Store", func() {
 		})
 
 		It("deletes the tags if no longer referenced", func() {
-			err := dataStore.Delete([]store.Policy{{
+			err := deletePolicies(realDb, dataStore, []store.Policy{{
 				Source: store.Source{ID: "some-app-guid"},
 				Destination: store.Destination{
 					ID:       "some-other-app-guid",
@@ -838,8 +838,8 @@ var _ = Describe("Store", func() {
 				})
 
 				It("returns an error", func() {
-					err = dataStore.Delete(nil)
-					Expect(err).To(MatchError("begin transaction: some-db-error"))
+					err = deletePolicies(mockDb, dataStore, nil)
+					Expect(err).To(MatchError("some-db-error"))
 				})
 			})
 
@@ -855,7 +855,7 @@ var _ = Describe("Store", func() {
 					})
 
 					It("swallows the error and continues", func() {
-						err = dataStore.Delete([]store.Policy{
+						err = deletePolicies(realDb, dataStore, []store.Policy{
 							{Source: store.Source{ID: "0"}},
 							{Source: store.Source{ID: "apple"}, Destination: store.Destination{ID: "banana"}},
 						})
@@ -878,7 +878,7 @@ var _ = Describe("Store", func() {
 						fakeGroup.GetIDReturns(-1, errors.New("some-get-error"))
 					})
 					It("returns the error", func() {
-						err = dataStore.Delete([]store.Policy{{
+						err = deletePolicies(realDb, dataStore, []store.Policy{{
 							Source: store.Source{ID: "some-app-guid"},
 							Destination: store.Destination{
 								ID:       "some-other-app-guid",
@@ -903,7 +903,7 @@ var _ = Describe("Store", func() {
 					})
 
 					It("swallows the error and continues", func() {
-						err = dataStore.Delete([]store.Policy{
+						err = deletePolicies(realDb, dataStore, []store.Policy{
 							{Source: store.Source{ID: "peach"}, Destination: store.Destination{ID: "pear"}},
 							{Source: store.Source{ID: "apple"}, Destination: store.Destination{ID: "banana"}},
 						})
@@ -936,7 +936,7 @@ var _ = Describe("Store", func() {
 						}
 					})
 					It("returns a error", func() {
-						err = dataStore.Delete([]store.Policy{{
+						err = deletePolicies(realDb, dataStore, []store.Policy{{
 							Source: store.Source{ID: "some-app-guid"},
 							Destination: store.Destination{
 								ID:       "some-other-app-guid",
@@ -961,7 +961,7 @@ var _ = Describe("Store", func() {
 					})
 
 					It("swallows the error and continues", func() {
-						err = dataStore.Delete([]store.Policy{
+						err = deletePolicies(realDb, dataStore, []store.Policy{
 							{Source: store.Source{ID: "peach"}, Destination: store.Destination{ID: "pear"}},
 							{Source: store.Source{ID: "apple"}, Destination: store.Destination{ID: "banana"}},
 						})
@@ -976,7 +976,7 @@ var _ = Describe("Store", func() {
 					})
 
 					It("returns a error", func() {
-						err = dataStore.Delete([]store.Policy{{
+						err = deletePolicies(realDb, dataStore, []store.Policy{{
 							Source: store.Source{ID: "some-app-guid"},
 							Destination: store.Destination{
 								ID:       "some-other-app-guid",
@@ -1001,7 +1001,7 @@ var _ = Describe("Store", func() {
 					})
 
 					It("swallows the error and continues", func() {
-						err = dataStore.Delete([]store.Policy{
+						err = deletePolicies(realDb, dataStore, []store.Policy{
 							{Source: store.Source{ID: "peach"}, Destination: store.Destination{ID: "pear"}},
 							{Source: store.Source{ID: "apple"}, Destination: store.Destination{ID: "banana"}},
 						})
@@ -1016,7 +1016,7 @@ var _ = Describe("Store", func() {
 					})
 
 					It("returns a error", func() {
-						err = dataStore.Delete([]store.Policy{{
+						err = deletePolicies(realDb, dataStore, []store.Policy{{
 							Source: store.Source{ID: "some-app-guid"},
 							Destination: store.Destination{
 								ID:       "some-other-app-guid",
@@ -1035,7 +1035,7 @@ var _ = Describe("Store", func() {
 				})
 
 				It("returns a error", func() {
-					err = dataStore.Delete([]store.Policy{{
+					err = deletePolicies(realDb, dataStore, []store.Policy{{
 						Source: store.Source{ID: "some-app-guid"},
 						Destination: store.Destination{
 							ID:       "some-other-app-guid",
@@ -1053,7 +1053,7 @@ var _ = Describe("Store", func() {
 				})
 
 				It("returns a error", func() {
-					err = dataStore.Delete([]store.Policy{{
+					err = deletePolicies(realDb, dataStore, []store.Policy{{
 						Source: store.Source{ID: "some-app-guid"},
 						Destination: store.Destination{
 							ID:       "some-other-app-guid",
@@ -1071,7 +1071,7 @@ var _ = Describe("Store", func() {
 				})
 
 				It("returns a error", func() {
-					err = dataStore.Delete([]store.Policy{{
+					err = deletePolicies(realDb, dataStore, []store.Policy{{
 						Source: store.Source{ID: "some-app-guid"},
 						Destination: store.Destination{
 							ID:       "some-other-app-guid",
@@ -1089,7 +1089,7 @@ var _ = Describe("Store", func() {
 				})
 
 				It("returns a error", func() {
-					err = dataStore.Delete([]store.Policy{{
+					err = deletePolicies(realDb, dataStore, []store.Policy{{
 						Source: store.Source{ID: "some-app-guid"},
 						Destination: store.Destination{
 							ID:       "some-other-app-guid",
@@ -1107,7 +1107,7 @@ var _ = Describe("Store", func() {
 				})
 
 				It("returns a error", func() {
-					err = dataStore.Delete([]store.Policy{{
+					err = deletePolicies(realDb, dataStore, []store.Policy{{
 						Source: store.Source{ID: "some-app-guid"},
 						Destination: store.Destination{
 							ID:       "some-other-app-guid",
@@ -1146,6 +1146,20 @@ func createPolicies(realDb store.Database, dataStore store.Store, policies []sto
 	}
 
 	err = dataStore.CreateWithTx(tx, policies)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	return tx.Commit()
+}
+
+func deletePolicies(realDb store.Database, dataStore store.Store, policies []store.Policy) error {
+	tx, err := realDb.Beginx()
+	if err != nil {
+		return err
+	}
+
+	err = dataStore.DeleteWithTx(tx, policies)
 	if err != nil {
 		tx.Rollback()
 		return err

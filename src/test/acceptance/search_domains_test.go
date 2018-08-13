@@ -14,8 +14,8 @@ import (
 // see `manifest-generation/opsfiles/add-apps-internal-search-domain.yml`
 var _ = Describe("search domains", func() {
 	var (
-		appName   string
-		orgName   string
+		appName string
+		orgName string
 	)
 
 	BeforeEach(func() {

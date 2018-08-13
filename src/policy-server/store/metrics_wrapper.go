@@ -43,19 +43,6 @@ func (mw *MetricsWrapper) All() ([]Policy, error) {
 	return policies, err
 }
 
-func (mw *MetricsWrapper) Delete(policies []Policy) error {
-	startTime := time.Now()
-	err := mw.Store.Delete(policies)
-	deleteTimeDuration := time.Now().Sub(startTime)
-	if err != nil {
-		mw.MetricsSender.IncrementCounter("StoreDeleteError")
-		mw.MetricsSender.SendDuration("StoreDeleteErrorTime", deleteTimeDuration)
-	} else {
-		mw.MetricsSender.SendDuration("StoreDeleteSuccessTime", deleteTimeDuration)
-	}
-	return err
-}
-
 func (mw *MetricsWrapper) DeleteWithTx(tx db.Transaction, policies []Policy) error {
 	startTime := time.Now()
 	err := mw.Store.DeleteWithTx(tx, policies)

@@ -262,42 +262,6 @@ var _ = Describe("MetricsWrapper", func() {
 		})
 	})
 
-	Describe("Delete", func() {
-		It("calls Delete on the Store", func() {
-			err := metricsWrapper.Delete(policies)
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(fakeStore.DeleteCallCount()).To(Equal(1))
-			Expect(fakeStore.DeleteArgsForCall(0)).To(Equal(policies))
-		})
-
-		It("emits a metric", func() {
-			err := metricsWrapper.Delete(policies)
-			Expect(err).NotTo(HaveOccurred())
-
-			Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
-			name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
-			Expect(name).To(Equal("StoreDeleteSuccessTime"))
-		})
-
-		Context("when there is an error", func() {
-			BeforeEach(func() {
-				fakeStore.DeleteReturns(errors.New("banana"))
-			})
-			It("emits an error metric", func() {
-				err := metricsWrapper.Delete(policies)
-				Expect(err).To(MatchError("banana"))
-
-				Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
-				Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("StoreDeleteError"))
-
-				Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
-				name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
-				Expect(name).To(Equal("StoreDeleteErrorTime"))
-			})
-		})
-	})
-
 	Describe("DeleteWithTx", func() {
 		It("calls DeleteWithTx on the Store", func() {
 			err := metricsWrapper.DeleteWithTx(tx, policies)

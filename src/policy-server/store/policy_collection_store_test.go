@@ -196,6 +196,7 @@ var _ = Describe("PolicyCollectionStore", func() {
 
 			It("does not commit the transaction", func() {
 				mockDB.BeginxReturns(nil, errors.New("potato"))
+				policyCollectionStore.Delete(policyCollection)
 				Expect(tx.CommitCallCount()).To(Equal(0))
 			})
 		})
@@ -206,8 +207,15 @@ var _ = Describe("PolicyCollectionStore", func() {
 				Expect(policyCollectionStore.Delete(policyCollection)).To(MatchError("failed to delete policy"))
 			})
 
+			It("rolls back the transaction", func() {
+				policyStore.DeleteWithTxReturns(errors.New("failed to delete policy"))
+				policyCollectionStore.Delete(policyCollection)
+				Expect(tx.RollbackCallCount()).To(Equal(1))
+			})
+
 			It("does not commit the transaction", func() {
 				policyStore.DeleteWithTxReturns(errors.New("failed to delete policy"))
+				policyCollectionStore.Delete(policyCollection)
 				Expect(tx.CommitCallCount()).To(Equal(0))
 			})
 		})
@@ -218,8 +226,15 @@ var _ = Describe("PolicyCollectionStore", func() {
 				Expect(policyCollectionStore.Delete(policyCollection)).To(MatchError("failed to delete egress policy"))
 			})
 
+			It("rolls back the transaction", func() {
+				egressPolicyStore.DeleteWithTxReturns(errors.New("failed to delete egress policy"))
+				policyCollectionStore.Delete(policyCollection)
+				Expect(tx.RollbackCallCount()).To(Equal(1))
+			})
+
 			It("does not commit the transaction", func() {
 				egressPolicyStore.DeleteWithTxReturns(errors.New("failed to delete egress policy"))
+				policyCollectionStore.Delete(policyCollection)
 				Expect(tx.CommitCallCount()).To(Equal(0))
 			})
 		})

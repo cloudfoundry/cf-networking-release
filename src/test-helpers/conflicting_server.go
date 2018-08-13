@@ -1,9 +1,9 @@
 package testhelpers
 
 import (
-	"net/http"
 	"fmt"
 	. "github.com/onsi/gomega"
+	"net/http"
 )
 
 func LaunchConflictingServer(port int) *http.Server {

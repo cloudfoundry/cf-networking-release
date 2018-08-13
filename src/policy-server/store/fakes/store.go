@@ -31,17 +31,6 @@ type Store struct {
 		result1 []store.Policy
 		result2 error
 	}
-	DeleteStub        func([]store.Policy) error
-	deleteMutex       sync.RWMutex
-	deleteArgsForCall []struct {
-		arg1 []store.Policy
-	}
-	deleteReturns struct {
-		result1 error
-	}
-	deleteReturnsOnCall map[int]struct {
-		result1 error
-	}
 	DeleteWithTxStub        func(db.Transaction, []store.Policy) error
 	deleteWithTxMutex       sync.RWMutex
 	deleteWithTxArgsForCall []struct {
@@ -177,59 +166,6 @@ func (fake *Store) AllReturnsOnCall(i int, result1 []store.Policy, result2 error
 		result1 []store.Policy
 		result2 error
 	}{result1, result2}
-}
-
-func (fake *Store) Delete(arg1 []store.Policy) error {
-	var arg1Copy []store.Policy
-	if arg1 != nil {
-		arg1Copy = make([]store.Policy, len(arg1))
-		copy(arg1Copy, arg1)
-	}
-	fake.deleteMutex.Lock()
-	ret, specificReturn := fake.deleteReturnsOnCall[len(fake.deleteArgsForCall)]
-	fake.deleteArgsForCall = append(fake.deleteArgsForCall, struct {
-		arg1 []store.Policy
-	}{arg1Copy})
-	fake.recordInvocation("Delete", []interface{}{arg1Copy})
-	fake.deleteMutex.Unlock()
-	if fake.DeleteStub != nil {
-		return fake.DeleteStub(arg1)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.deleteReturns.result1
-}
-
-func (fake *Store) DeleteCallCount() int {
-	fake.deleteMutex.RLock()
-	defer fake.deleteMutex.RUnlock()
-	return len(fake.deleteArgsForCall)
-}
-
-func (fake *Store) DeleteArgsForCall(i int) []store.Policy {
-	fake.deleteMutex.RLock()
-	defer fake.deleteMutex.RUnlock()
-	return fake.deleteArgsForCall[i].arg1
-}
-
-func (fake *Store) DeleteReturns(result1 error) {
-	fake.DeleteStub = nil
-	fake.deleteReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *Store) DeleteReturnsOnCall(i int, result1 error) {
-	fake.DeleteStub = nil
-	if fake.deleteReturnsOnCall == nil {
-		fake.deleteReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.deleteReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
 }
 
 func (fake *Store) DeleteWithTx(arg1 db.Transaction, arg2 []store.Policy) error {
@@ -396,8 +332,6 @@ func (fake *Store) Invocations() map[string][][]interface{} {
 	defer fake.createWithTxMutex.RUnlock()
 	fake.allMutex.RLock()
 	defer fake.allMutex.RUnlock()
-	fake.deleteMutex.RLock()
-	defer fake.deleteMutex.RUnlock()
 	fake.deleteWithTxMutex.RLock()
 	defer fake.deleteWithTxMutex.RUnlock()
 	fake.byGuidsMutex.RLock()

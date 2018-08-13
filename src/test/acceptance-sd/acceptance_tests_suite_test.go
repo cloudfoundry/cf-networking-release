@@ -17,10 +17,10 @@ import (
 	"testing"
 	"time"
 
+	"fmt"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	helpers_config "github.com/cloudfoundry-incubator/cf-test-helpers/config"
 	"github.com/onsi/gomega/gexec"
-	"fmt"
 )
 
 func TestAcceptance(t *testing.T) {
