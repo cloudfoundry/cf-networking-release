@@ -101,7 +101,10 @@ var _ = Describe("External API Deleting Policies", func() {
 				HaveName("DeletePoliciesRequestTime"),
 			))
 			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
-				HaveName("StoreDeleteSuccessTime"),
+				HaveName("StoreDeleteWithTxSuccessTime"),
+			))
+			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
+				HaveName("CollectionStoreDeleteSuccessTime"),
 			))
 		}
 

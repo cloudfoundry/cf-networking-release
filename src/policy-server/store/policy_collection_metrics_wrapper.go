@@ -19,10 +19,10 @@ func (p *PolicyCollectionMetricsWrapper) Create(policyCollection PolicyCollectio
 	err := p.Store.Create(policyCollection)
 	createDuration := time.Now().Sub(startTime)
 	if err != nil {
-		p.MetricsSender.IncrementCounter("StoreCreateError")
-		p.MetricsSender.SendDuration("StoreCreateErrorTime", createDuration)
+		p.MetricsSender.IncrementCounter("CollectionStoreCreateError")
+		p.MetricsSender.SendDuration("CollectionStoreCreateErrorTime", createDuration)
 	} else {
-		p.MetricsSender.SendDuration("StoreCreateSuccessTime", createDuration)
+		p.MetricsSender.SendDuration("CollectionStoreCreateSuccessTime", createDuration)
 	}
 	return err
 }
@@ -32,10 +32,10 @@ func (p *PolicyCollectionMetricsWrapper) Delete(policyCollection PolicyCollectio
 	err := p.Store.Delete(policyCollection)
 	createDuration := time.Now().Sub(startTime)
 	if err != nil {
-		p.MetricsSender.IncrementCounter("StoreDeleteError")
-		p.MetricsSender.SendDuration("StoreDeleteErrorTime", createDuration)
+		p.MetricsSender.IncrementCounter("CollectionStoreDeleteError")
+		p.MetricsSender.SendDuration("CollectionStoreDeleteErrorTime", createDuration)
 	} else {
-		p.MetricsSender.SendDuration("StoreDeleteSuccessTime", createDuration)
+		p.MetricsSender.SendDuration("CollectionStoreDeleteSuccessTime", createDuration)
 	}
 	return err
 }
@@ -45,10 +45,10 @@ func (p *PolicyCollectionMetricsWrapper) All() (PolicyCollection, error) {
 	collection, err := p.Store.All()
 	allDuration := time.Now().Sub(startTime)
 	if err != nil {
-		p.MetricsSender.IncrementCounter("StoreAllError")
-		p.MetricsSender.SendDuration("StoreAllErrorTime", allDuration)
+		p.MetricsSender.IncrementCounter("CollectionStoreAllError")
+		p.MetricsSender.SendDuration("CollectionStoreAllErrorTime", allDuration)
 	} else {
-		p.MetricsSender.SendDuration("StoreAllSuccessTime", allDuration)
+		p.MetricsSender.SendDuration("CollectionStoreAllSuccessTime", allDuration)
 	}
 	return collection, err
 }

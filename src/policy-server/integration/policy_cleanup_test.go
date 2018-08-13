@@ -96,7 +96,10 @@ var _ = Describe("Policy Cleanup", func() {
 				HaveName("CleanupRequestTime"),
 			))
 			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
-				HaveName("StoreDeleteSuccessTime"),
+				HaveName("StoreDeleteWithTxSuccessTime"),
+			))
+			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
+				HaveName("CollectionStoreDeleteSuccessTime"),
 			))
 		}
 
@@ -145,7 +148,10 @@ var _ = Describe("Policy Cleanup", func() {
 
 			By("emitting store metrics")
 			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
-				HaveName("StoreDeleteSuccessTime"),
+				HaveName("StoreDeleteWithTxSuccessTime"),
+			))
+			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
+				HaveName("CollectionStoreDeleteSuccessTime"),
 			))
 		})
 	})

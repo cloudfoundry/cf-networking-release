@@ -148,7 +148,7 @@ func main() {
 
 	policyCollectionStore := &store.PolicyCollectionStore{
 		Conn:              connectionPool,
-		PolicyStore:       dataStore,
+		PolicyStore:       wrappedStore,
 		EgressPolicyStore: egressDataStore,
 	}
 

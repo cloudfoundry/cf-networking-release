@@ -77,7 +77,10 @@ var _ = Describe("External API Adding Policies", func() {
 				HaveName("CreatePoliciesRequestTime"),
 			))
 			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
-				HaveName("StoreCreateSuccessTime"),
+				HaveName("StoreCreateWithTxSuccessTime"),
+			))
+			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
+				HaveName("CollectionStoreCreateSuccessTime"),
 			))
 		}
 		addPoliciesFails := func(version, request, expectedResponse string) {
@@ -155,7 +158,10 @@ var _ = Describe("External API Adding Policies", func() {
 				HaveName("CreatePoliciesRequestTime"),
 			))
 			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
-				HaveName("StoreCreateSuccessTime"),
+				HaveName("StoreCreateWithTxSuccessTime"),
+			))
+			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
+				HaveName("CollectionStoreCreateSuccessTime"),
 			))
 		}
 
