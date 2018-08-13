@@ -59,7 +59,7 @@ func (p *PolicyCleaner) DeleteStalePolicies() (store.PolicyCollection, error) {
 
 	policies := allPolicies.Policies
 
-	var stalePolicies []store.Policy
+	stalePolicies := []store.Policy{}
 
 	appGUIDs := policyAppGUIDs(policies)
 	appGUIDchunks := getChunks(appGUIDs, p.CCAppRequestChunkSize)
@@ -105,7 +105,7 @@ func getStaleAppGUIDs(liveAppGUIDs map[string]struct{}, appGUIDs []string) map[s
 }
 
 func getStalePolicies(policyList []store.Policy, staleAppGUIDs map[string]struct{}) []store.Policy {
-	var stalePolicies []store.Policy
+	stalePolicies := []store.Policy{}
 	for _, p := range policyList {
 		_, foundSrc := staleAppGUIDs[p.Source.ID]
 		_, foundDst := staleAppGUIDs[p.Destination.ID]
@@ -123,7 +123,7 @@ func policyAppGUIDs(policyList []store.Policy) []string {
 		appGUIDset[p.Destination.ID] = struct{}{}
 	}
 	var appGUIDs []string
-	for guid := range appGUIDset {
+	for guid, _ := range appGUIDset {
 		appGUIDs = append(appGUIDs, guid)
 	}
 	return appGUIDs
