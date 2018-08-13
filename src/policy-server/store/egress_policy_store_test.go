@@ -295,7 +295,7 @@ var _ = Describe("EgressPolicyStore", func() {
 		})
 	})
 
-	FDescribe("Delete", func() {
+	Describe("Delete", func() {
 		It("deletes the provided policies", func() {
 			egressPolicyRepo.GetIDsByEgressPolicyReturns(store.EgressPolicyIDCollection{
 				SourceAppID:           -1,
