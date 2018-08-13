@@ -101,7 +101,7 @@ var _ = Describe("PolicyCleaner", func() {
 
 		expectedCollection := store.PolicyCollection{Policies: stalePolicies}
 
-		Expect(fakeStore.DeleteCallCount()).To(Equal(1))
+		Expect(fakeStore.DeleteCallCount()).To(Equal(2))
 		Expect(fakeStore.DeleteArgsForCall(0)).To(Equal(expectedCollection))
 
 		Expect(logger).To(gbytes.Say("deleting stale policies:.*policies.*dead-guid.*dead-guid.*total_policies\":2"))
@@ -137,7 +137,7 @@ var _ = Describe("PolicyCleaner", func() {
 			))
 
 			stalePolicies := allPolicies[1:]
-			Expect(fakeStore.DeleteCallCount()).To(Equal(2))
+			Expect(fakeStore.DeleteCallCount()).To(Equal(3))
 
 			var deleted [][]store.Policy
 			deletedPolicyCollection := fakeStore.DeleteArgsForCall(0)
@@ -150,6 +150,97 @@ var _ = Describe("PolicyCleaner", func() {
 
 			staleAPIPolicies := allPolicies[1:]
 			Expect(returnedPolicyCollection.Policies).To(ConsistOf(staleAPIPolicies[0], staleAPIPolicies[1]))
+		})
+	})
+
+	Context("when there are egress space policies", func() {
+		var (
+			allEgressPolicies store.PolicyCollection
+		)
+
+		BeforeEach(func() {
+			allEgressPolicies = store.PolicyCollection{
+				EgressPolicies: []store.EgressPolicy{{
+					Source: store.EgressSource{ID: "live-guid", Type: "space"},
+					Destination: store.EgressDestination{
+						Protocol: "tcp",
+						Ports: []store.Ports{
+							{
+								Start: 8080,
+								End:   8080,
+							},
+						},
+						IPRanges: []store.IPRange{
+							{
+								Start: "1.2.3.4",
+								End:   "1.2.3.4",
+							},
+						},
+					},
+				}, {
+					Source: store.EgressSource{ID: "dead-guid", Type: "space"},
+					Destination: store.EgressDestination{
+						Protocol: "tcp",
+						Ports: []store.Ports{
+							{
+								Start: 8080,
+								End:   8080,
+							},
+						},
+						IPRanges: []store.IPRange{
+							{
+								Start: "1.2.3.4",
+								End:   "1.2.3.4",
+							},
+						},
+					},
+				}},
+			}
+		})
+
+		It("deletes policies that reference spaces that do not exist", func() {
+			fakeStore.AllReturns(allEgressPolicies, nil)
+			fakeCCClient.GetLiveSpaceGUIDsReturns(map[string]struct{}{"live-guid": {}}, nil)
+
+			_, err := policyCleaner.DeleteStalePolicies()
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(fakeStore.AllCallCount()).To(Equal(1))
+			Expect(fakeUAAClient.GetTokenCallCount()).To(Equal(1))
+			Expect(fakeCCClient.GetLiveSpaceGUIDsCallCount()).To(Equal(1))
+			token0, guids0 := fakeCCClient.GetLiveSpaceGUIDsArgsForCall(0)
+			Expect(token0).To(Equal("valid-token"))
+			Expect(guids0).To(ConsistOf(
+				"live-guid",
+				"dead-guid",
+			))
+			Expect(fakeStore.DeleteCallCount()).To(Equal(1))
+			passedDeletePolicies := fakeStore.DeleteArgsForCall(0)
+			Expect(passedDeletePolicies.EgressPolicies).To(ConsistOf(allEgressPolicies.EgressPolicies[1]))
+		})
+
+		It("returns a helpful error when egress store fails", func() {
+			fakeStore.AllReturns(store.PolicyCollection{}, errors.New("whiskey"))
+
+			_, err := policyCleaner.DeleteStalePolicies()
+			Expect(err).To(MatchError("database read failed: whiskey"))
+			Expect(logger).To(gbytes.Say("store-list-policies-failed.*whiskey"))
+		})
+
+		It("returns a helpful error when get live space guids call fails", func() {
+			fakeCCClient.GetLiveSpaceGUIDsReturns(nil, errors.New("yankee"))
+
+			_, err := policyCleaner.DeleteStalePolicies()
+			Expect(err).To(MatchError("get live space guids failed: yankee"))
+			Expect(logger).To(gbytes.Say("get-live-space-guids-failed.*yankee"))
+		})
+
+		It("returns a helpful error when egress store delete fails", func() {
+			fakeStore.DeleteReturns(errors.New("zulu"))
+
+			_, err := policyCleaner.DeleteStalePolicies()
+			Expect(err).To(MatchError("database write failed: zulu"))
+			Expect(logger).To(gbytes.Say("store-delete-policies-failed.*zulu"))
 		})
 	})
 

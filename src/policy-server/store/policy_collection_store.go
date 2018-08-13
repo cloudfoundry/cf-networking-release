@@ -68,5 +68,5 @@ func (p *PolicyCollectionStore) All() (PolicyCollection, error) {
 		return PolicyCollection{}, err
 	}
 
-	return PolicyCollection{Policies:c2cPolicies, EgressPolicies: egressPolicies}, nil
+	return PolicyCollection{Policies: c2cPolicies, EgressPolicies: egressPolicies}, nil
 }

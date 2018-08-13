@@ -27,6 +27,7 @@ type egressPolicyRepo interface {
 
 type EgressPolicyStore struct {
 	EgressPolicyRepo egressPolicyRepo
+	Conn             Database
 }
 
 func (e *EgressPolicyStore) CreateWithTx(tx db.Transaction, policies []EgressPolicy) error {
@@ -152,6 +153,25 @@ func (e *EgressPolicyStore) DeleteWithTx(tx db.Transaction, egressPolicies []Egr
 				return fmt.Errorf("failed to delete source terminal: %s", err)
 			}
 		}
+	}
+
+	return nil
+}
+
+func (e *EgressPolicyStore) Delete(egressPolicies []EgressPolicy) error {
+	tx, err := e.Conn.Beginx()
+	if err != nil {
+		panic(err)
+	}
+
+	err = e.DeleteWithTx(tx, egressPolicies)
+	if err != nil {
+		panic(err)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		panic(err)
 	}
 
 	return nil

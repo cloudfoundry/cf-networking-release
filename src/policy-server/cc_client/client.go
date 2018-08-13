@@ -40,6 +40,24 @@ type AppsV3Response struct {
 	} `json:"resources"`
 }
 
+type SpacesV3Response struct {
+	Pagination struct {
+		TotalPages int `json:"total_pages"`
+		First      struct {
+			Href string `json:"href"`
+		} `json:"first"`
+		Last struct {
+			Href string `json:"href"`
+		} `json:"last"`
+		Next struct {
+			Href string `json:"href"`
+		} `json:"next"`
+	} `json:"pagination"`
+	Resources []struct {
+		GUID string `json:"guid"`
+	} `json:"resources"`
+}
+
 type SpaceResponse struct {
 	Entity struct {
 		Name             string `json:"name"`
@@ -117,6 +135,44 @@ func (c *Client) GetLiveAppGUIDs(token string, appGUIDs []string) (map[string]st
 	}
 
 	return set, nil
+}
+
+func (c *Client) GetLiveSpaceGUIDs(token string, spaceGUIDs []string) (map[string]struct{}, error) {
+	token = fmt.Sprintf("bearer %s", token)
+
+	allSpaceGUIDs, err := c.getAllSpaceGUIDs(token)
+	if err != nil {
+		return nil, err
+	}
+
+	liveSpaceGUIDs := make(map[string]struct{})
+	for _, space := range spaceGUIDs {
+		if _, ok := allSpaceGUIDs[space]; ok {
+			liveSpaceGUIDs[space] = struct{}{}
+		}
+	}
+
+	return liveSpaceGUIDs, nil
+}
+
+func (c *Client) getAllSpaceGUIDs(token string) (map[string]struct{}, error) {
+	allSpaceGUIDs := make(map[string]struct{})
+
+	route := "/v3/spaces"
+	for route != "" {
+		var response SpacesV3Response
+		err := c.JSONClient.Do("GET", route, nil, &response, token)
+		if err != nil {
+			return nil, fmt.Errorf("json client do: %s", err)
+		}
+
+		for _, space := range response.Resources {
+			allSpaceGUIDs[space.GUID] = struct{}{}
+		}
+		route = response.Pagination.Next.Href
+	}
+
+	return allSpaceGUIDs, nil
 }
 
 func (c *Client) GetSpaceGUIDs(token string, appGUIDs []string) ([]string, error) {

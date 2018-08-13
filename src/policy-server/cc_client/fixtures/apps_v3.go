@@ -86,6 +86,37 @@ const AppsV3LiveAppGUIDs = `{
   ]
 }`
 
+const SpacesV3AllGUIDs = `{
+  "pagination": {
+    "total_results": 2,
+    "total_pages": 2,
+    "first": {
+      "href": "/first_page"
+    },
+    "next": {
+      "href": "/next_page"
+    }
+  },
+  "resources": [
+    {
+      "guid": "live-app-1-guid",
+			"links": {
+				"space": {
+					"href": "https://api.example.org/v2/spaces/space-1-guid"
+				}
+			}
+    },
+    {
+      "guid": "live-app-2-guid",
+			"links": {
+				"space": {
+					"href": "https://api.example.org/v2/spaces/space-1-guid"
+				}
+			}
+    }
+  ]
+}`
+
 const AppsV3LiveApp1GUID = `{
   "pagination": {
     "total_results": 1,

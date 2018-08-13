@@ -58,3 +58,80 @@ const Spaces = `{
     }
   ]
 }`
+
+const LiveSpacesPage1 = `{
+   "pagination": {
+      "total_results": 2,
+      "total_pages": 2,
+      "first": {
+         "href": "/v3/spaces?page=1"
+      },
+      "last": {
+         "href": "/v3/spaces?page=2"
+      },
+      "next": {
+         "href": "/v3/spaces?page=2"
+      },
+      "previous": null
+   },
+   "resources": [
+      {
+         "guid": "live-space-1-guid",
+         "created_at": "2018-07-24T17:49:02Z",
+         "updated_at": "2018-07-24T17:49:02Z",
+         "name": "space-1",
+         "relationships": {
+            "organization": {
+               "data": {
+                  "guid": "3638bc38-4e7a-45c9-8119-40af6f58b088"
+               }
+            }
+         }
+      },
+      {
+         "guid": "filtered-space-1-guid",
+         "created_at": "2018-07-24T17:49:02Z",
+         "updated_at": "2018-07-24T17:49:02Z",
+         "name": "space-1",
+         "relationships": {
+            "organization": {
+               "data": {
+                  "guid": "3638bc38-4e7a-45c9-8119-40af6f58b088"
+               }
+            }
+         }
+      }
+   ]
+}`
+
+const LiveSpacesPage2 = `{
+   "pagination": {
+      "total_results": 2,
+      "total_pages": 2,
+      "first": {
+         "href": "/v3/spaces?page=1"
+      },
+      "last": {
+         "href": "/v3/spaces?page=2"
+      },
+      "next": null,
+      "previous": {
+         "href": "/v3/spaces?page=1"
+      }
+   },
+   "resources": [
+      {
+         "guid": "live-space-2-guid",
+         "created_at": "2018-07-24T17:49:02Z",
+         "updated_at": "2018-07-24T17:49:02Z",
+         "name": "space-2",
+         "relationships": {
+            "organization": {
+               "data": {
+                  "guid": "3638bc38-4e7a-45c9-8119-40af6f58b088"
+               }
+            }
+         }
+      }
+   ]
+}`

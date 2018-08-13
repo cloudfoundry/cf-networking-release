@@ -42,7 +42,7 @@ properties:
     default: false
 
   policy_cleanup_interval:
-    description: "Clean up stale policies on this interval, in minutes."
+    description: "Clean up stale policies on this interval, in seconds."
     default: 60
 
   max_policies_per_app_source:

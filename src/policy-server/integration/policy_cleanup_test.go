@@ -13,11 +13,12 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
 
+	"test-helpers"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
-	"test-helpers"
 )
 
 var _ = Describe("Policy Cleanup", func() {
@@ -110,49 +111,98 @@ var _ = Describe("Policy Cleanup", func() {
 	})
 
 	Describe("Automatic Stale Policy Cleanup", func() {
-		BeforeEach(func() {
-			body := strings.NewReader(`{ "policies": [
+		Context("c2c policies", func() {
+			BeforeEach(func() {
+				body := strings.NewReader(`{ "policies": [
 				{"source": { "id": "live-app-1-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "ports": { "start": 8080, "end": 8080 } } },
 				{"source": { "id": "live-app-2-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "ports": { "start": 9999, "end": 9999 } } },
 				{"source": { "id": "live-app-1-guid" }, "destination": { "id": "dead-app", "protocol": "tcp", "ports": { "start": 3333, "end": 3333 } } }
 				]} `)
 
-			resp := helpers.MakeAndDoRequest(
-				"POST",
-				fmt.Sprintf("http://%s:%d/networking/v1/external/policies", conf.ListenHost, conf.ListenPort),
-				nil,
-				body,
-			)
-			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-		})
-
-		It("eventually cleans up stale policies", func() {
-			listPolicies := func() []byte {
 				resp := helpers.MakeAndDoRequest(
-					"GET",
+					"POST",
 					fmt.Sprintf("http://%s:%d/networking/v1/external/policies", conf.ListenHost, conf.ListenPort),
 					nil,
-					nil,
+					body,
 				)
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
-				bodyBytes, _ := ioutil.ReadAll(resp.Body)
-				return bodyBytes
-			}
+			})
 
-			activePolicies := `{ "total_policies": 2,
+			It("eventually cleans up stale c2c policies", func() {
+				listPolicies := func() []byte {
+					resp := helpers.MakeAndDoRequest(
+						"GET",
+						fmt.Sprintf("http://%s:%d/networking/v1/external/policies", conf.ListenHost, conf.ListenPort),
+						nil,
+						nil,
+					)
+					Expect(resp.StatusCode).To(Equal(http.StatusOK))
+					bodyBytes, _ := ioutil.ReadAll(resp.Body)
+					return bodyBytes
+				}
+
+				activePolicies := `{ "total_policies": 2,
 			"policies": [
 				{"source": { "id": "live-app-1-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "ports": { "start": 8080, "end": 8080 } } },
 				{"source": { "id": "live-app-2-guid" }, "destination": { "id": "live-app-2-guid", "protocol": "tcp", "ports": { "start": 9999, "end": 9999 } } }
 				]} `
-			Eventually(listPolicies, "5s").Should(MatchJSON(activePolicies))
+				Eventually(listPolicies, "5s").Should(MatchJSON(activePolicies))
 
-			By("emitting store metrics")
-			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
-				HaveName("StoreDeleteWithTxSuccessTime"),
-			))
-			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
-				HaveName("CollectionStoreDeleteSuccessTime"),
-			))
+				By("emitting store metrics")
+				Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
+					HaveName("StoreDeleteWithTxSuccessTime"),
+				))
+				Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
+					HaveName("CollectionStoreDeleteSuccessTime"),
+				))
+			})
+		})
+
+		Context("egress-based space policies", func() {
+			BeforeEach(func() {
+				body := strings.NewReader(`{ "egress_policies": [
+					{"source": { "id": "live-space-1-guid", "type": "space" }, "destination": { "ips": [{"start": "1.2.3.4", "end": "1.2.3.5"}], "protocol": "tcp", "ports": [{ "start": 8080, "end": 8080 }] } },
+					{"source": { "id": "live-space-2-guid", "type": "space" }, "destination": { "ips": [{"start": "1.2.3.4", "end": "1.2.3.5"}], "protocol": "tcp", "ports": [{ "start": 9999, "end": 9999 }] } },
+					{"source": { "id": "outdated-space", "type": "space" }, "destination": { "ips": [{"start": "1.2.3.4", "end": "1.2.3.5"}], "protocol": "tcp", "ports": [{ "start": 3333, "end": 3333 }] } }
+				]} `)
+
+				resp := helpers.MakeAndDoRequest(
+					"POST",
+					fmt.Sprintf("http://%s:%d/networking/v1/external/policies", conf.ListenHost, conf.ListenPort),
+					nil,
+					body,
+				)
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
+			})
+
+			It("eventually cleans up stale egress-based space policies", func() {
+				listPolicies := func() []byte {
+					resp := helpers.MakeAndDoRequest(
+						"GET",
+						fmt.Sprintf("http://%s:%d/networking/v1/external/policies", conf.ListenHost, conf.ListenPort),
+						nil,
+						nil,
+					)
+					Expect(resp.StatusCode).To(Equal(http.StatusOK))
+					bodyBytes, _ := ioutil.ReadAll(resp.Body)
+					return bodyBytes
+				}
+
+				activePolicies := `{
+            		"total_policies": 0,
+            		"policies": [], 
+					"total_egress_policies": 2,
+					"egress_policies": [
+						{"source": { "id": "live-space-1-guid", "type": "space" }, "destination": { "ips": [{"start": "1.2.3.4", "end": "1.2.3.5"}], "protocol": "tcp", "ports": [{ "start": 8080, "end": 8080 }] } },
+						{"source": { "id": "live-space-2-guid", "type": "space" }, "destination": { "ips": [{"start": "1.2.3.4", "end": "1.2.3.5"}], "protocol": "tcp", "ports": [{ "start": 9999, "end": 9999 }] } }
+					]} `
+				Eventually(listPolicies, "5s").Should(MatchJSON(activePolicies))
+
+				By("emitting store metrics")
+				Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
+					HaveName("CollectionStoreDeleteSuccessTime"),
+				))
+			})
 		})
 	})
 })

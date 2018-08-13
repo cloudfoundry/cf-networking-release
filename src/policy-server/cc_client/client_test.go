@@ -55,11 +55,11 @@ var _ = Describe("Client", func() {
 				Expect(token).To(Equal("bearer some-token"))
 
 				Expect(apps).To(Equal(map[string]struct{}{
-					"live-app-1-guid": struct{}{},
-					"live-app-2-guid": struct{}{},
-					"live-app-3-guid": struct{}{},
-					"live-app-4-guid": struct{}{},
-					"live-app-5-guid": struct{}{},
+					"live-app-1-guid": {},
+					"live-app-2-guid": {},
+					"live-app-3-guid": {},
+					"live-app-4-guid": {},
+					"live-app-5-guid": {},
 				}))
 			})
 		})
@@ -106,9 +106,9 @@ var _ = Describe("Client", func() {
 				Expect(token).To(Equal("bearer some-token"))
 
 				Expect(apps).To(Equal(map[string]struct{}{
-					"live-app-1-guid": struct{}{},
-					"live-app-2-guid": struct{}{},
-					"live-app-3-guid": struct{}{},
+					"live-app-1-guid": {},
+					"live-app-2-guid": {},
+					"live-app-3-guid": {},
 				}))
 			})
 		})
@@ -147,8 +147,8 @@ var _ = Describe("Client", func() {
 			Expect(token).To(Equal("bearer some-token"))
 
 			Expect(appGUIDs).To(Equal(map[string]struct{}{
-				"live-app-1-guid": struct{}{},
-				"live-app-2-guid": struct{}{},
+				"live-app-1-guid": {},
+				"live-app-2-guid": {},
 			}))
 		})
 
@@ -174,6 +174,46 @@ var _ = Describe("Client", func() {
 			It("should immediately return an error", func() {
 				_, err := client.GetLiveAppGUIDs("some-token", []string{})
 				Expect(err).To(MatchError("pagination support not yet implemented"))
+			})
+		})
+	})
+
+	Describe("GetLiveSpaceGUIDs", func() {
+		var (
+			passedToken string
+		)
+
+		BeforeEach(func() {
+			fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+				passedToken = token
+				if route == "/v3/spaces?page=2" {
+					_ = json.Unmarshal([]byte(fixtures.LiveSpacesPage2), respData)
+				} else {
+					_ = json.Unmarshal([]byte(fixtures.LiveSpacesPage1), respData)
+				}
+				return nil
+			}
+		})
+
+		It("returns the live space guids filtered by given space guids", func() {
+			liveSpaceGUIDs, err := client.GetLiveSpaceGUIDs("some-token", []string{"live-space-1-guid", "live-space-2-guid", "dead-space-1-guid"})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(liveSpaceGUIDs).To(Equal(map[string]struct{}{
+				"live-space-1-guid": {},
+				"live-space-2-guid": {},
+			}))
+
+			Expect(passedToken).To(Equal("bearer some-token"))
+		})
+
+		Context("when the json client returns an error", func() {
+			BeforeEach(func() {
+				fakeJSONClient.DoReturns(errors.New("banana"))
+			})
+
+			It("returns the error", func() {
+				_, err := client.GetLiveSpaceGUIDs("some-token", []string{})
+				Expect(err).To(MatchError(ContainSubstring("json client do: banana")))
 			})
 		})
 	})
@@ -402,8 +442,8 @@ var _ = Describe("Client", func() {
 			Expect(token).To(Equal("bearer some-token"))
 
 			Expect(userSpaces).To(Equal(map[string]struct{}{
-				"space-1-guid": struct{}{},
-				"space-2-guid": struct{}{},
+				"space-1-guid": {},
+				"space-2-guid": {},
 			}))
 		})
 

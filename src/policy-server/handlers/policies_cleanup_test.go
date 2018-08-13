@@ -27,22 +27,24 @@ var _ = Describe("PoliciesCleanup", func() {
 		fakePolicyCleaner *fakes.PolicyCleaner
 		fakeMapper        *apifakes.PolicyMapper
 		fakeErrorResponse *fakes.ErrorResponse
-		policies          []store.Policy
+		policies          store.PolicyCollection
 	)
 
 	BeforeEach(func() {
-		policies = []store.Policy{{
-			Source: store.Source{ID: "live-guid", Tag: "tag"},
-			Destination: store.Destination{
-				ID:       "dead-guid",
-				Tag:      "tag",
-				Protocol: "tcp",
-				Ports: store.Ports{
-					Start: 8080,
-					End:   8080,
+		policies = store.PolicyCollection{
+			Policies: []store.Policy{{
+				Source: store.Source{ID: "live-guid", Tag: "tag"},
+				Destination: store.Destination{
+					ID:       "dead-guid",
+					Tag:      "tag",
+					Protocol: "tcp",
+					Ports: store.Ports{
+						Start: 8080,
+						End:   8080,
+					},
 				},
-			},
-		}}
+			}},
+		}
 
 		logger = lagertest.NewTestLogger("test")
 		expectedLogger = lager.NewLogger("test").Session("cleanup-policies")
@@ -61,7 +63,7 @@ var _ = Describe("PoliciesCleanup", func() {
 			ErrorResponse: fakeErrorResponse,
 		}
 
-		fakePolicyCleaner.DeleteStalePoliciesReturns(store.PolicyCollection{Policies: policies}, nil)
+		fakePolicyCleaner.DeleteStalePoliciesReturns(policies, nil)
 		fakeMapper.AsBytesReturns([]byte("some-bytes"), nil)
 		resp = httptest.NewRecorder()
 		request, _ = http.NewRequest("POST", "/networking/v0/external/policies/cleanup", nil)
@@ -73,9 +75,10 @@ var _ = Describe("PoliciesCleanup", func() {
 		Expect(fakePolicyCleaner.DeleteStalePoliciesCallCount()).To(Equal(1))
 		Expect(fakeMapper.AsBytesCallCount()).To(Equal(1))
 
-		policyArg, _ := fakeMapper.AsBytesArgsForCall(0)
+		policyArg, egressPolicyArg := fakeMapper.AsBytesArgsForCall(0)
 
-		Expect(policyArg).To(Equal(policies))
+		Expect(policyArg).To(Equal(policies.Policies))
+		Expect(egressPolicyArg).To(Equal(policies.EgressPolicies))
 
 		Expect(resp.Code).To(Equal(http.StatusOK))
 		Expect(resp.Body.String()).To(Equal(`some-bytes`))

@@ -16,6 +16,7 @@ type uaaClient interface {
 //go:generate counterfeiter -o fakes/cc_client.go --fake-name CCClient . ccClient
 type ccClient interface {
 	GetLiveAppGUIDs(token string, appGUIDs []string) (map[string]struct{}, error)
+	GetLiveSpaceGUIDs(token string, spaceGUIDs []string) (map[string]struct{}, error)
 }
 
 //go:generate counterfeiter -o fakes/list_delete_store.go --fake-name ListDeleteStore . listDeleteStore
@@ -58,6 +59,7 @@ func (p *PolicyCleaner) DeleteStalePolicies() (store.PolicyCollection, error) {
 	}
 
 	policies := allPolicies.Policies
+	egressPolicies := allPolicies.EgressPolicies
 
 	stalePolicies := []store.Policy{}
 
@@ -86,12 +88,47 @@ func (p *PolicyCleaner) DeleteStalePolicies() (store.PolicyCollection, error) {
 		}
 	}
 
-	return store.PolicyCollection{Policies: stalePolicies}, nil
+	var spaceEgressPolicyGUIDs []string
+	spaceEgressPolicy := make(map[string][]store.EgressPolicy)
+	for _, egressPolicy := range egressPolicies {
+		if egressPolicy.Source.Type == "space" {
+			spaceEgressPolicyGUIDs = append(spaceEgressPolicyGUIDs, egressPolicy.Source.ID)
+			spaceEgressPolicy[egressPolicy.Source.ID] = append(spaceEgressPolicy[egressPolicy.Source.ID], egressPolicy)
+		}
+	}
+
+	liveSpaceGUIDs, err := p.CCClient.GetLiveSpaceGUIDs(token, spaceEgressPolicyGUIDs)
+	if err != nil {
+		p.Logger.Error("get-live-space-guids-failed", err)
+		return store.PolicyCollection{}, fmt.Errorf("get live space guids failed: %s", err)
+	}
+
+	policiesToDelete := getStaleSpacePolicies(spaceEgressPolicy, liveSpaceGUIDs)
+
+	err = p.Store.Delete(store.PolicyCollection{EgressPolicies: policiesToDelete})
+	if err != nil {
+		p.Logger.Error("delete-stale-egress-space-policies-failed", err)
+		return store.PolicyCollection{}, fmt.Errorf("delete stale egress space policies failed: %s", err)
+	}
+
+	return store.PolicyCollection{Policies: stalePolicies, EgressPolicies: policiesToDelete}, nil
 }
 
 func (p *PolicyCleaner) DeleteStalePoliciesWrapper() error {
 	_, err := p.DeleteStalePolicies()
 	return err
+}
+
+func getStaleSpacePolicies(spacePolicies map[string][]store.EgressPolicy, liveSpaceGUIDs map[string]struct{}) []store.EgressPolicy {
+	var staleSpaceEgressPolicies []store.EgressPolicy
+	for spaceGUID := range liveSpaceGUIDs {
+		delete(spacePolicies, spaceGUID)
+	}
+	for _, policies := range spacePolicies {
+		staleSpaceEgressPolicies = append(staleSpaceEgressPolicies, policies...)
+	}
+
+	return staleSpaceEgressPolicies
 }
 
 func getStaleAppGUIDs(liveAppGUIDs map[string]struct{}, appGUIDs []string) map[string]struct{} {
