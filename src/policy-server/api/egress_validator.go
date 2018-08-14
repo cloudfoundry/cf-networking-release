@@ -5,6 +5,8 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"sort"
+	"strings"
 )
 
 //go:generate counterfeiter -o fakes/egress_validator.go --fake-name EgressValidator . egressValidator
@@ -12,7 +14,20 @@ type egressValidator interface {
 	ValidateEgressPolicies(policies []EgressPolicy) error
 }
 
-type EgressValidator struct{}
+//go:generate counterfeiter -o fakes/cc_client.go --fake-name CCClient . ccClient
+type ccClient interface {
+	GetLiveAppGUIDs(token string, appGUIDs []string) (map[string]struct{}, error)
+}
+
+//go:generate counterfeiter -o fakes/uua_client.go --fake-name UAAClient . uaaClient
+type uaaClient interface {
+	GetToken() (string, error)
+}
+
+type EgressValidator struct {
+	CCClient  ccClient
+	UAAClient uaaClient
+}
 
 func (v *EgressValidator) ValidateEgressPolicies(policies []EgressPolicy) error {
 	for _, policy := range policies {
@@ -69,5 +84,53 @@ func (v *EgressValidator) ValidateEgressPolicies(policies []EgressPolicy) error 
 		}
 	}
 
+	token, err := v.UAAClient.GetToken()
+	if err != nil {
+		return fmt.Errorf("failed to get uaa token: %s", err)
+	}
+
+	appGUIDSet := sourceAppGUIDs(policies)
+
+	liveAppGUIDs, err := v.CCClient.GetLiveAppGUIDs(token, keys(appGUIDSet))
+	if err != nil {
+		return fmt.Errorf("failed to get live app guids: %s", err)
+	}
+
+	missingAppGUIDs := relativeComplement(appGUIDSet, liveAppGUIDs)
+
+	if len(missingAppGUIDs) > 0 {
+		return fmt.Errorf("app guids not found: [%s]", strings.Join(missingAppGUIDs, ", "))
+	}
+
 	return nil
+}
+
+func sourceAppGUIDs(policies []EgressPolicy) map[string]struct{} {
+	appGUIDSet := make(map[string]struct{})
+	for _, policy := range policies {
+		if policy.Source.Type == "" || policy.Source.Type == "app" {
+			appGUIDSet[policy.Source.ID] = struct{}{}
+		}
+	}
+	return appGUIDSet
+}
+
+func keys(set map[string]struct{}) []string {
+	var keys []string
+	for key, _ := range set {
+		keys = append(keys, key)
+	}
+	return keys
+}
+
+func relativeComplement(a map[string]struct{}, b map[string]struct{}) []string {
+	result := []string{}
+	for key, _ := range a {
+		_, ok := b[key]
+		if !ok {
+			result = append(result, key)
+		}
+	}
+	sort.Strings(result)
+	return result
 }

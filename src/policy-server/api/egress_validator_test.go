@@ -1,7 +1,9 @@
 package api_test
 
 import (
+	"errors"
 	"policy-server/api"
+	"policy-server/api/fakes"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -11,10 +13,21 @@ var _ = Describe("Egress Validator", func() {
 	var (
 		validator      api.EgressValidator
 		egressPolicies []api.EgressPolicy
+		ccClient       *fakes.CCClient
+		uaaClient      *fakes.UAAClient
 	)
 
 	BeforeEach(func() {
-		validator = api.EgressValidator{}
+		ccClient = new(fakes.CCClient)
+		uaaClient = new(fakes.UAAClient)
+		validator = api.EgressValidator{
+			CCClient:  ccClient,
+			UAAClient: uaaClient,
+		}
+		ccClient.GetLiveAppGUIDsReturns(map[string]struct{}{
+			"source id": struct{}{},
+		}, nil)
+		uaaClient.GetTokenReturns("valid-token", nil)
 
 		egressPolicies = []api.EgressPolicy{
 			{
@@ -41,6 +54,71 @@ var _ = Describe("Egress Validator", func() {
 
 			err := validator.ValidateEgressPolicies(egressPolicies)
 			Expect(err).To(MatchError("missing egress source"))
+		})
+
+		It("requires the source to exist", func() {
+			egressPolicies = []api.EgressPolicy{
+				{
+					Source: &api.EgressSource{
+						ID: "source id",
+					},
+					Destination: &api.EgressDestination{
+						IPRanges: []api.IPRange{{Start: "1.2.3.4", End: "5.6.7.8"}},
+						Protocol: "tcp",
+					},
+				},
+				{
+					Source: &api.EgressSource{
+						ID: "non-existent",
+					},
+					Destination: &api.EgressDestination{
+						IPRanges: []api.IPRange{{Start: "1.2.3.4", End: "5.6.7.8"}},
+						Protocol: "tcp",
+					},
+				},
+				{
+					Source: &api.EgressSource{
+						ID:   "non-existent-2",
+						Type: "app",
+					},
+					Destination: &api.EgressDestination{
+						IPRanges: []api.IPRange{{Start: "1.2.3.4", End: "5.6.7.8"}},
+						Protocol: "tcp",
+					},
+				},
+				{
+					Source: &api.EgressSource{
+						ID:   "non-existent-space",
+						Type: "space",
+					},
+					Destination: &api.EgressDestination{
+						IPRanges: []api.IPRange{{Start: "1.2.3.4", End: "5.6.7.8"}},
+						Protocol: "tcp",
+					},
+				},
+			}
+
+			err := validator.ValidateEgressPolicies(egressPolicies)
+			Expect(err).To(MatchError("app guids not found: [non-existent, non-existent-2]"))
+
+			Expect(uaaClient.GetTokenCallCount()).To(Equal(1))
+
+			passedToken, passedAppGUIDs := ccClient.GetLiveAppGUIDsArgsForCall(0)
+			Expect(passedToken).To(Equal("valid-token"))
+			Expect(passedAppGUIDs).To(ConsistOf("source id", "non-existent", "non-existent-2"))
+		})
+
+		It("returns an error if it can't query live app guids", func() {
+			ccClient.GetLiveAppGUIDsReturns(nil, errors.New("foxtrot"))
+			err := validator.ValidateEgressPolicies(egressPolicies)
+			Expect(err).To(MatchError("failed to get live app guids: foxtrot"))
+		})
+
+		It("returns an error when it is unable to obtain a token", func() {
+			uaaClient.GetTokenReturns("", errors.New("kilo"))
+
+			err := validator.ValidateEgressPolicies(egressPolicies)
+			Expect(err).To(MatchError("failed to get uaa token: kilo"))
 		})
 
 		It("type must be app, space or empty", func() {
