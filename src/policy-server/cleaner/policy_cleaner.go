@@ -112,14 +112,36 @@ func (p *PolicyCleaner) getC2CPoliciesToDelete(policies []store.Policy, token st
 	return c2cPoliciesToDelete, nil
 }
 
+
+
 func (p *PolicyCleaner) getEgressPoliciesToDelete(egressPolicies []store.EgressPolicy, token string) ([]store.EgressPolicy, error){
-	var spaceEgressPolicyGUIDs []string
-	spaceEgressPolicy := make(map[string][]store.EgressPolicy)
+	var spaceEgressPolicyGUIDs, appEgressPolicyGUIDs []string
+	spaceEgressPolicies := make(map[string][]store.EgressPolicy)
+	var egressPoliciesToDelete []store.EgressPolicy
+	appEgressPolicies := make(map[string][]store.EgressPolicy)
+
 	for _, egressPolicy := range egressPolicies {
 		if egressPolicy.Source.Type == "space" {
 			spaceEgressPolicyGUIDs = append(spaceEgressPolicyGUIDs, egressPolicy.Source.ID)
-			spaceEgressPolicy[egressPolicy.Source.ID] = append(spaceEgressPolicy[egressPolicy.Source.ID], egressPolicy)
+			spaceEgressPolicies[egressPolicy.Source.ID] = append(spaceEgressPolicies[egressPolicy.Source.ID], egressPolicy)
 		}
+		if egressPolicy.Source.Type == "app" {
+			appEgressPolicyGUIDs = append(appEgressPolicyGUIDs, egressPolicy.Source.ID)
+			appEgressPolicies[egressPolicy.Source.ID] = append(appEgressPolicies[egressPolicy.Source.ID], egressPolicy)
+		}
+	}
+
+	appGUIDchunks := getChunks(appEgressPolicyGUIDs, p.CCAppRequestChunkSize)
+
+	for _, appGUIDchunk := range appGUIDchunks {
+		liveAppGUIDs, err := p.CCClient.GetLiveAppGUIDs(token, appGUIDchunk)
+		if err != nil {
+			p.Logger.Error("cc-get-app-guids-failed", err)
+			return nil, fmt.Errorf("get app guids from Cloud-Controller failed: %s", err)
+		}
+
+		staleAppGUIDs := getStaleAppGUIDs(liveAppGUIDs, appGUIDchunk)
+		egressPoliciesToDelete = append(egressPoliciesToDelete, getStaleEgressAppPolicies(appEgressPolicies, staleAppGUIDs)...)
 	}
 
 	liveSpaceGUIDs, err := p.CCClient.GetLiveSpaceGUIDs(token, spaceEgressPolicyGUIDs)
@@ -127,8 +149,8 @@ func (p *PolicyCleaner) getEgressPoliciesToDelete(egressPolicies []store.EgressP
 		p.Logger.Error("get-live-space-guids-failed", err)
 		return nil, fmt.Errorf("get live space guids failed: %s", err)
 	}
-
-	return getStaleEgressSpacePolicies(spaceEgressPolicy, liveSpaceGUIDs), nil
+	egressPoliciesToDelete = append(egressPoliciesToDelete, getStaleEgressSpacePolicies(spaceEgressPolicies, liveSpaceGUIDs)...)
+	return egressPoliciesToDelete, nil
 }
 
 func getStaleEgressSpacePolicies(spacePolicies map[string][]store.EgressPolicy, liveSpaceGUIDs map[string]struct{}) []store.EgressPolicy {
@@ -141,6 +163,15 @@ func getStaleEgressSpacePolicies(spacePolicies map[string][]store.EgressPolicy, 
 	}
 
 	return staleSpaceEgressPolicies
+}
+
+func getStaleEgressAppPolicies(appPolicies map[string][]store.EgressPolicy, staleAppGUIDs map[string]struct{}) []store.EgressPolicy {
+	var staleAppEgressPolicies []store.EgressPolicy
+	for appGUID := range staleAppGUIDs {
+		staleAppEgressPolicies = append(staleAppEgressPolicies, appPolicies[appGUID]...)
+	}
+
+	return staleAppEgressPolicies
 }
 
 func getStaleAppGUIDs(liveAppGUIDs map[string]struct{}, appGUIDs []string) map[string]struct{} {

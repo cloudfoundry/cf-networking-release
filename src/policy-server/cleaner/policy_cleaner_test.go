@@ -63,7 +63,7 @@ var _ = Describe("PolicyCleaner", func() {
 		}}
 
 		egressPolicies = []store.EgressPolicy{{
-			Source: store.EgressSource{ID: "live-guid", Type: "space"},
+			Source: store.EgressSource{ID: "live-egress-app-guid", Type: "app"},
 			Destination: store.EgressDestination{
 				Protocol: "tcp",
 				Ports: []store.Ports{
@@ -80,7 +80,7 @@ var _ = Describe("PolicyCleaner", func() {
 				},
 			},
 		}, {
-			Source: store.EgressSource{ID: "dead-guid", Type: "space"},
+			Source: store.EgressSource{ID: "live-egress-space-guid", Type: "space"},
 			Destination: store.EgressDestination{
 				Protocol: "tcp",
 				Ports: []store.Ports{
@@ -96,7 +96,42 @@ var _ = Describe("PolicyCleaner", func() {
 					},
 				},
 			},
-		}}
+		}, {
+			Source: store.EgressSource{ID: "dead-egress-app-guid", Type: "app"},
+			Destination: store.EgressDestination{
+				Protocol: "tcp",
+				Ports: []store.Ports{
+					{
+						Start: 8080,
+						End:   8080,
+					},
+				},
+				IPRanges: []store.IPRange{
+					{
+						Start: "1.2.3.4",
+						End:   "1.2.3.4",
+					},
+				},
+			},
+		}, {
+			Source: store.EgressSource{ID: "dead-egress-space-guid", Type: "space"},
+			Destination: store.EgressDestination{
+				Protocol: "tcp",
+				Ports: []store.Ports{
+					{
+						Start: 8080,
+						End:   8080,
+					},
+				},
+				IPRanges: []store.IPRange{
+					{
+						Start: "1.2.3.4",
+						End:   "1.2.3.4",
+					},
+				},
+			},
+		},
+		}
 
 		fakeStore = &fakes.ListDeleteStore{}
 		fakeUAAClient = &fakes.UAAClient{}
@@ -114,19 +149,19 @@ var _ = Describe("PolicyCleaner", func() {
 		fakeUAAClient.GetTokenReturns("valid-token", nil)
 		policyCollection = store.PolicyCollection{Policies: c2cPolicies, EgressPolicies: egressPolicies}
 		fakeStore.AllReturns(policyCollection, nil)
-		fakeCCClient.GetLiveSpaceGUIDsReturns(map[string]struct{}{"live-guid": {}}, nil)
+		fakeCCClient.GetLiveSpaceGUIDsReturns(map[string]struct{}{"live-egress-space-guid": {}}, nil)
 		fakeCCClient.GetLiveAppGUIDsStub = func(token string, appGUIDs []string) (map[string]struct{}, error) {
 			liveGUIDs := make(map[string]struct{})
 			for _, guid := range appGUIDs {
-				if guid == "live-guid" {
-					liveGUIDs["live-guid"] = struct{}{}
+				if guid == "live-guid" || guid == "live-egress-app-guid" {
+					liveGUIDs[guid] = struct{}{}
 				}
 			}
 			return liveGUIDs, nil
 		}
 	})
 
-	It("Deletes policies that reference apps that do not exist", func() {
+	It("Deletes c2c and egress policies that reference apps that do not exist", func() {
 		deletedPolicyCollection, err := policyCleaner.DeleteStalePolicies()
 		Expect(err).NotTo(HaveOccurred())
 
@@ -136,23 +171,26 @@ var _ = Describe("PolicyCleaner", func() {
 		token0, guids0 := fakeCCClient.GetLiveSpaceGUIDsArgsForCall(0)
 		Expect(token0).To(Equal("valid-token"))
 		Expect(guids0).To(ConsistOf(
-			"live-guid",
-			"dead-guid",
+			"live-egress-space-guid",
+			"dead-egress-space-guid",
 		))
-		Expect(fakeCCClient.GetLiveAppGUIDsCallCount()).To(Equal(1))
+		Expect(fakeCCClient.GetLiveAppGUIDsCallCount()).To(Equal(2))
 		token, guids := fakeCCClient.GetLiveAppGUIDsArgsForCall(0)
 		Expect(token).To(Equal("valid-token"))
 		Expect(guids).To(ConsistOf("live-guid", "dead-guid"))
 
+		_, guids = fakeCCClient.GetLiveAppGUIDsArgsForCall(1)
+		Expect(guids).To(ConsistOf("live-egress-app-guid", "dead-egress-app-guid"))
+
 		stalePolicies := c2cPolicies[1:]
-		staleEgressPolicies := egressPolicies[1:]
+		staleEgressPolicies := egressPolicies[2:]
 
 		expectedCollection := store.PolicyCollection{Policies: stalePolicies, EgressPolicies: staleEgressPolicies}
 
 		Expect(fakeStore.DeleteCallCount()).To(Equal(1))
 		Expect(fakeStore.DeleteArgsForCall(0)).To(Equal(expectedCollection))
 
-		Expect(logger).To(gbytes.Say("deleting stale policies:.*c2c_policies.*dead-guid.*dead-guid.*egress_policies.*dead-guid.*total_c2c_policies\":2.*total_egress_policies\":1"))
+		Expect(logger).To(gbytes.Say("deleting stale policies:.*c2c_policies.*dead-guid.*dead-guid.*egress_policies.*dead-egress-app-guid.*dead-egress-space-guid.*total_c2c_policies\":2.*total_egress_policies\":2"))
 		Expect(deletedPolicyCollection).To(Equal(expectedCollection))
 	})
 
@@ -173,7 +211,7 @@ var _ = Describe("PolicyCleaner", func() {
 
 			Expect(fakeStore.AllCallCount()).To(Equal(1))
 			Expect(fakeUAAClient.GetTokenCallCount()).To(Equal(1))
-			Expect(fakeCCClient.GetLiveAppGUIDsCallCount()).To(Equal(2))
+			Expect(fakeCCClient.GetLiveAppGUIDsCallCount()).To(Equal(4))
 			token0, guids0 := fakeCCClient.GetLiveAppGUIDsArgsForCall(0)
 			Expect(token0).To(Equal("valid-token"))
 			token1, guids1 := fakeCCClient.GetLiveAppGUIDsArgsForCall(1)
