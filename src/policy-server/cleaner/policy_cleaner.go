@@ -58,44 +58,17 @@ func (p *PolicyCleaner) DeleteStalePolicies() (store.PolicyCollection, error) {
 		return store.PolicyCollection{}, fmt.Errorf("get UAA token failed: %s", err)
 	}
 
-	policies := allPolicies.Policies
-
-	appGUIDs := policyAppGUIDs(policies)
-	appGUIDchunks := getChunks(appGUIDs, p.CCAppRequestChunkSize)
-
 	allPoliciesToDelete := store.PolicyCollection{}
 
-	for _, appGUIDchunk := range appGUIDchunks {
-		liveAppGUIDs, err := p.CCClient.GetLiveAppGUIDs(token, appGUIDchunk)
-		if err != nil {
-			p.Logger.Error("cc-get-app-guids-failed", err)
-			return store.PolicyCollection{}, fmt.Errorf("get app guids from Cloud-Controller failed: %s", err)
-		}
-
-		staleAppGUIDs := getStaleAppGUIDs(liveAppGUIDs, appGUIDchunk)
-		toDelete := getStalePolicies(policies, staleAppGUIDs)
-
-		allPoliciesToDelete.Policies = append(allPoliciesToDelete.Policies, toDelete...)
-	}
-
-	egressPolicies := allPolicies.EgressPolicies
-
-	var spaceEgressPolicyGUIDs []string
-	spaceEgressPolicy := make(map[string][]store.EgressPolicy)
-	for _, egressPolicy := range egressPolicies {
-		if egressPolicy.Source.Type == "space" {
-			spaceEgressPolicyGUIDs = append(spaceEgressPolicyGUIDs, egressPolicy.Source.ID)
-			spaceEgressPolicy[egressPolicy.Source.ID] = append(spaceEgressPolicy[egressPolicy.Source.ID], egressPolicy)
-		}
-	}
-
-	liveSpaceGUIDs, err := p.CCClient.GetLiveSpaceGUIDs(token, spaceEgressPolicyGUIDs)
+	allPoliciesToDelete.Policies, err = p.getC2CPoliciesToDelete(allPolicies.Policies, token)
 	if err != nil {
-		p.Logger.Error("get-live-space-guids-failed", err)
-		return store.PolicyCollection{}, fmt.Errorf("get live space guids failed: %s", err)
+		return store.PolicyCollection{}, err
 	}
 
-	allPoliciesToDelete.EgressPolicies = getStaleEgressSpacePolicies(spaceEgressPolicy, liveSpaceGUIDs)
+	allPoliciesToDelete.EgressPolicies, err = p.getEgressPoliciesToDelete(allPolicies.EgressPolicies, token)
+	if err != nil {
+		return store.PolicyCollection{}, err
+	}
 
 	p.Logger.Info("deleting stale policies:", lager.Data{
 		"total_c2c_policies":    len(allPoliciesToDelete.Policies),
@@ -115,6 +88,47 @@ func (p *PolicyCleaner) DeleteStalePolicies() (store.PolicyCollection, error) {
 func (p *PolicyCleaner) DeleteStalePoliciesWrapper() error {
 	_, err := p.DeleteStalePolicies()
 	return err
+}
+
+func (p *PolicyCleaner) getC2CPoliciesToDelete(policies []store.Policy, token string) ([]store.Policy, error){
+	var c2cPoliciesToDelete []store.Policy
+
+	appGUIDs := policyAppGUIDs(policies)
+	appGUIDchunks := getChunks(appGUIDs, p.CCAppRequestChunkSize)
+
+	for _, appGUIDchunk := range appGUIDchunks {
+		liveAppGUIDs, err := p.CCClient.GetLiveAppGUIDs(token, appGUIDchunk)
+		if err != nil {
+			p.Logger.Error("cc-get-app-guids-failed", err)
+			return nil, fmt.Errorf("get app guids from Cloud-Controller failed: %s", err)
+		}
+
+		staleAppGUIDs := getStaleAppGUIDs(liveAppGUIDs, appGUIDchunk)
+		toDelete := getStalePolicies(policies, staleAppGUIDs)
+
+		c2cPoliciesToDelete = append(c2cPoliciesToDelete, toDelete...)
+	}
+
+	return c2cPoliciesToDelete, nil
+}
+
+func (p *PolicyCleaner) getEgressPoliciesToDelete(egressPolicies []store.EgressPolicy, token string) ([]store.EgressPolicy, error){
+	var spaceEgressPolicyGUIDs []string
+	spaceEgressPolicy := make(map[string][]store.EgressPolicy)
+	for _, egressPolicy := range egressPolicies {
+		if egressPolicy.Source.Type == "space" {
+			spaceEgressPolicyGUIDs = append(spaceEgressPolicyGUIDs, egressPolicy.Source.ID)
+			spaceEgressPolicy[egressPolicy.Source.ID] = append(spaceEgressPolicy[egressPolicy.Source.ID], egressPolicy)
+		}
+	}
+
+	liveSpaceGUIDs, err := p.CCClient.GetLiveSpaceGUIDs(token, spaceEgressPolicyGUIDs)
+	if err != nil {
+		p.Logger.Error("get-live-space-guids-failed", err)
+		return nil, fmt.Errorf("get live space guids failed: %s", err)
+	}
+
+	return getStaleEgressSpacePolicies(spaceEgressPolicy, liveSpaceGUIDs), nil
 }
 
 func getStaleEgressSpacePolicies(spacePolicies map[string][]store.EgressPolicy, liveSpaceGUIDs map[string]struct{}) []store.EgressPolicy {
