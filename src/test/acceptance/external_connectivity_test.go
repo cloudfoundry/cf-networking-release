@@ -88,7 +88,7 @@ var _ = Describe("external connectivity", func() {
 	}
 
 	canProxy := func() error {
-		return checkRequest(appRoute+"proxy/example.com", 200, "Example Domain")
+		return checkRequest(appRoute+"proxy/docs.cloudfoundry.org", 200, "https://docs.cloudfoundry.org")
 	}
 	isReachable := func() error {
 		return checkRequest(appRoute, 200, `{"ListenAddresses":[`)
@@ -97,7 +97,7 @@ var _ = Describe("external connectivity", func() {
 		return checkRequest(appRoute+"ping/8.8.8.8", 200, "Ping succeeded")
 	}
 	cannotProxy := func() error {
-		return checkRequest(appRoute+"proxy/example.com", 500, "example.com")
+		return checkRequest(appRoute+"proxy/docs.cloudfoundry.org", 500, "connection refused")
 	}
 	cannotPing := func() error {
 		return checkRequest(appRoute+"ping/8.8.8.8", 500, "Ping failed to destination: 8.8.8.8")

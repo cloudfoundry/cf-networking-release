@@ -78,10 +78,10 @@ var _ = Describe("external connectivity", func() {
 	}
 
 	canProxy := func() error {
-		return checkRequest(appRoute+"proxy/example.com", 200, "Example Domain")
+		return checkRequest(appRoute+"proxy/docs.cloudfoundry.org", 200, "https://docs.cloudfoundry.org")
 	}
 	cannotProxy := func() error {
-		return checkRequest(appRoute+"proxy/example.com", 500, "example.com")
+		return checkRequest(appRoute+"proxy/docs.cloudfoundry.org", 500, "connection refused")
 	}
 
 	Describe("egress policy connectivity", func() {
