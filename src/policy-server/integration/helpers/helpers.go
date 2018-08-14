@@ -161,6 +161,10 @@ func SplitUAAHostPort() (string, int) {
 }
 
 func DefaultTestConfig(dbConfig db.Config, metronAddress string, fixturesPath string) (config.Config, config.InternalConfig) {
+	return DefaultTestConfigWithCCServer(dbConfig, metronAddress, fixturesPath, MockCCServer.URL)
+}
+
+func DefaultTestConfigWithCCServer(dbConfig db.Config, metronAddress string, fixturesPath string, mockCCServerURL string) (config.Config, config.InternalConfig) {
 	UAAHost, UAAPort := SplitUAAHostPort()
 
 	externalConfig := config.Config{
@@ -174,7 +178,7 @@ func DefaultTestConfig(dbConfig db.Config, metronAddress string, fixturesPath st
 		UAAClientSecret:                 "test",
 		UAAURL:                          "http://" + UAAHost,
 		UAAPort:                         UAAPort,
-		CCURL:                           MockCCServer.URL,
+		CCURL:                           mockCCServerURL,
 		TagLength:                       1,
 		Database:                        dbConfig,
 		MetronAddress:                   metronAddress,

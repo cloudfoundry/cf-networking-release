@@ -25,14 +25,18 @@ var _ = Describe("Egress Validator", func() {
 			UAAClient: uaaClient,
 		}
 		ccClient.GetLiveAppGUIDsReturns(map[string]struct{}{
-			"source id": struct{}{},
+			"source-app-id": struct{}{},
+			"source--id":    struct{}{},
+		}, nil)
+		ccClient.GetLiveSpaceGUIDsReturns(map[string]struct{}{
+			"source-space-id": struct{}{},
 		}, nil)
 		uaaClient.GetTokenReturns("valid-token", nil)
 
 		egressPolicies = []api.EgressPolicy{
 			{
 				Source: &api.EgressSource{
-					ID: "source id",
+					ID: "source-app-id",
 				},
 				Destination: &api.EgressDestination{
 					IPRanges: []api.IPRange{
@@ -56,11 +60,11 @@ var _ = Describe("Egress Validator", func() {
 			Expect(err).To(MatchError("missing egress source"))
 		})
 
-		It("requires the source to exist", func() {
+		It("requires the source app to exist", func() {
 			egressPolicies = []api.EgressPolicy{
 				{
 					Source: &api.EgressSource{
-						ID: "source id",
+						ID: "source-app-id",
 					},
 					Destination: &api.EgressDestination{
 						IPRanges: []api.IPRange{{Start: "1.2.3.4", End: "5.6.7.8"}},
@@ -86,6 +90,38 @@ var _ = Describe("Egress Validator", func() {
 						Protocol: "tcp",
 					},
 				},
+			}
+
+			err := validator.ValidateEgressPolicies(egressPolicies)
+			Expect(err).To(MatchError("app guids not found: [non-existent, non-existent-2]"))
+
+			Expect(uaaClient.GetTokenCallCount()).To(Equal(1))
+
+			passedToken, passedAppGUIDs := ccClient.GetLiveAppGUIDsArgsForCall(0)
+			Expect(passedToken).To(Equal("valid-token"))
+			Expect(passedAppGUIDs).To(ConsistOf("source-app-id", "non-existent", "non-existent-2"))
+
+			Expect(ccClient.GetLiveSpaceGUIDsCallCount()).To(Equal(0))
+		})
+
+		It("returns an error if it can't query live app guids", func() {
+			ccClient.GetLiveAppGUIDsReturns(nil, errors.New("foxtrot"))
+			err := validator.ValidateEgressPolicies(egressPolicies)
+			Expect(err).To(MatchError("failed to get live app guids: foxtrot"))
+		})
+
+		It("requires the source space to exist", func() {
+			egressPolicies = []api.EgressPolicy{
+				{
+					Source: &api.EgressSource{
+						ID:   "source-space-id",
+						Type: "space",
+					},
+					Destination: &api.EgressDestination{
+						IPRanges: []api.IPRange{{Start: "1.2.3.4", End: "5.6.7.8"}},
+						Protocol: "tcp",
+					},
+				},
 				{
 					Source: &api.EgressSource{
 						ID:   "non-existent-space",
@@ -96,22 +132,36 @@ var _ = Describe("Egress Validator", func() {
 						Protocol: "tcp",
 					},
 				},
+				{
+					Source: &api.EgressSource{
+						ID:   "non-existent-space-2",
+						Type: "space",
+					},
+					Destination: &api.EgressDestination{
+						IPRanges: []api.IPRange{{Start: "1.2.3.4", End: "5.6.7.8"}},
+						Protocol: "tcp",
+					},
+				},
 			}
 
 			err := validator.ValidateEgressPolicies(egressPolicies)
-			Expect(err).To(MatchError("app guids not found: [non-existent, non-existent-2]"))
+			Expect(err).To(MatchError("space guids not found: [non-existent-space, non-existent-space-2]"))
 
 			Expect(uaaClient.GetTokenCallCount()).To(Equal(1))
 
-			passedToken, passedAppGUIDs := ccClient.GetLiveAppGUIDsArgsForCall(0)
+			passedToken, passedSpaceGUIDs := ccClient.GetLiveSpaceGUIDsArgsForCall(0)
 			Expect(passedToken).To(Equal("valid-token"))
-			Expect(passedAppGUIDs).To(ConsistOf("source id", "non-existent", "non-existent-2"))
+			Expect(passedSpaceGUIDs).To(ConsistOf("source-space-id", "non-existent-space", "non-existent-space-2"))
+
+			Expect(ccClient.GetLiveAppGUIDsCallCount()).To(Equal(0))
 		})
 
-		It("returns an error if it can't query live app guids", func() {
-			ccClient.GetLiveAppGUIDsReturns(nil, errors.New("foxtrot"))
+		It("returns an error if it can't query live space guids", func() {
+			egressPolicies[0].Source.Type = "space"
+
+			ccClient.GetLiveSpaceGUIDsReturns(nil, errors.New("india"))
 			err := validator.ValidateEgressPolicies(egressPolicies)
-			Expect(err).To(MatchError("failed to get live app guids: foxtrot"))
+			Expect(err).To(MatchError("failed to get live space guids: india"))
 		})
 
 		It("returns an error when it is unable to obtain a token", func() {
@@ -129,6 +179,7 @@ var _ = Describe("Egress Validator", func() {
 
 			for _, validType := range []string{"app", "space", ""} {
 				egressPolicies[0].Source.Type = validType
+				egressPolicies[0].Source.ID = "source-" + validType + "-id"
 				err := validator.ValidateEgressPolicies(egressPolicies)
 				Expect(err).NotTo(HaveOccurred())
 			}

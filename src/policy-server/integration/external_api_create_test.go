@@ -263,7 +263,7 @@ var _ = Describe("External API Adding Policies", func() {
 				{
 					"source": {
 						"type": "space",
-						"id": "some-space-guid"
+						"id": "live-space-1-guid"
 					},
 					"destination": {
 						"ips": [{"start": "10.27.2.1", "end": "10.27.2.2"}],
@@ -282,7 +282,7 @@ var _ = Describe("External API Adding Policies", func() {
 				{
 					"source": {
 						"type": "space",
-						"id": "some-space-guid"
+						"id": "live-space-1-guid"
 					},
 					"destination": {
 						"ips": [{"start": "10.27.2.1", "end": "10.27.2.2"}],

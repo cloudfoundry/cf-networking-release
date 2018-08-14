@@ -20,6 +20,20 @@ type CCClient struct {
 		result1 map[string]struct{}
 		result2 error
 	}
+	GetLiveSpaceGUIDsStub        func(token string, spaceGUIDs []string) (map[string]struct{}, error)
+	getLiveSpaceGUIDsMutex       sync.RWMutex
+	getLiveSpaceGUIDsArgsForCall []struct {
+		token      string
+		spaceGUIDs []string
+	}
+	getLiveSpaceGUIDsReturns struct {
+		result1 map[string]struct{}
+		result2 error
+	}
+	getLiveSpaceGUIDsReturnsOnCall map[int]struct {
+		result1 map[string]struct{}
+		result2 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -81,11 +95,70 @@ func (fake *CCClient) GetLiveAppGUIDsReturnsOnCall(i int, result1 map[string]str
 	}{result1, result2}
 }
 
+func (fake *CCClient) GetLiveSpaceGUIDs(token string, spaceGUIDs []string) (map[string]struct{}, error) {
+	var spaceGUIDsCopy []string
+	if spaceGUIDs != nil {
+		spaceGUIDsCopy = make([]string, len(spaceGUIDs))
+		copy(spaceGUIDsCopy, spaceGUIDs)
+	}
+	fake.getLiveSpaceGUIDsMutex.Lock()
+	ret, specificReturn := fake.getLiveSpaceGUIDsReturnsOnCall[len(fake.getLiveSpaceGUIDsArgsForCall)]
+	fake.getLiveSpaceGUIDsArgsForCall = append(fake.getLiveSpaceGUIDsArgsForCall, struct {
+		token      string
+		spaceGUIDs []string
+	}{token, spaceGUIDsCopy})
+	fake.recordInvocation("GetLiveSpaceGUIDs", []interface{}{token, spaceGUIDsCopy})
+	fake.getLiveSpaceGUIDsMutex.Unlock()
+	if fake.GetLiveSpaceGUIDsStub != nil {
+		return fake.GetLiveSpaceGUIDsStub(token, spaceGUIDs)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.getLiveSpaceGUIDsReturns.result1, fake.getLiveSpaceGUIDsReturns.result2
+}
+
+func (fake *CCClient) GetLiveSpaceGUIDsCallCount() int {
+	fake.getLiveSpaceGUIDsMutex.RLock()
+	defer fake.getLiveSpaceGUIDsMutex.RUnlock()
+	return len(fake.getLiveSpaceGUIDsArgsForCall)
+}
+
+func (fake *CCClient) GetLiveSpaceGUIDsArgsForCall(i int) (string, []string) {
+	fake.getLiveSpaceGUIDsMutex.RLock()
+	defer fake.getLiveSpaceGUIDsMutex.RUnlock()
+	return fake.getLiveSpaceGUIDsArgsForCall[i].token, fake.getLiveSpaceGUIDsArgsForCall[i].spaceGUIDs
+}
+
+func (fake *CCClient) GetLiveSpaceGUIDsReturns(result1 map[string]struct{}, result2 error) {
+	fake.GetLiveSpaceGUIDsStub = nil
+	fake.getLiveSpaceGUIDsReturns = struct {
+		result1 map[string]struct{}
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *CCClient) GetLiveSpaceGUIDsReturnsOnCall(i int, result1 map[string]struct{}, result2 error) {
+	fake.GetLiveSpaceGUIDsStub = nil
+	if fake.getLiveSpaceGUIDsReturnsOnCall == nil {
+		fake.getLiveSpaceGUIDsReturnsOnCall = make(map[int]struct {
+			result1 map[string]struct{}
+			result2 error
+		})
+	}
+	fake.getLiveSpaceGUIDsReturnsOnCall[i] = struct {
+		result1 map[string]struct{}
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *CCClient) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.getLiveAppGUIDsMutex.RLock()
 	defer fake.getLiveAppGUIDsMutex.RUnlock()
+	fake.getLiveSpaceGUIDsMutex.RLock()
+	defer fake.getLiveSpaceGUIDsMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

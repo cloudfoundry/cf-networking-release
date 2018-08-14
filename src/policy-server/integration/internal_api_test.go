@@ -75,7 +75,7 @@ var _ = Describe("Internal API", func() {
 		],
 		"egress_policies": [
 			{ "source": { "id": "live-app-1-guid" }, "destination": { "ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}], "protocol": "tcp" } },
-			{ "source": { "id": "space1", "type": "space" }, "destination": { "ips": [{"start": "10.27.1.3", "end": "10.27.1.3"}], "protocol": "tcp" } }
+			{ "source": { "id": "live-space-1-guid", "type": "space" }, "destination": { "ips": [{"start": "10.27.1.3", "end": "10.27.1.3"}], "protocol": "tcp" } }
 		]}`)
 		_ = helpers.MakeAndDoRequest(
 			"POST",
@@ -94,7 +94,7 @@ var _ = Describe("Internal API", func() {
 	listPoliciesAndTagsSucceeds := func(version, expectedResponse string) {
 		resp := helpers.MakeAndDoHTTPSRequest(
 			"GET",
-			fmt.Sprintf("https://%s:%d/networking/%s/internal/policies?id=app1,app2,space1,live-app-1-guid", internalConf.ListenHost, internalConf.InternalListenPort, version),
+			fmt.Sprintf("https://%s:%d/networking/%s/internal/policies?id=app1,app2,live-space-1-guid,live-app-1-guid", internalConf.ListenHost, internalConf.InternalListenPort, version),
 			nil,
 			tlsConfig,
 		)
@@ -119,7 +119,7 @@ var _ = Describe("Internal API", func() {
 		"total_egress_policies": 2,
 		"egress_policies": [
 			{ "source": { "id": "live-app-1-guid", "type": "app" }, "destination": { "ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}], "protocol": "tcp" } },
-			{ "source": { "id": "space1", "type": "space" }, "destination": { "ips": [{"start": "10.27.1.3", "end": "10.27.1.3"}], "protocol": "tcp" } }
+			{ "source": { "id": "live-space-1-guid", "type": "space" }, "destination": { "ips": [{"start": "10.27.1.3", "end": "10.27.1.3"}], "protocol": "tcp" } }
 		]
 	}`
 

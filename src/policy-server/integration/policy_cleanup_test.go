@@ -28,7 +28,8 @@ var _ = Describe("Policy Cleanup", func() {
 		policyServerConfs []config.Config
 		dbConf            db.Config
 
-		fakeMetron metrics.FakeMetron
+		fakeMetron   metrics.FakeMetron
+		mockCCServer *helpers.ConfigurableMockCCServer
 	)
 
 	BeforeEach(func() {
@@ -37,7 +38,12 @@ var _ = Describe("Policy Cleanup", func() {
 		dbConf = testsupport.GetDBConfig()
 		dbConf.DatabaseName = fmt.Sprintf("policy_cleanup_test_node_%d", ports.PickAPort())
 
-		template, _ := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
+		mockCCServer = helpers.NewConfigurableMockCCServer()
+		mockCCServer.Start()
+		mockCCServer.AddApp("live-app-1-guid")
+		mockCCServer.AddApp("live-app-2-guid")
+
+		template, _ := helpers.DefaultTestConfigWithCCServer(dbConf, fakeMetron.Address(), "fixtures", mockCCServer.URL())
 		template.CleanupInterval = 1
 		template.CCAppRequestChunkSize = 1
 
@@ -54,6 +60,7 @@ var _ = Describe("Policy Cleanup", func() {
 
 		testhelpers.RemoveDatabase(dbConf)
 
+		mockCCServer.Close()
 		Expect(fakeMetron.Close()).To(Succeed())
 	})
 
@@ -72,7 +79,6 @@ var _ = Describe("Policy Cleanup", func() {
 				body,
 			)
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-
 		})
 
 		cleanupPoliciesSucceeds := func(version string) {
@@ -160,6 +166,10 @@ var _ = Describe("Policy Cleanup", func() {
 
 		Context("egress-based space policies", func() {
 			BeforeEach(func() {
+				mockCCServer.AddSpace("live-space-1-guid")
+				mockCCServer.AddSpace("live-space-2-guid")
+				mockCCServer.AddSpace("outdated-space")
+
 				body := strings.NewReader(`{ "egress_policies": [
 					{"source": { "id": "live-space-1-guid", "type": "space" }, "destination": { "ips": [{"start": "1.2.3.4", "end": "1.2.3.5"}], "protocol": "tcp", "ports": [{ "start": 8080, "end": 8080 }] } },
 					{"source": { "id": "live-space-2-guid", "type": "space" }, "destination": { "ips": [{"start": "1.2.3.4", "end": "1.2.3.5"}], "protocol": "tcp", "ports": [{ "start": 9999, "end": 9999 }] } },
@@ -173,6 +183,8 @@ var _ = Describe("Policy Cleanup", func() {
 					body,
 				)
 				Expect(resp.StatusCode).To(Equal(http.StatusOK))
+
+				mockCCServer.DeleteSpace("outdated-space")
 			})
 
 			It("eventually cleans up stale egress-based space policies", func() {

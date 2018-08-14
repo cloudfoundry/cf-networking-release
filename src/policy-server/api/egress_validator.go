@@ -17,6 +17,7 @@ type egressValidator interface {
 //go:generate counterfeiter -o fakes/cc_client.go --fake-name CCClient . ccClient
 type ccClient interface {
 	GetLiveAppGUIDs(token string, appGUIDs []string) (map[string]struct{}, error)
+	GetLiveSpaceGUIDs(token string, spaceGUIDs []string) (map[string]struct{}, error)
 }
 
 //go:generate counterfeiter -o fakes/uua_client.go --fake-name UAAClient . uaaClient
@@ -91,15 +92,32 @@ func (v *EgressValidator) ValidateEgressPolicies(policies []EgressPolicy) error 
 
 	appGUIDSet := sourceAppGUIDs(policies)
 
-	liveAppGUIDs, err := v.CCClient.GetLiveAppGUIDs(token, keys(appGUIDSet))
-	if err != nil {
-		return fmt.Errorf("failed to get live app guids: %s", err)
+	if len(appGUIDSet) > 0 {
+		liveAppGUIDs, err := v.CCClient.GetLiveAppGUIDs(token, keys(appGUIDSet))
+		if err != nil {
+			return fmt.Errorf("failed to get live app guids: %s", err)
+		}
+
+		missingAppGUIDs := relativeComplement(appGUIDSet, liveAppGUIDs)
+
+		if len(missingAppGUIDs) > 0 {
+			return fmt.Errorf("app guids not found: [%s]", strings.Join(missingAppGUIDs, ", "))
+		}
 	}
 
-	missingAppGUIDs := relativeComplement(appGUIDSet, liveAppGUIDs)
+	spaceGUIDSet := sourceSpaceGUIDs(policies)
 
-	if len(missingAppGUIDs) > 0 {
-		return fmt.Errorf("app guids not found: [%s]", strings.Join(missingAppGUIDs, ", "))
+	if len(spaceGUIDSet) > 0 {
+		liveSpaceGUIDs, err := v.CCClient.GetLiveSpaceGUIDs(token, keys(spaceGUIDSet))
+		if err != nil {
+			return fmt.Errorf("failed to get live space guids: %s", err)
+		}
+
+		missingSpaceGUIDs := relativeComplement(spaceGUIDSet, liveSpaceGUIDs)
+
+		if len(missingSpaceGUIDs) > 0 {
+			return fmt.Errorf("space guids not found: [%s]", strings.Join(missingSpaceGUIDs, ", "))
+		}
 	}
 
 	return nil
@@ -113,6 +131,16 @@ func sourceAppGUIDs(policies []EgressPolicy) map[string]struct{} {
 		}
 	}
 	return appGUIDSet
+}
+
+func sourceSpaceGUIDs(policies []EgressPolicy) map[string]struct{} {
+	guidSet := make(map[string]struct{})
+	for _, policy := range policies {
+		if policy.Source.Type == "space" {
+			guidSet[policy.Source.ID] = struct{}{}
+		}
+	}
+	return guidSet
 }
 
 func keys(set map[string]struct{}) []string {
