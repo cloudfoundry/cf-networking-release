@@ -17,7 +17,7 @@ type egressPolicyRepo interface {
 	GetTerminalBySpaceGUID(tx db.Transaction, appGUID string) (int64, error)
 	GetAllPolicies() ([]EgressPolicy, error)
 	GetByGuids(ids []string) ([]EgressPolicy, error)
-	GetIDCollectionsByEgressPolicy(tx db.Transaction, egressPolicy EgressPolicy) ([]EgressPolicyIDCollection, error)
+	GetIDsByEgressPolicy(tx db.Transaction, egressPolicy EgressPolicy) (EgressPolicyIDCollection, error)
 	DeleteEgressPolicy(tx db.Transaction, egressPolicyID int64) error
 	DeleteIPRange(tx db.Transaction, ipRangeID int64) error
 	DeleteTerminal(tx db.Transaction, terminalID int64) error
@@ -34,7 +34,7 @@ type EgressPolicyStore struct {
 func (e *EgressPolicyStore) CreateWithTx(tx db.Transaction, policies []EgressPolicy) error {
 	for _, policy := range policies {
 
-		_, err := e.EgressPolicyRepo.GetIDCollectionsByEgressPolicy(tx, policy)
+		_, err := e.EgressPolicyRepo.GetIDsByEgressPolicy(tx, policy)
 		if err == nil {
 			continue
 		}
@@ -117,51 +117,49 @@ func (e *EgressPolicyStore) CreateWithTx(tx db.Transaction, policies []EgressPol
 
 func (e *EgressPolicyStore) DeleteWithTx(tx db.Transaction, egressPolicies []EgressPolicy) error {
 	for _, policy := range egressPolicies {
-		egressPolicyIDCollections, err := e.EgressPolicyRepo.GetIDCollectionsByEgressPolicy(tx, policy)
+		egressPolicyIDs, err := e.EgressPolicyRepo.GetIDsByEgressPolicy(tx, policy)
 		if err != nil {
 			return fmt.Errorf("failed to find egress policy: %s", err)
 		}
 
-		for _, egressPolicyIDCollection := range egressPolicyIDCollections {
-			err = e.EgressPolicyRepo.DeleteEgressPolicy(tx, egressPolicyIDCollection.EgressPolicyID)
-			if err != nil {
-				return fmt.Errorf("failed to delete egress policy: %s", err)
-			}
+		err = e.EgressPolicyRepo.DeleteEgressPolicy(tx, egressPolicyIDs.EgressPolicyID)
+		if err != nil {
+			return fmt.Errorf("failed to delete egress policy: %s", err)
+		}
 
-			err = e.EgressPolicyRepo.DeleteIPRange(tx, egressPolicyIDCollection.DestinationIPRangeID)
-			if err != nil {
-				return fmt.Errorf("failed to delete destination ip range: %s", err)
-			}
+		err = e.EgressPolicyRepo.DeleteIPRange(tx, egressPolicyIDs.DestinationIPRangeID)
+		if err != nil {
+			return fmt.Errorf("failed to delete destination ip range: %s", err)
+		}
 
-			err = e.EgressPolicyRepo.DeleteTerminal(tx, egressPolicyIDCollection.DestinationTerminalID)
-			if err != nil {
-				return fmt.Errorf("failed to delete destination terminal: %s", err)
-			}
+		err = e.EgressPolicyRepo.DeleteTerminal(tx, egressPolicyIDs.DestinationTerminalID)
+		if err != nil {
+			return fmt.Errorf("failed to delete destination terminal: %s", err)
+		}
 
-			terminalInUse, err := e.EgressPolicyRepo.IsTerminalInUse(tx, egressPolicyIDCollection.SourceTerminalID)
-			if err != nil {
-				return fmt.Errorf("failed to check if source terminal is in use: %s", err)
-			}
+		terminalInUse, err := e.EgressPolicyRepo.IsTerminalInUse(tx, egressPolicyIDs.SourceTerminalID)
+		if err != nil {
+			return fmt.Errorf("failed to check if source terminal is in use: %s", err)
+		}
 
-			if !terminalInUse {
-				if egressPolicyIDCollection.SourceAppID != -1 {
-					err = e.EgressPolicyRepo.DeleteApp(tx, egressPolicyIDCollection.SourceAppID)
-					if err != nil {
-						return fmt.Errorf("failed to delete source app: %s", err)
-					}
-				}
-
-				if egressPolicyIDCollection.SourceSpaceID != -1 {
-					err = e.EgressPolicyRepo.DeleteSpace(tx, egressPolicyIDCollection.SourceSpaceID)
-					if err != nil {
-						return fmt.Errorf("failed to delete source space: %s", err)
-					}
-				}
-
-				err = e.EgressPolicyRepo.DeleteTerminal(tx, egressPolicyIDCollection.SourceTerminalID)
+		if !terminalInUse {
+			if egressPolicyIDs.SourceAppID != -1 {
+				err = e.EgressPolicyRepo.DeleteApp(tx, egressPolicyIDs.SourceAppID)
 				if err != nil {
-					return fmt.Errorf("failed to delete source terminal: %s", err)
+					return fmt.Errorf("failed to delete source app: %s", err)
 				}
+			}
+
+			if egressPolicyIDs.SourceSpaceID != -1 {
+				err = e.EgressPolicyRepo.DeleteSpace(tx, egressPolicyIDs.SourceSpaceID)
+				if err != nil {
+					return fmt.Errorf("failed to delete source space: %s", err)
+				}
+			}
+
+			err = e.EgressPolicyRepo.DeleteTerminal(tx, egressPolicyIDs.SourceTerminalID)
+			if err != nil {
+				return fmt.Errorf("failed to delete source terminal: %s", err)
 			}
 		}
 	}
