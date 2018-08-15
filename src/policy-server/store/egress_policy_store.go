@@ -158,25 +158,6 @@ func (e *EgressPolicyStore) DeleteWithTx(tx db.Transaction, egressPolicies []Egr
 	return nil
 }
 
-func (e *EgressPolicyStore) Delete(egressPolicies []EgressPolicy) error {
-	tx, err := e.Conn.Beginx()
-	if err != nil {
-		panic(err)
-	}
-
-	err = e.DeleteWithTx(tx, egressPolicies)
-	if err != nil {
-		panic(err)
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		panic(err)
-	}
-
-	return nil
-}
-
 func (e *EgressPolicyStore) All() ([]EgressPolicy, error) {
 	return e.EgressPolicyRepo.GetAllPolicies()
 }

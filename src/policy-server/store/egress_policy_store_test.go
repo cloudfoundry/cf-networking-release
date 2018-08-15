@@ -295,69 +295,6 @@ var _ = Describe("EgressPolicyStore", func() {
 		})
 	})
 
-	Describe("Delete", func() {
-		It("deletes the provided policies", func() {
-			egressPolicyRepo.GetIDsByEgressPolicyReturns(store.EgressPolicyIDCollection{
-				SourceAppID:           -1,
-				EgressPolicyID:        1,
-				DestinationIPRangeID:  2,
-				DestinationTerminalID: 3,
-				SourceTerminalID:      4,
-				SourceSpaceID:         5,
-			}, nil)
-			egressPolicyRepo.IsTerminalInUseReturns(false, nil)
-
-			egressPolicies := []store.EgressPolicy{
-				{
-					Source: store.EgressSource{
-						ID:   "some-space",
-						Type: "space",
-					},
-					Destination: store.EgressDestination{
-						IPRanges: []store.IPRange{
-							{Start: "192.168.1.1", End: "192.170.1.1"},
-						},
-						Protocol: "tcp",
-					},
-				},
-			}
-			err := egressPolicyStore.Delete(egressPolicies)
-			Expect(err).NotTo(HaveOccurred())
-
-			passedTx, policies := egressPolicyRepo.GetIDsByEgressPolicyArgsForCall(0)
-			Expect(policies).To(Equal(egressPolicies[0]))
-			Expect(passedTx).To(Equal(tx))
-
-			passedTx, egressPolicyID := egressPolicyRepo.DeleteEgressPolicyArgsForCall(0)
-			Expect(egressPolicyID).To(Equal(int64(1)))
-			Expect(passedTx).To(Equal(tx))
-
-			passedTx, ipRangeID := egressPolicyRepo.DeleteIPRangeArgsForCall(0)
-			Expect(ipRangeID).To(Equal(int64(2)))
-			Expect(passedTx).To(Equal(tx))
-
-			passedTx, destinationTerminalID := egressPolicyRepo.DeleteTerminalArgsForCall(0)
-			Expect(destinationTerminalID).To(Equal(int64(3)))
-			Expect(passedTx).To(Equal(tx))
-
-			passedTx, sourceTerminalID := egressPolicyRepo.IsTerminalInUseArgsForCall(0)
-			Expect(sourceTerminalID).To(Equal(int64(4)))
-			Expect(passedTx).To(Equal(tx))
-
-			Expect(egressPolicyRepo.DeleteAppCallCount()).To(Equal(0))
-
-			passedTx, spaceID := egressPolicyRepo.DeleteSpaceArgsForCall(0)
-			Expect(spaceID).To(Equal(int64(5)))
-			Expect(passedTx).To(Equal(tx))
-
-			passedTx, sourceTerminalID = egressPolicyRepo.DeleteTerminalArgsForCall(1)
-			Expect(sourceTerminalID).To(Equal(int64(4)))
-			Expect(passedTx).To(Equal(tx))
-
-			Expect(tx.CommitCallCount()).To(Equal(1))
-		})
-	})
-
 	Describe("DeleteWithTx", func() {
 		var (
 			egressPoliciesToDelete   []store.EgressPolicy
