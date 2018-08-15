@@ -6,6 +6,7 @@ import (
 	"policy-server/store"
 	"policy-server/store/fakes"
 
+	"database/sql"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -108,6 +109,26 @@ var _ = Describe("EgressPolicyStore", func() {
 	})
 
 	Describe("CreateWithTx", func() {
+		BeforeEach(func() {
+			egressPolicyRepo.GetIDsByEgressPolicyReturns(store.EgressPolicyIDCollection{}, sql.ErrNoRows)
+		})
+
+		Context("when the policy already exists", func() {
+			It("does not create a duplicate policy", func() {
+				egressPolicyRepo.GetIDsByEgressPolicyReturns(store.EgressPolicyIDCollection{}, nil)
+				err := egressPolicyStore.CreateWithTx(tx, egressPolicies)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(egressPolicyRepo.CreateEgressPolicyCallCount()).To(Equal(0))
+			})
+
+			It("returns the error on a valid problem", func() {
+				egressPolicyRepo.GetIDsByEgressPolicyReturns(store.EgressPolicyIDCollection{}, errors.New("something went wrong"))
+				err := egressPolicyStore.CreateWithTx(tx, egressPolicies)
+				Expect(err).To(HaveOccurred())
+				Expect(egressPolicyRepo.CreateEgressPolicyCallCount()).To(Equal(0))
+			})
+		})
+
 		It("creates a source and destination terminal", func() {
 			err := egressPolicyStore.CreateWithTx(tx, egressPolicies)
 			Expect(err).NotTo(HaveOccurred())
