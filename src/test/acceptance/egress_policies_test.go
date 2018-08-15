@@ -94,7 +94,7 @@ var _ = Describe("external connectivity", func() {
 				By("creating egress policy")
 				appAGuid, err := cli.AppGuid(appA)
 				Expect(err).NotTo(HaveOccurred())
-				createEgressPolicy(cli, fmt.Sprintf(testEgresPolicies, appAGuid, "app"))
+				createEgressPolicy(cli, fmt.Sprintf(testEgressPolicies, appAGuid, "app"))
 
 				By("checking that the app can use dns and http to reach the internet")
 				Eventually(canProxy, "10s", "1s").Should(Succeed())
