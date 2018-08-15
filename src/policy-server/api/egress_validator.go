@@ -7,6 +7,8 @@ import (
 	"net"
 	"sort"
 	"strings"
+
+	"code.cloudfoundry.org/cf-networking-helpers/httperror"
 )
 
 //go:generate counterfeiter -o fakes/egress_validator.go --fake-name EgressValidator . egressValidator
@@ -33,54 +35,54 @@ type EgressValidator struct {
 func (v *EgressValidator) ValidateEgressPolicies(policies []EgressPolicy) error {
 	for _, policy := range policies {
 		if policy.Source == nil {
-			return errors.New("missing egress source")
+			return policyMetadataError("missing egress source", policy)
 		}
 		if policy.Source.ID == "" {
-			return errors.New("missing egress source ID")
+			return policyMetadataError("missing egress source ID", policy)
 		}
 		if policy.Source.Type != "" && policy.Source.Type != "app" && policy.Source.Type != "space" {
-			return errors.New("source type must be app or space")
+			return policyMetadataError("source type must be app or space", policy)
 		}
 		if policy.Destination == nil {
-			return errors.New("missing egress destination")
+			return policyMetadataError("missing egress destination", policy)
 		}
 		if policy.Destination.Protocol == "" {
-			return errors.New("missing egress destination protocol")
+			return policyMetadataError("missing egress destination protocol", policy)
 		}
 		if len(policy.Destination.IPRanges) != 1 {
-			return errors.New("expected exactly one iprange")
+			return policyMetadataError("expected exactly one iprange", policy)
 		}
 		if policy.Destination.IPRanges[0].Start == "" {
-			return errors.New("missing egress destination iprange start")
+			return policyMetadataError("missing egress destination iprange start", policy)
 		}
 		startIP := policy.Destination.IPRanges[0].Start
 		parsedStartIP := net.ParseIP(startIP)
 		if parsedStartIP == nil || parsedStartIP.To4() == nil {
-			return fmt.Errorf("invalid ipv4 start ip address for ip range: %v", startIP)
+			return policyMetadataError(fmt.Sprintf("invalid ipv4 start ip address for ip range: %v", startIP), policy)
 		}
 		endIP := policy.Destination.IPRanges[0].End
 		parsedEndIP := net.ParseIP(endIP)
 		if parsedEndIP == nil || parsedEndIP.To4() == nil {
-			return fmt.Errorf("invalid ipv4 end ip address for ip range: %v", endIP)
+			return policyMetadataError(fmt.Sprintf("invalid ipv4 end ip address for ip range: %v", endIP), policy)
 		}
 
 		if bytes.Compare(parsedStartIP, parsedEndIP) > 0 {
-			return fmt.Errorf("start ip address should be before end ip address: start: %v end: %v", startIP, endIP)
+			return policyMetadataError(fmt.Sprintf("start ip address should be before end ip address: start: %v end: %v", startIP, endIP), policy)
 		}
 
 		if policy.Destination.Protocol != "icmp" && policy.Destination.Protocol != "tcp" && policy.Destination.Protocol != "udp" {
-			return fmt.Errorf("protocol must be tcp, udp, or icmp")
+			return policyMetadataError("protocol must be tcp, udp, or icmp", policy)
 		}
 
 		if policy.Destination.Protocol == "icmp" {
 			if policy.Destination.ICMPType == nil {
-				return fmt.Errorf("missing icmp type")
+				return policyMetadataError("missing icmp type", policy)
 			}
 			if policy.Destination.ICMPCode == nil {
-				return fmt.Errorf("missing icmp code")
+				return policyMetadataError("missing icmp code", policy)
 			}
 			if policy.Destination.Ports != nil {
-				return fmt.Errorf("ports can not be defined with icmp")
+				return policyMetadataError("ports can not be defined with icmp", policy)
 			}
 		}
 	}
@@ -121,6 +123,11 @@ func (v *EgressValidator) ValidateEgressPolicies(policies []EgressPolicy) error 
 	}
 
 	return nil
+}
+
+func policyMetadataError(message string, policy EgressPolicy) error {
+	policyAsMap := map[string]interface{}{"bad_egress_policy": policy}
+	return httperror.NewMetadataError(errors.New(message), policyAsMap)
 }
 
 func sourceAppGUIDs(policies []EgressPolicy) map[string]struct{} {

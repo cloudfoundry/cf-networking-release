@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"policy-server/store"
 
+	"code.cloudfoundry.org/cf-networking-helpers/httperror"
 	"code.cloudfoundry.org/cf-networking-helpers/marshal"
 )
 
@@ -30,6 +31,9 @@ func (p *policyMapper) AsStorePolicy(bytes []byte) (store.PolicyCollection, erro
 
 	err = p.PayloadValidator.ValidatePayload(payload)
 	if err != nil {
+		if metadata, ok := err.(httperror.MetadataError); ok {
+			return store.PolicyCollection{}, httperror.NewMetadataError(fmt.Errorf("validate policies: %s", err), metadata.Metadata())
+		}
 		return store.PolicyCollection{}, fmt.Errorf("validate policies: %s", err)
 	}
 

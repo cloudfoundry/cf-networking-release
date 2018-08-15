@@ -5,6 +5,7 @@ import (
 	"policy-server/api"
 	"policy-server/api/fakes"
 
+	"code.cloudfoundry.org/cf-networking-helpers/httperror"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -57,7 +58,7 @@ var _ = Describe("Egress Validator", func() {
 			egressPolicies[0].Source = nil
 
 			err := validator.ValidateEgressPolicies(egressPolicies)
-			Expect(err).To(MatchError("missing egress source"))
+			Expect(err).To(MatchError(ContainSubstring("missing egress source")))
 		})
 
 		It("requires the source app to exist", func() {
@@ -93,7 +94,7 @@ var _ = Describe("Egress Validator", func() {
 			}
 
 			err := validator.ValidateEgressPolicies(egressPolicies)
-			Expect(err).To(MatchError("app guids not found: [non-existent, non-existent-2]"))
+			Expect(err).To(MatchError(ContainSubstring("app guids not found: [non-existent, non-existent-2]")))
 
 			Expect(uaaClient.GetTokenCallCount()).To(Equal(1))
 
@@ -107,7 +108,7 @@ var _ = Describe("Egress Validator", func() {
 		It("returns an error if it can't query live app guids", func() {
 			ccClient.GetLiveAppGUIDsReturns(nil, errors.New("foxtrot"))
 			err := validator.ValidateEgressPolicies(egressPolicies)
-			Expect(err).To(MatchError("failed to get live app guids: foxtrot"))
+			Expect(err).To(MatchError(ContainSubstring("failed to get live app guids: foxtrot")))
 		})
 
 		It("requires the source space to exist", func() {
@@ -145,7 +146,7 @@ var _ = Describe("Egress Validator", func() {
 			}
 
 			err := validator.ValidateEgressPolicies(egressPolicies)
-			Expect(err).To(MatchError("space guids not found: [non-existent-space, non-existent-space-2]"))
+			Expect(err).To(MatchError(ContainSubstring("space guids not found: [non-existent-space, non-existent-space-2]")))
 
 			Expect(uaaClient.GetTokenCallCount()).To(Equal(1))
 
@@ -161,21 +162,21 @@ var _ = Describe("Egress Validator", func() {
 
 			ccClient.GetLiveSpaceGUIDsReturns(nil, errors.New("india"))
 			err := validator.ValidateEgressPolicies(egressPolicies)
-			Expect(err).To(MatchError("failed to get live space guids: india"))
+			Expect(err).To(MatchError(ContainSubstring("failed to get live space guids: india")))
 		})
 
 		It("returns an error when it is unable to obtain a token", func() {
 			uaaClient.GetTokenReturns("", errors.New("kilo"))
 
 			err := validator.ValidateEgressPolicies(egressPolicies)
-			Expect(err).To(MatchError("failed to get uaa token: kilo"))
+			Expect(err).To(MatchError(ContainSubstring("failed to get uaa token: kilo")))
 		})
 
 		It("type must be app, space or empty", func() {
 			egressPolicies[0].Source.Type = "invalid"
 
 			err := validator.ValidateEgressPolicies(egressPolicies)
-			Expect(err).To(MatchError("source type must be app or space"))
+			Expect(err).To(MatchError(ContainSubstring("source type must be app or space")))
 
 			for _, validType := range []string{"app", "space", ""} {
 				egressPolicies[0].Source.Type = validType
@@ -189,28 +190,28 @@ var _ = Describe("Egress Validator", func() {
 			egressPolicies[0].Source.ID = ""
 
 			err := validator.ValidateEgressPolicies(egressPolicies)
-			Expect(err).To(MatchError("missing egress source ID"))
+			Expect(err).To(MatchError(ContainSubstring("missing egress source ID")))
 		})
 
 		It("requires a destination", func() {
 			egressPolicies[0].Destination = nil
 
 			err := validator.ValidateEgressPolicies(egressPolicies)
-			Expect(err).To(MatchError("missing egress destination"))
+			Expect(err).To(MatchError(ContainSubstring("missing egress destination")))
 		})
 
 		It("requires a destination protocol", func() {
 			egressPolicies[0].Destination.Protocol = ""
 
 			err := validator.ValidateEgressPolicies(egressPolicies)
-			Expect(err).To(MatchError("missing egress destination protocol"))
+			Expect(err).To(MatchError(ContainSubstring("missing egress destination protocol")))
 		})
 
 		It("requires protocol to be tcp, udp, or icmp", func() {
 			egressPolicies[0].Destination.Protocol = "invalid"
 
 			err := validator.ValidateEgressPolicies(egressPolicies)
-			Expect(err).To(MatchError("protocol must be tcp, udp, or icmp"))
+			Expect(err).To(MatchError(ContainSubstring("protocol must be tcp, udp, or icmp")))
 		})
 
 		Context("when protocol is icmp", func() {
@@ -220,7 +221,7 @@ var _ = Describe("Egress Validator", func() {
 
 			It("requires icmp type", func() {
 				err := validator.ValidateEgressPolicies(egressPolicies)
-				Expect(err).To(MatchError("missing icmp type"))
+				Expect(err).To(MatchError(ContainSubstring("missing icmp type")))
 			})
 
 			It("requires icmp code", func() {
@@ -228,7 +229,7 @@ var _ = Describe("Egress Validator", func() {
 				egressPolicies[0].Destination.ICMPType = &i
 
 				err := validator.ValidateEgressPolicies(egressPolicies)
-				Expect(err).To(MatchError("missing icmp code"))
+				Expect(err).To(MatchError(ContainSubstring("missing icmp code")))
 			})
 
 			It("does not allow ports to be defined", func() {
@@ -243,7 +244,7 @@ var _ = Describe("Egress Validator", func() {
 				}
 
 				err := validator.ValidateEgressPolicies(egressPolicies)
-				Expect(err).To(MatchError("ports can not be defined with icmp"))
+				Expect(err).To(MatchError(ContainSubstring("ports can not be defined with icmp")))
 			})
 		})
 
@@ -251,7 +252,7 @@ var _ = Describe("Egress Validator", func() {
 			egressPolicies[0].Destination.IPRanges = []api.IPRange{}
 
 			err := validator.ValidateEgressPolicies(egressPolicies)
-			Expect(err).To(MatchError("expected exactly one iprange"))
+			Expect(err).To(MatchError(ContainSubstring("expected exactly one iprange")))
 		})
 
 		It("only allows for one ip range", func() {
@@ -261,31 +262,31 @@ var _ = Describe("Egress Validator", func() {
 			}
 
 			err := validator.ValidateEgressPolicies(egressPolicies)
-			Expect(err).To(MatchError("expected exactly one iprange"))
+			Expect(err).To(MatchError(ContainSubstring("expected exactly one iprange")))
 		})
 
 		It("requires valid start v4 ip addresses", func() {
 			egressPolicies[0].Destination.IPRanges[0].Start = "1"
 
 			err := validator.ValidateEgressPolicies(egressPolicies)
-			Expect(err).To(MatchError("invalid ipv4 start ip address for ip range: 1"))
+			Expect(err).To(MatchError(ContainSubstring("invalid ipv4 start ip address for ip range: 1")))
 
 			egressPolicies[0].Destination.IPRanges[0].Start = "2001:db8:85a3:0:0:8a2e:370:7334"
 
 			err = validator.ValidateEgressPolicies(egressPolicies)
-			Expect(err).To(MatchError("invalid ipv4 start ip address for ip range: 2001:db8:85a3:0:0:8a2e:370:7334"))
+			Expect(err).To(MatchError(ContainSubstring("invalid ipv4 start ip address for ip range: 2001:db8:85a3:0:0:8a2e:370:7334")))
 		})
 
 		It("requires valid end v4 ip addresses", func() {
 			egressPolicies[0].Destination.IPRanges[0].End = "255.255.255.256"
 
 			err := validator.ValidateEgressPolicies(egressPolicies)
-			Expect(err).To(MatchError("invalid ipv4 end ip address for ip range: 255.255.255.256"))
+			Expect(err).To(MatchError(ContainSubstring("invalid ipv4 end ip address for ip range: 255.255.255.256")))
 
 			egressPolicies[0].Destination.IPRanges[0].End = "2001:db8:85a3:0:0:8a2e:370:7334"
 
 			err = validator.ValidateEgressPolicies(egressPolicies)
-			Expect(err).To(MatchError("invalid ipv4 end ip address for ip range: 2001:db8:85a3:0:0:8a2e:370:7334"))
+			Expect(err).To(MatchError(ContainSubstring("invalid ipv4 end ip address for ip range: 2001:db8:85a3:0:0:8a2e:370:7334")))
 		})
 
 		It("requires start ip address to be before end", func() {
@@ -293,7 +294,7 @@ var _ = Describe("Egress Validator", func() {
 			egressPolicies[0].Destination.IPRanges[0].End = "1.2.3.3"
 
 			err := validator.ValidateEgressPolicies(egressPolicies)
-			Expect(err).To(MatchError("start ip address should be before end ip address: start: 1.2.3.4 end: 1.2.3.3"))
+			Expect(err).To(MatchError(ContainSubstring("start ip address should be before end ip address: start: 1.2.3.4 end: 1.2.3.3")))
 		})
 
 		It("fails on first bad record", func() {
@@ -329,7 +330,22 @@ var _ = Describe("Egress Validator", func() {
 			}
 
 			err := validator.ValidateEgressPolicies(egressPolicies)
-			Expect(err).To(MatchError("missing egress destination protocol"))
+			Expect(err).To(MatchError(ContainSubstring("missing egress destination protocol")))
+		})
+
+		It("returns the bad record when validation fails", func() {
+			egressPolicies = []api.EgressPolicy{
+				{
+					Source: &api.EgressSource{
+						ID: "bad-record",
+					},
+					Destination: &api.EgressDestination{},
+				},
+			}
+
+			err := validator.ValidateEgressPolicies(egressPolicies)
+			egressPolicyError := err.(httperror.MetadataError)
+			Expect(egressPolicyError.Metadata()).To(Equal(map[string]interface{}{"bad_egress_policy": egressPolicies[0]}))
 		})
 	})
 })
