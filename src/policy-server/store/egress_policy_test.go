@@ -494,6 +494,53 @@ var _ = Describe("Egress Policy Table", func() {
 			}}))
 		})
 
+		Context("when there are duplicate matching policies", func() {
+			var (
+				destinationTerminalIDDuplicate int64
+				egressPolicyIDDuplicate        int64
+				ipRangeIDDuplicate             int64
+			)
+
+			BeforeEach(func() {
+				var err error
+
+				destinationTerminalIDDuplicate, err = egressPolicyTable.CreateTerminal(tx)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(destinationTerminalIDDuplicate).To(Equal(int64(3)))
+
+				egressPolicyIDDuplicate, err = egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalID, destinationTerminalIDDuplicate)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(egressPolicyIDDuplicate).To(Equal(int64(2)))
+
+				ipRangeIDDuplicate, err = egressPolicyTable.CreateIPRange(tx, destinationTerminalIDDuplicate, "1.1.1.1", "2.2.2.2", "tcp", 8080, 8081, 0, 0)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(ipRangeIDDuplicate).To(Equal(int64(2)))
+			})
+
+			It("returns them all", func() {
+				ids, err := egressPolicyTable.GetIDCollectionsByEgressPolicy(tx, egressPolicy)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(ids).To(Equal([]store.EgressPolicyIDCollection{
+					{
+						EgressPolicyID:        egressPolicyID,
+						DestinationTerminalID: destinationTerminalID,
+						DestinationIPRangeID:  ipRangeID,
+						SourceTerminalID:      sourceTerminalID,
+						SourceAppID:           appID,
+						SourceSpaceID:         -1,
+					},
+					{
+						EgressPolicyID:        egressPolicyIDDuplicate,
+						DestinationTerminalID: destinationTerminalIDDuplicate,
+						DestinationIPRangeID:  ipRangeIDDuplicate,
+						SourceTerminalID:      sourceTerminalID,
+						SourceAppID:           appID,
+						SourceSpaceID:         -1,
+					},
+				}))
+			})
+		})
+
 		Context("when source terminal is attached to a space", func() {
 			var (
 				spaceSourceTerminalID int64
@@ -676,7 +723,7 @@ var _ = Describe("Egress Policy Table", func() {
 		})
 
 		Context("when it can't find a matching egress policy", func() {
-			It("returns an error", func() {
+			It("returns an empty collection", func() {
 				otherEgressPolicy := store.EgressPolicy{
 					Source: store.EgressSource{
 						ID: "some-other-app-guid",
@@ -691,8 +738,9 @@ var _ = Describe("Egress Policy Table", func() {
 						},
 					},
 				}
-				_, err := egressPolicyTable.GetIDCollectionsByEgressPolicy(tx, otherEgressPolicy)
-				Expect(err).To(MatchError("sql: no rows in result set"))
+				results, err := egressPolicyTable.GetIDCollectionsByEgressPolicy(tx, otherEgressPolicy)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(results).To(HaveLen(0))
 			})
 		})
 	})

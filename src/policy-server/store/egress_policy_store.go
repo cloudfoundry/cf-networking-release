@@ -1,7 +1,6 @@
 package store
 
 import (
-	"database/sql"
 	"fmt"
 	"policy-server/db"
 )
@@ -34,12 +33,13 @@ type EgressPolicyStore struct {
 func (e *EgressPolicyStore) CreateWithTx(tx db.Transaction, policies []EgressPolicy) error {
 	for _, policy := range policies {
 
-		_, err := e.EgressPolicyRepo.GetIDCollectionsByEgressPolicy(tx, policy)
-		if err == nil {
-			continue
-		}
-		if err != sql.ErrNoRows {
+		ids, err := e.EgressPolicyRepo.GetIDCollectionsByEgressPolicy(tx, policy)
+		if err != nil {
 			return err
+		}
+
+		if len(ids) > 0 {
+			continue
 		}
 
 		var sourceTerminalID int64

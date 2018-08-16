@@ -6,7 +6,6 @@ import (
 	"policy-server/store"
 	"policy-server/store/fakes"
 
-	"database/sql"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -110,12 +109,21 @@ var _ = Describe("EgressPolicyStore", func() {
 
 	Describe("CreateWithTx", func() {
 		BeforeEach(func() {
-			egressPolicyRepo.GetIDCollectionsByEgressPolicyReturns([]store.EgressPolicyIDCollection{}, sql.ErrNoRows)
+			egressPolicyRepo.GetIDCollectionsByEgressPolicyReturns([]store.EgressPolicyIDCollection{}, nil)
 		})
 
 		Context("when the policy already exists", func() {
 			It("does not create a duplicate policy", func() {
-				egressPolicyRepo.GetIDCollectionsByEgressPolicyReturns([]store.EgressPolicyIDCollection{}, nil)
+				egressPolicyRepo.GetIDCollectionsByEgressPolicyReturns([]store.EgressPolicyIDCollection{
+					{
+						EgressPolicyID:        -1,
+						DestinationTerminalID: -1,
+						DestinationIPRangeID:  -1,
+						SourceTerminalID:      -1,
+						SourceAppID:           -1,
+						SourceSpaceID:         -1,
+					},
+				}, nil)
 				err := egressPolicyStore.CreateWithTx(tx, egressPolicies)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(egressPolicyRepo.CreateEgressPolicyCallCount()).To(Equal(0))
@@ -318,13 +326,21 @@ var _ = Describe("EgressPolicyStore", func() {
 
 	Describe("DeleteWithTx", func() {
 		var (
-			egressPoliciesToDelete   []store.EgressPolicy
-			egressPolicyIDCollection store.EgressPolicyIDCollection
-			egressPolicyID           int64
-			ipRangeID                int64
-			destTerminalID           int64
-			appID                    int64
-			srcTerminalID            int64
+			egressPoliciesToDelete    []store.EgressPolicy
+			egressPolicyIDCollection  store.EgressPolicyIDCollection
+			egressPolicyIDCollection2 store.EgressPolicyIDCollection
+
+			egressPolicyID            int64
+			ipRangeID                 int64
+			destTerminalID            int64
+			appID                     int64
+			srcTerminalID             int64
+
+			egressPolicyID2           int64
+			ipRangeID2                int64
+			destTerminalID2           int64
+			appID2                    int64
+			srcTerminalID2            int64
 		)
 		BeforeEach(func() {
 			egressPoliciesToDelete = []store.EgressPolicy{
@@ -356,6 +372,12 @@ var _ = Describe("EgressPolicyStore", func() {
 			appID = 21
 			srcTerminalID = 22
 
+			egressPolicyID2 = 7
+			ipRangeID2 = 10
+			destTerminalID2 = 13
+			appID2 = 23
+			srcTerminalID2 = 24
+
 			egressPolicyIDCollection = store.EgressPolicyIDCollection{
 				EgressPolicyID:        egressPolicyID,
 				DestinationIPRangeID:  ipRangeID,
@@ -364,7 +386,20 @@ var _ = Describe("EgressPolicyStore", func() {
 				SourceSpaceID:         -1,
 				SourceTerminalID:      srcTerminalID,
 			}
-			egressPolicyIDCollections := []store.EgressPolicyIDCollection{egressPolicyIDCollection}
+
+			egressPolicyIDCollection2 = store.EgressPolicyIDCollection{
+				EgressPolicyID:        egressPolicyID2,
+				DestinationIPRangeID:  ipRangeID2,
+				DestinationTerminalID: destTerminalID2,
+				SourceAppID:           appID2,
+				SourceSpaceID:         -1,
+				SourceTerminalID:      srcTerminalID2,
+			}
+
+			egressPolicyIDCollections := []store.EgressPolicyIDCollection{
+				egressPolicyIDCollection,
+				egressPolicyIDCollection2,
+			}
 			egressPolicyRepo.GetIDCollectionsByEgressPolicyReturns(egressPolicyIDCollections, nil)
 		})
 
@@ -377,29 +412,47 @@ var _ = Describe("EgressPolicyStore", func() {
 			Expect(passedTx).To(Equal(tx))
 			Expect(passedEgressPolicy).To(Equal(egressPoliciesToDelete[0]))
 
-			Expect(egressPolicyRepo.DeleteEgressPolicyCallCount()).To(Equal(1))
+			Expect(egressPolicyRepo.DeleteEgressPolicyCallCount()).To(Equal(2))
 			passedTx, passedEgressPolicyID := egressPolicyRepo.DeleteEgressPolicyArgsForCall(0)
 			Expect(passedTx).To(Equal(tx))
 			Expect(passedEgressPolicyID).To(Equal(egressPolicyID))
+			passedTx, passedEgressPolicyID = egressPolicyRepo.DeleteEgressPolicyArgsForCall(1)
+			Expect(passedTx).To(Equal(tx))
+			Expect(passedEgressPolicyID).To(Equal(egressPolicyID2))
 
-			Expect(egressPolicyRepo.DeleteIPRangeCallCount()).To(Equal(1))
+			Expect(egressPolicyRepo.DeleteIPRangeCallCount()).To(Equal(2))
 			passedTx, passedIPRangeID := egressPolicyRepo.DeleteIPRangeArgsForCall(0)
 			Expect(passedTx).To(Equal(tx))
 			Expect(passedIPRangeID).To(Equal(ipRangeID))
+			passedTx, passedIPRangeID = egressPolicyRepo.DeleteIPRangeArgsForCall(1)
+			Expect(passedTx).To(Equal(tx))
+			Expect(passedIPRangeID).To(Equal(ipRangeID2))
 
-			Expect(egressPolicyRepo.DeleteTerminalCallCount()).To(Equal(2))
+			Expect(egressPolicyRepo.DeleteTerminalCallCount()).To(Equal(4))
 			passedTx, passedDestTerminalID := egressPolicyRepo.DeleteTerminalArgsForCall(0)
 			Expect(passedTx).To(Equal(tx))
 			Expect(passedDestTerminalID).To(Equal(destTerminalID))
 
-			Expect(egressPolicyRepo.DeleteAppCallCount()).To(Equal(1))
+			passedTx, passedSrcTerminalID := egressPolicyRepo.DeleteTerminalArgsForCall(1)
+			Expect(passedTx).To(Equal(tx))
+			Expect(passedSrcTerminalID).To(Equal(srcTerminalID))
+
+			passedTx, passedDestTerminalID = egressPolicyRepo.DeleteTerminalArgsForCall(2)
+			Expect(passedTx).To(Equal(tx))
+			Expect(passedDestTerminalID).To(Equal(destTerminalID2))
+
+			passedTx, passedSrcTerminalID = egressPolicyRepo.DeleteTerminalArgsForCall(3)
+			Expect(passedTx).To(Equal(tx))
+			Expect(passedSrcTerminalID).To(Equal(srcTerminalID2))
+
+			Expect(egressPolicyRepo.DeleteAppCallCount()).To(Equal(2))
 			passedTx, passedAppID := egressPolicyRepo.DeleteAppArgsForCall(0)
 			Expect(passedTx).To(Equal(tx))
 			Expect(passedAppID).To(Equal(appID))
 
-			passedTx, passedSrcTerminalID := egressPolicyRepo.DeleteTerminalArgsForCall(1)
+			passedTx, passedAppID = egressPolicyRepo.DeleteAppArgsForCall(1)
 			Expect(passedTx).To(Equal(tx))
-			Expect(passedSrcTerminalID).To(Equal(srcTerminalID))
+			Expect(passedAppID).To(Equal(appID2))
 
 			Expect(egressPolicyRepo.DeleteSpaceCallCount()).To(Equal(0))
 		})
@@ -477,10 +530,10 @@ var _ = Describe("EgressPolicyStore", func() {
 				Expect(passedTx).To(Equal(tx))
 				Expect(passedEgressPolicy).To(Equal(egressPoliciesToDelete[1]))
 
-				Expect(egressPolicyRepo.DeleteEgressPolicyCallCount()).To(Equal(2))
-				Expect(egressPolicyRepo.DeleteIPRangeCallCount()).To(Equal(2))
-				Expect(egressPolicyRepo.DeleteTerminalCallCount()).To(Equal(4))
-				Expect(egressPolicyRepo.DeleteAppCallCount()).To(Equal(2))
+				Expect(egressPolicyRepo.DeleteEgressPolicyCallCount()).To(Equal(4))
+				Expect(egressPolicyRepo.DeleteIPRangeCallCount()).To(Equal(4))
+				Expect(egressPolicyRepo.DeleteTerminalCallCount()).To(Equal(8))
+				Expect(egressPolicyRepo.DeleteAppCallCount()).To(Equal(4))
 			})
 		})
 
@@ -493,17 +546,7 @@ var _ = Describe("EgressPolicyStore", func() {
 				err := egressPolicyStore.DeleteWithTx(tx, egressPoliciesToDelete)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(egressPolicyRepo.IsTerminalInUseCallCount()).To(Equal(1))
-				passedTx, passedTerminalID := egressPolicyRepo.IsTerminalInUseArgsForCall(0)
-				Expect(passedTx).To(Equal(tx))
-				Expect(passedTerminalID).To(Equal(srcTerminalID))
-
 				Expect(egressPolicyRepo.DeleteAppCallCount()).To(Equal(0))
-
-				Expect(egressPolicyRepo.DeleteTerminalCallCount()).To(Equal(1))
-				passedTx, passedDestTerminalID := egressPolicyRepo.DeleteTerminalArgsForCall(0)
-				Expect(passedTx).To(Equal(tx))
-				Expect(passedDestTerminalID).To(Equal(destTerminalID))
 			})
 		})
 

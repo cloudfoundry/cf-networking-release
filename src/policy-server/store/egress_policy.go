@@ -250,7 +250,7 @@ func (e *EgressPolicyTable) GetIDCollectionsByEgressPolicy(tx db.Transaction, eg
 		sourceGUIDColumn = "app_guid"
 	}
 
-	err := tx.QueryRow(tx.Rebind(fmt.Sprintf(`
+	rows, err := tx.Queryx(tx.Rebind(fmt.Sprintf(`
 		SELECT
 			egress_policies.id,
 			egress_policies.source_id,
@@ -277,30 +277,39 @@ func (e *EgressPolicyTable) GetIDCollectionsByEgressPolicy(tx db.Transaction, eg
 		endPort,
 		egressPolicy.Destination.ICMPType,
 		egressPolicy.Destination.ICMPCode,
-	).Scan(&egressPolicyID, &sourceTerminalID, &destinationTerminalID, &sourceID, &ipRangeID)
+	)
+
 	if err != nil {
 		return []EgressPolicyIDCollection{}, err
 	}
 
-	switch egressPolicy.Source.Type {
-	case "space":
-		appID = -1
-		spaceID = sourceID
-	default:
-		spaceID = -1
-		appID = sourceID
+	defer rows.Close()
+
+	var policyIDCollections []EgressPolicyIDCollection
+
+	for rows.Next() {
+		rows.Scan(&egressPolicyID, &sourceTerminalID, &destinationTerminalID, &sourceID, &ipRangeID)
+
+		switch egressPolicy.Source.Type {
+		case "space":
+			appID = -1
+			spaceID = sourceID
+		default:
+			spaceID = -1
+			appID = sourceID
+		}
+
+		policyIDCollections = append(policyIDCollections, EgressPolicyIDCollection{
+			EgressPolicyID:        egressPolicyID,
+			DestinationTerminalID: destinationTerminalID,
+			DestinationIPRangeID:  ipRangeID,
+			SourceTerminalID:      sourceTerminalID,
+			SourceAppID:           appID,
+			SourceSpaceID:         spaceID,
+		})
 	}
 
-	policyIDs := EgressPolicyIDCollection{
-		EgressPolicyID:        egressPolicyID,
-		DestinationTerminalID: destinationTerminalID,
-		DestinationIPRangeID:  ipRangeID,
-		SourceTerminalID:      sourceTerminalID,
-		SourceAppID:           appID,
-		SourceSpaceID:         spaceID,
-	}
-
-	return []EgressPolicyIDCollection{policyIDs}, nil
+	return policyIDCollections, nil
 }
 
 func (e *EgressPolicyTable) GetTerminalByAppGUID(tx db.Transaction, appGUID string) (int64, error) {
