@@ -231,7 +231,7 @@ func (e *EgressPolicyTable) IsTerminalInUse(tx db.Transaction, terminalID int64)
 	return count > 0, nil
 }
 
-func (e *EgressPolicyTable) GetIDsByEgressPolicy(tx db.Transaction, egressPolicy EgressPolicy) (EgressPolicyIDCollection, error) {
+func (e *EgressPolicyTable) GetIDCollectionsByEgressPolicy(tx db.Transaction, egressPolicy EgressPolicy) ([]EgressPolicyIDCollection, error) {
 	var egressPolicyID, sourceTerminalID, destinationTerminalID, sourceID, appID, spaceID, ipRangeID int64
 
 	var startPort, endPort int64
@@ -279,7 +279,7 @@ func (e *EgressPolicyTable) GetIDsByEgressPolicy(tx db.Transaction, egressPolicy
 		egressPolicy.Destination.ICMPCode,
 	).Scan(&egressPolicyID, &sourceTerminalID, &destinationTerminalID, &sourceID, &ipRangeID)
 	if err != nil {
-		return EgressPolicyIDCollection{}, err
+		return []EgressPolicyIDCollection{}, err
 	}
 
 	switch egressPolicy.Source.Type {
@@ -300,7 +300,7 @@ func (e *EgressPolicyTable) GetIDsByEgressPolicy(tx db.Transaction, egressPolicy
 		SourceSpaceID:         spaceID,
 	}
 
-	return policyIDs, nil
+	return []EgressPolicyIDCollection{policyIDs}, nil
 }
 
 func (e *EgressPolicyTable) GetTerminalByAppGUID(tx db.Transaction, appGUID string) (int64, error) {

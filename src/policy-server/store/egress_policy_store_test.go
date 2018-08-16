@@ -110,19 +110,19 @@ var _ = Describe("EgressPolicyStore", func() {
 
 	Describe("CreateWithTx", func() {
 		BeforeEach(func() {
-			egressPolicyRepo.GetIDsByEgressPolicyReturns(store.EgressPolicyIDCollection{}, sql.ErrNoRows)
+			egressPolicyRepo.GetIDCollectionsByEgressPolicyReturns([]store.EgressPolicyIDCollection{}, sql.ErrNoRows)
 		})
 
 		Context("when the policy already exists", func() {
 			It("does not create a duplicate policy", func() {
-				egressPolicyRepo.GetIDsByEgressPolicyReturns(store.EgressPolicyIDCollection{}, nil)
+				egressPolicyRepo.GetIDCollectionsByEgressPolicyReturns([]store.EgressPolicyIDCollection{}, nil)
 				err := egressPolicyStore.CreateWithTx(tx, egressPolicies)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(egressPolicyRepo.CreateEgressPolicyCallCount()).To(Equal(0))
 			})
 
 			It("returns the error on a valid problem", func() {
-				egressPolicyRepo.GetIDsByEgressPolicyReturns(store.EgressPolicyIDCollection{}, errors.New("something went wrong"))
+				egressPolicyRepo.GetIDCollectionsByEgressPolicyReturns([]store.EgressPolicyIDCollection{}, errors.New("something went wrong"))
 				err := egressPolicyStore.CreateWithTx(tx, egressPolicies)
 				Expect(err).To(HaveOccurred())
 				Expect(egressPolicyRepo.CreateEgressPolicyCallCount()).To(Equal(0))
@@ -364,15 +364,16 @@ var _ = Describe("EgressPolicyStore", func() {
 				SourceSpaceID:         -1,
 				SourceTerminalID:      srcTerminalID,
 			}
-			egressPolicyRepo.GetIDsByEgressPolicyReturns(egressPolicyIDCollection, nil)
+			egressPolicyIDCollections := []store.EgressPolicyIDCollection{egressPolicyIDCollection}
+			egressPolicyRepo.GetIDCollectionsByEgressPolicyReturns(egressPolicyIDCollections, nil)
 		})
 
 		It("deletes the egress policy", func() {
 			err := egressPolicyStore.DeleteWithTx(tx, egressPoliciesToDelete)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(egressPolicyRepo.GetIDsByEgressPolicyCallCount()).To(Equal(1))
-			passedTx, passedEgressPolicy := egressPolicyRepo.GetIDsByEgressPolicyArgsForCall(0)
+			Expect(egressPolicyRepo.GetIDCollectionsByEgressPolicyCallCount()).To(Equal(1))
+			passedTx, passedEgressPolicy := egressPolicyRepo.GetIDCollectionsByEgressPolicyArgsForCall(0)
 			Expect(passedTx).To(Equal(tx))
 			Expect(passedEgressPolicy).To(Equal(egressPoliciesToDelete[0]))
 
@@ -412,7 +413,8 @@ var _ = Describe("EgressPolicyStore", func() {
 				spaceID = 23
 				egressPolicyIDCollection.SourceAppID = -1
 				egressPolicyIDCollection.SourceSpaceID = spaceID
-				egressPolicyRepo.GetIDsByEgressPolicyReturns(egressPolicyIDCollection, nil)
+				egressPolicyIDCollections := []store.EgressPolicyIDCollection{egressPolicyIDCollection}
+				egressPolicyRepo.GetIDCollectionsByEgressPolicyReturns(egressPolicyIDCollections, nil)
 			})
 
 			It("deletes the space", func() {
@@ -466,12 +468,12 @@ var _ = Describe("EgressPolicyStore", func() {
 				err := egressPolicyStore.DeleteWithTx(tx, egressPoliciesToDelete)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(egressPolicyRepo.GetIDsByEgressPolicyCallCount()).To(Equal(2))
-				passedTx, passedEgressPolicy := egressPolicyRepo.GetIDsByEgressPolicyArgsForCall(0)
+				Expect(egressPolicyRepo.GetIDCollectionsByEgressPolicyCallCount()).To(Equal(2))
+				passedTx, passedEgressPolicy := egressPolicyRepo.GetIDCollectionsByEgressPolicyArgsForCall(0)
 				Expect(passedTx).To(Equal(tx))
 				Expect(passedEgressPolicy).To(Equal(egressPoliciesToDelete[0]))
 
-				passedTx, passedEgressPolicy = egressPolicyRepo.GetIDsByEgressPolicyArgsForCall(1)
+				passedTx, passedEgressPolicy = egressPolicyRepo.GetIDCollectionsByEgressPolicyArgsForCall(1)
 				Expect(passedTx).To(Equal(tx))
 				Expect(passedEgressPolicy).To(Equal(egressPoliciesToDelete[1]))
 
@@ -505,9 +507,9 @@ var _ = Describe("EgressPolicyStore", func() {
 			})
 		})
 
-		Context("when the EgressPolicyRepo.GetIDsByEgressPolicy fails", func() {
+		Context("when the EgressPolicyRepo.GetIDCollectionsByEgressPolicy fails", func() {
 			BeforeEach(func() {
-				egressPolicyRepo.GetIDsByEgressPolicyReturns(store.EgressPolicyIDCollection{}, errors.New("ther's a bug"))
+				egressPolicyRepo.GetIDCollectionsByEgressPolicyReturns([]store.EgressPolicyIDCollection{}, errors.New("ther's a bug"))
 			})
 
 			It("returns an error", func() {

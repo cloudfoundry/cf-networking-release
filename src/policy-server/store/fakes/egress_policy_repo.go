@@ -139,18 +139,18 @@ type EgressPolicyRepo struct {
 		result1 []store.EgressPolicy
 		result2 error
 	}
-	GetIDsByEgressPolicyStub        func(tx db.Transaction, egressPolicy store.EgressPolicy) (store.EgressPolicyIDCollection, error)
-	getIDsByEgressPolicyMutex       sync.RWMutex
-	getIDsByEgressPolicyArgsForCall []struct {
+	GetIDCollectionsByEgressPolicyStub        func(tx db.Transaction, egressPolicy store.EgressPolicy) ([]store.EgressPolicyIDCollection, error)
+	getIDCollectionsByEgressPolicyMutex       sync.RWMutex
+	getIDCollectionsByEgressPolicyArgsForCall []struct {
 		tx           db.Transaction
 		egressPolicy store.EgressPolicy
 	}
-	getIDsByEgressPolicyReturns struct {
-		result1 store.EgressPolicyIDCollection
+	getIDCollectionsByEgressPolicyReturns struct {
+		result1 []store.EgressPolicyIDCollection
 		result2 error
 	}
-	getIDsByEgressPolicyReturnsOnCall map[int]struct {
-		result1 store.EgressPolicyIDCollection
+	getIDCollectionsByEgressPolicyReturnsOnCall map[int]struct {
+		result1 []store.EgressPolicyIDCollection
 		result2 error
 	}
 	DeleteEgressPolicyStub        func(tx db.Transaction, egressPolicyID int64) error
@@ -703,54 +703,54 @@ func (fake *EgressPolicyRepo) GetByGuidsReturnsOnCall(i int, result1 []store.Egr
 	}{result1, result2}
 }
 
-func (fake *EgressPolicyRepo) GetIDsByEgressPolicy(tx db.Transaction, egressPolicy store.EgressPolicy) (store.EgressPolicyIDCollection, error) {
-	fake.getIDsByEgressPolicyMutex.Lock()
-	ret, specificReturn := fake.getIDsByEgressPolicyReturnsOnCall[len(fake.getIDsByEgressPolicyArgsForCall)]
-	fake.getIDsByEgressPolicyArgsForCall = append(fake.getIDsByEgressPolicyArgsForCall, struct {
+func (fake *EgressPolicyRepo) GetIDCollectionsByEgressPolicy(tx db.Transaction, egressPolicy store.EgressPolicy) ([]store.EgressPolicyIDCollection, error) {
+	fake.getIDCollectionsByEgressPolicyMutex.Lock()
+	ret, specificReturn := fake.getIDCollectionsByEgressPolicyReturnsOnCall[len(fake.getIDCollectionsByEgressPolicyArgsForCall)]
+	fake.getIDCollectionsByEgressPolicyArgsForCall = append(fake.getIDCollectionsByEgressPolicyArgsForCall, struct {
 		tx           db.Transaction
 		egressPolicy store.EgressPolicy
 	}{tx, egressPolicy})
-	fake.recordInvocation("GetIDsByEgressPolicy", []interface{}{tx, egressPolicy})
-	fake.getIDsByEgressPolicyMutex.Unlock()
-	if fake.GetIDsByEgressPolicyStub != nil {
-		return fake.GetIDsByEgressPolicyStub(tx, egressPolicy)
+	fake.recordInvocation("GetIDCollectionsByEgressPolicy", []interface{}{tx, egressPolicy})
+	fake.getIDCollectionsByEgressPolicyMutex.Unlock()
+	if fake.GetIDCollectionsByEgressPolicyStub != nil {
+		return fake.GetIDCollectionsByEgressPolicyStub(tx, egressPolicy)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.getIDsByEgressPolicyReturns.result1, fake.getIDsByEgressPolicyReturns.result2
+	return fake.getIDCollectionsByEgressPolicyReturns.result1, fake.getIDCollectionsByEgressPolicyReturns.result2
 }
 
-func (fake *EgressPolicyRepo) GetIDsByEgressPolicyCallCount() int {
-	fake.getIDsByEgressPolicyMutex.RLock()
-	defer fake.getIDsByEgressPolicyMutex.RUnlock()
-	return len(fake.getIDsByEgressPolicyArgsForCall)
+func (fake *EgressPolicyRepo) GetIDCollectionsByEgressPolicyCallCount() int {
+	fake.getIDCollectionsByEgressPolicyMutex.RLock()
+	defer fake.getIDCollectionsByEgressPolicyMutex.RUnlock()
+	return len(fake.getIDCollectionsByEgressPolicyArgsForCall)
 }
 
-func (fake *EgressPolicyRepo) GetIDsByEgressPolicyArgsForCall(i int) (db.Transaction, store.EgressPolicy) {
-	fake.getIDsByEgressPolicyMutex.RLock()
-	defer fake.getIDsByEgressPolicyMutex.RUnlock()
-	return fake.getIDsByEgressPolicyArgsForCall[i].tx, fake.getIDsByEgressPolicyArgsForCall[i].egressPolicy
+func (fake *EgressPolicyRepo) GetIDCollectionsByEgressPolicyArgsForCall(i int) (db.Transaction, store.EgressPolicy) {
+	fake.getIDCollectionsByEgressPolicyMutex.RLock()
+	defer fake.getIDCollectionsByEgressPolicyMutex.RUnlock()
+	return fake.getIDCollectionsByEgressPolicyArgsForCall[i].tx, fake.getIDCollectionsByEgressPolicyArgsForCall[i].egressPolicy
 }
 
-func (fake *EgressPolicyRepo) GetIDsByEgressPolicyReturns(result1 store.EgressPolicyIDCollection, result2 error) {
-	fake.GetIDsByEgressPolicyStub = nil
-	fake.getIDsByEgressPolicyReturns = struct {
-		result1 store.EgressPolicyIDCollection
+func (fake *EgressPolicyRepo) GetIDCollectionsByEgressPolicyReturns(result1 []store.EgressPolicyIDCollection, result2 error) {
+	fake.GetIDCollectionsByEgressPolicyStub = nil
+	fake.getIDCollectionsByEgressPolicyReturns = struct {
+		result1 []store.EgressPolicyIDCollection
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *EgressPolicyRepo) GetIDsByEgressPolicyReturnsOnCall(i int, result1 store.EgressPolicyIDCollection, result2 error) {
-	fake.GetIDsByEgressPolicyStub = nil
-	if fake.getIDsByEgressPolicyReturnsOnCall == nil {
-		fake.getIDsByEgressPolicyReturnsOnCall = make(map[int]struct {
-			result1 store.EgressPolicyIDCollection
+func (fake *EgressPolicyRepo) GetIDCollectionsByEgressPolicyReturnsOnCall(i int, result1 []store.EgressPolicyIDCollection, result2 error) {
+	fake.GetIDCollectionsByEgressPolicyStub = nil
+	if fake.getIDCollectionsByEgressPolicyReturnsOnCall == nil {
+		fake.getIDCollectionsByEgressPolicyReturnsOnCall = make(map[int]struct {
+			result1 []store.EgressPolicyIDCollection
 			result2 error
 		})
 	}
-	fake.getIDsByEgressPolicyReturnsOnCall[i] = struct {
-		result1 store.EgressPolicyIDCollection
+	fake.getIDCollectionsByEgressPolicyReturnsOnCall[i] = struct {
+		result1 []store.EgressPolicyIDCollection
 		result2 error
 	}{result1, result2}
 }
@@ -1073,8 +1073,8 @@ func (fake *EgressPolicyRepo) Invocations() map[string][][]interface{} {
 	defer fake.getAllPoliciesMutex.RUnlock()
 	fake.getByGuidsMutex.RLock()
 	defer fake.getByGuidsMutex.RUnlock()
-	fake.getIDsByEgressPolicyMutex.RLock()
-	defer fake.getIDsByEgressPolicyMutex.RUnlock()
+	fake.getIDCollectionsByEgressPolicyMutex.RLock()
+	defer fake.getIDCollectionsByEgressPolicyMutex.RUnlock()
 	fake.deleteEgressPolicyMutex.RLock()
 	defer fake.deleteEgressPolicyMutex.RUnlock()
 	fake.deleteIPRangeMutex.RLock()

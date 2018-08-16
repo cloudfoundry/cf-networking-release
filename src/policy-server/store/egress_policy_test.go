@@ -427,7 +427,7 @@ var _ = Describe("Egress Policy Table", func() {
 		})
 	})
 
-	Context("GetIDsByEgressPolicy", func() {
+	Context("GetIDCollectionsByEgressPolicy", func() {
 		var (
 			egressPolicy          store.EgressPolicy
 			sourceTerminalID      int64
@@ -482,16 +482,16 @@ var _ = Describe("Egress Policy Table", func() {
 		})
 
 		It("should return all the ids for an egress policy", func() {
-			ids, err := egressPolicyTable.GetIDsByEgressPolicy(tx, egressPolicy)
+			ids, err := egressPolicyTable.GetIDCollectionsByEgressPolicy(tx, egressPolicy)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(ids).To(Equal(store.EgressPolicyIDCollection{
+			Expect(ids).To(Equal([]store.EgressPolicyIDCollection{{
 				EgressPolicyID:        egressPolicyID,
 				DestinationTerminalID: destinationTerminalID,
 				DestinationIPRangeID:  ipRangeID,
 				SourceTerminalID:      sourceTerminalID,
 				SourceAppID:           appID,
 				SourceSpaceID:         -1,
-			}))
+			}}))
 		})
 
 		Context("when source terminal is attached to a space", func() {
@@ -540,16 +540,16 @@ var _ = Describe("Egress Policy Table", func() {
 			})
 
 			It("returns all the space id and sets app id to -1", func() {
-				ids, err := egressPolicyTable.GetIDsByEgressPolicy(tx, spaceEgressPolicy)
+				ids, err := egressPolicyTable.GetIDCollectionsByEgressPolicy(tx, spaceEgressPolicy)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(ids).To(Equal(store.EgressPolicyIDCollection{
+				Expect(ids).To(Equal([]store.EgressPolicyIDCollection{{
 					EgressPolicyID:        spaceEgressPolicyID,
 					DestinationTerminalID: destinationTerminalID,
 					DestinationIPRangeID:  ipRangeID,
 					SourceTerminalID:      spaceSourceTerminalID,
 					SourceSpaceID:         spaceID,
 					SourceAppID:           -1,
-				}))
+				}}))
 			})
 		})
 
@@ -593,16 +593,16 @@ var _ = Describe("Egress Policy Table", func() {
 			})
 
 			It("should returns the ids for the egress policy with port values of 0", func() {
-				ids, err := egressPolicyTable.GetIDsByEgressPolicy(tx, egressPolicy)
+				ids, err := egressPolicyTable.GetIDCollectionsByEgressPolicy(tx, egressPolicy)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(ids).To(Equal(store.EgressPolicyIDCollection{
+				Expect(ids).To(Equal([]store.EgressPolicyIDCollection{{
 					EgressPolicyID:        egressPolicyID,
 					DestinationTerminalID: destinationTerminalID,
 					DestinationIPRangeID:  ipRangeID,
 					SourceTerminalID:      sourceTerminalID,
 					SourceAppID:           appID,
 					SourceSpaceID:         -1,
-				}))
+				}}))
 			})
 		})
 
@@ -662,16 +662,16 @@ var _ = Describe("Egress Policy Table", func() {
 			})
 
 			It("should returns the ids for the egress policy that matches the icmp policy", func() {
-				ids, err := egressPolicyTable.GetIDsByEgressPolicy(tx, egressPolicy)
+				ids, err := egressPolicyTable.GetIDCollectionsByEgressPolicy(tx, egressPolicy)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(ids).To(Equal(store.EgressPolicyIDCollection{
+				Expect(ids).To(Equal([]store.EgressPolicyIDCollection{{
 					EgressPolicyID:        egressPolicyID,
 					DestinationTerminalID: destinationTerminalID,
 					DestinationIPRangeID:  ipRangeID,
 					SourceTerminalID:      sourceTerminalID,
 					SourceAppID:           appID,
 					SourceSpaceID:         -1,
-				}))
+				}}))
 			})
 		})
 
@@ -691,7 +691,7 @@ var _ = Describe("Egress Policy Table", func() {
 						},
 					},
 				}
-				_, err := egressPolicyTable.GetIDsByEgressPolicy(tx, otherEgressPolicy)
+				_, err := egressPolicyTable.GetIDCollectionsByEgressPolicy(tx, otherEgressPolicy)
 				Expect(err).To(MatchError("sql: no rows in result set"))
 			})
 		})
