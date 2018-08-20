@@ -1,17 +1,19 @@
 package main
 
 import (
-	"code.cloudfoundry.org/lager"
 	"flag"
 	"fmt"
+	"lib/common"
 	"log"
 	"os"
-	"policy-server/cmd/common"
 	"policy-server/config"
 	"policy-server/db"
 	"policy-server/store"
 	"policy-server/store/migrations"
 	"time"
+
+	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/lagerflags"
 )
 
 const (
@@ -46,7 +48,7 @@ func mainWithError() error {
 
 func migrateAndPopulateGroupsTable(conf *config.Config) error {
 
-	logger := logger()
+	logger, _ := lagerflags.NewFromConfig(fmt.Sprintf("%s.%s", logPrefix, jobPrefix), common.GetLagerConfig())
 	dbConn := dbConnection(conf, logger)
 
 	err := migrateDb(dbConn, logger)
@@ -60,12 +62,6 @@ func migrateAndPopulateGroupsTable(conf *config.Config) error {
 	}
 
 	return dbConn.Close()
-}
-
-func logger() lager.Logger {
-	logger := lager.NewLogger(fmt.Sprintf("%s.%s", logPrefix, jobPrefix))
-	logger.RegisterSink(common.InitLoggerSink(logger, "DEBUG"))
-	return logger
 }
 
 func dbConnection(conf *config.Config, logger lager.Logger) *db.ConnWrapper {

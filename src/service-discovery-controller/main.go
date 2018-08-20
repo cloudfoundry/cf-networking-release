@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"lib/common"
 	"os"
 	"os/signal"
 	"service-discovery-controller/addresstable"
@@ -22,6 +23,7 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/middleware/adapter"
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/lagerflags"
 	"github.com/cloudfoundry/dropsonde"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
@@ -41,7 +43,7 @@ func mainWithError() error {
 	configPath := flag.String("c", "", "path to config file")
 	flag.Parse()
 
-	logger, sink := buildLogger()
+	logger, sink := lagerflags.NewFromConfig("service-discovery-controller", common.GetLagerConfig())
 	conf, err := readConfig(configPath, logger)
 	if err != nil {
 		return err
@@ -148,14 +150,6 @@ func buildAddressTable(conf *config.Config, logger lager.Logger) *addresstable.A
 		time.Duration(conf.ResumePruningDelaySeconds)*time.Second,
 		clock.NewClock(),
 		logger.Session("address-table"))
-}
-
-func buildLogger() (lager.Logger, *lager.ReconfigurableSink) {
-	logger := lager.NewLogger("service-discovery-controller")
-	writerSink := lager.NewWriterSink(os.Stdout, lager.DEBUG)
-	sink := lager.NewReconfigurableSink(writerSink, lager.INFO)
-	logger.RegisterSink(sink)
-	return logger, sink
 }
 
 func readConfig(configPath *string, logger lager.Logger) (*config.Config, error) {

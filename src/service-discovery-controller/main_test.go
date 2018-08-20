@@ -161,8 +161,7 @@ var _ = Describe("Service Discovery Controller process", func() {
 				"service": ""
 			}`))
 
-			sessionContents := string(session.Out.Contents())
-			Expect(sessionContents).To(MatchRegexp(`HTTPServer access.*\"ip_address\\":\\"192.168.0.2\\".*\"serviceKey\":\"app-id.internal.local.\"`))
+			Eventually(session).Should(gbytes.Say(`HTTPServer access.*\"ip_address\\":\\"192.168.0.2\\".*\"serviceKey\":\"app-id.internal.local.\"`))
 		})
 
 		Context("when the route emitter greets the service discovery controller", func() {

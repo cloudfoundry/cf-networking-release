@@ -8,6 +8,7 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"lib/common"
 	"net"
 	"net/http"
 	"os"
@@ -21,6 +22,7 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/metrics"
 	"code.cloudfoundry.org/cf-networking-helpers/middleware"
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/lagerflags"
 	"github.com/cloudfoundry/dropsonde"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
@@ -32,11 +34,8 @@ func main() {
 	signalChannel := make(chan os.Signal, 1)
 	signal.Notify(signalChannel, syscall.SIGTERM, os.Interrupt)
 
-	logger := lager.NewLogger("bosh-dns-adapter")
-	writerSink := lager.NewWriterSink(os.Stdout, lager.DEBUG)
-	sink := lager.NewReconfigurableSink(writerSink, lager.INFO)
-	logger.RegisterSink(sink)
-	logger.RegisterSink(lager.NewWriterSink(os.Stderr, lager.ERROR))
+	logger, reconfigurableSink := lagerflags.NewFromConfig("bosh-dns-adapter", common.GetLagerConfig())
+	logger.RegisterSink(lager.NewPrettySink(os.Stderr, lager.ERROR))
 
 	configPath := flag.String("c", "", "path to config file")
 	flag.Parse()
@@ -143,15 +142,16 @@ func main() {
 	}()
 
 	uptimeSource := metrics.NewUptimeSource()
+
 	metricsEmitter := metrics.NewMetricsEmitter(
-		lager.NewLogger("bosh-dns-adapter"),
+		logger,
 		time.Duration(config.MetricsEmitSeconds)*time.Second,
 		uptimeSource,
 	)
 
 	members := grouper.Members{
 		{"metrics-emitter", metricsEmitter},
-		{"log-level-server", lagerlevel.NewServer(config.LogLevelAddress, config.LogLevelPort, sink, logger.Session("log-level-server"))},
+		{"log-level-server", lagerlevel.NewServer(config.LogLevelAddress, config.LogLevelPort, reconfigurableSink, logger.Session("log-level-server"))},
 	}
 	group := grouper.NewOrdered(os.Interrupt, members)
 	monitor := ifrit.Invoke(sigmon.New(group))

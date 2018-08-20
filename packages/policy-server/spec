@@ -15,6 +15,7 @@ files:
   - code.cloudfoundry.org/cf-networking-helpers/mutualtls/*.go # gosub
   - code.cloudfoundry.org/debugserver/*.go # gosub
   - code.cloudfoundry.org/lager/*.go # gosub
+  - code.cloudfoundry.org/lager/lagerflags/*.go # gosub
   - github.com/bmizerany/pat/*.go # gosub
   - github.com/cf-container-networking/sql-migrate/*.go # gosub
   - github.com/cf-container-networking/sql-migrate/sqlparse/*.go # gosub
@@ -50,6 +51,7 @@ files:
   - github.com/tedsuo/ifrit/sigmon/*.go # gosub
   - github.com/tedsuo/rata/*.go # gosub
   - gopkg.in/validator.v2/*.go # gosub
+  - lib/common/*.go # gosub
   - lib/nonmutualtls/*.go # gosub
   - lib/poller/*.go # gosub
   - policy-server/adapter/*.go # gosub
@@ -58,7 +60,6 @@ files:
   - policy-server/api/api_v0_internal/*.go # gosub
   - policy-server/cc_client/*.go # gosub
   - policy-server/cleaner/*.go # gosub
-  - policy-server/cmd/common/*.go # gosub
   - policy-server/cmd/migrate-db/*.go # gosub
   - policy-server/cmd/policy-server/*.go # gosub
   - policy-server/cmd/policy-server-internal/*.go # gosub

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"lib/common"
 	"log"
 	"net/http"
 	"os"
@@ -12,7 +13,6 @@ import (
 	"policy-server/adapter"
 	"policy-server/api"
 	"policy-server/api/api_v0_internal"
-	"policy-server/cmd/common"
 	"policy-server/config"
 	"policy-server/handlers"
 	"policy-server/store"
@@ -27,6 +27,7 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/mutualtls"
 	"code.cloudfoundry.org/debugserver"
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/lagerflags"
 	"github.com/cloudfoundry/dropsonde"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
@@ -55,9 +56,7 @@ func main() {
 		logPrefix = conf.LogPrefix
 	}
 
-	logger := lager.NewLogger(fmt.Sprintf("%s.%s", logPrefix, jobPrefix))
-	reconfigurableSink := common.InitLoggerSink(logger, conf.LogLevel)
-	logger.RegisterSink(reconfigurableSink)
+	logger, reconfigurableSink := lagerflags.NewFromConfig(fmt.Sprintf("%s.%s", logPrefix, jobPrefix), common.GetLagerConfig())
 
 	connectionPool := db.NewConnectionPool(
 		conf.Database,

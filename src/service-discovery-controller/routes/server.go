@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"lib/common"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -15,6 +16,7 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/metrics"
 	"code.cloudfoundry.org/cf-networking-helpers/middleware"
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/lagerflags"
 	"github.com/pivotal-cf/paraphernalia/secure/tlsconfig"
 
 	"time"
@@ -83,8 +85,9 @@ func NewServer(addressTable AddressTable, config *config.Config, dnsRequestRecor
 func (s *Server) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 	mux := http.NewServeMux()
 
+	logger, _ := lagerflags.NewFromConfig("bosh-dns-adapter", common.GetLagerConfig())
 	metricSender := metrics.MetricsSender{
-		Logger: lager.NewLogger("bosh-dns-adapter"),
+		Logger: logger,
 	}
 
 	metricsWrap := func(name string, handler http.Handler) http.Handler {

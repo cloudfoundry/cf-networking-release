@@ -4,12 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"lib/common"
 	"net/http"
 	"policy-server/uaa_client"
 	"strings"
 
 	"code.cloudfoundry.org/cf-networking-helpers/middleware"
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/lagerflags"
 )
 
 type Key string
@@ -40,7 +42,8 @@ func getLogger(req *http.Request) lager.Logger {
 			return logger
 		}
 	}
-	return lager.NewLogger("cfnetworking.policy-server")
+	logger, _ := lagerflags.NewFromConfig("cfnetworking.policy-server", common.GetLagerConfig())
+	return logger
 }
 
 func getTokenData(req *http.Request) uaa_client.CheckTokenResponse {

@@ -10,6 +10,7 @@ import (
 	"os"
 	"time"
 
+	"lib/common"
 	"lib/nonmutualtls"
 	"lib/poller"
 
@@ -18,7 +19,6 @@ import (
 	"policy-server/api/api_v0"
 	"policy-server/cc_client"
 	"policy-server/cleaner"
-	"policy-server/cmd/common"
 	"policy-server/config"
 	"policy-server/handlers"
 	psmiddleware "policy-server/middleware"
@@ -35,6 +35,7 @@ import (
 	middlewareAdapter "code.cloudfoundry.org/cf-networking-helpers/middleware/adapter"
 	"code.cloudfoundry.org/debugserver"
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/lagerflags"
 	"github.com/cloudfoundry/dropsonde"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
@@ -64,9 +65,7 @@ func main() {
 		logPrefix = conf.LogPrefix
 	}
 
-	logger := lager.NewLogger(fmt.Sprintf("%s.%s", logPrefix, jobPrefix))
-	reconfigurableSink := common.InitLoggerSink(logger, conf.LogLevel)
-	logger.RegisterSink(reconfigurableSink)
+	logger, reconfigurableSink := lagerflags.NewFromConfig(fmt.Sprintf("%s.%s", logPrefix, jobPrefix), common.GetLagerConfig())
 
 	var tlsConfig *tls.Config
 	if conf.SkipSSLValidation {

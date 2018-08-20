@@ -5,12 +5,18 @@ dependencies:
   - golang-1.10-linux
 
 files:
+  - code.cloudfoundry.org/cf-networking-helpers/db/*.go # gosub
   - code.cloudfoundry.org/cf-networking-helpers/lagerlevel/*.go # gosub
   - code.cloudfoundry.org/cf-networking-helpers/metrics/*.go # gosub
   - code.cloudfoundry.org/cf-networking-helpers/middleware/*.go # gosub
   - code.cloudfoundry.org/cf-networking-helpers/middleware/adapter/*.go # gosub
   - code.cloudfoundry.org/clock/*.go # gosub
   - code.cloudfoundry.org/lager/*.go # gosub
+  - code.cloudfoundry.org/lager/lagerflags/*.go # gosub
+  - github.com/bmizerany/pat/*.go # gosub
+  - github.com/cf-container-networking/sql-migrate/*.go # gosub
+  - github.com/cf-container-networking/sql-migrate/sqlparse/*.go # gosub
+  - github.com/cf-container-networking/sql-migrate/vendor/gopkg.in/gorp.v1/*.go # gosub
   - github.com/cloudfoundry/dropsonde/*.go # gosub
   - github.com/cloudfoundry/dropsonde/emitter/*.go # gosub
   - github.com/cloudfoundry/dropsonde/envelope_sender/*.go # gosub
@@ -27,9 +33,14 @@ files:
   - github.com/cloudfoundry/gosteno/*.go # gosub
   - github.com/cloudfoundry/gosteno/syslog/*.go # gosub
   - github.com/cloudfoundry/sonde-go/events/*.go # gosub
+  - github.com/go-sql-driver/mysql/*.go # gosub
   - github.com/gogo/protobuf/gogoproto/*.go # gosub
   - github.com/gogo/protobuf/proto/*.go # gosub
   - github.com/gogo/protobuf/protoc-gen-gogo/descriptor/*.go # gosub
+  - github.com/jmoiron/sqlx/*.go # gosub
+  - github.com/jmoiron/sqlx/reflectx/*.go # gosub
+  - github.com/lib/pq/*.go # gosub
+  - github.com/lib/pq/oid/*.go # gosub
   - github.com/nats-io/go-nats/*.go # gosub
   - github.com/nats-io/go-nats/encoders/builtin/*.go # gosub
   - github.com/nats-io/go-nats/util/*.go # gosub
@@ -39,8 +50,16 @@ files:
   - github.com/pkg/errors/*.go # gosub
   - github.com/tedsuo/ifrit/*.go # gosub
   - github.com/tedsuo/ifrit/grouper/*.go # gosub
+  - github.com/tedsuo/ifrit/http_server/*.go # gosub
   - github.com/tedsuo/ifrit/sigmon/*.go # gosub
+  - github.com/tedsuo/rata/*.go # gosub
   - gopkg.in/validator.v2/*.go # gosub
+  - lib/common/*.go # gosub
+  - policy-server/db/*.go # gosub
+  - policy-server/server_metrics/*.go # gosub
+  - policy-server/store/*.go # gosub
+  - policy-server/store/helpers/*.go # gosub
+  - policy-server/store/migrations/*.go # gosub
   - service-discovery-controller/*.go # gosub
   - service-discovery-controller/addresstable/*.go # gosub
   - service-discovery-controller/config/*.go # gosub

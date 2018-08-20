@@ -183,7 +183,7 @@ var _ = Describe("Garden External Networker errors", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				By("checking that process exits with an err")
-				Eventually(session).Should(gexec.Exit(1))
+				Eventually(session, "2s").Should(gexec.Exit(1))
 
 				By("checking that the error was logged to stderr")
 				Expect(session.Out.Contents()).To(BeEmpty())
