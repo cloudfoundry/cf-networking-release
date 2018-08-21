@@ -6,15 +6,15 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
-	"strings"
 
 	"os"
+
+	"regexp"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
-	"regexp"
 )
 
 var _ = Describe("external connectivity", func() {
