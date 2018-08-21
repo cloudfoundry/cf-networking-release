@@ -8,12 +8,12 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
+	"regexp"
 )
 
 var _ = Describe("external connectivity", func() {
@@ -67,7 +67,8 @@ var _ = Describe("external connectivity", func() {
 		}
 	})
 
-	checkRequest := func(route string, expectedStatusCode int, expectedResponseSubstring string) error {
+	checkRequest := func(route string, expectedStatusCode int, expectedResponseRegex string) error {
+		regex := regexp.MustCompile(expectedResponseRegex)
 		resp, err := http.Get(route)
 		if err != nil {
 			return err
@@ -81,26 +82,26 @@ var _ = Describe("external connectivity", func() {
 		if resp.StatusCode != expectedStatusCode {
 			return fmt.Errorf("test http get to %s: expected response code %d but got %d.  response body:\n%s", route, expectedStatusCode, resp.StatusCode, respBody)
 		}
-		if !strings.Contains(respBody, expectedResponseSubstring) {
-			return fmt.Errorf("test http get to %s: expected response to contain %q but instead saw:\n%s", route, expectedResponseSubstring, respBody)
+		if !regex.MatchString(respBody) {
+			return fmt.Errorf("test http get to %s: expected response to contain %q but instead saw:\n%s", route, expectedResponseRegex, respBody)
 		}
 		return nil
 	}
 
 	canProxy := func() error {
-		return checkRequest(appRoute+"proxy/docs.cloudfoundry.org", 200, "https://docs.cloudfoundry.org")
+		return checkRequest(appRoute+"proxy/docs.cloudfoundry.org", 200, `https://docs\.cloudfoundry\.org`)
 	}
 	isReachable := func() error {
-		return checkRequest(appRoute, 200, `{"ListenAddresses":[`)
+		return checkRequest(appRoute, 200, `{"ListenAddresses":\[`)
 	}
 	canPing := func() error {
 		return checkRequest(appRoute+"ping/8.8.8.8", 200, "Ping succeeded")
 	}
 	cannotProxy := func() error {
-		return checkRequest(appRoute+"proxy/docs.cloudfoundry.org", 500, "connection refused")
+		return checkRequest(appRoute+"proxy/docs.cloudfoundry.org", 500, "connection refused|i/o timeout")
 	}
 	cannotPing := func() error {
-		return checkRequest(appRoute+"ping/8.8.8.8", 500, "Ping failed to destination: 8.8.8.8")
+		return checkRequest(appRoute+"ping/8.8.8.8", 500, `Ping failed to destination: 8\.8\.8\.8`)
 	}
 
 	Describe("basic (legacy) network behavior for an app", func() {
