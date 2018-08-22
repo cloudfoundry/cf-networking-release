@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"time"
 
@@ -69,7 +70,7 @@ func (c *ConnWrapper) Close() error {
 	return c.sqlxDB.Close()
 }
 
-func NewConnectionPool(conf db.Config, maxOpenConnections int, maxIdleConnections int, logPrefix string, jobPrefix string, logger lager.Logger) *ConnWrapper {
+func NewErroringConnectionPool(conf db.Config, maxOpenConnections int, maxIdleConnections int, logPrefix string, jobPrefix string, logger lager.Logger) (*ConnWrapper, error) {
 	retriableConnector := db.RetriableConnector{
 		Connector:     db.GetConnectionPool,
 		Sleeper:       db.SleeperFunc(time.Sleep),
@@ -92,10 +93,10 @@ func NewConnectionPool(conf db.Config, maxOpenConnections int, maxIdleConnection
 	select {
 	case connectionResult = <-channel:
 	case <-time.After(time.Duration(conf.Timeout) * time.Second):
-		log.Fatalf("%s.%s: db connection timeout", logPrefix, jobPrefix)
+		return nil, fmt.Errorf("%s.%s: db connection timeout", logPrefix, jobPrefix)
 	}
 	if connectionResult.Err != nil {
-		log.Fatalf("%s.%s: db connect: %s", logPrefix, jobPrefix, connectionResult.Err) // not tested
+		return nil, fmt.Errorf("%s.%s: db connect: %s", logPrefix, jobPrefix, connectionResult.Err) // not tested
 	}
 
 	connectionPool := connectionResult.ConnectionPool
@@ -104,5 +105,13 @@ func NewConnectionPool(conf db.Config, maxOpenConnections int, maxIdleConnection
 	connectionPool.SetMaxIdleConns(maxIdleConnections)
 	logger.Info("db connection retrived", lager.Data{})
 
-	return &ConnWrapper{sqlxDB: connectionPool}
+	return &ConnWrapper{sqlxDB: connectionPool}, nil
+}
+
+func NewConnectionPool(conf db.Config, maxOpenConnections int, maxIdleConnections int, logPrefix string, jobPrefix string, logger lager.Logger) *ConnWrapper {
+	conn, err := NewErroringConnectionPool(conf, maxOpenConnections, maxIdleConnections, logPrefix, jobPrefix, logger)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	return conn
 }

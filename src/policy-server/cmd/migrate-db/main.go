@@ -1,16 +1,17 @@
 package main
 
 import (
-	"flag"
 	"fmt"
-	"lib/common"
-	"log"
 	"os"
 	"policy-server/config"
 	"policy-server/db"
 	"policy-server/store"
-	"policy-server/store/migrations"
 	"time"
+
+	"flag"
+	"lib/common"
+	"log"
+	"policy-server/store/migrations"
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagerflags"
@@ -31,82 +32,29 @@ func main() {
 
 func mainWithError() error {
 	conf := parseConfig()
-	c := make(chan error, 1)
-	go func() {
-		err := migrateAndPopulateGroupsTable(conf)
-		c <- err
-	}()
-
-	timeoutDuration := time.Duration(conf.DatabaseMigrationTimeout) * time.Second
-	select {
-	case err := <-c:
-		return err
-	case <-time.After(timeoutDuration):
-		return fmt.Errorf("migrations and groups table population timed out after %d seconds", conf.DatabaseMigrationTimeout)
-	}
-}
-
-func migrateAndPopulateGroupsTable(conf *config.Config) error {
 
 	logger, _ := lagerflags.NewFromConfig(fmt.Sprintf("%s.%s", logPrefix, jobPrefix), common.GetLagerConfig())
-	dbConn := dbConnection(conf, logger)
 
-	err := migrateDb(dbConn, logger)
-	if err != nil {
-		return fmt.Errorf("perform migrations: %s, and close db error: %s", err, dbConn.Close())
+	doneChan := make(chan bool, 1)
+	go func() {
+		for {
+			err := migrateAndPopulateGroupsTable(logger, conf)
+			if err != nil {
+				logger.Error("failed migrating and populating tags, retrying", err)
+				time.Sleep(1 * time.Second)
+				continue
+			}
+			doneChan <- true
+			break
+		}
+	}()
+
+	select {
+	case <-doneChan:
+		return nil
+	case <-time.After(time.Duration(conf.DatabaseMigrationTimeout) * time.Second):
+		return fmt.Errorf("migrations and groups table population timed out after %d seconds", conf.DatabaseMigrationTimeout)
 	}
-
-	err = populateGroupsTable(dbConn, conf.TagLength, logger)
-	if err != nil {
-		return fmt.Errorf("populating groups table: %s, and close db error: %s", err, dbConn.Close())
-	}
-
-	return dbConn.Close()
-}
-
-func dbConnection(conf *config.Config, logger lager.Logger) *db.ConnWrapper {
-	logger.Info("getting migration db connection", lager.Data{})
-	dbConn := db.NewConnectionPool(
-		conf.Database,
-		conf.MaxOpenConnections,
-		conf.MaxIdleConnections,
-		logPrefix,
-		jobPrefix,
-		logger,
-	)
-	logger.Info("migration db connection retrieved", lager.Data{})
-	return dbConn
-}
-
-func migrateDb(dbConn *db.ConnWrapper, logger lager.Logger) error {
-	logger.Info("running migrations", lager.Data{})
-	migrator := &migrations.Migrator{
-		MigrateAdapter: &migrations.MigrateAdapter{},
-		MigrationsProvider: &migrations.MigrationsProvider{
-			Store: &store.MigrationsStore{
-				DBConn: dbConn,
-			},
-		},
-	}
-	numMigrationsRun, err := migrator.PerformMigrations(dbConn.DriverName(), dbConn, 0)
-	if err != nil {
-		return err
-	}
-
-	logger.Info("finished running migrations", lager.Data{
-		"num-migrations-completed": numMigrationsRun,
-	})
-	return nil
-}
-
-func populateGroupsTable(dbConn *db.ConnWrapper, tagLength int, logger lager.Logger) error {
-	logger.Info("populating groups table", lager.Data{})
-
-	tagPopulator := &store.TagPopulator{DBConnection: dbConn}
-	err := tagPopulator.PopulateTables(tagLength)
-
-	logger.Info("finished populating groups table", lager.Data{})
-	return err
 }
 
 func parseConfig() *config.Config {
@@ -119,4 +67,50 @@ func parseConfig() *config.Config {
 	}
 
 	return conf
+}
+
+func migrateAndPopulateGroupsTable(logger lager.Logger, conf *config.Config) error {
+	logger.Info("getting migration db connection")
+	dbConn, err := db.NewErroringConnectionPool(
+		conf.Database,
+		conf.MaxOpenConnections,
+		conf.MaxIdleConnections,
+		logPrefix,
+		jobPrefix,
+		logger,
+	)
+	if err != nil {
+		return fmt.Errorf("getting migration db connection: %s", err)
+	}
+
+	defer dbConn.Close()
+
+	logger.Info("migration db connection retrieved")
+
+	migrator := &migrations.Migrator{
+		MigrateAdapter: &migrations.MigrateAdapter{},
+		MigrationsProvider: &migrations.MigrationsProvider{
+			Store: &store.MigrationsStore{
+				DBConn: dbConn,
+			},
+		},
+	}
+
+	tagPopulator := &store.TagPopulator{DBConnection: dbConn}
+
+	logger.Info("running migrations")
+	numMigrationsRun, err := migrator.PerformMigrations(dbConn.DriverName(), dbConn, 0)
+	if err != nil {
+		return fmt.Errorf("perform migrations: %s", err)
+	}
+	logger.Info("finished running migrations", lager.Data{"num-migrations-completed": numMigrationsRun})
+
+	logger.Info("populating groups table")
+	err = tagPopulator.PopulateTables(conf.TagLength)
+	if err != nil {
+		return fmt.Errorf("populating groups table: %s", err)
+	}
+	logger.Info("finished populating groups table")
+
+	return nil
 }
