@@ -27,6 +27,7 @@ func TestSmokeTests(t *testing.T) {
 }
 
 const Timeout_Short = 10 * time.Second
+const Timeout_Cf = 4 * time.Minute
 
 var (
 	config  SmokeConfig
