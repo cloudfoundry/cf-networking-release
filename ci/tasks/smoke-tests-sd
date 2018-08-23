@@ -13,25 +13,13 @@ function main() {
 
   echo "${CONFIG}"
   pushd "${ROOT}/cf-networking/src/test/smoke-sd" > /dev/null
-    # Push App Smoke
     set +e
-    ginkgo -r -v --focus="Push App Smoke"
+    ginkgo -r -v
     exit_status="$?"
     set -e
 
-    report_smoke_metric_to_datadog "cf-app-sd-smoke.ResolveAddSuccess" "${exit_status}"
+    report_smoke_metric_to_datadog "cf-networking-sd-smoke.status" "${exit_status}"
 
-    if [[ "${exit_status}" -ne 0 ]]; then
-      exit "${exit_status}"
-    fi
-
-    # Delete App Smoke
-    set +e
-    ginkgo -r -v --focus="Delete App Smoke"
-    exit_status="$?"
-    set -e
-
-    report_smoke_metric_to_datadog "cf-app-sd-smoke.ResolveDeleteSuccess" "${exit_status}"
     exit "${exit_status}"
   popd > /dev/null
 }
