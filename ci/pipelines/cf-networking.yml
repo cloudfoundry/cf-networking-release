@@ -195,6 +195,12 @@ resources:
       branch: master
       private_key: ((container-networking-bot-key.private_key))
   ####### Timers
+  - name: four-am-daily
+    type: time
+    source:
+      location: America/Los_Angeles
+      start: 4:00 AM
+      stop: 4:15 AM
   - name: every-monday-morning
     type: time
     source:
@@ -1420,6 +1426,8 @@ jobs:
     - aggregate:
       - get: cf-deployment-concourse-tasks
       - get: cf-deployment
+      - get: four-am-daily
+        trigger: true
       - get: cf-networking-release-ci
         params:
           submodules: none
