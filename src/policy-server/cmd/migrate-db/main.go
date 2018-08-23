@@ -45,7 +45,7 @@ func mainWithError() error {
 				continue
 			}
 			doneChan <- true
-			break
+			return
 		}
 	}()
 

@@ -48,29 +48,11 @@ var _ = Describe("Migrate DB Binary", func() {
 		It("runs the migrations and seeds the groups table", func() {
 			session := helpers.RunMigrationsPreStartBinary(migrateDbPath, conf)
 			Eventually(session.Wait(TimeoutShort)).Should(gexec.Exit(0))
-			conn := db.NewConnectionPool(
-				dbConf,
-				1,
-				1,
-				"test-db",
-				"test-job-prefix",
-				lagertest.NewTestLogger("test"),
-			)
 
+			conn := createDbConn(dbConf)
 			defer conn.Close()
 
-			numMigrations := len(migrations.V1ModifiedMigrationsToPerform) +
-				len(migrations.V2ModifiedMigrationsToPerform) +
-				len(migrations.V3ModifiedMigrationsToPerform) +
-				len(migrations.MigrationsToPerform)
-
-			var migrationCount int
-			conn.QueryRow("SELECT COUNT(*) FROM gorp_migrations").Scan(&migrationCount)
-			Expect(migrationCount).To(Equal(numMigrations))
-
-			var groupCount int
-			conn.QueryRow("SELECT COUNT(*) FROM groups").Scan(&groupCount)
-			Expect(groupCount).To(Equal(int(math.Exp2(float64(conf.TagLength*8))) - 1))
+			assertMigrationsSucceeded(conn, conf)
 		})
 
 		Context("when the migrations have already run", func() {
@@ -84,9 +66,54 @@ var _ = Describe("Migrate DB Binary", func() {
 	})
 
 	Context("when the db is not available", func() {
-		It("exits non zero", func() {
-			session := helpers.RunMigrationsPreStartBinary(migrateDbPath, conf)
-			Eventually(session.Wait(TimeoutShort)).Should(gexec.Exit(1))
+		Context("when it becomes available", func() {
+			AfterEach(func() {
+				testhelpers.RemoveDatabase(dbConf)
+			})
+
+			It("eventually succeeds", func() {
+				session := helpers.RunMigrationsPreStartBinary(migrateDbPath, conf)
+				testhelpers.CreateDatabase(dbConf)
+				Eventually(session.Wait(TimeoutShort)).Should(gexec.Exit(0))
+				conn := createDbConn(dbConf)
+				defer conn.Close()
+
+				assertMigrationsSucceeded(conn, conf)
+			})
+		})
+
+		Context("when it never becomes available", func() {
+			It("exits non-zero", func() {
+				conf.DatabaseMigrationTimeout = 1
+				session := helpers.RunMigrationsPreStartBinary(migrateDbPath, conf)
+				Eventually(session.Wait(TimeoutShort)).Should(gexec.Exit(1))
+			})
 		})
 	})
 })
+
+func assertMigrationsSucceeded(conn *db.ConnWrapper, conf config.Config) {
+	numMigrations := len(migrations.V1ModifiedMigrationsToPerform) +
+		len(migrations.V2ModifiedMigrationsToPerform) +
+		len(migrations.V3ModifiedMigrationsToPerform) +
+		len(migrations.MigrationsToPerform)
+
+	var migrationCount int
+	conn.QueryRow("SELECT COUNT(*) FROM gorp_migrations").Scan(&migrationCount)
+	Expect(migrationCount).To(Equal(numMigrations))
+
+	var groupCount int
+	conn.QueryRow("SELECT COUNT(*) FROM groups").Scan(&groupCount)
+	Expect(groupCount).To(Equal(int(math.Exp2(float64(conf.TagLength*8))) - 1))
+}
+
+func createDbConn(dbConf dbHelper.Config) *db.ConnWrapper {
+	return db.NewConnectionPool(
+		dbConf,
+		1,
+		1,
+		"test-db",
+		"test-job-prefix",
+		lagertest.NewTestLogger("test"),
+	)
+}
