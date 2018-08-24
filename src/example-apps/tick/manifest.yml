@@ -4,6 +4,7 @@ applications:
     memory: 32M
     disk_quota: 32M
     buildpack: go_buildpack
+    stack: cflinuxfs3
     instances: 3
     env:
       GOPACKAGENAME: example-apps/tick

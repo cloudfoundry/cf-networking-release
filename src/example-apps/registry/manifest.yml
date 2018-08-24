@@ -4,6 +4,7 @@ applications:
     memory: 2G
     disk_quota: 128M
     buildpack: go_buildpack
+    stack: cflinuxfs3
     instances: 1
     env:
       GOPACKAGENAME: example-apps/registry

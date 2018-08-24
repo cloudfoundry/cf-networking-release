@@ -539,6 +539,7 @@ jobs:
           add-apps-internal-search-domain.yml
           add-acceptance-test-jobs.yml
           add-fake-istio-router-on-overlay.yml
+          add-cflinuxfs3.yml
           opsfile.yml
       input_mapping:
         bbl-state: cf-networking-deployments
@@ -766,6 +767,7 @@ jobs:
           use-pxc.yml
           add-fake-istio-router-on-overlay.yml
           enable-backup-restore.yml
+          add-cflinuxfs3.yml
           opsfile.yml
       input_mapping:
         bbl-state: cf-networking-deployments
@@ -1231,6 +1233,7 @@ jobs:
           enable-service-discovery.yml
           use-pxc.yml
           add-apps-internal-search-domain.yml
+          add-cflinuxfs3.yml
           opsfile.yml
       input_mapping:
         bbl-state: cf-networking-deployments
@@ -1499,6 +1502,7 @@ jobs:
           enable-service-discovery.yml
           add-apps-internal-search-domain.yml
           add-istio.yml
+          add-cflinuxfs3.yml
           opsfile.yml
       input_mapping:
         bbl-state: cf-networking-deployments
