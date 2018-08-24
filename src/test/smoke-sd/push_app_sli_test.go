@@ -109,6 +109,7 @@ func pushProxy(appName string) {
 	Expect(cf.Cf(
 		"push", appName,
 		"-p", appDir("proxy"),
+		"-s", "cflinuxfs2",
 		"-f", defaultManifest("proxy"),
 	).Wait(Timeout_Cf)).To(gexec.Exit(0))
 }
@@ -117,6 +118,7 @@ func pushProxyWithInternalRoute(appName string) {
 	Expect(cf.Cf(
 		"push", appName,
 		"-p", appDir("proxy"),
+		"-s", "cflinuxfs2",
 		"-f", internalRouteManifest("proxy"),
 	).Wait(Timeout_Cf)).To(gexec.Exit(0))
 }
