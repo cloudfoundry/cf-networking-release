@@ -1484,6 +1484,7 @@ jobs:
       file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
       params:
         BBL_STATE_DIR: environments/slouch
+        BOSH_DEPLOY_ARGS: --recreate
         SYSTEM_DOMAIN: slouch.c2c.cf-app.com
         BOSH_DEPLOY_ARGS: "--recreate"
         OPS_FILES: |
