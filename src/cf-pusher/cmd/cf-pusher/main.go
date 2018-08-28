@@ -241,7 +241,7 @@ func main() {
 	}
 
 	expectedASG := testsupport.BuildASG(config.ASGSize)
-	asgFile, err := testsupport.CreateASGFile(expectedASG)
+	asgFile, err := testsupport.CreateTempFile(expectedASG)
 	if err != nil {
 		log.Fatalf("creating asg file: %s", err)
 	}

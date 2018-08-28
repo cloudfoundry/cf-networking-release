@@ -60,7 +60,7 @@ var _ = Describe("Container startup time with a big ASG", func() {
 			By("creating a large ASG", func() {
 				asg := testsupport.BuildASG(1000)
 				var err error
-				ASGFilepath, err = testsupport.CreateASGFile(asg)
+				ASGFilepath, err = testsupport.CreateTempFile(asg)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(cli.CreateSecurityGroup("big-asg", ASGFilepath)).To(Succeed())
 				Expect(cli.BindSecurityGroup("big-asg", orgName, spaceName)).To(Succeed())

@@ -17,14 +17,14 @@ func BuildASG(n int) string {
 	return asg + t + "]"
 }
 
-func CreateASGFile(asg string) (string, error) {
-	asgFile, err := ioutil.TempFile("", "")
+func CreateTempFile(content string) (string, error) {
+	tmpFile, err := ioutil.TempFile("", "")
 	if err != nil {
 		return "", err
 	}
 
-	path := asgFile.Name()
-	err = ioutil.WriteFile(path, []byte(asg), os.ModePerm)
+	path := tmpFile.Name()
+	err = ioutil.WriteFile(path, []byte(content), os.ModePerm)
 	if err != nil {
 		return "", err
 	}

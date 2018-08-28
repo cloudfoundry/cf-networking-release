@@ -167,7 +167,7 @@ var _ = Describe("external connectivity", func() {
 })
 
 func createASG(cli *cf_cli_adapter.Adapter, name string, asgDefinition string) {
-	asgFile, err := testsupport.CreateASGFile(asgDefinition)
+	asgFile, err := testsupport.CreateTempFile(asgDefinition)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(cli.CreateSecurityGroup(name, asgFile)).To(Succeed())
 	Expect(os.Remove(asgFile)).To(Succeed())
