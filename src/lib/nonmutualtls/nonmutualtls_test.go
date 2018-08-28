@@ -36,7 +36,7 @@ var _ = Describe("TLS config for internal API server", func() {
 
 		port := ports.PickAPort()
 		serverListenAddr = fmt.Sprintf("127.0.0.1:%d", port)
-		clientTLSConfig, err = nonmutualtls.NewClientTLSConfig(paths.ServerCACertPath)
+		clientTLSConfig, err = nonmutualtls.NewClientTLSConfig(paths.ServerCACertPath1, paths.ServerCACertPath2)
 		Expect(err).NotTo(HaveOccurred())
 		serverTLSConfig, err = nonmutualtls.NewServerTLSConfig(paths.ServerCertPath, paths.ServerKeyPath)
 		Expect(err).NotTo(HaveOccurred())
@@ -84,6 +84,17 @@ var _ = Describe("TLS config for internal API server", func() {
 
 			server.Signal(os.Interrupt)
 			Eventually(server.Wait(), WAIT_TIMEOUT).Should(Receive())
+		})
+
+		It("loads multiple ca certs", func() {
+			Expect(len(clientTLSConfig.RootCAs.Subjects())).To(Equal(2))
+			Expect(string(clientTLSConfig.RootCAs.Subjects()[0])).To(ContainSubstring("server-ca-1"))
+			Expect(string(clientTLSConfig.RootCAs.Subjects()[1])).To(ContainSubstring("server-ca-2"))
+		})
+
+		It("loads doesn't error on empty CA cert file", func() {
+			_, err := nonmutualtls.NewClientTLSConfig(paths.ServerCACertPath1, paths.ServerCACertPath2, paths.EmptyFilePath)
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		Context("when the key pair cannot be created", func() {

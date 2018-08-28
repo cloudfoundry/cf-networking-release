@@ -21,7 +21,9 @@ var (
 )
 
 type testPaths struct {
-	ServerCACertPath      string
+	EmptyFilePath         string
+	ServerCACertPath1     string
+	ServerCACertPath2     string
 	ServerCertPath        string
 	ServerKeyPath         string
 	WrongServerCACertPath string
@@ -32,12 +34,21 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	certDir, err = ioutil.TempDir("", "netman-certs")
 	Expect(err).NotTo(HaveOccurred())
 
+	file, err := ioutil.TempFile("", "empty")
+	Expect(err).NotTo(HaveOccurred())
+	paths.EmptyFilePath = file.Name()
+
+	err = ioutil.WriteFile(paths.EmptyFilePath, []byte("  \n\r\t"), 0600)
+	Expect(err).NotTo(HaveOccurred())
+
 	certWriter, err := testsupport.NewCertWriter(certDir)
 	Expect(err).NotTo(HaveOccurred())
 
-	paths.ServerCACertPath, err = certWriter.WriteCA("server-ca")
+	paths.ServerCACertPath1, err = certWriter.WriteCA("server-ca-1")
 	Expect(err).NotTo(HaveOccurred())
-	paths.ServerCertPath, paths.ServerKeyPath, err = certWriter.WriteAndSign("server", "server-ca")
+	paths.ServerCACertPath2, err = certWriter.WriteCA("server-ca-2")
+	Expect(err).NotTo(HaveOccurred())
+	paths.ServerCertPath, paths.ServerKeyPath, err = certWriter.WriteAndSign("server", "server-ca-1")
 	Expect(err).NotTo(HaveOccurred())
 
 	paths.WrongServerCACertPath, err = certWriter.WriteCA("wrong-server-ca")

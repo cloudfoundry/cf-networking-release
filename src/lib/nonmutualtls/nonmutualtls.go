@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"strings"
 )
 
 func NewServerTLSConfig(certFile, keyFile string) (*tls.Config, error) {
@@ -22,27 +23,36 @@ func NewServerTLSConfig(certFile, keyFile string) (*tls.Config, error) {
 	return c, nil
 }
 
-func NewClientTLSConfig(caCertFile string) (*tls.Config, error) {
+func NewClientTLSConfig(caCertFiles ...string) (*tls.Config, error) {
 	c := &tls.Config{
 		MinVersion: tls.VersionTLS12,
 	}
-	var err error
-	c.RootCAs, err = newCACertPool(caCertFile)
-	if err != nil {
-		return nil, err
+
+	caCertPool := x509.NewCertPool()
+	for _, caCertFile := range caCertFiles {
+		var err error
+		certBytes, err := ioutil.ReadFile(caCertFile)
+		if err != nil {
+			return nil, fmt.Errorf("failed read ca cert file: %s", err.Error())
+		}
+
+		if isEmptyBytes(certBytes) {
+			continue
+		}
+
+		if ok := caCertPool.AppendCertsFromPEM(certBytes); !ok {
+			return nil, errors.New("Unable to load caCert")
+		}
+
+		c.RootCAs = caCertPool
+		if err != nil {
+			return nil, err
+		}
 	}
 	return c, nil
 }
 
-func newCACertPool(caCertFile string) (*x509.CertPool, error) {
-	certBytes, err := ioutil.ReadFile(caCertFile)
-	if err != nil {
-		return nil, fmt.Errorf("failed read ca cert file: %s", err.Error())
-	}
-
-	caCertPool := x509.NewCertPool()
-	if ok := caCertPool.AppendCertsFromPEM(certBytes); !ok {
-		return nil, errors.New("Unable to load caCert")
-	}
-	return caCertPool, nil
+func isEmptyBytes(bytes []byte) bool {
+	trimmedStr := strings.Trim(string(bytes), "\t\n\r ")
+	return trimmedStr == ""
 }

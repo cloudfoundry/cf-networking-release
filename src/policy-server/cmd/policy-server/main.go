@@ -73,7 +73,7 @@ func main() {
 			InsecureSkipVerify: conf.SkipSSLValidation,
 		}
 	} else {
-		tlsConfig, err = nonmutualtls.NewClientTLSConfig(conf.UAACA)
+		tlsConfig, err = nonmutualtls.NewClientTLSConfig(conf.UAACA, conf.CCCA)
 		if err != nil {
 			log.Fatalf("%s.%s error creating tls config: %s", logPrefix, jobPrefix, err) // not tested
 		}

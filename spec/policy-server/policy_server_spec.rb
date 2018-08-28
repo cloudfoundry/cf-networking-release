@@ -9,6 +9,8 @@ module Bosh::Template::Test
     let(:release) {ReleaseDir.new(release_path)}
     let(:job) {release.job('policy-server')}
 
+    let(:cc_hostname) {'some-cc-hostname'}
+    let(:cc_port) {4567}
     let(:merged_manifest_properties) do
       {
         'disable' => false,
@@ -23,8 +25,8 @@ module Bosh::Template::Test
         'uaa_ca' => 'some-uaa-ca',
         'uaa_hostname' => 'some-uaa-hostname',
         'uaa_port' => 3456,
-        'cc_hostname' => 'some-cc-hostname',
-        'cc_port' => 4567,
+        'cc_hostname' => cc_hostname,
+        'cc_port' => cc_port,
         'skip_ssl_validation' => true,
         'database' => {
           'type' => 'postgres',
@@ -50,7 +52,7 @@ module Bosh::Template::Test
       let(:template) {job.template('config/certs/database_ca.crt')}
       it 'writes the content of database.ca_cert' do
         merged_manifest_properties['database']['ca_cert'] = 'the ca cert'
-        expect(template.render(merged_manifest_properties)).to eq('the ca cert')
+        expect(template.render(merged_manifest_properties).rstrip).to eq('the ca cert')
       end
     end
 
@@ -70,6 +72,7 @@ module Bosh::Template::Test
           'uaa_url' => 'https://some-uaa-hostname',
           'uaa_port' => 3456,
           'cc_url' => 'http://some-cc-hostname:4567',
+          'cc_ca_cert' => '/var/vcap/jobs/policy-server/config/certs/cc_ca.crt',
           'skip_ssl_validation' => true,
           'database' => {
             'type' => 'postgres',
@@ -95,6 +98,29 @@ module Bosh::Template::Test
           'uaa_ca' => '/var/vcap/jobs/policy-server/config/certs/uaa_ca.crt',
           'request_timeout' => 5,
         })
+      end
+
+      context 'when cloud_controller_https_endpoint is provided' do
+        let(:cloud_controller_https_endpoint_link) do
+          Link.new(
+            name: 'cloud_controller_https_endpoint',
+            instances: [LinkInstance.new()],
+            properties: {
+              'cc' => {
+                'internal_service_hostname' => 'cc.service.internal',
+                'tls_port' => '443',
+                'mutual_tls.ca_cert' => 'some-cc-ca-cert',
+              }
+            }
+          )
+          let(:cc_hostname) {''}
+          let(:cc_port) {0}
+
+          let(:links) { [cloud_controller_https_endpoint_link] }
+          policyServerJSON = JSON.parse(template.render(merged_manifest_properties, consumes: links))
+          expect(policyServerJSON['cc_url']).to eq 'https://cc.service.internal:443'
+          expect(policyServerJSON['cc_ca_cert']).to eq '/var/vcap/jobs/polict-server/config/certs/cc_ca.crt'
+        end
       end
 
       context 'when tag length is valid' do

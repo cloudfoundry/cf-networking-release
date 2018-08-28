@@ -6,6 +6,7 @@ templates:
   pre-backup-lock.sh.erb: bin/bbr/pre-backup-lock
   post-backup-unlock.sh.erb: bin/bbr/post-backup-unlock
   uaa_ca.crt.erb: config/certs/uaa_ca.crt
+  cc_ca.crt.erb: config/certs/cc_ca.crt
   database_ca.crt.erb: config/certs/database_ca.crt
   post-start.erb: bin/post-start
   pre-start.erb: bin/pre-start
@@ -34,6 +35,9 @@ provides:
 consumes:
 - name: database
   type: database
+  optional: true
+- name: cloud_controller_https_endpoint
+  type: cloud_controller_https_endpoint
   optional: true
 
 properties:
