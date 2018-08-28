@@ -27,7 +27,6 @@ var _ = Describe("Internal API", func() {
 		sessions                  []*gexec.Session
 		conf                      config.Config
 		internalConf              config.InternalConfig
-		address                   string
 		dbConf                    db.Config
 		tlsConfig                 *tls.Config
 		policyServerConfs         []config.Config
@@ -64,8 +63,6 @@ var _ = Describe("Internal API", func() {
 		sessions = startPolicyAndInternalServers(policyServerConfs, policyServerInternalConfs)
 		conf = policyServerConfs[0]
 		internalConf = policyServerInternalConfs[0]
-
-		address = fmt.Sprintf("%s:%d", conf.ListenHost, conf.ListenPort)
 
 		body := strings.NewReader(`{ "policies": [
 			{"source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "ports": { "start": 8080, "end": 8080 } } },

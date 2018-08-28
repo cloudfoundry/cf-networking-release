@@ -28,8 +28,6 @@ var _ = Describe("Integration", func() {
 			session           *gexec.Session
 			sessions          []*gexec.Session
 			conf              config.Config
-			address           string
-			debugAddress      string
 			dbConf            db.Config
 			headers           map[string]string
 			policyServerConfs []config.Config
@@ -47,9 +45,6 @@ var _ = Describe("Integration", func() {
 			sessions = startPolicyServers(policyServerConfs)
 			session = sessions[0]
 			conf = policyServerConfs[0]
-
-			address = fmt.Sprintf("%s:%d", conf.ListenHost, conf.ListenPort)
-			debugAddress = fmt.Sprintf("%s:%d", conf.DebugServerHost, conf.DebugServerPort)
 		})
 
 		AfterEach(func() {

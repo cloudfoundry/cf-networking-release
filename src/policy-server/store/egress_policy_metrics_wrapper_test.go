@@ -15,9 +15,7 @@ var _ = Describe("EgressPolicyMetricsWrapper", func() {
 	var (
 		metricsWrapper    *store.EgressPolicyMetricsWrapper
 		policies          []store.EgressPolicy
-		tags              []store.Tag
 		srcGuids          []string
-		destGuids         []string
 		fakeMetricsSender *fakes.MetricsSender
 		fakeStore         *fakes.EgressPolicyStore
 		tx                db.Transaction
@@ -38,15 +36,7 @@ var _ = Describe("EgressPolicyMetricsWrapper", func() {
 				IPRanges: []store.IPRange{{Start: "8.0.8.0", End: "8.0.8.0"}},
 			},
 		}}
-		tags = []store.Tag{{
-			ID:  "some-app-guid",
-			Tag: "0001",
-		}, {
-			ID:  "some-other-app-guid",
-			Tag: "0002",
-		}}
 		srcGuids = []string{"some-app-guid"}
-		destGuids = []string{"some-other-app-guid"}
 	})
 
 	Describe("CreateWithTx", func() {

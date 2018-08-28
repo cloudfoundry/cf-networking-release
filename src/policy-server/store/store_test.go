@@ -14,11 +14,12 @@ import (
 
 	"policy-server/store/migrations"
 
+	"policy-server/db"
+	"test-helpers"
+
 	"code.cloudfoundry.org/lager"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"policy-server/db"
-	"test-helpers"
 )
 
 var _ = Describe("Store", func() {
@@ -32,9 +33,7 @@ var _ = Describe("Store", func() {
 		destination  store.DestinationRepo
 		policy       store.PolicyRepo
 
-		realMigrator *migrations.Migrator
-		mockMigrator *fakes.Migrator
-		tagLength    int
+		tagLength int
 	)
 	const NumAttempts = 5
 
@@ -57,11 +56,6 @@ var _ = Describe("Store", func() {
 		policy = &store.PolicyTable{}
 
 		mockDb.DriverNameReturns(realDb.DriverName())
-
-		realMigrator = &migrations.Migrator{
-			MigrateAdapter: &migrations.MigrateAdapter{},
-		}
-		mockMigrator = &fakes.Migrator{}
 	})
 
 	AfterEach(func() {

@@ -25,7 +25,6 @@ import (
 var _ = Describe("Create Tags API", func() {
 	var (
 		sessions                  []*gexec.Session
-		conf                      config.Config
 		internalConf              config.InternalConfig
 		dbConf                    db.Config
 		tlsConfig                 *tls.Config
@@ -61,7 +60,6 @@ var _ = Describe("Create Tags API", func() {
 		policyServerConfs = configurePolicyServers(template, 1)
 		policyServerInternalConfs = configureInternalPolicyServers(internalTemplate, 1)
 		sessions = startPolicyAndInternalServers(policyServerConfs, policyServerInternalConfs)
-		conf = policyServerConfs[0]
 		internalConf = policyServerInternalConfs[0]
 	})
 
