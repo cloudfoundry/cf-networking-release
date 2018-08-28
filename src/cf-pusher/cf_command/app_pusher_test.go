@@ -12,13 +12,11 @@ import (
 
 var _ = Describe("AppPusher", func() {
 	var (
-		appPusher             *cf_command.AppPusher
-		fakeAdapter           *fakes.PushCLIAdapter
-		fakeManifestGenerator *fakes.ManifestGenerator
+		appPusher   *cf_command.AppPusher
+		fakeAdapter *fakes.PushCLIAdapter
 	)
 	BeforeEach(func() {
 		fakeAdapter = &fakes.PushCLIAdapter{}
-		fakeManifestGenerator = &fakes.ManifestGenerator{}
 		appPusher = &cf_command.AppPusher{
 			Adapter:      fakeAdapter,
 			Concurrency:  2,
