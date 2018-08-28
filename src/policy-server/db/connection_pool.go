@@ -11,6 +11,8 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+const connMaxLifetime = time.Hour
+
 type ConnWrapper struct {
 	sqlxDB *sqlx.DB
 }
@@ -103,6 +105,7 @@ func NewErroringConnectionPool(conf db.Config, maxOpenConnections int, maxIdleCo
 
 	connectionPool.SetMaxOpenConns(maxOpenConnections)
 	connectionPool.SetMaxIdleConns(maxIdleConnections)
+	connectionPool.SetConnMaxLifetime(connMaxLifetime)
 	logger.Info("db connection retrived", lager.Data{})
 
 	return &ConnWrapper{sqlxDB: connectionPool}, nil
