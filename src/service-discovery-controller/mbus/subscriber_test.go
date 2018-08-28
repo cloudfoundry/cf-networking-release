@@ -32,7 +32,6 @@ var _ = Describe("Subscriber", func() {
 		localIP          string
 		startMsgChan     chan *nats.Msg
 		greetMsgChan     chan *nats.Msg
-		metricsSender    *fakes.MetricsSender
 		messageRecorder  *fakes.RouteMessageRecorder
 		provider         NatsConnProvider
 		port             int
@@ -75,7 +74,6 @@ var _ = Describe("Subscriber", func() {
 
 		localIP = "192.168.0.1"
 
-		metricsSender = &fakes.MetricsSender{}
 		warmingDuration = time.Duration(60) * time.Second
 
 		subscriber = NewSubscriber(provider, subOpts, warmingDuration, addressTable, localIP, messageRecorder, subcriberLogger, fakeClock)
