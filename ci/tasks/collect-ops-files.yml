@@ -12,6 +12,7 @@ inputs:
   - name: cf-networking-release
   - name: silk-release
   - name: istio-release
+    optional: true
 
 outputs:
   - name: ops-files
