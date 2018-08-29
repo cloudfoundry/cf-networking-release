@@ -135,6 +135,11 @@ resources:
     source:
       uri: https://github.com/cloudfoundry/capi-release.git
       branch: ci-passed
+  - name: istio-release
+    type: git
+    source:
+      uri: https://github.com/cloudfoundry/istio-release.git
+      branch: master
   - name: silk-dev
     type: git
     source:
@@ -1438,6 +1443,7 @@ jobs:
       - get: silk-dev
         passed: [unit-and-integration-tests]
       - get: datadog-firehose-nozzle-release
+      - get: istio-release
     - task: upload-stemcell
       file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
       input_mapping:
@@ -1467,6 +1473,13 @@ jobs:
         local-release: silk-dev
       params:
         BBL_STATE_DIR: environments/slouch/
+    - task: upload-local-istio-release
+      file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+      input_mapping:
+        bbl-state: cf-networking-deployments
+        local-release: istio-release
+      params:
+        BBL_STATE_DIR: environments/slouch/
     - task: deploy-cf
       file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
       params:
@@ -1484,7 +1497,7 @@ jobs:
           use-latest-silk.yml
           enable-service-discovery.yml
           add-apps-internal-search-domain.yml
-          add-fake-istio-router-on-overlay.yml
+          add-istio.yml
           opsfile.yml
       input_mapping:
         bbl-state: cf-networking-deployments

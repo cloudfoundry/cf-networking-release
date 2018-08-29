@@ -11,6 +11,7 @@ inputs:
   - name: deployments-repo
   - name: cf-networking-release
   - name: silk-release
+  - name: istio-release
 
 outputs:
   - name: ops-files

@@ -2,6 +2,8 @@
 
 set -e -u
 
+cp istio-release/deploy/cf-deployment-operations/*.yml ops-files/
+
 cp cf-deployment/operations/**/*.yml ops-files/
 cp cf-deployment/operations/*.yml ops-files/
 
