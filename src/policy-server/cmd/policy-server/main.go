@@ -191,6 +191,22 @@ func main() {
 	policiesIndexHandlerV1 := handlers.NewPoliciesIndex(wrappedStore, egressDataStore, policyMapperV1, policyFilter, errorResponse)
 	policiesIndexHandlerV0 := handlers.NewPoliciesIndex(wrappedStore, egressDataStore, policyMapperV0, policyFilter, errorResponse)
 
+	egressDestinationMapper := &api.EgressDestinationMapper{
+		Marshaler: marshal.MarshalFunc(json.Marshal),
+	}
+
+	egressDestinationStore := &store.EgressDestinationStore{
+		Conn: connectionPool,
+		EgressDestinationRepo: &store.EgressDestinationTable{},
+	}
+
+	destinationsIndexHandlerV1 := &handlers.DestinationsIndex{
+		ErrorResponse:           errorResponse,
+		EgressDestinationStore:  egressDestinationStore,
+		EgressDestinationMapper: egressDestinationMapper,
+		Logger:                  logger,
+	}
+
 	policyCleaner := cleaner.NewPolicyCleaner(logger.Session("policy-cleaner"), wrappedPolicyCollectionStore, uaaClient,
 		ccClient, 100, time.Duration(5)*time.Second)
 
@@ -256,6 +272,7 @@ func main() {
 		{Name: "create_policies", Method: "POST", Path: "/networking/:version/external/policies"},
 		{Name: "delete_policies", Method: "POST", Path: "/networking/:version/external/policies/delete"},
 		{Name: "policies_index", Method: "GET", Path: "/networking/:version/external/policies"},
+		{Name: "destinations_index", Method: "GET", Path: "/networking/:version/external/destinations"},
 		{Name: "cleanup", Method: "POST", Path: "/networking/:version/external/policies/cleanup"},
 		{Name: "tags_index", Method: "GET", Path: "/networking/:version/external/tags"},
 	}
@@ -285,6 +302,9 @@ func main() {
 
 		"policies_index": corsOptionsWrapper(metricsWrap("PoliciesIndex",
 			logWrap(versionWrap(authWriteWrap(policiesIndexHandlerV1), authWriteWrap(policiesIndexHandlerV0))))),
+
+		"destinations_index": corsOptionsWrapper(metricsWrap("DestinationsIndex",
+			logWrap(versionWrap(authAdminWrap(destinationsIndexHandlerV1), authAdminWrap(destinationsIndexHandlerV1))))),
 
 		"cleanup": corsOptionsWrapper(metricsWrap("Cleanup",
 			logWrap(versionWrap(authAdminWrap(policiesCleanupHandler), authAdminWrap(policiesCleanupHandler))))),
