@@ -9,11 +9,12 @@ import (
 	"net/http"
 	"os"
 
+	"regexp"
+
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
-	"regexp"
 )
 
 var _ = Describe("external connectivity", func() {
@@ -26,7 +27,7 @@ var _ = Describe("external connectivity", func() {
 	)
 
 	BeforeEach(func() {
-		if testConfig.Internetless {
+		if testConfig.Internetless || testConfig.SkipExperimentalDynamicEgressTest {
 			Skip("skipping external connectivity tests")
 		}
 
