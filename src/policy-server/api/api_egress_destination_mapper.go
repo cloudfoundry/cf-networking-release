@@ -12,11 +12,11 @@ type EgressDestinationMapper struct {
 
 type DestinationsPayload struct {
 	TotalDestinations  int                 `json:"total_destinations"`
-	EgressDestinations []EgressDestination `json:"destinations"`
+	EgressDestinations []*EgressDestination `json:"destinations"`
 }
 
 func (p *EgressDestinationMapper) AsBytes(egressDestinations []store.EgressDestination) ([]byte, error) {
-	apiEgressDestinations := make([]EgressDestination, len(egressDestinations))
+	apiEgressDestinations := make([]*EgressDestination, len(egressDestinations))
 
 	for i, storeEgressDestination := range egressDestinations {
 		apiEgressDestinations[i] = asApiEgressDestination(storeEgressDestination)
@@ -34,7 +34,7 @@ func (p *EgressDestinationMapper) AsBytes(egressDestinations []store.EgressDesti
 	return bytes, nil
 }
 
-func asApiEgressDestination(storeEgressDestination store.EgressDestination) EgressDestination {
+func asApiEgressDestination(storeEgressDestination store.EgressDestination) *EgressDestination {
 	var ports []Ports
 
 	if len(storeEgressDestination.Ports) > 0 {
@@ -48,7 +48,7 @@ func asApiEgressDestination(storeEgressDestination store.EgressDestination) Egre
 
 	firstIPRange := storeEgressDestination.IPRanges[0]
 
-	apiEgressDestination := EgressDestination{
+	apiEgressDestination := &EgressDestination{
 		GUID:     storeEgressDestination.ID,
 		Protocol: storeEgressDestination.Protocol,
 		Ports:    ports,
