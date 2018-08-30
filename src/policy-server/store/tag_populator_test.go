@@ -12,7 +12,6 @@ import (
 	"policy-server/db"
 	"policy-server/store"
 	"policy-server/store/fakes"
-	"policy-server/store/migrations"
 	"strings"
 	"test-helpers"
 	"time"
@@ -27,8 +26,6 @@ var _ = Describe("Tag Populator", func() {
 		var (
 			dbConf dbHelper.Config
 			realDb *db.ConnWrapper
-
-			realMigrator *migrations.Migrator
 		)
 
 		BeforeEach(func() {
@@ -40,20 +37,9 @@ var _ = Describe("Tag Populator", func() {
 
 			logger := lager.NewLogger("Tag Populator Test")
 
-			var err error
 			realDb = db.NewConnectionPool(dbConf, 200, 200, "Tag Populator Test", "Tag Populator Test", logger)
-			Expect(err).NotTo(HaveOccurred())
 
-			realMigrator = &migrations.Migrator{
-				MigrateAdapter: &migrations.MigrateAdapter{},
-				MigrationsProvider: &migrations.MigrationsProvider{
-					Store: &store.MigrationsStore{
-						DBConn: realDb,
-					},
-				},
-			}
-
-			realMigrator.PerformMigrations(realDb.DriverName(), realDb, 0)
+			migrate(realDb)
 			tagPopulator = &store.TagPopulator{
 				DBConnection: realDb,
 			}
@@ -119,5 +105,4 @@ var _ = Describe("Tag Populator", func() {
 			Expect(err).To(MatchError("populating tables: some error"))
 		})
 	})
-
 })

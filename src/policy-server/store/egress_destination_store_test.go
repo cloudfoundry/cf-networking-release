@@ -12,7 +12,6 @@ import (
 	dbfakes "policy-server/db/fakes"
 	"policy-server/store"
 	"policy-server/store/fakes"
-	"policy-server/store/migrations"
 	"strconv"
 	"test-helpers"
 	"time"
@@ -29,8 +28,6 @@ var _ = Describe("EgressDestinationStore", func() {
 		var (
 			dbConf dbHelper.Config
 			realDb *db.ConnWrapper
-
-			realMigrator *migrations.Migrator
 		)
 
 		BeforeEach(func() {
@@ -42,17 +39,7 @@ var _ = Describe("EgressDestinationStore", func() {
 			logger := lager.NewLogger("Egress Destination Store Test")
 			realDb = db.NewConnectionPool(dbConf, 200, 200, "Egress Destination Store Test", "Egress Destination Store Test", logger)
 
-			realMigrator = &migrations.Migrator{
-				MigrateAdapter: &migrations.MigrateAdapter{},
-				MigrationsProvider: &migrations.MigrationsProvider{
-					Store: &store.MigrationsStore{
-						DBConn: realDb,
-					},
-				},
-			}
-
-			_, err := realMigrator.PerformMigrations(realDb.DriverName(), realDb, 0)
-			Expect(err).NotTo(HaveOccurred())
+			migrate(realDb)
 
 			egressDestinationTable = &store.EgressDestinationTable{}
 			egressDestinationsStore = &store.EgressDestinationStore{

@@ -1,16 +1,16 @@
 package handlers
 
 import (
+	"code.cloudfoundry.org/lager"
 	"net/http"
 	"policy-server/store"
-	"code.cloudfoundry.org/lager"
 )
 
 type DestinationsIndex struct {
-	ErrorResponse errorResponse
-	EgressDestinationStore EgressDestinationStore
+	ErrorResponse           errorResponse
+	EgressDestinationStore  EgressDestinationStore
 	EgressDestinationMapper EgressDestinationMapper
-	Logger lager.Logger
+	Logger                  lager.Logger
 }
 
 //go:generate counterfeiter -o fakes/egress_destination_mapper.go --fake-name EgressDestinationMapper . EgressDestinationMapper
@@ -37,4 +37,3 @@ func (d *DestinationsIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 	w.WriteHeader(http.StatusOK)
 	w.Write(responseBytes)
 }
-

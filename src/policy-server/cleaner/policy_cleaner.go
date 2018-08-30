@@ -90,7 +90,7 @@ func (p *PolicyCleaner) DeleteStalePoliciesWrapper() error {
 	return err
 }
 
-func (p *PolicyCleaner) getC2CPoliciesToDelete(policies []store.Policy, token string) ([]store.Policy, error){
+func (p *PolicyCleaner) getC2CPoliciesToDelete(policies []store.Policy, token string) ([]store.Policy, error) {
 	var c2cPoliciesToDelete []store.Policy
 
 	appGUIDs := policyAppGUIDs(policies)
@@ -112,9 +112,7 @@ func (p *PolicyCleaner) getC2CPoliciesToDelete(policies []store.Policy, token st
 	return c2cPoliciesToDelete, nil
 }
 
-
-
-func (p *PolicyCleaner) getEgressPoliciesToDelete(egressPolicies []store.EgressPolicy, token string) ([]store.EgressPolicy, error){
+func (p *PolicyCleaner) getEgressPoliciesToDelete(egressPolicies []store.EgressPolicy, token string) ([]store.EgressPolicy, error) {
 	var spaceEgressPolicyGUIDs, appEgressPolicyGUIDs []string
 	spaceEgressPolicies := make(map[string][]store.EgressPolicy)
 	var egressPoliciesToDelete []store.EgressPolicy

@@ -1117,6 +1117,14 @@ var _ = Describe("Store", func() {
 })
 
 func migrateAndPopulateTags(realDb *db.ConnWrapper, tl int) {
+	migrate(realDb)
+
+	tagPopulator := &store.TagPopulator{DBConnection: realDb}
+	err := tagPopulator.PopulateTables(tl)
+	Expect(err).NotTo(HaveOccurred())
+}
+
+func migrate(realDb *db.ConnWrapper) {
 	migrator := &migrations.Migrator{
 		MigrateAdapter: &migrations.MigrateAdapter{},
 		MigrationsProvider: &migrations.MigrationsProvider{
@@ -1127,10 +1135,6 @@ func migrateAndPopulateTags(realDb *db.ConnWrapper, tl int) {
 	}
 	_, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 0)
 	Expect(err).ToNot(HaveOccurred())
-
-	tagPopulator := &store.TagPopulator{DBConnection: realDb}
-	err = tagPopulator.PopulateTables(tl)
-	Expect(err).NotTo(HaveOccurred())
 }
 
 func createPolicies(realDb store.Database, dataStore store.Store, policies []store.Policy) error {

@@ -47,7 +47,6 @@ var _ = Describe("Destinations index handler", func() {
 
 		logger = lagertest.NewTestLogger("test")
 
-
 		fakeMetricsSender = &storeFakes.MetricsSender{}
 
 		errorResponse := &httperror.ErrorResponse{

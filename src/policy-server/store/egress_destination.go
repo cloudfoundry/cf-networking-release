@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-type EgressDestinationTable struct {}
+type EgressDestinationTable struct{}
 
 func (e *EgressDestinationTable) All(tx db.Transaction) ([]EgressDestination, error) {
 	rows, err := tx.Queryx(`

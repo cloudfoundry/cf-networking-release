@@ -1,8 +1,8 @@
 package store
 
 import (
-	"policy-server/db"
 	"fmt"
+	"policy-server/db"
 )
 
 //go:generate counterfeiter -o fakes/egress_destination_repo.go --fake-name EgressDestinationRepo . egressDestinationRepo

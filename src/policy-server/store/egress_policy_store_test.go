@@ -330,17 +330,17 @@ var _ = Describe("EgressPolicyStore", func() {
 			egressPolicyIDCollection  store.EgressPolicyIDCollection
 			egressPolicyIDCollection2 store.EgressPolicyIDCollection
 
-			egressPolicyID            int64
-			ipRangeID                 int64
-			destTerminalID            int64
-			appID                     int64
-			srcTerminalID             int64
+			egressPolicyID int64
+			ipRangeID      int64
+			destTerminalID int64
+			appID          int64
+			srcTerminalID  int64
 
-			egressPolicyID2           int64
-			ipRangeID2                int64
-			destTerminalID2           int64
-			appID2                    int64
-			srcTerminalID2            int64
+			egressPolicyID2 int64
+			ipRangeID2      int64
+			destTerminalID2 int64
+			appID2          int64
+			srcTerminalID2  int64
 		)
 		BeforeEach(func() {
 			egressPoliciesToDelete = []store.EgressPolicy{

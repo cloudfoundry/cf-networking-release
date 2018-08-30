@@ -2,8 +2,8 @@ package api
 
 import (
 	"code.cloudfoundry.org/cf-networking-helpers/marshal"
-	"policy-server/store"
 	"fmt"
+	"policy-server/store"
 )
 
 type EgressDestinationMapper struct {
@@ -11,7 +11,7 @@ type EgressDestinationMapper struct {
 }
 
 type DestinationsPayload struct {
-	TotalDestinations  int                 `json:"total_destinations"`
+	TotalDestinations  int                  `json:"total_destinations"`
 	EgressDestinations []*EgressDestination `json:"destinations"`
 }
 
@@ -23,7 +23,7 @@ func (p *EgressDestinationMapper) AsBytes(egressDestinations []store.EgressDesti
 	}
 
 	payload := &DestinationsPayload{
-		TotalDestinations: len(apiEgressDestinations),
+		TotalDestinations:  len(apiEgressDestinations),
 		EgressDestinations: apiEgressDestinations,
 	}
 

@@ -12,8 +12,6 @@ import (
 	dbHelper "code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 
-	"policy-server/store/migrations"
-
 	"code.cloudfoundry.org/lager"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -22,14 +20,13 @@ import (
 
 var _ = Describe("TagStore", func() {
 	var (
-		dataStore    store.Store
-		dbConf       dbHelper.Config
-		realDb       *db.ConnWrapper
-		mockDb       *fakes.Db
-		group        store.GroupRepo
-		destination  store.DestinationRepo
-		policy       store.PolicyRepo
-		realMigrator *migrations.Migrator
+		dataStore   store.Store
+		dbConf      dbHelper.Config
+		realDb      *db.ConnWrapper
+		mockDb      *fakes.Db
+		group       store.GroupRepo
+		destination store.DestinationRepo
+		policy      store.PolicyRepo
 
 		tagStore  store.TagStore
 		tagLength int
@@ -57,18 +54,7 @@ var _ = Describe("TagStore", func() {
 
 		mockDb.DriverNameReturns(realDb.DriverName())
 
-		realMigrator = &migrations.Migrator{
-			MigrateAdapter: &migrations.MigrateAdapter{},
-			MigrationsProvider: &migrations.MigrationsProvider{
-				Store: &store.MigrationsStore{
-					DBConn: realDb,
-				},
-			},
-		}
-		realMigrator.PerformMigrations(realDb.DriverName(), realDb, 0)
-
-		tagPopulator := &store.TagPopulator{DBConnection: realDb}
-		tagPopulator.PopulateTables(tagLength)
+		migrateAndPopulateTags(realDb, tagLength)
 	})
 
 	AfterEach(func() {
