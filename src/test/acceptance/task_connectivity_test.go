@@ -53,7 +53,6 @@ var _ = Describe("task connectivity on the overlay network", func() {
 			pushProxy(proxy2)
 
 			cfCli.AddNetworkPolicy(proxy1, proxy2, 8080, "tcp")
-
 		})
 
 		AfterEach(func() {

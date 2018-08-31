@@ -31,12 +31,14 @@ type EgressSource struct {
 }
 
 type EgressDestination struct {
-	GUID     string    `json:"guid,omitempty"`
-	Protocol string    `json:"protocol"`
-	Ports    []Ports   `json:"ports,omitempty"`
-	IPRanges []IPRange `json:"ips"`
-	ICMPType *int      `json:"icmp_type,omitempty"`
-	ICMPCode *int      `json:"icmp_code,omitempty"`
+	GUID        string    `json:"guid,omitempty"`
+	Name        string    `json:"name,omitempty"`
+	Description string    `json:"description,omitempty"`
+	Protocol    string    `json:"protocol"`
+	Ports       []Ports   `json:"ports,omitempty"`
+	IPRanges    []IPRange `json:"ips"`
+	ICMPType    *int      `json:"icmp_type,omitempty"`
+	ICMPCode    *int      `json:"icmp_code,omitempty"`
 }
 
 type Source struct {

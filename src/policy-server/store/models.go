@@ -45,12 +45,14 @@ type EgressSource struct {
 }
 
 type EgressDestination struct {
-	ID       string
-	Protocol string
-	Ports    []Ports
-	IPRanges []IPRange
-	ICMPType int
-	ICMPCode int
+	ID          string
+	Name        string
+	Description string
+	Protocol    string
+	Ports       []Ports
+	IPRanges    []IPRange
+	ICMPType    int
+	ICMPCode    int
 }
 
 type IPRange struct {

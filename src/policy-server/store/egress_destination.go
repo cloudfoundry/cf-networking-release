@@ -45,12 +45,14 @@ func (e *EgressDestinationTable) All(tx db.Transaction) ([]EgressDestination, er
 		}
 
 		foundEgressDestinations = append(foundEgressDestinations, EgressDestination{
-			ID:       strconv.FormatInt(terminalID, 10),
-			Protocol: *protocol,
-			Ports:    ports,
-			IPRanges: []IPRange{{Start: *startIP, End: *endIP}},
-			ICMPType: icmpType,
-			ICMPCode: icmpCode,
+			ID:          strconv.FormatInt(terminalID, 10),
+			Name:        " ",
+			Description: " ",
+			Protocol:    *protocol,
+			Ports:       ports,
+			IPRanges:    []IPRange{{Start: *startIP, End: *endIP}},
+			ICMPType:    icmpType,
+			ICMPCode:    icmpCode,
 		})
 	}
 	return foundEgressDestinations, nil

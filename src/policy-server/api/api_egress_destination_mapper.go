@@ -49,9 +49,11 @@ func asApiEgressDestination(storeEgressDestination store.EgressDestination) *Egr
 	firstIPRange := storeEgressDestination.IPRanges[0]
 
 	apiEgressDestination := &EgressDestination{
-		GUID:     storeEgressDestination.ID,
-		Protocol: storeEgressDestination.Protocol,
-		Ports:    ports,
+		GUID:        storeEgressDestination.ID,
+		Name:        storeEgressDestination.Name,
+		Description: storeEgressDestination.Description,
+		Protocol:    storeEgressDestination.Protocol,
+		Ports:       ports,
 		IPRanges: []IPRange{{
 			Start: firstIPRange.Start,
 			End:   firstIPRange.End,

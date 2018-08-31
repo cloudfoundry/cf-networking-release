@@ -90,9 +90,9 @@ var _ = Describe("External Destination API", func() {
 		v1Response := `{
 			"total_destinations": 3,
 			"destinations": [
-				{ "guid": "2", "protocol": "tcp", "ips": [ {"start": "23.96.32.148", "end": "23.96.32.149" } ] },
-				{ "guid": "3", "protocol": "tcp", "ports": [{"start": 8080, "end": 8081}], "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] },
-				{ "guid": "4", "protocol": "icmp", "icmp_type": 1, "icmp_code": 2, "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] }
+				{ "guid": "2", "name": " ", "description": " ", "protocol": "tcp", "ips": [ {"start": "23.96.32.148", "end": "23.96.32.149" } ] },
+				{ "guid": "3", "name": " ", "description": " ", "protocol": "tcp", "ports": [{"start": 8080, "end": 8081}], "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] },
+				{ "guid": "4", "name": " ", "description": " ", "protocol": "icmp", "icmp_type": 1, "icmp_code": 2, "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] }
 			]
 		}`
 

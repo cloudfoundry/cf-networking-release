@@ -27,6 +27,7 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 			egressDestinations = []store.EgressDestination{
 				{
 					ID:       "1",
+					Name:     " ",
 					Protocol: "tcp",
 					Ports: []store.Ports{{
 						Start: 8080,
@@ -39,6 +40,7 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 				},
 				{
 					ID:       "2",
+					Description: " ",
 					Protocol: "icmp",
 					IPRanges: []store.IPRange{{
 						Start: "1.2.3.7",
@@ -67,12 +69,14 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 					"destinations": [
 						{   
 							"guid": "1",
+							"name": " ",
 							"protocol": "tcp",
 							"ports": [{ "start": 8080, "end": 8081 }],
 							"ips": [{ "start": "1.2.3.4", "end": "1.2.3.5" }]
 						},
 						{
 							"guid": "2",
+							"description": " ",
 							"protocol": "icmp",
 							"ips": [{ "start": "1.2.3.7", "end": "1.2.3.8" }],
 							"icmp_type": 1,
