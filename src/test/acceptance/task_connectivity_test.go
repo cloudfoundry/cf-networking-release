@@ -39,8 +39,6 @@ var _ = Describe("task connectivity on the overlay network", func() {
 			domain = config.AppsDomain
 
 			orgName = prefix + "task-org"
-
-			Expect(cf.Cf("delete-org", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
 			Expect(cf.Cf("create-org", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
 			Expect(cf.Cf("target", "-o", orgName).Wait(Timeout_Push)).To(gexec.Exit(0))
 
