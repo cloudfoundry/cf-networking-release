@@ -36,39 +36,6 @@ func (p *EgressDestinationMapper) AsBytes(egressDestinations []store.EgressDesti
 	return bytes, nil
 }
 
-func (d *EgressDestination) AsStoreEgressDestination() store.EgressDestination {
-	ipRanges := []store.IPRange{}
-	for _, apiIPRange := range d.IPRanges {
-		ipRanges = append(ipRanges, store.IPRange{
-			Start: apiIPRange.Start,
-			End:   apiIPRange.End,
-		})
-	}
-	ports := []store.Ports{}
-	for _, apiPorts := range d.Ports {
-		ports = append(ports, store.Ports{
-			Start: apiPorts.Start,
-			End:   apiPorts.End,
-		})
-	}
-
-	destination := store.EgressDestination{
-		ID:          d.GUID,
-		Name:        d.Name,
-		Description: d.Description,
-		Protocol:    d.Protocol,
-		Ports:       ports,
-		IPRanges:    ipRanges,
-	}
-
-	if d.Protocol == "icmp" {
-		destination.ICMPType = *d.ICMPType
-		destination.ICMPCode = *d.ICMPCode
-	}
-
-	return destination
-}
-
 func (p *EgressDestinationMapper) AsEgressDestinations(egressDestinations []byte) ([]store.EgressDestination, error) {
 	var payload DestinationsPayload
 	err := json.Unmarshal(egressDestinations, &payload)
@@ -77,8 +44,7 @@ func (p *EgressDestinationMapper) AsEgressDestinations(egressDestinations []byte
 	}
 	storeEgressDestinations := make([]store.EgressDestination, len(payload.EgressDestinations))
 	for i, apiDest := range payload.EgressDestinations {
-		storeEgressDestinations[i] = apiDest.AsStoreEgressDestination()
-
+		storeEgressDestinations[i] = apiDest.asStoreEgressDestination()
 	}
 	return storeEgressDestinations, nil
 }
@@ -114,4 +80,37 @@ func asApiEgressDestination(storeEgressDestination store.EgressDestination) Egre
 		apiEgressDestination.ICMPCode = &storeEgressDestination.ICMPCode
 	}
 	return *apiEgressDestination
+}
+
+func (d *EgressDestination) asStoreEgressDestination() store.EgressDestination {
+	ipRanges := []store.IPRange{}
+	for _, apiIPRange := range d.IPRanges {
+		ipRanges = append(ipRanges, store.IPRange{
+			Start: apiIPRange.Start,
+			End:   apiIPRange.End,
+		})
+	}
+	ports := []store.Ports{}
+	for _, apiPorts := range d.Ports {
+		ports = append(ports, store.Ports{
+			Start: apiPorts.Start,
+			End:   apiPorts.End,
+		})
+	}
+
+	destination := store.EgressDestination{
+		ID:          d.GUID,
+		Name:        d.Name,
+		Description: d.Description,
+		Protocol:    d.Protocol,
+		Ports:       ports,
+		IPRanges:    ipRanges,
+	}
+
+	if d.Protocol == "icmp" {
+		destination.ICMPType = *d.ICMPType
+		destination.ICMPCode = *d.ICMPCode
+	}
+
+	return destination
 }
