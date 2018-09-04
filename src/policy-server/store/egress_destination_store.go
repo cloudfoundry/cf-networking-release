@@ -19,7 +19,7 @@ type terminalRepo interface {
 
 //go:generate counterfeiter -o fakes/destination_metadata_repo.go --fake-name DestinationMetadataRepo . destinationMetadataRepo
 type destinationMetadataRepo interface {
-	CreateDestinationMetadata(tx db.Transaction, terminalID int64, name, description string) (int64, error)
+	Create(tx db.Transaction, terminalID int64, name, description string) (int64, error)
 }
 
 type EgressDestinationStore struct {
@@ -52,7 +52,7 @@ func (e *EgressDestinationStore) Create(egressDestinations []EgressDestination) 
 			return []EgressDestination{}, fmt.Errorf("egress destination store create terminal: %s", err)
 		}
 
-		_, err = e.DestinationMetadataRepo.CreateDestinationMetadata(tx, destinationTerminalID, egressDestination.Name, egressDestination.Description)
+		_, err = e.DestinationMetadataRepo.Create(tx, destinationTerminalID, egressDestination.Name, egressDestination.Description)
 		if err != nil {
 			tx.Rollback()
 			return []EgressDestination{}, fmt.Errorf("egress destination store create destination metadata: %s", err)

@@ -196,7 +196,7 @@ var _ = Describe("EgressDestinationStore", func() {
 				var err error
 
 				BeforeEach(func() {
-					destinationMetadataRepo.CreateDestinationMetadataReturns(-1, errors.New("can't create a destination metadata"))
+					destinationMetadataRepo.CreateReturns(-1, errors.New("can't create a destination metadata"))
 					_, err = egressDestinationsStore.Create([]store.EgressDestination{
 						{
 							Name:        " ",

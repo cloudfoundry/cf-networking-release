@@ -7,13 +7,13 @@ import (
 
 type DestinationMetadataTable struct{}
 
-func (d *DestinationMetadataTable) CreateDestinationMetadata(tx db.Transaction, terminalID int64, name, description string) (int64, error) {
+func (d *DestinationMetadataTable) Create(tx db.Transaction, terminalID int64, name, description string) (int64, error) {
 	driver := tx.DriverName()
 	if driver == "mysql" {
 		result, err := tx.Exec(tx.Rebind(`
-		INSERT INTO destination_metadatas (terminal_id, name, description)
-		VALUES (?, ?, ?)
-	`),
+			INSERT INTO destination_metadatas (terminal_id, name, description)
+			VALUES (?, ?, ?)
+		`),
 			terminalID,
 			name,
 			description,

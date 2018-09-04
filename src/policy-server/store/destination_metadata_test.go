@@ -29,7 +29,7 @@ var _ = Describe("DestinationMetadata", func() {
 			})
 
 			It("returns an error", func() {
-				_, err := destinationMetadataTable.CreateDestinationMetadata(tx, 1, "some-name", "some-desc")
+				_, err := destinationMetadataTable.Create(tx, 1, "some-name", "some-desc")
 				Expect(err).To(MatchError("failed to create destination metadata: failed to insert"))
 			})
 		})
