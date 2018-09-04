@@ -197,10 +197,19 @@ func main() {
 
 	egressDestinationStore := &store.EgressDestinationStore{
 		Conn: connectionPool,
-		EgressDestinationRepo: &store.EgressDestinationTable{},
+		EgressDestinationRepo:   &store.EgressDestinationTable{},
+		TerminalRepo:            &store.EgressPolicyTable{},
+		DestinationMetadataRepo: &store.DestinationMetadataTable{},
 	}
 
 	destinationsIndexHandlerV1 := &handlers.DestinationsIndex{
+		ErrorResponse:           errorResponse,
+		EgressDestinationStore:  egressDestinationStore,
+		EgressDestinationMapper: egressDestinationMapper,
+		Logger:                  logger,
+	}
+
+	createDestinationsHandlerV1 := &handlers.DestinationsCreate{
 		ErrorResponse:           errorResponse,
 		EgressDestinationStore:  egressDestinationStore,
 		EgressDestinationMapper: egressDestinationMapper,
@@ -273,6 +282,7 @@ func main() {
 		{Name: "delete_policies", Method: "POST", Path: "/networking/:version/external/policies/delete"},
 		{Name: "policies_index", Method: "GET", Path: "/networking/:version/external/policies"},
 		{Name: "destinations_index", Method: "GET", Path: "/networking/:version/external/destinations"},
+		{Name: "destinations_create", Method: "POST", Path: "/networking/:version/external/destinations"},
 		{Name: "cleanup", Method: "POST", Path: "/networking/:version/external/policies/cleanup"},
 		{Name: "tags_index", Method: "GET", Path: "/networking/:version/external/tags"},
 	}
@@ -305,6 +315,9 @@ func main() {
 
 		"destinations_index": corsOptionsWrapper(metricsWrap("DestinationsIndex",
 			logWrap(versionWrap(authAdminWrap(destinationsIndexHandlerV1), authAdminWrap(destinationsIndexHandlerV1))))),
+
+		"destinations_create": corsOptionsWrapper(metricsWrap("DestinationsCreate",
+			logWrap(authAdminWrap(createDestinationsHandlerV1)))),
 
 		"cleanup": corsOptionsWrapper(metricsWrap("Cleanup",
 			logWrap(versionWrap(authAdminWrap(policiesCleanupHandler), authAdminWrap(policiesCleanupHandler))))),

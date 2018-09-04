@@ -1396,6 +1396,57 @@ var _ = Describe("migrations", func() {
 			})
 		})
 
+		Describe("V19 - Named Destinations", func() {
+			Context("mysql", func() {
+				BeforeEach(func() {
+					if realDb.DriverName() != "mysql" {
+						Skip("skipping mysql tests")
+					}
+				})
+
+				It("should migrate", func() {
+					By("performing migration")
+					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 28)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(numMigrations).To(Equal(28))
+
+					result, err := realDb.Exec("INSERT INTO terminals (id) VALUES (NULL)")
+					Expect(err).NotTo(HaveOccurred())
+					terminalId, err := result.LastInsertId()
+					Expect(err).NotTo(HaveOccurred())
+
+					_, err = realDb.Exec(realDb.RawConnection().Rebind(`
+						INSERT INTO destination_metadatas (terminal_id, name, description)
+						VALUES (?, ?, ?)`), terminalId, "some-dest", "my destination")
+					Expect(err).NotTo(HaveOccurred())
+				})
+			})
+
+			Context("postgres", func() {
+				BeforeEach(func() {
+					if realDb.DriverName() != "postgres" {
+						Skip("skipping postgres tests")
+					}
+				})
+
+				It("should migrate", func() {
+					By("performing migration")
+					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 28)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(numMigrations).To(Equal(28))
+
+					var terminalId int64
+					err = realDb.QueryRow("INSERT INTO terminals DEFAULT VALUES RETURNING id").Scan(&terminalId)
+					Expect(err).NotTo(HaveOccurred())
+
+					_, err = realDb.Exec(realDb.RawConnection().Rebind(`
+						INSERT INTO destination_metadatas (terminal_id, name, description)
+						VALUES (?, ?, ?)`), terminalId, "some-dest", "my destination")
+					Expect(err).NotTo(HaveOccurred())
+				})
+			})
+		})
+
 		Context("when migrating in parallel", func() {
 			Context("mysql", func() {
 				BeforeEach(func() {

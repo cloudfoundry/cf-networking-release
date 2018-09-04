@@ -7,7 +7,7 @@ import (
 	"sync"
 )
 
-type EgressDestinationStore struct {
+type EgressDestinationStoreLister struct {
 	AllStub        func() ([]store.EgressDestination, error)
 	allMutex       sync.RWMutex
 	allArgsForCall []struct{}
@@ -23,7 +23,7 @@ type EgressDestinationStore struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *EgressDestinationStore) All() ([]store.EgressDestination, error) {
+func (fake *EgressDestinationStoreLister) All() ([]store.EgressDestination, error) {
 	fake.allMutex.Lock()
 	ret, specificReturn := fake.allReturnsOnCall[len(fake.allArgsForCall)]
 	fake.allArgsForCall = append(fake.allArgsForCall, struct{}{})
@@ -38,13 +38,13 @@ func (fake *EgressDestinationStore) All() ([]store.EgressDestination, error) {
 	return fake.allReturns.result1, fake.allReturns.result2
 }
 
-func (fake *EgressDestinationStore) AllCallCount() int {
+func (fake *EgressDestinationStoreLister) AllCallCount() int {
 	fake.allMutex.RLock()
 	defer fake.allMutex.RUnlock()
 	return len(fake.allArgsForCall)
 }
 
-func (fake *EgressDestinationStore) AllReturns(result1 []store.EgressDestination, result2 error) {
+func (fake *EgressDestinationStoreLister) AllReturns(result1 []store.EgressDestination, result2 error) {
 	fake.AllStub = nil
 	fake.allReturns = struct {
 		result1 []store.EgressDestination
@@ -52,7 +52,7 @@ func (fake *EgressDestinationStore) AllReturns(result1 []store.EgressDestination
 	}{result1, result2}
 }
 
-func (fake *EgressDestinationStore) AllReturnsOnCall(i int, result1 []store.EgressDestination, result2 error) {
+func (fake *EgressDestinationStoreLister) AllReturnsOnCall(i int, result1 []store.EgressDestination, result2 error) {
 	fake.AllStub = nil
 	if fake.allReturnsOnCall == nil {
 		fake.allReturnsOnCall = make(map[int]struct {
@@ -66,7 +66,7 @@ func (fake *EgressDestinationStore) AllReturnsOnCall(i int, result1 []store.Egre
 	}{result1, result2}
 }
 
-func (fake *EgressDestinationStore) Invocations() map[string][][]interface{} {
+func (fake *EgressDestinationStoreLister) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.allMutex.RLock()
@@ -78,7 +78,7 @@ func (fake *EgressDestinationStore) Invocations() map[string][][]interface{} {
 	return copiedInvocations
 }
 
-func (fake *EgressDestinationStore) recordInvocation(key string, args []interface{}) {
+func (fake *EgressDestinationStoreLister) recordInvocation(key string, args []interface{}) {
 	fake.invocationsMutex.Lock()
 	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {
@@ -90,4 +90,4 @@ func (fake *EgressDestinationStore) recordInvocation(key string, args []interfac
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ handlers.EgressDestinationStore = new(EgressDestinationStore)
+var _ handlers.EgressDestinationStoreLister = new(EgressDestinationStoreLister)

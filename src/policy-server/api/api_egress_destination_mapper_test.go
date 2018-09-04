@@ -4,10 +4,11 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"code.cloudfoundry.org/cf-networking-helpers/marshal"
 	"encoding/json"
 	"policy-server/api"
 	"policy-server/store"
+
+	"code.cloudfoundry.org/cf-networking-helpers/marshal"
 )
 
 var _ = Describe("ApiEgressDestinationMapper", func() {
@@ -39,9 +40,9 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 					}},
 				},
 				{
-					ID:       "2",
+					ID:          "2",
 					Description: " ",
-					Protocol: "icmp",
+					Protocol:    "icmp",
 					IPRanges: []store.IPRange{{
 						Start: "1.2.3.7",
 						End:   "1.2.3.8",
@@ -67,7 +68,7 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 				[]byte(`{
 					"total_destinations": 3,
 					"destinations": [
-						{   
+						{
 							"guid": "1",
 							"name": " ",
 							"protocol": "tcp",
@@ -89,6 +90,81 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 						}
 					]
 				}`)))
+		})
+	})
+
+	Describe("AsEgressDestinations", func() {
+		var expectedOutputBytes []byte
+
+		BeforeEach(func() {
+			expectedOutputBytes = []byte(`{
+					"total_destinations": 3,
+					"destinations": [
+						{
+							"guid": "1",
+							"name": "my service",
+							"protocol": "tcp",
+							"ports": [{ "start": 8080, "end": 8081 }],
+							"ips": [{ "start": "1.2.3.4", "end": "1.2.3.5" }]
+						},
+						{
+							"guid": "2",
+							"description": "this is where my apps go",
+							"protocol": "icmp",
+							"ips": [{ "start": "1.2.3.7", "end": "1.2.3.8" }],
+							"icmp_type": 1,
+							"icmp_code": 6
+						},
+ 						{
+							"guid": "3",
+							"protocol": "udp",
+							"ips": [{ "start": "1.2.3.7", "end": "1.2.3.8" }]
+						}
+					]
+				}`)
+		})
+
+		It("unmarshals egress destinations from json", func() {
+			payload, err := mapper.AsEgressDestinations(expectedOutputBytes)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(payload).To(Equal(
+				[]store.EgressDestination{
+					{
+						ID:       "1",
+						Name:     "my service",
+						Protocol: "tcp",
+						Ports: []store.Ports{{
+							Start: 8080,
+							End:   8081,
+						}},
+						IPRanges: []store.IPRange{{
+							Start: "1.2.3.4",
+							End:   "1.2.3.5",
+						}},
+					},
+					{
+						ID:          "2",
+						Description: "this is where my apps go",
+						Protocol:    "icmp",
+						Ports:       []store.Ports{},
+						IPRanges: []store.IPRange{{
+							Start: "1.2.3.7",
+							End:   "1.2.3.8",
+						}},
+						ICMPType: 1,
+						ICMPCode: 6,
+					},
+					{
+						ID:       "3",
+						Protocol: "udp",
+						Ports:    []store.Ports{},
+						IPRanges: []store.IPRange{{
+							Start: "1.2.3.7",
+							End:   "1.2.3.8",
+						}},
+					},
+				}),
+			)
 		})
 	})
 })

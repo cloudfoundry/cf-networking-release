@@ -26,8 +26,8 @@ var _ = Describe("Destinations index handler", func() {
 		handler              *handlers.DestinationsIndex
 		resp                 *httptest.ResponseRecorder
 		fakeMetricsSender    *storeFakes.MetricsSender
-		fakeStore            *fakes.EgressDestinationStore
-		fakeMapper           *fakes.EgressDestinationMapper
+		fakeStore            *fakes.EgressDestinationStoreLister
+		fakeMapper           *fakes.EgressDestinationMarshaller
 		logger               *lagertest.TestLogger
 		token                uaa_client.CheckTokenResponse
 	)
@@ -39,10 +39,10 @@ var _ = Describe("Destinations index handler", func() {
 		request, err = http.NewRequest("GET", "/networking/v1/external/destinations", nil)
 		Expect(err).NotTo(HaveOccurred())
 
-		fakeStore = &fakes.EgressDestinationStore{}
+		fakeStore = &fakes.EgressDestinationStoreLister{}
 		fakeStore.AllReturns(allDestinations, nil)
 
-		fakeMapper = &fakes.EgressDestinationMapper{}
+		fakeMapper = &fakes.EgressDestinationMarshaller{}
 		fakeMapper.AsBytesReturns(expectedResponseBody, nil)
 
 		logger = lagertest.NewTestLogger("test")

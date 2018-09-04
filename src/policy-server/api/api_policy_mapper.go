@@ -137,13 +137,15 @@ func (p *Policy) asStorePolicy() store.Policy {
 		},
 	}
 }
+
 func mapStoreEgressPolicy(storeEgressPolicy store.EgressPolicy) EgressPolicy {
+	destination := asApiEgressDestination(storeEgressPolicy.Destination)
 	return EgressPolicy{
 		Source: &EgressSource{
 			ID:   storeEgressPolicy.Source.ID,
 			Type: storeEgressPolicy.Source.Type,
 		},
-		Destination: asApiEgressDestination(storeEgressPolicy.Destination),
+		Destination: &destination,
 	}
 }
 

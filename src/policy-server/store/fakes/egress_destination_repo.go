@@ -21,6 +21,27 @@ type EgressDestinationRepo struct {
 		result1 []store.EgressDestination
 		result2 error
 	}
+	CreateIPRangeStub        func(tx db.Transaction, destinationTerminalID int64, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) (int64, error)
+	createIPRangeMutex       sync.RWMutex
+	createIPRangeArgsForCall []struct {
+		tx                    db.Transaction
+		destinationTerminalID int64
+		startIP               string
+		endIP                 string
+		protocol              string
+		startPort             int64
+		endPort               int64
+		icmpType              int64
+		icmpCode              int64
+	}
+	createIPRangeReturns struct {
+		result1 int64
+		result2 error
+	}
+	createIPRangeReturnsOnCall map[int]struct {
+		result1 int64
+		result2 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -76,11 +97,72 @@ func (fake *EgressDestinationRepo) AllReturnsOnCall(i int, result1 []store.Egres
 	}{result1, result2}
 }
 
+func (fake *EgressDestinationRepo) CreateIPRange(tx db.Transaction, destinationTerminalID int64, startIP string, endIP string, protocol string, startPort int64, endPort int64, icmpType int64, icmpCode int64) (int64, error) {
+	fake.createIPRangeMutex.Lock()
+	ret, specificReturn := fake.createIPRangeReturnsOnCall[len(fake.createIPRangeArgsForCall)]
+	fake.createIPRangeArgsForCall = append(fake.createIPRangeArgsForCall, struct {
+		tx                    db.Transaction
+		destinationTerminalID int64
+		startIP               string
+		endIP                 string
+		protocol              string
+		startPort             int64
+		endPort               int64
+		icmpType              int64
+		icmpCode              int64
+	}{tx, destinationTerminalID, startIP, endIP, protocol, startPort, endPort, icmpType, icmpCode})
+	fake.recordInvocation("CreateIPRange", []interface{}{tx, destinationTerminalID, startIP, endIP, protocol, startPort, endPort, icmpType, icmpCode})
+	fake.createIPRangeMutex.Unlock()
+	if fake.CreateIPRangeStub != nil {
+		return fake.CreateIPRangeStub(tx, destinationTerminalID, startIP, endIP, protocol, startPort, endPort, icmpType, icmpCode)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.createIPRangeReturns.result1, fake.createIPRangeReturns.result2
+}
+
+func (fake *EgressDestinationRepo) CreateIPRangeCallCount() int {
+	fake.createIPRangeMutex.RLock()
+	defer fake.createIPRangeMutex.RUnlock()
+	return len(fake.createIPRangeArgsForCall)
+}
+
+func (fake *EgressDestinationRepo) CreateIPRangeArgsForCall(i int) (db.Transaction, int64, string, string, string, int64, int64, int64, int64) {
+	fake.createIPRangeMutex.RLock()
+	defer fake.createIPRangeMutex.RUnlock()
+	return fake.createIPRangeArgsForCall[i].tx, fake.createIPRangeArgsForCall[i].destinationTerminalID, fake.createIPRangeArgsForCall[i].startIP, fake.createIPRangeArgsForCall[i].endIP, fake.createIPRangeArgsForCall[i].protocol, fake.createIPRangeArgsForCall[i].startPort, fake.createIPRangeArgsForCall[i].endPort, fake.createIPRangeArgsForCall[i].icmpType, fake.createIPRangeArgsForCall[i].icmpCode
+}
+
+func (fake *EgressDestinationRepo) CreateIPRangeReturns(result1 int64, result2 error) {
+	fake.CreateIPRangeStub = nil
+	fake.createIPRangeReturns = struct {
+		result1 int64
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *EgressDestinationRepo) CreateIPRangeReturnsOnCall(i int, result1 int64, result2 error) {
+	fake.CreateIPRangeStub = nil
+	if fake.createIPRangeReturnsOnCall == nil {
+		fake.createIPRangeReturnsOnCall = make(map[int]struct {
+			result1 int64
+			result2 error
+		})
+	}
+	fake.createIPRangeReturnsOnCall[i] = struct {
+		result1 int64
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *EgressDestinationRepo) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.allMutex.RLock()
 	defer fake.allMutex.RUnlock()
+	fake.createIPRangeMutex.RLock()
+	defer fake.createIPRangeMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

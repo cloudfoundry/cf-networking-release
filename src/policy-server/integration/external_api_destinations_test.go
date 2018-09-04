@@ -13,8 +13,9 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
 
+	"bytes"
+
 	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 )
@@ -47,11 +48,11 @@ var _ = Describe("External Destination API", func() {
 		Expect(fakeMetron.Close()).To(Succeed())
 	})
 
-	Describe("listing destinations", func() {
-		addPolicy := func(version, body string) {
+	Describe("destinations", func() {
+		addPolicy := func(body string) {
 			resp := helpers.MakeAndDoRequest(
 				"POST",
-				fmt.Sprintf("http://%s:%d/networking/%s/external/policies", conf.ListenHost, conf.ListenPort, version),
+				fmt.Sprintf("http://%s:%d/networking/v1/external/policies", conf.ListenHost, conf.ListenPort),
 				nil,
 				strings.NewReader(body),
 			)
@@ -62,42 +63,89 @@ var _ = Describe("External Destination API", func() {
 			Expect(responseString).To(MatchJSON("{}"))
 		}
 		BeforeEach(func() {
-			addPolicy("v1", `{ "egress_policies": [ {"source": { "id": "live-app-1-guid" }, "destination": { "protocol": "tcp", "ips": [ {"start": "23.96.32.148", "end": "23.96.32.149" } ] } } ] }`)
-			addPolicy("v1", `{ "egress_policies": [ {"source": { "id": "live-app-1-guid" }, "destination": { "protocol": "tcp", "ports": [{"start": 8080, "end": 8081}], "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] } } ] }`)
-			addPolicy("v1", `{ "egress_policies": [ {"source": { "id": "live-app-1-guid" }, "destination": { "protocol": "icmp", "icmp_type": 1, "icmp_code": 2, "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] } } ] }`)
+			addPolicy(`{ "egress_policies": [ {"source": { "id": "live-app-1-guid" }, "destination": { "protocol": "tcp", "ips": [ {"start": "23.96.32.148", "end": "23.96.32.149" } ] } } ] }`)
+			addPolicy(`{ "egress_policies": [ {"source": { "id": "live-app-1-guid" }, "destination": { "protocol": "tcp", "ports": [{"start": 8080, "end": 8081}], "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] } } ] }`)
+			addPolicy(`{ "egress_policies": [ {"source": { "id": "live-app-1-guid" }, "destination": { "protocol": "icmp", "icmp_type": 1, "icmp_code": 2, "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] } } ] }`)
 		})
 
-		listDestinations := func(version, queryString, expectedResponse string) {
-			resp := helpers.MakeAndDoRequest(
-				"GET",
-				fmt.Sprintf("http://%s:%d/networking/%s/external/destinations%s", conf.ListenHost, conf.ListenPort, version, queryString),
-				nil,
-				nil,
-			)
+		Describe("create and listing all destinations", func() {
+			It("returns all created destinations", func() {
 
-			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-			responseBytes, err := ioutil.ReadAll(resp.Body)
-			Expect(err).NotTo(HaveOccurred())
+				createRequestBody := bytes.NewBufferString(`{
+					"destinations": [	
+						{  "name": "my service",
+						    "description": "my service is a great service",	
+						    "ips": [{"start": "7211.30.35.9", "end": "72.30.35.9"}],
+						     "ports": [{"start": 8080, "end": 8080}],
+						     "protocol":"tcp"
+						},
+						{  "name": "cloud infra",
+						    "description": "this is where my apps go",
+						    "ips": [{"start": "7211.30.35.9", "end": "72.30.35.9"}],
+						     "ports": [{"start": 8080, "end": 8080}],
+						     "protocol":"tcp"
+						}
+					]
+				}`)
+				resp := helpers.MakeAndDoRequest(
+					"POST",
+					fmt.Sprintf("http://%s:%d/networking/v1/external/destinations", conf.ListenHost, conf.ListenPort),
+					nil,
+					createRequestBody,
+				)
 
-			Expect(string(responseBytes)).To(MatchJSON(expectedResponse))
+				Expect(resp.StatusCode).To(Equal(http.StatusCreated))
+				responseBytes, err := ioutil.ReadAll(resp.Body)
+				Expect(err).NotTo(HaveOccurred())
 
-			//move this to it's own it block
-			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
-				HaveName("DestinationsIndexRequestTime"),
-			))
-		}
+				Expect(string(responseBytes)).To(MatchJSON(`{
+					"total_destinations": 2,
+					"destinations": [
+						{
+							"guid": "5",	
+							"name": "my service",
+						    "description": "my service is a great service",	
+						    "ips": [{"start": "7211.30.35.9", "end": "72.30.35.9"}],
+						    "ports": [{"start": 8080, "end": 8080}],
+						    "protocol":"tcp"
+						},
+						{
+							"guid": "6",	
+							"name": "cloud infra",
+						    "description": "this is where my apps go",
+						    "ips": [{"start": "7211.30.35.9", "end": "72.30.35.9"}],
+						    "ports": [{"start": 8080, "end": 8080}],
+						    "protocol":"tcp"
+						}
+					]
+				}`))
 
-		v1Response := `{
-			"total_destinations": 3,
-			"destinations": [
-				{ "guid": "2", "name": " ", "description": " ", "protocol": "tcp", "ips": [ {"start": "23.96.32.148", "end": "23.96.32.149" } ] },
-				{ "guid": "3", "name": " ", "description": " ", "protocol": "tcp", "ports": [{"start": 8080, "end": 8081}], "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] },
-				{ "guid": "4", "name": " ", "description": " ", "protocol": "icmp", "icmp_type": 1, "icmp_code": 2, "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] }
-			]
-		}`
+				resp = helpers.MakeAndDoRequest(
+					"GET",
+					fmt.Sprintf("http://%s:%d/networking/v1/external/destinations", conf.ListenHost, conf.ListenPort),
+					nil,
+					nil,
+				)
 
-		DescribeTable("listing all destinations", listDestinations,
-			Entry("v1: all", "v1", "", v1Response),
-		)
+				Expect(resp.StatusCode).To(Equal(http.StatusOK))
+				responseBytes, err = ioutil.ReadAll(resp.Body)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(string(responseBytes)).To(MatchJSON(`{
+					"total_destinations": 5,
+					"destinations": [
+						{ "guid": "2", "protocol": "tcp", "ips": [ {"start": "23.96.32.148", "end": "23.96.32.149" } ] },
+						{ "guid": "3", "protocol": "tcp", "ports": [{"start": 8080, "end": 8081}], "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] },
+						{ "guid": "4", "protocol": "icmp", "icmp_type": 1, "icmp_code": 2, "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] },
+						{ "guid": "5", "name": "my service", "description": "my service is a great service",	"ips": [{"start": "7211.30.35.9", "end": "72.30.35.9"}], "ports": [{"start": 8080, "end": 8080}], "protocol":"tcp" },
+						{ "guid": "6", "name": "cloud infra", "description": "this is where my apps go", "ips": [{"start": "7211.30.35.9", "end": "72.30.35.9"}], "ports": [{"start": 8080, "end": 8080}], "protocol":"tcp" }
+					]
+				}`))
+
+				Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
+					HaveName("DestinationsIndexRequestTime"),
+				))
+			})
+		})
 	})
 })

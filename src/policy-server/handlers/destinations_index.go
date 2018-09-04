@@ -8,18 +8,19 @@ import (
 
 type DestinationsIndex struct {
 	ErrorResponse           errorResponse
-	EgressDestinationStore  EgressDestinationStore
-	EgressDestinationMapper EgressDestinationMapper
+	EgressDestinationStore  EgressDestinationStoreLister
+	EgressDestinationMapper EgressDestinationMarshaller
 	Logger                  lager.Logger
 }
 
-//go:generate counterfeiter -o fakes/egress_destination_mapper.go --fake-name EgressDestinationMapper . EgressDestinationMapper
-type EgressDestinationMapper interface {
+//go:generate counterfeiter -o fakes/egress_destination_marshaller.go --fake-name EgressDestinationMarshaller . EgressDestinationMarshaller
+type EgressDestinationMarshaller interface {
 	AsBytes(egressDestinations []store.EgressDestination) ([]byte, error)
+	AsEgressDestinations([]byte) ([]store.EgressDestination, error)
 }
 
-//go:generate counterfeiter -o fakes/egress_destination_store.go --fake-name EgressDestinationStore . EgressDestinationStore
-type EgressDestinationStore interface {
+//go:generate counterfeiter -o fakes/egress_destination_store_lister.go --fake-name EgressDestinationStoreLister . EgressDestinationStoreLister
+type EgressDestinationStoreLister interface {
 	All() ([]store.EgressDestination, error)
 }
 
