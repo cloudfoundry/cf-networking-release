@@ -184,4 +184,12 @@ var MigrationsToPerform = PolicyServerMigrations{
 		Id: "19",
 		Up: migration_v0019,
 	},
+	PolicyServerMigration{
+		Id: "20",
+		Up: migration_v0020,
+	},
+	PolicyServerMigration{
+		Id: "21",
+		Up: migration_v0021,
+	},
 }

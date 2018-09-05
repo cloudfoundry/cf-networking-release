@@ -1406,9 +1406,9 @@ var _ = Describe("migrations", func() {
 
 				It("should migrate", func() {
 					By("performing migration")
-					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 28)
+					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 30)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(numMigrations).To(Equal(28))
+					Expect(numMigrations).To(Equal(30))
 
 					result, err := realDb.Exec("INSERT INTO terminals (id) VALUES (NULL)")
 					Expect(err).NotTo(HaveOccurred())
@@ -1431,9 +1431,9 @@ var _ = Describe("migrations", func() {
 
 				It("should migrate", func() {
 					By("performing migration")
-					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 28)
+					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 30)
 					Expect(err).NotTo(HaveOccurred())
-					Expect(numMigrations).To(Equal(28))
+					Expect(numMigrations).To(Equal(30))
 
 					var terminalId int64
 					err = realDb.QueryRow("INSERT INTO terminals DEFAULT VALUES RETURNING id").Scan(&terminalId)
