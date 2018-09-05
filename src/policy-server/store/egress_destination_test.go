@@ -20,7 +20,7 @@ var _ = Describe("EgressDestination", func() {
 		dbConf dbHelper.Config
 		realDb *db.ConnWrapper
 
-		egressPolicyTable      *store.EgressPolicyTable
+		terminalsTable         *store.TerminalsTable
 		egressDestinationTable *store.EgressDestinationTable
 	)
 
@@ -40,7 +40,7 @@ var _ = Describe("EgressDestination", func() {
 		tx, err := realDb.Beginx()
 		Expect(err).NotTo(HaveOccurred())
 
-		terminalId, err := egressPolicyTable.CreateTerminal(tx)
+		terminalId, err := terminalsTable.Create(tx)
 		Expect(err).NotTo(HaveOccurred())
 
 		_, err = egressDestinationTable.CreateIPRange(tx, terminalId, "1.1.1.1", "2.2.2.2", "tcp", 8080, 8081, -1, -1)

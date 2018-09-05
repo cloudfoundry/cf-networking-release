@@ -119,6 +119,7 @@ func main() {
 		EgressPolicyRepo: &store.EgressPolicyTable{
 			Conn: connectionPool,
 		},
+		TerminalsRepo: &store.TerminalsTable{},
 	}
 
 	dataStore := store.New(
@@ -196,9 +197,9 @@ func main() {
 	}
 
 	egressDestinationStore := &store.EgressDestinationStore{
-		Conn: connectionPool,
+		Conn:                    connectionPool,
 		EgressDestinationRepo:   &store.EgressDestinationTable{},
-		TerminalRepo:            &store.EgressPolicyTable{},
+		TerminalsRepo:           &store.TerminalsTable{},
 		DestinationMetadataRepo: &store.DestinationMetadataTable{},
 	}
 

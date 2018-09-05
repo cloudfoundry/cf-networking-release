@@ -8,19 +8,6 @@ import (
 )
 
 type EgressPolicyRepo struct {
-	CreateTerminalStub        func(tx db.Transaction) (int64, error)
-	createTerminalMutex       sync.RWMutex
-	createTerminalArgsForCall []struct {
-		tx db.Transaction
-	}
-	createTerminalReturns struct {
-		result1 int64
-		result2 error
-	}
-	createTerminalReturnsOnCall map[int]struct {
-		result1 int64
-		result2 error
-	}
 	CreateAppStub        func(tx db.Transaction, sourceTerminalID int64, appGUID string) (int64, error)
 	createAppMutex       sync.RWMutex
 	createAppArgsForCall []struct {
@@ -177,18 +164,6 @@ type EgressPolicyRepo struct {
 	deleteIPRangeReturnsOnCall map[int]struct {
 		result1 error
 	}
-	DeleteTerminalStub        func(tx db.Transaction, terminalID int64) error
-	deleteTerminalMutex       sync.RWMutex
-	deleteTerminalArgsForCall []struct {
-		tx         db.Transaction
-		terminalID int64
-	}
-	deleteTerminalReturns struct {
-		result1 error
-	}
-	deleteTerminalReturnsOnCall map[int]struct {
-		result1 error
-	}
 	DeleteAppStub        func(tx db.Transaction, appID int64) error
 	deleteAppMutex       sync.RWMutex
 	deleteAppArgsForCall []struct {
@@ -229,57 +204,6 @@ type EgressPolicyRepo struct {
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
-}
-
-func (fake *EgressPolicyRepo) CreateTerminal(tx db.Transaction) (int64, error) {
-	fake.createTerminalMutex.Lock()
-	ret, specificReturn := fake.createTerminalReturnsOnCall[len(fake.createTerminalArgsForCall)]
-	fake.createTerminalArgsForCall = append(fake.createTerminalArgsForCall, struct {
-		tx db.Transaction
-	}{tx})
-	fake.recordInvocation("CreateTerminal", []interface{}{tx})
-	fake.createTerminalMutex.Unlock()
-	if fake.CreateTerminalStub != nil {
-		return fake.CreateTerminalStub(tx)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.createTerminalReturns.result1, fake.createTerminalReturns.result2
-}
-
-func (fake *EgressPolicyRepo) CreateTerminalCallCount() int {
-	fake.createTerminalMutex.RLock()
-	defer fake.createTerminalMutex.RUnlock()
-	return len(fake.createTerminalArgsForCall)
-}
-
-func (fake *EgressPolicyRepo) CreateTerminalArgsForCall(i int) db.Transaction {
-	fake.createTerminalMutex.RLock()
-	defer fake.createTerminalMutex.RUnlock()
-	return fake.createTerminalArgsForCall[i].tx
-}
-
-func (fake *EgressPolicyRepo) CreateTerminalReturns(result1 int64, result2 error) {
-	fake.CreateTerminalStub = nil
-	fake.createTerminalReturns = struct {
-		result1 int64
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *EgressPolicyRepo) CreateTerminalReturnsOnCall(i int, result1 int64, result2 error) {
-	fake.CreateTerminalStub = nil
-	if fake.createTerminalReturnsOnCall == nil {
-		fake.createTerminalReturnsOnCall = make(map[int]struct {
-			result1 int64
-			result2 error
-		})
-	}
-	fake.createTerminalReturnsOnCall[i] = struct {
-		result1 int64
-		result2 error
-	}{result1, result2}
 }
 
 func (fake *EgressPolicyRepo) CreateApp(tx db.Transaction, sourceTerminalID int64, appGUID string) (int64, error) {
@@ -853,55 +777,6 @@ func (fake *EgressPolicyRepo) DeleteIPRangeReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *EgressPolicyRepo) DeleteTerminal(tx db.Transaction, terminalID int64) error {
-	fake.deleteTerminalMutex.Lock()
-	ret, specificReturn := fake.deleteTerminalReturnsOnCall[len(fake.deleteTerminalArgsForCall)]
-	fake.deleteTerminalArgsForCall = append(fake.deleteTerminalArgsForCall, struct {
-		tx         db.Transaction
-		terminalID int64
-	}{tx, terminalID})
-	fake.recordInvocation("DeleteTerminal", []interface{}{tx, terminalID})
-	fake.deleteTerminalMutex.Unlock()
-	if fake.DeleteTerminalStub != nil {
-		return fake.DeleteTerminalStub(tx, terminalID)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.deleteTerminalReturns.result1
-}
-
-func (fake *EgressPolicyRepo) DeleteTerminalCallCount() int {
-	fake.deleteTerminalMutex.RLock()
-	defer fake.deleteTerminalMutex.RUnlock()
-	return len(fake.deleteTerminalArgsForCall)
-}
-
-func (fake *EgressPolicyRepo) DeleteTerminalArgsForCall(i int) (db.Transaction, int64) {
-	fake.deleteTerminalMutex.RLock()
-	defer fake.deleteTerminalMutex.RUnlock()
-	return fake.deleteTerminalArgsForCall[i].tx, fake.deleteTerminalArgsForCall[i].terminalID
-}
-
-func (fake *EgressPolicyRepo) DeleteTerminalReturns(result1 error) {
-	fake.DeleteTerminalStub = nil
-	fake.deleteTerminalReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *EgressPolicyRepo) DeleteTerminalReturnsOnCall(i int, result1 error) {
-	fake.DeleteTerminalStub = nil
-	if fake.deleteTerminalReturnsOnCall == nil {
-		fake.deleteTerminalReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.deleteTerminalReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
 func (fake *EgressPolicyRepo) DeleteApp(tx db.Transaction, appID int64) error {
 	fake.deleteAppMutex.Lock()
 	ret, specificReturn := fake.deleteAppReturnsOnCall[len(fake.deleteAppArgsForCall)]
@@ -1055,8 +930,6 @@ func (fake *EgressPolicyRepo) IsTerminalInUseReturnsOnCall(i int, result1 bool, 
 func (fake *EgressPolicyRepo) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.createTerminalMutex.RLock()
-	defer fake.createTerminalMutex.RUnlock()
 	fake.createAppMutex.RLock()
 	defer fake.createAppMutex.RUnlock()
 	fake.createIPRangeMutex.RLock()
@@ -1079,8 +952,6 @@ func (fake *EgressPolicyRepo) Invocations() map[string][][]interface{} {
 	defer fake.deleteEgressPolicyMutex.RUnlock()
 	fake.deleteIPRangeMutex.RLock()
 	defer fake.deleteIPRangeMutex.RUnlock()
-	fake.deleteTerminalMutex.RLock()
-	defer fake.deleteTerminalMutex.RUnlock()
 	fake.deleteAppMutex.RLock()
 	defer fake.deleteAppMutex.RUnlock()
 	fake.deleteSpaceMutex.RLock()

@@ -27,6 +27,7 @@ var _ = Describe("Egress Policy Table", func() {
 		mockDb            *fakes.Db
 		migrator          *migrations.Migrator
 		egressPolicyTable *store.EgressPolicyTable
+		terminalsTable    *store.TerminalsTable
 		tx                db.Transaction
 		egressStore       store.EgressPolicyStore
 	)
@@ -58,8 +59,10 @@ var _ = Describe("Egress Policy Table", func() {
 			Conn: realDb,
 		}
 
+		terminalsTable = &store.TerminalsTable{}
 		egressStore = store.EgressPolicyStore{
 			EgressPolicyRepo: egressPolicyTable,
+			TerminalsRepo:    terminalsTable,
 		}
 		tx, err = realDb.Beginx()
 		Expect(err).NotTo(HaveOccurred())
@@ -73,27 +76,9 @@ var _ = Describe("Egress Policy Table", func() {
 		testhelpers.RemoveDatabase(dbConf)
 	})
 
-	Context("CreateTerminal", func() {
-		It("should create a Terminal and return the ID", func() {
-			id, err := egressPolicyTable.CreateTerminal(tx)
-			Expect(err).ToNot(HaveOccurred())
-
-			Expect(id).To(Equal(int64(1)))
-		})
-
-		It("should return an error if the driver is not supported", func() {
-			fakeTx := &dbfakes.Transaction{}
-
-			fakeTx.DriverNameReturns("db2")
-
-			_, err := egressPolicyTable.CreateTerminal(fakeTx)
-			Expect(err).To(MatchError("unknown driver: db2"))
-		})
-	})
-
 	Context("CreateApp", func() {
 		It("should create an app and return the ID", func() {
-			appTerminalID, err := egressPolicyTable.CreateTerminal(tx)
+			appTerminalID, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 
 			id, err := egressPolicyTable.CreateApp(tx, appTerminalID, "some-app-guid")
@@ -120,7 +105,7 @@ var _ = Describe("Egress Policy Table", func() {
 
 	Context("CreateSpace", func() {
 		It("should create a space and return the ID", func() {
-			spaceTerminalID, err := egressPolicyTable.CreateTerminal(tx)
+			spaceTerminalID, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 
 			id, err := egressPolicyTable.CreateSpace(tx, spaceTerminalID, "some-space-guid")
@@ -147,7 +132,7 @@ var _ = Describe("Egress Policy Table", func() {
 
 	Context("CreateIPRange", func() {
 		It("should create an iprange and return the ID", func() {
-			ipRangeTerminalID, err := egressPolicyTable.CreateTerminal(tx)
+			ipRangeTerminalID, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 
 			id, err := egressPolicyTable.CreateIPRange(tx, ipRangeTerminalID, "1.1.1.1", "2.2.2.2", "tcp", 8080, 8081, 0, 0)
@@ -170,7 +155,7 @@ var _ = Describe("Egress Policy Table", func() {
 		})
 
 		It("should create an iprange with icmp and return the ID", func() {
-			ipRangeTerminalID, err := egressPolicyTable.CreateTerminal(tx)
+			ipRangeTerminalID, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 
 			id, err := egressPolicyTable.CreateIPRange(tx, ipRangeTerminalID, "1.1.1.1", "2.2.2.2", "icmp", 0, 0, 2, 1)
@@ -204,9 +189,9 @@ var _ = Describe("Egress Policy Table", func() {
 
 	Context("CreateEgressPolicy", func() {
 		It("should create and return the id for an egress policy", func() {
-			sourceTerminalId, err := egressPolicyTable.CreateTerminal(tx)
+			sourceTerminalId, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
-			destinationTerminalId, err := egressPolicyTable.CreateTerminal(tx)
+			destinationTerminalId, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 
 			id, err := egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalId, destinationTerminalId)
@@ -234,9 +219,9 @@ var _ = Describe("Egress Policy Table", func() {
 		)
 
 		BeforeEach(func() {
-			sourceTerminalId, err := egressPolicyTable.CreateTerminal(tx)
+			sourceTerminalId, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
-			destinationTerminalId, err := egressPolicyTable.CreateTerminal(tx)
+			destinationTerminalId, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 
 			egressPolicyID, err = egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalId, destinationTerminalId)
@@ -269,7 +254,7 @@ var _ = Describe("Egress Policy Table", func() {
 		)
 
 		BeforeEach(func() {
-			ipRangeTerminalID, err := egressPolicyTable.CreateTerminal(tx)
+			ipRangeTerminalID, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 
 			ipRangeID, err = egressPolicyTable.CreateIPRange(tx, ipRangeTerminalID, "1.1.1.1", "2.2.2.2", "tcp", 8080, 8081, 0, 0)
@@ -304,13 +289,13 @@ var _ = Describe("Egress Policy Table", func() {
 
 		BeforeEach(func() {
 			var err error
-			terminalID, err = egressPolicyTable.CreateTerminal(tx)
+			terminalID, err = terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(terminalID).To(Equal(int64(1)))
 		})
 
 		It("deletes the terminal", func() {
-			err := egressPolicyTable.DeleteTerminal(tx, terminalID)
+			err := terminalsTable.Delete(tx, terminalID)
 			Expect(err).ToNot(HaveOccurred())
 
 			var terminalCount int
@@ -324,7 +309,7 @@ var _ = Describe("Egress Policy Table", func() {
 			fakeTx := &dbfakes.Transaction{}
 			fakeTx.ExecReturns(nil, errors.New("broke"))
 
-			err := egressPolicyTable.DeleteTerminal(fakeTx, 2)
+			err := terminalsTable.Delete(fakeTx, 2)
 			Expect(err).To(MatchError("broke"))
 		})
 	})
@@ -335,7 +320,7 @@ var _ = Describe("Egress Policy Table", func() {
 		)
 
 		BeforeEach(func() {
-			appTerminalID, err := egressPolicyTable.CreateTerminal(tx)
+			appTerminalID, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 
 			appID, err = egressPolicyTable.CreateApp(tx, appTerminalID, "some-app-guid")
@@ -370,7 +355,7 @@ var _ = Describe("Egress Policy Table", func() {
 		)
 
 		BeforeEach(func() {
-			spaceTerminalID, err := egressPolicyTable.CreateTerminal(tx)
+			spaceTerminalID, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 
 			spaceID, err = egressPolicyTable.CreateSpace(tx, spaceTerminalID, "some-space-guid")
@@ -405,9 +390,9 @@ var _ = Describe("Egress Policy Table", func() {
 		)
 
 		BeforeEach(func() {
-			destinationTerminalID, err := egressPolicyTable.CreateTerminal(tx)
+			destinationTerminalID, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
-			sourceTerminalID, err = egressPolicyTable.CreateTerminal(tx)
+			sourceTerminalID, err = terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 
 			_, err = egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalID, destinationTerminalID)
@@ -460,11 +445,11 @@ var _ = Describe("Egress Policy Table", func() {
 				},
 			}
 
-			sourceTerminalID, err = egressPolicyTable.CreateTerminal(tx)
+			sourceTerminalID, err = terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(sourceTerminalID).To(Equal(int64(1)))
 
-			destinationTerminalID, err = egressPolicyTable.CreateTerminal(tx)
+			destinationTerminalID, err = terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(destinationTerminalID).To(Equal(int64(2)))
 
@@ -504,7 +489,7 @@ var _ = Describe("Egress Policy Table", func() {
 			BeforeEach(func() {
 				var err error
 
-				destinationTerminalIDDuplicate, err = egressPolicyTable.CreateTerminal(tx)
+				destinationTerminalIDDuplicate, err = terminalsTable.Create(tx)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(destinationTerminalIDDuplicate).To(Equal(int64(3)))
 
@@ -573,7 +558,7 @@ var _ = Describe("Egress Policy Table", func() {
 				}
 
 				var err error
-				spaceSourceTerminalID, err = egressPolicyTable.CreateTerminal(tx)
+				spaceSourceTerminalID, err = terminalsTable.Create(tx)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(spaceSourceTerminalID).To(Equal(int64(3)))
 
@@ -618,11 +603,11 @@ var _ = Describe("Egress Policy Table", func() {
 					},
 				}
 
-				sourceTerminalID, err = egressPolicyTable.CreateTerminal(tx)
+				sourceTerminalID, err = terminalsTable.Create(tx)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(sourceTerminalID).To(Equal(int64(3)))
 
-				destinationTerminalID, err = egressPolicyTable.CreateTerminal(tx)
+				destinationTerminalID, err = terminalsTable.Create(tx)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(destinationTerminalID).To(Equal(int64(4)))
 
@@ -674,11 +659,11 @@ var _ = Describe("Egress Policy Table", func() {
 				}
 
 				By("making a icmp policy")
-				sourceTerminalID, err = egressPolicyTable.CreateTerminal(tx)
+				sourceTerminalID, err = terminalsTable.Create(tx)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(sourceTerminalID).To(Equal(int64(3)))
 
-				destinationTerminalID, err = egressPolicyTable.CreateTerminal(tx)
+				destinationTerminalID, err = terminalsTable.Create(tx)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(destinationTerminalID).To(Equal(int64(4)))
 
@@ -695,7 +680,7 @@ var _ = Describe("Egress Policy Table", func() {
 				Expect(ipRangeID).To(Equal(int64(2)))
 
 				By("making a slightly similar icmp policy with different type/code")
-				otherDestTermID, err := egressPolicyTable.CreateTerminal(tx)
+				otherDestTermID, err := terminalsTable.Create(tx)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(otherDestTermID).To(Equal(int64(5)))
 
@@ -747,7 +732,7 @@ var _ = Describe("Egress Policy Table", func() {
 
 	Context("GetTerminalByAppGUID", func() {
 		It("should return the terminal id for an app if it exists", func() {
-			terminalId, err := egressPolicyTable.CreateTerminal(tx)
+			terminalId, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 			appsId, err := egressPolicyTable.CreateApp(tx, terminalId, "some-app-guid")
 			Expect(err).ToNot(HaveOccurred())
@@ -766,7 +751,7 @@ var _ = Describe("Egress Policy Table", func() {
 
 	Context("GetTerminalBySpaceGUID", func() {
 		It("should return the terminal id for a space if it exists", func() {
-			terminalId, err := egressPolicyTable.CreateTerminal(tx)
+			terminalId, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 			spacesId, err := egressPolicyTable.CreateSpace(tx, terminalId, "some-space-guid")
 			Expect(err).ToNot(HaveOccurred())

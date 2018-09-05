@@ -20,8 +20,8 @@ import (
 var _ = Describe("EgressDestinationStore", func() {
 	var (
 		egressDestinationsStore *store.EgressDestinationStore
-		egressPolicyRepo        *store.EgressPolicyTable
 		destinationMetadataRepo *store.DestinationMetadataTable
+		terminalsRepo           *store.TerminalsTable
 		egressDestinationTable  *store.EgressDestinationTable
 	)
 
@@ -46,13 +46,10 @@ var _ = Describe("EgressDestinationStore", func() {
 			destinationMetadataRepo = &store.DestinationMetadataTable{}
 
 			egressDestinationsStore = &store.EgressDestinationStore{
-				Conn: realDb,
-				EgressDestinationRepo:   egressDestinationTable,
-				TerminalRepo:            egressPolicyRepo,
+				TerminalsRepo:           terminalsRepo,
 				DestinationMetadataRepo: destinationMetadataRepo,
-			}
-			egressPolicyRepo = &store.EgressPolicyTable{
-				Conn: realDb,
+				Conn:                    realDb,
+				EgressDestinationRepo:   egressDestinationTable,
 			}
 		})
 
@@ -141,7 +138,7 @@ var _ = Describe("EgressDestinationStore", func() {
 		var (
 			mockDB                  *fakes.Db
 			tx                      *dbfakes.Transaction
-			terminalRepo            *fakes.TerminalRepo
+			terminalsRepo           *fakes.TerminalsRepo
 			egressDestinationRepo   *fakes.EgressDestinationRepo
 			destinationMetadataRepo *fakes.DestinationMetadataRepo
 		)
@@ -152,15 +149,15 @@ var _ = Describe("EgressDestinationStore", func() {
 
 			mockDB.BeginxReturns(tx, nil)
 
-			terminalRepo = &fakes.TerminalRepo{}
+			terminalsRepo = &fakes.TerminalsRepo{}
 			egressDestinationRepo = &fakes.EgressDestinationRepo{}
 			destinationMetadataRepo = &fakes.DestinationMetadataRepo{}
 
 			egressDestinationsStore = &store.EgressDestinationStore{
-				Conn: mockDB,
+				Conn:                    mockDB,
 				EgressDestinationRepo:   egressDestinationRepo,
 				DestinationMetadataRepo: destinationMetadataRepo,
-				TerminalRepo:            terminalRepo,
+				TerminalsRepo:           terminalsRepo,
 			}
 		})
 
@@ -178,7 +175,7 @@ var _ = Describe("EgressDestinationStore", func() {
 
 			Context("when creating the terminal returns an error", func() {
 				BeforeEach(func() {
-					terminalRepo.CreateTerminalReturns(-1, errors.New("can't create a terminal"))
+					terminalsRepo.CreateReturns(-1, errors.New("can't create a terminal"))
 				})
 
 				It("returns an error", func() {

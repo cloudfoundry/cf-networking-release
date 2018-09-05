@@ -25,7 +25,7 @@ type destinationMetadataRepo interface {
 type EgressDestinationStore struct {
 	Conn                    Database
 	EgressDestinationRepo   egressDestinationRepo
-	TerminalRepo            terminalRepo
+	TerminalsRepo           terminalsRepo
 	DestinationMetadataRepo destinationMetadataRepo
 }
 
@@ -46,7 +46,7 @@ func (e *EgressDestinationStore) Create(egressDestinations []EgressDestination) 
 
 	results := []EgressDestination{}
 	for _, egressDestination := range egressDestinations {
-		destinationTerminalID, err := e.TerminalRepo.CreateTerminal(tx)
+		destinationTerminalID, err := e.TerminalsRepo.Create(tx)
 		if err != nil {
 			tx.Rollback()
 			return []EgressDestination{}, fmt.Errorf("egress destination store create terminal: %s", err)

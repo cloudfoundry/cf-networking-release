@@ -11,30 +11,6 @@ type EgressPolicyTable struct {
 	Conn Database
 }
 
-func (e *EgressPolicyTable) CreateTerminal(tx db.Transaction) (int64, error) {
-	driverName := tx.DriverName()
-
-	if driverName == "mysql" {
-		result, err := tx.Exec("INSERT INTO terminals (id) VALUES (NULL)")
-		if err != nil {
-			return -1, err
-		}
-
-		return result.LastInsertId()
-
-	} else if driverName == "postgres" {
-		var id int64
-		err := tx.QueryRow("INSERT INTO terminals default values RETURNING id").Scan(&id)
-		if err != nil {
-			return -1, err
-		}
-
-		return id, nil
-	}
-
-	return -1, fmt.Errorf("unknown driver: %s", driverName)
-}
-
 func (e *EgressPolicyTable) CreateApp(tx db.Transaction, sourceTerminalID int64, appGUID string) (int64, error) {
 	driverName := tx.DriverName()
 
@@ -204,11 +180,6 @@ func (e *EgressPolicyTable) DeleteEgressPolicy(tx db.Transaction, egressPolicyID
 
 func (e *EgressPolicyTable) DeleteIPRange(tx db.Transaction, ipRangeID int64) error {
 	_, err := tx.Exec(tx.Rebind(`DELETE FROM ip_ranges WHERE id = ?`), ipRangeID)
-	return err
-}
-
-func (e *EgressPolicyTable) DeleteTerminal(tx db.Transaction, terminalID int64) error {
-	_, err := tx.Exec(tx.Rebind(`DELETE FROM terminals WHERE id = ?`), terminalID)
 	return err
 }
 
