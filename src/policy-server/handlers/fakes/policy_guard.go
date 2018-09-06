@@ -22,15 +22,15 @@ type PolicyGuard struct {
 		result1 bool
 		result2 error
 	}
-	CheckEgressPolicyListAccessStub        func(userToken uaa_client.CheckTokenResponse) bool
-	checkEgressPolicyListAccessMutex       sync.RWMutex
-	checkEgressPolicyListAccessArgsForCall []struct {
+	IsNetworkAdminStub        func(userToken uaa_client.CheckTokenResponse) bool
+	isNetworkAdminMutex       sync.RWMutex
+	isNetworkAdminArgsForCall []struct {
 		userToken uaa_client.CheckTokenResponse
 	}
-	checkEgressPolicyListAccessReturns struct {
+	isNetworkAdminReturns struct {
 		result1 bool
 	}
-	checkEgressPolicyListAccessReturnsOnCall map[int]struct {
+	isNetworkAdminReturnsOnCall map[int]struct {
 		result1 bool
 	}
 	invocations      map[string][][]interface{}
@@ -89,50 +89,50 @@ func (fake *PolicyGuard) CheckAccessReturnsOnCall(i int, result1 bool, result2 e
 	}{result1, result2}
 }
 
-func (fake *PolicyGuard) CheckEgressPolicyListAccess(userToken uaa_client.CheckTokenResponse) bool {
-	fake.checkEgressPolicyListAccessMutex.Lock()
-	ret, specificReturn := fake.checkEgressPolicyListAccessReturnsOnCall[len(fake.checkEgressPolicyListAccessArgsForCall)]
-	fake.checkEgressPolicyListAccessArgsForCall = append(fake.checkEgressPolicyListAccessArgsForCall, struct {
+func (fake *PolicyGuard) IsNetworkAdmin(userToken uaa_client.CheckTokenResponse) bool {
+	fake.isNetworkAdminMutex.Lock()
+	ret, specificReturn := fake.isNetworkAdminReturnsOnCall[len(fake.isNetworkAdminArgsForCall)]
+	fake.isNetworkAdminArgsForCall = append(fake.isNetworkAdminArgsForCall, struct {
 		userToken uaa_client.CheckTokenResponse
 	}{userToken})
-	fake.recordInvocation("CheckEgressPolicyListAccess", []interface{}{userToken})
-	fake.checkEgressPolicyListAccessMutex.Unlock()
-	if fake.CheckEgressPolicyListAccessStub != nil {
-		return fake.CheckEgressPolicyListAccessStub(userToken)
+	fake.recordInvocation("IsNetworkAdmin", []interface{}{userToken})
+	fake.isNetworkAdminMutex.Unlock()
+	if fake.IsNetworkAdminStub != nil {
+		return fake.IsNetworkAdminStub(userToken)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.checkEgressPolicyListAccessReturns.result1
+	return fake.isNetworkAdminReturns.result1
 }
 
-func (fake *PolicyGuard) CheckEgressPolicyListAccessCallCount() int {
-	fake.checkEgressPolicyListAccessMutex.RLock()
-	defer fake.checkEgressPolicyListAccessMutex.RUnlock()
-	return len(fake.checkEgressPolicyListAccessArgsForCall)
+func (fake *PolicyGuard) IsNetworkAdminCallCount() int {
+	fake.isNetworkAdminMutex.RLock()
+	defer fake.isNetworkAdminMutex.RUnlock()
+	return len(fake.isNetworkAdminArgsForCall)
 }
 
-func (fake *PolicyGuard) CheckEgressPolicyListAccessArgsForCall(i int) uaa_client.CheckTokenResponse {
-	fake.checkEgressPolicyListAccessMutex.RLock()
-	defer fake.checkEgressPolicyListAccessMutex.RUnlock()
-	return fake.checkEgressPolicyListAccessArgsForCall[i].userToken
+func (fake *PolicyGuard) IsNetworkAdminArgsForCall(i int) uaa_client.CheckTokenResponse {
+	fake.isNetworkAdminMutex.RLock()
+	defer fake.isNetworkAdminMutex.RUnlock()
+	return fake.isNetworkAdminArgsForCall[i].userToken
 }
 
-func (fake *PolicyGuard) CheckEgressPolicyListAccessReturns(result1 bool) {
-	fake.CheckEgressPolicyListAccessStub = nil
-	fake.checkEgressPolicyListAccessReturns = struct {
+func (fake *PolicyGuard) IsNetworkAdminReturns(result1 bool) {
+	fake.IsNetworkAdminStub = nil
+	fake.isNetworkAdminReturns = struct {
 		result1 bool
 	}{result1}
 }
 
-func (fake *PolicyGuard) CheckEgressPolicyListAccessReturnsOnCall(i int, result1 bool) {
-	fake.CheckEgressPolicyListAccessStub = nil
-	if fake.checkEgressPolicyListAccessReturnsOnCall == nil {
-		fake.checkEgressPolicyListAccessReturnsOnCall = make(map[int]struct {
+func (fake *PolicyGuard) IsNetworkAdminReturnsOnCall(i int, result1 bool) {
+	fake.IsNetworkAdminStub = nil
+	if fake.isNetworkAdminReturnsOnCall == nil {
+		fake.isNetworkAdminReturnsOnCall = make(map[int]struct {
 			result1 bool
 		})
 	}
-	fake.checkEgressPolicyListAccessReturnsOnCall[i] = struct {
+	fake.isNetworkAdminReturnsOnCall[i] = struct {
 		result1 bool
 	}{result1}
 }
@@ -142,8 +142,8 @@ func (fake *PolicyGuard) Invocations() map[string][][]interface{} {
 	defer fake.invocationsMutex.RUnlock()
 	fake.checkAccessMutex.RLock()
 	defer fake.checkAccessMutex.RUnlock()
-	fake.checkEgressPolicyListAccessMutex.RLock()
-	defer fake.checkEgressPolicyListAccessMutex.RUnlock()
+	fake.isNetworkAdminMutex.RLock()
+	defer fake.isNetworkAdminMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

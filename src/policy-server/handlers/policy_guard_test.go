@@ -115,7 +115,7 @@ var _ = Describe("PolicyGuard", func() {
 		}
 	})
 
-	Describe("CheckEgressPolicyListAccess", func() {
+	Describe("IsNetworkAdmin", func() {
 		Context("when the user is network.admin", func() {
 			BeforeEach(func() {
 				tokenData = uaa_client.CheckTokenResponse{
@@ -123,7 +123,7 @@ var _ = Describe("PolicyGuard", func() {
 				}
 			})
 			It("returns true", func() {
-				authorized := policyGuard.CheckEgressPolicyListAccess(tokenData)
+				authorized := policyGuard.IsNetworkAdmin(tokenData)
 				Expect(fakeUAAClient.GetTokenCallCount()).To(Equal(0))
 				Expect(authorized).To(BeTrue())
 			})
@@ -136,7 +136,7 @@ var _ = Describe("PolicyGuard", func() {
 				}
 			})
 			It("returns false", func() {
-				authorized := policyGuard.CheckEgressPolicyListAccess(tokenData)
+				authorized := policyGuard.IsNetworkAdmin(tokenData)
 				Expect(fakeUAAClient.GetTokenCallCount()).To(Equal(0))
 				Expect(authorized).To(BeFalse())
 			})

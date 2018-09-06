@@ -87,8 +87,7 @@ func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	var egressPolicies []store.EgressPolicy
 
-	if policyGuard.CheckEgressPolicyListAccess(&PolicyGuard{}, userToken) {
-
+	if policyGuard.IsNetworkAdmin(&PolicyGuard{}, userToken) {
 		egressPolicies, err = h.EgressStore.All()
 		if err != nil {
 			h.ErrorResponse.InternalServerError(logger, w, err, "getting egress policies failed")

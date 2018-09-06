@@ -56,7 +56,8 @@ func (g *PolicyGuard) CheckAccess(policyCollection store.PolicyCollection, userT
 	}
 	return true, nil
 }
-func (g *PolicyGuard) CheckEgressPolicyListAccess(userToken uaa_client.CheckTokenResponse) bool {
+
+func (g *PolicyGuard) IsNetworkAdmin(userToken uaa_client.CheckTokenResponse) bool {
 	for _, scope := range userToken.Scope {
 		if scope == "network.admin" {
 			return true
