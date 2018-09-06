@@ -189,15 +189,15 @@ func main() {
 	deletePolicyHandlerV0 := handlers.NewPoliciesDelete(wrappedPolicyCollectionStore, policyMapperV0,
 		policyGuard, errorResponse)
 
-	policiesIndexHandlerV1 := handlers.NewPoliciesIndex(wrappedStore, egressDataStore, policyMapperV1, policyFilter, errorResponse)
-	policiesIndexHandlerV0 := handlers.NewPoliciesIndex(wrappedStore, egressDataStore, policyMapperV0, policyFilter, errorResponse)
+	policiesIndexHandlerV1 := handlers.NewPoliciesIndex(wrappedStore, egressDataStore, policyMapperV1, policyFilter, policyGuard, errorResponse)
+	policiesIndexHandlerV0 := handlers.NewPoliciesIndex(wrappedStore, egressDataStore, policyMapperV0, policyFilter, policyGuard, errorResponse)
 
 	egressDestinationMapper := &api.EgressDestinationMapper{
 		Marshaler: marshal.MarshalFunc(json.Marshal),
 	}
 
 	egressDestinationStore := &store.EgressDestinationStore{
-		Conn:                    connectionPool,
+		Conn: connectionPool,
 		EgressDestinationRepo:   &store.EgressDestinationTable{},
 		TerminalsRepo:           &store.TerminalsTable{},
 		DestinationMetadataRepo: &store.DestinationMetadataTable{},
@@ -214,6 +214,7 @@ func main() {
 		ErrorResponse:           errorResponse,
 		EgressDestinationStore:  egressDestinationStore,
 		EgressDestinationMapper: egressDestinationMapper,
+		PolicyGuard:             policyGuard,
 		Logger:                  logger,
 	}
 

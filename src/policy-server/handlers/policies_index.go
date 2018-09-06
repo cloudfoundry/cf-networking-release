@@ -32,16 +32,18 @@ type PoliciesIndex struct {
 	EgressStore   egressPolicyStore
 	Mapper        api.PolicyMapper
 	PolicyFilter  policyFilter
+	PolicyGuard   policyGuard
 	ErrorResponse errorResponse
 }
 
 func NewPoliciesIndex(store store.Store, egressStore egressPolicyStore,
-	mapper api.PolicyMapper, policyFilter policyFilter, errorResponse errorResponse) *PoliciesIndex {
+	mapper api.PolicyMapper, policyFilter policyFilter, policyGuard policyGuard, errorResponse errorResponse) *PoliciesIndex {
 	return &PoliciesIndex{
 		Store:         store,
 		EgressStore:   egressStore,
 		Mapper:        mapper,
 		PolicyFilter:  policyFilter,
+		PolicyGuard:   policyGuard,
 		ErrorResponse: errorResponse,
 	}
 }
@@ -87,7 +89,7 @@ func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 	var egressPolicies []store.EgressPolicy
 
-	if policyGuard.IsNetworkAdmin(&PolicyGuard{}, userToken) {
+	if policyGuard.IsNetworkAdmin(h.PolicyGuard, userToken) {
 		egressPolicies, err = h.EgressStore.All()
 		if err != nil {
 			h.ErrorResponse.InternalServerError(logger, w, err, "getting egress policies failed")

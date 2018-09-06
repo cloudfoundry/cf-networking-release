@@ -11,22 +11,22 @@ import (
 	storeFakes "policy-server/store/fakes"
 
 	"bytes"
+	"errors"
+
 	"code.cloudfoundry.org/cf-networking-helpers/httperror"
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"errors"
 )
 
 type failingReader struct {
-
 }
 
-func(f *failingReader) Read(p []byte) (n int, err error) {
+func (f *failingReader) Read(p []byte) (n int, err error) {
 	return 0, errors.New("can't do it")
 }
 
-func(f *failingReader) Close() (err error) {
+func (f *failingReader) Close() (err error) {
 	return nil
 }
 
@@ -39,6 +39,7 @@ var _ = Describe("Destinations create handler", func() {
 		fakeMetricsSender     *storeFakes.MetricsSender
 		fakeStore             *fakes.EgressDestinationStoreCreator
 		fakeMarshaller        *fakes.EgressDestinationMarshaller
+		fakePolicyGuard       *fakes.PolicyGuard
 		logger                *lagertest.TestLogger
 		createdDestinations   []store.EgressDestination
 		requestedDestinations []store.EgressDestination
@@ -80,6 +81,9 @@ var _ = Describe("Destinations create handler", func() {
 		fakeMarshaller = &fakes.EgressDestinationMarshaller{}
 		fakeMarshaller.AsBytesReturns(expectedResponseBody, nil)
 
+		fakePolicyGuard = &fakes.PolicyGuard{}
+		fakePolicyGuard.IsNetworkAdminReturns(true)
+
 		requestedDestinations = []store.EgressDestination{
 			{ID: "req-one"},
 			{ID: "req-two"},
@@ -98,13 +102,24 @@ var _ = Describe("Destinations create handler", func() {
 			ErrorResponse:           errorResponse,
 			EgressDestinationStore:  fakeStore,
 			EgressDestinationMapper: fakeMarshaller,
+			PolicyGuard:             fakePolicyGuard,
 			Logger:                  logger,
 		}
 		resp = httptest.NewRecorder()
+
+		token = uaa_client.CheckTokenResponse{
+			Scope:    []string{"some-scope", "network.admin"},
+			UserID:   "some-user-id",
+			UserName: "some-user",
+		}
 	})
 
 	It("creates destinations", func() {
 		MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
+
+		Expect(fakePolicyGuard.IsNetworkAdminCallCount()).To(Equal(1))
+		passedToken := fakePolicyGuard.IsNetworkAdminArgsForCall(0)
+		Expect(passedToken).To(Equal(token))
 
 		Expect(fakeStore.CreateCallCount()).To(Equal(1))
 		Expect(fakeStore.CreateArgsForCall(0)).To(Equal(requestedDestinations))
@@ -113,7 +128,6 @@ var _ = Describe("Destinations create handler", func() {
 		Expect(resp.Code).To(Equal(http.StatusCreated))
 		Expect(resp.Body.Bytes()).To(Equal(expectedResponseBody))
 	})
-
 
 	It("returns an error request body can't be read", func() {
 		request.Body = &failingReader{}
@@ -142,5 +156,17 @@ var _ = Describe("Destinations create handler", func() {
 		MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
 		Expect(resp.Code).To(Equal(http.StatusInternalServerError))
 		Expect(resp.Body.Bytes()).To(MatchJSON(`{"error": "error serializing egress destinations"}`))
+	})
+
+	Context("when the user is not network admin", func() {
+		BeforeEach(func() {
+			fakePolicyGuard.IsNetworkAdminReturns(false)
+		})
+
+		It("returns an error", func() {
+			MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
+			Expect(resp.Code).To(Equal(http.StatusForbidden))
+			Expect(resp.Body.Bytes()).To(MatchJSON(`{"error": "not authorized: creating egress destinations failed"}`))
+		})
 	})
 })

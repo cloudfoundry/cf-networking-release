@@ -1,16 +1,18 @@
 package handlers
 
 import (
-	"code.cloudfoundry.org/lager"
+	"io/ioutil"
 	"net/http"
 	"policy-server/store"
-	"io/ioutil"
+
+	"code.cloudfoundry.org/lager"
 )
 
 type DestinationsCreate struct {
 	ErrorResponse           errorResponse
 	EgressDestinationStore  EgressDestinationStoreCreator
 	EgressDestinationMapper EgressDestinationMarshaller
+	PolicyGuard             policyGuard
 	Logger                  lager.Logger
 }
 
@@ -19,11 +21,16 @@ type EgressDestinationStoreCreator interface {
 	Create([]store.EgressDestination) ([]store.EgressDestination, error)
 }
 
-
 func (d *DestinationsCreate) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	var destinations, createdDestinations []store.EgressDestination
 	var requestBytes, responseBytes []byte
 	var err error
+
+	userToken := getTokenData(req)
+	if policyGuard.IsNetworkAdmin(d.PolicyGuard, userToken) == false {
+		d.ErrorResponse.Forbidden(d.Logger, w, err, "not authorized: creating egress destinations failed")
+		return
+	}
 
 	requestBytes, err = ioutil.ReadAll(req.Body)
 	if err != nil {

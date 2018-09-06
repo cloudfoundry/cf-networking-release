@@ -37,6 +37,7 @@ var _ = Describe("Policies index handler", func() {
 		fakePolicyFilter      *fakes.PolicyFilter
 		fakeErrorResponse     *fakes.ErrorResponse
 		fakeMapper            *apifakes.PolicyMapper
+		fakePolicyGuard       *fakes.PolicyGuard
 		logger                *lagertest.TestLogger
 		expectedLogger        lager.Logger
 		token                 uaa_client.CheckTokenResponse
@@ -155,6 +156,9 @@ var _ = Describe("Policies index handler", func() {
 		fakeEgressPolicyStore = &fakes.EgressPolicyStore{}
 		fakeEgressPolicyStore.AllReturns(allEgressPolicies, nil)
 
+		fakePolicyGuard = &fakes.PolicyGuard{}
+		fakePolicyGuard.IsNetworkAdminReturns(true)
+
 		fakeErrorResponse = &fakes.ErrorResponse{}
 		fakePolicyFilter = &fakes.PolicyFilter{}
 		fakePolicyFilter.FilterPoliciesStub = func(policies []store.Policy, userToken uaa_client.CheckTokenResponse) ([]store.Policy, error) {
@@ -168,6 +172,7 @@ var _ = Describe("Policies index handler", func() {
 			EgressStore:   fakeEgressPolicyStore,
 			Mapper:        fakeMapper,
 			PolicyFilter:  fakePolicyFilter,
+			PolicyGuard:   fakePolicyGuard,
 			ErrorResponse: fakeErrorResponse,
 		}
 
@@ -207,6 +212,10 @@ var _ = Describe("Policies index handler", func() {
 			It("returns all egress policies", func() {
 				MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
 
+				Expect(fakePolicyGuard.IsNetworkAdminCallCount()).To(Equal(1))
+				passedToken := fakePolicyGuard.IsNetworkAdminArgsForCall(0)
+				Expect(passedToken).To(Equal(token))
+
 				Expect(fakeEgressPolicyStore.AllCallCount()).To(Equal(1))
 				_, egressPolicies := fakeMapper.AsBytesArgsForCall(0)
 				Expect(egressPolicies).To(Equal(allEgressPolicies))
@@ -234,6 +243,10 @@ var _ = Describe("Policies index handler", func() {
 		})
 
 		Context("when the user is not a network admin", func() {
+			BeforeEach(func() {
+				fakePolicyGuard.IsNetworkAdminReturns(false)
+			})
+
 			It("does not return any egress policies", func() {
 				MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
 
