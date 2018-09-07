@@ -190,8 +190,8 @@ var _ = Describe("Internal API", func() {
 
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
 
-			Expect(session.Out).To(gbytes.Say("testprefix.policy-server-internal.request_.*serving"))
-			Expect(session.Out).To(gbytes.Say("testprefix.policy-server-internal.request_.*done"))
+			Eventually(session.Out).Should(gbytes.Say("testprefix.policy-server-internal.request_.*serving"))
+			Eventually(session.Out).Should(gbytes.Say("testprefix.policy-server-internal.request_.*done"))
 		})
 	})
 

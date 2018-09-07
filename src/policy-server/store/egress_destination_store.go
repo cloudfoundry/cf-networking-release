@@ -3,23 +3,17 @@ package store
 import (
 	"fmt"
 	"policy-server/db"
-	"strconv"
 )
 
 //go:generate counterfeiter -o fakes/egress_destination_repo.go --fake-name EgressDestinationRepo . egressDestinationRepo
 type egressDestinationRepo interface {
 	All(tx db.Transaction) ([]EgressDestination, error)
-	CreateIPRange(tx db.Transaction, destinationTerminalID int64, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) (int64, error)
-}
-
-//go:generate counterfeiter -o fakes/terminal_repo.go --fake-name TerminalRepo . terminalRepo
-type terminalRepo interface {
-	CreateTerminal(tx db.Transaction) (int64, error)
+	CreateIPRange(tx db.Transaction, destinationTerminalGUID, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) (int64, error)
 }
 
 //go:generate counterfeiter -o fakes/destination_metadata_repo.go --fake-name DestinationMetadataRepo . destinationMetadataRepo
 type destinationMetadataRepo interface {
-	Create(tx db.Transaction, terminalID int64, name, description string) (int64, error)
+	Create(tx db.Transaction, terminalGUID, name, description string) (int64, error)
 }
 
 type EgressDestinationStore struct {
@@ -46,13 +40,13 @@ func (e *EgressDestinationStore) Create(egressDestinations []EgressDestination) 
 
 	results := []EgressDestination{}
 	for _, egressDestination := range egressDestinations {
-		destinationTerminalID, err := e.TerminalsRepo.Create(tx)
+		destinationTerminalGUID, err := e.TerminalsRepo.Create(tx)
 		if err != nil {
 			tx.Rollback()
 			return []EgressDestination{}, fmt.Errorf("egress destination store create terminal: %s", err)
 		}
 
-		_, err = e.DestinationMetadataRepo.Create(tx, destinationTerminalID, egressDestination.Name, egressDestination.Description)
+		_, err = e.DestinationMetadataRepo.Create(tx, destinationTerminalGUID, egressDestination.Name, egressDestination.Description)
 		if err != nil {
 			tx.Rollback()
 			return []EgressDestination{}, fmt.Errorf("egress destination store create destination metadata: %s", err)
@@ -66,7 +60,7 @@ func (e *EgressDestinationStore) Create(egressDestinations []EgressDestination) 
 
 		_, err = e.EgressDestinationRepo.CreateIPRange(
 			tx,
-			destinationTerminalID,
+			destinationTerminalGUID,
 			egressDestination.IPRanges[0].Start,
 			egressDestination.IPRanges[0].End,
 			egressDestination.Protocol,
@@ -80,7 +74,7 @@ func (e *EgressDestinationStore) Create(egressDestinations []EgressDestination) 
 			return []EgressDestination{}, fmt.Errorf("egress destination store create ip range: %s", err)
 		}
 
-		egressDestination.ID = strconv.FormatInt(destinationTerminalID, 10)
+		egressDestination.GUID = destinationTerminalGUID
 		results = append(results, egressDestination)
 	}
 

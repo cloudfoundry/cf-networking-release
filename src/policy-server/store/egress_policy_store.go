@@ -7,12 +7,12 @@ import (
 
 //go:generate counterfeiter -o fakes/egress_policy_repo.go --fake-name EgressPolicyRepo . egressPolicyRepo
 type egressPolicyRepo interface {
-	CreateApp(tx db.Transaction, sourceTerminalID int64, appGUID string) (int64, error)
-	CreateIPRange(tx db.Transaction, destinationTerminalID int64, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) (int64, error)
-	CreateEgressPolicy(tx db.Transaction, sourceTerminalID, destinationTerminalID int64) (int64, error)
-	CreateSpace(tx db.Transaction, sourceTerminalID int64, spaceGUID string) (int64, error)
-	GetTerminalByAppGUID(tx db.Transaction, appGUID string) (int64, error)
-	GetTerminalBySpaceGUID(tx db.Transaction, appGUID string) (int64, error)
+	CreateApp(tx db.Transaction, sourceTerminalGUID string, appGUID string) (int64, error)
+	CreateIPRange(tx db.Transaction, destinationTerminalGUID string, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) (int64, error)
+	CreateEgressPolicy(tx db.Transaction, sourceTerminalGUID, destinationTerminalGUID string) (int64, error)
+	CreateSpace(tx db.Transaction, sourceTerminalGUID string, spaceGUID string) (int64, error)
+	GetTerminalByAppGUID(tx db.Transaction, appGUID string) (string, error)
+	GetTerminalBySpaceGUID(tx db.Transaction, appGUID string) (string, error)
 	GetAllPolicies() ([]EgressPolicy, error)
 	GetByGuids(ids []string) ([]EgressPolicy, error)
 	GetIDCollectionsByEgressPolicy(tx db.Transaction, egressPolicy EgressPolicy) ([]EgressPolicyIDCollection, error)
@@ -20,13 +20,13 @@ type egressPolicyRepo interface {
 	DeleteIPRange(tx db.Transaction, ipRangeID int64) error
 	DeleteApp(tx db.Transaction, appID int64) error
 	DeleteSpace(tx db.Transaction, spaceID int64) error
-	IsTerminalInUse(tx db.Transaction, terminalID int64) (bool, error)
+	IsTerminalInUse(tx db.Transaction, terminalGUID string) (bool, error)
 }
 
 //go:generate counterfeiter -o fakes/terminals_repo.go --fake-name TerminalsRepo . terminalsRepo
 type terminalsRepo interface {
-	Create(tx db.Transaction) (int64, error)
-	Delete(tx db.Transaction, terminalID int64) error
+	Create(tx db.Transaction) (string, error)
+	Delete(tx db.Transaction, terminalGUID string) error
 }
 
 type EgressPolicyStore struct {
@@ -47,46 +47,46 @@ func (e *EgressPolicyStore) CreateWithTx(tx db.Transaction, policies []EgressPol
 			continue
 		}
 
-		var sourceTerminalID int64
+		var sourceTerminalGUID string
 
 		switch policy.Source.Type {
 		case "space":
-			sourceTerminalID, err = e.EgressPolicyRepo.GetTerminalBySpaceGUID(tx, policy.Source.ID)
+			sourceTerminalGUID, err = e.EgressPolicyRepo.GetTerminalBySpaceGUID(tx, policy.Source.ID)
 			if err != nil {
 				return fmt.Errorf("failed to get terminal by space guid: %s", err)
 			}
 
-			if sourceTerminalID == -1 {
-				sourceTerminalID, err = e.TerminalsRepo.Create(tx)
+			if sourceTerminalGUID == "" {
+				sourceTerminalGUID, err = e.TerminalsRepo.Create(tx)
 				if err != nil {
 					return fmt.Errorf("failed to create source terminal: %s", err)
 				}
 
-				_, err = e.EgressPolicyRepo.CreateSpace(tx, sourceTerminalID, policy.Source.ID)
+				_, err = e.EgressPolicyRepo.CreateSpace(tx, sourceTerminalGUID, policy.Source.ID)
 				if err != nil {
 					return fmt.Errorf("failed to create space: %s", err)
 				}
 			}
 		default:
-			sourceTerminalID, err = e.EgressPolicyRepo.GetTerminalByAppGUID(tx, policy.Source.ID)
+			sourceTerminalGUID, err = e.EgressPolicyRepo.GetTerminalByAppGUID(tx, policy.Source.ID)
 			if err != nil {
 				return fmt.Errorf("failed to get terminal by app guid: %s", err)
 			}
 
-			if sourceTerminalID == -1 {
-				sourceTerminalID, err = e.TerminalsRepo.Create(tx)
+			if sourceTerminalGUID == "" {
+				sourceTerminalGUID, err = e.TerminalsRepo.Create(tx)
 				if err != nil {
 					return fmt.Errorf("failed to create source terminal: %s", err)
 				}
 
-				_, err = e.EgressPolicyRepo.CreateApp(tx, sourceTerminalID, policy.Source.ID)
+				_, err = e.EgressPolicyRepo.CreateApp(tx, sourceTerminalGUID, policy.Source.ID)
 				if err != nil {
 					return fmt.Errorf("failed to create source app: %s", err)
 				}
 			}
 		}
 
-		destinationTerminalID, err := e.TerminalsRepo.Create(tx)
+		destinationTerminalGUID, err := e.TerminalsRepo.Create(tx)
 		if err != nil {
 			return fmt.Errorf("failed to create destination terminal: %s", err)
 		}
@@ -99,7 +99,7 @@ func (e *EgressPolicyStore) CreateWithTx(tx db.Transaction, policies []EgressPol
 
 		_, err = e.EgressPolicyRepo.CreateIPRange(
 			tx,
-			destinationTerminalID,
+			destinationTerminalGUID,
 			policy.Destination.IPRanges[0].Start,
 			policy.Destination.IPRanges[0].End,
 			policy.Destination.Protocol,
@@ -112,7 +112,7 @@ func (e *EgressPolicyStore) CreateWithTx(tx db.Transaction, policies []EgressPol
 			return fmt.Errorf("failed to create ip range: %s", err)
 		}
 
-		_, err = e.EgressPolicyRepo.CreateEgressPolicy(tx, sourceTerminalID, destinationTerminalID)
+		_, err = e.EgressPolicyRepo.CreateEgressPolicy(tx, sourceTerminalGUID, destinationTerminalGUID)
 		if err != nil {
 			return fmt.Errorf("failed to create egress policy: %s", err)
 		}
@@ -138,12 +138,12 @@ func (e *EgressPolicyStore) DeleteWithTx(tx db.Transaction, egressPolicies []Egr
 				return fmt.Errorf("failed to delete destination ip range: %s", err)
 			}
 
-			err = e.TerminalsRepo.Delete(tx, egressPolicyIDCollection.DestinationTerminalID)
+			err = e.TerminalsRepo.Delete(tx, egressPolicyIDCollection.DestinationTerminalGUID)
 			if err != nil {
 				return fmt.Errorf("failed to delete destination terminal: %s", err)
 			}
 
-			terminalInUse, err := e.EgressPolicyRepo.IsTerminalInUse(tx, egressPolicyIDCollection.SourceTerminalID)
+			terminalInUse, err := e.EgressPolicyRepo.IsTerminalInUse(tx, egressPolicyIDCollection.SourceTerminalGUID)
 			if err != nil {
 				return fmt.Errorf("failed to check if source terminal is in use: %s", err)
 			}
@@ -163,7 +163,7 @@ func (e *EgressPolicyStore) DeleteWithTx(tx db.Transaction, egressPolicies []Egr
 					}
 				}
 
-				err = e.TerminalsRepo.Delete(tx, egressPolicyIDCollection.SourceTerminalID)
+				err = e.TerminalsRepo.Delete(tx, egressPolicyIDCollection.SourceTerminalGUID)
 				if err != nil {
 					return fmt.Errorf("failed to delete source terminal: %s", err)
 				}

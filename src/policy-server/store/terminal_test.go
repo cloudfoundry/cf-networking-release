@@ -13,6 +13,7 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"code.cloudfoundry.org/lager"
 
+	uuid "github.com/nu7hatch/gouuid"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -54,24 +55,23 @@ var _ = Describe("Terminal Table", func() {
 		})
 
 		Context("Create", func() {
-			It("should create a Terminal and return the ID", func() {
-				id, err := terminalsTable.Create(tx)
+			It("should create a Terminal and return the guid", func() {
+				guid, err := terminalsTable.Create(tx)
 				Expect(err).ToNot(HaveOccurred())
-
-				Expect(id).To(Equal(int64(1)))
+				_, err = uuid.ParseHex(guid)
+				Expect(err).NotTo(HaveOccurred())
 			})
 		})
 
 		Context("Delete", func() {
 			var (
-				terminalID int64
+				terminalID string
 			)
 
 			BeforeEach(func() {
 				var err error
 				terminalID, err = terminalsTable.Create(tx)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(terminalID).To(Equal(int64(1)))
 			})
 
 			It("deletes the terminal", func() {
@@ -79,7 +79,7 @@ var _ = Describe("Terminal Table", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				var terminalCount int
-				row := tx.QueryRow(`SELECT COUNT(id) FROM terminals WHERE id = 1`)
+				row := tx.QueryRow(tx.Rebind(`SELECT COUNT(guid) FROM terminals WHERE guid = ?`), terminalID)
 				err = row.Scan(&terminalCount)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(terminalCount).To(Equal(0))
@@ -101,11 +101,11 @@ var _ = Describe("Terminal Table", func() {
 		})
 
 		Context("Create", func() {
-			It("should return an error if the driver is not supported", func() {
-				tx.DriverNameReturns("db2")
+			It("should return the sql error", func() {
+				tx.ExecReturns(nil, errors.New("broke"))
 
 				_, err := terminalsTable.Create(tx)
-				Expect(err).To(MatchError("unknown driver: db2"))
+				Expect(err).To(MatchError("broke"))
 			})
 		})
 
@@ -113,7 +113,7 @@ var _ = Describe("Terminal Table", func() {
 			It("should return the sql error", func() {
 				tx.ExecReturns(nil, errors.New("broke"))
 
-				err := terminalsTable.Delete(tx, 2)
+				err := terminalsTable.Delete(tx, "foo")
 				Expect(err).To(MatchError("broke"))
 			})
 		})

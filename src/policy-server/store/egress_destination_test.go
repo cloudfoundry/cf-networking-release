@@ -11,6 +11,7 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"code.cloudfoundry.org/lager"
 
+	uuid "github.com/nu7hatch/gouuid"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -22,6 +23,8 @@ var _ = Describe("EgressDestination", func() {
 
 		terminalsTable         *store.TerminalsTable
 		egressDestinationTable *store.EgressDestinationTable
+
+		terminalId string
 	)
 
 	BeforeEach(func() {
@@ -40,7 +43,7 @@ var _ = Describe("EgressDestination", func() {
 		tx, err := realDb.Beginx()
 		Expect(err).NotTo(HaveOccurred())
 
-		terminalId, err := terminalsTable.Create(tx)
+		terminalId, err = terminalsTable.Create(tx)
 		Expect(err).NotTo(HaveOccurred())
 
 		_, err = egressDestinationTable.CreateIPRange(tx, terminalId, "1.1.1.1", "2.2.2.2", "tcp", 8080, 8081, -1, -1)
@@ -68,18 +71,17 @@ var _ = Describe("EgressDestination", func() {
 			err = tx.Rollback()
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(destinations).To(Equal([]store.EgressDestination{
-				{
-					ID:          "1",
-					Name:        "",
-					Description: "",
-					Protocol:    "tcp",
-					IPRanges:    []store.IPRange{{Start: "1.1.1.1", End: "2.2.2.2"}},
-					Ports:       []store.Ports{{Start: 8080, End: 8081}},
-					ICMPType:    -1,
-					ICMPCode:    -1,
-				},
-			}))
+			_, err = uuid.ParseHex(destinations[0].GUID)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(destinations[0].GUID).To(Equal(terminalId))
+			Expect(destinations[0].Name).To(Equal(""))
+			Expect(destinations[0].Description).To(Equal(""))
+			Expect(destinations[0].Protocol).To(Equal("tcp"))
+			Expect(destinations[0].IPRanges).To(Equal([]store.IPRange{{Start: "1.1.1.1", End: "2.2.2.2"}}))
+			Expect(destinations[0].Ports).To(Equal([]store.Ports{{Start: 8080, End: 8081}}))
+			Expect(destinations[0].ICMPType).To(Equal(-1))
+			Expect(destinations[0].ICMPCode).To(Equal(-1))
 		})
 	})
 })

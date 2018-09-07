@@ -1,38 +1,29 @@
 package store
 
 import (
-	"fmt"
 	"policy-server/db"
+
+	uuid "github.com/nu7hatch/gouuid"
 )
 
 type TerminalsTable struct {
 }
 
-func (e *TerminalsTable) Create(tx db.Transaction) (int64, error) {
-	driverName := tx.DriverName()
-
-	if driverName == "mysql" {
-		result, err := tx.Exec("INSERT INTO terminals (id) VALUES (NULL)")
-		if err != nil {
-			return -1, err
-		}
-
-		return result.LastInsertId()
-
-	} else if driverName == "postgres" {
-		var id int64
-		err := tx.QueryRow("INSERT INTO terminals default values RETURNING id").Scan(&id)
-		if err != nil {
-			return -1, err
-		}
-
-		return id, nil
+func (e *TerminalsTable) Create(tx db.Transaction) (string, error) {
+	guid, err := uuid.NewV4()
+	if err != nil {
+		panic(err)
 	}
 
-	return -1, fmt.Errorf("unknown driver: %s", driverName)
+	_, err = tx.Exec(tx.Rebind("INSERT INTO terminals (guid) VALUES (?)"), guid.String())
+	if err != nil {
+		return "", err
+	}
+
+	return guid.String(), nil
 }
 
-func (e *TerminalsTable) Delete(tx db.Transaction, terminalID int64) error {
-	_, err := tx.Exec(tx.Rebind(`DELETE FROM terminals WHERE id = ?`), terminalID)
+func (e *TerminalsTable) Delete(tx db.Transaction, terminalGUID string) error {
+	_, err := tx.Exec(tx.Rebind(`DELETE FROM terminals WHERE guid = ?`), terminalGUID)
 	return err
 }

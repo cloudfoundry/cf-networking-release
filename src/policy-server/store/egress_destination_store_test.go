@@ -13,6 +13,7 @@ import (
 	dbHelper "code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"code.cloudfoundry.org/lager"
+	uuid "github.com/nu7hatch/gouuid"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -48,8 +49,8 @@ var _ = Describe("EgressDestinationStore", func() {
 			egressDestinationsStore = &store.EgressDestinationStore{
 				TerminalsRepo:           terminalsRepo,
 				DestinationMetadataRepo: destinationMetadataRepo,
-				Conn:                    realDb,
-				EgressDestinationRepo:   egressDestinationTable,
+				Conn: realDb,
+				EgressDestinationRepo: egressDestinationTable,
 			}
 		})
 
@@ -89,47 +90,40 @@ var _ = Describe("EgressDestinationStore", func() {
 				createdDestinations, err := egressDestinationsStore.Create(toBeCreatedDestinations)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(createdDestinations).To(HaveLen(2))
-				Expect(createdDestinations).To(Equal([]store.EgressDestination{
-					{
-						ID:          "1",
-						Name:        "dest-1",
-						Description: "desc-1",
-						Protocol:    "tcp",
-						IPRanges:    []store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}},
-						Ports:       []store.Ports{{Start: 8080, End: 8081}},
-					},
-					{
-						ID:          "2",
-						Name:        "dest-2",
-						Description: "desc-2",
-						Protocol:    "icmp",
-						IPRanges:    []store.IPRange{{Start: "1.2.2.4", End: "1.2.2.5"}},
-						ICMPType:    12,
-						ICMPCode:    13,
-					},
-				}))
+
+				_, err = uuid.ParseHex(createdDestinations[0].GUID)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(createdDestinations[0].Name).To(Equal("dest-1"))
+				Expect(createdDestinations[0].Description).To(Equal("desc-1"))
+				Expect(createdDestinations[0].Protocol).To(Equal("tcp"))
+				Expect(createdDestinations[0].IPRanges).To(Equal([]store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}}))
+				Expect(createdDestinations[0].Ports).To(Equal([]store.Ports{{Start: 8080, End: 8081}}))
+
+				_, err = uuid.ParseHex(createdDestinations[1].GUID)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(createdDestinations[1].Name).To(Equal("dest-2"))
+				Expect(createdDestinations[1].Description).To(Equal("desc-2"))
+				Expect(createdDestinations[1].Protocol).To(Equal("icmp"))
+				Expect(createdDestinations[1].IPRanges).To(Equal([]store.IPRange{{Start: "1.2.2.4", End: "1.2.2.5"}}))
+				Expect(createdDestinations[1].ICMPType).To(Equal(12))
+				Expect(createdDestinations[1].ICMPCode).To(Equal(13))
 
 				destinations, err := egressDestinationsStore.All()
 				Expect(err).NotTo(HaveOccurred())
-				Expect(destinations).To(Equal([]store.EgressDestination{
-					{
-						ID:          "1",
-						Name:        "dest-1",
-						Description: "desc-1",
-						Protocol:    "tcp",
-						IPRanges:    []store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}},
-						Ports:       []store.Ports{{Start: 8080, End: 8081}},
-					},
-					{
-						ID:          "2",
-						Name:        "dest-2",
-						Description: "desc-2",
-						Protocol:    "icmp",
-						IPRanges:    []store.IPRange{{Start: "1.2.2.4", End: "1.2.2.5"}},
-						ICMPType:    12,
-						ICMPCode:    13,
-					},
-				}))
+				Expect(destinations[0].GUID).To(Equal(createdDestinations[0].GUID))
+				Expect(destinations[0].Name).To(Equal("dest-1"))
+				Expect(destinations[0].Description).To(Equal("desc-1"))
+				Expect(destinations[0].Protocol).To(Equal("tcp"))
+				Expect(destinations[0].IPRanges).To(Equal([]store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}}))
+				Expect(destinations[0].Ports).To(Equal([]store.Ports{{Start: 8080, End: 8081}}))
+
+				Expect(destinations[1].GUID).To(Equal(createdDestinations[1].GUID))
+				Expect(destinations[1].Name).To(Equal("dest-2"))
+				Expect(destinations[1].Description).To(Equal("desc-2"))
+				Expect(destinations[1].Protocol).To(Equal("icmp"))
+				Expect(destinations[1].IPRanges).To(Equal([]store.IPRange{{Start: "1.2.2.4", End: "1.2.2.5"}}))
+				Expect(destinations[1].ICMPType).To(Equal(12))
+				Expect(destinations[1].ICMPCode).To(Equal(13))
 			})
 		})
 	})
@@ -154,7 +148,7 @@ var _ = Describe("EgressDestinationStore", func() {
 			destinationMetadataRepo = &fakes.DestinationMetadataRepo{}
 
 			egressDestinationsStore = &store.EgressDestinationStore{
-				Conn:                    mockDB,
+				Conn: mockDB,
 				EgressDestinationRepo:   egressDestinationRepo,
 				DestinationMetadataRepo: destinationMetadataRepo,
 				TerminalsRepo:           terminalsRepo,
@@ -175,7 +169,7 @@ var _ = Describe("EgressDestinationStore", func() {
 
 			Context("when creating the terminal returns an error", func() {
 				BeforeEach(func() {
-					terminalsRepo.CreateReturns(-1, errors.New("can't create a terminal"))
+					terminalsRepo.CreateReturns("", errors.New("can't create a terminal"))
 				})
 
 				It("returns an error", func() {

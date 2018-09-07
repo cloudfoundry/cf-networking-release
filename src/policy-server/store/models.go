@@ -45,7 +45,7 @@ type EgressSource struct {
 }
 
 type EgressDestination struct {
-	ID          string
+	GUID        string
 	Name        string
 	Description string
 	Protocol    string
@@ -61,10 +61,10 @@ type IPRange struct {
 }
 
 type EgressPolicyIDCollection struct {
-	EgressPolicyID        int64
-	DestinationTerminalID int64
-	DestinationIPRangeID  int64
-	SourceTerminalID      int64
-	SourceAppID           int64
-	SourceSpaceID         int64
+	EgressPolicyID          int64
+	DestinationTerminalGUID string
+	DestinationIPRangeID    int64
+	SourceTerminalGUID      string
+	SourceAppID             int64
+	SourceSpaceID           int64
 }

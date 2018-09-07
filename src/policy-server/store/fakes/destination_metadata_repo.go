@@ -7,13 +7,13 @@ import (
 )
 
 type DestinationMetadataRepo struct {
-	CreateStub        func(tx db.Transaction, terminalID int64, name, description string) (int64, error)
+	CreateStub        func(tx db.Transaction, terminalGUID, name, description string) (int64, error)
 	createMutex       sync.RWMutex
 	createArgsForCall []struct {
-		tx          db.Transaction
-		terminalID  int64
-		name        string
-		description string
+		tx           db.Transaction
+		terminalGUID string
+		name         string
+		description  string
 	}
 	createReturns struct {
 		result1 int64
@@ -27,19 +27,19 @@ type DestinationMetadataRepo struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *DestinationMetadataRepo) Create(tx db.Transaction, terminalID int64, name string, description string) (int64, error) {
+func (fake *DestinationMetadataRepo) Create(tx db.Transaction, terminalGUID string, name string, description string) (int64, error) {
 	fake.createMutex.Lock()
 	ret, specificReturn := fake.createReturnsOnCall[len(fake.createArgsForCall)]
 	fake.createArgsForCall = append(fake.createArgsForCall, struct {
-		tx          db.Transaction
-		terminalID  int64
-		name        string
-		description string
-	}{tx, terminalID, name, description})
-	fake.recordInvocation("Create", []interface{}{tx, terminalID, name, description})
+		tx           db.Transaction
+		terminalGUID string
+		name         string
+		description  string
+	}{tx, terminalGUID, name, description})
+	fake.recordInvocation("Create", []interface{}{tx, terminalGUID, name, description})
 	fake.createMutex.Unlock()
 	if fake.CreateStub != nil {
-		return fake.CreateStub(tx, terminalID, name, description)
+		return fake.CreateStub(tx, terminalGUID, name, description)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -53,10 +53,10 @@ func (fake *DestinationMetadataRepo) CreateCallCount() int {
 	return len(fake.createArgsForCall)
 }
 
-func (fake *DestinationMetadataRepo) CreateArgsForCall(i int) (db.Transaction, int64, string, string) {
+func (fake *DestinationMetadataRepo) CreateArgsForCall(i int) (db.Transaction, string, string, string) {
 	fake.createMutex.RLock()
 	defer fake.createMutex.RUnlock()
-	return fake.createArgsForCall[i].tx, fake.createArgsForCall[i].terminalID, fake.createArgsForCall[i].name, fake.createArgsForCall[i].description
+	return fake.createArgsForCall[i].tx, fake.createArgsForCall[i].terminalGUID, fake.createArgsForCall[i].name, fake.createArgsForCall[i].description
 }
 
 func (fake *DestinationMetadataRepo) CreateReturns(result1 int64, result2 error) {

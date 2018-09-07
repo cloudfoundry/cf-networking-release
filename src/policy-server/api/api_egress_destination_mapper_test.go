@@ -27,7 +27,7 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 		BeforeEach(func() {
 			egressDestinations = []store.EgressDestination{
 				{
-					ID:       "1",
+					GUID:     "1",
 					Name:     " ",
 					Protocol: "tcp",
 					Ports: []store.Ports{{
@@ -40,7 +40,7 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 					}},
 				},
 				{
-					ID:          "2",
+					GUID:        "2",
 					Description: " ",
 					Protocol:    "icmp",
 					IPRanges: []store.IPRange{{
@@ -51,7 +51,7 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 					ICMPCode: 6,
 				},
 				{
-					ID:       "3",
+					GUID:     "3",
 					Protocol: "udp",
 					IPRanges: []store.IPRange{{
 						Start: "1.2.3.7",
@@ -130,7 +130,7 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 			Expect(payload).To(Equal(
 				[]store.EgressDestination{
 					{
-						ID:       "1",
+						GUID:     "1",
 						Name:     "my service",
 						Protocol: "tcp",
 						Ports: []store.Ports{{
@@ -143,7 +143,7 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 						}},
 					},
 					{
-						ID:          "2",
+						GUID:        "2",
 						Description: "this is where my apps go",
 						Protocol:    "icmp",
 						Ports:       []store.Ports{},
@@ -155,7 +155,7 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 						ICMPCode: 6,
 					},
 					{
-						ID:       "3",
+						GUID:     "3",
 						Protocol: "udp",
 						Ports:    []store.Ports{},
 						IPRanges: []store.IPRange{{

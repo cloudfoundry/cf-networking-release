@@ -64,7 +64,7 @@ func asApiEgressDestination(storeEgressDestination store.EgressDestination) Egre
 	firstIPRange := storeEgressDestination.IPRanges[0]
 
 	apiEgressDestination := &EgressDestination{
-		GUID:        storeEgressDestination.ID,
+		GUID:        storeEgressDestination.GUID,
 		Name:        storeEgressDestination.Name,
 		Description: storeEgressDestination.Description,
 		Protocol:    storeEgressDestination.Protocol,
@@ -99,7 +99,7 @@ func (d *EgressDestination) asStoreEgressDestination() store.EgressDestination {
 	}
 
 	destination := store.EgressDestination{
-		ID:          d.GUID,
+		GUID:        d.GUID,
 		Name:        d.Name,
 		Description: d.Description,
 		Protocol:    d.Protocol,

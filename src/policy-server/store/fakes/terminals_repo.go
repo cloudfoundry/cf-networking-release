@@ -7,24 +7,24 @@ import (
 )
 
 type TerminalsRepo struct {
-	CreateStub        func(tx db.Transaction) (int64, error)
+	CreateStub        func(tx db.Transaction) (string, error)
 	createMutex       sync.RWMutex
 	createArgsForCall []struct {
 		tx db.Transaction
 	}
 	createReturns struct {
-		result1 int64
+		result1 string
 		result2 error
 	}
 	createReturnsOnCall map[int]struct {
-		result1 int64
+		result1 string
 		result2 error
 	}
-	DeleteStub        func(tx db.Transaction, terminalID int64) error
+	DeleteStub        func(tx db.Transaction, terminalGUID string) error
 	deleteMutex       sync.RWMutex
 	deleteArgsForCall []struct {
-		tx         db.Transaction
-		terminalID int64
+		tx           db.Transaction
+		terminalGUID string
 	}
 	deleteReturns struct {
 		result1 error
@@ -36,7 +36,7 @@ type TerminalsRepo struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *TerminalsRepo) Create(tx db.Transaction) (int64, error) {
+func (fake *TerminalsRepo) Create(tx db.Transaction) (string, error) {
 	fake.createMutex.Lock()
 	ret, specificReturn := fake.createReturnsOnCall[len(fake.createArgsForCall)]
 	fake.createArgsForCall = append(fake.createArgsForCall, struct {
@@ -65,39 +65,39 @@ func (fake *TerminalsRepo) CreateArgsForCall(i int) db.Transaction {
 	return fake.createArgsForCall[i].tx
 }
 
-func (fake *TerminalsRepo) CreateReturns(result1 int64, result2 error) {
+func (fake *TerminalsRepo) CreateReturns(result1 string, result2 error) {
 	fake.CreateStub = nil
 	fake.createReturns = struct {
-		result1 int64
+		result1 string
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *TerminalsRepo) CreateReturnsOnCall(i int, result1 int64, result2 error) {
+func (fake *TerminalsRepo) CreateReturnsOnCall(i int, result1 string, result2 error) {
 	fake.CreateStub = nil
 	if fake.createReturnsOnCall == nil {
 		fake.createReturnsOnCall = make(map[int]struct {
-			result1 int64
+			result1 string
 			result2 error
 		})
 	}
 	fake.createReturnsOnCall[i] = struct {
-		result1 int64
+		result1 string
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *TerminalsRepo) Delete(tx db.Transaction, terminalID int64) error {
+func (fake *TerminalsRepo) Delete(tx db.Transaction, terminalGUID string) error {
 	fake.deleteMutex.Lock()
 	ret, specificReturn := fake.deleteReturnsOnCall[len(fake.deleteArgsForCall)]
 	fake.deleteArgsForCall = append(fake.deleteArgsForCall, struct {
-		tx         db.Transaction
-		terminalID int64
-	}{tx, terminalID})
-	fake.recordInvocation("Delete", []interface{}{tx, terminalID})
+		tx           db.Transaction
+		terminalGUID string
+	}{tx, terminalGUID})
+	fake.recordInvocation("Delete", []interface{}{tx, terminalGUID})
 	fake.deleteMutex.Unlock()
 	if fake.DeleteStub != nil {
-		return fake.DeleteStub(tx, terminalID)
+		return fake.DeleteStub(tx, terminalGUID)
 	}
 	if specificReturn {
 		return ret.result1
@@ -111,10 +111,10 @@ func (fake *TerminalsRepo) DeleteCallCount() int {
 	return len(fake.deleteArgsForCall)
 }
 
-func (fake *TerminalsRepo) DeleteArgsForCall(i int) (db.Transaction, int64) {
+func (fake *TerminalsRepo) DeleteArgsForCall(i int) (db.Transaction, string) {
 	fake.deleteMutex.RLock()
 	defer fake.deleteMutex.RUnlock()
-	return fake.deleteArgsForCall[i].tx, fake.deleteArgsForCall[i].terminalID
+	return fake.deleteArgsForCall[i].tx, fake.deleteArgsForCall[i].terminalGUID
 }
 
 func (fake *TerminalsRepo) DeleteReturns(result1 error) {

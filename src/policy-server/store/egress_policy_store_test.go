@@ -107,7 +107,7 @@ var _ = Describe("EgressPolicyStore", func() {
 			},
 		}
 
-		egressPolicyRepo.GetTerminalByAppGUIDReturns(-1, nil)
+		egressPolicyRepo.GetTerminalByAppGUIDReturns("", nil)
 	})
 
 	Describe("CreateWithTx", func() {
@@ -119,12 +119,12 @@ var _ = Describe("EgressPolicyStore", func() {
 			It("does not create a duplicate policy", func() {
 				egressPolicyRepo.GetIDCollectionsByEgressPolicyReturns([]store.EgressPolicyIDCollection{
 					{
-						EgressPolicyID:        -1,
-						DestinationTerminalID: -1,
-						DestinationIPRangeID:  -1,
-						SourceTerminalID:      -1,
-						SourceAppID:           -1,
-						SourceSpaceID:         -1,
+						EgressPolicyID:          -1,
+						DestinationTerminalGUID: "",
+						DestinationIPRangeID:    -1,
+						SourceTerminalGUID:      "",
+						SourceAppID:             -1,
+						SourceSpaceID:           -1,
 					},
 				}, nil)
 				err := egressPolicyStore.CreateWithTx(tx, egressPolicies)
@@ -151,15 +151,15 @@ var _ = Describe("EgressPolicyStore", func() {
 		})
 
 		It("returns an error when CreateTerminal fails", func() {
-			terminalsRepo.CreateReturns(-1, errors.New("OMG WHY DID THIS FAIL"))
+			terminalsRepo.CreateReturns("", errors.New("OMG WHY DID THIS FAIL"))
 
 			err := egressPolicyStore.CreateWithTx(tx, egressPolicies)
 			Expect(err).To(MatchError("failed to create source terminal: OMG WHY DID THIS FAIL"))
 		})
 
-		It("creates an app with the sourceTerminalID", func() {
-			terminalsRepo.CreateReturnsOnCall(0, 42, nil)
-			terminalsRepo.CreateReturnsOnCall(2, 24, nil)
+		It("creates an app with the sourceTerminalGUID", func() {
+			terminalsRepo.CreateReturnsOnCall(0, "some-term-guid", nil)
+			terminalsRepo.CreateReturnsOnCall(2, "some-term-guid-2", nil)
 
 			err := egressPolicyStore.CreateWithTx(tx, egressPolicies)
 			Expect(err).NotTo(HaveOccurred())
@@ -167,12 +167,12 @@ var _ = Describe("EgressPolicyStore", func() {
 			Expect(egressPolicyRepo.CreateAppCallCount()).To(Equal(3))
 			argTx, argSourceTerminalId, argAppGUID := egressPolicyRepo.CreateAppArgsForCall(0)
 			Expect(argTx).To(Equal(tx))
-			Expect(argSourceTerminalId).To(Equal(int64(42)))
+			Expect(argSourceTerminalId).To(Equal("some-term-guid"))
 			Expect(argAppGUID).To(Equal("some-app-guid"))
 
 			argTx, argSourceTerminalId, argAppGUID = egressPolicyRepo.CreateAppArgsForCall(1)
 			Expect(argTx).To(Equal(tx))
-			Expect(argSourceTerminalId).To(Equal(int64(24)))
+			Expect(argSourceTerminalId).To(Equal("some-term-guid-2"))
 			Expect(argAppGUID).To(Equal("different-app-guid"))
 
 			Expect(egressPolicyRepo.CreateSpaceCallCount()).To(Equal(0))
@@ -185,23 +185,23 @@ var _ = Describe("EgressPolicyStore", func() {
 			Expect(err).To(MatchError("failed to create source app: OMG WHY DID THIS FAIL"))
 		})
 
-		It("creates a space with a sourceTerminalID", func() {
-			egressPolicyRepo.GetTerminalBySpaceGUIDReturns(-1, nil)
-			terminalsRepo.CreateReturns(66, nil)
+		It("creates a space with a sourceTerminalGUID", func() {
+			egressPolicyRepo.GetTerminalBySpaceGUIDReturns("", nil)
+			terminalsRepo.CreateReturns("some-term-guid", nil)
 			err := egressPolicyStore.CreateWithTx(tx, []store.EgressPolicy{spacePolicy})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(egressPolicyRepo.CreateSpaceCallCount()).To(Equal(1))
 			Expect(egressPolicyRepo.CreateAppCallCount()).To(Equal(0))
-			argTx, argSourceTerminalID, argSpaceGUID := egressPolicyRepo.CreateSpaceArgsForCall(0)
+			argTx, argSourceTerminalGUID, argSpaceGUID := egressPolicyRepo.CreateSpaceArgsForCall(0)
 			Expect(argTx).To(Equal(tx))
-			Expect(argSourceTerminalID).To(Equal(int64(66)))
+			Expect(argSourceTerminalGUID).To(Equal("some-term-guid"))
 			Expect(argSpaceGUID).To(Equal("space-guid"))
 		})
 
-		It("creates an ip range with the destinationTerminalID", func() {
-			terminalsRepo.CreateReturnsOnCall(1, 42, nil)
-			terminalsRepo.CreateReturnsOnCall(3, 24, nil)
-			terminalsRepo.CreateReturnsOnCall(5, 44, nil)
+		It("creates an ip range with the destinationTerminalGUID", func() {
+			terminalsRepo.CreateReturnsOnCall(1, "42", nil)
+			terminalsRepo.CreateReturnsOnCall(3, "24", nil)
+			terminalsRepo.CreateReturnsOnCall(5, "44", nil)
 
 			err := egressPolicyStore.CreateWithTx(tx, egressPolicies)
 			Expect(err).NotTo(HaveOccurred())
@@ -209,7 +209,7 @@ var _ = Describe("EgressPolicyStore", func() {
 
 			argTx, destinationID, startIP, endIP, protocol, startPort, endPort, icmpType, icmpCode := egressPolicyRepo.CreateIPRangeArgsForCall(0)
 			Expect(argTx).To(Equal(tx))
-			Expect(destinationID).To(Equal(int64(42)))
+			Expect(destinationID).To(Equal("42"))
 			Expect(startPort).To(Equal(int64(8080)))
 			Expect(endPort).To(Equal(int64(8081)))
 			Expect(startIP).To(Equal("1.2.3.4"))
@@ -220,7 +220,7 @@ var _ = Describe("EgressPolicyStore", func() {
 
 			argTx, destinationID, startIP, endIP, protocol, startPort, endPort, icmpType, icmpCode = egressPolicyRepo.CreateIPRangeArgsForCall(1)
 			Expect(argTx).To(Equal(tx))
-			Expect(destinationID).To(Equal(int64(24)))
+			Expect(destinationID).To(Equal("24"))
 			Expect(startPort).To(Equal(int64(0)))
 			Expect(endPort).To(Equal(int64(0)))
 			Expect(startIP).To(Equal("2.2.3.4"))
@@ -231,7 +231,7 @@ var _ = Describe("EgressPolicyStore", func() {
 
 			argTx, destinationID, startIP, endIP, protocol, startPort, endPort, icmpType, icmpCode = egressPolicyRepo.CreateIPRangeArgsForCall(2)
 			Expect(argTx).To(Equal(tx))
-			Expect(destinationID).To(Equal(int64(44)))
+			Expect(destinationID).To(Equal("44"))
 			Expect(startPort).To(Equal(int64(0)))
 			Expect(endPort).To(Equal(int64(0)))
 			Expect(startIP).To(Equal("2.2.3.4"))
@@ -249,10 +249,10 @@ var _ = Describe("EgressPolicyStore", func() {
 		})
 
 		It("creates an egress policy with the right IDs", func() {
-			terminalsRepo.CreateReturnsOnCall(0, 11, nil)
-			terminalsRepo.CreateReturnsOnCall(1, 22, nil)
-			terminalsRepo.CreateReturnsOnCall(2, 33, nil)
-			terminalsRepo.CreateReturnsOnCall(3, 44, nil)
+			terminalsRepo.CreateReturnsOnCall(0, "11", nil)
+			terminalsRepo.CreateReturnsOnCall(1, "22", nil)
+			terminalsRepo.CreateReturnsOnCall(2, "33", nil)
+			terminalsRepo.CreateReturnsOnCall(3, "44", nil)
 
 			err := egressPolicyStore.CreateWithTx(tx, egressPolicies)
 			Expect(err).NotTo(HaveOccurred())
@@ -260,13 +260,13 @@ var _ = Describe("EgressPolicyStore", func() {
 
 			argTx, sourceID, destinationID := egressPolicyRepo.CreateEgressPolicyArgsForCall(0)
 			Expect(argTx).To(Equal(tx))
-			Expect(sourceID).To(Equal(int64(11)))
-			Expect(destinationID).To(Equal(int64(22)))
+			Expect(sourceID).To(Equal("11"))
+			Expect(destinationID).To(Equal("22"))
 
 			argTx, sourceID, destinationID = egressPolicyRepo.CreateEgressPolicyArgsForCall(1)
 			Expect(argTx).To(Equal(tx))
-			Expect(sourceID).To(Equal(int64(33)))
-			Expect(destinationID).To(Equal(int64(44)))
+			Expect(sourceID).To(Equal("33"))
+			Expect(destinationID).To(Equal("44"))
 		})
 
 		It("returns an error when the CreateEgressPolicy fails", func() {
@@ -277,35 +277,35 @@ var _ = Describe("EgressPolicyStore", func() {
 		})
 
 		It("uses the existing app terminal id when it exists", func() {
-			egressPolicyRepo.GetTerminalByAppGUIDReturns(66, nil)
+			egressPolicyRepo.GetTerminalByAppGUIDReturns("66", nil)
 
 			err := egressPolicyStore.CreateWithTx(tx, egressPolicies)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(egressPolicyRepo.CreateAppCallCount()).To(Equal(0))
 			_, sourceID, _ := egressPolicyRepo.CreateEgressPolicyArgsForCall(0)
-			Expect(sourceID).To(Equal(int64(66)))
+			Expect(sourceID).To(Equal("66"))
 		})
 
 		It("uses the existing space terminal id when it exists", func() {
-			egressPolicyRepo.GetTerminalBySpaceGUIDReturns(55, nil)
+			egressPolicyRepo.GetTerminalBySpaceGUIDReturns("55", nil)
 
 			err := egressPolicyStore.CreateWithTx(tx, []store.EgressPolicy{spacePolicy})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(egressPolicyRepo.CreateSpaceCallCount()).To(Equal(0))
 			_, sourceID, _ := egressPolicyRepo.CreateEgressPolicyArgsForCall(0)
-			Expect(sourceID).To(Equal(int64(55)))
+			Expect(sourceID).To(Equal("55"))
 		})
 
 		It("returns an error when the CreateTerminal fails for space", func() {
-			egressPolicyRepo.GetTerminalBySpaceGUIDReturns(-1, nil)
-			terminalsRepo.CreateReturns(-1, errors.New("OMG WHY DID THIS FAIL"))
+			egressPolicyRepo.GetTerminalBySpaceGUIDReturns("", nil)
+			terminalsRepo.CreateReturns("", errors.New("OMG WHY DID THIS FAIL"))
 
 			err := egressPolicyStore.CreateWithTx(tx, []store.EgressPolicy{spacePolicy})
 			Expect(err).To(MatchError("failed to create source terminal: OMG WHY DID THIS FAIL"))
 		})
 
 		It("returns an error when the CreateSpace fails", func() {
-			egressPolicyRepo.GetTerminalBySpaceGUIDReturns(-1, nil)
+			egressPolicyRepo.GetTerminalBySpaceGUIDReturns("", nil)
 			egressPolicyRepo.CreateSpaceReturns(-1, errors.New("OMG WHY DID THIS FAIL"))
 
 			err := egressPolicyStore.CreateWithTx(tx, []store.EgressPolicy{spacePolicy})
@@ -313,14 +313,14 @@ var _ = Describe("EgressPolicyStore", func() {
 		})
 
 		It("returns an error when the GetTerminalBySpaceGUID fails", func() {
-			egressPolicyRepo.GetTerminalBySpaceGUIDReturns(-1, errors.New("OMG WHY DID THIS FAIL"))
+			egressPolicyRepo.GetTerminalBySpaceGUIDReturns("", errors.New("OMG WHY DID THIS FAIL"))
 
 			err := egressPolicyStore.CreateWithTx(tx, []store.EgressPolicy{spacePolicy})
 			Expect(err).To(MatchError("failed to get terminal by space guid: OMG WHY DID THIS FAIL"))
 		})
 
 		It("returns an error when the GetTerminalByAppGUID fails", func() {
-			egressPolicyRepo.GetTerminalByAppGUIDReturns(-1, errors.New("OMG WHY DID THIS FAIL"))
+			egressPolicyRepo.GetTerminalByAppGUIDReturns("", errors.New("OMG WHY DID THIS FAIL"))
 
 			err := egressPolicyStore.CreateWithTx(tx, egressPolicies)
 			Expect(err).To(MatchError("failed to get terminal by app guid: OMG WHY DID THIS FAIL"))
@@ -333,17 +333,17 @@ var _ = Describe("EgressPolicyStore", func() {
 			egressPolicyIDCollection  store.EgressPolicyIDCollection
 			egressPolicyIDCollection2 store.EgressPolicyIDCollection
 
-			egressPolicyID int64
-			ipRangeID      int64
-			destTerminalID int64
-			appID          int64
-			srcTerminalID  int64
+			egressPolicyID   int64
+			ipRangeID        int64
+			destTerminalGUID string
+			appID            int64
+			srcTerminalGUID  string
 
-			egressPolicyID2 int64
-			ipRangeID2      int64
-			destTerminalID2 int64
-			appID2          int64
-			srcTerminalID2  int64
+			egressPolicyID2   int64
+			ipRangeID2        int64
+			destTerminalGUID2 string
+			appID2            int64
+			srcTerminalGUID2  string
 		)
 		BeforeEach(func() {
 			egressPoliciesToDelete = []store.EgressPolicy{
@@ -371,32 +371,32 @@ var _ = Describe("EgressPolicyStore", func() {
 
 			egressPolicyID = 6
 			ipRangeID = 9
-			destTerminalID = 12
+			destTerminalGUID = "some-dest-terminal-guid"
 			appID = 21
-			srcTerminalID = 22
+			srcTerminalGUID = "some-src-terminal-guid"
 
 			egressPolicyID2 = 7
 			ipRangeID2 = 10
-			destTerminalID2 = 13
+			destTerminalGUID2 = "some-dest-terminal-guid-2"
 			appID2 = 23
-			srcTerminalID2 = 24
+			srcTerminalGUID2 = "some-src-terminal-guid-2"
 
 			egressPolicyIDCollection = store.EgressPolicyIDCollection{
-				EgressPolicyID:        egressPolicyID,
-				DestinationIPRangeID:  ipRangeID,
-				DestinationTerminalID: destTerminalID,
-				SourceAppID:           appID,
-				SourceSpaceID:         -1,
-				SourceTerminalID:      srcTerminalID,
+				EgressPolicyID:          egressPolicyID,
+				DestinationIPRangeID:    ipRangeID,
+				DestinationTerminalGUID: destTerminalGUID,
+				SourceAppID:             appID,
+				SourceSpaceID:           -1,
+				SourceTerminalGUID:      srcTerminalGUID,
 			}
 
 			egressPolicyIDCollection2 = store.EgressPolicyIDCollection{
-				EgressPolicyID:        egressPolicyID2,
-				DestinationIPRangeID:  ipRangeID2,
-				DestinationTerminalID: destTerminalID2,
-				SourceAppID:           appID2,
-				SourceSpaceID:         -1,
-				SourceTerminalID:      srcTerminalID2,
+				EgressPolicyID:          egressPolicyID2,
+				DestinationIPRangeID:    ipRangeID2,
+				DestinationTerminalGUID: destTerminalGUID2,
+				SourceAppID:             appID2,
+				SourceSpaceID:           -1,
+				SourceTerminalGUID:      srcTerminalGUID2,
 			}
 
 			egressPolicyIDCollections := []store.EgressPolicyIDCollection{
@@ -432,21 +432,21 @@ var _ = Describe("EgressPolicyStore", func() {
 			Expect(passedIPRangeID).To(Equal(ipRangeID2))
 
 			Expect(terminalsRepo.DeleteCallCount()).To(Equal(4))
-			passedTx, passedDestTerminalID := terminalsRepo.DeleteArgsForCall(0)
+			passedTx, passedDestTerminalGUID := terminalsRepo.DeleteArgsForCall(0)
 			Expect(passedTx).To(Equal(tx))
-			Expect(passedDestTerminalID).To(Equal(destTerminalID))
+			Expect(passedDestTerminalGUID).To(Equal(destTerminalGUID))
 
-			passedTx, passedSrcTerminalID := terminalsRepo.DeleteArgsForCall(1)
+			passedTx, passedSrcTerminalGUID := terminalsRepo.DeleteArgsForCall(1)
 			Expect(passedTx).To(Equal(tx))
-			Expect(passedSrcTerminalID).To(Equal(srcTerminalID))
+			Expect(passedSrcTerminalGUID).To(Equal(srcTerminalGUID))
 
-			passedTx, passedDestTerminalID = terminalsRepo.DeleteArgsForCall(2)
+			passedTx, passedDestTerminalGUID = terminalsRepo.DeleteArgsForCall(2)
 			Expect(passedTx).To(Equal(tx))
-			Expect(passedDestTerminalID).To(Equal(destTerminalID2))
+			Expect(passedDestTerminalGUID).To(Equal(destTerminalGUID2))
 
-			passedTx, passedSrcTerminalID = terminalsRepo.DeleteArgsForCall(3)
+			passedTx, passedSrcTerminalGUID = terminalsRepo.DeleteArgsForCall(3)
 			Expect(passedTx).To(Equal(tx))
-			Expect(passedSrcTerminalID).To(Equal(srcTerminalID2))
+			Expect(passedSrcTerminalGUID).To(Equal(srcTerminalGUID2))
 
 			Expect(egressPolicyRepo.DeleteAppCallCount()).To(Equal(2))
 			passedTx, passedAppID := egressPolicyRepo.DeleteAppArgsForCall(0)

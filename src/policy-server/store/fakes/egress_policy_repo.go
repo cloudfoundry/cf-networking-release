@@ -8,12 +8,12 @@ import (
 )
 
 type EgressPolicyRepo struct {
-	CreateAppStub        func(tx db.Transaction, sourceTerminalID int64, appGUID string) (int64, error)
+	CreateAppStub        func(tx db.Transaction, sourceTerminalGUID string, appGUID string) (int64, error)
 	createAppMutex       sync.RWMutex
 	createAppArgsForCall []struct {
-		tx               db.Transaction
-		sourceTerminalID int64
-		appGUID          string
+		tx                 db.Transaction
+		sourceTerminalGUID string
+		appGUID            string
 	}
 	createAppReturns struct {
 		result1 int64
@@ -23,18 +23,18 @@ type EgressPolicyRepo struct {
 		result1 int64
 		result2 error
 	}
-	CreateIPRangeStub        func(tx db.Transaction, destinationTerminalID int64, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) (int64, error)
+	CreateIPRangeStub        func(tx db.Transaction, destinationTerminalGUID string, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) (int64, error)
 	createIPRangeMutex       sync.RWMutex
 	createIPRangeArgsForCall []struct {
-		tx                    db.Transaction
-		destinationTerminalID int64
-		startIP               string
-		endIP                 string
-		protocol              string
-		startPort             int64
-		endPort               int64
-		icmpType              int64
-		icmpCode              int64
+		tx                      db.Transaction
+		destinationTerminalGUID string
+		startIP                 string
+		endIP                   string
+		protocol                string
+		startPort               int64
+		endPort                 int64
+		icmpType                int64
+		icmpCode                int64
 	}
 	createIPRangeReturns struct {
 		result1 int64
@@ -44,12 +44,12 @@ type EgressPolicyRepo struct {
 		result1 int64
 		result2 error
 	}
-	CreateEgressPolicyStub        func(tx db.Transaction, sourceTerminalID, destinationTerminalID int64) (int64, error)
+	CreateEgressPolicyStub        func(tx db.Transaction, sourceTerminalGUID, destinationTerminalGUID string) (int64, error)
 	createEgressPolicyMutex       sync.RWMutex
 	createEgressPolicyArgsForCall []struct {
-		tx                    db.Transaction
-		sourceTerminalID      int64
-		destinationTerminalID int64
+		tx                      db.Transaction
+		sourceTerminalGUID      string
+		destinationTerminalGUID string
 	}
 	createEgressPolicyReturns struct {
 		result1 int64
@@ -59,12 +59,12 @@ type EgressPolicyRepo struct {
 		result1 int64
 		result2 error
 	}
-	CreateSpaceStub        func(tx db.Transaction, sourceTerminalID int64, spaceGUID string) (int64, error)
+	CreateSpaceStub        func(tx db.Transaction, sourceTerminalGUID string, spaceGUID string) (int64, error)
 	createSpaceMutex       sync.RWMutex
 	createSpaceArgsForCall []struct {
-		tx               db.Transaction
-		sourceTerminalID int64
-		spaceGUID        string
+		tx                 db.Transaction
+		sourceTerminalGUID string
+		spaceGUID          string
 	}
 	createSpaceReturns struct {
 		result1 int64
@@ -74,32 +74,32 @@ type EgressPolicyRepo struct {
 		result1 int64
 		result2 error
 	}
-	GetTerminalByAppGUIDStub        func(tx db.Transaction, appGUID string) (int64, error)
+	GetTerminalByAppGUIDStub        func(tx db.Transaction, appGUID string) (string, error)
 	getTerminalByAppGUIDMutex       sync.RWMutex
 	getTerminalByAppGUIDArgsForCall []struct {
 		tx      db.Transaction
 		appGUID string
 	}
 	getTerminalByAppGUIDReturns struct {
-		result1 int64
+		result1 string
 		result2 error
 	}
 	getTerminalByAppGUIDReturnsOnCall map[int]struct {
-		result1 int64
+		result1 string
 		result2 error
 	}
-	GetTerminalBySpaceGUIDStub        func(tx db.Transaction, appGUID string) (int64, error)
+	GetTerminalBySpaceGUIDStub        func(tx db.Transaction, appGUID string) (string, error)
 	getTerminalBySpaceGUIDMutex       sync.RWMutex
 	getTerminalBySpaceGUIDArgsForCall []struct {
 		tx      db.Transaction
 		appGUID string
 	}
 	getTerminalBySpaceGUIDReturns struct {
-		result1 int64
+		result1 string
 		result2 error
 	}
 	getTerminalBySpaceGUIDReturnsOnCall map[int]struct {
-		result1 int64
+		result1 string
 		result2 error
 	}
 	GetAllPoliciesStub        func() ([]store.EgressPolicy, error)
@@ -188,11 +188,11 @@ type EgressPolicyRepo struct {
 	deleteSpaceReturnsOnCall map[int]struct {
 		result1 error
 	}
-	IsTerminalInUseStub        func(tx db.Transaction, terminalID int64) (bool, error)
+	IsTerminalInUseStub        func(tx db.Transaction, terminalGUID string) (bool, error)
 	isTerminalInUseMutex       sync.RWMutex
 	isTerminalInUseArgsForCall []struct {
-		tx         db.Transaction
-		terminalID int64
+		tx           db.Transaction
+		terminalGUID string
 	}
 	isTerminalInUseReturns struct {
 		result1 bool
@@ -206,18 +206,18 @@ type EgressPolicyRepo struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *EgressPolicyRepo) CreateApp(tx db.Transaction, sourceTerminalID int64, appGUID string) (int64, error) {
+func (fake *EgressPolicyRepo) CreateApp(tx db.Transaction, sourceTerminalGUID string, appGUID string) (int64, error) {
 	fake.createAppMutex.Lock()
 	ret, specificReturn := fake.createAppReturnsOnCall[len(fake.createAppArgsForCall)]
 	fake.createAppArgsForCall = append(fake.createAppArgsForCall, struct {
-		tx               db.Transaction
-		sourceTerminalID int64
-		appGUID          string
-	}{tx, sourceTerminalID, appGUID})
-	fake.recordInvocation("CreateApp", []interface{}{tx, sourceTerminalID, appGUID})
+		tx                 db.Transaction
+		sourceTerminalGUID string
+		appGUID            string
+	}{tx, sourceTerminalGUID, appGUID})
+	fake.recordInvocation("CreateApp", []interface{}{tx, sourceTerminalGUID, appGUID})
 	fake.createAppMutex.Unlock()
 	if fake.CreateAppStub != nil {
-		return fake.CreateAppStub(tx, sourceTerminalID, appGUID)
+		return fake.CreateAppStub(tx, sourceTerminalGUID, appGUID)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -231,10 +231,10 @@ func (fake *EgressPolicyRepo) CreateAppCallCount() int {
 	return len(fake.createAppArgsForCall)
 }
 
-func (fake *EgressPolicyRepo) CreateAppArgsForCall(i int) (db.Transaction, int64, string) {
+func (fake *EgressPolicyRepo) CreateAppArgsForCall(i int) (db.Transaction, string, string) {
 	fake.createAppMutex.RLock()
 	defer fake.createAppMutex.RUnlock()
-	return fake.createAppArgsForCall[i].tx, fake.createAppArgsForCall[i].sourceTerminalID, fake.createAppArgsForCall[i].appGUID
+	return fake.createAppArgsForCall[i].tx, fake.createAppArgsForCall[i].sourceTerminalGUID, fake.createAppArgsForCall[i].appGUID
 }
 
 func (fake *EgressPolicyRepo) CreateAppReturns(result1 int64, result2 error) {
@@ -259,24 +259,24 @@ func (fake *EgressPolicyRepo) CreateAppReturnsOnCall(i int, result1 int64, resul
 	}{result1, result2}
 }
 
-func (fake *EgressPolicyRepo) CreateIPRange(tx db.Transaction, destinationTerminalID int64, startIP string, endIP string, protocol string, startPort int64, endPort int64, icmpType int64, icmpCode int64) (int64, error) {
+func (fake *EgressPolicyRepo) CreateIPRange(tx db.Transaction, destinationTerminalGUID string, startIP string, endIP string, protocol string, startPort int64, endPort int64, icmpType int64, icmpCode int64) (int64, error) {
 	fake.createIPRangeMutex.Lock()
 	ret, specificReturn := fake.createIPRangeReturnsOnCall[len(fake.createIPRangeArgsForCall)]
 	fake.createIPRangeArgsForCall = append(fake.createIPRangeArgsForCall, struct {
-		tx                    db.Transaction
-		destinationTerminalID int64
-		startIP               string
-		endIP                 string
-		protocol              string
-		startPort             int64
-		endPort               int64
-		icmpType              int64
-		icmpCode              int64
-	}{tx, destinationTerminalID, startIP, endIP, protocol, startPort, endPort, icmpType, icmpCode})
-	fake.recordInvocation("CreateIPRange", []interface{}{tx, destinationTerminalID, startIP, endIP, protocol, startPort, endPort, icmpType, icmpCode})
+		tx                      db.Transaction
+		destinationTerminalGUID string
+		startIP                 string
+		endIP                   string
+		protocol                string
+		startPort               int64
+		endPort                 int64
+		icmpType                int64
+		icmpCode                int64
+	}{tx, destinationTerminalGUID, startIP, endIP, protocol, startPort, endPort, icmpType, icmpCode})
+	fake.recordInvocation("CreateIPRange", []interface{}{tx, destinationTerminalGUID, startIP, endIP, protocol, startPort, endPort, icmpType, icmpCode})
 	fake.createIPRangeMutex.Unlock()
 	if fake.CreateIPRangeStub != nil {
-		return fake.CreateIPRangeStub(tx, destinationTerminalID, startIP, endIP, protocol, startPort, endPort, icmpType, icmpCode)
+		return fake.CreateIPRangeStub(tx, destinationTerminalGUID, startIP, endIP, protocol, startPort, endPort, icmpType, icmpCode)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -290,10 +290,10 @@ func (fake *EgressPolicyRepo) CreateIPRangeCallCount() int {
 	return len(fake.createIPRangeArgsForCall)
 }
 
-func (fake *EgressPolicyRepo) CreateIPRangeArgsForCall(i int) (db.Transaction, int64, string, string, string, int64, int64, int64, int64) {
+func (fake *EgressPolicyRepo) CreateIPRangeArgsForCall(i int) (db.Transaction, string, string, string, string, int64, int64, int64, int64) {
 	fake.createIPRangeMutex.RLock()
 	defer fake.createIPRangeMutex.RUnlock()
-	return fake.createIPRangeArgsForCall[i].tx, fake.createIPRangeArgsForCall[i].destinationTerminalID, fake.createIPRangeArgsForCall[i].startIP, fake.createIPRangeArgsForCall[i].endIP, fake.createIPRangeArgsForCall[i].protocol, fake.createIPRangeArgsForCall[i].startPort, fake.createIPRangeArgsForCall[i].endPort, fake.createIPRangeArgsForCall[i].icmpType, fake.createIPRangeArgsForCall[i].icmpCode
+	return fake.createIPRangeArgsForCall[i].tx, fake.createIPRangeArgsForCall[i].destinationTerminalGUID, fake.createIPRangeArgsForCall[i].startIP, fake.createIPRangeArgsForCall[i].endIP, fake.createIPRangeArgsForCall[i].protocol, fake.createIPRangeArgsForCall[i].startPort, fake.createIPRangeArgsForCall[i].endPort, fake.createIPRangeArgsForCall[i].icmpType, fake.createIPRangeArgsForCall[i].icmpCode
 }
 
 func (fake *EgressPolicyRepo) CreateIPRangeReturns(result1 int64, result2 error) {
@@ -318,18 +318,18 @@ func (fake *EgressPolicyRepo) CreateIPRangeReturnsOnCall(i int, result1 int64, r
 	}{result1, result2}
 }
 
-func (fake *EgressPolicyRepo) CreateEgressPolicy(tx db.Transaction, sourceTerminalID int64, destinationTerminalID int64) (int64, error) {
+func (fake *EgressPolicyRepo) CreateEgressPolicy(tx db.Transaction, sourceTerminalGUID string, destinationTerminalGUID string) (int64, error) {
 	fake.createEgressPolicyMutex.Lock()
 	ret, specificReturn := fake.createEgressPolicyReturnsOnCall[len(fake.createEgressPolicyArgsForCall)]
 	fake.createEgressPolicyArgsForCall = append(fake.createEgressPolicyArgsForCall, struct {
-		tx                    db.Transaction
-		sourceTerminalID      int64
-		destinationTerminalID int64
-	}{tx, sourceTerminalID, destinationTerminalID})
-	fake.recordInvocation("CreateEgressPolicy", []interface{}{tx, sourceTerminalID, destinationTerminalID})
+		tx                      db.Transaction
+		sourceTerminalGUID      string
+		destinationTerminalGUID string
+	}{tx, sourceTerminalGUID, destinationTerminalGUID})
+	fake.recordInvocation("CreateEgressPolicy", []interface{}{tx, sourceTerminalGUID, destinationTerminalGUID})
 	fake.createEgressPolicyMutex.Unlock()
 	if fake.CreateEgressPolicyStub != nil {
-		return fake.CreateEgressPolicyStub(tx, sourceTerminalID, destinationTerminalID)
+		return fake.CreateEgressPolicyStub(tx, sourceTerminalGUID, destinationTerminalGUID)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -343,10 +343,10 @@ func (fake *EgressPolicyRepo) CreateEgressPolicyCallCount() int {
 	return len(fake.createEgressPolicyArgsForCall)
 }
 
-func (fake *EgressPolicyRepo) CreateEgressPolicyArgsForCall(i int) (db.Transaction, int64, int64) {
+func (fake *EgressPolicyRepo) CreateEgressPolicyArgsForCall(i int) (db.Transaction, string, string) {
 	fake.createEgressPolicyMutex.RLock()
 	defer fake.createEgressPolicyMutex.RUnlock()
-	return fake.createEgressPolicyArgsForCall[i].tx, fake.createEgressPolicyArgsForCall[i].sourceTerminalID, fake.createEgressPolicyArgsForCall[i].destinationTerminalID
+	return fake.createEgressPolicyArgsForCall[i].tx, fake.createEgressPolicyArgsForCall[i].sourceTerminalGUID, fake.createEgressPolicyArgsForCall[i].destinationTerminalGUID
 }
 
 func (fake *EgressPolicyRepo) CreateEgressPolicyReturns(result1 int64, result2 error) {
@@ -371,18 +371,18 @@ func (fake *EgressPolicyRepo) CreateEgressPolicyReturnsOnCall(i int, result1 int
 	}{result1, result2}
 }
 
-func (fake *EgressPolicyRepo) CreateSpace(tx db.Transaction, sourceTerminalID int64, spaceGUID string) (int64, error) {
+func (fake *EgressPolicyRepo) CreateSpace(tx db.Transaction, sourceTerminalGUID string, spaceGUID string) (int64, error) {
 	fake.createSpaceMutex.Lock()
 	ret, specificReturn := fake.createSpaceReturnsOnCall[len(fake.createSpaceArgsForCall)]
 	fake.createSpaceArgsForCall = append(fake.createSpaceArgsForCall, struct {
-		tx               db.Transaction
-		sourceTerminalID int64
-		spaceGUID        string
-	}{tx, sourceTerminalID, spaceGUID})
-	fake.recordInvocation("CreateSpace", []interface{}{tx, sourceTerminalID, spaceGUID})
+		tx                 db.Transaction
+		sourceTerminalGUID string
+		spaceGUID          string
+	}{tx, sourceTerminalGUID, spaceGUID})
+	fake.recordInvocation("CreateSpace", []interface{}{tx, sourceTerminalGUID, spaceGUID})
 	fake.createSpaceMutex.Unlock()
 	if fake.CreateSpaceStub != nil {
-		return fake.CreateSpaceStub(tx, sourceTerminalID, spaceGUID)
+		return fake.CreateSpaceStub(tx, sourceTerminalGUID, spaceGUID)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -396,10 +396,10 @@ func (fake *EgressPolicyRepo) CreateSpaceCallCount() int {
 	return len(fake.createSpaceArgsForCall)
 }
 
-func (fake *EgressPolicyRepo) CreateSpaceArgsForCall(i int) (db.Transaction, int64, string) {
+func (fake *EgressPolicyRepo) CreateSpaceArgsForCall(i int) (db.Transaction, string, string) {
 	fake.createSpaceMutex.RLock()
 	defer fake.createSpaceMutex.RUnlock()
-	return fake.createSpaceArgsForCall[i].tx, fake.createSpaceArgsForCall[i].sourceTerminalID, fake.createSpaceArgsForCall[i].spaceGUID
+	return fake.createSpaceArgsForCall[i].tx, fake.createSpaceArgsForCall[i].sourceTerminalGUID, fake.createSpaceArgsForCall[i].spaceGUID
 }
 
 func (fake *EgressPolicyRepo) CreateSpaceReturns(result1 int64, result2 error) {
@@ -424,7 +424,7 @@ func (fake *EgressPolicyRepo) CreateSpaceReturnsOnCall(i int, result1 int64, res
 	}{result1, result2}
 }
 
-func (fake *EgressPolicyRepo) GetTerminalByAppGUID(tx db.Transaction, appGUID string) (int64, error) {
+func (fake *EgressPolicyRepo) GetTerminalByAppGUID(tx db.Transaction, appGUID string) (string, error) {
 	fake.getTerminalByAppGUIDMutex.Lock()
 	ret, specificReturn := fake.getTerminalByAppGUIDReturnsOnCall[len(fake.getTerminalByAppGUIDArgsForCall)]
 	fake.getTerminalByAppGUIDArgsForCall = append(fake.getTerminalByAppGUIDArgsForCall, struct {
@@ -454,29 +454,29 @@ func (fake *EgressPolicyRepo) GetTerminalByAppGUIDArgsForCall(i int) (db.Transac
 	return fake.getTerminalByAppGUIDArgsForCall[i].tx, fake.getTerminalByAppGUIDArgsForCall[i].appGUID
 }
 
-func (fake *EgressPolicyRepo) GetTerminalByAppGUIDReturns(result1 int64, result2 error) {
+func (fake *EgressPolicyRepo) GetTerminalByAppGUIDReturns(result1 string, result2 error) {
 	fake.GetTerminalByAppGUIDStub = nil
 	fake.getTerminalByAppGUIDReturns = struct {
-		result1 int64
+		result1 string
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *EgressPolicyRepo) GetTerminalByAppGUIDReturnsOnCall(i int, result1 int64, result2 error) {
+func (fake *EgressPolicyRepo) GetTerminalByAppGUIDReturnsOnCall(i int, result1 string, result2 error) {
 	fake.GetTerminalByAppGUIDStub = nil
 	if fake.getTerminalByAppGUIDReturnsOnCall == nil {
 		fake.getTerminalByAppGUIDReturnsOnCall = make(map[int]struct {
-			result1 int64
+			result1 string
 			result2 error
 		})
 	}
 	fake.getTerminalByAppGUIDReturnsOnCall[i] = struct {
-		result1 int64
+		result1 string
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *EgressPolicyRepo) GetTerminalBySpaceGUID(tx db.Transaction, appGUID string) (int64, error) {
+func (fake *EgressPolicyRepo) GetTerminalBySpaceGUID(tx db.Transaction, appGUID string) (string, error) {
 	fake.getTerminalBySpaceGUIDMutex.Lock()
 	ret, specificReturn := fake.getTerminalBySpaceGUIDReturnsOnCall[len(fake.getTerminalBySpaceGUIDArgsForCall)]
 	fake.getTerminalBySpaceGUIDArgsForCall = append(fake.getTerminalBySpaceGUIDArgsForCall, struct {
@@ -506,24 +506,24 @@ func (fake *EgressPolicyRepo) GetTerminalBySpaceGUIDArgsForCall(i int) (db.Trans
 	return fake.getTerminalBySpaceGUIDArgsForCall[i].tx, fake.getTerminalBySpaceGUIDArgsForCall[i].appGUID
 }
 
-func (fake *EgressPolicyRepo) GetTerminalBySpaceGUIDReturns(result1 int64, result2 error) {
+func (fake *EgressPolicyRepo) GetTerminalBySpaceGUIDReturns(result1 string, result2 error) {
 	fake.GetTerminalBySpaceGUIDStub = nil
 	fake.getTerminalBySpaceGUIDReturns = struct {
-		result1 int64
+		result1 string
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *EgressPolicyRepo) GetTerminalBySpaceGUIDReturnsOnCall(i int, result1 int64, result2 error) {
+func (fake *EgressPolicyRepo) GetTerminalBySpaceGUIDReturnsOnCall(i int, result1 string, result2 error) {
 	fake.GetTerminalBySpaceGUIDStub = nil
 	if fake.getTerminalBySpaceGUIDReturnsOnCall == nil {
 		fake.getTerminalBySpaceGUIDReturnsOnCall = make(map[int]struct {
-			result1 int64
+			result1 string
 			result2 error
 		})
 	}
 	fake.getTerminalBySpaceGUIDReturnsOnCall[i] = struct {
-		result1 int64
+		result1 string
 		result2 error
 	}{result1, result2}
 }
@@ -875,17 +875,17 @@ func (fake *EgressPolicyRepo) DeleteSpaceReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *EgressPolicyRepo) IsTerminalInUse(tx db.Transaction, terminalID int64) (bool, error) {
+func (fake *EgressPolicyRepo) IsTerminalInUse(tx db.Transaction, terminalGUID string) (bool, error) {
 	fake.isTerminalInUseMutex.Lock()
 	ret, specificReturn := fake.isTerminalInUseReturnsOnCall[len(fake.isTerminalInUseArgsForCall)]
 	fake.isTerminalInUseArgsForCall = append(fake.isTerminalInUseArgsForCall, struct {
-		tx         db.Transaction
-		terminalID int64
-	}{tx, terminalID})
-	fake.recordInvocation("IsTerminalInUse", []interface{}{tx, terminalID})
+		tx           db.Transaction
+		terminalGUID string
+	}{tx, terminalGUID})
+	fake.recordInvocation("IsTerminalInUse", []interface{}{tx, terminalGUID})
 	fake.isTerminalInUseMutex.Unlock()
 	if fake.IsTerminalInUseStub != nil {
-		return fake.IsTerminalInUseStub(tx, terminalID)
+		return fake.IsTerminalInUseStub(tx, terminalGUID)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -899,10 +899,10 @@ func (fake *EgressPolicyRepo) IsTerminalInUseCallCount() int {
 	return len(fake.isTerminalInUseArgsForCall)
 }
 
-func (fake *EgressPolicyRepo) IsTerminalInUseArgsForCall(i int) (db.Transaction, int64) {
+func (fake *EgressPolicyRepo) IsTerminalInUseArgsForCall(i int) (db.Transaction, string) {
 	fake.isTerminalInUseMutex.RLock()
 	defer fake.isTerminalInUseMutex.RUnlock()
-	return fake.isTerminalInUseArgsForCall[i].tx, fake.isTerminalInUseArgsForCall[i].terminalID
+	return fake.isTerminalInUseArgsForCall[i].tx, fake.isTerminalInUseArgsForCall[i].terminalGUID
 }
 
 func (fake *EgressPolicyRepo) IsTerminalInUseReturns(result1 bool, result2 error) {

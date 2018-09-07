@@ -78,10 +78,10 @@ var _ = Describe("Egress Policy Table", func() {
 
 	Context("CreateApp", func() {
 		It("should create an app and return the ID", func() {
-			appTerminalID, err := terminalsTable.Create(tx)
+			appTerminalGUID, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 
-			id, err := egressPolicyTable.CreateApp(tx, appTerminalID, "some-app-guid")
+			id, err := egressPolicyTable.CreateApp(tx, appTerminalGUID, "some-app-guid")
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(id).To(Equal(int64(1)))
@@ -98,17 +98,17 @@ var _ = Describe("Egress Policy Table", func() {
 
 			fakeTx.DriverNameReturns("db2")
 
-			_, err := egressPolicyTable.CreateApp(fakeTx, 1, "some-app-guid")
+			_, err := egressPolicyTable.CreateApp(fakeTx, "some-term-guid", "some-app-guid")
 			Expect(err).To(MatchError("unknown driver: db2"))
 		})
 	})
 
 	Context("CreateSpace", func() {
 		It("should create a space and return the ID", func() {
-			spaceTerminalID, err := terminalsTable.Create(tx)
+			spaceTerminalGUID, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 
-			id, err := egressPolicyTable.CreateSpace(tx, spaceTerminalID, "some-space-guid")
+			id, err := egressPolicyTable.CreateSpace(tx, spaceTerminalGUID, "some-space-guid")
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(id).To(Equal(int64(1)))
@@ -125,17 +125,17 @@ var _ = Describe("Egress Policy Table", func() {
 
 			fakeTx.DriverNameReturns("db2")
 
-			_, err := egressPolicyTable.CreateSpace(fakeTx, 1, "some-space-guid")
+			_, err := egressPolicyTable.CreateSpace(fakeTx, "some-term-guid", "some-space-guid")
 			Expect(err).To(MatchError("unknown driver: db2"))
 		})
 	})
 
 	Context("CreateIPRange", func() {
 		It("should create an iprange and return the ID", func() {
-			ipRangeTerminalID, err := terminalsTable.Create(tx)
+			ipRangeTerminalGUID, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 
-			id, err := egressPolicyTable.CreateIPRange(tx, ipRangeTerminalID, "1.1.1.1", "2.2.2.2", "tcp", 8080, 8081, 0, 0)
+			id, err := egressPolicyTable.CreateIPRange(tx, ipRangeTerminalGUID, "1.1.1.1", "2.2.2.2", "tcp", 8080, 8081, 0, 0)
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(id).To(Equal(int64(1)))
@@ -155,10 +155,10 @@ var _ = Describe("Egress Policy Table", func() {
 		})
 
 		It("should create an iprange with icmp and return the ID", func() {
-			ipRangeTerminalID, err := terminalsTable.Create(tx)
+			ipRangeTerminalGUID, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 
-			id, err := egressPolicyTable.CreateIPRange(tx, ipRangeTerminalID, "1.1.1.1", "2.2.2.2", "icmp", 0, 0, 2, 1)
+			id, err := egressPolicyTable.CreateIPRange(tx, ipRangeTerminalGUID, "1.1.1.1", "2.2.2.2", "icmp", 0, 0, 2, 1)
 			Expect(err).ToNot(HaveOccurred())
 
 			Expect(id).To(Equal(int64(1)))
@@ -182,7 +182,7 @@ var _ = Describe("Egress Policy Table", func() {
 
 			fakeTx.DriverNameReturns("db2")
 
-			_, err := egressPolicyTable.CreateIPRange(fakeTx, 1, "1.1.1.1", "2.2.2.2", "tcp", 8080, 8081, 0, 0)
+			_, err := egressPolicyTable.CreateIPRange(fakeTx, "some-term-guid", "1.1.1.1", "2.2.2.2", "tcp", 8080, 8081, 0, 0)
 			Expect(err).To(MatchError("unknown driver: db2"))
 		})
 	})
@@ -198,8 +198,8 @@ var _ = Describe("Egress Policy Table", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(id).To(Equal(int64(1)))
 
-			var foundSourceID, foundDestinationID int64
-			row := tx.QueryRow(`SELECT source_id, destination_id FROM egress_policies WHERE id = 1`)
+			var foundSourceID, foundDestinationID string
+			row := tx.QueryRow(`SELECT source_guid, destination_guid FROM egress_policies WHERE id = 1`)
 			err = row.Scan(&foundSourceID, &foundDestinationID)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(foundSourceID).To(Equal(sourceTerminalId))
@@ -208,7 +208,7 @@ var _ = Describe("Egress Policy Table", func() {
 		})
 
 		It("should return the sql error", func() {
-			_, err := egressPolicyTable.CreateEgressPolicy(tx, 2, 3)
+			_, err := egressPolicyTable.CreateEgressPolicy(tx, "some-term-guid", "some-term-guid")
 			Expect(err).To(HaveOccurred())
 		})
 	})
@@ -254,10 +254,10 @@ var _ = Describe("Egress Policy Table", func() {
 		)
 
 		BeforeEach(func() {
-			ipRangeTerminalID, err := terminalsTable.Create(tx)
+			ipRangeTerminalGUID, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 
-			ipRangeID, err = egressPolicyTable.CreateIPRange(tx, ipRangeTerminalID, "1.1.1.1", "2.2.2.2", "tcp", 8080, 8081, 0, 0)
+			ipRangeID, err = egressPolicyTable.CreateIPRange(tx, ipRangeTerminalGUID, "1.1.1.1", "2.2.2.2", "tcp", 8080, 8081, 0, 0)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(ipRangeID).To(Equal(int64(1)))
 		})
@@ -284,22 +284,21 @@ var _ = Describe("Egress Policy Table", func() {
 
 	Context("DeleteTerminal", func() {
 		var (
-			terminalID int64
+			terminalGUID string
 		)
 
 		BeforeEach(func() {
 			var err error
-			terminalID, err = terminalsTable.Create(tx)
+			terminalGUID, err = terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(terminalID).To(Equal(int64(1)))
 		})
 
 		It("deletes the terminal", func() {
-			err := terminalsTable.Delete(tx, terminalID)
+			err := terminalsTable.Delete(tx, terminalGUID)
 			Expect(err).ToNot(HaveOccurred())
 
 			var terminalCount int
-			row := tx.QueryRow(`SELECT COUNT(id) FROM terminals WHERE id = 1`)
+			row := tx.QueryRow(tx.Rebind(`SELECT COUNT(guid) FROM terminals WHERE guid = ?`), terminalGUID)
 			err = row.Scan(&terminalCount)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(terminalCount).To(Equal(0))
@@ -309,7 +308,7 @@ var _ = Describe("Egress Policy Table", func() {
 			fakeTx := &dbfakes.Transaction{}
 			fakeTx.ExecReturns(nil, errors.New("broke"))
 
-			err := terminalsTable.Delete(fakeTx, 2)
+			err := terminalsTable.Delete(fakeTx, "some-term-guid")
 			Expect(err).To(MatchError("broke"))
 		})
 	})
@@ -320,10 +319,10 @@ var _ = Describe("Egress Policy Table", func() {
 		)
 
 		BeforeEach(func() {
-			appTerminalID, err := terminalsTable.Create(tx)
+			appTerminalGUID, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 
-			appID, err = egressPolicyTable.CreateApp(tx, appTerminalID, "some-app-guid")
+			appID, err = egressPolicyTable.CreateApp(tx, appTerminalGUID, "some-app-guid")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(appID).To(Equal(int64(1)))
 
@@ -355,10 +354,10 @@ var _ = Describe("Egress Policy Table", func() {
 		)
 
 		BeforeEach(func() {
-			spaceTerminalID, err := terminalsTable.Create(tx)
+			spaceTerminalGUID, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 
-			spaceID, err = egressPolicyTable.CreateSpace(tx, spaceTerminalID, "some-space-guid")
+			spaceID, err = egressPolicyTable.CreateSpace(tx, spaceTerminalGUID, "some-space-guid")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(spaceID).To(Equal(int64(1)))
 
@@ -386,27 +385,27 @@ var _ = Describe("Egress Policy Table", func() {
 
 	Context("IsTerminalInUse", func() {
 		var (
-			sourceTerminalID int64
+			sourceTerminalGUID string
 		)
 
 		BeforeEach(func() {
-			destinationTerminalID, err := terminalsTable.Create(tx)
+			destinationTerminalGUID, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
-			sourceTerminalID, err = terminalsTable.Create(tx)
+			sourceTerminalGUID, err = terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 
-			_, err = egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalID, destinationTerminalID)
+			_, err = egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalGUID, destinationTerminalGUID)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("returns true if the terminal is in use by an egress policy", func() {
-			inUse, err := egressPolicyTable.IsTerminalInUse(tx, sourceTerminalID)
+			inUse, err := egressPolicyTable.IsTerminalInUse(tx, sourceTerminalGUID)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(inUse).To(BeTrue())
 		})
 
 		It("returns false if the terminal is not in use by an egress policy", func() {
-			inUse, err := egressPolicyTable.IsTerminalInUse(tx, 42)
+			inUse, err := egressPolicyTable.IsTerminalInUse(tx, "some-term-guid")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(inUse).To(BeFalse())
 		})
@@ -414,12 +413,12 @@ var _ = Describe("Egress Policy Table", func() {
 
 	Context("GetIDCollectionsByEgressPolicy", func() {
 		var (
-			egressPolicy          store.EgressPolicy
-			sourceTerminalID      int64
-			destinationTerminalID int64
-			egressPolicyID        int64
-			appID                 int64
-			ipRangeID             int64
+			egressPolicy            store.EgressPolicy
+			sourceTerminalGUID      string
+			destinationTerminalGUID string
+			egressPolicyID          int64
+			appID                   int64
+			ipRangeID               int64
 		)
 
 		BeforeEach(func() {
@@ -445,61 +444,53 @@ var _ = Describe("Egress Policy Table", func() {
 				},
 			}
 
-			sourceTerminalID, err = terminalsTable.Create(tx)
+			sourceTerminalGUID, err = terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(sourceTerminalID).To(Equal(int64(1)))
 
-			destinationTerminalID, err = terminalsTable.Create(tx)
+			destinationTerminalGUID, err = terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(destinationTerminalID).To(Equal(int64(2)))
 
-			egressPolicyID, err = egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalID, destinationTerminalID)
+			egressPolicyID, err = egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalGUID, destinationTerminalGUID)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(egressPolicyID).To(Equal(int64(1)))
 
-			appID, err = egressPolicyTable.CreateApp(tx, sourceTerminalID, "some-app-guid")
+			appID, err = egressPolicyTable.CreateApp(tx, sourceTerminalGUID, "some-app-guid")
 			Expect(err).ToNot(HaveOccurred())
-			Expect(appID).To(Equal(int64(1)))
 
-			ipRangeID, err = egressPolicyTable.CreateIPRange(tx, destinationTerminalID, "1.1.1.1", "2.2.2.2", "tcp", 8080, 8081, 0, 0)
+			ipRangeID, err = egressPolicyTable.CreateIPRange(tx, destinationTerminalGUID, "1.1.1.1", "2.2.2.2", "tcp", 8080, 8081, 0, 0)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(ipRangeID).To(Equal(int64(1)))
 		})
 
 		It("should return all the ids for an egress policy", func() {
 			ids, err := egressPolicyTable.GetIDCollectionsByEgressPolicy(tx, egressPolicy)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(ids).To(Equal([]store.EgressPolicyIDCollection{{
-				EgressPolicyID:        egressPolicyID,
-				DestinationTerminalID: destinationTerminalID,
-				DestinationIPRangeID:  ipRangeID,
-				SourceTerminalID:      sourceTerminalID,
-				SourceAppID:           appID,
-				SourceSpaceID:         -1,
+				EgressPolicyID:          egressPolicyID,
+				DestinationTerminalGUID: destinationTerminalGUID,
+				DestinationIPRangeID:    ipRangeID,
+				SourceTerminalGUID:      sourceTerminalGUID,
+				SourceAppID:             appID,
+				SourceSpaceID:           -1,
 			}}))
 		})
 
 		Context("when there are duplicate matching policies", func() {
 			var (
-				destinationTerminalIDDuplicate int64
-				egressPolicyIDDuplicate        int64
-				ipRangeIDDuplicate             int64
+				destinationTerminalGUIDDuplicate string
+				egressPolicyIDDuplicate          int64
+				ipRangeIDDuplicate               int64
 			)
 
 			BeforeEach(func() {
 				var err error
 
-				destinationTerminalIDDuplicate, err = terminalsTable.Create(tx)
+				destinationTerminalGUIDDuplicate, err = terminalsTable.Create(tx)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(destinationTerminalIDDuplicate).To(Equal(int64(3)))
 
-				egressPolicyIDDuplicate, err = egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalID, destinationTerminalIDDuplicate)
+				egressPolicyIDDuplicate, err = egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalGUID, destinationTerminalGUIDDuplicate)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(egressPolicyIDDuplicate).To(Equal(int64(2)))
 
-				ipRangeIDDuplicate, err = egressPolicyTable.CreateIPRange(tx, destinationTerminalIDDuplicate, "1.1.1.1", "2.2.2.2", "tcp", 8080, 8081, 0, 0)
+				ipRangeIDDuplicate, err = egressPolicyTable.CreateIPRange(tx, destinationTerminalGUIDDuplicate, "1.1.1.1", "2.2.2.2", "tcp", 8080, 8081, 0, 0)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(ipRangeIDDuplicate).To(Equal(int64(2)))
 			})
 
 			It("returns them all", func() {
@@ -507,20 +498,20 @@ var _ = Describe("Egress Policy Table", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(ids).To(Equal([]store.EgressPolicyIDCollection{
 					{
-						EgressPolicyID:        egressPolicyID,
-						DestinationTerminalID: destinationTerminalID,
-						DestinationIPRangeID:  ipRangeID,
-						SourceTerminalID:      sourceTerminalID,
-						SourceAppID:           appID,
-						SourceSpaceID:         -1,
+						EgressPolicyID:          egressPolicyID,
+						DestinationTerminalGUID: destinationTerminalGUID,
+						DestinationIPRangeID:    ipRangeID,
+						SourceTerminalGUID:      sourceTerminalGUID,
+						SourceAppID:             appID,
+						SourceSpaceID:           -1,
 					},
 					{
-						EgressPolicyID:        egressPolicyIDDuplicate,
-						DestinationTerminalID: destinationTerminalIDDuplicate,
-						DestinationIPRangeID:  ipRangeIDDuplicate,
-						SourceTerminalID:      sourceTerminalID,
-						SourceAppID:           appID,
-						SourceSpaceID:         -1,
+						EgressPolicyID:          egressPolicyIDDuplicate,
+						DestinationTerminalGUID: destinationTerminalGUIDDuplicate,
+						DestinationIPRangeID:    ipRangeIDDuplicate,
+						SourceTerminalGUID:      sourceTerminalGUID,
+						SourceAppID:             appID,
+						SourceSpaceID:           -1,
 					},
 				}))
 			})
@@ -528,10 +519,10 @@ var _ = Describe("Egress Policy Table", func() {
 
 		Context("when source terminal is attached to a space", func() {
 			var (
-				spaceSourceTerminalID int64
-				spaceEgressPolicyID   int64
-				spaceID               int64
-				spaceEgressPolicy     store.EgressPolicy
+				spaceSourceTerminalGUID string
+				spaceEgressPolicyID     int64
+				spaceID                 int64
+				spaceEgressPolicy       store.EgressPolicy
 			)
 
 			BeforeEach(func() {
@@ -558,29 +549,26 @@ var _ = Describe("Egress Policy Table", func() {
 				}
 
 				var err error
-				spaceSourceTerminalID, err = terminalsTable.Create(tx)
+				spaceSourceTerminalGUID, err = terminalsTable.Create(tx)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(spaceSourceTerminalID).To(Equal(int64(3)))
 
-				spaceID, err = egressPolicyTable.CreateSpace(tx, spaceSourceTerminalID, "some-space-guid")
+				spaceID, err = egressPolicyTable.CreateSpace(tx, spaceSourceTerminalGUID, "some-space-guid")
 				Expect(err).ToNot(HaveOccurred())
-				Expect(spaceID).To(Equal(int64(1)))
 
-				spaceEgressPolicyID, err = egressPolicyTable.CreateEgressPolicy(tx, spaceSourceTerminalID, destinationTerminalID)
+				spaceEgressPolicyID, err = egressPolicyTable.CreateEgressPolicy(tx, spaceSourceTerminalGUID, destinationTerminalGUID)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(spaceEgressPolicyID).To(Equal(int64(2)))
 			})
 
 			It("returns all the space id and sets app id to -1", func() {
 				ids, err := egressPolicyTable.GetIDCollectionsByEgressPolicy(tx, spaceEgressPolicy)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(ids).To(Equal([]store.EgressPolicyIDCollection{{
-					EgressPolicyID:        spaceEgressPolicyID,
-					DestinationTerminalID: destinationTerminalID,
-					DestinationIPRangeID:  ipRangeID,
-					SourceTerminalID:      spaceSourceTerminalID,
-					SourceSpaceID:         spaceID,
-					SourceAppID:           -1,
+					EgressPolicyID:          spaceEgressPolicyID,
+					DestinationTerminalGUID: destinationTerminalGUID,
+					DestinationIPRangeID:    ipRangeID,
+					SourceTerminalGUID:      spaceSourceTerminalGUID,
+					SourceSpaceID:           spaceID,
+					SourceAppID:             -1,
 				}}))
 			})
 		})
@@ -603,23 +591,21 @@ var _ = Describe("Egress Policy Table", func() {
 					},
 				}
 
-				sourceTerminalID, err = terminalsTable.Create(tx)
+				sourceTerminalGUID, err = terminalsTable.Create(tx)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(sourceTerminalID).To(Equal(int64(3)))
 
-				destinationTerminalID, err = terminalsTable.Create(tx)
+				destinationTerminalGUID, err = terminalsTable.Create(tx)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(destinationTerminalID).To(Equal(int64(4)))
 
-				egressPolicyID, err = egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalID, destinationTerminalID)
+				egressPolicyID, err = egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalGUID, destinationTerminalGUID)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(egressPolicyID).To(Equal(int64(2)))
 
-				appID, err = egressPolicyTable.CreateApp(tx, sourceTerminalID, "some-app-guid-2")
+				appID, err = egressPolicyTable.CreateApp(tx, sourceTerminalGUID, "some-app-guid-2")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(appID).To(Equal(int64(2)))
 
-				ipRangeID, err = egressPolicyTable.CreateIPRange(tx, destinationTerminalID, "1.1.1.1", "2.2.2.2", "tcp", 0, 0, 0, 0)
+				ipRangeID, err = egressPolicyTable.CreateIPRange(tx, destinationTerminalGUID, "1.1.1.1", "2.2.2.2", "tcp", 0, 0, 0, 0)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(ipRangeID).To(Equal(int64(2)))
 			})
@@ -628,12 +614,12 @@ var _ = Describe("Egress Policy Table", func() {
 				ids, err := egressPolicyTable.GetIDCollectionsByEgressPolicy(tx, egressPolicy)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(ids).To(Equal([]store.EgressPolicyIDCollection{{
-					EgressPolicyID:        egressPolicyID,
-					DestinationTerminalID: destinationTerminalID,
-					DestinationIPRangeID:  ipRangeID,
-					SourceTerminalID:      sourceTerminalID,
-					SourceAppID:           appID,
-					SourceSpaceID:         -1,
+					EgressPolicyID:          egressPolicyID,
+					DestinationTerminalGUID: destinationTerminalGUID,
+					DestinationIPRangeID:    ipRangeID,
+					SourceTerminalGUID:      sourceTerminalGUID,
+					SourceAppID:             appID,
+					SourceSpaceID:           -1,
 				}}))
 			})
 		})
@@ -659,32 +645,29 @@ var _ = Describe("Egress Policy Table", func() {
 				}
 
 				By("making a icmp policy")
-				sourceTerminalID, err = terminalsTable.Create(tx)
+				sourceTerminalGUID, err = terminalsTable.Create(tx)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(sourceTerminalID).To(Equal(int64(3)))
 
-				destinationTerminalID, err = terminalsTable.Create(tx)
+				destinationTerminalGUID, err = terminalsTable.Create(tx)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(destinationTerminalID).To(Equal(int64(4)))
 
-				egressPolicyID, err = egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalID, destinationTerminalID)
+				egressPolicyID, err = egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalGUID, destinationTerminalGUID)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(egressPolicyID).To(Equal(int64(2)))
 
-				appID, err = egressPolicyTable.CreateApp(tx, sourceTerminalID, "some-app-guid-2")
+				appID, err = egressPolicyTable.CreateApp(tx, sourceTerminalGUID, "some-app-guid-2")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(appID).To(Equal(int64(2)))
 
-				ipRangeID, err = egressPolicyTable.CreateIPRange(tx, destinationTerminalID, "1.1.1.1", "2.2.2.2", "icmp", 0, 0, 1, 2)
+				ipRangeID, err = egressPolicyTable.CreateIPRange(tx, destinationTerminalGUID, "1.1.1.1", "2.2.2.2", "icmp", 0, 0, 1, 2)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(ipRangeID).To(Equal(int64(2)))
 
 				By("making a slightly similar icmp policy with different type/code")
 				otherDestTermID, err := terminalsTable.Create(tx)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(otherDestTermID).To(Equal(int64(5)))
 
-				otherEgressPolicyID, err := egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalID, otherDestTermID)
+				otherEgressPolicyID, err := egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalGUID, otherDestTermID)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(otherEgressPolicyID).To(Equal(int64(3)))
 
@@ -697,12 +680,12 @@ var _ = Describe("Egress Policy Table", func() {
 				ids, err := egressPolicyTable.GetIDCollectionsByEgressPolicy(tx, egressPolicy)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(ids).To(Equal([]store.EgressPolicyIDCollection{{
-					EgressPolicyID:        egressPolicyID,
-					DestinationTerminalID: destinationTerminalID,
-					DestinationIPRangeID:  ipRangeID,
-					SourceTerminalID:      sourceTerminalID,
-					SourceAppID:           appID,
-					SourceSpaceID:         -1,
+					EgressPolicyID:          egressPolicyID,
+					DestinationTerminalGUID: destinationTerminalGUID,
+					DestinationIPRangeID:    ipRangeID,
+					SourceTerminalGUID:      sourceTerminalGUID,
+					SourceAppID:             appID,
+					SourceSpaceID:           -1,
 				}}))
 			})
 		})
@@ -734,37 +717,37 @@ var _ = Describe("Egress Policy Table", func() {
 		It("should return the terminal id for an app if it exists", func() {
 			terminalId, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
-			appsId, err := egressPolicyTable.CreateApp(tx, terminalId, "some-app-guid")
+			_, err = egressPolicyTable.CreateApp(tx, terminalId, "some-app-guid")
 			Expect(err).ToNot(HaveOccurred())
 
 			foundID, err := egressPolicyTable.GetTerminalByAppGUID(tx, "some-app-guid")
 			Expect(err).ToNot(HaveOccurred())
-			Expect(foundID).To(Equal(appsId))
+			Expect(foundID).To(Equal(terminalId))
 		})
 
-		It("should -1 and no error if the app is not found", func() {
+		It("should return empty string and no error if the app is not found", func() {
 			foundID, err := egressPolicyTable.GetTerminalByAppGUID(tx, "some-app-guid")
 			Expect(err).ToNot(HaveOccurred())
-			Expect(foundID).To(Equal(int64(-1)))
+			Expect(foundID).To(Equal(""))
 		})
 	})
 
 	Context("GetTerminalBySpaceGUID", func() {
-		It("should return the terminal id for a space if it exists", func() {
+		It("should return the terminal guid for a space if it exists", func() {
 			terminalId, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
-			spacesId, err := egressPolicyTable.CreateSpace(tx, terminalId, "some-space-guid")
+			_, err = egressPolicyTable.CreateSpace(tx, terminalId, "some-space-guid")
 			Expect(err).ToNot(HaveOccurred())
 
 			foundID, err := egressPolicyTable.GetTerminalBySpaceGUID(tx, "some-space-guid")
 			Expect(err).ToNot(HaveOccurred())
-			Expect(foundID).To(Equal(spacesId))
+			Expect(foundID).To(Equal(terminalId))
 		})
 
-		It("should -1 and no error if the space is not found", func() {
+		It("should return empty string and no error if the space is not found", func() {
 			foundID, err := egressPolicyTable.GetTerminalBySpaceGUID(tx, "some-space-guid")
 			Expect(err).ToNot(HaveOccurred())
-			Expect(foundID).To(Equal(int64(-1)))
+			Expect(foundID).To(Equal(""))
 		})
 	})
 
@@ -1000,6 +983,5 @@ var _ = Describe("Egress Policy Table", func() {
 				Expect(err).To(MatchError("some error that sql would return"))
 			})
 		})
-
 	})
 })

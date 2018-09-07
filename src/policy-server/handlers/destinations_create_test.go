@@ -71,8 +71,8 @@ var _ = Describe("Destinations create handler", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		createdDestinations = []store.EgressDestination{
-			{ID: "created-one"},
-			{ID: "created-two"},
+			{GUID: "created-one"},
+			{GUID: "created-two"},
 		}
 
 		fakeStore = &fakes.EgressDestinationStoreCreator{}
@@ -85,8 +85,8 @@ var _ = Describe("Destinations create handler", func() {
 		fakePolicyGuard.IsNetworkAdminReturns(true)
 
 		requestedDestinations = []store.EgressDestination{
-			{ID: "req-one"},
-			{ID: "req-two"},
+			{GUID: "req-one"},
+			{GUID: "req-two"},
 		}
 		fakeMarshaller.AsEgressDestinationsReturns(requestedDestinations, nil)
 
