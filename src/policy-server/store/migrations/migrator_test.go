@@ -9,6 +9,7 @@ import (
 	"policy-server/store/helpers"
 	"policy-server/store/migrations"
 	migrationsFakes "policy-server/store/migrations/fakes"
+	"strconv"
 
 	"sync"
 
@@ -1356,7 +1357,6 @@ var _ = Describe("migrations", func() {
 						Expect(columns).To(ContainElement("terminal_id"))
 						Expect(columns).To(ContainElement("space_guid"))
 					})
-
 				})
 			})
 
@@ -1391,7 +1391,6 @@ var _ = Describe("migrations", func() {
 						Expect(columns).To(ContainElement("terminal_id"))
 						Expect(columns).To(ContainElement("space_guid"))
 					})
-
 				})
 			})
 		})
@@ -1443,6 +1442,103 @@ var _ = Describe("migrations", func() {
 						INSERT INTO destination_metadatas (terminal_id, name, description)
 						VALUES (?, ?, ?)`), terminalId, "some-dest", "my destination")
 					Expect(err).NotTo(HaveOccurred())
+				})
+			})
+		})
+
+		Describe("V22 - ID to GUID Named Destination", func() {
+			Context("mysql", func() {
+				var (
+					terminalId int64
+				)
+
+				BeforeEach(func() {
+					By("performing migration")
+					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 30)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(numMigrations).To(Equal(30))
+
+					terminalId = insertTerminal(realDb)
+
+					_, err = realDb.Exec(realDb.RawConnection().Rebind(`
+						INSERT INTO apps (terminal_id, app_guid)
+						VALUES (?, ?)`), terminalId, "some-app-guid")
+					Expect(err).NotTo(HaveOccurred())
+
+					_, err = realDb.Exec(realDb.RawConnection().Rebind(`
+						INSERT INTO spaces (terminal_id, space_guid)
+						VALUES (?, ?)`), terminalId, "some-space-guid")
+					Expect(err).NotTo(HaveOccurred())
+
+					_, err = realDb.Exec(realDb.RawConnection().Rebind(`
+						INSERT INTO ip_ranges (protocol, start_ip, end_ip, terminal_id, start_port, end_port, icmp_type, icmp_code)
+						VALUES (?, ?, ?, ?, ?, ?, ?, ?)`), "tcp", "1.1.1.1", "2.2.2.2", terminalId, 8080, 8081, -1, -1)
+					Expect(err).NotTo(HaveOccurred())
+
+					_, err = realDb.Exec(realDb.RawConnection().Rebind(`
+						INSERT INTO destination_metadatas (terminal_id, name, description)
+						VALUES (?, ?, ?)`), terminalId, "some-name", "some-description")
+					Expect(err).NotTo(HaveOccurred())
+
+					_, err = realDb.Exec(realDb.RawConnection().Rebind(`
+						INSERT INTO egress_policies (source_id, destination_id)
+						VALUES (?, ?)`), terminalId, terminalId)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("should migrate", func() {
+					By("performing migration")
+					numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 29)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(numMigrations).To(Equal(29))
+
+					By("verifying the id was migrated to guid")
+					expectedTermainalGUID := strconv.FormatInt(terminalId, 10)
+					terminalGUIDs := queryTableForColumn("terminals", "guid", realDb)
+					Expect(terminalGUIDs).To(ConsistOf(expectedTermainalGUID))
+
+					expectedTermainalGUID = strconv.FormatInt(terminalId, 10)
+					terminalGUIDs = queryTableForColumn("apps", "terminal_guid", realDb)
+					Expect(terminalGUIDs).To(ConsistOf(expectedTermainalGUID))
+
+					terminalGUIDs = queryTableForColumn("spaces", "terminal_guid", realDb)
+					Expect(terminalGUIDs).To(ConsistOf(expectedTermainalGUID))
+
+					terminalGUIDs = queryTableForColumn("ip_ranges", "terminal_guid", realDb)
+					Expect(terminalGUIDs).To(ConsistOf(expectedTermainalGUID))
+
+					terminalGUIDs = queryTableForColumn("destination_metadatas", "terminal_guid", realDb)
+					Expect(terminalGUIDs).To(ConsistOf(expectedTermainalGUID))
+
+					terminalGUIDs = queryTableForColumn("egress_policies", "source_guid", realDb)
+					Expect(terminalGUIDs).To(ConsistOf(expectedTermainalGUID))
+
+					terminalGUIDs = queryTableForColumn("egress_policies", "destination_guid", realDb)
+					Expect(terminalGUIDs).To(ConsistOf(expectedTermainalGUID))
+
+					rows, err := realDb.Query(helpers.RebindForSQLDialect(`
+							select TABLE_NAME, COLUMN_NAME
+							from INFORMATION_SCHEMA.COLUMNS t1
+							where TABLE_NAME IN ('terminals', 'apps', 'spaces', 'ip_ranges', 'destination_metadatas', 'egress_policies')
+						`, realDb.DriverName()))
+					Expect(err).NotTo(HaveOccurred())
+
+					By("verifying the terminal_guid column exists and the terminal_id column does not", func() {
+						columns := map[string][]string{}
+						defer rows.Close()
+						for rows.Next() {
+							var tableName, columnName string
+							Expect(rows.Scan(&tableName, &columnName)).To(Succeed())
+							columns[tableName] = append(columns[tableName], columnName)
+						}
+						Expect(columns["terminals"]).NotTo(ContainElement("id"))
+						Expect(columns["apps"]).NotTo(ContainElement("terminal_id"))
+						Expect(columns["spaces"]).NotTo(ContainElement("terminal_id"))
+						Expect(columns["ip_ranges"]).NotTo(ContainElement("terminal_id"))
+						Expect(columns["destination_metadatas"]).NotTo(ContainElement("terminal_id"))
+						Expect(columns["egress_policies"]).NotTo(ContainElement("source_id"))
+						Expect(columns["egress_policies"]).NotTo(ContainElement("destination_id"))
+					})
 				})
 			})
 		})
@@ -1618,4 +1714,34 @@ func scanCountRow(rows *sql.Rows) int {
 		Expect(rows.Scan(&count)).To(Succeed())
 	}
 	return count
+}
+
+func insertTerminal(realDb *db.ConnWrapper) int64 {
+	var terminalId int64
+	if realDb.DriverName() == "mysql" {
+		result, err := realDb.Exec("INSERT INTO terminals (id) VALUES (NULL)")
+		Expect(err).NotTo(HaveOccurred())
+		terminalId, err = result.LastInsertId()
+		Expect(err).NotTo(HaveOccurred())
+	} else {
+		err := realDb.QueryRow("INSERT INTO terminals DEFAULT VALUES RETURNING id").Scan(&terminalId)
+		Expect(err).NotTo(HaveOccurred())
+	}
+	return terminalId
+}
+
+func queryTableForColumn(tableName, columnName string, realDb *db.ConnWrapper) []string {
+	rows, err := realDb.Query(helpers.RebindForSQLDialect(fmt.Sprintf(`
+		select %s from %s
+	`, columnName, tableName), realDb.DriverName()))
+	Expect(err).NotTo(HaveOccurred())
+
+	defer rows.Close()
+	var values []string
+	for rows.Next() {
+		var value string
+		Expect(rows.Scan(&value)).To(Succeed())
+		values = append(values, value)
+	}
+	return values
 }

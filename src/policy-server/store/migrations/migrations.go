@@ -192,4 +192,120 @@ var MigrationsToPerform = PolicyServerMigrations{
 		Id: "21",
 		Up: migration_v0021,
 	},
+	PolicyServerMigration{
+		Id: "22",
+		Up: migration_v0022,
+	},
+	PolicyServerMigration{
+		Id: "23",
+		Up: migration_v0023,
+	},
+	PolicyServerMigration{
+		Id: "24",
+		Up: migration_v0024,
+	},
+	PolicyServerMigration{
+		Id: "25",
+		Up: migration_v0025,
+	},
+	PolicyServerMigration{
+		Id: "26",
+		Up: migration_v0026,
+	},
+	PolicyServerMigration{
+		Id: "27",
+		Up: migration_v0027,
+	},
+	PolicyServerMigration{
+		Id: "28",
+		Up: migration_v0028,
+	},
+	PolicyServerMigration{
+		Id: "29",
+		Up: migration_v0029,
+	},
+	PolicyServerMigration{
+		Id: "30",
+		Up: migration_v0030,
+	},
+	PolicyServerMigration{
+		Id: "31",
+		Up: migration_v0031,
+	},
+	PolicyServerMigration{
+		Id: "32",
+		Up: migration_v0032,
+	},
+	PolicyServerMigration{
+		Id: "33",
+		Up: migration_v0033,
+	},
+	PolicyServerMigration{
+		Id: "34",
+		Up: migration_v0034,
+	},
+	PolicyServerMigration{
+		Id: "35",
+		Up: migration_v0035,
+	},
+	PolicyServerMigration{
+		Id: "36",
+		Up: migration_v0036,
+	},
+	PolicyServerMigration{
+		Id: "37",
+		Up: migration_v0037,
+	},
+	PolicyServerMigration{
+		Id: "38",
+		Up: migration_v0038,
+	},
+	PolicyServerMigration{
+		Id: "39",
+		Up: migration_v0039,
+	},
+	PolicyServerMigration{
+		Id: "40",
+		Up: migration_v0040,
+	},
+	PolicyServerMigration{
+		Id: "41",
+		Up: migration_v0041,
+	},
+	PolicyServerMigration{
+		Id: "42",
+		Up: migration_v0042,
+	},
+	PolicyServerMigration{
+		Id: "43",
+		Up: migration_v0043,
+	},
+	PolicyServerMigration{
+		Id: "44",
+		Up: migration_v0044,
+	},
+	PolicyServerMigration{
+		Id: "45",
+		Up: migration_v0045,
+	},
+	PolicyServerMigration{
+		Id: "46",
+		Up: migration_v0046,
+	},
+	PolicyServerMigration{
+		Id: "47",
+		Up: migration_v0047,
+	},
+	PolicyServerMigration{
+		Id: "48",
+		Up: migration_v0048,
+	},
+	PolicyServerMigration{
+		Id: "49",
+		Up: migration_v0049,
+	},
+	PolicyServerMigration{
+		Id: "50",
+		Up: migration_v0050,
+	},
 }
