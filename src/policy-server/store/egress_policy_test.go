@@ -837,7 +837,7 @@ var _ = Describe("Egress Policy Table", func() {
 		It("returns policies", func() {
 			listedPolicies, err := egressPolicyTable.GetAllPolicies()
 			Expect(err).ToNot(HaveOccurred())
-			Expect(listedPolicies).To(Equal(egressPolicies))
+			Expect(listedPolicies).To(ConsistOf(egressPolicies))
 		})
 
 		Context("when the query fails", func() {
