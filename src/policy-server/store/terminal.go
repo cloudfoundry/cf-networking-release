@@ -2,28 +2,24 @@ package store
 
 import (
 	"policy-server/db"
-
-	uuid "github.com/nu7hatch/gouuid"
 )
 
 type TerminalsTable struct {
+	Guids guidGenerator
 }
 
-func (e *TerminalsTable) Create(tx db.Transaction) (string, error) {
-	guid, err := uuid.NewV4()
-	if err != nil {
-		panic(err)
-	}
+func (t *TerminalsTable) Create(tx db.Transaction) (string, error) {
+	guid := t.Guids.New()
 
-	_, err = tx.Exec(tx.Rebind("INSERT INTO terminals (guid) VALUES (?)"), guid.String())
+	_, err := tx.Exec(tx.Rebind("INSERT INTO terminals (guid) VALUES (?)"), guid)
 	if err != nil {
 		return "", err
 	}
 
-	return guid.String(), nil
+	return guid, nil
 }
 
-func (e *TerminalsTable) Delete(tx db.Transaction, terminalGUID string) error {
+func (t *TerminalsTable) Delete(tx db.Transaction, terminalGUID string) error {
 	_, err := tx.Exec(tx.Rebind(`DELETE FROM terminals WHERE guid = ?`), terminalGUID)
 	return err
 }

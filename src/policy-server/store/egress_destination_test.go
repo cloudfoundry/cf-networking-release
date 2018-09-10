@@ -40,6 +40,10 @@ var _ = Describe("EgressDestination", func() {
 
 		egressDestinationTable = &store.EgressDestinationTable{}
 
+		terminalsTable = &store.TerminalsTable{
+			Guids: &store.GuidGenerator{},
+		}
+
 		tx, err := realDb.Beginx()
 		Expect(err).NotTo(HaveOccurred())
 

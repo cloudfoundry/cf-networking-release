@@ -9,14 +9,14 @@ import (
 type egressPolicyRepo interface {
 	CreateApp(tx db.Transaction, sourceTerminalGUID string, appGUID string) (int64, error)
 	CreateIPRange(tx db.Transaction, destinationTerminalGUID string, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) (int64, error)
-	CreateEgressPolicy(tx db.Transaction, sourceTerminalGUID, destinationTerminalGUID string) (int64, error)
+	CreateEgressPolicy(tx db.Transaction, sourceTerminalGUID, destinationTerminalGUID string) (string, error)
 	CreateSpace(tx db.Transaction, sourceTerminalGUID string, spaceGUID string) (int64, error)
 	GetTerminalByAppGUID(tx db.Transaction, appGUID string) (string, error)
 	GetTerminalBySpaceGUID(tx db.Transaction, appGUID string) (string, error)
 	GetAllPolicies() ([]EgressPolicy, error)
 	GetByGuids(ids []string) ([]EgressPolicy, error)
 	GetIDCollectionsByEgressPolicy(tx db.Transaction, egressPolicy EgressPolicy) ([]EgressPolicyIDCollection, error)
-	DeleteEgressPolicy(tx db.Transaction, egressPolicyID int64) error
+	DeleteEgressPolicy(tx db.Transaction, egressPolicyGUID string) error
 	DeleteIPRange(tx db.Transaction, ipRangeID int64) error
 	DeleteApp(tx db.Transaction, appID int64) error
 	DeleteSpace(tx db.Transaction, spaceID int64) error
@@ -128,7 +128,7 @@ func (e *EgressPolicyStore) DeleteWithTx(tx db.Transaction, egressPolicies []Egr
 		}
 
 		for _, egressPolicyIDCollection := range egressPolicyIDCollections {
-			err = e.EgressPolicyRepo.DeleteEgressPolicy(tx, egressPolicyIDCollection.EgressPolicyID)
+			err = e.EgressPolicyRepo.DeleteEgressPolicy(tx, egressPolicyIDCollection.EgressPolicyGUID)
 			if err != nil {
 				return fmt.Errorf("failed to delete egress policy: %s", err)
 			}

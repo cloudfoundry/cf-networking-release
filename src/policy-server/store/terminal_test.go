@@ -40,7 +40,9 @@ var _ = Describe("Terminal Table", func() {
 
 			migrate(realDb)
 
-			terminalsTable = &store.TerminalsTable{}
+			terminalsTable = &store.TerminalsTable{
+				Guids: &store.GuidGenerator{},
+			}
 
 			tx, err = realDb.Beginx()
 			Expect(err).NotTo(HaveOccurred())
@@ -97,7 +99,9 @@ var _ = Describe("Terminal Table", func() {
 		BeforeEach(func() {
 			tx = &dbfakes.Transaction{}
 
-			terminalsTable = &store.TerminalsTable{}
+			terminalsTable = &store.TerminalsTable{
+				Guids: &store.GuidGenerator{},
+			}
 		})
 
 		Context("Create", func() {

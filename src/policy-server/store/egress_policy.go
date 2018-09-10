@@ -8,7 +8,8 @@ import (
 )
 
 type EgressPolicyTable struct {
-	Conn Database
+	Conn  Database
+	Guids guidGenerator
 }
 
 func (e *EgressPolicyTable) CreateApp(tx db.Transaction, sourceTerminalGUID, appGUID string) (int64, error) {
@@ -98,42 +99,23 @@ func (e *EgressPolicyTable) CreateIPRange(tx db.Transaction, destinationTerminal
 	return -1, fmt.Errorf("unknown driver: %s", driverName)
 }
 
-func (e *EgressPolicyTable) CreateEgressPolicy(tx db.Transaction, sourceTerminalGUID, destinationTerminalGUID string) (int64, error) {
-	driverName := tx.DriverName()
-	if driverName == "mysql" {
-		result, err := tx.Exec(tx.Rebind(`
-			INSERT INTO egress_policies (source_guid, destination_guid)
-			VALUES (?,?)
+func (e *EgressPolicyTable) CreateEgressPolicy(tx db.Transaction, sourceTerminalGUID, destinationTerminalGUID string) (string, error) {
+	guid := e.Guids.New()
+
+	_, err := tx.Exec(tx.Rebind(`
+			INSERT INTO egress_policies (guid, source_guid, destination_guid)
+			VALUES (?, ?,?)
 		`),
-			sourceTerminalGUID,
-			destinationTerminalGUID,
-		)
+		guid,
+		sourceTerminalGUID,
+		destinationTerminalGUID,
+	)
 
-		if err != nil {
-			return -1, fmt.Errorf("error inserting egress policy: %s", err)
-		}
-
-		return result.LastInsertId()
-	} else if driverName == "postgres" {
-		var id int64
-
-		err := tx.QueryRow(tx.Rebind(`
-			INSERT INTO egress_policies (source_guid, destination_guid)
-			VALUES (?,?)
-			RETURNING id
-		`),
-			sourceTerminalGUID,
-			destinationTerminalGUID,
-		).Scan(&id)
-
-		if err != nil {
-			return -1, fmt.Errorf("error inserting egress policy: %s", err)
-		}
-
-		return id, nil
+	if err != nil {
+		return "", fmt.Errorf("error inserting egress policy: %s", err)
 	}
 
-	return -1, fmt.Errorf("unknown driver: %s", driverName)
+	return guid, nil
 }
 
 func (e *EgressPolicyTable) CreateSpace(tx db.Transaction, sourceTerminalGUID, spaceGUID string) (int64, error) {
@@ -173,8 +155,8 @@ func (e *EgressPolicyTable) CreateSpace(tx db.Transaction, sourceTerminalGUID, s
 	return -1, fmt.Errorf("unknown driver: %s", driverName)
 }
 
-func (e *EgressPolicyTable) DeleteEgressPolicy(tx db.Transaction, egressPolicyID int64) error {
-	_, err := tx.Exec(tx.Rebind(`DELETE FROM egress_policies WHERE id = ?`), egressPolicyID)
+func (e *EgressPolicyTable) DeleteEgressPolicy(tx db.Transaction, egressPolicyGUID string) error {
+	_, err := tx.Exec(tx.Rebind(`DELETE FROM egress_policies WHERE guid = ?`), egressPolicyGUID)
 	return err
 }
 
@@ -195,7 +177,7 @@ func (e *EgressPolicyTable) DeleteSpace(tx db.Transaction, spaceID int64) error 
 
 func (e *EgressPolicyTable) IsTerminalInUse(tx db.Transaction, terminalGUID string) (bool, error) {
 	var count int64
-	err := tx.QueryRow(tx.Rebind(`SELECT COUNT(id) FROM egress_policies WHERE source_guid = ? OR destination_guid = ?`), terminalGUID, terminalGUID).Scan(&count)
+	err := tx.QueryRow(tx.Rebind(`SELECT COUNT(guid) FROM egress_policies WHERE source_guid = ? OR destination_guid = ?`), terminalGUID, terminalGUID).Scan(&count)
 	if err != nil {
 		return false, err
 	}
@@ -203,8 +185,8 @@ func (e *EgressPolicyTable) IsTerminalInUse(tx db.Transaction, terminalGUID stri
 }
 
 func (e *EgressPolicyTable) GetIDCollectionsByEgressPolicy(tx db.Transaction, egressPolicy EgressPolicy) ([]EgressPolicyIDCollection, error) {
-	var egressPolicyID, sourceID, appID, spaceID, ipRangeID int64
-	var sourceTerminalGUID, destinationTerminalGUID string
+	var sourceID, appID, spaceID, ipRangeID int64
+	var egressPolicyGUID, sourceTerminalGUID, destinationTerminalGUID string
 	var startPort, endPort int64
 
 	if len(egressPolicy.Destination.Ports) > 0 {
@@ -224,7 +206,7 @@ func (e *EgressPolicyTable) GetIDCollectionsByEgressPolicy(tx db.Transaction, eg
 
 	rows, err := tx.Queryx(tx.Rebind(fmt.Sprintf(`
 		SELECT
-			egress_policies.id,
+			egress_policies.guid,
 			egress_policies.source_guid,
 			egress_policies.destination_guid,
 			%s.id,
@@ -260,7 +242,7 @@ func (e *EgressPolicyTable) GetIDCollectionsByEgressPolicy(tx db.Transaction, eg
 	var policyIDCollections []EgressPolicyIDCollection
 
 	for rows.Next() {
-		rows.Scan(&egressPolicyID, &sourceTerminalGUID, &destinationTerminalGUID, &sourceID, &ipRangeID)
+		rows.Scan(&egressPolicyGUID, &sourceTerminalGUID, &destinationTerminalGUID, &sourceID, &ipRangeID)
 
 		switch egressPolicy.Source.Type {
 		case "space":
@@ -272,7 +254,7 @@ func (e *EgressPolicyTable) GetIDCollectionsByEgressPolicy(tx db.Transaction, eg
 		}
 
 		policyIDCollections = append(policyIDCollections, EgressPolicyIDCollection{
-			EgressPolicyID:          egressPolicyID,
+			EgressPolicyGUID:        egressPolicyGUID,
 			DestinationTerminalGUID: destinationTerminalGUID,
 			DestinationIPRangeID:    ipRangeID,
 			SourceTerminalGUID:      sourceTerminalGUID,

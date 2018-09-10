@@ -1,6 +1,7 @@
 package store_test
 
 import (
+	uuid "github.com/nu7hatch/gouuid"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -56,10 +57,13 @@ var _ = Describe("Egress Policy Table", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		egressPolicyTable = &store.EgressPolicyTable{
-			Conn: realDb,
+			Conn:  realDb,
+			Guids: &store.GuidGenerator{},
 		}
 
-		terminalsTable = &store.TerminalsTable{}
+		terminalsTable = &store.TerminalsTable{
+			Guids: &store.GuidGenerator{},
+		}
 		egressStore = store.EgressPolicyStore{
 			EgressPolicyRepo: egressPolicyTable,
 			TerminalsRepo:    terminalsTable,
@@ -194,12 +198,13 @@ var _ = Describe("Egress Policy Table", func() {
 			destinationTerminalId, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 
-			id, err := egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalId, destinationTerminalId)
+			guid, err := egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalId, destinationTerminalId)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(id).To(Equal(int64(1)))
+			_, err = uuid.ParseHex(guid)
+			Expect(err).NotTo(HaveOccurred())
 
 			var foundSourceID, foundDestinationID string
-			row := tx.QueryRow(`SELECT source_guid, destination_guid FROM egress_policies WHERE id = 1`)
+			row := tx.QueryRow(tx.Rebind(`SELECT source_guid, destination_guid FROM egress_policies WHERE guid = ?`), guid)
 			err = row.Scan(&foundSourceID, &foundDestinationID)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(foundSourceID).To(Equal(sourceTerminalId))
@@ -215,7 +220,7 @@ var _ = Describe("Egress Policy Table", func() {
 
 	Context("DeleteEgressPolicy", func() {
 		var (
-			egressPolicyID int64
+			egressPolicyGUID string
 		)
 
 		BeforeEach(func() {
@@ -224,16 +229,16 @@ var _ = Describe("Egress Policy Table", func() {
 			destinationTerminalId, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 
-			egressPolicyID, err = egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalId, destinationTerminalId)
+			egressPolicyGUID, err = egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalId, destinationTerminalId)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("deletes the policy", func() {
-			err := egressPolicyTable.DeleteEgressPolicy(tx, egressPolicyID)
+			err := egressPolicyTable.DeleteEgressPolicy(tx, egressPolicyGUID)
 			Expect(err).ToNot(HaveOccurred())
 
 			var policyCount int
-			row := tx.QueryRow(`SELECT COUNT(id) FROM egress_policies WHERE id = 1`)
+			row := tx.QueryRow(tx.Rebind(`SELECT COUNT(guid) FROM egress_policies WHERE guid = ?`), egressPolicyGUID)
 			err = row.Scan(&policyCount)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(policyCount).To(Equal(0))
@@ -243,7 +248,7 @@ var _ = Describe("Egress Policy Table", func() {
 			fakeTx := &dbfakes.Transaction{}
 			fakeTx.ExecReturns(nil, errors.New("broke"))
 
-			err := egressPolicyTable.DeleteEgressPolicy(fakeTx, 2)
+			err := egressPolicyTable.DeleteEgressPolicy(fakeTx, "some-guid")
 			Expect(err).To(MatchError("broke"))
 		})
 	})
@@ -416,7 +421,7 @@ var _ = Describe("Egress Policy Table", func() {
 			egressPolicy            store.EgressPolicy
 			sourceTerminalGUID      string
 			destinationTerminalGUID string
-			egressPolicyID          int64
+			egressPolicyGUID        string
 			appID                   int64
 			ipRangeID               int64
 		)
@@ -450,7 +455,7 @@ var _ = Describe("Egress Policy Table", func() {
 			destinationTerminalGUID, err = terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 
-			egressPolicyID, err = egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalGUID, destinationTerminalGUID)
+			egressPolicyGUID, err = egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalGUID, destinationTerminalGUID)
 			Expect(err).ToNot(HaveOccurred())
 
 			appID, err = egressPolicyTable.CreateApp(tx, sourceTerminalGUID, "some-app-guid")
@@ -464,7 +469,7 @@ var _ = Describe("Egress Policy Table", func() {
 			ids, err := egressPolicyTable.GetIDCollectionsByEgressPolicy(tx, egressPolicy)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(ids).To(Equal([]store.EgressPolicyIDCollection{{
-				EgressPolicyID:          egressPolicyID,
+				EgressPolicyGUID:        egressPolicyGUID,
 				DestinationTerminalGUID: destinationTerminalGUID,
 				DestinationIPRangeID:    ipRangeID,
 				SourceTerminalGUID:      sourceTerminalGUID,
@@ -476,7 +481,7 @@ var _ = Describe("Egress Policy Table", func() {
 		Context("when there are duplicate matching policies", func() {
 			var (
 				destinationTerminalGUIDDuplicate string
-				egressPolicyIDDuplicate          int64
+				egressPolicyIDDuplicate          string
 				ipRangeIDDuplicate               int64
 			)
 
@@ -496,31 +501,31 @@ var _ = Describe("Egress Policy Table", func() {
 			It("returns them all", func() {
 				ids, err := egressPolicyTable.GetIDCollectionsByEgressPolicy(tx, egressPolicy)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(ids).To(Equal([]store.EgressPolicyIDCollection{
-					{
-						EgressPolicyID:          egressPolicyID,
+				Expect(ids).To(ConsistOf(
+					store.EgressPolicyIDCollection{
+						EgressPolicyGUID:        egressPolicyGUID,
 						DestinationTerminalGUID: destinationTerminalGUID,
 						DestinationIPRangeID:    ipRangeID,
 						SourceTerminalGUID:      sourceTerminalGUID,
 						SourceAppID:             appID,
 						SourceSpaceID:           -1,
 					},
-					{
-						EgressPolicyID:          egressPolicyIDDuplicate,
+					store.EgressPolicyIDCollection{
+						EgressPolicyGUID:        egressPolicyIDDuplicate,
 						DestinationTerminalGUID: destinationTerminalGUIDDuplicate,
 						DestinationIPRangeID:    ipRangeIDDuplicate,
 						SourceTerminalGUID:      sourceTerminalGUID,
 						SourceAppID:             appID,
 						SourceSpaceID:           -1,
 					},
-				}))
+				))
 			})
 		})
 
 		Context("when source terminal is attached to a space", func() {
 			var (
 				spaceSourceTerminalGUID string
-				spaceEgressPolicyID     int64
+				spaceEgressPolicyID     string
 				spaceID                 int64
 				spaceEgressPolicy       store.EgressPolicy
 			)
@@ -563,7 +568,7 @@ var _ = Describe("Egress Policy Table", func() {
 				ids, err := egressPolicyTable.GetIDCollectionsByEgressPolicy(tx, spaceEgressPolicy)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(ids).To(Equal([]store.EgressPolicyIDCollection{{
-					EgressPolicyID:          spaceEgressPolicyID,
+					EgressPolicyGUID:        spaceEgressPolicyID,
 					DestinationTerminalGUID: destinationTerminalGUID,
 					DestinationIPRangeID:    ipRangeID,
 					SourceTerminalGUID:      spaceSourceTerminalGUID,
@@ -597,9 +602,8 @@ var _ = Describe("Egress Policy Table", func() {
 				destinationTerminalGUID, err = terminalsTable.Create(tx)
 				Expect(err).ToNot(HaveOccurred())
 
-				egressPolicyID, err = egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalGUID, destinationTerminalGUID)
+				egressPolicyGUID, err = egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalGUID, destinationTerminalGUID)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(egressPolicyID).To(Equal(int64(2)))
 
 				appID, err = egressPolicyTable.CreateApp(tx, sourceTerminalGUID, "some-app-guid-2")
 				Expect(err).ToNot(HaveOccurred())
@@ -614,7 +618,7 @@ var _ = Describe("Egress Policy Table", func() {
 				ids, err := egressPolicyTable.GetIDCollectionsByEgressPolicy(tx, egressPolicy)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(ids).To(Equal([]store.EgressPolicyIDCollection{{
-					EgressPolicyID:          egressPolicyID,
+					EgressPolicyGUID:        egressPolicyGUID,
 					DestinationTerminalGUID: destinationTerminalGUID,
 					DestinationIPRangeID:    ipRangeID,
 					SourceTerminalGUID:      sourceTerminalGUID,
@@ -651,9 +655,8 @@ var _ = Describe("Egress Policy Table", func() {
 				destinationTerminalGUID, err = terminalsTable.Create(tx)
 				Expect(err).ToNot(HaveOccurred())
 
-				egressPolicyID, err = egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalGUID, destinationTerminalGUID)
+				egressPolicyGUID, err = egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalGUID, destinationTerminalGUID)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(egressPolicyID).To(Equal(int64(2)))
 
 				appID, err = egressPolicyTable.CreateApp(tx, sourceTerminalGUID, "some-app-guid-2")
 				Expect(err).ToNot(HaveOccurred())
@@ -667,9 +670,8 @@ var _ = Describe("Egress Policy Table", func() {
 				otherDestTermID, err := terminalsTable.Create(tx)
 				Expect(err).ToNot(HaveOccurred())
 
-				otherEgressPolicyID, err := egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalGUID, otherDestTermID)
+				_, err = egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalGUID, otherDestTermID)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(otherEgressPolicyID).To(Equal(int64(3)))
 
 				otherIpRangeID, err := egressPolicyTable.CreateIPRange(tx, otherDestTermID, "1.1.1.1", "2.2.2.2", "icmp", 0, 0, 3, 4)
 				Expect(err).ToNot(HaveOccurred())
@@ -680,7 +682,7 @@ var _ = Describe("Egress Policy Table", func() {
 				ids, err := egressPolicyTable.GetIDCollectionsByEgressPolicy(tx, egressPolicy)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(ids).To(Equal([]store.EgressPolicyIDCollection{{
-					EgressPolicyID:          egressPolicyID,
+					EgressPolicyGUID:        egressPolicyGUID,
 					DestinationTerminalGUID: destinationTerminalGUID,
 					DestinationIPRangeID:    ipRangeID,
 					SourceTerminalGUID:      sourceTerminalGUID,

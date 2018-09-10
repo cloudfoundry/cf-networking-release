@@ -77,7 +77,8 @@ func main() {
 
 	egressDataStore := &store.EgressPolicyStore{
 		EgressPolicyRepo: &store.EgressPolicyTable{
-			Conn: connectionPool,
+			Conn:  connectionPool,
+			Guids: &store.GuidGenerator{},
 		},
 	}
 

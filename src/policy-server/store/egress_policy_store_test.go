@@ -119,7 +119,7 @@ var _ = Describe("EgressPolicyStore", func() {
 			It("does not create a duplicate policy", func() {
 				egressPolicyRepo.GetIDCollectionsByEgressPolicyReturns([]store.EgressPolicyIDCollection{
 					{
-						EgressPolicyID:          -1,
+						EgressPolicyGUID:        "",
 						DestinationTerminalGUID: "",
 						DestinationIPRangeID:    -1,
 						SourceTerminalGUID:      "",
@@ -270,7 +270,7 @@ var _ = Describe("EgressPolicyStore", func() {
 		})
 
 		It("returns an error when the CreateEgressPolicy fails", func() {
-			egressPolicyRepo.CreateEgressPolicyReturns(-1, errors.New("OMG WHY DID THIS FAIL"))
+			egressPolicyRepo.CreateEgressPolicyReturns("", errors.New("OMG WHY DID THIS FAIL"))
 
 			err := egressPolicyStore.CreateWithTx(tx, egressPolicies)
 			Expect(err).To(MatchError("failed to create egress policy: OMG WHY DID THIS FAIL"))
@@ -333,13 +333,13 @@ var _ = Describe("EgressPolicyStore", func() {
 			egressPolicyIDCollection  store.EgressPolicyIDCollection
 			egressPolicyIDCollection2 store.EgressPolicyIDCollection
 
-			egressPolicyID   int64
+			egressPolicyGUID string
 			ipRangeID        int64
 			destTerminalGUID string
 			appID            int64
 			srcTerminalGUID  string
 
-			egressPolicyID2   int64
+			egressPolicyGUID2 string
 			ipRangeID2        int64
 			destTerminalGUID2 string
 			appID2            int64
@@ -369,20 +369,20 @@ var _ = Describe("EgressPolicyStore", func() {
 				},
 			}
 
-			egressPolicyID = 6
+			egressPolicyGUID = "some-egress-policy-guid"
 			ipRangeID = 9
 			destTerminalGUID = "some-dest-terminal-guid"
 			appID = 21
 			srcTerminalGUID = "some-src-terminal-guid"
 
-			egressPolicyID2 = 7
+			egressPolicyGUID2 = "some-egress-policy-guid-2"
 			ipRangeID2 = 10
 			destTerminalGUID2 = "some-dest-terminal-guid-2"
 			appID2 = 23
 			srcTerminalGUID2 = "some-src-terminal-guid-2"
 
 			egressPolicyIDCollection = store.EgressPolicyIDCollection{
-				EgressPolicyID:          egressPolicyID,
+				EgressPolicyGUID:        egressPolicyGUID,
 				DestinationIPRangeID:    ipRangeID,
 				DestinationTerminalGUID: destTerminalGUID,
 				SourceAppID:             appID,
@@ -391,7 +391,7 @@ var _ = Describe("EgressPolicyStore", func() {
 			}
 
 			egressPolicyIDCollection2 = store.EgressPolicyIDCollection{
-				EgressPolicyID:          egressPolicyID2,
+				EgressPolicyGUID:        egressPolicyGUID2,
 				DestinationIPRangeID:    ipRangeID2,
 				DestinationTerminalGUID: destTerminalGUID2,
 				SourceAppID:             appID2,
@@ -416,12 +416,12 @@ var _ = Describe("EgressPolicyStore", func() {
 			Expect(passedEgressPolicy).To(Equal(egressPoliciesToDelete[0]))
 
 			Expect(egressPolicyRepo.DeleteEgressPolicyCallCount()).To(Equal(2))
-			passedTx, passedEgressPolicyID := egressPolicyRepo.DeleteEgressPolicyArgsForCall(0)
+			passedTx, passedEgressPolicyGUID := egressPolicyRepo.DeleteEgressPolicyArgsForCall(0)
 			Expect(passedTx).To(Equal(tx))
-			Expect(passedEgressPolicyID).To(Equal(egressPolicyID))
-			passedTx, passedEgressPolicyID = egressPolicyRepo.DeleteEgressPolicyArgsForCall(1)
+			Expect(passedEgressPolicyGUID).To(Equal(egressPolicyGUID))
+			passedTx, passedEgressPolicyGUID = egressPolicyRepo.DeleteEgressPolicyArgsForCall(1)
 			Expect(passedTx).To(Equal(tx))
-			Expect(passedEgressPolicyID).To(Equal(egressPolicyID2))
+			Expect(passedEgressPolicyGUID).To(Equal(egressPolicyGUID2))
 
 			Expect(egressPolicyRepo.DeleteIPRangeCallCount()).To(Equal(2))
 			passedTx, passedIPRangeID := egressPolicyRepo.DeleteIPRangeArgsForCall(0)

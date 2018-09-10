@@ -44,7 +44,7 @@ type EgressPolicyRepo struct {
 		result1 int64
 		result2 error
 	}
-	CreateEgressPolicyStub        func(tx db.Transaction, sourceTerminalGUID, destinationTerminalGUID string) (int64, error)
+	CreateEgressPolicyStub        func(tx db.Transaction, sourceTerminalGUID, destinationTerminalGUID string) (string, error)
 	createEgressPolicyMutex       sync.RWMutex
 	createEgressPolicyArgsForCall []struct {
 		tx                      db.Transaction
@@ -52,11 +52,11 @@ type EgressPolicyRepo struct {
 		destinationTerminalGUID string
 	}
 	createEgressPolicyReturns struct {
-		result1 int64
+		result1 string
 		result2 error
 	}
 	createEgressPolicyReturnsOnCall map[int]struct {
-		result1 int64
+		result1 string
 		result2 error
 	}
 	CreateSpaceStub        func(tx db.Transaction, sourceTerminalGUID string, spaceGUID string) (int64, error)
@@ -140,11 +140,11 @@ type EgressPolicyRepo struct {
 		result1 []store.EgressPolicyIDCollection
 		result2 error
 	}
-	DeleteEgressPolicyStub        func(tx db.Transaction, egressPolicyID int64) error
+	DeleteEgressPolicyStub        func(tx db.Transaction, egressPolicyGUID string) error
 	deleteEgressPolicyMutex       sync.RWMutex
 	deleteEgressPolicyArgsForCall []struct {
-		tx             db.Transaction
-		egressPolicyID int64
+		tx               db.Transaction
+		egressPolicyGUID string
 	}
 	deleteEgressPolicyReturns struct {
 		result1 error
@@ -318,7 +318,7 @@ func (fake *EgressPolicyRepo) CreateIPRangeReturnsOnCall(i int, result1 int64, r
 	}{result1, result2}
 }
 
-func (fake *EgressPolicyRepo) CreateEgressPolicy(tx db.Transaction, sourceTerminalGUID string, destinationTerminalGUID string) (int64, error) {
+func (fake *EgressPolicyRepo) CreateEgressPolicy(tx db.Transaction, sourceTerminalGUID string, destinationTerminalGUID string) (string, error) {
 	fake.createEgressPolicyMutex.Lock()
 	ret, specificReturn := fake.createEgressPolicyReturnsOnCall[len(fake.createEgressPolicyArgsForCall)]
 	fake.createEgressPolicyArgsForCall = append(fake.createEgressPolicyArgsForCall, struct {
@@ -349,24 +349,24 @@ func (fake *EgressPolicyRepo) CreateEgressPolicyArgsForCall(i int) (db.Transacti
 	return fake.createEgressPolicyArgsForCall[i].tx, fake.createEgressPolicyArgsForCall[i].sourceTerminalGUID, fake.createEgressPolicyArgsForCall[i].destinationTerminalGUID
 }
 
-func (fake *EgressPolicyRepo) CreateEgressPolicyReturns(result1 int64, result2 error) {
+func (fake *EgressPolicyRepo) CreateEgressPolicyReturns(result1 string, result2 error) {
 	fake.CreateEgressPolicyStub = nil
 	fake.createEgressPolicyReturns = struct {
-		result1 int64
+		result1 string
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *EgressPolicyRepo) CreateEgressPolicyReturnsOnCall(i int, result1 int64, result2 error) {
+func (fake *EgressPolicyRepo) CreateEgressPolicyReturnsOnCall(i int, result1 string, result2 error) {
 	fake.CreateEgressPolicyStub = nil
 	if fake.createEgressPolicyReturnsOnCall == nil {
 		fake.createEgressPolicyReturnsOnCall = make(map[int]struct {
-			result1 int64
+			result1 string
 			result2 error
 		})
 	}
 	fake.createEgressPolicyReturnsOnCall[i] = struct {
-		result1 int64
+		result1 string
 		result2 error
 	}{result1, result2}
 }
@@ -679,17 +679,17 @@ func (fake *EgressPolicyRepo) GetIDCollectionsByEgressPolicyReturnsOnCall(i int,
 	}{result1, result2}
 }
 
-func (fake *EgressPolicyRepo) DeleteEgressPolicy(tx db.Transaction, egressPolicyID int64) error {
+func (fake *EgressPolicyRepo) DeleteEgressPolicy(tx db.Transaction, egressPolicyGUID string) error {
 	fake.deleteEgressPolicyMutex.Lock()
 	ret, specificReturn := fake.deleteEgressPolicyReturnsOnCall[len(fake.deleteEgressPolicyArgsForCall)]
 	fake.deleteEgressPolicyArgsForCall = append(fake.deleteEgressPolicyArgsForCall, struct {
-		tx             db.Transaction
-		egressPolicyID int64
-	}{tx, egressPolicyID})
-	fake.recordInvocation("DeleteEgressPolicy", []interface{}{tx, egressPolicyID})
+		tx               db.Transaction
+		egressPolicyGUID string
+	}{tx, egressPolicyGUID})
+	fake.recordInvocation("DeleteEgressPolicy", []interface{}{tx, egressPolicyGUID})
 	fake.deleteEgressPolicyMutex.Unlock()
 	if fake.DeleteEgressPolicyStub != nil {
-		return fake.DeleteEgressPolicyStub(tx, egressPolicyID)
+		return fake.DeleteEgressPolicyStub(tx, egressPolicyGUID)
 	}
 	if specificReturn {
 		return ret.result1
@@ -703,10 +703,10 @@ func (fake *EgressPolicyRepo) DeleteEgressPolicyCallCount() int {
 	return len(fake.deleteEgressPolicyArgsForCall)
 }
 
-func (fake *EgressPolicyRepo) DeleteEgressPolicyArgsForCall(i int) (db.Transaction, int64) {
+func (fake *EgressPolicyRepo) DeleteEgressPolicyArgsForCall(i int) (db.Transaction, string) {
 	fake.deleteEgressPolicyMutex.RLock()
 	defer fake.deleteEgressPolicyMutex.RUnlock()
-	return fake.deleteEgressPolicyArgsForCall[i].tx, fake.deleteEgressPolicyArgsForCall[i].egressPolicyID
+	return fake.deleteEgressPolicyArgsForCall[i].tx, fake.deleteEgressPolicyArgsForCall[i].egressPolicyGUID
 }
 
 func (fake *EgressPolicyRepo) DeleteEgressPolicyReturns(result1 error) {

@@ -115,11 +115,15 @@ func main() {
 	)
 	logger.Info("db connection retrieved", lager.Data{})
 
+	terminalsTable := &store.TerminalsTable{
+		Guids: &store.GuidGenerator{},
+	}
 	egressDataStore := &store.EgressPolicyStore{
 		EgressPolicyRepo: &store.EgressPolicyTable{
-			Conn: connectionPool,
+			Conn:  connectionPool,
+			Guids: &store.GuidGenerator{},
 		},
-		TerminalsRepo: &store.TerminalsTable{},
+		TerminalsRepo: terminalsTable,
 	}
 
 	dataStore := store.New(
@@ -199,7 +203,7 @@ func main() {
 	egressDestinationStore := &store.EgressDestinationStore{
 		Conn: connectionPool,
 		EgressDestinationRepo:   &store.EgressDestinationTable{},
-		TerminalsRepo:           &store.TerminalsTable{},
+		TerminalsRepo:           terminalsTable,
 		DestinationMetadataRepo: &store.DestinationMetadataTable{},
 	}
 

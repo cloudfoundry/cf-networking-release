@@ -45,6 +45,9 @@ var _ = Describe("EgressDestinationStore", func() {
 
 			egressDestinationTable = &store.EgressDestinationTable{}
 			destinationMetadataRepo = &store.DestinationMetadataTable{}
+			terminalsRepo = &store.TerminalsTable{
+				Guids: &store.GuidGenerator{},
+			}
 
 			egressDestinationsStore = &store.EgressDestinationStore{
 				TerminalsRepo:           terminalsRepo,
