@@ -55,6 +55,7 @@ var _ = Describe("Config", func() {
 					"database_migration_timeout": 88,
 					"max_idle_connections": 4,
 					"max_open_connections": 5,
+					"connections_max_lifetime_seconds": 62,
 					"tag_length": 2,
 					"metron_address": "http://1.2.3.4:9999",
 					"log_level": "debug",
@@ -91,6 +92,7 @@ var _ = Describe("Config", func() {
 				Expect(c.DatabaseMigrationTimeout).To(Equal(88))
 				Expect(c.MaxIdleConnections).To(Equal(4))
 				Expect(c.MaxOpenConnections).To(Equal(5))
+				Expect(c.MaxConnectionsLifetimeSeconds).To(Equal(62))
 				Expect(c.TagLength).To(Equal(2))
 				Expect(c.MetronAddress).To(Equal("http://1.2.3.4:9999"))
 				Expect(c.LogLevel).To(Equal("debug"))
@@ -316,6 +318,18 @@ var _ = Describe("Config", func() {
 				It("returns an error", func() {
 					_, err = config.New(file.Name())
 					Expect(err).To(MatchError("invalid config: MaxOpenConnections: less than min"))
+				})
+			})
+
+			Context("when the max connections lifetime seconds is less than 0", func() {
+				BeforeEach(func() {
+					allData["connections_max_lifetime_seconds"] = -1
+					Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
+				})
+
+				It("returns an error", func() {
+					_, err = config.New(file.Name())
+					Expect(err).To(MatchError("invalid config: MaxConnectionsLifetimeSeconds: less than min"))
 				})
 			})
 

@@ -112,6 +112,7 @@ func createDbConn(dbConf dbHelper.Config) *db.ConnWrapper {
 		dbConf,
 		1,
 		1,
+		5*time.Minute,
 		"test-db",
 		"test-job-prefix",
 		lagertest.NewTestLogger("test"),

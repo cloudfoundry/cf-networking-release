@@ -41,6 +41,7 @@ module Bosh::Template::Test
         },
         'max_idle_connections' => 4,
         'max_open_connections' => 5,
+        'connections_max_lifetime_seconds' => 45,
         'tag_length' => 2,
         'metron_port' => 6789,
         'log_level' => 'debug',
@@ -88,6 +89,7 @@ module Bosh::Template::Test
           'database_migration_timeout' => 600,
           'max_idle_connections' => 4,
           'max_open_connections' => 5,
+          'connections_max_lifetime_seconds' => 45,
           'tag_length' => 2,
           'metron_address' => '127.0.0.1:6789',
           'log_level' => 'debug',
@@ -101,25 +103,38 @@ module Bosh::Template::Test
       end
 
       context 'when cloud_controller_https_endpoint is provided' do
-        let(:cloud_controller_https_endpoint_link) do
-          Link.new(
-            name: 'cloud_controller_https_endpoint',
-            instances: [LinkInstance.new()],
-            properties: {
-              'cc' => {
-                'internal_service_hostname' => 'cc.service.internal',
-                'tls_port' => '443',
-                'mutual_tls.ca_cert' => 'some-cc-ca-cert',
+        let(:cc_hostname) {''}
+        let(:cc_port) {0}
+        let(:links) do
+          [
+            Link.new(
+              name: 'cloud_controller_https_endpoint',
+              properties: {
+                'cc' => {
+                  'internal_service_hostname' => 'cc.service.internal',
+                  'public_tls' => {
+                    'port' => '443',
+                    'ca_cert' => 'the-cc-ca-cert'
+                  }
+                }
               }
-            }
-          )
-          let(:cc_hostname) {''}
-          let(:cc_port) {0}
+            )
+          ]
+        end
 
-          let(:links) { [cloud_controller_https_endpoint_link] }
+        it 'renders those values into the config' do
           policyServerJSON = JSON.parse(template.render(merged_manifest_properties, consumes: links))
+
           expect(policyServerJSON['cc_url']).to eq 'https://cc.service.internal:443'
-          expect(policyServerJSON['cc_ca_cert']).to eq '/var/vcap/jobs/polict-server/config/certs/cc_ca.crt'
+          expect(policyServerJSON['cc_ca_cert']).to eq '/var/vcap/jobs/policy-server/config/certs/cc_ca.crt'
+        end
+
+        describe 'cc_ca.crt' do
+          let(:template) {job.template('config/certs/cc_ca.crt')}
+          it 'writes the content of cc ca cert' do
+            cc_ca_cert = template.render(merged_manifest_properties, consumes: links)
+            expect(cc_ca_cert.strip).to eq('the-cc-ca-cert')
+          end
         end
       end
 

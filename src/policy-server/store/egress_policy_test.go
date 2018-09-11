@@ -44,7 +44,7 @@ var _ = Describe("Egress Policy Table", func() {
 
 		logger := lager.NewLogger("Egress Store Test")
 
-		realDb = db.NewConnectionPool(dbConf, 200, 200, "Egress Store Test", "Egress Store Test", logger)
+		realDb = db.NewConnectionPool(dbConf, 200, 200, 5*time.Minute, "Egress Store Test", "Egress Store Test", logger)
 		migrator = &migrations.Migrator{
 			MigrateAdapter: &migrations.MigrateAdapter{},
 			MigrationsProvider: &migrations.MigrationsProvider{

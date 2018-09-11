@@ -39,7 +39,7 @@ var _ = Describe("EgressDestinationStore", func() {
 			testhelpers.CreateDatabase(dbConf)
 
 			logger := lager.NewLogger("Egress Destination Store Test")
-			realDb = db.NewConnectionPool(dbConf, 200, 200, "Egress Destination Store Test", "Egress Destination Store Test", logger)
+			realDb = db.NewConnectionPool(dbConf, 200, 200, 5*time.Minute, "Egress Destination Store Test", "Egress Destination Store Test", logger)
 
 			migrate(realDb)
 
@@ -52,8 +52,8 @@ var _ = Describe("EgressDestinationStore", func() {
 			egressDestinationsStore = &store.EgressDestinationStore{
 				TerminalsRepo:           terminalsRepo,
 				DestinationMetadataRepo: destinationMetadataRepo,
-				Conn: realDb,
-				EgressDestinationRepo: egressDestinationTable,
+				Conn:                    realDb,
+				EgressDestinationRepo:   egressDestinationTable,
 			}
 		})
 
@@ -151,7 +151,7 @@ var _ = Describe("EgressDestinationStore", func() {
 			destinationMetadataRepo = &fakes.DestinationMetadataRepo{}
 
 			egressDestinationsStore = &store.EgressDestinationStore{
-				Conn: mockDB,
+				Conn:                    mockDB,
 				EgressDestinationRepo:   egressDestinationRepo,
 				DestinationMetadataRepo: destinationMetadataRepo,
 				TerminalsRepo:           terminalsRepo,

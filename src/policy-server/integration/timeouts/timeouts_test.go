@@ -10,6 +10,7 @@ import (
 	"policy-server/integration/helpers"
 	"strconv"
 	"strings"
+	"time"
 
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics"
@@ -178,7 +179,7 @@ func mustSucceed(binary string, args ...string) string {
 func migrateAndPopulateTags(dbConf db.Config) {
 	logger := lager.NewLogger("Timeout Test")
 
-	realDb := policyServerDb.NewConnectionPool(dbConf, 200, 200, "Timeout Test", "Timeout Test", logger)
+	realDb := policyServerDb.NewConnectionPool(dbConf, 200, 200, 5*time.Minute, "Timeout Test", "Timeout Test", logger)
 
 	migrator := &migrations.Migrator{
 		MigrateAdapter: &migrations.MigrateAdapter{},

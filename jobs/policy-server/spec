@@ -73,7 +73,7 @@ properties:
     description: |
       UAA client name. Must match the name of a UAA client with the following properties:
       `authorities: uaa.resource,cloud_controller.admin_read_only`,
-      `authorities: uaa.resource,cloud_controller.admin_read_only`."
+      `authorities: uaa.resource,cloud_controller.admin_read_only`.
     default: network-policy
 
   uaa_client_secret:
@@ -140,6 +140,10 @@ properties:
   max_idle_connections:
     description: "Maximum number of idle connections to the SQL database"
     default: 200
+
+  connections_max_lifetime_seconds:
+    description: "Sets the maximum amount of time a connection may be reused. Expired connections may be closed lazily before reuse. If value <= 0, connections are reused forever"
+    default: 0
 
   tag_length:
     description: "Length in bytes of the packet tags to generate for policy sources and destinations. Must be greater than 0 and less than or equal to 4. If using VXLAN GBP, must be less than or equal to 2."

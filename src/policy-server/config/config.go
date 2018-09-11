@@ -37,6 +37,7 @@ type Config struct {
 	AllowedCORSDomains              []string  `json:"allowed_cors_domains"`
 	MaxIdleConnections              int       `json:"max_idle_connections" validate:"min=0"`
 	MaxOpenConnections              int       `json:"max_open_connections" validate:"min=0"`
+	MaxConnectionsLifetimeSeconds   int       `json:"connections_max_lifetime_seconds" validate:"min=0"`
 }
 
 func (c *Config) Validate() error {

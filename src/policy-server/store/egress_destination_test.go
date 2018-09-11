@@ -34,7 +34,7 @@ var _ = Describe("EgressDestination", func() {
 		testhelpers.CreateDatabase(dbConf)
 
 		logger := lager.NewLogger("Egress Destination Test")
-		realDb = db.NewConnectionPool(dbConf, 200, 200, "Egress Destination Test", "Egress Destination Test", logger)
+		realDb = db.NewConnectionPool(dbConf, 200, 200, 5*time.Minute, "Egress Destination Test", "Egress Destination Test", logger)
 
 		migrate(realDb)
 

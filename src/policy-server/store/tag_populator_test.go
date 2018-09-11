@@ -37,7 +37,7 @@ var _ = Describe("Tag Populator", func() {
 
 			logger := lager.NewLogger("Tag Populator Test")
 
-			realDb = db.NewConnectionPool(dbConf, 200, 200, "Tag Populator Test", "Tag Populator Test", logger)
+			realDb = db.NewConnectionPool(dbConf, 200, 200, 5*time.Minute, "Tag Populator Test", "Tag Populator Test", logger)
 
 			migrate(realDb)
 			tagPopulator = &store.TagPopulator{

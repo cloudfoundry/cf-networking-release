@@ -62,6 +62,7 @@ func main() {
 		conf.Database,
 		conf.MaxOpenConnections,
 		conf.MaxIdleConnections,
+		5*time.Minute,
 		logPrefix,
 		jobPrefix,
 		logger,

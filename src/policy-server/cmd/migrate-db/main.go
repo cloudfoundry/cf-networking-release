@@ -75,6 +75,7 @@ func migrateAndPopulateGroupsTable(logger lager.Logger, conf *config.Config) err
 		conf.Database,
 		conf.MaxOpenConnections,
 		conf.MaxIdleConnections,
+		time.Duration(conf.MaxConnectionsLifetimeSeconds)*time.Second,
 		logPrefix,
 		jobPrefix,
 		logger,

@@ -62,7 +62,7 @@ var _ = Describe("migrations", func() {
 
 		logger := lager.NewLogger("Migrations Test")
 
-		realDb = db.NewConnectionPool(dbConf, 200, 200, "Store Test", "Store Test", logger)
+		realDb = db.NewConnectionPool(dbConf, 200, 200, 5*time.Minute, "Store Test", "Store Test", logger)
 
 		mockMigrateAdapter = &migrationsFakes.MigrateAdapter{}
 

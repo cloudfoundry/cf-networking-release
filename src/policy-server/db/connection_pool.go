@@ -11,8 +11,6 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-const connMaxLifetime = time.Hour
-
 type ConnWrapper struct {
 	sqlxDB *sqlx.DB
 }
@@ -72,7 +70,7 @@ func (c *ConnWrapper) Close() error {
 	return c.sqlxDB.Close()
 }
 
-func NewErroringConnectionPool(conf db.Config, maxOpenConnections int, maxIdleConnections int, logPrefix string, jobPrefix string, logger lager.Logger) (*ConnWrapper, error) {
+func NewErroringConnectionPool(conf db.Config, maxOpenConnections int, maxIdleConnections int, connMaxLifetime time.Duration, logPrefix string, jobPrefix string, logger lager.Logger) (*ConnWrapper, error) {
 	retriableConnector := db.RetriableConnector{
 		Connector:     db.GetConnectionPool,
 		Sleeper:       db.SleeperFunc(time.Sleep),
@@ -111,8 +109,8 @@ func NewErroringConnectionPool(conf db.Config, maxOpenConnections int, maxIdleCo
 	return &ConnWrapper{sqlxDB: connectionPool}, nil
 }
 
-func NewConnectionPool(conf db.Config, maxOpenConnections int, maxIdleConnections int, logPrefix string, jobPrefix string, logger lager.Logger) *ConnWrapper {
-	conn, err := NewErroringConnectionPool(conf, maxOpenConnections, maxIdleConnections, logPrefix, jobPrefix, logger)
+func NewConnectionPool(conf db.Config, maxOpenConnections int, maxIdleConnections int, connMaxLifetime time.Duration, logPrefix string, jobPrefix string, logger lager.Logger) *ConnWrapper {
+	conn, err := NewErroringConnectionPool(conf, maxOpenConnections, maxIdleConnections, connMaxLifetime, logPrefix, jobPrefix, logger)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
