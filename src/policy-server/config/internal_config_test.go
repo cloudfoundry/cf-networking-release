@@ -47,6 +47,7 @@ var _ = Describe("InternalConfig", func() {
 					},
 					"max_idle_connections": 4,
 					"max_open_connections": 5,
+					"connections_max_lifetime_seconds": 45,
 					"tag_length": 2,
 					"metron_address": "http://1.2.3.4:9999",
 					"log_level": "debug",
@@ -76,6 +77,7 @@ var _ = Describe("InternalConfig", func() {
 				Expect(c.RequestTimeout).To(Equal(5))
 				Expect(c.MaxIdleConnections).To(Equal(4))
 				Expect(c.MaxOpenConnections).To(Equal(5))
+				Expect(c.MaxConnectionsLifetimeSeconds).To(Equal(45))
 			})
 		})
 
@@ -278,6 +280,18 @@ var _ = Describe("InternalConfig", func() {
 				It("returns an error", func() {
 					_, err = config.NewInternal(file.Name())
 					Expect(err).To(MatchError("invalid config: MaxOpenConnections: less than min"))
+				})
+			})
+
+			Context("when the connections max lifetime is less than 0", func() {
+				BeforeEach(func() {
+					allData["connections_max_lifetime_seconds"] = -1
+					Expect(json.NewEncoder(file).Encode(allData)).To(Succeed())
+				})
+
+				It("returns an error", func() {
+					_, err = config.NewInternal(file.Name())
+					Expect(err).To(MatchError("invalid config: MaxConnectionsLifetimeSeconds: less than min"))
 				})
 			})
 

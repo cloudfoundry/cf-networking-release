@@ -24,7 +24,8 @@ module Bosh::Template::Test
           'connect_timeout_seconds' => 30,
         },
         'max_idle_connections' => 4,
-        'max_open_connections' => 5
+        'max_open_connections' => 5,
+        'connections_max_lifetime_seconds' => 54
       }
     end
 
@@ -94,6 +95,7 @@ module Bosh::Template::Test
           },
           'max_idle_connections' => 4,
           'max_open_connections' => 5,
+          'connections_max_lifetime_seconds' => 54,
           'tag_length' => 1,
           'metron_address' => '127.0.0.1:4567',
           'log_level' => 'error',
