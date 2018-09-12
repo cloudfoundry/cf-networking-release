@@ -78,6 +78,7 @@ properties:
       Each agent polls this server once every 5s, by default.
       Anecdote: in an environment with ~300 diego-cells has seen use up to ~200 conns.
       Anecdote: in an environment with ~200 diego-cells has seen use up to ~170 conns.
+      In these scenarios, each instance of this job would expect total-number-of-conns/job-instance-count conns each.
       Idle state will likely use fewer connections.
     default: 200
 
