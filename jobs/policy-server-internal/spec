@@ -70,13 +70,27 @@ properties:
     default: 120
 
   max_open_connections:
-    description: "Maximum number of open connections to the SQL database"
+    description: |
+      Maximum number of open connections to the SQL database.
+
+      The number of necessary connections will scale with the number of diego-cells in the deployment.
+      The handlers that use the db conns in this job respond to the vxlan-policy-agent, which runs on the diego-cells.
+      Each agent polls this server once every 5s, by default.
+      Anecdote: in an environment with ~300 diego-cells has seen use up to ~200 conns.
+      Anecdote: in an environment with ~200 diego-cells has seen use up to ~170 conns.
+      Idle state will likely use fewer connections.
     default: 200
 
   max_idle_connections:
-    description: "Maximum number of idle connections to the SQL database"
+    description: |
+      Maximum number of idle connections to the SQL database
+
+      Idle connections will be retained until their `connections_max_lifetime_seconds` has been reached.
     default: 200
 
   connections_max_lifetime_seconds:
-    description: "Sets the maximum amount of time a connection may be reused. Expired connections may be closed lazily before reuse. If value <= 0, connections are reused forever"
+    description: |
+      Sets the maximum amount of time a connection may be reused.
+
+      Expired connections may be closed lazily before reuse. If value <= 0, connections are reused forever
     default: 3600

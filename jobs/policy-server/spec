@@ -134,11 +134,17 @@ properties:
     default: ~
 
   max_open_connections:
-    description: "Maximum number of open connections to the SQL database"
+    description: |
+      Maximum number of open connections to the SQL database.
+
+      The number of necessary connections will scale with the number of requests to the `/networking/...` cf api endpoints.
     default: 200
 
   max_idle_connections:
-    description: "Maximum number of idle connections to the SQL database"
+    description: |
+      Maximum number of idle connections to the SQL database.
+
+      Idle connections will be retained until their `connections_max_lifetime_seconds` has been reached.
     default: 200
 
   connections_max_lifetime_seconds:
