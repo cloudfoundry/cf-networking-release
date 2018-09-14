@@ -160,35 +160,6 @@ curl -s \
 }
 ```
 
-### Example Get Policy Request and Response for Egress Policies (Experimental)
-
-#### Get all policies
-
-```bash
-curl -s \
-  --cacert certs/ca.crt \
-  --cert certs/client.crt \
-  --key certs/client.key \
-  https://policy-server.service.cf.internal:4003/networking/v1/internal/policies
-```
-
-```json
-  {
-    "policies": [],
-    "egress_policies": [
-      {
-        "source": {
-          "id": "1081ceac-f5c4-47a8-95e8-88e1e302efb5"
-        },
-        "destination": {
-          "protocol":"tcp",
-          "ips": [{"start": "1.2.3.4", "end": "1.2.3.5"}]
-        }
-      }
-    ]
-  }
-```
-
 #### Get Filtered Policies
 
 Returns all policies with source or destination id's that match any of the
@@ -237,34 +208,4 @@ https://policy-server.service.cf.internal:4003/networking/v1/internal/policies?i
         }
     ]
 }
-```
-
-#### Get Filtered Policies for Egress Policies (Experimental)
-
-Returns all egress policies where the source ids match any of the
-included `policy_group_id`'s.
-
-```bash
-curl -s \
---cacert certs/ca.crt \
---cert certs/client.crt \
---key certs/client.key \
-https://policy-server.service.cf.internal:4003/networking/v1/internal/policies?id=1081ceac-f5c4-47a8-95e8-88e1e302efb5
-```
-
-```json
-  {
-    "policies": [],
-    "egress_policies": [
-      {
-        "source": {
-          "id": "1081ceac-f5c4-47a8-95e8-88e1e302efb5"
-        },
-        "destination": {
-          "protocol":"tcp",
-          "ips": [{"start": "1.2.3.4", "end": "1.2.3.5"}]
-        }
-      }
-    ]
-  }
 ```
