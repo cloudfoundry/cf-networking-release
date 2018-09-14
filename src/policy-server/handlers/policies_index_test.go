@@ -24,7 +24,6 @@ import (
 var _ = Describe("Policies index handler", func() {
 	var (
 		allPolicies          []store.Policy
-		allEgressPolicies    []store.EgressPolicy
 		byGuidsPolicies      []store.Policy
 		byGuidsAPIPolicies   []store.Policy
 		expectedResponseBody []byte
@@ -74,14 +73,6 @@ var _ = Describe("Policies index handler", func() {
 					Start: 5555,
 					End:   5555,
 				},
-			},
-		}}
-
-		allEgressPolicies = []store.EgressPolicy{{
-			Source: store.EgressSource{ID: "some-egress-app-guid"},
-			Destination: store.EgressDestination{
-				Protocol: "tcp",
-				IPRanges: []store.IPRange{{Start: "8.0.8.0", End: "8.0.8.0"}},
 			},
 		}}
 
