@@ -21,15 +21,15 @@ import (
 
 var _ = Describe("PoliciesIndexInternal", func() {
 	var (
-		handler              *handlers.PoliciesIndexInternal
-		resp                 *httptest.ResponseRecorder
-		fakeStore            *storeFakes.Store
-		fakeEgressStore      *fakes.EgressPolicyStore
-		fakeErrorResponse    *fakes.ErrorResponse
-		logger               *lagertest.TestLogger
-		expectedLogger       lager.Logger
-		fakeMapper           *apifakes.PolicyMapper
-		expectedResponseBody []byte
+		handler                    *handlers.PoliciesIndexInternal
+		resp                       *httptest.ResponseRecorder
+		fakeStore                  *storeFakes.Store
+		fakeEgressStore            *fakes.EgressPolicyStore
+		fakeErrorResponse          *fakes.ErrorResponse
+		logger                     *lagertest.TestLogger
+		expectedLogger             lager.Logger
+		fakePolicyCollectionWriter *apifakes.PolicyCollectionWriter
+		expectedResponseBody       []byte
 	)
 
 	BeforeEach(func() {
@@ -78,13 +78,13 @@ var _ = Describe("PoliciesIndexInternal", func() {
 
 		expectedResponseBody = []byte("some-response")
 
-		fakeMapper = &apifakes.PolicyMapper{}
+		fakePolicyCollectionWriter = &apifakes.PolicyCollectionWriter{}
 		fakeStore = &storeFakes.Store{}
 		fakeStore.AllReturns(allPolicies, nil)
 		fakeEgressStore = &fakes.EgressPolicyStore{}
 		fakeEgressStore.ByGuidsReturns(allEgressPolicies, nil)
 		fakeStore.ByGuidsReturns(byGuidsPolicies, nil)
-		fakeMapper.AsBytesReturns(expectedResponseBody, nil)
+		fakePolicyCollectionWriter.AsBytesReturns(expectedResponseBody, nil)
 		logger = lagertest.NewTestLogger("test")
 		expectedLogger = lager.NewLogger("test").Session("index-policies-internal")
 
@@ -93,16 +93,16 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		expectedLogger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 		fakeErrorResponse = &fakes.ErrorResponse{}
 		handler = &handlers.PoliciesIndexInternal{
-			Logger:        logger,
-			Store:         fakeStore,
-			EgressStore:   fakeEgressStore,
-			Mapper:        fakeMapper,
-			ErrorResponse: fakeErrorResponse,
+			Logger:                 logger,
+			Store:                  fakeStore,
+			EgressStore:            fakeEgressStore,
+			PolicyCollectionWriter: fakePolicyCollectionWriter,
+			ErrorResponse:          fakeErrorResponse,
 		}
 		resp = httptest.NewRecorder()
 	})
 
-	It("it returns the policies returned by ByGuids", func() {
+	It("returns the policies returned by ByGuids", func() {
 		request, err := http.NewRequest("GET", "/networking/v0/internal/policies?id=some-app-guid", nil)
 		Expect(err).NotTo(HaveOccurred())
 		MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
@@ -113,6 +113,8 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		Expect(srcGuids).To(Equal([]string{"some-app-guid"}))
 		Expect(dstGuids).To(Equal([]string{"some-app-guid"}))
 		Expect(inSourceAndDest).To(BeFalse())
+		guids := fakeEgressStore.ByGuidsArgsForCall(0)
+		Expect(guids).To(Equal([]string{"some-app-guid"}))
 		Expect(resp.Code).To(Equal(http.StatusOK))
 		Expect(resp.Body.Bytes()).To(Equal(expectedResponseBody))
 	})
@@ -143,7 +145,7 @@ var _ = Describe("PoliciesIndexInternal", func() {
 
 	Context("when rendering the policies as bytes fails", func() {
 		BeforeEach(func() {
-			fakeMapper.AsBytesReturns(nil, errors.New("banana"))
+			fakePolicyCollectionWriter.AsBytesReturns(nil, errors.New("banana"))
 		})
 
 		It("calls the internal server error handler", func() {
@@ -157,7 +159,7 @@ var _ = Describe("PoliciesIndexInternal", func() {
 			Expect(l).To(Equal(expectedLogger))
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("banana"))
-			Expect(description).To(Equal("map policy as bytes failed"))
+			Expect(description).To(Equal("map policies as bytes failed"))
 		})
 	})
 

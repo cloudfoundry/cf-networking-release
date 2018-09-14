@@ -1,7 +1,6 @@
 package store
 
 import (
-	"policy-server/db"
 	"time"
 )
 
@@ -17,15 +16,15 @@ type MetricsWrapper struct {
 	MetricsSender metricsSender
 }
 
-func (mw *MetricsWrapper) CreateWithTx(tx db.Transaction, policies []Policy) error {
+func (mw *MetricsWrapper) Create(policies []Policy) error {
 	startTime := time.Now()
-	err := mw.Store.CreateWithTx(tx, policies)
+	err := mw.Store.Create(policies)
 	createTimeDuration := time.Now().Sub(startTime)
 	if err != nil {
-		mw.MetricsSender.IncrementCounter("StoreCreateWithTxError")
-		mw.MetricsSender.SendDuration("StoreCreateWithTxErrorTime", createTimeDuration)
+		mw.MetricsSender.IncrementCounter("StoreCreateError")
+		mw.MetricsSender.SendDuration("StoreCreateErrorTime", createTimeDuration)
 	} else {
-		mw.MetricsSender.SendDuration("StoreCreateWithTxSuccessTime", createTimeDuration)
+		mw.MetricsSender.SendDuration("StoreCreateSuccessTime", createTimeDuration)
 	}
 	return err
 }
@@ -43,15 +42,15 @@ func (mw *MetricsWrapper) All() ([]Policy, error) {
 	return policies, err
 }
 
-func (mw *MetricsWrapper) DeleteWithTx(tx db.Transaction, policies []Policy) error {
+func (mw *MetricsWrapper) Delete(policies []Policy) error {
 	startTime := time.Now()
-	err := mw.Store.DeleteWithTx(tx, policies)
+	err := mw.Store.Delete(policies)
 	deleteTimeDuration := time.Now().Sub(startTime)
 	if err != nil {
-		mw.MetricsSender.IncrementCounter("StoreDeleteWithTxError")
-		mw.MetricsSender.SendDuration("StoreDeleteWithTxErrorTime", deleteTimeDuration)
+		mw.MetricsSender.IncrementCounter("StoreDeleteError")
+		mw.MetricsSender.SendDuration("StoreDeleteErrorTime", deleteTimeDuration)
 	} else {
-		mw.MetricsSender.SendDuration("StoreDeleteWithTxSuccessTime", deleteTimeDuration)
+		mw.MetricsSender.SendDuration("StoreDeleteSuccessTime", deleteTimeDuration)
 	}
 	return err
 }

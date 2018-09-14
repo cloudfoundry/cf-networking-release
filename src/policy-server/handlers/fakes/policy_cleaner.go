@@ -7,22 +7,24 @@ import (
 )
 
 type PolicyCleaner struct {
-	DeleteStalePoliciesStub        func() (store.PolicyCollection, error)
+	DeleteStalePoliciesStub        func() ([]store.Policy, []store.EgressPolicy, error)
 	deleteStalePoliciesMutex       sync.RWMutex
 	deleteStalePoliciesArgsForCall []struct{}
 	deleteStalePoliciesReturns     struct {
-		result1 store.PolicyCollection
-		result2 error
+		result1 []store.Policy
+		result2 []store.EgressPolicy
+		result3 error
 	}
 	deleteStalePoliciesReturnsOnCall map[int]struct {
-		result1 store.PolicyCollection
-		result2 error
+		result1 []store.Policy
+		result2 []store.EgressPolicy
+		result3 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *PolicyCleaner) DeleteStalePolicies() (store.PolicyCollection, error) {
+func (fake *PolicyCleaner) DeleteStalePolicies() ([]store.Policy, []store.EgressPolicy, error) {
 	fake.deleteStalePoliciesMutex.Lock()
 	ret, specificReturn := fake.deleteStalePoliciesReturnsOnCall[len(fake.deleteStalePoliciesArgsForCall)]
 	fake.deleteStalePoliciesArgsForCall = append(fake.deleteStalePoliciesArgsForCall, struct{}{})
@@ -32,9 +34,9 @@ func (fake *PolicyCleaner) DeleteStalePolicies() (store.PolicyCollection, error)
 		return fake.DeleteStalePoliciesStub()
 	}
 	if specificReturn {
-		return ret.result1, ret.result2
+		return ret.result1, ret.result2, ret.result3
 	}
-	return fake.deleteStalePoliciesReturns.result1, fake.deleteStalePoliciesReturns.result2
+	return fake.deleteStalePoliciesReturns.result1, fake.deleteStalePoliciesReturns.result2, fake.deleteStalePoliciesReturns.result3
 }
 
 func (fake *PolicyCleaner) DeleteStalePoliciesCallCount() int {
@@ -43,26 +45,29 @@ func (fake *PolicyCleaner) DeleteStalePoliciesCallCount() int {
 	return len(fake.deleteStalePoliciesArgsForCall)
 }
 
-func (fake *PolicyCleaner) DeleteStalePoliciesReturns(result1 store.PolicyCollection, result2 error) {
+func (fake *PolicyCleaner) DeleteStalePoliciesReturns(result1 []store.Policy, result2 []store.EgressPolicy, result3 error) {
 	fake.DeleteStalePoliciesStub = nil
 	fake.deleteStalePoliciesReturns = struct {
-		result1 store.PolicyCollection
-		result2 error
-	}{result1, result2}
+		result1 []store.Policy
+		result2 []store.EgressPolicy
+		result3 error
+	}{result1, result2, result3}
 }
 
-func (fake *PolicyCleaner) DeleteStalePoliciesReturnsOnCall(i int, result1 store.PolicyCollection, result2 error) {
+func (fake *PolicyCleaner) DeleteStalePoliciesReturnsOnCall(i int, result1 []store.Policy, result2 []store.EgressPolicy, result3 error) {
 	fake.DeleteStalePoliciesStub = nil
 	if fake.deleteStalePoliciesReturnsOnCall == nil {
 		fake.deleteStalePoliciesReturnsOnCall = make(map[int]struct {
-			result1 store.PolicyCollection
-			result2 error
+			result1 []store.Policy
+			result2 []store.EgressPolicy
+			result3 error
 		})
 	}
 	fake.deleteStalePoliciesReturnsOnCall[i] = struct {
-		result1 store.PolicyCollection
-		result2 error
-	}{result1, result2}
+		result1 []store.Policy
+		result2 []store.EgressPolicy
+		result3 error
+	}{result1, result2, result3}
 }
 
 func (fake *PolicyCleaner) Invocations() map[string][][]interface{} {

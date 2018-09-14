@@ -14,30 +14,31 @@ import (
 
 //go:generate counterfeiter -o fakes/policy_guard.go --fake-name PolicyGuard . policyGuard
 type policyGuard interface {
-	CheckAccess(policyCollection store.PolicyCollection, tokenData uaa_client.CheckTokenResponse) (bool, error)
+	CheckAccess(policies []store.Policy, tokenData uaa_client.CheckTokenResponse) (bool, error)
 	IsNetworkAdmin(userToken uaa_client.CheckTokenResponse) bool
 }
 
 //go:generate counterfeiter -o fakes/quota_guard.go --fake-name QuotaGuard . quotaGuard
 type quotaGuard interface {
-	CheckAccess(policyCollection store.PolicyCollection, tokenData uaa_client.CheckTokenResponse) (bool, error)
+	CheckAccess(policies []store.Policy, tokenData uaa_client.CheckTokenResponse) (bool, error)
 }
 
-//go:generate counterfeiter -o fakes/policy_collection_store.go --fake-name PolicyCollectionStore . policyCollectionStore
-type policyCollectionStore interface {
-	Create(store.PolicyCollection) error
-	Delete(store.PolicyCollection) error
+//go:generate counterfeiter -o fakes/policy_store.go --fake-name PolicyStore . policyStore
+type policyStore interface {
+	Create([]store.Policy) error
+	Delete([]store.Policy) error
+	ByGuids(srcGuids []string, dstGuids []string, srcAndDst bool) ([]store.Policy, error)
 }
 
 type PoliciesCreate struct {
-	Store         policyCollectionStore
+	Store         policyStore
 	Mapper        api.PolicyMapper
 	PolicyGuard   policyGuard
 	QuotaGuard    quotaGuard
 	ErrorResponse errorResponse
 }
 
-func NewPoliciesCreate(store policyCollectionStore, mapper api.PolicyMapper,
+func NewPoliciesCreate(store policyStore, mapper api.PolicyMapper,
 	policyGuard policyGuard, quotaGuard quotaGuard, errorResponse errorResponse) *PoliciesCreate {
 	return &PoliciesCreate{
 		Store:         store,
@@ -93,7 +94,7 @@ func (h *PoliciesCreate) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	logger.Info("created-policies", lager.Data{"policies": policies.Policies, "userName": tokenData.UserName})
+	logger.Info("created-policies", lager.Data{"policies": policies, "userName": tokenData.UserName})
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("{}"))
 }

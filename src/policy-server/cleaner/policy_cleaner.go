@@ -19,26 +19,34 @@ type ccClient interface {
 	GetLiveSpaceGUIDs(token string, spaceGUIDs []string) (map[string]struct{}, error)
 }
 
-//go:generate counterfeiter -o fakes/list_delete_store.go --fake-name ListDeleteStore . listDeleteStore
-type listDeleteStore interface {
-	All() (store.PolicyCollection, error)
-	Delete(store.PolicyCollection) error
+//go:generate counterfeiter -o fakes/policy_store.go --fake-name PolicyStore . policyStore
+type policyStore interface {
+	All() ([]store.Policy, error)
+	Delete([]store.Policy) error
+}
+
+//go:generate counterfeiter -o fakes/egress_policy_store.go --fake-name EgressPolicyStore . egressPolicyStore
+type egressPolicyStore interface {
+	All() ([]store.EgressPolicy, error)
+	Delete([]store.EgressPolicy) error
 }
 
 type PolicyCleaner struct {
 	Logger                lager.Logger
-	Store                 listDeleteStore
+	Store                 policyStore
+	EgressStore           egressPolicyStore
 	UAAClient             uaaClient
 	CCClient              ccClient
 	CCAppRequestChunkSize int
 	RequestTimeout        time.Duration
 }
 
-func NewPolicyCleaner(logger lager.Logger, store listDeleteStore, uaaClient uaaClient,
+func NewPolicyCleaner(logger lager.Logger, store policyStore, egressStore egressPolicyStore, uaaClient uaaClient,
 	ccClient ccClient, ccAppRequestChunkSize int, requestTimeout time.Duration) *PolicyCleaner {
 	return &PolicyCleaner{
 		Logger:                logger,
 		Store:                 store,
+		EgressStore:           egressStore,
 		UAAClient:             uaaClient,
 		CCClient:              ccClient,
 		CCAppRequestChunkSize: ccAppRequestChunkSize,
@@ -46,47 +54,58 @@ func NewPolicyCleaner(logger lager.Logger, store listDeleteStore, uaaClient uaaC
 	}
 }
 
-func (p *PolicyCleaner) DeleteStalePolicies() (store.PolicyCollection, error) {
-	allPolicies, err := p.Store.All()
+func (p *PolicyCleaner) DeleteStalePolicies() ([]store.Policy, []store.EgressPolicy, error) {
+	policies, err := p.Store.All()
 	if err != nil {
 		p.Logger.Error("store-list-policies-failed", err)
-		return store.PolicyCollection{}, fmt.Errorf("database read failed: %s", err)
+		return []store.Policy{}, []store.EgressPolicy{}, fmt.Errorf("database read failed for c2c policies: %s", err)
 	}
+
+	egressPolicies, err := p.EgressStore.All()
+	if err != nil {
+		p.Logger.Error("store-list-policies-failed", err)
+		return []store.Policy{}, []store.EgressPolicy{}, fmt.Errorf("database read failed for egress policies: %s", err)
+	}
+
 	token, err := p.UAAClient.GetToken()
 	if err != nil {
 		p.Logger.Error("get-uaa-token-failed", err)
-		return store.PolicyCollection{}, fmt.Errorf("get UAA token failed: %s", err)
+		return []store.Policy{}, []store.EgressPolicy{}, fmt.Errorf("get UAA token failed: %s", err)
 	}
 
-	allPoliciesToDelete := store.PolicyCollection{}
-
-	allPoliciesToDelete.Policies, err = p.getC2CPoliciesToDelete(allPolicies.Policies, token)
+	policiesToDelete, err := p.getC2CPoliciesToDelete(policies, token)
 	if err != nil {
-		return store.PolicyCollection{}, err
+		return []store.Policy{}, []store.EgressPolicy{}, err
 	}
 
-	allPoliciesToDelete.EgressPolicies, err = p.getEgressPoliciesToDelete(allPolicies.EgressPolicies, token)
+	egressPoliciesToDelete, err := p.getEgressPoliciesToDelete(egressPolicies, token)
 	if err != nil {
-		return store.PolicyCollection{}, err
+		return []store.Policy{}, []store.EgressPolicy{}, err
 	}
 
 	p.Logger.Info("deleting stale policies:", lager.Data{
-		"total_c2c_policies":    len(allPoliciesToDelete.Policies),
-		"stale_c2c_policies":    allPoliciesToDelete.Policies,
-		"total_egress_policies": len(allPoliciesToDelete.EgressPolicies),
-		"stale_egress_policies": allPoliciesToDelete.EgressPolicies,
+		"total_c2c_policies":    len(policiesToDelete),
+		"stale_c2c_policies":    policiesToDelete,
+		"total_egress_policies": len(egressPoliciesToDelete),
+		"stale_egress_policies": egressPoliciesToDelete,
 	})
-	err = p.Store.Delete(allPoliciesToDelete)
+	err = p.Store.Delete(policiesToDelete)
 	if err != nil {
 		p.Logger.Error("store-delete-policies-failed", err)
-		return store.PolicyCollection{}, fmt.Errorf("database write failed: %s", err)
+		return []store.Policy{}, []store.EgressPolicy{}, fmt.Errorf("database write failed: %s", err)
 	}
 
-	return allPoliciesToDelete, nil
+	err = p.EgressStore.Delete(egressPoliciesToDelete)
+	if err != nil {
+		p.Logger.Error("egress-store-delete-policies-failed", err)
+		return []store.Policy{}, []store.EgressPolicy{}, fmt.Errorf("database write failed: %s", err)
+	}
+
+	return policiesToDelete, egressPoliciesToDelete, nil
 }
 
 func (p *PolicyCleaner) DeleteStalePoliciesWrapper() error {
-	_, err := p.DeleteStalePolicies()
+	_, _, err := p.DeleteStalePolicies()
 	return err
 }
 

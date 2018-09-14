@@ -18,15 +18,11 @@ func NewPolicyGuard(uaaClient uaaClient, ccClient ccClient) *PolicyGuard {
 	}
 }
 
-func (g *PolicyGuard) CheckAccess(policyCollection store.PolicyCollection, userToken uaa_client.CheckTokenResponse) (bool, error) {
+func (g *PolicyGuard) CheckAccess(policies []store.Policy, userToken uaa_client.CheckTokenResponse) (bool, error) {
 	for _, scope := range userToken.Scope {
 		if scope == "network.admin" {
 			return true, nil
 		}
-	}
-
-	if len(policyCollection.EgressPolicies) > 0 {
-		return false, nil
 	}
 
 	token, err := g.UAAClient.GetToken()
@@ -34,7 +30,7 @@ func (g *PolicyGuard) CheckAccess(policyCollection store.PolicyCollection, userT
 		return false, fmt.Errorf("getting token: %s", err)
 	}
 
-	spaceGUIDs, err := g.CCClient.GetSpaceGUIDs(token, uniqueAppGUIDs(policyCollection.Policies))
+	spaceGUIDs, err := g.CCClient.GetSpaceGUIDs(token, uniqueAppGUIDs(policies))
 	if err != nil {
 		return false, fmt.Errorf("getting space guids: %s", err)
 	}

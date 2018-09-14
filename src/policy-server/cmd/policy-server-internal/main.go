@@ -10,9 +10,7 @@ import (
 	"os"
 	"time"
 
-	"policy-server/adapter"
 	"policy-server/api"
-	"policy-server/api/api_v0_internal"
 	"policy-server/config"
 	"policy-server/handlers"
 	"policy-server/store"
@@ -62,7 +60,7 @@ func main() {
 		conf.Database,
 		conf.MaxOpenConnections,
 		conf.MaxIdleConnections,
-		time.Duration(conf.MaxConnectionsLifetimeSeconds) * time.Second,
+		time.Duration(conf.MaxConnectionsLifetimeSeconds)*time.Second,
 		logPrefix,
 		jobPrefix,
 		logger,
@@ -103,23 +101,14 @@ func main() {
 	errorResponse := &httperror.ErrorResponse{
 		MetricsSender: metricsSender,
 	}
-	payloadValidator := &api.PayloadValidator{PolicyValidator: &api.Validator{}, EgressPolicyValidator: &api.EgressValidator{}}
-	policyMapperV0Internal := api_v0_internal.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal))
-	policyMapperV1 := api.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal), payloadValidator)
+	policyCollectionWriter := api.NewPolicyCollectionWriter(marshal.MarshalFunc(json.Marshal))
 
-	internalPoliciesHandlerV0 := handlers.NewPoliciesIndexInternal(logger, wrappedStore,
-		wrappedEgressStore, policyMapperV0Internal, errorResponse)
 	internalPoliciesHandlerV1 := handlers.NewPoliciesIndexInternal(logger, wrappedStore,
-		wrappedEgressStore, policyMapperV1, errorResponse)
+		wrappedEgressStore, policyCollectionWriter, errorResponse)
 
 	createTagsHandlerV1 := &handlers.TagsCreate{
 		Store:         wrappedStore,
 		ErrorResponse: errorResponse,
-	}
-
-	checkVersionWrapper := &handlers.CheckVersionWrapper{
-		ErrorResponse: errorResponse,
-		RataAdapter:   adapter.RataAdapter{},
 	}
 
 	metricsWrap := func(name string, handler http.Handler) http.Handler {
@@ -138,13 +127,6 @@ func main() {
 		return logWrapper.LogWrap(logger, handler)
 	}
 
-	versionWrap := func(v1Handler, v0Handler http.Handler) http.Handler {
-		return checkVersionWrapper.CheckVersion(map[string]http.Handler{
-			"v1": v1Handler,
-			"v0": v0Handler,
-		})
-	}
-
 	err = dropsonde.Initialize(conf.MetronAddress, jobPrefix)
 	if err != nil {
 		log.Fatalf("%s.%s: initializing dropsonde: %s", logPrefix, jobPrefix, err)
@@ -156,11 +138,10 @@ func main() {
 		{Name: "internal_policies", Method: "GET", Path: "/networking/:version/internal/policies"},
 		{Name: "create_tags", Method: "PUT", Path: "/networking/v1/internal/tags"},
 	}
+
 	internalHandlers := rata.Handlers{
-		"internal_policies": metricsWrap("InternalPolicies", logWrap(
-			versionWrap(internalPoliciesHandlerV1, internalPoliciesHandlerV0),
-		)),
-		"create_tags": metricsWrap("CreateTags", logWrap(createTagsHandlerV1)),
+		"internal_policies": metricsWrap("InternalPolicies", logWrap(internalPoliciesHandlerV1)),
+		"create_tags":       metricsWrap("CreateTags", logWrap(createTagsHandlerV1)),
 	}
 
 	tlsConfig, err := mutualtls.NewServerTLSConfig(conf.ServerCertFile, conf.ServerKeyFile, conf.CACertFile)

@@ -119,15 +119,16 @@ func main() {
 	terminalsTable := &store.TerminalsTable{
 		Guids: &store.GuidGenerator{},
 	}
-	egressDataStore := &store.EgressPolicyStore{
+	egressPolicyStore := &store.EgressPolicyStore{
 		EgressPolicyRepo: &store.EgressPolicyTable{
 			Conn:  connectionPool,
 			Guids: &store.GuidGenerator{},
 		},
 		TerminalsRepo: terminalsTable,
+		Conn:          connectionPool,
 	}
 
-	dataStore := store.New(
+	c2cPolicyStore := store.New(
 		connectionPool,
 		storeGroup,
 		destination,
@@ -146,19 +147,8 @@ func main() {
 	}
 
 	wrappedStore := &store.MetricsWrapper{
-		Store:         dataStore,
+		Store:         c2cPolicyStore,
 		TagStore:      tagDataStore,
-		MetricsSender: metricsSender,
-	}
-
-	policyCollectionStore := &store.PolicyCollectionStore{
-		Conn:              connectionPool,
-		PolicyStore:       wrappedStore,
-		EgressPolicyStore: egressDataStore,
-	}
-
-	wrappedPolicyCollectionStore := &store.PolicyCollectionMetricsWrapper{
-		Store:         policyCollectionStore,
 		MetricsSender: metricsSender,
 	}
 
@@ -175,27 +165,22 @@ func main() {
 	quotaGuard := handlers.NewQuotaGuard(wrappedStore, conf.MaxPolicies)
 	policyFilter := handlers.NewPolicyFilter(uaaClient, ccClient, 100)
 
-	egressValidator := &api.EgressValidator{
-		UAAClient: uaaClient,
-		CCClient:  ccClient,
-	}
-
-	payloadValidator := &api.PayloadValidator{PolicyValidator: &api.Validator{}, EgressPolicyValidator: egressValidator}
+	payloadValidator := &api.PayloadValidator{PolicyValidator: &api.Validator{}}
 	policyMapperV0 := api_v0.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal), &api_v0.Validator{})
 	policyMapperV1 := api.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal), payloadValidator)
 
-	createPolicyHandlerV1 := handlers.NewPoliciesCreate(wrappedPolicyCollectionStore, policyMapperV1,
+	createPolicyHandlerV1 := handlers.NewPoliciesCreate(wrappedStore, policyMapperV1,
 		policyGuard, quotaGuard, errorResponse)
-	createPolicyHandlerV0 := handlers.NewPoliciesCreate(wrappedPolicyCollectionStore, policyMapperV0,
+	createPolicyHandlerV0 := handlers.NewPoliciesCreate(wrappedStore, policyMapperV0,
 		policyGuard, quotaGuard, errorResponse)
 
-	deletePolicyHandlerV1 := handlers.NewPoliciesDelete(wrappedPolicyCollectionStore, policyMapperV1,
+	deletePolicyHandlerV1 := handlers.NewPoliciesDelete(wrappedStore, policyMapperV1,
 		policyGuard, errorResponse)
-	deletePolicyHandlerV0 := handlers.NewPoliciesDelete(wrappedPolicyCollectionStore, policyMapperV0,
+	deletePolicyHandlerV0 := handlers.NewPoliciesDelete(wrappedStore, policyMapperV0,
 		policyGuard, errorResponse)
 
-	policiesIndexHandlerV1 := handlers.NewPoliciesIndex(wrappedStore, egressDataStore, policyMapperV1, policyFilter, policyGuard, errorResponse)
-	policiesIndexHandlerV0 := handlers.NewPoliciesIndex(wrappedStore, egressDataStore, policyMapperV0, policyFilter, policyGuard, errorResponse)
+	policiesIndexHandlerV1 := handlers.NewPoliciesIndex(wrappedStore, policyMapperV1, policyFilter, policyGuard, errorResponse)
+	policiesIndexHandlerV0 := handlers.NewPoliciesIndex(wrappedStore, policyMapperV0, policyFilter, policyGuard, errorResponse)
 
 	egressDestinationMapper := &api.EgressDestinationMapper{
 		Marshaler: marshal.MarshalFunc(json.Marshal),
@@ -223,10 +208,11 @@ func main() {
 		Logger:                  logger,
 	}
 
-	policyCleaner := cleaner.NewPolicyCleaner(logger.Session("policy-cleaner"), wrappedPolicyCollectionStore, uaaClient,
+	policyCleaner := cleaner.NewPolicyCleaner(logger.Session("policy-cleaner"), wrappedStore, egressPolicyStore, uaaClient,
 		ccClient, 100, time.Duration(5)*time.Second)
 
-	policiesCleanupHandler := handlers.NewPoliciesCleanup(policyMapperV1, policyCleaner, errorResponse)
+	policyCollectionWriter := api.NewPolicyCollectionWriter(marshal.MarshalFunc(json.Marshal))
+	policiesCleanupHandler := handlers.NewPoliciesCleanup(policyCollectionWriter, policyCleaner, errorResponse)
 
 	tagsIndexHandler := handlers.NewTagsIndex(wrappedStore, marshal.MarshalFunc(json.Marshal), errorResponse)
 

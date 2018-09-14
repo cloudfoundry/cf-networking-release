@@ -22,16 +22,16 @@ func NewMapper(unmarshaler marshal.Unmarshaler, marshaler marshal.Marshaler, val
 	}
 }
 
-func (p *policyMapper) AsStorePolicy(bytes []byte) (store.PolicyCollection, error) {
+func (p *policyMapper) AsStorePolicy(bytes []byte) ([]store.Policy, error) {
 	payload := &Policies{}
 	err := p.Unmarshaler.Unmarshal(bytes, payload)
 	if err != nil {
-		return store.PolicyCollection{}, fmt.Errorf("unmarshal json: %s", err)
+		return []store.Policy{}, fmt.Errorf("unmarshal json: %s", err)
 	}
 
 	err = p.Validator.ValidatePolicies(payload.Policies)
 	if err != nil {
-		return store.PolicyCollection{}, fmt.Errorf("validate policies: %s", err)
+		return []store.Policy{}, fmt.Errorf("validate policies: %s", err)
 	}
 
 	storePolicies := []store.Policy{}
@@ -39,13 +39,10 @@ func (p *policyMapper) AsStorePolicy(bytes []byte) (store.PolicyCollection, erro
 		storePolicies = append(storePolicies, policy.asStorePolicy())
 	}
 
-	return store.PolicyCollection{
-		Policies: storePolicies,
-	}, nil
-
+	return storePolicies, nil
 }
 
-func (p *policyMapper) AsBytes(storePolicies []store.Policy, _ []store.EgressPolicy) ([]byte, error) {
+func (p *policyMapper) AsBytes(storePolicies []store.Policy) ([]byte, error) {
 	// convert store.Policy to api_v0.Policy
 	apiPolicies := []Policy{}
 	for _, policy := range storePolicies {

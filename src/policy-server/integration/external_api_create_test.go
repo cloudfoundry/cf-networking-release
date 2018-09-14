@@ -77,10 +77,7 @@ var _ = Describe("External API Adding Policies", func() {
 				HaveName("CreatePoliciesRequestTime"),
 			))
 			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
-				HaveName("StoreCreateWithTxSuccessTime"),
-			))
-			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
-				HaveName("CollectionStoreCreateSuccessTime"),
+				HaveName("StoreCreateSuccessTime"),
 			))
 		}
 		addPoliciesFails := func(version, request, expectedResponse string) {
@@ -128,175 +125,175 @@ var _ = Describe("External API Adding Policies", func() {
 		)
 	})
 
-	Describe("adding egress policies", func() {
-		addPoliciesSucceeds := func(version, request, expectedResponse string) {
-			body := strings.NewReader(request)
-			resp := helpers.MakeAndDoRequest(
-				"POST",
-				fmt.Sprintf("http://%s:%d/networking/%s/external/policies", conf.ListenHost, conf.ListenPort, version),
-				nil,
-				body,
-			)
+	// Describe("adding egress policies", func() {
+	// 	addPoliciesSucceeds := func(version, request, expectedResponse string) {
+	// 		body := strings.NewReader(request)
+	// 		resp := helpers.MakeAndDoRequest(
+	// 			"POST",
+	// 			fmt.Sprintf("http://%s:%d/networking/%s/external/policies", conf.ListenHost, conf.ListenPort, version),
+	// 			nil,
+	// 			body,
+	// 		)
 
-			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-			responseString, err := ioutil.ReadAll(resp.Body)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(responseString).To(MatchJSON("{}"))
+	// 		Expect(resp.StatusCode).To(Equal(http.StatusOK))
+	// 		responseString, err := ioutil.ReadAll(resp.Body)
+	// 		Expect(err).NotTo(HaveOccurred())
+	// 		Expect(responseString).To(MatchJSON("{}"))
 
-			resp = helpers.MakeAndDoRequest(
-				"GET",
-				fmt.Sprintf("http://%s:%d/networking/%s/external/policies", conf.ListenHost, conf.ListenPort, version),
-				nil,
-				nil,
-			)
+	// 		resp = helpers.MakeAndDoRequest(
+	// 			"GET",
+	// 			fmt.Sprintf("http://%s:%d/networking/%s/external/policies", conf.ListenHost, conf.ListenPort, version),
+	// 			nil,
+	// 			nil,
+	// 		)
 
-			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-			responseString, err = ioutil.ReadAll(resp.Body)
-			Expect(responseString).To(MatchJSON(expectedResponse))
+	// 		Expect(resp.StatusCode).To(Equal(http.StatusOK))
+	// 		responseString, err = ioutil.ReadAll(resp.Body)
+	// 		Expect(responseString).To(MatchJSON(expectedResponse))
 
-			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
-				HaveName("CreatePoliciesRequestTime"),
-			))
-			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
-				HaveName("StoreCreateWithTxSuccessTime"),
-			))
-			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
-				HaveName("CollectionStoreCreateSuccessTime"),
-			))
-		}
+	// 		Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
+	// 			HaveName("CreatePoliciesRequestTime"),
+	// 		))
+	// 		Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
+	// 			HaveName("StoreCreateWithTxSuccessTime"),
+	// 		))
+	// 		Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
+	// 			HaveName("CollectionStoreCreateSuccessTime"),
+	// 		))
+	// 	}
 
-		v1Request := `{
-			"policies": [],
-			"egress_policies": [
-				{
-					"source": {
-						"id": "live-app-1-guid"
-					},
-					"destination": {
-						"ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}],
-						"ports": [{"start": 8080, "end": 8081}],
-						"protocol": "tcp"
-					}
-				},
-				{
-					"source": {
-						"id": "live-app-1-guid",
-						"type": "app"
-					},
-					"destination": {
-						"ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}],
-						"protocol": "icmp",
-						"icmp_type": 4,
-						"icmp_code": 3
-					}
-				}
-			]
-		}`
+	// 	v1Request := `{
+	// 		"policies": [],
+	// 		"egress_policies": [
+	// 			{
+	// 				"source": {
+	// 					"id": "live-app-1-guid"
+	// 				},
+	// 				"destination": {
+	// 					"ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}],
+	// 					"ports": [{"start": 8080, "end": 8081}],
+	// 					"protocol": "tcp"
+	// 				}
+	// 			},
+	// 			{
+	// 				"source": {
+	// 					"id": "live-app-1-guid",
+	// 					"type": "app"
+	// 				},
+	// 				"destination": {
+	// 					"ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}],
+	// 					"protocol": "icmp",
+	// 					"icmp_type": 4,
+	// 					"icmp_code": 3
+	// 				}
+	// 			}
+	// 		]
+	// 	}`
 
-		v1ExpectedResponse := `{
-			"total_policies": 0,
-			"policies": [],
-			"total_egress_policies": 2,
-			"egress_policies": [
-				{
-					"source": {
-						"id": "live-app-1-guid",
-						"type": "app"
-					},
-					"destination": {
-						"ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}],
-						"ports": [{"start": 8080, "end": 8081}],
-						"protocol": "tcp"
-					}
-				},
-				{
-					"source": {
-						"id": "live-app-1-guid",
-						"type": "app"
-					},
-					"destination": {
-						"ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}],
-						"protocol": "icmp",
-						"icmp_type": 4,
-						"icmp_code": 3
-					}
-				}
-			]
-		}`
+	// 	v1ExpectedResponse := `{
+	// 		"total_policies": 0,
+	// 		"policies": [],
+	// 		"total_egress_policies": 2,
+	// 		"egress_policies": [
+	// 			{
+	// 				"source": {
+	// 					"id": "live-app-1-guid",
+	// 					"type": "app"
+	// 				},
+	// 				"destination": {
+	// 					"ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}],
+	// 					"ports": [{"start": 8080, "end": 8081}],
+	// 					"protocol": "tcp"
+	// 				}
+	// 			},
+	// 			{
+	// 				"source": {
+	// 					"id": "live-app-1-guid",
+	// 					"type": "app"
+	// 				},
+	// 				"destination": {
+	// 					"ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}],
+	// 					"protocol": "icmp",
+	// 					"icmp_type": 4,
+	// 					"icmp_code": 3
+	// 				}
+	// 			}
+	// 		]
+	// 	}`
 
-		v1RequestNoPorts := `{
-			"policies": [],
-			"egress_policies": [
-				{
-					"source": {
-						"id": "live-app-1-guid"
-					},
-					"destination": {
-						"ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}],
-						"protocol": "tcp"
-					}
-				}
-			]
-		}`
+	// 	v1RequestNoPorts := `{
+	// 		"policies": [],
+	// 		"egress_policies": [
+	// 			{
+	// 				"source": {
+	// 					"id": "live-app-1-guid"
+	// 				},
+	// 				"destination": {
+	// 					"ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}],
+	// 					"protocol": "tcp"
+	// 				}
+	// 			}
+	// 		]
+	// 	}`
 
-		v1ExpectedResponseNoPorts := `{
-			"total_policies": 0,
-			"policies": [],
-			"total_egress_policies": 1,
-			"egress_policies": [
-				{
-					"source": {
-						"id": "live-app-1-guid",
-						"type": "app"
-					},
-					"destination": {
-						"ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}],
-						"protocol": "tcp"
-					}
-				}
-			]
-		}`
+	// 	v1ExpectedResponseNoPorts := `{
+	// 		"total_policies": 0,
+	// 		"policies": [],
+	// 		"total_egress_policies": 1,
+	// 		"egress_policies": [
+	// 			{
+	// 				"source": {
+	// 					"id": "live-app-1-guid",
+	// 					"type": "app"
+	// 				},
+	// 				"destination": {
+	// 					"ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}],
+	// 					"protocol": "tcp"
+	// 				}
+	// 			}
+	// 		]
+	// 	}`
 
-		v1RequestSpaceEgress := `{
-			"policies": [],
-			"egress_policies": [
-				{
-					"source": {
-						"type": "space",
-						"id": "live-space-1-guid"
-					},
-					"destination": {
-						"ips": [{"start": "10.27.2.1", "end": "10.27.2.2"}],
-						"ports": [{"start": 8083, "end": 8086}],
-						"protocol": "udp"
-					}
-				}
-			]	
-		}`
+	// 	v1RequestSpaceEgress := `{
+	// 		"policies": [],
+	// 		"egress_policies": [
+	// 			{
+	// 				"source": {
+	// 					"type": "space",
+	// 					"id": "live-space-1-guid"
+	// 				},
+	// 				"destination": {
+	// 					"ips": [{"start": "10.27.2.1", "end": "10.27.2.2"}],
+	// 					"ports": [{"start": 8083, "end": 8086}],
+	// 					"protocol": "udp"
+	// 				}
+	// 			}
+	// 		]
+	// 	}`
 
-		v1ExpectedResponseSpaceEgress := `{
-			"total_policies": 0,
-			"policies": [],
-			"total_egress_policies": 1,
-			"egress_policies": [
-				{
-					"source": {
-						"type": "space",
-						"id": "live-space-1-guid"
-					},
-					"destination": {
-						"ips": [{"start": "10.27.2.1", "end": "10.27.2.2"}],
-						"ports": [{"start": 8083, "end": 8086}],
-						"protocol": "udp"
-					}
-				}
-			]	
-		}`
+	// 	v1ExpectedResponseSpaceEgress := `{
+	// 		"total_policies": 0,
+	// 		"policies": [],
+	// 		"total_egress_policies": 1,
+	// 		"egress_policies": [
+	// 			{
+	// 				"source": {
+	// 					"type": "space",
+	// 					"id": "live-space-1-guid"
+	// 				},
+	// 				"destination": {
+	// 					"ips": [{"start": "10.27.2.1", "end": "10.27.2.2"}],
+	// 					"ports": [{"start": 8083, "end": 8086}],
+	// 					"protocol": "udp"
+	// 				}
+	// 			}
+	// 		]
+	// 	}`
 
-		DescribeTable("adding policies succeeds", addPoliciesSucceeds,
-			Entry("v1", "v1", v1Request, v1ExpectedResponse),
-			Entry("v1 no ports", "v1", v1RequestNoPorts, v1ExpectedResponseNoPorts),
-			Entry("v1 space egress", "v1", v1RequestSpaceEgress, v1ExpectedResponseSpaceEgress),
-		)
-	})
+	// 	DescribeTable("adding policies succeeds", addPoliciesSucceeds,
+	// 		Entry("v1", "v1", v1Request, v1ExpectedResponse),
+	// 		Entry("v1 no ports", "v1", v1RequestNoPorts, v1ExpectedResponseNoPorts),
+	// 		Entry("v1 space egress", "v1", v1RequestSpaceEgress, v1ExpectedResponseSpaceEgress),
+	// 	)
+	// })
 })

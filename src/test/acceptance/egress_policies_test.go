@@ -17,7 +17,7 @@ import (
 	"github.com/onsi/gomega/gexec"
 )
 
-var _ = Describe("external connectivity", func() {
+var _ = PDescribe("external connectivity", func() {
 	var (
 		appA      string
 		orgName   string

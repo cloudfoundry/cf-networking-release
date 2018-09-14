@@ -22,19 +22,19 @@ func NewMapper(unmarshaler marshal.Unmarshaler, marshaler marshal.Marshaler, pay
 	}
 }
 
-func (p *policyMapper) AsStorePolicy(bytes []byte) (store.PolicyCollection, error) {
+func (p *policyMapper) AsStorePolicy(bytes []byte) ([]store.Policy, error) {
 	payload := &PoliciesPayload{}
 	err := p.Unmarshaler.Unmarshal(bytes, payload)
 	if err != nil {
-		return store.PolicyCollection{}, fmt.Errorf("unmarshal json: %s", err)
+		return []store.Policy{}, fmt.Errorf("unmarshal json: %s", err)
 	}
 
 	err = p.PayloadValidator.ValidatePayload(payload)
 	if err != nil {
 		if metadata, ok := err.(httperror.MetadataError); ok {
-			return store.PolicyCollection{}, httperror.NewMetadataError(fmt.Errorf("validate policies: %s", err), metadata.Metadata())
+			return []store.Policy{}, httperror.NewMetadataError(fmt.Errorf("validate policies: %s", err), metadata.Metadata())
 		}
-		return store.PolicyCollection{}, fmt.Errorf("validate policies: %s", err)
+		return []store.Policy{}, fmt.Errorf("validate policies: %s", err)
 	}
 
 	var storePolicies []store.Policy
@@ -42,77 +42,27 @@ func (p *policyMapper) AsStorePolicy(bytes []byte) (store.PolicyCollection, erro
 		storePolicies = append(storePolicies, policy.asStorePolicy())
 	}
 
-	var storeEgressPolicies []store.EgressPolicy
-	for _, egressPolicy := range payload.EgressPolicies {
-		storeEgressPolicies = append(storeEgressPolicies, egressPolicy.asStoreEgressPolicy())
-	}
-
-	return store.PolicyCollection{
-		Policies:       storePolicies,
-		EgressPolicies: storeEgressPolicies,
-	}, nil
+	return storePolicies, nil
 }
 
-func (p *policyMapper) AsBytes(storePolicies []store.Policy, storeEgressPolicies []store.EgressPolicy) ([]byte, error) {
+func (p *policyMapper) AsBytes(storePolicies []store.Policy) ([]byte, error) {
 	// convert store.Policy to api.Policy
 	apiPolicies := make([]Policy, len(storePolicies))
 	for i, policy := range storePolicies {
 		apiPolicies[i] = mapStorePolicy(policy)
 	}
 
-	apiEgressPolicies := make([]EgressPolicy, len(storeEgressPolicies))
-	for i, egressPolicy := range storeEgressPolicies {
-		apiEgressPolicies[i] = mapStoreEgressPolicy(egressPolicy)
-	}
-
 	// convert api.Policy payload to bytes
 	payload := &PoliciesPayload{
 		TotalPolicies:       len(apiPolicies),
 		Policies:            apiPolicies,
-		TotalEgressPolicies: len(apiEgressPolicies),
-		EgressPolicies:      apiEgressPolicies,
 	}
+
 	bytes, err := p.Marshaler.Marshal(payload)
 	if err != nil {
 		return nil, fmt.Errorf("marshal json: %s", err)
 	}
 	return bytes, nil
-}
-
-func (p *EgressPolicy) asStoreEgressPolicy() store.EgressPolicy {
-	ipRanges := []store.IPRange{}
-	for _, apiIPRange := range p.Destination.IPRanges {
-		ipRanges = append(ipRanges, store.IPRange{
-			Start: apiIPRange.Start,
-			End:   apiIPRange.End,
-		})
-	}
-	ports := []store.Ports{}
-	for _, apiPorts := range p.Destination.Ports {
-		ports = append(ports, store.Ports{
-			Start: apiPorts.Start,
-			End:   apiPorts.End,
-		})
-	}
-
-	egressPolicy := store.EgressPolicy{
-		Source: store.EgressSource{
-			ID:   p.Source.ID,
-			Type: p.Source.Type,
-		},
-		Destination: store.EgressDestination{
-			Protocol: p.Destination.Protocol,
-			Ports:    ports,
-			IPRanges: ipRanges,
-		},
-	}
-
-	if p.Destination.Protocol == "icmp" {
-		egressPolicy.Destination.ICMPType = *p.Destination.ICMPType
-		egressPolicy.Destination.ICMPCode = *p.Destination.ICMPCode
-	}
-
-	return egressPolicy
 }
 
 func (p *Policy) asStorePolicy() store.Policy {
@@ -135,17 +85,6 @@ func (p *Policy) asStorePolicy() store.Policy {
 				End:   p.Destination.Ports.End,
 			},
 		},
-	}
-}
-
-func mapStoreEgressPolicy(storeEgressPolicy store.EgressPolicy) EgressPolicy {
-	destination := asApiEgressDestination(storeEgressPolicy.Destination)
-	return EgressPolicy{
-		Source: &EgressSource{
-			ID:   storeEgressPolicy.Source.ID,
-			Type: storeEgressPolicy.Source.Type,
-		},
-		Destination: &destination,
 	}
 }
 

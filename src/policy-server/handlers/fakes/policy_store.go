@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-type Store struct {
+type PolicyStore struct {
 	CreateStub        func([]store.Policy) error
 	createMutex       sync.RWMutex
 	createArgsForCall []struct {
@@ -17,17 +17,6 @@ type Store struct {
 	}
 	createReturnsOnCall map[int]struct {
 		result1 error
-	}
-	AllStub        func() ([]store.Policy, error)
-	allMutex       sync.RWMutex
-	allArgsForCall []struct{}
-	allReturns     struct {
-		result1 []store.Policy
-		result2 error
-	}
-	allReturnsOnCall map[int]struct {
-		result1 []store.Policy
-		result2 error
 	}
 	DeleteStub        func([]store.Policy) error
 	deleteMutex       sync.RWMutex
@@ -40,12 +29,12 @@ type Store struct {
 	deleteReturnsOnCall map[int]struct {
 		result1 error
 	}
-	ByGuidsStub        func([]string, []string, bool) ([]store.Policy, error)
+	ByGuidsStub        func(srcGuids []string, dstGuids []string, srcAndDst bool) ([]store.Policy, error)
 	byGuidsMutex       sync.RWMutex
 	byGuidsArgsForCall []struct {
-		arg1 []string
-		arg2 []string
-		arg3 bool
+		srcGuids  []string
+		dstGuids  []string
+		srcAndDst bool
 	}
 	byGuidsReturns struct {
 		result1 []store.Policy
@@ -55,20 +44,11 @@ type Store struct {
 		result1 []store.Policy
 		result2 error
 	}
-	CheckDatabaseStub        func() error
-	checkDatabaseMutex       sync.RWMutex
-	checkDatabaseArgsForCall []struct{}
-	checkDatabaseReturns     struct {
-		result1 error
-	}
-	checkDatabaseReturnsOnCall map[int]struct {
-		result1 error
-	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *Store) Create(arg1 []store.Policy) error {
+func (fake *PolicyStore) Create(arg1 []store.Policy) error {
 	var arg1Copy []store.Policy
 	if arg1 != nil {
 		arg1Copy = make([]store.Policy, len(arg1))
@@ -90,26 +70,26 @@ func (fake *Store) Create(arg1 []store.Policy) error {
 	return fake.createReturns.result1
 }
 
-func (fake *Store) CreateCallCount() int {
+func (fake *PolicyStore) CreateCallCount() int {
 	fake.createMutex.RLock()
 	defer fake.createMutex.RUnlock()
 	return len(fake.createArgsForCall)
 }
 
-func (fake *Store) CreateArgsForCall(i int) []store.Policy {
+func (fake *PolicyStore) CreateArgsForCall(i int) []store.Policy {
 	fake.createMutex.RLock()
 	defer fake.createMutex.RUnlock()
 	return fake.createArgsForCall[i].arg1
 }
 
-func (fake *Store) CreateReturns(result1 error) {
+func (fake *PolicyStore) CreateReturns(result1 error) {
 	fake.CreateStub = nil
 	fake.createReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *Store) CreateReturnsOnCall(i int, result1 error) {
+func (fake *PolicyStore) CreateReturnsOnCall(i int, result1 error) {
 	fake.CreateStub = nil
 	if fake.createReturnsOnCall == nil {
 		fake.createReturnsOnCall = make(map[int]struct {
@@ -121,50 +101,7 @@ func (fake *Store) CreateReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *Store) All() ([]store.Policy, error) {
-	fake.allMutex.Lock()
-	ret, specificReturn := fake.allReturnsOnCall[len(fake.allArgsForCall)]
-	fake.allArgsForCall = append(fake.allArgsForCall, struct{}{})
-	fake.recordInvocation("All", []interface{}{})
-	fake.allMutex.Unlock()
-	if fake.AllStub != nil {
-		return fake.AllStub()
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.allReturns.result1, fake.allReturns.result2
-}
-
-func (fake *Store) AllCallCount() int {
-	fake.allMutex.RLock()
-	defer fake.allMutex.RUnlock()
-	return len(fake.allArgsForCall)
-}
-
-func (fake *Store) AllReturns(result1 []store.Policy, result2 error) {
-	fake.AllStub = nil
-	fake.allReturns = struct {
-		result1 []store.Policy
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *Store) AllReturnsOnCall(i int, result1 []store.Policy, result2 error) {
-	fake.AllStub = nil
-	if fake.allReturnsOnCall == nil {
-		fake.allReturnsOnCall = make(map[int]struct {
-			result1 []store.Policy
-			result2 error
-		})
-	}
-	fake.allReturnsOnCall[i] = struct {
-		result1 []store.Policy
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *Store) Delete(arg1 []store.Policy) error {
+func (fake *PolicyStore) Delete(arg1 []store.Policy) error {
 	var arg1Copy []store.Policy
 	if arg1 != nil {
 		arg1Copy = make([]store.Policy, len(arg1))
@@ -186,26 +123,26 @@ func (fake *Store) Delete(arg1 []store.Policy) error {
 	return fake.deleteReturns.result1
 }
 
-func (fake *Store) DeleteCallCount() int {
+func (fake *PolicyStore) DeleteCallCount() int {
 	fake.deleteMutex.RLock()
 	defer fake.deleteMutex.RUnlock()
 	return len(fake.deleteArgsForCall)
 }
 
-func (fake *Store) DeleteArgsForCall(i int) []store.Policy {
+func (fake *PolicyStore) DeleteArgsForCall(i int) []store.Policy {
 	fake.deleteMutex.RLock()
 	defer fake.deleteMutex.RUnlock()
 	return fake.deleteArgsForCall[i].arg1
 }
 
-func (fake *Store) DeleteReturns(result1 error) {
+func (fake *PolicyStore) DeleteReturns(result1 error) {
 	fake.DeleteStub = nil
 	fake.deleteReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *Store) DeleteReturnsOnCall(i int, result1 error) {
+func (fake *PolicyStore) DeleteReturnsOnCall(i int, result1 error) {
 	fake.DeleteStub = nil
 	if fake.deleteReturnsOnCall == nil {
 		fake.deleteReturnsOnCall = make(map[int]struct {
@@ -217,28 +154,28 @@ func (fake *Store) DeleteReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *Store) ByGuids(arg1 []string, arg2 []string, arg3 bool) ([]store.Policy, error) {
-	var arg1Copy []string
-	if arg1 != nil {
-		arg1Copy = make([]string, len(arg1))
-		copy(arg1Copy, arg1)
+func (fake *PolicyStore) ByGuids(srcGuids []string, dstGuids []string, srcAndDst bool) ([]store.Policy, error) {
+	var srcGuidsCopy []string
+	if srcGuids != nil {
+		srcGuidsCopy = make([]string, len(srcGuids))
+		copy(srcGuidsCopy, srcGuids)
 	}
-	var arg2Copy []string
-	if arg2 != nil {
-		arg2Copy = make([]string, len(arg2))
-		copy(arg2Copy, arg2)
+	var dstGuidsCopy []string
+	if dstGuids != nil {
+		dstGuidsCopy = make([]string, len(dstGuids))
+		copy(dstGuidsCopy, dstGuids)
 	}
 	fake.byGuidsMutex.Lock()
 	ret, specificReturn := fake.byGuidsReturnsOnCall[len(fake.byGuidsArgsForCall)]
 	fake.byGuidsArgsForCall = append(fake.byGuidsArgsForCall, struct {
-		arg1 []string
-		arg2 []string
-		arg3 bool
-	}{arg1Copy, arg2Copy, arg3})
-	fake.recordInvocation("ByGuids", []interface{}{arg1Copy, arg2Copy, arg3})
+		srcGuids  []string
+		dstGuids  []string
+		srcAndDst bool
+	}{srcGuidsCopy, dstGuidsCopy, srcAndDst})
+	fake.recordInvocation("ByGuids", []interface{}{srcGuidsCopy, dstGuidsCopy, srcAndDst})
 	fake.byGuidsMutex.Unlock()
 	if fake.ByGuidsStub != nil {
-		return fake.ByGuidsStub(arg1, arg2, arg3)
+		return fake.ByGuidsStub(srcGuids, dstGuids, srcAndDst)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -246,19 +183,19 @@ func (fake *Store) ByGuids(arg1 []string, arg2 []string, arg3 bool) ([]store.Pol
 	return fake.byGuidsReturns.result1, fake.byGuidsReturns.result2
 }
 
-func (fake *Store) ByGuidsCallCount() int {
+func (fake *PolicyStore) ByGuidsCallCount() int {
 	fake.byGuidsMutex.RLock()
 	defer fake.byGuidsMutex.RUnlock()
 	return len(fake.byGuidsArgsForCall)
 }
 
-func (fake *Store) ByGuidsArgsForCall(i int) ([]string, []string, bool) {
+func (fake *PolicyStore) ByGuidsArgsForCall(i int) ([]string, []string, bool) {
 	fake.byGuidsMutex.RLock()
 	defer fake.byGuidsMutex.RUnlock()
-	return fake.byGuidsArgsForCall[i].arg1, fake.byGuidsArgsForCall[i].arg2, fake.byGuidsArgsForCall[i].arg3
+	return fake.byGuidsArgsForCall[i].srcGuids, fake.byGuidsArgsForCall[i].dstGuids, fake.byGuidsArgsForCall[i].srcAndDst
 }
 
-func (fake *Store) ByGuidsReturns(result1 []store.Policy, result2 error) {
+func (fake *PolicyStore) ByGuidsReturns(result1 []store.Policy, result2 error) {
 	fake.ByGuidsStub = nil
 	fake.byGuidsReturns = struct {
 		result1 []store.Policy
@@ -266,7 +203,7 @@ func (fake *Store) ByGuidsReturns(result1 []store.Policy, result2 error) {
 	}{result1, result2}
 }
 
-func (fake *Store) ByGuidsReturnsOnCall(i int, result1 []store.Policy, result2 error) {
+func (fake *PolicyStore) ByGuidsReturnsOnCall(i int, result1 []store.Policy, result2 error) {
 	fake.ByGuidsStub = nil
 	if fake.byGuidsReturnsOnCall == nil {
 		fake.byGuidsReturnsOnCall = make(map[int]struct {
@@ -280,59 +217,15 @@ func (fake *Store) ByGuidsReturnsOnCall(i int, result1 []store.Policy, result2 e
 	}{result1, result2}
 }
 
-func (fake *Store) CheckDatabase() error {
-	fake.checkDatabaseMutex.Lock()
-	ret, specificReturn := fake.checkDatabaseReturnsOnCall[len(fake.checkDatabaseArgsForCall)]
-	fake.checkDatabaseArgsForCall = append(fake.checkDatabaseArgsForCall, struct{}{})
-	fake.recordInvocation("CheckDatabase", []interface{}{})
-	fake.checkDatabaseMutex.Unlock()
-	if fake.CheckDatabaseStub != nil {
-		return fake.CheckDatabaseStub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.checkDatabaseReturns.result1
-}
-
-func (fake *Store) CheckDatabaseCallCount() int {
-	fake.checkDatabaseMutex.RLock()
-	defer fake.checkDatabaseMutex.RUnlock()
-	return len(fake.checkDatabaseArgsForCall)
-}
-
-func (fake *Store) CheckDatabaseReturns(result1 error) {
-	fake.CheckDatabaseStub = nil
-	fake.checkDatabaseReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *Store) CheckDatabaseReturnsOnCall(i int, result1 error) {
-	fake.CheckDatabaseStub = nil
-	if fake.checkDatabaseReturnsOnCall == nil {
-		fake.checkDatabaseReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.checkDatabaseReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *Store) Invocations() map[string][][]interface{} {
+func (fake *PolicyStore) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.createMutex.RLock()
 	defer fake.createMutex.RUnlock()
-	fake.allMutex.RLock()
-	defer fake.allMutex.RUnlock()
 	fake.deleteMutex.RLock()
 	defer fake.deleteMutex.RUnlock()
 	fake.byGuidsMutex.RLock()
 	defer fake.byGuidsMutex.RUnlock()
-	fake.checkDatabaseMutex.RLock()
-	defer fake.checkDatabaseMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
@@ -340,7 +233,7 @@ func (fake *Store) Invocations() map[string][][]interface{} {
 	return copiedInvocations
 }
 
-func (fake *Store) recordInvocation(key string, args []interface{}) {
+func (fake *PolicyStore) recordInvocation(key string, args []interface{}) {
 	fake.invocationsMutex.Lock()
 	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {
@@ -351,5 +244,3 @@ func (fake *Store) recordInvocation(key string, args []interface{}) {
 	}
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
-
-var _ store.Store = new(Store)

@@ -10,7 +10,7 @@ import (
 
 //go:generate counterfeiter -o fakes/policy_cleaner.go --fake-name PolicyCleaner . policyCleaner
 type policyCleaner interface {
-	DeleteStalePolicies() (store.PolicyCollection, error)
+	DeleteStalePolicies() ([]store.Policy, []store.EgressPolicy, error)
 }
 
 //go:generate counterfeiter -o fakes/error_response.go --fake-name ErrorResponse . errorResponse
@@ -23,16 +23,16 @@ type errorResponse interface {
 }
 
 type PoliciesCleanup struct {
-	Mapper        api.PolicyMapper
-	PolicyCleaner policyCleaner
-	ErrorResponse errorResponse
+	PolicyCollectionWriter api.PolicyCollectionWriter
+	PolicyCleaner          policyCleaner
+	ErrorResponse          errorResponse
 }
 
-func NewPoliciesCleanup(mapper api.PolicyMapper, policyCleaner policyCleaner, errorResponse errorResponse) *PoliciesCleanup {
+func NewPoliciesCleanup(writer api.PolicyCollectionWriter, policyCleaner policyCleaner, errorResponse errorResponse) *PoliciesCleanup {
 	return &PoliciesCleanup{
-		Mapper:        mapper,
-		PolicyCleaner: policyCleaner,
-		ErrorResponse: errorResponse,
+		PolicyCollectionWriter: writer,
+		PolicyCleaner:          policyCleaner,
+		ErrorResponse:          errorResponse,
 	}
 }
 
@@ -40,20 +40,18 @@ func (h *PoliciesCleanup) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	logger := getLogger(req)
 	logger = logger.Session("cleanup-policies")
 
-	policyCollection, err := h.PolicyCleaner.DeleteStalePolicies()
+	c2cPolicies, egressPolicies, err := h.PolicyCleaner.DeleteStalePolicies()
 	if err != nil {
 		h.ErrorResponse.InternalServerError(logger, w, err, "policies cleanup failed")
 		return
 	}
 
-	policies := policyCollection.Policies
-
-	for i := range policies {
-		policies[i].Source.Tag = ""
-		policies[i].Destination.Tag = ""
+	for i := range c2cPolicies {
+		c2cPolicies[i].Source.Tag = ""
+		c2cPolicies[i].Destination.Tag = ""
 	}
 
-	bytes, err := h.Mapper.AsBytes(policies, policyCollection.EgressPolicies)
+	bytes, err := h.PolicyCollectionWriter.AsBytes(c2cPolicies, egressPolicies)
 	if err != nil {
 		h.ErrorResponse.InternalServerError(logger, w, err, "map policy as bytes failed")
 		return

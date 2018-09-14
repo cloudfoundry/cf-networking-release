@@ -31,6 +31,17 @@ type EgressPolicyStore struct {
 		result1 []store.EgressPolicy
 		result2 error
 	}
+	CreateStub        func(egressPolicies []store.EgressPolicy) error
+	createMutex       sync.RWMutex
+	createArgsForCall []struct {
+		egressPolicies []store.EgressPolicy
+	}
+	createReturns struct {
+		result1 error
+	}
+	createReturnsOnCall map[int]struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -134,6 +145,59 @@ func (fake *EgressPolicyStore) ByGuidsReturnsOnCall(i int, result1 []store.Egres
 	}{result1, result2}
 }
 
+func (fake *EgressPolicyStore) Create(egressPolicies []store.EgressPolicy) error {
+	var egressPoliciesCopy []store.EgressPolicy
+	if egressPolicies != nil {
+		egressPoliciesCopy = make([]store.EgressPolicy, len(egressPolicies))
+		copy(egressPoliciesCopy, egressPolicies)
+	}
+	fake.createMutex.Lock()
+	ret, specificReturn := fake.createReturnsOnCall[len(fake.createArgsForCall)]
+	fake.createArgsForCall = append(fake.createArgsForCall, struct {
+		egressPolicies []store.EgressPolicy
+	}{egressPoliciesCopy})
+	fake.recordInvocation("Create", []interface{}{egressPoliciesCopy})
+	fake.createMutex.Unlock()
+	if fake.CreateStub != nil {
+		return fake.CreateStub(egressPolicies)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.createReturns.result1
+}
+
+func (fake *EgressPolicyStore) CreateCallCount() int {
+	fake.createMutex.RLock()
+	defer fake.createMutex.RUnlock()
+	return len(fake.createArgsForCall)
+}
+
+func (fake *EgressPolicyStore) CreateArgsForCall(i int) []store.EgressPolicy {
+	fake.createMutex.RLock()
+	defer fake.createMutex.RUnlock()
+	return fake.createArgsForCall[i].egressPolicies
+}
+
+func (fake *EgressPolicyStore) CreateReturns(result1 error) {
+	fake.CreateStub = nil
+	fake.createReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *EgressPolicyStore) CreateReturnsOnCall(i int, result1 error) {
+	fake.CreateStub = nil
+	if fake.createReturnsOnCall == nil {
+		fake.createReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.createReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *EgressPolicyStore) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -141,6 +205,8 @@ func (fake *EgressPolicyStore) Invocations() map[string][][]interface{} {
 	defer fake.allMutex.RUnlock()
 	fake.byGuidsMutex.RLock()
 	defer fake.byGuidsMutex.RUnlock()
+	fake.createMutex.RLock()
+	defer fake.createMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

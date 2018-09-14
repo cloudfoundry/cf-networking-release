@@ -11,10 +11,6 @@ type QuotaGuard struct {
 	MaxPolicies int
 }
 
-type policyStore interface {
-	ByGuids([]string, []string, bool) ([]store.Policy, error)
-}
-
 func NewQuotaGuard(store policyStore, maxPolicies int) *QuotaGuard {
 	return &QuotaGuard{
 		Store:       store,
@@ -22,19 +18,15 @@ func NewQuotaGuard(store policyStore, maxPolicies int) *QuotaGuard {
 	}
 }
 
-func (g *QuotaGuard) CheckAccess(policyCollection store.PolicyCollection, userToken uaa_client.CheckTokenResponse) (bool, error) {
+func (g *QuotaGuard) CheckAccess(policies []store.Policy, userToken uaa_client.CheckTokenResponse) (bool, error) {
 	for _, scope := range userToken.Scope {
 		if scope == "network.admin" {
 			return true, nil
 		}
 	}
 
-	if len(policyCollection.EgressPolicies) > 0 {
-		return false, nil
-	}
-
-	appGuids := uniqueAppGUIDs(policyCollection.Policies)
-	toAddSourceCounts := sourceCounts(policyCollection.Policies, appGuids)
+	appGuids := uniqueAppGUIDs(policies)
+	toAddSourceCounts := sourceCounts(policies, appGuids)
 	sourcePolicies, err := g.Store.ByGuids(appGuids, []string{}, false)
 	if err != nil {
 		return false, fmt.Errorf("getting policies: %s", err)

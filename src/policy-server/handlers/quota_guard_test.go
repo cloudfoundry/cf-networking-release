@@ -13,10 +13,10 @@ import (
 
 var _ = Describe("QuotaGuard", func() {
 	var (
-		quotaGuard       *handlers.QuotaGuard
-		fakeStore        *fakes.Store
-		policyCollection store.PolicyCollection
-		tokenData        uaa_client.CheckTokenResponse
+		quotaGuard *handlers.QuotaGuard
+		fakeStore  *fakes.Store
+		policies   []store.Policy
+		tokenData  uaa_client.CheckTokenResponse
 	)
 	BeforeEach(func() {
 		fakeStore = &fakes.Store{}
@@ -29,46 +29,26 @@ var _ = Describe("QuotaGuard", func() {
 			UserID:   "some-developer-guid",
 			UserName: "some-developer",
 		}
-		policyCollection = store.PolicyCollection{
-			Policies: []store.Policy{
-				{
-					Source:      store.Source{ID: "some-app-guid"},
-					Destination: store.Destination{ID: "some-other-guid"},
-				},
-				{
-					Source:      store.Source{ID: "some-app-guid"},
-					Destination: store.Destination{ID: "yet-another-guid"},
-				},
-				{
-					Source:      store.Source{ID: "some-other-app-guid"},
-					Destination: store.Destination{ID: "yet-another-guid"},
-				},
+		policies = []store.Policy{
+			{
+				Source:      store.Source{ID: "some-app-guid"},
+				Destination: store.Destination{ID: "some-other-guid"},
+			},
+			{
+				Source:      store.Source{ID: "some-app-guid"},
+				Destination: store.Destination{ID: "yet-another-guid"},
+			},
+			{
+				Source:      store.Source{ID: "some-other-app-guid"},
+				Destination: store.Destination{ID: "yet-another-guid"},
 			},
 		}
 		fakeStore.ByGuidsReturns([]store.Policy{}, nil)
 	})
 	Context("when the user is not an admin", func() {
-		Context("when the user is attempting to create an egress policy", func() {
-			BeforeEach(func() {
-				policyCollection.EgressPolicies = []store.EgressPolicy{
-					{
-						Source:      store.EgressSource{ID: "some-other-app-guid"},
-						Destination: store.EgressDestination{IPRanges: []store.IPRange{{Start: "1.2.3.4", End: "1.2.3.5"}}},
-					},
-				}
-			})
-
-			It("denies policy creation", func() {
-				authorized, err := quotaGuard.CheckAccess(policyCollection, tokenData)
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(authorized).To(BeFalse())
-			})
-		})
-
 		Context("when the additional policies do not exceed the quota", func() {
 			It("allows policy creation", func() {
-				authorized, err := quotaGuard.CheckAccess(policyCollection, tokenData)
+				authorized, err := quotaGuard.CheckAccess(policies, tokenData)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(authorized).To(BeTrue())
@@ -88,7 +68,7 @@ var _ = Describe("QuotaGuard", func() {
 				}, nil)
 			})
 			It("does not allow policy creation", func() {
-				authorized, err := quotaGuard.CheckAccess(policyCollection, tokenData)
+				authorized, err := quotaGuard.CheckAccess(policies, tokenData)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(authorized).To(BeFalse())
@@ -99,7 +79,7 @@ var _ = Describe("QuotaGuard", func() {
 				fakeStore.ByGuidsReturns([]store.Policy{}, errors.New("banana"))
 			})
 			It("returns an error", func() {
-				_, err := quotaGuard.CheckAccess(policyCollection, tokenData)
+				_, err := quotaGuard.CheckAccess(policies, tokenData)
 				Expect(err).To(MatchError("getting policies: banana"))
 			})
 
@@ -124,7 +104,7 @@ var _ = Describe("QuotaGuard", func() {
 			}, nil)
 		})
 		It("allows policy creation beyond the max policies", func() {
-			authorized, err := quotaGuard.CheckAccess(policyCollection, tokenData)
+			authorized, err := quotaGuard.CheckAccess(policies, tokenData)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(authorized).To(BeTrue())

@@ -11,13 +11,13 @@ import (
 )
 
 type PoliciesDelete struct {
-	Store         policyCollectionStore
+	Store         policyStore
 	Mapper        api.PolicyMapper
 	PolicyGuard   policyGuard
 	ErrorResponse errorResponse
 }
 
-func NewPoliciesDelete(store policyCollectionStore, mapper api.PolicyMapper,
+func NewPoliciesDelete(store policyStore, mapper api.PolicyMapper,
 	policyGuard policyGuard, errorResponse errorResponse) *PoliciesDelete {
 	return &PoliciesDelete{
 		Store:         store,
@@ -61,7 +61,7 @@ func (h *PoliciesDelete) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	logger.Info("deleted-policies", lager.Data{"policies": policies.Policies, "userName": tokenData.UserName})
+	logger.Info("deleted-policies", lager.Data{"policies": policies, "userName": tokenData.UserName})
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(`{}`))
 	return

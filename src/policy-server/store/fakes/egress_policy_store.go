@@ -2,34 +2,31 @@
 package fakes
 
 import (
-	"policy-server/db"
 	"policy-server/store"
 	"sync"
 )
 
 type EgressPolicyStore struct {
-	CreateWithTxStub        func(db.Transaction, []store.EgressPolicy) error
-	createWithTxMutex       sync.RWMutex
-	createWithTxArgsForCall []struct {
-		arg1 db.Transaction
-		arg2 []store.EgressPolicy
+	CreateStub        func([]store.EgressPolicy) error
+	createMutex       sync.RWMutex
+	createArgsForCall []struct {
+		arg1 []store.EgressPolicy
 	}
-	createWithTxReturns struct {
+	createReturns struct {
 		result1 error
 	}
-	createWithTxReturnsOnCall map[int]struct {
+	createReturnsOnCall map[int]struct {
 		result1 error
 	}
-	DeleteWithTxStub        func(db.Transaction, []store.EgressPolicy) error
-	deleteWithTxMutex       sync.RWMutex
-	deleteWithTxArgsForCall []struct {
-		arg1 db.Transaction
-		arg2 []store.EgressPolicy
+	DeleteStub        func([]store.EgressPolicy) error
+	deleteMutex       sync.RWMutex
+	deleteArgsForCall []struct {
+		arg1 []store.EgressPolicy
 	}
-	deleteWithTxReturns struct {
+	deleteReturns struct {
 		result1 error
 	}
-	deleteWithTxReturnsOnCall map[int]struct {
+	deleteReturnsOnCall map[int]struct {
 		result1 error
 	}
 	AllStub        func() ([]store.EgressPolicy, error)
@@ -60,110 +57,108 @@ type EgressPolicyStore struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *EgressPolicyStore) CreateWithTx(arg1 db.Transaction, arg2 []store.EgressPolicy) error {
-	var arg2Copy []store.EgressPolicy
-	if arg2 != nil {
-		arg2Copy = make([]store.EgressPolicy, len(arg2))
-		copy(arg2Copy, arg2)
+func (fake *EgressPolicyStore) Create(arg1 []store.EgressPolicy) error {
+	var arg1Copy []store.EgressPolicy
+	if arg1 != nil {
+		arg1Copy = make([]store.EgressPolicy, len(arg1))
+		copy(arg1Copy, arg1)
 	}
-	fake.createWithTxMutex.Lock()
-	ret, specificReturn := fake.createWithTxReturnsOnCall[len(fake.createWithTxArgsForCall)]
-	fake.createWithTxArgsForCall = append(fake.createWithTxArgsForCall, struct {
-		arg1 db.Transaction
-		arg2 []store.EgressPolicy
-	}{arg1, arg2Copy})
-	fake.recordInvocation("CreateWithTx", []interface{}{arg1, arg2Copy})
-	fake.createWithTxMutex.Unlock()
-	if fake.CreateWithTxStub != nil {
-		return fake.CreateWithTxStub(arg1, arg2)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.createWithTxReturns.result1
-}
-
-func (fake *EgressPolicyStore) CreateWithTxCallCount() int {
-	fake.createWithTxMutex.RLock()
-	defer fake.createWithTxMutex.RUnlock()
-	return len(fake.createWithTxArgsForCall)
-}
-
-func (fake *EgressPolicyStore) CreateWithTxArgsForCall(i int) (db.Transaction, []store.EgressPolicy) {
-	fake.createWithTxMutex.RLock()
-	defer fake.createWithTxMutex.RUnlock()
-	return fake.createWithTxArgsForCall[i].arg1, fake.createWithTxArgsForCall[i].arg2
-}
-
-func (fake *EgressPolicyStore) CreateWithTxReturns(result1 error) {
-	fake.CreateWithTxStub = nil
-	fake.createWithTxReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *EgressPolicyStore) CreateWithTxReturnsOnCall(i int, result1 error) {
-	fake.CreateWithTxStub = nil
-	if fake.createWithTxReturnsOnCall == nil {
-		fake.createWithTxReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.createWithTxReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *EgressPolicyStore) DeleteWithTx(arg1 db.Transaction, arg2 []store.EgressPolicy) error {
-	var arg2Copy []store.EgressPolicy
-	if arg2 != nil {
-		arg2Copy = make([]store.EgressPolicy, len(arg2))
-		copy(arg2Copy, arg2)
-	}
-	fake.deleteWithTxMutex.Lock()
-	ret, specificReturn := fake.deleteWithTxReturnsOnCall[len(fake.deleteWithTxArgsForCall)]
-	fake.deleteWithTxArgsForCall = append(fake.deleteWithTxArgsForCall, struct {
-		arg1 db.Transaction
-		arg2 []store.EgressPolicy
-	}{arg1, arg2Copy})
-	fake.recordInvocation("DeleteWithTx", []interface{}{arg1, arg2Copy})
-	fake.deleteWithTxMutex.Unlock()
-	if fake.DeleteWithTxStub != nil {
-		return fake.DeleteWithTxStub(arg1, arg2)
+	fake.createMutex.Lock()
+	ret, specificReturn := fake.createReturnsOnCall[len(fake.createArgsForCall)]
+	fake.createArgsForCall = append(fake.createArgsForCall, struct {
+		arg1 []store.EgressPolicy
+	}{arg1Copy})
+	fake.recordInvocation("Create", []interface{}{arg1Copy})
+	fake.createMutex.Unlock()
+	if fake.CreateStub != nil {
+		return fake.CreateStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.deleteWithTxReturns.result1
+	return fake.createReturns.result1
 }
 
-func (fake *EgressPolicyStore) DeleteWithTxCallCount() int {
-	fake.deleteWithTxMutex.RLock()
-	defer fake.deleteWithTxMutex.RUnlock()
-	return len(fake.deleteWithTxArgsForCall)
+func (fake *EgressPolicyStore) CreateCallCount() int {
+	fake.createMutex.RLock()
+	defer fake.createMutex.RUnlock()
+	return len(fake.createArgsForCall)
 }
 
-func (fake *EgressPolicyStore) DeleteWithTxArgsForCall(i int) (db.Transaction, []store.EgressPolicy) {
-	fake.deleteWithTxMutex.RLock()
-	defer fake.deleteWithTxMutex.RUnlock()
-	return fake.deleteWithTxArgsForCall[i].arg1, fake.deleteWithTxArgsForCall[i].arg2
+func (fake *EgressPolicyStore) CreateArgsForCall(i int) []store.EgressPolicy {
+	fake.createMutex.RLock()
+	defer fake.createMutex.RUnlock()
+	return fake.createArgsForCall[i].arg1
 }
 
-func (fake *EgressPolicyStore) DeleteWithTxReturns(result1 error) {
-	fake.DeleteWithTxStub = nil
-	fake.deleteWithTxReturns = struct {
+func (fake *EgressPolicyStore) CreateReturns(result1 error) {
+	fake.CreateStub = nil
+	fake.createReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *EgressPolicyStore) DeleteWithTxReturnsOnCall(i int, result1 error) {
-	fake.DeleteWithTxStub = nil
-	if fake.deleteWithTxReturnsOnCall == nil {
-		fake.deleteWithTxReturnsOnCall = make(map[int]struct {
+func (fake *EgressPolicyStore) CreateReturnsOnCall(i int, result1 error) {
+	fake.CreateStub = nil
+	if fake.createReturnsOnCall == nil {
+		fake.createReturnsOnCall = make(map[int]struct {
 			result1 error
 		})
 	}
-	fake.deleteWithTxReturnsOnCall[i] = struct {
+	fake.createReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *EgressPolicyStore) Delete(arg1 []store.EgressPolicy) error {
+	var arg1Copy []store.EgressPolicy
+	if arg1 != nil {
+		arg1Copy = make([]store.EgressPolicy, len(arg1))
+		copy(arg1Copy, arg1)
+	}
+	fake.deleteMutex.Lock()
+	ret, specificReturn := fake.deleteReturnsOnCall[len(fake.deleteArgsForCall)]
+	fake.deleteArgsForCall = append(fake.deleteArgsForCall, struct {
+		arg1 []store.EgressPolicy
+	}{arg1Copy})
+	fake.recordInvocation("Delete", []interface{}{arg1Copy})
+	fake.deleteMutex.Unlock()
+	if fake.DeleteStub != nil {
+		return fake.DeleteStub(arg1)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.deleteReturns.result1
+}
+
+func (fake *EgressPolicyStore) DeleteCallCount() int {
+	fake.deleteMutex.RLock()
+	defer fake.deleteMutex.RUnlock()
+	return len(fake.deleteArgsForCall)
+}
+
+func (fake *EgressPolicyStore) DeleteArgsForCall(i int) []store.EgressPolicy {
+	fake.deleteMutex.RLock()
+	defer fake.deleteMutex.RUnlock()
+	return fake.deleteArgsForCall[i].arg1
+}
+
+func (fake *EgressPolicyStore) DeleteReturns(result1 error) {
+	fake.DeleteStub = nil
+	fake.deleteReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *EgressPolicyStore) DeleteReturnsOnCall(i int, result1 error) {
+	fake.DeleteStub = nil
+	if fake.deleteReturnsOnCall == nil {
+		fake.deleteReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.deleteReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }
@@ -270,10 +265,10 @@ func (fake *EgressPolicyStore) ByGuidsReturnsOnCall(i int, result1 []store.Egres
 func (fake *EgressPolicyStore) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.createWithTxMutex.RLock()
-	defer fake.createWithTxMutex.RUnlock()
-	fake.deleteWithTxMutex.RLock()
-	defer fake.deleteWithTxMutex.RUnlock()
+	fake.createMutex.RLock()
+	defer fake.createMutex.RUnlock()
+	fake.deleteMutex.RLock()
+	defer fake.deleteMutex.RUnlock()
 	fake.allMutex.RLock()
 	defer fake.allMutex.RUnlock()
 	fake.byGuidsMutex.RLock()

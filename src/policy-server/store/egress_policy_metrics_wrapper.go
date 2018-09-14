@@ -1,24 +1,31 @@
 package store
 
 import (
-	"policy-server/db"
 	"time"
 )
+
+//go:generate counterfeiter -o fakes/egress_policy_store.go --fake-name EgressPolicyStore . egressPolicyStore
+type egressPolicyStore interface {
+	Create([]EgressPolicy) error
+	Delete([]EgressPolicy) error
+	All() ([]EgressPolicy, error)
+	ByGuids(srcGuids []string) ([]EgressPolicy, error)
+}
 
 type EgressPolicyMetricsWrapper struct {
 	Store         egressPolicyStore
 	MetricsSender metricsSender
 }
 
-func (mw *EgressPolicyMetricsWrapper) CreateWithTx(tx db.Transaction, egressPolicies []EgressPolicy) error {
+func (mw *EgressPolicyMetricsWrapper) Create(egressPolicies []EgressPolicy) error {
 	startTime := time.Now()
-	err := mw.Store.CreateWithTx(tx, egressPolicies)
+	err := mw.Store.Create(egressPolicies)
 	createTimeDuration := time.Now().Sub(startTime)
 	if err != nil {
-		mw.MetricsSender.IncrementCounter("EgressPolicyStoreCreateWithTxError")
-		mw.MetricsSender.SendDuration("EgressPolicyStoreCreateWithTxErrorTime", createTimeDuration)
+		mw.MetricsSender.IncrementCounter("EgressPolicyStoreCreateError")
+		mw.MetricsSender.SendDuration("EgressPolicyStoreCreateErrorTime", createTimeDuration)
 	} else {
-		mw.MetricsSender.SendDuration("EgressPolicyStoreCreateWithTxSuccessTime", createTimeDuration)
+		mw.MetricsSender.SendDuration("EgressPolicyStoreCreateSuccessTime", createTimeDuration)
 	}
 	return err
 }
@@ -36,15 +43,15 @@ func (mw *EgressPolicyMetricsWrapper) All() ([]EgressPolicy, error) {
 	return policies, err
 }
 
-func (mw *EgressPolicyMetricsWrapper) DeleteWithTx(tx db.Transaction, egressPolicies []EgressPolicy) error {
+func (mw *EgressPolicyMetricsWrapper) Delete(egressPolicies []EgressPolicy) error {
 	startTime := time.Now()
-	err := mw.Store.DeleteWithTx(tx, egressPolicies)
+	err := mw.Store.Delete(egressPolicies)
 	deleteTimeDuration := time.Now().Sub(startTime)
 	if err != nil {
-		mw.MetricsSender.IncrementCounter("EgressPolicyStoreDeleteWithTxError")
-		mw.MetricsSender.SendDuration("EgressPolicyStoreDeleteWithTxErrorTime", deleteTimeDuration)
+		mw.MetricsSender.IncrementCounter("EgressPolicyStoreDeleteError")
+		mw.MetricsSender.SendDuration("EgressPolicyStoreDeleteErrorTime", deleteTimeDuration)
 	} else {
-		mw.MetricsSender.SendDuration("EgressPolicyStoreDeleteWithTxSuccessTime", deleteTimeDuration)
+		mw.MetricsSender.SendDuration("EgressPolicyStoreDeleteSuccessTime", deleteTimeDuration)
 	}
 	return err
 }

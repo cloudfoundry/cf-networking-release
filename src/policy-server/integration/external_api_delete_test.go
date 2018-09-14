@@ -65,10 +65,10 @@ var _ = Describe("External API Deleting Policies", func() {
 		BeforeEach(func() {
 			addPolicy("v1", `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 1234, "end": 1234 } } } ] }`)
 			addPolicy("v1", `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8080, "end": 8090 } } } ] }`)
-			addPolicy("v1", `{ "egress_policies": [ {"source": { "id": "live-app-1-guid" }, "destination": { "protocol": "tcp", "ips": [ {"start": "23.96.32.148", "end": "23.96.32.149" } ] } } ] }`)
-			addPolicy("v1", `{ "egress_policies": [ {"source": { "id": "live-app-1-guid" }, "destination": { "protocol": "tcp", "ports": [{"start": 8080, "end": 8081}], "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] } } ] }`)
-			addPolicy("v1", `{ "egress_policies": [ {"source": { "id": "live-app-1-guid" }, "destination": { "protocol": "icmp", "icmp_type": 1, "icmp_code": 2, "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] } } ] }`)
-			addPolicy("v1", `{ "egress_policies": [ {"source": { "id": "live-space-1-guid", "type": "space" }, "destination": { "protocol": "tcp", "ips": [ {"start": "23.96.32.152", "end": "23.96.32.153" } ] } } ] }`)
+			// addPolicy("v1", `{ "egress_policies": [ {"source": { "id": "live-app-1-guid" }, "destination": { "protocol": "tcp", "ips": [ {"start": "23.96.32.148", "end": "23.96.32.149" } ] } } ] }`)
+			// addPolicy("v1", `{ "egress_policies": [ {"source": { "id": "live-app-1-guid" }, "destination": { "protocol": "tcp", "ports": [{"start": 8080, "end": 8081}], "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] } } ] }`)
+			// addPolicy("v1", `{ "egress_policies": [ {"source": { "id": "live-app-1-guid" }, "destination": { "protocol": "icmp", "icmp_type": 1, "icmp_code": 2, "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] } } ] }`)
+			// addPolicy("v1", `{ "egress_policies": [ {"source": { "id": "live-space-1-guid", "type": "space" }, "destination": { "protocol": "tcp", "ips": [ {"start": "23.96.32.152", "end": "23.96.32.153" } ] } } ] }`)
 			addPolicy("v0", `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 7777 } } ] }`)
 		})
 
@@ -101,10 +101,7 @@ var _ = Describe("External API Deleting Policies", func() {
 				HaveName("DeletePoliciesRequestTime"),
 			))
 			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
-				HaveName("StoreDeleteWithTxSuccessTime"),
-			))
-			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
-				HaveName("CollectionStoreDeleteSuccessTime"),
+				HaveName("StoreDeleteSuccessTime"),
 			))
 		}
 
@@ -135,84 +132,12 @@ var _ = Describe("External API Deleting Policies", func() {
 		v1RequestMissingProtocol := `{ "policies": [ { "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "ports": { "start": 8080, "end": 8080 } } } ] }`
 		v1Response := `{
 			"total_policies": 1,
-			"policies": [ { "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 1234, "end": 1234 } } } ],
-			"total_egress_policies": 4,
-			"egress_policies": [
-				{"source": { "id": "live-app-1-guid", "type": "app" }, "destination": { "protocol": "tcp", "ips": [ {"start": "23.96.32.148", "end": "23.96.32.149" } ] } },
-				{"source": { "id": "live-app-1-guid", "type": "app" }, "destination": { "protocol": "tcp", "ports": [{"start": 8080, "end": 8081}], "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] } },
-				{"source": { "id": "live-app-1-guid", "type": "app" }, "destination": { "protocol": "icmp", "icmp_type": 1, "icmp_code": 2, "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] } },
-				{"source": { "id": "live-space-1-guid", "type": "space" }, "destination": { "protocol": "tcp", "ips": [ {"start": "23.96.32.152", "end": "23.96.32.153" } ] } }
-			]
+			"policies": [ { "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 1234, "end": 1234 } } } ]
 		}`
 		v1ResponseNoneDeleted := `{ "total_policies": 3, "policies": [
 				{ "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 1234, "end": 1234 } } },
 				{ "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8080, "end": 8090 } } },
 				{ "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 7777, "end": 7777 } } }
-			],
-			"total_egress_policies": 4,
-			"egress_policies": [
-				{"source": { "id": "live-app-1-guid", "type": "app" }, "destination": { "protocol": "tcp", "ips": [ {"start": "23.96.32.148", "end": "23.96.32.149" } ] } },
-				{"source": { "id": "live-app-1-guid", "type": "app" }, "destination": { "protocol": "tcp", "ports": [{"start": 8080, "end": 8081}], "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] } },
-				{"source": { "id": "live-app-1-guid", "type": "app" }, "destination": { "protocol": "icmp", "icmp_type": 1, "icmp_code": 2, "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] } },
-				{"source": { "id": "live-space-1-guid", "type": "space" }, "destination": { "protocol": "tcp", "ips": [ {"start": "23.96.32.152", "end": "23.96.32.153" } ] } }
-			]
-		}`
-
-		v1EgressRequest := `{"egress_policies": [ {"source": { "id": "live-app-1-guid" }, "destination": { "protocol": "tcp", "ips": [ {"start": "23.96.32.148", "end": "23.96.32.149" } ] } } ] }`
-
-		v1EgressResponse := `{ "total_policies": 3, "policies": [
-				{ "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 1234, "end": 1234 } } },
-				{ "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8080, "end": 8090 } } },
-				{ "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 7777, "end": 7777 } } }
-			],
-			"total_egress_policies": 3,
-			"egress_policies": [
-				{"source": { "id": "live-app-1-guid", "type": "app" }, "destination": { "protocol": "tcp", "ports": [{"start": 8080, "end": 8081}], "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] } },
-				{"source": { "id": "live-app-1-guid", "type": "app" }, "destination": { "protocol": "icmp", "icmp_type": 1, "icmp_code": 2, "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] } },
-				{"source": { "id": "live-space-1-guid", "type": "space" }, "destination": { "protocol": "tcp", "ips": [ {"start": "23.96.32.152", "end": "23.96.32.153" } ] } }
-			]
-		}`
-
-		v1EgressRequestWithPort := `{"egress_policies": [ {"source": { "id": "live-app-1-guid" }, "destination": { "protocol": "tcp", "ports": [{"start": 8080, "end": 8081}], "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] } } ] }`
-		v1EgressResponseWithPort := `{ "total_policies": 3, "policies": [
-				{ "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 1234, "end": 1234 } } },
-				{ "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8080, "end": 8090 } } },
-				{ "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 7777, "end": 7777 } } }
-			],
-			"total_egress_policies": 3,
-			"egress_policies": [
-				{"source": { "id": "live-app-1-guid", "type": "app" }, "destination": { "protocol": "tcp", "ips": [ {"start": "23.96.32.148", "end": "23.96.32.149" } ] } },
-				{"source": { "id": "live-app-1-guid", "type": "app" }, "destination": { "protocol": "icmp", "icmp_type": 1, "icmp_code": 2, "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] } },
-				{"source": { "id": "live-space-1-guid", "type": "space" }, "destination": { "protocol": "tcp", "ips": [ {"start": "23.96.32.152", "end": "23.96.32.153" } ] } }
-			]
-		}`
-
-		v1EgressRequestICMP := `{ "egress_policies": [ {"source": { "id": "live-app-1-guid" }, "destination": { "protocol": "icmp", "icmp_type": 1, "icmp_code": 2, "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] } } ] }`
-
-		v1EgressResponseICMP := `{ "total_policies": 3, "policies": [
-				{ "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 1234, "end": 1234 } } },
-				{ "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8080, "end": 8090 } } },
-				{ "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 7777, "end": 7777 } } }
-			],
-			"total_egress_policies": 3,
-			"egress_policies": [
-				{"source": { "id": "live-app-1-guid", "type": "app" }, "destination": { "protocol": "tcp", "ips": [ {"start": "23.96.32.148", "end": "23.96.32.149" } ] } },
-				{"source": { "id": "live-app-1-guid", "type": "app" }, "destination": { "protocol": "tcp", "ports": [{"start": 8080, "end": 8081}], "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] } },
-				{"source": { "id": "live-space-1-guid", "type": "space" }, "destination": { "protocol": "tcp", "ips": [ {"start": "23.96.32.152", "end": "23.96.32.153" } ] } }
-			]
-		}`
-
-		v1EgressRequestSpace := `{ "egress_policies": [ {"source": { "id": "live-space-1-guid", "type": "space" }, "destination": { "protocol": "tcp", "ips": [ {"start": "23.96.32.152", "end": "23.96.32.153" } ] } } ] }`
-		v1EgressResponseSpace := `{ "total_policies": 3, "policies": [
-				{ "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 1234, "end": 1234 } } },
-				{ "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8080, "end": 8090 } } },
-				{ "source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 7777, "end": 7777 } } }
-			],
-			"total_egress_policies": 3,
-			"egress_policies": [
-				{"source": { "id": "live-app-1-guid", "type": "app" }, "destination": { "protocol": "tcp", "ips": [ {"start": "23.96.32.148", "end": "23.96.32.149" } ] } },
-				{"source": { "id": "live-app-1-guid", "type": "app" }, "destination": { "protocol": "tcp", "ports": [{"start": 8080, "end": 8081}], "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] } },
-				{"source": { "id": "live-app-1-guid", "type": "app" }, "destination": { "protocol": "icmp", "icmp_type": 1, "icmp_code": 2, "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] } }
 			]
 		}`
 
@@ -236,10 +161,6 @@ var _ = Describe("External API Deleting Policies", func() {
 		DescribeTable("deleting policies succeeds", deletePoliciesSucceeds,
 			Entry("v1", "v1", v1Request, v1Response),
 			Entry("v1: no match", "v1", v1RequestNoPolicyMatch, v1ResponseNoneDeleted),
-			Entry("v1: egress policy", "v1", v1EgressRequest, v1EgressResponse),
-			Entry("v1: egress policy with ports", "v1", v1EgressRequestWithPort, v1EgressResponseWithPort),
-			Entry("v1: egress policy icmp", "v1", v1EgressRequestICMP, v1EgressResponseICMP),
-			Entry("v1: egress policy space", "v1", v1EgressRequestSpace, v1EgressResponseSpace),
 			Entry("v0", "v0", v0Request, v0Response),
 			Entry("v0: no match", "v0", v0RequestNoPolicyMatch, v0ResponseNoneDeleted),
 		)

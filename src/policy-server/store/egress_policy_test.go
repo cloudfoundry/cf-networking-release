@@ -67,6 +67,7 @@ var _ = Describe("Egress Policy Table", func() {
 		egressStore = store.EgressPolicyStore{
 			EgressPolicyRepo: egressPolicyTable,
 			TerminalsRepo:    terminalsTable,
+			Conn:             realDb,
 		}
 		tx, err = realDb.Beginx()
 		Expect(err).NotTo(HaveOccurred())
@@ -829,10 +830,7 @@ var _ = Describe("Egress Policy Table", func() {
 					},
 				},
 			}
-			err := egressStore.CreateWithTx(tx, egressPolicies)
-			Expect(err).ToNot(HaveOccurred())
-
-			err = tx.Commit()
+			err := egressStore.Create(egressPolicies)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
@@ -950,10 +948,7 @@ var _ = Describe("Egress Policy Table", func() {
 					},
 				},
 			}
-			err := egressStore.CreateWithTx(tx, egressPolicies)
-			Expect(err).ToNot(HaveOccurred())
-
-			err = tx.Commit()
+			err := egressStore.Create(egressPolicies)
 			Expect(err).ToNot(HaveOccurred())
 		})
 

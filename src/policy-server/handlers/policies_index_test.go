@@ -23,24 +23,23 @@ import (
 
 var _ = Describe("Policies index handler", func() {
 	var (
-		allPolicies           []store.Policy
-		allEgressPolicies     []store.EgressPolicy
-		byGuidsPolicies       []store.Policy
-		byGuidsAPIPolicies    []store.Policy
-		expectedResponseBody  []byte
-		filteredPolicies      []store.Policy
-		request               *http.Request
-		handler               *handlers.PoliciesIndex
-		resp                  *httptest.ResponseRecorder
-		fakeStore             *storeFakes.Store
-		fakeEgressPolicyStore *fakes.EgressPolicyStore
-		fakePolicyFilter      *fakes.PolicyFilter
-		fakeErrorResponse     *fakes.ErrorResponse
-		fakeMapper            *apifakes.PolicyMapper
-		fakePolicyGuard       *fakes.PolicyGuard
-		logger                *lagertest.TestLogger
-		expectedLogger        lager.Logger
-		token                 uaa_client.CheckTokenResponse
+		allPolicies          []store.Policy
+		allEgressPolicies    []store.EgressPolicy
+		byGuidsPolicies      []store.Policy
+		byGuidsAPIPolicies   []store.Policy
+		expectedResponseBody []byte
+		filteredPolicies     []store.Policy
+		request              *http.Request
+		handler              *handlers.PoliciesIndex
+		resp                 *httptest.ResponseRecorder
+		fakeStore            *storeFakes.Store
+		fakePolicyFilter     *fakes.PolicyFilter
+		fakeErrorResponse    *fakes.ErrorResponse
+		fakeMapper           *apifakes.PolicyMapper
+		fakePolicyGuard      *fakes.PolicyGuard
+		logger               *lagertest.TestLogger
+		expectedLogger       lager.Logger
+		token                uaa_client.CheckTokenResponse
 	)
 
 	BeforeEach(func() {
@@ -153,9 +152,6 @@ var _ = Describe("Policies index handler", func() {
 		fakeStore.AllReturns(allPolicies, nil)
 		fakeStore.ByGuidsReturns(byGuidsPolicies, nil)
 
-		fakeEgressPolicyStore = &fakes.EgressPolicyStore{}
-		fakeEgressPolicyStore.AllReturns(allEgressPolicies, nil)
-
 		fakePolicyGuard = &fakes.PolicyGuard{}
 		fakePolicyGuard.IsNetworkAdminReturns(true)
 
@@ -169,7 +165,6 @@ var _ = Describe("Policies index handler", func() {
 		logger = lagertest.NewTestLogger("test")
 		handler = &handlers.PoliciesIndex{
 			Store:         fakeStore,
-			EgressStore:   fakeEgressPolicyStore,
 			Mapper:        fakeMapper,
 			PolicyFilter:  fakePolicyFilter,
 			PolicyGuard:   fakePolicyGuard,
@@ -197,68 +192,6 @@ var _ = Describe("Policies index handler", func() {
 		Expect(fakePolicyFilter.FilterPoliciesCallCount()).To(Equal(1))
 		Expect(resp.Code).To(Equal(http.StatusOK))
 		Expect(resp.Body.Bytes()).To(Equal(expectedResponseBody))
-	})
-
-	Context("when there are egress policies", func() {
-		Context("when the user is a network admin", func() {
-			BeforeEach(func() {
-				token = uaa_client.CheckTokenResponse{
-					Scope:    []string{"some-scope", "network.admin"},
-					UserID:   "some-user-id",
-					UserName: "some-user",
-				}
-			})
-
-			It("returns all egress policies", func() {
-				MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
-
-				Expect(fakePolicyGuard.IsNetworkAdminCallCount()).To(Equal(1))
-				passedToken := fakePolicyGuard.IsNetworkAdminArgsForCall(0)
-				Expect(passedToken).To(Equal(token))
-
-				Expect(fakeEgressPolicyStore.AllCallCount()).To(Equal(1))
-				_, egressPolicies := fakeMapper.AsBytesArgsForCall(0)
-				Expect(egressPolicies).To(Equal(allEgressPolicies))
-				Expect(resp.Code).To(Equal(http.StatusOK))
-				Expect(resp.Body.Bytes()).To(Equal(expectedResponseBody))
-			})
-
-			Context("when egressPolicyStore.All returns an error", func() {
-				BeforeEach(func() {
-					fakeEgressPolicyStore.AllReturns([]store.EgressPolicy{}, errors.New("I am an error from All"))
-				})
-
-				It("returns a nice error", func() {
-					MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
-
-					Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
-
-					l, w, err, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
-					Expect(l).To(Equal(expectedLogger))
-					Expect(w).To(Equal(resp))
-					Expect(err).To(MatchError("I am an error from All"))
-					Expect(description).To(Equal("getting egress policies failed"))
-				})
-			})
-		})
-
-		Context("when the user is not a network admin", func() {
-			BeforeEach(func() {
-				fakePolicyGuard.IsNetworkAdminReturns(false)
-			})
-
-			It("does not return any egress policies", func() {
-				MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
-
-				var emptyEgressPolicies []store.EgressPolicy
-
-				Expect(fakeEgressPolicyStore.AllCallCount()).To(Equal(0))
-				_, egressPolicies := fakeMapper.AsBytesArgsForCall(0)
-				Expect(egressPolicies).To(Equal(emptyEgressPolicies))
-				Expect(resp.Code).To(Equal(http.StatusOK))
-				Expect(resp.Body.Bytes()).To(Equal(expectedResponseBody))
-			})
-		})
 	})
 
 	Context("when the logger isn't on the request context", func() {

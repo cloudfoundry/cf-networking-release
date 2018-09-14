@@ -8,24 +8,23 @@ import (
 )
 
 type PolicyMapper struct {
-	AsStorePolicyStub        func([]byte) (store.PolicyCollection, error)
+	AsStorePolicyStub        func([]byte) ([]store.Policy, error)
 	asStorePolicyMutex       sync.RWMutex
 	asStorePolicyArgsForCall []struct {
 		arg1 []byte
 	}
 	asStorePolicyReturns struct {
-		result1 store.PolicyCollection
+		result1 []store.Policy
 		result2 error
 	}
 	asStorePolicyReturnsOnCall map[int]struct {
-		result1 store.PolicyCollection
+		result1 []store.Policy
 		result2 error
 	}
-	AsBytesStub        func([]store.Policy, []store.EgressPolicy) ([]byte, error)
+	AsBytesStub        func([]store.Policy) ([]byte, error)
 	asBytesMutex       sync.RWMutex
 	asBytesArgsForCall []struct {
 		arg1 []store.Policy
-		arg2 []store.EgressPolicy
 	}
 	asBytesReturns struct {
 		result1 []byte
@@ -39,7 +38,7 @@ type PolicyMapper struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *PolicyMapper) AsStorePolicy(arg1 []byte) (store.PolicyCollection, error) {
+func (fake *PolicyMapper) AsStorePolicy(arg1 []byte) ([]store.Policy, error) {
 	var arg1Copy []byte
 	if arg1 != nil {
 		arg1Copy = make([]byte, len(arg1))
@@ -73,49 +72,43 @@ func (fake *PolicyMapper) AsStorePolicyArgsForCall(i int) []byte {
 	return fake.asStorePolicyArgsForCall[i].arg1
 }
 
-func (fake *PolicyMapper) AsStorePolicyReturns(result1 store.PolicyCollection, result2 error) {
+func (fake *PolicyMapper) AsStorePolicyReturns(result1 []store.Policy, result2 error) {
 	fake.AsStorePolicyStub = nil
 	fake.asStorePolicyReturns = struct {
-		result1 store.PolicyCollection
+		result1 []store.Policy
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *PolicyMapper) AsStorePolicyReturnsOnCall(i int, result1 store.PolicyCollection, result2 error) {
+func (fake *PolicyMapper) AsStorePolicyReturnsOnCall(i int, result1 []store.Policy, result2 error) {
 	fake.AsStorePolicyStub = nil
 	if fake.asStorePolicyReturnsOnCall == nil {
 		fake.asStorePolicyReturnsOnCall = make(map[int]struct {
-			result1 store.PolicyCollection
+			result1 []store.Policy
 			result2 error
 		})
 	}
 	fake.asStorePolicyReturnsOnCall[i] = struct {
-		result1 store.PolicyCollection
+		result1 []store.Policy
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *PolicyMapper) AsBytes(arg1 []store.Policy, arg2 []store.EgressPolicy) ([]byte, error) {
+func (fake *PolicyMapper) AsBytes(arg1 []store.Policy) ([]byte, error) {
 	var arg1Copy []store.Policy
 	if arg1 != nil {
 		arg1Copy = make([]store.Policy, len(arg1))
 		copy(arg1Copy, arg1)
 	}
-	var arg2Copy []store.EgressPolicy
-	if arg2 != nil {
-		arg2Copy = make([]store.EgressPolicy, len(arg2))
-		copy(arg2Copy, arg2)
-	}
 	fake.asBytesMutex.Lock()
 	ret, specificReturn := fake.asBytesReturnsOnCall[len(fake.asBytesArgsForCall)]
 	fake.asBytesArgsForCall = append(fake.asBytesArgsForCall, struct {
 		arg1 []store.Policy
-		arg2 []store.EgressPolicy
-	}{arg1Copy, arg2Copy})
-	fake.recordInvocation("AsBytes", []interface{}{arg1Copy, arg2Copy})
+	}{arg1Copy})
+	fake.recordInvocation("AsBytes", []interface{}{arg1Copy})
 	fake.asBytesMutex.Unlock()
 	if fake.AsBytesStub != nil {
-		return fake.AsBytesStub(arg1, arg2)
+		return fake.AsBytesStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -129,10 +122,10 @@ func (fake *PolicyMapper) AsBytesCallCount() int {
 	return len(fake.asBytesArgsForCall)
 }
 
-func (fake *PolicyMapper) AsBytesArgsForCall(i int) ([]store.Policy, []store.EgressPolicy) {
+func (fake *PolicyMapper) AsBytesArgsForCall(i int) []store.Policy {
 	fake.asBytesMutex.RLock()
 	defer fake.asBytesMutex.RUnlock()
-	return fake.asBytesArgsForCall[i].arg1, fake.asBytesArgsForCall[i].arg2
+	return fake.asBytesArgsForCall[i].arg1
 }
 
 func (fake *PolicyMapper) AsBytesReturns(result1 []byte, result2 error) {

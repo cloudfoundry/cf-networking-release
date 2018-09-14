@@ -34,7 +34,7 @@ var _ = Describe("ApiPolicyMapper", func() {
 	})
 	Describe("AsStorePolicy", func() {
 		It("maps a payload with api.Policy to a slice of store.Policy", func() {
-			policyCollection, err := mapper.AsStorePolicy(
+			policies, err := mapper.AsStorePolicy(
 				[]byte(`{
 					"policies": [{
 						"source": { "id": "some-src-id" },
@@ -87,8 +87,7 @@ var _ = Describe("ApiPolicyMapper", func() {
 					},
 				},
 			))
-			storePolicies := policyCollection.Policies
-			Expect(storePolicies).To(Equal([]store.Policy{
+			Expect(policies).To(Equal([]store.Policy{
 				{
 					Source: store.Source{ID: "some-src-id"},
 					Destination: store.Destination{
@@ -117,182 +116,7 @@ var _ = Describe("ApiPolicyMapper", func() {
 			}))
 		})
 
-		Context("when mapping an egress policy", func() {
-			It("maps a payload with api.Policy to a slice of store.Policy", func() {
-				policyCollection, err := mapper.AsStorePolicy(
-					[]byte(`{
-					"egress_policies": [{
-						"source": { "id": "some-src-id" },
-						"destination": {
-							"protocol": "some-protocol",
-							"ports": [{
-								"start": 8080,
-								"end": 8081
-							}],
-							"ips": [{
-								"start": "1.2.3.4",
-								"end": "1.2.3.5"
-							}]
-						}
-					},{
-						"source": { "id": "some-src-id-2" },
-						"destination": {
-							"protocol": "some-protocol",
-							"ips": [{
-								"start": "2.2.3.4",
-								"end": "2.2.3.5"
-							}]
-						}
-					},{
-						"source": { "id": "some-src-id-2" },
-						"destination": {
-							"protocol": "icmp",
-							"ips": [{
-								"start": "2.2.3.4",
-								"end": "2.2.3.5"
-							}],
-							"icmp_type": 1,
-							"icmp_code": 2
-						}
-					},{
-						"source": {
-							"type": "space",
-							"id": "some-space"
-						},
-						"destination": {
-							"protocol": "udp",
-							"ips": [{
-								"start": "3.3.3.3",
-								"end": "4.4.4.4"
-							}]
-						}
-					}]
-				}`),
-				)
-				storePolicies := policyCollection.Policies
-				icmpType := 1
-				icmpCode := 2
-				Expect(err).NotTo(HaveOccurred())
-				Expect(fakeValidator.ValidatePayloadCallCount()).To(Equal(1))
-				Expect(fakeValidator.ValidatePayloadArgsForCall(0)).To(Equal(
-					&api.PoliciesPayload{
-						EgressPolicies: []api.EgressPolicy{
-							{
-								Source: &api.EgressSource{
-									ID: "some-src-id",
-								},
-								Destination: &api.EgressDestination{
-									Protocol: "some-protocol",
-									Ports: []api.Ports{
-										{Start: 8080, End: 8081},
-									},
-									IPRanges: []api.IPRange{
-										{Start: "1.2.3.4", End: "1.2.3.5"},
-									},
-								},
-							},
-							{
-								Source: &api.EgressSource{
-									ID: "some-src-id-2",
-								},
-								Destination: &api.EgressDestination{
-									Protocol: "some-protocol",
-									IPRanges: []api.IPRange{
-										{Start: "2.2.3.4", End: "2.2.3.5"},
-									},
-								},
-							},
-							{
-								Source: &api.EgressSource{
-									ID: "some-src-id-2",
-								},
-								Destination: &api.EgressDestination{
-									Protocol: "icmp",
-									IPRanges: []api.IPRange{
-										{Start: "2.2.3.4", End: "2.2.3.5"},
-									},
-									ICMPType: &icmpType,
-									ICMPCode: &icmpCode,
-								},
-							},
-							{
-								Source: &api.EgressSource{
-									ID:   "some-space",
-									Type: "space",
-								},
-								Destination: &api.EgressDestination{
-									Protocol: "udp",
-									IPRanges: []api.IPRange{
-										{Start: "3.3.3.3", End: "4.4.4.4"},
-									},
-								},
-							},
-						},
-					},
-				))
 
-				Expect(storePolicies).To(BeEmpty())
-				storeEgressPolicies := policyCollection.EgressPolicies
-				Expect(storeEgressPolicies).To(Equal([]store.EgressPolicy{
-					{
-						Source: store.EgressSource{ID: "some-src-id"},
-						Destination: store.EgressDestination{
-							Protocol: "some-protocol",
-							Ports: []store.Ports{
-								{Start: 8080, End: 8081},
-							},
-							IPRanges: []store.IPRange{
-								{
-									Start: "1.2.3.4",
-									End:   "1.2.3.5",
-								},
-							},
-						},
-					},
-					{
-						Source: store.EgressSource{ID: "some-src-id-2"},
-						Destination: store.EgressDestination{
-							Protocol: "some-protocol",
-							Ports:    []store.Ports{},
-							IPRanges: []store.IPRange{
-								{
-									Start: "2.2.3.4",
-									End:   "2.2.3.5",
-								},
-							},
-						},
-					},
-					{
-						Source: store.EgressSource{ID: "some-src-id-2"},
-						Destination: store.EgressDestination{
-							Protocol: "icmp",
-							Ports:    []store.Ports{},
-							IPRanges: []store.IPRange{
-								{
-									Start: "2.2.3.4",
-									End:   "2.2.3.5",
-								},
-							},
-							ICMPType: 1,
-							ICMPCode: 2,
-						},
-					},
-					{
-						Source: store.EgressSource{
-							ID:   "some-space",
-							Type: "space",
-						},
-						Destination: store.EgressDestination{
-							Protocol: "udp",
-							Ports:    []store.Ports{},
-							IPRanges: []store.IPRange{
-								{Start: "3.3.3.3", End: "4.4.4.4"},
-							},
-						},
-					},
-				}))
-			})
-		})
 
 		Context("when unmarshalling fails", func() {
 			BeforeEach(func() {
@@ -349,65 +173,8 @@ var _ = Describe("ApiPolicyMapper", func() {
 				},
 			}
 
-			egressPolicies := []store.EgressPolicy{
-				{
-					Source: store.EgressSource{ID: "egress-source-id"},
-					Destination: store.EgressDestination{
-						Protocol: "tcp",
-						Ports: []store.Ports{{
-							Start: 8080,
-							End:   8081,
-						}},
-						IPRanges: []store.IPRange{{
-							Start: "1.2.3.4",
-							End:   "1.2.3.5",
-						}},
-					},
-				},
-				{
-					Source: store.EgressSource{ID: "egress-source-id-2"},
-					Destination: store.EgressDestination{
-						Protocol: "udp",
-						IPRanges: []store.IPRange{{
-							Start: "1.2.3.7",
-							End:   "1.2.3.8",
-						}},
-					},
-				},
-				{
-					Source: store.EgressSource{ID: "egress-source-id-2"},
-					Destination: store.EgressDestination{
-						Protocol: "icmp",
-						IPRanges: []store.IPRange{{
-							Start: "1.2.3.7",
-							End:   "1.2.3.8",
-						}},
-						ICMPType: 1,
-						ICMPCode: 6,
-					},
-				},
-				{
-					Source: store.EgressSource{
-						ID:   "space-source-id-1",
-						Type: "space",
-					},
-					Destination: store.EgressDestination{
-						Protocol: "udp",
-						Ports: []store.Ports{
-							{
-								Start: 8080,
-								End:   8081,
-							},
-						},
-						IPRanges: []store.IPRange{{
-							Start: "2.2.3.7",
-							End:   "2.2.3.8",
-						}},
-					},
-				},
-			}
 
-			payload, err := mapper.AsBytes(policies, egressPolicies)
+			payload, err := mapper.AsBytes(policies)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(payload).To(MatchJSON(
 				[]byte(`{
@@ -434,62 +201,11 @@ var _ = Describe("ApiPolicyMapper", func() {
 								"end": 8081
 							}
 						}
-					}],
-
-					"total_egress_policies": 4,
-					"egress_policies": [{
-						"source": { "id": "egress-source-id" },
-						"destination": {
-							"protocol": "tcp",
-							"ports": [{
-								"start": 8080,
-								"end": 8081
-							}],
-							"ips": [{
-								"start": "1.2.3.4",
-								"end": "1.2.3.5"
-							}]
-						}
-					}, {
-						"source": { "id": "egress-source-id-2" },
-						"destination": {
-							"protocol": "udp",
-							"ips": [{
-								"start": "1.2.3.7",
-								"end": "1.2.3.8"
-							}]
-						}
-					}, {
-						"source": { "id": "egress-source-id-2" },
-						"destination": {
-							"protocol": "icmp",
-							"ips": [{
-								"start": "1.2.3.7",
-								"end": "1.2.3.8"
-							}],
-							"icmp_type": 1,
-							"icmp_code": 6
-						}
-					}, {
-						"source": {
-							"id": "space-source-id-1",
-							"type": "space"
-						},
-						"destination": {
-							"protocol": "udp",
-							"ports": [{
-								"start": 8080,
-								"end": 8081
-							}],
-							"ips": [{
-								"start": "2.2.3.7",
-								"end": "2.2.3.8"
-							}]
-						}
 					}]
 				}`),
 			))
 		})
+
 		Context("when the policy has an empty tag", func() {
 			It("omits the tag field", func() {
 				payload, err := mapper.AsBytes([]store.Policy{
@@ -504,7 +220,7 @@ var _ = Describe("ApiPolicyMapper", func() {
 							},
 						},
 					},
-				}, []store.EgressPolicy{})
+				})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(payload).To(MatchJSON([]byte(`{
 					"total_policies": 1,
@@ -534,7 +250,7 @@ var _ = Describe("ApiPolicyMapper", func() {
 				)
 			})
 			It("wraps and returns an error", func() {
-				_, err := mapper.AsBytes([]store.Policy{}, []store.EgressPolicy{})
+				_, err := mapper.AsBytes([]store.Policy{})
 				Expect(err).To(MatchError(errors.New("marshal json: banana")))
 			})
 		})

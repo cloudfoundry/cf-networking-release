@@ -4,13 +4,34 @@ import "policy-server/store"
 
 //go:generate counterfeiter -o fakes/policy_mapper.go --fake-name PolicyMapper . PolicyMapper
 type PolicyMapper interface {
-	AsStorePolicy([]byte) (store.PolicyCollection, error)         // marshal
+	AsStorePolicy([]byte) ([]store.Policy, error) // marshal
+	AsBytes([]store.Policy) ([]byte, error)       // unmarshal
+}
+
+//go:generate counterfeiter -o fakes/egress_policy_mapper.go --fake-name EgressPolicyMapper . EgressPolicyMapper
+type EgressPolicyMapper interface {
+	AsStoreEgressPolicy([]byte) ([]store.EgressPolicy, error) // marshal
+	AsBytes([]store.EgressPolicy) ([]byte, error)             // unmarshal
+}
+
+//go:generate counterfeiter -o fakes/policy_collection_writer.go --fake-name PolicyCollectionWriter . PolicyCollectionWriter
+type PolicyCollectionWriter interface {
 	AsBytes([]store.Policy, []store.EgressPolicy) ([]byte, error) // unmarshal
 }
 
-type PoliciesPayload struct {
+type PolicyCollectionPayload struct {
 	TotalPolicies       int            `json:"total_policies"`
 	Policies            []Policy       `json:"policies"`
+	TotalEgressPolicies int            `json:"total_egress_policies,omitempty"`
+	EgressPolicies      []EgressPolicy `json:"egress_policies,omitempty"`
+}
+
+type PoliciesPayload struct {
+	TotalPolicies int      `json:"total_policies"`
+	Policies      []Policy `json:"policies"`
+}
+
+type EgressPoliciesPayload struct {
 	TotalEgressPolicies int            `json:"total_egress_policies,omitempty"`
 	EgressPolicies      []EgressPolicy `json:"egress_policies,omitempty"`
 }

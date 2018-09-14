@@ -6,22 +6,22 @@ import (
 	"sync"
 )
 
-type ListDeleteStore struct {
-	AllStub        func() (store.PolicyCollection, error)
+type EgressPolicyStore struct {
+	AllStub        func() ([]store.EgressPolicy, error)
 	allMutex       sync.RWMutex
 	allArgsForCall []struct{}
 	allReturns     struct {
-		result1 store.PolicyCollection
+		result1 []store.EgressPolicy
 		result2 error
 	}
 	allReturnsOnCall map[int]struct {
-		result1 store.PolicyCollection
+		result1 []store.EgressPolicy
 		result2 error
 	}
-	DeleteStub        func(store.PolicyCollection) error
+	DeleteStub        func([]store.EgressPolicy) error
 	deleteMutex       sync.RWMutex
 	deleteArgsForCall []struct {
-		arg1 store.PolicyCollection
+		arg1 []store.EgressPolicy
 	}
 	deleteReturns struct {
 		result1 error
@@ -33,7 +33,7 @@ type ListDeleteStore struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *ListDeleteStore) All() (store.PolicyCollection, error) {
+func (fake *EgressPolicyStore) All() ([]store.EgressPolicy, error) {
 	fake.allMutex.Lock()
 	ret, specificReturn := fake.allReturnsOnCall[len(fake.allArgsForCall)]
 	fake.allArgsForCall = append(fake.allArgsForCall, struct{}{})
@@ -48,41 +48,46 @@ func (fake *ListDeleteStore) All() (store.PolicyCollection, error) {
 	return fake.allReturns.result1, fake.allReturns.result2
 }
 
-func (fake *ListDeleteStore) AllCallCount() int {
+func (fake *EgressPolicyStore) AllCallCount() int {
 	fake.allMutex.RLock()
 	defer fake.allMutex.RUnlock()
 	return len(fake.allArgsForCall)
 }
 
-func (fake *ListDeleteStore) AllReturns(result1 store.PolicyCollection, result2 error) {
+func (fake *EgressPolicyStore) AllReturns(result1 []store.EgressPolicy, result2 error) {
 	fake.AllStub = nil
 	fake.allReturns = struct {
-		result1 store.PolicyCollection
+		result1 []store.EgressPolicy
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *ListDeleteStore) AllReturnsOnCall(i int, result1 store.PolicyCollection, result2 error) {
+func (fake *EgressPolicyStore) AllReturnsOnCall(i int, result1 []store.EgressPolicy, result2 error) {
 	fake.AllStub = nil
 	if fake.allReturnsOnCall == nil {
 		fake.allReturnsOnCall = make(map[int]struct {
-			result1 store.PolicyCollection
+			result1 []store.EgressPolicy
 			result2 error
 		})
 	}
 	fake.allReturnsOnCall[i] = struct {
-		result1 store.PolicyCollection
+		result1 []store.EgressPolicy
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *ListDeleteStore) Delete(arg1 store.PolicyCollection) error {
+func (fake *EgressPolicyStore) Delete(arg1 []store.EgressPolicy) error {
+	var arg1Copy []store.EgressPolicy
+	if arg1 != nil {
+		arg1Copy = make([]store.EgressPolicy, len(arg1))
+		copy(arg1Copy, arg1)
+	}
 	fake.deleteMutex.Lock()
 	ret, specificReturn := fake.deleteReturnsOnCall[len(fake.deleteArgsForCall)]
 	fake.deleteArgsForCall = append(fake.deleteArgsForCall, struct {
-		arg1 store.PolicyCollection
-	}{arg1})
-	fake.recordInvocation("Delete", []interface{}{arg1})
+		arg1 []store.EgressPolicy
+	}{arg1Copy})
+	fake.recordInvocation("Delete", []interface{}{arg1Copy})
 	fake.deleteMutex.Unlock()
 	if fake.DeleteStub != nil {
 		return fake.DeleteStub(arg1)
@@ -93,26 +98,26 @@ func (fake *ListDeleteStore) Delete(arg1 store.PolicyCollection) error {
 	return fake.deleteReturns.result1
 }
 
-func (fake *ListDeleteStore) DeleteCallCount() int {
+func (fake *EgressPolicyStore) DeleteCallCount() int {
 	fake.deleteMutex.RLock()
 	defer fake.deleteMutex.RUnlock()
 	return len(fake.deleteArgsForCall)
 }
 
-func (fake *ListDeleteStore) DeleteArgsForCall(i int) store.PolicyCollection {
+func (fake *EgressPolicyStore) DeleteArgsForCall(i int) []store.EgressPolicy {
 	fake.deleteMutex.RLock()
 	defer fake.deleteMutex.RUnlock()
 	return fake.deleteArgsForCall[i].arg1
 }
 
-func (fake *ListDeleteStore) DeleteReturns(result1 error) {
+func (fake *EgressPolicyStore) DeleteReturns(result1 error) {
 	fake.DeleteStub = nil
 	fake.deleteReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *ListDeleteStore) DeleteReturnsOnCall(i int, result1 error) {
+func (fake *EgressPolicyStore) DeleteReturnsOnCall(i int, result1 error) {
 	fake.DeleteStub = nil
 	if fake.deleteReturnsOnCall == nil {
 		fake.deleteReturnsOnCall = make(map[int]struct {
@@ -124,7 +129,7 @@ func (fake *ListDeleteStore) DeleteReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *ListDeleteStore) Invocations() map[string][][]interface{} {
+func (fake *EgressPolicyStore) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.allMutex.RLock()
@@ -138,7 +143,7 @@ func (fake *ListDeleteStore) Invocations() map[string][][]interface{} {
 	return copiedInvocations
 }
 
-func (fake *ListDeleteStore) recordInvocation(key string, args []interface{}) {
+func (fake *EgressPolicyStore) recordInvocation(key string, args []interface{}) {
 	fake.invocationsMutex.Lock()
 	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {

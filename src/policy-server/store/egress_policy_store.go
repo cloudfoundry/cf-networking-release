@@ -35,7 +35,21 @@ type EgressPolicyStore struct {
 	Conn             Database
 }
 
-func (e *EgressPolicyStore) CreateWithTx(tx db.Transaction, policies []EgressPolicy) error {
+func (e *EgressPolicyStore) Create(policies []EgressPolicy) error {
+	tx, err := e.Conn.Beginx()
+	if err != nil {
+		return fmt.Errorf("create transaction: %s", err)
+	}
+
+	err = e.createWithTx(tx, policies)
+	if err != nil {
+		return rollback(tx, err)
+	}
+
+	return commit(tx)
+}
+
+func (e *EgressPolicyStore) createWithTx(tx db.Transaction, policies []EgressPolicy) error {
 	for _, policy := range policies {
 
 		ids, err := e.EgressPolicyRepo.GetIDCollectionsByEgressPolicy(tx, policy)
@@ -120,7 +134,21 @@ func (e *EgressPolicyStore) CreateWithTx(tx db.Transaction, policies []EgressPol
 	return nil
 }
 
-func (e *EgressPolicyStore) DeleteWithTx(tx db.Transaction, egressPolicies []EgressPolicy) error {
+func (e *EgressPolicyStore) Delete(egressPolicies []EgressPolicy) error {
+	tx, err := e.Conn.Beginx()
+	if err != nil {
+		return fmt.Errorf("create transaction: %s", err)
+	}
+
+	err = e.deleteWithTx(tx, egressPolicies)
+	if err != nil {
+		return rollback(tx, err)
+	}
+
+	return commit(tx)
+}
+
+func (e *EgressPolicyStore) deleteWithTx(tx db.Transaction, egressPolicies []EgressPolicy) error {
 	for _, policy := range egressPolicies {
 		egressPolicyIDCollections, err := e.EgressPolicyRepo.GetIDCollectionsByEgressPolicy(tx, policy)
 		if err != nil {

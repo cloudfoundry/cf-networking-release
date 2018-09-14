@@ -19,9 +19,9 @@ type Migrator interface {
 
 //go:generate counterfeiter -o fakes/store.go --fake-name Store . Store
 type Store interface {
-	CreateWithTx(db.Transaction, []Policy) error
+	Create([]Policy) error
 	All() ([]Policy, error)
-	DeleteWithTx(db.Transaction, []Policy) error
+	Delete([]Policy) error
 	ByGuids([]string, []string, bool) ([]Policy, error)
 	CheckDatabase() error
 }
@@ -58,12 +58,40 @@ func New(dbConnectionPool Database, g GroupRepo, d DestinationRepo, p PolicyRepo
 	}
 }
 
+func (s *store) Create(policies []Policy) error {
+	tx, err := s.conn.Beginx()
+	if err != nil {
+		return fmt.Errorf("create transaction: %s", err)
+	}
+
+	err = s.createWithTx(tx, policies)
+	if err != nil {
+		return rollback(tx, err)
+	}
+
+	return commit(tx)
+}
+
+func (s *store) Delete(policies []Policy) error {
+	tx, err := s.conn.Beginx()
+	if err != nil {
+		return fmt.Errorf("create transaction: %s", err)
+	}
+
+	err = s.deleteWithTx(tx, policies)
+	if err != nil {
+		return rollback(tx, err)
+	}
+
+	return commit(tx)
+}
+
 func (s *store) CheckDatabase() error {
 	var result int
 	return s.conn.QueryRow("SELECT 1").Scan(&result)
 }
 
-func (s *store) CreateWithTx(tx db.Transaction, policies []Policy) error {
+func (s *store) createWithTx(tx db.Transaction, policies []Policy) error {
 	for _, policy := range policies {
 		sourceGroupId, err := s.group.Create(tx, policy.Source.ID, "app")
 		if err != nil {
@@ -95,7 +123,7 @@ func (s *store) CreateWithTx(tx db.Transaction, policies []Policy) error {
 	return nil
 }
 
-func (s *store) DeleteWithTx(tx db.Transaction, policies []Policy) error {
+func (s *store) deleteWithTx(tx db.Transaction, policies []Policy) error {
 	for _, p := range policies {
 		sourceGroupID, err := s.group.GetID(tx, p.Source.ID)
 		if err != nil {

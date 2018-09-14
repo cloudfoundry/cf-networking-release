@@ -20,6 +20,7 @@ type policyFilter interface {
 type egressPolicyStore interface {
 	All() ([]store.EgressPolicy, error)
 	ByGuids(ids []string) ([]store.EgressPolicy, error)
+	Create(egressPolicies []store.EgressPolicy) error
 }
 
 //go:generate counterfeiter -o fakes/database.go --fake-name Db . database
@@ -29,18 +30,16 @@ type database interface {
 
 type PoliciesIndex struct {
 	Store         store.Store
-	EgressStore   egressPolicyStore
 	Mapper        api.PolicyMapper
 	PolicyFilter  policyFilter
 	PolicyGuard   policyGuard
 	ErrorResponse errorResponse
 }
 
-func NewPoliciesIndex(store store.Store, egressStore egressPolicyStore,
+func NewPoliciesIndex(store store.Store,
 	mapper api.PolicyMapper, policyFilter policyFilter, policyGuard policyGuard, errorResponse errorResponse) *PoliciesIndex {
 	return &PoliciesIndex{
 		Store:         store,
-		EgressStore:   egressStore,
 		Mapper:        mapper,
 		PolicyFilter:  policyFilter,
 		PolicyGuard:   policyGuard,
@@ -87,17 +86,7 @@ func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		policies[i].Destination.Tag = ""
 	}
 
-	var egressPolicies []store.EgressPolicy
-
-	if policyGuard.IsNetworkAdmin(h.PolicyGuard, userToken) {
-		egressPolicies, err = h.EgressStore.All()
-		if err != nil {
-			h.ErrorResponse.InternalServerError(logger, w, err, "getting egress policies failed")
-			return
-		}
-	}
-
-	bytes, err := h.Mapper.AsBytes(policies, egressPolicies)
+	bytes, err := h.Mapper.AsBytes(policies)
 	if err != nil {
 		h.ErrorResponse.InternalServerError(logger, w, err, "map policy as bytes failed")
 		return

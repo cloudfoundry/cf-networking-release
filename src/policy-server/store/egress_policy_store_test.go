@@ -110,7 +110,7 @@ var _ = Describe("EgressPolicyStore", func() {
 		egressPolicyRepo.GetTerminalByAppGUIDReturns("", nil)
 	})
 
-	Describe("CreateWithTx", func() {
+	Describe("Create", func() {
 		BeforeEach(func() {
 			egressPolicyRepo.GetIDCollectionsByEgressPolicyReturns([]store.EgressPolicyIDCollection{}, nil)
 		})
@@ -127,21 +127,48 @@ var _ = Describe("EgressPolicyStore", func() {
 						SourceSpaceID:           -1,
 					},
 				}, nil)
-				err := egressPolicyStore.CreateWithTx(tx, egressPolicies)
+				err := egressPolicyStore.Create(egressPolicies)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(egressPolicyRepo.CreateEgressPolicyCallCount()).To(Equal(0))
 			})
 
 			It("returns the error on a valid problem", func() {
 				egressPolicyRepo.GetIDCollectionsByEgressPolicyReturns([]store.EgressPolicyIDCollection{}, errors.New("something went wrong"))
-				err := egressPolicyStore.CreateWithTx(tx, egressPolicies)
+				err := egressPolicyStore.Create(egressPolicies)
 				Expect(err).To(HaveOccurred())
 				Expect(egressPolicyRepo.CreateEgressPolicyCallCount()).To(Equal(0))
 			})
 		})
 
+		It("starts/commits transaction", func() {
+			err := egressPolicyStore.Create(egressPolicies)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(mockDb.BeginxCallCount()).To(Equal(1))
+			Expect(tx.CommitCallCount()).To(Equal(1))
+		})
+
+		It("returns an error when begin transaction fails", func() {
+			mockDb.BeginxReturns(nil, errors.New("failed to begin"))
+			err := egressPolicyStore.Create(egressPolicies)
+			Expect(err).To(MatchError("create transaction: failed to begin"))
+		})
+
+		It("returns an error when commit transaction fails", func() {
+			tx.CommitReturns(errors.New("failed to commit"))
+			err := egressPolicyStore.Create(egressPolicies)
+			Expect(err).To(MatchError("commit transaction: failed to commit"))
+		})
+
+		It("rollsback the tx when the createWithTx fails", func() {
+			egressPolicyRepo.CreateAppReturns(-1, errors.New("OMG WHY DID THIS FAIL"))
+
+			err := egressPolicyStore.Create(egressPolicies)
+			Expect(err).To(MatchError("failed to create source app: OMG WHY DID THIS FAIL"))
+			Expect(tx.RollbackCallCount()).To(Equal(1))
+		})
+
 		It("creates a source and destination terminal", func() {
-			err := egressPolicyStore.CreateWithTx(tx, egressPolicies)
+			err := egressPolicyStore.Create(egressPolicies)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(terminalsRepo.CreateCallCount()).To(Equal(6))
 			Expect(terminalsRepo.CreateArgsForCall(0)).To(Equal(tx))
@@ -153,7 +180,7 @@ var _ = Describe("EgressPolicyStore", func() {
 		It("returns an error when CreateTerminal fails", func() {
 			terminalsRepo.CreateReturns("", errors.New("OMG WHY DID THIS FAIL"))
 
-			err := egressPolicyStore.CreateWithTx(tx, egressPolicies)
+			err := egressPolicyStore.Create(egressPolicies)
 			Expect(err).To(MatchError("failed to create source terminal: OMG WHY DID THIS FAIL"))
 		})
 
@@ -161,7 +188,7 @@ var _ = Describe("EgressPolicyStore", func() {
 			terminalsRepo.CreateReturnsOnCall(0, "some-term-guid", nil)
 			terminalsRepo.CreateReturnsOnCall(2, "some-term-guid-2", nil)
 
-			err := egressPolicyStore.CreateWithTx(tx, egressPolicies)
+			err := egressPolicyStore.Create(egressPolicies)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(egressPolicyRepo.CreateAppCallCount()).To(Equal(3))
@@ -181,14 +208,14 @@ var _ = Describe("EgressPolicyStore", func() {
 		It("returns an error when the CreateApp fails", func() {
 			egressPolicyRepo.CreateAppReturns(-1, errors.New("OMG WHY DID THIS FAIL"))
 
-			err := egressPolicyStore.CreateWithTx(tx, egressPolicies)
+			err := egressPolicyStore.Create(egressPolicies)
 			Expect(err).To(MatchError("failed to create source app: OMG WHY DID THIS FAIL"))
 		})
 
 		It("creates a space with a sourceTerminalGUID", func() {
 			egressPolicyRepo.GetTerminalBySpaceGUIDReturns("", nil)
 			terminalsRepo.CreateReturns("some-term-guid", nil)
-			err := egressPolicyStore.CreateWithTx(tx, []store.EgressPolicy{spacePolicy})
+			err := egressPolicyStore.Create([]store.EgressPolicy{spacePolicy})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(egressPolicyRepo.CreateSpaceCallCount()).To(Equal(1))
 			Expect(egressPolicyRepo.CreateAppCallCount()).To(Equal(0))
@@ -203,7 +230,7 @@ var _ = Describe("EgressPolicyStore", func() {
 			terminalsRepo.CreateReturnsOnCall(3, "24", nil)
 			terminalsRepo.CreateReturnsOnCall(5, "44", nil)
 
-			err := egressPolicyStore.CreateWithTx(tx, egressPolicies)
+			err := egressPolicyStore.Create(egressPolicies)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(egressPolicyRepo.CreateIPRangeCallCount()).To(Equal(3))
 
@@ -244,7 +271,7 @@ var _ = Describe("EgressPolicyStore", func() {
 		It("returns an error when the CreateIPRange fails", func() {
 			egressPolicyRepo.CreateIPRangeReturns(-1, errors.New("OMG WHY DID THIS FAIL"))
 
-			err := egressPolicyStore.CreateWithTx(tx, egressPolicies)
+			err := egressPolicyStore.Create(egressPolicies)
 			Expect(err).To(MatchError("failed to create ip range: OMG WHY DID THIS FAIL"))
 		})
 
@@ -254,7 +281,7 @@ var _ = Describe("EgressPolicyStore", func() {
 			terminalsRepo.CreateReturnsOnCall(2, "33", nil)
 			terminalsRepo.CreateReturnsOnCall(3, "44", nil)
 
-			err := egressPolicyStore.CreateWithTx(tx, egressPolicies)
+			err := egressPolicyStore.Create(egressPolicies)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(egressPolicyRepo.CreateEgressPolicyCallCount()).To(Equal(3))
 
@@ -272,14 +299,14 @@ var _ = Describe("EgressPolicyStore", func() {
 		It("returns an error when the CreateEgressPolicy fails", func() {
 			egressPolicyRepo.CreateEgressPolicyReturns("", errors.New("OMG WHY DID THIS FAIL"))
 
-			err := egressPolicyStore.CreateWithTx(tx, egressPolicies)
+			err := egressPolicyStore.Create(egressPolicies)
 			Expect(err).To(MatchError("failed to create egress policy: OMG WHY DID THIS FAIL"))
 		})
 
 		It("uses the existing app terminal id when it exists", func() {
 			egressPolicyRepo.GetTerminalByAppGUIDReturns("66", nil)
 
-			err := egressPolicyStore.CreateWithTx(tx, egressPolicies)
+			err := egressPolicyStore.Create(egressPolicies)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(egressPolicyRepo.CreateAppCallCount()).To(Equal(0))
 			_, sourceID, _ := egressPolicyRepo.CreateEgressPolicyArgsForCall(0)
@@ -289,7 +316,7 @@ var _ = Describe("EgressPolicyStore", func() {
 		It("uses the existing space terminal id when it exists", func() {
 			egressPolicyRepo.GetTerminalBySpaceGUIDReturns("55", nil)
 
-			err := egressPolicyStore.CreateWithTx(tx, []store.EgressPolicy{spacePolicy})
+			err := egressPolicyStore.Create([]store.EgressPolicy{spacePolicy})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(egressPolicyRepo.CreateSpaceCallCount()).To(Equal(0))
 			_, sourceID, _ := egressPolicyRepo.CreateEgressPolicyArgsForCall(0)
@@ -300,7 +327,7 @@ var _ = Describe("EgressPolicyStore", func() {
 			egressPolicyRepo.GetTerminalBySpaceGUIDReturns("", nil)
 			terminalsRepo.CreateReturns("", errors.New("OMG WHY DID THIS FAIL"))
 
-			err := egressPolicyStore.CreateWithTx(tx, []store.EgressPolicy{spacePolicy})
+			err := egressPolicyStore.Create([]store.EgressPolicy{spacePolicy})
 			Expect(err).To(MatchError("failed to create source terminal: OMG WHY DID THIS FAIL"))
 		})
 
@@ -308,26 +335,26 @@ var _ = Describe("EgressPolicyStore", func() {
 			egressPolicyRepo.GetTerminalBySpaceGUIDReturns("", nil)
 			egressPolicyRepo.CreateSpaceReturns(-1, errors.New("OMG WHY DID THIS FAIL"))
 
-			err := egressPolicyStore.CreateWithTx(tx, []store.EgressPolicy{spacePolicy})
+			err := egressPolicyStore.Create([]store.EgressPolicy{spacePolicy})
 			Expect(err).To(MatchError("failed to create space: OMG WHY DID THIS FAIL"))
 		})
 
 		It("returns an error when the GetTerminalBySpaceGUID fails", func() {
 			egressPolicyRepo.GetTerminalBySpaceGUIDReturns("", errors.New("OMG WHY DID THIS FAIL"))
 
-			err := egressPolicyStore.CreateWithTx(tx, []store.EgressPolicy{spacePolicy})
+			err := egressPolicyStore.Create([]store.EgressPolicy{spacePolicy})
 			Expect(err).To(MatchError("failed to get terminal by space guid: OMG WHY DID THIS FAIL"))
 		})
 
 		It("returns an error when the GetTerminalByAppGUID fails", func() {
 			egressPolicyRepo.GetTerminalByAppGUIDReturns("", errors.New("OMG WHY DID THIS FAIL"))
 
-			err := egressPolicyStore.CreateWithTx(tx, egressPolicies)
+			err := egressPolicyStore.Create(egressPolicies)
 			Expect(err).To(MatchError("failed to get terminal by app guid: OMG WHY DID THIS FAIL"))
 		})
 	})
 
-	Describe("DeleteWithTx", func() {
+	Describe("Delete", func() {
 		var (
 			egressPoliciesToDelete    []store.EgressPolicy
 			egressPolicyIDCollection  store.EgressPolicyIDCollection
@@ -406,8 +433,15 @@ var _ = Describe("EgressPolicyStore", func() {
 			egressPolicyRepo.GetIDCollectionsByEgressPolicyReturns(egressPolicyIDCollections, nil)
 		})
 
+		It("returns an error when beginning a transaction fails", func() {
+			mockDb.BeginxReturns(nil, errors.New("failed to create tx"))
+			err := egressPolicyStore.Delete(egressPoliciesToDelete)
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError("create transaction: failed to create tx"))
+		})
+
 		It("deletes the egress policy", func() {
-			err := egressPolicyStore.DeleteWithTx(tx, egressPoliciesToDelete)
+			err := egressPolicyStore.Delete(egressPoliciesToDelete)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(egressPolicyRepo.GetIDCollectionsByEgressPolicyCallCount()).To(Equal(1))
@@ -474,7 +508,7 @@ var _ = Describe("EgressPolicyStore", func() {
 			})
 
 			It("deletes the space", func() {
-				err := egressPolicyStore.DeleteWithTx(tx, egressPoliciesToDelete)
+				err := egressPolicyStore.Delete(egressPoliciesToDelete)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(egressPolicyRepo.DeleteAppCallCount()).To(Equal(0))
@@ -490,7 +524,7 @@ var _ = Describe("EgressPolicyStore", func() {
 				})
 
 				It("returns an error", func() {
-					err := egressPolicyStore.DeleteWithTx(tx, egressPoliciesToDelete)
+					err := egressPolicyStore.Delete(egressPoliciesToDelete)
 					Expect(err).To(MatchError("failed to delete source space: ther's a bug"))
 				})
 			})
@@ -521,7 +555,7 @@ var _ = Describe("EgressPolicyStore", func() {
 			})
 
 			It("deletes all the egress policies", func() {
-				err := egressPolicyStore.DeleteWithTx(tx, egressPoliciesToDelete)
+				err := egressPolicyStore.Delete(egressPoliciesToDelete)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(egressPolicyRepo.GetIDCollectionsByEgressPolicyCallCount()).To(Equal(2))
@@ -546,10 +580,22 @@ var _ = Describe("EgressPolicyStore", func() {
 			})
 
 			It("doesn't delete the source terminal or source app", func() {
-				err := egressPolicyStore.DeleteWithTx(tx, egressPoliciesToDelete)
+				err := egressPolicyStore.Delete(egressPoliciesToDelete)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(egressPolicyRepo.DeleteAppCallCount()).To(Equal(0))
+			})
+		})
+
+		Context("when the deleteWithTx fails", func() {
+			BeforeEach(func() {
+				egressPolicyRepo.GetIDCollectionsByEgressPolicyReturns([]store.EgressPolicyIDCollection{}, errors.New("ther's a bug"))
+			})
+
+			It("rollsback the transaction", func() {
+				err := egressPolicyStore.Delete(egressPoliciesToDelete)
+				Expect(err).To(MatchError("failed to find egress policy: ther's a bug"))
+				Expect(tx.RollbackCallCount()).To(Equal(1))
 			})
 		})
 
@@ -559,7 +605,7 @@ var _ = Describe("EgressPolicyStore", func() {
 			})
 
 			It("returns an error", func() {
-				err := egressPolicyStore.DeleteWithTx(tx, egressPoliciesToDelete)
+				err := egressPolicyStore.Delete(egressPoliciesToDelete)
 				Expect(err).To(MatchError("failed to find egress policy: ther's a bug"))
 			})
 		})
@@ -570,7 +616,7 @@ var _ = Describe("EgressPolicyStore", func() {
 			})
 
 			It("returns an error", func() {
-				err := egressPolicyStore.DeleteWithTx(tx, egressPoliciesToDelete)
+				err := egressPolicyStore.Delete(egressPoliciesToDelete)
 				Expect(err).To(MatchError("failed to delete egress policy: ther's a bug"))
 			})
 		})
@@ -581,7 +627,7 @@ var _ = Describe("EgressPolicyStore", func() {
 			})
 
 			It("returns an error", func() {
-				err := egressPolicyStore.DeleteWithTx(tx, egressPoliciesToDelete)
+				err := egressPolicyStore.Delete(egressPoliciesToDelete)
 				Expect(err).To(MatchError("failed to delete destination ip range: ther's a bug"))
 			})
 		})
@@ -592,7 +638,7 @@ var _ = Describe("EgressPolicyStore", func() {
 			})
 
 			It("returns an error", func() {
-				err := egressPolicyStore.DeleteWithTx(tx, egressPoliciesToDelete)
+				err := egressPolicyStore.Delete(egressPoliciesToDelete)
 				Expect(err).To(MatchError("failed to delete destination terminal: ther's a bug"))
 			})
 		})
@@ -603,7 +649,7 @@ var _ = Describe("EgressPolicyStore", func() {
 			})
 
 			It("returns an error", func() {
-				err := egressPolicyStore.DeleteWithTx(tx, egressPoliciesToDelete)
+				err := egressPolicyStore.Delete(egressPoliciesToDelete)
 				Expect(err).To(MatchError("failed to check if source terminal is in use: ther's a bug"))
 			})
 		})
@@ -614,7 +660,7 @@ var _ = Describe("EgressPolicyStore", func() {
 			})
 
 			It("returns an error", func() {
-				err := egressPolicyStore.DeleteWithTx(tx, egressPoliciesToDelete)
+				err := egressPolicyStore.Delete(egressPoliciesToDelete)
 				Expect(err).To(MatchError("failed to delete source app: ther's a bug"))
 			})
 		})
@@ -625,9 +671,15 @@ var _ = Describe("EgressPolicyStore", func() {
 			})
 
 			It("returns an error", func() {
-				err := egressPolicyStore.DeleteWithTx(tx, egressPoliciesToDelete)
+				err := egressPolicyStore.Delete(egressPoliciesToDelete)
 				Expect(err).To(MatchError("failed to delete source terminal: ther's a bug"))
 			})
+		})
+
+		It("returns an error when commit transaction fails", func() {
+			tx.CommitReturns(errors.New("failed to commit"))
+			err := egressPolicyStore.Delete(egressPoliciesToDelete)
+			Expect(err).To(MatchError("commit transaction: failed to commit"))
 		})
 	})
 

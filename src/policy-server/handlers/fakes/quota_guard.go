@@ -8,11 +8,11 @@ import (
 )
 
 type QuotaGuard struct {
-	CheckAccessStub        func(policyCollection store.PolicyCollection, tokenData uaa_client.CheckTokenResponse) (bool, error)
+	CheckAccessStub        func(policies []store.Policy, tokenData uaa_client.CheckTokenResponse) (bool, error)
 	checkAccessMutex       sync.RWMutex
 	checkAccessArgsForCall []struct {
-		policyCollection store.PolicyCollection
-		tokenData        uaa_client.CheckTokenResponse
+		policies  []store.Policy
+		tokenData uaa_client.CheckTokenResponse
 	}
 	checkAccessReturns struct {
 		result1 bool
@@ -26,17 +26,22 @@ type QuotaGuard struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *QuotaGuard) CheckAccess(policyCollection store.PolicyCollection, tokenData uaa_client.CheckTokenResponse) (bool, error) {
+func (fake *QuotaGuard) CheckAccess(policies []store.Policy, tokenData uaa_client.CheckTokenResponse) (bool, error) {
+	var policiesCopy []store.Policy
+	if policies != nil {
+		policiesCopy = make([]store.Policy, len(policies))
+		copy(policiesCopy, policies)
+	}
 	fake.checkAccessMutex.Lock()
 	ret, specificReturn := fake.checkAccessReturnsOnCall[len(fake.checkAccessArgsForCall)]
 	fake.checkAccessArgsForCall = append(fake.checkAccessArgsForCall, struct {
-		policyCollection store.PolicyCollection
-		tokenData        uaa_client.CheckTokenResponse
-	}{policyCollection, tokenData})
-	fake.recordInvocation("CheckAccess", []interface{}{policyCollection, tokenData})
+		policies  []store.Policy
+		tokenData uaa_client.CheckTokenResponse
+	}{policiesCopy, tokenData})
+	fake.recordInvocation("CheckAccess", []interface{}{policiesCopy, tokenData})
 	fake.checkAccessMutex.Unlock()
 	if fake.CheckAccessStub != nil {
-		return fake.CheckAccessStub(policyCollection, tokenData)
+		return fake.CheckAccessStub(policies, tokenData)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -50,10 +55,10 @@ func (fake *QuotaGuard) CheckAccessCallCount() int {
 	return len(fake.checkAccessArgsForCall)
 }
 
-func (fake *QuotaGuard) CheckAccessArgsForCall(i int) (store.PolicyCollection, uaa_client.CheckTokenResponse) {
+func (fake *QuotaGuard) CheckAccessArgsForCall(i int) ([]store.Policy, uaa_client.CheckTokenResponse) {
 	fake.checkAccessMutex.RLock()
 	defer fake.checkAccessMutex.RUnlock()
-	return fake.checkAccessArgsForCall[i].policyCollection, fake.checkAccessArgsForCall[i].tokenData
+	return fake.checkAccessArgsForCall[i].policies, fake.checkAccessArgsForCall[i].tokenData
 }
 
 func (fake *QuotaGuard) CheckAccessReturns(result1 bool, result2 error) {

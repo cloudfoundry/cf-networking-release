@@ -2,6 +2,7 @@ package store
 
 import (
 	"fmt"
+	"policy-server/db"
 )
 
 //go:generate counterfeiter -o fakes/tag_store.go --fake-name TagStore . TagStore
@@ -86,4 +87,20 @@ func (s *tagStore) Tags() ([]Tag, error) {
 
 func (s *tagStore) tagIntToString(tag int) string {
 	return fmt.Sprintf("%"+fmt.Sprintf("0%d", s.tagLength*2)+"X", tag)
+}
+
+func commit(tx db.Transaction) error {
+	err := tx.Commit()
+	if err != nil {
+		return fmt.Errorf("commit transaction: %s", err)
+	}
+	return nil
+}
+
+func rollback(tx db.Transaction, err error) error {
+	txErr := tx.Rollback()
+	if txErr != nil {
+		return fmt.Errorf("database rollback: %s (sql error: %s)", txErr, err)
+	}
+	return err
 }

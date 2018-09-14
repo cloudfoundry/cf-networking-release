@@ -2,8 +2,6 @@ package store_test
 
 import (
 	"errors"
-	"policy-server/db"
-	dbfakes "policy-server/db/fakes"
 	"policy-server/store"
 	"policy-server/store/fakes"
 
@@ -18,11 +16,9 @@ var _ = Describe("EgressPolicyMetricsWrapper", func() {
 		srcGuids          []string
 		fakeMetricsSender *fakes.MetricsSender
 		fakeStore         *fakes.EgressPolicyStore
-		tx                db.Transaction
 	)
 
 	BeforeEach(func() {
-		tx = &dbfakes.Transaction{}
 		fakeStore = &fakes.EgressPolicyStore{}
 		fakeMetricsSender = &fakes.MetricsSender{}
 		metricsWrapper = &store.EgressPolicyMetricsWrapper{
@@ -39,40 +35,39 @@ var _ = Describe("EgressPolicyMetricsWrapper", func() {
 		srcGuids = []string{"some-app-guid"}
 	})
 
-	Describe("CreateWithTx", func() {
-		It("calls CreateWithTx on the Store", func() {
-			err := metricsWrapper.CreateWithTx(tx, policies)
+	Describe("Create", func() {
+		It("calls Create on the Store", func() {
+			err := metricsWrapper.Create(policies)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(fakeStore.CreateWithTxCallCount()).To(Equal(1))
-			passedTx, passedPolicies := fakeStore.CreateWithTxArgsForCall(0)
+			Expect(fakeStore.CreateCallCount()).To(Equal(1))
+			passedPolicies := fakeStore.CreateArgsForCall(0)
 			Expect(passedPolicies).To(Equal(policies))
-			Expect(passedTx).To(Equal(tx))
 		})
 
 		It("emits a metric", func() {
-			err := metricsWrapper.CreateWithTx(tx, policies)
+			err := metricsWrapper.Create(policies)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
 			name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
-			Expect(name).To(Equal("EgressPolicyStoreCreateWithTxSuccessTime"))
+			Expect(name).To(Equal("EgressPolicyStoreCreateSuccessTime"))
 		})
 
 		Context("when there is an error", func() {
 			BeforeEach(func() {
-				fakeStore.CreateWithTxReturns(errors.New("banana"))
+				fakeStore.CreateReturns(errors.New("banana"))
 			})
 			It("emits an error metric", func() {
-				err := metricsWrapper.CreateWithTx(tx, policies)
+				err := metricsWrapper.Create(policies)
 				Expect(err).To(MatchError("banana"))
 
 				Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
-				Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("EgressPolicyStoreCreateWithTxError"))
+				Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("EgressPolicyStoreCreateError"))
 
 				Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
 				name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
-				Expect(name).To(Equal("EgressPolicyStoreCreateWithTxErrorTime"))
+				Expect(name).To(Equal("EgressPolicyStoreCreateErrorTime"))
 			})
 		})
 	})
@@ -159,40 +154,39 @@ var _ = Describe("EgressPolicyMetricsWrapper", func() {
 		})
 	})
 
-	Describe("DeleteWithTx", func() {
-		It("calls DeleteWithTx on the Store", func() {
-			err := metricsWrapper.DeleteWithTx(tx, policies)
+	Describe("Delete", func() {
+		It("calls Delete on the Store", func() {
+			err := metricsWrapper.Delete(policies)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(fakeStore.DeleteWithTxCallCount()).To(Equal(1))
-			passedTx, passedPolicies := fakeStore.DeleteWithTxArgsForCall(0)
-			Expect(passedTx).To(Equal(tx))
+			Expect(fakeStore.DeleteCallCount()).To(Equal(1))
+			passedPolicies := fakeStore.DeleteArgsForCall(0)
 			Expect(passedPolicies).To(Equal(policies))
 		})
 
 		It("emits a metric", func() {
-			err := metricsWrapper.DeleteWithTx(tx, policies)
+			err := metricsWrapper.Delete(policies)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
 			name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
-			Expect(name).To(Equal("EgressPolicyStoreDeleteWithTxSuccessTime"))
+			Expect(name).To(Equal("EgressPolicyStoreDeleteSuccessTime"))
 		})
 
 		Context("when there is an error", func() {
 			BeforeEach(func() {
-				fakeStore.DeleteWithTxReturns(errors.New("banana"))
+				fakeStore.DeleteReturns(errors.New("banana"))
 			})
 			It("emits an error metric", func() {
-				err := metricsWrapper.DeleteWithTx(tx, policies)
+				err := metricsWrapper.Delete(policies)
 				Expect(err).To(MatchError("banana"))
 
 				Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
-				Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("EgressPolicyStoreDeleteWithTxError"))
+				Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("EgressPolicyStoreDeleteError"))
 
 				Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
 				name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
-				Expect(name).To(Equal("EgressPolicyStoreDeleteWithTxErrorTime"))
+				Expect(name).To(Equal("EgressPolicyStoreDeleteErrorTime"))
 			})
 		})
 	})

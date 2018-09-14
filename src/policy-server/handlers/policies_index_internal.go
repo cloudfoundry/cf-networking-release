@@ -11,21 +11,21 @@ import (
 )
 
 type PoliciesIndexInternal struct {
-	Logger        lager.Logger
-	Store         store.Store
-	Mapper        api.PolicyMapper
-	ErrorResponse errorResponse
-	EgressStore   egressPolicyStore
+	Logger                 lager.Logger
+	Store                  store.Store
+	PolicyCollectionWriter api.PolicyCollectionWriter
+	ErrorResponse          errorResponse
+	EgressStore            egressPolicyStore
 }
 
 func NewPoliciesIndexInternal(logger lager.Logger, store store.Store, egressStore egressPolicyStore,
-	mapper api.PolicyMapper, errorResponse errorResponse) *PoliciesIndexInternal {
+	writer api.PolicyCollectionWriter, errorResponse errorResponse) *PoliciesIndexInternal {
 	return &PoliciesIndexInternal{
-		Logger:        logger,
-		Store:         store,
-		EgressStore:   egressStore,
-		Mapper:        mapper,
-		ErrorResponse: errorResponse,
+		Logger:                 logger,
+		Store:                  store,
+		EgressStore:            egressStore,
+		PolicyCollectionWriter: writer,
+		ErrorResponse:          errorResponse,
 	}
 }
 
@@ -61,9 +61,9 @@ func (h *PoliciesIndexInternal) ServeHTTP(w http.ResponseWriter, req *http.Reque
 		return
 	}
 
-	bytes, err := h.Mapper.AsBytes(policies, egressPolicies)
+	bytes, err := h.PolicyCollectionWriter.AsBytes(policies, egressPolicies)
 	if err != nil {
-		h.ErrorResponse.InternalServerError(logger, w, err, "map policy as bytes failed")
+		h.ErrorResponse.InternalServerError(logger, w, err, "map policies as bytes failed")
 		return
 	}
 

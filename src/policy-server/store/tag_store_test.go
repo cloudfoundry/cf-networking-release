@@ -12,10 +12,11 @@ import (
 	dbHelper "code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 
+	"policy-server/db"
+
 	"code.cloudfoundry.org/lager"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"policy-server/db"
 )
 
 var _ = Describe("TagStore", func() {
@@ -182,7 +183,7 @@ var _ = Describe("TagStore", func() {
 				},
 			}}
 
-			err := createPolicies(realDb, dataStore, policies)
+			err := dataStore.Create(policies)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
