@@ -91,7 +91,10 @@ properties:
 
   connections_max_lifetime_seconds:
     description: |
-      Sets the maximum amount of time a connection may be reused.
+      Sets the maximum amount of time a connection may be reused. Expired connections may be closed lazily before reuse.
+      If value <= 0, connections are reused forever
 
-      Expired connections may be closed lazily before reuse. If value <= 0, connections are reused forever
+      If there is a spike in connection usage, all of these connections have the potential to stick around with a high lifetime.
+      Lowering the lifetime will result in connections getting reaped sooner, but the policy server may have to renegotiate connections
+      more often, which could add some latency. We recommend using the default unless you have seen specific needs to change it.
     default: 3600
