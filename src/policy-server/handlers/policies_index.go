@@ -16,13 +16,6 @@ type policyFilter interface {
 	FilterPolicies(policies []store.Policy, userToken uaa_client.CheckTokenResponse) ([]store.Policy, error)
 }
 
-//go:generate counterfeiter -o fakes/egress_policy_store.go --fake-name EgressPolicyStore . egressPolicyStore
-type egressPolicyStore interface {
-	All() ([]store.EgressPolicy, error)
-	ByGuids(ids []string) ([]store.EgressPolicy, error)
-	Create(egressPolicies []store.EgressPolicy) error
-}
-
 //go:generate counterfeiter -o fakes/database.go --fake-name Db . database
 type database interface {
 	Beginx() (db.Transaction, error)

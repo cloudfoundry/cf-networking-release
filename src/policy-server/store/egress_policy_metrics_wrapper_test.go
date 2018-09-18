@@ -37,16 +37,19 @@ var _ = Describe("EgressPolicyMetricsWrapper", func() {
 
 	Describe("Create", func() {
 		It("calls Create on the Store", func() {
-			err := metricsWrapper.Create(policies)
+			createdPolicies := []store.EgressPolicy{{ID: "hi"}}
+			fakeStore.CreateReturns(createdPolicies, nil)
+			returnedPolicies, err := metricsWrapper.Create(policies)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeStore.CreateCallCount()).To(Equal(1))
 			passedPolicies := fakeStore.CreateArgsForCall(0)
 			Expect(passedPolicies).To(Equal(policies))
+			Expect(returnedPolicies).To(Equal(createdPolicies))
 		})
 
 		It("emits a metric", func() {
-			err := metricsWrapper.Create(policies)
+			_, err := metricsWrapper.Create(policies)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
@@ -56,10 +59,11 @@ var _ = Describe("EgressPolicyMetricsWrapper", func() {
 
 		Context("when there is an error", func() {
 			BeforeEach(func() {
-				fakeStore.CreateReturns(errors.New("banana"))
+				fakeStore.CreateReturns(nil, errors.New("banana"))
 			})
+
 			It("emits an error metric", func() {
-				err := metricsWrapper.Create(policies)
+				_, err := metricsWrapper.Create(policies)
 				Expect(err).To(MatchError("banana"))
 
 				Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
@@ -112,43 +116,43 @@ var _ = Describe("EgressPolicyMetricsWrapper", func() {
 		})
 	})
 
-	Describe("ByGuids", func() {
+	Describe("GetBySourceGuids", func() {
 		BeforeEach(func() {
-			fakeStore.ByGuidsReturns(policies, nil)
+			fakeStore.GetBySourceGuidsReturns(policies, nil)
 		})
-		It("returns the result of ByGuids on the Store", func() {
-			returnedPolicies, err := metricsWrapper.ByGuids(srcGuids)
+		It("returns the result of GetBySourceGuids on the Store", func() {
+			returnedPolicies, err := metricsWrapper.GetBySourceGuids(srcGuids)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(returnedPolicies).To(Equal(policies))
 
-			Expect(fakeStore.ByGuidsCallCount()).To(Equal(1))
-			returnedSrcGuids := fakeStore.ByGuidsArgsForCall(0)
+			Expect(fakeStore.GetBySourceGuidsCallCount()).To(Equal(1))
+			returnedSrcGuids := fakeStore.GetBySourceGuidsArgsForCall(0)
 			Expect(returnedSrcGuids).To(Equal(srcGuids))
 		})
 
 		It("emits a metric", func() {
-			_, err := metricsWrapper.ByGuids(srcGuids)
+			_, err := metricsWrapper.GetBySourceGuids(srcGuids)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
 			name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
-			Expect(name).To(Equal("EgressPolicyStoreByGuidsSuccessTime"))
+			Expect(name).To(Equal("EgressPolicyStoreGetBySourceGuidsSuccessTime"))
 		})
 
 		Context("when there is an error", func() {
 			BeforeEach(func() {
-				fakeStore.ByGuidsReturns(nil, errors.New("banana"))
+				fakeStore.GetBySourceGuidsReturns(nil, errors.New("banana"))
 			})
 			It("emits an error metric", func() {
-				_, err := metricsWrapper.ByGuids(srcGuids)
+				_, err := metricsWrapper.GetBySourceGuids(srcGuids)
 				Expect(err).To(MatchError("banana"))
 
 				Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
-				Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("EgressPolicyStoreByGuidsError"))
+				Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("EgressPolicyStoreGetBySourceGuidsError"))
 
 				Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
 				name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
-				Expect(name).To(Equal("EgressPolicyStoreByGuidsErrorTime"))
+				Expect(name).To(Equal("EgressPolicyStoreGetBySourceGuidsErrorTime"))
 
 			})
 		})

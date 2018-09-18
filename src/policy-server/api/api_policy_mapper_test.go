@@ -116,8 +116,6 @@ var _ = Describe("ApiPolicyMapper", func() {
 			}))
 		})
 
-
-
 		Context("when unmarshalling fails", func() {
 			BeforeEach(func() {
 				fakeUnmarshaler.UnmarshalReturns(errors.New("banana"))
@@ -172,7 +170,6 @@ var _ = Describe("ApiPolicyMapper", func() {
 					},
 				},
 			}
-
 
 			payload, err := mapper.AsBytes(policies)
 			Expect(err).NotTo(HaveOccurred())

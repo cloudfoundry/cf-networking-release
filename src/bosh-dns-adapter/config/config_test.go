@@ -57,8 +57,8 @@ var _ = Describe("Config", func() {
 	var requiredFields map[string]interface{}
 	BeforeEach(func() {
 		requiredFields = map[string]interface{}{
-			"address": "example.com",
-			"port":    "80053",
+			"address":                              "example.com",
+			"port":                                 "80053",
 			"service_discovery_controller_address": "example.com",
 			"service_discovery_controller_port":    "80053",
 			"client_cert":                          "path_to_cert",

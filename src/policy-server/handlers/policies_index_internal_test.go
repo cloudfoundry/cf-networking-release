@@ -82,7 +82,7 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		fakeStore = &storeFakes.Store{}
 		fakeStore.AllReturns(allPolicies, nil)
 		fakeEgressStore = &fakes.EgressPolicyStore{}
-		fakeEgressStore.ByGuidsReturns(allEgressPolicies, nil)
+		fakeEgressStore.GetBySourceGuidsReturns(allEgressPolicies, nil)
 		fakeStore.ByGuidsReturns(byGuidsPolicies, nil)
 		fakePolicyCollectionWriter.AsBytesReturns(expectedResponseBody, nil)
 		logger = lagertest.NewTestLogger("test")
@@ -108,12 +108,12 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
 
 		Expect(fakeStore.ByGuidsCallCount()).To(Equal(1))
-		Expect(fakeEgressStore.ByGuidsCallCount()).To(Equal(1))
+		Expect(fakeEgressStore.GetBySourceGuidsCallCount()).To(Equal(1))
 		srcGuids, dstGuids, inSourceAndDest := fakeStore.ByGuidsArgsForCall(0)
 		Expect(srcGuids).To(Equal([]string{"some-app-guid"}))
 		Expect(dstGuids).To(Equal([]string{"some-app-guid"}))
 		Expect(inSourceAndDest).To(BeFalse())
-		guids := fakeEgressStore.ByGuidsArgsForCall(0)
+		guids := fakeEgressStore.GetBySourceGuidsArgsForCall(0)
 		Expect(guids).To(Equal([]string{"some-app-guid"}))
 		Expect(resp.Code).To(Equal(http.StatusOK))
 		Expect(resp.Body.Bytes()).To(Equal(expectedResponseBody))
@@ -227,10 +227,10 @@ var _ = Describe("PoliciesIndexInternal", func() {
 
 	})
 
-	Context("when egressStore.ByGuids() throws an error", func() {
+	Context("when egressStore.GetBySourceGuidsReturns() throws an error", func() {
 
 		BeforeEach(func() {
-			fakeEgressStore.ByGuidsReturns(nil, errors.New("banana"))
+			fakeEgressStore.GetBySourceGuidsReturns(nil, errors.New("banana"))
 		})
 
 		It("calls the internal server error handler", func() {

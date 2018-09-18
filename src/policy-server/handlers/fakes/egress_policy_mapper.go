@@ -2,16 +2,15 @@
 package fakes
 
 import (
-	"policy-server/api"
 	"policy-server/store"
 	"sync"
 )
 
 type EgressPolicyMapper struct {
-	AsStoreEgressPolicyStub        func([]byte) ([]store.EgressPolicy, error)
+	AsStoreEgressPolicyStub        func(bytes []byte) ([]store.EgressPolicy, error)
 	asStoreEgressPolicyMutex       sync.RWMutex
 	asStoreEgressPolicyArgsForCall []struct {
-		arg1 []byte
+		bytes []byte
 	}
 	asStoreEgressPolicyReturns struct {
 		result1 []store.EgressPolicy
@@ -21,10 +20,10 @@ type EgressPolicyMapper struct {
 		result1 []store.EgressPolicy
 		result2 error
 	}
-	AsBytesStub        func([]store.EgressPolicy) ([]byte, error)
+	AsBytesStub        func(storeEgressPolicies []store.EgressPolicy) ([]byte, error)
 	asBytesMutex       sync.RWMutex
 	asBytesArgsForCall []struct {
-		arg1 []store.EgressPolicy
+		storeEgressPolicies []store.EgressPolicy
 	}
 	asBytesReturns struct {
 		result1 []byte
@@ -38,21 +37,21 @@ type EgressPolicyMapper struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *EgressPolicyMapper) AsStoreEgressPolicy(arg1 []byte) ([]store.EgressPolicy, error) {
-	var arg1Copy []byte
-	if arg1 != nil {
-		arg1Copy = make([]byte, len(arg1))
-		copy(arg1Copy, arg1)
+func (fake *EgressPolicyMapper) AsStoreEgressPolicy(bytes []byte) ([]store.EgressPolicy, error) {
+	var bytesCopy []byte
+	if bytes != nil {
+		bytesCopy = make([]byte, len(bytes))
+		copy(bytesCopy, bytes)
 	}
 	fake.asStoreEgressPolicyMutex.Lock()
 	ret, specificReturn := fake.asStoreEgressPolicyReturnsOnCall[len(fake.asStoreEgressPolicyArgsForCall)]
 	fake.asStoreEgressPolicyArgsForCall = append(fake.asStoreEgressPolicyArgsForCall, struct {
-		arg1 []byte
-	}{arg1Copy})
-	fake.recordInvocation("AsStoreEgressPolicy", []interface{}{arg1Copy})
+		bytes []byte
+	}{bytesCopy})
+	fake.recordInvocation("AsStoreEgressPolicy", []interface{}{bytesCopy})
 	fake.asStoreEgressPolicyMutex.Unlock()
 	if fake.AsStoreEgressPolicyStub != nil {
-		return fake.AsStoreEgressPolicyStub(arg1)
+		return fake.AsStoreEgressPolicyStub(bytes)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -69,7 +68,7 @@ func (fake *EgressPolicyMapper) AsStoreEgressPolicyCallCount() int {
 func (fake *EgressPolicyMapper) AsStoreEgressPolicyArgsForCall(i int) []byte {
 	fake.asStoreEgressPolicyMutex.RLock()
 	defer fake.asStoreEgressPolicyMutex.RUnlock()
-	return fake.asStoreEgressPolicyArgsForCall[i].arg1
+	return fake.asStoreEgressPolicyArgsForCall[i].bytes
 }
 
 func (fake *EgressPolicyMapper) AsStoreEgressPolicyReturns(result1 []store.EgressPolicy, result2 error) {
@@ -94,21 +93,21 @@ func (fake *EgressPolicyMapper) AsStoreEgressPolicyReturnsOnCall(i int, result1 
 	}{result1, result2}
 }
 
-func (fake *EgressPolicyMapper) AsBytes(arg1 []store.EgressPolicy) ([]byte, error) {
-	var arg1Copy []store.EgressPolicy
-	if arg1 != nil {
-		arg1Copy = make([]store.EgressPolicy, len(arg1))
-		copy(arg1Copy, arg1)
+func (fake *EgressPolicyMapper) AsBytes(storeEgressPolicies []store.EgressPolicy) ([]byte, error) {
+	var storeEgressPoliciesCopy []store.EgressPolicy
+	if storeEgressPolicies != nil {
+		storeEgressPoliciesCopy = make([]store.EgressPolicy, len(storeEgressPolicies))
+		copy(storeEgressPoliciesCopy, storeEgressPolicies)
 	}
 	fake.asBytesMutex.Lock()
 	ret, specificReturn := fake.asBytesReturnsOnCall[len(fake.asBytesArgsForCall)]
 	fake.asBytesArgsForCall = append(fake.asBytesArgsForCall, struct {
-		arg1 []store.EgressPolicy
-	}{arg1Copy})
-	fake.recordInvocation("AsBytes", []interface{}{arg1Copy})
+		storeEgressPolicies []store.EgressPolicy
+	}{storeEgressPoliciesCopy})
+	fake.recordInvocation("AsBytes", []interface{}{storeEgressPoliciesCopy})
 	fake.asBytesMutex.Unlock()
 	if fake.AsBytesStub != nil {
-		return fake.AsBytesStub(arg1)
+		return fake.AsBytesStub(storeEgressPolicies)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -125,7 +124,7 @@ func (fake *EgressPolicyMapper) AsBytesCallCount() int {
 func (fake *EgressPolicyMapper) AsBytesArgsForCall(i int) []store.EgressPolicy {
 	fake.asBytesMutex.RLock()
 	defer fake.asBytesMutex.RUnlock()
-	return fake.asBytesArgsForCall[i].arg1
+	return fake.asBytesArgsForCall[i].storeEgressPolicies
 }
 
 func (fake *EgressPolicyMapper) AsBytesReturns(result1 []byte, result2 error) {
@@ -175,5 +174,3 @@ func (fake *EgressPolicyMapper) recordInvocation(key string, args []interface{})
 	}
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
-
-var _ api.EgressPolicyMapper = new(EgressPolicyMapper)

@@ -54,8 +54,8 @@ func (p *policyMapper) AsBytes(storePolicies []store.Policy) ([]byte, error) {
 
 	// convert api.Policy payload to bytes
 	payload := &PoliciesPayload{
-		TotalPolicies:       len(apiPolicies),
-		Policies:            apiPolicies,
+		TotalPolicies: len(apiPolicies),
+		Policies:      apiPolicies,
 	}
 
 	bytes, err := p.Marshaler.Marshal(payload)

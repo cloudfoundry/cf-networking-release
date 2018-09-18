@@ -125,6 +125,7 @@ var _ = Describe("EgressDestinationStore", func() {
 				Expect(destinations[1].Description).To(Equal("desc-2"))
 				Expect(destinations[1].Protocol).To(Equal("icmp"))
 				Expect(destinations[1].IPRanges).To(Equal([]store.IPRange{{Start: "1.2.2.4", End: "1.2.2.5"}}))
+				Expect(destinations[1].Ports).To(HaveLen(0))
 				Expect(destinations[1].ICMPType).To(Equal(12))
 				Expect(destinations[1].ICMPCode).To(Equal(13))
 			})

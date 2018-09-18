@@ -6,10 +6,10 @@ import (
 
 //go:generate counterfeiter -o fakes/egress_policy_store.go --fake-name EgressPolicyStore . egressPolicyStore
 type egressPolicyStore interface {
-	Create([]EgressPolicy) error
+	Create([]EgressPolicy) ([]EgressPolicy, error)
 	Delete([]EgressPolicy) error
 	All() ([]EgressPolicy, error)
-	ByGuids(srcGuids []string) ([]EgressPolicy, error)
+	GetBySourceGuids(srcGuids []string) ([]EgressPolicy, error)
 }
 
 type EgressPolicyMetricsWrapper struct {
@@ -17,9 +17,9 @@ type EgressPolicyMetricsWrapper struct {
 	MetricsSender metricsSender
 }
 
-func (mw *EgressPolicyMetricsWrapper) Create(egressPolicies []EgressPolicy) error {
+func (mw *EgressPolicyMetricsWrapper) Create(egressPolicies []EgressPolicy) ([]EgressPolicy, error) {
 	startTime := time.Now()
-	err := mw.Store.Create(egressPolicies)
+	policies, err := mw.Store.Create(egressPolicies)
 	createTimeDuration := time.Now().Sub(startTime)
 	if err != nil {
 		mw.MetricsSender.IncrementCounter("EgressPolicyStoreCreateError")
@@ -27,7 +27,7 @@ func (mw *EgressPolicyMetricsWrapper) Create(egressPolicies []EgressPolicy) erro
 	} else {
 		mw.MetricsSender.SendDuration("EgressPolicyStoreCreateSuccessTime", createTimeDuration)
 	}
-	return err
+	return policies, err
 }
 
 func (mw *EgressPolicyMetricsWrapper) All() ([]EgressPolicy, error) {
@@ -56,15 +56,15 @@ func (mw *EgressPolicyMetricsWrapper) Delete(egressPolicies []EgressPolicy) erro
 	return err
 }
 
-func (mw *EgressPolicyMetricsWrapper) ByGuids(srcGuids []string) ([]EgressPolicy, error) {
+func (mw *EgressPolicyMetricsWrapper) GetBySourceGuids(srcGuids []string) ([]EgressPolicy, error) {
 	startTime := time.Now()
-	egressPolicies, err := mw.Store.ByGuids(srcGuids)
+	egressPolicies, err := mw.Store.GetBySourceGuids(srcGuids)
 	byGuidsTimeDuration := time.Now().Sub(startTime)
 	if err != nil {
-		mw.MetricsSender.IncrementCounter("EgressPolicyStoreByGuidsError")
-		mw.MetricsSender.SendDuration("EgressPolicyStoreByGuidsErrorTime", byGuidsTimeDuration)
+		mw.MetricsSender.IncrementCounter("EgressPolicyStoreGetBySourceGuidsError")
+		mw.MetricsSender.SendDuration("EgressPolicyStoreGetBySourceGuidsErrorTime", byGuidsTimeDuration)
 	} else {
-		mw.MetricsSender.SendDuration("EgressPolicyStoreByGuidsSuccessTime", byGuidsTimeDuration)
+		mw.MetricsSender.SendDuration("EgressPolicyStoreGetBySourceGuidsSuccessTime", byGuidsTimeDuration)
 	}
 	return egressPolicies, err
 }

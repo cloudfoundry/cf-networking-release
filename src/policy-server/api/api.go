@@ -8,12 +8,6 @@ type PolicyMapper interface {
 	AsBytes([]store.Policy) ([]byte, error)       // unmarshal
 }
 
-//go:generate counterfeiter -o fakes/egress_policy_mapper.go --fake-name EgressPolicyMapper . EgressPolicyMapper
-type EgressPolicyMapper interface {
-	AsStoreEgressPolicy([]byte) ([]store.EgressPolicy, error) // marshal
-	AsBytes([]store.EgressPolicy) ([]byte, error)             // unmarshal
-}
-
 //go:generate counterfeiter -o fakes/policy_collection_writer.go --fake-name PolicyCollectionWriter . PolicyCollectionWriter
 type PolicyCollectionWriter interface {
 	AsBytes([]store.Policy, []store.EgressPolicy) ([]byte, error) // unmarshal
@@ -52,7 +46,7 @@ type EgressSource struct {
 }
 
 type EgressDestination struct {
-	GUID        string    `json:"guid,omitempty"`
+	GUID        string    `json:"id,omitempty"`
 	Name        string    `json:"name,omitempty"`
 	Description string    `json:"description,omitempty"`
 	Protocol    string    `json:"protocol"`

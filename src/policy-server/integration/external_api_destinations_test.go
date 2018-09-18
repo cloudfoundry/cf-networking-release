@@ -20,12 +20,10 @@ import (
 	"github.com/onsi/gomega/gexec"
 )
 
-var replaceGUIDRegex = regexp.MustCompile(`"guid":"[^"]*"`)
-
 var _ = Describe("External Destination API", func() {
 	var (
 		sessions          []*gexec.Session
-		conf              config.Config
+		destinationsURL   string
 		policyServerConfs []config.Config
 		dbConf            db.Config
 
@@ -41,7 +39,9 @@ var _ = Describe("External Destination API", func() {
 		template, _ := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
 		policyServerConfs = configurePolicyServers(template, 2)
 		sessions = startPolicyServers(policyServerConfs)
-		conf = policyServerConfs[0]
+
+		conf := policyServerConfs[0]
+		destinationsURL = fmt.Sprintf("http://%s:%d/networking/v1/external/destinations", conf.ListenHost, conf.ListenPort)
 	})
 
 	AfterEach(func() {
@@ -51,94 +51,102 @@ var _ = Describe("External Destination API", func() {
 	})
 
 	Describe("create and listing all destinations", func() {
-		// addPolicy := func(body string) {
-		// 	resp := helpers.MakeAndDoRequest(
-		// 		"POST",
-		// 		fmt.Sprintf("http://%s:%d/networking/v1/external/policies", conf.ListenHost, conf.ListenPort),
-		// 		nil,
-		// 		strings.NewReader(body),
-		// 	)
-
-		// 	Expect(resp.StatusCode).To(Equal(http.StatusOK))
-		// 	responseString, err := ioutil.ReadAll(resp.Body)
-		// 	Expect(err).NotTo(HaveOccurred())
-		// 	Expect(responseString).To(MatchJSON("{}"))
-		// }
-		BeforeEach(func() {
-			// addPolicy(`{ "egress_policies": [ {"source": { "id": "live-app-1-guid" }, "destination": { "protocol": "tcp", "ips": [ {"start": "23.96.32.148", "end": "23.96.32.149" } ] } } ] }`)
-			// addPolicy(`{ "egress_policies": [ {"source": { "id": "live-app-1-guid" }, "destination": { "protocol": "tcp", "ports": [{"start": 8080, "end": 8081}], "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] } } ] }`)
-			// addPolicy(`{ "egress_policies": [ {"source": { "id": "live-app-1-guid" }, "destination": { "protocol": "icmp", "icmp_type": 1, "icmp_code": 2, "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] } } ] }`)
-		})
-		//TODO: add back coverage for different types of destinations, icmp, udp, w ports, wo ports etc.
 		It("returns all created destinations", func() {
-
 			createRequestBody := bytes.NewBufferString(`{
 				"destinations": [	
 					{
-						"name": "my service",
-						"description": "my service is a great service",	
-						"ips": [{"start": "7211.30.35.9", "end": "72.30.35.9"}],
-						"ports": [{"start": 8080, "end": 8080}],
-						"protocol":"tcp"
+						"name": "tcp ips only",
+						"description": "tcp ips only desc",
+						"ips": [{"start": "23.96.32.148", "end": "23.96.32.149" }],
+						"protocol": "tcp"
 					},
 					{
-						"name": "cloud infra",
-						"description": "this is where my apps go",
-						"ips": [{"start": "7211.30.35.9", "end": "72.30.35.9"}],
-						"ports": [{"start": 8080, "end": 8080}],
-						"protocol":"tcp"
+						"name": "udp ips and ports",
+						"description": "udp ips and ports desc",
+						"protocol": "udp",
+						"ports": [{"start": 8080, "end": 8081}],
+						"ips": [{"start": "23.96.32.150", "end": "23.96.32.151"}]
+					},
+					{
+						"name": "icmp with type code",
+						"description": "icmp with type code",
+						"icmp_type": 1,
+						"icmp_code": 2,
+						"ips": [{"start": "23.96.32.150", "end": "23.96.32.151"}],
+						"protocol": "icmp"
 					}
 				]
 			}`)
-			resp := helpers.MakeAndDoRequest(
-				"POST",
-				fmt.Sprintf("http://%s:%d/networking/v1/external/destinations", conf.ListenHost, conf.ListenPort),
-				nil,
-				createRequestBody,
-			)
+
+			resp := helpers.MakeAndDoRequest("POST", destinationsURL, nil, createRequestBody)
 
 			Expect(resp.StatusCode).To(Equal(http.StatusCreated))
 			responseBytes, err := ioutil.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(string(responseBytes)).To(WithTransform(replaceGUID, MatchJSON(`{
-				"total_destinations": 2,
+				"total_destinations": 3,
 				"destinations": [
 					{
-						"guid": "<replaced>",
-						"name": "my service",
-						"description": "my service is a great service",
-						"ips": [{"start": "7211.30.35.9", "end": "72.30.35.9"}],
-						"ports": [{"start": 8080, "end": 8080}],
-						"protocol":"tcp"
+						"id": "<replaced>",
+						"name": "tcp ips only",
+						"description": "tcp ips only desc",
+						"ips": [{"start": "23.96.32.148", "end": "23.96.32.149" }],
+						"protocol": "tcp"
 					},
 					{
-						"guid": "<replaced>",
-						"name": "cloud infra",
-						"description": "this is where my apps go",
-						"ips": [{"start": "7211.30.35.9", "end": "72.30.35.9"}],
-						"ports": [{"start": 8080, "end": 8080}],
-						"protocol":"tcp"
+						"id": "<replaced>",
+						"name": "udp ips and ports",
+						"description": "udp ips and ports desc",
+						"protocol": "udp",
+						"ports": [{"start": 8080, "end": 8081}],
+						"ips": [{"start": "23.96.32.150", "end": "23.96.32.151"}]
+					},
+					{
+						"id": "<replaced>",
+						"name": "icmp with type code",
+						"description": "icmp with type code",
+						"icmp_type": 1,
+						"icmp_code": 2,
+						"ips": [{"start": "23.96.32.150", "end": "23.96.32.151"}],
+						"protocol": "icmp"
 					}
 				]
 			}`)))
 
-			resp = helpers.MakeAndDoRequest(
-				"GET",
-				fmt.Sprintf("http://%s:%d/networking/v1/external/destinations", conf.ListenHost, conf.ListenPort),
-				nil,
-				nil,
-			)
+			resp = helpers.MakeAndDoRequest("GET", destinationsURL, nil, nil)
 
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
 			responseBytes, err = ioutil.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(string(responseBytes)).To(WithTransform(replaceGUID, MatchJSON(`{
-				"total_destinations": 2,
+				"total_destinations": 3,
 				"destinations": [
-					{ "guid": "<replaced>", "name": "my service", "description": "my service is a great service",	"ips": [{"start": "7211.30.35.9", "end": "72.30.35.9"}], "ports": [{"start": 8080, "end": 8080}], "protocol":"tcp" },
-					{ "guid": "<replaced>", "name": "cloud infra", "description": "this is where my apps go", "ips": [{"start": "7211.30.35.9", "end": "72.30.35.9"}], "ports": [{"start": 8080, "end": 8080}], "protocol":"tcp" }
+					{
+						"id": "<replaced>",
+						"name": "tcp ips only",
+						"description": "tcp ips only desc",
+						"ips": [{"start": "23.96.32.148", "end": "23.96.32.149" }],
+						"protocol": "tcp"
+					},
+					{
+						"id": "<replaced>",
+						"name": "udp ips and ports",
+						"description": "udp ips and ports desc",
+						"protocol": "udp",
+						"ports": [{"start": 8080, "end": 8081}],
+						"ips": [{"start": "23.96.32.150", "end": "23.96.32.151"}]
+					},
+					{
+						"id": "<replaced>",
+						"name": "icmp with type code",
+						"description": "icmp with type code",
+						"icmp_type": 1,
+						"icmp_code": 2,
+						"ips": [{"start": "23.96.32.150", "end": "23.96.32.151"}],
+						"protocol": "icmp"
+					}
 				]
 			}`)))
 
@@ -149,6 +157,8 @@ var _ = Describe("External Destination API", func() {
 	})
 })
 
+var replaceGUIDRegex = regexp.MustCompile(`"id":"[^"]*"`)
+
 func replaceGUID(value string) string {
-	return string(replaceGUIDRegex.ReplaceAll([]byte(value), []byte(`"guid":"<replaced>"`)))
+	return string(replaceGUIDRegex.ReplaceAll([]byte(value), []byte(`"id":"<replaced>"`)))
 }

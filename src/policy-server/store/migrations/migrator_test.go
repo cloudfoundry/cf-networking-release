@@ -1512,6 +1512,30 @@ var _ = Describe("migrations", func() {
 			})
 		})
 
+		Describe("V56 - Egress Policy uniqueness constraint", func() {
+			It("should migrate", func() {
+				By("performing migration")
+				migrateTo("56")
+
+				_, err := realDb.Exec("INSERT INTO terminals (guid) VALUES ('some-terminal-guid')")
+				Expect(err).NotTo(HaveOccurred())
+
+				By("validating that inserting the same policy twice fails")
+				_, err = realDb.Exec(realDb.RawConnection().Rebind(`
+					INSERT INTO egress_policies (guid, source_guid, destination_guid)
+					VALUES (?, ?, ?)`), "some-egress-guid-1", "some-terminal-guid", "some-terminal-guid")
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = realDb.Exec(realDb.RawConnection().Rebind(`
+					INSERT INTO egress_policies (guid, source_guid, destination_guid)
+					VALUES (?, ?, ?)`), "some-egress-guid-2", "some-terminal-guid", "some-terminal-guid")
+				Expect(err).To(MatchError(Or(
+					ContainSubstring("duplicate key value violates unique constraint"), // postgres error
+					ContainSubstring("Duplicate entry"),                                // mysql error
+				)))
+			})
+		})
+
 		Context("when migrating in parallel", func() {
 			Context("mysql", func() {
 				BeforeEach(func() {

@@ -301,8 +301,12 @@ func (e *EgressPolicyTable) GetTerminalBySpaceGUID(tx db.Transaction, spaceGUID 
 func (e *EgressPolicyTable) GetAllPolicies() ([]EgressPolicy, error) {
 	rows, err := e.Conn.Query(`
 	SELECT
+		egress_policies.guid,
+		destination_metadatas.name,
+		destination_metadatas.description,
 		apps.app_guid,
 		spaces.space_guid,
+		ip_ranges.terminal_guid,
 		ip_ranges.protocol,
 		ip_ranges.start_ip,
 		ip_ranges.end_ip,
@@ -311,9 +315,10 @@ func (e *EgressPolicyTable) GetAllPolicies() ([]EgressPolicy, error) {
 		ip_ranges.icmp_type,
 		ip_ranges.icmp_code
 	FROM egress_policies
-	LEFT OUTER JOIN apps on (egress_policies.source_guid = apps.terminal_guid)
-	LEFT OUTER JOIN spaces on (egress_policies.source_guid = spaces.terminal_guid)
-	LEFT OUTER JOIN ip_ranges on (egress_policies.destination_guid = ip_ranges.terminal_guid);`)
+	LEFT OUTER JOIN apps ON (egress_policies.source_guid = apps.terminal_guid)
+	LEFT OUTER JOIN spaces ON (egress_policies.source_guid = spaces.terminal_guid)
+	LEFT OUTER JOIN ip_ranges ON (egress_policies.destination_guid = ip_ranges.terminal_guid)
+	LEFT OUTER JOIN destination_metadatas ON (egress_policies.destination_guid = destination_metadatas.terminal_guid);`)
 
 	var foundPolicies []EgressPolicy
 	if err != nil {
@@ -323,10 +328,10 @@ func (e *EgressPolicyTable) GetAllPolicies() ([]EgressPolicy, error) {
 	defer rows.Close()
 	for rows.Next() {
 
-		var sourceAppGUID, sourceSpaceGUID, protocol, startIP, endIP *string
+		var egressPolicyGUID, name, description, destinationGUID, sourceAppGUID, sourceSpaceGUID, protocol, startIP, endIP *string
 		var startPort, endPort, icmpType, icmpCode int
 
-		err = rows.Scan(&sourceAppGUID, &sourceSpaceGUID, &protocol, &startIP, &endIP, &startPort, &endPort, &icmpType, &icmpCode)
+		err = rows.Scan(&egressPolicyGUID, &name, &description, &sourceAppGUID, &sourceSpaceGUID, &destinationGUID, &protocol, &startIP, &endIP, &startPort, &endPort, &icmpType, &icmpCode)
 		if err != nil {
 			return []EgressPolicy{}, err
 		}
@@ -357,10 +362,14 @@ func (e *EgressPolicyTable) GetAllPolicies() ([]EgressPolicy, error) {
 		}
 
 		foundPolicies = append(foundPolicies, EgressPolicy{
+			ID:     *egressPolicyGUID,
 			Source: source,
 			Destination: EgressDestination{
-				Protocol: *protocol,
-				Ports:    ports,
+				GUID:        *destinationGUID,
+				Name:        *name,
+				Description: *description,
+				Protocol:    *protocol,
+				Ports:       ports,
 				IPRanges: []IPRange{
 					{
 						Start: *startIP,
@@ -376,7 +385,7 @@ func (e *EgressPolicyTable) GetAllPolicies() ([]EgressPolicy, error) {
 	return foundPolicies, nil
 }
 
-func (e *EgressPolicyTable) GetByGuids(ids []string) ([]EgressPolicy, error) {
+func (e *EgressPolicyTable) GetBySourceGuids(ids []string) ([]EgressPolicy, error) {
 	foundPolicies := []EgressPolicy{}
 
 	for i, id := range ids {

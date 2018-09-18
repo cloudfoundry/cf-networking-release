@@ -11,15 +11,15 @@ import (
 var _ = Describe("PayloadValidator", func() {
 
 	var (
-		validator             *api.PayloadValidator
-		payload               *api.PoliciesPayload
-		policyValidator       *fakes.Validator
+		validator       *api.PayloadValidator
+		payload         *api.PoliciesPayload
+		policyValidator *fakes.Validator
 	)
 	BeforeEach(func() {
 		policyValidator = &fakes.Validator{}
 
 		validator = &api.PayloadValidator{
-			PolicyValidator:       policyValidator,
+			PolicyValidator: policyValidator,
 		}
 		payload = &api.PoliciesPayload{
 			Policies: []api.Policy{

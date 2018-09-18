@@ -10,7 +10,7 @@ type payloadValidator interface {
 }
 
 type PayloadValidator struct {
-	PolicyValidator       validator
+	PolicyValidator validator
 }
 
 func (p *PayloadValidator) ValidatePayload(payload *PoliciesPayload) error {

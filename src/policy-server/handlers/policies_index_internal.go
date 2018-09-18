@@ -10,6 +10,13 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
+//go:generate counterfeiter -o fakes/egress_policy_store.go --fake-name EgressPolicyStore . egressPolicyStore
+type egressPolicyStore interface {
+	All() ([]store.EgressPolicy, error)
+	GetBySourceGuids(ids []string) ([]store.EgressPolicy, error)
+	Create(egressPolicies []store.EgressPolicy) ([]store.EgressPolicy, error)
+}
+
 type PoliciesIndexInternal struct {
 	Logger                 lager.Logger
 	Store                  store.Store
@@ -53,7 +60,7 @@ func (h *PoliciesIndexInternal) ServeHTTP(w http.ResponseWriter, req *http.Reque
 	if len(ids) == 0 {
 		egressPolicies, err = h.EgressStore.All()
 	} else {
-		egressPolicies, err = h.EgressStore.ByGuids(ids)
+		egressPolicies, err = h.EgressStore.GetBySourceGuids(ids)
 	}
 
 	if err != nil {

@@ -187,7 +187,7 @@ func main() {
 	}
 
 	egressDestinationStore := &store.EgressDestinationStore{
-		Conn: connectionPool,
+		Conn:                    connectionPool,
 		EgressDestinationRepo:   &store.EgressDestinationTable{},
 		TerminalsRepo:           terminalsTable,
 		DestinationMetadataRepo: &store.DestinationMetadataTable{},
@@ -206,6 +206,18 @@ func main() {
 		EgressDestinationMapper: egressDestinationMapper,
 		PolicyGuard:             policyGuard,
 		Logger:                  logger,
+	}
+
+	egressPolicyMapper := &api.EgressPolicyMapper{
+		Unmarshaler: marshal.UnmarshalFunc(json.Unmarshal),
+		Marshaler: marshal.MarshalFunc(json.Marshal),
+	}
+
+	createEgressPolicyHandlerV1 := &handlers.EgressPolicyCreate{
+		Store:         egressPolicyStore,
+		Mapper:        egressPolicyMapper,
+		ErrorResponse: errorResponse,
+		Logger:        logger,
 	}
 
 	policyCleaner := cleaner.NewPolicyCleaner(logger.Session("policy-cleaner"), wrappedStore, egressPolicyStore, uaaClient,
@@ -276,6 +288,7 @@ func main() {
 		{Name: "policies_index", Method: "GET", Path: "/networking/:version/external/policies"},
 		{Name: "destinations_index", Method: "GET", Path: "/networking/:version/external/destinations"},
 		{Name: "destinations_create", Method: "POST", Path: "/networking/:version/external/destinations"},
+		{Name: "create_egress_policies", Method: "POST", Path: "/networking/:version/external/egress_policies"},
 		{Name: "cleanup", Method: "POST", Path: "/networking/:version/external/policies/cleanup"},
 		{Name: "tags_index", Method: "GET", Path: "/networking/:version/external/tags"},
 	}
@@ -311,6 +324,9 @@ func main() {
 
 		"destinations_create": corsOptionsWrapper(metricsWrap("DestinationsCreate",
 			logWrap(authAdminWrap(createDestinationsHandlerV1)))),
+
+		"create_egress_policies": corsOptionsWrapper(metricsWrap("EgressPoliciesCreate",
+			logWrap(authAdminWrap(createEgressPolicyHandlerV1)))),
 
 		"cleanup": corsOptionsWrapper(metricsWrap("Cleanup",
 			logWrap(versionWrap(authAdminWrap(policiesCleanupHandler), authAdminWrap(policiesCleanupHandler))))),

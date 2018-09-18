@@ -14,7 +14,7 @@ type egressPolicyRepo interface {
 	GetTerminalByAppGUID(tx db.Transaction, appGUID string) (string, error)
 	GetTerminalBySpaceGUID(tx db.Transaction, appGUID string) (string, error)
 	GetAllPolicies() ([]EgressPolicy, error)
-	GetByGuids(ids []string) ([]EgressPolicy, error)
+	GetBySourceGuids(ids []string) ([]EgressPolicy, error)
 	GetIDCollectionsByEgressPolicy(tx db.Transaction, egressPolicy EgressPolicy) ([]EgressPolicyIDCollection, error)
 	DeleteEgressPolicy(tx db.Transaction, egressPolicyGUID string) error
 	DeleteIPRange(tx db.Transaction, ipRangeID int64) error
@@ -35,103 +35,73 @@ type EgressPolicyStore struct {
 	Conn             Database
 }
 
-func (e *EgressPolicyStore) Create(policies []EgressPolicy) error {
+func (e *EgressPolicyStore) Create(policies []EgressPolicy) ([]EgressPolicy, error) {
 	tx, err := e.Conn.Beginx()
 	if err != nil {
-		return fmt.Errorf("create transaction: %s", err)
+		return nil, fmt.Errorf("create transaction: %s", err)
 	}
 
-	err = e.createWithTx(tx, policies)
+	policies, err = e.createWithTx(tx, policies)
 	if err != nil {
-		return rollback(tx, err)
+		return nil, rollback(tx, err)
 	}
 
-	return commit(tx)
+	return policies, commit(tx)
 }
 
-func (e *EgressPolicyStore) createWithTx(tx db.Transaction, policies []EgressPolicy) error {
+func (e *EgressPolicyStore) createWithTx(tx db.Transaction, policies []EgressPolicy) ([]EgressPolicy, error) {
+	var createdPolicies []EgressPolicy
 	for _, policy := range policies {
-
-		ids, err := e.EgressPolicyRepo.GetIDCollectionsByEgressPolicy(tx, policy)
-		if err != nil {
-			return err
-		}
-
-		if len(ids) > 0 {
-			continue
-		}
-
 		var sourceTerminalGUID string
+		var err error
 
 		switch policy.Source.Type {
 		case "space":
 			sourceTerminalGUID, err = e.EgressPolicyRepo.GetTerminalBySpaceGUID(tx, policy.Source.ID)
 			if err != nil {
-				return fmt.Errorf("failed to get terminal by space guid: %s", err)
+				return nil, fmt.Errorf("failed to get terminal by space guid: %s", err)
 			}
 
 			if sourceTerminalGUID == "" {
 				sourceTerminalGUID, err = e.TerminalsRepo.Create(tx)
 				if err != nil {
-					return fmt.Errorf("failed to create source terminal: %s", err)
+					return nil, fmt.Errorf("failed to create source terminal: %s", err)
 				}
 
 				_, err = e.EgressPolicyRepo.CreateSpace(tx, sourceTerminalGUID, policy.Source.ID)
 				if err != nil {
-					return fmt.Errorf("failed to create space: %s", err)
+					return nil, fmt.Errorf("failed to create space: %s", err)
 				}
 			}
 		default:
 			sourceTerminalGUID, err = e.EgressPolicyRepo.GetTerminalByAppGUID(tx, policy.Source.ID)
 			if err != nil {
-				return fmt.Errorf("failed to get terminal by app guid: %s", err)
+				return nil, fmt.Errorf("failed to get terminal by app guid: %s", err)
 			}
 
 			if sourceTerminalGUID == "" {
 				sourceTerminalGUID, err = e.TerminalsRepo.Create(tx)
 				if err != nil {
-					return fmt.Errorf("failed to create source terminal: %s", err)
+					return nil, fmt.Errorf("failed to create source terminal: %s", err)
 				}
 
 				_, err = e.EgressPolicyRepo.CreateApp(tx, sourceTerminalGUID, policy.Source.ID)
 				if err != nil {
-					return fmt.Errorf("failed to create source app: %s", err)
+					return nil, fmt.Errorf("failed to create source app: %s", err)
 				}
 			}
 		}
 
-		destinationTerminalGUID, err := e.TerminalsRepo.Create(tx)
+		createdPolicyGUID, err := e.EgressPolicyRepo.CreateEgressPolicy(tx, sourceTerminalGUID, policy.Destination.GUID)
 		if err != nil {
-			return fmt.Errorf("failed to create destination terminal: %s", err)
+			return nil, fmt.Errorf("failed to create egress policy: %s", err)
 		}
 
-		var startPort, endPort int64
-		if len(policy.Destination.Ports) > 0 {
-			startPort = int64(policy.Destination.Ports[0].Start)
-			endPort = int64(policy.Destination.Ports[0].End)
-		}
+		policy.ID = createdPolicyGUID
 
-		_, err = e.EgressPolicyRepo.CreateIPRange(
-			tx,
-			destinationTerminalGUID,
-			policy.Destination.IPRanges[0].Start,
-			policy.Destination.IPRanges[0].End,
-			policy.Destination.Protocol,
-			startPort,
-			endPort,
-			int64(policy.Destination.ICMPType),
-			int64(policy.Destination.ICMPCode),
-		)
-		if err != nil {
-			return fmt.Errorf("failed to create ip range: %s", err)
-		}
-
-		_, err = e.EgressPolicyRepo.CreateEgressPolicy(tx, sourceTerminalGUID, destinationTerminalGUID)
-		if err != nil {
-			return fmt.Errorf("failed to create egress policy: %s", err)
-		}
+		createdPolicies = append(createdPolicies, policy)
 	}
-	return nil
+	return createdPolicies, nil
 }
 
 func (e *EgressPolicyStore) Delete(egressPolicies []EgressPolicy) error {
@@ -206,8 +176,8 @@ func (e *EgressPolicyStore) All() ([]EgressPolicy, error) {
 	return e.EgressPolicyRepo.GetAllPolicies()
 }
 
-func (e *EgressPolicyStore) ByGuids(ids []string) ([]EgressPolicy, error) {
-	policies, err := e.EgressPolicyRepo.GetByGuids(ids)
+func (e *EgressPolicyStore) GetBySourceGuids(ids []string) ([]EgressPolicy, error) {
+	policies, err := e.EgressPolicyRepo.GetBySourceGuids(ids)
 	if err != nil {
 		return []EgressPolicy{}, fmt.Errorf("failed to get policies by guids: %s", err)
 	}

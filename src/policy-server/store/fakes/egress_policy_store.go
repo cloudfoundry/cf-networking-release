@@ -7,16 +7,18 @@ import (
 )
 
 type EgressPolicyStore struct {
-	CreateStub        func([]store.EgressPolicy) error
+	CreateStub        func([]store.EgressPolicy) ([]store.EgressPolicy, error)
 	createMutex       sync.RWMutex
 	createArgsForCall []struct {
 		arg1 []store.EgressPolicy
 	}
 	createReturns struct {
-		result1 error
+		result1 []store.EgressPolicy
+		result2 error
 	}
 	createReturnsOnCall map[int]struct {
-		result1 error
+		result1 []store.EgressPolicy
+		result2 error
 	}
 	DeleteStub        func([]store.EgressPolicy) error
 	deleteMutex       sync.RWMutex
@@ -40,16 +42,16 @@ type EgressPolicyStore struct {
 		result1 []store.EgressPolicy
 		result2 error
 	}
-	ByGuidsStub        func(srcGuids []string) ([]store.EgressPolicy, error)
-	byGuidsMutex       sync.RWMutex
-	byGuidsArgsForCall []struct {
+	GetBySourceGuidsStub        func(srcGuids []string) ([]store.EgressPolicy, error)
+	getBySourceGuidsMutex       sync.RWMutex
+	getBySourceGuidsArgsForCall []struct {
 		srcGuids []string
 	}
-	byGuidsReturns struct {
+	getBySourceGuidsReturns struct {
 		result1 []store.EgressPolicy
 		result2 error
 	}
-	byGuidsReturnsOnCall map[int]struct {
+	getBySourceGuidsReturnsOnCall map[int]struct {
 		result1 []store.EgressPolicy
 		result2 error
 	}
@@ -57,7 +59,7 @@ type EgressPolicyStore struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *EgressPolicyStore) Create(arg1 []store.EgressPolicy) error {
+func (fake *EgressPolicyStore) Create(arg1 []store.EgressPolicy) ([]store.EgressPolicy, error) {
 	var arg1Copy []store.EgressPolicy
 	if arg1 != nil {
 		arg1Copy = make([]store.EgressPolicy, len(arg1))
@@ -74,9 +76,9 @@ func (fake *EgressPolicyStore) Create(arg1 []store.EgressPolicy) error {
 		return fake.CreateStub(arg1)
 	}
 	if specificReturn {
-		return ret.result1
+		return ret.result1, ret.result2
 	}
-	return fake.createReturns.result1
+	return fake.createReturns.result1, fake.createReturns.result2
 }
 
 func (fake *EgressPolicyStore) CreateCallCount() int {
@@ -91,23 +93,26 @@ func (fake *EgressPolicyStore) CreateArgsForCall(i int) []store.EgressPolicy {
 	return fake.createArgsForCall[i].arg1
 }
 
-func (fake *EgressPolicyStore) CreateReturns(result1 error) {
+func (fake *EgressPolicyStore) CreateReturns(result1 []store.EgressPolicy, result2 error) {
 	fake.CreateStub = nil
 	fake.createReturns = struct {
-		result1 error
-	}{result1}
+		result1 []store.EgressPolicy
+		result2 error
+	}{result1, result2}
 }
 
-func (fake *EgressPolicyStore) CreateReturnsOnCall(i int, result1 error) {
+func (fake *EgressPolicyStore) CreateReturnsOnCall(i int, result1 []store.EgressPolicy, result2 error) {
 	fake.CreateStub = nil
 	if fake.createReturnsOnCall == nil {
 		fake.createReturnsOnCall = make(map[int]struct {
-			result1 error
+			result1 []store.EgressPolicy
+			result2 error
 		})
 	}
 	fake.createReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
+		result1 []store.EgressPolicy
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *EgressPolicyStore) Delete(arg1 []store.EgressPolicy) error {
@@ -206,57 +211,57 @@ func (fake *EgressPolicyStore) AllReturnsOnCall(i int, result1 []store.EgressPol
 	}{result1, result2}
 }
 
-func (fake *EgressPolicyStore) ByGuids(srcGuids []string) ([]store.EgressPolicy, error) {
+func (fake *EgressPolicyStore) GetBySourceGuids(srcGuids []string) ([]store.EgressPolicy, error) {
 	var srcGuidsCopy []string
 	if srcGuids != nil {
 		srcGuidsCopy = make([]string, len(srcGuids))
 		copy(srcGuidsCopy, srcGuids)
 	}
-	fake.byGuidsMutex.Lock()
-	ret, specificReturn := fake.byGuidsReturnsOnCall[len(fake.byGuidsArgsForCall)]
-	fake.byGuidsArgsForCall = append(fake.byGuidsArgsForCall, struct {
+	fake.getBySourceGuidsMutex.Lock()
+	ret, specificReturn := fake.getBySourceGuidsReturnsOnCall[len(fake.getBySourceGuidsArgsForCall)]
+	fake.getBySourceGuidsArgsForCall = append(fake.getBySourceGuidsArgsForCall, struct {
 		srcGuids []string
 	}{srcGuidsCopy})
-	fake.recordInvocation("ByGuids", []interface{}{srcGuidsCopy})
-	fake.byGuidsMutex.Unlock()
-	if fake.ByGuidsStub != nil {
-		return fake.ByGuidsStub(srcGuids)
+	fake.recordInvocation("GetBySourceGuids", []interface{}{srcGuidsCopy})
+	fake.getBySourceGuidsMutex.Unlock()
+	if fake.GetBySourceGuidsStub != nil {
+		return fake.GetBySourceGuidsStub(srcGuids)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.byGuidsReturns.result1, fake.byGuidsReturns.result2
+	return fake.getBySourceGuidsReturns.result1, fake.getBySourceGuidsReturns.result2
 }
 
-func (fake *EgressPolicyStore) ByGuidsCallCount() int {
-	fake.byGuidsMutex.RLock()
-	defer fake.byGuidsMutex.RUnlock()
-	return len(fake.byGuidsArgsForCall)
+func (fake *EgressPolicyStore) GetBySourceGuidsCallCount() int {
+	fake.getBySourceGuidsMutex.RLock()
+	defer fake.getBySourceGuidsMutex.RUnlock()
+	return len(fake.getBySourceGuidsArgsForCall)
 }
 
-func (fake *EgressPolicyStore) ByGuidsArgsForCall(i int) []string {
-	fake.byGuidsMutex.RLock()
-	defer fake.byGuidsMutex.RUnlock()
-	return fake.byGuidsArgsForCall[i].srcGuids
+func (fake *EgressPolicyStore) GetBySourceGuidsArgsForCall(i int) []string {
+	fake.getBySourceGuidsMutex.RLock()
+	defer fake.getBySourceGuidsMutex.RUnlock()
+	return fake.getBySourceGuidsArgsForCall[i].srcGuids
 }
 
-func (fake *EgressPolicyStore) ByGuidsReturns(result1 []store.EgressPolicy, result2 error) {
-	fake.ByGuidsStub = nil
-	fake.byGuidsReturns = struct {
+func (fake *EgressPolicyStore) GetBySourceGuidsReturns(result1 []store.EgressPolicy, result2 error) {
+	fake.GetBySourceGuidsStub = nil
+	fake.getBySourceGuidsReturns = struct {
 		result1 []store.EgressPolicy
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *EgressPolicyStore) ByGuidsReturnsOnCall(i int, result1 []store.EgressPolicy, result2 error) {
-	fake.ByGuidsStub = nil
-	if fake.byGuidsReturnsOnCall == nil {
-		fake.byGuidsReturnsOnCall = make(map[int]struct {
+func (fake *EgressPolicyStore) GetBySourceGuidsReturnsOnCall(i int, result1 []store.EgressPolicy, result2 error) {
+	fake.GetBySourceGuidsStub = nil
+	if fake.getBySourceGuidsReturnsOnCall == nil {
+		fake.getBySourceGuidsReturnsOnCall = make(map[int]struct {
 			result1 []store.EgressPolicy
 			result2 error
 		})
 	}
-	fake.byGuidsReturnsOnCall[i] = struct {
+	fake.getBySourceGuidsReturnsOnCall[i] = struct {
 		result1 []store.EgressPolicy
 		result2 error
 	}{result1, result2}
@@ -271,8 +276,8 @@ func (fake *EgressPolicyStore) Invocations() map[string][][]interface{} {
 	defer fake.deleteMutex.RUnlock()
 	fake.allMutex.RLock()
 	defer fake.allMutex.RUnlock()
-	fake.byGuidsMutex.RLock()
-	defer fake.byGuidsMutex.RUnlock()
+	fake.getBySourceGuidsMutex.RLock()
+	defer fake.getBySourceGuidsMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

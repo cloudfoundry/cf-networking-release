@@ -35,6 +35,7 @@ type Tag struct {
 }
 
 type EgressPolicy struct {
+	ID          string
 	Source      EgressSource
 	Destination EgressDestination
 }
