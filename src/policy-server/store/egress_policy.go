@@ -302,8 +302,8 @@ func (e *EgressPolicyTable) GetAllPolicies() ([]EgressPolicy, error) {
 	rows, err := e.Conn.Query(`
 	SELECT
 		egress_policies.guid,
-		destination_metadatas.name,
-		destination_metadatas.description,
+		COALESCE(destination_metadatas.name, ''),
+		COALESCE(destination_metadatas.description, ''),
 		apps.app_guid,
 		spaces.space_guid,
 		ip_ranges.terminal_guid,

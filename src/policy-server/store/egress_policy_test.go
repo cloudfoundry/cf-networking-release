@@ -809,8 +809,8 @@ var _ = Describe("Egress Policy Table", func() {
 					},
 				},
 				{
-					Name:        "d",
-					Description: "desc d",
+					Name:        "old-entry",
+					Description: "this represents an entry that has no destination_metadata",
 					Protocol:    "icmp",
 					ICMPType:    1,
 					ICMPCode:    2,
@@ -823,7 +823,11 @@ var _ = Describe("Egress Policy Table", func() {
 				},
 			}
 
-			createdEgessDestinations, err = egressDestinationStore(realDb).Create(egressDestinations)
+			destinationStore := egressDestinationStore(realDb)
+			createdEgessDestinations, err = destinationStore.Create(egressDestinations)
+			// delete one of the description_metadatas to simulate destinations that were created before the
+			// destination_metadatas table existed
+			_, err = realDb.Exec(`DELETE FROM destination_metadatas WHERE name='old-entry';`)
 			Expect(err).ToNot(HaveOccurred())
 
 			egressPolicies = []store.EgressPolicy{
@@ -946,8 +950,8 @@ var _ = Describe("Egress Policy Table", func() {
 					},
 					Destination: store.EgressDestination{
 						GUID:        createdEgessDestinations[3].GUID,
-						Name:        "d",
-						Description: "desc d",
+						Name:        "",
+						Description: "",
 						Protocol:    "icmp",
 						ICMPType:    1,
 						ICMPCode:    2,
