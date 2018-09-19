@@ -104,7 +104,7 @@ func (e *EgressPolicyTable) CreateEgressPolicy(tx db.Transaction, sourceTerminal
 
 	_, err := tx.Exec(tx.Rebind(`
 			INSERT INTO egress_policies (guid, source_guid, destination_guid)
-			VALUES (?, ?,?)
+			VALUES (?,?,?)
 		`),
 		guid,
 		sourceTerminalGUID,
@@ -386,11 +386,21 @@ func (e *EgressPolicyTable) GetAllPolicies() ([]EgressPolicy, error) {
 }
 
 func (e *EgressPolicyTable) GetBySourceGuids(ids []string) ([]EgressPolicy, error) {
-	foundPolicies := []EgressPolicy{}
+	var foundPolicies []EgressPolicy
 
+	interfaceIds := make([]interface{}, len(ids))
 	for i, id := range ids {
-		ids[i] = fmt.Sprintf("'%s'", id)
+		interfaceIds[i] = id
 	}
+
+	interfaceIds = append(interfaceIds, interfaceIds...)
+
+	questionMarks := make([]string, len(ids))
+	for i := range questionMarks {
+		questionMarks[i] = "?"
+	}
+
+	questionMarksStr := strings.Join(questionMarks, ",")
 
 	query := fmt.Sprintf(`
 	SELECT
@@ -409,8 +419,9 @@ func (e *EgressPolicyTable) GetBySourceGuids(ids []string) ([]EgressPolicy, erro
 	LEFT OUTER JOIN spaces on (egress_policies.source_guid = spaces.terminal_guid)
 	LEFT OUTER JOIN ip_ranges on (egress_policies.destination_guid = ip_ranges.terminal_guid)
 	WHERE apps.app_guid IN (%s) OR spaces.space_guid IN (%s)
-	ORDER BY ip_ranges.id;`, strings.Join(ids, ","), strings.Join(ids, ","))
-	rows, err := e.Conn.Query(query)
+	ORDER BY ip_ranges.id;`, questionMarksStr, questionMarksStr)
+
+	rows, err := e.Conn.Query(e.Conn.Rebind(query), interfaceIds...)
 	if err != nil {
 		return foundPolicies, err
 	}

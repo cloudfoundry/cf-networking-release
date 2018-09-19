@@ -12,7 +12,7 @@ func (d *DestinationMetadataTable) Create(tx db.Transaction, terminalGUID, name,
 	if driver == "mysql" {
 		result, err := tx.Exec(tx.Rebind(`
 			INSERT INTO destination_metadatas (terminal_guid, name, description)
-			VALUES (?, ?, ?)
+			VALUES (?,?,?)
 		`),
 			terminalGUID,
 			name,
