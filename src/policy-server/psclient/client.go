@@ -22,10 +22,12 @@ type Port struct {
 }
 
 type Destination struct {
-	GUID     string `json:"id,omitempty"`
-	Protocol string
-	IPs      []IPRange
-	Ports    []Port
+	GUID        string `json:"id,omitempty"`
+	Protocol    string
+	IPs         []IPRange
+	Ports       []Port
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
 type DestinationList struct {
@@ -64,7 +66,7 @@ func (c *Client) CreateDestination(destination Destination, token string) (strin
 		Destinations: []Destination{
 			destination,
 		},
-	}, &response, "Bearer " + token)
+	}, &response, "Bearer "+token)
 	if err != nil {
 		return "", fmt.Errorf("json client do: %s", err)
 	}
@@ -78,7 +80,7 @@ func (c *Client) CreateEgressPolicy(egressPolicy EgressPolicy, token string) (st
 		EgressPolicies: []EgressPolicy{
 			egressPolicy,
 		},
-	}, &response, "Bearer " + token)
+	}, &response, "Bearer "+token)
 	if err != nil {
 		return "", fmt.Errorf("json client do: %s", err)
 	}
@@ -88,7 +90,7 @@ func (c *Client) CreateEgressPolicy(egressPolicy EgressPolicy, token string) (st
 
 func (c *Client) ListEgressPolicies(token string) (EgressPolicyList, error) {
 	var response EgressPolicyList
-	err := c.JsonClient.Do("GET", "/networking/v1/external/egress_policies", "", &response, "Bearer " + token)
+	err := c.JsonClient.Do("GET", "/networking/v1/external/egress_policies", "", &response, "Bearer "+token)
 	if err != nil {
 		return EgressPolicyList{}, fmt.Errorf("list egress policies api call: %s", err)
 	}

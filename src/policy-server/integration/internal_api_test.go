@@ -1,6 +1,7 @@
 package integration_test
 
 import (
+	"code.cloudfoundry.org/lager/lagertest"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	"net/http"
 	"policy-server/config"
 	"policy-server/integration/helpers"
+	"policy-server/psclient"
 	"strings"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
@@ -64,33 +66,50 @@ var _ = Describe("Internal API", func() {
 		conf = policyServerConfs[0]
 		internalConf = policyServerInternalConfs[0]
 
-		body := strings.NewReader(`{ "policies": [
-			{"source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "ports": { "start": 8080, "end": 8080 } } },
-			{"source": { "id": "app3" }, "destination": { "id": "app1", "protocol": "tcp", "ports": { "start": 9999, "end": 9999 } } },
-			{"source": { "id": "app3" }, "destination": { "id": "app2", "protocol": "tcp", "ports": { "start": 3333, "end": 4444 } } },
-			{"source": { "id": "app3" }, "destination": { "id": "app4", "protocol": "tcp", "ports": { "start": 3333, "end": 3333 } } }
-		]
-	}`)
+		body := strings.NewReader(`{
+			"policies": [
+				{"source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "ports": { "start": 8080, "end": 8080 } } },
+				{"source": { "id": "app3" }, "destination": { "id": "app1", "protocol": "tcp", "ports": { "start": 9999, "end": 9999 } } },
+				{"source": { "id": "app3" }, "destination": { "id": "app2", "protocol": "tcp", "ports": { "start": 3333, "end": 4444 } } },
+				{"source": { "id": "app3" }, "destination": { "id": "app4", "protocol": "tcp", "ports": { "start": 3333, "end": 3333 } } }
+			]
+		}`)
 
-		// TODO: add egress policies via egress policy API
-
-		// body := strings.NewReader(`{ "policies": [
-		// 	{"source": { "id": "app1" }, "destination": { "id": "app2", "protocol": "tcp", "ports": { "start": 8080, "end": 8080 } } },
-		// 	{"source": { "id": "app3" }, "destination": { "id": "app1", "protocol": "tcp", "ports": { "start": 9999, "end": 9999 } } },
-		// 	{"source": { "id": "app3" }, "destination": { "id": "app2", "protocol": "tcp", "ports": { "start": 3333, "end": 4444 } } },
-		// 	{"source": { "id": "app3" }, "destination": { "id": "app4", "protocol": "tcp", "ports": { "start": 3333, "end": 3333 } } }
-		// ],
-		// "egress_policies": [
-		// 	{ "source": { "id": "live-app-1-guid" }, "destination": { "ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}], "protocol": "tcp" } },
-		// 	{ "source": { "id": "live-space-1-guid", "type": "space" }, "destination": { "ips": [{"start": "10.27.1.3", "end": "10.27.1.3"}], "protocol": "tcp" } }
-		// ]
-		// }`)
-		_ = helpers.MakeAndDoRequest(
+		helpers.MakeAndDoRequest(
 			"POST",
 			fmt.Sprintf("http://%s:%d/networking/v1/external/policies", conf.ListenHost, conf.ListenPort),
 			nil,
 			body,
 		)
+
+		logger := lagertest.NewTestLogger("internal_api_test")
+		client := psclient.NewClient(logger, http.DefaultClient, fmt.Sprintf("http://%s:%d", conf.ListenHost, conf.ListenPort))
+
+		dest1GUID, err := client.CreateDestination(psclient.Destination{
+			IPs: []psclient.IPRange{{Start: "10.27.1.1", End: "10.27.1.2"}},
+			Protocol: "tcp",
+			Name: "dest-1",
+			Description: "dest-1-desc",
+		}, "valid-token")
+		Expect(err).ToNot(HaveOccurred())
+		dest2GUID, err := client.CreateDestination(psclient.Destination{
+			IPs: []psclient.IPRange{{Start: "10.27.1.3", End: "10.27.1.3"}},
+			Protocol: "tcp",
+			Name: "dest-2",
+			Description: "dest-2-desc",
+		}, "valid-token")
+		Expect(err).ToNot(HaveOccurred())
+
+		_, err = client.CreateEgressPolicy(psclient.EgressPolicy{
+			Source: psclient.EgressPolicySource{ ID: "live-app-1-guid" },
+			Destination: psclient.EgressPolicyDestination{ID: dest1GUID},
+		}, "valid-token")
+		Expect(err).ToNot(HaveOccurred())
+		_, err = client.CreateEgressPolicy(psclient.EgressPolicy{
+			Source: psclient.EgressPolicySource{ ID: "live-space-1-guid", Type: "space" },
+			Destination: psclient.EgressPolicyDestination{ID: dest2GUID},
+		}, "valid-token")
+		Expect(err).ToNot(HaveOccurred())
 	})
 
 	AfterEach(func() {
@@ -123,20 +142,13 @@ var _ = Describe("Internal API", func() {
 		"policies": [
 			{"source": { "id": "app1", "tag": "0001" }, "destination": { "id": "app2", "tag": "0002", "protocol": "tcp", "ports": {"start": 8080, "end": 8080 } } },
 			{"source": { "id": "app3", "tag": "0003" }, "destination": { "id": "app1", "tag": "0001", "protocol": "tcp", "ports": {"start": 9999, "end": 9999 } } },
-			{"source": { "id": "app3", "tag": "0003" }, "destination": { "id": "app2", "tag": "0002", "protocol": "tcp", "ports": { "start": 3333, "end": 4444 } } }]
+			{"source": { "id": "app3", "tag": "0003" }, "destination": { "id": "app2", "tag": "0002", "protocol": "tcp", "ports": { "start": 3333, "end": 4444 } } }],
+		"total_egress_policies": 2,
+		"egress_policies": [
+			{ "source": { "id": "live-app-1-guid", "type": "app" }, "destination": { "ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}], "protocol": "tcp" } },
+			{ "source": { "id": "live-space-1-guid", "type": "space" }, "destination": { "ips": [{"start": "10.27.1.3", "end": "10.27.1.3"}], "protocol": "tcp" } }
+		]
 	}`
-
-	// v1ExpectedResponse := `{"total_policies": 3,
-	// 	"policies": [
-	// 		{"source": { "id": "app1", "tag": "0001" }, "destination": { "id": "app2", "tag": "0002", "protocol": "tcp", "ports": {"start": 8080, "end": 8080 } } },
-	// 		{"source": { "id": "app3", "tag": "0003" }, "destination": { "id": "app1", "tag": "0001", "protocol": "tcp", "ports": {"start": 9999, "end": 9999 } } },
-	// 		{"source": { "id": "app3", "tag": "0003" }, "destination": { "id": "app2", "tag": "0002", "protocol": "tcp", "ports": { "start": 3333, "end": 4444 } } }],
-	// 	"total_egress_policies": 2,
-	// 	"egress_policies": [
-	// 		{ "source": { "id": "live-app-1-guid", "type": "app" }, "destination": { "ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}], "protocol": "tcp" } },
-	// 		{ "source": { "id": "live-space-1-guid", "type": "space" }, "destination": { "ips": [{"start": "10.27.1.3", "end": "10.27.1.3"}], "protocol": "tcp" } }
-	// 	]
-	// }`
 
 	DescribeTable("listing policies and tags succeeds", listPoliciesAndTagsSucceeds,
 		Entry("v1", "v1", v1ExpectedResponse),

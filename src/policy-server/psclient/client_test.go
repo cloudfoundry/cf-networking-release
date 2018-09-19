@@ -40,7 +40,9 @@ var _ = Describe("Client", func() {
 			}
 
 			destination = psclient.Destination{
-				Protocol: "tcp",
+				Name:        "meow-dest",
+				Description: "cats rule",
+				Protocol:    "tcp",
 				IPs: []psclient.IPRange{
 					{
 						Start: "1.2.3.4",
@@ -67,7 +69,7 @@ var _ = Describe("Client", func() {
 			Expect(passedRoute).To(Equal("/networking/v1/external/destinations"))
 
 			Expect(passedReqData).To(Equal(psclient.DestinationList{
-				Destinations:[]psclient.Destination{destination},
+				Destinations: []psclient.Destination{destination},
 			}))
 			Expect(passedToken).To(Equal("Bearer some-token"))
 		})
