@@ -396,6 +396,7 @@ func (e *EgressPolicyTable) GetBySourceGuids(ids []string) ([]EgressPolicy, erro
 	SELECT
 		apps.app_guid,
 		spaces.space_guid,
+		ip_ranges.id,
 		ip_ranges.protocol,
 		ip_ranges.start_ip,
 		ip_ranges.end_ip,
@@ -407,7 +408,8 @@ func (e *EgressPolicyTable) GetBySourceGuids(ids []string) ([]EgressPolicy, erro
 	LEFT OUTER JOIN apps on (egress_policies.source_guid = apps.terminal_guid)
 	LEFT OUTER JOIN spaces on (egress_policies.source_guid = spaces.terminal_guid)
 	LEFT OUTER JOIN ip_ranges on (egress_policies.destination_guid = ip_ranges.terminal_guid)
-	WHERE apps.app_guid IN (%s) OR spaces.space_guid IN (%s);`, strings.Join(ids, ","), strings.Join(ids, ","))
+	WHERE apps.app_guid IN (%s) OR spaces.space_guid IN (%s)
+	ORDER BY ip_ranges.id;`, strings.Join(ids, ","), strings.Join(ids, ","))
 	rows, err := e.Conn.Query(query)
 	if err != nil {
 		return foundPolicies, err
@@ -416,10 +418,10 @@ func (e *EgressPolicyTable) GetBySourceGuids(ids []string) ([]EgressPolicy, erro
 	defer rows.Close()
 	for rows.Next() {
 
-		var sourceAppGUID, sourceSpaceGUID, protocol, startIP, endIP *string
+		var sourceAppGUID, sourceSpaceGUID, destinationGUID, protocol, startIP, endIP *string
 		var startPort, endPort, icmpType, icmpCode int
 
-		err = rows.Scan(&sourceAppGUID, &sourceSpaceGUID, &protocol, &startIP, &endIP, &startPort, &endPort, &icmpType, &icmpCode)
+		err = rows.Scan(&sourceAppGUID, &sourceSpaceGUID, &destinationGUID, &protocol, &startIP, &endIP, &startPort, &endPort, &icmpType, &icmpCode)
 		if err != nil {
 			return foundPolicies, err
 		}
