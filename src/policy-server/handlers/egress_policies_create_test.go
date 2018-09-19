@@ -28,6 +28,7 @@ var _ = Describe("EgressPoliciesCreate", func() {
 		fakeStore                   *fakes.EgressPolicyStore
 		logger                      *lagertest.TestLogger
 		fakeMetricsSender           *storeFakes.MetricsSender
+		fakePolicyGuard             *fakes.PolicyGuard
 		handler                     *handlers.EgressPolicyCreate
 		resp                        *httptest.ResponseRecorder
 		request                     *http.Request
@@ -40,6 +41,8 @@ var _ = Describe("EgressPoliciesCreate", func() {
 	BeforeEach(func() {
 		fakeStore = &fakes.EgressPolicyStore{}
 		fakeMapper = &fakes.EgressPolicyMapper{}
+		fakePolicyGuard = &fakes.PolicyGuard{}
+		fakePolicyGuard.IsNetworkAdminReturns(true)
 
 		fakeMetricsSender = &storeFakes.MetricsSender{}
 		errorResponse := &httperror.ErrorResponse{
@@ -53,6 +56,7 @@ var _ = Describe("EgressPoliciesCreate", func() {
 			Mapper:        fakeMapper,
 			ErrorResponse: errorResponse,
 			Logger:        logger,
+			PolicyGuard:   fakePolicyGuard,
 		}
 
 		var err error
@@ -100,59 +104,70 @@ var _ = Describe("EgressPoliciesCreate", func() {
 		token = uaa_client.CheckTokenResponse{Scope: []string{"some-scope"}}
 	})
 
-	Describe("ServeHTTP", func() {
-		It("creates an egress policy", func() {
-			MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
+	It("creates an egress policy", func() {
+		MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
 
-			Expect(fakeMapper.AsStoreEgressPolicyCallCount()).To(Equal(1))
-			policies := fakeMapper.AsStoreEgressPolicyArgsForCall(0)
-			Expect(string(policies)).To(Equal(requestBody))
+		Expect(fakeMapper.AsStoreEgressPolicyCallCount()).To(Equal(1))
+		policies := fakeMapper.AsStoreEgressPolicyArgsForCall(0)
+		Expect(string(policies)).To(Equal(requestBody))
 
-			Expect(fakeStore.CreateCallCount()).To(Equal(1))
-			storePolicies := fakeStore.CreateArgsForCall(0)
-			Expect(storePolicies).To(Equal(expectedStoreEgressPolicies))
+		Expect(fakeStore.CreateCallCount()).To(Equal(1))
+		storePolicies := fakeStore.CreateArgsForCall(0)
+		Expect(storePolicies).To(Equal(expectedStoreEgressPolicies))
 
-			Expect(fakeMapper.AsBytesCallCount()).To(Equal(1))
-			Expect(fakeMapper.AsBytesArgsForCall(0)).To(Equal(createdPolicies))
+		Expect(fakeMapper.AsBytesCallCount()).To(Equal(1))
+		Expect(fakeMapper.AsBytesArgsForCall(0)).To(Equal(createdPolicies))
+	})
+
+	It("returns a response that includes the guid for the created policy", func() {
+		MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
+
+		body, err := ioutil.ReadAll(resp.Body)
+		Expect(err).ToNot(HaveOccurred())
+		Expect(string(body)).To(Equal(responseBody))
+	})
+
+	It("returns a 400 when the request body can not be read", func() {
+		request.Body = &failingReader{}
+		MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
+
+		Expect(resp.Code).To(Equal(http.StatusBadRequest))
+		Expect(resp.Body.Bytes()).To(MatchJSON(`{"error": "error reading request"}`))
+	})
+
+	It("returns an error when the store returns an error", func() {
+		fakeStore.CreateReturns(nil, errors.New("can't create"))
+		MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
+		Expect(resp.Code).To(Equal(http.StatusInternalServerError))
+		Expect(resp.Body.Bytes()).To(MatchJSON(`{"error": "error creating egress policy"}`))
+	})
+
+	It("returns an error when parsing the request returns an error", func() {
+		fakeMapper.AsStoreEgressPolicyReturns(nil, errors.New("didn't go well"))
+
+		MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
+		Expect(resp.Code).To(Equal(http.StatusBadRequest))
+		Expect(resp.Body.Bytes()).To(MatchJSON(`{"error": "error parsing egress policies"}`))
+	})
+
+	It("returns an error response when marshalling the response returns an error", func() {
+		fakeMapper.AsBytesReturns(nil, errors.New("didn't go well"))
+
+		MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
+		Expect(resp.Code).To(Equal(http.StatusInternalServerError))
+		Expect(resp.Body.Bytes()).To(MatchJSON(`{"error": "error serializing response"}`))
+	})
+
+	Context("when the user is not network admin", func() {
+		BeforeEach(func() {
+			fakePolicyGuard.IsNetworkAdminReturns(false)
 		})
 
-		It("returns a response that includes the guid for the created policy", func() {
+		It("returns an error", func() {
 			MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
-
-			body, err := ioutil.ReadAll(resp.Body)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(string(body)).To(Equal(responseBody))
-		})
-
-		It("returns a 400 when the request body can not be read", func() {
-			request.Body = &failingReader{}
-			MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
-
-			Expect(resp.Code).To(Equal(http.StatusBadRequest))
-			Expect(resp.Body.Bytes()).To(MatchJSON(`{"error": "error reading request"}`))
-		})
-
-		It("returns an error when the store returns an error", func() {
-			fakeStore.CreateReturns(nil, errors.New("can't create"))
-			MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
-			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
-			Expect(resp.Body.Bytes()).To(MatchJSON(`{"error": "error creating egress policy"}`))
-		})
-
-		It("returns an error when parsing the request returns an error", func() {
-			fakeMapper.AsStoreEgressPolicyReturns(nil, errors.New("didn't go well"))
-
-			MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
-			Expect(resp.Code).To(Equal(http.StatusBadRequest))
-			Expect(resp.Body.Bytes()).To(MatchJSON(`{"error": "error parsing egress policies"}`))
-		})
-
-		It("returns an error response when marshalling the response returns an error", func() {
-			fakeMapper.AsBytesReturns(nil, errors.New("didn't go well"))
-
-			MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
-			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
-			Expect(resp.Body.Bytes()).To(MatchJSON(`{"error": "error serializing response"}`))
+			Expect(resp.Code).To(Equal(http.StatusForbidden))
+			Expect(fakePolicyGuard.IsNetworkAdminArgsForCall(0)).To(Equal(token))
+			Expect(resp.Body.Bytes()).To(MatchJSON(`{"error": "not authorized: creating egress policies failed"}`))
 		})
 	})
 })

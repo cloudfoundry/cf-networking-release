@@ -210,7 +210,7 @@ func main() {
 
 	egressPolicyMapper := &api.EgressPolicyMapper{
 		Unmarshaler: marshal.UnmarshalFunc(json.Unmarshal),
-		Marshaler: marshal.MarshalFunc(json.Marshal),
+		Marshaler:   marshal.MarshalFunc(json.Marshal),
 	}
 
 	createEgressPolicyHandlerV1 := &handlers.EgressPolicyCreate{
@@ -218,6 +218,7 @@ func main() {
 		Mapper:        egressPolicyMapper,
 		ErrorResponse: errorResponse,
 		Logger:        logger,
+		PolicyGuard:   policyGuard,
 	}
 
 	policyCleaner := cleaner.NewPolicyCleaner(logger.Session("policy-cleaner"), wrappedStore, egressPolicyStore, uaaClient,
