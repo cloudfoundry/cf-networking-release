@@ -1116,7 +1116,7 @@ var _ = Describe("Egress Policy Table", func() {
 			It("returns no egress policies", func() {
 				policies, err := egressPolicyTable.GetBySourceGuids([]string{"meow-this-is-a-bogus-app-guid"})
 				Expect(err).ToNot(HaveOccurred())
-				Expect(policies).To(Equal([]store.EgressPolicy{}))
+				Expect(policies).To(HaveLen(0))
 			})
 		})
 
