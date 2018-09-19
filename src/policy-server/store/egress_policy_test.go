@@ -872,7 +872,7 @@ var _ = Describe("Egress Policy Table", func() {
 			listedPolicies, err := egressPolicyTable.GetAllPolicies()
 			Expect(err).ToNot(HaveOccurred())
 			Expect(listedPolicies).To(HaveLen(4))
-			Expect(listedPolicies).To(Equal([]store.EgressPolicy{
+			Expect(listedPolicies).To(ConsistOf([]store.EgressPolicy{
 				{
 					ID: "guid-1",
 					Source: store.EgressSource{
