@@ -10,7 +10,7 @@ trap 'cleanup' EXIT
 
 # set bosh target
 function setup_bosh_env_vars() {
-pushd "deployments-repo/environments/${ENVIRONMENT_NAME}"
+  pushd "deployments-repo/environments/${ENVIRONMENT_NAME}"
     eval "$(bbl print-env)"
   popd
 }

@@ -121,10 +121,6 @@ resources:
       branch: master
       uri: https://github.com/cloudfoundry-incubator/disaster-recovery-acceptance-tests
   ###### bosh.io releases
-  - name: concourse
-    type: bosh-io-release
-    source:
-      repository: concourse/concourse
   - name: datadog-firehose-nozzle-release
     type: bosh-io-release
     source:
@@ -509,11 +505,10 @@ jobs:
         BBL_STATE_DIR: environments/pickelhelm/
     - task: upload-acceptance-test-release
       file: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release.yml
-      params:
-        ENVIRONMENT_NAME: pickelhelm
       input_mapping:
         bbl-state: cf-networking-deployments
       params:
+        ENVIRONMENT_NAME: pickelhelm
         BBL_STATE_DIR: environments/pickelhelm/
     - task: deploy-cf
       file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
@@ -684,7 +679,6 @@ jobs:
     serial_groups: [mitre-deploy-group, version]
     plan:
     - aggregate:
-      - get: concourse
       - get: capi-ci-passed
       - get: cf-networking-release-ci
         params:
@@ -733,11 +727,10 @@ jobs:
         BBL_STATE_DIR: environments/mitre/
     - task: upload-acceptance-test-release
       file: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release.yml
-      params:
-        ENVIRONMENT_NAME: mitre
       input_mapping:
         bbl-state: cf-networking-deployments
       params:
+        ENVIRONMENT_NAME: mitre
         BBL_STATE_DIR: environments/mitre/
     - task: deploy-cf
       file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
@@ -769,13 +762,6 @@ jobs:
         vars-store: cf-networking-deployments
         vars-files: cf-networking-deployments
         release: cf-networking-dev
-    - task: upload-concourse-release
-      file: cf-networking-release-ci/ci/tasks/upload-release-tarball.yml
-      input_mapping:
-        deployments-repo: cf-networking-deployments
-        tarballs: concourse
-      params:
-        ENVIRONMENT_NAME: mitre
     - task: create-release-tarball
       file: cf-networking-release-ci/ci/tasks/create-release-tarball.yml
       input_mapping:
