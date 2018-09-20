@@ -161,9 +161,6 @@ var _ = Describe("PoliciesCreate", func() {
 	})
 
 	Context("when the logger isn't on the request context", func() {
-		BeforeEach(func() {
-			logger = nil
-		})
 		It("still works", func() {
 			MakeRequestWithAuth(handler.ServeHTTP, resp, request, tokenData)
 

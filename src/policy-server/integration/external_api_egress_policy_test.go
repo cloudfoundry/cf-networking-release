@@ -2,6 +2,7 @@ package integration_test
 
 import (
 	"fmt"
+	"github.com/nu7hatch/gouuid"
 	"net/http"
 	"policy-server/config"
 	"policy-server/integration/helpers"
@@ -81,8 +82,11 @@ var _ = Describe("External API Egress Policies", func() {
 				ID: destGuid,
 			},
 		}
-		_, err = client.CreateEgressPolicy(somePolicy, token)
+		policyGUID, err := client.CreateEgressPolicy(somePolicy, token)
 		Expect(err).NotTo(HaveOccurred())
+
+		_, e := uuid.ParseHex(policyGUID)
+		Expect(e).NotTo(HaveOccurred())
 
 		//TODO: re-instate when index is an endpoint
 		//egressPolicies, err := client.ListEgressPolicies(token)

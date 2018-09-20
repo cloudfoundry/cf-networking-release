@@ -17,9 +17,11 @@ type payload struct {
 }
 
 type EgressPolicyPtr struct {
+	ID          string                `json:"id"`
 	Source      *EgressSource         `json:"source"`
 	Destination *EgressDestinationPtr `json:"destination"`
 }
+
 type EgressDestinationPtr struct {
 	GUID string `json:"id,omitempty"`
 }
@@ -60,6 +62,7 @@ func (p *EgressPolicyMapper) AsStoreEgressPolicy(bytes []byte) ([]store.EgressPo
 
 func asApiEgressPolicyPtr(storeEgressPolicy store.EgressPolicy) EgressPolicyPtr {
 	return EgressPolicyPtr{
+		ID: storeEgressPolicy.ID,
 		Destination: &EgressDestinationPtr{
 			GUID: storeEgressPolicy.Destination.GUID,
 		},

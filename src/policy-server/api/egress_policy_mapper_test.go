@@ -62,10 +62,12 @@ var _ = Describe("EgressPolicyMapper", func() {
 		BeforeEach(func() {
 			egressPolicies = []store.EgressPolicy{
 				{
+					ID: 		"policy-1",
 					Source:      store.EgressSource{ID: "some-src-id", Type: "app"},
 					Destination: store.EgressDestination{GUID: "some-dst-id"},
 				},
 				{
+					ID: 		"policy-2",
 					Source:      store.EgressSource{ID: "some-src-id-2", Type: "space"},
 					Destination: store.EgressDestination{GUID: "some-dst-id-2"},
 				},
@@ -79,10 +81,12 @@ var _ = Describe("EgressPolicyMapper", func() {
 					"total_egress_policies": 2,
 					"egress_policies": [
             	        {
+							"id": "policy-1",
 							"source": { "id": "some-src-id", "type": "app" },
 							"destination": { "id": "some-dst-id" }
 						},
                	    	{
+							"id": "policy-2",
 							"source": { "id": "some-src-id-2", "type": "space" },
 							"destination": { "id": "some-dst-id-2" }
 						}
