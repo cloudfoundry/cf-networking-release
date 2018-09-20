@@ -2,8 +2,42 @@
 
 See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for examples
 
+### 2.15.0 CF-Networking-Release & Silk-Release
+**No Manifest Changes**
+
+### 2.14.0 CF-Networking-Release & Silk-Release
+**No Manifest Changes**
+
+### 2.13.0 CF-Networking-Release
+**New Default**
+  - The `internal_domains` property on the `bosh-dns-adapter` job now defaults to `[]` instead of `[apps.internal.]`  
+
+### 2.13.0 Silk-Release
+**No Manifest Changes**
+
+### 2.12.0 CF-Networking-Release & Silk-Release
+**No Manifest Changes**
+
+### 2.11.0 CF-Networking-Release & Silk-Release
+**No Manifest Changes**
+
+### 2.10.0 CF-Networking-Release & Silk-Release
+**No Manifest Changes**
+
+### 2.9.0 CF-Networking-Release & Silk-Release
+**No Manifest Changes**
+
+### 2.8.0 CF-Networking-Release & Silk-Release
+**No Manifest Changes**
+
+### 2.7.0 CF-Networking-Release & Silk-Release
+**No Manifest Changes**
+
+### 2.6.0 CF-Networking-Release & Silk-Release
+**No Manifest Changes**
+
 ### 2.5.0 CF-Networking-Release
-**New Properties
+**New Properties**
   - An optional paramater has been added to the `bosh-dns-adapter` job to configure custom internal domains. Defaults to `[apps.internal.]`
     - `internal_domains`
 
