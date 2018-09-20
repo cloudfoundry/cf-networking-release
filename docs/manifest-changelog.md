@@ -2,6 +2,16 @@
 
 See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for examples
 
+### 2.16.0 CF-Networking-Release
+**New Properties**
+  - An optional parameter has been added to the `policy-server` and `policy-server-internal` jobs to configure the max lifetime of connections to the policy-server database.
+    - `connections_max_lifetime_seconds`
+
+### 2.16.0 Silk-Release
+**New Properties**
+  - An optional parameter has been added to the `silk-controller` job to configure the max lifetime of connections to the silk database.
+    - `connections_max_lifetime_seconds`
+
 ### 2.15.0 CF-Networking-Release & Silk-Release
 **No Manifest Changes**
 
