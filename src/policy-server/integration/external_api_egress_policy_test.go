@@ -70,8 +70,28 @@ var _ = Describe("External API Egress Policies", func() {
 				},
 			},
 		}
-		destGuid, err := client.CreateDestination(someDest, token)
+
+		unusedDest := psclient.Destination{
+			Protocol: "udp",
+			IPs: []psclient.IPRange{
+				{
+					Start: "3.2.3.4",
+					End:   "3.2.3.5",
+				},
+			},
+			Ports: []psclient.Port{
+				{
+					Start: 8082,
+					End:   9092,
+				},
+			},
+		}
+		guids, err := client.CreateDestinations(token, someDest, unusedDest)
 		Expect(err).NotTo(HaveOccurred())
+
+		//TODO: assert the list returns the created destinations
+		//destinations, err = client.ListDestinations(token, unusedDest)
+		//Expect(e).NotTo(HaveOccurred())
 
 		somePolicy := psclient.EgressPolicy{
 			Source: psclient.EgressPolicySource{
@@ -79,7 +99,7 @@ var _ = Describe("External API Egress Policies", func() {
 				ID:   "some-app-guid",
 			},
 			Destination: psclient.EgressPolicyDestination{
-				ID: destGuid,
+				ID: guids[0],
 			},
 		}
 		policyGUID, err := client.CreateEgressPolicy(somePolicy, token)

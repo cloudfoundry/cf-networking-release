@@ -25,21 +25,13 @@ var _ = Describe("Client", func() {
 		token = "some-token"
 	})
 
-	Describe("CreateDestination", func() {
+	Describe("Destinations", func() {
 		var (
-			destination psclient.Destination
+			destination1, destination2 psclient.Destination
 		)
 
 		BeforeEach(func() {
-			jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
-				respBytes := []byte(`{
-					"destinations": [ { "id": "some-dest-guid" } ]
-				}`)
-				json.Unmarshal(respBytes, respData)
-				return nil
-			}
-
-			destination = psclient.Destination{
+			destination1 = psclient.Destination{
 				Name:        "meow-dest",
 				Description: "cats rule",
 				Protocol:    "tcp",
@@ -56,29 +48,58 @@ var _ = Describe("Client", func() {
 					},
 				},
 			}
+
+			destination2 = psclient.Destination{
+				Name:        "bark-dest",
+				Description: "dogs drool",
+				Protocol:    "tcp",
+				IPs: []psclient.IPRange{
+					{
+						Start: "2.2.3.4",
+						End:   "2.2.3.5",
+					},
+				},
+				Ports: []psclient.Port{
+					{
+						Start: 8081,
+						End:   9091,
+					},
+				},
+			}
 		})
 
-		It("creates a destination and returns a guid", func() {
-			guid, err := client.CreateDestination(destination, token)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(guid).To(Equal("some-dest-guid"))
+		Describe("create", func() {
+			BeforeEach(func() {
+				jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+					respBytes := []byte(`{
+                    "destinations": [ { "id": "some-dest-guid" }, { "id": "some-other-dest-guid" }  ]
+                }`)
+					json.Unmarshal(respBytes, respData)
+					return nil
+				}
+			})
+			It("creates a destination and returns a guid", func() {
+				guids, err := client.CreateDestinations(token, destination1, destination2)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(guids).To(Equal([]string{"some-dest-guid", "some-other-dest-guid"}))
 
-			Expect(jsonClient.DoCallCount()).To(Equal(1))
-			passedMethod, passedRoute, passedReqData, _, passedToken := jsonClient.DoArgsForCall(0)
-			Expect(passedMethod).To(Equal("POST"))
-			Expect(passedRoute).To(Equal("/networking/v1/external/destinations"))
+				Expect(jsonClient.DoCallCount()).To(Equal(1))
+				passedMethod, passedRoute, passedReqData, _, passedToken := jsonClient.DoArgsForCall(0)
+				Expect(passedMethod).To(Equal("POST"))
+				Expect(passedRoute).To(Equal("/networking/v1/external/destinations"))
 
-			Expect(passedReqData).To(Equal(psclient.DestinationList{
-				Destinations: []psclient.Destination{destination},
-			}))
-			Expect(passedToken).To(Equal("Bearer some-token"))
-		})
+				Expect(passedReqData).To(Equal(psclient.DestinationList{
+					Destinations: []psclient.Destination{destination1, destination2},
+				}))
+				Expect(passedToken).To(Equal("Bearer some-token"))
+			})
 
-		It("returns an error when the json client do fails", func() {
-			jsonClient.DoStub = nil
-			jsonClient.DoReturns(errors.New("failed to do"))
-			_, err := client.CreateDestination(destination, token)
-			Expect(err).To(MatchError("json client do: failed to do"))
+			It("returns an error when the json client do fails", func() {
+				jsonClient.DoStub = nil
+				jsonClient.DoReturns(errors.New("failed to do"))
+				_, err := client.CreateDestinations(token, destination1)
+				Expect(err).To(MatchError("json client do: failed to do"))
+			})
 		})
 	})
 
@@ -90,8 +111,8 @@ var _ = Describe("Client", func() {
 		BeforeEach(func() {
 			jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 				respBytes := []byte(`{
-					"egress_policies": [ { "id": "some-egress-policy-guid" } ]
-				}`)
+                    "egress_policies": [ { "id": "some-egress-policy-guid" } ]
+                }`)
 				json.Unmarshal(respBytes, respData)
 				return nil
 			}
@@ -135,20 +156,20 @@ var _ = Describe("Client", func() {
 		BeforeEach(func() {
 			jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 				respBytes := []byte(`{
-					"total_egress_policies": 1,
-					"egress_policies": [
-						{
-							"id": "some-egress-policy-guid",
-							"source": {
-								"type": "app",
-								"id": "some-app-guid"
-							},
-							"destination": {
-								"id": "some-dest-guid"
-							}
-						}
-					]
-				}`)
+                    "total_egress_policies": 1,
+                    "egress_policies": [
+                        {
+                            "id": "some-egress-policy-guid",
+                            "source": {
+                                "type": "app",
+                                "id": "some-app-guid"
+                            },
+                            "destination": {
+                                "id": "some-dest-guid"
+                            }
+                        }
+                    ]
+                }`)
 				json.Unmarshal(respBytes, respData)
 				return nil
 			}

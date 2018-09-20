@@ -85,29 +85,27 @@ var _ = Describe("Internal API", func() {
 		logger := lagertest.NewTestLogger("internal_api_test")
 		client := psclient.NewClient(logger, http.DefaultClient, fmt.Sprintf("http://%s:%d", conf.ListenHost, conf.ListenPort))
 
-		dest1GUID, err := client.CreateDestination(psclient.Destination{
-			IPs: []psclient.IPRange{{Start: "10.27.1.1", End: "10.27.1.2"}},
-			Protocol: "tcp",
-			Name: "dest-1",
+		guids, err := client.CreateDestinations("valid-token", psclient.Destination{
+			IPs:         []psclient.IPRange{{Start: "10.27.1.1", End: "10.27.1.2"}},
+			Protocol:    "tcp",
+			Name:        "dest-1",
 			Description: "dest-1-desc",
-		}, "valid-token")
-		Expect(err).ToNot(HaveOccurred())
-		dest2GUID, err := client.CreateDestination(psclient.Destination{
-			IPs: []psclient.IPRange{{Start: "10.27.1.3", End: "10.27.1.3"}},
-			Protocol: "tcp",
-			Name: "dest-2",
+		}, psclient.Destination{
+			IPs:         []psclient.IPRange{{Start: "10.27.1.3", End: "10.27.1.3"}},
+			Protocol:    "tcp",
+			Name:        "dest-2",
 			Description: "dest-2-desc",
-		}, "valid-token")
+		})
 		Expect(err).ToNot(HaveOccurred())
 
 		_, err = client.CreateEgressPolicy(psclient.EgressPolicy{
-			Source: psclient.EgressPolicySource{ ID: "live-app-1-guid" },
-			Destination: psclient.EgressPolicyDestination{ID: dest1GUID},
+			Source:      psclient.EgressPolicySource{ID: "live-app-1-guid"},
+			Destination: psclient.EgressPolicyDestination{ID: guids[0]},
 		}, "valid-token")
 		Expect(err).ToNot(HaveOccurred())
 		_, err = client.CreateEgressPolicy(psclient.EgressPolicy{
-			Source: psclient.EgressPolicySource{ ID: "live-space-1-guid", Type: "space" },
-			Destination: psclient.EgressPolicyDestination{ID: dest2GUID},
+			Source:      psclient.EgressPolicySource{ID: "live-space-1-guid", Type: "space"},
+			Destination: psclient.EgressPolicyDestination{ID: guids[1]},
 		}, "valid-token")
 		Expect(err).ToNot(HaveOccurred())
 	})

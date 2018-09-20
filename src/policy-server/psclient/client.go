@@ -60,18 +60,22 @@ func NewClient(logger lager.Logger, httpClient json_client.HttpClient, baseURL s
 	}
 }
 
-func (c *Client) CreateDestination(destination Destination, token string) (string, error) {
+func (c *Client) CreateDestinations(token string, destinations... Destination) ([]string, error) {
 	var response DestinationList
 	err := c.JsonClient.Do("POST", "/networking/v1/external/destinations", DestinationList{
-		Destinations: []Destination{
-			destination,
-		},
+		Destinations: destinations,
 	}, &response, "Bearer "+token)
 	if err != nil {
-		return "", fmt.Errorf("json client do: %s", err)
+		return []string{}, fmt.Errorf("json client do: %s", err)
 	}
 
-	return response.Destinations[0].GUID, nil
+	guids := make([]string, len(response.Destinations))
+
+	for i, dest := range response.Destinations{
+		guids[i] = dest.GUID
+	}
+
+	return guids, nil
 }
 
 func (c *Client) CreateEgressPolicy(egressPolicy EgressPolicy, token string) (string, error) {
