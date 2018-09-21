@@ -56,6 +56,7 @@ var _ = Describe("External API Egress Policies", func() {
 
 	Specify("a journey through egress policy", func() {
 		someDest := psclient.Destination{
+			Name: "tcp with ports",
 			Protocol: "tcp",
 			IPs: []psclient.IPRange{
 				{
@@ -72,6 +73,7 @@ var _ = Describe("External API Egress Policies", func() {
 		}
 
 		unusedDest := psclient.Destination{
+			Name: "unused dest",
 			Protocol: "udp",
 			IPs: []psclient.IPRange{
 				{
