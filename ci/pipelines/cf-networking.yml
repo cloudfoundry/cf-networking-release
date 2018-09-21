@@ -1,3 +1,24 @@
+# Steps for making a branch pipeline
+# 1. Delete all slouch and toque items
+# 2. Delete all pickelhelm items, we don't patch for postgres
+# 3. Delete all version and tarball items
+# 4. Delete ship it. We tag the 'release' manually.
+# 5. Switch cf-networking-dev and cf-networking-dev-ci to use the lts repo
+# 6. Pin resources:
+  #  >  cf-networking-release-ci
+  #  >  cf-networking-deployments
+  #  >  cf-deployment-concourse-tasks
+  #  >  cf-deployment
+  #  >  silk-dev
+  #  >  cf-networking-dev
+  #  >  cf-acceptance-tests
+# 7. Don't deploy with the following opsfiles
+  #  >  custom-apps-domain.yml
+  #  >  enable-iptables-logger.yml
+  #  >  use-latest-capi.yml
+  #  >  add-fake-istio-router-on-overlay.yml
+
+
 groups:
 - name: cf-networking
   jobs:
