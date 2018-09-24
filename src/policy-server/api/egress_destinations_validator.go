@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"net"
@@ -27,7 +28,7 @@ func (v *EgressDestinationsValidator) ValidateEgressDestinations(destinations []
 			return errors.New("missing destination protocol")
 		}
 
-		if !isValidProtocol(destination.Protocol){
+		if !isValidProtocol(destination.Protocol) {
 			return fmt.Errorf("invalid destination protocol '%s', specify either tcp, udp, or icmp", destination.Protocol)
 		}
 
@@ -64,11 +65,10 @@ func (v *EgressDestinationsValidator) ValidateEgressDestinations(destinations []
 				return fmt.Errorf("invalid ip address '%s', must be a valid IPv4 address", ipRange.End)
 			}
 
-			if ipRange.Start > ipRange.End {
+			if bytes.Compare(startIP, endIP) > 0 {
 				return fmt.Errorf("invalid IP range %s-%s, start must be less than or equal to end", ipRange.Start, ipRange.End)
 			}
 		}
-
 	}
 	return nil
 }
@@ -81,5 +81,5 @@ func isValidProtocol(protocol string) bool {
 			return true
 		}
 	}
-		return false
+	return false
 }
