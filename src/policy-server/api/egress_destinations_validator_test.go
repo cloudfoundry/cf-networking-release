@@ -93,6 +93,23 @@ var _ = Describe("EgressDestinationsValidator", func() {
 				})
 			})
 
+			Context("when multiple port ranges are provided", func() {
+				It("returns an error", func() {
+					destinations := []api.EgressDestination{
+						{
+							Name:        "meow",
+							Description: "a cat",
+							Protocol:    "tcp",
+							Ports:       []api.Ports{{Start: 8000, End: 9000}, {Start: 8000, End: 9000}},
+							IPRanges:    []api.IPRange{{Start: "192.0.2.1", End: "192.0.2.1"}},
+						},
+					}
+
+					err := validator.ValidateEgressDestinations(destinations)
+					Expect(err).To(MatchError("only one port range is currently supported"))
+				})
+			})
+
 			Context("when the end port is before the start port", func() {
 				It("returns an error", func() {
 					destinations := []api.EgressDestination{
@@ -100,7 +117,7 @@ var _ = Describe("EgressDestinationsValidator", func() {
 							Name:        "meow",
 							Description: "a cat",
 							Protocol:    "tcp",
-							Ports:       []api.Ports{{Start: 8080, End: 8081}, {Start: 8000, End: 7000}},
+							Ports:       []api.Ports{{Start: 8000, End: 7000}},
 							IPRanges:    []api.IPRange{{Start: "192.0.2.1", End: "192.0.2.1"}},
 						},
 					}
@@ -118,13 +135,30 @@ var _ = Describe("EgressDestinationsValidator", func() {
 							Name:        "meow",
 							Description: "a cat",
 							Protocol:    "tcp",
-							Ports:       []api.Ports{{Start: 8080, End: 8081}, {Start: 8000, End: 999999}},
+							Ports:       []api.Ports{{Start: 8000, End: 999999}},
 							IPRanges:    []api.IPRange{{Start: "192.0.2.1", End: "192.0.2.1"}},
 						},
 					}
 
 					err := validator.ValidateEgressDestinations(destinations)
 					Expect(err).To(MatchError("invalid end port 999999, must be in range 1-65535"))
+				})
+			})
+
+			Context("when the protocol is icmp", func(){
+				It("returns an error", func(){
+					destinations := []api.EgressDestination{
+						{
+							Name:        "meow",
+							Description: "a cat",
+							Protocol:    "icmp",
+							Ports:       []api.Ports{{Start: 8000, End: 9000}},
+							IPRanges:    []api.IPRange{{Start: "192.0.2.1", End: "192.0.2.1"}},
+						},
+					}
+
+					err := validator.ValidateEgressDestinations(destinations)
+					Expect(err).To(MatchError("ports are not supported for icmp protocol"))
 				})
 			})
 		})
@@ -213,7 +247,6 @@ var _ = Describe("EgressDestinationsValidator", func() {
 								Name:        "meow",
 								Description: "a cat",
 								Protocol:    "icmp",
-								Ports:       []api.Ports{{Start: 8080, End: 8081}},
 								IPRanges:    []api.IPRange{{Start: "192.0.2.1", End: "192.0.2.1"}},
 							},
 						}
@@ -233,7 +266,6 @@ var _ = Describe("EgressDestinationsValidator", func() {
 								Name:        "meow",
 								Description: "a cat",
 								Protocol:    "icmp",
-								Ports:       []api.Ports{{Start: 8080, End: 8081}},
 								IPRanges:    []api.IPRange{{Start: "192.0.2.1", End: "192.0.2.1"}},
 								ICMPCode:    &icmpCode,
 								ICMPType:    &icmpType,
@@ -263,6 +295,23 @@ var _ = Describe("EgressDestinationsValidator", func() {
 
 					err := validator.ValidateEgressDestinations(destinations)
 					Expect(err).To(MatchError("missing destination IP range"))
+				})
+			})
+
+			Context("when the End IP is greater than the Start IP ", func() {
+				It("returns an error", func() {
+					destinations := []api.EgressDestination{
+						{
+							Name:        "meow",
+							Description: "a cat",
+							Protocol:    "tcp",
+							Ports:       []api.Ports{{Start: 8080, End: 8081}},
+							IPRanges:    []api.IPRange{{Start: "192.0.2.10", End: "192.0.2.11"}, {Start: "192.0.2.10", End: "192.0.2.11"}},
+						},
+					}
+
+					err := validator.ValidateEgressDestinations(destinations)
+					Expect(err).To(MatchError("only one IP range is currently supported"))
 				})
 			})
 
@@ -318,6 +367,5 @@ var _ = Describe("EgressDestinationsValidator", func() {
 				})
 			})
 		})
-
 	})
 })

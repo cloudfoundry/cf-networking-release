@@ -20,10 +20,6 @@ func (v *EgressDestinationsValidator) ValidateEgressDestinations(destinations []
 			return errors.New("missing destination name")
 		}
 
-		if len(destination.IPRanges) == 0 {
-			return errors.New("missing destination IP range")
-		}
-
 		if destination.Protocol == "" {
 			return errors.New("missing destination protocol")
 		}
@@ -34,6 +30,14 @@ func (v *EgressDestinationsValidator) ValidateEgressDestinations(destinations []
 
 		if destination.Protocol != "icmp" && len(destination.Ports) == 0 {
 			return errors.New("missing destination ports")
+		}
+
+		if destination.Protocol == "icmp" && len(destination.Ports) > 0 {
+			return errors.New("ports are not supported for icmp protocol")
+		}
+
+		if len(destination.Ports) > 1 {
+			return errors.New("only one port range is currently supported")
 		}
 
 		for _, portRange := range destination.Ports {
@@ -52,6 +56,14 @@ func (v *EgressDestinationsValidator) ValidateEgressDestinations(destinations []
 
 		if destination.Protocol != "icmp" && destination.ICMPType != nil {
 			return fmt.Errorf("invalid destination: cannot set icmp_type property for destination with protocol '%s'", destination.Protocol)
+		}
+
+		if len(destination.IPRanges) == 0 {
+			return errors.New("missing destination IP range")
+		}
+
+		if len(destination.IPRanges) > 1 {
+			return errors.New("only one IP range is currently supported")
 		}
 
 		for _, ipRange := range destination.IPRanges {
