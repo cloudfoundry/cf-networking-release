@@ -1,6 +1,7 @@
 package db
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -11,6 +12,7 @@ import (
 
 func NewErroringConnectionPool(conf db.Config, maxOpenConnections int, maxIdleConnections int, connMaxLifetime time.Duration, logPrefix string, jobPrefix string, logger lager.Logger) (*db.ConnWrapper, error) {
 	retriableConnector := db.RetriableConnector{
+		Logger:        logger,
 		Connector:     db.GetConnectionPool,
 		Sleeper:       db.SleeperFunc(time.Sleep),
 		RetryInterval: time.Duration(3) * time.Second,
@@ -18,27 +20,11 @@ func NewErroringConnectionPool(conf db.Config, maxOpenConnections int, maxIdleCo
 	}
 
 	logger.Info("getting db connection", lager.Data{})
-	type dbConnection struct {
-		ConnectionPool *db.ConnWrapper
-		Err            error
+	timeoutCtx, _ := context.WithTimeout(context.Background(), time.Duration(conf.Timeout)*time.Second)
+	connectionPool, err := retriableConnector.GetConnectionPool(conf, timeoutCtx)
+	if err != nil {
+		return nil, fmt.Errorf("%s.%s: db connect: %s", logPrefix, jobPrefix, err) // not tested
 	}
-
-	channel := make(chan dbConnection)
-	go func() {
-		connection, err := retriableConnector.GetConnectionPool(conf)
-		channel <- dbConnection{connection, err}
-	}()
-	var connectionResult dbConnection
-	select {
-	case connectionResult = <-channel:
-	case <-time.After(time.Duration(conf.Timeout) * time.Second):
-		return nil, fmt.Errorf("%s.%s: db connection timeout", logPrefix, jobPrefix)
-	}
-	if connectionResult.Err != nil {
-		return nil, fmt.Errorf("%s.%s: db connect: %s", logPrefix, jobPrefix, connectionResult.Err) // not tested
-	}
-
-	connectionPool := connectionResult.ConnectionPool
 
 	connectionPool.SetMaxOpenConns(maxOpenConnections)
 	connectionPool.SetMaxIdleConns(maxIdleConnections)
