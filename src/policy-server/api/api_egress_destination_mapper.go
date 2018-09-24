@@ -10,6 +10,7 @@ import (
 
 type EgressDestinationMapper struct {
 	Marshaler marshal.Marshaler
+	PayloadValidator payloadValidator
 }
 
 type DestinationsPayload struct {
@@ -37,11 +38,17 @@ func (p *EgressDestinationMapper) AsBytes(egressDestinations []store.EgressDesti
 }
 
 func (p *EgressDestinationMapper) AsEgressDestinations(egressDestinations []byte) ([]store.EgressDestination, error) {
-	var payload DestinationsPayload
-	err := json.Unmarshal(egressDestinations, &payload)
+	payload := &DestinationsPayload{}
+	err := json.Unmarshal(egressDestinations, payload)
 	if err != nil {
 		panic(err)
 	}
+
+	err = p.PayloadValidator.ValidateEgressDestinationsPayload(payload)
+	if err != nil {
+		return []store.EgressDestination{}, fmt.Errorf("validate destinations: %s", err)
+	}
+
 	storeEgressDestinations := make([]store.EgressDestination, len(payload.EgressDestinations))
 	for i, apiDest := range payload.EgressDestinations {
 		storeEgressDestinations[i] = apiDest.asStoreEgressDestination()

@@ -18,6 +18,17 @@ type PayloadValidator struct {
 	validatePayloadReturnsOnCall map[int]struct {
 		result1 error
 	}
+	ValidateEgressDestinationsPayloadStub        func(payload *api.DestinationsPayload) error
+	validateEgressDestinationsPayloadMutex       sync.RWMutex
+	validateEgressDestinationsPayloadArgsForCall []struct {
+		payload *api.DestinationsPayload
+	}
+	validateEgressDestinationsPayloadReturns struct {
+		result1 error
+	}
+	validateEgressDestinationsPayloadReturnsOnCall map[int]struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -70,11 +81,61 @@ func (fake *PayloadValidator) ValidatePayloadReturnsOnCall(i int, result1 error)
 	}{result1}
 }
 
+func (fake *PayloadValidator) ValidateEgressDestinationsPayload(payload *api.DestinationsPayload) error {
+	fake.validateEgressDestinationsPayloadMutex.Lock()
+	ret, specificReturn := fake.validateEgressDestinationsPayloadReturnsOnCall[len(fake.validateEgressDestinationsPayloadArgsForCall)]
+	fake.validateEgressDestinationsPayloadArgsForCall = append(fake.validateEgressDestinationsPayloadArgsForCall, struct {
+		payload *api.DestinationsPayload
+	}{payload})
+	fake.recordInvocation("ValidateEgressDestinationsPayload", []interface{}{payload})
+	fake.validateEgressDestinationsPayloadMutex.Unlock()
+	if fake.ValidateEgressDestinationsPayloadStub != nil {
+		return fake.ValidateEgressDestinationsPayloadStub(payload)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.validateEgressDestinationsPayloadReturns.result1
+}
+
+func (fake *PayloadValidator) ValidateEgressDestinationsPayloadCallCount() int {
+	fake.validateEgressDestinationsPayloadMutex.RLock()
+	defer fake.validateEgressDestinationsPayloadMutex.RUnlock()
+	return len(fake.validateEgressDestinationsPayloadArgsForCall)
+}
+
+func (fake *PayloadValidator) ValidateEgressDestinationsPayloadArgsForCall(i int) *api.DestinationsPayload {
+	fake.validateEgressDestinationsPayloadMutex.RLock()
+	defer fake.validateEgressDestinationsPayloadMutex.RUnlock()
+	return fake.validateEgressDestinationsPayloadArgsForCall[i].payload
+}
+
+func (fake *PayloadValidator) ValidateEgressDestinationsPayloadReturns(result1 error) {
+	fake.ValidateEgressDestinationsPayloadStub = nil
+	fake.validateEgressDestinationsPayloadReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *PayloadValidator) ValidateEgressDestinationsPayloadReturnsOnCall(i int, result1 error) {
+	fake.ValidateEgressDestinationsPayloadStub = nil
+	if fake.validateEgressDestinationsPayloadReturnsOnCall == nil {
+		fake.validateEgressDestinationsPayloadReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.validateEgressDestinationsPayloadReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *PayloadValidator) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.validatePayloadMutex.RLock()
 	defer fake.validatePayloadMutex.RUnlock()
+	fake.validateEgressDestinationsPayloadMutex.RLock()
+	defer fake.validateEgressDestinationsPayloadMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

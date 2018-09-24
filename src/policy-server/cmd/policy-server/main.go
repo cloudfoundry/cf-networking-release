@@ -165,7 +165,7 @@ func main() {
 	quotaGuard := handlers.NewQuotaGuard(wrappedStore, conf.MaxPolicies)
 	policyFilter := handlers.NewPolicyFilter(uaaClient, ccClient, 100)
 
-	payloadValidator := &api.PayloadValidator{PolicyValidator: &api.Validator{}}
+	payloadValidator := &api.PayloadValidator{PolicyValidator: &api.Validator{}, EgressDestinationValidator: &api.EgressDestinationsValidator{}}
 	policyMapperV0 := api_v0.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal), &api_v0.Validator{})
 	policyMapperV1 := api.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal), payloadValidator)
 
@@ -184,6 +184,7 @@ func main() {
 
 	egressDestinationMapper := &api.EgressDestinationMapper{
 		Marshaler: marshal.MarshalFunc(json.Marshal),
+		PayloadValidator: payloadValidator,
 	}
 
 	egressDestinationStore := &store.EgressDestinationStore{

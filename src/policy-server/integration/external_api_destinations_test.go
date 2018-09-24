@@ -52,11 +52,19 @@ var _ = Describe("External Destination API", func() {
 
 	Describe("create and listing all destinations", func() {
 		It("returns all created destinations", func() {
+			invalidCreateRequestBody := bytes.NewBufferString(`{
+				"destinations": []
+			}`)
+
+			resp := helpers.MakeAndDoRequest("POST", destinationsURL, nil, invalidCreateRequestBody)
+			Expect(resp.StatusCode).To(Equal(http.StatusInternalServerError))
+
 			createRequestBody := bytes.NewBufferString(`{
 				"destinations": [	
 					{
 						"name": "tcp ips only",
 						"description": "tcp ips only desc",
+						"ports": [{"start": 8080, "end": 8081}],
 						"ips": [{"start": "23.96.32.148", "end": "23.96.32.149" }],
 						"protocol": "tcp"
 					},
@@ -78,8 +86,7 @@ var _ = Describe("External Destination API", func() {
 				]
 			}`)
 
-			resp := helpers.MakeAndDoRequest("POST", destinationsURL, nil, createRequestBody)
-
+			resp = helpers.MakeAndDoRequest("POST", destinationsURL, nil, createRequestBody)
 			Expect(resp.StatusCode).To(Equal(http.StatusCreated))
 			responseBytes, err := ioutil.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
@@ -91,6 +98,7 @@ var _ = Describe("External Destination API", func() {
 						"id": "<replaced>",
 						"name": "tcp ips only",
 						"description": "tcp ips only desc",
+						"ports": [{"start": 8080, "end": 8081}],
 						"ips": [{"start": "23.96.32.148", "end": "23.96.32.149" }],
 						"protocol": "tcp"
 					},
@@ -127,6 +135,7 @@ var _ = Describe("External Destination API", func() {
 						"id": "<replaced>",
 						"name": "tcp ips only",
 						"description": "tcp ips only desc",
+						"ports": [{"start": 8080, "end": 8081}],
 						"ips": [{"start": "23.96.32.148", "end": "23.96.32.149" }],
 						"protocol": "tcp"
 					},
