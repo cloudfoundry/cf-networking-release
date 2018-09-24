@@ -184,6 +184,7 @@ var _ = Describe("Integration", func() {
 			var err error
 			session, err = gexec.Start(policyServerCmd, GinkgoWriter, GinkgoWriter)
 			Expect(err).NotTo(HaveOccurred())
+			Eventually(session.Out).Should(gbytes.Say("getting db connection"))
 		})
 
 		AfterEach(func() {
@@ -191,7 +192,7 @@ var _ = Describe("Integration", func() {
 			Eventually(session, helpers.DEFAULT_TIMEOUT).Should(gexec.Exit())
 		})
 
-		It("should log and exit after ~1 second", func() {
+		It("should log and exit with a timeout error", func() {
 			Eventually(session, 5*time.Second).Should(gexec.Exit())
 			Expect(session.Err).To(gbytes.Say("testprefix.policy-server: db connect: unable to ping: context deadline exceeded"))
 		})
