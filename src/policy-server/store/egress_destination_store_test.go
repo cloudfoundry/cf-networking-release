@@ -3,7 +3,6 @@ package store_test
 import (
 	"errors"
 	"fmt"
-	"policy-server/db"
 	"policy-server/store"
 	"policy-server/store/fakes"
 	"test-helpers"
@@ -11,7 +10,7 @@ import (
 
 	dbfakes "code.cloudfoundry.org/cf-networking-helpers/db/fakes"
 
-	dbHelper "code.cloudfoundry.org/cf-networking-helpers/db"
+	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"code.cloudfoundry.org/lager"
 	uuid "github.com/nu7hatch/gouuid"
@@ -29,8 +28,8 @@ var _ = Describe("EgressDestinationStore", func() {
 
 	Describe("using an actual db", func() {
 		var (
-			dbConf dbHelper.Config
-			realDb *dbHelper.ConnWrapper
+			dbConf db.Config
+			realDb *db.ConnWrapper
 		)
 
 		BeforeEach(func() {
@@ -40,7 +39,10 @@ var _ = Describe("EgressDestinationStore", func() {
 			testhelpers.CreateDatabase(dbConf)
 
 			logger := lager.NewLogger("Egress Destination Store Test")
-			realDb = db.NewConnectionPool(dbConf, 200, 200, 5*time.Minute, "Egress Destination Store Test", "Egress Destination Store Test", logger)
+
+			var err error
+			realDb, err = db.NewConnectionPool(dbConf, 200, 200, 5*time.Minute, "Egress Destination Store Test", "Egress Destination Store Test", logger)
+			Expect(err).NotTo(HaveOccurred())
 
 			migrate(realDb)
 
@@ -53,8 +55,8 @@ var _ = Describe("EgressDestinationStore", func() {
 			egressDestinationsStore = &store.EgressDestinationStore{
 				TerminalsRepo:           terminalsRepo,
 				DestinationMetadataRepo: destinationMetadataRepo,
-				Conn:                    realDb,
-				EgressDestinationRepo:   egressDestinationTable,
+				Conn: realDb,
+				EgressDestinationRepo: egressDestinationTable,
 			}
 		})
 
@@ -168,7 +170,7 @@ var _ = Describe("EgressDestinationStore", func() {
 			destinationMetadataRepo = &fakes.DestinationMetadataRepo{}
 
 			egressDestinationsStore = &store.EgressDestinationStore{
-				Conn:                    mockDB,
+				Conn: mockDB,
 				EgressDestinationRepo:   egressDestinationRepo,
 				DestinationMetadataRepo: destinationMetadataRepo,
 				TerminalsRepo:           terminalsRepo,

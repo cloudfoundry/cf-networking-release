@@ -3,7 +3,6 @@ package store_test
 import (
 	"errors"
 	"fmt"
-	"policy-server/db"
 	"policy-server/store"
 	"policy-server/store/fakes"
 	"test-helpers"
@@ -14,29 +13,30 @@ import (
 
 	dbfakes "code.cloudfoundry.org/cf-networking-helpers/db/fakes"
 
-	dbHelper "code.cloudfoundry.org/cf-networking-helpers/db"
+	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"code.cloudfoundry.org/lager"
 )
 
 var _ = Describe("Egress Policy Table", func() {
 	var (
-		dbConf            dbHelper.Config
-		realDb            *dbHelper.ConnWrapper
+		dbConf            db.Config
+		realDb            *db.ConnWrapper
 		mockDb            *fakes.Db
 		egressPolicyTable *store.EgressPolicyTable
 		terminalsTable    *store.TerminalsTable
-		tx                dbHelper.Transaction
+		tx                db.Transaction
 		fakeGUIDGenerator *fakes.GUIDGenerator
 	)
 
-	getMigratedRealDb := func(dbConfig dbHelper.Config) (*dbHelper.ConnWrapper, dbHelper.Transaction) {
+	getMigratedRealDb := func(dbConfig db.Config) (*db.ConnWrapper, db.Transaction) {
 		var err error
 		testhelpers.CreateDatabase(dbConf)
 
 		logger := lager.NewLogger("Egress Store Test")
 
-		realDb = db.NewConnectionPool(dbConf, 200, 200, 5*time.Minute, "Egress Store Test", "Egress Store Test", logger)
+		realDb, err = db.NewConnectionPool(dbConf, 200, 200, 5*time.Minute, "Egress Store Test", "Egress Store Test", logger)
+		Expect(err).NotTo(HaveOccurred())
 
 		migrate(realDb)
 		tx, err = realDb.Beginx()
@@ -1167,7 +1167,7 @@ func egressDestinationStore(db store.Database) *store.EgressDestinationStore {
 
 	destinationMetadataTable := &store.DestinationMetadataTable{}
 	egressDestinationStore := &store.EgressDestinationStore{
-		Conn:                    db,
+		Conn: db,
 		EgressDestinationRepo:   &store.EgressDestinationTable{},
 		TerminalsRepo:           terminalsRepo,
 		DestinationMetadataRepo: destinationMetadataTable,

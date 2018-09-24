@@ -6,21 +6,19 @@ import (
 	"strings"
 	"time"
 
-	"policy-server/db"
-
-	configHelper "code.cloudfoundry.org/cf-networking-helpers/db"
+	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/lager"
 	"github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-func CreateDatabase(config configHelper.Config) {
+func CreateDatabase(config db.Config) {
 	config.Timeout = 120
 	dbToCreate := config.DatabaseName
 	config.DatabaseName = ""
 	fmt.Fprintf(ginkgo.GinkgoWriter, "%s Creating database %s", time.Now().String(), dbToCreate)
 	logger := lager.NewLogger("Test Support")
-	connectionPool := db.NewConnectionPool(
+	connectionPool, err := db.NewConnectionPool(
 		config,
 		200,
 		200,
@@ -29,19 +27,20 @@ func CreateDatabase(config configHelper.Config) {
 		"db-helper",
 		logger,
 	)
+	Expect(err).NotTo(HaveOccurred())
 	defer connectionPool.Close()
-	_, err := connectionPool.Exec(fmt.Sprintf("CREATE DATABASE %s", dbToCreate))
+	_, err = connectionPool.Exec(fmt.Sprintf("CREATE DATABASE %s", dbToCreate))
 	Expect(err).NotTo(HaveOccurred())
 }
 
-func RemoveDatabase(config configHelper.Config) {
+func RemoveDatabase(config db.Config) {
 	config.Timeout = 120
 
 	dbToDrop := config.DatabaseName
 	config.DatabaseName = ""
 
 	logger := lager.NewLogger("Test Support")
-	connectionPool := db.NewConnectionPool(
+	connectionPool, err := db.NewConnectionPool(
 		config,
 		200,
 		200,
@@ -50,8 +49,9 @@ func RemoveDatabase(config configHelper.Config) {
 		"db-helper",
 		logger,
 	)
+	Expect(err).NotTo(HaveOccurred())
 	defer connectionPool.Close()
-	_, err := connectionPool.Exec(fmt.Sprintf("DROP DATABASE %s", dbToDrop))
+	_, err = connectionPool.Exec(fmt.Sprintf("DROP DATABASE %s", dbToDrop))
 	if err != nil {
 		fmt.Fprintln(ginkgo.GinkgoWriter, fmt.Sprintf("%+v", err))
 	}
@@ -59,8 +59,8 @@ func RemoveDatabase(config configHelper.Config) {
 
 const DefaultDBTimeout = 5
 
-func getPostgresDBConfig() configHelper.Config {
-	return configHelper.Config{
+func getPostgresDBConfig() db.Config {
+	return db.Config{
 		Type:     "postgres",
 		User:     "postgres",
 		Password: "",
@@ -70,8 +70,8 @@ func getPostgresDBConfig() configHelper.Config {
 	}
 }
 
-func getMySQLDBConfig() configHelper.Config {
-	return configHelper.Config{
+func getMySQLDBConfig() db.Config {
+	return db.Config{
 		Type:     "mysql",
 		User:     "root",
 		Password: "password",
@@ -81,7 +81,7 @@ func getMySQLDBConfig() configHelper.Config {
 	}
 }
 
-func GetDBConfig() configHelper.Config {
+func GetDBConfig() db.Config {
 	dbEnv := os.Getenv("DB")
 	switch {
 	case strings.HasPrefix(dbEnv, "mysql"):

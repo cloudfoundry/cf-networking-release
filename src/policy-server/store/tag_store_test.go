@@ -8,11 +8,9 @@ import (
 	"policy-server/store/fakes"
 	"time"
 
-	dbHelper "code.cloudfoundry.org/cf-networking-helpers/db"
+	"code.cloudfoundry.org/cf-networking-helpers/db"
 	dbfakes "code.cloudfoundry.org/cf-networking-helpers/db/fakes"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
-
-	"policy-server/db"
 
 	"code.cloudfoundry.org/lager"
 	. "github.com/onsi/ginkgo"
@@ -22,8 +20,8 @@ import (
 var _ = Describe("TagStore", func() {
 	var (
 		dataStore   store.Store
-		dbConf      dbHelper.Config
-		realDb      *dbHelper.ConnWrapper
+		dbConf      db.Config
+		realDb      *db.ConnWrapper
 		mockDb      *fakes.Db
 		group       store.GroupRepo
 		destination store.DestinationRepo
@@ -46,7 +44,7 @@ var _ = Describe("TagStore", func() {
 		logger := lager.NewLogger("Tag Store Test")
 
 		var err error
-		realDb = db.NewConnectionPool(dbConf, 200, 200, 5*time.Minute, "Tag Store Test", "Tag Store Test", logger)
+		realDb, err = db.NewConnectionPool(dbConf, 200, 200, 5*time.Minute, "Tag Store Test", "Tag Store Test", logger)
 		Expect(err).NotTo(HaveOccurred())
 
 		group = &store.GroupTable{}

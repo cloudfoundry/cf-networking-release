@@ -3,14 +3,13 @@ package store_test
 import (
 	"errors"
 	"fmt"
-	"policy-server/db"
 	"policy-server/store"
 	testhelpers "test-helpers"
 	"time"
 
 	dbfakes "code.cloudfoundry.org/cf-networking-helpers/db/fakes"
 
-	dbHelper "code.cloudfoundry.org/cf-networking-helpers/db"
+	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"code.cloudfoundry.org/lager"
 
@@ -22,10 +21,10 @@ import (
 var _ = Describe("Terminal Table", func() {
 	Context("when using a real db", func() {
 		var (
-			dbConf         dbHelper.Config
-			realDb         *dbHelper.ConnWrapper
+			dbConf         db.Config
+			realDb         *db.ConnWrapper
 			terminalsTable *store.TerminalsTable
-			tx             dbHelper.Transaction
+			tx             db.Transaction
 		)
 
 		BeforeEach(func() {
@@ -37,7 +36,8 @@ var _ = Describe("Terminal Table", func() {
 
 			logger := lager.NewLogger("Terminal Table Test")
 
-			realDb = db.NewConnectionPool(dbConf, 200, 200, 5*time.Minute, "Terminal Table Test", "Terminal Table Test", logger)
+			realDb, err = db.NewConnectionPool(dbConf, 200, 200, 5*time.Minute, "Terminal Table Test", "Terminal Table Test", logger)
+			Expect(err).NotTo(HaveOccurred())
 
 			migrate(realDb)
 

@@ -16,15 +16,14 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
 
-	"code.cloudfoundry.org/cf-networking-helpers/db"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gexec"
 	"policy-server/store"
 	"policy-server/store/migrations"
 	"test-helpers"
 
-	policyServerDb "policy-server/db"
+	"code.cloudfoundry.org/cf-networking-helpers/db"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gexec"
 
 	"code.cloudfoundry.org/lager"
 )
@@ -179,7 +178,8 @@ func mustSucceed(binary string, args ...string) string {
 func migrateAndPopulateTags(dbConf db.Config) {
 	logger := lager.NewLogger("Timeout Test")
 
-	realDb := policyServerDb.NewConnectionPool(dbConf, 200, 200, 5*time.Minute, "Timeout Test", "Timeout Test", logger)
+	realDb, err := db.NewConnectionPool(dbConf, 200, 200, 5*time.Minute, "Timeout Test", "Timeout Test", logger)
+	Expect(err).NotTo(HaveOccurred())
 
 	migrator := &migrations.Migrator{
 		MigrateAdapter: &migrations.MigrateAdapter{},

@@ -25,8 +25,7 @@ import (
 	"policy-server/store"
 	"policy-server/uaa_client"
 
-	"policy-server/db"
-
+	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/httperror"
 	"code.cloudfoundry.org/cf-networking-helpers/json_client"
 	"code.cloudfoundry.org/cf-networking-helpers/marshal"
@@ -105,7 +104,7 @@ func main() {
 	policy := &store.PolicyTable{}
 
 	logger.Info("getting db connection", lager.Data{})
-	connectionPool := db.NewConnectionPool(
+	connectionPool, err := db.NewConnectionPool(
 		conf.Database,
 		conf.MaxOpenConnections,
 		conf.MaxIdleConnections,
@@ -114,6 +113,10 @@ func main() {
 		jobPrefix,
 		logger,
 	)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+
 	logger.Info("db connection retrieved", lager.Data{})
 
 	terminalsTable := &store.TerminalsTable{

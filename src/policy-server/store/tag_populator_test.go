@@ -4,14 +4,13 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"policy-server/db"
 	"policy-server/store"
 	"policy-server/store/fakes"
 	"strings"
 	"test-helpers"
 	"time"
 
-	dbHelper "code.cloudfoundry.org/cf-networking-helpers/db"
+	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"code.cloudfoundry.org/lager"
 	. "github.com/onsi/ginkgo"
@@ -25,8 +24,8 @@ var _ = Describe("Tag Populator", func() {
 
 	Context("when connecting to the DB succeeds", func() {
 		var (
-			dbConf dbHelper.Config
-			realDb *dbHelper.ConnWrapper
+			dbConf db.Config
+			realDb *db.ConnWrapper
 		)
 
 		BeforeEach(func() {
@@ -38,7 +37,9 @@ var _ = Describe("Tag Populator", func() {
 
 			logger := lager.NewLogger("Tag Populator Test")
 
-			realDb = db.NewConnectionPool(dbConf, 200, 200, 5*time.Minute, "Tag Populator Test", "Tag Populator Test", logger)
+			var err error
+			realDb, err = db.NewConnectionPool(dbConf, 200, 200, 5*time.Minute, "Tag Populator Test", "Tag Populator Test", logger)
+			Expect(err).NotTo(HaveOccurred())
 
 			migrate(realDb)
 			tagPopulator = &store.TagPopulator{

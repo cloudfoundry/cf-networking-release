@@ -6,12 +6,11 @@ import (
 	"time"
 
 	"policy-server/config"
-	"policy-server/db"
 	"policy-server/integration/helpers"
 	"policy-server/store/migrations"
 	"test-helpers"
 
-	dbHelper "code.cloudfoundry.org/cf-networking-helpers/db"
+	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
 	"code.cloudfoundry.org/lager/lagertest"
@@ -24,7 +23,7 @@ const TimeoutShort = 20 * time.Second
 
 var _ = Describe("Migrate DB Binary", func() {
 	var (
-		dbConf dbHelper.Config
+		dbConf db.Config
 		conf   config.Config
 	)
 
@@ -92,7 +91,7 @@ var _ = Describe("Migrate DB Binary", func() {
 	})
 })
 
-func assertMigrationsSucceeded(conn *dbHelper.ConnWrapper, conf config.Config) {
+func assertMigrationsSucceeded(conn *db.ConnWrapper, conf config.Config) {
 	numMigrations := len(migrations.V1ModifiedMigrationsToPerform) +
 		len(migrations.V2ModifiedMigrationsToPerform) +
 		len(migrations.V3ModifiedMigrationsToPerform) +
@@ -107,8 +106,8 @@ func assertMigrationsSucceeded(conn *dbHelper.ConnWrapper, conf config.Config) {
 	Expect(groupCount).To(Equal(int(math.Exp2(float64(conf.TagLength*8))) - 1))
 }
 
-func createDbConn(dbConf dbHelper.Config) *dbHelper.ConnWrapper {
-	return db.NewConnectionPool(
+func createDbConn(dbConf db.Config) *db.ConnWrapper {
+	conn, err := db.NewConnectionPool(
 		dbConf,
 		1,
 		1,
@@ -117,4 +116,6 @@ func createDbConn(dbConf dbHelper.Config) *dbHelper.ConnWrapper {
 		"test-job-prefix",
 		lagertest.NewTestLogger("test"),
 	)
+	Expect(err).NotTo(HaveOccurred())
+	return conn
 }

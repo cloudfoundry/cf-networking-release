@@ -2,7 +2,6 @@ package store_test
 
 import (
 	"fmt"
-	"policy-server/db"
 	"policy-server/store"
 	"policy-server/store/migrations"
 	"test-helpers"
@@ -10,7 +9,7 @@ import (
 
 	migrationsFakes "policy-server/store/migrations/fakes"
 
-	dbHelper "code.cloudfoundry.org/cf-networking-helpers/db"
+	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"code.cloudfoundry.org/lager"
 
@@ -21,8 +20,8 @@ import (
 
 var _ = Describe("MigrationsStore", func() {
 	var (
-		dbConf dbHelper.Config
-		realDb *dbHelper.ConnWrapper
+		dbConf db.Config
+		realDb *db.ConnWrapper
 
 		migrationsProvider *migrationsFakes.MigrationsProvider
 		migrator           *migrations.Migrator
@@ -38,7 +37,9 @@ var _ = Describe("MigrationsStore", func() {
 
 		logger := lager.NewLogger("Migrations Store Test")
 
-		realDb = db.NewConnectionPool(dbConf, 200, 200, 5*time.Minute, "Migrations Store Test", "Migrations Store Test", logger)
+		var err error
+		realDb, err = db.NewConnectionPool(dbConf, 200, 200, 5*time.Minute, "Migrations Store Test", "Migrations Store Test", logger)
+		Expect(err).NotTo(HaveOccurred())
 
 		migrationsProvider = &migrationsFakes.MigrationsProvider{}
 

@@ -2,14 +2,13 @@ package store_test
 
 import (
 	"fmt"
-	"policy-server/db"
 	"policy-server/store"
 	"test-helpers"
 	"time"
 
 	"github.com/nu7hatch/gouuid"
 
-	dbHelper "code.cloudfoundry.org/cf-networking-helpers/db"
+	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"code.cloudfoundry.org/lager"
 
@@ -19,14 +18,14 @@ import (
 
 var _ = Describe("EgressDestination", func() {
 	var (
-		dbConf dbHelper.Config
-		realDb *dbHelper.ConnWrapper
+		dbConf db.Config
+		realDb *db.ConnWrapper
 
 		terminalsTable         *store.TerminalsTable
 		egressDestinationTable *store.EgressDestinationTable
 
 		terminalId string
-		tx         dbHelper.Transaction
+		tx         db.Transaction
 		err        error
 	)
 
@@ -37,7 +36,10 @@ var _ = Describe("EgressDestination", func() {
 		testhelpers.CreateDatabase(dbConf)
 
 		logger := lager.NewLogger("Egress Destination Test")
-		realDb = db.NewConnectionPool(dbConf, 200, 200, 5*time.Minute, "Egress Destination Test", "Egress Destination Test", logger)
+
+		var err error
+		realDb, err = db.NewConnectionPool(dbConf, 200, 200, 5*time.Minute, "Egress Destination Test", "Egress Destination Test", logger)
+		Expect(err).NotTo(HaveOccurred())
 
 		migrate(realDb)
 

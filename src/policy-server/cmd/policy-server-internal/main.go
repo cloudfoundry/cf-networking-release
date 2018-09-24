@@ -15,8 +15,7 @@ import (
 	"policy-server/handlers"
 	"policy-server/store"
 
-	"policy-server/db"
-
+	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/httperror"
 	"code.cloudfoundry.org/cf-networking-helpers/marshal"
 	"code.cloudfoundry.org/cf-networking-helpers/metrics"
@@ -56,7 +55,7 @@ func main() {
 
 	logger, reconfigurableSink := lagerflags.NewFromConfig(fmt.Sprintf("%s.%s", logPrefix, jobPrefix), common.GetLagerConfig())
 
-	connectionPool := db.NewConnectionPool(
+	connectionPool, err := db.NewConnectionPool(
 		conf.Database,
 		conf.MaxOpenConnections,
 		conf.MaxIdleConnections,
@@ -65,6 +64,9 @@ func main() {
 		jobPrefix,
 		logger,
 	)
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
 
 	dataStore := store.New(
 		connectionPool,

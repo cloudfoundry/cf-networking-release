@@ -55,7 +55,6 @@ files:
   - github.com/tedsuo/rata/*.go # gosub
   - gopkg.in/validator.v2/*.go # gosub
   - lib/common/*.go # gosub
-  - policy-server/db/*.go # gosub
   - policy-server/server_metrics/*.go # gosub
   - policy-server/store/*.go # gosub
   - policy-server/store/helpers/*.go # gosub

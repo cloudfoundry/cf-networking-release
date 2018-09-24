@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"policy-server/config"
-	"policy-server/db"
 	"policy-server/store"
 	"time"
 
@@ -13,6 +12,7 @@ import (
 	"log"
 	"policy-server/store/migrations"
 
+	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagerflags"
 )
@@ -71,7 +71,7 @@ func parseConfig() *config.Config {
 
 func migrateAndPopulateGroupsTable(logger lager.Logger, conf *config.Config) error {
 	logger.Info("getting migration db connection")
-	dbConn, err := db.NewErroringConnectionPool(
+	dbConn, err := db.NewConnectionPool(
 		conf.Database,
 		conf.MaxOpenConnections,
 		conf.MaxIdleConnections,

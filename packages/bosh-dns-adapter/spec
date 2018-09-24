@@ -52,7 +52,6 @@ files:
   - golang.org/x/net/dns/dnsmessage/*.go # gosub
   - gopkg.in/validator.v2/*.go # gosub
   - lib/common/*.go # gosub
-  - policy-server/db/*.go # gosub
   - policy-server/server_metrics/*.go # gosub
   - policy-server/store/*.go # gosub
   - policy-server/store/helpers/*.go # gosub
