@@ -38,6 +38,17 @@ var HaveName = func(name string) types.GomegaMatcher {
 	}, Equal(name))
 }
 
+var HaveOriginAndName = func(origin, name string) types.GomegaMatcher {
+	return SatisfyAll(
+		WithTransform(func(ev metrics.Event) string {
+			return ev.Name
+		}, Equal(name)),
+		WithTransform(func(ev metrics.Event) string {
+			return ev.Origin
+		}, Equal(origin)),
+	)
+}
+
 var _ = helpers.MockCCServer
 var _ = helpers.MockUAAServer
 

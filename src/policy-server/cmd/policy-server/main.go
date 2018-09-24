@@ -187,7 +187,7 @@ func main() {
 	}
 
 	egressDestinationStore := &store.EgressDestinationStore{
-		Conn:                    connectionPool,
+		Conn: connectionPool,
 		EgressDestinationRepo:   &store.EgressDestinationTable{},
 		TerminalsRepo:           terminalsTable,
 		DestinationMetadataRepo: &store.DestinationMetadataTable{},
@@ -344,7 +344,7 @@ func main() {
 		log.Fatalf("%s.%s: initializing dropsonde: %s", logPrefix, jobPrefix, err)
 	}
 
-	metricsEmitter := common.InitMetricsEmitter(logger, wrappedStore)
+	metricsEmitter := common.InitMetricsEmitter(logger, wrappedStore, connectionPool)
 	externalServer := common.InitServer(logger, nil, conf.ListenHost, conf.ListenPort, externalHandlers, externalRoutesWithOptions)
 	poller := initPoller(logger, conf, policyCleaner)
 	debugServer := debugserver.Runner(fmt.Sprintf("%s:%d", conf.DebugServerHost, conf.DebugServerPort), reconfigurableSink)

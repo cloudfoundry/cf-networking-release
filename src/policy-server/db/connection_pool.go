@@ -70,6 +70,10 @@ func (c *ConnWrapper) Close() error {
 	return c.sqlxDB.Close()
 }
 
+func (c *ConnWrapper) OpenConnections() int {
+	return c.sqlxDB.Stats().OpenConnections
+}
+
 func NewErroringConnectionPool(conf db.Config, maxOpenConnections int, maxIdleConnections int, connMaxLifetime time.Duration, logPrefix string, jobPrefix string, logger lager.Logger) (*ConnWrapper, error) {
 	retriableConnector := db.RetriableConnector{
 		Connector:     db.GetConnectionPool,

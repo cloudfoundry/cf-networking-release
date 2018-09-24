@@ -148,14 +148,16 @@ var _ = Describe("Integration", func() {
 
 			It("should emit some metrics", func() {
 				Eventually(fakeMetron.AllEvents, "5s").Should(
-					ContainElement(
-						HaveName("uptime"),
-					))
+					ContainElement(HaveOriginAndName("policy-server", "uptime")),
+				)
 
 				Eventually(fakeMetron.AllEvents, "5s").Should(
-					ContainElement(
-						HaveName("totalPolicies"),
-					))
+					ContainElement(HaveOriginAndName("policy-server", "totalPolicies")),
+				)
+
+				Eventually(fakeMetron.AllEvents, "5s").Should(
+					ContainElement(HaveOriginAndName("policy-server", "DBOpenConnections")),
+				)
 			})
 		})
 	})

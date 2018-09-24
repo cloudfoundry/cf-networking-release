@@ -1,7 +1,6 @@
 package integration_test
 
 import (
-	"code.cloudfoundry.org/lager/lagertest"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
@@ -11,6 +10,8 @@ import (
 	"policy-server/integration/helpers"
 	"policy-server/psclient"
 	"strings"
+
+	"code.cloudfoundry.org/lager/lagertest"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
@@ -213,6 +214,20 @@ var _ = Describe("Internal API", func() {
 
 			Eventually(session.Out).Should(gbytes.Say("testprefix.policy-server-internal.request_.*serving"))
 			Eventually(session.Out).Should(gbytes.Say("testprefix.policy-server-internal.request_.*done"))
+		})
+
+		It("should emit some metrics", func() {
+			Eventually(fakeMetron.AllEvents, "5s").Should(
+				ContainElement(HaveOriginAndName("policy-server-internal", "uptime")),
+			)
+
+			Eventually(fakeMetron.AllEvents, "5s").Should(
+				ContainElement(HaveOriginAndName("policy-server-internal", "totalPolicies")),
+			)
+
+			Eventually(fakeMetron.AllEvents, "5s").Should(
+				ContainElement(HaveOriginAndName("policy-server-internal", "DBOpenConnections")),
+			)
 		})
 	})
 
