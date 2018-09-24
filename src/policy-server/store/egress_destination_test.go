@@ -2,11 +2,12 @@ package store_test
 
 import (
 	"fmt"
-	"github.com/nu7hatch/gouuid"
 	"policy-server/db"
 	"policy-server/store"
 	"test-helpers"
 	"time"
+
+	"github.com/nu7hatch/gouuid"
 
 	dbHelper "code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
@@ -25,7 +26,7 @@ var _ = Describe("EgressDestination", func() {
 		egressDestinationTable *store.EgressDestinationTable
 
 		terminalId string
-		tx         db.Transaction
+		tx         dbHelper.Transaction
 		err        error
 	)
 
