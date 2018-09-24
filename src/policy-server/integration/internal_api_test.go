@@ -86,7 +86,7 @@ var _ = Describe("Internal API", func() {
 		logger := lagertest.NewTestLogger("internal_api_test")
 		client := psclient.NewClient(logger, http.DefaultClient, fmt.Sprintf("http://%s:%d", conf.ListenHost, conf.ListenPort))
 
-		guids, err := client.CreateDestinations("valid-token", psclient.Destination{
+		createdDestinations, err := client.CreateDestinations("valid-token", psclient.Destination{
 			IPs:         []psclient.IPRange{{Start: "10.27.1.1", End: "10.27.1.2"}},
 			Protocol:    "tcp",
 			Name:        "dest-1",
@@ -101,12 +101,12 @@ var _ = Describe("Internal API", func() {
 
 		_, err = client.CreateEgressPolicy(psclient.EgressPolicy{
 			Source:      psclient.EgressPolicySource{ID: "live-app-1-guid"},
-			Destination: psclient.EgressPolicyDestination{ID: guids[0]},
+			Destination: psclient.EgressPolicyDestination{ID: createdDestinations[0].GUID},
 		}, "valid-token")
 		Expect(err).ToNot(HaveOccurred())
 		_, err = client.CreateEgressPolicy(psclient.EgressPolicy{
 			Source:      psclient.EgressPolicySource{ID: "live-space-1-guid", Type: "space"},
-			Destination: psclient.EgressPolicyDestination{ID: guids[1]},
+			Destination: psclient.EgressPolicyDestination{ID: createdDestinations[1].GUID},
 		}, "valid-token")
 		Expect(err).ToNot(HaveOccurred())
 	})

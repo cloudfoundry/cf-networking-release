@@ -72,16 +72,20 @@ var _ = Describe("Client", func() {
 			BeforeEach(func() {
 				jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 					respBytes := []byte(`{
-                    "destinations": [ { "id": "some-dest-guid" }, { "id": "some-other-dest-guid" }  ]
-                }`)
+           				"destinations": [ { "id": "some-dest-guid" }, { "id": "some-other-dest-guid" }  ]
+                	}`)
 					json.Unmarshal(respBytes, respData)
 					return nil
 				}
 			})
 			It("creates a destination and returns a guid", func() {
-				guids, err := client.CreateDestinations(token, destination1, destination2)
+				createdDestinations, err := client.CreateDestinations(token, destination1, destination2)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(guids).To(Equal([]string{"some-dest-guid", "some-other-dest-guid"}))
+				expectedDestinations := []psclient.Destination{
+					{GUID: "some-dest-guid"},
+					{GUID: "some-other-dest-guid"},
+				}
+				Expect(createdDestinations).To(Equal(expectedDestinations))
 
 				Expect(jsonClient.DoCallCount()).To(Equal(1))
 				passedMethod, passedRoute, passedReqData, _, passedToken := jsonClient.DoArgsForCall(0)
@@ -98,6 +102,59 @@ var _ = Describe("Client", func() {
 				jsonClient.DoStub = nil
 				jsonClient.DoReturns(errors.New("failed to do"))
 				_, err := client.CreateDestinations(token, destination1)
+				Expect(err).To(MatchError("json client do: failed to do"))
+			})
+		})
+
+		Describe("DeleteDestination", func() {
+			var (
+				destinationToDelete psclient.Destination
+				destinationResp     psclient.DestinationList
+			)
+
+			BeforeEach(func() {
+				destinationResp = psclient.DestinationList{
+					Destinations: []psclient.Destination{{
+						GUID:     "response-dest-guid",
+						Protocol: "tcp",
+						IPs: []psclient.IPRange{
+							{Start: "1.1.1.1", End: "1.1.1.5"},
+						},
+						Ports: []psclient.Port{
+							{Start: 1234, End: 2345},
+						},
+						Name:        "destinationObject",
+						Description: "description",
+					}},
+				}
+				destinationRespBytes, err := json.Marshal(destinationResp)
+				Expect(err).NotTo(HaveOccurred())
+
+				jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+					json.Unmarshal(destinationRespBytes, respData)
+					return nil
+				}
+
+				destinationToDelete = psclient.Destination{GUID: "dest-guid"}
+			})
+
+			It("deletes destination", func() {
+				deletedDestination, err := client.DeleteDestination(token, destinationToDelete)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(deletedDestination).To(Equal(destinationResp.Destinations[0]))
+
+				Expect(jsonClient.DoCallCount()).To(Equal(1))
+				passedMethod, passedRoute, _, _, passedToken := jsonClient.DoArgsForCall(0)
+				Expect(passedMethod).To(Equal("DELETE"))
+				Expect(passedRoute).To(Equal("/networking/v1/external/destinations/dest-guid"))
+				Expect(passedToken).To(Equal("Bearer some-token"))
+			})
+
+			It("returns an error when the json client do fails", func() {
+				jsonClient.DoStub = nil
+				jsonClient.DoReturns(errors.New("failed to do"))
+				_, err := client.DeleteDestination(token, destination1)
 				Expect(err).To(MatchError("json client do: failed to do"))
 			})
 		})

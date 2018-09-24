@@ -43,6 +43,32 @@ type EgressDestinationRepo struct {
 		result1 int64
 		result2 error
 	}
+	GetByGUIDStub        func(tx db.Transaction, guid string) (store.EgressDestination, error)
+	getByGUIDMutex       sync.RWMutex
+	getByGUIDArgsForCall []struct {
+		tx   db.Transaction
+		guid string
+	}
+	getByGUIDReturns struct {
+		result1 store.EgressDestination
+		result2 error
+	}
+	getByGUIDReturnsOnCall map[int]struct {
+		result1 store.EgressDestination
+		result2 error
+	}
+	DeleteStub        func(tx db.Transaction, guid string) error
+	deleteMutex       sync.RWMutex
+	deleteArgsForCall []struct {
+		tx   db.Transaction
+		guid string
+	}
+	deleteReturns struct {
+		result1 error
+	}
+	deleteReturnsOnCall map[int]struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -157,6 +183,107 @@ func (fake *EgressDestinationRepo) CreateIPRangeReturnsOnCall(i int, result1 int
 	}{result1, result2}
 }
 
+func (fake *EgressDestinationRepo) GetByGUID(tx db.Transaction, guid string) (store.EgressDestination, error) {
+	fake.getByGUIDMutex.Lock()
+	ret, specificReturn := fake.getByGUIDReturnsOnCall[len(fake.getByGUIDArgsForCall)]
+	fake.getByGUIDArgsForCall = append(fake.getByGUIDArgsForCall, struct {
+		tx   db.Transaction
+		guid string
+	}{tx, guid})
+	fake.recordInvocation("GetByGUID", []interface{}{tx, guid})
+	fake.getByGUIDMutex.Unlock()
+	if fake.GetByGUIDStub != nil {
+		return fake.GetByGUIDStub(tx, guid)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.getByGUIDReturns.result1, fake.getByGUIDReturns.result2
+}
+
+func (fake *EgressDestinationRepo) GetByGUIDCallCount() int {
+	fake.getByGUIDMutex.RLock()
+	defer fake.getByGUIDMutex.RUnlock()
+	return len(fake.getByGUIDArgsForCall)
+}
+
+func (fake *EgressDestinationRepo) GetByGUIDArgsForCall(i int) (db.Transaction, string) {
+	fake.getByGUIDMutex.RLock()
+	defer fake.getByGUIDMutex.RUnlock()
+	return fake.getByGUIDArgsForCall[i].tx, fake.getByGUIDArgsForCall[i].guid
+}
+
+func (fake *EgressDestinationRepo) GetByGUIDReturns(result1 store.EgressDestination, result2 error) {
+	fake.GetByGUIDStub = nil
+	fake.getByGUIDReturns = struct {
+		result1 store.EgressDestination
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *EgressDestinationRepo) GetByGUIDReturnsOnCall(i int, result1 store.EgressDestination, result2 error) {
+	fake.GetByGUIDStub = nil
+	if fake.getByGUIDReturnsOnCall == nil {
+		fake.getByGUIDReturnsOnCall = make(map[int]struct {
+			result1 store.EgressDestination
+			result2 error
+		})
+	}
+	fake.getByGUIDReturnsOnCall[i] = struct {
+		result1 store.EgressDestination
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *EgressDestinationRepo) Delete(tx db.Transaction, guid string) error {
+	fake.deleteMutex.Lock()
+	ret, specificReturn := fake.deleteReturnsOnCall[len(fake.deleteArgsForCall)]
+	fake.deleteArgsForCall = append(fake.deleteArgsForCall, struct {
+		tx   db.Transaction
+		guid string
+	}{tx, guid})
+	fake.recordInvocation("Delete", []interface{}{tx, guid})
+	fake.deleteMutex.Unlock()
+	if fake.DeleteStub != nil {
+		return fake.DeleteStub(tx, guid)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.deleteReturns.result1
+}
+
+func (fake *EgressDestinationRepo) DeleteCallCount() int {
+	fake.deleteMutex.RLock()
+	defer fake.deleteMutex.RUnlock()
+	return len(fake.deleteArgsForCall)
+}
+
+func (fake *EgressDestinationRepo) DeleteArgsForCall(i int) (db.Transaction, string) {
+	fake.deleteMutex.RLock()
+	defer fake.deleteMutex.RUnlock()
+	return fake.deleteArgsForCall[i].tx, fake.deleteArgsForCall[i].guid
+}
+
+func (fake *EgressDestinationRepo) DeleteReturns(result1 error) {
+	fake.DeleteStub = nil
+	fake.deleteReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *EgressDestinationRepo) DeleteReturnsOnCall(i int, result1 error) {
+	fake.DeleteStub = nil
+	if fake.deleteReturnsOnCall == nil {
+		fake.deleteReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.deleteReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *EgressDestinationRepo) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -164,6 +291,10 @@ func (fake *EgressDestinationRepo) Invocations() map[string][][]interface{} {
 	defer fake.allMutex.RUnlock()
 	fake.createIPRangeMutex.RLock()
 	defer fake.createIPRangeMutex.RUnlock()
+	fake.getByGUIDMutex.RLock()
+	defer fake.getByGUIDMutex.RUnlock()
+	fake.deleteMutex.RLock()
+	defer fake.deleteMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

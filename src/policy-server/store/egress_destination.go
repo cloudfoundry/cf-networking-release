@@ -1,12 +1,62 @@
 package store
 
 import (
+	"database/sql"
 	"fmt"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 )
 
 type EgressDestinationTable struct{}
+
+func (e *EgressDestinationTable) GetByGUID(tx db.Transaction, guid string) (EgressDestination, error) {
+	var (
+		startPort, endPort, icmpType, icmpCode                    int
+		terminalGUID, name, description, protocol, startIP, endIP *string
+		ports                                                     []Ports
+	)
+
+	err := tx.QueryRow(tx.Rebind(`
+    SELECT
+		ip_ranges.protocol,
+		ip_ranges.start_ip,
+		ip_ranges.end_ip,
+		ip_ranges.start_port,
+		ip_ranges.end_port,
+		ip_ranges.icmp_type,
+		ip_ranges.icmp_code,
+		ip_ranges.terminal_guid,
+		COALESCE(d_m.name, ''),
+		COALESCE(d_m.description, '')
+	FROM ip_ranges
+	LEFT OUTER JOIN destination_metadatas AS d_m
+	  ON d_m.terminal_guid = ip_ranges.terminal_guid
+	WHERE ip_ranges.terminal_guid = ?;`), guid).Scan(&protocol, &startIP, &endIP, &startPort, &endPort, &icmpType, &icmpCode, &terminalGUID, &name, &description)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return EgressDestination{}, nil
+		}
+		panic(err)
+	}
+
+	if startPort != 0 && endPort != 0 {
+		ports = []Ports{{Start: startPort, End: endPort}}
+	}
+
+	foundEgressDestination := EgressDestination{
+		GUID:        *terminalGUID,
+		Name:        *name,
+		Description: *description,
+		Protocol:    *protocol,
+		Ports:       ports,
+		IPRanges:    []IPRange{{Start: *startIP, End: *endIP}},
+		ICMPType:    icmpType,
+		ICMPCode:    icmpCode,
+	}
+
+	return foundEgressDestination, nil
+}
 
 func (e *EgressDestinationTable) CreateIPRange(tx db.Transaction, destinationTerminalGUID, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) (int64, error) {
 	driverName := tx.DriverName()
@@ -56,6 +106,11 @@ func (e *EgressDestinationTable) CreateIPRange(tx db.Transaction, destinationTer
 	}
 
 	return -1, fmt.Errorf("unknown driver: %s", driverName)
+}
+
+func (e *EgressDestinationTable) Delete(tx db.Transaction, guid string) error {
+	_, err := tx.Exec(tx.Rebind(`DELETE FROM ip_ranges WHERE terminal_guid = ?`), guid)
+	return err
 }
 
 func (e *EgressDestinationTable) All(tx db.Transaction) ([]EgressDestination, error) {

@@ -45,3 +45,8 @@ func (d *DestinationMetadataTable) Create(tx db.Transaction, terminalGUID, name,
 	}
 	return -1, fmt.Errorf("unknown driver: %s", driver)
 }
+
+func (d *DestinationMetadataTable) Delete(tx db.Transaction, guid string) error {
+	_, err := tx.Exec(tx.Rebind(`DELETE FROM destination_metadatas WHERE terminal_guid = ?`), guid)
+	return err
+}

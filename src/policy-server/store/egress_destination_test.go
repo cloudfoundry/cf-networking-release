@@ -2,16 +2,16 @@ package store_test
 
 import (
 	"fmt"
+	"github.com/nu7hatch/gouuid"
 	"policy-server/db"
 	"policy-server/store"
-	testhelpers "test-helpers"
+	"test-helpers"
 	"time"
 
 	dbHelper "code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"code.cloudfoundry.org/lager"
 
-	uuid "github.com/nu7hatch/gouuid"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -25,6 +25,8 @@ var _ = Describe("EgressDestination", func() {
 		egressDestinationTable *store.EgressDestinationTable
 
 		terminalId string
+		tx         db.Transaction
+		err        error
 	)
 
 	BeforeEach(func() {
@@ -44,7 +46,7 @@ var _ = Describe("EgressDestination", func() {
 			Guids: &store.GuidGenerator{},
 		}
 
-		tx, err := realDb.Beginx()
+		tx, err = realDb.Beginx()
 		Expect(err).NotTo(HaveOccurred())
 
 		terminalId, err = terminalsTable.Create(tx)
@@ -55,9 +57,15 @@ var _ = Describe("EgressDestination", func() {
 
 		err = tx.Commit()
 		Expect(err).NotTo(HaveOccurred())
+
+		tx, err = realDb.Beginx()
+		Expect(err).NotTo(HaveOccurred())
 	})
 
 	AfterEach(func() {
+		err = tx.Rollback()
+		Expect(err).NotTo(HaveOccurred())
+
 		if realDb != nil {
 			Expect(realDb.Close()).To(Succeed())
 		}
@@ -66,13 +74,9 @@ var _ = Describe("EgressDestination", func() {
 
 	Context("when a destination metadata doesn't exist for destination", func() {
 		It("returns empty strings for name/description", func() {
-			tx, err := realDb.Beginx()
-			Expect(err).NotTo(HaveOccurred())
+			By("All")
 
 			destinations, err := egressDestinationTable.All(tx)
-			Expect(err).NotTo(HaveOccurred())
-
-			err = tx.Rollback()
 			Expect(err).NotTo(HaveOccurred())
 
 			_, err = uuid.ParseHex(destinations[0].GUID)
@@ -86,6 +90,84 @@ var _ = Describe("EgressDestination", func() {
 			Expect(destinations[0].Ports).To(Equal([]store.Ports{{Start: 8080, End: 8081}}))
 			Expect(destinations[0].ICMPType).To(Equal(-1))
 			Expect(destinations[0].ICMPCode).To(Equal(-1))
+
+			By("GetByGUID")
+			destination, err := egressDestinationTable.GetByGUID(tx, terminalId)
+			Expect(err).NotTo(HaveOccurred())
+
+			_, err = uuid.ParseHex(destination.GUID)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(destination.GUID).To(Equal(terminalId))
+			Expect(destination.Name).To(Equal(""))
+			Expect(destination.Description).To(Equal(""))
+			Expect(destination.Protocol).To(Equal("tcp"))
+			Expect(destination.IPRanges).To(Equal([]store.IPRange{{Start: "1.1.1.1", End: "2.2.2.2"}}))
+			Expect(destination.Ports).To(Equal([]store.Ports{{Start: 8080, End: 8081}}))
+			Expect(destination.ICMPType).To(Equal(-1))
+			Expect(destination.ICMPCode).To(Equal(-1))
+
+			_, err = egressDestinationTable.GetByGUID(tx, "garbage id")
+			Expect(err).NotTo(HaveOccurred())
+
+			By("Delete")
+			err = egressDestinationTable.Delete(tx, "garbage id")
+			// TODO: ensure that there's zero count deleted on the response, and that the list is empty
+			// right now the response contains an empty destination object and a total count == 1
+			Expect(err).ToNot(HaveOccurred())
+
+			err = egressDestinationTable.Delete(tx, terminalId)
+			Expect(err).NotTo(HaveOccurred())
+
+			destinations, err = egressDestinationTable.All(tx)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(destinations).To(HaveLen(0))
+		})
+	})
+
+	Context("when a destination metadata exist for destination", func() {
+		BeforeEach(func() {
+			metadataTable := store.DestinationMetadataTable{}
+			_, err = metadataTable.Create(tx, terminalId, "dest name", "dest desc")
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		Context("GetByGUID", func() {
+			It("returns the name/description", func() {
+				By("All")
+
+				destinations, err := egressDestinationTable.All(tx)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = uuid.ParseHex(destinations[0].GUID)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(destinations[0].GUID).To(Equal(terminalId))
+				Expect(destinations[0].Name).To(Equal("dest name"))
+				Expect(destinations[0].Description).To(Equal("dest desc"))
+				Expect(destinations[0].Protocol).To(Equal("tcp"))
+				Expect(destinations[0].IPRanges).To(Equal([]store.IPRange{{Start: "1.1.1.1", End: "2.2.2.2"}}))
+				Expect(destinations[0].Ports).To(Equal([]store.Ports{{Start: 8080, End: 8081}}))
+				Expect(destinations[0].ICMPType).To(Equal(-1))
+				Expect(destinations[0].ICMPCode).To(Equal(-1))
+
+				By("GetByGUID")
+
+				destination, err := egressDestinationTable.GetByGUID(tx, terminalId)
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = uuid.ParseHex(destination.GUID)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(destination.GUID).To(Equal(terminalId))
+				Expect(destination.Name).To(Equal("dest name"))
+				Expect(destination.Description).To(Equal("dest desc"))
+				Expect(destination.Protocol).To(Equal("tcp"))
+				Expect(destination.IPRanges).To(Equal([]store.IPRange{{Start: "1.1.1.1", End: "2.2.2.2"}}))
+				Expect(destination.Ports).To(Equal([]store.Ports{{Start: 8080, End: 8081}}))
+				Expect(destination.ICMPType).To(Equal(-1))
+				Expect(destination.ICMPCode).To(Equal(-1))
+			})
 		})
 	})
 })

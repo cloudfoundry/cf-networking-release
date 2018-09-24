@@ -90,7 +90,8 @@ var _ = Describe("EgressDestinationStore", func() {
 				}
 			})
 
-			It("creates and lists policies to/from the database", func() {
+			It("creates, lists, and deletes destinations to/from the database", func() {
+				By("creating")
 				createdDestinations, err := egressDestinationsStore.Create(toBeCreatedDestinations)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(createdDestinations).To(HaveLen(2))
@@ -112,6 +113,7 @@ var _ = Describe("EgressDestinationStore", func() {
 				Expect(createdDestinations[1].ICMPType).To(Equal(12))
 				Expect(createdDestinations[1].ICMPCode).To(Equal(13))
 
+				By("listing")
 				destinations, err := egressDestinationsStore.All()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(destinations[0].GUID).To(Equal(createdDestinations[0].GUID))
@@ -129,6 +131,19 @@ var _ = Describe("EgressDestinationStore", func() {
 				Expect(destinations[1].Ports).To(HaveLen(0))
 				Expect(destinations[1].ICMPType).To(Equal(12))
 				Expect(destinations[1].ICMPCode).To(Equal(13))
+
+				By("deleting")
+				deletedDestination, err := egressDestinationsStore.Delete(createdDestinations[0].GUID)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(deletedDestination).To(Equal(createdDestinations[0]))
+
+				deletedDestination, err = egressDestinationsStore.Delete(createdDestinations[1].GUID)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(deletedDestination).To(Equal(createdDestinations[1]))
+
+				destinations, err = egressDestinationsStore.All()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(destinations).To(HaveLen(0))
 			})
 		})
 	})
@@ -265,6 +280,95 @@ var _ = Describe("EgressDestinationStore", func() {
 				It("returns an error", func() {
 					_, err := egressDestinationsStore.All()
 					Expect(err).To(MatchError("egress destination store create transaction: can't create a transaction"))
+				})
+			})
+		})
+
+		Context("Delete", func() {
+			var err error
+			Context("when the transaction cannot be created", func() {
+				BeforeEach(func() {
+					mockDB.BeginxReturns(nil, errors.New("can't create a transaction"))
+				})
+
+				It("returns an error", func() {
+					_, err := egressDestinationsStore.Delete("a-guid")
+					Expect(err).To(MatchError("egress destination store delete transaction: can't create a transaction"))
+				})
+			})
+
+			Context("when getting the destination fails", func(){
+				BeforeEach(func() {
+					egressDestinationRepo.GetByGUIDReturns(store.EgressDestination{}, errors.New("can't get the destination"))
+					_, err = egressDestinationsStore.Delete("a-guid")
+				})
+
+				It("rolls back the transaction", func() {
+					Expect(tx.RollbackCallCount()).To(Equal(1))
+				})
+
+				It("returns an error", func() {
+					Expect(err).To(MatchError("egress destination store get destination by guid: can't get the destination"))
+				})
+			})
+
+			Context("when deleting the destination fails", func(){
+				BeforeEach(func() {
+					egressDestinationRepo.DeleteReturns(errors.New("can't delete"))
+					_, err = egressDestinationsStore.Delete("a-guid")
+				})
+
+				It("rolls back the transaction", func() {
+					Expect(tx.RollbackCallCount()).To(Equal(1))
+				})
+
+				It("returns an error", func() {
+					Expect(err).To(MatchError("egress destination store delete destination: can't delete"))
+				})
+			})
+
+			Context("when deleting the destination metadata fails", func(){
+				BeforeEach(func() {
+					destinationMetadataRepo.DeleteReturns(errors.New("can't delete metadata"))
+					_, err = egressDestinationsStore.Delete("a-guid")
+				})
+
+				It("rolls back the transaction", func() {
+					Expect(tx.RollbackCallCount()).To(Equal(1))
+				})
+
+				It("returns an error", func() {
+					Expect(err).To(MatchError("egress destination store delete destination metadata: can't delete metadata"))
+				})
+			})
+
+			Context("when deleting the destination terminal fails", func(){
+				BeforeEach(func() {
+					terminalsRepo.DeleteReturns(errors.New("can't delete terminal"))
+					_, err = egressDestinationsStore.Delete("a-guid")
+				})
+
+				It("rolls back the transaction", func() {
+					Expect(tx.RollbackCallCount()).To(Equal(1))
+				})
+
+				It("returns an error", func() {
+					Expect(err).To(MatchError("egress destination store delete destination terminal: can't delete terminal"))
+				})
+			})
+
+			Context("when committing the transaction fails", func() {
+				var err error
+				BeforeEach(func() {
+					tx.CommitReturns(errors.New("can't commit transaction"))
+					_, err = egressDestinationsStore.Delete("a-guid")
+				})
+				It("rolls back the transaction", func() {
+					Expect(tx.RollbackCallCount()).To(Equal(1))
+				})
+
+				It("returns an error", func() {
+					Expect(err).To(MatchError("egress destination store delete destination commit: can't commit transaction"))
 				})
 			})
 		})

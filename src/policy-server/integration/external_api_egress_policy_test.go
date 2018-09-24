@@ -88,8 +88,13 @@ var _ = Describe("External API Egress Policies", func() {
 				},
 			},
 		}
-		guids, err := client.CreateDestinations(token, someDest, unusedDest)
+		createdDestinations, err := client.CreateDestinations(token, someDest, unusedDest)
 		Expect(err).NotTo(HaveOccurred())
+
+		for _, createdDestination := range createdDestinations {
+			_, err = uuid.ParseHex(createdDestination.GUID)
+			Expect(err).NotTo(HaveOccurred())
+		}
 
 		//TODO: assert the list returns the created destinations
 		//destinations, err = client.ListDestinations(token, unusedDest)
@@ -101,14 +106,22 @@ var _ = Describe("External API Egress Policies", func() {
 				ID:   "some-app-guid",
 			},
 			Destination: psclient.EgressPolicyDestination{
-				ID: guids[0],
+				ID: createdDestinations[0].GUID,
 			},
 		}
 		policyGUID, err := client.CreateEgressPolicy(somePolicy, token)
 		Expect(err).NotTo(HaveOccurred())
 
-		_, e := uuid.ParseHex(policyGUID)
-		Expect(e).NotTo(HaveOccurred())
+		_, err = uuid.ParseHex(policyGUID)
+		Expect(err).NotTo(HaveOccurred())
+
+		deletedDestination, err := client.DeleteDestination(token, createdDestinations[1])
+		Expect(err).NotTo(HaveOccurred())
+		Expect(deletedDestination).To(Equal(createdDestinations[1]))
+
+		//TODO: assert the deleted dest is gone...
+		//destinationss, err = client.ListDestinations(token)
+		//Expect(e).NotTo(HaveOccurred())
 
 		//TODO: re-instate when index is an endpoint
 		//egressPolicies, err := client.ListEgressPolicies(token)
