@@ -2,7 +2,8 @@ package store
 
 import (
 	"fmt"
-	"policy-server/db"
+
+	"code.cloudfoundry.org/cf-networking-helpers/db"
 )
 
 //go:generate counterfeiter -o fakes/tag_store.go --fake-name TagStore . TagStore

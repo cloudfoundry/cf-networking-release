@@ -4,12 +4,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	dbFakes "policy-server/db/fakes"
 	"policy-server/store"
 	"policy-server/store/fakes"
 	"time"
 
 	dbHelper "code.cloudfoundry.org/cf-networking-helpers/db"
+	dbfakes "code.cloudfoundry.org/cf-networking-helpers/db/fakes"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 
 	"policy-server/db"
@@ -23,7 +23,7 @@ var _ = Describe("TagStore", func() {
 	var (
 		dataStore   store.Store
 		dbConf      dbHelper.Config
-		realDb      *db.ConnWrapper
+		realDb      *dbHelper.ConnWrapper
 		mockDb      *fakes.Db
 		group       store.GroupRepo
 		destination store.DestinationRepo
@@ -108,14 +108,14 @@ var _ = Describe("TagStore", func() {
 
 		Context("when there are no tags left to allocate", func() {
 			var (
-				mockTx    *dbFakes.Transaction
+				mockTx    *dbfakes.Transaction
 				mockGroup *fakes.GroupRepo
 			)
 
 			BeforeEach(func() {
 				mockGroup = &fakes.GroupRepo{}
 				mockGroup.CreateReturns(-1, errors.New("failed to find available tag"))
-				mockTx = &dbFakes.Transaction{}
+				mockTx = &dbfakes.Transaction{}
 				mockDb.BeginxReturns(mockTx, nil)
 
 				tagStore = store.NewTagStore(mockDb, mockGroup, tagLength)
@@ -134,14 +134,14 @@ var _ = Describe("TagStore", func() {
 
 		Context("when a transaction commit fails", func() {
 			var (
-				mockTx    *dbFakes.Transaction
+				mockTx    *dbfakes.Transaction
 				mockGroup *fakes.GroupRepo
 			)
 
 			BeforeEach(func() {
 				mockGroup = &fakes.GroupRepo{}
 				mockGroup.CreateReturns(1, nil)
-				mockTx = &dbFakes.Transaction{}
+				mockTx = &dbfakes.Transaction{}
 				mockTx.CommitReturns(errors.New("transaction commit failed"))
 				mockDb.BeginxReturns(mockTx, nil)
 

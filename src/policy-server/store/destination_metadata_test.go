@@ -2,8 +2,9 @@ package store_test
 
 import (
 	"errors"
-	dbfakes "policy-server/db/fakes"
 	"policy-server/store"
+
+	dbfakes "code.cloudfoundry.org/cf-networking-helpers/db/fakes"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

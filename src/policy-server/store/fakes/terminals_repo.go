@@ -2,8 +2,9 @@
 package fakes
 
 import (
-	"policy-server/db"
 	"sync"
+
+	"code.cloudfoundry.org/cf-networking-helpers/db"
 )
 
 type TerminalsRepo struct {

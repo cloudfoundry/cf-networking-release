@@ -2,7 +2,8 @@ package store
 
 import (
 	"fmt"
-	"policy-server/db"
+
+	"code.cloudfoundry.org/cf-networking-helpers/db"
 )
 
 //go:generate counterfeiter -o fakes/egress_destination_repo.go --fake-name EgressDestinationRepo . egressDestinationRepo

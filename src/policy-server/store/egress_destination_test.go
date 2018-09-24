@@ -19,7 +19,7 @@ import (
 var _ = Describe("EgressDestination", func() {
 	var (
 		dbConf dbHelper.Config
-		realDb *db.ConnWrapper
+		realDb *dbHelper.ConnWrapper
 
 		terminalsTable         *store.TerminalsTable
 		egressDestinationTable *store.EgressDestinationTable

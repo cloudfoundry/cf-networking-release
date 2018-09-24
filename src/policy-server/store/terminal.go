@@ -1,8 +1,6 @@
 package store
 
-import (
-	"policy-server/db"
-)
+import "code.cloudfoundry.org/cf-networking-helpers/db"
 
 type TerminalsTable struct {
 	Guids guidGenerator

@@ -1,20 +1,21 @@
 package store_test
 
 import (
-	dbHelper "code.cloudfoundry.org/cf-networking-helpers/db"
-	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
-	"code.cloudfoundry.org/lager"
 	"database/sql"
 	"errors"
 	"fmt"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"policy-server/db"
 	"policy-server/store"
 	"policy-server/store/fakes"
 	"strings"
 	"test-helpers"
 	"time"
+
+	dbHelper "code.cloudfoundry.org/cf-networking-helpers/db"
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
+	"code.cloudfoundry.org/lager"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Tag Populator", func() {
@@ -25,7 +26,7 @@ var _ = Describe("Tag Populator", func() {
 	Context("when connecting to the DB succeeds", func() {
 		var (
 			dbConf dbHelper.Config
-			realDb *db.ConnWrapper
+			realDb *dbHelper.ConnWrapper
 		)
 
 		BeforeEach(func() {

@@ -6,9 +6,9 @@ import (
 	"policy-server/store/helpers"
 	"strings"
 
-	"policy-server/db"
 	"policy-server/store/migrations"
 
+	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"github.com/jmoiron/sqlx"
 )
 

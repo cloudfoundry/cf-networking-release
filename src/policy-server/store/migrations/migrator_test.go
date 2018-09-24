@@ -35,7 +35,7 @@ var _ = Describe("migrations", func() {
 
 	var (
 		dbConf                     dbHelper.Config
-		realDb                     *db.ConnWrapper
+		realDb                     *dbHelper.ConnWrapper
 		mockDb                     *fakes.Db
 		mockMigrateAdapter         *migrationsFakes.MigrateAdapter
 		legacyMigrations           migrations.PolicyServerMigrations
@@ -1668,7 +1668,7 @@ var _ = Describe("migrations", func() {
 	})
 })
 
-func expectMigrations(realDb *db.ConnWrapper, expectedMigrations []string) {
+func expectMigrations(realDb *dbHelper.ConnWrapper, expectedMigrations []string) {
 	rows, err := realDb.Query(`select ID from gorp_migrations`)
 	defer rows.Close()
 	Expect(err).NotTo(HaveOccurred())
@@ -1709,7 +1709,7 @@ func scanCountRow(rows *sql.Rows) int {
 	return count
 }
 
-func insertTerminal(realDb *db.ConnWrapper) int64 {
+func insertTerminal(realDb *dbHelper.ConnWrapper) int64 {
 	var terminalId int64
 	if realDb.DriverName() == "mysql" {
 		result, err := realDb.Exec("INSERT INTO terminals (id) VALUES (NULL)")
@@ -1723,7 +1723,7 @@ func insertTerminal(realDb *db.ConnWrapper) int64 {
 	return terminalId
 }
 
-func queryTableForColumnValues(tableName, columnName string, realDb *db.ConnWrapper) []string {
+func queryTableForColumnValues(tableName, columnName string, realDb *dbHelper.ConnWrapper) []string {
 	rows, err := realDb.Query(helpers.RebindForSQLDialect(fmt.Sprintf(`
 		select %s from %s
 	`, columnName, tableName), realDb.DriverName()))
@@ -1739,7 +1739,7 @@ func queryTableForColumnValues(tableName, columnName string, realDb *db.ConnWrap
 	return values
 }
 
-func queryTableColumnNames(tableName string, realDb *db.ConnWrapper) []string {
+func queryTableColumnNames(tableName string, realDb *dbHelper.ConnWrapper) []string {
 	rows, err := realDb.Query(realDb.Rebind(helpers.RebindForSQLDialect(`
 		select COLUMN_NAME
 		from INFORMATION_SCHEMA.COLUMNS t1

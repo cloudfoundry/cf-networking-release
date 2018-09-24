@@ -3,10 +3,10 @@ package fakes
 
 import (
 	"database/sql"
-	"policy-server/db"
 	"policy-server/store"
 	"sync"
 
+	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"github.com/jmoiron/sqlx"
 )
 

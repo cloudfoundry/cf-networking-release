@@ -92,7 +92,7 @@ var _ = Describe("Migrate DB Binary", func() {
 	})
 })
 
-func assertMigrationsSucceeded(conn *db.ConnWrapper, conf config.Config) {
+func assertMigrationsSucceeded(conn *dbHelper.ConnWrapper, conf config.Config) {
 	numMigrations := len(migrations.V1ModifiedMigrationsToPerform) +
 		len(migrations.V2ModifiedMigrationsToPerform) +
 		len(migrations.V3ModifiedMigrationsToPerform) +
@@ -107,7 +107,7 @@ func assertMigrationsSucceeded(conn *db.ConnWrapper, conf config.Config) {
 	Expect(groupCount).To(Equal(int(math.Exp2(float64(conf.TagLength*8))) - 1))
 }
 
-func createDbConn(dbConf dbHelper.Config) *db.ConnWrapper {
+func createDbConn(dbConf dbHelper.Config) *dbHelper.ConnWrapper {
 	return db.NewConnectionPool(
 		dbConf,
 		1,

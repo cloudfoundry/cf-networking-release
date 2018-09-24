@@ -1,6 +1,6 @@
 package store
 
-import "policy-server/db"
+import "code.cloudfoundry.org/cf-networking-helpers/db"
 
 //go:generate counterfeiter -o fakes/policy_repo.go --fake-name PolicyRepo . PolicyRepo
 type PolicyRepo interface {

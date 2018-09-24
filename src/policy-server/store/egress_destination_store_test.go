@@ -4,11 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"policy-server/db"
-	dbfakes "policy-server/db/fakes"
 	"policy-server/store"
 	"policy-server/store/fakes"
 	"test-helpers"
 	"time"
+
+	dbfakes "code.cloudfoundry.org/cf-networking-helpers/db/fakes"
 
 	dbHelper "code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
@@ -29,7 +30,7 @@ var _ = Describe("EgressDestinationStore", func() {
 	Describe("using an actual db", func() {
 		var (
 			dbConf dbHelper.Config
-			realDb *db.ConnWrapper
+			realDb *dbHelper.ConnWrapper
 		)
 
 		BeforeEach(func() {
@@ -52,8 +53,8 @@ var _ = Describe("EgressDestinationStore", func() {
 			egressDestinationsStore = &store.EgressDestinationStore{
 				TerminalsRepo:           terminalsRepo,
 				DestinationMetadataRepo: destinationMetadataRepo,
-				Conn:                    realDb,
-				EgressDestinationRepo:   egressDestinationTable,
+				Conn: realDb,
+				EgressDestinationRepo: egressDestinationTable,
 			}
 		})
 
@@ -152,7 +153,7 @@ var _ = Describe("EgressDestinationStore", func() {
 			destinationMetadataRepo = &fakes.DestinationMetadataRepo{}
 
 			egressDestinationsStore = &store.EgressDestinationStore{
-				Conn:                    mockDB,
+				Conn: mockDB,
 				EgressDestinationRepo:   egressDestinationRepo,
 				DestinationMetadataRepo: destinationMetadataRepo,
 				TerminalsRepo:           terminalsRepo,

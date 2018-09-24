@@ -4,10 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"policy-server/db"
-	dbfakes "policy-server/db/fakes"
 	"policy-server/store"
 	testhelpers "test-helpers"
 	"time"
+
+	dbfakes "code.cloudfoundry.org/cf-networking-helpers/db/fakes"
 
 	dbHelper "code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
@@ -22,9 +23,9 @@ var _ = Describe("Terminal Table", func() {
 	Context("when using a real db", func() {
 		var (
 			dbConf         dbHelper.Config
-			realDb         *db.ConnWrapper
+			realDb         *dbHelper.ConnWrapper
 			terminalsTable *store.TerminalsTable
-			tx             db.Transaction
+			tx             dbHelper.Transaction
 		)
 
 		BeforeEach(func() {

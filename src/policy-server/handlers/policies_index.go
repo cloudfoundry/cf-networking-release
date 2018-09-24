@@ -7,8 +7,9 @@ import (
 	"policy-server/uaa_client"
 	"strings"
 
-	"policy-server/db"
 	"policy-server/store"
+
+	"code.cloudfoundry.org/cf-networking-helpers/db"
 )
 
 //go:generate counterfeiter -o fakes/policy_filter.go --fake-name PolicyFilter . policyFilter

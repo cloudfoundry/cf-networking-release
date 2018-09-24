@@ -3,7 +3,8 @@ package store
 import (
 	"database/sql"
 	"fmt"
-	"policy-server/db"
+
+	"code.cloudfoundry.org/cf-networking-helpers/db"
 )
 
 //go:generate counterfeiter -o fakes/group_repo.go --fake-name GroupRepo . GroupRepo

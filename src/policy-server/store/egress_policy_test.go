@@ -13,7 +13,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	dbfakes "policy-server/db/fakes"
+	dbfakes "code.cloudfoundry.org/cf-networking-helpers/db/fakes"
 
 	dbHelper "code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
@@ -23,12 +23,12 @@ import (
 var _ = Describe("Egress Policy Table", func() {
 	var (
 		dbConf            dbHelper.Config
-		realDb            *db.ConnWrapper
+		realDb            *dbHelper.ConnWrapper
 		mockDb            *fakes.Db
 		migrator          *migrations.Migrator
 		egressPolicyTable *store.EgressPolicyTable
 		terminalsTable    *store.TerminalsTable
-		tx                db.Transaction
+		tx                dbHelper.Transaction
 		egressStore       store.EgressPolicyStore
 		fakeGUIDGenerator *fakes.GUIDGenerator
 	)

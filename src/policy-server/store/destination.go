@@ -1,6 +1,6 @@
 package store
 
-import "policy-server/db"
+import "code.cloudfoundry.org/cf-networking-helpers/db"
 
 //go:generate counterfeiter -o fakes/destination_repo.go --fake-name DestinationRepo . DestinationRepo
 type DestinationRepo interface {

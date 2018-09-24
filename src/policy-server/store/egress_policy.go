@@ -3,8 +3,9 @@ package store
 import (
 	"database/sql"
 	"fmt"
-	"policy-server/db"
 	"strings"
+
+	"code.cloudfoundry.org/cf-networking-helpers/db"
 )
 
 type EgressPolicyTable struct {

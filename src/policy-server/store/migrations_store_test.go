@@ -22,7 +22,7 @@ import (
 var _ = Describe("MigrationsStore", func() {
 	var (
 		dbConf dbHelper.Config
-		realDb *db.ConnWrapper
+		realDb *dbHelper.ConnWrapper
 
 		migrationsProvider *migrationsFakes.MigrationsProvider
 		migrator           *migrations.Migrator

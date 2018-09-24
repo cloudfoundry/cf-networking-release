@@ -4,11 +4,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	dbfakes "policy-server/db/fakes"
 	"policy-server/store"
 	"policy-server/store/fakes"
 	"sync/atomic"
 	"time"
+
+	dbfakes "code.cloudfoundry.org/cf-networking-helpers/db/fakes"
 
 	dbHelper "code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
@@ -28,7 +29,7 @@ var _ = Describe("Store", func() {
 		dataStore    store.Store
 		tagDataStore store.TagStore
 		dbConf       dbHelper.Config
-		realDb       *db.ConnWrapper
+		realDb       *dbHelper.ConnWrapper
 		mockDb       *fakes.Db
 		group        store.GroupRepo
 		destination  store.DestinationRepo
@@ -388,7 +389,7 @@ var _ = Describe("Store", func() {
 					{2, nil},
 					{-1, errors.New("some-insert-error")},
 				}
-				fakeGroup.CreateStub = func(t db.Transaction, guid, groupType string) (int, error) {
+				fakeGroup.CreateStub = func(t dbHelper.Transaction, guid, groupType string) (int, error) {
 					response := responses[0]
 					responses = responses[1:]
 					return response.Id, response.Err
@@ -906,7 +907,7 @@ var _ = Describe("Store", func() {
 			Context("when getting the source id fails", func() {
 				Context("when the error is because the source does not exist", func() {
 					BeforeEach(func() {
-						fakeGroup.GetIDStub = func(db.Transaction, string) (int, error) {
+						fakeGroup.GetIDStub = func(dbHelper.Transaction, string) (int, error) {
 							if fakeGroup.GetIDCallCount() == 1 {
 								return -1, sql.ErrNoRows
 							}
@@ -954,7 +955,7 @@ var _ = Describe("Store", func() {
 			Context("when getting the destination group id fails", func() {
 				Context("when the error is because the destination group does not exist", func() {
 					BeforeEach(func() {
-						fakeGroup.GetIDStub = func(db.Transaction, string) (int, error) {
+						fakeGroup.GetIDStub = func(dbHelper.Transaction, string) (int, error) {
 							if fakeGroup.GetIDCallCount() == 2 {
 								return -1, sql.ErrNoRows
 							}
@@ -988,7 +989,7 @@ var _ = Describe("Store", func() {
 
 				Context("when the error is for any other reason", func() {
 					BeforeEach(func() {
-						fakeGroup.GetIDStub = func(db.Transaction, string) (int, error) {
+						fakeGroup.GetIDStub = func(dbHelper.Transaction, string) (int, error) {
 							if fakeGroup.GetIDCallCount() > 1 {
 								return -1, errors.New("some-get-error")
 							}
@@ -1012,7 +1013,7 @@ var _ = Describe("Store", func() {
 			Context("when getting the destination id fails", func() {
 				Context("when the error is because the destination does not exist", func() {
 					BeforeEach(func() {
-						fakeDestination.GetIDStub = func(db.Transaction, int, int, int, int, string) (int, error) {
+						fakeDestination.GetIDStub = func(dbHelper.Transaction, int, int, int, int, string) (int, error) {
 							if fakeDestination.GetIDCallCount() == 1 {
 								return -1, sql.ErrNoRows
 							}
@@ -1052,7 +1053,7 @@ var _ = Describe("Store", func() {
 			Context("when deleting the policy fails", func() {
 				Context("when the error is because the policy does not exist", func() {
 					BeforeEach(func() {
-						fakePolicy.DeleteStub = func(db.Transaction, int, int) error {
+						fakePolicy.DeleteStub = func(dbHelper.Transaction, int, int) error {
 							if fakePolicy.DeleteCallCount() == 1 {
 								return sql.ErrNoRows
 							}
@@ -1182,7 +1183,7 @@ var _ = Describe("Store", func() {
 	})
 })
 
-func migrateAndPopulateTags(realDb *db.ConnWrapper, tl int) {
+func migrateAndPopulateTags(realDb *dbHelper.ConnWrapper, tl int) {
 	migrate(realDb)
 
 	tagPopulator := &store.TagPopulator{DBConnection: realDb}
@@ -1190,7 +1191,7 @@ func migrateAndPopulateTags(realDb *db.ConnWrapper, tl int) {
 	Expect(err).NotTo(HaveOccurred())
 }
 
-func migrate(realDb *db.ConnWrapper) {
+func migrate(realDb *dbHelper.ConnWrapper) {
 	migrator := &migrations.Migrator{
 		MigrateAdapter: &migrations.MigrateAdapter{},
 		MigrationsProvider: &migrations.MigrationsProvider{
