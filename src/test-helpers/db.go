@@ -6,18 +6,19 @@ import (
 	"strings"
 	"time"
 
+	"policy-server/db"
+
 	configHelper "code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/lager"
 	"github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"policy-server/db"
 )
 
 func CreateDatabase(config configHelper.Config) {
 	config.Timeout = 120
 	dbToCreate := config.DatabaseName
 	config.DatabaseName = ""
-	println(time.Now().String() + " Creating database " + dbToCreate)
+	fmt.Fprintf(ginkgo.GinkgoWriter, "%s Creating database %s", time.Now().String(), dbToCreate)
 	logger := lager.NewLogger("Test Support")
 	connectionPool := db.NewConnectionPool(
 		config,
