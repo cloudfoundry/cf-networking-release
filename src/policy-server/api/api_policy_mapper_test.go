@@ -20,10 +20,10 @@ var _ = Describe("ApiPolicyMapper", func() {
 		mapper          api.PolicyMapper
 		fakeUnmarshaler *hfakes.Unmarshaler
 		fakeMarshaler   *hfakes.Marshaler
-		fakeValidator   *fakes.PayloadValidator
+		fakeValidator   *fakes.Validator
 	)
 	BeforeEach(func() {
-		fakeValidator = &fakes.PayloadValidator{}
+		fakeValidator = &fakes.Validator{}
 		mapper = api.NewMapper(
 			marshal.UnmarshalFunc(json.Unmarshal),
 			marshal.MarshalFunc(json.Marshal),
@@ -62,10 +62,9 @@ var _ = Describe("ApiPolicyMapper", func() {
 				}`),
 			)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(fakeValidator.ValidatePayloadCallCount()).To(Equal(1))
-			Expect(fakeValidator.ValidatePayloadArgsForCall(0)).To(Equal(
-				&api.PoliciesPayload{
-					Policies: []api.Policy{
+			Expect(fakeValidator.ValidatePoliciesCallCount()).To(Equal(1))
+			Expect(fakeValidator.ValidatePoliciesArgsForCall(0)).To(Equal(
+				[]api.Policy{
 						{
 							Source: api.Source{ID: "some-src-id", Tag: ""},
 							Destination: api.Destination{
@@ -85,7 +84,6 @@ var _ = Describe("ApiPolicyMapper", func() {
 							},
 						},
 					},
-				},
 			))
 			Expect(policies).To(Equal([]store.Policy{
 				{
@@ -133,7 +131,7 @@ var _ = Describe("ApiPolicyMapper", func() {
 
 		Context("when a policy to includes a validation error", func() {
 			BeforeEach(func() {
-				fakeValidator.ValidatePayloadReturns(errors.New("banana"))
+				fakeValidator.ValidatePoliciesReturns(errors.New("banana"))
 			})
 
 			It("calls the bad request handler", func() {

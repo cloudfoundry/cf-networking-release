@@ -11,10 +11,10 @@ import (
 type policyMapper struct {
 	Unmarshaler      marshal.Unmarshaler
 	Marshaler        marshal.Marshaler
-	PayloadValidator payloadValidator
+	PayloadValidator validator
 }
 
-func NewMapper(unmarshaler marshal.Unmarshaler, marshaler marshal.Marshaler, payloadValidator payloadValidator) PolicyMapper {
+func NewMapper(unmarshaler marshal.Unmarshaler, marshaler marshal.Marshaler, payloadValidator validator) PolicyMapper {
 	return &policyMapper{
 		Unmarshaler:      unmarshaler,
 		Marshaler:        marshaler,
@@ -29,7 +29,7 @@ func (p *policyMapper) AsStorePolicy(bytes []byte) ([]store.Policy, error) {
 		return []store.Policy{}, fmt.Errorf("unmarshal json: %s", err)
 	}
 
-	err = p.PayloadValidator.ValidatePayload(payload)
+	err = p.PayloadValidator.ValidatePolicies(payload.Policies)
 	if err != nil {
 		if metadata, ok := err.(httperror.MetadataError); ok {
 			return []store.Policy{}, httperror.NewMetadataError(fmt.Errorf("validate policies: %s", err), metadata.Metadata())

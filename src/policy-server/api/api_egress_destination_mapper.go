@@ -10,7 +10,12 @@ import (
 
 type EgressDestinationMapper struct {
 	Marshaler marshal.Marshaler
-	PayloadValidator payloadValidator
+	PayloadValidator egressDestinationsValidator
+}
+
+//go:generate counterfeiter -o fakes/egress_destinations_validator.go --fake-name EgressDestinationsValidator . egressDestinationsValidator
+type egressDestinationsValidator interface {
+	ValidateEgressDestinations([]EgressDestination) error
 }
 
 type DestinationsPayload struct {
@@ -44,7 +49,7 @@ func (p *EgressDestinationMapper) AsEgressDestinations(egressDestinations []byte
 		panic(err)
 	}
 
-	err = p.PayloadValidator.ValidateEgressDestinationsPayload(payload)
+	err = p.PayloadValidator.ValidateEgressDestinations(payload.EgressDestinations)
 	if err != nil {
 		return []store.EgressDestination{}, fmt.Errorf("validate destinations: %s", err)
 	}

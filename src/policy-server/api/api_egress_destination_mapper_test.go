@@ -16,12 +16,12 @@ import (
 var _ = Describe("ApiEgressDestinationMapper", func() {
 	var (
 		mapper *api.EgressDestinationMapper
-		fakeValidator *fakes.PayloadValidator
+		fakeValidator *fakes.EgressDestinationsValidator
 	)
 
 	BeforeEach(func() {
-		fakeValidator = &fakes.PayloadValidator{}
-		fakeValidator.ValidateEgressDestinationsPayloadReturns(nil)
+		fakeValidator = &fakes.EgressDestinationsValidator{}
+		fakeValidator.ValidateEgressDestinationsReturns(nil)
 
 		mapper = &api.EgressDestinationMapper{
 			Marshaler: marshal.MarshalFunc(json.Marshal),
@@ -176,7 +176,7 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 
 		Context("when there is a validation error", func(){
 			BeforeEach(func(){
-				fakeValidator.ValidateEgressDestinationsPayloadReturns(errors.New("banana"))
+				fakeValidator.ValidateEgressDestinationsReturns(errors.New("banana"))
 			})
 
 			It("returns an error", func(){
