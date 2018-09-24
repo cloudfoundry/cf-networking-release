@@ -11,13 +11,13 @@ type egressDestinationRepo interface {
 	All(tx db.Transaction) ([]EgressDestination, error)
 	CreateIPRange(tx db.Transaction, destinationTerminalGUID, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) (int64, error)
 	GetByGUID(tx db.Transaction, guid string) (EgressDestination, error)
-	Delete(tx db.Transaction, guid string) (error)
+	Delete(tx db.Transaction, guid string) error
 }
 
 //go:generate counterfeiter -o fakes/destination_metadata_repo.go --fake-name DestinationMetadataRepo . destinationMetadataRepo
 type destinationMetadataRepo interface {
 	Create(tx db.Transaction, terminalGUID, name, description string) (int64, error)
-	Delete(tx db.Transaction, terminalGUID string) (error)
+	Delete(tx db.Transaction, terminalGUID string) error
 }
 
 type EgressDestinationStore struct {

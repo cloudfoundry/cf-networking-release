@@ -53,8 +53,8 @@ var _ = Describe("EgressDestinationStore", func() {
 			egressDestinationsStore = &store.EgressDestinationStore{
 				TerminalsRepo:           terminalsRepo,
 				DestinationMetadataRepo: destinationMetadataRepo,
-				Conn: realDb,
-				EgressDestinationRepo: egressDestinationTable,
+				Conn:                    realDb,
+				EgressDestinationRepo:   egressDestinationTable,
 			}
 		})
 
@@ -168,7 +168,7 @@ var _ = Describe("EgressDestinationStore", func() {
 			destinationMetadataRepo = &fakes.DestinationMetadataRepo{}
 
 			egressDestinationsStore = &store.EgressDestinationStore{
-				Conn: mockDB,
+				Conn:                    mockDB,
 				EgressDestinationRepo:   egressDestinationRepo,
 				DestinationMetadataRepo: destinationMetadataRepo,
 				TerminalsRepo:           terminalsRepo,
@@ -297,7 +297,7 @@ var _ = Describe("EgressDestinationStore", func() {
 				})
 			})
 
-			Context("when getting the destination fails", func(){
+			Context("when getting the destination fails", func() {
 				BeforeEach(func() {
 					egressDestinationRepo.GetByGUIDReturns(store.EgressDestination{}, errors.New("can't get the destination"))
 					_, err = egressDestinationsStore.Delete("a-guid")
@@ -312,7 +312,7 @@ var _ = Describe("EgressDestinationStore", func() {
 				})
 			})
 
-			Context("when deleting the destination fails", func(){
+			Context("when deleting the destination fails", func() {
 				BeforeEach(func() {
 					egressDestinationRepo.DeleteReturns(errors.New("can't delete"))
 					_, err = egressDestinationsStore.Delete("a-guid")
@@ -327,7 +327,7 @@ var _ = Describe("EgressDestinationStore", func() {
 				})
 			})
 
-			Context("when deleting the destination metadata fails", func(){
+			Context("when deleting the destination metadata fails", func() {
 				BeforeEach(func() {
 					destinationMetadataRepo.DeleteReturns(errors.New("can't delete metadata"))
 					_, err = egressDestinationsStore.Delete("a-guid")
@@ -342,7 +342,7 @@ var _ = Describe("EgressDestinationStore", func() {
 				})
 			})
 
-			Context("when deleting the destination terminal fails", func(){
+			Context("when deleting the destination terminal fails", func() {
 				BeforeEach(func() {
 					terminalsRepo.DeleteReturns(errors.New("can't delete terminal"))
 					_, err = egressDestinationsStore.Delete("a-guid")
