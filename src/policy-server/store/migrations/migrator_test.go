@@ -61,6 +61,7 @@ var _ = Describe("migrations", func() {
 
 		logger := lager.NewLogger("Migrations Test")
 
+		var err error
 		realDb, err = db.NewConnectionPool(dbConf, 200, 200, 5*time.Minute, "Store Test", "Store Test", logger)
 		Expect(err).NotTo(HaveOccurred())
 
