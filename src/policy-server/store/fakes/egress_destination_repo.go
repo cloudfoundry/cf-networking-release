@@ -43,18 +43,18 @@ type EgressDestinationRepo struct {
 		result1 int64
 		result2 error
 	}
-	GetByGUIDStub        func(tx db.Transaction, guid string) (store.EgressDestination, error)
+	GetByGUIDStub        func(tx db.Transaction, guid ...string) ([]store.EgressDestination, error)
 	getByGUIDMutex       sync.RWMutex
 	getByGUIDArgsForCall []struct {
 		tx   db.Transaction
-		guid string
+		guid []string
 	}
 	getByGUIDReturns struct {
-		result1 store.EgressDestination
+		result1 []store.EgressDestination
 		result2 error
 	}
 	getByGUIDReturnsOnCall map[int]struct {
-		result1 store.EgressDestination
+		result1 []store.EgressDestination
 		result2 error
 	}
 	DeleteStub        func(tx db.Transaction, guid string) error
@@ -183,17 +183,17 @@ func (fake *EgressDestinationRepo) CreateIPRangeReturnsOnCall(i int, result1 int
 	}{result1, result2}
 }
 
-func (fake *EgressDestinationRepo) GetByGUID(tx db.Transaction, guid string) (store.EgressDestination, error) {
+func (fake *EgressDestinationRepo) GetByGUID(tx db.Transaction, guid ...string) ([]store.EgressDestination, error) {
 	fake.getByGUIDMutex.Lock()
 	ret, specificReturn := fake.getByGUIDReturnsOnCall[len(fake.getByGUIDArgsForCall)]
 	fake.getByGUIDArgsForCall = append(fake.getByGUIDArgsForCall, struct {
 		tx   db.Transaction
-		guid string
+		guid []string
 	}{tx, guid})
 	fake.recordInvocation("GetByGUID", []interface{}{tx, guid})
 	fake.getByGUIDMutex.Unlock()
 	if fake.GetByGUIDStub != nil {
-		return fake.GetByGUIDStub(tx, guid)
+		return fake.GetByGUIDStub(tx, guid...)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -207,30 +207,30 @@ func (fake *EgressDestinationRepo) GetByGUIDCallCount() int {
 	return len(fake.getByGUIDArgsForCall)
 }
 
-func (fake *EgressDestinationRepo) GetByGUIDArgsForCall(i int) (db.Transaction, string) {
+func (fake *EgressDestinationRepo) GetByGUIDArgsForCall(i int) (db.Transaction, []string) {
 	fake.getByGUIDMutex.RLock()
 	defer fake.getByGUIDMutex.RUnlock()
 	return fake.getByGUIDArgsForCall[i].tx, fake.getByGUIDArgsForCall[i].guid
 }
 
-func (fake *EgressDestinationRepo) GetByGUIDReturns(result1 store.EgressDestination, result2 error) {
+func (fake *EgressDestinationRepo) GetByGUIDReturns(result1 []store.EgressDestination, result2 error) {
 	fake.GetByGUIDStub = nil
 	fake.getByGUIDReturns = struct {
-		result1 store.EgressDestination
+		result1 []store.EgressDestination
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *EgressDestinationRepo) GetByGUIDReturnsOnCall(i int, result1 store.EgressDestination, result2 error) {
+func (fake *EgressDestinationRepo) GetByGUIDReturnsOnCall(i int, result1 []store.EgressDestination, result2 error) {
 	fake.GetByGUIDStub = nil
 	if fake.getByGUIDReturnsOnCall == nil {
 		fake.getByGUIDReturnsOnCall = make(map[int]struct {
-			result1 store.EgressDestination
+			result1 []store.EgressDestination
 			result2 error
 		})
 	}
 	fake.getByGUIDReturnsOnCall[i] = struct {
-		result1 store.EgressDestination
+		result1 []store.EgressDestination
 		result2 error
 	}{result1, result2}
 }

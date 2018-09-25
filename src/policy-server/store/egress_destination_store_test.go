@@ -301,7 +301,7 @@ var _ = Describe("EgressDestinationStore", func() {
 
 			Context("when getting the destination fails", func() {
 				BeforeEach(func() {
-					egressDestinationRepo.GetByGUIDReturns(store.EgressDestination{}, errors.New("can't get the destination"))
+					egressDestinationRepo.GetByGUIDReturns([]store.EgressDestination{}, errors.New("can't get the destination"))
 					_, err = egressDestinationsStore.Delete("a-guid")
 				})
 

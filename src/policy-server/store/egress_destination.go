@@ -1,22 +1,26 @@
 package store
 
 import (
-	"database/sql"
 	"fmt"
+	"strings"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 )
 
 type EgressDestinationTable struct{}
 
-func (e *EgressDestinationTable) GetByGUID(tx db.Transaction, guid string) (EgressDestination, error) {
-	var (
-		startPort, endPort, icmpType, icmpCode                    int
-		terminalGUID, name, description, protocol, startIP, endIP *string
-		ports                                                     []Ports
-	)
+func (e *EgressDestinationTable) GetByGUID(tx db.Transaction, guids ...string) ([]EgressDestination, error) {
+	questionMarks := make([]string, len(guids))
+	for i := range questionMarks {
+		questionMarks[i] = "?"
+	}
+	questionMarksStr := strings.Join(questionMarks, ", ")
+	guidsInterfaces := make([]interface{}, len(guids))
+	for i, guid := range guids {
+		guidsInterfaces[i] = guid
+	}
 
-	err := tx.QueryRow(tx.Rebind(`
+	rows, err := tx.Queryx(tx.Rebind(`
     SELECT
 		ip_ranges.protocol,
 		ip_ranges.start_ip,
@@ -31,31 +35,44 @@ func (e *EgressDestinationTable) GetByGUID(tx db.Transaction, guid string) (Egre
 	FROM ip_ranges
 	LEFT OUTER JOIN destination_metadatas AS d_m
 	  ON d_m.terminal_guid = ip_ranges.terminal_guid
-	WHERE ip_ranges.terminal_guid = ?;`), guid).Scan(&protocol, &startIP, &endIP, &startPort, &endPort, &icmpType, &icmpCode, &terminalGUID, &name, &description)
+	WHERE ip_ranges.terminal_guid IN (`+questionMarksStr+`)
+	ORDER BY ip_ranges.id
+	`), guidsInterfaces...)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return EgressDestination{}, nil
+		return []EgressDestination{}, fmt.Errorf("running query: %s", err)
+	}
+
+	var egressDestinations []EgressDestination
+	for rows.Next() {
+		var (
+			startPort, endPort, icmpType, icmpCode                    int
+			terminalGUID, name, description, protocol, startIP, endIP *string
+			ports                                                     []Ports
+		)
+
+		err = rows.Scan(&protocol, &startIP, &endIP, &startPort, &endPort, &icmpType, &icmpCode, &terminalGUID, &name, &description)
+		if err != nil {
+			return []EgressDestination{}, fmt.Errorf("scanning row: %s", err)
 		}
-		panic(err)
+
+		if startPort != 0 && endPort != 0 {
+			ports = []Ports{{Start: startPort, End: endPort}}
+		}
+
+		egressDestinations = append(egressDestinations, EgressDestination{
+			GUID:        *terminalGUID,
+			Name:        *name,
+			Description: *description,
+			Protocol:    *protocol,
+			Ports:       ports,
+			IPRanges:    []IPRange{{Start: *startIP, End: *endIP}},
+			ICMPType:    icmpType,
+			ICMPCode:    icmpCode,
+		})
 	}
 
-	if startPort != 0 && endPort != 0 {
-		ports = []Ports{{Start: startPort, End: endPort}}
-	}
-
-	foundEgressDestination := EgressDestination{
-		GUID:        *terminalGUID,
-		Name:        *name,
-		Description: *description,
-		Protocol:    *protocol,
-		Ports:       ports,
-		IPRanges:    []IPRange{{Start: *startIP, End: *endIP}},
-		ICMPType:    icmpType,
-		ICMPCode:    icmpCode,
-	}
-
-	return foundEgressDestination, nil
+	return egressDestinations, nil
 }
 
 func (e *EgressDestinationTable) CreateIPRange(tx db.Transaction, destinationTerminalGUID, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) (int64, error) {

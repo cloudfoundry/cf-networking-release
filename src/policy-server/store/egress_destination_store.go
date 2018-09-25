@@ -10,7 +10,7 @@ import (
 type egressDestinationRepo interface {
 	All(tx db.Transaction) ([]EgressDestination, error)
 	CreateIPRange(tx db.Transaction, destinationTerminalGUID, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) (int64, error)
-	GetByGUID(tx db.Transaction, guid string) (EgressDestination, error)
+	GetByGUID(tx db.Transaction, guid ...string) ([]EgressDestination, error)
 	Delete(tx db.Transaction, guid string) error
 }
 
@@ -42,7 +42,7 @@ func (e *EgressDestinationStore) Delete(guid string) (EgressDestination, error) 
 		return EgressDestination{}, fmt.Errorf("egress destination store delete transaction: %s", err)
 	}
 
-	destination, err := e.EgressDestinationRepo.GetByGUID(tx, guid)
+	destinations, err := e.EgressDestinationRepo.GetByGUID(tx, guid)
 	if err != nil {
 		tx.Rollback()
 		return EgressDestination{}, fmt.Errorf("egress destination store get destination by guid: %s", err)
@@ -72,7 +72,11 @@ func (e *EgressDestinationStore) Delete(guid string) (EgressDestination, error) 
 		return EgressDestination{}, fmt.Errorf("egress destination store delete destination commit: %s", err)
 	}
 
-	return destination, nil
+	if len(destinations) > 0 {
+		return destinations[0], nil
+	}
+
+	return EgressDestination{}, nil
 }
 
 func (e *EgressDestinationStore) Create(egressDestinations []EgressDestination) ([]EgressDestination, error) {
