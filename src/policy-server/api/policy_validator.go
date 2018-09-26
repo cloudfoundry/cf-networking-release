@@ -5,14 +5,14 @@ import (
 	"fmt"
 )
 
-//go:generate counterfeiter -o fakes/validator.go --fake-name Validator . validator
-type validator interface {
+//go:generate counterfeiter -o fakes/policyValidator.go --fake-name PolicyValidator . policyValidator
+type policyValidator interface {
 	ValidatePolicies(policies []Policy) error
 }
 
-type Validator struct{}
+type PolicyValidator struct{}
 
-func (v *Validator) ValidatePolicies(policies []Policy) error {
+func (v *PolicyValidator) ValidatePolicies(policies []Policy) error {
 	if len(policies) == 0 {
 		return errors.New("missing policies")
 	}

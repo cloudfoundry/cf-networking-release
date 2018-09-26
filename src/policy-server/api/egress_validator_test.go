@@ -10,7 +10,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Egress Validator", func() {
+var _ = Describe("Egress PolicyValidator", func() {
 	var (
 		validator      api.EgressValidator
 		egressPolicies []api.EgressPolicy

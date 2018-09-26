@@ -11,10 +11,10 @@ import (
 type policyMapper struct {
 	Unmarshaler      marshal.Unmarshaler
 	Marshaler        marshal.Marshaler
-	PayloadValidator validator
+	PayloadValidator policyValidator
 }
 
-func NewMapper(unmarshaler marshal.Unmarshaler, marshaler marshal.Marshaler, payloadValidator validator) PolicyMapper {
+func NewMapper(unmarshaler marshal.Unmarshaler, marshaler marshal.Marshaler, payloadValidator policyValidator) PolicyMapper {
 	return &policyMapper{
 		Unmarshaler:      unmarshaler,
 		Marshaler:        marshaler,

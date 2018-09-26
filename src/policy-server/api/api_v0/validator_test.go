@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Validator", func() {
+var _ = Describe("PolicyValidator", func() {
 	var validator api_v0.Validator
 
 	BeforeEach(func() {
