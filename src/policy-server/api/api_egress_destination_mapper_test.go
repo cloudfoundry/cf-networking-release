@@ -9,8 +9,9 @@ import (
 	"policy-server/api/fakes"
 	"policy-server/store"
 
-	"code.cloudfoundry.org/cf-networking-helpers/marshal"
 	"errors"
+
+	"code.cloudfoundry.org/cf-networking-helpers/marshal"
 )
 
 var _ = Describe("ApiEgressDestinationMapper", func() {
@@ -122,8 +123,14 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 							"icmp_type": 1,
 							"icmp_code": 6
 						},
- 						{
+						{
 							"id": "3",
+							"description": "regression test: icmp without type and code",
+							"protocol": "icmp",
+							"ips": [{ "start": "1.2.3.7", "end": "1.2.3.8" }]
+						},
+						{
+							"id": "4",
 							"protocol": "udp",
 							"ips": [{ "start": "1.2.3.7", "end": "1.2.3.8" }]
 						}
@@ -162,7 +169,19 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 						ICMPCode: 6,
 					},
 					{
-						GUID:     "3",
+						GUID:        "3",
+						Description: "regression test: icmp without type and code",
+						Protocol:    "icmp",
+						Ports:       []store.Ports{},
+						IPRanges: []store.IPRange{{
+							Start: "1.2.3.7",
+							End:   "1.2.3.8",
+						}},
+						ICMPType: -1,
+						ICMPCode: -1,
+					},
+					{
+						GUID:     "4",
 						Protocol: "udp",
 						Ports:    []store.Ports{},
 						IPRanges: []store.IPRange{{

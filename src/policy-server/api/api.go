@@ -2,6 +2,8 @@ package api
 
 import "policy-server/store"
 
+var ICMPDefault = -1
+
 //go:generate counterfeiter -o fakes/policy_mapper.go --fake-name PolicyMapper . PolicyMapper
 type PolicyMapper interface {
 	AsStorePolicy([]byte) ([]store.Policy, error) // marshal

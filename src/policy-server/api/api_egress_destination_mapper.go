@@ -103,6 +103,7 @@ func (d *EgressDestination) asStoreEgressDestination() store.EgressDestination {
 		})
 	}
 	ports := []store.Ports{}
+
 	for _, apiPorts := range d.Ports {
 		ports = append(ports, store.Ports{
 			Start: apiPorts.Start,
@@ -120,6 +121,12 @@ func (d *EgressDestination) asStoreEgressDestination() store.EgressDestination {
 	}
 
 	if d.Protocol == "icmp" {
+		if d.ICMPType == nil {
+			d.ICMPType = &ICMPDefault
+		}
+		if d.ICMPCode == nil {
+			d.ICMPCode = &ICMPDefault
+		}
 		destination.ICMPType = *d.ICMPType
 		destination.ICMPCode = *d.ICMPCode
 	}

@@ -39,11 +39,13 @@ func (d *DestinationsCreate) ServeHTTP(w http.ResponseWriter, req *http.Request)
 		d.ErrorResponse.InternalServerError(d.Logger, w, err, "error reading request")
 		return
 	}
+
 	destinations, err = d.EgressDestinationMapper.AsEgressDestinations(requestBytes)
 	if err != nil {
 		d.ErrorResponse.BadRequest(d.Logger, w, err, fmt.Sprintf("error parsing egress destinations: %s", err))
 		return
 	}
+
 	createdDestinations, err = d.EgressDestinationStore.Create(destinations)
 	if err != nil {
 		if strings.Contains(err.Error(), "duplicate name error") {
@@ -53,6 +55,7 @@ func (d *DestinationsCreate) ServeHTTP(w http.ResponseWriter, req *http.Request)
 		d.ErrorResponse.InternalServerError(d.Logger, w, err, "error creating egress destinations")
 		return
 	}
+
 	responseBytes, err = d.EgressDestinationMapper.AsBytes(createdDestinations)
 	if err != nil {
 		d.ErrorResponse.InternalServerError(d.Logger, w, err, "error serializing egress destinations")
