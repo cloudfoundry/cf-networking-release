@@ -10,7 +10,7 @@ import (
 
 	dbfakes "code.cloudfoundry.org/cf-networking-helpers/db/fakes"
 
-	"code.cloudfoundry.org/cf-networking-helpers/db"
+	dbHelper "code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"code.cloudfoundry.org/lager"
 	uuid "github.com/nu7hatch/gouuid"
@@ -28,8 +28,8 @@ var _ = Describe("EgressDestinationStore", func() {
 
 	Describe("using an actual db", func() {
 		var (
-			dbConf db.Config
-			realDb *db.ConnWrapper
+			dbConf dbHelper.Config
+			realDb *dbHelper.ConnWrapper
 		)
 
 		BeforeEach(func() {
@@ -41,7 +41,7 @@ var _ = Describe("EgressDestinationStore", func() {
 			logger := lager.NewLogger("Egress Destination Store Test")
 
 			var err error
-			realDb, err = db.NewConnectionPool(dbConf, 200, 200, 5*time.Minute, "Egress Destination Store Test", "Egress Destination Store Test", logger)
+			realDb, err = dbHelper.NewConnectionPool(dbConf, 200, 200, 5*time.Minute, "Egress Destination Store Test", "Egress Destination Store Test", logger)
 			Expect(err).NotTo(HaveOccurred())
 
 			migrate(realDb)
@@ -55,8 +55,8 @@ var _ = Describe("EgressDestinationStore", func() {
 			egressDestinationsStore = &store.EgressDestinationStore{
 				TerminalsRepo:           terminalsRepo,
 				DestinationMetadataRepo: destinationMetadataRepo,
-				Conn: realDb,
-				EgressDestinationRepo: egressDestinationTable,
+				Conn:                    realDb,
+				EgressDestinationRepo:   egressDestinationTable,
 			}
 		})
 
@@ -134,6 +134,20 @@ var _ = Describe("EgressDestinationStore", func() {
 				Expect(destinations[1].ICMPType).To(Equal(12))
 				Expect(destinations[1].ICMPCode).To(Equal(13))
 
+				By("getting")
+				destinations, err = egressDestinationsStore.GetByGUID(createdDestinations[0].GUID)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(destinations[0].GUID).To(Equal(createdDestinations[0].GUID))
+				Expect(destinations[0].Name).To(Equal("dest-1"))
+				Expect(destinations[0].Description).To(Equal("desc-1"))
+				Expect(destinations[0].Protocol).To(Equal("tcp"))
+				Expect(destinations[0].IPRanges).To(Equal([]store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}}))
+				Expect(destinations[0].Ports).To(Equal([]store.Ports{{Start: 8080, End: 8081}}))
+
+				destinations, err = egressDestinationsStore.GetByGUID("unknown-guid")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(destinations).To(HaveLen(0))
+
 				By("deleting")
 				deletedDestination, err := egressDestinationsStore.Delete(createdDestinations[0].GUID)
 				Expect(err).NotTo(HaveOccurred())
@@ -170,7 +184,7 @@ var _ = Describe("EgressDestinationStore", func() {
 			destinationMetadataRepo = &fakes.DestinationMetadataRepo{}
 
 			egressDestinationsStore = &store.EgressDestinationStore{
-				Conn: mockDB,
+				Conn:                    mockDB,
 				EgressDestinationRepo:   egressDestinationRepo,
 				DestinationMetadataRepo: destinationMetadataRepo,
 				TerminalsRepo:           terminalsRepo,
@@ -282,6 +296,30 @@ var _ = Describe("EgressDestinationStore", func() {
 				It("returns an error", func() {
 					_, err := egressDestinationsStore.All()
 					Expect(err).To(MatchError("egress destination store create transaction: can't create a transaction"))
+				})
+			})
+		})
+
+		Context("GetByGUID", func() {
+			Context("when the transaction cannot be created", func() {
+				BeforeEach(func() {
+					mockDB.BeginxReturns(nil, errors.New("can't create a transaction"))
+				})
+
+				It("returns an error", func() {
+					_, err := egressDestinationsStore.GetByGUID("some-guid")
+					Expect(err).To(MatchError("egress destination store create transaction: can't create a transaction"))
+				})
+			})
+
+			Context("when getting the destination from the table fails", func() {
+				BeforeEach(func() {
+					egressDestinationRepo.GetByGUIDReturns(nil, errors.New("failed to get"))
+				})
+
+				It("rolls back the transaction", func() {
+					egressDestinationsStore.GetByGUID("some-guid")
+					Expect(tx.RollbackCallCount()).To(Equal(1))
 				})
 			})
 		})

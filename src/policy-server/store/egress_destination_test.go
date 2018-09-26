@@ -8,7 +8,7 @@ import (
 
 	"github.com/nu7hatch/gouuid"
 
-	"code.cloudfoundry.org/cf-networking-helpers/db"
+	dbHelper "code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"code.cloudfoundry.org/lager"
 
@@ -18,14 +18,14 @@ import (
 
 var _ = Describe("EgressDestination", func() {
 	var (
-		dbConf db.Config
-		realDb *db.ConnWrapper
+		dbConf dbHelper.Config
+		realDb *dbHelper.ConnWrapper
 
 		terminalsTable         *store.TerminalsTable
 		egressDestinationTable *store.EgressDestinationTable
 
 		terminalIds []string
-		tx          db.Transaction
+		tx          dbHelper.Transaction
 		err         error
 	)
 
@@ -40,7 +40,7 @@ var _ = Describe("EgressDestination", func() {
 		logger := lager.NewLogger("Egress Destination Test")
 
 		var err error
-		realDb, err = db.NewConnectionPool(dbConf, 200, 200, 5*time.Minute, "Egress Destination Test", "Egress Destination Test", logger)
+		realDb, err = dbHelper.NewConnectionPool(dbConf, 200, 200, 5*time.Minute, "Egress Destination Test", "Egress Destination Test", logger)
 		Expect(err).NotTo(HaveOccurred())
 
 		migrate(realDb)

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"policy-server/api"
+	"policy-server/api/fakes"
 	"policy-server/store"
 
 	"code.cloudfoundry.org/cf-networking-helpers/marshal"
@@ -13,12 +14,18 @@ import (
 )
 
 var _ = Describe("EgressPolicyMapper", func() {
-	var mapper *api.EgressPolicyMapper
+	var (
+		mapper    *api.EgressPolicyMapper
+		validator *fakes.EgressValidator
+	)
 
 	BeforeEach(func() {
+		validator = &fakes.EgressValidator{}
+
 		mapper = &api.EgressPolicyMapper{
 			Unmarshaler: marshal.UnmarshalFunc(json.Unmarshal),
 			Marshaler:   marshal.MarshalFunc(json.Marshal),
+			Validator:   validator,
 		}
 	})
 
@@ -54,6 +61,25 @@ var _ = Describe("EgressPolicyMapper", func() {
 				Expect(err).To(MatchError(errors.New("unmarshal json: invalid character 'g' looking for beginning of value")))
 			})
 		})
+
+		Context("when validation fails", func() {
+			BeforeEach(func() {
+				validator.ValidateEgressPoliciesReturns(errors.New("does not validate"))
+			})
+			It("wraps and returns an error", func() {
+				payloadBytes := []byte(`{
+					"egress_policies": [
+						{
+							"source": { "id": "some-src-id", "type": "app" },
+							"destination": { "id": "some-dst-id" }
+						}
+					]
+				}`)
+				_, err := mapper.AsStoreEgressPolicy(payloadBytes)
+
+				Expect(err).To(MatchError(errors.New("validating egress policies: does not validate")))
+			})
+		})
 	})
 
 	Describe("AsBytes", func() {
@@ -62,12 +88,12 @@ var _ = Describe("EgressPolicyMapper", func() {
 		BeforeEach(func() {
 			egressPolicies = []store.EgressPolicy{
 				{
-					ID: 		"policy-1",
+					ID:          "policy-1",
 					Source:      store.EgressSource{ID: "some-src-id", Type: "app"},
 					Destination: store.EgressDestination{GUID: "some-dst-id"},
 				},
 				{
-					ID: 		"policy-2",
+					ID:          "policy-2",
 					Source:      store.EgressSource{ID: "some-src-id-2", Type: "space"},
 					Destination: store.EgressDestination{GUID: "some-dst-id-2"},
 				},

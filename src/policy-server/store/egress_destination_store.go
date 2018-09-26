@@ -27,6 +27,15 @@ type EgressDestinationStore struct {
 	DestinationMetadataRepo destinationMetadataRepo
 }
 
+func (e *EgressDestinationStore) GetByGUID(guid ...string) ([]EgressDestination, error) {
+	tx, err := e.Conn.Beginx()
+	if err != nil {
+		return []EgressDestination{}, fmt.Errorf("egress destination store create transaction: %s", err)
+	}
+	defer tx.Rollback()
+	return e.EgressDestinationRepo.GetByGUID(tx, guid...)
+}
+
 func (e *EgressDestinationStore) All() ([]EgressDestination, error) {
 	tx, err := e.Conn.Beginx()
 	if err != nil {

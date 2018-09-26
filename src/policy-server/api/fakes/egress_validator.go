@@ -7,10 +7,10 @@ import (
 )
 
 type EgressValidator struct {
-	ValidateEgressPoliciesStub        func(policies []api.EgressPolicy) error
+	ValidateEgressPoliciesStub        func([]api.EgressPolicy) error
 	validateEgressPoliciesMutex       sync.RWMutex
 	validateEgressPoliciesArgsForCall []struct {
-		policies []api.EgressPolicy
+		arg1 []api.EgressPolicy
 	}
 	validateEgressPoliciesReturns struct {
 		result1 error
@@ -22,21 +22,21 @@ type EgressValidator struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *EgressValidator) ValidateEgressPolicies(policies []api.EgressPolicy) error {
-	var policiesCopy []api.EgressPolicy
-	if policies != nil {
-		policiesCopy = make([]api.EgressPolicy, len(policies))
-		copy(policiesCopy, policies)
+func (fake *EgressValidator) ValidateEgressPolicies(arg1 []api.EgressPolicy) error {
+	var arg1Copy []api.EgressPolicy
+	if arg1 != nil {
+		arg1Copy = make([]api.EgressPolicy, len(arg1))
+		copy(arg1Copy, arg1)
 	}
 	fake.validateEgressPoliciesMutex.Lock()
 	ret, specificReturn := fake.validateEgressPoliciesReturnsOnCall[len(fake.validateEgressPoliciesArgsForCall)]
 	fake.validateEgressPoliciesArgsForCall = append(fake.validateEgressPoliciesArgsForCall, struct {
-		policies []api.EgressPolicy
-	}{policiesCopy})
-	fake.recordInvocation("ValidateEgressPolicies", []interface{}{policiesCopy})
+		arg1 []api.EgressPolicy
+	}{arg1Copy})
+	fake.recordInvocation("ValidateEgressPolicies", []interface{}{arg1Copy})
 	fake.validateEgressPoliciesMutex.Unlock()
 	if fake.ValidateEgressPoliciesStub != nil {
-		return fake.ValidateEgressPoliciesStub(policies)
+		return fake.ValidateEgressPoliciesStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
@@ -53,7 +53,7 @@ func (fake *EgressValidator) ValidateEgressPoliciesCallCount() int {
 func (fake *EgressValidator) ValidateEgressPoliciesArgsForCall(i int) []api.EgressPolicy {
 	fake.validateEgressPoliciesMutex.RLock()
 	defer fake.validateEgressPoliciesMutex.RUnlock()
-	return fake.validateEgressPoliciesArgsForCall[i].policies
+	return fake.validateEgressPoliciesArgsForCall[i].arg1
 }
 
 func (fake *EgressValidator) ValidateEgressPoliciesReturns(result1 error) {

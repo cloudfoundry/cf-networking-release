@@ -185,12 +185,12 @@ func main() {
 	policiesIndexHandlerV0 := handlers.NewPoliciesIndex(wrappedStore, policyMapperV0, policyFilter, policyGuard, errorResponse)
 
 	egressDestinationMapper := &api.EgressDestinationMapper{
-		Marshaler: marshal.MarshalFunc(json.Marshal),
+		Marshaler:        marshal.MarshalFunc(json.Marshal),
 		PayloadValidator: &api.EgressDestinationsValidator{},
 	}
 
 	egressDestinationStore := &store.EgressDestinationStore{
-		Conn: connectionPool,
+		Conn:                    connectionPool,
 		EgressDestinationRepo:   &store.EgressDestinationTable{},
 		TerminalsRepo:           terminalsTable,
 		DestinationMetadataRepo: &store.DestinationMetadataTable{},
@@ -218,9 +218,16 @@ func main() {
 		Logger:                  logger,
 	}
 
+	egressPolicyValidator := &api.EgressValidator{
+		CCClient:         ccClient,
+		UAAClient:        uaaClient,
+		DestinationStore: egressDestinationStore,
+	}
+
 	egressPolicyMapper := &api.EgressPolicyMapper{
 		Unmarshaler: marshal.UnmarshalFunc(json.Unmarshal),
 		Marshaler:   marshal.MarshalFunc(json.Marshal),
+		Validator:   egressPolicyValidator,
 	}
 
 	createEgressPolicyHandlerV1 := &handlers.EgressPolicyCreate{

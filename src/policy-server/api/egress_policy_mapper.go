@@ -9,6 +9,12 @@ import (
 type EgressPolicyMapper struct {
 	Unmarshaler marshal.Unmarshaler
 	Marshaler   marshal.Marshaler
+	Validator   egressValidator
+}
+
+//go:generate counterfeiter -o fakes/egress_validator.go --fake-name EgressValidator . egressValidator
+type egressValidator interface {
+	ValidateEgressPolicies([]EgressPolicy) error
 }
 
 type payload struct {
@@ -50,6 +56,11 @@ func (p *EgressPolicyMapper) AsStoreEgressPolicy(bytes []byte) ([]store.EgressPo
 	err := p.Unmarshaler.Unmarshal(bytes, payload)
 	if err != nil {
 		return []store.EgressPolicy{}, fmt.Errorf("unmarshal json: %s", err)
+	}
+
+	err = p.Validator.ValidateEgressPolicies(payload.EgressPolicies)
+	if err != nil {
+		return []store.EgressPolicy{}, fmt.Errorf("validating egress policies: %s", err)
 	}
 
 	var storeEgressPolicies []store.EgressPolicy

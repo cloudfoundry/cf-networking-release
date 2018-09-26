@@ -998,7 +998,6 @@ var _ = Describe("Egress Policy Table", func() {
 			var egressPolicies []store.EgressPolicy
 
 			BeforeEach(func() {
-
 				db, _ := getMigratedRealDb(dbConf)
 				egressStore := setupEgressPolicyStore(db)
 
@@ -1167,7 +1166,7 @@ func egressDestinationStore(db store.Database) *store.EgressDestinationStore {
 
 	destinationMetadataTable := &store.DestinationMetadataTable{}
 	egressDestinationStore := &store.EgressDestinationStore{
-		Conn: db,
+		Conn:                    db,
 		EgressDestinationRepo:   &store.EgressDestinationTable{},
 		TerminalsRepo:           terminalsRepo,
 		DestinationMetadataRepo: destinationMetadataTable,
