@@ -159,17 +159,24 @@ var _ = Describe("EgressPolicyMetricsWrapper", func() {
 	})
 
 	Describe("Delete", func() {
+		var egressPolicies []store.EgressPolicy
+		BeforeEach(func() {
+			egressPolicies = []store.EgressPolicy{{}}
+			fakeStore.DeleteReturns(egressPolicies, nil)
+		})
+
 		It("calls Delete on the Store", func() {
-			err := metricsWrapper.Delete(policies)
+			policies, err := metricsWrapper.Delete("some-policy-guid")
 			Expect(err).NotTo(HaveOccurred())
+			Expect(policies).To(Equal(egressPolicies))
 
 			Expect(fakeStore.DeleteCallCount()).To(Equal(1))
 			passedPolicies := fakeStore.DeleteArgsForCall(0)
-			Expect(passedPolicies).To(Equal(policies))
+			Expect(passedPolicies).To(ConsistOf("some-policy-guid"))
 		})
 
 		It("emits a metric", func() {
-			err := metricsWrapper.Delete(policies)
+			_, err := metricsWrapper.Delete("some-policy-guid")
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
@@ -179,10 +186,10 @@ var _ = Describe("EgressPolicyMetricsWrapper", func() {
 
 		Context("when there is an error", func() {
 			BeforeEach(func() {
-				fakeStore.DeleteReturns(errors.New("banana"))
+				fakeStore.DeleteReturns(nil, errors.New("banana"))
 			})
 			It("emits an error metric", func() {
-				err := metricsWrapper.Delete(policies)
+				_, err := metricsWrapper.Delete("some-policy-guid")
 				Expect(err).To(MatchError("banana"))
 
 				Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))

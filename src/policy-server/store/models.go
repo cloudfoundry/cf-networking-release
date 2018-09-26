@@ -41,8 +41,9 @@ type EgressPolicy struct {
 }
 
 type EgressSource struct {
-	ID   string
-	Type string
+	TerminalGUID string
+	ID           string
+	Type         string
 }
 
 type EgressDestination struct {
@@ -59,14 +60,4 @@ type EgressDestination struct {
 type IPRange struct {
 	Start string
 	End   string
-}
-
-// EgressPolicyIDCollection is the set of IDs referred to by a particular EgressPolicy
-type EgressPolicyIDCollection struct {
-	EgressPolicyGUID        string
-	DestinationTerminalGUID string
-	DestinationIPRangeID    int64
-	SourceTerminalGUID      string
-	SourceAppID             int64
-	SourceSpaceID           int64
 }

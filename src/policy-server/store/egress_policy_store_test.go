@@ -71,8 +71,8 @@ var _ = Describe("EgressPolicyStore", func() {
 
 	Describe("Create", func() {
 		It("creates an egress policy with the right GUIDs", func() {
-			terminalsRepo.CreateReturnsOnCall(0, "some-app-guid", nil)
-			terminalsRepo.CreateReturnsOnCall(1, "some-space-guid", nil)
+			terminalsRepo.CreateReturnsOnCall(0, "some-terminal-app-guid", nil)
+			terminalsRepo.CreateReturnsOnCall(1, "some-terminal-space-guid", nil)
 			egressPolicyRepo.CreateEgressPolicyReturnsOnCall(0, "some-egress-policy-guid-1", nil)
 			egressPolicyRepo.CreateEgressPolicyReturnsOnCall(1, "some-egress-policy-guid-2", nil)
 
@@ -84,7 +84,8 @@ var _ = Describe("EgressPolicyStore", func() {
 				{
 					ID: "some-egress-policy-guid-1",
 					Source: store.EgressSource{
-						ID: "some-app-guid",
+						ID:           "some-app-guid",
+						TerminalGUID: "some-terminal-app-guid",
 					},
 					Destination: store.EgressDestination{
 						GUID: "some-destination-guid",
@@ -93,7 +94,8 @@ var _ = Describe("EgressPolicyStore", func() {
 				{
 					ID: "some-egress-policy-guid-2",
 					Source: store.EgressSource{
-						ID: "different-app-guid",
+						ID:           "different-app-guid",
+						TerminalGUID: "some-terminal-space-guid",
 					},
 					Destination: store.EgressDestination{
 						GUID: "some-destination-guid-2",
@@ -103,12 +105,12 @@ var _ = Describe("EgressPolicyStore", func() {
 
 			argTx, sourceID, destinationID := egressPolicyRepo.CreateEgressPolicyArgsForCall(0)
 			Expect(argTx).To(Equal(tx))
-			Expect(sourceID).To(Equal("some-app-guid"))
+			Expect(sourceID).To(Equal("some-terminal-app-guid"))
 			Expect(destinationID).To(Equal("some-destination-guid"))
 
 			argTx, sourceID, destinationID = egressPolicyRepo.CreateEgressPolicyArgsForCall(1)
 			Expect(argTx).To(Equal(tx))
-			Expect(sourceID).To(Equal("some-space-guid"))
+			Expect(sourceID).To(Equal("some-terminal-space-guid"))
 			Expect(destinationID).To(Equal("some-destination-guid-2"))
 		})
 
@@ -272,221 +274,142 @@ var _ = Describe("EgressPolicyStore", func() {
 
 	Describe("Delete", func() {
 		var (
-			egressPoliciesToDelete    []store.EgressPolicy
-			egressPolicyIDCollection  store.EgressPolicyIDCollection
-			egressPolicyIDCollection2 store.EgressPolicyIDCollection
-
 			egressPolicyGUID string
-			ipRangeID        int64
 			destTerminalGUID string
-			appID            int64
 			srcTerminalGUID  string
+			srcGUID          string
+			srcType          string
 
 			egressPolicyGUID2 string
-			ipRangeID2        int64
 			destTerminalGUID2 string
-			appID2            int64
 			srcTerminalGUID2  string
+			srcGUID2          string
+			srcType2          string
+
+			expectedEgressPolicies []store.EgressPolicy
 		)
 		BeforeEach(func() {
-			egressPoliciesToDelete = []store.EgressPolicy{
+			egressPolicyGUID = "some-egress-policy-guid"
+			destTerminalGUID = "some-dest-terminal-guid"
+			srcTerminalGUID = "some-src-terminal-guid"
+			srcGUID = "some-app-guid"
+			srcType = "app"
+
+			egressPolicyGUID2 = "some-egress-policy-guid-2"
+			destTerminalGUID2 = "some-dest-terminal-guid-2"
+			srcTerminalGUID2 = "some-src-terminal-guid-2"
+			srcGUID2 = "some-space-guid"
+			srcType2 = "space"
+
+			expectedEgressPolicies = []store.EgressPolicy{
 				{
+					ID: egressPolicyGUID,
 					Source: store.EgressSource{
-						ID: "some-app-guid",
+						TerminalGUID: srcTerminalGUID,
+						ID:           srcGUID,
+						Type:         srcType,
 					},
 					Destination: store.EgressDestination{
-						Protocol: "tcp",
-						Ports: []store.Ports{
-							{
-								Start: 8080,
-								End:   8081,
-							},
-						},
-						IPRanges: []store.IPRange{
-							{
-								Start: "1.2.3.4",
-								End:   "1.2.3.5",
-							},
-						},
+						GUID: destTerminalGUID,
+					},
+				},
+				{
+					ID: egressPolicyGUID2,
+					Source: store.EgressSource{
+						TerminalGUID: srcTerminalGUID2,
+						ID:           srcGUID2,
+						Type:         srcType2,
+					},
+					Destination: store.EgressDestination{
+						GUID: destTerminalGUID2,
 					},
 				},
 			}
-
-			egressPolicyGUID = "some-egress-policy-guid"
-			ipRangeID = 9
-			destTerminalGUID = "some-dest-terminal-guid"
-			appID = 21
-			srcTerminalGUID = "some-src-terminal-guid"
-
-			egressPolicyGUID2 = "some-egress-policy-guid-2"
-			ipRangeID2 = 10
-			destTerminalGUID2 = "some-dest-terminal-guid-2"
-			appID2 = 23
-			srcTerminalGUID2 = "some-src-terminal-guid-2"
-
-			egressPolicyIDCollection = store.EgressPolicyIDCollection{
-				EgressPolicyGUID:        egressPolicyGUID,
-				DestinationIPRangeID:    ipRangeID,
-				DestinationTerminalGUID: destTerminalGUID,
-				SourceAppID:             appID,
-				SourceSpaceID:           -1,
-				SourceTerminalGUID:      srcTerminalGUID,
-			}
-
-			egressPolicyIDCollection2 = store.EgressPolicyIDCollection{
-				EgressPolicyGUID:        egressPolicyGUID2,
-				DestinationIPRangeID:    ipRangeID2,
-				DestinationTerminalGUID: destTerminalGUID2,
-				SourceAppID:             appID2,
-				SourceSpaceID:           -1,
-				SourceTerminalGUID:      srcTerminalGUID2,
-			}
-
-			egressPolicyIDCollections := []store.EgressPolicyIDCollection{
-				egressPolicyIDCollection,
-				egressPolicyIDCollection2,
-			}
-			egressPolicyRepo.GetIDCollectionsByEgressPolicyReturns(egressPolicyIDCollections, nil)
+			egressPolicyRepo.GetByGUIDReturns(expectedEgressPolicies, nil)
 		})
 
 		It("returns an error when beginning a transaction fails", func() {
 			mockDb.BeginxReturns(nil, errors.New("failed to create tx"))
-			err := egressPolicyStore.Delete(egressPoliciesToDelete)
+			_, err := egressPolicyStore.Delete(egressPolicyGUID)
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError("create transaction: failed to create tx"))
 		})
 
-		It("deletes the egress policy", func() {
-			err := egressPolicyStore.Delete(egressPoliciesToDelete)
+		It("deletes the egress policies and returns the deleted egress policies", func() {
+			egressPolicies, err := egressPolicyStore.Delete(egressPolicyGUID, egressPolicyGUID2)
 			Expect(err).NotTo(HaveOccurred())
+			Expect(egressPolicies).To(Equal(expectedEgressPolicies))
 
-			Expect(egressPolicyRepo.GetIDCollectionsByEgressPolicyCallCount()).To(Equal(1))
-			passedTx, passedEgressPolicy := egressPolicyRepo.GetIDCollectionsByEgressPolicyArgsForCall(0)
+			Expect(egressPolicyRepo.GetByGUIDCallCount()).To(Equal(1))
+			passedTx, passedEgressPolicyGUIDs := egressPolicyRepo.GetByGUIDArgsForCall(0)
 			Expect(passedTx).To(Equal(tx))
-			Expect(passedEgressPolicy).To(Equal(egressPoliciesToDelete[0]))
+			Expect(passedEgressPolicyGUIDs).To(ConsistOf(egressPolicyGUID, egressPolicyGUID2))
 
 			Expect(egressPolicyRepo.DeleteEgressPolicyCallCount()).To(Equal(2))
 			passedTx, passedEgressPolicyGUID := egressPolicyRepo.DeleteEgressPolicyArgsForCall(0)
 			Expect(passedTx).To(Equal(tx))
 			Expect(passedEgressPolicyGUID).To(Equal(egressPolicyGUID))
+
 			passedTx, passedEgressPolicyGUID = egressPolicyRepo.DeleteEgressPolicyArgsForCall(1)
 			Expect(passedTx).To(Equal(tx))
 			Expect(passedEgressPolicyGUID).To(Equal(egressPolicyGUID2))
 
-			Expect(egressPolicyRepo.DeleteIPRangeCallCount()).To(Equal(2))
-			passedTx, passedIPRangeID := egressPolicyRepo.DeleteIPRangeArgsForCall(0)
-			Expect(passedTx).To(Equal(tx))
-			Expect(passedIPRangeID).To(Equal(ipRangeID))
-			passedTx, passedIPRangeID = egressPolicyRepo.DeleteIPRangeArgsForCall(1)
-			Expect(passedTx).To(Equal(tx))
-			Expect(passedIPRangeID).To(Equal(ipRangeID2))
-
-			Expect(terminalsRepo.DeleteCallCount()).To(Equal(4))
-			passedTx, passedDestTerminalGUID := terminalsRepo.DeleteArgsForCall(0)
-			Expect(passedTx).To(Equal(tx))
-			Expect(passedDestTerminalGUID).To(Equal(destTerminalGUID))
-
-			passedTx, passedSrcTerminalGUID := terminalsRepo.DeleteArgsForCall(1)
+			Expect(terminalsRepo.DeleteCallCount()).To(Equal(2))
+			passedTx, passedSrcTerminalGUID := terminalsRepo.DeleteArgsForCall(0)
 			Expect(passedTx).To(Equal(tx))
 			Expect(passedSrcTerminalGUID).To(Equal(srcTerminalGUID))
 
-			passedTx, passedDestTerminalGUID = terminalsRepo.DeleteArgsForCall(2)
-			Expect(passedTx).To(Equal(tx))
-			Expect(passedDestTerminalGUID).To(Equal(destTerminalGUID2))
-
-			passedTx, passedSrcTerminalGUID = terminalsRepo.DeleteArgsForCall(3)
+			passedTx, passedSrcTerminalGUID = terminalsRepo.DeleteArgsForCall(1)
 			Expect(passedTx).To(Equal(tx))
 			Expect(passedSrcTerminalGUID).To(Equal(srcTerminalGUID2))
 
-			Expect(egressPolicyRepo.DeleteAppCallCount()).To(Equal(2))
-			passedTx, passedAppID := egressPolicyRepo.DeleteAppArgsForCall(0)
+			Expect(egressPolicyRepo.DeleteAppCallCount()).To(Equal(1))
+			passedTx, passedSrcTerminalGUID = egressPolicyRepo.DeleteAppArgsForCall(0)
 			Expect(passedTx).To(Equal(tx))
-			Expect(passedAppID).To(Equal(appID))
+			Expect(passedSrcTerminalGUID).To(Equal(srcTerminalGUID))
 
-			passedTx, passedAppID = egressPolicyRepo.DeleteAppArgsForCall(1)
+			Expect(egressPolicyRepo.DeleteSpaceCallCount()).To(Equal(1))
+			passedTx, passedSourceTerminalGUID := egressPolicyRepo.DeleteSpaceArgsForCall(0)
 			Expect(passedTx).To(Equal(tx))
-			Expect(passedAppID).To(Equal(appID2))
-
-			Expect(egressPolicyRepo.DeleteSpaceCallCount()).To(Equal(0))
+			Expect(passedSourceTerminalGUID).To(Equal(srcTerminalGUID2))
 		})
 
-		Context("when the source terminal is attached to a space", func() {
-			var (
-				spaceID int64
-			)
-
+		Context("when the EgressPolicyRepo.DeleteSpace fails", func() {
 			BeforeEach(func() {
-				spaceID = 23
-				egressPolicyIDCollection.SourceAppID = -1
-				egressPolicyIDCollection.SourceSpaceID = spaceID
-				egressPolicyIDCollections := []store.EgressPolicyIDCollection{egressPolicyIDCollection}
-				egressPolicyRepo.GetIDCollectionsByEgressPolicyReturns(egressPolicyIDCollections, nil)
+				srcGUID = "some-space-guid"
+				srcType = "space"
+				expectedEgressPolicies = []store.EgressPolicy{
+					{
+						ID: egressPolicyGUID,
+						Source: store.EgressSource{
+							TerminalGUID: srcTerminalGUID,
+							ID:           srcGUID,
+							Type:         srcType,
+						},
+						Destination: store.EgressDestination{
+							GUID: destTerminalGUID,
+						},
+					},
+				}
+				egressPolicyRepo.GetByGUIDReturns(expectedEgressPolicies, nil)
+				egressPolicyRepo.DeleteSpaceReturns(errors.New("ther's a bug"))
 			})
 
-			It("deletes the space", func() {
-				err := egressPolicyStore.Delete(egressPoliciesToDelete)
-				Expect(err).NotTo(HaveOccurred())
-
-				Expect(egressPolicyRepo.DeleteAppCallCount()).To(Equal(0))
-				Expect(egressPolicyRepo.DeleteSpaceCallCount()).To(Equal(1))
-				passedTx, passedSpaceID := egressPolicyRepo.DeleteSpaceArgsForCall(0)
-				Expect(passedTx).To(Equal(tx))
-				Expect(passedSpaceID).To(Equal(spaceID))
-			})
-
-			Context("when the EgressPolicyRepo.DeleteSpace fails", func() {
-				BeforeEach(func() {
-					egressPolicyRepo.DeleteSpaceReturns(errors.New("ther's a bug"))
-				})
-
-				It("returns an error", func() {
-					err := egressPolicyStore.Delete(egressPoliciesToDelete)
-					Expect(err).To(MatchError("failed to delete source space: ther's a bug"))
-				})
+			It("returns an error", func() {
+				_, err := egressPolicyStore.Delete(egressPolicyGUID)
+				Expect(err).To(MatchError("failed to delete source space: ther's a bug"))
 			})
 		})
 
-		Context("when there are multiple egress policies", func() {
+		Context("when the egress policy doesn't exist", func() {
 			BeforeEach(func() {
-				egressPoliciesToDelete = append(egressPoliciesToDelete, store.EgressPolicy{
-					Source: store.EgressSource{
-						ID: "some-other-app-guid",
-					},
-					Destination: store.EgressDestination{
-						Protocol: "tcp",
-						Ports: []store.Ports{
-							{
-								Start: 8080,
-								End:   8081,
-							},
-						},
-						IPRanges: []store.IPRange{
-							{
-								Start: "1.2.3.4",
-								End:   "1.2.3.6",
-							},
-						},
-					},
-				})
+				egressPolicyRepo.GetByGUIDReturns([]store.EgressPolicy{}, nil)
 			})
 
-			It("deletes all the egress policies", func() {
-				err := egressPolicyStore.Delete(egressPoliciesToDelete)
+			It("returns an empty array", func() {
+				egressPolicies, err := egressPolicyStore.Delete(egressPolicyGUID)
 				Expect(err).NotTo(HaveOccurred())
-
-				Expect(egressPolicyRepo.GetIDCollectionsByEgressPolicyCallCount()).To(Equal(2))
-				passedTx, passedEgressPolicy := egressPolicyRepo.GetIDCollectionsByEgressPolicyArgsForCall(0)
-				Expect(passedTx).To(Equal(tx))
-				Expect(passedEgressPolicy).To(Equal(egressPoliciesToDelete[0]))
-
-				passedTx, passedEgressPolicy = egressPolicyRepo.GetIDCollectionsByEgressPolicyArgsForCall(1)
-				Expect(passedTx).To(Equal(tx))
-				Expect(passedEgressPolicy).To(Equal(egressPoliciesToDelete[1]))
-
-				Expect(egressPolicyRepo.DeleteEgressPolicyCallCount()).To(Equal(4))
-				Expect(egressPolicyRepo.DeleteIPRangeCallCount()).To(Equal(4))
-				Expect(terminalsRepo.DeleteCallCount()).To(Equal(8))
-				Expect(egressPolicyRepo.DeleteAppCallCount()).To(Equal(4))
+				Expect(egressPolicies).To(HaveLen(0))
 			})
 		})
 
@@ -496,7 +419,7 @@ var _ = Describe("EgressPolicyStore", func() {
 			})
 
 			It("doesn't delete the source terminal or source app", func() {
-				err := egressPolicyStore.Delete(egressPoliciesToDelete)
+				_, err := egressPolicyStore.Delete(egressPolicyGUID)
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(egressPolicyRepo.DeleteAppCallCount()).To(Equal(0))
@@ -505,23 +428,23 @@ var _ = Describe("EgressPolicyStore", func() {
 
 		Context("when the deleteWithTx fails", func() {
 			BeforeEach(func() {
-				egressPolicyRepo.GetIDCollectionsByEgressPolicyReturns([]store.EgressPolicyIDCollection{}, errors.New("ther's a bug"))
+				egressPolicyRepo.GetByGUIDReturns(nil, errors.New("ther's a bug"))
 			})
 
 			It("rollsback the transaction", func() {
-				err := egressPolicyStore.Delete(egressPoliciesToDelete)
+				_, err := egressPolicyStore.Delete(egressPolicyGUID)
 				Expect(err).To(MatchError("failed to find egress policy: ther's a bug"))
 				Expect(tx.RollbackCallCount()).To(Equal(1))
 			})
 		})
 
-		Context("when the EgressPolicyRepo.GetIDCollectionsByEgressPolicy fails", func() {
+		Context("when the EgressPolicyRepo.GetByGUID fails", func() {
 			BeforeEach(func() {
-				egressPolicyRepo.GetIDCollectionsByEgressPolicyReturns([]store.EgressPolicyIDCollection{}, errors.New("ther's a bug"))
+				egressPolicyRepo.GetByGUIDReturns(nil, errors.New("ther's a bug"))
 			})
 
 			It("returns an error", func() {
-				err := egressPolicyStore.Delete(egressPoliciesToDelete)
+				_, err := egressPolicyStore.Delete(egressPolicyGUID)
 				Expect(err).To(MatchError("failed to find egress policy: ther's a bug"))
 			})
 		})
@@ -532,30 +455,8 @@ var _ = Describe("EgressPolicyStore", func() {
 			})
 
 			It("returns an error", func() {
-				err := egressPolicyStore.Delete(egressPoliciesToDelete)
+				_, err := egressPolicyStore.Delete(egressPolicyGUID)
 				Expect(err).To(MatchError("failed to delete egress policy: ther's a bug"))
-			})
-		})
-
-		Context("when the EgressPolicyRepo.DeleteIPRange fails", func() {
-			BeforeEach(func() {
-				egressPolicyRepo.DeleteIPRangeReturns(errors.New("ther's a bug"))
-			})
-
-			It("returns an error", func() {
-				err := egressPolicyStore.Delete(egressPoliciesToDelete)
-				Expect(err).To(MatchError("failed to delete destination ip range: ther's a bug"))
-			})
-		})
-
-		Context("when the EgressPolicyRepo.DeleteTerminal fails", func() {
-			BeforeEach(func() {
-				terminalsRepo.DeleteReturns(errors.New("ther's a bug"))
-			})
-
-			It("returns an error", func() {
-				err := egressPolicyStore.Delete(egressPoliciesToDelete)
-				Expect(err).To(MatchError("failed to delete destination terminal: ther's a bug"))
 			})
 		})
 
@@ -565,7 +466,7 @@ var _ = Describe("EgressPolicyStore", func() {
 			})
 
 			It("returns an error", func() {
-				err := egressPolicyStore.Delete(egressPoliciesToDelete)
+				_, err := egressPolicyStore.Delete(egressPolicyGUID)
 				Expect(err).To(MatchError("failed to check if source terminal is in use: ther's a bug"))
 			})
 		})
@@ -576,25 +477,14 @@ var _ = Describe("EgressPolicyStore", func() {
 			})
 
 			It("returns an error", func() {
-				err := egressPolicyStore.Delete(egressPoliciesToDelete)
+				_, err := egressPolicyStore.Delete(egressPolicyGUID)
 				Expect(err).To(MatchError("failed to delete source app: ther's a bug"))
-			})
-		})
-
-		Context("when the EgressPolicyRepo.DeleteTerminal fails", func() {
-			BeforeEach(func() {
-				terminalsRepo.DeleteReturnsOnCall(1, errors.New("ther's a bug"))
-			})
-
-			It("returns an error", func() {
-				err := egressPolicyStore.Delete(egressPoliciesToDelete)
-				Expect(err).To(MatchError("failed to delete source terminal: ther's a bug"))
 			})
 		})
 
 		It("returns an error when commit transaction fails", func() {
 			tx.CommitReturns(errors.New("failed to commit"))
-			err := egressPolicyStore.Delete(egressPoliciesToDelete)
+			_, err := egressPolicyStore.Delete(egressPolicyGUID)
 			Expect(err).To(MatchError("commit transaction: failed to commit"))
 		})
 	})

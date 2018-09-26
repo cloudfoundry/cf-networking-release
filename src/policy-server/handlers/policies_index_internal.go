@@ -15,6 +15,7 @@ type egressPolicyStore interface {
 	All() ([]store.EgressPolicy, error)
 	GetBySourceGuids(ids []string) ([]store.EgressPolicy, error)
 	Create(egressPolicies []store.EgressPolicy) ([]store.EgressPolicy, error)
+	Delete(guids ...string) ([]store.EgressPolicy, error)
 }
 
 type PoliciesIndexInternal struct {

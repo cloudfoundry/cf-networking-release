@@ -28,7 +28,7 @@ type policyStore interface {
 //go:generate counterfeiter -o fakes/egress_policy_store.go --fake-name EgressPolicyStore . egressPolicyStore
 type egressPolicyStore interface {
 	All() ([]store.EgressPolicy, error)
-	Delete([]store.EgressPolicy) error
+	Delete(guids ...string) ([]store.EgressPolicy, error)
 }
 
 type PolicyCleaner struct {
@@ -95,7 +95,12 @@ func (p *PolicyCleaner) DeleteStalePolicies() ([]store.Policy, []store.EgressPol
 		return []store.Policy{}, []store.EgressPolicy{}, fmt.Errorf("database write failed: %s", err)
 	}
 
-	err = p.EgressStore.Delete(egressPoliciesToDelete)
+	egressPoliciesGUIDsToDelete := make([]string, len(egressPoliciesToDelete))
+	for i, egressPolicy := range egressPoliciesToDelete {
+		egressPoliciesGUIDsToDelete[i] = egressPolicy.ID
+	}
+
+	_, err = p.EgressStore.Delete(egressPoliciesGUIDsToDelete...)
 	if err != nil {
 		p.Logger.Error("egress-store-delete-policies-failed", err)
 		return []store.Policy{}, []store.EgressPolicy{}, fmt.Errorf("database write failed: %s", err)

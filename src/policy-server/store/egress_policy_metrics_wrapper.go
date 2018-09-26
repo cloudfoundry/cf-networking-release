@@ -7,7 +7,7 @@ import (
 //go:generate counterfeiter -o fakes/egress_policy_store.go --fake-name EgressPolicyStore . egressPolicyStore
 type egressPolicyStore interface {
 	Create([]EgressPolicy) ([]EgressPolicy, error)
-	Delete([]EgressPolicy) error
+	Delete(guids ...string) ([]EgressPolicy, error)
 	All() ([]EgressPolicy, error)
 	GetBySourceGuids(srcGuids []string) ([]EgressPolicy, error)
 }
@@ -43,9 +43,9 @@ func (mw *EgressPolicyMetricsWrapper) All() ([]EgressPolicy, error) {
 	return policies, err
 }
 
-func (mw *EgressPolicyMetricsWrapper) Delete(egressPolicies []EgressPolicy) error {
+func (mw *EgressPolicyMetricsWrapper) Delete(guids ...string) ([]EgressPolicy, error) {
 	startTime := time.Now()
-	err := mw.Store.Delete(egressPolicies)
+	egressPolicies, err := mw.Store.Delete(guids...)
 	deleteTimeDuration := time.Now().Sub(startTime)
 	if err != nil {
 		mw.MetricsSender.IncrementCounter("EgressPolicyStoreDeleteError")
@@ -53,7 +53,7 @@ func (mw *EgressPolicyMetricsWrapper) Delete(egressPolicies []EgressPolicy) erro
 	} else {
 		mw.MetricsSender.SendDuration("EgressPolicyStoreDeleteSuccessTime", deleteTimeDuration)
 	}
-	return err
+	return egressPolicies, err
 }
 
 func (mw *EgressPolicyMetricsWrapper) GetBySourceGuids(srcGuids []string) ([]EgressPolicy, error) {

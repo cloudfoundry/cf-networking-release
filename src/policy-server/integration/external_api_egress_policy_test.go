@@ -2,11 +2,12 @@ package integration_test
 
 import (
 	"fmt"
-	"github.com/nu7hatch/gouuid"
 	"net/http"
 	"policy-server/config"
 	"policy-server/integration/helpers"
 	"policy-server/psclient"
+
+	"github.com/nu7hatch/gouuid"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
@@ -115,13 +116,26 @@ var _ = Describe("External API Egress Policies", func() {
 		_, err = uuid.ParseHex(policyGUID)
 		Expect(err).NotTo(HaveOccurred())
 
+		//TODO: assert the egress policy exists...
+		//egressPolicies, err = client.ListEgressPolicies(token)
+		//Expect(err).NotTo(HaveOccurred())
+
+		deletedEgressPolicy, err := client.DeleteEgressPolicy(policyGUID, token)
+		Expect(err).NotTo(HaveOccurred())
+		somePolicy.GUID = policyGUID
+		Expect(somePolicy).To(Equal(deletedEgressPolicy))
+
+		//TODO: assert the deleted egress policy is gone...
+		//destinationss, err = client.ListEgressPolicies(token)
+		//Expect(err).NotTo(HaveOccurred())
+
 		deletedDestination, err := client.DeleteDestination(token, createdDestinations[1])
 		Expect(err).NotTo(HaveOccurred())
 		Expect(deletedDestination).To(Equal(createdDestinations[1]))
 
 		//TODO: assert the deleted dest is gone...
 		//destinationss, err = client.ListDestinations(token)
-		//Expect(e).NotTo(HaveOccurred())
+		//Expect(err).NotTo(HaveOccurred())
 
 		//TODO: re-instate when index is an endpoint
 		//egressPolicies, err := client.ListEgressPolicies(token)

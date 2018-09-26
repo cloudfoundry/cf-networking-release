@@ -60,7 +60,7 @@ func NewClient(logger lager.Logger, httpClient json_client.HttpClient, baseURL s
 	}
 }
 
-func (c *Client) CreateDestinations(token string, destinations... Destination) ([]Destination, error) {
+func (c *Client) CreateDestinations(token string, destinations ...Destination) ([]Destination, error) {
 	var response DestinationList
 	err := c.JsonClient.Do("POST", "/networking/v1/external/destinations", DestinationList{
 		Destinations: destinations,
@@ -74,7 +74,7 @@ func (c *Client) CreateDestinations(token string, destinations... Destination) (
 
 func (c *Client) DeleteDestination(token string, destination Destination) (Destination, error) {
 	var response DestinationList
-	err := c.JsonClient.Do("DELETE", "/networking/v1/external/destinations/" + destination.GUID, nil, &response, "Bearer "+token)
+	err := c.JsonClient.Do("DELETE", "/networking/v1/external/destinations/"+destination.GUID, nil, &response, "Bearer "+token)
 	if err != nil {
 		return Destination{}, fmt.Errorf("json client do: %s", err)
 	}
@@ -93,6 +93,16 @@ func (c *Client) CreateEgressPolicy(egressPolicy EgressPolicy, token string) (st
 	}
 
 	return response.EgressPolicies[0].GUID, nil
+}
+
+func (c *Client) DeleteEgressPolicy(egressPolicyGUID, token string) (EgressPolicy, error) {
+	var response EgressPolicyList
+	err := c.JsonClient.Do("DELETE", fmt.Sprintf("/networking/v1/external/egress_policies/%s", egressPolicyGUID), "", &response, "Bearer "+token)
+	if err != nil {
+		return EgressPolicy{}, fmt.Errorf("json client do: %s", err)
+	}
+
+	return response.EgressPolicies[0], nil
 }
 
 func (c *Client) ListEgressPolicies(token string) (EgressPolicyList, error) {

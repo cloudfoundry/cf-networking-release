@@ -166,13 +166,13 @@ func (e *EgressPolicyTable) DeleteIPRange(tx db.Transaction, ipRangeID int64) er
 	return err
 }
 
-func (e *EgressPolicyTable) DeleteApp(tx db.Transaction, appID int64) error {
-	_, err := tx.Exec(tx.Rebind(`DELETE FROM apps WHERE id = ?`), appID)
+func (e *EgressPolicyTable) DeleteApp(tx db.Transaction, terminalGUID string) error {
+	_, err := tx.Exec(tx.Rebind(`DELETE FROM apps WHERE terminal_guid = ?`), terminalGUID)
 	return err
 }
 
-func (e *EgressPolicyTable) DeleteSpace(tx db.Transaction, spaceID int64) error {
-	_, err := tx.Exec(tx.Rebind(`DELETE FROM spaces WHERE id = ?`), spaceID)
+func (e *EgressPolicyTable) DeleteSpace(tx db.Transaction, terminalGUID string) error {
+	_, err := tx.Exec(tx.Rebind(`DELETE FROM spaces WHERE terminal_guid = ?`), terminalGUID)
 	return err
 }
 
@@ -185,86 +185,98 @@ func (e *EgressPolicyTable) IsTerminalInUse(tx db.Transaction, terminalGUID stri
 	return count > 0, nil
 }
 
-func (e *EgressPolicyTable) GetIDCollectionsByEgressPolicy(tx db.Transaction, egressPolicy EgressPolicy) ([]EgressPolicyIDCollection, error) {
-	var sourceID, appID, spaceID, ipRangeID int64
-	var egressPolicyGUID, sourceTerminalGUID, destinationTerminalGUID string
-	var startPort, endPort int64
-
-	if len(egressPolicy.Destination.Ports) > 0 {
-		startPort = int64(egressPolicy.Destination.Ports[0].Start)
-		endPort = int64(egressPolicy.Destination.Ports[0].End)
+func (e *EgressPolicyTable) GetByGUID(tx db.Transaction, guids ...string) ([]EgressPolicy, error) {
+	if len(guids) == 0 {
+		return []EgressPolicy{}, nil
 	}
 
-	var sourceTable, sourceGUIDColumn string
-	switch egressPolicy.Source.Type {
-	case "space":
-		sourceTable = "spaces"
-		sourceGUIDColumn = "space_guid"
-	default:
-		sourceTable = "apps"
-		sourceGUIDColumn = "app_guid"
-	}
-
-	rows, err := tx.Queryx(tx.Rebind(fmt.Sprintf(`
-		SELECT
-			egress_policies.guid,
-			egress_policies.source_guid,
-			egress_policies.destination_guid,
-			%s.id,
-			ip_ranges.id
-		FROM egress_policies
-		JOIN %[1]s on (egress_policies.source_guid = %[1]s.terminal_guid)
-		JOIN ip_ranges on (egress_policies.destination_guid = ip_ranges.terminal_guid)
-		WHERE %[1]s.%[2]s = ? AND
-			ip_ranges.protocol = ? AND
-			ip_ranges.start_ip = ? AND
-			ip_ranges.end_ip = ? AND
-			ip_ranges.start_port = ? AND
-			ip_ranges.end_port = ? AND
-			ip_ranges.icmp_type = ? AND
-			ip_ranges.icmp_code = ?
-		;`, sourceTable, sourceGUIDColumn)),
-		egressPolicy.Source.ID,
-		egressPolicy.Destination.Protocol,
-		egressPolicy.Destination.IPRanges[0].Start,
-		egressPolicy.Destination.IPRanges[0].End,
-		startPort,
-		endPort,
-		egressPolicy.Destination.ICMPType,
-		egressPolicy.Destination.ICMPCode,
-	)
-
+	rows, err := tx.Queryx(tx.Rebind(`
+	SELECT
+		egress_policies.guid,
+		egress_policies.source_guid,
+		COALESCE(destination_metadatas.name, ''),
+		COALESCE(destination_metadatas.description, ''),
+		apps.app_guid,
+		spaces.space_guid,
+		ip_ranges.terminal_guid,
+		ip_ranges.protocol,
+		ip_ranges.start_ip,
+		ip_ranges.end_ip,
+		ip_ranges.start_port,
+		ip_ranges.end_port,
+		ip_ranges.icmp_type,
+		ip_ranges.icmp_code
+	FROM egress_policies
+	LEFT OUTER JOIN apps ON (egress_policies.source_guid = apps.terminal_guid)
+	LEFT OUTER JOIN spaces ON (egress_policies.source_guid = spaces.terminal_guid)
+	LEFT OUTER JOIN ip_ranges ON (egress_policies.destination_guid = ip_ranges.terminal_guid)
+	LEFT OUTER JOIN destination_metadatas ON (egress_policies.destination_guid = destination_metadatas.terminal_guid)
+	WHERE egress_policies.guid IN (`+generateQuestionMarkString(len(guids))+`);`),
+		convertToInterfaceSlice(guids)...)
 	if err != nil {
-		return []EgressPolicyIDCollection{}, err
+		return []EgressPolicy{}, err
 	}
 
+	var foundPolicies []EgressPolicy
 	defer rows.Close()
-
-	var policyIDCollections []EgressPolicyIDCollection
-
 	for rows.Next() {
-		rows.Scan(&egressPolicyGUID, &sourceTerminalGUID, &destinationTerminalGUID, &sourceID, &ipRangeID)
+		var egressPolicyGUID, sourceTerminalGUID, name, description, destinationGUID, sourceAppGUID, sourceSpaceGUID, protocol, startIP, endIP *string
+		var startPort, endPort, icmpType, icmpCode int
 
-		switch egressPolicy.Source.Type {
-		case "space":
-			appID = -1
-			spaceID = sourceID
-		default:
-			spaceID = -1
-			appID = sourceID
+		err = rows.Scan(&egressPolicyGUID, &sourceTerminalGUID, &name, &description, &sourceAppGUID, &sourceSpaceGUID, &destinationGUID, &protocol, &startIP, &endIP, &startPort, &endPort, &icmpType, &icmpCode)
+		if err != nil {
+			return []EgressPolicy{}, err
 		}
 
-		policyIDCollections = append(policyIDCollections, EgressPolicyIDCollection{
-			EgressPolicyGUID:        egressPolicyGUID,
-			DestinationTerminalGUID: destinationTerminalGUID,
-			DestinationIPRangeID:    ipRangeID,
-			SourceTerminalGUID:      sourceTerminalGUID,
-			SourceAppID:             appID,
-			SourceSpaceID:           spaceID,
+		var ports []Ports
+		if startPort != 0 && endPort != 0 {
+			ports = []Ports{
+				{
+					Start: startPort,
+					End:   endPort,
+				},
+			}
+		}
+
+		var source EgressSource
+
+		switch {
+		case sourceSpaceGUID != nil:
+			source = EgressSource{
+				ID:           *sourceSpaceGUID,
+				Type:         "space",
+				TerminalGUID: *sourceTerminalGUID,
+			}
+		default:
+			source = EgressSource{
+				ID:           *sourceAppGUID,
+				Type:         "app",
+				TerminalGUID: *sourceTerminalGUID,
+			}
+		}
+
+		foundPolicies = append(foundPolicies, EgressPolicy{
+			ID:     *egressPolicyGUID,
+			Source: source,
+			Destination: EgressDestination{
+				GUID:        *destinationGUID,
+				Name:        *name,
+				Description: *description,
+				Protocol:    *protocol,
+				Ports:       ports,
+				IPRanges: []IPRange{
+					{
+						Start: *startIP,
+						End:   *endIP,
+					},
+				},
+				ICMPType: icmpType,
+				ICMPCode: icmpCode,
+			},
 		})
 	}
 
-	return policyIDCollections, nil
+	return foundPolicies, nil
 }
 
 func (e *EgressPolicyTable) GetTerminalByAppGUID(tx db.Transaction, appGUID string) (string, error) {
@@ -303,6 +315,7 @@ func (e *EgressPolicyTable) GetAllPolicies() ([]EgressPolicy, error) {
 	rows, err := e.Conn.Query(`
 	SELECT
 		egress_policies.guid,
+		egress_policies.source_guid,
 		COALESCE(destination_metadatas.name, ''),
 		COALESCE(destination_metadatas.description, ''),
 		apps.app_guid,
@@ -329,10 +342,10 @@ func (e *EgressPolicyTable) GetAllPolicies() ([]EgressPolicy, error) {
 	defer rows.Close()
 	for rows.Next() {
 
-		var egressPolicyGUID, name, description, destinationGUID, sourceAppGUID, sourceSpaceGUID, protocol, startIP, endIP *string
+		var egressPolicyGUID, sourceTerminalGUID, name, description, destinationGUID, sourceAppGUID, sourceSpaceGUID, protocol, startIP, endIP *string
 		var startPort, endPort, icmpType, icmpCode int
 
-		err = rows.Scan(&egressPolicyGUID, &name, &description, &sourceAppGUID, &sourceSpaceGUID, &destinationGUID, &protocol, &startIP, &endIP, &startPort, &endPort, &icmpType, &icmpCode)
+		err = rows.Scan(&egressPolicyGUID, &sourceTerminalGUID, &name, &description, &sourceAppGUID, &sourceSpaceGUID, &destinationGUID, &protocol, &startIP, &endIP, &startPort, &endPort, &icmpType, &icmpCode)
 		if err != nil {
 			return []EgressPolicy{}, err
 		}
@@ -352,13 +365,15 @@ func (e *EgressPolicyTable) GetAllPolicies() ([]EgressPolicy, error) {
 		switch {
 		case sourceSpaceGUID != nil:
 			source = EgressSource{
-				ID:   *sourceSpaceGUID,
-				Type: "space",
+				ID:           *sourceSpaceGUID,
+				Type:         "space",
+				TerminalGUID: *sourceTerminalGUID,
 			}
 		default:
 			source = EgressSource{
-				ID:   *sourceAppGUID,
-				Type: "app",
+				ID:           *sourceAppGUID,
+				Type:         "app",
+				TerminalGUID: *sourceTerminalGUID,
 			}
 		}
 

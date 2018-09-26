@@ -63,6 +63,7 @@ var _ = Describe("PolicyCleaner", func() {
 		}}
 
 		egressPolicies = []store.EgressPolicy{{
+			ID:     "live-egress-policy-guid-1",
 			Source: store.EgressSource{ID: "live-egress-app-guid", Type: "app"},
 			Destination: store.EgressDestination{
 				Protocol: "tcp",
@@ -80,6 +81,7 @@ var _ = Describe("PolicyCleaner", func() {
 				},
 			},
 		}, {
+			ID:     "live-egress-policy-guid-2",
 			Source: store.EgressSource{ID: "live-egress-space-guid", Type: "space"},
 			Destination: store.EgressDestination{
 				Protocol: "tcp",
@@ -97,6 +99,7 @@ var _ = Describe("PolicyCleaner", func() {
 				},
 			},
 		}, {
+			ID:     "dead-egress-policy-guid-3",
 			Source: store.EgressSource{ID: "dead-egress-app-guid", Type: "app"},
 			Destination: store.EgressDestination{
 				Protocol: "tcp",
@@ -114,6 +117,7 @@ var _ = Describe("PolicyCleaner", func() {
 				},
 			},
 		}, {
+			ID:     "dead-egress-policy-guid-4",
 			Source: store.EgressSource{ID: "dead-egress-space-guid", Type: "space"},
 			Destination: store.EgressDestination{
 				Protocol: "tcp",
@@ -184,7 +188,7 @@ var _ = Describe("PolicyCleaner", func() {
 		Expect(fakeStore.DeleteArgsForCall(0)).To(Equal(stalePolicies))
 
 		Expect(fakeEgressStore.DeleteCallCount()).To(Equal(1))
-		Expect(fakeEgressStore.DeleteArgsForCall(0)).To(Equal(staleEgressPolicies))
+		Expect(fakeEgressStore.DeleteArgsForCall(0)).To(Equal([]string{"dead-egress-policy-guid-3", "dead-egress-policy-guid-4"}))
 
 		Expect(logger).To(gbytes.Say("deleting stale policies:.*c2c_policies.*dead-guid.*dead-guid.*egress_policies.*dead-egress-app-guid.*dead-egress-space-guid.*total_c2c_policies\":2.*total_egress_policies\":2"))
 		Expect(deletedPolicies).To(Equal(stalePolicies))
@@ -323,7 +327,7 @@ var _ = Describe("PolicyCleaner", func() {
 
 	Context("When deleting the egress policies fails", func() {
 		BeforeEach(func() {
-			fakeEgressStore.DeleteReturns(errors.New("potato"))
+			fakeEgressStore.DeleteReturns(nil, errors.New("potato"))
 		})
 
 		It("returns a meaningful error", func() {

@@ -10,16 +10,6 @@ import (
 type EgressDestinationTable struct{}
 
 func (e *EgressDestinationTable) GetByGUID(tx db.Transaction, guids ...string) ([]EgressDestination, error) {
-	questionMarks := make([]string, len(guids))
-	for i := range questionMarks {
-		questionMarks[i] = "?"
-	}
-	questionMarksStr := strings.Join(questionMarks, ", ")
-	guidsInterfaces := make([]interface{}, len(guids))
-	for i, guid := range guids {
-		guidsInterfaces[i] = guid
-	}
-
 	rows, err := tx.Queryx(tx.Rebind(`
     SELECT
 		ip_ranges.protocol,
@@ -35,9 +25,9 @@ func (e *EgressDestinationTable) GetByGUID(tx db.Transaction, guids ...string) (
 	FROM ip_ranges
 	LEFT OUTER JOIN destination_metadatas AS d_m
 	  ON d_m.terminal_guid = ip_ranges.terminal_guid
-	WHERE ip_ranges.terminal_guid IN (`+questionMarksStr+`)
+	WHERE ip_ranges.terminal_guid IN (`+generateQuestionMarkString(len(guids))+`)
 	ORDER BY ip_ranges.id
-	`), guidsInterfaces...)
+	`), convertToInterfaceSlice(guids)...)
 
 	if err != nil {
 		return []EgressDestination{}, fmt.Errorf("running query: %s", err)
@@ -183,4 +173,20 @@ func (e *EgressDestinationTable) All(tx db.Transaction) ([]EgressDestination, er
 		})
 	}
 	return foundEgressDestinations, nil
+}
+
+func generateQuestionMarkString(length int) string {
+	questionMarks := make([]string, length)
+	for i := 0; i < length; i++ {
+		questionMarks[i] = "?"
+	}
+	return strings.Join(questionMarks, ", ")
+}
+
+func convertToInterfaceSlice(slice []string) []interface{} {
+	ifaces := make([]interface{}, len(slice))
+	for i, value := range slice {
+		ifaces[i] = value
+	}
+	return ifaces
 }

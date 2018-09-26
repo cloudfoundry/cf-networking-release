@@ -9,7 +9,7 @@ import (
 )
 
 type EgressDestinationMapper struct {
-	Marshaler marshal.Marshaler
+	Marshaler        marshal.Marshaler
 	PayloadValidator egressDestinationsValidator
 }
 

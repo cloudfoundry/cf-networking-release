@@ -65,25 +65,25 @@ var _ = Describe("ApiPolicyMapper", func() {
 			Expect(fakeValidator.ValidatePoliciesCallCount()).To(Equal(1))
 			Expect(fakeValidator.ValidatePoliciesArgsForCall(0)).To(Equal(
 				[]api.Policy{
-						{
-							Source: api.Source{ID: "some-src-id", Tag: ""},
-							Destination: api.Destination{
-								ID:       "some-dst-id",
-								Tag:      "some-other-dst-tag",
-								Protocol: "some-protocol",
-								Ports:    api.Ports{Start: 8080, End: 9090},
-							},
-						},
-						{
-							Source: api.Source{ID: "some-src-id-2", Tag: ""},
-							Destination: api.Destination{
-								ID:       "some-dst-id-2",
-								Tag:      "some-other-dst-tag-2",
-								Protocol: "some-protocol-2",
-								Ports:    api.Ports{Start: 8080, End: 8080},
-							},
+					{
+						Source: api.Source{ID: "some-src-id", Tag: ""},
+						Destination: api.Destination{
+							ID:       "some-dst-id",
+							Tag:      "some-other-dst-tag",
+							Protocol: "some-protocol",
+							Ports:    api.Ports{Start: 8080, End: 9090},
 						},
 					},
+					{
+						Source: api.Source{ID: "some-src-id-2", Tag: ""},
+						Destination: api.Destination{
+							ID:       "some-dst-id-2",
+							Tag:      "some-other-dst-tag-2",
+							Protocol: "some-protocol-2",
+							Ports:    api.Ports{Start: 8080, End: 8080},
+						},
+					},
+				},
 			))
 			Expect(policies).To(Equal([]store.Policy{
 				{

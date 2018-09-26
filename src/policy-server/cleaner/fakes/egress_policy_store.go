@@ -18,16 +18,18 @@ type EgressPolicyStore struct {
 		result1 []store.EgressPolicy
 		result2 error
 	}
-	DeleteStub        func([]store.EgressPolicy) error
+	DeleteStub        func(guids ...string) ([]store.EgressPolicy, error)
 	deleteMutex       sync.RWMutex
 	deleteArgsForCall []struct {
-		arg1 []store.EgressPolicy
+		guids []string
 	}
 	deleteReturns struct {
-		result1 error
+		result1 []store.EgressPolicy
+		result2 error
 	}
 	deleteReturnsOnCall map[int]struct {
-		result1 error
+		result1 []store.EgressPolicy
+		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
@@ -76,26 +78,21 @@ func (fake *EgressPolicyStore) AllReturnsOnCall(i int, result1 []store.EgressPol
 	}{result1, result2}
 }
 
-func (fake *EgressPolicyStore) Delete(arg1 []store.EgressPolicy) error {
-	var arg1Copy []store.EgressPolicy
-	if arg1 != nil {
-		arg1Copy = make([]store.EgressPolicy, len(arg1))
-		copy(arg1Copy, arg1)
-	}
+func (fake *EgressPolicyStore) Delete(guids ...string) ([]store.EgressPolicy, error) {
 	fake.deleteMutex.Lock()
 	ret, specificReturn := fake.deleteReturnsOnCall[len(fake.deleteArgsForCall)]
 	fake.deleteArgsForCall = append(fake.deleteArgsForCall, struct {
-		arg1 []store.EgressPolicy
-	}{arg1Copy})
-	fake.recordInvocation("Delete", []interface{}{arg1Copy})
+		guids []string
+	}{guids})
+	fake.recordInvocation("Delete", []interface{}{guids})
 	fake.deleteMutex.Unlock()
 	if fake.DeleteStub != nil {
-		return fake.DeleteStub(arg1)
+		return fake.DeleteStub(guids...)
 	}
 	if specificReturn {
-		return ret.result1
+		return ret.result1, ret.result2
 	}
-	return fake.deleteReturns.result1
+	return fake.deleteReturns.result1, fake.deleteReturns.result2
 }
 
 func (fake *EgressPolicyStore) DeleteCallCount() int {
@@ -104,29 +101,32 @@ func (fake *EgressPolicyStore) DeleteCallCount() int {
 	return len(fake.deleteArgsForCall)
 }
 
-func (fake *EgressPolicyStore) DeleteArgsForCall(i int) []store.EgressPolicy {
+func (fake *EgressPolicyStore) DeleteArgsForCall(i int) []string {
 	fake.deleteMutex.RLock()
 	defer fake.deleteMutex.RUnlock()
-	return fake.deleteArgsForCall[i].arg1
+	return fake.deleteArgsForCall[i].guids
 }
 
-func (fake *EgressPolicyStore) DeleteReturns(result1 error) {
+func (fake *EgressPolicyStore) DeleteReturns(result1 []store.EgressPolicy, result2 error) {
 	fake.DeleteStub = nil
 	fake.deleteReturns = struct {
-		result1 error
-	}{result1}
+		result1 []store.EgressPolicy
+		result2 error
+	}{result1, result2}
 }
 
-func (fake *EgressPolicyStore) DeleteReturnsOnCall(i int, result1 error) {
+func (fake *EgressPolicyStore) DeleteReturnsOnCall(i int, result1 []store.EgressPolicy, result2 error) {
 	fake.DeleteStub = nil
 	if fake.deleteReturnsOnCall == nil {
 		fake.deleteReturnsOnCall = make(map[int]struct {
-			result1 error
+			result1 []store.EgressPolicy
+			result2 error
 		})
 	}
 	fake.deleteReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
+		result1 []store.EgressPolicy
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *EgressPolicyStore) Invocations() map[string][][]interface{} {

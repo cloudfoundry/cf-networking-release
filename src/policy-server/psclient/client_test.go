@@ -3,6 +3,7 @@ package psclient_test
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"policy-server/psclient"
 
 	"code.cloudfoundry.org/cf-networking-helpers/fakes"
@@ -205,6 +206,67 @@ var _ = Describe("Client", func() {
 			jsonClient.DoStub = nil
 			jsonClient.DoReturns(errors.New("failed to do"))
 			_, err := client.CreateEgressPolicy(egressPolicy, token)
+			Expect(err).To(MatchError("json client do: failed to do"))
+		})
+	})
+
+	Describe("DeleteEgressPolicy", func() {
+		var (
+			expectedEgressPolicy psclient.EgressPolicy
+			egressPolicyGUID     string
+		)
+
+		BeforeEach(func() {
+			jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+				respBytes := []byte(`{
+					"egress_policies": [
+						{
+							"id": "some-egress-policy-guid",
+							"source": {
+								"type": "app",
+								"id":   "some-app-guid"
+							},
+							"destination": {
+								"id": "some-dest-guid"
+							}
+						}
+					]
+				}`)
+				err := json.Unmarshal(respBytes, respData)
+				Expect(err).NotTo(HaveOccurred())
+				return nil
+			}
+
+			expectedEgressPolicy = psclient.EgressPolicy{
+				GUID: "some-egress-policy-guid",
+				Source: psclient.EgressPolicySource{
+					Type: "app",
+					ID:   "some-app-guid",
+				},
+				Destination: psclient.EgressPolicyDestination{
+					ID: "some-dest-guid",
+				},
+			}
+			egressPolicyGUID = "some-egress-policy-guid"
+		})
+
+		It("deletes an egress policy provided a guid and returns the deleted egress policy", func() {
+			egressPolicy, err := client.DeleteEgressPolicy(egressPolicyGUID, token)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(egressPolicy).To(Equal(expectedEgressPolicy))
+
+			Expect(jsonClient.DoCallCount()).To(Equal(1))
+			passedMethod, passedRoute, passedReqData, _, passedToken := jsonClient.DoArgsForCall(0)
+			Expect(passedMethod).To(Equal("DELETE"))
+			Expect(passedRoute).To(Equal(fmt.Sprintf("/networking/v1/external/egress_policies/%s", egressPolicyGUID)))
+			Expect(passedReqData).To(BeEmpty())
+			Expect(passedToken).To(Equal("Bearer some-token"))
+		})
+
+		It("returns an error when the json client do fails", func() {
+			jsonClient.DoStub = nil
+			jsonClient.DoReturns(errors.New("failed to do"))
+			_, err := client.DeleteEgressPolicy(egressPolicyGUID, token)
 			Expect(err).To(MatchError("json client do: failed to do"))
 		})
 	})

@@ -145,8 +145,8 @@ var _ = Describe("EgressDestinationsValidator", func() {
 				})
 			})
 
-			Context("when the protocol is icmp", func(){
-				It("returns an error", func(){
+			Context("when the protocol is icmp", func() {
+				It("returns an error", func() {
 					destinations := []api.EgressDestination{
 						{
 							Name:        "meow",

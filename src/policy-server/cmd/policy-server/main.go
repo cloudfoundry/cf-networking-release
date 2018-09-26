@@ -238,6 +238,13 @@ func main() {
 		PolicyGuard:   policyGuard,
 	}
 
+	deleteEgressPolicyHandlerV1 := &handlers.EgressPolicyDelete{
+		Store:         egressPolicyStore,
+		Mapper:        egressPolicyMapper,
+		ErrorResponse: errorResponse,
+		Logger:        logger,
+	}
+
 	policyCleaner := cleaner.NewPolicyCleaner(logger.Session("policy-cleaner"), wrappedStore, egressPolicyStore, uaaClient,
 		ccClient, 100, time.Duration(5)*time.Second)
 
@@ -308,6 +315,7 @@ func main() {
 		{Name: "destinations_create", Method: "POST", Path: "/networking/:version/external/destinations"},
 		{Name: "destination_delete", Method: "DELETE", Path: "/networking/:version/external/destinations/:id"},
 		{Name: "create_egress_policies", Method: "POST", Path: "/networking/:version/external/egress_policies"},
+		{Name: "egress_policies_delete", Method: "DELETE", Path: "/networking/:version/external/egress_policies/:id"},
 		{Name: "cleanup", Method: "POST", Path: "/networking/:version/external/policies/cleanup"},
 		{Name: "tags_index", Method: "GET", Path: "/networking/:version/external/tags"},
 	}
@@ -349,6 +357,9 @@ func main() {
 
 		"create_egress_policies": corsOptionsWrapper(metricsWrap("EgressPoliciesCreate",
 			logWrap(authAdminWrap(createEgressPolicyHandlerV1)))),
+
+		"egress_policies_delete": corsOptionsWrapper(metricsWrap("EgressPoliciesDelete",
+			logWrap(authAdminWrap(deleteEgressPolicyHandlerV1)))),
 
 		"cleanup": corsOptionsWrapper(metricsWrap("Cleanup",
 			logWrap(versionWrap(authAdminWrap(policiesCleanupHandler), authAdminWrap(policiesCleanupHandler))))),
