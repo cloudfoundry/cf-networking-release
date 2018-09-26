@@ -57,7 +57,7 @@ var _ = Describe("External Destination API", func() {
 			}`)
 
 			resp := helpers.MakeAndDoRequest("POST", destinationsURL, nil, invalidCreateRequestBody)
-			Expect(resp.StatusCode).To(Equal(http.StatusInternalServerError))
+			Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
 
 			createRequestBody := bytes.NewBufferString(`{
 				"destinations": [	

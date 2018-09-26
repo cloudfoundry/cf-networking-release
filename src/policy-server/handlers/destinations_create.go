@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"policy-server/store"
@@ -39,7 +40,7 @@ func (d *DestinationsCreate) ServeHTTP(w http.ResponseWriter, req *http.Request)
 	}
 	destinations, err = d.EgressDestinationMapper.AsEgressDestinations(requestBytes)
 	if err != nil {
-		d.ErrorResponse.InternalServerError(d.Logger, w, err, "error parsing egress destinations")
+		d.ErrorResponse.BadRequest(d.Logger, w, err, fmt.Sprintf("error parsing egress destinations: %s", err))
 		return
 	}
 	createdDestinations, err = d.EgressDestinationStore.Create(destinations)

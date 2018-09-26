@@ -147,8 +147,8 @@ var _ = Describe("Destinations create handler", func() {
 	It("returns an error when the mapper returns an error", func() {
 		fakeMarshaller.AsEgressDestinationsReturns(nil, errors.New("whoa"))
 		MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
-		Expect(resp.Code).To(Equal(http.StatusInternalServerError))
-		Expect(resp.Body.Bytes()).To(MatchJSON(`{"error": "error parsing egress destinations"}`))
+		Expect(resp.Code).To(Equal(http.StatusBadRequest))
+		Expect(resp.Body.Bytes()).To(MatchJSON(`{"error": "error parsing egress destinations: whoa"}`))
 	})
 
 	It("returns an error when the marshalling created destinations", func() {
