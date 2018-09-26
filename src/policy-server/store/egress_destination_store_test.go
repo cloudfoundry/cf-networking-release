@@ -55,8 +55,8 @@ var _ = Describe("EgressDestinationStore", func() {
 			egressDestinationsStore = &store.EgressDestinationStore{
 				TerminalsRepo:           terminalsRepo,
 				DestinationMetadataRepo: destinationMetadataRepo,
-				Conn:                    realDb,
-				EgressDestinationRepo:   egressDestinationTable,
+				Conn: realDb,
+				EgressDestinationRepo: egressDestinationTable,
 			}
 		})
 
@@ -184,7 +184,7 @@ var _ = Describe("EgressDestinationStore", func() {
 			destinationMetadataRepo = &fakes.DestinationMetadataRepo{}
 
 			egressDestinationsStore = &store.EgressDestinationStore{
-				Conn:                    mockDB,
+				Conn: mockDB,
 				EgressDestinationRepo:   egressDestinationRepo,
 				DestinationMetadataRepo: destinationMetadataRepo,
 				TerminalsRepo:           terminalsRepo,
@@ -220,28 +220,67 @@ var _ = Describe("EgressDestinationStore", func() {
 			})
 
 			Context("when creating the destination metadata returns an error", func() {
-				var err error
+				var (
+					err                  error
+					destinationsToCreate []store.EgressDestination
+				)
 
 				BeforeEach(func() {
-					destinationMetadataRepo.CreateReturns(-1, errors.New("can't create a destination metadata"))
-					_, err = egressDestinationsStore.Create([]store.EgressDestination{
+					destinationsToCreate = []store.EgressDestination{
 						{
-							Name:        " ",
+							Name:        "dupe",
 							Description: " ",
 							Protocol:    "icmp",
 							IPRanges:    []store.IPRange{{Start: "2.2.2.4", End: "2.2.2.5"}},
 							ICMPType:    11,
 							ICMPCode:    14,
 						},
+					}
+				})
+
+				Context("normal error", func() {
+					BeforeEach(func() {
+						destinationMetadataRepo.CreateReturns(-1, errors.New("can't create a destination metadata"))
+						_, err = egressDestinationsStore.Create(destinationsToCreate)
+					})
+
+					It("returns an error", func() {
+						Expect(err).To(MatchError("egress destination store create destination metadata: can't create a destination metadata"))
+					})
+
+					It("rolls back the transaction", func() {
+						Expect(tx.RollbackCallCount()).To(Equal(1))
 					})
 				})
 
-				It("returns an error", func() {
-					Expect(err).To(MatchError("egress destination store create destination metadata: can't create a destination metadata"))
+				Context("when creating the destination metadata returns duplicate name postgres error", func() {
+					BeforeEach(func() {
+						destinationMetadataRepo.CreateReturns(-1, errors.New("pq: duplicate key value violates unique constraint \"metadata_name_unique\""))
+						_, err = egressDestinationsStore.Create(destinationsToCreate)
+					})
+
+					It("returns a specific error when DB detects a duplicate", func() {
+						Expect(err).To(MatchError("egress destination store create destination metadata: duplicate name error: entry with name 'dupe' already exists"))
+					})
+
+					It("rolls back the transaction", func() {
+						Expect(tx.RollbackCallCount()).To(Equal(1))
+					})
 				})
 
-				It("rolls back the transaction", func() {
-					Expect(tx.RollbackCallCount()).To(Equal(1))
+				Context("when creating the destination metadata returns duplicate name mysql error", func() {
+					BeforeEach(func() {
+						destinationMetadataRepo.CreateReturns(-1, errors.New("Error 1062: Duplicate entry 'dupe' for key 'name'"))
+						_, err = egressDestinationsStore.Create(destinationsToCreate)
+					})
+
+					It("returns a specific error when DB detects a duplicate", func() {
+						Expect(err).To(MatchError("egress destination store create destination metadata: duplicate name error: entry with name 'dupe' already exists"))
+					})
+
+					It("rolls back the transaction", func() {
+						Expect(tx.RollbackCallCount()).To(Equal(1))
+					})
 				})
 			})
 

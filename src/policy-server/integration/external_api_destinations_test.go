@@ -59,7 +59,9 @@ var _ = Describe("External Destination API", func() {
 			resp := helpers.MakeAndDoRequest("POST", destinationsURL, nil, invalidCreateRequestBody)
 			Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
 
-			createRequestBody := bytes.NewBufferString(`{
+			By("creating the initial destinations")
+			getCreateRequestBody := func() *bytes.Buffer {
+				return bytes.NewBufferString(`{
 				"destinations": [	
 					{
 						"name": "tcp ips only",
@@ -85,8 +87,8 @@ var _ = Describe("External Destination API", func() {
 					}
 				]
 			}`)
-
-			resp = helpers.MakeAndDoRequest("POST", destinationsURL, nil, createRequestBody)
+			}
+			resp = helpers.MakeAndDoRequest("POST", destinationsURL, nil, getCreateRequestBody())
 			Expect(resp.StatusCode).To(Equal(http.StatusCreated))
 			responseBytes, err := ioutil.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
@@ -122,6 +124,7 @@ var _ = Describe("External Destination API", func() {
 				]
 			}`)))
 
+			By("listing the existing destinations")
 			resp = helpers.MakeAndDoRequest("GET", destinationsURL, nil, nil)
 
 			Expect(resp.StatusCode).To(Equal(http.StatusOK))
@@ -158,6 +161,13 @@ var _ = Describe("External Destination API", func() {
 					}
 				]
 			}`)))
+
+			By("attempting to duplicate destinations")
+			resp = helpers.MakeAndDoRequest("POST", destinationsURL, nil, getCreateRequestBody())
+			Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
+			responseBytes, err = ioutil.ReadAll(resp.Body)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(responseBytes)).To(ContainSubstring("duplicate name error"))
 
 			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
 				HaveName("DestinationsIndexRequestTime"),

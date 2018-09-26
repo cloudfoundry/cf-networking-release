@@ -2,6 +2,7 @@ package store
 
 import (
 	"fmt"
+	"strings"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 )
@@ -105,6 +106,9 @@ func (e *EgressDestinationStore) Create(egressDestinations []EgressDestination) 
 		_, err = e.DestinationMetadataRepo.Create(tx, destinationTerminalGUID, egressDestination.Name, egressDestination.Description)
 		if err != nil {
 			tx.Rollback()
+			if isDuplicateError(err, egressDestination.Name) {
+				return []EgressDestination{}, fmt.Errorf("egress destination store create destination metadata: duplicate name error: entry with name '%s' already exists", egressDestination.Name)
+			}
 			return []EgressDestination{}, fmt.Errorf("egress destination store create destination metadata: %s", err)
 		}
 
@@ -141,4 +145,10 @@ func (e *EgressDestinationStore) Create(egressDestinations []EgressDestination) 
 	}
 
 	return results, nil
+}
+
+func isDuplicateError(err error, name string) bool {
+	postgresError := "pq: duplicate key value violates unique constraint \"metadata_name_unique\""
+	mysqlError := fmt.Sprintf("Error 1062: Duplicate entry '%s' for key 'name'", name)
+	return strings.Contains(err.Error(), postgresError) || strings.Contains(err.Error(), mysqlError)
 }

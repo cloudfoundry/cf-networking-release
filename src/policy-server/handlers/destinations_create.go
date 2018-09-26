@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"policy-server/store"
+	"strings"
 
 	"code.cloudfoundry.org/lager"
 )
@@ -45,6 +46,10 @@ func (d *DestinationsCreate) ServeHTTP(w http.ResponseWriter, req *http.Request)
 	}
 	createdDestinations, err = d.EgressDestinationStore.Create(destinations)
 	if err != nil {
+		if strings.Contains(err.Error(), "duplicate name error") {
+			d.ErrorResponse.BadRequest(d.Logger, w, err, fmt.Sprintf("error creating egress destinations: %s", err))
+			return
+		}
 		d.ErrorResponse.InternalServerError(d.Logger, w, err, "error creating egress destinations")
 		return
 	}

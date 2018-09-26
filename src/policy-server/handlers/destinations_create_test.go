@@ -144,6 +144,13 @@ var _ = Describe("Destinations create handler", func() {
 		Expect(resp.Body.Bytes()).To(MatchJSON(`{"error": "error creating egress destinations"}`))
 	})
 
+	It("returns an duplicate name error when the store returns duplicate entry error", func() {
+		fakeStore.CreateReturns(nil, errors.New("egress destination store create destination metadata: duplicate name error: entry with name 'dupe' already exists"))
+		MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
+		Expect(resp.Code).To(Equal(http.StatusBadRequest))
+		Expect(resp.Body.Bytes()).To(MatchJSON(`{"error": "error creating egress destinations: egress destination store create destination metadata: duplicate name error: entry with name 'dupe' already exists"}`))
+	})
+
 	It("returns an error when the mapper returns an error", func() {
 		fakeMarshaller.AsEgressDestinationsReturns(nil, errors.New("whoa"))
 		MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
