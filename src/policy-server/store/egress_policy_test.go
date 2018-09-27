@@ -743,7 +743,11 @@ var _ = Describe("Egress Policy Table", func() {
 
 	Context("GetBySourceGuids", func() {
 		Context("When using a real db", func() {
-			var egressPolicies []store.EgressPolicy
+			var (
+				egressPolicies        []store.EgressPolicy
+				createdDestinations   []store.EgressDestination
+				createdEgressPolicies []store.EgressPolicy
+			)
 
 			BeforeEach(func() {
 				db, _ := getMigratedRealDb(dbConf)
@@ -816,7 +820,8 @@ var _ = Describe("Egress Policy Table", func() {
 					},
 				}
 
-				createdDestinations, err := egressDestinationStore(db).Create(egressDestinations)
+				var err error
+				createdDestinations, err = egressDestinationStore(db).Create(egressDestinations)
 				Expect(err).ToNot(HaveOccurred())
 
 				egressPolicies = []store.EgressPolicy{
@@ -865,7 +870,7 @@ var _ = Describe("Egress Policy Table", func() {
 						},
 					},
 				}
-				_, err = egressStore.Create(egressPolicies)
+				createdEgressPolicies, err = egressStore.Create(egressPolicies)
 				Expect(err).ToNot(HaveOccurred())
 			})
 
@@ -873,11 +878,14 @@ var _ = Describe("Egress Policy Table", func() {
 				It("returns egress policies with those ids", func() {
 					policies, err := egressPolicyTable.GetBySourceGuids([]string{"some-app-guid", "different-app-guid", "some-space-guid"})
 					Expect(err).ToNot(HaveOccurred())
-					Expect(policies).To(HaveLen(4))
-					Expect(policies[0].Source.ID).To(Equal("some-app-guid"))
-					Expect(policies[1].Source.ID).To(Equal("different-app-guid"))
-					Expect(policies[2].Source.ID).To(Equal("different-app-guid"))
-					Expect(policies[3].Source.ID).To(Equal("some-space-guid"))
+
+					// egressStore.Create doesn't return the full destination, but GetBySourceGuids does
+					expectedEgressPolicies := createdEgressPolicies[:4]
+					expectedEgressPolicies[0].Destination = createdDestinations[0]
+					expectedEgressPolicies[1].Destination = createdDestinations[1]
+					expectedEgressPolicies[2].Destination = createdDestinations[2]
+					expectedEgressPolicies[3].Destination = createdDestinations[3]
+					Expect(policies).To(ConsistOf(expectedEgressPolicies))
 				})
 			})
 

@@ -421,9 +421,13 @@ func (e *EgressPolicyTable) GetBySourceGuids(ids []string) ([]EgressPolicy, erro
 
 	query := fmt.Sprintf(`
 	SELECT
+		egress_policies.guid,
+		egress_policies.source_guid,
+		COALESCE(destination_metadatas.name, ''),
+		COALESCE(destination_metadatas.description, ''),
 		apps.app_guid,
 		spaces.space_guid,
-		ip_ranges.id,
+		ip_ranges.terminal_guid,
 		ip_ranges.protocol,
 		ip_ranges.start_ip,
 		ip_ranges.end_ip,
@@ -435,6 +439,7 @@ func (e *EgressPolicyTable) GetBySourceGuids(ids []string) ([]EgressPolicy, erro
 	LEFT OUTER JOIN apps on (egress_policies.source_guid = apps.terminal_guid)
 	LEFT OUTER JOIN spaces on (egress_policies.source_guid = spaces.terminal_guid)
 	LEFT OUTER JOIN ip_ranges on (egress_policies.destination_guid = ip_ranges.terminal_guid)
+	LEFT OUTER JOIN destination_metadatas ON (egress_policies.destination_guid = destination_metadatas.terminal_guid)
 	WHERE apps.app_guid IN (%s) OR spaces.space_guid IN (%s)
 	ORDER BY ip_ranges.id;`, questionMarksStr, questionMarksStr)
 
@@ -446,10 +451,9 @@ func (e *EgressPolicyTable) GetBySourceGuids(ids []string) ([]EgressPolicy, erro
 	defer rows.Close()
 	for rows.Next() {
 
-		var sourceAppGUID, sourceSpaceGUID, destinationGUID, protocol, startIP, endIP *string
+		var egressPolicyGUID, sourceTerminalGUID, name, description, sourceAppGUID, sourceSpaceGUID, destinationGUID, protocol, startIP, endIP *string
 		var startPort, endPort, icmpType, icmpCode int
-
-		err = rows.Scan(&sourceAppGUID, &sourceSpaceGUID, &destinationGUID, &protocol, &startIP, &endIP, &startPort, &endPort, &icmpType, &icmpCode)
+		err = rows.Scan(&egressPolicyGUID, &sourceTerminalGUID, &name, &description, &sourceAppGUID, &sourceSpaceGUID, &destinationGUID, &protocol, &startIP, &endIP, &startPort, &endPort, &icmpType, &icmpCode)
 		if err != nil {
 			return foundPolicies, err
 		}
@@ -469,21 +473,27 @@ func (e *EgressPolicyTable) GetBySourceGuids(ids []string) ([]EgressPolicy, erro
 		switch {
 		case sourceSpaceGUID != nil:
 			source = EgressSource{
-				ID:   *sourceSpaceGUID,
-				Type: "space",
+				ID:           *sourceSpaceGUID,
+				Type:         "space",
+				TerminalGUID: *sourceTerminalGUID,
 			}
 		default:
 			source = EgressSource{
-				ID:   *sourceAppGUID,
-				Type: "app",
+				ID:           *sourceAppGUID,
+				Type:         "app",
+				TerminalGUID: *sourceTerminalGUID,
 			}
 		}
 
 		foundPolicies = append(foundPolicies, EgressPolicy{
+			ID:     *egressPolicyGUID,
 			Source: source,
 			Destination: EgressDestination{
-				Protocol: *protocol,
-				Ports:    ports,
+				GUID:        *destinationGUID,
+				Name:        *name,
+				Description: *description,
+				Protocol:    *protocol,
+				Ports:       ports,
 				IPRanges: []IPRange{
 					{
 						Start: *startIP,
