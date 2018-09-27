@@ -86,7 +86,7 @@ var _ = Describe("external connectivity", func() {
 		return checkRequest(appRoute+"proxy/docs.cloudfoundry.org", 500, "connection refused|i/o timeout")
 	}
 
-	Describe("egress policy connectivity", func() {
+	XDescribe("egress policy connectivity", func() {
 		Context("when the egress policy is for the app", func() {
 			It("the app can reach the internet when egress policy is present", func(done Done) {
 				By("checking that the app cannot reach the internet using http and dns")

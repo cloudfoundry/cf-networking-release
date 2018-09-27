@@ -108,7 +108,7 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
 
 		Expect(fakeStore.ByGuidsCallCount()).To(Equal(1))
-		Expect(fakeEgressStore.ByGuidsCallCount()).To(Equal(1))
+		Expect(fakeEgressStore.ByGuidsCallCount()).To(Equal(0)) // patch: don't use egress tables
 		srcGuids, dstGuids, inSourceAndDest := fakeStore.ByGuidsArgsForCall(0)
 		Expect(srcGuids).To(Equal([]string{"some-app-guid"}))
 		Expect(dstGuids).To(Equal([]string{"some-app-guid"}))
@@ -135,7 +135,7 @@ var _ = Describe("PoliciesIndexInternal", func() {
 			MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
 
 			Expect(fakeStore.AllCallCount()).To(Equal(1))
-			Expect(fakeEgressStore.AllCallCount()).To(Equal(1))
+			Expect(fakeEgressStore.AllCallCount()).To(Equal(0)) // patch: don't use egress tables
 			Expect(resp.Code).To(Equal(http.StatusOK))
 			Expect(resp.Body.Bytes()).To(Equal(expectedResponseBody))
 		})
@@ -201,49 +201,5 @@ var _ = Describe("PoliciesIndexInternal", func() {
 			Expect(err).To(MatchError("banana"))
 			Expect(description).To(Equal("database read failed"))
 		})
-	})
-
-	Context("when egressStore.All() throws an error", func() {
-
-		BeforeEach(func() {
-			fakeEgressStore.AllReturns(nil, errors.New("banana"))
-		})
-
-		It("calls the internal server error handler", func() {
-			request, err := http.NewRequest("GET", "/networking/v0/internal/policies", nil)
-			Expect(err).NotTo(HaveOccurred())
-			MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
-
-			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
-
-			l, w, err, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
-			Expect(l).To(Equal(expectedLogger))
-			Expect(w).To(Equal(resp))
-			Expect(err).To(MatchError("banana"))
-			Expect(description).To(Equal("egress database read failed"))
-		})
-
-	})
-
-	Context("when egressStore.ByGuids() throws an error", func() {
-
-		BeforeEach(func() {
-			fakeEgressStore.ByGuidsReturns(nil, errors.New("banana"))
-		})
-
-		It("calls the internal server error handler", func() {
-			request, err := http.NewRequest("GET", "/networking/v0/internal/policies?id=meowmeow", nil)
-			Expect(err).NotTo(HaveOccurred())
-			MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
-
-			Expect(fakeErrorResponse.InternalServerErrorCallCount()).To(Equal(1))
-
-			l, w, err, description := fakeErrorResponse.InternalServerErrorArgsForCall(0)
-			Expect(l).To(Equal(expectedLogger))
-			Expect(w).To(Equal(resp))
-			Expect(err).To(MatchError("banana"))
-			Expect(description).To(Equal("egress database read failed"))
-		})
-
 	})
 })

@@ -50,11 +50,7 @@ func (h *PoliciesIndexInternal) ServeHTTP(w http.ResponseWriter, req *http.Reque
 	}
 
 	var egressPolicies []store.EgressPolicy
-	if len(ids) == 0 {
-		egressPolicies, err = h.EgressStore.All()
-	} else {
-		egressPolicies, err = h.EgressStore.ByGuids(ids)
-	}
+	// patch: don't return any egress policies
 
 	if err != nil {
 		h.ErrorResponse.InternalServerError(logger, w, err, "egress database read failed")
