@@ -211,7 +211,8 @@ func (e *EgressPolicyTable) GetByGUID(tx db.Transaction, guids ...string) ([]Egr
 	LEFT OUTER JOIN spaces ON (egress_policies.source_guid = spaces.terminal_guid)
 	LEFT OUTER JOIN ip_ranges ON (egress_policies.destination_guid = ip_ranges.terminal_guid)
 	LEFT OUTER JOIN destination_metadatas ON (egress_policies.destination_guid = destination_metadatas.terminal_guid)
-	WHERE egress_policies.guid IN (`+generateQuestionMarkString(len(guids))+`);`),
+	WHERE egress_policies.guid IN (`+generateQuestionMarkString(len(guids))+`)
+	ORDER BY ip_ranges.id;`),
 		convertToInterfaceSlice(guids)...)
 	if err != nil {
 		return []EgressPolicy{}, err
