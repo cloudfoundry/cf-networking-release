@@ -32,6 +32,9 @@ type EgressValidator struct {
 	DestinationStore EgressDestinationStore
 }
 
+func DestinationKeyFunc(policy EgressPolicy) string { return policy.Destination.GUID }
+func SourceKeyFunc(policy EgressPolicy) string { return policy.Source.ID }
+
 func (v *EgressValidator) ValidateEgressPolicies(policies []EgressPolicy) error {
 	for _, policy := range policies {
 		if policy.Source == nil {
@@ -67,7 +70,7 @@ func (v *EgressValidator) ValidateEgressPolicies(policies []EgressPolicy) error 
 		missingAppGUIDs := relativeComplement(appGUIDSet, liveAppGUIDs)
 
 		if len(missingAppGUIDs) > 0 {
-			return fmt.Errorf("app guids not found: [%s]", strings.Join(missingAppGUIDs, ", "))
+			return composeMetadataError("app", missingAppGUIDs, SourceKeyFunc, policies)
 		}
 	}
 
@@ -82,7 +85,7 @@ func (v *EgressValidator) ValidateEgressPolicies(policies []EgressPolicy) error 
 		missingSpaceGUIDs := relativeComplement(spaceGUIDSet, liveSpaceGUIDs)
 
 		if len(missingSpaceGUIDs) > 0 {
-			return fmt.Errorf("space guids not found: [%s]", strings.Join(missingSpaceGUIDs, ", "))
+			return composeMetadataError("space", missingSpaceGUIDs, SourceKeyFunc, policies)
 		}
 	}
 
@@ -99,10 +102,32 @@ func (v *EgressValidator) ValidateEgressPolicies(policies []EgressPolicy) error 
 
 	missingDestinations := relativeComplement(destinationGUIDSet, foundGUIDSet)
 	if len(missingDestinations) > 0 {
-		return fmt.Errorf("destination guids not found: [%s]", strings.Join(missingDestinations, ", "))
+		return composeMetadataError("destination", missingDestinations, DestinationKeyFunc, policies)
+
 	}
 
 	return nil
+}
+
+func composeMetadataError(dataType string, missingGuids []string, keyFunc func(policy EgressPolicy) string, policies []EgressPolicy) error{
+	errorMsg := fmt.Sprintf("%s guids not found: [%s]", dataType, strings.Join(missingGuids, ", "))
+	deficientPolicies := findPoliciesWithKeyGUID(policies, missingGuids, keyFunc)
+	policyAsMap := map[string]interface{}{fmt.Sprintf("policies with missing %ss", dataType): deficientPolicies}
+	return httperror.NewMetadataError(errors.New(errorMsg), policyAsMap)
+}
+
+func findPoliciesWithKeyGUID(policies []EgressPolicy, guids []string, keyFunc func(EgressPolicy) string) []EgressPolicy {
+	guidSet := set(guids)
+	var policiesToReturn []EgressPolicy
+
+	for _, policy := range policies {
+		_, ok := guidSet[keyFunc(policy)]
+		if ok {
+			policiesToReturn = append(policiesToReturn, policy)
+		}
+	}
+
+	return policiesToReturn
 }
 
 func policyMetadataError(message string, policy EgressPolicy) error {
@@ -144,6 +169,14 @@ func keys(set map[string]struct{}) []string {
 		keys = append(keys, key)
 	}
 	return keys
+}
+
+func set(items []string) map[string]struct{} {
+	itemSet := make(map[string]struct{})
+	for _, item := range items {
+		 itemSet[item] = struct{}{}
+	}
+	return itemSet
 }
 
 func relativeComplement(a map[string]struct{}, b map[string]struct{}) []string {

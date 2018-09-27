@@ -98,6 +98,12 @@ var _ = Describe("Egress PolicyValidator", func() {
 			err := validator.ValidateEgressPolicies(egressPolicies)
 			Expect(err).To(MatchError(ContainSubstring("app guids not found: [non-existent, non-existent-2]")))
 
+			egressPolicyError, ok := err.(httperror.MetadataError)
+			Expect(ok).To(BeTrue(), "expected error to be of type MetadataError")
+			Expect(egressPolicyError.Metadata()).To(Equal(map[string]interface{}{
+				"policies with missing apps": egressPolicies[1:],
+			}))
+
 			Expect(uaaClient.GetTokenCallCount()).To(Equal(1))
 
 			passedToken, passedAppGUIDs := ccClient.GetLiveAppGUIDsArgsForCall(0)
@@ -107,7 +113,7 @@ var _ = Describe("Egress PolicyValidator", func() {
 			Expect(ccClient.GetLiveSpaceGUIDsCallCount()).To(Equal(0))
 		})
 
-		It("requires the destination app to exist", func() {
+		It("requires the destination to exist", func() {
 			egressPolicies = []api.EgressPolicy{
 				{
 					Source: &api.EgressSource{
@@ -141,6 +147,12 @@ var _ = Describe("Egress PolicyValidator", func() {
 
 			err := validator.ValidateEgressPolicies(egressPolicies)
 			Expect(err).To(MatchError(ContainSubstring("destination guids not found: [non-existent-2, non-existent-guid]")))
+
+			egressPolicyError, ok := err.(httperror.MetadataError)
+			Expect(ok).To(BeTrue(), "expected error to be of type MetadataError")
+			Expect(egressPolicyError.Metadata()).To(Equal(map[string]interface{}{
+				"policies with missing destinations": egressPolicies[1:],
+			}))
 
 			Expect(destinationStore.GetByGUIDArgsForCall(0)).To(ConsistOf("existing-guid", "non-existent-guid", "non-existent-2"))
 		})
@@ -184,6 +196,12 @@ var _ = Describe("Egress PolicyValidator", func() {
 
 			err := validator.ValidateEgressPolicies(egressPolicies)
 			Expect(err).To(MatchError(ContainSubstring("space guids not found: [non-existent-space, non-existent-space-2]")))
+			egressPolicyError, ok := err.(httperror.MetadataError)
+			Expect(ok).To(BeTrue(), "expected error to be of type MetadataError")
+			Expect(egressPolicyError.Metadata()).To(Equal(map[string]interface{}{
+				"policies with missing spaces": egressPolicies[1:],
+			}))
+
 
 			Expect(uaaClient.GetTokenCallCount()).To(Equal(1))
 
