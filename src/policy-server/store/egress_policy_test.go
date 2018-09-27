@@ -549,8 +549,8 @@ var _ = Describe("Egress Policy Table", func() {
 			It("should return the requeted egress policies", func() {
 				egressPolicies, err := egressPolicyTable.GetByGUID(tx, createdEgressPolicies[0].ID, createdEgressPolicies[1].ID)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(egressPolicies).To(Equal([]store.EgressPolicy{
-					{
+				Expect(egressPolicies).To(ConsistOf(
+					store.EgressPolicy{
 						ID: createdEgressPolicies[0].ID,
 						Source: store.EgressSource{
 							Type:         "app",
@@ -559,7 +559,7 @@ var _ = Describe("Egress Policy Table", func() {
 						},
 						Destination: createdEgressDestinations[0],
 					},
-					{
+					store.EgressPolicy{
 						ID: createdEgressPolicies[1].ID,
 						Source: store.EgressSource{
 							Type:         "space",
@@ -567,8 +567,7 @@ var _ = Describe("Egress Policy Table", func() {
 							ID:           "space-guid",
 						},
 						Destination: createdEgressDestinations[1],
-					},
-				}))
+					}))
 			})
 
 			Context("when a non-existent policy/no policy guid is requested", func() {
