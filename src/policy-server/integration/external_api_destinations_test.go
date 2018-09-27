@@ -176,7 +176,7 @@ var _ = Describe("External Destination API", func() {
 	})
 })
 
-var replaceGUIDRegex = regexp.MustCompile(`"id":"[^"]*"`)
+var replaceGUIDRegex = regexp.MustCompile(`"id":"[a-z0-9\-]{36}"`)
 
 func replaceGUID(value string) string {
 	return string(replaceGUIDRegex.ReplaceAll([]byte(value), []byte(`"id":"<replaced>"`)))
