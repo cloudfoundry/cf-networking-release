@@ -190,29 +190,11 @@ func (e *EgressPolicyTable) GetByGUID(tx db.Transaction, guids ...string) ([]Egr
 		return []EgressPolicy{}, nil
 	}
 
-	rows, err := tx.Queryx(tx.Rebind(`
-	SELECT
-		egress_policies.guid,
-		egress_policies.source_guid,
-		COALESCE(destination_metadatas.name, ''),
-		COALESCE(destination_metadatas.description, ''),
-		apps.app_guid,
-		spaces.space_guid,
-		ip_ranges.terminal_guid,
-		ip_ranges.protocol,
-		ip_ranges.start_ip,
-		ip_ranges.end_ip,
-		ip_ranges.start_port,
-		ip_ranges.end_port,
-		ip_ranges.icmp_type,
-		ip_ranges.icmp_code
-	FROM egress_policies
-	LEFT OUTER JOIN apps ON (egress_policies.source_guid = apps.terminal_guid)
-	LEFT OUTER JOIN spaces ON (egress_policies.source_guid = spaces.terminal_guid)
-	LEFT OUTER JOIN ip_ranges ON (egress_policies.destination_guid = ip_ranges.terminal_guid)
-	LEFT OUTER JOIN destination_metadatas ON (egress_policies.destination_guid = destination_metadatas.terminal_guid)
-	WHERE egress_policies.guid IN (`+generateQuestionMarkString(len(guids))+`)
-	ORDER BY ip_ranges.id;`),
+	rows, err := tx.Queryx(tx.Rebind(
+		selectEgressPolicyQuery(`
+			WHERE egress_policies.guid IN (`+generateQuestionMarkString(len(guids))+`)
+			ORDER BY ip_ranges.id;`,
+		)),
 		convertToInterfaceSlice(guids)...)
 	if err != nil {
 		return []EgressPolicy{}, err
@@ -229,52 +211,9 @@ func (e *EgressPolicyTable) GetByGUID(tx db.Transaction, guids ...string) ([]Egr
 			return []EgressPolicy{}, err
 		}
 
-		var ports []Ports
-		if startPort != 0 && endPort != 0 {
-			ports = []Ports{
-				{
-					Start: startPort,
-					End:   endPort,
-				},
-			}
-		}
-
-		var source EgressSource
-
-		switch {
-		case sourceSpaceGUID != nil:
-			source = EgressSource{
-				ID:           *sourceSpaceGUID,
-				Type:         "space",
-				TerminalGUID: *sourceTerminalGUID,
-			}
-		default:
-			source = EgressSource{
-				ID:           *sourceAppGUID,
-				Type:         "app",
-				TerminalGUID: *sourceTerminalGUID,
-			}
-		}
-
-		foundPolicies = append(foundPolicies, EgressPolicy{
-			ID:     *egressPolicyGUID,
-			Source: source,
-			Destination: EgressDestination{
-				GUID:        *destinationGUID,
-				Name:        *name,
-				Description: *description,
-				Protocol:    *protocol,
-				Ports:       ports,
-				IPRanges: []IPRange{
-					{
-						Start: *startIP,
-						End:   *endIP,
-					},
-				},
-				ICMPType: icmpType,
-				ICMPCode: icmpCode,
-			},
-		})
+		foundPolicies = append(foundPolicies, mapRowToEgressPolicy(egressPolicyGUID, sourceTerminalGUID, name, description, destinationGUID,
+			sourceAppGUID, sourceSpaceGUID, protocol, startIP, endIP,
+			startPort, endPort, icmpType, icmpCode))
 	}
 
 	return foundPolicies, nil
@@ -313,27 +252,7 @@ func (e *EgressPolicyTable) GetTerminalBySpaceGUID(tx db.Transaction, spaceGUID 
 }
 
 func (e *EgressPolicyTable) GetAllPolicies() ([]EgressPolicy, error) {
-	rows, err := e.Conn.Query(`
-	SELECT
-		egress_policies.guid,
-		egress_policies.source_guid,
-		COALESCE(destination_metadatas.name, ''),
-		COALESCE(destination_metadatas.description, ''),
-		apps.app_guid,
-		spaces.space_guid,
-		ip_ranges.terminal_guid,
-		ip_ranges.protocol,
-		ip_ranges.start_ip,
-		ip_ranges.end_ip,
-		ip_ranges.start_port,
-		ip_ranges.end_port,
-		ip_ranges.icmp_type,
-		ip_ranges.icmp_code
-	FROM egress_policies
-	LEFT OUTER JOIN apps ON (egress_policies.source_guid = apps.terminal_guid)
-	LEFT OUTER JOIN spaces ON (egress_policies.source_guid = spaces.terminal_guid)
-	LEFT OUTER JOIN ip_ranges ON (egress_policies.destination_guid = ip_ranges.terminal_guid)
-	LEFT OUTER JOIN destination_metadatas ON (egress_policies.destination_guid = destination_metadatas.terminal_guid);`)
+	rows, err := e.Conn.Query(selectEgressPolicyQuery())
 
 	var foundPolicies []EgressPolicy
 	if err != nil {
@@ -351,52 +270,9 @@ func (e *EgressPolicyTable) GetAllPolicies() ([]EgressPolicy, error) {
 			return []EgressPolicy{}, err
 		}
 
-		var ports []Ports
-		if startPort != 0 && endPort != 0 {
-			ports = []Ports{
-				{
-					Start: startPort,
-					End:   endPort,
-				},
-			}
-		}
-
-		var source EgressSource
-
-		switch {
-		case sourceSpaceGUID != nil:
-			source = EgressSource{
-				ID:           *sourceSpaceGUID,
-				Type:         "space",
-				TerminalGUID: *sourceTerminalGUID,
-			}
-		default:
-			source = EgressSource{
-				ID:           *sourceAppGUID,
-				Type:         "app",
-				TerminalGUID: *sourceTerminalGUID,
-			}
-		}
-
-		foundPolicies = append(foundPolicies, EgressPolicy{
-			ID:     *egressPolicyGUID,
-			Source: source,
-			Destination: EgressDestination{
-				GUID:        *destinationGUID,
-				Name:        *name,
-				Description: *description,
-				Protocol:    *protocol,
-				Ports:       ports,
-				IPRanges: []IPRange{
-					{
-						Start: *startIP,
-						End:   *endIP,
-					},
-				},
-				ICMPType: icmpType,
-				ICMPCode: icmpCode,
-			},
-		})
+		foundPolicies = append(foundPolicies, mapRowToEgressPolicy(egressPolicyGUID, sourceTerminalGUID, name, description, destinationGUID,
+			sourceAppGUID, sourceSpaceGUID, protocol, startIP, endIP,
+			startPort, endPort, icmpType, icmpCode))
 	}
 
 	return foundPolicies, nil
@@ -405,45 +281,12 @@ func (e *EgressPolicyTable) GetAllPolicies() ([]EgressPolicy, error) {
 func (e *EgressPolicyTable) GetBySourceGuids(ids []string) ([]EgressPolicy, error) {
 	var foundPolicies []EgressPolicy
 
-	interfaceIds := make([]interface{}, len(ids))
-	for i, id := range ids {
-		interfaceIds[i] = id
-	}
+	query := selectEgressPolicyQuery(fmt.Sprintf(`
+		WHERE apps.app_guid IN (%[1]s) OR spaces.space_guid IN (%[1]s)
+		ORDER BY ip_ranges.id;`, generateQuestionMarkString(len(ids))))
 
-	interfaceIds = append(interfaceIds, interfaceIds...)
-
-	questionMarks := make([]string, len(ids))
-	for i := range questionMarks {
-		questionMarks[i] = "?"
-	}
-
-	questionMarksStr := strings.Join(questionMarks, ",")
-
-	query := fmt.Sprintf(`
-	SELECT
-		egress_policies.guid,
-		egress_policies.source_guid,
-		COALESCE(destination_metadatas.name, ''),
-		COALESCE(destination_metadatas.description, ''),
-		apps.app_guid,
-		spaces.space_guid,
-		ip_ranges.terminal_guid,
-		ip_ranges.protocol,
-		ip_ranges.start_ip,
-		ip_ranges.end_ip,
-		ip_ranges.start_port,
-		ip_ranges.end_port,
-		ip_ranges.icmp_type,
-		ip_ranges.icmp_code
-	FROM egress_policies
-	LEFT OUTER JOIN apps on (egress_policies.source_guid = apps.terminal_guid)
-	LEFT OUTER JOIN spaces on (egress_policies.source_guid = spaces.terminal_guid)
-	LEFT OUTER JOIN ip_ranges on (egress_policies.destination_guid = ip_ranges.terminal_guid)
-	LEFT OUTER JOIN destination_metadatas ON (egress_policies.destination_guid = destination_metadatas.terminal_guid)
-	WHERE apps.app_guid IN (%s) OR spaces.space_guid IN (%s)
-	ORDER BY ip_ranges.id;`, questionMarksStr, questionMarksStr)
-
-	rows, err := e.Conn.Query(e.Conn.Rebind(query), interfaceIds...)
+	ids = append(ids, ids...)
+	rows, err := e.Conn.Query(e.Conn.Rebind(query), convertToInterfaceSlice(ids)...)
 	if err != nil {
 		return foundPolicies, err
 	}
@@ -458,53 +301,87 @@ func (e *EgressPolicyTable) GetBySourceGuids(ids []string) ([]EgressPolicy, erro
 			return foundPolicies, err
 		}
 
-		var ports []Ports
-		if startPort != 0 && endPort != 0 {
-			ports = []Ports{
-				{
-					Start: int(startPort),
-					End:   int(endPort),
-				},
-			}
-		}
-
-		var source EgressSource
-
-		switch {
-		case sourceSpaceGUID != nil:
-			source = EgressSource{
-				ID:           *sourceSpaceGUID,
-				Type:         "space",
-				TerminalGUID: *sourceTerminalGUID,
-			}
-		default:
-			source = EgressSource{
-				ID:           *sourceAppGUID,
-				Type:         "app",
-				TerminalGUID: *sourceTerminalGUID,
-			}
-		}
-
-		foundPolicies = append(foundPolicies, EgressPolicy{
-			ID:     *egressPolicyGUID,
-			Source: source,
-			Destination: EgressDestination{
-				GUID:        *destinationGUID,
-				Name:        *name,
-				Description: *description,
-				Protocol:    *protocol,
-				Ports:       ports,
-				IPRanges: []IPRange{
-					{
-						Start: *startIP,
-						End:   *endIP,
-					},
-				},
-				ICMPType: icmpType,
-				ICMPCode: icmpCode,
-			},
-		})
+		foundPolicies = append(foundPolicies, mapRowToEgressPolicy(egressPolicyGUID, sourceTerminalGUID, name, description, destinationGUID,
+			sourceAppGUID, sourceSpaceGUID, protocol, startIP, endIP,
+			startPort, endPort, icmpType, icmpCode))
 	}
 
 	return foundPolicies, nil
+}
+
+func selectEgressPolicyQuery(extraClauses ...string) string {
+	return fmt.Sprintf(`
+		SELECT
+			egress_policies.guid,
+			egress_policies.source_guid,
+			COALESCE(destination_metadatas.name, ''),
+			COALESCE(destination_metadatas.description, ''),
+			apps.app_guid,
+			spaces.space_guid,
+			ip_ranges.terminal_guid,
+			ip_ranges.protocol,
+			ip_ranges.start_ip,
+			ip_ranges.end_ip,
+			ip_ranges.start_port,
+			ip_ranges.end_port,
+			ip_ranges.icmp_type,
+			ip_ranges.icmp_code
+		FROM egress_policies
+		LEFT OUTER JOIN apps ON (egress_policies.source_guid = apps.terminal_guid)
+		LEFT OUTER JOIN spaces ON (egress_policies.source_guid = spaces.terminal_guid)
+		LEFT OUTER JOIN ip_ranges ON (egress_policies.destination_guid = ip_ranges.terminal_guid)
+		LEFT OUTER JOIN destination_metadatas ON (egress_policies.destination_guid = destination_metadatas.terminal_guid)
+		%s;`, strings.Join(extraClauses, " "))
+}
+
+func mapRowToEgressPolicy(egressPolicyGUID, sourceTerminalGUID, name, description, destinationGUID,
+	sourceAppGUID, sourceSpaceGUID, protocol, startIP, endIP *string,
+	startPort, endPort, icmpType, icmpCode int) EgressPolicy {
+
+	var ports []Ports
+	if startPort != 0 && endPort != 0 {
+		ports = []Ports{
+			{
+				Start: startPort,
+				End:   endPort,
+			},
+		}
+	}
+
+	var source EgressSource
+
+	switch {
+	case sourceSpaceGUID != nil:
+		source = EgressSource{
+			ID:           *sourceSpaceGUID,
+			Type:         "space",
+			TerminalGUID: *sourceTerminalGUID,
+		}
+	default:
+		source = EgressSource{
+			ID:           *sourceAppGUID,
+			Type:         "app",
+			TerminalGUID: *sourceTerminalGUID,
+		}
+	}
+
+	return EgressPolicy{
+		ID:     *egressPolicyGUID,
+		Source: source,
+		Destination: EgressDestination{
+			GUID:        *destinationGUID,
+			Name:        *name,
+			Description: *description,
+			Protocol:    *protocol,
+			Ports:       ports,
+			IPRanges: []IPRange{
+				{
+					Start: *startIP,
+					End:   *endIP,
+				},
+			},
+			ICMPType: icmpType,
+			ICMPCode: icmpCode,
+		},
+	}
 }
