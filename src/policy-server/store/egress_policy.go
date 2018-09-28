@@ -200,23 +200,7 @@ func (e *EgressPolicyTable) GetByGUID(tx db.Transaction, guids ...string) ([]Egr
 		return []EgressPolicy{}, err
 	}
 
-	var foundPolicies []EgressPolicy
-	defer rows.Close()
-	for rows.Next() {
-		var egressPolicyGUID, sourceTerminalGUID, name, description, destinationGUID, sourceAppGUID, sourceSpaceGUID, protocol, startIP, endIP *string
-		var startPort, endPort, icmpType, icmpCode int
-
-		err = rows.Scan(&egressPolicyGUID, &sourceTerminalGUID, &name, &description, &sourceAppGUID, &sourceSpaceGUID, &destinationGUID, &protocol, &startIP, &endIP, &startPort, &endPort, &icmpType, &icmpCode)
-		if err != nil {
-			return []EgressPolicy{}, err
-		}
-
-		foundPolicies = append(foundPolicies, mapRowToEgressPolicy(egressPolicyGUID, sourceTerminalGUID, name, description, destinationGUID,
-			sourceAppGUID, sourceSpaceGUID, protocol, startIP, endIP,
-			startPort, endPort, icmpType, icmpCode))
-	}
-
-	return foundPolicies, nil
+	return e.convertRowsToEgressPolicies(rows)
 }
 
 func (e *EgressPolicyTable) GetTerminalByAppGUID(tx db.Transaction, appGUID string) (string, error) {
@@ -253,33 +237,14 @@ func (e *EgressPolicyTable) GetTerminalBySpaceGUID(tx db.Transaction, spaceGUID 
 
 func (e *EgressPolicyTable) GetAllPolicies() ([]EgressPolicy, error) {
 	rows, err := e.Conn.Query(selectEgressPolicyQuery())
-
-	var foundPolicies []EgressPolicy
 	if err != nil {
-		return foundPolicies, err
+		return []EgressPolicy{}, err
 	}
 
-	defer rows.Close()
-	for rows.Next() {
-
-		var egressPolicyGUID, sourceTerminalGUID, name, description, destinationGUID, sourceAppGUID, sourceSpaceGUID, protocol, startIP, endIP *string
-		var startPort, endPort, icmpType, icmpCode int
-
-		err = rows.Scan(&egressPolicyGUID, &sourceTerminalGUID, &name, &description, &sourceAppGUID, &sourceSpaceGUID, &destinationGUID, &protocol, &startIP, &endIP, &startPort, &endPort, &icmpType, &icmpCode)
-		if err != nil {
-			return []EgressPolicy{}, err
-		}
-
-		foundPolicies = append(foundPolicies, mapRowToEgressPolicy(egressPolicyGUID, sourceTerminalGUID, name, description, destinationGUID,
-			sourceAppGUID, sourceSpaceGUID, protocol, startIP, endIP,
-			startPort, endPort, icmpType, icmpCode))
-	}
-
-	return foundPolicies, nil
+	return e.convertRowsToEgressPolicies(rows)
 }
 
 func (e *EgressPolicyTable) GetBySourceGuids(ids []string) ([]EgressPolicy, error) {
-	var foundPolicies []EgressPolicy
 
 	query := selectEgressPolicyQuery(fmt.Sprintf(`
 		WHERE apps.app_guid IN (%[1]s) OR spaces.space_guid IN (%[1]s)
@@ -288,25 +253,10 @@ func (e *EgressPolicyTable) GetBySourceGuids(ids []string) ([]EgressPolicy, erro
 	ids = append(ids, ids...)
 	rows, err := e.Conn.Query(e.Conn.Rebind(query), convertToInterfaceSlice(ids)...)
 	if err != nil {
-		return foundPolicies, err
+		return []EgressPolicy{}, err
 	}
 
-	defer rows.Close()
-	for rows.Next() {
-
-		var egressPolicyGUID, sourceTerminalGUID, name, description, sourceAppGUID, sourceSpaceGUID, destinationGUID, protocol, startIP, endIP *string
-		var startPort, endPort, icmpType, icmpCode int
-		err = rows.Scan(&egressPolicyGUID, &sourceTerminalGUID, &name, &description, &sourceAppGUID, &sourceSpaceGUID, &destinationGUID, &protocol, &startIP, &endIP, &startPort, &endPort, &icmpType, &icmpCode)
-		if err != nil {
-			return foundPolicies, err
-		}
-
-		foundPolicies = append(foundPolicies, mapRowToEgressPolicy(egressPolicyGUID, sourceTerminalGUID, name, description, destinationGUID,
-			sourceAppGUID, sourceSpaceGUID, protocol, startIP, endIP,
-			startPort, endPort, icmpType, icmpCode))
-	}
-
-	return foundPolicies, nil
+	return e.convertRowsToEgressPolicies(rows)
 }
 
 func selectEgressPolicyQuery(extraClauses ...string) string {
@@ -332,6 +282,55 @@ func selectEgressPolicyQuery(extraClauses ...string) string {
 		LEFT OUTER JOIN ip_ranges ON (egress_policies.destination_guid = ip_ranges.terminal_guid)
 		LEFT OUTER JOIN destination_metadatas ON (egress_policies.destination_guid = destination_metadatas.terminal_guid)
 		%s;`, strings.Join(extraClauses, " "))
+}
+
+type sqlRows interface {
+	Close() error
+	Next() bool
+	Scan(dest ...interface{}) error
+}
+
+func (e *EgressPolicyTable) convertRowsToEgressPolicies(rows sqlRows) ([]EgressPolicy, error) {
+	var foundPolicies []EgressPolicy
+	defer rows.Close()
+	for rows.Next() {
+		var egressPolicyGUID, sourceTerminalGUID, name, description, destinationGUID, sourceAppGUID, sourceSpaceGUID, protocol, startIP, endIP *string
+		var startPort, endPort, icmpType, icmpCode int
+		err := rows.Scan(
+			&egressPolicyGUID,
+			&sourceTerminalGUID,
+			&name,
+			&description,
+			&sourceAppGUID,
+			&sourceSpaceGUID,
+			&destinationGUID,
+			&protocol,
+			&startIP,
+			&endIP,
+			&startPort,
+			&endPort,
+			&icmpType,
+			&icmpCode)
+		if err != nil {
+			return foundPolicies, err
+		}
+		foundPolicies = append(foundPolicies, mapRowToEgressPolicy(
+			egressPolicyGUID,
+			sourceTerminalGUID,
+			name,
+			description,
+			destinationGUID,
+			sourceAppGUID,
+			sourceSpaceGUID,
+			protocol,
+			startIP,
+			endIP,
+			startPort,
+			endPort,
+			icmpType,
+			icmpCode))
+	}
+	return foundPolicies, nil
 }
 
 func mapRowToEgressPolicy(egressPolicyGUID, sourceTerminalGUID, name, description, destinationGUID,
