@@ -1,62 +1,28 @@
 #!/bin/bash
+set -e -u
 
-set -e -u -x
+ROOT_DIR_PATH="$(cd $(dirname $0)/.. && pwd)"
+cd ${ROOT_DIR_PATH}
 
-cd cf-networking-release
-export GOPATH=$PWD
+db=${DB:-"postgres"} # if not set, default to postgres
 
-declare -a serial_packages=(
-  "src/policy-server/integration/timeouts"
-  "src/policy-server/integration"
-  "src/policy-server/store/migrations"
-  "src/policy-server/store"
-)
+kernelversion="$(docker run -t -i alpine:latest uname -r | tr -d '\r\n' | tr -d '\-moby')"
+if [ $db = "mysql" ]; then
+  # pinning back because we don't support mysql 8
+  docker_image=c2cnetworking/dev-mysql:0.18.0
+fi
+if [ $db = "none" ] || [ $db = "postgres" ]; then
+  docker_image=c2cnetworking/dev-postgres-ifb
+fi
 
-# smoke/perf/acceptance/scaling tests should be skipped
-declare -a ignored_packages=(
-  "src/test"
-)
-
-function loadIFB {
-  set +e
-    depmod $(uname -r)
-    modprobe ifb
-  set -e
-}
-
-function bootDB {
-  db=$1
-
-  if [ "$db" = "postgres" ]; then
-    launchDB="(/docker-entrypoint.sh postgres &> /var/log/postgres-boot.log) &"
-    testConnection="psql -h localhost -U postgres -c '\conninfo' &>/dev/null"
-  elif [ "$db" = "mysql" ]  || [ "$db" = "mysql-5.6" ]; then
-    launchDB="(MYSQL_ROOT_PASSWORD=password /entrypoint.sh mysqld &> /var/log/mysql-boot.log) &"
-    testConnection="echo '\s;' | mysql -h 127.0.0.1 -u root --password='password' &>/dev/null"
-  else
-    echo "skipping database"
-    return 0
-  fi
-
-  echo -n "booting $db"
-  eval "$launchDB"
-  for _ in $(seq 1 60); do
-    set +e
-    eval "${testConnection}"
-    exitcode=$?
-    set -e
-    if [ ${exitcode} -eq 0 ]; then
-      echo "connection established to $db"
-      return 0
-    fi
-    echo -n "."
-    sleep 1
-  done
-  echo "unable to connect to $db"
-  exit 1
-}
-
-loadIFB
-set +e
-bootDB "${DB:-"notset"}"
-set +e
+docker run \
+   --rm \
+   -it \
+   --privileged \
+   -v ${PWD}:/cf-networking-release \
+   -e GOPATH=/cf-networking-release \
+   -e DB=$db \
+   --cap-add ALL \
+   -w / \
+   $docker_image \
+   /cf-networking-release/scripts/start-db-in-docker
