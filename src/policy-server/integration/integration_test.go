@@ -193,7 +193,7 @@ var _ = Describe("Integration", func() {
 		})
 
 		It("should log and exit with a timeout error", func() {
-			Eventually(session, 5*time.Second).Should(gexec.Exit())
+			Eventually(session, 10*time.Second).Should(gexec.Exit())
 			Expect(session.Err).To(gbytes.Say("testprefix.policy-server: db connect: unable to ping: context deadline exceeded"))
 		})
 	})
