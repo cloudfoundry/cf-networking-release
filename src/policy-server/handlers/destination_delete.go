@@ -1,9 +1,10 @@
 package handlers
 
 import (
-	"code.cloudfoundry.org/lager"
 	"net/http"
 	"policy-server/store"
+
+	"code.cloudfoundry.org/lager"
 )
 
 //go:generate counterfeiter -o fakes/egress_destination_store_deleter.go --fake-name EgressDestinationStoreDeleter . EgressDestinationStoreDeleter
@@ -24,8 +25,14 @@ func (d *DestinationDelete) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 
 	deletedDestination, err := d.EgressDestinationStore.Delete(guid)
 	if err != nil {
-		d.ErrorResponse.InternalServerError(logger, w, err, "error deleting egress destination")
-		return
+		switch err.(type) {
+		case store.ForeignKeyError:
+			d.ErrorResponse.BadRequest(logger, w, err, "destination is still in use")
+			return
+		default:
+			d.ErrorResponse.InternalServerError(logger, w, err, "error deleting egress destination")
+			return
+		}
 	}
 
 	responseBody, err := d.EgressDestinationMapper.AsBytes([]store.EgressDestination{deletedDestination})

@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
+	"github.com/go-sql-driver/mysql"
+	"github.com/lib/pq"
 )
 
 //go:generate counterfeiter -o fakes/egress_destination_repo.go --fake-name EgressDestinationRepo . egressDestinationRepo
@@ -73,6 +75,9 @@ func (e *EgressDestinationStore) Delete(guid string) (EgressDestination, error) 
 	err = e.TerminalsRepo.Delete(tx, guid)
 	if err != nil {
 		tx.Rollback()
+		if isForeignKeyError(err) {
+			return EgressDestination{}, NewForeignKeyError(err)
+		}
 		return EgressDestination{}, fmt.Errorf("egress destination store delete destination terminal: %s", err)
 	}
 
@@ -151,4 +156,18 @@ func isDuplicateError(err error, name string) bool {
 	postgresError := "pq: duplicate key value violates unique constraint \"metadata_name_unique\""
 	mysqlError := fmt.Sprintf("Error 1062: Duplicate entry '%s' for key 'name'", name)
 	return strings.Contains(err.Error(), postgresError) || strings.Contains(err.Error(), mysqlError)
+}
+
+func isForeignKeyError(err error) bool {
+	switch typedErr := err.(type) {
+	case *pq.Error:
+		if typedErr.Code == "23503" { // postgres foreign key constraint error
+			return true
+		}
+	case *mysql.MySQLError:
+		if typedErr.Number == 1451 { // mysql foreign key constraint error
+			return true
+		}
+	}
+	return false
 }

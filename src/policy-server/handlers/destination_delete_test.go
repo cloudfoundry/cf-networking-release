@@ -1,17 +1,18 @@
 package handlers_test
 
 import (
-	"code.cloudfoundry.org/cf-networking-helpers/httperror"
-	"code.cloudfoundry.org/lager/lagertest"
 	"errors"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"net/http"
 	"net/http/httptest"
 	"policy-server/handlers"
 	"policy-server/handlers/fakes"
 	"policy-server/store"
 	storeFakes "policy-server/store/fakes"
+
+	"code.cloudfoundry.org/cf-networking-helpers/httperror"
+	"code.cloudfoundry.org/lager/lagertest"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("DestinationDelete", func() {
@@ -75,11 +76,20 @@ var _ = Describe("DestinationDelete", func() {
 		Expect(resp.Body.Bytes()).To(Equal(expectedResponseBody))
 	})
 
-	It("returns an error when the store returns an error", func() {
-		fakeStore.DeleteReturns(store.EgressDestination{}, errors.New("can't delete"))
-		MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
-		Expect(resp.Code).To(Equal(http.StatusInternalServerError))
-		Expect(resp.Body.Bytes()).To(MatchJSON(`{"error": "error deleting egress destination"}`))
+	Context("when the store returns an error", func() {
+		It("returns bad request when the store returns foreign key violation", func() {
+			fakeStore.DeleteReturns(store.EgressDestination{}, store.NewForeignKeyError(errors.New("egress dest in use")))
+			MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
+			Expect(resp.Code).To(Equal(http.StatusBadRequest))
+			Expect(resp.Body.Bytes()).To(MatchJSON(`{"error": "destination is still in use"}`))
+		})
+
+		It("returns an internal server error when the store returns a generic error", func() {
+			fakeStore.DeleteReturns(store.EgressDestination{}, errors.New("can't delete"))
+			MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
+			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
+			Expect(resp.Body.Bytes()).To(MatchJSON(`{"error": "error deleting egress destination"}`))
+		})
 	})
 
 	It("returns an error when the marshalling deleted destination fails", func() {

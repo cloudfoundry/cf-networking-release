@@ -55,8 +55,8 @@ var _ = Describe("EgressDestinationStore", func() {
 			egressDestinationsStore = &store.EgressDestinationStore{
 				TerminalsRepo:           terminalsRepo,
 				DestinationMetadataRepo: destinationMetadataRepo,
-				Conn: realDb,
-				EgressDestinationRepo: egressDestinationTable,
+				Conn:                    realDb,
+				EgressDestinationRepo:   egressDestinationTable,
 			}
 		})
 
@@ -161,6 +161,61 @@ var _ = Describe("EgressDestinationStore", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(destinations).To(HaveLen(0))
 			})
+
+			Context("when attempting to delete a destination that is referenced by a policy", func() {
+				var (
+					egressPolicyStore *store.EgressPolicyStore
+					egressPolicyRepo  *store.EgressPolicyTable
+
+					createdDestinations []store.EgressDestination
+				)
+
+				BeforeEach(func() {
+					egressPolicyRepo = &store.EgressPolicyTable{
+						Conn:  realDb,
+						Guids: &store.GuidGenerator{},
+					}
+					egressPolicyStore = &store.EgressPolicyStore{
+						TerminalsRepo:    terminalsRepo,
+						EgressPolicyRepo: egressPolicyRepo,
+						Conn:             realDb,
+					}
+
+					toBeCreatedDestinations := []store.EgressDestination{
+						{
+							Name:        "dest-1",
+							Description: "desc-1",
+							Protocol:    "tcp",
+							IPRanges:    []store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}},
+							Ports:       []store.Ports{{Start: 8080, End: 8081}},
+						},
+					}
+
+					var err error
+					createdDestinations, err = egressDestinationsStore.Create(toBeCreatedDestinations)
+					Expect(err).NotTo(HaveOccurred())
+
+					toBeCreatedEgressPolicy := []store.EgressPolicy{
+						{
+							Source: store.EgressSource{
+								ID: "some-app-guid",
+							},
+							Destination: store.EgressDestination{
+								GUID: createdDestinations[0].GUID,
+							},
+						},
+					}
+
+					_, err = egressPolicyStore.Create(toBeCreatedEgressPolicy)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("returns a foreign key error", func() {
+					_, err := egressDestinationsStore.Delete(createdDestinations[0].GUID)
+					_, ok := err.(store.ForeignKeyError)
+					Expect(ok).To(BeTrue(), "expected store.ForeignKeyError, got %v", err)
+				})
+			})
 		})
 	})
 
@@ -184,7 +239,7 @@ var _ = Describe("EgressDestinationStore", func() {
 			destinationMetadataRepo = &fakes.DestinationMetadataRepo{}
 
 			egressDestinationsStore = &store.EgressDestinationStore{
-				Conn: mockDB,
+				Conn:                    mockDB,
 				EgressDestinationRepo:   egressDestinationRepo,
 				DestinationMetadataRepo: destinationMetadataRepo,
 				TerminalsRepo:           terminalsRepo,
