@@ -70,9 +70,23 @@ var _ = Describe("EgressDestinationStore", func() {
 		Describe("CRUD", func() {
 			var (
 				toBeCreatedDestinations []store.EgressDestination
+				egressPolicyStore       *store.EgressPolicyStore
+				egressPolicyRepo        *store.EgressPolicyTable
+
+				createdDestinations []store.EgressDestination
 			)
 
 			BeforeEach(func() {
+				egressPolicyRepo = &store.EgressPolicyTable{
+					Conn:  realDb,
+					Guids: &store.GuidGenerator{},
+				}
+				egressPolicyStore = &store.EgressPolicyStore{
+					TerminalsRepo:    terminalsRepo,
+					EgressPolicyRepo: egressPolicyRepo,
+					Conn:             realDb,
+				}
+
 				toBeCreatedDestinations = []store.EgressDestination{
 					{
 						Name:        "dest-1",
@@ -162,25 +176,31 @@ var _ = Describe("EgressDestinationStore", func() {
 				Expect(destinations).To(HaveLen(0))
 			})
 
-			Context("when attempting to delete a destination that is referenced by a policy", func() {
-				var (
-					egressPolicyStore *store.EgressPolicyStore
-					egressPolicyRepo  *store.EgressPolicyTable
-
-					createdDestinations []store.EgressDestination
-				)
-
+			Context("when creating the destination metadata returns duplicate name error", func() {
 				BeforeEach(func() {
-					egressPolicyRepo = &store.EgressPolicyTable{
-						Conn:  realDb,
-						Guids: &store.GuidGenerator{},
-					}
-					egressPolicyStore = &store.EgressPolicyStore{
-						TerminalsRepo:    terminalsRepo,
-						EgressPolicyRepo: egressPolicyRepo,
-						Conn:             realDb,
+					toBeCreatedDestinations = []store.EgressDestination{
+						{
+							Name:        "dupe",
+							Description: "dupe",
+							Protocol:    "tcp",
+							IPRanges:    []store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}},
+							Ports:       []store.Ports{{Start: 8080, End: 8081}},
+						},
 					}
 
+					var err error
+					createdDestinations, err = egressDestinationsStore.Create(toBeCreatedDestinations)
+					Expect(err).NotTo(HaveOccurred())
+				})
+
+				It("returns a specific error when DB detects a duplicate", func() {
+					_, err := egressDestinationsStore.Create(toBeCreatedDestinations)
+					Expect(err).To(MatchError("egress destination store create destination metadata: duplicate name error: entry with name 'dupe' already exists"))
+				})
+			})
+
+			Context("when attempting to delete a destination that is referenced by a policy", func() {
+				BeforeEach(func() {
 					toBeCreatedDestinations := []store.EgressDestination{
 						{
 							Name:        "dest-1",
@@ -301,36 +321,6 @@ var _ = Describe("EgressDestinationStore", func() {
 
 					It("returns an error", func() {
 						Expect(err).To(MatchError("egress destination store create destination metadata: can't create a destination metadata"))
-					})
-
-					It("rolls back the transaction", func() {
-						Expect(tx.RollbackCallCount()).To(Equal(1))
-					})
-				})
-
-				Context("when creating the destination metadata returns duplicate name postgres error", func() {
-					BeforeEach(func() {
-						destinationMetadataRepo.CreateReturns(-1, errors.New("pq: duplicate key value violates unique constraint \"metadata_name_unique\""))
-						_, err = egressDestinationsStore.Create(destinationsToCreate)
-					})
-
-					It("returns a specific error when DB detects a duplicate", func() {
-						Expect(err).To(MatchError("egress destination store create destination metadata: duplicate name error: entry with name 'dupe' already exists"))
-					})
-
-					It("rolls back the transaction", func() {
-						Expect(tx.RollbackCallCount()).To(Equal(1))
-					})
-				})
-
-				Context("when creating the destination metadata returns duplicate name mysql error", func() {
-					BeforeEach(func() {
-						destinationMetadataRepo.CreateReturns(-1, errors.New("Error 1062: Duplicate entry 'dupe' for key 'name'"))
-						_, err = egressDestinationsStore.Create(destinationsToCreate)
-					})
-
-					It("returns a specific error when DB detects a duplicate", func() {
-						Expect(err).To(MatchError("egress destination store create destination metadata: duplicate name error: entry with name 'dupe' already exists"))
 					})
 
 					It("rolls back the transaction", func() {

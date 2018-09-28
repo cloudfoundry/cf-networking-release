@@ -20,7 +20,7 @@ func (d *DestinationMetadataTable) Create(tx db.Transaction, terminalGUID, name,
 			description,
 		)
 		if err != nil {
-			return -1, fmt.Errorf("failed to create destination metadata: %s", err)
+			return -1, err
 		}
 		return result.LastInsertId()
 	} else if driver == "postgres" {
@@ -37,7 +37,7 @@ func (d *DestinationMetadataTable) Create(tx db.Transaction, terminalGUID, name,
 		).Scan(&id)
 
 		if err != nil {
-			return -1, fmt.Errorf("failed to create destination metadata: %s", err)
+			return -1, err
 		}
 
 		return id, nil

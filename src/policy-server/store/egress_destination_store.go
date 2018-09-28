@@ -2,7 +2,6 @@ package store
 
 import (
 	"fmt"
-	"strings"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"github.com/go-sql-driver/mysql"
@@ -153,19 +152,27 @@ func (e *EgressDestinationStore) Create(egressDestinations []EgressDestination) 
 }
 
 func isDuplicateError(err error, name string) bool {
-	postgresError := "pq: duplicate key value violates unique constraint \"metadata_name_unique\""
-	mysqlError := fmt.Sprintf("Error 1062: Duplicate entry '%s' for key 'name'", name)
-	return strings.Contains(err.Error(), postgresError) || strings.Contains(err.Error(), mysqlError)
+	switch typedErr := err.(type) {
+	case *pq.Error:
+		if typedErr.Code == "23505" {
+			return true
+		}
+	case *mysql.MySQLError:
+		if typedErr.Number == 1062 {
+			return true
+		}
+	}
+	return false
 }
 
 func isForeignKeyError(err error) bool {
 	switch typedErr := err.(type) {
 	case *pq.Error:
-		if typedErr.Code == "23503" { // postgres foreign key constraint error
+		if typedErr.Code == "23503" {
 			return true
 		}
 	case *mysql.MySQLError:
-		if typedErr.Number == 1451 { // mysql foreign key constraint error
+		if typedErr.Number == 1451 {
 			return true
 		}
 	}
