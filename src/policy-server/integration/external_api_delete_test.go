@@ -65,10 +65,6 @@ var _ = Describe("External API Deleting Policies", func() {
 		BeforeEach(func() {
 			addPolicy("v1", `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 1234, "end": 1234 } } } ] }`)
 			addPolicy("v1", `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "ports": { "start": 8080, "end": 8090 } } } ] }`)
-			// addPolicy("v1", `{ "egress_policies": [ {"source": { "id": "live-app-1-guid" }, "destination": { "protocol": "tcp", "ips": [ {"start": "23.96.32.148", "end": "23.96.32.149" } ] } } ] }`)
-			// addPolicy("v1", `{ "egress_policies": [ {"source": { "id": "live-app-1-guid" }, "destination": { "protocol": "tcp", "ports": [{"start": 8080, "end": 8081}], "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] } } ] }`)
-			// addPolicy("v1", `{ "egress_policies": [ {"source": { "id": "live-app-1-guid" }, "destination": { "protocol": "icmp", "icmp_type": 1, "icmp_code": 2, "ips": [ {"start": "23.96.32.150", "end": "23.96.32.151" } ] } } ] }`)
-			// addPolicy("v1", `{ "egress_policies": [ {"source": { "id": "live-space-1-guid", "type": "space" }, "destination": { "protocol": "tcp", "ips": [ {"start": "23.96.32.152", "end": "23.96.32.153" } ] } } ] }`)
 			addPolicy("v0", `{ "policies": [ {"source": { "id": "some-app-guid" }, "destination": { "id": "some-other-app-guid", "protocol": "tcp", "port": 7777 } } ] }`)
 		})
 

@@ -39,7 +39,6 @@ var _ = Describe("Destinations create handler", func() {
 		fakeMetricsSender     *storeFakes.MetricsSender
 		fakeStore             *fakes.EgressDestinationStoreCreator
 		fakeMarshaller        *fakes.EgressDestinationMarshaller
-		fakePolicyGuard       *fakes.PolicyGuard
 		logger                *lagertest.TestLogger
 		createdDestinations   []store.EgressDestination
 		requestedDestinations []store.EgressDestination
@@ -81,9 +80,6 @@ var _ = Describe("Destinations create handler", func() {
 		fakeMarshaller = &fakes.EgressDestinationMarshaller{}
 		fakeMarshaller.AsBytesReturns(expectedResponseBody, nil)
 
-		fakePolicyGuard = &fakes.PolicyGuard{}
-		fakePolicyGuard.IsNetworkAdminReturns(true)
-
 		requestedDestinations = []store.EgressDestination{
 			{GUID: "req-one"},
 			{GUID: "req-two"},
@@ -102,7 +98,6 @@ var _ = Describe("Destinations create handler", func() {
 			ErrorResponse:           errorResponse,
 			EgressDestinationStore:  fakeStore,
 			EgressDestinationMapper: fakeMarshaller,
-			PolicyGuard:             fakePolicyGuard,
 			Logger:                  logger,
 		}
 		resp = httptest.NewRecorder()
@@ -116,10 +111,6 @@ var _ = Describe("Destinations create handler", func() {
 
 	It("creates destinations", func() {
 		MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
-
-		Expect(fakePolicyGuard.IsNetworkAdminCallCount()).To(Equal(1))
-		passedToken := fakePolicyGuard.IsNetworkAdminArgsForCall(0)
-		Expect(passedToken).To(Equal(token))
 
 		Expect(fakeStore.CreateCallCount()).To(Equal(1))
 		Expect(fakeStore.CreateArgsForCall(0)).To(Equal(requestedDestinations))
@@ -163,17 +154,5 @@ var _ = Describe("Destinations create handler", func() {
 		MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
 		Expect(resp.Code).To(Equal(http.StatusInternalServerError))
 		Expect(resp.Body.Bytes()).To(MatchJSON(`{"error": "error serializing egress destinations"}`))
-	})
-
-	Context("when the user is not network admin", func() {
-		BeforeEach(func() {
-			fakePolicyGuard.IsNetworkAdminReturns(false)
-		})
-
-		It("returns an error", func() {
-			MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
-			Expect(resp.Code).To(Equal(http.StatusForbidden))
-			Expect(resp.Body.Bytes()).To(MatchJSON(`{"error": "not authorized: creating egress destinations failed"}`))
-		})
 	})
 })

@@ -108,7 +108,7 @@ func main() {
 		conf.Database,
 		conf.MaxOpenConnections,
 		conf.MaxIdleConnections,
-		time.Duration(conf.MaxConnectionsLifetimeSeconds) * time.Second,
+		time.Duration(conf.MaxConnectionsLifetimeSeconds)*time.Second,
 		logPrefix,
 		jobPrefix,
 		logger,
@@ -207,7 +207,6 @@ func main() {
 		ErrorResponse:           errorResponse,
 		EgressDestinationStore:  egressDestinationStore,
 		EgressDestinationMapper: egressDestinationMapper,
-		PolicyGuard:             policyGuard,
 		Logger:                  logger,
 	}
 
@@ -235,7 +234,6 @@ func main() {
 		Mapper:        egressPolicyMapper,
 		ErrorResponse: errorResponse,
 		Logger:        logger,
-		PolicyGuard:   policyGuard,
 	}
 
 	deleteEgressPolicyHandlerV1 := &handlers.EgressPolicyDelete{

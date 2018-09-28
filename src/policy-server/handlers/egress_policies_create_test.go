@@ -28,7 +28,6 @@ var _ = Describe("EgressPoliciesCreate", func() {
 		fakeStore                   *fakes.EgressPolicyStore
 		logger                      *lagertest.TestLogger
 		fakeMetricsSender           *storeFakes.MetricsSender
-		fakePolicyGuard             *fakes.PolicyGuard
 		handler                     *handlers.EgressPolicyCreate
 		resp                        *httptest.ResponseRecorder
 		request                     *http.Request
@@ -41,8 +40,6 @@ var _ = Describe("EgressPoliciesCreate", func() {
 	BeforeEach(func() {
 		fakeStore = &fakes.EgressPolicyStore{}
 		fakeMapper = &fakes.EgressPolicyMapper{}
-		fakePolicyGuard = &fakes.PolicyGuard{}
-		fakePolicyGuard.IsNetworkAdminReturns(true)
 
 		fakeMetricsSender = &storeFakes.MetricsSender{}
 		errorResponse := &httperror.ErrorResponse{
@@ -56,7 +53,6 @@ var _ = Describe("EgressPoliciesCreate", func() {
 			Mapper:        fakeMapper,
 			ErrorResponse: errorResponse,
 			Logger:        logger,
-			PolicyGuard:   fakePolicyGuard,
 		}
 
 		var err error
@@ -156,18 +152,5 @@ var _ = Describe("EgressPoliciesCreate", func() {
 		MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
 		Expect(resp.Code).To(Equal(http.StatusInternalServerError))
 		Expect(resp.Body.Bytes()).To(MatchJSON(`{"error": "error serializing response"}`))
-	})
-
-	Context("when the user is not network admin", func() {
-		BeforeEach(func() {
-			fakePolicyGuard.IsNetworkAdminReturns(false)
-		})
-
-		It("returns an error", func() {
-			MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
-			Expect(resp.Code).To(Equal(http.StatusForbidden))
-			Expect(fakePolicyGuard.IsNetworkAdminArgsForCall(0)).To(Equal(token))
-			Expect(resp.Body.Bytes()).To(MatchJSON(`{"error": "not authorized: creating egress policies failed"}`))
-		})
 	})
 })

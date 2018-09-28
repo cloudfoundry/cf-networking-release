@@ -1,10 +1,11 @@
 package handlers
 
 import (
-	"code.cloudfoundry.org/lager"
 	"io/ioutil"
 	"net/http"
 	"policy-server/store"
+
+	"code.cloudfoundry.org/lager"
 )
 
 //go:generate counterfeiter -o fakes/egress_policy_mapper.go --fake-name EgressPolicyMapper . egressPolicyMapper
@@ -17,7 +18,6 @@ type EgressPolicyCreate struct {
 	Store         egressPolicyStore
 	Mapper        egressPolicyMapper
 	ErrorResponse errorResponse
-	PolicyGuard   policyGuard
 	Logger        lager.Logger
 }
 
@@ -25,12 +25,6 @@ func (e *EgressPolicyCreate) ServeHTTP(w http.ResponseWriter, req *http.Request)
 	requestBytes, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		e.ErrorResponse.BadRequest(e.Logger, w, err, "error reading request")
-		return
-	}
-
-	userToken := getTokenData(req)
-	if policyGuard.IsNetworkAdmin(e.PolicyGuard, userToken) == false {
-		e.ErrorResponse.Forbidden(e.Logger, w, err, "not authorized: creating egress policies failed")
 		return
 	}
 

@@ -14,7 +14,6 @@ type DestinationsCreate struct {
 	ErrorResponse           errorResponse
 	EgressDestinationStore  EgressDestinationStoreCreator
 	EgressDestinationMapper EgressDestinationMarshaller
-	PolicyGuard             policyGuard
 	Logger                  lager.Logger
 }
 
@@ -27,12 +26,6 @@ func (d *DestinationsCreate) ServeHTTP(w http.ResponseWriter, req *http.Request)
 	var destinations, createdDestinations []store.EgressDestination
 	var requestBytes, responseBytes []byte
 	var err error
-
-	userToken := getTokenData(req)
-	if policyGuard.IsNetworkAdmin(d.PolicyGuard, userToken) == false {
-		d.ErrorResponse.Forbidden(d.Logger, w, err, "not authorized: creating egress destinations failed")
-		return
-	}
 
 	requestBytes, err = ioutil.ReadAll(req.Body)
 	if err != nil {
