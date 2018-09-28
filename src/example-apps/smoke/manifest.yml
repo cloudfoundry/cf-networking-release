@@ -4,7 +4,6 @@ applications:
     memory: 32M
     disk_quota: 32M
     buildpack: go_buildpack
-    stack: cflinuxfs3
     env:
       GOPACKAGENAME: example-apps/smoke
       PROXY_APP_URL: http://proxy.some-cf-deployment.example.com
