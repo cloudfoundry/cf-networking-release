@@ -108,7 +108,7 @@ func main() {
 		conf.Database,
 		conf.MaxOpenConnections,
 		conf.MaxIdleConnections,
-		5*time.Minute,
+		time.Duration(conf.MaxConnectionsLifetimeSeconds) * time.Second,
 		logPrefix,
 		jobPrefix,
 		logger,
