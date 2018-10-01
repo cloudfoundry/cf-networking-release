@@ -23,37 +23,11 @@ type payload struct {
 	EgressPolicies      []EgressPolicy `json:"egress_policies,omitempty"`
 }
 
-func asApiIPRanges(storeIPRanges []store.IPRange) []IPRange {
-	if len(storeIPRanges) > 0 {
-		return []IPRange{{
-			Start: storeIPRanges[0].Start,
-			End:   storeIPRanges[0].End,
-		}}
-	}
-	return nil
-}
-
-func asApiPorts(storePorts []store.Ports) []Ports {
-	if len(storePorts) > 0 {
-		return []Ports{{
-			Start: storePorts[0].Start,
-			End:   storePorts[0].End,
-		}}
-	}
-	return nil
-}
-
 func withPopulatedDestinations(storeEgressPolicy store.EgressPolicy) EgressPolicy {
+	egressDestination := asApiEgressDestination(storeEgressPolicy.Destination)
 	return EgressPolicy{
-		ID: storeEgressPolicy.ID,
-		Destination: &EgressDestination{
-			GUID:        storeEgressPolicy.Destination.GUID,
-			Name:        storeEgressPolicy.Destination.Name,
-			Description: storeEgressPolicy.Destination.Description,
-			IPRanges:    asApiIPRanges(storeEgressPolicy.Destination.IPRanges),
-			Ports:       asApiPorts(storeEgressPolicy.Destination.Ports),
-			Protocol:    storeEgressPolicy.Destination.Protocol,
-		},
+		ID:          storeEgressPolicy.ID,
+		Destination: &egressDestination,
 		Source: &EgressSource{
 			ID:   storeEgressPolicy.Source.ID,
 			Type: storeEgressPolicy.Source.Type,
