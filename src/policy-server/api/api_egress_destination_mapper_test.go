@@ -193,6 +193,13 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 			)
 		})
 
+		Context("when there is a json unmarshalling error", func() {
+			It("returns an error", func() {
+				_, err := mapper.AsEgressDestinations([]byte("%%%"))
+				Expect(err).To(MatchError("unmarshal json: invalid character '%' looking for beginning of value"))
+			})
+		})
+
 		Context("when there is a validation error", func() {
 			BeforeEach(func() {
 				fakeValidator.ValidateEgressDestinationsReturns(errors.New("banana"))

@@ -46,7 +46,7 @@ func (p *EgressDestinationMapper) AsEgressDestinations(egressDestinations []byte
 	payload := &DestinationsPayload{}
 	err := json.Unmarshal(egressDestinations, payload)
 	if err != nil {
-		panic(err)
+		return []store.EgressDestination{}, fmt.Errorf("unmarshal json: %s", err)
 	}
 
 	err = p.PayloadValidator.ValidateEgressDestinations(payload.EgressDestinations)
