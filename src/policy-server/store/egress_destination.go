@@ -9,60 +9,29 @@ import (
 
 type EgressDestinationTable struct{}
 
-func (e *EgressDestinationTable) GetByGUID(tx db.Transaction, guids ...string) ([]EgressDestination, error) {
-	rows, err := tx.Queryx(tx.Rebind(`
-    SELECT
-		ip_ranges.protocol,
-		ip_ranges.start_ip,
-		ip_ranges.end_ip,
-		ip_ranges.start_port,
-		ip_ranges.end_port,
-		ip_ranges.icmp_type,
-		ip_ranges.icmp_code,
-		ip_ranges.terminal_guid,
-		COALESCE(d_m.name, ''),
-		COALESCE(d_m.description, '')
-	FROM ip_ranges
-	LEFT OUTER JOIN destination_metadatas AS d_m
-	  ON d_m.terminal_guid = ip_ranges.terminal_guid
-	WHERE ip_ranges.terminal_guid IN (`+generateQuestionMarkString(len(guids))+`)
-	ORDER BY ip_ranges.id
-	`), convertToInterfaceSlice(guids)...)
+func (e *EgressDestinationTable) All(tx db.Transaction) ([]EgressDestination, error) {
+	query := egressDestinationsQuery("")
+	rows, err := tx.Queryx(query)
+	if err != nil {
+		return []EgressDestination{}, err
+	}
+	defer rows.Close()
+	return convertRowsToEgressDestinations(rows)
+}
 
+func (e *EgressDestinationTable) GetByGUID(tx db.Transaction, guids ...string) ([]EgressDestination, error) {
+	query := egressDestinationsQuery(`WHERE ip_ranges.terminal_guid IN (` + generateQuestionMarkString(len(guids)) + `)`)
+	rows, err := tx.Queryx(tx.Rebind(query), convertToInterfaceSlice(guids)...)
 	if err != nil {
 		return []EgressDestination{}, fmt.Errorf("running query: %s", err)
 	}
+	defer rows.Close()
+	return convertRowsToEgressDestinations(rows)
+}
 
-	var egressDestinations []EgressDestination
-	for rows.Next() {
-		var (
-			startPort, endPort, icmpType, icmpCode                    int
-			terminalGUID, name, description, protocol, startIP, endIP *string
-			ports                                                     []Ports
-		)
-
-		err = rows.Scan(&protocol, &startIP, &endIP, &startPort, &endPort, &icmpType, &icmpCode, &terminalGUID, &name, &description)
-		if err != nil {
-			return []EgressDestination{}, fmt.Errorf("scanning row: %s", err)
-		}
-
-		if startPort != 0 && endPort != 0 {
-			ports = []Ports{{Start: startPort, End: endPort}}
-		}
-
-		egressDestinations = append(egressDestinations, EgressDestination{
-			GUID:        *terminalGUID,
-			Name:        *name,
-			Description: *description,
-			Protocol:    *protocol,
-			Ports:       ports,
-			IPRanges:    []IPRange{{Start: *startIP, End: *endIP}},
-			ICMPType:    icmpType,
-			ICMPCode:    icmpCode,
-		})
-	}
-
-	return egressDestinations, nil
+func (e *EgressDestinationTable) Delete(tx db.Transaction, guid string) error {
+	_, err := tx.Exec(tx.Rebind(`DELETE FROM ip_ranges WHERE terminal_guid = ?`), guid)
+	return err
 }
 
 func (e *EgressDestinationTable) CreateIPRange(tx db.Transaction, destinationTerminalGUID, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) (int64, error) {
@@ -115,33 +84,7 @@ func (e *EgressDestinationTable) CreateIPRange(tx db.Transaction, destinationTer
 	return -1, fmt.Errorf("unknown driver: %s", driverName)
 }
 
-func (e *EgressDestinationTable) Delete(tx db.Transaction, guid string) error {
-	_, err := tx.Exec(tx.Rebind(`DELETE FROM ip_ranges WHERE terminal_guid = ?`), guid)
-	return err
-}
-
-func (e *EgressDestinationTable) All(tx db.Transaction) ([]EgressDestination, error) {
-	rows, err := tx.Queryx(`
-    SELECT
-		ip_ranges.protocol,
-		ip_ranges.start_ip,
-		ip_ranges.end_ip,
-		ip_ranges.start_port,
-		ip_ranges.end_port,
-		ip_ranges.icmp_type,
-		ip_ranges.icmp_code,
-		ip_ranges.terminal_guid,
-		COALESCE(d_m.name, ''),
-		COALESCE(d_m.description, '')
-	FROM ip_ranges
-	LEFT OUTER JOIN destination_metadatas AS d_m
-	  ON d_m.terminal_guid = ip_ranges.terminal_guid
-	ORDER BY ip_ranges.id;`)
-	if err != nil {
-		return []EgressDestination{}, err
-	}
-	defer rows.Close()
-
+func convertRowsToEgressDestinations(rows sqlRows) ([]EgressDestination, error) {
 	var foundEgressDestinations []EgressDestination
 
 	for rows.Next() {
@@ -151,7 +94,7 @@ func (e *EgressDestinationTable) All(tx db.Transaction) ([]EgressDestination, er
 			ports                                                     []Ports
 		)
 
-		err = rows.Scan(&protocol, &startIP, &endIP, &startPort, &endPort, &icmpType, &icmpCode, &terminalGUID, &name, &description)
+		err := rows.Scan(&protocol, &startIP, &endIP, &startPort, &endPort, &icmpType, &icmpCode, &terminalGUID, &name, &description)
 
 		if err != nil {
 			return []EgressDestination{}, err
@@ -173,6 +116,25 @@ func (e *EgressDestinationTable) All(tx db.Transaction) ([]EgressDestination, er
 		})
 	}
 	return foundEgressDestinations, nil
+}
+
+func egressDestinationsQuery(whereClause string) string {
+	return strings.Join([]string{`SELECT
+			ip_ranges.protocol,
+			ip_ranges.start_ip,
+			ip_ranges.end_ip,
+			ip_ranges.start_port,
+			ip_ranges.end_port,
+			ip_ranges.icmp_type,
+			ip_ranges.icmp_code,
+			ip_ranges.terminal_guid,
+			COALESCE(d_m.name, ''),
+			COALESCE(d_m.description, '')
+		FROM ip_ranges
+		LEFT OUTER JOIN destination_metadatas AS d_m
+		  ON d_m.terminal_guid = ip_ranges.terminal_guid`,
+		whereClause,
+		`ORDER BY ip_ranges.id`}, " ")
 }
 
 func generateQuestionMarkString(length int) string {
