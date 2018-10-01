@@ -25,7 +25,8 @@ module Bosh::Template::Test
         },
         'max_idle_connections' => 4,
         'max_open_connections' => 5,
-        'connections_max_lifetime_seconds' => 54
+        'connections_max_lifetime_seconds' => 54,
+        'enforce_experimental_dynamic_egress_policies' => true,
       }
     end
 
@@ -99,6 +100,7 @@ module Bosh::Template::Test
           'tag_length' => 1,
           'metron_address' => '127.0.0.1:4567',
           'log_level' => 'error',
+          'enforce_experimental_dynamic_egress_policies' => true,
 
           # hard-coded values, not exposed as bosh spec properties
           'debug_server_host' => '127.0.0.1',

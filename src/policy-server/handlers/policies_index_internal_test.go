@@ -93,11 +93,12 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		expectedLogger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 		fakeErrorResponse = &fakes.ErrorResponse{}
 		handler = &handlers.PoliciesIndexInternal{
-			Logger:                 logger,
-			Store:                  fakeStore,
-			EgressStore:            fakeEgressStore,
-			PolicyCollectionWriter: fakePolicyCollectionWriter,
-			ErrorResponse:          fakeErrorResponse,
+			Logger:                                   logger,
+			Store:                                    fakeStore,
+			EgressStore:                              fakeEgressStore,
+			PolicyCollectionWriter:                   fakePolicyCollectionWriter,
+			ErrorResponse:                            fakeErrorResponse,
+			EnforceExperimentalDynamicEgressPolicies: true,
 		}
 		resp = httptest.NewRecorder()
 	})
@@ -117,6 +118,39 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		Expect(guids).To(Equal([]string{"some-app-guid"}))
 		Expect(resp.Code).To(Equal(http.StatusOK))
 		Expect(resp.Body.Bytes()).To(Equal(expectedResponseBody))
+	})
+
+	Context("when enforce experimental dynamic egress policies is off", func() {
+		BeforeEach(func() {
+			handler = &handlers.PoliciesIndexInternal{
+				Logger:                                   logger,
+				Store:                                    fakeStore,
+				EgressStore:                              fakeEgressStore,
+				PolicyCollectionWriter:                   fakePolicyCollectionWriter,
+				ErrorResponse:                            fakeErrorResponse,
+				EnforceExperimentalDynamicEgressPolicies: false,
+			}
+		})
+
+		It("doesn't return egress policies", func() {
+			request, err := http.NewRequest("GET", "/networking/v0/internal/policies", nil)
+			Expect(err).NotTo(HaveOccurred())
+			MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
+
+			Expect(fakeEgressStore.AllCallCount()).To(Equal(0))
+			_, passedEgressPolicies := fakePolicyCollectionWriter.AsBytesArgsForCall(0)
+			Expect(passedEgressPolicies).To(BeNil())
+		})
+
+		It("doesn't return egress policies when filtering", func() {
+			request, err := http.NewRequest("GET", "/networking/v0/internal/policies?id=some-app-guid", nil)
+			Expect(err).NotTo(HaveOccurred())
+			MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
+
+			Expect(fakeEgressStore.GetBySourceGuidsCallCount()).To(Equal(0))
+			_, passedEgressPolicies := fakePolicyCollectionWriter.AsBytesArgsForCall(0)
+			Expect(passedEgressPolicies).To(BeNil())
+		})
 	})
 
 	Context("when the logger isn't on the request context", func() {
@@ -164,7 +198,6 @@ var _ = Describe("PoliciesIndexInternal", func() {
 	})
 
 	Context("when store.All() throws an error", func() {
-
 		BeforeEach(func() {
 			fakeStore.AllReturns(nil, errors.New("banana"))
 		})
@@ -185,7 +218,6 @@ var _ = Describe("PoliciesIndexInternal", func() {
 	})
 
 	Context("when store.ByGuids() throws an error", func() {
-
 		BeforeEach(func() {
 			fakeStore.ByGuidsReturns(nil, errors.New("banana"))
 		})
@@ -206,7 +238,6 @@ var _ = Describe("PoliciesIndexInternal", func() {
 	})
 
 	Context("when egressStore.All() throws an error", func() {
-
 		BeforeEach(func() {
 			fakeEgressStore.AllReturns(nil, errors.New("banana"))
 		})
@@ -224,11 +255,9 @@ var _ = Describe("PoliciesIndexInternal", func() {
 			Expect(err).To(MatchError("banana"))
 			Expect(description).To(Equal("egress database read failed"))
 		})
-
 	})
 
 	Context("when egressStore.GetBySourceGuidsReturns() throws an error", func() {
-
 		BeforeEach(func() {
 			fakeEgressStore.GetBySourceGuidsReturns(nil, errors.New("banana"))
 		})
@@ -246,6 +275,5 @@ var _ = Describe("PoliciesIndexInternal", func() {
 			Expect(err).To(MatchError("banana"))
 			Expect(description).To(Equal("egress database read failed"))
 		})
-
 	})
 })

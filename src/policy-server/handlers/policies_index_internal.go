@@ -19,21 +19,23 @@ type egressPolicyStore interface {
 }
 
 type PoliciesIndexInternal struct {
-	Logger                 lager.Logger
-	Store                  store.Store
-	PolicyCollectionWriter api.PolicyCollectionWriter
-	ErrorResponse          errorResponse
-	EgressStore            egressPolicyStore
+	Logger                                   lager.Logger
+	Store                                    store.Store
+	PolicyCollectionWriter                   api.PolicyCollectionWriter
+	ErrorResponse                            errorResponse
+	EgressStore                              egressPolicyStore
+	EnforceExperimentalDynamicEgressPolicies bool
 }
 
 func NewPoliciesIndexInternal(logger lager.Logger, store store.Store, egressStore egressPolicyStore,
-	writer api.PolicyCollectionWriter, errorResponse errorResponse) *PoliciesIndexInternal {
+	writer api.PolicyCollectionWriter, errorResponse errorResponse, enforceExperimentalDynamicEgressPolicies bool) *PoliciesIndexInternal {
 	return &PoliciesIndexInternal{
-		Logger:                 logger,
-		Store:                  store,
-		EgressStore:            egressStore,
-		PolicyCollectionWriter: writer,
-		ErrorResponse:          errorResponse,
+		Logger:                                   logger,
+		Store:                                    store,
+		EgressStore:                              egressStore,
+		PolicyCollectionWriter:                   writer,
+		ErrorResponse:                            errorResponse,
+		EnforceExperimentalDynamicEgressPolicies: enforceExperimentalDynamicEgressPolicies,
 	}
 }
 
@@ -58,15 +60,16 @@ func (h *PoliciesIndexInternal) ServeHTTP(w http.ResponseWriter, req *http.Reque
 	}
 
 	var egressPolicies []store.EgressPolicy
-	if len(ids) == 0 {
-		egressPolicies, err = h.EgressStore.All()
-	} else {
-		egressPolicies, err = h.EgressStore.GetBySourceGuids(ids)
-	}
-
-	if err != nil {
-		h.ErrorResponse.InternalServerError(logger, w, err, "egress database read failed")
-		return
+	if h.EnforceExperimentalDynamicEgressPolicies {
+		if len(ids) == 0 {
+			egressPolicies, err = h.EgressStore.All()
+		} else {
+			egressPolicies, err = h.EgressStore.GetBySourceGuids(ids)
+		}
+		if err != nil {
+			h.ErrorResponse.InternalServerError(logger, w, err, "egress database read failed")
+			return
+		}
 	}
 
 	bytes, err := h.PolicyCollectionWriter.AsBytes(policies, egressPolicies)

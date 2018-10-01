@@ -106,7 +106,7 @@ func main() {
 	policyCollectionWriter := api.NewPolicyCollectionWriter(marshal.MarshalFunc(json.Marshal))
 
 	internalPoliciesHandlerV1 := handlers.NewPoliciesIndexInternal(logger, wrappedStore,
-		wrappedEgressStore, policyCollectionWriter, errorResponse)
+		wrappedEgressStore, policyCollectionWriter, errorResponse, conf.EnforceExperimentalDynamicEgressPolicies)
 
 	createTagsHandlerV1 := &handlers.TagsCreate{
 		Store:         wrappedStore,
