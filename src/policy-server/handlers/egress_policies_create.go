@@ -12,6 +12,7 @@ import (
 type egressPolicyMapper interface {
 	AsStoreEgressPolicy(bytes []byte) ([]store.EgressPolicy, error)
 	AsBytes(storeEgressPolicies []store.EgressPolicy) ([]byte, error)
+	AsBytesWithPopulatedDestinations(storeEgressPolicies []store.EgressPolicy) ([]byte, error)
 }
 
 type EgressPolicyCreate struct {

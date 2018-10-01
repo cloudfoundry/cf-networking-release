@@ -1,9 +1,10 @@
 package api
 
 import (
-	"code.cloudfoundry.org/cf-networking-helpers/marshal"
 	"fmt"
 	"policy-server/store"
+
+	"code.cloudfoundry.org/cf-networking-helpers/marshal"
 )
 
 type EgressPolicyMapper struct {
@@ -18,29 +19,70 @@ type egressValidator interface {
 }
 
 type payload struct {
-	TotalEgressPolicies int               `json:"total_egress_policies,omitempty"`
-	EgressPolicies      []EgressPolicyPtr `json:"egress_policies,omitempty"`
+	TotalEgressPolicies int            `json:"total_egress_policies,omitempty"`
+	EgressPolicies      []EgressPolicy `json:"egress_policies,omitempty"`
 }
 
-type EgressPolicyPtr struct {
-	ID          string                `json:"id"`
-	Source      *EgressSource         `json:"source"`
-	Destination *EgressDestinationPtr `json:"destination"`
+func asApiIPRanges(storeIPRanges []store.IPRange) []IPRange {
+	if len(storeIPRanges) > 0 {
+		return []IPRange{{
+			Start: storeIPRanges[0].Start,
+			End:   storeIPRanges[0].End,
+		}}
+	}
+	return nil
 }
 
-type EgressDestinationPtr struct {
-	GUID string `json:"id,omitempty"`
+func asApiPorts(storePorts []store.Ports) []Ports {
+	if len(storePorts) > 0 {
+		return []Ports{{
+			Start: storePorts[0].Start,
+			End:   storePorts[0].End,
+		}}
+	}
+	return nil
 }
 
-func (p *EgressPolicyMapper) AsBytes(storeEgressPolicies []store.EgressPolicy) ([]byte, error) {
-	var apiEgressPolicyPtrs []EgressPolicyPtr
+func withPopulatedDestinations(storeEgressPolicy store.EgressPolicy) EgressPolicy {
+	return EgressPolicy{
+		ID: storeEgressPolicy.ID,
+		Destination: &EgressDestination{
+			GUID:        storeEgressPolicy.Destination.GUID,
+			Name:        storeEgressPolicy.Destination.Name,
+			Description: storeEgressPolicy.Destination.Description,
+			IPRanges:    asApiIPRanges(storeEgressPolicy.Destination.IPRanges),
+			Ports:       asApiPorts(storeEgressPolicy.Destination.Ports),
+			Protocol:    storeEgressPolicy.Destination.Protocol,
+		},
+		Source: &EgressSource{
+			ID:   storeEgressPolicy.Source.ID,
+			Type: storeEgressPolicy.Source.Type,
+		},
+	}
+}
+
+func withDestinationPointer(storeEgressPolicy store.EgressPolicy) EgressPolicy {
+	return EgressPolicy{
+		ID: storeEgressPolicy.ID,
+		Destination: &EgressDestination{
+			GUID: storeEgressPolicy.Destination.GUID,
+		},
+		Source: &EgressSource{
+			ID:   storeEgressPolicy.Source.ID,
+			Type: storeEgressPolicy.Source.Type,
+		},
+	}
+}
+
+func (p *EgressPolicyMapper) AsBytesWithStrategy(storeEgressPolicies []store.EgressPolicy, mappingStrategy func(store.EgressPolicy) EgressPolicy) ([]byte, error) {
+	var apiEgressPolicies []EgressPolicy
 	for _, storeEgressPolicy := range storeEgressPolicies {
-		apiEgressPolicyPtrs = append(apiEgressPolicyPtrs, asApiEgressPolicyPtr(storeEgressPolicy))
+		apiEgressPolicies = append(apiEgressPolicies, mappingStrategy(storeEgressPolicy))
 	}
 
 	payload := &payload{
-		TotalEgressPolicies: len(apiEgressPolicyPtrs),
-		EgressPolicies:      apiEgressPolicyPtrs,
+		TotalEgressPolicies: len(apiEgressPolicies),
+		EgressPolicies:      apiEgressPolicies,
 	}
 
 	bytes, err := p.Marshaler.Marshal(payload)
@@ -49,6 +91,14 @@ func (p *EgressPolicyMapper) AsBytes(storeEgressPolicies []store.EgressPolicy) (
 	}
 
 	return bytes, nil
+}
+
+func (p *EgressPolicyMapper) AsBytesWithPopulatedDestinations(storeEgressPolicies []store.EgressPolicy) ([]byte, error) {
+	return p.AsBytesWithStrategy(storeEgressPolicies, withPopulatedDestinations)
+}
+
+func (p *EgressPolicyMapper) AsBytes(storeEgressPolicies []store.EgressPolicy) ([]byte, error) {
+	return p.AsBytesWithStrategy(storeEgressPolicies, withDestinationPointer)
 }
 
 func (p *EgressPolicyMapper) AsStoreEgressPolicy(bytes []byte) ([]store.EgressPolicy, error) {
@@ -69,19 +119,6 @@ func (p *EgressPolicyMapper) AsStoreEgressPolicy(bytes []byte) ([]store.EgressPo
 	}
 
 	return storeEgressPolicies, nil
-}
-
-func asApiEgressPolicyPtr(storeEgressPolicy store.EgressPolicy) EgressPolicyPtr {
-	return EgressPolicyPtr{
-		ID: storeEgressPolicy.ID,
-		Destination: &EgressDestinationPtr{
-			GUID: storeEgressPolicy.Destination.GUID,
-		},
-		Source: &EgressSource{
-			ID:   storeEgressPolicy.Source.ID,
-			Type: storeEgressPolicy.Source.Type,
-		},
-	}
 }
 
 func asStoreEgressPolicy(apiEgressPolicy EgressPolicy) store.EgressPolicy {

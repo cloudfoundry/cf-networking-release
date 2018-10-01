@@ -229,6 +229,13 @@ func main() {
 		Validator:   egressPolicyValidator,
 	}
 
+	indexEgressPolicyHandlerV1 := &handlers.EgressPolicyIndex{
+		ErrorResponse: errorResponse,
+		Store:         egressPolicyStore,
+		Mapper:        egressPolicyMapper,
+		Logger:        logger,
+	}
+
 	createEgressPolicyHandlerV1 := &handlers.EgressPolicyCreate{
 		Store:         egressPolicyStore,
 		Mapper:        egressPolicyMapper,
@@ -312,6 +319,7 @@ func main() {
 		{Name: "destinations_index", Method: "GET", Path: "/networking/:version/external/destinations"},
 		{Name: "destinations_create", Method: "POST", Path: "/networking/:version/external/destinations"},
 		{Name: "destination_delete", Method: "DELETE", Path: "/networking/:version/external/destinations/:id"},
+		{Name: "egress_policies_index", Method: "GET", Path: "/networking/:version/external/egress_policies"},
 		{Name: "egress_policies_create", Method: "POST", Path: "/networking/:version/external/egress_policies"},
 		{Name: "egress_policies_delete", Method: "DELETE", Path: "/networking/:version/external/egress_policies/:id"},
 		{Name: "cleanup", Method: "POST", Path: "/networking/:version/external/policies/cleanup"},
@@ -352,6 +360,9 @@ func main() {
 
 		"destination_delete": corsOptionsWrapper(metricsWrap("DestinationDelete",
 			logWrap(authAdminWrap(deleteDestinationHandlerV1)))),
+
+		"egress_policies_index": corsOptionsWrapper(metricsWrap("EgressPoliciesIndex",
+			logWrap(authAdminWrap(indexEgressPolicyHandlerV1)))),
 
 		"egress_policies_create": corsOptionsWrapper(metricsWrap("EgressPoliciesCreate",
 			logWrap(authAdminWrap(createEgressPolicyHandlerV1)))),

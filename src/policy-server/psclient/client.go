@@ -35,9 +35,9 @@ type DestinationList struct {
 }
 
 type EgressPolicy struct {
-	GUID        string                  `json:"id,omitempty"`
-	Source      EgressPolicySource      `json:"source"`
-	Destination EgressPolicyDestination `json:"destination"`
+	GUID        string             `json:"id,omitempty"`
+	Source      EgressPolicySource `json:"source"`
+	Destination Destination        `json:"destination"`
 }
 
 type EgressPolicySource struct {

@@ -1,12 +1,13 @@
 package api_test
 
 import (
-	hfakes "code.cloudfoundry.org/cf-networking-helpers/fakes"
 	"encoding/json"
 	"errors"
 	"policy-server/api"
 	"policy-server/api/fakes"
 	"policy-server/store"
+
+	hfakes "code.cloudfoundry.org/cf-networking-helpers/fakes"
 
 	"code.cloudfoundry.org/cf-networking-helpers/marshal"
 	. "github.com/onsi/ginkgo"
@@ -88,14 +89,23 @@ var _ = Describe("EgressPolicyMapper", func() {
 		BeforeEach(func() {
 			egressPolicies = []store.EgressPolicy{
 				{
-					ID:          "policy-1",
-					Source:      store.EgressSource{ID: "some-src-id", Type: "app"},
-					Destination: store.EgressDestination{GUID: "some-dst-id"},
+					ID:     "policy-1",
+					Source: store.EgressSource{ID: "some-src-id", Type: "app"},
+					Destination: store.EgressDestination{
+						GUID: "some-dst-id",
+					},
 				},
 				{
-					ID:          "policy-2",
-					Source:      store.EgressSource{ID: "some-src-id-2", Type: "space"},
-					Destination: store.EgressDestination{GUID: "some-dst-id-2"},
+					ID:     "policy-2",
+					Source: store.EgressSource{ID: "some-src-id-2", Type: "space"},
+					Destination: store.EgressDestination{
+						GUID:        "some-dst-id-2",
+						Name:        "dest-name",
+						Description: "dest-desc",
+						IPRanges:    []store.IPRange{{Start: "1.1.1.1", End: "2.2.2.2"}},
+						Ports:       []store.Ports{{Start: 1212, End: 2323}},
+						Protocol:    "icmp",
+					},
 				},
 			}
 		})
@@ -119,7 +129,6 @@ var _ = Describe("EgressPolicyMapper", func() {
 					]
 				}`))
 		})
-
 		Context("when marshalling fails", func() {
 			BeforeEach(func() {
 				marshaler := &hfakes.Marshaler{}
@@ -129,6 +138,74 @@ var _ = Describe("EgressPolicyMapper", func() {
 
 			It("wraps and returns an error", func() {
 				_, err := mapper.AsBytes(egressPolicies)
+				Expect(err).To(MatchError(errors.New("marshal json: failed to marshal bytes")))
+			})
+		})
+	})
+
+	Describe("AsBytesWithPopulatedDestinations", func() {
+		var egressPolicies []store.EgressPolicy
+
+		BeforeEach(func() {
+			egressPolicies = []store.EgressPolicy{
+				{
+					ID:     "policy-1",
+					Source: store.EgressSource{ID: "some-src-id", Type: "app"},
+					Destination: store.EgressDestination{
+						GUID: "some-dst-id",
+					},
+				},
+				{
+					ID:     "policy-2",
+					Source: store.EgressSource{ID: "some-src-id-2", Type: "space"},
+					Destination: store.EgressDestination{
+						GUID:        "some-dst-id-2",
+						Name:        "dest-name",
+						Description: "dest-desc",
+						IPRanges:    []store.IPRange{{Start: "1.1.1.1", End: "2.2.2.2"}},
+						Ports:       []store.Ports{{Start: 1212, End: 2323}},
+						Protocol:    "icmp",
+					},
+				},
+			}
+		})
+
+		It("maps a payload with api.EgressPolicy to a slice of store.EgressPolicy", func() {
+			mappedBytes, err := mapper.AsBytesWithPopulatedDestinations(egressPolicies)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(string(mappedBytes)).To(MatchJSON(`{
+					"total_egress_policies": 2,
+					"egress_policies": [
+            	        {
+							"id": "policy-1",
+							"source": { "id": "some-src-id", "type": "app" },
+							"destination": { "id": "some-dst-id" }
+						},
+               	    	{
+							"id": "policy-2",
+							"source": { "id": "some-src-id-2", "type": "space" },
+							"destination": {
+								"id": "some-dst-id-2",
+								"name": "dest-name",
+								"description": "dest-desc",
+								"ips": [{"start": "1.1.1.1", "end": "2.2.2.2"}],
+								"ports": [{"start": 1212, "end": 2323}],
+								"protocol": "icmp"
+							}
+						}
+					]
+				}`))
+		})
+
+		Context("when marshalling fails", func() {
+			BeforeEach(func() {
+				marshaler := &hfakes.Marshaler{}
+				marshaler.MarshalReturns([]byte{}, errors.New("failed to marshal bytes"))
+				mapper.Marshaler = marshaler
+			})
+
+			It("wraps and returns an error", func() {
+				_, err := mapper.AsBytesWithPopulatedDestinations(egressPolicies)
 				Expect(err).To(MatchError(errors.New("marshal json: failed to marshal bytes")))
 			})
 		})

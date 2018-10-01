@@ -38,6 +38,7 @@ type Policy struct {
 }
 
 type EgressPolicy struct {
+	ID          string             `json:"id,omitempty"`
 	Source      *EgressSource      `json:"source"`
 	Destination *EgressDestination `json:"destination"`
 }
@@ -51,9 +52,9 @@ type EgressDestination struct {
 	GUID        string    `json:"id,omitempty"`
 	Name        string    `json:"name,omitempty"`
 	Description string    `json:"description,omitempty"`
-	Protocol    string    `json:"protocol"`
+	Protocol    string    `json:"protocol,omitempty"`
 	Ports       []Ports   `json:"ports,omitempty"`
-	IPRanges    []IPRange `json:"ips"`
+	IPRanges    []IPRange `json:"ips,omitempty"`
 	ICMPType    *int      `json:"icmp_type,omitempty"`
 	ICMPCode    *int      `json:"icmp_code,omitempty"`
 }

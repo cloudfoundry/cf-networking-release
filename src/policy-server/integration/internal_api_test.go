@@ -103,12 +103,12 @@ var _ = Describe("Internal API", func() {
 
 		_, err = client.CreateEgressPolicy(psclient.EgressPolicy{
 			Source:      psclient.EgressPolicySource{ID: "live-app-1-guid"},
-			Destination: psclient.EgressPolicyDestination{ID: createdDestinations[0].GUID},
+			Destination: psclient.Destination{GUID: createdDestinations[0].GUID},
 		}, "valid-token")
 		Expect(err).ToNot(HaveOccurred())
 		_, err = client.CreateEgressPolicy(psclient.EgressPolicy{
 			Source:      psclient.EgressPolicySource{ID: "live-space-1-guid", Type: "space"},
-			Destination: psclient.EgressPolicyDestination{ID: createdDestinations[1].GUID},
+			Destination: psclient.Destination{GUID: createdDestinations[1].GUID},
 		}, "valid-token")
 		Expect(err).ToNot(HaveOccurred())
 	})

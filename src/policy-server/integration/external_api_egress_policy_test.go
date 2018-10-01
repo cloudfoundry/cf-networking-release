@@ -7,13 +7,12 @@ import (
 	"policy-server/integration/helpers"
 	"policy-server/psclient"
 
-	"github.com/nu7hatch/gouuid"
-
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
 	"code.cloudfoundry.org/lager"
+	uuid "github.com/nu7hatch/gouuid"
 	"github.com/onsi/gomega/gexec"
 
 	. "github.com/onsi/ginkgo"
@@ -57,8 +56,9 @@ var _ = Describe("External API Egress Policies", func() {
 
 	Specify("a journey through egress policy", func() {
 		someDest := psclient.Destination{
-			Name:     "tcp with ports",
-			Protocol: "tcp",
+			Name:        "tcp with ports",
+			Description: "dest description",
+			Protocol:    "tcp",
 			IPs: []psclient.IPRange{
 				{
 					Start: "1.2.3.4",
@@ -97,17 +97,13 @@ var _ = Describe("External API Egress Policies", func() {
 			Expect(err).NotTo(HaveOccurred())
 		}
 
-		//TODO: assert the list returns the created destinations
-		//destinations, err = client.ListDestinations(token, unusedDest)
-		//Expect(e).NotTo(HaveOccurred())
-
 		somePolicy := psclient.EgressPolicy{
 			Source: psclient.EgressPolicySource{
 				Type: "app",
 				ID:   "live-app-1-guid",
 			},
-			Destination: psclient.EgressPolicyDestination{
-				ID: createdDestinations[0].GUID,
+			Destination: psclient.Destination{
+				GUID: createdDestinations[0].GUID,
 			},
 		}
 		policyGUID, err := client.CreateEgressPolicy(somePolicy, token)
@@ -116,30 +112,44 @@ var _ = Describe("External API Egress Policies", func() {
 		_, err = uuid.ParseHex(policyGUID)
 		Expect(err).NotTo(HaveOccurred())
 
-		//TODO: assert the egress policy exists...
-		//egressPolicies, err = client.ListEgressPolicies(token)
-		//Expect(err).NotTo(HaveOccurred())
+		egressPolicyList, err := client.ListEgressPolicies(token)
+		Expect(err).NotTo(HaveOccurred())
+		egressPolicies := egressPolicyList.EgressPolicies
+		Expect(egressPolicies).To(HaveLen(1))
+		Expect(egressPolicies[0]).To(Equal(
+			psclient.EgressPolicy{
+				GUID: policyGUID,
+				Source: psclient.EgressPolicySource{
+					ID:   "live-app-1-guid",
+					Type: "app",
+				},
+				Destination: psclient.Destination{
+					GUID:        createdDestinations[0].GUID,
+					Name:        "tcp with ports",
+					Description: "dest description",
+					Protocol:    "tcp",
+					IPs:         []psclient.IPRange{{Start: "1.2.3.4", End: "1.2.3.5"}},
+					Ports:       []psclient.Port{{Start: 8080, End: 9090}},
+				},
+			},
+		))
+
+		deletedDestination, err := client.DeleteDestination(token, createdDestinations[0])
+		Expect(err).To(HaveOccurred(), "expected the delete to fail because this destination still has associated egress policy")
+		Expect(err).To(MatchError(ContainSubstring("destination is still in use")))
 
 		deletedEgressPolicy, err := client.DeleteEgressPolicy(policyGUID, token)
 		Expect(err).NotTo(HaveOccurred())
 		somePolicy.GUID = policyGUID
 		Expect(somePolicy).To(Equal(deletedEgressPolicy))
 
-		//TODO: assert the deleted egress policy is gone...
-		//destinationss, err = client.ListEgressPolicies(token)
-		//Expect(err).NotTo(HaveOccurred())
-
-		deletedDestination, err := client.DeleteDestination(token, createdDestinations[1])
+		egressPolicyList, err = client.ListEgressPolicies(token)
 		Expect(err).NotTo(HaveOccurred())
-		Expect(deletedDestination).To(Equal(createdDestinations[1]))
+		egressPolicies = egressPolicyList.EgressPolicies
+		Expect(egressPolicies).To(HaveLen(0))
 
-		//TODO: assert the deleted dest is gone...
-		//destinationss, err = client.ListDestinations(token)
-		//Expect(err).NotTo(HaveOccurred())
-
-		//TODO: re-instate when index is an endpoint
-		//egressPolicies, err := client.ListEgressPolicies(token)
-		//Expect(err).NotTo(HaveOccurred())
-		//Expect(egressPolicies).To(ConsistOf(somePolicy))
+		deletedDestination, err = client.DeleteDestination(token, createdDestinations[0])
+		Expect(err).NotTo(HaveOccurred())
+		Expect(deletedDestination).To(Equal(createdDestinations[0]))
 	})
 })

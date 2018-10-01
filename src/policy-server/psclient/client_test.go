@@ -180,8 +180,8 @@ var _ = Describe("Client", func() {
 					Type: "app",
 					ID:   "some-app-guid",
 				},
-				Destination: psclient.EgressPolicyDestination{
-					ID: "some-dest-guid",
+				Destination: psclient.Destination{
+					GUID: "some-dest-guid",
 				},
 			}
 		})
@@ -243,8 +243,8 @@ var _ = Describe("Client", func() {
 					Type: "app",
 					ID:   "some-app-guid",
 				},
-				Destination: psclient.EgressPolicyDestination{
-					ID: "some-dest-guid",
+				Destination: psclient.Destination{
+					GUID: "some-dest-guid",
 				},
 			}
 			egressPolicyGUID = "some-egress-policy-guid"
@@ -304,8 +304,8 @@ var _ = Describe("Client", func() {
 					Type: "app",
 					ID:   "some-app-guid",
 				},
-				Destination: psclient.EgressPolicyDestination{
-					ID: "some-dest-guid",
+				Destination: psclient.Destination{
+					GUID: "some-dest-guid",
 				},
 			}))
 

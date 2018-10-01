@@ -33,6 +33,19 @@ type EgressPolicyMapper struct {
 		result1 []byte
 		result2 error
 	}
+	AsBytesWithPopulatedDestinationsStub        func(storeEgressPolicies []store.EgressPolicy) ([]byte, error)
+	asBytesWithPopulatedDestinationsMutex       sync.RWMutex
+	asBytesWithPopulatedDestinationsArgsForCall []struct {
+		storeEgressPolicies []store.EgressPolicy
+	}
+	asBytesWithPopulatedDestinationsReturns struct {
+		result1 []byte
+		result2 error
+	}
+	asBytesWithPopulatedDestinationsReturnsOnCall map[int]struct {
+		result1 []byte
+		result2 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -149,6 +162,62 @@ func (fake *EgressPolicyMapper) AsBytesReturnsOnCall(i int, result1 []byte, resu
 	}{result1, result2}
 }
 
+func (fake *EgressPolicyMapper) AsBytesWithPopulatedDestinations(storeEgressPolicies []store.EgressPolicy) ([]byte, error) {
+	var storeEgressPoliciesCopy []store.EgressPolicy
+	if storeEgressPolicies != nil {
+		storeEgressPoliciesCopy = make([]store.EgressPolicy, len(storeEgressPolicies))
+		copy(storeEgressPoliciesCopy, storeEgressPolicies)
+	}
+	fake.asBytesWithPopulatedDestinationsMutex.Lock()
+	ret, specificReturn := fake.asBytesWithPopulatedDestinationsReturnsOnCall[len(fake.asBytesWithPopulatedDestinationsArgsForCall)]
+	fake.asBytesWithPopulatedDestinationsArgsForCall = append(fake.asBytesWithPopulatedDestinationsArgsForCall, struct {
+		storeEgressPolicies []store.EgressPolicy
+	}{storeEgressPoliciesCopy})
+	fake.recordInvocation("AsBytesWithPopulatedDestinations", []interface{}{storeEgressPoliciesCopy})
+	fake.asBytesWithPopulatedDestinationsMutex.Unlock()
+	if fake.AsBytesWithPopulatedDestinationsStub != nil {
+		return fake.AsBytesWithPopulatedDestinationsStub(storeEgressPolicies)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.asBytesWithPopulatedDestinationsReturns.result1, fake.asBytesWithPopulatedDestinationsReturns.result2
+}
+
+func (fake *EgressPolicyMapper) AsBytesWithPopulatedDestinationsCallCount() int {
+	fake.asBytesWithPopulatedDestinationsMutex.RLock()
+	defer fake.asBytesWithPopulatedDestinationsMutex.RUnlock()
+	return len(fake.asBytesWithPopulatedDestinationsArgsForCall)
+}
+
+func (fake *EgressPolicyMapper) AsBytesWithPopulatedDestinationsArgsForCall(i int) []store.EgressPolicy {
+	fake.asBytesWithPopulatedDestinationsMutex.RLock()
+	defer fake.asBytesWithPopulatedDestinationsMutex.RUnlock()
+	return fake.asBytesWithPopulatedDestinationsArgsForCall[i].storeEgressPolicies
+}
+
+func (fake *EgressPolicyMapper) AsBytesWithPopulatedDestinationsReturns(result1 []byte, result2 error) {
+	fake.AsBytesWithPopulatedDestinationsStub = nil
+	fake.asBytesWithPopulatedDestinationsReturns = struct {
+		result1 []byte
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *EgressPolicyMapper) AsBytesWithPopulatedDestinationsReturnsOnCall(i int, result1 []byte, result2 error) {
+	fake.AsBytesWithPopulatedDestinationsStub = nil
+	if fake.asBytesWithPopulatedDestinationsReturnsOnCall == nil {
+		fake.asBytesWithPopulatedDestinationsReturnsOnCall = make(map[int]struct {
+			result1 []byte
+			result2 error
+		})
+	}
+	fake.asBytesWithPopulatedDestinationsReturnsOnCall[i] = struct {
+		result1 []byte
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *EgressPolicyMapper) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -156,6 +225,8 @@ func (fake *EgressPolicyMapper) Invocations() map[string][][]interface{} {
 	defer fake.asStoreEgressPolicyMutex.RUnlock()
 	fake.asBytesMutex.RLock()
 	defer fake.asBytesMutex.RUnlock()
+	fake.asBytesWithPopulatedDestinationsMutex.RLock()
+	defer fake.asBytesWithPopulatedDestinationsMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
