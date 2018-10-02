@@ -1636,17 +1636,11 @@ jobs:
           use-pxc.yml
           add-cflinuxfs3.yml
           opsfile.yml
-        VARS_STORE_FILE: environments/caubeen/vars-store.yml
       input_mapping:
         bbl-state: cf-networking-deployments
         release: cf-networking-dev
         vars-files: cf-networking-deployments
         vars-store: cf-networking-deployments
-      ensure:
-        put: cf-networking-deployments
-        params:
-          repository: updated-vars-store
-          rebase: true
 
 ##### Human-triggered utilities
 
