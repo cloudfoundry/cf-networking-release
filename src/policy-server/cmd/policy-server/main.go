@@ -387,13 +387,13 @@ func main() {
 
 	metricsEmitter := common.InitMetricsEmitter(logger, wrappedStore, connectionPool)
 	externalServer := common.InitServer(logger, nil, conf.ListenHost, conf.ListenPort, externalHandlers, externalRoutesWithOptions)
-	poller := initPoller(logger, conf, policyCleaner)
+	policyPoller := initPoller(logger, conf, policyCleaner)
 	debugServer := debugserver.Runner(fmt.Sprintf("%s:%d", conf.DebugServerHost, conf.DebugServerPort), reconfigurableSink)
 
 	members := grouper.Members{
 		{"metrics_emitter", metricsEmitter},
 		{"http_server", externalServer},
-		{"policy-cleaner-poller", poller},
+		{"policy-cleaner-poller", policyPoller},
 		{"debug-server", debugServer},
 	}
 
