@@ -1503,6 +1503,7 @@ jobs:
           enable-service-discovery.yml
           add-apps-internal-search-domain.yml
           add-cflinuxfs3.yml
+          enable-experimental-dynamic-egress-policies.yml
           opsfile.yml
       input_mapping:
         bbl-state: cf-networking-deployments
