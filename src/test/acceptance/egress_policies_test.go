@@ -26,6 +26,23 @@ var _ = Describe("external connectivity", func() {
 		appRoute        string
 		destinationGuid string
 		cli             *cf_cli_adapter.Adapter
+		testDestination = `{
+			"destinations": [
+				{
+					"name": %q,
+					"description": "Testing description",
+					"protocol": "tcp",
+					"ports": [ { "start": 80, "end": 80 } ],
+					"ips": [ { "start": "0.0.0.0", "end": "255.255.255.255" } ]
+				}
+			]
+		}`
+		testEgressPolicies = `{
+			"egress_policies": [ {
+					"source": { "id": %q, "type": %q },
+					"destination": { "id": %q }
+				} ]
+		}`
 	)
 
 	BeforeEach(func() {
@@ -273,42 +290,3 @@ func deleteDestination(cli *cf_cli_adapter.Adapter, guid string) {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(destDeleteStruct.Error).To(BeEmpty())
 }
-
-var testDestination = `
-{
-  "destinations": [
-    {
-      "name": %q,
-      "description": "Testing description",
-      "protocol": "tcp",
-      "ports": [
-        {
-          "start": 80,
-          "end": 80
-        }
-      ],
-      "ips": [
-        {
-          "start": "0.0.0.0",
-          "end": "255.255.255.255"
-        }
-      ]
-    }
-  ]
-}
-`
-
-var testEgressPolicies = `
-{
-  "egress_policies": [
-    {
-      "source": {
-        "id": %q,
-        "type": %q
-      },
-      "destination": {
-        "id": %q
-      }
-    }
-  ]
-}`
