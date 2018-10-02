@@ -69,7 +69,7 @@ var _ = Describe("Client", func() {
 			}
 		})
 
-		Describe("create", func() {
+		Describe("create destinations", func() {
 			BeforeEach(func() {
 				jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 					respBytes := []byte(`{
@@ -107,12 +107,125 @@ var _ = Describe("Client", func() {
 			})
 		})
 
+		Describe("listing destinations", func() {
+			BeforeEach(func() {
+				jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+					respBytes := []byte(`{
+           				"destinations": [ { "id": "some-dest-guid" }, { "id": "some-other-dest-guid" }  ]
+                	}`)
+					json.Unmarshal(respBytes, respData)
+					return nil
+				}
+			})
+			It("returns a list of destinations", func() {
+				foundDestinations, err := client.ListDestinations(token)
+				Expect(err).NotTo(HaveOccurred())
+				expectedDestinations := []psclient.Destination{
+					{GUID: "some-dest-guid"},
+					{GUID: "some-other-dest-guid"},
+				}
+				Expect(foundDestinations).To(Equal(expectedDestinations))
+
+				Expect(jsonClient.DoCallCount()).To(Equal(1))
+				passedMethod, passedRoute, passedReqData, _, passedToken := jsonClient.DoArgsForCall(0)
+				Expect(passedMethod).To(Equal("GET"))
+				Expect(passedRoute).To(Equal("/networking/v1/external/destinations"))
+
+				Expect(passedReqData).To(BeNil())
+				Expect(passedToken).To(Equal("Bearer some-token"))
+			})
+
+			It("returns an error when the json client do fails", func() {
+				jsonClient.DoStub = nil
+				jsonClient.DoReturns(errors.New("failed to do"))
+				_, err := client.CreateDestinations(token, destination1)
+				Expect(err).To(MatchError("json client do: failed to do"))
+			})
+		})
+
+		Describe("UpdateDestination", func() {
+			var destinationToUpdate psclient.Destination
+			BeforeEach(func() {
+				jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+					respBytes := []byte(`{
+						"destinations": [{
+							 "id": "guid-received-from-server",
+					     "name": "name-received-from-server",
+					     "description": "description-received-from-server",
+					     "ips": [{"start": "8.8.8.8", "end": "8.8.8.8"}],
+					     "ports": [{"start": 8080, "end": 8080}],
+					     "protocol": "tcp"
+					  }]
+					}`)
+					Expect(json.Unmarshal(respBytes, respData)).To(Succeed())
+					return nil
+				}
+
+				destinationToUpdate = destination1
+				destinationToUpdate.GUID = "guid-of-dest-to-update"
+			})
+
+			It("updates the destination", func() {
+				updatedDestination, err := client.UpdateDestination(token, destinationToUpdate)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(updatedDestination).To(Equal(psclient.Destination{
+					GUID:        "guid-received-from-server",
+					Name:        "name-received-from-server",
+					Description: "description-received-from-server",
+					IPs:         []psclient.IPRange{{Start: "8.8.8.8", End: "8.8.8.8"}},
+					Ports:       []psclient.Port{{Start: 8080, End: 8080}},
+					Protocol:    "tcp",
+				}))
+
+				Expect(jsonClient.DoCallCount()).To(Equal(1))
+				passedMethod, passedRoute, passedReqData, _, passedToken := jsonClient.DoArgsForCall(0)
+				Expect(passedMethod).To(Equal("PUT"))
+				Expect(passedRoute).To(Equal("/networking/v1/external/destinations/guid-of-dest-to-update"))
+
+				Expect(passedReqData).To(Equal(destinationToUpdate))
+				Expect(passedToken).To(Equal("Bearer some-token"))
+			})
+
+			Context("when the response doesn't include any destinations", func() {
+				BeforeEach(func() {
+					jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+						respBytes := []byte(`{ "destinations": [] }`)
+						Expect(json.Unmarshal(respBytes, respData)).To(Succeed())
+						return nil
+					}
+				})
+
+				It("returns an error indicating that the server misbehaved", func() {
+					_, err := client.UpdateDestination(token, destinationToUpdate)
+					Expect(err).To(MatchError("server returned unexpected response: missing destinations"))
+				})
+			})
+
+			Context("when the caller forgets to set the GUID field on the Destination", func() {
+				BeforeEach(func() {
+					destinationToUpdate.GUID = ""
+				})
+				It("returns early with a helpful error", func() {
+					_, err := client.UpdateDestination(token, destinationToUpdate)
+					Expect(err).To(MatchError("destination to be updated must have an ID"))
+				})
+			})
+
+			Context("when the json client do fails", func() {
+				It("wraps and returns the error", func() {
+					jsonClient.DoStub = nil
+					jsonClient.DoReturns(errors.New("failed to do"))
+					_, err := client.UpdateDestination(token, destinationToUpdate)
+					Expect(err).To(MatchError("json client do: failed to do"))
+				})
+			})
+		})
+
 		Describe("DeleteDestination", func() {
 			var (
 				destinationToDelete psclient.Destination
 				destinationResp     psclient.DestinationList
 			)
-
 			BeforeEach(func() {
 				destinationResp = psclient.DestinationList{
 					Destinations: []psclient.Destination{{

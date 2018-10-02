@@ -2,18 +2,20 @@ package integration_test
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"policy-server/config"
 	"policy-server/integration/helpers"
+	"policy-server/psclient"
 	"regexp"
+
+	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/lagertest"
+	"github.com/nu7hatch/gouuid"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
-
-	"bytes"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -23,11 +25,12 @@ import (
 var _ = Describe("External Destination API", func() {
 	var (
 		sessions          []*gexec.Session
-		destinationsURL   string
 		policyServerConfs []config.Config
 		dbConf            db.Config
-
-		fakeMetron metrics.FakeMetron
+		client            *psclient.Client
+		logger            lager.Logger
+		fakeMetron        metrics.FakeMetron
+		token             string
 	)
 
 	BeforeEach(func() {
@@ -41,7 +44,10 @@ var _ = Describe("External Destination API", func() {
 		sessions = startPolicyServers(policyServerConfs)
 
 		conf := policyServerConfs[0]
-		destinationsURL = fmt.Sprintf("http://%s:%d/networking/v1/external/destinations", conf.ListenHost, conf.ListenPort)
+
+		token = "valid-token"
+		logger = lagertest.NewTestLogger("psclient")
+		client = psclient.NewClient(logger, http.DefaultClient, fmt.Sprintf("http://%s:%d", conf.ListenHost, conf.ListenPort))
 	})
 
 	AfterEach(func() {
@@ -52,122 +58,78 @@ var _ = Describe("External Destination API", func() {
 
 	Describe("create and listing all destinations", func() {
 		It("returns all created destinations", func() {
-			invalidCreateRequestBody := bytes.NewBufferString(`{
-				"destinations": []
-			}`)
+			By("checking that invalid requests result in 400 error code response")
+			_, err := client.CreateDestinations(token)
+			Expect(err).To(MatchError(MatchRegexp("http status 400.*missing destinations")))
 
-			resp := helpers.MakeAndDoRequest("POST", destinationsURL, nil, invalidCreateRequestBody)
-			Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
+			By("testing a happy-path journey")
+			icmpType := 1
+			icmpCode := 2
 
-			By("creating the initial destinations")
-			getCreateRequestBody := func() *bytes.Buffer {
-				return bytes.NewBufferString(`{
-				"destinations": [	
-					{
-						"name": "tcp ips only",
-						"description": "tcp ips only desc",
-						"ports": [{"start": 8080, "end": 8081}],
-						"ips": [{"start": "23.96.32.148", "end": "23.96.32.149" }],
-						"protocol": "tcp"
-					},
-					{
-						"name": "udp ips and ports",
-						"description": "udp ips and ports desc",
-						"protocol": "udp",
-						"ports": [{"start": 8080, "end": 8081}],
-						"ips": [{"start": "23.96.32.150", "end": "23.96.32.151"}]
-					},
-					{
-						"name": "icmp with type code",
-						"description": "icmp with type code",
-						"icmp_type": 1,
-						"icmp_code": 2,
-						"ips": [{"start": "23.96.32.150", "end": "23.96.32.151"}],
-						"protocol": "icmp"
-					}
-				]
-			}`)
+			toBeCreated := []psclient.Destination{
+				{
+					Name:        "tcp ips only",
+					Description: "tcp ips only desc",
+					Ports:       []psclient.Port{{Start: 8080, End: 8081}},
+					IPs:         []psclient.IPRange{{Start: "23.96.32.148", End: "23.96.32.149"}},
+					Protocol:    "tcp",
+				},
+				{
+					Name:        "udp ips and ports",
+					Description: "udp ips and ports desc",
+					Protocol:    "udp",
+					Ports:       []psclient.Port{{Start: 8080, End: 8081}},
+					IPs:         []psclient.IPRange{{Start: "23.96.32.150", End: "23.96.32.151"}},
+				},
+				{
+					Name:        "icmp with type code",
+					Description: "icmp with type code",
+					ICMPType:    &icmpType,
+					ICMPCode:    &icmpCode,
+					IPs:         []psclient.IPRange{{Start: "23.96.32.150", End: "23.96.32.151"}},
+					Protocol:    "icmp",
+				},
 			}
-			resp = helpers.MakeAndDoRequest("POST", destinationsURL, nil, getCreateRequestBody())
-			Expect(resp.StatusCode).To(Equal(http.StatusCreated))
-			responseBytes, err := ioutil.ReadAll(resp.Body)
+
+			createdDestinations, err := client.CreateDestinations(token, toBeCreated...)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(string(responseBytes)).To(WithTransform(replaceGUID, MatchJSON(`{
-				"total_destinations": 3,
-				"destinations": [
-					{
-						"id": "<replaced>",
-						"name": "tcp ips only",
-						"description": "tcp ips only desc",
-						"ports": [{"start": 8080, "end": 8081}],
-						"ips": [{"start": "23.96.32.148", "end": "23.96.32.149" }],
-						"protocol": "tcp"
-					},
-					{
-						"id": "<replaced>",
-						"name": "udp ips and ports",
-						"description": "udp ips and ports desc",
-						"protocol": "udp",
-						"ports": [{"start": 8080, "end": 8081}],
-						"ips": [{"start": "23.96.32.150", "end": "23.96.32.151"}]
-					},
-					{
-						"id": "<replaced>",
-						"name": "icmp with type code",
-						"description": "icmp with type code",
-						"icmp_type": 1,
-						"icmp_code": 2,
-						"ips": [{"start": "23.96.32.150", "end": "23.96.32.151"}],
-						"protocol": "icmp"
-					}
-				]
-			}`)))
+			Expect(createdDestinations).To(HaveLen(3))
+
+			_, err = uuid.ParseHex(createdDestinations[0].GUID)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(createdDestinations[0].Name).To(Equal("tcp ips only"))
+			Expect(createdDestinations[0].Description).To(Equal("tcp ips only desc"))
+			Expect(createdDestinations[0].Ports).To(Equal([]psclient.Port{{Start: 8080, End: 8081}}))
+			Expect(createdDestinations[0].IPs).To(Equal([]psclient.IPRange{{Start: "23.96.32.148", End: "23.96.32.149"}}))
+			Expect(createdDestinations[0].Protocol).To(Equal("tcp"))
+
+			_, err = uuid.ParseHex(createdDestinations[1].GUID)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(createdDestinations[1].Name).To(Equal("udp ips and ports"))
+			Expect(createdDestinations[1].Description).To(Equal("udp ips and ports desc"))
+			Expect(createdDestinations[1].Ports).To(Equal([]psclient.Port{{Start: 8080, End: 8081}}))
+			Expect(createdDestinations[1].IPs).To(Equal([]psclient.IPRange{{Start: "23.96.32.150", End: "23.96.32.151"}}))
+			Expect(createdDestinations[1].Protocol).To(Equal("udp"))
+
+			_, err = uuid.ParseHex(createdDestinations[2].GUID)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(createdDestinations[2].Name).To(Equal("icmp with type code"))
+			Expect(createdDestinations[2].Description).To(Equal("icmp with type code"))
+			Expect(createdDestinations[2].IPs).To(Equal([]psclient.IPRange{{Start: "23.96.32.150", End: "23.96.32.151"}}))
+			Expect(createdDestinations[2].Protocol).To(Equal("icmp"))
+			Expect(createdDestinations[2].ICMPCode).To(Equal(&icmpCode))
+			Expect(createdDestinations[2].ICMPType).To(Equal(&icmpType))
 
 			By("listing the existing destinations")
-			resp = helpers.MakeAndDoRequest("GET", destinationsURL, nil, nil)
-
-			Expect(resp.StatusCode).To(Equal(http.StatusOK))
-			responseBytes, err = ioutil.ReadAll(resp.Body)
+			listedDestinations, err := client.ListDestinations(token)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(string(responseBytes)).To(WithTransform(replaceGUID, MatchJSON(`{
-				"total_destinations": 3,
-				"destinations": [
-					{
-						"id": "<replaced>",
-						"name": "tcp ips only",
-						"description": "tcp ips only desc",
-						"ports": [{"start": 8080, "end": 8081}],
-						"ips": [{"start": "23.96.32.148", "end": "23.96.32.149" }],
-						"protocol": "tcp"
-					},
-					{
-						"id": "<replaced>",
-						"name": "udp ips and ports",
-						"description": "udp ips and ports desc",
-						"protocol": "udp",
-						"ports": [{"start": 8080, "end": 8081}],
-						"ips": [{"start": "23.96.32.150", "end": "23.96.32.151"}]
-					},
-					{
-						"id": "<replaced>",
-						"name": "icmp with type code",
-						"description": "icmp with type code",
-						"icmp_type": 1,
-						"icmp_code": 2,
-						"ips": [{"start": "23.96.32.150", "end": "23.96.32.151"}],
-						"protocol": "icmp"
-					}
-				]
-			}`)))
+			Expect(listedDestinations).To(Equal(createdDestinations))
 
 			By("attempting to duplicate destinations")
-			resp = helpers.MakeAndDoRequest("POST", destinationsURL, nil, getCreateRequestBody())
-			Expect(resp.StatusCode).To(Equal(http.StatusBadRequest))
-			responseBytes, err = ioutil.ReadAll(resp.Body)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(string(responseBytes)).To(ContainSubstring("duplicate name error"))
+			_, err = client.CreateDestinations(token, toBeCreated...)
+			Expect(err).To(MatchError(MatchRegexp("http status 400.*entry with name 'tcp ips only' already exists")))
 
 			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
 				HaveName("DestinationsIndexRequestTime"),

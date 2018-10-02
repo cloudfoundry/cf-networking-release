@@ -1,6 +1,7 @@
 package psclient
 
 import (
+	"errors"
 	"fmt"
 
 	"code.cloudfoundry.org/cf-networking-helpers/json_client"
@@ -28,6 +29,8 @@ type Destination struct {
 	Ports       []Port
 	Name        string `json:"name"`
 	Description string `json:"description"`
+	ICMPType    *int   `json:"icmp_type,omitempty"`
+	ICMPCode    *int   `json:"icmp_code,omitempty"`
 }
 
 type DestinationList struct {
@@ -58,6 +61,31 @@ func NewClient(logger lager.Logger, httpClient json_client.HttpClient, baseURL s
 	return &Client{
 		JsonClient: json_client.New(logger, httpClient, baseURL),
 	}
+}
+
+func (c *Client) ListDestinations(token string) ([]Destination, error) {
+	var response DestinationList
+	err := c.JsonClient.Do("GET", "/networking/v1/external/destinations", nil, &response, "Bearer "+token)
+	if err != nil {
+		return nil, fmt.Errorf("json client do: %s", err) //TODO: test
+	}
+	return response.Destinations, nil
+}
+
+func (c *Client) UpdateDestination(token string, destination Destination) (Destination, error) {
+	if destination.GUID == "" {
+		return Destination{}, errors.New("destination to be updated must have an ID")
+	}
+
+	var response DestinationList
+	err := c.JsonClient.Do("PUT", "/networking/v1/external/destinations/"+destination.GUID, destination, &response, "Bearer "+token)
+	if err != nil {
+		return Destination{}, fmt.Errorf("json client do: %s", err) //TODO: test
+	}
+	if len(response.Destinations) != 1 {
+		return Destination{}, errors.New("server returned unexpected response: missing destinations")
+	}
+	return response.Destinations[0], nil
 }
 
 func (c *Client) CreateDestinations(token string, destinations ...Destination) ([]Destination, error) {

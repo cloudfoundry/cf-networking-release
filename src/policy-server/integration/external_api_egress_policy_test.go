@@ -1,6 +1,7 @@
 package integration_test
 
 import (
+	"code.cloudfoundry.org/lager/lagertest"
 	"fmt"
 	"net/http"
 	"policy-server/config"
@@ -42,7 +43,7 @@ var _ = Describe("External API Egress Policies", func() {
 		policyServerConfs = configurePolicyServers(template, 2)
 		sessions = startPolicyServers(policyServerConfs)
 		conf = policyServerConfs[0]
-		logger = lager.NewLogger("psclient")
+		logger = lagertest.NewTestLogger("psclient")
 
 		client = psclient.NewClient(logger, http.DefaultClient, fmt.Sprintf("http://%s:%d", conf.ListenHost, conf.ListenPort))
 
