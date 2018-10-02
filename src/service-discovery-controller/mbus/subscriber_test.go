@@ -215,7 +215,7 @@ var _ = Describe("Subscriber", func() {
 
 			Eventually(func() bool {
 				return fakeRouteEmitter.IsConnected()
-			}, 20*time.Second).Should(BeTrue())
+			}, 30*time.Second).Should(BeTrue())
 		})
 		It("should send a start message", func() {
 			var msg *nats.Msg
