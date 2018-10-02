@@ -88,6 +88,10 @@ groups:
   - slouch-deploy
   - delete-slouch-deployment
   - slouch-bbl-destroy
+- name: caubeen
+  jobs:
+  - caubeen-bbl-up
+  - caubeen-deploy
 - name: bbl
   jobs:
   - pickelhelm-bbl-up
@@ -98,6 +102,7 @@ groups:
   - mitre-bbl-destroy
   - toque-bbl-destroy
   - slouch-bbl-destroy
+  - caubeen-bbl-up
 - name: cleanup
   jobs:
   - delete-deployment-mitre-cf
@@ -1524,6 +1529,123 @@ jobs:
         BBL_STATE_DIR: environments/slouch/
       input_mapping:
         bbl-state: cf-networking-deployments
+
+  - name: caubeen-bbl-up
+    serial_groups: [caubeen]
+    plan:
+    - aggregate:
+      - get: cf-deployment-concourse-tasks
+      - get: cf-networking-deployments
+    - task: bbl-up
+      file: cf-deployment-concourse-tasks/bbl-up/task.yml
+      params:
+        BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
+        BBL_GCP_REGION: us-east1
+        BBL_STATE_DIR: environments/caubeen/
+        BBL_IAAS: gcp
+        BBL_LB_CERT: ((caubeen-lb-cert.certificate))
+        BBL_LB_KEY: ((caubeen-lb-key.private_key))
+        LB_DOMAIN: caubeen.c2c.cf-app.com
+        BBL_ENV_NAME: caubeen
+      input_mapping:
+        bbl-state: cf-networking-deployments
+        bbl-config: cf-networking-deployments
+        ops-files: cf-networking-deployments
+      ensure:
+        put: cf-networking-deployments
+        params:
+          repository: updated-bbl-state
+          rebase: true
+
+#  - name: caubeen-bbl-destroy
+#    serial_groups: [caubeen]
+#    plan:
+#    - aggregate:
+#      - get: cf-deployment-concourse-tasks
+#        version: {ref: v6.1}
+#      - get: cf-networking-deployments
+#    - task: bosh-cleanup
+#      file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
+#      params:
+#        BBL_STATE_DIR: environments/caubeen/
+#      input_mapping:
+#        bbl-state: cf-networking-deployments
+#    - task: bbl-destroy
+#      file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
+#      params:
+#        BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
+#        BBL_STATE_DIR: environments/caubeen/
+#      input_mapping:
+#        bbl-state: cf-networking-deployments
+#      ensure:
+#        put: cf-networking-deployments
+#        params:
+#          repository: updated-bbl-state
+#          rebase: true
+
+  - name: caubeen-deploy
+    serial_groups: [caubeen]
+    plan:
+    - aggregate:
+      - get: cf-networking-release-ci
+        params:
+          submodules: none
+      - get: cf-deployment-concourse-tasks
+      - get: cf-networking-deployments
+      - get: cf-deployment
+      - get: cf-networking-dev
+      - get: silk-dev
+    - task: upload-stemcell
+      file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
+      params:
+        BBL_STATE_DIR: environments/caubeen/
+      input_mapping:
+        bbl-state: cf-networking-deployments
+    - task: collect-ops-files
+      file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
+      params:
+        ENVIRONMENT_NAME: caubeen
+      input_mapping:
+        cf-networking-release: cf-networking-dev
+        deployments-repo: cf-networking-deployments
+        silk-release: silk-dev
+    - task: upload-local-silk-release
+      file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+      input_mapping:
+        bbl-state: cf-networking-deployments
+        local-release: silk-dev
+      params:
+        BBL_STATE_DIR: environments/caubeen/
+    - task: deploy-cf
+      file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
+      params:
+        BBL_STATE_DIR: environments/caubeen/
+        SYSTEM_DOMAIN: caubeen.c2c.cf-app.com
+        OPS_FILES: |
+          use-compiled-releases.yml
+          scale-to-one-az.yml
+          cf-networking.yml
+          use-system-domain-as-metron-deployment-name.yml
+          custom-apps-domain.yml
+          enable-routing-integrity.yml
+          enable-iptables-logger.yml
+          use-latest-silk.yml
+          enable-service-discovery.yml
+          add-apps-internal-search-domain.yml
+          use-pxc.yml
+          add-cflinuxfs3.yml
+          opsfile.yml
+        VARS_STORE_FILE: environments/caubeen/vars-store.yml
+      input_mapping:
+        bbl-state: cf-networking-deployments
+        release: cf-networking-dev
+        vars-files: cf-networking-deployments
+        vars-store: cf-networking-deployments
+      ensure:
+        put: cf-networking-deployments
+        params:
+          repository: updated-vars-store
+          rebase: true
 
 ##### Human-triggered utilities
 
