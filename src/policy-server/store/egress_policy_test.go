@@ -147,56 +147,45 @@ var _ = Describe("Egress Policy Table", func() {
 	})
 
 	Context("CreateIPRange", func() {
+
 		It("should create an iprange and return the ID", func() {
 			db, tx := getMigratedRealDb(dbConf)
 			setupEgressPolicyStore(db)
 
+			checkIpRangeFields := func(entryId int, expectedStartIP, expectedEndIP, expectedProtocol string, expectedStartPort, expectedEndPort, expectedIcmpType, expectedIcmpCode int64) {
+				var startIP, endIP, protocol string
+				var startPort, endPort, icmpType, icmpCode int64
+
+				row := tx.QueryRow(fmt.Sprintf(`SELECT start_ip, end_ip, protocol, start_port, end_port, icmp_type, icmp_code FROM ip_ranges WHERE id = %d`, entryId))
+				err := row.Scan(&startIP, &endIP, &protocol, &startPort, &endPort, &icmpType, &icmpCode)
+
+				Expect(err).ToNot(HaveOccurred())
+				Expect(startPort).To(Equal(expectedStartPort))
+				Expect(endPort).To(Equal(expectedEndPort))
+				Expect(startIP).To(Equal(expectedStartIP))
+				Expect(endIP).To(Equal(expectedEndIP))
+				Expect(protocol).To(Equal(expectedProtocol))
+				Expect(icmpType).To(Equal(expectedIcmpType))
+				Expect(icmpCode).To(Equal(expectedIcmpCode))
+			}
+
+			By("creating an ip range with TCP as protocol")
 			ipRangeTerminalGUID, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
-
 			id, err := egressPolicyTable.CreateIPRange(tx, ipRangeTerminalGUID, "1.1.1.1", "2.2.2.2", "tcp", 8080, 8081, 0, 0)
 			Expect(err).ToNot(HaveOccurred())
-
 			Expect(id).To(Equal(int64(1)))
 
-			var startIP, endIP, protocol string
-			var startPort, endPort, icmpType, icmpCode int64
-			row := tx.QueryRow(`SELECT start_ip, end_ip, protocol, start_port, end_port, icmp_type, icmp_code FROM ip_ranges WHERE id = 1`)
-			err = row.Scan(&startIP, &endIP, &protocol, &startPort, &endPort, &icmpType, &icmpCode)
+			checkIpRangeFields(1, "1.1.1.1", "2.2.2.2", "tcp", int64(8080), int64(8081), int64(0), int64(0))
+
+			By("creating an ip range with ICMP as protocol")
+			ipRangeTerminalGUID, err = terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(startPort).To(Equal(int64(8080)))
-			Expect(endPort).To(Equal(int64(8081)))
-			Expect(startIP).To(Equal("1.1.1.1"))
-			Expect(endIP).To(Equal("2.2.2.2"))
-			Expect(protocol).To(Equal("tcp"))
-			Expect(icmpType).To(Equal(int64(0)))
-			Expect(icmpCode).To(Equal(int64(0)))
-		})
-
-		It("should create an iprange with icmp and return the ID", func() {
-			db, tx := getMigratedRealDb(dbConf)
-			setupEgressPolicyStore(db)
-
-			ipRangeTerminalGUID, err := terminalsTable.Create(tx)
+			id, err = egressPolicyTable.CreateIPRange(tx, ipRangeTerminalGUID, "1.1.1.1", "2.2.2.2", "icmp", 0, 0, 2, 1)
 			Expect(err).ToNot(HaveOccurred())
+			Expect(id).To(Equal(int64(2)))
 
-			id, err := egressPolicyTable.CreateIPRange(tx, ipRangeTerminalGUID, "1.1.1.1", "2.2.2.2", "icmp", 0, 0, 2, 1)
-			Expect(err).ToNot(HaveOccurred())
-
-			Expect(id).To(Equal(int64(1)))
-
-			var startIP, endIP, protocol string
-			var startPort, endPort, icmpType, icmpCode int64
-			row := tx.QueryRow(`SELECT start_ip, end_ip, protocol, start_port, end_port, icmp_type, icmp_code FROM ip_ranges WHERE id = 1`)
-			err = row.Scan(&startIP, &endIP, &protocol, &startPort, &endPort, &icmpType, &icmpCode)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(startPort).To(Equal(int64(0)))
-			Expect(endPort).To(Equal(int64(0)))
-			Expect(startIP).To(Equal("1.1.1.1"))
-			Expect(endIP).To(Equal("2.2.2.2"))
-			Expect(protocol).To(Equal("icmp"))
-			Expect(icmpType).To(Equal(int64(2)))
-			Expect(icmpCode).To(Equal(int64(1)))
+			checkIpRangeFields(2, "1.1.1.1", "2.2.2.2", "icmp", int64(0), int64(0), int64(2), int64(1))
 		})
 
 		It("should return an error if the driver is not supported", func() {
@@ -430,271 +419,271 @@ var _ = Describe("Egress Policy Table", func() {
 			egressDestinations        []store.EgressDestination
 			createdEgressDestinations []store.EgressDestination
 		)
+		Context("when the APIs succeed", func() {
+			BeforeEach(func() {
+				db, _ := getMigratedRealDb(dbConf)
+				egressStore := setupEgressPolicyStore(db)
 
-		BeforeEach(func() {
-			db, _ := getMigratedRealDb(dbConf)
-			egressStore := setupEgressPolicyStore(db)
+				var err error
 
-			var err error
-
-			egressDestinations = []store.EgressDestination{
-				{
-					Name:        "a",
-					Description: "desc a",
-					Protocol:    "tcp",
-					Ports: []store.Ports{
-						{
-							Start: 8080,
-							End:   8081,
+				egressDestinations = []store.EgressDestination{
+					{
+						Name:        "a",
+						Description: "desc a",
+						Protocol:    "tcp",
+						Ports: []store.Ports{
+							{
+								Start: 8080,
+								End:   8081,
+							},
+						},
+						IPRanges: []store.IPRange{
+							{
+								Start: "1.2.3.4",
+								End:   "1.2.3.5",
+							},
 						},
 					},
-					IPRanges: []store.IPRange{
-						{
-							Start: "1.2.3.4",
-							End:   "1.2.3.5",
+					{
+						Name:        "b",
+						Description: "desc b",
+						Protocol:    "udp",
+						IPRanges: []store.IPRange{
+							{
+								Start: "2.2.3.4",
+								End:   "2.2.3.5",
+							},
 						},
 					},
-				},
-				{
-					Name:        "b",
-					Description: "desc b",
-					Protocol:    "udp",
-					IPRanges: []store.IPRange{
-						{
-							Start: "2.2.3.4",
-							End:   "2.2.3.5",
+					{
+						Name:        "c",
+						Description: "desc c",
+						Protocol:    "icmp",
+						ICMPType:    1,
+						ICMPCode:    2,
+						IPRanges: []store.IPRange{
+							{
+								Start: "2.2.3.4",
+								End:   "2.2.3.5",
+							},
 						},
 					},
-				},
-				{
-					Name:        "c",
-					Description: "desc c",
-					Protocol:    "icmp",
-					ICMPType:    1,
-					ICMPCode:    2,
-					IPRanges: []store.IPRange{
-						{
-							Start: "2.2.3.4",
-							End:   "2.2.3.5",
+					{
+						Name:        "old-entry",
+						Description: "this represents an entry that has no destination_metadata",
+						Protocol:    "icmp",
+						ICMPType:    1,
+						ICMPCode:    2,
+						IPRanges: []store.IPRange{
+							{
+								Start: "2.2.3.4",
+								End:   "2.2.3.5",
+							},
 						},
 					},
-				},
-				{
-					Name:        "old-entry",
-					Description: "this represents an entry that has no destination_metadata",
-					Protocol:    "icmp",
-					ICMPType:    1,
-					ICMPCode:    2,
-					IPRanges: []store.IPRange{
-						{
-							Start: "2.2.3.4",
-							End:   "2.2.3.5",
-						},
-					},
-				},
-			}
+				}
 
-			destinationStore := egressDestinationStore(db)
-			createdEgressDestinations, err = destinationStore.Create(egressDestinations)
-			Expect(err).ToNot(HaveOccurred())
-			// delete one of the description_metadatas to simulate destinations that were created before the
-			// destination_metadatas table existed
-			_, err = db.Exec(`DELETE FROM destination_metadatas WHERE name='old-entry';`)
-			Expect(err).ToNot(HaveOccurred())
-
-			egressPolicies = []store.EgressPolicy{
-				{
-					Source: store.EgressSource{
-						ID:   "some-app-guid",
-						Type: "app",
-					},
-					Destination: store.EgressDestination{
-						GUID: createdEgressDestinations[0].GUID,
-					},
-				},
-				{
-					Source: store.EgressSource{
-						ID:   "space-guid",
-						Type: "space",
-					},
-					Destination: store.EgressDestination{
-						GUID: createdEgressDestinations[1].GUID,
-					},
-				},
-				{
-					Source: store.EgressSource{
-						ID:   "different-app-guid",
-						Type: "app",
-					},
-					Destination: store.EgressDestination{
-						GUID: createdEgressDestinations[2].GUID,
-					},
-				},
-				{
-					Source: store.EgressSource{
-						ID:   "different-space-guid",
-						Type: "space",
-					},
-					Destination: store.EgressDestination{
-						GUID: createdEgressDestinations[3].GUID,
-					},
-				},
-			}
-
-			createdEgressPolicies, err = egressStore.Create(egressPolicies)
-			Expect(err).ToNot(HaveOccurred())
-		})
-
-		Context("GetByGUID", func() {
-			It("should return the requeted egress policies", func() {
-				egressPolicies, err := egressPolicyTable.GetByGUID(tx, createdEgressPolicies[0].ID, createdEgressPolicies[1].ID)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(egressPolicies).To(ConsistOf(
-					store.EgressPolicy{
-						ID: createdEgressPolicies[0].ID,
-						Source: store.EgressSource{
-							Type:         "app",
-							TerminalGUID: createdEgressPolicies[0].Source.TerminalGUID,
-							ID:           "some-app-guid",
-						},
-						Destination: createdEgressDestinations[0],
-					},
-					store.EgressPolicy{
-						ID: createdEgressPolicies[1].ID,
-						Source: store.EgressSource{
-							Type:         "space",
-							TerminalGUID: createdEgressPolicies[1].Source.TerminalGUID,
-							ID:           "space-guid",
-						},
-						Destination: createdEgressDestinations[1],
-					}))
-			})
-
-			Context("when a non-existent policy/no policy guid is requested", func() {
-				It("returns an empty array", func() {
-					egressPolicies, err := egressPolicyTable.GetByGUID(tx, "what-policy?")
-					Expect(err).ToNot(HaveOccurred())
-					Expect(egressPolicies).To(HaveLen(0))
-
-					egressPolicies, err = egressPolicyTable.GetByGUID(tx)
-					Expect(err).ToNot(HaveOccurred())
-					Expect(egressPolicies).To(HaveLen(0))
-				})
-			})
-		})
-
-		Context("GetAllPolicies", func() {
-			It("returns policies", func() {
-				listedPolicies, err := egressPolicyTable.GetAllPolicies()
+				destinationStore := egressDestinationStore(db)
+				createdEgressDestinations, err = destinationStore.Create(egressDestinations)
 				Expect(err).ToNot(HaveOccurred())
-				Expect(listedPolicies).To(HaveLen(4))
-				Expect(listedPolicies).To(ConsistOf([]store.EgressPolicy{
+				// delete one of the description_metadatas to simulate destinations that were created before the
+				// destination_metadatas table existed
+				_, err = db.Exec(`DELETE FROM destination_metadatas WHERE name='old-entry';`)
+				Expect(err).ToNot(HaveOccurred())
+
+				egressPolicies = []store.EgressPolicy{
 					{
-						ID: "guid-1",
 						Source: store.EgressSource{
-							ID:           "some-app-guid",
-							Type:         "app",
-							TerminalGUID: createdEgressPolicies[0].Source.TerminalGUID,
+							ID:   "some-app-guid",
+							Type: "app",
 						},
 						Destination: store.EgressDestination{
-							GUID:        createdEgressDestinations[0].GUID,
-							Name:        "a",
-							Description: "desc a",
-							Protocol:    "tcp",
-							Ports: []store.Ports{
-								{
-									Start: 8080,
-									End:   8081,
-								},
-							},
-							IPRanges: []store.IPRange{
-								{
-									Start: "1.2.3.4",
-									End:   "1.2.3.5",
-								},
-							},
+							GUID: createdEgressDestinations[0].GUID,
 						},
 					},
 					{
-						ID: "guid-2",
 						Source: store.EgressSource{
-							ID:           "space-guid",
-							Type:         "space",
-							TerminalGUID: createdEgressPolicies[1].Source.TerminalGUID,
+							ID:   "space-guid",
+							Type: "space",
 						},
 						Destination: store.EgressDestination{
-							GUID:        createdEgressDestinations[1].GUID,
-							Name:        "b",
-							Description: "desc b",
-							Protocol:    "udp",
-							IPRanges: []store.IPRange{
-								{
-									Start: "2.2.3.4",
-									End:   "2.2.3.5",
-								},
-							},
+							GUID: createdEgressDestinations[1].GUID,
 						},
 					},
 					{
-						ID: "guid-3",
 						Source: store.EgressSource{
-							ID:           "different-app-guid",
-							Type:         "app",
-							TerminalGUID: createdEgressPolicies[2].Source.TerminalGUID,
+							ID:   "different-app-guid",
+							Type: "app",
 						},
 						Destination: store.EgressDestination{
-							GUID:        createdEgressDestinations[2].GUID,
-							Name:        "c",
-							Description: "desc c",
-							Protocol:    "icmp",
-							ICMPType:    1,
-							ICMPCode:    2,
-							IPRanges: []store.IPRange{
-								{
-									Start: "2.2.3.4",
-									End:   "2.2.3.5",
-								},
-							},
+							GUID: createdEgressDestinations[2].GUID,
 						},
 					},
 					{
-						ID: "guid-4",
 						Source: store.EgressSource{
-							ID:           "different-space-guid",
-							Type:         "space",
-							TerminalGUID: createdEgressPolicies[3].Source.TerminalGUID,
+							ID:   "different-space-guid",
+							Type: "space",
 						},
 						Destination: store.EgressDestination{
-							GUID:        createdEgressDestinations[3].GUID,
-							Name:        "",
-							Description: "",
-							Protocol:    "icmp",
-							ICMPType:    1,
-							ICMPCode:    2,
-							IPRanges: []store.IPRange{
-								{
-									Start: "2.2.3.4",
-									End:   "2.2.3.5",
-								},
-							},
+							GUID: createdEgressDestinations[3].GUID,
 						},
 					},
-				}))
+				}
+
+				createdEgressPolicies, err = egressStore.Create(egressPolicies)
+				Expect(err).ToNot(HaveOccurred())
 			})
 
-			Context("when the query fails", func() {
-				It("returns an error", func() {
-					setupEgressPolicyStore(mockDb)
-
-					mockDb.QueryReturns(nil, errors.New("some error that sql would return"))
-
-					egressPolicyTable = &store.EgressPolicyTable{
-						Conn: mockDb,
-					}
-
-					_, err := egressPolicyTable.GetAllPolicies()
-					Expect(err).To(MatchError("some error that sql would return"))
+			Context("GetByGUID", func() {
+				It("should return the requeted egress policies", func() {
+					egressPolicies, err := egressPolicyTable.GetByGUID(tx, createdEgressPolicies[0].ID, createdEgressPolicies[1].ID)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(egressPolicies).To(ConsistOf(
+						store.EgressPolicy{
+							ID: createdEgressPolicies[0].ID,
+							Source: store.EgressSource{
+								Type:         "app",
+								TerminalGUID: createdEgressPolicies[0].Source.TerminalGUID,
+								ID:           "some-app-guid",
+							},
+							Destination: createdEgressDestinations[0],
+						},
+						store.EgressPolicy{
+							ID: createdEgressPolicies[1].ID,
+							Source: store.EgressSource{
+								Type:         "space",
+								TerminalGUID: createdEgressPolicies[1].Source.TerminalGUID,
+								ID:           "space-guid",
+							},
+							Destination: createdEgressDestinations[1],
+						}))
 				})
+
+				Context("when a non-existent policy/no policy guid is requested", func() {
+					It("returns an empty array", func() {
+						egressPolicies, err := egressPolicyTable.GetByGUID(tx, "what-policy?")
+						Expect(err).ToNot(HaveOccurred())
+						Expect(egressPolicies).To(HaveLen(0))
+
+						egressPolicies, err = egressPolicyTable.GetByGUID(tx)
+						Expect(err).ToNot(HaveOccurred())
+						Expect(egressPolicies).To(HaveLen(0))
+					})
+				})
+			})
+
+			Context("GetAllPolicies", func() {
+				It("returns policies", func() {
+					listedPolicies, err := egressPolicyTable.GetAllPolicies()
+					Expect(err).ToNot(HaveOccurred())
+					Expect(listedPolicies).To(HaveLen(4))
+					Expect(listedPolicies).To(ConsistOf([]store.EgressPolicy{
+						{
+							ID: "guid-1",
+							Source: store.EgressSource{
+								ID:           "some-app-guid",
+								Type:         "app",
+								TerminalGUID: createdEgressPolicies[0].Source.TerminalGUID,
+							},
+							Destination: store.EgressDestination{
+								GUID:        createdEgressDestinations[0].GUID,
+								Name:        "a",
+								Description: "desc a",
+								Protocol:    "tcp",
+								Ports: []store.Ports{
+									{
+										Start: 8080,
+										End:   8081,
+									},
+								},
+								IPRanges: []store.IPRange{
+									{
+										Start: "1.2.3.4",
+										End:   "1.2.3.5",
+									},
+								},
+							},
+						},
+						{
+							ID: "guid-2",
+							Source: store.EgressSource{
+								ID:           "space-guid",
+								Type:         "space",
+								TerminalGUID: createdEgressPolicies[1].Source.TerminalGUID,
+							},
+							Destination: store.EgressDestination{
+								GUID:        createdEgressDestinations[1].GUID,
+								Name:        "b",
+								Description: "desc b",
+								Protocol:    "udp",
+								IPRanges: []store.IPRange{
+									{
+										Start: "2.2.3.4",
+										End:   "2.2.3.5",
+									},
+								},
+							},
+						},
+						{
+							ID: "guid-3",
+							Source: store.EgressSource{
+								ID:           "different-app-guid",
+								Type:         "app",
+								TerminalGUID: createdEgressPolicies[2].Source.TerminalGUID,
+							},
+							Destination: store.EgressDestination{
+								GUID:        createdEgressDestinations[2].GUID,
+								Name:        "c",
+								Description: "desc c",
+								Protocol:    "icmp",
+								ICMPType:    1,
+								ICMPCode:    2,
+								IPRanges: []store.IPRange{
+									{
+										Start: "2.2.3.4",
+										End:   "2.2.3.5",
+									},
+								},
+							},
+						},
+						{
+							ID: "guid-4",
+							Source: store.EgressSource{
+								ID:           "different-space-guid",
+								Type:         "space",
+								TerminalGUID: createdEgressPolicies[3].Source.TerminalGUID,
+							},
+							Destination: store.EgressDestination{
+								GUID:        createdEgressDestinations[3].GUID,
+								Name:        "",
+								Description: "",
+								Protocol:    "icmp",
+								ICMPType:    1,
+								ICMPCode:    2,
+								IPRanges: []store.IPRange{
+									{
+										Start: "2.2.3.4",
+										End:   "2.2.3.5",
+									},
+								},
+							},
+						},
+					}))
+				})
+				})
+		})
+		Context("when the query fails", func() {
+			It("returns an error", func() {
+				setupEgressPolicyStore(mockDb)
+
+				mockDb.QueryReturns(nil, errors.New("some error that sql would return"))
+
+				egressPolicyTable = &store.EgressPolicyTable{
+					Conn: mockDb,
+				}
+
+				_, err := egressPolicyTable.GetAllPolicies()
+				Expect(err).To(MatchError("some error that sql would return"))
 			})
 		})
 	})
@@ -876,6 +865,7 @@ var _ = Describe("Egress Policy Table", func() {
 
 			Context("when there are policies with the given id", func() {
 				It("returns egress policies with those ids", func() {
+					By("returning egress policies with existing ids")
 					policies, err := egressPolicyTable.GetBySourceGuids([]string{"some-app-guid", "different-app-guid", "some-space-guid"})
 					Expect(err).ToNot(HaveOccurred())
 
@@ -886,12 +876,9 @@ var _ = Describe("Egress Policy Table", func() {
 					expectedEgressPolicies[2].Destination = createdDestinations[2]
 					expectedEgressPolicies[3].Destination = createdDestinations[3]
 					Expect(policies).To(ConsistOf(expectedEgressPolicies))
-				})
-			})
 
-			Context("when there are no policies with the given id", func() {
-				It("returns no egress policies", func() {
-					policies, err := egressPolicyTable.GetBySourceGuids([]string{"meow-this-is-a-bogus-app-guid"})
+					By("returning empty list for non-existent ids")
+					policies, err = egressPolicyTable.GetBySourceGuids([]string{"meow-this-is-a-bogus-app-guid"})
 					Expect(err).ToNot(HaveOccurred())
 					Expect(policies).To(HaveLen(0))
 				})
