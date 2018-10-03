@@ -10,8 +10,7 @@ kernelversion="$(docker run -t -i alpine:latest uname -r | tr -d '\r\n' | tr -d 
 if [ $db = "mysql" ]; then
   # pinning back because we don't support mysql 8
   docker_image=c2cnetworking/dev-mysql:0.18.0
-fi
-if [ $db = "none" ] || [ $db = "postgres" ]; then
+else
   docker_image=c2cnetworking/dev-postgres-ifb
 fi
 

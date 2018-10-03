@@ -27,6 +27,18 @@ function loadIFB {
 function bootDB {
   db=$1
 
+  if [ "$db" = "random" ]; then
+    cointoss=$RANDOM
+    set +e
+    let "cointoss %= 2"
+    set -e
+    if [ "$cointoss" == "0" ]; then
+      db="postgres"
+    else
+      db="mysql"
+    fi
+  fi
+
   if [ "$db" = "postgres" ]; then
     launchDB="(/docker-entrypoint.sh postgres &> /var/log/postgres-boot.log) &"
     testConnection="psql -h localhost -U postgres -c '\conninfo' &>/dev/null"
