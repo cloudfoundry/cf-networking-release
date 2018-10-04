@@ -42,7 +42,7 @@ func (g *PolicyGuard) CheckAccess(policies []store.Policy, userToken uaa_client.
 		if space == nil {
 			return false, nil
 		}
-		userSpace, err := g.CCClient.GetUserSpace(token, userToken.UserID, *space)
+		userSpace, err := g.CCClient.GetUserSpace(token, userToken.Subject, *space)
 		if err != nil {
 			return false, fmt.Errorf("getting space with guid %s: %s", guid, err)
 		}

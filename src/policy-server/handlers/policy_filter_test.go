@@ -48,8 +48,10 @@ var _ = Describe("PolicyFilter", func() {
 		}
 		tokenData = uaa_client.CheckTokenResponse{
 			Scope:    []string{"network.write"},
+			Subject:  "some-developer-guid",
 			UserID:   "some-developer-guid",
 			UserName: "some-developer",
+			ClientID: "cf",
 		}
 
 		appSpaces := map[string]string{
@@ -99,6 +101,45 @@ var _ = Describe("PolicyFilter", func() {
 				},
 			}
 			Expect(filteredPolicies).To(Equal(expected))
+		})
+
+		Context("when the token has a client as the subject", func() {
+			BeforeEach(func() {
+				tokenData = uaa_client.CheckTokenResponse{
+					ClientID: "some-client-id",
+					Subject: "some-client-id",
+				}
+			})
+
+			It("filters the policies by the spaces the client can access", func() {
+				filteredPolicies, err := policyFilter.FilterPolicies(policies, tokenData)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(fakeUAAClient.GetTokenCallCount()).To(Equal(1))
+				Expect(fakeCCClient.GetAppSpacesCallCount()).To(Equal(1))
+
+				token, appGUIDs := fakeCCClient.GetAppSpacesArgsForCall(0)
+				Expect(token).To(Equal("policy-server-token"))
+				Expect(appGUIDs).To(ConsistOf([]string{"app-guid-1", "app-guid-2", "app-guid-3", "app-guid-4"}))
+
+				Expect(fakeCCClient.GetUserSpacesCallCount()).To(Equal(1))
+
+				token, userGUID := fakeCCClient.GetUserSpacesArgsForCall(0)
+				Expect(token).To(Equal("policy-server-token"))
+				Expect(userGUID).To(Equal("some-client-id"))
+
+				expected := []store.Policy{
+					{
+						Source: store.Source{
+							ID: "app-guid-1",
+						},
+						Destination: store.Destination{
+							ID: "app-guid-2",
+						},
+					},
+				}
+				Expect(filteredPolicies).To(Equal(expected))
+			})
 		})
 
 		Context("when the filter results in zero policies", func() {

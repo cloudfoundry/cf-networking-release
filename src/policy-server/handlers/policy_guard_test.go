@@ -52,8 +52,10 @@ var _ = Describe("PolicyGuard", func() {
 		}
 		tokenData = uaa_client.CheckTokenResponse{
 			Scope:    []string{"network.write"},
+			Subject:  "some-developer-guid",
 			UserID:   "some-developer-guid",
 			UserName: "some-developer",
+			ClientID: "cf",
 		}
 		spaceGUIDs = []string{"space-guid-1", "space-guid-2", "space-guid-3"}
 		space1 = api.Space{
@@ -175,6 +177,49 @@ var _ = Describe("PolicyGuard", func() {
 			Expect(userGUID).To(Equal("some-developer-guid"))
 			Expect(checkUserSpace).To(Equal(space3))
 			Expect(authorized).To(BeTrue())
+		})
+
+		Context("when the token has a client as the subject", func() {
+			BeforeEach(func() {
+				tokenData = uaa_client.CheckTokenResponse{
+					ClientID: "some-client-id",
+					Subject: "some-client-id",
+				}
+			})
+
+			It("checks that the client can access all apps references in policies", func() {
+				authorized, err := policyGuard.CheckAccess(policies, tokenData)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(fakeUAAClient.GetTokenCallCount()).To(Equal(1))
+				Expect(fakeCCClient.GetSpaceGUIDsCallCount()).To(Equal(1))
+				token, appGUIDs := fakeCCClient.GetSpaceGUIDsArgsForCall(0)
+				Expect(token).To(Equal("policy-server-token"))
+				Expect(appGUIDs).To(ConsistOf([]string{"some-app-guid", "some-other-guid", "yet-another-guid"}))
+				Expect(fakeCCClient.GetSpaceCallCount()).To(Equal(3))
+				token, guid := fakeCCClient.GetSpaceArgsForCall(0)
+				Expect(token).To(Equal("policy-server-token"))
+				Expect(guid).To(Equal("space-guid-1"))
+				token, guid = fakeCCClient.GetSpaceArgsForCall(1)
+				Expect(token).To(Equal("policy-server-token"))
+				Expect(guid).To(Equal("space-guid-2"))
+				token, guid = fakeCCClient.GetSpaceArgsForCall(2)
+				Expect(token).To(Equal("policy-server-token"))
+				Expect(guid).To(Equal("space-guid-3"))
+				Expect(fakeCCClient.GetUserSpaceCallCount()).To(Equal(3))
+				token, userGUID, checkUserSpace := fakeCCClient.GetUserSpaceArgsForCall(0)
+				Expect(token).To(Equal("policy-server-token"))
+				Expect(userGUID).To(Equal("some-client-id"))
+				Expect(checkUserSpace).To(Equal(space1))
+				token, userGUID, checkUserSpace = fakeCCClient.GetUserSpaceArgsForCall(1)
+				Expect(token).To(Equal("policy-server-token"))
+				Expect(userGUID).To(Equal("some-client-id"))
+				Expect(checkUserSpace).To(Equal(space2))
+				token, userGUID, checkUserSpace = fakeCCClient.GetUserSpaceArgsForCall(2)
+				Expect(token).To(Equal("policy-server-token"))
+				Expect(userGUID).To(Equal("some-client-id"))
+				Expect(checkUserSpace).To(Equal(space3))
+				Expect(authorized).To(BeTrue())
+			})
 		})
 
 		Context("when the token has network.admin scope", func() {

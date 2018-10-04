@@ -62,7 +62,7 @@ func (f *PolicyFilter) FilterPolicies(policies []store.Policy, userToken uaa_cli
 
 	appSpaces := flatten(appSpacesList)
 
-	userSpaces, err := f.CCClient.GetUserSpaces(token, userToken.UserID)
+	userSpaces, err := f.CCClient.GetUserSpaces(token, userToken.Subject)
 	if err != nil {
 		return nil, fmt.Errorf("getting user spaces: %s", err)
 	}
