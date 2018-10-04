@@ -143,7 +143,7 @@ var _ = Describe("EgressPoliciesCreate", func() {
 
 		MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
 		Expect(resp.Code).To(Equal(http.StatusBadRequest))
-		Expect(resp.Body.Bytes()).To(MatchJSON(`{"error": "error parsing egress policies"}`))
+		Expect(resp.Body.Bytes()).To(MatchJSON(`{"error": "error parsing egress policies: didn't go well"}`))
 	})
 
 	It("returns an error response when marshalling the response returns an error", func() {

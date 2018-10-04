@@ -6,6 +6,7 @@ import (
 	"policy-server/store"
 
 	"code.cloudfoundry.org/lager"
+	"fmt"
 )
 
 //go:generate counterfeiter -o fakes/egress_policy_mapper.go --fake-name EgressPolicyMapper . egressPolicyMapper
@@ -31,7 +32,7 @@ func (e *EgressPolicyCreate) ServeHTTP(w http.ResponseWriter, req *http.Request)
 
 	storeEgressPolicies, err := e.Mapper.AsStoreEgressPolicy(requestBytes)
 	if err != nil {
-		e.ErrorResponse.BadRequest(e.Logger, w, err, "error parsing egress policies")
+		e.ErrorResponse.BadRequest(e.Logger, w, err, fmt.Sprintf("error parsing egress policies: %s", err))
 		return
 	}
 
