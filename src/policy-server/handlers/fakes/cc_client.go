@@ -49,32 +49,32 @@ type CCClient struct {
 		result1 []string
 		result2 error
 	}
-	GetUserSpaceStub        func(token, userGUID string, spaces api.Space) (*api.Space, error)
-	getUserSpaceMutex       sync.RWMutex
-	getUserSpaceArgsForCall []struct {
-		token    string
-		userGUID string
-		spaces   api.Space
+	GetSubjectSpaceStub        func(token, subjectId string, spaces api.Space) (*api.Space, error)
+	getSubjectSpaceMutex       sync.RWMutex
+	getSubjectSpaceArgsForCall []struct {
+		token     string
+		subjectId string
+		spaces    api.Space
 	}
-	getUserSpaceReturns struct {
+	getSubjectSpaceReturns struct {
 		result1 *api.Space
 		result2 error
 	}
-	getUserSpaceReturnsOnCall map[int]struct {
+	getSubjectSpaceReturnsOnCall map[int]struct {
 		result1 *api.Space
 		result2 error
 	}
-	GetUserSpacesStub        func(token, userGUID string) (map[string]struct{}, error)
-	getUserSpacesMutex       sync.RWMutex
-	getUserSpacesArgsForCall []struct {
-		token    string
-		userGUID string
+	GetSubjectSpacesStub func(token, subjectId string) (map[string]struct{}, error)
+	getSubjectSpacesMutex       sync.RWMutex
+	getSubjectSpacesArgsForCall []struct {
+		token     string
+		subjectId string
 	}
-	getUserSpacesReturns struct {
+	getSubjectSpacesReturns struct {
 		result1 map[string]struct{}
 		result2 error
 	}
-	getUserSpacesReturnsOnCall map[int]struct {
+	getSubjectSpacesReturnsOnCall map[int]struct {
 		result1 map[string]struct{}
 		result2 error
 	}
@@ -248,106 +248,106 @@ func (fake *CCClient) GetSpaceGUIDsReturnsOnCall(i int, result1 []string, result
 	}{result1, result2}
 }
 
-func (fake *CCClient) GetUserSpace(token string, userGUID string, spaces api.Space) (*api.Space, error) {
-	fake.getUserSpaceMutex.Lock()
-	ret, specificReturn := fake.getUserSpaceReturnsOnCall[len(fake.getUserSpaceArgsForCall)]
-	fake.getUserSpaceArgsForCall = append(fake.getUserSpaceArgsForCall, struct {
-		token    string
-		userGUID string
-		spaces   api.Space
-	}{token, userGUID, spaces})
-	fake.recordInvocation("GetUserSpace", []interface{}{token, userGUID, spaces})
-	fake.getUserSpaceMutex.Unlock()
-	if fake.GetUserSpaceStub != nil {
-		return fake.GetUserSpaceStub(token, userGUID, spaces)
+func (fake *CCClient) GetSubjectSpace(token string, subjectId string, spaces api.Space) (*api.Space, error) {
+	fake.getSubjectSpaceMutex.Lock()
+	ret, specificReturn := fake.getSubjectSpaceReturnsOnCall[len(fake.getSubjectSpaceArgsForCall)]
+	fake.getSubjectSpaceArgsForCall = append(fake.getSubjectSpaceArgsForCall, struct {
+		token     string
+		subjectId string
+		spaces    api.Space
+	}{token, subjectId, spaces})
+	fake.recordInvocation("GetSubjectSpace", []interface{}{token, subjectId, spaces})
+	fake.getSubjectSpaceMutex.Unlock()
+	if fake.GetSubjectSpaceStub != nil {
+		return fake.GetSubjectSpaceStub(token, subjectId, spaces)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.getUserSpaceReturns.result1, fake.getUserSpaceReturns.result2
+	return fake.getSubjectSpaceReturns.result1, fake.getSubjectSpaceReturns.result2
 }
 
-func (fake *CCClient) GetUserSpaceCallCount() int {
-	fake.getUserSpaceMutex.RLock()
-	defer fake.getUserSpaceMutex.RUnlock()
-	return len(fake.getUserSpaceArgsForCall)
+func (fake *CCClient) GetSubjectSpaceCallCount() int {
+	fake.getSubjectSpaceMutex.RLock()
+	defer fake.getSubjectSpaceMutex.RUnlock()
+	return len(fake.getSubjectSpaceArgsForCall)
 }
 
-func (fake *CCClient) GetUserSpaceArgsForCall(i int) (string, string, api.Space) {
-	fake.getUserSpaceMutex.RLock()
-	defer fake.getUserSpaceMutex.RUnlock()
-	return fake.getUserSpaceArgsForCall[i].token, fake.getUserSpaceArgsForCall[i].userGUID, fake.getUserSpaceArgsForCall[i].spaces
+func (fake *CCClient) GetSubjectSpaceArgsForCall(i int) (string, string, api.Space) {
+	fake.getSubjectSpaceMutex.RLock()
+	defer fake.getSubjectSpaceMutex.RUnlock()
+	return fake.getSubjectSpaceArgsForCall[i].token, fake.getSubjectSpaceArgsForCall[i].subjectId, fake.getSubjectSpaceArgsForCall[i].spaces
 }
 
-func (fake *CCClient) GetUserSpaceReturns(result1 *api.Space, result2 error) {
-	fake.GetUserSpaceStub = nil
-	fake.getUserSpaceReturns = struct {
+func (fake *CCClient) GetSubjectSpaceReturns(result1 *api.Space, result2 error) {
+	fake.GetSubjectSpaceStub = nil
+	fake.getSubjectSpaceReturns = struct {
 		result1 *api.Space
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *CCClient) GetUserSpaceReturnsOnCall(i int, result1 *api.Space, result2 error) {
-	fake.GetUserSpaceStub = nil
-	if fake.getUserSpaceReturnsOnCall == nil {
-		fake.getUserSpaceReturnsOnCall = make(map[int]struct {
+func (fake *CCClient) GetSubjectSpaceReturnsOnCall(i int, result1 *api.Space, result2 error) {
+	fake.GetSubjectSpaceStub = nil
+	if fake.getSubjectSpaceReturnsOnCall == nil {
+		fake.getSubjectSpaceReturnsOnCall = make(map[int]struct {
 			result1 *api.Space
 			result2 error
 		})
 	}
-	fake.getUserSpaceReturnsOnCall[i] = struct {
+	fake.getSubjectSpaceReturnsOnCall[i] = struct {
 		result1 *api.Space
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *CCClient) GetUserSpaces(token string, userGUID string) (map[string]struct{}, error) {
-	fake.getUserSpacesMutex.Lock()
-	ret, specificReturn := fake.getUserSpacesReturnsOnCall[len(fake.getUserSpacesArgsForCall)]
-	fake.getUserSpacesArgsForCall = append(fake.getUserSpacesArgsForCall, struct {
+func (fake *CCClient) GetSubjectSpaces(token string, subjectId string) (map[string]struct{}, error) {
+	fake.getSubjectSpacesMutex.Lock()
+	ret, specificReturn := fake.getSubjectSpacesReturnsOnCall[len(fake.getSubjectSpacesArgsForCall)]
+	fake.getSubjectSpacesArgsForCall = append(fake.getSubjectSpacesArgsForCall, struct {
 		token    string
-		userGUID string
-	}{token, userGUID})
-	fake.recordInvocation("GetUserSpaces", []interface{}{token, userGUID})
-	fake.getUserSpacesMutex.Unlock()
-	if fake.GetUserSpacesStub != nil {
-		return fake.GetUserSpacesStub(token, userGUID)
+		subjectId string
+	}{token, subjectId})
+	fake.recordInvocation("GetSubjectSpaces", []interface{}{token, subjectId})
+	fake.getSubjectSpacesMutex.Unlock()
+	if fake.GetSubjectSpacesStub != nil {
+		return fake.GetSubjectSpacesStub(token, subjectId)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.getUserSpacesReturns.result1, fake.getUserSpacesReturns.result2
+	return fake.getSubjectSpacesReturns.result1, fake.getSubjectSpacesReturns.result2
 }
 
-func (fake *CCClient) GetUserSpacesCallCount() int {
-	fake.getUserSpacesMutex.RLock()
-	defer fake.getUserSpacesMutex.RUnlock()
-	return len(fake.getUserSpacesArgsForCall)
+func (fake *CCClient) GetSubjectSpacesCallCount() int {
+	fake.getSubjectSpacesMutex.RLock()
+	defer fake.getSubjectSpacesMutex.RUnlock()
+	return len(fake.getSubjectSpacesArgsForCall)
 }
 
-func (fake *CCClient) GetUserSpacesArgsForCall(i int) (string, string) {
-	fake.getUserSpacesMutex.RLock()
-	defer fake.getUserSpacesMutex.RUnlock()
-	return fake.getUserSpacesArgsForCall[i].token, fake.getUserSpacesArgsForCall[i].userGUID
+func (fake *CCClient) GetSubjectSpacesArgsForCall(i int) (string, string) {
+	fake.getSubjectSpacesMutex.RLock()
+	defer fake.getSubjectSpacesMutex.RUnlock()
+	return fake.getSubjectSpacesArgsForCall[i].token, fake.getSubjectSpacesArgsForCall[i].subjectId
 }
 
-func (fake *CCClient) GetUserSpacesReturns(result1 map[string]struct{}, result2 error) {
-	fake.GetUserSpacesStub = nil
-	fake.getUserSpacesReturns = struct {
+func (fake *CCClient) GetSubjectSpacesReturns(result1 map[string]struct{}, result2 error) {
+	fake.GetSubjectSpacesStub = nil
+	fake.getSubjectSpacesReturns = struct {
 		result1 map[string]struct{}
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *CCClient) GetUserSpacesReturnsOnCall(i int, result1 map[string]struct{}, result2 error) {
-	fake.GetUserSpacesStub = nil
-	if fake.getUserSpacesReturnsOnCall == nil {
-		fake.getUserSpacesReturnsOnCall = make(map[int]struct {
+func (fake *CCClient) GetSubjectSpacesReturnsOnCall(i int, result1 map[string]struct{}, result2 error) {
+	fake.GetSubjectSpacesStub = nil
+	if fake.getSubjectSpacesReturnsOnCall == nil {
+		fake.getSubjectSpacesReturnsOnCall = make(map[int]struct {
 			result1 map[string]struct{}
 			result2 error
 		})
 	}
-	fake.getUserSpacesReturnsOnCall[i] = struct {
+	fake.getSubjectSpacesReturnsOnCall[i] = struct {
 		result1 map[string]struct{}
 		result2 error
 	}{result1, result2}
@@ -362,10 +362,10 @@ func (fake *CCClient) Invocations() map[string][][]interface{} {
 	defer fake.getSpaceMutex.RUnlock()
 	fake.getSpaceGUIDsMutex.RLock()
 	defer fake.getSpaceGUIDsMutex.RUnlock()
-	fake.getUserSpaceMutex.RLock()
-	defer fake.getUserSpaceMutex.RUnlock()
-	fake.getUserSpacesMutex.RLock()
-	defer fake.getUserSpacesMutex.RUnlock()
+	fake.getSubjectSpaceMutex.RLock()
+	defer fake.getSubjectSpaceMutex.RUnlock()
+	fake.getSubjectSpacesMutex.RLock()
+	defer fake.getSubjectSpacesMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

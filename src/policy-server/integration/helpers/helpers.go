@@ -79,19 +79,19 @@ var MockCCServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWrite
 	if r.URL.Path == "/v2/spaces" {
 		if strings.Contains(r.URL.RawQuery, "space-1") {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(fixtures.UserSpace))
+			w.Write([]byte(fixtures.SubjectSpace))
 			return
 		}
 		if strings.Contains(r.URL.RawQuery, "space-2") {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(fixtures.UserSpaceEmpty))
+			w.Write([]byte(fixtures.SubjectSpaceEmpty))
 			return
 		}
 	}
 
 	if r.URL.Path == "/v2/users/some-user-id/spaces" {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(fixtures.UserSpaces))
+		w.Write([]byte(fixtures.SubjectSpaces))
 		return
 	}
 

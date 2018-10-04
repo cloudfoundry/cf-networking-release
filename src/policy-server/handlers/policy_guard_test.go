@@ -53,9 +53,7 @@ var _ = Describe("PolicyGuard", func() {
 		tokenData = uaa_client.CheckTokenResponse{
 			Scope:    []string{"network.write"},
 			Subject:  "some-developer-guid",
-			UserID:   "some-developer-guid",
 			UserName: "some-developer",
-			ClientID: "cf",
 		}
 		spaceGUIDs = []string{"space-guid-1", "space-guid-2", "space-guid-3"}
 		space1 = api.Space{
@@ -93,7 +91,7 @@ var _ = Describe("PolicyGuard", func() {
 				}
 			}
 		}
-		fakeCCClient.GetUserSpaceStub = func(token, userGUID string, space api.Space) (*api.Space, error) {
+		fakeCCClient.GetSubjectSpaceStub = func(token, subjectId string, space api.Space) (*api.Space, error) {
 			switch space {
 			case space1:
 				{
@@ -116,7 +114,7 @@ var _ = Describe("PolicyGuard", func() {
 	})
 
 	Describe("IsNetworkAdmin", func() {
-		Context("when the user is network.admin", func() {
+		Context("when the subject is network.admin", func() {
 			BeforeEach(func() {
 				tokenData = uaa_client.CheckTokenResponse{
 					Scope: []string{"network.admin"},
@@ -129,7 +127,7 @@ var _ = Describe("PolicyGuard", func() {
 			})
 		})
 
-		Context("when the user is not network.admin", func() {
+		Context("when the subject is not network.admin", func() {
 			BeforeEach(func() {
 				tokenData = uaa_client.CheckTokenResponse{
 					Scope: []string{"not-network.not-admin"},
@@ -163,19 +161,19 @@ var _ = Describe("PolicyGuard", func() {
 			token, guid = fakeCCClient.GetSpaceArgsForCall(2)
 			Expect(token).To(Equal("policy-server-token"))
 			Expect(guid).To(Equal("space-guid-3"))
-			Expect(fakeCCClient.GetUserSpaceCallCount()).To(Equal(3))
-			token, userGUID, checkUserSpace := fakeCCClient.GetUserSpaceArgsForCall(0)
+			Expect(fakeCCClient.GetSubjectSpaceCallCount()).To(Equal(3))
+			token, subjectId, checkSubjectSpace := fakeCCClient.GetSubjectSpaceArgsForCall(0)
 			Expect(token).To(Equal("policy-server-token"))
-			Expect(userGUID).To(Equal("some-developer-guid"))
-			Expect(checkUserSpace).To(Equal(space1))
-			token, userGUID, checkUserSpace = fakeCCClient.GetUserSpaceArgsForCall(1)
+			Expect(subjectId).To(Equal("some-developer-guid"))
+			Expect(checkSubjectSpace).To(Equal(space1))
+			token, subjectId, checkSubjectSpace = fakeCCClient.GetSubjectSpaceArgsForCall(1)
 			Expect(token).To(Equal("policy-server-token"))
-			Expect(userGUID).To(Equal("some-developer-guid"))
-			Expect(checkUserSpace).To(Equal(space2))
-			token, userGUID, checkUserSpace = fakeCCClient.GetUserSpaceArgsForCall(2)
+			Expect(subjectId).To(Equal("some-developer-guid"))
+			Expect(checkSubjectSpace).To(Equal(space2))
+			token, subjectId, checkSubjectSpace = fakeCCClient.GetSubjectSpaceArgsForCall(2)
 			Expect(token).To(Equal("policy-server-token"))
-			Expect(userGUID).To(Equal("some-developer-guid"))
-			Expect(checkUserSpace).To(Equal(space3))
+			Expect(subjectId).To(Equal("some-developer-guid"))
+			Expect(checkSubjectSpace).To(Equal(space3))
 			Expect(authorized).To(BeTrue())
 		})
 
@@ -205,19 +203,19 @@ var _ = Describe("PolicyGuard", func() {
 				token, guid = fakeCCClient.GetSpaceArgsForCall(2)
 				Expect(token).To(Equal("policy-server-token"))
 				Expect(guid).To(Equal("space-guid-3"))
-				Expect(fakeCCClient.GetUserSpaceCallCount()).To(Equal(3))
-				token, userGUID, checkUserSpace := fakeCCClient.GetUserSpaceArgsForCall(0)
+				Expect(fakeCCClient.GetSubjectSpaceCallCount()).To(Equal(3))
+				token, subjectId, checkSubjectSpace := fakeCCClient.GetSubjectSpaceArgsForCall(0)
 				Expect(token).To(Equal("policy-server-token"))
-				Expect(userGUID).To(Equal("some-client-id"))
-				Expect(checkUserSpace).To(Equal(space1))
-				token, userGUID, checkUserSpace = fakeCCClient.GetUserSpaceArgsForCall(1)
+				Expect(subjectId).To(Equal("some-client-id"))
+				Expect(checkSubjectSpace).To(Equal(space1))
+				token, subjectId, checkSubjectSpace = fakeCCClient.GetSubjectSpaceArgsForCall(1)
 				Expect(token).To(Equal("policy-server-token"))
-				Expect(userGUID).To(Equal("some-client-id"))
-				Expect(checkUserSpace).To(Equal(space2))
-				token, userGUID, checkUserSpace = fakeCCClient.GetUserSpaceArgsForCall(2)
+				Expect(subjectId).To(Equal("some-client-id"))
+				Expect(checkSubjectSpace).To(Equal(space2))
+				token, subjectId, checkSubjectSpace = fakeCCClient.GetSubjectSpaceArgsForCall(2)
 				Expect(token).To(Equal("policy-server-token"))
-				Expect(userGUID).To(Equal("some-client-id"))
-				Expect(checkUserSpace).To(Equal(space3))
+				Expect(subjectId).To(Equal("some-client-id"))
+				Expect(checkSubjectSpace).To(Equal(space3))
 				Expect(authorized).To(BeTrue())
 			})
 		})
@@ -233,7 +231,7 @@ var _ = Describe("PolicyGuard", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(fakeUAAClient.GetTokenCallCount()).To(Equal(0))
 				Expect(fakeCCClient.GetSpaceCallCount()).To(Equal(0))
-				Expect(fakeCCClient.GetUserSpaceCallCount()).To(Equal(0))
+				Expect(fakeCCClient.GetSubjectSpaceCallCount()).To(Equal(0))
 				Expect(authorized).To(BeTrue())
 			})
 		})
@@ -249,9 +247,9 @@ var _ = Describe("PolicyGuard", func() {
 			})
 		})
 
-		Context("when the getting the users spaces returns nil", func() {
+		Context("when the getting the subjects spaces returns nil", func() {
 			BeforeEach(func() {
-				fakeCCClient.GetUserSpaceReturns(nil, nil)
+				fakeCCClient.GetSubjectSpaceReturns(nil, nil)
 			})
 			It("returns false", func() {
 				authorized, err := policyGuard.CheckAccess(policies, tokenData)
@@ -293,9 +291,9 @@ var _ = Describe("PolicyGuard", func() {
 			})
 		})
 
-		Context("when the getting the users spaces fails", func() {
+		Context("when the getting the subjects spaces fails", func() {
 			BeforeEach(func() {
-				fakeCCClient.GetUserSpaceReturns(nil, errors.New("banana"))
+				fakeCCClient.GetSubjectSpaceReturns(nil, errors.New("banana"))
 			})
 			It("returns a useful error", func() {
 				authorized, err := policyGuard.CheckAccess(policies, tokenData)

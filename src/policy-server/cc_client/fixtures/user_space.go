@@ -1,6 +1,6 @@
 package fixtures
 
-const UserSpace = `{
+const SubjectSpace = `{
   "total_results": 1,
   "total_pages": 1,
   "prev_url": null,
@@ -34,7 +34,7 @@ const UserSpace = `{
   ]
 }`
 
-const UserSpaceEmpty = `{
+const SubjectSpaceEmpty = `{
   "total_results": 0,
   "total_pages": 1,
   "prev_url": null,
@@ -42,7 +42,7 @@ const UserSpaceEmpty = `{
   "resources": []
 }`
 
-const UserSpaces = `{
+const SubjectSpaces = `{
   "total_results": 2,
   "total_pages": 1,
   "prev_url": null,

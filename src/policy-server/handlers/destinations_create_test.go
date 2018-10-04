@@ -104,8 +104,6 @@ var _ = Describe("Destinations create handler", func() {
 
 		token = uaa_client.CheckTokenResponse{
 			Scope:    []string{"some-scope", "network.admin"},
-			UserID:   "some-user-id",
-			UserName: "some-user",
 		}
 	})
 

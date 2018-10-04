@@ -14,7 +14,7 @@ import (
 
 //go:generate counterfeiter -o fakes/policy_filter.go --fake-name PolicyFilter . policyFilter
 type policyFilter interface {
-	FilterPolicies(policies []store.Policy, userToken uaa_client.CheckTokenResponse) ([]store.Policy, error)
+	FilterPolicies(policies []store.Policy, subjectToken uaa_client.CheckTokenResponse) ([]store.Policy, error)
 }
 
 //go:generate counterfeiter -o fakes/database.go --fake-name Db . database
@@ -44,7 +44,7 @@ func NewPoliciesIndex(store store.Store,
 func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	logger := getLogger(req)
 	logger = logger.Session("index-policies")
-	userToken := getTokenData(req)
+	subjectToken := getTokenData(req)
 	queryValues := req.URL.Query()
 	ids := parseIds(queryValues)
 	sourceIDs := parseSourceIds(queryValues)
@@ -69,7 +69,7 @@ func (h *PoliciesIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	policies, err := h.PolicyFilter.FilterPolicies(storePolicies, userToken)
+	policies, err := h.PolicyFilter.FilterPolicies(storePolicies, subjectToken)
 	if err != nil {
 		h.ErrorResponse.InternalServerError(logger, w, err, "filter policies failed")
 		return
