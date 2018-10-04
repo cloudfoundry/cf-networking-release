@@ -48,6 +48,10 @@ func (v *EgressDestinationsValidator) ValidateEgressDestinations(destinations []
 			if portRange.End > 65535 {
 				return fmt.Errorf("invalid end port %d, must be in range 1-65535", portRange.End)
 			}
+
+			if portRange.Start <= 0 {
+				return fmt.Errorf("invalid start port %d, must be in range 1-65535", portRange.Start)
+			}
 		}
 
 		if destination.Protocol != "icmp" && destination.ICMPCode != nil {

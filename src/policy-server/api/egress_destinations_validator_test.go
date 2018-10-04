@@ -127,6 +127,23 @@ var _ = Describe("EgressDestinationsValidator", func() {
 				})
 			})
 
+			Context("when a provided port is negative", func() {
+				It("returns an error", func() {
+					destinations := []api.EgressDestination{
+						{
+							Name:        "meow",
+							Description: "a cat",
+							Protocol:    "tcp",
+							Ports:       []api.Ports{{Start: -2, End: 7000}},
+							IPRanges:    []api.IPRange{{Start: "192.0.2.1", End: "192.0.2.1"}},
+						},
+					}
+
+					err := validator.ValidateEgressDestinations(destinations)
+					Expect(err).To(MatchError("invalid start port -2, must be in range 1-65535"))
+				})
+			})
+
 			Context("when the ports are out of range", func() {
 				It("returns an error", func() {
 
