@@ -1,0 +1,218 @@
+# Dynamic Egress Policies and Destinations APIs
+
+## Purpose:
+
+These APIs are for creating, deleting, listing, and updating dynamic egress destinations and policies.
+
+## API Authorization
+In order to communicate with the policy server API, a UAA oauth token with valid `network.admin`.
+The CF admin by default has `network.admin` scope, other users will need to have the proper scope granted by an admin.
+
+### Option 1: cf curl
+Use the `cf curl` command as admin
+
+Example
+```sh
+$ cf curl /networking/v1/external/egress_policies
+{"total_egress_policies":2,"egress_policies":[{"source":{...}]}
+```
+
+### Option 2: curl
+When using curl the token must be explicitly provided in the `Authorization` header.
+
+Example
+```sh
+$ export TOKEN=`cf oauth-token` # as CF admin
+$ curl http://api.bosh-lite.com/networking/v1/external/egress_policies -H "Authorization: $TOKEN"
+{"total_egress_policies":2,"egress_policies":[{"source":{...}]}
+```
+
+<hr> 
+
+## Egress Destination API
+
+| Method | Path |  Description|
+| :----- | :--- |  :----------- |
+| GET | /networking/v1/external/destinations |  List Destinations |
+| POST | /networking/v1/external/destinations |Create Destinations |
+| DELETE | /networking/v1/external/destinations/GUID |   Delete Destinations |
+
+
+### List Egress Destinations
+#### GET /networking/v1/external/destinations 
+#### Arguments: None
+
+Will return all egress destinations.
+
+#### Response Body:
+
+```json
+{
+  "total_destinations": 2,
+  "destinations": [
+   	   {  "name": "oracle database",
+      "id": "90be9c1f-b694-4463-9f1f-6ce71904440d",
+      "description": "db for user accounts",		
+      "ips": [{"start":"1.9.9.9", "end": "1.9.9.20"}],
+      "ports": [{"start": 8000, "end": 9000}],
+      "protocol": "tcp",	
+   },
+   {  "name": "AWS",
+      "id": "72813418-bd38-49e0-ace0-7bf5b7c54687",		
+      "ips": [{"start":"1.8.8.8", "end": "1.8.8.8"}],
+      "ports": [{"start": 8000, "end": 9000}],
+      "protocol": "udp",
+   }
+  ]
+}
+```
+
+### Create Egress Destinations
+#### POST /networking/v1/external/destinations
+
+#### Request Body:
+
+```json
+{
+  "destinations": [
+   {  "name": "oracle database",
+      "description": "db for user accounts",		
+      "ips": [{"start":"1.9.9.9", "end": "1.9.9.20"}],
+      "ports": [{"start": 8000, "end": 9000}],
+      "protocol": "tcp",	
+   },
+   {  "name": "AWS",	
+      "ips": [{"start":"1.8.8.8", "end": "1.8.8.8"}],
+      "ports": [{"start": 8000, "end": 9000}],
+      "protocol": "udp",
+   }
+  ]
+}
+```
+
+| Field | Required? | Description |
+| :---- | :-------: | :------ |
+| destinations.name | Y | The name of the destination. Must be globally unique.
+| destinations.description | N | A description of the destination.
+| destinations.ips.start* | Y | The start of the destination ip range. Must be IPv4. 
+| destinations.ips.end* | Y | The end of the destination ip range. Must be IPv4. May be equal to the the start ip.
+| destinations.ports.start* | Y | The destination start port (1 - 65535)
+| destinations.ports.end* | Y |The destination end port (1 - 65535)
+| destinations.protocol | Y |The protocol (tcp, udp, or icmp)
+
+*Note: Currently only one ip range and one port range is supported. 
+In the future, a destination will be able to support multiple ip ranges and port ranges.
+
+### Delete an Egress Destination
+
+### DELETE /networking/v1/external/destinations/GUID
+
+#### Response Body:
+
+This endpoint returns the json of the deleted destination object.
+
+```json
+{
+  "total_destinations": 1,
+  "destinations": [
+   {  "name": "oracle database",
+      "id": "90be9c1f-b694-4463-9f1f-6ce71904440d",
+      "description": "db for user accounts",		
+      "ips": [{"start":"1.9.9.9", "end": "1.9.9.20"}],
+      "ports": [{"start": 8000, "end": 9000}],
+      "protocol": "tcp",	
+   }
+  ]
+}
+```
+
+<hr>
+
+## Egress Policy API
+
+| Method | Path |  Description|
+| :----- | :--- |  :----------- |
+| GET | /networking/v1/external/egress_policies |   List Egress Policies |
+| POST | /networking/v1/external/egress_policies |  Create EgressPolicies |
+| DELETE | /networking/v1/external/egress_policies/GUID | Delete Egress Policy |
+
+### List Egress Policies
+#### GET /networking/v1/external/egress_policies
+#### Arguments: None
+
+Will return all egress policies.
+
+#### Response Body:
+
+```json
+{
+  "total_egress_policies": 1,
+  "egress_policies": [{
+	  "id": "dynamic-egress-guid",
+    "source": {
+      "type": "app",
+      "id": "SOURCE-APP-GUID"
+     },
+     "destination": {  
+        "name": "AWS",
+        "id": "72813418-bd38-49e0-ace0-7bf5b7c54687",		
+        "ips": [{"start":"1.8.8.8", "end": "1.8.8.8"}],
+        "ports": [{"start": 8000, "end": 9000}],
+        "protocol": "udp"
+     }
+   }]
+}
+```
+### Create Egress Policies
+#### POST /networking/v1/external/egress_policies
+
+#### Request Body:
+
+```json
+{
+  "egress_policies": [{ 
+    "source": {
+      "type": "space",
+      "id": "SOURCE-SPACE-GUID"
+    },
+    "destination": {
+      "id": "EGRESS-DESTINATION-GUID"
+    }
+  }]
+}
+```
+
+| Field | Required? | Description |
+| :---- | :-------: | :------ |
+| source.type | N | The type of source. Must be 'app' or 'space'. Defaults to 'app'.
+| source.id | Y | The guid of the source app or space.
+| destination.id | Y | The guid of the egress destination. 
+
+### Delete an Egress Destination
+
+### DELETE /networking/v1/external/egress_policies/GUID
+
+#### Response Body:
+
+This endpoint returns the json of the deleted egress policy object.
+
+
+```json
+{
+  "total_egress_policies": 1,
+  "egress_policies": [{
+	  "id": "dynamic-egress-guid",
+    "source": {
+      "type": "app",
+      "id": "SOURCE-APP-GUID"
+     },
+     "destination": {  
+        "name": "AWS",
+        "id": "72813418-bd38-49e0-ace0-7bf5b7c54687",		
+        "ips": [{"start":"1.8.8.8", "end": "1.8.8.8"}],
+        "ports": [{"start": 8000, "end": 9000}],
+        "protocol": "udp"
+     }
+   }]
+}
+```
