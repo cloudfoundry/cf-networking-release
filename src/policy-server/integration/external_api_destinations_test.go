@@ -131,6 +131,20 @@ var _ = Describe("External Destination API", func() {
 			_, err = client.CreateDestinations(token, toBeCreated...)
 			Expect(err).To(MatchError(MatchRegexp("http status 400.*entry with name 'tcp ips only' already exists")))
 
+			By("updating one of the destinations")
+			destToUpdate := createdDestinations[1]
+			destToUpdate.Name = "new name"
+			destToUpdate.Ports[0].End = 8080
+			updatedDests, err := client.UpdateDestinations(token, destToUpdate)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(updatedDests).To(HaveLen(1))
+			Expect(updatedDests[0]).To(Equal(destToUpdate))
+
+			By("listing all destinations and confirming that the update was persisted")
+			listedDestinations, err = client.ListDestinations(token)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(listedDestinations).To(ConsistOf(createdDestinations[0], updatedDests[0], createdDestinations[2]))
+
 			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
 				HaveName("DestinationsIndexRequestTime"),
 			))

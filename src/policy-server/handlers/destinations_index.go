@@ -1,9 +1,10 @@
 package handlers
 
 import (
-	"code.cloudfoundry.org/lager"
 	"net/http"
 	"policy-server/store"
+
+	"code.cloudfoundry.org/lager"
 )
 
 type DestinationsIndex struct {

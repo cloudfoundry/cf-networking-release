@@ -18,7 +18,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("EgressDestinationStore", func() {
+var _ = FDescribe("EgressDestinationStore", func() {
 	var (
 		egressDestinationsStore *store.EgressDestinationStore
 		destinationMetadataRepo *store.DestinationMetadataTable
@@ -162,14 +162,40 @@ var _ = Describe("EgressDestinationStore", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(destinations).To(HaveLen(0))
 
+				By("updating")
+				destinationToUpdate1 := createdDestinations[0]
+				destinationToUpdate1.Name = "dest-1-updated"
+				destinationToUpdate1.Description = "desc-1-updated"
+				destinationToUpdate1.Protocol = "tcp-updated"
+				destinationToUpdate1.IPRanges = []store.IPRange{{Start: "2.3.3.3", End: "2.3.3.4"}}
+				destinationToUpdate1.Ports = []store.Ports{{Start: 9090, End: 9091}}
+
+				destinationToUpdate2 := createdDestinations[1]
+				destinationToUpdate2.Name = "dest-2-updated"
+				destinationToUpdate2.Description = "desc-2-updated"
+				destinationToUpdate2.Protocol = "icmp-updated"
+				destinationToUpdate2.IPRanges = []store.IPRange{{Start: "2.3.3.4", End: "2.3.3.5"}}
+				destinationToUpdate2.ICMPType = 15
+				destinationToUpdate2.ICMPCode = 16
+
+				updatedDestinations, err := egressDestinationsStore.Update([]store.EgressDestination{destinationToUpdate1, destinationToUpdate2})
+				Expect(err).NotTo(HaveOccurred())
+				Expect(updatedDestinations).To(HaveLen(2))
+				Expect(updatedDestinations).To(Equal([]store.EgressDestination{destinationToUpdate1, destinationToUpdate2}))
+
+				By("listing updated destinations to ensure the updates were persisted")
+				destinations, err = egressDestinationsStore.All()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(destinations).To(ConsistOf(updatedDestinations))
+
 				By("deleting")
 				deletedDestination, err := egressDestinationsStore.Delete(createdDestinations[0].GUID)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(deletedDestination).To(Equal(createdDestinations[0]))
+				Expect(deletedDestination).To(Equal(updatedDestinations[0]))
 
 				deletedDestination, err = egressDestinationsStore.Delete(createdDestinations[1].GUID)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(deletedDestination).To(Equal(createdDestinations[1]))
+				Expect(deletedDestination).To(Equal(updatedDestinations[1]))
 
 				destinations, err = egressDestinationsStore.All()
 				Expect(err).NotTo(HaveOccurred())
@@ -264,6 +290,78 @@ var _ = Describe("EgressDestinationStore", func() {
 				DestinationMetadataRepo: destinationMetadataRepo,
 				TerminalsRepo:           terminalsRepo,
 			}
+		})
+
+		Context("Update", func() {
+			var (
+				destinationsToUpdate = []store.EgressDestination{
+					{
+						Name:        "dupe",
+						Description: " ",
+						Protocol:    "icmp",
+						IPRanges:    []store.IPRange{{Start: "2.2.2.4", End: "2.2.2.5"}},
+						ICMPType:    11,
+						ICMPCode:    14,
+					},
+				}
+			)
+			Context("when the transaction cannot be created", func() {
+				BeforeEach(func() {
+					mockDB.BeginxReturns(nil, errors.New("can't create a transaction"))
+				})
+
+				It("returns an error", func() {
+					_, err := egressDestinationsStore.Update(destinationsToUpdate)
+					Expect(err).To(MatchError("egress destination store update transaction: can't create a transaction"))
+				})
+			})
+
+			Context("when updating the destination metadata fails", func() {
+				BeforeEach(func() {
+					destinationMetadataRepo.UpdateReturns(errors.New("can't update metadata"))
+				})
+
+				It("rolls back the transaction", func() {
+					egressDestinationsStore.Update(destinationsToUpdate)
+					Expect(tx.RollbackCallCount()).To(Equal(1))
+				})
+
+				It("returns the error", func() {
+					_, err := egressDestinationsStore.Update(destinationsToUpdate)
+					Expect(err).To(MatchError("egress destination store update metadata: can't update metadata"))
+				})
+			})
+			Context("when updating the destintaion fails", func() {
+				BeforeEach(func() {
+					egressDestinationRepo.UpdateIPRangeReturns(errors.New("can't update iprange"))
+				})
+
+				It("rolls back the transaction", func() {
+					egressDestinationsStore.Update(destinationsToUpdate)
+					Expect(tx.RollbackCallCount()).To(Equal(1))
+				})
+
+				It("returns the error", func() {
+					_, err := egressDestinationsStore.Update(destinationsToUpdate)
+					Expect(err).To(MatchError("egress destination store update iprange: can't update iprange"))
+				})
+			})
+
+			Context("when the transaction cannot be committed", func() {
+				var err error
+				BeforeEach(func() {
+					tx.CommitReturns(errors.New("can't commit transaction"))
+					_, err = egressDestinationsStore.Update(destinationsToUpdate)
+				})
+
+				It("returns an error", func() {
+					Expect(err).To(MatchError("egress destination store update commit transaction: can't commit transaction"))
+				})
+
+				It("rolls back the transaction", func() {
+					Expect(tx.RollbackCallCount()).To(Equal(1))
+				})
+			})
 		})
 
 		Context("Create", func() {

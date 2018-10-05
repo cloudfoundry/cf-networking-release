@@ -12,6 +12,7 @@ import (
 type egressDestinationRepo interface {
 	All(tx db.Transaction) ([]EgressDestination, error)
 	CreateIPRange(tx db.Transaction, destinationTerminalGUID, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) (int64, error)
+	UpdateIPRange(tx db.Transaction, destinationTerminalGUID, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) error
 	GetByGUID(tx db.Transaction, guid ...string) ([]EgressDestination, error)
 	Delete(tx db.Transaction, guid string) error
 }
@@ -20,6 +21,7 @@ type egressDestinationRepo interface {
 type destinationMetadataRepo interface {
 	Create(tx db.Transaction, terminalGUID, name, description string) (int64, error)
 	Delete(tx db.Transaction, terminalGUID string) error
+	Update(tx db.Transaction, terminalGUID, name, description string) error
 }
 
 type EgressDestinationStore struct {
@@ -91,6 +93,54 @@ func (e *EgressDestinationStore) Delete(guid string) (EgressDestination, error) 
 	}
 
 	return EgressDestination{}, nil
+}
+
+func (e *EgressDestinationStore) Update(egressDestinations []EgressDestination) ([]EgressDestination, error) {
+	tx, err := e.Conn.Beginx()
+	if err != nil {
+		return nil, fmt.Errorf("egress destination store update transaction: %s", err)
+	}
+
+	//TODO ensure all of the destinations exist i.e. GetByGUIDs returns a slice of len egressDestinations
+
+	for _, egressDestination := range egressDestinations {
+		//TODO ensure the metadata exists, legacy destinations did not have them
+		err := e.DestinationMetadataRepo.Update(tx, egressDestination.GUID, egressDestination.Name, egressDestination.Description)
+		if err != nil {
+			tx.Rollback()
+			return nil, fmt.Errorf("egress destination store update metadata: %s", err)
+		}
+
+		var startPort, endPort int64
+		if len(egressDestination.Ports) > 0 {
+			startPort = int64(egressDestination.Ports[0].Start)
+			endPort = int64(egressDestination.Ports[0].End)
+		}
+
+		err = e.EgressDestinationRepo.UpdateIPRange(
+			tx,
+			egressDestination.GUID,
+			egressDestination.IPRanges[0].Start,
+			egressDestination.IPRanges[0].End,
+			egressDestination.Protocol,
+			startPort,
+			endPort,
+			int64(egressDestination.ICMPType),
+			int64(egressDestination.ICMPCode),
+		)
+		if err != nil {
+			tx.Rollback()
+			return nil, fmt.Errorf("egress destination store update iprange: %s", err)
+		}
+	}
+
+	err = tx.Commit()
+
+	if err != nil {
+		tx.Rollback()
+		return nil, fmt.Errorf("egress destination store update commit transaction: %s", err)
+	}
+	return egressDestinations, nil
 }
 
 func (e *EgressDestinationStore) Create(egressDestinations []EgressDestination) ([]EgressDestination, error) {

@@ -72,20 +72,25 @@ func (c *Client) ListDestinations(token string) ([]Destination, error) {
 	return response.Destinations, nil
 }
 
-func (c *Client) UpdateDestination(token string, destination Destination) (Destination, error) {
-	if destination.GUID == "" {
-		return Destination{}, errors.New("destination to be updated must have an ID")
+func (c *Client) UpdateDestinations(token string, destinations ...Destination) ([]Destination, error) {
+	if len(destinations) == 0 {
+		return []Destination{}, errors.New("destinations to be updated must not be empty")
+	}
+	for _, destination := range destinations {
+		if destination.GUID == "" {
+			return []Destination{}, errors.New("destinations to be updated must have an ID")
+		}
 	}
 
 	var response DestinationList
-	err := c.JsonClient.Do("PUT", "/networking/v1/external/destinations/"+destination.GUID, destination, &response, "Bearer "+token)
+	err := c.JsonClient.Do("PUT", "/networking/v1/external/destinations", DestinationList{
+		Destinations: destinations,
+	}, &response, "Bearer "+token)
+
 	if err != nil {
-		return Destination{}, fmt.Errorf("json client do: %s", err) //TODO: test
+		return []Destination{}, fmt.Errorf("json client do: %s", err)
 	}
-	if len(response.Destinations) != 1 {
-		return Destination{}, errors.New("server returned unexpected response: missing destinations")
-	}
-	return response.Destinations[0], nil
+	return response.Destinations, nil
 }
 
 func (c *Client) CreateDestinations(token string, destinations ...Destination) ([]Destination, error) {

@@ -143,71 +143,90 @@ var _ = Describe("Client", func() {
 			})
 		})
 
-		Describe("UpdateDestination", func() {
-			var destinationToUpdate psclient.Destination
+		Describe("UpdateDestinations", func() {
+			var destinationToUpdate1, destinationToUpdate2 psclient.Destination
 			BeforeEach(func() {
 				jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 					respBytes := []byte(`{
-						"destinations": [{
-							 "id": "guid-received-from-server",
+						"destinations": [
+						{
+							 "id": "guid-received-from-server-1",
 					     "name": "name-received-from-server",
 					     "description": "description-received-from-server",
 					     "ips": [{"start": "8.8.8.8", "end": "8.8.8.8"}],
 					     "ports": [{"start": 8080, "end": 8080}],
 					     "protocol": "tcp"
-					  }]
+					  },
+						{
+							 "id": "guid-received-from-server-2",
+					     "name": "name-received-from-server",
+					     "description": "description-received-from-server",
+					     "ips": [{"start": "8.8.8.8", "end": "8.8.8.8"}],
+					     "ports": [{"start": 8080, "end": 8080}],
+					     "protocol": "tcp"
+					  }
+						]
 					}`)
 					Expect(json.Unmarshal(respBytes, respData)).To(Succeed())
 					return nil
 				}
 
-				destinationToUpdate = destination1
-				destinationToUpdate.GUID = "guid-of-dest-to-update"
+				destinationToUpdate1 = destination1
+				destinationToUpdate1.GUID = "guid-of-dest-to-update-1"
+				destinationToUpdate2 = destination2
+				destinationToUpdate2.GUID = "guid-of-dest-to-update-2"
 			})
 
 			It("updates the destination", func() {
-				updatedDestination, err := client.UpdateDestination(token, destinationToUpdate)
+				updatedDestinations, err := client.UpdateDestinations(token, destinationToUpdate1, destinationToUpdate2)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(updatedDestination).To(Equal(psclient.Destination{
-					GUID:        "guid-received-from-server",
-					Name:        "name-received-from-server",
-					Description: "description-received-from-server",
-					IPs:         []psclient.IPRange{{Start: "8.8.8.8", End: "8.8.8.8"}},
-					Ports:       []psclient.Port{{Start: 8080, End: 8080}},
-					Protocol:    "tcp",
+				Expect(updatedDestinations).To(Equal([]psclient.Destination{
+					{
+						GUID:        "guid-received-from-server-1",
+						Name:        "name-received-from-server",
+						Description: "description-received-from-server",
+						IPs:         []psclient.IPRange{{Start: "8.8.8.8", End: "8.8.8.8"}},
+						Ports:       []psclient.Port{{Start: 8080, End: 8080}},
+						Protocol:    "tcp",
+					},
+					{
+						GUID:        "guid-received-from-server-2",
+						Name:        "name-received-from-server",
+						Description: "description-received-from-server",
+						IPs:         []psclient.IPRange{{Start: "8.8.8.8", End: "8.8.8.8"}},
+						Ports:       []psclient.Port{{Start: 8080, End: 8080}},
+						Protocol:    "tcp",
+					},
 				}))
 
 				Expect(jsonClient.DoCallCount()).To(Equal(1))
 				passedMethod, passedRoute, passedReqData, _, passedToken := jsonClient.DoArgsForCall(0)
 				Expect(passedMethod).To(Equal("PUT"))
-				Expect(passedRoute).To(Equal("/networking/v1/external/destinations/guid-of-dest-to-update"))
+				Expect(passedRoute).To(Equal("/networking/v1/external/destinations"))
 
-				Expect(passedReqData).To(Equal(destinationToUpdate))
+				Expect(passedReqData).To(Equal(psclient.DestinationList{
+					Destinations: []psclient.Destination{
+						destinationToUpdate1,
+						destinationToUpdate2,
+					},
+				}))
 				Expect(passedToken).To(Equal("Bearer some-token"))
 			})
 
-			Context("when the response doesn't include any destinations", func() {
-				BeforeEach(func() {
-					jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
-						respBytes := []byte(`{ "destinations": [] }`)
-						Expect(json.Unmarshal(respBytes, respData)).To(Succeed())
-						return nil
-					}
-				})
-
-				It("returns an error indicating that the server misbehaved", func() {
-					_, err := client.UpdateDestination(token, destinationToUpdate)
-					Expect(err).To(MatchError("server returned unexpected response: missing destinations"))
+			Context("when no destinations are passed", func() {
+				It("returns a helpful error", func() {
+					_, err := client.UpdateDestinations(token)
+					Expect(err).To(MatchError("destinations to be updated must not be empty"))
 				})
 			})
 
 			Context("when the caller forgets to set the GUID field on the Destination", func() {
 				BeforeEach(func() {
-					destinationToUpdate.GUID = ""
+					destinationToUpdate1.GUID = ""
 				})
 				It("returns early with a helpful error", func() {
-					_, err := client.UpdateDestination(token, destinationToUpdate)
-					Expect(err).To(MatchError("destination to be updated must have an ID"))
+					_, err := client.UpdateDestinations(token, destinationToUpdate1)
+					Expect(err).To(MatchError("destinations to be updated must have an ID"))
 				})
 			})
 
@@ -215,7 +234,7 @@ var _ = Describe("Client", func() {
 				It("wraps and returns the error", func() {
 					jsonClient.DoStub = nil
 					jsonClient.DoReturns(errors.New("failed to do"))
-					_, err := client.UpdateDestination(token, destinationToUpdate)
+					_, err := client.UpdateDestinations(token, destinationToUpdate1)
 					Expect(err).To(MatchError("json client do: failed to do"))
 				})
 			})

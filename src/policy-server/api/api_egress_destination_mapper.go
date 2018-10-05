@@ -88,7 +88,9 @@ func asApiEgressDestination(storeEgressDestination store.EgressDestination) Egre
 	}
 
 	if storeEgressDestination.Protocol == "icmp" {
+		//TODO: This should only be assigned when the store value is not nil
 		apiEgressDestination.ICMPType = &storeEgressDestination.ICMPType
+		//TODO: This should only be assigned when the store value is not nil
 		apiEgressDestination.ICMPCode = &storeEgressDestination.ICMPCode
 	}
 	return *apiEgressDestination

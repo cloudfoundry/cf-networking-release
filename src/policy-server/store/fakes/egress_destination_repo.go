@@ -43,6 +43,25 @@ type EgressDestinationRepo struct {
 		result1 int64
 		result2 error
 	}
+	UpdateIPRangeStub        func(tx db.Transaction, destinationTerminalGUID, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) error
+	updateIPRangeMutex       sync.RWMutex
+	updateIPRangeArgsForCall []struct {
+		tx                      db.Transaction
+		destinationTerminalGUID string
+		startIP                 string
+		endIP                   string
+		protocol                string
+		startPort               int64
+		endPort                 int64
+		icmpType                int64
+		icmpCode                int64
+	}
+	updateIPRangeReturns struct {
+		result1 error
+	}
+	updateIPRangeReturnsOnCall map[int]struct {
+		result1 error
+	}
 	GetByGUIDStub        func(tx db.Transaction, guid ...string) ([]store.EgressDestination, error)
 	getByGUIDMutex       sync.RWMutex
 	getByGUIDArgsForCall []struct {
@@ -183,6 +202,62 @@ func (fake *EgressDestinationRepo) CreateIPRangeReturnsOnCall(i int, result1 int
 	}{result1, result2}
 }
 
+func (fake *EgressDestinationRepo) UpdateIPRange(tx db.Transaction, destinationTerminalGUID string, startIP string, endIP string, protocol string, startPort int64, endPort int64, icmpType int64, icmpCode int64) error {
+	fake.updateIPRangeMutex.Lock()
+	ret, specificReturn := fake.updateIPRangeReturnsOnCall[len(fake.updateIPRangeArgsForCall)]
+	fake.updateIPRangeArgsForCall = append(fake.updateIPRangeArgsForCall, struct {
+		tx                      db.Transaction
+		destinationTerminalGUID string
+		startIP                 string
+		endIP                   string
+		protocol                string
+		startPort               int64
+		endPort                 int64
+		icmpType                int64
+		icmpCode                int64
+	}{tx, destinationTerminalGUID, startIP, endIP, protocol, startPort, endPort, icmpType, icmpCode})
+	fake.recordInvocation("UpdateIPRange", []interface{}{tx, destinationTerminalGUID, startIP, endIP, protocol, startPort, endPort, icmpType, icmpCode})
+	fake.updateIPRangeMutex.Unlock()
+	if fake.UpdateIPRangeStub != nil {
+		return fake.UpdateIPRangeStub(tx, destinationTerminalGUID, startIP, endIP, protocol, startPort, endPort, icmpType, icmpCode)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.updateIPRangeReturns.result1
+}
+
+func (fake *EgressDestinationRepo) UpdateIPRangeCallCount() int {
+	fake.updateIPRangeMutex.RLock()
+	defer fake.updateIPRangeMutex.RUnlock()
+	return len(fake.updateIPRangeArgsForCall)
+}
+
+func (fake *EgressDestinationRepo) UpdateIPRangeArgsForCall(i int) (db.Transaction, string, string, string, string, int64, int64, int64, int64) {
+	fake.updateIPRangeMutex.RLock()
+	defer fake.updateIPRangeMutex.RUnlock()
+	return fake.updateIPRangeArgsForCall[i].tx, fake.updateIPRangeArgsForCall[i].destinationTerminalGUID, fake.updateIPRangeArgsForCall[i].startIP, fake.updateIPRangeArgsForCall[i].endIP, fake.updateIPRangeArgsForCall[i].protocol, fake.updateIPRangeArgsForCall[i].startPort, fake.updateIPRangeArgsForCall[i].endPort, fake.updateIPRangeArgsForCall[i].icmpType, fake.updateIPRangeArgsForCall[i].icmpCode
+}
+
+func (fake *EgressDestinationRepo) UpdateIPRangeReturns(result1 error) {
+	fake.UpdateIPRangeStub = nil
+	fake.updateIPRangeReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *EgressDestinationRepo) UpdateIPRangeReturnsOnCall(i int, result1 error) {
+	fake.UpdateIPRangeStub = nil
+	if fake.updateIPRangeReturnsOnCall == nil {
+		fake.updateIPRangeReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.updateIPRangeReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *EgressDestinationRepo) GetByGUID(tx db.Transaction, guid ...string) ([]store.EgressDestination, error) {
 	fake.getByGUIDMutex.Lock()
 	ret, specificReturn := fake.getByGUIDReturnsOnCall[len(fake.getByGUIDArgsForCall)]
@@ -291,6 +366,8 @@ func (fake *EgressDestinationRepo) Invocations() map[string][][]interface{} {
 	defer fake.allMutex.RUnlock()
 	fake.createIPRangeMutex.RLock()
 	defer fake.createIPRangeMutex.RUnlock()
+	fake.updateIPRangeMutex.RLock()
+	defer fake.updateIPRangeMutex.RUnlock()
 	fake.getByGUIDMutex.RLock()
 	defer fake.getByGUIDMutex.RUnlock()
 	fake.deleteMutex.RLock()

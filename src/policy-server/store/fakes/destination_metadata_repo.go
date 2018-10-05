@@ -36,6 +36,20 @@ type DestinationMetadataRepo struct {
 	deleteReturnsOnCall map[int]struct {
 		result1 error
 	}
+	UpdateStub        func(tx db.Transaction, terminalGUID, name, description string) error
+	updateMutex       sync.RWMutex
+	updateArgsForCall []struct {
+		tx           db.Transaction
+		terminalGUID string
+		name         string
+		description  string
+	}
+	updateReturns struct {
+		result1 error
+	}
+	updateReturnsOnCall map[int]struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -143,6 +157,57 @@ func (fake *DestinationMetadataRepo) DeleteReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
+func (fake *DestinationMetadataRepo) Update(tx db.Transaction, terminalGUID string, name string, description string) error {
+	fake.updateMutex.Lock()
+	ret, specificReturn := fake.updateReturnsOnCall[len(fake.updateArgsForCall)]
+	fake.updateArgsForCall = append(fake.updateArgsForCall, struct {
+		tx           db.Transaction
+		terminalGUID string
+		name         string
+		description  string
+	}{tx, terminalGUID, name, description})
+	fake.recordInvocation("Update", []interface{}{tx, terminalGUID, name, description})
+	fake.updateMutex.Unlock()
+	if fake.UpdateStub != nil {
+		return fake.UpdateStub(tx, terminalGUID, name, description)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.updateReturns.result1
+}
+
+func (fake *DestinationMetadataRepo) UpdateCallCount() int {
+	fake.updateMutex.RLock()
+	defer fake.updateMutex.RUnlock()
+	return len(fake.updateArgsForCall)
+}
+
+func (fake *DestinationMetadataRepo) UpdateArgsForCall(i int) (db.Transaction, string, string, string) {
+	fake.updateMutex.RLock()
+	defer fake.updateMutex.RUnlock()
+	return fake.updateArgsForCall[i].tx, fake.updateArgsForCall[i].terminalGUID, fake.updateArgsForCall[i].name, fake.updateArgsForCall[i].description
+}
+
+func (fake *DestinationMetadataRepo) UpdateReturns(result1 error) {
+	fake.UpdateStub = nil
+	fake.updateReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *DestinationMetadataRepo) UpdateReturnsOnCall(i int, result1 error) {
+	fake.UpdateStub = nil
+	if fake.updateReturnsOnCall == nil {
+		fake.updateReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.updateReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *DestinationMetadataRepo) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -150,6 +215,8 @@ func (fake *DestinationMetadataRepo) Invocations() map[string][][]interface{} {
 	defer fake.createMutex.RUnlock()
 	fake.deleteMutex.RLock()
 	defer fake.deleteMutex.RUnlock()
+	fake.updateMutex.RLock()
+	defer fake.updateMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

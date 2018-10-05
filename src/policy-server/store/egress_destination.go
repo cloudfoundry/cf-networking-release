@@ -34,6 +34,25 @@ func (e *EgressDestinationTable) Delete(tx db.Transaction, guid string) error {
 	return err
 }
 
+func (e *EgressDestinationTable) UpdateIPRange(tx db.Transaction, destinationTerminalGUID, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) error {
+	_, err := tx.Exec(tx.Rebind(`
+	  UPDATE ip_ranges
+		SET protocol=?, start_ip=?, end_ip=?, start_port=?, end_port=?, icmp_type=?, icmp_code=?
+		WHERE terminal_guid=?
+	`),
+		protocol,
+		startIP,
+		endIP,
+		startPort,
+		endPort,
+		icmpType,
+		icmpCode,
+		destinationTerminalGUID,
+	)
+
+	return err
+}
+
 func (e *EgressDestinationTable) CreateIPRange(tx db.Transaction, destinationTerminalGUID, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) (int64, error) {
 	driverName := tx.DriverName()
 	if driverName == "mysql" {

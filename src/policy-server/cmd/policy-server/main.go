@@ -210,6 +210,13 @@ func main() {
 		Logger:                  logger,
 	}
 
+	updateDestinationsHandlerV1 := &handlers.DestinationsUpdate{
+		ErrorResponse:           errorResponse,
+		EgressDestinationStore:  egressDestinationStore,
+		EgressDestinationMapper: egressDestinationMapper,
+		Logger:                  logger,
+	}
+
 	deleteDestinationHandlerV1 := &handlers.DestinationDelete{
 		ErrorResponse:           errorResponse,
 		EgressDestinationStore:  egressDestinationStore,
@@ -318,6 +325,7 @@ func main() {
 		{Name: "policies_index", Method: "GET", Path: "/networking/:version/external/policies"},
 		{Name: "destinations_index", Method: "GET", Path: "/networking/:version/external/destinations"},
 		{Name: "destinations_create", Method: "POST", Path: "/networking/:version/external/destinations"},
+		{Name: "destinations_update", Method: "PUT", Path: "/networking/:version/external/destinations"},
 		{Name: "destination_delete", Method: "DELETE", Path: "/networking/:version/external/destinations/:id"},
 		{Name: "egress_policies_index", Method: "GET", Path: "/networking/:version/external/egress_policies"},
 		{Name: "egress_policies_create", Method: "POST", Path: "/networking/:version/external/egress_policies"},
@@ -357,6 +365,10 @@ func main() {
 
 		"destinations_create": corsOptionsWrapper(metricsWrap("DestinationsCreate",
 			logWrap(authAdminWrap(createDestinationsHandlerV1)))),
+
+		"destinations_update": corsOptionsWrapper(metricsWrap("DestinationsUpdate",
+			logWrap(updateDestinationsHandlerV1))),
+		//TODO authAdmin wrap
 
 		"destination_delete": corsOptionsWrapper(metricsWrap("DestinationDelete",
 			logWrap(authAdminWrap(deleteDestinationHandlerV1)))),

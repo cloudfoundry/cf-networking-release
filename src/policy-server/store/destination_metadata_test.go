@@ -35,4 +35,18 @@ var _ = Describe("DestinationMetadata", func() {
 			})
 		})
 	})
+
+	Context("when the db fails to update", func() {
+		It("returns the error", func() {
+			tx.ExecReturns(nil, errors.New("not right now"))
+			err := destinationMetadataTable.Update(tx, "term-guid", "name", "desc")
+			Expect(err).To(MatchError("not right now"))
+		})
+	})
+
+	Context("update", func() {
+		//TODO do it
+		It("should create the destination metadata row if one does not exist. Destinations created in the 'inline destinations' implementation do not have an associated metadata row", func() {
+		})
+	})
 })
