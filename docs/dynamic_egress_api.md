@@ -173,6 +173,7 @@ Will return all egress policies.
      },
      "destination": {  
         "name": "AWS",
+	"description": "AWS",
         "id": "72813418-bd38-49e0-ace0-7bf5b7c54687",		
         "ips": [{"start":"1.8.8.8", "end": "1.8.8.8"}],
         "ports": [{"start": 8000, "end": 9000}],
@@ -226,6 +227,7 @@ This endpoint returns the json of the deleted egress policy object.
      },
      "destination": {  
         "name": "AWS",
+	"description": "AWS",
         "id": "72813418-bd38-49e0-ace0-7bf5b7c54687",		
         "ips": [{"start":"1.8.8.8", "end": "1.8.8.8"}],
         "ports": [{"start": 8000, "end": 9000}],
