@@ -1,6 +1,13 @@
-# Dynamic Egress Policies and Destinations APIs
+# Dynamic Egress Policies and Destinations APIs - EXPERIMENTAL
 
-## Purpose:
+NOTE: These APIs are EXPERIMENTAL. 
+
+## Turn on the Dynamic Egress Feature
+
+The dynamic egress feature set is not turned on by default. In order for these policies to be enforced, the cloud foundry 
+operator must set the `enforce_experimental_dynamic_egress_policies` property on the `policy-server-internl` job to true. See spec file [here](https://github.com/cloudfoundry/cf-networking-release/blob/develop/jobs/policy-server-internal/spec#L102-L104). Currently this feature only works with silk.
+
+## Purpose
 
 These APIs are for creating, deleting, listing, and updating dynamic egress destinations and policies.
 
@@ -26,6 +33,17 @@ $ export TOKEN=`cf oauth-token` # as CF admin
 $ curl http://api.bosh-lite.com/networking/v1/external/egress_policies -H "Authorization: $TOKEN"
 {"total_egress_policies":2,"egress_policies":[{"source":{...}]}
 ```
+
+## Typical Workflows
+Adding an Egress Policy
+1. Create an egress destination.
+1. Create an egress policy linking the destination and an app or space.
+1. See policy apply. No app restarts needed.
+
+Updating an Egress Policy when an IP changes
+1. List all egress destinations to find the one you want to change.
+1. Update the egress destination (not implemented yet).
+1. See updated policy apply. No app restarts needed.
 
 <hr> 
 
