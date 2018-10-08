@@ -1,0 +1,17 @@
+processes:
+- name: backup
+  executable: /var/vcap/jobs/bbr-cfnetworkingdb/bin/bbr/backup
+  args:
+  - run
+  unsafe:
+    unrestricted_volumes:
+      - path: /var/vcap/jobs/database-backup-restorer/bin
+        allow_executions: true
+- name: restore
+  executable: /var/vcap/jobs/bbr-cfnetworkingdb/bin/bbr/restore
+    args:
+    - run
+    unsafe:
+      unrestricted_volumes:
+        - path: /var/vcap/jobs/database-backup-restorer/bin
+          allow_executions: true
