@@ -358,6 +358,11 @@ var _ = Describe("External API Space Developer", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
 
+				req = makeNewRequest("PUT", "networking/v1/external/destinations", "{}")
+				resp, err = http.DefaultClient.Do(req)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
+
 				req = makeNewRequest("DELETE", "networking/v1/external/destinations/meow", "")
 				resp, err = http.DefaultClient.Do(req)
 				Expect(err).NotTo(HaveOccurred())

@@ -367,8 +367,7 @@ func main() {
 			logWrap(authAdminWrap(createDestinationsHandlerV1)))),
 
 		"destinations_update": corsOptionsWrapper(metricsWrap("DestinationsUpdate",
-			logWrap(updateDestinationsHandlerV1))),
-		//TODO authAdmin wrap
+			logWrap(authAdminWrap(updateDestinationsHandlerV1)))),
 
 		"destination_delete": corsOptionsWrapper(metricsWrap("DestinationDelete",
 			logWrap(authAdminWrap(deleteDestinationHandlerV1)))),
