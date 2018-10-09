@@ -54,7 +54,7 @@ var _ = Describe("ASG/Dynamic Egress Interaction", func() {
 					"description": "Testing description",
 					"protocol": "tcp",
 					"ports": [ { "start": 80, "end": 443 } ],
-					"ips": [ { "start": "208.80.153.224", "end": "208.80.153.224" } ]
+					"ips": [ { "start": "208.80.152.1", "end": "208.80.155.254" } ]
 				} ]
 		}`
 		testEgressPolicies = `{
