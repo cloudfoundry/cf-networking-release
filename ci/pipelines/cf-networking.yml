@@ -59,6 +59,14 @@ groups:
   - pickelhelm-test
   - pickelhelm-deploy-firehose-nozzle
   - delete-pickelhelm-deployment
+- name: istio-cfn
+  jobs:
+  - istio-cfn-bbl-up
+  - istio-cfn-bbl-destroy
+  - istio-cfn-deploy
+  - istio-cfn-test
+  - istio-cfn-deploy-firehose-nozzle
+  - delete-istio-cfn-deployment
 - name: mitre
   jobs:
   - mitre-bbl-up
@@ -95,10 +103,12 @@ groups:
 - name: bbl
   jobs:
   - pickelhelm-bbl-up
+  - istio-cfn-bbl-up
   - mitre-bbl-up
   - toque-bbl-up
   - slouch-bbl-up
   - pickelhelm-bbl-destroy
+  - istio-cfn-bbl-destroy
   - mitre-bbl-destroy
   - toque-bbl-destroy
   - slouch-bbl-destroy
@@ -107,6 +117,7 @@ groups:
   jobs:
   - delete-deployment-mitre-cf
   - delete-pickelhelm-deployment
+  - delete-istio-cfn-deployment
   - delete-toque-deployment
   - delete-slouch-deployment
 - name: version
@@ -429,6 +440,220 @@ jobs:
     - get: silk-dev
       passed: [silk-postgres-tests, silk-mysql-tests, silk-mysql-5.6-tests, silk-template-tests]
       trigger: true
+
+  - name: istio-cfn-bbl-up
+    serial_groups: [istio-cfn]
+    plan:
+    - aggregate:
+      - get: cf-deployment-concourse-tasks
+        trigger: true
+      - get: cf-networking-deployments
+    - task: bbl-up
+      file: cf-deployment-concourse-tasks/bbl-up/task.yml
+      params:
+        BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
+        BBL_GCP_REGION: us-east1
+        BBL_STATE_DIR: environments/istio-cfn/
+        BBL_IAAS: gcp
+        BBL_LB_CERT: ((istio-cfn-lb-cert.certificate))
+        BBL_LB_KEY: ((istio-cfn-lb-key.private_key))
+        LB_DOMAIN: istio-cfn.c2c.cf-app.com
+        BBL_ENV_NAME: istio-cfn
+      input_mapping:
+        bbl-state: cf-networking-deployments
+        bbl-config: cf-networking-deployments
+        ops-files: cf-networking-deployments
+      ensure:
+        put: cf-networking-deployments
+        params:
+          repository: updated-bbl-state
+          rebase: true
+
+  - name: istio-cfn-bbl-destroy
+    serial_groups: [istio-cfn]
+    plan:
+    - aggregate:
+      - get: cf-deployment-concourse-tasks
+      - get: cf-networking-deployments
+    - task: bosh-cleanup
+      file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
+      params:
+        BBL_STATE_DIR: environments/istio-cfn/
+      input_mapping:
+        bbl-state: cf-networking-deployments
+    - task: bbl-destroy
+      file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
+      params:
+        BBL_STATE_DIR: environments/istio-cfn/
+        BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
+      input_mapping:
+        bbl-state: cf-networking-deployments
+      ensure:
+        put: cf-networking-deployments
+        params:
+          repository: updated-bbl-state
+          rebase: true
+
+  - name: istio-cfn-deploy
+    serial_groups: [istio-cfn]
+    plan:
+    - aggregate:
+      - get: capi-ci-passed
+      - get: cf-networking-release-ci
+        params:
+          submodules: none
+      - get: cf-deployment-concourse-tasks
+      - get: cf-networking-deployments
+      - get: cf-deployment
+      - get: cf-networking-dev
+      - get: silk-dev
+    - task: upload-stemcell
+      file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
+      params:
+        BBL_STATE_DIR: environments/istio-cfn/
+      input_mapping:
+        bbl-state: cf-networking-deployments
+    - task: collect-ops-files
+      file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
+      params:
+        ENVIRONMENT_NAME: istio-cfn
+      input_mapping:
+        cf-networking-release: cf-networking-dev
+        deployments-repo: cf-networking-deployments
+        silk-release: silk-dev
+    - task: upload-local-capi-release
+      file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+      input_mapping:
+        bbl-state: cf-networking-deployments
+        local-release: capi-ci-passed
+      params:
+        BBL_STATE_DIR: environments/istio-cfn/
+    - task: upload-local-silk-release
+      file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+      input_mapping:
+        bbl-state: cf-networking-deployments
+        local-release: silk-dev
+      params:
+        BBL_STATE_DIR: environments/istio-cfn/
+    - task: upload-acceptance-test-release
+      file: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release.yml
+      input_mapping:
+        bbl-state: cf-networking-deployments
+      params:
+        ENVIRONMENT_NAME: istio-cfn
+        BBL_STATE_DIR: environments/istio-cfn/
+    - task: deploy-cf
+      file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
+      params:
+        BBL_STATE_DIR: environments/istio-cfn/
+        SYSTEM_DOMAIN: istio-cfn.c2c.cf-app.com
+        OPS_FILES: |
+          use-compiled-releases.yml
+          datadog.yml
+          scale-to-one-az.yml
+          smaller-footprint.yml
+          cf-networking.yml
+          use-system-domain-as-metron-deployment-name.yml
+          enable-routing-integrity.yml
+          use-latest-silk.yml
+          use-latest-capi.yml
+          enable-service-discovery.yml
+          add-apps-internal-search-domain.yml
+          add-acceptance-test-jobs.yml
+          add-fake-istio-router-on-overlay.yml
+          add-cflinuxfs3.yml
+          enable-experimental-dynamic-egress-policies.yml
+          opsfile.yml
+      input_mapping:
+        bbl-state: cf-networking-deployments
+        release: cf-networking-dev
+        vars-files: cf-networking-deployments
+        vars-store: cf-networking-deployments
+    - task: bosh-cleanup
+      file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
+      params:
+        BBL_STATE_DIR: environments/istio-cfn/
+      input_mapping:
+        bbl-state: cf-networking-deployments
+
+  - name: istio-cfn-deploy-firehose-nozzle
+    serial_groups: [istio-cfn]
+    plan:
+    - aggregate:
+      - get: every-monday-morning
+        trigger: true
+      - get: cf-deployment-concourse-tasks
+      - get: cf-networking-release-ci
+        params:
+          submodules: none
+      - get: cf-networking-deployments
+        passed: [istio-cfn-deploy]
+      - get: datadog-firehose-nozzle-release
+    - task: upload-datadog-firehose-nozzle-release
+      file: cf-networking-release-ci/ci/tasks/upload-release-tarball.yml
+      input_mapping:
+        deployments-repo: cf-networking-deployments
+        tarballs: datadog-firehose-nozzle-release
+      params:
+        ENVIRONMENT_NAME: istio-cfn
+    - task: deploy-datadog-firehose-nozzle
+      file: cf-deployment-concourse-tasks/bosh-deploy/task.yml
+      input_mapping:
+        bbl-state: cf-networking-deployments
+        cf-deployment: cf-networking-deployments
+        ops-files: cf-networking-deployments
+        vars-files: cf-networking-deployments
+        vars-store: cf-networking-deployments
+      params:
+        BBL_STATE_DIR: environments/istio-cfn
+        MANIFEST_FILE: firehose-nozzles.yml
+        OPS_FILES: ""
+        SYSTEM_DOMAIN: istio-cfn.c2c.cf-app.com
+
+
+  - name: istio-cfn-test
+    serial_groups: [istio-cfn]
+    plan:
+    - aggregate:
+      - get: cf-networking-release-ci
+        params:
+          submodules: none
+      - get: cf-networking-deployments
+        passed: [istio-cfn-deploy]
+      - get: cf-deployment
+        passed: [istio-cfn-deploy]
+        trigger: true
+      - get: cf-networking-dev
+        passed: [istio-cfn-deploy]
+        trigger: true
+      - get: silk-dev
+        passed: [istio-cfn-deploy]
+        trigger: true
+    - task: get-credhub-vars
+      file: cf-networking-release-ci/ci/tasks/get-credhub-vars.yml
+      input_mapping:
+        bbl-state: cf-networking-deployments
+      params:
+        BBL_STATE_DIR: environments/istio-cfn
+        VARIABLES: |
+          /bosh-istio-cfn/cf/cf_admin_password
+          /bosh-istio-cfn/cf/uaa_admin_client_secret
+    - task: acceptance-tests-sd
+      file: cf-networking-release-ci/ci/tasks/test-acceptance-sd.yml
+      input_mapping:
+        cf-networking: cf-networking-dev
+        test-config: cf-networking-deployments
+        vars-store: cf-networking-deployments
+      params:
+        ENVIRONMENT_NAME: istio-cfn
+    - task: acceptance-tests
+      file: cf-networking-release-ci/ci/tasks/acceptance-tests.yml
+      input_mapping:
+        cf-networking: cf-networking-dev
+        test-config: cf-networking-deployments
+        vars-store: cf-networking-deployments
+      params:
+        ENVIRONMENT_NAME: istio-cfn
 
   - name: pickelhelm-bbl-up
     serial_groups: [pickelhelm]
@@ -1655,6 +1880,21 @@ jobs:
       file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
       params:
         BBL_STATE_DIR: environments/pickelhelm/
+        DEPLOYMENT_NAME: cf
+      input_mapping:
+        bbl-state: cf-networking-deployments
+
+  - name: delete-istio-cfn-deployment
+    public: true
+    serial_groups: [istio-cfn]
+    plan:
+    - aggregate:
+      - get: cf-networking-deployments
+      - get: cf-deployment-concourse-tasks
+    - task: delete-deployment
+      file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
+      params:
+        BBL_STATE_DIR: environments/istio-cfn/
         DEPLOYMENT_NAME: cf
       input_mapping:
         bbl-state: cf-networking-deployments
