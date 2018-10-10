@@ -225,5 +225,13 @@ var _ = Describe("EgressDestination", func() {
 				Expect(egressDestinationTable.UpdateIPRange(tx, "", "", "", "", int64(3), int64(4), int64(5), int64(6))).To(MatchError("bad things happened"))
 			})
 		})
+
+		Context("update", func() {
+			It("passes an error from Exec if Exec fails", func() {
+				tx.ExecReturns(nil, errors.New("bigger error"))
+				err := egressDestinationTable.UpdateIPRange(tx, "", "", "", "", int64(3), int64(4), int64(5), int64(6))
+				Expect(err).To(MatchError("bigger error"))
+			})
+		})
 	})
 })

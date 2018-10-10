@@ -25,6 +25,14 @@ type ErrorResponse struct {
 		arg3 error
 		arg4 string
 	}
+	NotFoundStub        func(lager.Logger, http.ResponseWriter, error, string)
+	notFoundMutex       sync.RWMutex
+	notFoundArgsForCall []struct {
+		arg1 lager.Logger
+		arg2 http.ResponseWriter
+		arg3 error
+		arg4 string
+	}
 	NotAcceptableStub        func(lager.Logger, http.ResponseWriter, error, string)
 	notAcceptableMutex       sync.RWMutex
 	notAcceptableArgsForCall []struct {
@@ -105,6 +113,33 @@ func (fake *ErrorResponse) BadRequestArgsForCall(i int) (lager.Logger, http.Resp
 	fake.badRequestMutex.RLock()
 	defer fake.badRequestMutex.RUnlock()
 	return fake.badRequestArgsForCall[i].arg1, fake.badRequestArgsForCall[i].arg2, fake.badRequestArgsForCall[i].arg3, fake.badRequestArgsForCall[i].arg4
+}
+
+func (fake *ErrorResponse) NotFound(arg1 lager.Logger, arg2 http.ResponseWriter, arg3 error, arg4 string) {
+	fake.notFoundMutex.Lock()
+	fake.notFoundArgsForCall = append(fake.notFoundArgsForCall, struct {
+		arg1 lager.Logger
+		arg2 http.ResponseWriter
+		arg3 error
+		arg4 string
+	}{arg1, arg2, arg3, arg4})
+	fake.recordInvocation("NotFound", []interface{}{arg1, arg2, arg3, arg4})
+	fake.notFoundMutex.Unlock()
+	if fake.NotFoundStub != nil {
+		fake.NotFoundStub(arg1, arg2, arg3, arg4)
+	}
+}
+
+func (fake *ErrorResponse) NotFoundCallCount() int {
+	fake.notFoundMutex.RLock()
+	defer fake.notFoundMutex.RUnlock()
+	return len(fake.notFoundArgsForCall)
+}
+
+func (fake *ErrorResponse) NotFoundArgsForCall(i int) (lager.Logger, http.ResponseWriter, error, string) {
+	fake.notFoundMutex.RLock()
+	defer fake.notFoundMutex.RUnlock()
+	return fake.notFoundArgsForCall[i].arg1, fake.notFoundArgsForCall[i].arg2, fake.notFoundArgsForCall[i].arg3, fake.notFoundArgsForCall[i].arg4
 }
 
 func (fake *ErrorResponse) NotAcceptable(arg1 lager.Logger, arg2 http.ResponseWriter, arg3 error, arg4 string) {
@@ -195,6 +230,8 @@ func (fake *ErrorResponse) Invocations() map[string][][]interface{} {
 	defer fake.internalServerErrorMutex.RUnlock()
 	fake.badRequestMutex.RLock()
 	defer fake.badRequestMutex.RUnlock()
+	fake.notFoundMutex.RLock()
+	defer fake.notFoundMutex.RUnlock()
 	fake.notAcceptableMutex.RLock()
 	defer fake.notAcceptableMutex.RUnlock()
 	fake.forbiddenMutex.RLock()

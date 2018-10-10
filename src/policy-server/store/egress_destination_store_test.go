@@ -55,15 +55,13 @@ var _ = Describe("EgressDestinationStore", func() {
 			egressDestinationsStore = &store.EgressDestinationStore{
 				TerminalsRepo:           terminalsRepo,
 				DestinationMetadataRepo: destinationMetadataRepo,
-				Conn:                    realDb,
-				EgressDestinationRepo:   egressDestinationTable,
+				Conn: realDb,
+				EgressDestinationRepo: egressDestinationTable,
 			}
 		})
 
 		AfterEach(func() {
-			if realDb != nil {
-				Expect(realDb.Close()).To(Succeed())
-			}
+			Expect(realDb.Close()).To(Succeed())
 			testhelpers.RemoveDatabase(dbConf)
 		})
 
@@ -183,7 +181,32 @@ var _ = Describe("EgressDestinationStore", func() {
 				Expect(updatedDestinations).To(HaveLen(2))
 				Expect(updatedDestinations).To(Equal([]store.EgressDestination{destinationToUpdate1, destinationToUpdate2}))
 
+				By("updating with an error")
+				destinationToUpdate2.GUID = "missing"
+				updatedDestinationsWithNoGUID, errWithNoGUID := egressDestinationsStore.Update([]store.EgressDestination{destinationToUpdate1, destinationToUpdate2})
+				Expect(errWithNoGUID).To(MatchError("egress destination store update iprange: destination GUID not found"))
+				Expect(updatedDestinationsWithNoGUID).To(HaveLen(0))
+
 				By("listing updated destinations to ensure the updates were persisted")
+				destinations, err = egressDestinationsStore.All()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(destinations).To(ConsistOf(updatedDestinations))
+
+				By("updating a destination that has no metadata row")
+				tx, err := realDb.Beginx()
+				Expect(err).NotTo(HaveOccurred())
+
+				err = destinationMetadataRepo.Delete(tx, updatedDestinations[1].GUID)
+				Expect(err).NotTo(HaveOccurred())
+
+				err = tx.Commit()
+				Expect(err).NotTo(HaveOccurred())
+
+				destinationToUpdate2.GUID = updatedDestinations[1].GUID
+				_, err = egressDestinationsStore.Update([]store.EgressDestination{destinationToUpdate2})
+				Expect(err).NotTo(HaveOccurred())
+
+				By("verifying the destination that had no metadata persisted the update")
 				destinations, err = egressDestinationsStore.All()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(destinations).To(ConsistOf(updatedDestinations))
@@ -202,12 +225,19 @@ var _ = Describe("EgressDestinationStore", func() {
 				Expect(destinations).To(HaveLen(0))
 			})
 
-			Context("when creating the destination metadata returns duplicate name error", func() {
+			Context("when destination metadata returns duplicate name error", func() {
 				BeforeEach(func() {
 					toBeCreatedDestinations = []store.EgressDestination{
 						{
 							Name:        "dupe",
 							Description: "dupe",
+							Protocol:    "tcp",
+							IPRanges:    []store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}},
+							Ports:       []store.Ports{{Start: 8080, End: 8081}},
+						},
+						{
+							Name:        "dupe2",
+							Description: "dupe2",
 							Protocol:    "tcp",
 							IPRanges:    []store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}},
 							Ports:       []store.Ports{{Start: 8080, End: 8081}},
@@ -219,9 +249,15 @@ var _ = Describe("EgressDestinationStore", func() {
 					Expect(err).NotTo(HaveOccurred())
 				})
 
-				It("returns a specific error when DB detects a duplicate", func() {
-					_, err := egressDestinationsStore.Create(toBeCreatedDestinations)
+				It("returns a specific error when DB detects a duplicate on create", func() {
+					_, err := egressDestinationsStore.Create(toBeCreatedDestinations[:1])
 					Expect(err).To(MatchError("egress destination store create destination metadata: duplicate name error: entry with name 'dupe' already exists"))
+				})
+
+				It("returns a specific error when DB detects a duplicate name on update", func() {
+					createdDestinations[1].Name = "dupe"
+					_, err := egressDestinationsStore.Update(createdDestinations[1:])
+					Expect(err).To(MatchError("egress destination store update destination metadata: duplicate name error: entry with name 'dupe' already exists"))
 				})
 			})
 
@@ -285,7 +321,7 @@ var _ = Describe("EgressDestinationStore", func() {
 			destinationMetadataRepo = &fakes.DestinationMetadataRepo{}
 
 			egressDestinationsStore = &store.EgressDestinationStore{
-				Conn:                    mockDB,
+				Conn: mockDB,
 				EgressDestinationRepo:   egressDestinationRepo,
 				DestinationMetadataRepo: destinationMetadataRepo,
 				TerminalsRepo:           terminalsRepo,
@@ -316,9 +352,21 @@ var _ = Describe("EgressDestinationStore", func() {
 				})
 			})
 
+			Context("when getting by guid fails", func() {
+				BeforeEach(func() {
+					egressDestinationRepo.GetByGUIDReturns(nil, errors.New("something bad happened"))
+				})
+
+				It("returns the error", func() {
+					_, err := egressDestinationsStore.Update(destinationsToUpdate)
+					Expect(err).To(MatchError("egress destination store update GetByGUID: something bad happened"))
+				})
+			})
+
 			Context("when updating the destination metadata fails", func() {
 				BeforeEach(func() {
 					destinationMetadataRepo.UpdateReturns(errors.New("can't update metadata"))
+					egressDestinationRepo.GetByGUIDReturns([]store.EgressDestination{{}}, nil)
 				})
 
 				It("rolls back the transaction", func() {
@@ -331,9 +379,11 @@ var _ = Describe("EgressDestinationStore", func() {
 					Expect(err).To(MatchError("egress destination store update metadata: can't update metadata"))
 				})
 			})
-			Context("when updating the destintaion fails", func() {
+
+			Context("when updating the destination fails", func() {
 				BeforeEach(func() {
 					egressDestinationRepo.UpdateIPRangeReturns(errors.New("can't update iprange"))
+					egressDestinationRepo.GetByGUIDReturns([]store.EgressDestination{{}}, nil)
 				})
 
 				It("rolls back the transaction", func() {
@@ -350,6 +400,7 @@ var _ = Describe("EgressDestinationStore", func() {
 			Context("when the transaction cannot be committed", func() {
 				var err error
 				BeforeEach(func() {
+					egressDestinationRepo.GetByGUIDReturns([]store.EgressDestination{{}}, nil)
 					tx.CommitReturns(errors.New("can't commit transaction"))
 					_, err = egressDestinationsStore.Update(destinationsToUpdate)
 				})

@@ -47,16 +47,27 @@ func (d *DestinationMetadataTable) Create(tx db.Transaction, terminalGUID, name,
 }
 
 func (d *DestinationMetadataTable) Update(tx db.Transaction, terminalGUID, name, description string) error {
-	_, err := tx.Exec(tx.Rebind(`
-		UPDATE destination_metadatas
-		SET name = ?, description = ?
-		WHERE terminal_guid = ?
-	`),
-		name,
-		description,
-		terminalGUID,
-	)
-	return err
+	var count int64
+	err := tx.QueryRow(tx.Rebind(`SELECT COUNT(*) FROM destination_metadatas WHERE terminal_guid = ?`), terminalGUID).Scan(&count)
+	if err != nil {
+		return err
+	}
+
+	if count == 0 {
+		_, err = d.Create(tx, terminalGUID, name, description)
+		return err
+	} else {
+		_, err = tx.Exec(tx.Rebind(`
+	  	UPDATE destination_metadatas
+  		SET name = ?, description = ?
+	  	WHERE terminal_guid = ?
+  	`),
+			name,
+			description,
+			terminalGUID,
+		)
+		return err
+	}
 }
 
 func (d *DestinationMetadataTable) Delete(tx db.Transaction, guid string) error {

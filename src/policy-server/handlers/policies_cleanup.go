@@ -17,6 +17,7 @@ type policyCleaner interface {
 type errorResponse interface {
 	InternalServerError(lager.Logger, http.ResponseWriter, error, string)
 	BadRequest(lager.Logger, http.ResponseWriter, error, string)
+	NotFound(lager.Logger, http.ResponseWriter, error, string)
 	NotAcceptable(lager.Logger, http.ResponseWriter, error, string)
 	Forbidden(lager.Logger, http.ResponseWriter, error, string)
 	Unauthorized(lager.Logger, http.ResponseWriter, error, string)
