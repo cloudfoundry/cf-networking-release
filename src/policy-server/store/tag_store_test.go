@@ -57,9 +57,7 @@ var _ = Describe("TagStore", func() {
 	})
 
 	AfterEach(func() {
-		if realDb != nil {
-			Expect(realDb.Close()).To(Succeed())
-		}
+		Expect(realDb.Close()).To(Succeed())
 		testsupport.RemoveDatabase(dbConf)
 	})
 

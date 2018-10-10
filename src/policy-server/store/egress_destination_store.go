@@ -108,10 +108,12 @@ func (e *EgressDestinationStore) Update(egressDestinations []EgressDestination) 
 
 	foundDestinations, err := e.EgressDestinationRepo.GetByGUID(tx, guids...)
 	if err != nil {
+		tx.Rollback()
 		return nil, fmt.Errorf("egress destination store update GetByGUID: %s", err)
 	}
 
 	if len(foundDestinations) != len(egressDestinations) {
+		tx.Rollback()
 		return nil, fmt.Errorf("egress destination store update iprange: destination GUID not found")
 	}
 

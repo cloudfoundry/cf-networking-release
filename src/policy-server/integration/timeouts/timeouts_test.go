@@ -180,6 +180,7 @@ func migrateAndPopulateTags(dbConf db.Config) {
 
 	realDb, err := db.NewConnectionPool(dbConf, 200, 200, 5*time.Minute, "Timeout Test", "Timeout Test", logger)
 	Expect(err).NotTo(HaveOccurred())
+	defer realDb.Close()
 
 	migrator := &migrations.Migrator{
 		MigrateAdapter: &migrations.MigrateAdapter{},

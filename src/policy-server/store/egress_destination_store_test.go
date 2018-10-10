@@ -13,10 +13,38 @@ import (
 	dbHelper "code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"code.cloudfoundry.org/lager"
-	uuid "github.com/nu7hatch/gouuid"
+	"github.com/nu7hatch/gouuid"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
+
+func dumpQueries(realDb *dbHelper.ConnWrapper) {
+	fmt.Println("")
+	fmt.Println("====================== Begin query dump =======================")
+	rows, err := realDb.Query(`
+				SELECT ID, USER, HOST, DB, COMMAND, STATE, INFO
+				FROM INFORMATION_SCHEMA.PROCESSLIST
+			`)
+	Expect(err).ToNot(HaveOccurred())
+
+	for rows.Next() {
+		var id, user, host, db, command, state, info *string
+		err = rows.Scan(&id, &user, &host, &db, &command, &state, &info)
+		if err != nil {
+			rows.Close()
+			fmt.Printf("error reading row: %s", err)
+		}
+
+		if info == nil {
+			var none = "<null>"
+			info = &none
+		}
+		fmt.Printf("%s, %s, %s, %s, %s, %s, %s\n", *id, *user, *host, *db, *command, *state, *info)
+	}
+	rows.Close()
+	fmt.Println("====================== End query dump =======================")
+	fmt.Println("")
+}
 
 var _ = Describe("EgressDestinationStore", func() {
 	var (
@@ -55,8 +83,8 @@ var _ = Describe("EgressDestinationStore", func() {
 			egressDestinationsStore = &store.EgressDestinationStore{
 				TerminalsRepo:           terminalsRepo,
 				DestinationMetadataRepo: destinationMetadataRepo,
-				Conn: realDb,
-				EgressDestinationRepo: egressDestinationTable,
+				Conn:                    realDb,
+				EgressDestinationRepo:   egressDestinationTable,
 			}
 		})
 
@@ -216,10 +244,12 @@ var _ = Describe("EgressDestinationStore", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(deletedDestination).To(Equal(updatedDestinations[0]))
 
+				By("deleting another")
 				deletedDestination, err = egressDestinationsStore.Delete(createdDestinations[1].GUID)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(deletedDestination).To(Equal(updatedDestinations[1]))
 
+				By("asserting all are gone")
 				destinations, err = egressDestinationsStore.All()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(destinations).To(HaveLen(0))
@@ -321,7 +351,7 @@ var _ = Describe("EgressDestinationStore", func() {
 			destinationMetadataRepo = &fakes.DestinationMetadataRepo{}
 
 			egressDestinationsStore = &store.EgressDestinationStore{
-				Conn: mockDB,
+				Conn:                    mockDB,
 				EgressDestinationRepo:   egressDestinationRepo,
 				DestinationMetadataRepo: destinationMetadataRepo,
 				TerminalsRepo:           terminalsRepo,
@@ -360,6 +390,27 @@ var _ = Describe("EgressDestinationStore", func() {
 				It("returns the error", func() {
 					_, err := egressDestinationsStore.Update(destinationsToUpdate)
 					Expect(err).To(MatchError("egress destination store update GetByGUID: something bad happened"))
+				})
+
+				It("rolls back the transaction", func() {
+					egressDestinationsStore.Update(destinationsToUpdate)
+					Expect(tx.RollbackCallCount()).To(Equal(1))
+				})
+			})
+
+			Context("when getting by guid returns an unexpected count of destinations", func() {
+				BeforeEach(func() {
+					egressDestinationRepo.GetByGUIDReturns([]store.EgressDestination{}, nil)
+				})
+
+				It("returns the error", func() {
+					_, err := egressDestinationsStore.Update(destinationsToUpdate)
+					Expect(err).To(MatchError("egress destination store update iprange: destination GUID not found"))
+				})
+
+				It("rolls back the transaction", func() {
+					egressDestinationsStore.Update(destinationsToUpdate)
+					Expect(tx.RollbackCallCount()).To(Equal(1))
 				})
 			})
 
