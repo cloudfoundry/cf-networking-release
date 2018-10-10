@@ -416,7 +416,7 @@ var _ = Describe("EgressDestinationStore", func() {
 
 			Context("when updating the destination metadata fails", func() {
 				BeforeEach(func() {
-					destinationMetadataRepo.UpdateReturns(errors.New("can't update metadata"))
+					destinationMetadataRepo.UpsertReturns(errors.New("can't update metadata"))
 					egressDestinationRepo.GetByGUIDReturns([]store.EgressDestination{{}}, nil)
 				})
 
@@ -427,7 +427,7 @@ var _ = Describe("EgressDestinationStore", func() {
 
 				It("returns the error", func() {
 					_, err := egressDestinationsStore.Update(destinationsToUpdate)
-					Expect(err).To(MatchError("egress destination store update metadata: can't update metadata"))
+					Expect(err).To(MatchError("egress destination store upsert metadata: can't update metadata"))
 				})
 			})
 
@@ -515,7 +515,7 @@ var _ = Describe("EgressDestinationStore", func() {
 
 				Context("normal error", func() {
 					BeforeEach(func() {
-						destinationMetadataRepo.CreateReturns(-1, errors.New("can't create a destination metadata"))
+						destinationMetadataRepo.UpsertReturns(errors.New("can't create a destination metadata"))
 						_, err = egressDestinationsStore.Create(destinationsToCreate)
 					})
 

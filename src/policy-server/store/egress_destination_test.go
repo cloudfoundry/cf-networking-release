@@ -162,7 +162,7 @@ var _ = Describe("EgressDestination", func() {
 		Context("when a destination metadata exist for destination", func() {
 			BeforeEach(func() {
 				metadataTable := store.DestinationMetadataTable{}
-				_, err = metadataTable.Create(tx, terminalIds[0], "dest name", "dest desc")
+				err = metadataTable.Upsert(tx, terminalIds[0], "dest name", "dest desc")
 				Expect(err).NotTo(HaveOccurred())
 			})
 

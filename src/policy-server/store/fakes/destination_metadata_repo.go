@@ -8,22 +8,6 @@ import (
 )
 
 type DestinationMetadataRepo struct {
-	CreateStub        func(tx db.Transaction, terminalGUID, name, description string) (int64, error)
-	createMutex       sync.RWMutex
-	createArgsForCall []struct {
-		tx           db.Transaction
-		terminalGUID string
-		name         string
-		description  string
-	}
-	createReturns struct {
-		result1 int64
-		result2 error
-	}
-	createReturnsOnCall map[int]struct {
-		result1 int64
-		result2 error
-	}
 	DeleteStub        func(tx db.Transaction, terminalGUID string) error
 	deleteMutex       sync.RWMutex
 	deleteArgsForCall []struct {
@@ -36,76 +20,22 @@ type DestinationMetadataRepo struct {
 	deleteReturnsOnCall map[int]struct {
 		result1 error
 	}
-	UpdateStub        func(tx db.Transaction, terminalGUID, name, description string) error
-	updateMutex       sync.RWMutex
-	updateArgsForCall []struct {
+	UpsertStub        func(tx db.Transaction, terminalGUID, name, description string) error
+	upsertMutex       sync.RWMutex
+	upsertArgsForCall []struct {
 		tx           db.Transaction
 		terminalGUID string
 		name         string
 		description  string
 	}
-	updateReturns struct {
+	upsertReturns struct {
 		result1 error
 	}
-	updateReturnsOnCall map[int]struct {
+	upsertReturnsOnCall map[int]struct {
 		result1 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
-}
-
-func (fake *DestinationMetadataRepo) Create(tx db.Transaction, terminalGUID string, name string, description string) (int64, error) {
-	fake.createMutex.Lock()
-	ret, specificReturn := fake.createReturnsOnCall[len(fake.createArgsForCall)]
-	fake.createArgsForCall = append(fake.createArgsForCall, struct {
-		tx           db.Transaction
-		terminalGUID string
-		name         string
-		description  string
-	}{tx, terminalGUID, name, description})
-	fake.recordInvocation("Create", []interface{}{tx, terminalGUID, name, description})
-	fake.createMutex.Unlock()
-	if fake.CreateStub != nil {
-		return fake.CreateStub(tx, terminalGUID, name, description)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.createReturns.result1, fake.createReturns.result2
-}
-
-func (fake *DestinationMetadataRepo) CreateCallCount() int {
-	fake.createMutex.RLock()
-	defer fake.createMutex.RUnlock()
-	return len(fake.createArgsForCall)
-}
-
-func (fake *DestinationMetadataRepo) CreateArgsForCall(i int) (db.Transaction, string, string, string) {
-	fake.createMutex.RLock()
-	defer fake.createMutex.RUnlock()
-	return fake.createArgsForCall[i].tx, fake.createArgsForCall[i].terminalGUID, fake.createArgsForCall[i].name, fake.createArgsForCall[i].description
-}
-
-func (fake *DestinationMetadataRepo) CreateReturns(result1 int64, result2 error) {
-	fake.CreateStub = nil
-	fake.createReturns = struct {
-		result1 int64
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *DestinationMetadataRepo) CreateReturnsOnCall(i int, result1 int64, result2 error) {
-	fake.CreateStub = nil
-	if fake.createReturnsOnCall == nil {
-		fake.createReturnsOnCall = make(map[int]struct {
-			result1 int64
-			result2 error
-		})
-	}
-	fake.createReturnsOnCall[i] = struct {
-		result1 int64
-		result2 error
-	}{result1, result2}
 }
 
 func (fake *DestinationMetadataRepo) Delete(tx db.Transaction, terminalGUID string) error {
@@ -157,53 +87,53 @@ func (fake *DestinationMetadataRepo) DeleteReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *DestinationMetadataRepo) Update(tx db.Transaction, terminalGUID string, name string, description string) error {
-	fake.updateMutex.Lock()
-	ret, specificReturn := fake.updateReturnsOnCall[len(fake.updateArgsForCall)]
-	fake.updateArgsForCall = append(fake.updateArgsForCall, struct {
+func (fake *DestinationMetadataRepo) Upsert(tx db.Transaction, terminalGUID string, name string, description string) error {
+	fake.upsertMutex.Lock()
+	ret, specificReturn := fake.upsertReturnsOnCall[len(fake.upsertArgsForCall)]
+	fake.upsertArgsForCall = append(fake.upsertArgsForCall, struct {
 		tx           db.Transaction
 		terminalGUID string
 		name         string
 		description  string
 	}{tx, terminalGUID, name, description})
-	fake.recordInvocation("Update", []interface{}{tx, terminalGUID, name, description})
-	fake.updateMutex.Unlock()
-	if fake.UpdateStub != nil {
-		return fake.UpdateStub(tx, terminalGUID, name, description)
+	fake.recordInvocation("Upsert", []interface{}{tx, terminalGUID, name, description})
+	fake.upsertMutex.Unlock()
+	if fake.UpsertStub != nil {
+		return fake.UpsertStub(tx, terminalGUID, name, description)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.updateReturns.result1
+	return fake.upsertReturns.result1
 }
 
-func (fake *DestinationMetadataRepo) UpdateCallCount() int {
-	fake.updateMutex.RLock()
-	defer fake.updateMutex.RUnlock()
-	return len(fake.updateArgsForCall)
+func (fake *DestinationMetadataRepo) UpsertCallCount() int {
+	fake.upsertMutex.RLock()
+	defer fake.upsertMutex.RUnlock()
+	return len(fake.upsertArgsForCall)
 }
 
-func (fake *DestinationMetadataRepo) UpdateArgsForCall(i int) (db.Transaction, string, string, string) {
-	fake.updateMutex.RLock()
-	defer fake.updateMutex.RUnlock()
-	return fake.updateArgsForCall[i].tx, fake.updateArgsForCall[i].terminalGUID, fake.updateArgsForCall[i].name, fake.updateArgsForCall[i].description
+func (fake *DestinationMetadataRepo) UpsertArgsForCall(i int) (db.Transaction, string, string, string) {
+	fake.upsertMutex.RLock()
+	defer fake.upsertMutex.RUnlock()
+	return fake.upsertArgsForCall[i].tx, fake.upsertArgsForCall[i].terminalGUID, fake.upsertArgsForCall[i].name, fake.upsertArgsForCall[i].description
 }
 
-func (fake *DestinationMetadataRepo) UpdateReturns(result1 error) {
-	fake.UpdateStub = nil
-	fake.updateReturns = struct {
+func (fake *DestinationMetadataRepo) UpsertReturns(result1 error) {
+	fake.UpsertStub = nil
+	fake.upsertReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *DestinationMetadataRepo) UpdateReturnsOnCall(i int, result1 error) {
-	fake.UpdateStub = nil
-	if fake.updateReturnsOnCall == nil {
-		fake.updateReturnsOnCall = make(map[int]struct {
+func (fake *DestinationMetadataRepo) UpsertReturnsOnCall(i int, result1 error) {
+	fake.UpsertStub = nil
+	if fake.upsertReturnsOnCall == nil {
+		fake.upsertReturnsOnCall = make(map[int]struct {
 			result1 error
 		})
 	}
-	fake.updateReturnsOnCall[i] = struct {
+	fake.upsertReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }
@@ -211,12 +141,10 @@ func (fake *DestinationMetadataRepo) UpdateReturnsOnCall(i int, result1 error) {
 func (fake *DestinationMetadataRepo) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.createMutex.RLock()
-	defer fake.createMutex.RUnlock()
 	fake.deleteMutex.RLock()
 	defer fake.deleteMutex.RUnlock()
-	fake.updateMutex.RLock()
-	defer fake.updateMutex.RUnlock()
+	fake.upsertMutex.RLock()
+	defer fake.upsertMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

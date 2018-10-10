@@ -19,9 +19,8 @@ type egressDestinationRepo interface {
 
 //go:generate counterfeiter -o fakes/destination_metadata_repo.go --fake-name DestinationMetadataRepo . destinationMetadataRepo
 type destinationMetadataRepo interface {
-	Create(tx db.Transaction, terminalGUID, name, description string) (int64, error)
 	Delete(tx db.Transaction, terminalGUID string) error
-	Update(tx db.Transaction, terminalGUID, name, description string) error
+	Upsert(tx db.Transaction, terminalGUID, name, description string) error
 }
 
 type EgressDestinationStore struct {
@@ -34,7 +33,7 @@ type EgressDestinationStore struct {
 func (e *EgressDestinationStore) GetByGUID(guid ...string) ([]EgressDestination, error) {
 	tx, err := e.Conn.Beginx()
 	if err != nil {
-		return []EgressDestination{}, fmt.Errorf("egress destination store create transaction: %s", err)
+		return nil, fmt.Errorf("egress destination store create transaction: %s", err)
 	}
 	defer tx.Rollback()
 	return e.EgressDestinationRepo.GetByGUID(tx, guid...)
@@ -43,7 +42,7 @@ func (e *EgressDestinationStore) GetByGUID(guid ...string) ([]EgressDestination,
 func (e *EgressDestinationStore) All() ([]EgressDestination, error) {
 	tx, err := e.Conn.Beginx()
 	if err != nil {
-		return []EgressDestination{}, fmt.Errorf("egress destination store create transaction: %s", err)
+		return nil, fmt.Errorf("egress destination store create transaction: %s", err)
 	}
 	defer tx.Rollback()
 	return e.EgressDestinationRepo.All(tx)
@@ -139,14 +138,14 @@ func (e *EgressDestinationStore) Update(egressDestinations []EgressDestination) 
 			return nil, fmt.Errorf("egress destination store update iprange: %s", err)
 		}
 
-		err := e.DestinationMetadataRepo.Update(tx, egressDestination.GUID, egressDestination.Name, egressDestination.Description)
+		err := e.DestinationMetadataRepo.Upsert(tx, egressDestination.GUID, egressDestination.Name, egressDestination.Description)
 
 		if err != nil {
 			tx.Rollback()
 			if isDuplicateError(err) {
-				return []EgressDestination{}, fmt.Errorf("egress destination store update destination metadata: duplicate name error: entry with name '%s' already exists", egressDestination.Name)
+				return nil, fmt.Errorf("egress destination store update destination metadata: duplicate name error: entry with name '%s' already exists", egressDestination.Name)
 			}
-			return nil, fmt.Errorf("egress destination store update metadata: %s", err)
+			return nil, fmt.Errorf("egress destination store upsert metadata: %s", err)
 		}
 	}
 
@@ -162,24 +161,24 @@ func (e *EgressDestinationStore) Update(egressDestinations []EgressDestination) 
 func (e *EgressDestinationStore) Create(egressDestinations []EgressDestination) ([]EgressDestination, error) {
 	tx, err := e.Conn.Beginx()
 	if err != nil {
-		return []EgressDestination{}, fmt.Errorf("egress destination store create transaction: %s", err)
+		return nil, fmt.Errorf("egress destination store create transaction: %s", err)
 	}
 
-	results := []EgressDestination{}
+	var results []EgressDestination
 	for _, egressDestination := range egressDestinations {
 		destinationTerminalGUID, err := e.TerminalsRepo.Create(tx)
 		if err != nil {
 			tx.Rollback()
-			return []EgressDestination{}, fmt.Errorf("egress destination store create terminal: %s", err)
+			return nil, fmt.Errorf("egress destination store create terminal: %s", err)
 		}
 
-		_, err = e.DestinationMetadataRepo.Create(tx, destinationTerminalGUID, egressDestination.Name, egressDestination.Description)
+		err = e.DestinationMetadataRepo.Upsert(tx, destinationTerminalGUID, egressDestination.Name, egressDestination.Description)
 		if err != nil {
 			tx.Rollback()
 			if isDuplicateError(err) {
-				return []EgressDestination{}, fmt.Errorf("egress destination store create destination metadata: duplicate name error: entry with name '%s' already exists", egressDestination.Name)
+				return nil, fmt.Errorf("egress destination store create destination metadata: duplicate name error: entry with name '%s' already exists", egressDestination.Name)
 			}
-			return []EgressDestination{}, fmt.Errorf("egress destination store create destination metadata: %s", err)
+			return nil, fmt.Errorf("egress destination store create destination metadata: %s", err)
 		}
 
 		var startPort, endPort int64
@@ -201,7 +200,7 @@ func (e *EgressDestinationStore) Create(egressDestinations []EgressDestination) 
 		)
 		if err != nil {
 			tx.Rollback()
-			return []EgressDestination{}, fmt.Errorf("egress destination store create ip range: %s", err)
+			return nil, fmt.Errorf("egress destination store create ip range: %s", err)
 		}
 
 		egressDestination.GUID = destinationTerminalGUID
@@ -211,7 +210,7 @@ func (e *EgressDestinationStore) Create(egressDestinations []EgressDestination) 
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
-		return []EgressDestination{}, fmt.Errorf("egress destination store commit transaction: %s", err)
+		return nil, fmt.Errorf("egress destination store commit transaction: %s", err)
 	}
 
 	return results, nil
