@@ -42,7 +42,7 @@ Adding an Egress Policy
 
 Updating an Egress Policy when an IP changes
 1. List all egress destinations to find the one you want to change.
-1. Update the egress destination (not implemented yet).
+1. Update the egress destination.
 1. See updated policy apply. No app restarts needed.
 
 <hr> 
@@ -123,7 +123,7 @@ Will return all egress destinations.
 In the future, a destination will be able to support multiple ip ranges and port ranges.
 
 ### Update Egress Destinations
-#### POST /networking/v1/external/destinations
+#### PUT /networking/v1/external/destinations
 
 #### Request Body:
 
