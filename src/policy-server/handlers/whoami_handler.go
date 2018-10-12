@@ -12,7 +12,7 @@ type WhoAmIHandler struct {
 }
 
 type WhoAmIResponse struct {
-	UserName string `json:"user_name"`
+	Subject string `json:"subject"`
 }
 
 func (h *WhoAmIHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
@@ -20,7 +20,10 @@ func (h *WhoAmIHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	logger = logger.Session("who-am-i")
 	tokenData := getTokenData(req)
 	whoAmIResponse := WhoAmIResponse{
-		UserName: tokenData.UserName,
+		Subject: tokenData.UserName,
+	}
+	if len(whoAmIResponse.Subject) < 1 {
+		whoAmIResponse.Subject = tokenData.Subject
 	}
 	responseJSON, err := h.Marshaler.Marshal(whoAmIResponse)
 	if err != nil {

@@ -112,6 +112,9 @@ var MockUAAServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWrit
 			case "valid-token":
 				w.WriteHeader(http.StatusOK)
 				w.Write([]byte(`{"scope":["network.admin"], "user_name":"some-user", "sub": "some-user-or-client-id"}`))
+			case "valid-client-token":
+				w.WriteHeader(http.StatusOK)
+				w.Write([]byte(`{"scope":["network.admin"], "sub": "some-client-id"}`))
 			case "space-dev-with-network-write-token":
 				w.WriteHeader(http.StatusOK)
 				w.Write([]byte(`{"scope":["network.write"], "user_name":"some-user", "sub": "some-user-or-client-id"}`))
@@ -276,7 +279,9 @@ func StartInternalPolicyServer(pathToBinary string, conf config.InternalConfig) 
 func MakeAndDoRequest(method string, endpoint string, extraHeaders map[string]string, body io.Reader) *http.Response {
 	req, err := http.NewRequest(method, endpoint, body)
 	Expect(err).NotTo(HaveOccurred())
-	req.Header.Set("Authorization", "Bearer valid-token")
+	if _, ok := extraHeaders["Authorization"]; !ok {
+		req.Header.Set("Authorization", "Bearer valid-token")
+	}
 	for k, v := range extraHeaders {
 		req.Header.Set(k, v)
 	}
