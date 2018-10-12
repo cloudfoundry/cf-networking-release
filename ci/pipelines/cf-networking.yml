@@ -457,13 +457,13 @@ jobs:
         trigger: true
       - get: cf-networking-deployments
       - get: routing-ci
+      - get: istio-release
     - task: merge-bbl-config
       file: routing-ci/merge-bbl-config/task.yml
       input_mapping:
-        source1: cf-networking-deployments
-        source2: istio-release
+        source1: istio-release
       params:
-        SOURCE2_DIR: deploy/bbl-config
+        SOURCE1_DIR: deploy/bbl-config
     - task: bbl-up
       file: cf-deployment-concourse-tasks/bbl-up/task.yml
       params:
@@ -475,6 +475,7 @@ jobs:
         BBL_LB_KEY: ((istio-cfn-lb-key.private_key))
         LB_DOMAIN: istio-cfn.c2c.cf-app.com
         BBL_ENV_NAME: istio-cfn
+        BBL_CONFIG_DIR: "."
       input_mapping:
         bbl-state: cf-networking-deployments
         bbl-config: merged-bbl-config
