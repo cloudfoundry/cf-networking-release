@@ -21,7 +21,7 @@ module Bosh::Template::Test
     describe 'handlers.json' do
       let(:template) {job.template('dns/handlers.json')}
 
-      it 'creates a dns/handlers.json from properties' do
+      it 'creates a dns/handlers.json with default properties' do
         config = JSON.parse(template.render(merged_manifest_properties))
         expect(config).to eq([
           {
@@ -38,6 +38,25 @@ module Bosh::Template::Test
             'source' => {
               'type' => 'http',
               'url' => 'http://127.0.0.1:8053'
+            }
+          }
+        ])
+      end
+
+      it 'creates a dns/handlers.json with custom properties' do
+        properties = {
+          'internal_domains' => ['hello.world'],
+          'port' => 1001,
+          'address' => '0.0.0.0'
+        }
+        config = JSON.parse(template.render(properties))
+        expect(config).to eq([
+          {
+            'domain' => 'hello.world',
+            'cache' => {'enabled' => false},
+            'source' => {
+              'type' => 'http',
+              'url' => 'http://0.0.0.0:1001'
             }
           }
         ])
