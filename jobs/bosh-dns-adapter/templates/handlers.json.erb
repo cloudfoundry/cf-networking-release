@@ -15,7 +15,7 @@ config = p('internal_domains').map{
     'cache' => {'enabled' => false},
     'source' => {
       'type' => 'http',
-      'url' => 'http://127.0.0.1:8053'
+      'url' => "http://#{p('address')}:#{p('port')}"
     }
   }
 }
