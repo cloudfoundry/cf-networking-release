@@ -1318,7 +1318,7 @@ jobs:
         SLI_ORG: sli-resolve-route
         SLI_SPACE: sli-resolve-route
         SLI_APP_NAME: sli-resolve-route
-        MAP_INTERNAL_ROUTE: true
+        MAP_ROUTES: true
     - task: sli-resolve-route
       file: cf-networking-release-ci/ci/tasks/sli-resolve-route.yml
       timeout: 5m
@@ -1698,6 +1698,8 @@ jobs:
           use-latest-silk.yml
           enable-service-discovery.yml
           add-apps-internal-search-domain.yml
+          enable-bpm-garden.yml
+          rootless-containers.yml
           add-cflinuxfs3.yml
           enable-experimental-dynamic-egress-policies.yml
           opsfile.yml
