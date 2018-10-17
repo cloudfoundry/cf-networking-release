@@ -133,6 +133,13 @@ resources:
       branch: develop
       paths:
         - ci
+  - name: cf-networking-release-assets
+    type: git
+    source:
+      uri: https://github.com/cloudfoundry/cf-networking-release
+      branch: develop
+      paths:
+        - src/example-apps
   - name: cf-networking-deployments
     type: git
     source:
@@ -1232,6 +1239,9 @@ jobs:
       - get: cf-networking-release-ci
         params:
           submodules: none
+      - get: cf-networking-release-assets
+        params:
+          submodules: none
       - get: cf-networking-deployments
     - task: get-credhub-vars
       file: cf-networking-release-ci/ci/tasks/get-credhub-vars.yml
@@ -1241,6 +1251,13 @@ jobs:
         BBL_STATE_DIR: environments/mitre
         VARIABLES: |
           /bosh-mitre/cf/cf_admin_password
+    - task: sli-setup
+      file: cf-networking-release-ci/ci/tasks/sli-setup.yml
+      params:
+        ENVIRONMENT_TAG: mitre.c2c.cf-app.com
+        SLI_ORG: sli-map-route
+        SLI_SPACE: sli-map-route
+        SLI_APP_NAME: sli-map-route
     - task: sli-map-route
       file: cf-networking-release-ci/ci/tasks/sli-map-route.yml
       timeout: 5m
@@ -1261,6 +1278,9 @@ jobs:
       - get: cf-networking-release-ci
         params:
           submodules: none
+      - get: cf-networking-release-assets
+        params:
+          submodules: none
       - get: cf-networking-deployments
     - task: get-credhub-vars
       file: cf-networking-release-ci/ci/tasks/get-credhub-vars.yml
@@ -1270,6 +1290,13 @@ jobs:
         BBL_STATE_DIR: environments/mitre
         VARIABLES: |
           /bosh-mitre/cf/cf_admin_password
+    - task: sli-setup
+      file: cf-networking-release-ci/ci/tasks/sli-setup.yml
+      params:
+        ENVIRONMENT_TAG: mitre.c2c.cf-app.com
+        SLI_ORG: sli-resolve-route
+        SLI_SPACE: sli-resolve-route
+        SLI_APP_NAME: sli-resolve-route
     - task: sli-resolve-route
       file: cf-networking-release-ci/ci/tasks/sli-resolve-route.yml
       timeout: 5m

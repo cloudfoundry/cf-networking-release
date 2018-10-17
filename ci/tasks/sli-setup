@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+set -eu
+
+ROOT="$(cd "$(dirname $0)/../../.." && pwd)"
+
+function main() {
+    cf_login
+    create_org_space
+    create_app
+}
+
+function cf_login() {
+    local cf_username="${CF_USERNAME:-admin}"
+    local cf_password="${CF_PASSWORD:-$(get_var_from_yml cf_admin_password)}"
+
+    cf api api."${ENVIRONMENT_TAG}" --skip-ssl-validation
+    cf auth "${cf_username}" "${cf_password}"
+}
+
+function get_var_from_yml() {
+  local name="${1}"
+  grep "^${name}:" ${ROOT}/variables/variables.yml | cut -d" " -f2
+}
+
+function create_org_space() {
+    cf create-org "${SLI_ORG}"
+    cf create-space "${SLI_SPACE}" -o "${SLI_ORG}"
+}
+
+function create_app() {
+    cf target -o "${SLI_ORG}" -s "${SLI_SPACE}"
+    if cf apps | grep "${SLI_APP_NAME}" | grep "started" > /dev/null; then
+      echo "Application ${SLI_APP_NAME} already exists!"
+    else
+      pushd "${SLI_APP_PATH}"
+      cf push "${SLI_APP_NAME}" --no-route
+      popd
+    fi
+}
+
+main
