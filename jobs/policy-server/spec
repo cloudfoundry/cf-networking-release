@@ -27,6 +27,9 @@ provides:
   - database.host
   - database.require_ssl
   - database.ca_cert
+  - database.skip_hostname_validation
+  - database.client_cert
+  - database.client_key
 - name: tag_length
   type: tag_length
   properties:
@@ -131,6 +134,18 @@ properties:
 
   database.ca_cert:
     description: "ca cert for db connectivity. Requires 'database.require_ssl' to be true."
+    default: ~
+
+  database.skip_hostname_validation:
+    description: "Skip hostname validation when true. Requires 'database.require_ssl' to be true"
+    default: false
+
+  database.client_cert:
+    description: "Client cert for db connectivity. Requires 'database.require_ssl' to be true"
+    default: ~
+
+  database.client_key:
+    description: "Client key for db connectivity. Requires 'database.require_ssl' to be true"
     default: ~
 
   max_open_connections:

@@ -38,6 +38,9 @@ module Bosh::Template::Test
           'require_ssl' => true,
           'ca_cert' => 'some-ca-cert',
           'connect_timeout_seconds' => 3,
+          'skip_hostname_validation' => true,
+          'client_cert' => 'hello i am a cert',
+          'client_key' => 'knock knock its your key',
         },
         'max_idle_connections' => 4,
         'max_open_connections' => 5,
@@ -84,7 +87,10 @@ module Bosh::Template::Test
             'timeout' => 3,
             'database_name' => 'some-database-name',
             'require_ssl' => true,
-            'ca_cert' => '/var/vcap/jobs/policy-server/config/certs/database_ca.crt'
+            'ca_cert' => '/var/vcap/jobs/policy-server/config/certs/database_ca.crt',
+            'skip_hostname_validation' => true,
+            'client_cert' => 'hello i am a cert',
+            'client_key' => 'knock knock its your key'
           },
           'database_migration_timeout' => 600,
           'max_idle_connections' => 4,
