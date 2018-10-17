@@ -28,6 +28,12 @@ function create_org_space() {
     cf create-space "${SLI_SPACE}" -o "${SLI_ORG}"
 }
 
+function map_routes() {
+    # routes used for resolving route
+    cf map-route "${SLI_APP_NAME}" apps."${ENVIRONMENT_TAG}" --hostname "${SLI_APP_NAME}"
+    cf map-route "${SLI_APP_NAME}" apps.internal --hostname "${SLI_APP_NAME}"
+}
+
 function create_app() {
     cf target -o "${SLI_ORG}" -s "${SLI_SPACE}"
     if cf apps | grep "${SLI_APP_NAME}" | grep "started" > /dev/null; then
@@ -36,6 +42,9 @@ function create_app() {
       pushd "${SLI_APP_PATH}"
       cf push "${SLI_APP_NAME}" --no-route
       popd
+    fi
+    if ${MAP_ROUTES}; then
+      map_routes
     fi
 }
 
