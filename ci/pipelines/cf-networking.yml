@@ -51,6 +51,8 @@ groups:
   - toque-deploy
   - toque-push
   - toque-test
+  - caubeen-deploy-pinned
+  - caubeen-upgrade-test
 - name: pickelhelm
   jobs:
   - pickelhelm-bbl-up
@@ -97,7 +99,11 @@ groups:
 - name: caubeen
   jobs:
   - caubeen-bbl-up
-  - caubeen-deploy
+  - caubeen-deploy-pinned
+  - caubeen-upgrade-test
+  - caubeen-cleanup
+  - caubeen-bbl-destroy
+  - delete-caubeen-deployment
 - name: bbl
   jobs:
   - pickelhelm-bbl-up
@@ -118,6 +124,7 @@ groups:
   - delete-istio-cfn-deployment
   - delete-toque-deployment
   - delete-slouch-deployment
+  - delete-caubeen-deployment
 - name: version
   jobs:
   - major-bump
@@ -150,6 +157,12 @@ resources:
     source:
       branch: release-candidate
       uri: https://github.com/cloudfoundry/cf-deployment.git
+  - name: cf-deployment-pinned
+    type: git
+    source:
+      branch: master
+      uri: https://github.com/cloudfoundry/cf-deployment.git
+      tag_filter: "v4.5.0"
   - name: disaster-recovery-acceptance-tests
     type: git
     source:
@@ -236,6 +249,27 @@ resources:
       branch: master
       private_key: ((container-networking-bot-key.private_key))
   ####### Timers
+  - name: trigger-upgrade-deploy
+    type: time
+    source:
+      location: America/Los_Angeles
+      start: 4:00 AM
+      stop: 4:15 AM
+      days: [ Monday, Tuesday, Wednesday, Thursday, Friday ]
+  - name: trigger-caubeen-delete
+    type: time
+    source:
+      location: America/Los_Angeles
+      start: 2:00 PM
+      stop: 2:15 PM
+      days: [ Monday, Tuesday, Wednesday, Thursday, Friday ]
+  - name: trigger-caubeen-cleanup
+    type: time
+    source:
+      location: America/Los_Angeles
+      start: 2:00 PM
+      stop: 2:15 PM
+      days: [ Saturday ]
   - name: four-am-daily
     type: time
     source:
@@ -1720,36 +1754,94 @@ jobs:
           repository: updated-bbl-state
           rebase: true
 
-#  - name: caubeen-bbl-destroy
-#    serial_groups: [caubeen]
-#    plan:
-#    - aggregate:
-#      - get: cf-deployment-concourse-tasks
-#        version: {ref: v6.1}
-#      - get: cf-networking-deployments
-#    - task: bosh-cleanup
-#      file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
-#      params:
-#        BBL_STATE_DIR: environments/caubeen/
-#      input_mapping:
-#        bbl-state: cf-networking-deployments
-#    - task: bbl-destroy
-#      file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
-#      params:
-#        BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
-#        BBL_STATE_DIR: environments/caubeen/
-#      input_mapping:
-#        bbl-state: cf-networking-deployments
-#      ensure:
-#        put: cf-networking-deployments
-#        params:
-#          repository: updated-bbl-state
-#          rebase: true
-
-  - name: caubeen-deploy
+  - name: caubeen-bbl-destroy
     serial_groups: [caubeen]
     plan:
     - aggregate:
+      - get: cf-deployment-concourse-tasks
+      - get: cf-networking-deployments
+    - task: bosh-cleanup
+      file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
+      params:
+        BBL_STATE_DIR: environments/caubeen/
+      input_mapping:
+        bbl-state: cf-networking-deployments
+    - task: bbl-destroy
+      file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
+      params:
+        BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
+        BBL_STATE_DIR: environments/caubeen/
+      input_mapping:
+        bbl-state: cf-networking-deployments
+      ensure:
+        put: cf-networking-deployments
+        params:
+          repository: updated-bbl-state
+          rebase: true
+
+  - name: caubeen-deploy-pinned
+    serial_groups: [caubeen]
+    plan:
+    - aggregate:
+      - get: trigger-upgrade-deploy
+        trigger: true
+      - get: cf-networking-release-ci
+        params:
+          submodules: none
+      - get: cf-deployment-concourse-tasks
+      - get: cf-networking-deployments
+      - get: cf-deployment
+      - get: cf-deployment-pinned
+      - get: cf-networking-dev
+        passed: [unit-and-integration-tests]
+      - get: silk-dev
+        passed: [unit-and-integration-tests]
+    - task: upload-pinned-stemcell
+      file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
+      params:
+        BBL_STATE_DIR: environments/caubeen/
+      input_mapping:
+        cf-deployment: cf-deployment-pinned
+        bbl-state: cf-networking-deployments
+    - task: collect-pinned-ops-files
+      file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
+      params:
+        ENVIRONMENT_NAME: caubeen
+      input_mapping:
+        cf-deployment: cf-deployment-pinned
+        cf-networking-release: cf-networking-dev
+        deployments-repo: cf-networking-deployments
+        silk-release: silk-dev
+    - task: deploy-pinned-cf-deployment
+      file: cf-deployment-concourse-tasks/bosh-deploy/task.yml
+      params:
+        BBL_STATE_DIR: environments/caubeen/
+        SYSTEM_DOMAIN: caubeen.c2c.cf-app.com
+        OPS_FILES: |
+          use-compiled-releases.yml
+          cf-networking.yml
+          use-system-domain-as-metron-deployment-name.yml
+          enable-routing-integrity.yml
+          enable-iptables-logger.yml
+          enable-service-discovery.yml
+          add-apps-internal-search-domain.yml
+          use-pxc.yml
+          add-cflinuxfs3.yml
+          enable-experimental-dynamic-egress-policies.yml
+          opsfile.yml
+      input_mapping:
+        cf-deployment: cf-deployment-pinned
+        bbl-state: cf-networking-deployments
+        vars-files: cf-networking-deployments
+        vars-store: cf-networking-deployments
+
+  - name: caubeen-upgrade-test
+    serial_groups: [caubeen]
+    plan:
+    - aggregate:
+      - get: trigger-upgrade-deploy
+        passed: [caubeen-deploy-pinned]
+        trigger: true
       - get: cf-networking-release-ci
         params:
           submodules: none
@@ -1757,7 +1849,9 @@ jobs:
       - get: cf-networking-deployments
       - get: cf-deployment
       - get: cf-networking-dev
+        passed: [caubeen-deploy-pinned]
       - get: silk-dev
+        passed: [caubeen-deploy-pinned]
     - task: upload-stemcell
       file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
       params:
@@ -1779,17 +1873,15 @@ jobs:
         local-release: silk-dev
       params:
         BBL_STATE_DIR: environments/caubeen/
-    - task: deploy-cf
+    - task: deploy-cf-dev
       file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
       params:
         BBL_STATE_DIR: environments/caubeen/
         SYSTEM_DOMAIN: caubeen.c2c.cf-app.com
         OPS_FILES: |
           use-compiled-releases.yml
-          scale-to-one-az.yml
           cf-networking.yml
           use-system-domain-as-metron-deployment-name.yml
-          custom-apps-domain.yml
           enable-routing-integrity.yml
           enable-iptables-logger.yml
           use-latest-silk.yml
@@ -1797,7 +1889,11 @@ jobs:
           add-apps-internal-search-domain.yml
           use-pxc.yml
           add-cflinuxfs3.yml
+          enable-experimental-dynamic-egress-policies.yml
           opsfile.yml
+        DEPLOY_WITH_UPTIME_MEASUREMENTS: true
+        FAIL_ON_DOWNTIME: true
+        APP_PUSHABILITY_THRESHOLD: 1
       input_mapping:
         bbl-state: cf-networking-deployments
         release: cf-networking-dev
@@ -1865,6 +1961,41 @@ jobs:
         DEPLOYMENT_NAME: cf
       input_mapping:
         bbl-state: cf-networking-deployments
+
+  - name: delete-caubeen-deployment
+    public: true
+    serial_groups: [caubeen]
+    plan:
+    - aggregate:
+      - get: cf-networking-deployments
+      - get: cf-deployment-concourse-tasks
+      - get: trigger-caubeen-delete
+        trigger: true
+    - task: delete-deployment
+      file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
+      params:
+        BBL_STATE_DIR: environments/caubeen/
+        DEPLOYMENT_NAME: cf
+      input_mapping:
+        bbl-state: cf-networking-deployments
+
+  - name: caubeen-cleanup
+    public: true
+    serial_groups: [caubeen]
+    plan:
+    - aggregate:
+      - get: cf-networking-deployments
+      - get: cf-deployment-concourse-tasks
+      - get: trigger-caubeen-cleanup
+        trigger: true
+    - task: cleanup-caubeen
+      file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
+      params:
+        CLEAN_ALL: false
+        BBL_STATE_DIR: environments/caubeen/
+      input_mapping:
+        bbl-state: cf-networking-deployments
+
 
   - name: ship-what
     serial_groups: [version]
