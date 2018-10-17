@@ -133,13 +133,6 @@ resources:
       branch: develop
       paths:
         - ci
-  - name: cf-networking-release-assets
-    type: git
-    source:
-      uri: https://github.com/cloudfoundry/cf-networking-release
-      branch: develop
-      paths:
-        - src/example-apps
   - name: cf-networking-deployments
     type: git
     source:
@@ -1239,9 +1232,6 @@ jobs:
       - get: cf-networking-release-ci
         params:
           submodules: none
-      - get: cf-networking-release-assets
-        params:
-          submodules: none
       - get: cf-networking-deployments
     - task: get-credhub-vars
       file: cf-networking-release-ci/ci/tasks/get-credhub-vars.yml
@@ -1276,9 +1266,6 @@ jobs:
       - get: every-two-minutes
         trigger: true
       - get: cf-networking-release-ci
-        params:
-          submodules: none
-      - get: cf-networking-release-assets
         params:
           submodules: none
       - get: cf-networking-deployments

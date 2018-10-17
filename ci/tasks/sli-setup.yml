@@ -18,7 +18,7 @@ params:
   SLI_ORG: ~
   SLI_SPACE: ~
   SLI_APP_NAME: ~
-  SLI_APP_PATH: cf-networking-release-assets/proxy
+  SLI_APP_PATH: cf-networking-release-ci/src/example-apps/proxy/
 
 run:
   path: cf-networking-release-ci/ci/tasks/sli-setup
