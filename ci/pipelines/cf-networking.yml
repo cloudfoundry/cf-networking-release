@@ -1284,7 +1284,7 @@ jobs:
         SLI_ORG: sli-resolve-route
         SLI_SPACE: sli-resolve-route
         SLI_APP_NAME: sli-resolve-route
-        MAP_ROUTES: true
+        MAP_INTERNAL_ROUTE: true
     - task: sli-resolve-route
       file: cf-networking-release-ci/ci/tasks/sli-resolve-route.yml
       timeout: 5m

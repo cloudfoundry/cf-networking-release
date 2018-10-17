@@ -28,9 +28,7 @@ function create_org_space() {
     cf create-space "${SLI_SPACE}" -o "${SLI_ORG}"
 }
 
-function map_routes() {
-    # routes used for resolving route
-    cf map-route "${SLI_APP_NAME}" apps."${ENVIRONMENT_TAG}" --hostname "${SLI_APP_NAME}"
+function map_internal_route() {
     cf map-route "${SLI_APP_NAME}" apps.internal --hostname "${SLI_APP_NAME}"
 }
 
@@ -40,11 +38,11 @@ function create_app() {
       echo "Application ${SLI_APP_NAME} already exists!"
     else
       pushd "${SLI_APP_PATH}"
-      cf push "${SLI_APP_NAME}" --no-route
+      cf push "${SLI_APP_NAME}"
       popd
     fi
-    if ${MAP_ROUTES}; then
-      map_routes
+    if ${MAP_INTERNAL_ROUTE}; then
+      map_internal_route
     fi
 }
 
