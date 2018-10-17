@@ -142,11 +142,9 @@ properties:
 
   database.client_cert:
     description: "Client cert for db connectivity. Requires 'database.require_ssl' to be true"
-    default: ~
 
   database.client_key:
     description: "Client key for db connectivity. Requires 'database.require_ssl' to be true"
-    default: ~
 
   max_open_connections:
     description: |
