@@ -9,7 +9,6 @@ inputs:
   - name: variables
     optional: true
   - name: cf-networking-release-ci
-  - name: cf-networking-release-assets
 
 params:
   ENVIRONMENT_TAG: ~
