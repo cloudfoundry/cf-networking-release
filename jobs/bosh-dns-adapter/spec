@@ -53,3 +53,8 @@ properties:
     description: "TLD for internal app resolution with service discovery."
     example: ["apps.internal.", "my.apps.internal."]
     default: []
+
+  internal_service_mesh_domains:
+    description: "TLD for internal app resolution with istio service discovery."
+    example: ["istio.apps.internal."]
+    default: []

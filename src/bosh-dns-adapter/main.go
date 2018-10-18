@@ -3,6 +3,7 @@ package main
 import (
 	"bosh-dns-adapter/config"
 	"bosh-dns-adapter/sdcclient"
+	"bosh-dns-adapter/vip"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -15,7 +16,6 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
-
 	"time"
 
 	"code.cloudfoundry.org/cf-networking-helpers/lagerlevel"
@@ -116,22 +116,32 @@ func main() {
 			}
 
 			start := time.Now()
-			ips, err := sdcClient.IPs(name)
-			duration := time.Now().Sub(start).Nanoseconds()
-			if err != nil {
-				wrappedErr := errors.New(fmt.Sprintf("Error querying Service Discover Controller: %s", err))
-				writeErrorResponse(resp, wrappedErr, logger)
-				requestLogger.Error("could not connect to service discovery controller",
-					wrappedErr,
-					lager.Data{
-						"ips":          "",
-						"service-name": name,
-					})
+			var ips []string
+			var err error
+			var duration int64
+			if hasInternalServiceMeshDomain(name, config.InternalServiceMeshDomains) {
+				// hardcoded default VIPCIDR for dev
+				_, cidr, _ := net.ParseCIDR("127.128.0.0/9")
+				provider := &vip.Provider{CIDR: cidr}
+				ips = []string{provider.Get(name)}
+				duration = time.Now().Sub(start).Nanoseconds()
+			} else {
+				ips, err = sdcClient.IPs(name)
+				duration = time.Now().Sub(start).Nanoseconds()
+				if err != nil {
+					wrappedErr := errors.New(fmt.Sprintf("Error querying Service Discover Controller: %s", err))
+					writeErrorResponse(resp, wrappedErr, logger)
+					requestLogger.Error("could not connect to service discovery controller",
+						wrappedErr,
+						lager.Data{
+							"ips":          "",
+							"service-name": name,
+						})
 
-				metricSender.IncrementCounter("DNSRequestFailures")
-				return
+					metricSender.IncrementCounter("DNSRequestFailures")
+					return
+				}
 			}
-
 			writeResponse(resp, dnsmessage.RCodeSuccess, name, dnsType, ips, logger)
 			requestLogger.Debug("success", lager.Data{
 				"ips":          strings.Join(ips, ","),
@@ -248,4 +258,13 @@ func buildResponseBody(dnsResponseStatus dnsmessage.RCode, requestedInfraName st
 	}`
 
 	return fmt.Sprintf(template, dnsResponseStatus, requestedInfraName, dnsType, string(bytes)), nil
+}
+
+func hasInternalServiceMeshDomain(route string, domains []string) bool {
+	for _, d := range domains {
+		if strings.HasSuffix(route, d) {
+			return true
+		}
+	}
+	return false
 }

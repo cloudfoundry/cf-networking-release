@@ -8,8 +8,8 @@ JSON.dump(config)
 %>
 <% else %>
  <%=
-
-config = p('internal_domains').map{
+all_domains = p('internal_domains') + p('internal_service_mesh_domains')
+config = all_domains.map{
   |domain| {
     'domain' => domain,
     'cache' => {'enabled' => false},

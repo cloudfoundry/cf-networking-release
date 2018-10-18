@@ -90,7 +90,8 @@ var _ = Describe("Main", func() {
 			"metron_port": %d,
 			"metrics_emit_seconds": 2,
 			"log_level_port": %d,
-			"log_level_address": "127.0.0.1"
+			"log_level_address": "127.0.0.1",
+			"internal_service_mesh_domains" : ["istio.local."]
 		}`, dnsAdapterAddress,
 			dnsAdapterPort,
 			strings.TrimPrefix(urlParts[1], "//"),
@@ -161,6 +162,52 @@ var _ = Describe("Main", func() {
 					"edns_client_subnet": "0.0.0.0/0"
 				}
 		`))
+	})
+
+	Context("when internal service mesh domain", func() {
+		It("should return a http 200 status", func() {
+			Eventually(session).Should(gbytes.Say("bosh-dns-adapter.server-started"))
+
+			var reader io.Reader
+			url := fmt.Sprintf("http://127.0.0.1:%s?type=1&name=app-id.istio.local.", dnsAdapterPort)
+			request, err := http.NewRequest("GET", url, reader)
+			Expect(err).To(Succeed())
+
+			resp, err := http.DefaultClient.Do(request)
+			Expect(err).To(Succeed())
+
+			Expect(resp.StatusCode).To(Equal(http.StatusOK))
+
+			all, err := ioutil.ReadAll(resp.Body)
+			Expect(err).To(Succeed())
+			Expect(string(all)).To(MatchJSON(`{
+					"Status": 0,
+					"TC": false,
+					"RD": false,
+					"RA": false,
+					"AD": false,
+					"CD": false,
+					"Question":
+					[
+						{
+							"name": "app-id.istio.local.",
+							"type": 1
+						}
+					],
+					"Answer":
+					[
+						{
+							"name": "app-id.istio.local.",
+							"type": 1,
+							"TTL":  0,
+							"data": "127.155.173.188"
+						}
+					],
+					"Additional": [ ],
+					"edns_client_subnet": "0.0.0.0/0"
+				}
+		`))
+		})
 	})
 
 	It("accepts interrupt signals and shuts down", func() {

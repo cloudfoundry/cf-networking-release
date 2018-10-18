@@ -14,6 +14,9 @@ module Bosh::Template::Test
         'internal_domains' => [
           'my.internal.app.domain.',
           'other.internal.app.domain.'
+        ],
+        'internal_service_mesh_domains' => [
+          'myistio.internal.app.domain.'
         ]
       }
     end
@@ -39,6 +42,14 @@ module Bosh::Template::Test
               'type' => 'http',
               'url' => 'http://127.0.0.1:8053'
             }
+          },
+          {
+            'domain' => 'myistio.internal.app.domain.',
+            'cache' => {'enabled' => false},
+            'source' => {
+              'type' => 'http',
+              'url' => 'http://127.0.0.1:8053'
+            }
           }
         ])
       end
@@ -46,6 +57,7 @@ module Bosh::Template::Test
       it 'creates a dns/handlers.json with custom properties' do
         properties = {
           'internal_domains' => ['hello.world'],
+          'internal_service_mesh_domains' => ['helloistio.world'],
           'port' => 1001,
           'address' => '0.0.0.0'
         }
@@ -53,6 +65,14 @@ module Bosh::Template::Test
         expect(config).to eq([
           {
             'domain' => 'hello.world',
+            'cache' => {'enabled' => false},
+            'source' => {
+              'type' => 'http',
+              'url' => 'http://0.0.0.0:1001'
+            }
+          },
+          {
+            'domain' => 'helloistio.world',
             'cache' => {'enabled' => false},
             'source' => {
               'type' => 'http',
