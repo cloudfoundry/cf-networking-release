@@ -58,8 +58,11 @@ Updating an Egress Policy when an IP changes
 
 
 ### List Egress Destinations
-#### GET /networking/v1/external/destinations 
-#### Arguments: None
+#### GET /networking/v1/external/destinations
+#### Arguments:
+
+[optionally] `id`: comma-separated id values. This cannot be used with `name`.\
+[optionally] `name`: comma-separated name values. This cannot be used with `id`.\
 
 Will return all egress destinations.
 
