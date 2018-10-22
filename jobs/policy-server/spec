@@ -8,6 +8,8 @@ templates:
   uaa_ca.crt.erb: config/certs/uaa_ca.crt
   cc_ca.crt.erb: config/certs/cc_ca.crt
   database_ca.crt.erb: config/certs/database_ca.crt
+  db_client.crt.erb: config/certs/db_client.crt
+  db_client.key.erb: config/certs/db_client.key
   post-start.erb: bin/post-start
   pre-start.erb: bin/pre-start
 

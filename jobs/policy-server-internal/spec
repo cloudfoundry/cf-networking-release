@@ -9,6 +9,8 @@ templates:
   server.key.erb: config/certs/server.key
   dns_health_check.erb: bin/dns_health_check
   database_ca.crt.erb: config/certs/database_ca.crt
+  db_client.crt.erb: config/certs/db_client.crt
+  db_client.key.erb: config/certs/db_client.key
 
 packages:
   - policy-server
@@ -68,6 +70,18 @@ properties:
   database.connect_timeout_seconds:
     description: "Connection timeout between the policy server and its database."
     default: 120
+
+  database.skip_hostname_validation:
+    description: "Skip hostname validation when true. Requires 'database.require_ssl' to be true"
+    default: false
+
+  database.client_cert:
+    description: "Client cert for db connectivity. Requires 'database.require_ssl' to be true"
+    default: ""
+
+  database.client_key:
+    description: "Client key for db connectivity. Requires 'database.require_ssl' to be true"
+    default: ""
 
   max_open_connections:
     description: |
