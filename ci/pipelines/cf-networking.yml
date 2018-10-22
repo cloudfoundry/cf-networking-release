@@ -1698,8 +1698,6 @@ jobs:
           use-latest-silk.yml
           enable-service-discovery.yml
           add-apps-internal-search-domain.yml
-          enable-bpm-garden.yml
-          rootless-containers.yml
           add-cflinuxfs3.yml
           enable-experimental-dynamic-egress-policies.yml
           opsfile.yml
