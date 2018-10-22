@@ -34,7 +34,7 @@ var _ = Describe("ASG/Dynamic Egress Interaction", func() {
 				}]
 			`,
 			"only-asg": `[{
-					"destination": "23.185.0.1",
+					"destination": "208.80.154.224",
 					"protocol": "tcp",
 					"ports": "80,443"
 				}]`,
@@ -54,7 +54,7 @@ var _ = Describe("ASG/Dynamic Egress Interaction", func() {
 					"description": "Testing description",
 					"protocol": "tcp",
 					"ports": [ { "start": 80, "end": 443 } ],
-					"ips": [ { "start": "208.80.152.1", "end": "208.80.155.254" } ]
+					"ips": [ { "start": "198.35.26.96", "end": "198.35.26.96" } ]
 				} ]
 		}`
 		testEgressPolicies = `{
@@ -146,13 +146,13 @@ var _ = Describe("ASG/Dynamic Egress Interaction", func() {
 		return checkRequest(appRoute+"proxy/example.com", 200, `Example Domain`)
 	}
 	canProxyASGOnlySite := func() error {
-		return checkRequest(appRoute+"proxy/cloudfoundry.org", 200, `https://cloudfoundry\.org`)
+		return checkRequest(appRoute+"proxy/208.80.154.224", 200, `wikimedia`)
 	}
 	canProxyDEOnlySite := func() error {
-		return checkRequest(appRoute+"proxy/wikipedia.org", 200, `wikipedia\.org`)
+		return checkRequest(appRoute+"proxy/198.35.26.96", 200, `wikimedia`)
 	}
 	cannotProxyDEOnlySite := func() error {
-		return checkRequest(appRoute+"proxy/wikipedia.org", 500, "connection refused|i/o timeout")
+		return checkRequest(appRoute+"proxy/198.35.26.96", 500, "connection refused|i/o timeout")
 	}
 
 	It("can reach all the websites allowed by both asgs and dynamic egress", func(done Done) {
