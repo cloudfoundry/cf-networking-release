@@ -73,7 +73,7 @@ var _ = Describe("Garden External Networker errors", func() {
 				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 				Expect(err).NotTo(HaveOccurred())
 
-				Eventually(session).Should(gexec.Exit(1))
+				Eventually(session, "2s").Should(gexec.Exit(1))
 				Expect(session.Out.Contents()).To(BeEmpty())
 				By("checking that the error was logged to stderr")
 				Expect(string(session.Err.Contents())).To(ContainSubstring("prefix: invalid character"))
@@ -86,7 +86,7 @@ var _ = Describe("Garden External Networker errors", func() {
 				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 				Expect(err).NotTo(HaveOccurred())
 
-				Eventually(session).Should(gexec.Exit(1))
+				Eventually(session, "2s").Should(gexec.Exit(1))
 				Expect(session.Out.Contents()).To(BeEmpty())
 				Expect(string(session.Err.Contents())).To(MatchRegexp(`prefix: json: cannot unmarshal string into Go.*type int`))
 			})
@@ -99,7 +99,7 @@ var _ = Describe("Garden External Networker errors", func() {
 				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 				Expect(err).NotTo(HaveOccurred())
 
-				Eventually(session).Should(gexec.Exit(1))
+				Eventually(session, "2s").Should(gexec.Exit(1))
 				Expect(session.Out.Contents()).To(BeEmpty())
 				Expect(string(session.Err.Contents())).To(ContainSubstring(`prefix: unrecognized action: some-invalid-action`))
 			})
@@ -111,7 +111,7 @@ var _ = Describe("Garden External Networker errors", func() {
 				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 				Expect(err).NotTo(HaveOccurred())
 
-				Eventually(session).Should(gexec.Exit(1))
+				Eventually(session, "2s").Should(gexec.Exit(1))
 				Expect(session.Out.Contents()).To(BeEmpty())
 				Expect(session.Err.Contents()).NotTo(BeEmpty())
 			})
@@ -124,7 +124,7 @@ var _ = Describe("Garden External Networker errors", func() {
 				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 				Expect(err).NotTo(HaveOccurred())
 
-				Eventually(session).Should(gexec.Exit(1))
+				Eventually(session, "2s").Should(gexec.Exit(1))
 				Expect(session.Out.Contents()).To(BeEmpty())
 				Expect(string(session.Err.Contents())).To(ContainSubstring(`cfnetworking: parse args: flag provided but not defined: -banana`))
 			})
@@ -137,7 +137,7 @@ var _ = Describe("Garden External Networker errors", func() {
 				session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 				Expect(err).NotTo(HaveOccurred())
 
-				Eventually(session).Should(gexec.Exit(1))
+				Eventually(session, "2s").Should(gexec.Exit(1))
 				Expect(session.Out.Contents()).To(BeEmpty())
 				Expect(session.Err.Contents()).To(ContainSubstring(`prefix: parse args: unexpected extra args: [something-else]`))
 			})
@@ -162,7 +162,7 @@ var _ = Describe("Garden External Networker errors", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				By("checking that process exits with an err")
-				Eventually(session).Should(gexec.Exit(1))
+				Eventually(session, "2s").Should(gexec.Exit(1))
 
 				By("checking that the error was logged to stderr")
 				Expect(session.Out.Contents()).To(BeEmpty())
@@ -205,7 +205,7 @@ var _ = Describe("Garden External Networker errors", func() {
 					session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
 					Expect(err).NotTo(HaveOccurred())
 
-					Eventually(session).Should(gexec.Exit(1))
+					Eventually(session, "2s").Should(gexec.Exit(1))
 					Expect(session.Out.Contents()).To(BeEmpty())
 					Expect(session.Err.Contents()).To(ContainSubstring(`cfnetworking: this is a plugin for Garden-runC.  Don't run it directly.`))
 				},
