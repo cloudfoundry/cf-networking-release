@@ -117,8 +117,9 @@ var _ = Describe("Client", func() {
 					return nil
 				}
 			})
+
 			It("returns a list of destinations", func() {
-				foundDestinations, err := client.ListDestinations(token)
+				foundDestinations, err := client.ListDestinations(token, psclient.ListDestinationsOptions{})
 				Expect(err).NotTo(HaveOccurred())
 				expectedDestinations := []psclient.Destination{
 					{GUID: "some-dest-guid"},
@@ -129,16 +130,44 @@ var _ = Describe("Client", func() {
 				Expect(jsonClient.DoCallCount()).To(Equal(1))
 				passedMethod, passedRoute, passedReqData, _, passedToken := jsonClient.DoArgsForCall(0)
 				Expect(passedMethod).To(Equal("GET"))
-				Expect(passedRoute).To(Equal("/networking/v1/external/destinations"))
+				Expect(passedRoute).To(Equal("/networking/v1/external/destinations?"))
 
 				Expect(passedReqData).To(BeNil())
 				Expect(passedToken).To(Equal("Bearer some-token"))
 			})
 
+			Context("when using query names", func() {
+				It("returns a list of destinations", func() {
+					queryParams := psclient.ListDestinationsOptions{
+						QueryNames: []string{"some-dest-name", "some-other-dest-name"},
+					}
+					_, err := client.ListDestinations(token, queryParams)
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(jsonClient.DoCallCount()).To(Equal(1))
+					_, passedRoute, _, _, _ := jsonClient.DoArgsForCall(0)
+					Expect(passedRoute).To(Equal("/networking/v1/external/destinations?name=some-dest-name%2Csome-other-dest-name"))
+				})
+			})
+
+			Context("when using query ids", func() {
+				It("returns a list of destinations", func() {
+					queryParams := psclient.ListDestinationsOptions{
+						QueryIDs: []string{"some-dest-guid", "some-other-dest-guid"},
+					}
+					_, err := client.ListDestinations(token, queryParams)
+					Expect(err).NotTo(HaveOccurred())
+
+					Expect(jsonClient.DoCallCount()).To(Equal(1))
+					_, passedRoute, _, _, _ := jsonClient.DoArgsForCall(0)
+					Expect(passedRoute).To(Equal("/networking/v1/external/destinations?id=some-dest-guid%2Csome-other-dest-guid"))
+				})
+			})
+
 			It("returns an error when the json client do fails", func() {
 				jsonClient.DoStub = nil
 				jsonClient.DoReturns(errors.New("failed to do"))
-				_, err := client.CreateDestinations(token, destination1)
+				_, err := client.ListDestinations(token, psclient.ListDestinationsOptions{})
 				Expect(err).To(MatchError("json client do: failed to do"))
 			})
 		})

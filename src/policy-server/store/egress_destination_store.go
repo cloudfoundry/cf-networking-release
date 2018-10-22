@@ -15,6 +15,7 @@ type egressDestinationRepo interface {
 	UpdateIPRange(tx db.Transaction, destinationTerminalGUID, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) error
 	GetByGUID(tx db.Transaction, guid ...string) ([]EgressDestination, error)
 	Delete(tx db.Transaction, guid string) error
+	GetByName(tx db.Transaction, name ...string) ([]EgressDestination, error)
 }
 
 //go:generate counterfeiter -o fakes/destination_metadata_repo.go --fake-name DestinationMetadataRepo . destinationMetadataRepo
@@ -33,16 +34,25 @@ type EgressDestinationStore struct {
 func (e *EgressDestinationStore) GetByGUID(guid ...string) ([]EgressDestination, error) {
 	tx, err := e.Conn.Beginx()
 	if err != nil {
-		return nil, fmt.Errorf("egress destination store create transaction: %s", err)
+		return nil, fmt.Errorf("egress destination store get by guid transaction: %s", err)
 	}
 	defer tx.Rollback()
 	return e.EgressDestinationRepo.GetByGUID(tx, guid...)
 }
 
+func (e *EgressDestinationStore) GetByName(name ...string) ([]EgressDestination, error) {
+	tx, err := e.Conn.Beginx()
+	if err != nil {
+		return nil, fmt.Errorf("egress destination store get by name transaction: %s", err)
+	}
+	defer tx.Rollback()
+	return e.EgressDestinationRepo.GetByName(tx, name...)
+}
+
 func (e *EgressDestinationStore) All() ([]EgressDestination, error) {
 	tx, err := e.Conn.Beginx()
 	if err != nil {
-		return nil, fmt.Errorf("egress destination store create transaction: %s", err)
+		return nil, fmt.Errorf("egress destination store get all transaction: %s", err)
 	}
 	defer tx.Rollback()
 	return e.EgressDestinationRepo.All(tx)

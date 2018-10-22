@@ -29,6 +29,16 @@ func (e *EgressDestinationTable) GetByGUID(tx db.Transaction, guids ...string) (
 	return convertRowsToEgressDestinations(rows)
 }
 
+func (e *EgressDestinationTable) GetByName(tx db.Transaction, names ...string) ([]EgressDestination, error) {
+	query := egressDestinationsQuery("WHERE d_m.name IN (" + generateQuestionMarkString(len(names)) + ")")
+	rows, err := tx.Queryx(tx.Rebind(query), convertToInterfaceSlice(names)...)
+	if err != nil {
+		return []EgressDestination{}, fmt.Errorf("running query: %s", err)
+	}
+	defer rows.Close()
+	return convertRowsToEgressDestinations(rows)
+}
+
 func (e *EgressDestinationTable) Delete(tx db.Transaction, guid string) error {
 	_, err := tx.Exec(tx.Rebind(`DELETE FROM ip_ranges WHERE terminal_guid = ?`), guid)
 	return err

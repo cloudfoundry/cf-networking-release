@@ -233,5 +233,19 @@ var _ = Describe("EgressDestination", func() {
 				Expect(err).To(MatchError("bigger error"))
 			})
 		})
+
+		Context("GetByName", func() {
+			Context("when there is an error running the query", func() {
+				BeforeEach(func() {
+					tx.QueryxReturns(nil, errors.New("error with transaction"))
+				})
+
+				It("returns an error", func() {
+					_, err := egressDestinationTable.GetByName(tx, "some-name")
+					Expect(err).To(MatchError("running query: error with transaction"))
+				})
+			})
+		})
 	})
+
 })

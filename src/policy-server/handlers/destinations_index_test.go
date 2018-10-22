@@ -11,9 +11,10 @@ import (
 	"policy-server/store"
 	storeFakes "policy-server/store/fakes"
 
+	"errors"
+
 	"code.cloudfoundry.org/cf-networking-helpers/httperror"
 	"code.cloudfoundry.org/lager/lagertest"
-	"errors"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -98,6 +99,36 @@ var _ = Describe("Destinations index handler", func() {
 
 			Expect(resp.Code).To(Equal(http.StatusOK))
 			Expect(resp.Body.Bytes()).To(Equal(expectedResponseBody))
+		})
+	})
+
+	Context("when the id query parameter is passed", func() {
+		BeforeEach(func() {
+			var err error
+			request, err = http.NewRequest("GET", "/networking/v1/external/destinations?id=some-guid,some-guid-2", nil)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("return only the destination with that guid", func() {
+			MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
+			Expect(fakeStore.AllCallCount()).To(Equal(0))
+			Expect(fakeStore.GetByGUIDCallCount()).To(Equal(1))
+			Expect(fakeStore.GetByGUIDArgsForCall(0)).To(Equal([]string{"some-guid", "some-guid-2"}))
+		})
+	})
+
+	Context("when the name query parameter is passed", func() {
+		BeforeEach(func() {
+			var err error
+			request, err = http.NewRequest("GET", "/networking/v1/external/destinations?name=some-name,some-name-2", nil)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("return only the destination with that name", func() {
+			MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
+			Expect(fakeStore.AllCallCount()).To(Equal(0))
+			Expect(fakeStore.GetByGUIDCallCount()).To(Equal(0))
+			Expect(fakeStore.GetByNameArgsForCall(0)).To(Equal([]string{"some-name", "some-name-2"}))
 		})
 	})
 })

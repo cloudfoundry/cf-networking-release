@@ -88,6 +88,20 @@ type EgressDestinationRepo struct {
 	deleteReturnsOnCall map[int]struct {
 		result1 error
 	}
+	GetByNameStub        func(tx db.Transaction, name ...string) ([]store.EgressDestination, error)
+	getByNameMutex       sync.RWMutex
+	getByNameArgsForCall []struct {
+		tx   db.Transaction
+		name []string
+	}
+	getByNameReturns struct {
+		result1 []store.EgressDestination
+		result2 error
+	}
+	getByNameReturnsOnCall map[int]struct {
+		result1 []store.EgressDestination
+		result2 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -359,6 +373,58 @@ func (fake *EgressDestinationRepo) DeleteReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
+func (fake *EgressDestinationRepo) GetByName(tx db.Transaction, name ...string) ([]store.EgressDestination, error) {
+	fake.getByNameMutex.Lock()
+	ret, specificReturn := fake.getByNameReturnsOnCall[len(fake.getByNameArgsForCall)]
+	fake.getByNameArgsForCall = append(fake.getByNameArgsForCall, struct {
+		tx   db.Transaction
+		name []string
+	}{tx, name})
+	fake.recordInvocation("GetByName", []interface{}{tx, name})
+	fake.getByNameMutex.Unlock()
+	if fake.GetByNameStub != nil {
+		return fake.GetByNameStub(tx, name...)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.getByNameReturns.result1, fake.getByNameReturns.result2
+}
+
+func (fake *EgressDestinationRepo) GetByNameCallCount() int {
+	fake.getByNameMutex.RLock()
+	defer fake.getByNameMutex.RUnlock()
+	return len(fake.getByNameArgsForCall)
+}
+
+func (fake *EgressDestinationRepo) GetByNameArgsForCall(i int) (db.Transaction, []string) {
+	fake.getByNameMutex.RLock()
+	defer fake.getByNameMutex.RUnlock()
+	return fake.getByNameArgsForCall[i].tx, fake.getByNameArgsForCall[i].name
+}
+
+func (fake *EgressDestinationRepo) GetByNameReturns(result1 []store.EgressDestination, result2 error) {
+	fake.GetByNameStub = nil
+	fake.getByNameReturns = struct {
+		result1 []store.EgressDestination
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *EgressDestinationRepo) GetByNameReturnsOnCall(i int, result1 []store.EgressDestination, result2 error) {
+	fake.GetByNameStub = nil
+	if fake.getByNameReturnsOnCall == nil {
+		fake.getByNameReturnsOnCall = make(map[int]struct {
+			result1 []store.EgressDestination
+			result2 error
+		})
+	}
+	fake.getByNameReturnsOnCall[i] = struct {
+		result1 []store.EgressDestination
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *EgressDestinationRepo) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -372,6 +438,8 @@ func (fake *EgressDestinationRepo) Invocations() map[string][][]interface{} {
 	defer fake.getByGUIDMutex.RUnlock()
 	fake.deleteMutex.RLock()
 	defer fake.deleteMutex.RUnlock()
+	fake.getByNameMutex.RLock()
+	defer fake.getByNameMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

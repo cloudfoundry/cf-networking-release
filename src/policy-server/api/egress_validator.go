@@ -13,6 +13,7 @@ import (
 //go:generate counterfeiter -o fakes/egress_destination_store.go --fake-name EgressDestinationStore . EgressDestinationStore
 type EgressDestinationStore interface {
 	GetByGUID(guid ...string) ([]store.EgressDestination, error)
+	GetByName(name ...string) ([]store.EgressDestination, error)
 }
 
 //go:generate counterfeiter -o fakes/cc_client.go --fake-name CCClient . ccClient
@@ -33,7 +34,7 @@ type EgressValidator struct {
 }
 
 func DestinationKeyFunc(policy EgressPolicy) string { return policy.Destination.GUID }
-func SourceKeyFunc(policy EgressPolicy) string { return policy.Source.ID }
+func SourceKeyFunc(policy EgressPolicy) string      { return policy.Source.ID }
 
 func (v *EgressValidator) ValidateEgressPolicies(policies []EgressPolicy) error {
 	for _, policy := range policies {
@@ -109,7 +110,7 @@ func (v *EgressValidator) ValidateEgressPolicies(policies []EgressPolicy) error 
 	return nil
 }
 
-func composeMetadataError(dataType string, missingGuids []string, keyFunc func(policy EgressPolicy) string, policies []EgressPolicy) error{
+func composeMetadataError(dataType string, missingGuids []string, keyFunc func(policy EgressPolicy) string, policies []EgressPolicy) error {
 	errorMsg := fmt.Sprintf("%s guids not found: [%s]", dataType, strings.Join(missingGuids, ", "))
 	deficientPolicies := findPoliciesWithKeyGUID(policies, missingGuids, keyFunc)
 	policyAsMap := map[string]interface{}{fmt.Sprintf("policies with missing %ss", dataType): deficientPolicies}
@@ -174,7 +175,7 @@ func keys(set map[string]struct{}) []string {
 func set(items []string) map[string]struct{} {
 	itemSet := make(map[string]struct{})
 	for _, item := range items {
-		 itemSet[item] = struct{}{}
+		itemSet[item] = struct{}{}
 	}
 	return itemSet
 }

@@ -83,8 +83,8 @@ var _ = Describe("EgressDestinationStore", func() {
 			egressDestinationsStore = &store.EgressDestinationStore{
 				TerminalsRepo:           terminalsRepo,
 				DestinationMetadataRepo: destinationMetadataRepo,
-				Conn:                    realDb,
-				EgressDestinationRepo:   egressDestinationTable,
+				Conn: realDb,
+				EgressDestinationRepo: egressDestinationTable,
 			}
 		})
 
@@ -185,6 +185,28 @@ var _ = Describe("EgressDestinationStore", func() {
 				Expect(destinations[0].Ports).To(Equal([]store.Ports{{Start: 8080, End: 8081}}))
 
 				destinations, err = egressDestinationsStore.GetByGUID("unknown-guid")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(destinations).To(HaveLen(0))
+
+				By("getting by name")
+				destinations, err = egressDestinationsStore.GetByName("dest-1", "dest-2")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(destinations).To(HaveLen(2))
+				Expect(destinations[0].Name).To(Equal("dest-1"))
+				Expect(destinations[1].Name).To(Equal("dest-2"))
+
+				By("getting by nonexistant name")
+				destinations, err = egressDestinationsStore.GetByName("not-a-real-name")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(destinations).To(HaveLen(0))
+
+				By("getting by guid")
+				destinations, err = egressDestinationsStore.GetByGUID(createdDestinations[0].GUID)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(destinations).To(HaveLen(1))
+
+				By("getting by nonexistant guid")
+				destinations, err = egressDestinationsStore.GetByGUID("not-a-real-guid")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(destinations).To(HaveLen(0))
 
@@ -351,7 +373,7 @@ var _ = Describe("EgressDestinationStore", func() {
 			destinationMetadataRepo = &fakes.DestinationMetadataRepo{}
 
 			egressDestinationsStore = &store.EgressDestinationStore{
-				Conn:                    mockDB,
+				Conn: mockDB,
 				EgressDestinationRepo:   egressDestinationRepo,
 				DestinationMetadataRepo: destinationMetadataRepo,
 				TerminalsRepo:           terminalsRepo,
@@ -579,7 +601,7 @@ var _ = Describe("EgressDestinationStore", func() {
 
 				It("returns an error", func() {
 					_, err := egressDestinationsStore.All()
-					Expect(err).To(MatchError("egress destination store create transaction: can't create a transaction"))
+					Expect(err).To(MatchError("egress destination store get all transaction: can't create a transaction"))
 				})
 			})
 		})
@@ -592,7 +614,7 @@ var _ = Describe("EgressDestinationStore", func() {
 
 				It("returns an error", func() {
 					_, err := egressDestinationsStore.GetByGUID("some-guid")
-					Expect(err).To(MatchError("egress destination store create transaction: can't create a transaction"))
+					Expect(err).To(MatchError("egress destination store get by guid transaction: can't create a transaction"))
 				})
 			})
 
@@ -604,6 +626,19 @@ var _ = Describe("EgressDestinationStore", func() {
 				It("rolls back the transaction", func() {
 					egressDestinationsStore.GetByGUID("some-guid")
 					Expect(tx.RollbackCallCount()).To(Equal(1))
+				})
+			})
+		})
+
+		Context("GetByName", func() {
+			Context("when the transaction cannot be created", func() {
+				BeforeEach(func() {
+					mockDB.BeginxReturns(nil, errors.New("can't create a transaction"))
+				})
+
+				It("returns an error", func() {
+					_, err := egressDestinationsStore.GetByName("some-name")
+					Expect(err).To(MatchError("egress destination store get by name transaction: can't create a transaction"))
 				})
 			})
 		})

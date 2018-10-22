@@ -122,10 +122,28 @@ var _ = Describe("External Destination API", func() {
 			Expect(createdDestinations[2].ICMPType).To(Equal(&icmpType))
 
 			By("listing the existing destinations")
-			listedDestinations, err := client.ListDestinations(token)
+			listedDestinations, err := client.ListDestinations(token, psclient.ListDestinationsOptions{})
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(listedDestinations).To(Equal(createdDestinations))
+
+			By("listing destinations with name filter")
+			listedDestinations, err = client.ListDestinations(token, psclient.ListDestinationsOptions{
+				QueryNames: []string{createdDestinations[1].Name, createdDestinations[2].Name},
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(listedDestinations).To(HaveLen(2))
+			Expect(listedDestinations).To(ConsistOf(createdDestinations[1], createdDestinations[2]))
+
+			By("listing destinations with guid filter")
+			listedDestinations, err = client.ListDestinations(token, psclient.ListDestinationsOptions{
+				QueryIDs: []string{createdDestinations[0].GUID, createdDestinations[2].GUID},
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(listedDestinations).To(HaveLen(2))
+			Expect(listedDestinations).To(ConsistOf(createdDestinations[0], createdDestinations[2]))
 
 			By("attempting to duplicate destinations")
 			_, err = client.CreateDestinations(token, toBeCreated...)
@@ -141,7 +159,7 @@ var _ = Describe("External Destination API", func() {
 			Expect(updatedDests[0]).To(Equal(destToUpdate))
 
 			By("listing all destinations and confirming that the update was persisted")
-			listedDestinations, err = client.ListDestinations(token)
+			listedDestinations, err = client.ListDestinations(token, psclient.ListDestinationsOptions{})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(listedDestinations).To(ConsistOf(createdDestinations[0], updatedDests[0], createdDestinations[2]))
 
