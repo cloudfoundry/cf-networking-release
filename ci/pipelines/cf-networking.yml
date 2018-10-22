@@ -163,6 +163,18 @@ resources:
       branch: master
       uri: https://github.com/cloudfoundry/cf-deployment.git
       tag_filter: "v4.5.0"
+  - name: cf-networking-2.16.0
+    type: git
+    source:
+      branch: master
+      uri: https://github.com/cloudfoundry/cf-networking-release.git
+      tag_filter: "2.16.0"
+  - name: silk-2.16.0
+    type: git
+    source:
+      branch: master
+      uri: https://github.com/cloudfoundry/silk-release.git
+      tag_filter: "2.16.0"
   - name: disaster-recovery-acceptance-tests
     type: git
     source:
@@ -1792,6 +1804,8 @@ jobs:
       - get: cf-networking-deployments
       - get: cf-deployment
       - get: cf-deployment-pinned
+      - get: cf-networking-2.16.0
+      - get: silk-2.16.0
       - get: cf-networking-dev
         passed: [unit-and-integration-tests]
       - get: silk-dev
@@ -1803,6 +1817,20 @@ jobs:
       input_mapping:
         cf-deployment: cf-deployment-pinned
         bbl-state: cf-networking-deployments
+    - task: upload-local-silk-release-pinned
+      file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+      input_mapping:
+        bbl-state: cf-networking-deployments
+        local-release: silk-2.16.0
+      params:
+        BBL_STATE_DIR: environments/caubeen/
+    - task: upload-local-cf-networking-release-pinned
+      file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+      input_mapping:
+        bbl-state: cf-networking-deployments
+        local-release: cf-networking-2.16.0
+      params:
+        BBL_STATE_DIR: environments/caubeen/
     - task: collect-pinned-ops-files
       file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
       params:
@@ -1820,15 +1848,19 @@ jobs:
         OPS_FILES: |
           use-compiled-releases.yml
           cf-networking.yml
+          use-external-dbs.yml
+          use-external-blobstore.yml
+          use-gcs-blobstore-service-account.yml
           use-system-domain-as-metron-deployment-name.yml
           enable-routing-integrity.yml
           enable-iptables-logger.yml
           enable-service-discovery.yml
           add-apps-internal-search-domain.yml
-          use-pxc.yml
-          add-cflinuxfs3.yml
           enable-experimental-dynamic-egress-policies.yml
           opsfile.yml
+        VARS_FILES: |
+          environments/caubeen/external-db-vars.yml
+          environments/caubeen/gcs-vars.yml
       input_mapping:
         cf-deployment: cf-deployment-pinned
         bbl-state: cf-networking-deployments
@@ -1881,16 +1913,20 @@ jobs:
         OPS_FILES: |
           use-compiled-releases.yml
           cf-networking.yml
+          use-external-dbs.yml
+          use-external-blobstore.yml
+          use-gcs-blobstore-service-account.yml
           use-system-domain-as-metron-deployment-name.yml
           enable-routing-integrity.yml
           enable-iptables-logger.yml
           use-latest-silk.yml
           enable-service-discovery.yml
           add-apps-internal-search-domain.yml
-          use-pxc.yml
-          add-cflinuxfs3.yml
           enable-experimental-dynamic-egress-policies.yml
           opsfile.yml
+        VARS_FILES: |
+          environments/caubeen/external-db-vars.yml
+          environments/caubeen/gcs-vars.yml
         DEPLOY_WITH_UPTIME_MEASUREMENTS: true
         FAIL_ON_DOWNTIME: true
         APP_PUSHABILITY_THRESHOLD: 1
