@@ -200,7 +200,7 @@ var _ = Describe("Main", func() {
 							"name": "app-id.istio.local.",
 							"type": 1,
 							"TTL":  0,
-							"data": "127.155.173.188"
+							"data": "127.185.28.26"
 						}
 					],
 					"Additional": [ ],

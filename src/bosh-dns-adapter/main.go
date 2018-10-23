@@ -123,7 +123,9 @@ func main() {
 				// hardcoded default VIPCIDR for dev
 				_, cidr, _ := net.ParseCIDR("127.128.0.0/9")
 				provider := &vip.Provider{CIDR: cidr}
-				ips = []string{provider.Get(name)}
+				// Copilot consumes internal routes without a trailing dot from CAPI
+				nameNoTrailingDot := strings.TrimRight(name, ".")
+				ips = []string{provider.Get(nameNoTrailingDot)}
 				duration = time.Now().Sub(start).Nanoseconds()
 			} else {
 				ips, err = sdcClient.IPs(name)
