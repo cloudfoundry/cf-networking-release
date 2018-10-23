@@ -43,8 +43,6 @@ module Bosh::Template::Test
         'require_ssl' => true,
         'ca_cert' => 'some ca cert',
         'skip_hostname_validation' => true,
-        'client_cert' => 'hello i am a cert',
-        'client_key' => 'knock knock its your key',
       }
     end
 
@@ -76,22 +74,6 @@ module Bosh::Template::Test
       end
     end
 
-    describe 'db_client.crt' do
-      let(:template) {job.template('config/certs/db_client.crt')}
-      it 'renders the cert' do
-        cert = template.render(merged_manifest_properties, consumes: links)
-        expect(cert).to eq("hello i am a cert\n")
-      end
-    end
-
-    describe 'db_client.key' do
-      let(:template) {job.template('config/certs/db_client.key')}
-      it 'renders the key' do
-        cert = template.render(merged_manifest_properties, consumes: links)
-        expect(cert).to eq("knock knock its your key\n")
-      end
-    end
-
     describe 'policy-server-internal.json' do
       let(:template) {job.template('config/policy-server-internal.json')}
 
@@ -113,8 +95,6 @@ module Bosh::Template::Test
             'require_ssl' => true,
             'ca_cert' => '/var/vcap/jobs/policy-server-internal/config/certs/database_ca.crt',
             'skip_hostname_validation' => true,
-            'client_cert' => '/var/vcap/jobs/policy-server-internal/config/certs/db_client.crt',
-            'client_key' => '/var/vcap/jobs/policy-server-internal/config/certs/db_client.key',
           },
           'max_idle_connections' => 4,
           'max_open_connections' => 5,

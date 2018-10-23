@@ -90,8 +90,6 @@
         'require_ssl' => p('database.require_ssl'),
         'ca_cert' => '/var/vcap/jobs/policy-server/config/certs/database_ca.crt',
         'skip_hostname_validation' => p('database.skip_hostname_validation'),
-        'client_cert' => '/var/vcap/jobs/policy-server/config/certs/db_client.crt',
-        'client_key' => '/var/vcap/jobs/policy-server/config/certs/db_client.key',
       },
       'database_migration_timeout' => 600,
       'max_idle_connections' => p('max_idle_connections'),

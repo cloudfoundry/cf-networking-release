@@ -39,8 +39,6 @@ module Bosh::Template::Test
           'ca_cert' => 'some-ca-cert',
           'connect_timeout_seconds' => 3,
           'skip_hostname_validation' => true,
-          'client_cert' => 'hello i am a cert',
-          'client_key' => 'knock knock its your key',
         },
         'max_idle_connections' => 4,
         'max_open_connections' => 5,
@@ -57,22 +55,6 @@ module Bosh::Template::Test
       it 'writes the content of database.ca_cert' do
         merged_manifest_properties['database']['ca_cert'] = 'the ca cert'
         expect(template.render(merged_manifest_properties).rstrip).to eq('the ca cert')
-      end
-    end
-
-    describe 'db_client.crt' do
-      let(:template) {job.template('config/certs/db_client.crt')}
-      it 'writes the content of database.client_cert' do
-        merged_manifest_properties['database']['client_cert'] = 'the client cert'
-        expect(template.render(merged_manifest_properties).rstrip).to eq('the client cert')
-      end
-    end
-
-    describe 'db_client.key' do
-      let(:template) {job.template('config/certs/db_client.key')}
-      it 'writes the content of database.client_key' do
-        merged_manifest_properties['database']['client_key'] = 'the client key'
-        expect(template.render(merged_manifest_properties).rstrip).to eq('the client key')
       end
     end
 
@@ -105,8 +87,6 @@ module Bosh::Template::Test
             'require_ssl' => true,
             'ca_cert' => '/var/vcap/jobs/policy-server/config/certs/database_ca.crt',
             'skip_hostname_validation' => true,
-            'client_cert' => '/var/vcap/jobs/policy-server/config/certs/db_client.crt',
-            'client_key' => '/var/vcap/jobs/policy-server/config/certs/db_client.key',
           },
           'database_migration_timeout' => 600,
           'max_idle_connections' => 4,
