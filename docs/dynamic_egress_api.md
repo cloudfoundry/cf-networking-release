@@ -122,8 +122,8 @@ Will return all egress destinations.
 | destinations.description | N | A description of the destination.
 | destinations.ips.start* | Y | The start of the destination ip range. Must be IPv4.
 | destinations.ips.end* | Y | The end of the destination ip range. Must be IPv4. May be equal to the the start ip.
-| destinations.ports.start* | Y | The destination start port (1 - 65535)
-| destinations.ports.end* | Y | The destination end port (1 - 65535)
+| destinations.ports.start* | Y | The destination start port (1 - 65535). Ports are not applicable for ICMP protocol.
+| destinations.ports.end* | Y | The destination end port (1 - 65535). Ports are not applicable for ICMP protocol.
 | destinations.protocol | Y | The protocol (tcp, udp, or icmp)
 | destinations.icmp_type | N | The icmp type to allow when using the icmp protocol. Default is all icmp types, represented by -1.
 | destinations.icmp_code | N | The icmp code to allow when using the icmp protocol. Default is all icmp codes, represented by -1.
@@ -165,8 +165,8 @@ In the future, a destination will be able to support multiple ip ranges and port
 | destinations.description | N | A description of the destination.
 | destinations.ips.start* | Y | The start of the destination ip range. Must be IPv4.
 | destinations.ips.end* | Y | The end of the destination ip range. Must be IPv4. May be equal to the the start ip.
-| destinations.ports.start* | Y | The destination start port (1 - 65535)
-| destinations.ports.end* | Y |The destination end port (1 - 65535)
+| destinations.ports.start* | Y | The destination start port (1 - 65535). Ports are not applicable for ICMP protocol.
+| destinations.ports.end* | Y |The destination end port (1 - 65535). Ports are not applicable for ICMP protocol.
 | destinations.protocol | Y |The protocol (tcp, udp, or icmp)
 | destinations.icmp_type | N | The icmp type to allow when using the icmp protocol. Default is all icmp types, represented by -1.
 | destinations.icmp_code | N | The icmp code to allow when using the icmp protocol. Default is all icmp codes, represented by -1.
