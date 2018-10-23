@@ -12,7 +12,8 @@ config = {
     "metron_port" => p("metron_port"),
     "metrics_emit_seconds" => 10,
     "log_level_address" => p("log_level_address"),
-    "log_level_port" => p("log_level_port")
+    "log_level_port" => p("log_level_port"),
+    "internal_service_mesh_domains" => p("internal_service_mesh_domains")
 }
 
 JSON.dump(config)
