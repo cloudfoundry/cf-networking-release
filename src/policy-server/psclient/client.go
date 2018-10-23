@@ -80,7 +80,6 @@ func (c *Client) ListDestinations(token string, options ListDestinationsOptions)
 		query.Set("id", strings.Join(options.QueryIDs, ","))
 	}
 	url := fmt.Sprintf("/networking/v1/external/destinations?%s", query.Encode())
-	fmt.Println("url: ", url)
 	err := c.JsonClient.Do("GET", url, nil, &response, "Bearer "+token)
 	if err != nil {
 		return nil, fmt.Errorf("json client do: %s", err)
