@@ -1,10 +1,10 @@
 # Dynamic Egress Policies and Destinations APIs - EXPERIMENTAL
 
-NOTE: These APIs are EXPERIMENTAL. 
+NOTE: These APIs are EXPERIMENTAL.
 
 ## Turn on the Dynamic Egress Feature
 
-The dynamic egress feature set is not turned on by default. In order for these policies to be enforced, the cloud foundry 
+The dynamic egress feature set is not turned on by default. In order for these policies to be enforced, the cloud foundry
 operator must set the `enforce_experimental_dynamic_egress_policies` property on the `policy-server-internl` job to true. See spec file [here](https://github.com/cloudfoundry/cf-networking-release/blob/develop/jobs/policy-server-internal/spec#L102-L104). Currently this feature only works with silk.
 
 ## Purpose
@@ -45,7 +45,7 @@ Updating an Egress Policy when an IP changes
 1. Update the egress destination.
 1. See updated policy apply. No app restarts needed.
 
-<hr> 
+<hr>
 
 ## Egress Destination API
 
@@ -72,15 +72,17 @@ Will return all egress destinations.
 {
   "total_destinations": 2,
   "destinations": [
-   {  "name": "oracle database",
+   {
+      "name": "oracle database",
       "id": "90be9c1f-b694-4463-9f1f-6ce71904440d",
-      "description": "db for user accounts",	
+      "description": "db for user accounts",
       "ips": [{"start":"1.9.9.9", "end": "1.9.9.20"}],
       "ports": [{"start": 8000, "end": 9000}],
       "protocol": "tcp"
    },
-   {  "name": "AWS",
-      "id": "72813418-bd38-49e0-ace0-7bf5b7c54687",		
+   {
+      "name": "AWS",
+      "id": "72813418-bd38-49e0-ace0-7bf5b7c54687",
       "ips": [{"start":"1.8.8.8", "end": "1.8.8.8"}],
       "ports": [{"start": 8000, "end": 9000}],
       "protocol": "udp"
@@ -97,13 +99,15 @@ Will return all egress destinations.
 ```json
 {
   "destinations": [
-   {  "name": "oracle database",
-      "description": "db for user accounts",		
+   {
+      "name": "oracle database",
+      "description": "db for user accounts",
       "ips": [{"start":"1.9.9.9", "end": "1.9.9.20"}],
       "ports": [{"start": 8000, "end": 9000}],
       "protocol": "tcp"
    },
-   {  "name": "AWS",	
+   {
+      "name": "AWS",
       "ips": [{"start":"1.8.8.8", "end": "1.8.8.8"}],
       "ports": [{"start": 8000, "end": 9000}],
       "protocol": "udp"
@@ -116,13 +120,15 @@ Will return all egress destinations.
 | :---- | :-------: | :------ |
 | destinations.name | Y | The name of the destination. Must be globally unique.
 | destinations.description | N | A description of the destination.
-| destinations.ips.start* | Y | The start of the destination ip range. Must be IPv4. 
+| destinations.ips.start* | Y | The start of the destination ip range. Must be IPv4.
 | destinations.ips.end* | Y | The end of the destination ip range. Must be IPv4. May be equal to the the start ip.
 | destinations.ports.start* | Y | The destination start port (1 - 65535)
-| destinations.ports.end* | Y |The destination end port (1 - 65535)
-| destinations.protocol | Y |The protocol (tcp, udp, or icmp)
+| destinations.ports.end* | Y | The destination end port (1 - 65535)
+| destinations.protocol | Y | The protocol (tcp, udp, or icmp)
+| destinations.icmp_type | N | The icmp type to allow when using the icmp protocol. Default is all icmp types, represented by -1.
+| destinations.icmp_code | N | The icmp code to allow when using the icmp protocol. Default is all icmp codes, represented by -1.
 
-*Note: Currently only one ip range and one port range is supported. 
+*Note: Currently only one ip range and one port range is supported.
 In the future, a destination will be able to support multiple ip ranges and port ranges.
 
 ### Update Egress Destinations
@@ -133,14 +139,16 @@ In the future, a destination will be able to support multiple ip ranges and port
 ```json
 {
   "destinations": [
-   {  "id": "90be9c1f-b694-4463-9f1f-6ce71904440d",
+   {
+      "id": "90be9c1f-b694-4463-9f1f-6ce71904440d",
       "name": "oracle database",
       "description": "db for user accounts",
       "ips": [{"start":"1.9.9.9", "end": "1.9.9.20"}],
       "ports": [{"start": 8000, "end": 9000}],
       "protocol": "tcp"
    },
-   {  "id": "72813418-bd38-49e0-ace0-7bf5b7c54687",
+   {
+      "id": "72813418-bd38-49e0-ace0-7bf5b7c54687",
       "name": "AWS",
       "ips": [{"start":"1.8.8.8", "end": "1.8.8.8"}],
       "ports": [{"start": 8000, "end": 9000}],
@@ -155,11 +163,13 @@ In the future, a destination will be able to support multiple ip ranges and port
 | destinations.id | Y | The id of the destination. This id is returned in the destinations create response, as well as in the destinations index response.
 | destinations.name | Y | The name of the destination. Must be globally unique.
 | destinations.description | N | A description of the destination.
-| destinations.ips.start* | Y | The start of the destination ip range. Must be IPv4. 
+| destinations.ips.start* | Y | The start of the destination ip range. Must be IPv4.
 | destinations.ips.end* | Y | The end of the destination ip range. Must be IPv4. May be equal to the the start ip.
 | destinations.ports.start* | Y | The destination start port (1 - 65535)
 | destinations.ports.end* | Y |The destination end port (1 - 65535)
 | destinations.protocol | Y |The protocol (tcp, udp, or icmp)
+| destinations.icmp_type | N | The icmp type to allow when using the icmp protocol. Default is all icmp types, represented by -1.
+| destinations.icmp_code | N | The icmp code to allow when using the icmp protocol. Default is all icmp codes, represented by -1.
 
 *Note: Currently only one ip range and one port range is supported.
 In the future, a destination will be able to support multiple ip ranges and port ranges.
@@ -176,9 +186,10 @@ This endpoint returns the json of the deleted destination object.
 {
   "total_destinations": 1,
   "destinations": [
-   {  "name": "oracle database",
+   {
+      "name": "oracle database",
       "id": "90be9c1f-b694-4463-9f1f-6ce71904440d",
-      "description": "db for user accounts",		
+      "description": "db for user accounts",
       "ips": [{"start":"1.9.9.9", "end": "1.9.9.20"}],
       "ports": [{"start": 8000, "end": 9000}],
       "protocol": "tcp"
@@ -209,16 +220,16 @@ Will return all egress policies.
 {
   "total_egress_policies": 1,
   "egress_policies": [{
-	  "id": "dynamic-egress-guid",
+    "id": "dynamic-egress-guid",
     "source": {
       "type": "app",
       "id": "SOURCE-APP-GUID"
      },
-     "destination": {  
+     "destination": {
         "id": "guid-abc-123",
         "name": "AWS",
-	    "description": "AWS",
-        "id": "72813418-bd38-49e0-ace0-7bf5b7c54687",		
+        "description": "AWS",
+        "id": "72813418-bd38-49e0-ace0-7bf5b7c54687",
         "ips": [{"start":"1.8.8.8", "end": "1.8.8.8"}],
         "ports": [{"start": 8000, "end": 9000}],
         "protocol": "udp"
@@ -233,7 +244,7 @@ Will return all egress policies.
 
 ```json
 {
-  "egress_policies": [{ 
+  "egress_policies": [{
     "source": {
       "type": "space",
       "id": "SOURCE-SPACE-GUID"
@@ -249,7 +260,7 @@ Will return all egress policies.
 | :---- | :-------: | :------ |
 | source.type | N | The type of source. Must be 'app' or 'space'. Defaults to 'app'.
 | source.id | Y | The guid of the source app or space.
-| destination.id | Y | The guid of the egress destination. 
+| destination.id | Y | The guid of the egress destination.
 
 ### Delete an Egress Destination
 
@@ -264,15 +275,15 @@ This endpoint returns the json of the deleted egress policy object.
 {
   "total_egress_policies": 1,
   "egress_policies": [{
-	  "id": "dynamic-egress-guid",
+    "id": "dynamic-egress-guid",
     "source": {
       "type": "app",
       "id": "SOURCE-APP-GUID"
      },
-     "destination": {  
+     "destination": {
         "name": "AWS",
-	"description": "AWS",
-        "id": "72813418-bd38-49e0-ace0-7bf5b7c54687",		
+        "description": "AWS",
+        "id": "72813418-bd38-49e0-ace0-7bf5b7c54687",
         "ips": [{"start":"1.8.8.8", "end": "1.8.8.8"}],
         "ports": [{"start": 8000, "end": 9000}],
         "protocol": "udp"
