@@ -33,7 +33,9 @@ type httpClient interface {
 }
 
 type CheckTokenResponse struct {
+	ClientID string `json:"client_id"`
 	Scope    []string `json:"scope"`
+	Subject  string `json:"sub"`
 	UserID   string   `json:"user_id"`
 	UserName string   `json:"user_name"`
 }

@@ -251,11 +251,11 @@ func (c *Client) GetSpace(token, spaceGUID string) (*api.Space, error) {
 	}, nil
 }
 
-func (c *Client) GetUserSpace(token, userGUID string, space api.Space) (*api.Space, error) {
+func (c *Client) GetSubjectSpace(token, subjectId string, space api.Space) (*api.Space, error) {
 	token = fmt.Sprintf("bearer %s", token)
 
 	values := url.Values{}
-	values.Add("q", fmt.Sprintf("developer_guid:%s", userGUID))
+	values.Add("q", fmt.Sprintf("developer_guid:%s", subjectId))
 	values.Add("q", fmt.Sprintf("name:%s", space.Name))
 	values.Add("q", fmt.Sprintf("organization_guid:%s", space.OrgGUID))
 
@@ -281,10 +281,10 @@ func (c *Client) GetUserSpace(token, userGUID string, space api.Space) (*api.Spa
 	}, nil
 }
 
-func (c *Client) GetUserSpaces(token, userGUID string) (map[string]struct{}, error) {
+func (c *Client) GetSubjectSpaces(token, subjectId string) (map[string]struct{}, error) {
 	token = fmt.Sprintf("bearer %s", token)
 
-	route := fmt.Sprintf("/v2/users/%s/spaces", userGUID)
+	route := fmt.Sprintf("/v2/users/%s/spaces", subjectId)
 
 	var response SpacesResponse
 	err := c.JSONClient.Do("GET", route, nil, &response, token)
@@ -292,11 +292,11 @@ func (c *Client) GetUserSpaces(token, userGUID string) (map[string]struct{}, err
 		return nil, fmt.Errorf("json client do: %s", err)
 	}
 
-	userSpaces := map[string]struct{}{}
+	subjectSpaces := map[string]struct{}{}
 	for _, space := range response.Resources {
 		spaceID := space.Metadata.GUID
-		userSpaces[spaceID] = struct{}{}
+		subjectSpaces[spaceID] = struct{}{}
 	}
 
-	return userSpaces, nil
+	return subjectSpaces, nil
 }

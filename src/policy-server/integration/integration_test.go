@@ -107,6 +107,29 @@ var _ = Describe("Integration", func() {
 				))
 			})
 
+			Context("whoami endpoint with a client", func() {
+				It("responds with the client id", func() {
+					clientAuthHeaders := map[string]string{
+						"Authorization": "Bearer valid-client-token",
+					}
+					resp := helpers.MakeAndDoRequest(
+						"GET",
+						fmt.Sprintf("http://%s:%d/networking/v0/external/whoami", conf.ListenHost, conf.ListenPort),
+						clientAuthHeaders,
+						nil,
+					)
+
+					Expect(resp.StatusCode).To(Equal(http.StatusOK))
+					responseString, err := ioutil.ReadAll(resp.Body)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(responseString).To(ContainSubstring("some-client-id"))
+
+					Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
+						HaveName("WhoAmIRequestTime"),
+					))
+				})
+			})
+
 			It("has a log level thats configurable at runtime", func() {
 				resp := helpers.MakeAndDoRequest(
 					"GET",

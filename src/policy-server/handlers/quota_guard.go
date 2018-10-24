@@ -18,8 +18,8 @@ func NewQuotaGuard(store policyStore, maxPolicies int) *QuotaGuard {
 	}
 }
 
-func (g *QuotaGuard) CheckAccess(policies []store.Policy, userToken uaa_client.CheckTokenResponse) (bool, error) {
-	for _, scope := range userToken.Scope {
+func (g *QuotaGuard) CheckAccess(policies []store.Policy, subjectToken uaa_client.CheckTokenResponse) (bool, error) {
+	for _, scope := range subjectToken.Scope {
 		if scope == "network.admin" {
 			return true, nil
 		}

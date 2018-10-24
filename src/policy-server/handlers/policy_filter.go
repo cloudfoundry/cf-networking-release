@@ -18,8 +18,8 @@ type ccClient interface {
 	GetAppSpaces(token string, appGUIDs []string) (map[string]string, error)
 	GetSpace(token, spaceGUID string) (*api.Space, error)
 	GetSpaceGUIDs(token string, appGUIDs []string) ([]string, error)
-	GetUserSpace(token, userGUID string, spaces api.Space) (*api.Space, error)
-	GetUserSpaces(token, userGUID string) (map[string]struct{}, error)
+	GetSubjectSpace(token, subjectId string, spaces api.Space) (*api.Space, error)
+	GetSubjectSpaces(token, subjectId string) (map[string]struct{}, error)
 }
 
 type PolicyFilter struct {
@@ -36,8 +36,8 @@ func NewPolicyFilter(uaaClient uaaClient, ccClient ccClient, chunkSize int) *Pol
 	}
 }
 
-func (f *PolicyFilter) FilterPolicies(policies []store.Policy, userToken uaa_client.CheckTokenResponse) ([]store.Policy, error) {
-	for _, scope := range userToken.Scope {
+func (f *PolicyFilter) FilterPolicies(policies []store.Policy, subjectToken uaa_client.CheckTokenResponse) ([]store.Policy, error) {
+	for _, scope := range subjectToken.Scope {
 		if scope == "network.admin" {
 			return policies, nil
 		}
@@ -62,12 +62,12 @@ func (f *PolicyFilter) FilterPolicies(policies []store.Policy, userToken uaa_cli
 
 	appSpaces := flatten(appSpacesList)
 
-	userSpaces, err := f.CCClient.GetUserSpaces(token, userToken.UserID)
+	subjectSpaces, err := f.CCClient.GetSubjectSpaces(token, subjectToken.Subject)
 	if err != nil {
-		return nil, fmt.Errorf("getting user spaces: %s", err)
+		return nil, fmt.Errorf("getting subject spaces: %s", err)
 	}
 
-	filtered := filter(policies, appSpaces, userSpaces)
+	filtered := filter(policies, appSpaces, subjectSpaces)
 
 	return filtered, nil
 }
@@ -98,12 +98,12 @@ func getChunks(appGuids []string, chunkSize int) [][]string {
 	return appGuidChunks
 }
 
-func filter(policies []store.Policy, appSpaces map[string]string, userSpaces map[string]struct{}) []store.Policy {
+func filter(policies []store.Policy, appSpaces map[string]string, subjectSpaces map[string]struct{}) []store.Policy {
 	filtered := []store.Policy{}
 
 	for _, policy := range policies {
-		_, sourceFound := userSpaces[appSpaces[policy.Source.ID]]
-		_, destFound := userSpaces[appSpaces[policy.Destination.ID]]
+		_, sourceFound := subjectSpaces[appSpaces[policy.Source.ID]]
+		_, destFound := subjectSpaces[appSpaces[policy.Destination.ID]]
 		if sourceFound && destFound {
 			filtered = append(filtered, policy)
 		}

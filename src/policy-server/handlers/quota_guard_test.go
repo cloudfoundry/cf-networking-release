@@ -26,8 +26,6 @@ var _ = Describe("QuotaGuard", func() {
 		}
 		tokenData = uaa_client.CheckTokenResponse{
 			Scope:    []string{"network.write"},
-			UserID:   "some-developer-guid",
-			UserName: "some-developer",
 		}
 		policies = []store.Policy{
 			{
@@ -45,7 +43,7 @@ var _ = Describe("QuotaGuard", func() {
 		}
 		fakeStore.ByGuidsReturns([]store.Policy{}, nil)
 	})
-	Context("when the user is not an admin", func() {
+	Context("when the subject is not an admin", func() {
 		Context("when the additional policies do not exceed the quota", func() {
 			It("allows policy creation", func() {
 				authorized, err := quotaGuard.CheckAccess(policies, tokenData)
@@ -85,12 +83,10 @@ var _ = Describe("QuotaGuard", func() {
 
 		})
 	})
-	Context("when the user is an admin", func() {
+	Context("when the subject is an admin", func() {
 		BeforeEach(func() {
 			tokenData = uaa_client.CheckTokenResponse{
 				Scope:    []string{"network.admin"},
-				UserID:   "some-developer-guid",
-				UserName: "some-developer",
 			}
 			fakeStore.ByGuidsReturns([]store.Policy{
 				{

@@ -79,19 +79,19 @@ var MockCCServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWrite
 	if r.URL.Path == "/v2/spaces" {
 		if strings.Contains(r.URL.RawQuery, "space-1") {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(fixtures.UserSpace))
+			w.Write([]byte(fixtures.SubjectSpace))
 			return
 		}
 		if strings.Contains(r.URL.RawQuery, "space-2") {
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(fixtures.UserSpaceEmpty))
+			w.Write([]byte(fixtures.SubjectSpaceEmpty))
 			return
 		}
 	}
 
-	if r.URL.Path == "/v2/users/some-user-id/spaces" {
+	if r.URL.Path == "/v2/users/some-user-or-client-id/spaces" {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(fixtures.UserSpaces))
+		w.Write([]byte(fixtures.SubjectSpaces))
 		return
 	}
 
@@ -111,13 +111,16 @@ var MockUAAServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWrit
 			switch token {
 			case "valid-token":
 				w.WriteHeader(http.StatusOK)
-				w.Write([]byte(`{"scope":["network.admin"], "user_name":"some-user", "user_id": "some-user-id"}`))
+				w.Write([]byte(`{"scope":["network.admin"], "user_name":"some-user", "sub": "some-user-or-client-id"}`))
+			case "valid-client-token":
+				w.WriteHeader(http.StatusOK)
+				w.Write([]byte(`{"scope":["network.admin"], "sub": "some-client-id"}`))
 			case "space-dev-with-network-write-token":
 				w.WriteHeader(http.StatusOK)
-				w.Write([]byte(`{"scope":["network.write"], "user_name":"some-user", "user_id": "some-user-id"}`))
+				w.Write([]byte(`{"scope":["network.write"], "user_name":"some-user", "sub": "some-user-or-client-id"}`))
 			case "space-dev-token":
 				w.WriteHeader(http.StatusOK)
-				w.Write([]byte(`{"scope":[], "user_name":"some-user", "user_id": "some-user-id"}`))
+				w.Write([]byte(`{"scope":[], "user_name":"some-user", "sub": "some-user-or-client-id"}`))
 			default:
 				w.WriteHeader(http.StatusBadRequest)
 				w.Write([]byte(`{"error_description":"banana"}`))
@@ -276,7 +279,9 @@ func StartInternalPolicyServer(pathToBinary string, conf config.InternalConfig) 
 func MakeAndDoRequest(method string, endpoint string, extraHeaders map[string]string, body io.Reader) *http.Response {
 	req, err := http.NewRequest(method, endpoint, body)
 	Expect(err).NotTo(HaveOccurred())
-	req.Header.Set("Authorization", "Bearer valid-token")
+	if _, ok := extraHeaders["Authorization"]; !ok {
+		req.Header.Set("Authorization", "Bearer valid-token")
+	}
 	for k, v := range extraHeaders {
 		req.Header.Set(k, v)
 	}

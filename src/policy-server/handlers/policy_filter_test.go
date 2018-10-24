@@ -48,7 +48,7 @@ var _ = Describe("PolicyFilter", func() {
 		}
 		tokenData = uaa_client.CheckTokenResponse{
 			Scope:    []string{"network.write"},
-			UserID:   "some-developer-guid",
+			Subject:  "some-developer-guid",
 			UserName: "some-developer",
 		}
 
@@ -59,7 +59,7 @@ var _ = Describe("PolicyFilter", func() {
 			"app-guid-4": "space-4",
 		}
 
-		userSpaces := map[string]struct{}{
+		subjectSpaces := map[string]struct{}{
 			"space-1": {},
 			"space-2": {},
 			"space-3": {},
@@ -67,7 +67,7 @@ var _ = Describe("PolicyFilter", func() {
 
 		fakeUAAClient.GetTokenReturns("policy-server-token", nil)
 		fakeCCClient.GetAppSpacesReturns(appSpaces, nil)
-		fakeCCClient.GetUserSpacesReturns(userSpaces, nil)
+		fakeCCClient.GetSubjectSpacesReturns(subjectSpaces, nil)
 	})
 
 	Describe("FilterPolicies", func() {
@@ -82,11 +82,11 @@ var _ = Describe("PolicyFilter", func() {
 			Expect(token).To(Equal("policy-server-token"))
 			Expect(appGUIDs).To(ConsistOf([]string{"app-guid-1", "app-guid-2", "app-guid-3", "app-guid-4"}))
 
-			Expect(fakeCCClient.GetUserSpacesCallCount()).To(Equal(1))
+			Expect(fakeCCClient.GetSubjectSpacesCallCount()).To(Equal(1))
 
-			token, userGUID := fakeCCClient.GetUserSpacesArgsForCall(0)
+			token, subjectId := fakeCCClient.GetSubjectSpacesArgsForCall(0)
 			Expect(token).To(Equal("policy-server-token"))
-			Expect(userGUID).To(Equal("some-developer-guid"))
+			Expect(subjectId).To(Equal("some-developer-guid"))
 
 			expected := []store.Policy{
 				{
@@ -101,9 +101,48 @@ var _ = Describe("PolicyFilter", func() {
 			Expect(filteredPolicies).To(Equal(expected))
 		})
 
+		Context("when the token has a client as the subject", func() {
+			BeforeEach(func() {
+				tokenData = uaa_client.CheckTokenResponse{
+					ClientID: "some-client-id",
+					Subject: "some-client-id",
+				}
+			})
+
+			It("filters the policies by the spaces the client can access", func() {
+				filteredPolicies, err := policyFilter.FilterPolicies(policies, tokenData)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(fakeUAAClient.GetTokenCallCount()).To(Equal(1))
+				Expect(fakeCCClient.GetAppSpacesCallCount()).To(Equal(1))
+
+				token, appGUIDs := fakeCCClient.GetAppSpacesArgsForCall(0)
+				Expect(token).To(Equal("policy-server-token"))
+				Expect(appGUIDs).To(ConsistOf([]string{"app-guid-1", "app-guid-2", "app-guid-3", "app-guid-4"}))
+
+				Expect(fakeCCClient.GetSubjectSpacesCallCount()).To(Equal(1))
+
+				token, subjectId := fakeCCClient.GetSubjectSpacesArgsForCall(0)
+				Expect(token).To(Equal("policy-server-token"))
+				Expect(subjectId).To(Equal("some-client-id"))
+
+				expected := []store.Policy{
+					{
+						Source: store.Source{
+							ID: "app-guid-1",
+						},
+						Destination: store.Destination{
+							ID: "app-guid-2",
+						},
+					},
+				}
+				Expect(filteredPolicies).To(Equal(expected))
+			})
+		})
+
 		Context("when the filter results in zero policies", func() {
 			BeforeEach(func() {
-				fakeCCClient.GetUserSpacesReturns(map[string]struct{}{}, nil)
+				fakeCCClient.GetSubjectSpacesReturns(map[string]struct{}{}, nil)
 			})
 
 			It("returns a non-null, but empty, slice of policies", func() {
@@ -125,7 +164,7 @@ var _ = Describe("PolicyFilter", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(fakeUAAClient.GetTokenCallCount()).To(Equal(0))
 				Expect(fakeCCClient.GetAppSpacesCallCount()).To(Equal(0))
-				Expect(fakeCCClient.GetUserSpacesCallCount()).To(Equal(0))
+				Expect(fakeCCClient.GetSubjectSpacesCallCount()).To(Equal(0))
 				Expect(filtered).To(Equal(policies))
 			})
 		})
@@ -141,13 +180,13 @@ var _ = Describe("PolicyFilter", func() {
 			})
 		})
 
-		Context("when the getting the user spaces fails", func() {
+		Context("when the getting the subject spaces fails", func() {
 			BeforeEach(func() {
-				fakeCCClient.GetUserSpacesReturns(nil, errors.New("banana"))
+				fakeCCClient.GetSubjectSpacesReturns(nil, errors.New("banana"))
 			})
 			It("returns a useful error", func() {
 				filtered, err := policyFilter.FilterPolicies(policies, tokenData)
-				Expect(err).To(MatchError("getting user spaces: banana"))
+				Expect(err).To(MatchError("getting subject spaces: banana"))
 				Expect(filtered).To(BeNil())
 			})
 		})

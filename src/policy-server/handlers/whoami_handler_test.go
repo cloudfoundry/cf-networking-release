@@ -55,7 +55,21 @@ var _ = Describe("Who Am I Handler", func() {
 		MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, tokenData)
 
 		Expect(resp.Code).To(Equal(http.StatusOK))
-		Expect(resp.Body.String()).To(Equal(`{"user_name":"some_user"}`))
+		Expect(resp.Body.String()).To(Equal(`{"subject":"some_user"}`))
+	})
+
+	Context("when the subject token is a client", func() {
+		It("returns the client id", func() {
+			tokenData = uaa_client.CheckTokenResponse{
+				Scope:   []string{"network.admin"},
+				Subject: "some-client-id",
+			}
+
+			MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, tokenData)
+
+			Expect(resp.Code).To(Equal(http.StatusOK))
+			Expect(resp.Body.String()).To(Equal(`{"subject":"some-client-id"}`))
+		})
 	})
 
 	Context("when the logger isn't on the request context", func() {
@@ -63,7 +77,7 @@ var _ = Describe("Who Am I Handler", func() {
 			MakeRequestWithAuth(handler.ServeHTTP, resp, request, tokenData)
 
 			Expect(resp.Code).To(Equal(http.StatusOK))
-			Expect(resp.Body.String()).To(Equal(`{"user_name":"some_user"}`))
+			Expect(resp.Body.String()).To(Equal(`{"subject":"some_user"}`))
 		})
 	})
 
@@ -72,7 +86,7 @@ var _ = Describe("Who Am I Handler", func() {
 			MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
 
 			Expect(resp.Code).To(Equal(http.StatusOK))
-			Expect(resp.Body.String()).To(Equal(`{"user_name":""}`))
+			Expect(resp.Body.String()).To(Equal(`{"subject":""}`))
 		})
 	})
 

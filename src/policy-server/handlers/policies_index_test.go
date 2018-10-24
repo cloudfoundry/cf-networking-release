@@ -148,7 +148,7 @@ var _ = Describe("Policies index handler", func() {
 
 		fakeErrorResponse = &fakes.ErrorResponse{}
 		fakePolicyFilter = &fakes.PolicyFilter{}
-		fakePolicyFilter.FilterPoliciesStub = func(policies []store.Policy, userToken uaa_client.CheckTokenResponse) ([]store.Policy, error) {
+		fakePolicyFilter.FilterPoliciesStub = func(policies []store.Policy, subjectToken uaa_client.CheckTokenResponse) ([]store.Policy, error) {
 			return filteredPolicies, nil
 		}
 		fakeMapper = &apifakes.PolicyMapper{}
@@ -164,8 +164,6 @@ var _ = Describe("Policies index handler", func() {
 
 		token = uaa_client.CheckTokenResponse{
 			Scope:    []string{"some-scope", "some-other-scope"},
-			UserID:   "some-user-id",
-			UserName: "some-user",
 		}
 		resp = httptest.NewRecorder()
 
@@ -244,9 +242,9 @@ var _ = Describe("Policies index handler", func() {
 			Expect(destGuids).To(ConsistOf([]string{"some-app-guid", "yet-another-app-guid"}))
 			Expect(inSourceAndDest).To(BeFalse())
 			Expect(fakePolicyFilter.FilterPoliciesCallCount()).To(Equal(1))
-			policies, userToken := fakePolicyFilter.FilterPoliciesArgsForCall(0)
+			policies, subjectToken := fakePolicyFilter.FilterPoliciesArgsForCall(0)
 			Expect(policies).To(Equal(byGuidsAPIPolicies))
-			Expect(userToken).To(Equal(token))
+			Expect(subjectToken).To(Equal(token))
 			Expect(resp.Code).To(Equal(http.StatusOK))
 		})
 
@@ -263,9 +261,9 @@ var _ = Describe("Policies index handler", func() {
 				Expect(destGuids).To(Equal([]string{""}))
 				Expect(inSourceAndDest).To(BeFalse())
 				Expect(fakePolicyFilter.FilterPoliciesCallCount()).To(Equal(1))
-				policies, userToken := fakePolicyFilter.FilterPoliciesArgsForCall(0)
+				policies, subjectToken := fakePolicyFilter.FilterPoliciesArgsForCall(0)
 				Expect(policies).To(Equal(byGuidsAPIPolicies))
-				Expect(userToken).To(Equal(token))
+				Expect(subjectToken).To(Equal(token))
 
 				Expect(resp.Code).To(Equal(http.StatusOK))
 			})
@@ -288,9 +286,9 @@ var _ = Describe("Policies index handler", func() {
 			Expect(destGuids).To(ConsistOf([]string{"not-a-real-app-guid", "some-other-app-guid"}))
 			Expect(inSourceAndDest).To(BeFalse())
 			Expect(fakePolicyFilter.FilterPoliciesCallCount()).To(Equal(1))
-			policies, userToken := fakePolicyFilter.FilterPoliciesArgsForCall(0)
+			policies, subjectToken := fakePolicyFilter.FilterPoliciesArgsForCall(0)
 			Expect(policies).To(Equal(byGuidsAPIPolicies))
-			Expect(userToken).To(Equal(token))
+			Expect(subjectToken).To(Equal(token))
 			Expect(resp.Code).To(Equal(http.StatusOK))
 		})
 
@@ -307,9 +305,9 @@ var _ = Describe("Policies index handler", func() {
 				Expect(destGuids).To(Equal([]string{""}))
 				Expect(inSourceAndDest).To(BeFalse())
 				Expect(fakePolicyFilter.FilterPoliciesCallCount()).To(Equal(1))
-				policies, userToken := fakePolicyFilter.FilterPoliciesArgsForCall(0)
+				policies, subjectToken := fakePolicyFilter.FilterPoliciesArgsForCall(0)
 				Expect(policies).To(Equal(byGuidsAPIPolicies))
-				Expect(userToken).To(Equal(token))
+				Expect(subjectToken).To(Equal(token))
 				Expect(resp.Code).To(Equal(http.StatusOK))
 			})
 		})
@@ -331,9 +329,9 @@ var _ = Describe("Policies index handler", func() {
 			Expect(destGuids).To(ConsistOf([]string{}))
 			Expect(inSourceAndDest).To(BeFalse())
 			Expect(fakePolicyFilter.FilterPoliciesCallCount()).To(Equal(1))
-			policies, userToken := fakePolicyFilter.FilterPoliciesArgsForCall(0)
+			policies, subjectToken := fakePolicyFilter.FilterPoliciesArgsForCall(0)
 			Expect(policies).To(Equal(byGuidsAPIPolicies))
-			Expect(userToken).To(Equal(token))
+			Expect(subjectToken).To(Equal(token))
 			Expect(resp.Code).To(Equal(http.StatusOK))
 		})
 
@@ -350,9 +348,9 @@ var _ = Describe("Policies index handler", func() {
 				Expect(destGuids).To(Equal([]string{}))
 				Expect(inSourceAndDest).To(BeFalse())
 				Expect(fakePolicyFilter.FilterPoliciesCallCount()).To(Equal(1))
-				policies, userToken := fakePolicyFilter.FilterPoliciesArgsForCall(0)
+				policies, subjectToken := fakePolicyFilter.FilterPoliciesArgsForCall(0)
 				Expect(policies).To(Equal(byGuidsAPIPolicies))
-				Expect(userToken).To(Equal(token))
+				Expect(subjectToken).To(Equal(token))
 
 				Expect(resp.Code).To(Equal(http.StatusOK))
 			})
@@ -375,9 +373,9 @@ var _ = Describe("Policies index handler", func() {
 			Expect(destGuids).To(ConsistOf([]string{"not-a-real-app-guid", "some-other-app-guid"}))
 			Expect(inSourceAndDest).To(BeTrue())
 			Expect(fakePolicyFilter.FilterPoliciesCallCount()).To(Equal(1))
-			policies, userToken := fakePolicyFilter.FilterPoliciesArgsForCall(0)
+			policies, subjectToken := fakePolicyFilter.FilterPoliciesArgsForCall(0)
 			Expect(policies).To(Equal(byGuidsAPIPolicies))
-			Expect(userToken).To(Equal(token))
+			Expect(subjectToken).To(Equal(token))
 			Expect(resp.Code).To(Equal(http.StatusOK))
 		})
 	})

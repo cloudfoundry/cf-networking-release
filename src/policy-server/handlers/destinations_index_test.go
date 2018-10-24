@@ -63,8 +63,6 @@ var _ = Describe("Destinations index handler", func() {
 
 		token = uaa_client.CheckTokenResponse{
 			Scope:    []string{"some-scope", "some-other-scope"},
-			UserID:   "some-user-id",
-			UserName: "some-user",
 		}
 		resp = httptest.NewRecorder()
 	})
