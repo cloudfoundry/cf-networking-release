@@ -2161,6 +2161,8 @@ jobs:
     plan:
     - aggregate:
       - get: cf-networking-release-ci
+        params:
+          submodules: none
       - get: cf-networking-deployments
       - get: cf-deployment-concourse-tasks
       - get: trigger-caubeen-delete
@@ -2175,9 +2177,11 @@ jobs:
     - task: reinitialize-database
       file: cf-networking-release-ci/ci/tasks/reinitialize-database.yml
       params:
-        BACKUP_ID: 154025019451
+        BACKUP_ID: '154025019451'
         DATABASE_NAME: caubeen-database
-        EVIRONMENT_NAME: caubeen
+        ENVIRONMENT_NAME: caubeen
+      input_mapping:
+        deployments-repo: cf-networking-deployments
 
   - name: caubeen-cleanup
     public: true
