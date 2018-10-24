@@ -6,6 +6,13 @@ See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for example
 **New Properties**
   - An optional parameter has been added to the `bosh-dns-adapter` job to allow for internal service mesh domains. Routes created with these domains will be proxied through the sidecar envoy. This is a part of istio integration. Defaults to `[]`
     - `internal_service_mesh_domains`
+  - An optional parameter has been added to the `policy-server` job to skip host name validation when using ssl validation. The `policy-server-internal` uses the same configuration applied to `policy-server` via bosh links.
+    - `database.skip_hostname_validation`
+
+### 2.18.0 Silk-Release
+**New Properties**
+  - An optional parameter has been added to the `silk-controller` job to skip host name validation when using ssl validation
+    - `database.skip_hostname_validation`
 
 ### 2.17.0 CF-Networking-Release
 **New Properties**

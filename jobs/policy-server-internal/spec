@@ -69,10 +69,6 @@ properties:
     description: "Connection timeout between the policy server and its database."
     default: 120
 
-  database.skip_hostname_validation:
-    description: "Skip hostname validation when true. Requires 'database.require_ssl' to be true"
-    default: false
-
   max_open_connections:
     description: |
       Maximum number of open connections to the SQL database.
