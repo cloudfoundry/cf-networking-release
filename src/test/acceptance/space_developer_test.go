@@ -1,6 +1,7 @@
 package acceptance_test
 
 import (
+	"cf-pusher/cf_cli_adapter"
 	"crypto/tls"
 	"fmt"
 	"lib/policy_client"
@@ -8,9 +9,9 @@ import (
 	"net/http"
 	"policy-server/api/api_v0"
 	"strings"
+	"time"
 
 	"code.cloudfoundry.org/lager/lagertest"
-
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -28,6 +29,9 @@ var _ = Describe("space developer policy configuration", func() {
 		prefix     string
 
 		policyClient *policy_client.ExternalClient
+		cli          *cf_cli_adapter.Adapter
+
+		warrantClient warrant.Warrant
 	)
 
 	BeforeEach(func() {
@@ -42,7 +46,7 @@ var _ = Describe("space developer policy configuration", func() {
 			fmt.Sprintf("https://%s", config.ApiEndpoint),
 		)
 
-		warrantClient := warrant.New(warrant.Config{
+		warrantClient = warrant.New(warrant.Config{
 			Host:          getUAABaseURL(),
 			SkipVerifySSL: true,
 		})
@@ -72,16 +76,27 @@ var _ = Describe("space developer policy configuration", func() {
 		uaaAdminClientToken, err := warrantClient.Clients.GetToken("admin", testConfig.AdminSecret)
 		Expect(err).NotTo(HaveOccurred())
 
-		user := ensureUserExists(warrantClient, "space-developer", "password", uaaAdminClientToken)
-		group := ensureGroupExists(warrantClient, "network.write", uaaAdminClientToken)
+		err = warrantClient.Clients.Create(warrant.Client{
+			ID:                   "space-client",
+			Name:                 "space-client",
+			Authorities:          []string{"network.write", "cloud_controller.read"},
+			AuthorizedGrantTypes: []string{"client_credentials"},
+			AccessTokenValidity:  600 * time.Second,
+		}, "password", uaaAdminClientToken)
+		Expect(err).NotTo(HaveOccurred())
 
-		err = warrantClient.Groups.AddMember(group.ID, user.ID, uaaAdminClientToken)
-		Expect(err).To(Or(BeNil(), BeAssignableToTypeOf(warrant.DuplicateResourceError{})))
+		cli = &cf_cli_adapter.Adapter{CfCliPath: "cf"}
 	})
 
 	AfterEach(func() {
 		By("logging in as admin and deleting the org", func() {
+			Expect(cf.Cf("logout").Wait(Timeout_Push)).To(gexec.Exit(0))
 			Expect(cf.Cf("auth", config.AdminUser, config.AdminPassword).Wait(Timeout_Push)).To(gexec.Exit(0))
+
+			uaaAdminClientToken, err := warrantClient.Clients.GetToken("admin", testConfig.AdminSecret)
+			Expect(err).NotTo(HaveOccurred())
+			warrantClient.Clients.Delete("space-client", uaaAdminClientToken)
+
 			Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 		})
 	})
@@ -89,13 +104,23 @@ var _ = Describe("space developer policy configuration", func() {
 	Describe("space developer with network.write scope", func() {
 		It("can create, list, and delete network policies in spaces they have access to", func(done Done) {
 			By("setting space roles", func() {
-				Expect(cf.Cf("set-space-role", "space-developer", orgName, spaceNameA, "SpaceDeveloper").Wait(Timeout_Push)).To(gexec.Exit(0))
-				Expect(cf.Cf("set-space-role", "space-developer", orgName, spaceNameB, "SpaceDeveloper").Wait(Timeout_Push)).To(gexec.Exit(0))
+				orgGuid, err := cli.OrgGuid(orgName)
+				Expect(err).NotTo(HaveOccurred())
+
+				spaceAGuid, err := cli.SpaceGuid(spaceNameA)
+				Expect(err).NotTo(HaveOccurred())
+
+				spaceBGuid, err := cli.SpaceGuid(spaceNameB)
+				Expect(err).NotTo(HaveOccurred())
+
+				cf.Cf("curl", "-X", "PUT", fmt.Sprintf("/v2/organizations/%s/users/space-client", orgGuid))
+				cf.Cf("curl", "-X", "PUT", fmt.Sprintf("/v2/spaces/%s/developers/space-client", spaceAGuid))
+				cf.Cf("curl", "-X", "PUT", fmt.Sprintf("/v2/spaces/%s/developers/space-client", spaceBGuid))
 			})
 
 			var spaceDevUserToken string
 			By("logging in and getting the space developer user token", func() {
-				Expect(cf.Cf("auth", "space-developer", "password").Wait(Timeout_Push)).To(gexec.Exit(0))
+				Expect(cf.Cf("auth", "space-client", "password", "--client-credentials").Wait(Timeout_Push)).To(gexec.Exit(0))
 				session := cf.Cf("oauth-token")
 				Expect(session.Wait(Timeout_Push)).To(gexec.Exit(0))
 				spaceDevUserToken = strings.TrimSpace(string(session.Out.Contents()))
