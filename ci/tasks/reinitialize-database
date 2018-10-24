@@ -7,7 +7,9 @@ echo "9b7492f593d35de06bee72a5a25d469bf72e880001f76d2a55e8d680f6e084df  ./gcloud
 
 tar zxvf ./gcloud-cli.tar.gz google-cloud-sdk
 yes n | ./google-cloud-sdk/install.sh
-gcloud --quiet auth activate-service-account --key-file deployments-repo/environments/${ENVIRONMENT_NAME}/restore-database-service-account.json
+export PATH=$PATH:$PWD/google-cloud-sdk/bin
+
+gcloud --quiet auth activate-service-account --key-file "deployments-repo/environments/${ENVIRONMENT_NAME}/restore-database-service-account.json"
 
 set +e  #TODO: figure out which roles will not error.
-gcloud --quiet sql backups restore ${BACKUP_ID} --restore-instance ${DATABASE_NAME}
+gcloud --quiet sql backups restore "${BACKUP_ID}" --restore-instance "${DATABASE_NAME}"
