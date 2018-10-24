@@ -14,6 +14,7 @@ import (
 	"code.cloudfoundry.org/lager/lagertest"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 	"github.com/pivotal-cf-experimental/warrant"
@@ -29,7 +30,6 @@ var _ = Describe("space developer policy configuration", func() {
 		prefix     string
 
 		policyClient *policy_client.ExternalClient
-		cli          *cf_cli_adapter.Adapter
 
 		warrantClient warrant.Warrant
 	)
@@ -76,6 +76,15 @@ var _ = Describe("space developer policy configuration", func() {
 		uaaAdminClientToken, err := warrantClient.Clients.GetToken("admin", testConfig.AdminSecret)
 		Expect(err).NotTo(HaveOccurred())
 
+		user := ensureUserExists(warrantClient, "space-developer", "password", uaaAdminClientToken)
+		group := ensureGroupExists(warrantClient, "network.write", uaaAdminClientToken)
+
+		err = warrantClient.Groups.AddMember(group.ID, user.ID, uaaAdminClientToken)
+		Expect(err).To(Or(BeNil(), BeAssignableToTypeOf(warrant.DuplicateResourceError{})))
+
+		Expect(cf.Cf("set-space-role", "space-developer", orgName, spaceNameA, "SpaceDeveloper").Wait(Timeout_Push)).To(gexec.Exit(0))
+		Expect(cf.Cf("set-space-role", "space-developer", orgName, spaceNameB, "SpaceDeveloper").Wait(Timeout_Push)).To(gexec.Exit(0))
+
 		err = warrantClient.Clients.Create(warrant.Client{
 			ID:                   "space-client",
 			Name:                 "space-client",
@@ -85,7 +94,19 @@ var _ = Describe("space developer policy configuration", func() {
 		}, "password", uaaAdminClientToken)
 		Expect(err).NotTo(HaveOccurred())
 
-		cli = &cf_cli_adapter.Adapter{CfCliPath: "cf"}
+		cli := &cf_cli_adapter.Adapter{CfCliPath: "cf"}
+		orgGuid, err := cli.OrgGuid(orgName)
+		Expect(err).NotTo(HaveOccurred())
+
+		spaceAGuid, err := cli.SpaceGuid(spaceNameA)
+		Expect(err).NotTo(HaveOccurred())
+
+		spaceBGuid, err := cli.SpaceGuid(spaceNameB)
+		Expect(err).NotTo(HaveOccurred())
+
+		cf.Cf("curl", "-X", "PUT", fmt.Sprintf("/v2/organizations/%s/users/space-client", orgGuid))
+		cf.Cf("curl", "-X", "PUT", fmt.Sprintf("/v2/spaces/%s/developers/space-client", spaceAGuid))
+		cf.Cf("curl", "-X", "PUT", fmt.Sprintf("/v2/spaces/%s/developers/space-client", spaceBGuid))
 	})
 
 	AfterEach(func() {
@@ -102,25 +123,11 @@ var _ = Describe("space developer policy configuration", func() {
 	})
 
 	Describe("space developer with network.write scope", func() {
-		It("can create, list, and delete network policies in spaces they have access to", func(done Done) {
-			By("setting space roles", func() {
-				orgGuid, err := cli.OrgGuid(orgName)
-				Expect(err).NotTo(HaveOccurred())
-
-				spaceAGuid, err := cli.SpaceGuid(spaceNameA)
-				Expect(err).NotTo(HaveOccurred())
-
-				spaceBGuid, err := cli.SpaceGuid(spaceNameB)
-				Expect(err).NotTo(HaveOccurred())
-
-				cf.Cf("curl", "-X", "PUT", fmt.Sprintf("/v2/organizations/%s/users/space-client", orgGuid))
-				cf.Cf("curl", "-X", "PUT", fmt.Sprintf("/v2/spaces/%s/developers/space-client", spaceAGuid))
-				cf.Cf("curl", "-X", "PUT", fmt.Sprintf("/v2/spaces/%s/developers/space-client", spaceBGuid))
-			})
-
+		DescribeTable("can create, list, and delete network policies in spaces they have access to", func(authArgs []string) {
 			var spaceDevUserToken string
 			By("logging in and getting the space developer user token", func() {
-				Expect(cf.Cf("auth", "space-client", "password", "--client-credentials").Wait(Timeout_Push)).To(gexec.Exit(0))
+				authArgs = append([]string{"auth"}, authArgs...)
+				Expect(cf.Cf(authArgs...).Wait(Timeout_Push)).To(gexec.Exit(0))
 				session := cf.Cf("oauth-token")
 				Expect(session.Wait(Timeout_Push)).To(gexec.Exit(0))
 				spaceDevUserToken = strings.TrimSpace(string(session.Out.Contents()))
@@ -188,9 +195,10 @@ var _ = Describe("space developer policy configuration", func() {
 				})
 				Expect(err).NotTo(HaveOccurred())
 			})
-
-			close(done)
-		}, 60 /* <-- overall spec timeout in seconds */)
+		},
+			Entry("as a user", []string{"space-developer", "password"}),
+			Entry("as a service account", []string{"space-client", "password", "--client-credentials"}),
+		)
 	})
 })
 
