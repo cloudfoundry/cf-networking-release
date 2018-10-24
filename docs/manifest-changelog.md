@@ -2,6 +2,19 @@
 
 See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for examples
 
+### 2.18.0 CF-Networking-Release
+**New Properties**
+  - An optional parameter has been added to the `bosh-dns-adapter` job to allow for internal service mesh domains. Routes created with these domains will be proxied through the sidecar envoy. This is a part of istio integration. Defaults to `[]`
+    - `internal_service_mesh_domains`
+
+### 2.17.0 CF-Networking-Release
+**New Properties**
+  - An optional parameter has been added to the `policy-server-internal` job to enforce dynamic egress policy. Note that you can still create dynamic egress policies through the external API. Defaults to `false`
+    - `enforce_experimental_dynamic_egress_policies`
+
+### 2.17.0 Silk-Release
+**No Manifest Changes**
+
 ### 2.16.0 CF-Networking-Release
 **New Properties**
   - An optional parameter has been added to the `policy-server` and `policy-server-internal` jobs to configure the max lifetime of connections to the policy-server database.
