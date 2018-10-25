@@ -11,5 +11,4 @@ export PATH=$PATH:$PWD/google-cloud-sdk/bin
 
 gcloud --quiet auth activate-service-account --key-file "deployments-repo/environments/${ENVIRONMENT_NAME}/restore-database-service-account.json"
 
-set +e  #TODO: figure out which roles will not error.
-gcloud --quiet sql backups restore "${BACKUP_ID}" --restore-instance "${DATABASE_NAME}"
+gcloud --quiet sql backups restore "${BACKUP_ID}" --async --restore-instance "${DATABASE_NAME}"
