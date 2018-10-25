@@ -1,6 +1,12 @@
 <% unless p("cf_app_sd_disable") %>
 <%=
-require 'json'
+
+def internal_service_mesh_domains
+  p("internal_service_mesh_domains").map do |domain|
+    domain.end_with?('.') ? domain : domain << '.'
+  end
+end
+
 config = {
     "address" => p('address'),
     "port" => "#{p('port')}",
@@ -13,9 +19,10 @@ config = {
     "metrics_emit_seconds" => 10,
     "log_level_address" => p("log_level_address"),
     "log_level_port" => p("log_level_port"),
-    "internal_service_mesh_domains" => p("internal_service_mesh_domains")
+    "internal_service_mesh_domains" => internal_service_mesh_domains
 }
 
+require 'json'
 JSON.dump(config)
 %>
 <% end %>

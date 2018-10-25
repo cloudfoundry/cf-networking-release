@@ -50,6 +50,15 @@ module Bosh::Template::Test
           "internal_service_mesh_domains" => []
         })
       end
+
+      describe 'when the mesh domain has no trailing dot' do
+        it 'appends a dot to the domain name' do
+          properties = { 'internal_service_mesh_domains' => ['domain.with.no.trailing.dot'] }
+          config = JSON.parse(template.render(properties, consumes: links))
+          expect(config['internal_service_mesh_domains']).to eq(['domain.with.no.trailing.dot.'])
+        end
+      end
+
       describe 'with custom properties' do
         it 'renders a file with custom properties' do
         config = JSON.parse(template.render(merged_manifest_properties, consumes: links))
