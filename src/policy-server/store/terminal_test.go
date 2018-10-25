@@ -36,7 +36,7 @@ var _ = Describe("Terminal Table", func() {
 
 			logger := lager.NewLogger("Terminal Table Test")
 
-			realDb, err = db.NewConnectionPool(dbConf, 200, 200, 5*time.Minute, "Terminal Table Test", "Terminal Table Test", logger)
+			realDb, err = db.NewConnectionPool(dbConf, 200, 200, 60*time.Minute, "Terminal Table Test", "Terminal Table Test", logger)
 			Expect(err).NotTo(HaveOccurred())
 
 			migrate(realDb)

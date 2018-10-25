@@ -35,7 +35,7 @@ var _ = Describe("Egress Policy Table", func() {
 
 		logger := lager.NewLogger("Egress Store Test")
 
-		realDb, err = db.NewConnectionPool(dbConf, 200, 200, 5*time.Minute, "Egress Store Test", "Egress Store Test", logger)
+		realDb, err = db.NewConnectionPool(dbConf, 200, 200, 60*time.Minute, "Egress Store Test", "Egress Store Test", logger)
 		Expect(err).NotTo(HaveOccurred())
 
 		migrate(realDb)
