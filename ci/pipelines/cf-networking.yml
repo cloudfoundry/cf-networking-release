@@ -2177,7 +2177,7 @@ jobs:
     - task: reinitialize-database
       file: cf-networking-release-ci/ci/tasks/reinitialize-database.yml
       params:
-        BACKUP_ID: '154025019451'
+        BACKUP_ID: '1540250194513'
         DATABASE_NAME: caubeen-database
         ENVIRONMENT_NAME: caubeen
       input_mapping:
