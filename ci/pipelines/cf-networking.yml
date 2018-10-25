@@ -53,6 +53,7 @@ groups:
   - toque-test
   - caubeen-deploy-pinned
   - caubeen-upgrade-test
+  - delete-caubeen-deployment
 - name: pickelhelm
   jobs:
   - pickelhelm-bbl-up
