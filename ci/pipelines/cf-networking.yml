@@ -1958,14 +1958,9 @@ jobs:
           submodules: none
       - get: cf-deployment-concourse-tasks
       - get: cf-networking-deployments
-      - get: cf-deployment
       - get: cf-deployment-pinned
       - get: cf-networking-2.16.0
       - get: silk-2.16.0
-      - get: cf-networking-dev
-        passed: [unit-and-integration-tests]
-      - get: silk-dev
-        passed: [unit-and-integration-tests]
     - task: upload-pinned-stemcell
       file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
       params:
@@ -1973,29 +1968,15 @@ jobs:
       input_mapping:
         cf-deployment: cf-deployment-pinned
         bbl-state: cf-networking-deployments
-    - task: upload-local-silk-release-pinned
-      file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
-      input_mapping:
-        bbl-state: cf-networking-deployments
-        local-release: silk-2.16.0
-      params:
-        BBL_STATE_DIR: environments/caubeen/
-    - task: upload-local-cf-networking-release-pinned
-      file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
-      input_mapping:
-        bbl-state: cf-networking-deployments
-        local-release: cf-networking-2.16.0
-      params:
-        BBL_STATE_DIR: environments/caubeen/
     - task: collect-pinned-ops-files
       file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
       params:
         ENVIRONMENT_NAME: caubeen
       input_mapping:
         cf-deployment: cf-deployment-pinned
-        cf-networking-release: cf-networking-dev
+        cf-networking-release: cf-networking-2.16.0
         deployments-repo: cf-networking-deployments
-        silk-release: silk-dev
+        silk-release: silk-2.16.0
     - task: deploy-pinned-cf-deployment
       file: cf-deployment-concourse-tasks/bosh-deploy/task.yml
       params:
@@ -2012,7 +1993,6 @@ jobs:
           enable-iptables-logger.yml
           enable-service-discovery.yml
           add-apps-internal-search-domain.yml
-          enable-experimental-dynamic-egress-policies.yml
           opsfile.yml
         VARS_FILES: |
           environments/caubeen/external-db-vars.yml
@@ -2037,9 +2017,7 @@ jobs:
       - get: cf-networking-deployments
       - get: cf-deployment
       - get: cf-networking-dev
-        passed: [caubeen-deploy-pinned]
       - get: silk-dev
-        passed: [caubeen-deploy-pinned]
     - task: upload-stemcell
       file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
       params:
