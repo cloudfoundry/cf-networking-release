@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"fmt"
+
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	helpers_config "github.com/cloudfoundry-incubator/cf-test-helpers/config"
 	"github.com/onsi/gomega/gexec"
@@ -99,7 +100,7 @@ func digForNumberOfIPs(hostName string, expectedLength int) []string {
 		Expect(err).NotTo(HaveOccurred())
 
 		return proxyIPs
-	}, 5*time.Second).Should(HaveLen(expectedLength))
+	}, 10*time.Second).Should(HaveLen(expectedLength))
 	return proxyIPs
 }
 
