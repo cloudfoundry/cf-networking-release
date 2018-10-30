@@ -19,9 +19,11 @@ cells with new leases. This causes the silk daemons to use a lot of CPU.
 Change the property `lease_poll_interval_seconds` on the silk-daemon job to be greater than 5 seconds. This will cause the silk-daemon to 
 poll the silk-controller less frequently and thus make linux system calls less frequently. However, increasing this property means that when a cell gets a new lease 
 (this happens when a cell is rolled, recreated, or for whatever reason it doesn't renew it's lease properly) it will take longer for the other cells to know how to 
-route container-to-container traffic to it.
+route container-to-container traffic to it. To start with, we suggest setting this property to 300 seconds (5 minutes). Then you can tweak accordingly.
 
 ## Problem 2: ARP Cache on diego-cell not large enough 
+[Github issue](https://github.com/cloudfoundry/cf-networking-release/issues/54)
+
 ### Symptoms
 Silk daemon fails to converge leases. Errors in the silk-daemon logs might look like this: 
 ```json
@@ -35,9 +37,29 @@ Silk daemon fails to converge leases. Errors in the silk-daemon logs might look 
    }
 }
 ```
+Also kernel logs might look like this:
+```neighbour: arp_cache: neighbor table overflow```
 
 ### Reason
 ARP cache on the diego cell is not large enough to handle the number of entries the silk-daemon is trying to write.
 
 ### Solution
 Increase the ARP cache size on the diego cells. 
+
+1. Look at the current size of your ARP cache
+    - ssh onto a diego-cell and become root 
+    - inspect following kernel variables
+    ```
+    sysctl net.ipv4.neigh.default.gc_thresh1
+    sysctl net.ipv4.neigh.default.gc_thresh2
+    sysctl net.ipv4.neigh.default.gc_thresh3
+    ```
+
+1. Manually increase ARP cache size on the cell. This is good for fixing the issue in the moment, but isn't a good long term soluation because the values will be reset when the cell is recreated.
+     - set new, larger values for the kernel variables. These sizes were used successfully for a deployment of ~800 cells.
+     ```
+     sudo sysctl -w net.ipv4.neigh.default.gc_thresh3=8192; 
+     sudo sysctl -w net.ipv4.neigh.default.gc_thresh2=4096; 
+     sudo sysctl -w net.ipv4.neigh.default.gc_thresh1=2048;
+     ```
+     
