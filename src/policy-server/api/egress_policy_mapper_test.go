@@ -219,5 +219,20 @@ var _ = Describe("EgressPolicyMapper", func() {
 				Expect(err).To(MatchError(errors.New("marshal json: failed to marshal bytes")))
 			})
 		})
+
+		Context("when there are no egress policies", func() {
+			BeforeEach(func() {
+				egressPolicies = []store.EgressPolicy{}
+			})
+
+			It("returns keys with no values", func() {
+				mappedBytes, err := mapper.AsBytesWithPopulatedDestinations(egressPolicies)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(string(mappedBytes)).To(MatchJSON(`{
+					"total_egress_policies": 0,
+					"egress_policies": []
+				}`))
+			})
+		})
 	})
 })

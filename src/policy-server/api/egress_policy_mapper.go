@@ -19,8 +19,8 @@ type egressValidator interface {
 }
 
 type payload struct {
-	TotalEgressPolicies int            `json:"total_egress_policies,omitempty"`
-	EgressPolicies      []EgressPolicy `json:"egress_policies,omitempty"`
+	TotalEgressPolicies int            `json:"total_egress_policies"`
+	EgressPolicies      []EgressPolicy `json:"egress_policies"`
 }
 
 func withPopulatedDestinations(storeEgressPolicy store.EgressPolicy) EgressPolicy {
@@ -49,9 +49,9 @@ func withDestinationPointer(storeEgressPolicy store.EgressPolicy) EgressPolicy {
 }
 
 func (p *EgressPolicyMapper) AsBytesWithStrategy(storeEgressPolicies []store.EgressPolicy, mappingStrategy func(store.EgressPolicy) EgressPolicy) ([]byte, error) {
-	var apiEgressPolicies []EgressPolicy
-	for _, storeEgressPolicy := range storeEgressPolicies {
-		apiEgressPolicies = append(apiEgressPolicies, mappingStrategy(storeEgressPolicy))
+	apiEgressPolicies := make([]EgressPolicy, len(storeEgressPolicies))
+	for i, storeEgressPolicy := range storeEgressPolicies {
+		apiEgressPolicies[i] = mappingStrategy(storeEgressPolicy)
 	}
 
 	payload := &payload{
