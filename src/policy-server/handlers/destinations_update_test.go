@@ -161,6 +161,18 @@ var _ = Describe("Destinations update handler", func() {
 		Expect(resp.Body.Bytes()).To(MatchJSON(`{"error": "destination id not found on request"}`))
 	})
 
+	It("returns an error when requested update destination has a duplicate ID", func() {
+		requestedDestinationsWithMissingGUID := []store.EgressDestination{
+			{GUID: "meow"},
+			{GUID: "meow"},
+		}
+		fakeMarshaller.AsEgressDestinationsReturns(requestedDestinationsWithMissingGUID, nil)
+
+		MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
+		Expect(resp.Code).To(Equal(http.StatusBadRequest))
+		Expect(resp.Body.Bytes()).To(MatchJSON(`{"error": "duplicate destination id 'meow'"}`))
+	})
+
 	It("returns an error when requested update destination is not in the database", func() {
 		fakeStore.UpdateReturns([]store.EgressDestination{}, errors.New("blah blah: destination GUID not found: blah blah"))
 

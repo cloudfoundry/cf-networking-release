@@ -39,11 +39,18 @@ func (d *DestinationsUpdate) ServeHTTP(w http.ResponseWriter, req *http.Request)
 		return
 	}
 
+	seenGUIDs := make(map[string]struct{}, len(destinations))
 	for _, destination := range destinations {
 		if destination.GUID == "" {
 			d.ErrorResponse.BadRequest(d.Logger, w, nil, fmt.Sprintf("destination id not found on request"))
 			return
 		}
+
+		if _, ok := seenGUIDs[destination.GUID]; ok {
+			d.ErrorResponse.BadRequest(d.Logger, w, nil, fmt.Sprintf("duplicate destination id '%s'", destination.GUID))
+			return
+		}
+		seenGUIDs[destination.GUID] = struct{}{}
 	}
 
 	updatedDestinations, err = d.EgressDestinationStore.Update(destinations)
