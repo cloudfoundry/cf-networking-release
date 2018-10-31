@@ -2,6 +2,14 @@
 
 See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for examples
 
+### 2.19.0 CF-Networking-Release
+**No Manifest Changes**
+
+### 2.19.0 Silk-Release
+**New Properties**
+  - An optional parameter has been added to the `vxlan-policy-agent` job to disable c3c network policy enforcement.
+    - `disable_container_network_policy`
+
 ### 2.18.0 CF-Networking-Release
 **New Properties**
   - An optional parameter has been added to the `bosh-dns-adapter` job to allow for internal service mesh domains. Routes created with these domains will be proxied through the sidecar envoy. This is a part of istio integration. Defaults to `[]`
