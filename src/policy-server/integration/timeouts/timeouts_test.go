@@ -178,7 +178,7 @@ func mustSucceed(binary string, args ...string) string {
 func migrateAndPopulateTags(dbConf db.Config) {
 	logger := lager.NewLogger("Timeout Test")
 
-	realDb, err := db.NewConnectionPool(dbConf, 200, 200, 60*time.Minute, "Timeout Test", "Timeout Test", logger)
+	realDb, err := db.NewConnectionPool(dbConf, 200, 0, 60*time.Minute, "Timeout Test", "Timeout Test", logger)
 	Expect(err).NotTo(HaveOccurred())
 	defer realDb.Close()
 

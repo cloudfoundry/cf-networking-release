@@ -50,7 +50,7 @@ var _ = Describe("Store", func() {
 		logger := lager.NewLogger("Store Test")
 
 		var err error
-		realDb, err = db.NewConnectionPool(dbConf, 200, 200, 60*time.Minute, "Store Test", "Store Test", logger)
+		realDb, err = db.NewConnectionPool(dbConf, 200, 0, 60*time.Minute, "Store Test", "Store Test", logger)
 		Expect(err).NotTo(HaveOccurred())
 
 		group = &store.GroupTable{}

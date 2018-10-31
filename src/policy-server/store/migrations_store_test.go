@@ -38,7 +38,7 @@ var _ = Describe("MigrationsStore", func() {
 		logger := lager.NewLogger("Migrations Store Test")
 
 		var err error
-		realDb, err = db.NewConnectionPool(dbConf, 200, 200, 60*time.Minute, "Migrations Store Test", "Migrations Store Test", logger)
+		realDb, err = db.NewConnectionPool(dbConf, 200, 0, 60*time.Minute, "Migrations Store Test", "Migrations Store Test", logger)
 		Expect(err).NotTo(HaveOccurred())
 
 		migrationsProvider = &migrationsFakes.MigrationsProvider{}

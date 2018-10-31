@@ -38,7 +38,7 @@ var _ = Describe("Tag Populator", func() {
 			logger := lager.NewLogger("Tag Populator Test")
 
 			var err error
-			realDb, err = db.NewConnectionPool(dbConf, 200, 200, 60*time.Minute, "Tag Populator Test", "Tag Populator Test", logger)
+			realDb, err = db.NewConnectionPool(dbConf, 200, 0, 60*time.Minute, "Tag Populator Test", "Tag Populator Test", logger)
 			Expect(err).NotTo(HaveOccurred())
 
 			migrate(realDb)
