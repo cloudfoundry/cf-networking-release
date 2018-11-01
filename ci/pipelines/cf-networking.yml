@@ -690,6 +690,7 @@ jobs:
     serial_groups: [pickelhelm]
     plan:
     - aggregate:
+      - get: istio-release
       - get: capi-ci-passed
       - get: cf-networking-release-ci
         params:
@@ -704,41 +705,48 @@ jobs:
       - get: silk-dev
         trigger: true
         passed: [unit-and-integration-tests]
-    - task: upload-stemcell
-      file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
-      params:
-        BBL_STATE_DIR: environments/pickelhelm/
-      input_mapping:
-        bbl-state: cf-networking-deployments
-    - task: collect-ops-files
-      file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
-      params:
-        ENVIRONMENT_NAME: pickelhelm
-      input_mapping:
-        cf-networking-release: cf-networking-dev
-        deployments-repo: cf-networking-deployments
-        silk-release: silk-dev
-    - task: upload-local-capi-release
-      file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
-      input_mapping:
-        bbl-state: cf-networking-deployments
-        local-release: capi-ci-passed
-      params:
-        BBL_STATE_DIR: environments/pickelhelm/
-    - task: upload-local-silk-release
-      file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
-      input_mapping:
-        bbl-state: cf-networking-deployments
-        local-release: silk-dev
-      params:
-        BBL_STATE_DIR: environments/pickelhelm/
-    - task: upload-acceptance-test-release
-      file: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release.yml
-      input_mapping:
-        bbl-state: cf-networking-deployments
-      params:
-        ENVIRONMENT_NAME: pickelhelm
-        BBL_STATE_DIR: environments/pickelhelm/
+    - aggregate:
+      - task: upload-stemcell
+        file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
+        params:
+          BBL_STATE_DIR: environments/pickelhelm/
+        input_mapping:
+          bbl-state: cf-networking-deployments
+      - task: upload-local-capi-release
+        file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+        input_mapping:
+          bbl-state: cf-networking-deployments
+          local-release: capi-ci-passed
+        params:
+          BBL_STATE_DIR: environments/pickelhelm/
+      - task: upload-local-networking-release
+        file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+        input_mapping:
+          bbl-state: cf-networking-deployments
+          local-release: cf-networking-dev
+        params:
+          BBL_STATE_DIR: environments/pickelhelm/
+      - task: upload-local-silk-release
+        file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+        input_mapping:
+          bbl-state: cf-networking-deployments
+          local-release: silk-dev
+        params:
+          BBL_STATE_DIR: environments/pickelhelm/
+      - task: upload-acceptance-test-release
+        file: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release.yml
+        input_mapping:
+          bbl-state: cf-networking-deployments
+        params:
+          BBL_STATE_DIR: environments/pickelhelm/
+      - task: collect-ops-files
+        file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
+        params:
+          ENVIRONMENT_NAME: pickelhelm
+        input_mapping:
+          cf-networking-release: cf-networking-dev
+          deployments-repo: cf-networking-deployments
+          silk-release: silk-dev
     - task: deploy-cf
       file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
       params:
@@ -752,18 +760,20 @@ jobs:
           cf-networking.yml
           use-system-domain-as-metron-deployment-name.yml
           enable-routing-integrity.yml
+          add-istio.yml
+          add-route-syncer.yml
           use-latest-silk.yml
           use-latest-capi.yml
+          use-latest.yml
           enable-service-discovery.yml
           add-apps-internal-search-domain.yml
           add-acceptance-test-jobs.yml
-          add-fake-istio-router-on-overlay.yml
           add-cflinuxfs3.yml
           enable-experimental-dynamic-egress-policies.yml
           opsfile.yml
       input_mapping:
         bbl-state: cf-networking-deployments
-        release: cf-networking-dev
+        release: istio-release # because the pre-package script is broken
         vars-files: cf-networking-deployments
         vars-store: cf-networking-deployments
     - task: bosh-cleanup
@@ -909,6 +919,7 @@ jobs:
     serial_groups: [mitre-deploy-group, version]
     plan:
     - aggregate:
+      - get: istio-release
       - get: capi-ci-passed
       - get: cf-networking-release-ci
         params:
@@ -927,41 +938,49 @@ jobs:
       - get: version
         params:
           pre: rc
-    - task: upload-stemcell
-      file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
-      params:
-        BBL_STATE_DIR: environments/mitre/
-      input_mapping:
-        bbl-state: cf-networking-deployments
-    - task: collect-ops-files
-      file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
-      params:
-        ENVIRONMENT_NAME: mitre
-      input_mapping:
-        cf-networking-release: cf-networking-dev
-        deployments-repo: cf-networking-deployments
-        silk-release: silk-dev
-    - task: upload-local-capi-release
-      file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
-      input_mapping:
-        bbl-state: cf-networking-deployments
-        local-release: capi-ci-passed
-      params:
-        BBL_STATE_DIR: environments/mitre/
-    - task: upload-local-silk-release
-      file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
-      input_mapping:
-        bbl-state: cf-networking-deployments
-        local-release: silk-dev
-      params:
-        BBL_STATE_DIR: environments/mitre/
-    - task: upload-acceptance-test-release
-      file: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release.yml
-      input_mapping:
-        bbl-state: cf-networking-deployments
-      params:
-        ENVIRONMENT_NAME: mitre
-        BBL_STATE_DIR: environments/mitre/
+    - aggregate:
+      - task: upload-stemcell
+        file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
+        params:
+          BBL_STATE_DIR: environments/mitre/
+        input_mapping:
+          bbl-state: cf-networking-deployments
+      - task: upload-local-capi-release
+        file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+        input_mapping:
+          bbl-state: cf-networking-deployments
+          local-release: capi-ci-passed
+        params:
+          BBL_STATE_DIR: environments/mitre/
+      - task: upload-cfnetworking-release
+        file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+        input_mapping:
+          bbl-state: cf-networking-deployments
+          local-release: cf-networking-dev
+        params:
+          BBL_STATE_DIR: environments/mitre/
+      - task: upload-local-silk-release
+        file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+        input_mapping:
+          bbl-state: cf-networking-deployments
+          local-release: silk-dev
+        params:
+          BBL_STATE_DIR: environments/mitre/
+      - task: upload-acceptance-test-release
+        file: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release.yml
+        input_mapping:
+          bbl-state: cf-networking-deployments
+        params:
+          ENVIRONMENT_NAME: mitre
+          BBL_STATE_DIR: environments/mitre/
+      - task: collect-ops-files
+        file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
+        params:
+          ENVIRONMENT_NAME: mitre
+        input_mapping:
+          cf-networking-release: cf-networking-dev
+          deployments-repo: cf-networking-deployments
+          silk-release: silk-dev
     - task: deploy-cf
       file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
       params:
@@ -977,13 +996,15 @@ jobs:
           custom-apps-domain.yml
           enable-routing-integrity.yml
           enable-iptables-logger.yml
+          add-istio.yml
+          add-route-syncer.yml
           use-latest-silk.yml
           use-latest-capi.yml
+          use-latest.yml
           enable-service-discovery.yml
           add-apps-internal-search-domain.yml
           add-acceptance-test-jobs.yml
           use-pxc.yml
-          add-fake-istio-router-on-overlay.yml
           enable-backup-restore.yml
           add-cflinuxfs3.yml
           enable-experimental-dynamic-egress-policies.yml
@@ -992,7 +1013,7 @@ jobs:
         bbl-state: cf-networking-deployments
         vars-store: cf-networking-deployments
         vars-files: cf-networking-deployments
-        release: cf-networking-dev
+        release: istio-release
     - task: create-release-tarball
       file: cf-networking-release-ci/ci/tasks/create-release-tarball.yml
       input_mapping:
@@ -1408,6 +1429,8 @@ jobs:
     serial_groups: [toque]
     plan:
     - aggregate:
+      - get: istio-release
+      - get: capi-ci-passed
       - get: cf-deployment-concourse-tasks
       - get: cf-deployment
       - get: cf-networking-release-ci
@@ -1421,28 +1444,43 @@ jobs:
         passed: [unit-and-integration-tests]
         trigger: true
       - get: datadog-firehose-nozzle-release
-    - task: upload-stemcell
-      file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
-      input_mapping:
-        bbl-state: cf-networking-deployments
-        cf-deployment: cf-deployment
-      params:
-        BBL_STATE_DIR: environments/toque
-    - task: collect-ops-files
-      file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
-      params:
-        ENVIRONMENT_NAME: toque
-      input_mapping:
-        deployments-repo: cf-networking-deployments
-        cf-networking-release: cf-networking-dev
-        silk-release: silk-dev
-    - task: upload-local-silk-release
-      file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
-      input_mapping:
-        bbl-state: cf-networking-deployments
-        local-release: silk-dev
-      params:
-        BBL_STATE_DIR: environments/toque/
+    - aggregate:
+      - task: upload-stemcell
+        file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
+        input_mapping:
+          bbl-state: cf-networking-deployments
+          cf-deployment: cf-deployment
+        params:
+          BBL_STATE_DIR: environments/toque
+      - task: upload-local-capi-release
+        file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+        input_mapping:
+          bbl-state: cf-networking-deployments
+          local-release: capi-ci-passed
+        params:
+          BBL_STATE_DIR: environments/toque/
+      - task: upload-local-silk-release
+        file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+        input_mapping:
+          bbl-state: cf-networking-deployments
+          local-release: silk-dev
+        params:
+          BBL_STATE_DIR: environments/toque/
+      - task: upload-local-networking-release
+        file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+        input_mapping:
+          bbl-state: cf-networking-deployments
+          local-release: cf-networking-dev
+        params:
+          BBL_STATE_DIR: environments/toque/
+      - task: collect-ops-files
+        file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
+        params:
+          ENVIRONMENT_NAME: toque
+        input_mapping:
+          deployments-repo: cf-networking-deployments
+          cf-networking-release: cf-networking-dev
+          silk-release: silk-dev
     - task: deploy-cf
       file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
       params:
@@ -1456,7 +1494,11 @@ jobs:
           cf-networking.yml
           use-system-domain-as-metron-deployment-name.yml
           enable-routing-integrity.yml
+          add-istio.yml
+          add-route-syncer.yml
           use-latest-silk.yml
+          use-latest-capi.yml
+          use-latest.yml
           enable-service-discovery.yml
           use-pxc.yml
           add-apps-internal-search-domain.yml
@@ -1466,7 +1508,7 @@ jobs:
       input_mapping:
         bbl-state: cf-networking-deployments
         cf-deployment: cf-deployment
-        release: cf-networking-dev
+        release: istio-release
         vars-files: cf-networking-deployments
         vars-store: cf-networking-deployments
     - task: bosh-cleanup
