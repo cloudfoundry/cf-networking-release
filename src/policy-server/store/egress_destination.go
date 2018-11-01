@@ -129,6 +129,7 @@ func convertRowsToEgressDestinations(rows sqlRows) ([]EgressDestination, error) 
 			return []EgressDestination{}, err
 		}
 
+		ports = []Ports{}
 		if startPort != 0 && endPort != 0 {
 			ports = []Ports{{Start: startPort, End: endPort}}
 		}

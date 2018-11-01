@@ -96,6 +96,12 @@ var _ = Describe("External Destination API", func() {
 
 			Expect(createdDestinations).To(HaveLen(3))
 
+			By("creating destinations idempotently")
+			createdDestinations, err = client.CreateDestinations(token, toBeCreated...)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(createdDestinations).To(HaveLen(3))
+
 			_, err = uuid.ParseHex(createdDestinations[0].GUID)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(createdDestinations[0].Name).To(Equal("tcp ips only"))
@@ -146,6 +152,15 @@ var _ = Describe("External Destination API", func() {
 			Expect(listedDestinations).To(ConsistOf(createdDestinations[0], createdDestinations[2]))
 
 			By("attempting to duplicate destinations")
+			toBeCreated = []psclient.Destination{
+				{
+					Name:        "tcp ips only",
+					Description: "this is different than before",
+					Ports:       []psclient.Port{{Start: 8080, End: 8081}},
+					IPs:         []psclient.IPRange{{Start: "23.96.32.148", End: "23.96.32.149"}},
+					Protocol:    "tcp",
+				},
+			}
 			_, err = client.CreateDestinations(token, toBeCreated...)
 			Expect(err).To(MatchError(MatchRegexp("http status 400.*entry with name 'tcp ips only' already exists")))
 

@@ -2,6 +2,7 @@ package store
 
 import (
 	"fmt"
+	"reflect"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"github.com/go-sql-driver/mysql"
@@ -176,6 +177,20 @@ func (e *EgressDestinationStore) Create(egressDestinations []EgressDestination) 
 
 	var results []EgressDestination
 	for _, egressDestination := range egressDestinations {
+
+		destinations, err := e.EgressDestinationRepo.GetByName(tx, egressDestination.Name)
+		if err != nil {
+			tx.Rollback()
+			return nil, fmt.Errorf("egress destination store create get by name: %s", err)
+		}
+
+		if len(destinations) > 0 {
+			if isDuplicateDestination(destinations[0], egressDestination) {
+				results = append(results, destinations[0])
+				continue
+			}
+		}
+
 		destinationTerminalGUID, err := e.TerminalsRepo.Create(tx)
 		if err != nil {
 			tx.Rollback()
@@ -224,6 +239,16 @@ func (e *EgressDestinationStore) Create(egressDestinations []EgressDestination) 
 	}
 
 	return results, nil
+}
+
+func isDuplicateDestination(a, b EgressDestination) bool {
+	return a.Name == b.Name &&
+		a.Description == b.Description &&
+		a.Protocol == b.Protocol &&
+		reflect.DeepEqual(a.Ports, b.Ports) &&
+		reflect.DeepEqual(a.IPRanges, b.IPRanges) &&
+		a.ICMPType == b.ICMPType &&
+		a.ICMPCode == b.ICMPCode
 }
 
 func isDuplicateError(err error) bool {

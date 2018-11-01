@@ -301,9 +301,39 @@ var _ = Describe("EgressDestinationStore", func() {
 					Expect(err).NotTo(HaveOccurred())
 				})
 
-				It("returns a specific error when DB detects a duplicate on create", func() {
-					_, err := egressDestinationsStore.Create(toBeCreatedDestinations[:1])
-					Expect(err).To(MatchError("egress destination store create destination metadata: duplicate name error: entry with name 'dupe' already exists"))
+				Context("when the destination contents are the same as the existing destination on create", func() {
+					It("returns the existing destination to be idempotent", func() {
+						createdDestinations, err := egressDestinationsStore.Create(toBeCreatedDestinations[:1])
+						Expect(err).NotTo(HaveOccurred())
+						Expect(createdDestinations).To(HaveLen(1))
+
+						_, err = uuid.ParseHex(createdDestinations[0].GUID)
+						Expect(err).NotTo(HaveOccurred())
+						Expect(createdDestinations[0].Name).To(Equal("dupe"))
+						Expect(createdDestinations[0].Description).To(Equal("dupe"))
+						Expect(createdDestinations[0].Protocol).To(Equal("tcp"))
+						Expect(createdDestinations[0].IPRanges).To(Equal([]store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}}))
+						Expect(createdDestinations[0].Ports).To(Equal([]store.Ports{{Start: 8080, End: 8081}}))
+					})
+				})
+
+				Context("when the destination contents are the different than the existing destination on create", func() {
+					BeforeEach(func() {
+						toBeCreatedDestinations = []store.EgressDestination{
+							{
+								Name:        "dupe",
+								Description: "dupe",
+								Protocol:    "udp",
+								IPRanges:    []store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}},
+								Ports:       []store.Ports{{Start: 8080, End: 8081}},
+							},
+						}
+					})
+
+					It("returns a specific error ", func() {
+						_, err := egressDestinationsStore.Create(toBeCreatedDestinations)
+						Expect(err).To(MatchError("egress destination store create destination metadata: duplicate name error: entry with name 'dupe' already exists"))
+					})
 				})
 
 				It("returns a specific error when DB detects a duplicate name on update", func() {
@@ -508,6 +538,22 @@ var _ = Describe("EgressDestinationStore", func() {
 				It("returns an error", func() {
 					_, err := egressDestinationsStore.Create([]store.EgressDestination{{}})
 					Expect(err).To(MatchError("egress destination store create terminal: can't create a terminal"))
+				})
+
+				It("rolls back the transaction", func() {
+					egressDestinationsStore.Create([]store.EgressDestination{{}})
+					Expect(tx.RollbackCallCount()).To(Equal(1))
+				})
+			})
+
+			Context("when getting destination by name returns an error", func() {
+				BeforeEach(func() {
+					egressDestinationRepo.GetByNameReturns([]store.EgressDestination{{}}, errors.New("can't get by name"))
+				})
+
+				It("returns an error", func() {
+					_, err := egressDestinationsStore.Create([]store.EgressDestination{{}})
+					Expect(err).To(MatchError("egress destination store create get by name: can't get by name"))
 				})
 
 				It("rolls back the transaction", func() {
