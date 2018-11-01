@@ -1702,6 +1702,8 @@ jobs:
     serial_groups: [beanie]
     plan:
     - aggregate:
+      - get: istio-release
+      - get: capi-ci-passed
       - get: cf-deployment-concourse-tasks
       - get: cf-deployment
       - get: four-am-daily
@@ -1716,35 +1718,48 @@ jobs:
       - get: silk-dev
         passed: [unit-and-integration-tests]
       - get: datadog-firehose-nozzle-release
-    - task: upload-stemcell
-      file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
-      input_mapping:
-        bbl-state: cf-networking-deployments
-      params:
-        BBL_STATE_DIR: environments/beanie
-    - task: upload-acceptance-test-release
-      file: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release.yml
-      params:
-        ENVIRONMENT_NAME: beanie
-      input_mapping:
-        bbl-state: cf-networking-deployments
-      params:
-        BBL_STATE_DIR: environments/beanie/
-    - task: collect-ops-files
-      file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
-      params:
-        ENVIRONMENT_NAME: beanie
-      input_mapping:
-        cf-networking-release: cf-networking-dev
-        deployments-repo: cf-networking-deployments
-        silk-release: silk-dev
-    - task: upload-local-silk-release
-      file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
-      input_mapping:
-        bbl-state: cf-networking-deployments
-        local-release: silk-dev
-      params:
-        BBL_STATE_DIR: environments/beanie/
+    - aggregate:
+      - task: upload-stemcell
+        file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
+        input_mapping:
+          bbl-state: cf-networking-deployments
+        params:
+          BBL_STATE_DIR: environments/beanie
+      - task: upload-acceptance-test-release
+        file: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release.yml
+        input_mapping:
+          bbl-state: cf-networking-deployments
+        params:
+          BBL_STATE_DIR: environments/beanie/
+      - task: upload-local-capi-release
+        file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+        input_mapping:
+          bbl-state: cf-networking-deployments
+          local-release: capi-ci-passed
+        params:
+          BBL_STATE_DIR: environments/beanie/
+      - task: upload-local-networking-release
+        file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+        input_mapping:
+          bbl-state: cf-networking-deployments
+          local-release: cf-networking-dev
+        params:
+          BBL_STATE_DIR: environments/beanie/
+      - task: upload-local-silk-release
+        file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+        input_mapping:
+          bbl-state: cf-networking-deployments
+          local-release: silk-dev
+        params:
+          BBL_STATE_DIR: environments/beanie/
+      - task: collect-ops-files
+        file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
+        params:
+          ENVIRONMENT_NAME: beanie
+        input_mapping:
+          cf-networking-release: cf-networking-dev
+          deployments-repo: cf-networking-deployments
+          silk-release: silk-dev
     - task: deploy-cf
       file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
       params:
@@ -1759,7 +1774,11 @@ jobs:
           use-system-domain-as-metron-deployment-name.yml
           enable-routing-integrity.yml
           enable-iptables-logger.yml
+          add-istio.yml
+          add-route-syncer.yml
           use-latest-silk.yml
+          use-latest-capi.yml
+          use-latest.yml
           enable-service-discovery.yml
           add-apps-internal-search-domain.yml
           add-cflinuxfs3.yml
@@ -1767,7 +1786,7 @@ jobs:
           opsfile.yml
       input_mapping:
         bbl-state: cf-networking-deployments
-        release: cf-networking-dev
+        release: istio-release
         vars-store: cf-networking-deployments
         vars-files: cf-networking-deployments
     - task: bosh-cleanup
@@ -1848,6 +1867,8 @@ jobs:
     serial_groups: [slouch]
     plan:
     - aggregate:
+      - get: istio-release
+      - get: capi-ci-passed
       - get: cf-deployment-concourse-tasks
       - get: cf-deployment
       - get: four-am-daily
@@ -1862,35 +1883,48 @@ jobs:
       - get: silk-dev
         passed: [unit-and-integration-tests]
       - get: datadog-firehose-nozzle-release
-    - task: upload-stemcell
-      file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
-      input_mapping:
-        bbl-state: cf-networking-deployments
-      params:
-        BBL_STATE_DIR: environments/slouch
-    - task: upload-acceptance-test-release
-      file: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release.yml
-      params:
-        ENVIRONMENT_NAME: slouch
-      input_mapping:
-        bbl-state: cf-networking-deployments
-      params:
-        BBL_STATE_DIR: environments/slouch/
-    - task: collect-ops-files
-      file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
-      params:
-        ENVIRONMENT_NAME: slouch
-      input_mapping:
-        cf-networking-release: cf-networking-dev
-        deployments-repo: cf-networking-deployments
-        silk-release: silk-dev
-    - task: upload-local-silk-release
-      file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
-      input_mapping:
-        bbl-state: cf-networking-deployments
-        local-release: silk-dev
-      params:
-        BBL_STATE_DIR: environments/slouch/
+    - aggregate:
+      - task: upload-stemcell
+        file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
+        input_mapping:
+          bbl-state: cf-networking-deployments
+        params:
+          BBL_STATE_DIR: environments/slouch
+      - task: upload-acceptance-test-release
+        file: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release.yml
+        input_mapping:
+          bbl-state: cf-networking-deployments
+        params:
+          BBL_STATE_DIR: environments/slouch/
+      - task: upload-local-silk-release
+        file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+        input_mapping:
+          bbl-state: cf-networking-deployments
+          local-release: silk-dev
+        params:
+          BBL_STATE_DIR: environments/slouch/
+      - task: upload-local-capi-release
+        file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+        input_mapping:
+          bbl-state: cf-networking-deployments
+          local-release: capi-ci-passed
+        params:
+          BBL_STATE_DIR: environments/slouch/
+      - task: upload-local-networking-release
+        file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+        input_mapping:
+          bbl-state: cf-networking-deployments
+          local-release: cf-networking-dev
+        params:
+          BBL_STATE_DIR: environments/slouch/
+      - task: collect-ops-files
+        file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
+        params:
+          ENVIRONMENT_NAME: slouch
+        input_mapping:
+          cf-networking-release: cf-networking-dev
+          deployments-repo: cf-networking-deployments
+          silk-release: silk-dev
     - task: deploy-cf
       file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
       params:
@@ -1905,7 +1939,11 @@ jobs:
           use-system-domain-as-metron-deployment-name.yml
           enable-routing-integrity.yml
           enable-iptables-logger.yml
+          add-istio.yml
+          add-route-syncer.yml
           use-latest-silk.yml
+          use-latest-capi.yml
+          use-latest.yml
           enable-service-discovery.yml
           add-apps-internal-search-domain.yml
           add-cflinuxfs3.yml
@@ -1913,7 +1951,7 @@ jobs:
           opsfile.yml
       input_mapping:
         bbl-state: cf-networking-deployments
-        release: cf-networking-dev
+        release: istio-release
         vars-store: cf-networking-deployments
         vars-files: cf-networking-deployments
     - task: bosh-cleanup
