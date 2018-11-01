@@ -151,6 +151,7 @@ var _ = Describe("EgressDestinationStore", func() {
 				Expect(createdDestinations[1].Name).To(Equal("dest-2"))
 				Expect(createdDestinations[1].Description).To(Equal("desc-2"))
 				Expect(createdDestinations[1].Protocol).To(Equal("icmp"))
+				Expect(createdDestinations[1].Ports).To(BeEmpty())
 				Expect(createdDestinations[1].IPRanges).To(Equal([]store.IPRange{{Start: "1.2.2.4", End: "1.2.2.5"}}))
 				Expect(createdDestinations[1].ICMPType).To(Equal(12))
 				Expect(createdDestinations[1].ICMPCode).To(Equal(13))
@@ -222,6 +223,7 @@ var _ = Describe("EgressDestinationStore", func() {
 				destinationToUpdate2.Name = "dest-2-updated"
 				destinationToUpdate2.Description = "desc-2-updated"
 				destinationToUpdate2.Protocol = "icmp-updated"
+				destinationToUpdate2.Ports = []store.Ports{}
 				destinationToUpdate2.IPRanges = []store.IPRange{{Start: "2.3.3.4", End: "2.3.3.5"}}
 				destinationToUpdate2.ICMPType = 15
 				destinationToUpdate2.ICMPCode = 16
