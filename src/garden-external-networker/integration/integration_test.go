@@ -281,7 +281,7 @@ var _ = Describe("Garden External Networker", func() {
 		It("should setup proxy iptable rules inside the container network namespace", func() {
 			runAndWait(upCommand)
 
-			Expect(containerIPTablesRules(containerNSShortName, "nat")).To(ContainElement("-A OUTPUT -d 10.255.0.0/16 -p tcp -m owner ! --uid-owner 42 -j REDIRECT --to-ports 9999"))
+			Expect(containerIPTablesRules(containerNSShortName, "nat")).To(ContainElement("-A OUTPUT -d 10.255.0.0/16 -p tcp -j REDIRECT --to-ports 9999"))
 		})
 	})
 
