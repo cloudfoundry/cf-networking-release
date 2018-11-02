@@ -1000,7 +1000,7 @@ jobs:
           add-route-syncer.yml
           use-latest-silk.yml
           use-latest-capi.yml
-          use-latest.yml
+          use-latest-cf-networking.yml
           enable-service-discovery.yml
           add-apps-internal-search-domain.yml
           add-acceptance-test-jobs.yml
@@ -1498,7 +1498,7 @@ jobs:
           add-route-syncer.yml
           use-latest-silk.yml
           use-latest-capi.yml
-          use-latest.yml
+          use-latest-cf-networking.yml
           enable-service-discovery.yml
           use-pxc.yml
           add-apps-internal-search-domain.yml
@@ -1778,7 +1778,7 @@ jobs:
           add-route-syncer.yml
           use-latest-silk.yml
           use-latest-capi.yml
-          use-latest.yml
+          use-latest-cf-networking.yml
           enable-service-discovery.yml
           add-apps-internal-search-domain.yml
           add-cflinuxfs3.yml
@@ -1943,7 +1943,7 @@ jobs:
           add-route-syncer.yml
           use-latest-silk.yml
           use-latest-capi.yml
-          use-latest.yml
+          use-latest-cf-networking.yml
           enable-service-discovery.yml
           add-apps-internal-search-domain.yml
           add-cflinuxfs3.yml
