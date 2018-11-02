@@ -43,7 +43,7 @@ var _ = Describe("DestinationDelete", func() {
 		}
 
 		fakeStore = &fakes.EgressDestinationStoreDeleter{}
-		fakeStore.DeleteReturns(deletedDestination, nil)
+		fakeStore.DeleteReturns([]store.EgressDestination{deletedDestination}, nil)
 
 		fakeMarshaller = &fakes.EgressDestinationMarshaller{}
 		fakeMarshaller.AsBytesReturns(expectedResponseBody, nil)
@@ -69,7 +69,7 @@ var _ = Describe("DestinationDelete", func() {
 		MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
 
 		Expect(fakeStore.DeleteCallCount()).To(Equal(1))
-		Expect(fakeStore.DeleteArgsForCall(0)).To(Equal("destguid"))
+		Expect(fakeStore.DeleteArgsForCall(0)).To(Equal([]string{"destguid"}))
 		Expect(fakeMarshaller.AsBytesCallCount()).To(Equal(1))
 		Expect(fakeMarshaller.AsBytesArgsForCall(0)).To(Equal([]store.EgressDestination{deletedDestination}))
 		Expect(resp.Code).To(Equal(http.StatusOK))
@@ -78,14 +78,14 @@ var _ = Describe("DestinationDelete", func() {
 
 	Context("when the store returns an error", func() {
 		It("returns bad request when the store returns foreign key violation", func() {
-			fakeStore.DeleteReturns(store.EgressDestination{}, store.NewForeignKeyError(errors.New("egress dest in use")))
+			fakeStore.DeleteReturns([]store.EgressDestination{}, store.NewForeignKeyError(errors.New("egress dest in use")))
 			MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
 			Expect(resp.Code).To(Equal(http.StatusBadRequest))
 			Expect(resp.Body.Bytes()).To(MatchJSON(`{"error": "destination is still in use"}`))
 		})
 
 		It("returns an internal server error when the store returns a generic error", func() {
-			fakeStore.DeleteReturns(store.EgressDestination{}, errors.New("can't delete"))
+			fakeStore.DeleteReturns([]store.EgressDestination{}, errors.New("can't delete"))
 			MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
 			Expect(resp.Code).To(Equal(http.StatusInternalServerError))
 			Expect(resp.Body.Bytes()).To(MatchJSON(`{"error": "error deleting egress destination"}`))

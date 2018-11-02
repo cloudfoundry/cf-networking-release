@@ -8,33 +8,33 @@ import (
 )
 
 type EgressDestinationStoreDeleter struct {
-	DeleteStub        func(string) (store.EgressDestination, error)
+	DeleteStub        func(...string) ([]store.EgressDestination, error)
 	deleteMutex       sync.RWMutex
 	deleteArgsForCall []struct {
-		arg1 string
+		arg1 []string
 	}
 	deleteReturns struct {
-		result1 store.EgressDestination
+		result1 []store.EgressDestination
 		result2 error
 	}
 	deleteReturnsOnCall map[int]struct {
-		result1 store.EgressDestination
+		result1 []store.EgressDestination
 		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *EgressDestinationStoreDeleter) Delete(arg1 string) (store.EgressDestination, error) {
+func (fake *EgressDestinationStoreDeleter) Delete(arg1 ...string) ([]store.EgressDestination, error) {
 	fake.deleteMutex.Lock()
 	ret, specificReturn := fake.deleteReturnsOnCall[len(fake.deleteArgsForCall)]
 	fake.deleteArgsForCall = append(fake.deleteArgsForCall, struct {
-		arg1 string
+		arg1 []string
 	}{arg1})
 	fake.recordInvocation("Delete", []interface{}{arg1})
 	fake.deleteMutex.Unlock()
 	if fake.DeleteStub != nil {
-		return fake.DeleteStub(arg1)
+		return fake.DeleteStub(arg1...)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -48,30 +48,30 @@ func (fake *EgressDestinationStoreDeleter) DeleteCallCount() int {
 	return len(fake.deleteArgsForCall)
 }
 
-func (fake *EgressDestinationStoreDeleter) DeleteArgsForCall(i int) string {
+func (fake *EgressDestinationStoreDeleter) DeleteArgsForCall(i int) []string {
 	fake.deleteMutex.RLock()
 	defer fake.deleteMutex.RUnlock()
 	return fake.deleteArgsForCall[i].arg1
 }
 
-func (fake *EgressDestinationStoreDeleter) DeleteReturns(result1 store.EgressDestination, result2 error) {
+func (fake *EgressDestinationStoreDeleter) DeleteReturns(result1 []store.EgressDestination, result2 error) {
 	fake.DeleteStub = nil
 	fake.deleteReturns = struct {
-		result1 store.EgressDestination
+		result1 []store.EgressDestination
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *EgressDestinationStoreDeleter) DeleteReturnsOnCall(i int, result1 store.EgressDestination, result2 error) {
+func (fake *EgressDestinationStoreDeleter) DeleteReturnsOnCall(i int, result1 []store.EgressDestination, result2 error) {
 	fake.DeleteStub = nil
 	if fake.deleteReturnsOnCall == nil {
 		fake.deleteReturnsOnCall = make(map[int]struct {
-			result1 store.EgressDestination
+			result1 []store.EgressDestination
 			result2 error
 		})
 	}
 	fake.deleteReturnsOnCall[i] = struct {
-		result1 store.EgressDestination
+		result1 []store.EgressDestination
 		result2 error
 	}{result1, result2}
 }

@@ -1,12 +1,13 @@
 package integration_test
 
 import (
-	"code.cloudfoundry.org/lager/lagertest"
 	"fmt"
 	"net/http"
 	"policy-server/config"
 	"policy-server/integration/helpers"
 	"policy-server/psclient"
+
+	"code.cloudfoundry.org/lager/lagertest"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
@@ -135,8 +136,8 @@ var _ = Describe("External API Egress Policies", func() {
 			},
 		))
 
-		deletedDestination, err := client.DeleteDestination(token, createdDestinations[0])
-		Expect(err).To(HaveOccurred(), "expected the delete to fail because this destination still has associated egress policy")
+		deletedDestinations, err := client.DeleteDestination(token, createdDestinations[0])
+		Expect(err).To(HaveOccurred(), "expected the delete to fail because this destinations still has associated egress policy")
 		Expect(err).To(MatchError(ContainSubstring("destination is still in use")))
 
 		deletedEgressPolicy, err := client.DeleteEgressPolicy(policyGUID, token)
@@ -149,8 +150,14 @@ var _ = Describe("External API Egress Policies", func() {
 		egressPolicies = egressPolicyList.EgressPolicies
 		Expect(egressPolicies).To(HaveLen(0))
 
-		deletedDestination, err = client.DeleteDestination(token, createdDestinations[0])
+		deletedDestinations, err = client.DeleteDestination(token, createdDestinations[0])
 		Expect(err).NotTo(HaveOccurred())
-		Expect(deletedDestination).To(Equal(createdDestinations[0]))
+		Expect(deletedDestinations).To(HaveLen(1))
+		Expect(deletedDestinations[0]).To(Equal(createdDestinations[0]))
+
+		By("deleting a destination that does not exist")
+		deletedDestinations, err = client.DeleteDestination(token, createdDestinations[0])
+		Expect(err).NotTo(HaveOccurred())
+		Expect(deletedDestinations).To(HaveLen(0))
 	})
 })

@@ -8,11 +8,11 @@ import (
 )
 
 type PolicyFilter struct {
-	FilterPoliciesStub        func(policies []store.Policy, userToken uaa_client.CheckTokenResponse) ([]store.Policy, error)
+	FilterPoliciesStub        func(policies []store.Policy, subjectToken uaa_client.CheckTokenResponse) ([]store.Policy, error)
 	filterPoliciesMutex       sync.RWMutex
 	filterPoliciesArgsForCall []struct {
-		policies  []store.Policy
-		userToken uaa_client.CheckTokenResponse
+		policies     []store.Policy
+		subjectToken uaa_client.CheckTokenResponse
 	}
 	filterPoliciesReturns struct {
 		result1 []store.Policy
@@ -26,7 +26,7 @@ type PolicyFilter struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *PolicyFilter) FilterPolicies(policies []store.Policy, userToken uaa_client.CheckTokenResponse) ([]store.Policy, error) {
+func (fake *PolicyFilter) FilterPolicies(policies []store.Policy, subjectToken uaa_client.CheckTokenResponse) ([]store.Policy, error) {
 	var policiesCopy []store.Policy
 	if policies != nil {
 		policiesCopy = make([]store.Policy, len(policies))
@@ -35,13 +35,13 @@ func (fake *PolicyFilter) FilterPolicies(policies []store.Policy, userToken uaa_
 	fake.filterPoliciesMutex.Lock()
 	ret, specificReturn := fake.filterPoliciesReturnsOnCall[len(fake.filterPoliciesArgsForCall)]
 	fake.filterPoliciesArgsForCall = append(fake.filterPoliciesArgsForCall, struct {
-		policies  []store.Policy
-		userToken uaa_client.CheckTokenResponse
-	}{policiesCopy, userToken})
-	fake.recordInvocation("FilterPolicies", []interface{}{policiesCopy, userToken})
+		policies     []store.Policy
+		subjectToken uaa_client.CheckTokenResponse
+	}{policiesCopy, subjectToken})
+	fake.recordInvocation("FilterPolicies", []interface{}{policiesCopy, subjectToken})
 	fake.filterPoliciesMutex.Unlock()
 	if fake.FilterPoliciesStub != nil {
-		return fake.FilterPoliciesStub(policies, userToken)
+		return fake.FilterPoliciesStub(policies, subjectToken)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -58,7 +58,7 @@ func (fake *PolicyFilter) FilterPoliciesCallCount() int {
 func (fake *PolicyFilter) FilterPoliciesArgsForCall(i int) ([]store.Policy, uaa_client.CheckTokenResponse) {
 	fake.filterPoliciesMutex.RLock()
 	defer fake.filterPoliciesMutex.RUnlock()
-	return fake.filterPoliciesArgsForCall[i].policies, fake.filterPoliciesArgsForCall[i].userToken
+	return fake.filterPoliciesArgsForCall[i].policies, fake.filterPoliciesArgsForCall[i].subjectToken
 }
 
 func (fake *PolicyFilter) FilterPoliciesReturns(result1 []store.Policy, result2 error) {

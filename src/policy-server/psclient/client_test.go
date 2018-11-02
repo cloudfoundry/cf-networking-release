@@ -289,6 +289,9 @@ var _ = Describe("Client", func() {
 						Description: "description",
 					}},
 				}
+			})
+
+			JustBeforeEach(func() {
 				destinationRespBytes, err := json.Marshal(destinationResp)
 				Expect(err).NotTo(HaveOccurred())
 
@@ -300,11 +303,24 @@ var _ = Describe("Client", func() {
 				destinationToDelete = psclient.Destination{GUID: "dest-guid"}
 			})
 
+			Context("when nothing is deleted", func() {
+				BeforeEach(func() {
+					destinationResp = psclient.DestinationList{
+						Destinations: []psclient.Destination{},
+					}
+				})
+				It("returns an empty array", func() {
+					deletedDestinations, err := client.DeleteDestination(token, destinationToDelete)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(deletedDestinations).To(HaveLen(0))
+				})
+			})
+
 			It("deletes destination", func() {
-				deletedDestination, err := client.DeleteDestination(token, destinationToDelete)
+				deletedDestinations, err := client.DeleteDestination(token, destinationToDelete)
 				Expect(err).NotTo(HaveOccurred())
 
-				Expect(deletedDestination).To(Equal(destinationResp.Destinations[0]))
+				Expect(deletedDestinations[0]).To(Equal(destinationResp.Destinations[0]))
 
 				Expect(jsonClient.DoCallCount()).To(Equal(1))
 				passedMethod, passedRoute, _, _, passedToken := jsonClient.DoArgsForCall(0)

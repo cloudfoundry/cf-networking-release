@@ -120,13 +120,13 @@ func (c *Client) CreateDestinations(token string, destinations ...Destination) (
 	return response.Destinations, nil
 }
 
-func (c *Client) DeleteDestination(token string, destination Destination) (Destination, error) {
+func (c *Client) DeleteDestination(token string, destination Destination) ([]Destination, error) {
 	var response DestinationList
 	err := c.JsonClient.Do("DELETE", "/networking/v1/external/destinations/"+destination.GUID, nil, &response, "Bearer "+token)
 	if err != nil {
-		return Destination{}, fmt.Errorf("json client do: %s", err)
+		return []Destination{}, fmt.Errorf("json client do: %s", err)
 	}
-	return response.Destinations[0], nil
+	return response.Destinations, nil
 }
 
 func (c *Client) CreateEgressPolicy(egressPolicy EgressPolicy, token string) (string, error) {

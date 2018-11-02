@@ -64,7 +64,7 @@ type CCClient struct {
 		result1 *api.Space
 		result2 error
 	}
-	GetSubjectSpacesStub func(token, subjectId string) (map[string]struct{}, error)
+	GetSubjectSpacesStub        func(token, subjectId string) (map[string]struct{}, error)
 	getSubjectSpacesMutex       sync.RWMutex
 	getSubjectSpacesArgsForCall []struct {
 		token     string
@@ -305,7 +305,7 @@ func (fake *CCClient) GetSubjectSpaces(token string, subjectId string) (map[stri
 	fake.getSubjectSpacesMutex.Lock()
 	ret, specificReturn := fake.getSubjectSpacesReturnsOnCall[len(fake.getSubjectSpacesArgsForCall)]
 	fake.getSubjectSpacesArgsForCall = append(fake.getSubjectSpacesArgsForCall, struct {
-		token    string
+		token     string
 		subjectId string
 	}{token, subjectId})
 	fake.recordInvocation("GetSubjectSpaces", []interface{}{token, subjectId})

@@ -22,10 +22,10 @@ type PolicyGuard struct {
 		result1 bool
 		result2 error
 	}
-	IsNetworkAdminStub        func(userToken uaa_client.CheckTokenResponse) bool
+	IsNetworkAdminStub        func(subjectToken uaa_client.CheckTokenResponse) bool
 	isNetworkAdminMutex       sync.RWMutex
 	isNetworkAdminArgsForCall []struct {
-		userToken uaa_client.CheckTokenResponse
+		subjectToken uaa_client.CheckTokenResponse
 	}
 	isNetworkAdminReturns struct {
 		result1 bool
@@ -94,16 +94,16 @@ func (fake *PolicyGuard) CheckAccessReturnsOnCall(i int, result1 bool, result2 e
 	}{result1, result2}
 }
 
-func (fake *PolicyGuard) IsNetworkAdmin(userToken uaa_client.CheckTokenResponse) bool {
+func (fake *PolicyGuard) IsNetworkAdmin(subjectToken uaa_client.CheckTokenResponse) bool {
 	fake.isNetworkAdminMutex.Lock()
 	ret, specificReturn := fake.isNetworkAdminReturnsOnCall[len(fake.isNetworkAdminArgsForCall)]
 	fake.isNetworkAdminArgsForCall = append(fake.isNetworkAdminArgsForCall, struct {
-		userToken uaa_client.CheckTokenResponse
-	}{userToken})
-	fake.recordInvocation("IsNetworkAdmin", []interface{}{userToken})
+		subjectToken uaa_client.CheckTokenResponse
+	}{subjectToken})
+	fake.recordInvocation("IsNetworkAdmin", []interface{}{subjectToken})
 	fake.isNetworkAdminMutex.Unlock()
 	if fake.IsNetworkAdminStub != nil {
-		return fake.IsNetworkAdminStub(userToken)
+		return fake.IsNetworkAdminStub(subjectToken)
 	}
 	if specificReturn {
 		return ret.result1
@@ -120,7 +120,7 @@ func (fake *PolicyGuard) IsNetworkAdminCallCount() int {
 func (fake *PolicyGuard) IsNetworkAdminArgsForCall(i int) uaa_client.CheckTokenResponse {
 	fake.isNetworkAdminMutex.RLock()
 	defer fake.isNetworkAdminMutex.RUnlock()
-	return fake.isNetworkAdminArgsForCall[i].userToken
+	return fake.isNetworkAdminArgsForCall[i].subjectToken
 }
 
 func (fake *PolicyGuard) IsNetworkAdminReturns(result1 bool) {

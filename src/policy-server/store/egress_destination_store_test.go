@@ -264,14 +264,14 @@ var _ = Describe("EgressDestinationStore", func() {
 				Expect(destinations).To(ConsistOf(updatedDestinations))
 
 				By("deleting")
-				deletedDestination, err := egressDestinationsStore.Delete(createdDestinations[0].GUID)
+				deletedDestinations, err := egressDestinationsStore.Delete(createdDestinations[0].GUID, createdDestinations[1].GUID)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(deletedDestination).To(Equal(updatedDestinations[0]))
+				Expect(deletedDestinations).To(Equal(updatedDestinations))
 
-				By("deleting another")
-				deletedDestination, err = egressDestinationsStore.Delete(createdDestinations[1].GUID)
+				By("deleting a non-existent destination")
+				deletedDestinations, err = egressDestinationsStore.Delete("what guid?")
 				Expect(err).NotTo(HaveOccurred())
-				Expect(deletedDestination).To(Equal(updatedDestinations[1]))
+				Expect(deletedDestinations).To(BeEmpty())
 
 				By("asserting all are gone")
 				destinations, err = egressDestinationsStore.All()

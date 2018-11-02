@@ -59,50 +59,48 @@ func (e *EgressDestinationStore) All() ([]EgressDestination, error) {
 	return e.EgressDestinationRepo.All(tx)
 }
 
-func (e *EgressDestinationStore) Delete(guid string) (EgressDestination, error) {
+func (e *EgressDestinationStore) Delete(guids ...string) ([]EgressDestination, error) {
 	tx, err := e.Conn.Beginx()
 	if err != nil {
-		return EgressDestination{}, fmt.Errorf("egress destination store delete transaction: %s", err)
+		return []EgressDestination{}, fmt.Errorf("egress destination store delete transaction: %s", err)
 	}
 
-	destinations, err := e.EgressDestinationRepo.GetByGUID(tx, guid)
+	destinations, err := e.EgressDestinationRepo.GetByGUID(tx, guids...)
 	if err != nil {
 		tx.Rollback()
-		return EgressDestination{}, fmt.Errorf("egress destination store get destination by guid: %s", err)
+		return []EgressDestination{}, fmt.Errorf("egress destination store get destination by guid: %s", err)
 	}
 
-	err = e.EgressDestinationRepo.Delete(tx, guid)
-	if err != nil {
-		tx.Rollback()
-		return EgressDestination{}, fmt.Errorf("egress destination store delete destination: %s", err)
-	}
-
-	err = e.DestinationMetadataRepo.Delete(tx, guid)
-	if err != nil {
-		tx.Rollback()
-		return EgressDestination{}, fmt.Errorf("egress destination store delete destination metadata: %s", err)
-	}
-
-	err = e.TerminalsRepo.Delete(tx, guid)
-	if err != nil {
-		tx.Rollback()
-		if isForeignKeyError(err) {
-			return EgressDestination{}, NewForeignKeyError(err)
+	for _, guid := range guids {
+		err = e.EgressDestinationRepo.Delete(tx, guid)
+		if err != nil {
+			tx.Rollback()
+			return []EgressDestination{}, fmt.Errorf("egress destination store delete destination: %s", err)
 		}
-		return EgressDestination{}, fmt.Errorf("egress destination store delete destination terminal: %s", err)
+
+		err = e.DestinationMetadataRepo.Delete(tx, guid)
+		if err != nil {
+			tx.Rollback()
+			return []EgressDestination{}, fmt.Errorf("egress destination store delete destination metadata: %s", err)
+		}
+
+		err = e.TerminalsRepo.Delete(tx, guid)
+		if err != nil {
+			tx.Rollback()
+			if isForeignKeyError(err) {
+				return []EgressDestination{}, NewForeignKeyError(err)
+			}
+			return []EgressDestination{}, fmt.Errorf("egress destination store delete destination terminal: %s", err)
+		}
 	}
 
 	err = tx.Commit()
 	if err != nil {
 		tx.Rollback()
-		return EgressDestination{}, fmt.Errorf("egress destination store delete destination commit: %s", err)
+		return []EgressDestination{}, fmt.Errorf("egress destination store delete destination commit: %s", err)
 	}
 
-	if len(destinations) > 0 {
-		return destinations[0], nil
-	}
-
-	return EgressDestination{}, nil
+	return destinations, nil
 }
 
 func (e *EgressDestinationStore) Update(egressDestinations []EgressDestination) ([]EgressDestination, error) {
