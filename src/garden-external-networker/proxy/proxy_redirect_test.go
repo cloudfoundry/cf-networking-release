@@ -73,7 +73,6 @@ var _ = Describe("Redirect", func() {
 				{
 					"-d", redirectCIDR,
 					"-p", "tcp",
-					"-m", "owner", "!", "--uid-owner", string(strconv.Itoa(proxyUID)),
 					"-j", "REDIRECT", "--to-port", string(strconv.Itoa(proxyPort)),
 				},
 			}))

@@ -30,7 +30,6 @@ func (r *Redirect) Apply(containerNetNamespace string) error {
 		return r.IPTables.BulkAppend("nat", "OUTPUT", rules.IPTablesRule{
 			"-d", r.RedirectCIDR,
 			"-p", "tcp",
-			"-m", "owner", "!", "--uid-owner", fmt.Sprintf("%d", r.ProxyUID),
 			"-j", "REDIRECT", "--to-port", fmt.Sprintf("%d", r.ProxyPort),
 		})
 	})
