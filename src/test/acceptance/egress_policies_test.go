@@ -178,34 +178,34 @@ var _ = Describe("external connectivity", func() {
 
 				close(done)
 			}, 180 /* <-- overall spec timeout in seconds */)
+		})
 
-			Context("when a policy is already applied to the space", func() {
-				var (
-					egressPolicyGuid string
-				)
+		Context("when a policy is already applied to the space", func() {
+			var (
+				egressPolicyGuid string
+			)
 
-				BeforeEach(func() {
-					By("creating an egress policy")
-					spaceGuid, err := cli.SpaceGuid(spaceName)
-					Expect(err).NotTo(HaveOccurred())
-					egressPolicyGuid = createEgressPolicy(cli, fmt.Sprintf(testEgressPolicies, spaceGuid, "space", destinationGuid))
-				})
-
-				AfterEach(func() {
-					By("deleting egress policy")
-					deleteEgressPolicy(cli, egressPolicyGuid)
-				})
-
-				It("the app in the space can reach the internet immediately after a push", func(done Done) {
-					By("pushing the test app")
-					pushProxy(appA)
-					appRoute = fmt.Sprintf("http://%s.%s/", appA, config.AppsDomain)
-
-					Expect(canProxy()).To(Succeed())
-
-					close(done)
-				}, 180 /* <-- overall spec timeout in seconds */)
+			BeforeEach(func() {
+				By("creating an egress policy")
+				spaceGuid, err := cli.SpaceGuid(spaceName)
+				Expect(err).NotTo(HaveOccurred())
+				egressPolicyGuid = createEgressPolicy(cli, fmt.Sprintf(testEgressPolicies, spaceGuid, "space", destinationGuid))
 			})
+
+			AfterEach(func() {
+				By("deleting egress policy")
+				deleteEgressPolicy(cli, egressPolicyGuid)
+			})
+
+			It("the app in the space can reach the internet immediately after a push", func(done Done) {
+				By("pushing the test app")
+				pushProxy(appA)
+				appRoute = fmt.Sprintf("http://%s.%s/", appA, config.AppsDomain)
+
+				Expect(canProxy()).To(Succeed())
+
+				close(done)
+			}, 180 /* <-- overall spec timeout in seconds */)
 		})
 	})
 })
@@ -270,7 +270,7 @@ func createDestination(cli *cf_cli_adapter.Adapter, payload string) string {
 	response, err := cli.Curl("POST", "/networking/v1/external/destinations", payloadFile.Name())
 	Expect(err).NotTo(HaveOccurred())
 	err = json.Unmarshal(response, &destStruct)
-	Expect(err).NotTo(HaveOccurred())
+	Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("cannot unmarshal json: %s", response))
 	Expect(destStruct.Error).To(BeEmpty())
 
 	err = os.Remove(payloadFile.Name())
@@ -287,6 +287,6 @@ func deleteDestination(cli *cf_cli_adapter.Adapter, guid string) {
 	response, err := cli.Curl("DELETE", fmt.Sprintf("/networking/v1/external/destinations/%s", guid), "")
 	Expect(err).NotTo(HaveOccurred())
 	err = json.Unmarshal(response, &destDeleteStruct)
-	Expect(err).NotTo(HaveOccurred())
+	Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("cannot unmarshal json: %s", response))
 	Expect(destDeleteStruct.Error).To(BeEmpty())
 }
