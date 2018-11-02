@@ -9,6 +9,7 @@ files:
   - bosh-dns-adapter/config/*.go # gosub
   - bosh-dns-adapter/sdcclient/*.go # gosub
   - bosh-dns-adapter/vip/*.go # gosub
+  - code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor/*.go # gosub
   - code.cloudfoundry.org/cf-networking-helpers/db/*.go # gosub
   - code.cloudfoundry.org/cf-networking-helpers/lagerlevel/*.go # gosub
   - code.cloudfoundry.org/cf-networking-helpers/metrics/*.go # gosub

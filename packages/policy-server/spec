@@ -5,6 +5,7 @@ dependencies:
   - golang-1.10-linux
 
 files:
+  - code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor/*.go # gosub
   - code.cloudfoundry.org/cf-networking-helpers/db/*.go # gosub
   - code.cloudfoundry.org/cf-networking-helpers/httperror/*.go # gosub
   - code.cloudfoundry.org/cf-networking-helpers/json_client/*.go # gosub
