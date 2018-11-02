@@ -396,7 +396,7 @@ func main() {
 		log.Fatalf("%s.%s: initializing dropsonde: %s", logPrefix, jobPrefix, err)
 	}
 
-	metricsEmitter := common.InitMetricsEmitter(logger, wrappedStore, connectionPool)
+	metricsEmitter := common.InitMetricsEmitter(logger, wrappedStore, connectionPool, connectionPool.Monitor)
 	externalServer := common.InitServer(logger, nil, conf.ListenHost, conf.ListenPort, externalHandlers, externalRoutesWithOptions)
 	policyPoller := initPoller(logger, conf, policyCleaner)
 	debugServer := debugserver.Runner(fmt.Sprintf("%s:%d", conf.DebugServerHost, conf.DebugServerPort), reconfigurableSink)

@@ -134,7 +134,7 @@ func main() {
 		log.Fatalf("%s.%s: initializing dropsonde: %s", logPrefix, jobPrefix, err)
 	}
 
-	metricsEmitter := common.InitMetricsEmitter(logger, wrappedStore, connectionPool)
+	metricsEmitter := common.InitMetricsEmitter(logger, wrappedStore, connectionPool, connectionPool.Monitor)
 
 	internalRoutes := rata.Routes{
 		{Name: "internal_policies", Method: "GET", Path: "/networking/:version/internal/policies"},

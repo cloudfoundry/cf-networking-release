@@ -181,6 +181,26 @@ var _ = Describe("Integration", func() {
 				Eventually(fakeMetron.AllEvents, "5s").Should(
 					ContainElement(HaveOriginAndName("policy-server", "DBOpenConnections")),
 				)
+
+				Eventually(fakeMetron.AllEvents, "5s").Should(
+					ContainElement(HaveOriginAndName("policy-server", "DBQueriesTotal")),
+				)
+
+				Eventually(fakeMetron.AllEvents, "5s").Should(
+					ContainElement(HaveOriginAndName("policy-server", "DBQueriesSucceeded")),
+				)
+
+				Eventually(fakeMetron.AllEvents, "5s").Should(
+					ContainElement(HaveOriginAndName("policy-server", "DBQueriesFailed")),
+				)
+
+				Eventually(fakeMetron.AllEvents, "5s").Should(
+					ContainElement(HaveOriginAndName("policy-server", "DBQueriesInFlight")),
+				)
+
+				Eventually(fakeMetron.AllEvents, "5s").Should(
+					ContainElement(HaveOriginAndName("policy-server", "DBQueryDurationMax")),
+				)
 			})
 		})
 	})
