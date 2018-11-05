@@ -1,7 +1,7 @@
 ## Contributing
 We welcome contributions from the community.  Here are guidelines for development.
 
-### Running low-level tests
+### Running unit, integration and template tests
 
 ```bash
 ~/workspace/cf-networking-release/scripts/docker-test
@@ -9,9 +9,13 @@ We welcome contributions from the community.  Here are guidelines for developmen
 ```
 
 ### Running the full acceptance test on bosh-lite
-WARNING: This test is taxing and has an aggressive timeout.
-It may fail on a laptop or other underpowered bosh-lite.
+#### Setting up
 
+Run the [`scripts/deploy-to-bosh-lite`](scripts/deploy-to-bosh-lite) script.
+
+To deploy, [cf-networking-release](https://github.com/cloudfoundry/cf-networking-release), [bosh-deployment](https://github.com/cloudfoundry/bosh-deployment), and [cf-deployment](https://github.com/cloudfoundry/cf-deployment) repos are required.
+
+#### Running acceptance
 ```bash
 cd src/test/acceptance
 ./run-locally.sh
