@@ -605,6 +605,7 @@ jobs:
           opsfile.yml
           use-latest-silk.yml
           use-latest-capi.yml
+          lower-canary-watch-time.yml
       input_mapping:
         bbl-state: cf-networking-deployments
         vars-store: cf-networking-deployments
@@ -773,6 +774,7 @@ jobs:
           add-cflinuxfs3.yml
           enable-experimental-dynamic-egress-policies.yml
           opsfile.yml
+          lower-canary-watch-time.yml
       input_mapping:
         bbl-state: cf-networking-deployments
         release: istio-release # because the pre-package script is broken
@@ -1011,6 +1013,7 @@ jobs:
           add-cflinuxfs3.yml
           enable-experimental-dynamic-egress-policies.yml
           opsfile.yml
+          lower-canary-watch-time.yml
       input_mapping:
         bbl-state: cf-networking-deployments
         vars-store: cf-networking-deployments
@@ -1507,6 +1510,7 @@ jobs:
           add-cflinuxfs3.yml
           enable-experimental-dynamic-egress-policies.yml
           opsfile.yml
+          lower-canary-watch-time.yml
       input_mapping:
         bbl-state: cf-networking-deployments
         cf-deployment: cf-deployment
@@ -1786,6 +1790,7 @@ jobs:
           add-cflinuxfs3.yml
           enable-experimental-dynamic-egress-policies.yml
           opsfile.yml
+          lower-canary-watch-time.yml
       input_mapping:
         bbl-state: cf-networking-deployments
         release: istio-release
@@ -1951,6 +1956,7 @@ jobs:
           add-cflinuxfs3.yml
           enable-experimental-dynamic-egress-policies.yml
           opsfile.yml
+          lower-canary-watch-time.yml
       input_mapping:
         bbl-state: cf-networking-deployments
         release: istio-release
@@ -2140,6 +2146,7 @@ jobs:
           add-apps-internal-search-domain.yml
           enable-experimental-dynamic-egress-policies.yml
           opsfile.yml
+          lower-canary-watch-time.yml
         VARS_FILES: |
           environments/caubeen/external-db-vars.yml
           environments/caubeen/gcs-vars.yml

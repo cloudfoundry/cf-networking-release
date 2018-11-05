@@ -1,0 +1,4 @@
+---
+- type: replace
+  path: /update/canary-watch-time?
+  value: "5000-1200000"
