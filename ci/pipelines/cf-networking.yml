@@ -402,6 +402,7 @@ jobs:
 
   - name: mysql-tests
     public: true
+    serial: true
     plan:
     - aggregate:
       - get: cf-networking-dev
@@ -417,6 +418,7 @@ jobs:
 
   - name: mysql-5.6-tests
     public: true
+    serial: true
     plan:
     - aggregate:
       - get: cf-networking-dev
