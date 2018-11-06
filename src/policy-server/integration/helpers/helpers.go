@@ -54,14 +54,8 @@ var MockCCServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWrite
 	}
 
 	if r.URL.Path == "/v3/spaces" {
-		if r.URL.Query().Get("page") == "2" {
-			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(fixtures.LiveSpacesPage2))
-			return
-		}
-
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(fixtures.LiveSpacesPage1))
+		w.Write([]byte(fixtures.SpaceV3LiveSpaces))
 		return
 	}
 

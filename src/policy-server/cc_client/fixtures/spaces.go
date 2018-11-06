@@ -59,19 +59,17 @@ const Spaces = `{
   ]
 }`
 
-const LiveSpacesPage1 = `{
+const SpaceV3LiveSpaces = `{
    "pagination": {
       "total_results": 2,
-      "total_pages": 2,
+      "total_pages": 1,
       "first": {
-         "href": "/v3/spaces?page=1"
+        "href": "https://foo.bar/v3/spaces?page=1"
       },
       "last": {
-         "href": "/v3/spaces?page=2"
+        "href": "https://foo.bar/v3/spaces?page=1"
       },
-      "next": {
-         "href": "/v3/spaces?page=2"
-      },
+      "next": null,
       "previous": null
    },
    "resources": [
@@ -89,10 +87,10 @@ const LiveSpacesPage1 = `{
          }
       },
       {
-         "guid": "filtered-space-1-guid",
+         "guid": "live-space-2-guid",
          "created_at": "2018-07-24T17:49:02Z",
          "updated_at": "2018-07-24T17:49:02Z",
-         "name": "space-1",
+         "name": "space-2",
          "relationships": {
             "organization": {
                "data": {
@@ -104,22 +102,35 @@ const LiveSpacesPage1 = `{
    ]
 }`
 
-const LiveSpacesPage2 = `{
+const SpaceV3MultiplePages = `{
    "pagination": {
       "total_results": 2,
       "total_pages": 2,
       "first": {
-         "href": "/v3/spaces?page=1"
+        "href": "https://foo.bar/v3/spaces?page=1"
       },
       "last": {
-         "href": "/v3/spaces?page=2"
+        "href": "https://foo.bar/v3/spaces?page=2"
       },
-      "next": null,
-      "previous": {
-         "href": "/v3/spaces?page=1"
-      }
+      "next": {
+        "href": "https://foo.bar/v3/spaces?page=2"
+      },
+      "previous": null
    },
    "resources": [
+      {
+         "guid": "live-space-1-guid",
+         "created_at": "2018-07-24T17:49:02Z",
+         "updated_at": "2018-07-24T17:49:02Z",
+         "name": "space-1",
+         "relationships": {
+            "organization": {
+               "data": {
+                  "guid": "3638bc38-4e7a-45c9-8119-40af6f58b088"
+               }
+            }
+         }
+      },
       {
          "guid": "live-space-2-guid",
          "created_at": "2018-07-24T17:49:02Z",

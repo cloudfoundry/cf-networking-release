@@ -181,16 +181,14 @@ var _ = Describe("Client", func() {
 	Describe("GetLiveSpaceGUIDs", func() {
 		var (
 			passedToken string
+			passedRoute string
 		)
 
 		BeforeEach(func() {
 			fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 				passedToken = token
-				if route == "/v3/spaces?page=2" {
-					_ = json.Unmarshal([]byte(fixtures.LiveSpacesPage2), respData)
-				} else {
-					_ = json.Unmarshal([]byte(fixtures.LiveSpacesPage1), respData)
-				}
+				passedRoute = route
+				_ = json.Unmarshal([]byte(fixtures.SpaceV3LiveSpaces), respData)
 				return nil
 			}
 		})
@@ -204,6 +202,7 @@ var _ = Describe("Client", func() {
 			}))
 
 			Expect(passedToken).To(Equal("bearer some-token"))
+			Expect(passedRoute).To(Equal("/v3/spaces?guids=live-space-1-guid%2Clive-space-2-guid%2Cdead-space-1-guid&per_page=3"))
 		})
 
 		Context("when the json client returns an error", func() {
@@ -214,6 +213,20 @@ var _ = Describe("Client", func() {
 			It("returns the error", func() {
 				_, err := client.GetLiveSpaceGUIDs("some-token", []string{})
 				Expect(err).To(MatchError(ContainSubstring("json client do: banana")))
+			})
+		})
+
+		Context("when there are multiple pages", func() {
+			BeforeEach(func() {
+				fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+					_ = json.Unmarshal([]byte(fixtures.SpaceV3MultiplePages), respData)
+					return nil
+				}
+			})
+
+			It("should immediately return an error", func() {
+				_, err := client.GetLiveSpaceGUIDs("some-token", []string{})
+				Expect(err).To(MatchError("pagination support not yet implemented"))
 			})
 		})
 	})
