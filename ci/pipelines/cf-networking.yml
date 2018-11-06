@@ -598,6 +598,7 @@ jobs:
           enable-routing-integrity.yml
           disable-consul.yml
           add-istio.yml
+          enable-sidecar-egress-proxying.yml
           add-cflinuxfs3.yml
           add-external-istio-lb.yml
           add-route-syncer.yml
@@ -764,6 +765,7 @@ jobs:
           use-system-domain-as-metron-deployment-name.yml
           enable-routing-integrity.yml
           add-istio.yml
+          enable-sidecar-egress-proxying.yml
           add-route-syncer.yml
           use-latest-silk.yml
           use-latest-capi.yml
@@ -1001,6 +1003,7 @@ jobs:
           enable-routing-integrity.yml
           enable-iptables-logger.yml
           add-istio.yml
+          enable-sidecar-egress-proxying.yml
           add-route-syncer.yml
           use-latest-silk.yml
           use-latest-capi.yml
@@ -1500,6 +1503,7 @@ jobs:
           use-system-domain-as-metron-deployment-name.yml
           enable-routing-integrity.yml
           add-istio.yml
+          enable-sidecar-egress-proxying.yml
           add-route-syncer.yml
           use-latest-silk.yml
           use-latest-capi.yml
@@ -1781,6 +1785,7 @@ jobs:
           enable-routing-integrity.yml
           enable-iptables-logger.yml
           add-istio.yml
+          enable-sidecar-egress-proxying.yml
           add-route-syncer.yml
           use-latest-silk.yml
           use-latest-capi.yml
@@ -1947,6 +1952,7 @@ jobs:
           enable-routing-integrity.yml
           enable-iptables-logger.yml
           add-istio.yml
+          enable-sidecar-egress-proxying.yml
           add-route-syncer.yml
           use-latest-silk.yml
           use-latest-capi.yml
