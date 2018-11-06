@@ -230,6 +230,26 @@ var _ = Describe("Internal API", func() {
 			Eventually(fakeMetron.AllEvents, "5s").Should(
 				ContainElement(HaveOriginAndName("policy-server-internal", "DBOpenConnections")),
 			)
+
+			Eventually(fakeMetron.AllEvents, "5s").Should(
+				ContainElement(HaveOriginAndName("policy-server-internal", "DBQueriesTotal")),
+			)
+
+			Eventually(fakeMetron.AllEvents, "5s").Should(
+				ContainElement(HaveOriginAndName("policy-server-internal", "DBQueriesSucceeded")),
+			)
+
+			Eventually(fakeMetron.AllEvents, "5s").Should(
+				ContainElement(HaveOriginAndName("policy-server-internal", "DBQueriesFailed")),
+			)
+
+			Eventually(fakeMetron.AllEvents, "5s").Should(
+				ContainElement(HaveOriginAndName("policy-server-internal", "DBQueriesInFlight")),
+			)
+
+			Eventually(fakeMetron.AllEvents, "5s").Should(
+				ContainElement(HaveOriginAndName("policy-server-internal", "DBQueryDurationMax")),
+			)
 		})
 	})
 
