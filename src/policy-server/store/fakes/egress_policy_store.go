@@ -57,6 +57,22 @@ type EgressPolicyStore struct {
 		result1 []store.EgressPolicy
 		result2 error
 	}
+	GetByFilterStub        func(sourceIds, sourceTypes, destinationIds, destinationNames []string) ([]store.EgressPolicy, error)
+	getByFilterMutex       sync.RWMutex
+	getByFilterArgsForCall []struct {
+		sourceIds        []string
+		sourceTypes      []string
+		destinationIds   []string
+		destinationNames []string
+	}
+	getByFilterReturns struct {
+		result1 []store.EgressPolicy
+		result2 error
+	}
+	getByFilterReturnsOnCall map[int]struct {
+		result1 []store.EgressPolicy
+		result2 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -267,6 +283,80 @@ func (fake *EgressPolicyStore) GetBySourceGuidsReturnsOnCall(i int, result1 []st
 	}{result1, result2}
 }
 
+func (fake *EgressPolicyStore) GetByFilter(sourceIds []string, sourceTypes []string, destinationIds []string, destinationNames []string) ([]store.EgressPolicy, error) {
+	var sourceIdsCopy []string
+	if sourceIds != nil {
+		sourceIdsCopy = make([]string, len(sourceIds))
+		copy(sourceIdsCopy, sourceIds)
+	}
+	var sourceTypesCopy []string
+	if sourceTypes != nil {
+		sourceTypesCopy = make([]string, len(sourceTypes))
+		copy(sourceTypesCopy, sourceTypes)
+	}
+	var destinationIdsCopy []string
+	if destinationIds != nil {
+		destinationIdsCopy = make([]string, len(destinationIds))
+		copy(destinationIdsCopy, destinationIds)
+	}
+	var destinationNamesCopy []string
+	if destinationNames != nil {
+		destinationNamesCopy = make([]string, len(destinationNames))
+		copy(destinationNamesCopy, destinationNames)
+	}
+	fake.getByFilterMutex.Lock()
+	ret, specificReturn := fake.getByFilterReturnsOnCall[len(fake.getByFilterArgsForCall)]
+	fake.getByFilterArgsForCall = append(fake.getByFilterArgsForCall, struct {
+		sourceIds        []string
+		sourceTypes      []string
+		destinationIds   []string
+		destinationNames []string
+	}{sourceIdsCopy, sourceTypesCopy, destinationIdsCopy, destinationNamesCopy})
+	fake.recordInvocation("GetByFilter", []interface{}{sourceIdsCopy, sourceTypesCopy, destinationIdsCopy, destinationNamesCopy})
+	fake.getByFilterMutex.Unlock()
+	if fake.GetByFilterStub != nil {
+		return fake.GetByFilterStub(sourceIds, sourceTypes, destinationIds, destinationNames)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.getByFilterReturns.result1, fake.getByFilterReturns.result2
+}
+
+func (fake *EgressPolicyStore) GetByFilterCallCount() int {
+	fake.getByFilterMutex.RLock()
+	defer fake.getByFilterMutex.RUnlock()
+	return len(fake.getByFilterArgsForCall)
+}
+
+func (fake *EgressPolicyStore) GetByFilterArgsForCall(i int) ([]string, []string, []string, []string) {
+	fake.getByFilterMutex.RLock()
+	defer fake.getByFilterMutex.RUnlock()
+	return fake.getByFilterArgsForCall[i].sourceIds, fake.getByFilterArgsForCall[i].sourceTypes, fake.getByFilterArgsForCall[i].destinationIds, fake.getByFilterArgsForCall[i].destinationNames
+}
+
+func (fake *EgressPolicyStore) GetByFilterReturns(result1 []store.EgressPolicy, result2 error) {
+	fake.GetByFilterStub = nil
+	fake.getByFilterReturns = struct {
+		result1 []store.EgressPolicy
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *EgressPolicyStore) GetByFilterReturnsOnCall(i int, result1 []store.EgressPolicy, result2 error) {
+	fake.GetByFilterStub = nil
+	if fake.getByFilterReturnsOnCall == nil {
+		fake.getByFilterReturnsOnCall = make(map[int]struct {
+			result1 []store.EgressPolicy
+			result2 error
+		})
+	}
+	fake.getByFilterReturnsOnCall[i] = struct {
+		result1 []store.EgressPolicy
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *EgressPolicyStore) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -278,11 +368,9 @@ func (fake *EgressPolicyStore) Invocations() map[string][][]interface{} {
 	defer fake.allMutex.RUnlock()
 	fake.getBySourceGuidsMutex.RLock()
 	defer fake.getBySourceGuidsMutex.RUnlock()
-	copiedInvocations := map[string][][]interface{}{}
-	for key, value := range fake.invocations {
-		copiedInvocations[key] = value
-	}
-	return copiedInvocations
+	fake.getByFilterMutex.RLock()
+	defer fake.getByFilterMutex.RUnlock()
+	return fake.invocations
 }
 
 func (fake *EgressPolicyStore) recordInvocation(key string, args []interface{}) {

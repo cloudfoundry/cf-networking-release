@@ -259,6 +259,45 @@ func (e *EgressPolicyTable) GetBySourceGuids(ids []string) ([]EgressPolicy, erro
 	return e.convertRowsToEgressPolicies(rows)
 }
 
+func (e *EgressPolicyTable) GetByFilter(sourceIds, sourceTypes, destinationIds, destinationNames []string) ([]EgressPolicy, error) {
+	query := "WHERE "
+
+	if len(sourceIds) > 0 {
+		query += fmt.Sprintf(`(apps.app_guid IN (%[1]s) OR spaces.space_guid IN (%[1]s)) AND `, generateQuestionMarkString(len(sourceIds)))
+	}
+
+	if len(sourceTypes) > 0 {
+		for _, sourceType := range sourceTypes {
+			if sourceType == "app" {
+				query += "spaces.space_guid IS NULL AND\n"
+			} else {
+				query += "apps.app_guid IS NULL AND\n"
+			}
+		}
+	}
+
+	if len(destinationIds) > 0 {
+		query += fmt.Sprintf(`ip_ranges.terminal_guid IN (%[1]s) AND `, generateQuestionMarkString(len(destinationIds)))
+	}
+
+	if len(destinationNames) > 0 {
+		query += fmt.Sprintf(`destination_metadatas.name IN (%[1]s) AND `, generateQuestionMarkString(len(destinationNames)))
+	}
+
+	query = selectEgressPolicyQuery(query + " 1=1 ORDER BY ip_ranges.id;")
+
+	sourceIds = append(sourceIds, sourceIds...)
+	sourceIds = append(sourceIds, destinationIds...)
+	sourceIds = append(sourceIds, destinationNames...)
+
+	rows, err := e.Conn.Query(e.Conn.Rebind(query), convertToInterfaceSlice(sourceIds)...)
+	if err != nil {
+		return []EgressPolicy{}, err
+	}
+
+	return e.convertRowsToEgressPolicies(rows)
+}
+
 func selectEgressPolicyQuery(extraClauses ...string) string {
 	return fmt.Sprintf(`
 		SELECT

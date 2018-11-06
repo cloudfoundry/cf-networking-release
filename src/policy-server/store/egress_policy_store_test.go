@@ -6,7 +6,6 @@ import (
 	"policy-server/store/fakes"
 
 	dbfakes "code.cloudfoundry.org/cf-networking-helpers/db/fakes"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -527,6 +526,37 @@ var _ = Describe("EgressPolicyStore", func() {
 			It("calls egressPolicyRepo.GetByGuid", func() {
 				_, err := egressPolicyStore.GetBySourceGuids([]string{"meow"})
 				Expect(err).To(MatchError("failed to get policies by guids: bark bark"))
+			})
+		})
+	})
+
+	Describe("GetByFilter", func() {
+		Context("when called", func() {
+			BeforeEach(func() {
+				egressPolicyRepo.GetByFilterReturns(egressPolicies, nil)
+			})
+
+			It("calls egressPolicyRepo.GetByFilter", func() {
+				policies, err := egressPolicyStore.GetByFilter([]string{"abc-123"}, []string{"outerSpace"}, []string{"xyz789"}, []string{"moon walk"})
+				Expect(err).NotTo(HaveOccurred())
+				Expect(policies).To(Equal(egressPolicies))
+
+				sourceIds, sourceTypes, destinationIds, destinationNames := egressPolicyRepo.GetByFilterArgsForCall(0)
+				Expect(sourceIds).To(Equal([]string{"abc-123"}))
+				Expect(sourceTypes).To(Equal([]string{"outerSpace"}))
+				Expect(destinationIds).To(Equal([]string{"xyz789"}))
+				Expect(destinationNames).To(Equal([]string{"moon walk"}))
+			})
+		})
+
+		Context("when an error is returned from the repo", func() {
+			BeforeEach(func() {
+				egressPolicyRepo.GetByFilterReturns(nil, errors.New("bark bark"))
+			})
+
+			It("calls egressPolicyRepo.GetByFilter", func() {
+				_, err := egressPolicyStore.GetByFilter([]string{"sourceId"}, []string{"sourceType"}, []string{"destinationId"}, []string{"destinationName"})
+				Expect(err).To(MatchError("failed to get policies by filter: bark bark"))
 			})
 		})
 	})

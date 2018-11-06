@@ -5,17 +5,15 @@ import (
 	"fmt"
 	"policy-server/store"
 	"policy-server/store/fakes"
-	"test-helpers"
+	testhelpers "test-helpers"
 	"time"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-
-	dbfakes "code.cloudfoundry.org/cf-networking-helpers/db/fakes"
-
 	"code.cloudfoundry.org/cf-networking-helpers/db"
+	dbfakes "code.cloudfoundry.org/cf-networking-helpers/db/fakes"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"code.cloudfoundry.org/lager"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Egress Policy Table", func() {
@@ -900,6 +898,236 @@ var _ = Describe("Egress Policy Table", func() {
 			})
 		})
 	})
+
+	Context("GetByFilter", func() {
+		Context("When using a real db", func() {
+			var (
+				egressPolicies        []store.EgressPolicy
+				createdDestinations   []store.EgressDestination
+				createdEgressPolicies []store.EgressPolicy
+			)
+
+			BeforeEach(func() {
+				db, _ := getMigratedRealDb(dbConf)
+				egressStore := setupEgressPolicyStore(db)
+
+				egressDestinations := []store.EgressDestination{
+					{
+						Name:     "a",
+						Protocol: "tcp",
+						Ports: []store.Ports{
+							{
+								Start: 8080,
+								End:   8081,
+							},
+						},
+						IPRanges: []store.IPRange{
+							{
+								Start: "1.2.3.4",
+								End:   "1.2.3.5",
+							},
+						},
+					},
+					{
+						Name:     "b",
+						Protocol: "udp",
+						IPRanges: []store.IPRange{
+							{
+								Start: "2.2.3.4",
+								End:   "2.2.3.5",
+							},
+						},
+					},
+					{
+						Name:     "c",
+						Protocol: "icmp",
+						ICMPType: 1,
+						ICMPCode: 2,
+						IPRanges: []store.IPRange{
+							{
+								Start: "2.2.3.4",
+								End:   "2.2.3.5",
+							},
+						},
+					},
+					{
+						Name:     "d",
+						Protocol: "udp",
+						Ports: []store.Ports{
+							{
+								Start: 8080,
+								End:   8081,
+							},
+						},
+						IPRanges: []store.IPRange{
+							{
+								Start: "3.2.3.4",
+								End:   "3.2.3.5",
+							},
+						},
+					},
+					{
+						Name:     "e",
+						Protocol: "udp",
+						IPRanges: []store.IPRange{
+							{
+								Start: "2.2.3.4",
+								End:   "2.2.3.5",
+							},
+						},
+					},
+				}
+
+				var err error
+				createdDestinations, err = egressDestinationStore(db).Create(egressDestinations)
+				Expect(err).ToNot(HaveOccurred())
+
+				egressPolicies = []store.EgressPolicy{
+					{
+						Source: store.EgressSource{
+							ID:   "some-app-guid",
+							Type: "app",
+						},
+						Destination: store.EgressDestination{
+							GUID: createdDestinations[0].GUID,
+						},
+					},
+					{
+						Source: store.EgressSource{
+							ID:   "different-app-guid",
+							Type: "app",
+						},
+						Destination: store.EgressDestination{
+							GUID: createdDestinations[1].GUID,
+						},
+					},
+					{
+						Source: store.EgressSource{
+							ID:   "different-app-guid",
+							Type: "app",
+						},
+						Destination: store.EgressDestination{
+							GUID: createdDestinations[2].GUID,
+						},
+					},
+					{
+						Source: store.EgressSource{
+							ID:   "some-space-guid",
+							Type: "space",
+						},
+						Destination: store.EgressDestination{
+							GUID: createdDestinations[3].GUID,
+						},
+					},
+					{
+						Source: store.EgressSource{
+							ID: "never-referenced-app-guid",
+						},
+						Destination: store.EgressDestination{
+							GUID: createdDestinations[4].GUID,
+						},
+					},
+				}
+				createdEgressPolicies, err = egressStore.Create(egressPolicies)
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			Context("when there are policies with the filter", func() {
+				It("returns egress policies that match", func() {
+					By("returning egress policies by sourceID")
+					policies, err := egressPolicyTable.GetByFilter([]string{"different-app-guid"}, []string{}, []string{}, []string{})
+					Expect(err).ToNot(HaveOccurred())
+
+					// egressStore.Create doesn't return the full destination, but GetBySourceGuids does
+					expectedEgressPolicies := createdEgressPolicies[1:3]
+					expectedEgressPolicies[0].Destination = createdDestinations[1]
+					expectedEgressPolicies[1].Destination = createdDestinations[2]
+					Expect(policies).To(ConsistOf(expectedEgressPolicies))
+
+					By("returning egress policies by sourceType")
+					policies, err = egressPolicyTable.GetByFilter([]string{}, []string{"app"}, []string{}, []string{})
+					Expect(err).ToNot(HaveOccurred())
+
+					// egressStore.Create doesn't return the full destination, but GetBySourceGuids does
+					expectedEgressPolicies = createdEgressPolicies[0:3]
+					expectedEgressPolicies = append([]store.EgressPolicy(nil), expectedEgressPolicies...)
+					expectedEgressPolicies = append(expectedEgressPolicies, createdEgressPolicies[4])
+					expectedEgressPolicies[0].Destination = createdDestinations[0]
+					expectedEgressPolicies[1].Destination = createdDestinations[1]
+					expectedEgressPolicies[2].Destination = createdDestinations[2]
+					expectedEgressPolicies[3].Destination = createdDestinations[4]
+					expectedEgressPolicies[3].Source.Type = "app"
+					Expect(policies).To(ConsistOf(expectedEgressPolicies))
+
+					By("returning egress policies sourceID where source is a space")
+					policies, err = egressPolicyTable.GetByFilter([]string{"some-space-guid"}, []string{}, []string{}, []string{})
+					Expect(err).ToNot(HaveOccurred())
+
+					// egressStore.Create doesn't return the full destination, but GetBySourceGuids does
+					expectedEgressPolicy := createdEgressPolicies[3]
+					expectedEgressPolicy.Destination = createdDestinations[3]
+					Expect(policies).To(ConsistOf(expectedEgressPolicy))
+
+					By("returning egress policies sourceType where type is space")
+					policies, err = egressPolicyTable.GetByFilter([]string{}, []string{"space"}, []string{}, []string{})
+					Expect(err).ToNot(HaveOccurred())
+
+					// egressStore.Create doesn't return the full destination, but GetBySourceGuids does
+					expectedEgressPolicy = createdEgressPolicies[3]
+					expectedEgressPolicy.Destination = createdDestinations[3]
+					Expect(policies).To(ConsistOf(expectedEgressPolicy))
+
+					By("returning egress policies sourceId and sourceType")
+					policies, err = egressPolicyTable.GetByFilter([]string{"some-space-guid"}, []string{"space"}, []string{}, []string{})
+					Expect(err).ToNot(HaveOccurred())
+
+					// egressStore.Create doesn't return the full destination, but GetBySourceGuids does
+					expectedEgressPolicy = createdEgressPolicies[3]
+					expectedEgressPolicy.Destination = createdDestinations[3]
+					Expect(policies).To(ConsistOf(expectedEgressPolicy))
+
+					By("returning egress policies by destinationId")
+					policies, err = egressPolicyTable.GetByFilter([]string{}, []string{}, []string{createdDestinations[0].GUID}, []string{})
+					Expect(err).ToNot(HaveOccurred())
+
+					// egressStore.Create doesn't return the full destination, but GetBySourceGuids does
+					expectedEgressPolicy = createdEgressPolicies[0]
+					expectedEgressPolicy.Destination = createdDestinations[0]
+					Expect(policies).To(ConsistOf(expectedEgressPolicy))
+
+					By("returning egress policies by destinationName")
+					policies, err = egressPolicyTable.GetByFilter([]string{}, []string{}, []string{}, []string{"a"})
+					Expect(err).ToNot(HaveOccurred())
+
+					// egressStore.Create doesn't return the full destination, but GetBySourceGuids does
+					expectedEgressPolicy = createdEgressPolicies[0]
+					expectedEgressPolicy.Destination = createdDestinations[0]
+					Expect(policies).To(ConsistOf(expectedEgressPolicy))
+
+					By("returning empty list for non-existent ids")
+					policies, err = egressPolicyTable.GetByFilter([]string{"meow-bogus"}, []string{}, []string{}, []string{})
+					Expect(err).ToNot(HaveOccurred())
+					Expect(policies).To(HaveLen(0))
+				})
+			})
+		})
+
+	})
+
+	Context("when the query fails", func() {
+		It("returns an error", func() {
+			setupEgressPolicyStore(mockDb)
+
+			mockDb.QueryReturns(nil, errors.New("some error that sql would return"))
+
+			egressPolicyTable = &store.EgressPolicyTable{
+				Conn: mockDb,
+			}
+
+			_, err := egressPolicyTable.GetByFilter([]string{"epic fail"}, []string{""}, []string{""}, []string{""})
+			Expect(err).To(MatchError("some error that sql would return"))
+		})
+	})
 })
 
 func egressDestinationStore(db store.Database) *store.EgressDestinationStore {
@@ -909,7 +1137,7 @@ func egressDestinationStore(db store.Database) *store.EgressDestinationStore {
 
 	destinationMetadataTable := &store.DestinationMetadataTable{}
 	egressDestinationStore := &store.EgressDestinationStore{
-		Conn: db,
+		Conn:                    db,
 		EgressDestinationRepo:   &store.EgressDestinationTable{},
 		TerminalsRepo:           terminalsRepo,
 		DestinationMetadataRepo: destinationMetadataTable,

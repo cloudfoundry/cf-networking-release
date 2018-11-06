@@ -85,11 +85,7 @@ func (fake *Migrator) Invocations() map[string][][]interface{} {
 	defer fake.invocationsMutex.RUnlock()
 	fake.performMigrationsMutex.RLock()
 	defer fake.performMigrationsMutex.RUnlock()
-	copiedInvocations := map[string][][]interface{}{}
-	for key, value := range fake.invocations {
-		copiedInvocations[key] = value
-	}
-	return copiedInvocations
+	return fake.invocations
 }
 
 func (fake *Migrator) recordInvocation(key string, args []interface{}) {

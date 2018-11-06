@@ -136,11 +136,7 @@ func (fake *UAAClient) Invocations() map[string][][]interface{} {
 	defer fake.getTokenMutex.RUnlock()
 	fake.checkTokenMutex.RLock()
 	defer fake.checkTokenMutex.RUnlock()
-	copiedInvocations := map[string][][]interface{}{}
-	for key, value := range fake.invocations {
-		copiedInvocations[key] = value
-	}
-	return copiedInvocations
+	return fake.invocations
 }
 
 func (fake *UAAClient) recordInvocation(key string, args []interface{}) {

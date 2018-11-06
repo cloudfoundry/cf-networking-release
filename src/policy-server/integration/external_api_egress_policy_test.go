@@ -7,18 +7,16 @@ import (
 	"policy-server/integration/helpers"
 	"policy-server/psclient"
 
-	"code.cloudfoundry.org/lager/lagertest"
-
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/lagertest"
 	uuid "github.com/nu7hatch/gouuid"
-	"github.com/onsi/gomega/gexec"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gexec"
 )
 
 var _ = Describe("External API Egress Policies", func() {
@@ -75,9 +73,10 @@ var _ = Describe("External API Egress Policies", func() {
 			},
 		}
 
-		unusedDest := psclient.Destination{
-			Name:     "unused dest",
-			Protocol: "udp",
+		anotherDest := psclient.Destination{
+			Name:        "udp destination",
+			Description: "another description",
+			Protocol:    "udp",
 			IPs: []psclient.IPRange{
 				{
 					Start: "3.2.3.4",
@@ -91,7 +90,7 @@ var _ = Describe("External API Egress Policies", func() {
 				},
 			},
 		}
-		createdDestinations, err := client.CreateDestinations(token, someDest, unusedDest)
+		createdDestinations, err := client.CreateDestinations(token, someDest, anotherDest)
 		Expect(err).NotTo(HaveOccurred())
 
 		for _, createdDestination := range createdDestinations {
@@ -113,10 +112,104 @@ var _ = Describe("External API Egress Policies", func() {
 
 		_, err = uuid.ParseHex(policyGUID)
 		Expect(err).NotTo(HaveOccurred())
-
-		egressPolicyList, err := client.ListEgressPolicies(token)
+		egressPolicyList, err := client.ListEgressPolicies(token, []string{}, []string{}, []string{}, []string{})
 		Expect(err).NotTo(HaveOccurred())
 		egressPolicies := egressPolicyList.EgressPolicies
+		Expect(egressPolicies).To(HaveLen(1))
+		Expect(egressPolicies[0]).To(Equal(
+			psclient.EgressPolicy{
+				GUID: policyGUID,
+				Source: psclient.EgressPolicySource{
+					ID:   "live-app-1-guid",
+					Type: "app",
+				},
+				Destination: psclient.Destination{
+					GUID:        createdDestinations[0].GUID,
+					Name:        "tcp with ports",
+					Description: "dest description",
+					Protocol:    "tcp",
+					IPs:         []psclient.IPRange{{Start: "1.2.3.4", End: "1.2.3.5"}},
+					Ports:       []psclient.Port{{Start: 8080, End: 9090}},
+				},
+			},
+		))
+
+		someSecondPolicy := psclient.EgressPolicy{
+			Source: psclient.EgressPolicySource{
+				Type: "app",
+				ID:   "live-app-2-guid",
+			},
+			Destination: psclient.Destination{
+				GUID: createdDestinations[1].GUID,
+			},
+		}
+
+		secondPolicyGUID, err := client.CreateEgressPolicy(someSecondPolicy, token)
+		Expect(err).NotTo(HaveOccurred())
+
+		_, err = uuid.ParseHex(secondPolicyGUID)
+		Expect(err).NotTo(HaveOccurred())
+
+		someThirdPolicy := psclient.EgressPolicy{
+			Source: psclient.EgressPolicySource{
+				Type: "app",
+				ID:   "live-app-3-guid",
+			},
+			Destination: psclient.Destination{
+				GUID: createdDestinations[1].GUID,
+			},
+		}
+
+		thirdPolicyGUID, err := client.CreateEgressPolicy(someThirdPolicy, token)
+		Expect(err).NotTo(HaveOccurred())
+
+		_, err = uuid.ParseHex(thirdPolicyGUID)
+		Expect(err).NotTo(HaveOccurred())
+
+		By("fetching list of IDs")
+		egressPolicyList, err = client.ListEgressPolicies(token, []string{"live-app-1-guid", "live-app-3-guid"}, []string{"app"}, []string{}, []string{})
+		Expect(err).NotTo(HaveOccurred())
+		egressPolicies = egressPolicyList.EgressPolicies
+		Expect(egressPolicies).To(HaveLen(2))
+		Expect(egressPolicies[0]).To(Equal(
+			psclient.EgressPolicy{
+				GUID: policyGUID,
+				Source: psclient.EgressPolicySource{
+					ID:   "live-app-1-guid",
+					Type: "app",
+				},
+				Destination: psclient.Destination{
+					GUID:        createdDestinations[0].GUID,
+					Name:        "tcp with ports",
+					Description: "dest description",
+					Protocol:    "tcp",
+					IPs:         []psclient.IPRange{{Start: "1.2.3.4", End: "1.2.3.5"}},
+					Ports:       []psclient.Port{{Start: 8080, End: 9090}},
+				},
+			},
+		))
+		Expect(egressPolicies[1]).To(Equal(
+			psclient.EgressPolicy{
+				GUID: thirdPolicyGUID,
+				Source: psclient.EgressPolicySource{
+					ID:   "live-app-3-guid",
+					Type: "app",
+				},
+				Destination: psclient.Destination{
+					GUID:        createdDestinations[1].GUID,
+					Name:        "udp destination",
+					Description: "another description",
+					Protocol:    "udp",
+					IPs:         []psclient.IPRange{{Start: "3.2.3.4", End: "3.2.3.5"}},
+					Ports:       []psclient.Port{{Start: 8082, End: 9092}},
+				},
+			},
+		))
+
+		By("ANDing search filter params")
+		egressPolicyList, err = client.ListEgressPolicies(token, []string{"live-app-1-guid", "live-app-3-guid"}, []string{"app"}, []string{createdDestinations[0].GUID}, []string{})
+		Expect(err).NotTo(HaveOccurred())
+		egressPolicies = egressPolicyList.EgressPolicies
 		Expect(egressPolicies).To(HaveLen(1))
 		Expect(egressPolicies[0]).To(Equal(
 			psclient.EgressPolicy{
@@ -145,7 +238,17 @@ var _ = Describe("External API Egress Policies", func() {
 		somePolicy.GUID = policyGUID
 		Expect(somePolicy).To(Equal(deletedEgressPolicy))
 
-		egressPolicyList, err = client.ListEgressPolicies(token)
+		deletedEgressPolicy, err = client.DeleteEgressPolicy(secondPolicyGUID, token)
+		Expect(err).NotTo(HaveOccurred())
+		someSecondPolicy.GUID = secondPolicyGUID
+		Expect(someSecondPolicy).To(Equal(deletedEgressPolicy))
+
+		deletedEgressPolicy, err = client.DeleteEgressPolicy(thirdPolicyGUID, token)
+		Expect(err).NotTo(HaveOccurred())
+		someThirdPolicy.GUID = thirdPolicyGUID
+		Expect(someThirdPolicy).To(Equal(deletedEgressPolicy))
+
+		egressPolicyList, err = client.ListEgressPolicies(token, []string{}, []string{}, []string{}, []string{})
 		Expect(err).NotTo(HaveOccurred())
 		egressPolicies = egressPolicyList.EgressPolicies
 		Expect(egressPolicies).To(HaveLen(0))

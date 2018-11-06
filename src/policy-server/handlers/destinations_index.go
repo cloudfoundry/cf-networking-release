@@ -65,5 +65,8 @@ func parseQueryParam(queryValues url.Values, queryParam string) []string {
 	if ok {
 		values = strings.Split(v[0], ",")
 	}
+	if len(values) == 1 && values[0] == "" {
+		return []string{}
+	}
 	return values
 }

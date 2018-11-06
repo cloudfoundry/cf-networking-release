@@ -634,11 +634,7 @@ func (fake *Db) Invocations() map[string][][]interface{} {
 	defer fake.rawConnectionMutex.RUnlock()
 	fake.rebindMutex.RLock()
 	defer fake.rebindMutex.RUnlock()
-	copiedInvocations := map[string][][]interface{}{}
-	for key, value := range fake.invocations {
-		copiedInvocations[key] = value
-	}
-	return copiedInvocations
+	return fake.invocations
 }
 
 func (fake *Db) recordInvocation(key string, args []interface{}) {

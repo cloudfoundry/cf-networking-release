@@ -201,4 +201,52 @@ var _ = Describe("EgressPolicyMetricsWrapper", func() {
 			})
 		})
 	})
+	Describe("GetByFilter", func() {
+		var sourceIds, sourceTypes, destinationIds, destinationNames []string
+		BeforeEach(func() {
+			fakeStore.GetByFilterReturns(policies, nil)
+			sourceIds = []string{"source1", "source2"}
+			sourceTypes = []string{"type1", "type2"}
+			destinationIds = []string{"dstid"}
+			destinationNames = []string{"destName"}
+		})
+		It("returns the result of GetByFilter on the Store", func() {
+			returnedPolicies, err := metricsWrapper.GetByFilter(sourceIds, sourceTypes, destinationIds, destinationNames)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(returnedPolicies).To(Equal(policies))
+
+			Expect(fakeStore.GetByFilterCallCount()).To(Equal(1))
+			actualSourceIds, actualSourceTypes, actualDestinationIds, actualDestinationNames := fakeStore.GetByFilterArgsForCall(0)
+			Expect(sourceIds).To(Equal(actualSourceIds))
+			Expect(sourceTypes).To(Equal(actualSourceTypes))
+			Expect(destinationIds).To(Equal(actualDestinationIds))
+			Expect(destinationNames).To(Equal(actualDestinationNames))
+		})
+
+		It("emits a metric", func() {
+			_, err := metricsWrapper.GetByFilter(sourceIds, sourceTypes, destinationIds, destinationNames)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
+			name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
+			Expect(name).To(Equal("EgressPolicyStoreGetByFilterSuccessTime"))
+		})
+
+		Context("when there is an error", func() {
+			BeforeEach(func() {
+				fakeStore.GetByFilterReturns(nil, errors.New("banana"))
+			})
+			It("emits an error metric", func() {
+				_, err := metricsWrapper.GetByFilter(sourceIds, sourceTypes, destinationIds, destinationNames)
+				Expect(err).To(MatchError("banana"))
+
+				Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
+				Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("EgressPolicyStoreGetByFilterError"))
+
+				Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
+				name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
+				Expect(name).To(Equal("EgressPolicyStoreGetByFilterErrorTime"))
+			})
+		})
+	})
 })

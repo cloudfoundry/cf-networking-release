@@ -38,14 +38,19 @@ var MockCCServer = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWrite
 			w.Write([]byte(fixtures.AppsV3TwoSpaces))
 			return
 		}
-		if strings.Contains(r.URL.RawQuery, "live-app-1-guid") && !strings.Contains(r.URL.RawQuery, "live-app-2-guid") {
+		if strings.Contains(r.URL.RawQuery, "live-app-1-guid") {
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte(fixtures.AppsV3LiveApp1GUID))
 			return
 		}
-		if strings.Contains(r.URL.RawQuery, "live-app-2-guid") && !strings.Contains(r.URL.RawQuery, "live-app-1-guid") {
+		if strings.Contains(r.URL.RawQuery, "live-app-2-guid") {
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte(fixtures.AppsV3LiveApp2GUID))
+			return
+		}
+		if strings.Contains(r.URL.RawQuery, "live-app-3-guid") {
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(fixtures.AppsV3LiveApp3GUID))
 			return
 		}
 		w.WriteHeader(http.StatusOK)

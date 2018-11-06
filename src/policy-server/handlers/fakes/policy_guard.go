@@ -149,11 +149,7 @@ func (fake *PolicyGuard) Invocations() map[string][][]interface{} {
 	defer fake.checkAccessMutex.RUnlock()
 	fake.isNetworkAdminMutex.RLock()
 	defer fake.isNetworkAdminMutex.RUnlock()
-	copiedInvocations := map[string][][]interface{}{}
-	for key, value := range fake.invocations {
-		copiedInvocations[key] = value
-	}
-	return copiedInvocations
+	return fake.invocations
 }
 
 func (fake *PolicyGuard) recordInvocation(key string, args []interface{}) {

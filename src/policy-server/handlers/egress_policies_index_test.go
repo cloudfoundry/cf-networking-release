@@ -7,14 +7,11 @@ import (
 	"net/http/httptest"
 	"policy-server/handlers"
 	"policy-server/handlers/fakes"
+	"policy-server/store"
 	storeFakes "policy-server/store/fakes"
-
-	"code.cloudfoundry.org/cf-networking-helpers/httperror"
-
 	"policy-server/uaa_client"
 
-	"policy-server/store"
-
+	"code.cloudfoundry.org/cf-networking-helpers/httperror"
 	"code.cloudfoundry.org/lager/lagertest"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -57,8 +54,6 @@ var _ = Describe("EgressPoliciesIndex", func() {
 				ID: "abc-123",
 			},
 		}
-		fakeStore.AllReturns(policies, nil)
-
 		responseBody = `{
 			"egress_policies": [
 				{
@@ -81,9 +76,10 @@ var _ = Describe("EgressPoliciesIndex", func() {
 	})
 
 	It("lists egress policies", func() {
+		fakeStore.GetByFilterReturns(policies, nil)
 		MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
 
-		Expect(fakeStore.AllCallCount()).To(Equal(1))
+		Expect(fakeStore.GetByFilterCallCount()).To(Equal(1))
 
 		Expect(fakeMapper.AsBytesWithPopulatedDestinationsCallCount()).To(Equal(1))
 		Expect(fakeMapper.AsBytesWithPopulatedDestinationsArgsForCall(0)).To(Equal(policies))
@@ -100,7 +96,7 @@ var _ = Describe("EgressPoliciesIndex", func() {
 	})
 
 	It("returns an error when the store returns an error", func() {
-		fakeStore.AllReturns([]store.EgressPolicy{}, errors.New("can't create"))
+		fakeStore.GetByFilterReturns([]store.EgressPolicy{}, errors.New("can't create"))
 		MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
 		Expect(resp.Code).To(Equal(http.StatusInternalServerError))
 		Expect(resp.Body.Bytes()).To(MatchJSON(`{"error": "error listing egress policies"}`))
@@ -112,5 +108,23 @@ var _ = Describe("EgressPoliciesIndex", func() {
 		MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
 		Expect(resp.Code).To(Equal(http.StatusInternalServerError))
 		Expect(resp.Body.Bytes()).To(MatchJSON(`{"error": "error serializing response"}`))
+	})
+
+	Context("when the query parameters are passed", func() {
+		BeforeEach(func() {
+			var err error
+			request, err = http.NewRequest("GET", `/networking/v1/external/egress_policies?SourceIDs=abc-123&SourceTypes=outerSpace&DestinationIDs=xyz789,helloguid&DestinationNames=moon%20walk`, nil)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("return only the destination with that guid", func() {
+			MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
+			Expect(fakeStore.GetByFilterCallCount()).To(Equal(1))
+			sourceIds, sourceTypes, destinationIds, destinationNames := fakeStore.GetByFilterArgsForCall(0)
+			Expect(sourceIds).To(Equal([]string{"abc-123"}))
+			Expect(sourceTypes).To(Equal([]string{"outerSpace"}))
+			Expect(destinationIds).To(Equal([]string{"xyz789", "helloguid"}))
+			Expect(destinationNames).To(Equal([]string{"moon walk"}))
+		})
 	})
 })

@@ -333,11 +333,7 @@ func (fake *Store) Invocations() map[string][][]interface{} {
 	defer fake.byGuidsMutex.RUnlock()
 	fake.checkDatabaseMutex.RLock()
 	defer fake.checkDatabaseMutex.RUnlock()
-	copiedInvocations := map[string][][]interface{}{}
-	for key, value := range fake.invocations {
-		copiedInvocations[key] = value
-	}
-	return copiedInvocations
+	return fake.invocations
 }
 
 func (fake *Store) recordInvocation(key string, args []interface{}) {

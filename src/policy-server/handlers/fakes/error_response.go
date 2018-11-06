@@ -238,11 +238,7 @@ func (fake *ErrorResponse) Invocations() map[string][][]interface{} {
 	defer fake.forbiddenMutex.RUnlock()
 	fake.unauthorizedMutex.RLock()
 	defer fake.unauthorizedMutex.RUnlock()
-	copiedInvocations := map[string][][]interface{}{}
-	for key, value := range fake.invocations {
-		copiedInvocations[key] = value
-	}
-	return copiedInvocations
+	return fake.invocations
 }
 
 func (fake *ErrorResponse) recordInvocation(key string, args []interface{}) {

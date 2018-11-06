@@ -227,11 +227,7 @@ func (fake *EgressPolicyMapper) Invocations() map[string][][]interface{} {
 	defer fake.asBytesMutex.RUnlock()
 	fake.asBytesWithPopulatedDestinationsMutex.RLock()
 	defer fake.asBytesWithPopulatedDestinationsMutex.RUnlock()
-	copiedInvocations := map[string][][]interface{}{}
-	for key, value := range fake.invocations {
-		copiedInvocations[key] = value
-	}
-	return copiedInvocations
+	return fake.invocations
 }
 
 func (fake *EgressPolicyMapper) recordInvocation(key string, args []interface{}) {

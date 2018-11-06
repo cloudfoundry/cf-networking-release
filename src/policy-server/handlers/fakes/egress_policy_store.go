@@ -18,6 +18,22 @@ type EgressPolicyStore struct {
 		result1 []store.EgressPolicy
 		result2 error
 	}
+	GetByFilterStub        func(sourceId, sourceType, destinationId, destinationName []string) ([]store.EgressPolicy, error)
+	getByFilterMutex       sync.RWMutex
+	getByFilterArgsForCall []struct {
+		sourceId        []string
+		sourceType      []string
+		destinationId   []string
+		destinationName []string
+	}
+	getByFilterReturns struct {
+		result1 []store.EgressPolicy
+		result2 error
+	}
+	getByFilterReturnsOnCall map[int]struct {
+		result1 []store.EgressPolicy
+		result2 error
+	}
 	GetBySourceGuidsStub        func(ids []string) ([]store.EgressPolicy, error)
 	getBySourceGuidsMutex       sync.RWMutex
 	getBySourceGuidsArgsForCall []struct {
@@ -99,6 +115,80 @@ func (fake *EgressPolicyStore) AllReturnsOnCall(i int, result1 []store.EgressPol
 		})
 	}
 	fake.allReturnsOnCall[i] = struct {
+		result1 []store.EgressPolicy
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *EgressPolicyStore) GetByFilter(sourceId []string, sourceType []string, destinationId []string, destinationName []string) ([]store.EgressPolicy, error) {
+	var sourceIdCopy []string
+	if sourceId != nil {
+		sourceIdCopy = make([]string, len(sourceId))
+		copy(sourceIdCopy, sourceId)
+	}
+	var sourceTypeCopy []string
+	if sourceType != nil {
+		sourceTypeCopy = make([]string, len(sourceType))
+		copy(sourceTypeCopy, sourceType)
+	}
+	var destinationIdCopy []string
+	if destinationId != nil {
+		destinationIdCopy = make([]string, len(destinationId))
+		copy(destinationIdCopy, destinationId)
+	}
+	var destinationNameCopy []string
+	if destinationName != nil {
+		destinationNameCopy = make([]string, len(destinationName))
+		copy(destinationNameCopy, destinationName)
+	}
+	fake.getByFilterMutex.Lock()
+	ret, specificReturn := fake.getByFilterReturnsOnCall[len(fake.getByFilterArgsForCall)]
+	fake.getByFilterArgsForCall = append(fake.getByFilterArgsForCall, struct {
+		sourceId        []string
+		sourceType      []string
+		destinationId   []string
+		destinationName []string
+	}{sourceIdCopy, sourceTypeCopy, destinationIdCopy, destinationNameCopy})
+	fake.recordInvocation("GetByFilter", []interface{}{sourceIdCopy, sourceTypeCopy, destinationIdCopy, destinationNameCopy})
+	fake.getByFilterMutex.Unlock()
+	if fake.GetByFilterStub != nil {
+		return fake.GetByFilterStub(sourceId, sourceType, destinationId, destinationName)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.getByFilterReturns.result1, fake.getByFilterReturns.result2
+}
+
+func (fake *EgressPolicyStore) GetByFilterCallCount() int {
+	fake.getByFilterMutex.RLock()
+	defer fake.getByFilterMutex.RUnlock()
+	return len(fake.getByFilterArgsForCall)
+}
+
+func (fake *EgressPolicyStore) GetByFilterArgsForCall(i int) ([]string, []string, []string, []string) {
+	fake.getByFilterMutex.RLock()
+	defer fake.getByFilterMutex.RUnlock()
+	return fake.getByFilterArgsForCall[i].sourceId, fake.getByFilterArgsForCall[i].sourceType, fake.getByFilterArgsForCall[i].destinationId, fake.getByFilterArgsForCall[i].destinationName
+}
+
+func (fake *EgressPolicyStore) GetByFilterReturns(result1 []store.EgressPolicy, result2 error) {
+	fake.GetByFilterStub = nil
+	fake.getByFilterReturns = struct {
+		result1 []store.EgressPolicy
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *EgressPolicyStore) GetByFilterReturnsOnCall(i int, result1 []store.EgressPolicy, result2 error) {
+	fake.GetByFilterStub = nil
+	if fake.getByFilterReturnsOnCall == nil {
+		fake.getByFilterReturnsOnCall = make(map[int]struct {
+			result1 []store.EgressPolicy
+			result2 error
+		})
+	}
+	fake.getByFilterReturnsOnCall[i] = struct {
 		result1 []store.EgressPolicy
 		result2 error
 	}{result1, result2}
@@ -272,6 +362,8 @@ func (fake *EgressPolicyStore) Invocations() map[string][][]interface{} {
 	defer fake.invocationsMutex.RUnlock()
 	fake.allMutex.RLock()
 	defer fake.allMutex.RUnlock()
+	fake.getByFilterMutex.RLock()
+	defer fake.getByFilterMutex.RUnlock()
 	fake.getBySourceGuidsMutex.RLock()
 	defer fake.getBySourceGuidsMutex.RUnlock()
 	fake.createMutex.RLock()

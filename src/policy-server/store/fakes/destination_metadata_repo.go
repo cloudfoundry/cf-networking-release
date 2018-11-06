@@ -145,11 +145,7 @@ func (fake *DestinationMetadataRepo) Invocations() map[string][][]interface{} {
 	defer fake.deleteMutex.RUnlock()
 	fake.upsertMutex.RLock()
 	defer fake.upsertMutex.RUnlock()
-	copiedInvocations := map[string][][]interface{}{}
-	for key, value := range fake.invocations {
-		copiedInvocations[key] = value
-	}
-	return copiedInvocations
+	return fake.invocations
 }
 
 func (fake *DestinationMetadataRepo) recordInvocation(key string, args []interface{}) {

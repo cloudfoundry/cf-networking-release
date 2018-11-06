@@ -153,9 +153,17 @@ func (c *Client) DeleteEgressPolicy(egressPolicyGUID, token string) (EgressPolic
 	return response.EgressPolicies[0], nil
 }
 
-func (c *Client) ListEgressPolicies(token string) (EgressPolicyList, error) {
+func (c *Client) ListEgressPolicies(token string, sourceIDs, sourceTypes, destinationIDs, destinationNames []string) (EgressPolicyList, error) {
 	var response EgressPolicyList
-	err := c.JsonClient.Do("GET", "/networking/v1/external/egress_policies", "", &response, "Bearer "+token)
+
+	var filter = strings.Join([]string{
+		"SourceIDs=" + strings.Join(sourceIDs, ","),
+		"SourceTypes=" + strings.Join(sourceTypes, ","),
+		"DestinationIDs=" + strings.Join(destinationIDs, ","),
+		"DestinationNames=" + strings.Join(destinationNames, ","),
+	}, "&")
+
+	err := c.JsonClient.Do("GET", "/networking/v1/external/egress_policies?"+filter, "", &response, "Bearer "+token)
 	if err != nil {
 		return EgressPolicyList{}, fmt.Errorf("list egress policies api call: %s", err)
 	}

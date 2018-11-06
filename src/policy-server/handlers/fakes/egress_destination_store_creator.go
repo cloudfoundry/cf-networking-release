@@ -86,11 +86,7 @@ func (fake *EgressDestinationStoreCreator) Invocations() map[string][][]interfac
 	defer fake.invocationsMutex.RUnlock()
 	fake.createMutex.RLock()
 	defer fake.createMutex.RUnlock()
-	copiedInvocations := map[string][][]interface{}{}
-	for key, value := range fake.invocations {
-		copiedInvocations[key] = value
-	}
-	return copiedInvocations
+	return fake.invocations
 }
 
 func (fake *EgressDestinationStoreCreator) recordInvocation(key string, args []interface{}) {

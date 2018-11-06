@@ -448,7 +448,7 @@ var _ = Describe("Client", func() {
 		})
 	})
 
-	Describe("ListEgressPolicy", func() {
+	Describe("ListEgressPolicies", func() {
 		BeforeEach(func() {
 			jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 				respBytes := []byte(`{
@@ -472,7 +472,7 @@ var _ = Describe("Client", func() {
 		})
 
 		It("lists all egress policies", func() {
-			policyList, err := client.ListEgressPolicies(token)
+			policyList, err := client.ListEgressPolicies(token, []string{}, []string{}, []string{}, []string{})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(policyList.TotalEgressPolicies).To(Equal(1))
 			Expect(policyList.EgressPolicies).To(ConsistOf(psclient.EgressPolicy{
@@ -489,7 +489,30 @@ var _ = Describe("Client", func() {
 			Expect(jsonClient.DoCallCount()).To(Equal(1))
 			passedMethod, passedRoute, passedReqData, _, passedToken := jsonClient.DoArgsForCall(0)
 			Expect(passedMethod).To(Equal("GET"))
-			Expect(passedRoute).To(Equal("/networking/v1/external/egress_policies"))
+			Expect(passedRoute).To(Equal("/networking/v1/external/egress_policies?SourceIDs=&SourceTypes=&DestinationIDs=&DestinationNames="))
+			Expect(passedReqData).To(BeEmpty())
+			Expect(passedToken).To(Equal("Bearer some-token"))
+		})
+
+		It("filters egress policies by source ID", func() {
+			policyList, err := client.ListEgressPolicies(token, []string{"app-guid1", "app-guid2"}, []string{"app"}, []string{"app-dest"}, []string{"dest-name-a", "dest-name-b"})
+			Expect(err).NotTo(HaveOccurred())
+			Expect(policyList.TotalEgressPolicies).To(Equal(1))
+			Expect(policyList.EgressPolicies).To(ConsistOf(psclient.EgressPolicy{
+				GUID: "some-egress-policy-guid",
+				Source: psclient.EgressPolicySource{
+					Type: "app",
+					ID:   "some-app-guid",
+				},
+				Destination: psclient.Destination{
+					GUID: "some-dest-guid",
+				},
+			}))
+
+			Expect(jsonClient.DoCallCount()).To(Equal(1))
+			passedMethod, passedRoute, passedReqData, _, passedToken := jsonClient.DoArgsForCall(0)
+			Expect(passedMethod).To(Equal("GET"))
+			Expect(passedRoute).To(Equal("/networking/v1/external/egress_policies?SourceIDs=app-guid1,app-guid2&SourceTypes=app&DestinationIDs=app-dest&DestinationNames=dest-name-a,dest-name-b"))
 			Expect(passedReqData).To(BeEmpty())
 			Expect(passedToken).To(Equal("Bearer some-token"))
 		})
@@ -497,7 +520,7 @@ var _ = Describe("Client", func() {
 		It("returns an error when the json client do fails", func() {
 			jsonClient.DoStub = nil
 			jsonClient.DoReturns(errors.New("failed to do"))
-			_, err := client.ListEgressPolicies(token)
+			_, err := client.ListEgressPolicies(token, []string{}, []string{}, []string{}, []string{})
 			Expect(err).To(MatchError("list egress policies api call: failed to do"))
 		})
 	})

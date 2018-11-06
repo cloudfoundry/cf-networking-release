@@ -138,11 +138,7 @@ func (fake *TagStore) Invocations() map[string][][]interface{} {
 	defer fake.createTagMutex.RUnlock()
 	fake.tagsMutex.RLock()
 	defer fake.tagsMutex.RUnlock()
-	copiedInvocations := map[string][][]interface{}{}
-	for key, value := range fake.invocations {
-		copiedInvocations[key] = value
-	}
-	return copiedInvocations
+	return fake.invocations
 }
 
 func (fake *TagStore) recordInvocation(key string, args []interface{}) {

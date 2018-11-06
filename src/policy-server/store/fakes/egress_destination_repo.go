@@ -440,11 +440,7 @@ func (fake *EgressDestinationRepo) Invocations() map[string][][]interface{} {
 	defer fake.deleteMutex.RUnlock()
 	fake.getByNameMutex.RLock()
 	defer fake.getByNameMutex.RUnlock()
-	copiedInvocations := map[string][][]interface{}{}
-	for key, value := range fake.invocations {
-		copiedInvocations[key] = value
-	}
-	return copiedInvocations
+	return fake.invocations
 }
 
 func (fake *EgressDestinationRepo) recordInvocation(key string, args []interface{}) {

@@ -226,11 +226,7 @@ func (fake *PolicyStore) Invocations() map[string][][]interface{} {
 	defer fake.deleteMutex.RUnlock()
 	fake.byGuidsMutex.RLock()
 	defer fake.byGuidsMutex.RUnlock()
-	copiedInvocations := map[string][][]interface{}{}
-	for key, value := range fake.invocations {
-		copiedInvocations[key] = value
-	}
-	return copiedInvocations
+	return fake.invocations
 }
 
 func (fake *PolicyStore) recordInvocation(key string, args []interface{}) {

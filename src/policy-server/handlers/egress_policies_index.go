@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"policy-server/store"
 
 	"code.cloudfoundry.org/lager"
 )
@@ -14,7 +15,15 @@ type EgressPolicyIndex struct {
 }
 
 func (e *EgressPolicyIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	policies, err := e.Store.All()
+	queryParameters := req.URL.Query()
+	sourceIds := parseQueryParam(queryParameters, "SourceIDs")
+	sourceTypes := parseQueryParam(queryParameters, "SourceTypes")
+	destinationIds := parseQueryParam(queryParameters, "DestinationIDs")
+	destinationNames := parseQueryParam(queryParameters, "DestinationNames")
+
+	var policies []store.EgressPolicy
+	var err error
+	policies, err = e.Store.GetByFilter(sourceIds, sourceTypes, destinationIds, destinationNames)
 	if err != nil {
 		e.ErrorResponse.InternalServerError(e.Logger, w, err, "error listing egress policies")
 		return

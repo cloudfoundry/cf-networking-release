@@ -366,11 +366,7 @@ func (fake *CCClient) Invocations() map[string][][]interface{} {
 	defer fake.getSubjectSpaceMutex.RUnlock()
 	fake.getSubjectSpacesMutex.RLock()
 	defer fake.getSubjectSpacesMutex.RUnlock()
-	copiedInvocations := map[string][][]interface{}{}
-	for key, value := range fake.invocations {
-		copiedInvocations[key] = value
-	}
-	return copiedInvocations
+	return fake.invocations
 }
 
 func (fake *CCClient) recordInvocation(key string, args []interface{}) {
