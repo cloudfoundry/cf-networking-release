@@ -2,7 +2,7 @@
 name: policy-server
 
 dependencies:
-  - golang-1.10-linux
+  - golang-1.11-linux
 
 files:
   - code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor/*.go # gosub

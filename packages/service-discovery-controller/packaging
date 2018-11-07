@@ -1,7 +1,7 @@
 set -e -x
 
 pushd ${BOSH_INSTALL_TARGET} > /dev/null
-  source /var/vcap/packages/golang-1.10-linux/bosh/compile.env
+  source /var/vcap/packages/golang-1.11-linux/bosh/compile.env
 popd > /dev/null
 
 mkdir -p ${BOSH_INSTALL_TARGET}/src
