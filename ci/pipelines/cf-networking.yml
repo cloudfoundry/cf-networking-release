@@ -597,8 +597,6 @@ jobs:
           enable-service-discovery.yml
           enable-routing-integrity.yml
           disable-consul.yml
-          add-istio.yml
-          enable-sidecar-egress-proxying.yml
           add-cflinuxfs3.yml
           add-external-istio-lb.yml
           add-route-syncer.yml
@@ -606,6 +604,8 @@ jobs:
           opsfile.yml
           use-latest-silk.yml
           use-latest-capi.yml
+          add-istio.yml
+          enable-sidecar-egress-proxying.yml
           lower-canary-watch-time.yml
       input_mapping:
         bbl-state: cf-networking-deployments
@@ -764,8 +764,6 @@ jobs:
           cf-networking.yml
           use-system-domain-as-metron-deployment-name.yml
           enable-routing-integrity.yml
-          add-istio.yml
-          enable-sidecar-egress-proxying.yml
           add-route-syncer.yml
           use-latest-silk.yml
           use-latest-capi.yml
@@ -775,6 +773,8 @@ jobs:
           add-acceptance-test-jobs.yml
           add-cflinuxfs3.yml
           enable-experimental-dynamic-egress-policies.yml
+          add-istio.yml
+          enable-sidecar-egress-proxying.yml
           opsfile.yml
           lower-canary-watch-time.yml
       input_mapping:
@@ -1002,8 +1002,6 @@ jobs:
           custom-apps-domain.yml
           enable-routing-integrity.yml
           enable-iptables-logger.yml
-          add-istio.yml
-          enable-sidecar-egress-proxying.yml
           add-route-syncer.yml
           use-latest-silk.yml
           use-latest-capi.yml
@@ -1015,6 +1013,8 @@ jobs:
           enable-backup-restore.yml
           add-cflinuxfs3.yml
           enable-experimental-dynamic-egress-policies.yml
+          add-istio.yml
+          enable-sidecar-egress-proxying.yml
           opsfile.yml
           lower-canary-watch-time.yml
       input_mapping:
@@ -1502,8 +1502,6 @@ jobs:
           cf-networking.yml
           use-system-domain-as-metron-deployment-name.yml
           enable-routing-integrity.yml
-          add-istio.yml
-          enable-sidecar-egress-proxying.yml
           add-route-syncer.yml
           use-latest-silk.yml
           use-latest-capi.yml
@@ -1513,6 +1511,8 @@ jobs:
           add-apps-internal-search-domain.yml
           add-cflinuxfs3.yml
           enable-experimental-dynamic-egress-policies.yml
+          add-istio.yml
+          enable-sidecar-egress-proxying.yml
           opsfile.yml
           lower-canary-watch-time.yml
       input_mapping:
@@ -1784,8 +1784,6 @@ jobs:
           use-system-domain-as-metron-deployment-name.yml
           enable-routing-integrity.yml
           enable-iptables-logger.yml
-          add-istio.yml
-          enable-sidecar-egress-proxying.yml
           add-route-syncer.yml
           use-latest-silk.yml
           use-latest-capi.yml
@@ -1794,6 +1792,8 @@ jobs:
           add-apps-internal-search-domain.yml
           add-cflinuxfs3.yml
           enable-experimental-dynamic-egress-policies.yml
+          add-istio.yml
+          enable-sidecar-egress-proxying.yml
           opsfile.yml
           lower-canary-watch-time.yml
       input_mapping:
@@ -1951,8 +1951,6 @@ jobs:
           use-system-domain-as-metron-deployment-name.yml
           enable-routing-integrity.yml
           enable-iptables-logger.yml
-          add-istio.yml
-          enable-sidecar-egress-proxying.yml
           add-route-syncer.yml
           use-latest-silk.yml
           use-latest-capi.yml
@@ -1961,6 +1959,8 @@ jobs:
           add-apps-internal-search-domain.yml
           add-cflinuxfs3.yml
           enable-experimental-dynamic-egress-policies.yml
+          add-istio.yml
+          enable-sidecar-egress-proxying.yml
           opsfile.yml
           lower-canary-watch-time.yml
       input_mapping:
