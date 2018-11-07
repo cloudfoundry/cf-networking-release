@@ -202,7 +202,7 @@ var _ = Describe("Client", func() {
 			}))
 
 			Expect(passedToken).To(Equal("bearer some-token"))
-			Expect(passedRoute).To(Equal("/v3/spaces?guids=live-space-1-guid%2Clive-space-2-guid%2Cdead-space-1-guid&per_page=3"))
+			Expect(passedRoute).To(Equal("/v3/spaces?guids=live-space-1-guid%2Clive-space-2-guid%2Cdead-space-1-guid&per_page=4"))
 		})
 
 		Context("when the json client returns an error", func() {

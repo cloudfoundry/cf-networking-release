@@ -144,7 +144,7 @@ func (c *Client) GetLiveSpaceGUIDs(token string, spaceGUIDs []string) (map[strin
 
 	values := url.Values{}
 	values.Add("guids", strings.Join(spaceGUIDs, ","))
-	values.Add("per_page", strconv.Itoa(len(spaceGUIDs)))
+	values.Add("per_page", strconv.Itoa(len(spaceGUIDs)+1))
 
 	route := fmt.Sprintf("/v3/spaces?%s", values.Encode())
 	var response SpacesV3Response

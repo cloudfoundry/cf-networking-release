@@ -77,5 +77,59 @@ var _ = Describe("policy cleanup", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(allPolicies)).ShouldNot(ContainSubstring(appAGuid))
 		})
+
+		It("cleans up stale policies for deleted spaces", func() {
+			By("creating a destination")
+			testDestination := `{
+				"destinations": [
+					{
+						"name": %q,
+						"description": "Testing description",
+						"protocol": "tcp",
+						"ports": [ { "start": 80, "end": 80 } ],
+						"ips": [ { "start": "0.0.0.0", "end": "255.255.255.255" } ]
+					}
+				]
+			}`
+			destinationGuid := createDestination(cfCli, fmt.Sprintf(testDestination, fmt.Sprintf("egress-policies-%d", rand.Int31())))
+
+			By("creating an egress policy for a space")
+			testEgressPolicies := `{
+				"egress_policies": [ {
+						"source": { "id": %q, "type": %q },
+						"destination": { "id": %q }
+					} ]
+			}`
+			spaceGuid, err := cfCli.SpaceGuid(spaceName)
+			Expect(err).NotTo(HaveOccurred())
+			createEgressPolicy(cfCli, fmt.Sprintf(testEgressPolicies, spaceGuid, "space", destinationGuid))
+
+			By("checking that policy exists")
+			allPolicies, err := cfCli.Curl("GET", "/networking/v0/external/egress_policies", "")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(allPolicies)).Should(ContainSubstring(spaceGuid))
+
+			By("cleaning up stale policies")
+			stalePolicies, err := cfCli.Curl("POST", "/networking/v0/external/policies/cleanup", "")
+			Expect(string(stalePolicies)).ShouldNot(ContainSubstring(spaceGuid))
+
+			By("checking that policy was not deleted")
+			allPolicies, err = cfCli.Curl("GET", "/networking/v0/external/egress_policies", "")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(allPolicies)).Should(ContainSubstring(spaceGuid))
+
+			By("deleting space so policy becomes stale")
+			Expect(cf.Cf("delete-space", spaceName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
+
+			By("cleaning up stale policies")
+			stalePolicies, err = cfCli.Curl("POST", "/networking/v0/external/policies/cleanup", "")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(stalePolicies)).Should(ContainSubstring(spaceGuid))
+
+			By("checking that stale policy was deleted")
+			allPolicies, err = cfCli.Curl("GET", "/networking/v0/external/egress_policies", "")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(allPolicies)).ShouldNot(ContainSubstring(spaceGuid))
+		})
 	})
 })
