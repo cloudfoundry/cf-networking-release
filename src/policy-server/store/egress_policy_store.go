@@ -57,6 +57,15 @@ func (e *EgressPolicyStore) createWithTx(tx db.Transaction, policies []EgressPol
 		var sourceTerminalGUID string
 		var err error
 
+		matchingPolicy, err := e.GetByFilter([]string{policy.Source.ID}, []string{policy.Source.Type}, []string{policy.Destination.GUID}, []string{})
+		if err != nil {
+			return nil, fmt.Errorf("failed to filter existing policies: %s", err)
+		}
+		if len(matchingPolicy) > 0 {
+			createdPolicies = append(createdPolicies, matchingPolicy[0])
+			continue
+		}
+
 		switch policy.Source.Type {
 		case "space":
 			sourceTerminalGUID, err = e.EgressPolicyRepo.GetTerminalBySpaceGUID(tx, policy.Source.ID)

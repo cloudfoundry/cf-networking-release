@@ -113,6 +113,12 @@ var _ = Describe("EgressPolicyStore", func() {
 			Expect(destinationID).To(Equal("some-destination-guid-2"))
 		})
 
+		It("returns an error when get by filter fails", func() {
+			egressPolicyRepo.GetByFilterReturns(nil, errors.New("bark bark"))
+			_, err := egressPolicyStore.Create(egressPolicies)
+			Expect(err).To(MatchError("failed to filter existing policies: failed to get policies by filter: bark bark"))
+		})
+
 		It("returns an error when the database connection can't begin a transaction", func() {
 			mockDb.BeginxReturns(nil, errors.New("potato"))
 			_, err := egressPolicyStore.Create(egressPolicies)

@@ -134,6 +134,14 @@ var _ = Describe("External API Egress Policies", func() {
 			},
 		))
 
+		//check idempotent create
+		_, err = client.CreateEgressPolicy(somePolicy, token)
+		Expect(err).NotTo(HaveOccurred())
+		egressPolicyList, err = client.ListEgressPolicies(token, []string{}, []string{}, []string{}, []string{})
+		Expect(err).NotTo(HaveOccurred())
+		egressPolicies = egressPolicyList.EgressPolicies
+		Expect(egressPolicies).To(HaveLen(1))
+
 		someSecondPolicy := psclient.EgressPolicy{
 			Source: psclient.EgressPolicySource{
 				Type: "app",
