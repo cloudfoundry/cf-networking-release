@@ -26,8 +26,13 @@ On every Diego cell
   - Optionally [limit bandwidth](bandwidth-limiting.md) in and out of each container
 - Traffic within a diego cell travels in the overlay network. Traffic going to the internet or other diego cells travels in the underlay network.
 
-![](data_plane.png)
-![](data_plane_one_cell.png) ![](data_plane_asg.png)
+| Multi Diego Cell |
+:-------------------------:
+| ![](data_plane.png) |
+
+Single Diego Cell | ASG
+:-------------------------:|:-------------------------:
+![](data_plane_one_cell.png)  |  ![](data_plane_asg.png)
 
 ### Plugin layer cake
 Here is a summary of the network-related actions that occur when a new container is created.
