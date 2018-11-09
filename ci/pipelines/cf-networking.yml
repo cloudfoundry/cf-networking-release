@@ -1,10 +1,11 @@
 # Steps for making a branch pipeline
-# 1. Delete all slouch and toque items
+# 1. Delete all slouch, beanie, istio-cfn, caubeen and toque items
 # 2. Delete all pickelhelm items, we don't patch for postgres
 # 3. Delete all version and tarball items
 # 4. Delete ship it. We tag the 'release' manually.
 # 5. Switch cf-networking-dev and cf-networking-dev-ci to use the lts repo
-# 6. Pin resources:
+# 6. Branch disaster-recovery-acceptance-tests into cf-container-networking
+# 7. Pin resources:
   #  >  cf-networking-release-ci
   #  >  cf-networking-deployments
   #  >  cf-deployment-concourse-tasks
