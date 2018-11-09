@@ -11,6 +11,7 @@ inputs:
 
 params:
     SYSTEM_DOMAIN: ~
+    ENVIRONMENT_NAME: ~
 
 run:
   path: cf-networking-release-ci/ci/tasks/verify-api-ready
