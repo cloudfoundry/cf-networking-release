@@ -2124,6 +2124,7 @@ jobs:
       file: cf-networking-release-ci/ci/tasks/verify-api-ready.yml
       params:
         SYSTEM_DOMAIN: caubeen.c2c.cf-app.com
+        ENVIRONMENT_NAME: caubeen
     - task: upload-stemcell
       file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
       params:
