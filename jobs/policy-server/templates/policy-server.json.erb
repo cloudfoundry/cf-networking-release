@@ -44,11 +44,11 @@
     end
 
     def get_cc_url
-      cc_url = "http://#{p('cc_hostname')}:#{p('cc_port')}"
+      return "http://#{p('cc_hostname')}:#{p('cc_port')}" unless p('cc_hostname').nil? || p('cc_hostname').empty?
+
       if_link("cloud_controller_https_endpoint") do |link|
-        cc_url = "https://#{link.p('cc.internal_service_hostname')}:#{link.p('cc.public_tls.port')}"
+        return "https://#{link.p('cc.internal_service_hostname')}:#{link.p('cc.public_tls.port')}"
       end
-      cc_url
     end
 
 %>

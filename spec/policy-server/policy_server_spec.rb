@@ -104,7 +104,7 @@ module Bosh::Template::Test
         })
       end
 
-      context 'when cloud_controller_https_endpoint is provided' do
+      context 'when property values are not provided' do
         let(:cc_hostname) {''}
         let(:cc_port) {0}
         let(:links) do
@@ -124,10 +124,46 @@ module Bosh::Template::Test
           ]
         end
 
-        it 'renders those values into the config' do
+        it 'uses the values from the cloud controller link' do
           policyServerJSON = JSON.parse(template.render(merged_manifest_properties, consumes: links))
 
           expect(policyServerJSON['cc_url']).to eq 'https://cc.service.internal:443'
+          expect(policyServerJSON['cc_ca_cert']).to eq '/var/vcap/jobs/policy-server/config/certs/cc_ca.crt'
+        end
+
+        describe 'cc_ca.crt' do
+          let(:template) {job.template('config/certs/cc_ca.crt')}
+          it 'writes the content of cc ca cert' do
+            cc_ca_cert = template.render(merged_manifest_properties, consumes: links)
+            expect(cc_ca_cert.strip).to eq('the-cc-ca-cert')
+          end
+        end
+      end
+
+      context 'when property values are provided' do
+        let(:cc_hostname) {'use.me.pls'}
+        let(:cc_port) {1234}
+        let(:links) do
+          [
+            Link.new(
+              name: 'cloud_controller_https_endpoint',
+              properties: {
+                'cc' => {
+                  'internal_service_hostname' => 'cc.service.internal',
+                  'public_tls' => {
+                    'port' => '443',
+                    'ca_cert' => 'the-cc-ca-cert'
+                  }
+                }
+              }
+            )
+          ]
+        end
+
+        it 'uses the property values' do
+          policyServerJSON = JSON.parse(template.render(merged_manifest_properties, consumes: links))
+
+          expect(policyServerJSON['cc_url']).to eq 'http://use.me.pls:1234'
           expect(policyServerJSON['cc_ca_cert']).to eq '/var/vcap/jobs/policy-server/config/certs/cc_ca.crt'
         end
 
