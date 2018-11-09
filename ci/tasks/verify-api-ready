@@ -4,13 +4,10 @@ set -eu
 
 ROOT="$(cd "$(dirname $0)/../../.." && pwd)"
 
-pushd "${ROOT}/test-config/environments/${ENVIRONMENT_NAME}" > /dev/null
-  ADMIN_PASSWORD="$(grep '^cf_admin_password:' ${ROOT}/variables/variables.yml | cut -d" " -f2)"
-  sed -i -- "s/{{admin-password}}/${ADMIN_PASSWORD}/g" test-config.json
-popd > /dev/null
+ADMIN_PASSWORD="$(grep '^cf_admin_password:' ${ROOT}/variables/variables.yml | cut -d" " -f2)"
 
 # try 10 times dumbly
-for i in {0...9}
+for i in `seq 0 9`
 do
   echo "try #$i"
   cf api "api.${SYSTEM_DOMAIN}" --skip-ssl-validation
