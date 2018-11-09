@@ -2112,6 +2112,18 @@ jobs:
       - get: cf-deployment
       - get: cf-networking-dev
       - get: silk-dev
+    - task: get-credhub-vars
+      file: cf-networking-release-ci/ci/tasks/get-credhub-vars.yml
+      input_mapping:
+        bbl-state: cf-networking-deployments
+      params:
+        BBL_STATE_DIR: environments/caubeen
+        VARIABLES: |
+          /bosh-caubeen/cf/cf_admin_password
+    - task: verify-api-ready
+      file: cf-networking-release-ci/ci/tasks/verify-api-ready.yml
+      params:
+        SYSTEM_DOMAIN: caubeen.c2c.cf-app.com
     - task: upload-stemcell
       file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
       params:
