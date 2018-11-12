@@ -70,7 +70,7 @@ function report_timing_to_datadog() {
 
 function report_status_to_datadog() {
     status=0
-    if [[ ${time_to_resolve} -le 10000 ]]; then
+    if [[ ${time_to_resolve} -le 5000 ]]; then
       status=1
     fi
 

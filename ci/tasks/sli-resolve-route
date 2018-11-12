@@ -13,7 +13,7 @@ function main() {
 
     printf "Time to resolve route: ${time_to_resolve}\n"
     report_timing_to_datadog "${time_to_resolve}"
-    report_status_to_datadog "${time_to_resolve}" "50"
+    report_status_to_datadog "${time_to_resolve}" "15"
     report_status_to_datadog "${time_to_resolve}" "200"
 }
 
