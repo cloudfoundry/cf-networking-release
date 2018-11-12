@@ -36,6 +36,9 @@ func (c CORSOptionsWrapper) Wrap(handler http.Handler) http.Handler {
 		if ok, allowedOrigin := c.allowedOrigin(req.Header["Origin"]); ok {
 			w.Header().Set("Access-Control-Allow-Origin", allowedOrigin)
 		}
+
+		w.Header().Set("X-Frame-Options", "deny")
+		w.Header().Set("Content-Security-Policy", "frame-ancestors 'none'")
 		handler.ServeHTTP(w, req)
 	})
 }

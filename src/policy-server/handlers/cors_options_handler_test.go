@@ -108,7 +108,7 @@ var _ = Describe("CORS Option Handler", func() {
 		})
 
 		Context("when request method is OPTIONS", func() {
-			It("adds Access-Control-Allow-Methods to header", func() {
+			It("adds security related headers", func() {
 				resp := httptest.NewRecorder()
 				request, _ := http.NewRequest("OPTIONS", "/networking/v1/external/policies", nil)
 				request.Header.Add("origin", "https://foo.bar")
@@ -118,6 +118,9 @@ var _ = Describe("CORS Option Handler", func() {
 				Expect(resp.Header()["Access-Control-Allow-Methods"]).To(ContainElement("GET,POST"))
 				Expect(resp.Header()["Access-Control-Allow-Headers"]).To(ContainElement("authorization"))
 				Expect(resp.Header()["Access-Control-Allow-Origin"]).To(Equal([]string{"https://foo.bar"}))
+
+				Expect(resp.Header()["X-Frame-Options"]).To(Equal([]string{"deny"}))
+				Expect(resp.Header()["Content-Security-Policy"]).To(Equal([]string{"frame-ancestors 'none'"}))
 			})
 		})
 	})

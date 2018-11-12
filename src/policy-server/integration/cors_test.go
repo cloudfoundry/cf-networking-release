@@ -61,6 +61,8 @@ var _ = Describe("Cross Origin Resource Sharing", func() {
 			Expect(resp.Header["Access-Control-Allow-Origin"]).To(ContainElement("https://www.google.com"))
 			Expect(resp.Header["Access-Control-Allow-Methods"]).To(ContainElement("POST,GET,OPTIONS"))
 			Expect(resp.Header["Access-Control-Allow-Headers"]).To(ContainElement("authorization"))
+			Expect(resp.Header["X-Frame-Options"]).To(ContainElement("deny"))
+			Expect(resp.Header["Content-Security-Policy"]).To(ContainElement("frame-ancestors 'none'"))
 		})
 	})
 
@@ -76,6 +78,8 @@ var _ = Describe("Cross Origin Resource Sharing", func() {
 			)
 
 			Expect(resp.Header["Access-Control-Allow-Origin"]).To(ContainElement("https://www.mozilla.org"))
+			Expect(resp.Header["X-Frame-Options"]).To(ContainElement("deny"))
+			Expect(resp.Header["Content-Security-Policy"]).To(ContainElement("frame-ancestors 'none'"))
 		})
 	})
 })
