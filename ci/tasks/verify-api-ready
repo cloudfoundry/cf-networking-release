@@ -9,6 +9,7 @@ ADMIN_PASSWORD="$(grep '^cf_admin_password:' ${ROOT}/variables/variables.yml | c
 # try 10 times dumbly
 for i in `seq 0 9`
 do
+  sleep 10
   echo "try #$i"
   cf api "api.${SYSTEM_DOMAIN}" --skip-ssl-validation
   cf auth admin "${ADMIN_PASSWORD}"
