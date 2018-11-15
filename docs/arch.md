@@ -24,7 +24,8 @@ On every Diego cell
   - Updates IPTables rules on Diego cell to allow whitelisted ingress traffic
   - Egress traffic is tagged with a unique identifier per source application, using the [VXLAN GBP header](https://tools.ietf.org/html/draft-smith-vxlan-group-policy-02#section-2.1)
   - Optionally [limit bandwidth](bandwidth-limiting.md) in and out of each container
-- Traffic within a diego cell travels in the overlay network. Traffic going to the internet or other diego cells travels in the underlay network.
+- Traffic destined for container IPs travels in the overlay network. This traffic is subject to container to container network policies.
+- Traffic destined for the Internet or any other non container IPs travels in the underlay network. This traffic is subject to application security groups and dynamic egress network policies.
 
 | Multi Diego Cell |
 :-------------------------:
