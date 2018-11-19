@@ -1587,8 +1587,10 @@ jobs:
           enable-routing-integrity.yml
           enable-iptables-logger.yml
           enable-service-discovery.yml
+          enable-backup-restore.yml
           add-apps-internal-search-domain.yml
           opsfile.yml
+          lower-canary-watch-time.yml
         VARS_FILES: |
           environments/caubeen/external-db-vars.yml
           environments/caubeen/gcs-vars.yml
@@ -1661,12 +1663,13 @@ jobs:
           use-system-domain-as-metron-deployment-name.yml
           enable-routing-integrity.yml
           enable-iptables-logger.yml
-          use-latest-silk.yml
           enable-service-discovery.yml
+          enable-backup-restore.yml
           add-apps-internal-search-domain.yml
-          enable-experimental-dynamic-egress-policies.yml
           opsfile.yml
           lower-canary-watch-time.yml
+          use-latest-silk.yml
+          enable-experimental-dynamic-egress-policies.yml
         VARS_FILES: |
           environments/caubeen/external-db-vars.yml
           environments/caubeen/gcs-vars.yml
