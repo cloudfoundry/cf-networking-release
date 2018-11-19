@@ -20,4 +20,4 @@ params:
   GIT_COMMIT_USERNAME:
 
 run:
-  path: cf-networking-release-ci/tasks/add-parent-dns
+  path: cf-networking-release-ci/ci/tasks/add-parent-dns

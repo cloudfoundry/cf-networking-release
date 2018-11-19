@@ -8,7 +8,7 @@ git clone "${indir}" "${outdir}"
 dest_dir="${outdir}/${ENVIRONMENT}/bbl-state/terraform/"
 mkdir -p "${dest_dir}"
 
-cp "${PWD}/cf-networking-release-ci/tasks/bbl-full-parent-dns_override.tf" "${dest_dir}"
+cp "${PWD}/cf-networking-release-ci/ci/tasks/bbl-full-parent-dns_override.tf" "${dest_dir}"
 
 function set_git_config() {
   if [ -z "${GIT_COMMIT_USERNAME}" ]; then
