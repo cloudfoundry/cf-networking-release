@@ -5,7 +5,7 @@ indir=./bbl-state
 outdir=./updated-bbl-state
 git clone "${indir}" "${outdir}"
 
-dest_dir="${outdir}/environments/${ENVIRONMENT}/bbl-state/terraform/"
+dest_dir="${outdir}/environments/${ENVIRONMENT}/terraform/"
 mkdir -p "${dest_dir}"
 
 cp "${PWD}/cf-networking-release-ci/ci/tasks/bbl-full-parent-dns_override.tf" "${dest_dir}"
@@ -32,7 +32,7 @@ function commit_dns_tf {
   pushd "${root_dir}/${outdir}/environments/${ENVIRONMENT}"
     if [[ -n $(git status --porcelain) ]]; then
     set_git_config
-    git add bbl-state/terraform
+    git add terraform
     git commit -m "${commit_message}"
   fi
 }
