@@ -13,7 +13,8 @@
   #  >  silk-dev
   #  >  cf-networking-dev
   #  >  cf-acceptance-tests
-# 7. Don't deploy with the following opsfiles
+# 8. Remove capi-ci-passed
+# 9. Don't deploy with the following opsfiles
   #  >  custom-apps-domain.yml
   #  >  enable-iptables-logger.yml
   #  >  use-latest-capi.yml
