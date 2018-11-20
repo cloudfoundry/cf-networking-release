@@ -233,6 +233,11 @@ resources:
     source:
       branch: master
       uri: https://github.com/cloudfoundry/istio-release
+  - name: bosh-bootloader
+    type: git
+    source:
+      branch: master
+      uri: https://github.com/cloudfoundry/bosh-bootloader.git
   ####### Stats
   - name: toque-stats
     type: git
@@ -468,6 +473,14 @@ jobs:
       - get: cf-deployment-concourse-tasks
         trigger: true
       - get: cf-networking-deployments
+      - get: cf-networking-release-ci
+      - get: bosh-bootloader
+    - task: add-parent-dns
+      file: cf-networking-release-ci/ci/tasks/add-parent-dns.yml
+      params:
+        ENVIRONMENT: pickelhelm
+      input_mapping:
+        bbl-state: cf-networking-deployments
     - task: bbl-up
       file: cf-deployment-concourse-tasks/bbl-up/task.yml
       params:
@@ -480,9 +493,8 @@ jobs:
         LB_DOMAIN: pickelhelm.c2c.cf-app.com
         BBL_ENV_NAME: pickelhelm
       input_mapping:
-        bbl-state: cf-networking-deployments
-        bbl-config: cf-networking-deployments
-        ops-files: cf-networking-deployments
+        bbl-state: updated-bbl-state
+        bbl-config: updated-bbl-state
       ensure:
         put: cf-networking-deployments
         params:
@@ -699,6 +711,14 @@ jobs:
       - get: cf-deployment-concourse-tasks
         trigger: true
       - get: cf-networking-deployments
+      - get: cf-networking-release-ci
+      - get: bosh-bootloader
+    - task: add-parent-dns
+      file: cf-networking-release-ci/ci/tasks/add-parent-dns.yml
+      params:
+        ENVIRONMENT: mitre
+      input_mapping:
+        bbl-state: cf-networking-deployments
     - task: bbl-up
       file: cf-deployment-concourse-tasks/bbl-up/task.yml
       params:
@@ -711,9 +731,8 @@ jobs:
         LB_DOMAIN: mitre.c2c.cf-app.com
         BBL_ENV_NAME: mitre
       input_mapping:
-        bbl-state: cf-networking-deployments
-        bbl-config: cf-networking-deployments
-        ops-files: cf-networking-deployments
+        bbl-state: updated-bbl-state
+        bbl-config: updated-bbl-state
       ensure:
         put: cf-networking-deployments
         params:
@@ -1165,6 +1184,14 @@ jobs:
       - get: cf-deployment-concourse-tasks
         trigger: true
       - get: cf-networking-deployments
+      - get: cf-networking-release-ci
+      - get: bosh-bootloader
+    - task: add-parent-dns
+      file: cf-networking-release-ci/ci/tasks/add-parent-dns.yml
+      params:
+        ENVIRONMENT: toque
+      input_mapping:
+        bbl-state: cf-networking-deployments
     - task: bbl-up
       file: cf-deployment-concourse-tasks/bbl-up/task.yml
       params:
@@ -1177,9 +1204,8 @@ jobs:
         LB_DOMAIN: toque.c2c.cf-app.com
         BBL_ENV_NAME: toque
       input_mapping:
-        bbl-state: cf-networking-deployments
-        bbl-config: cf-networking-deployments
-        ops-files: cf-networking-deployments
+        bbl-state: updated-bbl-state
+        bbl-config: updated-bbl-state
       ensure:
         put: cf-networking-deployments
         params:
@@ -1439,6 +1465,14 @@ jobs:
     - aggregate:
       - get: cf-deployment-concourse-tasks
       - get: cf-networking-deployments
+      - get: cf-networking-release-ci
+      - get: bosh-bootloader
+    - task: add-parent-dns
+      file: cf-networking-release-ci/ci/tasks/add-parent-dns.yml
+      params:
+        ENVIRONMENT: caubeen
+      input_mapping:
+        bbl-state: cf-networking-deployments
     - task: bbl-up
       file: cf-deployment-concourse-tasks/bbl-up/task.yml
       params:
@@ -1451,9 +1485,8 @@ jobs:
         LB_DOMAIN: caubeen.c2c.cf-app.com
         BBL_ENV_NAME: caubeen
       input_mapping:
-        bbl-state: cf-networking-deployments
-        bbl-config: cf-networking-deployments
-        ops-files: cf-networking-deployments
+        bbl-state: updated-bbl-state
+        bbl-config: updated-bbl-state
       ensure:
         put: cf-networking-deployments
         params:
