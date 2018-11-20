@@ -257,8 +257,8 @@ resources:
     type: time
     source:
       location: America/Los_Angeles
-      start: 2:00 PM
-      stop: 2:15 PM
+      start: 8:00 PM
+      stop: 8:15 PM
       days: [ Monday, Tuesday, Wednesday, Thursday, Friday ]
   - name: trigger-caubeen-cleanup
     type: time
