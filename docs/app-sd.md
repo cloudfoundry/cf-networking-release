@@ -52,7 +52,11 @@ Creating your own internal domain requires [enable-service-discovery opsfile](ht
 
 NOTE: The internal domain property in bosh-dns-adapter supports domains with and without the trailing dot.
 
-2. Add the custom internal domain to the `apps_domains` property on `cloud_controller_ng` job.
+2. Run the following command after deployment:
+```
+cf create-shared-domain <DOMAIN> --internal
+```
+Or, add the custom internal domain to the `apps_domains` property on `cloud_controller_ng` job.
 ```
 - type: replace
   path: /instance_groups/name=api/jobs/name=cloud_controller_ng/properties/app_domains/-
@@ -64,6 +68,7 @@ NOTE: The internal domain property in bosh-dns-adapter supports domains with and
 NOTE: The internal domain property in cloud_controller_ng does not accept domains with a trailing dot.
 
 3. Deploy.
+
 
 To delete a shared domain, run one of the following commands:
 ```
