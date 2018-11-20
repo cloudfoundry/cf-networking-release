@@ -1563,7 +1563,6 @@ jobs:
           enable-routing-integrity.yml
           enable-iptables-logger.yml
           enable-service-discovery.yml
-          enable-backup-restore.yml
           add-apps-internal-search-domain.yml
           opsfile.yml
           lower-canary-watch-time.yml
