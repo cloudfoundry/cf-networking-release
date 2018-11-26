@@ -1,0 +1,24 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: relintdockerhubpushbot/cf-deployment-concourse-tasks
+
+inputs:
+- name: bbl-state
+- name: cf-networking-release-ci
+- name: bosh-bootloader
+- name: istio-release
+
+outputs:
+- name: updated-bbl-state
+
+params:
+  ENVIRONMENT: ~
+  GIT_COMMIT_EMAIL:
+  GIT_COMMIT_USERNAME:
+
+run:
+  path: cf-networking-release-ci/ci/tasks/setup-bbl
