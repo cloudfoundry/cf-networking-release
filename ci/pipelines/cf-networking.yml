@@ -610,7 +610,7 @@ jobs:
           add-cflinuxfs3.yml
           enable-experimental-dynamic-egress-policies.yml
           add-istio.yml
-          enable-sidecar-egress-proxying.yml
+          enable-sidecar-proxying.yml
           opsfile.yml
           lower-canary-watch-time.yml
       input_mapping:
@@ -857,7 +857,7 @@ jobs:
           add-cflinuxfs3.yml
           enable-experimental-dynamic-egress-policies.yml
           add-istio.yml
-          enable-sidecar-egress-proxying.yml
+          enable-sidecar-proxying.yml
           opsfile.yml
           lower-canary-watch-time.yml
       input_mapping:
@@ -1316,7 +1316,7 @@ jobs:
           add-cflinuxfs3.yml
           enable-experimental-dynamic-egress-policies.yml
           add-istio.yml
-          enable-sidecar-egress-proxying.yml
+          enable-sidecar-proxying.yml
           opsfile.yml
           lower-canary-watch-time.yml
       input_mapping:
