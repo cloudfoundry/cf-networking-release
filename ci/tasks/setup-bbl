@@ -37,6 +37,6 @@ function commit {
 }
 
 cp "${PWD}/cf-networking-release-ci/ci/tasks/bbl-full-parent-dns_override.tf" "${dest_dir}/terraform"
-cp -R "${PWD}/istio-release/deploy/bbl-config/*" "${dest_dir}"
+cp -R ${PWD}/istio-release/deploy/bbl-config/* "${dest_dir}"
 
 commit "${PWD}" "Adding bbl configurations"
