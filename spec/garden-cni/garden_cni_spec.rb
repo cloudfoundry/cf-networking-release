@@ -20,7 +20,8 @@ module Bosh::Template::Test
             'nat_port_range_start' => 1111,
             'nat_port_range_size' => 5555,
             'search_domains' => ['meow', 'woof', 'neopets'],
-            'experimental_proxy_redirect_cidr' => 'some-proxy-cidr'
+            'experimental_proxy_redirect_cidr' => 'some-proxy-cidr',
+            'experimental_enable_ingress_proxy_redirect' => true
           }
         end
 
@@ -39,6 +40,7 @@ module Bosh::Template::Test
             'proxy_redirect_cidr' => 'some-proxy-cidr',
             'proxy_port' => 15001,
             'proxy_uid' => 0,
+            'enable_ingress_proxy_redirect' => true,
           })
         end
       end
@@ -61,6 +63,7 @@ module Bosh::Template::Test
             'proxy_redirect_cidr' => '',
             'proxy_port' => 15001,
             'proxy_uid' => 0,
+            'enable_ingress_proxy_redirect' => false,
           })
         end
       end

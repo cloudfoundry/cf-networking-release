@@ -161,7 +161,6 @@ var _ = Describe("Garden External Networker", func() {
 		Expect(err).NotTo(HaveOccurred())
 		fakeConfigFilePath = configFile.Name()
 		proxyRedirectCIDR = "10.255.0.0/16"
-
 		cniPluginDir, err = ioutil.TempDir("", "cni-plugin-")
 		Expect(err).NotTo(HaveOccurred())
 
@@ -282,6 +281,21 @@ var _ = Describe("Garden External Networker", func() {
 			runAndWait(upCommand)
 
 			Expect(containerIPTablesRules(containerNSShortName, "nat")).To(ContainElement("-A OUTPUT -d 10.255.0.0/16 -p tcp -j REDIRECT --to-ports 9999"))
+		})
+	})
+
+	Context("when the enable_ingress_proxy_redirect is true", func() {
+		BeforeEach(func() {
+			config["enable_ingress_proxy_redirect"] = true
+			configBytes, err := json.Marshal(config)
+			Expect(err).NotTo(HaveOccurred())
+			err = ioutil.WriteFile(fakeConfigFilePath, configBytes, 0644)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("should setup proxy iptable rules inside the container network namespace", func() {
+			runAndWait(upCommand)
+			Expect(containerIPTablesRules(containerNSShortName, "nat")).To(ContainElement("-A PREROUTING -p tcp -j REDIRECT --to-ports 9999"))
 		})
 	})
 

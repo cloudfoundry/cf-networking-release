@@ -32,3 +32,7 @@ properties:
   experimental_proxy_redirect_cidr:
     description: "CIDR range to transparently redirect to a proxy process in the container namespace.  If empty (default), will not redirect any traffic."
     default: ""
+
+  experimental_enable_ingress_proxy_redirect:
+    description: "Redirect ingress traffic for a container to a proxy sidecar. If false (default), will go directly to the application."
+    default: false

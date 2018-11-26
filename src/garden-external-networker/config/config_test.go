@@ -36,6 +36,7 @@ var _ = Describe("Config", func() {
 					"log_prefix": "prefix",
 					"iptables_lock_file": "some-lock-file",
 					"proxy_redirect_cidr": "some-cidr",
+					"enable_ingress_proxy_redirect": true,
 					"proxy_port": 1111,
 					"proxy_uid": 1,
 					"search_domains": [
@@ -56,6 +57,7 @@ var _ = Describe("Config", func() {
 				Expect(c.SearchDomains).Should(ConsistOf("pivotal.io", "foo.bar", "baz.me"))
 				Expect(c.IPTablesLockFile).To(Equal("some-lock-file"))
 				Expect(c.ProxyRedirectCIDR).To(Equal("some-cidr"))
+				Expect(c.EnableIngressProxyRedirect).To(BeTrue())
 				Expect(c.ProxyPort).To(Equal(1111))
 				Expect(*c.ProxyUID).To(Equal(1))
 			})

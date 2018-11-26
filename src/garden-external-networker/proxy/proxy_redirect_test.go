@@ -47,11 +47,12 @@ var _ = Describe("Redirect", func() {
 		proxyUID = 1
 
 		proxyRedirect = &proxy.Redirect{
-			IPTables:         iptablesAdapter,
-			NamespaceAdapter: namespaceAdapter,
-			RedirectCIDR:     redirectCIDR,
-			ProxyPort:        proxyPort,
-			ProxyUID:         proxyUID,
+			IPTables:                   iptablesAdapter,
+			NamespaceAdapter:           namespaceAdapter,
+			RedirectCIDR:               redirectCIDR,
+			ProxyPort:                  proxyPort,
+			ProxyUID:                   proxyUID,
+			EnableIngressProxyRedirect: true,
 		}
 	})
 
@@ -65,13 +66,23 @@ var _ = Describe("Redirect", func() {
 
 			Expect(netNS.DoCallCount()).To(Equal(1))
 
-			Expect(iptablesAdapter.BulkAppendCallCount()).To(Equal(1))
+			Expect(iptablesAdapter.BulkAppendCallCount()).To(Equal(2))
 			table, name, iptablesRules := iptablesAdapter.BulkAppendArgsForCall(0)
 			Expect(table).To(Equal("nat"))
 			Expect(name).To(Equal("OUTPUT"))
 			Expect(iptablesRules).To(Equal([]rules.IPTablesRule{
 				{
 					"-d", redirectCIDR,
+					"-p", "tcp",
+					"-j", "REDIRECT", "--to-port", string(strconv.Itoa(proxyPort)),
+				},
+			}))
+
+			table, name, iptablesRules = iptablesAdapter.BulkAppendArgsForCall(1)
+			Expect(table).To(Equal("nat"))
+			Expect(name).To(Equal("PREROUTING"))
+			Expect(iptablesRules).To(Equal([]rules.IPTablesRule{
+				{
 					"-p", "tcp",
 					"-j", "REDIRECT", "--to-port", string(strconv.Itoa(proxyPort)),
 				},
@@ -94,9 +105,39 @@ var _ = Describe("Redirect", func() {
 				proxyRedirect.RedirectCIDR = ""
 			})
 
-			It("no-ops", func() {
+			It("doesn't write the redirect cidr rule", func() {
 				Expect(proxyRedirect.Apply(containerNetNamespace)).To(Succeed())
-				Expect(netNS.DoCallCount()).To(Equal(0))
+				Expect(netNS.DoCallCount()).To(Equal(1))
+				table, name, iptablesRules := iptablesAdapter.BulkAppendArgsForCall(0)
+				Expect(table).To(Equal("nat"))
+				Expect(name).To(Equal("PREROUTING"))
+				Expect(iptablesRules).To(Equal([]rules.IPTablesRule{
+					{
+						"-p", "tcp",
+						"-j", "REDIRECT", "--to-port", string(strconv.Itoa(proxyPort)),
+					},
+				}))
+			})
+		})
+
+		Context("when enable ingress proxy redirect is set to false", func() {
+			BeforeEach(func() {
+				proxyRedirect.EnableIngressProxyRedirect = false
+			})
+
+			It("does not write the ingress proxy redirect rule", func() {
+				Expect(proxyRedirect.Apply(containerNetNamespace)).To(Succeed())
+				Expect(netNS.DoCallCount()).To(Equal(1))
+				table, name, iptablesRules := iptablesAdapter.BulkAppendArgsForCall(0)
+				Expect(table).To(Equal("nat"))
+				Expect(name).To(Equal("OUTPUT"))
+				Expect(iptablesRules).To(Equal([]rules.IPTablesRule{
+					{
+						"-d", redirectCIDR,
+						"-p", "tcp",
+						"-j", "REDIRECT", "--to-port", string(strconv.Itoa(proxyPort)),
+					},
+				}))
 			})
 		})
 	})

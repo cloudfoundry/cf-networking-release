@@ -13,25 +13,39 @@ type namespaceAdapter interface {
 }
 
 type Redirect struct {
-	IPTables         rules.IPTablesAdapter
-	NamespaceAdapter namespaceAdapter
-	RedirectCIDR     string
-	ProxyPort        int
-	ProxyUID         int
+	IPTables                   rules.IPTablesAdapter
+	NamespaceAdapter           namespaceAdapter
+	RedirectCIDR               string
+	ProxyPort                  int
+	ProxyUID                   int
+	EnableIngressProxyRedirect bool
 }
 
 func (r *Redirect) Apply(containerNetNamespace string) error {
-	if r.RedirectCIDR == "" {
-		return nil
-	}
-
 	netNS, err := r.NamespaceAdapter.GetNS(containerNetNamespace)
 	err = netNS.Do(func(_ ns.NetNS) error {
-		return r.IPTables.BulkAppend("nat", "OUTPUT", rules.IPTablesRule{
-			"-d", r.RedirectCIDR,
-			"-p", "tcp",
-			"-j", "REDIRECT", "--to-port", fmt.Sprintf("%d", r.ProxyPort),
-		})
+		if r.RedirectCIDR != "" {
+			err := r.IPTables.BulkAppend("nat", "OUTPUT", rules.IPTablesRule{
+				"-d", r.RedirectCIDR,
+				"-p", "tcp",
+				"-j", "REDIRECT", "--to-port", fmt.Sprintf("%d", r.ProxyPort),
+			})
+			if err != nil {
+				return err
+			}
+		}
+
+		if r.EnableIngressProxyRedirect {
+			err := r.IPTables.BulkAppend("nat", "PREROUTING", rules.IPTablesRule{
+				"-p", "tcp",
+				"-j", "REDIRECT", "--to-port", fmt.Sprintf("%d", r.ProxyPort),
+			})
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
 	})
 	if err != nil {
 		return fmt.Errorf("do in container: %s", err)

@@ -136,11 +136,12 @@ func mainWithError(logger io.Writer) error {
 	namespaceAdapter := &adapter.NamespaceAdapter{}
 
 	proxyRedirect := &proxy.Redirect{
-		IPTables:         lockedIPTables,
-		NamespaceAdapter: namespaceAdapter,
-		RedirectCIDR:     cfg.ProxyRedirectCIDR,
-		ProxyPort:        cfg.ProxyPort,
-		ProxyUID:         *cfg.ProxyUID,
+		IPTables:                   lockedIPTables,
+		NamespaceAdapter:           namespaceAdapter,
+		RedirectCIDR:               cfg.ProxyRedirectCIDR,
+		EnableIngressProxyRedirect: cfg.EnableIngressProxyRedirect,
+		ProxyPort:                  cfg.ProxyPort,
+		ProxyUID:                   *cfg.ProxyUID,
 	}
 
 	manager := &manager.Manager{
