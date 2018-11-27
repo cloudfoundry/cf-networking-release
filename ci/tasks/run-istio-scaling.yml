@@ -17,4 +17,4 @@ params:
   CLEANUP_ORG:
 
 run:
-  path: cf-networking-release-ci/tasks/run-istio-scaling
+  path: cf-networking-release-ci/ci/tasks/run-istio-scaling
