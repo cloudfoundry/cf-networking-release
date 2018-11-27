@@ -48,6 +48,25 @@ var _ = Describe("Egress PolicyValidator", func() {
 				Destination: &api.EgressDestination{
 					GUID: "existing-guid",
 				},
+				AppLifecycle: stringPtr("running"),
+			},
+			{
+				Source: &api.EgressSource{
+					ID: "source-app-id",
+				},
+				Destination: &api.EgressDestination{
+					GUID: "existing-guid",
+				},
+				AppLifecycle: stringPtr("staging"),
+			},
+			{
+				Source: &api.EgressSource{
+					ID: "source-app-id",
+				},
+				Destination: &api.EgressDestination{
+					GUID: "existing-guid",
+				},
+				AppLifecycle: stringPtr("all"),
 			},
 		}
 
@@ -55,6 +74,14 @@ var _ = Describe("Egress PolicyValidator", func() {
 	})
 
 	Describe("ValidateEgressPolicies", func() {
+		Context("AppLifecycle", func(){
+			It("returns an error when app_lifecycle is invalid", func(){
+				egressPolicies[0].AppLifecycle = stringPtr("meow")
+				err := validator.ValidateEgressPolicies(egressPolicies)
+				Expect(err).To(MatchError(ContainSubstring("app lifecycle must be 'running', 'staging', or 'all'")))
+			})
+		})
+
 		It("should not return an error when given a valid egress policy", func() {
 			Expect(validator.ValidateEgressPolicies(egressPolicies)).To(Succeed())
 		})
@@ -277,3 +304,7 @@ var _ = Describe("Egress PolicyValidator", func() {
 		})
 	})
 })
+
+func stringPtr(x string) *string {
+	return &x
+}

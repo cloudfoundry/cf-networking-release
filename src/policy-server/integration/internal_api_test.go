@@ -146,8 +146,8 @@ var _ = Describe("Internal API", func() {
 			{"source": { "id": "app3", "tag": "0003" }, "destination": { "id": "app2", "tag": "0002", "protocol": "tcp", "ports": { "start": 3333, "end": 4444 } } }],
 		"total_egress_policies": 2,
 		"egress_policies": [
-			{ "source": { "id": "live-app-1-guid", "type": "app" }, "destination": { "id": "<replaced>", "name": "dest-1", "description": "dest-1-desc", "ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}], "ports": [{"start": 8080, "end": 8081}], "protocol": "tcp" } },
-			{ "source": { "id": "live-space-1-guid", "type": "space" }, "destination": { "id": "<replaced>", "name": "dest-2", "description": "dest-2-desc", "ips": [{"start": "10.27.1.3", "end": "10.27.1.3"}], "ports": [{"start": 8080, "end": 8081}], "protocol": "tcp" } }
+			{ "source": { "id": "live-app-1-guid", "type": "app" }, "destination": { "id": "<replaced>", "name": "dest-1", "description": "dest-1-desc", "ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}], "ports": [{"start": 8080, "end": 8081}], "protocol": "tcp" }, "app_lifecycle": "all" },
+			{ "source": { "id": "live-space-1-guid", "type": "space" }, "destination": { "id": "<replaced>", "name": "dest-2", "description": "dest-2-desc", "ips": [{"start": "10.27.1.3", "end": "10.27.1.3"}], "ports": [{"start": 8080, "end": 8081}], "protocol": "tcp" }, "app_lifecycle": "all" }
 		]
 	}`
 

@@ -53,6 +53,12 @@ func (v *EgressValidator) ValidateEgressPolicies(policies []EgressPolicy) error 
 		if policy.Destination.GUID == "" {
 			return policyMetadataError("missing egress destination id", policy)
 		}
+		if policy.AppLifecycle != nil &&
+			*policy.AppLifecycle != "running" &&
+			*policy.AppLifecycle != "staging" &&
+			*policy.AppLifecycle != "all" {
+			return policyMetadataError("app lifecycle must be 'running', 'staging', or 'all'", policy)
+		}
 	}
 
 	token, err := v.UAAClient.GetToken()

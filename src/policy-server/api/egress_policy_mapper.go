@@ -32,7 +32,7 @@ func withPopulatedDestinations(storeEgressPolicy store.EgressPolicy) EgressPolic
 			ID:   storeEgressPolicy.Source.ID,
 			Type: storeEgressPolicy.Source.Type,
 		},
-		AppLifecycle: storeEgressPolicy.AppLifecycle,
+		AppLifecycle: &storeEgressPolicy.AppLifecycle,
 	}
 }
 
@@ -46,7 +46,7 @@ func withDestinationPointer(storeEgressPolicy store.EgressPolicy) EgressPolicy {
 			ID:   storeEgressPolicy.Source.ID,
 			Type: storeEgressPolicy.Source.Type,
 		},
-		AppLifecycle: storeEgressPolicy.AppLifecycle,
+		AppLifecycle: &storeEgressPolicy.AppLifecycle,
 	}
 }
 
@@ -98,6 +98,10 @@ func (p *EgressPolicyMapper) AsStoreEgressPolicy(bytes []byte) ([]store.EgressPo
 }
 
 func asStoreEgressPolicy(apiEgressPolicy EgressPolicy) store.EgressPolicy {
+	appLifecycle := AppLifecycleDefault
+	if apiEgressPolicy.AppLifecycle != nil {
+		appLifecycle = *apiEgressPolicy.AppLifecycle
+	}
 	return store.EgressPolicy{
 		Destination: store.EgressDestination{
 			GUID: apiEgressPolicy.Destination.GUID,
@@ -106,6 +110,6 @@ func asStoreEgressPolicy(apiEgressPolicy EgressPolicy) store.EgressPolicy {
 			ID:   apiEgressPolicy.Source.ID,
 			Type: apiEgressPolicy.Source.Type,
 		},
-		AppLifecycle: apiEgressPolicy.AppLifecycle,
+		AppLifecycle: appLifecycle,
 	}
 }

@@ -51,9 +51,11 @@ var _ = Describe("EgressPolicyMapper", func() {
 			Expect(policies[0].Source.ID).To(Equal("some-src-id"))
 			Expect(policies[0].Source.Type).To(Equal("app"))
 			Expect(policies[0].Destination.GUID).To(Equal("some-dst-id"))
+			Expect(policies[0].AppLifecycle).To(Equal("all"))
 			Expect(policies[1].Source.ID).To(Equal("some-src-id-2"))
 			Expect(policies[1].Source.Type).To(Equal("space"))
 			Expect(policies[1].Destination.GUID).To(Equal("some-dst-id-2"))
+			Expect(policies[1].AppLifecycle).To(Equal("all"))
 		})
 
 		Context("when unmarshalling fails", func() {

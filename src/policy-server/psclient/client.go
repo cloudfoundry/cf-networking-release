@@ -48,7 +48,7 @@ type EgressPolicy struct {
 	GUID         string             `json:"id,omitempty"`
 	Source       EgressPolicySource `json:"source"`
 	Destination  Destination        `json:"destination"`
-	AppLifecycle string             `json:"app_lifecycle"`
+	AppLifecycle string             `json:"app_lifecycle,omitempty"`
 }
 
 type EgressPolicySource struct {

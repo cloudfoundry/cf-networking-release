@@ -3,6 +3,7 @@ package api
 import "policy-server/store"
 
 var ICMPDefault = -1
+var AppLifecycleDefault = "all"
 
 //go:generate counterfeiter -o fakes/policy_mapper.go --fake-name PolicyMapper . PolicyMapper
 type PolicyMapper interface {
@@ -41,7 +42,7 @@ type EgressPolicy struct {
 	ID           string             `json:"id,omitempty"`
 	Source       *EgressSource      `json:"source"`
 	Destination  *EgressDestination `json:"destination"`
-	AppLifecycle string             `json:"app_lifecycle"`
+	AppLifecycle *string             `json:"app_lifecycle"`
 }
 
 type EgressSource struct {

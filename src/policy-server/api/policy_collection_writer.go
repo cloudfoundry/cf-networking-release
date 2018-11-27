@@ -57,6 +57,6 @@ func mapStoreEgressPolicy(storeEgressPolicy store.EgressPolicy) EgressPolicy {
 			Type: storeEgressPolicy.Source.Type,
 		},
 		Destination: &destination,
-		AppLifecycle: storeEgressPolicy.AppLifecycle,
+		AppLifecycle: &storeEgressPolicy.AppLifecycle,
 	}
 }
