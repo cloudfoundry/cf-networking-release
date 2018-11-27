@@ -55,6 +55,7 @@ var _ = Describe("PolicyCollectionWriter", func() {
 					Protocol: "tcp",
 					IPRanges: []store.IPRange{{Start: "8.0.8.0", End: "8.0.8.0"}},
 				},
+				AppLifecycle: "running",
 			}}
 
 			payload, err := writer.AsBytes(policies, egressPolicies)
@@ -92,7 +93,8 @@ var _ = Describe("PolicyCollectionWriter", func() {
 							"destination": {
 								"ips": [{"start": "8.0.8.0", "end": "8.0.8.0"}],
 								"protocol": "tcp"
-							}
+							},
+							"app_lifecycle": "running"
 						}
 					]
 				}`),

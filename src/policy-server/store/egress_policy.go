@@ -100,16 +100,17 @@ func (e *EgressPolicyTable) CreateIPRange(tx db.Transaction, destinationTerminal
 	return -1, fmt.Errorf("unknown driver: %s", driverName)
 }
 
-func (e *EgressPolicyTable) CreateEgressPolicy(tx db.Transaction, sourceTerminalGUID, destinationTerminalGUID string) (string, error) {
+func (e *EgressPolicyTable) CreateEgressPolicy(tx db.Transaction, sourceTerminalGUID, destinationTerminalGUID, appLifecycle string) (string, error) {
 	guid := e.Guids.New()
 
 	_, err := tx.Exec(tx.Rebind(`
-			INSERT INTO egress_policies (guid, source_guid, destination_guid)
-			VALUES (?,?,?)
+			INSERT INTO egress_policies (guid, source_guid, destination_guid, app_lifecycle)
+			VALUES (?,?,?,?)
 		`),
 		guid,
 		sourceTerminalGUID,
 		destinationTerminalGUID,
+		appLifecycle,
 	)
 
 	if err != nil {
@@ -303,6 +304,7 @@ func selectEgressPolicyQuery(extraClauses ...string) string {
 		SELECT
 			egress_policies.guid,
 			egress_policies.source_guid,
+			egress_policies.app_lifecycle,
 			COALESCE(destination_metadatas.name, ''),
 			COALESCE(destination_metadatas.description, ''),
 			apps.app_guid,
@@ -333,11 +335,12 @@ func (e *EgressPolicyTable) convertRowsToEgressPolicies(rows sqlRows) ([]EgressP
 	var foundPolicies []EgressPolicy
 	defer rows.Close()
 	for rows.Next() {
-		var egressPolicyGUID, sourceTerminalGUID, name, description, destinationGUID, sourceAppGUID, sourceSpaceGUID, protocol, startIP, endIP *string
+		var egressPolicyGUID, sourceTerminalGUID, appLifecycle, name, description, destinationGUID, sourceAppGUID, sourceSpaceGUID, protocol, startIP, endIP *string
 		var startPort, endPort, icmpType, icmpCode int
 		err := rows.Scan(
 			&egressPolicyGUID,
 			&sourceTerminalGUID,
+			&appLifecycle,
 			&name,
 			&description,
 			&sourceAppGUID,
@@ -356,6 +359,7 @@ func (e *EgressPolicyTable) convertRowsToEgressPolicies(rows sqlRows) ([]EgressP
 		foundPolicies = append(foundPolicies, mapRowToEgressPolicy(
 			egressPolicyGUID,
 			sourceTerminalGUID,
+			appLifecycle,
 			name,
 			description,
 			destinationGUID,
@@ -372,7 +376,7 @@ func (e *EgressPolicyTable) convertRowsToEgressPolicies(rows sqlRows) ([]EgressP
 	return foundPolicies, nil
 }
 
-func mapRowToEgressPolicy(egressPolicyGUID, sourceTerminalGUID, name, description, destinationGUID,
+func mapRowToEgressPolicy(egressPolicyGUID, sourceTerminalGUID, appLifecycle, name, description, destinationGUID,
 	sourceAppGUID, sourceSpaceGUID, protocol, startIP, endIP *string,
 	startPort, endPort, icmpType, icmpCode int) EgressPolicy {
 
@@ -421,5 +425,6 @@ func mapRowToEgressPolicy(egressPolicyGUID, sourceTerminalGUID, name, descriptio
 			ICMPType: icmpType,
 			ICMPCode: icmpCode,
 		},
+		AppLifecycle: *appLifecycle,
 	}
 }

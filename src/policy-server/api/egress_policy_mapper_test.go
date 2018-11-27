@@ -94,6 +94,7 @@ var _ = Describe("EgressPolicyMapper", func() {
 					Destination: store.EgressDestination{
 						GUID: "some-dst-id",
 					},
+					AppLifecycle: "running",
 				},
 				{
 					ID:     "policy-2",
@@ -108,6 +109,7 @@ var _ = Describe("EgressPolicyMapper", func() {
 						ICMPType:    4,
 						ICMPCode:    3,
 					},
+					AppLifecycle: "staging",
 				},
 			}
 		})
@@ -121,12 +123,14 @@ var _ = Describe("EgressPolicyMapper", func() {
             	        {
 							"id": "policy-1",
 							"source": { "id": "some-src-id", "type": "app" },
-							"destination": { "id": "some-dst-id" }
+							"destination": { "id": "some-dst-id" },
+							"app_lifecycle": "running"
 						},
                	    	{
 							"id": "policy-2",
 							"source": { "id": "some-src-id-2", "type": "space" },
-							"destination": { "id": "some-dst-id-2" }
+							"destination": { "id": "some-dst-id-2" },
+							"app_lifecycle": "staging"
 						}
 					]
 				}`))
@@ -157,6 +161,7 @@ var _ = Describe("EgressPolicyMapper", func() {
 						GUID:     "some-dst-id",
 						IPRanges: []store.IPRange{{Start: "2.1.1.1", End: "3.2.2.2"}},
 					},
+					AppLifecycle: "running",
 				},
 				{
 					ID:     "policy-2",
@@ -171,6 +176,7 @@ var _ = Describe("EgressPolicyMapper", func() {
 						ICMPType:    4,
 						ICMPCode:    3,
 					},
+					AppLifecycle: "staging",
 				},
 			}
 		})
@@ -187,7 +193,8 @@ var _ = Describe("EgressPolicyMapper", func() {
 							"destination": {
 								"id": "some-dst-id",
 								"ips": [{"start": "2.1.1.1", "end": "3.2.2.2"}]
-							}
+							},
+							"app_lifecycle": "running"
 						},
                	    	{
 							"id": "policy-2",
@@ -201,7 +208,8 @@ var _ = Describe("EgressPolicyMapper", func() {
 								"protocol": "icmp",
 								"icmp_type": 4,
 								"icmp_code": 3
-							}
+							},
+							"app_lifecycle": "staging"
 						}
 					]
 				}`))

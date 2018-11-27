@@ -35,9 +35,10 @@ type Tag struct {
 }
 
 type EgressPolicy struct {
-	ID          string
-	Source      EgressSource
-	Destination EgressDestination
+	ID           string
+	Source       EgressSource
+	Destination  EgressDestination
+	AppLifecycle string
 }
 
 type EgressSource struct {

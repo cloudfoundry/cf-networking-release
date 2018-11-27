@@ -60,7 +60,8 @@ var _ = Describe("EgressPoliciesCreate", func() {
 			"egress_policies": [
 				{
 					"source": { "id": "AN-APP-GUID", "type": "app" },
-					"destination": {"id": "A-DEST-GUID" }
+					"destination": {"id": "A-DEST-GUID" },
+					"app_lifecycle": "staging"
 				}
 			]
 		}`
@@ -69,6 +70,7 @@ var _ = Describe("EgressPoliciesCreate", func() {
 			{
 				Source:      store.EgressSource{ID: "AN-APP-GUID"},
 				Destination: store.EgressDestination{GUID: "A-DEST-GUID"},
+				AppLifecycle: "staging",
 			},
 		}
 
@@ -85,7 +87,8 @@ var _ = Describe("EgressPoliciesCreate", func() {
 				{
 					"id": "policy-guid",
 					"source": { "id": "AN-APP-GUID", "type": "app" },
-					"destination": {"id": "A-DEST-GUID" }
+					"destination": {"id": "A-DEST-GUID" },
+					"app_lifecycle": "staging"
 				}
 			]
 		}`

@@ -1537,6 +1537,50 @@ var _ = Describe("migrations", func() {
 			})
 		})
 
+		Describe("V57 - Add app_lifecycle to egress_policies", func() {
+			It("should migrate", func() {
+				By("performing migration")
+				migrateTo("56")
+				_, err := realDb.Exec("INSERT INTO terminals (guid) VALUES ('some-terminal-guid')")
+				Expect(err).NotTo(HaveOccurred())
+
+				_, err = realDb.Exec("INSERT INTO terminals (guid) VALUES ('some-terminal-guid-also')")
+				Expect(err).NotTo(HaveOccurred())
+
+				By("inserting a policy before the migration")
+				_, err = realDb.Exec(realDb.RawConnection().Rebind(`
+					INSERT INTO egress_policies (guid, source_guid, destination_guid)
+					VALUES (?, ?, ?)`), "some-egress-guid-1", "some-terminal-guid", "some-terminal-guid")
+				Expect(err).NotTo(HaveOccurred())
+
+				By("performing migration")
+				numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 1)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(numMigrations).To(Equal(1))
+
+				By("verifying old row uses default")
+				var appLifecycle string
+				err = realDb.QueryRow(`
+						SELECT app_lifecycle FROM egress_policies
+						WHERE guid = 'some-egress-guid-1'`).Scan(&appLifecycle)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(appLifecycle).To(Equal("all"))
+
+				By("validating that value can be inserted")
+				_, err = realDb.Exec(realDb.RawConnection().Rebind(`
+					INSERT INTO egress_policies (guid, source_guid, destination_guid, app_lifecycle)
+					VALUES (?, ?, ?, ?)`), "some-egress-guid-2", "some-terminal-guid-also", "some-terminal-guid", "running")
+				Expect(err).NotTo(HaveOccurred())
+
+				By("validating that it doesn't use default when provided")
+				err = realDb.QueryRow(`
+						SELECT app_lifecycle FROM egress_policies
+						WHERE guid = 'some-egress-guid-2'`).Scan(&appLifecycle)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(appLifecycle).To(Equal("running"))
+			})
+		})
+
 		Context("when migrating in parallel", func() {
 			Context("mysql", func() {
 				BeforeEach(func() {

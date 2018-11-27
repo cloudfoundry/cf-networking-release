@@ -44,6 +44,7 @@ var _ = Describe("EgressPolicyStore", func() {
 				Destination: store.EgressDestination{
 					GUID: "some-destination-guid",
 				},
+				AppLifecycle: "running",
 			},
 			{
 				Source: store.EgressSource{
@@ -52,6 +53,7 @@ var _ = Describe("EgressPolicyStore", func() {
 				Destination: store.EgressDestination{
 					GUID: "some-destination-guid-2",
 				},
+				AppLifecycle: "staging",
 			},
 		}
 
@@ -63,6 +65,7 @@ var _ = Describe("EgressPolicyStore", func() {
 			Destination: store.EgressDestination{
 				GUID: "some-destination-guid",
 			},
+			AppLifecycle: "all",
 		}
 
 		egressPolicyRepo.GetTerminalByAppGUIDReturns("", nil)
@@ -89,6 +92,7 @@ var _ = Describe("EgressPolicyStore", func() {
 					Destination: store.EgressDestination{
 						GUID: "some-destination-guid",
 					},
+					AppLifecycle: "running",
 				},
 				{
 					ID: "some-egress-policy-guid-2",
@@ -99,18 +103,21 @@ var _ = Describe("EgressPolicyStore", func() {
 					Destination: store.EgressDestination{
 						GUID: "some-destination-guid-2",
 					},
+					AppLifecycle: "staging",
 				},
 			}))
 
-			argTx, sourceID, destinationID := egressPolicyRepo.CreateEgressPolicyArgsForCall(0)
+			argTx, sourceID, destinationID, appLifecycle := egressPolicyRepo.CreateEgressPolicyArgsForCall(0)
 			Expect(argTx).To(Equal(tx))
 			Expect(sourceID).To(Equal("some-terminal-app-guid"))
 			Expect(destinationID).To(Equal("some-destination-guid"))
+			Expect(appLifecycle).To(Equal("running"))
 
-			argTx, sourceID, destinationID = egressPolicyRepo.CreateEgressPolicyArgsForCall(1)
+			argTx, sourceID, destinationID, appLifecycle = egressPolicyRepo.CreateEgressPolicyArgsForCall(1)
 			Expect(argTx).To(Equal(tx))
 			Expect(sourceID).To(Equal("some-terminal-space-guid"))
 			Expect(destinationID).To(Equal("some-destination-guid-2"))
+			Expect(appLifecycle).To(Equal("staging"))
 		})
 
 		It("returns an error when get by filter fails", func() {
@@ -188,9 +195,10 @@ var _ = Describe("EgressPolicyStore", func() {
 		})
 
 		It("creates a space with a sourceTerminalGUID", func() {
+			egressPolicyRepo.CreateEgressPolicyReturns("some-egress-policy-guid", nil)
 			egressPolicyRepo.GetTerminalBySpaceGUIDReturns("", nil)
 			terminalsRepo.CreateReturns("some-term-guid", nil)
-			_, err := egressPolicyStore.Create([]store.EgressPolicy{spacePolicy})
+			createdPolicies, err := egressPolicyStore.Create([]store.EgressPolicy{spacePolicy})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(egressPolicyRepo.CreateSpaceCallCount()).To(Equal(1))
 			Expect(egressPolicyRepo.CreateAppCallCount()).To(Equal(0))
@@ -198,6 +206,19 @@ var _ = Describe("EgressPolicyStore", func() {
 			Expect(argTx).To(Equal(tx))
 			Expect(argSourceTerminalGUID).To(Equal("some-term-guid"))
 			Expect(argSpaceGUID).To(Equal("space-guid"))
+
+			Expect(createdPolicies).To(Equal([]store.EgressPolicy{{
+				ID: "some-egress-policy-guid",
+				Source: store.EgressSource{
+					Type: "space",
+					ID:   "space-guid",
+					TerminalGUID: "some-term-guid",
+				},
+				Destination: store.EgressDestination{
+					GUID: "some-destination-guid",
+				},
+				AppLifecycle: "all",
+			}}))
 		})
 
 		It("creates an egress policy with the right GUIDs", func() {
@@ -208,15 +229,17 @@ var _ = Describe("EgressPolicyStore", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(egressPolicyRepo.CreateEgressPolicyCallCount()).To(Equal(2))
 
-			argTx, sourceID, destinationID := egressPolicyRepo.CreateEgressPolicyArgsForCall(0)
+			argTx, sourceID, destinationID, appLifecycle := egressPolicyRepo.CreateEgressPolicyArgsForCall(0)
 			Expect(argTx).To(Equal(tx))
 			Expect(sourceID).To(Equal("some-app-guid"))
 			Expect(destinationID).To(Equal("some-destination-guid"))
+			Expect(appLifecycle).To(Equal("running"))
 
-			argTx, sourceID, destinationID = egressPolicyRepo.CreateEgressPolicyArgsForCall(1)
+			argTx, sourceID, destinationID, appLifecycle = egressPolicyRepo.CreateEgressPolicyArgsForCall(1)
 			Expect(argTx).To(Equal(tx))
 			Expect(sourceID).To(Equal("some-space-guid"))
 			Expect(destinationID).To(Equal("some-destination-guid-2"))
+			Expect(appLifecycle).To(Equal("staging"))
 		})
 
 		It("returns an error when the CreateEgressPolicy fails", func() {
@@ -232,7 +255,7 @@ var _ = Describe("EgressPolicyStore", func() {
 			_, err := egressPolicyStore.Create(egressPolicies)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(egressPolicyRepo.CreateAppCallCount()).To(Equal(0))
-			_, sourceID, _ := egressPolicyRepo.CreateEgressPolicyArgsForCall(0)
+			_, sourceID, _, _ := egressPolicyRepo.CreateEgressPolicyArgsForCall(0)
 			Expect(sourceID).To(Equal("66"))
 		})
 
@@ -242,7 +265,7 @@ var _ = Describe("EgressPolicyStore", func() {
 			_, err := egressPolicyStore.Create([]store.EgressPolicy{spacePolicy})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(egressPolicyRepo.CreateSpaceCallCount()).To(Equal(0))
-			_, sourceID, _ := egressPolicyRepo.CreateEgressPolicyArgsForCall(0)
+			_, sourceID, _, _ := egressPolicyRepo.CreateEgressPolicyArgsForCall(0)
 			Expect(sourceID).To(Equal("55"))
 		})
 
@@ -317,6 +340,7 @@ var _ = Describe("EgressPolicyStore", func() {
 					Destination: store.EgressDestination{
 						GUID: destTerminalGUID,
 					},
+					AppLifecycle: "running",
 				},
 				{
 					ID: egressPolicyGUID2,
@@ -328,6 +352,7 @@ var _ = Describe("EgressPolicyStore", func() {
 					Destination: store.EgressDestination{
 						GUID: destTerminalGUID2,
 					},
+					AppLifecycle: "staging",
 				},
 			}
 			egressPolicyRepo.GetByGUIDReturns(expectedEgressPolicies, nil)
@@ -394,6 +419,7 @@ var _ = Describe("EgressPolicyStore", func() {
 						Destination: store.EgressDestination{
 							GUID: destTerminalGUID,
 						},
+						AppLifecycle: "all",
 					},
 				}
 				egressPolicyRepo.GetByGUIDReturns(expectedEgressPolicies, nil)

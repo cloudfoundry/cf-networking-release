@@ -106,6 +106,7 @@ var _ = Describe("External API Egress Policies", func() {
 			Destination: psclient.Destination{
 				GUID: createdDestinations[0].GUID,
 			},
+			AppLifecycle: "running",
 		}
 		policyGUID, err := client.CreateEgressPolicy(somePolicy, token)
 		Expect(err).NotTo(HaveOccurred())
@@ -131,6 +132,7 @@ var _ = Describe("External API Egress Policies", func() {
 					IPs:         []psclient.IPRange{{Start: "1.2.3.4", End: "1.2.3.5"}},
 					Ports:       []psclient.Port{{Start: 8080, End: 9090}},
 				},
+				AppLifecycle: "running",
 			},
 		))
 
@@ -150,6 +152,7 @@ var _ = Describe("External API Egress Policies", func() {
 			Destination: psclient.Destination{
 				GUID: createdDestinations[1].GUID,
 			},
+			AppLifecycle: "staging",
 		}
 
 		secondPolicyGUID, err := client.CreateEgressPolicy(someSecondPolicy, token)
@@ -166,6 +169,7 @@ var _ = Describe("External API Egress Policies", func() {
 			Destination: psclient.Destination{
 				GUID: createdDestinations[1].GUID,
 			},
+			AppLifecycle: "all",
 		}
 
 		thirdPolicyGUID, err := client.CreateEgressPolicy(someThirdPolicy, token)
@@ -194,6 +198,7 @@ var _ = Describe("External API Egress Policies", func() {
 					IPs:         []psclient.IPRange{{Start: "1.2.3.4", End: "1.2.3.5"}},
 					Ports:       []psclient.Port{{Start: 8080, End: 9090}},
 				},
+				AppLifecycle: "running",
 			},
 		))
 		Expect(egressPolicies[1]).To(Equal(
@@ -211,6 +216,7 @@ var _ = Describe("External API Egress Policies", func() {
 					IPs:         []psclient.IPRange{{Start: "3.2.3.4", End: "3.2.3.5"}},
 					Ports:       []psclient.Port{{Start: 8082, End: 9092}},
 				},
+				AppLifecycle: "all",
 			},
 		))
 
@@ -234,6 +240,7 @@ var _ = Describe("External API Egress Policies", func() {
 					IPs:         []psclient.IPRange{{Start: "1.2.3.4", End: "1.2.3.5"}},
 					Ports:       []psclient.Port{{Start: 8080, End: 9090}},
 				},
+				AppLifecycle: "running",
 			},
 		))
 

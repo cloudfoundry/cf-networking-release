@@ -32,6 +32,7 @@ func withPopulatedDestinations(storeEgressPolicy store.EgressPolicy) EgressPolic
 			ID:   storeEgressPolicy.Source.ID,
 			Type: storeEgressPolicy.Source.Type,
 		},
+		AppLifecycle: storeEgressPolicy.AppLifecycle,
 	}
 }
 
@@ -45,6 +46,7 @@ func withDestinationPointer(storeEgressPolicy store.EgressPolicy) EgressPolicy {
 			ID:   storeEgressPolicy.Source.ID,
 			Type: storeEgressPolicy.Source.Type,
 		},
+		AppLifecycle: storeEgressPolicy.AppLifecycle,
 	}
 }
 
@@ -104,5 +106,6 @@ func asStoreEgressPolicy(apiEgressPolicy EgressPolicy) store.EgressPolicy {
 			ID:   apiEgressPolicy.Source.ID,
 			Type: apiEgressPolicy.Source.Type,
 		},
+		AppLifecycle: apiEgressPolicy.AppLifecycle,
 	}
 }

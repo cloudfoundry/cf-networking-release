@@ -45,12 +45,13 @@ type EgressPolicyRepo struct {
 		result1 int64
 		result2 error
 	}
-	CreateEgressPolicyStub        func(tx db.Transaction, sourceTerminalGUID, destinationTerminalGUID string) (string, error)
+	CreateEgressPolicyStub        func(tx db.Transaction, sourceTerminalGUID, destinationTerminalGUID, appLifecycle string) (string, error)
 	createEgressPolicyMutex       sync.RWMutex
 	createEgressPolicyArgsForCall []struct {
 		tx                      db.Transaction
 		sourceTerminalGUID      string
 		destinationTerminalGUID string
+		appLifecycle            string
 	}
 	createEgressPolicyReturns struct {
 		result1 string
@@ -335,18 +336,19 @@ func (fake *EgressPolicyRepo) CreateIPRangeReturnsOnCall(i int, result1 int64, r
 	}{result1, result2}
 }
 
-func (fake *EgressPolicyRepo) CreateEgressPolicy(tx db.Transaction, sourceTerminalGUID string, destinationTerminalGUID string) (string, error) {
+func (fake *EgressPolicyRepo) CreateEgressPolicy(tx db.Transaction, sourceTerminalGUID string, destinationTerminalGUID string, appLifecycle string) (string, error) {
 	fake.createEgressPolicyMutex.Lock()
 	ret, specificReturn := fake.createEgressPolicyReturnsOnCall[len(fake.createEgressPolicyArgsForCall)]
 	fake.createEgressPolicyArgsForCall = append(fake.createEgressPolicyArgsForCall, struct {
 		tx                      db.Transaction
 		sourceTerminalGUID      string
 		destinationTerminalGUID string
-	}{tx, sourceTerminalGUID, destinationTerminalGUID})
-	fake.recordInvocation("CreateEgressPolicy", []interface{}{tx, sourceTerminalGUID, destinationTerminalGUID})
+		appLifecycle            string
+	}{tx, sourceTerminalGUID, destinationTerminalGUID, appLifecycle})
+	fake.recordInvocation("CreateEgressPolicy", []interface{}{tx, sourceTerminalGUID, destinationTerminalGUID, appLifecycle})
 	fake.createEgressPolicyMutex.Unlock()
 	if fake.CreateEgressPolicyStub != nil {
-		return fake.CreateEgressPolicyStub(tx, sourceTerminalGUID, destinationTerminalGUID)
+		return fake.CreateEgressPolicyStub(tx, sourceTerminalGUID, destinationTerminalGUID, appLifecycle)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -360,10 +362,10 @@ func (fake *EgressPolicyRepo) CreateEgressPolicyCallCount() int {
 	return len(fake.createEgressPolicyArgsForCall)
 }
 
-func (fake *EgressPolicyRepo) CreateEgressPolicyArgsForCall(i int) (db.Transaction, string, string) {
+func (fake *EgressPolicyRepo) CreateEgressPolicyArgsForCall(i int) (db.Transaction, string, string, string) {
 	fake.createEgressPolicyMutex.RLock()
 	defer fake.createEgressPolicyMutex.RUnlock()
-	return fake.createEgressPolicyArgsForCall[i].tx, fake.createEgressPolicyArgsForCall[i].sourceTerminalGUID, fake.createEgressPolicyArgsForCall[i].destinationTerminalGUID
+	return fake.createEgressPolicyArgsForCall[i].tx, fake.createEgressPolicyArgsForCall[i].sourceTerminalGUID, fake.createEgressPolicyArgsForCall[i].destinationTerminalGUID, fake.createEgressPolicyArgsForCall[i].appLifecycle
 }
 
 func (fake *EgressPolicyRepo) CreateEgressPolicyReturns(result1 string, result2 error) {

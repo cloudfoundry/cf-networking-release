@@ -10,7 +10,7 @@ import (
 type egressPolicyRepo interface {
 	CreateApp(tx db.Transaction, sourceTerminalGUID string, appGUID string) (int64, error)
 	CreateIPRange(tx db.Transaction, destinationTerminalGUID string, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) (int64, error)
-	CreateEgressPolicy(tx db.Transaction, sourceTerminalGUID, destinationTerminalGUID string) (string, error)
+	CreateEgressPolicy(tx db.Transaction, sourceTerminalGUID, destinationTerminalGUID, appLifecycle string) (string, error)
 	CreateSpace(tx db.Transaction, sourceTerminalGUID string, spaceGUID string) (int64, error)
 	GetTerminalByAppGUID(tx db.Transaction, appGUID string) (string, error)
 	GetTerminalBySpaceGUID(tx db.Transaction, appGUID string) (string, error)
@@ -103,7 +103,7 @@ func (e *EgressPolicyStore) createWithTx(tx db.Transaction, policies []EgressPol
 			}
 		}
 
-		createdPolicyGUID, err := e.EgressPolicyRepo.CreateEgressPolicy(tx, sourceTerminalGUID, policy.Destination.GUID)
+		createdPolicyGUID, err := e.EgressPolicyRepo.CreateEgressPolicy(tx, sourceTerminalGUID, policy.Destination.GUID, policy.AppLifecycle)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create egress policy: %s", err)
 		}

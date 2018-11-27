@@ -207,19 +207,21 @@ var _ = Describe("Egress Policy Table", func() {
 			destinationTerminalId, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 
-			guid, err := egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalId, destinationTerminalId)
+			appLifecycle := "running"
+			guid, err := egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalId, destinationTerminalId, appLifecycle)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(guid).To(Equal("guid-1"))
 
-			var foundSourceID, foundDestinationID string
-			row := tx.QueryRow(tx.Rebind(`SELECT source_guid, destination_guid FROM egress_policies WHERE guid = ?`), guid)
-			err = row.Scan(&foundSourceID, &foundDestinationID)
+			var foundSourceID, foundDestinationID, foundAppLifecycle string
+			row := tx.QueryRow(tx.Rebind(`SELECT source_guid, destination_guid, app_lifecycle FROM egress_policies WHERE guid = ?`), guid)
+			err = row.Scan(&foundSourceID, &foundDestinationID, &foundAppLifecycle)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(foundSourceID).To(Equal(sourceTerminalId))
 			Expect(foundDestinationID).To(Equal(destinationTerminalId))
+			Expect(foundAppLifecycle).To(Equal(appLifecycle))
 
 			By("checking that if bad args are sent, it returns an error") // merged because db's are slow
-			_, err = egressPolicyTable.CreateEgressPolicy(tx, "some-term-guid", "some-term-guid")
+			_, err = egressPolicyTable.CreateEgressPolicy(tx, "some-term-guid", "some-term-guid", "banana")
 			Expect(err).To(HaveOccurred())
 		})
 	})
@@ -234,7 +236,7 @@ var _ = Describe("Egress Policy Table", func() {
 			destinationTerminalId, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 
-			egressPolicyGUID, err := egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalId, destinationTerminalId)
+			egressPolicyGUID, err := egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalId, destinationTerminalId, "all")
 			Expect(err).ToNot(HaveOccurred())
 
 			err = egressPolicyTable.DeleteEgressPolicy(tx, egressPolicyGUID)
@@ -397,7 +399,7 @@ var _ = Describe("Egress Policy Table", func() {
 			sourceTerminalGUID, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 
-			_, err = egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalGUID, destinationTerminalGUID)
+			_, err = egressPolicyTable.CreateEgressPolicy(tx, sourceTerminalGUID, destinationTerminalGUID, "all")
 			Expect(err).ToNot(HaveOccurred())
 			inUse, err := egressPolicyTable.IsTerminalInUse(tx, sourceTerminalGUID)
 			Expect(err).ToNot(HaveOccurred())
