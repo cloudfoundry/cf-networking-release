@@ -233,7 +233,8 @@ Will return all egress policies.
         "ips": [{"start":"1.8.8.8", "end": "1.8.8.8"}],
         "ports": [{"start": 8000, "end": 9000}],
         "protocol": "udp"
-     }
+     },
+     "app_lifecycle": "all"
    }]
 }
 ```
@@ -251,16 +252,18 @@ Will return all egress policies.
     },
     "destination": {
       "id": "EGRESS-DESTINATION-GUID"
-    }
+    },
+    "app_lifecycle": "running"
   }]
 }
 ```
 
 | Field | Required? | Description |
 | :---- | :-------: | :------ |
-| source.type | N | The type of source. Must be 'app' or 'space'. Defaults to 'app'.
+| source.type | N | The type of source. Must be `app` or `space`. Defaults to `app`.
 | source.id | Y | The guid of the source app or space.
 | destination.id | Y | The guid of the egress destination.
+| app_lifecycle | N | The part of the app lifecycle you want the policy to apply to. Must be `running`, `staging`, or `all`. The `running` value applies to an app once it has started and to tasks. The `staging` value applies to apps when they are staging e.g when an app is being built by a buildpack during `cf push`. And the `all` value applies to both `running` and `staging`. Defaults to `all`.
 
 ### Delete an Egress Destination
 
@@ -287,7 +290,8 @@ This endpoint returns the json of the deleted egress policy object.
         "ips": [{"start":"1.8.8.8", "end": "1.8.8.8"}],
         "ports": [{"start": 8000, "end": 9000}],
         "protocol": "udp"
-     }
+     }, 
+     "app_lifecycle": "staging"
    }]
 }
 ```
