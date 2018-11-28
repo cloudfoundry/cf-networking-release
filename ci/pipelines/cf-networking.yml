@@ -611,6 +611,7 @@ jobs:
           enable-experimental-dynamic-egress-policies.yml
           add-istio.yml
           enable-sidecar-proxying.yml
+          disable-ingress-redirect-to-proxy.yml
           opsfile.yml
           lower-canary-watch-time.yml
       input_mapping:
@@ -858,6 +859,7 @@ jobs:
           enable-experimental-dynamic-egress-policies.yml
           add-istio.yml
           enable-sidecar-proxying.yml
+          disable-ingress-redirect-to-proxy.yml
           opsfile.yml
           lower-canary-watch-time.yml
       input_mapping:
@@ -1317,6 +1319,7 @@ jobs:
           enable-experimental-dynamic-egress-policies.yml
           add-istio.yml
           enable-sidecar-proxying.yml
+          disable-ingress-redirect-to-proxy.yml
           opsfile.yml
           lower-canary-watch-time.yml
       input_mapping:
