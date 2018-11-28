@@ -5,9 +5,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 
+	"io/ioutil"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"io/ioutil"
 )
 
 var _ = Describe("EchoSourceIPHandler", func() {
@@ -26,7 +27,7 @@ var _ = Describe("EchoSourceIPHandler", func() {
 		BeforeEach(func() {
 			var err error
 			req, err = http.NewRequest("GET", "/echosourceip", nil)
-			req.RemoteAddr = "foo"
+			req.RemoteAddr = "foo:1234"
 			Expect(err).NotTo(HaveOccurred())
 		})
 
