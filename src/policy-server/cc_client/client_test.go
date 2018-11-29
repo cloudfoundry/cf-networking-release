@@ -14,6 +14,8 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/fakes"
 	"code.cloudfoundry.org/cf-networking-helpers/json_client"
 	"code.cloudfoundry.org/lager/lagertest"
+	"net/url"
+	"strconv"
 )
 
 var _ = Describe("Client", func() {
@@ -422,8 +424,22 @@ var _ = Describe("Client", func() {
 
 	Describe("GetSubjectSpaces", func() {
 		BeforeEach(func() {
+			responses := []string{
+				fixtures.SubjectSpacesPage1,
+				fixtures.SubjectSpacesPage2,
+				fixtures.SubjectSpacesPage3,
+			}
 			fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
-				_ = json.Unmarshal([]byte(fixtures.SubjectSpaces), respData)
+				parsedRoute, err := url.Parse(route)
+				Expect(err).NotTo(HaveOccurred())
+				pageParameter := parsedRoute.Query().Get("page")
+				if pageParameter == "" {
+					pageParameter = "1"
+				}
+				page, err := strconv.Atoi(pageParameter)
+				Expect(err).NotTo(HaveOccurred())
+				response := responses[page - 1]
+				_ = json.Unmarshal([]byte(response), respData)
 				return nil
 			}
 		})
@@ -432,7 +448,7 @@ var _ = Describe("Client", func() {
 			subjectSpaces, err := client.GetSubjectSpaces("some-token", "some-subject-id")
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(fakeJSONClient.DoCallCount()).To(Equal(1))
+			Expect(fakeJSONClient.DoCallCount()).To(Equal(3))
 
 			method, route, reqData, _, token := fakeJSONClient.DoArgsForCall(0)
 
@@ -441,9 +457,24 @@ var _ = Describe("Client", func() {
 			Expect(reqData).To(BeNil())
 			Expect(token).To(Equal("bearer some-token"))
 
+			method, route, reqData, _, token = fakeJSONClient.DoArgsForCall(1)
+
+			Expect(method).To(Equal("GET"))
+			Expect(route).To(Equal("/v2/users/some-subject-id/spaces?order-direction=asc&page=2&results-per-page=1"))
+			Expect(reqData).To(BeNil())
+			Expect(token).To(Equal("bearer some-token"))
+
+			method, route, reqData, _, token = fakeJSONClient.DoArgsForCall(2)
+
+			Expect(method).To(Equal("GET"))
+			Expect(route).To(Equal("/v2/users/some-subject-id/spaces?order-direction=asc&page=3&results-per-page=1"))
+			Expect(reqData).To(BeNil())
+			Expect(token).To(Equal("bearer some-token"))
+
 			Expect(subjectSpaces).To(Equal(map[string]struct{}{
 				"space-1-guid": {},
 				"space-2-guid": {},
+				"space-3-guid": {},
 			}))
 		})
 

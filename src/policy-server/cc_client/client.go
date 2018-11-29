@@ -65,16 +65,22 @@ type SpaceResponse struct {
 	} `json:"entity"`
 }
 
+type SpaceResource struct {
+	Metadata struct {
+		GUID string `json:"guid"`
+	}
+	Entity struct {
+		Name             string `json:"name"`
+		OrganizationGUID string `json:"organization_guid"`
+	} `json:"entity"`
+}
+
 type SpacesResponse struct {
-	Resources []struct {
-		Metadata struct {
-			GUID string `json:"guid"`
-		}
-		Entity struct {
-			Name             string `json:"name"`
-			OrganizationGUID string `json:"organization_guid"`
-		} `json:"entity"`
-	} `json:"resources"`
+	TotalResults int64           `json:"total_results"`
+	TotalPages   int64           `json:"total_pages"`
+	PrevUrl      string          `json:"prev_url"`
+	NextUrl      string          `json:"next_url"`
+	Resources    []SpaceResource `json:"resources"`
 }
 
 func (c *Client) GetAllAppGUIDs(token string) (map[string]struct{}, error) {
@@ -286,14 +292,19 @@ func (c *Client) GetSubjectSpaces(token, subjectId string) (map[string]struct{},
 
 	route := fmt.Sprintf("/v2/users/%s/spaces", subjectId)
 
-	var response SpacesResponse
-	err := c.JSONClient.Do("GET", route, nil, &response, token)
-	if err != nil {
-		return nil, fmt.Errorf("json client do: %s", err)
+	var resources []SpaceResource
+	for route != "" {
+		var response SpacesResponse
+		err := c.JSONClient.Do("GET", route, nil, &response, token)
+		if err != nil {
+			return nil, fmt.Errorf("json client do: %s", err)
+		}
+		route = response.NextUrl
+		resources = append(resources, response.Resources...)
 	}
 
 	subjectSpaces := map[string]struct{}{}
-	for _, space := range response.Resources {
+	for _, space := range resources {
 		spaceID := space.Metadata.GUID
 		subjectSpaces[spaceID] = struct{}{}
 	}
