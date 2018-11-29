@@ -1295,6 +1295,14 @@ jobs:
           deployments-repo: cf-networking-deployments
           cf-networking-release: cf-networking-dev
           silk-release: silk-dev
+    - task: emit-datadog-deploy-start
+      file: cf-networking-release-ci/ci/tasks/emit-datadog-event.yml
+      params:
+        TITLE: deploy_start
+        TEXT: deploy_start
+        PRIORITY: normal
+        AWS_ENV: toque.c2c.cf-app.com
+        DATADOG_API_KEY: ((datadog_api_key))
     - task: deploy-cf
       file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
       params:
@@ -1328,6 +1336,14 @@ jobs:
         release: istio-release
         vars-files: cf-networking-deployments
         vars-store: cf-networking-deployments
+    - task: emit-datadog-deploy-end
+      file: cf-networking-release-ci/ci/tasks/emit-datadog-event.yml
+      params:
+        TITLE: deploy_end
+        TEXT: deploy_end
+        PRIORITY: normal
+        AWS_ENV: toque.c2c.cf-app.com
+        DATADOG_API_KEY: ((datadog_api_key))
     - task: bosh-cleanup
       file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
       params:
