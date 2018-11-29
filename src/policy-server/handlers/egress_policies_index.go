@@ -23,7 +23,7 @@ func (e *EgressPolicyIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 
 	var policies []store.EgressPolicy
 	var err error
-	policies, err = e.Store.GetByFilter(sourceIds, sourceTypes, destinationIds, destinationNames)
+	policies, err = e.Store.GetByFilter(sourceIds, sourceTypes, destinationIds, destinationNames, []string{})
 	if err != nil {
 		e.ErrorResponse.InternalServerError(e.Logger, w, err, "error listing egress policies")
 		return

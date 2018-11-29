@@ -13,7 +13,7 @@ import (
 //go:generate counterfeiter -o fakes/egress_policy_store.go --fake-name EgressPolicyStore . egressPolicyStore
 type egressPolicyStore interface {
 	All() ([]store.EgressPolicy, error)
-	GetByFilter(sourceId, sourceType, destinationId, destinationName []string) ([]store.EgressPolicy, error)
+	GetByFilter(sourceId, sourceType, destinationId, destinationName, appLifecycle []string) ([]store.EgressPolicy, error)
 	GetBySourceGuids(ids []string) ([]store.EgressPolicy, error)
 	Create(egressPolicies []store.EgressPolicy) ([]store.EgressPolicy, error)
 	Delete(guids ...string) ([]store.EgressPolicy, error)

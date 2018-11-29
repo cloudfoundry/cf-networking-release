@@ -115,13 +115,14 @@ type EgressPolicyRepo struct {
 		result1 []store.EgressPolicy
 		result2 error
 	}
-	GetByFilterStub        func(sourceIds, sourceTypes, destinationIds, destinationNames []string) ([]store.EgressPolicy, error)
+	GetByFilterStub        func(sourceIds, sourceTypes, destinationIds, destinationNames, appLifecycles []string) ([]store.EgressPolicy, error)
 	getByFilterMutex       sync.RWMutex
 	getByFilterArgsForCall []struct {
 		sourceIds        []string
 		sourceTypes      []string
 		destinationIds   []string
 		destinationNames []string
+		appLifecycles    []string
 	}
 	getByFilterReturns struct {
 		result1 []store.EgressPolicy
@@ -590,7 +591,7 @@ func (fake *EgressPolicyRepo) GetAllPoliciesReturnsOnCall(i int, result1 []store
 	}{result1, result2}
 }
 
-func (fake *EgressPolicyRepo) GetByFilter(sourceIds []string, sourceTypes []string, destinationIds []string, destinationNames []string) ([]store.EgressPolicy, error) {
+func (fake *EgressPolicyRepo) GetByFilter(sourceIds []string, sourceTypes []string, destinationIds []string, destinationNames []string, appLifecycles []string) ([]store.EgressPolicy, error) {
 	var sourceIdsCopy []string
 	if sourceIds != nil {
 		sourceIdsCopy = make([]string, len(sourceIds))
@@ -611,6 +612,11 @@ func (fake *EgressPolicyRepo) GetByFilter(sourceIds []string, sourceTypes []stri
 		destinationNamesCopy = make([]string, len(destinationNames))
 		copy(destinationNamesCopy, destinationNames)
 	}
+	var appLifecyclesCopy []string
+	if appLifecycles != nil {
+		appLifecyclesCopy = make([]string, len(appLifecycles))
+		copy(appLifecyclesCopy, appLifecycles)
+	}
 	fake.getByFilterMutex.Lock()
 	ret, specificReturn := fake.getByFilterReturnsOnCall[len(fake.getByFilterArgsForCall)]
 	fake.getByFilterArgsForCall = append(fake.getByFilterArgsForCall, struct {
@@ -618,11 +624,12 @@ func (fake *EgressPolicyRepo) GetByFilter(sourceIds []string, sourceTypes []stri
 		sourceTypes      []string
 		destinationIds   []string
 		destinationNames []string
-	}{sourceIdsCopy, sourceTypesCopy, destinationIdsCopy, destinationNamesCopy})
-	fake.recordInvocation("GetByFilter", []interface{}{sourceIdsCopy, sourceTypesCopy, destinationIdsCopy, destinationNamesCopy})
+		appLifecycles    []string
+	}{sourceIdsCopy, sourceTypesCopy, destinationIdsCopy, destinationNamesCopy, appLifecyclesCopy})
+	fake.recordInvocation("GetByFilter", []interface{}{sourceIdsCopy, sourceTypesCopy, destinationIdsCopy, destinationNamesCopy, appLifecyclesCopy})
 	fake.getByFilterMutex.Unlock()
 	if fake.GetByFilterStub != nil {
-		return fake.GetByFilterStub(sourceIds, sourceTypes, destinationIds, destinationNames)
+		return fake.GetByFilterStub(sourceIds, sourceTypes, destinationIds, destinationNames, appLifecycles)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -636,10 +643,10 @@ func (fake *EgressPolicyRepo) GetByFilterCallCount() int {
 	return len(fake.getByFilterArgsForCall)
 }
 
-func (fake *EgressPolicyRepo) GetByFilterArgsForCall(i int) ([]string, []string, []string, []string) {
+func (fake *EgressPolicyRepo) GetByFilterArgsForCall(i int) ([]string, []string, []string, []string, []string) {
 	fake.getByFilterMutex.RLock()
 	defer fake.getByFilterMutex.RUnlock()
-	return fake.getByFilterArgsForCall[i].sourceIds, fake.getByFilterArgsForCall[i].sourceTypes, fake.getByFilterArgsForCall[i].destinationIds, fake.getByFilterArgsForCall[i].destinationNames
+	return fake.getByFilterArgsForCall[i].sourceIds, fake.getByFilterArgsForCall[i].sourceTypes, fake.getByFilterArgsForCall[i].destinationIds, fake.getByFilterArgsForCall[i].destinationNames, fake.getByFilterArgsForCall[i].appLifecycles
 }
 
 func (fake *EgressPolicyRepo) GetByFilterReturns(result1 []store.EgressPolicy, result2 error) {

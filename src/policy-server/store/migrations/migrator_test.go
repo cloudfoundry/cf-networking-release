@@ -1537,7 +1537,7 @@ var _ = Describe("migrations", func() {
 			})
 		})
 
-		Describe("V57 - Add app_lifecycle to egress_policies", func() {
+		Describe("V57 - V59 - Add app_lifecycle to egress_policies", func() {
 			It("should migrate", func() {
 				By("performing migration")
 				migrateTo("56")
@@ -1554,9 +1554,9 @@ var _ = Describe("migrations", func() {
 				Expect(err).NotTo(HaveOccurred())
 
 				By("performing migration")
-				numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 1)
+				numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 3)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(numMigrations).To(Equal(1))
+				Expect(numMigrations).To(Equal(3))
 
 				By("verifying old row uses default")
 				var appLifecycle string
@@ -1570,6 +1570,12 @@ var _ = Describe("migrations", func() {
 				_, err = realDb.Exec(realDb.RawConnection().Rebind(`
 					INSERT INTO egress_policies (guid, source_guid, destination_guid, app_lifecycle)
 					VALUES (?, ?, ?, ?)`), "some-egress-guid-2", "some-terminal-guid-also", "some-terminal-guid", "running")
+				Expect(err).NotTo(HaveOccurred())
+
+				By("validating that app lifecycle is considered in uniqueness constraint")
+				_, err = realDb.Exec(realDb.RawConnection().Rebind(`
+					INSERT INTO egress_policies (guid, source_guid, destination_guid, app_lifecycle)
+					VALUES (?, ?, ?, ?)`), "some-egress-guid-3", "some-terminal-guid-also", "some-terminal-guid", "staging")
 				Expect(err).NotTo(HaveOccurred())
 
 				By("validating that it doesn't use default when provided")

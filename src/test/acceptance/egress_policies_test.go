@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
-
 	"os"
 
 	"regexp"
@@ -20,27 +19,43 @@ import (
 
 var _ = Describe("external connectivity", func() {
 	var (
-		appA            string
-		orgName         string
-		spaceName       string
-		appRoute        string
-		destinationGuid string
-		cli             *cf_cli_adapter.Adapter
-		testDestination = `{
+		appA                    string
+		orgName                 string
+		spaceName               string
+		appRoute                string
+		destinationGuid         string
+		stagingEgressPolicyGuid string
+		cli                     *cf_cli_adapter.Adapter
+		testDestination         = `{
 			"destinations": [
 				{
 					"name": %q,
 					"description": "Testing description",
 					"protocol": "tcp",
-					"ports": [ { "start": 80, "end": 80 } ],
+					"ports": [ { "start": 1, "end": 65535 } ],
 					"ips": [ { "start": "0.0.0.0", "end": "255.255.255.255" } ]
 				}
 			]
 		}`
-		testEgressPolicies = `{
+		testStagingEgressPolicies = `{
 			"egress_policies": [ {
 					"source": { "id": %q, "type": %q },
-					"destination": { "id": %q }
+					"destination": { "id": %q },
+					"app_lifecycle": "staging"
+				} ]
+		}`
+		testRunningEgressPolicies = `{
+			"egress_policies": [ {
+					"source": { "id": %q, "type": %q },
+					"destination": { "id": %q },
+					"app_lifecycle": "running"
+				} ]
+		}`
+		testAllEgressPolicies = `{
+			"egress_policies": [ {
+					"source": { "id": %q, "type": %q },
+					"destination": { "id": %q },
+					"app_lifecycle": "all"
 				} ]
 		}`
 	)
@@ -62,6 +77,11 @@ var _ = Describe("external connectivity", func() {
 			Expect(cf.Cf("unbind-running-security-group", sg).Wait(Timeout_Short)).To(gexec.Exit(0))
 		}
 
+		By("unbinding all staging ASGs")
+		for _, sg := range testConfig.DefaultSecurityGroups {
+			Expect(cf.Cf("unbind-staging-security-group", sg).Wait(Timeout_Short)).To(gexec.Exit(0))
+		}
+
 		By("creating a destination")
 		destinationGuid = createDestination(cli, fmt.Sprintf(testDestination, fmt.Sprintf("egress-policies-%d", rand.Int31())))
 	})
@@ -69,6 +89,11 @@ var _ = Describe("external connectivity", func() {
 	AfterEach(func() {
 		By("deleting destination")
 		deleteDestination(cli, destinationGuid)
+
+		By("adding back all the original staging ASGs")
+		for _, sg := range testConfig.DefaultSecurityGroups {
+			Expect(cf.Cf("bind-staging-security-group", sg).Wait(Timeout_Short)).To(gexec.Exit(0))
+		}
 
 		By("adding back all the original running ASGs")
 		for _, sg := range testConfig.DefaultSecurityGroups {
@@ -107,7 +132,45 @@ var _ = Describe("external connectivity", func() {
 		return checkRequest(appRoute+"proxy/example.com", 500, "connection refused|i/o timeout")
 	}
 
-	Describe("egress policy connectivity", func() {
+	Context("when an all egress policy is created", func() {
+		BeforeEach(func() {
+			By("creating staging egress policy")
+			spaceGuid, err := cli.SpaceGuid(spaceName)
+			Expect(err).NotTo(HaveOccurred())
+			stagingEgressPolicyGuid = createEgressPolicy(cli, fmt.Sprintf(testAllEgressPolicies, spaceGuid, "space", destinationGuid))
+		})
+
+		AfterEach(func() {
+			By("deleting staging egress policy")
+			deleteEgressPolicy(cli, stagingEgressPolicyGuid)
+		})
+
+		It("the app can reach the internet when egress policy is present", func(done Done) {
+			By("pushing the test app")
+			pushProxy(appA)
+			appRoute = fmt.Sprintf("http://%s.%s/", appA, config.AppsDomain)
+
+			By("checking that the app can use dns and http to reach the internet")
+			Eventually(canProxy, "10s", "1s").Should(Succeed())
+			Consistently(canProxy, "2s", "0.5s").Should(Succeed())
+
+			close(done)
+		}, 180 /* <-- overall spec timeout in seconds */)
+	})
+
+	Context("when a staging egress policy is created", func() {
+		BeforeEach(func() {
+			By("creating staging egress policy")
+			spaceGuid, err := cli.SpaceGuid(spaceName)
+			Expect(err).NotTo(HaveOccurred())
+			stagingEgressPolicyGuid = createEgressPolicy(cli, fmt.Sprintf(testStagingEgressPolicies, spaceGuid, "space", destinationGuid))
+		})
+
+		AfterEach(func() {
+			By("deleting staging egress policy")
+			deleteEgressPolicy(cli, stagingEgressPolicyGuid)
+		})
+
 		Context("when the egress policy is for the app", func() {
 			var (
 				egressPolicyGuid string
@@ -131,10 +194,10 @@ var _ = Describe("external connectivity", func() {
 				Eventually(cannotProxy, "10s", "1s").Should(Succeed())
 				Consistently(cannotProxy, "2s", "0.5s").Should(Succeed())
 
-				By("creating egress policy")
+				By("creating running egress policy")
 				appAGuid, err := cli.AppGuid(appA)
 				Expect(err).NotTo(HaveOccurred())
-				egressPolicyGuid = createEgressPolicy(cli, fmt.Sprintf(testEgressPolicies, appAGuid, "app", destinationGuid))
+				egressPolicyGuid = createEgressPolicy(cli, fmt.Sprintf(testRunningEgressPolicies, appAGuid, "app", destinationGuid))
 
 				By("checking that the app can use dns and http to reach the internet")
 				Eventually(canProxy, "10s", "1s").Should(Succeed())
@@ -167,10 +230,10 @@ var _ = Describe("external connectivity", func() {
 				Eventually(cannotProxy, "10s", "1s").Should(Succeed())
 				Consistently(cannotProxy, "2s", "0.5s").Should(Succeed())
 
-				By("creating egress policy")
+				By("creating running egress policy")
 				spaceGuid, err := cli.SpaceGuid(spaceName)
 				Expect(err).NotTo(HaveOccurred())
-				egressPolicyGuid = createEgressPolicy(cli, fmt.Sprintf(testEgressPolicies, spaceGuid, "space", destinationGuid))
+				egressPolicyGuid = createEgressPolicy(cli, fmt.Sprintf(testRunningEgressPolicies, spaceGuid, "space", destinationGuid))
 
 				By("checking that the app can use dns and http to reach the internet")
 				Eventually(canProxy, "10s", "1s").Should(Succeed())
@@ -189,7 +252,7 @@ var _ = Describe("external connectivity", func() {
 				By("creating an egress policy")
 				spaceGuid, err := cli.SpaceGuid(spaceName)
 				Expect(err).NotTo(HaveOccurred())
-				egressPolicyGuid = createEgressPolicy(cli, fmt.Sprintf(testEgressPolicies, spaceGuid, "space", destinationGuid))
+				egressPolicyGuid = createEgressPolicy(cli, fmt.Sprintf(testRunningEgressPolicies, spaceGuid, "space", destinationGuid))
 			})
 
 			AfterEach(func() {

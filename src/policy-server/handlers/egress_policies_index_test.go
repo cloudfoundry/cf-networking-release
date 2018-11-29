@@ -120,11 +120,12 @@ var _ = Describe("EgressPoliciesIndex", func() {
 		It("return only the destination with that guid", func() {
 			MakeRequestWithLoggerAndAuth(handler.ServeHTTP, resp, request, logger, token)
 			Expect(fakeStore.GetByFilterCallCount()).To(Equal(1))
-			sourceIds, sourceTypes, destinationIds, destinationNames := fakeStore.GetByFilterArgsForCall(0)
+			sourceIds, sourceTypes, destinationIds, destinationNames, appLifecycles := fakeStore.GetByFilterArgsForCall(0)
 			Expect(sourceIds).To(Equal([]string{"abc-123"}))
 			Expect(sourceTypes).To(Equal([]string{"outerSpace"}))
 			Expect(destinationIds).To(Equal([]string{"xyz789", "helloguid"}))
 			Expect(destinationNames).To(Equal([]string{"moon walk"}))
+			Expect(appLifecycles).To(Equal([]string{}))
 		})
 	})
 })

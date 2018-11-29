@@ -113,7 +113,8 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 							"name": "my service",
 							"protocol": "tcp",
 							"ports": [{ "start": 8080, "end": 8081 }],
-							"ips": [{ "start": "1.2.3.4", "end": "1.2.3.5" }]
+							"ips": [{ "start": "1.2.3.4", "end": "1.2.3.5" }],
+							"app_lifecycle": "all"
 						},
 						{
 							"id": "2",
@@ -121,18 +122,21 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 							"protocol": "icmp",
 							"ips": [{ "start": "1.2.3.7", "end": "1.2.3.8" }],
 							"icmp_type": 1,
-							"icmp_code": 6
+							"icmp_code": 6,
+							"app_lifecycle": "all"
 						},
 						{
 							"id": "3",
 							"description": "regression test: icmp without type and code",
 							"protocol": "icmp",
-							"ips": [{ "start": "1.2.3.7", "end": "1.2.3.8" }]
+							"ips": [{ "start": "1.2.3.7", "end": "1.2.3.8" }],
+							"app_lifecycle": "all"
 						},
 						{
 							"id": "4",
 							"protocol": "udp",
-							"ips": [{ "start": "1.2.3.7", "end": "1.2.3.8" }]
+							"ips": [{ "start": "1.2.3.7", "end": "1.2.3.8" }],
+							"app_lifecycle": "all"
 						}
 					]
 				}`)

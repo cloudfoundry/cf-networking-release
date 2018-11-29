@@ -36,7 +36,8 @@ var _ = Describe("EgressPolicyMapper", func() {
 				"egress_policies": [
                     {
 						"source": { "id": "some-src-id", "type": "app" },
-						"destination": { "id": "some-dst-id" }
+						"destination": { "id": "some-dst-id" },
+						"app_lifecycle": "all"
 					},
                     {
 						"source": { "id": "some-src-id-2", "type": "space"  },

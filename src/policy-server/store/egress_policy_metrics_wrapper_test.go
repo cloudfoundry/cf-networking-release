@@ -202,29 +202,31 @@ var _ = Describe("EgressPolicyMetricsWrapper", func() {
 		})
 	})
 	Describe("GetByFilter", func() {
-		var sourceIds, sourceTypes, destinationIds, destinationNames []string
+		var sourceIds, sourceTypes, destinationIds, destinationNames, appLifecycles []string
 		BeforeEach(func() {
 			fakeStore.GetByFilterReturns(policies, nil)
 			sourceIds = []string{"source1", "source2"}
 			sourceTypes = []string{"type1", "type2"}
 			destinationIds = []string{"dstid"}
 			destinationNames = []string{"destName"}
+			appLifecycles = []string{"#applyfe"}
 		})
 		It("returns the result of GetByFilter on the Store", func() {
-			returnedPolicies, err := metricsWrapper.GetByFilter(sourceIds, sourceTypes, destinationIds, destinationNames)
+			returnedPolicies, err := metricsWrapper.GetByFilter(sourceIds, sourceTypes, destinationIds, destinationNames, appLifecycles)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(returnedPolicies).To(Equal(policies))
 
 			Expect(fakeStore.GetByFilterCallCount()).To(Equal(1))
-			actualSourceIds, actualSourceTypes, actualDestinationIds, actualDestinationNames := fakeStore.GetByFilterArgsForCall(0)
+			actualSourceIds, actualSourceTypes, actualDestinationIds, actualDestinationNames, actualAppLifecycles := fakeStore.GetByFilterArgsForCall(0)
 			Expect(sourceIds).To(Equal(actualSourceIds))
 			Expect(sourceTypes).To(Equal(actualSourceTypes))
 			Expect(destinationIds).To(Equal(actualDestinationIds))
 			Expect(destinationNames).To(Equal(actualDestinationNames))
+			Expect(appLifecycles).To(Equal(actualAppLifecycles))
 		})
 
 		It("emits a metric", func() {
-			_, err := metricsWrapper.GetByFilter(sourceIds, sourceTypes, destinationIds, destinationNames)
+			_, err := metricsWrapper.GetByFilter(sourceIds, sourceTypes, destinationIds, destinationNames, appLifecycles)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
@@ -237,7 +239,7 @@ var _ = Describe("EgressPolicyMetricsWrapper", func() {
 				fakeStore.GetByFilterReturns(nil, errors.New("banana"))
 			})
 			It("emits an error metric", func() {
-				_, err := metricsWrapper.GetByFilter(sourceIds, sourceTypes, destinationIds, destinationNames)
+				_, err := metricsWrapper.GetByFilter(sourceIds, sourceTypes, destinationIds, destinationNames, appLifecycles)
 				Expect(err).To(MatchError("banana"))
 
 				Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))

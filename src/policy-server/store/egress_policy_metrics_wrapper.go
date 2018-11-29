@@ -10,7 +10,7 @@ type egressPolicyStore interface {
 	Delete(guids ...string) ([]EgressPolicy, error)
 	All() ([]EgressPolicy, error)
 	GetBySourceGuids(srcGuids []string) ([]EgressPolicy, error)
-	GetByFilter(sourceIds, sourceTypes, destinationIds, destinationNames []string) ([]EgressPolicy, error)
+	GetByFilter(sourceIds, sourceTypes, destinationIds, destinationNames, appLifecycles []string) ([]EgressPolicy, error)
 }
 
 type EgressPolicyMetricsWrapper struct {
@@ -70,9 +70,9 @@ func (mw *EgressPolicyMetricsWrapper) GetBySourceGuids(srcGuids []string) ([]Egr
 	return egressPolicies, err
 }
 
-func (mw *EgressPolicyMetricsWrapper) GetByFilter(sourceIds, sourceTypes, destinationIds, destinationNames []string) ([]EgressPolicy, error) {
+func (mw *EgressPolicyMetricsWrapper) GetByFilter(sourceIds, sourceTypes, destinationIds, destinationNames, appLifecycles []string) ([]EgressPolicy, error) {
 	startTime := time.Now()
-	egressPolicies, err := mw.Store.GetByFilter(sourceIds, sourceTypes, destinationIds, destinationNames)
+	egressPolicies, err := mw.Store.GetByFilter(sourceIds, sourceTypes, destinationIds, destinationNames, appLifecycles)
 	byGuidsTimeDuration := time.Now().Sub(startTime)
 	if err != nil {
 		mw.MetricsSender.IncrementCounter("EgressPolicyStoreGetByFilterError")

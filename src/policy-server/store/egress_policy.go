@@ -260,7 +260,7 @@ func (e *EgressPolicyTable) GetBySourceGuids(ids []string) ([]EgressPolicy, erro
 	return e.convertRowsToEgressPolicies(rows)
 }
 
-func (e *EgressPolicyTable) GetByFilter(sourceIds, sourceTypes, destinationIds, destinationNames []string) ([]EgressPolicy, error) {
+func (e *EgressPolicyTable) GetByFilter(sourceIds, sourceTypes, destinationIds, destinationNames, appLifecycles []string) ([]EgressPolicy, error) {
 	query := "WHERE "
 
 	if len(sourceIds) > 0 {
@@ -285,11 +285,16 @@ func (e *EgressPolicyTable) GetByFilter(sourceIds, sourceTypes, destinationIds, 
 		query += fmt.Sprintf(`destination_metadatas.name IN (%[1]s) AND `, generateQuestionMarkString(len(destinationNames)))
 	}
 
+	if len(appLifecycles) > 0 {
+		query += fmt.Sprintf(`egress_policies.app_lifecycle IN (%[1]s) AND `, generateQuestionMarkString(len(appLifecycles)))
+	}
+
 	query = selectEgressPolicyQuery(query + " 1=1 ORDER BY ip_ranges.id;")
 
 	sourceIds = append(sourceIds, sourceIds...)
 	sourceIds = append(sourceIds, destinationIds...)
 	sourceIds = append(sourceIds, destinationNames...)
+	sourceIds = append(sourceIds, appLifecycles...)
 
 	rows, err := e.Conn.Query(e.Conn.Rebind(query), convertToInterfaceSlice(sourceIds)...)
 	if err != nil {

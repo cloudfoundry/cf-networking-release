@@ -39,7 +39,8 @@ var _ = Describe("EgressPolicyStore", func() {
 		egressPolicies = []store.EgressPolicy{
 			{
 				Source: store.EgressSource{
-					ID: "some-app-guid",
+					ID:   "some-app-guid",
+					Type: "app",
 				},
 				Destination: store.EgressDestination{
 					GUID: "some-destination-guid",
@@ -48,7 +49,8 @@ var _ = Describe("EgressPolicyStore", func() {
 			},
 			{
 				Source: store.EgressSource{
-					ID: "different-app-guid",
+					ID:   "different-app-guid",
+					Type: "app",
 				},
 				Destination: store.EgressDestination{
 					GUID: "some-destination-guid-2",
@@ -87,6 +89,7 @@ var _ = Describe("EgressPolicyStore", func() {
 					ID: "some-egress-policy-guid-1",
 					Source: store.EgressSource{
 						ID:           "some-app-guid",
+						Type:         "app",
 						TerminalGUID: "some-terminal-app-guid",
 					},
 					Destination: store.EgressDestination{
@@ -98,6 +101,7 @@ var _ = Describe("EgressPolicyStore", func() {
 					ID: "some-egress-policy-guid-2",
 					Source: store.EgressSource{
 						ID:           "different-app-guid",
+						Type:         "app",
 						TerminalGUID: "some-terminal-space-guid",
 					},
 					Destination: store.EgressDestination{
@@ -106,6 +110,20 @@ var _ = Describe("EgressPolicyStore", func() {
 					AppLifecycle: "staging",
 				},
 			}))
+
+			passedSourceId, passedSourceType, passedDestinationId, passedDestinationName, passedAppLifecycle := egressPolicyRepo.GetByFilterArgsForCall(0)
+			Expect(passedSourceId).To(ConsistOf("some-app-guid"))
+			Expect(passedSourceType).To(ConsistOf("app"))
+			Expect(passedDestinationId).To(ConsistOf("some-destination-guid"))
+			Expect(passedDestinationName).To(BeEmpty())
+			Expect(passedAppLifecycle).To(ConsistOf("running"))
+
+			passedSourceId, passedSourceType, passedDestinationId, passedDestinationName, passedAppLifecycle = egressPolicyRepo.GetByFilterArgsForCall(1)
+			Expect(passedSourceId).To(ConsistOf("different-app-guid"))
+			Expect(passedSourceType).To(ConsistOf("app"))
+			Expect(passedDestinationId).To(ConsistOf("some-destination-guid-2"))
+			Expect(passedDestinationName).To(BeEmpty())
+			Expect(passedAppLifecycle).To(ConsistOf("staging"))
 
 			argTx, sourceID, destinationID, appLifecycle := egressPolicyRepo.CreateEgressPolicyArgsForCall(0)
 			Expect(argTx).To(Equal(tx))
@@ -210,8 +228,8 @@ var _ = Describe("EgressPolicyStore", func() {
 			Expect(createdPolicies).To(Equal([]store.EgressPolicy{{
 				ID: "some-egress-policy-guid",
 				Source: store.EgressSource{
-					Type: "space",
-					ID:   "space-guid",
+					Type:         "space",
+					ID:           "space-guid",
 					TerminalGUID: "some-term-guid",
 				},
 				Destination: store.EgressDestination{
@@ -569,15 +587,16 @@ var _ = Describe("EgressPolicyStore", func() {
 			})
 
 			It("calls egressPolicyRepo.GetByFilter", func() {
-				policies, err := egressPolicyStore.GetByFilter([]string{"abc-123"}, []string{"outerSpace"}, []string{"xyz789"}, []string{"moon walk"})
+				policies, err := egressPolicyStore.GetByFilter([]string{"abc-123"}, []string{"outerSpace"}, []string{"xyz789"}, []string{"moon walk"}, []string{"meow"})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(policies).To(Equal(egressPolicies))
 
-				sourceIds, sourceTypes, destinationIds, destinationNames := egressPolicyRepo.GetByFilterArgsForCall(0)
+				sourceIds, sourceTypes, destinationIds, destinationNames, appLifecycles := egressPolicyRepo.GetByFilterArgsForCall(0)
 				Expect(sourceIds).To(Equal([]string{"abc-123"}))
 				Expect(sourceTypes).To(Equal([]string{"outerSpace"}))
 				Expect(destinationIds).To(Equal([]string{"xyz789"}))
 				Expect(destinationNames).To(Equal([]string{"moon walk"}))
+				Expect(appLifecycles).To(Equal([]string{"meow"}))
 			})
 		})
 
@@ -587,7 +606,7 @@ var _ = Describe("EgressPolicyStore", func() {
 			})
 
 			It("calls egressPolicyRepo.GetByFilter", func() {
-				_, err := egressPolicyStore.GetByFilter([]string{"sourceId"}, []string{"sourceType"}, []string{"destinationId"}, []string{"destinationName"})
+				_, err := egressPolicyStore.GetByFilter([]string{"sourceId"}, []string{"sourceType"}, []string{"destinationId"}, []string{"destinationName"}, []string{})
 				Expect(err).To(MatchError("failed to get policies by filter: bark bark"))
 			})
 		})

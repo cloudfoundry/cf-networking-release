@@ -18,13 +18,14 @@ type EgressPolicyStore struct {
 		result1 []store.EgressPolicy
 		result2 error
 	}
-	GetByFilterStub        func(sourceId, sourceType, destinationId, destinationName []string) ([]store.EgressPolicy, error)
+	GetByFilterStub        func(sourceId, sourceType, destinationId, destinationName, appLifecycle []string) ([]store.EgressPolicy, error)
 	getByFilterMutex       sync.RWMutex
 	getByFilterArgsForCall []struct {
 		sourceId        []string
 		sourceType      []string
 		destinationId   []string
 		destinationName []string
+		appLifecycle    []string
 	}
 	getByFilterReturns struct {
 		result1 []store.EgressPolicy
@@ -120,7 +121,7 @@ func (fake *EgressPolicyStore) AllReturnsOnCall(i int, result1 []store.EgressPol
 	}{result1, result2}
 }
 
-func (fake *EgressPolicyStore) GetByFilter(sourceId []string, sourceType []string, destinationId []string, destinationName []string) ([]store.EgressPolicy, error) {
+func (fake *EgressPolicyStore) GetByFilter(sourceId []string, sourceType []string, destinationId []string, destinationName []string, appLifecycle []string) ([]store.EgressPolicy, error) {
 	var sourceIdCopy []string
 	if sourceId != nil {
 		sourceIdCopy = make([]string, len(sourceId))
@@ -141,6 +142,11 @@ func (fake *EgressPolicyStore) GetByFilter(sourceId []string, sourceType []strin
 		destinationNameCopy = make([]string, len(destinationName))
 		copy(destinationNameCopy, destinationName)
 	}
+	var appLifecycleCopy []string
+	if appLifecycle != nil {
+		appLifecycleCopy = make([]string, len(appLifecycle))
+		copy(appLifecycleCopy, appLifecycle)
+	}
 	fake.getByFilterMutex.Lock()
 	ret, specificReturn := fake.getByFilterReturnsOnCall[len(fake.getByFilterArgsForCall)]
 	fake.getByFilterArgsForCall = append(fake.getByFilterArgsForCall, struct {
@@ -148,11 +154,12 @@ func (fake *EgressPolicyStore) GetByFilter(sourceId []string, sourceType []strin
 		sourceType      []string
 		destinationId   []string
 		destinationName []string
-	}{sourceIdCopy, sourceTypeCopy, destinationIdCopy, destinationNameCopy})
-	fake.recordInvocation("GetByFilter", []interface{}{sourceIdCopy, sourceTypeCopy, destinationIdCopy, destinationNameCopy})
+		appLifecycle    []string
+	}{sourceIdCopy, sourceTypeCopy, destinationIdCopy, destinationNameCopy, appLifecycleCopy})
+	fake.recordInvocation("GetByFilter", []interface{}{sourceIdCopy, sourceTypeCopy, destinationIdCopy, destinationNameCopy, appLifecycleCopy})
 	fake.getByFilterMutex.Unlock()
 	if fake.GetByFilterStub != nil {
-		return fake.GetByFilterStub(sourceId, sourceType, destinationId, destinationName)
+		return fake.GetByFilterStub(sourceId, sourceType, destinationId, destinationName, appLifecycle)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -166,10 +173,10 @@ func (fake *EgressPolicyStore) GetByFilterCallCount() int {
 	return len(fake.getByFilterArgsForCall)
 }
 
-func (fake *EgressPolicyStore) GetByFilterArgsForCall(i int) ([]string, []string, []string, []string) {
+func (fake *EgressPolicyStore) GetByFilterArgsForCall(i int) ([]string, []string, []string, []string, []string) {
 	fake.getByFilterMutex.RLock()
 	defer fake.getByFilterMutex.RUnlock()
-	return fake.getByFilterArgsForCall[i].sourceId, fake.getByFilterArgsForCall[i].sourceType, fake.getByFilterArgsForCall[i].destinationId, fake.getByFilterArgsForCall[i].destinationName
+	return fake.getByFilterArgsForCall[i].sourceId, fake.getByFilterArgsForCall[i].sourceType, fake.getByFilterArgsForCall[i].destinationId, fake.getByFilterArgsForCall[i].destinationName, fake.getByFilterArgsForCall[i].appLifecycle
 }
 
 func (fake *EgressPolicyStore) GetByFilterReturns(result1 []store.EgressPolicy, result2 error) {
@@ -370,11 +377,7 @@ func (fake *EgressPolicyStore) Invocations() map[string][][]interface{} {
 	defer fake.createMutex.RUnlock()
 	fake.deleteMutex.RLock()
 	defer fake.deleteMutex.RUnlock()
-	copiedInvocations := map[string][][]interface{}{}
-	for key, value := range fake.invocations {
-		copiedInvocations[key] = value
-	}
-	return copiedInvocations
+	return fake.invocations
 }
 
 func (fake *EgressPolicyStore) recordInvocation(key string, args []interface{}) {
