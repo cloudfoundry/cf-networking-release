@@ -34,5 +34,5 @@ For information about getting started with CF Networking, look at our docs for [
 - [Design doc for Container Networking Policy](https://docs.google.com/document/d/1HDS89TJKD7ACG6cqQHph5BdNSKLt8jvo6sPGBZ5DmsM)
 - [Engineering backlog](https://www.pivotaltracker.com/n/projects/1498342)
 - Chat with us at the `#container-networking` channel on [Cloud Foundry Slack](http://slack.cloudfoundry.org/)
-- [CI dashboard](http://dashboard.c2c.cf-app.com) and [config](https://github.com/cloudfoundry-incubator/cf-networking-ci)
+- [CI dashboard](https://c2c.ci.cf-app.com/) and [config](https://github.com/cloudfoundry-incubator/cf-networking-ci)
 - [Documentation](./docs)
