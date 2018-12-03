@@ -174,7 +174,7 @@ resources:
   - name: capi-ci-passed
     type: git
     source:
-      uri: https://github.com/cloudfoundry/capi-release.git
+      uri: https://github.com/cf-container-networking/capi-release.git
       branch: ci-passed
   - name: silk-dev
     type: git
