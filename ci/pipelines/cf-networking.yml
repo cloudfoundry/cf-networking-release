@@ -459,6 +459,7 @@ jobs:
 
   - name: unit-and-integration-tests
     plan:
+    - get: istio-release
     - get: cf-networking-dev
       passed: [postgres-tests, mysql-tests, mysql-5.6-tests, windows-tests, template-tests]
       trigger: true
@@ -531,6 +532,7 @@ jobs:
     plan:
     - aggregate:
       - get: istio-release
+        passed: [unit-and-integration-tests]
       - get: capi-ci-passed
       - get: cf-networking-release-ci
         params:
@@ -770,6 +772,7 @@ jobs:
     plan:
     - aggregate:
       - get: istio-release
+        passed: [pickelhelm-deploy]
       - get: capi-ci-passed
       - get: cf-networking-release-ci
         params:
@@ -1244,6 +1247,7 @@ jobs:
     plan:
     - aggregate:
       - get: istio-release
+        passed: [unit-and-integration-tests]
       - get: capi-ci-passed
       - get: cf-deployment-concourse-tasks
       - get: cf-deployment
