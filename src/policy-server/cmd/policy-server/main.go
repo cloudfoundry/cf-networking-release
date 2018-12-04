@@ -288,10 +288,16 @@ func main() {
 		return logWrapper.LogWrap(logger, handler)
 	}
 
-	versionWrap := func(v1Handler, v0Handler http.Handler) http.Handler {
+	v0Andv1VersionWrap := func(v1Handler, v0Handler http.Handler) http.Handler {
 		return checkVersionWrapper.CheckVersion(map[string]http.Handler{
 			"v1": v1Handler,
 			"v0": v0Handler,
+		})
+	}
+
+	v1OnlyVersionWrap := func(v1Handler http.Handler) http.Handler {
+		return checkVersionWrapper.CheckVersion(map[string]http.Handler{
+			"v1": v1Handler,
 		})
 	}
 
@@ -352,43 +358,43 @@ func main() {
 		"health": corsOptionsWrapper(metricsWrap("Health", logWrap(healthHandler))),
 
 		"create_policies": corsOptionsWrapper(metricsWrap("CreatePolicies",
-			logWrap(versionWrap(authWriteWrap(createPolicyHandlerV1), authWriteWrap(createPolicyHandlerV0))))),
+			logWrap(v0Andv1VersionWrap(authWriteWrap(createPolicyHandlerV1), authWriteWrap(createPolicyHandlerV0))))),
 
 		"delete_policies": corsOptionsWrapper(metricsWrap("DeletePolicies",
-			logWrap(versionWrap(authWriteWrap(deletePolicyHandlerV1), authWriteWrap(deletePolicyHandlerV0))))),
+			logWrap(v0Andv1VersionWrap(authWriteWrap(deletePolicyHandlerV1), authWriteWrap(deletePolicyHandlerV0))))),
 
 		"policies_index": corsOptionsWrapper(metricsWrap("PoliciesIndex",
-			logWrap(versionWrap(authWriteWrap(policiesIndexHandlerV1), authWriteWrap(policiesIndexHandlerV0))))),
+			logWrap(v0Andv1VersionWrap(authWriteWrap(policiesIndexHandlerV1), authWriteWrap(policiesIndexHandlerV0))))),
 
 		"destinations_index": corsOptionsWrapper(metricsWrap("DestinationsIndex",
-			logWrap(versionWrap(authAdminWrap(destinationsIndexHandlerV1), authAdminWrap(destinationsIndexHandlerV1))))),
+			logWrap(v0Andv1VersionWrap(authAdminWrap(destinationsIndexHandlerV1), authAdminWrap(destinationsIndexHandlerV1))))),
 
 		"destinations_create": corsOptionsWrapper(metricsWrap("DestinationsCreate",
-			logWrap(authAdminWrap(createDestinationsHandlerV1)))),
+			logWrap(v1OnlyVersionWrap(authAdminWrap(createDestinationsHandlerV1))))),
 
 		"destinations_update": corsOptionsWrapper(metricsWrap("DestinationsUpdate",
-			logWrap(authAdminWrap(updateDestinationsHandlerV1)))),
+			logWrap(v1OnlyVersionWrap(authAdminWrap(updateDestinationsHandlerV1))))),
 
 		"destination_delete": corsOptionsWrapper(metricsWrap("DestinationDelete",
-			logWrap(authAdminWrap(deleteDestinationHandlerV1)))),
+			logWrap(v1OnlyVersionWrap(authAdminWrap(deleteDestinationHandlerV1))))),
 
 		"egress_policies_index": corsOptionsWrapper(metricsWrap("EgressPoliciesIndex",
-			logWrap(authAdminWrap(indexEgressPolicyHandlerV1)))),
+			logWrap(v1OnlyVersionWrap(authAdminWrap(indexEgressPolicyHandlerV1))))),
 
 		"egress_policies_create": corsOptionsWrapper(metricsWrap("EgressPoliciesCreate",
-			logWrap(authAdminWrap(createEgressPolicyHandlerV1)))),
+			logWrap(v1OnlyVersionWrap(authAdminWrap(createEgressPolicyHandlerV1))))),
 
 		"egress_policies_delete": corsOptionsWrapper(metricsWrap("EgressPoliciesDelete",
-			logWrap(authAdminWrap(deleteEgressPolicyHandlerV1)))),
+			logWrap(v1OnlyVersionWrap(authAdminWrap(deleteEgressPolicyHandlerV1))))),
 
 		"cleanup": corsOptionsWrapper(metricsWrap("Cleanup",
-			logWrap(versionWrap(authAdminWrap(policiesCleanupHandler), authAdminWrap(policiesCleanupHandler))))),
+			logWrap(v0Andv1VersionWrap(authAdminWrap(policiesCleanupHandler), authAdminWrap(policiesCleanupHandler))))),
 
 		"tags_index": corsOptionsWrapper(metricsWrap("TagsIndex",
-			logWrap(versionWrap(authAdminWrap(tagsIndexHandler), authAdminWrap(tagsIndexHandler))))),
+			logWrap(v0Andv1VersionWrap(authAdminWrap(tagsIndexHandler), authAdminWrap(tagsIndexHandler))))),
 
 		"whoami": corsOptionsWrapper(metricsWrap("WhoAmI",
-			logWrap(versionWrap(authAdminWrap(whoamiHandler), authAdminWrap(whoamiHandler))))),
+			logWrap(v0Andv1VersionWrap(authAdminWrap(whoamiHandler), authAdminWrap(whoamiHandler))))),
 	}
 
 	err = dropsonde.Initialize(conf.MetronAddress, dropsondeOrigin)
