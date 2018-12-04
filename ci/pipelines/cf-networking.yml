@@ -460,6 +460,7 @@ jobs:
   - name: unit-and-integration-tests
     plan:
     - get: istio-release
+    - get: capi-ci-passed
     - get: cf-networking-dev
       passed: [postgres-tests, mysql-tests, mysql-5.6-tests, windows-tests, template-tests]
       trigger: true
@@ -534,6 +535,7 @@ jobs:
       - get: istio-release
         passed: [unit-and-integration-tests]
       - get: capi-ci-passed
+        passed: [unit-and-integration-tests]
       - get: cf-networking-release-ci
         params:
           submodules: none
@@ -774,6 +776,7 @@ jobs:
       - get: istio-release
         passed: [pickelhelm-deploy]
       - get: capi-ci-passed
+        passed: [pickelhelm-deploy]
       - get: cf-networking-release-ci
         params:
           submodules: none
@@ -1249,6 +1252,7 @@ jobs:
       - get: istio-release
         passed: [unit-and-integration-tests]
       - get: capi-ci-passed
+        passed: [unit-and-integration-tests]
       - get: cf-deployment-concourse-tasks
       - get: cf-deployment
       - get: cf-networking-release-ci
