@@ -41,11 +41,14 @@ func (v *EgressValidator) ValidateEgressPolicies(policies []EgressPolicy) error 
 		if policy.Source == nil {
 			return policyMetadataError("missing egress source", policy)
 		}
-		if policy.Source.ID == "" {
+		if policy.Source.ID == "" && policy.Source.Type != "default" {
 			return policyMetadataError("missing egress source ID", policy)
 		}
-		if policy.Source.Type != "" && policy.Source.Type != "app" && policy.Source.Type != "space" {
+		if policy.Source.Type != "" && policy.Source.Type != "app" && policy.Source.Type != "space" && policy.Source.Type != "default" {
 			return policyMetadataError("source type must be app or space", policy)
+		}
+		if policy.Source.ID != "" && policy.Source.Type == "default" {
+			return policyMetadataError("cannot set source ID with type 'default'", policy)
 		}
 		if policy.Destination == nil {
 			return policyMetadataError("missing egress destination", policy)

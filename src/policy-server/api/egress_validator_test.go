@@ -74,8 +74,8 @@ var _ = Describe("Egress PolicyValidator", func() {
 	})
 
 	Describe("ValidateEgressPolicies", func() {
-		Context("AppLifecycle", func(){
-			It("returns an error when app_lifecycle is invalid", func(){
+		Context("AppLifecycle", func() {
+			It("returns an error when app_lifecycle is invalid", func() {
 				egressPolicies[0].AppLifecycle = stringPtr("meow")
 				err := validator.ValidateEgressPolicies(egressPolicies)
 				Expect(err).To(MatchError(ContainSubstring("app lifecycle must be 'running', 'staging', or 'all'")))
@@ -91,6 +91,15 @@ var _ = Describe("Egress PolicyValidator", func() {
 
 			err := validator.ValidateEgressPolicies(egressPolicies)
 			Expect(err).To(MatchError(ContainSubstring("missing egress source")))
+		})
+
+		Context("type default", func() {
+			It("prohibits source", func() {
+				egressPolicies[0].Source.Type = "default"
+
+				err := validator.ValidateEgressPolicies(egressPolicies)
+				Expect(err).To(MatchError(ContainSubstring("cannot set source ID with type 'default'")))
+			})
 		})
 
 		It("requires the source app to exist", func() {
@@ -228,7 +237,6 @@ var _ = Describe("Egress PolicyValidator", func() {
 			Expect(egressPolicyError.Metadata()).To(Equal(map[string]interface{}{
 				"policies with missing spaces": egressPolicies[1:],
 			}))
-
 
 			Expect(uaaClient.GetTokenCallCount()).To(Equal(1))
 
