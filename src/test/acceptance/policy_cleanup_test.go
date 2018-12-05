@@ -105,7 +105,7 @@ var _ = Describe("policy cleanup", func() {
 			createEgressPolicy(cfCli, fmt.Sprintf(testEgressPolicies, spaceGuid, "space", destinationGuid))
 
 			By("checking that policy exists")
-			allPolicies, err := cfCli.Curl("GET", "/networking/v0/external/egress_policies", "")
+			allPolicies, err := cfCli.Curl("GET", "/networking/v1/external/egress_policies", "")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(allPolicies)).Should(ContainSubstring(spaceGuid))
 
@@ -114,7 +114,7 @@ var _ = Describe("policy cleanup", func() {
 			Expect(string(stalePolicies)).ShouldNot(ContainSubstring(spaceGuid))
 
 			By("checking that policy was not deleted")
-			allPolicies, err = cfCli.Curl("GET", "/networking/v0/external/egress_policies", "")
+			allPolicies, err = cfCli.Curl("GET", "/networking/v1/external/egress_policies", "")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(allPolicies)).Should(ContainSubstring(spaceGuid))
 
@@ -127,7 +127,7 @@ var _ = Describe("policy cleanup", func() {
 			Expect(string(stalePolicies)).Should(ContainSubstring(spaceGuid))
 
 			By("checking that stale policy was deleted")
-			allPolicies, err = cfCli.Curl("GET", "/networking/v0/external/egress_policies", "")
+			allPolicies, err = cfCli.Curl("GET", "/networking/v1/external/egress_policies", "")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(allPolicies)).ShouldNot(ContainSubstring(spaceGuid))
 		})
