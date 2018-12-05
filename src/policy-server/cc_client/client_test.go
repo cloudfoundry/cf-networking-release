@@ -439,7 +439,8 @@ var _ = Describe("Client", func() {
 				page, err := strconv.Atoi(pageParameter)
 				Expect(err).NotTo(HaveOccurred())
 				response := responses[page - 1]
-				_ = json.Unmarshal([]byte(response), respData)
+				err = json.Unmarshal([]byte(response), respData)
+				Expect(err).NotTo(HaveOccurred())
 				return nil
 			}
 		})
@@ -453,7 +454,7 @@ var _ = Describe("Client", func() {
 			method, route, reqData, _, token := fakeJSONClient.DoArgsForCall(0)
 
 			Expect(method).To(Equal("GET"))
-			Expect(route).To(Equal("/v2/users/some-subject-id/spaces"))
+			Expect(route).To(Equal("/v2/users/some-subject-id/spaces?results-per-page=100"))
 			Expect(reqData).To(BeNil())
 			Expect(token).To(Equal("bearer some-token"))
 

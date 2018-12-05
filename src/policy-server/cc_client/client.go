@@ -288,9 +288,13 @@ func (c *Client) GetSubjectSpace(token, subjectId string, space api.Space) (*api
 }
 
 func (c *Client) GetSubjectSpaces(token, subjectId string) (map[string]struct{}, error) {
+	const maximumPageSize = "100"
 	token = fmt.Sprintf("bearer %s", token)
 
-	route := fmt.Sprintf("/v2/users/%s/spaces", subjectId)
+	values := url.Values{}
+	values.Add("results-per-page", maximumPageSize)
+
+	route := fmt.Sprintf("/v2/users/%s/spaces?%s", subjectId, values.Encode())
 
 	var resources []SpaceResource
 	for route != "" {
