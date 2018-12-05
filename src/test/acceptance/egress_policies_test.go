@@ -171,7 +171,7 @@ var _ = Describe("external connectivity", func() {
 			deleteEgressPolicy(cli, stagingEgressPolicyGuid)
 		})
 
-		Context("when the egress policy is for the app", func() {
+		PContext("when the egress policy is for the app", func() {
 			var (
 				egressPolicyGuid string
 			)
@@ -207,7 +207,7 @@ var _ = Describe("external connectivity", func() {
 			}, 180 /* <-- overall spec timeout in seconds */)
 		})
 
-		Context("when the egress policy is for the space", func() {
+		PContext("when the egress policy is for the space", func() {
 			var (
 				egressPolicyGuid string
 			)
