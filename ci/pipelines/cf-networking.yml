@@ -617,7 +617,8 @@ jobs:
           enable-sidecar-proxying.yml
           disable-ingress-redirect-to-proxy.yml
           enable-iptables-logger.yml
-          opsfile.yml
+          use-postgres.yml
+          scale-to-2-diego-cells.yml
           lower-canary-watch-time.yml
       input_mapping:
         bbl-state: cf-networking-deployments
