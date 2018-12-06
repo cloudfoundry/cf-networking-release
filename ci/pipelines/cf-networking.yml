@@ -1339,7 +1339,13 @@ jobs:
           enable-sidecar-proxying.yml
           disable-ingress-redirect-to-proxy.yml
           enable-iptables-logger.yml
-          opsfile.yml
+          change-nats-monitor-port.yml
+          increase-diego-cell-mtu.yml
+          scale-diego-cell-max-in-flight.yml
+          scale-diego-cell-vm-size.yml
+          scale-max-containers.yml
+          scale-router-ephemeral-disk.yml
+          scale-to-3-diego-cells.yml
           lower-canary-watch-time.yml
       input_mapping:
         bbl-state: cf-networking-deployments
