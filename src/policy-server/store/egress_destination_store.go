@@ -126,27 +126,34 @@ func (e *EgressDestinationStore) Update(egressDestinations []EgressDestination) 
 	}
 
 	for _, egressDestination := range egressDestinations {
-		var startPort, endPort int64
-		if len(egressDestination.Ports) > 0 {
-			startPort = int64(egressDestination.Ports[0].Start)
-			endPort = int64(egressDestination.Ports[0].End)
-		}
-		err = e.EgressDestinationRepo.UpdateIPRange(
-			tx,
-			egressDestination.GUID,
-			egressDestination.IPRanges[0].Start,
-			egressDestination.IPRanges[0].End,
-			egressDestination.Protocol,
-			startPort,
-			endPort,
-			int64(egressDestination.ICMPType),
-			int64(egressDestination.ICMPCode),
-		)
+		err = e.EgressDestinationRepo.Delete(tx, egressDestination.GUID)
 		if err != nil {
 			tx.Rollback()
-			return nil, fmt.Errorf("egress destination store update iprange: %s", err)
+			return nil, fmt.Errorf("egress destination store delete iprange: %s", err)
 		}
+		for _, rule := range egressDestination.Rules {
+			var startPort, endPort int64
+			if len(rule.Ports) > 0 {
+				startPort = int64(rule.Ports[0].Start)
+				endPort = int64(rule.Ports[0].End)
+			}
 
+			_, err = e.EgressDestinationRepo.CreateIPRange(
+				tx,
+				egressDestination.GUID,
+				rule.IPRanges[0].Start,
+				rule.IPRanges[0].End,
+				rule.Protocol,
+				startPort,
+				endPort,
+				int64(rule.ICMPType),
+				int64(rule.ICMPCode),
+			)
+			if err != nil {
+				tx.Rollback()
+				return nil, fmt.Errorf("egress destination store create iprange: %s", err)
+			}
+		}
 		err := e.DestinationMetadataRepo.Upsert(tx, egressDestination.GUID, egressDestination.Name, egressDestination.Description)
 
 		if err != nil {
@@ -204,26 +211,28 @@ func (e *EgressDestinationStore) Create(egressDestinations []EgressDestination) 
 			return nil, fmt.Errorf("egress destination store create destination metadata: %s", err)
 		}
 
-		var startPort, endPort int64
-		if len(egressDestination.Ports) > 0 {
-			startPort = int64(egressDestination.Ports[0].Start)
-			endPort = int64(egressDestination.Ports[0].End)
-		}
+		for _, rule := range egressDestination.Rules {
+			var startPort, endPort int64
+			if len(rule.Ports) > 0 {
+				startPort = int64(rule.Ports[0].Start)
+				endPort = int64(rule.Ports[0].End)
+			}
 
-		_, err = e.EgressDestinationRepo.CreateIPRange(
-			tx,
-			destinationTerminalGUID,
-			egressDestination.IPRanges[0].Start,
-			egressDestination.IPRanges[0].End,
-			egressDestination.Protocol,
-			startPort,
-			endPort,
-			int64(egressDestination.ICMPType),
-			int64(egressDestination.ICMPCode),
-		)
-		if err != nil {
-			tx.Rollback()
-			return nil, fmt.Errorf("egress destination store create ip range: %s", err)
+			_, err = e.EgressDestinationRepo.CreateIPRange(
+				tx,
+				destinationTerminalGUID,
+				rule.IPRanges[0].Start,
+				rule.IPRanges[0].End,
+				rule.Protocol,
+				startPort,
+				endPort,
+				int64(rule.ICMPType),
+				int64(rule.ICMPCode),
+			)
+			if err != nil {
+				tx.Rollback()
+				return nil, fmt.Errorf("egress destination store create ip range: %s", err)
+			}
 		}
 
 		egressDestination.GUID = destinationTerminalGUID
@@ -239,14 +248,15 @@ func (e *EgressDestinationStore) Create(egressDestinations []EgressDestination) 
 	return results, nil
 }
 
+//TODO all rules must be considered
 func isDuplicateDestination(a, b EgressDestination) bool {
 	return a.Name == b.Name &&
 		a.Description == b.Description &&
-		a.Protocol == b.Protocol &&
-		reflect.DeepEqual(a.Ports, b.Ports) &&
-		reflect.DeepEqual(a.IPRanges, b.IPRanges) &&
-		a.ICMPType == b.ICMPType &&
-		a.ICMPCode == b.ICMPCode
+		a.Rules[0].Protocol == b.Rules[0].Protocol &&
+		reflect.DeepEqual(a.Rules[0].Ports, b.Rules[0].Ports) &&
+		reflect.DeepEqual(a.Rules[0].IPRanges, b.Rules[0].IPRanges) &&
+		a.Rules[0].ICMPType == b.Rules[0].ICMPType &&
+		a.Rules[0].ICMPCode == b.Rules[0].ICMPCode
 }
 
 func isDuplicateError(err error) bool {

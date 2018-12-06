@@ -10,17 +10,14 @@ import (
 	"policy-server/store/migrations"
 	migrationsFakes "policy-server/store/migrations/fakes"
 	"strconv"
-
 	"sync"
-
+	testhelpers "test-helpers"
 	"time"
-
-	"test-helpers"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"code.cloudfoundry.org/lager"
-	"github.com/cf-container-networking/sql-migrate"
+	migrate "github.com/cf-container-networking/sql-migrate"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -1584,6 +1581,33 @@ var _ = Describe("migrations", func() {
 						WHERE guid = 'some-egress-guid-2'`).Scan(&appLifecycle)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(appLifecycle).To(Equal("running"))
+			})
+		})
+
+		Describe("V60-V62 - Allow many ip ranges to an egress policy", func() {
+			It("should migrate", func() {
+				By("performing migration")
+				migrateTo("59")
+
+				_, err := realDb.Exec("INSERT INTO terminals (guid) VALUES ('some-terminal-guid')")
+				Expect(err).NotTo(HaveOccurred())
+
+				By("performing migration")
+				numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 3)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(numMigrations).To(Equal(3))
+
+				By("inserting two ip range for a terminal")
+				_, err = realDb.Exec(`
+					INSERT INTO ip_ranges (protocol, start_ip, end_ip, terminal_guid)
+					VALUES ('tcp', '1.2.3.4', '2.3.4.5', 'some-terminal-guid')`)
+				Expect(err).NotTo(HaveOccurred())
+
+				By("validating a duplicate ip range can be added")
+				_, err = realDb.Exec(`
+					INSERT INTO ip_ranges (protocol, start_ip, end_ip, terminal_guid)
+					VALUES ('tcp', '1.2.3.4', '2.3.4.5', 'some-terminal-guid')`)
+				Expect(err).NotTo(HaveOccurred())
 			})
 		})
 

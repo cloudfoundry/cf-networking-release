@@ -26,13 +26,17 @@ type Port struct {
 
 type Destination struct {
 	GUID        string `json:"id,omitempty"`
-	Protocol    string
-	IPs         []IPRange
-	Ports       []Port
 	Name        string `json:"name"`
 	Description string `json:"description"`
-	ICMPType    *int   `json:"icmp_type,omitempty"`
-	ICMPCode    *int   `json:"icmp_code,omitempty"`
+	Rules       []DestinationRule
+}
+
+type DestinationRule struct {
+	Protocol string
+	IPs      []IPRange
+	Ports    []Port
+	ICMPType *int `json:"icmp_type,omitempty"`
+	ICMPCode *int `json:"icmp_code,omitempty"`
 }
 
 type DestinationList struct {

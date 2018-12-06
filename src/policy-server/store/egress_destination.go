@@ -114,7 +114,7 @@ func (e *EgressDestinationTable) CreateIPRange(tx db.Transaction, destinationTer
 }
 
 func convertRowsToEgressDestinations(rows sqlRows) ([]EgressDestination, error) {
-	var foundEgressDestinations []EgressDestination
+	foundEgressDestinations := make(map[string]EgressDestination)
 
 	for rows.Next() {
 		var (
@@ -134,18 +134,39 @@ func convertRowsToEgressDestinations(rows sqlRows) ([]EgressDestination, error) 
 			ports = []Ports{{Start: startPort, End: endPort}}
 		}
 
-		foundEgressDestinations = append(foundEgressDestinations, EgressDestination{
-			GUID:        *terminalGUID,
-			Name:        *name,
-			Description: *description,
-			Protocol:    *protocol,
-			Ports:       ports,
-			IPRanges:    []IPRange{{Start: *startIP, End: *endIP}},
-			ICMPType:    icmpType,
-			ICMPCode:    icmpCode,
-		})
+		if destination, ok := foundEgressDestinations[*terminalGUID]; ok {
+			destination.Rules = append(destination.Rules, EgressDestinationRule{
+				Protocol: *protocol,
+				Ports:    ports,
+				IPRanges: []IPRange{{Start: *startIP, End: *endIP}},
+				ICMPType: icmpType,
+				ICMPCode: icmpCode,
+			})
+			foundEgressDestinations[*terminalGUID] = destination
+		} else {
+			foundEgressDestinations[*terminalGUID] = EgressDestination{
+				GUID:        *terminalGUID,
+				Name:        *name,
+				Description: *description,
+				Rules: []EgressDestinationRule{
+					{
+						Protocol: *protocol,
+						Ports:    ports,
+						IPRanges: []IPRange{{Start: *startIP, End: *endIP}},
+						ICMPType: icmpType,
+						ICMPCode: icmpCode,
+					},
+				},
+			}
+		}
 	}
-	return foundEgressDestinations, nil
+
+	var destinationsToReturn []EgressDestination
+	for _, destination := range foundEgressDestinations {
+		destinationsToReturn = append(destinationsToReturn, destination)
+	}
+
+	return destinationsToReturn, nil
 }
 
 func egressDestinationsQuery(whereClause string) string {

@@ -66,17 +66,21 @@ var _ = Describe("PolicyCleaner", func() {
 			ID:     "live-egress-policy-guid-1",
 			Source: store.EgressSource{ID: "live-egress-app-guid", Type: "app"},
 			Destination: store.EgressDestination{
-				Protocol: "tcp",
-				Ports: []store.Ports{
+				Rules: []store.EgressDestinationRule{
 					{
-						Start: 8080,
-						End:   8080,
-					},
-				},
-				IPRanges: []store.IPRange{
-					{
-						Start: "1.2.3.4",
-						End:   "1.2.3.4",
+						Protocol: "tcp",
+						Ports: []store.Ports{
+							{
+								Start: 8080,
+								End:   8080,
+							},
+						},
+						IPRanges: []store.IPRange{
+							{
+								Start: "1.2.3.4",
+								End:   "1.2.3.4",
+							},
+						},
 					},
 				},
 			},
@@ -84,17 +88,21 @@ var _ = Describe("PolicyCleaner", func() {
 			ID:     "live-egress-policy-guid-2",
 			Source: store.EgressSource{ID: "live-egress-space-guid", Type: "space"},
 			Destination: store.EgressDestination{
-				Protocol: "tcp",
-				Ports: []store.Ports{
+				Rules: []store.EgressDestinationRule{
 					{
-						Start: 8080,
-						End:   8080,
-					},
-				},
-				IPRanges: []store.IPRange{
-					{
-						Start: "1.2.3.4",
-						End:   "1.2.3.4",
+						Protocol: "tcp",
+						Ports: []store.Ports{
+							{
+								Start: 8080,
+								End:   8080,
+							},
+						},
+						IPRanges: []store.IPRange{
+							{
+								Start: "1.2.3.4",
+								End:   "1.2.3.4",
+							},
+						},
 					},
 				},
 			},
@@ -102,17 +110,21 @@ var _ = Describe("PolicyCleaner", func() {
 			ID:     "dead-egress-policy-guid-3",
 			Source: store.EgressSource{ID: "dead-egress-app-guid", Type: "app"},
 			Destination: store.EgressDestination{
-				Protocol: "tcp",
-				Ports: []store.Ports{
+				Rules: []store.EgressDestinationRule{
 					{
-						Start: 8080,
-						End:   8080,
-					},
-				},
-				IPRanges: []store.IPRange{
-					{
-						Start: "1.2.3.4",
-						End:   "1.2.3.4",
+						Protocol: "tcp",
+						Ports: []store.Ports{
+							{
+								Start: 8080,
+								End:   8080,
+							},
+						},
+						IPRanges: []store.IPRange{
+							{
+								Start: "1.2.3.4",
+								End:   "1.2.3.4",
+							},
+						},
 					},
 				},
 			},
@@ -120,17 +132,21 @@ var _ = Describe("PolicyCleaner", func() {
 			ID:     "dead-egress-policy-guid-4",
 			Source: store.EgressSource{ID: "dead-egress-space-guid", Type: "space"},
 			Destination: store.EgressDestination{
-				Protocol: "tcp",
-				Ports: []store.Ports{
+				Rules: []store.EgressDestinationRule{
 					{
-						Start: 8080,
-						End:   8080,
-					},
-				},
-				IPRanges: []store.IPRange{
-					{
-						Start: "1.2.3.4",
-						End:   "1.2.3.4",
+						Protocol: "tcp",
+						Ports: []store.Ports{
+							{
+								Start: 8080,
+								End:   8080,
+							},
+						},
+						IPRanges: []store.IPRange{
+							{
+								Start: "1.2.3.4",
+								End:   "1.2.3.4",
+							},
+						},
 					},
 				},
 			},

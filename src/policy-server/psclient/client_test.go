@@ -35,17 +35,36 @@ var _ = Describe("Client", func() {
 			destination1 = psclient.Destination{
 				Name:        "meow-dest",
 				Description: "cats rule",
-				Protocol:    "tcp",
-				IPs: []psclient.IPRange{
+				Rules: []psclient.DestinationRule{
 					{
-						Start: "1.2.3.4",
-						End:   "1.2.3.5",
+						Protocol: "tcp",
+						IPs: []psclient.IPRange{
+							{
+								Start: "1.2.3.4",
+								End:   "1.2.3.5",
+							},
+						},
+						Ports: []psclient.Port{
+							{
+								Start: 8080,
+								End:   9090,
+							},
+						},
 					},
-				},
-				Ports: []psclient.Port{
 					{
-						Start: 8080,
-						End:   9090,
+						Protocol: "tcp",
+						IPs: []psclient.IPRange{
+							{
+								Start: "10.20.30.40",
+								End:   "10.20.30.50",
+							},
+						},
+						Ports: []psclient.Port{
+							{
+								Start: 80,
+								End:   90,
+							},
+						},
 					},
 				},
 			}
@@ -53,17 +72,21 @@ var _ = Describe("Client", func() {
 			destination2 = psclient.Destination{
 				Name:        "bark-dest",
 				Description: "dogs drool",
-				Protocol:    "tcp",
-				IPs: []psclient.IPRange{
+				Rules: []psclient.DestinationRule{
 					{
-						Start: "2.2.3.4",
-						End:   "2.2.3.5",
-					},
-				},
-				Ports: []psclient.Port{
-					{
-						Start: 8081,
-						End:   9091,
+						Protocol: "tcp",
+						IPs: []psclient.IPRange{
+							{
+								Start: "2.2.3.4",
+								End:   "2.2.3.5",
+							},
+						},
+						Ports: []psclient.Port{
+							{
+								Start: 8081,
+								End:   9091,
+							},
+						},
 					},
 				},
 			}
@@ -177,24 +200,30 @@ var _ = Describe("Client", func() {
 			BeforeEach(func() {
 				jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 					respBytes := []byte(`{
-						"destinations": [
-						{
+						"destinations": [{
 							 "id": "guid-received-from-server-1",
 					     "name": "name-received-from-server",
 					     "description": "description-received-from-server",
-					     "ips": [{"start": "8.8.8.8", "end": "8.8.8.8"}],
-					     "ports": [{"start": 8080, "end": 8080}],
-					     "protocol": "tcp"
+							 "rules": [{
+								 "ips": [{"start": "8.8.8.8", "end": "8.8.8.8"}],
+								 "ports": [{"start": 8080, "end": 8080}],
+								 "protocol": "tcp"
+							 }, {
+								 "ips": [{"start": "9.9.9.9", "end": "9.9.9.9"}],
+								 "ports": [{"start": 80, "end": 80}],
+								 "protocol": "tcp"
+							 }]
 					  },
 						{
 							 "id": "guid-received-from-server-2",
 					     "name": "name-received-from-server",
 					     "description": "description-received-from-server",
-					     "ips": [{"start": "8.8.8.8", "end": "8.8.8.8"}],
-					     "ports": [{"start": 8080, "end": 8080}],
-					     "protocol": "tcp"
-					  }
-						]
+							 "rules": [{
+								 "ips": [{"start": "8.8.8.8", "end": "8.8.8.8"}],
+								 "ports": [{"start": 8080, "end": 8080}],
+								 "protocol": "tcp"
+							 }]
+					  }]
 					}`)
 					Expect(json.Unmarshal(respBytes, respData)).To(Succeed())
 					return nil
@@ -214,17 +243,30 @@ var _ = Describe("Client", func() {
 						GUID:        "guid-received-from-server-1",
 						Name:        "name-received-from-server",
 						Description: "description-received-from-server",
-						IPs:         []psclient.IPRange{{Start: "8.8.8.8", End: "8.8.8.8"}},
-						Ports:       []psclient.Port{{Start: 8080, End: 8080}},
-						Protocol:    "tcp",
+						Rules: []psclient.DestinationRule{
+							{
+								IPs:      []psclient.IPRange{{Start: "8.8.8.8", End: "8.8.8.8"}},
+								Ports:    []psclient.Port{{Start: 8080, End: 8080}},
+								Protocol: "tcp",
+							},
+							{
+								IPs:      []psclient.IPRange{{Start: "9.9.9.9", End: "9.9.9.9"}},
+								Ports:    []psclient.Port{{Start: 80, End: 80}},
+								Protocol: "tcp",
+							},
+						},
 					},
 					{
 						GUID:        "guid-received-from-server-2",
 						Name:        "name-received-from-server",
 						Description: "description-received-from-server",
-						IPs:         []psclient.IPRange{{Start: "8.8.8.8", End: "8.8.8.8"}},
-						Ports:       []psclient.Port{{Start: 8080, End: 8080}},
-						Protocol:    "tcp",
+						Rules: []psclient.DestinationRule{
+							{
+								IPs:      []psclient.IPRange{{Start: "8.8.8.8", End: "8.8.8.8"}},
+								Ports:    []psclient.Port{{Start: 8080, End: 8080}},
+								Protocol: "tcp",
+							},
+						},
 					},
 				}))
 
@@ -277,16 +319,20 @@ var _ = Describe("Client", func() {
 			BeforeEach(func() {
 				destinationResp = psclient.DestinationList{
 					Destinations: []psclient.Destination{{
-						GUID:     "response-dest-guid",
-						Protocol: "tcp",
-						IPs: []psclient.IPRange{
-							{Start: "1.1.1.1", End: "1.1.1.5"},
-						},
-						Ports: []psclient.Port{
-							{Start: 1234, End: 2345},
-						},
 						Name:        "destinationObject",
 						Description: "description",
+						GUID:        "response-dest-guid",
+						Rules: []psclient.DestinationRule{
+							{
+								Protocol: "tcp",
+								IPs: []psclient.IPRange{
+									{Start: "1.1.1.1", End: "1.1.1.5"},
+								},
+								Ports: []psclient.Port{
+									{Start: 1234, End: 2345},
+								},
+							},
+						},
 					}},
 				}
 			})
@@ -346,8 +392,8 @@ var _ = Describe("Client", func() {
 		BeforeEach(func() {
 			jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 				respBytes := []byte(`{
-                    "egress_policies": [ { "id": "some-egress-policy-guid" } ]
-                }`)
+						"egress_policies": [ { "id": "some-egress-policy-guid" } ]
+				}`)
 				json.Unmarshal(respBytes, respData)
 				return nil
 			}
@@ -452,20 +498,20 @@ var _ = Describe("Client", func() {
 		BeforeEach(func() {
 			jsonClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
 				respBytes := []byte(`{
-                    "total_egress_policies": 1,
-                    "egress_policies": [
-                        {
-                            "id": "some-egress-policy-guid",
-                            "source": {
-                                "type": "app",
-                                "id": "some-app-guid"
-                            },
-                            "destination": {
-                                "id": "some-dest-guid"
-                            }
-                        }
-                    ]
-                }`)
+						"total_egress_policies": 1,
+						"egress_policies": [
+								{
+										"id": "some-egress-policy-guid",
+										"source": {
+												"type": "app",
+												"id": "some-app-guid"
+										},
+										"destination": {
+												"id": "some-dest-guid"
+										}
+								}
+						]
+				}`)
 				json.Unmarshal(respBytes, respData)
 				return nil
 			}

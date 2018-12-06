@@ -52,8 +52,19 @@ var _ = Describe("PolicyCollectionWriter", func() {
 			egressPolicies := []store.EgressPolicy{{
 				Source: store.EgressSource{ID: "some-egress-app-guid", Type: "app"},
 				Destination: store.EgressDestination{
-					Protocol: "tcp",
-					IPRanges: []store.IPRange{{Start: "8.0.8.0", End: "8.0.8.0"}},
+					Rules: []store.EgressDestinationRule{
+						{
+							Protocol: "tcp",
+							IPRanges: []store.IPRange{{Start: "8.0.8.0", End: "8.0.8.0"}},
+							Ports:    []store.Ports{{Start: 80, End: 90}},
+						},
+						{
+							Protocol: "icmp",
+							IPRanges: []store.IPRange{{Start: "1.1.1.1", End: "2.2.2.2"}},
+							ICMPType: 8,
+							ICMPCode: 4,
+						},
+					},
 				},
 				AppLifecycle: "running",
 			}}
@@ -86,13 +97,24 @@ var _ = Describe("PolicyCollectionWriter", func() {
 							}
 						}
 					}],
-					"total_egress_policies": 1,
+					"total_egress_policies": 2,
 					"egress_policies": [
 						{
 							"source": {"id": "some-egress-app-guid", "type": "app"},
 							"destination": {
 								"ips": [{"start": "8.0.8.0", "end": "8.0.8.0"}],
-								"protocol": "tcp"
+								"protocol": "tcp",
+								"ports": [{"start": 80, "end": 90}]
+							},
+							"app_lifecycle": "running"
+						},
+						{
+							"source": {"id": "some-egress-app-guid", "type": "app"},
+							"destination": {
+								"ips": [{"start": "1.1.1.1", "end": "2.2.2.2"}],
+								"protocol": "icmp",
+								"icmp_type": 8,
+								"icmp_code": 4
 							},
 							"app_lifecycle": "running"
 						}

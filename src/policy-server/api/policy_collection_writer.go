@@ -30,15 +30,15 @@ func (p *policyCollectionWriter) AsBytes(policies []store.Policy, egressPolicies
 		apiPolicies = append(apiPolicies, mapStorePolicy(policy))
 	}
 
-	apiEgressPolicies := []EgressPolicy{}
+	apiEgressPolicies := []InternalEgressPolicy{}
 	for _, egressPolicy := range egressPolicies {
-		apiEgressPolicies = append(apiEgressPolicies, mapStoreEgressPolicy(egressPolicy))
+		apiEgressPolicies = append(apiEgressPolicies, mapStoreEgressPolicyToInternalAPIEgressPolicy(egressPolicy)...)
 	}
 
 	policyCollection := PolicyCollectionPayload{
-		TotalPolicies:       len(policies),
+		TotalPolicies:       len(apiPolicies),
 		Policies:            apiPolicies,
-		TotalEgressPolicies: len(egressPolicies),
+		TotalEgressPolicies: len(apiEgressPolicies),
 		EgressPolicies:      apiEgressPolicies,
 	}
 	bytes, err := p.Marshaler.Marshal(policyCollection)
@@ -49,14 +49,48 @@ func (p *policyCollectionWriter) AsBytes(policies []store.Policy, egressPolicies
 	return bytes, nil
 }
 
-func mapStoreEgressPolicy(storeEgressPolicy store.EgressPolicy) EgressPolicy {
-	destination := asApiEgressDestination(storeEgressPolicy.Destination)
-	return EgressPolicy{
-		Source: &EgressSource{
-			ID:   storeEgressPolicy.Source.ID,
-			Type: storeEgressPolicy.Source.Type,
-		},
-		Destination: &destination,
-		AppLifecycle: &storeEgressPolicy.AppLifecycle,
+func mapStoreEgressPolicyToInternalAPIEgressPolicy(storeEgressPolicy store.EgressPolicy) []InternalEgressPolicy {
+	var policies []InternalEgressPolicy
+
+	for _, rule := range storeEgressPolicy.Destination.Rules {
+		var ports []Ports
+
+		if len(rule.Ports) > 0 {
+			ports = []Ports{
+				{
+					Start: rule.Ports[0].Start,
+					End:   rule.Ports[0].End,
+				},
+			}
+		}
+		var icmpType, icmpCode *int
+		if rule.Protocol == "icmp" {
+			icmpType = &rule.ICMPType
+			icmpCode = &rule.ICMPCode
+		}
+
+		firstIPRange := rule.IPRanges[0]
+
+		policies = append(policies, InternalEgressPolicy{
+			Source: &EgressSource{
+				ID:   storeEgressPolicy.Source.ID,
+				Type: storeEgressPolicy.Source.Type,
+			},
+			Destination: &InternalEgressDestination{
+				GUID:        storeEgressPolicy.Destination.GUID,
+				Name:        storeEgressPolicy.Destination.Name,
+				Description: storeEgressPolicy.Destination.Description,
+				Protocol:    rule.Protocol,
+				Ports:       ports,
+				IPRanges: []IPRange{{
+					Start: firstIPRange.Start,
+					End:   firstIPRange.End,
+				}},
+				ICMPType: icmpType,
+				ICMPCode: icmpCode,
+			},
+			AppLifecycle: &storeEgressPolicy.AppLifecycle,
+		})
 	}
+	return policies
 }

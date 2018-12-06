@@ -412,6 +412,8 @@ func mapRowToEgressPolicy(egressPolicyGUID, sourceTerminalGUID, appLifecycle, na
 		}
 	}
 
+	//TODO what about multiple rules?
+
 	return EgressPolicy{
 		ID:     *egressPolicyGUID,
 		Source: source,
@@ -419,16 +421,20 @@ func mapRowToEgressPolicy(egressPolicyGUID, sourceTerminalGUID, appLifecycle, na
 			GUID:        *destinationGUID,
 			Name:        *name,
 			Description: *description,
-			Protocol:    *protocol,
-			Ports:       ports,
-			IPRanges: []IPRange{
+			Rules: []EgressDestinationRule{
 				{
-					Start: *startIP,
-					End:   *endIP,
+					Protocol: *protocol,
+					Ports:    ports,
+					IPRanges: []IPRange{
+						{
+							Start: *startIP,
+							End:   *endIP,
+						},
+					},
+					ICMPType: icmpType,
+					ICMPCode: icmpCode,
 				},
 			},
-			ICMPType: icmpType,
-			ICMPCode: icmpCode,
 		},
 		AppLifecycle: *appLifecycle,
 	}

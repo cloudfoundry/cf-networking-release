@@ -163,7 +163,7 @@ var _ = Describe("Policies index handler", func() {
 		}
 
 		token = uaa_client.CheckTokenResponse{
-			Scope:    []string{"some-scope", "some-other-scope"},
+			Scope: []string{"some-scope", "some-other-scope"},
 		}
 		resp = httptest.NewRecorder()
 

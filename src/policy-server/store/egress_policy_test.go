@@ -430,54 +430,70 @@ var _ = Describe("Egress Policy Table", func() {
 					{
 						Name:        "a",
 						Description: "desc a",
-						Protocol:    "tcp",
-						Ports: []store.Ports{
+						Rules: []store.EgressDestinationRule{
 							{
-								Start: 8080,
-								End:   8081,
-							},
-						},
-						IPRanges: []store.IPRange{
-							{
-								Start: "1.2.3.4",
-								End:   "1.2.3.5",
+								Protocol: "tcp",
+								Ports: []store.Ports{
+									{
+										Start: 8080,
+										End:   8081,
+									},
+								},
+								IPRanges: []store.IPRange{
+									{
+										Start: "1.2.3.4",
+										End:   "1.2.3.5",
+									},
+								},
 							},
 						},
 					},
 					{
 						Name:        "b",
 						Description: "desc b",
-						Protocol:    "udp",
-						IPRanges: []store.IPRange{
+						Rules: []store.EgressDestinationRule{
 							{
-								Start: "2.2.3.4",
-								End:   "2.2.3.5",
+								Protocol: "udp",
+								IPRanges: []store.IPRange{
+									{
+										Start: "2.2.3.4",
+										End:   "2.2.3.5",
+									},
+								},
 							},
 						},
 					},
 					{
 						Name:        "c",
 						Description: "desc c",
-						Protocol:    "icmp",
-						ICMPType:    1,
-						ICMPCode:    2,
-						IPRanges: []store.IPRange{
+						Rules: []store.EgressDestinationRule{
 							{
-								Start: "2.2.3.4",
-								End:   "2.2.3.5",
+								Protocol: "icmp",
+								ICMPType: 1,
+								ICMPCode: 2,
+								IPRanges: []store.IPRange{
+									{
+										Start: "2.2.3.4",
+										End:   "2.2.3.5",
+									},
+								},
 							},
 						},
 					},
 					{
 						Name:        "old-entry",
 						Description: "this represents an entry that has no destination_metadata",
-						Protocol:    "icmp",
-						ICMPType:    1,
-						ICMPCode:    2,
-						IPRanges: []store.IPRange{
+						Rules: []store.EgressDestinationRule{
 							{
-								Start: "2.2.3.4",
-								End:   "2.2.3.5",
+								Protocol: "icmp",
+								ICMPType: 1,
+								ICMPCode: 2,
+								IPRanges: []store.IPRange{
+									{
+										Start: "2.2.3.4",
+										End:   "2.2.3.5",
+									},
+								},
 							},
 						},
 					},
@@ -589,17 +605,21 @@ var _ = Describe("Egress Policy Table", func() {
 								GUID:        createdEgressDestinations[0].GUID,
 								Name:        "a",
 								Description: "desc a",
-								Protocol:    "tcp",
-								Ports: []store.Ports{
+								Rules: []store.EgressDestinationRule{
 									{
-										Start: 8080,
-										End:   8081,
-									},
-								},
-								IPRanges: []store.IPRange{
-									{
-										Start: "1.2.3.4",
-										End:   "1.2.3.5",
+										Protocol: "tcp",
+										Ports: []store.Ports{
+											{
+												Start: 8080,
+												End:   8081,
+											},
+										},
+										IPRanges: []store.IPRange{
+											{
+												Start: "1.2.3.4",
+												End:   "1.2.3.5",
+											},
+										},
 									},
 								},
 							},
@@ -615,11 +635,15 @@ var _ = Describe("Egress Policy Table", func() {
 								GUID:        createdEgressDestinations[1].GUID,
 								Name:        "b",
 								Description: "desc b",
-								Protocol:    "udp",
-								IPRanges: []store.IPRange{
+								Rules: []store.EgressDestinationRule{
 									{
-										Start: "2.2.3.4",
-										End:   "2.2.3.5",
+										Protocol: "udp",
+										IPRanges: []store.IPRange{
+											{
+												Start: "2.2.3.4",
+												End:   "2.2.3.5",
+											},
+										},
 									},
 								},
 							},
@@ -635,13 +659,17 @@ var _ = Describe("Egress Policy Table", func() {
 								GUID:        createdEgressDestinations[2].GUID,
 								Name:        "c",
 								Description: "desc c",
-								Protocol:    "icmp",
-								ICMPType:    1,
-								ICMPCode:    2,
-								IPRanges: []store.IPRange{
+								Rules: []store.EgressDestinationRule{
 									{
-										Start: "2.2.3.4",
-										End:   "2.2.3.5",
+										Protocol: "icmp",
+										ICMPType: 1,
+										ICMPCode: 2,
+										IPRanges: []store.IPRange{
+											{
+												Start: "2.2.3.4",
+												End:   "2.2.3.5",
+											},
+										},
 									},
 								},
 							},
@@ -657,13 +685,17 @@ var _ = Describe("Egress Policy Table", func() {
 								GUID:        createdEgressDestinations[3].GUID,
 								Name:        "",
 								Description: "",
-								Protocol:    "icmp",
-								ICMPType:    1,
-								ICMPCode:    2,
-								IPRanges: []store.IPRange{
+								Rules: []store.EgressDestinationRule{
 									{
-										Start: "2.2.3.4",
-										End:   "2.2.3.5",
+										Protocol: "icmp",
+										ICMPType: 1,
+										ICMPCode: 2,
+										IPRanges: []store.IPRange{
+											{
+												Start: "2.2.3.4",
+												End:   "2.2.3.5",
+											},
+										},
 									},
 								},
 							},
@@ -744,66 +776,86 @@ var _ = Describe("Egress Policy Table", func() {
 
 				egressDestinations := []store.EgressDestination{
 					{
-						Name:     "a",
-						Protocol: "tcp",
-						Ports: []store.Ports{
+						Name: "a",
+						Rules: []store.EgressDestinationRule{
 							{
-								Start: 8080,
-								End:   8081,
-							},
-						},
-						IPRanges: []store.IPRange{
-							{
-								Start: "1.2.3.4",
-								End:   "1.2.3.5",
-							},
-						},
-					},
-					{
-						Name:     "b",
-						Protocol: "udp",
-						IPRanges: []store.IPRange{
-							{
-								Start: "2.2.3.4",
-								End:   "2.2.3.5",
+								Protocol: "tcp",
+								Ports: []store.Ports{
+									{
+										Start: 8080,
+										End:   8081,
+									},
+								},
+								IPRanges: []store.IPRange{
+									{
+										Start: "1.2.3.4",
+										End:   "1.2.3.5",
+									},
+								},
 							},
 						},
 					},
 					{
-						Name:     "c",
-						Protocol: "icmp",
-						ICMPType: 1,
-						ICMPCode: 2,
-						IPRanges: []store.IPRange{
+						Name: "b",
+						Rules: []store.EgressDestinationRule{
 							{
-								Start: "2.2.3.4",
-								End:   "2.2.3.5",
+								Protocol: "udp",
+								IPRanges: []store.IPRange{
+									{
+										Start: "2.2.3.4",
+										End:   "2.2.3.5",
+									},
+								},
 							},
 						},
 					},
 					{
-						Name:     "d",
-						Protocol: "udp",
-						Ports: []store.Ports{
+						Name: "c",
+						Rules: []store.EgressDestinationRule{
 							{
-								Start: 8080,
-								End:   8081,
-							},
-						},
-						IPRanges: []store.IPRange{
-							{
-								Start: "3.2.3.4",
-								End:   "3.2.3.5",
+								Protocol: "icmp",
+								ICMPType: 1,
+								ICMPCode: 2,
+								IPRanges: []store.IPRange{
+									{
+										Start: "2.2.3.4",
+										End:   "2.2.3.5",
+									},
+								},
 							},
 						},
 					},
 					{
-						Name:     "e",
-						Protocol: "udp",
-						IPRanges: []store.IPRange{
+						Name: "d",
+						Rules: []store.EgressDestinationRule{
 							{
-								Start: "2.2.3.4",
-								End:   "2.2.3.5",
+								Protocol: "udp",
+								Ports: []store.Ports{
+									{
+										Start: 8080,
+										End:   8081,
+									},
+								},
+								IPRanges: []store.IPRange{
+									{
+										Start: "3.2.3.4",
+										End:   "3.2.3.5",
+									},
+								},
+							},
+						},
+					},
+					{
+						Name: "e",
+						Rules: []store.EgressDestinationRule{
+							{
+								Protocol: "udp",
+								IPRanges: []store.IPRange{
+									{
+										Start: "2.2.3.4",
+										End:   "2.2.3.5",
+									},
+								},
 							},
 						},
 					},
@@ -915,66 +967,86 @@ var _ = Describe("Egress Policy Table", func() {
 
 				egressDestinations := []store.EgressDestination{
 					{
-						Name:     "a",
-						Protocol: "tcp",
-						Ports: []store.Ports{
+						Name: "a",
+						Rules: []store.EgressDestinationRule{
 							{
-								Start: 8080,
-								End:   8081,
-							},
-						},
-						IPRanges: []store.IPRange{
-							{
-								Start: "1.2.3.4",
-								End:   "1.2.3.5",
-							},
-						},
-					},
-					{
-						Name:     "b",
-						Protocol: "udp",
-						IPRanges: []store.IPRange{
-							{
-								Start: "2.2.3.4",
-								End:   "2.2.3.5",
+								Protocol: "tcp",
+								Ports: []store.Ports{
+									{
+										Start: 8080,
+										End:   8081,
+									},
+								},
+								IPRanges: []store.IPRange{
+									{
+										Start: "1.2.3.4",
+										End:   "1.2.3.5",
+									},
+								},
 							},
 						},
 					},
 					{
-						Name:     "c",
-						Protocol: "icmp",
-						ICMPType: 1,
-						ICMPCode: 2,
-						IPRanges: []store.IPRange{
+						Name: "b",
+						Rules: []store.EgressDestinationRule{
 							{
-								Start: "2.2.3.4",
-								End:   "2.2.3.5",
+								Protocol: "udp",
+								IPRanges: []store.IPRange{
+									{
+										Start: "2.2.3.4",
+										End:   "2.2.3.5",
+									},
+								},
 							},
 						},
 					},
 					{
-						Name:     "d",
-						Protocol: "udp",
-						Ports: []store.Ports{
+						Name: "c",
+						Rules: []store.EgressDestinationRule{
 							{
-								Start: 8080,
-								End:   8081,
-							},
-						},
-						IPRanges: []store.IPRange{
-							{
-								Start: "3.2.3.4",
-								End:   "3.2.3.5",
+								Protocol: "icmp",
+								ICMPType: 1,
+								ICMPCode: 2,
+								IPRanges: []store.IPRange{
+									{
+										Start: "2.2.3.4",
+										End:   "2.2.3.5",
+									},
+								},
 							},
 						},
 					},
 					{
-						Name:     "e",
-						Protocol: "udp",
-						IPRanges: []store.IPRange{
+						Name: "d",
+						Rules: []store.EgressDestinationRule{
 							{
-								Start: "2.2.3.4",
-								End:   "2.2.3.5",
+								Protocol: "udp",
+								Ports: []store.Ports{
+									{
+										Start: 8080,
+										End:   8081,
+									},
+								},
+								IPRanges: []store.IPRange{
+									{
+										Start: "3.2.3.4",
+										End:   "3.2.3.5",
+									},
+								},
+							},
+						},
+					},
+					{
+						Name: "e",
+						Rules: []store.EgressDestinationRule{
+							{
+								Protocol: "udp",
+								IPRanges: []store.IPRange{
+									{
+										Start: "2.2.3.4",
+										End:   "2.2.3.5",
+									},
+								},
 							},
 						},
 					},
@@ -1166,7 +1238,7 @@ func egressDestinationStore(db store.Database) *store.EgressDestinationStore {
 
 	destinationMetadataTable := &store.DestinationMetadataTable{}
 	egressDestinationStore := &store.EgressDestinationStore{
-		Conn: db,
+		Conn:                    db,
 		EgressDestinationRepo:   &store.EgressDestinationTable{},
 		TerminalsRepo:           terminalsRepo,
 		DestinationMetadataRepo: destinationMetadataTable,

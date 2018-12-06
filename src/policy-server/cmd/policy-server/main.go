@@ -190,7 +190,7 @@ func main() {
 	}
 
 	egressDestinationStore := &store.EgressDestinationStore{
-		Conn: connectionPool,
+		Conn:                    connectionPool,
 		EgressDestinationRepo:   &store.EgressDestinationTable{},
 		TerminalsRepo:           terminalsTable,
 		DestinationMetadataRepo: &store.DestinationMetadataTable{},

@@ -58,17 +58,21 @@ var _ = Describe("External API Egress Policies", func() {
 		someDest := psclient.Destination{
 			Name:        "tcp with ports",
 			Description: "dest description",
-			Protocol:    "tcp",
-			IPs: []psclient.IPRange{
+			Rules: []psclient.DestinationRule{
 				{
-					Start: "1.2.3.4",
-					End:   "1.2.3.5",
-				},
-			},
-			Ports: []psclient.Port{
-				{
-					Start: 8080,
-					End:   9090,
+					Protocol: "tcp",
+					IPs: []psclient.IPRange{
+						{
+							Start: "1.2.3.4",
+							End:   "1.2.3.5",
+						},
+					},
+					Ports: []psclient.Port{
+						{
+							Start: 8080,
+							End:   9090,
+						},
+					},
 				},
 			},
 		}
@@ -76,17 +80,21 @@ var _ = Describe("External API Egress Policies", func() {
 		anotherDest := psclient.Destination{
 			Name:        "udp destination",
 			Description: "another description",
-			Protocol:    "udp",
-			IPs: []psclient.IPRange{
+			Rules: []psclient.DestinationRule{
 				{
-					Start: "3.2.3.4",
-					End:   "3.2.3.5",
-				},
-			},
-			Ports: []psclient.Port{
-				{
-					Start: 8082,
-					End:   9092,
+					Protocol: "udp",
+					IPs: []psclient.IPRange{
+						{
+							Start: "3.2.3.4",
+							End:   "3.2.3.5",
+						},
+					},
+					Ports: []psclient.Port{
+						{
+							Start: 8082,
+							End:   9092,
+						},
+					},
 				},
 			},
 		}
@@ -128,9 +136,13 @@ var _ = Describe("External API Egress Policies", func() {
 					GUID:        createdDestinations[0].GUID,
 					Name:        "tcp with ports",
 					Description: "dest description",
-					Protocol:    "tcp",
-					IPs:         []psclient.IPRange{{Start: "1.2.3.4", End: "1.2.3.5"}},
-					Ports:       []psclient.Port{{Start: 8080, End: 9090}},
+					Rules: []psclient.DestinationRule{
+						{
+							Protocol: "tcp",
+							IPs:      []psclient.IPRange{{Start: "1.2.3.4", End: "1.2.3.5"}},
+							Ports:    []psclient.Port{{Start: 8080, End: 9090}},
+						},
+					},
 				},
 				AppLifecycle: "running",
 			},
@@ -194,9 +206,13 @@ var _ = Describe("External API Egress Policies", func() {
 					GUID:        createdDestinations[0].GUID,
 					Name:        "tcp with ports",
 					Description: "dest description",
-					Protocol:    "tcp",
-					IPs:         []psclient.IPRange{{Start: "1.2.3.4", End: "1.2.3.5"}},
-					Ports:       []psclient.Port{{Start: 8080, End: 9090}},
+					Rules: []psclient.DestinationRule{
+						{
+							Protocol: "tcp",
+							IPs:      []psclient.IPRange{{Start: "1.2.3.4", End: "1.2.3.5"}},
+							Ports:    []psclient.Port{{Start: 8080, End: 9090}},
+						},
+					},
 				},
 				AppLifecycle: "running",
 			},
@@ -212,9 +228,13 @@ var _ = Describe("External API Egress Policies", func() {
 					GUID:        createdDestinations[1].GUID,
 					Name:        "udp destination",
 					Description: "another description",
-					Protocol:    "udp",
-					IPs:         []psclient.IPRange{{Start: "3.2.3.4", End: "3.2.3.5"}},
-					Ports:       []psclient.Port{{Start: 8082, End: 9092}},
+					Rules: []psclient.DestinationRule{
+						{
+							Protocol: "udp",
+							IPs:      []psclient.IPRange{{Start: "3.2.3.4", End: "3.2.3.5"}},
+							Ports:    []psclient.Port{{Start: 8082, End: 9092}},
+						},
+					},
 				},
 				AppLifecycle: "all",
 			},
@@ -236,9 +256,13 @@ var _ = Describe("External API Egress Policies", func() {
 					GUID:        createdDestinations[0].GUID,
 					Name:        "tcp with ports",
 					Description: "dest description",
-					Protocol:    "tcp",
-					IPs:         []psclient.IPRange{{Start: "1.2.3.4", End: "1.2.3.5"}},
-					Ports:       []psclient.Port{{Start: 8080, End: 9090}},
+					Rules: []psclient.DestinationRule{
+						{
+							Protocol: "tcp",
+							IPs:      []psclient.IPRange{{Start: "1.2.3.4", End: "1.2.3.5"}},
+							Ports:    []psclient.Port{{Start: 8080, End: 9090}},
+						},
+					},
 				},
 				AppLifecycle: "running",
 			},

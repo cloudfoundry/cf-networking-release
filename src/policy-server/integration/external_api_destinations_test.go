@@ -70,24 +70,41 @@ var _ = Describe("External Destination API", func() {
 				{
 					Name:        "tcp ips only",
 					Description: "tcp ips only desc",
-					Ports:       []psclient.Port{{Start: 8080, End: 8081}},
-					IPs:         []psclient.IPRange{{Start: "23.96.32.148", End: "23.96.32.149"}},
-					Protocol:    "tcp",
+					Rules: []psclient.DestinationRule{
+						{
+							Ports:    []psclient.Port{{Start: 8080, End: 8081}},
+							IPs:      []psclient.IPRange{{Start: "23.96.32.148", End: "23.96.32.149"}},
+							Protocol: "tcp",
+						},
+						{
+							Ports:    []psclient.Port{{Start: 1000, End: 1001}},
+							IPs:      []psclient.IPRange{{Start: "10.10.10.148", End: "10.10.10.149"}},
+							Protocol: "tcp",
+						},
+					},
 				},
 				{
 					Name:        "udp ips and ports",
 					Description: "udp ips and ports desc",
-					Protocol:    "udp",
-					Ports:       []psclient.Port{{Start: 8080, End: 8081}},
-					IPs:         []psclient.IPRange{{Start: "23.96.32.150", End: "23.96.32.151"}},
+					Rules: []psclient.DestinationRule{
+						{
+							Protocol: "udp",
+							Ports:    []psclient.Port{{Start: 8080, End: 8081}},
+							IPs:      []psclient.IPRange{{Start: "23.96.32.150", End: "23.96.32.151"}},
+						},
+					},
 				},
 				{
 					Name:        "icmp with type code",
 					Description: "icmp with type code",
-					ICMPType:    &icmpType,
-					ICMPCode:    &icmpCode,
-					IPs:         []psclient.IPRange{{Start: "23.96.32.150", End: "23.96.32.151"}},
-					Protocol:    "icmp",
+					Rules: []psclient.DestinationRule{
+						{
+							ICMPType: &icmpType,
+							ICMPCode: &icmpCode,
+							IPs:      []psclient.IPRange{{Start: "23.96.32.150", End: "23.96.32.151"}},
+							Protocol: "icmp",
+						},
+					},
 				},
 			}
 
@@ -106,26 +123,43 @@ var _ = Describe("External Destination API", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(createdDestinations[0].Name).To(Equal("tcp ips only"))
 			Expect(createdDestinations[0].Description).To(Equal("tcp ips only desc"))
-			Expect(createdDestinations[0].Ports).To(Equal([]psclient.Port{{Start: 8080, End: 8081}}))
-			Expect(createdDestinations[0].IPs).To(Equal([]psclient.IPRange{{Start: "23.96.32.148", End: "23.96.32.149"}}))
-			Expect(createdDestinations[0].Protocol).To(Equal("tcp"))
+			Expect(createdDestinations[0].Rules).To(Equal([]psclient.DestinationRule{
+				{
+					Ports:    []psclient.Port{{Start: 8080, End: 8081}},
+					IPs:      []psclient.IPRange{{Start: "23.96.32.148", End: "23.96.32.149"}},
+					Protocol: "tcp",
+				},
+				{
+					Ports:    []psclient.Port{{Start: 1000, End: 1001}},
+					IPs:      []psclient.IPRange{{Start: "10.10.10.148", End: "10.10.10.149"}},
+					Protocol: "tcp",
+				},
+			}))
 
 			_, err = uuid.ParseHex(createdDestinations[1].GUID)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(createdDestinations[1].Name).To(Equal("udp ips and ports"))
 			Expect(createdDestinations[1].Description).To(Equal("udp ips and ports desc"))
-			Expect(createdDestinations[1].Ports).To(Equal([]psclient.Port{{Start: 8080, End: 8081}}))
-			Expect(createdDestinations[1].IPs).To(Equal([]psclient.IPRange{{Start: "23.96.32.150", End: "23.96.32.151"}}))
-			Expect(createdDestinations[1].Protocol).To(Equal("udp"))
+			Expect(createdDestinations[1].Rules).To(Equal([]psclient.DestinationRule{
+				{
+					Ports:    []psclient.Port{{Start: 8080, End: 8081}},
+					IPs:      []psclient.IPRange{{Start: "23.96.32.150", End: "23.96.32.151"}},
+					Protocol: "udp",
+				},
+			}))
 
 			_, err = uuid.ParseHex(createdDestinations[2].GUID)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(createdDestinations[2].Name).To(Equal("icmp with type code"))
 			Expect(createdDestinations[2].Description).To(Equal("icmp with type code"))
-			Expect(createdDestinations[2].IPs).To(Equal([]psclient.IPRange{{Start: "23.96.32.150", End: "23.96.32.151"}}))
-			Expect(createdDestinations[2].Protocol).To(Equal("icmp"))
-			Expect(createdDestinations[2].ICMPCode).To(Equal(&icmpCode))
-			Expect(createdDestinations[2].ICMPType).To(Equal(&icmpType))
+			Expect(createdDestinations[2].Rules).To(Equal([]psclient.DestinationRule{
+				{
+					IPs:      []psclient.IPRange{{Start: "23.96.32.150", End: "23.96.32.151"}},
+					Protocol: "icmp",
+					ICMPCode: &icmpCode,
+					ICMPType: &icmpType,
+				},
+			}))
 
 			By("listing the existing destinations")
 			listedDestinations, err := client.ListDestinations(token, psclient.ListDestinationsOptions{})
@@ -156,9 +190,13 @@ var _ = Describe("External Destination API", func() {
 				{
 					Name:        "tcp ips only",
 					Description: "this is different than before",
-					Ports:       []psclient.Port{{Start: 8080, End: 8081}},
-					IPs:         []psclient.IPRange{{Start: "23.96.32.148", End: "23.96.32.149"}},
-					Protocol:    "tcp",
+					Rules: []psclient.DestinationRule{
+						{
+							Ports:    []psclient.Port{{Start: 8080, End: 8081}},
+							IPs:      []psclient.IPRange{{Start: "23.96.32.148", End: "23.96.32.149"}},
+							Protocol: "tcp",
+						},
+					},
 				},
 			}
 			_, err = client.CreateDestinations(token, toBeCreated...)
@@ -167,7 +205,7 @@ var _ = Describe("External Destination API", func() {
 			By("updating one of the destinations")
 			destToUpdate := createdDestinations[1]
 			destToUpdate.Name = "new name"
-			destToUpdate.Ports[0].End = 8080
+			destToUpdate.Rules[0].Ports[0].End = 8080
 			updatedDests, err := client.UpdateDestinations(token, destToUpdate)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(updatedDests).To(HaveLen(1))

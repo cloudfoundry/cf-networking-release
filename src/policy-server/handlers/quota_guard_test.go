@@ -25,7 +25,7 @@ var _ = Describe("QuotaGuard", func() {
 			MaxPolicies: 2,
 		}
 		tokenData = uaa_client.CheckTokenResponse{
-			Scope:    []string{"network.write"},
+			Scope: []string{"network.write"},
 		}
 		policies = []store.Policy{
 			{
@@ -86,7 +86,7 @@ var _ = Describe("QuotaGuard", func() {
 	Context("when the subject is an admin", func() {
 		BeforeEach(func() {
 			tokenData = uaa_client.CheckTokenResponse{
-				Scope:    []string{"network.admin"},
+				Scope: []string{"network.admin"},
 			}
 			fakeStore.ByGuidsReturns([]store.Policy{
 				{

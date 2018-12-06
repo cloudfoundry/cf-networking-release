@@ -8,9 +8,8 @@ import (
 	"test-helpers"
 	"time"
 
-	dbfakes "code.cloudfoundry.org/cf-networking-helpers/db/fakes"
-
 	dbHelper "code.cloudfoundry.org/cf-networking-helpers/db"
+	dbfakes "code.cloudfoundry.org/cf-networking-helpers/db/fakes"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"code.cloudfoundry.org/lager"
 	"github.com/nu7hatch/gouuid"
@@ -83,8 +82,8 @@ var _ = Describe("EgressDestinationStore", func() {
 			egressDestinationsStore = &store.EgressDestinationStore{
 				TerminalsRepo:           terminalsRepo,
 				DestinationMetadataRepo: destinationMetadataRepo,
-				Conn: realDb,
-				EgressDestinationRepo: egressDestinationTable,
+				Conn:                    realDb,
+				EgressDestinationRepo:   egressDestinationTable,
 			}
 		})
 
@@ -117,17 +116,30 @@ var _ = Describe("EgressDestinationStore", func() {
 					{
 						Name:        "dest-1",
 						Description: "desc-1",
-						Protocol:    "tcp",
-						IPRanges:    []store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}},
-						Ports:       []store.Ports{{Start: 8080, End: 8081}},
+						Rules: []store.EgressDestinationRule{
+							{
+								Protocol: "tcp",
+								IPRanges: []store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}},
+								Ports:    []store.Ports{{Start: 8080, End: 8081}},
+							},
+							{
+								Protocol: "udp",
+								IPRanges: []store.IPRange{{Start: "10.20.20.20", End: "10.20.20.30"}},
+								Ports:    []store.Ports{{Start: 9080, End: 9081}},
+							},
+						},
 					},
 					{
 						Name:        "dest-2",
 						Description: "desc-2",
-						Protocol:    "icmp",
-						IPRanges:    []store.IPRange{{Start: "1.2.2.4", End: "1.2.2.5"}},
-						ICMPType:    12,
-						ICMPCode:    13,
+						Rules: []store.EgressDestinationRule{
+							{
+								Protocol: "icmp",
+								IPRanges: []store.IPRange{{Start: "1.2.2.4", End: "1.2.2.5"}},
+								ICMPType: 12,
+								ICMPCode: 13,
+							},
+						},
 					},
 				}
 			})
@@ -142,19 +154,22 @@ var _ = Describe("EgressDestinationStore", func() {
 				Expect(err).NotTo(HaveOccurred())
 				Expect(createdDestinations[0].Name).To(Equal("dest-1"))
 				Expect(createdDestinations[0].Description).To(Equal("desc-1"))
-				Expect(createdDestinations[0].Protocol).To(Equal("tcp"))
-				Expect(createdDestinations[0].IPRanges).To(Equal([]store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}}))
-				Expect(createdDestinations[0].Ports).To(Equal([]store.Ports{{Start: 8080, End: 8081}}))
+				Expect(createdDestinations[0].Rules[0].Protocol).To(Equal("tcp"))
+				Expect(createdDestinations[0].Rules[0].IPRanges).To(Equal([]store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}}))
+				Expect(createdDestinations[0].Rules[0].Ports).To(Equal([]store.Ports{{Start: 8080, End: 8081}}))
+				Expect(createdDestinations[0].Rules[1].Protocol).To(Equal("udp"))
+				Expect(createdDestinations[0].Rules[1].IPRanges).To(Equal([]store.IPRange{{Start: "10.20.20.20", End: "10.20.20.30"}}))
+				Expect(createdDestinations[0].Rules[1].Ports).To(Equal([]store.Ports{{Start: 9080, End: 9081}}))
 
 				_, err = uuid.ParseHex(createdDestinations[1].GUID)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(createdDestinations[1].Name).To(Equal("dest-2"))
 				Expect(createdDestinations[1].Description).To(Equal("desc-2"))
-				Expect(createdDestinations[1].Protocol).To(Equal("icmp"))
-				Expect(createdDestinations[1].Ports).To(BeEmpty())
-				Expect(createdDestinations[1].IPRanges).To(Equal([]store.IPRange{{Start: "1.2.2.4", End: "1.2.2.5"}}))
-				Expect(createdDestinations[1].ICMPType).To(Equal(12))
-				Expect(createdDestinations[1].ICMPCode).To(Equal(13))
+				Expect(createdDestinations[1].Rules[0].Protocol).To(Equal("icmp"))
+				Expect(createdDestinations[1].Rules[0].Ports).To(BeEmpty())
+				Expect(createdDestinations[1].Rules[0].IPRanges).To(Equal([]store.IPRange{{Start: "1.2.2.4", End: "1.2.2.5"}}))
+				Expect(createdDestinations[1].Rules[0].ICMPType).To(Equal(12))
+				Expect(createdDestinations[1].Rules[0].ICMPCode).To(Equal(13))
 
 				By("listing")
 				destinations, err := egressDestinationsStore.All()
@@ -162,18 +177,21 @@ var _ = Describe("EgressDestinationStore", func() {
 				Expect(destinations[0].GUID).To(Equal(createdDestinations[0].GUID))
 				Expect(destinations[0].Name).To(Equal("dest-1"))
 				Expect(destinations[0].Description).To(Equal("desc-1"))
-				Expect(destinations[0].Protocol).To(Equal("tcp"))
-				Expect(destinations[0].IPRanges).To(Equal([]store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}}))
-				Expect(destinations[0].Ports).To(Equal([]store.Ports{{Start: 8080, End: 8081}}))
+				Expect(destinations[0].Rules[0].Protocol).To(Equal("tcp"))
+				Expect(destinations[0].Rules[0].IPRanges).To(Equal([]store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}}))
+				Expect(destinations[0].Rules[0].Ports).To(Equal([]store.Ports{{Start: 8080, End: 8081}}))
+				Expect(destinations[0].Rules[1].Protocol).To(Equal("udp"))
+				Expect(destinations[0].Rules[1].IPRanges).To(Equal([]store.IPRange{{Start: "10.20.20.20", End: "10.20.20.30"}}))
+				Expect(destinations[0].Rules[1].Ports).To(Equal([]store.Ports{{Start: 9080, End: 9081}}))
 
 				Expect(destinations[1].GUID).To(Equal(createdDestinations[1].GUID))
 				Expect(destinations[1].Name).To(Equal("dest-2"))
 				Expect(destinations[1].Description).To(Equal("desc-2"))
-				Expect(destinations[1].Protocol).To(Equal("icmp"))
-				Expect(destinations[1].IPRanges).To(Equal([]store.IPRange{{Start: "1.2.2.4", End: "1.2.2.5"}}))
-				Expect(destinations[1].Ports).To(HaveLen(0))
-				Expect(destinations[1].ICMPType).To(Equal(12))
-				Expect(destinations[1].ICMPCode).To(Equal(13))
+				Expect(destinations[1].Rules[0].Protocol).To(Equal("icmp"))
+				Expect(destinations[1].Rules[0].IPRanges).To(Equal([]store.IPRange{{Start: "1.2.2.4", End: "1.2.2.5"}}))
+				Expect(destinations[1].Rules[0].Ports).To(HaveLen(0))
+				Expect(destinations[1].Rules[0].ICMPType).To(Equal(12))
+				Expect(destinations[1].Rules[0].ICMPCode).To(Equal(13))
 
 				By("getting")
 				destinations, err = egressDestinationsStore.GetByGUID(createdDestinations[0].GUID)
@@ -181,9 +199,12 @@ var _ = Describe("EgressDestinationStore", func() {
 				Expect(destinations[0].GUID).To(Equal(createdDestinations[0].GUID))
 				Expect(destinations[0].Name).To(Equal("dest-1"))
 				Expect(destinations[0].Description).To(Equal("desc-1"))
-				Expect(destinations[0].Protocol).To(Equal("tcp"))
-				Expect(destinations[0].IPRanges).To(Equal([]store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}}))
-				Expect(destinations[0].Ports).To(Equal([]store.Ports{{Start: 8080, End: 8081}}))
+				Expect(destinations[0].Rules[0].Protocol).To(Equal("tcp"))
+				Expect(destinations[0].Rules[0].IPRanges).To(Equal([]store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}}))
+				Expect(destinations[0].Rules[0].Ports).To(Equal([]store.Ports{{Start: 8080, End: 8081}}))
+				Expect(destinations[0].Rules[1].Protocol).To(Equal("udp"))
+				Expect(destinations[0].Rules[1].IPRanges).To(Equal([]store.IPRange{{Start: "10.20.20.20", End: "10.20.20.30"}}))
+				Expect(destinations[0].Rules[1].Ports).To(Equal([]store.Ports{{Start: 9080, End: 9081}}))
 
 				destinations, err = egressDestinationsStore.GetByGUID("unknown-guid")
 				Expect(err).NotTo(HaveOccurred())
@@ -193,8 +214,7 @@ var _ = Describe("EgressDestinationStore", func() {
 				destinations, err = egressDestinationsStore.GetByName("dest-1", "dest-2")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(destinations).To(HaveLen(2))
-				Expect(destinations[0].Name).To(Equal("dest-1"))
-				Expect(destinations[1].Name).To(Equal("dest-2"))
+				Expect([]string{destinations[0].Name, destinations[1].Name}).To(ConsistOf("dest-1", "dest-2"))
 
 				By("getting by nonexistant name")
 				destinations, err = egressDestinationsStore.GetByName("not-a-real-name")
@@ -215,18 +235,18 @@ var _ = Describe("EgressDestinationStore", func() {
 				destinationToUpdate1 := createdDestinations[0]
 				destinationToUpdate1.Name = "dest-1-updated"
 				destinationToUpdate1.Description = "desc-1-updated"
-				destinationToUpdate1.Protocol = "tcp-updated"
-				destinationToUpdate1.IPRanges = []store.IPRange{{Start: "2.3.3.3", End: "2.3.3.4"}}
-				destinationToUpdate1.Ports = []store.Ports{{Start: 9090, End: 9091}}
+				destinationToUpdate1.Rules[0].Protocol = "tcp-updated"
+				destinationToUpdate1.Rules[0].IPRanges = []store.IPRange{{Start: "2.3.3.3", End: "2.3.3.4"}}
+				destinationToUpdate1.Rules[0].Ports = []store.Ports{{Start: 9090, End: 9091}}
 
 				destinationToUpdate2 := createdDestinations[1]
 				destinationToUpdate2.Name = "dest-2-updated"
 				destinationToUpdate2.Description = "desc-2-updated"
-				destinationToUpdate2.Protocol = "icmp-updated"
-				destinationToUpdate2.Ports = []store.Ports{}
-				destinationToUpdate2.IPRanges = []store.IPRange{{Start: "2.3.3.4", End: "2.3.3.5"}}
-				destinationToUpdate2.ICMPType = 15
-				destinationToUpdate2.ICMPCode = 16
+				destinationToUpdate2.Rules[0].Protocol = "icmp-updated"
+				destinationToUpdate2.Rules[0].Ports = []store.Ports{}
+				destinationToUpdate2.Rules[0].IPRanges = []store.IPRange{{Start: "2.3.3.4", End: "2.3.3.5"}}
+				destinationToUpdate2.Rules[0].ICMPType = 15
+				destinationToUpdate2.Rules[0].ICMPCode = 16
 
 				updatedDestinations, err := egressDestinationsStore.Update([]store.EgressDestination{destinationToUpdate1, destinationToUpdate2})
 				Expect(err).NotTo(HaveOccurred())
@@ -266,7 +286,7 @@ var _ = Describe("EgressDestinationStore", func() {
 				By("deleting")
 				deletedDestinations, err := egressDestinationsStore.Delete(createdDestinations[0].GUID, createdDestinations[1].GUID)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(deletedDestinations).To(Equal(updatedDestinations))
+				Expect(deletedDestinations).To(ConsistOf(updatedDestinations))
 
 				By("deleting a non-existent destination")
 				deletedDestinations, err = egressDestinationsStore.Delete("what guid?")
@@ -285,16 +305,24 @@ var _ = Describe("EgressDestinationStore", func() {
 						{
 							Name:        "dupe",
 							Description: "dupe",
-							Protocol:    "tcp",
-							IPRanges:    []store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}},
-							Ports:       []store.Ports{{Start: 8080, End: 8081}},
+							Rules: []store.EgressDestinationRule{
+								{
+									Protocol: "tcp",
+									IPRanges: []store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}},
+									Ports:    []store.Ports{{Start: 8080, End: 8081}},
+								},
+							},
 						},
 						{
 							Name:        "dupe2",
 							Description: "dupe2",
-							Protocol:    "tcp",
-							IPRanges:    []store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}},
-							Ports:       []store.Ports{{Start: 8080, End: 8081}},
+							Rules: []store.EgressDestinationRule{
+								{
+									Protocol: "tcp",
+									IPRanges: []store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}},
+									Ports:    []store.Ports{{Start: 8080, End: 8081}},
+								},
+							},
 						},
 					}
 
@@ -313,9 +341,9 @@ var _ = Describe("EgressDestinationStore", func() {
 						Expect(err).NotTo(HaveOccurred())
 						Expect(createdDestinations[0].Name).To(Equal("dupe"))
 						Expect(createdDestinations[0].Description).To(Equal("dupe"))
-						Expect(createdDestinations[0].Protocol).To(Equal("tcp"))
-						Expect(createdDestinations[0].IPRanges).To(Equal([]store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}}))
-						Expect(createdDestinations[0].Ports).To(Equal([]store.Ports{{Start: 8080, End: 8081}}))
+						Expect(createdDestinations[0].Rules[0].Protocol).To(Equal("tcp"))
+						Expect(createdDestinations[0].Rules[0].IPRanges).To(Equal([]store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}}))
+						Expect(createdDestinations[0].Rules[0].Ports).To(Equal([]store.Ports{{Start: 8080, End: 8081}}))
 					})
 				})
 
@@ -325,9 +353,13 @@ var _ = Describe("EgressDestinationStore", func() {
 							{
 								Name:        "dupe",
 								Description: "dupe",
-								Protocol:    "udp",
-								IPRanges:    []store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}},
-								Ports:       []store.Ports{{Start: 8080, End: 8081}},
+								Rules: []store.EgressDestinationRule{
+									{
+										Protocol: "udp",
+										IPRanges: []store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}},
+										Ports:    []store.Ports{{Start: 8080, End: 8081}},
+									},
+								},
 							},
 						}
 					})
@@ -351,9 +383,13 @@ var _ = Describe("EgressDestinationStore", func() {
 						{
 							Name:        "dest-1",
 							Description: "desc-1",
-							Protocol:    "tcp",
-							IPRanges:    []store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}},
-							Ports:       []store.Ports{{Start: 8080, End: 8081}},
+							Rules: []store.EgressDestinationRule{
+								{
+									Protocol: "tcp",
+									IPRanges: []store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}},
+									Ports:    []store.Ports{{Start: 8080, End: 8081}},
+								},
+							},
 						},
 					}
 
@@ -405,7 +441,7 @@ var _ = Describe("EgressDestinationStore", func() {
 			destinationMetadataRepo = &fakes.DestinationMetadataRepo{}
 
 			egressDestinationsStore = &store.EgressDestinationStore{
-				Conn: mockDB,
+				Conn:                    mockDB,
 				EgressDestinationRepo:   egressDestinationRepo,
 				DestinationMetadataRepo: destinationMetadataRepo,
 				TerminalsRepo:           terminalsRepo,
@@ -418,10 +454,14 @@ var _ = Describe("EgressDestinationStore", func() {
 					{
 						Name:        "dupe",
 						Description: " ",
-						Protocol:    "icmp",
-						IPRanges:    []store.IPRange{{Start: "2.2.2.4", End: "2.2.2.5"}},
-						ICMPType:    11,
-						ICMPCode:    14,
+						Rules: []store.EgressDestinationRule{
+							{
+								Protocol: "icmp",
+								IPRanges: []store.IPRange{{Start: "2.2.2.4", End: "2.2.2.5"}},
+								ICMPType: 11,
+								ICMPCode: 14,
+							},
+						},
 					},
 				}
 			)
@@ -485,9 +525,9 @@ var _ = Describe("EgressDestinationStore", func() {
 				})
 			})
 
-			Context("when updating the destination fails", func() {
+			Context("when deleting the old ip ranges fails", func() {
 				BeforeEach(func() {
-					egressDestinationRepo.UpdateIPRangeReturns(errors.New("can't update iprange"))
+					egressDestinationRepo.DeleteReturns(errors.New("can't delete iprange"))
 					egressDestinationRepo.GetByGUIDReturns([]store.EgressDestination{{}}, nil)
 				})
 
@@ -498,7 +538,24 @@ var _ = Describe("EgressDestinationStore", func() {
 
 				It("returns the error", func() {
 					_, err := egressDestinationsStore.Update(destinationsToUpdate)
-					Expect(err).To(MatchError("egress destination store update iprange: can't update iprange"))
+					Expect(err).To(MatchError("egress destination store delete iprange: can't delete iprange"))
+				})
+			})
+
+			Context("when creating the new ip ranges fails", func() {
+				BeforeEach(func() {
+					egressDestinationRepo.CreateIPRangeReturns(0, errors.New("can't create iprange"))
+					egressDestinationRepo.GetByGUIDReturns([]store.EgressDestination{{}}, nil)
+				})
+
+				It("rolls back the transaction", func() {
+					egressDestinationsStore.Update(destinationsToUpdate)
+					Expect(tx.RollbackCallCount()).To(Equal(1))
+				})
+
+				It("returns the error", func() {
+					_, err := egressDestinationsStore.Update(destinationsToUpdate)
+					Expect(err).To(MatchError("egress destination store create iprange: can't create iprange"))
 				})
 			})
 
@@ -575,10 +632,14 @@ var _ = Describe("EgressDestinationStore", func() {
 						{
 							Name:        "dupe",
 							Description: " ",
-							Protocol:    "icmp",
-							IPRanges:    []store.IPRange{{Start: "2.2.2.4", End: "2.2.2.5"}},
-							ICMPType:    11,
-							ICMPCode:    14,
+							Rules: []store.EgressDestinationRule{
+								{
+									Protocol: "icmp",
+									IPRanges: []store.IPRange{{Start: "2.2.2.4", End: "2.2.2.5"}},
+									ICMPType: 11,
+									ICMPCode: 14,
+								},
+							},
 						},
 					}
 				})
@@ -607,10 +668,14 @@ var _ = Describe("EgressDestinationStore", func() {
 						{
 							Name:        " ",
 							Description: " ",
-							Protocol:    "icmp",
-							IPRanges:    []store.IPRange{{Start: "2.2.2.4", End: "2.2.2.5"}},
-							ICMPType:    11,
-							ICMPCode:    14,
+							Rules: []store.EgressDestinationRule{
+								{
+									Protocol: "icmp",
+									IPRanges: []store.IPRange{{Start: "2.2.2.4", End: "2.2.2.5"}},
+									ICMPType: 11,
+									ICMPCode: 14,
+								},
+							},
 						},
 					})
 				})

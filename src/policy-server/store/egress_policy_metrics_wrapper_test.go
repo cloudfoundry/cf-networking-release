@@ -28,8 +28,12 @@ var _ = Describe("EgressPolicyMetricsWrapper", func() {
 		policies = []store.EgressPolicy{{
 			Source: store.EgressSource{ID: "some-app-guid"},
 			Destination: store.EgressDestination{
-				Protocol: "tcp",
-				IPRanges: []store.IPRange{{Start: "8.0.8.0", End: "8.0.8.0"}},
+				Rules: []store.EgressDestinationRule{
+					{
+						Protocol: "tcp",
+						IPRanges: []store.IPRange{{Start: "8.0.8.0", End: "8.0.8.0"}},
+					},
+				},
 			},
 		}}
 		srcGuids = []string{"some-app-guid"}

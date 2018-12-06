@@ -105,7 +105,7 @@ var _ = Describe("PolicyFilter", func() {
 			BeforeEach(func() {
 				tokenData = uaa_client.CheckTokenResponse{
 					ClientID: "some-client-id",
-					Subject: "some-client-id",
+					Subject:  "some-client-id",
 				}
 			})
 

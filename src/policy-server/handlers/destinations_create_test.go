@@ -103,7 +103,7 @@ var _ = Describe("Destinations create handler", func() {
 		resp = httptest.NewRecorder()
 
 		token = uaa_client.CheckTokenResponse{
-			Scope:    []string{"some-scope", "network.admin"},
+			Scope: []string{"some-scope", "network.admin"},
 		}
 	})
 

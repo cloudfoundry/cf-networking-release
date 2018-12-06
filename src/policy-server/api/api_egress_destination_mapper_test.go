@@ -35,36 +35,64 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 		BeforeEach(func() {
 			egressDestinations = []store.EgressDestination{
 				{
-					GUID:     "1",
-					Name:     " ",
-					Protocol: "tcp",
-					Ports: []store.Ports{{
-						Start: 8080,
-						End:   8081,
-					}},
-					IPRanges: []store.IPRange{{
-						Start: "1.2.3.4",
-						End:   "1.2.3.5",
-					}},
+					GUID: "1",
+					Name: " ",
+					Rules: []store.EgressDestinationRule{
+						{
+							Protocol: "tcp",
+							Ports: []store.Ports{{
+								Start: 8080,
+								End:   8081,
+							}},
+							IPRanges: []store.IPRange{{
+								Start: "1.2.3.4",
+								End:   "1.2.3.5",
+							}},
+						},
+						{
+							Protocol: "udp",
+							IPRanges: []store.IPRange{{
+								Start: "10.20.30.40",
+								End:   "10.20.30.50",
+							}},
+						},
+						{
+							Protocol: "icmp",
+							IPRanges: []store.IPRange{{
+								Start: "10.20.30.40",
+								End:   "10.20.30.50",
+							}},
+							ICMPType: 2,
+							ICMPCode: 3,
+						},
+					},
 				},
 				{
 					GUID:        "2",
 					Description: " ",
-					Protocol:    "icmp",
-					IPRanges: []store.IPRange{{
-						Start: "1.2.3.7",
-						End:   "1.2.3.8",
-					}},
-					ICMPType: 1,
-					ICMPCode: 6,
+					Rules: []store.EgressDestinationRule{
+						{
+							Protocol: "icmp",
+							IPRanges: []store.IPRange{{
+								Start: "1.2.3.7",
+								End:   "1.2.3.8",
+							}},
+							ICMPType: 1,
+							ICMPCode: 6,
+						},
+					},
 				},
 				{
-					GUID:     "3",
-					Protocol: "udp",
-					IPRanges: []store.IPRange{{
-						Start: "1.2.3.7",
-						End:   "1.2.3.8",
-					}},
+					GUID: "3",
+					Rules: []store.EgressDestinationRule{
+						{
+							Protocol: "udp",
+							IPRanges: []store.IPRange{{
+								Start: "1.2.3.7",
+								End:   "1.2.3.8",
+							}},
+						},
+					},
 				},
 			}
 		})
@@ -79,22 +107,44 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 						{
 							"id": "1",
 							"name": " ",
-							"protocol": "tcp",
-							"ports": [{ "start": 8080, "end": 8081 }],
-							"ips": [{ "start": "1.2.3.4", "end": "1.2.3.5" }]
+							"rules": [
+								{
+									"protocol": "tcp",
+									"ports": [{ "start": 8080, "end": 8081 }],
+									"ips": [{ "start": "1.2.3.4", "end": "1.2.3.5" }]
+								},
+								{
+									"protocol": "udp",
+									"ips": [{ "start": "10.20.30.40", "end": "10.20.30.50" }]
+								},
+								{
+									"protocol": "icmp",
+									"ips": [{ "start": "10.20.30.40", "end": "10.20.30.50" }],
+									"icmp_type": 2,
+									"icmp_code": 3
+								}
+							]
 						},
 						{
 							"id": "2",
 							"description": " ",
-							"protocol": "icmp",
-							"ips": [{ "start": "1.2.3.7", "end": "1.2.3.8" }],
-							"icmp_type": 1,
-							"icmp_code": 6
+							"rules": [
+								{
+									"protocol": "icmp",
+									"ips": [{ "start": "1.2.3.7", "end": "1.2.3.8" }],
+									"icmp_type": 1,
+									"icmp_code": 6
+								}
+							]
 						},
  						{
 							"id": "3",
-							"protocol": "udp",
-							"ips": [{ "start": "1.2.3.7", "end": "1.2.3.8" }]
+							"rules": [
+								{
+									"protocol": "udp",
+									"ips": [{ "start": "1.2.3.7", "end": "1.2.3.8" }]
+								}
+							]
 						}
 					]
 				}`)))
@@ -111,32 +161,50 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 						{
 							"id": "1",
 							"name": "my service",
-							"protocol": "tcp",
-							"ports": [{ "start": 8080, "end": 8081 }],
-							"ips": [{ "start": "1.2.3.4", "end": "1.2.3.5" }],
-							"app_lifecycle": "all"
+							"rules": [
+								{
+									"protocol": "tcp",
+									"ports": [{ "start": 8080, "end": 8081 }],
+									"ips": [{ "start": "1.2.3.4", "end": "1.2.3.5" }]
+								},
+								{
+									"protocol": "icmp",
+									"ips": [{ "start": "10.20.30.70", "end": "10.20.30.80" }],
+									"icmp_type": 2,
+									"icmp_code": 3
+								}
+							]
 						},
 						{
 							"id": "2",
 							"description": "this is where my apps go",
-							"protocol": "icmp",
-							"ips": [{ "start": "1.2.3.7", "end": "1.2.3.8" }],
-							"icmp_type": 1,
-							"icmp_code": 6,
-							"app_lifecycle": "all"
+							"rules": [
+								{
+									"protocol": "icmp",
+									"ips": [{ "start": "1.2.3.7", "end": "1.2.3.8" }],
+									"icmp_type": 1,
+									"icmp_code": 6
+								}
+							]
 						},
 						{
 							"id": "3",
 							"description": "regression test: icmp without type and code",
-							"protocol": "icmp",
-							"ips": [{ "start": "1.2.3.7", "end": "1.2.3.8" }],
-							"app_lifecycle": "all"
+							"rules": [
+								{
+									"protocol": "icmp",
+									"ips": [{ "start": "1.2.3.7", "end": "1.2.3.8" }]
+								}
+							]
 						},
 						{
 							"id": "4",
-							"protocol": "udp",
-							"ips": [{ "start": "1.2.3.7", "end": "1.2.3.8" }],
-							"app_lifecycle": "all"
+							"rules": [
+								{
+									"protocol": "udp",
+									"ips": [{ "start": "1.2.3.7", "end": "1.2.3.8" }]
+								}
+							]
 						}
 					]
 				}`)
@@ -148,50 +216,76 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 			Expect(payload).To(Equal(
 				[]store.EgressDestination{
 					{
-						GUID:     "1",
-						Name:     "my service",
-						Protocol: "tcp",
-						Ports: []store.Ports{{
-							Start: 8080,
-							End:   8081,
-						}},
-						IPRanges: []store.IPRange{{
-							Start: "1.2.3.4",
-							End:   "1.2.3.5",
-						}},
+						GUID: "1",
+						Name: "my service",
+						Rules: []store.EgressDestinationRule{
+							{
+								Protocol: "tcp",
+								Ports: []store.Ports{{
+									Start: 8080,
+									End:   8081,
+								}},
+								IPRanges: []store.IPRange{{
+									Start: "1.2.3.4",
+									End:   "1.2.3.5",
+								}},
+							},
+							{
+								Protocol: "icmp",
+								Ports:    []store.Ports{},
+								IPRanges: []store.IPRange{{
+									Start: "10.20.30.70",
+									End:   "10.20.30.80",
+								}},
+								ICMPType: 2,
+								ICMPCode: 3,
+							},
+						},
 					},
 					{
 						GUID:        "2",
 						Description: "this is where my apps go",
-						Protocol:    "icmp",
-						Ports:       []store.Ports{},
-						IPRanges: []store.IPRange{{
-							Start: "1.2.3.7",
-							End:   "1.2.3.8",
-						}},
-						ICMPType: 1,
-						ICMPCode: 6,
+						Rules: []store.EgressDestinationRule{
+							{
+								Protocol: "icmp",
+								Ports:    []store.Ports{},
+								IPRanges: []store.IPRange{{
+									Start: "1.2.3.7",
+									End:   "1.2.3.8",
+								}},
+								ICMPType: 1,
+								ICMPCode: 6,
+							},
+						},
 					},
 					{
 						GUID:        "3",
 						Description: "regression test: icmp without type and code",
-						Protocol:    "icmp",
-						Ports:       []store.Ports{},
-						IPRanges: []store.IPRange{{
-							Start: "1.2.3.7",
-							End:   "1.2.3.8",
-						}},
-						ICMPType: -1,
-						ICMPCode: -1,
+						Rules: []store.EgressDestinationRule{
+							{
+								Protocol: "icmp",
+								Ports:    []store.Ports{},
+								IPRanges: []store.IPRange{{
+									Start: "1.2.3.7",
+									End:   "1.2.3.8",
+								}},
+								ICMPType: -1,
+								ICMPCode: -1,
+							},
+						},
 					},
 					{
-						GUID:     "4",
-						Protocol: "udp",
-						Ports:    []store.Ports{},
-						IPRanges: []store.IPRange{{
-							Start: "1.2.3.7",
-							End:   "1.2.3.8",
-						}},
+						GUID: "4",
+						Rules: []store.EgressDestinationRule{
+							{
+								Protocol: "udp",
+								Ports:    []store.Ports{},
+								IPRanges: []store.IPRange{{
+									Start: "1.2.3.7",
+									End:   "1.2.3.8",
+								}},
+							},
+						},
 					},
 				}),
 			)

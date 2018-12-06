@@ -85,15 +85,23 @@ var _ = Describe("EnforceExperimentalDynamicEgressPolicies Flag", func() {
 		client := psclient.NewClient(logger, http.DefaultClient, fmt.Sprintf("http://%s:%d", conf.ListenHost, conf.ListenPort))
 
 		createdDestinations, err := client.CreateDestinations("valid-token", psclient.Destination{
-			IPs:         []psclient.IPRange{{Start: "10.27.1.1", End: "10.27.1.2"}},
-			Ports:       []psclient.Port{{Start: 8080, End: 8081}},
-			Protocol:    "tcp",
+			Rules: []psclient.DestinationRule{
+				{
+					IPs:      []psclient.IPRange{{Start: "10.27.1.1", End: "10.27.1.2"}},
+					Ports:    []psclient.Port{{Start: 8080, End: 8081}},
+					Protocol: "tcp",
+				},
+			},
 			Name:        "dest-1",
 			Description: "dest-1-desc",
 		}, psclient.Destination{
-			IPs:         []psclient.IPRange{{Start: "10.27.1.3", End: "10.27.1.3"}},
-			Ports:       []psclient.Port{{Start: 8080, End: 8081}},
-			Protocol:    "tcp",
+			Rules: []psclient.DestinationRule{
+				{
+					IPs:      []psclient.IPRange{{Start: "10.27.1.3", End: "10.27.1.3"}},
+					Ports:    []psclient.Port{{Start: 8080, End: 8081}},
+					Protocol: "tcp",
+				},
+			},
 			Name:        "dest-2",
 			Description: "dest-2-desc",
 		})

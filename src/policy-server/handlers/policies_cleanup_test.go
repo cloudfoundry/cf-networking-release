@@ -47,17 +47,21 @@ var _ = Describe("PoliciesCleanup", func() {
 		egressPolicies = []store.EgressPolicy{{
 			Source: store.EgressSource{ID: "live-guid", Type: "app"},
 			Destination: store.EgressDestination{
-				Protocol: "tcp",
-				IPRanges: []store.IPRange{
+				Rules: []store.EgressDestinationRule{
 					{
-						Start: "1.2.3.4",
-						End:   "1.2.3.5",
-					},
-				},
-				Ports: []store.Ports{
-					{
-						Start: 8080,
-						End:   8080,
+						Protocol: "tcp",
+						IPRanges: []store.IPRange{
+							{
+								Start: "1.2.3.4",
+								End:   "1.2.3.5",
+							},
+						},
+						Ports: []store.Ports{
+							{
+								Start: 8080,
+								End:   8080,
+							},
+						},
 					},
 				},
 			},

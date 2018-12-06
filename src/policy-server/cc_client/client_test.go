@@ -451,7 +451,7 @@ var _ = Describe("Client", func() {
 				}
 				page, err := strconv.Atoi(pageParameter)
 				Expect(err).NotTo(HaveOccurred())
-				response := responses[page - 1]
+				response := responses[page-1]
 				err = json.Unmarshal([]byte(response), respData)
 				Expect(err).NotTo(HaveOccurred())
 				return nil

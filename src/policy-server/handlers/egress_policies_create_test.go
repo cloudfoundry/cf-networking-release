@@ -68,8 +68,8 @@ var _ = Describe("EgressPoliciesCreate", func() {
 
 		expectedStoreEgressPolicies = []store.EgressPolicy{
 			{
-				Source:      store.EgressSource{ID: "AN-APP-GUID"},
-				Destination: store.EgressDestination{GUID: "A-DEST-GUID"},
+				Source:       store.EgressSource{ID: "AN-APP-GUID"},
+				Destination:  store.EgressDestination{GUID: "A-DEST-GUID"},
 				AppLifecycle: "staging",
 			},
 		}

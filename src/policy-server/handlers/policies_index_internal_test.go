@@ -71,8 +71,12 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		allEgressPolicies := []store.EgressPolicy{{
 			Source: store.EgressSource{ID: "some-egress-app-guid"},
 			Destination: store.EgressDestination{
-				Protocol: "tcp",
-				IPRanges: []store.IPRange{{Start: "8.0.8.0", End: "8.0.8.0"}},
+				Rules: []store.EgressDestinationRule{
+					{
+						Protocol: "tcp",
+						IPRanges: []store.IPRange{{Start: "8.0.8.0", End: "8.0.8.0"}},
+					},
+				},
 			},
 		}}
 

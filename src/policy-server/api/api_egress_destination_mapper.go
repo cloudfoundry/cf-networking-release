@@ -62,75 +62,88 @@ func (p *EgressDestinationMapper) AsEgressDestinations(egressDestinations []byte
 }
 
 func asApiEgressDestination(storeEgressDestination store.EgressDestination) EgressDestination {
-	var ports []Ports
-
-	if len(storeEgressDestination.Ports) > 0 {
-		ports = []Ports{
-			{
-				Start: storeEgressDestination.Ports[0].Start,
-				End:   storeEgressDestination.Ports[0].End,
-			},
-		}
-	}
-
-	firstIPRange := storeEgressDestination.IPRanges[0]
-
 	apiEgressDestination := &EgressDestination{
 		GUID:        storeEgressDestination.GUID,
 		Name:        storeEgressDestination.Name,
 		Description: storeEgressDestination.Description,
-		Protocol:    storeEgressDestination.Protocol,
-		Ports:       ports,
-		IPRanges: []IPRange{{
-			Start: firstIPRange.Start,
-			End:   firstIPRange.End,
-		}},
 	}
 
-	if storeEgressDestination.Protocol == "icmp" {
-		//TODO: This should only be assigned when the store value is not nil
-		apiEgressDestination.ICMPType = &storeEgressDestination.ICMPType
-		//TODO: This should only be assigned when the store value is not nil
-		apiEgressDestination.ICMPCode = &storeEgressDestination.ICMPCode
+	for _, rule := range storeEgressDestination.Rules {
+		var ports []Ports
+
+		if len(rule.Ports) > 0 {
+			ports = []Ports{
+				{
+					Start: rule.Ports[0].Start,
+					End:   rule.Ports[0].End,
+				},
+			}
+		}
+		var icmpType, icmpCode *int
+		if rule.Protocol == "icmp" {
+			icmpType = &rule.ICMPType
+			icmpCode = &rule.ICMPCode
+		}
+
+		firstIPRange := rule.IPRanges[0]
+		apiEgressDestination.Rules = append(apiEgressDestination.Rules, EgressDestinationRule{
+			Protocol: rule.Protocol,
+			Ports:    ports,
+			IPRanges: []IPRange{{
+				Start: firstIPRange.Start,
+				End:   firstIPRange.End,
+			}},
+			ICMPType: icmpType,
+			ICMPCode: icmpCode,
+		})
 	}
+
 	return *apiEgressDestination
 }
 
 func (d *EgressDestination) asStoreEgressDestination() store.EgressDestination {
-	ipRanges := []store.IPRange{}
-	for _, apiIPRange := range d.IPRanges {
-		ipRanges = append(ipRanges, store.IPRange{
-			Start: apiIPRange.Start,
-			End:   apiIPRange.End,
-		})
-	}
-	ports := []store.Ports{}
-
-	for _, apiPorts := range d.Ports {
-		ports = append(ports, store.Ports{
-			Start: apiPorts.Start,
-			End:   apiPorts.End,
-		})
-	}
-
 	destination := store.EgressDestination{
 		GUID:        d.GUID,
 		Name:        d.Name,
 		Description: d.Description,
-		Protocol:    d.Protocol,
-		Ports:       ports,
-		IPRanges:    ipRanges,
 	}
 
-	if d.Protocol == "icmp" {
-		if d.ICMPType == nil {
-			d.ICMPType = &ICMPDefault
+	for _, rule := range d.Rules {
+		ipRanges := []store.IPRange{}
+		for _, apiIPRange := range rule.IPRanges {
+			ipRanges = append(ipRanges, store.IPRange{
+				Start: apiIPRange.Start,
+				End:   apiIPRange.End,
+			})
 		}
-		if d.ICMPCode == nil {
-			d.ICMPCode = &ICMPDefault
+		ports := []store.Ports{}
+
+		for _, apiPorts := range rule.Ports {
+			ports = append(ports, store.Ports{
+				Start: apiPorts.Start,
+				End:   apiPorts.End,
+			})
 		}
-		destination.ICMPType = *d.ICMPType
-		destination.ICMPCode = *d.ICMPCode
+
+		var icmpType, icmpCode int
+		if rule.Protocol == "icmp" {
+			if rule.ICMPType == nil {
+				rule.ICMPType = &ICMPDefault
+			}
+			if rule.ICMPCode == nil {
+				rule.ICMPCode = &ICMPDefault
+			}
+			icmpType = *rule.ICMPType
+			icmpCode = *rule.ICMPCode
+		}
+
+		destination.Rules = append(destination.Rules, store.EgressDestinationRule{
+			Protocol: rule.Protocol,
+			Ports:    ports,
+			IPRanges: ipRanges,
+			ICMPType: icmpType,
+			ICMPCode: icmpCode,
+		})
 	}
 
 	return destination

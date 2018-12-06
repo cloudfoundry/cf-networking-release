@@ -17,10 +17,28 @@ type PolicyCollectionWriter interface {
 }
 
 type PolicyCollectionPayload struct {
-	TotalPolicies       int            `json:"total_policies"`
-	Policies            []Policy       `json:"policies"`
-	TotalEgressPolicies int            `json:"total_egress_policies,omitempty"`
-	EgressPolicies      []EgressPolicy `json:"egress_policies,omitempty"`
+	TotalPolicies       int                    `json:"total_policies"`
+	Policies            []Policy               `json:"policies"`
+	TotalEgressPolicies int                    `json:"total_egress_policies,omitempty"`
+	EgressPolicies      []InternalEgressPolicy `json:"egress_policies,omitempty"`
+}
+
+type InternalEgressPolicy struct {
+	ID           string                     `json:"id,omitempty"`
+	Source       *EgressSource              `json:"source"`
+	Destination  *InternalEgressDestination `json:"destination"`
+	AppLifecycle *string                    `json:"app_lifecycle"`
+}
+
+type InternalEgressDestination struct {
+	GUID        string    `json:"id,omitempty"`
+	Name        string    `json:"name,omitempty"`
+	Description string    `json:"description,omitempty"`
+	Protocol    string    `json:"protocol,omitempty"`
+	Ports       []Ports   `json:"ports,omitempty"`
+	IPRanges    []IPRange `json:"ips,omitempty"`
+	ICMPType    *int      `json:"icmp_type,omitempty"`
+	ICMPCode    *int      `json:"icmp_code,omitempty"`
 }
 
 type PoliciesPayload struct {
@@ -42,7 +60,7 @@ type EgressPolicy struct {
 	ID           string             `json:"id,omitempty"`
 	Source       *EgressSource      `json:"source"`
 	Destination  *EgressDestination `json:"destination"`
-	AppLifecycle *string             `json:"app_lifecycle"`
+	AppLifecycle *string            `json:"app_lifecycle"`
 }
 
 type EgressSource struct {
@@ -51,14 +69,18 @@ type EgressSource struct {
 }
 
 type EgressDestination struct {
-	GUID        string    `json:"id,omitempty"`
-	Name        string    `json:"name,omitempty"`
-	Description string    `json:"description,omitempty"`
-	Protocol    string    `json:"protocol,omitempty"`
-	Ports       []Ports   `json:"ports,omitempty"`
-	IPRanges    []IPRange `json:"ips,omitempty"`
-	ICMPType    *int      `json:"icmp_type,omitempty"`
-	ICMPCode    *int      `json:"icmp_code,omitempty"`
+	GUID        string                  `json:"id,omitempty"`
+	Name        string                  `json:"name,omitempty"`
+	Description string                  `json:"description,omitempty"`
+	Rules       []EgressDestinationRule `json:"rules,omitempty"`
+}
+
+type EgressDestinationRule struct {
+	Protocol string    `json:"protocol,omitempty"`
+	Ports    []Ports   `json:"ports,omitempty"`
+	IPRanges []IPRange `json:"ips,omitempty"`
+	ICMPType *int      `json:"icmp_type,omitempty"`
+	ICMPCode *int      `json:"icmp_code,omitempty"`
 }
 
 type Source struct {
