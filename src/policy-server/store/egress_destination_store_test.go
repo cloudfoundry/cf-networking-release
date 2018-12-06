@@ -311,6 +311,11 @@ var _ = Describe("EgressDestinationStore", func() {
 									IPRanges: []store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}},
 									Ports:    []store.Ports{{Start: 8080, End: 8081}},
 								},
+								{
+									Protocol: "udp",
+									IPRanges: []store.IPRange{{Start: "10.20.20.20", End: "10.20.20.30"}},
+									Ports:    []store.Ports{{Start: 9080, End: 9081}},
+								},
 							},
 						},
 						{
@@ -333,17 +338,40 @@ var _ = Describe("EgressDestinationStore", func() {
 
 				Context("when the destination contents are the same as the existing destination on create", func() {
 					It("returns the existing destination to be idempotent", func() {
-						createdDestinations, err := egressDestinationsStore.Create(toBeCreatedDestinations[:1])
+						duplicateDestinationWithDifferentOrderedRules := store.EgressDestination{
+							Name:        "dupe",
+							Description: "dupe",
+							Rules: []store.EgressDestinationRule{
+								{
+									Protocol: "tcp",
+									IPRanges: []store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}},
+									Ports:    []store.Ports{{Start: 8080, End: 8081}},
+								},
+								{
+									Protocol: "udp",
+									IPRanges: []store.IPRange{{Start: "10.20.20.20", End: "10.20.20.30"}},
+									Ports:    []store.Ports{{Start: 9080, End: 9081}},
+								},
+							},
+						}
+
+						originalGUID := createdDestinations[0].GUID
+
+						createdDestinations, err := egressDestinationsStore.Create([]store.EgressDestination{duplicateDestinationWithDifferentOrderedRules})
 						Expect(err).NotTo(HaveOccurred())
 						Expect(createdDestinations).To(HaveLen(1))
 
 						_, err = uuid.ParseHex(createdDestinations[0].GUID)
 						Expect(err).NotTo(HaveOccurred())
+						Expect(createdDestinations[0].GUID).To(Equal(originalGUID))
 						Expect(createdDestinations[0].Name).To(Equal("dupe"))
 						Expect(createdDestinations[0].Description).To(Equal("dupe"))
 						Expect(createdDestinations[0].Rules[0].Protocol).To(Equal("tcp"))
 						Expect(createdDestinations[0].Rules[0].IPRanges).To(Equal([]store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}}))
 						Expect(createdDestinations[0].Rules[0].Ports).To(Equal([]store.Ports{{Start: 8080, End: 8081}}))
+						Expect(createdDestinations[0].Rules[1].Protocol).To(Equal("udp"))
+						Expect(createdDestinations[0].Rules[1].IPRanges).To(Equal([]store.IPRange{{Start: "10.20.20.20", End: "10.20.20.30"}}))
+						Expect(createdDestinations[0].Rules[1].Ports).To(Equal([]store.Ports{{Start: 9080, End: 9081}}))
 					})
 				})
 

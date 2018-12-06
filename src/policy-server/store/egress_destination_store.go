@@ -248,15 +248,10 @@ func (e *EgressDestinationStore) Create(egressDestinations []EgressDestination) 
 	return results, nil
 }
 
-//TODO all rules must be considered
 func isDuplicateDestination(a, b EgressDestination) bool {
 	return a.Name == b.Name &&
 		a.Description == b.Description &&
-		a.Rules[0].Protocol == b.Rules[0].Protocol &&
-		reflect.DeepEqual(a.Rules[0].Ports, b.Rules[0].Ports) &&
-		reflect.DeepEqual(a.Rules[0].IPRanges, b.Rules[0].IPRanges) &&
-		a.Rules[0].ICMPType == b.Rules[0].ICMPType &&
-		a.Rules[0].ICMPCode == b.Rules[0].ICMPCode
+		reflect.DeepEqual(a.Rules, b.Rules)
 }
 
 func isDuplicateError(err error) bool {
