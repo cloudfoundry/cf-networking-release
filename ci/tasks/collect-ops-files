@@ -10,7 +10,7 @@ cp cf-deployment/operations/*.yml ops-files/
 cp cf-networking-release/manifest-generation/opsfiles/*.yml ops-files/
 
 cp deployments-repo/smaller-footprint.yml ops-files/
-cp deployments-repo/environments/${ENVIRONMENT_NAME}/opsfile*.yml ops-files/ || true # if we don't have an env specific opsfile
+cp deployments-repo/environments/${ENVIRONMENT_NAME}/*.yml ops-files/ || true # if we don't have an env specific opsfile
 
 cp silk-release/opsfiles/*.yml ops-files/
 
