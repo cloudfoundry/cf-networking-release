@@ -82,8 +82,8 @@ var _ = Describe("EgressDestinationStore", func() {
 			egressDestinationsStore = &store.EgressDestinationStore{
 				TerminalsRepo:           terminalsRepo,
 				DestinationMetadataRepo: destinationMetadataRepo,
-				Conn:                    realDb,
-				EgressDestinationRepo:   egressDestinationTable,
+				Conn: realDb,
+				EgressDestinationRepo: egressDestinationTable,
 			}
 		})
 
@@ -238,6 +238,9 @@ var _ = Describe("EgressDestinationStore", func() {
 				destinationToUpdate1.Rules[0].Protocol = "tcp-updated"
 				destinationToUpdate1.Rules[0].IPRanges = []store.IPRange{{Start: "2.3.3.3", End: "2.3.3.4"}}
 				destinationToUpdate1.Rules[0].Ports = []store.Ports{{Start: 9090, End: 9091}}
+				destinationToUpdate1.Rules[1].Protocol = "udp-updated"
+				destinationToUpdate1.Rules[1].IPRanges = []store.IPRange{{Start: "1.2.3.4", End: "5.6.7.8"}}
+				destinationToUpdate1.Rules[1].Ports = []store.Ports{{Start: 1234, End: 5678}}
 
 				destinationToUpdate2 := createdDestinations[1]
 				destinationToUpdate2.Name = "dest-2-updated"
@@ -469,7 +472,7 @@ var _ = Describe("EgressDestinationStore", func() {
 			destinationMetadataRepo = &fakes.DestinationMetadataRepo{}
 
 			egressDestinationsStore = &store.EgressDestinationStore{
-				Conn:                    mockDB,
+				Conn: mockDB,
 				EgressDestinationRepo:   egressDestinationRepo,
 				DestinationMetadataRepo: destinationMetadataRepo,
 				TerminalsRepo:           terminalsRepo,
