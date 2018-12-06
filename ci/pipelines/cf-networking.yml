@@ -868,7 +868,13 @@ jobs:
           add-istio.yml
           enable-sidecar-proxying.yml
           disable-ingress-redirect-to-proxy.yml
-          opsfile.yml
+          add-smoke-test-user.yml
+          change-vtep-port.yml
+          enable-rate-limiting-for-udp.yml
+          enable-space-developer-self-service.yml
+          scale-ephemeral-disk.yml
+          scale-instances-to-2.yml
+          scale-persistent-disk.yml
           lower-canary-watch-time.yml
       input_mapping:
         bbl-state: cf-networking-deployments
