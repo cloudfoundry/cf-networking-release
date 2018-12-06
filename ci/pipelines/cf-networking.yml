@@ -1593,7 +1593,7 @@ jobs:
           enable-iptables-logger.yml
           enable-service-discovery.yml
           add-apps-internal-search-domain.yml
-          opsfile.yml
+          scale-up-4-api-instances.yml
           lower-canary-watch-time.yml
         VARS_FILES: |
           environments/caubeen/external-db-vars.yml
@@ -1672,7 +1672,7 @@ jobs:
           enable-service-discovery.yml
           enable-backup-restore.yml
           add-apps-internal-search-domain.yml
-          opsfile.yml
+          scale-up-4-api-instances.yml
           lower-canary-watch-time.yml
           use-latest-silk.yml
           enable-experimental-dynamic-egress-policies.yml
