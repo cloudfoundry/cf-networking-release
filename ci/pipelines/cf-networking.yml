@@ -616,6 +616,7 @@ jobs:
           add-istio.yml
           enable-sidecar-proxying.yml
           disable-ingress-redirect-to-proxy.yml
+          enable-iptables-logger.yml
           opsfile.yml
           lower-canary-watch-time.yml
       input_mapping:
@@ -1336,6 +1337,7 @@ jobs:
           add-istio.yml
           enable-sidecar-proxying.yml
           disable-ingress-redirect-to-proxy.yml
+          enable-iptables-logger.yml
           opsfile.yml
           lower-canary-watch-time.yml
       input_mapping:
