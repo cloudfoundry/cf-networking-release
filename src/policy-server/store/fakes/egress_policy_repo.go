@@ -61,6 +61,20 @@ type EgressPolicyRepo struct {
 		result1 string
 		result2 error
 	}
+	CreateDefaultStub        func(tx db.Transaction, sourceTerminalGUID string) (int64, error)
+	createDefaultMutex       sync.RWMutex
+	createDefaultArgsForCall []struct {
+		tx                 db.Transaction
+		sourceTerminalGUID string
+	}
+	createDefaultReturns struct {
+		result1 int64
+		result2 error
+	}
+	createDefaultReturnsOnCall map[int]struct {
+		result1 int64
+		result2 error
+	}
 	CreateSpaceStub        func(tx db.Transaction, sourceTerminalGUID string, spaceGUID string) (int64, error)
 	createSpaceMutex       sync.RWMutex
 	createSpaceArgsForCall []struct {
@@ -205,6 +219,18 @@ type EgressPolicyRepo struct {
 		result1 error
 	}
 	deleteSpaceReturnsOnCall map[int]struct {
+		result1 error
+	}
+	DeleteDefaultStub        func(tx db.Transaction, defaultID string) error
+	deleteDefaultMutex       sync.RWMutex
+	deleteDefaultArgsForCall []struct {
+		tx        db.Transaction
+		defaultID string
+	}
+	deleteDefaultReturns struct {
+		result1 error
+	}
+	deleteDefaultReturnsOnCall map[int]struct {
 		result1 error
 	}
 	IsTerminalInUseStub        func(tx db.Transaction, terminalGUID string) (bool, error)
@@ -387,6 +413,58 @@ func (fake *EgressPolicyRepo) CreateEgressPolicyReturnsOnCall(i int, result1 str
 	}
 	fake.createEgressPolicyReturnsOnCall[i] = struct {
 		result1 string
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *EgressPolicyRepo) CreateDefault(tx db.Transaction, sourceTerminalGUID string) (int64, error) {
+	fake.createDefaultMutex.Lock()
+	ret, specificReturn := fake.createDefaultReturnsOnCall[len(fake.createDefaultArgsForCall)]
+	fake.createDefaultArgsForCall = append(fake.createDefaultArgsForCall, struct {
+		tx                 db.Transaction
+		sourceTerminalGUID string
+	}{tx, sourceTerminalGUID})
+	fake.recordInvocation("CreateDefault", []interface{}{tx, sourceTerminalGUID})
+	fake.createDefaultMutex.Unlock()
+	if fake.CreateDefaultStub != nil {
+		return fake.CreateDefaultStub(tx, sourceTerminalGUID)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.createDefaultReturns.result1, fake.createDefaultReturns.result2
+}
+
+func (fake *EgressPolicyRepo) CreateDefaultCallCount() int {
+	fake.createDefaultMutex.RLock()
+	defer fake.createDefaultMutex.RUnlock()
+	return len(fake.createDefaultArgsForCall)
+}
+
+func (fake *EgressPolicyRepo) CreateDefaultArgsForCall(i int) (db.Transaction, string) {
+	fake.createDefaultMutex.RLock()
+	defer fake.createDefaultMutex.RUnlock()
+	return fake.createDefaultArgsForCall[i].tx, fake.createDefaultArgsForCall[i].sourceTerminalGUID
+}
+
+func (fake *EgressPolicyRepo) CreateDefaultReturns(result1 int64, result2 error) {
+	fake.CreateDefaultStub = nil
+	fake.createDefaultReturns = struct {
+		result1 int64
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *EgressPolicyRepo) CreateDefaultReturnsOnCall(i int, result1 int64, result2 error) {
+	fake.CreateDefaultStub = nil
+	if fake.createDefaultReturnsOnCall == nil {
+		fake.createDefaultReturnsOnCall = make(map[int]struct {
+			result1 int64
+			result2 error
+		})
+	}
+	fake.createDefaultReturnsOnCall[i] = struct {
+		result1 int64
 		result2 error
 	}{result1, result2}
 }
@@ -975,6 +1053,55 @@ func (fake *EgressPolicyRepo) DeleteSpaceReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
+func (fake *EgressPolicyRepo) DeleteDefault(tx db.Transaction, defaultID string) error {
+	fake.deleteDefaultMutex.Lock()
+	ret, specificReturn := fake.deleteDefaultReturnsOnCall[len(fake.deleteDefaultArgsForCall)]
+	fake.deleteDefaultArgsForCall = append(fake.deleteDefaultArgsForCall, struct {
+		tx        db.Transaction
+		defaultID string
+	}{tx, defaultID})
+	fake.recordInvocation("DeleteDefault", []interface{}{tx, defaultID})
+	fake.deleteDefaultMutex.Unlock()
+	if fake.DeleteDefaultStub != nil {
+		return fake.DeleteDefaultStub(tx, defaultID)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.deleteDefaultReturns.result1
+}
+
+func (fake *EgressPolicyRepo) DeleteDefaultCallCount() int {
+	fake.deleteDefaultMutex.RLock()
+	defer fake.deleteDefaultMutex.RUnlock()
+	return len(fake.deleteDefaultArgsForCall)
+}
+
+func (fake *EgressPolicyRepo) DeleteDefaultArgsForCall(i int) (db.Transaction, string) {
+	fake.deleteDefaultMutex.RLock()
+	defer fake.deleteDefaultMutex.RUnlock()
+	return fake.deleteDefaultArgsForCall[i].tx, fake.deleteDefaultArgsForCall[i].defaultID
+}
+
+func (fake *EgressPolicyRepo) DeleteDefaultReturns(result1 error) {
+	fake.DeleteDefaultStub = nil
+	fake.deleteDefaultReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *EgressPolicyRepo) DeleteDefaultReturnsOnCall(i int, result1 error) {
+	fake.DeleteDefaultStub = nil
+	if fake.deleteDefaultReturnsOnCall == nil {
+		fake.deleteDefaultReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.deleteDefaultReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *EgressPolicyRepo) IsTerminalInUse(tx db.Transaction, terminalGUID string) (bool, error) {
 	fake.isTerminalInUseMutex.Lock()
 	ret, specificReturn := fake.isTerminalInUseReturnsOnCall[len(fake.isTerminalInUseArgsForCall)]
@@ -1036,6 +1163,8 @@ func (fake *EgressPolicyRepo) Invocations() map[string][][]interface{} {
 	defer fake.createIPRangeMutex.RUnlock()
 	fake.createEgressPolicyMutex.RLock()
 	defer fake.createEgressPolicyMutex.RUnlock()
+	fake.createDefaultMutex.RLock()
+	defer fake.createDefaultMutex.RUnlock()
 	fake.createSpaceMutex.RLock()
 	defer fake.createSpaceMutex.RUnlock()
 	fake.getTerminalByAppGUIDMutex.RLock()
@@ -1058,6 +1187,8 @@ func (fake *EgressPolicyRepo) Invocations() map[string][][]interface{} {
 	defer fake.deleteAppMutex.RUnlock()
 	fake.deleteSpaceMutex.RLock()
 	defer fake.deleteSpaceMutex.RUnlock()
+	fake.deleteDefaultMutex.RLock()
+	defer fake.deleteDefaultMutex.RUnlock()
 	fake.isTerminalInUseMutex.RLock()
 	defer fake.isTerminalInUseMutex.RUnlock()
 	return fake.invocations

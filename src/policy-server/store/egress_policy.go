@@ -50,6 +50,41 @@ func (e *EgressPolicyTable) CreateApp(tx db.Transaction, sourceTerminalGUID, app
 	return -1, fmt.Errorf("unknown driver: %s", driverName)
 }
 
+func (e *EgressPolicyTable) CreateDefault(tx db.Transaction, sourceTerminalGUID string) (int64, error) {
+	driverName := tx.DriverName()
+
+	if driverName == "mysql" {
+		result, err := tx.Exec(tx.Rebind(`
+			INSERT INTO defaults (terminal_guid)
+			VALUES (?)
+		`),
+			sourceTerminalGUID,
+		)
+		if err != nil {
+			return -1, err
+		}
+
+		return result.LastInsertId()
+	} else if driverName == "postgres" {
+		var id int64
+
+		err := tx.QueryRow(tx.Rebind(`
+			INSERT INTO defaults (terminal_guid)
+			VALUES (?)
+			RETURNING id
+		`),
+			sourceTerminalGUID,
+		).Scan(&id)
+
+		if err != nil {
+			return -1, fmt.Errorf("error inserting default: %s", err)
+		}
+
+		return id, nil
+	}
+	return -1, fmt.Errorf("unknown driver: %s", driverName)
+}
+
 func (e *EgressPolicyTable) CreateIPRange(tx db.Transaction, destinationTerminalGUID, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) (int64, error) {
 	driverName := tx.DriverName()
 	if driverName == "mysql" {
@@ -169,6 +204,11 @@ func (e *EgressPolicyTable) DeleteIPRange(tx db.Transaction, ipRangeID int64) er
 
 func (e *EgressPolicyTable) DeleteApp(tx db.Transaction, terminalGUID string) error {
 	_, err := tx.Exec(tx.Rebind(`DELETE FROM apps WHERE terminal_guid = ?`), terminalGUID)
+	return err
+}
+
+func (e *EgressPolicyTable) DeleteDefault(tx db.Transaction, terminalGUID string) error {
+	_, err := tx.Exec(tx.Rebind(`DELETE FROM defaults WHERE terminal_guid = ?`), terminalGUID)
 	return err
 }
 
@@ -402,6 +442,11 @@ func mapRowToEgressPolicy(egressPolicyGUID, sourceTerminalGUID, appLifecycle, na
 		source = EgressSource{
 			ID:           *sourceSpaceGUID,
 			Type:         "space",
+			TerminalGUID: *sourceTerminalGUID,
+		}
+	case sourceSpaceGUID == nil && sourceAppGUID == nil:
+		source = EgressSource{
+			Type:         "default",
 			TerminalGUID: *sourceTerminalGUID,
 		}
 	default:

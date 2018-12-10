@@ -114,6 +114,37 @@ var _ = Describe("Egress Policy Table", func() {
 		})
 	})
 
+	Context("CreateDefault", func() {
+		It("should create a default and return the ID", func() {
+			db, tx := getMigratedRealDb(dbConf)
+			setupEgressPolicyStore(db)
+
+			terminalGUID, err := terminalsTable.Create(tx)
+			Expect(err).ToNot(HaveOccurred())
+
+			id, err := egressPolicyTable.CreateDefault(tx, terminalGUID)
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(id).To(Equal(int64(1)))
+
+			var foundID int
+			row := tx.QueryRow(`SELECT id FROM defaults WHERE id = 1`)
+			err = row.Scan(&foundID)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(foundID).To(Equal(1))
+		})
+
+		It("should return an error if the driver is not supported", func() {
+			setupEgressPolicyStore(mockDb)
+			fakeTx := &dbfakes.Transaction{}
+
+			fakeTx.DriverNameReturns("db2")
+
+			_, err := egressPolicyTable.CreateDefault(fakeTx, "some-term-guid")
+			Expect(err).To(MatchError("unknown driver: db2"))
+		})
+	})
+
 	Context("CreateSpace", func() {
 		It("should create a space and return the ID", func() {
 			db, tx := getMigratedRealDb(dbConf)
@@ -145,7 +176,6 @@ var _ = Describe("Egress Policy Table", func() {
 	})
 
 	Context("CreateIPRange", func() {
-
 		It("should create an iprange and return the ID", func() {
 			db, tx := getMigratedRealDb(dbConf)
 			setupEgressPolicyStore(db)
@@ -356,6 +386,39 @@ var _ = Describe("Egress Policy Table", func() {
 		})
 	})
 
+	Context("DeleteDefault", func() {
+		It("deletes the app provided a terminal guid", func() {
+			db, tx := getMigratedRealDb(dbConf)
+			setupEgressPolicyStore(db)
+
+			appTerminalGUID, err := terminalsTable.Create(tx)
+			Expect(err).ToNot(HaveOccurred())
+
+			appID, err := egressPolicyTable.CreateDefault(tx, appTerminalGUID)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(appID).To(Equal(int64(1)))
+
+			err = egressPolicyTable.DeleteDefault(tx, appTerminalGUID)
+			Expect(err).ToNot(HaveOccurred())
+
+			var defaultCount int
+			row := tx.QueryRow(`SELECT COUNT(id) FROM defaults WHERE id = 1`)
+			err = row.Scan(&defaultCount)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(defaultCount).To(Equal(0))
+		})
+
+		It("should return the sql error", func() {
+			setupEgressPolicyStore(mockDb)
+
+			fakeTx := &dbfakes.Transaction{}
+			fakeTx.ExecReturns(nil, errors.New("broke"))
+
+			err := egressPolicyTable.DeleteDefault(fakeTx, "2")
+			Expect(err).To(MatchError("broke"))
+		})
+	})
+
 	Context("DeleteSpace", func() {
 		It("deletes the space provided a terminal guid", func() {
 			db, tx := getMigratedRealDb(dbConf)
@@ -419,6 +482,7 @@ var _ = Describe("Egress Policy Table", func() {
 			egressDestinations        []store.EgressDestination
 			createdEgressDestinations []store.EgressDestination
 		)
+
 		Context("when the APIs succeed", func() {
 			BeforeEach(func() {
 				db, _ := getMigratedRealDb(dbConf)
@@ -528,6 +592,14 @@ var _ = Describe("Egress Policy Table", func() {
 							GUID: createdEgressDestinations[3].GUID,
 						},
 					},
+					{
+						Source: store.EgressSource{
+							Type: "default",
+						},
+						Destination: store.EgressDestination{
+							GUID: createdEgressDestinations[3].GUID,
+						},
+					},
 				}
 
 				createdEgressPolicies, err = egressStore.Create(egressPolicies)
@@ -576,7 +648,7 @@ var _ = Describe("Egress Policy Table", func() {
 				It("returns policies", func() {
 					listedPolicies, err := egressPolicyTable.GetAllPolicies()
 					Expect(err).ToNot(HaveOccurred())
-					Expect(listedPolicies).To(HaveLen(4))
+					Expect(listedPolicies).To(HaveLen(5))
 					Expect(listedPolicies).To(ConsistOf([]store.EgressPolicy{
 						{
 							ID: "guid-1",
@@ -668,10 +740,32 @@ var _ = Describe("Egress Policy Table", func() {
 								},
 							},
 						},
+						{
+							ID: "guid-5",
+							Source: store.EgressSource{
+								Type:         "default",
+								TerminalGUID: createdEgressPolicies[4].Source.TerminalGUID,
+							},
+							Destination: store.EgressDestination{
+								GUID:        createdEgressDestinations[3].GUID,
+								Name:        "",
+								Description: "",
+								Protocol:    "icmp",
+								ICMPType:    1,
+								ICMPCode:    2,
+								IPRanges: []store.IPRange{
+									{
+										Start: "2.2.3.4",
+										End:   "2.2.3.5",
+									},
+								},
+							},
+						},
 					}))
 				})
 			})
 		})
+
 		Context("when the query fails", func() {
 			It("returns an error", func() {
 				setupEgressPolicyStore(mockDb)
@@ -1166,7 +1260,7 @@ func egressDestinationStore(db store.Database) *store.EgressDestinationStore {
 
 	destinationMetadataTable := &store.DestinationMetadataTable{}
 	egressDestinationStore := &store.EgressDestinationStore{
-		Conn: db,
+		Conn:                    db,
 		EgressDestinationRepo:   &store.EgressDestinationTable{},
 		TerminalsRepo:           terminalsRepo,
 		DestinationMetadataRepo: destinationMetadataTable,

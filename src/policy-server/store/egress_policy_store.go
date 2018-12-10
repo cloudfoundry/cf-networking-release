@@ -11,6 +11,7 @@ type egressPolicyRepo interface {
 	CreateApp(tx db.Transaction, sourceTerminalGUID string, appGUID string) (int64, error)
 	CreateIPRange(tx db.Transaction, destinationTerminalGUID string, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) (int64, error)
 	CreateEgressPolicy(tx db.Transaction, sourceTerminalGUID, destinationTerminalGUID, appLifecycle string) (string, error)
+	CreateDefault(tx db.Transaction, sourceTerminalGUID string) (int64, error)
 	CreateSpace(tx db.Transaction, sourceTerminalGUID string, spaceGUID string) (int64, error)
 	GetTerminalByAppGUID(tx db.Transaction, appGUID string) (string, error)
 	GetTerminalBySpaceGUID(tx db.Transaction, appGUID string) (string, error)
@@ -22,6 +23,7 @@ type egressPolicyRepo interface {
 	DeleteIPRange(tx db.Transaction, ipRangeID int64) error
 	DeleteApp(tx db.Transaction, terminalID string) error
 	DeleteSpace(tx db.Transaction, spaceID string) error
+	DeleteDefault(tx db.Transaction, defaultID string) error
 	IsTerminalInUse(tx db.Transaction, terminalGUID string) (bool, error)
 }
 
@@ -83,6 +85,16 @@ func (e *EgressPolicyStore) createWithTx(tx db.Transaction, policies []EgressPol
 				if err != nil {
 					return nil, fmt.Errorf("failed to create space: %s", err)
 				}
+			}
+		case "default":
+			sourceTerminalGUID, err = e.TerminalsRepo.Create(tx)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create source terminal: %s", err)
+			}
+
+			_, err = e.EgressPolicyRepo.CreateDefault(tx, sourceTerminalGUID)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create space: %s", err)
 			}
 		default:
 			sourceTerminalGUID, err = e.EgressPolicyRepo.GetTerminalByAppGUID(tx, policy.Source.ID)
@@ -161,6 +173,13 @@ func (e *EgressPolicyStore) deleteWithTx(tx db.Transaction, egressPolicyGUIDs ..
 
 			if egressPolicy.Source.Type == "space" {
 				err = e.EgressPolicyRepo.DeleteSpace(tx, egressPolicy.Source.TerminalGUID)
+				if err != nil {
+					return []EgressPolicy{}, fmt.Errorf("failed to delete source space: %s", err)
+				}
+			}
+
+			if egressPolicy.Source.Type == "default" {
+				err = e.EgressPolicyRepo.DeleteDefault(tx, egressPolicy.Source.TerminalGUID)
 				if err != nil {
 					return []EgressPolicy{}, fmt.Errorf("failed to delete source space: %s", err)
 				}

@@ -76,7 +76,7 @@ var _ = Describe("EgressPolicyStore", func() {
 	Describe("Create", func() {
 		It("creates an egress policy with the right GUIDs", func() {
 			terminalsRepo.CreateReturnsOnCall(0, "some-terminal-app-guid", nil)
-			terminalsRepo.CreateReturnsOnCall(1, "some-terminal-space-guid", nil)
+			terminalsRepo.CreateReturnsOnCall(1, "some-terminal-app-guid-2", nil)
 			egressPolicyRepo.CreateEgressPolicyReturnsOnCall(0, "some-egress-policy-guid-1", nil)
 			egressPolicyRepo.CreateEgressPolicyReturnsOnCall(1, "some-egress-policy-guid-2", nil)
 
@@ -102,7 +102,7 @@ var _ = Describe("EgressPolicyStore", func() {
 					Source: store.EgressSource{
 						ID:           "different-app-guid",
 						Type:         "app",
-						TerminalGUID: "some-terminal-space-guid",
+						TerminalGUID: "some-terminal-app-guid-2",
 					},
 					Destination: store.EgressDestination{
 						GUID: "some-destination-guid-2",
@@ -133,9 +133,72 @@ var _ = Describe("EgressPolicyStore", func() {
 
 			argTx, sourceID, destinationID, appLifecycle = egressPolicyRepo.CreateEgressPolicyArgsForCall(1)
 			Expect(argTx).To(Equal(tx))
-			Expect(sourceID).To(Equal("some-terminal-space-guid"))
+			Expect(sourceID).To(Equal("some-terminal-app-guid-2"))
 			Expect(destinationID).To(Equal("some-destination-guid-2"))
 			Expect(appLifecycle).To(Equal("staging"))
+		})
+
+		Context("when a default egress policy is created", func() {
+			BeforeEach(func() {
+				egressPolicies = []store.EgressPolicy{
+					{
+						Source: store.EgressSource{
+							Type: "default",
+						},
+						Destination: store.EgressDestination{
+							GUID: "some-destination-guid",
+						},
+						AppLifecycle: "running",
+					},
+				}
+			})
+
+			It("creates an egress policy with the right GUIDs", func() {
+				terminalsRepo.CreateReturnsOnCall(0, "some-terminal-default-guid", nil)
+				egressPolicyRepo.CreateEgressPolicyReturnsOnCall(0, "some-egress-policy-guid", nil)
+
+				createdPolicies, err := egressPolicyStore.Create(egressPolicies)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(egressPolicyRepo.CreateEgressPolicyCallCount()).To(Equal(1))
+				Expect(createdPolicies).To(HaveLen(1))
+				Expect(createdPolicies).To(Equal([]store.EgressPolicy{
+					{
+						ID: "some-egress-policy-guid",
+						Source: store.EgressSource{
+							Type:         "default",
+							TerminalGUID: "some-terminal-default-guid",
+						},
+						Destination: store.EgressDestination{
+							GUID: "some-destination-guid",
+						},
+						AppLifecycle: "running",
+					},
+				}))
+
+				passedSourceId, passedSourceType, passedDestinationId, passedDestinationName, passedAppLifecycle := egressPolicyRepo.GetByFilterArgsForCall(0)
+				Expect(passedSourceId).To(ConsistOf(""))
+				Expect(passedSourceType).To(ConsistOf("default"))
+				Expect(passedDestinationId).To(ConsistOf("some-destination-guid"))
+				Expect(passedDestinationName).To(BeEmpty())
+				Expect(passedAppLifecycle).To(ConsistOf("running"))
+
+				argTx, sourceID, destinationID, appLifecycle := egressPolicyRepo.CreateEgressPolicyArgsForCall(0)
+				Expect(argTx).To(Equal(tx))
+				Expect(sourceID).To(Equal("some-terminal-default-guid"))
+				Expect(destinationID).To(Equal("some-destination-guid"))
+				Expect(appLifecycle).To(Equal("running"))
+
+				Expect(terminalsRepo.CreateCallCount()).To(Equal(1))
+				argTx = terminalsRepo.CreateArgsForCall(0)
+				Expect(argTx).To(Equal(tx))
+
+				egressPolicyRepo.CreateDefaultReturns(1234, nil)
+
+				Expect(egressPolicyRepo.CreateDefaultCallCount()).To(Equal(1))
+				argTx, argTerminalGUID := egressPolicyRepo.CreateDefaultArgsForCall(0)
+				Expect(argTx).To(Equal(tx))
+				Expect(argTerminalGUID).To(Equal("some-terminal-default-guid"))
+			})
 		})
 
 		It("returns an error when get by filter fails", func() {
@@ -420,6 +483,42 @@ var _ = Describe("EgressPolicyStore", func() {
 			passedTx, passedSourceTerminalGUID := egressPolicyRepo.DeleteSpaceArgsForCall(0)
 			Expect(passedTx).To(Equal(tx))
 			Expect(passedSourceTerminalGUID).To(Equal(srcTerminalGUID2))
+		})
+
+		Context("when the egress policy is of type default", func() {
+			BeforeEach(func() {
+				srcType = "default"
+				expectedEgressPolicies = []store.EgressPolicy{
+					{
+						ID: egressPolicyGUID,
+						Source: store.EgressSource{
+							TerminalGUID: srcTerminalGUID,
+							Type:         srcType,
+						},
+						Destination: store.EgressDestination{
+							GUID: destTerminalGUID,
+						},
+						AppLifecycle: "running",
+					},
+				}
+				egressPolicyRepo.GetByGUIDReturns(expectedEgressPolicies, nil)
+			})
+
+			It("deletes the egress policy and associated tables", func() {
+				egressPolicies, err := egressPolicyStore.Delete(egressPolicyGUID)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(egressPolicies).To(Equal(expectedEgressPolicies))
+
+				Expect(egressPolicyRepo.DeleteDefaultCallCount()).To(Equal(1))
+				passedTx, passedTerminalGUID := egressPolicyRepo.DeleteDefaultArgsForCall(0)
+				Expect(passedTx).To(Equal(tx))
+				Expect(passedTerminalGUID).To(Equal(srcTerminalGUID))
+
+				Expect(terminalsRepo.DeleteCallCount()).To(Equal(1))
+				passedTx, passedSrcTerminalGUID := terminalsRepo.DeleteArgsForCall(0)
+				Expect(passedTx).To(Equal(tx))
+				Expect(passedSrcTerminalGUID).To(Equal(srcTerminalGUID))
+			})
 		})
 
 		Context("when the EgressPolicyRepo.DeleteSpace fails", func() {
