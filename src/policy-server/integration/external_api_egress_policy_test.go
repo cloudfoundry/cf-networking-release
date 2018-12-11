@@ -1,22 +1,21 @@
 package integration_test
 
 import (
-	"fmt"
-	"net/http"
-	"policy-server/config"
-	"policy-server/integration/helpers"
-	"policy-server/psclient"
-
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
-	uuid "github.com/nu7hatch/gouuid"
+	"fmt"
+	"github.com/nu7hatch/gouuid"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
+	"net/http"
+	"policy-server/config"
+	"policy-server/integration/helpers"
+	"policy-server/psclient"
 )
 
 var _ = Describe("External API Egress Policies", func() {
@@ -158,8 +157,7 @@ var _ = Describe("External API Egress Policies", func() {
 
 		someSecondPolicy := psclient.EgressPolicy{
 			Source: psclient.EgressPolicySource{
-				Type: "app",
-				ID:   "live-app-2-guid",
+				Type: "default",
 			},
 			Destination: psclient.Destination{
 				GUID: createdDestinations[1].GUID,
@@ -189,6 +187,67 @@ var _ = Describe("External API Egress Policies", func() {
 
 		_, err = uuid.ParseHex(thirdPolicyGUID)
 		Expect(err).NotTo(HaveOccurred())
+
+		By("listing all policies")
+		egressPolicyList, err = client.ListEgressPolicies(token, []string{}, []string{}, []string{}, []string{})
+		Expect(err).NotTo(HaveOccurred())
+		egressPolicies = egressPolicyList.EgressPolicies
+		Expect(egressPolicies).To(HaveLen(3))
+		Expect(egressPolicies).To(ConsistOf(
+			psclient.EgressPolicy{
+				GUID: policyGUID,
+				Source: psclient.EgressPolicySource{
+					ID:   "live-app-1-guid",
+					Type: "app",
+				},
+				Destination: psclient.Destination{
+					GUID:        createdDestinations[0].GUID,
+					Name:        "tcp with ports",
+					Description: "dest description",
+					Rules: []psclient.DestinationRule{{
+						Protocol: "tcp",
+						IPs:      []psclient.IPRange{{Start: "1.2.3.4", End: "1.2.3.5"}},
+						Ports:    []psclient.Port{{Start: 8080, End: 9090}},
+					}},
+				},
+				AppLifecycle: "running",
+			},
+			psclient.EgressPolicy{
+				GUID: secondPolicyGUID,
+				Source: psclient.EgressPolicySource{
+					Type: "default",
+				},
+				Destination: psclient.Destination{
+					GUID:        createdDestinations[1].GUID,
+					Name:        "udp destination",
+					Description: "another description",
+					Rules: []psclient.DestinationRule{{
+						Protocol: "udp",
+						IPs:      []psclient.IPRange{{Start: "3.2.3.4", End: "3.2.3.5"}},
+						Ports:    []psclient.Port{{Start: 8082, End: 9092}},
+					}},
+				},
+				AppLifecycle: "staging",
+			},
+			psclient.EgressPolicy{
+				GUID: thirdPolicyGUID,
+				Source: psclient.EgressPolicySource{
+					ID:   "live-app-3-guid",
+					Type: "app",
+				},
+				Destination: psclient.Destination{
+					GUID:        createdDestinations[1].GUID,
+					Name:        "udp destination",
+					Description: "another description",
+					Rules: []psclient.DestinationRule{{
+						Protocol: "udp",
+						IPs:      []psclient.IPRange{{Start: "3.2.3.4", End: "3.2.3.5"}},
+						Ports:    []psclient.Port{{Start: 8082, End: 9092}},
+					}},
+				},
+				AppLifecycle: "all",
+			},
+		))
 
 		By("fetching list of IDs")
 		egressPolicyList, err = client.ListEgressPolicies(token, []string{"live-app-1-guid", "live-app-3-guid"}, []string{"app"}, []string{}, []string{})

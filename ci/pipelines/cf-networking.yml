@@ -617,7 +617,8 @@ jobs:
           enable-sidecar-proxying.yml
           disable-ingress-redirect-to-proxy.yml
           enable-iptables-logger.yml
-          opsfile.yml
+          use-postgres.yml
+          scale-to-2-diego-cells.yml
           lower-canary-watch-time.yml
       input_mapping:
         bbl-state: cf-networking-deployments
@@ -867,7 +868,13 @@ jobs:
           add-istio.yml
           enable-sidecar-proxying.yml
           disable-ingress-redirect-to-proxy.yml
-          opsfile.yml
+          add-smoke-test-user.yml
+          change-vtep-port.yml
+          enable-rate-limiting-for-udp.yml
+          enable-space-developer-self-service.yml
+          scale-ephemeral-disk.yml
+          scale-instances-to-2.yml
+          scale-persistent-disk.yml
           lower-canary-watch-time.yml
       input_mapping:
         bbl-state: cf-networking-deployments
@@ -1338,7 +1345,13 @@ jobs:
           enable-sidecar-proxying.yml
           disable-ingress-redirect-to-proxy.yml
           enable-iptables-logger.yml
-          opsfile.yml
+          change-nats-monitor-port.yml
+          increase-diego-cell-mtu.yml
+          scale-diego-cell-max-in-flight.yml
+          scale-diego-cell-vm-size.yml
+          scale-max-containers.yml
+          scale-router-ephemeral-disk.yml
+          scale-to-3-diego-cells.yml
           lower-canary-watch-time.yml
       input_mapping:
         bbl-state: cf-networking-deployments
@@ -1593,7 +1606,7 @@ jobs:
           enable-iptables-logger.yml
           enable-service-discovery.yml
           add-apps-internal-search-domain.yml
-          opsfile.yml
+          scale-up-4-api-instances.yml
           lower-canary-watch-time.yml
         VARS_FILES: |
           environments/caubeen/external-db-vars.yml
@@ -1672,7 +1685,7 @@ jobs:
           enable-service-discovery.yml
           enable-backup-restore.yml
           add-apps-internal-search-domain.yml
-          opsfile.yml
+          scale-up-4-api-instances.yml
           lower-canary-watch-time.yml
           use-latest-silk.yml
           enable-experimental-dynamic-egress-policies.yml

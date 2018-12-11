@@ -1584,6 +1584,47 @@ var _ = Describe("migrations", func() {
 			})
 		})
 
+		Describe("V60 - Add default table", func() {
+			It("should migrate", func() {
+				By("performing migration")
+				migrateTo("60")
+
+				_, err := realDb.Exec("INSERT INTO terminals (guid) VALUES ('some-terminal-guid')")
+				Expect(err).NotTo(HaveOccurred())
+
+				By("inserting a default")
+				_, err = realDb.Exec(realDb.RawConnection().Rebind(`
+					INSERT INTO defaults (terminal_guid)
+					VALUES (?)`), "some-terminal-guid")
+				Expect(err).NotTo(HaveOccurred())
+
+				By("validating that it is inserted with an id")
+				var id int
+				var terminalGUID string
+				err = realDb.QueryRow(`
+						SELECT id, terminal_guid FROM defaults
+						WHERE terminal_guid = 'some-terminal-guid'`).Scan(&id, &terminalGUID)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(id).To(Equal(1))
+				Expect(terminalGUID).To(Equal("some-terminal-guid"))
+
+				By("validating that terminal guid is unique")
+				_, err = realDb.Exec(realDb.RawConnection().Rebind(`
+					INSERT INTO defaults (terminal_guid)
+					VALUES (?)`), "some-terminal-guid")
+				Expect(err).To(MatchError(Or(
+					ContainSubstring("duplicate key value violates unique constraint"), // postgres error
+					ContainSubstring("Duplicate entry"),                                // mysql error
+				)))
+
+				By("validating that terminal guid is a foreign key")
+				_, err = realDb.Exec(realDb.RawConnection().Rebind(`
+					INSERT INTO defaults (terminal_guid)
+					VALUES (?)`), "non-existant-terminal-guid")
+				Expect(err).To(MatchError(ContainSubstring("foreign key constraint")))
+			})
+		})
+
 		Describe("V61-V63 - Allow many ip ranges to an egress policy", func() {
 			It("should migrate", func() {
 				By("performing migration")
