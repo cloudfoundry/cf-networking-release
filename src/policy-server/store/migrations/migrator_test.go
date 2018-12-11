@@ -1584,10 +1584,10 @@ var _ = Describe("migrations", func() {
 			})
 		})
 
-		Describe("V60-V62 - Allow many ip ranges to an egress policy", func() {
+		Describe("V61-V63 - Allow many ip ranges to an egress policy", func() {
 			It("should migrate", func() {
 				By("performing migration")
-				migrateTo("59")
+				migrateTo("60")
 
 				_, err := realDb.Exec("INSERT INTO terminals (guid) VALUES ('some-terminal-guid')")
 				Expect(err).NotTo(HaveOccurred())
