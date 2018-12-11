@@ -182,7 +182,7 @@ var _ = Describe("External API Egress Policies", func() {
 		Expect(err).NotTo(HaveOccurred())
 		egressPolicies = egressPolicyList.EgressPolicies
 		Expect(egressPolicies).To(HaveLen(3))
-		Expect(egressPolicies[0]).To(Equal(
+		Expect(egressPolicies).To(ConsistOf(
 			psclient.EgressPolicy{
 				GUID: policyGUID,
 				Source: psclient.EgressPolicySource{
@@ -199,8 +199,6 @@ var _ = Describe("External API Egress Policies", func() {
 				},
 				AppLifecycle: "running",
 			},
-		))
-		Expect(egressPolicies[1]).To(Equal(
 			psclient.EgressPolicy{
 				GUID: secondPolicyGUID,
 				Source: psclient.EgressPolicySource{
@@ -216,8 +214,6 @@ var _ = Describe("External API Egress Policies", func() {
 				},
 				AppLifecycle: "staging",
 			},
-		))
-		Expect(egressPolicies[2]).To(Equal(
 			psclient.EgressPolicy{
 				GUID: thirdPolicyGUID,
 				Source: psclient.EgressPolicySource{
