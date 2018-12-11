@@ -63,54 +63,26 @@ func (e *EgressDestinationTable) UpdateIPRange(tx db.Transaction, destinationTer
 	return err
 }
 
-func (e *EgressDestinationTable) CreateIPRange(tx db.Transaction, destinationTerminalGUID, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) (int64, error) {
-	driverName := tx.DriverName()
-	if driverName == "mysql" {
-		result, err := tx.Exec(tx.Rebind(`
+func (e *EgressDestinationTable) CreateIPRange(tx db.Transaction, destinationTerminalGUID, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) error {
+	_, err := tx.Exec(tx.Rebind(`
 			INSERT INTO ip_ranges (protocol, start_ip, end_ip, terminal_guid, start_port, end_port, icmp_type, icmp_code)
 			VALUES (?,?,?,?,?,?,?,?)
 		`),
-			protocol,
-			startIP,
-			endIP,
-			destinationTerminalGUID,
-			startPort,
-			endPort,
-			icmpType,
-			icmpCode,
-		)
+		protocol,
+		startIP,
+		endIP,
+		destinationTerminalGUID,
+		startPort,
+		endPort,
+		icmpType,
+		icmpCode,
+	)
 
-		if err != nil {
-			return -1, fmt.Errorf("error inserting ip ranges: %s", err)
-		}
-
-		return result.LastInsertId()
-	} else if driverName == "postgres" {
-		var id int64
-
-		err := tx.QueryRow(tx.Rebind(`
-			INSERT INTO ip_ranges (protocol, start_ip, end_ip, terminal_guid, start_port, end_port, icmp_type, icmp_code)
-			VALUES (?,?,?,?,?,?,?,?)
-			RETURNING id
-		`),
-			protocol,
-			startIP,
-			endIP,
-			destinationTerminalGUID,
-			startPort,
-			endPort,
-			icmpType,
-			icmpCode,
-		).Scan(&id)
-
-		if err != nil {
-			return -1, fmt.Errorf("error inserting ip ranges: %s", err)
-		}
-
-		return id, nil
+	if err != nil {
+		return fmt.Errorf("error inserting ip ranges: %s", err)
 	}
 
-	return -1, fmt.Errorf("unknown driver: %s", driverName)
+	return nil
 }
 
 func convertRowsToEgressDestinations(rows sqlRows) ([]EgressDestination, error) {

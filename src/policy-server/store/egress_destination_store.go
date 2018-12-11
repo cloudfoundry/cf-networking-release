@@ -12,7 +12,7 @@ import (
 //go:generate counterfeiter -o fakes/egress_destination_repo.go --fake-name EgressDestinationRepo . egressDestinationRepo
 type egressDestinationRepo interface {
 	All(tx db.Transaction) ([]EgressDestination, error)
-	CreateIPRange(tx db.Transaction, destinationTerminalGUID, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) (int64, error)
+	CreateIPRange(tx db.Transaction, destinationTerminalGUID, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) error
 	UpdateIPRange(tx db.Transaction, destinationTerminalGUID, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) error
 	GetByGUID(tx db.Transaction, guid ...string) ([]EgressDestination, error)
 	Delete(tx db.Transaction, guid string) error
@@ -138,7 +138,7 @@ func (e *EgressDestinationStore) Update(egressDestinations []EgressDestination) 
 				endPort = int64(rule.Ports[0].End)
 			}
 
-			_, err = e.EgressDestinationRepo.CreateIPRange(
+			err = e.EgressDestinationRepo.CreateIPRange(
 				tx,
 				egressDestination.GUID,
 				rule.IPRanges[0].Start,
@@ -218,7 +218,7 @@ func (e *EgressDestinationStore) Create(egressDestinations []EgressDestination) 
 				endPort = int64(rule.Ports[0].End)
 			}
 
-			_, err = e.EgressDestinationRepo.CreateIPRange(
+			err = e.EgressDestinationRepo.CreateIPRange(
 				tx,
 				destinationTerminalGUID,
 				rule.IPRanges[0].Start,

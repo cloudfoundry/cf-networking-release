@@ -122,26 +122,14 @@ var _ = Describe("Egress Policy Table", func() {
 			terminalGUID, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 
-			id, err := egressPolicyTable.CreateDefault(tx, terminalGUID)
+			err = egressPolicyTable.CreateDefault(tx, terminalGUID)
 			Expect(err).ToNot(HaveOccurred())
 
-			Expect(id).To(Equal(int64(1)))
-
 			var foundID int
-			row := tx.QueryRow(`SELECT id FROM defaults WHERE id = 1`)
+			row := tx.QueryRow(`SELECT id FROM defaults`)
 			err = row.Scan(&foundID)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(foundID).To(Equal(1))
-		})
-
-		It("should return an error if the driver is not supported", func() {
-			setupEgressPolicyStore(mockDb)
-			fakeTx := &dbfakes.Transaction{}
-
-			fakeTx.DriverNameReturns("db2")
-
-			_, err := egressPolicyTable.CreateDefault(fakeTx, "some-term-guid")
-			Expect(err).To(MatchError("unknown driver: db2"))
 		})
 	})
 
@@ -171,58 +159,6 @@ var _ = Describe("Egress Policy Table", func() {
 
 			fakeTx.DriverNameReturns("db2")
 			_, err := egressPolicyTable.CreateSpace(fakeTx, "some-term-guid", "some-space-guid")
-			Expect(err).To(MatchError("unknown driver: db2"))
-		})
-	})
-
-	Context("CreateIPRange", func() {
-		It("should create an iprange and return the ID", func() {
-			db, tx := getMigratedRealDb(dbConf)
-			setupEgressPolicyStore(db)
-
-			checkIpRangeFields := func(entryId int, expectedStartIP, expectedEndIP, expectedProtocol string, expectedStartPort, expectedEndPort, expectedIcmpType, expectedIcmpCode int64) {
-				var startIP, endIP, protocol string
-				var startPort, endPort, icmpType, icmpCode int64
-
-				row := tx.QueryRow(fmt.Sprintf(`SELECT start_ip, end_ip, protocol, start_port, end_port, icmp_type, icmp_code FROM ip_ranges WHERE id = %d`, entryId))
-				err := row.Scan(&startIP, &endIP, &protocol, &startPort, &endPort, &icmpType, &icmpCode)
-
-				Expect(err).ToNot(HaveOccurred())
-				Expect(startPort).To(Equal(expectedStartPort))
-				Expect(endPort).To(Equal(expectedEndPort))
-				Expect(startIP).To(Equal(expectedStartIP))
-				Expect(endIP).To(Equal(expectedEndIP))
-				Expect(protocol).To(Equal(expectedProtocol))
-				Expect(icmpType).To(Equal(expectedIcmpType))
-				Expect(icmpCode).To(Equal(expectedIcmpCode))
-			}
-
-			By("creating an ip range with TCP as protocol")
-			ipRangeTerminalGUID, err := terminalsTable.Create(tx)
-			Expect(err).ToNot(HaveOccurred())
-			id, err := egressPolicyTable.CreateIPRange(tx, ipRangeTerminalGUID, "1.1.1.1", "2.2.2.2", "tcp", 8080, 8081, 0, 0)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(id).To(Equal(int64(1)))
-
-			checkIpRangeFields(1, "1.1.1.1", "2.2.2.2", "tcp", int64(8080), int64(8081), int64(0), int64(0))
-
-			By("creating an ip range with ICMP as protocol")
-			ipRangeTerminalGUID, err = terminalsTable.Create(tx)
-			Expect(err).ToNot(HaveOccurred())
-			id, err = egressPolicyTable.CreateIPRange(tx, ipRangeTerminalGUID, "1.1.1.1", "2.2.2.2", "icmp", 0, 0, 2, 1)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(id).To(Equal(int64(2)))
-
-			checkIpRangeFields(2, "1.1.1.1", "2.2.2.2", "icmp", int64(0), int64(0), int64(2), int64(1))
-		})
-
-		It("should return an error if the driver is not supported", func() {
-			setupEgressPolicyStore(mockDb)
-			fakeTx := &dbfakes.Transaction{}
-
-			fakeTx.DriverNameReturns("db2")
-
-			_, err := egressPolicyTable.CreateIPRange(fakeTx, "some-term-guid", "1.1.1.1", "2.2.2.2", "tcp", 8080, 8081, 0, 0)
 			Expect(err).To(MatchError("unknown driver: db2"))
 		})
 	})
@@ -286,39 +222,6 @@ var _ = Describe("Egress Policy Table", func() {
 			setupEgressPolicyStore(mockDb)
 
 			err := egressPolicyTable.DeleteEgressPolicy(fakeTx, "some-guid")
-			Expect(err).To(MatchError("broke"))
-		})
-	})
-
-	Context("DeleteIPRange", func() {
-		It("deletes the ip range", func() {
-			db, tx := getMigratedRealDb(dbConf)
-			setupEgressPolicyStore(db)
-
-			ipRangeTerminalGUID, err := terminalsTable.Create(tx)
-			Expect(err).ToNot(HaveOccurred())
-
-			ipRangeID, err := egressPolicyTable.CreateIPRange(tx, ipRangeTerminalGUID, "1.1.1.1", "2.2.2.2", "tcp", 8080, 8081, 0, 0)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(ipRangeID).To(Equal(int64(1)))
-
-			err = egressPolicyTable.DeleteIPRange(tx, ipRangeID)
-			Expect(err).ToNot(HaveOccurred())
-
-			var ipRangeCount int
-			row := tx.QueryRow(`SELECT COUNT(id) FROM ip_ranges WHERE id = 1`)
-			err = row.Scan(&ipRangeCount)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(ipRangeCount).To(Equal(0))
-		})
-
-		It("should return the sql error", func() {
-			setupEgressPolicyStore(mockDb)
-
-			fakeTx := &dbfakes.Transaction{}
-			fakeTx.ExecReturns(nil, errors.New("broke"))
-
-			err := egressPolicyTable.DeleteIPRange(fakeTx, 2)
 			Expect(err).To(MatchError("broke"))
 		})
 	})
@@ -394,15 +297,14 @@ var _ = Describe("Egress Policy Table", func() {
 			appTerminalGUID, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 
-			appID, err := egressPolicyTable.CreateDefault(tx, appTerminalGUID)
+			err = egressPolicyTable.CreateDefault(tx, appTerminalGUID)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(appID).To(Equal(int64(1)))
 
 			err = egressPolicyTable.DeleteDefault(tx, appTerminalGUID)
 			Expect(err).ToNot(HaveOccurred())
 
 			var defaultCount int
-			row := tx.QueryRow(`SELECT COUNT(id) FROM defaults WHERE id = 1`)
+			row := tx.QueryRow(`SELECT COUNT(id) FROM defaults`)
 			err = row.Scan(&defaultCount)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(defaultCount).To(Equal(0))

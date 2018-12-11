@@ -50,89 +50,9 @@ func (e *EgressPolicyTable) CreateApp(tx db.Transaction, sourceTerminalGUID, app
 	return -1, fmt.Errorf("unknown driver: %s", driverName)
 }
 
-func (e *EgressPolicyTable) CreateDefault(tx db.Transaction, sourceTerminalGUID string) (int64, error) {
-	driverName := tx.DriverName()
-
-	if driverName == "mysql" {
-		result, err := tx.Exec(tx.Rebind(`
-			INSERT INTO defaults (terminal_guid)
-			VALUES (?)
-		`),
-			sourceTerminalGUID,
-		)
-		if err != nil {
-			return -1, err
-		}
-
-		return result.LastInsertId()
-	} else if driverName == "postgres" {
-		var id int64
-
-		err := tx.QueryRow(tx.Rebind(`
-			INSERT INTO defaults (terminal_guid)
-			VALUES (?)
-			RETURNING id
-		`),
-			sourceTerminalGUID,
-		).Scan(&id)
-
-		if err != nil {
-			return -1, fmt.Errorf("error inserting default: %s", err)
-		}
-
-		return id, nil
-	}
-	return -1, fmt.Errorf("unknown driver: %s", driverName)
-}
-
-func (e *EgressPolicyTable) CreateIPRange(tx db.Transaction, destinationTerminalGUID, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) (int64, error) {
-	driverName := tx.DriverName()
-	if driverName == "mysql" {
-		result, err := tx.Exec(tx.Rebind(`
-			INSERT INTO ip_ranges (protocol, start_ip, end_ip, terminal_guid, start_port, end_port, icmp_type, icmp_code)
-			VALUES (?,?,?,?,?,?,?,?)
-		`),
-			protocol,
-			startIP,
-			endIP,
-			destinationTerminalGUID,
-			startPort,
-			endPort,
-			icmpType,
-			icmpCode,
-		)
-
-		if err != nil {
-			return -1, fmt.Errorf("error inserting ip ranges: %s", err)
-		}
-
-		return result.LastInsertId()
-	} else if driverName == "postgres" {
-		var id int64
-
-		err := tx.QueryRow(tx.Rebind(`
-			INSERT INTO ip_ranges (protocol, start_ip, end_ip, terminal_guid, start_port, end_port, icmp_type, icmp_code)
-			VALUES (?,?,?,?,?,?,?,?)
-			RETURNING id
-		`),
-			protocol,
-			startIP,
-			endIP,
-			destinationTerminalGUID,
-			startPort,
-			endPort,
-			icmpType,
-			icmpCode,
-		).Scan(&id)
-
-		if err != nil {
-			return -1, fmt.Errorf("error inserting ip ranges: %s", err)
-		}
-
-		return id, nil
-	}
-
-	return -1, fmt.Errorf("unknown driver: %s", driverName)
+func (e *EgressPolicyTable) CreateDefault(tx db.Transaction, sourceTerminalGUID string) error {
+	_, err := tx.Exec(tx.Rebind(`INSERT INTO defaults (terminal_guid) VALUES (?)`), sourceTerminalGUID)
+	return err
 }
 
 func (e *EgressPolicyTable) CreateEgressPolicy(tx db.Transaction, sourceTerminalGUID, destinationTerminalGUID, appLifecycle string) (string, error) {

@@ -24,27 +24,6 @@ type EgressPolicyRepo struct {
 		result1 int64
 		result2 error
 	}
-	CreateIPRangeStub        func(tx db.Transaction, destinationTerminalGUID string, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) (int64, error)
-	createIPRangeMutex       sync.RWMutex
-	createIPRangeArgsForCall []struct {
-		tx                      db.Transaction
-		destinationTerminalGUID string
-		startIP                 string
-		endIP                   string
-		protocol                string
-		startPort               int64
-		endPort                 int64
-		icmpType                int64
-		icmpCode                int64
-	}
-	createIPRangeReturns struct {
-		result1 int64
-		result2 error
-	}
-	createIPRangeReturnsOnCall map[int]struct {
-		result1 int64
-		result2 error
-	}
 	CreateEgressPolicyStub        func(tx db.Transaction, sourceTerminalGUID, destinationTerminalGUID, appLifecycle string) (string, error)
 	createEgressPolicyMutex       sync.RWMutex
 	createEgressPolicyArgsForCall []struct {
@@ -61,19 +40,17 @@ type EgressPolicyRepo struct {
 		result1 string
 		result2 error
 	}
-	CreateDefaultStub        func(tx db.Transaction, sourceTerminalGUID string) (int64, error)
+	CreateDefaultStub        func(tx db.Transaction, sourceTerminalGUID string) error
 	createDefaultMutex       sync.RWMutex
 	createDefaultArgsForCall []struct {
 		tx                 db.Transaction
 		sourceTerminalGUID string
 	}
 	createDefaultReturns struct {
-		result1 int64
-		result2 error
+		result1 error
 	}
 	createDefaultReturnsOnCall map[int]struct {
-		result1 int64
-		result2 error
+		result1 error
 	}
 	CreateSpaceStub        func(tx db.Transaction, sourceTerminalGUID string, spaceGUID string) (int64, error)
 	createSpaceMutex       sync.RWMutex
@@ -185,18 +162,6 @@ type EgressPolicyRepo struct {
 	deleteEgressPolicyReturnsOnCall map[int]struct {
 		result1 error
 	}
-	DeleteIPRangeStub        func(tx db.Transaction, ipRangeID int64) error
-	deleteIPRangeMutex       sync.RWMutex
-	deleteIPRangeArgsForCall []struct {
-		tx        db.Transaction
-		ipRangeID int64
-	}
-	deleteIPRangeReturns struct {
-		result1 error
-	}
-	deleteIPRangeReturnsOnCall map[int]struct {
-		result1 error
-	}
 	DeleteAppStub        func(tx db.Transaction, terminalID string) error
 	deleteAppMutex       sync.RWMutex
 	deleteAppArgsForCall []struct {
@@ -304,65 +269,6 @@ func (fake *EgressPolicyRepo) CreateAppReturnsOnCall(i int, result1 int64, resul
 	}{result1, result2}
 }
 
-func (fake *EgressPolicyRepo) CreateIPRange(tx db.Transaction, destinationTerminalGUID string, startIP string, endIP string, protocol string, startPort int64, endPort int64, icmpType int64, icmpCode int64) (int64, error) {
-	fake.createIPRangeMutex.Lock()
-	ret, specificReturn := fake.createIPRangeReturnsOnCall[len(fake.createIPRangeArgsForCall)]
-	fake.createIPRangeArgsForCall = append(fake.createIPRangeArgsForCall, struct {
-		tx                      db.Transaction
-		destinationTerminalGUID string
-		startIP                 string
-		endIP                   string
-		protocol                string
-		startPort               int64
-		endPort                 int64
-		icmpType                int64
-		icmpCode                int64
-	}{tx, destinationTerminalGUID, startIP, endIP, protocol, startPort, endPort, icmpType, icmpCode})
-	fake.recordInvocation("CreateIPRange", []interface{}{tx, destinationTerminalGUID, startIP, endIP, protocol, startPort, endPort, icmpType, icmpCode})
-	fake.createIPRangeMutex.Unlock()
-	if fake.CreateIPRangeStub != nil {
-		return fake.CreateIPRangeStub(tx, destinationTerminalGUID, startIP, endIP, protocol, startPort, endPort, icmpType, icmpCode)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.createIPRangeReturns.result1, fake.createIPRangeReturns.result2
-}
-
-func (fake *EgressPolicyRepo) CreateIPRangeCallCount() int {
-	fake.createIPRangeMutex.RLock()
-	defer fake.createIPRangeMutex.RUnlock()
-	return len(fake.createIPRangeArgsForCall)
-}
-
-func (fake *EgressPolicyRepo) CreateIPRangeArgsForCall(i int) (db.Transaction, string, string, string, string, int64, int64, int64, int64) {
-	fake.createIPRangeMutex.RLock()
-	defer fake.createIPRangeMutex.RUnlock()
-	return fake.createIPRangeArgsForCall[i].tx, fake.createIPRangeArgsForCall[i].destinationTerminalGUID, fake.createIPRangeArgsForCall[i].startIP, fake.createIPRangeArgsForCall[i].endIP, fake.createIPRangeArgsForCall[i].protocol, fake.createIPRangeArgsForCall[i].startPort, fake.createIPRangeArgsForCall[i].endPort, fake.createIPRangeArgsForCall[i].icmpType, fake.createIPRangeArgsForCall[i].icmpCode
-}
-
-func (fake *EgressPolicyRepo) CreateIPRangeReturns(result1 int64, result2 error) {
-	fake.CreateIPRangeStub = nil
-	fake.createIPRangeReturns = struct {
-		result1 int64
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *EgressPolicyRepo) CreateIPRangeReturnsOnCall(i int, result1 int64, result2 error) {
-	fake.CreateIPRangeStub = nil
-	if fake.createIPRangeReturnsOnCall == nil {
-		fake.createIPRangeReturnsOnCall = make(map[int]struct {
-			result1 int64
-			result2 error
-		})
-	}
-	fake.createIPRangeReturnsOnCall[i] = struct {
-		result1 int64
-		result2 error
-	}{result1, result2}
-}
-
 func (fake *EgressPolicyRepo) CreateEgressPolicy(tx db.Transaction, sourceTerminalGUID string, destinationTerminalGUID string, appLifecycle string) (string, error) {
 	fake.createEgressPolicyMutex.Lock()
 	ret, specificReturn := fake.createEgressPolicyReturnsOnCall[len(fake.createEgressPolicyArgsForCall)]
@@ -417,7 +323,7 @@ func (fake *EgressPolicyRepo) CreateEgressPolicyReturnsOnCall(i int, result1 str
 	}{result1, result2}
 }
 
-func (fake *EgressPolicyRepo) CreateDefault(tx db.Transaction, sourceTerminalGUID string) (int64, error) {
+func (fake *EgressPolicyRepo) CreateDefault(tx db.Transaction, sourceTerminalGUID string) error {
 	fake.createDefaultMutex.Lock()
 	ret, specificReturn := fake.createDefaultReturnsOnCall[len(fake.createDefaultArgsForCall)]
 	fake.createDefaultArgsForCall = append(fake.createDefaultArgsForCall, struct {
@@ -430,9 +336,9 @@ func (fake *EgressPolicyRepo) CreateDefault(tx db.Transaction, sourceTerminalGUI
 		return fake.CreateDefaultStub(tx, sourceTerminalGUID)
 	}
 	if specificReturn {
-		return ret.result1, ret.result2
+		return ret.result1
 	}
-	return fake.createDefaultReturns.result1, fake.createDefaultReturns.result2
+	return fake.createDefaultReturns.result1
 }
 
 func (fake *EgressPolicyRepo) CreateDefaultCallCount() int {
@@ -447,26 +353,23 @@ func (fake *EgressPolicyRepo) CreateDefaultArgsForCall(i int) (db.Transaction, s
 	return fake.createDefaultArgsForCall[i].tx, fake.createDefaultArgsForCall[i].sourceTerminalGUID
 }
 
-func (fake *EgressPolicyRepo) CreateDefaultReturns(result1 int64, result2 error) {
+func (fake *EgressPolicyRepo) CreateDefaultReturns(result1 error) {
 	fake.CreateDefaultStub = nil
 	fake.createDefaultReturns = struct {
-		result1 int64
-		result2 error
-	}{result1, result2}
+		result1 error
+	}{result1}
 }
 
-func (fake *EgressPolicyRepo) CreateDefaultReturnsOnCall(i int, result1 int64, result2 error) {
+func (fake *EgressPolicyRepo) CreateDefaultReturnsOnCall(i int, result1 error) {
 	fake.CreateDefaultStub = nil
 	if fake.createDefaultReturnsOnCall == nil {
 		fake.createDefaultReturnsOnCall = make(map[int]struct {
-			result1 int64
-			result2 error
+			result1 error
 		})
 	}
 	fake.createDefaultReturnsOnCall[i] = struct {
-		result1 int64
-		result2 error
-	}{result1, result2}
+		result1 error
+	}{result1}
 }
 
 func (fake *EgressPolicyRepo) CreateSpace(tx db.Transaction, sourceTerminalGUID string, spaceGUID string) (int64, error) {
@@ -906,55 +809,6 @@ func (fake *EgressPolicyRepo) DeleteEgressPolicyReturnsOnCall(i int, result1 err
 	}{result1}
 }
 
-func (fake *EgressPolicyRepo) DeleteIPRange(tx db.Transaction, ipRangeID int64) error {
-	fake.deleteIPRangeMutex.Lock()
-	ret, specificReturn := fake.deleteIPRangeReturnsOnCall[len(fake.deleteIPRangeArgsForCall)]
-	fake.deleteIPRangeArgsForCall = append(fake.deleteIPRangeArgsForCall, struct {
-		tx        db.Transaction
-		ipRangeID int64
-	}{tx, ipRangeID})
-	fake.recordInvocation("DeleteIPRange", []interface{}{tx, ipRangeID})
-	fake.deleteIPRangeMutex.Unlock()
-	if fake.DeleteIPRangeStub != nil {
-		return fake.DeleteIPRangeStub(tx, ipRangeID)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.deleteIPRangeReturns.result1
-}
-
-func (fake *EgressPolicyRepo) DeleteIPRangeCallCount() int {
-	fake.deleteIPRangeMutex.RLock()
-	defer fake.deleteIPRangeMutex.RUnlock()
-	return len(fake.deleteIPRangeArgsForCall)
-}
-
-func (fake *EgressPolicyRepo) DeleteIPRangeArgsForCall(i int) (db.Transaction, int64) {
-	fake.deleteIPRangeMutex.RLock()
-	defer fake.deleteIPRangeMutex.RUnlock()
-	return fake.deleteIPRangeArgsForCall[i].tx, fake.deleteIPRangeArgsForCall[i].ipRangeID
-}
-
-func (fake *EgressPolicyRepo) DeleteIPRangeReturns(result1 error) {
-	fake.DeleteIPRangeStub = nil
-	fake.deleteIPRangeReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *EgressPolicyRepo) DeleteIPRangeReturnsOnCall(i int, result1 error) {
-	fake.DeleteIPRangeStub = nil
-	if fake.deleteIPRangeReturnsOnCall == nil {
-		fake.deleteIPRangeReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.deleteIPRangeReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
 func (fake *EgressPolicyRepo) DeleteApp(tx db.Transaction, terminalID string) error {
 	fake.deleteAppMutex.Lock()
 	ret, specificReturn := fake.deleteAppReturnsOnCall[len(fake.deleteAppArgsForCall)]
@@ -1159,8 +1013,6 @@ func (fake *EgressPolicyRepo) Invocations() map[string][][]interface{} {
 	defer fake.invocationsMutex.RUnlock()
 	fake.createAppMutex.RLock()
 	defer fake.createAppMutex.RUnlock()
-	fake.createIPRangeMutex.RLock()
-	defer fake.createIPRangeMutex.RUnlock()
 	fake.createEgressPolicyMutex.RLock()
 	defer fake.createEgressPolicyMutex.RUnlock()
 	fake.createDefaultMutex.RLock()
@@ -1181,8 +1033,6 @@ func (fake *EgressPolicyRepo) Invocations() map[string][][]interface{} {
 	defer fake.getByGUIDMutex.RUnlock()
 	fake.deleteEgressPolicyMutex.RLock()
 	defer fake.deleteEgressPolicyMutex.RUnlock()
-	fake.deleteIPRangeMutex.RLock()
-	defer fake.deleteIPRangeMutex.RUnlock()
 	fake.deleteAppMutex.RLock()
 	defer fake.deleteAppMutex.RUnlock()
 	fake.deleteSpaceMutex.RLock()

@@ -62,17 +62,17 @@ var _ = Describe("EgressDestination", func() {
 			Expect(err).NotTo(HaveOccurred())
 			terminalIds = append(terminalIds, terminalId)
 
-			_, err = egressDestinationTable.CreateIPRange(tx, terminalId, "1.1.1.1", "2.2.2.2", "tcp", 8080, 8081, -1, -1)
+			err = egressDestinationTable.CreateIPRange(tx, terminalId, "1.1.1.1", "2.2.2.2", "tcp", 8080, 8081, -1, -1)
 			Expect(err).NotTo(HaveOccurred())
 
-			_, err = egressDestinationTable.CreateIPRange(tx, terminalId, "10.10.10.10", "20.20.20.20", "tcp", 9080, 9081, -1, -1)
+			err = egressDestinationTable.CreateIPRange(tx, terminalId, "10.10.10.10", "20.20.20.20", "tcp", 9080, 9081, -1, -1)
 			Expect(err).NotTo(HaveOccurred())
 
 			terminalId, err = terminalsTable.Create(tx)
 			Expect(err).NotTo(HaveOccurred())
 			terminalIds = append(terminalIds, terminalId)
 
-			_, err = egressDestinationTable.CreateIPRange(tx, terminalId, "1.1.1.2", "2.2.2.3", "udp", 8082, 8083, 7, 8)
+			err = egressDestinationTable.CreateIPRange(tx, terminalId, "1.1.1.2", "2.2.2.3", "udp", 8082, 8083, 7, 8)
 			Expect(err).NotTo(HaveOccurred())
 
 			expectedDestination1 = store.EgressDestination{

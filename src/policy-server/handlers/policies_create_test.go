@@ -114,6 +114,7 @@ var _ = Describe("PoliciesCreate", func() {
 			Expect(resp.Body.String()).To(MatchJSON("{}"))
 		}
 	})
+
 	It("persists a new policy rule", func() {
 		createPoliciesSucceeds()
 	})

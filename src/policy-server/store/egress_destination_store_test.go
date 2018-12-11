@@ -575,7 +575,7 @@ var _ = Describe("EgressDestinationStore", func() {
 
 			Context("when creating the new ip ranges fails", func() {
 				BeforeEach(func() {
-					egressDestinationRepo.CreateIPRangeReturns(0, errors.New("can't create iprange"))
+					egressDestinationRepo.CreateIPRangeReturns(errors.New("can't create iprange"))
 					egressDestinationRepo.GetByGUIDReturns([]store.EgressDestination{{}}, nil)
 				})
 
@@ -694,7 +694,7 @@ var _ = Describe("EgressDestinationStore", func() {
 			Context("when creating the ip range returns an error", func() {
 				var err error
 				BeforeEach(func() {
-					egressDestinationRepo.CreateIPRangeReturns(-1, errors.New("can't create an ip range"))
+					egressDestinationRepo.CreateIPRangeReturns(errors.New("can't create an ip range"))
 					_, err = egressDestinationsStore.Create([]store.EgressDestination{
 						{
 							Name:        " ",

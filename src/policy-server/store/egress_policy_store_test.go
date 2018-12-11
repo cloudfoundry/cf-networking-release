@@ -192,7 +192,7 @@ var _ = Describe("EgressPolicyStore", func() {
 				argTx = terminalsRepo.CreateArgsForCall(0)
 				Expect(argTx).To(Equal(tx))
 
-				egressPolicyRepo.CreateDefaultReturns(1234, nil)
+				egressPolicyRepo.CreateDefaultReturns(nil)
 
 				Expect(egressPolicyRepo.CreateDefaultCallCount()).To(Equal(1))
 				argTx, argTerminalGUID := egressPolicyRepo.CreateDefaultArgsForCall(0)

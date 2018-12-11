@@ -9,9 +9,8 @@ import (
 //go:generate counterfeiter -o fakes/egress_policy_repo.go --fake-name EgressPolicyRepo . egressPolicyRepo
 type egressPolicyRepo interface {
 	CreateApp(tx db.Transaction, sourceTerminalGUID string, appGUID string) (int64, error)
-	CreateIPRange(tx db.Transaction, destinationTerminalGUID string, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) (int64, error)
 	CreateEgressPolicy(tx db.Transaction, sourceTerminalGUID, destinationTerminalGUID, appLifecycle string) (string, error)
-	CreateDefault(tx db.Transaction, sourceTerminalGUID string) (int64, error)
+	CreateDefault(tx db.Transaction, sourceTerminalGUID string) (error)
 	CreateSpace(tx db.Transaction, sourceTerminalGUID string, spaceGUID string) (int64, error)
 	GetTerminalByAppGUID(tx db.Transaction, appGUID string) (string, error)
 	GetTerminalBySpaceGUID(tx db.Transaction, appGUID string) (string, error)
@@ -20,7 +19,6 @@ type egressPolicyRepo interface {
 	GetBySourceGuids(ids []string) ([]EgressPolicy, error)
 	GetByGUID(tx db.Transaction, ids ...string) ([]EgressPolicy, error)
 	DeleteEgressPolicy(tx db.Transaction, egressPolicyGUID string) error
-	DeleteIPRange(tx db.Transaction, ipRangeID int64) error
 	DeleteApp(tx db.Transaction, terminalID string) error
 	DeleteSpace(tx db.Transaction, spaceID string) error
 	DeleteDefault(tx db.Transaction, defaultID string) error
@@ -92,7 +90,7 @@ func (e *EgressPolicyStore) createWithTx(tx db.Transaction, policies []EgressPol
 				return nil, fmt.Errorf("failed to create source terminal: %s", err)
 			}
 
-			_, err = e.EgressPolicyRepo.CreateDefault(tx, sourceTerminalGUID)
+			err = e.EgressPolicyRepo.CreateDefault(tx, sourceTerminalGUID)
 			if err != nil {
 				return nil, fmt.Errorf("failed to create space: %s", err)
 			}
