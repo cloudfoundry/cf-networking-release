@@ -228,3 +228,12 @@ var replaceGUIDRegex = regexp.MustCompile(`"id":"[a-z0-9\-]{36}"`)
 func replaceGUID(value string) string {
 	return string(replaceGUIDRegex.ReplaceAll([]byte(value), []byte(`"id":"<replaced>"`)))
 }
+
+func replaceEgressPoliciesGUID(value []psclient.EgressPolicy) []psclient.EgressPolicy {
+	newValue := []psclient.EgressPolicy{}
+	for _, egressPolicy := range value {
+		egressPolicy.GUID = ""
+		newValue = append(newValue, egressPolicy)
+	}
+	return newValue
+}
