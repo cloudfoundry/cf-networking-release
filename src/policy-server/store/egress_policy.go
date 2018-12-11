@@ -13,41 +13,12 @@ type EgressPolicyTable struct {
 	Guids guidGenerator
 }
 
-func (e *EgressPolicyTable) CreateApp(tx db.Transaction, sourceTerminalGUID, appGUID string) (int64, error) {
-	driverName := tx.DriverName()
-
-	if driverName == "mysql" {
-		result, err := tx.Exec(tx.Rebind(`
-			INSERT INTO apps (terminal_guid, app_guid)
-			VALUES (?,?)
-		`),
-			sourceTerminalGUID,
-			appGUID,
-		)
-		if err != nil {
-			return -1, err
-		}
-
-		return result.LastInsertId()
-	} else if driverName == "postgres" {
-		var id int64
-
-		err := tx.QueryRow(tx.Rebind(`
-			INSERT INTO apps (terminal_guid, app_guid)
-			VALUES (?,?)
-			RETURNING id
-		`),
-			sourceTerminalGUID,
-			appGUID,
-		).Scan(&id)
-
-		if err != nil {
-			return -1, fmt.Errorf("error inserting app: %s", err)
-		}
-
-		return id, nil
-	}
-	return -1, fmt.Errorf("unknown driver: %s", driverName)
+func (e *EgressPolicyTable) CreateApp(tx db.Transaction, sourceTerminalGUID, appGUID string) error {
+	_, err := tx.Exec(tx.Rebind(`INSERT INTO apps (terminal_guid, app_guid) VALUES (?,?)`),
+		sourceTerminalGUID,
+		appGUID,
+	)
+	return err
 }
 
 func (e *EgressPolicyTable) CreateDefault(tx db.Transaction, sourceTerminalGUID string) error {
@@ -75,41 +46,12 @@ func (e *EgressPolicyTable) CreateEgressPolicy(tx db.Transaction, sourceTerminal
 	return guid, nil
 }
 
-func (e *EgressPolicyTable) CreateSpace(tx db.Transaction, sourceTerminalGUID, spaceGUID string) (int64, error) {
-	driverName := tx.DriverName()
-
-	if driverName == "mysql" {
-		result, err := tx.Exec(tx.Rebind(`
-			INSERT INTO spaces (terminal_guid, space_guid)
-			VALUES (?,?)
-		`),
-			sourceTerminalGUID,
-			spaceGUID,
-		)
-		if err != nil {
-			return -1, err
-		}
-
-		return result.LastInsertId()
-	} else if driverName == "postgres" {
-		var id int64
-
-		err := tx.QueryRow(tx.Rebind(`
-			INSERT INTO spaces (terminal_guid, space_guid)
-			VALUES (?,?)
-			RETURNING id
-		`),
-			sourceTerminalGUID,
-			spaceGUID,
-		).Scan(&id)
-
-		if err != nil {
-			return -1, fmt.Errorf("error inserting space: %s", err)
-		}
-
-		return id, nil
-	}
-	return -1, fmt.Errorf("unknown driver: %s", driverName)
+func (e *EgressPolicyTable) CreateSpace(tx db.Transaction, sourceTerminalGUID, spaceGUID string) error {
+	_, err := tx.Exec(tx.Rebind(`INSERT INTO spaces (terminal_guid, space_guid) VALUES (?,?)`),
+		sourceTerminalGUID,
+		spaceGUID,
+	)
+	return err
 }
 
 func (e *EgressPolicyTable) DeleteEgressPolicy(tx db.Transaction, egressPolicyGUID string) error {

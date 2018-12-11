@@ -233,7 +233,7 @@ var _ = Describe("EgressPolicyStore", func() {
 		})
 
 		It("rollsback the tx when the createWithTx fails", func() {
-			egressPolicyRepo.CreateAppReturns(-1, errors.New("OMG WHY DID THIS FAIL"))
+			egressPolicyRepo.CreateAppReturns(errors.New("OMG WHY DID THIS FAIL"))
 
 			_, err := egressPolicyStore.Create(egressPolicies)
 			Expect(err).To(MatchError("failed to create source app: OMG WHY DID THIS FAIL"))
@@ -269,7 +269,7 @@ var _ = Describe("EgressPolicyStore", func() {
 		})
 
 		It("returns an error when the CreateApp fails", func() {
-			egressPolicyRepo.CreateAppReturns(-1, errors.New("OMG WHY DID THIS FAIL"))
+			egressPolicyRepo.CreateAppReturns(errors.New("OMG WHY DID THIS FAIL"))
 
 			_, err := egressPolicyStore.Create(egressPolicies)
 			Expect(err).To(MatchError("failed to create source app: OMG WHY DID THIS FAIL"))
@@ -360,7 +360,7 @@ var _ = Describe("EgressPolicyStore", func() {
 
 		It("returns an error when the CreateSpace fails", func() {
 			egressPolicyRepo.GetTerminalBySpaceGUIDReturns("", nil)
-			egressPolicyRepo.CreateSpaceReturns(-1, errors.New("OMG WHY DID THIS FAIL"))
+			egressPolicyRepo.CreateSpaceReturns(errors.New("OMG WHY DID THIS FAIL"))
 
 			_, err := egressPolicyStore.Create([]store.EgressPolicy{spacePolicy})
 			Expect(err).To(MatchError("failed to create space: OMG WHY DID THIS FAIL"))

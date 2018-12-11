@@ -9,7 +9,7 @@ import (
 )
 
 type EgressPolicyRepo struct {
-	CreateAppStub        func(tx db.Transaction, sourceTerminalGUID string, appGUID string) (int64, error)
+	CreateAppStub        func(tx db.Transaction, sourceTerminalGUID string, appGUID string) error
 	createAppMutex       sync.RWMutex
 	createAppArgsForCall []struct {
 		tx                 db.Transaction
@@ -17,12 +17,10 @@ type EgressPolicyRepo struct {
 		appGUID            string
 	}
 	createAppReturns struct {
-		result1 int64
-		result2 error
+		result1 error
 	}
 	createAppReturnsOnCall map[int]struct {
-		result1 int64
-		result2 error
+		result1 error
 	}
 	CreateEgressPolicyStub        func(tx db.Transaction, sourceTerminalGUID, destinationTerminalGUID, appLifecycle string) (string, error)
 	createEgressPolicyMutex       sync.RWMutex
@@ -52,7 +50,7 @@ type EgressPolicyRepo struct {
 	createDefaultReturnsOnCall map[int]struct {
 		result1 error
 	}
-	CreateSpaceStub        func(tx db.Transaction, sourceTerminalGUID string, spaceGUID string) (int64, error)
+	CreateSpaceStub        func(tx db.Transaction, sourceTerminalGUID string, spaceGUID string) error
 	createSpaceMutex       sync.RWMutex
 	createSpaceArgsForCall []struct {
 		tx                 db.Transaction
@@ -60,12 +58,10 @@ type EgressPolicyRepo struct {
 		spaceGUID          string
 	}
 	createSpaceReturns struct {
-		result1 int64
-		result2 error
+		result1 error
 	}
 	createSpaceReturnsOnCall map[int]struct {
-		result1 int64
-		result2 error
+		result1 error
 	}
 	GetTerminalByAppGUIDStub        func(tx db.Transaction, appGUID string) (string, error)
 	getTerminalByAppGUIDMutex       sync.RWMutex
@@ -216,7 +212,7 @@ type EgressPolicyRepo struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *EgressPolicyRepo) CreateApp(tx db.Transaction, sourceTerminalGUID string, appGUID string) (int64, error) {
+func (fake *EgressPolicyRepo) CreateApp(tx db.Transaction, sourceTerminalGUID string, appGUID string) error {
 	fake.createAppMutex.Lock()
 	ret, specificReturn := fake.createAppReturnsOnCall[len(fake.createAppArgsForCall)]
 	fake.createAppArgsForCall = append(fake.createAppArgsForCall, struct {
@@ -230,9 +226,9 @@ func (fake *EgressPolicyRepo) CreateApp(tx db.Transaction, sourceTerminalGUID st
 		return fake.CreateAppStub(tx, sourceTerminalGUID, appGUID)
 	}
 	if specificReturn {
-		return ret.result1, ret.result2
+		return ret.result1
 	}
-	return fake.createAppReturns.result1, fake.createAppReturns.result2
+	return fake.createAppReturns.result1
 }
 
 func (fake *EgressPolicyRepo) CreateAppCallCount() int {
@@ -247,26 +243,23 @@ func (fake *EgressPolicyRepo) CreateAppArgsForCall(i int) (db.Transaction, strin
 	return fake.createAppArgsForCall[i].tx, fake.createAppArgsForCall[i].sourceTerminalGUID, fake.createAppArgsForCall[i].appGUID
 }
 
-func (fake *EgressPolicyRepo) CreateAppReturns(result1 int64, result2 error) {
+func (fake *EgressPolicyRepo) CreateAppReturns(result1 error) {
 	fake.CreateAppStub = nil
 	fake.createAppReturns = struct {
-		result1 int64
-		result2 error
-	}{result1, result2}
+		result1 error
+	}{result1}
 }
 
-func (fake *EgressPolicyRepo) CreateAppReturnsOnCall(i int, result1 int64, result2 error) {
+func (fake *EgressPolicyRepo) CreateAppReturnsOnCall(i int, result1 error) {
 	fake.CreateAppStub = nil
 	if fake.createAppReturnsOnCall == nil {
 		fake.createAppReturnsOnCall = make(map[int]struct {
-			result1 int64
-			result2 error
+			result1 error
 		})
 	}
 	fake.createAppReturnsOnCall[i] = struct {
-		result1 int64
-		result2 error
-	}{result1, result2}
+		result1 error
+	}{result1}
 }
 
 func (fake *EgressPolicyRepo) CreateEgressPolicy(tx db.Transaction, sourceTerminalGUID string, destinationTerminalGUID string, appLifecycle string) (string, error) {
@@ -372,7 +365,7 @@ func (fake *EgressPolicyRepo) CreateDefaultReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *EgressPolicyRepo) CreateSpace(tx db.Transaction, sourceTerminalGUID string, spaceGUID string) (int64, error) {
+func (fake *EgressPolicyRepo) CreateSpace(tx db.Transaction, sourceTerminalGUID string, spaceGUID string) error {
 	fake.createSpaceMutex.Lock()
 	ret, specificReturn := fake.createSpaceReturnsOnCall[len(fake.createSpaceArgsForCall)]
 	fake.createSpaceArgsForCall = append(fake.createSpaceArgsForCall, struct {
@@ -386,9 +379,9 @@ func (fake *EgressPolicyRepo) CreateSpace(tx db.Transaction, sourceTerminalGUID 
 		return fake.CreateSpaceStub(tx, sourceTerminalGUID, spaceGUID)
 	}
 	if specificReturn {
-		return ret.result1, ret.result2
+		return ret.result1
 	}
-	return fake.createSpaceReturns.result1, fake.createSpaceReturns.result2
+	return fake.createSpaceReturns.result1
 }
 
 func (fake *EgressPolicyRepo) CreateSpaceCallCount() int {
@@ -403,26 +396,23 @@ func (fake *EgressPolicyRepo) CreateSpaceArgsForCall(i int) (db.Transaction, str
 	return fake.createSpaceArgsForCall[i].tx, fake.createSpaceArgsForCall[i].sourceTerminalGUID, fake.createSpaceArgsForCall[i].spaceGUID
 }
 
-func (fake *EgressPolicyRepo) CreateSpaceReturns(result1 int64, result2 error) {
+func (fake *EgressPolicyRepo) CreateSpaceReturns(result1 error) {
 	fake.CreateSpaceStub = nil
 	fake.createSpaceReturns = struct {
-		result1 int64
-		result2 error
-	}{result1, result2}
+		result1 error
+	}{result1}
 }
 
-func (fake *EgressPolicyRepo) CreateSpaceReturnsOnCall(i int, result1 int64, result2 error) {
+func (fake *EgressPolicyRepo) CreateSpaceReturnsOnCall(i int, result1 error) {
 	fake.CreateSpaceStub = nil
 	if fake.createSpaceReturnsOnCall == nil {
 		fake.createSpaceReturnsOnCall = make(map[int]struct {
-			result1 int64
-			result2 error
+			result1 error
 		})
 	}
 	fake.createSpaceReturnsOnCall[i] = struct {
-		result1 int64
-		result2 error
-	}{result1, result2}
+		result1 error
+	}{result1}
 }
 
 func (fake *EgressPolicyRepo) GetTerminalByAppGUID(tx db.Transaction, appGUID string) (string, error) {

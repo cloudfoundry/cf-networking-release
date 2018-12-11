@@ -91,26 +91,14 @@ var _ = Describe("Egress Policy Table", func() {
 			appTerminalGUID, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 
-			id, err := egressPolicyTable.CreateApp(tx, appTerminalGUID, "some-app-guid")
+			err = egressPolicyTable.CreateApp(tx, appTerminalGUID, "some-app-guid")
 			Expect(err).ToNot(HaveOccurred())
 
-			Expect(id).To(Equal(int64(1)))
-
 			var foundAppGuid string
-			row := tx.QueryRow(`SELECT app_guid FROM apps WHERE id = 1`)
+			row := tx.QueryRow(`SELECT app_guid FROM apps`)
 			err = row.Scan(&foundAppGuid)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(foundAppGuid).To(Equal("some-app-guid"))
-		})
-
-		It("should return an error if the driver is not supported", func() {
-			setupEgressPolicyStore(mockDb)
-			fakeTx := &dbfakes.Transaction{}
-
-			fakeTx.DriverNameReturns("db2")
-
-			_, err := egressPolicyTable.CreateApp(fakeTx, "some-term-guid", "some-app-guid")
-			Expect(err).To(MatchError("unknown driver: db2"))
 		})
 	})
 
@@ -141,25 +129,14 @@ var _ = Describe("Egress Policy Table", func() {
 			spaceTerminalGUID, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 
-			id, err := egressPolicyTable.CreateSpace(tx, spaceTerminalGUID, "some-space-guid")
+			err = egressPolicyTable.CreateSpace(tx, spaceTerminalGUID, "some-space-guid")
 			Expect(err).ToNot(HaveOccurred())
 
-			Expect(id).To(Equal(int64(1)))
-
 			var foundSpaceGuid string
-			row := tx.QueryRow(`SELECT space_guid FROM spaces WHERE id = 1`)
+			row := tx.QueryRow(`SELECT space_guid FROM spaces`)
 			err = row.Scan(&foundSpaceGuid)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(foundSpaceGuid).To(Equal("some-space-guid"))
-		})
-
-		It("should return an error if the driver is not supported", func() {
-			setupEgressPolicyStore(mockDb)
-			fakeTx := &dbfakes.Transaction{}
-
-			fakeTx.DriverNameReturns("db2")
-			_, err := egressPolicyTable.CreateSpace(fakeTx, "some-term-guid", "some-space-guid")
-			Expect(err).To(MatchError("unknown driver: db2"))
 		})
 	})
 
@@ -264,15 +241,14 @@ var _ = Describe("Egress Policy Table", func() {
 			appTerminalGUID, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 
-			appID, err := egressPolicyTable.CreateApp(tx, appTerminalGUID, "some-app-guid")
+			err = egressPolicyTable.CreateApp(tx, appTerminalGUID, "some-app-guid")
 			Expect(err).ToNot(HaveOccurred())
-			Expect(appID).To(Equal(int64(1)))
 
 			err = egressPolicyTable.DeleteApp(tx, appTerminalGUID)
 			Expect(err).ToNot(HaveOccurred())
 
 			var appCount int
-			row := tx.QueryRow(`SELECT COUNT(id) FROM apps WHERE id = 1`)
+			row := tx.QueryRow(`SELECT COUNT(id) FROM apps`)
 			err = row.Scan(&appCount)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(appCount).To(Equal(0))
@@ -329,15 +305,14 @@ var _ = Describe("Egress Policy Table", func() {
 			spaceTerminalGUID, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
 
-			spaceID, err := egressPolicyTable.CreateSpace(tx, spaceTerminalGUID, "some-space-guid")
+			err = egressPolicyTable.CreateSpace(tx, spaceTerminalGUID, "some-space-guid")
 			Expect(err).ToNot(HaveOccurred())
-			Expect(spaceID).To(Equal(int64(1)))
 
 			err = egressPolicyTable.DeleteSpace(tx, spaceTerminalGUID)
 			Expect(err).ToNot(HaveOccurred())
 
 			var spaceCount int
-			row := tx.QueryRow(`SELECT COUNT(id) FROM spaces WHERE id = 1`)
+			row := tx.QueryRow(`SELECT COUNT(id) FROM spaces`)
 			err = row.Scan(&spaceCount)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(spaceCount).To(Equal(0))
@@ -756,7 +731,7 @@ var _ = Describe("Egress Policy Table", func() {
 
 			terminalId, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
-			_, err = egressPolicyTable.CreateApp(tx, terminalId, "some-app-guid")
+			err = egressPolicyTable.CreateApp(tx, terminalId, "some-app-guid")
 			Expect(err).ToNot(HaveOccurred())
 
 			foundID, err := egressPolicyTable.GetTerminalByAppGUID(tx, "some-app-guid")
@@ -777,7 +752,7 @@ var _ = Describe("Egress Policy Table", func() {
 
 			terminalId, err := terminalsTable.Create(tx)
 			Expect(err).ToNot(HaveOccurred())
-			_, err = egressPolicyTable.CreateSpace(tx, terminalId, "some-space-guid")
+			err = egressPolicyTable.CreateSpace(tx, terminalId, "some-space-guid")
 			Expect(err).ToNot(HaveOccurred())
 
 			foundID, err := egressPolicyTable.GetTerminalBySpaceGUID(tx, "some-space-guid")
