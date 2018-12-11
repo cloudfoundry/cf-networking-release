@@ -192,10 +192,7 @@ func (e *EgressPolicyTable) GetByGUID(tx db.Transaction, guids ...string) ([]Egr
 	}
 
 	rows, err := tx.Queryx(tx.Rebind(
-		selectEgressPolicyQuery(`
-			WHERE egress_policies.guid IN (`+generateQuestionMarkString(len(guids))+`)
-			ORDER BY ip_ranges.id;`,
-		)),
+		selectEgressPolicyQuery(`egress_policies.guid IN (`+generateQuestionMarkString(len(guids))+`)`)),
 		convertToInterfaceSlice(guids)...)
 	if err != nil {
 		return []EgressPolicy{}, err
@@ -207,9 +204,7 @@ func (e *EgressPolicyTable) GetByGUID(tx db.Transaction, guids ...string) ([]Egr
 func (e *EgressPolicyTable) GetTerminalByAppGUID(tx db.Transaction, appGUID string) (string, error) {
 	var guid string
 
-	err := tx.QueryRow(tx.Rebind(`
-	SELECT terminal_guid FROM apps WHERE app_guid = ?
-	`),
+	err := tx.QueryRow(tx.Rebind(`SELECT terminal_guid FROM apps WHERE app_guid = ?`),
 		appGUID,
 	).Scan(&guid)
 
@@ -223,9 +218,7 @@ func (e *EgressPolicyTable) GetTerminalByAppGUID(tx db.Transaction, appGUID stri
 func (e *EgressPolicyTable) GetTerminalBySpaceGUID(tx db.Transaction, spaceGUID string) (string, error) {
 	var guid string
 
-	err := tx.QueryRow(tx.Rebind(`
-		SELECT terminal_guid FROM spaces WHERE space_guid = ?
-	`),
+	err := tx.QueryRow(tx.Rebind(`SELECT terminal_guid FROM spaces WHERE space_guid = ?`),
 		spaceGUID,
 	).Scan(&guid)
 
@@ -248,8 +241,8 @@ func (e *EgressPolicyTable) GetAllPolicies() ([]EgressPolicy, error) {
 func (e *EgressPolicyTable) GetBySourceGuids(ids []string) ([]EgressPolicy, error) {
 
 	query := selectEgressPolicyQuery(fmt.Sprintf(`
-		WHERE apps.app_guid IN (%[1]s) OR spaces.space_guid IN (%[1]s)
-		ORDER BY ip_ranges.id;`, generateQuestionMarkString(len(ids))))
+		apps.app_guid IN (%[1]s) OR spaces.space_guid IN (%[1]s)
+		`, generateQuestionMarkString(len(ids))))
 
 	ids = append(ids, ids...)
 	rows, err := e.Conn.Query(e.Conn.Rebind(query), convertToInterfaceSlice(ids)...)
@@ -261,35 +254,35 @@ func (e *EgressPolicyTable) GetBySourceGuids(ids []string) ([]EgressPolicy, erro
 }
 
 func (e *EgressPolicyTable) GetByFilter(sourceIds, sourceTypes, destinationIds, destinationNames, appLifecycles []string) ([]EgressPolicy, error) {
-	query := "WHERE "
+	var whereClauses []string
 
 	if len(sourceIds) > 0 {
-		query += fmt.Sprintf(`(apps.app_guid IN (%[1]s) OR spaces.space_guid IN (%[1]s)) AND `, generateQuestionMarkString(len(sourceIds)))
+		whereClauses = append(whereClauses, fmt.Sprintf(`(apps.app_guid IN (%[1]s) OR spaces.space_guid IN (%[1]s))`, generateQuestionMarkString(len(sourceIds))))
 	}
 
 	if len(sourceTypes) > 0 {
 		for _, sourceType := range sourceTypes {
 			if sourceType == "app" {
-				query += "spaces.space_guid IS NULL AND\n"
+				whereClauses = append(whereClauses, "spaces.space_guid IS NULL")
 			} else {
-				query += "apps.app_guid IS NULL AND\n"
+				whereClauses = append(whereClauses, "apps.app_guid IS NULL")
 			}
 		}
 	}
 
 	if len(destinationIds) > 0 {
-		query += fmt.Sprintf(`ip_ranges.terminal_guid IN (%[1]s) AND `, generateQuestionMarkString(len(destinationIds)))
+		whereClauses = append(whereClauses, fmt.Sprintf(`ip_ranges.terminal_guid IN (%[1]s)`, generateQuestionMarkString(len(destinationIds))))
 	}
 
 	if len(destinationNames) > 0 {
-		query += fmt.Sprintf(`destination_metadatas.name IN (%[1]s) AND `, generateQuestionMarkString(len(destinationNames)))
+		whereClauses = append(whereClauses, fmt.Sprintf(`destination_metadatas.name IN (%[1]s)`, generateQuestionMarkString(len(destinationNames))))
 	}
 
 	if len(appLifecycles) > 0 {
-		query += fmt.Sprintf(`egress_policies.app_lifecycle IN (%[1]s) AND `, generateQuestionMarkString(len(appLifecycles)))
+		whereClauses = append(whereClauses, fmt.Sprintf(`egress_policies.app_lifecycle IN (%[1]s)`, generateQuestionMarkString(len(appLifecycles))))
 	}
 
-	query = selectEgressPolicyQuery(query + " 1=1 ORDER BY ip_ranges.id;")
+	query := selectEgressPolicyQuery(whereClauses...)
 
 	sourceIds = append(sourceIds, sourceIds...)
 	sourceIds = append(sourceIds, destinationIds...)
@@ -305,6 +298,8 @@ func (e *EgressPolicyTable) GetByFilter(sourceIds, sourceTypes, destinationIds, 
 }
 
 func selectEgressPolicyQuery(extraClauses ...string) string {
+	extraClauses = append(extraClauses, "egress_policies.guid IS NOT NULL")
+
 	return fmt.Sprintf(`
 		SELECT
 			egress_policies.guid,
@@ -322,12 +317,13 @@ func selectEgressPolicyQuery(extraClauses ...string) string {
 			ip_ranges.end_port,
 			ip_ranges.icmp_type,
 			ip_ranges.icmp_code
-		FROM egress_policies
+		FROM ip_ranges
+		LEFT OUTER JOIN egress_policies ON (ip_ranges.terminal_guid = egress_policies.destination_guid)
 		LEFT OUTER JOIN apps ON (egress_policies.source_guid = apps.terminal_guid)
 		LEFT OUTER JOIN spaces ON (egress_policies.source_guid = spaces.terminal_guid)
-		LEFT OUTER JOIN ip_ranges ON (egress_policies.destination_guid = ip_ranges.terminal_guid)
 		LEFT OUTER JOIN destination_metadatas ON (egress_policies.destination_guid = destination_metadatas.terminal_guid)
-		%s;`, strings.Join(extraClauses, " "))
+		WHERE %s
+		ORDER BY ip_ranges.id;`, strings.Join(extraClauses, " AND "))
 }
 
 type sqlRows interface {
@@ -337,7 +333,8 @@ type sqlRows interface {
 }
 
 func (e *EgressPolicyTable) convertRowsToEgressPolicies(rows sqlRows) ([]EgressPolicy, error) {
-	var foundPolicies []EgressPolicy
+	foundPolicies := make(map[string]*EgressPolicy)
+	var policiesToReturn []EgressPolicy
 	defer rows.Close()
 	for rows.Next() {
 		var egressPolicyGUID, sourceTerminalGUID, appLifecycle, name, description, destinationGUID, sourceAppGUID, sourceSpaceGUID, protocol, startIP, endIP *string
@@ -359,83 +356,77 @@ func (e *EgressPolicyTable) convertRowsToEgressPolicies(rows sqlRows) ([]EgressP
 			&icmpType,
 			&icmpCode)
 		if err != nil {
-			return foundPolicies, err
+			return []EgressPolicy{}, err
 		}
-		foundPolicies = append(foundPolicies, mapRowToEgressPolicy(
-			egressPolicyGUID,
-			sourceTerminalGUID,
-			appLifecycle,
-			name,
-			description,
-			destinationGUID,
-			sourceAppGUID,
-			sourceSpaceGUID,
-			protocol,
-			startIP,
-			endIP,
-			startPort,
-			endPort,
-			icmpType,
-			icmpCode))
-	}
-	return foundPolicies, nil
-}
 
-func mapRowToEgressPolicy(egressPolicyGUID, sourceTerminalGUID, appLifecycle, name, description, destinationGUID,
-	sourceAppGUID, sourceSpaceGUID, protocol, startIP, endIP *string,
-	startPort, endPort, icmpType, icmpCode int) EgressPolicy {
-
-	var ports []Ports
-	if startPort != 0 && endPort != 0 {
-		ports = []Ports{
-			{
-				Start: startPort,
-				End:   endPort,
-			},
-		}
-	}
-
-	var source EgressSource
-
-	switch {
-	case sourceSpaceGUID != nil:
-		source = EgressSource{
-			ID:           *sourceSpaceGUID,
-			Type:         "space",
-			TerminalGUID: *sourceTerminalGUID,
-		}
-	default:
-		source = EgressSource{
-			ID:           *sourceAppGUID,
-			Type:         "app",
-			TerminalGUID: *sourceTerminalGUID,
-		}
-	}
-
-	//TODO what about multiple rules?
-
-	return EgressPolicy{
-		ID:     *egressPolicyGUID,
-		Source: source,
-		Destination: EgressDestination{
-			GUID:        *destinationGUID,
-			Name:        *name,
-			Description: *description,
-			Rules: []EgressDestinationRule{
+		var ports []Ports
+		if startPort != 0 && endPort != 0 {
+			ports = []Ports{
 				{
-					Protocol: *protocol,
-					Ports:    ports,
-					IPRanges: []IPRange{
+					Start: startPort,
+					End:   endPort,
+				},
+			}
+		}
+
+		if policy, ok := foundPolicies[*egressPolicyGUID]; ok {
+			policy.Destination.Rules = append(policy.Destination.Rules, EgressDestinationRule{
+				Protocol: *protocol,
+				Ports:    ports,
+				IPRanges: []IPRange{
+					{
+						Start: *startIP,
+						End:   *endIP,
+					},
+				},
+				ICMPType: icmpType,
+				ICMPCode: icmpCode,
+			})
+		} else {
+			var source EgressSource
+
+			switch {
+			case sourceSpaceGUID != nil:
+				source = EgressSource{
+					ID:           *sourceSpaceGUID,
+					Type:         "space",
+					TerminalGUID: *sourceTerminalGUID,
+				}
+			default:
+				source = EgressSource{
+					ID:           *sourceAppGUID,
+					Type:         "app",
+					TerminalGUID: *sourceTerminalGUID,
+				}
+			}
+
+			policiesToReturn = append(policiesToReturn, EgressPolicy{
+				ID:     *egressPolicyGUID,
+				Source: source,
+				Destination: EgressDestination{
+					GUID:        *destinationGUID,
+					Name:        *name,
+					Description: *description,
+					Rules: []EgressDestinationRule{
 						{
-							Start: *startIP,
-							End:   *endIP,
+							Protocol: *protocol,
+							Ports:    ports,
+							IPRanges: []IPRange{
+								{
+									Start: *startIP,
+									End:   *endIP,
+								},
+							},
+							ICMPType: icmpType,
+							ICMPCode: icmpCode,
 						},
 					},
-					ICMPType: icmpType,
-					ICMPCode: icmpCode,
 				},
-			},
-		},
-		AppLifecycle: *appLifecycle,
+				AppLifecycle: *appLifecycle,
+			})
+			foundPolicies[*egressPolicyGUID] = &policiesToReturn[len(policiesToReturn)-1]
+		}
 	}
+
+	return policiesToReturn, nil
 }

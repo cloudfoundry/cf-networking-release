@@ -43,18 +43,26 @@ var _ = Describe("ASG/Dynamic Egress Interaction", func() {
 			"destinations": [ {
 					"name": %q,
 					"description": "Testing description",
-					"protocol": "tcp",
-					"ports": [ { "start": 80, "end": 80 }  ],
-					"ips": [ { "start": "93.184.216.34", "end": "93.184.216.34" } ]
+					"rules": [
+						{
+							"protocol": "tcp",
+							"ports": [ { "start": 80, "end": 80 }  ],
+							"ips": [ { "start": "93.184.216.34", "end": "93.184.216.34" } ]
+						}
+					]
 				} ]
 		}`
 		nonOverlappingDestination = `{
 			"destinations": [ {
 					"name": %q,
 					"description": "Testing description",
-					"protocol": "tcp",
-					"ports": [ { "start": 80, "end": 443 } ],
-					"ips": [ { "start": "198.35.26.96", "end": "198.35.26.96" } ]
+					"rules": [
+						{
+							"protocol": "tcp",
+							"ports": [ { "start": 80, "end": 443 } ],
+							"ips": [ { "start": "198.35.26.96", "end": "198.35.26.96" } ]
+						}
+					]
 				} ]
 		}`
 		testEgressPolicies = `{

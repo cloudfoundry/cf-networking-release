@@ -31,9 +31,21 @@ var _ = Describe("external connectivity", func() {
 				{
 					"name": %q,
 					"description": "Testing description",
-					"protocol": "tcp",
-					"ports": [ { "start": 1, "end": 65535 } ],
-					"ips": [ { "start": "0.0.0.0", "end": "255.255.255.255" } ]
+					"rules": [
+						{
+							"protocol": "tcp",
+							"ports": [ { "start": 1, "end": 65535 } ],
+							"ips": [ { "start": "0.0.0.0", "end": "255.255.255.255" } ]
+						},
+						{
+							"protocol": "icmp",
+							"ips": [ { "start": "1.1.1.1", "end": "1.1.1.1" } ]
+						},
+						{
+							"protocol": "icmp",
+							"ips": [ { "start": "8.8.8.8", "end": "8.8.8.8" } ]
+						}
+					]
 				}
 			]
 		}`
@@ -132,6 +144,10 @@ var _ = Describe("external connectivity", func() {
 		return checkRequest(appRoute+"proxy/example.com", 500, "connection refused|i/o timeout")
 	}
 
+	canPing := func(ipAddress string) error {
+		return checkRequest(appRoute+"ping/" + ipAddress, 200, `Ping succeeded to destination: ` + ipAddress)
+	}
+
 	Context("when an all egress policy is created", func() {
 		BeforeEach(func() {
 			By("creating staging egress policy")
@@ -153,6 +169,9 @@ var _ = Describe("external connectivity", func() {
 			By("checking that the app can use dns and http to reach the internet")
 			Eventually(canProxy, "10s", "1s").Should(Succeed())
 			Consistently(canProxy, "2s", "0.5s").Should(Succeed())
+
+			Consistently(func() error { return canPing("8.8.8.8") }, "2s", "0.5s").Should(Succeed())
+			Consistently(func() error { return canPing("1.1.1.1") }, "2s", "0.5s").Should(Succeed())
 
 			close(done)
 		}, 180 /* <-- overall spec timeout in seconds */)
@@ -334,7 +353,7 @@ func createDestination(cli *cf_cli_adapter.Adapter, payload string) string {
 	Expect(err).NotTo(HaveOccurred())
 	err = json.Unmarshal(response, &destStruct)
 	Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("cannot unmarshal json: %s", response))
-	Expect(destStruct.Error).To(BeEmpty())
+	Expect(destStruct.Error).To(BeEmpty(), destStruct.Error)
 
 	err = os.Remove(payloadFile.Name())
 	Expect(err).NotTo(HaveOccurred())

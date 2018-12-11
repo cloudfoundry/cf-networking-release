@@ -86,6 +86,11 @@ var _ = Describe("Egress PolicyValidator", func() {
 			Expect(validator.ValidateEgressPolicies(egressPolicies)).To(Succeed())
 		})
 
+		It("requires policies", func() {
+			err := validator.ValidateEgressPolicies([]api.EgressPolicy{})
+			Expect(err).To(MatchError(ContainSubstring("missing egress policies")))
+		})
+
 		It("requires a source", func() {
 			egressPolicies[0].Source = nil
 

@@ -453,6 +453,15 @@ var _ = Describe("Egress Policy Table", func() {
 						Description: "desc b",
 						Rules: []store.EgressDestinationRule{
 							{
+								Protocol: "tcp",
+								IPRanges: []store.IPRange{
+									{
+										Start: "2.2.3.9",
+										End:   "2.2.3.10",
+									},
+								},
+							},
+							{
 								Protocol: "udp",
 								IPRanges: []store.IPRange{
 									{
@@ -494,6 +503,17 @@ var _ = Describe("Egress Policy Table", func() {
 										End:   "2.2.3.5",
 									},
 								},
+							},
+						},
+					},
+					{
+						Name:        "un referenced dest",
+						Description: "this represents an entry that is not referenced by any policy and should not be returned when listing policies",
+						Rules: []store.EgressDestinationRule{
+							{
+								Protocol: "tcp",
+								IPRanges: []store.IPRange{{Start: "5.2.3.4", End: "5.2.3.5"}},
+								Ports:    []store.Ports{{Start: 123, End: 456}},
 							},
 						},
 					},
@@ -551,7 +571,7 @@ var _ = Describe("Egress Policy Table", func() {
 			})
 
 			Context("GetByGUID", func() {
-				It("should return the requeted egress policies", func() {
+				It("should return the requested egress policies", func() {
 					egressPolicies, err := egressPolicyTable.GetByGUID(tx, createdEgressPolicies[0].ID, createdEgressPolicies[1].ID)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(egressPolicies).To(ConsistOf(
@@ -636,6 +656,15 @@ var _ = Describe("Egress Policy Table", func() {
 								Name:        "b",
 								Description: "desc b",
 								Rules: []store.EgressDestinationRule{
+									{
+										Protocol: "tcp",
+										IPRanges: []store.IPRange{
+											{
+												Start: "2.2.3.9",
+												End:   "2.2.3.10",
+											},
+										},
+									},
 									{
 										Protocol: "udp",
 										IPRanges: []store.IPRange{

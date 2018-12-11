@@ -37,30 +37,35 @@ func DestinationKeyFunc(policy EgressPolicy) string { return policy.Destination.
 func SourceKeyFunc(policy EgressPolicy) string      { return policy.Source.ID }
 
 func (v *EgressValidator) ValidateEgressPolicies(policies []EgressPolicy) error {
+
+	if len(policies) == 0 {
+		return policyMetadataError("missing egress policies", "policies_array_empty", policies)
+	}
+
 	for _, policy := range policies {
 		if policy.Source == nil {
-			return policyMetadataError("missing egress source", policy)
+			return policyMetadataError("missing egress source", "bad_egress_policy", policy)
 		}
 		if policy.Source.ID == "" && policy.Source.Type != "default" {
-			return policyMetadataError("missing egress source ID", policy)
+			return policyMetadataError("missing egress source ID", "bad_egress_policy", policy)
 		}
 		if policy.Source.Type != "" && policy.Source.Type != "app" && policy.Source.Type != "space" && policy.Source.Type != "default" {
-			return policyMetadataError("source type must be app or space", policy)
+			return policyMetadataError("source type must be app or space", "bad_egress_policy", policy)
 		}
 		if policy.Source.ID != "" && policy.Source.Type == "default" {
-			return policyMetadataError("cannot set source ID with type 'default'", policy)
+			return policyMetadataError("cannot set source ID with type 'default'", "bad_egress_policy", policy)
 		}
 		if policy.Destination == nil {
-			return policyMetadataError("missing egress destination", policy)
+			return policyMetadataError("missing egress destination", "bad_egress_policy", policy)
 		}
 		if policy.Destination.GUID == "" {
-			return policyMetadataError("missing egress destination id", policy)
+			return policyMetadataError("missing egress destination id", "bad_egress_policy", policy)
 		}
 		if policy.AppLifecycle != nil &&
 			*policy.AppLifecycle != "running" &&
 			*policy.AppLifecycle != "staging" &&
 			*policy.AppLifecycle != "all" {
-			return policyMetadataError("app lifecycle must be 'running', 'staging', or 'all'", policy)
+			return policyMetadataError("app lifecycle must be 'running', 'staging', or 'all'", "bad_egress_policy", policy)
 		}
 	}
 
@@ -140,9 +145,9 @@ func findPoliciesWithKeyGUID(policies []EgressPolicy, guids []string, keyFunc fu
 	return policiesToReturn
 }
 
-func policyMetadataError(message string, policy EgressPolicy) error {
-	policyAsMap := map[string]interface{}{"bad_egress_policy": policy}
-	return httperror.NewMetadataError(errors.New(message), policyAsMap)
+func policyMetadataError(message, reason string, metadataValue interface{}) error {
+	metadataAsMap := map[string]interface{}{reason: metadataValue}
+	return httperror.NewMetadataError(errors.New(message), metadataAsMap)
 }
 
 func sourceAppGUIDs(policies []EgressPolicy) map[string]struct{} {

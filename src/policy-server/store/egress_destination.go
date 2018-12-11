@@ -114,7 +114,8 @@ func (e *EgressDestinationTable) CreateIPRange(tx db.Transaction, destinationTer
 }
 
 func convertRowsToEgressDestinations(rows sqlRows) ([]EgressDestination, error) {
-	foundEgressDestinations := make(map[string]EgressDestination)
+	foundEgressDestinations := make(map[string]*EgressDestination)
+	var destinationsToReturn []EgressDestination
 
 	for rows.Next() {
 		var (
@@ -142,9 +143,8 @@ func convertRowsToEgressDestinations(rows sqlRows) ([]EgressDestination, error) 
 				ICMPType: icmpType,
 				ICMPCode: icmpCode,
 			})
-			foundEgressDestinations[*terminalGUID] = destination
 		} else {
-			foundEgressDestinations[*terminalGUID] = EgressDestination{
+			destination := EgressDestination{
 				GUID:        *terminalGUID,
 				Name:        *name,
 				Description: *description,
@@ -158,12 +158,9 @@ func convertRowsToEgressDestinations(rows sqlRows) ([]EgressDestination, error) 
 					},
 				},
 			}
+			destinationsToReturn = append(destinationsToReturn, destination)
+			foundEgressDestinations[*terminalGUID] = &destinationsToReturn[len(destinationsToReturn)-1]
 		}
-	}
-
-	var destinationsToReturn []EgressDestination
-	for _, destination := range foundEgressDestinations {
-		destinationsToReturn = append(destinationsToReturn, destination)
 	}
 
 	return destinationsToReturn, nil
