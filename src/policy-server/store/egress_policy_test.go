@@ -766,7 +766,7 @@ var _ = Describe("Egress Policy Table", func() {
 		})
 	})
 
-	Context("weird duping thing lol", func() {
+	Context("Regression test: when a shared destination has multiple rules", func() {
 		var (
 			egressPolicies        []store.EgressPolicy
 			createdDestinations   []store.EgressDestination
@@ -1027,7 +1027,7 @@ var _ = Describe("Egress Policy Table", func() {
 				Expect(err).ToNot(HaveOccurred())
 			})
 
-			FContext("when there are policies with the given id", func() {
+			Context("when there are policies with the given id", func() {
 				It("returns egress policies with those ids", func() {
 					By("returning egress policies with existing ids")
 					policies, err := egressPolicyTable.GetBySourceGuidsAndDefaults([]string{"some-app-guid", "different-app-guid", "some-space-guid"})
