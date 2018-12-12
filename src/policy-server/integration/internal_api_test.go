@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"github.com/onsi/gomega/gbytes"
 	"io/ioutil"
 	"net/http"
 	"policy-server/config"
@@ -17,9 +16,11 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
 	"code.cloudfoundry.org/lager/lagertest"
+	. "github.com/Benjamintf1/unmarshalledmatchers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 )
 
@@ -145,7 +146,7 @@ var _ = Describe("Internal API", func() {
 		Expect(resp.StatusCode).To(Equal(http.StatusOK))
 		responseBytes, err := ioutil.ReadAll(resp.Body)
 		Expect(err).NotTo(HaveOccurred())
-		Expect(string(responseBytes)).To(WithTransform(replaceGUID, MatchJSON(expectedResponse)))
+		Expect(string(responseBytes)).To(WithTransform(replaceGUID, MatchUnorderedJSON(expectedResponse)))
 		Expect(resp.StatusCode).To(Equal(http.StatusOK))
 		Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
 			HaveName("InternalPoliciesRequestTime"),
