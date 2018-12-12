@@ -32,7 +32,8 @@ func (p *policyCollectionWriter) AsBytes(policies []store.Policy, egressPolicies
 
 	apiEgressPolicies := []InternalEgressPolicy{}
 	for _, egressPolicy := range egressPolicies {
-		apiEgressPolicies = append(apiEgressPolicies, mapStoreEgressPolicyToInternalAPIEgressPolicy(egressPolicy)...)
+		withoutRulesPolicies := mapStoreEgressPolicyToInternalAPIEgressPolicy(egressPolicy)
+		apiEgressPolicies = append(apiEgressPolicies, withoutRulesPolicies...)
 	}
 
 	policyCollection := PolicyCollectionPayload{

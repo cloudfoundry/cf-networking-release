@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"github.com/onsi/gomega/gbytes"
 	"io/ioutil"
 	"net/http"
 	"policy-server/config"
@@ -19,7 +20,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 )
 
@@ -122,6 +122,11 @@ var _ = Describe("Internal API", func() {
 			Destination: psclient.Destination{GUID: createdDestinations[1].GUID},
 		}, "valid-token")
 		Expect(err).ToNot(HaveOccurred())
+		_, err = client.CreateEgressPolicy(psclient.EgressPolicy{
+			Source:      psclient.EgressPolicySource{Type: "default"},
+			Destination: psclient.Destination{GUID: createdDestinations[1].GUID},
+		}, "valid-token")
+		Expect(err).ToNot(HaveOccurred())
 	})
 
 	AfterEach(func() {
@@ -155,11 +160,13 @@ var _ = Describe("Internal API", func() {
 			{"source": { "id": "app1", "tag": "0001" }, "destination": { "id": "app2", "tag": "0002", "protocol": "tcp", "ports": {"start": 8080, "end": 8080 } } },
 			{"source": { "id": "app3", "tag": "0003" }, "destination": { "id": "app1", "tag": "0001", "protocol": "tcp", "ports": {"start": 9999, "end": 9999 } } },
 			{"source": { "id": "app3", "tag": "0003" }, "destination": { "id": "app2", "tag": "0002", "protocol": "tcp", "ports": { "start": 3333, "end": 4444 } } }],
-		"total_egress_policies": 3,
+		"total_egress_policies": 5,
 		"egress_policies": [
 			{ "source": { "id": "live-app-1-guid", "type": "app" }, "destination": { "id": "<replaced>", "name": "dest-1", "description": "dest-1-desc", "ips": [{"start": "10.27.1.1", "end": "10.27.1.2"}], "ports": [{"start": 8080, "end": 8081}], "protocol": "tcp" }, "app_lifecycle": "all" },
 			{ "source": { "id": "live-space-1-guid", "type": "space" }, "destination": { "id": "<replaced>", "name": "dest-2", "description": "dest-2-desc", "ips": [{"start": "10.27.1.3", "end": "10.27.1.3"}], "ports": [{"start": 8080, "end": 8081}], "protocol": "tcp" }, "app_lifecycle": "all" },
-			{ "source": { "id": "live-space-1-guid", "type": "space" }, "destination": { "id": "<replaced>", "name": "dest-2", "description": "dest-2-desc", "ips": [{"start": "10.27.1.4", "end": "10.27.1.4"}], "ports": [{"start": 80, "end": 81}], "protocol": "tcp" }, "app_lifecycle": "all" }
+			{ "source": { "id": "live-space-1-guid", "type": "space" }, "destination": { "id": "<replaced>", "name": "dest-2", "description": "dest-2-desc", "ips": [{"start": "10.27.1.4", "end": "10.27.1.4"}], "ports": [{"start": 80, "end": 81}], "protocol": "tcp" }, "app_lifecycle": "all" },
+			{ "source": { "id": "", "type": "default" }, "destination": { "id": "<replaced>", "name": "dest-2", "description": "dest-2-desc", "ips": [{"start": "10.27.1.3", "end": "10.27.1.3"}], "ports": [{"start": 8080, "end": 8081}], "protocol": "tcp" }, "app_lifecycle": "all" },
+ 			{ "source": { "id": "", "type": "default" }, "destination": { "id": "<replaced>", "name": "dest-2", "description": "dest-2-desc", "ips": [{"start": "10.27.1.4", "end": "10.27.1.4"}], "ports": [{"start": 80, "end": 81}], "protocol": "tcp" }, "app_lifecycle": "all" }
 		]
 	}`
 

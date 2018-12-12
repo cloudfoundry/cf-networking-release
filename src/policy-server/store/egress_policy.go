@@ -140,10 +140,10 @@ func (e *EgressPolicyTable) GetAllPolicies() ([]EgressPolicy, error) {
 	return e.convertRowsToEgressPolicies(rows)
 }
 
-func (e *EgressPolicyTable) GetBySourceGuids(ids []string) ([]EgressPolicy, error) {
+func (e *EgressPolicyTable) GetBySourceGuidsAndDefaults(ids []string) ([]EgressPolicy, error) {
 
 	query := selectEgressPolicyQuery(fmt.Sprintf(`
-		apps.app_guid IN (%[1]s) OR spaces.space_guid IN (%[1]s)
+		apps.app_guid IN (%[1]s) OR spaces.space_guid IN (%[1]s) OR defaults.terminal_guid IS NOT NULL
 		`, generateQuestionMarkString(len(ids))))
 
 	ids = append(ids, ids...)
@@ -211,6 +211,7 @@ func selectEgressPolicyQuery(extraClauses ...string) string {
 			COALESCE(destination_metadatas.description, ''),
 			apps.app_guid,
 			spaces.space_guid,
+			defaults.terminal_guid,
 			ip_ranges.terminal_guid,
 			ip_ranges.protocol,
 			ip_ranges.start_ip,
@@ -223,6 +224,7 @@ func selectEgressPolicyQuery(extraClauses ...string) string {
 		LEFT OUTER JOIN ip_ranges ON (ip_ranges.terminal_guid = egress_policies.destination_guid)
 		LEFT OUTER JOIN apps ON (egress_policies.source_guid = apps.terminal_guid)
 		LEFT OUTER JOIN spaces ON (egress_policies.source_guid = spaces.terminal_guid)
+		LEFT OUTER JOIN defaults ON (egress_policies.source_guid = defaults.terminal_guid)
 		LEFT OUTER JOIN destination_metadatas ON (egress_policies.destination_guid = destination_metadatas.terminal_guid)
 		WHERE %s
 		ORDER BY ip_ranges.id;`, strings.Join(extraClauses, " AND "))
@@ -240,7 +242,7 @@ func (e *EgressPolicyTable) convertRowsToEgressPolicies(rows sqlRows) ([]EgressP
 	var counter int
 	defer rows.Close()
 	for rows.Next() {
-		var egressPolicyGUID, sourceTerminalGUID, appLifecycle, name, description, destinationGUID, sourceAppGUID, sourceSpaceGUID, protocol, startIP, endIP *string
+		var egressPolicyGUID, sourceTerminalGUID, appLifecycle, name, description, destinationGUID, sourceAppGUID, sourceSpaceGUID, defaultTerminalGUID, protocol, startIP, endIP *string
 		var startPort, endPort, icmpType, icmpCode int
 		err := rows.Scan(
 			&egressPolicyGUID,
@@ -250,6 +252,7 @@ func (e *EgressPolicyTable) convertRowsToEgressPolicies(rows sqlRows) ([]EgressP
 			&description,
 			&sourceAppGUID,
 			&sourceSpaceGUID,
+			&defaultTerminalGUID,
 			&destinationGUID,
 			&protocol,
 			&startIP,

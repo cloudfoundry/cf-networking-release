@@ -68,17 +68,30 @@ var _ = Describe("PoliciesIndexInternal", func() {
 			},
 		}}
 
-		allEgressPolicies := []store.EgressPolicy{{
-			Source: store.EgressSource{ID: "some-egress-app-guid"},
-			Destination: store.EgressDestination{
-				Rules: []store.EgressDestinationRule{
-					{
-						Protocol: "tcp",
-						IPRanges: []store.IPRange{{Start: "8.0.8.0", End: "8.0.8.0"}},
+		allEgressPolicies := []store.EgressPolicy{
+			{
+				Source: store.EgressSource{ID: "some-egress-app-guid"},
+				Destination: store.EgressDestination{
+					Rules: []store.EgressDestinationRule{
+						{
+							Protocol: "tcp",
+							IPRanges: []store.IPRange{{Start: "8.0.8.0", End: "8.0.8.0"}},
+						},
 					},
 				},
 			},
-		}}
+			{
+				Source: store.EgressSource{Type: "default"},
+				Destination: store.EgressDestination{
+					Rules: []store.EgressDestinationRule{
+						{
+							Protocol: "udp",
+							IPRanges: []store.IPRange{{Start: "8.8.8.8", End: "8.8.8.8"}},
+						},
+					},
+				},
+			},
+		}
 
 		expectedResponseBody = []byte("some-response")
 
@@ -86,7 +99,7 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		fakeStore = &storeFakes.Store{}
 		fakeStore.AllReturns(allPolicies, nil)
 		fakeEgressStore = &fakes.EgressPolicyStore{}
-		fakeEgressStore.GetBySourceGuidsReturns(allEgressPolicies, nil)
+		fakeEgressStore.GetBySourceGuidsAndDefaultsReturns(allEgressPolicies, nil)
 		fakeStore.ByGuidsReturns(byGuidsPolicies, nil)
 		fakePolicyCollectionWriter.AsBytesReturns(expectedResponseBody, nil)
 		logger = lagertest.NewTestLogger("test")
@@ -113,12 +126,12 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
 
 		Expect(fakeStore.ByGuidsCallCount()).To(Equal(1))
-		Expect(fakeEgressStore.GetBySourceGuidsCallCount()).To(Equal(1))
+		Expect(fakeEgressStore.GetBySourceGuidsAndDefaultsCallCount()).To(Equal(1))
 		srcGuids, dstGuids, inSourceAndDest := fakeStore.ByGuidsArgsForCall(0)
 		Expect(srcGuids).To(Equal([]string{"some-app-guid"}))
 		Expect(dstGuids).To(Equal([]string{"some-app-guid"}))
 		Expect(inSourceAndDest).To(BeFalse())
-		guids := fakeEgressStore.GetBySourceGuidsArgsForCall(0)
+		guids := fakeEgressStore.GetBySourceGuidsAndDefaultsArgsForCall(0)
 		Expect(guids).To(Equal([]string{"some-app-guid"}))
 		Expect(resp.Code).To(Equal(http.StatusOK))
 		Expect(resp.Body.Bytes()).To(Equal(expectedResponseBody))
@@ -151,7 +164,7 @@ var _ = Describe("PoliciesIndexInternal", func() {
 			Expect(err).NotTo(HaveOccurred())
 			MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
 
-			Expect(fakeEgressStore.GetBySourceGuidsCallCount()).To(Equal(0))
+			Expect(fakeEgressStore.GetBySourceGuidsAndDefaultsCallCount()).To(Equal(0))
 			_, passedEgressPolicies := fakePolicyCollectionWriter.AsBytesArgsForCall(0)
 			Expect(passedEgressPolicies).To(BeNil())
 		})
@@ -261,9 +274,9 @@ var _ = Describe("PoliciesIndexInternal", func() {
 		})
 	})
 
-	Context("when egressStore.GetBySourceGuidsReturns() throws an error", func() {
+	Context("when egressStore.GetBySourceGuidsAndDefaultsReturns() throws an error", func() {
 		BeforeEach(func() {
-			fakeEgressStore.GetBySourceGuidsReturns(nil, errors.New("banana"))
+			fakeEgressStore.GetBySourceGuidsAndDefaultsReturns(nil, errors.New("banana"))
 		})
 
 		It("calls the internal server error handler", func() {

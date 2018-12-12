@@ -120,43 +120,43 @@ var _ = Describe("EgressPolicyMetricsWrapper", func() {
 		})
 	})
 
-	Describe("GetBySourceGuids", func() {
+	Describe("GetBySourceGuidsAndDefaults", func() {
 		BeforeEach(func() {
-			fakeStore.GetBySourceGuidsReturns(policies, nil)
+			fakeStore.GetBySourceGuidsAndDefaultsReturns(policies, nil)
 		})
-		It("returns the result of GetBySourceGuids on the Store", func() {
-			returnedPolicies, err := metricsWrapper.GetBySourceGuids(srcGuids)
+		It("returns the result of GetBySourceGuidsAndDefaults on the Store", func() {
+			returnedPolicies, err := metricsWrapper.GetBySourceGuidsAndDefaults(srcGuids)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(returnedPolicies).To(Equal(policies))
 
-			Expect(fakeStore.GetBySourceGuidsCallCount()).To(Equal(1))
-			returnedSrcGuids := fakeStore.GetBySourceGuidsArgsForCall(0)
+			Expect(fakeStore.GetBySourceGuidsAndDefaultsCallCount()).To(Equal(1))
+			returnedSrcGuids := fakeStore.GetBySourceGuidsAndDefaultsArgsForCall(0)
 			Expect(returnedSrcGuids).To(Equal(srcGuids))
 		})
 
 		It("emits a metric", func() {
-			_, err := metricsWrapper.GetBySourceGuids(srcGuids)
+			_, err := metricsWrapper.GetBySourceGuidsAndDefaults(srcGuids)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
 			name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
-			Expect(name).To(Equal("EgressPolicyStoreGetBySourceGuidsSuccessTime"))
+			Expect(name).To(Equal("EgressPolicyStoreGetBySourceGuidsAndDefaultsSuccessTime"))
 		})
 
 		Context("when there is an error", func() {
 			BeforeEach(func() {
-				fakeStore.GetBySourceGuidsReturns(nil, errors.New("banana"))
+				fakeStore.GetBySourceGuidsAndDefaultsReturns(nil, errors.New("banana"))
 			})
 			It("emits an error metric", func() {
-				_, err := metricsWrapper.GetBySourceGuids(srcGuids)
+				_, err := metricsWrapper.GetBySourceGuidsAndDefaults(srcGuids)
 				Expect(err).To(MatchError("banana"))
 
 				Expect(fakeMetricsSender.IncrementCounterCallCount()).To(Equal(1))
-				Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("EgressPolicyStoreGetBySourceGuidsError"))
+				Expect(fakeMetricsSender.IncrementCounterArgsForCall(0)).To(Equal("EgressPolicyStoreGetBySourceGuidsAndDefaultsError"))
 
 				Expect(fakeMetricsSender.SendDurationCallCount()).To(Equal(1))
 				name, _ := fakeMetricsSender.SendDurationArgsForCall(0)
-				Expect(name).To(Equal("EgressPolicyStoreGetBySourceGuidsErrorTime"))
+				Expect(name).To(Equal("EgressPolicyStoreGetBySourceGuidsAndDefaultsErrorTime"))
 
 			})
 		})

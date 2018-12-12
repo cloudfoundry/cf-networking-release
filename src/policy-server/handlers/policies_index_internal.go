@@ -6,7 +6,6 @@ import (
 	"policy-server/api"
 	"policy-server/store"
 	"strings"
-
 	"code.cloudfoundry.org/lager"
 )
 
@@ -14,7 +13,7 @@ import (
 type egressPolicyStore interface {
 	All() ([]store.EgressPolicy, error)
 	GetByFilter(sourceId, sourceType, destinationId, destinationName, appLifecycle []string) ([]store.EgressPolicy, error)
-	GetBySourceGuids(ids []string) ([]store.EgressPolicy, error)
+	GetBySourceGuidsAndDefaults(ids []string) ([]store.EgressPolicy, error)
 	Create(egressPolicies []store.EgressPolicy) ([]store.EgressPolicy, error)
 	Delete(guids ...string) ([]store.EgressPolicy, error)
 }
@@ -65,7 +64,7 @@ func (h *PoliciesIndexInternal) ServeHTTP(w http.ResponseWriter, req *http.Reque
 		if len(ids) == 0 {
 			egressPolicies, err = h.EgressStore.All()
 		} else {
-			egressPolicies, err = h.EgressStore.GetBySourceGuids(ids)
+			egressPolicies, err = h.EgressStore.GetBySourceGuidsAndDefaults(ids)
 		}
 		if err != nil {
 			h.ErrorResponse.InternalServerError(logger, w, err, "egress database read failed")

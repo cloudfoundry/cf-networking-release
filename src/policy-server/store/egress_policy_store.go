@@ -16,7 +16,7 @@ type egressPolicyRepo interface {
 	GetTerminalBySpaceGUID(tx db.Transaction, appGUID string) (string, error)
 	GetAllPolicies() ([]EgressPolicy, error)
 	GetByFilter(sourceIds, sourceTypes, destinationIds, destinationNames, appLifecycles []string) ([]EgressPolicy, error)
-	GetBySourceGuids(ids []string) ([]EgressPolicy, error)
+	GetBySourceGuidsAndDefaults(ids []string) ([]EgressPolicy, error)
 	GetByGUID(tx db.Transaction, ids ...string) ([]EgressPolicy, error)
 	DeleteEgressPolicy(tx db.Transaction, egressPolicyGUID string) error
 	DeleteApp(tx db.Transaction, terminalID string) error
@@ -197,8 +197,8 @@ func (e *EgressPolicyStore) All() ([]EgressPolicy, error) {
 	return e.EgressPolicyRepo.GetAllPolicies()
 }
 
-func (e *EgressPolicyStore) GetBySourceGuids(ids []string) ([]EgressPolicy, error) {
-	policies, err := e.EgressPolicyRepo.GetBySourceGuids(ids)
+func (e *EgressPolicyStore) GetBySourceGuidsAndDefaults(ids []string) ([]EgressPolicy, error) {
+	policies, err := e.EgressPolicyRepo.GetBySourceGuidsAndDefaults(ids)
 	if err != nil {
 		return []EgressPolicy{}, fmt.Errorf("failed to get policies by guids: %s", err)
 	}

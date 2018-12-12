@@ -9,7 +9,7 @@ type egressPolicyStore interface {
 	Create([]EgressPolicy) ([]EgressPolicy, error)
 	Delete(guids ...string) ([]EgressPolicy, error)
 	All() ([]EgressPolicy, error)
-	GetBySourceGuids(srcGuids []string) ([]EgressPolicy, error)
+	GetBySourceGuidsAndDefaults(srcGuids []string) ([]EgressPolicy, error)
 	GetByFilter(sourceIds, sourceTypes, destinationIds, destinationNames, appLifecycles []string) ([]EgressPolicy, error)
 }
 
@@ -57,15 +57,15 @@ func (mw *EgressPolicyMetricsWrapper) Delete(guids ...string) ([]EgressPolicy, e
 	return egressPolicies, err
 }
 
-func (mw *EgressPolicyMetricsWrapper) GetBySourceGuids(srcGuids []string) ([]EgressPolicy, error) {
+func (mw *EgressPolicyMetricsWrapper) GetBySourceGuidsAndDefaults(srcGuids []string) ([]EgressPolicy, error) {
 	startTime := time.Now()
-	egressPolicies, err := mw.Store.GetBySourceGuids(srcGuids)
+	egressPolicies, err := mw.Store.GetBySourceGuidsAndDefaults(srcGuids)
 	byGuidsTimeDuration := time.Now().Sub(startTime)
 	if err != nil {
-		mw.MetricsSender.IncrementCounter("EgressPolicyStoreGetBySourceGuidsError")
-		mw.MetricsSender.SendDuration("EgressPolicyStoreGetBySourceGuidsErrorTime", byGuidsTimeDuration)
+		mw.MetricsSender.IncrementCounter("EgressPolicyStoreGetBySourceGuidsAndDefaultsError")
+		mw.MetricsSender.SendDuration("EgressPolicyStoreGetBySourceGuidsAndDefaultsErrorTime", byGuidsTimeDuration)
 	} else {
-		mw.MetricsSender.SendDuration("EgressPolicyStoreGetBySourceGuidsSuccessTime", byGuidsTimeDuration)
+		mw.MetricsSender.SendDuration("EgressPolicyStoreGetBySourceGuidsAndDefaultsSuccessTime", byGuidsTimeDuration)
 	}
 	return egressPolicies, err
 }

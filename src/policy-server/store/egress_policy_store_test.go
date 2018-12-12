@@ -651,29 +651,29 @@ var _ = Describe("EgressPolicyStore", func() {
 		})
 	})
 
-	Describe("GetBySourceGuids", func() {
+	Describe("GetBySourceGuidsAndDefaults", func() {
 		Context("when called with ids", func() {
 			BeforeEach(func() {
-				egressPolicyRepo.GetBySourceGuidsReturns(egressPolicies, nil)
+				egressPolicyRepo.GetBySourceGuidsAndDefaultsReturns(egressPolicies, nil)
 			})
 
 			It("calls egressPolicyRepo.GetByGuid", func() {
-				policies, err := egressPolicyStore.GetBySourceGuids([]string{"meow"})
+				policies, err := egressPolicyStore.GetBySourceGuidsAndDefaults([]string{"meow"})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(policies).To(Equal(egressPolicies))
 
-				ids := egressPolicyRepo.GetBySourceGuidsArgsForCall(0)
+				ids := egressPolicyRepo.GetBySourceGuidsAndDefaultsArgsForCall(0)
 				Expect(ids).To(Equal([]string{"meow"}))
 			})
 		})
 
 		Context("when an error is returned from the repo", func() {
 			BeforeEach(func() {
-				egressPolicyRepo.GetBySourceGuidsReturns(nil, errors.New("bark bark"))
+				egressPolicyRepo.GetBySourceGuidsAndDefaultsReturns(nil, errors.New("bark bark"))
 			})
 
 			It("calls egressPolicyRepo.GetByGuid", func() {
-				_, err := egressPolicyStore.GetBySourceGuids([]string{"meow"})
+				_, err := egressPolicyStore.GetBySourceGuidsAndDefaults([]string{"meow"})
 				Expect(err).To(MatchError("failed to get policies by guids: bark bark"))
 			})
 		})

@@ -822,10 +822,10 @@ var _ = Describe("Egress Policy Table", func() {
 		})
 
 		It("returns the proper rules", func() {
-			policies, err := egressPolicyTable.GetBySourceGuids([]string{"some-app-guid", "different-app-guid"})
+			policies, err := egressPolicyTable.GetBySourceGuidsAndDefaults([]string{"some-app-guid", "different-app-guid"})
 			Expect(err).ToNot(HaveOccurred())
 
-			// egressStore.Create doesn't return the full destination, but GetBySourceGuidsc does
+			// egressStore.Create doesn't return the full destination, but GetBySourceGuidsAndDefaults does
 			expectedEgressPolicies := createdEgressPolicies
 			expectedEgressPolicies[0].Destination = createdDestinations[0]
 			expectedEgressPolicies[1].Destination = createdDestinations[0]
@@ -834,7 +834,7 @@ var _ = Describe("Egress Policy Table", func() {
 		})
 	})
 
-	Context("GetBySourceGuids", func() {
+	Context("GetBySourceGuidsAndDefaults", func() {
 		Context("When using a real db", func() {
 			var (
 				egressPolicies        []store.EgressPolicy
@@ -876,6 +876,15 @@ var _ = Describe("Egress Policy Table", func() {
 									{
 										Start: "2.2.3.4",
 										End:   "2.2.3.5",
+									},
+								},
+							},
+							{
+								Protocol: "udp",
+								IPRanges: []store.IPRange{
+									{
+										Start: "3.2.3.4",
+										End:   "3.2.3.5",
 									},
 								},
 							},
@@ -931,6 +940,29 @@ var _ = Describe("Egress Policy Table", func() {
 							},
 						},
 					},
+					{
+						Name: "f",
+						Rules: []store.EgressDestinationRule{
+							{
+								Protocol: "udp",
+								IPRanges: []store.IPRange{
+									{
+										Start: "2.2.5.4",
+										End:   "2.2.5.5",
+									},
+								},
+							},
+							{
+								Protocol: "udp",
+								IPRanges: []store.IPRange{
+									{
+										Start: "3.2.5.4",
+										End:   "3.2.5.5",
+									},
+								},
+							},
+						},
+					},
 				}
 
 				var err error
@@ -976,10 +1008,18 @@ var _ = Describe("Egress Policy Table", func() {
 					},
 					{
 						Source: store.EgressSource{
-							ID: "never-referenced-app-guid",
+							Type: "default",
 						},
 						Destination: store.EgressDestination{
 							GUID: createdDestinations[4].GUID,
+						},
+					},
+					{
+						Source: store.EgressSource{
+							ID: "never-referenced-app-guid",
+						},
+						Destination: store.EgressDestination{
+							GUID: createdDestinations[5].GUID,
 						},
 					},
 				}
@@ -987,24 +1027,26 @@ var _ = Describe("Egress Policy Table", func() {
 				Expect(err).ToNot(HaveOccurred())
 			})
 
-			Context("when there are policies with the given id", func() {
+			FContext("when there are policies with the given id", func() {
 				It("returns egress policies with those ids", func() {
 					By("returning egress policies with existing ids")
-					policies, err := egressPolicyTable.GetBySourceGuids([]string{"some-app-guid", "different-app-guid", "some-space-guid"})
+					policies, err := egressPolicyTable.GetBySourceGuidsAndDefaults([]string{"some-app-guid", "different-app-guid", "some-space-guid"})
 					Expect(err).ToNot(HaveOccurred())
 
-					// egressStore.Create doesn't return the full destination, but GetBySourceGuids does
-					expectedEgressPolicies := createdEgressPolicies[:4]
+					// egressStore.Create doesn't return the full destination, but GetBySourceGuidsAndDefaults does
+					expectedEgressPolicies := createdEgressPolicies[:5]
 					expectedEgressPolicies[0].Destination = createdDestinations[0]
 					expectedEgressPolicies[1].Destination = createdDestinations[1]
 					expectedEgressPolicies[2].Destination = createdDestinations[2]
 					expectedEgressPolicies[3].Destination = createdDestinations[3]
+					expectedEgressPolicies[4].Destination = createdDestinations[4]
 					Expect(policies).To(ConsistOf(expectedEgressPolicies))
+					Expect(len(policies)).To(Equal(5))
 
 					By("returning empty list for non-existent ids")
-					policies, err = egressPolicyTable.GetBySourceGuids([]string{"meow-this-is-a-bogus-app-guid"})
+					policies, err = egressPolicyTable.GetBySourceGuidsAndDefaults([]string{"meow-this-is-a-bogus-app-guid"})
 					Expect(err).ToNot(HaveOccurred())
-					Expect(policies).To(HaveLen(0))
+					Expect(policies).To(HaveLen(1))
 				})
 			})
 		})
@@ -1019,7 +1061,7 @@ var _ = Describe("Egress Policy Table", func() {
 					Conn: mockDb,
 				}
 
-				_, err := egressPolicyTable.GetBySourceGuids([]string{"id-does-not-matter"})
+				_, err := egressPolicyTable.GetBySourceGuidsAndDefaults([]string{"id-does-not-matter"})
 				Expect(err).To(MatchError("some error that sql would return"))
 			})
 		})
@@ -1199,7 +1241,7 @@ var _ = Describe("Egress Policy Table", func() {
 					policies, err := egressPolicyTable.GetByFilter([]string{"different-app-guid"}, []string{}, []string{}, []string{}, []string{})
 					Expect(err).ToNot(HaveOccurred())
 
-					// egressStore.Create doesn't return the full destination, but GetBySourceGuids does
+					// egressStore.Create doesn't return the full destination, but GetBySourceGuidsAndDefaults does
 					expectedEgressPolicies := createdEgressPolicies[1:3]
 					expectedEgressPolicies[0].Destination = createdDestinations[1]
 					expectedEgressPolicies[1].Destination = createdDestinations[2]
@@ -1209,7 +1251,7 @@ var _ = Describe("Egress Policy Table", func() {
 					policies, err = egressPolicyTable.GetByFilter([]string{}, []string{"app"}, []string{}, []string{}, []string{})
 					Expect(err).ToNot(HaveOccurred())
 
-					// egressStore.Create doesn't return the full destination, but GetBySourceGuids does
+					// egressStore.Create doesn't return the full destination, but GetBySourceGuidsAndDefaults does
 					expectedEgressPolicies = createdEgressPolicies[0:3]
 					expectedEgressPolicies = append([]store.EgressPolicy(nil), expectedEgressPolicies...)
 					expectedEgressPolicies = append(expectedEgressPolicies, createdEgressPolicies[5])
@@ -1224,7 +1266,7 @@ var _ = Describe("Egress Policy Table", func() {
 					policies, err = egressPolicyTable.GetByFilter([]string{"some-space-guid"}, []string{}, []string{}, []string{}, []string{})
 					Expect(err).ToNot(HaveOccurred())
 
-					// egressStore.Create doesn't return the full destination, but GetBySourceGuids does
+					// egressStore.Create doesn't return the full destination, but GetBySourceGuidsAndDefaults does
 					expectedEgressPolicies = createdEgressPolicies[3:5]
 					expectedEgressPolicies[0].Destination = createdDestinations[3]
 					expectedEgressPolicies[1].Destination = createdDestinations[3]
@@ -1234,7 +1276,7 @@ var _ = Describe("Egress Policy Table", func() {
 					policies, err = egressPolicyTable.GetByFilter([]string{}, []string{"space"}, []string{}, []string{}, []string{})
 					Expect(err).ToNot(HaveOccurred())
 
-					// egressStore.Create doesn't return the full destination, but GetBySourceGuids does
+					// egressStore.Create doesn't return the full destination, but GetBySourceGuidsAndDefaults does
 					expectedEgressPolicies = createdEgressPolicies[3:5]
 					expectedEgressPolicies[0].Destination = createdDestinations[3]
 					expectedEgressPolicies[1].Destination = createdDestinations[3]
@@ -1244,7 +1286,7 @@ var _ = Describe("Egress Policy Table", func() {
 					policies, err = egressPolicyTable.GetByFilter([]string{"some-space-guid"}, []string{"space"}, []string{}, []string{}, []string{})
 					Expect(err).ToNot(HaveOccurred())
 
-					// egressStore.Create doesn't return the full destination, but GetBySourceGuids does
+					// egressStore.Create doesn't return the full destination, but GetBySourceGuidsAndDefaults does
 					expectedEgressPolicies = createdEgressPolicies[3:5]
 					expectedEgressPolicies[0].Destination = createdDestinations[3]
 					expectedEgressPolicies[1].Destination = createdDestinations[3]
@@ -1254,7 +1296,7 @@ var _ = Describe("Egress Policy Table", func() {
 					policies, err = egressPolicyTable.GetByFilter([]string{}, []string{}, []string{}, []string{}, []string{"staging"})
 					Expect(err).ToNot(HaveOccurred())
 
-					// egressStore.Create doesn't return the full destination, but GetBySourceGuids does
+					// egressStore.Create doesn't return the full destination, but GetBySourceGuidsAndDefaults does
 					expectedEgressPolicy := createdEgressPolicies[4]
 					expectedEgressPolicy.Destination = createdDestinations[3]
 					Expect(policies).To(ConsistOf(expectedEgressPolicy))
@@ -1263,7 +1305,7 @@ var _ = Describe("Egress Policy Table", func() {
 					policies, err = egressPolicyTable.GetByFilter([]string{}, []string{}, []string{createdDestinations[0].GUID}, []string{}, []string{})
 					Expect(err).ToNot(HaveOccurred())
 
-					// egressStore.Create doesn't return the full destination, but GetBySourceGuids does
+					// egressStore.Create doesn't return the full destination, but GetBySourceGuidsAndDefaults does
 					expectedEgressPolicy = createdEgressPolicies[0]
 					expectedEgressPolicy.Destination = createdDestinations[0]
 					Expect(policies).To(ConsistOf(expectedEgressPolicy))
@@ -1272,7 +1314,7 @@ var _ = Describe("Egress Policy Table", func() {
 					policies, err = egressPolicyTable.GetByFilter([]string{}, []string{}, []string{}, []string{"a"}, []string{})
 					Expect(err).ToNot(HaveOccurred())
 
-					// egressStore.Create doesn't return the full destination, but GetBySourceGuids does
+					// egressStore.Create doesn't return the full destination, but GetBySourceGuidsAndDefaults does
 					expectedEgressPolicy = createdEgressPolicies[0]
 					expectedEgressPolicy.Destination = createdDestinations[0]
 					Expect(policies).To(ConsistOf(expectedEgressPolicy))
@@ -1310,7 +1352,7 @@ func egressDestinationStore(db store.Database) *store.EgressDestinationStore {
 
 	destinationMetadataTable := &store.DestinationMetadataTable{}
 	egressDestinationStore := &store.EgressDestinationStore{
-		Conn:                    db,
+		Conn: db,
 		EgressDestinationRepo:   &store.EgressDestinationTable{},
 		TerminalsRepo:           terminalsRepo,
 		DestinationMetadataRepo: destinationMetadataTable,
