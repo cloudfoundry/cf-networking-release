@@ -7,6 +7,10 @@ ROOT="$(cd "$(dirname $0)/../../.." && pwd)"
 function main() {
     cf_login
     create_org_space
+
+    cf target -o "${SLI_ORG}" -s "${SLI_SPACE}"
+
+    bind_default_security_groups
     create_app
 }
 
@@ -32,8 +36,14 @@ function map_internal_route() {
     cf map-route "${SLI_APP_NAME}" apps.internal --hostname "${SLI_APP_NAME}"
 }
 
+function bind_default_security_groups() {
+  cf bind-security-group public_networks "${SLI_ORG}" --lifecycle running
+  cf bind-security-group public_networks "${SLI_ORG}" --lifecycle staging
+  cf bind-security-group dns "${SLI_ORG}" --lifecycle running
+  cf bind-security-group dns "${SLI_ORG}" --lifecycle staging
+}
+
 function create_app() {
-    cf target -o "${SLI_ORG}" -s "${SLI_SPACE}"
     if cf apps | grep "${SLI_APP_NAME}" | grep "started" > /dev/null; then
       echo "Application ${SLI_APP_NAME} already exists!"
     else
