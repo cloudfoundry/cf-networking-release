@@ -86,8 +86,9 @@ func (e *EgressDestinationTable) CreateIPRange(tx db.Transaction, destinationTer
 }
 
 func convertRowsToEgressDestinations(rows sqlRows) ([]EgressDestination, error) {
-	foundEgressDestinations := make(map[string]*EgressDestination)
+	foundEgressDestinationIndexes := make(map[string]int)
 	var destinationsToReturn []EgressDestination
+	var count int
 
 	for rows.Next() {
 		var (
@@ -107,7 +108,8 @@ func convertRowsToEgressDestinations(rows sqlRows) ([]EgressDestination, error) 
 			ports = []Ports{{Start: startPort, End: endPort}}
 		}
 
-		if destination, ok := foundEgressDestinations[*terminalGUID]; ok {
+		if destinationIdx, ok := foundEgressDestinationIndexes[*terminalGUID]; ok {
+			destination := destinationsToReturn[destinationIdx]
 			destination.Rules = append(destination.Rules, EgressDestinationRule{
 				Protocol: *protocol,
 				Ports:    ports,
@@ -115,6 +117,7 @@ func convertRowsToEgressDestinations(rows sqlRows) ([]EgressDestination, error) 
 				ICMPType: icmpType,
 				ICMPCode: icmpCode,
 			})
+			destinationsToReturn[destinationIdx] = destination
 		} else {
 			destination := EgressDestination{
 				GUID:        *terminalGUID,
@@ -131,7 +134,8 @@ func convertRowsToEgressDestinations(rows sqlRows) ([]EgressDestination, error) 
 				},
 			}
 			destinationsToReturn = append(destinationsToReturn, destination)
-			foundEgressDestinations[*terminalGUID] = &destinationsToReturn[len(destinationsToReturn)-1]
+			foundEgressDestinationIndexes[*terminalGUID] = count
+			count = count + 1
 		}
 	}
 

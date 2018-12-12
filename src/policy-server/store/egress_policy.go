@@ -219,8 +219,8 @@ func selectEgressPolicyQuery(extraClauses ...string) string {
 			ip_ranges.end_port,
 			ip_ranges.icmp_type,
 			ip_ranges.icmp_code
-		FROM ip_ranges
-		LEFT OUTER JOIN egress_policies ON (ip_ranges.terminal_guid = egress_policies.destination_guid)
+		FROM egress_policies
+		LEFT OUTER JOIN ip_ranges ON (ip_ranges.terminal_guid = egress_policies.destination_guid)
 		LEFT OUTER JOIN apps ON (egress_policies.source_guid = apps.terminal_guid)
 		LEFT OUTER JOIN spaces ON (egress_policies.source_guid = spaces.terminal_guid)
 		LEFT OUTER JOIN destination_metadatas ON (egress_policies.destination_guid = destination_metadatas.terminal_guid)
@@ -235,8 +235,9 @@ type sqlRows interface {
 }
 
 func (e *EgressPolicyTable) convertRowsToEgressPolicies(rows sqlRows) ([]EgressPolicy, error) {
-	foundPolicies := make(map[string]*EgressPolicy)
+	foundPolicieIdxs := make(map[string]int)
 	var policiesToReturn []EgressPolicy
+	var counter int
 	defer rows.Close()
 	for rows.Next() {
 		var egressPolicyGUID, sourceTerminalGUID, appLifecycle, name, description, destinationGUID, sourceAppGUID, sourceSpaceGUID, protocol, startIP, endIP *string
@@ -271,19 +272,17 @@ func (e *EgressPolicyTable) convertRowsToEgressPolicies(rows sqlRows) ([]EgressP
 			}
 		}
 
-		if policy, ok := foundPolicies[*egressPolicyGUID]; ok {
+		foundIndex, ok := foundPolicieIdxs[*egressPolicyGUID]
+		if ok {
+			policy := policiesToReturn[foundIndex]
 			policy.Destination.Rules = append(policy.Destination.Rules, EgressDestinationRule{
 				Protocol: *protocol,
 				Ports:    ports,
-				IPRanges: []IPRange{
-					{
-						Start: *startIP,
-						End:   *endIP,
-					},
-				},
+				IPRanges: []IPRange{{Start: *startIP, End: *endIP}},
 				ICMPType: icmpType,
 				ICMPCode: icmpCode,
 			})
+			policiesToReturn[foundIndex] = policy
 		} else {
 			var source EgressSource
 
@@ -307,7 +306,7 @@ func (e *EgressPolicyTable) convertRowsToEgressPolicies(rows sqlRows) ([]EgressP
 				}
 			}
 
-			policiesToReturn = append(policiesToReturn, EgressPolicy{
+			egressPolicy := EgressPolicy{
 				ID:     *egressPolicyGUID,
 				Source: source,
 				Destination: EgressDestination{
@@ -330,8 +329,10 @@ func (e *EgressPolicyTable) convertRowsToEgressPolicies(rows sqlRows) ([]EgressP
 					},
 				},
 				AppLifecycle: *appLifecycle,
-			})
-			foundPolicies[*egressPolicyGUID] = &policiesToReturn[len(policiesToReturn)-1]
+			}
+			policiesToReturn = append(policiesToReturn, egressPolicy)
+			foundPolicieIdxs[*egressPolicyGUID] = counter
+			counter = counter + 1
 		}
 	}
 

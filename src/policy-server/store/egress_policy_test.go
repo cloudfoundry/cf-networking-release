@@ -766,6 +766,74 @@ var _ = Describe("Egress Policy Table", func() {
 		})
 	})
 
+	Context("weird duping thing lol", func() {
+		var (
+			egressPolicies        []store.EgressPolicy
+			createdDestinations   []store.EgressDestination
+			createdEgressPolicies []store.EgressPolicy
+		)
+
+		BeforeEach(func() {
+			db, _ := getMigratedRealDb(dbConf)
+			egressStore := setupEgressPolicyStore(db)
+
+			egressDestinations := []store.EgressDestination{
+				{
+					Name: "a",
+					Rules: []store.EgressDestinationRule{
+						{
+							Protocol: "udp",
+							IPRanges: []store.IPRange{{Start: "2.2.5.4", End: "2.2.5.5"}},
+						},
+						{
+							Protocol: "tcp",
+							IPRanges: []store.IPRange{{Start: "2.2.5.6", End: "2.2.5.7"}},
+						},
+					},
+				},
+			}
+
+			var err error
+			createdDestinations, err = egressDestinationStore(db).Create(egressDestinations)
+			Expect(err).ToNot(HaveOccurred())
+
+			egressPolicies = []store.EgressPolicy{
+				{
+					Source: store.EgressSource{
+						ID:   "some-app-guid",
+						Type: "app",
+					},
+					Destination: store.EgressDestination{
+						GUID: createdDestinations[0].GUID,
+					},
+				},
+				{
+					Source: store.EgressSource{
+						ID:   "different-app-guid",
+						Type: "app",
+					},
+					Destination: store.EgressDestination{
+						GUID: createdDestinations[0].GUID,
+					},
+				},
+			}
+			createdEgressPolicies, err = egressStore.Create(egressPolicies)
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		It("returns the proper rules", func() {
+			policies, err := egressPolicyTable.GetBySourceGuids([]string{"some-app-guid", "different-app-guid"})
+			Expect(err).ToNot(HaveOccurred())
+
+			// egressStore.Create doesn't return the full destination, but GetBySourceGuidsc does
+			expectedEgressPolicies := createdEgressPolicies
+			expectedEgressPolicies[0].Destination = createdDestinations[0]
+			expectedEgressPolicies[1].Destination = createdDestinations[0]
+			Expect(policies).To(ConsistOf(expectedEgressPolicies))
+			Expect(len(policies)).To(Equal(2))
+		})
+	})
+
 	Context("GetBySourceGuids", func() {
 		Context("When using a real db", func() {
 			var (
