@@ -59,11 +59,11 @@ func (v *EgressDestinationsValidator) ValidateEgressDestinations(destinations []
 				}
 			}
 
-			if rule.Protocol != "icmp" && rule.ICMPCode != nil {
+			if rule.Protocol != "icmp" && rule.Protocol != "all" && rule.ICMPCode != nil {
 				return fmt.Errorf("invalid destination: cannot set icmp_code property for destination with protocol '%s'", rule.Protocol)
 			}
 
-			if rule.Protocol != "icmp" && rule.ICMPType != nil {
+			if rule.Protocol != "icmp" && rule.Protocol != "all" && rule.ICMPType != nil {
 				return fmt.Errorf("invalid destination: cannot set icmp_type property for destination with protocol '%s'", rule.Protocol)
 			}
 

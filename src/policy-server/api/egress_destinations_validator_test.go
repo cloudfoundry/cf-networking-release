@@ -270,6 +270,71 @@ var _ = Describe("EgressDestinationsValidator", func() {
 			})
 		})
 
+		Context("when the protocol is all", func() {
+			Context("when no ports are provided", func() {
+				It("returns an error", func() {
+					destinations := []api.EgressDestination{
+						{
+							Name:        "meow",
+							Description: "a cat",
+							Rules: []api.EgressDestinationRule{
+								{
+									Protocol: "all",
+									IPRanges: []api.IPRange{{Start: "192.0.2.1", End: "192.0.2.1"}},
+								},
+							},
+						},
+					}
+					err := validator.ValidateEgressDestinations(destinations)
+					Expect(err).To(MatchError("missing destination ports"))
+				})
+			})
+
+			Context("when an icmp type is provided", func() {
+				It("doesn't return an error", func() {
+					icmpType := 13
+					destinations := []api.EgressDestination{
+						{
+							Name:        "meow",
+							Description: "a cat",
+							Rules: []api.EgressDestinationRule{
+								{
+									Protocol: "all",
+									IPRanges: []api.IPRange{{Start: "192.0.2.1", End: "192.0.2.1"}},
+									Ports: []api.Ports{{Start: 8080, End: 8080}},
+									ICMPType: &icmpType,
+								},
+							},
+						},
+					}
+					err := validator.ValidateEgressDestinations(destinations)
+					Expect(err).To(Not(HaveOccurred()))
+				})
+			})
+
+			Context("when an icmp type is provided", func() {
+				It("doesn't return an error", func() {
+					icmpCode := 13
+					destinations := []api.EgressDestination{
+						{
+							Name:        "meow",
+							Description: "a cat",
+							Rules: []api.EgressDestinationRule{
+								{
+									Protocol: "all",
+									IPRanges: []api.IPRange{{Start: "192.0.2.1", End: "192.0.2.1"}},
+									Ports: []api.Ports{{Start: 8080, End: 8080}},
+									ICMPCode: &icmpCode,
+								},
+							},
+						},
+					}
+					err := validator.ValidateEgressDestinations(destinations)
+					Expect(err).To(Not(HaveOccurred()))
+				})
+			})
+		})
+
 		Context("when the protocol is invalid", func() {
 			Context("when no protocol is provided", func() {
 				It("returns an error", func() {
