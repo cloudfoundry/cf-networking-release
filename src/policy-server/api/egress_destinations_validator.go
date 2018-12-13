@@ -97,7 +97,7 @@ func (v *EgressDestinationsValidator) ValidateEgressDestinations(destinations []
 }
 
 func isValidProtocol(protocol string) bool {
-	validProtocols := []string{"tcp", "udp", "icmp"}
+	validProtocols := []string{"tcp", "udp", "icmp", "all"}
 
 	for _, validProtocol := range validProtocols {
 		if validProtocol == protocol {

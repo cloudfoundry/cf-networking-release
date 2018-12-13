@@ -205,6 +205,15 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 									"ips": [{ "start": "1.2.3.7", "end": "1.2.3.8" }]
 								}
 							]
+						},
+						{
+							"id": "5",
+							"rules": [
+								{
+									"protocol": "all",
+									"ips": [{ "start": "1.2.3.7", "end": "1.2.3.8" }]
+								}
+							]
 						}
 					]
 				}`)
@@ -279,6 +288,19 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 						Rules: []store.EgressDestinationRule{
 							{
 								Protocol: "udp",
+								Ports:    []store.Ports{},
+								IPRanges: []store.IPRange{{
+									Start: "1.2.3.7",
+									End:   "1.2.3.8",
+								}},
+							},
+						},
+					},
+					{
+						GUID: "5",
+						Rules: []store.EgressDestinationRule{
+							{
+								Protocol: "all",
 								Ports:    []store.Ports{},
 								IPRanges: []store.IPRange{{
 									Start: "1.2.3.7",

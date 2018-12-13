@@ -31,6 +31,11 @@ var _ = Describe("EgressDestinationsValidator", func() {
 							Ports:    []api.Ports{{Start: 8080, End: 8081}},
 							IPRanges: []api.IPRange{{Start: "192.0.2.1", End: "192.0.2.1"}},
 						},
+						{
+							Protocol: "all",
+							Ports:    []api.Ports{{Start: 8080, End: 8081}},
+							IPRanges: []api.IPRange{{Start: "192.0.2.1", End: "192.0.2.1"}},
+						},
 					},
 				},
 			}
@@ -113,7 +118,7 @@ var _ = Describe("EgressDestinationsValidator", func() {
 				})
 
 				Context("when the protocol is icmp", func() {
-					It("returns an error", func() {
+					It("doesn't return an error", func() {
 						destinations := []api.EgressDestination{
 							{
 								Name:        "meow",
