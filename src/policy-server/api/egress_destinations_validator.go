@@ -59,11 +59,11 @@ func (v *EgressDestinationsValidator) ValidateEgressDestinations(destinations []
 				}
 			}
 
-			if rule.Protocol != "icmp" && rule.Protocol != "all" && rule.ICMPCode != nil {
+			if !protocolIncludesICMP(rule.Protocol) && rule.ICMPCode != nil {
 				return fmt.Errorf("invalid destination: cannot set icmp_code property for destination with protocol '%s'", rule.Protocol)
 			}
 
-			if rule.Protocol != "icmp" && rule.Protocol != "all" && rule.ICMPType != nil {
+			if !protocolIncludesICMP(rule.Protocol) && rule.ICMPType != nil {
 				return fmt.Errorf("invalid destination: cannot set icmp_type property for destination with protocol '%s'", rule.Protocol)
 			}
 
@@ -94,6 +94,10 @@ func (v *EgressDestinationsValidator) ValidateEgressDestinations(destinations []
 	}
 
 	return nil
+}
+
+func protocolIncludesICMP(protocol string) bool {
+	return protocol == "icmp" || protocol == "all"
 }
 
 func isValidProtocol(protocol string) bool {
