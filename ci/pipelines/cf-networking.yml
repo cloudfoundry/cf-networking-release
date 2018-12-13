@@ -39,7 +39,6 @@ groups:
   - mitre-deploy
   - mitre-test
   - mitre-perf-tests
-  - mitre-smoke
   - mitre-cats
   - mitre-sli-map-route
   - mitre-sli-resolve-route
@@ -71,7 +70,6 @@ groups:
   - mitre-deploy
   - mitre-test
   - mitre-perf-tests
-  - mitre-smoke
   - mitre-cats
   - mitre-deploy-firehose-nozzle
   - mitre-sli-map-route
@@ -278,10 +276,6 @@ resources:
     type: time
     source:
       interval: 30m
-  - name: every-fifteen-minutes
-    type: time
-    source:
-      interval: 15m
   - name: every-two-minutes
     type: time
     source:
@@ -939,6 +933,29 @@ jobs:
         VARIABLES: |
           /bosh-mitre/cf/cf_admin_password
           /bosh-mitre/cf/uaa_admin_client_secret
+          /bosh-mitre/cf/cf_networking_smoke_user_password
+    - task: setup-smoke-config
+      file: cf-networking-release-ci/ci/tasks/setup-smoke-config.yml
+      params:
+        ENVIRONMENT_NAME: mitre
+    - task: smoke-tests-sd
+      privileged: true
+      file: cf-networking-release-ci/ci/tasks/smoke-tests-sd.yml
+      input_mapping:
+        test-config: cf-networking-deployments
+        cf-networking: cf-networking-dev
+      params:
+        ENVIRONMENT_TAG: mitre.c2c.cf-app.com
+        DATADOG_API_KEY: ((datadog_api_key))
+    - task: smoke-tests
+      file: cf-networking-release-ci/ci/tasks/smoke-tests.yml
+      params:
+        ENVIRONMENT_NAME: mitre
+        ENVIRONMENT_TAG: mitre.c2c.cf-app.com
+        DATADOG_API_KEY: ((datadog_api_key))
+      input_mapping:
+        test-config: cf-networking-deployments
+        cf-networking: cf-networking-dev
     - task: acceptance-tests
       file: cf-networking-release-ci/ci/tasks/acceptance-tests.yml
       input_mapping:
@@ -1023,55 +1040,6 @@ jobs:
         deployments-repo: cf-networking-deployments
       params:
         ENVIRONMENT_NAME: mitre
-
-  - name: mitre-smoke
-    plan:
-    - aggregate:
-      - get: every-fifteen-minutes
-        trigger: true
-      - get: cf-networking-deployments
-      - get: cf-networking-dev
-        passed: [mitre-test, mitre-perf-tests]
-        trigger: true
-      - get: cf-networking-release-ci
-        params:
-          submodules: none
-      - get: cf-deployment
-        passed: [mitre-test, mitre-perf-tests]
-        trigger: true
-      - get: silk-dev
-        passed: [mitre-test, mitre-perf-tests]
-        trigger: true
-    - task: get-credhub-vars
-      file: cf-networking-release-ci/ci/tasks/get-credhub-vars.yml
-      input_mapping:
-        bbl-state: cf-networking-deployments
-      params:
-        BBL_STATE_DIR: environments/mitre
-        VARIABLES: |
-          /bosh-mitre/cf/cf_networking_smoke_user_password
-    - task: setup-smoke-config
-      file: cf-networking-release-ci/ci/tasks/setup-smoke-config.yml
-      params:
-        ENVIRONMENT_NAME: mitre
-    - task: smoke-tests-sd
-      privileged: true
-      file: cf-networking-release-ci/ci/tasks/smoke-tests-sd.yml
-      input_mapping:
-        test-config: cf-networking-deployments
-        cf-networking: cf-networking-dev
-      params:
-        ENVIRONMENT_TAG: mitre.c2c.cf-app.com
-        DATADOG_API_KEY: ((datadog_api_key))
-    - task: smoke-tests
-      file: cf-networking-release-ci/ci/tasks/smoke-tests.yml
-      params:
-        ENVIRONMENT_NAME: mitre
-        ENVIRONMENT_TAG: mitre.c2c.cf-app.com
-        DATADOG_API_KEY: ((datadog_api_key))
-      input_mapping:
-        test-config: cf-networking-deployments
-        cf-networking: cf-networking-dev
 
   - name: mitre-cats
     serial_groups: [mitre-test-group, mitre-deploy-group]
@@ -1832,12 +1800,12 @@ jobs:
         - get: cf-networking-dev
           params:
             submodules: none
-          passed: [mitre-cats, caubeen-drats, mitre-smoke]
+          passed: [mitre-cats, caubeen-drats]
           trigger: true
         - get: silk-dev
           params:
             submodules: none
-          passed: [mitre-cats, caubeen-drats, mitre-smoke]
+          passed: [mitre-cats, caubeen-drats]
           trigger: true
         - get: cf-deployment
           passed: [mitre-cats, caubeen-drats]
@@ -1876,7 +1844,7 @@ jobs:
         - get: cf-networking-dev
           params:
             submodules: none
-          passed: [mitre-cats, mitre-smoke]
+          passed: [mitre-cats]
           trigger: true
       - task: check-empty-networking-opsfile
         file: cf-networking-release-ci/ci/tasks/check-empty-networking-opsfile.yml
