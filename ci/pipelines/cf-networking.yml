@@ -1656,7 +1656,7 @@ jobs:
           environments/caubeen/gcs-vars.yml
         DEPLOY_WITH_UPTIME_MEASUREMENTS: true
         FAIL_ON_DOWNTIME: true
-        APP_PUSHABILITY_THRESHOLD: 1
+        APP_PUSHABILITY_THRESHOLD: 2 # our api vms take 6 min to recreate, so this number should be under 6
         MEASURE_SYSLOG_AVAILABILITY: false
         RECENT_LOGS_THRESHOLD: 5
       input_mapping:
