@@ -9,10 +9,11 @@ import (
 	"strconv"
 )
 
-func launchHandler(port int, downloadHandler, digHandler, timedDigHandler, pingHandler, proxyHandler, statsHandler, uploadHandler, echoSourceIPHandler http.Handler) {
+func launchHandler(port int, downloadHandler, digHandler, digUDPHandler, timedDigHandler, pingHandler, proxyHandler, statsHandler, uploadHandler, echoSourceIPHandler http.Handler) {
 	mux := http.NewServeMux()
 	mux.Handle("/download/", downloadHandler)
 	mux.Handle("/dig/", digHandler)
+	mux.Handle("/digudp/", digUDPHandler)
 	mux.Handle("/timed_dig/", timedDigHandler)
 	mux.Handle("/ping/", pingHandler)
 	mux.Handle("/proxy/", proxyHandler)
@@ -38,6 +39,7 @@ func main() {
 	downloadHandler := &handlers.DownloadHandler{}
 	pingHandler := &handlers.PingHandler{}
 	digHandler := &handlers.DigHandler{}
+	digUDPHandler := &handlers.DigUDPHandler{}
 	timedDigHandler := &handlers.TimedDigHandler{}
 	proxyHandler := &handlers.ProxyHandler{
 		Stats: stats,
@@ -49,5 +51,5 @@ func main() {
 
 	echoSourceIPHandler := &handlers.EchoSourceIPHandler{}
 
-	launchHandler(systemPort, downloadHandler, digHandler, timedDigHandler, pingHandler, proxyHandler, statsHandler, uploadHandler, echoSourceIPHandler)
+	launchHandler(systemPort, downloadHandler, digHandler, digUDPHandler, timedDigHandler, pingHandler, proxyHandler, statsHandler, uploadHandler, echoSourceIPHandler)
 }
