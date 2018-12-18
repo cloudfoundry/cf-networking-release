@@ -174,24 +174,41 @@ var _ = Describe("external connectivity", func() {
 		return checkRequest(appRoute+"ping/"+ipAddress, 200, `Ping succeeded to destination: `+ipAddress)
 	}
 
+	cannotPing := func(ipAddress string) error {
+		return checkRequest(appRoute+"ping/"+ipAddress, 500, ``)
+	}
+
 	Context("when an app lifecycle 'all' egress policy is created", func() {
+		var (
+			stagingEgressPolicyGuid string
+		)
+
 		BeforeEach(func() {
-			By("creating all egress policy")
+			By("creating staging egress policy")
 			spaceGuid, err := cli.SpaceGuid(spaceName)
 			Expect(err).NotTo(HaveOccurred())
+			stagingEgressPolicyGuid = createEgressPolicy(cli, fmt.Sprintf(testStagingEgressPolicies, spaceGuid, "space", wideOpenTCPplusICMPDestinationGuid))
+
+			By("pushing the test app")
+			pushProxy(appA)
+			appRoute = fmt.Sprintf("http://%s.%s/", appA, config.AppsDomain)
+
+			By("verifying that the test app has no connectivity to the internet prior to setting policy")
+			Consistently(cannotProxy, "2s", "0.5s").Should(Succeed())
+			Consistently(func() error { return cannotPing("8.8.8.8") }, "2s", "0.5s").Should(Succeed())
+			Consistently(cannotDigUDP, "2s", "0.5s").Should(Succeed())
+
+			By("creating all egress policy")
 			egressPolicyGuid = createEgressPolicy(cli, fmt.Sprintf(testAllEgressPolicies, spaceGuid, "space", wideOpenTCPplusICMPDestinationGuid))
 		})
 
 		AfterEach(func() {
 			By("deleting all egress policy")
+			deleteEgressPolicy(cli, stagingEgressPolicyGuid)
 			deleteEgressPolicy(cli, egressPolicyGuid)
 		})
 
 		It("the app can reach the internet when egress policy is present", func(done Done) {
-			By("pushing the test app")
-			pushProxy(appA)
-			appRoute = fmt.Sprintf("http://%s.%s/", appA, config.AppsDomain)
-
 			By("checking that the app can use dns and http to reach the internet")
 			Eventually(canProxy, "10s", "1s").Should(Succeed())
 			Consistently(canProxy, "2s", "0.5s").Should(Succeed())
@@ -207,23 +224,36 @@ var _ = Describe("external connectivity", func() {
 	})
 
 	Context("when a protocol 'all' egress policy is created", func() {
+		var (
+			stagingEgressPolicyGuid string
+		)
+
 		BeforeEach(func() {
-			By("creating all egress policy")
+			By("creating staging egress policy")
 			spaceGuid, err := cli.SpaceGuid(spaceName)
 			Expect(err).NotTo(HaveOccurred())
+			stagingEgressPolicyGuid = createEgressPolicy(cli, fmt.Sprintf(testStagingEgressPolicies, spaceGuid, "space", wideOpenTCPplusICMPDestinationGuid))
+
+			By("pushing the test app")
+			pushProxy(appA)
+			appRoute = fmt.Sprintf("http://%s.%s/", appA, config.AppsDomain)
+
+			By("verifying that the test app has no connectivity to the internet prior to setting policy")
+			Consistently(cannotProxy, "2s", "0.5s").Should(Succeed())
+			Consistently(func() error { return cannotPing("8.8.8.8") }, "2s", "0.5s").Should(Succeed())
+			Consistently(cannotDigUDP, "2s", "0.5s").Should(Succeed())
+
+			By("creating all egress policy")
 			egressPolicyGuid = createEgressPolicy(cli, fmt.Sprintf(testAllEgressPolicies, spaceGuid, "space", wideOpenAllDestinationGuid))
 		})
 
 		AfterEach(func() {
 			By("deleting all egress policy")
+			deleteEgressPolicy(cli, stagingEgressPolicyGuid)
 			deleteEgressPolicy(cli, egressPolicyGuid)
 		})
 
 		It("the app can reach the internet when egress policy is present", func(done Done) {
-			By("pushing the test app")
-			pushProxy(appA)
-			appRoute = fmt.Sprintf("http://%s.%s/", appA, config.AppsDomain)
-
 			By("checking that the app can use dns and http to reach the internet")
 			Eventually(canProxy, "10s", "1s").Should(Succeed())
 			Consistently(canProxy, "2s", "0.5s").Should(Succeed())
