@@ -15,9 +15,8 @@ func (h *DigUDPHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
 	destination := strings.TrimPrefix(req.URL.Path, "/digudp/")
 	destination = strings.Split(destination, ":")[0]
 
-	cmd := exec.Command("dig", destination, "+short", "+notcp")
+	cmd := exec.Command("dig", "+short", "+notcp", "+ignore", "@8.8.8.8", destination)
 	output, err := cmd.Output()
-
 	if err != nil {
 		handleDigError(err, destination, resp)
 		return
