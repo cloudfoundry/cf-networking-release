@@ -3,7 +3,7 @@ applications:
   - name: tick
     memory: 32M
     disk_quota: 32M
-    buildpack: go_buildpack
+    buildpacks: [go_buildpack]
     instances: 3
     env:
       GOPACKAGENAME: example-apps/tick
