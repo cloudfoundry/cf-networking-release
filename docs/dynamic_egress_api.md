@@ -320,7 +320,7 @@ Will return all egress policies.
 
 | Field | Required? | Description |
 | :---- | :-------: | :------ |
-| source.type | N | The type of source. Must be `app` or `space`. Defaults to `app`.
+| source.type | N | The type of source. Must be `app`, `space`, or `default`. If `default` is provided, then the policy applies to every app in the foundation. If nothing is provided, defaults to `app`.
 | source.id | Y | The guid of the source app or space.
 | destination.id | Y | The guid of the egress destination.
 | app_lifecycle | N | The part of the app lifecycle you want the policy to apply to. Must be `running`, `staging`, or `all`. The `running` value applies to an app once it has started and to tasks. The `staging` value applies to apps when they are staging e.g when an app is being built by a buildpack during `cf push`. And the `all` value applies to both `running` and `staging`. Defaults to `all`.
