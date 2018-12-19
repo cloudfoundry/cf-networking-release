@@ -325,7 +325,7 @@ Will return all egress policies.
 | destination.id | Y | The guid of the egress destination.
 | app_lifecycle | N | The part of the app lifecycle you want the policy to apply to. Must be `running`, `staging`, or `all`. The `running` value applies to an app once it has started and to tasks. The `staging` value applies to apps when they are staging e.g when an app is being built by a buildpack during `cf push`. And the `all` value applies to both `running` and `staging`. Defaults to `all`.
 
-### Delete an Egress Destination
+### Delete an Egress Policy
 
 ### DELETE /networking/v1/external/egress_policies/GUID
 
