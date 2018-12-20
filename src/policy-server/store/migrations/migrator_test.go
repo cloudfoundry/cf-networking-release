@@ -1654,30 +1654,11 @@ var _ = Describe("migrations", func() {
 
 		Describe("V64 - Add description to rules", func() {
 			It("should add the column", func() {
-				By("migrating up to 63")
-				migrateTo("63")
+				By("migrating up to 64")
+				migrateTo("64")
 
 				By("inserting a friendly ip range")
 				_, err := realDb.Exec("INSERT INTO terminals (guid) VALUES ('some-terminal-guid')")
-
-				_, err = realDb.Exec(`
-					INSERT INTO ip_ranges (protocol, start_ip, end_ip, terminal_guid)
-					VALUES ('tcp', '1.1.1.1', '1.1.1.1', 'some-terminal-guid')`)
-				Expect(err).NotTo(HaveOccurred())
-
-				By("executing our migration")
-				numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 1)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(numMigrations).To(Equal(1))
-
-				By("seeing that description defaults to empty string")
-				var description string
-				err = realDb.QueryRow(`
-						SELECT description FROM ip_ranges
-						WHERE start_ip='1.1.1.1'`).Scan(&description)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(description).To(Equal(""))
-
 
 				By("seeing that we create a ip_range with a description")
 				_, err = realDb.Exec(`
@@ -1685,7 +1666,7 @@ var _ = Describe("migrations", func() {
 					VALUES ('udp', '2.2.2.2', '2.2.2.2', 'some-terminal-guid', 'it works!')`)
 				Expect(err).NotTo(HaveOccurred())
 
-
+				var description string
 				err = realDb.QueryRow(`
 						SELECT description FROM ip_ranges
 						WHERE start_ip='2.2.2.2'`).Scan(&description)

@@ -155,7 +155,7 @@ func egressDestinationsQuery(whereClause string) string {
 			ip_ranges.end_port,
 			ip_ranges.icmp_type,
 			ip_ranges.icmp_code,
-			ip_ranges.description,
+			COALESCE(ip_ranges.description, ''),
 			ip_ranges.terminal_guid,
 			COALESCE(d_m.name, ''),
 			COALESCE(d_m.description, '')

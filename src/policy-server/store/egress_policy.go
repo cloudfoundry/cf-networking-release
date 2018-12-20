@@ -220,7 +220,7 @@ func selectEgressPolicyQuery(extraClauses ...string) string {
 			ip_ranges.end_port,
 			ip_ranges.icmp_type,
 			ip_ranges.icmp_code,
-			ip_ranges.description
+			COALESCE(ip_ranges.description, '')
 		FROM egress_policies
 		LEFT OUTER JOIN ip_ranges ON (ip_ranges.terminal_guid = egress_policies.destination_guid)
 		LEFT OUTER JOIN apps ON (egress_policies.source_guid = apps.terminal_guid)
