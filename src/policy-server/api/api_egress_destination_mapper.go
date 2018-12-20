@@ -93,8 +93,9 @@ func asApiEgressDestination(storeEgressDestination store.EgressDestination) Egre
 				Start: firstIPRange.Start,
 				End:   firstIPRange.End,
 			}},
-			ICMPType: icmpType,
-			ICMPCode: icmpCode,
+			ICMPType:    icmpType,
+			ICMPCode:    icmpCode,
+			Description: rule.Description,
 		})
 	}
 
@@ -138,11 +139,12 @@ func (d *EgressDestination) asStoreEgressDestination() store.EgressDestination {
 		}
 
 		destination.Rules = append(destination.Rules, store.EgressDestinationRule{
-			Protocol: rule.Protocol,
-			Ports:    ports,
-			IPRanges: ipRanges,
-			ICMPType: icmpType,
-			ICMPCode: icmpCode,
+			Protocol:    rule.Protocol,
+			Ports:       ports,
+			IPRanges:    ipRanges,
+			ICMPType:    icmpType,
+			ICMPCode:    icmpCode,
+			Description: rule.Description,
 		})
 	}
 

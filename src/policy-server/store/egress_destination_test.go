@@ -62,17 +62,17 @@ var _ = Describe("EgressDestination", func() {
 			Expect(err).NotTo(HaveOccurred())
 			terminalIds = append(terminalIds, terminalId)
 
-			err = egressDestinationTable.CreateIPRange(tx, terminalId, "1.1.1.1", "2.2.2.2", "tcp", 8080, 8081, -1, -1)
+			err = egressDestinationTable.CreateIPRange(tx, terminalId, "an description", "1.1.1.1", "2.2.2.2", "tcp", 8080, 8081, -1, -1)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = egressDestinationTable.CreateIPRange(tx, terminalId, "10.10.10.10", "20.20.20.20", "tcp", 9080, 9081, -1, -1)
+			err = egressDestinationTable.CreateIPRange(tx, terminalId, "", "10.10.10.10", "20.20.20.20", "tcp", 9080, 9081, -1, -1)
 			Expect(err).NotTo(HaveOccurred())
 
 			terminalId, err = terminalsTable.Create(tx)
 			Expect(err).NotTo(HaveOccurred())
 			terminalIds = append(terminalIds, terminalId)
 
-			err = egressDestinationTable.CreateIPRange(tx, terminalId, "1.1.1.2", "2.2.2.3", "udp", 8082, 8083, 7, 8)
+			err = egressDestinationTable.CreateIPRange(tx, terminalId, "", "1.1.1.2", "2.2.2.3", "udp", 8082, 8083, 7, 8)
 			Expect(err).NotTo(HaveOccurred())
 
 			expectedDestination1 = store.EgressDestination{
@@ -81,6 +81,7 @@ var _ = Describe("EgressDestination", func() {
 				Description: "",
 				Rules: []store.EgressDestinationRule{
 					{
+						Description: "an description",
 						Protocol: "tcp",
 						IPRanges: []store.IPRange{{Start: "1.1.1.1", End: "2.2.2.2"}},
 						Ports:    []store.Ports{{Start: 8080, End: 8081}},
@@ -89,6 +90,7 @@ var _ = Describe("EgressDestination", func() {
 					},
 
 					{
+						Description: "",
 						Protocol: "tcp",
 						IPRanges: []store.IPRange{{Start: "10.10.10.10", End: "20.20.20.20"}},
 						Ports:    []store.Ports{{Start: 9080, End: 9081}},
@@ -103,6 +105,7 @@ var _ = Describe("EgressDestination", func() {
 				Description: "",
 				Rules: []store.EgressDestinationRule{
 					{
+						Description: "",
 						Protocol: "udp",
 						IPRanges: []store.IPRange{{Start: "1.1.1.2", End: "2.2.2.3"}},
 						Ports:    []store.Ports{{Start: 8082, End: 8083}},
@@ -124,7 +127,7 @@ var _ = Describe("EgressDestination", func() {
 		})
 
 		Context("when a destination metadata doesn't exist for destination", func() {
-			It("returns empty strings for name/description", func() {
+			It("returns empty strings for the policy name/description", func() {
 				By("All")
 
 				destinations, err := egressDestinationTable.All(tx)
@@ -221,14 +224,14 @@ var _ = Describe("EgressDestination", func() {
 				tx.ExecReturns(nil, errors.New("bad things happened"))
 			})
 			It("returns the error", func() {
-				Expect(egressDestinationTable.UpdateIPRange(tx, "", "", "", "", int64(3), int64(4), int64(5), int64(6))).To(MatchError("bad things happened"))
+				Expect(egressDestinationTable.UpdateIPRange(tx, "", "", "", "", "", int64(3), int64(4), int64(5), int64(6))).To(MatchError("bad things happened"))
 			})
 		})
 
 		Context("update", func() {
 			It("passes an error from Exec if Exec fails", func() {
 				tx.ExecReturns(nil, errors.New("bigger error"))
-				err := egressDestinationTable.UpdateIPRange(tx, "", "", "", "", int64(3), int64(4), int64(5), int64(6))
+				err := egressDestinationTable.UpdateIPRange(tx, "", "", "", "", "", int64(3), int64(4), int64(5), int64(6))
 				Expect(err).To(MatchError("bigger error"))
 			})
 		})

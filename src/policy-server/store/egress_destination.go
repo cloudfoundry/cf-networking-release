@@ -44,10 +44,10 @@ func (e *EgressDestinationTable) Delete(tx db.Transaction, guid string) error {
 	return err
 }
 
-func (e *EgressDestinationTable) UpdateIPRange(tx db.Transaction, destinationTerminalGUID, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) error {
+func (e *EgressDestinationTable) UpdateIPRange(tx db.Transaction, destinationTerminalGUID, description, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) error {
 	_, err := tx.Exec(tx.Rebind(`
 	  UPDATE ip_ranges
-		SET protocol=?, start_ip=?, end_ip=?, start_port=?, end_port=?, icmp_type=?, icmp_code=?
+		SET protocol=?, start_ip=?, end_ip=?, start_port=?, end_port=?, icmp_type=?, icmp_code=?, description=?
 		WHERE terminal_guid=?
 	`),
 		protocol,
@@ -58,15 +58,16 @@ func (e *EgressDestinationTable) UpdateIPRange(tx db.Transaction, destinationTer
 		icmpType,
 		icmpCode,
 		destinationTerminalGUID,
+		description,
 	)
 
 	return err
 }
 
-func (e *EgressDestinationTable) CreateIPRange(tx db.Transaction, destinationTerminalGUID, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) error {
+func (e *EgressDestinationTable) CreateIPRange(tx db.Transaction, destinationTerminalGUID, description, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) error {
 	_, err := tx.Exec(tx.Rebind(`
-			INSERT INTO ip_ranges (protocol, start_ip, end_ip, terminal_guid, start_port, end_port, icmp_type, icmp_code)
-			VALUES (?,?,?,?,?,?,?,?)
+			INSERT INTO ip_ranges (protocol, start_ip, end_ip, terminal_guid, start_port, end_port, icmp_type, icmp_code, description)
+			VALUES (?,?,?,?,?,?,?,?,?)
 		`),
 		protocol,
 		startIP,
@@ -76,6 +77,7 @@ func (e *EgressDestinationTable) CreateIPRange(tx db.Transaction, destinationTer
 		endPort,
 		icmpType,
 		icmpCode,
+		description,
 	)
 
 	if err != nil {
@@ -92,12 +94,12 @@ func convertRowsToEgressDestinations(rows sqlRows) ([]EgressDestination, error) 
 
 	for rows.Next() {
 		var (
-			startPort, endPort, icmpType, icmpCode                    int
-			terminalGUID, name, description, protocol, startIP, endIP *string
-			ports                                                     []Ports
+			startPort, endPort, icmpType, icmpCode                                 int
+			terminalGUID, name, description, protocol, startIP, endIP, ruleDescription *string
+			ports                                                                  []Ports
 		)
 
-		err := rows.Scan(&protocol, &startIP, &endIP, &startPort, &endPort, &icmpType, &icmpCode, &terminalGUID, &name, &description)
+		err := rows.Scan(&protocol, &startIP, &endIP, &startPort, &endPort, &icmpType, &icmpCode, &ruleDescription, &terminalGUID, &name, &description)
 
 		if err != nil {
 			return []EgressDestination{}, err
@@ -116,6 +118,7 @@ func convertRowsToEgressDestinations(rows sqlRows) ([]EgressDestination, error) 
 				IPRanges: []IPRange{{Start: *startIP, End: *endIP}},
 				ICMPType: icmpType,
 				ICMPCode: icmpCode,
+				Description: *ruleDescription,
 			})
 			destinationsToReturn[destinationIdx] = destination
 		} else {
@@ -130,6 +133,7 @@ func convertRowsToEgressDestinations(rows sqlRows) ([]EgressDestination, error) 
 						IPRanges: []IPRange{{Start: *startIP, End: *endIP}},
 						ICMPType: icmpType,
 						ICMPCode: icmpCode,
+						Description: *ruleDescription,
 					},
 				},
 			}
@@ -151,6 +155,7 @@ func egressDestinationsQuery(whereClause string) string {
 			ip_ranges.end_port,
 			ip_ranges.icmp_type,
 			ip_ranges.icmp_code,
+			ip_ranges.description,
 			ip_ranges.terminal_guid,
 			COALESCE(d_m.name, ''),
 			COALESCE(d_m.description, '')

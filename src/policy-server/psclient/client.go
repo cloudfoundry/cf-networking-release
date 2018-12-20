@@ -32,6 +32,7 @@ type Destination struct {
 }
 
 type DestinationRule struct {
+	Description string
 	Protocol string
 	IPs      []IPRange
 	Ports    []Port

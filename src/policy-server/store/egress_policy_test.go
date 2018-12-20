@@ -1084,6 +1084,7 @@ var _ = Describe("Egress Policy Table", func() {
 						Name: "a",
 						Rules: []store.EgressDestinationRule{
 							{
+								Description: "rulea",
 								Protocol: "tcp",
 								Ports: []store.Ports{
 									{
@@ -1104,6 +1105,7 @@ var _ = Describe("Egress Policy Table", func() {
 						Name: "b",
 						Rules: []store.EgressDestinationRule{
 							{
+								Description: "ruleb",
 								Protocol: "udp",
 								IPRanges: []store.IPRange{
 									{
@@ -1118,6 +1120,7 @@ var _ = Describe("Egress Policy Table", func() {
 						Name: "c",
 						Rules: []store.EgressDestinationRule{
 							{
+								Description: "rulec",
 								Protocol: "icmp",
 								ICMPType: 1,
 								ICMPCode: 2,
@@ -1134,6 +1137,7 @@ var _ = Describe("Egress Policy Table", func() {
 						Name: "d",
 						Rules: []store.EgressDestinationRule{
 							{
+								Description: "ruled",
 								Protocol: "udp",
 								Ports: []store.Ports{
 									{
@@ -1154,6 +1158,7 @@ var _ = Describe("Egress Policy Table", func() {
 						Name: "e",
 						Rules: []store.EgressDestinationRule{
 							{
+								Description: "rulee",
 								Protocol: "udp",
 								IPRanges: []store.IPRange{
 									{

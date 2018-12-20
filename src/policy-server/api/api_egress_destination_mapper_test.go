@@ -39,6 +39,7 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 					Name: " ",
 					Rules: []store.EgressDestinationRule{
 						{
+							Description: "hello friends",
 							Protocol: "tcp",
 							Ports: []store.Ports{{
 								Start: 8080,
@@ -57,6 +58,7 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 							}},
 						},
 						{
+							Description: "marshal me",
 							Protocol: "icmp",
 							IPRanges: []store.IPRange{{
 								Start: "10.20.30.40",
@@ -109,15 +111,18 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 							"name": " ",
 							"rules": [
 								{
+									"description": "hello friends",
 									"protocol": "tcp",
 									"ports": [{ "start": 8080, "end": 8081 }],
 									"ips": [{ "start": "1.2.3.4", "end": "1.2.3.5" }]
 								},
 								{
+									"description": "",
 									"protocol": "udp",
 									"ips": [{ "start": "10.20.30.40", "end": "10.20.30.50" }]
 								},
 								{
+									"description": "marshal me",
 									"protocol": "icmp",
 									"ips": [{ "start": "10.20.30.40", "end": "10.20.30.50" }],
 									"icmp_type": 2,
@@ -130,6 +135,7 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 							"description": " ",
 							"rules": [
 								{
+									"description": "",
 									"protocol": "icmp",
 									"ips": [{ "start": "1.2.3.7", "end": "1.2.3.8" }],
 									"icmp_type": 1,
@@ -141,6 +147,7 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 							"id": "3",
 							"rules": [
 								{
+									"description": "",
 									"protocol": "udp",
 									"ips": [{ "start": "1.2.3.7", "end": "1.2.3.8" }]
 								}
@@ -163,6 +170,7 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 							"name": "my service",
 							"rules": [
 								{
+									"description": "hamdinger",
 									"protocol": "tcp",
 									"ports": [{ "start": 8080, "end": 8081 }],
 									"ips": [{ "start": "1.2.3.4", "end": "1.2.3.5" }]
@@ -180,6 +188,7 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 							"description": "this is where my apps go",
 							"rules": [
 								{
+									"description": "rule 2 by blur",
 									"protocol": "icmp",
 									"ips": [{ "start": "1.2.3.7", "end": "1.2.3.8" }],
 									"icmp_type": 1,
@@ -210,6 +219,7 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 							"id": "5",
 							"rules": [
 								{
+									"description": "the fifth rule sorry not sorry",
 									"protocol": "all",
 									"ips": [{ "start": "1.2.3.7", "end": "1.2.3.8" }]
 								}
@@ -229,6 +239,7 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 						Name: "my service",
 						Rules: []store.EgressDestinationRule{
 							{
+								Description: "hamdinger",
 								Protocol: "tcp",
 								Ports: []store.Ports{{
 									Start: 8080,
@@ -256,6 +267,7 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 						Description: "this is where my apps go",
 						Rules: []store.EgressDestinationRule{
 							{
+								Description: "rule 2 by blur",
 								Protocol: "icmp",
 								Ports:    []store.Ports{},
 								IPRanges: []store.IPRange{{
@@ -300,6 +312,7 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 						GUID: "5",
 						Rules: []store.EgressDestinationRule{
 							{
+								Description: "the fifth rule sorry not sorry",
 								Protocol: "all",
 								Ports:    []store.Ports{},
 								IPRanges: []store.IPRange{{

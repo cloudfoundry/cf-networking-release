@@ -219,7 +219,8 @@ func selectEgressPolicyQuery(extraClauses ...string) string {
 			ip_ranges.start_port,
 			ip_ranges.end_port,
 			ip_ranges.icmp_type,
-			ip_ranges.icmp_code
+			ip_ranges.icmp_code,
+			ip_ranges.description
 		FROM egress_policies
 		LEFT OUTER JOIN ip_ranges ON (ip_ranges.terminal_guid = egress_policies.destination_guid)
 		LEFT OUTER JOIN apps ON (egress_policies.source_guid = apps.terminal_guid)
@@ -242,7 +243,7 @@ func (e *EgressPolicyTable) convertRowsToEgressPolicies(rows sqlRows) ([]EgressP
 	var counter int
 	defer rows.Close()
 	for rows.Next() {
-		var egressPolicyGUID, sourceTerminalGUID, appLifecycle, name, description, destinationGUID, sourceAppGUID, sourceSpaceGUID, defaultTerminalGUID, protocol, startIP, endIP *string
+		var egressPolicyGUID, sourceTerminalGUID, appLifecycle, name, description, destinationGUID, sourceAppGUID, sourceSpaceGUID, defaultTerminalGUID, protocol, startIP, endIP, ruleDescription *string
 		var startPort, endPort, icmpType, icmpCode int
 		err := rows.Scan(
 			&egressPolicyGUID,
@@ -260,7 +261,8 @@ func (e *EgressPolicyTable) convertRowsToEgressPolicies(rows sqlRows) ([]EgressP
 			&startPort,
 			&endPort,
 			&icmpType,
-			&icmpCode)
+			&icmpCode,
+			&ruleDescription)
 		if err != nil {
 			return []EgressPolicy{}, err
 		}
@@ -284,6 +286,7 @@ func (e *EgressPolicyTable) convertRowsToEgressPolicies(rows sqlRows) ([]EgressP
 				IPRanges: []IPRange{{Start: *startIP, End: *endIP}},
 				ICMPType: icmpType,
 				ICMPCode: icmpCode,
+				Description: *ruleDescription,
 			})
 			policiesToReturn[foundIndex] = policy
 		} else {
@@ -328,6 +331,7 @@ func (e *EgressPolicyTable) convertRowsToEgressPolicies(rows sqlRows) ([]EgressP
 							},
 							ICMPType: icmpType,
 							ICMPCode: icmpCode,
+							Description: *ruleDescription,
 						},
 					},
 				},

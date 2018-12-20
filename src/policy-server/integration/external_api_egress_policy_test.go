@@ -71,6 +71,7 @@ var _ = Describe("External API Egress Policies", func() {
 			Description: "dest description",
 			Rules: []psclient.DestinationRule{
 				{
+					Description: "dis is cool",
 					Protocol: "tcp",
 					IPs: []psclient.IPRange{
 						{
@@ -115,6 +116,7 @@ var _ = Describe("External API Egress Policies", func() {
 			Description: "description",
 			Rules: []psclient.DestinationRule{
 				{
+					Description: "meow rule description",
 					Protocol: "all",
 					IPs: []psclient.IPRange{
 						{

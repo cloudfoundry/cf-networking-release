@@ -22,11 +22,12 @@ type EgressDestinationRepo struct {
 		result1 []store.EgressDestination
 		result2 error
 	}
-	CreateIPRangeStub        func(tx db.Transaction, destinationTerminalGUID, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) error
+	CreateIPRangeStub        func(tx db.Transaction, destinationTerminalGUID, description, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) error
 	createIPRangeMutex       sync.RWMutex
 	createIPRangeArgsForCall []struct {
 		tx                      db.Transaction
 		destinationTerminalGUID string
+		description             string
 		startIP                 string
 		endIP                   string
 		protocol                string
@@ -41,11 +42,12 @@ type EgressDestinationRepo struct {
 	createIPRangeReturnsOnCall map[int]struct {
 		result1 error
 	}
-	UpdateIPRangeStub        func(tx db.Transaction, destinationTerminalGUID, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) error
+	UpdateIPRangeStub        func(tx db.Transaction, destinationTerminalGUID, description, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) error
 	updateIPRangeMutex       sync.RWMutex
 	updateIPRangeArgsForCall []struct {
 		tx                      db.Transaction
 		destinationTerminalGUID string
+		description             string
 		startIP                 string
 		endIP                   string
 		protocol                string
@@ -155,12 +157,13 @@ func (fake *EgressDestinationRepo) AllReturnsOnCall(i int, result1 []store.Egres
 	}{result1, result2}
 }
 
-func (fake *EgressDestinationRepo) CreateIPRange(tx db.Transaction, destinationTerminalGUID string, startIP string, endIP string, protocol string, startPort int64, endPort int64, icmpType int64, icmpCode int64) error {
+func (fake *EgressDestinationRepo) CreateIPRange(tx db.Transaction, destinationTerminalGUID string, description string, startIP string, endIP string, protocol string, startPort int64, endPort int64, icmpType int64, icmpCode int64) error {
 	fake.createIPRangeMutex.Lock()
 	ret, specificReturn := fake.createIPRangeReturnsOnCall[len(fake.createIPRangeArgsForCall)]
 	fake.createIPRangeArgsForCall = append(fake.createIPRangeArgsForCall, struct {
 		tx                      db.Transaction
 		destinationTerminalGUID string
+		description             string
 		startIP                 string
 		endIP                   string
 		protocol                string
@@ -168,11 +171,11 @@ func (fake *EgressDestinationRepo) CreateIPRange(tx db.Transaction, destinationT
 		endPort                 int64
 		icmpType                int64
 		icmpCode                int64
-	}{tx, destinationTerminalGUID, startIP, endIP, protocol, startPort, endPort, icmpType, icmpCode})
-	fake.recordInvocation("CreateIPRange", []interface{}{tx, destinationTerminalGUID, startIP, endIP, protocol, startPort, endPort, icmpType, icmpCode})
+	}{tx, destinationTerminalGUID, description, startIP, endIP, protocol, startPort, endPort, icmpType, icmpCode})
+	fake.recordInvocation("CreateIPRange", []interface{}{tx, destinationTerminalGUID, description, startIP, endIP, protocol, startPort, endPort, icmpType, icmpCode})
 	fake.createIPRangeMutex.Unlock()
 	if fake.CreateIPRangeStub != nil {
-		return fake.CreateIPRangeStub(tx, destinationTerminalGUID, startIP, endIP, protocol, startPort, endPort, icmpType, icmpCode)
+		return fake.CreateIPRangeStub(tx, destinationTerminalGUID, description, startIP, endIP, protocol, startPort, endPort, icmpType, icmpCode)
 	}
 	if specificReturn {
 		return ret.result1
@@ -186,10 +189,10 @@ func (fake *EgressDestinationRepo) CreateIPRangeCallCount() int {
 	return len(fake.createIPRangeArgsForCall)
 }
 
-func (fake *EgressDestinationRepo) CreateIPRangeArgsForCall(i int) (db.Transaction, string, string, string, string, int64, int64, int64, int64) {
+func (fake *EgressDestinationRepo) CreateIPRangeArgsForCall(i int) (db.Transaction, string, string, string, string, string, int64, int64, int64, int64) {
 	fake.createIPRangeMutex.RLock()
 	defer fake.createIPRangeMutex.RUnlock()
-	return fake.createIPRangeArgsForCall[i].tx, fake.createIPRangeArgsForCall[i].destinationTerminalGUID, fake.createIPRangeArgsForCall[i].startIP, fake.createIPRangeArgsForCall[i].endIP, fake.createIPRangeArgsForCall[i].protocol, fake.createIPRangeArgsForCall[i].startPort, fake.createIPRangeArgsForCall[i].endPort, fake.createIPRangeArgsForCall[i].icmpType, fake.createIPRangeArgsForCall[i].icmpCode
+	return fake.createIPRangeArgsForCall[i].tx, fake.createIPRangeArgsForCall[i].destinationTerminalGUID, fake.createIPRangeArgsForCall[i].description, fake.createIPRangeArgsForCall[i].startIP, fake.createIPRangeArgsForCall[i].endIP, fake.createIPRangeArgsForCall[i].protocol, fake.createIPRangeArgsForCall[i].startPort, fake.createIPRangeArgsForCall[i].endPort, fake.createIPRangeArgsForCall[i].icmpType, fake.createIPRangeArgsForCall[i].icmpCode
 }
 
 func (fake *EgressDestinationRepo) CreateIPRangeReturns(result1 error) {
@@ -211,12 +214,13 @@ func (fake *EgressDestinationRepo) CreateIPRangeReturnsOnCall(i int, result1 err
 	}{result1}
 }
 
-func (fake *EgressDestinationRepo) UpdateIPRange(tx db.Transaction, destinationTerminalGUID string, startIP string, endIP string, protocol string, startPort int64, endPort int64, icmpType int64, icmpCode int64) error {
+func (fake *EgressDestinationRepo) UpdateIPRange(tx db.Transaction, destinationTerminalGUID string, description string, startIP string, endIP string, protocol string, startPort int64, endPort int64, icmpType int64, icmpCode int64) error {
 	fake.updateIPRangeMutex.Lock()
 	ret, specificReturn := fake.updateIPRangeReturnsOnCall[len(fake.updateIPRangeArgsForCall)]
 	fake.updateIPRangeArgsForCall = append(fake.updateIPRangeArgsForCall, struct {
 		tx                      db.Transaction
 		destinationTerminalGUID string
+		description             string
 		startIP                 string
 		endIP                   string
 		protocol                string
@@ -224,11 +228,11 @@ func (fake *EgressDestinationRepo) UpdateIPRange(tx db.Transaction, destinationT
 		endPort                 int64
 		icmpType                int64
 		icmpCode                int64
-	}{tx, destinationTerminalGUID, startIP, endIP, protocol, startPort, endPort, icmpType, icmpCode})
-	fake.recordInvocation("UpdateIPRange", []interface{}{tx, destinationTerminalGUID, startIP, endIP, protocol, startPort, endPort, icmpType, icmpCode})
+	}{tx, destinationTerminalGUID, description, startIP, endIP, protocol, startPort, endPort, icmpType, icmpCode})
+	fake.recordInvocation("UpdateIPRange", []interface{}{tx, destinationTerminalGUID, description, startIP, endIP, protocol, startPort, endPort, icmpType, icmpCode})
 	fake.updateIPRangeMutex.Unlock()
 	if fake.UpdateIPRangeStub != nil {
-		return fake.UpdateIPRangeStub(tx, destinationTerminalGUID, startIP, endIP, protocol, startPort, endPort, icmpType, icmpCode)
+		return fake.UpdateIPRangeStub(tx, destinationTerminalGUID, description, startIP, endIP, protocol, startPort, endPort, icmpType, icmpCode)
 	}
 	if specificReturn {
 		return ret.result1
@@ -242,10 +246,10 @@ func (fake *EgressDestinationRepo) UpdateIPRangeCallCount() int {
 	return len(fake.updateIPRangeArgsForCall)
 }
 
-func (fake *EgressDestinationRepo) UpdateIPRangeArgsForCall(i int) (db.Transaction, string, string, string, string, int64, int64, int64, int64) {
+func (fake *EgressDestinationRepo) UpdateIPRangeArgsForCall(i int) (db.Transaction, string, string, string, string, string, int64, int64, int64, int64) {
 	fake.updateIPRangeMutex.RLock()
 	defer fake.updateIPRangeMutex.RUnlock()
-	return fake.updateIPRangeArgsForCall[i].tx, fake.updateIPRangeArgsForCall[i].destinationTerminalGUID, fake.updateIPRangeArgsForCall[i].startIP, fake.updateIPRangeArgsForCall[i].endIP, fake.updateIPRangeArgsForCall[i].protocol, fake.updateIPRangeArgsForCall[i].startPort, fake.updateIPRangeArgsForCall[i].endPort, fake.updateIPRangeArgsForCall[i].icmpType, fake.updateIPRangeArgsForCall[i].icmpCode
+	return fake.updateIPRangeArgsForCall[i].tx, fake.updateIPRangeArgsForCall[i].destinationTerminalGUID, fake.updateIPRangeArgsForCall[i].description, fake.updateIPRangeArgsForCall[i].startIP, fake.updateIPRangeArgsForCall[i].endIP, fake.updateIPRangeArgsForCall[i].protocol, fake.updateIPRangeArgsForCall[i].startPort, fake.updateIPRangeArgsForCall[i].endPort, fake.updateIPRangeArgsForCall[i].icmpType, fake.updateIPRangeArgsForCall[i].icmpCode
 }
 
 func (fake *EgressDestinationRepo) UpdateIPRangeReturns(result1 error) {

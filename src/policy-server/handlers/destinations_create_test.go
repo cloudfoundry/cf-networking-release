@@ -52,15 +52,20 @@ var _ = Describe("Destinations create handler", func() {
 					"destinations": [
 						{  "name": "my service",
 						    "description": "my service is a great service",	
-						    "ips": [{"start": "7211.30.35.9", "end": "72.30.35.9"}],
-						     "ports": [{"start": 8080, "end": 8080}],
-						     "protocol":"tcp"
+							"rules": [
+								"description": "my rule",
+						    	"ips": [{"start": "7211.30.35.9", "end": "72.30.35.9"}],
+						     	"ports": [{"start": 8080, "end": 8080}],
+						     	"protocol":"tcp"
+							]
 						},
 						{  "name": "cloud infra",
 						    "description": "this is where my apps go",
-						    "ips": [{"start": "7211.30.35.9", "end": "72.30.35.9"}],
-						     "ports": [{"start": 8080, "end": 8080}],
-						     "protocol":"tcp"
+						    "rules": [
+								 "ips": [{"start": "7211.30.35.9", "end": "72.30.35.9"}],
+						    	 "ports": [{"start": 8080, "end": 8080}],
+						    	 "protocol":"tcp"
+							]
 						}
 					]
 				}`

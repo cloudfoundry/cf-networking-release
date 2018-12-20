@@ -12,8 +12,8 @@ import (
 //go:generate counterfeiter -o fakes/egress_destination_repo.go --fake-name EgressDestinationRepo . egressDestinationRepo
 type egressDestinationRepo interface {
 	All(tx db.Transaction) ([]EgressDestination, error)
-	CreateIPRange(tx db.Transaction, destinationTerminalGUID, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) error
-	UpdateIPRange(tx db.Transaction, destinationTerminalGUID, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) error
+	CreateIPRange(tx db.Transaction, destinationTerminalGUID, description, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) error
+	UpdateIPRange(tx db.Transaction, destinationTerminalGUID, description, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) error
 	GetByGUID(tx db.Transaction, guid ...string) ([]EgressDestination, error)
 	Delete(tx db.Transaction, guid string) error
 	GetByName(tx db.Transaction, name ...string) ([]EgressDestination, error)
@@ -141,6 +141,7 @@ func (e *EgressDestinationStore) Update(egressDestinations []EgressDestination) 
 			err = e.EgressDestinationRepo.CreateIPRange(
 				tx,
 				egressDestination.GUID,
+				rule.Description,
 				rule.IPRanges[0].Start,
 				rule.IPRanges[0].End,
 				rule.Protocol,
@@ -221,6 +222,7 @@ func (e *EgressDestinationStore) Create(egressDestinations []EgressDestination) 
 			err = e.EgressDestinationRepo.CreateIPRange(
 				tx,
 				destinationTerminalGUID,
+				rule.Description,
 				rule.IPRanges[0].Start,
 				rule.IPRanges[0].End,
 				rule.Protocol,

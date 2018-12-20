@@ -118,11 +118,13 @@ var _ = Describe("EgressDestinationStore", func() {
 						Description: "desc-1",
 						Rules: []store.EgressDestinationRule{
 							{
+								Description: "tcp rule",
 								Protocol: "tcp",
 								IPRanges: []store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}},
 								Ports:    []store.Ports{{Start: 8080, End: 8081}},
 							},
 							{
+								Description: "udp rule",
 								Protocol: "udp",
 								IPRanges: []store.IPRange{{Start: "10.20.20.20", End: "10.20.20.30"}},
 								Ports:    []store.Ports{{Start: 9080, End: 9081}},
@@ -157,9 +159,11 @@ var _ = Describe("EgressDestinationStore", func() {
 				Expect(createdDestinations[0].Rules[0].Protocol).To(Equal("tcp"))
 				Expect(createdDestinations[0].Rules[0].IPRanges).To(Equal([]store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}}))
 				Expect(createdDestinations[0].Rules[0].Ports).To(Equal([]store.Ports{{Start: 8080, End: 8081}}))
+				Expect(createdDestinations[0].Rules[0].Description).To(Equal("tcp rule"))
 				Expect(createdDestinations[0].Rules[1].Protocol).To(Equal("udp"))
 				Expect(createdDestinations[0].Rules[1].IPRanges).To(Equal([]store.IPRange{{Start: "10.20.20.20", End: "10.20.20.30"}}))
 				Expect(createdDestinations[0].Rules[1].Ports).To(Equal([]store.Ports{{Start: 9080, End: 9081}}))
+				Expect(createdDestinations[0].Rules[1].Description).To(Equal("udp rule"))
 
 				_, err = uuid.ParseHex(createdDestinations[1].GUID)
 				Expect(err).NotTo(HaveOccurred())
@@ -170,6 +174,7 @@ var _ = Describe("EgressDestinationStore", func() {
 				Expect(createdDestinations[1].Rules[0].IPRanges).To(Equal([]store.IPRange{{Start: "1.2.2.4", End: "1.2.2.5"}}))
 				Expect(createdDestinations[1].Rules[0].ICMPType).To(Equal(12))
 				Expect(createdDestinations[1].Rules[0].ICMPCode).To(Equal(13))
+				Expect(createdDestinations[1].Rules[0].Description).To(Equal(""))
 
 				By("listing")
 				destinations, err := egressDestinationsStore.All()
@@ -180,9 +185,11 @@ var _ = Describe("EgressDestinationStore", func() {
 				Expect(destinations[0].Rules[0].Protocol).To(Equal("tcp"))
 				Expect(destinations[0].Rules[0].IPRanges).To(Equal([]store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}}))
 				Expect(destinations[0].Rules[0].Ports).To(Equal([]store.Ports{{Start: 8080, End: 8081}}))
+				Expect(destinations[0].Rules[0].Description).To(Equal("tcp rule"))
 				Expect(destinations[0].Rules[1].Protocol).To(Equal("udp"))
 				Expect(destinations[0].Rules[1].IPRanges).To(Equal([]store.IPRange{{Start: "10.20.20.20", End: "10.20.20.30"}}))
 				Expect(destinations[0].Rules[1].Ports).To(Equal([]store.Ports{{Start: 9080, End: 9081}}))
+				Expect(destinations[0].Rules[1].Description).To(Equal("udp rule"))
 
 				Expect(destinations[1].GUID).To(Equal(createdDestinations[1].GUID))
 				Expect(destinations[1].Name).To(Equal("dest-2"))
@@ -192,6 +199,7 @@ var _ = Describe("EgressDestinationStore", func() {
 				Expect(destinations[1].Rules[0].Ports).To(HaveLen(0))
 				Expect(destinations[1].Rules[0].ICMPType).To(Equal(12))
 				Expect(destinations[1].Rules[0].ICMPCode).To(Equal(13))
+				Expect(destinations[1].Rules[0].Description).To(Equal(""))
 
 				By("getting")
 				destinations, err = egressDestinationsStore.GetByGUID(createdDestinations[0].GUID)
@@ -202,9 +210,11 @@ var _ = Describe("EgressDestinationStore", func() {
 				Expect(destinations[0].Rules[0].Protocol).To(Equal("tcp"))
 				Expect(destinations[0].Rules[0].IPRanges).To(Equal([]store.IPRange{{Start: "1.2.2.2", End: "1.2.2.3"}}))
 				Expect(destinations[0].Rules[0].Ports).To(Equal([]store.Ports{{Start: 8080, End: 8081}}))
+				Expect(destinations[0].Rules[0].Description).To(Equal("tcp rule"))
 				Expect(destinations[0].Rules[1].Protocol).To(Equal("udp"))
 				Expect(destinations[0].Rules[1].IPRanges).To(Equal([]store.IPRange{{Start: "10.20.20.20", End: "10.20.20.30"}}))
 				Expect(destinations[0].Rules[1].Ports).To(Equal([]store.Ports{{Start: 9080, End: 9081}}))
+				Expect(destinations[0].Rules[1].Description).To(Equal("udp rule"))
 
 				destinations, err = egressDestinationsStore.GetByGUID("unknown-guid")
 				Expect(err).NotTo(HaveOccurred())
@@ -238,9 +248,12 @@ var _ = Describe("EgressDestinationStore", func() {
 				destinationToUpdate1.Rules[0].Protocol = "tcp-updated"
 				destinationToUpdate1.Rules[0].IPRanges = []store.IPRange{{Start: "2.3.3.3", End: "2.3.3.4"}}
 				destinationToUpdate1.Rules[0].Ports = []store.Ports{{Start: 9090, End: 9091}}
+				destinationToUpdate1.Rules[0].Description = "tcp rule updated"
+
 				destinationToUpdate1.Rules[1].Protocol = "udp-updated"
 				destinationToUpdate1.Rules[1].IPRanges = []store.IPRange{{Start: "1.2.3.4", End: "5.6.7.8"}}
 				destinationToUpdate1.Rules[1].Ports = []store.Ports{{Start: 1234, End: 5678}}
+				destinationToUpdate1.Rules[1].Description = "udp rule updated"
 
 				destinationToUpdate2 := createdDestinations[1]
 				destinationToUpdate2.Name = "dest-2-updated"

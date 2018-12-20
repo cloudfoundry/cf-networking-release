@@ -72,6 +72,7 @@ var _ = Describe("External Destination API", func() {
 					Description: "tcp ips only desc",
 					Rules: []psclient.DestinationRule{
 						{
+							Description: "hello world",
 							Ports:    []psclient.Port{{Start: 8080, End: 8081}},
 							IPs:      []psclient.IPRange{{Start: "23.96.32.148", End: "23.96.32.149"}},
 							Protocol: "tcp",
@@ -99,6 +100,7 @@ var _ = Describe("External Destination API", func() {
 					Description: "icmp with type code",
 					Rules: []psclient.DestinationRule{
 						{
+							Description: "slamdance hammerpants",
 							ICMPType: &icmpType,
 							ICMPCode: &icmpCode,
 							IPs:      []psclient.IPRange{{Start: "23.96.32.150", End: "23.96.32.151"}},
@@ -125,6 +127,7 @@ var _ = Describe("External Destination API", func() {
 			Expect(createdDestinations[0].Description).To(Equal("tcp ips only desc"))
 			Expect(createdDestinations[0].Rules).To(Equal([]psclient.DestinationRule{
 				{
+					Description: "hello world",
 					Ports:    []psclient.Port{{Start: 8080, End: 8081}},
 					IPs:      []psclient.IPRange{{Start: "23.96.32.148", End: "23.96.32.149"}},
 					Protocol: "tcp",
@@ -154,6 +157,7 @@ var _ = Describe("External Destination API", func() {
 			Expect(createdDestinations[2].Description).To(Equal("icmp with type code"))
 			Expect(createdDestinations[2].Rules).To(Equal([]psclient.DestinationRule{
 				{
+					Description: "slamdance hammerpants",
 					IPs:      []psclient.IPRange{{Start: "23.96.32.150", End: "23.96.32.151"}},
 					Protocol: "icmp",
 					ICMPCode: &icmpCode,

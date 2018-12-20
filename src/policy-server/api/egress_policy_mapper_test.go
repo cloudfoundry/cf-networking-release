@@ -207,7 +207,7 @@ var _ = Describe("EgressPolicyMapper", func() {
 							"source": { "id": "some-src-id", "type": "app" },
 							"destination": {
 								"id": "some-dst-id",
-								"rules": [ { "ips": [{"start": "2.1.1.1", "end": "3.2.2.2"}] } ]
+								"rules": [ { "ips": [{"start": "2.1.1.1", "end": "3.2.2.2"}], "description": "" } ]
 							},
 							"app_lifecycle": "running"
 						},
@@ -220,6 +220,7 @@ var _ = Describe("EgressPolicyMapper", func() {
 								"description": "dest-desc",
 								"rules": [
 									{
+										"description": "",
 										"ips": [{"start": "1.1.1.1", "end": "2.2.2.2"}],
 										"ports": [{"start": 1212, "end": 2323}],
 										"protocol": "icmp",
