@@ -605,6 +605,7 @@ jobs:
           enable-experimental-dynamic-egress-policies.yml
           add-istio.yml
           enable-sidecar-proxying.yml
+          disable-ingress-redirect-to-proxy.yml
           enable-iptables-logger.yml
           use-postgres.yml
           scale-to-2-diego-cells.yml
@@ -856,6 +857,7 @@ jobs:
           enable-experimental-dynamic-egress-policies.yml
           add-istio.yml
           enable-sidecar-proxying.yml
+          disable-ingress-redirect-to-proxy.yml
           add-smoke-test-user.yml
           change-vtep-port.yml
           enable-rate-limiting-for-udp.yml
@@ -1303,6 +1305,7 @@ jobs:
           enable-experimental-dynamic-egress-policies.yml
           add-istio.yml
           enable-sidecar-proxying.yml
+          disable-ingress-redirect-to-proxy.yml
           enable-iptables-logger.yml
           change-nats-monitor-port.yml
           increase-diego-cell-mtu.yml
