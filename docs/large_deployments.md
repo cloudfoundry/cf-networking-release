@@ -5,6 +5,14 @@ These deployments have specific considerations that smaller deployments don't ne
 
 Please submit a PR or create an issue if you have come across other large deployment considerations.
 
+## Problem 0: Default overlay IP CIDR block too small when there are 250+ diego cells
+
+### Symptoms
+The silk daemon on some diego cells fails because it cannot get a lease.
+
+### Solution
+Increase the size of the [`silk-controller.network` CIDR job property](https://github.com/cloudfoundry/silk-release/blob/b949495e16b6c3acab765e139408a5db57fa27c0/jobs/silk-controller/spec#L31-L33). 
+
 ## Problem 1: Silk Daemon uses too much CPU
 ### Symptoms
 The silk daemon begins using too much CPU on the cells. This causes the app health checks to fail, which causes the apps to evacuate the cell.
