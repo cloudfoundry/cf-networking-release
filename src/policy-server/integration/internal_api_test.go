@@ -88,7 +88,7 @@ var _ = Describe("Internal API", func() {
 		createdDestinations, err := client.CreateDestinations("valid-token", psclient.Destination{
 			Rules: []psclient.DestinationRule{
 				{
-					IPs:      []psclient.IPRange{{Start: "10.27.1.1", End: "10.27.1.2"}},
+					IPs:      "10.27.1.1-10.27.1.2",
 					Ports:    []psclient.Port{{Start: 8080, End: 8081}},
 					Protocol: "tcp",
 				},
@@ -98,12 +98,12 @@ var _ = Describe("Internal API", func() {
 		}, psclient.Destination{
 			Rules: []psclient.DestinationRule{
 				{
-					IPs:      []psclient.IPRange{{Start: "10.27.1.3", End: "10.27.1.3"}},
+					IPs:      "10.27.1.3-10.27.1.3",
 					Ports:    []psclient.Port{{Start: 8080, End: 8081}},
 					Protocol: "tcp",
 				},
 				{
-					IPs:      []psclient.IPRange{{Start: "10.27.1.4", End: "10.27.1.4"}},
+					IPs:      "10.27.1.4-10.27.1.4",
 					Ports:    []psclient.Port{{Start: 80, End: 81}},
 					Protocol: "tcp",
 				},

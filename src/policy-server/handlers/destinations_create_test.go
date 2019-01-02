@@ -1,17 +1,15 @@
 package handlers_test
 
 import (
+	"bytes"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"policy-server/handlers"
 	"policy-server/handlers/fakes"
-	"policy-server/uaa_client"
-
 	"policy-server/store"
 	storeFakes "policy-server/store/fakes"
-
-	"bytes"
-	"errors"
+	"policy-server/uaa_client"
 
 	"code.cloudfoundry.org/cf-networking-helpers/httperror"
 	"code.cloudfoundry.org/lager/lagertest"
@@ -54,7 +52,7 @@ var _ = Describe("Destinations create handler", func() {
 						    "description": "my service is a great service",	
 							"rules": [
 								"description": "my rule",
-						    	"ips": [{"start": "7211.30.35.9", "end": "72.30.35.9"}],
+						    	"ips": "211.30.35.9-72.30.35.9",
 						     	"ports": [{"start": 8080, "end": 8080}],
 						     	"protocol":"tcp"
 							]
@@ -62,7 +60,7 @@ var _ = Describe("Destinations create handler", func() {
 						{  "name": "cloud infra",
 						    "description": "this is where my apps go",
 						    "rules": [
-								 "ips": [{"start": "7211.30.35.9", "end": "72.30.35.9"}],
+								 "ips": "211.30.35.9-72.30.35.9",
 						    	 "ports": [{"start": 8080, "end": 8080}],
 						    	 "protocol":"tcp"
 							]

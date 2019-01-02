@@ -8,7 +8,6 @@ import (
 	"policy-server/store"
 
 	hfakes "code.cloudfoundry.org/cf-networking-helpers/fakes"
-
 	"code.cloudfoundry.org/cf-networking-helpers/marshal"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -207,7 +206,7 @@ var _ = Describe("EgressPolicyMapper", func() {
 							"source": { "id": "some-src-id", "type": "app" },
 							"destination": {
 								"id": "some-dst-id",
-								"rules": [ { "ips": [{"start": "2.1.1.1", "end": "3.2.2.2"}], "description": "" } ]
+								"rules": [ { "ips": "2.1.1.1-3.2.2.2", "description": "" } ]
 							},
 							"app_lifecycle": "running"
 						},
@@ -221,7 +220,7 @@ var _ = Describe("EgressPolicyMapper", func() {
 								"rules": [
 									{
 										"description": "",
-										"ips": [{"start": "1.1.1.1", "end": "2.2.2.2"}],
+										"ips": "1.1.1.1-2.2.2.2",
 										"ports": [{"start": 1212, "end": 2323}],
 										"protocol": "icmp",
 										"icmp_type": 4,

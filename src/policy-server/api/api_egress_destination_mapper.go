@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"policy-server/store"
+	"strings"
 
 	"code.cloudfoundry.org/cf-networking-helpers/marshal"
 )
@@ -85,14 +86,10 @@ func asApiEgressDestination(storeEgressDestination store.EgressDestination) Egre
 			icmpCode = &rule.ICMPCode
 		}
 
-		firstIPRange := rule.IPRanges[0]
 		apiEgressDestination.Rules = append(apiEgressDestination.Rules, EgressDestinationRule{
-			Protocol: rule.Protocol,
-			Ports:    ports,
-			IPRanges: []IPRange{{
-				Start: firstIPRange.Start,
-				End:   firstIPRange.End,
-			}},
+			Protocol:    rule.Protocol,
+			Ports:       ports,
+			IPRanges:    fmt.Sprintf("%s-%s", rule.IPRanges[0].Start, rule.IPRanges[0].End),
 			ICMPType:    icmpType,
 			ICMPCode:    icmpCode,
 			Description: rule.Description,
@@ -111,14 +108,13 @@ func (d *EgressDestination) asStoreEgressDestination() store.EgressDestination {
 
 	for _, rule := range d.Rules {
 		ipRanges := []store.IPRange{}
-		for _, apiIPRange := range rule.IPRanges {
-			ipRanges = append(ipRanges, store.IPRange{
-				Start: apiIPRange.Start,
-				End:   apiIPRange.End,
-			})
-		}
-		ports := []store.Ports{}
+		splitRange := strings.Split(rule.IPRanges, "-")
+		ipRanges = append(ipRanges, store.IPRange{
+			Start: splitRange[0],
+			End:   splitRange[1],
+		})
 
+		ports := []store.Ports{}
 		for _, apiPorts := range rule.Ports {
 			ports = append(ports, store.Ports{
 				Start: apiPorts.Start,

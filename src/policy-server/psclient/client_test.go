@@ -38,12 +38,7 @@ var _ = Describe("Client", func() {
 				Rules: []psclient.DestinationRule{
 					{
 						Protocol: "tcp",
-						IPs: []psclient.IPRange{
-							{
-								Start: "1.2.3.4",
-								End:   "1.2.3.5",
-							},
-						},
+						IPs:      "1.2.3.4-1.2.3.5",
 						Ports: []psclient.Port{
 							{
 								Start: 8080,
@@ -53,12 +48,7 @@ var _ = Describe("Client", func() {
 					},
 					{
 						Protocol: "tcp",
-						IPs: []psclient.IPRange{
-							{
-								Start: "10.20.30.40",
-								End:   "10.20.30.50",
-							},
-						},
+						IPs:      "10.20.30.40-10.20.30.50",
 						Ports: []psclient.Port{
 							{
 								Start: 80,
@@ -75,12 +65,7 @@ var _ = Describe("Client", func() {
 				Rules: []psclient.DestinationRule{
 					{
 						Protocol: "tcp",
-						IPs: []psclient.IPRange{
-							{
-								Start: "2.2.3.4",
-								End:   "2.2.3.5",
-							},
-						},
+						IPs:      "2.2.3.4-2.2.3.5",
 						Ports: []psclient.Port{
 							{
 								Start: 8081,
@@ -205,11 +190,11 @@ var _ = Describe("Client", func() {
 					     "name": "name-received-from-server",
 					     "description": "description-received-from-server",
 							 "rules": [{
-								 "ips": [{"start": "8.8.8.8", "end": "8.8.8.8"}],
+								 "ips": "8.8.8.8-8.8.8.8",
 								 "ports": [{"start": 8080, "end": 8080}],
 								 "protocol": "tcp"
 							 }, {
-								 "ips": [{"start": "9.9.9.9", "end": "9.9.9.9"}],
+								 "ips": "9.9.9.9-9.9.9.9",
 								 "ports": [{"start": 80, "end": 80}],
 								 "protocol": "tcp"
 							 }]
@@ -219,7 +204,7 @@ var _ = Describe("Client", func() {
 					     "name": "name-received-from-server",
 					     "description": "description-received-from-server",
 							 "rules": [{
-								 "ips": [{"start": "8.8.8.8", "end": "8.8.8.8"}],
+								 "ips": "8.8.8.8-8.8.8.8",
 								 "ports": [{"start": 8080, "end": 8080}],
 								 "protocol": "tcp"
 							 }]
@@ -245,12 +230,12 @@ var _ = Describe("Client", func() {
 						Description: "description-received-from-server",
 						Rules: []psclient.DestinationRule{
 							{
-								IPs:      []psclient.IPRange{{Start: "8.8.8.8", End: "8.8.8.8"}},
+								IPs:      "8.8.8.8-8.8.8.8",
 								Ports:    []psclient.Port{{Start: 8080, End: 8080}},
 								Protocol: "tcp",
 							},
 							{
-								IPs:      []psclient.IPRange{{Start: "9.9.9.9", End: "9.9.9.9"}},
+								IPs:      "9.9.9.9-9.9.9.9",
 								Ports:    []psclient.Port{{Start: 80, End: 80}},
 								Protocol: "tcp",
 							},
@@ -262,7 +247,7 @@ var _ = Describe("Client", func() {
 						Description: "description-received-from-server",
 						Rules: []psclient.DestinationRule{
 							{
-								IPs:      []psclient.IPRange{{Start: "8.8.8.8", End: "8.8.8.8"}},
+								IPs:      "8.8.8.8-8.8.8.8",
 								Ports:    []psclient.Port{{Start: 8080, End: 8080}},
 								Protocol: "tcp",
 							},
@@ -325,9 +310,7 @@ var _ = Describe("Client", func() {
 						Rules: []psclient.DestinationRule{
 							{
 								Protocol: "tcp",
-								IPs: []psclient.IPRange{
-									{Start: "1.1.1.1", End: "1.1.1.5"},
-								},
+								IPs:      "1.1.1.1-1.1.1.5",
 								Ports: []psclient.Port{
 									{Start: 1234, End: 2345},
 								},

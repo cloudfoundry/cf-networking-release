@@ -33,11 +33,11 @@ type Destination struct {
 
 type DestinationRule struct {
 	Description string
-	Protocol string
-	IPs      []IPRange
-	Ports    []Port
-	ICMPType *int `json:"icmp_type,omitempty"`
-	ICMPCode *int `json:"icmp_code,omitempty"`
+	Protocol    string
+	IPs         string
+	Ports       []Port
+	ICMPType    *int `json:"icmp_type,omitempty"`
+	ICMPCode    *int `json:"icmp_code,omitempty"`
 }
 
 type DestinationList struct {

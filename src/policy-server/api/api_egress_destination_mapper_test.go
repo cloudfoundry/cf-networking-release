@@ -1,17 +1,15 @@
 package api_test
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-
 	"encoding/json"
+	"errors"
 	"policy-server/api"
 	"policy-server/api/fakes"
 	"policy-server/store"
 
-	"errors"
-
 	"code.cloudfoundry.org/cf-networking-helpers/marshal"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("ApiEgressDestinationMapper", func() {
@@ -40,7 +38,7 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 					Rules: []store.EgressDestinationRule{
 						{
 							Description: "hello friends",
-							Protocol: "tcp",
+							Protocol:    "tcp",
 							Ports: []store.Ports{{
 								Start: 8080,
 								End:   8081,
@@ -59,7 +57,7 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 						},
 						{
 							Description: "marshal me",
-							Protocol: "icmp",
+							Protocol:    "icmp",
 							IPRanges: []store.IPRange{{
 								Start: "10.20.30.40",
 								End:   "10.20.30.50",
@@ -114,17 +112,17 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 									"description": "hello friends",
 									"protocol": "tcp",
 									"ports": [{ "start": 8080, "end": 8081 }],
-									"ips": [{ "start": "1.2.3.4", "end": "1.2.3.5" }]
+									"ips": "1.2.3.4-1.2.3.5"
 								},
 								{
 									"description": "",
 									"protocol": "udp",
-									"ips": [{ "start": "10.20.30.40", "end": "10.20.30.50" }]
+									"ips": "10.20.30.40-10.20.30.50"
 								},
 								{
 									"description": "marshal me",
 									"protocol": "icmp",
-									"ips": [{ "start": "10.20.30.40", "end": "10.20.30.50" }],
+									"ips": "10.20.30.40-10.20.30.50",
 									"icmp_type": 2,
 									"icmp_code": 3
 								}
@@ -137,7 +135,7 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 								{
 									"description": "",
 									"protocol": "icmp",
-									"ips": [{ "start": "1.2.3.7", "end": "1.2.3.8" }],
+									"ips": "1.2.3.7-1.2.3.8",
 									"icmp_type": 1,
 									"icmp_code": 6
 								}
@@ -149,7 +147,7 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 								{
 									"description": "",
 									"protocol": "udp",
-									"ips": [{ "start": "1.2.3.7", "end": "1.2.3.8" }]
+									"ips": "1.2.3.7-1.2.3.8"
 								}
 							]
 						}
@@ -173,11 +171,11 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 									"description": "hamdinger",
 									"protocol": "tcp",
 									"ports": [{ "start": 8080, "end": 8081 }],
-									"ips": [{ "start": "1.2.3.4", "end": "1.2.3.5" }]
+									"ips": "1.2.3.4-1.2.3.5"
 								},
 								{
 									"protocol": "icmp",
-									"ips": [{ "start": "10.20.30.70", "end": "10.20.30.80" }],
+									"ips": "10.20.30.70-10.20.30.80",
 									"icmp_type": 2,
 									"icmp_code": 3
 								}
@@ -190,7 +188,7 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 								{
 									"description": "rule 2 by blur",
 									"protocol": "icmp",
-									"ips": [{ "start": "1.2.3.7", "end": "1.2.3.8" }],
+									"ips": "1.2.3.7-1.2.3.8",
 									"icmp_type": 1,
 									"icmp_code": 6
 								}
@@ -202,7 +200,7 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 							"rules": [
 								{
 									"protocol": "icmp",
-									"ips": [{ "start": "1.2.3.7", "end": "1.2.3.8" }]
+									"ips": "1.2.3.7-1.2.3.8"
 								}
 							]
 						},
@@ -211,7 +209,7 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 							"rules": [
 								{
 									"protocol": "udp",
-									"ips": [{ "start": "1.2.3.7", "end": "1.2.3.8" }]
+									"ips": "1.2.3.7-1.2.3.8"
 								}
 							]
 						},
@@ -221,7 +219,7 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 								{
 									"description": "the fifth rule sorry not sorry",
 									"protocol": "all",
-									"ips": [{ "start": "1.2.3.7", "end": "1.2.3.8" }]
+									"ips": "1.2.3.7-1.2.3.8"
 								}
 							]
 						}
@@ -240,7 +238,7 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 						Rules: []store.EgressDestinationRule{
 							{
 								Description: "hamdinger",
-								Protocol: "tcp",
+								Protocol:    "tcp",
 								Ports: []store.Ports{{
 									Start: 8080,
 									End:   8081,
@@ -268,8 +266,8 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 						Rules: []store.EgressDestinationRule{
 							{
 								Description: "rule 2 by blur",
-								Protocol: "icmp",
-								Ports:    []store.Ports{},
+								Protocol:    "icmp",
+								Ports:       []store.Ports{},
 								IPRanges: []store.IPRange{{
 									Start: "1.2.3.7",
 									End:   "1.2.3.8",
@@ -313,8 +311,8 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 						Rules: []store.EgressDestinationRule{
 							{
 								Description: "the fifth rule sorry not sorry",
-								Protocol: "all",
-								Ports:    []store.Ports{},
+								Protocol:    "all",
+								Ports:       []store.Ports{},
 								IPRanges: []store.IPRange{{
 									Start: "1.2.3.7",
 									End:   "1.2.3.8",

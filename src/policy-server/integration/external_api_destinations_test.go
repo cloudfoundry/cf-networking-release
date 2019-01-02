@@ -8,15 +8,13 @@ import (
 	"policy-server/psclient"
 	"regexp"
 
-	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/lager/lagertest"
-	"github.com/nu7hatch/gouuid"
-
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
-
+	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/lager/lagertest"
+	"github.com/nu7hatch/gouuid"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
@@ -73,13 +71,13 @@ var _ = Describe("External Destination API", func() {
 					Rules: []psclient.DestinationRule{
 						{
 							Description: "hello world",
-							Ports:    []psclient.Port{{Start: 8080, End: 8081}},
-							IPs:      []psclient.IPRange{{Start: "23.96.32.148", End: "23.96.32.149"}},
-							Protocol: "tcp",
+							Ports:       []psclient.Port{{Start: 8080, End: 8081}},
+							IPs:         "23.96.32.148-23.96.32.149",
+							Protocol:    "tcp",
 						},
 						{
 							Ports:    []psclient.Port{{Start: 1000, End: 1001}},
-							IPs:      []psclient.IPRange{{Start: "10.10.10.148", End: "10.10.10.149"}},
+							IPs:      "10.10.10.148-10.10.10.149",
 							Protocol: "tcp",
 						},
 					},
@@ -91,7 +89,7 @@ var _ = Describe("External Destination API", func() {
 						{
 							Protocol: "udp",
 							Ports:    []psclient.Port{{Start: 8080, End: 8081}},
-							IPs:      []psclient.IPRange{{Start: "23.96.32.150", End: "23.96.32.151"}},
+							IPs:      "23.96.32.150-23.96.32.151",
 						},
 					},
 				},
@@ -101,10 +99,10 @@ var _ = Describe("External Destination API", func() {
 					Rules: []psclient.DestinationRule{
 						{
 							Description: "slamdance hammerpants",
-							ICMPType: &icmpType,
-							ICMPCode: &icmpCode,
-							IPs:      []psclient.IPRange{{Start: "23.96.32.150", End: "23.96.32.151"}},
-							Protocol: "icmp",
+							ICMPType:    &icmpType,
+							ICMPCode:    &icmpCode,
+							IPs:         "23.96.32.150-23.96.32.151",
+							Protocol:    "icmp",
 						},
 					},
 				},
@@ -128,13 +126,13 @@ var _ = Describe("External Destination API", func() {
 			Expect(createdDestinations[0].Rules).To(Equal([]psclient.DestinationRule{
 				{
 					Description: "hello world",
-					Ports:    []psclient.Port{{Start: 8080, End: 8081}},
-					IPs:      []psclient.IPRange{{Start: "23.96.32.148", End: "23.96.32.149"}},
-					Protocol: "tcp",
+					Ports:       []psclient.Port{{Start: 8080, End: 8081}},
+					IPs:         "23.96.32.148-23.96.32.149",
+					Protocol:    "tcp",
 				},
 				{
 					Ports:    []psclient.Port{{Start: 1000, End: 1001}},
-					IPs:      []psclient.IPRange{{Start: "10.10.10.148", End: "10.10.10.149"}},
+					IPs:      "10.10.10.148-10.10.10.149",
 					Protocol: "tcp",
 				},
 			}))
@@ -146,7 +144,7 @@ var _ = Describe("External Destination API", func() {
 			Expect(createdDestinations[1].Rules).To(Equal([]psclient.DestinationRule{
 				{
 					Ports:    []psclient.Port{{Start: 8080, End: 8081}},
-					IPs:      []psclient.IPRange{{Start: "23.96.32.150", End: "23.96.32.151"}},
+					IPs:      "23.96.32.150-23.96.32.151",
 					Protocol: "udp",
 				},
 			}))
@@ -158,10 +156,10 @@ var _ = Describe("External Destination API", func() {
 			Expect(createdDestinations[2].Rules).To(Equal([]psclient.DestinationRule{
 				{
 					Description: "slamdance hammerpants",
-					IPs:      []psclient.IPRange{{Start: "23.96.32.150", End: "23.96.32.151"}},
-					Protocol: "icmp",
-					ICMPCode: &icmpCode,
-					ICMPType: &icmpType,
+					IPs:         "23.96.32.150-23.96.32.151",
+					Protocol:    "icmp",
+					ICMPCode:    &icmpCode,
+					ICMPType:    &icmpType,
 				},
 			}))
 
@@ -197,7 +195,7 @@ var _ = Describe("External Destination API", func() {
 					Rules: []psclient.DestinationRule{
 						{
 							Ports:    []psclient.Port{{Start: 8080, End: 8081}},
-							IPs:      []psclient.IPRange{{Start: "23.96.32.148", End: "23.96.32.149"}},
+							IPs:      "23.96.32.148-23.96.32.149",
 							Protocol: "tcp",
 						},
 					},

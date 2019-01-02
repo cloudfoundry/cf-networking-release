@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strings"
 )
 
 type EgressDestinationsValidator struct{}
@@ -71,24 +72,24 @@ func (v *EgressDestinationsValidator) ValidateEgressDestinations(destinations []
 				return errors.New("missing destination IP range")
 			}
 
-			if len(rule.IPRanges) > 1 {
+			if len(strings.Split(rule.IPRanges, ",")) > 1 {
 				return errors.New("only one IP range is currently supported")
 			}
 
-			for _, ipRange := range rule.IPRanges {
-				startIP := net.ParseIP(ipRange.Start)
-				if startIP == nil || startIP.To4() == nil {
-					return fmt.Errorf("invalid ip address '%s', must be a valid IPv4 address", ipRange.Start)
-				}
+			splitIPS := strings.Split(rule.IPRanges, "-")
+			startIPString, endIPString := splitIPS[0], splitIPS[1]
+			startIP := net.ParseIP(startIPString)
+			if startIP == nil || startIP.To4() == nil {
+				return fmt.Errorf("invalid ip address '%s', must be a valid IPv4 address", startIPString)
+			}
 
-				endIP := net.ParseIP(ipRange.End)
-				if endIP == nil || endIP.To4() == nil {
-					return fmt.Errorf("invalid ip address '%s', must be a valid IPv4 address", ipRange.End)
-				}
+			endIP := net.ParseIP(endIPString)
+			if endIP == nil || endIP.To4() == nil {
+				return fmt.Errorf("invalid ip address '%s', must be a valid IPv4 address", endIPString)
+			}
 
-				if bytes.Compare(startIP, endIP) > 0 {
-					return fmt.Errorf("invalid IP range %s-%s, start must be less than or equal to end", ipRange.Start, ipRange.End)
-				}
+			if bytes.Compare(startIP, endIP) > 0 {
+				return fmt.Errorf("invalid IP range %s-%s, start must be less than or equal to end", startIPString, endIPString)
 			}
 		}
 	}

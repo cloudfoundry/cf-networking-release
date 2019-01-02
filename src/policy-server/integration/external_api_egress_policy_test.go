@@ -72,13 +72,8 @@ var _ = Describe("External API Egress Policies", func() {
 			Rules: []psclient.DestinationRule{
 				{
 					Description: "dis is cool",
-					Protocol: "tcp",
-					IPs: []psclient.IPRange{
-						{
-							Start: "1.2.3.4",
-							End:   "1.2.3.5",
-						},
-					},
+					Protocol:    "tcp",
+					IPs:         "1.2.3.4-1.2.3.5",
 					Ports: []psclient.Port{
 						{
 							Start: 8080,
@@ -95,12 +90,7 @@ var _ = Describe("External API Egress Policies", func() {
 			Rules: []psclient.DestinationRule{
 				{
 					Protocol: "udp",
-					IPs: []psclient.IPRange{
-						{
-							Start: "3.2.3.4",
-							End:   "3.2.3.5",
-						},
-					},
+					IPs:      "3.2.3.4-3.2.3.5",
 					Ports: []psclient.Port{
 						{
 							Start: 8082,
@@ -117,13 +107,8 @@ var _ = Describe("External API Egress Policies", func() {
 			Rules: []psclient.DestinationRule{
 				{
 					Description: "meow rule description",
-					Protocol: "all",
-					IPs: []psclient.IPRange{
-						{
-							Start: "3.2.3.4",
-							End:   "3.2.3.5",
-						},
-					},
+					Protocol:    "all",
+					IPs:         "3.2.3.4-3.2.3.5",
 					Ports: []psclient.Port{
 						{
 							Start: 8082,

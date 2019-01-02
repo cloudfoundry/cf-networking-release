@@ -16,10 +16,9 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
 	"code.cloudfoundry.org/lager/lagertest"
-	"github.com/onsi/gomega/gexec"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gexec"
 )
 
 var _ = Describe("EnforceExperimentalDynamicEgressPolicies Flag", func() {
@@ -87,7 +86,7 @@ var _ = Describe("EnforceExperimentalDynamicEgressPolicies Flag", func() {
 		createdDestinations, err := client.CreateDestinations("valid-token", psclient.Destination{
 			Rules: []psclient.DestinationRule{
 				{
-					IPs:      []psclient.IPRange{{Start: "10.27.1.1", End: "10.27.1.2"}},
+					IPs:      "10.27.1.1-10.27.1.2",
 					Ports:    []psclient.Port{{Start: 8080, End: 8081}},
 					Protocol: "tcp",
 				},
@@ -97,7 +96,7 @@ var _ = Describe("EnforceExperimentalDynamicEgressPolicies Flag", func() {
 		}, psclient.Destination{
 			Rules: []psclient.DestinationRule{
 				{
-					IPs:      []psclient.IPRange{{Start: "10.27.1.3", End: "10.27.1.3"}},
+					IPs:      "10.27.1.3-10.27.1.3",
 					Ports:    []psclient.Port{{Start: 8080, End: 8081}},
 					Protocol: "tcp",
 				},

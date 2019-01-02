@@ -76,12 +76,12 @@ type EgressDestination struct {
 }
 
 type EgressDestinationRule struct {
-	Description string    `json:"description"`
-	Protocol    string    `json:"protocol,omitempty"`
-	Ports       []Ports   `json:"ports,omitempty"`
-	IPRanges    []IPRange `json:"ips,omitempty"`
-	ICMPType    *int      `json:"icmp_type,omitempty"`
-	ICMPCode    *int      `json:"icmp_code,omitempty"`
+	Description string  `json:"description"`
+	Protocol    string  `json:"protocol,omitempty"`
+	Ports       []Ports `json:"ports,omitempty"`
+	IPRanges    string  `json:"ips,omitempty"`
+	ICMPType    *int    `json:"icmp_type,omitempty"`
+	ICMPCode    *int    `json:"icmp_code,omitempty"`
 }
 
 type Source struct {
