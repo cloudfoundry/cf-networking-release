@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"net/http"
-
 	"regexp"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
@@ -47,7 +46,7 @@ var _ = Describe("ASG/Dynamic Egress Interaction", func() {
 						{
 							"protocol": "tcp",
 							"ports": [ { "start": 80, "end": 80 }  ],
-							"ips": [ { "start": "93.184.216.34", "end": "93.184.216.34" } ]
+							"ips": "93.184.216.34-93.184.216.34"
 						}
 					]
 				} ]
@@ -60,7 +59,7 @@ var _ = Describe("ASG/Dynamic Egress Interaction", func() {
 						{
 							"protocol": "tcp",
 							"ports": [ { "start": 80, "end": 443 } ],
-							"ips": [ { "start": "198.35.26.96", "end": "198.35.26.96" } ]
+							"ips": "198.35.26.96-198.35.26.96"
 						}
 					]
 				} ]

@@ -8,7 +8,6 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
-
 	"regexp"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
@@ -36,15 +35,15 @@ var _ = Describe("external connectivity", func() {
 						{
 							"protocol": "tcp",
 							"ports": [ { "start": 1, "end": 65535 } ],
-							"ips": [ { "start": "0.0.0.0", "end": "255.255.255.255" } ]
+							"ips": "0.0.0.0-255.255.255.255"
 						},
 						{
 							"protocol": "icmp",
-							"ips": [ { "start": "1.1.1.1", "end": "1.1.1.1" } ]
+							"ips": "1.1.1.1-1.1.1.1"
 						},
 						{
 							"protocol": "icmp",
-							"ips": [ { "start": "8.8.8.8", "end": "8.8.8.8" } ]
+							"ips": "8.8.8.8-8.8.8.8"
 						}
 					]
 				}
@@ -59,7 +58,7 @@ var _ = Describe("external connectivity", func() {
 						{
 							"protocol": "all",
 							"ports": [ { "start": 1, "end": 65535 } ],
-							"ips": [ { "start": "0.0.0.0", "end": "255.255.255.255" } ]
+							"ips": "0.0.0.0-255.255.255.255"
 						}
 					]
 				}
