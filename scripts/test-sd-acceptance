@@ -30,9 +30,9 @@ echo "
 }
 " > ${CONFIG}
 
-ADMIN_PASSWORD=`grep cf_admin_password ${VARS_STORE} | cut -d' ' -f2`
+ADMIN_PASSWORD="$(credhub get -n "/bosh-${ENVIRONMENT_NAME}/cf/cf_admin_password" | bosh int --path /value -)"
 sed -i -- "s/{{admin-password}}/${ADMIN_PASSWORD}/g" /tmp/test-config.json
-ADMIN_SECRET=`grep uaa_admin_client_secret ${VARS_STORE} | cut -d' ' -f2`
+ADMIN_SECRET=$(credhub get -n "/bosh-${ENVIRONMENT_NAME}/cf/uaa_admin_client_secret" | bosh int --path /value -)
 sed -i -- "s/{{admin-secret}}/${ADMIN_SECRET}/g" /tmp/test-config.json
 
 ginkgo -v ../src/test/acceptance-sd
