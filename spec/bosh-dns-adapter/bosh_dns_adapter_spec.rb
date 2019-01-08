@@ -17,7 +17,8 @@ module Bosh::Template::Test
         ],
         'internal_service_mesh_domains' => [
           'myistio.internal.app.domain.'
-        ]
+        ],
+        "internal_route_vip_range" => "127.128.0.0/8",
       }
     end
 
@@ -29,6 +30,12 @@ module Bosh::Template::Test
               name: 'service-discovery-controller',
               properties: {
                 'port' => 1234
+              }
+            ),
+            Link.new(
+              name: 'cloud_controller_container_networking_info',
+              properties: {
+                'cc' => {'internal_route_vip_range' => '192.168.0.1/24'}
               }
             )
           ]
@@ -47,7 +54,8 @@ module Bosh::Template::Test
           "port" => "8053",
           "service_discovery_controller_address" => "service-discovery-controller.service.cf.internal",
           "service_discovery_controller_port" => "1234",
-          "internal_service_mesh_domains" => []
+          "internal_service_mesh_domains" => [],
+          "internal_route_vip_range" => "192.168.0.1/24"
         })
       end
 
@@ -74,6 +82,7 @@ module Bosh::Template::Test
           "port" => "8053",
           "service_discovery_controller_address" => "service-discovery-controller.service.cf.internal",
           "service_discovery_controller_port" => "1234",
+          "internal_route_vip_range" => "127.128.0.0/8",
           "internal_service_mesh_domains" => ['myistio.internal.app.domain.']
         })
         end

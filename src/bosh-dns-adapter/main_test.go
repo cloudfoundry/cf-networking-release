@@ -33,6 +33,7 @@ var _ = Describe("Main", func() {
 		dnsAdapterPort                         string
 		fakeMetron                             metrics.FakeMetron
 		logLevelPort                           int
+		internalRouteVIPRange                  string
 	)
 
 	BeforeEach(func() {
@@ -56,6 +57,7 @@ var _ = Describe("Main", func() {
 				}`),
 		)}
 		dnsAdapterAddress = "127.0.0.1"
+		internalRouteVIPRange = "127.0.0.0/24"
 
 		dnsAdapterPort = fmt.Sprintf("%d", ports.PickAPort())
 		logLevelPort = ports.PickAPort()
@@ -91,7 +93,8 @@ var _ = Describe("Main", func() {
 			"metrics_emit_seconds": 2,
 			"log_level_port": %d,
 			"log_level_address": "127.0.0.1",
-			"internal_service_mesh_domains" : ["istio.local."]
+			"internal_service_mesh_domains" : ["istio.local."],
+			"internal_route_vip_range": "%s"
 		}`, dnsAdapterAddress,
 			dnsAdapterPort,
 			strings.TrimPrefix(urlParts[1], "//"),
@@ -101,6 +104,7 @@ var _ = Describe("Main", func() {
 			caFileName,
 			fakeMetron.Port(),
 			logLevelPort,
+			internalRouteVIPRange,
 		)
 
 		tempConfigFile, err = ioutil.TempFile(os.TempDir(), "sd")
@@ -200,7 +204,7 @@ var _ = Describe("Main", func() {
 							"name": "app-id.istio.local.",
 							"type": 1,
 							"TTL":  0,
-							"data": "127.185.28.26"
+							"data": "127.0.0.26"
 						}
 					],
 					"Additional": [ ],

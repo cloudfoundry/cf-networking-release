@@ -7,6 +7,14 @@ def internal_service_mesh_domains
   end
 end
 
+def internal_route_vip_range
+  if_p('internal_route_vip_range') do |prop|
+    return prop
+  end.else do
+    link("cloud_controller_container_networking_info").p("cc.internal_route_vip_range")
+  end
+end
+
 config = {
     "address" => p('address'),
     "port" => "#{p('port')}",
@@ -19,7 +27,8 @@ config = {
     "metrics_emit_seconds" => 10,
     "log_level_address" => p("log_level_address"),
     "log_level_port" => p("log_level_port"),
-    "internal_service_mesh_domains" => internal_service_mesh_domains
+    "internal_service_mesh_domains" => internal_service_mesh_domains,
+    "internal_route_vip_range" => internal_route_vip_range,
 }
 
 require 'json'

@@ -64,6 +64,8 @@ func main() {
 		config.ServiceDiscoveryControllerPort,
 	)
 
+	vipRangeCIDR := config.GetInternalRouteVIPRangeCIDR()
+
 	metronAddress := fmt.Sprintf("127.0.0.1:%d", config.MetronPort)
 	err = dropsonde.Initialize(metronAddress, "bosh-dns-adapter")
 	if err != nil {
@@ -121,8 +123,7 @@ func main() {
 			var duration int64
 			if hasInternalServiceMeshDomain(name, config.InternalServiceMeshDomains) {
 				// hardcoded default VIPCIDR for dev
-				_, cidr, _ := net.ParseCIDR("127.128.0.0/9")
-				provider := &vip.Provider{CIDR: cidr}
+				provider := &vip.Provider{CIDR: vipRangeCIDR}
 				// Copilot consumes internal routes without a trailing dot from CAPI
 				nameNoTrailingDot := strings.TrimRight(name, ".")
 				ips = []string{provider.Get(nameNoTrailingDot)}

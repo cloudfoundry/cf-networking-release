@@ -2,17 +2,22 @@ package config_test
 
 import (
 	. "bosh-dns-adapter/config"
+	"net"
 
 	"encoding/json"
 	"fmt"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Config", func() {
+
+	var parsedConfig *Config
+	var err error
 	Context("when created from valid JSON", func() {
-		It("contains the values in the JSON", func() {
+		BeforeEach(func() {
 			configJSON := []byte(`{
 				"address":"example.com",
 				"port":"80053",
@@ -24,12 +29,13 @@ var _ = Describe("Config", func() {
 				"metrics_emit_seconds": 6,
 				"metron_port": 8080,
 				"log_level_address": "log-level-address",
+				"internal_route_vip_range": "127.128.0.0/24",
 				"log_level_port": 9090
-
 			}`)
-
-			parsedConfig, err := NewConfig(configJSON)
+			parsedConfig, err = NewConfig(configJSON)
 			Expect(err).ToNot(HaveOccurred())
+		})
+		It("contains the values in the JSON", func() {
 
 			Expect(parsedConfig.Address).To(Equal("example.com"))
 			Expect(parsedConfig.Port).To(Equal("80053"))
@@ -43,6 +49,15 @@ var _ = Describe("Config", func() {
 			Expect(parsedConfig.MetronPort).To(Equal(8080))
 			Expect(parsedConfig.LogLevelAddress).To(Equal("log-level-address"))
 			Expect(parsedConfig.LogLevelPort).To(Equal(9090))
+			Expect(parsedConfig.InternalRouteVIPRange).To(Equal("127.128.0.0/24"))
+		})
+		It("returns a parsed CIDR struct", func() {
+			cidr := parsedConfig.GetInternalRouteVIPRangeCIDR()
+			expectedCIDR := &net.IPNet{
+				IP:   net.IP{127, 128, 0, 0},
+				Mask: net.IPMask{255, 255, 255, 0},
+			}
+			Expect(cidr).To(Equal(expectedCIDR))
 		})
 	})
 
@@ -57,8 +72,8 @@ var _ = Describe("Config", func() {
 	var requiredFields map[string]interface{}
 	BeforeEach(func() {
 		requiredFields = map[string]interface{}{
-			"address":                              "example.com",
-			"port":                                 "80053",
+			"address": "example.com",
+			"port":    "80053",
 			"service_discovery_controller_address": "example.com",
 			"service_discovery_controller_port":    "80053",
 			"client_cert":                          "path_to_cert",
@@ -68,6 +83,7 @@ var _ = Describe("Config", func() {
 			"metrics_emit_seconds":                 678,
 			"log_level_address":                    "log_level_address",
 			"log_level_port":                       8081,
+			"internal_route_vip_range":             "127.0.0.0/8",
 		}
 	})
 
@@ -93,7 +109,9 @@ var _ = Describe("Config", func() {
 		Entry("invalid ca_cert", "ca_cert", "", "CACert: zero value"),
 		Entry("invalid log_level_address", "log_level_address", "", "LogLevelAddress: zero value"),
 		Entry("invalid log_level_port", "log_level_port", -2, "LogLevelPort: less than min"),
+		Entry("invalid internal_route_vip_range", "internal_route_vip_range", "321.12.12.0/8", "InternalRouteVIPRange: invalid CIDR address: 321.12.12.0/8"),
 	)
+
 })
 
 func cloneMap(original map[string]interface{}) map[string]interface{} {
