@@ -30,6 +30,7 @@ groups:
   - postgres-tests
   - windows-tests
   - silk-postgres-tests
+  - silk-windows-tests
   - silk-mysql-tests
   - silk-mysql-5.6-tests
   - silk-template-tests
@@ -406,6 +407,17 @@ jobs:
         cf-networking-release: cf-networking-dev
         ci: cf-networking-release-ci
 
+  - name: silk-windows-tests
+    plan:
+    - aggregate:
+      - get: silk-dev
+        trigger: true
+    - task: test
+      file: silk-dev/ci/test-windows.yml
+      privileged: true
+      input_mapping:
+        silk: silk-dev
+
   - name: silk-postgres-tests
     plan:
     - aggregate:
@@ -458,7 +470,7 @@ jobs:
       passed: [postgres-tests, mysql-tests, mysql-5.6-tests, windows-tests, template-tests]
       trigger: true
     - get: silk-dev
-      passed: [silk-postgres-tests, silk-mysql-tests, silk-mysql-5.6-tests, silk-template-tests]
+      passed: [silk-postgres-tests, silk-mysql-tests, silk-mysql-5.6-tests, silk-template-tests, silk-windows-tests]
       trigger: true
 
   - name: pickelhelm-bbl-up
