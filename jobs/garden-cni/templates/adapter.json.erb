@@ -1,6 +1,17 @@
 <%=
     require 'json'
 
+    def redirect_cidr
+      return '' unless p("experimental_enable_proxy_redirect")
+      if_p("experimental_proxy_redirect_cidr") do |cidr|
+        return cidr unless cidr.nil? || cidr.empty?
+      end
+      if_link('cloud_controller_container_networking_info') do |link|
+        return link.p("cc.internal_route_vip_range")
+      end
+      ''
+    end
+
     toRender = {
       "cni_plugin_dir" => p("cni_plugin_dir"),
       "cni_config_dir" => p("cni_config_dir"),
@@ -11,7 +22,7 @@
       "log_prefix" => "cfnetworking",
       "search_domains" => p("search_domains"),
       "iptables_lock_file" => "/var/vcap/data/garden-cni/iptables.lock",
-      "proxy_redirect_cidr": p("experimental_proxy_redirect_cidr"),
+      "proxy_redirect_cidr": redirect_cidr,
       "enable_ingress_proxy_redirect": p("experimental_enable_ingress_proxy_redirect"),
 			"proxy_port":          15001,
 			"proxy_uid":           0,

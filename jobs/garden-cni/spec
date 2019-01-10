@@ -8,6 +8,10 @@ templates:
 packages:
   - runc-cni
 
+consumes:
+  - name: cloud_controller_container_networking_info
+    type: cloud_controller_container_networking_info
+
 properties:
   cni_plugin_dir:
     description: "Directory containing CNI plugins."
@@ -29,8 +33,14 @@ properties:
     description: "An array of search domains for DNS on the containers"
     default: []
 
+  experimental_enable_proxy_redirect:
+    description: |
+      Enable transparently redirecting traffic to proxy process in the container namespace. This
+      property should only need to be used to override the value provided by the cloud controller link.
+    default: false
+
   experimental_proxy_redirect_cidr:
-    description: "CIDR range to transparently redirect to a proxy process in the container namespace.  If empty (default), will not redirect any traffic."
+    description: "CIDR range to transparently redirect to a proxy process in the container namespace."
     default: ""
 
   experimental_enable_ingress_proxy_redirect:
