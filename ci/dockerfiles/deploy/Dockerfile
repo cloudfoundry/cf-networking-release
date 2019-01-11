@@ -1,4 +1,4 @@
-FROM ruby
+FROM ruby:2.5
 
 RUN apt-get update -y && apt-get install -y jq unzip
 RUN curl -L -o /usr/local/bin/bosh https://s3.amazonaws.com/bosh-cli-artifacts/bosh-cli-3.0.1-linux-amd64 && echo "ccc893bab8b219e9e4a628ed044ebca6c6de9ca0  /usr/local/bin/bosh" | shasum -c - && chmod +x /usr/local/bin/bosh
