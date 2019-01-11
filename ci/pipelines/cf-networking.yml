@@ -614,7 +614,6 @@ jobs:
           enable-service-discovery.yml
           add-apps-internal-search-domain.yml
           add-acceptance-test-jobs.yml
-          add-cflinuxfs3.yml
           enable-experimental-dynamic-egress-policies.yml
           add-istio.yml
           enable-sidecar-proxying.yml
@@ -866,7 +865,6 @@ jobs:
           add-acceptance-test-jobs.yml
           use-pxc.yml
           enable-backup-restore.yml
-          add-cflinuxfs3.yml
           enable-experimental-dynamic-egress-policies.yml
           add-istio.yml
           enable-sidecar-proxying.yml
@@ -1314,7 +1312,6 @@ jobs:
           enable-service-discovery.yml
           use-pxc.yml
           add-apps-internal-search-domain.yml
-          add-cflinuxfs3.yml
           enable-experimental-dynamic-egress-policies.yml
           add-istio.yml
           enable-sidecar-proxying.yml
