@@ -18,6 +18,7 @@ consumes:
     type: service-discovery-controller
   - name: cloud_controller_container_networking_info
     type: cloud_controller_container_networking_info
+    optional: true
 
 
 properties:

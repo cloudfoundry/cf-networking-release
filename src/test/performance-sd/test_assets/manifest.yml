@@ -53,10 +53,6 @@ instance_groups:
   instances: 2
   jobs:
   - name: bosh-dns-adapter
-    consumes:
-      cloud_controller_container_networking_info:
-        from: nil
-        optional: true
     properties:
       internal_route_vip_range: 127.128.0.0/9
       dnshttps:
