@@ -54,6 +54,7 @@ instance_groups:
   jobs:
   - name: bosh-dns-adapter
     properties:
+      internal_route_vip_range: 127.128.0.0/9
       dnshttps:
         client:
           tls:
