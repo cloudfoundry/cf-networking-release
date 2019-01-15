@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strconv"
 	"strings"
 )
 
@@ -42,21 +43,33 @@ func (v *EgressDestinationsValidator) ValidateEgressDestinations(destinations []
 				return errors.New("ports are not supported for icmp protocol")
 			}
 
-			if len(rule.Ports) > 1 {
-				return errors.New("only one port range is currently supported")
-			}
+			if len(rule.Ports) > 0 {
+				splitPorts := strings.Split(rule.Ports, "-")
 
-			for _, portRange := range rule.Ports {
-				if portRange.Start > portRange.End {
-					return fmt.Errorf("invalid port range %d-%d, start must be less than or equal to end", portRange.Start, portRange.End)
+				if len(strings.Split(rule.Ports, ",")) > 1 {
+					return errors.New("only one port range is currently supported")
 				}
 
-				if portRange.End > 65535 {
-					return fmt.Errorf("invalid end port %d, must be in range 1-65535", portRange.End)
+				startPort, err := portToInt(splitPorts[0])
+				if err != nil {
+					return fmt.Errorf("invalid port %s, could not convert to an integer", splitPorts[0])
 				}
 
-				if portRange.Start <= 0 {
-					return fmt.Errorf("invalid start port %d, must be in range 1-65535", portRange.Start)
+				endPort, err := portToInt(splitPorts[1])
+				if err != nil {
+					return fmt.Errorf("invalid port %s, could not convert to an integer", splitPorts[1])
+				}
+
+				if startPort > endPort {
+					return fmt.Errorf("invalid port range %d-%d, start must be less than or equal to end", startPort, endPort)
+				}
+
+				if endPort > 65535 {
+					return fmt.Errorf("invalid end port %d, must be in range 1-65535", endPort)
+				}
+
+				if startPort <= 0 {
+					return fmt.Errorf("invalid start port %d, must be in range 1-65535", startPort)
 				}
 			}
 
@@ -95,6 +108,10 @@ func (v *EgressDestinationsValidator) ValidateEgressDestinations(destinations []
 	}
 
 	return nil
+}
+
+func portToInt(port string) (int, error) {
+	return strconv.Atoi(port)
 }
 
 func protocolIncludesICMP(protocol string) bool {

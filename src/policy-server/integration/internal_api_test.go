@@ -89,7 +89,7 @@ var _ = Describe("Internal API", func() {
 			Rules: []psclient.DestinationRule{
 				{
 					IPs:      "10.27.1.1-10.27.1.2",
-					Ports:    []psclient.Port{{Start: 8080, End: 8081}},
+					Ports:    "8080-8081",
 					Protocol: "tcp",
 				},
 			},
@@ -99,12 +99,12 @@ var _ = Describe("Internal API", func() {
 			Rules: []psclient.DestinationRule{
 				{
 					IPs:      "10.27.1.3-10.27.1.3",
-					Ports:    []psclient.Port{{Start: 8080, End: 8081}},
+					Ports:    "8080-8081",
 					Protocol: "tcp",
 				},
 				{
 					IPs:      "10.27.1.4-10.27.1.4",
-					Ports:    []psclient.Port{{Start: 80, End: 81}},
+					Ports:    "80-81",
 					Protocol: "tcp",
 				},
 			},

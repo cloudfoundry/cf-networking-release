@@ -74,12 +74,7 @@ var _ = Describe("External API Egress Policies", func() {
 					Description: "dis is cool",
 					Protocol:    "tcp",
 					IPs:         "1.2.3.4-1.2.3.5",
-					Ports: []psclient.Port{
-						{
-							Start: 8080,
-							End:   9090,
-						},
-					},
+					Ports:       "8080-9090",
 				},
 			},
 		}
@@ -91,12 +86,7 @@ var _ = Describe("External API Egress Policies", func() {
 				{
 					Protocol: "udp",
 					IPs:      "3.2.3.4-3.2.3.5",
-					Ports: []psclient.Port{
-						{
-							Start: 8082,
-							End:   9092,
-						},
-					},
+					Ports:    "8082-9092",
 				},
 			},
 		}
@@ -109,12 +99,7 @@ var _ = Describe("External API Egress Policies", func() {
 					Description: "meow rule description",
 					Protocol:    "all",
 					IPs:         "3.2.3.4-3.2.3.5",
-					Ports: []psclient.Port{
-						{
-							Start: 8082,
-							End:   9092,
-						},
-					},
+					Ports:       "8082-9092",
 				},
 			},
 		}

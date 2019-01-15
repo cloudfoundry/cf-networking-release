@@ -39,22 +39,12 @@ var _ = Describe("Client", func() {
 					{
 						Protocol: "tcp",
 						IPs:      "1.2.3.4-1.2.3.5",
-						Ports: []psclient.Port{
-							{
-								Start: 8080,
-								End:   9090,
-							},
-						},
+						Ports:    "8080-9090",
 					},
 					{
 						Protocol: "tcp",
 						IPs:      "10.20.30.40-10.20.30.50",
-						Ports: []psclient.Port{
-							{
-								Start: 80,
-								End:   90,
-							},
-						},
+						Ports:    "80-90",
 					},
 				},
 			}
@@ -66,12 +56,7 @@ var _ = Describe("Client", func() {
 					{
 						Protocol: "tcp",
 						IPs:      "2.2.3.4-2.2.3.5",
-						Ports: []psclient.Port{
-							{
-								Start: 8081,
-								End:   9091,
-							},
-						},
+						Ports:    "8081-9091",
 					},
 				},
 			}
@@ -191,11 +176,11 @@ var _ = Describe("Client", func() {
 					     "description": "description-received-from-server",
 							 "rules": [{
 								 "ips": "8.8.8.8-8.8.8.8",
-								 "ports": [{"start": 8080, "end": 8080}],
+								 "ports": "8080-8080",
 								 "protocol": "tcp"
 							 }, {
 								 "ips": "9.9.9.9-9.9.9.9",
-								 "ports": [{"start": 80, "end": 80}],
+								 "ports": "80-80",
 								 "protocol": "tcp"
 							 }]
 					  },
@@ -205,7 +190,7 @@ var _ = Describe("Client", func() {
 					     "description": "description-received-from-server",
 							 "rules": [{
 								 "ips": "8.8.8.8-8.8.8.8",
-								 "ports": [{"start": 8080, "end": 8080}],
+								 "ports": "8080-8080",
 								 "protocol": "tcp"
 							 }]
 					  }]
@@ -231,12 +216,12 @@ var _ = Describe("Client", func() {
 						Rules: []psclient.DestinationRule{
 							{
 								IPs:      "8.8.8.8-8.8.8.8",
-								Ports:    []psclient.Port{{Start: 8080, End: 8080}},
+								Ports:    "8080-8080",
 								Protocol: "tcp",
 							},
 							{
 								IPs:      "9.9.9.9-9.9.9.9",
-								Ports:    []psclient.Port{{Start: 80, End: 80}},
+								Ports:    "80-80",
 								Protocol: "tcp",
 							},
 						},
@@ -248,7 +233,7 @@ var _ = Describe("Client", func() {
 						Rules: []psclient.DestinationRule{
 							{
 								IPs:      "8.8.8.8-8.8.8.8",
-								Ports:    []psclient.Port{{Start: 8080, End: 8080}},
+								Ports:    "8080-8080",
 								Protocol: "tcp",
 							},
 						},
@@ -311,9 +296,7 @@ var _ = Describe("Client", func() {
 							{
 								Protocol: "tcp",
 								IPs:      "1.1.1.1-1.1.1.5",
-								Ports: []psclient.Port{
-									{Start: 1234, End: 2345},
-								},
+								Ports:    "1234-2345",
 							},
 						},
 					}},

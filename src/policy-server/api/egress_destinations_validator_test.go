@@ -23,17 +23,17 @@ var _ = Describe("EgressDestinationsValidator", func() {
 					Rules: []api.EgressDestinationRule{
 						{
 							Protocol: "tcp",
-							Ports:    []api.Ports{{Start: 8080, End: 8081}},
+							Ports:    "8080-8081",
 							IPRanges: "192.0.2.1-192.0.2.1",
 						},
 						{
 							Protocol: "udp",
-							Ports:    []api.Ports{{Start: 8080, End: 8081}},
+							Ports:    "8080-8081",
 							IPRanges: "192.0.2.1-192.0.2.1",
 						},
 						{
 							Protocol: "all",
-							Ports:    []api.Ports{{Start: 8080, End: 8081}},
+							Ports:    "8080-8081",
 							IPRanges: "192.0.2.1-192.0.2.1",
 						},
 					},
@@ -74,7 +74,7 @@ var _ = Describe("EgressDestinationsValidator", func() {
 							Rules: []api.EgressDestinationRule{
 								{
 									Protocol: "tcp",
-									Ports:    []api.Ports{{Start: 8080, End: 8081}},
+									Ports:    "8080-8081",
 									IPRanges: "192.0.2.1-192.0.2.1",
 								},
 							},
@@ -100,12 +100,12 @@ var _ = Describe("EgressDestinationsValidator", func() {
 								Rules: []api.EgressDestinationRule{
 									{
 										Protocol: "tcp",
-										Ports:    []api.Ports{{Start: 8080, End: 8080}},
+										Ports:    "8080-8080",
 										IPRanges: "192.0.2.1-192.0.2.1",
 									},
 									{
 										Protocol: "tcp",
-										Ports:    []api.Ports{},
+										Ports:    "",
 										IPRanges: "192.0.2.1-192.0.2.1",
 									},
 								},
@@ -147,12 +147,12 @@ var _ = Describe("EgressDestinationsValidator", func() {
 							Rules: []api.EgressDestinationRule{
 								{
 									Protocol: "tcp",
-									Ports:    []api.Ports{{Start: 8080, End: 8080}},
+									Ports:    "8080-8080,1234-5678",
 									IPRanges: "192.0.2.1-192.0.2.1",
 								},
 								{
 									Protocol: "tcp",
-									Ports:    []api.Ports{{Start: 8000, End: 9000}, {Start: 8000, End: 9000}},
+									Ports:    "8000-9000",
 									IPRanges: "192.0.2.1-192.0.2.1",
 								},
 							},
@@ -173,12 +173,12 @@ var _ = Describe("EgressDestinationsValidator", func() {
 							Rules: []api.EgressDestinationRule{
 								{
 									Protocol: "tcp",
-									Ports:    []api.Ports{{Start: 8080, End: 8080}},
+									Ports:    "8080-8080",
 									IPRanges: "192.0.2.1-192.0.2.1",
 								},
 								{
 									Protocol: "tcp",
-									Ports:    []api.Ports{{Start: 8000, End: 7000}},
+									Ports:    "8000-7000",
 									IPRanges: "192.0.2.1-192.0.2.1",
 								},
 							},
@@ -199,12 +199,12 @@ var _ = Describe("EgressDestinationsValidator", func() {
 							Rules: []api.EgressDestinationRule{
 								{
 									Protocol: "tcp",
-									Ports:    []api.Ports{{Start: 8080, End: 8080}},
+									Ports:    "8080-8080",
 									IPRanges: "192.0.2.1-192.0.2.1",
 								},
 								{
 									Protocol: "tcp",
-									Ports:    []api.Ports{{Start: -2, End: 7000}},
+									Ports:    "-7000-1000",
 									IPRanges: "192.0.2.1-192.0.2.1",
 								},
 							},
@@ -212,7 +212,28 @@ var _ = Describe("EgressDestinationsValidator", func() {
 					}
 
 					err := validator.ValidateEgressDestinations(destinations)
-					Expect(err).To(MatchError("invalid start port -2, must be in range 1-65535"))
+					Expect(err).To(MatchError("invalid port , could not convert to an integer"))
+				})
+			})
+
+			Context("when a provided port isn't one", func() {
+				It("returns an error", func() {
+					destinations := []api.EgressDestination{
+						{
+							Name:        "meow",
+							Description: "a cat",
+							Rules: []api.EgressDestinationRule{
+								{
+									Protocol: "tcp",
+									Ports:    "8080-johnwayne",
+									IPRanges: "192.0.2.1-192.0.2.1",
+								},
+							},
+						},
+					}
+
+					err := validator.ValidateEgressDestinations(destinations)
+					Expect(err).To(MatchError("invalid port johnwayne, could not convert to an integer"))
 				})
 			})
 
@@ -226,12 +247,12 @@ var _ = Describe("EgressDestinationsValidator", func() {
 							Rules: []api.EgressDestinationRule{
 								{
 									Protocol: "tcp",
-									Ports:    []api.Ports{{Start: 8080, End: 8080}},
+									Ports:    "8080-8080",
 									IPRanges: "192.0.2.1-192.0.2.1",
 								},
 								{
 									Protocol: "tcp",
-									Ports:    []api.Ports{{Start: 8000, End: 999999}},
+									Ports:    "8000-999999",
 									IPRanges: "192.0.2.1-192.0.2.1",
 								},
 							},
@@ -252,12 +273,12 @@ var _ = Describe("EgressDestinationsValidator", func() {
 							Rules: []api.EgressDestinationRule{
 								{
 									Protocol: "tcp",
-									Ports:    []api.Ports{{Start: 8080, End: 8080}},
+									Ports:    "8080-8080",
 									IPRanges: "192.0.2.1-192.0.2.1",
 								},
 								{
 									Protocol: "icmp",
-									Ports:    []api.Ports{{Start: 8000, End: 9000}},
+									Ports:    "8000-9000",
 									IPRanges: "192.0.2.1-192.0.2.1",
 								},
 							},
@@ -301,7 +322,7 @@ var _ = Describe("EgressDestinationsValidator", func() {
 								{
 									Protocol: "all",
 									IPRanges: "192.0.2.1-192.0.2.1",
-									Ports:    []api.Ports{{Start: 8080, End: 8080}},
+									Ports:    "8080-8080",
 									ICMPType: &icmpType,
 								},
 							},
@@ -323,7 +344,7 @@ var _ = Describe("EgressDestinationsValidator", func() {
 								{
 									Protocol: "all",
 									IPRanges: "192.0.2.1-192.0.2.1",
-									Ports:    []api.Ports{{Start: 8080, End: 8080}},
+									Ports:    "8080-8080",
 									ICMPCode: &icmpCode,
 								},
 							},
@@ -345,11 +366,11 @@ var _ = Describe("EgressDestinationsValidator", func() {
 							Rules: []api.EgressDestinationRule{
 								{
 									Protocol: "tcp",
-									Ports:    []api.Ports{{Start: 8080, End: 8080}},
+									Ports:    "8080-8080",
 									IPRanges: "192.0.2.1-192.0.2.1",
 								},
 								{
-									Ports:    []api.Ports{{Start: 8080, End: 8081}},
+									Ports:    "8080-8081",
 									IPRanges: "192.0.2.1-192.0.2.1",
 								},
 							},
@@ -370,12 +391,12 @@ var _ = Describe("EgressDestinationsValidator", func() {
 							Rules: []api.EgressDestinationRule{
 								{
 									Protocol: "tcp",
-									Ports:    []api.Ports{{Start: 8080, End: 8080}},
+									Ports:    "8080-8080",
 									IPRanges: "192.0.2.1-192.0.2.1",
 								},
 								{
 									Protocol: "meow",
-									Ports:    []api.Ports{{Start: 8080, End: 8081}},
+									Ports:    "8080-8081",
 									IPRanges: "192.0.2.1-192.0.2.1",
 								},
 							},
@@ -400,12 +421,12 @@ var _ = Describe("EgressDestinationsValidator", func() {
 								Rules: []api.EgressDestinationRule{
 									{
 										Protocol: "tcp",
-										Ports:    []api.Ports{{Start: 8080, End: 8080}},
+										Ports:    "8080-8080",
 										IPRanges: "192.0.2.1-192.0.2.1",
 									},
 									{
 										Protocol: "tcp",
-										Ports:    []api.Ports{{Start: 8080, End: 8081}},
+										Ports:    "8080-8081",
 										IPRanges: "192.0.2.1-192.0.2.1",
 										ICMPType: &icmpType,
 									},
@@ -428,12 +449,12 @@ var _ = Describe("EgressDestinationsValidator", func() {
 								Rules: []api.EgressDestinationRule{
 									{
 										Protocol: "tcp",
-										Ports:    []api.Ports{{Start: 8080, End: 8080}},
+										Ports:    "8080-8080",
 										IPRanges: "192.0.2.1-192.0.2.1",
 									},
 									{
 										Protocol: "udp",
-										Ports:    []api.Ports{{Start: 8080, End: 8081}},
+										Ports:    "8080-8081",
 										IPRanges: "192.0.2.1-192.0.2.1",
 										ICMPCode: &icmpCode,
 									},
@@ -480,7 +501,7 @@ var _ = Describe("EgressDestinationsValidator", func() {
 								Rules: []api.EgressDestinationRule{
 									{
 										Protocol: "tcp",
-										Ports:    []api.Ports{{Start: 8080, End: 8080}},
+										Ports:    "8080-8080",
 										IPRanges: "192.0.2.1-192.0.2.1",
 									},
 									{
@@ -511,12 +532,12 @@ var _ = Describe("EgressDestinationsValidator", func() {
 							Rules: []api.EgressDestinationRule{
 								{
 									Protocol: "tcp",
-									Ports:    []api.Ports{{Start: 8080, End: 8080}},
+									Ports:    "8080-8080",
 									IPRanges: "192.0.2.1-192.0.2.1",
 								},
 								{
 									Protocol: "tcp",
-									Ports:    []api.Ports{{Start: 8080, End: 8081}},
+									Ports:    "8080-8081",
 									IPRanges: "",
 								},
 							},
@@ -537,12 +558,12 @@ var _ = Describe("EgressDestinationsValidator", func() {
 							Rules: []api.EgressDestinationRule{
 								{
 									Protocol: "tcp",
-									Ports:    []api.Ports{{Start: 8080, End: 8080}},
+									Ports:    "8080-8080",
 									IPRanges: "192.0.2.1-192.0.2.1",
 								},
 								{
 									Protocol: "tcp",
-									Ports:    []api.Ports{{Start: 8080, End: 8081}},
+									Ports:    "8080-8081",
 									IPRanges: "192.0.2.10-192.0.2.11,192.0.2.10-192.0.2.11",
 								},
 							},
@@ -563,12 +584,12 @@ var _ = Describe("EgressDestinationsValidator", func() {
 							Rules: []api.EgressDestinationRule{
 								{
 									Protocol: "tcp",
-									Ports:    []api.Ports{{Start: 8080, End: 8080}},
+									Ports:    "8080-8080",
 									IPRanges: "192.0.2.1-192.0.2.1",
 								},
 								{
 									Protocol: "tcp",
-									Ports:    []api.Ports{{Start: 8080, End: 8081}},
+									Ports:    "8080-8081",
 									IPRanges: "192.0.2.1-192.0.2.500",
 								},
 							},
@@ -590,12 +611,12 @@ var _ = Describe("EgressDestinationsValidator", func() {
 							Rules: []api.EgressDestinationRule{
 								{
 									Protocol: "tcp",
-									Ports:    []api.Ports{{Start: 8080, End: 8080}},
+									Ports:    "8080-8080",
 									IPRanges: "192.0.2.1-192.0.2.1",
 								},
 								{
 									Protocol: "tcp",
-									Ports:    []api.Ports{{Start: 8080, End: 8081}},
+									Ports:    "8080-8081",
 									IPRanges: "2001:0db8:85a3:0000:0000:8a2e:0370:7334-2001:0db8:85a3:0000:0000:8a2e:0370:7334",
 								},
 							},
@@ -616,12 +637,12 @@ var _ = Describe("EgressDestinationsValidator", func() {
 							Rules: []api.EgressDestinationRule{
 								{
 									Protocol: "tcp",
-									Ports:    []api.Ports{{Start: 8080, End: 8080}},
+									Ports:    "8080-8080",
 									IPRanges: "192.0.2.1-192.0.2.1",
 								},
 								{
 									Protocol: "tcp",
-									Ports:    []api.Ports{{Start: 8080, End: 8081}},
+									Ports:    "8080-8081",
 									IPRanges: "192.0.2.10-192.0.2.1",
 								},
 							},

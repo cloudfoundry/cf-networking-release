@@ -34,7 +34,7 @@ var _ = Describe("external connectivity", func() {
 					"rules": [
 						{
 							"protocol": "tcp",
-							"ports": [ { "start": 1, "end": 65535 } ],
+							"ports": "1-65535",
 							"ips": "0.0.0.0-255.255.255.255"
 						},
 						{
@@ -57,7 +57,7 @@ var _ = Describe("external connectivity", func() {
 					"rules": [
 						{
 							"protocol": "all",
-							"ports": [ { "start": 1, "end": 65535 } ],
+							"ports": "1-65535",
 							"ips": "0.0.0.0-255.255.255.255"
 						}
 					]

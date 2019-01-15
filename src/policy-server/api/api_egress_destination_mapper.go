@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"policy-server/store"
+	"strconv"
 	"strings"
 
 	"code.cloudfoundry.org/cf-networking-helpers/marshal"
@@ -57,7 +58,10 @@ func (p *EgressDestinationMapper) AsEgressDestinations(egressDestinations []byte
 
 	storeEgressDestinations := make([]store.EgressDestination, len(payload.EgressDestinations))
 	for i, apiDest := range payload.EgressDestinations {
-		storeEgressDestinations[i] = apiDest.asStoreEgressDestination()
+		storeEgressDestinations[i], err = apiDest.asStoreEgressDestination()
+		if err != nil {
+			return []store.EgressDestination{}, fmt.Errorf("slicing egress destinations: %s", err)
+		}
 	}
 	return storeEgressDestinations, nil
 }
@@ -70,20 +74,15 @@ func asApiEgressDestination(storeEgressDestination store.EgressDestination) Egre
 	}
 
 	for _, rule := range storeEgressDestination.Rules {
-		var ports []Ports
-
-		if len(rule.Ports) > 0 {
-			ports = []Ports{
-				{
-					Start: rule.Ports[0].Start,
-					End:   rule.Ports[0].End,
-				},
-			}
-		}
 		var icmpType, icmpCode *int
 		if rule.Protocol == "icmp" {
 			icmpType = &rule.ICMPType
 			icmpCode = &rule.ICMPCode
+		}
+
+		ports := ""
+		if len(rule.Ports) > 0 {
+			ports = fmt.Sprintf("%d-%d", rule.Ports[0].Start, rule.Ports[0].End)
 		}
 
 		apiEgressDestination.Rules = append(apiEgressDestination.Rules, EgressDestinationRule{
@@ -99,7 +98,7 @@ func asApiEgressDestination(storeEgressDestination store.EgressDestination) Egre
 	return *apiEgressDestination
 }
 
-func (d *EgressDestination) asStoreEgressDestination() store.EgressDestination {
+func (d *EgressDestination) asStoreEgressDestination() (store.EgressDestination, error) {
 	destination := store.EgressDestination{
 		GUID:        d.GUID,
 		Name:        d.Name,
@@ -115,10 +114,20 @@ func (d *EgressDestination) asStoreEgressDestination() store.EgressDestination {
 		})
 
 		ports := []store.Ports{}
-		for _, apiPorts := range rule.Ports {
+		splitPorts := strings.Split(rule.Ports, "-")
+		if len(splitPorts) == 2 {
+			intPorts := make([]int, 2)
+			for i, port := range splitPorts {
+				port, err := strconv.Atoi(port)
+				if err != nil {
+					return store.EgressDestination{}, fmt.Errorf("parsing port range: %s", err)
+				}
+				intPorts[i] = port
+			}
+
 			ports = append(ports, store.Ports{
-				Start: apiPorts.Start,
-				End:   apiPorts.End,
+				Start: intPorts[0],
+				End:   intPorts[1],
 			})
 		}
 
@@ -144,5 +153,5 @@ func (d *EgressDestination) asStoreEgressDestination() store.EgressDestination {
 		})
 	}
 
-	return destination
+	return destination, nil
 }

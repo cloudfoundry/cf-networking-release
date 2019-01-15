@@ -47,26 +47,28 @@ var _ = Describe("Destinations create handler", func() {
 		expectedResponseBody = []byte("some-response")
 
 		requestBody := `{
-					"destinations": [
-						{  "name": "my service",
-						    "description": "my service is a great service",	
-							"rules": [
-								"description": "my rule",
-						    	"ips": "211.30.35.9-72.30.35.9",
-						     	"ports": [{"start": 8080, "end": 8080}],
-						     	"protocol":"tcp"
-							]
-						},
-						{  "name": "cloud infra",
-						    "description": "this is where my apps go",
-						    "rules": [
-								 "ips": "211.30.35.9-72.30.35.9",
-						    	 "ports": [{"start": 8080, "end": 8080}],
-						    	 "protocol":"tcp"
-							]
-						}
-					]
-				}`
+			"destinations": [
+				{
+					"name": "my service",
+					"description": "my service is a great service",
+					"rules": [{
+						"description": "my rule",
+						"ips": "211.30.35.9-72.30.35.9",
+						"ports": "8080-8080",
+						"protocol":"tcp"
+					}]
+				},
+				{
+					"name": "cloud infra",
+					"description": "this is where my apps go",
+					"rules": [{
+						"ips": "211.30.35.9-72.30.35.9",
+						"ports": "8080-8080",
+						"protocol":"tcp"
+					}]
+				}
+			]
+		}`
 
 		var err error
 		request, err = http.NewRequest("POST", "/networking/v1/external/destinations", bytes.NewBuffer([]byte(requestBody)))

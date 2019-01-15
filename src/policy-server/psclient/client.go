@@ -19,11 +19,6 @@ type IPRange struct {
 	End   string
 }
 
-type Port struct {
-	Start int
-	End   int
-}
-
 type Destination struct {
 	GUID        string `json:"id,omitempty"`
 	Name        string `json:"name"`
@@ -35,7 +30,7 @@ type DestinationRule struct {
 	Description string
 	Protocol    string
 	IPs         string
-	Ports       []Port
+	Ports       string
 	ICMPType    *int `json:"icmp_type,omitempty"`
 	ICMPCode    *int `json:"icmp_code,omitempty"`
 }

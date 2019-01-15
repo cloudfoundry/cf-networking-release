@@ -14,7 +14,7 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagertest"
-	"github.com/nu7hatch/gouuid"
+	uuid "github.com/nu7hatch/gouuid"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
@@ -71,12 +71,12 @@ var _ = Describe("External Destination API", func() {
 					Rules: []psclient.DestinationRule{
 						{
 							Description: "hello world",
-							Ports:       []psclient.Port{{Start: 8080, End: 8081}},
+							Ports:       "8080-8081",
 							IPs:         "23.96.32.148-23.96.32.149",
 							Protocol:    "tcp",
 						},
 						{
-							Ports:    []psclient.Port{{Start: 1000, End: 1001}},
+							Ports:    "1000-1001",
 							IPs:      "10.10.10.148-10.10.10.149",
 							Protocol: "tcp",
 						},
@@ -88,7 +88,7 @@ var _ = Describe("External Destination API", func() {
 					Rules: []psclient.DestinationRule{
 						{
 							Protocol: "udp",
-							Ports:    []psclient.Port{{Start: 8080, End: 8081}},
+							Ports:    "8080-8081",
 							IPs:      "23.96.32.150-23.96.32.151",
 						},
 					},
@@ -126,12 +126,12 @@ var _ = Describe("External Destination API", func() {
 			Expect(createdDestinations[0].Rules).To(Equal([]psclient.DestinationRule{
 				{
 					Description: "hello world",
-					Ports:       []psclient.Port{{Start: 8080, End: 8081}},
+					Ports:       "8080-8081",
 					IPs:         "23.96.32.148-23.96.32.149",
 					Protocol:    "tcp",
 				},
 				{
-					Ports:    []psclient.Port{{Start: 1000, End: 1001}},
+					Ports:    "1000-1001",
 					IPs:      "10.10.10.148-10.10.10.149",
 					Protocol: "tcp",
 				},
@@ -143,7 +143,7 @@ var _ = Describe("External Destination API", func() {
 			Expect(createdDestinations[1].Description).To(Equal("udp ips and ports desc"))
 			Expect(createdDestinations[1].Rules).To(Equal([]psclient.DestinationRule{
 				{
-					Ports:    []psclient.Port{{Start: 8080, End: 8081}},
+					Ports:    "8080-8081",
 					IPs:      "23.96.32.150-23.96.32.151",
 					Protocol: "udp",
 				},
@@ -194,7 +194,7 @@ var _ = Describe("External Destination API", func() {
 					Description: "this is different than before",
 					Rules: []psclient.DestinationRule{
 						{
-							Ports:    []psclient.Port{{Start: 8080, End: 8081}},
+							Ports:    "8080-8081",
 							IPs:      "23.96.32.148-23.96.32.149",
 							Protocol: "tcp",
 						},
@@ -207,7 +207,7 @@ var _ = Describe("External Destination API", func() {
 			By("updating one of the destinations")
 			destToUpdate := createdDestinations[1]
 			destToUpdate.Name = "new name"
-			destToUpdate.Rules[0].Ports[0].End = 8080
+			destToUpdate.Rules[0].Ports = "8080-8080"
 			updatedDests, err := client.UpdateDestinations(token, destToUpdate)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(updatedDests).To(HaveLen(1))

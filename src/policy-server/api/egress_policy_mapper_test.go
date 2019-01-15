@@ -221,7 +221,7 @@ var _ = Describe("EgressPolicyMapper", func() {
 									{
 										"description": "",
 										"ips": "1.1.1.1-2.2.2.2",
-										"ports": [{"start": 1212, "end": 2323}],
+										"ports": "1212-2323",
 										"protocol": "icmp",
 										"icmp_type": 4,
 										"icmp_code": 3

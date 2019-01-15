@@ -88,7 +88,7 @@ var _ = Describe("policy cleanup", func() {
 						"rules": [
 							{
 								"protocol": "tcp",
-								"ports": [ { "start": 80, "end": 80 } ],
+								"ports": "80-80",
 								"ips": "0.0.0.0-255.255.255.255"
 							}
 						]

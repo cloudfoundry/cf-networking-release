@@ -111,7 +111,7 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 								{
 									"description": "hello friends",
 									"protocol": "tcp",
-									"ports": [{ "start": 8080, "end": 8081 }],
+									"ports": "8080-8081",
 									"ips": "1.2.3.4-1.2.3.5"
 								},
 								{
@@ -170,7 +170,7 @@ var _ = Describe("ApiEgressDestinationMapper", func() {
 								{
 									"description": "hamdinger",
 									"protocol": "tcp",
-									"ports": [{ "start": 8080, "end": 8081 }],
+									"ports": "8080-8081",
 									"ips": "1.2.3.4-1.2.3.5"
 								},
 								{
