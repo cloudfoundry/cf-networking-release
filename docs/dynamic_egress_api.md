@@ -79,8 +79,8 @@ Will return all egress destinations.
       "rules": [
         {
           "ips": "1.9.9.9-1.9.9.20",
-          "ports": [{"start": 8000, "end": 9000}],
-          "protocol": "tcp", 
+          "ports": "8000-9000",
+          "protocol": "tcp",
           "description": "our user db"
         }
       ]
@@ -91,7 +91,7 @@ Will return all egress destinations.
       "rules": [
         {
           "ips": "1.8.8.8-1.8.8.8",
-          "ports": [{"start": 8000, "end": 9000}],
+          "ports": "8000-9000",
           "protocol": "udp",
           "description": "our user db on aws"
         },
@@ -102,10 +102,10 @@ Will return all egress destinations.
         },
         {
           "ips": "1.8.9.0-1.8.9.1",
-          "ports": [{"start": 8000, "end": 9000}],
+          "ports": "8000-9000",
           "icmp_type": 14,
           "icmp_code": 0,
-          "protocol": "all", 
+          "protocol": "all",
           "description": ""
         }
       ]
@@ -128,7 +128,7 @@ Will return all egress destinations.
       "rules": [
         {
           "ips": "1.9.9.9-1.9.9.20",
-          "ports": [{"start": 8000, "end": 9000}],
+          "ports": "8000-9000",
           "protocol": "tcp",
           "description": "our user db"
         }
@@ -139,18 +139,18 @@ Will return all egress destinations.
       "rules": [
         {
           "ips": "1.8.8.8-1.8.8.8",
-          "ports": [{"start": 8000, "end": 9000}],
+          "ports": "8000-9000",
           "protocol": "udp"
         },
         {
           "ips": "9.9.9.9-10.10.10.10",
-          "ports": [{"start": 8001, "end": 9001}],
+          "ports": "8001-9001",
           "protocol": "tcp",
           "description": "frontend app"
         },
         {
          "ips": "1.8.9.0-1.8.9.1",
-          "ports": [{"start": 8000, "end": 9000}],
+          "ports": "8000-9000",
           "icmp_type": 14,
           "icmp_code": 0,
           "protocol": "all"
@@ -166,8 +166,7 @@ Will return all egress destinations.
 | destinations.name | Y | The name of the destination. Must be globally unique.
 | destinations.description | N | A description of the destination.
 | destinations.rules.ips* | Y | The destination IP range. Must take the form X.X.X.X-X.X.X.X. Must be IPV4. Start and end IPs may be equal.
-| destinations.rules.ports.start* | Y | The destination start port (1 - 65535). Ports are not applicable for ICMP protocol.
-| destinations.rules.ports.end* | Y | The destination end port (1 - 65535). Ports are not applicable for ICMP protocol.
+| destinations.rules.ports* | Y | The destination port range. Must take the form <start>-<end>. Start and end ports may be equal. Ports are not applicable for ICMP protocol.
 | destinations.rules.protocol | Y | The protocol (`tcp`, `udp`, `icmp`, or `all`). The value `all` will allow tcp, udp, udplite, icmp, esp, ah, sctp protocols.
 | destinations.rules.icmp_type | N | The icmp type to allow when using the icmp protocol. Default is all icmp types, represented by -1.
 | destinations.rules.icmp_code | N | The icmp code to allow when using the icmp protocol. Default is all icmp codes, represented by -1.
@@ -184,43 +183,40 @@ In the future, a destination will be able to support multiple ip ranges and port
 ```json
 {
   "destinations": [
-   {
+    {
       "id": "90be9c1f-b694-4463-9f1f-6ce71904440d",
       "name": "oracle database",
       "description": "db for user accounts",
       "rules": [
         {
-            "ips": "1.9.9.9-1.9.9.20",
-            "ports": [{"start": 8000, "end": 9000}],
-            "protocol": "tcp" ,
-            
+          "ips": "1.9.9.9-1.9.9.20",
+          "ports": "8000-9000",
+          "protocol": "tcp"
         }
       ]
-   },
-   {
+    },
+    {
       "id": "72813418-bd38-49e0-ace0-7bf5b7c54687",
       "name": "AWS",
       "rules": [
         {
           "ips": "1.8.8.8-1.8.8.8",
-          "ports": [{"start": 8000, "end": 9000}],
+          "ports": "8000-9000",
           "protocol": "udp",
           "description": "frontend app"
         }
       ]
-   }
+    }
   ]
 }
 ```
-
 | Field | Required? | Description |
 | :---- | :-------: | :------ |
 | destinations.id | Y | The id of the destination. This id is returned in the destinations create response, as well as in the destinations index response.
 | destinations.name | Y | The name of the destination. Must be globally unique.
 | destinations.description | N | A description of the destination.
 | destinations.rules.ips* | Y | The destination IP range. Must take the form X.X.X.X-X.X.X.X. Must be IPV4. Start and end IPs may be equal.
-| destinations.rules.ports.start* | Y | The destination start port (1 - 65535). Ports are not applicable for ICMP protocol.
-| destinations.rules.ports.end* | Y |The destination end port (1 - 65535). Ports are not applicable for ICMP protocol.
+| destinations.rules.ports* | Y | The destination port range. Must take the form <start>-<end>. Start and end ports may be equal. Ports are not applicable for ICMP protocol.
 | destinations.rules.protocol | Y |The protocol (`tcp`, `udp`, `icmp`, or `all`). The value `all` will allow tcp, udp, udplite, icmp, esp, ah, sctp protocols.
 | destinations.rules.icmp_type | N | The icmp type to allow when using the icmp protocol. Default is all icmp types, represented by -1.
 | destinations.rules.icmp_code | N | The icmp code to allow when using the icmp protocol. Default is all icmp codes, represented by -1.
@@ -248,12 +244,12 @@ This endpoint returns the json of the deleted destination object.
       "rules": [
         {
           "ips": "1.9.9.9-1.9.9.20",
-          "ports": [{"start": 8000, "end": 9000}],
+          "ports": "8000-9000",
           "protocol": "tcp",
         },
         {
           "ips": "1.1.1.1-1.1.1.1",
-          "ports": [{"start": 80, "end": 80}],
+          "ports": "80-80",
           "protocol": "udp"
         }
       ]
@@ -297,7 +293,7 @@ Will return all egress policies.
         "rules": [
           {
             "ips": "1.8.8.8-1.8.8.8",
-            "ports": [{"start": 8000, "end": 9000}],
+            "ports": "8000-9000",
             "protocol": "udp",
             "description": "frontend app"
           }
@@ -359,12 +355,12 @@ This endpoint returns the json of the deleted egress policy object.
       "rules": [
         {
           "ips": "1.8.8.8-1.8.8.8",
-          "ports": [{"start": 8000, "end": 9000}],
+          "ports": "8000-9000",
           "protocol": "udp",
           "description": "frontend app"
         }
       ]
-     }, 
+     },
      "app_lifecycle": "staging"
    }]
 }
