@@ -620,6 +620,7 @@ jobs:
           disable-ingress-redirect-to-proxy.yml
           enable-iptables-logger.yml
           use-postgres.yml
+          use-external-postgres-for-c2c.yml
           scale-to-2-diego-cells.yml
           lower-canary-watch-time.yml
       input_mapping:
@@ -863,7 +864,6 @@ jobs:
           enable-service-discovery.yml
           add-apps-internal-search-domain.yml
           add-acceptance-test-jobs.yml
-          use-pxc.yml
           enable-backup-restore.yml
           enable-experimental-dynamic-egress-policies.yml
           add-istio.yml
@@ -1310,7 +1310,6 @@ jobs:
           use-latest-capi.yml
           use-latest-cf-networking.yml
           enable-service-discovery.yml
-          use-pxc.yml
           add-apps-internal-search-domain.yml
           enable-experimental-dynamic-egress-policies.yml
           add-istio.yml
