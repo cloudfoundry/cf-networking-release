@@ -22,7 +22,7 @@ type Config struct {
 	UAAURL                          string    `json:"uaa_url" validate:"nonzero"`
 	UAAPort                         int       `json:"uaa_port" validate:"nonzero"`
 	CCURL                           string    `json:"cc_url" validate:"nonzero"`
-	CCCA                            string    `json:"cc_ca_cert" validate:"nonzero"`
+	CCCA                            string    `json:"cc_ca_cert"`
 	SkipSSLValidation               bool      `json:"skip_ssl_validation"`
 	Database                        db.Config `json:"database" validate:"nonzero"`
 	DatabaseMigrationTimeout        int       `json:"database_migration_timeout" validate:"min=1"`

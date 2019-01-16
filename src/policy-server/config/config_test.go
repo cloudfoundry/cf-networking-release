@@ -181,7 +181,6 @@ var _ = Describe("Config", func() {
 			Entry("missing uaa client", "uaa_client", "UAAClient: zero value"),
 			Entry("missing uaa client secret", "uaa_client_secret", "UAAClientSecret: zero value"),
 			Entry("missing uaa url", "uaa_url", "UAAURL: zero value"),
-			Entry("missing ca cert", "cc_ca_cert", "CCCA: zero value"),
 			Entry("missing uaa port", "uaa_port", "UAAPort: zero value"),
 			Entry("missing cc url", "cc_url", "CCURL: zero value"),
 			Entry("missing tag length", "tag_length", "TagLength: zero value"),
