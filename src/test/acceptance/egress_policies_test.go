@@ -220,6 +220,33 @@ var _ = Describe("external connectivity", func() {
 
 			close(done)
 		}, 180 /* <-- overall spec timeout in seconds */)
+
+		Context("when the dynamic egress policy covers the overlay range", func() {
+			var appCount int
+
+			BeforeEach(func() {
+				appCount = 5
+				By(fmt.Sprintf("pushing proxy app with %d instances", appCount))
+				pushAppWithInstanceCount(appA, appCount)
+			})
+
+			It("does not allow traffic on the overlay network", func() {
+				appInstances := getAppInstances(appA, appCount)
+				By("checking connectivity fails between two instances on the same cell")
+				app1, app2 := findTwoInstancesOnTheSameHost(appInstances)
+
+				app2Curl := fmt.Sprintf("curl --fail --connect-timeout 10 http://%s:8080/echosourceip", app2.internalIP)
+				session := cf.Cf("ssh", appA, "-i", app1.index, "-c", app2Curl)
+				Expect(session.Wait(Timeout_Push)).ToNot(gexec.Exit(0))
+
+				By("checking connectivity fails between two instances on the different cells")
+				app1, app2 = findTwoInstancesOnDifferentHosts(appInstances)
+
+				app2Curl = fmt.Sprintf("curl --fail --connect-timeout 10 http://%s:8080/echosourceip", app2.internalIP)
+				session = cf.Cf("ssh", appA, "-i", app1.index, "-c", app2Curl)
+				Expect(session.Wait(Timeout_Push)).ToNot(gexec.Exit(0))
+			})
+		})
 	})
 
 	Context("when a protocol 'all' egress policy is created", func() {
