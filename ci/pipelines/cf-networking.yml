@@ -629,7 +629,6 @@ jobs:
           enable-sidecar-proxying.yml
           disable-ingress-redirect-to-proxy.yml
           enable-iptables-logger.yml
-          use-postgres.yml
           use-external-postgres-for-c2c.yml
           scale-to-2-diego-cells.yml
           lower-canary-watch-time.yml
