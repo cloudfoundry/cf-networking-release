@@ -552,15 +552,15 @@ jobs:
       - get: silk-dev
         trigger: true
         passed: [unit-and-integration-tests]
+    - task: collect-ops-files
+      file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
+      params:
+        ENVIRONMENT_NAME: pickelhelm
+      input_mapping:
+        cf-networking-release: cf-networking-dev
+        deployments-repo: cf-networking-deployments
+        silk-release: silk-dev
     - aggregate:
-      - task: collect-ops-files
-        file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
-        params:
-          ENVIRONMENT_NAME: pickelhelm
-        input_mapping:
-          cf-networking-release: cf-networking-dev
-          deployments-repo: cf-networking-deployments
-          silk-release: silk-dev
       - task: upload-stemcell
         file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
         params:
@@ -570,7 +570,7 @@ jobs:
       - task: upload-windows-1803-stemcell
         file: cf-deployment-concourse-tasks/bosh-upload-stemcells/task.yml
         params:
-          BBL_STATE_DIR: environments/mitre/
+          BBL_STATE_DIR: environments/pickelhelm/
           OPS_FILES: |
             windows1803-cell.yml
         input_mapping:
@@ -608,7 +608,6 @@ jobs:
         BBL_STATE_DIR: environments/pickelhelm/
         SYSTEM_DOMAIN: pickelhelm.c2c.cf-app.com
         OPS_FILES: |
-          use-compiled-releases.yml
           datadog.yml
           scale-to-one-az.yml
           smaller-footprint.yml
@@ -808,15 +807,15 @@ jobs:
       - get: version
         params:
           pre: rc
+    - task: collect-ops-files
+      file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
+      params:
+        ENVIRONMENT_NAME: mitre
+      input_mapping:
+        cf-networking-release: cf-networking-dev
+        deployments-repo: cf-networking-deployments
+        silk-release: silk-dev
     - aggregate:
-      - task: collect-ops-files
-        file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
-        params:
-          ENVIRONMENT_NAME: mitre
-        input_mapping:
-          cf-networking-release: cf-networking-dev
-          deployments-repo: cf-networking-deployments
-          silk-release: silk-dev
       - task: upload-stemcell
         file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
         params:
@@ -865,7 +864,6 @@ jobs:
         BBL_STATE_DIR: environments/mitre/
         SYSTEM_DOMAIN: mitre.c2c.cf-app.com
         OPS_FILES: |
-          use-compiled-releases.yml
           datadog.yml
           scale-to-one-az.yml
           smaller-footprint.yml
