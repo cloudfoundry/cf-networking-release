@@ -1,0 +1,14 @@
+#!/bin/bash -eu
+
+ROOT_DIR="$(cd "$(dirname ${0})/.." && pwd)"
+COPILOT_DIR="${1:-}"
+
+if [ -z "${COPILOT_DIR}" ]; then
+  echo "missing expected arg: path to copilot repository"
+  exit 1
+fi
+
+protoc \
+  --proto_path "${COPILOT_DIR}/api/protos" \
+  --go_out "plugins=grpc:${ROOT_DIR}/src/bosh-dns-adapter/copilot/api" \
+  common.proto vip_resolver.proto

@@ -1,6 +1,7 @@
 package main_test
 
 import (
+	"bosh-dns-adapter/fakes"
 	"crypto/tls"
 	"fmt"
 	"io"
@@ -29,6 +30,7 @@ var _ = Describe("Main", func() {
 		configFileContents                     string
 		fakeServiceDiscoveryControllerServer   *ghttp.Server
 		fakeServiceDiscoveryControllerResponse []http.HandlerFunc
+		fakeCopilotVIPResolverServer           *fakes.CopilotVIPResolverServer
 		dnsAdapterAddress                      string
 		dnsAdapterPort                         string
 		fakeMetron                             metrics.FakeMetron
@@ -56,6 +58,10 @@ var _ = Describe("Main", func() {
 					"service": ""
 				}`),
 		)}
+
+		fakeCopilotVIPResolverServer = &fakes.CopilotVIPResolverServer{}
+		fakeCopilotVIPResolverServer.Start(ports.PickAPort())
+
 		dnsAdapterAddress = "127.0.0.1"
 		internalRouteVIPRange = "127.0.0.0/24"
 
@@ -169,6 +175,10 @@ var _ = Describe("Main", func() {
 	})
 
 	Context("when internal service mesh domain", func() {
+		BeforeEach(func() {
+			fakeCopilotVIPResolverServer.AddHostVIPMapping("app-id.istio.local", "127.1.2.3")
+		})
+
 		It("should return a http 200 status", func() {
 			Eventually(session).Should(gbytes.Say("bosh-dns-adapter.server-started"))
 
@@ -204,7 +214,7 @@ var _ = Describe("Main", func() {
 							"name": "app-id.istio.local.",
 							"type": 1,
 							"TTL":  0,
-							"data": "127.0.0.26"
+							"data": "127.1.2.3"
 						}
 					],
 					"Additional": [ ],

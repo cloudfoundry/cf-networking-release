@@ -172,3 +172,9 @@
 [submodule "src/github.com/Benjamintf1/unmarshalledmatchers"]
 	path = src/github.com/Benjamintf1/unmarshalledmatchers
 	url = https://github.com/Benjamintf1/unmarshalledmatchers.git
+[submodule "src/google.golang.org/genproto"]
+	path = src/google.golang.org/genproto
+	url = https://github.com/google/go-genproto
+[submodule "src/google.golang.org/grpc"]
+	path = src/google.golang.org/grpc
+	url = https://github.com/grpc/grpc-go

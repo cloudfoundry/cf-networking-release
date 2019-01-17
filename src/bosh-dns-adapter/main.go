@@ -2,10 +2,8 @@ package main
 
 import (
 	"bosh-dns-adapter/config"
+	"bosh-dns-adapter/handlers"
 	"bosh-dns-adapter/sdcclient"
-	"bosh-dns-adapter/vip"
-	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -14,7 +12,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 	"time"
 
@@ -27,7 +24,6 @@ import (
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
 	"github.com/tedsuo/ifrit/sigmon"
-	"golang.org/x/net/dns/dnsmessage"
 )
 
 func main() {
@@ -64,8 +60,6 @@ func main() {
 		config.ServiceDiscoveryControllerPort,
 	)
 
-	vipRangeCIDR := config.GetInternalRouteVIPRangeCIDR()
-
 	metronAddress := fmt.Sprintf("127.0.0.1:%d", config.MetronPort)
 	err = dropsonde.Initialize(metronAddress, "bosh-dns-adapter")
 	if err != nil {
@@ -79,7 +73,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	requestLogger := logger.Session("serve-request")
+	// copilotClient := CopilotClient{}
 
 	metricSender := metrics.MetricsSender{
 		Logger: logger.Session("bosh-dns-adapter"),
@@ -93,65 +87,16 @@ func main() {
 		return metricsWrapper.Wrap(handler)
 	}
 
+	getIPsHandler := handlers.GetIP{
+		SDCClient: sdcClient,
+		// CopilotClient:              copilotClient,
+		InternalServiceMeshDomains: config.InternalServiceMeshDomains,
+		Logger:        logger,
+		MetricsSender: &metricSender,
+	}
+
 	go func() {
-		http.Serve(l, metricsWrap("GetIPs", http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
-			dnsType := getQueryParam(req, "type", "1")
-			name := getQueryParam(req, "name", "")
-
-			if dnsType != "1" {
-				writeResponse(resp, dnsmessage.RCodeSuccess, name, dnsType, nil, logger)
-				requestLogger.Debug("unsupported record type", lager.Data{
-					"ips":          "",
-					"service-name": name,
-				})
-				return
-			}
-
-			if name == "" {
-				resp.WriteHeader(http.StatusBadRequest)
-				writeResponse(resp, dnsmessage.RCodeServerFailure, name, dnsType, nil, logger)
-				requestLogger.Debug("name parameter empty", lager.Data{
-					"ips":          "",
-					"service-name": "",
-				})
-				return
-			}
-
-			start := time.Now()
-			var ips []string
-			var err error
-			var duration int64
-			if hasInternalServiceMeshDomain(name, config.InternalServiceMeshDomains) {
-				// hardcoded default VIPCIDR for dev
-				provider := &vip.Provider{CIDR: vipRangeCIDR}
-				// Copilot consumes internal routes without a trailing dot from CAPI
-				nameNoTrailingDot := strings.TrimRight(name, ".")
-				ips = []string{provider.Get(nameNoTrailingDot)}
-				duration = time.Now().Sub(start).Nanoseconds()
-			} else {
-				ips, err = sdcClient.IPs(name)
-				duration = time.Now().Sub(start).Nanoseconds()
-				if err != nil {
-					wrappedErr := errors.New(fmt.Sprintf("Error querying Service Discover Controller: %s", err))
-					writeErrorResponse(resp, wrappedErr, logger)
-					requestLogger.Error("could not connect to service discovery controller",
-						wrappedErr,
-						lager.Data{
-							"ips":          "",
-							"service-name": name,
-						})
-
-					metricSender.IncrementCounter("DNSRequestFailures")
-					return
-				}
-			}
-			writeResponse(resp, dnsmessage.RCodeSuccess, name, dnsType, ips, logger)
-			requestLogger.Debug("success", lager.Data{
-				"ips":          strings.Join(ips, ","),
-				"service-name": name,
-				"duration-ns":  duration,
-			})
-		})))
+		http.Serve(l, metricsWrap("GetIPs", http.HandlerFunc(getIPsHandler.ServeHTTP)))
 	}()
 
 	uptimeSource := metrics.NewUptimeSource()
@@ -185,89 +130,4 @@ func main() {
 		logger.Info("server-stopped")
 		return
 	}
-}
-func getQueryParam(req *http.Request, key, defaultValue string) string {
-	queryValue := req.URL.Query().Get(key)
-	if queryValue == "" {
-		return defaultValue
-	}
-
-	return queryValue
-}
-
-func writeErrorResponse(resp http.ResponseWriter, err error, logger lager.Logger) {
-	resp.WriteHeader(http.StatusInternalServerError)
-	_, err = resp.Write([]byte(err.Error()))
-	if err != nil {
-		logger.Error("Error writing to http response body", err)
-	}
-}
-
-func writeResponse(resp http.ResponseWriter, dnsResponseStatus dnsmessage.RCode, requestedInfraName string, dnsType string, ips []string, logger lager.Logger) {
-	responseBody, err := buildResponseBody(dnsResponseStatus, requestedInfraName, dnsType, ips)
-	if err != nil {
-		logger.Error("Error building response", err)
-		return
-	}
-
-	_, err = resp.Write([]byte(responseBody))
-	if err != nil {
-		logger.Error("Error writing to http response body", err)
-	}
-
-	logger.Debug("HTTPServer access")
-}
-
-type Answer struct {
-	Name   string `json:"name"`
-	RRType uint16 `json:"type"`
-	TTL    uint32 `json:"TTL"`
-	Data   string `json:"data"`
-}
-
-func buildResponseBody(dnsResponseStatus dnsmessage.RCode, requestedInfraName string, dnsType string, ips []string) (string, error) {
-	answers := make([]Answer, len(ips), len(ips))
-	for i, ip := range ips {
-		answers[i] = Answer{
-			Name:   requestedInfraName,
-			RRType: uint16(dnsmessage.TypeA),
-			Data:   ip,
-			TTL:    0,
-		}
-	}
-
-	bytes, err := json.Marshal(answers)
-	if err != nil {
-		return "", err // not tested
-	}
-
-	template := `{
-		"Status": %d,
-		"TC": false,
-		"RD": false,
-		"RA": false,
-		"AD": false,
-		"CD": false,
-		"Question":
-		[
-			{
-				"name": "%s",
-				"type": %s
-			}
-		],
-		"Answer": %s,
-		"Additional": [ ],
-		"edns_client_subnet": "0.0.0.0/0"
-	}`
-
-	return fmt.Sprintf(template, dnsResponseStatus, requestedInfraName, dnsType, string(bytes)), nil
-}
-
-func hasInternalServiceMeshDomain(route string, domains []string) bool {
-	for _, d := range domains {
-		if strings.HasSuffix(route, d) {
-			return true
-		}
-	}
-	return false
 }
