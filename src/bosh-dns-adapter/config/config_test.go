@@ -30,13 +30,14 @@ var _ = Describe("Config", func() {
 				"metron_port": 8080,
 				"log_level_address": "log-level-address",
 				"internal_route_vip_range": "127.128.0.0/24",
-				"log_level_port": 9090
+				"log_level_port": 9090,
+				"vip_resolver_address": "copilot.server.bosh:1002"
 			}`)
 			parsedConfig, err = NewConfig(configJSON)
 			Expect(err).ToNot(HaveOccurred())
 		})
-		It("contains the values in the JSON", func() {
 
+		It("contains the values in the JSON", func() {
 			Expect(parsedConfig.Address).To(Equal("example.com"))
 			Expect(parsedConfig.Port).To(Equal("80053"))
 			Expect(parsedConfig.ServiceDiscoveryControllerAddress).To(Equal("bar.com"))
@@ -50,7 +51,9 @@ var _ = Describe("Config", func() {
 			Expect(parsedConfig.LogLevelAddress).To(Equal("log-level-address"))
 			Expect(parsedConfig.LogLevelPort).To(Equal(9090))
 			Expect(parsedConfig.InternalRouteVIPRange).To(Equal("127.128.0.0/24"))
+			Expect(parsedConfig.VIPResolverAddress).To(Equal("copilot.server.bosh:1002"))
 		})
+
 		It("returns a parsed CIDR struct", func() {
 			cidr := parsedConfig.GetInternalRouteVIPRangeCIDR()
 			expectedCIDR := &net.IPNet{

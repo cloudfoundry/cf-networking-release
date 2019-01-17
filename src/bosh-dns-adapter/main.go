@@ -2,6 +2,7 @@ package main
 
 import (
 	"bosh-dns-adapter/config"
+	"bosh-dns-adapter/copilot"
 	"bosh-dns-adapter/handlers"
 	"bosh-dns-adapter/sdcclient"
 	"flag"
@@ -73,7 +74,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	// copilotClient := CopilotClient{}
+	copilotClient, err := copilot.NewConnectedClient(config.VIPResolverAddress, copilot.WithInsecure())
+	if err != nil {
+		logger.Error("Unable to create vip resovler client", err)
+		os.Exit(1)
+	}
 
 	metricSender := metrics.MetricsSender{
 		Logger: logger.Session("bosh-dns-adapter"),
@@ -88,8 +93,8 @@ func main() {
 	}
 
 	getIPsHandler := handlers.GetIP{
-		SDCClient: sdcClient,
-		// CopilotClient:              copilotClient,
+		SDCClient:                  sdcClient,
+		CopilotClient:              copilotClient,
 		InternalServiceMeshDomains: config.InternalServiceMeshDomains,
 		Logger:        logger,
 		MetricsSender: &metricSender,

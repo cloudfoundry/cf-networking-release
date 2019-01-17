@@ -36,6 +36,7 @@ var _ = Describe("Main", func() {
 		fakeMetron                             metrics.FakeMetron
 		logLevelPort                           int
 		internalRouteVIPRange                  string
+		vipResolverAddress                     string
 	)
 
 	BeforeEach(func() {
@@ -100,7 +101,8 @@ var _ = Describe("Main", func() {
 			"log_level_port": %d,
 			"log_level_address": "127.0.0.1",
 			"internal_service_mesh_domains" : ["istio.local."],
-			"internal_route_vip_range": "%s"
+			"internal_route_vip_range": "%s",
+			"vip_resolver_address": "%s"
 		}`, dnsAdapterAddress,
 			dnsAdapterPort,
 			strings.TrimPrefix(urlParts[1], "//"),
@@ -111,6 +113,7 @@ var _ = Describe("Main", func() {
 			fakeMetron.Port(),
 			logLevelPort,
 			internalRouteVIPRange,
+			vipResolverAddress,
 		)
 
 		tempConfigFile, err = ioutil.TempFile(os.TempDir(), "sd")
@@ -174,9 +177,30 @@ var _ = Describe("Main", func() {
 		`))
 	})
 
+	Context("when the vip resolver link is not present", func() {
+		BeforeEach(func() {
+			vipResolverAddress = ""
+		})
+
+		It("returns a http 500 response", func() {
+			Eventually(session).Should(gbytes.Say("bosh-dns-adapter.server-started"))
+
+			var reader io.Reader
+			url := fmt.Sprintf("http://127.0.0.1:%s?type=1&name=app-id.istio.local.", dnsAdapterPort)
+			request, err := http.NewRequest("GET", url, reader)
+			Expect(err).To(Succeed())
+
+			resp, err := http.DefaultClient.Do(request)
+			Expect(err).To(Succeed())
+
+			Expect(resp.StatusCode).To(Equal(http.StatusInternalServerError))
+		})
+	})
+
 	Context("when internal service mesh domain", func() {
 		BeforeEach(func() {
-			fakeCopilotVIPResolverServer.AddHostVIPMapping("app-id.istio.local", "127.1.2.3")
+			vipResolverAddress = fakeCopilotVIPResolverServer.Address()
+			fakeCopilotVIPResolverServer.AddHostVIPMapping("app-id.istio.local.", "127.1.2.3")
 		})
 
 		It("should return a http 200 status", func() {
@@ -222,6 +246,7 @@ var _ = Describe("Main", func() {
 				}
 		`))
 		})
+
 	})
 
 	It("accepts interrupt signals and shuts down", func() {

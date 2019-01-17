@@ -2,6 +2,7 @@
 package fakes
 
 import (
+	"bosh-dns-adapter/handlers"
 	"sync"
 )
 
@@ -93,3 +94,5 @@ func (fake *CopilotClient) recordInvocation(key string, args []interface{}) {
 	}
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
+
+var _ handlers.CopilotClient = new(CopilotClient)

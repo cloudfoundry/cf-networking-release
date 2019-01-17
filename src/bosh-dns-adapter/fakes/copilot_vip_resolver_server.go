@@ -18,6 +18,7 @@ type CopilotVIPResolverServer struct {
 
 func (c *CopilotVIPResolverServer) Start(port int) {
 	var err error
+	c.hostToVIP = make(map[string]string)
 	c.listener, err = net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
@@ -35,11 +36,14 @@ func (c *CopilotVIPResolverServer) Close() error {
 	return c.listener.Close()
 }
 
-func (c *CopilotVIPResolverServer) AddHostVIPMapping(hostname, vip string) {
-	if c.hostToVIP == nil {
-		c.hostToVIP = make(map[string]string)
+func (c *CopilotVIPResolverServer) Address() string {
+	if c.listener == nil {
+		return ""
 	}
+	return c.listener.Addr().String()
+}
 
+func (c *CopilotVIPResolverServer) AddHostVIPMapping(hostname, vip string) {
 	c.hostToVIP[hostname] = vip
 }
 

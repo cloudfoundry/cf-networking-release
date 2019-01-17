@@ -7,8 +7,10 @@ dependencies:
 files:
   - bosh-dns-adapter/*.go # gosub
   - bosh-dns-adapter/config/*.go # gosub
+  - bosh-dns-adapter/copilot/*.go # gosub
+  - bosh-dns-adapter/copilot/api/*.go # gosub
+  - bosh-dns-adapter/handlers/*.go # gosub
   - bosh-dns-adapter/sdcclient/*.go # gosub
-  - bosh-dns-adapter/vip/*.go # gosub
   - code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor/*.go # gosub
   - code.cloudfoundry.org/cf-networking-helpers/db/*.go # gosub
   - code.cloudfoundry.org/cf-networking-helpers/lagerlevel/*.go # gosub
@@ -40,6 +42,11 @@ files:
   - github.com/gogo/protobuf/gogoproto/*.go # gosub
   - github.com/gogo/protobuf/proto/*.go # gosub
   - github.com/gogo/protobuf/protoc-gen-gogo/descriptor/*.go # gosub
+  - github.com/golang/protobuf/proto/*.go # gosub
+  - github.com/golang/protobuf/ptypes/*.go # gosub
+  - github.com/golang/protobuf/ptypes/any/*.go # gosub
+  - github.com/golang/protobuf/ptypes/duration/*.go # gosub
+  - github.com/golang/protobuf/ptypes/timestamp/*.go # gosub
   - github.com/jmoiron/sqlx/*.go # gosub
   - github.com/jmoiron/sqlx/reflectx/*.go # gosub
   - github.com/lib/pq/*.go # gosub
@@ -51,7 +58,48 @@ files:
   - github.com/tedsuo/ifrit/http_server/*.go # gosub
   - github.com/tedsuo/ifrit/sigmon/*.go # gosub
   - github.com/tedsuo/rata/*.go # gosub
+  - golang.org/x/net/context/*.go # gosub
   - golang.org/x/net/dns/dnsmessage/*.go # gosub
+  - golang.org/x/net/http/httpguts/*.go # gosub
+  - golang.org/x/net/http2/*.go # gosub
+  - golang.org/x/net/http2/hpack/*.go # gosub
+  - golang.org/x/net/idna/*.go # gosub
+  - golang.org/x/net/internal/timeseries/*.go # gosub
+  - golang.org/x/net/lex/httplex/*.go # gosub
+  - golang.org/x/net/trace/*.go # gosub
+  - golang.org/x/sys/unix/*.go # gosub
+  - golang.org/x/sys/unix/*.s # gosub
+  - golang.org/x/text/secure/bidirule/*.go # gosub
+  - golang.org/x/text/transform/*.go # gosub
+  - golang.org/x/text/unicode/bidi/*.go # gosub
+  - golang.org/x/text/unicode/norm/*.go # gosub
+  - google.golang.org/genproto/googleapis/rpc/status/*.go # gosub
+  - google.golang.org/grpc/*.go # gosub
+  - google.golang.org/grpc/balancer/*.go # gosub
+  - google.golang.org/grpc/balancer/base/*.go # gosub
+  - google.golang.org/grpc/balancer/roundrobin/*.go # gosub
+  - google.golang.org/grpc/codes/*.go # gosub
+  - google.golang.org/grpc/connectivity/*.go # gosub
+  - google.golang.org/grpc/credentials/*.go # gosub
+  - google.golang.org/grpc/encoding/*.go # gosub
+  - google.golang.org/grpc/encoding/proto/*.go # gosub
+  - google.golang.org/grpc/grpclog/*.go # gosub
+  - google.golang.org/grpc/internal/*.go # gosub
+  - google.golang.org/grpc/internal/backoff/*.go # gosub
+  - google.golang.org/grpc/internal/channelz/*.go # gosub
+  - google.golang.org/grpc/internal/envconfig/*.go # gosub
+  - google.golang.org/grpc/internal/grpcrand/*.go # gosub
+  - google.golang.org/grpc/internal/transport/*.go # gosub
+  - google.golang.org/grpc/keepalive/*.go # gosub
+  - google.golang.org/grpc/metadata/*.go # gosub
+  - google.golang.org/grpc/naming/*.go # gosub
+  - google.golang.org/grpc/peer/*.go # gosub
+  - google.golang.org/grpc/resolver/*.go # gosub
+  - google.golang.org/grpc/resolver/dns/*.go # gosub
+  - google.golang.org/grpc/resolver/passthrough/*.go # gosub
+  - google.golang.org/grpc/stats/*.go # gosub
+  - google.golang.org/grpc/status/*.go # gosub
+  - google.golang.org/grpc/tap/*.go # gosub
   - gopkg.in/validator.v2/*.go # gosub
   - lib/common/*.go # gosub
   - policy-server/server_metrics/*.go # gosub

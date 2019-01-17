@@ -1,8 +1,8 @@
-<% unless p("cf_app_sd_disable") %>
+<% unless p('cf_app_sd_disable') %>
 <%=
 
 def internal_service_mesh_domains
-  p("internal_service_mesh_domains").map do |domain|
+  p('internal_service_mesh_domains').map do |domain|
     domain.end_with?('.') ? domain : domain << '.'
   end
 end
@@ -11,24 +11,32 @@ def internal_route_vip_range
   if_p('internal_route_vip_range') do |prop|
     return prop
   end.else do
-    link("cloud_controller_container_networking_info").p("cc.internal_route_vip_range")
+    link('cloud_controller_container_networking_info').p('cc.internal_route_vip_range')
   end
 end
 
+def vip_resolver_address 
+  if_link('vip_resolver_conn') do |link|
+    return "#{link.address}:#{link.p('listen_port_for_vip_resolver')}"
+  end
+  ''
+end
+
 config = {
-    "address" => p('address'),
-    "port" => "#{p('port')}",
-    "service_discovery_controller_address" => "service-discovery-controller.service.cf.internal",
-    "service_discovery_controller_port" => "#{link('service-discovery-controller').p('port')}",
-    "client_cert" => "/var/vcap/jobs/bosh-dns-adapter/config/certs/client.crt",
-    "client_key" => "/var/vcap/jobs/bosh-dns-adapter/config/certs/client.key",
-    "ca_cert" => "/var/vcap/jobs/bosh-dns-adapter/config/certs/server_ca.crt",
-    "metron_port" => p("metron_port"),
-    "metrics_emit_seconds" => 10,
-    "log_level_address" => p("log_level_address"),
-    "log_level_port" => p("log_level_port"),
-    "internal_service_mesh_domains" => internal_service_mesh_domains,
-    "internal_route_vip_range" => internal_route_vip_range,
+    'address' => p('address'),
+    'port' => "#{p('port')}",
+    'service_discovery_controller_address' => 'service-discovery-controller.service.cf.internal',
+    'service_discovery_controller_port' => "#{link('service-discovery-controller').p('port')}",
+    'client_cert' => '/var/vcap/jobs/bosh-dns-adapter/config/certs/client.crt',
+    'client_key' => '/var/vcap/jobs/bosh-dns-adapter/config/certs/client.key',
+    'ca_cert' => '/var/vcap/jobs/bosh-dns-adapter/config/certs/server_ca.crt',
+    'metron_port' => p('metron_port'),
+    'metrics_emit_seconds' => 10,
+    'log_level_address' => p('log_level_address'),
+    'log_level_port' => p('log_level_port'),
+    'internal_service_mesh_domains' => internal_service_mesh_domains,
+    'internal_route_vip_range' => internal_route_vip_range,
+    'vip_resolver_address' => vip_resolver_address,
 }
 
 require 'json'

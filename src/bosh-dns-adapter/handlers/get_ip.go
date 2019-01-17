@@ -16,8 +16,8 @@ type sdcClient interface {
 	IPs(hostname string) ([]string, error)
 }
 
-//go:generate counterfeiter -o fakes/copilot_client.go --fake-name CopilotClient . copilotClient
-type copilotClient interface {
+//go:generate counterfeiter -o fakes/copilot_client.go --fake-name CopilotClient . CopilotClient
+type CopilotClient interface {
 	IP(string) (string, error)
 }
 
@@ -29,7 +29,7 @@ type metricsSender interface {
 
 type GetIP struct {
 	SDCClient                  sdcClient
-	CopilotClient              copilotClient
+	CopilotClient              CopilotClient
 	InternalServiceMeshDomains []string
 	Logger                     lager.Logger
 	MetricsSender              metricsSender
