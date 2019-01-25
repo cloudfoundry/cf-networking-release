@@ -2,6 +2,9 @@
 
 NOTE: If you are having problems, first consult our [known issues doc](known-issues.md).
 
+### Latency Issues? 
+If you are seeing latency issues with container to container networking, please see our [debugging guide](network-latency-troubleshooting.md).
+
 ### Checking Logs
 
 * Discovering All CF Networking Logs:
