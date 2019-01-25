@@ -89,6 +89,7 @@ If there is no latency seen the problem likely originates in either your fronten
 
 ### Try using IPs instead of internal routes
 **Goal: another way to eliminte DNS as the source of the problem**
+
 This is not meant a solution to the problem. This should only be used to determine if the slowness is still present when DNS is taken out of the equation. 
 
 
