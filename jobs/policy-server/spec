@@ -93,12 +93,18 @@ properties:
     default: 8443
 
   cc_hostname:
-    description: "Host name for the Cloud Controller server.  E.g. the service advertised via Consul DNS. Must match `cc.internal_service_hostname`."
-    default: cloud-controller-ng.service.cf.internal
+    description: |
+      Host name for the Cloud Controller server for connecting to the non-secure api endpoint.
+      If this value is not provided, policy-server will consume the `cloud_controller_https_endpoint` link.
+      E.g. the service advertised via bosh-dns. Must match `cc.internal_service_hostname`.
+    example: cloud-controller-ng.service.cf.internal
 
   cc_port:
-    description: "External port of Cloud Controller server. Must match `cc.external_port`."
-    default: 9022
+    description: |
+      External port of Cloud Controller server for connecting to the non-secure api endpoint. 
+      If this value is not provided, policy-server will consume the `cloud_controller_https_endpoint` link.
+      Must match `cc.external_port`.
+    example: 9022
 
   skip_ssl_validation:
     description: "Skip verifying ssl certs when speaking to UAA or Cloud Controller."

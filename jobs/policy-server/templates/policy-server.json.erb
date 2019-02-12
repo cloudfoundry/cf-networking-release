@@ -44,13 +44,16 @@
     end
 
     def get_cc_url
-      return "http://#{p('cc_hostname')}:#{p('cc_port')}" unless p('cc_hostname').nil? || p('cc_hostname').empty?
+      if_p('cc_hostname') do |cc_hostname|
+        return "http://#{cc_hostname}:#{p('cc_port')}"
+      end
 
       if_link("cloud_controller_https_endpoint") do |link|
         return "https://#{link.p('cc.internal_service_hostname')}:#{link.p('cc.public_tls.port')}"
       end
-    end
 
+      raise '`cc_hostname` and `cc_port` properties were not supplied as manifest properties, nor were found in `cloud_controller_https_endpoint` link'
+    end
 %>
 
 <%=

@@ -8,7 +8,6 @@ module Bosh::Template::Test
     let(:release_path) {File.join(File.dirname(__FILE__), '../..')}
     let(:release) {ReleaseDir.new(release_path)}
     let(:job) {release.job('policy-server')}
-
     let(:cc_hostname) {'some-cc-hostname'}
     let(:cc_port) {4567}
     let(:merged_manifest_properties) do
@@ -73,8 +72,8 @@ module Bosh::Template::Test
           'uaa_client_secret' => 'some-uaa-client-secret',
           'uaa_url' => 'https://some-uaa-hostname',
           'uaa_port' => 3456,
-          'cc_url' => 'http://some-cc-hostname:4567',
           'cc_ca_cert' => '/var/vcap/jobs/policy-server/config/certs/cc_ca.crt',
+          'cc_url' => 'http://some-cc-hostname:4567',
           'skip_ssl_validation' => true,
           'database' => {
             'type' => 'postgres',
@@ -104,9 +103,8 @@ module Bosh::Template::Test
         })
       end
 
-      context 'when property values are not provided' do
-        let(:cc_hostname) {''}
-        let(:cc_port) {0}
+
+      context 'when capi provides a link to the https endpoint' do
         let(:links) do
           [
             Link.new(
@@ -122,6 +120,11 @@ module Bosh::Template::Test
               }
             )
           ]
+        end
+
+        before do
+          merged_manifest_properties.delete('cc_hostname')
+          merged_manifest_properties.delete('cc_port')
         end
 
         it 'uses the values from the cloud controller link' do
@@ -140,7 +143,7 @@ module Bosh::Template::Test
         end
       end
 
-      context 'when property values are provided' do
+      context 'when cc_hostname and cc_port property values are provided, and the link is provided' do
         let(:cc_hostname) {'use.me.pls'}
         let(:cc_port) {1234}
         let(:links) do
@@ -160,24 +163,28 @@ module Bosh::Template::Test
           ]
         end
 
-        it 'uses the property values' do
+        it 'uses the property values, so the link can be overridden' do
           policyServerJSON = JSON.parse(template.render(merged_manifest_properties, consumes: links))
 
           expect(policyServerJSON['cc_url']).to eq 'http://use.me.pls:1234'
           expect(policyServerJSON['cc_ca_cert']).to eq '/var/vcap/jobs/policy-server/config/certs/cc_ca.crt'
         end
+      end
 
-        describe 'cc_ca.crt' do
-          let(:template) {job.template('config/certs/cc_ca.crt')}
-          it 'writes the content of cc ca cert' do
-            cc_ca_cert = template.render(merged_manifest_properties, consumes: links)
-            expect(cc_ca_cert.strip).to eq('the-cc-ca-cert')
-          end
+      context 'when neither the cc_hostname nor cc_port property values are provided nor is the link provided' do
+        before do
+          merged_manifest_properties.delete('cc_hostname')
+          merged_manifest_properties.delete('cc_port')
+        end
+
+        it 'should raise an error' do
+          expect {
+            JSON.parse(template.render(merged_manifest_properties))
+          }.to raise_error '`cc_hostname` and `cc_port` properties were not supplied as manifest properties, nor were found in `cloud_controller_https_endpoint` link'
         end
       end
 
       context 'when tag length is valid' do
-
         [1, 2, 3].each do |i|
           it "does not raise when tag length is #{i}" do
             merged_manifest_properties['tag_length'] = i
@@ -186,7 +193,6 @@ module Bosh::Template::Test
             }.to_not raise_error
           end
         end
-
       end
 
       it 'raises an error when the tag length is too high' do
