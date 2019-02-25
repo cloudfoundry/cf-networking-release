@@ -2,7 +2,7 @@
 name: bosh-dns-adapter
 
 dependencies:
-  - golang-1.11-linux
+  - golang-1-linux
 
 files:
   - bosh-dns-adapter/*.go # gosub

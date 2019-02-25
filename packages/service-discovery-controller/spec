@@ -2,7 +2,7 @@
 name: service-discovery-controller
 
 dependencies:
-  - golang-1.11-linux
+  - golang-1-linux
 
 files:
   - code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor/*.go # gosub

@@ -187,6 +187,12 @@ resources:
     source:
       uri: https://github.com/cloudfoundry/capi-release.git
       branch: ci-passed
+  - name: silk-dev-full
+    type: git
+    source:
+      uri: git@github.com:cloudfoundry/silk-release.git
+      branch: develop
+      private_key: ((silk-release-deploy-key.private_key))
   - name: silk-dev
     type: git
     source:
@@ -509,6 +515,33 @@ jobs:
       input_mapping:
         release: modified-release
     - put: cf-networking-dev-full
+      params:
+        repository: modified-release
+
+  - name: upgrade-go1.x-in-silk-release
+    plan:
+    - aggregate:
+      - get: silk-dev-full
+      - get: golang-release-latest
+        trigger: true
+      - get: routing-ci
+    - task: upgrade-go1.x-in-networking-release
+      file: routing-ci/upgrade-package-in-release/task.yml
+      params:
+        PACKAGE: golang-1-linux
+        AWS_SECRET_ACCESS_KEY: ((cf_networking_release_aws_blobstore_secret_access_key))
+        AWS_ACCESS_KEY_ID: ((cf_networking_release_aws_blobstore_access_key_id))
+        RELEASE: release
+      input_mapping:
+        release: silk-dev-full
+        package-release: golang-release-latest
+    - task: save-golang-version-to-file
+      file: routing-ci/save-golang-version-to-file/task.yml
+      params:
+        BRANCH: develop
+      input_mapping:
+        release: modified-release
+    - put: silk-dev-full
       params:
         repository: modified-release
 
