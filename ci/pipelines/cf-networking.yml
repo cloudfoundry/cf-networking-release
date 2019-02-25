@@ -35,6 +35,7 @@ groups:
   - silk-mysql-5.6-tests
   - silk-template-tests
   - unit-and-integration-tests
+  - upgrade-go1.x-in-networking-release
   - pickelhelm-deploy
   - pickelhelm-test
   - mitre-deploy
@@ -146,7 +147,7 @@ resources:
     source:
       branch: master
       uri: https://github.com/cloudfoundry/cf-deployment.git
-      tag_filter: "v4.5.0"
+      tag_filter: "v7.1.0"
   - name: cf-networking-2.16.0
     type: git
     source:
@@ -170,6 +171,17 @@ resources:
     source:
       repository: DataDog/datadog-firehose-nozzle-release
   ###### BOSH release repos
+  - name: routing-ci
+    type: git
+    source:
+      branch: master
+      uri: https://github.com/cloudfoundry/routing-ci.git
+  - name: golang-release-latest
+    type: git
+    source:
+      branch: master
+      tag_filter: v*
+      uri: https://github.com/bosh-packages/golang-release.git
   - name: capi-ci-passed
     type: git
     source:
@@ -472,6 +484,33 @@ jobs:
     - get: silk-dev
       passed: [silk-postgres-tests, silk-mysql-tests, silk-mysql-5.6-tests, silk-template-tests, silk-windows-tests]
       trigger: true
+
+  - name: upgrade-go1.x-in-networking-release
+    plan:
+    - aggregate:
+      - get: cf-networking-dev
+      - get: golang-release-latest
+        trigger: true
+      - get: routing-ci
+    - task: upgrade-go1.x-in-networking-release
+      file: routing-ci/upgrade-package-in-release/task.yml
+      params:
+        PACKAGE: golang-1-linux
+        AWS_SECRET_ACCESS_KEY: ((cf_networking_release_aws_blobstore_secret_access_key))
+        AWS_ACCESS_KEY_ID: ((cf_networking_release_aws_blobstore_access_key_id))
+        RELEASE: release
+      input_mapping:
+        release: cf-networking-dev
+        package-release: golang-release-latest
+    - task: save-golang-version-to-file
+      file: routing-ci/save-golang-version-to-file/task.yml
+      params:
+        BRANCH: develop
+      input_mapping:
+        release: modified-release
+    - put: cf-networking-dev
+      params:
+        repository: modified-release
 
   - name: pickelhelm-bbl-up
     serial_groups: [pickelhelm]
