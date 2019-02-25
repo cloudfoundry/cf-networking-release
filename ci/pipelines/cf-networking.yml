@@ -36,6 +36,7 @@ groups:
   - silk-template-tests
   - unit-and-integration-tests
   - upgrade-go1.x-in-networking-release
+  - upgrade-go1.x-in-silk-release
   - pickelhelm-deploy
   - pickelhelm-test
   - mitre-deploy
