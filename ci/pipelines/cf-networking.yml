@@ -488,7 +488,7 @@ jobs:
   - name: upgrade-go1.x-in-networking-release
     plan:
     - aggregate:
-      - get: cf-networking-dev
+      - get: cf-networking-dev-full
       - get: golang-release-latest
         trigger: true
       - get: routing-ci
@@ -500,7 +500,7 @@ jobs:
         AWS_ACCESS_KEY_ID: ((cf_networking_release_aws_blobstore_access_key_id))
         RELEASE: release
       input_mapping:
-        release: cf-networking-dev
+        release: cf-networking-dev-full
         package-release: golang-release-latest
     - task: save-golang-version-to-file
       file: routing-ci/save-golang-version-to-file/task.yml
@@ -508,7 +508,7 @@ jobs:
         BRANCH: develop
       input_mapping:
         release: modified-release
-    - put: cf-networking-dev
+    - put: cf-networking-dev-full
       params:
         repository: modified-release
 
