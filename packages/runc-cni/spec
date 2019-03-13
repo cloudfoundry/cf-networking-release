@@ -25,7 +25,9 @@ files:
   - github.com/containernetworking/cni/pkg/version/*.go # gosub
   - github.com/containernetworking/plugins/pkg/ns/*.go # gosub
   - github.com/containernetworking/plugins/vendor/golang.org/x/sys/unix/*.go # gosub
+  - github.com/containernetworking/plugins/vendor/golang.org/x/sys/unix/*.s # gosub
   - github.com/coreos/go-iptables/iptables/*.go # gosub
   - golang.org/x/sys/unix/*.go # gosub
+  - golang.org/x/sys/unix/*.s # gosub
   - lib/rules/*.go # gosub
   - lib/serial/*.go # gosub
