@@ -272,6 +272,8 @@ func main() {
 		RataAdapter:   adapter.RataAdapter{},
 	}
 
+	xXssProtectionWrapper := handlers.XXSSProtectionHandler{}
+
 	metricsWrap := func(name string, handler http.Handler) http.Handler {
 		metricsWrapper := middleware.MetricWrapper{
 			Name:          name,
@@ -352,49 +354,57 @@ func main() {
 	}
 
 	externalHandlers := rata.Handlers{
-		"options": corsOptionsWrapper(http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		})),
-		"uptime": corsOptionsWrapper(metricsWrap("Uptime", logWrap(uptimeHandler))),
-		"health": corsOptionsWrapper(metricsWrap("Health", logWrap(healthHandler))),
+		"options": http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		}),
+		"uptime": metricsWrap("Uptime", logWrap(uptimeHandler)),
+		"health": metricsWrap("Health", logWrap(healthHandler)),
 
-		"create_policies": corsOptionsWrapper(metricsWrap("CreatePolicies",
-			logWrap(v0Andv1VersionWrap(authWriteWrap(createPolicyHandlerV1), authWriteWrap(createPolicyHandlerV0))))),
+		"create_policies": metricsWrap("CreatePolicies",
+			logWrap(v0Andv1VersionWrap(authWriteWrap(createPolicyHandlerV1), authWriteWrap(createPolicyHandlerV0)))),
 
-		"delete_policies": corsOptionsWrapper(metricsWrap("DeletePolicies",
-			logWrap(v0Andv1VersionWrap(authWriteWrap(deletePolicyHandlerV1), authWriteWrap(deletePolicyHandlerV0))))),
+		"delete_policies": metricsWrap("DeletePolicies",
+			logWrap(v0Andv1VersionWrap(authWriteWrap(deletePolicyHandlerV1), authWriteWrap(deletePolicyHandlerV0)))),
 
-		"policies_index": corsOptionsWrapper(metricsWrap("PoliciesIndex",
-			logWrap(v0Andv1VersionWrap(authWriteWrap(policiesIndexHandlerV1), authWriteWrap(policiesIndexHandlerV0))))),
+		"policies_index": metricsWrap("PoliciesIndex",
+			logWrap(v0Andv1VersionWrap(authWriteWrap(policiesIndexHandlerV1), authWriteWrap(policiesIndexHandlerV0)))),
 
-		"destinations_index": corsOptionsWrapper(metricsWrap("DestinationsIndex",
-			logWrap(v0Andv1VersionWrap(authAdminWrap(destinationsIndexHandlerV1), authAdminWrap(destinationsIndexHandlerV1))))),
+		"destinations_index": metricsWrap("DestinationsIndex",
+			logWrap(v0Andv1VersionWrap(authAdminWrap(destinationsIndexHandlerV1), authAdminWrap(destinationsIndexHandlerV1)))),
 
-		"destinations_create": corsOptionsWrapper(metricsWrap("DestinationsCreate",
-			logWrap(v1OnlyVersionWrap(authAdminWrap(createDestinationsHandlerV1))))),
+		"destinations_create": metricsWrap("DestinationsCreate",
+			logWrap(v1OnlyVersionWrap(authAdminWrap(createDestinationsHandlerV1)))),
 
-		"destinations_update": corsOptionsWrapper(metricsWrap("DestinationsUpdate",
-			logWrap(v1OnlyVersionWrap(authAdminWrap(updateDestinationsHandlerV1))))),
+		"destinations_update": metricsWrap("DestinationsUpdate",
+			logWrap(v1OnlyVersionWrap(authAdminWrap(updateDestinationsHandlerV1)))),
 
-		"destination_delete": corsOptionsWrapper(metricsWrap("DestinationDelete",
-			logWrap(v1OnlyVersionWrap(authAdminWrap(deleteDestinationHandlerV1))))),
+		"destination_delete": metricsWrap("DestinationDelete",
+			logWrap(v1OnlyVersionWrap(authAdminWrap(deleteDestinationHandlerV1)))),
 
-		"egress_policies_index": corsOptionsWrapper(metricsWrap("EgressPoliciesIndex",
-			logWrap(v1OnlyVersionWrap(authAdminWrap(indexEgressPolicyHandlerV1))))),
+		"egress_policies_index": metricsWrap("EgressPoliciesIndex",
+			logWrap(v1OnlyVersionWrap(authAdminWrap(indexEgressPolicyHandlerV1)))),
 
-		"egress_policies_create": corsOptionsWrapper(metricsWrap("EgressPoliciesCreate",
-			logWrap(v1OnlyVersionWrap(authAdminWrap(createEgressPolicyHandlerV1))))),
+		"egress_policies_create": metricsWrap("EgressPoliciesCreate",
+			logWrap(v1OnlyVersionWrap(authAdminWrap(createEgressPolicyHandlerV1)))),
 
-		"egress_policies_delete": corsOptionsWrapper(metricsWrap("EgressPoliciesDelete",
-			logWrap(v1OnlyVersionWrap(authAdminWrap(deleteEgressPolicyHandlerV1))))),
+		"egress_policies_delete": metricsWrap("EgressPoliciesDelete",
+			logWrap(v1OnlyVersionWrap(authAdminWrap(deleteEgressPolicyHandlerV1)))),
 
-		"cleanup": corsOptionsWrapper(metricsWrap("Cleanup",
-			logWrap(v0Andv1VersionWrap(authAdminWrap(policiesCleanupHandler), authAdminWrap(policiesCleanupHandler))))),
+		"cleanup": metricsWrap("Cleanup",
+			logWrap(v0Andv1VersionWrap(authAdminWrap(policiesCleanupHandler), authAdminWrap(policiesCleanupHandler)))),
 
-		"tags_index": corsOptionsWrapper(metricsWrap("TagsIndex",
-			logWrap(v0Andv1VersionWrap(authAdminWrap(tagsIndexHandler), authAdminWrap(tagsIndexHandler))))),
+		"tags_index": metricsWrap("TagsIndex",
+			logWrap(v0Andv1VersionWrap(authAdminWrap(tagsIndexHandler), authAdminWrap(tagsIndexHandler)))),
 
-		"whoami": corsOptionsWrapper(metricsWrap("WhoAmI",
-			logWrap(v0Andv1VersionWrap(authAdminWrap(whoamiHandler), authAdminWrap(whoamiHandler))))),
+		"whoami": metricsWrap("WhoAmI",
+			logWrap(v0Andv1VersionWrap(authAdminWrap(whoamiHandler), authAdminWrap(whoamiHandler)))),
+	}
+
+	for key, handler := range externalHandlers {
+		externalHandlers[key] = corsOptionsWrapper(handler)
+	}
+
+	for key, handler := range externalHandlers {
+		externalHandlers[key] = xXssProtectionWrapper.Wrap(handler)
 	}
 
 	err = dropsonde.Initialize(conf.MetronAddress, dropsondeOrigin)
