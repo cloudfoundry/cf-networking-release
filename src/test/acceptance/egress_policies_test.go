@@ -194,7 +194,9 @@ var _ = Describe("external connectivity", func() {
 
 			By("verifying that the test app has no connectivity to the internet prior to setting policy")
 			Consistently(cannotProxy, "2s", "0.5s").Should(Succeed())
-			Consistently(func() error { return cannotPing("8.8.8.8") }, "2s", "0.5s").Should(Succeed())
+			if !testConfig.SkipICMPDynamicEgressTests {
+				Consistently(func() error { return cannotPing("8.8.8.8") }, "2s", "0.5s").Should(Succeed())
+			}
 			Consistently(cannotDigUDP, "2s", "0.5s").Should(Succeed())
 
 			By("creating all egress policy")
@@ -212,8 +214,10 @@ var _ = Describe("external connectivity", func() {
 			Eventually(canProxy, "10s", "1s").Should(Succeed())
 			Consistently(canProxy, "2s", "0.5s").Should(Succeed())
 
-			Consistently(func() error { return canPing("8.8.8.8") }, "2s", "0.5s").Should(Succeed())
-			Consistently(func() error { return canPing("1.1.1.1") }, "2s", "0.5s").Should(Succeed())
+			if !testConfig.SkipICMPDynamicEgressTests {
+				Consistently(func() error { return canPing("8.8.8.8") }, "2s", "0.5s").Should(Succeed())
+				Consistently(func() error { return canPing("1.1.1.1") }, "2s", "0.5s").Should(Succeed())
+			}
 
 			By("checking that the app cannot use UDP")
 			Consistently(cannotDigUDP, "2s", "0.5s").Should(Succeed())
@@ -266,7 +270,9 @@ var _ = Describe("external connectivity", func() {
 
 			By("verifying that the test app has no connectivity to the internet prior to setting policy")
 			Consistently(cannotProxy, "2s", "0.5s").Should(Succeed())
-			Consistently(func() error { return cannotPing("8.8.8.8") }, "2s", "0.5s").Should(Succeed())
+			if !testConfig.SkipICMPDynamicEgressTests {
+				Consistently(func() error { return cannotPing("8.8.8.8") }, "2s", "0.5s").Should(Succeed())
+			}
 			Consistently(cannotDigUDP, "2s", "0.5s").Should(Succeed())
 
 			By("creating all egress policy")
@@ -284,8 +290,10 @@ var _ = Describe("external connectivity", func() {
 			Eventually(canProxy, "10s", "1s").Should(Succeed())
 			Consistently(canProxy, "2s", "0.5s").Should(Succeed())
 
-			Consistently(func() error { return canPing("8.8.8.8") }, "2s", "0.5s").Should(Succeed())
-			Consistently(func() error { return canPing("1.1.1.1") }, "2s", "0.5s").Should(Succeed())
+			if !testConfig.SkipICMPDynamicEgressTests {
+				Consistently(func() error { return canPing("8.8.8.8") }, "2s", "0.5s").Should(Succeed())
+				Consistently(func() error { return canPing("1.1.1.1") }, "2s", "0.5s").Should(Succeed())
+			}
 
 			Eventually(canDigUDP, "10s", "1s").Should(Succeed())
 			Consistently(canDigUDP, "2s", "0.5s").Should(Succeed())
