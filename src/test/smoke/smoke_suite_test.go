@@ -90,7 +90,6 @@ func pushApp(appName, kind string, extraArgs ...string) {
 	args := append([]string{
 		"push", appName,
 		"-p", appDir(kind),
-		"-s", "cflinuxfs2",
 		"-f", defaultManifest(kind),
 	}, extraArgs...)
 	Expect(cf.Cf(args...).Wait(Timeout_Push)).To(gexec.Exit(0))
