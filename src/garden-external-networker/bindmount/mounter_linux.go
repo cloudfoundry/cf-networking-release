@@ -12,7 +12,7 @@ import (
 type Mounter struct{}
 
 func (m *Mounter) IdempotentlyMount(source, target string) error {
-	err := os.MkdirAll(filepath.Dir(target), 0600)
+	err := os.MkdirAll(filepath.Dir(target), 0700)
 	if err != nil {
 		return fmt.Errorf("os.MkdirAll failed: %s", err)
 	}
