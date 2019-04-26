@@ -160,7 +160,7 @@ properties:
       Maximum number of idle connections to the SQL database.
 
       Idle connections will be retained until their `connections_max_lifetime_seconds` has been reached.
-    default: 200
+    default: 10
 
   connections_max_lifetime_seconds:
     description: |

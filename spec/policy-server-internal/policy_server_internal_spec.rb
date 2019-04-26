@@ -23,7 +23,6 @@ module Bosh::Template::Test
         'database' => {
           'connect_timeout_seconds' => 30,
         },
-        'max_idle_connections' => 4,
         'max_open_connections' => 5,
         'connections_max_lifetime_seconds' => 54,
         'enforce_experimental_dynamic_egress_policies' => true,
@@ -96,7 +95,7 @@ module Bosh::Template::Test
             'ca_cert' => '/var/vcap/jobs/policy-server-internal/config/certs/database_ca.crt',
             'skip_hostname_validation' => true,
           },
-          'max_idle_connections' => 4,
+          'max_idle_connections' => 10,
           'max_open_connections' => 5,
           'connections_max_lifetime_seconds' => 54,
           'tag_length' => 1,
