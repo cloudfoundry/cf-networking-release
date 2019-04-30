@@ -6,7 +6,8 @@ function wait_for_server_to_become_healthy() {
   for _ in $(seq "${timeout}"); do
     set +e
     curl -f --connect-timeout 1 "${url}" > /dev/null 2>&1
-    if [ $? -eq 0 ]; then
+    last_exit_code=$?
+    if [ $last_exit_code -eq 0  ] || [ $last_exit_code -eq 22  ]; then
       echo 0
       return
     fi
