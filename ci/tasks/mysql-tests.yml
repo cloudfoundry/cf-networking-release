@@ -3,7 +3,6 @@ image_resource:
   type: docker-image
   source:
     repository: c2cnetworking/dev-mysql
-    tag: 0.18.0
 
 platform: linux
 
