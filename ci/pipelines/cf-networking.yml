@@ -640,14 +640,6 @@ jobs:
           BBL_STATE_DIR: environments/pickelhelm/
         input_mapping:
           bbl-state: cf-networking-deployments
-      - task: upload-windows-1803-stemcell
-        file: cf-deployment-concourse-tasks/bosh-upload-stemcells/task.yml
-        params:
-          BBL_STATE_DIR: environments/pickelhelm/
-          OPS_FILES: |
-            windows1803-cell.yml
-        input_mapping:
-          bbl-state: cf-networking-deployments
       - task: upload-local-capi-release
         file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
         input_mapping:
@@ -688,8 +680,6 @@ jobs:
           use-system-domain-as-metron-deployment-name.yml
           enable-routing-integrity.yml
           add-route-syncer.yml
-          windows1803-cell.yml
-          add-vxlan-policy-agent-windows.yml
           use-latest-silk.yml
           use-latest-capi.yml
           use-latest-cf-networking.yml
@@ -895,14 +885,6 @@ jobs:
           BBL_STATE_DIR: environments/mitre/
         input_mapping:
           bbl-state: cf-networking-deployments
-      - task: upload-windows-1803-stemcell
-        file: cf-deployment-concourse-tasks/bosh-upload-stemcells/task.yml
-        params:
-          BBL_STATE_DIR: environments/mitre/
-          OPS_FILES: |
-            windows1803-cell.yml
-        input_mapping:
-          bbl-state: cf-networking-deployments
       - task: upload-local-capi-release
         file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
         input_mapping:
@@ -946,8 +928,6 @@ jobs:
           enable-routing-integrity.yml
           enable-iptables-logger.yml
           add-route-syncer.yml
-          windows1803-cell.yml
-          add-vxlan-policy-agent-windows.yml
           use-latest-silk.yml
           use-latest-capi.yml
           use-latest-cf-networking.yml
