@@ -1912,6 +1912,15 @@ jobs:
           other-release-version: version
         params:
           OTHER_RELEASE_NAME: silk-release
+          PRE_RELEASE: "true"
+      - task: silk-build-release-notes
+        file: cf-networking-release-ci/ci/tasks/build-release-notes.yml
+        input_mapping:
+          master-release: silk-dev
+          other-release-version: version
+        params:
+          OTHER_RELEASE_NAME: cf-networking-release
+          PRE_RELEASE: "true"
       - put: cf-networking-release-candidate
         params:
           repository: cf-networking-dev

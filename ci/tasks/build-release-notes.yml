@@ -20,3 +20,4 @@ params:
   SOURCE_DIR: master-release
   OUTPUT_DIR: release-notes
   OTHER_RELEASE_NAME: silk-release
+  PRE_RELEASE: "false"
