@@ -115,9 +115,6 @@
 [submodule "src/github.com/vishvananda/netns"]
 	path = src/github.com/vishvananda/netns
 	url = https://github.com/vishvananda/netns
-[submodule "src/gopkg.in/gorp.v1"]
-	path = src/gopkg.in/gorp.v1
-	url = https://gopkg.in/go-gorp/gorp.v1
 [submodule "src/github.com/golang/protobuf"]
 	path = src/github.com/golang/protobuf
 	url = https://github.com/golang/protobuf
