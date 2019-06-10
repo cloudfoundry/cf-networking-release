@@ -170,7 +170,7 @@ func waitForAllInstancesToBeRunning(appName string) {
 		return true
 	}
 
-	Eventually(allInstancesRunning, "5s").Should(Equal(true), "not all instances running")
+	Eventually(allInstancesRunning, "30s", "500ms").Should(Equal(true), "not all instances running")
 }
 
 func restage(appName string) {
