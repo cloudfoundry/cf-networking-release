@@ -104,10 +104,8 @@ var _ = Describe("space developer policy configuration", func() {
 		spaceBGuid, err := cli.SpaceGuid(spaceNameB)
 		Expect(err).NotTo(HaveOccurred())
 
-		cf.Cf("curl", "-X", "PUT", fmt.Sprintf("/v2/organizations/%s/users/space-client", orgGuid))
-		// Hack time.Sleep to deal with race condition, first curl has to succeed before the subsequent curls
-		// Later change sleep to assert that the previous curl command succeeded before continuing
-		time.Sleep(5 * time.Second)
+		Expect(cf.Cf("curl", "-X", "PUT", fmt.Sprintf("/v2/organizations/%s/users/space-client", orgGuid)).Wait()).To(gexec.Exit(0))
+
 		cf.Cf("curl", "-X", "PUT", fmt.Sprintf("/v2/spaces/%s/developers/space-client", spaceAGuid))
 		cf.Cf("curl", "-X", "PUT", fmt.Sprintf("/v2/spaces/%s/developers/space-client", spaceBGuid))
 	})
