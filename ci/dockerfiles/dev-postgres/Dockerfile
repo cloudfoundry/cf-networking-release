@@ -1,5 +1,7 @@
 FROM postgres
 
+ENV CF_CLI_VERSION 6.45.0
+
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
   ca-certificates \
   curl \
@@ -16,7 +18,7 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
   &&  apt-get clean \
   &&  rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN curl -L "https://packages.cloudfoundry.org/stable?release=linux64-binary&version=6.43.0&source=github-rel" | tar -zx && mv cf /usr/local/bin/cf
+RUN curl -L "https://packages.cloudfoundry.org/stable?release=linux64-binary&version=${CF_CLI_VERSION}&source=github-rel" | tar -zx && mv cf /usr/local/bin/cf
 
 ADD go*.tar.gz /usr/local
 
