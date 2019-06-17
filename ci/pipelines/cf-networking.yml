@@ -28,9 +28,7 @@ groups:
   - mysql-tests
   - mysql-5.6-tests
   - postgres-tests
-  - windows-tests
   - silk-postgres-tests
-  - silk-windows-tests
   - silk-mysql-tests
   - silk-mysql-5.6-tests
   - silk-template-tests
@@ -412,31 +410,6 @@ jobs:
       input_mapping:
         cf-networking-release: cf-networking-dev
 
-  - name: windows-tests
-    plan:
-    - aggregate:
-      - get: cf-networking-dev
-        trigger: true
-      - get: cf-networking-release-ci
-        params:
-          submodules: none
-    - task: garden-external-networker-windows
-      file: cf-networking-release-ci/ci/tasks/garden-external-networker-windows.yml
-      input_mapping:
-        cf-networking-release: cf-networking-dev
-        ci: cf-networking-release-ci
-
-  - name: silk-windows-tests
-    plan:
-    - aggregate:
-      - get: silk-dev
-        trigger: true
-    - task: test
-      file: silk-dev/ci/test-windows.yml
-      privileged: true
-      input_mapping:
-        silk: silk-dev
-
   - name: silk-postgres-tests
     plan:
     - aggregate:
@@ -486,10 +459,10 @@ jobs:
   - name: unit-and-integration-tests
     plan:
     - get: cf-networking-dev
-      passed: [postgres-tests, mysql-tests, mysql-5.6-tests, windows-tests, template-tests]
+      passed: [postgres-tests, mysql-tests, mysql-5.6-tests, template-tests]
       trigger: true
     - get: silk-dev
-      passed: [silk-postgres-tests, silk-mysql-tests, silk-mysql-5.6-tests, silk-template-tests, silk-windows-tests]
+      passed: [silk-postgres-tests, silk-mysql-tests, silk-mysql-5.6-tests, silk-template-tests]
       trigger: true
 
   - name: upgrade-go1.x-in-networking-release
