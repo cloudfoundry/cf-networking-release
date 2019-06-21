@@ -126,7 +126,7 @@ var _ = Describe("External API Space Developer", func() {
 					req.Header.Set("Authorization", "Bearer space-dev-token")
 				})
 
-				XIt("succeeds for developers with access to apps", func() {
+				It("succeeds for developers with access to apps", func() {
 					resp, err := http.DefaultClient.Do(req)
 					Expect(err).NotTo(HaveOccurred())
 
