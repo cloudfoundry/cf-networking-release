@@ -900,7 +900,9 @@ jobs:
           args:
             - -exc
             - |
-              (cd cf-networking-deployments/environments/mitre && eval "$(bbl print-env)")
+              pushd cf-networking-deployments/environments/mitre
+                eval "$(bbl print-env)")
+              popd
               credhub set -n "/bosh-mitre/cf/apps_domain" -t value -v "apps.mitre.c2c.cf-app.com"
     - task: deploy-cf
       file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
