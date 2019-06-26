@@ -920,6 +920,7 @@ jobs:
           scale-instances-to-2.yml
           scale-persistent-disk.yml
           lower-canary-watch-time.yml
+          set-apps-domain.yml
       input_mapping:
         bbl-state: cf-networking-deployments
         vars-store: cf-networking-deployments
