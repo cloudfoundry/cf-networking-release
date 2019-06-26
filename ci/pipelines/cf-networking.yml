@@ -886,6 +886,22 @@ jobs:
         params:
           ENVIRONMENT_NAME: mitre
           BBL_STATE_DIR: environments/mitre/
+    - task: set-apps-domain
+      config:
+        platform: linux
+        image_resource:
+          type: docker-image
+          source:
+            repository: c2cnetworking/deploy-light
+        inputs:
+          - name: cf-networking-deployments
+        run:
+          path: bash
+          args:
+            - -exc
+            - |
+              (cd cf-networking-deployments/environments/mitre && "$(eval bbl print-env)")
+              credhub set -n "/bosh-mitre/cf/apps_domain" -t value -v "apps.mitre.c2c.cf-app.com"
     - task: deploy-cf
       file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
       params:
@@ -920,7 +936,6 @@ jobs:
           scale-instances-to-2.yml
           scale-persistent-disk.yml
           lower-canary-watch-time.yml
-          set-apps-domain.yml
       input_mapping:
         bbl-state: cf-networking-deployments
         vars-store: cf-networking-deployments
