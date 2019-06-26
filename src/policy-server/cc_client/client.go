@@ -131,6 +131,7 @@ func (c *Client) GetLiveAppGUIDs(token string, appGUIDs []string) (map[string]st
 		return nil, fmt.Errorf("json client do: %s", err)
 	}
 
+	// TotalPages will never be greater than 1, we are setting per_page equal to size of app_guid list
 	if response.Pagination.TotalPages > 1 {
 		return nil, fmt.Errorf("pagination support not yet implemented")
 	}
@@ -150,6 +151,7 @@ func (c *Client) GetLiveSpaceGUIDs(token string, spaceGUIDs []string) (map[strin
 
 	values := url.Values{}
 	values.Add("guids", strings.Join(spaceGUIDs, ","))
+	// Add +1 incase len is 0 - avoiding a capi error
 	values.Add("per_page", strconv.Itoa(len(spaceGUIDs)+1))
 
 	route := fmt.Sprintf("/v3/spaces?%s", values.Encode())
@@ -158,6 +160,8 @@ func (c *Client) GetLiveSpaceGUIDs(token string, spaceGUIDs []string) (map[strin
 	if err != nil {
 		return nil, fmt.Errorf("json client do: %s", err)
 	}
+
+	// TotalPages will never be greater than 1, we are setting per_page equal to size of space_guids list
 	if response.Pagination.TotalPages > 1 {
 		return nil, fmt.Errorf("pagination support not yet implemented")
 	}
@@ -206,6 +210,7 @@ func (c *Client) GetAppSpaces(token string, appGUIDs []string) (map[string]strin
 		return nil, fmt.Errorf("json client do: %s", err)
 	}
 
+	// TotalPages will never be greater than 1, we are setting per_page equal to size of app_guid list
 	if response.Pagination.TotalPages > 1 {
 		return nil, fmt.Errorf("pagination support not yet implemented")
 	}
