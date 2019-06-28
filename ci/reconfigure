@@ -4,6 +4,9 @@ set -e -u
 export PIPELINE=$1
 export TARGET=c2c
 
+fly -t $TARGET sync
+fly -t $TARGET status || fly -t $TARGET login -b
+
 fly -t $TARGET \
   set-pipeline -p $PIPELINE \
   -c $HOME/workspace/cf-networking-release/ci/pipelines/$PIPELINE.yml
