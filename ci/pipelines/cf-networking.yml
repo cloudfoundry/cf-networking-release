@@ -170,11 +170,6 @@ resources:
     source:
       repository: DataDog/datadog-firehose-nozzle-release
   ###### BOSH release repos
-  - name: routing-ci
-    type: git
-    source:
-      branch: master
-      uri: https://github.com/cloudfoundry/routing-ci.git
   - name: golang-release-latest
     type: git
     source:
@@ -471,9 +466,8 @@ jobs:
       - get: cf-networking-dev-full
       - get: golang-release-latest
         trigger: true
-      - get: routing-ci
     - task: upgrade-go1.x-in-networking-release
-      file: routing-ci/upgrade-package-in-release/task.yml
+      file: cf-networking-dev-full/ci/tasks/upgrade-package-in-release/task.yml
       params:
         PACKAGE: golang-1-linux
         AWS_SECRET_ACCESS_KEY: ((cf_networking_release_aws_blobstore_secret_access_key))
@@ -483,7 +477,7 @@ jobs:
         release: cf-networking-dev-full
         package-release: golang-release-latest
     - task: save-golang-version-to-file
-      file: routing-ci/save-golang-version-to-file/task.yml
+      file: cf-networking-dev-full/ci/tasks/save-golang-version-to-file/task.yml
       params:
         BRANCH: develop
       input_mapping:
@@ -498,9 +492,9 @@ jobs:
       - get: silk-dev-full
       - get: golang-release-latest
         trigger: true
-      - get: routing-ci
+      - get: cf-networking-dev-full
     - task: upgrade-go1.x-in-networking-release
-      file: routing-ci/upgrade-package-in-release/task.yml
+      file: cf-networking-dev-full/ci/tasks/upgrade-package-in-release/task.yml
       params:
         PACKAGE: golang-1-linux
         AWS_SECRET_ACCESS_KEY: ((cf_networking_release_aws_blobstore_secret_access_key))
@@ -510,7 +504,7 @@ jobs:
         release: silk-dev-full
         package-release: golang-release-latest
     - task: save-golang-version-to-file
-      file: routing-ci/save-golang-version-to-file/task.yml
+      file: cf-networking-dev-full/ci/tasks/save-golang-version-to-file/task.yml
       params:
         BRANCH: develop
       input_mapping:
