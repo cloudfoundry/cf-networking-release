@@ -1,0 +1,22 @@
+#!/bin/bash
+
+set -e -u
+
+mkdir -p ops-files/istio-release/deploy/cf-deployment-operations
+cp istio-release/deploy/cf-deployment-operations/*.yml ops-files/istio-release/deploy/cf-deployment-operations/ || true # istio-release ops files are optional
+
+mkdir -p ops-files/cf-deployment/operations
+cp cf-deployment/operations/**/*.yml ops-files/cf-deployment/operations
+cp cf-deployment/operations/*.yml ops-files/cf-deployment/operations/
+
+mkdir -p ops-files/cf-networking-release/manifest-generation/opsfiles
+cp cf-networking-release/manifest-generation/opsfiles/*.yml ops-files/cf-networking-release/manifest-generation/opsfiles/
+
+mkdir -p ops-files/deployments-repo/environments/${ENVIRONMENT_NAME}
+cp deployments-repo/smaller-footprint.yml ops-files/
+cp deployments-repo/environments/${ENVIRONMENT_NAME}/*.yml ops-files/deployments-repo/environments/${ENVIRONMENT_NAME}/ || true # if we don't have an env specific opsfile
+
+mkdir -p opsfiles/silk-release/opsfiles
+cp silk-release/opsfiles/*.yml ops-files/silk-release/opsfiles
+
+cp cf-networking-release/ci/opsfiles/*.yml ops-files/cf-networking-release/ci/opsfiles/
