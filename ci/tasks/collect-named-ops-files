@@ -5,8 +5,10 @@ set -e -u
 mkdir -p ops-files/istio-release/deploy/cf-deployment-operations
 cp istio-release/deploy/cf-deployment-operations/*.yml ops-files/istio-release/deploy/cf-deployment-operations/ || true # istio-release ops files are optional
 
-mkdir -p ops-files/cf-deployment/operations
-cp cf-deployment/operations/**/*.yml ops-files/cf-deployment/operations
+mkdir -p ops-files/cf-deployment/operations/experimental/
+mkdir -p ops-files/cf-deployment/operations/backup-and-restore/
+cp cf-deployment/operations/experimental/*.yml ops-files/cf-deployment/operations/experimental/
+cp cf-deployment/operations/backup-and-restore/*.yml ops-files/cf-deployment/operations/backup-and-restore/
 cp cf-deployment/operations/*.yml ops-files/cf-deployment/operations/
 
 mkdir -p ops-files/cf-networking-release/manifest-generation/opsfiles
