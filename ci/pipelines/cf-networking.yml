@@ -838,7 +838,7 @@ jobs:
         params:
           pre: rc
     - task: collect-ops-files
-      file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
+      file: cf-networking-release-ci/ci/tasks/collect-named-ops-files.yml
       params:
         ENVIRONMENT_NAME: mitre
       input_mapping:
@@ -904,34 +904,34 @@ jobs:
         BBL_STATE_DIR: environments/mitre/
         SYSTEM_DOMAIN: mitre.c2c.cf-app.com
         OPS_FILES: |
-          datadog.yml
-          scale-to-one-az.yml
-          smaller-footprint.yml
-          cf-networking.yml
-          use-system-domain-as-metron-deployment-name.yml
-          custom-apps-domain.yml
-          enable-routing-integrity.yml
-          enable-iptables-logger.yml
-          add-route-syncer.yml
-          use-latest-silk.yml
-          use-latest-capi.yml
-          use-latest-cf-networking.yml
-          enable-service-discovery.yml
-          add-apps-internal-search-domain.yml
-          add-acceptance-test-jobs.yml
-          enable-backup-restore.yml
-          enable-experimental-dynamic-egress-policies.yml
-          add-istio.yml
-          enable-sidecar-proxying.yml
-          disable-ingress-redirect-to-proxy.yml
-          add-smoke-test-user.yml
-          change-vtep-port.yml
-          enable-rate-limiting-for-udp.yml
-          enable-space-developer-self-service.yml
-          scale-ephemeral-disk.yml
-          scale-instances-to-2.yml
-          scale-persistent-disk.yml
-          lower-canary-watch-time.yml
+          cf-networking-release/ci/opsfiles/datadog.yml
+          cf-deployment/operations/scale-to-one-az.yml
+          deployments-repo/smaller-footprint.yml
+          cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
+          cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
+          cf-networking-release/ci/opsfiles/custom-apps-domain.yml
+          cf-deployment/operations/enable-routing-integrity.yml
+          cf-deployment/operations/experimental/enable-iptables-logger.yml
+          istio-release/deploy/cf-deployment-operations/add-route-syncer.yml
+          cf-networking-release/ci/opsfiles/use-latest-silk.yml
+          cf-networking-release/ci/opsfiles/use-latest-capi.yml
+          cf-networking-release/ci/opsfiles/use-latest-cf-networking.yml
+          cf-deployment/operations/enable-service-discovery.yml
+          cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain.yml
+          cf-networking-release/ci/opsfiles/add-acceptance-test-jobs.yml
+          cf-deployment/operations/backup-and-restore/enable-backup-restore.yml
+          cf-networking-release/manifest-generation/opsfiles/enable-experimental-dynamic-egress-policies.yml
+          istio-release/deploy/cf-deployment-operations/add-istio.yml
+          istio-release/deploy/cf-deployment-operations/enable-sidecar-proxying.yml
+          cf-networking-release/ci/opsfiles/disable-ingress-redirect-to-proxy.yml
+          deployments-repo/environments/mitre/add-smoke-test-user.yml
+          deployments-repo/environments/mitre/change-vtep-port.yml
+          deployments-repo/environments/mitre/enable-rate-limiting-for-udp.yml
+          deployments-repo/environments/mitre/enable-space-developer-self-service.yml
+          deployments-repo/environments/mitre/scale-ephemeral-disk.yml
+          deployments-repo/environments/mitre/scale-instances-to-2.yml
+          deployments-repo/environments/mitre/scale-persistent-disk.yml
+          cf-networking-release/ci/opsfiles/lower-canary-watch-time.yml
       input_mapping:
         bbl-state: cf-networking-deployments
         vars-store: cf-networking-deployments
