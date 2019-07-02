@@ -593,7 +593,7 @@ jobs:
         trigger: true
         passed: [unit-and-integration-tests]
     - task: collect-ops-files
-      file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
+      file: cf-networking-release-ci/ci/tasks/collect-named-ops-files.yml
       params:
         ENVIRONMENT_NAME: pickelhelm
       input_mapping:
@@ -640,27 +640,27 @@ jobs:
         BBL_STATE_DIR: environments/pickelhelm/
         SYSTEM_DOMAIN: pickelhelm.c2c.cf-app.com
         OPS_FILES: |
-          datadog.yml
-          scale-to-one-az.yml
-          smaller-footprint.yml
-          cf-networking.yml
-          use-system-domain-as-metron-deployment-name.yml
-          enable-routing-integrity.yml
-          add-route-syncer.yml
-          use-latest-silk.yml
-          use-latest-capi.yml
-          use-latest-cf-networking.yml
-          enable-service-discovery.yml
-          add-apps-internal-search-domain.yml
-          add-acceptance-test-jobs.yml
-          enable-experimental-dynamic-egress-policies.yml
-          add-istio.yml
-          enable-sidecar-proxying.yml
-          disable-ingress-redirect-to-proxy.yml
-          enable-iptables-logger.yml
-          use-external-postgres-for-c2c.yml
-          scale-to-2-diego-cells.yml
-          lower-canary-watch-time.yml
+          cf-networking-release/ci/opsfiles/datadog.yml
+          cf-deployment/operations/scale-to-one-az.yml
+          deployments-repo/smaller-footprint.yml
+          cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
+          cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
+          cf-deployment/operations/enable-routing-integrity.yml
+          istio-release/deploy/cf-deployment-operations/add-route-syncer.yml
+          cf-networking-release/ci/opsfiles/use-latest-silk.yml
+          cf-networking-release/ci/opsfiles/use-latest-capi.yml
+          cf-networking-release/ci/opsfiles/use-latest-cf-networking.yml
+          cf-deployment/operations/enable-service-discovery.yml
+          cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain.yml
+          cf-networking-release/ci/opsfiles/add-acceptance-test-jobs.yml
+          cf-networking-release/manifest-generation/opsfiles/enable-experimental-dynamic-egress-policies.yml
+          istio-release/deploy/cf-deployment-operations/add-istio.yml
+          istio-release/deploy/cf-deployment-operations/enable-sidecar-proxying.yml
+          cf-networking-release/ci/opsfiles/disable-ingress-redirect-to-proxy.yml
+          cf-deployment/operations/experimental/enable-iptables-logger.yml
+          deployments-repo/environments/pickelhelm/use-external-postgres-for-c2c.yml
+          deployments-repo/environments/pickelhelm/scale-to-2-diego-cells.yml
+          cf-networking-release/ci/opsfiles/lower-canary-watch-time.yml
       input_mapping:
         bbl-state: cf-networking-deployments
         release: istio-release # because the pre-package script is broken
@@ -1332,7 +1332,7 @@ jobs:
         params:
           BBL_STATE_DIR: environments/toque/
       - task: collect-ops-files
-        file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
+        file: cf-networking-release-ci/ci/tasks/collect-named-ops-files.yml
         params:
           ENVIRONMENT_NAME: toque
         input_mapping:
@@ -1353,32 +1353,32 @@ jobs:
         BBL_STATE_DIR: environments/toque
         SYSTEM_DOMAIN: toque.c2c.cf-app.com
         OPS_FILES: |
-          use-compiled-releases.yml
-          datadog.yml
-          scale-to-one-az.yml
-          smaller-footprint.yml
-          cf-networking.yml
-          use-system-domain-as-metron-deployment-name.yml
-          enable-routing-integrity.yml
-          add-route-syncer.yml
-          use-latest-silk.yml
-          use-latest-capi.yml
-          use-latest-cf-networking.yml
-          enable-service-discovery.yml
-          add-apps-internal-search-domain.yml
-          enable-experimental-dynamic-egress-policies.yml
-          add-istio.yml
-          enable-sidecar-proxying.yml
-          disable-ingress-redirect-to-proxy.yml
-          enable-iptables-logger.yml
-          change-nats-monitor-port.yml
-          increase-diego-cell-mtu.yml
-          scale-diego-cell-max-in-flight.yml
-          scale-diego-cell-vm-size.yml
-          scale-max-containers.yml
-          scale-router-ephemeral-disk.yml
-          scale-to-3-diego-cells.yml
-          lower-canary-watch-time.yml
+          cf-deployment/operations/use-compiled-releases.yml
+          cf-networking-release/ci/opsfiles/datadog.yml
+          cf-deployment/operations/scale-to-one-az.yml
+          deployments-repo/smaller-footprint.yml
+          cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
+          cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
+          cf-deployment/operations/enable-routing-integrity.yml
+          istio-release/deploy/cf-deployment-operations/add-route-syncer.yml
+          cf-networking-release/ci/opsfiles/use-latest-silk.yml
+          cf-networking-release/ci/opsfiles/use-latest-capi.yml
+          cf-networking-release/ci/opsfiles/use-latest-cf-networking.yml
+          cf-deployment/operations/enable-service-discovery.yml
+          cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain.yml
+          cf-networking-release/manifest-generation/opsfiles/enable-experimental-dynamic-egress-policies.yml
+          istio-release/deploy/cf-deployment-operations/add-istio.yml
+          istio-release/deploy/cf-deployment-operations/enable-sidecar-proxying.yml
+          cf-networking-release/ci/opsfiles/disable-ingress-redirect-to-proxy.yml
+          cf-deployment/operations/experimental/enable-iptables-logger.yml
+          deployments-repo/environments/toque/change-nats-monitor-port.yml
+          deployments-repo/environments/toque/increase-diego-cell-mtu.yml
+          deployments-repo/environments/toque/scale-diego-cell-max-in-flight.yml
+          deployments-repo/environments/toque/scale-diego-cell-vm-size.yml
+          deployments-repo/environments/toque/scale-max-containers.yml
+          deployments-repo/environments/toque/scale-router-ephemeral-disk.yml
+          deployments-repo/environments/toque/scale-to-3-diego-cells.yml
+          cf-networking-release/ci/opsfiles/lower-canary-watch-time.yml
       input_mapping:
         bbl-state: cf-networking-deployments
         cf-deployment: cf-deployment
@@ -1608,7 +1608,7 @@ jobs:
         cf-deployment: cf-deployment-pinned
         bbl-state: cf-networking-deployments
     - task: collect-pinned-ops-files
-      file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
+      file: cf-networking-release-ci/ci/tasks/collect-named-ops-files.yml
       params:
         ENVIRONMENT_NAME: caubeen
       input_mapping:
@@ -1622,18 +1622,18 @@ jobs:
         BBL_STATE_DIR: environments/caubeen/
         SYSTEM_DOMAIN: caubeen.c2c.cf-app.com
         OPS_FILES: |
-          use-compiled-releases.yml
-          cf-networking.yml
-          use-external-dbs.yml
-          use-external-blobstore.yml
-          use-gcs-blobstore-service-account.yml
-          use-system-domain-as-metron-deployment-name.yml
-          enable-routing-integrity.yml
-          enable-iptables-logger.yml
-          enable-service-discovery.yml
-          add-apps-internal-search-domain.yml
-          scale-up-4-api-instances.yml
-          lower-canary-watch-time.yml
+          cf-deployment/operations/use-compiled-releases.yml
+          cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
+          cf-deployment/operations/use-external-dbs.yml
+          cf-deployment/operations/use-external-blobstore.yml
+          cf-deployment/operations/use-gcs-blobstore-service-account.yml
+          cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
+          cf-deployment/operations/enable-routing-integrity.yml
+          cf-deployment/operations/experimental/enable-iptables-logger.yml
+          cf-deployment/operations/enable-service-discovery.yml
+          cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain.yml
+          deployments-repo/environments/caubeen/scale-up-4-api-instances.yml
+          cf-networking-release/ci/opsfiles/lower-canary-watch-time.yml
         VARS_FILES: |
           environments/caubeen/external-db-vars.yml
           environments/caubeen/gcs-vars.yml
@@ -1681,7 +1681,7 @@ jobs:
       input_mapping:
         bbl-state: cf-networking-deployments
     - task: collect-ops-files
-      file: cf-networking-release-ci/ci/tasks/collect-ops-files.yml
+      file: cf-networking-release-ci/ci/tasks/collect-named-ops-files.yml
       params:
         ENVIRONMENT_NAME: caubeen
       input_mapping:
@@ -1708,22 +1708,22 @@ jobs:
         BBL_STATE_DIR: environments/caubeen/
         SYSTEM_DOMAIN: caubeen.c2c.cf-app.com
         OPS_FILES: |
-          use-compiled-releases.yml
-          cf-networking.yml
-          use-external-dbs.yml
-          use-external-blobstore.yml
-          use-gcs-blobstore-service-account.yml
-          use-system-domain-as-metron-deployment-name.yml
-          enable-routing-integrity.yml
-          enable-iptables-logger.yml
-          enable-service-discovery.yml
-          enable-backup-restore.yml
-          add-apps-internal-search-domain.yml
-          scale-up-4-api-instances.yml
-          lower-canary-watch-time.yml
-          use-latest-silk.yml
-          use-latest-capi.yml
-          enable-experimental-dynamic-egress-policies.yml
+          cf-deployment/operations/use-compiled-releases.yml
+          cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
+          cf-deployment/operations/use-external-dbs.yml
+          cf-deployment/operations/use-external-blobstore.yml
+          cf-deployment/operations/use-gcs-blobstore-service-account.yml
+          cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
+          cf-deployment/operations/enable-routing-integrity.yml
+          cf-deployment/operations/experimental/enable-iptables-logger.yml
+          cf-deployment/operations/enable-service-discovery.yml
+          cf-deployment/operations/backup-and-restore/enable-backup-restore.yml
+          cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain.yml
+          deployments-repo/environments/caubeen/scale-up-4-api-instances.yml
+          cf-networking-release/ci/opsfiles/lower-canary-watch-time.yml
+          cf-networking-release/ci/opsfiles/use-latest-silk.yml
+          cf-networking-release/ci/opsfiles/use-latest-capi.yml
+          cf-networking-release/manifest-generation/opsfiles/enable-experimental-dynamic-egress-policies.yml
         VARS_FILES: |
           environments/caubeen/external-db-vars.yml
           environments/caubeen/gcs-vars.yml
