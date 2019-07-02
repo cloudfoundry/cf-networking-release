@@ -15,9 +15,7 @@ mkdir -p ops-files/cf-networking-release/manifest-generation/opsfiles
 cp cf-networking-release/manifest-generation/opsfiles/*.yml ops-files/cf-networking-release/manifest-generation/opsfiles/
 
 mkdir -p ops-files/deployments-repo/environments/${ENVIRONMENT_NAME}
-mkdir -p ops-files/deployments-repo/operations
 cp deployments-repo/smaller-footprint.yml ops-files/deployments-repo/
-cp deployments-repo/operations/*.yml ops-files/deployments-repo/operations/ || true # only cf-networking-deployment has these
 cp deployments-repo/environments/${ENVIRONMENT_NAME}/*.yml ops-files/deployments-repo/environments/${ENVIRONMENT_NAME}/ || true # if we don't have an env specific opsfile
 
 mkdir -p ops-files/silk-release/opsfiles
