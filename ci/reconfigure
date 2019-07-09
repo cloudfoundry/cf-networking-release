@@ -2,7 +2,7 @@
 
 set -e -u
 export PIPELINE=$1
-export TARGET=c2c
+export TARGET=ga
 
 fly -t $TARGET sync
 fly -t $TARGET status || fly -t $TARGET login -b
