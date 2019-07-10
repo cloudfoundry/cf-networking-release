@@ -23,3 +23,6 @@ cp silk-release/opsfiles/*.yml ops-files/silk-release/opsfiles/
 
 mkdir -p ops-files/cf-networking-release/ci/opsfiles/
 cp cf-networking-release/ci/opsfiles/*.yml ops-files/cf-networking-release/ci/opsfiles/
+
+mkdir -p ops-files/cf-networking-release-ci/ci/opsfiles/
+cp cf-networking-release-ci/ci/opsfiles/*.yml ops-files/cf-networking-release-ci/ci/opsfiles/
