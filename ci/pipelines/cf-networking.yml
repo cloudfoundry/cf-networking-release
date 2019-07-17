@@ -646,7 +646,6 @@ jobs:
           cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
           cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
           cf-deployment/operations/enable-routing-integrity.yml
-          istio-release/deploy/cf-deployment-operations/add-route-syncer.yml
           cf-networking-release/ci/opsfiles/use-latest-silk.yml
           cf-networking-release/ci/opsfiles/use-latest-capi.yml
           cf-networking-release/ci/opsfiles/use-latest-cf-networking.yml
@@ -912,7 +911,6 @@ jobs:
           cf-networking-release/ci/opsfiles/custom-apps-domain.yml
           cf-deployment/operations/enable-routing-integrity.yml
           cf-deployment/operations/experimental/enable-iptables-logger.yml
-          istio-release/deploy/cf-deployment-operations/add-route-syncer.yml
           cf-networking-release/ci/opsfiles/use-latest-silk.yml
           cf-networking-release/ci/opsfiles/use-latest-capi.yml
           cf-networking-release/ci/opsfiles/use-latest-cf-networking.yml
@@ -1360,7 +1358,6 @@ jobs:
           cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
           cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
           cf-deployment/operations/enable-routing-integrity.yml
-          istio-release/deploy/cf-deployment-operations/add-route-syncer.yml
           cf-networking-release/ci/opsfiles/use-latest-silk.yml
           cf-networking-release/ci/opsfiles/use-latest-capi.yml
           cf-networking-release/ci/opsfiles/use-latest-cf-networking.yml
