@@ -14,6 +14,16 @@ cp cf-networking-deployments/config/private.yml silk/config/private.yml
 CANDIDATE_DIR=$PWD/silk-tarball
 cd silk
 
+FORMATTED_KEY="$(sed 's/^/      /' <(echo ${GCP_BLOBSTORE_SERVICE_ACCOUNT_KEY}))"
+cat > config/private.yml <<EOF
+---
+blobstore:
+    credentials_source: static
+    json_key: |
+${FORMATTED_KEY}
+EOF
+
+
 git config --global user.email "container-networking+ci@pivotal.io"
 git config --global user.name "Container Networking Bot"
 

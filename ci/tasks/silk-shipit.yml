@@ -16,5 +16,8 @@ outputs:
   - name: final-release
   - name: release
 
+params:
+  GCP_BLOBSTORE_SERVICE_ACCOUNT_KEY:
+
 run:
   path: cf-networking-release-ci/ci/tasks/silk-shipit

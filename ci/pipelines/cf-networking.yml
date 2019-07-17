@@ -2001,6 +2001,8 @@ jobs:
         file: cf-networking-release-ci/ci/tasks/silk-shipit.yml
         input_mapping:
           silk: silk-dev
+        params:
+          GCP_BLOBSTORE_SERVICE_ACCOUNT_KEY: ((gcp_silk_blobstore_service_account_key))
       - put: silk-master
         params:
           repository: release/master

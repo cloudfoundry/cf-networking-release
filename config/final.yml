@@ -1,8 +1,6 @@
 ---
 final_name: cf-networking
 blobstore:
-  provider: s3
+  provider: gcs
   options:
-    bucket_name: c2c-networking-blobs
-    region: us-west-2
-    endpoint: https://s3-us-west-2.amazonaws.com/
+    bucket_name: cf-networking-release-blobs
