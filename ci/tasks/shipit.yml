@@ -18,3 +18,6 @@ outputs:
 
 run:
   path: cf-networking-release-ci/ci/tasks/shipit
+
+params:
+  GCP_BLOBSTORE_SERVICE_ACCOUNT_KEY:
