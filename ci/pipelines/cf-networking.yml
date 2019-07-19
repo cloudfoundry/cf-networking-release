@@ -350,7 +350,7 @@ resources:
 jobs:
   - name: postgres-tests
     plan:
-    - aggregate:
+    - in_parallel:
       - get: cf-networking-dev
         trigger: true
       - get: cf-networking-release-ci
@@ -364,7 +364,7 @@ jobs:
 
   - name: template-tests
     plan:
-    - aggregate:
+    - in_parallel:
       - get: cf-networking-dev
         trigger: true
       - get: cf-networking-release-ci
@@ -378,7 +378,7 @@ jobs:
   - name: mysql-tests
     serial: true
     plan:
-    - aggregate:
+    - in_parallel:
       - get: cf-networking-dev
         trigger: true
       - get: cf-networking-release-ci
@@ -393,7 +393,7 @@ jobs:
   - name: mysql-5.6-tests
     serial: true
     plan:
-    - aggregate:
+    - in_parallel:
       - get: cf-networking-dev
         trigger: true
       - get: cf-networking-release-ci
@@ -407,7 +407,7 @@ jobs:
 
   - name: silk-postgres-tests
     plan:
-    - aggregate:
+    - in_parallel:
       - get: silk-dev
         trigger: true
     - task: test-postgres
@@ -418,7 +418,7 @@ jobs:
 
   - name: silk-mysql-tests
     plan:
-    - aggregate:
+    - in_parallel:
       - get: silk-dev
         trigger: true
     - task: test-mysql
@@ -429,7 +429,7 @@ jobs:
 
   - name: silk-mysql-5.6-tests
     plan:
-    - aggregate:
+    - in_parallel:
       - get: silk-dev
         trigger: true
     - task: test-mysql-5.6
@@ -440,7 +440,7 @@ jobs:
 
   - name: silk-template-tests
     plan:
-    - aggregate:
+    - in_parallel:
       - get: silk-dev
         trigger: true
       - get: cf-networking-release-ci
@@ -462,7 +462,7 @@ jobs:
 
   - name: upgrade-go1.x-in-networking-release
     plan:
-    - aggregate:
+    - in_parallel:
       - get: cf-networking-release-ci
       - get: cf-networking-dev-full
       - get: golang-release-latest
@@ -488,7 +488,7 @@ jobs:
 
   - name: upgrade-go1.x-in-silk-release
     plan:
-    - aggregate:
+    - in_parallel:
       - get: silk-dev-full
       - get: golang-release-latest
         trigger: true
@@ -516,7 +516,7 @@ jobs:
   - name: pickelhelm-bbl-up
     serial_groups: [pickelhelm]
     plan:
-    - aggregate:
+    - in_parallel:
       - get: cf-deployment-concourse-tasks
         trigger: true
       - get: cf-networking-deployments
@@ -551,7 +551,7 @@ jobs:
   - name: pickelhelm-bbl-destroy
     serial_groups: [pickelhelm]
     plan:
-    - aggregate:
+    - in_parallel:
       - get: cf-deployment-concourse-tasks
       - get: cf-networking-deployments
     - task: bosh-cleanup
@@ -576,7 +576,7 @@ jobs:
   - name: pickelhelm-deploy
     serial_groups: [pickelhelm]
     plan:
-    - aggregate:
+    - in_parallel:
       - get: istio-release
       - get: capi-ci-passed
       - get: cf-networking-release-ci
@@ -600,7 +600,7 @@ jobs:
         cf-networking-release: cf-networking-dev
         deployments-repo: cf-networking-deployments
         silk-release: silk-dev
-    - aggregate:
+    - in_parallel:
       - task: upload-stemcell
         file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
         params:
@@ -675,7 +675,7 @@ jobs:
   - name: pickelhelm-deploy-firehose-nozzle
     serial_groups: [pickelhelm]
     plan:
-    - aggregate:
+    - in_parallel:
       - get: every-monday-morning
         trigger: true
       - get: cf-deployment-concourse-tasks
@@ -710,7 +710,7 @@ jobs:
   - name: pickelhelm-test
     serial_groups: [pickelhelm]
     plan:
-    - aggregate:
+    - in_parallel:
       - get: cf-networking-release-ci
         params:
           submodules: none
@@ -754,7 +754,7 @@ jobs:
   - name: mitre-bbl-up
     serial_groups: [mitre-test-group, mitre-deploy-group]
     plan:
-    - aggregate:
+    - in_parallel:
       - get: cf-deployment-concourse-tasks
         trigger: true
       - get: cf-networking-deployments
@@ -789,7 +789,7 @@ jobs:
   - name: mitre-bbl-destroy
     serial_groups: [mitre-deploy-group]
     plan:
-    - aggregate:
+    - in_parallel:
       - get: cf-deployment-concourse-tasks
       - get: cf-networking-deployments
     - task: bosh-cleanup
@@ -814,7 +814,7 @@ jobs:
   - name: mitre-deploy
     serial_groups: [mitre-deploy-group, version]
     plan:
-    - aggregate:
+    - in_parallel:
       - get: istio-release
         passed: [pickelhelm-deploy]
       - get: capi-ci-passed
@@ -844,7 +844,7 @@ jobs:
         cf-networking-release: cf-networking-dev
         deployments-repo: cf-networking-deployments
         silk-release: silk-dev
-    - aggregate:
+    - in_parallel:
       - task: upload-stemcell
         file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
         params:
@@ -967,7 +967,7 @@ jobs:
   - name: mitre-test
     serial_groups: [mitre-test-group, mitre-deploy-group]
     plan:
-    - aggregate:
+    - in_parallel:
       - get: cf-networking-deployments
       - get: cf-networking-dev
         passed: [mitre-deploy]
@@ -1041,7 +1041,7 @@ jobs:
   - name: mitre-deploy-firehose-nozzle
     serial_groups: [mitre-test-group, mitre-deploy-group]
     plan:
-    - aggregate:
+    - in_parallel:
       - get: every-monday-morning
         trigger: true
       - get: cf-deployment-concourse-tasks
@@ -1074,7 +1074,7 @@ jobs:
   - name: mitre-perf-tests
     serial_groups: [mitre-test-group, mitre-deploy-group]
     plan:
-    - aggregate:
+    - in_parallel:
       - get: cf-networking-deployments
       - get: cf-networking-dev
         passed: [mitre-deploy]
@@ -1108,7 +1108,7 @@ jobs:
   - name: mitre-cats
     serial_groups: [mitre-test-group, mitre-deploy-group]
     plan:
-    - aggregate:
+    - in_parallel:
       - get: cf-networking-release-ci
         params:
           submodules: none
@@ -1152,7 +1152,7 @@ jobs:
     serial: true
     build_logs_to_retain: 1000
     plan:
-    - aggregate:
+    - in_parallel:
       - get: every-two-minutes
         trigger: true
       - get: cf-networking-release-ci
@@ -1188,7 +1188,7 @@ jobs:
     serial: true
     build_logs_to_retain: 1000
     plan:
-    - aggregate:
+    - in_parallel:
       - get: every-two-minutes
         trigger: true
       - get: cf-networking-release-ci
@@ -1224,7 +1224,7 @@ jobs:
   - name: toque-bbl-up
     serial_groups: [toque]
     plan:
-    - aggregate:
+    - in_parallel:
       - get: cf-deployment-concourse-tasks
         trigger: true
       - get: cf-networking-deployments
@@ -1259,7 +1259,7 @@ jobs:
   - name: toque-bbl-destroy
     serial_groups: [toque]
     plan:
-    - aggregate:
+    - in_parallel:
       - get: cf-deployment-concourse-tasks
       - get: cf-networking-deployments
     - task: bosh-cleanup
@@ -1284,7 +1284,7 @@ jobs:
   - name: toque-deploy
     serial_groups: [toque]
     plan:
-    - aggregate:
+    - in_parallel:
       - get: istio-release
       - get: capi-ci-passed
       - get: cf-deployment-concourse-tasks
@@ -1300,7 +1300,7 @@ jobs:
         passed: [unit-and-integration-tests]
         trigger: true
       - get: datadog-firehose-nozzle-release
-    - aggregate:
+    - in_parallel:
       - task: upload-stemcell
         file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
         input_mapping:
@@ -1400,7 +1400,7 @@ jobs:
   - name: toque-deploy-firehose-nozzle
     serial_groups: [toque]
     plan:
-    - aggregate:
+    - in_parallel:
       - get: every-monday-morning
         trigger: true
       - get: cf-deployment-concourse-tasks
@@ -1434,7 +1434,7 @@ jobs:
   - name: toque-push
     serial_groups: [toque]
     plan:
-    - aggregate:
+    - in_parallel:
       - get: cf-networking-release-ci
         params:
           submodules: none
@@ -1471,7 +1471,7 @@ jobs:
   - name: toque-test
     serial_groups: [toque]
     plan:
-    - aggregate:
+    - in_parallel:
       - get: every-half-hour
         trigger: true
       - get: cf-networking-dev
@@ -1527,7 +1527,7 @@ jobs:
   - name: caubeen-bbl-up
     serial_groups: [caubeen]
     plan:
-    - aggregate:
+    - in_parallel:
       - get: cf-deployment-concourse-tasks
       - get: cf-networking-deployments
       - get: cf-networking-release-ci
@@ -1561,7 +1561,7 @@ jobs:
   - name: caubeen-bbl-destroy
     serial_groups: [caubeen]
     plan:
-    - aggregate:
+    - in_parallel:
       - get: cf-deployment-concourse-tasks
       - get: cf-networking-deployments
     - task: bosh-cleanup
@@ -1586,7 +1586,7 @@ jobs:
   - name: caubeen-deploy-pinned
     serial_groups: [caubeen]
     plan:
-    - aggregate:
+    - in_parallel:
       - get: trigger-upgrade-deploy
         trigger: true
       - get: cf-networking-release-ci
@@ -1643,7 +1643,7 @@ jobs:
   - name: caubeen-upgrade-test
     serial_groups: [caubeen]
     plan:
-    - aggregate:
+    - in_parallel:
       - get: trigger-upgrade-deploy
         passed: [caubeen-deploy-pinned]
         trigger: true
@@ -1738,7 +1738,7 @@ jobs:
   - name: caubeen-drats
     serial_groups: [caubeen]
     plan:
-    - aggregate:
+    - in_parallel:
       - get: cf-networking-release-ci
         params:
           submodules: none
@@ -1777,7 +1777,7 @@ jobs:
   - name: delete-pickelhelm-deployment
     serial_groups: [pickelhelm]
     plan:
-    - aggregate:
+    - in_parallel:
       - get: cf-networking-deployments
       - get: cf-deployment-concourse-tasks
     - task: delete-deployment
@@ -1791,7 +1791,7 @@ jobs:
   - name: delete-deployment-mitre-cf
     serial_groups: [mitre-test-group, mitre-deploy-group]
     plan:
-    - aggregate:
+    - in_parallel:
       - get: cf-networking-deployments
       - get: cf-deployment-concourse-tasks
     - task: delete-deployment
@@ -1805,7 +1805,7 @@ jobs:
   - name: delete-toque-deployment
     serial_groups: [toque]
     plan:
-    - aggregate:
+    - in_parallel:
       - get: cf-networking-deployments
       - get: cf-deployment-concourse-tasks
     - task: delete-deployment
@@ -1819,7 +1819,7 @@ jobs:
   - name: delete-caubeen-deployment
     serial_groups: [caubeen]
     plan:
-    - aggregate:
+    - in_parallel:
       - get: cf-networking-release-ci
         params:
           submodules: none
@@ -1846,7 +1846,7 @@ jobs:
   - name: caubeen-cleanup
     serial_groups: [caubeen]
     plan:
-    - aggregate:
+    - in_parallel:
       - get: cf-networking-deployments
       - get: cf-deployment-concourse-tasks
       - get: trigger-caubeen-cleanup
@@ -1864,7 +1864,7 @@ jobs:
     serial_groups: [version]
     plan:
     - do:
-      - aggregate:
+      - in_parallel:
         - get: version
           passed: [mitre-cats]
         - get: cf-networking-dev
@@ -1914,7 +1914,7 @@ jobs:
     serial_groups: [version]
     plan:
     - do:
-      - aggregate:
+      - in_parallel:
         - get: cf-networking-release-ci
           params:
             submodules: none
@@ -1933,7 +1933,7 @@ jobs:
   - name: ship-cf-networking-and-silk
     plan:
     - do:
-      - aggregate:
+      - in_parallel:
         - get: cf-networking-master
         - get: silk-master
         - get: cf-networking-deployments
@@ -2029,7 +2029,7 @@ jobs:
   - name: bump-minor-version
     serial_groups: [version]
     plan:
-    - aggregate:
+    - in_parallel:
       - get: version
         trigger: true
         passed: [ship-cf-networking-and-silk]
@@ -2041,7 +2041,7 @@ jobs:
   - name: merge-master
     plan:
     - do:
-      - aggregate:
+      - in_parallel:
         - get: cf-networking-release-ci
           params:
             submodules: none
@@ -2087,7 +2087,7 @@ jobs:
   - name: silk-merge-master
     plan:
     - do:
-      - aggregate:
+      - in_parallel:
         - get: cf-networking-release-ci
           params:
             submodules: none
