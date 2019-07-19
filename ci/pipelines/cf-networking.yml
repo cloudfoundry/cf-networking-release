@@ -463,11 +463,12 @@ jobs:
   - name: upgrade-go1.x-in-networking-release
     plan:
     - aggregate:
+      - get: cf-networking-release-ci
       - get: cf-networking-dev-full
       - get: golang-release-latest
         trigger: true
     - task: upgrade-go1.x-in-networking-release
-      file: cf-networking-dev-full/ci/tasks/upgrade-package-in-release/task.yml
+      file: cf-networking-release-ci/ci/tasks/upgrade-package-in-release/task.yml
       params:
         PACKAGE: golang-1-linux
         GCP_BLOBSTORE_SERVICE_ACCOUNT_KEY: ((gcp_container_networking_blobstore_service_account_key))
@@ -476,7 +477,7 @@ jobs:
         release: cf-networking-dev-full
         package-release: golang-release-latest
     - task: save-golang-version-to-file
-      file: cf-networking-dev-full/ci/tasks/save-golang-version-to-file/task.yml
+      file: cf-networking-release-ci/ci/tasks/save-golang-version-to-file/task.yml
       params:
         BRANCH: develop
       input_mapping:
@@ -492,8 +493,9 @@ jobs:
       - get: golang-release-latest
         trigger: true
       - get: cf-networking-dev-full
+      - get: cf-networking-release-ci
     - task: upgrade-go1.x-in-networking-release
-      file: cf-networking-dev-full/ci/tasks/upgrade-package-in-release/task.yml
+      file: cf-networking-release-ci/ci/tasks/upgrade-package-in-release/task.yml
       params:
         PACKAGE: golang-1-linux
         GCP_BLOBSTORE_SERVICE_ACCOUNT_KEY: ((gcp_container_networking_blobstore_service_account_key))
@@ -502,7 +504,7 @@ jobs:
         release: silk-dev-full
         package-release: golang-release-latest
     - task: save-golang-version-to-file
-      file: cf-networking-dev-full/ci/tasks/save-golang-version-to-file/task.yml
+      file: cf-networking-release-ci/ci/tasks/save-golang-version-to-file/task.yml
       params:
         BRANCH: develop
       input_mapping:

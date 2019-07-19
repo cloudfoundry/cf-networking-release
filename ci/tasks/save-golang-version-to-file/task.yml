@@ -8,7 +8,7 @@ image_resource:
 
 inputs:
   - name: release
-  - name: ci-tasks
+  - name: cf-networking-release-ci
 
 outputs:
   - name: modified-release
@@ -20,4 +20,4 @@ params:
   GIT_COMMIT_EMAIL: "CF-Networking@pivotal.io"
 
 run:
-  path: ci-tasks/ci/tasks/save-golang-version-to-file/task
+  path: cf-networking-release-ci/ci/tasks/save-golang-version-to-file/task
