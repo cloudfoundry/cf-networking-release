@@ -645,7 +645,6 @@ jobs:
           deployments-repo/smaller-footprint.yml
           cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
           cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
-          cf-deployment/operations/enable-routing-integrity.yml
           cf-networking-release/ci/opsfiles/use-latest-silk.yml
           cf-networking-release/ci/opsfiles/use-latest-capi.yml
           cf-networking-release/ci/opsfiles/use-latest-cf-networking.yml
@@ -909,7 +908,6 @@ jobs:
           cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
           cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
           cf-networking-release/ci/opsfiles/custom-apps-domain.yml
-          cf-deployment/operations/enable-routing-integrity.yml
           cf-deployment/operations/experimental/enable-iptables-logger.yml
           cf-networking-release/ci/opsfiles/use-latest-silk.yml
           cf-networking-release/ci/opsfiles/use-latest-capi.yml
@@ -1357,7 +1355,6 @@ jobs:
           deployments-repo/smaller-footprint.yml
           cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
           cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
-          cf-deployment/operations/enable-routing-integrity.yml
           cf-networking-release/ci/opsfiles/use-latest-silk.yml
           cf-networking-release/ci/opsfiles/use-latest-capi.yml
           cf-networking-release/ci/opsfiles/use-latest-cf-networking.yml
@@ -1625,7 +1622,6 @@ jobs:
           cf-deployment/operations/use-external-blobstore.yml
           cf-deployment/operations/use-gcs-blobstore-service-account.yml
           cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
-          cf-deployment/operations/enable-routing-integrity.yml
           cf-deployment/operations/experimental/enable-iptables-logger.yml
           cf-deployment/operations/enable-service-discovery.yml
           cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain.yml
@@ -1711,7 +1707,6 @@ jobs:
           cf-deployment/operations/use-external-blobstore.yml
           cf-deployment/operations/use-gcs-blobstore-service-account.yml
           cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
-          cf-deployment/operations/enable-routing-integrity.yml
           cf-deployment/operations/experimental/enable-iptables-logger.yml
           cf-deployment/operations/enable-service-discovery.yml
           cf-deployment/operations/backup-and-restore/enable-backup-restore.yml
