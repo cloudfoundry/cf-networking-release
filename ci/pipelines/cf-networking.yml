@@ -55,7 +55,6 @@ groups:
   - caubeen-deploy-pinned
   - caubeen-upgrade-test
   - caubeen-drats
-  - delete-caubeen-deployment
 - name: pickelhelm
   jobs:
   - pickelhelm-bbl-up
