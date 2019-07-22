@@ -1626,7 +1626,7 @@ jobs:
           cf-deployment/operations/enable-service-discovery.yml
           cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain.yml
           deployments-repo/environments/caubeen/scale-up-4-api-instances.yml
-          cf-networking-release/ci/opsfiles/lower-canary-watch-time.yml
+          cf-networking-release-ci/ci/opsfiles/lower-canary-watch-time.yml
         VARS_FILES: |
           environments/caubeen/external-db-vars.yml
           environments/caubeen/gcs-vars.yml
