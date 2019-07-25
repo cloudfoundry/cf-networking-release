@@ -1710,10 +1710,10 @@ jobs:
           cf-deployment/operations/enable-service-discovery.yml
           cf-deployment/operations/backup-and-restore/enable-backup-restore.yml
           cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain.yml
-          cf-networking-release/ci/opsfiles/scale-up-4-api-instances.yml
-          cf-networking-release/ci/opsfiles/lower-canary-watch-time.yml
-          cf-networking-release/ci/opsfiles/use-latest-silk.yml
-          cf-networking-release/ci/opsfiles/use-latest-capi.yml
+          cf-networking-release-ci/ci/opsfiles/scale-up-4-api-instances.yml
+          cf-networking-release-ci/ci/opsfiles/lower-canary-watch-time.yml
+          cf-networking-release-ci/ci/opsfiles/use-latest-silk.yml
+          cf-networking-release-ci/ci/opsfiles/use-latest-capi.yml
           cf-networking-release/manifest-generation/opsfiles/enable-experimental-dynamic-egress-policies.yml
         VARS_FILES: |
           environments/caubeen/external-db-vars.yml
