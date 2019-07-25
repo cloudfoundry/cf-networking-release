@@ -413,7 +413,17 @@ func main() {
 	}
 
 	metricsEmitter := common.InitMetricsEmitter(logger, wrappedStore, connectionPool, connectionPool.Monitor)
-	externalServer := common.InitServer(logger, nil, conf.ListenHost, conf.ListenPort, externalHandlers, externalRoutesWithOptions)
+
+	var serverTLSConfig *tls.Config
+
+	if conf.EnableTLS {
+		serverTLSConfig, err = nonmutualtls.NewServerTLSConfig(conf.ServerCertFile, conf.ServerKeyFile)
+		if err != nil {
+			log.Fatalf("%s.%s: server tls config: %s", logPrefix, jobPrefix, err) // not tested
+		}
+	}
+
+	externalServer := common.InitServer(logger, serverTLSConfig, conf.ListenHost, conf.ListenPort, externalHandlers, externalRoutesWithOptions)
 	policyPoller := initPoller(logger, conf, policyCleaner)
 	debugServer := debugserver.Runner(fmt.Sprintf("%s:%d", conf.DebugServerHost, conf.DebugServerPort), reconfigurableSink)
 

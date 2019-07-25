@@ -1,6 +1,7 @@
 package integration_test
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -42,14 +43,16 @@ var _ = Describe("Integration", func() {
 
 			template, _ := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
 			policyServerConfs = configurePolicyServers(template, 1)
+			conf = policyServerConfs[0]
+		})
+
+		JustBeforeEach(func() {
 			sessions = startPolicyServers(policyServerConfs)
 			session = sessions[0]
-			conf = policyServerConfs[0]
 		})
 
 		AfterEach(func() {
 			stopPolicyServers(sessions, policyServerConfs)
-
 			Expect(fakeMetron.Close()).To(Succeed())
 		})
 
@@ -123,6 +126,38 @@ var _ = Describe("Integration", func() {
 					responseString, err := ioutil.ReadAll(resp.Body)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(responseString).To(ContainSubstring("some-client-id"))
+
+					Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
+						HaveName("WhoAmIRequestTime"),
+					))
+				})
+			})
+
+			Context("with enabled TLS", func() {
+				var (
+					tlsConfig *tls.Config
+				)
+
+				BeforeEach(func() {
+					tlsConfig = helpers.DefaultTLSConfig()
+
+					for i := range policyServerConfs {
+						policyServerConfs[i].EnableTLS = true
+					}
+				})
+
+				It("responds to whoami endpoint", func() {
+					resp := helpers.MakeAndDoHTTPSRequest(
+						"GET",
+						fmt.Sprintf("https://%s:%d/networking/v0/external/whoami", conf.ListenHost, conf.ListenPort),
+						nil,
+						tlsConfig,
+					)
+
+					Expect(resp.StatusCode).To(Equal(http.StatusOK))
+					responseString, err := ioutil.ReadAll(resp.Body)
+					Expect(err).NotTo(HaveOccurred())
+					Expect(responseString).To(ContainSubstring("some-user"))
 
 					Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
 						HaveName("WhoAmIRequestTime"),

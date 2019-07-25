@@ -14,6 +14,9 @@ type Config struct {
 	ListenHost                      string    `json:"listen_host" validate:"nonzero"`
 	ListenPort                      int       `json:"listen_port" validate:"nonzero"`
 	LogPrefix                       string    `json:"log_prefix" validate:"nonzero"`
+	EnableTLS                       bool      `json:"enable_tls"`
+	ServerCertFile                  string    `json:"server_cert_file"`
+	ServerKeyFile                   string    `json:"server_key_file"`
 	DebugServerHost                 string    `json:"debug_server_host" validate:"nonzero"`
 	DebugServerPort                 int       `json:"debug_server_port" validate:"nonzero"`
 	UAAClient                       string    `json:"uaa_client" validate:"nonzero"`

@@ -2,6 +2,7 @@ package helpers
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -175,6 +176,10 @@ func DefaultTestConfigWithCCServer(dbConfig db.Config, metronAddress string, fix
 		LogPrefix:                       "testprefix",
 		DebugServerHost:                 "127.0.0.1",
 		DebugServerPort:                 ports.PickAPort(),
+		EnableTLS:                       false,
+		CACertFile:                      filepath.Join(fixturesPath, "netman-ca.crt"),
+		ServerCertFile:                  filepath.Join(fixturesPath, "server.crt"),
+		ServerKeyFile:                   filepath.Join(fixturesPath, "server.key"),
 		SkipSSLValidation:               true,
 		UAAClient:                       "test",
 		UAAClientSecret:                 "test",
@@ -209,6 +214,24 @@ func DefaultTestConfigWithCCServer(dbConfig db.Config, metronAddress string, fix
 		EnforceExperimentalDynamicEgressPolicies: true,
 	}
 	return externalConfig, internalConfig
+}
+
+func DefaultTLSConfig() *tls.Config {
+	cert, err := tls.LoadX509KeyPair("fixtures/client.crt", "fixtures/client.key")
+	Expect(err).NotTo(HaveOccurred())
+
+	clientCACert, err := ioutil.ReadFile("fixtures/netman-ca.crt")
+	Expect(err).NotTo(HaveOccurred())
+
+	clientCertPool := x509.NewCertPool()
+	clientCertPool.AppendCertsFromPEM(clientCACert)
+
+	tlsConfig := &tls.Config{
+		Certificates: []tls.Certificate{cert},
+		RootCAs:      clientCertPool,
+	}
+	tlsConfig.BuildNameToCertificate()
+	return tlsConfig
 }
 
 func WriteConfigFile(policyServerConfig interface{}) string {

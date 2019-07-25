@@ -5,11 +5,17 @@ templates:
   policy-server.json.erb: config/policy-server.json
   pre-backup-lock.sh.erb: bin/bbr/pre-backup-lock
   post-backup-unlock.sh.erb: bin/bbr/post-backup-unlock
+
+  server.crt.erb: config/certs/server.crt
+  server.key.erb: config/certs/server.key
+  
   uaa_ca.crt.erb: config/certs/uaa_ca.crt
   cc_ca.crt.erb: config/certs/cc_ca.crt
   database_ca.crt.erb: config/certs/database_ca.crt
+  
   post-start.erb: bin/post-start
   pre-start.erb: bin/pre-start
+
 
 packages:
   - policy-server
@@ -69,6 +75,16 @@ properties:
   debug_port:
     description: "Port for the debug server. Use this to adjust log level at runtime or dump process stats."
     default: 31821
+
+  enable_tls:
+    description: "Use TLS server for external API server."
+    default: false
+
+  server_cert:
+    description: "External API server certificate for TLS."
+
+  server_key:
+    description: "External API server key for TLS."
 
   uaa_client:
     description: |

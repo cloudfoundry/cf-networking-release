@@ -19,6 +19,9 @@ module Bosh::Template::Test
         'listen_ip' => '111.11.11.1',
         'listen_port' => 1234,
         'debug_port' => 2345,
+        'enable_tls' => true,
+        'server_cert' => 'the server cert',
+        'server_key'=> 'the server key',
         'uaa_client' => 'some-uaa-client',
         'uaa_client_secret' => 'some-uaa-client-secret',
         'uaa_ca' => 'some-uaa-ca',
@@ -56,6 +59,72 @@ module Bosh::Template::Test
       end
     end
 
+    describe 'server.crt' do
+      let(:template) {job.template('config/certs/server.crt')}
+
+      it 'renders the server cert' do
+        cert = template.render(merged_manifest_properties)
+        expect(cert.strip).to eq('the server cert')
+      end
+
+      describe 'when the property doesn\'t exist' do
+        before do
+          merged_manifest_properties.delete('server_cert')
+        end
+        describe 'when enable_tls is true' do
+          before do
+            merged_manifest_properties['enable_tls'] = true
+          end
+
+          it 'should err' do
+            expect { template.render(merged_manifest_properties) }.to raise_error Bosh::Template::UnknownProperty
+          end
+        end
+        describe 'when enable_tls is false' do
+          before do
+            merged_manifest_properties['enable_tls'] = false
+          end
+
+          it 'should not err' do
+            expect { template.render(merged_manifest_properties) }.not_to raise_error
+          end
+        end
+      end
+    end
+
+    describe 'server.key' do
+      let(:template) {job.template('config/certs/server.key')}
+
+      it 'renders the server key' do
+        key = template.render(merged_manifest_properties)
+        expect(key.strip).to eq('the server key')
+      end
+
+      describe 'when the property doesn\'t exist' do
+        before do
+          merged_manifest_properties.delete('server_key')
+        end
+        describe 'when enable_tls is true' do
+          before do
+            merged_manifest_properties['enable_tls'] = true
+          end
+
+          it 'should err' do
+            expect { template.render(merged_manifest_properties) }.to raise_error Bosh::Template::UnknownProperty
+          end
+        end
+        describe 'when enable_tls is false' do
+          before do
+            merged_manifest_properties['enable_tls'] = false
+          end
+
+          it 'should not err' do
+            expect { template.render(merged_manifest_properties) }.not_to raise_error
+          end
+        end
+      end
+    end
+
     describe 'policy-server.json' do
       let(:template) {job.template('config/policy-server.json')}
 
@@ -66,6 +135,10 @@ module Bosh::Template::Test
           'listen_port' => 1234,
           'log_prefix' => 'cfnetworking',
           'debug_server_host' => '127.0.0.1',
+          'enable_tls' => true,
+          'ca_cert_file' => '/var/vcap/jobs/policy-server/config/certs/server_ca.crt',
+          'server_cert_file' => '/var/vcap/jobs/policy-server/config/certs/server.crt',
+          'server_key_file'=> '/var/vcap/jobs/policy-server/config/certs/server.key',
           'debug_server_port' => 2345,
           'uaa_client' => 'some-uaa-client',
           'uaa_client_secret' => 'some-uaa-client-secret',

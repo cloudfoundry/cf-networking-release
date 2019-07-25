@@ -2,7 +2,6 @@ package integration_test
 
 import (
 	"crypto/tls"
-	"crypto/x509"
 	"fmt"
 	"io/ioutil"
 	"policy-server/config"
@@ -39,20 +38,7 @@ var _ = Describe("Create Tags API", func() {
 		dbConf.Timeout = 5
 		dbConf.DatabaseName = fmt.Sprintf("internal_api_test_node_%d", ports.PickAPort())
 
-		cert, err := tls.LoadX509KeyPair("fixtures/client.crt", "fixtures/client.key")
-		Expect(err).NotTo(HaveOccurred())
-
-		clientCACert, err := ioutil.ReadFile("fixtures/netman-ca.crt")
-		Expect(err).NotTo(HaveOccurred())
-
-		clientCertPool := x509.NewCertPool()
-		clientCertPool.AppendCertsFromPEM(clientCACert)
-
-		tlsConfig = &tls.Config{
-			Certificates: []tls.Certificate{cert},
-			RootCAs:      clientCertPool,
-		}
-		tlsConfig.BuildNameToCertificate()
+		tlsConfig = helpers.DefaultTLSConfig()
 
 		template, internalTemplate := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
 		template.TagLength = 2

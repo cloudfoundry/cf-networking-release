@@ -16,7 +16,7 @@ import (
 	"github.com/onsi/gomega/gexec"
 	"github.com/onsi/gomega/types"
 
-	"test-helpers"
+	testhelpers "test-helpers"
 	"testing"
 )
 
