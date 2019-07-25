@@ -4,10 +4,4 @@ check process policy-server
   start program "/var/vcap/jobs/bpm/bin/bpm start policy-server"
   stop program "/var/vcap/jobs/bpm/bin/bpm stop policy-server"
   group vcap
-  if failed
-     host 127.0.0.1
-     port <%= p("listen_port") %>
-     protocol HTTP
-     with timeout 10 seconds for 6 cycles
-     then restart
 <% end %>
