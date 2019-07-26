@@ -177,7 +177,6 @@ func DefaultTestConfigWithCCServer(dbConfig db.Config, metronAddress string, fix
 		DebugServerHost:                 "127.0.0.1",
 		DebugServerPort:                 ports.PickAPort(),
 		EnableTLS:                       false,
-		CACertFile:                      filepath.Join(fixturesPath, "netman-ca.crt"),
 		ServerCertFile:                  filepath.Join(fixturesPath, "server.crt"),
 		ServerKeyFile:                   filepath.Join(fixturesPath, "server.key"),
 		SkipSSLValidation:               true,
