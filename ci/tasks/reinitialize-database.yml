@@ -14,6 +14,7 @@ params:
   BACKUP_ID: ~
   DATABASE_NAME: ~
   ENVIRONMENT_NAME: ~
+  PROJECT_ID: ~
 
 run:
   path: cf-networking-release-ci/ci/tasks/reinitialize-database
