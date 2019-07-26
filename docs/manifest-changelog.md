@@ -1,5 +1,7 @@
 ## Manifest changelog
 
+## This doc is deprecated. Refer to [Release](https://github.com/cloudfoundry/cf-networking-release/releases) tab to see changes.
+
 See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for examples
 
 ### 2.21.0 CF-Networking-Release
