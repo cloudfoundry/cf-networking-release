@@ -273,6 +273,7 @@ func main() {
 	}
 
 	xXssProtectionWrapper := handlers.XXSSProtectionHandler{}
+	hstsHeaderWrapper := handlers.HSTSHandler{}
 
 	metricsWrap := func(name string, handler http.Handler) http.Handler {
 		metricsWrapper := middleware.MetricWrapper{
@@ -400,11 +401,12 @@ func main() {
 	}
 
 	for key, handler := range externalHandlers {
-		externalHandlers[key] = corsOptionsWrapper(handler)
-	}
-
-	for key, handler := range externalHandlers {
-		externalHandlers[key] = xXssProtectionWrapper.Wrap(handler)
+		wrappedHandler := corsOptionsWrapper(handler)
+		wrappedHandler = xXssProtectionWrapper.Wrap(wrappedHandler)
+		if conf.EnableTLS {
+			wrappedHandler = hstsHeaderWrapper.Wrap(wrappedHandler)
+		}
+		externalHandlers[key] = wrappedHandler
 	}
 
 	err = dropsonde.Initialize(conf.MetronAddress, dropsondeOrigin)
