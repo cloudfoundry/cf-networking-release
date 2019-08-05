@@ -145,7 +145,6 @@ resources:
     source:
       branch: master
       uri: https://github.com/cloudfoundry/cf-deployment.git
-      tag_filter: "v7.1.0"
   - name: cf-networking-2.16.0
     type: git
     source:
