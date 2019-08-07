@@ -52,7 +52,6 @@ groups:
   - toque-deploy
   - toque-push
   - toque-test
-  - caubeen-deploy-pinned
   - caubeen-upgrade-test
   - caubeen-drats
 - name: pickelhelm
@@ -87,7 +86,6 @@ groups:
 - name: caubeen
   jobs:
   - caubeen-bbl-up
-  - caubeen-deploy-pinned
   - caubeen-upgrade-test
   - caubeen-drats
   - caubeen-cleanup
@@ -1578,7 +1576,7 @@ jobs:
           repository: updated-bbl-state
           rebase: true
 
-  - name: caubeen-deploy-pinned
+  - name: caubeen-upgrade-test
     serial_groups: [caubeen]
     plan:
     - in_parallel:
@@ -1592,6 +1590,11 @@ jobs:
       - get: cf-deployment-pinned
       - get: cf-networking-2.16.0
       - get: silk-2.16.0
+      - get: cf-deployment
+      - get: cf-networking-dev
+        passed: [unit-and-integration-tests]
+      - get: silk-dev
+        passed: [unit-and-integration-tests]
     - task: upload-pinned-stemcell
       file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
       params:
@@ -1633,24 +1636,6 @@ jobs:
         bbl-state: cf-networking-deployments
         vars-files: cf-networking-deployments
         vars-store: cf-networking-deployments
-
-  - name: caubeen-upgrade-test
-    serial_groups: [caubeen]
-    plan:
-    - in_parallel:
-      - get: trigger-upgrade-deploy
-        passed: [caubeen-deploy-pinned]
-        trigger: true
-      - get: cf-networking-release-ci
-        params:
-          submodules: none
-      - get: cf-deployment-concourse-tasks
-      - get: cf-networking-deployments
-      - get: cf-deployment
-      - get: cf-networking-dev
-        passed: [unit-and-integration-tests]
-      - get: silk-dev
-        passed: [unit-and-integration-tests]
     - task: get-credhub-vars
       file: cf-networking-release-ci/ci/tasks/get-credhub-vars.yml
       input_mapping:
@@ -1718,6 +1703,7 @@ jobs:
         release: cf-networking-dev
         vars-files: cf-networking-deployments
         vars-store: cf-networking-deployments
+
 
   - name: caubeen-drats
     serial_groups: [caubeen]
