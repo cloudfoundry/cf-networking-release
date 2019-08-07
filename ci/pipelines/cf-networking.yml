@@ -1647,7 +1647,6 @@ jobs:
       - get: cf-deployment-concourse-tasks
       - get: cf-networking-deployments
       - get: cf-deployment
-      - get: capi-ci-passed
       - get: cf-networking-dev
         passed: [unit-and-integration-tests]
       - get: silk-dev
@@ -1686,13 +1685,6 @@ jobs:
         local-release: silk-dev
       params:
         BBL_STATE_DIR: environments/caubeen/
-    - task: upload-local-capi-release
-      file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
-      input_mapping:
-        bbl-state: cf-networking-deployments
-        local-release: capi-ci-passed
-      params:
-        BBL_STATE_DIR: environments/caubeen/
     - task: deploy-cf-dev
       file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
       params:
@@ -1712,7 +1704,6 @@ jobs:
           cf-networking-release-ci/ci/opsfiles/scale-up-4-api-instances.yml
           cf-networking-release-ci/ci/opsfiles/lower-canary-watch-time.yml
           cf-networking-release-ci/ci/opsfiles/use-latest-silk.yml
-          cf-networking-release-ci/ci/opsfiles/use-latest-capi.yml
           cf-networking-release/manifest-generation/opsfiles/enable-experimental-dynamic-egress-policies.yml
         VARS_FILES: |
           environments/caubeen/external-db-vars.yml
