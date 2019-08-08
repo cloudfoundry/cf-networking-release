@@ -17,6 +17,7 @@ FORMATTED_KEY="$(sed 's/^/      /' <(echo ${GCP_BLOBSTORE_SERVICE_ACCOUNT_KEY}))
 cat > config/private.yml <<EOF
 ---
 blobstore:
+  options:
     credentials_source: static
     json_key: |
 ${FORMATTED_KEY}
