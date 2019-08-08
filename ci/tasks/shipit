@@ -12,7 +12,7 @@ fi
 CANDIDATE_DIR=$PWD/cf-networking-tarball
 cd cf-networking
 
-
+set +x
 FORMATTED_KEY="$(sed 's/^/      /' <(echo ${GCP_BLOBSTORE_SERVICE_ACCOUNT_KEY}))"
 cat > config/private.yml <<EOF
 ---
@@ -21,6 +21,7 @@ blobstore:
     json_key: |
 ${FORMATTED_KEY}
 EOF
+set -x
 
 git config --global user.email "container-networking+ci@pivotal.io"
 git config --global user.name "Container Networking Bot"
