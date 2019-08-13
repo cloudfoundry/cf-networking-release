@@ -5,3 +5,5 @@ processes:
     args:
       - -c
       - /var/vcap/jobs/bosh-dns-adapter/config/config.json
+    limits:
+      open_files: 65535

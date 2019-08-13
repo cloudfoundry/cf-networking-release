@@ -22,6 +22,17 @@ module Bosh::Template::Test
       }
     end
 
+    describe 'bpm.yml' do
+      let(:config) {
+        template = job.template('config/bpm.yml')
+        YAML.safe_load(template.render({}, consumes: []))
+      }
+
+      it 'sets the open file descriptor limit' do
+        expect(config['processes'][0]['limits']['open_files']).to eq(65_535)
+      end
+    end
+
     describe 'config.json' do
       let(:template) { job.template('config/config.json') }
       let(:links) do
