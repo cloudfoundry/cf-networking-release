@@ -235,7 +235,7 @@ resources:
     source:
       owner: cloudfoundry-incubator
       repository: bosh-backup-and-restore
-      private_key: ((container-networking-bot-key.private_key)) # using a private key to get around rate limiting
+      access_token: ((github-access-token))
   - name: istio-release
     type: git
     source:
