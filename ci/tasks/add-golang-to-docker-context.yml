@@ -6,7 +6,7 @@ image_resource:
   source: {repository: alpine}
 
 inputs:
-- name: golang-1.x-tarball
+- name: golang-tarball
 - name: dockerfile
 
 outputs:
@@ -21,4 +21,4 @@ run:
   - -exuc
   - |
     cp $INPUT_DOCKERIMAGE_PATH/* docker-build-context
-    cp golang-1.x-tarball/go* docker-build-context
+    cp golang-tarball/go* docker-build-context
