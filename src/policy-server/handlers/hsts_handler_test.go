@@ -1,9 +1,11 @@
 package handlers_test
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"policy-server/handlers"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -30,8 +32,8 @@ var _ = Describe("HSTSHandler", func() {
 
 		resp := httptest.NewRecorder()
 		request, _ := http.NewRequest("GET", "/", nil)
-
+		maxAge := time.Hour * 24 * 365
 		wrappedHandler.ServeHTTP(resp, request)
-		Expect(resp.Header().Get("Strict-Transport-Security")).To(Equal("max-age=31536000"))
+		Expect(resp.Header().Get("Strict-Transport-Security")).To(Equal(fmt.Sprintf("max-age=%.0f", maxAge.Seconds())))
 	})
 })
