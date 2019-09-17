@@ -1612,12 +1612,12 @@ jobs:
         deployments-repo: cf-networking-deployments
         silk-release: silk-2.23.0
     - task: reinitialize-database
-       file: cf-networking-release-ci/ci/tasks/reinitialize-database.yml
-       params:
-         BACKUP_ID: "1567707244949"
-         DATABASE_NAME: caubeen-db
-         ENVIRONMENT_NAME: caubeen
-         PROJECT_ID: cf-container-networking-gcp
+      file: cf-networking-release-ci/ci/tasks/reinitialize-database.yml
+      params:
+        BACKUP_ID: "1567707244949"
+        DATABASE_NAME: caubeen-db
+        ENVIRONMENT_NAME: caubeen
+        PROJECT_ID: cf-container-networking-gcp
     - task: deploy-pinned-cf-deployment
       file: cf-deployment-concourse-tasks/bosh-deploy/task.yml
       params:
