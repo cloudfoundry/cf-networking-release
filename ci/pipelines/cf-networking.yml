@@ -1618,6 +1618,8 @@ jobs:
         DATABASE_NAME: caubeen-db
         ENVIRONMENT_NAME: caubeen
         PROJECT_ID: cf-container-networking-gcp
+      input_mapping:
+        deployments-repo: cf-networking-deployments
     - task: deploy-pinned-cf-deployment
       file: cf-deployment-concourse-tasks/bosh-deploy/task.yml
       params:
