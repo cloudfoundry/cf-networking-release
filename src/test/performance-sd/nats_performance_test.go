@@ -60,7 +60,7 @@ var _ = Describe("NatsPerformance", func() {
 			}
 		})
 
-	}, 1)
+	}, 3)
 
 	Measure("SDC subscription CPU load does not greatly increase Nats CPU", func(b Benchmarker) {
 		var medianJustExternalRoutes float64
@@ -139,7 +139,7 @@ var _ = Describe("NatsPerformance", func() {
 
 		Expect(medianExternalAndInternalRoutes).Should(BeNumerically("~", medianJustExternalRoutes, 15.00))
 		Expect(meanExternalAndInternalRoutes).Should(BeNumerically("~", meanJustExternalRoutes, 15.00))
-	}, 1)
+	}, 3)
 })
 
 func closeSubscribers() {
