@@ -143,18 +143,18 @@ resources:
     source:
       branch: master
       uri: https://github.com/cloudfoundry/cf-deployment.git
-  - name: cf-networking-2.16.0
+  - name: cf-networking-2.23.0
     type: git
     source:
       branch: master
       uri: https://github.com/cloudfoundry/cf-networking-release.git
-      tag_filter: "2.16.0"
-  - name: silk-2.16.0
+      tag_filter: "2.23.0"
+  - name: silk-2.23.0
     type: git
     source:
       branch: master
       uri: https://github.com/cloudfoundry/silk-release.git
-      tag_filter: "2.16.0"
+      tag_filter: "2.23.0"
   - name: disaster-recovery-acceptance-tests
     type: git
     source:
@@ -1588,8 +1588,8 @@ jobs:
       - get: cf-deployment-concourse-tasks
       - get: cf-networking-deployments
       - get: cf-deployment-pinned
-      - get: cf-networking-2.16.0
-      - get: silk-2.16.0
+      - get: cf-networking-2.23.0
+      - get: silk-2.23.0
       - get: cf-deployment
       - get: cf-networking-dev
         passed: [unit-and-integration-tests]
@@ -1608,9 +1608,9 @@ jobs:
         ENVIRONMENT_NAME: caubeen
       input_mapping:
         cf-deployment: cf-deployment-pinned
-        cf-networking-release: cf-networking-2.16.0
+        cf-networking-release: cf-networking-2.23.0
         deployments-repo: cf-networking-deployments
-        silk-release: silk-2.16.0
+        silk-release: silk-2.23.0
     - task: deploy-pinned-cf-deployment
       file: cf-deployment-concourse-tasks/bosh-deploy/task.yml
       params:
