@@ -138,7 +138,7 @@ resources:
     source:
       branch: release-candidate
       uri: https://github.com/cloudfoundry/cf-deployment.git
-  - name: cf-deployment-pinned
+  - name: cf-deployment-stable
     type: git
     source:
       branch: master
@@ -1587,7 +1587,7 @@ jobs:
           submodules: none
       - get: cf-deployment-concourse-tasks
       - get: cf-networking-deployments
-      - get: cf-deployment-pinned
+      - get: cf-deployment-stable
       - get: cf-networking-2.23.0
       - get: silk-2.23.0
       - get: cf-deployment
@@ -1600,14 +1600,14 @@ jobs:
       params:
         BBL_STATE_DIR: environments/caubeen/
       input_mapping:
-        cf-deployment: cf-deployment-pinned
+        cf-deployment: cf-deployment-stable
         bbl-state: cf-networking-deployments
     - task: collect-pinned-ops-files
       file: cf-networking-release-ci/ci/tasks/collect-named-ops-files.yml
       params:
         ENVIRONMENT_NAME: caubeen
       input_mapping:
-        cf-deployment: cf-deployment-pinned
+        cf-deployment: cf-deployment-stable
         cf-networking-release: cf-networking-2.23.0
         deployments-repo: cf-networking-deployments
         silk-release: silk-2.23.0
@@ -1641,7 +1641,7 @@ jobs:
           environments/caubeen/external-db-vars.yml
           environments/caubeen/gcs-vars.yml
       input_mapping:
-        cf-deployment: cf-deployment-pinned
+        cf-deployment: cf-deployment-stable
         bbl-state: cf-networking-deployments
         vars-files: cf-networking-deployments
         vars-store: cf-networking-deployments
