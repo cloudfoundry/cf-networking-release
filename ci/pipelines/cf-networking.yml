@@ -1611,15 +1611,6 @@ jobs:
         cf-networking-release: cf-networking-2.23.0
         deployments-repo: cf-networking-deployments
         silk-release: silk-2.23.0
-    - task: reinitialize-database
-      file: cf-networking-release-ci/ci/tasks/reinitialize-database.yml
-      params:
-        BACKUP_ID: "1567707244949"
-        DATABASE_NAME: caubeen-db
-        ENVIRONMENT_NAME: caubeen
-        PROJECT_ID: cf-container-networking-gcp
-      input_mapping:
-        deployments-repo: cf-networking-deployments
     - task: deploy-pinned-cf-deployment
       file: cf-deployment-concourse-tasks/bosh-deploy/task.yml
       params:
@@ -1628,9 +1619,9 @@ jobs:
         OPS_FILES: |
           cf-deployment/operations/use-compiled-releases.yml
           cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
-          cf-deployment/operations/use-external-dbs.yml
           cf-deployment/operations/use-external-blobstore.yml
           cf-deployment/operations/use-gcs-blobstore-service-account.yml
+          cf-deployment/operations/scale-database-cluster.yml
           cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
           cf-deployment/operations/experimental/enable-iptables-logger.yml
           cf-deployment/operations/enable-service-discovery.yml
@@ -1638,7 +1629,6 @@ jobs:
           cf-networking-release-ci/ci/opsfiles/scale-up-4-api-instances.yml
           cf-networking-release-ci/ci/opsfiles/lower-canary-watch-time.yml
         VARS_FILES: |
-          environments/caubeen/external-db-vars.yml
           environments/caubeen/gcs-vars.yml
       input_mapping:
         cf-deployment: cf-deployment-stable
@@ -1687,9 +1677,9 @@ jobs:
         OPS_FILES: |
           cf-deployment/operations/use-compiled-releases.yml
           cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
-          cf-deployment/operations/use-external-dbs.yml
           cf-deployment/operations/use-external-blobstore.yml
           cf-deployment/operations/use-gcs-blobstore-service-account.yml
+          cf-deployment/operations/scale-database-cluster.yml
           cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
           cf-deployment/operations/experimental/enable-iptables-logger.yml
           cf-deployment/operations/enable-service-discovery.yml
@@ -1698,9 +1688,7 @@ jobs:
           cf-networking-release-ci/ci/opsfiles/scale-up-4-api-instances.yml
           cf-networking-release-ci/ci/opsfiles/lower-canary-watch-time.yml
           cf-networking-release-ci/ci/opsfiles/use-latest-silk.yml
-          cf-networking-release/manifest-generation/opsfiles/enable-experimental-dynamic-egress-policies.yml
         VARS_FILES: |
-          environments/caubeen/external-db-vars.yml
           environments/caubeen/gcs-vars.yml
         DEPLOY_WITH_UPTIME_MEASUREMENTS: true
         FAIL_ON_DOWNTIME: true
@@ -1813,15 +1801,6 @@ jobs:
         DEPLOYMENT_NAME: cf
       input_mapping:
         bbl-state: cf-networking-deployments
-    - task: reinitialize-database
-      file: cf-networking-release-ci/ci/tasks/reinitialize-database.yml
-      params:
-        BACKUP_ID: '1567707244949'
-        DATABASE_NAME: caubeen-db
-        ENVIRONMENT_NAME: caubeen
-        PROJECT_ID: cf-container-networking-gcp
-      input_mapping:
-        deployments-repo: cf-networking-deployments
 
   - name: caubeen-cleanup
     serial_groups: [caubeen]
