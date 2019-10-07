@@ -1091,6 +1091,7 @@ jobs:
         passed: [mitre-deploy]
     - task: mitre-perf-tests
       privileged: true
+      attempts: 3
       file: cf-networking-release-ci/ci/tasks/test-nats-performance.yml
       input_mapping:
         cf-networking: cf-networking-dev
