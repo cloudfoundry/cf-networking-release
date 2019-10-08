@@ -116,6 +116,7 @@ resources:
   ###### Control plane
   - name: cf-networking-release-ci
     type: git
+    icon: github-box
     source:
       uri: https://github.com/cloudfoundry/cf-networking-release
       branch: develop
@@ -123,40 +124,47 @@ resources:
         - ci
   - name: cf-networking-deployments
     type: git
+    icon: github-box
     source:
       uri: "git@github.com:cloudfoundry/cf-networking-deployments.git"
       branch: master
       private_key: ((cf-networking-deployments-push-key.private_key))
   - name: cf-deployment-concourse-tasks
     type: git
+    icon: github-box
     source:
       uri: https://github.com/cloudfoundry/cf-deployment-concourse-tasks
       branch: master
       tag_filter: "v*"
   - name: cf-deployment
     type: git
+    icon: github-box
     source:
       branch: release-candidate
       uri: https://github.com/cloudfoundry/cf-deployment.git
   - name: cf-deployment-stable
     type: git
+    icon: github-box
     source:
       branch: master
       uri: https://github.com/cloudfoundry/cf-deployment.git
   - name: cf-networking-2.23.0
     type: git
+    icon: github-box
     source:
       branch: master
       uri: https://github.com/cloudfoundry/cf-networking-release.git
       tag_filter: "2.23.0"
   - name: silk-2.23.0
     type: git
+    icon: github-box
     source:
       branch: master
       uri: https://github.com/cloudfoundry/silk-release.git
       tag_filter: "2.23.0"
   - name: disaster-recovery-acceptance-tests
     type: git
+    icon: github-box
     source:
       branch: master
       uri: https://github.com/cloudfoundry-incubator/disaster-recovery-acceptance-tests
@@ -168,23 +176,27 @@ resources:
   ###### BOSH release repos
   - name: golang-release-latest
     type: git
+    icon: github-box
     source:
       branch: master
       tag_filter: v*
       uri: https://github.com/bosh-packages/golang-release.git
   - name: capi-ci-passed
     type: git
+    icon: github-box
     source:
       uri: https://github.com/cloudfoundry/capi-release.git
       branch: ci-passed
   - name: silk-dev-full
     type: git
+    icon: github-box
     source:
       uri: git@github.com:cloudfoundry/silk-release.git
       branch: develop
       private_key: ((silk-release-deploy-key.private_key))
   - name: silk-dev
     type: git
+    icon: github-box
     source:
       uri: git@github.com:cloudfoundry/silk-release.git
       branch: develop
@@ -193,18 +205,21 @@ resources:
       private_key: ((silk-release-deploy-key.private_key))
   - name: silk-master
     type: git
+    icon: github-box
     source:
       uri: git@github.com:cloudfoundry/silk-release.git
       branch: master
       private_key: ((silk-release-deploy-key.private_key))
   - name: cf-networking-dev-full
     type: git
+    icon: github-box
     source:
       uri: git@github.com:cloudfoundry/cf-networking-release.git
       branch: develop
       private_key: ((cf-networking-deploy-key.private_key))
   - name: cf-networking-dev
     type: git
+    icon: github-box
     source:
       uri: git@github.com:cloudfoundry/cf-networking-release.git
       branch: develop
@@ -214,41 +229,48 @@ resources:
       private_key: ((cf-networking-deploy-key.private_key))
   - name: cf-networking-master
     type: git
+    icon: github-box
     source:
       uri: git@github.com:cloudfoundry/cf-networking-release.git
       branch: master
       private_key: ((cf-networking-deploy-key.private_key))
   - name: cf-networking-release-candidate
     type: git
+    icon: github-box
     source:
       uri: git@github.com:cloudfoundry/cf-networking-release.git
       branch: release-candidate
       private_key: ((cf-networking-deploy-key.private_key))
   - name: silk-release-candidate
     type: git
+    icon: github-box
     source:
       uri: git@github.com:cloudfoundry/silk-release.git
       branch: release-candidate
       private_key: ((silk-release-deploy-key.private_key))
   - name: bbr-binary-release
     type: github-release
+    icon: github-face
     source:
       owner: cloudfoundry-incubator
       repository: bosh-backup-and-restore
       access_token: ((github-access-token))
   - name: istio-release
     type: git
+    icon: github-box
     source:
       branch: master
       uri: https://github.com/cloudfoundry/istio-release
   - name: bosh-bootloader
     type: git
+    icon: github-box
     source:
       branch: master
       uri: https://github.com/cloudfoundry/bosh-bootloader.git
   ####### Stats
   - name: toque-stats
     type: git
+    icon: github-box
     source:
       uri: "git@github.com:cf-container-networking/toque-stats.git"
       branch: master
@@ -256,6 +278,7 @@ resources:
   ####### Timers
   - name: trigger-upgrade-deploy
     type: time
+    icon: clock-outline
     source:
       location: America/Los_Angeles
       start: 4:00 AM
@@ -263,6 +286,7 @@ resources:
       days: [ Monday, Tuesday, Wednesday, Thursday, Friday ]
   - name: trigger-caubeen-delete
     type: time
+    icon: clock-outline
     source:
       location: America/Los_Angeles
       start: 8:00 PM
@@ -270,6 +294,7 @@ resources:
       days: [ Monday, Tuesday, Wednesday, Thursday, Friday ]
   - name: trigger-caubeen-cleanup
     type: time
+    icon: clock-outline
     source:
       location: America/Los_Angeles
       start: 2:00 PM
@@ -277,6 +302,7 @@ resources:
       days: [ Saturday ]
   - name: every-monday-morning
     type: time
+    icon: clock-outline
     source:
       start: 8:00 AM
       stop: 9:00 AM
@@ -284,20 +310,24 @@ resources:
       days: [Monday]
   - name: every-half-hour
     type: time
+    icon: clock-outline
     source:
       interval: 30m
   - name: every-two-minutes
     type: time
+    icon: clock-outline
     source:
       interval: 2m
   ####### Tests
   - name: cf-acceptance-tests
     type: git
+    icon: github-box
     source:
       branch: release-candidate
       uri: git://github.com/cloudfoundry/cf-acceptance-tests.git
   - name: toque-scaling-test-params
     type: git
+    icon: github-box
     source:
       uri: https://github.com/cf-container-networking/toque-scaling
       paths: [ test-params ]
@@ -313,6 +343,7 @@ resources:
       secret_access_key: ((aws-secret-access-key))
   - name: cf-networking-tarball
     type: s3
+    icon: cloud-download
     source:
       bucket: ((cf-networking-candidate-s3-bucket))
       region_name: us-west-2
@@ -321,6 +352,7 @@ resources:
       secret_access_key: ((aws-secret-access-key))
   - name: silk-tarball
     type: s3
+    icon: cloud-download
     source:
       bucket: ((silk-candidate-s3-bucket))
       region_name: us-west-2
@@ -330,6 +362,7 @@ resources:
   # Github release
   - name: cf-networking-github-release
     type: github-release
+    icon: github-face
     source:
       user: cloudfoundry
       repository: cf-networking-release
@@ -337,6 +370,7 @@ resources:
       drafts: true
   - name: silk-github-release
     type: github-release
+    icon: github-face
     source:
       user: cloudfoundry
       repository: silk-release
