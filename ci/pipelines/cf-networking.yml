@@ -142,12 +142,6 @@ resources:
     source:
       branch: release-candidate
       uri: https://github.com/cloudfoundry/cf-deployment.git
-  - name: cf-deployment-stable
-    type: git
-    icon: github-box
-    source:
-      branch: master
-      uri: https://github.com/cloudfoundry/cf-deployment.git
   - name: cf-networking-2.23.0
     type: git
     icon: github-box
@@ -1334,7 +1328,6 @@ jobs:
         file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
         input_mapping:
           bbl-state: cf-networking-deployments
-          cf-deployment: cf-deployment
         params:
           BBL_STATE_DIR: environments/toque
       - task: upload-local-capi-release
@@ -1406,7 +1399,6 @@ jobs:
           cf-networking-release/ci/opsfiles/lower-canary-watch-time.yml
       input_mapping:
         bbl-state: cf-networking-deployments
-        cf-deployment: cf-deployment
         release: istio-release
         vars-files: cf-networking-deployments
         vars-store: cf-networking-deployments
@@ -1622,31 +1614,36 @@ jobs:
           submodules: none
       - get: cf-deployment-concourse-tasks
       - get: cf-networking-deployments
-      - get: cf-deployment-stable
+      - get: cf-deployment
       - get: cf-networking-2.23.0
       - get: silk-2.23.0
-      - get: cf-deployment
       - get: cf-networking-dev
         passed: [unit-and-integration-tests]
       - get: silk-dev
         passed: [unit-and-integration-tests]
-    - task: upload-pinned-stemcell
+    - task: guarantee-no-existing-cf-deployment
+      file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
+      params:
+        BBL_STATE_DIR: environments/caubeen/
+        DEPLOYMENT_NAME: cf
+        IGNORE_ERRORS: true
+      input_mapping:
+        bbl-state: cf-networking-deployments
+    - task: upload-stemcell
       file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
       params:
         BBL_STATE_DIR: environments/caubeen/
       input_mapping:
-        cf-deployment: cf-deployment-stable
         bbl-state: cf-networking-deployments
     - task: collect-pinned-ops-files
       file: cf-networking-release-ci/ci/tasks/collect-named-ops-files.yml
       params:
         ENVIRONMENT_NAME: caubeen
       input_mapping:
-        cf-deployment: cf-deployment-stable
         cf-networking-release: cf-networking-2.23.0
         deployments-repo: cf-networking-deployments
         silk-release: silk-2.23.0
-    - task: deploy-pinned-cf-deployment
+    - task: bosh-deploy-cf-rc
       file: cf-deployment-concourse-tasks/bosh-deploy/task.yml
       params:
         BBL_STATE_DIR: environments/caubeen/
@@ -1666,7 +1663,6 @@ jobs:
         VARS_FILES: |
           environments/caubeen/gcs-vars.yml
       input_mapping:
-        cf-deployment: cf-deployment-stable
         bbl-state: cf-networking-deployments
         vars-files: cf-networking-deployments
         vars-store: cf-networking-deployments
@@ -1683,12 +1679,6 @@ jobs:
       params:
         SYSTEM_DOMAIN: caubeen.c2c.cf-app.com
         ENVIRONMENT_NAME: caubeen
-    - task: upload-stemcell
-      file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
-      params:
-        BBL_STATE_DIR: environments/caubeen/
-      input_mapping:
-        bbl-state: cf-networking-deployments
     - task: collect-ops-files
       file: cf-networking-release-ci/ci/tasks/collect-named-ops-files.yml
       params:
@@ -1704,7 +1694,7 @@ jobs:
         local-release: silk-dev
       params:
         BBL_STATE_DIR: environments/caubeen/
-    - task: deploy-cf-dev
+    - task: bosh-deploy-cf-rc-with-updated-releases
       file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
       params:
         BBL_STATE_DIR: environments/caubeen/
@@ -1727,9 +1717,10 @@ jobs:
           environments/caubeen/gcs-vars.yml
         DEPLOY_WITH_UPTIME_MEASUREMENTS: true
         FAIL_ON_DOWNTIME: true
-        APP_PUSHABILITY_THRESHOLD: 2 # our api vms take 6 min to recreate, so this number should be under 6
-        MEASURE_SYSLOG_AVAILABILITY: false
-        RECENT_LOGS_THRESHOLD: 5
+        HTTP_AVAILABILITY_THRESHOLD: 0
+        APP_PUSHABILITY_THRESHOLD: 10
+        RECENT_LOGS_THRESHOLD: 10000 # we don't guarantee logs availability, only app and http, see cf-deployment CI
+        STREAMING_LOGS_THRESHOLD: 10000
       input_mapping:
         bbl-state: cf-networking-deployments
         release: cf-networking-dev
