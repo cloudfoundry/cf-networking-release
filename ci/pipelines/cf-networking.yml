@@ -50,7 +50,6 @@ groups:
   - merge-master
   - silk-merge-master
   - toque-deploy
-  - toque-push
   - toque-test
   - caubeen-upgrade-test
   - caubeen-drats
@@ -79,7 +78,6 @@ groups:
   - toque-bbl-up
   - toque-bbl-destroy
   - toque-deploy
-  - toque-push
   - toque-test
   - toque-deploy-firehose-nozzle
   - delete-toque-deployment
@@ -302,11 +300,6 @@ resources:
       stop: 9:00 AM
       location: America/Los_Angeles
       days: [Monday]
-  - name: every-half-hour
-    type: time
-    icon: clock-outline
-    source:
-      interval: 30m
   - name: every-two-minutes
     type: time
     icon: clock-outline
@@ -1451,7 +1444,7 @@ jobs:
         OPS_FILES: ""
         SYSTEM_DOMAIN: toque.c2c.cf-app.com
 
-  - name: toque-push
+  - name: toque-test
     serial_groups: [toque]
     plan:
     - in_parallel:
@@ -1465,6 +1458,7 @@ jobs:
         trigger: true
       - get: toque-scaling-test-params
         trigger: true
+      - get: toque-stats
     - task: get-credhub-vars
       file: cf-networking-release-ci/ci/tasks/get-credhub-vars.yml
       input_mapping:
@@ -1487,38 +1481,6 @@ jobs:
       input_mapping:
         cf-networking: cf-networking-dev
         test-config: test-config
-
-  - name: toque-test
-    serial_groups: [toque]
-    plan:
-    - in_parallel:
-      - get: every-half-hour
-        trigger: true
-      - get: cf-networking-dev
-        passed: [toque-push]
-      - get: cf-networking-release-ci
-        params:
-          submodules: none
-      - get: toque-scaling-test-params
-        passed: [toque-push]
-      - get: toque-stats
-      - get: cf-networking-deployments
-        passed: [toque-push]
-    - task: get-credhub-vars
-      file: cf-networking-release-ci/ci/tasks/get-credhub-vars.yml
-      input_mapping:
-        bbl-state: cf-networking-deployments
-      params:
-        BBL_STATE_DIR: environments/toque
-        VARIABLES: |
-          /bosh-toque/cf/cf_admin_password
-    - task: set-scaling-test-params
-      file: cf-networking-release-ci/ci/tasks/set-scaling-test-params.yml
-      params:
-        ENVIRONMENT_NAME: toque
-      input_mapping:
-        deployments-repo: cf-networking-deployments
-        scaling-test-params: toque-scaling-test-params
     - task: emit-datadog-test-start
       file: cf-networking-release-ci/ci/tasks/emit-datadog-event.yml
       params:
