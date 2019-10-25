@@ -44,6 +44,7 @@ groups:
   - mitre-sli-map-route
   - mitre-sli-resolve-route
   - check-empty-networking-opsfile
+  - deliver-stories
   - ship-what
   - bump-minor-version
   - ship-cf-networking-and-silk
@@ -363,6 +364,13 @@ resources:
       repository: silk-release
       access_token: ((github-access-token))
       drafts: true
+  # Tracker projects
+  - name: cf-diego-networking-tracker
+    type: tracker
+    source:
+      token: ((tracker_api_token))
+      project_id: '2245594'
+      tracker_url: https://www.pivotaltracker.com
 
 jobs:
   - name: postgres-tests
@@ -1806,6 +1814,28 @@ jobs:
       input_mapping:
         bbl-state: cf-networking-deployments
 
+  - name: deliver-stories
+    serial: true
+    plan:
+    - get: cf-networking-dev
+      params:
+        submodules: none
+      passed:
+      - mitre-cats
+      - caubeen-drats
+      trigger: true
+    - get: silk-dev
+      params:
+        submodules: none
+      passed:
+      - mitre-cats
+      - caubeen-drats
+      trigger: true
+    - put: cf-diego-networking-tracker
+      params:
+        repos:
+        - cf-networking-dev
+        - silk-dev
 
   - name: ship-what
     serial_groups: [version]
