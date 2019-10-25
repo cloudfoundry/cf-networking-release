@@ -142,8 +142,11 @@ var _ = Describe("TLS config for internal API server", func() {
 				})
 			})
 
-			Context("when the client is configured to use an unsupported ciphersuite", func() {
+			Context("when the client is configured to use an unsupported ciphersuite with TLS 1.2", func() {
 				BeforeEach(func() {
+					clientTLSConfig.MinVersion = tls.VersionTLS12
+					clientTLSConfig.MaxVersion = tls.VersionTLS12
+
 					clientTLSConfig.CipherSuites = []uint16{tls.TLS_RSA_WITH_AES_256_GCM_SHA384}
 				})
 

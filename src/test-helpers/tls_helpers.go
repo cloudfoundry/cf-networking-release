@@ -58,7 +58,7 @@ func mapToX509Cert(PemEncodedCertFilePath string) []*x509.Certificate {
 }
 
 func buildCaFile() (string, *rsa.PrivateKey, error) {
-	privKey, err := rsa.GenerateKey(rand.Reader, 512)
+	privKey, err := rsa.GenerateKey(rand.Reader, 1024)
 	if err != nil {
 		return "", nil, err
 	}

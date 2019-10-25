@@ -111,12 +111,12 @@ resources:
     email: ((dockerhub_email))
     repository: c2cnetworking/deploy-light
 
-- name: golang-1.12.x-tarball
+- name: golang-tarball
   type: s3
   source:
     endpoint: storage.googleapis.com
     bucket: golang
-    regexp: 'go(1\.12(\.\d+)?)\.linux-amd64\.tar.gz'
+    regexp: 'go(1\.13(\.\d+)?)\.linux-amd64\.tar.gz'
 
 - name: cf-networking-release-ci
   type: git
@@ -222,13 +222,13 @@ jobs:
       params: {bump: minor}
     - get: dev-postgres-dockerfile
       trigger: true
-    - get: golang-1.12.x-tarball
+    - get: golang-tarball
       trigger: true
   - task: add-golang
     file: cf-networking-release-ci/ci/tasks/add-golang-to-docker-context.yml
     input_mapping:
       dockerfile: dev-postgres-dockerfile
-      golang-tarball: golang-1.12.x-tarball
+      golang-tarball: golang-tarball
     params:
       INPUT_DOCKERIMAGE_PATH: dockerfile/ci/dockerfiles/dev-postgres
   - put: dev-postgres-image
@@ -250,13 +250,13 @@ jobs:
       params: {bump: minor}
     - get: dev-postgres-ifb-dockerfile
       trigger: true
-    - get: golang-1.12.x-tarball
+    - get: golang-tarball
       trigger: true
   - task: add-golang
     file: cf-networking-release-ci/ci/tasks/add-golang-to-docker-context.yml
     input_mapping:
       dockerfile: dev-postgres-ifb-dockerfile
-      golang-tarball: golang-1.12.x-tarball
+      golang-tarball: golang-tarball
     params:
       INPUT_DOCKERIMAGE_PATH: dockerfile/ci/dockerfiles/dev-postgres-ifb
   - put: dev-postgres-ifb-image
@@ -279,13 +279,13 @@ jobs:
       params: {bump: minor}
     - get: dev-mysql-dockerfile
       trigger: true
-    - get: golang-1.12.x-tarball
+    - get: golang-tarball
       trigger: true
   - task: add-golang
     file: cf-networking-release-ci/ci/tasks/add-golang-to-docker-context.yml
     input_mapping:
       dockerfile: dev-mysql-dockerfile
-      golang-tarball: golang-1.12.x-tarball
+      golang-tarball: golang-tarball
     params:
       INPUT_DOCKERIMAGE_PATH: dockerfile/ci/dockerfiles/dev-mysql
   - put: dev-mysql-image
@@ -306,13 +306,13 @@ jobs:
       params: {bump: minor}
     - get: dev-mysql-5.6-dockerfile
       trigger: true
-    - get: golang-1.12.x-tarball
+    - get: golang-tarball
       trigger: true
   - task: add-golang
     file: cf-networking-release-ci/ci/tasks/add-golang-to-docker-context.yml
     input_mapping:
       dockerfile: dev-mysql-5.6-dockerfile
-      golang-tarball: golang-1.12.x-tarball
+      golang-tarball: golang-tarball
     params:
       INPUT_DOCKERIMAGE_PATH: dockerfile/ci/dockerfiles/dev-mysql-5.6
   - put: dev-mysql-5.6-image
