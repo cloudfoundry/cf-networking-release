@@ -178,6 +178,15 @@ var _ = Describe("ASG/Dynamic Egress Interaction", func() {
 		Eventually(canProxy, "10s", "1s").Should(Succeed())
 		Eventually(canProxyASGOnlySite, "10s", "1s").Should(Succeed())
 
+		// Get all ASGS
+		asgResp, err := cli.Curl("GET", "/v2/security_groups", "")
+		Expect(err).NotTo(HaveOccurred())
+		// Get all DEs
+		deResp, err := cli.Curl("GET", "/networking/v1/external/egress_policies", "")
+		Expect(err).NotTo(HaveOccurred())
+
+		fmt.Printf("====ASGs:\n%s\n\n===DEs:\n%s\n\n", string(asgResp), string(deResp))
+
 		By("checking that the app cannot reach the website previously allowed by dynamic egress policies")
 		Eventually(cannotProxyDEOnlySite, "10s", "0.5s").Should(Succeed())
 
