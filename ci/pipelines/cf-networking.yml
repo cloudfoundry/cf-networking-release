@@ -496,7 +496,7 @@ jobs:
       file: cf-networking-release-ci/ci/tasks/upgrade-package-in-release/task.yml
       params:
         PACKAGE: golang-1-linux
-        GCP_BLOBSTORE_SERVICE_ACCOUNT_KEY: ((gcp_container_networking_blobstore_service_account_key))
+        GCP_BLOBSTORE_SERVICE_ACCOUNT_KEY: ((gcp_routing_blobstore_service_account_key))
         RELEASE: release
       input_mapping:
         release: cf-networking-dev-full
@@ -523,7 +523,7 @@ jobs:
       file: cf-networking-release-ci/ci/tasks/upgrade-package-in-release/task.yml
       params:
         PACKAGE: golang-1-linux
-        GCP_BLOBSTORE_SERVICE_ACCOUNT_KEY: ((gcp_container_networking_blobstore_service_account_key))
+        GCP_BLOBSTORE_SERVICE_ACCOUNT_KEY: ((gcp_routing_blobstore_service_account_key))
         RELEASE: release
       input_mapping:
         release: silk-dev-full
@@ -1950,7 +1950,7 @@ jobs:
         input_mapping:
           cf-networking: cf-networking-dev
         params:
-          GCP_BLOBSTORE_SERVICE_ACCOUNT_KEY: ((gcp_container_networking_blobstore_service_account_key))
+          GCP_BLOBSTORE_SERVICE_ACCOUNT_KEY: ((gcp_routing_blobstore_service_account_key))
       - put: version
         params: {file: version/number}
       - put: cf-networking-master
@@ -1979,7 +1979,7 @@ jobs:
         input_mapping:
           silk: silk-dev
         params:
-          GCP_BLOBSTORE_SERVICE_ACCOUNT_KEY: ((gcp_silk_blobstore_service_account_key))
+          GCP_BLOBSTORE_SERVICE_ACCOUNT_KEY: ((gcp_routing_blobstore_service_account_key))
       - put: silk-master
         params:
           repository: release/master
