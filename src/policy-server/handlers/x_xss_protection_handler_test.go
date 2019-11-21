@@ -11,17 +11,14 @@ import (
 
 var _ = Describe("XXSSProtectionHandler", func() {
 	var (
-		fakeHandler          http.Handler
-		fakeHandlerCallCount int
+		fakeHandler http.Handler
 
 		xxssProtectionHandler handlers.XXSSProtectionHandler
 		wrappedHandler        http.Handler
 	)
 
 	BeforeEach(func() {
-		fakeHandlerCallCount = 0
 		fakeHandler = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-			fakeHandlerCallCount++
 			w.Write([]byte("some-handler"))
 		})
 
