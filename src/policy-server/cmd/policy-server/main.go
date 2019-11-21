@@ -273,6 +273,7 @@ func main() {
 	}
 
 	xXssProtectionWrapper := handlers.XXSSProtectionHandler{}
+	noSniffHeaderWrapper := handlers.NoSniffHeaderHandler{}
 	hstsHeaderWrapper := handlers.HSTSHandler{}
 
 	metricsWrap := func(name string, handler http.Handler) http.Handler {
@@ -403,6 +404,7 @@ func main() {
 	for key, handler := range externalHandlers {
 		wrappedHandler := corsOptionsWrapper(handler)
 		wrappedHandler = xXssProtectionWrapper.Wrap(wrappedHandler)
+		wrappedHandler = noSniffHeaderWrapper.Wrap(wrappedHandler)
 		if conf.EnableTLS {
 			wrappedHandler = hstsHeaderWrapper.Wrap(wrappedHandler)
 		}
