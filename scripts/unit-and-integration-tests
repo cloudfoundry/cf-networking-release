@@ -2,8 +2,10 @@
 
 set -e -u -x
 
-cd cf-networking-release
-export GOPATH=$PWD
+SCRIPT_PATH="$(cd "$(dirname $0)" && pwd)"
+
+cd ${SCRIPT_PATH}/..
+export GOPATH="${SCRIPT_PATH}/.."
 
 declare -a serial_packages=(
   "src/policy-server/integration/timeouts"
