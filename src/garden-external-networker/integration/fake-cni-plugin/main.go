@@ -17,7 +17,7 @@ import (
 func parseEnviron(pairs []string) (map[string]string, error) {
 	hash := make(map[string]string)
 	for i, p := range pairs {
-		parts := strings.SplitN(p, "=", 1)
+		parts := strings.SplitN(p, "=", 2)
 		if len(parts) != 2 {
 			return nil, fmt.Errorf("can't parse env var %d: %s", i, p)
 		}
