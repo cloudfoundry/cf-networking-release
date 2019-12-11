@@ -182,13 +182,13 @@ var _ = Describe("Authentication middleware", func() {
 			uaaClient.CheckTokenReturns(uaa_client.CheckTokenResponse{UserName: ""}, errors.New("potato"))
 		})
 
-		It("calls the forbidden error handler", func() {
+		It("calls the unauthorized error handler", func() {
 			makeRequest()
 			Expect(unprotectedCallCount).To(Equal(0))
 
-			Expect(fakeErrorResponse.ForbiddenCallCount()).To(Equal(1))
+			Expect(fakeErrorResponse.UnauthorizedCallCount()).To(Equal(1))
 
-			l, w, err, description := fakeErrorResponse.ForbiddenArgsForCall(0)
+			l, w, err, description := fakeErrorResponse.UnauthorizedArgsForCall(0)
 			Expect(l).To(Equal(expectedLogger))
 			Expect(w).To(Equal(resp))
 			Expect(err).To(MatchError("potato"))

@@ -72,7 +72,7 @@ func (a *Authenticator) Wrap(handle http.Handler) http.Handler {
 		token = strings.TrimPrefix(token, "bearer ")
 		tokenData, err := a.Client.CheckToken(token)
 		if err != nil {
-			a.ErrorResponse.Forbidden(logger, w, err, "failed to verify token with uaa")
+			a.ErrorResponse.Unauthorized(logger, w, err, "failed to verify token with uaa")
 			return
 		}
 
