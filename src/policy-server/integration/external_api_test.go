@@ -14,11 +14,12 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
 
+	testhelpers "test-helpers"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
-	"test-helpers"
 )
 
 var _ = Describe("External API", func() {
@@ -73,13 +74,13 @@ var _ = Describe("External API", func() {
 		}
 
 		var TestBadBearerToken = func(req *http.Request) {
-			By("check that 403 is returned when auth header is invalid")
+			By("check that 401 is returned when auth header is invalid")
 			req.Header.Set("Authorization", "Bearer bad-token")
 
 			resp, err := http.DefaultClient.Do(req)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
+			Expect(resp.StatusCode).To(Equal(http.StatusUnauthorized))
 			responseString, err := ioutil.ReadAll(resp.Body)
 			Expect(responseString).To(MatchJSON(`{ "error": "failed to verify token with uaa" }`))
 		}
