@@ -1,0 +1,23 @@
+---
+image_resource:
+  type: docker-image
+  source: { repository: c2cnetworking/deploy }
+
+platform: linux
+
+inputs:
+  - name: version
+  - name: cf-networking-release-ci
+  - name: cf-networking-deployments
+  - name: cf-networking-tarball
+  - name: cf-networking
+
+outputs:
+  - name: final-release
+  - name: release
+
+params:
+  GCP_BLOBSTORE_SERVICE_ACCOUNT_KEY:
+
+run:
+  path: cf-networking-release-ci/ci/tasks/shipit/task

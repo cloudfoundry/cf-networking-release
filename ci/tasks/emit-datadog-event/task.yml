@@ -1,0 +1,18 @@
+platform: linux
+
+image_resource:
+  type: docker-image
+  source: { repository: c2cnetworking/deploy }
+
+inputs:
+  - name: cf-networking-release-ci
+
+run:
+  path: cf-networking-release-ci/ci/tasks/emit-datadog-event/task
+
+params:
+  TITLE:
+  TEXT:
+  PRIORITY:
+  AWS_ENV:
+  DATADOG_API_KEY:

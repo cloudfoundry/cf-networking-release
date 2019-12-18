@@ -1,0 +1,18 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: c2cnetworking/deploy-light
+
+inputs:
+  - name: cf-networking
+  - name: cf-networking-release-ci
+  - name: deployments-repo
+
+params:
+  ENVIRONMENT_NAME: ~
+
+run:
+  path: cf-networking-release-ci/ci/tasks/test-nats-performance/task

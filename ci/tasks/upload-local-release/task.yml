@@ -1,0 +1,20 @@
+---
+image_resource:
+  type: docker-image
+  source:
+    repository: c2cnetworking/deploy
+    tag: latest
+
+platform: linux
+
+inputs:
+  - name: cf-deployment-concourse-tasks
+  - name: cf-networking-release-ci
+  - name: bbl-state
+  - name: local-release
+
+run:
+  path: cf-networking-release-ci/ci/tasks/upload-local-release/task
+
+params:
+  BBL_STATE_DIR:

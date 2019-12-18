@@ -1,0 +1,19 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: c2cnetworking/deploy-light
+
+inputs:
+  - name: cf-networking-release-ci
+  - name: cf-networking
+  - name: test-config
+  - name: variables
+
+params:
+  ENVIRONMENT_NAME: ~
+
+run:
+  path: cf-networking-release-ci/ci/tasks/test-acceptance-sd/task

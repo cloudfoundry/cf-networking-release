@@ -1,0 +1,21 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: relintdockerhubpushbot/cf-deployment-concourse-tasks
+
+inputs:
+  - name: bbl-state
+  - name: cf-networking-release-ci
+
+outputs:
+  - name: variables
+
+params:
+  BBL_STATE_DIR: bbl-state
+  VARIABLES:
+
+run:
+  path: cf-networking-release-ci/ci/tasks/get-credhub-vars/task

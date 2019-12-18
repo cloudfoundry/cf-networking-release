@@ -15,10 +15,10 @@
   #  >  cf-acceptance-tests
 # 8. Remove capi-ci-passed
 # 9. Don't deploy with the following opsfiles
-  #  >  custom-apps-domain.yml
-  #  >  enable-iptables-logger.yml
-  #  >  use-latest-capi.yml
-  #  >  add-fake-istio-router-on-overlay.yml
+  #  >  custom-apps-domain/task.yml
+  #  >  enable-iptables-logger/task.yml
+  #  >  use-latest-capi/task.yml
+  #  >  add-fake-istio-router-on-overlay/task.yml
 
 
 groups:
@@ -382,7 +382,7 @@ jobs:
         params:
           submodules: none
     - task: unit-and-integration-tests
-      file: cf-networking-release-ci/ci/tasks/postgres-tests.yml
+      file: cf-networking-release-ci/ci/tasks/postgres-tests/task.yml
       privileged: true
       input_mapping:
         cf-networking-release: cf-networking-dev
@@ -396,7 +396,7 @@ jobs:
         params:
           submodules: none
     - task: template-tests
-      file: cf-networking-release-ci/ci/tasks/template-tests.yml
+      file: cf-networking-release-ci/ci/tasks/template-tests/task.yml
       input_mapping:
         cf-networking-release: cf-networking-dev
 
@@ -410,7 +410,7 @@ jobs:
         params:
           submodules: none
     - task: unit-and-integration-tests
-      file: cf-networking-release-ci/ci/tasks/mysql-tests.yml
+      file: cf-networking-release-ci/ci/tasks/mysql-tests/task.yml
       privileged: true
       input_mapping:
         cf-networking-release: cf-networking-dev
@@ -425,7 +425,7 @@ jobs:
         params:
           submodules: none
     - task: unit-and-integration-tests
-      file: cf-networking-release-ci/ci/tasks/mysql-5.6-tests.yml
+      file: cf-networking-release-ci/ci/tasks/mysql-5.6-tests/task.yml
       privileged: true
       input_mapping:
         cf-networking-release: cf-networking-dev
@@ -436,7 +436,7 @@ jobs:
       - get: silk-dev
         trigger: true
     - task: test-postgres
-      file: silk-dev/ci/test-postgres.yml
+      file: silk-dev/ci/test-postgres/task.yml
       privileged: true
       input_mapping:
         silk: silk-dev
@@ -447,7 +447,7 @@ jobs:
       - get: silk-dev
         trigger: true
     - task: test-mysql
-      file: silk-dev/ci/test-mysql.yml
+      file: silk-dev/ci/test-mysql/task.yml
       privileged: true
       input_mapping:
         silk: silk-dev
@@ -458,7 +458,7 @@ jobs:
       - get: silk-dev
         trigger: true
     - task: test-mysql-5.6
-      file: silk-dev/ci/test-mysql-5.6.yml
+      file: silk-dev/ci/test-mysql-5.6/task.yml
       privileged: true
       input_mapping:
         silk: silk-dev
@@ -472,7 +472,7 @@ jobs:
         params:
           submodules: none
     - task: template-tests
-      file: cf-networking-release-ci/ci/tasks/silk-template-tests.yml
+      file: cf-networking-release-ci/ci/tasks/silk-template-tests/task.yml
       input_mapping:
         silk-release: silk-dev
 
@@ -548,7 +548,7 @@ jobs:
       - get: cf-networking-release-ci
       - get: bosh-bootloader
     - task: add-parent-dns
-      file: cf-networking-release-ci/ci/tasks/add-parent-dns.yml
+      file: cf-networking-release-ci/ci/tasks/add-parent-dns/task.yml
       params:
         ENVIRONMENT: pickelhelm
       input_mapping:
@@ -618,7 +618,7 @@ jobs:
         trigger: true
         passed: [unit-and-integration-tests]
     - task: collect-ops-files
-      file: cf-networking-release-ci/ci/tasks/collect-named-ops-files.yml
+      file: cf-networking-release-ci/ci/tasks/collect-named-ops-files/task.yml
       params:
         ENVIRONMENT_NAME: pickelhelm
       input_mapping:
@@ -633,28 +633,28 @@ jobs:
         input_mapping:
           bbl-state: cf-networking-deployments
       - task: upload-local-capi-release
-        file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+        file: cf-networking-release-ci/ci/tasks/upload-local-release/task.yml
         input_mapping:
           bbl-state: cf-networking-deployments
           local-release: capi-ci-passed
         params:
           BBL_STATE_DIR: environments/pickelhelm/
       - task: upload-local-networking-release
-        file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+        file: cf-networking-release-ci/ci/tasks/upload-local-release/task.yml
         input_mapping:
           bbl-state: cf-networking-deployments
           local-release: cf-networking-dev
         params:
           BBL_STATE_DIR: environments/pickelhelm/
       - task: upload-local-silk-release
-        file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+        file: cf-networking-release-ci/ci/tasks/upload-local-release/task.yml
         input_mapping:
           bbl-state: cf-networking-deployments
           local-release: silk-dev
         params:
           BBL_STATE_DIR: environments/pickelhelm/
       - task: upload-acceptance-test-release
-        file: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release.yml
+        file: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release/task.yml
         input_mapping:
           bbl-state: cf-networking-deployments
         params:
@@ -665,25 +665,25 @@ jobs:
         BBL_STATE_DIR: environments/pickelhelm/
         SYSTEM_DOMAIN: pickelhelm.c2c.cf-app.com
         OPS_FILES: |
-          cf-networking-release/ci/opsfiles/datadog.yml
-          cf-deployment/operations/scale-to-one-az.yml
-          deployments-repo/smaller-footprint.yml
-          cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
-          cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
-          cf-networking-release/ci/opsfiles/use-latest-silk.yml
-          cf-networking-release/ci/opsfiles/use-latest-capi.yml
-          cf-networking-release/ci/opsfiles/use-latest-cf-networking.yml
-          cf-deployment/operations/enable-service-discovery.yml
-          cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain.yml
-          cf-networking-release/ci/opsfiles/add-acceptance-test-jobs.yml
-          cf-networking-release/manifest-generation/opsfiles/enable-experimental-dynamic-egress-policies.yml
-          istio-release/deploy/cf-deployment-operations/add-istio.yml
-          istio-release/deploy/cf-deployment-operations/enable-sidecar-proxying.yml
-          cf-networking-release/ci/opsfiles/disable-ingress-redirect-to-proxy.yml
-          cf-deployment/operations/experimental/enable-iptables-logger.yml
-          deployments-repo/environments/pickelhelm/use-external-postgres-for-c2c.yml
-          deployments-repo/environments/pickelhelm/scale-to-2-diego-cells.yml
-          cf-networking-release/ci/opsfiles/lower-canary-watch-time.yml
+          cf-networking-release/ci/opsfiles/datadog/task.yml
+          cf-deployment/operations/scale-to-one-az/task.yml
+          deployments-repo/smaller-footprint/task.yml
+          cf-networking-release/manifest-generation/opsfiles/cf-networking/task.yml
+          cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name/task.yml
+          cf-networking-release/ci/opsfiles/use-latest-silk/task.yml
+          cf-networking-release/ci/opsfiles/use-latest-capi/task.yml
+          cf-networking-release/ci/opsfiles/use-latest-cf-networking/task.yml
+          cf-deployment/operations/enable-service-discovery/task.yml
+          cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain/task.yml
+          cf-networking-release/ci/opsfiles/add-acceptance-test-jobs/task.yml
+          cf-networking-release/manifest-generation/opsfiles/enable-experimental-dynamic-egress-policies/task.yml
+          istio-release/deploy/cf-deployment-operations/add-istio/task.yml
+          istio-release/deploy/cf-deployment-operations/enable-sidecar-proxying/task.yml
+          cf-networking-release/ci/opsfiles/disable-ingress-redirect-to-proxy/task.yml
+          cf-deployment/operations/experimental/enable-iptables-logger/task.yml
+          deployments-repo/environments/pickelhelm/use-external-postgres-for-c2c/task.yml
+          deployments-repo/environments/pickelhelm/scale-to-2-diego-cells/task.yml
+          cf-networking-release/ci/opsfiles/lower-canary-watch-time/task.yml
       input_mapping:
         bbl-state: cf-networking-deployments
         release: istio-release # because the pre-package script is broken
@@ -710,7 +710,7 @@ jobs:
         passed: [pickelhelm-deploy]
       - get: datadog-firehose-nozzle-release
     - task: upload-datadog-firehose-nozzle-release
-      file: cf-networking-release-ci/ci/tasks/upload-release-tarball.yml
+      file: cf-networking-release-ci/ci/tasks/upload-release-tarball/task.yml
       input_mapping:
         deployments-repo: cf-networking-deployments
         tarballs: datadog-firehose-nozzle-release
@@ -726,7 +726,7 @@ jobs:
         vars-store: cf-networking-deployments
       params:
         BBL_STATE_DIR: environments/pickelhelm
-        MANIFEST_FILE: firehose-nozzles.yml
+        MANIFEST_FILE: firehose-nozzles/task.yml
         OPS_FILES: ""
         SYSTEM_DOMAIN: pickelhelm.c2c.cf-app.com
 
@@ -750,7 +750,7 @@ jobs:
         passed: [pickelhelm-deploy]
         trigger: true
     - task: get-credhub-vars
-      file: cf-networking-release-ci/ci/tasks/get-credhub-vars.yml
+      file: cf-networking-release-ci/ci/tasks/get-credhub-vars/task.yml
       input_mapping:
         bbl-state: cf-networking-deployments
       params:
@@ -759,7 +759,7 @@ jobs:
           /bosh-pickelhelm/cf/cf_admin_password
           /bosh-pickelhelm/cf/uaa_admin_client_secret
     - task: acceptance-tests-sd
-      file: cf-networking-release-ci/ci/tasks/test-acceptance-sd.yml
+      file: cf-networking-release-ci/ci/tasks/test-acceptance-sd/task.yml
       input_mapping:
         cf-networking: cf-networking-dev
         test-config: cf-networking-deployments
@@ -767,7 +767,7 @@ jobs:
       params:
         ENVIRONMENT_NAME: pickelhelm
     - task: acceptance-tests
-      file: cf-networking-release-ci/ci/tasks/acceptance-tests.yml
+      file: cf-networking-release-ci/ci/tasks/acceptance-tests/task.yml
       input_mapping:
         cf-networking: cf-networking-dev
         test-config: cf-networking-deployments
@@ -785,7 +785,7 @@ jobs:
       - get: cf-networking-release-ci
       - get: bosh-bootloader
     - task: add-parent-dns
-      file: cf-networking-release-ci/ci/tasks/add-parent-dns.yml
+      file: cf-networking-release-ci/ci/tasks/add-parent-dns/task.yml
       params:
         ENVIRONMENT: mitre
       input_mapping:
@@ -861,7 +861,7 @@ jobs:
         params:
           pre: rc
     - task: collect-ops-files
-      file: cf-networking-release-ci/ci/tasks/collect-named-ops-files.yml
+      file: cf-networking-release-ci/ci/tasks/collect-named-ops-files/task.yml
       params:
         ENVIRONMENT_NAME: mitre
       input_mapping:
@@ -876,28 +876,28 @@ jobs:
         input_mapping:
           bbl-state: cf-networking-deployments
       - task: upload-local-capi-release
-        file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+        file: cf-networking-release-ci/ci/tasks/upload-local-release/task.yml
         input_mapping:
           bbl-state: cf-networking-deployments
           local-release: capi-ci-passed
         params:
           BBL_STATE_DIR: environments/mitre/
       - task: upload-cfnetworking-release
-        file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+        file: cf-networking-release-ci/ci/tasks/upload-local-release/task.yml
         input_mapping:
           bbl-state: cf-networking-deployments
           local-release: cf-networking-dev
         params:
           BBL_STATE_DIR: environments/mitre/
       - task: upload-local-silk-release
-        file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+        file: cf-networking-release-ci/ci/tasks/upload-local-release/task.yml
         input_mapping:
           bbl-state: cf-networking-deployments
           local-release: silk-dev
         params:
           BBL_STATE_DIR: environments/mitre/
       - task: upload-acceptance-test-release
-        file: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release.yml
+        file: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release/task.yml
         input_mapping:
           bbl-state: cf-networking-deployments
         params:
@@ -927,39 +927,39 @@ jobs:
         BBL_STATE_DIR: environments/mitre/
         SYSTEM_DOMAIN: mitre.c2c.cf-app.com
         OPS_FILES: |
-          cf-networking-release/ci/opsfiles/datadog.yml
-          cf-deployment/operations/scale-to-one-az.yml
-          deployments-repo/smaller-footprint.yml
-          cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
-          cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
-          cf-networking-release/ci/opsfiles/custom-apps-domain.yml
-          cf-deployment/operations/experimental/enable-iptables-logger.yml
-          cf-networking-release/ci/opsfiles/use-latest-silk.yml
-          cf-networking-release/ci/opsfiles/use-latest-capi.yml
-          cf-networking-release/ci/opsfiles/use-latest-cf-networking.yml
-          cf-deployment/operations/enable-service-discovery.yml
-          cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain.yml
-          cf-networking-release/ci/opsfiles/add-acceptance-test-jobs.yml
-          cf-deployment/operations/backup-and-restore/enable-backup-restore.yml
-          cf-networking-release/manifest-generation/opsfiles/enable-experimental-dynamic-egress-policies.yml
-          istio-release/deploy/cf-deployment-operations/add-istio.yml
-          istio-release/deploy/cf-deployment-operations/enable-sidecar-proxying.yml
-          cf-networking-release/ci/opsfiles/disable-ingress-redirect-to-proxy.yml
-          deployments-repo/environments/mitre/add-smoke-test-user.yml
-          deployments-repo/environments/mitre/change-vtep-port.yml
-          deployments-repo/environments/mitre/enable-rate-limiting-for-udp.yml
-          deployments-repo/environments/mitre/enable-space-developer-self-service.yml
-          deployments-repo/environments/mitre/scale-ephemeral-disk.yml
-          deployments-repo/environments/mitre/scale-instances-to-2.yml
-          deployments-repo/environments/mitre/scale-persistent-disk.yml
-          cf-networking-release/ci/opsfiles/lower-canary-watch-time.yml
+          cf-networking-release/ci/opsfiles/datadog/task.yml
+          cf-deployment/operations/scale-to-one-az/task.yml
+          deployments-repo/smaller-footprint/task.yml
+          cf-networking-release/manifest-generation/opsfiles/cf-networking/task.yml
+          cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name/task.yml
+          cf-networking-release/ci/opsfiles/custom-apps-domain/task.yml
+          cf-deployment/operations/experimental/enable-iptables-logger/task.yml
+          cf-networking-release/ci/opsfiles/use-latest-silk/task.yml
+          cf-networking-release/ci/opsfiles/use-latest-capi/task.yml
+          cf-networking-release/ci/opsfiles/use-latest-cf-networking/task.yml
+          cf-deployment/operations/enable-service-discovery/task.yml
+          cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain/task.yml
+          cf-networking-release/ci/opsfiles/add-acceptance-test-jobs/task.yml
+          cf-deployment/operations/backup-and-restore/enable-backup-restore/task.yml
+          cf-networking-release/manifest-generation/opsfiles/enable-experimental-dynamic-egress-policies/task.yml
+          istio-release/deploy/cf-deployment-operations/add-istio/task.yml
+          istio-release/deploy/cf-deployment-operations/enable-sidecar-proxying/task.yml
+          cf-networking-release/ci/opsfiles/disable-ingress-redirect-to-proxy/task.yml
+          deployments-repo/environments/mitre/add-smoke-test-user/task.yml
+          deployments-repo/environments/mitre/change-vtep-port/task.yml
+          deployments-repo/environments/mitre/enable-rate-limiting-for-udp/task.yml
+          deployments-repo/environments/mitre/enable-space-developer-self-service/task.yml
+          deployments-repo/environments/mitre/scale-ephemeral-disk/task.yml
+          deployments-repo/environments/mitre/scale-instances-to-2/task.yml
+          deployments-repo/environments/mitre/scale-persistent-disk/task.yml
+          cf-networking-release/ci/opsfiles/lower-canary-watch-time/task.yml
       input_mapping:
         bbl-state: cf-networking-deployments
         vars-store: cf-networking-deployments
         vars-files: cf-networking-deployments
         release: istio-release
     - task: create-release-tarball
-      file: cf-networking-release-ci/ci/tasks/create-release-tarball.yml
+      file: cf-networking-release-ci/ci/tasks/create-release-tarball/task.yml
       input_mapping:
         my-release: cf-networking-dev
       params:
@@ -969,7 +969,7 @@ jobs:
       params:
         file: tarballs/cf-networking-*.tgz
     - task: create-silk-release-tarball
-      file: cf-networking-release-ci/ci/tasks/create-release-tarball.yml
+      file: cf-networking-release-ci/ci/tasks/create-release-tarball/task.yml
       input_mapping:
         my-release: silk-dev
       params:
@@ -1012,7 +1012,7 @@ jobs:
       - get: silk-tarball
         passed: [mitre-deploy]
     - task: get-credhub-vars
-      file: cf-networking-release-ci/ci/tasks/get-credhub-vars.yml
+      file: cf-networking-release-ci/ci/tasks/get-credhub-vars/task.yml
       input_mapping:
         bbl-state: cf-networking-deployments
       params:
@@ -1022,12 +1022,12 @@ jobs:
           /bosh-mitre/cf/uaa_admin_client_secret
           /bosh-mitre/cf/cf_networking_smoke_user_password
     - task: setup-smoke-config
-      file: cf-networking-release-ci/ci/tasks/setup-smoke-config.yml
+      file: cf-networking-release-ci/ci/tasks/setup-smoke-config/task.yml
       params:
         ENVIRONMENT_NAME: mitre
     - task: smoke-tests-sd
       privileged: true
-      file: cf-networking-release-ci/ci/tasks/smoke-tests-sd.yml
+      file: cf-networking-release-ci/ci/tasks/smoke-tests-sd/task.yml
       input_mapping:
         test-config: cf-networking-deployments
         cf-networking: cf-networking-dev
@@ -1035,7 +1035,7 @@ jobs:
         ENVIRONMENT_TAG: mitre.c2c.cf-app.com
         DATADOG_API_KEY: ((datadog_api_key))
     - task: smoke-tests
-      file: cf-networking-release-ci/ci/tasks/smoke-tests.yml
+      file: cf-networking-release-ci/ci/tasks/smoke-tests/task.yml
       params:
         ENVIRONMENT_NAME: mitre
         ENVIRONMENT_TAG: mitre.c2c.cf-app.com
@@ -1044,7 +1044,7 @@ jobs:
         test-config: cf-networking-deployments
         cf-networking: cf-networking-dev
     - task: acceptance-tests
-      file: cf-networking-release-ci/ci/tasks/acceptance-tests.yml
+      file: cf-networking-release-ci/ci/tasks/acceptance-tests/task.yml
       input_mapping:
         cf-networking: cf-networking-dev
         test-config: cf-networking-deployments
@@ -1053,7 +1053,7 @@ jobs:
         ENVIRONMENT_NAME: mitre
     - task: acceptance-tests-sd
       privileged: true
-      file: cf-networking-release-ci/ci/tasks/test-acceptance-sd.yml
+      file: cf-networking-release-ci/ci/tasks/test-acceptance-sd/task.yml
       input_mapping:
         cf-networking: cf-networking-dev
         test-config: cf-networking-deployments
@@ -1075,7 +1075,7 @@ jobs:
         passed: [mitre-deploy]
       - get: datadog-firehose-nozzle-release
     - task: upload-datadog-firehose-nozzle-release
-      file: cf-networking-release-ci/ci/tasks/upload-release-tarball.yml
+      file: cf-networking-release-ci/ci/tasks/upload-release-tarball/task.yml
       input_mapping:
         deployments-repo: cf-networking-deployments
         tarballs: datadog-firehose-nozzle-release
@@ -1090,7 +1090,7 @@ jobs:
         ops-files: cf-networking-deployments
       params:
         BBL_STATE_DIR: environments/mitre
-        MANIFEST_FILE: firehose-nozzles.yml
+        MANIFEST_FILE: firehose-nozzles/task.yml
         OPS_FILES: ""
         SYSTEM_DOMAIN: mitre.c2c.cf-app.com
 
@@ -1121,7 +1121,7 @@ jobs:
     - task: mitre-perf-tests
       privileged: true
       attempts: 3
-      file: cf-networking-release-ci/ci/tasks/test-nats-performance.yml
+      file: cf-networking-release-ci/ci/tasks/test-nats-performance/task.yml
       input_mapping:
         cf-networking: cf-networking-dev
         test-config: cf-networking-deployments
@@ -1156,7 +1156,7 @@ jobs:
       - get: version
         passed: [mitre-test, mitre-perf-tests]
     - task: get-credhub-vars
-      file: cf-networking-release-ci/ci/tasks/get-credhub-vars.yml
+      file: cf-networking-release-ci/ci/tasks/get-credhub-vars/task.yml
       input_mapping:
         bbl-state: cf-networking-deployments
       params:
@@ -1164,7 +1164,7 @@ jobs:
         VARIABLES: |
           /bosh-mitre/cf/cf_admin_password
     - task: copy-config
-      file: cf-networking-release-ci/ci/tasks/copy-config.yml
+      file: cf-networking-release-ci/ci/tasks/copy-config/task.yml
       params:
         ENVIRONMENT: mitre
     - task: cats
@@ -1184,7 +1184,7 @@ jobs:
           submodules: none
       - get: cf-networking-deployments
     - task: get-credhub-vars
-      file: cf-networking-release-ci/ci/tasks/get-credhub-vars.yml
+      file: cf-networking-release-ci/ci/tasks/get-credhub-vars/task.yml
       input_mapping:
         bbl-state: cf-networking-deployments
       params:
@@ -1192,14 +1192,14 @@ jobs:
         VARIABLES: |
           /bosh-mitre/cf/cf_admin_password
     - task: sli-setup
-      file: cf-networking-release-ci/ci/tasks/sli-setup.yml
+      file: cf-networking-release-ci/ci/tasks/sli-setup/task.yml
       params:
         ENVIRONMENT_TAG: mitre.c2c.cf-app.com
         SLI_ORG: sli-map-route
         SLI_SPACE: sli-map-route
         SLI_APP_NAME: sli-map-route
     - task: sli-map-route
-      file: cf-networking-release-ci/ci/tasks/sli-map-route.yml
+      file: cf-networking-release-ci/ci/tasks/sli-map-route/task.yml
       timeout: 5m
       params:
         ENVIRONMENT_TAG: mitre.c2c.cf-app.com
@@ -1220,7 +1220,7 @@ jobs:
           submodules: none
       - get: cf-networking-deployments
     - task: get-credhub-vars
-      file: cf-networking-release-ci/ci/tasks/get-credhub-vars.yml
+      file: cf-networking-release-ci/ci/tasks/get-credhub-vars/task.yml
       input_mapping:
         bbl-state: cf-networking-deployments
       params:
@@ -1228,7 +1228,7 @@ jobs:
         VARIABLES: |
           /bosh-mitre/cf/cf_admin_password
     - task: sli-setup
-      file: cf-networking-release-ci/ci/tasks/sli-setup.yml
+      file: cf-networking-release-ci/ci/tasks/sli-setup/task.yml
       params:
         ENVIRONMENT_TAG: mitre.c2c.cf-app.com
         SLI_ORG: sli-resolve-route
@@ -1236,7 +1236,7 @@ jobs:
         SLI_APP_NAME: sli-resolve-route
         MAP_INTERNAL_ROUTE: true
     - task: sli-resolve-route
-      file: cf-networking-release-ci/ci/tasks/sli-resolve-route.yml
+      file: cf-networking-release-ci/ci/tasks/sli-resolve-route/task.yml
       timeout: 5m
       params:
         ENVIRONMENT_TAG: mitre.c2c.cf-app.com
@@ -1255,7 +1255,7 @@ jobs:
       - get: cf-networking-release-ci
       - get: bosh-bootloader
     - task: add-parent-dns
-      file: cf-networking-release-ci/ci/tasks/add-parent-dns.yml
+      file: cf-networking-release-ci/ci/tasks/add-parent-dns/task.yml
       params:
         ENVIRONMENT: toque
       input_mapping:
@@ -1332,28 +1332,28 @@ jobs:
         params:
           BBL_STATE_DIR: environments/toque
       - task: upload-local-capi-release
-        file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+        file: cf-networking-release-ci/ci/tasks/upload-local-release/task.yml
         input_mapping:
           bbl-state: cf-networking-deployments
           local-release: capi-ci-passed
         params:
           BBL_STATE_DIR: environments/toque/
       - task: upload-local-silk-release
-        file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+        file: cf-networking-release-ci/ci/tasks/upload-local-release/task.yml
         input_mapping:
           bbl-state: cf-networking-deployments
           local-release: silk-dev
         params:
           BBL_STATE_DIR: environments/toque/
       - task: upload-local-networking-release
-        file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+        file: cf-networking-release-ci/ci/tasks/upload-local-release/task.yml
         input_mapping:
           bbl-state: cf-networking-deployments
           local-release: cf-networking-dev
         params:
           BBL_STATE_DIR: environments/toque/
       - task: collect-ops-files
-        file: cf-networking-release-ci/ci/tasks/collect-named-ops-files.yml
+        file: cf-networking-release-ci/ci/tasks/collect-named-ops-files/task.yml
         params:
           ENVIRONMENT_NAME: toque
         input_mapping:
@@ -1361,7 +1361,7 @@ jobs:
           cf-networking-release: cf-networking-dev
           silk-release: silk-dev
     - task: emit-datadog-deploy-start
-      file: cf-networking-release-ci/ci/tasks/emit-datadog-event.yml
+      file: cf-networking-release-ci/ci/tasks/emit-datadog-event/task.yml
       params:
         TITLE: deploy_start
         TEXT: deploy_start
@@ -1374,37 +1374,37 @@ jobs:
         BBL_STATE_DIR: environments/toque
         SYSTEM_DOMAIN: toque.c2c.cf-app.com
         OPS_FILES: |
-          cf-deployment/operations/use-compiled-releases.yml
-          cf-networking-release/ci/opsfiles/datadog.yml
-          cf-deployment/operations/scale-to-one-az.yml
-          deployments-repo/smaller-footprint.yml
-          cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
-          cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
-          cf-networking-release/ci/opsfiles/use-latest-silk.yml
-          cf-networking-release/ci/opsfiles/use-latest-capi.yml
-          cf-networking-release/ci/opsfiles/use-latest-cf-networking.yml
-          cf-deployment/operations/enable-service-discovery.yml
-          cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain.yml
-          cf-networking-release/manifest-generation/opsfiles/enable-experimental-dynamic-egress-policies.yml
-          istio-release/deploy/cf-deployment-operations/add-istio.yml
-          istio-release/deploy/cf-deployment-operations/enable-sidecar-proxying.yml
-          cf-networking-release/ci/opsfiles/disable-ingress-redirect-to-proxy.yml
-          cf-deployment/operations/experimental/enable-iptables-logger.yml
-          deployments-repo/environments/toque/change-nats-monitor-port.yml
-          deployments-repo/environments/toque/increase-diego-cell-mtu.yml
-          deployments-repo/environments/toque/scale-diego-cell-max-in-flight.yml
-          deployments-repo/environments/toque/scale-diego-cell-vm-size.yml
-          deployments-repo/environments/toque/scale-max-containers.yml
-          deployments-repo/environments/toque/scale-router-ephemeral-disk.yml
-          deployments-repo/environments/toque/scale-to-3-diego-cells.yml
-          cf-networking-release/ci/opsfiles/lower-canary-watch-time.yml
+          cf-deployment/operations/use-compiled-releases/task.yml
+          cf-networking-release/ci/opsfiles/datadog/task.yml
+          cf-deployment/operations/scale-to-one-az/task.yml
+          deployments-repo/smaller-footprint/task.yml
+          cf-networking-release/manifest-generation/opsfiles/cf-networking/task.yml
+          cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name/task.yml
+          cf-networking-release/ci/opsfiles/use-latest-silk/task.yml
+          cf-networking-release/ci/opsfiles/use-latest-capi/task.yml
+          cf-networking-release/ci/opsfiles/use-latest-cf-networking/task.yml
+          cf-deployment/operations/enable-service-discovery/task.yml
+          cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain/task.yml
+          cf-networking-release/manifest-generation/opsfiles/enable-experimental-dynamic-egress-policies/task.yml
+          istio-release/deploy/cf-deployment-operations/add-istio/task.yml
+          istio-release/deploy/cf-deployment-operations/enable-sidecar-proxying/task.yml
+          cf-networking-release/ci/opsfiles/disable-ingress-redirect-to-proxy/task.yml
+          cf-deployment/operations/experimental/enable-iptables-logger/task.yml
+          deployments-repo/environments/toque/change-nats-monitor-port/task.yml
+          deployments-repo/environments/toque/increase-diego-cell-mtu/task.yml
+          deployments-repo/environments/toque/scale-diego-cell-max-in-flight/task.yml
+          deployments-repo/environments/toque/scale-diego-cell-vm-size/task.yml
+          deployments-repo/environments/toque/scale-max-containers/task.yml
+          deployments-repo/environments/toque/scale-router-ephemeral-disk/task.yml
+          deployments-repo/environments/toque/scale-to-3-diego-cells/task.yml
+          cf-networking-release/ci/opsfiles/lower-canary-watch-time/task.yml
       input_mapping:
         bbl-state: cf-networking-deployments
         release: istio-release
         vars-files: cf-networking-deployments
         vars-store: cf-networking-deployments
     - task: emit-datadog-deploy-end
-      file: cf-networking-release-ci/ci/tasks/emit-datadog-event.yml
+      file: cf-networking-release-ci/ci/tasks/emit-datadog-event/task.yml
       params:
         TITLE: deploy_end
         TEXT: deploy_end
@@ -1432,7 +1432,7 @@ jobs:
         passed: [toque-deploy]
       - get: datadog-firehose-nozzle-release
     - task: upload-datadog-firehose-nozzle-release
-      file: cf-networking-release-ci/ci/tasks/upload-release-tarball.yml
+      file: cf-networking-release-ci/ci/tasks/upload-release-tarball/task.yml
       input_mapping:
         deployments-repo: cf-networking-deployments
         tarballs: datadog-firehose-nozzle-release
@@ -1448,7 +1448,7 @@ jobs:
         ops-files: cf-networking-deployments
       params:
         BBL_STATE_DIR: environments/toque
-        MANIFEST_FILE: firehose-nozzles.yml
+        MANIFEST_FILE: firehose-nozzles/task.yml
         OPS_FILES: ""
         SYSTEM_DOMAIN: toque.c2c.cf-app.com
 
@@ -1468,7 +1468,7 @@ jobs:
         trigger: true
       - get: toque-stats
     - task: get-credhub-vars
-      file: cf-networking-release-ci/ci/tasks/get-credhub-vars.yml
+      file: cf-networking-release-ci/ci/tasks/get-credhub-vars/task.yml
       input_mapping:
         bbl-state: cf-networking-deployments
       params:
@@ -1476,21 +1476,21 @@ jobs:
         VARIABLES: |
           /bosh-toque/cf/cf_admin_password
     - task: set-scaling-test-params
-      file: cf-networking-release-ci/ci/tasks/set-scaling-test-params.yml
+      file: cf-networking-release-ci/ci/tasks/set-scaling-test-params/task.yml
       params:
         ENVIRONMENT_NAME: toque
       input_mapping:
         deployments-repo: cf-networking-deployments
         scaling-test-params: toque-scaling-test-params
     - task: push-apps
-      file: cf-networking-release-ci/ci/tasks/push-apps.yml
+      file: cf-networking-release-ci/ci/tasks/push-apps/task.yml
       params:
         ENVIRONMENT_NAME: toque
       input_mapping:
         cf-networking: cf-networking-dev
         test-config: test-config
     - task: emit-datadog-test-start
-      file: cf-networking-release-ci/ci/tasks/emit-datadog-event.yml
+      file: cf-networking-release-ci/ci/tasks/emit-datadog-event/task.yml
       params:
         TITLE: test_start
         TEXT: test_start
@@ -1498,7 +1498,7 @@ jobs:
         AWS_ENV: toque.c2c.cf-app.com
         DATADOG_API_KEY: ((datadog_api_key))
     - task: test-scalability
-      file: cf-networking-release-ci/ci/tasks/test-scalability.yml
+      file: cf-networking-release-ci/ci/tasks/test-scalability/task.yml
       params:
         ENVIRONMENT_NAME: toque
       input_mapping:
@@ -1506,7 +1506,7 @@ jobs:
         test-config: test-config
       ensure:
         task: emit-datadog-test-stop
-        file: cf-networking-release-ci/ci/tasks/emit-datadog-event.yml
+        file: cf-networking-release-ci/ci/tasks/emit-datadog-event/task.yml
         params:
           TITLE: test_end
           TEXT: test_end
@@ -1523,7 +1523,7 @@ jobs:
       - get: cf-networking-release-ci
       - get: bosh-bootloader
     - task: add-parent-dns
-      file: cf-networking-release-ci/ci/tasks/add-parent-dns.yml
+      file: cf-networking-release-ci/ci/tasks/add-parent-dns/task.yml
       params:
         ENVIRONMENT: caubeen
       input_mapping:
@@ -1606,7 +1606,7 @@ jobs:
       input_mapping:
         bbl-state: cf-networking-deployments
     - task: collect-pinned-ops-files
-      file: cf-networking-release-ci/ci/tasks/collect-named-ops-files.yml
+      file: cf-networking-release-ci/ci/tasks/collect-named-ops-files/task.yml
       params:
         ENVIRONMENT_NAME: caubeen
       input_mapping:
@@ -1619,25 +1619,25 @@ jobs:
         BBL_STATE_DIR: environments/caubeen/
         SYSTEM_DOMAIN: caubeen.c2c.cf-app.com
         OPS_FILES: |
-          cf-deployment/operations/use-compiled-releases.yml
-          cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
-          cf-deployment/operations/use-external-blobstore.yml
-          cf-deployment/operations/use-gcs-blobstore-service-account.yml
-          cf-deployment/operations/scale-database-cluster.yml
-          cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
-          cf-deployment/operations/experimental/enable-iptables-logger.yml
-          cf-deployment/operations/enable-service-discovery.yml
-          cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain.yml
-          cf-networking-release-ci/ci/opsfiles/scale-up-4-api-instances.yml
-          cf-networking-release-ci/ci/opsfiles/lower-canary-watch-time.yml
+          cf-deployment/operations/use-compiled-releases/task.yml
+          cf-networking-release/manifest-generation/opsfiles/cf-networking/task.yml
+          cf-deployment/operations/use-external-blobstore/task.yml
+          cf-deployment/operations/use-gcs-blobstore-service-account/task.yml
+          cf-deployment/operations/scale-database-cluster/task.yml
+          cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name/task.yml
+          cf-deployment/operations/experimental/enable-iptables-logger/task.yml
+          cf-deployment/operations/enable-service-discovery/task.yml
+          cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain/task.yml
+          cf-networking-release-ci/ci/opsfiles/scale-up-4-api-instances/task.yml
+          cf-networking-release-ci/ci/opsfiles/lower-canary-watch-time/task.yml
         VARS_FILES: |
-          environments/caubeen/gcs-vars.yml
+          environments/caubeen/gcs-vars/task.yml
       input_mapping:
         bbl-state: cf-networking-deployments
         vars-files: cf-networking-deployments
         vars-store: cf-networking-deployments
     - task: get-credhub-vars
-      file: cf-networking-release-ci/ci/tasks/get-credhub-vars.yml
+      file: cf-networking-release-ci/ci/tasks/get-credhub-vars/task.yml
       input_mapping:
         bbl-state: cf-networking-deployments
       params:
@@ -1645,12 +1645,12 @@ jobs:
         VARIABLES: |
           /bosh-caubeen/cf/cf_admin_password
     - task: verify-api-ready
-      file: cf-networking-release-ci/ci/tasks/verify-api-ready.yml
+      file: cf-networking-release-ci/ci/tasks/verify-api-ready/task.yml
       params:
         SYSTEM_DOMAIN: caubeen.c2c.cf-app.com
         ENVIRONMENT_NAME: caubeen
     - task: collect-ops-files
-      file: cf-networking-release-ci/ci/tasks/collect-named-ops-files.yml
+      file: cf-networking-release-ci/ci/tasks/collect-named-ops-files/task.yml
       params:
         ENVIRONMENT_NAME: caubeen
       input_mapping:
@@ -1658,7 +1658,7 @@ jobs:
         deployments-repo: cf-networking-deployments
         silk-release: silk-dev
     - task: upload-local-silk-release
-      file: cf-networking-release-ci/ci/tasks/upload-local-release.yml
+      file: cf-networking-release-ci/ci/tasks/upload-local-release/task.yml
       input_mapping:
         bbl-state: cf-networking-deployments
         local-release: silk-dev
@@ -1670,21 +1670,21 @@ jobs:
         BBL_STATE_DIR: environments/caubeen/
         SYSTEM_DOMAIN: caubeen.c2c.cf-app.com
         OPS_FILES: |
-          cf-deployment/operations/use-compiled-releases.yml
-          cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
-          cf-deployment/operations/use-external-blobstore.yml
-          cf-deployment/operations/use-gcs-blobstore-service-account.yml
-          cf-deployment/operations/scale-database-cluster.yml
-          cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
-          cf-deployment/operations/experimental/enable-iptables-logger.yml
-          cf-deployment/operations/enable-service-discovery.yml
-          cf-deployment/operations/backup-and-restore/enable-backup-restore.yml
-          cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain.yml
-          cf-networking-release-ci/ci/opsfiles/scale-up-4-api-instances.yml
-          cf-networking-release-ci/ci/opsfiles/lower-canary-watch-time.yml
-          cf-networking-release-ci/ci/opsfiles/use-latest-silk.yml
+          cf-deployment/operations/use-compiled-releases/task.yml
+          cf-networking-release/manifest-generation/opsfiles/cf-networking/task.yml
+          cf-deployment/operations/use-external-blobstore/task.yml
+          cf-deployment/operations/use-gcs-blobstore-service-account/task.yml
+          cf-deployment/operations/scale-database-cluster/task.yml
+          cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name/task.yml
+          cf-deployment/operations/experimental/enable-iptables-logger/task.yml
+          cf-deployment/operations/enable-service-discovery/task.yml
+          cf-deployment/operations/backup-and-restore/enable-backup-restore/task.yml
+          cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain/task.yml
+          cf-networking-release-ci/ci/opsfiles/scale-up-4-api-instances/task.yml
+          cf-networking-release-ci/ci/opsfiles/lower-canary-watch-time/task.yml
+          cf-networking-release-ci/ci/opsfiles/use-latest-silk/task.yml
         VARS_FILES: |
-          environments/caubeen/gcs-vars.yml
+          environments/caubeen/gcs-vars/task.yml
         DEPLOY_WITH_UPTIME_MEASUREMENTS: true
         FAIL_ON_DOWNTIME: true
         HTTP_AVAILABILITY_THRESHOLD: 0
@@ -1718,7 +1718,7 @@ jobs:
       - get: disaster-recovery-acceptance-tests
       - get: bbr-binary-release
     - task: get-credhub-vars
-      file: cf-networking-release-ci/ci/tasks/get-credhub-vars.yml
+      file: cf-networking-release-ci/ci/tasks/get-credhub-vars/task.yml
       input_mapping:
         bbl-state: cf-networking-deployments
       params:
@@ -1726,7 +1726,7 @@ jobs:
         VARIABLES: |
           /bosh-caubeen/cf/cf_admin_password
     - task: create-drats-config
-      file: cf-networking-release-ci/ci/tasks/create-drats-config.yml
+      file: cf-networking-release-ci/ci/tasks/create-drats-config/task.yml
       input_mapping:
         test-config: cf-networking-deployments
         vars-store: cf-networking-deployments
@@ -1865,7 +1865,7 @@ jobs:
           params:
             submodules: none
       - task: build-release-notes
-        file: cf-networking-release-ci/ci/tasks/build-release-notes.yml
+        file: cf-networking-release-ci/ci/tasks/build-release-notes/task.yml
         input_mapping:
           master-release: cf-networking-dev
           other-release-version: version
@@ -1873,7 +1873,7 @@ jobs:
           OTHER_RELEASE_NAME: silk-release
           PRE_RELEASE: "true"
       - task: silk-build-release-notes
-        file: cf-networking-release-ci/ci/tasks/build-release-notes.yml
+        file: cf-networking-release-ci/ci/tasks/build-release-notes/task.yml
         input_mapping:
           master-release: silk-dev
           other-release-version: version
@@ -1903,7 +1903,7 @@ jobs:
           passed: [mitre-cats]
           trigger: true
       - task: check-empty-networking-opsfile
-        file: cf-networking-release-ci/ci/tasks/check-empty-networking-opsfile.yml
+        file: cf-networking-release-ci/ci/tasks/check-empty-networking-opsfile/task.yml
         input_mapping:
           cf-networking: cf-networking-dev
 
@@ -1936,17 +1936,17 @@ jobs:
         - get: silk-tarball
           passed: [ship-what]
       - task: checkit
-        file: cf-networking-release-ci/ci/tasks/checkit.yml
+        file: cf-networking-release-ci/ci/tasks/checkit/task.yml
         input_mapping:
           dev-repo: cf-networking-dev
           master-repo: cf-networking-master
       - task: checkit-silk
-        file: cf-networking-release-ci/ci/tasks/checkit.yml
+        file: cf-networking-release-ci/ci/tasks/checkit/task.yml
         input_mapping:
           dev-repo: silk-dev
           master-repo: silk-master
       - task: shipit
-        file: cf-networking-release-ci/ci/tasks/shipit.yml
+        file: cf-networking-release-ci/ci/tasks/shipit/task.yml
         input_mapping:
           cf-networking: cf-networking-dev
         params:
@@ -1961,7 +1961,7 @@ jobs:
         params:
           file: final-release/cf-networking-*.tgz
       - task: build-release-notes
-        file: cf-networking-release-ci/ci/tasks/build-release-notes.yml
+        file: cf-networking-release-ci/ci/tasks/build-release-notes/task.yml
         input_mapping:
           master-release: cf-networking-master
           other-release-version: version
@@ -1975,7 +1975,7 @@ jobs:
           globs:
           - final-release/cf-networking-*.tgz
       - task: silk-shipit
-        file: cf-networking-release-ci/ci/tasks/silk-shipit.yml
+        file: cf-networking-release-ci/ci/tasks/silk-shipit/task.yml
         input_mapping:
           silk: silk-dev
         params:
@@ -1988,7 +1988,7 @@ jobs:
         params:
           file: final-release/silk-*.tgz
       - task: silk-build-release-notes
-        file: cf-networking-release-ci/ci/tasks/build-release-notes.yml
+        file: cf-networking-release-ci/ci/tasks/build-release-notes/task.yml
         input_mapping:
           master-release: silk-master
           other-release-version: version
@@ -2031,7 +2031,7 @@ jobs:
           resource: cf-networking-dev-full
           params: {submodules: none}
       - task: merge-master
-        file: cf-networking-release-ci/ci/tasks/merge-master.yml
+        file: cf-networking-release-ci/ci/tasks/merge-master/task.yml
       - put: cf-networking-dev-full
         params: {repository: release-merged}
 
@@ -2076,6 +2076,6 @@ jobs:
         - get: silk-dev
           params: {submodules: none}
       - task: silk-merge-master
-        file: cf-networking-release-ci/ci/tasks/silk-merge-master.yml
+        file: cf-networking-release-ci/ci/tasks/silk-merge-master/task.yml
       - put: silk-dev
         params: {repository: release-merged}
