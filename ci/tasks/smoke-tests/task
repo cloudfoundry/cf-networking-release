@@ -2,7 +2,7 @@
 
 set -e
 
-ROOT="$(cd "$(dirname $0)/../../.." && pwd)"
+ROOT="$(cd "$(dirname $0)/../../../.." && pwd)"
 
 export CONFIG="${ROOT}/smoke-config/smoke-config.json"
 export GOPATH="${ROOT}/cf-networking"

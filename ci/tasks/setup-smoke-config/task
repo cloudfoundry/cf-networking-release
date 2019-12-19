@@ -2,7 +2,7 @@
 
 set -e
 
-root="$(cd "$(dirname "$0")/../../.." && pwd)"
+root="$(cd "$(dirname "$0")/../../../.." && pwd)"
 env_dir="${root}/cf-networking-deployments/environments/${ENVIRONMENT_NAME}"
 config="${env_dir}/smoke-config${CONFIG_POSTFIX}.json"
 

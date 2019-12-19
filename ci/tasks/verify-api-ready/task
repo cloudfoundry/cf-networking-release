@@ -2,7 +2,7 @@
 
 set -u
 
-ROOT="$(cd "$(dirname $0)/../../.." && pwd)"
+ROOT="$(cd "$(dirname $0)/../../../.." && pwd)"
 
 ADMIN_PASSWORD="$(grep '^cf_admin_password:' ${ROOT}/variables/variables.yml | cut -d" " -f2)"
 

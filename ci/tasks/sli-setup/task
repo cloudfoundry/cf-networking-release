@@ -2,7 +2,7 @@
 
 set -eu
 
-ROOT="$(cd "$(dirname $0)/../../.." && pwd)"
+ROOT="$(cd "$(dirname $0)/../../../.." && pwd)"
 
 function main() {
     cf_login

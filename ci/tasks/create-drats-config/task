@@ -2,7 +2,7 @@
 
 set -eu
 
-ROOT="$(cd "$(dirname $0)/../../.." && pwd)"
+ROOT="$(cd "$(dirname $0)/../../../.." && pwd)"
 
 # replace secrets in test config
 pushd test-config/environments/${ENVIRONMENT_NAME}

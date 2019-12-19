@@ -2,7 +2,7 @@
 
 set -eu
 
-ROOT="$(cd "$(dirname $0)/../../.." && pwd)"
+ROOT="$(cd "$(dirname $0)/../../../.." && pwd)"
 
 APP_URL="${APP_URL:-${SLI_APP_NAME}.apps.${ENVIRONMENT_TAG}}"
 

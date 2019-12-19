@@ -1,6 +1,6 @@
 #!/bin/bash -eu
 
-ROOT="$(cd "$(dirname $0)/../../.." && pwd)"
+ROOT="$(cd "$(dirname $0)/../../../.." && pwd)"
 
 function main() {
   eval "$(bbl --state-dir "${ROOT}/bbl-state/${BBL_STATE_DIR}" print-env)"

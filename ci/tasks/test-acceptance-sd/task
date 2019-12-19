@@ -2,7 +2,7 @@
 
 set -eu
 
-ROOT="$(cd "$(dirname $0)/../../.." && pwd)"
+ROOT="$(cd "$(dirname $0)/../../../.." && pwd)"
 
 # replace admin password and secret in test config
 pushd "${ROOT}/test-config/environments/${ENVIRONMENT_NAME}" > /dev/null
