@@ -10,7 +10,7 @@ inputs:
 - name: cf-networking-release
 
 run:
-  path: cf-networking-release/scripts/unit-and-integration-tests/task
+  path: cf-networking-release/scripts/unit-and-integration-tests
 
 params:
   GINKGO_EXTRA_FLAGS: "-race"
