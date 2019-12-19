@@ -436,7 +436,7 @@ jobs:
       - get: silk-dev
         trigger: true
     - task: test-postgres
-      file: silk-dev/ci/test-postgres/task.yml
+      file: silk-dev/ci/tasks/test-postgres/task.yml
       privileged: true
       input_mapping:
         silk: silk-dev
@@ -447,7 +447,7 @@ jobs:
       - get: silk-dev
         trigger: true
     - task: test-mysql
-      file: silk-dev/ci/test-mysql/task.yml
+      file: silk-dev/ci/tasks/test-mysql/task.yml
       privileged: true
       input_mapping:
         silk: silk-dev
@@ -458,7 +458,7 @@ jobs:
       - get: silk-dev
         trigger: true
     - task: test-mysql-5.6
-      file: silk-dev/ci/test-mysql-5.6/task.yml
+      file: silk-dev/ci/tasks/test-mysql-5.6/task.yml
       privileged: true
       input_mapping:
         silk: silk-dev
