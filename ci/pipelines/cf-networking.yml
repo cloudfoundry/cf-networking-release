@@ -1631,7 +1631,7 @@ jobs:
           cf-networking-release-ci/ci/opsfiles/scale-up-4-api-instances.yml
           cf-networking-release-ci/ci/opsfiles/lower-canary-watch-time.yml
         VARS_FILES: |
-          environments/caubeen/gcs-vars/task.yml
+          environments/caubeen/gcs-vars.yml
       input_mapping:
         bbl-state: cf-networking-deployments
         vars-files: cf-networking-deployments
