@@ -225,7 +225,7 @@ jobs:
     - get: golang-tarball
       trigger: true
   - task: add-golang
-    file: cf-networking-release-ci/ci/tasks/add-golang-to-docker-context.yml
+    file: cf-networking-release-ci/ci/tasks/add-golang-to-docker-context/task.yml
     input_mapping:
       dockerfile: dev-postgres-dockerfile
       golang-tarball: golang-tarball
@@ -253,7 +253,7 @@ jobs:
     - get: golang-tarball
       trigger: true
   - task: add-golang
-    file: cf-networking-release-ci/ci/tasks/add-golang-to-docker-context.yml
+    file: cf-networking-release-ci/ci/tasks/add-golang-to-docker-context/task.yml
     input_mapping:
       dockerfile: dev-postgres-ifb-dockerfile
       golang-tarball: golang-tarball
@@ -282,7 +282,7 @@ jobs:
     - get: golang-tarball
       trigger: true
   - task: add-golang
-    file: cf-networking-release-ci/ci/tasks/add-golang-to-docker-context.yml
+    file: cf-networking-release-ci/ci/tasks/add-golang-to-docker-context/task.yml
     input_mapping:
       dockerfile: dev-mysql-dockerfile
       golang-tarball: golang-tarball
@@ -309,7 +309,7 @@ jobs:
     - get: golang-tarball
       trigger: true
   - task: add-golang
-    file: cf-networking-release-ci/ci/tasks/add-golang-to-docker-context.yml
+    file: cf-networking-release-ci/ci/tasks/add-golang-to-docker-context/task.yml
     input_mapping:
       dockerfile: dev-mysql-5.6-dockerfile
       golang-tarball: golang-tarball
