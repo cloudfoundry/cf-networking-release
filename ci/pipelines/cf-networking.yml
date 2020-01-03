@@ -726,7 +726,7 @@ jobs:
         vars-store: cf-networking-deployments
       params:
         BBL_STATE_DIR: environments/pickelhelm
-        MANIFEST_FILE: firehose-nozzles/task.yml
+        MANIFEST_FILE: firehose-nozzles.yml
         OPS_FILES: ""
         SYSTEM_DOMAIN: pickelhelm.c2c.cf-app.com
 
@@ -1090,7 +1090,7 @@ jobs:
         ops-files: cf-networking-deployments
       params:
         BBL_STATE_DIR: environments/mitre
-        MANIFEST_FILE: firehose-nozzles/task.yml
+        MANIFEST_FILE: firehose-nozzles.yml
         OPS_FILES: ""
         SYSTEM_DOMAIN: mitre.c2c.cf-app.com
 
@@ -1448,7 +1448,7 @@ jobs:
         ops-files: cf-networking-deployments
       params:
         BBL_STATE_DIR: environments/toque
-        MANIFEST_FILE: firehose-nozzles/task.yml
+        MANIFEST_FILE: firehose-nozzles.yml
         OPS_FILES: ""
         SYSTEM_DOMAIN: toque.c2c.cf-app.com
 
