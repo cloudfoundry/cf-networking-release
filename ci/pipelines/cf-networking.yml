@@ -60,7 +60,6 @@ groups:
   - pickelhelm-bbl-destroy
   - pickelhelm-deploy
   - pickelhelm-test
-  - pickelhelm-deploy-firehose-nozzle
   - delete-pickelhelm-deployment
 - name: mitre
   jobs:
@@ -70,7 +69,6 @@ groups:
   - mitre-test
   - mitre-perf-tests
   - mitre-cats
-  - mitre-deploy-firehose-nozzle
   - mitre-sli-map-route
   - mitre-sli-resolve-route
   - delete-deployment-mitre-cf
@@ -80,7 +78,6 @@ groups:
   - toque-bbl-destroy
   - toque-deploy
   - toque-test
-  - toque-deploy-firehose-nozzle
   - delete-toque-deployment
 - name: caubeen
   jobs:
@@ -161,11 +158,6 @@ resources:
     source:
       branch: master
       uri: https://github.com/cloudfoundry-incubator/disaster-recovery-acceptance-tests
-  ###### bosh.io releases
-  - name: datadog-firehose-nozzle-release
-    type: bosh-io-release
-    source:
-      repository: DataDog/datadog-firehose-nozzle-release
   ###### BOSH release repos
   - name: golang-release-latest
     type: git
@@ -293,14 +285,6 @@ resources:
       start: 2:00 PM
       stop: 2:15 PM
       days: [ Saturday ]
-  - name: every-monday-morning
-    type: time
-    icon: clock-outline
-    source:
-      start: 8:00 AM
-      stop: 9:00 AM
-      location: America/Los_Angeles
-      days: [Monday]
   - name: every-two-minutes
     type: time
     icon: clock-outline
@@ -665,7 +649,6 @@ jobs:
         BBL_STATE_DIR: environments/pickelhelm/
         SYSTEM_DOMAIN: pickelhelm.c2c.cf-app.com
         OPS_FILES: |
-          cf-networking-release/ci/opsfiles/datadog.yml
           cf-deployment/operations/scale-to-one-az.yml
           deployments-repo/smaller-footprint.yml
           cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
@@ -695,41 +678,6 @@ jobs:
         BBL_STATE_DIR: environments/pickelhelm/
       input_mapping:
         bbl-state: cf-networking-deployments
-
-  - name: pickelhelm-deploy-firehose-nozzle
-    serial_groups: [pickelhelm]
-    plan:
-    - in_parallel:
-      - get: every-monday-morning
-        trigger: true
-      - get: cf-deployment-concourse-tasks
-      - get: cf-networking-release-ci
-        params:
-          submodules: none
-      - get: cf-networking-deployments
-        passed: [pickelhelm-deploy]
-      - get: datadog-firehose-nozzle-release
-    - task: upload-datadog-firehose-nozzle-release
-      file: cf-networking-release-ci/ci/tasks/upload-release-tarball/task.yml
-      input_mapping:
-        deployments-repo: cf-networking-deployments
-        tarballs: datadog-firehose-nozzle-release
-      params:
-        ENVIRONMENT_NAME: pickelhelm
-    - task: deploy-datadog-firehose-nozzle
-      file: cf-deployment-concourse-tasks/bosh-deploy/task.yml
-      input_mapping:
-        bbl-state: cf-networking-deployments
-        cf-deployment: cf-networking-deployments
-        ops-files: cf-networking-deployments
-        vars-files: cf-networking-deployments
-        vars-store: cf-networking-deployments
-      params:
-        BBL_STATE_DIR: environments/pickelhelm
-        MANIFEST_FILE: firehose-nozzles.yml
-        OPS_FILES: ""
-        SYSTEM_DOMAIN: pickelhelm.c2c.cf-app.com
-
 
   - name: pickelhelm-test
     serial_groups: [pickelhelm]
@@ -927,7 +875,6 @@ jobs:
         BBL_STATE_DIR: environments/mitre/
         SYSTEM_DOMAIN: mitre.c2c.cf-app.com
         OPS_FILES: |
-          cf-networking-release/ci/opsfiles/datadog.yml
           cf-deployment/operations/scale-to-one-az.yml
           deployments-repo/smaller-footprint.yml
           cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
@@ -1060,39 +1007,6 @@ jobs:
         vars-store: cf-networking-deployments
       params:
         ENVIRONMENT_NAME: mitre
-
-  - name: mitre-deploy-firehose-nozzle
-    serial_groups: [mitre-test-group, mitre-deploy-group]
-    plan:
-    - in_parallel:
-      - get: every-monday-morning
-        trigger: true
-      - get: cf-deployment-concourse-tasks
-      - get: cf-networking-release-ci
-        params:
-          submodules: none
-      - get: cf-networking-deployments
-        passed: [mitre-deploy]
-      - get: datadog-firehose-nozzle-release
-    - task: upload-datadog-firehose-nozzle-release
-      file: cf-networking-release-ci/ci/tasks/upload-release-tarball/task.yml
-      input_mapping:
-        deployments-repo: cf-networking-deployments
-        tarballs: datadog-firehose-nozzle-release
-      params:
-        ENVIRONMENT_NAME: mitre
-    - task: deploy-datadog-firehose-nozzle
-      file: cf-deployment-concourse-tasks/bosh-deploy/task.yml
-      input_mapping:
-        cf-deployment: cf-networking-deployments
-        bbl-state: cf-networking-deployments
-        vars-files: cf-networking-deployments
-        ops-files: cf-networking-deployments
-      params:
-        BBL_STATE_DIR: environments/mitre
-        MANIFEST_FILE: firehose-nozzles.yml
-        OPS_FILES: ""
-        SYSTEM_DOMAIN: mitre.c2c.cf-app.com
 
   - name: mitre-perf-tests
     serial_groups: [mitre-test-group, mitre-deploy-group]
@@ -1323,7 +1237,6 @@ jobs:
       - get: silk-dev
         passed: [unit-and-integration-tests]
         trigger: true
-      - get: datadog-firehose-nozzle-release
     - in_parallel:
       - task: upload-stemcell
         file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
@@ -1375,7 +1288,6 @@ jobs:
         SYSTEM_DOMAIN: toque.c2c.cf-app.com
         OPS_FILES: |
           cf-deployment/operations/use-compiled-releases.yml
-          cf-networking-release/ci/opsfiles/datadog.yml
           cf-deployment/operations/scale-to-one-az.yml
           deployments-repo/smaller-footprint.yml
           cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
@@ -1417,40 +1329,6 @@ jobs:
         BBL_STATE_DIR: environments/toque/
       input_mapping:
         bbl-state: cf-networking-deployments
-
-  - name: toque-deploy-firehose-nozzle
-    serial_groups: [toque]
-    plan:
-    - in_parallel:
-      - get: every-monday-morning
-        trigger: true
-      - get: cf-deployment-concourse-tasks
-      - get: cf-networking-release-ci
-        params:
-          submodules: none
-      - get: cf-networking-deployments
-        passed: [toque-deploy]
-      - get: datadog-firehose-nozzle-release
-    - task: upload-datadog-firehose-nozzle-release
-      file: cf-networking-release-ci/ci/tasks/upload-release-tarball/task.yml
-      input_mapping:
-        deployments-repo: cf-networking-deployments
-        tarballs: datadog-firehose-nozzle-release
-      params:
-        ENVIRONMENT_NAME: toque
-    - task: deploy-datadog-firehose-nozzle
-      file: cf-deployment-concourse-tasks/bosh-deploy/task.yml
-      input_mapping:
-        cf-deployment: cf-networking-deployments
-        vars-store: cf-networking-deployments
-        bbl-state: cf-networking-deployments
-        vars-files: cf-networking-deployments
-        ops-files: cf-networking-deployments
-      params:
-        BBL_STATE_DIR: environments/toque
-        MANIFEST_FILE: firehose-nozzles.yml
-        OPS_FILES: ""
-        SYSTEM_DOMAIN: toque.c2c.cf-app.com
 
   - name: toque-test
     serial_groups: [toque]
