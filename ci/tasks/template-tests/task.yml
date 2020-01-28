@@ -9,4 +9,4 @@ inputs:
 - name: cf-networking-release
 
 run:
-  path: cf-networking-release/scripts/template-tests/task
+  path: cf-networking-release/scripts/template-tests
