@@ -5,7 +5,7 @@ Keep credentials and other private config in our [private repo](https://github.c
 
 The main source code repo is [cf-networking-release](https://code.cloudfoundry.org/cf-networking-release).
 
-View our team's [CI dashboard](http://dashboard.c2c.cf-app.com).
+View our team's [CI dashboard](https://networking.ci.cf-app.com/teams/ga/pipelines/cf-networking).
 
 [Metrics dashboard](https://p.datadoghq.com/sb/f3af7f8e2-baf5212773?tv_mode=true).
 
