@@ -3,12 +3,12 @@ Container networking performance tests will be conducted on the following enviro
 
 ## Setup
 ### Number of Diego Cells
-0. Git checkout [cf-networking-ci](https://code.cloudfoundry.org/cf-networking-ci) repository under ~/workspace.
+0. Make sure you have cf-networking-release checked out in your workspace.
 
     ```
-    $ cd ~/workspace && git clone https://github.com/cloudfoundry/cf-networking-ci.git
+    $ cd ~/workspace && git clone https://github.com/cloudfoundry/cf-networking-release.git
     ```
-0. Set `toque-deploy` `CELL_COUNT` to the number of desired Diego cells in [pipelines/cf-networking.yml](pipelines/cf-networking.yml)
+0. Set `toque-deploy` `CELL_COUNT` to the number of desired Diego cells in [ci/pipelines/cf-networking.yml](pipelines/cf-networking.yml)
      ```yaml
       - name: toque-deploy
         serial_groups: [toque]
