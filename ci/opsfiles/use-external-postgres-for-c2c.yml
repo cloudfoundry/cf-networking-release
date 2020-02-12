@@ -1,0 +1,22 @@
+---
+# deployment variables
+- type: replace
+  path: /instance_groups/name=api/jobs/name=policy-server/properties/database?
+  value:
+    type: postgres
+    username: (( pickelhelm-network-policy-db-credentials.username ))
+    password: (( pickelhelm-network-policy-db-credentials.password ))
+    host: (( pickelhelm-network-policy-db-host ))
+    port: 5432
+    name: network_policy
+
+- type: replace
+  path: /instance_groups/name=diego-api/jobs/name=silk-controller/properties/database?
+  value:
+    type: postgres
+    username: (( pickelhelm-silk-controller-db-credentials.username ))
+    password: (( pickelhelm-silk-controller-db-credentials.password ))
+    host: (( pickelhelm-silk-controller-db-host ))
+    port: 5432
+    name: silk_controller
+
