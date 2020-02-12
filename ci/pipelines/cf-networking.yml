@@ -601,6 +601,16 @@ jobs:
       - get: silk-dev
         trigger: true
         passed: [unit-and-integration-tests]
+    - task: add-postgres-db-credentials
+      file: cf-networking-release-ci/ci/tasks/add-postgres-db-credentials/task.yml
+      params:
+        USERNAME: (( pickelhelm-network-policy-db-credentials.username ))
+        PASSWORD: (( pickelhelm-network-policy-db-credentials.password ))
+        HOST: (( pickelhelm-network-policy-db-host ))
+      input_mapping:
+        cf-networking-release: cf-networking-dev
+        deployments-repo: cf-networking-deployments
+        silk-release: silk-dev
     - task: collect-ops-files
       file: cf-networking-release-ci/ci/tasks/collect-named-ops-files/task.yml
       params:
@@ -650,7 +660,7 @@ jobs:
         SYSTEM_DOMAIN: pickelhelm.c2c.cf-app.com
         OPS_FILES: |
           cf-deployment/operations/scale-to-one-az.yml
-          deployments-repo/smaller-footprint.yml
+          cf-networking-release/ci/opsfiles/smaller-footprint.yml
           cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
           cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
           cf-networking-release/ci/opsfiles/use-latest-silk.yml
@@ -876,7 +886,7 @@ jobs:
         SYSTEM_DOMAIN: mitre.c2c.cf-app.com
         OPS_FILES: |
           cf-deployment/operations/scale-to-one-az.yml
-          deployments-repo/smaller-footprint.yml
+          cf-networking-release/ci/opsfiles/smaller-footprint.yml
           cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
           cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
           cf-networking-release/ci/opsfiles/custom-apps-domain.yml
@@ -1289,7 +1299,7 @@ jobs:
         OPS_FILES: |
           cf-deployment/operations/use-compiled-releases.yml
           cf-deployment/operations/scale-to-one-az.yml
-          deployments-repo/smaller-footprint.yml
+          cf-networking-release/ci/opsfiles/smaller-footprint.yml
           cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
           cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
           cf-networking-release/ci/opsfiles/use-latest-silk.yml
