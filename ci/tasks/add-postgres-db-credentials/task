@@ -1,0 +1,26 @@
+#!/bin/bash
+
+set -e -u -o pipefail
+
+credhub set \
+  --name "/bosh-${ENV}/cf/network-policy-db-credentials" \
+  --type user \
+  --username "${USERNAME}" \
+  --password "${PASSWORD}"
+
+credhub set \
+  --name "/bosh-${ENV}/cf/network-policy-db-host" \
+  --type value \
+  --value "${HOST}"
+
+credhub set \
+  --name "/bosh-${ENV}/cf/silk-controller-db-credentials" \
+  --type user \
+  --username "${USERNAME}" \
+  --password "${PASSWORD}"
+
+credhub set \
+  --name "/bosh-${ENV}/cf/silk-controller-db-host" \
+  --type value \
+  --value "${HOST}"
+
