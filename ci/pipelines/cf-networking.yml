@@ -607,10 +607,9 @@ jobs:
         USERNAME: (( pickelhelm-network-policy-db-credentials.username ))
         PASSWORD: (( pickelhelm-network-policy-db-credentials.password ))
         HOST: (( pickelhelm-network-policy-db-host ))
+        ENV: pickelhelm
       input_mapping:
-        cf-networking-release: cf-networking-dev
-        deployments-repo: cf-networking-deployments
-        silk-release: silk-dev
+        bbl-state: cf-networking-deployments
     - task: collect-ops-files
       file: cf-networking-release-ci/ci/tasks/collect-named-ops-files/task.yml
       params:
@@ -667,6 +666,7 @@ jobs:
           cf-networking-release/ci/opsfiles/use-latest-capi.yml
           cf-networking-release/ci/opsfiles/use-latest-cf-networking.yml
           cf-networking-release/ci/opsfiles/use-external-postgres-for-c2c.yml
+          cf-networking-release/ci/opsfiles/add-postgres-db-credentials.yml
           cf-deployment/operations/enable-service-discovery.yml
           cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain.yml
           cf-networking-release/ci/opsfiles/add-acceptance-test-jobs.yml
