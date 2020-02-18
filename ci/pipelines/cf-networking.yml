@@ -666,6 +666,7 @@ jobs:
           cf-networking-release/ci/opsfiles/use-latest-silk.yml
           cf-networking-release/ci/opsfiles/use-latest-capi.yml
           cf-networking-release/ci/opsfiles/use-latest-cf-networking.yml
+          cf-networking-release/ci/opsfiles/use-external-postgres-for-c2c.yml
           cf-deployment/operations/enable-service-discovery.yml
           cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain.yml
           cf-networking-release/ci/opsfiles/add-acceptance-test-jobs.yml
@@ -674,7 +675,6 @@ jobs:
           istio-release/deploy/cf-deployment-operations/enable-sidecar-proxying.yml
           cf-networking-release/ci/opsfiles/disable-ingress-redirect-to-proxy.yml
           cf-deployment/operations/experimental/enable-iptables-logger.yml
-          deployments-repo/environments/pickelhelm/use-external-postgres-for-c2c.yml
           deployments-repo/environments/pickelhelm/scale-to-2-diego-cells.yml
           cf-networking-release/ci/opsfiles/lower-canary-watch-time.yml
       input_mapping:
