@@ -14,8 +14,13 @@ cp cf-deployment/operations/*.yml ops-files/cf-deployment/operations/
 mkdir -p ops-files/cf-networking-release/manifest-generation/opsfiles
 cp cf-networking-release/manifest-generation/opsfiles/*.yml ops-files/cf-networking-release/manifest-generation/opsfiles/
 
+# old way when using cf-networking-deployments
 mkdir -p ops-files/deployments-repo/environments/${ENVIRONMENT_NAME}
 cp deployments-repo/environments/${ENVIRONMENT_NAME}/*.yml ops-files/deployments-repo/environments/${ENVIRONMENT_NAME}/ || true # if we don't have an env specific opsfile
+
+# new way when using networking-oss-deployments
+mkdir -p ops-files/deployments-repo/opsfiles
+cp deployments-repo/opsfiles/*.yml ops-files/deployments-repo/opsfiles/ || true # if we don't have opsfiles in this location
 
 mkdir -p ops-files/silk-release/opsfiles
 cp silk-release/opsfiles/*.yml ops-files/silk-release/opsfiles/
