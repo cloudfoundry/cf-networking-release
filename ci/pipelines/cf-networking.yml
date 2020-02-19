@@ -118,6 +118,13 @@ resources:
       branch: develop
       paths:
         - ci
+  - name: networking-oss-deployments
+    type: git
+    icon: github-box
+    source:
+      branch: master
+      private_key: ((github_private_key.private_key))
+      uri: git@github.com:cloudfoundry/networking-oss-deployments.git
   - name: cf-networking-deployments
     type: git
     icon: github-box
@@ -593,6 +600,7 @@ jobs:
           submodules: none
       - get: cf-deployment-concourse-tasks
       - get: cf-networking-deployments
+      - get: networking-oss-deployments
       - get: cf-deployment
         trigger: true
       - get: cf-networking-dev
@@ -607,7 +615,7 @@ jobs:
         ENVIRONMENT_NAME: pickelhelm
       input_mapping:
         cf-networking-release: cf-networking-dev
-        deployments-repo: cf-networking-deployments
+        deployments-repo: networking-oss-deployments
         silk-release: silk-dev
     - in_parallel:
       - task: upload-stemcell
