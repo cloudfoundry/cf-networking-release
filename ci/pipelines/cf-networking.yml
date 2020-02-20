@@ -658,23 +658,23 @@ jobs:
         SYSTEM_DOMAIN: pickelhelm.c2c.cf-app.com
         OPS_FILES: |
           cf-deployment/operations/scale-to-one-az.yml
-          cf-networking-release/ci/opsfiles/smaller-footprint.yml
+          cf-networking-release-ci/ci/opsfiles/smaller-footprint.yml
           cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
           cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
-          cf-networking-release/ci/opsfiles/use-latest-silk.yml
-          cf-networking-release/ci/opsfiles/use-latest-capi.yml
-          cf-networking-release/ci/opsfiles/use-latest-cf-networking.yml
+          cf-networking-release-ci/ci/opsfiles/use-latest-silk.yml
+          cf-networking-release-ci/ci/opsfiles/use-latest-capi.yml
+          cf-networking-release-ci/ci/opsfiles/use-latest-cf-networking.yml
           deployments-repo/opsfiles/pickelhelm-use-external-postgres-for-c2c.yml
           cf-deployment/operations/enable-service-discovery.yml
           cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain.yml
-          cf-networking-release/ci/opsfiles/add-acceptance-test-jobs.yml
+          cf-networking-release-ci/ci/opsfiles/add-acceptance-test-jobs.yml
           cf-networking-release/manifest-generation/opsfiles/enable-experimental-dynamic-egress-policies.yml
           istio-release/deploy/cf-deployment-operations/add-istio.yml
           istio-release/deploy/cf-deployment-operations/enable-sidecar-proxying.yml
-          cf-networking-release/ci/opsfiles/disable-ingress-redirect-to-proxy.yml
+          cf-networking-release-ci/ci/opsfiles/disable-ingress-redirect-to-proxy.yml
           cf-deployment/operations/experimental/enable-iptables-logger.yml
-          cf-networking-release/ci/opsfiles/scale-to-2-diego-cells.yml
-          cf-networking-release/ci/opsfiles/lower-canary-watch-time.yml
+          cf-networking-release-ci/ci/opsfiles/scale-to-2-diego-cells.yml
+          cf-networking-release-ci/ci/opsfiles/lower-canary-watch-time.yml
       input_mapping:
         bbl-state: networking-oss-deployments
         release: istio-release # because the pre-package script is broken
@@ -882,22 +882,22 @@ jobs:
         SYSTEM_DOMAIN: mitre.c2c.cf-app.com
         OPS_FILES: |
           cf-deployment/operations/scale-to-one-az.yml
-          cf-networking-release/ci/opsfiles/smaller-footprint.yml
+          cf-networking-release-ci/ci/opsfiles/smaller-footprint.yml
           cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
           cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
-          cf-networking-release/ci/opsfiles/custom-apps-domain.yml
+          cf-networking-release-ci/ci/opsfiles/custom-apps-domain.yml
           cf-deployment/operations/experimental/enable-iptables-logger.yml
-          cf-networking-release/ci/opsfiles/use-latest-silk.yml
-          cf-networking-release/ci/opsfiles/use-latest-capi.yml
-          cf-networking-release/ci/opsfiles/use-latest-cf-networking.yml
+          cf-networking-release-ci/ci/opsfiles/use-latest-silk.yml
+          cf-networking-release-ci/ci/opsfiles/use-latest-capi.yml
+          cf-networking-release-ci/ci/opsfiles/use-latest-cf-networking.yml
           cf-deployment/operations/enable-service-discovery.yml
           cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain.yml
-          cf-networking-release/ci/opsfiles/add-acceptance-test-jobs.yml
+          cf-networking-release-ci/ci/opsfiles/add-acceptance-test-jobs.yml
           cf-deployment/operations/backup-and-restore/enable-backup-restore.yml
           cf-networking-release/manifest-generation/opsfiles/enable-experimental-dynamic-egress-policies.yml
           istio-release/deploy/cf-deployment-operations/add-istio.yml
           istio-release/deploy/cf-deployment-operations/enable-sidecar-proxying.yml
-          cf-networking-release/ci/opsfiles/disable-ingress-redirect-to-proxy.yml
+          cf-networking-release-ci/ci/opsfiles/disable-ingress-redirect-to-proxy.yml
           deployments-repo/environments/mitre/add-smoke-test-user.yml
           deployments-repo/environments/mitre/change-vtep-port.yml
           deployments-repo/environments/mitre/enable-rate-limiting-for-udp.yml
@@ -905,7 +905,7 @@ jobs:
           deployments-repo/environments/mitre/scale-ephemeral-disk.yml
           deployments-repo/environments/mitre/scale-instances-to-2.yml
           deployments-repo/environments/mitre/scale-persistent-disk.yml
-          cf-networking-release/ci/opsfiles/lower-canary-watch-time.yml
+          cf-networking-release-ci/ci/opsfiles/lower-canary-watch-time.yml
       input_mapping:
         bbl-state: cf-networking-deployments
         vars-store: cf-networking-deployments
@@ -1296,27 +1296,27 @@ jobs:
         OPS_FILES: |
           cf-deployment/operations/use-compiled-releases.yml
           cf-deployment/operations/scale-to-one-az.yml
-          cf-networking-release/ci/opsfiles/smaller-footprint.yml
+          cf-networking-release-ci/ci/opsfiles/smaller-footprint.yml
           cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
           cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
-          cf-networking-release/ci/opsfiles/use-latest-silk.yml
-          cf-networking-release/ci/opsfiles/use-latest-capi.yml
-          cf-networking-release/ci/opsfiles/use-latest-cf-networking.yml
+          cf-networking-release-ci/ci/opsfiles/use-latest-silk.yml
+          cf-networking-release-ci/ci/opsfiles/use-latest-capi.yml
+          cf-networking-release-ci/ci/opsfiles/use-latest-cf-networking.yml
           cf-deployment/operations/enable-service-discovery.yml
           cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain.yml
           cf-networking-release/manifest-generation/opsfiles/enable-experimental-dynamic-egress-policies.yml
           istio-release/deploy/cf-deployment-operations/add-istio.yml
           istio-release/deploy/cf-deployment-operations/enable-sidecar-proxying.yml
-          cf-networking-release/ci/opsfiles/disable-ingress-redirect-to-proxy.yml
+          cf-networking-release-ci/ci/opsfiles/disable-ingress-redirect-to-proxy.yml
           cf-deployment/operations/experimental/enable-iptables-logger.yml
-          cf-networking-release/ci/opsfiles/change-nats-monitor-port.yml
-          cf-networking-release/ci/opsfiles/increase-diego-cell-mtu.yml
-          cf-networking-release/ci/opsfiles/scale-diego-cell-max-in-flight.yml
-          cf-networking-release/ci/opsfiles/scale-diego-cell-vm-size.yml
-          cf-networking-release/ci/opsfiles/scale-max-containers.yml
-          cf-networking-release/ci/opsfiles/scale-router-ephemeral-disk.yml
-          cf-networking-release/ci/opsfiles/scale-to-3-diego-cells.yml
-          cf-networking-release/ci/opsfiles/lower-canary-watch-time.yml
+          cf-networking-release-ci/ci/opsfiles/change-nats-monitor-port.yml
+          cf-networking-release-ci/ci/opsfiles/increase-diego-cell-mtu.yml
+          cf-networking-release-ci/ci/opsfiles/scale-diego-cell-max-in-flight.yml
+          cf-networking-release-ci/ci/opsfiles/scale-diego-cell-vm-size.yml
+          cf-networking-release-ci/ci/opsfiles/scale-max-containers.yml
+          cf-networking-release-ci/ci/opsfiles/scale-router-ephemeral-disk.yml
+          cf-networking-release-ci/ci/opsfiles/scale-to-3-diego-cells.yml
+          cf-networking-release-ci/ci/opsfiles/lower-canary-watch-time.yml
       input_mapping:
         bbl-state: cf-networking-deployments
         release: istio-release
