@@ -125,6 +125,7 @@ resources:
       branch: master
       private_key: ((github_private_key.private_key))
       uri: git@github.com:cloudfoundry/networking-oss-deployments.git
+
   - name: cf-networking-deployments
     type: git
     icon: github-box
@@ -535,21 +536,21 @@ jobs:
     - in_parallel:
       - get: cf-deployment-concourse-tasks
         trigger: true
-      - get: cf-networking-deployments
       - get: cf-networking-release-ci
       - get: bosh-bootloader
+      - get: networking-oss-deployments
     - task: add-parent-dns
       file: cf-networking-release-ci/ci/tasks/add-parent-dns/task.yml
       params:
         ENVIRONMENT: pickelhelm
       input_mapping:
-        bbl-state: cf-networking-deployments
+        bbl-state: networking-oss-deployments
     - task: bbl-up
       file: cf-deployment-concourse-tasks/bbl-up/task.yml
       params:
         BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
         BBL_GCP_REGION: us-east1
-        BBL_STATE_DIR: environments/pickelhelm/
+        BBL_STATE_DIR: environments/pickelhelm/bbl-state
         BBL_IAAS: gcp
         BBL_LB_CERT: ((pickelhelm-lb-cert.certificate))
         BBL_LB_KEY: ((pickelhelm-lb-key.private_key))
@@ -559,7 +560,7 @@ jobs:
         bbl-state: updated-bbl-state
         bbl-config: updated-bbl-state
       ensure:
-        put: cf-networking-deployments
+        put: networking-oss-deployments
         params:
           repository: updated-bbl-state
           rebase: true
@@ -569,22 +570,22 @@ jobs:
     plan:
     - in_parallel:
       - get: cf-deployment-concourse-tasks
-      - get: cf-networking-deployments
+      - get: networking-oss-deployments
     - task: bosh-cleanup
       file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
       params:
-        BBL_STATE_DIR: environments/pickelhelm/
+        BBL_STATE_DIR: environments/pickelhelm/bbl-state
       input_mapping:
-        bbl-state: cf-networking-deployments
+        bbl-state: networking-oss-deployments
     - task: bbl-destroy
       file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
       params:
-        BBL_STATE_DIR: environments/pickelhelm/
+        BBL_STATE_DIR: environments/pickelhelm/bbl-state
         BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
       input_mapping:
-        bbl-state: cf-networking-deployments
+        bbl-state: networking-oss-deployments
       ensure:
-        put: cf-networking-deployments
+        put: networking-oss-deployments
         params:
           repository: updated-bbl-state
           rebase: true
@@ -599,7 +600,6 @@ jobs:
         params:
           submodules: none
       - get: cf-deployment-concourse-tasks
-      - get: cf-networking-deployments
       - get: networking-oss-deployments
       - get: cf-deployment
         trigger: true
@@ -621,40 +621,40 @@ jobs:
       - task: upload-stemcell
         file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
         params:
-          BBL_STATE_DIR: environments/pickelhelm/
+          BBL_STATE_DIR: environments/pickelhelm/bbl-state
         input_mapping:
-          bbl-state: cf-networking-deployments
+          bbl-state: networking-oss-deployments
       - task: upload-local-capi-release
         file: cf-networking-release-ci/ci/tasks/upload-local-release/task.yml
         input_mapping:
-          bbl-state: cf-networking-deployments
+          bbl-state: networking-oss-deployments
           local-release: capi-ci-passed
         params:
-          BBL_STATE_DIR: environments/pickelhelm/
+          BBL_STATE_DIR: environments/pickelhelm/bbl-state
       - task: upload-local-networking-release
         file: cf-networking-release-ci/ci/tasks/upload-local-release/task.yml
         input_mapping:
-          bbl-state: cf-networking-deployments
+          bbl-state: networking-oss-deployments
           local-release: cf-networking-dev
         params:
-          BBL_STATE_DIR: environments/pickelhelm/
+          BBL_STATE_DIR: environments/pickelhelm/bbl-state
       - task: upload-local-silk-release
         file: cf-networking-release-ci/ci/tasks/upload-local-release/task.yml
         input_mapping:
-          bbl-state: cf-networking-deployments
+          bbl-state: networking-oss-deployments
           local-release: silk-dev
         params:
-          BBL_STATE_DIR: environments/pickelhelm/
+          BBL_STATE_DIR: environments/pickelhelm/bbl-state
       - task: upload-acceptance-test-release
         file: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release/task.yml
         input_mapping:
-          bbl-state: cf-networking-deployments
+          bbl-state: networking-oss-deployments
         params:
-          BBL_STATE_DIR: environments/pickelhelm/
+          BBL_STATE_DIR: environments/pickelhelm/bbl-state
     - task: deploy-cf
       file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
       params:
-        BBL_STATE_DIR: environments/pickelhelm/
+        BBL_STATE_DIR: environments/pickelhelm/bbl-state
         SYSTEM_DOMAIN: pickelhelm.c2c.cf-app.com
         OPS_FILES: |
           cf-deployment/operations/scale-to-one-az.yml
@@ -676,16 +676,15 @@ jobs:
           cf-networking-release/ci/opsfiles/scale-to-2-diego-cells.yml
           cf-networking-release/ci/opsfiles/lower-canary-watch-time.yml
       input_mapping:
-        bbl-state: cf-networking-deployments
+        bbl-state: networking-oss-deployments
         release: istio-release # because the pre-package script is broken
-        vars-files: cf-networking-deployments
-        vars-store: cf-networking-deployments
+        vars-files: networking-oss-deployments
     - task: bosh-cleanup
       file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
       params:
-        BBL_STATE_DIR: environments/pickelhelm/
+        BBL_STATE_DIR: environments/pickelhelm/bbl-state
       input_mapping:
-        bbl-state: cf-networking-deployments
+        bbl-state: networking-oss-deployments
 
   - name: pickelhelm-test
     serial_groups: [pickelhelm]
@@ -694,8 +693,6 @@ jobs:
       - get: cf-networking-release-ci
         params:
           submodules: none
-      - get: cf-networking-deployments
-        passed: [pickelhelm-deploy]
       - get: cf-deployment
         passed: [pickelhelm-deploy]
         trigger: true
@@ -705,12 +702,13 @@ jobs:
       - get: silk-dev
         passed: [pickelhelm-deploy]
         trigger: true
+      - get: networking-oss-deployments
     - task: get-credhub-vars
       file: cf-networking-release-ci/ci/tasks/get-credhub-vars/task.yml
       input_mapping:
-        bbl-state: cf-networking-deployments
+        bbl-state: networking-oss-deployments
       params:
-        BBL_STATE_DIR: environments/pickelhelm
+        BBL_STATE_DIR: environments/pickelhelm/bbl-state
         VARIABLES: |
           /bosh-pickelhelm/cf/cf_admin_password
           /bosh-pickelhelm/cf/uaa_admin_client_secret
@@ -719,7 +717,6 @@ jobs:
       input_mapping:
         cf-networking: cf-networking-dev
         test-config: cf-networking-deployments
-        vars-store: cf-networking-deployments
       params:
         ENVIRONMENT_NAME: pickelhelm
     - task: acceptance-tests
@@ -1627,15 +1624,15 @@ jobs:
     serial_groups: [pickelhelm]
     plan:
     - in_parallel:
-      - get: cf-networking-deployments
       - get: cf-deployment-concourse-tasks
+      - get: networking-oss-deployments
     - task: delete-deployment
       file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
       params:
-        BBL_STATE_DIR: environments/pickelhelm/
+        BBL_STATE_DIR: environments/pickelhelm/bbl-state
         DEPLOYMENT_NAME: cf
       input_mapping:
-        bbl-state: cf-networking-deployments
+        bbl-state: networking-oss-deployments
 
   - name: delete-deployment-mitre-cf
     serial_groups: [mitre-test-group, mitre-deploy-group]

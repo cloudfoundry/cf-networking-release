@@ -5,7 +5,7 @@ indir=./bbl-state
 outdir=./updated-bbl-state
 git clone "${indir}" "${outdir}"
 
-dest_dir="${outdir}/environments/${ENVIRONMENT}/terraform/"
+dest_dir="${outdir}/environments/${ENVIRONMENT}/bbl-state/terraform/"
 mkdir -p "${dest_dir}"
 
 cp "${PWD}/cf-networking-release-ci/ci/tasks/bbl-full-parent-dns_override.tf" "${dest_dir}"
