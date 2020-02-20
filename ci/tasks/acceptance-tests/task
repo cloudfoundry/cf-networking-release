@@ -4,18 +4,41 @@ set -eu
 
 ROOT="$(cd "$(dirname $0)/../../../.." && pwd)"
 
-# replace admin password and secret in test config
-pushd "${ROOT}/test-config/environments/${ENVIRONMENT_NAME}" > /dev/null
-  ADMIN_PASSWORD="$(grep '^cf_admin_password:' ${ROOT}/variables/variables.yml | cut -d" " -f2)"
-  sed -i -- "s/{{admin-password}}/${ADMIN_PASSWORD}/g" test-config.json
-  ADMIN_SECRET="$(grep '^uaa_admin_client_secret:' ${ROOT}/variables/variables.yml | cut -d" " -f2)"
-  sed -i -- "s/{{admin-secret}}/${ADMIN_SECRET}/g" test-config.json
-popd > /dev/null
+# we have moved pickelhelm to networking-oss-deployments from other c2c envs
+# when those envs move they will need use this block too
+if [[ "$ENVIRONMENT_NAME" == 'pickelhelm' ]]; then
 
-ENVIRONMENT_PATH="${ROOT}/test-config/environments/${ENVIRONMENT_NAME}/test-config.json"
+  # replace admin password and secret in test config
+  pushd "${ROOT}/test-config/environments/${ENVIRONMENT_NAME}/test-configs" > /dev/null
+    ADMIN_PASSWORD="$(grep '^cf_admin_password:' ${ROOT}/variables/variables.yml | cut -d" " -f2)"
+    sed -i -- "s/{{admin-password}}/${ADMIN_PASSWORD}/g" acceptance-test-config.json
+    ADMIN_SECRET="$(grep '^uaa_admin_client_secret:' ${ROOT}/variables/variables.yml | cut -d" " -f2)"
+    sed -i -- "s/{{admin-secret}}/${ADMIN_SECRET}/g" acceptance-test-config.json
+  popd > /dev/null
+
+  ENVIRONMENT_PATH="${ROOT}/test-config/environments/${ENVIRONMENT_NAME}/test-configs/acceptance-test-config.json"
+
+# this else is for all the environments still in cf-networking-deployments
+else
+
+  # replace admin password and secret in test config
+  pushd "${ROOT}/test-config/environments/${ENVIRONMENT_NAME}" > /dev/null
+    ADMIN_PASSWORD="$(grep '^cf_admin_password:' ${ROOT}/variables/variables.yml | cut -d" " -f2)"
+    sed -i -- "s/{{admin-password}}/${ADMIN_PASSWORD}/g" test-config.json
+    ADMIN_SECRET="$(grep '^uaa_admin_client_secret:' ${ROOT}/variables/variables.yml | cut -d" " -f2)"
+    sed -i -- "s/{{admin-secret}}/${ADMIN_SECRET}/g" test-config.json
+  popd > /dev/null
+
+  ENVIRONMENT_PATH="${ROOT}/test-config/environments/${ENVIRONMENT_NAME}/test-config.json"
+
+fi
+
 export CONFIG="${CONFIG:-"${ENVIRONMENT_PATH}"}"
 export NETWORK_STATS_FILE="${ROOT}/network-stats/stats.json"
 export GOPATH="${ROOT}/cf-networking"
 export APPS_DIR="${ROOT}/cf-networking/src/example-apps"
+export PATH="${GOPATH}/bin:${PATH}"
 
-ginkgo -r -v "${ROOT}/cf-networking/src/test/acceptance"
+go install github.com/onsi/ginkgo/ginkgo
+
+ginkgo -keepGoing -randomizeAllSpecs -randomizeSuites -race "${ROOT}/cf-networking/src/test/${TEST_NAME}"

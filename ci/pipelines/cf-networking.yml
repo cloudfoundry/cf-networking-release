@@ -713,20 +713,21 @@ jobs:
           /bosh-pickelhelm/cf/cf_admin_password
           /bosh-pickelhelm/cf/uaa_admin_client_secret
     - task: acceptance-tests-sd
-      file: cf-networking-release-ci/ci/tasks/test-acceptance-sd/task.yml
+      file: cf-networking-release-ci/ci/tasks/acceptance-tests/task.yml
       input_mapping:
         cf-networking: cf-networking-dev
-        test-config: cf-networking-deployments
+        test-config: networking-oss-deployments
       params:
         ENVIRONMENT_NAME: pickelhelm
+        TEST_NAME: acceptance-sd
     - task: acceptance-tests
       file: cf-networking-release-ci/ci/tasks/acceptance-tests/task.yml
       input_mapping:
         cf-networking: cf-networking-dev
-        test-config: cf-networking-deployments
-        vars-store: cf-networking-deployments
+        test-config: networking-oss-deployments
       params:
         ENVIRONMENT_NAME: pickelhelm
+        TEST_NAME: acceptance
 
   - name: mitre-bbl-up
     serial_groups: [mitre-test-group, mitre-deploy-group]

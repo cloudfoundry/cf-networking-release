@@ -17,6 +17,7 @@ outputs:
 params:
     ENVIRONMENT_NAME: ~
     CONFIG: ~
+    TEST_NAME: acceptance
 
 run:
   path: cf-networking-release-ci/ci/tasks/acceptance-tests/task
