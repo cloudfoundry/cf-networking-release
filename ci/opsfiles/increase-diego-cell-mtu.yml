@@ -1,0 +1,4 @@
+# change MTU in the containers
+- type: replace
+  path: /instance_groups/name=diego-cell/jobs/name=silk-cni/properties?/mtu
+  value: 1350

@@ -1,0 +1,4 @@
+# bump up ephemeral disk on router vm
+- type: replace
+  path: /instance_groups/name=router/vm_extensions?/-
+  value: 10GB_ephemeral_disk

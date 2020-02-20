@@ -1237,6 +1237,7 @@ jobs:
         params:
           submodules: none
       - get: cf-networking-deployments
+      - get: networking-oss-deployments
       - get: cf-networking-dev
         passed: [unit-and-integration-tests]
         trigger: true
@@ -1308,13 +1309,13 @@ jobs:
           istio-release/deploy/cf-deployment-operations/enable-sidecar-proxying.yml
           cf-networking-release/ci/opsfiles/disable-ingress-redirect-to-proxy.yml
           cf-deployment/operations/experimental/enable-iptables-logger.yml
-          deployments-repo/environments/toque/change-nats-monitor-port.yml
-          deployments-repo/environments/toque/increase-diego-cell-mtu.yml
-          deployments-repo/environments/toque/scale-diego-cell-max-in-flight.yml
-          deployments-repo/environments/toque/scale-diego-cell-vm-size.yml
-          deployments-repo/environments/toque/scale-max-containers.yml
-          deployments-repo/environments/toque/scale-router-ephemeral-disk.yml
-          deployments-repo/environments/toque/scale-to-3-diego-cells.yml
+          cf-networking-release/ci/opsfiles/change-nats-monitor-port.yml
+          cf-networking-release/ci/opsfiles/increase-diego-cell-mtu.yml
+          cf-networking-release/ci/opsfiles/scale-diego-cell-max-in-flight.yml
+          cf-networking-release/ci/opsfiles/scale-diego-cell-vm-size.yml
+          cf-networking-release/ci/opsfiles/scale-max-containers.yml
+          cf-networking-release/ci/opsfiles/scale-router-ephemeral-disk.yml
+          cf-networking-release/ci/opsfiles/scale-to-3-diego-cells.yml
           cf-networking-release/ci/opsfiles/lower-canary-watch-time.yml
       input_mapping:
         bbl-state: cf-networking-deployments
