@@ -3,14 +3,27 @@
 set -e -u
 set -o pipefail
 
-# replace admin password in test config
-ADMIN_PASSWORD=`grep cf_admin_password variables/variables.yml | cut -d' ' -f2`
-sed -i -- "s/{{admin-password}}/${ADMIN_PASSWORD}/g" ${PWD}/deployments-repo/environments/${ENVIRONMENT_NAME}/test-config.json
+# we are moving toque to networking-oss-deployments, so the path to the test config is differet.
+if [[ "$ENVIRONMENT_NAME" == 'toque' ]]; then
+  # replace admin password in test config
+  ADMIN_PASSWORD=`grep cf_admin_password variables/variables.yml | cut -d' ' -f2`
+  sed -i -- "s/{{admin-password}}/${ADMIN_PASSWORD}/g" ${PWD}/deployments-repo/environments/${ENVIRONMENT_NAME}/test-configs/scaling-test-config.json
+
+  existing_test_params=${PWD}/deployments-repo/environments/${ENVIRONMENT_NAME}/test-configs/scaling-test-config.json
+  output_test_params=${PWD}/test-config/environments/${ENVIRONMENT_NAME}/test-configs/scaling-test-config.json
+
+else # this is is for all envs that aren't in networking-oss-deployments yet. should remove once we dont use cf-networking-deployments
+  # replace admin password in test config
+  ADMIN_PASSWORD=`grep cf_admin_password variables/variables.yml | cut -d' ' -f2`
+  sed -i -- "s/{{admin-password}}/${ADMIN_PASSWORD}/g" ${PWD}/deployments-repo/environments/${ENVIRONMENT_NAME}/test-config.json
+
+  existing_test_params=${PWD}/deployments-repo/environments/${ENVIRONMENT_NAME}/test-config.json
+  output_test_params=${PWD}/test-config/environments/${ENVIRONMENT_NAME}/test-config.json
+
+fi
 
 mkdir -p ${PWD}/test-config/environments/${ENVIRONMENT_NAME}
 input_test_params=${PWD}/scaling-test-params/test-params/params.json
-existing_test_params=${PWD}/deployments-repo/environments/${ENVIRONMENT_NAME}/test-config.json
-output_test_params=${PWD}/test-config/environments/${ENVIRONMENT_NAME}/test-config.json
 
 set +x
 jq -s '.[0] * .[1] ' $existing_test_params $input_test_params > $output_test_params
