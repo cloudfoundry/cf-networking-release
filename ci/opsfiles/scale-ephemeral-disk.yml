@@ -1,0 +1,4 @@
+# embiggen ephemeral disk
+- type: replace
+  path: /instance_groups/name=scheduler/vm_extensions/-
+  value: 100GB_ephemeral_disk

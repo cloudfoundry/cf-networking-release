@@ -1,0 +1,4 @@
+# override VTEP port
+- type: replace
+  path: /instance_groups/name=diego-cell/jobs/name=silk-daemon/properties?/vtep_port
+  value: 4800

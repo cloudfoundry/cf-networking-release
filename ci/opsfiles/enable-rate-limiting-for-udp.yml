@@ -1,0 +1,10 @@
+# enable rate-limiting for ASGs udp
+- type: replace
+  path: /instance_groups/name=diego-cell/jobs/name=silk-cni/properties?/iptables_accepted_udp_logs_per_sec
+  value: 1
+
+# enable rate-limiting for c2c udp
+- type: replace
+  path: /instance_groups/name=diego-cell/jobs/name=vxlan-policy-agent/properties?/iptables_accepted_udp_logs_per_sec
+  value: 1
+
