@@ -6,7 +6,7 @@ ROOT="$(cd "$(dirname $0)/../../../.." && pwd)"
 
 # we have moved pickelhelm to networking-oss-deployments from other c2c envs
 # when those envs move they will need use this block too
-if [[ "$ENVIRONMENT_NAME" == 'pickelhelm' ]]; then
+if [[ "$ENVIRONMENT_NAME" == 'pickelhelm' || "$ENVIRONMENT_NAME" == 'mitre' ]]; then
 
   # replace admin password and secret in test config
   pushd "${ROOT}/test-config/environments/${ENVIRONMENT_NAME}/test-configs" > /dev/null

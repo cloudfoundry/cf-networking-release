@@ -9,7 +9,7 @@ function cleanup() {
 trap 'cleanup' EXIT
 
 # Targetting director
-pushd "deployments-repo/environments/$ENVIRONMENT_NAME"
+pushd "deployments-repo/$BBL_STATE_DIR"
   eval "$(bbl print-env)"
 popd
 
@@ -18,7 +18,7 @@ export PATH="${GOPATH}/bin":$PATH
 
 go install github.com/onsi/ginkgo/ginkgo
 
-export CONFIG="$PWD/deployments-repo/environments/$ENVIRONMENT_NAME/perf-config.json"
+export CONFIG="$PWD/deployments-repo/$TEST_CONFIG_DIR/perf-config.json"
 
 pushd cf-networking/src/test/performance-sd
    ginkgo -race deploy/

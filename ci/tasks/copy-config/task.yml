@@ -6,12 +6,12 @@ image_resource:
 platform: linux
 
 params:
-  ENVIRONMENT: ~
+  TEST_CONFIG_DIR: ~
 
 inputs:
   - name: cf-networking-release-ci
-  - name: cf-networking-deployments
   - name: variables
+  - name: test-config
 
 outputs:
   - name: integration-config

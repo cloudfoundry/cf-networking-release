@@ -5,6 +5,6 @@ set -o pipefail
 
 # replace admin password in test config
 ADMIN_PASSWORD=`grep cf_admin_password variables/variables.yml  | cut -d' ' -f2`
-sed -i -- "s/{{admin-password}}/${ADMIN_PASSWORD}/g" cf-networking-deployments/environments/${ENVIRONMENT}/integration_config.json
+sed -i -- "s/{{admin-password}}/${ADMIN_PASSWORD}/g" test-config/${TEST_CONFIG_DIR}/integration_config.json
 
-cp cf-networking-deployments/environments/${ENVIRONMENT}/integration_config.json integration-config/
+cp test-config/${TEST_CONFIG_DIR}/integration_config.json integration-config/

@@ -8,7 +8,7 @@ platform: linux
 inputs:
   - name: version
   - name: cf-networking-release-ci
-  - name: cf-networking-deployments
+  - name: networking-oss-deployments
   - name: silk-tarball
   - name: silk
 

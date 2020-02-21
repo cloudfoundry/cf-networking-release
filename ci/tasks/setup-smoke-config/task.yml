@@ -7,7 +7,7 @@ image_resource:
 
 inputs:
   - name: cf-networking-release-ci
-  - name: cf-networking-deployments
+  - name: test-config
   - name: variables
     optional: true
 
@@ -15,6 +15,7 @@ params:
   ENVIRONMENT_NAME: ~
   CONFIG_POSTFIX: ~
   SMOKE_PASSWORD: ~
+  TEST_CONFIG_DIR: ~
 
 outputs:
   - name: smoke-config

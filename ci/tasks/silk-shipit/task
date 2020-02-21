@@ -9,7 +9,7 @@ if [ -z "$VERSION" ]; then
   exit 1
 fi
 
-cp cf-networking-deployments/config/private.yml silk/config/private.yml
+cp networking-oss-deployments/deployment-helpers/private.yml silk/config/private.yml
 
 CANDIDATE_DIR=$PWD/silk-tarball
 cd silk

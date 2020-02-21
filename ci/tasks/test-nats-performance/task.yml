@@ -13,6 +13,8 @@ inputs:
 
 params:
   ENVIRONMENT_NAME: ~
+  BBL_STATE_DIR: ~
+  TEST_CONFIG_DIR: ~
 
 run:
   path: cf-networking-release-ci/ci/tasks/test-nats-performance/task
