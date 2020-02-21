@@ -11,6 +11,7 @@ if [[ "$ENVIRONMENT_NAME" == 'toque' ]]; then
 
   existing_test_params=${PWD}/deployments-repo/environments/${ENVIRONMENT_NAME}/test-configs/scaling-test-config.json
   output_test_params=${PWD}/test-config/environments/${ENVIRONMENT_NAME}/test-configs/scaling-test-config.json
+  mkdir -p ${PWD}/test-config/environments/${ENVIRONMENT_NAME}/test-configs
 
 else # this is is for all envs that aren't in networking-oss-deployments yet. should remove once we dont use cf-networking-deployments
   # replace admin password in test config
@@ -19,10 +20,9 @@ else # this is is for all envs that aren't in networking-oss-deployments yet. sh
 
   existing_test_params=${PWD}/deployments-repo/environments/${ENVIRONMENT_NAME}/test-config.json
   output_test_params=${PWD}/test-config/environments/${ENVIRONMENT_NAME}/test-config.json
-
+  mkdir -p ${PWD}/test-config/environments/${ENVIRONMENT_NAME}
 fi
 
-mkdir -p ${PWD}/test-config/environments/${ENVIRONMENT_NAME}
 input_test_params=${PWD}/scaling-test-params/test-params/params.json
 
 set +x
