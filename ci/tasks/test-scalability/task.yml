@@ -14,7 +14,7 @@ outputs:
   - name: network-stats
 
 params:
-    ENVIRONMENT_NAME: ~
+    TEST_CONFIG_DIR: ~
 
 run:
   path: cf-networking-release-ci/ci/tasks/test-scalability/task

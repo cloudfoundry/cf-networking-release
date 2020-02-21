@@ -1378,7 +1378,7 @@ jobs:
     - task: test-scalability
       file: cf-networking-release-ci/ci/tasks/test-scalability/task.yml
       params:
-        ENVIRONMENT_NAME: toque
+        TEST_CONFIG_DIR: environments/toque/test-configs
       input_mapping:
         cf-networking: cf-networking-dev
         test-config: test-config
