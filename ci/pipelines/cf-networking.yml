@@ -7,7 +7,7 @@
 # 6. Branch disaster-recovery-acceptance-tests into cf-container-networking
 # 7. Pin resources:
   #  >  cf-networking-release-ci
-  #  >  cf-networking-deployments
+  #  >  networking-oss-deployments
   #  >  cf-deployment-concourse-tasks
   #  >  cf-deployment
   #  >  silk-dev
@@ -125,14 +125,6 @@ resources:
       branch: master
       private_key: ((github_private_key.private_key))
       uri: git@github.com:cloudfoundry/networking-oss-deployments.git
-
-  - name: cf-networking-deployments
-    type: git
-    icon: github-box
-    source:
-      uri: "git@github.com:cloudfoundry/cf-networking-deployments.git"
-      branch: master
-      private_key: ((cf-networking-deployments-push-key.private_key))
   - name: cf-deployment-concourse-tasks
     type: git
     icon: github-box
@@ -735,7 +727,7 @@ jobs:
     - in_parallel:
       - get: cf-deployment-concourse-tasks
         trigger: true
-      - get: cf-networking-deployments
+      - get: networking-oss-deployments
       - get: cf-networking-release-ci
       - get: bosh-bootloader
     - task: add-parent-dns
@@ -743,13 +735,13 @@ jobs:
       params:
         ENVIRONMENT: mitre
       input_mapping:
-        bbl-state: cf-networking-deployments
+        bbl-state: networking-oss-deployments
     - task: bbl-up
       file: cf-deployment-concourse-tasks/bbl-up/task.yml
       params:
         BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
         BBL_GCP_REGION: us-east1
-        BBL_STATE_DIR: environments/mitre/
+        BBL_STATE_DIR: environments/mitre/bbl-state
         BBL_IAAS: gcp
         BBL_LB_CERT: ((mitre-lb-cert.certificate))
         BBL_LB_KEY: ((mitre-lb-key.private_key))
@@ -759,7 +751,7 @@ jobs:
         bbl-state: updated-bbl-state
         bbl-config: updated-bbl-state
       ensure:
-        put: cf-networking-deployments
+        put: networking-oss-deployments
         params:
           repository: updated-bbl-state
           rebase: true
@@ -769,22 +761,22 @@ jobs:
     plan:
     - in_parallel:
       - get: cf-deployment-concourse-tasks
-      - get: cf-networking-deployments
+      - get: networking-oss-deployments
     - task: bosh-cleanup
       file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
       params:
-        BBL_STATE_DIR: environments/mitre/
+        BBL_STATE_DIR: environments/mitre/bbl-state
       input_mapping:
-        bbl-state: cf-networking-deployments
+        bbl-state: networking-oss-deployments
     - task: bbl-destroy
       file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
       params:
-        BBL_STATE_DIR: environments/mitre/
+        BBL_STATE_DIR: environments/mitre/bbl-state
         BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
       input_mapping:
-        bbl-state: cf-networking-deployments
+        bbl-state: networking-oss-deployments
       ensure:
-        put: cf-networking-deployments
+        put: networking-oss-deployments
         params:
           repository: updated-bbl-state
           rebase: true
@@ -801,7 +793,7 @@ jobs:
         params:
           submodules: none
       - get: cf-deployment-concourse-tasks
-      - get: cf-networking-deployments
+      - get: networking-oss-deployments
       - get: cf-deployment
         passed: [pickelhelm-test]
         trigger: true
@@ -820,43 +812,43 @@ jobs:
         ENVIRONMENT_NAME: mitre
       input_mapping:
         cf-networking-release: cf-networking-dev
-        deployments-repo: cf-networking-deployments
+        deployments-repo: networking-oss-deployments
         silk-release: silk-dev
     - in_parallel:
       - task: upload-stemcell
         file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
         params:
-          BBL_STATE_DIR: environments/mitre/
+          BBL_STATE_DIR: environments/mitre/bbl-state
         input_mapping:
-          bbl-state: cf-networking-deployments
+          bbl-state: networking-oss-deployments
       - task: upload-local-capi-release
         file: cf-networking-release-ci/ci/tasks/upload-local-release/task.yml
         input_mapping:
-          bbl-state: cf-networking-deployments
+          bbl-state: networking-oss-deployments
           local-release: capi-ci-passed
         params:
-          BBL_STATE_DIR: environments/mitre/
+          BBL_STATE_DIR: environments/mitre/bbl-state
       - task: upload-cfnetworking-release
         file: cf-networking-release-ci/ci/tasks/upload-local-release/task.yml
         input_mapping:
-          bbl-state: cf-networking-deployments
+          bbl-state: networking-oss-deployments
           local-release: cf-networking-dev
         params:
-          BBL_STATE_DIR: environments/mitre/
+          BBL_STATE_DIR: environments/mitre/bbl-state
       - task: upload-local-silk-release
         file: cf-networking-release-ci/ci/tasks/upload-local-release/task.yml
         input_mapping:
-          bbl-state: cf-networking-deployments
+          bbl-state: networking-oss-deployments
           local-release: silk-dev
         params:
-          BBL_STATE_DIR: environments/mitre/
+          BBL_STATE_DIR: environments/mitre/bbl-state
       - task: upload-acceptance-test-release
         file: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release/task.yml
         input_mapping:
-          bbl-state: cf-networking-deployments
+          bbl-state: networking-oss-deployments
         params:
           ENVIRONMENT_NAME: mitre
-          BBL_STATE_DIR: environments/mitre/
+          BBL_STATE_DIR: environments/mitre/bbl-state
     - task: set-apps-domain
       config:
         platform: linux
@@ -865,20 +857,20 @@ jobs:
           source:
             repository: c2cnetworking/deploy-light
         inputs:
-          - name: cf-networking-deployments
+          - name: networking-oss-deployments
         run:
           path: bash
           args:
             - -exc
             - |
-              pushd cf-networking-deployments/environments/mitre
+              pushd networking-oss-deployments/environments/mitre/bbl-state
                 eval "$(bbl print-env)"
               popd
               credhub set -n "/bosh-mitre/cf/apps_domain" -t value -v "apps.mitre.c2c.cf-app.com"
     - task: deploy-cf
       file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
       params:
-        BBL_STATE_DIR: environments/mitre/
+        BBL_STATE_DIR: environments/mitre/bbl-state
         SYSTEM_DOMAIN: mitre.c2c.cf-app.com
         OPS_FILES: |
           cf-deployment/operations/scale-to-one-az.yml
@@ -898,17 +890,17 @@ jobs:
           istio-release/deploy/cf-deployment-operations/add-istio.yml
           istio-release/deploy/cf-deployment-operations/enable-sidecar-proxying.yml
           cf-networking-release-ci/ci/opsfiles/disable-ingress-redirect-to-proxy.yml
-          deployments-repo/environments/mitre/add-smoke-test-user.yml
-          deployments-repo/environments/mitre/change-vtep-port.yml
-          deployments-repo/environments/mitre/enable-rate-limiting-for-udp.yml
-          deployments-repo/environments/mitre/enable-space-developer-self-service.yml
-          deployments-repo/environments/mitre/scale-ephemeral-disk.yml
-          deployments-repo/environments/mitre/scale-instances-to-2.yml
-          deployments-repo/environments/mitre/scale-persistent-disk.yml
+          cf-networking-release-ci/ci/opsfiles/add-smoke-test-user.yml
+          cf-networking-release-ci/ci/opsfiles/change-vtep-port.yml
+          cf-networking-release-ci/ci/opsfiles/enable-rate-limiting-for-udp.yml
+          cf-networking-release-ci/ci/opsfiles/enable-space-developer-self-service.yml
+          cf-networking-release-ci/ci/opsfiles/scale-ephemeral-disk.yml
+          cf-networking-release-ci/ci/opsfiles/scale-instances-to-2.yml
+          cf-networking-release-ci/ci/opsfiles/scale-persistent-disk.yml
           cf-networking-release-ci/ci/opsfiles/lower-canary-watch-time.yml
       input_mapping:
-        bbl-state: cf-networking-deployments
-        vars-files: cf-networking-deployments
+        bbl-state: networking-oss-deployments
+        vars-files: networking-oss-deployments
         release: istio-release
     - task: create-release-tarball
       file: cf-networking-release-ci/ci/tasks/create-release-tarball/task.yml
@@ -935,15 +927,15 @@ jobs:
     - task: bosh-cleanup
       file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
       params:
-        BBL_STATE_DIR: environments/mitre/
+        BBL_STATE_DIR: environments/mitre/bbl-state
       input_mapping:
-        bbl-state: cf-networking-deployments
+        bbl-state: networking-oss-deployments
 
   - name: mitre-test
     serial_groups: [mitre-test-group, mitre-deploy-group]
     plan:
     - in_parallel:
-      - get: cf-networking-deployments
+      - get: networking-oss-deployments
       - get: cf-networking-dev
         passed: [mitre-deploy]
         trigger: true
@@ -966,9 +958,9 @@ jobs:
     - task: get-credhub-vars
       file: cf-networking-release-ci/ci/tasks/get-credhub-vars/task.yml
       input_mapping:
-        bbl-state: cf-networking-deployments
+        bbl-state: networking-oss-deployments
       params:
-        BBL_STATE_DIR: environments/mitre
+        BBL_STATE_DIR: environments/mitre/bbl-state
         VARIABLES: |
           /bosh-mitre/cf/cf_admin_password
           /bosh-mitre/cf/uaa_admin_client_secret
@@ -977,11 +969,13 @@ jobs:
       file: cf-networking-release-ci/ci/tasks/setup-smoke-config/task.yml
       params:
         ENVIRONMENT_NAME: mitre
+        TEST_CONFIG_DIR: environments/mitre/test-configs
+      input_mapping:
+        test-config: networking-oss-deployments
     - task: smoke-tests-sd
       privileged: true
       file: cf-networking-release-ci/ci/tasks/smoke-tests-sd/task.yml
       input_mapping:
-        test-config: cf-networking-deployments
         cf-networking: cf-networking-dev
       params:
         ENVIRONMENT_TAG: mitre.c2c.cf-app.com
@@ -993,29 +987,29 @@ jobs:
         ENVIRONMENT_TAG: mitre.c2c.cf-app.com
         DATADOG_API_KEY: ((datadog_api_key))
       input_mapping:
-        test-config: cf-networking-deployments
         cf-networking: cf-networking-dev
     - task: acceptance-tests
       file: cf-networking-release-ci/ci/tasks/acceptance-tests/task.yml
       input_mapping:
         cf-networking: cf-networking-dev
-        test-config: cf-networking-deployments
+        test-config: networking-oss-deployments
       params:
         ENVIRONMENT_NAME: mitre
     - task: acceptance-tests-sd
       privileged: true
-      file: cf-networking-release-ci/ci/tasks/test-acceptance-sd/task.yml
+      file: cf-networking-release-ci/ci/tasks/acceptance-tests/task.yml
       input_mapping:
         cf-networking: cf-networking-dev
-        test-config: cf-networking-deployments
+        test-config: networking-oss-deployments
       params:
         ENVIRONMENT_NAME: mitre
+        TEST_NAME: acceptance-sd
 
   - name: mitre-perf-tests
     serial_groups: [mitre-test-group, mitre-deploy-group]
     plan:
     - in_parallel:
-      - get: cf-networking-deployments
+      - get: networking-oss-deployments
       - get: cf-networking-dev
         passed: [mitre-deploy]
         trigger: true
@@ -1041,10 +1035,12 @@ jobs:
       file: cf-networking-release-ci/ci/tasks/test-nats-performance/task.yml
       input_mapping:
         cf-networking: cf-networking-dev
-        test-config: cf-networking-deployments
-        deployments-repo: cf-networking-deployments
+        test-config: networking-oss-deployments
+        deployments-repo: networking-oss-deployments
       params:
         ENVIRONMENT_NAME: mitre
+        BBL_STATE_DIR: environments/mitre/bbl-state
+        TEST_CONFIG_DIR: environments/mitre/test-configs
 
   - name: mitre-cats
     serial_groups: [mitre-test-group, mitre-deploy-group]
@@ -1061,7 +1057,7 @@ jobs:
       - get: cf-deployment
         passed: [mitre-test, mitre-perf-tests]
         trigger: true
-      - get: cf-networking-deployments
+      - get: networking-oss-deployments
       - get: cf-networking-tarball
         trigger: true
         passed: [mitre-test, mitre-perf-tests]
@@ -1075,15 +1071,17 @@ jobs:
     - task: get-credhub-vars
       file: cf-networking-release-ci/ci/tasks/get-credhub-vars/task.yml
       input_mapping:
-        bbl-state: cf-networking-deployments
+        bbl-state: networking-oss-deployments
       params:
-        BBL_STATE_DIR: environments/mitre
+        BBL_STATE_DIR: environments/mitre/bbl-state
         VARIABLES: |
           /bosh-mitre/cf/cf_admin_password
     - task: copy-config
       file: cf-networking-release-ci/ci/tasks/copy-config/task.yml
       params:
-        ENVIRONMENT: mitre
+        TEST_CONFIG_DIR: environments/mitre/test-configs
+      input_mapping:
+        test-config: networking-oss-deployments
     - task: cats
       file: cf-deployment-concourse-tasks/run-cats/task.yml
       params:
@@ -1099,13 +1097,13 @@ jobs:
       - get: cf-networking-release-ci
         params:
           submodules: none
-      - get: cf-networking-deployments
+      - get: networking-oss-deployments
     - task: get-credhub-vars
       file: cf-networking-release-ci/ci/tasks/get-credhub-vars/task.yml
       input_mapping:
-        bbl-state: cf-networking-deployments
+        bbl-state: networking-oss-deployments
       params:
-        BBL_STATE_DIR: environments/mitre
+        BBL_STATE_DIR: environments/mitre/bbl-state
         VARIABLES: |
           /bosh-mitre/cf/cf_admin_password
     - task: sli-setup
@@ -1135,13 +1133,13 @@ jobs:
       - get: cf-networking-release-ci
         params:
           submodules: none
-      - get: cf-networking-deployments
+      - get: networking-oss-deployments
     - task: get-credhub-vars
       file: cf-networking-release-ci/ci/tasks/get-credhub-vars/task.yml
       input_mapping:
-        bbl-state: cf-networking-deployments
+        bbl-state: networking-oss-deployments
       params:
-        BBL_STATE_DIR: environments/mitre
+        BBL_STATE_DIR: environments/mitre/bbl-state
         VARIABLES: |
           /bosh-mitre/cf/cf_admin_password
     - task: sli-setup
@@ -1632,15 +1630,15 @@ jobs:
     serial_groups: [mitre-test-group, mitre-deploy-group]
     plan:
     - in_parallel:
-      - get: cf-networking-deployments
+      - get: networking-oss-deployments
       - get: cf-deployment-concourse-tasks
     - task: delete-deployment
       file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
       params:
-        BBL_STATE_DIR: environments/mitre/
+        BBL_STATE_DIR: environments/mitre/bbl-state
         DEPLOYMENT_NAME: cf
       input_mapping:
-        bbl-state: cf-networking-deployments
+        bbl-state: networking-oss-deployments
 
   - name: delete-toque-deployment
     serial_groups: [toque]
@@ -1789,8 +1787,8 @@ jobs:
     - do:
       - in_parallel:
         - get: cf-networking-master
+        - get: networking-oss-deployments
         - get: silk-master
-        - get: cf-networking-deployments
         - get: cf-networking-release-ci
           params:
             submodules: none
