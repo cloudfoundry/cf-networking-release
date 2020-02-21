@@ -1363,7 +1363,7 @@ jobs:
     - task: push-apps
       file: cf-networking-release-ci/ci/tasks/push-apps/task.yml
       params:
-        ENVIRONMENT_NAME: toque
+        TEST_CONFIG_DIR: environments/toque/test-configs
       input_mapping:
         cf-networking: cf-networking-dev
         test-config: test-config

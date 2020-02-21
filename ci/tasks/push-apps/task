@@ -2,8 +2,8 @@
 
 set -e -u
 
-environment_path="${PWD}/test-config/environments/${ENVIRONMENT_NAME}"
-export CONFIG=$environment_path/test-config.json
+environment_path="${PWD}/test-config/${TEST_CONFIG_DIR}"
+export CONFIG=$environment_path/scaling-test-config.json
 export APPS_DIR=${PWD}/cf-networking/src/example-apps
 
 cd cf-networking
