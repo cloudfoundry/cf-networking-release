@@ -908,7 +908,6 @@ jobs:
           cf-networking-release-ci/ci/opsfiles/lower-canary-watch-time.yml
       input_mapping:
         bbl-state: cf-networking-deployments
-        vars-store: cf-networking-deployments
         vars-files: cf-networking-deployments
         release: istio-release
     - task: create-release-tarball
@@ -1001,7 +1000,6 @@ jobs:
       input_mapping:
         cf-networking: cf-networking-dev
         test-config: cf-networking-deployments
-        vars-store: cf-networking-deployments
       params:
         ENVIRONMENT_NAME: mitre
     - task: acceptance-tests-sd
@@ -1010,7 +1008,6 @@ jobs:
       input_mapping:
         cf-networking: cf-networking-dev
         test-config: cf-networking-deployments
-        vars-store: cf-networking-deployments
       params:
         ENVIRONMENT_NAME: mitre
 
@@ -1402,7 +1399,7 @@ jobs:
     plan:
     - in_parallel:
       - get: cf-deployment-concourse-tasks
-      - get: cf-networking-deployments
+      - get: networking-oss-deployments
       - get: cf-networking-release-ci
       - get: bosh-bootloader
     - task: add-parent-dns
@@ -1410,13 +1407,13 @@ jobs:
       params:
         ENVIRONMENT: caubeen
       input_mapping:
-        bbl-state: cf-networking-deployments
+        bbl-state: networking-oss-deployments
     - task: bbl-up
       file: cf-deployment-concourse-tasks/bbl-up/task.yml
       params:
         BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
         BBL_GCP_REGION: us-east1
-        BBL_STATE_DIR: environments/caubeen/
+        BBL_STATE_DIR: environments/caubeen/bbl-state
         BBL_IAAS: gcp
         BBL_LB_CERT: ((caubeen-lb-cert.certificate))
         BBL_LB_KEY: ((caubeen-lb-key.private_key))
@@ -1426,7 +1423,7 @@ jobs:
         bbl-state: updated-bbl-state
         bbl-config: updated-bbl-state
       ensure:
-        put: cf-networking-deployments
+        put: networking-oss-deployments
         params:
           repository: updated-bbl-state
           rebase: true
@@ -1436,22 +1433,22 @@ jobs:
     plan:
     - in_parallel:
       - get: cf-deployment-concourse-tasks
-      - get: cf-networking-deployments
+      - get: networking-oss-deployments
     - task: bosh-cleanup
       file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
       params:
-        BBL_STATE_DIR: environments/caubeen/
+        BBL_STATE_DIR: environments/caubeen/bbl-state
       input_mapping:
-        bbl-state: cf-networking-deployments
+        bbl-state: networking-oss-deployments
     - task: bbl-destroy
       file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
       params:
         BBL_GCP_SERVICE_ACCOUNT_KEY: environments/gcp/service-account.key.json
-        BBL_STATE_DIR: environments/caubeen/
+        BBL_STATE_DIR: environments/caubeen/bbl-state
       input_mapping:
-        bbl-state: cf-networking-deployments
+        bbl-state: networking-oss-deployments
       ensure:
-        put: cf-networking-deployments
+        put: networking-oss-deployments
         params:
           repository: updated-bbl-state
           rebase: true
@@ -1466,7 +1463,7 @@ jobs:
         params:
           submodules: none
       - get: cf-deployment-concourse-tasks
-      - get: cf-networking-deployments
+      - get: networking-oss-deployments
       - get: cf-deployment
       - get: cf-networking-2.23.0
       - get: silk-2.23.0
@@ -1477,29 +1474,29 @@ jobs:
     - task: guarantee-no-existing-cf-deployment
       file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
       params:
-        BBL_STATE_DIR: environments/caubeen/
+        BBL_STATE_DIR: environments/caubeen/bbl-state
         DEPLOYMENT_NAME: cf
         IGNORE_ERRORS: true
       input_mapping:
-        bbl-state: cf-networking-deployments
+        bbl-state: networking-oss-deployments
     - task: upload-stemcell
       file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
       params:
-        BBL_STATE_DIR: environments/caubeen/
+        BBL_STATE_DIR: environments/caubeen/bbl-state
       input_mapping:
-        bbl-state: cf-networking-deployments
+        bbl-state: networking-oss-deployments
     - task: collect-pinned-ops-files
       file: cf-networking-release-ci/ci/tasks/collect-named-ops-files/task.yml
       params:
         ENVIRONMENT_NAME: caubeen
       input_mapping:
         cf-networking-release: cf-networking-2.23.0
-        deployments-repo: cf-networking-deployments
+        deployments-repo: networking-oss-deployments
         silk-release: silk-2.23.0
     - task: bosh-deploy-cf-rc
       file: cf-deployment-concourse-tasks/bosh-deploy/task.yml
       params:
-        BBL_STATE_DIR: environments/caubeen/
+        BBL_STATE_DIR: environments/caubeen/bbl-state
         SYSTEM_DOMAIN: caubeen.c2c.cf-app.com
         OPS_FILES: |
           cf-deployment/operations/use-compiled-releases.yml
@@ -1514,15 +1511,14 @@ jobs:
           cf-networking-release-ci/ci/opsfiles/scale-up-4-api-instances.yml
           cf-networking-release-ci/ci/opsfiles/lower-canary-watch-time.yml
         VARS_FILES: |
-          environments/caubeen/gcs-vars.yml
+          deployment-helpers/caubeen-gcs-vars.yml
       input_mapping:
-        bbl-state: cf-networking-deployments
-        vars-files: cf-networking-deployments
-        vars-store: cf-networking-deployments
+        bbl-state: networking-oss-deployments
+        vars-files: networking-oss-deployments
     - task: get-credhub-vars
       file: cf-networking-release-ci/ci/tasks/get-credhub-vars/task.yml
       input_mapping:
-        bbl-state: cf-networking-deployments
+        bbl-state: networking-oss-deployments
       params:
         BBL_STATE_DIR: environments/caubeen
         VARIABLES: |
@@ -1538,19 +1534,19 @@ jobs:
         ENVIRONMENT_NAME: caubeen
       input_mapping:
         cf-networking-release: cf-networking-dev
-        deployments-repo: cf-networking-deployments
+        deployments-repo: networking-oss-deployments
         silk-release: silk-dev
     - task: upload-local-silk-release
       file: cf-networking-release-ci/ci/tasks/upload-local-release/task.yml
       input_mapping:
-        bbl-state: cf-networking-deployments
+        bbl-state: networking-oss-deployments
         local-release: silk-dev
       params:
-        BBL_STATE_DIR: environments/caubeen/
+        BBL_STATE_DIR: environments/caubeen/bbl-state
     - task: bosh-deploy-cf-rc-with-updated-releases
       file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
       params:
-        BBL_STATE_DIR: environments/caubeen/
+        BBL_STATE_DIR: environments/caubeen/bbl-state
         SYSTEM_DOMAIN: caubeen.c2c.cf-app.com
         OPS_FILES: |
           cf-deployment/operations/use-compiled-releases.yml
@@ -1567,7 +1563,7 @@ jobs:
           cf-networking-release-ci/ci/opsfiles/lower-canary-watch-time.yml
           cf-networking-release-ci/ci/opsfiles/use-latest-silk.yml
         VARS_FILES: |
-          environments/caubeen/gcs-vars.yml
+          deployment-helpers/caubeen-gcs-vars.yml
         DEPLOY_WITH_UPTIME_MEASUREMENTS: true
         FAIL_ON_DOWNTIME: true
         HTTP_AVAILABILITY_THRESHOLD: 0
@@ -1575,10 +1571,9 @@ jobs:
         RECENT_LOGS_THRESHOLD: 10000 # we don't guarantee logs availability, only app and http, see cf-deployment CI
         STREAMING_LOGS_THRESHOLD: 10000
       input_mapping:
-        bbl-state: cf-networking-deployments
+        bbl-state: networking-oss-deployments
         release: cf-networking-dev
-        vars-files: cf-networking-deployments
-        vars-store: cf-networking-deployments
+        vars-files: networking-oss-deployments
 
 
   - name: caubeen-drats
@@ -1597,13 +1592,13 @@ jobs:
       - get: cf-deployment
         passed: [caubeen-upgrade-test]
         trigger: true
-      - get: cf-networking-deployments
+      - get: networking-oss-deployments
       - get: disaster-recovery-acceptance-tests
       - get: bbr-binary-release
     - task: get-credhub-vars
       file: cf-networking-release-ci/ci/tasks/get-credhub-vars/task.yml
       input_mapping:
-        bbl-state: cf-networking-deployments
+        bbl-state: networking-oss-deployments
       params:
         BBL_STATE_DIR: environments/caubeen
         VARIABLES: |
@@ -1611,8 +1606,7 @@ jobs:
     - task: create-drats-config
       file: cf-networking-release-ci/ci/tasks/create-drats-config/task.yml
       input_mapping:
-        test-config: cf-networking-deployments
-        vars-store: cf-networking-deployments
+        test-config: networking-oss-deployments
       params:
         ENVIRONMENT_NAME: caubeen
     - task: run-drats
@@ -1652,15 +1646,15 @@ jobs:
     serial_groups: [toque]
     plan:
     - in_parallel:
-      - get: cf-networking-deployments
+      - get: networking-oss-deployments
       - get: cf-deployment-concourse-tasks
     - task: delete-deployment
       file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
       params:
-        BBL_STATE_DIR: environments/toque/
+        BBL_STATE_DIR: environments/toque/bbl-state
         DEPLOYMENT_NAME: cf
       input_mapping:
-        bbl-state: cf-networking-deployments
+        bbl-state: networking-oss-deployments
 
   - name: delete-caubeen-deployment
     serial_groups: [caubeen]
@@ -1669,23 +1663,23 @@ jobs:
       - get: cf-networking-release-ci
         params:
           submodules: none
-      - get: cf-networking-deployments
+      - get: networking-oss-deployments
       - get: cf-deployment-concourse-tasks
       - get: trigger-caubeen-delete
         trigger: true
     - task: delete-deployment
       file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
       params:
-        BBL_STATE_DIR: environments/caubeen/
+        BBL_STATE_DIR: environments/caubeen/bbl-state
         DEPLOYMENT_NAME: cf
       input_mapping:
-        bbl-state: cf-networking-deployments
+        bbl-state: networking-oss-deployments
 
   - name: caubeen-cleanup
     serial_groups: [caubeen]
     plan:
     - in_parallel:
-      - get: cf-networking-deployments
+      - get: networking-oss-deployments
       - get: cf-deployment-concourse-tasks
       - get: trigger-caubeen-cleanup
         trigger: true
@@ -1693,9 +1687,9 @@ jobs:
       file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
       params:
         CLEAN_ALL: false
-        BBL_STATE_DIR: environments/caubeen/
+        BBL_STATE_DIR: environments/caubeen/bbl-state
       input_mapping:
-        bbl-state: cf-networking-deployments
+        bbl-state: networking-oss-deployments
 
   - name: deliver-stories
     serial: true
