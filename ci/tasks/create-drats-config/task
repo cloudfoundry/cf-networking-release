@@ -4,51 +4,27 @@ set -eu
 
 ROOT="$(cd "$(dirname $0)/../../../.." && pwd)"
 
-if [[ "$ENVIRONMENT_NAME" == 'caubeen' ]]; then
-  # replace secrets in test config
-  pushd test-config/environments/${ENVIRONMENT_NAME}/bbl-state
-    cf_admin_password=`grep cf_admin_password ${ROOT}/variables/variables.yml | cut -d' ' -f2`
-    ssh_proxy_private_key=`bbl ssh-key`
-    bosh_client_secret=`bbl director-password`
-    bosh_ca_cert=`bbl director-ca-cert`
-  popd
+# replace secrets in test config
+pushd test-config/environments/${ENVIRONMENT_NAME}/bbl-state
+  cf_admin_password=`grep cf_admin_password ${ROOT}/variables/variables.yml | cut -d' ' -f2`
+  ssh_proxy_private_key=`bbl ssh-key`
+  bosh_client_secret=`bbl director-password`
+  bosh_ca_cert=`bbl director-ca-cert`
+popd
 
-  JUMPBOX_VARS=${PWD}/test-config/environments/${ENVIRONMENT_NAME}/bbl-state/vars/jumpbox-vars-file.yml
-  pushd test-config/environments/${ENVIRONMENT_NAME}/bbl-state/vars
-    ssh_proxy_host=`grep external_ip ${JUMPBOX_VARS} | cut -d' ' -f2`
-  popd
+JUMPBOX_VARS=${PWD}/test-config/environments/${ENVIRONMENT_NAME}/bbl-state/vars/jumpbox-vars-file.yml
+pushd test-config/environments/${ENVIRONMENT_NAME}/bbl-state/vars
+  ssh_proxy_host=`grep external_ip ${JUMPBOX_VARS} | cut -d' ' -f2`
+popd
 
-  configs=( cf_admin_password
-            bosh_client_secret
-            bosh_ca_cert
-            ssh_proxy_host
-            ssh_proxy_private_key )
+configs=( cf_admin_password
+          bosh_client_secret
+          bosh_ca_cert
+          ssh_proxy_host
+          ssh_proxy_private_key )
 
-  integration_config=`cat test-config/environments/${ENVIRONMENT_NAME}/test-configs/drats_integration_config.json`
+integration_config=`cat test-config/environments/${ENVIRONMENT_NAME}/test-configs/drats_integration_config.json`
 
-else
-  # replace secrets in test config
-  pushd test-config/environments/${ENVIRONMENT_NAME}
-    cf_admin_password=`grep cf_admin_password ${ROOT}/variables/variables.yml | cut -d' ' -f2`
-    ssh_proxy_private_key=`bbl ssh-key`
-    bosh_client_secret=`bbl director-password`
-    bosh_ca_cert=`bbl director-ca-cert`
-  popd
-
-  JUMPBOX_VARS=${PWD}/vars-store/environments/${ENVIRONMENT_NAME}/vars/jumpbox-vars-file.yml
-  pushd test-config/environments/${ENVIRONMENT_NAME}/vars
-    ssh_proxy_host=`grep external_ip ${JUMPBOX_VARS} | cut -d' ' -f2`
-  popd
-
-  configs=( cf_admin_password
-            bosh_client_secret
-            bosh_ca_cert
-            ssh_proxy_host
-            ssh_proxy_private_key )
-
-  integration_config=`cat test-config/environments/${ENVIRONMENT_NAME}/drats_integration_config.json`
-
-fi
 
 for config in "${configs[@]}"
 do
