@@ -1598,7 +1598,7 @@ jobs:
       input_mapping:
         bbl-state: networking-oss-deployments
       params:
-        BBL_STATE_DIR: environments/caubeen
+        BBL_STATE_DIR: environments/caubeen/bbl-state
         VARIABLES: |
           /bosh-caubeen/cf/cf_admin_password
     - task: create-drats-config
