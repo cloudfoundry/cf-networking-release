@@ -240,12 +240,6 @@ resources:
       owner: cloudfoundry-incubator
       repository: bosh-backup-and-restore
       access_token: ((github-access-token))
-  - name: istio-release
-    type: git
-    icon: github-box
-    source:
-      branch: master
-      uri: https://github.com/cloudfoundry/istio-release
   - name: bosh-bootloader
     type: git
     icon: github-box
@@ -586,7 +580,6 @@ jobs:
     serial_groups: [pickelhelm]
     plan:
     - in_parallel:
-      - get: istio-release
       - get: capi-ci-passed
       - get: cf-networking-release-ci
         params:
@@ -661,15 +654,13 @@ jobs:
           cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain.yml
           cf-networking-release-ci/ci/opsfiles/add-acceptance-test-jobs.yml
           cf-networking-release/manifest-generation/opsfiles/enable-experimental-dynamic-egress-policies.yml
-          istio-release/deploy/cf-deployment-operations/add-istio.yml
-          istio-release/deploy/cf-deployment-operations/enable-sidecar-proxying.yml
           cf-networking-release-ci/ci/opsfiles/disable-ingress-redirect-to-proxy.yml
           cf-deployment/operations/experimental/enable-iptables-logger.yml
           cf-networking-release-ci/ci/opsfiles/scale-to-2-diego-cells.yml
           cf-networking-release-ci/ci/opsfiles/lower-canary-watch-time.yml
       input_mapping:
         bbl-state: networking-oss-deployments
-        release: istio-release # because the pre-package script is broken
+        release: cf-networking-dev
         vars-files: networking-oss-deployments
     - task: bosh-cleanup
       file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
@@ -785,8 +776,6 @@ jobs:
     serial_groups: [mitre-deploy-group, version]
     plan:
     - in_parallel:
-      - get: istio-release
-        passed: [pickelhelm-deploy]
       - get: capi-ci-passed
         passed: [pickelhelm-deploy]
       - get: cf-networking-release-ci
@@ -887,8 +876,6 @@ jobs:
           cf-networking-release-ci/ci/opsfiles/add-acceptance-test-jobs.yml
           cf-deployment/operations/backup-and-restore/enable-backup-restore.yml
           cf-networking-release/manifest-generation/opsfiles/enable-experimental-dynamic-egress-policies.yml
-          istio-release/deploy/cf-deployment-operations/add-istio.yml
-          istio-release/deploy/cf-deployment-operations/enable-sidecar-proxying.yml
           cf-networking-release-ci/ci/opsfiles/disable-ingress-redirect-to-proxy.yml
           cf-networking-release-ci/ci/opsfiles/add-smoke-test-user.yml
           cf-networking-release-ci/ci/opsfiles/change-vtep-port.yml
@@ -901,7 +888,7 @@ jobs:
       input_mapping:
         bbl-state: networking-oss-deployments
         vars-files: networking-oss-deployments
-        release: istio-release
+        release: cf-networking-dev
     - task: create-release-tarball
       file: cf-networking-release-ci/ci/tasks/create-release-tarball/task.yml
       input_mapping:
@@ -1224,7 +1211,6 @@ jobs:
     serial_groups: [toque]
     plan:
     - in_parallel:
-      - get: istio-release
       - get: capi-ci-passed
       - get: cf-deployment-concourse-tasks
       - get: cf-deployment
@@ -1299,8 +1285,6 @@ jobs:
           cf-deployment/operations/enable-service-discovery.yml
           cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain.yml
           cf-networking-release/manifest-generation/opsfiles/enable-experimental-dynamic-egress-policies.yml
-          istio-release/deploy/cf-deployment-operations/add-istio.yml
-          istio-release/deploy/cf-deployment-operations/enable-sidecar-proxying.yml
           cf-networking-release-ci/ci/opsfiles/disable-ingress-redirect-to-proxy.yml
           cf-deployment/operations/experimental/enable-iptables-logger.yml
           cf-networking-release-ci/ci/opsfiles/change-nats-monitor-port.yml
@@ -1313,7 +1297,7 @@ jobs:
           cf-networking-release-ci/ci/opsfiles/lower-canary-watch-time.yml
       input_mapping:
         bbl-state: networking-oss-deployments
-        release: istio-release
+        release: cf-networking-dev
         vars-files: networking-oss-deployments
     - task: emit-datadog-deploy-end
       file: cf-networking-release-ci/ci/tasks/emit-datadog-event/task.yml
