@@ -1,6 +1,6 @@
 # Scripts
 
-This is the README for our scripts. To learn more about `routing-release`, go to the main [README](../README.md).
+This is the README for our scripts. To learn more about `cf-networking-release`, go to the main [README](../README.md).
 
 | Name | Purpose | Notes |
 | --- | --- | --- |
