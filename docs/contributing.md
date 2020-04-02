@@ -1,5 +1,7 @@
 ## Contributing
-We welcome contributions from the community.  Here are guidelines for development.
+
+We welcome contributions from the community.  Here are guidelines for
+development.
 
 ### Running unit, integration and template tests
 
@@ -13,15 +15,21 @@ We welcome contributions from the community.  Here are guidelines for developmen
 
 Run the [`scripts/deploy-to-bosh-lite`](scripts/deploy-to-bosh-lite) script.
 
-To deploy, [cf-networking-release](https://github.com/cloudfoundry/cf-networking-release), [bosh-deployment](https://github.com/cloudfoundry/bosh-deployment), and [cf-deployment](https://github.com/cloudfoundry/cf-deployment) repos are required.
+To deploy,
+[cf-networking-release](https://github.com/cloudfoundry/cf-networking-release),
+[bosh-deployment](https://github.com/cloudfoundry/bosh-deployment), and
+[cf-deployment](https://github.com/cloudfoundry/cf-deployment) repos are
+required.
 
 #### Running acceptance
+
 ```bash
 cd src/test/acceptance
 ./run-locally.sh
 ```
 
 ### Referencing a new library from existing BOSH package
+
 1. Add any new libraries into the submodule from the root of the repo
 
   ```bash
@@ -31,6 +39,7 @@ cd src/test/acceptance
   ```
 
 ### Adding a new BOSH package
+
 1. Add any new libraries into the submodules from the root of the repo
   ```bash
   cd $GOPATH
@@ -50,4 +59,6 @@ cd src/test/acceptance
 
 ### When using bosh-lite, not finding iptable logging inside kern.log
 The linux kernel prevents iptable log targets from working inside a container.
-See [commit introducing the change](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=69b34fb996b2eee3970548cf6eb516d3ecb5eeed)
+See [commit introducing the
+change](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=69b34fb996b2eee3970548cf6eb516d3ecb5eeed)
+

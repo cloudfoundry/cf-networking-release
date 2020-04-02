@@ -16,7 +16,7 @@ be added as an `OrgManager` for a persistent test org.
 
 For example add the following to an opsfile:
 
-```
+```yaml
 # smoke test user
 - type: replace
   path: /instance_groups/name=uaa/jobs/name=uaa/properties/uaa/scim/users/-
@@ -41,13 +41,13 @@ For example add the following to an opsfile:
 
 1. Target your environment
 
-	```
+	```bash
 	uaac target uaa.my-environment.com --skip-ssl-validation
 	```
 
 2. Authenticate with a user who can create users
 
-	```
+	```bash
 	uaac token client get
 	 Client ID: admin
 	 Client secret:  <uaa_admin_client_secret>
@@ -55,7 +55,7 @@ For example add the following to an opsfile:
 
 3. Create a smoke test user (any name is fine)
 
-	```
+	```bash
 	$ uaac user add some-user-name --emails some-user-name
 	Password: some-password
 	Verify password: some-password
@@ -66,12 +66,13 @@ For example add the following to an opsfile:
 
 	You may need to add the `network.write` group first:
 
-	```
+	```bash
 	uaac group add network.write
 	```
 
 	Then grant it for the user:
-	```
+
+	```bash
 	uaac member add network.write some-user-name
 	```
 
@@ -79,7 +80,7 @@ For example add the following to an opsfile:
 
 ### Create the Smoke Test org and add the user as OrgManager
 
-```
+```bash
 cf auth admin <uaa_scim_users_admin_password>
 cf create-org some-org
 cf set-org-role smoke-test-user some-org OrgManager
@@ -88,20 +89,20 @@ cf set-org-role smoke-test-user some-org OrgManager
 
 ### Configure and run smoke tests with user and org
 
-```
+```bash
 pushd src/test/smoke/run_locally.sh
-	export CONFIG=./smoke-config.json
-	export APPS_DIR=../../example-apps
-	echo '
-	{
-		"api": "api.my-environment.com",
-		"smoke_user": "some-user-name",
-		"smoke_password": "some-password",
-		"app_instances": 4,
-		"apps_domain": "my-environment.com",
-		"prefix":"smoke-",
-		"smoke_org": "some-org"
-	}' > $CONFIG
-	ginkgo -v .
+  export CONFIG=./smoke-config.json
+  export APPS_DIR=../../example-apps
+  echo '
+  {
+    "api": "api.my-environment.com",
+    "smoke_user": "some-user-name",
+    "smoke_password": "some-password",
+    "app_instances": 4,
+    "apps_domain": "my-environment.com",
+    "prefix":"smoke-",
+    "smoke_org": "some-org"
+  }' > $CONFIG
+  ginkgo -v .
 popd
 ```

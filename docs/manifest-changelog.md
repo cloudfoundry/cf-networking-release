@@ -6,7 +6,7 @@ See [deployment docs](https://github.com/cloudfoundry/cf-deployment) for example
 
 ### 2.21.0 CF-Networking-Release
 **No New Properties**
-  Some properties were added for experimental service mesh features. 
+  Some properties were added for experimental service mesh features.
 
 **Properties Changes**
   - The policy-server job has changed the cc_hostname and cc_port to not have a default.

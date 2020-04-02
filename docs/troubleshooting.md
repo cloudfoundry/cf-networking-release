@@ -1,69 +1,96 @@
 # Troubleshooting
 
-NOTE: If you are having problems, first consult our [known issues doc](known-issues.md).
+NOTE: If you are having problems, first consult our [known issues
+doc](known-issues.md).
 
-### Latency Issues? 
-If you are seeing latency issues with container to container networking, please see our [debugging guide](network-latency-troubleshooting.md).
+### Latency Issues?
+
+If you are seeing latency issues with container to container networking, please
+see our [debugging guide](network-latency-troubleshooting.md).
 
 ### Checking Logs
 
 * Discovering All CF Networking Logs:
 
-  All cf-networking components log lines are prefixed with `cfnetworking` (no hyphen)
-  followed by the component name. To find all CF Networking logs, run:
-  `grep -r cfnetworking /var/vcap/sys/log/*`
+  All cf-networking components log lines are prefixed with `cfnetworking` (no
+  hyphen) followed by the component name. To find all CF Networking logs, run:
+
+  ```bash
+  grep -r cfnetworking /var/vcap/sys/log/*
+  ```
 
   The log lines for the following components will be returned:
-  * `silk-daemon` (from [silk-release](code.cloudfoundry.org/silk))
-  * `silk-controller` (from [silk-release](code.cloudfoundry.org/silk))
-  * `vxlan-policy-agent` (from [silk-release](code.cloudfoundry.org/silk))
+  * `silk-daemon` (from [silk-release](https://github.com/cloudfoundry/silk-release))
+  * `silk-controller` (from [silk-release](https://github.com/cloudfoundry/silk-release))
+  * `vxlan-policy-agent` (from [silk-release](https://github.com/cloudfoundry/silk-release))
   * `policy-server`
   * `policy-server-internal`
-  * `netmon` (from [silk-release](code.cloudfoundry.org/silk))
+  * `netmon` (from [silk-release](https://github.com/cloudfoundry/silk-release))
 
   The log lines for the following components will be not returned:
-  * `iptables`(from [silk-release](code.cloudfoundry.org/silk)): We have limited room to add an identifier, and these logs are high-volume.
-  * `garden-external-networker`: Garden will only print errors if creating a container fails.
-  * `cni-wrapper-plugin`(from [silk-release](code.cloudfoundry.org/silk)): Only stdout and stderr are printed in garden logs.
+  * `iptables`(from [silk-release](https://github.com/cloudfoundry/silk-release)): We have limited
+    room to add an identifier, and these logs are high-volume.
+  * `garden-external-networker`: Garden will only print errors if creating a
+    container fails.
+  * `cni-wrapper-plugin`(from [silk-release](https://github.com/cloudfoundry/silk-release)): Only
+    stdout and stderr are printed in garden logs.
 
 * Container Create is Failing:
 
-  If container create is failing check the garden logs, located on the cell VMs at `/var/vcap/sys/log/garden/garden.stdout.log`.
-  Garden logs stdout and stderr from calls to the CNI plugin, you can find any errors related to the CNI ADD/DEL there. 
+  If container create is failing check the garden logs, located on the cell VMs
+  at `/var/vcap/sys/log/garden/garden.stdout.log`.  Garden logs stdout and
+  stderr from calls to the CNI plugin, you can find any errors related to the
+  CNI ADD/DEL there.
 
-  Unsuccessful create will say things like `exit status 1` in the `stderr` field of the log message.
+  Unsuccessful create will say things like `exit status 1` in the `stderr` field
+  of the log message.
 
 * Problems Creating Policies:
 
-  Problems creating policies are usually related to issues on the policy server VM(s). Check the logs at `/var/vcap/sys/log/policy-server/policy-server.stdout.log`
+  Problems creating policies are usually related to issues on the policy server
+  VM(s). Check the logs at
+  `/var/vcap/sys/log/policy-server/policy-server.stdout.log`
 
-  If a policy is successfully created you will see a log line created with the message `created-policies` along with other relevant data.
-  
-  If a policy is successfully deleted you will see a log line created with the message `deleted-policies` along with other relevant data.
+  If a policy is successfully created you will see a log line created with the
+  message `created-policies` along with other relevant data.
+
+  If a policy is successfully deleted you will see a log line created with the
+  message `deleted-policies` along with other relevant data.
 
 ### Enabling Debug Logging
 
-The policy server log at the `info` level by default. The log level can be adjusted at runtime by making a request to the debug server running on the VM.
+The policy server log at the `info` level by default. The log level can be
+adjusted at runtime by making a request to the debug server running on the VM.
 To enable debug logging ssh to the VM and make this request to the debug server:
-```
+
+```bash
 curl -X POST -d 'DEBUG' localhost:31821/log-level
 ```
+
 To switch back to info logging make this request:
-```
+
+```bash
 curl -X POST -d 'INFO' localhost:31821/log-level
 ```
-For the policy server, the debug server listens on port 31821 by default, it can be overridden by the manifest property `cf_networking.policy_server.debug_port`.
+
+For the policy server, the debug server listens on port 31821 by default, it can
+be overridden by the manifest property `cf_networking.policy_server.debug_port`.
 
 ### Metrics
 
-CF networking components emit metrics which can be consumed from the firehose, e.g. with the datadog firehose nozzle. Relevant metrics have theses prefixes:
+CF networking components emit metrics which can be consumed from the firehose,
+e.g. with the datadog firehose nozzle. Relevant metrics have theses prefixes:
+
 -   `policy_server`
 
 
 ### Diagnosing and Recovering from Subnet Overlap
 
-This section describes how to recover from a deploy of CF Networking with Silk which has an overlay network configured which conflicts with the entire CF subnet. We set `network` on the `silk-controller` to the same subnet as CF and BOSH (10.0.0.0/16). When we deploy we fail to bring up the first diego cell
-  
+This section describes how to recover from a deploy of CF Networking with Silk
+which has an overlay network configured which conflicts with the entire CF
+subnet. We set `network` on the `silk-controller` to the same subnet as CF and
+BOSH (10.0.0.0/16). When we deploy we fail to bring up the first diego cell
+
 ```
 17:31:56 | Updating instance diego-cell: diego-cell/4abb639b-33a9-4d8d-8a95-21c3863c7b0c (0) (canary) (00:03:25)
 	    L Error: Timed out sending 'get_state' to baa8bc66-df64-4c2f-80d0-c090559ac28d after 45 seconds
@@ -72,6 +99,7 @@ This section describes how to recover from a deploy of CF Networking with Silk w
 ```
 
 bosh vms shows:
+
 ```
 $ bosh vms
 Using environment 'https://104.196.19.37:25555' as client 'admin'
@@ -117,82 +145,107 @@ uaa/4c334724-7362-47b6-917e-3502566a8fad          running             z2  10.0.3
 
 Trying to roll back fails since the deployment lock is still being held.
 
-These commands get the deployment unstuck, so the operator can roll back to a previous version or correct the configuration:
-```
+These commands get the deployment unstuck, so the operator can roll back to a
+previous version or correct the configuration:
+
+```bash
 bosh update-resurrection off
 bosh ignore diego-cell/4abb639b-33a9-4d8d-8a95-21c3863c7b0c
 bosh delete-vm vm-a4f6c259-c1f8-4b35-746e-f1db3359fad6
 ```
 
 Once the deploy is complete run:
-```
+
+```bash
 bosh update-resurrection on
 bosh unignore diego-cell/4abb639b-33a9-4d8d-8a95-21c3863c7b0c
 ```
 
 
 ### Inspecting VTEP configuration
-The VXLAN tunnel endpoint can be inspected using the `ip` utility from the `iproute2` package.
 
-From the Diego cell, install a recent version of `iproute2` and its dependency `libmnl`:
-```
+The VXLAN tunnel endpoint can be inspected using the `ip` utility from the
+`iproute2` package.
+
+From the Diego cell, install a recent version of `iproute2` and its dependency
+`libmnl`:
+
+```bash
 curl -o /tmp/iproute2.deb -L http://mirrors.kernel.org/ubuntu/pool/main/i/iproute2/iproute2_4.3.0-1ubuntu3_amd64.deb
 curl -o /tmp/libmnl0.deb -L http://mirrors.kernel.org/ubuntu/pool/main/libm/libmnl/libmnl0_1.0.3-5_amd64.deb
 dpkg -i /tmp/*.deb
 ```
 
 Then you can see details of the VTEP device by running
-```
+
+```bash
 ip -d link list silk-vtep
 ```
+
 which should resemble
+
 ```
 3: silk-vtep: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1410 qdisc noqueue state UNKNOWN mode DEFAULT group default
     link/ether ee:ee:0a:ff:17:00 brd ff:ff:ff:ff:ff:ff promiscuity 0
     vxlan id 1 local 10.0.32.15 dev eth0 srcport 0 0 dstport 4789 nolearning ageing 300 gbp
 ```
 
-Note `srcport 0 0 dstport 4789`.  The `dstport PORT` value is the external UDP port used by the VTEP for all encapsulated VXLAN packets.
-See [the `vtep_port` on the `silk-daemon` job](https://github.com/cloudfoundry/silk-release/blob/a68ed558438405dabba56297e787dfbebd34f080/jobs/silk-daemon/spec#L22-L24).
+Note `srcport 0 0 dstport 4789`.  The `dstport PORT` value is the external UDP
+port used by the VTEP for all encapsulated VXLAN packets.  See [the `vtep_port`
+on the `silk-daemon`
+job](https://github.com/cloudfoundry/silk-release/blob/develop/jobs/silk-daemon/spec).
 
 For more details, look at `man ip-link`.
 
-
 ### When packets won't flow (with Silk)
-If you've installed `cf-networking-release` and `silk-release` and find that you don't have connectivity between app containers,
-there are some basic troubleshooting steps to follow:
+If you've installed `cf-networking-release` and `silk-release` and find that you
+don't have connectivity between app containers, there are some basic
+troubleshooting steps to follow:
 
-First, verify basic infrastructure network connectivity between diego cells.  You can see the infrastructure ip from running `bosh vms`.
-`bosh ssh diego-cell/0` and `bosh ssh diego-cell/1`.  Then `ping` the infrastructure (underlay) IP of one cell from the other cell.
+First, verify basic infrastructure network connectivity between diego cells.
+You can see the infrastructure ip from running `bosh vms`.  `bosh ssh
+diego-cell/0` and `bosh ssh diego-cell/1`.  Then `ping` the infrastructure
+(underlay) IP of one cell from the other cell.
 
-If that part works, the next would be to test the overlay network connectivity between diego cells themselves.
-Each diego cell has an overlay IP address for itself.  You can discover this by running
-```
+If that part works, the next would be to test the overlay network connectivity
+between diego cells themselves.  Each diego cell has an overlay IP address for
+itself.  You can discover this by running
+
+```bash
 ip addr show silk-vtep
 ```
+
 from the cell.  It will show something like:
+
 ```
 294: silk-vtep: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1410 qdisc noqueue state UNKNOWN group default
     link/ether ee:ee:0a:ff:22:00 brd ff:ff:ff:ff:ff:ff
     inet 10.255.34.0/16 scope link silk-vtep
        valid_lft forever preferred_lft forever
 ```
+
 Then ping that overlap IP address from a different cell
-```
+
+```bash
 ping 10.255.34.0
 ```
+
 This step should always succeed.
 
 If it doesn't, use `tcpdump` on each side of the connection to inspect packets.
 
-First, [use a recent version of the `ip` utility to discover your VTEP port](#inspecting-vtep-configuration), or confirm that your `vtep_port` is set to `4789`.
+First, [use a recent version of the `ip` utility to discover your VTEP
+port](#inspecting-vtep-configuration), or confirm that your `vtep_port` is set
+to `4789`.
 
 Then, from each diego cell, open a terminal and run
-```
+
+```bash
 tcpdump -n port 4789
 ```
 
-In a separate terminal, re-run the `ping $CELL_OVERLAY_ADDRESS`.  The `tcpdump` output on each cell should show a single request/reply packet pair:
+In a separate terminal, re-run the `ping $CELL_OVERLAY_ADDRESS`.  The `tcpdump`
+output on each cell should show a single request/reply packet pair:
 
 ```
 02:19:44.965688 IP 10.0.16.17.43146 > 10.0.32.15.4789: VXLAN, flags [I] (0x08), vni 1
@@ -202,24 +255,32 @@ IP 10.255.23.0 > 10.255.34.0: ICMP echo reply, id 56571, seq 1, length 64
 ```
 
 Note that each packet shows up as two lines in tcpdump:
-- the first line is the underlay network packet, destined for VXLAN listener on UDP port 4789.
+- the first line is the underlay network packet, destined for VXLAN listener on
+  UDP port 4789.
 - the second line shows the encapsulated, overlay ICMP packet
 
-If `tcpdump` shows outgoing packets from the sending cell, but no incoming packets on the receiving cell, your infrastructure may be blocking access to the VXLAN port `4789`.
-Consider changing the `vtep_port` value in your BOSH manifest and re-deploying.
-
+If `tcpdump` shows outgoing packets from the sending cell, but no incoming
+packets on the receiving cell, your infrastructure may be blocking access to the
+VXLAN port `4789`.  Consider changing the `vtep_port` value in your BOSH
+manifest and re-deploying.
 
 ### Debugging C2C Packets
 
-To determine a failure on a c2c packet, `bosh ssh` onto a cell suspected of hosting an app that is not receiving failing packets.
+To determine a failure on a c2c packet, `bosh ssh` onto a cell suspected of
+hosting an app that is not receiving failing packets.
 
 As above, set up a packet capture
-```
+
+```bash
 tcpdump -n -XX port 4789
 ```
-where `4789` is the `vtep_port` setting on the `silk-daemon` job (or [use a recent version of the `ip` utility to discover your VTEP port](#inspecting-vtep-configuration)).
+
+where `4789` is the `vtep_port` setting on the `silk-daemon` job (or [use a
+recent version of the `ip` utility to discover your VTEP
+port](#inspecting-vtep-configuration)).
 
 Here's a packet capture from an HTTP request over the overlay network
+
 ```
 03:39:07.934028 IP 10.0.32.15.41669 > 10.0.16.17.4789: VXLAN, flags [I] (0x88), vni 1
 IP 10.255.82.67.58054 > 10.255.144.63.8080: Flags [P.], seq 1:83, ack 1, win 215, options [nop,nop,TS val 9490690 ecr 9562410], length 82: HTTP: GET / HTTP/1.1
@@ -237,17 +298,23 @@ IP 10.255.82.67.58054 > 10.255.144.63.8080: Flags [P.], seq 1:83, ack 1, win 215
         0x00b0:  3a38 3038 300d 0a41 6363 6570 743a 202a  :8080..Accept:.*
         0x00c0:  2f2a 0d0a 0d0a                           /*....
 ```
+
 Note:
 - `vni 1` corresponds to the 3 bytes starting at `0x002E`
-- The VXLAN port `4789` in decimal is `12b5` in hex.  You can see that at address `0x0024`
-- In this example, the sending application was tagged with [VXLAN Group Based Policy](https://tools.ietf.org/html/draft-smith-vxlan-group-policy-04#section-2.1) (GBP)
-  ID `0x0003`.  This is at address `0x002C`
-- The overlay destination ip address of `10.255.144.63` is `0aff 903f`.  You can see that at address `0x0050`
-- The overlay destination port `8080` in decimal is `1f90` in hex.  You can see that at address `0x0066`
+- The VXLAN port `4789` in decimal is `12b5` in hex.  You can see that at
+  address `0x0024`
+- In this example, the sending application was tagged with [VXLAN Group Based
+  Policy](https://tools.ietf.org/html/draft-smith-vxlan-group-policy-04#section-2.1)
+  (GBP) ID `0x0003`.  This is at address `0x002C`
+- The overlay destination ip address of `10.255.144.63` is `0aff 903f`.  You can
+  see that at address `0x0050`
+- The overlay destination port `8080` in decimal is `1f90` in hex.  You can see
+  that at address `0x0066`
 
-To see which application is assigned the GBP tag `0x0003`, query the Network Policy Server:
+To see which application is assigned the GBP tag `0x0003`, query the Network
+Policy Server:
 
-```
+```bash
 cf curl /networking/v1/external/tags | jq .
 ```
 
@@ -269,9 +336,12 @@ cf curl /networking/v1/external/tags | jq .
   ]
 }
 ```
-The `id` associated with tag `0003` is the source application guid, the result of `cf app --guid app-name`.
+The `id` associated with tag `0003` is the source application guid, the result
+of `cf app --guid app-name`.
 
-You can also inspect `/var/vcap/data/container-metadata/store.json` on a diego cell to see the IP address and CF app metadata for every container:
+You can also inspect `/var/vcap/data/container-metadata/store.json` on a diego
+cell to see the IP address and CF app metadata for every container:
+
 ```json
 {
    "53069156-e8cf-4ca5-5a0a-838e" : {
@@ -286,8 +356,10 @@ You can also inspect `/var/vcap/data/container-metadata/store.json` on a diego c
    }
 }
 ```
+
 Note that:
-- the `ip` in the above metadata matches the overlay source IP from the `tcpdump` output
+- the `ip` in the above metadata matches the overlay source IP from the
+  `tcpdump` output
 - the `app_id` in the above metadata matches tag `0003` in the `tags` result
 - the `tag` of `0003` can be read off the `tcpdump` output
 
@@ -295,20 +367,24 @@ Note that:
 
 To capture non-c2c packets (destination is an external address), run the following:
 
-```
+```bash
 tcpdump -v -XX -i any
 ```
 
-The packets that you are interested in will be packets with the source ip being in the container network.
+The packets that you are interested in will be packets with the source ip being
+in the container network.
 
-To filter by destination address, you may add `-n dst host <destination-ip>` to the `tcpdump` command. For example:
+To filter by destination address, you may add `-n dst host <destination-ip>` to
+the `tcpdump` command. For example:
 
-```
+```bash
 tcpdump -v -XX -i any -n dst host 96.126.115.72
 ```
 
-Once you have a packet and want to find information about the application,
-find the assigned container ip in the packet header. For the example below, the ip is 10.255.29.3.
+Once you have a packet and want to find information about the application, find
+the assigned container ip in the packet header. For the example below, the ip is
+10.255.29.3.
+
 ```
 18:49:04.749158 IP (tos 0x0, ttl 64, id 25116, offset 0, flags [DF], proto TCP (6), length 114)
   10.255.29.3.34638 > lax17s05-in-f14.1e100.net.http: Flags [P.], cksum 0xda6f (incorrect -> 0x5709), seq 1:75, ack 1, win 28200, length 74: HTTP, length: 74
@@ -328,15 +404,19 @@ find the assigned container ip in the packet header. For the example below, the 
 ```
 
 On the same cell which the packet was captured, run
-```
+
+```bash
 less /var/vcap/data/container-metadata/store.json | json_pp
 ```
-and find the entry with the ip. If no entry exists, check the `store.json` on other cells.
+
+and find the entry with the ip. If no entry exists, check the `store.json` on
+other cells.
 
 The associated `app_id` is the application guid.
 
 Example of `store.json` output:
-```
+
+```json
 {
  "9bce657c-b92f-422b-60e0-227a66ad8b48" : {
     "metadata" : {

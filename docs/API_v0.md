@@ -2,19 +2,24 @@
 
 ## Purpose:
 
-The policy server API is used for creating, deleting and listing policies and tags.
+The policy server API is used for creating, deleting and listing policies and
+tags.
 
 ## API Authorization
-In order to communicate with the policy server API, a UAA oauth token with valid `network.admin` or `network.write` scope is required.
-The CF admin by default has `network.admin` scope, other users will need to have the proper scope granted by an admin.
+In order to communicate with the policy server API, a UAA oauth token with valid
+`network.admin` or `network.write` scope is required.  The CF admin by default
+has `network.admin` scope, other users will need to have the proper scope
+granted by an admin.
 
-Space developers with the `network.write` scope can configure policies for applications in spaces for which they have the SpaceDeveloper role.
+Space developers with the `network.write` scope can configure policies for
+applications in spaces for which they have the SpaceDeveloper role.
 
 ### Option 1: cf curl
 Use the `cf curl` command as admin
 
 Example
-```sh
+
+```bash
 $ cf curl /networking/v0/external/policies
 {"total_policies":2,"policies":[{"source":{...}]}
 ```
@@ -23,7 +28,8 @@ $ cf curl /networking/v0/external/policies
 When using curl the token must be explicitly provided in the `Authorization` header.
 
 Example
-```sh
+
+```bash
 $ export TOKEN=`cf oauth-token` # as CF admin
 $ curl http://api.bosh-lite.com/networking/v0/external/policies -H "Authorization: $TOKEN"
 {"total_policies":2,"policies":[{"source":{...}]}
@@ -39,7 +45,8 @@ $ curl http://api.bosh-lite.com/networking/v0/external/policies -H "Authorizatio
 | GET | /networking/v0/external/tags | - | - | List all tag and `id` mappings |
 
 Notes:
-- A policy_group_id is a generic way to identify a policy, but currently it is also the same as the app guid
+- A policy_group_id is a generic way to identify a policy, but currently it is
+  also the same as the app guid
 - A unique tag is assigned to a policy_group_id when policies are created.
 
 ### GET /networking/v0/external/policies
@@ -49,7 +56,8 @@ Notes:
 [optionally] `source_id`: comma-separated source policy_group_id values\
 [optionally] `dest_id`: comma-separated destination policy_group_id values
 
-Will return only the policies which include the given policy_group_id either as source id or destination id.
+Will return only the policies which include the given policy_group_id either as
+source id or destination id.
 
 #### Response Body:
 

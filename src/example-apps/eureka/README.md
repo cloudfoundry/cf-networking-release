@@ -9,7 +9,7 @@ https://spring.io/guides/gs/service-registration-and-discovery/
 ## Assumptions
 
 - `maven` installed (`brew install maven`)
-- CF deployed with [cf-networking-release](https://github.com/cloudfoundry-incubator/cf-networking-release)
+- CF deployed with [cf-networking-release](https://github.com/cloudfoundry/cf-networking-release)
   (The examples assume a bosh-lite deployment)
 - [CF CLI](https://github.com/cloudfoundry/cli) installed, using version `6.30.0` or higher.
 
@@ -22,14 +22,14 @@ There are 4 applications:
 - `frontend`: A web app that locates the `backend` via the `registry`
 - `zuul-proxy`: A web proxy that forwards requests to services in the `registry`
 
-```
+```bash
 ./build
 ```
 
 ## Push the applications
 
 The `manifest.yml` includes all 4 applications.
-```
+```bash
 cf push
 ```
 
@@ -41,7 +41,7 @@ accessing it via the `go-router`. In order for the `zuul-proxy` or the
 
 ### Allow access from frontend to backend
 
-```
+```bash
 cf add-network-policy frontend --destination-app backend --protocol tcp --port 8080
 ```
 
@@ -59,7 +59,7 @@ should have the same response:
 
 ### Allow access from zuul-proxy to backend
 
-```
+```bash
 cf add-network-policy zuul-proxy --destination-app backend --protocol tcp --port 8080
 ```
 
@@ -83,7 +83,7 @@ In addition to the `/whoami`, the following actuator endpoints are also availabl
 
 ### Remove access
 
-```
+```bash
 cf remove-network-policy zuul-proxy --destination-app backend --protocol tcp --port 8080
 cf remove-network-policy frontend --destination-app backend --protocol tcp --port 8080
 ```
@@ -93,19 +93,20 @@ cf remove-network-policy frontend --destination-app backend --protocol tcp --por
 These properties are set to have the `backend` register with it's IP
 address in the file `backend/src/main/resources/application.properties`:
 
-```
+```bash
 eureka.client.preferIpAddress=true
 eureka.instance.hostname=${CF_INSTANCE_INTERNAL_IP}
 eureka.instance.nonSecurePort=${PORT}
 ```
 
-This causes the backend instance to report its own address as the internal container-network address and port
-(not the external, NAT'ed address that the router uses to reach it).
+This causes the backend instance to report its own address as the internal
+container-network address and port (not the external, NAT'ed address that the
+router uses to reach it).
 
-The `backend` reaches the registry at the public address `registry.bosh-lite.com`.
-The `zuul-proxy` is also configured to look up
-services registered in eureka at this address. Edit this address if deploying
-to a CF on a different domain.
+The `backend` reaches the registry at the public address
+`registry.bosh-lite.com`.  The `zuul-proxy` is also configured to look up
+services registered in eureka at this address. Edit this address if deploying to
+a CF on a different domain.
 
 Note that the apps are using the default, Diego-assigned port 8080.
 

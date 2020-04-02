@@ -2,11 +2,16 @@
 
 CF Networking provides policy-based container networking for Cloud Foundry.
 
-For information about getting started with CF Networking, look at our docs for [the supported mode of deploying to AWS, GCP or BOSH-lite](https://github.com/cloudfoundry/cf-deployment).
+For information about getting started with CF Networking, look at our docs for
+[the supported mode of deploying to AWS, GCP or
+BOSH-lite](https://github.com/cloudfoundry/cf-deployment).
 
 ## Getting Help
 
-For help or questions with this release or any of its submodules, you can reach the maintainers on Slack at [cloudfoundry.slack.com](https://cloudfoundry.slack.com) in the `#networking` channel.
+For help or questions with this release or any of its submodules, you can reach
+the maintainers on Slack at
+[cloudfoundry.slack.com](https://cloudfoundry.slack.com) in the `#networking`
+channel.
 
 ## Downloads
 - Our BOSH release is available [on bosh.io](http://bosh.io/releases/github.com/cloudfoundry-incubator/cf-networking-release)
@@ -36,7 +41,7 @@ For help or questions with this release or any of its submodules, you can reach 
 
 ## Project links
 - [Design doc for Container Networking Policy](https://docs.google.com/document/d/1HDS89TJKD7ACG6cqQHph5BdNSKLt8jvo6sPGBZ5DmsM)
-- [Engineering backlog](https://www.pivotaltracker.com/n/projects/1498342)
-- Chat with us at the `#container-networking` channel on [Cloud Foundry Slack](http://slack.cloudfoundry.org/)
-- [CI dashboard](https://c2c.ci.cf-app.com/) and [config](https://github.com/cloudfoundry-incubator/cf-networking-ci)
+- [Engineering backlog](https://www.pivotaltracker.com/n/projects/1498342) (no
+  longer active)
+- [CI dashboard](https://networking.ci.cf-app.com/)
 - [Documentation](./docs)

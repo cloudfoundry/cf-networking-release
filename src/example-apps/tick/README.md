@@ -1,11 +1,15 @@
 # tick ❤
-Simple app that registers itself with an [a8registry](https://github.com/amalgam8/amalgam8/tree/master/registry) on a regular interval.
+Simple app that registers itself with an
+[a8registry](https://github.com/amalgam8/amalgam8/tree/master/registry) on a
+regular interval.
 
 ## Prerequisites
 The following instructions for this example assume the following:
-- [This git repo](http://github.com/cloudfoundry-incubator/cf-networking-release) cloned somewhere
+- [This git repo](http://github.com/cloudfoundry/cf-networking-release) cloned somewhere
 - [jq](https://stedolan.github.io/jq/download/)
-- A Cloud Foundry deployed.  Below we assume [bosh-lite](https://github.com/cloudfoundry/bosh-lite), but you can substitute your CF domain instead.
+- A Cloud Foundry deployed.  Below we assume
+  [bosh-lite](https://github.com/cloudfoundry/bosh-lite), but you can substitute
+  your CF domain instead.
 
 ## Example
 Starting from this directory....

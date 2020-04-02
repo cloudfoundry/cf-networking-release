@@ -4,37 +4,49 @@ NOTE: These APIs are EXPERIMENTAL.
 
 ## Turn on the Dynamic Egress Feature
 
-The dynamic egress feature set is not turned on by default. In order for these policies to be enforced, the cloud foundry
-operator must set the `enforce_experimental_dynamic_egress_policies` property on the `policy-server-internal` job to true. See spec file [here](https://github.com/cloudfoundry/cf-networking-release/blob/develop/jobs/policy-server-internal/spec#L102-L104). Currently this feature only works with silk.
+The dynamic egress feature set is not turned on by default. In order for these
+policies to be enforced, the cloud foundry operator must set the
+`enforce_experimental_dynamic_egress_policies` property on the
+`policy-server-internal` job to true. See spec file
+[here](https://github.com/cloudfoundry/cf-networking-release/blob/develop/jobs/policy-server-internal/spec).
+Currently this feature only works with silk.
 
 ## Purpose
 
-These APIs are for creating, deleting, listing, and updating dynamic egress destinations and policies.
+These APIs are for creating, deleting, listing, and updating dynamic egress
+destinations and policies.
 
 ## API Authorization
-In order to communicate with the policy server API, a UAA oauth token with valid `network.admin`.
-The CF admin by default has `network.admin` scope, other users will need to have the proper scope granted by an admin.
+
+In order to communicate with the policy server API, a UAA oauth token with valid
+`network.admin`.  The CF admin by default has `network.admin` scope, other users
+will need to have the proper scope granted by an admin.
 
 ### Option 1: cf curl
+
 Use the `cf curl` command as admin
 
 Example
-```sh
+
+```bash
 $ cf curl /networking/v1/external/egress_policies
 {"total_egress_policies":2,"egress_policies":[{"source":{...}]}
 ```
 
 ### Option 2: curl
+
 When using curl the token must be explicitly provided in the `Authorization` header.
 
 Example
-```sh
+
+```bash
 $ export TOKEN=`cf oauth-token` # as CF admin
 $ curl http://api.bosh-lite.com/networking/v1/external/egress_policies -H "Authorization: $TOKEN"
 {"total_egress_policies":2,"egress_policies":[{"source":{...}]}
 ```
 
 ## Typical Workflows
+
 Adding an Egress Policy
 1. Create an egress destination.
 1. Create an egress policy linking the destination and an app or space.
@@ -172,8 +184,8 @@ Will return all egress destinations.
 | destinations.rules.icmp_code | N | The icmp code to allow when using the icmp protocol. Default is all icmp codes, represented by -1.
 | destinations.rules.description | N | A text field to describe the rule. Not unique. Not required.
 
-*Note: Currently only one ip range and one port range is supported.
-In the future, a destination will be able to support multiple ip ranges and port ranges.
+> Note: Currently only one ip range and one port range is supported.
+> In the future, a destination will be able to support multiple ip ranges and port ranges.
 
 ### Update Egress Destinations
 #### PUT /networking/v1/external/destinations
@@ -210,6 +222,7 @@ In the future, a destination will be able to support multiple ip ranges and port
   ]
 }
 ```
+
 | Field | Required? | Description |
 | :---- | :-------: | :------ |
 | destinations.id | Y | The id of the destination. This id is returned in the destinations create response, as well as in the destinations index response.
@@ -222,8 +235,8 @@ In the future, a destination will be able to support multiple ip ranges and port
 | destinations.rules.icmp_code | N | The icmp code to allow when using the icmp protocol. Default is all icmp codes, represented by -1.
 | destinations.rules.description | N | A text field to describe the rule. Not unique. Not required.
 
-*Note: Currently only one ip range and one port range is supported.
-In the future, a destination will be able to support multiple ip ranges and port ranges.
+> Note: Currently only one ip range and one port range is supported.
+> In the future, a destination will be able to support multiple ip ranges and port ranges.
 
 ### Delete an Egress Destination
 
@@ -245,7 +258,7 @@ This endpoint returns the json of the deleted destination object.
         {
           "ips": "1.9.9.9-1.9.9.20",
           "ports": "8000-9000",
-          "protocol": "tcp",
+          "protocol": "tcp"
         },
         {
           "ips": "1.1.1.1-1.1.1.1",
@@ -303,6 +316,7 @@ Will return all egress policies.
    }]
 }
 ```
+
 ### Create Egress Policies
 #### POST /networking/v1/external/egress_policies
 

@@ -1,97 +1,128 @@
-# Tips for Large Deployments with CF Networking and Silk Release 
+# Tips for Large Deployments with CF Networking and Silk Release
 
-Some users have larger deployments than we regularly test with. We have heard of large deployments with 500-1000 diego cells. 
-These deployments have specific considerations that smaller deployments don't need to worry about. 
+Some users have larger deployments than we regularly test with. We have heard of
+large deployments with 500-1000 diego cells.  These deployments have specific
+considerations that smaller deployments don't need to worry about.
 
-Please submit a PR or create an issue if you have come across other large deployment considerations.
+Please submit a PR or create an issue if you have come across other large
+deployment considerations.
 
 ## Problem 0: Default overlay IP CIDR block too small when there are 250+ diego cells
 
 ### Symptoms
+
 The silk daemon on some diego cells fails because it cannot get a lease.
 
 ### Solution
-Increase the size of the [`silk-controller.network` CIDR job property](https://github.com/cloudfoundry/silk-release/blob/b949495e16b6c3acab765e139408a5db57fa27c0/jobs/silk-controller/spec#L31-L33). 
+
+Increase the size of the `silk-controller.network` CIDR in the [silk controller
+spec](https://github.com/cloudfoundry/silk-release/blob/develop/jobs/silk-controller/spec).
 
 ## Problem 1: Silk Daemon uses too much CPU
 ### Symptoms
-The silk daemon begins using too much CPU on the cells. This causes the app health checks to fail, which causes the apps to evacuate the cell.
+
+The silk daemon begins using too much CPU on the cells. This causes the app
+health checks to fail, which causes the apps to evacuate the cell.
 
 ### Reason
-The silk daemon is deployed on every cell. It is in charge of getting the IP leases for every other cell from the silk controller. The 
-silk daemon calls out to the silk controller every 5 seconds (by default) to get updated lease information. Every time it gets new information 
-the silk daemon does some linux system calls to set up the networking. This can take a long time (relatively) and get expensive when there are a lot of 
-cells with new leases. This causes the silk daemons to use a lot of CPU.
+
+The silk daemon is deployed on every cell. It is in charge of getting the IP
+leases for every other cell from the silk controller. The silk daemon calls out
+to the silk controller every 5 seconds (by default) to get updated lease
+information. Every time it gets new information the silk daemon does some linux
+system calls to set up the networking. This can take a long time (relatively)
+and get expensive when there are a lot of cells with new leases. This causes the
+silk daemons to use a lot of CPU.
 
 ### Solution
-Change the property `lease_poll_interval_seconds` on the silk-daemon job to be greater than 5 seconds. This will cause the silk-daemon to 
-poll the silk-controller less frequently and thus make linux system calls less frequently. However, increasing this property means that when a cell gets a new lease 
-(this happens when a cell is rolled, recreated, or for whatever reason it doesn't renew it's lease properly) it will take longer for the other cells to know how to 
-route container-to-container traffic to it. To start with, we suggest setting this property to 300 seconds (5 minutes). Then you can tweak accordingly.
 
-## Problem 2: ARP Cache on diego-cell not large enough 
+Change the property `lease_poll_interval_seconds` on the silk-daemon job to be
+greater than 5 seconds. This will cause the silk-daemon to poll the
+silk-controller less frequently and thus make linux system calls less
+frequently. However, increasing this property means that when a cell gets a new
+lease (this happens when a cell is rolled, recreated, or for whatever reason it
+doesn't renew it's lease properly) it will take longer for the other cells to
+know how to route container-to-container traffic to it. To start with, we
+suggest setting this property to 300 seconds (5 minutes). Then you can tweak
+accordingly.
+
+## Problem 2: ARP Cache on diego-cell not large enough
 [Github issue](https://github.com/cloudfoundry/cf-networking-release/issues/54)
 
 ### Symptoms
-Silk daemon fails to converge leases. Errors in the silk-daemon logs might look like this: 
+
+Silk daemon fails to converge leases. Errors in the silk-daemon logs might look
+like this:
+
 ```json
-{  
+{
    "timestamp": "TIME",
    "source": "cfnetworking.silk-daemon",
    "message": "cfnetworking.silk-daemon.poll-cycle",
    "log_level": 2,
-   "data": {  
+   "data": {
       "error":"converge leases: del neigh with ip/hwaddr 10.255.21.2 : no such file or directory"
    }
 }
 ```
+
 Also kernel logs might look like this:
-```neighbour: arp_cache: neighbor table overflow```
+
+```
+neighbour: arp_cache: neighbor table overflow
+```
 
 ### Reason
-ARP cache on the diego cell is not large enough to handle the number of entries the silk-daemon is trying to write.
+
+ARP cache on the diego cell is not large enough to handle the number of entries
+the silk-daemon is trying to write.
 
 ### Solution
-Increase the ARP cache size on the diego cells. 
+
+Increase the ARP cache size on the diego cells.
 
 1. Look at the current size of your ARP cache
-    - ssh onto a diego-cell and become root 
+    - ssh onto a diego-cell and become root
     - inspect following kernel variables
-    ```
+    ```bash
     sysctl net.ipv4.neigh.default.gc_thresh1
     sysctl net.ipv4.neigh.default.gc_thresh2
     sysctl net.ipv4.neigh.default.gc_thresh3
     ```
 
-1. Manually increase ARP cache size on the cell. This is good for fixing the issue in the moment, but isn't a good long term soluation because the values will be reset when the cell is recreated.
-     - set new, larger values for the kernel variables. These sizes were used successfully for a deployment of ~800 cells.
-     ```
-     sudo sysctl -w net.ipv4.neigh.default.gc_thresh3=8192; 
-     sudo sysctl -w net.ipv4.neigh.default.gc_thresh2=4096; 
+1. Manually increase ARP cache size on the cell. This is good for fixing the
+   issue in the moment, but isn't a good long term soluation because the values
+   will be reset when the cell is recreated.
+   - set new, larger values for the kernel variables. These sizes were used successfully for a deployment of ~800 cells.
+     ```bash
+     sudo sysctl -w net.ipv4.neigh.default.gc_thresh3=8192;
+     sudo sysctl -w net.ipv4.neigh.default.gc_thresh2=4096;
      sudo sysctl -w net.ipv4.neigh.default.gc_thresh1=2048;
      ```
-     
-1. For a more permanent solution, set these variables by adding the [os-conf-release](https://github.com/cloudfoundry/os-conf-release) sysctl job to the deigo-cell instance group. A conf file will be autogenerated into ```/etc/stsctl.d/71-bosh-os-conf-sysctl.conf```.
-     - the manifest changes will look similar to this: 
-     ```
+
+1. For a more permanent solution, set these variables by adding the
+   [os-conf-release](https://github.com/cloudfoundry/os-conf-release) sysctl job
+   to the deigo-cell instance group. A conf file will be autogenerated into
+   `/etc/stsctl.d/71-bosh-os-conf-sysctl.conf`.
+   - the manifest changes will look similar to this:
+     ```yaml
      instance_groups:
      - name: diego-cell
        jobs:
        - name: sysctl
          properties:
-            sysctl: 
+            sysctl:
             - net.ipv4.neigh.default.gc_thresh3=8192
             - net.ipv4.neigh.default.gc_thresh2=4096
             - net.ipv4.neigh.default.gc_thresh1=2048
          release: os-conf
-         
+
      ...
-     
+
      releases:
      - name: "os-conf"
        version: "20.0.0"
        url: "https://bosh.io/d/github.com/cloudfoundry/os-conf-release?v=20.0.0"
        sha1: "a60187f038d45e2886db9df82b72a9ab5fdcc49d"
      ```
-     
-     
+

@@ -1,14 +1,20 @@
 # Container Networking Performance Suite
-Container networking performance tests will be conducted on the following environment: **toque.c2c.cf-app.com**
+
+Container networking performance tests will be conducted on the following
+environment: **toque.c2c.cf-app.com**
 
 ## Setup
 ### Number of Diego Cells
-0. Make sure you have cf-networking-release checked out in your workspace.
 
-    ```
+1. Make sure you have cf-networking-release checked out in your workspace.
+
+    ```bash
     $ cd ~/workspace && git clone https://github.com/cloudfoundry/cf-networking-release.git
     ```
-0. Set `toque-deploy` `CELL_COUNT` to the number of desired Diego cells in [ci/pipelines/cf-networking.yml](pipelines/cf-networking.yml)
+
+1. Set `toque-deploy` `CELL_COUNT` to the number of desired Diego cells in
+   [ci/pipelines/cf-networking.yml](pipelines/cf-networking.yml)
+
      ```yaml
       - name: toque-deploy
         serial_groups: [toque]
@@ -26,11 +32,18 @@ Container networking performance tests will be conducted on the following enviro
                 CELL_COUNT: 5
       ```
 
-0.  Update pipeline
-    ```
+1.  Update pipeline
+
+    ```bash
     $ ./reconfigure cf-networking
     ```
-*Note: In order to reconfigure a [Concourse](http://concourse.ci) pipeline you may need to first download the `fly` command line tool for [Mac](https://c2c.ci.cf-app.com/api/v1/cli?arch=amd64&platform=darwin), [Windows](https://c2c.ci.cf-app.com/api/v1/cli?arch=amd64&platform=windows) or [Linux](https://c2c.ci.cf-app.com/api/v1/cli?arch=amd64&platform=linux)*
 
-0.  Git commit `CELL_COUNT` changes back to [cf-networking-ci](https://code.cloudfoundry.org/cf-networking-ci)
-0.  Deploy `CELL_COUNT` changes using `toque-deploy` stage in [CI](https://c2c.ci.cf-app.com/pipelines/cf-networking/jobs/toque-deploy)
+> Note: In order to reconfigure a [Concourse](http://concourse.ci) pipeline you
+> may need to first download the `fly` command line tool for
+> [Mac](https://networking.ci.cf-app.com/api/v1/cli?arch=amd64&platform=darwin),
+> [Windows](https://networking.ci.cf-app.com/api/v1/cli?arch=amd64&platform=windows) or
+> [Linux](https://networking.ci.cf-app.com/api/v1/cli?arch=amd64&platform=linux)
+
+1.  Git commit `CELL_COUNT` changes back to this repo.
+1.  Deploy `CELL_COUNT` changes using `toque-deploy` stage in
+    [CI](https://networking.ci.cf-app.com/teams/ga/pipelines/cf-networking/jobs/toque-deploy)

@@ -19,7 +19,7 @@ This is the README for our Opsfiles. To learn more about `cf-networking-release`
 | large-disk.yml | Sets the disk_size to 65536. | Not used by any environments in CI. Maybe we can delete? |
 | lower-canary-watch-time.yml | Sets the canary watch time to 5000-1200000. | Used by Pickelhelm, Mitre, Toque, and Caubeen in CI. |
 | scale-diego-cell-max-in-flight.yml | Sets the max_in_flight for diego cell instance groups to 20.  | Used by Toque in CI. Toque only has three Diego Cells, so I'm not sure why this is necessary. |
-| scale-diego-cell-vm-size.yml | Sets the Diego Cell VM type to "n1-highmem-4". | Used by Toque in CI. |  
+| scale-diego-cell-vm-size.yml | Sets the Diego Cell VM type to "n1-highmem-4". | Used by Toque in CI. |
 | scale-ephemeral-disk.yml | Sets the scheduler instance group to have a 100GB ephemeral disk. | Used by Mitre in CI. |
 | scale-instances-to-2.yml | Sets the following instance groups to have two instances: api, cc-worker, diego-api, diego-cell, nats, router, and uaa. | Used by Mitre in CI. |
 | scale-max-containers.yml | Sets the max_containers property on the garden job to 1000. This allows garden to create 1000 containers at a time per Diego Cell. | Used by Toque in CI. |

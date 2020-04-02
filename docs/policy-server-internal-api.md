@@ -1,14 +1,16 @@
 # Policy Server Internal API
-If you are replacing the built-in "VXLAN Policy Agent" with your own Policy Enforcement implementation,
-you can use the Policy Server's internal API to retrieve policy information.
+
+If you are replacing the built-in "VXLAN Policy Agent" with your own Policy
+Enforcement implementation, you can use the Policy Server's internal API to
+retrieve policy information.
 
 There is a single endpoint to retrieve policies:
 
 `GET https://policy-server.service.cf.internal:4003/networking/v1/internal/policies`
 
-Additionally, you can use the `id` query parameter to filter the response to include
-only policies with a source or destination that match any of the comma-separated
-`group_policy_id`'s that are included.
+Additionally, you can use the `id` query parameter to filter the response to
+include only policies with a source or destination that match any of the
+comma-separated `group_policy_id`'s that are included.
 
 ## Policy Server Internal API Details
 
@@ -17,7 +19,8 @@ only policies with a source or destination that match any of the comma-separated
 Create a new tag for a given `type` and `id`
 Noop and returns existing tag if present
 
-If a request is made for an existing `id` with a new `type`, the request will fail. `id` is a unique constraint.
+If a request is made for an existing `id` with a new `type`, the request will
+fail. `id` is a unique constraint.
 
 Json Parameters (required):
 - `id`: a unique identifier for the resource or group of resources; e.g. `INGRESS_ROUTER`
@@ -94,69 +97,69 @@ curl -s \
 ```
 
 ```json
-  {
-      "policies": [
-        {
-            "destination": {
-                "id": "eb95ff20-cba8-4edc-8f4a-cf80d0669faf",
-                "ports": {
-                  "start": 8080,
-                  "end": 8090
-                },
-                "protocol": "tcp",
-                "tag": "0002"
-            },
-            "source": {
-                "id": "4a2d3627-0b8c-42d1-9563-22696eedc05d",
-                "tag": "0001"
-            }
+{
+  "policies": [
+    {
+      "destination": {
+        "id": "eb95ff20-cba8-4edc-8f4a-cf80d0669faf",
+        "ports": {
+          "end": 8090,
+          "start": 8080
         },
-        {
-            "destination": {
-                "id": "b611f7e6-c8fe-41cb-b150-92581aafa5c2",
-                "ports": {
-                  "start": 8080,
-                  "end": 8080
-                },
-                "protocol": "tcp",
-                "tag": "0004"
-            },
-            "source": {
-                "id": "3b348978-a3cb-487c-a277-58fdc3e2c678",
-                "tag": "0003"
-            }
+        "protocol": "tcp",
+        "tag": "0002"
+      },
+      "source": {
+        "id": "4a2d3627-0b8c-42d1-9563-22696eedc05d",
+        "tag": "0001"
+      }
+    },
+    {
+      "destination": {
+        "id": "b611f7e6-c8fe-41cb-b150-92581aafa5c2",
+        "ports": {
+          "end": 8080,
+          "start": 8080
         },
-        {
-            "destination": {
-                "id": "8fa287c9-0d01-491e-a1d5-d6e2d8a1ef61",
-                "ports": {
-                  "start": 8080,
-                  "end": 8080
-                },
-                "protocol": "tcp",
-                "tag": "0005"
-            },
-            "source": {
-                "id": "8fa287c9-0d01-491e-a1d5-d6e2d8a1ef61",
-                "tag": "0005"
-            }
+        "protocol": "tcp",
+        "tag": "0004"
+      },
+      "source": {
+        "id": "3b348978-a3cb-487c-a277-58fdc3e2c678",
+        "tag": "0003"
+      }
+    },
+    {
+      "destination": {
+        "id": "8fa287c9-0d01-491e-a1d5-d6e2d8a1ef61",
+        "ports": {
+          "end": 8080,
+          "start": 8080
         },
-        {
-            "destination": {
-                "id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
-                "ports": {
-                  "start": 5555,
-                  "end": 6666
-                },
-                "protocol": "tcp",
-                "tag": "0006"
-            },
-            "source": {
-                "id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
-                "tag": "0006"
-            }
-        }
-    ]
+        "protocol": "tcp",
+        "tag": "0005"
+      },
+      "source": {
+        "id": "8fa287c9-0d01-491e-a1d5-d6e2d8a1ef61",
+        "tag": "0005"
+      }
+    },
+    {
+      "destination": {
+        "id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
+        "ports": {
+          "end": 6666,
+          "start": 5555
+        },
+        "protocol": "tcp",
+        "tag": "0006"
+      },
+      "source": {
+        "id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
+        "tag": "0006"
+      }
+    }
+  ]
 }
 ```
 
@@ -175,37 +178,37 @@ https://policy-server.service.cf.internal:4003/networking/v1/internal/policies?i
 
 ```json
 {
-    "policies": [
-        {
-            "destination": {
-                "id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
-                "ports": {
-                  "start": 5555,
-                  "end": 6666
-                },
-                "protocol": "tcp",
-                "tag": "0006"
-            },
-            "source": {
-                "id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
-                "tag": "0006"
-            }
+  "policies": [
+    {
+      "destination": {
+        "id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
+        "ports": {
+          "start": 5555,
+          "end": 6666
         },
-        {
-            "destination": {
-                "id": "5351a742-6704-46df-8de0-1a376adab65c",
-                "ports": {
-                  "start": 5555,
-                  "end": 6666
-                },
-                "protocol": "tcp",
-                "tag": "0007"
-            },
-            "source": {
-                "id": "5351a742-6704-46df-8de0-1a376adab65c",
-                "tag": "0007"
-            }
-        }
-    ]
+        "protocol": "tcp",
+        "tag": "0006"
+      },
+      "source": {
+        "id": "d5bbc5ed-886a-44e6-945d-67df1013fa16",
+        "tag": "0006"
+      }
+    },
+    {
+      "destination": {
+        "id": "5351a742-6704-46df-8de0-1a376adab65c",
+        "ports": {
+          "start": 5555,
+          "end": 6666
+        },
+        "protocol": "tcp",
+        "tag": "0007"
+      },
+      "source": {
+        "id": "5351a742-6704-46df-8de0-1a376adab65c",
+        "tag": "0007"
+      }
+    }
+  ]
 }
 ```

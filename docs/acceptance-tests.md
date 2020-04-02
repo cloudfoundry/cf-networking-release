@@ -2,7 +2,7 @@
 
 The `cf-networking-release` acceptance tests can be run as follows:
 
-```
+```bash
 export APPS_DIR=$WORKSPACE/cf-networking-release/src/example-apps
 export CONFIG=$PWD/cnats-config.json
 
