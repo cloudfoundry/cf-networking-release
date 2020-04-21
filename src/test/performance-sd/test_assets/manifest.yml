@@ -33,6 +33,7 @@ instance_groups:
         password: ((nats_password))
         trace: true
         user: nats
+        hostname: nats.service.cf.internal
     provides:
       nats:
         as: nats
