@@ -8,7 +8,6 @@ platform: linux
 inputs:
   - name: version
   - name: cf-networking-release-ci
-  - name: cf-networking-deployments
   - name: cf-networking-tarball
   - name: cf-networking
 
