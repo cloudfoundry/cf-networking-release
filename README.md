@@ -41,7 +41,5 @@ channel.
 
 ## Project links
 - [Design doc for Container Networking Policy](https://docs.google.com/document/d/1HDS89TJKD7ACG6cqQHph5BdNSKLt8jvo6sPGBZ5DmsM)
-- [Engineering backlog](https://www.pivotaltracker.com/n/projects/1498342) (no
-  longer active)
 - [CI dashboard](https://networking.ci.cf-app.com/)
 - [Documentation](./docs)
