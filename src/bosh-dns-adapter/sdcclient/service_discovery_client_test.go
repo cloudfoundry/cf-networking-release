@@ -2,6 +2,7 @@ package sdcclient_test
 
 import (
 	"net/http"
+	"time"
 
 	. "bosh-dns-adapter/sdcclient"
 	"test-helpers"
@@ -237,10 +238,17 @@ var _ = Describe("ServiceDiscoveryClient", func() {
 			})
 
 			It("retries and returns the successful response", func() {
+				startTime := time.Now()
 				actualIPs, err := client.IPs("app-id.apps.internal.")
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(actualIPs).To(ConsistOf("192.168.0.1", "192.168.0.2"))
+
+				timeTaken := time.Now().Sub(startTime).Seconds()
+				Expect(timeTaken).To(
+					BeNumerically("~", 2, 1),
+					"Retries should not be immediate",
+				)
 			})
 		})
 
@@ -263,9 +271,17 @@ var _ = Describe("ServiceDiscoveryClient", func() {
 			})
 
 			It("returns an error", func() {
+				startTime := time.Now()
 				_, err := client.IPs("app-id.apps.internal.")
+
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("Received non successful response from server:"))
+
+				timeTaken := time.Now().Sub(startTime).Seconds()
+				Expect(timeTaken).To(
+					BeNumerically("~", 2, 1),
+					"Retries should not be immediate",
+				)
 			})
 		})
 	})

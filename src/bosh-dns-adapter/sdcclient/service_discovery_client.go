@@ -77,7 +77,8 @@ func (s *ServiceDiscoveryClient) IPs(infrastructureName string) ([]string, error
 		httpResp *http.Response
 	)
 
-	for i := 0; i < 4; i++ {
+	retries := 3
+	for i := 0; i <= retries; i++ {
 		httpResp, err = s.client.Get(requestUrl)
 		if err != nil {
 			return []string{}, err
@@ -85,11 +86,17 @@ func (s *ServiceDiscoveryClient) IPs(infrastructureName string) ([]string, error
 
 		if httpResp.StatusCode == http.StatusOK {
 			break
-		} else {
-			defer func(httpResp *http.Response) {
-				io.Copy(ioutil.Discard, httpResp.Body)
-				httpResp.Body.Close()
-			}(httpResp)
+		}
+
+		defer func(httpResp *http.Response) {
+			io.Copy(ioutil.Discard, httpResp.Body)
+			httpResp.Body.Close()
+		}(httpResp)
+
+		if i != retries {
+			jitter := rand.Intn(75) + 50   // jitter between 50ms and 125ms
+			interval := jitter + (500 * i) // interval will be 0/500/1000 + jitter
+			time.Sleep(time.Duration(interval) * time.Millisecond)
 		}
 	}
 
