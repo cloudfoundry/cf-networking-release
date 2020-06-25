@@ -5,3 +5,8 @@ processes:
     args:
       - -c
       - /var/vcap/jobs/service-discovery-controller/config/config.json
+
+    <% if_p('open_files') do %>
+    limits:
+      open_files: <%= p('open_files') %>
+    <% end %>
