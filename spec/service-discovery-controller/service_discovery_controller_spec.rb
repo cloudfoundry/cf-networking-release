@@ -11,28 +11,10 @@ module Bosh::Template::Test
 
     describe 'bpm.yml' do
       let(:template) { job.template('config/bpm.yml') }
+      let(:config) { YAML.safe_load(template.render({}, consumes: [])) }
 
-      context 'when open_files is not set' do
-        let(:config) { YAML.safe_load(template.render({}, consumes: [])) }
-
-        it 'does not set the open file descriptor limit' do
-          expect(config['processes'][0].dig('limits', 'open_files')).to be_nil
-        end
-      end
-
-      context 'when open_files is set' do
-        let(:config) {
-          YAML.safe_load(template.render(
-            {
-              'open_files' => 4096
-            },
-            consumes: []
-          ))
-        }
-
-        it 'does not set the open file descriptor limit' do
-          expect(config['processes'][0].dig('limits', 'open_files')).to eq(4096)
-        end
+      it 'sets the open file descriptor limit' do
+        expect(config['processes'][0].dig('limits', 'open_files')).to eq(65535)
       end
     end
   end

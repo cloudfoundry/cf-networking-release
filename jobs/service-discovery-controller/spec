@@ -71,6 +71,3 @@ properties:
     example: |
       - 192.168.50.123
       - 192.168.52.123
-
-  open_files:
-    description: "File descriptor limit, increase this to handle more concurrent requests"
