@@ -20,6 +20,7 @@ This is the README for our scripts. To learn more about `cf-networking-release`,
 | test-acceptance | runs the acceptance tests against a provided bosh environment | |
 | test-sd-acceptance | runs the service discovery acceptance tests against a provided bosh environment | |
 | test-sd-acceptance-local | runs the service discovery acceptance tests against a local bosh-lite | |
+| test-sd-acceptance-smith | runs the service discovery acceptance tests against a toolsmiths provisioned bosh environment | |
 | test-sd-performance | runs the service discovery performance tests against a provided bosh environment | |
 | unit-and-integration-tests | runs unit and integration tests for networking components | |
 | update | updates all submodules | |
