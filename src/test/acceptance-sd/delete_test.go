@@ -33,8 +33,8 @@ var _ = Describe("Delete Acceptance", func() {
 		pushApp(srcAppName, 1)
 		pushApp(dstAppName, 1)
 
-		Expect(cf.Cf("map-route", dstAppName, domain, "--hostname", dstAppName).Wait(10 * time.Second)).To(gexec.Exit(0))
-		hostName = "http://" + srcAppName + "." + config.AppsDomain + "/dig/" + dstAppName + "." + domain
+		Expect(cf.Cf("map-route", dstAppName, internalDomain, "--hostname", dstAppName).Wait(10 * time.Second)).To(gexec.Exit(0))
+		hostName = "http://" + srcAppName + "." + config.AppsDomain + "/dig/" + dstAppName + "." + internalDomain
 		proxyIPs := digForNumberOfIPs(hostName, 1)
 
 		Expect(proxyIPs).To(ContainElement(getInternalIP(dstAppName, 0)))

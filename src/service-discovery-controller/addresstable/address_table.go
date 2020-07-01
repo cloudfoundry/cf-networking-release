@@ -2,6 +2,7 @@ package addresstable
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -46,6 +47,7 @@ func NewAddressTable(stalenessThreshold, pruningInterval, resumePruningDelay tim
 func (at *AddressTable) Add(hostnames []string, ip string) {
 	at.mutex.Lock()
 	for _, hostname := range hostnames {
+		hostname = strings.ToLower(hostname)
 		fqHostname := fqdn(hostname)
 		entries := at.entriesForHostname(fqHostname)
 		entryIndex := indexOf(entries, ip)
@@ -61,6 +63,7 @@ func (at *AddressTable) Add(hostnames []string, ip string) {
 func (at *AddressTable) Remove(hostnames []string, ip string) {
 	at.mutex.Lock()
 	for _, hostname := range hostnames {
+		hostname = strings.ToLower(hostname)
 		fqHostname := fqdn(hostname)
 		entries := at.entriesForHostname(fqHostname)
 		index := indexOf(entries, ip)
@@ -78,6 +81,7 @@ func (at *AddressTable) Remove(hostnames []string, ip string) {
 func (at *AddressTable) Lookup(hostname string) []string {
 	at.mutex.RLock()
 
+	hostname = strings.ToLower(hostname)
 	found := at.entriesForHostname(fqdn(hostname))
 	ips := entriesToIPs(found)
 

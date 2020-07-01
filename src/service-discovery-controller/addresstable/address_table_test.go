@@ -76,6 +76,14 @@ var _ = Describe("AddressTable", func() {
 				Expect(table.Lookup("foo.com")).To(Equal([]string{"192.0.0.1"}))
 			})
 		})
+		Context("when a hostname includes variable casing", func() {
+			It("removes casing", func() {
+				table.Add([]string{"FOO.com"}, "192.0.0.1")
+				Expect(table.GetAllAddresses()).To(Equal(map[string][]string{
+					"foo.com.": {"192.0.0.1"},
+				}))
+			})
+		})
 	})
 
 	Describe("GetAllAddresses", func() {
@@ -138,6 +146,17 @@ var _ = Describe("AddressTable", func() {
 				Expect(table.Lookup("foo.com")).To(Equal([]string{}))
 			})
 		})
+
+		Context("when a route has variable casing", func() {
+			BeforeEach(func() {
+				table.Add([]string{"foo.com."}, "192.0.0.2")
+			})
+			It("removes the case insensitive route from the table", func() {
+				table.Remove([]string{"FoO.com"}, "192.0.0.2")
+
+				Expect(table.Lookup("foo.com")).To(Equal([]string{}))
+			})
+		})
 	})
 
 	Describe("Lookup", func() {
@@ -169,6 +188,14 @@ var _ = Describe("AddressTable", func() {
 				pruneMessage := logger.Logs()[0]
 				Expect(pruneMessage.LogLevel).To(Equal(lager.DEBUG))
 				Expect(pruneMessage.Message).To(ContainSubstring("pruning address 192.0.0.1 from stale.com"))
+			})
+		})
+		Context("when a route includes variable casing", func() {
+			BeforeEach(func() {
+				table.Add([]string{"route.com"}, "192.0.0.1")
+			})
+			It("ignores casing", func() {
+				Eventually(func() []string { return table.Lookup("ROUTE.com") }).Should(Equal([]string{"192.0.0.1"}))
 			})
 		})
 	})

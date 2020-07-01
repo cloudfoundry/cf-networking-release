@@ -30,8 +30,8 @@ var _ = Describe("Scale Acceptance", func() {
 		By("pushing the app and checking it resolves")
 		pushApp(appName, 1)
 
-		Expect(cf.Cf("map-route", appName, domain, "--hostname", appName).Wait(10 * time.Second)).To(gexec.Exit(0))
-		hostName = "http://" + appName + "." + config.AppsDomain + "/dig/" + appName + "." + domain
+		Expect(cf.Cf("map-route", appName, internalDomain, "--hostname", appName).Wait(10 * time.Second)).To(gexec.Exit(0))
+		hostName = "http://" + appName + "." + config.AppsDomain + "/dig/" + appName + "." + internalDomain
 		proxyIPs := digForNumberOfIPs(hostName, 1)
 
 		Expect(proxyIPs).To(ContainElement(getInternalIP(appName, 0)))

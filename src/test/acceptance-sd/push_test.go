@@ -1,6 +1,7 @@
 package acceptance_test
 
 import (
+	"strings"
 	"time"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
@@ -8,9 +9,6 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
 )
-
-const Timeout_Cf = 2 * time.Minute
-const domain = "apps.internal"
 
 var _ = Describe("Push Acceptance", func() {
 	var (
@@ -36,12 +34,25 @@ var _ = Describe("Push Acceptance", func() {
 	Describe("when performing a dns lookup for a domain configured to point to the bosh adapter", func() {
 		It("returns the result from the adapter", func() {
 			pushApp(appName, 1)
-			Expect(cf.Cf("map-route", appName, domain, "--hostname", appName).Wait(10 * time.Second)).To(gexec.Exit(0))
+			Expect(cf.Cf("map-route", appName, internalDomain, "--hostname", appName).Wait(10 * time.Second)).To(gexec.Exit(0))
 
-			hostName := "http://" + appName + "." + config.AppsDomain + "/dig/" + appName + "." + domain
+			hostName := "http://" + appName + "." + config.AppsDomain + "/dig/" + appName + "." + internalDomain
 			proxyIPs := digForNumberOfIPs(hostName, 1)
 
 			Expect(proxyIPs).To(ContainElement(getInternalIP(appName, 0)))
+		})
+
+		Context("when the route uses variable casing", func() {
+			It("returns the result from the adapter", func() {
+				pushApp(appName, 1)
+				Expect(cf.Cf("map-route", appName, internalDomain, "--hostname", appName).Wait(10 * time.Second)).To(gexec.Exit(0))
+
+				internalRoute := appName + "." + internalDomain
+				hostName := "http://" + appName + "." + config.AppsDomain + "/dig/" + strings.ToUpper(internalRoute)
+				proxyIPs := digForNumberOfIPs(hostName, 1)
+
+				Expect(proxyIPs).To(ContainElement(getInternalIP(appName, 0)))
+			})
 		})
 	})
 })

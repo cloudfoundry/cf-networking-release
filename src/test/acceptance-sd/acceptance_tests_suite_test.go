@@ -30,6 +30,8 @@ func TestAcceptance(t *testing.T) {
 }
 
 const Timeout_Short = 10 * time.Second
+const Timeout_Cf = 2 * time.Minute
+const internalDomain = "apps.internal"
 
 var (
 	allDeployedInstances []instanceInfo
