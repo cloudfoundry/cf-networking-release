@@ -125,4 +125,22 @@ Increase the ARP cache size on the diego cells.
        url: "https://bosh.io/d/github.com/cloudfoundry/os-conf-release?v=20.0.0"
        sha1: "a60187f038d45e2886db9df82b72a9ab5fdcc49d"
      ```
+     
+## Problem 3: Reaching the Upper Limit of Network Policies
+
+To our knowledge no one has actually run into this problem, even in the largest of deployments. However our team is asked about this, so it seems important to cover it.
+
+### Summary 
+
+The quick answer is that you are limited to 65,635 _apps_ used in network policies. This results in _at least_ 32,767 network policies. 
+
+### Reason
+
+Container networking policies are implemented using [linux marks](https://www.linuxtopia.org/Linux_Firewall_iptables/x4368.html). Each source and destination app in a networking policy is assigned a mark at the policy creation time. If the source or destination app already has a mark assigned to it from a different policy, then the app uses that mark and does not get a new one. The overlay network for container networking uses VXLAN. VXLAN limits the marks to 16-bits. With 16 bits there are 2^16 (or 65,536) distinct values for marks. The first mark is saved and not given to apps, so that results in 65,535 marks available for apps.
+
+### Scenario 1 - policies with no overlapping apps
+Let's imagine that there are 65,535 _different_ apps. A user could create 32,767 network policies from appA --> appB, where appA and appB are only ever used in ONE network policy. Each of the 32,767 policies includes two apps (the source and the destination) and each of those apps needs a mark. This would result in 65,634 marks. This would reach the upper limits of network policies. 
+
+### Scenario 2 - policies with overlapping apps
+Let's imagine that there are 5 apps. Let's say a user wants all 5 apps to be able to talk to everyother app. This would result in 25 network policies. However, this would only use up 5 marks (one per app). There are still 65,630 marks available for other apps. This scenario shows how the more "overlapping" the policies are, the more policies you can have.
 
