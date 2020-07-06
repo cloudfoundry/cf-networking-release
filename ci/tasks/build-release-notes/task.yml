@@ -21,3 +21,4 @@ params:
   OUTPUT_DIR: release-notes
   OTHER_RELEASE_NAME: silk-release
   PRE_RELEASE: "false"
+  TRACKER_API_TOKEN:

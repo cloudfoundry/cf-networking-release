@@ -1731,6 +1731,7 @@ jobs:
         params:
           OTHER_RELEASE_NAME: silk-release
           PRE_RELEASE: "true"
+          TRACKER_API_TOKEN: ((tracker_api_token))
       - task: silk-build-release-notes
         file: cf-networking-release-ci/ci/tasks/build-release-notes/task.yml
         input_mapping:
@@ -1739,6 +1740,7 @@ jobs:
         params:
           OTHER_RELEASE_NAME: cf-networking-release
           PRE_RELEASE: "true"
+          TRACKER_API_TOKEN: ((tracker_api_token))
       - put: cf-networking-release-candidate
         params:
           repository: cf-networking-dev
