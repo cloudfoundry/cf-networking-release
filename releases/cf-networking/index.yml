@@ -129,6 +129,8 @@ builds:
     version: 1.1.0
   f2344846-1f84-4bc4-9a08-e503b51851f2:
     version: 0.17.0
+  f76d0294-0e03-439d-474c-c1ef856ec36e:
+    version: 2.31.0
   fc3d1825-cab6-4b13-45d3-ff603f7a2f5a:
     version: 2.16.0
 format-version: "2"
