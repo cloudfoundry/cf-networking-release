@@ -149,7 +149,7 @@ resources:
     type: git
     icon: github-box
     source:
-      branch: master
+      branch: release
       uri: https://github.com/cloudfoundry/silk-release.git
       tag_filter: "2.23.0"
   - name: disaster-recovery-acceptance-tests
@@ -193,7 +193,7 @@ resources:
     icon: github-box
     source:
       uri: git@github.com:cloudfoundry/silk-release.git
-      branch: master
+      branch: release
       private_key: ((silk-release-deploy-key.private_key))
   - name: cf-networking-dev-full
     type: git
