@@ -142,7 +142,7 @@ resources:
     type: git
     icon: github-box
     source:
-      branch: master
+      branch: release
       uri: https://github.com/cloudfoundry/cf-networking-release.git
       tag_filter: "2.23.0"
   - name: silk-2.23.0
@@ -217,7 +217,7 @@ resources:
     icon: github-box
     source:
       uri: git@github.com:cloudfoundry/cf-networking-release.git
-      branch: master
+      branch: release
       private_key: ((cf-networking-deploy-key.private_key))
   - name: cf-networking-release-candidate
     type: git
