@@ -296,6 +296,7 @@ resources:
     icon: github-box
     source:
       uri: https://github.com/cf-container-networking/toque-scaling
+      branch: main
       paths: [ test-params ]
   #######  Release management
   - name: version
