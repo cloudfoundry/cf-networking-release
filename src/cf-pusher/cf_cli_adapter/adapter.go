@@ -135,7 +135,7 @@ func (a *Adapter) CheckApp(guid string) ([]byte, error) {
 
 func (a *Adapter) AddNetworkPolicy(sourceApp, destApp string, port int, protocol string) error {
 	portStr := fmt.Sprintf("%d-%d", port, port)
-	commandArgs := []string{"add-network-policy", sourceApp, "--destination-app", destApp, "--port", portStr, "--protocol", "tcp"}
+	commandArgs := []string{"add-network-policy", sourceApp, destApp, "--port", portStr, "--protocol", "tcp"}
 	fmt.Printf("running: cf %v \n", commandArgs)
 	cmd := exec.Command("cf", commandArgs...)
 	return runCommandWithTimeout(cmd)
@@ -143,7 +143,7 @@ func (a *Adapter) AddNetworkPolicy(sourceApp, destApp string, port int, protocol
 
 func (a *Adapter) RemoveNetworkPolicy(sourceApp, destApp string, port int, protocol string) error {
 	portStr := fmt.Sprintf("%d-%d", port, port)
-	commandArgs := []string{"remove-network-policy", sourceApp, "--destination-app", destApp, "--port", portStr, "--protocol", "tcp"}
+	commandArgs := []string{"remove-network-policy", sourceApp, destApp, "--port", portStr, "--protocol", "tcp"}
 	fmt.Printf("running: cf %v \n", commandArgs)
 	cmd := exec.Command("cf", commandArgs...)
 	return runCommandWithTimeout(cmd)
@@ -155,14 +155,14 @@ func (a *Adapter) CreateQuota(name, memory string, instanceMemory, routes, servi
 	serviceInstancesStr := fmt.Sprintf("%d", serviceInstances)
 	appInstancesStr := fmt.Sprintf("%d", appInstances)
 	routePortsStr := fmt.Sprintf("%d", routePorts)
-	fmt.Printf("running cf create-quota %s -m %s -i %s -r %s -s %s -a %s --reserved-route-ports %s\n", name, memory, instanceMemoryStr, routesStr, serviceInstancesStr, appInstancesStr, routePortsStr)
-	cmd := exec.Command("cf", "create-quota", name, "-m", memory, "-i", instanceMemoryStr, "-r", routesStr, "-s", serviceInstancesStr, "-a", appInstancesStr, "--reserved-route-ports", routePortsStr)
+	fmt.Printf("running cf create-org-quota %s -m %s -i %s -r %s -s %s -a %s --reserved-route-ports %s\n", name, memory, instanceMemoryStr, routesStr, serviceInstancesStr, appInstancesStr, routePortsStr)
+	cmd := exec.Command("cf", "create-org-quota", name, "-m", memory, "-i", instanceMemoryStr, "-r", routesStr, "-s", serviceInstancesStr, "-a", appInstancesStr, "--reserved-route-ports", routePortsStr)
 	return runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) SetQuota(org, quota string) error {
-	fmt.Printf("running cf set-quota %s %s\n", org, quota)
-	cmd := exec.Command("cf", "set-quota", org, quota)
+	fmt.Printf("running cf set-org-quota %s %s\n", org, quota)
+	cmd := exec.Command("cf", "set-org-quota", org, quota)
 	return runCommandWithTimeout(cmd)
 }
 
@@ -202,8 +202,8 @@ func (a *Adapter) SecurityGroup(name string) (string, error) {
 }
 
 func (a *Adapter) BindSecurityGroup(name, org, space string) error {
-	fmt.Printf("running cf bind-security-group %s %s %s\n", name, org, space)
-	cmd := exec.Command("cf", "bind-security-group", name, org, space)
+	fmt.Printf("running cf bind-security-group %s %s --space %s\n", name, org, space)
+	cmd := exec.Command("cf", "bind-security-group", name, org, "--space", space)
 	return runCommandWithTimeout(cmd)
 }
 
@@ -220,8 +220,8 @@ func (a *Adapter) DeleteSecurityGroup(name string) error {
 }
 
 func (a *Adapter) DeleteQuota(quota string) error {
-	fmt.Printf("running cf delete-quota %s -f\n", quota)
-	cmd := exec.Command("cf", "delete-quota", quota, "-f")
+	fmt.Printf("running cf delete-org-quota %s -f\n", quota)
+	cmd := exec.Command("cf", "delete-org-quota", quota, "-f")
 	return runCommandWithTimeout(cmd)
 }
 

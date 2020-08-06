@@ -70,7 +70,7 @@ var _ = Describe("task connectivity on the overlay network", func() {
 			containerIP := getContainerIP(proxy2Response.ListenAddresses)
 
 			By("Checking that the task associated with proxy1 can connect to proxy2")
-			Expect(cf.Cf("run-task", proxy1, `
+			Expect(cf.Cf("run-task", proxy1, "-c", `
 			while true; do
 				if curl --fail "`+containerIP+`:`+strconv.Itoa(proxy2Response.Port)+`" ; then
 					exit 0
