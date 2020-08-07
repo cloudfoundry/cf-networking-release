@@ -9,8 +9,9 @@ export CONFIG=/tmp/test-config.json
 export APPS_DIR=`pwd`/../src/example-apps
 
 ENVIRONMENT_NAME="$1"
-VARS_STORE="$HOME/workspace/cf-networking-deployments/environments/$ENVIRONMENT_NAME/vars-store.yml"
 
+BBL_STATE_DIR="$HOME/workspace/cf-networking-deployments/environments/$ENVIRONMENT_NAME/bbl-state"
+eval "$(bbl --state-dir "${BBL_STATE_DIR}" print-env)"
 
 echo "
 {
