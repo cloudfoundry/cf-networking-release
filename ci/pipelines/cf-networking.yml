@@ -1829,6 +1829,7 @@ jobs:
           other-release-version: version
         params:
           OTHER_RELEASE_NAME: silk-release
+          TRACKER_API_TOKEN: ((tracker_api_token))
       - put: cf-networking-github-release
         params:
           name: version/number
@@ -1856,6 +1857,7 @@ jobs:
           other-release-version: version
         params:
           OTHER_RELEASE_NAME: cf-networking-release
+          TRACKER_API_TOKEN: ((tracker_api_token))
       - put: silk-github-release
         params:
           name: version/number
