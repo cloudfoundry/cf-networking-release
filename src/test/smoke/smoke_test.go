@@ -25,6 +25,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			prefix       string
 			spaceName    string
 			orgName      string
+			cfCli        *cf_cli_adapter.Adapter
 		)
 
 		BeforeEach(func() {
@@ -48,6 +49,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			appProxy = prefix + "proxy"
 			appSmoke = prefix + "smoke"
 
+			cfCli = cf_cli_adapter.NewAdapter()
 		})
 
 		AfterEach(func() {
@@ -73,7 +75,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			})
 
 			By("creating policies")
-			createAllPolicies(appProxy, appsSmoke, ports)
+			createAllPolicies(appProxy, appsSmoke, ports, cfCli)
 
 			// we should wait for minimum (pollInterval * 2)
 			By("waiting for policies to be created on cells")
@@ -85,7 +87,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 			})
 
 			By("deleting policies")
-			deleteAllPolicies(appProxy, appsSmoke, ports)
+			deleteAllPolicies(appProxy, appsSmoke, ports, cfCli)
 
 			By(fmt.Sprintf("checking that %s can NOT reach %s", appProxy, appsSmoke))
 			runWithTimeout("check connection failures, again", 5*time.Minute, func() {
@@ -97,10 +99,7 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 	})
 })
 
-func createAllPolicies(sourceApp string, dstList []string, dstPorts []int) {
-	cfCli := &cf_cli_adapter.Adapter{
-		CfCliPath: "cf",
-	}
+func createAllPolicies(sourceApp string, dstList []string, dstPorts []int, cfCli *cf_cli_adapter.Adapter) {
 	for _, destApp := range dstList {
 		for _, port := range dstPorts {
 			err := cfCli.AddNetworkPolicy(sourceApp, destApp, port, "tcp")
@@ -109,10 +108,7 @@ func createAllPolicies(sourceApp string, dstList []string, dstPorts []int) {
 	}
 }
 
-func deleteAllPolicies(sourceApp string, dstList []string, dstPorts []int) {
-	cfCli := &cf_cli_adapter.Adapter{
-		CfCliPath: "cf",
-	}
+func deleteAllPolicies(sourceApp string, dstList []string, dstPorts []int, cfCli *cf_cli_adapter.Adapter) {
 	for _, destApp := range dstList {
 		for _, port := range dstPorts {
 			err := cfCli.RemoveNetworkPolicy(sourceApp, destApp, port, "tcp")

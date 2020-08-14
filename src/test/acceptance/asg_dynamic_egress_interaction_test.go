@@ -1,7 +1,6 @@
 package acceptance_test
 
 import (
-	"cf-pusher/cf_cli_adapter"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -20,7 +19,6 @@ var _ = Describe("ASG/Dynamic Egress Interaction", func() {
 		orgName              string
 		spaceName            string
 		appRoute             string
-		cli                  *cf_cli_adapter.Adapter
 		bothEgressPolicyGuid string
 		onlyEgressPolicyGuid string
 		bothDestinationGuid  string
@@ -77,7 +75,6 @@ var _ = Describe("ASG/Dynamic Egress Interaction", func() {
 			Skip("skipping asg/dynamic egress interaction tests")
 		}
 
-		cli = &cf_cli_adapter.Adapter{CfCliPath: "cf"}
 		appA = fmt.Sprintf("appA-%d", rand.Int31())
 
 		orgName = testConfig.Prefix + "asg-de-interaction-org"
@@ -91,22 +88,22 @@ var _ = Describe("ASG/Dynamic Egress Interaction", func() {
 
 		By("creating test-generated ASGs")
 		for asgName, asgValue := range allASGs {
-			createASG(cli, asgName, asgValue)
+			createASG(asgName, asgValue)
 		}
 
 		By("creating and binding a tcp and udp security group")
-		Expect(cli.BindSecurityGroup("both-asg", orgName, spaceName)).To(Succeed())
-		Expect(cli.BindSecurityGroup("only-asg", orgName, spaceName)).To(Succeed())
+		Expect(cfCLI.BindSecurityGroup("both-asg", orgName, spaceName)).To(Succeed())
+		Expect(cfCLI.BindSecurityGroup("only-asg", orgName, spaceName)).To(Succeed())
 
 		By("creating dynamic egress policies to same destination as ASG")
-		bothDestinationGuid = createDestination(cli, fmt.Sprintf(overlappingDestination, fmt.Sprintf("asg-egress-overlap-%d", rand.Int31())))
-		spaceGuid, err := cli.SpaceGuid(spaceName)
+		bothDestinationGuid = createDestination(fmt.Sprintf(overlappingDestination, fmt.Sprintf("asg-egress-overlap-%d", rand.Int31())))
+		spaceGuid, err := cfCLI.SpaceGuid(spaceName)
 		Expect(err).NotTo(HaveOccurred())
-		bothEgressPolicyGuid = createEgressPolicy(cli, fmt.Sprintf(testEgressPolicies, spaceGuid, "space", bothDestinationGuid))
+		bothEgressPolicyGuid = createEgressPolicy(fmt.Sprintf(testEgressPolicies, spaceGuid, "space", bothDestinationGuid))
 
 		By("creating dynamic egress policies to different destination from ASG")
-		onlyDestinationGuid = createDestination(cli, fmt.Sprintf(nonOverlappingDestination, fmt.Sprintf("asg-egress-overlap-%d", rand.Int31())))
-		onlyEgressPolicyGuid = createEgressPolicy(cli, fmt.Sprintf(testEgressPolicies, spaceGuid, "space", onlyDestinationGuid))
+		onlyDestinationGuid = createDestination(fmt.Sprintf(nonOverlappingDestination, fmt.Sprintf("asg-egress-overlap-%d", rand.Int31())))
+		onlyEgressPolicyGuid = createEgressPolicy(fmt.Sprintf(testEgressPolicies, spaceGuid, "space", onlyDestinationGuid))
 
 		By("pushing the test app")
 		pushProxy(appA)
@@ -124,7 +121,7 @@ var _ = Describe("ASG/Dynamic Egress Interaction", func() {
 
 		By("removing test-generated ASGs")
 		for asgName, _ := range allASGs {
-			removeASG(cli, asgName)
+			removeASG(asgName)
 		}
 	})
 
@@ -169,10 +166,10 @@ var _ = Describe("ASG/Dynamic Egress Interaction", func() {
 		Eventually(canProxyDEOnlySite, "10s", "1s").Should(Succeed())
 
 		By("deleting all the dynamic egress policies")
-		deleteEgressPolicy(cli, bothEgressPolicyGuid)
-		deleteEgressPolicy(cli, onlyEgressPolicyGuid)
-		deleteDestination(cli, bothDestinationGuid)
-		deleteDestination(cli, onlyDestinationGuid)
+		deleteEgressPolicy(bothEgressPolicyGuid)
+		deleteEgressPolicy(onlyEgressPolicyGuid)
+		deleteDestination(bothDestinationGuid)
+		deleteDestination(onlyDestinationGuid)
 
 		By("checking that the app can stil reach the websites allowed by the asgs")
 		Eventually(canProxy, "10s", "1s").Should(Succeed())

@@ -32,7 +32,7 @@ var _ = Describe("c2c traffic source ip", func() {
 		apps = getAppInstances(appName, appCount)
 
 		By("adding a network policy")
-		Expect(cf.Cf("add-network-policy", appName, appName).Wait(Timeout_Push)).To(gexec.Exit(0))
+		Expect(cfCLI.AddNetworkPolicy(appName, appName, 8080, "tcp")).To(Succeed())
 
 		By(fmt.Sprintf("waiting %s for policies to be created on cells", time.Duration(PolicyWaitTime)))
 		time.Sleep(PolicyWaitTime)

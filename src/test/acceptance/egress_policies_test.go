@@ -1,7 +1,6 @@
 package acceptance_test
 
 import (
-	"cf-pusher/cf_cli_adapter"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -25,7 +24,6 @@ var _ = Describe("external connectivity", func() {
 		wideOpenTCPplusICMPDestinationGuid string
 		wideOpenAllDestinationGuid         string
 		egressPolicyGuid                   string
-		cli                                *cf_cli_adapter.Adapter
 		testWideOpenTCPplusICMPDestination = `{
 			"destinations": [
 				{
@@ -92,7 +90,6 @@ var _ = Describe("external connectivity", func() {
 			Skip("skipping egress policy tests")
 		}
 
-		cli = &cf_cli_adapter.Adapter{CfCliPath: "cf"}
 		appA = fmt.Sprintf("appA-%d", rand.Int31())
 
 		orgName = testConfig.Prefix + "egress-policy-org"
@@ -110,14 +107,14 @@ var _ = Describe("external connectivity", func() {
 		}
 
 		By("creating all destinations")
-		wideOpenTCPplusICMPDestinationGuid = createDestination(cli, fmt.Sprintf(testWideOpenTCPplusICMPDestination, fmt.Sprintf("%d", rand.Int31())))
-		wideOpenAllDestinationGuid = createDestination(cli, fmt.Sprintf(testWideOpenAllDestination, fmt.Sprintf("%d", rand.Int31())))
+		wideOpenTCPplusICMPDestinationGuid = createDestination(fmt.Sprintf(testWideOpenTCPplusICMPDestination, fmt.Sprintf("%d", rand.Int31())))
+		wideOpenAllDestinationGuid = createDestination(fmt.Sprintf(testWideOpenAllDestination, fmt.Sprintf("%d", rand.Int31())))
 	})
 
 	AfterEach(func() {
 		By("deleting destinations")
-		deleteDestination(cli, wideOpenTCPplusICMPDestinationGuid)
-		deleteDestination(cli, wideOpenAllDestinationGuid)
+		deleteDestination(wideOpenTCPplusICMPDestinationGuid)
+		deleteDestination(wideOpenAllDestinationGuid)
 
 		By("adding back all the original staging ASGs")
 		for _, sg := range testConfig.DefaultSecurityGroups {
@@ -184,9 +181,9 @@ var _ = Describe("external connectivity", func() {
 
 		BeforeEach(func() {
 			By("creating staging egress policy")
-			spaceGuid, err := cli.SpaceGuid(spaceName)
+			spaceGuid, err := cfCLI.SpaceGuid(spaceName)
 			Expect(err).NotTo(HaveOccurred())
-			stagingEgressPolicyGuid = createEgressPolicy(cli, fmt.Sprintf(testStagingEgressPolicies, spaceGuid, "space", wideOpenTCPplusICMPDestinationGuid))
+			stagingEgressPolicyGuid = createEgressPolicy(fmt.Sprintf(testStagingEgressPolicies, spaceGuid, "space", wideOpenTCPplusICMPDestinationGuid))
 
 			By("pushing the test app")
 			pushProxy(appA)
@@ -200,13 +197,13 @@ var _ = Describe("external connectivity", func() {
 			Consistently(cannotDigUDP, "2s", "0.5s").Should(Succeed())
 
 			By("creating all egress policy")
-			egressPolicyGuid = createEgressPolicy(cli, fmt.Sprintf(testAllEgressPolicies, spaceGuid, "space", wideOpenTCPplusICMPDestinationGuid))
+			egressPolicyGuid = createEgressPolicy(fmt.Sprintf(testAllEgressPolicies, spaceGuid, "space", wideOpenTCPplusICMPDestinationGuid))
 		})
 
 		AfterEach(func() {
 			By("deleting all egress policy")
-			deleteEgressPolicy(cli, stagingEgressPolicyGuid)
-			deleteEgressPolicy(cli, egressPolicyGuid)
+			deleteEgressPolicy(stagingEgressPolicyGuid)
+			deleteEgressPolicy(egressPolicyGuid)
 		})
 
 		It("the app can reach the internet when egress policy is present", func(done Done) {
@@ -260,9 +257,9 @@ var _ = Describe("external connectivity", func() {
 
 		BeforeEach(func() {
 			By("creating staging egress policy")
-			spaceGuid, err := cli.SpaceGuid(spaceName)
+			spaceGuid, err := cfCLI.SpaceGuid(spaceName)
 			Expect(err).NotTo(HaveOccurred())
-			stagingEgressPolicyGuid = createEgressPolicy(cli, fmt.Sprintf(testStagingEgressPolicies, spaceGuid, "space", wideOpenTCPplusICMPDestinationGuid))
+			stagingEgressPolicyGuid = createEgressPolicy(fmt.Sprintf(testStagingEgressPolicies, spaceGuid, "space", wideOpenTCPplusICMPDestinationGuid))
 
 			By("pushing the test app")
 			pushProxy(appA)
@@ -276,13 +273,13 @@ var _ = Describe("external connectivity", func() {
 			Consistently(cannotDigUDP, "2s", "0.5s").Should(Succeed())
 
 			By("creating all egress policy")
-			egressPolicyGuid = createEgressPolicy(cli, fmt.Sprintf(testAllEgressPolicies, spaceGuid, "space", wideOpenAllDestinationGuid))
+			egressPolicyGuid = createEgressPolicy(fmt.Sprintf(testAllEgressPolicies, spaceGuid, "space", wideOpenAllDestinationGuid))
 		})
 
 		AfterEach(func() {
 			By("deleting all egress policy")
-			deleteEgressPolicy(cli, stagingEgressPolicyGuid)
-			deleteEgressPolicy(cli, egressPolicyGuid)
+			deleteEgressPolicy(stagingEgressPolicyGuid)
+			deleteEgressPolicy(egressPolicyGuid)
 		})
 
 		It("the app can reach the internet when egress policy is present", func(done Done) {
@@ -305,14 +302,14 @@ var _ = Describe("external connectivity", func() {
 	Context("when a staging egress policy is created", func() {
 		BeforeEach(func() {
 			By("creating staging egress policy")
-			spaceGuid, err := cli.SpaceGuid(spaceName)
+			spaceGuid, err := cfCLI.SpaceGuid(spaceName)
 			Expect(err).NotTo(HaveOccurred())
-			egressPolicyGuid = createEgressPolicy(cli, fmt.Sprintf(testStagingEgressPolicies, spaceGuid, "space", wideOpenTCPplusICMPDestinationGuid))
+			egressPolicyGuid = createEgressPolicy(fmt.Sprintf(testStagingEgressPolicies, spaceGuid, "space", wideOpenTCPplusICMPDestinationGuid))
 		})
 
 		AfterEach(func() {
 			By("deleting staging egress policy")
-			deleteEgressPolicy(cli, egressPolicyGuid)
+			deleteEgressPolicy(egressPolicyGuid)
 		})
 
 		Context("when the egress policy is for the app", func() {
@@ -322,7 +319,7 @@ var _ = Describe("external connectivity", func() {
 
 			AfterEach(func() {
 				By("deleting egress policy")
-				deleteEgressPolicy(cli, egressPolicyGuid)
+				deleteEgressPolicy(egressPolicyGuid)
 
 				By("checking that the app cannot reach the internet using http and dns")
 				Eventually(cannotProxy, "10s", "1s").Should(Succeed())
@@ -339,9 +336,9 @@ var _ = Describe("external connectivity", func() {
 				Consistently(cannotProxy, "2s", "0.5s").Should(Succeed())
 
 				By("creating running egress policy")
-				appAGuid, err := cli.AppGuid(appA)
+				appAGuid, err := cfCLI.AppGuid(appA)
 				Expect(err).NotTo(HaveOccurred())
-				egressPolicyGuid = createEgressPolicy(cli, fmt.Sprintf(testRunningEgressPolicies, appAGuid, "app", wideOpenTCPplusICMPDestinationGuid))
+				egressPolicyGuid = createEgressPolicy(fmt.Sprintf(testRunningEgressPolicies, appAGuid, "app", wideOpenTCPplusICMPDestinationGuid))
 
 				By("checking that the app can use dns and http to reach the internet")
 				Eventually(canProxy, "10s", "1s").Should(Succeed())
@@ -358,7 +355,7 @@ var _ = Describe("external connectivity", func() {
 
 			AfterEach(func() {
 				By("deleting egress policy")
-				deleteEgressPolicy(cli, egressPolicyGuid)
+				deleteEgressPolicy(egressPolicyGuid)
 
 				By("checking that the app cannot reach the internet using http and dns")
 				Eventually(cannotProxy, "10s", "1s").Should(Succeed())
@@ -375,9 +372,9 @@ var _ = Describe("external connectivity", func() {
 				Consistently(cannotProxy, "2s", "0.5s").Should(Succeed())
 
 				By("creating running egress policy")
-				spaceGuid, err := cli.SpaceGuid(spaceName)
+				spaceGuid, err := cfCLI.SpaceGuid(spaceName)
 				Expect(err).NotTo(HaveOccurred())
-				egressPolicyGuid = createEgressPolicy(cli, fmt.Sprintf(testRunningEgressPolicies, spaceGuid, "space", wideOpenTCPplusICMPDestinationGuid))
+				egressPolicyGuid = createEgressPolicy(fmt.Sprintf(testRunningEgressPolicies, spaceGuid, "space", wideOpenTCPplusICMPDestinationGuid))
 
 				By("checking that the app can use dns and http to reach the internet")
 				Eventually(canProxy, "10s", "1s").Should(Succeed())
@@ -394,14 +391,14 @@ var _ = Describe("external connectivity", func() {
 
 			BeforeEach(func() {
 				By("creating an egress policy")
-				spaceGuid, err := cli.SpaceGuid(spaceName)
+				spaceGuid, err := cfCLI.SpaceGuid(spaceName)
 				Expect(err).NotTo(HaveOccurred())
-				egressPolicyGuid = createEgressPolicy(cli, fmt.Sprintf(testRunningEgressPolicies, spaceGuid, "space", wideOpenTCPplusICMPDestinationGuid))
+				egressPolicyGuid = createEgressPolicy(fmt.Sprintf(testRunningEgressPolicies, spaceGuid, "space", wideOpenTCPplusICMPDestinationGuid))
 			})
 
 			AfterEach(func() {
 				By("deleting egress policy")
-				deleteEgressPolicy(cli, egressPolicyGuid)
+				deleteEgressPolicy(egressPolicyGuid)
 			})
 
 			It("the app in the space can reach the internet immediately after a push", func(done Done) {
@@ -417,19 +414,19 @@ var _ = Describe("external connectivity", func() {
 	})
 })
 
-func deleteEgressPolicy(cli *cf_cli_adapter.Adapter, guid string) {
+func deleteEgressPolicy(guid string) {
 	var egressPolicyDeleteStruct struct {
 		Error string `json:"error"`
 	}
 
-	response, err := cli.Curl("DELETE", fmt.Sprintf("/networking/v1/external/egress_policies/%s", guid), "")
+	response, err := cfCLI.Curl("DELETE", fmt.Sprintf("/networking/v1/external/egress_policies/%s", guid), "")
 	Expect(err).NotTo(HaveOccurred())
 	err = json.Unmarshal(response, &egressPolicyDeleteStruct)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(egressPolicyDeleteStruct.Error).To(BeEmpty())
 }
 
-func createEgressPolicy(cli *cf_cli_adapter.Adapter, payload string) string {
+func createEgressPolicy(payload string) string {
 	payloadFile, err := ioutil.TempFile("", "")
 	Expect(err).NotTo(HaveOccurred())
 
@@ -446,7 +443,7 @@ func createEgressPolicy(cli *cf_cli_adapter.Adapter, payload string) string {
 	err = payloadFile.Close()
 	Expect(err).NotTo(HaveOccurred())
 
-	response, err := cli.Curl("POST", "/networking/v1/external/egress_policies", payloadFile.Name())
+	response, err := cfCLI.Curl("POST", "/networking/v1/external/egress_policies", payloadFile.Name())
 	Expect(err).NotTo(HaveOccurred())
 	err = json.Unmarshal(response, &egressPolicyStruct)
 	Expect(err).NotTo(HaveOccurred())
@@ -457,7 +454,7 @@ func createEgressPolicy(cli *cf_cli_adapter.Adapter, payload string) string {
 	return egressPolicyStruct.EgressPolicies[0].ID
 }
 
-func createDestination(cli *cf_cli_adapter.Adapter, payload string) string {
+func createDestination(payload string) string {
 	payloadFile, err := ioutil.TempFile("", "")
 	Expect(err).NotTo(HaveOccurred())
 
@@ -474,7 +471,7 @@ func createDestination(cli *cf_cli_adapter.Adapter, payload string) string {
 	err = payloadFile.Close()
 	Expect(err).NotTo(HaveOccurred())
 
-	response, err := cli.Curl("POST", "/networking/v1/external/destinations", payloadFile.Name())
+	response, err := cfCLI.Curl("POST", "/networking/v1/external/destinations", payloadFile.Name())
 	Expect(err).NotTo(HaveOccurred())
 	err = json.Unmarshal(response, &destStruct)
 	Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("cannot unmarshal json: %s", response))
@@ -486,12 +483,12 @@ func createDestination(cli *cf_cli_adapter.Adapter, payload string) string {
 	return destStruct.Destinations[0].ID
 }
 
-func deleteDestination(cli *cf_cli_adapter.Adapter, guid string) {
+func deleteDestination(guid string) {
 	var destDeleteStruct struct {
 		Error string `json:"error"`
 	}
 
-	response, err := cli.Curl("DELETE", fmt.Sprintf("/networking/v1/external/destinations/%s", guid), "")
+	response, err := cfCLI.Curl("DELETE", fmt.Sprintf("/networking/v1/external/destinations/%s", guid), "")
 	Expect(err).NotTo(HaveOccurred())
 	err = json.Unmarshal(response, &destDeleteStruct)
 	Expect(err).NotTo(HaveOccurred(), fmt.Sprintf("cannot unmarshal json: %s", response))

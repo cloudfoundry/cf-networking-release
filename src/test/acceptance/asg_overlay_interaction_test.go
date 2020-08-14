@@ -5,8 +5,6 @@ import (
 	"math/rand"
 	"time"
 
-	"cf-pusher/cf_cli_adapter"
-
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -15,13 +13,8 @@ import (
 
 var _ = Describe("ASGs and Overlay Policy interaction", func() {
 	var (
-		cli     *cf_cli_adapter.Adapter
 		orgName string
 	)
-
-	BeforeEach(func() {
-		cli = &cf_cli_adapter.Adapter{CfCliPath: "cf"}
-	})
 
 	AfterEach(func() {
 		By("deleting the org")
@@ -50,8 +43,8 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 			pushAppWithInstanceCount(appProxy, appCount)
 
 			By("create a wide open ASG")
-			createASG(cli, asgName, `[{"destination":"0.0.0.0/0","protocol":"all"}]`)
-			Expect(cli.BindSecurityGroup(asgName, orgName, spaceName)).To(Succeed())
+			createASG(asgName, `[{"destination":"0.0.0.0/0","protocol":"all"}]`)
+			Expect(cfCLI.BindSecurityGroup(asgName, orgName, spaceName)).To(Succeed())
 
 			By("restage proxy app")
 			restage(appProxy)
@@ -60,7 +53,7 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 
 		AfterEach(func() {
 			By("deleting the security group")
-			removeASG(cli, asgName)
+			removeASG(asgName)
 		})
 
 		Context("when no policies are added", func() {
@@ -84,7 +77,7 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 		Context("when a policy is added", func() {
 			BeforeEach(func() {
 				By("creating a policy")
-				err := cli.AddNetworkPolicy(appProxy, appProxy, 8080, "tcp")
+				err := cfCLI.AddNetworkPolicy(appProxy, appProxy, 8080, "tcp")
 				Expect(err).NotTo(HaveOccurred())
 
 				By(fmt.Sprintf("waiting %s for policies to be created on cells", time.Duration(PolicyWaitTime)))
@@ -140,7 +133,7 @@ var _ = Describe("ASGs and Overlay Policy interaction", func() {
 
 		It("continues to enforce ASGs default deny", func() {
 			By("creating a policy")
-			err := cli.AddNetworkPolicy(appProxy, appProxy, 7777, "tcp")
+			err := cfCLI.AddNetworkPolicy(appProxy, appProxy, 7777, "tcp")
 			Expect(err).NotTo(HaveOccurred())
 
 			By("checking that default deny is still enforced")

@@ -1,7 +1,6 @@
 package acceptance_test
 
 import (
-	"cf-pusher/cf_cli_adapter"
 	"fmt"
 	"lib/testsupport"
 	"math/rand"
@@ -18,28 +17,24 @@ var _ = Describe("Container startup time with a big ASG", func() {
 	var (
 		orgName     string
 		spaceName   string
-		cli         *cf_cli_adapter.Adapter
 		ASGFilepath string
 	)
 
 	BeforeEach(func() {
-		cli = &cf_cli_adapter.Adapter{
-			CfCliPath: "cf",
-		}
 		AuthAsAdmin()
 
 		orgName = "asg-org"
-		Expect(cli.CreateOrg(orgName)).To(Succeed())
-		Expect(cli.TargetOrg(orgName)).To(Succeed())
+		Expect(cfCLI.CreateOrg(orgName)).To(Succeed())
+		Expect(cfCLI.TargetOrg(orgName)).To(Succeed())
 
 		spaceName = "asg-space"
-		Expect(cli.CreateSpace(spaceName, orgName)).To(Succeed())
-		Expect(cli.TargetSpace(spaceName)).To(Succeed())
+		Expect(cfCLI.CreateSpace(spaceName, orgName)).To(Succeed())
+		Expect(cfCLI.TargetSpace(spaceName)).To(Succeed())
 	})
 
 	AfterEach(func() {
 		Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
-		Expect(cli.DeleteSecurityGroup("big-asg")).To(Succeed())
+		Expect(cfCLI.DeleteSecurityGroup("big-asg")).To(Succeed())
 		os.Remove(ASGFilepath)
 	})
 
@@ -62,8 +57,8 @@ var _ = Describe("Container startup time with a big ASG", func() {
 				var err error
 				ASGFilepath, err = testsupport.CreateTempFile(asg)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(cli.CreateSecurityGroup("big-asg", ASGFilepath)).To(Succeed())
-				Expect(cli.BindSecurityGroup("big-asg", orgName, spaceName)).To(Succeed())
+				Expect(cfCLI.CreateSecurityGroup("big-asg", ASGFilepath)).To(Succeed())
+				Expect(cfCLI.BindSecurityGroup("big-asg", orgName, spaceName)).To(Succeed())
 			})
 
 			By("pushing another app", func() {

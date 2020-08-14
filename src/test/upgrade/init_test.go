@@ -47,7 +47,7 @@ var _ = BeforeSuite(func() {
 	err = json.Unmarshal(bytes, boshConfig)
 	Expect(err).NotTo(HaveOccurred(), "Could not unmarshal config file. Make sure it is valid JSON.")
 	config = helpers.LoadConfig()
-	cli = &cf_cli_adapter.Adapter{CfCliPath: "cf"}
+	cli = cf_cli_adapter.NewAdapter()
 })
 
 func boshDeploy(manifestPath string) {

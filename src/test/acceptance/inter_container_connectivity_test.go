@@ -1,7 +1,6 @@
 package acceptance_test
 
 import (
-	"cf-pusher/cf_cli_adapter"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -133,24 +132,18 @@ var _ = Describe("connectivity between containers on the overlay network", func(
 })
 
 func createAllPolicies(sourceApp string, dstList []string, dstPorts []int) {
-	cfCli := &cf_cli_adapter.Adapter{
-		CfCliPath: "cf",
-	}
 	for _, destApp := range dstList {
 		for _, port := range dstPorts {
-			err := cfCli.AddNetworkPolicy(sourceApp, destApp, port, "tcp")
+			err := cfCLI.AddNetworkPolicy(sourceApp, destApp, port, "tcp")
 			Expect(err).NotTo(HaveOccurred())
 		}
 	}
 }
 
 func deleteAllPolicies(sourceApp string, dstList []string, dstPorts []int) {
-	cfCli := &cf_cli_adapter.Adapter{
-		CfCliPath: "cf",
-	}
 	for _, destApp := range dstList {
 		for _, port := range dstPorts {
-			err := cfCli.RemoveNetworkPolicy(sourceApp, destApp, port, "tcp")
+			err := cfCLI.RemoveNetworkPolicy(sourceApp, destApp, port, "tcp")
 			Expect(err).NotTo(HaveOccurred())
 		}
 	}

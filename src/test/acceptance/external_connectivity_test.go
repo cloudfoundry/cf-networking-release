@@ -1,7 +1,6 @@
 package acceptance_test
 
 import (
-	"cf-pusher/cf_cli_adapter"
 	"fmt"
 	"io/ioutil"
 	"lib/testsupport"
@@ -23,7 +22,6 @@ var _ = Describe("external connectivity", func() {
 		orgName   string
 		spaceName string
 		appRoute  string
-		cli       *cf_cli_adapter.Adapter
 	)
 
 	BeforeEach(func() {
@@ -31,7 +29,6 @@ var _ = Describe("external connectivity", func() {
 			Skip("skipping external connectivity tests")
 		}
 
-		cli = &cf_cli_adapter.Adapter{CfCliPath: "cf"}
 		appA = fmt.Sprintf("appA-%d", rand.Int31())
 
 		orgName = testConfig.Prefix + "external-connectivity-org"
@@ -45,7 +42,7 @@ var _ = Describe("external connectivity", func() {
 
 		By("creating test-generated ASGs")
 		for asgName, asgValue := range testASGs {
-			createASG(cli, asgName, asgValue)
+			createASG(asgName, asgValue)
 		}
 
 		By("pushing the test app")
@@ -64,7 +61,7 @@ var _ = Describe("external connectivity", func() {
 
 		By("removing test-generated ASGs")
 		for asgName, _ := range testASGs {
-			removeASG(cli, asgName)
+			removeASG(asgName)
 		}
 	})
 
@@ -119,8 +116,8 @@ var _ = Describe("external connectivity", func() {
 			Consistently(cannotPing, "2s", "0.5s").Should(Succeed())
 
 			By("creating and binding a tcp and udp security group")
-			Expect(cli.BindSecurityGroup("tcp-asg", orgName, spaceName)).To(Succeed())
-			Expect(cli.BindSecurityGroup("udp-asg", orgName, spaceName)).To(Succeed())
+			Expect(cfCLI.BindSecurityGroup("tcp-asg", orgName, spaceName)).To(Succeed())
+			Expect(cfCLI.BindSecurityGroup("udp-asg", orgName, spaceName)).To(Succeed())
 
 			By("restarting the app")
 			Expect(cf.Cf("restart", appA).Wait(Timeout_Push)).To(gexec.Exit(0))
@@ -133,7 +130,7 @@ var _ = Describe("external connectivity", func() {
 			Consistently(cannotPing, "2s", "1s").Should(Succeed())
 
 			By("removing the tcp security groups")
-			Expect(cli.UnbindSecurityGroup("tcp-asg", orgName, spaceName)).To(Succeed())
+			Expect(cfCLI.UnbindSecurityGroup("tcp-asg", orgName, spaceName)).To(Succeed())
 
 			By("restarting the app")
 			Expect(cf.Cf("restart", appA).Wait(Timeout_Push)).To(gexec.Exit(0))
@@ -153,7 +150,7 @@ var _ = Describe("external connectivity", func() {
 			Consistently(cannotPing, "2s", "0.5s").Should(Succeed())
 
 			By("creating and binding an icmp security group")
-			Expect(cli.BindSecurityGroup("icmp-asg", orgName, spaceName)).To(Succeed())
+			Expect(cfCLI.BindSecurityGroup("icmp-asg", orgName, spaceName)).To(Succeed())
 
 			By("restarting the app")
 			Expect(cf.Cf("restart", appA).Wait(Timeout_Push)).To(gexec.Exit(0))
@@ -167,15 +164,15 @@ var _ = Describe("external connectivity", func() {
 	})
 })
 
-func createASG(cli *cf_cli_adapter.Adapter, name string, asgDefinition string) {
+func createASG(name string, asgDefinition string) {
 	asgFile, err := testsupport.CreateTempFile(asgDefinition)
 	Expect(err).NotTo(HaveOccurred())
-	Expect(cli.CreateSecurityGroup(name, asgFile)).To(Succeed())
+	Expect(cfCLI.CreateSecurityGroup(name, asgFile)).To(Succeed())
 	Expect(os.Remove(asgFile)).To(Succeed())
 }
 
-func removeASG(cli *cf_cli_adapter.Adapter, name string) {
-	Expect(cli.DeleteSecurityGroup(name)).To(Succeed())
+func removeASG(name string) {
+	Expect(cfCLI.DeleteSecurityGroup(name)).To(Succeed())
 }
 
 func setupOrgAndSpace(orgName, spaceName string) {

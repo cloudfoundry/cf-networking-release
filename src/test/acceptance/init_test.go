@@ -15,6 +15,7 @@ import (
 
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport"
 
+	"cf-pusher/cf_cli_adapter"
 	pusherConfig "cf-pusher/config"
 
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
@@ -31,12 +32,14 @@ var (
 	appsDir    string
 	config     *helpers.Config
 	testConfig pusherConfig.Config
+	cfCLI      *cf_cli_adapter.Adapter
 )
 
 func TestAcceptance(t *testing.T) {
 	RegisterFailHandler(Fail)
 
 	BeforeSuite(func() {
+		cfCLI = cf_cli_adapter.NewAdapter()
 		config = helpers.LoadConfig()
 
 		configPath := helpers.ConfigPath()

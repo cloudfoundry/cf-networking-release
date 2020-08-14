@@ -1,7 +1,6 @@
 package acceptance_test
 
 import (
-	"cf-pusher/cf_cli_adapter"
 	"encoding/json"
 	"os/exec"
 	"strconv"
@@ -28,13 +27,11 @@ var _ = Describe("task connectivity on the overlay network", func() {
 			prefix  string
 			domain  string
 			orgName string
-			cfCli   *cf_cli_adapter.Adapter
 			proxy1  string
 			proxy2  string
 		)
 
 		BeforeEach(func() {
-			cfCli = &cf_cli_adapter.Adapter{CfCliPath: "cf"}
 			prefix = testConfig.Prefix
 			domain = config.AppsDomain
 
@@ -52,7 +49,7 @@ var _ = Describe("task connectivity on the overlay network", func() {
 			pushProxy(proxy1)
 			pushProxy(proxy2)
 
-			cfCli.AddNetworkPolicy(proxy1, proxy2, 8080, "tcp")
+			cfCLI.AddNetworkPolicy(proxy1, proxy2, 8080, "tcp")
 		})
 
 		AfterEach(func() {
@@ -70,14 +67,15 @@ var _ = Describe("task connectivity on the overlay network", func() {
 			containerIP := getContainerIP(proxy2Response.ListenAddresses)
 
 			By("Checking that the task associated with proxy1 can connect to proxy2")
-			Expect(cf.Cf("run-task", proxy1, "-c", `
+			commandToRun := `
 			while true; do
-				if curl --fail "`+containerIP+`:`+strconv.Itoa(proxy2Response.Port)+`" ; then
+				if curl --fail "` + containerIP + `:` + strconv.Itoa(proxy2Response.Port) + `" ; then
 					exit 0
 				fi
 			done;
 			exit 1
-			`).Wait(5 * time.Second)).To(gexec.Exit(0))
+			`
+			Expect(cfCLI.RunTask(proxy1, commandToRun)).To(Succeed())
 
 			Eventually(func() *gbytes.Buffer {
 				return cf.Cf("tasks", proxy1).Wait(5 * time.Second).Out

@@ -1,7 +1,6 @@
 package acceptance_test
 
 import (
-	"cf-pusher/cf_cli_adapter"
 	"crypto/tls"
 	"fmt"
 	"lib/policy_client"
@@ -94,14 +93,13 @@ var _ = Describe("space developer policy configuration", func() {
 		}, "password", uaaAdminClientToken)
 		Expect(err).NotTo(HaveOccurred())
 
-		cli := &cf_cli_adapter.Adapter{CfCliPath: "cf"}
-		orgGuid, err := cli.OrgGuid(orgName)
+		orgGuid, err := cfCLI.OrgGuid(orgName)
 		Expect(err).NotTo(HaveOccurred())
 
-		spaceAGuid, err := cli.SpaceGuid(spaceNameA)
+		spaceAGuid, err := cfCLI.SpaceGuid(spaceNameA)
 		Expect(err).NotTo(HaveOccurred())
 
-		spaceBGuid, err := cli.SpaceGuid(spaceNameB)
+		spaceBGuid, err := cfCLI.SpaceGuid(spaceNameB)
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(cf.Cf("curl", "-X", "PUT", fmt.Sprintf("/v2/organizations/%s/users/space-client", orgGuid)).Wait()).To(gexec.Exit(0))

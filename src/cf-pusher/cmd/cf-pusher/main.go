@@ -79,9 +79,7 @@ func main() {
 		ProxyInstances: config.ProxyInstances,
 	}
 
-	adapter := &cf_cli_adapter.Adapter{
-		CfCliPath: "cf",
-	}
+	adapter := cf_cli_adapter.NewAdapter()
 	apiConnector := &cf_command.ApiConnector{
 		Api:               config.Api,
 		AdminUser:         config.AdminUser,
@@ -105,7 +103,7 @@ func main() {
 	registryAppDirectory := filepath.Join(appsDir, "registry")
 	registryManifestPath := filepath.Join(registryAppDirectory, "manifest.yml")
 	if err != nil {
-		log.Fatal("generate manifest: %s", err)
+		log.Fatalf("generate manifest: %s", err)
 	}
 	registryApp := cf_command.Application{
 		Name: scaleGroup.Registry,
@@ -131,7 +129,7 @@ func main() {
 	tickAppDirectory := filepath.Join(appsDir, "tick")
 	tickManifestPath, err := manifestGenerator.Generate(tickAppManifest)
 	if err != nil {
-		log.Fatal("generate manifest: %s", err)
+		log.Fatalf("generate manifest: %s", err)
 	}
 	for _, tickApp := range scaleGroup.TickApps {
 		t := cf_command.Application{
@@ -156,7 +154,7 @@ func main() {
 	proxyAppDirectory := filepath.Join(appsDir, "proxy")
 	proxyManifestPath, err := manifestGenerator.Generate(proxyAppManifest)
 	if err != nil {
-		log.Fatal("generate manifest: %s", err)
+		log.Fatalf("generate manifest: %s", err)
 	}
 	for _, proxyApp := range scaleGroup.ProxyApps {
 		p := cf_command.Application{
