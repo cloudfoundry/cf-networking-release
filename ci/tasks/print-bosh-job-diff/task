@@ -14,7 +14,7 @@ pushd $SOURCE_DIR > /dev/null
     new_version=$(git tag --sort=version:refname | egrep "^\d+\.\d+\.\d+$" | tail -1)
   fi
 
-  diff_string="$old_version...$new_version"
+  diff_string="$old_version..$new_version"
   echo "comparing $diff_string:"
-  git log $diff_string jobs/*/spec
+  git --no-pager diff $diff_string jobs/*/spec
 popd > /dev/null
