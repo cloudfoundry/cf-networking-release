@@ -1733,6 +1733,13 @@ jobs:
           OTHER_RELEASE_NAME: silk-release
           PRE_RELEASE: "true"
           TRACKER_API_TOKEN: ((tracker_api_token))
+      - task: print-bosh-job-spec-diff
+        file: cf-networking-release-ci/ci/tasks/print-bosh-job-spec-diff/task.yml
+        input_mapping:
+          master-release: cf-networking-dev
+          other-release-version: version
+        params:
+          PRE_RELEASE: "true"
       - task: silk-build-release-notes
         file: cf-networking-release-ci/ci/tasks/build-release-notes/task.yml
         input_mapping:
@@ -1742,6 +1749,13 @@ jobs:
           OTHER_RELEASE_NAME: cf-networking-release
           PRE_RELEASE: "true"
           TRACKER_API_TOKEN: ((tracker_api_token))
+      - task: silk-print-bosh-job-spec-diff
+        file: cf-networking-release-ci/ci/tasks/print-bosh-job-spec-diff/task.yml
+        input_mapping:
+          master-release: silk-dev
+          other-release-version: version
+        params:
+          PRE_RELEASE: "true"
       - put: cf-networking-release-candidate
         params:
           repository: cf-networking-dev
@@ -1830,6 +1844,11 @@ jobs:
         params:
           OTHER_RELEASE_NAME: silk-release
           TRACKER_API_TOKEN: ((tracker_api_token))
+      - task: print-bosh-job-spec-diff
+        file: cf-networking-release-ci/ci/tasks/print-bosh-job-spec-diff/task.yml
+        input_mapping:
+          master-release: cf-networking-master
+          other-release-version: version
       - put: cf-networking-github-release
         params:
           name: version/number
@@ -1858,6 +1877,11 @@ jobs:
         params:
           OTHER_RELEASE_NAME: cf-networking-release
           TRACKER_API_TOKEN: ((tracker_api_token))
+      - task: silk-print-bosh-job-spec-diff
+        file: cf-networking-release-ci/ci/tasks/print-bosh-job-spec-diff/task.yml
+        input_mapping:
+          master-release: silk-master
+          other-release-version: version
       - put: silk-github-release
         params:
           name: version/number
