@@ -10,7 +10,7 @@ BOSH-lite](https://github.com/cloudfoundry/cf-deployment).
 
 For help or questions with this release or any of its submodules, you can reach
 the maintainers on Slack at
-[cloudfoundry.slack.com](https://cloudfoundry.slack.com) in the `#networking`
+[cloudfoundry.slack.com](https://cloudfoundry.slack.com) in the `#cf-for-vms-networking`
 channel.
 
 ## Downloads
