@@ -107,6 +107,13 @@ groups:
   - major-bump
   - minor-bump
   - patch-bump
+- name: finalize-release
+  jobs:
+  - ship-what
+  - ship-cf-networking-and-silk
+  - merge-master
+  - silk-merge-master
+  - bump-minor-version
 
 resources:
   ###### Control plane
