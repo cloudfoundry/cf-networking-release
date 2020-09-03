@@ -2,9 +2,13 @@
 
 CF Networking provides policy-based container networking for Cloud Foundry.
 
-For information about getting started with CF Networking, look at our docs for
-[the supported mode of deploying to AWS, GCP or
-BOSH-lite](https://github.com/cloudfoundry/cf-deployment).
+For information on getting started with Cloud Foundry look at the docs for
+[CF Deployment.](https://github.com/cloudfoundry/cf-deployment).
+
+## Downloads
+
+Our BOSH release is available [on bosh.io](http://bosh.io/releases/github.com/cloudfoundry-incubator/cf-networking-release)
+  and [on our GitHub Releases page](https://github.com/cloudfoundry-incubator/cf-networking-release/releases)
 
 ## Getting Help
 
@@ -13,9 +17,11 @@ the maintainers on Slack at
 [cloudfoundry.slack.com](https://cloudfoundry.slack.com) in the `#cf-for-vms-networking`
 channel.
 
-## Downloads
-- Our BOSH release is available [on bosh.io](http://bosh.io/releases/github.com/cloudfoundry-incubator/cf-networking-release)
-  and [on our GitHub Releases page](https://github.com/cloudfoundry-incubator/cf-networking-release/releases)
+
+
+## Contributing
+
+Please look at the ["Contributing to CF Networking" doc](docs/contributing.md) for more information.
 
 ## Documentation
 - [Architecture](docs/arch.md)
@@ -32,7 +38,7 @@ channel.
   - [Proxy](src/example-apps/proxy)
   - [Tick](src/example-apps/tick)
 - [3rd Party Plugin Development](docs/3rd-party.md)
-- [Contributing to CF Networking](docs/contributing.md)
+- 
 - [Service Discovery](docs/app-sd.md)
 - Operation
   - [Configuration](docs/configuration.md)
@@ -40,6 +46,5 @@ channel.
   - [Troubleshooting](docs/troubleshooting.md)
 
 ## Project links
-- [Design doc for Container Networking Policy](https://docs.google.com/document/d/1HDS89TJKD7ACG6cqQHph5BdNSKLt8jvo6sPGBZ5DmsM)
 - [CI dashboard](https://networking.ci.cf-app.com/)
-- [Documentation](./docs)
+
