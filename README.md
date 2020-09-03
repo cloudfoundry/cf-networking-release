@@ -31,12 +31,7 @@ Please look at the ["Contributing to CF Networking" doc](docs/contributing.md) f
   - [CLI](docs/CLI.md)
   - [Policy Server API](docs/policy-server-external-api.md)
   - [Policy Server Internal API](docs/policy-server-internal-api.md)
-- [Examples](src/example-apps)
-  - [Cats & Dogs](https://github.com/cloudfoundry/cf-networking-examples/blob/master/docs/c2c-no-service-discovery.md)
-  - [Cats & Dogs With Service Discovery](https://github.com/cloudfoundry/cf-networking-examples/blob/master/docs/c2c-with-service-discovery.md)
-  - [Eureka](src/example-apps/eureka)
-  - [Proxy](src/example-apps/proxy)
-  - [Tick](src/example-apps/tick)
+- [Example Apps and Their Use Cases](docs/example-apps-overview.md)
 - [3rd Party Plugin Development](docs/3rd-party.md)
 - 
 - [Service Discovery](docs/app-sd.md)
