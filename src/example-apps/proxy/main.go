@@ -9,47 +9,25 @@ import (
 	"strconv"
 )
 
-func launchHandler(port int, downloadHandler, digHandler, digUDPHandler, timedDigHandler, pingHandler, proxyHandler, statsHandler, uploadHandler, echoSourceIPHandler http.Handler) {
-	mux := http.NewServeMux()
-	mux.Handle("/download/", downloadHandler)
-	mux.Handle("/dig/", digHandler)
-	mux.Handle("/digudp/", digUDPHandler)
-	mux.Handle("/timed_dig/", timedDigHandler)
-	mux.Handle("/ping/", pingHandler)
-	mux.Handle("/proxy/", proxyHandler)
-	mux.Handle("/stats", statsHandler)
-	mux.Handle("/upload", uploadHandler)
-	mux.Handle("/echosourceip", echoSourceIPHandler)
-	mux.Handle("/", &handlers.InfoHandler{
-		Port: port,
-	})
-	http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", port), mux)
-}
-
 func main() {
 	systemPortString := os.Getenv("PORT")
-	systemPort, err := strconv.Atoi(systemPortString)
+	port, err := strconv.Atoi(systemPortString)
 	if err != nil {
 		log.Fatal("invalid required env var PORT")
 	}
+	stats := &handlers.Stats{Latency: []float64{}}
 
-	stats := &handlers.Stats{
-		Latency: []float64{},
-	}
-	downloadHandler := &handlers.DownloadHandler{}
-	pingHandler := &handlers.PingHandler{}
-	digHandler := &handlers.DigHandler{}
-	digUDPHandler := &handlers.DigUDPHandler{}
-	timedDigHandler := &handlers.TimedDigHandler{}
-	proxyHandler := &handlers.ProxyHandler{
-		Stats: stats,
-	}
-	statsHandler := &handlers.StatsHandler{
-		Stats: stats,
-	}
-	uploadHandler := &handlers.UploadHandler{}
+	mux := http.NewServeMux()
+	mux.Handle("/", &handlers.InfoHandler{Port: port})
+	mux.Handle("/dig/", &handlers.DigHandler{})
+	mux.Handle("/digudp/", &handlers.DigUDPHandler{})
+	mux.Handle("/download/", &handlers.DownloadHandler{})
+	mux.Handle("/echosourceip/", &handlers.EchoSourceIPHandler{})
+	mux.Handle("/ping/", &handlers.PingHandler{})
+	mux.Handle("/proxy/", &handlers.ProxyHandler{Stats: stats})
+	mux.Handle("/stats/", &handlers.StatsHandler{Stats: stats})
+	mux.Handle("/timed_dig/", &handlers.TimedDigHandler{})
+	mux.Handle("/upload/", &handlers.UploadHandler{})
 
-	echoSourceIPHandler := &handlers.EchoSourceIPHandler{}
-
-	launchHandler(systemPort, downloadHandler, digHandler, digUDPHandler, timedDigHandler, pingHandler, proxyHandler, statsHandler, uploadHandler, echoSourceIPHandler)
+	http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", port), mux)
 }
