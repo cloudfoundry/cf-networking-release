@@ -22,6 +22,7 @@ func main() {
 	mux.Handle("/dig/", &handlers.DigHandler{})
 	mux.Handle("/digudp/", &handlers.DigUDPHandler{})
 	mux.Handle("/download/", &handlers.DownloadHandler{})
+	mux.Handle("/dumprequest/", &handlers.DumpRequestHandler{})
 	mux.Handle("/echosourceip/", &handlers.EchoSourceIPHandler{})
 	mux.Handle("/ping/", &handlers.PingHandler{})
 	mux.Handle("/proxy/", &handlers.ProxyHandler{Stats: stats})
