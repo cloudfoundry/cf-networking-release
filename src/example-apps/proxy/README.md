@@ -106,7 +106,7 @@ X-Request-Start: 1600296938338
 X-Vcap-Request-Id: 2249e92a-fbc0-42e3-4d33-e341cd3969c8
 ```
 
-## `/echosourceip/`
+## `/echosourceip`
 
 [Echo source IP handler](./handlers/echo_source_ip_handler.go) responds with the
 IP address of the client making the request. This can be useful when used in
@@ -116,7 +116,7 @@ combination with the `/proxy/` endpoint
 $ curl https://proxy.mydomain.com/
 {"ListenAddresses":["127.0.0.1","10.255.208.54"],"Port":8080}
 
-$ curl https://proxy.mydomain.com/proxy/appB.apps.internal/echosourceip/
+$ curl https://proxy.mydomain.com/proxy/appB.apps.internal/echosourceip
 10.255.208.54 # IP address of the proxy app making the request
 ```
 
@@ -146,13 +146,13 @@ $ curl https://appa.mydomain.com/proxy/appB.apps.internal:8080
 {"ListenAddresses":["127.0.0.1","10.255.208.82"],"Port":8080}
 ```
 
-## `/stats/`
+## `/stats`
 
 [Stats handler](./handlers/stats_handler.go) returns latency data for prior
 requests to the `/proxy/` endpoint. Can be cleared with the `DELETE` method.
 
 ```bash
-$ curl https://appa.mydomain.com/stats/
+$ curl https://appa.mydomain.com/stats
 {"latency":[]}
 
 $ curl https://appa.mydomain.com/proxy/appB.apps.internal:8080
@@ -160,11 +160,11 @@ $ curl https://appa.mydomain.com/proxy/appB.apps.internal:8080
 $ curl https://appa.mydomain.com/proxy/appB.apps.internal:8080
 $ curl https://appa.mydomain.com/proxy/appB.apps.internal:8080
 
-$ curl https://appa.mydomain.com/stats/
+$ curl https://appa.mydomain.com/stats
 {"latency":[0.006587316,0.007722343,0.005693,0.005313626]}
 
-$ curl https://appa.mydomain.com/stats/ -X DELETE
-$ curl https://appa.mydomain.com/stats/
+$ curl https://appa.mydomain.com/stats -X DELETE
+$ curl https://appa.mydomain.com/stats
 {"latency":[]}
 ```
 
@@ -178,12 +178,12 @@ $ curl https://proxy.mydomain.com/dig/example.com
 {"lookup_time_ms":2,"ips":["93.184.216.34","\u003cnil\u003e"]}
 ```
 
-## `/upload/`
+## `/upload`
 [Upload handler](./handlers/upload_handler.go) returns the number of bytes
 received in the request body.
 
 ```bash
 $ curl https://proxy.mydomain.com/download/1024 > foo
-$ curl https://proxy.mydomain.com/upload/ --data-binary @foo
+$ curl https://proxy.mydomain.com/upload --data-binary @foo
 1024 bytes received and read
 ```
