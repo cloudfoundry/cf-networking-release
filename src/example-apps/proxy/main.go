@@ -23,12 +23,12 @@ func main() {
 	mux.Handle("/digudp/", &handlers.DigUDPHandler{})
 	mux.Handle("/download/", &handlers.DownloadHandler{})
 	mux.Handle("/dumprequest/", &handlers.DumpRequestHandler{})
-	mux.Handle("/echosourceip/", &handlers.EchoSourceIPHandler{})
+	mux.Handle("/echosourceip", &handlers.EchoSourceIPHandler{})
 	mux.Handle("/ping/", &handlers.PingHandler{})
 	mux.Handle("/proxy/", &handlers.ProxyHandler{Stats: stats})
-	mux.Handle("/stats/", &handlers.StatsHandler{Stats: stats})
+	mux.Handle("/stats", &handlers.StatsHandler{Stats: stats})
 	mux.Handle("/timed_dig/", &handlers.TimedDigHandler{})
-	mux.Handle("/upload/", &handlers.UploadHandler{})
+	mux.Handle("/upload", &handlers.UploadHandler{})
 
 	http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", port), mux)
 }
