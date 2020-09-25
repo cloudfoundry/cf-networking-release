@@ -47,3 +47,9 @@
   same diego-cell does not log to `/var/log/kern.log`. Due to this, the
   iptables-logger job is unable to read and generate the logging statements in
   `/var/vcap/sys/log/iptables-logger/iptables.log`.
+
+### When using bosh-lite, not finding iptable logging inside kern.log
+The linux kernel prevents iptable log targets from working inside a container.
+See [commit introducing the
+change](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=69b34fb996b2eee3970548cf6eb516d3ecb5eeed)
+

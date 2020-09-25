@@ -3,62 +3,23 @@
 We welcome contributions from the community.  Here are guidelines for
 development.
 
-### Running unit, integration and template tests
+1. **Create an issue**
+  
+    I can hear you already: "What? I'm trying to do the right thing and creator a PR! Why would I make an issue?"
+    If you create an issue we can help point you in the right direction  or warn you about any gotchas. Just mention in
+    the issue that you are planning on writing a PR to fix the issue. 
 
-```bash
-~/workspace/cf-networking-release/scripts/docker-test
-~/workspace/cf-networking-release/scripts/template-tests
-```
+2. **Make your changes**
 
-### Running the full acceptance test on bosh-lite
-#### Setting up
+    Make sure to add tests and docs changes here too!
 
-Run the [`scripts/deploy-to-bosh-lite`](scripts/deploy-to-bosh-lite) script.
+3. **Run tests**
+   
+   This includes unit, template, integration, and acceptance tests. See [Test Overview](test-overview.md) for how to run all of these tests.
 
-To deploy,
-[cf-networking-release](https://github.com/cloudfoundry/cf-networking-release),
-[bosh-deployment](https://github.com/cloudfoundry/bosh-deployment), and
-[cf-deployment](https://github.com/cloudfoundry/cf-deployment) repos are
-required.
+4. **Submit a PR**
 
-#### Running acceptance
+   There might be a little back and forth here, but hopefully it will be a quick and easy merge. Now you are a CF Networking Contributor. Congrats!
 
-```bash
-cd src/test/acceptance
-./run-locally.sh
-```
-
-### Referencing a new library from existing BOSH package
-
-1. Add any new libraries into the submodule from the root of the repo
-
-  ```bash
-  cd $GOPATH
-  git submodule add https://github.com/foo/bar src/github.com/foo/bar
-  ./scripts/sync-package-specs
-  ```
-
-### Adding a new BOSH package
-
-1. Add any new libraries into the submodules from the root of the repo
-  ```bash
-  cd $GOPATH
-  git submodule add https://github.com/foo/bar src/github.com/foo/bar
-  ```
-
-2. Update the package sync script:
-  ```bash
-  vim $GOPATH/scripts/sync-package-specs
-  ```
-  Find or create the `sync_package` line for `baz`
-
-3. Run the sync script:
-  ```bash
-  ./scripts/sync-package-specs
-  ```
-
-### When using bosh-lite, not finding iptable logging inside kern.log
-The linux kernel prevents iptable log targets from working inside a container.
-See [commit introducing the
-change](https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=69b34fb996b2eee3970548cf6eb516d3ecb5eeed)
-
+For help or questions with this release or any of its submodules, you can reach the maintainers on Slack at
+[cloudfoundry.slack.com](https://cloudfoundry.slack.com) in the `#cf-for-vms-networking` channel.

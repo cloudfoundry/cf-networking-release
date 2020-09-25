@@ -1,4 +1,4 @@
-# Troubleshooting
+# Troubleshooting Container to Container Networking
 
 NOTE: If you are having problems, first consult our [known issues
 doc](known-issues.md).

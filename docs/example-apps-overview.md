@@ -1,4 +1,4 @@
-# Example Apps
+# Example Apps Overview
 
 This doc provides an overview of the example apps provided and the uses cases they provide.
 

@@ -128,65 +128,7 @@ With capi-release versions >= 1.63.0:
 - A custom domain name may be used and the `apps.internal` domain may be deleted
   using the API.
 
-### Example usage
 
-For example usage, please reference our [repo of example
-apps](https://github.com/cloudfoundry/cf-networking-examples).
-
-## Architecture
-
-### Architecture Diagram
-![](architecture-diagram.png)
-
-Routes are emitted from the Route Emitter. Internal routes are emitted from the
-Route Emitter as well, on a separate topic.
-
-The NATS message queue cluster that handles routes for the gorouter also handles
-internal routes.
-
-The Service Discovery Controller (SDC) subscribes to route updates from NATS on
-the internal routes topic. The SDC is highly available. The SDC has no
-persistence, it is an in memory store of internal domain names to IPs. The SDC
-warms (populates routes) before entering service.
-
-Each Diego Cell has a BOSH DNS and a BOSH-DNS Adapter. App containers are
-configured to use the BOSH DNS server on their Deigo cell as their DNS server.
-The BOSH-DNS Adapter configures BOSH DNS to route queries for internal domains
-to itself. When a request for an internal domain hits BOSH DNS it looks at the
-domain name. If it's internal it directs the request to the BOSH-DNS Adapter.
-BOSH DNS communicates to the BOSH DNS Adapter via http (following the [Google
-DNS over
-HTTPS](https://developers.google.com/speed/public-dns/docs/dns-over-https)
-schema).
-
-The BOSH DNS adapter in turn makes a request to the SDC. This HTTP connection is
-secured using mTLS. Responses from the SDC contain all the IPs of all the app
-containers associated with the requested route. Responses from the BOSH DNS
-adapter contain all the IPs returned from the SDC, shuffled. BOSH DNS in turn
-returns the full set of IPs originally from the SDC. Clients typically use the
-first IP in the DNS response, the shuffling provides a crude form of load
-balancing.
-
-## Deployment Instructions
-
-Enable local DNS on your `bosh` director as specified
-[here](https://bosh.io/docs/dns.html).
-
-### BOSH-lite
-
-Run the [`scripts/deploy-to-bosh-lite`](scripts/deploy-to-bosh-lite) script.
-
-To deploy you will need
-[cf-networking-release](https://github.com/cloudfoundry/cf-networking-release),
-[bosh-deployment](https://github.com/cloudfoundry/bosh-deployment), and
-[cf-deployment](https://github.com/cloudfoundry/cf-deployment).
-
-### All other platforms
-
-To add service discovery to cf-deployment, include the following ops-files:
-- [Service Discovery ops file](https://github.com/cloudfoundry/cf-deployment/blob/release-candidate/operations/enable-service-discovery.yml)
-- [BOSH DNS ops file](https://github.com/cloudfoundry/cf-deployment/blob/release-candidate/operations/use-bosh-dns.yml)
-- [BOSH DNS for containers ops file](https://github.com/cloudfoundry/cf-deployment/blob/release-candidate/operations/use-bosh-dns-for-containers.yml)
 
 #### Example steps
 ***Assumes you're running a recent environment from cf-deployment***
@@ -263,27 +205,6 @@ To switch back to `info` logging:
 ```bash
 curl -X POST -d 'info' localhost:8066/log-level
 ```
-
-## Metrics
-
-Metric Name | Description
------------- | -------------
-`bosh_dns_adapter.GetIPsRequestTime` | duration of get ip request in milliseconds
-`bosh_dns_adapter.GetIPsRequestCount` | number of get ip requests
-`bosh_dns_adapter.DNSRequstFailures` | number of failed requests to the Service Discovery Controller
-`bosh_dns_adapter.uptime` | process uptime, emitted on 10 second interval
-`service_discovery_controller.RegistrationRequestTime` | duration of registration request in milliseconds
-`service_discovery_controller.RegistrationRequestCount` | number of registration requests
-`service_discovery_controller.addressTableLookupTime` | duration of looking up address table in milliseconds
-`service_discovery_controller.uptime` | process uptime, emitted on 10 second interval
-`service_discovery_controller.dnsRequest` | count of successful dnsRequests, emitted on a 10 second interval
-`service_discovery_controller.registerMessagesReceived` | count of route register messages received via NATS from route emitter
-`service_discovery_controller.maxRouteMessageTimePerInterval` | maximum time taken from BBS to SDC, only on new app creation
-
-To deploy a firehose nozzle to see the metrics, upload the
-[datadog-firehose-nozzle-release](http://bosh.io/releases/github.com/DataDog/datadog-firehose-nozzle-release)
-and follow the instructions
-[here](https://github.com/DataDog/datadog-firehose-nozzle-release) to deploy.
 
 ## Tests
 

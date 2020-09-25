@@ -1,4 +1,4 @@
-# Latency with Container to Container Networking
+# Debugging Latency with Container to Container Networking
 
 You have probably found these docs because you are experiencing latency with
 container to container networking.
