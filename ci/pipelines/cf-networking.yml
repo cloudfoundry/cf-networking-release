@@ -130,7 +130,7 @@ resources:
     icon: github-box
     source:
       branch: main
-      private_key: ((github_private_key.private_key))
+      private_key: ((networking_oss_deployments_github_key_pair.private_key))
       uri: git@github.com:cloudfoundry/networking-oss-deployments.git
   - name: cf-deployment-concourse-tasks
     type: git
