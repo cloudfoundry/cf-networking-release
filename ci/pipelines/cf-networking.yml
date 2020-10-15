@@ -246,7 +246,7 @@ resources:
     source:
       owner: cloudfoundry-incubator
       repository: bosh-backup-and-restore
-      access_token: ((github-access-token))
+      access_token: ((github_access_token))
   - name: bosh-bootloader
     type: git
     icon: github-box
@@ -340,7 +340,7 @@ resources:
     source:
       user: cloudfoundry
       repository: cf-networking-release
-      access_token: ((github-access-token))
+      access_token: ((github_access_token))
       drafts: true
   - name: silk-github-release
     type: github-release
@@ -348,7 +348,7 @@ resources:
     source:
       user: cloudfoundry
       repository: silk-release
-      access_token: ((github-access-token))
+      access_token: ((github_access_token))
       drafts: true
   # Tracker projects
   - name: cf-diego-networking-tracker
