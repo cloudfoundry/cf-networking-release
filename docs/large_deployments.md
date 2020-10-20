@@ -126,7 +126,7 @@ Increase the ARP cache size on the diego cells.
        sha1: "a60187f038d45e2886db9df82b72a9ab5fdcc49d"
      ```
  
-## Problem 3: Too freuquent and in-sync polling from the silk-daemon and the vxlan-policy-agent
+## Problem 3: Too frequent and in-sync polling from the silk-daemon and the vxlan-policy-agent
 ### Symptoms
 * All silk-daemons can't connect to the silk-controller
 * Silk-controller is overwhelmed with connections
