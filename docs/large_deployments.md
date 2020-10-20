@@ -125,10 +125,24 @@ Increase the ARP cache size on the diego cells.
        url: "https://bosh.io/d/github.com/cloudfoundry/os-conf-release?v=20.0.0"
        sha1: "a60187f038d45e2886db9df82b72a9ab5fdcc49d"
      ```
-     
-## Problem 3: Reaching the Upper Limit of Network Policies
+ 
+## Problem 3: Too freuquent and in-sync polling from the silk-daemon and the vxlan-policy-agent
+### Symptoms
+* All silk-daemons can't connect to the silk-controller
+* Silk-controller is overwhelmed with connections
+* All vxlan-policy-agents can't connect to the network-policy-server
+* Network-policy-server is overwhlemed with connections
 
-To our knowledge no one has actually run into this problem, even in the largest of deployments. However our team is asked about this, so it seems important to cover it.
+### Reason
+The silk-daemon and the vxlan-policy-agent both live on the Diego Cell. The silk-daemon polls the silk-controller [every 30 seconds by default](https://github.com/cloudfoundry/silk-release/blob/develop/jobs/silk-daemon/spec#L42-L44). The vxlan-policy-agent polls the network-policy-server [every 5 seconds by default](https://github.com/cloudfoundry/silk-release/blob/develop/jobs/vxlan-policy-agent/spec#L42-L44). If there is a high "max_in_flight" set for the Diego Cell instance group, then it is possible for many cells (50+) to start at the same time. This means that many silk-daemons and vxlan-policy-agents start polling at nearly the exact same time. This can overwhelm the jobs that they are polling.
+
+### Solution
+* Lower max in flight
+* Lower polling interval for the [silk-daemon](https://github.com/cloudfoundry/silk-release/blob/develop/jobs/silk-daemon/spec#L42-L44) and/or the [vxlan-polixy-agent](https://github.com/cloudfoundry/silk-release/blob/develop/jobs/vxlan-policy-agent/spec#L42-L44)
+
+## Problem 4: Reaching the Upper Limit of Network Policies
+
+To our knowledge no one has actually run into this problem, even in the largest of deployments. However our team is often asked about this, so it seems important to cover it.
 
 ### Summary 
 
