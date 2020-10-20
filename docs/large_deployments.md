@@ -138,7 +138,7 @@ The silk-daemon and the vxlan-policy-agent both live on the Diego Cell. The silk
 
 ### Solution
 * Lower max in flight
-* Lower polling interval for the [silk-daemon](https://github.com/cloudfoundry/silk-release/blob/develop/jobs/silk-daemon/spec#L42-L44) and/or the [vxlan-polixy-agent](https://github.com/cloudfoundry/silk-release/blob/develop/jobs/vxlan-policy-agent/spec#L42-L44)
+* Increase polling interval for the [silk-daemon](https://github.com/cloudfoundry/silk-release/blob/develop/jobs/silk-daemon/spec#L42-L44) and/or the [vxlan-polixy-agent](https://github.com/cloudfoundry/silk-release/blob/develop/jobs/vxlan-policy-agent/spec#L42-L44)
 
 ## Problem 4: Reaching the Upper Limit of Network Policies
 
