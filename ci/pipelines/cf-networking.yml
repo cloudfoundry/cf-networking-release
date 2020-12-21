@@ -137,13 +137,13 @@ resources:
     icon: github-box
     source:
       uri: https://github.com/cloudfoundry/cf-deployment-concourse-tasks
-      branch: master
+      branch: main
       tag_filter: "v*"
   - name: cf-deployment
     type: git
     icon: github-box
     source:
-      branch: master
+      branch: main
       uri: https://github.com/cloudfoundry/cf-deployment.git
   - name: cf-networking-2.23.0
     type: git
@@ -251,7 +251,7 @@ resources:
     type: git
     icon: github-box
     source:
-      branch: master
+      branch: main
       uri: https://github.com/cloudfoundry/bosh-bootloader.git
   ####### Stats
   - name: toque-stats
