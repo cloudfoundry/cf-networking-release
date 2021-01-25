@@ -2,7 +2,7 @@
 
 set -e -u
 export PIPELINE=${1:-cf-networking}
-export TARGET=ga
+export TARGET=net
 
 fly -t $TARGET sync
 fly -t $TARGET status || fly -t $TARGET login -b

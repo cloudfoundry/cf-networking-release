@@ -130,7 +130,7 @@ resources:
     icon: github-box
     source:
       branch: main
-      private_key: ((networking_oss_deployments_github_key_pair.private_key))
+      private_key: ((routing-ci-bot-ssh-key.private_key))
       uri: git@github.com:cloudfoundry/networking-oss-deployments.git
   - name: cf-deployment-concourse-tasks
     type: git
@@ -185,7 +185,7 @@ resources:
     source:
       uri: git@github.com:cloudfoundry/silk-release.git
       branch: develop
-      private_key: ((silk-release-deploy-key.private_key))
+      private_key: ((routing-ci-bot-ssh-key.private_key))
   - name: silk-dev
     type: git
     icon: github-box
@@ -194,21 +194,21 @@ resources:
       branch: develop
       ignore_paths:
         - docs
-      private_key: ((silk-release-deploy-key.private_key))
+      private_key: ((routing-ci-bot-ssh-key.private_key))
   - name: silk-master
     type: git
     icon: github-box
     source:
       uri: git@github.com:cloudfoundry/silk-release.git
       branch: release
-      private_key: ((silk-release-deploy-key.private_key))
+      private_key: ((routing-ci-bot-ssh-key.private_key))
   - name: cf-networking-dev-full
     type: git
     icon: github-box
     source:
       uri: git@github.com:cloudfoundry/cf-networking-release.git
       branch: develop
-      private_key: ((cf-networking-deploy-key.private_key))
+      private_key: ((routing-ci-bot-ssh-key.private_key))
   - name: cf-networking-dev
     type: git
     icon: github-box
@@ -218,28 +218,28 @@ resources:
       ignore_paths:
         - docs
         - ci
-      private_key: ((cf-networking-deploy-key.private_key))
+      private_key: ((routing-ci-bot-ssh-key.private_key))
   - name: cf-networking-master
     type: git
     icon: github-box
     source:
       uri: git@github.com:cloudfoundry/cf-networking-release.git
       branch: release
-      private_key: ((cf-networking-deploy-key.private_key))
+      private_key: ((routing-ci-bot-ssh-key.private_key))
   - name: cf-networking-release-candidate
     type: git
     icon: github-box
     source:
       uri: git@github.com:cloudfoundry/cf-networking-release.git
       branch: release-candidate
-      private_key: ((cf-networking-deploy-key.private_key))
+      private_key: ((routing-ci-bot-ssh-key.private_key))
   - name: silk-release-candidate
     type: git
     icon: github-box
     source:
       uri: git@github.com:cloudfoundry/silk-release.git
       branch: release-candidate
-      private_key: ((silk-release-deploy-key.private_key))
+      private_key: ((routing-ci-bot-ssh-key.private_key))
   - name: bbr-binary-release
     type: github-release
     icon: github-face
@@ -260,7 +260,7 @@ resources:
     source:
       uri: "git@github.com:cf-container-networking/toque-stats.git"
       branch: master
-      private_key: ((container-networking-bot-key.private_key))
+      private_key: ((routing-ci-bot-ssh-key.private_key))
   ####### Timers
   - name: trigger-upgrade-deploy
     type: time
