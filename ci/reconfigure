@@ -1,12 +1,15 @@
 #!/bin/bash
 
-set -e -u
+set -euo pipefail
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
 export PIPELINE=${1:-cf-networking}
 export TARGET=net
 
-fly -t $TARGET sync
-fly -t $TARGET status || fly -t $TARGET login -b
+fly -t "${TARGET}" sync
+fly -t "${TARGET}" status || fly -t "${TARGET}" login -b
 
 fly -t $TARGET \
-  set-pipeline -p $PIPELINE \
-  -c $HOME/workspace/cf-networking-release/ci/pipelines/$PIPELINE.yml
+  set-pipeline -p "${PIPELINE}" \
+  -c "${DIR}/pipelines/${PIPELINE}.yml"
