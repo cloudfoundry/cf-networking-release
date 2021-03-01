@@ -13,11 +13,9 @@
   #  >  silk-dev
   #  >  cf-networking-dev
   #  >  cf-acceptance-tests
-# 8. Remove capi-ci-passed
-# 9. Don't deploy with the following opsfiles
+# 8. Don't deploy with the following opsfiles
   #  >  custom-apps-domain/task.yml
   #  >  enable-iptables-logger/task.yml
-  #  >  use-latest-capi/task.yml
   #  >  add-fake-istio-router-on-overlay/task.yml
 
 
@@ -173,12 +171,6 @@ resources:
       branch: master
       tag_filter: v*
       uri: https://github.com/bosh-packages/golang-release.git
-  - name: capi-ci-passed
-    type: git
-    icon: github-box
-    source:
-      uri: https://github.com/cloudfoundry/capi-release.git
-      branch: ci-passed
   - name: silk-dev-full
     type: git
     icon: github-box
@@ -588,7 +580,6 @@ jobs:
     serial_groups: [pickelhelm]
     plan:
     - in_parallel:
-      - get: capi-ci-passed
       - get: cf-networking-release-ci
         params:
           submodules: none
@@ -617,13 +608,6 @@ jobs:
           BBL_STATE_DIR: environments/pickelhelm/bbl-state
         input_mapping:
           bbl-state: networking-oss-deployments
-      - task: upload-local-capi-release
-        file: cf-networking-release-ci/ci/tasks/upload-local-release/task.yml
-        input_mapping:
-          bbl-state: networking-oss-deployments
-          local-release: capi-ci-passed
-        params:
-          BBL_STATE_DIR: environments/pickelhelm/bbl-state
       - task: upload-local-networking-release
         file: cf-networking-release-ci/ci/tasks/upload-local-release/task.yml
         input_mapping:
@@ -655,7 +639,6 @@ jobs:
           cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
           cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
           cf-networking-release-ci/ci/opsfiles/use-latest-silk.yml
-          cf-networking-release-ci/ci/opsfiles/use-latest-capi.yml
           cf-networking-release-ci/ci/opsfiles/use-latest-cf-networking.yml
           deployments-repo/opsfiles/pickelhelm-use-external-postgres-for-c2c.yml
           cf-deployment/operations/enable-service-discovery.yml
@@ -784,8 +767,6 @@ jobs:
     serial_groups: [mitre-deploy-group, version]
     plan:
     - in_parallel:
-      - get: capi-ci-passed
-        passed: [pickelhelm-deploy]
       - get: cf-networking-release-ci
         params:
           submodules: none
@@ -818,13 +799,6 @@ jobs:
           BBL_STATE_DIR: environments/mitre/bbl-state
         input_mapping:
           bbl-state: networking-oss-deployments
-      - task: upload-local-capi-release
-        file: cf-networking-release-ci/ci/tasks/upload-local-release/task.yml
-        input_mapping:
-          bbl-state: networking-oss-deployments
-          local-release: capi-ci-passed
-        params:
-          BBL_STATE_DIR: environments/mitre/bbl-state
       - task: upload-cfnetworking-release
         file: cf-networking-release-ci/ci/tasks/upload-local-release/task.yml
         input_mapping:
@@ -877,7 +851,6 @@ jobs:
           cf-networking-release-ci/ci/opsfiles/custom-apps-domain.yml
           cf-deployment/operations/experimental/enable-iptables-logger.yml
           cf-networking-release-ci/ci/opsfiles/use-latest-silk.yml
-          cf-networking-release-ci/ci/opsfiles/use-latest-capi.yml
           cf-networking-release-ci/ci/opsfiles/use-latest-cf-networking.yml
           cf-deployment/operations/enable-service-discovery.yml
           cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain.yml
@@ -1219,7 +1192,6 @@ jobs:
     serial_groups: [toque]
     plan:
     - in_parallel:
-      - get: capi-ci-passed
       - get: cf-deployment-concourse-tasks
       - get: cf-deployment
       - get: cf-networking-release-ci
@@ -1237,13 +1209,6 @@ jobs:
         file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
         input_mapping:
           bbl-state: networking-oss-deployments
-        params:
-          BBL_STATE_DIR: environments/toque/bbl-state
-      - task: upload-local-capi-release
-        file: cf-networking-release-ci/ci/tasks/upload-local-release/task.yml
-        input_mapping:
-          bbl-state: networking-oss-deployments
-          local-release: capi-ci-passed
         params:
           BBL_STATE_DIR: environments/toque/bbl-state
       - task: upload-local-silk-release
@@ -1288,7 +1253,6 @@ jobs:
           cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
           cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
           cf-networking-release-ci/ci/opsfiles/use-latest-silk.yml
-          cf-networking-release-ci/ci/opsfiles/use-latest-capi.yml
           cf-networking-release-ci/ci/opsfiles/use-latest-cf-networking.yml
           cf-deployment/operations/enable-service-discovery.yml
           cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain.yml
