@@ -649,6 +649,7 @@ jobs:
           cf-deployment/operations/experimental/enable-iptables-logger.yml
           cf-networking-release-ci/ci/opsfiles/scale-to-2-diego-cells.yml
           cf-networking-release-ci/ci/opsfiles/lower-canary-watch-time.yml
+          cf-networking-release-ci/ci/opsfiles/use-stemcell-621.101.yml
       input_mapping:
         bbl-state: networking-oss-deployments
         release: cf-networking-dev
@@ -1267,6 +1268,7 @@ jobs:
           cf-networking-release-ci/ci/opsfiles/scale-router-ephemeral-disk.yml
           cf-networking-release-ci/ci/opsfiles/scale-to-3-diego-cells.yml
           cf-networking-release-ci/ci/opsfiles/lower-canary-watch-time.yml
+          cf-networking-release-ci/ci/opsfiles/use-stemcell-621.101.yml
       input_mapping:
         bbl-state: networking-oss-deployments
         release: cf-networking-dev
@@ -1464,6 +1466,7 @@ jobs:
           cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain.yml
           cf-networking-release-ci/ci/opsfiles/scale-up-4-api-instances.yml
           cf-networking-release-ci/ci/opsfiles/lower-canary-watch-time.yml
+          cf-networking-release-ci/ci/opsfiles/use-stemcell-621.101.yml
         VARS_FILES: |
           deployment-helpers/caubeen-gcs-vars.yml
       input_mapping:
