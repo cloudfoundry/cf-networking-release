@@ -1,3 +1,0 @@
-- path: /stemcells/alias=default/version
-  type: replace
-  value: 621.101
