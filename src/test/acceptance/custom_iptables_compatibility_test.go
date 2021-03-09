@@ -42,7 +42,7 @@ var _ = Describe("Custom iptables compatibility", func() {
 	Describe("when a custom iptables rule is added and a new app is pushed", func() {
 		It("still applies the iptable rule to the new app", func(done Done) {
 			By("checking that the app can reach the process running on the host")
-			session := cf.Cf("ssh", appName, "-c", "curl $CF_INSTANCE_IP:8898").Wait(5 * time.Second)
+			session := cf.Cf("ssh", appName, "-c", "curl $CF_INSTANCE_IP:8898").Wait(10 * time.Second)
 			Eventually(session).Should(gexec.Exit(0))
 			Expect(session.Out).To(gbytes.Say("Hello world!!"))
 
