@@ -78,7 +78,7 @@ var _ = Describe("task connectivity on the overlay network", func() {
 			Expect(cfCLI.RunTask(proxy1, commandToRun)).To(Succeed())
 
 			Eventually(func() *gbytes.Buffer {
-				return cf.Cf("tasks", proxy1).Wait(5 * time.Second).Out
+				return cf.Cf("tasks", proxy1).Wait(10 * time.Second).Out
 			}, Timeout_Task_Curl).Should(gbytes.Say("SUCCEEDED"))
 
 			close(done)
