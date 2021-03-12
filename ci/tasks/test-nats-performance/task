@@ -19,7 +19,7 @@ export PATH="${GOPATH}/bin":$PATH
 go get -u github.com/onsi/ginkgo/ginkgo
 
 export CONFIG="$PWD/deployments-repo/$TEST_CONFIG_DIR/perf-config.json"
-
+export GO111MODULE="auto"
 pushd cf-networking/src/test/performance-sd
    ginkgo -race deploy/
    bosh -d performance run-errand performance-test-sd --keep-alive
