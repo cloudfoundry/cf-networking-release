@@ -1564,8 +1564,10 @@ jobs:
       params:
         ENVIRONMENT_NAME: caubeen
     - task: run-drats
-      privileged: true
       file: disaster-recovery-acceptance-tests/ci/tasks/drats-with-integration-config/task.yml
+      privileged: true
+      params:
+        CF_DIAL_TIMEOUT: 10
 ##### Human-triggered utilities
 
   - name: delete-pickelhelm-deployment
