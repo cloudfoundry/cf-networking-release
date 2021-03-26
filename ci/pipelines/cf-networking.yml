@@ -1261,7 +1261,6 @@ jobs:
           cf-deployment/operations/experimental/enable-iptables-logger.yml
           cf-networking-release-ci/ci/opsfiles/change-nats-monitor-port.yml
           cf-networking-release-ci/ci/opsfiles/increase-diego-cell-mtu.yml
-          cf-networking-release-ci/ci/opsfiles/scale-diego-cell-max-in-flight.yml
           cf-networking-release-ci/ci/opsfiles/scale-diego-cell-vm-size.yml
           cf-networking-release-ci/ci/opsfiles/scale-max-containers.yml
           cf-networking-release-ci/ci/opsfiles/scale-router-ephemeral-disk.yml
