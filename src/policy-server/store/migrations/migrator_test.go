@@ -1675,6 +1675,55 @@ var _ = Describe("migrations", func() {
 			})
 		})
 
+		Describe("V65 - Prevent policies without destinations", func() {
+			It("should have foreign key constraints after the migration", func() {
+				By("migrating up to 65")
+				migrateTo("65")
+
+				var srcGroupId, dstGroupId, dstId, policyId int64
+
+				By("inserting a src group")
+				_, err := realDb.Exec(`insert into groups (guid) values ('src-group-guid')`)
+				Expect(err).NotTo(HaveOccurred())
+				err = realDb.QueryRow(`SELECT id FROM groups WHERE guid='src-group-guid'`).Scan(&srcGroupId)
+				Expect(err).NotTo(HaveOccurred())
+
+				By("inserting a dst group")
+				_, err = realDb.Exec(`insert into groups (guid) values ('dst-group-guid')`)
+				Expect(err).NotTo(HaveOccurred())
+				err = realDb.QueryRow(`SELECT id FROM groups WHERE guid='dst-group-guid'`).Scan(&dstGroupId)
+				Expect(err).NotTo(HaveOccurred())
+
+				By("inserting a destination")
+				_, err = realDb.Exec(fmt.Sprintf("insert into destinations (group_id, protocol, start_port, end_port) values (%d, 'tcp', 9889, 9999)", dstGroupId))
+				Expect(err).NotTo(HaveOccurred())
+				err = realDb.QueryRow(`SELECT id FROM destinations WHERE start_port=9889`).Scan(&dstId)
+				Expect(err).NotTo(HaveOccurred())
+
+				By("inserting a policy")
+				_, err = realDb.Exec(fmt.Sprintf("insert into policies (group_id, destination_id) values (%d, %d)", srcGroupId, dstId))
+				Expect(err).NotTo(HaveOccurred())
+				err = realDb.QueryRow(fmt.Sprintf(`SELECT id FROM policies WHERE destination_id=%d`, dstId)).Scan(&policyId)
+				Expect(err).NotTo(HaveOccurred())
+
+				By("trying to change the dest_id to an id that DNE")
+				_, err = realDb.Exec(fmt.Sprintf("UPDATE policies SET destination_id=999 WHERE id=%d", policyId))
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(Or(
+					ContainSubstring("violates foreign key constraint"), // postgres error
+					ContainSubstring("a foreign key constraint fails"),  // mysql error
+				))
+
+				By("trying to delete the dst")
+				_, err = realDb.Exec(fmt.Sprintf("DELETE FROM destinations WHERE id=%d", dstId))
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(Or(
+					ContainSubstring("violates foreign key constraint"), // postgres error
+					ContainSubstring("a foreign key constraint fails"),  // mysql error
+				))
+			})
+		})
+
 		Context("when migrating in parallel", func() {
 			Context("mysql", func() {
 				BeforeEach(func() {
@@ -1765,33 +1814,20 @@ var _ = Describe("migrations", func() {
 
 	Describe("Down Migration", func() {
 		It("should no-op", func() {
-			adapter := &migrations.MigrateAdapter{}
+			adapter := migrations.MigrateAdapter{}
 
-			_, err := adapter.ExecMax(
-				realDb,
-				realDb.DriverName(),
-				migrate.MemoryMigrationSource{
-					Migrations: migrations.MigrationsToPerform.ForDriver(realDb.DriverName()),
-				},
-				migrate.Up,
-				0,
-			)
-			Expect(err).NotTo(HaveOccurred())
+			migrateUp(realDb, adapter, migrations.V1ModifiedMigrationsToPerform)
+			migrateUp(realDb, adapter, migrations.V2ModifiedMigrationsToPerform)
+			migrateUp(realDb, adapter, migrations.V3ModifiedMigrationsToPerform)
+			migrateUp(realDb, adapter, migrations.MigrationsToPerform)
 
-			numberOfMigrations, err := adapter.ExecMax(
-				realDb,
-				realDb.DriverName(),
-				migrate.MemoryMigrationSource{
-					Migrations: migrations.MigrationsToPerform.ForDriver(realDb.DriverName()),
-				},
-				migrate.Down,
-				0,
-			)
-
-			Expect(err).To(MatchError("down migration not supported"))
-			Expect(numberOfMigrations).To(Equal(0))
+			migrateDown(realDb, adapter, migrations.V1ModifiedMigrationsToPerform)
+			migrateDown(realDb, adapter, migrations.V2ModifiedMigrationsToPerform)
+			migrateDown(realDb, adapter, migrations.V3ModifiedMigrationsToPerform)
+			migrateDown(realDb, adapter, migrations.MigrationsToPerform)
 		})
 	})
+
 	Describe("Migrations should be atomic", func() {
 		It("should contain a single statement per migration", func() {
 			for _, migration := range migrations.MigrationsToPerform {
@@ -1801,11 +1837,37 @@ var _ = Describe("migrations", func() {
 							migration.Id, dbType, len(statements)))
 					}
 				}
-
 			}
 		})
 	})
 })
+
+func migrateUp(realDb *db.ConnWrapper, adapter migrations.MigrateAdapter, migrationGroup migrations.PolicyServerMigrations) {
+	_, err := adapter.ExecMax(
+		realDb,
+		realDb.DriverName(),
+		migrate.MemoryMigrationSource{
+			Migrations: migrationGroup.ForDriver(realDb.DriverName()),
+		},
+		migrate.Up,
+		0,
+	)
+	Expect(err).NotTo(HaveOccurred())
+}
+
+func migrateDown(realDb *db.ConnWrapper, adapter migrations.MigrateAdapter, migrationGroup migrations.PolicyServerMigrations) {
+	numberOfMigrations, err := adapter.ExecMax(
+		realDb,
+		realDb.DriverName(),
+		migrate.MemoryMigrationSource{
+			Migrations: migrationGroup.ForDriver(realDb.DriverName()),
+		},
+		migrate.Down,
+		0,
+	)
+	Expect(err).To(MatchError("down migration not supported"))
+	Expect(numberOfMigrations).To(Equal(0))
+}
 
 func expectMigrations(realDb *db.ConnWrapper, expectedMigrations []string) {
 	rows, err := realDb.Query(`select ID from gorp_migrations`)
