@@ -10,6 +10,7 @@ export NETWORK_STATS_FILE=$PWD/network-stats/stats.json
 
 cd cf-networking
 export GOPATH=$PWD
+export GO111MODULE=auto
 
 cd src/test/scaling
 ginkgo -v

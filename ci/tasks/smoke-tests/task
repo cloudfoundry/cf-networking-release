@@ -14,6 +14,7 @@ function main() {
   echo "${CONFIG}"
   pushd "${ROOT}/cf-networking/src/test/smoke" > /dev/null
     set +e
+    export GO111MODULE=auto
     ginkgo -r -v
     exit_status="$?"
     set -e
