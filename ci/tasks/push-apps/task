@@ -8,5 +8,6 @@ export APPS_DIR=${PWD}/cf-networking/src/example-apps
 
 cd cf-networking
 export GOPATH=$PWD
+export GO111MODULE=auto
 
 go run src/cf-pusher/cmd/cf-pusher/main.go --config "${CONFIG}"
