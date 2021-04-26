@@ -1,5 +1,6 @@
 #!/bin/bash
 set -eu
+export GO111MODULE=auto
 
 mkdir ../src && cp -a * ../src/ && mv ../src ./src
 mkdir -p $BOSH_INSTALL_TARGET/bin
