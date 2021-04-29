@@ -1,5 +1,7 @@
 set -e -x
 
+export GO111MODULE=auto
+
 pushd ${BOSH_INSTALL_TARGET} > /dev/null
   source /var/vcap/packages/golang-1-linux/bosh/compile.env
 popd > /dev/null
