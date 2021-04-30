@@ -3,6 +3,7 @@
 set -exu
 set -o pipefail
 
+export GO111MODULE=auto
 
 pushd /var/vcap/packages/performance-test-sd > /dev/null
   source /var/vcap/packages/golang-1-linux/bosh/compile.env
