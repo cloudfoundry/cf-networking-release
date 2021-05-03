@@ -97,7 +97,7 @@ export GO111MODULE=auto
 if [ "${1:-""}" = "" ]; then
   for dir in "${packages[@]}"; do
     pushd "$dir"
-      ginkgo -p --race -randomizeAllSpecs -randomizeSuites \
+      ginkgo -p --nodes 4 --race -randomizeAllSpecs -randomizeSuites \
         -ldflags="-extldflags=-Wl,--allow-multiple-definition" \
         ${@:2}
     popd
