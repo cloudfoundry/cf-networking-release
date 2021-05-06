@@ -104,7 +104,7 @@ if [ "${1:-""}" = "" ]; then
   done
   for dir in "${serial_packages[@]}"; do
     pushd "$dir"
-      ginkgo --race -randomizeAllSpecs -randomizeSuites -failFast \
+      ginkgo --nodes 4 --race -randomizeAllSpecs -randomizeSuites -failFast \
         -ldflags="-extldflags=-Wl,--allow-multiple-definition" \
         ${@:2}
     popd
