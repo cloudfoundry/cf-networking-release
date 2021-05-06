@@ -390,8 +390,11 @@ jobs:
     - task: unit-and-integration-tests
       file: cf-networking-release-ci/ci/tasks/mysql-tests/task.yml
       privileged: true
+      attempts: 1
       input_mapping:
         cf-networking-release: cf-networking-dev
+      params:
+        SERIAL_NODES: 1
 
   - name: mysql-5.6-tests
     serial: true
@@ -405,8 +408,11 @@ jobs:
     - task: unit-and-integration-tests
       file: cf-networking-release-ci/ci/tasks/mysql-5.6-tests/task.yml
       privileged: true
+      attempts: 1
       input_mapping:
         cf-networking-release: cf-networking-dev
+      params:
+        SERIAL_NODES: 1
 
   - name: silk-postgres-tests
     plan:

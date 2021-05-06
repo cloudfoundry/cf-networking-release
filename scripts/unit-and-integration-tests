@@ -7,6 +7,8 @@ SCRIPT_PATH="$(cd "$(dirname $0)" && pwd)"
 cd ${SCRIPT_PATH}/..
 export GOPATH="${SCRIPT_PATH}/.."
 
+SERIAL_NODES="${SERIAL_NODES:-4}"
+
 declare -a serial_packages=(
   "src/policy-server/integration/timeouts"
   "src/policy-server/integration"
@@ -104,7 +106,7 @@ if [ "${1:-""}" = "" ]; then
   done
   for dir in "${serial_packages[@]}"; do
     pushd "$dir"
-      ginkgo --nodes 4 --race -randomizeAllSpecs -randomizeSuites -failFast \
+      ginkgo --nodes "${SERIAL_NODES}" --race -randomizeAllSpecs -randomizeSuites -failFast \
         -ldflags="-extldflags=-Wl,--allow-multiple-definition" \
         ${@:2}
     popd

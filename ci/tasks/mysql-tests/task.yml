@@ -15,3 +15,4 @@ run:
 params:
   GINKGO_EXTRA_FLAGS: "-race"
   DB: mysql
+  SERIAL_NODES: ~
