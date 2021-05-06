@@ -8,17 +8,17 @@ function cleanup() {
 
 trap 'cleanup' EXIT
 
-# Targetting director
-pushd "deployments-repo/$BBL_STATE_DIR"
-  eval "$(bbl print-env)"
-popd
+ROOT="$(cd "$(dirname $0)/../../../.." && pwd)"
+
+source "${ROOT}/cf-deployment-concourse-tasks/shared-functions"
+setup_bosh_env_vars
 
 export GOPATH=$PWD/cf-networking
 export PATH="${GOPATH}/bin":$PATH
+export CONFIG="${CONFIG:-"${ROOT}/test-config/perf-config.json"}"
 
 go get -u github.com/onsi/ginkgo/ginkgo
 
-export CONFIG="$PWD/deployments-repo/$TEST_CONFIG_DIR/perf-config.json"
 export GO111MODULE="auto"
 pushd cf-networking/src/test/performance-sd
    ginkgo -race deploy/

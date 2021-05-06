@@ -1,6 +1,6 @@
 ---
 image_resource:
-  type: docker-image
+  type: registry-image
   source: { repository: c2cnetworking/small-git }
 
 platform: linux

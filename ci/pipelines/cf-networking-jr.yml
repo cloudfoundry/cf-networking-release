@@ -1,0 +1,1441 @@
+# Steps for making a branch pipeline
+# 1. Delete all caubeen and toque items
+# 2. Delete all pickelhelm items, we don't patch for postgres
+# 3. Delete all version and tarball items
+# 4. Delete ship it. We tag the 'release' manually.
+# 5. Switch cf-networking-dev and cf-networking-dev-ci to use the lts repo
+# 6. Branch disaster-recovery-acceptance-tests into cf-container-networking
+# 7. Pin resources:
+  #  >  cf-networking-release-ci
+  #  >  networking-oss-deployments
+  #  >  cf-deployment-concourse-tasks
+  #  >  cf-deployment
+  #  >  silk-dev
+  #  >  cf-networking-dev
+  #  >  cf-acceptance-tests
+# 8. Don't deploy with the following opsfiles
+  #  >  custom-apps-domain/task.yml
+  #  >  enable-iptables-logger/task.yml
+  #  >  add-fake-istio-router-on-overlay/task.yml
+
+
+groups: []
+
+resource_types:
+- name: pcf-pool
+  type: docker-image
+  source:
+    repository: cftoolsmiths/toolsmiths-envs-resource
+
+resources:
+  - name: toolsmiths-pool
+    type: pcf-pool
+    source:
+      api_token: ((toolsmiths_api_key))
+      hostname: environments.toolsmiths.cf-app.com
+      pool_name: cf-deployment
+  ###### Control plane
+  - name: cf-networking-release-ci
+    type: git
+    icon: github-box
+    source:
+      uri: https://github.com/cloudfoundry/cf-networking-release
+      branch: use-toolsmiths-envs
+      paths:
+        - ci
+  - name: networking-oss-deployments
+    type: git
+    icon: github-box
+    source:
+      branch: main
+      private_key: ((routing-ci-bot-ssh-key.private_key))
+      uri: git@github.com:cloudfoundry/networking-oss-deployments.git
+  - name: cf-deployment-concourse-tasks
+    type: git
+    icon: github-box
+    source:
+      uri: https://github.com/cloudfoundry/cf-deployment-concourse-tasks
+      branch: main
+      tag_filter: "v*"
+  - name: cf-deployment
+    type: git
+    icon: github-box
+    source:
+      branch: main
+      uri: https://github.com/cloudfoundry/cf-deployment.git
+  # - name: cf-networking-2.23.0
+  #   type: git
+  #   icon: github-box
+  #   source:
+  #     branch: release
+  #     uri: https://github.com/cloudfoundry/cf-networking-release.git
+  #     tag_filter: "2.23.0"
+  # - name: silk-2.23.0
+  #   type: git
+  #   icon: github-box
+  #   source:
+  #     branch: release
+  #     uri: https://github.com/cloudfoundry/silk-release.git
+  #     tag_filter: "2.23.0"
+  # - name: disaster-recovery-acceptance-tests
+  #   type: git
+  #   icon: github-box
+  #   source:
+  #     branch: master
+  #     uri: https://github.com/cloudfoundry-incubator/disaster-recovery-acceptance-tests
+  ###### BOSH release repos
+  # - name: golang-release-latest
+  #   type: git
+  #   icon: github-box
+  #   source:
+  #     branch: master
+  #     tag_filter: v*
+  #     uri: https://github.com/bosh-packages/golang-release.git
+  # - name: silk-dev-full
+  #   type: git
+  #   icon: github-box
+  #   source:
+  #     uri: git@github.com:cloudfoundry/silk-release.git
+  #     branch: develop
+  #     private_key: ((routing-ci-bot-ssh-key.private_key))
+  - name: silk-dev
+    type: git
+    icon: github-box
+    source:
+      uri: git@github.com:cloudfoundry/silk-release.git
+      branch: develop
+      ignore_paths:
+        - docs
+      private_key: ((routing-ci-bot-ssh-key.private_key))
+  # - name: silk-master
+  #   type: git
+  #   icon: github-box
+  #   source:
+  #     uri: git@github.com:cloudfoundry/silk-release.git
+  #     branch: release
+  #     private_key: ((routing-ci-bot-ssh-key.private_key))
+  # - name: cf-networking-dev-full
+  #   type: git
+  #   icon: github-box
+  #   source:
+  #     uri: git@github.com:cloudfoundry/cf-networking-release.git
+  #     branch: develop
+  #     private_key: ((routing-ci-bot-ssh-key.private_key))
+  - name: cf-networking-dev
+    type: git
+    icon: github-box
+    source:
+      uri: git@github.com:cloudfoundry/cf-networking-release.git
+      branch: use-toolsmiths-envs
+      ignore_paths:
+        - docs
+        - ci
+      private_key: ((routing-ci-bot-ssh-key.private_key))
+  # - name: cf-networking-master
+  #   type: git
+  #   icon: github-box
+  #   source:
+  #     uri: git@github.com:cloudfoundry/cf-networking-release.git
+  #     branch: release
+  #     private_key: ((routing-ci-bot-ssh-key.private_key))
+  # - name: cf-networking-release-candidate
+  #   type: git
+  #   icon: github-box
+  #   source:
+  #     uri: git@github.com:cloudfoundry/cf-networking-release.git
+  #     branch: release-candidate
+  #     private_key: ((routing-ci-bot-ssh-key.private_key))
+  # - name: silk-release-candidate
+  #   type: git
+  #   icon: github-box
+  #   source:
+  #     uri: git@github.com:cloudfoundry/silk-release.git
+  #     branch: release-candidate
+  #     private_key: ((routing-ci-bot-ssh-key.private_key))
+  # - name: bbr-binary-release
+  #   type: github-release
+  #   icon: github-face
+  #   source:
+  #     owner: cloudfoundry-incubator
+  #     repository: bosh-backup-and-restore
+  #     access_token: ((github_access_token))
+  # - name: bosh-bootloader
+  #   type: git
+  #   icon: github-box
+  #   source:
+  #     branch: main
+  #     uri: https://github.com/cloudfoundry/bosh-bootloader.git
+  ####### Stats
+  # - name: toque-stats
+  #   type: git
+  #   icon: github-box
+  #   source:
+  #     uri: "git@github.com:cf-container-networking/toque-stats.git"
+  #     branch: master
+  #     private_key: ((routing-ci-bot-ssh-key.private_key))
+  ####### Timers
+  # - name: trigger-upgrade-deploy
+  #   type: time
+  #   icon: clock-outline
+  #   source:
+  #     location: America/Los_Angeles
+  #     start: 4:00 AM
+  #     stop: 4:15 AM
+  #     days: [ Monday, Tuesday, Wednesday, Thursday, Friday ]
+  # - name: trigger-caubeen-delete
+  #   type: time
+  #   icon: clock-outline
+  #   source:
+  #     location: America/Los_Angeles
+  #     start: 8:00 PM
+  #     stop: 8:15 PM
+  #     days: [ Monday, Tuesday, Wednesday, Thursday, Friday ]
+  # - name: trigger-caubeen-cleanup
+  #   type: time
+  #   icon: clock-outline
+  #   source:
+  #     location: America/Los_Angeles
+  #     start: 2:00 PM
+  #     stop: 2:15 PM
+  #     days: [ Saturday ]
+  # - name: every-two-minutes
+  #   type: time
+  #   icon: clock-outline
+  #   source:
+  #     interval: 2m
+  ####### Tests
+  - name: cf-acceptance-tests
+    type: git
+    icon: github-box
+    source:
+      branch: release-candidate
+      uri: git://github.com/cloudfoundry/cf-acceptance-tests.git
+  # - name: toque-scaling-test-params
+  #   type: git
+  #   icon: github-box
+  #   source:
+  #     uri: https://github.com/cf-container-networking/toque-scaling
+  #     branch: main
+  #     paths: [ test-params ]
+  # #######  Release management
+  - name: version
+    type: semver
+    source:
+      bucket: ((cf-networking-s3-bucket))
+      region_name: us-west-2
+      initial_version: 0.2.0-rc.1
+      key: releases/current-version
+      access_key_id: ((aws-access-key-id))
+      secret_access_key: ((aws-secret-access-key))
+  - name: cf-networking-tarball
+    type: s3
+    icon: cloud-download
+    source:
+      bucket: ((cf-networking-candidate-s3-bucket))
+      region_name: us-west-2
+      regexp: releases/cf-networking-(.*).tgz
+      access_key_id: ((aws-access-key-id))
+      secret_access_key: ((aws-secret-access-key))
+  - name: silk-tarball
+    type: s3
+    icon: cloud-download
+    source:
+      bucket: ((silk-candidate-s3-bucket))
+      region_name: us-west-2
+      regexp: releases/silk-(.*).tgz
+      access_key_id: ((aws-access-key-id))
+      secret_access_key: ((aws-secret-access-key))
+  # # Github release
+  # - name: cf-networking-github-release
+  #   type: github-release
+  #   icon: github-face
+  #   source:
+  #     user: cloudfoundry
+  #     repository: cf-networking-release
+  #     access_token: ((github_access_token))
+  #     drafts: true
+  # - name: silk-github-release
+  #   type: github-release
+  #   icon: github-face
+  #   source:
+  #     user: cloudfoundry
+  #     repository: silk-release
+  #     access_token: ((github_access_token))
+  #     drafts: true
+  # # Tracker projects
+  # - name: cf-diego-networking-tracker
+  #   type: tracker
+  #   source:
+  #     token: ((tracker_api_token))
+  #     project_id: '2245594'
+  #     tracker_url: https://www.pivotaltracker.com
+
+jobs:
+  - name: pickelhelm-deploy
+    serial_groups: [pickelhelm]
+    plan:
+    - in_parallel:
+      - get: cf-networking-release-ci
+        params:
+          submodules: none
+      - get: cf-deployment-concourse-tasks
+      - get: networking-oss-deployments
+      - get: cf-deployment
+        trigger: true
+      - get: cf-networking-dev
+        trigger: true
+        # passed: [unit-and-integration-tests]
+      - get: silk-dev
+        trigger: true
+        # passed: [unit-and-integration-tests]
+    - in_parallel:
+      - put: pickelhelm
+        resource: toolsmiths-pool
+        inputs: []
+        params:
+          action: claim
+      - task: collect-ops-files
+        file: cf-networking-release-ci/ci/tasks/collect-named-ops-files/task.yml
+        params:
+          ENVIRONMENT_NAME: pickelhelm
+        input_mapping:
+          cf-networking-release: cf-networking-dev
+          deployments-repo: networking-oss-deployments
+          silk-release: silk-dev
+    - in_parallel:
+      - task: upload-stemcell
+        file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
+        input_mapping:
+          toolsmiths-env: pickelhelm
+      - task: upload-local-networking-release
+        file: cf-networking-release-ci/ci/tasks/upload-local-release/task.yml
+        input_mapping:
+          toolsmiths-env: pickelhelm
+          local-release: cf-networking-dev
+      - task: upload-local-silk-release
+        file: cf-networking-release-ci/ci/tasks/upload-local-release/task.yml
+        input_mapping:
+          toolsmiths-env: pickelhelm
+          local-release: silk-dev
+      - task: upload-acceptance-test-release
+        file: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release/task.yml
+        input_mapping:
+          toolsmiths-env: pickelhelm
+      # ensure:
+      #   put: pickelhelm
+      #   resource: toolsmiths-pool
+      #   inputs: []
+      #   params:
+      #     action: unclaim
+      #     env_file: pickelhelm/metadata
+
+    - task: deploy-cf
+      file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
+      params:
+        OPS_FILES: |
+          cf-deployment/operations/scale-to-one-az.yml
+          cf-networking-release-ci/ci/opsfiles/smaller-footprint.yml
+          cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
+          cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
+          cf-networking-release-ci/ci/opsfiles/use-latest-silk.yml
+          cf-networking-release-ci/ci/opsfiles/use-latest-cf-networking.yml
+          deployments-repo/opsfiles/pickelhelm-use-external-postgres-for-c2c.yml
+          cf-deployment/operations/enable-service-discovery.yml
+          cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain.yml
+          cf-networking-release-ci/ci/opsfiles/add-acceptance-test-jobs.yml
+          cf-networking-release/manifest-generation/opsfiles/enable-experimental-dynamic-egress-policies.yml
+          cf-networking-release-ci/ci/opsfiles/disable-ingress-redirect-to-proxy.yml
+          cf-deployment/operations/experimental/enable-iptables-logger.yml
+          cf-networking-release-ci/ci/opsfiles/scale-to-2-diego-cells.yml
+          cf-networking-release-ci/ci/opsfiles/lower-canary-watch-time.yml
+      input_mapping:
+        toolsmiths-env: pickelhelm
+        release: cf-networking-dev
+        vars-files: networking-oss-deployments
+    - task: bosh-cleanup
+      file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
+      input_mapping:
+        toolsmiths-env: pickelhelm
+
+  - name: pickelhelm-test
+    serial_groups: [pickelhelm]
+    plan:
+    - in_parallel:
+      - get: cf-networking-release-ci
+        params:
+          submodules: none
+      - get: cf-deployment
+        passed: [pickelhelm-deploy]
+        trigger: true
+      - get: cf-networking-dev
+        passed: [pickelhelm-deploy]
+        trigger: true
+      - get: silk-dev
+        passed: [pickelhelm-deploy]
+        trigger: true
+      - get: networking-oss-deployments
+      - get: cf-deployment-concourse-tasks
+      - get: pickelhelm
+        resource: toolsmiths-pool
+        passed: [pickelhelm-deploy]
+    - task: generate-test-config
+      input_mapping:
+        toolsmiths-env: pickelhelm
+      config:
+        platform: linux
+        image_resource:
+          type: registry-image
+          source:
+            repository: relintdockerhubpushbot/cf-deployment-concourse-tasks
+        inputs:
+          - name: toolsmiths-env
+          - name: cf-deployment-concourse-tasks
+        outputs:
+          - name: test-config
+        run:
+          path: /bin/bash
+          args:
+            - -c
+            - |
+              source cf-deployment-concourse-tasks/shared-functions
+              setup_bosh_env_vars
+              # set +x
+
+              mkdir -p test-config
+              echo '{}' | jq \
+              --arg cf_api "api.${SYSTEM_DOMAIN}" \
+              --arg apps_domain "${SYSTEM_DOMAIN}" \
+              --arg admin_password $(credhub f -j -n cf_admin_password | jq -r .credentials[].name | xargs credhub get -j -n | jq -r .value) \
+              --arg admin_secret $(credhub f -j -n uaa_admin_client_secret | jq -r .credentials[].name | xargs credhub get -j -n | jq -r .value) \
+              --args \
+              '{
+                  "admin_password":$admin_password,
+                  "admin_secret":$admin_secret,
+                  "admin_user":"admin",
+                  "api":$cf_api,
+                  "apps_domain":$apps_domain,
+                  "default_security_groups": [ "dns", "public_networks" ],
+                  "extra_listen_ports": 2,
+                  "nodes": 1,
+                  "prefix":"test-",
+                  "proxy_applications": 1,
+                  "proxy_instances": 1,
+                  "run_custom_iptables_compatibility_test": true,
+                  "skip_ssl_validation":true,
+                  "test_app_instances": 3,
+                  "test_applications": 2,
+                  "use_http":true
+              }' > test-config/test-config.json
+              cat test-config/test-config.json
+      tags: []
+    - task: acceptance-tests-sd
+      file: cf-networking-release-ci/ci/tasks/acceptance-tests-toolsmiths/task.yml
+      input_mapping:
+        cf-networking: cf-networking-dev
+      params:
+        TEST_NAME: acceptance-sd
+    - task: acceptance-tests
+      file: cf-networking-release-ci/ci/tasks/acceptance-tests-toolsmiths/task.yml
+      input_mapping:
+        cf-networking: cf-networking-dev
+      params:
+        TEST_NAME: acceptance
+
+  # - name: mitre-bbl-up
+  #   serial_groups: [mitre-test-group, mitre-deploy-group]
+  #   plan:
+  #   - in_parallel:
+  #     - get: cf-deployment-concourse-tasks
+  #       trigger: true
+  #     - get: networking-oss-deployments
+  #     - get: cf-networking-release-ci
+  #     - get: bosh-bootloader
+  #   - task: add-parent-dns
+  #     file: cf-networking-release-ci/ci/tasks/add-parent-dns/task.yml
+  #     params:
+  #       ENVIRONMENT: mitre
+  #     input_mapping:
+  #       bbl-state: networking-oss-deployments
+  #   - task: bbl-up
+  #     file: cf-deployment-concourse-tasks/bbl-up/task.yml
+  #     params:
+  #       BBL_GCP_SERVICE_ACCOUNT_KEY: deployment-helpers/c2c-service-account-key.json
+  #       BBL_GCP_REGION: us-east1
+  #       BBL_STATE_DIR: environments/mitre/bbl-state
+  #       BBL_IAAS: gcp
+  #       BBL_LB_CERT: ((mitre-lb-cert.certificate))
+  #       BBL_LB_KEY: ((mitre-lb-key.private_key))
+  #       LB_DOMAIN: mitre.c2c.cf-app.com
+  #       BBL_ENV_NAME: mitre
+  #     input_mapping:
+  #       bbl-state: updated-bbl-state
+  #       bbl-config: updated-bbl-state
+  #     ensure:
+  #       put: networking-oss-deployments
+  #       params:
+  #         repository: updated-bbl-state
+  #         rebase: true
+
+  # - name: mitre-bbl-destroy
+  #   serial_groups: [mitre-deploy-group]
+  #   plan:
+  #   - in_parallel:
+  #     - get: cf-deployment-concourse-tasks
+  #     - get: networking-oss-deployments
+  #   - task: bosh-cleanup
+  #     file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
+  #     params:
+  #       BBL_STATE_DIR: environments/mitre/bbl-state
+  #     input_mapping:
+  #       bbl-state: networking-oss-deployments
+  #   - task: bbl-destroy
+  #     file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
+  #     params:
+  #       BBL_STATE_DIR: environments/mitre/bbl-state
+  #       BBL_GCP_SERVICE_ACCOUNT_KEY: deployment-helpers/c2c-service-account-key.json
+  #     input_mapping:
+  #       bbl-state: networking-oss-deployments
+  #     ensure:
+  #       put: networking-oss-deployments
+  #       params:
+  #         repository: updated-bbl-state
+  #         rebase: true
+
+  - name: mitre-deploy
+    serial_groups: [mitre-deploy-group, version]
+    plan:
+    - in_parallel:
+      - get: cf-networking-release-ci
+        params:
+          submodules: none
+      - get: cf-deployment-concourse-tasks
+      - get: networking-oss-deployments
+      - get: cf-deployment
+        passed: [pickelhelm-test]
+        trigger: true
+      - get: cf-networking-dev
+        trigger: true
+        passed: [pickelhelm-test]
+      - get: silk-dev
+        trigger: true
+        passed: [pickelhelm-test]
+      - get: version
+        params:
+          pre: rc
+    - in_parallel:
+      - put: mitre
+        resource: toolsmiths-pool
+        inputs: []
+        params:
+          action: claim
+      - task: collect-ops-files
+        file: cf-networking-release-ci/ci/tasks/collect-named-ops-files/task.yml
+        params:
+          ENVIRONMENT_NAME: mitre
+        input_mapping:
+          cf-networking-release: cf-networking-dev
+          deployments-repo: networking-oss-deployments
+          silk-release: silk-dev
+    - in_parallel:
+      - task: upload-stemcell
+        file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
+        input_mapping:
+          toolsmiths-env: mitre
+      - task: upload-cfnetworking-release
+        file: cf-networking-release-ci/ci/tasks/upload-local-release/task.yml
+        input_mapping:
+          toolsmiths-env: mitre
+          local-release: cf-networking-dev
+      - task: upload-local-silk-release
+        file: cf-networking-release-ci/ci/tasks/upload-local-release/task.yml
+        input_mapping:
+          toolsmiths-env: mitre
+          local-release: silk-dev
+      - task: upload-acceptance-test-release
+        file: cf-networking-release-ci/ci/tasks/upload-acceptance-test-release/task.yml
+        input_mapping:
+          toolsmiths-env: mitre
+    - task: set-apps-domain-in-credhub
+      input_mapping:
+        toolsmiths-env: mitre
+      config:
+        platform: linux
+        image_resource:
+          type: registry-image
+          source:
+            repository: relintdockerhubpushbot/cf-deployment-concourse-tasks
+        inputs:
+          - name: toolsmiths-env
+          - name: cf-deployment-concourse-tasks
+        run:
+          path: bash
+          args:
+            - -cx
+            - |
+              source cf-deployment-concourse-tasks/shared-functions
+              setup_bosh_env_vars
+
+              credhub set -n "/bosh-$(cat toolsmiths-env/name)/cf/apps_domain" -t value -v "${SYSTEM_DOMAIN}"
+
+    - task: deploy-cf
+      file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
+      params:
+        OPS_FILES: |
+          cf-deployment/operations/scale-to-one-az.yml
+          cf-networking-release-ci/ci/opsfiles/smaller-footprint.yml
+          cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
+          cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
+          cf-networking-release-ci/ci/opsfiles/custom-apps-domain.yml
+          cf-deployment/operations/experimental/enable-iptables-logger.yml
+          cf-networking-release-ci/ci/opsfiles/use-latest-silk.yml
+          cf-networking-release-ci/ci/opsfiles/use-latest-cf-networking.yml
+          cf-deployment/operations/enable-service-discovery.yml
+          cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain.yml
+          cf-networking-release-ci/ci/opsfiles/add-acceptance-test-jobs.yml
+          cf-deployment/operations/backup-and-restore/enable-backup-restore.yml
+          cf-networking-release/manifest-generation/opsfiles/enable-experimental-dynamic-egress-policies.yml
+          cf-networking-release-ci/ci/opsfiles/disable-ingress-redirect-to-proxy.yml
+          cf-networking-release-ci/ci/opsfiles/add-smoke-test-user.yml
+          cf-networking-release-ci/ci/opsfiles/change-vtep-port.yml
+          cf-networking-release-ci/ci/opsfiles/enable-rate-limiting-for-udp.yml
+          cf-networking-release-ci/ci/opsfiles/enable-space-developer-self-service.yml
+          cf-networking-release-ci/ci/opsfiles/scale-ephemeral-disk.yml
+          cf-networking-release-ci/ci/opsfiles/scale-instances-to-2.yml
+          cf-networking-release-ci/ci/opsfiles/scale-persistent-disk.yml
+          cf-networking-release-ci/ci/opsfiles/lower-canary-watch-time.yml
+      input_mapping:
+        toolsmiths-env: mitre
+        release: cf-networking-dev
+        vars-files: networking-oss-deployments
+    - task: create-release-tarball
+      file: cf-networking-release-ci/ci/tasks/create-release-tarball/task.yml
+      input_mapping:
+        my-release: cf-networking-dev
+      params:
+        RELEASE_NAME: cf-networking
+        VERSION_NAME: version
+    - put: cf-networking-tarball
+      params:
+        file: tarballs/cf-networking-*.tgz
+    - task: create-silk-release-tarball
+      file: cf-networking-release-ci/ci/tasks/create-release-tarball/task.yml
+      input_mapping:
+        my-release: silk-dev
+      params:
+        RELEASE_NAME: silk
+        VERSION_NAME: version
+    - put: silk-tarball
+      params:
+        file: tarballs/silk-*.tgz
+    - put: version
+      params: {file: version/number}
+    - task: bosh-cleanup
+      file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
+      input_mapping:
+        toolsmiths-env: mitre
+
+  - name: mitre-test
+    serial_groups: [mitre-test-group, mitre-deploy-group]
+    plan:
+    - in_parallel:
+      - get: networking-oss-deployments
+      - get: cf-deployment-concourse-tasks
+      - get: cf-networking-dev
+        passed: [mitre-deploy]
+        trigger: true
+      - get: cf-networking-tarball
+        passed: [mitre-deploy]
+        trigger: true
+      - get: version
+        passed: [mitre-deploy]
+      - get: cf-networking-release-ci
+        params:
+          submodules: none
+      - get: cf-deployment
+        passed: [mitre-deploy]
+        trigger: true
+      - get: silk-dev
+        passed: [mitre-deploy]
+        trigger: true
+      - get: silk-tarball
+        passed: [mitre-deploy]
+      - get: mitre
+        resource: toolsmiths-pool
+        passed: [mitre-deploy]
+    - task: generate-test-config
+      input_mapping:
+        toolsmiths-env: mitre
+      config:
+        platform: linux
+        image_resource:
+          type: registry-image
+          source:
+            repository: relintdockerhubpushbot/cf-deployment-concourse-tasks
+        inputs:
+          - name: toolsmiths-env
+          - name: cf-deployment-concourse-tasks
+        outputs:
+          - name: test-config
+          - name: smoke-config
+        run:
+          path: /bin/bash
+          args:
+            - -c
+            - |
+              source cf-deployment-concourse-tasks/shared-functions
+              setup_bosh_env_vars
+              # set +x
+
+              mkdir -p test-config smoke-config
+              echo '{}' | jq \
+              --arg cf_api "api.${SYSTEM_DOMAIN}" \
+              --arg apps_domain "${SYSTEM_DOMAIN}" \
+              --arg admin_password $(credhub f -j -n cf_admin_password | jq -r .credentials[].name | xargs credhub get -j -n | jq -r .value) \
+              --arg admin_secret $(credhub f -j -n uaa_admin_client_secret | jq -r .credentials[].name | xargs credhub get -j -n | jq -r .value) \
+              --args \
+              '{
+                  "admin_password":$admin_password,
+                  "admin_secret":$admin_secret,
+                  "admin_user":"admin",
+                  "api":$cf_api,
+                  "apps_domain":$apps_domain,
+                  "default_security_groups": [ "dns", "public_networks" ],
+                  "extra_listen_ports": 2,
+                  "nodes": 1,
+                  "prefix":"test-",
+                  "proxy_applications": 1,
+                  "proxy_instances": 1,
+                  "run_custom_iptables_compatibility_test": true,
+                  "skip_ssl_validation":true,
+                  "test_app_instances": 3,
+                  "test_applications": 2,
+                  "use_http":true
+              }' > test-config/test-config.json
+              cat test-config/test-config.json
+
+
+              echo '{}' | jq \
+              --arg cf_api "api.${SYSTEM_DOMAIN}" \
+              --arg apps_domain "${SYSTEM_DOMAIN}" \
+              --arg smoke_password $(credhub f -j -n cf_networking_smoke_user_password | jq -r .credentials[].name | xargs credhub get -j -n | jq -r .value) \
+              --args \
+              '{
+                  "api":$cf_api,
+                  "apps_domain":$apps_domain,
+                  "app_instances": 4,
+                  "prefix":"smoke-",
+                  "skip_ssl_validation":true,
+                  "smoke_user": "cf-networking-smokes",
+                  "smoke_password":$smoke_password
+              }' > smoke-config/smoke-config.json
+              cat smoke-config/smoke-config.json
+
+    # - task: get-credhub-vars
+    #   file: cf-networking-release-ci/ci/tasks/get-credhub-vars/task.yml
+    #   input_mapping:
+    #     bbl-state: networking-oss-deployments
+    #   params:
+    #     BBL_STATE_DIR: environments/mitre/bbl-state
+    #     VARIABLES: |
+    #       /bosh-mitre/cf/cf_admin_password
+    #       /bosh-mitre/cf/uaa_admin_client_secret
+    #       /bosh-mitre/cf/cf_networking_smoke_user_password
+    # - task: setup-smoke-config
+    #   file: cf-networking-release-ci/ci/tasks/setup-smoke-config/task.yml
+    #   params:
+    #     ENVIRONMENT_NAME: mitre
+    #     TEST_CONFIG_DIR: environments/mitre/test-configs
+    #   input_mapping:
+    #     test-config: networking-oss-deployments
+    - task: smoke-tests-sd
+      privileged: true
+      file: cf-networking-release-ci/ci/tasks/smoke-tests-sd/task.yml
+      input_mapping:
+        cf-networking: cf-networking-dev
+      params:
+        ENVIRONMENT_TAG: mitre.c2c.cf-app.com
+        DATADOG_API_KEY: ((datadog_api_key))
+    - task: smoke-tests
+      file: cf-networking-release-ci/ci/tasks/smoke-tests/task.yml
+      params:
+        ENVIRONMENT_NAME: mitre
+        ENVIRONMENT_TAG: mitre.c2c.cf-app.com
+        DATADOG_API_KEY: ((datadog_api_key))
+      input_mapping:
+        cf-networking: cf-networking-dev
+    - task: acceptance-tests
+      file: cf-networking-release-ci/ci/tasks/acceptance-tests-toolsmiths/task.yml
+      input_mapping:
+        cf-networking: cf-networking-dev
+      params:
+        TEST_NAME: acceptance
+    - task: acceptance-tests-sd
+      privileged: true
+      file: cf-networking-release-ci/ci/tasks/acceptance-tests-toolsmiths/task.yml
+      input_mapping:
+        cf-networking: cf-networking-dev
+      params:
+        TEST_NAME: acceptance-sd
+
+  - name: mitre-perf-tests
+    serial_groups: [mitre-test-group, mitre-deploy-group]
+    plan:
+    - in_parallel:
+      - get: networking-oss-deployments
+      - get: cf-deployment-concourse-tasks
+      - get: cf-networking-dev
+        passed: [mitre-deploy]
+        trigger: true
+      - get: cf-networking-tarball
+        passed: [mitre-deploy]
+        trigger: true
+      - get: version
+        passed: [mitre-deploy]
+      - get: cf-networking-release-ci
+        params:
+          submodules: none
+      - get: cf-deployment
+        passed: [mitre-deploy]
+        trigger: true
+      - get: silk-dev
+        passed: [mitre-deploy]
+        trigger: true
+      - get: silk-tarball
+        passed: [mitre-deploy]
+      - get: mitre
+        resource: toolsmiths-pool
+        passed: [mitre-deploy]
+    - task: generate-perf-config
+      config:
+        platform: linux
+        image_resource:
+          type: registry-image
+          source:
+            repository: relintdockerhubpushbot/cf-deployment-concourse-tasks
+        outputs:
+          - name: test-config
+        run:
+          path: /bin/bash
+          args:
+            - -c
+            - |
+              # set +x
+
+              mkdir -p test-config
+              echo '{}' | jq \
+              --args \
+              '{
+                    "nats_url": "10.0.255.190",
+                    "nats_username": "nats",
+                    "nats_password": "any_password",
+                    "nats_monitoring_port": 8222,
+                    "num_messages": 100000,
+                    "num_publishers": 10
+              }' > test-config/perf-config.json
+              cat test-config/perf-config.json
+
+    - task: mitre-perf-tests
+      privileged: true
+      attempts: 3
+      file: cf-networking-release-ci/ci/tasks/test-nats-performance-toolsmiths/task.yml
+      input_mapping:
+        cf-networking: cf-networking-dev
+        toolsmiths-env: mitre
+
+  - name: mitre-cats
+    serial_groups: [mitre-test-group, mitre-deploy-group]
+    plan:
+    - in_parallel:
+      - get: cf-networking-release-ci
+        params:
+          submodules: none
+      - get: cf-deployment-concourse-tasks
+      - get: cf-acceptance-tests
+      - get: cf-networking-dev
+        passed: [mitre-test, mitre-perf-tests]
+        trigger: true
+      - get: cf-deployment
+        passed: [mitre-test, mitre-perf-tests]
+        trigger: true
+      - get: networking-oss-deployments
+      - get: cf-networking-tarball
+        trigger: true
+        passed: [mitre-test, mitre-perf-tests]
+      - get: silk-dev
+        passed: [mitre-test, mitre-perf-tests]
+        trigger: true
+      - get: silk-tarball
+        passed: [mitre-test, mitre-perf-tests]
+      - get: version
+        passed: [mitre-test, mitre-perf-tests]
+      - get: mitre
+        resource: toolsmiths-pool
+        passed: [mitre-test, mitre-perf-tests]
+    - task: generate-integration-config
+      input_mapping:
+        toolsmiths-env: mitre
+      config:
+        platform: linux
+        image_resource:
+          type: registry-image
+          source:
+            repository: relintdockerhubpushbot/cf-deployment-concourse-tasks
+        inputs:
+          - name: toolsmiths-env
+          - name: cf-deployment-concourse-tasks
+        outputs:
+          - name: integration-config
+        run:
+          path: /bin/bash
+          args:
+            - -c
+            - |
+              source cf-deployment-concourse-tasks/shared-functions
+              setup_bosh_env_vars
+              # set +x
+
+              mkdir -p integration-config
+              echo '{}' | jq \
+              --arg cf_api "api.${SYSTEM_DOMAIN}" \
+              --arg apps_domain "${SYSTEM_DOMAIN}" \
+              --arg admin_password $(credhub f -j -n cf_admin_password | jq -r .credentials[].name | xargs credhub get -j -n | jq -r .value) \
+              --arg admin_secret $(credhub f -j -n uaa_admin_client_secret | jq -r .credentials[].name | xargs credhub get -j -n | jq -r .value) \
+              --args \
+              '{
+                  "admin_password":$admin_password,
+                  "admin_secret":$admin_secret,
+                  "admin_user":"admin",
+                  "api":$cf_api,
+                  "apps_domain":$apps_domain,
+                  "default_security_groups": [ "dns", "public_networks" ],
+                  "extra_listen_ports": 2,
+                  "nodes": 1,
+                  "prefix":"test-",
+                  "proxy_applications": 1,
+                  "proxy_instances": 1,
+                  "run_custom_iptables_compatibility_test": true,
+                  "skip_ssl_validation":true,
+                  "test_app_instances": 3,
+                  "test_applications": 2,
+                  "use_http":true
+              }' > integration-config/integration_config.json
+              cat integration-config/integration_config.json
+    - task: cats
+      file: cf-deployment-concourse-tasks/run-cats/task.yml
+      params:
+        NODES: 8
+
+  # - name: mitre-sli-map-route
+  #   serial: true
+  #   build_logs_to_retain: 1000
+  #   plan:
+  #   - in_parallel:
+  #     - get: every-two-minutes
+  #       trigger: true
+  #     - get: cf-networking-release-ci
+  #       params:
+  #         submodules: none
+  #     - get: networking-oss-deployments
+  #   - task: get-credhub-vars
+  #     file: cf-networking-release-ci/ci/tasks/get-credhub-vars/task.yml
+  #     input_mapping:
+  #       bbl-state: networking-oss-deployments
+  #     params:
+  #       BBL_STATE_DIR: environments/mitre/bbl-state
+  #       VARIABLES: |
+  #         /bosh-mitre/cf/cf_admin_password
+  #   - task: sli-setup
+  #     file: cf-networking-release-ci/ci/tasks/sli-setup/task.yml
+  #     params:
+  #       ENVIRONMENT_TAG: mitre.c2c.cf-app.com
+  #       SLI_ORG: sli-map-route
+  #       SLI_SPACE: sli-map-route
+  #       SLI_APP_NAME: sli-map-route
+  #   - task: sli-map-route
+  #     file: cf-networking-release-ci/ci/tasks/sli-map-route/task.yml
+  #     timeout: 5m
+  #     params:
+  #       ENVIRONMENT_TAG: mitre.c2c.cf-app.com
+  #       DATADOG_API_KEY: ((datadog_api_key))
+  #       SLI_ORG: sli-map-route
+  #       SLI_SPACE: sli-map-route
+  #       SLI_APP_NAME: sli-map-route
+
+  # - name: mitre-sli-resolve-route
+  #   serial: true
+  #   build_logs_to_retain: 1000
+  #   plan:
+  #   - in_parallel:
+  #     - get: every-two-minutes
+  #       trigger: true
+  #     - get: cf-networking-release-ci
+  #       params:
+  #         submodules: none
+  #     - get: networking-oss-deployments
+  #   - task: get-credhub-vars
+  #     file: cf-networking-release-ci/ci/tasks/get-credhub-vars/task.yml
+  #     input_mapping:
+  #       bbl-state: networking-oss-deployments
+  #     params:
+  #       BBL_STATE_DIR: environments/mitre/bbl-state
+  #       VARIABLES: |
+  #         /bosh-mitre/cf/cf_admin_password
+  #   - task: sli-setup
+  #     file: cf-networking-release-ci/ci/tasks/sli-setup/task.yml
+  #     params:
+  #       ENVIRONMENT_TAG: mitre.c2c.cf-app.com
+  #       SLI_ORG: sli-resolve-route
+  #       SLI_SPACE: sli-resolve-route
+  #       SLI_APP_NAME: sli-resolve-route
+  #       MAP_INTERNAL_ROUTE: true
+  #   - task: sli-resolve-route
+  #     file: cf-networking-release-ci/ci/tasks/sli-resolve-route/task.yml
+  #     timeout: 5m
+  #     params:
+  #       ENVIRONMENT_TAG: mitre.c2c.cf-app.com
+  #       DATADOG_API_KEY: ((datadog_api_key))
+  #       SLI_ORG: sli-resolve-route
+  #       SLI_SPACE: sli-resolve-route
+  #       SLI_APP_NAME: sli-resolve-route
+
+  # - name: toque-bbl-up
+  #   serial_groups: [toque]
+  #   plan:
+  #   - in_parallel:
+  #     - get: cf-deployment-concourse-tasks
+  #       trigger: true
+  #     - get: networking-oss-deployments
+  #     - get: cf-networking-release-ci
+  #     - get: bosh-bootloader
+  #   - task: add-parent-dns
+  #     file: cf-networking-release-ci/ci/tasks/add-parent-dns/task.yml
+  #     params:
+  #       ENVIRONMENT: toque
+  #     input_mapping:
+  #       bbl-state: networking-oss-deployments
+  #   - task: bbl-up
+  #     file: cf-deployment-concourse-tasks/bbl-up/task.yml
+  #     params:
+  #       BBL_GCP_SERVICE_ACCOUNT_KEY: deployment-helpers/c2c-service-account-key.json
+  #       BBL_GCP_REGION: us-east1
+  #       BBL_STATE_DIR: environments/toque/bbl-state
+  #       BBL_IAAS: gcp
+  #       BBL_LB_CERT: ((toque-lb-cert.certificate))
+  #       BBL_LB_KEY: ((toque-lb-key.private_key))
+  #       LB_DOMAIN: toque.c2c.cf-app.com
+  #       BBL_ENV_NAME: toque
+  #     input_mapping:
+  #       bbl-state: updated-bbl-state
+  #       bbl-config: updated-bbl-state
+  #     ensure:
+  #       put: networking-oss-deployments
+  #       params:
+  #         repository: updated-bbl-state
+  #         rebase: true
+
+  # - name: toque-bbl-destroy
+  #   serial_groups: [toque]
+  #   plan:
+  #   - in_parallel:
+  #     - get: cf-deployment-concourse-tasks
+  #     - get: networking-oss-deployments
+  #   - task: bosh-cleanup
+  #     file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
+  #     params:
+  #       BBL_STATE_DIR: environments/toque/bbl-state
+  #     input_mapping:
+  #       bbl-state: networking-oss-deployments
+  #   - task: bbl-destroy
+  #     file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
+  #     params:
+  #       BBL_STATE_DIR: environments/toque/bbl-state
+  #       BBL_GCP_SERVICE_ACCOUNT_KEY: deployment-helpers/c2c-service-account-key.json
+  #     input_mapping:
+  #       bbl-state: networking-oss-deployments
+  #     ensure:
+  #       put: networking-oss-deployments
+  #       params:
+  #         repository: updated-bbl-state
+  #         rebase: true
+
+  # - name: toque-deploy
+  #   serial_groups: [toque]
+  #   plan:
+  #   - in_parallel:
+  #     - get: cf-deployment-concourse-tasks
+  #     - get: cf-deployment
+  #     - get: cf-networking-release-ci
+  #       params:
+  #         submodules: none
+  #     - get: networking-oss-deployments
+  #     - get: cf-networking-dev
+  #       passed: [unit-and-integration-tests]
+  #       trigger: true
+  #     - get: silk-dev
+  #       passed: [unit-and-integration-tests]
+  #       trigger: true
+  #   - in_parallel:
+  #     - task: upload-stemcell
+  #       file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
+  #       input_mapping:
+  #         bbl-state: networking-oss-deployments
+  #       params:
+  #         BBL_STATE_DIR: environments/toque/bbl-state
+  #     - task: upload-local-silk-release
+  #       file: cf-networking-release-ci/ci/tasks/upload-local-release/task.yml
+  #       input_mapping:
+  #         bbl-state: networking-oss-deployments
+  #         local-release: silk-dev
+  #       params:
+  #         BBL_STATE_DIR: environments/toque/bbl-state
+  #     - task: upload-local-networking-release
+  #       file: cf-networking-release-ci/ci/tasks/upload-local-release/task.yml
+  #       input_mapping:
+  #         bbl-state: networking-oss-deployments
+  #         local-release: cf-networking-dev
+  #       params:
+  #         BBL_STATE_DIR: environments/toque/bbl-state
+  #     - task: collect-ops-files
+  #       file: cf-networking-release-ci/ci/tasks/collect-named-ops-files/task.yml
+  #       params:
+  #         ENVIRONMENT_NAME: toque
+  #       input_mapping:
+  #         deployments-repo: networking-oss-deployments
+  #         cf-networking-release: cf-networking-dev
+  #         silk-release: silk-dev
+  #   - task: emit-datadog-deploy-start
+  #     file: cf-networking-release-ci/ci/tasks/emit-datadog-event/task.yml
+  #     params:
+  #       TITLE: deploy_start
+  #       TEXT: deploy_start
+  #       PRIORITY: normal
+  #       AWS_ENV: toque.c2c.cf-app.com
+  #       DATADOG_API_KEY: ((datadog_api_key))
+  #   - task: deploy-cf
+  #     file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
+  #     params:
+  #       BBL_STATE_DIR: environments/toque/bbl-state
+  #       SYSTEM_DOMAIN: toque.c2c.cf-app.com
+  #       OPS_FILES: |
+  #         cf-deployment/operations/use-compiled-releases.yml
+  #         cf-deployment/operations/scale-to-one-az.yml
+  #         cf-networking-release-ci/ci/opsfiles/smaller-footprint.yml
+  #         cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
+  #         cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
+  #         cf-networking-release-ci/ci/opsfiles/use-latest-silk.yml
+  #         cf-networking-release-ci/ci/opsfiles/use-latest-cf-networking.yml
+  #         cf-deployment/operations/enable-service-discovery.yml
+  #         cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain.yml
+  #         cf-networking-release/manifest-generation/opsfiles/enable-experimental-dynamic-egress-policies.yml
+  #         cf-networking-release-ci/ci/opsfiles/disable-ingress-redirect-to-proxy.yml
+  #         cf-deployment/operations/experimental/enable-iptables-logger.yml
+  #         cf-networking-release-ci/ci/opsfiles/change-nats-monitor-port.yml
+  #         cf-networking-release-ci/ci/opsfiles/increase-diego-cell-mtu.yml
+  #         cf-networking-release-ci/ci/opsfiles/scale-diego-cell-max-in-flight.yml
+  #         cf-networking-release-ci/ci/opsfiles/scale-diego-cell-vm-size.yml
+  #         cf-networking-release-ci/ci/opsfiles/scale-max-containers.yml
+  #         cf-networking-release-ci/ci/opsfiles/scale-router-ephemeral-disk.yml
+  #         cf-networking-release-ci/ci/opsfiles/scale-to-3-diego-cells.yml
+  #         cf-networking-release-ci/ci/opsfiles/lower-canary-watch-time.yml
+  #     input_mapping:
+  #       bbl-state: networking-oss-deployments
+  #       release: cf-networking-dev
+  #       vars-files: networking-oss-deployments
+  #   - task: emit-datadog-deploy-end
+  #     file: cf-networking-release-ci/ci/tasks/emit-datadog-event/task.yml
+  #     params:
+  #       TITLE: deploy_end
+  #       TEXT: deploy_end
+  #       PRIORITY: normal
+  #       AWS_ENV: toque.c2c.cf-app.com
+  #       DATADOG_API_KEY: ((datadog_api_key))
+  #   - task: bosh-cleanup
+  #     file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
+  #     params:
+  #       BBL_STATE_DIR: environments/toque/bbl-state
+  #     input_mapping:
+  #       bbl-state: networking-oss-deployments
+
+  # - name: toque-test
+  #   serial_groups: [toque]
+  #   plan:
+  #   - in_parallel:
+  #     - get: cf-networking-release-ci
+  #       params:
+  #         submodules: none
+  #     - get: networking-oss-deployments
+  #       passed: [toque-deploy]
+  #     - get: cf-networking-dev
+  #       passed: [toque-deploy]
+  #       trigger: true
+  #     - get: toque-scaling-test-params
+  #       trigger: true
+  #     - get: toque-stats
+  #   - task: get-credhub-vars
+  #     file: cf-networking-release-ci/ci/tasks/get-credhub-vars/task.yml
+  #     input_mapping:
+  #       bbl-state: networking-oss-deployments
+  #     params:
+  #       BBL_STATE_DIR: environments/toque/bbl-state
+  #       VARIABLES: |
+  #         /bosh-toque/cf/cf_admin_password
+  #   - task: set-scaling-test-params
+  #     file: cf-networking-release-ci/ci/tasks/set-scaling-test-params/task.yml
+  #     params:
+  #       ENVIRONMENT_NAME: toque
+  #     input_mapping:
+  #       deployments-repo: networking-oss-deployments
+  #       scaling-test-params: toque-scaling-test-params
+  #   - task: push-apps
+  #     file: cf-networking-release-ci/ci/tasks/push-apps/task.yml
+  #     params:
+  #       TEST_CONFIG_DIR: environments/toque/test-configs
+  #     input_mapping:
+  #       cf-networking: cf-networking-dev
+  #       test-config: test-config
+  #   - task: emit-datadog-test-start
+  #     file: cf-networking-release-ci/ci/tasks/emit-datadog-event/task.yml
+  #     params:
+  #       TITLE: test_start
+  #       TEXT: test_start
+  #       PRIORITY: normal
+  #       AWS_ENV: toque.c2c.cf-app.com
+  #       DATADOG_API_KEY: ((datadog_api_key))
+  #   - task: test-scalability
+  #     file: cf-networking-release-ci/ci/tasks/test-scalability/task.yml
+  #     params:
+  #       TEST_CONFIG_DIR: environments/toque/test-configs
+  #     input_mapping:
+  #       cf-networking: cf-networking-dev
+  #       test-config: test-config
+  #     ensure:
+  #       task: emit-datadog-test-stop
+  #       file: cf-networking-release-ci/ci/tasks/emit-datadog-event/task.yml
+  #       params:
+  #         TITLE: test_end
+  #         TEXT: test_end
+  #         PRIORITY: normal
+  #         AWS_ENV: toque.c2c.cf-app.com
+  #         DATADOG_API_KEY: ((datadog_api_key))
+
+  # - name: caubeen-bbl-up
+  #   serial_groups: [caubeen]
+  #   plan:
+  #   - in_parallel:
+  #     - get: cf-deployment-concourse-tasks
+  #     - get: networking-oss-deployments
+  #     - get: cf-networking-release-ci
+  #     - get: bosh-bootloader
+  #   - task: add-parent-dns
+  #     file: cf-networking-release-ci/ci/tasks/add-parent-dns/task.yml
+  #     params:
+  #       ENVIRONMENT: caubeen
+  #     input_mapping:
+  #       bbl-state: networking-oss-deployments
+  #   - task: bbl-up
+  #     file: cf-deployment-concourse-tasks/bbl-up/task.yml
+  #     params:
+  #       BBL_GCP_SERVICE_ACCOUNT_KEY: deployment-helpers/c2c-service-account-key.json
+  #       BBL_GCP_REGION: us-east1
+  #       BBL_STATE_DIR: environments/caubeen/bbl-state
+  #       BBL_IAAS: gcp
+  #       BBL_LB_CERT: ((caubeen-lb-cert.certificate))
+  #       BBL_LB_KEY: ((caubeen-lb-key.private_key))
+  #       LB_DOMAIN: caubeen.c2c.cf-app.com
+  #       BBL_ENV_NAME: caubeen
+  #     input_mapping:
+  #       bbl-state: updated-bbl-state
+  #       bbl-config: updated-bbl-state
+  #     ensure:
+  #       put: networking-oss-deployments
+  #       params:
+  #         repository: updated-bbl-state
+  #         rebase: true
+
+  # - name: caubeen-bbl-destroy
+  #   serial_groups: [caubeen]
+  #   plan:
+  #   - in_parallel:
+  #     - get: cf-deployment-concourse-tasks
+  #     - get: networking-oss-deployments
+  #   - task: bosh-cleanup
+  #     file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
+  #     params:
+  #       BBL_STATE_DIR: environments/caubeen/bbl-state
+  #     input_mapping:
+  #       bbl-state: networking-oss-deployments
+  #   - task: bbl-destroy
+  #     file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
+  #     params:
+  #       BBL_GCP_SERVICE_ACCOUNT_KEY: deployment-helpers/c2c-service-account-key.json
+  #       BBL_STATE_DIR: environments/caubeen/bbl-state
+  #     input_mapping:
+  #       bbl-state: networking-oss-deployments
+  #     ensure:
+  #       put: networking-oss-deployments
+  #       params:
+  #         repository: updated-bbl-state
+  #         rebase: true
+
+  # - name: caubeen-upgrade-test
+  #   serial_groups: [caubeen]
+  #   plan:
+  #   - in_parallel:
+  #     - get: trigger-upgrade-deploy
+  #       trigger: true
+  #     - get: cf-networking-release-ci
+  #       params:
+  #         submodules: none
+  #     - get: cf-deployment-concourse-tasks
+  #     - get: networking-oss-deployments
+  #     - get: cf-deployment
+  #     - get: cf-networking-2.23.0
+  #     - get: silk-2.23.0
+  #     - get: cf-networking-dev
+  #       passed: [unit-and-integration-tests]
+  #     - get: silk-dev
+  #       passed: [unit-and-integration-tests]
+  #   - task: guarantee-no-existing-cf-deployment
+  #     file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
+  #     params:
+  #       BBL_STATE_DIR: environments/caubeen/bbl-state
+  #       DEPLOYMENT_NAME: cf
+  #       IGNORE_ERRORS: true
+  #     input_mapping:
+  #       bbl-state: networking-oss-deployments
+  #   - task: upload-stemcell
+  #     file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
+  #     params:
+  #       BBL_STATE_DIR: environments/caubeen/bbl-state
+  #     input_mapping:
+  #       bbl-state: networking-oss-deployments
+  #   - task: collect-pinned-ops-files
+  #     file: cf-networking-release-ci/ci/tasks/collect-named-ops-files/task.yml
+  #     params:
+  #       ENVIRONMENT_NAME: caubeen
+  #     input_mapping:
+  #       cf-networking-release: cf-networking-2.23.0
+  #       deployments-repo: networking-oss-deployments
+  #       silk-release: silk-2.23.0
+  #   - task: bosh-deploy-cf-rc
+  #     file: cf-deployment-concourse-tasks/bosh-deploy/task.yml
+  #     params:
+  #       BBL_STATE_DIR: environments/caubeen/bbl-state
+  #       SYSTEM_DOMAIN: caubeen.c2c.cf-app.com
+  #       OPS_FILES: |
+  #         cf-deployment/operations/use-compiled-releases.yml
+  #         cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
+  #         cf-deployment/operations/use-external-blobstore.yml
+  #         cf-deployment/operations/use-gcs-blobstore-service-account.yml
+  #         cf-deployment/operations/scale-database-cluster.yml
+  #         cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
+  #         cf-deployment/operations/experimental/enable-iptables-logger.yml
+  #         cf-deployment/operations/enable-service-discovery.yml
+  #         cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain.yml
+  #         cf-networking-release-ci/ci/opsfiles/scale-up-4-api-instances.yml
+  #         cf-networking-release-ci/ci/opsfiles/lower-canary-watch-time.yml
+  #       VARS_FILES: |
+  #         deployment-helpers/caubeen-gcs-vars.yml
+  #     input_mapping:
+  #       bbl-state: networking-oss-deployments
+  #       vars-files: networking-oss-deployments
+  #   - task: get-credhub-vars
+  #     file: cf-networking-release-ci/ci/tasks/get-credhub-vars/task.yml
+  #     input_mapping:
+  #       bbl-state: networking-oss-deployments
+  #     params:
+  #       BBL_STATE_DIR: environments/caubeen/bbl-state
+  #       VARIABLES: |
+  #         /bosh-caubeen/cf/cf_admin_password
+  #   - task: verify-api-ready
+  #     file: cf-networking-release-ci/ci/tasks/verify-api-ready/task.yml
+  #     params:
+  #       SYSTEM_DOMAIN: caubeen.c2c.cf-app.com
+  #       ENVIRONMENT_NAME: caubeen
+  #   - task: collect-ops-files
+  #     file: cf-networking-release-ci/ci/tasks/collect-named-ops-files/task.yml
+  #     params:
+  #       ENVIRONMENT_NAME: caubeen
+  #     input_mapping:
+  #       cf-networking-release: cf-networking-dev
+  #       deployments-repo: networking-oss-deployments
+  #       silk-release: silk-dev
+  #   - task: upload-local-silk-release
+  #     file: cf-networking-release-ci/ci/tasks/upload-local-release/task.yml
+  #     input_mapping:
+  #       bbl-state: networking-oss-deployments
+  #       local-release: silk-dev
+  #     params:
+  #       BBL_STATE_DIR: environments/caubeen/bbl-state
+  #   - task: bosh-deploy-cf-rc-with-updated-releases
+  #     file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
+  #     params:
+  #       BBL_STATE_DIR: environments/caubeen/bbl-state
+  #       SYSTEM_DOMAIN: caubeen.c2c.cf-app.com
+  #       OPS_FILES: |
+  #         cf-deployment/operations/use-compiled-releases.yml
+  #         cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
+  #         cf-deployment/operations/use-external-blobstore.yml
+  #         cf-deployment/operations/use-gcs-blobstore-service-account.yml
+  #         cf-deployment/operations/scale-database-cluster.yml
+  #         cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
+  #         cf-deployment/operations/experimental/enable-iptables-logger.yml
+  #         cf-deployment/operations/enable-service-discovery.yml
+  #         cf-deployment/operations/backup-and-restore/enable-backup-restore.yml
+  #         cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain.yml
+  #         cf-networking-release-ci/ci/opsfiles/scale-up-4-api-instances.yml
+  #         cf-networking-release-ci/ci/opsfiles/lower-canary-watch-time.yml
+  #         cf-networking-release-ci/ci/opsfiles/use-latest-silk.yml
+  #       VARS_FILES: |
+  #         deployment-helpers/caubeen-gcs-vars.yml
+  #       DEPLOY_WITH_UPTIME_MEASUREMENTS: true
+  #       FAIL_ON_DOWNTIME: true
+  #       HTTP_AVAILABILITY_THRESHOLD: 0
+  #       APP_PUSHABILITY_THRESHOLD: 10
+  #       RECENT_LOGS_THRESHOLD: 10000 # we don't guarantee logs availability, only app and http, see cf-deployment CI
+  #       STREAMING_LOGS_THRESHOLD: 10000
+  #     input_mapping:
+  #       bbl-state: networking-oss-deployments
+  #       release: cf-networking-dev
+  #       vars-files: networking-oss-deployments
+
+
+  # - name: caubeen-drats
+  #   serial_groups: [caubeen]
+  #   plan:
+  #   - in_parallel:
+  #     - get: cf-networking-release-ci
+  #       params:
+  #         submodules: none
+  #     - get: cf-networking-dev
+  #       passed: [caubeen-upgrade-test]
+  #       trigger: true
+  #     - get: silk-dev
+  #       passed: [caubeen-upgrade-test]
+  #       trigger: true
+  #     - get: cf-deployment
+  #       passed: [caubeen-upgrade-test]
+  #       trigger: true
+  #     - get: networking-oss-deployments
+  #     - get: disaster-recovery-acceptance-tests
+  #     - get: bbr-binary-release
+  #   - task: get-credhub-vars
+  #     file: cf-networking-release-ci/ci/tasks/get-credhub-vars/task.yml
+  #     input_mapping:
+  #       bbl-state: networking-oss-deployments
+  #     params:
+  #       BBL_STATE_DIR: environments/caubeen/bbl-state
+  #       VARIABLES: |
+  #         /bosh-caubeen/cf/cf_admin_password
+  #   - task: create-drats-config
+  #     file: cf-networking-release-ci/ci/tasks/create-drats-config/task.yml
+  #     input_mapping:
+  #       test-config: networking-oss-deployments
+  #     params:
+  #       ENVIRONMENT_NAME: caubeen
+  #   - task: run-drats
+  #     file: disaster-recovery-acceptance-tests/ci/tasks/drats-with-integration-config/task.yml
+  #     privileged: true
+  #     params:
+  #       CF_DIAL_TIMEOUT: 10
+

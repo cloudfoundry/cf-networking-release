@@ -7,14 +7,14 @@ image_resource:
     repository: c2cnetworking/deploy-light
 
 inputs:
+  - name: cf-deployment-concourse-tasks
   - name: cf-networking
   - name: cf-networking-release-ci
-  - name: deployments-repo
+  - name: test-config
+  - name: toolsmiths-env
 
 params:
-  ENVIRONMENT_NAME: ~
-  BBL_STATE_DIR: ~
-  TEST_CONFIG_DIR: ~
+  CONFIG: ~
 
 run:
-  path: cf-networking-release-ci/ci/tasks/test-nats-performance/task
+  path: cf-networking-release-ci/ci/tasks/test-nats-performance-toolsmiths/task

@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+set -eu
+
+ROOT="$(cd "$(dirname $0)/../../../.." && pwd)"
+
+export CONFIG="${CONFIG:-"${ROOT}/test-config/test-config.json"}"
+export NETWORK_STATS_FILE="${ROOT}/network-stats/stats.json"
+export GOPATH="${ROOT}/cf-networking"
+export APPS_DIR="${ROOT}/cf-networking/src/example-apps"
+export PATH="${GOPATH}/bin:${PATH}"
+
+go get -u github.com/onsi/ginkgo/ginkgo
+export GO111MODULE=auto
+
+ginkgo -keepGoing -randomizeAllSpecs -randomizeSuites -race "${ROOT}/cf-networking/src/test/${TEST_NAME}"

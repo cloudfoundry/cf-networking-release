@@ -3,21 +3,20 @@ platform: linux
 
 image_resource:
   type: registry-image
-  source: { repository: c2cnetworking/dev-postgres }
+  source:
+    repository: c2cnetworking/dev-postgres
 
 inputs:
+  - name: cf-networking
   - name: cf-networking-release-ci
   - name: test-config
-  - name: cf-networking
-  - name: variables
 
 outputs:
   - name: network-stats
 
 params:
-    ENVIRONMENT_NAME: ~
     CONFIG: ~
     TEST_NAME: acceptance
 
 run:
-  path: cf-networking-release-ci/ci/tasks/acceptance-tests/task
+  path: cf-networking-release-ci/ci/tasks/acceptance-tests-toolsmiths/task
