@@ -390,7 +390,7 @@ jobs:
     - task: unit-and-integration-tests
       file: cf-networking-release-ci/ci/tasks/mysql-tests/task.yml
       privileged: true
-      attempts: 1
+      attempts: 3
       input_mapping:
         cf-networking-release: cf-networking-dev
       params:
@@ -408,7 +408,7 @@ jobs:
     - task: unit-and-integration-tests
       file: cf-networking-release-ci/ci/tasks/mysql-5.6-tests/task.yml
       privileged: true
-      attempts: 1
+      attempts: 3
       input_mapping:
         cf-networking-release: cf-networking-dev
       params:
