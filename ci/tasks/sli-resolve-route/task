@@ -3,37 +3,9 @@
 set -eu
 
 ROOT="$(cd "$(dirname $0)/../../../.." && pwd)"
+. "${ROOT}/cf-networking-release-ci/ci/tasks/sli-setup/shared-sli-functions.sh"
 
-APP_URL="${APP_URL:-${SLI_APP_NAME}.apps.${ENVIRONMENT_TAG}}"
-
-function main() {
-    cf_login
-
-    local time_to_resolve=$(time_dig_internal_route)
-
-    printf "Time to resolve route: ${time_to_resolve}\n"
-    report_timing_to_datadog "${time_to_resolve}"
-    report_status_to_datadog "${time_to_resolve}" "15"
-    report_status_to_datadog "${time_to_resolve}" "200"
-}
-
-function cf_login() {
-    local cf_username="${CF_USERNAME:-admin}"
-    local cf_password="${CF_PASSWORD:-$(get_var_from_yml cf_admin_password)}"
-
-    cf api api."${ENVIRONMENT_TAG}" --skip-ssl-validation
-    cf auth "${cf_username}" "${cf_password}"
-    cf target -o "${SLI_ORG}" -s "${SLI_SPACE}"
-}
-
-function get_var_from_yml() {
-  local name="${1}"
-  grep "^${name}:" ${ROOT}/variables/variables.yml | cut -d" " -f2
-}
-
-function now_in_ms() {
-    echo $(($(date +%s%N)/1000000))
-}
+APP_URL="${SLI_APP_NAME}.$(get_var_from_json apps_domain)"
 
 function time_dig_internal_route() {
   curl --silent --fail "${APP_URL}"/timed_dig/"${SLI_APP_NAME}".apps.internal | jq -e .lookup_time_ms
@@ -71,6 +43,18 @@ function report_status_to_datadog() {
           }]
         }" \
       "https://app.datadoghq.com/api/v1/series?api_key=${DATADOG_API_KEY}"
+}
+
+function main() {
+    cf_login
+    cf_target
+
+    local time_to_resolve=$(time_dig_internal_route)
+
+    printf "Time to resolve route: ${time_to_resolve}\n"
+    report_timing_to_datadog "${time_to_resolve}"
+    report_status_to_datadog "${time_to_resolve}" "15"
+    report_status_to_datadog "${time_to_resolve}" "200"
 }
 
 main

@@ -3,50 +3,10 @@
 set -eu
 
 ROOT="$(cd "$(dirname $0)/../../../.." && pwd)"
+. "${ROOT}/cf-networking-release-ci/ci/tasks/sli-setup/shared-sli-functions.sh"
 
-APP_URL="${APP_URL:-${SLI_APP_NAME}.apps.${ENVIRONMENT_TAG}}"
+APP_URL="${SLI_APP_NAME}.$(get_var_from_json apps_domain)"
 
-function main() {
-    cf_login
-    map_route
-
-    start=$(now_in_ms)
-    dig_app_until_resolved
-    end=$(now_in_ms)
-
-    time_to_resolve=$(( $end - $start ))
-    printf "Time to resolve route: ${time_to_resolve}\n"
-    report_timing_to_datadog "${time_to_resolve}"
-    report_status_to_datadog
-
-    unmap_route
-}
-
-function cf_login() {
-    local cf_username="${CF_USERNAME:-admin}"
-    local cf_password="${CF_PASSWORD:-$(get_var_from_yml cf_admin_password)}"
-
-    cf api api."${ENVIRONMENT_TAG}" --skip-ssl-validation
-    cf auth "${cf_username}" "${cf_password}"
-    cf target -o "${SLI_ORG}" -s "${SLI_SPACE}"
-}
-
-function get_var_from_yml() {
-  local name="${1}"
-  grep "^${name}:" ${ROOT}/variables/variables.yml | cut -d" " -f2
-}
-
-function map_route() {
-    cf map-route "${SLI_APP_NAME}" apps.internal --hostname "${SLI_APP_NAME}"
-}
-
-function unmap_route() {
-    cf unmap-route "${SLI_APP_NAME}" apps.internal --hostname "${SLI_APP_NAME}"
-}
-
-function now_in_ms() {
-    echo $(($(date +%s%N)/1000000))
-}
 
 function dig_app_until_resolved() {
     until $(curl --output /dev/null --silent --head --fail "${APP_URL}"/dig/"${SLI_APP_NAME}".apps.internal); do
@@ -62,7 +22,7 @@ function report_timing_to_datadog() {
            [{\"metric\":\"cf_networking_sli.MapRouteTime\",
             \"points\":[[$(date +%s), ${time_to_resolve}]],
             \"type\":\"gauge\",
-            \"tags\":[\"deployment:${ENVIRONMENT_TAG}\"]
+            \"tags\":[\"deployment:${DATADOG_ENVIRONMENT_TAG}\"]
           }]
         }" \
       "https://app.datadoghq.com/api/v1/series?api_key=${DATADOG_API_KEY}"
@@ -79,10 +39,27 @@ function report_status_to_datadog() {
            [{\"metric\":\"cf_networking_sli.MapRouteStatus\",
             \"points\":[[$(date +%s), ${status}]],
             \"type\":\"gauge\",
-            \"tags\":[\"deployment:${ENVIRONMENT_TAG}\"]
+            \"tags\":[\"deployment:${DATADOG_ENVIRONMENT_TAG}\"]
           }]
         }" \
       "https://app.datadoghq.com/api/v1/series?api_key=${DATADOG_API_KEY}"
+}
+
+function main() {
+    cf_login
+    cf_target
+    map_internal_route
+
+    start=$(now_in_ms)
+    dig_app_until_resolved
+    end=$(now_in_ms)
+
+    time_to_resolve=$(( $end - $start ))
+    printf "Time to resolve route: ${time_to_resolve}\n"
+    report_timing_to_datadog "${time_to_resolve}"
+    report_status_to_datadog
+
+    unmap_internal_route
 }
 
 main

@@ -7,13 +7,9 @@ image_resource:
 
 inputs:
   - name: variables
-    optional: true
   - name: cf-networking-release-ci
 
 params:
-  ENVIRONMENT_TAG: ~
-  CF_USERNAME: ~
-  CF_PASSWORD: ~
   SLI_ORG: ~
   SLI_SPACE: ~
   SLI_APP_NAME: ~

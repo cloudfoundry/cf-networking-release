@@ -3,37 +3,12 @@
 set -eu
 
 ROOT="$(cd "$(dirname $0)/../../../.." && pwd)"
+. "${ROOT}/cf-networking-release-ci/ci/tasks/sli-setup/shared-sli-functions.sh"
 
-function main() {
-    cf_login
-    create_org_space
-
-    cf target -o "${SLI_ORG}" -s "${SLI_SPACE}"
-
-    bind_default_security_groups
-    create_app
-}
-
-function cf_login() {
-    local cf_username="${CF_USERNAME:-admin}"
-    local cf_password="${CF_PASSWORD:-$(get_var_from_yml cf_admin_password)}"
-
-    cf api api."${ENVIRONMENT_TAG}" --skip-ssl-validation
-    cf auth "${cf_username}" "${cf_password}"
-}
-
-function get_var_from_yml() {
-  local name="${1}"
-  grep "^${name}:" ${ROOT}/variables/variables.yml | cut -d" " -f2
-}
 
 function create_org_space() {
     cf create-org "${SLI_ORG}"
     cf create-space "${SLI_SPACE}" -o "${SLI_ORG}"
-}
-
-function map_internal_route() {
-    cf map-route "${SLI_APP_NAME}" apps.internal --hostname "${SLI_APP_NAME}"
 }
 
 function bind_default_security_groups() {
@@ -54,6 +29,16 @@ function create_app() {
     if ${MAP_INTERNAL_ROUTE}; then
       map_internal_route
     fi
+}
+
+function main() {
+    cf_login
+    create_org_space
+
+    cf_target
+
+    bind_default_security_groups
+    create_app
 }
 
 main

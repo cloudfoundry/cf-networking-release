@@ -648,7 +648,7 @@ jobs:
             - |
               source cf-deployment-concourse-tasks/shared-functions
               setup_bosh_env_vars
-              # set +x
+              set +x
 
               mkdir -p test-config
               echo '{}' | jq \
@@ -872,7 +872,7 @@ jobs:
             - |
               source cf-deployment-concourse-tasks/shared-functions
               setup_bosh_env_vars
-              # set +x
+              set +x
 
               mkdir -p test-config smoke-config
               echo '{}' | jq \
@@ -986,8 +986,6 @@ jobs:
           args:
             - -c
             - |
-              # set +x
-
               mkdir -p test-config
               echo '{}' | jq \
               --args \
@@ -1058,7 +1056,7 @@ jobs:
             - |
               source cf-deployment-concourse-tasks/shared-functions
               setup_bosh_env_vars
-              # set +x
+              set +x
 
               mkdir -p integration-config
               echo '{}' | jq \
@@ -1089,6 +1087,7 @@ jobs:
       file: cf-deployment-concourse-tasks/run-cats/task.yml
       params:
         NODES: 8
+
   - name: mitre-sli-map-route
     serial: true
     build_logs_to_retain: 1000
@@ -1100,18 +1099,49 @@ jobs:
         params:
           submodules: none
       - get: networking-oss-deployments
-    - task: get-credhub-vars
-      file: cf-networking-release-ci/ci/tasks/get-credhub-vars/task.yml
+      - get: cf-deployment-concourse-tasks
+      - get: mitre
+        resource: toolsmiths-pool
+        passed: [mitre-deploy]
+    - task: generate-variables
       input_mapping:
-        bbl-state: networking-oss-deployments
-      params:
-        BBL_STATE_DIR: environments/mitre/bbl-state
-        VARIABLES: |
-          /bosh-mitre/cf/cf_admin_password
+        toolsmiths-env: mitre
+      config:
+        platform: linux
+        image_resource:
+          type: registry-image
+          source:
+            repository: relintdockerhubpushbot/cf-deployment-concourse-tasks
+        inputs:
+          - name: toolsmiths-env
+          - name: cf-deployment-concourse-tasks
+        outputs:
+          - name: variables
+        run:
+          path: /bin/bash
+          args:
+            - -c
+            - |
+              source cf-deployment-concourse-tasks/shared-functions
+              setup_bosh_env_vars
+              set +x
+
+              mkdir -p variables
+              echo '{}' | jq \
+              --arg cf_api "api.${SYSTEM_DOMAIN}" \
+              --arg admin_password $(credhub f -j -n cf_admin_password | jq -r .credentials[].name | xargs credhub get -j -n | jq -r .value) \
+              --arg apps_domain "${SYSTEM_DOMAIN}" \
+              --args \
+              '{
+                  "admin_password":$admin_password,
+                  "admin_user":"admin",
+                  "api":$cf_api,
+                  "apps_domain":$apps_domain
+              }' > variables/variables.json
+
     - task: sli-setup
       file: cf-networking-release-ci/ci/tasks/sli-setup/task.yml
       params:
-        ENVIRONMENT_TAG: mitre.c2c.cf-app.com
         SLI_ORG: sli-map-route
         SLI_SPACE: sli-map-route
         SLI_APP_NAME: sli-map-route
@@ -1119,8 +1149,8 @@ jobs:
       file: cf-networking-release-ci/ci/tasks/sli-map-route/task.yml
       timeout: 5m
       params:
-        ENVIRONMENT_TAG: mitre.c2c.cf-app.com
         DATADOG_API_KEY: ((datadog_api_key))
+        DATADOG_ENVIRONMENT_TAG: mitre.c2c.cf-app.com
         SLI_ORG: sli-map-route
         SLI_SPACE: sli-map-route
         SLI_APP_NAME: sli-map-route
@@ -1136,18 +1166,49 @@ jobs:
         params:
           submodules: none
       - get: networking-oss-deployments
-    - task: get-credhub-vars
-      file: cf-networking-release-ci/ci/tasks/get-credhub-vars/task.yml
+      - get: cf-deployment-concourse-tasks
+      - get: mitre
+        resource: toolsmiths-pool
+        passed: [mitre-deploy]
+    - task: generate-variables
       input_mapping:
-        bbl-state: networking-oss-deployments
-      params:
-        BBL_STATE_DIR: environments/mitre/bbl-state
-        VARIABLES: |
-          /bosh-mitre/cf/cf_admin_password
+        toolsmiths-env: mitre
+      config:
+        platform: linux
+        image_resource:
+          type: registry-image
+          source:
+            repository: relintdockerhubpushbot/cf-deployment-concourse-tasks
+        inputs:
+          - name: toolsmiths-env
+          - name: cf-deployment-concourse-tasks
+        outputs:
+          - name: variables
+        run:
+          path: /bin/bash
+          args:
+            - -c
+            - |
+              source cf-deployment-concourse-tasks/shared-functions
+              setup_bosh_env_vars
+              set +x
+
+              mkdir -p variables
+              echo '{}' | jq \
+              --arg cf_api "api.${SYSTEM_DOMAIN}" \
+              --arg admin_password $(credhub f -j -n cf_admin_password | jq -r .credentials[].name | xargs credhub get -j -n | jq -r .value) \
+              --arg apps_domain "${SYSTEM_DOMAIN}" \
+              --args \
+              '{
+                  "admin_password":$admin_password,
+                  "admin_user":"admin",
+                  "api":$cf_api,
+                  "apps_domain":$apps_domain
+              }' > variables/variables.json
+
     - task: sli-setup
       file: cf-networking-release-ci/ci/tasks/sli-setup/task.yml
       params:
-        ENVIRONMENT_TAG: mitre.c2c.cf-app.com
         SLI_ORG: sli-resolve-route
         SLI_SPACE: sli-resolve-route
         SLI_APP_NAME: sli-resolve-route
@@ -1156,8 +1217,8 @@ jobs:
       file: cf-networking-release-ci/ci/tasks/sli-resolve-route/task.yml
       timeout: 5m
       params:
-        ENVIRONMENT_TAG: mitre.c2c.cf-app.com
         DATADOG_API_KEY: ((datadog_api_key))
+        DATADOG_ENVIRONMENT_TAG: mitre.c2c.cf-app.com
         SLI_ORG: sli-resolve-route
         SLI_SPACE: sli-resolve-route
         SLI_APP_NAME: sli-resolve-route
