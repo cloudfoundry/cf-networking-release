@@ -46,8 +46,6 @@ groups:
   - ship-cf-networking-and-silk
   - merge-master
   - silk-merge-master
-  - toque-deploy
-  - toque-test
   - caubeen-upgrade-test
   - caubeen-drats
 - name: pickelhelm
@@ -62,13 +60,6 @@ groups:
   - mitre-perf-tests
   - mitre-cats
   - delete-deployment-mitre-cf
-- name: toque
-  jobs:
-  - toque-bbl-up
-  - toque-bbl-destroy
-  - toque-deploy
-  - toque-test
-  - delete-toque-deployment
 - name: caubeen
   jobs:
   - caubeen-bbl-up
@@ -79,14 +70,11 @@ groups:
   - delete-caubeen-deployment
 - name: bbl
   jobs:
-  - toque-bbl-up
-  - toque-bbl-destroy
   - caubeen-bbl-up
 - name: cleanup
   jobs:
   - delete-deployment-mitre-cf
   - delete-pickelhelm-deployment
-  - delete-toque-deployment
   - delete-caubeen-deployment
 - name: version
   jobs:
@@ -239,14 +227,6 @@ resources:
     source:
       branch: main
       uri: https://github.com/cloudfoundry/bosh-bootloader.git
-  ####### Stats
-  - name: toque-stats
-    type: git
-    icon: github-box
-    source:
-      uri: "git@github.com:cf-container-networking/toque-stats.git"
-      branch: master
-      private_key: ((routing-ci-bot-ssh-key.private_key))
   ####### Timers
   - name: trigger-upgrade-deploy
     type: time
@@ -280,13 +260,6 @@ resources:
     source:
       branch: release-candidate
       uri: git://github.com/cloudfoundry/cf-acceptance-tests.git
-  - name: toque-scaling-test-params
-    type: git
-    icon: github-box
-    source:
-      uri: https://github.com/cf-container-networking/toque-scaling
-      branch: main
-      paths: [ test-params ]
   #######  Release management
   - name: version
     type: semver
@@ -1080,225 +1053,6 @@ jobs:
       params:
         NODES: 8
 
-  - name: toque-bbl-up
-    serial_groups: [toque]
-    plan:
-    - in_parallel:
-      - get: cf-deployment-concourse-tasks
-        trigger: true
-      - get: networking-oss-deployments
-      - get: cf-networking-release-ci
-      - get: bosh-bootloader
-    - task: add-parent-dns
-      file: cf-networking-release-ci/ci/tasks/add-parent-dns/task.yml
-      params:
-        ENVIRONMENT: toque
-      input_mapping:
-        bbl-state: networking-oss-deployments
-    - task: bbl-up
-      file: cf-deployment-concourse-tasks/bbl-up/task.yml
-      params:
-        BBL_GCP_SERVICE_ACCOUNT_KEY: deployment-helpers/c2c-service-account-key.json
-        BBL_GCP_REGION: us-east1
-        BBL_STATE_DIR: environments/toque/bbl-state
-        BBL_IAAS: gcp
-        BBL_LB_CERT: ((toque-lb-cert.certificate))
-        BBL_LB_KEY: ((toque-lb-key.private_key))
-        LB_DOMAIN: toque.c2c.cf-app.com
-        BBL_ENV_NAME: toque
-      input_mapping:
-        bbl-state: updated-bbl-state
-        bbl-config: updated-bbl-state
-      ensure:
-        put: networking-oss-deployments
-        params:
-          repository: updated-bbl-state
-          rebase: true
-
-  - name: toque-bbl-destroy
-    serial_groups: [toque]
-    plan:
-    - in_parallel:
-      - get: cf-deployment-concourse-tasks
-      - get: networking-oss-deployments
-    - task: bosh-cleanup
-      file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
-      params:
-        BBL_STATE_DIR: environments/toque/bbl-state
-      input_mapping:
-        bbl-state: networking-oss-deployments
-    - task: bbl-destroy
-      file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
-      params:
-        BBL_STATE_DIR: environments/toque/bbl-state
-        BBL_GCP_SERVICE_ACCOUNT_KEY: deployment-helpers/c2c-service-account-key.json
-      input_mapping:
-        bbl-state: networking-oss-deployments
-      ensure:
-        put: networking-oss-deployments
-        params:
-          repository: updated-bbl-state
-          rebase: true
-
-  - name: toque-deploy
-    serial_groups: [toque]
-    plan:
-    - in_parallel:
-      - get: cf-deployment-concourse-tasks
-      - get: cf-deployment
-      - get: cf-networking-release-ci
-        params:
-          submodules: none
-      - get: networking-oss-deployments
-      - get: cf-networking-dev
-        passed: [unit-and-integration-tests]
-        trigger: true
-      - get: silk-dev
-        passed: [unit-and-integration-tests]
-        trigger: true
-    - in_parallel:
-      - task: upload-stemcell
-        file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
-        input_mapping:
-          bbl-state: networking-oss-deployments
-        params:
-          BBL_STATE_DIR: environments/toque/bbl-state
-      - task: upload-local-silk-release
-        file: cf-networking-release-ci/ci/tasks/upload-local-release/task.yml
-        input_mapping:
-          bbl-state: networking-oss-deployments
-          local-release: silk-dev
-        params:
-          BBL_STATE_DIR: environments/toque/bbl-state
-      - task: upload-local-networking-release
-        file: cf-networking-release-ci/ci/tasks/upload-local-release/task.yml
-        input_mapping:
-          bbl-state: networking-oss-deployments
-          local-release: cf-networking-dev
-        params:
-          BBL_STATE_DIR: environments/toque/bbl-state
-      - task: collect-ops-files
-        file: cf-networking-release-ci/ci/tasks/collect-named-ops-files/task.yml
-        params:
-          ENVIRONMENT_NAME: toque
-        input_mapping:
-          deployments-repo: networking-oss-deployments
-          cf-networking-release: cf-networking-dev
-          silk-release: silk-dev
-    - task: emit-datadog-deploy-start
-      file: cf-networking-release-ci/ci/tasks/emit-datadog-event/task.yml
-      params:
-        TITLE: deploy_start
-        TEXT: deploy_start
-        PRIORITY: normal
-        AWS_ENV: toque.c2c.cf-app.com
-        DATADOG_API_KEY: ((datadog_api_key))
-    - task: deploy-cf
-      file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
-      params:
-        BBL_STATE_DIR: environments/toque/bbl-state
-        SYSTEM_DOMAIN: toque.c2c.cf-app.com
-        OPS_FILES: |
-          cf-deployment/operations/use-compiled-releases.yml
-          cf-deployment/operations/scale-to-one-az.yml
-          cf-networking-release-ci/ci/opsfiles/smaller-footprint.yml
-          cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
-          cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
-          cf-networking-release-ci/ci/opsfiles/use-latest-silk.yml
-          cf-networking-release-ci/ci/opsfiles/use-latest-cf-networking.yml
-          cf-deployment/operations/enable-service-discovery.yml
-          cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain.yml
-          cf-networking-release/manifest-generation/opsfiles/enable-experimental-dynamic-egress-policies.yml
-          cf-networking-release-ci/ci/opsfiles/disable-ingress-redirect-to-proxy.yml
-          cf-deployment/operations/experimental/enable-iptables-logger.yml
-          cf-networking-release-ci/ci/opsfiles/change-nats-monitor-port.yml
-          cf-networking-release-ci/ci/opsfiles/increase-diego-cell-mtu.yml
-          cf-networking-release-ci/ci/opsfiles/scale-diego-cell-vm-size.yml
-          cf-networking-release-ci/ci/opsfiles/scale-max-containers.yml
-          cf-networking-release-ci/ci/opsfiles/scale-router-ephemeral-disk.yml
-          cf-networking-release-ci/ci/opsfiles/scale-to-3-diego-cells.yml
-          cf-networking-release-ci/ci/opsfiles/lower-canary-watch-time.yml
-      input_mapping:
-        bbl-state: networking-oss-deployments
-        release: cf-networking-dev
-        vars-files: networking-oss-deployments
-    - task: emit-datadog-deploy-end
-      file: cf-networking-release-ci/ci/tasks/emit-datadog-event/task.yml
-      params:
-        TITLE: deploy_end
-        TEXT: deploy_end
-        PRIORITY: normal
-        AWS_ENV: toque.c2c.cf-app.com
-        DATADOG_API_KEY: ((datadog_api_key))
-    - task: bosh-cleanup
-      file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
-      params:
-        BBL_STATE_DIR: environments/toque/bbl-state
-      input_mapping:
-        bbl-state: networking-oss-deployments
-
-  - name: toque-test
-    serial_groups: [toque]
-    plan:
-    - in_parallel:
-      - get: cf-networking-release-ci
-        params:
-          submodules: none
-      - get: networking-oss-deployments
-        passed: [toque-deploy]
-      - get: cf-networking-dev
-        passed: [toque-deploy]
-        trigger: true
-      - get: toque-scaling-test-params
-        trigger: true
-      - get: toque-stats
-    - task: get-credhub-vars
-      file: cf-networking-release-ci/ci/tasks/get-credhub-vars/task.yml
-      input_mapping:
-        bbl-state: networking-oss-deployments
-      params:
-        BBL_STATE_DIR: environments/toque/bbl-state
-        VARIABLES: |
-          /bosh-toque/cf/cf_admin_password
-    - task: set-scaling-test-params
-      file: cf-networking-release-ci/ci/tasks/set-scaling-test-params/task.yml
-      params:
-        ENVIRONMENT_NAME: toque
-      input_mapping:
-        deployments-repo: networking-oss-deployments
-        scaling-test-params: toque-scaling-test-params
-    - task: push-apps
-      file: cf-networking-release-ci/ci/tasks/push-apps/task.yml
-      params:
-        TEST_CONFIG_DIR: environments/toque/test-configs
-      input_mapping:
-        cf-networking: cf-networking-dev
-        test-config: test-config
-    - task: emit-datadog-test-start
-      file: cf-networking-release-ci/ci/tasks/emit-datadog-event/task.yml
-      params:
-        TITLE: test_start
-        TEXT: test_start
-        PRIORITY: normal
-        AWS_ENV: toque.c2c.cf-app.com
-        DATADOG_API_KEY: ((datadog_api_key))
-    - task: test-scalability
-      file: cf-networking-release-ci/ci/tasks/test-scalability/task.yml
-      params:
-        TEST_CONFIG_DIR: environments/toque/test-configs
-      input_mapping:
-        cf-networking: cf-networking-dev
-        test-config: test-config
-      ensure:
-        task: emit-datadog-test-stop
-        file: cf-networking-release-ci/ci/tasks/emit-datadog-event/task.yml
-        params:
-          TITLE: test_end
-          TEXT: test_end
-          PRIORITY: normal
-          AWS_ENV: toque.c2c.cf-app.com
-          DATADOG_API_KEY: ((datadog_api_key))
-
   - name: caubeen-bbl-up
     serial_groups: [caubeen]
     plan:
@@ -1545,20 +1299,6 @@ jobs:
       file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
       params:
         BBL_STATE_DIR: environments/mitre/bbl-state
-        DEPLOYMENT_NAME: cf
-      input_mapping:
-        bbl-state: networking-oss-deployments
-
-  - name: delete-toque-deployment
-    serial_groups: [toque]
-    plan:
-    - in_parallel:
-      - get: networking-oss-deployments
-      - get: cf-deployment-concourse-tasks
-    - task: delete-deployment
-      file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
-      params:
-        BBL_STATE_DIR: environments/toque/bbl-state
         DEPLOYMENT_NAME: cf
       input_mapping:
         bbl-state: networking-oss-deployments
