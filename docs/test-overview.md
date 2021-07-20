@@ -2,14 +2,53 @@
 
 ### Unit, integration and template tests
 
+To run everything:
 ```bash
-~/workspace/cf-networking-release/scripts/docker-test
-~/workspace/cf-networking-release/scripts/template-tests
+cd cf-networking-release
+./scripts/docker-test
+./template-tests
+```
+
+To run individual tests during development:
+
+```bash
+cd cf-networking-release
+./scripts/docker-shell-with-started-db
+# now use ginkgo to run whatever tests you want
 ```
 
 ### Acceptance tests
+Acceptance tests require a fully deployed Cloud Foundry. 
 
+⚠️ Warning: these tests remove default security groups. Do not run these tests on a prod environment.
+
+1. Make the following config.yml and fill in the properties
 ```bash
-cd src/test/acceptance
-./run-locally.sh
+{
+  "api": "API_URL",
+  "admin_user": "admin",
+  "admin_password": "ADMIN_PASSWORD", # this should be in credhub as "cf_admin_password"
+  "admin_secret": "ADMIN_SECRET", # this should be in credhub as "uaa_admin_client_secret"
+  "apps_domain": "APPS_DOMAIN",
+  "default_security_groups": [ "dns", "public_networks" ], # check these against your own security groups.
+  "skip_experimental_dynamic_egress_tests": false,
+  "skip_ssl_validation": true,
+  "test_app_instances": 2,
+  "test_applications": 2,
+  "proxy_instances": 1,
+  "proxy_applications": 1,
+  "extra_listen_ports": 2,
+  "prefix":"cf-networking-test-app"
+}
+```
+
+2. Run the following command for c2c acceptance tests:
+```
+GO111MODULE=auto CONFIG=config.yml APPS_DIR=${PWD}/src/example-apps ginkgo -v src/test/acceptance
+
+```
+
+3. Run the following command for service discovery acceptance tests:
+```
+GO111MODULE=auto CONFIG=config.yml APPS_DIR=${PWD}/src/example-apps ginkgo -v src/test/acceptance-sd
 ```
