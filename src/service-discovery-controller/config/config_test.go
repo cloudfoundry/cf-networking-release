@@ -1,9 +1,11 @@
 package config_test
 
 import (
+	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	. "service-discovery-controller/config"
+	testhelpers "test-helpers"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -11,39 +13,41 @@ import (
 )
 
 var _ = Describe("Config", func() {
+	var configJSON []byte
+
+	BeforeEach(func() {
+		configJSON = []byte(`{
+			"address":"example.com",
+			"port":"80053",
+			"index":"62",
+			"log_level_address": "localhost",
+			"log_level_port": 8012,
+			"server_cert": "some_path_server_cert",
+			"server_key": "some_path_server_key",
+			"ca_cert": "some_path_ca_cert",
+			"nats":{
+				"hosts": [{
+					"hostname": "a-nats-host",
+					"port": 1
+				},
+				{
+					"hostname": "b-nats-host",
+					"port": 2
+				}],
+				"user": "a-nats-user",
+				"pass": "a-nats-pass"
+			},
+			"staleness_threshold_seconds": 5,
+			"pruning_interval_seconds": 3,
+			"metrics_emit_seconds": 6,
+			"metron_port": 8080,
+			"resume_pruning_delay_seconds": 2,
+			"warm_duration_seconds": 5
+		}`)
+	})
+
 	Context("when created from valid JSON", func() {
 		It("contains the values in the JSON", func() {
-			configJSON := []byte(`{
-				"address":"example.com",
-				"port":"80053",
-				"index":"62",
-				"log_level_address": "localhost",
-				"log_level_port": 8012,
-				"server_cert": "some_path_server_cert",
-				"server_key": "some_path_server_key",
-				"ca_cert": "some_path_ca_cert",
-				"nats":[
-					{
-						"host": "a-nats-host",
-						"port": 1,
-						"user": "a-nats-user",
-						"pass": "a-nats-pass"
-					},
-					{
-						"host": "b-nats-host",
-						"port": 2,
-						"user": "b-nats-user",
-						"pass": "b-nats-pass"
-					}
-				],
-				"staleness_threshold_seconds": 5,
-				"pruning_interval_seconds": 3,
-				"metrics_emit_seconds": 6,
-				"metron_port": 8080,
-				"resume_pruning_delay_seconds": 2,
-				"warm_duration_seconds": 5
-			}`)
-
 			parsedConfig, err := NewConfig(configJSON)
 			Expect(err).ToNot(HaveOccurred())
 
@@ -57,12 +61,63 @@ var _ = Describe("Config", func() {
 			Expect(parsedConfig.CACert).To(Equal("some_path_ca_cert"))
 			Expect(parsedConfig.Index).To(Equal("62"))
 			Expect(parsedConfig.NatsServers()).To(ContainElement("nats://a-nats-user:a-nats-pass@a-nats-host:1"))
-			Expect(parsedConfig.NatsServers()).To(ContainElement("nats://b-nats-user:b-nats-pass@b-nats-host:2"))
+			Expect(parsedConfig.NatsServers()).To(ContainElement("nats://a-nats-user:a-nats-pass@b-nats-host:2"))
 			Expect(parsedConfig.StalenessThresholdSeconds).To(Equal(5))
 			Expect(parsedConfig.PruningIntervalSeconds).To(Equal(3))
 			Expect(parsedConfig.MetricsEmitSeconds).To(Equal(6))
 			Expect(parsedConfig.ResumePruningDelaySeconds).To(Equal(2))
 			Expect(parsedConfig.WarmDurationSeconds).To(Equal(5))
+		})
+	})
+
+	Context("when specifying to use NATS over TLS", func() {
+		It("interprets the configuration correctly", func() {
+			var configBeingAltered Config
+			err := json.Unmarshal(configJSON, &configBeingAltered)
+			Expect(err).ToNot(HaveOccurred())
+
+			_, serverCertPath, _, serverCert := testhelpers.GenerateCaAndMutualTlsCerts()
+			_, clientCertPath, clientKeyPath, clientCert := testhelpers.GenerateCaAndMutualTlsCerts()
+
+			parsedCert, err := x509.ParseCertificate(serverCert.Certificate[0])
+			Expect(err).ToNot(HaveOccurred())
+			expectedSubject := parsedCert.RawSubject
+
+			configBeingAltered.Nats = NatsConfig{
+				Hosts: []NatsHost{
+					{
+						Hostname: "tls-nats-server-1",
+						Port:     33,
+					},
+					{
+						Hostname: "tls-nats-server-2",
+						Port:     44,
+					},
+				},
+				TLSEnabled: true,
+				CACerts:    serverCertPath,
+				CertChain:  clientCertPath,
+				PrivateKey: clientKeyPath,
+			}
+
+			configJSON, err = json.Marshal(configBeingAltered)
+			Expect(err).ToNot(HaveOccurred())
+
+			parsedConfig, err := NewConfig(configJSON)
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(parsedConfig.NatsServers()).To(ConsistOf([]string{
+				"nats://tls-nats-server-1:33",
+				"nats://tls-nats-server-2:44",
+			}))
+
+			Expect(parsedConfig.Nats.TLSEnabled).To(Equal(true))
+
+			Expect(parsedConfig.Nats.CAPool).ToNot(BeNil())
+			poolSubjects := parsedConfig.Nats.CAPool.Subjects()
+			Expect(string(poolSubjects[0])).To(Equal(string(expectedSubject)))
+
+			Expect(parsedConfig.Nats.ClientAuthCertificate).To(Equal(clientCert))
 		})
 	})
 

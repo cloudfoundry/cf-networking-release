@@ -160,3 +160,6 @@
 [submodule "src/google.golang.org/grpc"]
 	path = src/google.golang.org/grpc
 	url = https://github.com/grpc/grpc-go
+[submodule "src/code.cloudfoundry.org/tlsconfig"]
+	path = src/code.cloudfoundry.org/tlsconfig
+	url = https://github.com/cloudfoundry/tlsconfig

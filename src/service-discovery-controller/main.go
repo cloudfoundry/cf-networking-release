@@ -24,6 +24,7 @@ import (
 	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagerflags"
+	"code.cloudfoundry.org/tlsconfig"
 	"github.com/cloudfoundry/dropsonde"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
@@ -179,13 +180,24 @@ func buildSubscriber(conf *config.Config, addressTable *addresstable.AddressTabl
 	subscriberID := fmt.Sprintf("%s-%s", conf.Index, uuid)
 
 	subOpts := mbus.SubscriberOpts{
-		ID: subscriberID,
+		ID:                               subscriberID,
 		MinimumRegisterIntervalInSeconds: conf.ResumePruningDelaySeconds,
 		PruneThresholdInSeconds:          120,
 	}
 
 	provider := &mbus.NatsConnWithUrlProvider{
 		Url: strings.Join(conf.NatsServers(), ","),
+	}
+	if conf.Nats.TLSEnabled {
+		provider.TLSConfig, err = tlsconfig.Build(
+			tlsconfig.WithInternalServiceDefaults(),
+			tlsconfig.WithIdentity(conf.Nats.ClientAuthCertificate),
+		).Client(
+			tlsconfig.WithAuthority(conf.Nats.CAPool),
+		)
+		if err != nil {
+			return nil, fmt.Errorf("error building TLS config for NATS: %w", err)
+		}
 	}
 
 	localIP, err := localip.LocalIP()
