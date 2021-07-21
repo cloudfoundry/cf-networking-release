@@ -305,8 +305,8 @@ func (s *Subscriber) setupAddressMessageHandler() error {
 
 func (s *Subscriber) subscriptionOptionsJSON() []byte {
 	discoveryMessageJson, err := json.Marshal(ServiceDiscoveryStartMessage{
-		Id:   s.subOpts.ID,
-		Host: s.localIP,
+		Id:                               s.subOpts.ID,
+		Host:                             s.localIP,
 		MinimumRegisterIntervalInSeconds: s.subOpts.MinimumRegisterIntervalInSeconds,
 		PruneThresholdInSeconds:          s.subOpts.PruneThresholdInSeconds,
 	})

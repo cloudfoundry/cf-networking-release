@@ -1,25 +1,24 @@
 package main_test
 
 import (
+	"crypto/tls"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
-
-	"code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics"
-
-	"fmt"
+	"strings"
 	"time"
 
-	"crypto/tls"
-	"test-helpers"
+	testhelpers "test-helpers"
 
-	"strings"
-
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics"
 	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
+	"code.cloudfoundry.org/tlsconfig"
 	"github.com/nats-io/gnatsd/server"
 	"github.com/nats-io/go-nats"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
@@ -33,7 +32,12 @@ var _ = Describe("Service Discovery Controller process", func() {
 		configPath                string
 		port                      int
 		natsServerPort            int
+		natsServerCAPath          string
+		natsClientCertPath        string
+		natsClientKeyPath         string
 		natsServer                *server.Server
+		natsTlsConfig             *tls.Config
+		natsClientTlsConfig       *tls.Config
 		routeEmitter              *nats.Conn
 		clientCert                tls.Certificate
 		caFile                    string
@@ -47,29 +51,53 @@ var _ = Describe("Service Discovery Controller process", func() {
 	)
 
 	BeforeEach(func() {
+		var err error
+
+		var natsServerCert, natsClientCert tls.Certificate
+		var natsClientCAPath string
+		natsServerCAPath, _, _, natsServerCert = testhelpers.GenerateCaAndMutualTlsCerts()
+		natsClientCAPath, natsClientCertPath, natsClientKeyPath, natsClientCert = testhelpers.GenerateCaAndMutualTlsCerts()
+
+		natsClientTlsConfig, err = tlsconfig.Build(
+			tlsconfig.WithInternalServiceDefaults(),
+			tlsconfig.WithIdentity(natsClientCert),
+		).Client(
+			tlsconfig.WithAuthorityFromFile(natsServerCAPath),
+		)
+		Expect(err).ToNot(HaveOccurred())
+		natsTlsConfig, err = tlsconfig.Build(
+			tlsconfig.WithIdentity(natsServerCert),
+			tlsconfig.WithInternalServiceDefaults(),
+		).Server(tlsconfig.WithClientAuthenticationFromFile(natsClientCAPath))
+		Expect(err).ToNot(HaveOccurred())
+		natsServerPort = ports.PickAPort()
+		natsServer = RunNatsServerOnPort(natsServerPort, natsTlsConfig)
+
 		caFile, serverCert, serverKey, clientCert = testhelpers.GenerateCaAndMutualTlsCerts()
 		stalenessThresholdSeconds = 1
 		pruningIntervalSeconds = 1
 		logLevelEndpointPort = ports.PickAPort()
 		logLevelEndpointAddress = "localhost"
 		fakeMetron = metrics.NewFakeMetron()
-		natsServerPort = ports.PickAPort()
-		natsServer = RunNatsServerOnPort(natsServerPort)
 		port = ports.PickAPort()
 		configPath = writeConfigFile(fmt.Sprintf(`{
-			"address":"127.0.0.1",
+			"address":"localhost",
 			"port":"%d",
 			"ca_cert": "%s",
 			"server_cert": "%s",
 			"server_key": "%s",
-			"nats":[
-				{
-					"host":"localhost",
-					"port":%d,
-					"user":"",
-					"pass":""
-				}
-			],
+			"nats":{
+				"hosts": [{
+					"hostname":"localhost",
+					"port":%d
+				}],
+				"user":"",
+				"pass":"",
+				"tls_enabled": true,
+				"ca_certs": "%s",
+				"cert_chain": "%s",
+				"private_key": "%s"
+			},
 			"staleness_threshold_seconds": %d,
 			"pruning_interval_seconds": %d,
 			"log_level_address": "%s",
@@ -79,7 +107,7 @@ var _ = Describe("Service Discovery Controller process", func() {
 			"resume_pruning_delay_seconds": 1,
 			"warm_duration_seconds": 0
 		}`,
-			port, caFile, serverCert, serverKey, natsServerPort, stalenessThresholdSeconds, pruningIntervalSeconds, logLevelEndpointAddress, logLevelEndpointPort, fakeMetron.Port()))
+			port, caFile, serverCert, serverKey, natsServerPort, natsServerCAPath, natsClientCertPath, natsClientKeyPath, stalenessThresholdSeconds, pruningIntervalSeconds, logLevelEndpointAddress, logLevelEndpointPort, fakeMetron.Port()))
 	})
 
 	AfterEach(func() {
@@ -97,7 +125,7 @@ var _ = Describe("Service Discovery Controller process", func() {
 
 			Eventually(session, 6*time.Second).Should(gbytes.Say("service-discovery-controller.server-started"))
 
-			routeEmitter = newFakeRouteEmitter("nats://" + natsServer.Addr().String())
+			routeEmitter = newFakeRouteEmitter("nats://"+natsServer.Addr().String(), natsClientTlsConfig)
 			register(routeEmitter, "192.168.0.1", "app-id.internal.local.")
 			register(routeEmitter, "192.168.0.2", "app-id.internal.local.")
 			register(routeEmitter, "192.168.0.1", "large-id.internal.local.")
@@ -450,20 +478,21 @@ var _ = Describe("Service Discovery Controller process", func() {
 					"ca_cert": "%s",
 					"server_cert": "%s",
 					"server_key": "%s",
-					"nats":[
-						{
-							"host":"garbage",
-							"port":%d,
-							"user":"who",
-							"pass":"what"
-						},
-						{
-							"host":"localhost",
-							"port":%d,
-							"user":"",
-							"pass":""
-						}
-					],
+					"nats":{
+						"hosts": [{
+							"hostname":"garbage",
+							"port":%d
+						}, {
+							"hostname":"localhost",
+							"port":%d
+						}],
+						"user":"who",
+						"pass":"what",
+						"tls_enabled": true,
+						"ca_certs": "%s",
+						"cert_chain": "%s",
+						"private_key": "%s"
+					},
 					"staleness_threshold_seconds": %d,
 					"pruning_interval_seconds": %d,
 					"metrics_emit_seconds": 2,
@@ -472,7 +501,7 @@ var _ = Describe("Service Discovery Controller process", func() {
 				    "log_level_port": %d,
 					"resume_pruning_delay_seconds": 0,
 					"warm_duration_seconds": 0
-				}`, port, caFile, serverCert, serverKey, garbagePort, natsServerPort, stalenessThresholdSeconds, pruningIntervalSeconds, fakeMetron.Port(), logLevelEndpointAddress, logLevelEndpointPort))
+				}`, port, caFile, serverCert, serverKey, garbagePort, natsServerPort, natsServerCAPath, natsClientCertPath, natsClientKeyPath, stalenessThresholdSeconds, pruningIntervalSeconds, fakeMetron.Port(), logLevelEndpointAddress, logLevelEndpointPort))
 			})
 
 			It("connects to NATs successfully", func() {
@@ -601,7 +630,7 @@ var _ = Describe("Service Discovery Controller process", func() {
 				})
 
 				By("resuming pruning when nats server is back up", func() {
-					natsServer = RunNatsServerOnPort(natsServerPort)
+					natsServer = RunNatsServerOnPort(natsServerPort, natsTlsConfig)
 					Eventually(func() []byte {
 						url := fmt.Sprintf("https://127.0.0.1:%d/v1/registration/app-id.internal.local.", port)
 						resp, err := client.Get(url)
@@ -687,14 +716,18 @@ var _ = Describe("Service Discovery Controller process", func() {
 					"ca_cert": "%s",
 					"server_cert": "%s",
 					"server_key": "%s",
-					"nats":[
-						{
-							"host":"localhost",
-							"port":%d,
-							"user":"",
-							"pass":""
-						}
-					],
+					"nats":{
+						"hosts": [{
+							"hostname":"localhost",
+							"port":%d
+						}],
+						"user":"",
+						"pass":"",
+						"tls_enabled": true,
+						"ca_certs": "%s",
+						"cert_chain": "%s",
+						"private_key": "%s"
+					},
 					"staleness_threshold_seconds": %d,
 					"pruning_interval_seconds": %d,
 					"log_level_address": "%s",
@@ -704,7 +737,7 @@ var _ = Describe("Service Discovery Controller process", func() {
 					"resume_pruning_delay_seconds": 0,
 					"warm_duration_seconds": 1
 				}`,
-					port, caFile, serverCert, serverKey, natsServerPort, stalenessThresholdSeconds, pruningIntervalSeconds, logLevelEndpointAddress, logLevelEndpointPort, fakeMetron.Port()))
+					port, caFile, serverCert, serverKey, natsServerPort, natsServerCAPath, natsClientCertPath, natsClientKeyPath, stalenessThresholdSeconds, pruningIntervalSeconds, logLevelEndpointAddress, logLevelEndpointPort, fakeMetron.Port()))
 			})
 
 			It("returns 500 for requests before the warm duration is over", func() {
@@ -755,14 +788,14 @@ var _ = Describe("Service Discovery Controller process", func() {
 				"ca_cert": "%s",
 				"server_cert": "%s",
 				"server_key": "%s",
-				"nats":[
-					{
-						"host":"garbage",
-						"port":%d,
-						"user":"who",
-						"pass":"what"
-					}
-				],
+				"nats":{
+					"hosts": [{
+						"hostname":"garbage",
+						"port":%d
+					}],
+					"user":"who",
+					"pass":"what"
+				},
 				"staleness_threshold_seconds": %d,
 				"pruning_interval_seconds": %d,
 				"log_level_address": "%s",
@@ -812,8 +845,8 @@ func unregister(routeEmitter *nats.Conn, ip string, url string) {
 	Expect(routeEmitter.PublishMsg(&natsRegistryMsg)).ToNot(HaveOccurred())
 }
 
-func newFakeRouteEmitter(natsUrl string) *nats.Conn {
-	natsClient, err := nats.Connect(natsUrl, nats.ReconnectWait(1*time.Nanosecond))
+func newFakeRouteEmitter(natsUrl string, natsClientTlsConfig *tls.Config) *nats.Conn {
+	natsClient, err := nats.Connect(natsUrl, nats.ReconnectWait(1*time.Nanosecond), nats.Secure(natsClientTlsConfig))
 	Expect(err).NotTo(HaveOccurred())
 	return natsClient
 }
