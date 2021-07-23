@@ -1,0 +1,7 @@
+<% if_p('nats.ca_certs') do |ca_certs| %>
+<%= ca_certs %>
+<% end.else do %>
+<% if_link("nats-tls") do |nats_tls| %>
+<%= nats_tls.p('nats.external.tls.ca') %>
+<% end %>
+<% end %>
