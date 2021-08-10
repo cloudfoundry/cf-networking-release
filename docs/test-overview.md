@@ -6,7 +6,7 @@ To run everything:
 ```bash
 cd cf-networking-release
 ./scripts/docker-test
-./template-tests
+./scripts/template-tests
 ```
 
 To run individual tests during development:
