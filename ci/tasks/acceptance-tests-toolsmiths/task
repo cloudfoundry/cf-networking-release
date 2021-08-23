@@ -13,4 +13,4 @@ export PATH="${GOPATH}/bin:${PATH}"
 go get -u github.com/onsi/ginkgo/ginkgo
 export GO111MODULE=auto
 
-ginkgo -keepGoing -randomizeAllSpecs -randomizeSuites -race "${ROOT}/cf-networking/src/test/${TEST_NAME}"
+ginkgo -reportPassed -v -keepGoing -randomizeAllSpecs -randomizeSuites -race "${ROOT}/cf-networking/src/test/${TEST_NAME}"
