@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+set -u
+
+ROOT="$(cd "$(dirname $0)/../../../.." && pwd)"
+
+function get_var_from_json() {
+  local name="${1}"
+  jq -r ".${name}" "${ROOT}/variables/variables.json"
+}
+
+main() {
+  local adminPassword="$(get_var_from_json admin_password)"
+  local api="$(get_var_from_json api)"
+
+  # try 10 times dumbly
+  for i in `seq 0 9`
+  do
+    sleep 10
+    echo "try #${i}"
+    cf api "${api}" --skip-ssl-validation
+    cf auth admin "${adminPassword}"
+  done
+}
+
+
+main

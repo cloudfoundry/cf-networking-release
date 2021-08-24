@@ -32,6 +32,7 @@ resources:
     type: pcf-pool
     source:
       api_token: ((toolsmiths_api_key))
+      # api_token: ((toolsmiths-api-key))
       hostname: environments.toolsmiths.cf-app.com
       pool_name: cf-deployment
   ###### Control plane
@@ -48,7 +49,7 @@ resources:
     icon: github-box
     source:
       branch: main
-      private_key: ((routing-ci-bot-ssh-key.private_key))
+      private_key: ((tas-runtime-github_private_key))
       uri: git@github.com:cloudfoundry/networking-oss-deployments.git
   - name: cf-deployment-concourse-tasks
     type: git
@@ -63,26 +64,28 @@ resources:
     source:
       branch: main
       uri: https://github.com/cloudfoundry/cf-deployment.git
-  # - name: cf-networking-2.23.0
-  #   type: git
-  #   icon: github-box
-  #   source:
-  #     branch: release
-  #     uri: https://github.com/cloudfoundry/cf-networking-release.git
-  #     tag_filter: "2.23.0"
-  # - name: silk-2.23.0
-  #   type: git
-  #   icon: github-box
-  #   source:
-  #     branch: release
-  #     uri: https://github.com/cloudfoundry/silk-release.git
-  #     tag_filter: "2.23.0"
-  # - name: disaster-recovery-acceptance-tests
-  #   type: git
-  #   icon: github-box
-  #   source:
-  #     branch: master
-  #     uri: https://github.com/cloudfoundry-incubator/disaster-recovery-acceptance-tests
+  - name: cf-networking-2.23.0
+    type: git
+    icon: github-box
+    source:
+      branch: release
+      uri: https://github.com/cloudfoundry/cf-networking-release.git
+      tag_filter: "2.23.0"
+  - name: silk-2.23.0
+    type: git
+    icon: github-box
+    source:
+      branch: release
+      uri: https://github.com/cloudfoundry/silk-release.git
+      tag_filter: "2.23.0"
+  - name: disaster-recovery-acceptance-tests
+    type: git
+    icon: github-box
+    source:
+      branch: main
+      private_key: ((tas-runtime-github_private_key))
+      uri: git@github.com:cloudfoundry-incubator/disaster-recovery-acceptance-tests
+
   ###### BOSH release repos
   # - name: golang-release-latest
   #   type: git
@@ -97,7 +100,7 @@ resources:
   #   source:
   #     uri: git@github.com:cloudfoundry/silk-release.git
   #     branch: develop
-  #     private_key: ((routing-ci-bot-ssh-key.private_key))
+  #     private_key: ((tas-runtime-github_private_key))
   - name: silk-dev
     type: git
     icon: github-box
@@ -106,21 +109,21 @@ resources:
       branch: develop
       ignore_paths:
         - docs
-      private_key: ((routing-ci-bot-ssh-key.private_key))
+      private_key: ((tas-runtime-github_private_key))
   # - name: silk-master
   #   type: git
   #   icon: github-box
   #   source:
   #     uri: git@github.com:cloudfoundry/silk-release.git
   #     branch: release
-  #     private_key: ((routing-ci-bot-ssh-key.private_key))
+  #     private_key: ((tas-runtime-github_private_key))
   # - name: cf-networking-dev-full
   #   type: git
   #   icon: github-box
   #   source:
   #     uri: git@github.com:cloudfoundry/cf-networking-release.git
   #     branch: develop
-  #     private_key: ((routing-ci-bot-ssh-key.private_key))
+  #     private_key: ((tas-runtime-github_private_key))
   - name: cf-networking-dev
     type: git
     icon: github-box
@@ -130,35 +133,35 @@ resources:
       ignore_paths:
         - docs
         - ci
-      private_key: ((routing-ci-bot-ssh-key.private_key))
+      private_key: ((tas-runtime-github_private_key))
   # - name: cf-networking-master
   #   type: git
   #   icon: github-box
   #   source:
   #     uri: git@github.com:cloudfoundry/cf-networking-release.git
   #     branch: release
-  #     private_key: ((routing-ci-bot-ssh-key.private_key))
+  #     private_key: ((tas-runtime-github_private_key))
   # - name: cf-networking-release-candidate
   #   type: git
   #   icon: github-box
   #   source:
   #     uri: git@github.com:cloudfoundry/cf-networking-release.git
   #     branch: release-candidate
-  #     private_key: ((routing-ci-bot-ssh-key.private_key))
+  #     private_key: ((tas-runtime-github_private_key))
   # - name: silk-release-candidate
   #   type: git
   #   icon: github-box
   #   source:
   #     uri: git@github.com:cloudfoundry/silk-release.git
   #     branch: release-candidate
-  #     private_key: ((routing-ci-bot-ssh-key.private_key))
-  # - name: bbr-binary-release
-  #   type: github-release
-  #   icon: github-face
-  #   source:
-  #     owner: cloudfoundry-incubator
-  #     repository: bosh-backup-and-restore
-  #     access_token: ((github_access_token))
+  #     private_key: ((tas-runtime-github_private_key))
+  - name: bbr-binary-release
+    type: github-release
+    icon: github-face
+    source:
+      owner: cloudfoundry-incubator
+      repository: bosh-backup-and-restore
+      access_token: ((tas-runtime-github-access-token))
   # - name: bosh-bootloader
   #   type: git
   #   icon: github-box
@@ -172,7 +175,7 @@ resources:
   #   source:
   #     uri: "git@github.com:cf-container-networking/toque-stats.git"
   #     branch: master
-  #     private_key: ((routing-ci-bot-ssh-key.private_key))
+  #     private_key: ((tas-runtime-github_private_key))
   ####### Timers
   # - name: trigger-upgrade-deploy
   #   type: time
@@ -570,7 +573,7 @@ jobs:
         run:
           path: bash
           args:
-            - -cx
+            - -c
             - |
               source cf-deployment-concourse-tasks/shared-functions
               setup_bosh_env_vars
@@ -1282,224 +1285,309 @@ jobs:
   #         AWS_ENV: toque.c2c.cf-app.com
   #         DATADOG_API_KEY: ((datadog_api_key))
 
-  # - name: caubeen-bbl-up
-  #   serial_groups: [caubeen]
-  #   plan:
-  #   - in_parallel:
-  #     - get: cf-deployment-concourse-tasks
-  #     - get: networking-oss-deployments
-  #     - get: cf-networking-release-ci
-  #     - get: bosh-bootloader
-  #   - task: add-parent-dns
-  #     file: cf-networking-release-ci/ci/tasks/add-parent-dns/task.yml
-  #     params:
-  #       ENVIRONMENT: caubeen
-  #     input_mapping:
-  #       bbl-state: networking-oss-deployments
-  #   - task: bbl-up
-  #     file: cf-deployment-concourse-tasks/bbl-up/task.yml
-  #     params:
-  #       BBL_GCP_SERVICE_ACCOUNT_KEY: deployment-helpers/c2c-service-account-key.json
-  #       BBL_GCP_REGION: us-east1
-  #       BBL_STATE_DIR: environments/caubeen/bbl-state
-  #       BBL_IAAS: gcp
-  #       BBL_LB_CERT: ((caubeen-lb-cert.certificate))
-  #       BBL_LB_KEY: ((caubeen-lb-key.private_key))
-  #       LB_DOMAIN: caubeen.c2c.cf-app.com
-  #       BBL_ENV_NAME: caubeen
-  #     input_mapping:
-  #       bbl-state: updated-bbl-state
-  #       bbl-config: updated-bbl-state
-  #     ensure:
-  #       put: networking-oss-deployments
-  #       params:
-  #         repository: updated-bbl-state
-  #         rebase: true
+  - name: caubeen-claim-and-clean-environment
+    serial_groups: [caubeen]
+    plan:
+    - in_parallel:
+      - get: cf-networking-release-ci
+        params:
+          submodules: none
+      - get: cf-deployment-concourse-tasks
+      - get: cf-networking-dev
+        # passed: [unit-and-integration-tests]
+        trigger: true
+      - get: silk-dev
+        # passed: [unit-and-integration-tests]
+        trigger: true
+    - put: caubeen
+      resource: toolsmiths-pool
+      inputs: []
+      params:
+        action: claim
+    - task: guarantee-no-existing-cf-deployment
+      file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
+      params:
+        BBL_STATE_DIR: environments/caubeen/bbl-state
+        DEPLOYMENT_NAME: cf
+        IGNORE_ERRORS: true
+      input_mapping:
+        toolsmiths-env: caubeen
 
-  # - name: caubeen-bbl-destroy
-  #   serial_groups: [caubeen]
-  #   plan:
-  #   - in_parallel:
-  #     - get: cf-deployment-concourse-tasks
-  #     - get: networking-oss-deployments
-  #   - task: bosh-cleanup
-  #     file: cf-deployment-concourse-tasks/bosh-cleanup/task.yml
-  #     params:
-  #       BBL_STATE_DIR: environments/caubeen/bbl-state
-  #     input_mapping:
-  #       bbl-state: networking-oss-deployments
-  #   - task: bbl-destroy
-  #     file: cf-deployment-concourse-tasks/bbl-destroy/task.yml
-  #     params:
-  #       BBL_GCP_SERVICE_ACCOUNT_KEY: deployment-helpers/c2c-service-account-key.json
-  #       BBL_STATE_DIR: environments/caubeen/bbl-state
-  #     input_mapping:
-  #       bbl-state: networking-oss-deployments
-  #     ensure:
-  #       put: networking-oss-deployments
-  #       params:
-  #         repository: updated-bbl-state
-  #         rebase: true
+  - name: caubeen-upgrade-test
+    serial_groups: [caubeen]
+    plan:
+    - in_parallel:
+      - get: cf-networking-release-ci
+        params:
+          submodules: none
+      - get: cf-deployment-concourse-tasks
+      - get: networking-oss-deployments
+      - get: cf-deployment
+      - get: cf-networking-2.23.0
+      - get: silk-2.23.0
+      - get: cf-networking-dev
+        passed: [caubeen-claim-and-clean-environment]
+      - get: silk-dev
+        passed: [caubeen-claim-and-clean-environment]
+      - get: caubeen
+        resource: toolsmiths-pool
+        passed: [caubeen-claim-and-clean-environment]
+    - in_parallel:
+      - task: upload-stemcell
+        file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
+        input_mapping:
+          toolsmiths-env: caubeen
+      - task: collect-pinned-ops-files
+        file: cf-networking-release-ci/ci/tasks/collect-named-ops-files/task.yml
+        params:
+          ENVIRONMENT_NAME: caubeen
+        input_mapping:
+          cf-networking-release: cf-networking-2.23.0
+          deployments-repo: networking-oss-deployments
+          silk-release: silk-2.23.0
+      - task: generate-gcs-vars-file
+        input_mapping:
+          toolsmiths-env: caubeen
+        config:
+          platform: linux
+          image_resource:
+            type: registry-image
+            source:
+              repository: relintdockerhubpushbot/cf-deployment-concourse-tasks
+          inputs:
+            - name: toolsmiths-env
+            - name: cf-deployment-concourse-tasks
+          outputs:
+            - name: generated-gcs-vars
+          params:
+            app_package_directory_key: ((upgrade_test_app_package_directory_key))
+            buildpack_directory_key: ((upgrade_test_buildpack_directory_key))
+            droplet_directory_key: ((upgrade_test_droplet_directory_key))
+            resource_directory_key: ((upgrade_test_resource_directory_key))
+            gcs_project: ((upgrade_test_gcs_project))
+            gcs_service_account_email: ((upgrade_test_gcs_service_account_email))
+            gcs_service_account_json_key: ((upgrade_test_gcs_service_account_json_key))
+          run:
+            path: bash
+            args:
+              - -c
+              - |
+                source cf-deployment-concourse-tasks/shared-functions
+                setup_bosh_env_vars
 
-  # - name: caubeen-upgrade-test
-  #   serial_groups: [caubeen]
-  #   plan:
-  #   - in_parallel:
-  #     - get: trigger-upgrade-deploy
-  #       trigger: true
-  #     - get: cf-networking-release-ci
-  #       params:
-  #         submodules: none
-  #     - get: cf-deployment-concourse-tasks
-  #     - get: networking-oss-deployments
-  #     - get: cf-deployment
-  #     - get: cf-networking-2.23.0
-  #     - get: silk-2.23.0
-  #     - get: cf-networking-dev
-  #       passed: [unit-and-integration-tests]
-  #     - get: silk-dev
-  #       passed: [unit-and-integration-tests]
-  #   - task: guarantee-no-existing-cf-deployment
-  #     file: cf-deployment-concourse-tasks/bosh-delete-deployment/task.yml
-  #     params:
-  #       BBL_STATE_DIR: environments/caubeen/bbl-state
-  #       DEPLOYMENT_NAME: cf
-  #       IGNORE_ERRORS: true
-  #     input_mapping:
-  #       bbl-state: networking-oss-deployments
-  #   - task: upload-stemcell
-  #     file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
-  #     params:
-  #       BBL_STATE_DIR: environments/caubeen/bbl-state
-  #     input_mapping:
-  #       bbl-state: networking-oss-deployments
-  #   - task: collect-pinned-ops-files
-  #     file: cf-networking-release-ci/ci/tasks/collect-named-ops-files/task.yml
-  #     params:
-  #       ENVIRONMENT_NAME: caubeen
-  #     input_mapping:
-  #       cf-networking-release: cf-networking-2.23.0
-  #       deployments-repo: networking-oss-deployments
-  #       silk-release: silk-2.23.0
-  #   - task: bosh-deploy-cf-rc
-  #     file: cf-deployment-concourse-tasks/bosh-deploy/task.yml
-  #     params:
-  #       BBL_STATE_DIR: environments/caubeen/bbl-state
-  #       SYSTEM_DOMAIN: caubeen.c2c.cf-app.com
-  #       OPS_FILES: |
-  #         cf-deployment/operations/use-compiled-releases.yml
-  #         cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
-  #         cf-deployment/operations/use-external-blobstore.yml
-  #         cf-deployment/operations/use-gcs-blobstore-service-account.yml
-  #         cf-deployment/operations/scale-database-cluster.yml
-  #         cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
-  #         cf-deployment/operations/experimental/enable-iptables-logger.yml
-  #         cf-deployment/operations/enable-service-discovery.yml
-  #         cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain.yml
-  #         cf-networking-release-ci/ci/opsfiles/scale-up-4-api-instances.yml
-  #         cf-networking-release-ci/ci/opsfiles/lower-canary-watch-time.yml
-  #       VARS_FILES: |
-  #         deployment-helpers/caubeen-gcs-vars.yml
-  #     input_mapping:
-  #       bbl-state: networking-oss-deployments
-  #       vars-files: networking-oss-deployments
-  #   - task: get-credhub-vars
-  #     file: cf-networking-release-ci/ci/tasks/get-credhub-vars/task.yml
-  #     input_mapping:
-  #       bbl-state: networking-oss-deployments
-  #     params:
-  #       BBL_STATE_DIR: environments/caubeen/bbl-state
-  #       VARIABLES: |
-  #         /bosh-caubeen/cf/cf_admin_password
-  #   - task: verify-api-ready
-  #     file: cf-networking-release-ci/ci/tasks/verify-api-ready/task.yml
-  #     params:
-  #       SYSTEM_DOMAIN: caubeen.c2c.cf-app.com
-  #       ENVIRONMENT_NAME: caubeen
-  #   - task: collect-ops-files
-  #     file: cf-networking-release-ci/ci/tasks/collect-named-ops-files/task.yml
-  #     params:
-  #       ENVIRONMENT_NAME: caubeen
-  #     input_mapping:
-  #       cf-networking-release: cf-networking-dev
-  #       deployments-repo: networking-oss-deployments
-  #       silk-release: silk-dev
-  #   - task: upload-local-silk-release
-  #     file: cf-networking-release-ci/ci/tasks/upload-local-release/task.yml
-  #     input_mapping:
-  #       bbl-state: networking-oss-deployments
-  #       local-release: silk-dev
-  #     params:
-  #       BBL_STATE_DIR: environments/caubeen/bbl-state
-  #   - task: bosh-deploy-cf-rc-with-updated-releases
-  #     file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
-  #     params:
-  #       BBL_STATE_DIR: environments/caubeen/bbl-state
-  #       SYSTEM_DOMAIN: caubeen.c2c.cf-app.com
-  #       OPS_FILES: |
-  #         cf-deployment/operations/use-compiled-releases.yml
-  #         cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
-  #         cf-deployment/operations/use-external-blobstore.yml
-  #         cf-deployment/operations/use-gcs-blobstore-service-account.yml
-  #         cf-deployment/operations/scale-database-cluster.yml
-  #         cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
-  #         cf-deployment/operations/experimental/enable-iptables-logger.yml
-  #         cf-deployment/operations/enable-service-discovery.yml
-  #         cf-deployment/operations/backup-and-restore/enable-backup-restore.yml
-  #         cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain.yml
-  #         cf-networking-release-ci/ci/opsfiles/scale-up-4-api-instances.yml
-  #         cf-networking-release-ci/ci/opsfiles/lower-canary-watch-time.yml
-  #         cf-networking-release-ci/ci/opsfiles/use-latest-silk.yml
-  #       VARS_FILES: |
-  #         deployment-helpers/caubeen-gcs-vars.yml
-  #       DEPLOY_WITH_UPTIME_MEASUREMENTS: true
-  #       FAIL_ON_DOWNTIME: true
-  #       HTTP_AVAILABILITY_THRESHOLD: 0
-  #       APP_PUSHABILITY_THRESHOLD: 10
-  #       RECENT_LOGS_THRESHOLD: 10000 # we don't guarantee logs availability, only app and http, see cf-deployment CI
-  #       STREAMING_LOGS_THRESHOLD: 10000
-  #     input_mapping:
-  #       bbl-state: networking-oss-deployments
-  #       release: cf-networking-dev
-  #       vars-files: networking-oss-deployments
+                mkdir -p generated-gcs-vars
+                echo '{}' | jq \
+                --arg app_package_directory_key "${app_package_directory_key}" \
+                --arg buildpack_directory_key "${buildpack_directory_key}" \
+                --arg droplet_directory_key "${droplet_directory_key}" \
+                --arg resource_directory_key "${resource_directory_key}" \
+                --arg gcs_project "${gcs_project}" \
+                --arg gcs_service_account_email "${gcs_service_account_email}" \
+                --arg gcs_service_account_json_key "${gcs_service_account_json_key}" \
+                --args \
+                '{
+                  "app_package_directory_key":$app_package_directory_key,
+                  "buildpack_directory_key":$buildpack_directory_key,
+                  "droplet_directory_key":$droplet_directory_key,
+                  "resource_directory_key":$resource_directory_key,
+                  "gcs_project":$gcs_project,
+                  "gcs_service_account_email":$gcs_service_account_email,
+                  "gcs_service_account_json_key":$gcs_service_account_json_key
+                }' > generated-gcs-vars/caubeen_gcs_creds.json
+                cat generated-gcs-vars/caubeen_gcs_creds.json
+
+    - task: bosh-deploy-cf-rc
+      file: cf-deployment-concourse-tasks/bosh-deploy/task.yml
+      params:
+        OPS_FILES: |
+          cf-deployment/operations/use-compiled-releases.yml
+          cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
+          cf-deployment/operations/use-external-blobstore.yml
+          cf-deployment/operations/use-gcs-blobstore-service-account.yml
+          cf-deployment/operations/scale-database-cluster.yml
+          cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
+          cf-deployment/operations/experimental/enable-iptables-logger.yml
+          cf-deployment/operations/enable-service-discovery.yml
+          cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain.yml
+          cf-networking-release-ci/ci/opsfiles/scale-up-4-api-instances.yml
+          cf-networking-release-ci/ci/opsfiles/lower-canary-watch-time.yml
+        VARS_FILES: |
+          caubeen_gcs_creds.json
+      input_mapping:
+        toolsmiths-env: caubeen
+        vars-files: generated-gcs-vars
+
+    - task: generate-variables
+      input_mapping:
+        toolsmiths-env: caubeen
+      config:
+        platform: linux
+        image_resource:
+          type: registry-image
+          source:
+            repository: relintdockerhubpushbot/cf-deployment-concourse-tasks
+        inputs:
+          - name: toolsmiths-env
+          - name: cf-deployment-concourse-tasks
+        outputs:
+          - name: variables
+        run:
+          path: /bin/bash
+          args:
+            - -c
+            - |
+              source cf-deployment-concourse-tasks/shared-functions
+              setup_bosh_env_vars
+              # set +x
+
+              mkdir -p variables
+              echo '{}' | jq \
+              --arg cf_api "api.${SYSTEM_DOMAIN}" \
+              --arg admin_password $(credhub f -j -n cf_admin_password | jq -r .credentials[].name | xargs credhub get -j -n | jq -r .value) \
+              --arg apps_domain "${SYSTEM_DOMAIN}" \
+              --args \
+              '{
+                  "admin_password":$admin_password,
+                  "admin_user":"admin",
+                  "api":$cf_api,
+                  "apps_domain":$apps_domain
+              }' > variables/variables.json
+              cat variables/variables.json
+
+    - task: verify-api-ready
+      file: cf-networking-release-ci/ci/tasks/verify-api-ready-toolsmiths/task.yml
+    - in_parallel:
+      - task: collect-ops-files
+        file: cf-networking-release-ci/ci/tasks/collect-named-ops-files/task.yml
+        params:
+          ENVIRONMENT_NAME: caubeen
+        input_mapping:
+          cf-networking-release: cf-networking-dev
+          deployments-repo: networking-oss-deployments
+          silk-release: silk-dev
+      - task: upload-local-silk-release
+        file: cf-networking-release-ci/ci/tasks/upload-local-release/task.yml
+        input_mapping:
+          toolsmiths-env: caubeen
+          local-release: silk-dev
+
+    - task: bosh-deploy-cf-rc-with-updated-releases
+      file: cf-deployment-concourse-tasks/bosh-deploy-with-created-release/task.yml
+      params:
+        OPS_FILES: |
+          cf-deployment/operations/use-compiled-releases.yml
+          cf-networking-release/manifest-generation/opsfiles/cf-networking.yml
+          cf-deployment/operations/use-external-blobstore.yml
+          cf-deployment/operations/use-gcs-blobstore-service-account.yml
+          cf-deployment/operations/scale-database-cluster.yml
+          cf-networking-release/manifest-generation/opsfiles/use-system-domain-as-metron-deployment-name.yml
+          cf-deployment/operations/experimental/enable-iptables-logger.yml
+          cf-deployment/operations/enable-service-discovery.yml
+          cf-deployment/operations/backup-and-restore/enable-backup-restore.yml
+          cf-networking-release/manifest-generation/opsfiles/add-apps-internal-search-domain.yml
+          cf-networking-release-ci/ci/opsfiles/scale-up-4-api-instances.yml
+          cf-networking-release-ci/ci/opsfiles/lower-canary-watch-time.yml
+          cf-networking-release-ci/ci/opsfiles/use-latest-silk.yml
+        VARS_FILES: |
+          caubeen_gcs_creds.json
+        DEPLOY_WITH_UPTIME_MEASUREMENTS: true
+        FAIL_ON_DOWNTIME: true
+        HTTP_AVAILABILITY_THRESHOLD: 0
+        APP_PUSHABILITY_THRESHOLD: 10
+        RECENT_LOGS_THRESHOLD: 10000 # we don't guarantee logs availability, only app and http, see cf-deployment CI
+        STREAMING_LOGS_THRESHOLD: 10000
+      input_mapping:
+        toolsmiths-env: caubeen
+        release: cf-networking-dev
+        vars-files: generated-gcs-vars
 
 
-  # - name: caubeen-drats
-  #   serial_groups: [caubeen]
-  #   plan:
-  #   - in_parallel:
-  #     - get: cf-networking-release-ci
-  #       params:
-  #         submodules: none
-  #     - get: cf-networking-dev
-  #       passed: [caubeen-upgrade-test]
-  #       trigger: true
-  #     - get: silk-dev
-  #       passed: [caubeen-upgrade-test]
-  #       trigger: true
-  #     - get: cf-deployment
-  #       passed: [caubeen-upgrade-test]
-  #       trigger: true
-  #     - get: networking-oss-deployments
-  #     - get: disaster-recovery-acceptance-tests
-  #     - get: bbr-binary-release
-  #   - task: get-credhub-vars
-  #     file: cf-networking-release-ci/ci/tasks/get-credhub-vars/task.yml
-  #     input_mapping:
-  #       bbl-state: networking-oss-deployments
-  #     params:
-  #       BBL_STATE_DIR: environments/caubeen/bbl-state
-  #       VARIABLES: |
-  #         /bosh-caubeen/cf/cf_admin_password
-  #   - task: create-drats-config
-  #     file: cf-networking-release-ci/ci/tasks/create-drats-config/task.yml
-  #     input_mapping:
-  #       test-config: networking-oss-deployments
-  #     params:
-  #       ENVIRONMENT_NAME: caubeen
-  #   - task: run-drats
-  #     file: disaster-recovery-acceptance-tests/ci/tasks/drats-with-integration-config/task.yml
-  #     privileged: true
-  #     params:
-  #       CF_DIAL_TIMEOUT: 10
+  - name: caubeen-drats
+    serial_groups: [caubeen]
+    plan:
+    - in_parallel:
+      - get: cf-networking-release-ci
+        params:
+          submodules: none
+      - get: cf-networking-dev
+        passed: [caubeen-upgrade-test]
+        trigger: true
+        params:
+          submodules: none
+      - get: silk-dev
+        passed: [caubeen-upgrade-test]
+        trigger: true
+        params:
+          submodules: none
+      - get: cf-deployment
+        passed: [caubeen-upgrade-test]
+        trigger: true
+      - get: disaster-recovery-acceptance-tests
+      - get: bbr-binary-release
+      - get: cf-deployment-concourse-tasks
+      - get: caubeen
+        resource: toolsmiths-pool
+        passed: [caubeen-upgrade-test]
+
+    - task: generate-drats-config
+      input_mapping:
+        toolsmiths-env: caubeen
+      tags: []
+      config:
+        platform: linux
+        image_resource:
+          type: registry-image
+          source:
+            repository: relintdockerhubpushbot/cf-deployment-concourse-tasks
+        inputs:
+          - name: toolsmiths-env
+          - name: cf-deployment-concourse-tasks
+        outputs:
+          - name: drats-integration-config
+        run:
+          path: /bin/bash
+          args:
+            - -c
+            - |
+              source cf-deployment-concourse-tasks/shared-functions
+              setup_bosh_env_vars
+              # set +x
+
+              mkdir -p drats-integration-config
+              echo '{}' | jq \
+              --arg cf_api "api.${SYSTEM_DOMAIN}" \
+              --arg admin_password $(credhub f -j -n cf_admin_password | jq -r .credentials[].name | xargs credhub get -j -n | jq -r .value) \
+              --arg bosh_client_secret "${BOSH_CLIENT_SECRET}" \
+              --arg bosh_ca_cert "${BOSH_CA_CERT}" \
+              --arg ssh_proxy_host $(echo $BOSH_ALL_PROXY | sed -e 's/.*\@\(.*\):.*/\1/') \
+              --arg ssh_proxy_private_key "$(cat $JUMPBOX_PRIVATE_KEY)" \
+              --args \
+              '{
+                  "cf_api_url":$cf_api,
+                  "cf_deployment_name":"cf",
+                  "cf_admin_username":"admin",
+                  "cf_admin_password":$admin_password,
+                  "bosh_environment": "https://10.0.0.6:25555",
+                  "bosh_client": "admin",
+                  "bosh_client_secret":$bosh_client_secret,
+                  "bosh_ca_cert":$bosh_ca_cert,
+                  "include_cf-app": false,
+                  "include_cf-networking": true,
+                  "include_cf-uaa": false,
+                  "include_cf-credhub": false,
+                  "include_cf-routing": false,
+                  "include_app-uptime": false,
+                  "ssh_proxy_user": "jumpbox",
+                  "ssh_proxy_host":$ssh_proxy_host,
+                  "ssh_proxy_private_key":$ssh_proxy_private_key,
+                  "ssh_proxy_cidr": "10.0.0.0/8",
+                  "timeout_in_minutes": 40
+              }' > drats-integration-config/drats_integration_config.json
+              cat drats-integration-config/drats_integration_config.json
+
+    - task: run-drats
+      file: disaster-recovery-acceptance-tests/ci/tasks/drats-with-integration-config/task.yml
+      privileged: true
+      params:
+        CF_DIAL_TIMEOUT: 10
 
