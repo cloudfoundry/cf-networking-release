@@ -34,6 +34,10 @@ var _ = Describe("space developer policy configuration", func() {
 	)
 
 	BeforeEach(func() {
+		if testConfig.SkipSpaceDeveloperPolicyTest {
+			Skip("skipping space developer policy test")
+		}
+
 		policyClient = policy_client.NewExternal(lagertest.NewTestLogger("test"),
 			&http.Client{
 				Transport: &http.Transport{
