@@ -9,6 +9,7 @@ inputs:
   - name: cf-networking-release-ci
   - name: cf-deployment
   - name: deployments-repo
+    optional: true
   - name: cf-networking-release
   - name: silk-release
   - name: istio-release
