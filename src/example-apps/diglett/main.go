@@ -1,7 +1,7 @@
 package main
 
 import (
-	"example-apps/diglett/handlers"
+	"diglett/handlers"
 	"fmt"
 	"log"
 	"net/http"

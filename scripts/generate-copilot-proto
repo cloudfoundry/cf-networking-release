@@ -10,5 +10,5 @@ fi
 
 protoc \
   --proto_path "${COPILOT_DIR}/api/protos" \
-  --go_out "plugins=grpc:${ROOT_DIR}/src/bosh-dns-adapter/copilot/api" \
+  --go_out "plugins=grpc:${ROOT_DIR}/src/code.cloudfoundry.org/bosh-dns-adapter/copilot/api" \
   common.proto vip_resolver.proto

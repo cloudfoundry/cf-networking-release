@@ -264,7 +264,7 @@ Param | Description
 Once the config is set, to run the acceptance tests do the following
 
 ```bash
-ginkgo -r ./src/test/acceptance-sd
+ginkgo -r ./src/code.cloudfoundry.org/test/acceptance-sd
 ```
 
 ### Running Smoke Tests
@@ -305,5 +305,5 @@ Parameter | Description | Required?
 
 Once the config is set, run the smoke tests:
 ```bash
-ginkgo -r ./src/test/smoke-sd
+ginkgo -r ./src/code.cloudfoundry.org/test/smoke-sd
 ```

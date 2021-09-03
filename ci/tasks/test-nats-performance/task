@@ -1,0 +1,31 @@
+#!/bin/bash
+
+set -euo pipefail
+
+function cleanup() {
+  pkill ssh || true
+}
+
+trap 'cleanup' EXIT
+
+# Targetting director
+pushd "deployments-repo/$BBL_STATE_DIR"
+  eval "$(bbl print-env)"
+popd
+
+export RELEASE_DIR=$PWD/cf-networking
+BIN_DIR=${RELEASE_DIR}/bin
+mkdir -p "${BIN_DIR}"
+
+export PATH="${BIN_DIR}":$PATH
+export CONFIG="$PWD/deployments-repo/$TEST_CONFIG_DIR/perf-config.json"
+
+pushd "${RELEASE_DIR}/src/code.cloudfoundry.org"
+  go build -o "${BIN_DIR}/ginkgo" github.com/onsi/ginkgo/ginkgo
+popd
+
+pushd "${RELEASE_DIR}/src/code.cloudfoundry.org/test/performance-sd"
+   ginkgo -race deploy/
+   bosh -d performance run-errand performance-test-sd --keep-alive
+   bosh -n -d performance delete-deployment
+popd

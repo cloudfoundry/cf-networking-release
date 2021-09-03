@@ -417,8 +417,8 @@ to true in order to register container IPs instead of port mappings.
 
 A Cloud Foundry system that integrates a 3rd party networking component should be able to pass the following test suites:
 
-- [CF Networking Smoke Tests](../src/test/smoke)
-- [CF Networking Acceptance Tests](../src/test/acceptance)
+- [CF Networking Smoke Tests](../src/code.cloudfoundry.org/test/smoke)
+- [CF Networking Acceptance Tests](../src/code.cloudfoundry.org/test/acceptance)
 - [CF Acceptance Tests (CATs)](https://github.com/cloudfoundry/cf-acceptance-tests/)
 - [CF Routing Acceptance Tests (RATS)](https://github.com/cloudfoundry-incubator/routing-acceptance-tests)
 - Optional - [CF Disaster Recovery Acceptance Tests (DRATS)](https://github.com/cloudfoundry-incubator/disaster-recovery-acceptance-tests)

@@ -9,8 +9,9 @@ inputs:
 - name: cf-networking-release
 
 run:
-  path: cf-networking-release/scripts/unit-and-integration-tests
+  path: cf-networking-release/scripts/test.sh
 
 params:
   GINKGO_EXTRA_FLAGS: "-race"
   DB: postgres
+  SERIAL_NODES: 4

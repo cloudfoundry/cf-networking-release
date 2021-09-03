@@ -1,8 +1,6 @@
 #!/bin/sh
 set -e -x
 
-export PATH=$GOPATH/bin:$PATH
-
 DEVELOP=$PWD/cf-networking-dev
 
 git clone ./cf-networking-master ./release-merged

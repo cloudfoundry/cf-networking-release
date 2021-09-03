@@ -90,7 +90,7 @@ cf set-org-role smoke-test-user some-org OrgManager
 ### Configure and run smoke tests with user and org
 
 ```bash
-pushd src/test/smoke/run_locally.sh
+pushd src/code.cloudfoundry.org/test/smoke/run_locally.sh
   export CONFIG=./smoke-config.json
   export APPS_DIR=../../example-apps
   echo '

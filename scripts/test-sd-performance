@@ -24,4 +24,4 @@ echo "
 NATS_PASSWORD="$(credhub get -n "/bosh-${ENVIRONMENT_NAME}/cf/nats_password" | bosh int --path /value -)"
 sed -i -- "s/{{nats_password}}/${NATS_PASSWORD}/g" /tmp/test-config.json
 
-ginkgo -v ../src/test/performance-sd
+ginkgo -v ../src/code.cloudfoundry.org/test/performance-sd

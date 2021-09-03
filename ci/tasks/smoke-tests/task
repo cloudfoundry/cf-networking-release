@@ -5,16 +5,14 @@ set -e
 ROOT="$(cd "$(dirname $0)/../../../.." && pwd)"
 
 export CONFIG="${ROOT}/smoke-config/smoke-config.json"
-export GOPATH="${ROOT}/cf-networking"
 export APPS_DIR="${ROOT}/cf-networking/src/example-apps"
 
 function main() {
   local exit_status
 
   echo "${CONFIG}"
-  pushd "${ROOT}/cf-networking/src/test/smoke" > /dev/null
+  pushd "${ROOT}/cf-networking/src/code.cloudfoundry.org/test/smoke" > /dev/null
     set +e
-    export GO111MODULE=auto
     ginkgo -r -v
     exit_status="$?"
     set -e

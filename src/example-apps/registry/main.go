@@ -19,8 +19,6 @@ import (
 	"os"
 
 	"github.com/Sirupsen/logrus"
-	"github.com/codegangsta/cli"
-
 	"github.com/amalgam8/amalgam8/pkg/auth"
 	"github.com/amalgam8/amalgam8/registry/api"
 	"github.com/amalgam8/amalgam8/registry/cluster"
@@ -34,6 +32,7 @@ import (
 	"github.com/amalgam8/amalgam8/registry/utils/metrics"
 	"github.com/amalgam8/amalgam8/registry/utils/network"
 	"github.com/amalgam8/amalgam8/registry/utils/version"
+	"github.com/codegangsta/cli"
 )
 
 func main() {

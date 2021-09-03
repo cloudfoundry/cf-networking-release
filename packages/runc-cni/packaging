@@ -1,12 +1,17 @@
 #!/bin/bash
-set -eu
-export GO111MODULE=auto
 
-mkdir ../src && cp -a * ../src/ && mv ../src ./src
-mkdir -p ${BOSH_INSTALL_TARGET}/bin
+set -eu
+
+mkdir -p ${BOSH_INSTALL_TARGET}/src
+mv * ${BOSH_INSTALL_TARGET}/src
+mv ${BOSH_INSTALL_TARGET}/src .
 
 source /var/vcap/packages/golang-1-linux/bosh/compile.env
 
-go build -o "${BOSH_INSTALL_TARGET}/bin/garden-external-networker" garden-external-networker
+mkdir ${BOSH_INSTALL_TARGET}/bin
+
+pushd src/code.cloudfoundry.org
+go build -o "${BOSH_INSTALL_TARGET}/bin/garden-external-networker" code.cloudfoundry.org/garden-external-networker
+popd
 
 chmod u+s /var/vcap/packages/runc-cni/bin/garden-external-networker

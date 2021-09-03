@@ -5,7 +5,7 @@ source cf-deployment-concourse-tasks/shared-functions
 
 setup_bosh_env_vars
 
-pushd cf-networking-dev/src/test/acceptance-test-release
+pushd cf-networking-dev/src/code.cloudfoundry.org/test/acceptance-test-release
   bosh create-release --force
   bosh upload-release --rebase
 popd

@@ -5,5 +5,5 @@ applications:
     disk_quota: 32M
     buildpacks: [go_buildpack]
     env:
-      GOPACKAGENAME: example-apps/smoke
+      GOPACKAGENAME: smoke
       PROXY_APP_URL: http://proxy.some-cf-deployment.example.com

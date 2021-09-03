@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+set -eu
+
+ROOT="$(cd "$(dirname $0)/../../../.." && pwd)"
+
+# replace admin password and secret in test config
+pushd "${ROOT}/test-config/environments/${ENVIRONMENT_NAME}" > /dev/null
+  ADMIN_PASSWORD="$(bosh int --path /cf_admin_password ${ROOT}/variables/variables.yml)"
+  sed -i -- "s/{{admin-password}}/${ADMIN_PASSWORD}/g" test-config.json
+  ADMIN_SECRET="$(bosh int --path /uaa_admin_client_secret ${ROOT}/variables/variables.yml)"
+  sed -i -- "s/{{admin-secret}}/${ADMIN_SECRET}/g" test-config.json
+popd > /dev/null
+
+ENVIRONMENT_PATH="${ROOT}/test-config/environments/${ENVIRONMENT_NAME}/test-config.json"
+export CONFIG="${CONFIG:-"${ENVIRONMENT_PATH}"}"
+export NETWORK_STATS_FILE="${ROOT}/network-stats/stats.json"
+export RELEASE_DIR="${ROOT}/cf-networking"
+export APPS_DIR="${ROOT}/cf-networking/src/example-apps"
+BIN_DIR="$RELEASE_DIR}/bin"
+mkdir -p "${BIN_DIR}"
+export PATH="${BIN_DIR}:${PATH}"
+
+
+pushd "${RELEASE_DIR}/src/code.cloudfoundry.org"
+  go build -o "${BIN_DIR}/ginkgo" github.com/onsi/ginkgo/ginkgo
+  ginkgo -keepGoing -randomizeAllSpecs -randomizeSuites -race test/acceptance-sd
+popd
+
+

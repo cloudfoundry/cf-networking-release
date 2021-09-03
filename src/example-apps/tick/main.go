@@ -2,16 +2,15 @@ package main
 
 import (
 	"encoding/json"
-	"example-apps/tick/a8"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
+	"tick/a8"
 	"time"
 
 	"code.cloudfoundry.org/localip"
-
 	"github.com/ryanmoran/viron"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"

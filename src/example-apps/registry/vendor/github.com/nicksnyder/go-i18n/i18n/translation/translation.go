@@ -12,6 +12,7 @@ type Translation interface {
 	// MarshalInterface returns the object that should be used
 	// to serialize the translation.
 	MarshalInterface() interface{}
+	MarshalFlatInterface() interface{}
 	ID() string
 	Template(language.Plural) *template
 	UntranslatedCopy() Translation
@@ -49,11 +50,11 @@ func NewTranslation(data map[string]interface{}) (Translation, error) {
 		// The YAML parser uses interface{} keys so we first convert them to string keys.
 		pluralObject = make(map[string]interface{})
 		for k, v := range translation {
-			kStr, ok := k.(string)
+			kstr, ok := k.(string)
 			if !ok {
 				return nil, fmt.Errorf(`invalid plural category type %T; expected string`, k)
 			}
-			pluralObject[kStr] = v
+			pluralObject[kstr] = v
 		}
 	case map[string]interface{}:
 		pluralObject = translation

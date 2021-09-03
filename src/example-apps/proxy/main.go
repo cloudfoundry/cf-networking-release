@@ -1,11 +1,11 @@
 package main
 
 import (
-	"example-apps/proxy/handlers"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"proxy/handlers"
 	"strconv"
 )
 

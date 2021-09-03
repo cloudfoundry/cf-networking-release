@@ -6,11 +6,14 @@ ROOT="$(cd "$(dirname $0)/../../../.." && pwd)"
 
 export CONFIG="${CONFIG:-"${ROOT}/test-config/test-config.json"}"
 export NETWORK_STATS_FILE="${ROOT}/network-stats/stats.json"
-export GOPATH="${ROOT}/cf-networking"
+export RELEASE_DIR="${ROOT}/cf-networking"
 export APPS_DIR="${ROOT}/cf-networking/src/example-apps"
-export PATH="${GOPATH}/bin:${PATH}"
 
-go get -u github.com/onsi/ginkgo/ginkgo
-export GO111MODULE=auto
+BIN_DIR="${RELEASE_DIR}/bin"
+mkdir -p "${BIN_DIR}"
+export PATH="${BIN_DIR}:${PATH}"
 
-ginkgo -v -keepGoing -randomizeAllSpecs -randomizeSuites -race "${ROOT}/cf-networking/src/test/${TEST_NAME}"
+pushd "${RELEASE_DIR}/src/code.cloudfoundry.org"
+    go build -o "${BIN_DIR}/ginkgo" github.com/onsi/ginkgo/ginkgo
+    ginkgo -v -keepGoing -randomizeAllSpecs -randomizeSuites -race "test/${TEST_NAME}"
+popd

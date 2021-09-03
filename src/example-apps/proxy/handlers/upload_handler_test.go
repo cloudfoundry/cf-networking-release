@@ -2,10 +2,10 @@ package handlers_test
 
 import (
 	"bytes"
-	"example-apps/proxy/handlers"
 	"math/rand"
 	"net/http"
 	"net/http/httptest"
+	"proxy/handlers"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

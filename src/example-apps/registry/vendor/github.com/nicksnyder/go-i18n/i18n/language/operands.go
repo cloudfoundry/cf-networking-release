@@ -6,8 +6,8 @@ import (
 	"strings"
 )
 
-// http://unicode.org/reports/tr35/tr35-numbers.html#Operands
-type operands struct {
+// Operands is a representation of http://unicode.org/reports/tr35/tr35-numbers.html#Operands
+type Operands struct {
 	N float64 // absolute value of the source number (integer and decimals)
 	I int64   // integer digits of n
 	V int64   // number of visible fraction digits in n, with trailing zeros
@@ -16,8 +16,8 @@ type operands struct {
 	T int64   // visible fractional digits in n, without trailing zeros
 }
 
-// NmodEqualAny returns true if o represents an integer equal to any of the arguments.
-func (o *operands) NequalsAny(any ...int64) bool {
+// NequalsAny returns true if o represents an integer equal to any of the arguments.
+func (o *Operands) NequalsAny(any ...int64) bool {
 	for _, i := range any {
 		if o.I == i && o.T == 0 {
 			return true
@@ -26,8 +26,8 @@ func (o *operands) NequalsAny(any ...int64) bool {
 	return false
 }
 
-// NmodEqualAny returns true if o represents an integer equal to any of the arguments modulo mod.
-func (o *operands) NmodEqualsAny(mod int64, any ...int64) bool {
+// NmodEqualsAny returns true if o represents an integer equal to any of the arguments modulo mod.
+func (o *Operands) NmodEqualsAny(mod int64, any ...int64) bool {
 	modI := o.I % mod
 	for _, i := range any {
 		if modI == i && o.T == 0 {
@@ -37,18 +37,18 @@ func (o *operands) NmodEqualsAny(mod int64, any ...int64) bool {
 	return false
 }
 
-// NmodInRange returns true if o represents an integer in the closed interval [from, to].
-func (o *operands) NinRange(from, to int64) bool {
+// NinRange returns true if o represents an integer in the closed interval [from, to].
+func (o *Operands) NinRange(from, to int64) bool {
 	return o.T == 0 && from <= o.I && o.I <= to
 }
 
 // NmodInRange returns true if o represents an integer in the closed interval [from, to] modulo mod.
-func (o *operands) NmodInRange(mod, from, to int64) bool {
+func (o *Operands) NmodInRange(mod, from, to int64) bool {
 	modI := o.I % mod
 	return o.T == 0 && from <= modI && modI <= to
 }
 
-func newOperands(v interface{}) (*operands, error) {
+func newOperands(v interface{}) (*Operands, error) {
 	switch v := v.(type) {
 	case int:
 		return newOperandsInt64(int64(v)), nil
@@ -69,14 +69,14 @@ func newOperands(v interface{}) (*operands, error) {
 	}
 }
 
-func newOperandsInt64(i int64) *operands {
+func newOperandsInt64(i int64) *Operands {
 	if i < 0 {
 		i = -i
 	}
-	return &operands{float64(i), i, 0, 0, 0, 0}
+	return &Operands{float64(i), i, 0, 0, 0, 0}
 }
 
-func newOperandsString(s string) (*operands, error) {
+func newOperandsString(s string) (*Operands, error) {
 	if s[0] == '-' {
 		s = s[1:]
 	}
@@ -84,7 +84,7 @@ func newOperandsString(s string) (*operands, error) {
 	if err != nil {
 		return nil, err
 	}
-	ops := &operands{N: n}
+	ops := &Operands{N: n}
 	parts := strings.SplitN(s, ".", 2)
 	ops.I, err = strconv.ParseInt(parts[0], 10, 64)
 	if err != nil {
