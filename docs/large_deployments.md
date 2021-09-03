@@ -158,3 +158,28 @@ Let's imagine that there are 65,535 _different_ apps. A user could create 32,767
 ### Scenario 2 - policies with overlapping apps
 Let's imagine that there are 5 apps. Let's say a user wants all 5 apps to be able to talk to everyother app. This would result in 25 network policies. However, this would only use up 5 marks (one per app). There are still 65,630 marks available for other apps. This scenario shows how the more "overlapping" the policies are, the more policies you can have.
 
+## Problem 5: NAT Gateway port exhaustion
+
+### Symptoms
+
+* Apps timeout while trying to connect to particular endpoints
+* Multiple port allocation issues on NAT Gateways
+* Multiple apps try to open multiple connections to a single service
+
+### Reason
+
+Each foundation has a finite number of NAT Gateways each of which can open up to 2<sup>16</sup> = 65536 ports per destination IP and destination port ([explanation](https://stackoverflow.com/questions/2332741/what-is-the-theoretical-maximum-number-of-open-tcp-connections-that-a-modern-lin)). By default the number of outbound connections per app are not limited. This is grounds for the noisy neighbour problem where bad apps exhaust the number of connections that could be opened to a given service thus blocking access to it. The issue could be fixed by applying hard limits on the number of connections that could be opened by each app in order to incapacitate the badly behaving ones.
+
+NAT Gateway ports could be exhausted in another way which is easier to implement. Instead of opening long lived connections a bad app could frequently open short lived ones. Because of the way TCP works, after each connection is closed the client-side ports would be kept in a TIME_WAIT state for a few minutes before they are released ([explanation](https://superuser.com/questions/173535/what-are-close-wait-and-time-wait-states)). The way to fix this is by applying rate limits on the number of outbound connections.
+
+### Solution
+
+Currently the implementation of hard limits is blocked by a [netfilter issue](https://unix.stackexchange.com/questions/654525/how-can-i-prevent-iptables-connlimit-counter-from-resetting-each-time-an-iptable).
+
+Rate limiting on the other hand is implemented as part of the `silk-cni` job and could be used through optional parameters under the `outbound_connections` field:
+
+- `limit` is an on/off switch for the feature.
+- `burst` is the maximum number of outbound connections per destination host allowed to be opened at once per container.
+- `rate_per_sec` is the maximum number of outbound connections to be opened per second per destination host per container given that the burst is exhausted.
+
+Additionally `iptables` logging of connections denied due to rate limits is available when `iptables_logging` is set to `true`. Such a log message is expected to have a prefix in the format `DENY_ORL_<container-id>`.
