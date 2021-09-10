@@ -1,0 +1,23 @@
+---
+
+
+# deployment variables
+- type: replace
+  path: /instance_groups/name=api/jobs/name=policy-server/properties/database?
+  value:
+    type: postgres
+    username: network_policy
+    password: ain9Echied7iey8E
+    host: pickelhelm-network-policy-gcp.c1zkcgnfbwka.us-west-2.rds.amazonaws.com
+    port: 5432
+    name: network_policy
+
+- type: replace
+  path: /instance_groups/name=diego-api/jobs/name=silk-controller/properties/database?
+  value:
+    type: postgres
+    username: silk_controller
+    password: ain9Echied7iey8E
+    host: pickelhelm-silk-controller-gcp.c1zkcgnfbwka.us-west-2.rds.amazonaws.com
+    port: 5432
+    name: silk_controller
