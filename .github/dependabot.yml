@@ -7,3 +7,6 @@ updates:
     target-branch: "develop"
     labels:
       - "dependencies"
+    ignore:
+    - dependency-name: "github.com/containernetworking/plugins" #locked at v0.6.0
+    - dependency-name: "github.com/containernetworking/cni" #locked at v0.6.0
