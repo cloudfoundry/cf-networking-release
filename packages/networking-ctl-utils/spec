@@ -2,4 +2,4 @@
 name: networking-ctl-utils
 
 files:
-  - networking-ctl-utils/ctl_util.sh
+  - code.cloudfoundry.org/networking-ctl-utils/ctl_util.sh

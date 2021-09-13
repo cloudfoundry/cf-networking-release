@@ -6,4 +6,4 @@ applications:
     buildpacks: [go_buildpack]
     instances: 1
     env:
-      GOPACKAGENAME: example-apps/registry
+      GOPACKAGENAME: registry

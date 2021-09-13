@@ -2,11 +2,11 @@ package main_test
 
 import (
 	"encoding/json"
-	"example-apps/tick/a8"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os/exec"
+	"tick/a8"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

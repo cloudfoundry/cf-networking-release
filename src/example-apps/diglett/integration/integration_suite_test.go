@@ -25,7 +25,8 @@ func TestIntegration(t *testing.T) {
 var _ = SynchronizedBeforeSuite(func() []byte {
 	fmt.Fprintf(GinkgoWriter, "building binary...")
 	var err error
-	exampleAppPath, err = gexec.Build("example-apps/diglett", "-race")
+
+	exampleAppPath, err = gexec.Build("diglett", "-race")
 	fmt.Fprintf(GinkgoWriter, "done")
 	Expect(err).NotTo(HaveOccurred())
 

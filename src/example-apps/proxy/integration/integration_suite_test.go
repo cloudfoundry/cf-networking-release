@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"math/rand"
 	"net"
+	"testing"
 
 	. "github.com/onsi/ginkgo"
 	ginkgoConfig "github.com/onsi/ginkgo/config"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
-
-	"testing"
 )
 
 var exampleAppPath string
@@ -25,7 +24,7 @@ func TestIntegration(t *testing.T) {
 var _ = SynchronizedBeforeSuite(func() []byte {
 	fmt.Fprintf(GinkgoWriter, "building binary...")
 	var err error
-	exampleAppPath, err = gexec.Build("example-apps/proxy", "-race")
+	exampleAppPath, err = gexec.Build("proxy", "-race")
 	fmt.Fprintf(GinkgoWriter, "done")
 	Expect(err).NotTo(HaveOccurred())
 

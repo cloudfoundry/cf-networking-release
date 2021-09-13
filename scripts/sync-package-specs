@@ -1,6 +1,62 @@
 #!/bin/bash
 
-HERE="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+set -e
 
-${HERE}/docker-shell 'cf-networking-release/scripts/sync-package-specs_linux-only'
+# ensure gosub is installed (this will recompile it only if necessary)
+GO111MODULE=on go get github.com/vito/gosub
 
+function sync_package() {
+  bosh_pkg=${1}
+
+  shift
+
+  (
+    set -e
+
+    cd src/code.cloudfoundry.org
+
+    spec=../../packages/${bosh_pkg}/spec
+
+    {
+      cat $spec | grep -v '# gosub'
+
+      for package in $(gosub list "$@"); do
+        repo=$(echo ${2} | cut -f1-3 -d/)
+        if [ -d "../../src/code.cloudfoundry.org/vendor/${package}" ]; then
+          package="code.cloudfoundry.org/vendor/${package}"
+        fi
+        echo ${package} | sed -e 's/\(.*\)/  - \1\/*.go # gosub/g'
+        if ls ../../src/${package}/*.s >/dev/null 2>&1; then
+          echo ${package} | sed -e 's/\(.*\)/  - \1\/*.s # gosub/g'
+        fi
+        if ls ../../src/${package}/*.h >/dev/null 2>&1; then
+          echo ${package} | sed -e 's/\(.*\)/  - \1\/*.h # gosub/g'
+        fi
+      done
+    } > $spec.new
+
+    mv $spec.new $spec
+  )
+}
+
+sync_package policy-server \
+  -app code.cloudfoundry.org/policy-server/cmd/policy-server \
+  -app code.cloudfoundry.org/policy-server/cmd/policy-server-internal \
+  -app code.cloudfoundry.org/policy-server/cmd/migrate-db &
+
+sync_package bosh-dns-adapter \
+  -app code.cloudfoundry.org/bosh-dns-adapter &
+
+sync_package service-discovery-controller \
+  -app code.cloudfoundry.org/service-discovery-controller &
+
+sync_package performance-test-sd \
+  -test code.cloudfoundry.org/test/performance-sd \
+  -app github.com/onsi/ginkgo/ginkgo &
+
+GOOS=linux sync_package runc-cni \
+  -app code.cloudfoundry.org/garden-external-networker &
+
+wait
+
+git diff --name-only packages/*/spec | tee # pipe through tee to avoid issues with non-interactive shells

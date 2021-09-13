@@ -44,11 +44,12 @@ Acceptance tests require a fully deployed Cloud Foundry.
 
 2. Run the following command for c2c acceptance tests:
 ```
-GO111MODULE=auto CONFIG=config.yml APPS_DIR=${PWD}/src/example-apps ginkgo -v src/test/acceptance
+CONFIG=config.yml APPS_DIR=${PWD}/src/example-apps ginkgo -v
+src/code.cloudfoundry.org/test/acceptance
 
 ```
 
 3. Run the following command for service discovery acceptance tests:
 ```
-GO111MODULE=auto CONFIG=config.yml APPS_DIR=${PWD}/src/example-apps ginkgo -v src/test/acceptance-sd
+CONFIG=config.yml APPS_DIR=${PWD}/src/example-apps ginkgo -v src/code.cloudfoundry.org/test/acceptance-sd
 ```

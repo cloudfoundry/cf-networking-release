@@ -25,7 +25,7 @@ cat << EOF > $CONFIG
 }
 EOF
 
-ginkgo -v $WORKSPACE/cf-networking-release/src/test/acceptance
+ginkgo -v $WORKSPACE/cf-networking-release/src/code.cloudfoundry.org/test/acceptance
 
 ```
 

@@ -2,7 +2,10 @@ package main_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/rand"
+	"os"
+	"path/filepath"
 
 	. "github.com/onsi/ginkgo"
 	"github.com/onsi/ginkgo/config"
@@ -23,11 +26,17 @@ type testApps struct {
 }
 
 var _ = SynchronizedBeforeSuite(func() []byte {
-	appPath, err := gexec.Build("example-apps/tick")
+	fmt.Fprintf(GinkgoWriter, "building binary...")
+	wd, err := os.Getwd()
+	Expect(err).To(Succeed())
+	appPath, err := gexec.Build("tick")
 	Expect(err).NotTo(HaveOccurred())
 
-	regPath, err := gexec.Build("../registry")
+	modPath := filepath.Join("..", "registry")
+	Expect(os.Chdir(modPath)).To(Succeed())
+	regPath, err := gexec.Build("registry")
 	Expect(err).NotTo(HaveOccurred())
+	Expect(os.Chdir(wd)).To(Succeed())
 
 	apps := testApps{
 		appPath,

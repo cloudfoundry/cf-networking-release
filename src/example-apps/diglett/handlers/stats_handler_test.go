@@ -1,7 +1,7 @@
 package handlers_test
 
 import (
-	"example-apps/diglett/handlers"
+	"diglett/handlers"
 	"net/http"
 	"net/http/httptest"
 

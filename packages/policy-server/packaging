@@ -1,12 +1,16 @@
 #!/bin/bash
 set -eu
-export GO111MODULE=auto
 
-mkdir ../src && cp -a * ../src/ && mv ../src ./src
-mkdir -p $BOSH_INSTALL_TARGET/bin
+mkdir -p ${BOSH_INSTALL_TARGET}/src
+mv * ${BOSH_INSTALL_TARGET}/src
+mv ${BOSH_INSTALL_TARGET}/src .
 
 source /var/vcap/packages/golang-1-linux/bosh/compile.env
 
-go build -o "${BOSH_INSTALL_TARGET}/bin/policy-server" policy-server/cmd/policy-server
-go build -o "${BOSH_INSTALL_TARGET}/bin/policy-server-internal" policy-server/cmd/policy-server-internal
-go build -o "${BOSH_INSTALL_TARGET}/bin/migrate-db" policy-server/cmd/migrate-db
+mkdir ${BOSH_INSTALL_TARGET}/bin
+
+pushd src/code.cloudfoundry.org
+go build -o "${BOSH_INSTALL_TARGET}/bin/policy-server" code.cloudfoundry.org/policy-server/cmd/policy-server
+go build -o "${BOSH_INSTALL_TARGET}/bin/policy-server-internal" code.cloudfoundry.org/policy-server/cmd/policy-server-internal
+go build -o "${BOSH_INSTALL_TARGET}/bin/migrate-db" code.cloudfoundry.org/policy-server/cmd/migrate-db
+popd

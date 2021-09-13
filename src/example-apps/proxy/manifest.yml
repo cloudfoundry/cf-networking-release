@@ -5,4 +5,4 @@ applications:
     disk_quota: 32M
     buildpacks: [go_buildpack]
     env:
-      GOPACKAGENAME: example-apps/proxy
+      GOPACKAGENAME: proxy

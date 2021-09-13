@@ -34,4 +34,4 @@ echo "
 " > ${CONFIG}
 
 
-ginkgo -v ../src/test/acceptance-sd
+ginkgo -v ../src/code.cloudfoundry.org/test/acceptance-sd

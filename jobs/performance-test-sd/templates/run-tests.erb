@@ -3,21 +3,27 @@
 set -exu
 set -o pipefail
 
-export GO111MODULE=auto
-
-pushd /var/vcap/packages/performance-test-sd > /dev/null
-  source /var/vcap/packages/golang-1-linux/bosh/compile.env
-popd > /dev/null
+PACKAGE_DIR=/var/vcap/packages/performance-test-sd
+GOBIN=${PACKAGE_DIR}/bin
+export PATH="${GOBIN}:$PATH"
+mkdir -p ${GOBIN}
 
 DATA_DIR=/var/vcap/data/performance-test-sd
 export CF_HOME=$DATA_DIR/cf-home
 mkdir -p $CF_HOME
 
 export CONFIG=/var/vcap/jobs/performance-test-sd/config.json
-export APPS_DIR=$GOPATH/src/example-apps
+export APPS_DIR=${PACKAGE_DIR}/src/example-apps
 
-go install github.com/onsi/ginkgo/ginkgo
+pushd ${PACKAGE_DIR} > /dev/null
+  source /var/vcap/packages/golang-1-linux/bosh/compile.env
+popd > /dev/null
 
-cd $GOPATH/src/test/performance-sd
-ginkgo -r -v
+pushd ${PACKAGE_DIR}/src/code.cloudfoundry.org > /dev/null
+  go build -o "${GOBIN}/ginkgo" github.com/onsi/ginkgo/ginkgo
+popd > /dev/null
+
+pushd ${PACKAGE_DIR}/src/code.cloudfoundry.org/test/performance-sd > /dev/null
+  ginkgo -r -v
+popd > /dev/null
 
