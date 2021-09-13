@@ -31,7 +31,7 @@ require (
 	github.com/cloudfoundry/dropsonde v1.0.0
 	github.com/cloudfoundry/gosteno v0.0.0-20150423193413-0c8581caea35 // indirect
 	github.com/cloudfoundry/loggregatorlib v0.0.0-20170823162133-36eddf15ef12 // indirect
-	github.com/containernetworking/cni v1.0.0
+	github.com/containernetworking/cni v1.0.1
 	github.com/containernetworking/plugins v1.0.0
 	github.com/coreos/go-iptables v0.6.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
