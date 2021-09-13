@@ -89,7 +89,7 @@ github.com/containernetworking/cni/pkg/types
 github.com/containernetworking/cni/pkg/types/020
 github.com/containernetworking/cni/pkg/types/current
 github.com/containernetworking/cni/pkg/version
-# github.com/containernetworking/plugins v1.0.0 => github.com/containernetworking/plugins v0.6.0
+# github.com/containernetworking/plugins v1.0.1 => github.com/containernetworking/plugins v0.6.0
 ## explicit
 github.com/containernetworking/plugins/pkg/ns
 # github.com/coreos/go-iptables v0.6.0
