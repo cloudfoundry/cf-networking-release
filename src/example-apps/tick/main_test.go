@@ -115,7 +115,7 @@ var _ = Describe("Tick app", func() {
 
 		StartTick()
 
-		Eventually(getInstances).Should(HaveLen(1))
+		Eventually(getInstances, "5s").Should(HaveLen(1))
 
 		for i := 0; i < listenPorts; i++ {
 			_, err := getURL(fmt.Sprintf("http://%s:%d", "127.0.0.1", startPort+i))()
