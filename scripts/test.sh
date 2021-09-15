@@ -81,7 +81,7 @@ loadIFB
 bootDB "${DB:-"notset"}"
 
 declare -a packages
-if [[ -n "${include_only}" ]]; then
+if [[ -n "${include_only:-""}" ]]; then
   packages=
   mapfile -t packages < <(jq -r ,[]) <<< "${include_only}"
 else
