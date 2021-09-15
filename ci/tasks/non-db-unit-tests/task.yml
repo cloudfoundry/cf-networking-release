@@ -1,0 +1,17 @@
+---
+image_resource:
+  type: registry-image
+  source:
+    repository: c2cnetworking/dev-mysql
+
+platform: linux
+
+inputs:
+- name: cf-networking-release
+
+run:
+  path: cf-networking-release/scripts/test.sh
+
+params:
+  GINKGO_EXTRA_FLAGS: "-race"
+  SERIAL_NODES: ~
