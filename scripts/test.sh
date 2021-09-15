@@ -80,7 +80,13 @@ function bootDB {
 loadIFB
 bootDB "${DB:-"notset"}"
 
-declare -a packages=($(find src -type f -name "*_test.go" | xargs -L 1 -I{} dirname {} | sort -u))
+declare -a packages
+if [[ -n "${include_only}" ]]; then
+  packages=
+  mapfile -t packages < <(jq -r ,[]) <<< "${include_only}"
+else
+  packages=($(find src -type f -name "*_test.go" | xargs -L 1 -I{} dirname {} | sort -u))
+fi
 
 # filter out serial_packages from packages
 for i in "${serial_packages[@]}"; do
