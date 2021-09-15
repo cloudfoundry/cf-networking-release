@@ -21,7 +21,7 @@ declare -a ignored_packages=(
   "src/code.cloudfoundry.org/test"
 )
 
-for pkg in ${exclude_packages:-""}; do
+for pkg in $(echo "${exclude_packages:-""}" | jq -r .[]); do
   ignored_packages+=("${pkg}")
 done
 
