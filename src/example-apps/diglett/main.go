@@ -26,7 +26,10 @@ func launchHandler(port int, statsHandler http.Handler) {
 	})
 
 	go func() {
-		http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", port), mux)
+		err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", port), mux)
+		if err != nil {
+			panic(err)
+		}
 	}()
 }
 

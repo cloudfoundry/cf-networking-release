@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"tick/a8"
 
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
@@ -74,11 +75,11 @@ var _ = Describe("Tick app", func() {
 	}
 
 	BeforeEach(func() {
-		registryPort = 40000 + GinkgoParallelNode()
+		registryPort = ports.PickAPort()
 		registryURL = fmt.Sprintf("http://127.0.0.1:%d/api/v1/instances", registryPort)
-		tickPort = 41000 + GinkgoParallelNode()
+		tickPort = ports.PickAPort()
 		tickTTLSeconds = 11
-		startPort = 42000 + 100*GinkgoParallelNode()
+		startPort = ports.PickAPort()
 		listenPorts = 3
 	})
 

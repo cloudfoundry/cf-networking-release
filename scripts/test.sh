@@ -13,7 +13,6 @@ declare -a serial_packages=(
   "src/code.cloudfoundry.org/policy-server/integration"
   "src/code.cloudfoundry.org/policy-server/store/migrations"
   "src/code.cloudfoundry.org/policy-server/store"
-  "src/example-apps/tick"
 )
 
 # smoke/perf/acceptance/scaling tests should be skipped
@@ -82,7 +81,6 @@ bootDB "${DB:-"notset"}"
 
 declare -a packages
 if [[ -n "${include_only:-""}" ]]; then
-  packages=
   mapfile -t packages < <(jq -r ,[]) <<< "${include_only}"
 else
   packages=($(find src -type f -name "*_test.go" | xargs -L 1 -I{} dirname {} | sort -u))

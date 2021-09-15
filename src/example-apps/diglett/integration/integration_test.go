@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os/exec"
 
+	"code.cloudfoundry.org/cf-networking-helpers/testsupport/ports"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
@@ -26,7 +27,7 @@ var _ = Describe("Integration", func() {
 	}
 
 	BeforeEach(func() {
-		listenPort = 44000 + GinkgoParallelNode()
+		listenPort = ports.PickAPort()
 		address = fmt.Sprintf("127.0.0.1:%d", listenPort)
 
 		appStartCommand = exec.Command(exampleAppPath)
