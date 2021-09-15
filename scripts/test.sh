@@ -90,6 +90,7 @@ done
 # filter out explicitly ignored packages
 for i in "${ignored_packages[@]}"; do
   packages=(${packages[@]//*$i*})
+  serial_packages=(${serial_packages[@]//*$i*})
 done
 
 if [ "${1:-""}" = "" ]; then
