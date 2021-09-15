@@ -15,3 +15,6 @@ run:
 params:
   GINKGO_EXTRA_FLAGS: "-race"
   SERIAL_NODES: ~
+  DB: ~
+  include_only: ~
+  exclude_packages: ~

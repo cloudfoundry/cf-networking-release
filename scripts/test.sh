@@ -21,6 +21,10 @@ declare -a ignored_packages=(
   "src/code.cloudfoundry.org/test"
 )
 
+for pkg in ${exclude_packages:-""}; do
+  ignored_packages+=("${pkg}")
+done
+
 function loadIFB {
   set +e
     depmod $(uname -r)
