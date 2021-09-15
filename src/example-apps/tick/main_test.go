@@ -72,6 +72,8 @@ var _ = Describe("Tick app", func() {
 		var err error
 		registrySession, err = gexec.Start(cmd, GinkgoWriter, GinkgoWriter)
 		Expect(err).NotTo(HaveOccurred())
+
+		Eventually(getURL(registryURL)).Should(MatchJSON(`{"instances": []}`))
 	}
 
 	BeforeEach(func() {
