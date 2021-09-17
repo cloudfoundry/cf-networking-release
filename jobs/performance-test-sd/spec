@@ -6,7 +6,7 @@ templates:
   config.json.erb: config.json
 
 packages:
-  - golang-1-linux
+  - golang-1.16-linux
   - performance-test-sd
 
 consumes:
