@@ -16,7 +16,7 @@ export CONFIG=/var/vcap/jobs/performance-test-sd/config.json
 export APPS_DIR=${PACKAGE_DIR}/src/example-apps
 
 pushd ${PACKAGE_DIR} > /dev/null
-  source /var/vcap/packages/golang-1-linux/bosh/compile.env
+  source /var/vcap/packages/golang-1.16-linux/bosh/compile.env
 popd > /dev/null
 
 pushd ${PACKAGE_DIR}/src/code.cloudfoundry.org > /dev/null
