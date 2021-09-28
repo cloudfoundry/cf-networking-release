@@ -41,7 +41,7 @@ func (g *GroupTable) findRowByGUID(tx db.Transaction, guid, groupType string) (i
 	var id int
 	err := tx.QueryRow(
 		tx.Rebind(`
-		SELECT id FROM groups
+		SELECT id FROM ` + "`groups`" + `
 		WHERE guid = ? AND type = ?
 		`),
 		guid,
@@ -53,7 +53,7 @@ func (g *GroupTable) findRowByGUID(tx db.Transaction, guid, groupType string) (i
 func (g *GroupTable) firstBlankRow(tx db.Transaction) (int, error) {
 	var id int
 	err := tx.QueryRow(
-		`SELECT id FROM groups
+		`SELECT id FROM ` + "`groups`" + `
 		WHERE guid is NULL
 		ORDER BY id
 		LIMIT 1
@@ -65,7 +65,7 @@ func (g *GroupTable) firstBlankRow(tx db.Transaction) (int, error) {
 func (g *GroupTable) updateRow(tx db.Transaction, id int, guid, groupType string) error {
 	_, err := tx.Exec(
 		tx.Rebind(`
-			UPDATE groups SET guid = ?, type =  ?
+			UPDATE ` + "`groups`" + ` SET guid = ?, type =  ?
 			WHERE id = ?
 		`),
 		guid,
@@ -77,7 +77,7 @@ func (g *GroupTable) updateRow(tx db.Transaction, id int, guid, groupType string
 
 func (g *GroupTable) Delete(tx db.Transaction, id int) error {
 	_, err := tx.Exec(
-		tx.Rebind(`UPDATE groups SET guid = NULL, type = NULL WHERE id = ?`),
+		tx.Rebind(`UPDATE ` + "`groups`" + ` SET guid = NULL, type = NULL WHERE id = ?`),
 		id,
 	)
 	return err
@@ -86,7 +86,7 @@ func (g *GroupTable) Delete(tx db.Transaction, id int) error {
 func (g *GroupTable) GetID(tx db.Transaction, guid string) (int, error) {
 	var id int
 	err := tx.QueryRow(
-		tx.Rebind(`SELECT id FROM groups WHERE guid = ?`),
+		tx.Rebind(`SELECT id FROM ` + "`groups`" + ` WHERE guid = ?`),
 		guid,
 	).Scan(&id)
 

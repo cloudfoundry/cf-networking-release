@@ -487,7 +487,7 @@ var _ = Describe("migrations", func() {
 					migrateTo("3a")
 
 					By("inserting existing data")
-					_, err := realDb.Exec(`insert into groups (guid) values ("some-guid")`)
+					_, err := realDb.Exec(`insert into ` + "`groups`" + ` (guid) values ("some-guid")`)
 					Expect(err).NotTo(HaveOccurred())
 
 					By("performing migration")
@@ -498,33 +498,33 @@ var _ = Describe("migrations", func() {
 					By("verifying existing rows have type 'app'")
 					rows, err := realDb.Query(`
 							SELECT count(*)
-							FROM groups
+							FROM ` + "`groups`" + `
 							WHERE type = 'app' AND guid = 'some-guid'
 						`)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(scanCountRow(rows)).To(Equal(1))
 
 					By("inserting new data")
-					_, err = realDb.Exec(`insert into groups (guid) values ('some-new-guid')`)
+					_, err = realDb.Exec(`insert into ` + "`groups`" + ` (guid) values ('some-new-guid')`)
 					Expect(err).NotTo(HaveOccurred())
 
 					By("verifying new row defaults to type 'app'")
 					rows, err = realDb.Query(`
 							SELECT count(*)
-							FROM groups
+							FROM ` + "`groups`" + `
 							WHERE type = 'app' AND guid = 'some-new-guid'
 						`)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(scanCountRow(rows)).To(Equal(1))
 
 					By("inserting new data with a type")
-					_, err = realDb.Exec(`insert into groups (guid, type) values ('some-new-guid-router', 'router')`)
+					_, err = realDb.Exec(`insert into ` + "`groups`" + ` (guid, type) values ('some-new-guid-router', 'router')`)
 					Expect(err).NotTo(HaveOccurred())
 
 					By("verifying new row has correct type")
 					rows, err = realDb.Query(`
 							SELECT count(*)
-							FROM groups
+							FROM ` + "`groups`" + `
 							WHERE type = 'router' AND guid = 'some-new-guid-router'
 					`)
 					Expect(err).NotTo(HaveOccurred())
@@ -595,7 +595,7 @@ var _ = Describe("migrations", func() {
 					migrateTo("3a")
 
 					By("inserting existing data")
-					_, err := realDb.Exec(`insert into groups (guid) values ('some-guid')`)
+					_, err := realDb.Exec(`insert into ` + "`groups`" + ` (guid) values ('some-guid')`)
 					Expect(err).NotTo(HaveOccurred())
 
 					By("performing migration")
@@ -606,33 +606,33 @@ var _ = Describe("migrations", func() {
 					By("verifying existing rows have type 'app'")
 					rows, err := realDb.Query(`
 							SELECT count(*)
-							FROM groups
+							FROM ` + "`groups`" + `
 							WHERE type = 'app' AND guid = 'some-guid'
 						`)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(scanCountRow(rows)).To(Equal(1))
 
 					By("inserting new data")
-					_, err = realDb.Exec(`insert into groups (guid) values ('some-new-guid')`)
+					_, err = realDb.Exec(`insert into ` + "`groups`" + ` (guid) values ('some-new-guid')`)
 					Expect(err).NotTo(HaveOccurred())
 
 					By("verifying new row defaults to type 'app'")
 					rows, err = realDb.Query(`
 							SELECT count(*)
-							FROM groups
+							FROM ` + "`groups`" + `
 							WHERE type = 'app' AND guid = 'some-new-guid'
 						`)
 					Expect(err).NotTo(HaveOccurred())
 					Expect(scanCountRow(rows)).To(Equal(1))
 
 					By("inserting new data with a type")
-					_, err = realDb.Exec(`insert into groups (guid, type) values ('some-new-guid-router', 'router')`)
+					_, err = realDb.Exec(`insert into ` + "`groups`" + ` (guid, type) values ('some-new-guid-router', 'router')`)
 					Expect(err).NotTo(HaveOccurred())
 
 					By("verifying new row has correct type")
 					rows, err = realDb.Query(`
 							SELECT count(*)
-							FROM groups
+							FROM ` + "`groups`" + `
 							WHERE type = 'router' AND guid = 'some-new-guid-router'
 					`)
 					Expect(err).NotTo(HaveOccurred())
@@ -1683,15 +1683,15 @@ var _ = Describe("migrations", func() {
 				var srcGroupId, dstGroupId, dstId, policyId int64
 
 				By("inserting a src group")
-				_, err := realDb.Exec(`insert into groups (guid) values ('src-group-guid')`)
+				_, err := realDb.Exec(`insert into ` + "`groups`" + ` (guid) values ('src-group-guid')`)
 				Expect(err).NotTo(HaveOccurred())
-				err = realDb.QueryRow(`SELECT id FROM groups WHERE guid='src-group-guid'`).Scan(&srcGroupId)
+				err = realDb.QueryRow(`SELECT id FROM ` + "`groups`" + ` WHERE guid='src-group-guid'`).Scan(&srcGroupId)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("inserting a dst group")
-				_, err = realDb.Exec(`insert into groups (guid) values ('dst-group-guid')`)
+				_, err = realDb.Exec(`insert into ` + "`groups`" + ` (guid) values ('dst-group-guid')`)
 				Expect(err).NotTo(HaveOccurred())
-				err = realDb.QueryRow(`SELECT id FROM groups WHERE guid='dst-group-guid'`).Scan(&dstGroupId)
+				err = realDb.QueryRow(`SELECT id FROM ` + "`groups`" + ` WHERE guid='dst-group-guid'`).Scan(&dstGroupId)
 				Expect(err).NotTo(HaveOccurred())
 
 				By("inserting a destination")

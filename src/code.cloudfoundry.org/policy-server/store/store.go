@@ -290,9 +290,9 @@ func (s *store) ByGuids(srcGuids, destGuids []string, inSourceAndDest bool) ([]P
 			destinations.end_port,
 			destinations.protocol
 		from policies
-		left outer join groups as src_grp on (policies.group_id = src_grp.id)
+		left outer join ` + "`groups`" + ` as src_grp on (policies.group_id = src_grp.id)
 		left outer join destinations on (destinations.id = policies.destination_id)
-		left outer join groups as dst_grp on (destinations.group_id = dst_grp.id)`
+		left outer join ` + "`groups`" + ` as dst_grp on (destinations.group_id = dst_grp.id)`
 
 	if len(wheres) > 0 {
 		andOr := " OR "
@@ -327,9 +327,9 @@ func (s *store) All() ([]Policy, error) {
 			destinations.end_port,
 			destinations.protocol
 		from policies
-		left outer join groups as src_grp on (policies.group_id = src_grp.id)
+		left outer join ` + "`groups`" + ` as src_grp on (policies.group_id = src_grp.id)
 		left outer join destinations on (destinations.id = policies.destination_id)
-		left outer join groups as dst_grp on (destinations.group_id = dst_grp.id);`)
+		left outer join ` + "`groups`" + ` as dst_grp on (destinations.group_id = dst_grp.id);`)
 }
 
 func (s *store) tagIntToString(tag int) string {

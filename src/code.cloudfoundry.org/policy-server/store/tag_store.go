@@ -53,7 +53,7 @@ func (s *tagStore) Tags() ([]Tag, error) {
 	var tags []Tag
 
 	rows, err := s.conn.Query(`
-		SELECT guid, id, type FROM groups
+		SELECT guid, id, type FROM ` + "`groups`" + `
 		WHERE guid IS NOT NULL
 		ORDER BY id
 	`)

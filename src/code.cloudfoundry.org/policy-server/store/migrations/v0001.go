@@ -2,7 +2,7 @@ package migrations
 
 var migration_v0001 = map[string][]string{
 	"mysql": {
-		`CREATE TABLE IF NOT EXISTS groups (
+		`CREATE TABLE IF NOT EXISTS ` + "`groups`" + ` (
 		id int NOT NULL AUTO_INCREMENT,
 		guid varchar(255),
 		UNIQUE (guid),
@@ -10,7 +10,7 @@ var migration_v0001 = map[string][]string{
 	);`,
 		`CREATE TABLE IF NOT EXISTS destinations (
 		id int NOT NULL AUTO_INCREMENT,
-		group_id int REFERENCES groups(id),
+		group_id int REFERENCES ` + "`groups`" + `(id),
 		port int,
 		protocol varchar(255),
 		UNIQUE (group_id, port, protocol),
@@ -18,7 +18,7 @@ var migration_v0001 = map[string][]string{
 	);`,
 		`CREATE TABLE IF NOT EXISTS policies (
 		id int NOT NULL AUTO_INCREMENT,
-		group_id int REFERENCES groups(id),
+		group_id int REFERENCES ` + "`groups`" + `(id),
 		destination_id int REFERENCES destinations(id),
 		UNIQUE (group_id, destination_id),
 		PRIMARY KEY (id)
@@ -48,7 +48,7 @@ var migration_v0001 = map[string][]string{
 
 var migration_modified_v0001 = map[string][]string{
 	"mysql": {
-		`CREATE TABLE IF NOT EXISTS groups (
+		`CREATE TABLE IF NOT EXISTS ` + "`groups`" + ` (
 		id int NOT NULL AUTO_INCREMENT,
 		guid varchar(255),
 		UNIQUE (guid),
@@ -68,7 +68,7 @@ var migration_modified_v0001a = map[string][]string{
 	"mysql": {
 		`CREATE TABLE IF NOT EXISTS destinations (
 		id int NOT NULL AUTO_INCREMENT,
-		group_id int REFERENCES groups(id),
+		group_id int REFERENCES ` + "`groups`" + `(id),
 		port int,
 		protocol varchar(255),
 		UNIQUE (group_id, port, protocol),
@@ -90,7 +90,7 @@ var migration_modified_v0001b = map[string][]string{
 	"mysql": {
 		`CREATE TABLE IF NOT EXISTS policies (
 		id int NOT NULL AUTO_INCREMENT,
-		group_id int REFERENCES groups(id),
+		group_id int REFERENCES ` + "`groups`" + `(id),
 		destination_id int REFERENCES destinations(id),
 		UNIQUE (group_id, destination_id),
 		PRIMARY KEY (id)
