@@ -101,7 +101,7 @@ func assertMigrationsSucceeded(conn *db.ConnWrapper, conf config.Config) {
 	Expect(migrationCount).To(Equal(numMigrations))
 
 	var groupCount int
-	conn.QueryRow("SELECT COUNT(*) FROM groups").Scan(&groupCount)
+	conn.QueryRow(`SELECT COUNT(*) FROM "groups"`).Scan(&groupCount)
 	Expect(groupCount).To(Equal(int(math.Exp2(float64(conf.TagLength*8))) - 1))
 }
 

@@ -437,7 +437,7 @@ var _ = Describe("Store", func() {
 
 				Expect(err).To(MatchError("creating destination: some-insert-error"))
 				var groupsCount int
-				err = realDb.QueryRow(`SELECT count(*) FROM groups WHERE guid IS NOT NULL`).Scan(&groupsCount)
+				err = realDb.QueryRow(`SELECT count(*) FROM "groups" WHERE guid IS NOT NULL`).Scan(&groupsCount)
 				Expect(groupsCount).To(BeZero())
 			})
 		})

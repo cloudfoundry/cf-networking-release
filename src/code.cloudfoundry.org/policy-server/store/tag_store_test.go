@@ -210,7 +210,7 @@ var _ = Describe("TagStore", func() {
 
 			BeforeEach(func() {
 				var err error
-				rows, err = realDb.Query(`select id from groups`)
+				rows, err = realDb.Query(`select id from "groups"`)
 				Expect(err).NotTo(HaveOccurred())
 
 				mockDb.QueryReturns(rows, nil)

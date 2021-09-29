@@ -5,6 +5,8 @@ code.cloudfoundry.org/bbs v0.0.0-20210727125654-2ad50317f7ed h1:lXyKwHvjX8AofvDk
 code.cloudfoundry.org/bbs v0.0.0-20210727125654-2ad50317f7ed/go.mod h1:XKlGVVXFi5EcHHMPzw3xgONK9PeEZuUbIC43XNwxD10=
 code.cloudfoundry.org/cf-networking-helpers v0.0.0-20210825141236-777da71209d5 h1:2LNoWK64q5eJjFK1be1HoNeWh0tFZ4nGIz4YJmDvn00=
 code.cloudfoundry.org/cf-networking-helpers v0.0.0-20210825141236-777da71209d5/go.mod h1:kf4WVsGZqWT4r9wA9xLpdc4U/QtB5HcUUMa1VSsb6AM=
+code.cloudfoundry.org/cf-networking-helpers v0.0.0-20210929193536-efcc04207348 h1:6J54855savU7Iey5LA9AaevzV5JMnSCLR21piSeVjhw=
+code.cloudfoundry.org/cf-networking-helpers v0.0.0-20210929193536-efcc04207348/go.mod h1:/3sxa/kc03LJnMR688nN/v1N7VDNzCbICOaNDdvS37s=
 code.cloudfoundry.org/clock v1.0.0 h1:kFXWQM4bxYvdBw2X8BbBeXwQNgfoWv1vqAk2ZZyBN2o=
 code.cloudfoundry.org/clock v1.0.0/go.mod h1:QD9Lzhd/ux6eNQVUDVRJX/RKTigpewimNYBi7ivZKY8=
 code.cloudfoundry.org/debugserver v0.0.0-20210608171006-d7658ce493f4 h1:6UIZEq5iyr4zDCgOH5MtRbgvsIjk4XFNUaaoMekEssQ=

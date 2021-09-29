@@ -31,7 +31,7 @@ func NewConnectionPool(conf Config,
 	connectionPool.SetMaxOpenConns(maxOpenConnections)
 	connectionPool.SetMaxIdleConns(maxIdleConnections)
 	connectionPool.SetConnMaxLifetime(connMaxLifetime)
-	logger.Info("db connection retrived", lager.Data{})
+	logger.Info("db connection retrieved", lager.Data{})
 
 	return connectionPool, nil
 }
