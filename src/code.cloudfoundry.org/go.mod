@@ -25,6 +25,7 @@ require (
 	code.cloudfoundry.org/garden v0.0.0-20210813150702-ba711ea09ea2
 	code.cloudfoundry.org/lager v2.0.0+incompatible
 	code.cloudfoundry.org/tlsconfig v0.0.0-20210615191307-5d92ef3894a7
+	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
 	github.com/cf-container-networking/sql-migrate v0.0.0-20191108002617-83f2bdabdc5d
 	github.com/cloudfoundry-incubator/cf-test-helpers v1.0.0
@@ -65,3 +66,5 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 	launchpad.net/gocheck v0.0.0-20140225173054-000000000087 // indirect
 )
+
+replace example-apps/spammer => ../example-apps/spammer
