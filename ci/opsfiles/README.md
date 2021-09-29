@@ -18,6 +18,7 @@ This is the README for our Opsfiles. To learn more about `cf-networking-release`
 | increase-diego-cell-mtu.yml | Sets the `mtu` property on the silk-cni job to 1350. | Used by Toque in CI. |
 | large-disk.yml | Sets the disk_size to 65536. | Not used by any environments in CI. Maybe we can delete? |
 | lower-canary-watch-time.yml | Sets the canary watch time to 5000-1200000. | Used by Pickelhelm, Mitre, Toque, and Caubeen in CI. |
+| limit-app-outbound-connections.yml | Enables app outbound connection rate limiting per host with a burst of 60 and rate per sec 2. | Should be used only when running the app outbound conn limit acceptance test. |
 | scale-diego-cell-max-in-flight.yml | Sets the max_in_flight for diego cell instance groups to 20.  | Used by Toque in CI. Toque only has three Diego Cells, so I'm not sure why this is necessary. |
 | scale-diego-cell-vm-size.yml | Sets the Diego Cell VM type to "n1-highmem-4". | Used by Toque in CI. |
 | scale-ephemeral-disk.yml | Sets the scheduler instance group to have a 100GB ephemeral disk. | Used by Mitre in CI. |
