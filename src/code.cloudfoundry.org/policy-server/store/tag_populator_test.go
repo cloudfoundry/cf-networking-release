@@ -58,7 +58,7 @@ var _ = Describe("Tag Populator", func() {
 			It("does not exceed 2^(tag_length * 8) rows", func() {
 				tagPopulator.PopulateTables(1)
 				var id int
-				err := realDb.QueryRow(`SELECT id FROM groups ORDER BY id DESC LIMIT 1`).Scan(&id)
+				err := realDb.QueryRow(`SELECT id FROM "groups" ORDER BY id DESC LIMIT 1`).Scan(&id)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(id).To(Equal(255))
 			})
@@ -68,14 +68,14 @@ var _ = Describe("Tag Populator", func() {
 			It("does not add more rows", func() {
 				tagPopulator.PopulateTables(1)
 				var id int
-				err := realDb.QueryRow(`SELECT id FROM groups ORDER BY id DESC LIMIT 1`).Scan(&id)
+				err := realDb.QueryRow(`SELECT id FROM "groups" ORDER BY id DESC LIMIT 1`).Scan(&id)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(id).To(Equal(255))
 
 				tagPopulator.PopulateTables(2)
 				Expect(err).NotTo(HaveOccurred())
 
-				err = realDb.QueryRow(`SELECT id FROM groups ORDER BY id DESC LIMIT 1`).Scan(&id)
+				err = realDb.QueryRow(`SELECT id FROM "groups" ORDER BY id DESC LIMIT 1`).Scan(&id)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(id).To(Equal(255))
 			})

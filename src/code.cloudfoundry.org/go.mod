@@ -18,7 +18,7 @@ go 1.16
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20210727125654-2ad50317f7ed
-	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20210825141236-777da71209d5
+	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20210929193536-efcc04207348
 	code.cloudfoundry.org/clock v1.0.0
 	code.cloudfoundry.org/debugserver v0.0.0-20210608171006-d7658ce493f4
 	code.cloudfoundry.org/filelock v0.0.0-20180314203404-13cd41364639

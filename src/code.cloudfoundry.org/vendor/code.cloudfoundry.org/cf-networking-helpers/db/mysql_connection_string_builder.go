@@ -5,6 +5,7 @@ import (
 	"crypto/x509"
 	"fmt"
 	"io/ioutil"
+	"net/url"
 	"time"
 
 	"github.com/go-sql-driver/mysql"
@@ -21,7 +22,8 @@ type MySQLConnectionStringBuilder struct {
 }
 
 func (m *MySQLConnectionStringBuilder) Build(config Config) (string, error) {
-	connString := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true", config.User, config.Password, config.Host, config.Port, config.DatabaseName)
+	sqlMode := url.QueryEscape("(SELECT CONCAT(@@sql_mode,',ANSI_QUOTES'))")
+	connString := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true&sql_mode=%s", config.User, config.Password, config.Host, config.Port, config.DatabaseName, sqlMode)
 
 	dbConfig, err := m.MySQLAdapter.ParseDSN(connString)
 	if err != nil {

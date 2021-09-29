@@ -12,7 +12,8 @@ type TagPopulator struct {
 
 func (t *TagPopulator) PopulateTables(tl int) error {
 	var err error
-	row := t.DBConnection.QueryRow(`SELECT COUNT(*) FROM groups`)
+
+	row := t.DBConnection.QueryRow(`SELECT COUNT(*) FROM "groups"`)
 	if row != nil {
 		var count int
 		err = row.Scan(&count)
@@ -25,7 +26,7 @@ func (t *TagPopulator) PopulateTables(tl int) error {
 	}
 
 	var b bytes.Buffer
-	_, err = b.WriteString("INSERT INTO groups (guid) VALUES (NULL)")
+	_, err = b.WriteString(`INSERT INTO "groups" (guid) VALUES (NULL)`)
 	if err != nil {
 		return err
 	}
