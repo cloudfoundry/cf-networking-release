@@ -99,5 +99,5 @@ func spamEndpoint(callCount int) string {
 }
 
 func getAppBaseURL(appName string) string {
-	return fmt.Sprintf("https://%s.%s", appName, testConfig.AppsDomain)
+	return fmt.Sprintf("http://%s.%s", appName, testConfig.AppsDomain)
 }
