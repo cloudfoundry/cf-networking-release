@@ -67,7 +67,7 @@ var _ = Describe("Outbound connection limit", func() {
 })
 
 func pushSpammer(spammerName string) {
-	session := cf.Cf("push", spammerName, "-p", appDir("spammer"), "-f", defaultManifest(spammerName), "--no-start")
+	session := cf.Cf("push", spammerName, "-p", appDir("spammer"), "-f", defaultManifest("spammer"), "--no-start")
 	Expect(session.Wait(Timeout_Push)).To(gexec.Exit(0))
 
 	proxyBaseURL := getAppBaseURL(proxyName)
