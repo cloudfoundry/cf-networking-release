@@ -6,4 +6,3 @@ applications:
   buildpacks: [go_buildpack]
   env:
     GOPACKAGENAME: example-apps/spammer
-    GO_INSTALL_PACKAGE_SPEC: example-apps/spammer/cmd

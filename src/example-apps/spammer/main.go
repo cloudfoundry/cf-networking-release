@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"example-apps/spammer/api"
+	"spammer/api"
 )
 
 func main() {
