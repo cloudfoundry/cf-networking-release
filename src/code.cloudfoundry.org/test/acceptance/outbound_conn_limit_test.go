@@ -42,7 +42,7 @@ var _ = Describe("Outbound connection limit", func() {
 		Expect(cf.Cf("delete-org", orgName, "-f").Wait(Timeout_Push)).To(gexec.Exit(0))
 	})
 
-	FDescribe("when an app opens multiple connections to one host", func() {
+	Describe("when an app opens multiple connections to one host", func() {
 		It("the connections get rate limited", func() {
 			By("pushing proxy")
 			pushProxy(proxyName)
