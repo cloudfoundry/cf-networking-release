@@ -14,17 +14,22 @@ import (
 )
 
 const (
-	orgName     = "outbound-conn-limit-test-org"
-	spaceName   = "outbound-conn-limit-test-space"
-	proxyName   = "proxy"
-	spammerName = "spammer"
+	orgName   = "outbound-conn-limit-test-org"
+	spaceName = "outbound-conn-limit-test-space"
 
 	setEnvTimeoutInSec = 10
 	burst              = 60
 )
 
+var (
+	proxyName   string
+	spammerName string
+)
+
 var _ = Describe("Outbound connection limit", func() {
 	BeforeEach(func() {
+		proxyName = testConfig.Prefix + "-proxy"
+		spammerName = testConfig.Prefix + "-spammer"
 		if testConfig.RunExperimentalOutboundConnLimitTest {
 			Skip("Skipping outbound connection limit test")
 		}
