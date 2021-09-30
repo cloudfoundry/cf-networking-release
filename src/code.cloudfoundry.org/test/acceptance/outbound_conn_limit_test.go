@@ -53,7 +53,7 @@ var _ = Describe("Outbound connection limit", func() {
 			pushProxy(proxyName)
 
 			By("pushing spammer")
-			pushSpammer()
+			pushSpammer(spammerName)
 
 			By("verifying the burst is available on start")
 			spamResp := spam()
@@ -66,8 +66,8 @@ var _ = Describe("Outbound connection limit", func() {
 	})
 })
 
-func pushSpammer() {
-	session := cf.Cf("push", spammerName, "-p", appDir(spammerName), "-f", defaultManifest(spammerName), "--no-start")
+func pushSpammer(spammerName string) {
+	session := cf.Cf("push", spammerName, "-p", appDir("spammer"), "-f", defaultManifest(spammerName), "--no-start")
 	Expect(session.Wait(Timeout_Push)).To(gexec.Exit(0))
 
 	proxyBaseURL := getAppBaseURL(proxyName)
