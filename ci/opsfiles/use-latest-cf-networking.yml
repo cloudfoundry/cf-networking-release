@@ -1,9 +1,0 @@
-- type: replace
-  path: /releases/name=cf-networking/version
-  value: latest
-
-- type: remove
-  path: /releases/name=cf-networking/url
-
-- type: remove
-  path: /releases/name=cf-networking/sha1

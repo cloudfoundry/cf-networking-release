@@ -1,4 +1,0 @@
-# embiggen the database disk to make room for migrating to pxc-release
-- type: replace
-  path: /instance_groups/name=database/persistent_disk_type
-  value: 100GB

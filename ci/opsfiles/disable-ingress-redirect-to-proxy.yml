@@ -1,4 +1,0 @@
----
-- type: replace
-  path: /instance_groups/name=diego-cell/jobs/name=garden-cni/properties/experimental_enable_ingress_proxy_redirect?
-  value: false

@@ -1,4 +1,0 @@
-# increase vm size of cell
-- type: replace
-  path: /instance_groups/name=diego-cell/vm_type
-  value: n1-highmem-4

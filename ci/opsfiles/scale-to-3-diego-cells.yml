@@ -1,4 +1,0 @@
-# instance count overrides
-- type: replace
-  path: /instance_groups/name=diego-cell/instances
-  value: 3
