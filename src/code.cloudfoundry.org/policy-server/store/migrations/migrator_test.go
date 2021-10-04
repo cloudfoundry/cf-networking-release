@@ -1724,6 +1724,20 @@ var _ = Describe("migrations", func() {
 			})
 		})
 
+		Describe("V66 - delete stored procedure", func() {
+			It("should migrate", func() {
+				By("performing migration")
+				migrateTo("66")
+
+				By("Looking for stored procedures")
+				var count int
+				err := realDb.QueryRow(`SELECT count(*) FROM INFORMATION_SCHEMA.ROUTINES`).Scan(&count)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(count).To(BeZero())
+
+			})
+		})
+
 		Context("when migrating in parallel", func() {
 			Context("mysql", func() {
 				BeforeEach(func() {
