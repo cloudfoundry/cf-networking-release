@@ -1724,10 +1724,15 @@ var _ = Describe("migrations", func() {
 			})
 		})
 
-		Describe("V66 - delete stored procedure", func() {
+		FDescribe("V66 - delete stored procedure", func() {
 			It("should migrate", func() {
+				By("Using the policy_server database")
+				migrateTo("65")
+				_, err := realDb.Query(`USE network_policy `)
+				Expect(err).NotTo(HaveOccurred())
+
 				By("Looking for stored procedures")
-				rows, err := realDb.QueryRow(`SELECT count(*) FROM INFORMATION_SCHEMA.ROUTINES`)
+				rows, err := realDb.Query(`SELECT count(*) FROM INFORMATION_SCHEMA.ROUTINES`)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(scanCountRow(rows)).To(Equal(1))
 
@@ -1735,7 +1740,7 @@ var _ = Describe("migrations", func() {
 				migrateTo("66")
 
 				By("Looking for stored procedures")
-				rows, err := realDb.QueryRow(`SELECT count(*) FROM INFORMATION_SCHEMA.ROUTINES`)
+				rows, err = realDb.Query(`SELECT count(*) FROM INFORMATION_SCHEMA.ROUTINES`)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(scanCountRow(rows)).To(Equal(0))
 
