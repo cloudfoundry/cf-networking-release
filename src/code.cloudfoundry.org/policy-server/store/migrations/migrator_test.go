@@ -1726,14 +1726,18 @@ var _ = Describe("migrations", func() {
 
 		Describe("V66 - delete stored procedure", func() {
 			It("should migrate", func() {
+				By("Looking for stored procedures")
+				rows, err := realDb.QueryRow(`SELECT count(*) FROM INFORMATION_SCHEMA.ROUTINES`)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(scanCountRow(rows)).To(Equal(1))
+
 				By("performing migration")
 				migrateTo("66")
 
 				By("Looking for stored procedures")
-				var count int
-				err := realDb.QueryRow(`SELECT count(*) FROM INFORMATION_SCHEMA.ROUTINES`).Scan(&count)
+				rows, err := realDb.QueryRow(`SELECT count(*) FROM INFORMATION_SCHEMA.ROUTINES`)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(count).To(BeZero())
+				Expect(scanCountRow(rows)).To(Equal(0))
 
 			})
 		})
