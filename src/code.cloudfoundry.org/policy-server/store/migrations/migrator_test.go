@@ -1725,16 +1725,20 @@ var _ = Describe("migrations", func() {
 		})
 
 		FDescribe("V66 - delete stored procedure", func() {
-			It("should migrate", func() {
-				By("Using the policy_server database")
-				migrateTo("65")
-				_, err := realDb.Query(`USE network_policy `)
-				Expect(err).NotTo(HaveOccurred())
-
-				By("Looking for stored procedures")
+			It("should migrate and go back to having the pre-migration number of stored procedures", func() {
 				rows, err := realDb.Query(`SELECT count(*) FROM INFORMATION_SCHEMA.ROUTINES`)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(scanCountRow(rows)).To(Equal(1))
+				baselineRowCount := scanCountRow(rows)
+
+				// By("Using the policy_server database")
+				// migrateTo("65")
+				// // _, err := realDb.Query(`USE policy_server `)
+				// // Expect(err).NotTo(HaveOccurred())
+
+				// By("Looking for stored procedures")
+				// rows, err = realDb.Query(`SELECT count(*) FROM INFORMATION_SCHEMA.ROUTINES`)
+				// Expect(err).NotTo(HaveOccurred())
+				// Expect(scanCountRow(rows)).To(Equal(baselineRowCount + 1))
 
 				By("performing migration")
 				migrateTo("66")
@@ -1742,8 +1746,7 @@ var _ = Describe("migrations", func() {
 				By("Looking for stored procedures")
 				rows, err = realDb.Query(`SELECT count(*) FROM INFORMATION_SCHEMA.ROUTINES`)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(scanCountRow(rows)).To(Equal(0))
-
+				Expect(scanCountRow(rows)).To(Equal(baselineRowCount))
 			})
 		})
 
