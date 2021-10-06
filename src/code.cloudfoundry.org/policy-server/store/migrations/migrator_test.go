@@ -1020,7 +1020,7 @@ var _ = Describe("migrations", func() {
 			Context("postgres", func() {
 				BeforeEach(func() {
 					if realDb.DriverName() != "postgres" {
-						Skip("skipping mysql tests")
+						Skip("skipping postgres tests")
 					}
 				})
 
@@ -1724,29 +1724,26 @@ var _ = Describe("migrations", func() {
 			})
 		})
 
-		FDescribe("V66 - delete stored procedure", func() {
-			It("should migrate and go back to having the pre-migration number of stored procedures", func() {
-				rows, err := realDb.Query(`SELECT count(*) FROM INFORMATION_SCHEMA.ROUTINES`)
+		Describe("V66 - delete stored procedure", func() {
+			It("should delete the sole stored procedure in the database", func() {
+
+				By("Looking for existing procedures")
+				migrateTo("65")
+				query := fmt.Sprintf("SELECT count(*) FROM INFORMATION_SCHEMA.ROUTINES WHERE ROUTINE_SCHEMA='%s'", dbConf.DatabaseName)
+				var count int
+				err := realDb.QueryRow(query).Scan(&count)
 				Expect(err).NotTo(HaveOccurred())
-				baselineRowCount := scanCountRow(rows)
-
-				// By("Using the policy_server database")
-				// migrateTo("65")
-				// // _, err := realDb.Query(`USE policy_server `)
-				// // Expect(err).NotTo(HaveOccurred())
-
-				// By("Looking for stored procedures")
-				// rows, err = realDb.Query(`SELECT count(*) FROM INFORMATION_SCHEMA.ROUTINES`)
-				// Expect(err).NotTo(HaveOccurred())
-				// Expect(scanCountRow(rows)).To(Equal(baselineRowCount + 1))
+				Expect(count).To(Equal(1))
 
 				By("performing migration")
-				migrateTo("66")
-
-				By("Looking for stored procedures")
-				rows, err = realDb.Query(`SELECT count(*) FROM INFORMATION_SCHEMA.ROUTINES`)
+				numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 1)
 				Expect(err).NotTo(HaveOccurred())
-				Expect(scanCountRow(rows)).To(Equal(baselineRowCount))
+				Expect(numMigrations).To(Equal(1))
+
+				By("Confirming stored procedure was deleted")
+				err = realDb.QueryRow(query).Scan(&count)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(count).To(Equal(0))
 			})
 		})
 
