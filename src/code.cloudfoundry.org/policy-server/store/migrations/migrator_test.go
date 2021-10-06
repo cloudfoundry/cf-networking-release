@@ -1725,6 +1725,11 @@ var _ = Describe("migrations", func() {
 		})
 
 		Describe("V66 - delete stored procedure", func() {
+			BeforeEach(func() {
+				if realDb.DriverName() != "mysql" {
+					Skip("skipping mysql test")
+				}
+			})
 			It("should delete the sole stored procedure in the database", func() {
 
 				By("Looking for existing procedures")
