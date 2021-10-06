@@ -1020,7 +1020,7 @@ var _ = Describe("migrations", func() {
 			Context("postgres", func() {
 				BeforeEach(func() {
 					if realDb.DriverName() != "postgres" {
-						Skip("skipping mysql tests")
+						Skip("skipping postgres tests")
 					}
 				})
 
@@ -1721,6 +1721,34 @@ var _ = Describe("migrations", func() {
 					ContainSubstring("violates foreign key constraint"), // postgres error
 					ContainSubstring("a foreign key constraint fails"),  // mysql error
 				))
+			})
+		})
+
+		Describe("V66 - delete stored procedure", func() {
+			BeforeEach(func() {
+				if realDb.DriverName() != "mysql" {
+					Skip("skipping mysql test")
+				}
+			})
+			It("should delete the sole stored procedure in the database", func() {
+
+				By("Looking for existing procedures")
+				migrateTo("65")
+				query := fmt.Sprintf("SELECT count(*) FROM INFORMATION_SCHEMA.ROUTINES WHERE ROUTINE_SCHEMA='%s'", dbConf.DatabaseName)
+				var count int
+				err := realDb.QueryRow(query).Scan(&count)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(count).To(Equal(1))
+
+				By("performing migration")
+				numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 1)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(numMigrations).To(Equal(1))
+
+				By("Confirming stored procedure was deleted")
+				err = realDb.QueryRow(query).Scan(&count)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(count).To(Equal(0))
 			})
 		})
 

@@ -81,7 +81,7 @@ bootDB "${DB:-"notset"}"
 
 declare -a packages
 if [[ -n "${include_only:-""}" ]]; then
-  mapfile -t packages < <(jq -r ,[]) <<< "${include_only}"
+  mapfile -t packages < <(jq -r .[]) <<< "${include_only}"
 else
   packages=($(find src -type f -name "*_test.go" | xargs -L 1 -I{} dirname {} | sort -u))
 fi
