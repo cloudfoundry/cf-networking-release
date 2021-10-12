@@ -30,7 +30,7 @@ var _ = Describe("Outbound connection limit", func() {
 	BeforeEach(func() {
 		proxyName = testConfig.Prefix + "-proxy"
 		spammerName = testConfig.Prefix + "-spammer"
-		if testConfig.RunExperimentalOutboundConnLimitTest {
+		if !testConfig.RunExperimentalOutboundConnLimitTest {
 			Skip("Skipping outbound connection limit test")
 		}
 

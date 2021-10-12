@@ -68,4 +68,4 @@ The following ops files are required to ensure a successful run:
 ##### Running the app outbound connection rate limit test
 
 This test is disabled by default and could be enabled by setting `run_experimental_outbound_conn_limit_test` to `true` as part of the test config.yml above.
-Additionally the [limit-app-outbound-connections.yml](https://github.com/cloudfoundry/cf-networking-release/blob/develop/ci/opsfiles/limit-app-outbound-connections.yml) ops file is required to properly configure and enable the connection rate limiting feature.
+Additionally the [limit-app-outbound-connections.yml](https://github.com/cloudfoundry/cf-networking-release/blob/8e9baff5ae0e2630c3d5b3b2d129e9eb70cbb70e/ci/opsfiles/limit-app-outbound-connections.yml) ops file is required to properly configure and enable the connection rate limiting feature.
