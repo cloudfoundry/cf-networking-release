@@ -47,7 +47,7 @@ require (
 	github.com/nats-io/nats-top v0.4.0
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d
-	github.com/onsi/ginkgo v1.16.4
+	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.16.0
 	github.com/pivotal-cf-experimental/gomegamatchers v0.0.0-20180326192815-e36bfcc98c3a
 	github.com/pivotal-cf-experimental/rainmaker v0.0.0-20160401052143-d533d01b7c52
