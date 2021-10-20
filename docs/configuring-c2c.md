@@ -62,9 +62,8 @@ some options:
   example, in some of our automated tests we use an AWS RDS PostgreSQL instance
   configured as follows:
 
-  - PostgreSQL 9.5.4
-  - db.m3.medium (3.75 GiB)
-  - 20 GB storage
+  - PostgreSQL 13.4
+  - db.m6g.large (8 GiB)
 
 - BOSH-deploy the [Postgres
   release](https://github.com/cloudfoundry/postgres-release/) to a dedicated VM.
