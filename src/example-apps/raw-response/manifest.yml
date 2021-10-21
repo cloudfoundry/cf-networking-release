@@ -1,0 +1,8 @@
+---
+applications:
+  - name: raw-response
+    memory: 32M
+    disk_quota: 32M
+    buildpacks: [go_buildpack]
+    env:
+      GOPACKAGENAME: raw-response
