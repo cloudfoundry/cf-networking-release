@@ -78,7 +78,7 @@ var _ = Describe("space developer policy configuration", func() {
 		user := ensureUserExists(warrantClient, "space-developer", "password", uaaAdminClientToken)
 		group := ensureGroupExists(warrantClient, "network.write", uaaAdminClientToken)
 
-		err = warrantClient.Groups.AddMember(group.ID, user.ID, uaaAdminClientToken)
+		_, err = warrantClient.Groups.AddMember(group.ID, user.ID, uaaAdminClientToken)
 		Expect(err).To(Or(BeNil(), BeAssignableToTypeOf(warrant.DuplicateResourceError{})))
 
 		Expect(cf.Cf("set-space-role", "space-developer", orgName, spaceNameA, "SpaceDeveloper").Wait(Timeout_Push)).To(gexec.Exit(0))
