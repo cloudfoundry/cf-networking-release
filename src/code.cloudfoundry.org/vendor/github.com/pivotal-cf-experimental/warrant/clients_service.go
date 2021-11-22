@@ -32,7 +32,7 @@ func NewClientsService(config Config) ClientsService {
 }
 
 // Create will make a request to UAA to register a client with the given client resource and
-// secret. A token with the "clients.write" scope is required.
+// A token with the "clients.write" or "clients.admin" scope is required.
 func (cs ClientsService) Create(client Client, secret, token string) error {
 	_, err := newNetworkClient(cs.config).MakeRequest(network.Request{
 		Method:        "POST",
@@ -70,6 +70,8 @@ func (cs ClientsService) Get(id, token string) (Client, error) {
 	return newClientFromDocument(document), nil
 }
 
+// List will make a request to UAA to retrieve all client resources matching the given query.
+// A token with the "clients.read" or "clients.admin" scope is required.
 func (cs ClientsService) List(query Query, token string) ([]Client, error) {
 	requestPath := url.URL{
 		Path: "/oauth/clients",
@@ -103,6 +105,8 @@ func (cs ClientsService) List(query Query, token string) ([]Client, error) {
 	return list, nil
 }
 
+// Update will make a request to UAA to update the matching client resource.
+// A token with the "clients.write" or "clients.admin" scope is required.
 func (cs ClientsService) Update(client Client, token string) error {
 	_, err := newNetworkClient(cs.config).MakeRequest(network.Request{
 		Method:        "PUT",
@@ -119,7 +123,7 @@ func (cs ClientsService) Update(client Client, token string) error {
 }
 
 // Delete will make a request to UAA to delete the client matching the given id.
-// A token with the "clients.write" scope is required.
+// A token with the "clients.write" or "clients.admin" scope is required.
 func (cs ClientsService) Delete(id, token string) error {
 	_, err := newNetworkClient(cs.config).MakeRequest(network.Request{
 		Method:                "DELETE",

@@ -160,18 +160,22 @@ func (c Client) buildRequest(req Request) (*http.Request, error) {
 func (c Client) handleResponse(request Request, response Response) (Response, error) {
 	c.printResponse(response)
 
-	if response.Code == http.StatusNotFound {
-		return Response{}, newNotFoundError(response.Body)
-	}
-
-	if response.Code == http.StatusUnauthorized || response.Code == http.StatusForbidden {
-		return Response{}, newUnauthorizedError(response.Body)
-	}
-
 	for _, acceptableCode := range request.AcceptableStatusCodes {
 		if response.Code == acceptableCode {
 			return response, nil
 		}
+	}
+
+	if response.Code == http.StatusNotFound {
+		return Response{}, newNotFoundError(response.Body)
+	}
+
+	if response.Code == http.StatusUnauthorized {
+		return Response{}, newUnauthorizedError(response.Body)
+	}
+
+	if response.Code == http.StatusForbidden {
+		return Response{}, newForbiddenError(response.Code, response.Body)
 	}
 
 	return Response{}, newUnexpectedStatusError(response.Code, response.Body)

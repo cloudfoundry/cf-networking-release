@@ -12,7 +12,6 @@ import (
 )
 
 // TODO: Pagination for List
-// TODO: Check membership
 
 // GroupsService provides access to common group actions. Using this service,
 // you can create, delete, fetch and list group resources.
@@ -36,7 +35,6 @@ func (gs GroupsService) Create(displayName, token string) (Group, error) {
 		Authorization: network.NewTokenAuthorization(token),
 		Body: network.NewJSONRequestBody(documents.CreateGroupRequest{
 			DisplayName: displayName,
-			Schemas:     schemas,
 		}),
 		AcceptableStatusCodes: []int{http.StatusCreated},
 	})
@@ -54,7 +52,7 @@ func (gs GroupsService) Create(displayName, token string) (Group, error) {
 }
 
 // Update will make a request to UAA to update the matching group resource.
-// A token with the "scim.write" scope is required.
+// A token with the "scim.write" or "groups.update" scope is required.
 func (gs GroupsService) Update(group Group, token string) (Group, error) {
 	resp, err := newNetworkClient(gs.config).MakeRequest(network.Request{
 		Method:        "PUT",
@@ -79,12 +77,12 @@ func (gs GroupsService) Update(group Group, token string) (Group, error) {
 
 // AddMember will make a request to UAA to add a member to the group resource with the matching id.
 // A token with the "scim.write" scope is required.
-func (gs GroupsService) AddMember(groupID, memberID, token string) error {
-	_, err := newNetworkClient(gs.config).MakeRequest(network.Request{
+func (gs GroupsService) AddMember(groupID, memberID, token string) (Member, error) {
+	resp, err := newNetworkClient(gs.config).MakeRequest(network.Request{
 		Method:        "POST",
 		Path:          fmt.Sprintf("/Groups/%s/members", groupID),
 		Authorization: network.NewTokenAuthorization(token),
-		Body: network.NewJSONRequestBody(documents.Member{
+		Body: network.NewJSONRequestBody(documents.CreateMemberRequest{
 			Origin: "uaa",
 			Type:   "USER",
 			Value:  memberID,
@@ -92,10 +90,42 @@ func (gs GroupsService) AddMember(groupID, memberID, token string) error {
 		AcceptableStatusCodes: []int{http.StatusCreated},
 	})
 	if err != nil {
-		return translateError(err)
+		return Member{}, translateError(err)
 	}
 
-	return nil
+	var response documents.MemberResponse
+	err = json.Unmarshal(resp.Body, &response)
+	if err != nil {
+		return Member{}, MalformedResponseError{err}
+	}
+
+	return newMemberFromResponse(gs.config, response), nil
+}
+
+// CheckMembership will make a request to UAA to fetch a member resource from a group resource.
+// A token with the "scim.read" scope is required.
+func (gs GroupsService) CheckMembership(groupID, memberID, token string) (Member, bool, error) {
+	resp, err := newNetworkClient(gs.config).MakeRequest(network.Request{
+		Method:                "GET",
+		Path:                  fmt.Sprintf("/Groups/%s/members/%s", groupID, memberID),
+		Authorization:         network.NewTokenAuthorization(token),
+		AcceptableStatusCodes: []int{http.StatusOK, http.StatusNotFound},
+	})
+	if err != nil {
+		return Member{}, false, translateError(err)
+	}
+
+	if resp.Code == http.StatusNotFound {
+		return Member{}, false, nil
+	}
+
+	var response documents.MemberResponse
+	err = json.Unmarshal(resp.Body, &response)
+	if err != nil {
+		return Member{}, false, MalformedResponseError{err}
+	}
+
+	return newMemberFromResponse(gs.config, response), true, nil
 }
 
 // ListMembers will make a request to UAA to fetch the members of a group resource with the matching id.
@@ -108,22 +138,18 @@ func (gs GroupsService) ListMembers(groupID, token string) ([]Member, error) {
 		AcceptableStatusCodes: []int{http.StatusOK},
 	})
 	if err != nil {
-		return nil, translateError(err)
+		return []Member{}, translateError(err)
 	}
 
-	var response []documents.Member
+	var response []documents.MemberResponse
 	err = json.Unmarshal(resp.Body, &response)
 	if err != nil {
-		return nil, MalformedResponseError{err}
+		return []Member{}, MalformedResponseError{err}
 	}
 
 	var memberList []Member
-	for _, m := range response {
-		memberList = append(memberList, Member{
-			Type:   m.Type,
-			Value:  m.Value,
-			Origin: m.Origin,
-		})
+	for _, memberResponse := range response {
+		memberList = append(memberList, newMemberFromResponse(gs.config, memberResponse))
 	}
 
 	return memberList, nil
@@ -219,9 +245,9 @@ func (gs GroupsService) Delete(id, token string) error {
 }
 
 func newUpdateGroupDocumentFromGroup(group Group) documents.CreateUpdateGroupRequest {
-	var members []documents.Member
+	var members []documents.CreateMemberRequest
 	for _, member := range group.Members {
-		members = append(members, documents.Member{
+		members = append(members, documents.CreateMemberRequest{
 			Origin: member.Origin,
 			Type:   member.Type,
 			Value:  member.Value,

@@ -8,8 +8,6 @@ replace github.com/containernetworking/plugins => github.com/containernetworking
 
 replace github.com/square/certstrap => github.com/square/certstrap v1.1.1
 
-replace github.com/pivotal-cf-experimental/warrant => github.com/pivotal-cf-experimental/warrant v0.0.0-20170102215731-9d632d130b6a
-
 replace github.com/nats-io/gnatsd => github.com/nats-io/gnatsd v1.1.1-0.20180411231007-da89364d9d43
 
 replace github.com/nats-io/nats-top => github.com/nats-io/nats-top v0.3.3-0.20160824043733-1c2a6920a922
@@ -35,7 +33,6 @@ require (
 	github.com/containernetworking/cni v1.0.0
 	github.com/containernetworking/plugins v1.0.0
 	github.com/coreos/go-iptables v0.6.0
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/golang/protobuf v1.5.2
 	github.com/gorilla/mux v1.8.0 // indirect
@@ -51,7 +48,7 @@ require (
 	github.com/onsi/gomega v1.17.0
 	github.com/pivotal-cf-experimental/gomegamatchers v0.0.0-20180326192815-e36bfcc98c3a
 	github.com/pivotal-cf-experimental/rainmaker v0.0.0-20160401052143-d533d01b7c52
-	github.com/pivotal-cf-experimental/warrant v0.0.0-20190619140101-cb9c3921aa62
+	github.com/pivotal-cf-experimental/warrant v0.0.0-20211122194707-17385443920f
 	github.com/pivotal-cf/paraphernalia v0.0.0-20180203224945-a64ae2051c20
 	github.com/pkg/errors v0.9.1
 	github.com/st3v/glager v0.3.0

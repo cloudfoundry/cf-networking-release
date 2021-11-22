@@ -111,3 +111,23 @@ func newUnauthorizedError(message []byte) UnauthorizedError {
 func (e UnauthorizedError) Error() string {
 	return fmt.Sprintf("Warrant UnauthorizedError: %s", e.message)
 }
+
+// ForbiddenError indicates that the request could not be
+// completed because the authorization that was provided does
+// not have the sufficient scope requirements from UAA.
+type ForbiddenError struct {
+	StatusCode int
+	Body       []byte
+}
+
+func newForbiddenError(statusCode int, body []byte) ForbiddenError {
+	return ForbiddenError{
+		StatusCode: statusCode,
+		Body:       body,
+	}
+}
+
+// Error returns a string representation of the ForbiddenError.
+func (e ForbiddenError) Error() string {
+	return fmt.Sprintf("Warrant ForbiddenError: %s", e.Body)
+}

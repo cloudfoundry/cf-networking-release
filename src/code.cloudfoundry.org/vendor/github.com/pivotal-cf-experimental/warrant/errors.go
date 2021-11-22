@@ -30,6 +30,18 @@ func (e UnauthorizedError) Error() string {
 	return e.err.Error()
 }
 
+// ForbiddenError indicates that the requested action was unauthorized.
+// This could mean that the provided token does not contain
+// the required scope.
+type ForbiddenError struct {
+	err error
+}
+
+// Error returns a string representation of the UnauthorizedError.
+func (e ForbiddenError) Error() string {
+	return e.err.Error()
+}
+
 // NotFoundError indicates that the resource could not be found.
 type NotFoundError struct {
 	err error
@@ -97,6 +109,8 @@ func translateError(err error) error {
 	switch s := err.(type) {
 	case network.NotFoundError:
 		return NotFoundError{err}
+	case network.ForbiddenError:
+		return ForbiddenError{err}
 	case network.UnauthorizedError:
 		return UnauthorizedError{err}
 	case network.UnexpectedStatusError:

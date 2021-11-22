@@ -3,18 +3,15 @@ package documents
 // CreateGroupRequest represents the JSON tranport data structure
 // for a request to create a Group.
 type CreateGroupRequest struct {
-	// Schemas is the list of schemas for this API request.
-	Schemas []string `json:"schemas"`
-
 	// DisplayName is the human-friendly name given to a group
 	// resource.
 	DisplayName string `json:"displayName"`
 
 	// Description is the human readable description of the group.
-	Description string `json:"description"`
+	Description string `json:"description,omitempty"`
 
 	// Members is the list of members to be included in the group.
-	Members []Member `json:"members"`
+	Members []CreateMemberRequest `json:"members,omitempty"`
 }
 
 // GroupResponse represents the JSON transport data structure
@@ -34,7 +31,7 @@ type GroupResponse struct {
 	Description string `json:"description"`
 
 	// Members is the list of members to be included in the group.
-	Members []Member `json:"members"`
+	Members []MemberResponse `json:"members"`
 
 	// Meta is the collection of metadata describing the group
 	// resource.
@@ -81,7 +78,7 @@ type CreateUpdateGroupRequest struct {
 	Description string `json:"description"`
 
 	// Members is the list of members to be included in the group.
-	Members []Member `json:"members"`
+	Members []CreateMemberRequest `json:"members"`
 
 	// Meta is the set of metadata for this resource.
 	Meta Meta `json:"meta"`

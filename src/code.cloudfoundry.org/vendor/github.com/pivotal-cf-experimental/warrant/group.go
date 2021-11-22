@@ -26,6 +26,7 @@ type Group struct {
 	// UpdatedAt is a timestamp value indicating when the group was last modified.
 	UpdatedAt time.Time
 
+	// Members is the list of members to be included in the group.
 	Members []Member
 }
 

@@ -26,6 +26,10 @@ type TokenResponse struct {
 	Issuer string `json:"iss"`
 }
 
+type TokenKeysResponse struct {
+	Keys []TokenKeyResponse `json:"keys"`
+}
+
 // TokenKeyResponse represents the JSON transport data structure
 // for a response from UAA containing the token signing key.
 type TokenKeyResponse struct {
@@ -34,6 +38,9 @@ type TokenKeyResponse struct {
 
 	// Value is a string representation of the key.
 	Value string `json:"value"`
+
+	// Kid identifies the key
+	Kid string `json:"kid"`
 
 	// Kty identifies the cryptographic algorithm family used with the key.
 	Kty string `json:"kty"`

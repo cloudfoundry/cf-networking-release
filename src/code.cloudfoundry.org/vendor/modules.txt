@@ -98,10 +98,7 @@ github.com/containernetworking/plugins/pkg/ns
 # github.com/coreos/go-iptables v0.6.0
 ## explicit
 github.com/coreos/go-iptables/iptables
-# github.com/dgrijalva/jwt-go v3.2.0+incompatible
-## explicit
-github.com/dgrijalva/jwt-go
-# github.com/fsnotify/fsnotify v1.4.9
+# github.com/fsnotify/fsnotify v1.5.1
 github.com/fsnotify/fsnotify
 # github.com/go-sql-driver/mysql v1.6.0
 ## explicit
@@ -112,6 +109,8 @@ github.com/go-task/slim-sprig
 github.com/gogo/protobuf/gogoproto
 github.com/gogo/protobuf/proto
 github.com/gogo/protobuf/protoc-gen-gogo/descriptor
+# github.com/golang-jwt/jwt v3.2.2+incompatible
+github.com/golang-jwt/jwt
 # github.com/golang/protobuf v1.5.2
 ## explicit
 github.com/golang/protobuf/proto
@@ -223,7 +222,7 @@ github.com/pivotal-cf-experimental/gomegamatchers/internal/prettyprint
 github.com/pivotal-cf-experimental/rainmaker
 github.com/pivotal-cf-experimental/rainmaker/internal/documents
 github.com/pivotal-cf-experimental/rainmaker/internal/network
-# github.com/pivotal-cf-experimental/warrant v0.0.0-20190619140101-cb9c3921aa62 => github.com/pivotal-cf-experimental/warrant v0.0.0-20170102215731-9d632d130b6a
+# github.com/pivotal-cf-experimental/warrant v0.0.0-20211122194707-17385443920f
 ## explicit
 github.com/pivotal-cf-experimental/warrant
 github.com/pivotal-cf-experimental/warrant/internal/documents
@@ -397,7 +396,6 @@ gopkg.in/yaml.v2
 # github.com/containernetworking/cni => github.com/containernetworking/cni v0.6.0
 # github.com/containernetworking/plugins => github.com/containernetworking/plugins v0.6.0
 # github.com/square/certstrap => github.com/square/certstrap v1.1.1
-# github.com/pivotal-cf-experimental/warrant => github.com/pivotal-cf-experimental/warrant v0.0.0-20170102215731-9d632d130b6a
 # github.com/nats-io/gnatsd => github.com/nats-io/gnatsd v1.1.1-0.20180411231007-da89364d9d43
 # github.com/nats-io/nats-top => github.com/nats-io/nats-top v0.3.3-0.20160824043733-1c2a6920a922
 # example-apps/spammer => ../example-apps/spammer
