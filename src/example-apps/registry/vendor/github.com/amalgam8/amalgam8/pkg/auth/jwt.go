@@ -17,7 +17,7 @@ package auth
 import (
 	"errors"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt"
 )
 
 // JWT related constants
@@ -54,13 +54,15 @@ func (aut *jwtAuthenticator) Authenticate(token string) (*Namespace, error) {
 		return nil, ErrUnauthorized
 	}
 
-	claim, exists := t.Claims[NamespaceClaim]
-	if !exists || claim.(string) == "" {
-		return nil, ErrUnauthorized
+	if c, ok := t.Claims.(jwt.MapClaims); ok {
+		claim, exists := c[NamespaceClaim]
+		if exists && claim.(string) != "" {
+			namespace := Namespace(claim.(string))
+			return &namespace, nil
+		}
 	}
 
-	namespace := Namespace(claim.(string))
-	return &namespace, nil
+	return nil, ErrUnauthorized
 }
 
 func (aut *jwtAuthenticator) parseToken(token string) (*jwt.Token, error) {
