@@ -1,0 +1,9 @@
+---
+applications:
+  - name: registry
+    memory: 2G
+    disk_quota: 128M
+    buildpacks: [go_buildpack]
+    instances: 1
+    env:
+      GOPACKAGENAME: registry
