@@ -4,7 +4,7 @@ set -e -u
 ROOT_DIR_PATH="$(cd $(dirname $0)/.. && pwd)"
 cd "${ROOT_DIR_PATH}"
 
-db=${DB:-"postgres"} # if not set, default to postgres
+db=${DB:-"mysql"} # if not set, default to mysql
 
 if [ "$db" = "mysql" ]; then
   docker_image=c2cnetworking/dev-mysql
