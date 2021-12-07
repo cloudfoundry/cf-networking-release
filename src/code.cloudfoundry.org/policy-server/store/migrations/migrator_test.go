@@ -1752,6 +1752,55 @@ var _ = Describe("migrations", func() {
 			})
 		})
 
+		Describe("V67 - add Dynamic ASG related tables", func() {
+			var rules string
+			BeforeEach(func() {
+				if realDb.DriverName() != "mysql" {
+					Skip("skipping mysql test")
+				}
+
+				rules = `[
+  {
+    "destination": "0.0.0.0/0",
+    "ports": "53",
+    "protocol": "udp"
+  }
+]`
+			})
+			It("should migrate", func() {
+				migrateTo("67c")
+				By("adding the security_groups table")
+				_, err := realDb.Exec(fmt.Sprintf(`
+					INSERT INTO security_groups
+					(guid, name, rules, running_default, staging_default)
+					VALUES ('asg-guid', 'my-group', '%s', true, true)`,
+					rules))
+				Expect(err).NotTo(HaveOccurred())
+
+				By("adding the staging_security_groups_spaces table")
+
+				By("adding the running_security_groups_spaces table")
+
+				By("constraining the security_group_guid of staging_security_groups_spaces to valid IDs")
+				_, err = realDb.Exec(`
+						INSERT INTO staging_security_groups_spaces
+						(space_guid, security_group_guid)
+						VALUES('some-guid', 'some-other-guid')
+					`)
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("foreign key constraint fails"))
+
+				By("constraining the security_group_guid of running_security_groups_spaces to valid IDs")
+				_, err = realDb.Exec(`
+						INSERT INTO running_security_groups_spaces
+						(space_guid, security_group_guid)
+						VALUES('some-guid', 'some-other-guid')
+					`)
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(ContainSubstring("foreign key constraint fails"))
+			})
+		})
+
 		Context("when migrating in parallel", func() {
 			Context("mysql", func() {
 				BeforeEach(func() {
