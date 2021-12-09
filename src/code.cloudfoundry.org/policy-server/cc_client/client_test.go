@@ -574,4 +574,164 @@ var _ = Describe("Client", func() {
 			})
 		})
 	})
+
+	Describe("GetSecurityGroups", func() {
+		BeforeEach(func() {
+			fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+				err := json.Unmarshal([]byte(fixtures.OneSecurityGroup), respData)
+				Expect(err).ToNot(HaveOccurred())
+				return nil
+			}
+		})
+
+		It("polls the Cloud Controller successfully", func() {
+			sgs, err := client.GetSecurityGroups("some-token")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(fakeJSONClient.DoCallCount()).To(Equal(1))
+
+			method, route, reqData, _, _ := fakeJSONClient.DoArgsForCall(0)
+
+			Expect(method).To(Equal("GET"))
+			Expect(route).To(Equal("/v3/security_groups"))
+			Expect(reqData).To(BeNil())
+
+			Expect(len(sgs)).To(Equal(1))
+			Expect(sgs[0].Name).To(Equal("my-group0"))
+			Expect(sgs[0].GUID).To(Equal("b85a788e-671f-4549-814d-e34cdb2f539a"))
+			Expect(sgs[0].GloballyEnabled.Running).To(BeTrue())
+			Expect(sgs[0].GloballyEnabled.Staging).To(BeFalse())
+			Expect(sgs[0].Rules[0].Protocol).To(Equal("tcp"))
+			Expect(sgs[0].Rules[1].Protocol).To(Equal("icmp"))
+		})
+
+		Context("when there are no security groups", func() {
+			BeforeEach(func() {
+				fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+					err := json.Unmarshal([]byte(fixtures.NoSecurityGroups), respData)
+					Expect(err).ToNot(HaveOccurred())
+					return nil
+				}
+			})
+
+			It("Returns them all", func() {
+				sgs, err := client.GetSecurityGroups("some-token")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(fakeJSONClient.DoCallCount()).To(Equal(1))
+
+				method, route, reqData, _, _ := fakeJSONClient.DoArgsForCall(0)
+
+				Expect(method).To(Equal("GET"))
+				Expect(route).To(Equal("/v3/security_groups"))
+				Expect(reqData).To(BeNil())
+
+				Expect(len(sgs)).To(Equal(0))
+			})
+		})
+
+		Context("when multiple security groups are returned", func() {
+			BeforeEach(func() {
+				fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+					err := json.Unmarshal([]byte(fixtures.TwoSecurityGroups), respData)
+					Expect(err).ToNot(HaveOccurred())
+					return nil
+				}
+			})
+
+			It("Returns them all", func() {
+				sgs, err := client.GetSecurityGroups("some-token")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(fakeJSONClient.DoCallCount()).To(Equal(1))
+
+				method, route, reqData, _, _ := fakeJSONClient.DoArgsForCall(0)
+
+				Expect(method).To(Equal("GET"))
+				Expect(route).To(Equal("/v3/security_groups"))
+				Expect(reqData).To(BeNil())
+
+				Expect(len(sgs)).To(Equal(2))
+				Expect(sgs[1].Name).To(Equal("my-group2"))
+				Expect(sgs[1].GUID).To(Equal("second-guid"))
+				Expect(sgs[1].GloballyEnabled.Running).To(BeFalse())
+				Expect(sgs[1].GloballyEnabled.Staging).To(BeTrue())
+				Expect(sgs[1].Rules[0].Protocol).To(Equal("tcp"))
+				Expect(sgs[1].Rules[0].Ports).To(Equal("53"))
+			})
+		})
+
+		Context("when there are multiple pages", func() {
+			BeforeEach(func() {
+				fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+					if route == "/v3/security_groups?page=2&per_page=1" {
+						err := json.Unmarshal([]byte(fixtures.SecurityGroupsMultiplePagesPg2), respData)
+						Expect(err).ToNot(HaveOccurred())
+					} else if route == "/v3/security_groups?page=3&per_page=1" {
+						err := json.Unmarshal([]byte(fixtures.SecurityGroupsMultiplePagesPg3), respData)
+						Expect(err).ToNot(HaveOccurred())
+					} else {
+						err := json.Unmarshal([]byte(fixtures.SecurityGroupsMultiplePages), respData)
+						Expect(err).ToNot(HaveOccurred())
+					}
+					return nil
+				}
+			})
+
+			It("returns all the security groups", func() {
+				sgs, err := client.GetSecurityGroups("some-token")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(fakeJSONClient.DoCallCount()).To(Equal(3))
+
+				method, route, reqData, _, token := fakeJSONClient.DoArgsForCall(0)
+
+				Expect(method).To(Equal("GET"))
+				Expect(route).To(Equal("/v3/security_groups"))
+				Expect(reqData).To(BeNil())
+				Expect(token).To(Equal("bearer some-token"))
+
+				method, route, reqData, _, token = fakeJSONClient.DoArgsForCall(1)
+
+				Expect(method).To(Equal("GET"))
+				Expect(route).To(Equal("/v3/security_groups?page=2&per_page=1"))
+				Expect(reqData).To(BeNil())
+				Expect(token).To(Equal("bearer some-token"))
+
+				method, route, reqData, _, token = fakeJSONClient.DoArgsForCall(2)
+
+				Expect(method).To(Equal("GET"))
+				Expect(route).To(Equal("/v3/security_groups?page=3&per_page=1"))
+				Expect(reqData).To(BeNil())
+				Expect(token).To(Equal("bearer some-token"))
+
+				Expect(len(sgs)).To(Equal(3))
+				Expect(sgs[0].Name).To(Equal("my-group0"))
+				Expect(sgs[0].GUID).To(Equal("b85a788e-671f-4549-814d-e34cdb2f539a"))
+				Expect(sgs[0].GloballyEnabled.Running).To(BeTrue())
+				Expect(sgs[0].GloballyEnabled.Staging).To(BeFalse())
+				Expect(sgs[0].Rules[0].Protocol).To(Equal("tcp"))
+				Expect(sgs[0].Rules[1].Protocol).To(Equal("icmp"))
+				Expect(sgs[1].Name).To(Equal("my-group2"))
+				Expect(sgs[1].GUID).To(Equal("second-guid"))
+				Expect(sgs[1].GloballyEnabled.Running).To(BeFalse())
+				Expect(sgs[1].GloballyEnabled.Staging).To(BeTrue())
+				Expect(sgs[1].Rules[0].Protocol).To(Equal("tcp"))
+				Expect(sgs[1].Rules[0].Ports).To(Equal("53"))
+				Expect(sgs[2].Name).To(Equal("my-group3"))
+				Expect(sgs[2].GUID).To(Equal("third-guid"))
+				Expect(sgs[2].GloballyEnabled.Running).To(BeTrue())
+				Expect(sgs[2].GloballyEnabled.Staging).To(BeTrue())
+				Expect(sgs[2].Rules[0].Protocol).To(Equal("tcp"))
+				Expect(sgs[2].Rules[0].Ports).To(Equal("123"))
+			})
+		})
+
+		Context("when the json client returns an error", func() {
+			BeforeEach(func() {
+				fakeJSONClient.DoReturns(errors.New("kissa ja undulaatti"))
+			})
+
+			It("returns a helpful error", func() {
+				_, err := client.GetSubjectSpaces("some-token", "some-subject-id")
+				Expect(err).To(MatchError(ContainSubstring("json client do: kissa ja undulaatti")))
+			})
+		})
+	})
 })
