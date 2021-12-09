@@ -35,7 +35,7 @@ var _ = Describe("SecurityGroupsStore", func() {
 		var err error
 		realDb, err = dbHelper.NewConnectionPool(dbConf, 200, 200, 5*time.Minute, "Security Groups Store Test", "Security Groups Store Test", logger)
 		Expect(err).NotTo(HaveOccurred())
-		securityGroupsStore = &store.SecurityGroupsStore{
+		securityGroupsStore = &store.SGStore{
 			Conn: realDb,
 		}
 
@@ -64,6 +64,7 @@ var _ = Describe("SecurityGroupsStore", func() {
 			RunningSpaceGuids: []string{},
 		}, {
 			Guid:              "second-guid",
+			Name:              "second-name",
 			Rules:             "secondUpdatedRules",
 			StagingSpaceGuids: []string{"first-space", "second-space"},
 			RunningSpaceGuids: []string{"first-space", "second-space"},
@@ -156,13 +157,55 @@ var _ = Describe("SecurityGroupsStore", func() {
 				})
 			})
 
-			Context("deleting/inserting data", func() {
+			Context("deleting data", func() {
 				BeforeEach(func() {
 					tx.ExecReturns(nil, errors.New("can't exec SQL"))
 				})
 				It("returns an error", func() {
 					err := securityGroupsStore.Replace(newRules)
 					Expect(err).To(MatchError("deleting running security group associations: can't exec SQL"))
+				})
+				It("rolls back the transaction", func() {
+					securityGroupsStore.Replace(newRules)
+					Expect(tx.RollbackCallCount()).To(Equal(1))
+				})
+			})
+
+			Context("inserting a security group", func() {
+				BeforeEach(func() {
+					tx.ExecReturnsOnCall(3, nil, errors.New("can't exec SQL"))
+				})
+				It("returns an error", func() {
+					err := securityGroupsStore.Replace(newRules)
+					Expect(err).To(MatchError("adding new security group third-guid (third-name): can't exec SQL"))
+				})
+				It("rolls back the transaction", func() {
+					securityGroupsStore.Replace(newRules)
+					Expect(tx.RollbackCallCount()).To(Equal(1))
+				})
+			})
+
+			Context("associating a space with a staging security group", func() {
+				BeforeEach(func() {
+					tx.ExecReturnsOnCall(4, nil, errors.New("can't exec SQL"))
+				})
+				It("returns an error", func() {
+					err := securityGroupsStore.Replace(newRules)
+					Expect(err).To(MatchError("associating staging security group third-guid (third-name) to space third-space: can't exec SQL"))
+				})
+				It("rolls back the transaction", func() {
+					securityGroupsStore.Replace(newRules)
+					Expect(tx.RollbackCallCount()).To(Equal(1))
+				})
+			})
+
+			Context("associating a space with a running security group", func() {
+				BeforeEach(func() {
+					tx.ExecReturnsOnCall(8, nil, errors.New("can't exec SQL"))
+				})
+				It("returns an error", func() {
+					err := securityGroupsStore.Replace(newRules)
+					Expect(err).To(MatchError("associating running security group second-guid (second-name) to space first-space: can't exec SQL"))
 				})
 				It("rolls back the transaction", func() {
 					securityGroupsStore.Replace(newRules)
