@@ -4,19 +4,10 @@ import (
 	"fmt"
 
 	"code.cloudfoundry.org/lager"
+	"code.cloudfoundry.org/policy-server/cc_client"
 	"code.cloudfoundry.org/policy-server/store"
+	"code.cloudfoundry.org/policy-server/uaa_client"
 )
-
-//go:generate counterfeiter -o fakes/uua_client.go --fake-name UAAClient . uaaClient
-type uaaClient interface {
-	GetToken() (string, error)
-}
-
-//go:generate counterfeiter -o fakes/cc_client.go --fake-name CCClient . ccClient
-type ccClient interface {
-	GetLiveAppGUIDs(token string, appGUIDs []string) (map[string]struct{}, error)
-	GetLiveSpaceGUIDs(token string, spaceGUIDs []string) (map[string]struct{}, error)
-}
 
 //go:generate counterfeiter -o fakes/policy_store.go --fake-name PolicyStore . policyStore
 type policyStore interface {
@@ -34,13 +25,13 @@ type PolicyCleaner struct {
 	Logger                lager.Logger
 	Store                 policyStore
 	EgressStore           egressPolicyStore
-	UAAClient             uaaClient
-	CCClient              ccClient
+	UAAClient             uaa_client.UAAClient
+	CCClient              cc_client.CCClient
 	CCAppRequestChunkSize int
 }
 
-func NewPolicyCleaner(logger lager.Logger, store policyStore, egressStore egressPolicyStore, uaaClient uaaClient,
-	ccClient ccClient, ccAppRequestChunkSize int) *PolicyCleaner {
+func NewPolicyCleaner(logger lager.Logger, store policyStore, egressStore egressPolicyStore, uaaClient uaa_client.UAAClient,
+	ccClient cc_client.CCClient, ccAppRequestChunkSize int) *PolicyCleaner {
 	return &PolicyCleaner{
 		Logger:                logger,
 		Store:                 store,

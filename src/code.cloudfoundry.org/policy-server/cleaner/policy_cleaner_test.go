@@ -4,9 +4,11 @@ import (
 	"errors"
 
 	"code.cloudfoundry.org/lager/lagertest"
+	ccfakes "code.cloudfoundry.org/policy-server/cc_client/fakes"
 	"code.cloudfoundry.org/policy-server/cleaner"
 	"code.cloudfoundry.org/policy-server/cleaner/fakes"
 	"code.cloudfoundry.org/policy-server/store"
+	uaafakes "code.cloudfoundry.org/policy-server/uaa_client/fakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
@@ -17,8 +19,8 @@ var _ = Describe("PolicyCleaner", func() {
 		policyCleaner   *cleaner.PolicyCleaner
 		fakeStore       *fakes.PolicyStore
 		fakeEgressStore *fakes.EgressPolicyStore
-		fakeUAAClient   *fakes.UAAClient
-		fakeCCClient    *fakes.CCClient
+		fakeUAAClient   *uaafakes.UAAClient
+		fakeCCClient    *ccfakes.CCClient
 		logger          *lagertest.TestLogger
 		c2cPolicies     []store.Policy
 		egressPolicies  []store.EgressPolicy
@@ -153,8 +155,8 @@ var _ = Describe("PolicyCleaner", func() {
 
 		fakeStore = &fakes.PolicyStore{}
 		fakeEgressStore = &fakes.EgressPolicyStore{}
-		fakeUAAClient = &fakes.UAAClient{}
-		fakeCCClient = &fakes.CCClient{}
+		fakeUAAClient = &uaafakes.UAAClient{}
+		fakeCCClient = &ccfakes.CCClient{}
 		logger = lagertest.NewTestLogger("test")
 		policyCleaner = cleaner.NewPolicyCleaner(logger, fakeStore, fakeEgressStore, fakeUAAClient, fakeCCClient, 0)
 

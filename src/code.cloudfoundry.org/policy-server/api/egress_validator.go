@@ -7,7 +7,9 @@ import (
 	"strings"
 
 	"code.cloudfoundry.org/cf-networking-helpers/httperror"
+	"code.cloudfoundry.org/policy-server/cc_client"
 	"code.cloudfoundry.org/policy-server/store"
+	"code.cloudfoundry.org/policy-server/uaa_client"
 )
 
 //go:generate counterfeiter -o fakes/egress_destination_store.go --fake-name EgressDestinationStore . EgressDestinationStore
@@ -16,20 +18,9 @@ type EgressDestinationStore interface {
 	GetByName(name ...string) ([]store.EgressDestination, error)
 }
 
-//go:generate counterfeiter -o fakes/cc_client.go --fake-name CCClient . ccClient
-type ccClient interface {
-	GetLiveAppGUIDs(token string, appGUIDs []string) (map[string]struct{}, error)
-	GetLiveSpaceGUIDs(token string, spaceGUIDs []string) (map[string]struct{}, error)
-}
-
-//go:generate counterfeiter -o fakes/uua_client.go --fake-name UAAClient . uaaClient
-type uaaClient interface {
-	GetToken() (string, error)
-}
-
 type EgressValidator struct {
-	CCClient         ccClient
-	UAAClient        uaaClient
+	CCClient         cc_client.CCClient
+	UAAClient        uaa_client.UAAClient
 	DestinationStore EgressDestinationStore
 }
 

@@ -3,33 +3,18 @@ package handlers
 import (
 	"fmt"
 
-	"code.cloudfoundry.org/policy-server/api"
+	"code.cloudfoundry.org/policy-server/cc_client"
 	"code.cloudfoundry.org/policy-server/store"
 	"code.cloudfoundry.org/policy-server/uaa_client"
 )
 
-//go:generate counterfeiter -o fakes/uua_client.go --fake-name UAAClient . uaaClient
-type uaaClient interface {
-	GetToken() (string, error)
-	CheckToken(string) (uaa_client.CheckTokenResponse, error)
-}
-
-//go:generate counterfeiter -o fakes/cc_client.go --fake-name CCClient . ccClient
-type ccClient interface {
-	GetAppSpaces(token string, appGUIDs []string) (map[string]string, error)
-	GetSpace(token, spaceGUID string) (*api.Space, error)
-	GetSpaceGUIDs(token string, appGUIDs []string) ([]string, error)
-	GetSubjectSpace(token, subjectId string, spaces api.Space) (*api.Space, error)
-	GetSubjectSpaces(token, subjectId string) (map[string]struct{}, error)
-}
-
 type PolicyFilter struct {
-	CCClient  ccClient
-	UAAClient uaaClient
+	CCClient  cc_client.CCClient
+	UAAClient uaa_client.UAAClient
 	ChunkSize int
 }
 
-func NewPolicyFilter(uaaClient uaaClient, ccClient ccClient, chunkSize int) *PolicyFilter {
+func NewPolicyFilter(uaaClient uaa_client.UAAClient, ccClient cc_client.CCClient, chunkSize int) *PolicyFilter {
 	return &PolicyFilter{
 		CCClient:  ccClient,
 		UAAClient: uaaClient,

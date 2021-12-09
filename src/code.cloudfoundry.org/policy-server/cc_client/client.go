@@ -9,8 +9,18 @@ import (
 
 	"code.cloudfoundry.org/cf-networking-helpers/json_client"
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/policy-server/api"
 )
+
+//go:generate counterfeiter -o fakes/cc_client.go --fake-name CCClient . CCClient
+type CCClient interface {
+	GetAppSpaces(token string, appGUIDs []string) (map[string]string, error)
+	GetSpace(token, spaceGUID string) (*SpaceResponse, error)
+	GetSpaceGUIDs(token string, appGUIDs []string) ([]string, error)
+	GetSubjectSpace(token, subjectId string, spaces SpaceResponse) (*SpaceResource, error)
+	GetSubjectSpaces(token, subjectId string) (map[string]struct{}, error)
+	GetLiveAppGUIDs(token string, appGUIDs []string) (map[string]struct{}, error)
+	GetLiveSpaceGUIDs(token string, spaceGUIDs []string) (map[string]struct{}, error)
+}
 
 type Client struct {
 	Logger     lager.Logger
@@ -59,20 +69,19 @@ type SpacesV3Response struct {
 }
 
 type SpaceResponse struct {
-	Entity struct {
-		Name             string `json:"name"`
-		OrganizationGUID string `json:"organization_guid"`
-	} `json:"entity"`
+	Entity SpaceEntity `json:"entity"`
+}
+
+type SpaceEntity struct {
+	Name             string `json:"name"`
+	OrganizationGUID string `json:"organization_guid"`
 }
 
 type SpaceResource struct {
 	Metadata struct {
 		GUID string `json:"guid"`
 	}
-	Entity struct {
-		Name             string `json:"name"`
-		OrganizationGUID string `json:"organization_guid"`
-	} `json:"entity"`
+	Entity SpaceEntity `json:"entity"`
 }
 
 type SpacesResponse struct {
@@ -226,7 +235,7 @@ func (c *Client) GetAppSpaces(token string, appGUIDs []string) (map[string]strin
 	return set, nil
 }
 
-func (c *Client) GetSpace(token, spaceGUID string) (*api.Space, error) {
+func (c *Client) GetSpace(token, spaceGUID string) (*SpaceResponse, error) {
 	token = fmt.Sprintf("bearer %s", token)
 	route := fmt.Sprintf("/v2/spaces/%s", spaceGUID)
 
@@ -243,19 +252,16 @@ func (c *Client) GetSpace(token, spaceGUID string) (*api.Space, error) {
 		return nil, fmt.Errorf("json client do: %s", err)
 	}
 
-	return &api.Space{
-		Name:    response.Entity.Name,
-		OrgGUID: response.Entity.OrganizationGUID,
-	}, nil
+	return &response, nil
 }
 
-func (c *Client) GetSubjectSpace(token, subjectId string, space api.Space) (*api.Space, error) {
+func (c *Client) GetSubjectSpace(token, subjectId string, space SpaceResponse) (*SpaceResource, error) {
 	token = fmt.Sprintf("bearer %s", token)
 
 	values := url.Values{}
 	values.Add("q", fmt.Sprintf("developer_guid:%s", subjectId))
-	values.Add("q", fmt.Sprintf("name:%s", space.Name))
-	values.Add("q", fmt.Sprintf("organization_guid:%s", space.OrgGUID))
+	values.Add("q", fmt.Sprintf("name:%s", space.Entity.Name))
+	values.Add("q", fmt.Sprintf("organization_guid:%s", space.Entity.OrganizationGUID))
 
 	route := fmt.Sprintf("/v2/spaces?%s", values.Encode())
 
@@ -273,10 +279,7 @@ func (c *Client) GetSubjectSpace(token, subjectId string, space api.Space) (*api
 		return nil, fmt.Errorf("found more than one matching space")
 	}
 
-	return &api.Space{
-		Name:    response.Resources[0].Entity.Name,
-		OrgGUID: response.Resources[0].Entity.OrganizationGUID,
-	}, nil
+	return &response.Resources[0], nil
 }
 
 func (c *Client) GetSubjectSpaces(token, subjectId string) (map[string]struct{}, error) {

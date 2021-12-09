@@ -114,8 +114,3 @@ type Tag struct {
 	Tag  string `json:"tag"`
 	Type string `json:"type"`
 }
-
-type Space struct {
-	Name    string `json:"name"`
-	OrgGUID string `json:"organization_guid"`
-}
