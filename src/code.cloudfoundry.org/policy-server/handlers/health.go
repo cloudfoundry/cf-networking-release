@@ -1,5 +1,7 @@
 package handlers
 
+//go:generate counterfeiter -generate
+
 import (
 	"net/http"
 

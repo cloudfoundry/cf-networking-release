@@ -11,12 +11,12 @@ import (
 	"code.cloudfoundry.org/policy-server/uaa_client"
 )
 
-//go:generate counterfeiter -o fakes/policy_filter.go --fake-name PolicyFilter . policyFilter
+//counterfeiter:generate -o fakes/policy_filter.go --fake-name PolicyFilter . policyFilter
 type policyFilter interface {
 	FilterPolicies(policies []store.Policy, subjectToken uaa_client.CheckTokenResponse) ([]store.Policy, error)
 }
 
-//go:generate counterfeiter -o fakes/database.go --fake-name Db . database
+//counterfeiter:generate -o fakes/database.go --fake-name Db . database
 type database interface {
 	Beginx() (db.Transaction, error)
 }

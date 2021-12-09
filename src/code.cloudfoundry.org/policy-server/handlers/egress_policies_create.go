@@ -9,7 +9,7 @@ import (
 	"code.cloudfoundry.org/policy-server/store"
 )
 
-//go:generate counterfeiter -o fakes/egress_policy_mapper.go --fake-name EgressPolicyMapper . egressPolicyMapper
+//counterfeiter:generate -o fakes/egress_policy_mapper.go --fake-name EgressPolicyMapper . egressPolicyMapper
 type egressPolicyMapper interface {
 	AsStoreEgressPolicy(bytes []byte) ([]store.EgressPolicy, error)
 	AsBytes(storeEgressPolicies []store.EgressPolicy) ([]byte, error)

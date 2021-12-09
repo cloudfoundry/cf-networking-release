@@ -2,7 +2,7 @@ package migrations
 
 import "fmt"
 
-//go:generate counterfeiter -o fakes/migration_store.go --fake-name MigrationStore . migrationStore
+//counterfeiter:generate -o fakes/migration_store.go --fake-name MigrationStore . migrationStore
 type migrationStore interface {
 	HasV1MigrationOccurred() (bool, error)
 	HasV2MigrationOccurred() (bool, error)

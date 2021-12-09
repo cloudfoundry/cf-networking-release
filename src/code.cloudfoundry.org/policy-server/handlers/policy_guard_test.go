@@ -3,11 +3,12 @@ package handlers_test
 import (
 	"errors"
 
-	"code.cloudfoundry.org/policy-server/api"
+	"code.cloudfoundry.org/policy-server/cc_client"
+	ccfakes "code.cloudfoundry.org/policy-server/cc_client/fakes"
 	"code.cloudfoundry.org/policy-server/handlers"
-	"code.cloudfoundry.org/policy-server/handlers/fakes"
 	"code.cloudfoundry.org/policy-server/store"
 	"code.cloudfoundry.org/policy-server/uaa_client"
+	uaafakes "code.cloudfoundry.org/policy-server/uaa_client/fakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -15,19 +16,19 @@ import (
 var _ = Describe("PolicyGuard", func() {
 	var (
 		policyGuard   *handlers.PolicyGuard
-		fakeCCClient  *fakes.CCClient
-		fakeUAAClient *fakes.UAAClient
+		fakeCCClient  *ccfakes.CCClient
+		fakeUAAClient *uaafakes.UAAClient
 		tokenData     uaa_client.CheckTokenResponse
 		policies      []store.Policy
 		spaceGUIDs    []string
-		space1        api.Space
-		space2        api.Space
-		space3        api.Space
+		space1        cc_client.SpaceResponse
+		space2        cc_client.SpaceResponse
+		space3        cc_client.SpaceResponse
 	)
 
 	BeforeEach(func() {
-		fakeCCClient = &fakes.CCClient{}
-		fakeUAAClient = &fakes.UAAClient{}
+		fakeCCClient = &ccfakes.CCClient{}
+		fakeUAAClient = &uaafakes.UAAClient{}
 		policyGuard = &handlers.PolicyGuard{
 			CCClient:  fakeCCClient,
 			UAAClient: fakeUAAClient,
@@ -56,22 +57,26 @@ var _ = Describe("PolicyGuard", func() {
 			UserName: "some-developer",
 		}
 		spaceGUIDs = []string{"space-guid-1", "space-guid-2", "space-guid-3"}
-		space1 = api.Space{
-			Name:    "space-1",
-			OrgGUID: "org-guid-1",
+		space1 = cc_client.SpaceResponse{
+			Entity: cc_client.SpaceEntity{
+				Name:             "space-1",
+				OrganizationGUID: "org-guid-1",
+			},
 		}
-		space2 = api.Space{
-			Name:    "space-2",
-			OrgGUID: "org-guid-2",
-		}
-		space3 = api.Space{
-			Name:    "space-3",
-			OrgGUID: "org-guid-3",
-		}
+		space2 = cc_client.SpaceResponse{
+			Entity: cc_client.SpaceEntity{
+				Name:             "space-2",
+				OrganizationGUID: "org-guid-2",
+			}}
+		space3 = cc_client.SpaceResponse{
+			Entity: cc_client.SpaceEntity{
+				Name:             "space-3",
+				OrganizationGUID: "org-guid-3",
+			}}
 
 		fakeUAAClient.GetTokenReturns("policy-server-token", nil)
 		fakeCCClient.GetSpaceGUIDsReturns(spaceGUIDs, nil)
-		fakeCCClient.GetSpaceStub = func(token, spaceGUID string) (*api.Space, error) {
+		fakeCCClient.GetSpaceStub = func(token, spaceGUID string) (*cc_client.SpaceResponse, error) {
 			switch spaceGUID {
 			case "space-guid-1":
 				{
@@ -91,19 +96,19 @@ var _ = Describe("PolicyGuard", func() {
 				}
 			}
 		}
-		fakeCCClient.GetSubjectSpaceStub = func(token, subjectId string, space api.Space) (*api.Space, error) {
+		fakeCCClient.GetSubjectSpaceStub = func(token, subjectId string, space cc_client.SpaceResponse) (*cc_client.SpaceResource, error) {
 			switch space {
 			case space1:
 				{
-					return &space1, nil
+					return &cc_client.SpaceResource{Entity: space1.Entity}, nil
 				}
 			case space2:
 				{
-					return &space2, nil
+					return &cc_client.SpaceResource{Entity: space2.Entity}, nil
 				}
 			case space3:
 				{
-					return &space3, nil
+					return &cc_client.SpaceResource{Entity: space3.Entity}, nil
 				}
 			default:
 				{

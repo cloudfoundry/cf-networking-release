@@ -2,16 +2,17 @@
 package fakes
 
 import (
+	"sync"
+
 	"code.cloudfoundry.org/lib/policy_client"
 	"code.cloudfoundry.org/policy-server/api/api_v0"
-	"sync"
 )
 
 type Chunker struct {
-	ChunkStub        func(allPolicies []api_v0.Policy) [][]api_v0.Policy
+	ChunkStub        func([]api_v0.Policy) [][]api_v0.Policy
 	chunkMutex       sync.RWMutex
 	chunkArgsForCall []struct {
-		allPolicies []api_v0.Policy
+		arg1 []api_v0.Policy
 	}
 	chunkReturns struct {
 		result1 [][]api_v0.Policy
@@ -23,26 +24,28 @@ type Chunker struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *Chunker) Chunk(allPolicies []api_v0.Policy) [][]api_v0.Policy {
-	var allPoliciesCopy []api_v0.Policy
-	if allPolicies != nil {
-		allPoliciesCopy = make([]api_v0.Policy, len(allPolicies))
-		copy(allPoliciesCopy, allPolicies)
+func (fake *Chunker) Chunk(arg1 []api_v0.Policy) [][]api_v0.Policy {
+	var arg1Copy []api_v0.Policy
+	if arg1 != nil {
+		arg1Copy = make([]api_v0.Policy, len(arg1))
+		copy(arg1Copy, arg1)
 	}
 	fake.chunkMutex.Lock()
 	ret, specificReturn := fake.chunkReturnsOnCall[len(fake.chunkArgsForCall)]
 	fake.chunkArgsForCall = append(fake.chunkArgsForCall, struct {
-		allPolicies []api_v0.Policy
-	}{allPoliciesCopy})
-	fake.recordInvocation("Chunk", []interface{}{allPoliciesCopy})
+		arg1 []api_v0.Policy
+	}{arg1Copy})
+	stub := fake.ChunkStub
+	fakeReturns := fake.chunkReturns
+	fake.recordInvocation("Chunk", []interface{}{arg1Copy})
 	fake.chunkMutex.Unlock()
-	if fake.ChunkStub != nil {
-		return fake.ChunkStub(allPolicies)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.chunkReturns.result1
+	return fakeReturns.result1
 }
 
 func (fake *Chunker) ChunkCallCount() int {
@@ -51,13 +54,22 @@ func (fake *Chunker) ChunkCallCount() int {
 	return len(fake.chunkArgsForCall)
 }
 
+func (fake *Chunker) ChunkCalls(stub func([]api_v0.Policy) [][]api_v0.Policy) {
+	fake.chunkMutex.Lock()
+	defer fake.chunkMutex.Unlock()
+	fake.ChunkStub = stub
+}
+
 func (fake *Chunker) ChunkArgsForCall(i int) []api_v0.Policy {
 	fake.chunkMutex.RLock()
 	defer fake.chunkMutex.RUnlock()
-	return fake.chunkArgsForCall[i].allPolicies
+	argsForCall := fake.chunkArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *Chunker) ChunkReturns(result1 [][]api_v0.Policy) {
+	fake.chunkMutex.Lock()
+	defer fake.chunkMutex.Unlock()
 	fake.ChunkStub = nil
 	fake.chunkReturns = struct {
 		result1 [][]api_v0.Policy
@@ -65,6 +77,8 @@ func (fake *Chunker) ChunkReturns(result1 [][]api_v0.Policy) {
 }
 
 func (fake *Chunker) ChunkReturnsOnCall(i int, result1 [][]api_v0.Policy) {
+	fake.chunkMutex.Lock()
+	defer fake.chunkMutex.Unlock()
 	fake.ChunkStub = nil
 	if fake.chunkReturnsOnCall == nil {
 		fake.chunkReturnsOnCall = make(map[int]struct {

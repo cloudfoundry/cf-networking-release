@@ -17,7 +17,7 @@ type DestinationsCreate struct {
 	Logger                  lager.Logger
 }
 
-//go:generate counterfeiter -o fakes/egress_destination_store_creator.go --fake-name EgressDestinationStoreCreator . EgressDestinationStoreCreator
+//counterfeiter:generate -o fakes/egress_destination_store_creator.go --fake-name EgressDestinationStoreCreator . EgressDestinationStoreCreator
 type EgressDestinationStoreCreator interface {
 	Create([]store.EgressDestination) ([]store.EgressDestination, error)
 }

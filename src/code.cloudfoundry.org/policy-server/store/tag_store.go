@@ -6,7 +6,7 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 )
 
-//go:generate counterfeiter -o fakes/tag_store.go --fake-name TagStore . TagStore
+//counterfeiter:generate -o fakes/tag_store.go --fake-name TagStore . TagStore
 type TagStore interface {
 	CreateTag(string, string) (Tag, error)
 	Tags() ([]Tag, error)

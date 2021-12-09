@@ -12,18 +12,18 @@ import (
 	"code.cloudfoundry.org/policy-server/uaa_client"
 )
 
-//go:generate counterfeiter -o fakes/policy_guard.go --fake-name PolicyGuard . policyGuard
+//counterfeiter:generate -o fakes/policy_guard.go --fake-name PolicyGuard . policyGuard
 type policyGuard interface {
 	CheckAccess(policies []store.Policy, tokenData uaa_client.CheckTokenResponse) (bool, error)
 	IsNetworkAdmin(subjectToken uaa_client.CheckTokenResponse) bool
 }
 
-//go:generate counterfeiter -o fakes/quota_guard.go --fake-name QuotaGuard . quotaGuard
+//counterfeiter:generate -o fakes/quota_guard.go --fake-name QuotaGuard . quotaGuard
 type quotaGuard interface {
 	CheckAccess(policies []store.Policy, tokenData uaa_client.CheckTokenResponse) (bool, error)
 }
 
-//go:generate counterfeiter -o fakes/policy_store.go --fake-name PolicyStore . policyStore
+//counterfeiter:generate -o fakes/policy_store.go --fake-name PolicyStore . policyStore
 type policyStore interface {
 	Create([]store.Policy) error
 	Delete([]store.Policy) error
