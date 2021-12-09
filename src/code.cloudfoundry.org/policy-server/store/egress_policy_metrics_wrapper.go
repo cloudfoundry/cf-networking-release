@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-//go:generate counterfeiter -o fakes/egress_policy_store.go --fake-name EgressPolicyStore . egressPolicyStore
+//counterfeiter:generate -o fakes/egress_policy_store.go --fake-name EgressPolicyStore . egressPolicyStore
 type egressPolicyStore interface {
 	Create([]EgressPolicy) ([]EgressPolicy, error)
 	Delete(guids ...string) ([]EgressPolicy, error)

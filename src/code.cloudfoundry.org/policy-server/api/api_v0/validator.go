@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-//go:generate counterfeiter -o fakes/validator.go --fake-name PolicyValidator . validator
+//counterfeiter:generate -o fakes/validator.go --fake-name PolicyValidator . validator
 type validator interface {
 	ValidatePolicies(policies []Policy) error
 }

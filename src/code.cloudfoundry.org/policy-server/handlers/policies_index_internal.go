@@ -10,7 +10,7 @@ import (
 	"code.cloudfoundry.org/policy-server/store"
 )
 
-//go:generate counterfeiter -o fakes/egress_policy_store.go --fake-name EgressPolicyStore . egressPolicyStore
+//counterfeiter:generate -o fakes/egress_policy_store.go --fake-name EgressPolicyStore . egressPolicyStore
 type egressPolicyStore interface {
 	All() ([]store.EgressPolicy, error)
 	GetByFilter(sourceId, sourceType, destinationId, destinationName, appLifecycle []string) ([]store.EgressPolicy, error)

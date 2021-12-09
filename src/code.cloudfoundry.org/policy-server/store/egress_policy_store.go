@@ -6,7 +6,7 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 )
 
-//go:generate counterfeiter -o fakes/egress_policy_repo.go --fake-name EgressPolicyRepo . egressPolicyRepo
+//counterfeiter:generate -o fakes/egress_policy_repo.go --fake-name EgressPolicyRepo . egressPolicyRepo
 type egressPolicyRepo interface {
 	CreateApp(tx db.Transaction, sourceTerminalGUID string, appGUID string) (error)
 	CreateEgressPolicy(tx db.Transaction, sourceTerminalGUID, destinationTerminalGUID, appLifecycle string) (string, error)
@@ -25,7 +25,7 @@ type egressPolicyRepo interface {
 	IsTerminalInUse(tx db.Transaction, terminalGUID string) (bool, error)
 }
 
-//go:generate counterfeiter -o fakes/terminals_repo.go --fake-name TerminalsRepo . terminalsRepo
+//counterfeiter:generate -o fakes/terminals_repo.go --fake-name TerminalsRepo . terminalsRepo
 type terminalsRepo interface {
 	Create(tx db.Transaction) (string, error)
 	Delete(tx db.Transaction, terminalGUID string) error

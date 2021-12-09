@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-//go:generate counterfeiter -o fakes/rata_adapter.go --fake-name RataAdapter . rataAdapter
+//counterfeiter:generate -o fakes/rata_adapter.go --fake-name RataAdapter . rataAdapter
 type rataAdapter interface {
 	Param(*http.Request, string) string
 }

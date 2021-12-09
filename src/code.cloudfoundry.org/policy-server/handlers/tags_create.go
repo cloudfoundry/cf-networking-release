@@ -10,7 +10,7 @@ import (
 	"code.cloudfoundry.org/policy-server/store"
 )
 
-//go:generate counterfeiter -o fakes/create_tag_store.go --fake-name CreateTagDataStore . createTagDataStore
+//counterfeiter:generate -o fakes/create_tag_store.go --fake-name CreateTagDataStore . createTagDataStore
 type createTagDataStore interface {
 	CreateTag(string, string) (store.Tag, error)
 }

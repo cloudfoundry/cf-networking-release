@@ -17,7 +17,7 @@ type DestinationsUpdate struct {
 	Logger                  lager.Logger
 }
 
-//go:generate counterfeiter -o fakes/egress_destination_store_updater.go --fake-name EgressDestinationStoreUpdater . EgressDestinationStoreUpdater
+//counterfeiter:generate -o fakes/egress_destination_store_updater.go --fake-name EgressDestinationStoreUpdater . EgressDestinationStoreUpdater
 type EgressDestinationStoreUpdater interface {
 	Update([]store.EgressDestination) ([]store.EgressDestination, error)
 }

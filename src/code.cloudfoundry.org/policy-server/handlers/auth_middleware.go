@@ -20,7 +20,7 @@ const TokenDataKey = Key("tokenData")
 
 const MAX_REQ_BODY_SIZE = 10 << 20 // 10 MB
 
-//go:generate counterfeiter -o fakes/http_handler.go --fake-name HTTPHandler . http_handler
+//counterfeiter:generate -o fakes/http_handler.go --fake-name HTTPHandler . http_handler
 type http_handler interface {
 	http.Handler
 }

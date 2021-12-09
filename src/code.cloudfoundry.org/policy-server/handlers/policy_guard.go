@@ -3,16 +3,17 @@ package handlers
 import (
 	"fmt"
 
+	"code.cloudfoundry.org/policy-server/cc_client"
 	"code.cloudfoundry.org/policy-server/store"
 	"code.cloudfoundry.org/policy-server/uaa_client"
 )
 
 type PolicyGuard struct {
-	CCClient  ccClient
-	UAAClient uaaClient
+	CCClient  cc_client.CCClient
+	UAAClient uaa_client.UAAClient
 }
 
-func NewPolicyGuard(uaaClient uaaClient, ccClient ccClient) *PolicyGuard {
+func NewPolicyGuard(uaaClient uaa_client.UAAClient, ccClient cc_client.CCClient) *PolicyGuard {
 	return &PolicyGuard{
 		CCClient:  ccClient,
 		UAAClient: uaaClient,

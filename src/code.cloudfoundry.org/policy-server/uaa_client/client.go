@@ -1,5 +1,7 @@
 package uaa_client
 
+//go:generate counterfeiter -generate
+
 import (
 	"encoding/json"
 	"fmt"
@@ -19,6 +21,12 @@ func (r BadUaaResponse) Error() string {
 	return fmt.Sprintf("bad uaa response: %d: %s", r.StatusCode, r.UaaResponseBody)
 }
 
+//counterfeiter:generate -o fakes/uaa_client.go --fake-name UAAClient . UAAClient
+type UAAClient interface {
+	GetToken() (string, error)
+	CheckToken(string) (CheckTokenResponse, error)
+}
+
 type Client struct {
 	BaseURL    string
 	Name       string
@@ -27,7 +35,7 @@ type Client struct {
 	Logger     lager.Logger
 }
 
-//go:generate counterfeiter -o fakes/http_client.go --fake-name HTTPClient . httpClient
+//counterfeiter:generate -o fakes/http_client.go --fake-name HTTPClient . httpClient
 type httpClient interface {
 	Do(*http.Request) (*http.Response, error)
 }

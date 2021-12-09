@@ -10,8 +10,7 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/fakes"
 	"code.cloudfoundry.org/cf-networking-helpers/json_client"
 	"code.cloudfoundry.org/lager/lagertest"
-	"code.cloudfoundry.org/policy-server/api"
-	"code.cloudfoundry.org/policy-server/cc_client"
+	. "code.cloudfoundry.org/policy-server/cc_client"
 	"code.cloudfoundry.org/policy-server/cc_client/fixtures"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -19,7 +18,7 @@ import (
 
 var _ = Describe("Client", func() {
 	var (
-		client         *cc_client.Client
+		client         *Client
 		fakeJSONClient *fakes.JSONClient
 		logger         *lagertest.TestLogger
 	)
@@ -27,7 +26,7 @@ var _ = Describe("Client", func() {
 	BeforeEach(func() {
 		logger = lagertest.NewTestLogger("test")
 		fakeJSONClient = &fakes.JSONClient{}
-		client = &cc_client.Client{
+		client = &Client{
 			JSONClient: fakeJSONClient,
 			Logger:     logger,
 		}
@@ -293,9 +292,11 @@ var _ = Describe("Client", func() {
 		})
 
 		It("returns the space with the matching GUID", func() {
-			space := api.Space{
-				Name:    "name-2064",
-				OrgGUID: "6e1ca5aa-55f1-4110-a97f-1f3473e771b9",
+			space := SpaceResponse{
+				Entity: SpaceEntity{
+					Name:             "name-2064",
+					OrganizationGUID: "6e1ca5aa-55f1-4110-a97f-1f3473e771b9",
+				},
 			}
 
 			matchingSpace, err := client.GetSpace("some-token", "some-space-guid")
@@ -504,9 +505,11 @@ var _ = Describe("Client", func() {
 	})
 
 	Describe("GetSubjectSpace", func() {
-		space := api.Space{
-			Name:    "some-space-name",
-			OrgGUID: "some-org-guid",
+		space := SpaceResponse{
+			Entity: SpaceEntity{
+				Name:             "some-space-name",
+				OrganizationGUID: "some-org-guid",
+			},
 		}
 		BeforeEach(func() {
 			fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
@@ -528,7 +531,7 @@ var _ = Describe("Client", func() {
 			Expect(reqData).To(BeNil())
 			Expect(token).To(Equal("bearer some-token"))
 
-			Expect(matchingSpace).To(Equal(&space))
+			Expect(matchingSpace.Entity).To(Equal(space.Entity))
 		})
 
 		Context("when the subject has no spaces", func() {

@@ -3,10 +3,11 @@ package handlers_test
 import (
 	"errors"
 
+	ccfakes "code.cloudfoundry.org/policy-server/cc_client/fakes"
 	"code.cloudfoundry.org/policy-server/handlers"
-	"code.cloudfoundry.org/policy-server/handlers/fakes"
 	"code.cloudfoundry.org/policy-server/store"
 	"code.cloudfoundry.org/policy-server/uaa_client"
+	uaafakes "code.cloudfoundry.org/policy-server/uaa_client/fakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -14,15 +15,15 @@ import (
 var _ = Describe("PolicyFilter", func() {
 	var (
 		policyFilter  *handlers.PolicyFilter
-		fakeCCClient  *fakes.CCClient
-		fakeUAAClient *fakes.UAAClient
+		fakeCCClient  *ccfakes.CCClient
+		fakeUAAClient *uaafakes.UAAClient
 		tokenData     uaa_client.CheckTokenResponse
 		policies      []store.Policy
 	)
 
 	BeforeEach(func() {
-		fakeCCClient = &fakes.CCClient{}
-		fakeUAAClient = &fakes.UAAClient{}
+		fakeCCClient = &ccfakes.CCClient{}
+		fakeUAAClient = &uaafakes.UAAClient{}
 		policyFilter = &handlers.PolicyFilter{
 			CCClient:  fakeCCClient,
 			UAAClient: fakeUAAClient,

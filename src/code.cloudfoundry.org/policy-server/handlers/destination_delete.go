@@ -7,7 +7,7 @@ import (
 	"code.cloudfoundry.org/policy-server/store"
 )
 
-//go:generate counterfeiter -o fakes/egress_destination_store_deleter.go --fake-name EgressDestinationStoreDeleter . EgressDestinationStoreDeleter
+//counterfeiter:generate -o fakes/egress_destination_store_deleter.go --fake-name EgressDestinationStoreDeleter . EgressDestinationStoreDeleter
 type EgressDestinationStoreDeleter interface {
 	Delete(...string) ([]store.EgressDestination, error)
 }
