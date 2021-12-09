@@ -12,7 +12,7 @@ import (
 	"code.cloudfoundry.org/policy-server/uaa_client"
 )
 
-//go:generate counterfeiter -o fakes/egress_destination_store.go --fake-name EgressDestinationStore . EgressDestinationStore
+//counterfeiter:generate -o fakes/egress_destination_store.go --fake-name EgressDestinationStore . EgressDestinationStore
 type EgressDestinationStore interface {
 	GetByGUID(guid ...string) ([]store.EgressDestination, error)
 	GetByName(name ...string) ([]store.EgressDestination, error)

@@ -9,7 +9,7 @@ import (
 	"github.com/lib/pq"
 )
 
-//go:generate counterfeiter -o fakes/egress_destination_repo.go --fake-name EgressDestinationRepo . egressDestinationRepo
+//counterfeiter:generate -o fakes/egress_destination_repo.go --fake-name EgressDestinationRepo . egressDestinationRepo
 type egressDestinationRepo interface {
 	All(tx db.Transaction) ([]EgressDestination, error)
 	CreateIPRange(tx db.Transaction, destinationTerminalGUID, description, startIP, endIP, protocol string, startPort, endPort, icmpType, icmpCode int64) error
@@ -19,7 +19,7 @@ type egressDestinationRepo interface {
 	GetByName(tx db.Transaction, name ...string) ([]EgressDestination, error)
 }
 
-//go:generate counterfeiter -o fakes/destination_metadata_repo.go --fake-name DestinationMetadataRepo . destinationMetadataRepo
+//counterfeiter:generate -o fakes/destination_metadata_repo.go --fake-name DestinationMetadataRepo . destinationMetadataRepo
 type destinationMetadataRepo interface {
 	Delete(tx db.Transaction, terminalGUID string) error
 	Upsert(tx db.Transaction, terminalGUID, name, description string) error

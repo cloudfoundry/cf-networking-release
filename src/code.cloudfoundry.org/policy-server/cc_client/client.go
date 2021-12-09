@@ -1,5 +1,7 @@
 package cc_client
 
+//go:generate counterfeiter -generate
+
 import (
 	"fmt"
 	"net/http"
@@ -11,7 +13,7 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-//go:generate counterfeiter -o fakes/cc_client.go --fake-name CCClient . CCClient
+//counterfeiter:generate -o fakes/cc_client.go --fake-name CCClient . CCClient
 type CCClient interface {
 	GetAppSpaces(token string, appGUIDs []string) (map[string]string, error)
 	GetSpace(token, spaceGUID string) (*SpaceResponse, error)

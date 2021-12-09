@@ -1,5 +1,7 @@
 package cleaner
 
+//go:generate counterfeiter -generate
+
 import (
 	"fmt"
 
@@ -9,13 +11,13 @@ import (
 	"code.cloudfoundry.org/policy-server/uaa_client"
 )
 
-//go:generate counterfeiter -o fakes/policy_store.go --fake-name PolicyStore . policyStore
+//counterfeiter:generate -o fakes/policy_store.go --fake-name PolicyStore . policyStore
 type policyStore interface {
 	All() ([]store.Policy, error)
 	Delete([]store.Policy) error
 }
 
-//go:generate counterfeiter -o fakes/egress_policy_store.go --fake-name EgressPolicyStore . egressPolicyStore
+//counterfeiter:generate -o fakes/egress_policy_store.go --fake-name EgressPolicyStore . egressPolicyStore
 type egressPolicyStore interface {
 	All() ([]store.EgressPolicy, error)
 	Delete(guids ...string) ([]store.EgressPolicy, error)

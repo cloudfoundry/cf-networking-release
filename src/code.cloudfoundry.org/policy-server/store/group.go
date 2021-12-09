@@ -7,7 +7,7 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/db"
 )
 
-//go:generate counterfeiter -o fakes/group_repo.go --fake-name GroupRepo . GroupRepo
+//counterfeiter:generate -o fakes/group_repo.go --fake-name GroupRepo . GroupRepo
 type GroupRepo interface {
 	Create(db.Transaction, string, string) (int, error)
 	Delete(db.Transaction, int) error

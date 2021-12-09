@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-//go:generate counterfeiter -o fakes/metrics_sender.go --fake-name MetricsSender . metricsSender
+//counterfeiter:generate -o fakes/metrics_sender.go --fake-name MetricsSender . metricsSender
 type metricsSender interface {
 	IncrementCounter(string)
 	SendDuration(string, time.Duration)

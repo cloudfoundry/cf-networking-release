@@ -15,7 +15,7 @@ type EgressDestinationMapper struct {
 	PayloadValidator egressDestinationsValidator
 }
 
-//go:generate counterfeiter -o fakes/egress_destinations_validator.go --fake-name EgressDestinationsValidator . egressDestinationsValidator
+//counterfeiter:generate -o fakes/egress_destinations_validator.go --fake-name EgressDestinationsValidator . egressDestinationsValidator
 type egressDestinationsValidator interface {
 	ValidateEgressDestinations([]EgressDestination) error
 }
