@@ -13,6 +13,8 @@ import (
 	"code.cloudfoundry.org/policy-server/handlers"
 	"code.cloudfoundry.org/policy-server/handlers/fakes"
 	"code.cloudfoundry.org/policy-server/uaa_client"
+	uaafakes "code.cloudfoundry.org/policy-server/uaa_client/fakes"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -25,7 +27,7 @@ var _ = Describe("Authentication middleware", func() {
 		authenticator *handlers.Authenticator
 
 		resp                 *httptest.ResponseRecorder
-		uaaClient            *fakes.UAAClient
+		uaaClient            *uaafakes.UAAClient
 		logger               *lagertest.TestLogger
 		expectedLogger       lager.Logger
 		tokenResponse        uaa_client.CheckTokenResponse
@@ -40,7 +42,7 @@ var _ = Describe("Authentication middleware", func() {
 		request.Header.Set("Authorization", "Bearer correct-token")
 		request.RemoteAddr = "some-host:some-ip"
 
-		uaaClient = &fakes.UAAClient{}
+		uaaClient = &uaafakes.UAAClient{}
 		logger = lagertest.NewTestLogger("test")
 
 		expectedLogger = lager.NewLogger("test").Session("authentication")
