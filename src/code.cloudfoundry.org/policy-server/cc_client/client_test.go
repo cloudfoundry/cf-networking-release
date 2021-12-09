@@ -604,5 +604,16 @@ var _ = Describe("Client", func() {
 			Expect(rsp.Resources[0].Rules[0].Protocol).To(Equal("tcp"))
 			Expect(rsp.Resources[0].Rules[1].Protocol).To(Equal("icmp"))
 		})
+
+		Context("when the json client returns an error", func() {
+			BeforeEach(func() {
+				fakeJSONClient.DoReturns(errors.New("kissa ja undulaatti"))
+			})
+
+			It("returns a helpful error", func() {
+				_, err := client.GetSubjectSpaces("some-token", "some-subject-id")
+				Expect(err).To(MatchError(ContainSubstring("json client do: kissa ja undulaatti")))
+			})
+		})
 	})
 })
