@@ -22,11 +22,52 @@ type CCClient interface {
 	GetSubjectSpaces(token, subjectId string) (map[string]struct{}, error)
 	GetLiveAppGUIDs(token string, appGUIDs []string) (map[string]struct{}, error)
 	GetLiveSpaceGUIDs(token string, spaceGUIDs []string) (map[string]struct{}, error)
+	GetSecurityGroups(token string) (GetSecurityGroupsResponse, error)
 }
 
 type Client struct {
 	Logger     lager.Logger
 	JSONClient json_client.JsonClient
+}
+
+type GetSecurityGroupsResponse struct {
+	Pagination struct {
+		TotalPages int `json:"total_pages"`
+		First      struct {
+			Href string `json:"href"`
+		} `json:"first"`
+		Last struct {
+			Href string `json:"href"`
+		} `json:"last"`
+		Next struct {
+			Href string `json:"href"`
+		} `json:"next"`
+	} `json:"pagination"`
+	Resources []struct {
+		GUID            string `json:"guid"`
+		Name            string `json:"name"`
+		GloballyEnabled struct {
+			Running bool `json:"running"`
+			Staging bool `json:"staging"`
+		} `json:"globally_enabled"`
+		Rules []struct {
+			Protocol    string `json:"protocol"`
+			Destination string `json:"destination"`
+			Ports       string `json:"ports"`
+			Type        int    `json:"type"`
+			Code        int    `json:"code"`
+			Description string `json:"description"`
+			Log         bool   `json:"log"`
+		} `json:"rules"`
+		Relationships struct {
+			StagingSpaces struct {
+				Data []map[string]string `json:"data"`
+			} `json:"staging_spaces"`
+			RunningSpaces struct {
+				Data []map[string]string `json:"data"`
+			} `json:"running_spaces"`
+		} `json:"relationships"`
+	} `json:"resources"`
 }
 
 type AppsV3Response struct {
@@ -311,4 +352,32 @@ func (c *Client) GetSubjectSpaces(token, subjectId string) (map[string]struct{},
 	}
 
 	return subjectSpaces, nil
+}
+
+func (c *Client) GetSecurityGroups(token string) (*GetSecurityGroupsResponse, error) {
+	token = fmt.Sprintf("bearer %s", token)
+
+	// set := make(map[string]struct{})
+	// nextPage := "?"
+	// for nextPage != "" {
+	// 	queryParams := strings.Split(nextPage, "?")[1]
+	// 	response, err := c.makeAppsV3Request(queryParams, token)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	for _, resource := range response.Resources {
+	// 		set[resource.GUID] = struct{}{}
+	// 	}
+	// 	nextPage = response.Pagination.Next.Href
+	// }
+
+	route := "/v3/security_groups"
+
+	var response GetSecurityGroupsResponse
+	err := c.JSONClient.Do("GET", route, nil, &response, token)
+	if err != nil {
+		return nil, fmt.Errorf("json client do: %s", err)
+	}
+
+	return &response, nil
 }

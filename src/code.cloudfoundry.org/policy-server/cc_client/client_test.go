@@ -574,4 +574,35 @@ var _ = Describe("Client", func() {
 			})
 		})
 	})
+
+	FDescribe("GetSecurityGroups", func() {
+		BeforeEach(func() {
+			fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
+				_ = json.Unmarshal([]byte(fixtures.OneSecurityGroup), respData)
+				return nil
+			}
+		})
+
+		It("polls the Cloud Controller successfully", func() {
+			var rsp *GetSecurityGroupsResponse
+			var err error
+
+			rsp, err = client.GetSecurityGroups("some-token")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(fakeJSONClient.DoCallCount()).To(Equal(1))
+
+			method, route, reqData, _, _ := fakeJSONClient.DoArgsForCall(0)
+
+			Expect(method).To(Equal("GET"))
+			Expect(route).To(Equal("/v3/security_groups"))
+			Expect(reqData).To(BeNil())
+
+			Expect(rsp.Resources[0].Name).To(Equal("my-group0"))
+			Expect(rsp.Resources[0].GUID).To(Equal("b85a788e-671f-4549-814d-e34cdb2f539a"))
+			Expect(rsp.Resources[0].GloballyEnabled.Running).To(BeTrue())
+			Expect(rsp.Resources[0].GloballyEnabled.Staging).To(BeFalse())
+			Expect(rsp.Resources[0].Rules[0].Protocol).To(Equal("tcp"))
+			Expect(rsp.Resources[0].Rules[1].Protocol).To(Equal("icmp"))
+		})
+	})
 })
