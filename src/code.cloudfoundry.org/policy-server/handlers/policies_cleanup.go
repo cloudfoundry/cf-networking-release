@@ -8,12 +8,12 @@ import (
 	"code.cloudfoundry.org/policy-server/store"
 )
 
-//go:generate counterfeiter -o fakes/policy_cleaner.go --fake-name PolicyCleaner . policyCleaner
+//counterfeiter:generate -o fakes/policy_cleaner.go --fake-name PolicyCleaner . policyCleaner
 type policyCleaner interface {
 	DeleteStalePolicies() ([]store.Policy, []store.EgressPolicy, error)
 }
 
-//go:generate counterfeiter -o fakes/error_response.go --fake-name ErrorResponse . errorResponse
+//counterfeiter:generate -o fakes/error_response.go --fake-name ErrorResponse . errorResponse
 type errorResponse interface {
 	InternalServerError(lager.Logger, http.ResponseWriter, error, string)
 	BadRequest(lager.Logger, http.ResponseWriter, error, string)

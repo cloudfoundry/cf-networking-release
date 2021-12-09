@@ -16,13 +16,13 @@ type DestinationsIndex struct {
 	Logger                  lager.Logger
 }
 
-//go:generate counterfeiter -o fakes/egress_destination_marshaller.go --fake-name EgressDestinationMarshaller . EgressDestinationMarshaller
+//counterfeiter:generate -o fakes/egress_destination_marshaller.go --fake-name EgressDestinationMarshaller . EgressDestinationMarshaller
 type EgressDestinationMarshaller interface {
 	AsBytes(egressDestinations []store.EgressDestination) ([]byte, error)
 	AsEgressDestinations([]byte) ([]store.EgressDestination, error)
 }
 
-//go:generate counterfeiter -o fakes/egress_destination_store_lister.go --fake-name EgressDestinationStoreLister . EgressDestinationStoreLister
+//counterfeiter:generate -o fakes/egress_destination_store_lister.go --fake-name EgressDestinationStoreLister . EgressDestinationStoreLister
 type EgressDestinationStoreLister interface {
 	All() ([]store.EgressDestination, error)
 	GetByGUID(guid ...string) ([]store.EgressDestination, error)

@@ -6,7 +6,9 @@ import (
 	"code.cloudfoundry.org/cf-networking-helpers/httperror"
 	"code.cloudfoundry.org/policy-server/api"
 	"code.cloudfoundry.org/policy-server/api/fakes"
+	ccfakes "code.cloudfoundry.org/policy-server/cc_client/fakes"
 	"code.cloudfoundry.org/policy-server/store"
+	uaafakes "code.cloudfoundry.org/policy-server/uaa_client/fakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -15,14 +17,14 @@ var _ = Describe("Egress PolicyValidator", func() {
 	var (
 		validator        api.EgressValidator
 		egressPolicies   []api.EgressPolicy
-		ccClient         *fakes.CCClient
-		uaaClient        *fakes.UAAClient
+		ccClient         *ccfakes.CCClient
+		uaaClient        *uaafakes.UAAClient
 		destinationStore *fakes.EgressDestinationStore
 	)
 
 	BeforeEach(func() {
-		ccClient = new(fakes.CCClient)
-		uaaClient = new(fakes.UAAClient)
+		ccClient = new(ccfakes.CCClient)
+		uaaClient = new(uaafakes.UAAClient)
 		destinationStore = new(fakes.EgressDestinationStore)
 		validator = api.EgressValidator{
 			CCClient:         ccClient,

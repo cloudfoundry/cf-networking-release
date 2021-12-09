@@ -2,17 +2,66 @@
 package fakes
 
 import (
+	"sync"
+
 	"code.cloudfoundry.org/lib/policy_client"
 	"code.cloudfoundry.org/policy-server/api"
 	"code.cloudfoundry.org/policy-server/api/api_v0"
-	"sync"
 )
 
 type ExternalPolicyClient struct {
-	GetPoliciesStub        func(token string) ([]api.Policy, error)
+	AddPoliciesStub        func(string, []api.Policy) error
+	addPoliciesMutex       sync.RWMutex
+	addPoliciesArgsForCall []struct {
+		arg1 string
+		arg2 []api.Policy
+	}
+	addPoliciesReturns struct {
+		result1 error
+	}
+	addPoliciesReturnsOnCall map[int]struct {
+		result1 error
+	}
+	AddPoliciesV0Stub        func(string, []api_v0.Policy) error
+	addPoliciesV0Mutex       sync.RWMutex
+	addPoliciesV0ArgsForCall []struct {
+		arg1 string
+		arg2 []api_v0.Policy
+	}
+	addPoliciesV0Returns struct {
+		result1 error
+	}
+	addPoliciesV0ReturnsOnCall map[int]struct {
+		result1 error
+	}
+	DeletePoliciesStub        func(string, []api.Policy) error
+	deletePoliciesMutex       sync.RWMutex
+	deletePoliciesArgsForCall []struct {
+		arg1 string
+		arg2 []api.Policy
+	}
+	deletePoliciesReturns struct {
+		result1 error
+	}
+	deletePoliciesReturnsOnCall map[int]struct {
+		result1 error
+	}
+	DeletePoliciesV0Stub        func(string, []api_v0.Policy) error
+	deletePoliciesV0Mutex       sync.RWMutex
+	deletePoliciesV0ArgsForCall []struct {
+		arg1 string
+		arg2 []api_v0.Policy
+	}
+	deletePoliciesV0Returns struct {
+		result1 error
+	}
+	deletePoliciesV0ReturnsOnCall map[int]struct {
+		result1 error
+	}
+	GetPoliciesStub        func(string) ([]api.Policy, error)
 	getPoliciesMutex       sync.RWMutex
 	getPoliciesArgsForCall []struct {
-		token string
+		arg1 string
 	}
 	getPoliciesReturns struct {
 		result1 []api.Policy
@@ -22,11 +71,11 @@ type ExternalPolicyClient struct {
 		result1 []api.Policy
 		result2 error
 	}
-	GetPoliciesByIDStub        func(token string, ids ...string) ([]api.Policy, error)
+	GetPoliciesByIDStub        func(string, ...string) ([]api.Policy, error)
 	getPoliciesByIDMutex       sync.RWMutex
 	getPoliciesByIDArgsForCall []struct {
-		token string
-		ids   []string
+		arg1 string
+		arg2 []string
 	}
 	getPoliciesByIDReturns struct {
 		result1 []api.Policy
@@ -36,10 +85,10 @@ type ExternalPolicyClient struct {
 		result1 []api.Policy
 		result2 error
 	}
-	GetPoliciesV0Stub        func(token string) ([]api_v0.Policy, error)
+	GetPoliciesV0Stub        func(string) ([]api_v0.Policy, error)
 	getPoliciesV0Mutex       sync.RWMutex
 	getPoliciesV0ArgsForCall []struct {
-		token string
+		arg1 string
 	}
 	getPoliciesV0Returns struct {
 		result1 []api_v0.Policy
@@ -49,11 +98,11 @@ type ExternalPolicyClient struct {
 		result1 []api_v0.Policy
 		result2 error
 	}
-	GetPoliciesV0ByIDStub        func(token string, ids ...string) ([]api_v0.Policy, error)
+	GetPoliciesV0ByIDStub        func(string, ...string) ([]api_v0.Policy, error)
 	getPoliciesV0ByIDMutex       sync.RWMutex
 	getPoliciesV0ByIDArgsForCall []struct {
-		token string
-		ids   []string
+		arg1 string
+		arg2 []string
 	}
 	getPoliciesV0ByIDReturns struct {
 		result1 []api_v0.Policy
@@ -63,73 +112,295 @@ type ExternalPolicyClient struct {
 		result1 []api_v0.Policy
 		result2 error
 	}
-	DeletePoliciesStub        func(token string, policies []api.Policy) error
-	deletePoliciesMutex       sync.RWMutex
-	deletePoliciesArgsForCall []struct {
-		token    string
-		policies []api.Policy
-	}
-	deletePoliciesReturns struct {
-		result1 error
-	}
-	deletePoliciesReturnsOnCall map[int]struct {
-		result1 error
-	}
-	DeletePoliciesV0Stub        func(token string, policies []api_v0.Policy) error
-	deletePoliciesV0Mutex       sync.RWMutex
-	deletePoliciesV0ArgsForCall []struct {
-		token    string
-		policies []api_v0.Policy
-	}
-	deletePoliciesV0Returns struct {
-		result1 error
-	}
-	deletePoliciesV0ReturnsOnCall map[int]struct {
-		result1 error
-	}
-	AddPoliciesStub        func(token string, policies []api.Policy) error
-	addPoliciesMutex       sync.RWMutex
-	addPoliciesArgsForCall []struct {
-		token    string
-		policies []api.Policy
-	}
-	addPoliciesReturns struct {
-		result1 error
-	}
-	addPoliciesReturnsOnCall map[int]struct {
-		result1 error
-	}
-	AddPoliciesV0Stub        func(token string, policies []api_v0.Policy) error
-	addPoliciesV0Mutex       sync.RWMutex
-	addPoliciesV0ArgsForCall []struct {
-		token    string
-		policies []api_v0.Policy
-	}
-	addPoliciesV0Returns struct {
-		result1 error
-	}
-	addPoliciesV0ReturnsOnCall map[int]struct {
-		result1 error
-	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *ExternalPolicyClient) GetPolicies(token string) ([]api.Policy, error) {
+func (fake *ExternalPolicyClient) AddPolicies(arg1 string, arg2 []api.Policy) error {
+	var arg2Copy []api.Policy
+	if arg2 != nil {
+		arg2Copy = make([]api.Policy, len(arg2))
+		copy(arg2Copy, arg2)
+	}
+	fake.addPoliciesMutex.Lock()
+	ret, specificReturn := fake.addPoliciesReturnsOnCall[len(fake.addPoliciesArgsForCall)]
+	fake.addPoliciesArgsForCall = append(fake.addPoliciesArgsForCall, struct {
+		arg1 string
+		arg2 []api.Policy
+	}{arg1, arg2Copy})
+	stub := fake.AddPoliciesStub
+	fakeReturns := fake.addPoliciesReturns
+	fake.recordInvocation("AddPolicies", []interface{}{arg1, arg2Copy})
+	fake.addPoliciesMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fakeReturns.result1
+}
+
+func (fake *ExternalPolicyClient) AddPoliciesCallCount() int {
+	fake.addPoliciesMutex.RLock()
+	defer fake.addPoliciesMutex.RUnlock()
+	return len(fake.addPoliciesArgsForCall)
+}
+
+func (fake *ExternalPolicyClient) AddPoliciesCalls(stub func(string, []api.Policy) error) {
+	fake.addPoliciesMutex.Lock()
+	defer fake.addPoliciesMutex.Unlock()
+	fake.AddPoliciesStub = stub
+}
+
+func (fake *ExternalPolicyClient) AddPoliciesArgsForCall(i int) (string, []api.Policy) {
+	fake.addPoliciesMutex.RLock()
+	defer fake.addPoliciesMutex.RUnlock()
+	argsForCall := fake.addPoliciesArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *ExternalPolicyClient) AddPoliciesReturns(result1 error) {
+	fake.addPoliciesMutex.Lock()
+	defer fake.addPoliciesMutex.Unlock()
+	fake.AddPoliciesStub = nil
+	fake.addPoliciesReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *ExternalPolicyClient) AddPoliciesReturnsOnCall(i int, result1 error) {
+	fake.addPoliciesMutex.Lock()
+	defer fake.addPoliciesMutex.Unlock()
+	fake.AddPoliciesStub = nil
+	if fake.addPoliciesReturnsOnCall == nil {
+		fake.addPoliciesReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.addPoliciesReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *ExternalPolicyClient) AddPoliciesV0(arg1 string, arg2 []api_v0.Policy) error {
+	var arg2Copy []api_v0.Policy
+	if arg2 != nil {
+		arg2Copy = make([]api_v0.Policy, len(arg2))
+		copy(arg2Copy, arg2)
+	}
+	fake.addPoliciesV0Mutex.Lock()
+	ret, specificReturn := fake.addPoliciesV0ReturnsOnCall[len(fake.addPoliciesV0ArgsForCall)]
+	fake.addPoliciesV0ArgsForCall = append(fake.addPoliciesV0ArgsForCall, struct {
+		arg1 string
+		arg2 []api_v0.Policy
+	}{arg1, arg2Copy})
+	stub := fake.AddPoliciesV0Stub
+	fakeReturns := fake.addPoliciesV0Returns
+	fake.recordInvocation("AddPoliciesV0", []interface{}{arg1, arg2Copy})
+	fake.addPoliciesV0Mutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fakeReturns.result1
+}
+
+func (fake *ExternalPolicyClient) AddPoliciesV0CallCount() int {
+	fake.addPoliciesV0Mutex.RLock()
+	defer fake.addPoliciesV0Mutex.RUnlock()
+	return len(fake.addPoliciesV0ArgsForCall)
+}
+
+func (fake *ExternalPolicyClient) AddPoliciesV0Calls(stub func(string, []api_v0.Policy) error) {
+	fake.addPoliciesV0Mutex.Lock()
+	defer fake.addPoliciesV0Mutex.Unlock()
+	fake.AddPoliciesV0Stub = stub
+}
+
+func (fake *ExternalPolicyClient) AddPoliciesV0ArgsForCall(i int) (string, []api_v0.Policy) {
+	fake.addPoliciesV0Mutex.RLock()
+	defer fake.addPoliciesV0Mutex.RUnlock()
+	argsForCall := fake.addPoliciesV0ArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *ExternalPolicyClient) AddPoliciesV0Returns(result1 error) {
+	fake.addPoliciesV0Mutex.Lock()
+	defer fake.addPoliciesV0Mutex.Unlock()
+	fake.AddPoliciesV0Stub = nil
+	fake.addPoliciesV0Returns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *ExternalPolicyClient) AddPoliciesV0ReturnsOnCall(i int, result1 error) {
+	fake.addPoliciesV0Mutex.Lock()
+	defer fake.addPoliciesV0Mutex.Unlock()
+	fake.AddPoliciesV0Stub = nil
+	if fake.addPoliciesV0ReturnsOnCall == nil {
+		fake.addPoliciesV0ReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.addPoliciesV0ReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *ExternalPolicyClient) DeletePolicies(arg1 string, arg2 []api.Policy) error {
+	var arg2Copy []api.Policy
+	if arg2 != nil {
+		arg2Copy = make([]api.Policy, len(arg2))
+		copy(arg2Copy, arg2)
+	}
+	fake.deletePoliciesMutex.Lock()
+	ret, specificReturn := fake.deletePoliciesReturnsOnCall[len(fake.deletePoliciesArgsForCall)]
+	fake.deletePoliciesArgsForCall = append(fake.deletePoliciesArgsForCall, struct {
+		arg1 string
+		arg2 []api.Policy
+	}{arg1, arg2Copy})
+	stub := fake.DeletePoliciesStub
+	fakeReturns := fake.deletePoliciesReturns
+	fake.recordInvocation("DeletePolicies", []interface{}{arg1, arg2Copy})
+	fake.deletePoliciesMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fakeReturns.result1
+}
+
+func (fake *ExternalPolicyClient) DeletePoliciesCallCount() int {
+	fake.deletePoliciesMutex.RLock()
+	defer fake.deletePoliciesMutex.RUnlock()
+	return len(fake.deletePoliciesArgsForCall)
+}
+
+func (fake *ExternalPolicyClient) DeletePoliciesCalls(stub func(string, []api.Policy) error) {
+	fake.deletePoliciesMutex.Lock()
+	defer fake.deletePoliciesMutex.Unlock()
+	fake.DeletePoliciesStub = stub
+}
+
+func (fake *ExternalPolicyClient) DeletePoliciesArgsForCall(i int) (string, []api.Policy) {
+	fake.deletePoliciesMutex.RLock()
+	defer fake.deletePoliciesMutex.RUnlock()
+	argsForCall := fake.deletePoliciesArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *ExternalPolicyClient) DeletePoliciesReturns(result1 error) {
+	fake.deletePoliciesMutex.Lock()
+	defer fake.deletePoliciesMutex.Unlock()
+	fake.DeletePoliciesStub = nil
+	fake.deletePoliciesReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *ExternalPolicyClient) DeletePoliciesReturnsOnCall(i int, result1 error) {
+	fake.deletePoliciesMutex.Lock()
+	defer fake.deletePoliciesMutex.Unlock()
+	fake.DeletePoliciesStub = nil
+	if fake.deletePoliciesReturnsOnCall == nil {
+		fake.deletePoliciesReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.deletePoliciesReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *ExternalPolicyClient) DeletePoliciesV0(arg1 string, arg2 []api_v0.Policy) error {
+	var arg2Copy []api_v0.Policy
+	if arg2 != nil {
+		arg2Copy = make([]api_v0.Policy, len(arg2))
+		copy(arg2Copy, arg2)
+	}
+	fake.deletePoliciesV0Mutex.Lock()
+	ret, specificReturn := fake.deletePoliciesV0ReturnsOnCall[len(fake.deletePoliciesV0ArgsForCall)]
+	fake.deletePoliciesV0ArgsForCall = append(fake.deletePoliciesV0ArgsForCall, struct {
+		arg1 string
+		arg2 []api_v0.Policy
+	}{arg1, arg2Copy})
+	stub := fake.DeletePoliciesV0Stub
+	fakeReturns := fake.deletePoliciesV0Returns
+	fake.recordInvocation("DeletePoliciesV0", []interface{}{arg1, arg2Copy})
+	fake.deletePoliciesV0Mutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fakeReturns.result1
+}
+
+func (fake *ExternalPolicyClient) DeletePoliciesV0CallCount() int {
+	fake.deletePoliciesV0Mutex.RLock()
+	defer fake.deletePoliciesV0Mutex.RUnlock()
+	return len(fake.deletePoliciesV0ArgsForCall)
+}
+
+func (fake *ExternalPolicyClient) DeletePoliciesV0Calls(stub func(string, []api_v0.Policy) error) {
+	fake.deletePoliciesV0Mutex.Lock()
+	defer fake.deletePoliciesV0Mutex.Unlock()
+	fake.DeletePoliciesV0Stub = stub
+}
+
+func (fake *ExternalPolicyClient) DeletePoliciesV0ArgsForCall(i int) (string, []api_v0.Policy) {
+	fake.deletePoliciesV0Mutex.RLock()
+	defer fake.deletePoliciesV0Mutex.RUnlock()
+	argsForCall := fake.deletePoliciesV0ArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *ExternalPolicyClient) DeletePoliciesV0Returns(result1 error) {
+	fake.deletePoliciesV0Mutex.Lock()
+	defer fake.deletePoliciesV0Mutex.Unlock()
+	fake.DeletePoliciesV0Stub = nil
+	fake.deletePoliciesV0Returns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *ExternalPolicyClient) DeletePoliciesV0ReturnsOnCall(i int, result1 error) {
+	fake.deletePoliciesV0Mutex.Lock()
+	defer fake.deletePoliciesV0Mutex.Unlock()
+	fake.DeletePoliciesV0Stub = nil
+	if fake.deletePoliciesV0ReturnsOnCall == nil {
+		fake.deletePoliciesV0ReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.deletePoliciesV0ReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *ExternalPolicyClient) GetPolicies(arg1 string) ([]api.Policy, error) {
 	fake.getPoliciesMutex.Lock()
 	ret, specificReturn := fake.getPoliciesReturnsOnCall[len(fake.getPoliciesArgsForCall)]
 	fake.getPoliciesArgsForCall = append(fake.getPoliciesArgsForCall, struct {
-		token string
-	}{token})
-	fake.recordInvocation("GetPolicies", []interface{}{token})
+		arg1 string
+	}{arg1})
+	stub := fake.GetPoliciesStub
+	fakeReturns := fake.getPoliciesReturns
+	fake.recordInvocation("GetPolicies", []interface{}{arg1})
 	fake.getPoliciesMutex.Unlock()
-	if fake.GetPoliciesStub != nil {
-		return fake.GetPoliciesStub(token)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.getPoliciesReturns.result1, fake.getPoliciesReturns.result2
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *ExternalPolicyClient) GetPoliciesCallCount() int {
@@ -138,13 +409,22 @@ func (fake *ExternalPolicyClient) GetPoliciesCallCount() int {
 	return len(fake.getPoliciesArgsForCall)
 }
 
+func (fake *ExternalPolicyClient) GetPoliciesCalls(stub func(string) ([]api.Policy, error)) {
+	fake.getPoliciesMutex.Lock()
+	defer fake.getPoliciesMutex.Unlock()
+	fake.GetPoliciesStub = stub
+}
+
 func (fake *ExternalPolicyClient) GetPoliciesArgsForCall(i int) string {
 	fake.getPoliciesMutex.RLock()
 	defer fake.getPoliciesMutex.RUnlock()
-	return fake.getPoliciesArgsForCall[i].token
+	argsForCall := fake.getPoliciesArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *ExternalPolicyClient) GetPoliciesReturns(result1 []api.Policy, result2 error) {
+	fake.getPoliciesMutex.Lock()
+	defer fake.getPoliciesMutex.Unlock()
 	fake.GetPoliciesStub = nil
 	fake.getPoliciesReturns = struct {
 		result1 []api.Policy
@@ -153,6 +433,8 @@ func (fake *ExternalPolicyClient) GetPoliciesReturns(result1 []api.Policy, resul
 }
 
 func (fake *ExternalPolicyClient) GetPoliciesReturnsOnCall(i int, result1 []api.Policy, result2 error) {
+	fake.getPoliciesMutex.Lock()
+	defer fake.getPoliciesMutex.Unlock()
 	fake.GetPoliciesStub = nil
 	if fake.getPoliciesReturnsOnCall == nil {
 		fake.getPoliciesReturnsOnCall = make(map[int]struct {
@@ -166,22 +448,24 @@ func (fake *ExternalPolicyClient) GetPoliciesReturnsOnCall(i int, result1 []api.
 	}{result1, result2}
 }
 
-func (fake *ExternalPolicyClient) GetPoliciesByID(token string, ids ...string) ([]api.Policy, error) {
+func (fake *ExternalPolicyClient) GetPoliciesByID(arg1 string, arg2 ...string) ([]api.Policy, error) {
 	fake.getPoliciesByIDMutex.Lock()
 	ret, specificReturn := fake.getPoliciesByIDReturnsOnCall[len(fake.getPoliciesByIDArgsForCall)]
 	fake.getPoliciesByIDArgsForCall = append(fake.getPoliciesByIDArgsForCall, struct {
-		token string
-		ids   []string
-	}{token, ids})
-	fake.recordInvocation("GetPoliciesByID", []interface{}{token, ids})
+		arg1 string
+		arg2 []string
+	}{arg1, arg2})
+	stub := fake.GetPoliciesByIDStub
+	fakeReturns := fake.getPoliciesByIDReturns
+	fake.recordInvocation("GetPoliciesByID", []interface{}{arg1, arg2})
 	fake.getPoliciesByIDMutex.Unlock()
-	if fake.GetPoliciesByIDStub != nil {
-		return fake.GetPoliciesByIDStub(token, ids...)
+	if stub != nil {
+		return stub(arg1, arg2...)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.getPoliciesByIDReturns.result1, fake.getPoliciesByIDReturns.result2
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *ExternalPolicyClient) GetPoliciesByIDCallCount() int {
@@ -190,13 +474,22 @@ func (fake *ExternalPolicyClient) GetPoliciesByIDCallCount() int {
 	return len(fake.getPoliciesByIDArgsForCall)
 }
 
+func (fake *ExternalPolicyClient) GetPoliciesByIDCalls(stub func(string, ...string) ([]api.Policy, error)) {
+	fake.getPoliciesByIDMutex.Lock()
+	defer fake.getPoliciesByIDMutex.Unlock()
+	fake.GetPoliciesByIDStub = stub
+}
+
 func (fake *ExternalPolicyClient) GetPoliciesByIDArgsForCall(i int) (string, []string) {
 	fake.getPoliciesByIDMutex.RLock()
 	defer fake.getPoliciesByIDMutex.RUnlock()
-	return fake.getPoliciesByIDArgsForCall[i].token, fake.getPoliciesByIDArgsForCall[i].ids
+	argsForCall := fake.getPoliciesByIDArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *ExternalPolicyClient) GetPoliciesByIDReturns(result1 []api.Policy, result2 error) {
+	fake.getPoliciesByIDMutex.Lock()
+	defer fake.getPoliciesByIDMutex.Unlock()
 	fake.GetPoliciesByIDStub = nil
 	fake.getPoliciesByIDReturns = struct {
 		result1 []api.Policy
@@ -205,6 +498,8 @@ func (fake *ExternalPolicyClient) GetPoliciesByIDReturns(result1 []api.Policy, r
 }
 
 func (fake *ExternalPolicyClient) GetPoliciesByIDReturnsOnCall(i int, result1 []api.Policy, result2 error) {
+	fake.getPoliciesByIDMutex.Lock()
+	defer fake.getPoliciesByIDMutex.Unlock()
 	fake.GetPoliciesByIDStub = nil
 	if fake.getPoliciesByIDReturnsOnCall == nil {
 		fake.getPoliciesByIDReturnsOnCall = make(map[int]struct {
@@ -218,21 +513,23 @@ func (fake *ExternalPolicyClient) GetPoliciesByIDReturnsOnCall(i int, result1 []
 	}{result1, result2}
 }
 
-func (fake *ExternalPolicyClient) GetPoliciesV0(token string) ([]api_v0.Policy, error) {
+func (fake *ExternalPolicyClient) GetPoliciesV0(arg1 string) ([]api_v0.Policy, error) {
 	fake.getPoliciesV0Mutex.Lock()
 	ret, specificReturn := fake.getPoliciesV0ReturnsOnCall[len(fake.getPoliciesV0ArgsForCall)]
 	fake.getPoliciesV0ArgsForCall = append(fake.getPoliciesV0ArgsForCall, struct {
-		token string
-	}{token})
-	fake.recordInvocation("GetPoliciesV0", []interface{}{token})
+		arg1 string
+	}{arg1})
+	stub := fake.GetPoliciesV0Stub
+	fakeReturns := fake.getPoliciesV0Returns
+	fake.recordInvocation("GetPoliciesV0", []interface{}{arg1})
 	fake.getPoliciesV0Mutex.Unlock()
-	if fake.GetPoliciesV0Stub != nil {
-		return fake.GetPoliciesV0Stub(token)
+	if stub != nil {
+		return stub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.getPoliciesV0Returns.result1, fake.getPoliciesV0Returns.result2
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *ExternalPolicyClient) GetPoliciesV0CallCount() int {
@@ -241,13 +538,22 @@ func (fake *ExternalPolicyClient) GetPoliciesV0CallCount() int {
 	return len(fake.getPoliciesV0ArgsForCall)
 }
 
+func (fake *ExternalPolicyClient) GetPoliciesV0Calls(stub func(string) ([]api_v0.Policy, error)) {
+	fake.getPoliciesV0Mutex.Lock()
+	defer fake.getPoliciesV0Mutex.Unlock()
+	fake.GetPoliciesV0Stub = stub
+}
+
 func (fake *ExternalPolicyClient) GetPoliciesV0ArgsForCall(i int) string {
 	fake.getPoliciesV0Mutex.RLock()
 	defer fake.getPoliciesV0Mutex.RUnlock()
-	return fake.getPoliciesV0ArgsForCall[i].token
+	argsForCall := fake.getPoliciesV0ArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *ExternalPolicyClient) GetPoliciesV0Returns(result1 []api_v0.Policy, result2 error) {
+	fake.getPoliciesV0Mutex.Lock()
+	defer fake.getPoliciesV0Mutex.Unlock()
 	fake.GetPoliciesV0Stub = nil
 	fake.getPoliciesV0Returns = struct {
 		result1 []api_v0.Policy
@@ -256,6 +562,8 @@ func (fake *ExternalPolicyClient) GetPoliciesV0Returns(result1 []api_v0.Policy, 
 }
 
 func (fake *ExternalPolicyClient) GetPoliciesV0ReturnsOnCall(i int, result1 []api_v0.Policy, result2 error) {
+	fake.getPoliciesV0Mutex.Lock()
+	defer fake.getPoliciesV0Mutex.Unlock()
 	fake.GetPoliciesV0Stub = nil
 	if fake.getPoliciesV0ReturnsOnCall == nil {
 		fake.getPoliciesV0ReturnsOnCall = make(map[int]struct {
@@ -269,22 +577,24 @@ func (fake *ExternalPolicyClient) GetPoliciesV0ReturnsOnCall(i int, result1 []ap
 	}{result1, result2}
 }
 
-func (fake *ExternalPolicyClient) GetPoliciesV0ByID(token string, ids ...string) ([]api_v0.Policy, error) {
+func (fake *ExternalPolicyClient) GetPoliciesV0ByID(arg1 string, arg2 ...string) ([]api_v0.Policy, error) {
 	fake.getPoliciesV0ByIDMutex.Lock()
 	ret, specificReturn := fake.getPoliciesV0ByIDReturnsOnCall[len(fake.getPoliciesV0ByIDArgsForCall)]
 	fake.getPoliciesV0ByIDArgsForCall = append(fake.getPoliciesV0ByIDArgsForCall, struct {
-		token string
-		ids   []string
-	}{token, ids})
-	fake.recordInvocation("GetPoliciesV0ByID", []interface{}{token, ids})
+		arg1 string
+		arg2 []string
+	}{arg1, arg2})
+	stub := fake.GetPoliciesV0ByIDStub
+	fakeReturns := fake.getPoliciesV0ByIDReturns
+	fake.recordInvocation("GetPoliciesV0ByID", []interface{}{arg1, arg2})
 	fake.getPoliciesV0ByIDMutex.Unlock()
-	if fake.GetPoliciesV0ByIDStub != nil {
-		return fake.GetPoliciesV0ByIDStub(token, ids...)
+	if stub != nil {
+		return stub(arg1, arg2...)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.getPoliciesV0ByIDReturns.result1, fake.getPoliciesV0ByIDReturns.result2
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *ExternalPolicyClient) GetPoliciesV0ByIDCallCount() int {
@@ -293,13 +603,22 @@ func (fake *ExternalPolicyClient) GetPoliciesV0ByIDCallCount() int {
 	return len(fake.getPoliciesV0ByIDArgsForCall)
 }
 
+func (fake *ExternalPolicyClient) GetPoliciesV0ByIDCalls(stub func(string, ...string) ([]api_v0.Policy, error)) {
+	fake.getPoliciesV0ByIDMutex.Lock()
+	defer fake.getPoliciesV0ByIDMutex.Unlock()
+	fake.GetPoliciesV0ByIDStub = stub
+}
+
 func (fake *ExternalPolicyClient) GetPoliciesV0ByIDArgsForCall(i int) (string, []string) {
 	fake.getPoliciesV0ByIDMutex.RLock()
 	defer fake.getPoliciesV0ByIDMutex.RUnlock()
-	return fake.getPoliciesV0ByIDArgsForCall[i].token, fake.getPoliciesV0ByIDArgsForCall[i].ids
+	argsForCall := fake.getPoliciesV0ByIDArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *ExternalPolicyClient) GetPoliciesV0ByIDReturns(result1 []api_v0.Policy, result2 error) {
+	fake.getPoliciesV0ByIDMutex.Lock()
+	defer fake.getPoliciesV0ByIDMutex.Unlock()
 	fake.GetPoliciesV0ByIDStub = nil
 	fake.getPoliciesV0ByIDReturns = struct {
 		result1 []api_v0.Policy
@@ -308,6 +627,8 @@ func (fake *ExternalPolicyClient) GetPoliciesV0ByIDReturns(result1 []api_v0.Poli
 }
 
 func (fake *ExternalPolicyClient) GetPoliciesV0ByIDReturnsOnCall(i int, result1 []api_v0.Policy, result2 error) {
+	fake.getPoliciesV0ByIDMutex.Lock()
+	defer fake.getPoliciesV0ByIDMutex.Unlock()
 	fake.GetPoliciesV0ByIDStub = nil
 	if fake.getPoliciesV0ByIDReturnsOnCall == nil {
 		fake.getPoliciesV0ByIDReturnsOnCall = make(map[int]struct {
@@ -321,225 +642,17 @@ func (fake *ExternalPolicyClient) GetPoliciesV0ByIDReturnsOnCall(i int, result1 
 	}{result1, result2}
 }
 
-func (fake *ExternalPolicyClient) DeletePolicies(token string, policies []api.Policy) error {
-	var policiesCopy []api.Policy
-	if policies != nil {
-		policiesCopy = make([]api.Policy, len(policies))
-		copy(policiesCopy, policies)
-	}
-	fake.deletePoliciesMutex.Lock()
-	ret, specificReturn := fake.deletePoliciesReturnsOnCall[len(fake.deletePoliciesArgsForCall)]
-	fake.deletePoliciesArgsForCall = append(fake.deletePoliciesArgsForCall, struct {
-		token    string
-		policies []api.Policy
-	}{token, policiesCopy})
-	fake.recordInvocation("DeletePolicies", []interface{}{token, policiesCopy})
-	fake.deletePoliciesMutex.Unlock()
-	if fake.DeletePoliciesStub != nil {
-		return fake.DeletePoliciesStub(token, policies)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.deletePoliciesReturns.result1
-}
-
-func (fake *ExternalPolicyClient) DeletePoliciesCallCount() int {
-	fake.deletePoliciesMutex.RLock()
-	defer fake.deletePoliciesMutex.RUnlock()
-	return len(fake.deletePoliciesArgsForCall)
-}
-
-func (fake *ExternalPolicyClient) DeletePoliciesArgsForCall(i int) (string, []api.Policy) {
-	fake.deletePoliciesMutex.RLock()
-	defer fake.deletePoliciesMutex.RUnlock()
-	return fake.deletePoliciesArgsForCall[i].token, fake.deletePoliciesArgsForCall[i].policies
-}
-
-func (fake *ExternalPolicyClient) DeletePoliciesReturns(result1 error) {
-	fake.DeletePoliciesStub = nil
-	fake.deletePoliciesReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *ExternalPolicyClient) DeletePoliciesReturnsOnCall(i int, result1 error) {
-	fake.DeletePoliciesStub = nil
-	if fake.deletePoliciesReturnsOnCall == nil {
-		fake.deletePoliciesReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.deletePoliciesReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *ExternalPolicyClient) DeletePoliciesV0(token string, policies []api_v0.Policy) error {
-	var policiesCopy []api_v0.Policy
-	if policies != nil {
-		policiesCopy = make([]api_v0.Policy, len(policies))
-		copy(policiesCopy, policies)
-	}
-	fake.deletePoliciesV0Mutex.Lock()
-	ret, specificReturn := fake.deletePoliciesV0ReturnsOnCall[len(fake.deletePoliciesV0ArgsForCall)]
-	fake.deletePoliciesV0ArgsForCall = append(fake.deletePoliciesV0ArgsForCall, struct {
-		token    string
-		policies []api_v0.Policy
-	}{token, policiesCopy})
-	fake.recordInvocation("DeletePoliciesV0", []interface{}{token, policiesCopy})
-	fake.deletePoliciesV0Mutex.Unlock()
-	if fake.DeletePoliciesV0Stub != nil {
-		return fake.DeletePoliciesV0Stub(token, policies)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.deletePoliciesV0Returns.result1
-}
-
-func (fake *ExternalPolicyClient) DeletePoliciesV0CallCount() int {
-	fake.deletePoliciesV0Mutex.RLock()
-	defer fake.deletePoliciesV0Mutex.RUnlock()
-	return len(fake.deletePoliciesV0ArgsForCall)
-}
-
-func (fake *ExternalPolicyClient) DeletePoliciesV0ArgsForCall(i int) (string, []api_v0.Policy) {
-	fake.deletePoliciesV0Mutex.RLock()
-	defer fake.deletePoliciesV0Mutex.RUnlock()
-	return fake.deletePoliciesV0ArgsForCall[i].token, fake.deletePoliciesV0ArgsForCall[i].policies
-}
-
-func (fake *ExternalPolicyClient) DeletePoliciesV0Returns(result1 error) {
-	fake.DeletePoliciesV0Stub = nil
-	fake.deletePoliciesV0Returns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *ExternalPolicyClient) DeletePoliciesV0ReturnsOnCall(i int, result1 error) {
-	fake.DeletePoliciesV0Stub = nil
-	if fake.deletePoliciesV0ReturnsOnCall == nil {
-		fake.deletePoliciesV0ReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.deletePoliciesV0ReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *ExternalPolicyClient) AddPolicies(token string, policies []api.Policy) error {
-	var policiesCopy []api.Policy
-	if policies != nil {
-		policiesCopy = make([]api.Policy, len(policies))
-		copy(policiesCopy, policies)
-	}
-	fake.addPoliciesMutex.Lock()
-	ret, specificReturn := fake.addPoliciesReturnsOnCall[len(fake.addPoliciesArgsForCall)]
-	fake.addPoliciesArgsForCall = append(fake.addPoliciesArgsForCall, struct {
-		token    string
-		policies []api.Policy
-	}{token, policiesCopy})
-	fake.recordInvocation("AddPolicies", []interface{}{token, policiesCopy})
-	fake.addPoliciesMutex.Unlock()
-	if fake.AddPoliciesStub != nil {
-		return fake.AddPoliciesStub(token, policies)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.addPoliciesReturns.result1
-}
-
-func (fake *ExternalPolicyClient) AddPoliciesCallCount() int {
-	fake.addPoliciesMutex.RLock()
-	defer fake.addPoliciesMutex.RUnlock()
-	return len(fake.addPoliciesArgsForCall)
-}
-
-func (fake *ExternalPolicyClient) AddPoliciesArgsForCall(i int) (string, []api.Policy) {
-	fake.addPoliciesMutex.RLock()
-	defer fake.addPoliciesMutex.RUnlock()
-	return fake.addPoliciesArgsForCall[i].token, fake.addPoliciesArgsForCall[i].policies
-}
-
-func (fake *ExternalPolicyClient) AddPoliciesReturns(result1 error) {
-	fake.AddPoliciesStub = nil
-	fake.addPoliciesReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *ExternalPolicyClient) AddPoliciesReturnsOnCall(i int, result1 error) {
-	fake.AddPoliciesStub = nil
-	if fake.addPoliciesReturnsOnCall == nil {
-		fake.addPoliciesReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.addPoliciesReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *ExternalPolicyClient) AddPoliciesV0(token string, policies []api_v0.Policy) error {
-	var policiesCopy []api_v0.Policy
-	if policies != nil {
-		policiesCopy = make([]api_v0.Policy, len(policies))
-		copy(policiesCopy, policies)
-	}
-	fake.addPoliciesV0Mutex.Lock()
-	ret, specificReturn := fake.addPoliciesV0ReturnsOnCall[len(fake.addPoliciesV0ArgsForCall)]
-	fake.addPoliciesV0ArgsForCall = append(fake.addPoliciesV0ArgsForCall, struct {
-		token    string
-		policies []api_v0.Policy
-	}{token, policiesCopy})
-	fake.recordInvocation("AddPoliciesV0", []interface{}{token, policiesCopy})
-	fake.addPoliciesV0Mutex.Unlock()
-	if fake.AddPoliciesV0Stub != nil {
-		return fake.AddPoliciesV0Stub(token, policies)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.addPoliciesV0Returns.result1
-}
-
-func (fake *ExternalPolicyClient) AddPoliciesV0CallCount() int {
-	fake.addPoliciesV0Mutex.RLock()
-	defer fake.addPoliciesV0Mutex.RUnlock()
-	return len(fake.addPoliciesV0ArgsForCall)
-}
-
-func (fake *ExternalPolicyClient) AddPoliciesV0ArgsForCall(i int) (string, []api_v0.Policy) {
-	fake.addPoliciesV0Mutex.RLock()
-	defer fake.addPoliciesV0Mutex.RUnlock()
-	return fake.addPoliciesV0ArgsForCall[i].token, fake.addPoliciesV0ArgsForCall[i].policies
-}
-
-func (fake *ExternalPolicyClient) AddPoliciesV0Returns(result1 error) {
-	fake.AddPoliciesV0Stub = nil
-	fake.addPoliciesV0Returns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *ExternalPolicyClient) AddPoliciesV0ReturnsOnCall(i int, result1 error) {
-	fake.AddPoliciesV0Stub = nil
-	if fake.addPoliciesV0ReturnsOnCall == nil {
-		fake.addPoliciesV0ReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.addPoliciesV0ReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
 func (fake *ExternalPolicyClient) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.addPoliciesMutex.RLock()
+	defer fake.addPoliciesMutex.RUnlock()
+	fake.addPoliciesV0Mutex.RLock()
+	defer fake.addPoliciesV0Mutex.RUnlock()
+	fake.deletePoliciesMutex.RLock()
+	defer fake.deletePoliciesMutex.RUnlock()
+	fake.deletePoliciesV0Mutex.RLock()
+	defer fake.deletePoliciesV0Mutex.RUnlock()
 	fake.getPoliciesMutex.RLock()
 	defer fake.getPoliciesMutex.RUnlock()
 	fake.getPoliciesByIDMutex.RLock()
@@ -548,14 +661,6 @@ func (fake *ExternalPolicyClient) Invocations() map[string][][]interface{} {
 	defer fake.getPoliciesV0Mutex.RUnlock()
 	fake.getPoliciesV0ByIDMutex.RLock()
 	defer fake.getPoliciesV0ByIDMutex.RUnlock()
-	fake.deletePoliciesMutex.RLock()
-	defer fake.deletePoliciesMutex.RUnlock()
-	fake.deletePoliciesV0Mutex.RLock()
-	defer fake.deletePoliciesV0Mutex.RUnlock()
-	fake.addPoliciesMutex.RLock()
-	defer fake.addPoliciesMutex.RUnlock()
-	fake.addPoliciesV0Mutex.RLock()
-	defer fake.addPoliciesV0Mutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

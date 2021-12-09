@@ -2,7 +2,7 @@ package store
 
 import "fmt"
 
-//go:generate counterfeiter -o fakes/security_groups_store.go --fake-name SecurityGroupsStore . SecurityGroupsStore
+//counterfeiter:generate -o fakes/security_groups_store.go --fake-name SecurityGroupsStore . SecurityGroupsStore
 type SecurityGroupsStore interface {
 	Replace([]SecurityGroup) error
 }

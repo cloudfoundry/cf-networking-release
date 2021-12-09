@@ -1,17 +1,19 @@
 package api
 
+//go:generate counterfeiter -generate
+
 import "code.cloudfoundry.org/policy-server/store"
 
 var ICMPDefault = -1
 var AppLifecycleDefault = "all"
 
-//go:generate counterfeiter -o fakes/policy_mapper.go --fake-name PolicyMapper . PolicyMapper
+//counterfeiter:generate -o fakes/policy_mapper.go --fake-name PolicyMapper . PolicyMapper
 type PolicyMapper interface {
 	AsStorePolicy([]byte) ([]store.Policy, error) // marshal
 	AsBytes([]store.Policy) ([]byte, error)       // unmarshal
 }
 
-//go:generate counterfeiter -o fakes/policy_collection_writer.go --fake-name PolicyCollectionWriter . PolicyCollectionWriter
+//counterfeiter:generate -o fakes/policy_collection_writer.go --fake-name PolicyCollectionWriter . PolicyCollectionWriter
 type PolicyCollectionWriter interface {
 	AsBytes([]store.Policy, []store.EgressPolicy) ([]byte, error) // unmarshal
 }
@@ -113,9 +115,4 @@ type Tag struct {
 	ID   string `json:"id"`
 	Tag  string `json:"tag"`
 	Type string `json:"type"`
-}
-
-type Space struct {
-	Name    string `json:"name"`
-	OrgGUID string `json:"organization_guid"`
 }
