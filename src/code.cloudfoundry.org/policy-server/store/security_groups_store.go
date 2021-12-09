@@ -2,11 +2,16 @@ package store
 
 import "fmt"
 
-type SecurityGroupsStore struct {
+//go:generate counterfeiter -o fakes/security_groups_store.go --fake-name SecurityGroupsStore . SecurityGroupsStore
+type SecurityGroupsStore interface {
+	Replace([]SecurityGroup) error
+}
+
+type SGStore struct {
 	Conn Database
 }
 
-func (sgs *SecurityGroupsStore) Replace(newSecurityGroups []SecurityGroup) error {
+func (sgs *SGStore) Replace(newSecurityGroups []SecurityGroup) error {
 	tx, err := sgs.Conn.Beginx()
 	if err != nil {
 		return fmt.Errorf("create transaction: %s", err)
@@ -51,7 +56,7 @@ func (sgs *SecurityGroupsStore) Replace(newSecurityGroups []SecurityGroup) error
 				group.Guid,
 			)
 			if err != nil {
-				return fmt.Errorf("adding staging security group association for %s (%s) to space %s: %s",
+				return fmt.Errorf("associating staging security group %s (%s) to space %s: %s",
 					group.Guid,
 					group.Name,
 					spaceGuid,
@@ -67,7 +72,7 @@ func (sgs *SecurityGroupsStore) Replace(newSecurityGroups []SecurityGroup) error
 				group.Guid,
 			)
 			if err != nil {
-				return fmt.Errorf("adding running security group association for %s (%s) to space %s: %s",
+				return fmt.Errorf("associating running security group %s (%s) to space %s: %s",
 					group.Guid,
 					group.Name,
 					spaceGuid,
