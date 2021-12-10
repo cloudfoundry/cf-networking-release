@@ -50,6 +50,19 @@ type CCClient struct {
 		result1 map[string]struct{}
 		result2 error
 	}
+	GetSecurityGroupsStub        func(string) ([]cc_client.SecurityGroupResource, error)
+	getSecurityGroupsMutex       sync.RWMutex
+	getSecurityGroupsArgsForCall []struct {
+		arg1 string
+	}
+	getSecurityGroupsReturns struct {
+		result1 []cc_client.SecurityGroupResource
+		result2 error
+	}
+	getSecurityGroupsReturnsOnCall map[int]struct {
+		result1 []cc_client.SecurityGroupResource
+		result2 error
+	}
 	GetSpaceStub        func(string, string) (*cc_client.SpaceResponse, error)
 	getSpaceMutex       sync.RWMutex
 	getSpaceArgsForCall []struct {
@@ -317,6 +330,70 @@ func (fake *CCClient) GetLiveSpaceGUIDsReturnsOnCall(i int, result1 map[string]s
 	}
 	fake.getLiveSpaceGUIDsReturnsOnCall[i] = struct {
 		result1 map[string]struct{}
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *CCClient) GetSecurityGroups(arg1 string) ([]cc_client.SecurityGroupResource, error) {
+	fake.getSecurityGroupsMutex.Lock()
+	ret, specificReturn := fake.getSecurityGroupsReturnsOnCall[len(fake.getSecurityGroupsArgsForCall)]
+	fake.getSecurityGroupsArgsForCall = append(fake.getSecurityGroupsArgsForCall, struct {
+		arg1 string
+	}{arg1})
+	stub := fake.GetSecurityGroupsStub
+	fakeReturns := fake.getSecurityGroupsReturns
+	fake.recordInvocation("GetSecurityGroups", []interface{}{arg1})
+	fake.getSecurityGroupsMutex.Unlock()
+	if stub != nil {
+		return stub(arg1)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *CCClient) GetSecurityGroupsCallCount() int {
+	fake.getSecurityGroupsMutex.RLock()
+	defer fake.getSecurityGroupsMutex.RUnlock()
+	return len(fake.getSecurityGroupsArgsForCall)
+}
+
+func (fake *CCClient) GetSecurityGroupsCalls(stub func(string) ([]cc_client.SecurityGroupResource, error)) {
+	fake.getSecurityGroupsMutex.Lock()
+	defer fake.getSecurityGroupsMutex.Unlock()
+	fake.GetSecurityGroupsStub = stub
+}
+
+func (fake *CCClient) GetSecurityGroupsArgsForCall(i int) string {
+	fake.getSecurityGroupsMutex.RLock()
+	defer fake.getSecurityGroupsMutex.RUnlock()
+	argsForCall := fake.getSecurityGroupsArgsForCall[i]
+	return argsForCall.arg1
+}
+
+func (fake *CCClient) GetSecurityGroupsReturns(result1 []cc_client.SecurityGroupResource, result2 error) {
+	fake.getSecurityGroupsMutex.Lock()
+	defer fake.getSecurityGroupsMutex.Unlock()
+	fake.GetSecurityGroupsStub = nil
+	fake.getSecurityGroupsReturns = struct {
+		result1 []cc_client.SecurityGroupResource
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *CCClient) GetSecurityGroupsReturnsOnCall(i int, result1 []cc_client.SecurityGroupResource, result2 error) {
+	fake.getSecurityGroupsMutex.Lock()
+	defer fake.getSecurityGroupsMutex.Unlock()
+	fake.GetSecurityGroupsStub = nil
+	if fake.getSecurityGroupsReturnsOnCall == nil {
+		fake.getSecurityGroupsReturnsOnCall = make(map[int]struct {
+			result1 []cc_client.SecurityGroupResource
+			result2 error
+		})
+	}
+	fake.getSecurityGroupsReturnsOnCall[i] = struct {
+		result1 []cc_client.SecurityGroupResource
 		result2 error
 	}{result1, result2}
 }
@@ -596,6 +673,8 @@ func (fake *CCClient) Invocations() map[string][][]interface{} {
 	defer fake.getLiveAppGUIDsMutex.RUnlock()
 	fake.getLiveSpaceGUIDsMutex.RLock()
 	defer fake.getLiveSpaceGUIDsMutex.RUnlock()
+	fake.getSecurityGroupsMutex.RLock()
+	defer fake.getSecurityGroupsMutex.RUnlock()
 	fake.getSpaceMutex.RLock()
 	defer fake.getSpaceMutex.RUnlock()
 	fake.getSpaceGUIDsMutex.RLock()

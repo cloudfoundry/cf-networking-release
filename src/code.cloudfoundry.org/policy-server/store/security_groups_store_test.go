@@ -18,7 +18,7 @@ import (
 
 var _ = Describe("SecurityGroupsStore", func() {
 	var (
-		securityGroupsStore    *store.SecurityGroupsStore
+		securityGroupsStore    *store.SGStore
 		dbConf                 dbHelper.Config
 		realDb                 *dbHelper.ConnWrapper
 		initialRules, newRules []store.SecurityGroup
