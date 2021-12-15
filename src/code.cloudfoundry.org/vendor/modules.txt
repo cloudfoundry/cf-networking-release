@@ -2,7 +2,7 @@
 ## explicit
 code.cloudfoundry.org/bbs/db/sqldb/helpers/monitor
 # code.cloudfoundry.org/cf-networking-helpers v0.0.0-20210929193536-efcc04207348
-## explicit
+## explicit; go 1.16
 code.cloudfoundry.org/cf-networking-helpers/db
 code.cloudfoundry.org/cf-networking-helpers/db/fakes
 code.cloudfoundry.org/cf-networking-helpers/fakes
@@ -22,13 +22,13 @@ code.cloudfoundry.org/cf-networking-helpers/testsupport/ports
 code.cloudfoundry.org/clock
 code.cloudfoundry.org/clock/fakeclock
 # code.cloudfoundry.org/debugserver v0.0.0-20210608171006-d7658ce493f4
-## explicit
+## explicit; go 1.16
 code.cloudfoundry.org/debugserver
 # code.cloudfoundry.org/filelock v0.0.0-20180314203404-13cd41364639
 ## explicit
 code.cloudfoundry.org/filelock
 # code.cloudfoundry.org/garden v0.0.0-20210813150702-ba711ea09ea2
-## explicit
+## explicit; go 1.16
 code.cloudfoundry.org/garden
 # code.cloudfoundry.org/lager v2.0.0+incompatible
 ## explicit
@@ -37,15 +37,16 @@ code.cloudfoundry.org/lager/lagerctx
 code.cloudfoundry.org/lager/lagerflags
 code.cloudfoundry.org/lager/lagertest
 # code.cloudfoundry.org/tlsconfig v0.0.0-20210615191307-5d92ef3894a7
-## explicit
+## explicit; go 1.16
 code.cloudfoundry.org/tlsconfig
 # example-apps/spammer v0.0.0-00010101000000-000000000000 => ../example-apps/spammer
-## explicit
+## explicit; go 1.16
 example-apps/spammer/api
 # github.com/benjamintf1/unmarshalledmatchers v1.0.0
-## explicit
+## explicit; go 1.14
 github.com/benjamintf1/unmarshalledmatchers
 # github.com/bmizerany/pat v0.0.0-20210406213842-e4b6760bdd6f
+## explicit
 github.com/bmizerany/pat
 # github.com/cf-container-networking/sql-migrate v0.0.0-20191108002617-83f2bdabdc5d
 ## explicit
@@ -83,6 +84,7 @@ github.com/cloudfoundry/gosteno/syslog
 # github.com/cloudfoundry/loggregatorlib v0.0.0-20170823162133-36eddf15ef12
 ## explicit
 # github.com/cloudfoundry/sonde-go v0.0.0-20171206171820-b33733203bb4
+## explicit
 github.com/cloudfoundry/sonde-go/events
 # github.com/containernetworking/cni v1.0.0 => github.com/containernetworking/cni v0.6.0
 ## explicit
@@ -96,46 +98,51 @@ github.com/containernetworking/cni/pkg/version
 ## explicit
 github.com/containernetworking/plugins/pkg/ns
 # github.com/coreos/go-iptables v0.6.0
-## explicit
+## explicit; go 1.16
 github.com/coreos/go-iptables/iptables
 # github.com/fsnotify/fsnotify v1.5.1
+## explicit; go 1.13
 github.com/fsnotify/fsnotify
 # github.com/go-sql-driver/mysql v1.6.0
-## explicit
+## explicit; go 1.10
 github.com/go-sql-driver/mysql
 # github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0
+## explicit; go 1.13
 github.com/go-task/slim-sprig
 # github.com/gogo/protobuf v1.1.1
+## explicit
 github.com/gogo/protobuf/gogoproto
 github.com/gogo/protobuf/proto
 github.com/gogo/protobuf/protoc-gen-gogo/descriptor
 # github.com/golang-jwt/jwt v3.2.2+incompatible
+## explicit
 github.com/golang-jwt/jwt
 # github.com/golang/protobuf v1.5.2
-## explicit
+## explicit; go 1.9
 github.com/golang/protobuf/proto
 github.com/golang/protobuf/ptypes
 github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/timestamp
 # github.com/gorilla/mux v1.8.0
-## explicit
+## explicit; go 1.12
 # github.com/jmoiron/sqlx v1.3.4
-## explicit
+## explicit; go 1.10
 github.com/jmoiron/sqlx
 github.com/jmoiron/sqlx/reflectx
 # github.com/lib/pq v1.10.3
-## explicit
+## explicit; go 1.13
 github.com/lib/pq
 github.com/lib/pq/oid
 github.com/lib/pq/scram
 # github.com/mailru/easyjson v0.0.0-20180823135443-60711f1a8329
+## explicit
 github.com/mailru/easyjson
 github.com/mailru/easyjson/buffer
 github.com/mailru/easyjson/jlexer
 github.com/mailru/easyjson/jwriter
 # github.com/montanaflynn/stats v0.6.6
-## explicit
+## explicit; go 1.13
 github.com/montanaflynn/stats
 # github.com/nats-io/gnatsd v1.4.1 => github.com/nats-io/gnatsd v1.1.1-0.20180411231007-da89364d9d43
 ## explicit
@@ -161,13 +168,14 @@ github.com/nats-io/nuid
 ## explicit
 github.com/nu7hatch/gouuid
 # github.com/nxadm/tail v1.4.8
+## explicit; go 1.13
 github.com/nxadm/tail
 github.com/nxadm/tail/ratelimiter
 github.com/nxadm/tail/util
 github.com/nxadm/tail/watch
 github.com/nxadm/tail/winfile
 # github.com/onsi/ginkgo v1.16.5
-## explicit
+## explicit; go 1.16
 github.com/onsi/ginkgo
 github.com/onsi/ginkgo/config
 github.com/onsi/ginkgo/extensions/table
@@ -198,7 +206,7 @@ github.com/onsi/ginkgo/reporters/stenographer/support/go-colorable
 github.com/onsi/ginkgo/reporters/stenographer/support/go-isatty
 github.com/onsi/ginkgo/types
 # github.com/onsi/gomega v1.17.0
-## explicit
+## explicit; go 1.16
 github.com/onsi/gomega
 github.com/onsi/gomega/format
 github.com/onsi/gomega/gbytes
@@ -223,7 +231,7 @@ github.com/pivotal-cf-experimental/rainmaker
 github.com/pivotal-cf-experimental/rainmaker/internal/documents
 github.com/pivotal-cf-experimental/rainmaker/internal/network
 # github.com/pivotal-cf-experimental/warrant v0.0.0-20211122194707-17385443920f
-## explicit
+## explicit; go 1.12
 github.com/pivotal-cf-experimental/warrant
 github.com/pivotal-cf-experimental/warrant/internal/documents
 github.com/pivotal-cf-experimental/warrant/internal/network
@@ -234,6 +242,7 @@ github.com/pivotal-cf/paraphernalia/secure/tlsconfig
 ## explicit
 github.com/pkg/errors
 # github.com/square/certstrap v1.2.0 => github.com/square/certstrap v1.1.1
+## explicit
 github.com/square/certstrap/depot
 github.com/square/certstrap/pkix
 # github.com/st3v/glager v0.3.0
@@ -251,10 +260,11 @@ github.com/tedsuo/rata
 # github.com/ziutek/mymysql v1.5.4
 ## explicit
 # golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
+## explicit; go 1.11
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
 # golang.org/x/net v0.0.0-20210825183410-e898025ed96a
-## explicit
+## explicit; go 1.17
 golang.org/x/net/context
 golang.org/x/net/dns/dnsmessage
 golang.org/x/net/html
@@ -267,7 +277,7 @@ golang.org/x/net/idna
 golang.org/x/net/internal/timeseries
 golang.org/x/net/trace
 # golang.org/x/sys v0.0.0-20210831042530-f4d43177bf5e
-## explicit
+## explicit; go 1.17
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
 golang.org/x/sys/windows
@@ -277,6 +287,7 @@ golang.org/x/sys/windows/svc/debug
 golang.org/x/sys/windows/svc/eventlog
 golang.org/x/sys/windows/svc/mgr
 # golang.org/x/text v0.3.7
+## explicit; go 1.17
 golang.org/x/text/encoding
 golang.org/x/text/encoding/charmap
 golang.org/x/text/encoding/htmlindex
@@ -298,11 +309,13 @@ golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 # golang.org/x/tools v0.0.0-20201224043029-2b0845dc783e
+## explicit; go 1.12
 golang.org/x/tools/go/ast/inspector
 # google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013
+## explicit; go 1.11
 google.golang.org/genproto/googleapis/rpc/status
 # google.golang.org/grpc v1.42.0
-## explicit
+## explicit; go 1.14
 google.golang.org/grpc
 google.golang.org/grpc/attributes
 google.golang.org/grpc/backoff
@@ -349,6 +362,7 @@ google.golang.org/grpc/stats
 google.golang.org/grpc/status
 google.golang.org/grpc/tap
 # google.golang.org/protobuf v1.27.1
+## explicit; go 1.9
 google.golang.org/protobuf/encoding/prototext
 google.golang.org/protobuf/encoding/protowire
 google.golang.org/protobuf/internal/descfmt
@@ -383,12 +397,13 @@ google.golang.org/protobuf/types/known/timestamppb
 ## explicit
 gopkg.in/gorp.v1
 # gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7
+## explicit
 gopkg.in/tomb.v1
 # gopkg.in/validator.v2 v2.0.0-20210331031555-b37d688a7fb0
 ## explicit
 gopkg.in/validator.v2
 # gopkg.in/yaml.v2 v2.4.0
-## explicit
+## explicit; go 1.15
 gopkg.in/yaml.v2
 # launchpad.net/gocheck v0.0.0-20140225173054-000000000087
 ## explicit
