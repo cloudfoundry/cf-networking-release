@@ -2,7 +2,6 @@ package cleaner_test
 
 import (
 	"errors"
-	"time"
 
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/policy-server/cleaner"
@@ -157,7 +156,7 @@ var _ = Describe("PolicyCleaner", func() {
 		fakeUAAClient = &fakes.UAAClient{}
 		fakeCCClient = &fakes.CCClient{}
 		logger = lagertest.NewTestLogger("test")
-		policyCleaner = cleaner.NewPolicyCleaner(logger, fakeStore, fakeEgressStore, fakeUAAClient, fakeCCClient, 0, 5*time.Second)
+		policyCleaner = cleaner.NewPolicyCleaner(logger, fakeStore, fakeEgressStore, fakeUAAClient, fakeCCClient, 0)
 
 		fakeUAAClient.GetTokenReturns("valid-token", nil)
 		fakeStore.AllReturns(c2cPolicies, nil)
@@ -219,7 +218,6 @@ var _ = Describe("PolicyCleaner", func() {
 				UAAClient:             fakeUAAClient,
 				CCClient:              fakeCCClient,
 				CCAppRequestChunkSize: 1,
-				RequestTimeout:        time.Duration(5) * time.Second,
 			}
 		})
 

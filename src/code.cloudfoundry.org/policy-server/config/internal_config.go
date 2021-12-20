@@ -24,7 +24,6 @@ type InternalConfig struct {
 	TagLength                                int       `json:"tag_length" validate:"nonzero"`
 	MetronAddress                            string    `json:"metron_address" validate:"nonzero"`
 	LogLevel                                 string    `json:"log_level"`
-	RequestTimeout                           int       `json:"request_timeout" validate:"min=1"`
 	MaxIdleConnections                       int       `json:"max_idle_connections" validate:"min=0"`
 	MaxOpenConnections                       int       `json:"max_open_connections" validate:"min=0"`
 	MaxConnectionsLifetimeSeconds            int       `json:"connections_max_lifetime_seconds" validate:"min=0"`

@@ -2,7 +2,6 @@ package cleaner
 
 import (
 	"fmt"
-	"time"
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/policy-server/store"
@@ -38,11 +37,10 @@ type PolicyCleaner struct {
 	UAAClient             uaaClient
 	CCClient              ccClient
 	CCAppRequestChunkSize int
-	RequestTimeout        time.Duration
 }
 
 func NewPolicyCleaner(logger lager.Logger, store policyStore, egressStore egressPolicyStore, uaaClient uaaClient,
-	ccClient ccClient, ccAppRequestChunkSize int, requestTimeout time.Duration) *PolicyCleaner {
+	ccClient ccClient, ccAppRequestChunkSize int) *PolicyCleaner {
 	return &PolicyCleaner{
 		Logger:                logger,
 		Store:                 store,
@@ -50,7 +48,6 @@ func NewPolicyCleaner(logger lager.Logger, store policyStore, egressStore egress
 		UAAClient:             uaaClient,
 		CCClient:              ccClient,
 		CCAppRequestChunkSize: ccAppRequestChunkSize,
-		RequestTimeout:        requestTimeout,
 	}
 }
 

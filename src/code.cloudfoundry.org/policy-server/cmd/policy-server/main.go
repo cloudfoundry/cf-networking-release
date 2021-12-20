@@ -257,7 +257,7 @@ func main() {
 	}
 
 	policyCleaner := cleaner.NewPolicyCleaner(logger.Session("policy-cleaner"), wrappedStore, egressPolicyStore, uaaClient,
-		ccClient, 100, time.Duration(5)*time.Second)
+		ccClient, 100)
 
 	policyCollectionWriter := api.NewPolicyCollectionWriter(marshal.MarshalFunc(json.Marshal))
 	policiesCleanupHandler := handlers.NewPoliciesCleanup(policyCollectionWriter, policyCleaner, errorResponse)

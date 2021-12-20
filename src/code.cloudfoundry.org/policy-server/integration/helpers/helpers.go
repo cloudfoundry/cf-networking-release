@@ -191,7 +191,6 @@ func DefaultTestConfigWithCCServer(dbConfig db.Config, metronAddress string, fix
 		MetronAddress:                   metronAddress,
 		CleanupInterval:                 60,
 		CCAppRequestChunkSize:           100,
-		RequestTimeout:                  10,
 		MaxPolicies:                     2,
 		EnableSpaceDeveloperSelfService: false,
 		DatabaseMigrationTimeout:        600,
@@ -209,7 +208,6 @@ func DefaultTestConfigWithCCServer(dbConfig db.Config, metronAddress string, fix
 		TagLength:                                1,
 		Database:                                 dbConfig,
 		MetronAddress:                            metronAddress,
-		RequestTimeout:                           10,
 		EnforceExperimentalDynamicEgressPolicies: true,
 	}
 	return externalConfig, internalConfig
