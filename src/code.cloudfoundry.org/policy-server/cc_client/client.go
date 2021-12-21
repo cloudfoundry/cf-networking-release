@@ -46,30 +46,32 @@ type GetSecurityGroupsResponse struct {
 	Resources []SecurityGroupResource `json:"resources"`
 }
 
+type SecurityGroupGloballyEnabled struct {
+	Running bool `json:"running"`
+	Staging bool `json:"staging"`
+}
+type SecurityGroupRule struct {
+	Protocol    string `json:"protocol"`
+	Destination string `json:"destination"`
+	Ports       string `json:"ports"`
+	Type        int    `json:"type"`
+	Code        int    `json:"code"`
+	Description string `json:"description"`
+	Log         bool   `json:"log"`
+}
+type SecurityGroupRelationships struct {
+	StagingSpaces SecurityGroupSpaceRelationship `json:"staging_spaces"`
+	RunningSpaces SecurityGroupSpaceRelationship `json:"running_spacres"`
+}
+type SecurityGroupSpaceRelationship struct {
+	Data []map[string]string `json:"data"`
+}
 type SecurityGroupResource struct {
-	GUID            string `json:"guid"`
-	Name            string `json:"name"`
-	GloballyEnabled struct {
-		Running bool `json:"running"`
-		Staging bool `json:"staging"`
-	} `json:"globally_enabled"`
-	Rules []struct {
-		Protocol    string `json:"protocol"`
-		Destination string `json:"destination"`
-		Ports       string `json:"ports"`
-		Type        int    `json:"type"`
-		Code        int    `json:"code"`
-		Description string `json:"description"`
-		Log         bool   `json:"log"`
-	} `json:"rules"`
-	Relationships struct {
-		StagingSpaces struct {
-			Data []map[string]string `json:"data"`
-		} `json:"staging_spaces"`
-		RunningSpaces struct {
-			Data []map[string]string `json:"data"`
-		} `json:"running_spaces"`
-	} `json:"relationships"`
+	GUID            string                       `json:"guid"`
+	Name            string                       `json:"name"`
+	GloballyEnabled SecurityGroupGloballyEnabled `json:"globally_enabled"`
+	Rules           []SecurityGroupRule          `json:"rules"`
+	Relationships   SecurityGroupRelationships   `json:"relationships"`
 }
 
 type AppsV3Response struct {
