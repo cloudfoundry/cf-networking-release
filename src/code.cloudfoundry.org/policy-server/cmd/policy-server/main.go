@@ -27,6 +27,7 @@ import (
 	"code.cloudfoundry.org/policy-server/adapter"
 	"code.cloudfoundry.org/policy-server/api"
 	"code.cloudfoundry.org/policy-server/api/api_v0"
+	"code.cloudfoundry.org/policy-server/asg_syncer"
 	"code.cloudfoundry.org/policy-server/cc_client"
 	"code.cloudfoundry.org/policy-server/cleaner"
 	"code.cloudfoundry.org/policy-server/config"
@@ -426,15 +427,24 @@ func main() {
 		}
 	}
 
+	asgSyncer := asg_syncer.NewASGSyncer(logger, securityGroupStore, uaaClient, , requestTimeout time.DurationccClient)
+
 	externalServer := common.InitServer(logger, serverTLSConfig, conf.ListenHost, conf.ListenPort, externalHandlers, externalRoutesWithOptions)
 	policyPoller := initPoller(logger, conf, policyCleaner)
 	debugServer := debugserver.Runner(fmt.Sprintf("%s:%d", conf.DebugServerHost, conf.DebugServerPort), reconfigurableSink)
+	asgPoller := initASGPoller(logger, conf, asgSyncer)
+
+	asgMembers := grouper.Members{}
+	if conf.ASGSyncInterval > 0 {
+		asgMembers = append(asgMembers, lock, asgPoller)
+	}
 
 	members := grouper.Members{
 		{"metrics_emitter", metricsEmitter},
 		{"http_server", externalServer},
 		{"policy-cleaner-poller", policyPoller},
 		{"debug-server", debugServer},
+		{"asg-poller", asgPoller},
 	}
 
 	logger.Info("starting external server", lager.Data{"listen-address": conf.ListenHost, "port": conf.ListenPort})
@@ -461,5 +471,15 @@ func initPoller(logger lager.Logger, conf *config.Config, policyCleaner *cleaner
 		Logger:          logger.Session("policy-cleaner-poller"),
 		PollInterval:    pollInterval,
 		SingleCycleFunc: policyCleaner.DeleteStalePoliciesWrapper,
+	}
+}
+
+func initASGPoller(logger lager.Logger, conf *config.Config, asgSyncer *asg_syncer.ASGSyncer) ifrit.Runner {
+	pollInterval := time.Duration(conf.ASGSyncInterval) * time.Second
+
+	return &poller.Poller{
+		Logger:          logger.Session("policy-cleaner-poller"),
+		PollInterval:    pollInterval,
+		SingleCycleFunc: asgSyncer,
 	}
 }
