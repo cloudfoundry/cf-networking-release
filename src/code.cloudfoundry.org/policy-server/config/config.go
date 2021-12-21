@@ -8,9 +8,11 @@ import (
 	validator "gopkg.in/validator.v2"
 
 	"code.cloudfoundry.org/cf-networking-helpers/db"
+	"code.cloudfoundry.org/locket"
 )
 
 type Config struct {
+	UUID                            string    `json:"uuid" validate:"nonzero"`
 	ListenHost                      string    `json:"listen_host" validate:"nonzero"`
 	ListenPort                      int       `json:"listen_port" validate:"nonzero"`
 	LogPrefix                       string    `json:"log_prefix" validate:"nonzero"`
@@ -33,6 +35,7 @@ type Config struct {
 	MetronAddress                   string    `json:"metron_address" validate:"nonzero"`
 	LogLevel                        string    `json:"log_level"`
 	CleanupInterval                 int       `json:"cleanup_interval" validate:"min=1"`
+	ASGSyncInterval                 int       `json:"asg_sync_interval" validate:"min=0"`
 	CCAppRequestChunkSize           int       `json:"cc_app_request_chunk_size"`
 	MaxPolicies                     int       `json:"max_policies" validate:"min=1"`
 	EnableSpaceDeveloperSelfService bool      `json:"enable_space_developer_self_service"`
@@ -40,6 +43,7 @@ type Config struct {
 	MaxIdleConnections              int       `json:"max_idle_connections" validate:"min=0"`
 	MaxOpenConnections              int       `json:"max_open_connections" validate:"min=0"`
 	MaxConnectionsLifetimeSeconds   int       `json:"connections_max_lifetime_seconds" validate:"min=0"`
+	locket.ClientLocketConfig
 }
 
 func (c *Config) Validate() error {
