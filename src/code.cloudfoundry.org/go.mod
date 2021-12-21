@@ -6,22 +6,26 @@ replace github.com/containernetworking/cni => github.com/containernetworking/cni
 
 replace github.com/containernetworking/plugins => github.com/containernetworking/plugins v0.6.0
 
-replace github.com/square/certstrap => github.com/square/certstrap v1.1.1
-
 replace github.com/nats-io/gnatsd => github.com/nats-io/gnatsd v1.1.1-0.20180411231007-da89364d9d43
 
 replace github.com/nats-io/nats-top => github.com/nats-io/nats-top v0.3.3-0.20160824043733-1c2a6920a922
 
 go 1.17
 
+replace github.com/hashicorp/consul => github.com/hashicorp/consul v0.7.0
+
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20210727125654-2ad50317f7ed
 	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20210929193536-efcc04207348
 	code.cloudfoundry.org/clock v1.0.0
+	code.cloudfoundry.org/consuladapter v0.0.0-20211122211027-9dbbfa656ee0
 	code.cloudfoundry.org/debugserver v0.0.0-20210608171006-d7658ce493f4
+	code.cloudfoundry.org/diego-logging-client v0.0.0-20211220190808-bd0d93324d64 // indirect
+	code.cloudfoundry.org/durationjson v0.0.0-20211123184609-ead4881606b1 // indirect
 	code.cloudfoundry.org/filelock v0.0.0-20180314203404-13cd41364639
 	code.cloudfoundry.org/garden v0.0.0-20210813150702-ba711ea09ea2
 	code.cloudfoundry.org/lager v2.0.0+incompatible
+	code.cloudfoundry.org/locket v0.0.0-20211014150347-5712a0767913
 	code.cloudfoundry.org/tlsconfig v0.0.0-20210615191307-5d92ef3894a7
 	example-apps/spammer v0.0.0-00010101000000-000000000000
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
@@ -52,7 +56,8 @@ require (
 	github.com/tedsuo/rata v1.0.0
 	golang.org/x/net v0.0.0-20210825183410-e898025ed96a
 	golang.org/x/sys v0.0.0-20210831042530-f4d43177bf5e
-	google.golang.org/grpc v1.42.0
+	google.golang.org/grpc v1.43.0
+	gopkg.in/gorp.v1 v1.7.2 // indirect
 	gopkg.in/validator.v2 v2.0.0-20210331031555-b37d688a7fb0
 	gopkg.in/yaml.v2 v2.4.0
 )
