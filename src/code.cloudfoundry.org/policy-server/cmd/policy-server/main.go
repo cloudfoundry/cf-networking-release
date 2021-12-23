@@ -110,7 +110,6 @@ func main() {
 	logger.Info("getting db connection", lager.Data{})
 	connectionPool, err := db.NewConnectionPool(
 		conf.Database,
-		conf.MaxOpenConnections,
 		conf.MaxIdleConnections,
 		time.Duration(conf.MaxConnectionsLifetimeSeconds)*time.Second,
 		logPrefix,
