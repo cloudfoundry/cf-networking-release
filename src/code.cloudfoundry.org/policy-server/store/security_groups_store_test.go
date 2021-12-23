@@ -16,7 +16,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("SecurityGroupsStore", func() {
+var _ = FDescribe("SecurityGroupsStore", func() {
 	var (
 		securityGroupsStore *store.SGStore
 		dbConf              dbHelper.Config

@@ -11,6 +11,7 @@ replace github.com/nats-io/gnatsd => github.com/nats-io/gnatsd v1.1.1-0.20180411
 replace github.com/nats-io/nats-top => github.com/nats-io/nats-top v0.3.3-0.20160824043733-1c2a6920a922
 
 go 1.17
+replace github.com/hashicorp/consul => github.com/hashicorp/consul v0.7.0
 
 replace github.com/hashicorp/consul => github.com/hashicorp/consul v0.7.0
 
