@@ -3,6 +3,7 @@ package testsupport
 import (
 	"fmt"
 	"net"
+	"net/url"
 	"strings"
 
 	"time"
@@ -70,7 +71,11 @@ func (c *CertWriter) WriteAndSign(commonName, caName string) (string, string, er
 
 	csr, err := pkix.CreateCertificateSigningRequest(
 		key, "", []net.IP{net.ParseIP("127.0.0.1")},
+<<<<<<< HEAD
 		[]string{commonName}, nil, "", "", "", "", commonName,
+=======
+		[]string{commonName}, []*url.URL{}, "", "", "", "", commonName,
+>>>>>>> Add locking + restart-on-failed-lock functionality
 	)
 	if err != nil {
 		return "", "", fmt.Errorf("create certificate request: %s", err)

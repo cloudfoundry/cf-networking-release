@@ -11,33 +11,47 @@ replace github.com/nats-io/gnatsd => github.com/nats-io/gnatsd v1.1.1-0.20180411
 replace github.com/nats-io/nats-top => github.com/nats-io/nats-top v0.3.3-0.20160824043733-1c2a6920a922
 
 go 1.17
-replace github.com/hashicorp/consul => github.com/hashicorp/consul v0.7.0
 
 replace github.com/hashicorp/consul => github.com/hashicorp/consul v0.7.0
 
 require (
-	code.cloudfoundry.org/bbs v0.0.0-20210727125654-2ad50317f7ed
-	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20210929193536-efcc04207348
+	code.cloudfoundry.org/bbs v0.0.0-20211221221754-f246cdd508e9
+	code.cloudfoundry.org/cf-networking-helpers v0.0.0-20211111210832-d3a705b8ebff
 	code.cloudfoundry.org/clock v1.0.0
-	code.cloudfoundry.org/consuladapter v0.0.0-20211122211027-9dbbfa656ee0
-	code.cloudfoundry.org/debugserver v0.0.0-20210608171006-d7658ce493f4
+	code.cloudfoundry.org/consuladapter v0.0.0-20211122211027-9dbbfa656ee0 // indirect
+	code.cloudfoundry.org/debugserver v0.0.0-20211123175613-a7ac7ce093eb
 	code.cloudfoundry.org/diego-logging-client v0.0.0-20211220190808-bd0d93324d64 // indirect
 	code.cloudfoundry.org/durationjson v0.0.0-20211123184609-ead4881606b1 // indirect
 	code.cloudfoundry.org/filelock v0.0.0-20180314203404-13cd41364639
 	code.cloudfoundry.org/garden v0.0.0-20210813150702-ba711ea09ea2
+	code.cloudfoundry.org/go-diodes v0.0.0-20211115184647-b584dd5df32c // indirect
+	code.cloudfoundry.org/inigo v0.0.0-20211021201637-031ac17b0ea6 // indirect
 	code.cloudfoundry.org/lager v2.0.0+incompatible
 	code.cloudfoundry.org/locket v0.0.0-20211014150347-5712a0767913
-	code.cloudfoundry.org/tlsconfig v0.0.0-20210615191307-5d92ef3894a7
+	code.cloudfoundry.org/rep v0.1441.2 // indirect
+	code.cloudfoundry.org/routing-info v0.0.0-20210811170011-d6736bca3081 // indirect
+	code.cloudfoundry.org/tlsconfig v0.0.0-20211123175040-23cc9f05b6b3
 	example-apps/spammer v0.0.0-00010101000000-000000000000
+	github.com/armon/go-metrics v0.3.10 // indirect
 	github.com/benjamintf1/unmarshalledmatchers v1.0.0
 	github.com/cf-container-networking/sql-migrate v0.0.0-20191108002617-83f2bdabdc5d
+	github.com/cloudfoundry-incubator/bbs v0.0.0-20211221221754-f246cdd508e9 // indirect
 	github.com/cloudfoundry-incubator/cf-test-helpers v1.0.0
+	github.com/cloudfoundry-incubator/executor v0.0.0-20211222191433-23e011088892 // indirect
 	github.com/cloudfoundry/dropsonde v1.0.0
+	github.com/cockroachdb/apd v1.1.0 // indirect
 	github.com/containernetworking/cni v1.0.0
 	github.com/containernetworking/plugins v1.0.0
 	github.com/coreos/go-iptables v0.6.0
 	github.com/go-sql-driver/mysql v1.6.0
+	github.com/go-test/deep v1.0.8 // indirect
+	github.com/gofrs/uuid v4.2.0+incompatible // indirect
 	github.com/golang/protobuf v1.5.2
+	github.com/hashicorp/consul v1.11.1 // indirect
+	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
+	github.com/hashicorp/serf v0.9.6 // indirect
+	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
+	github.com/jackc/pgx v3.6.2+incompatible // indirect
 	github.com/jmoiron/sqlx v1.3.4
 	github.com/lib/pq v1.10.3
 	github.com/montanaflynn/stats v0.6.6
@@ -51,12 +65,19 @@ require (
 	github.com/pivotal-cf-experimental/rainmaker v0.0.0-20160401052143-d533d01b7c52
 	github.com/pivotal-cf-experimental/warrant v0.0.0-20211122194707-17385443920f
 	github.com/pivotal-cf/paraphernalia v0.0.0-20180203224945-a64ae2051c20
+	github.com/pivotal-golang/clock v1.0.0 // indirect
+	github.com/pivotal-golang/lager v2.0.0+incompatible // indirect
 	github.com/pkg/errors v0.9.1
+	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/st3v/glager v0.3.0
 	github.com/tedsuo/ifrit v0.0.0-20191009134036-9a97d0632f00
 	github.com/tedsuo/rata v1.0.0
-	golang.org/x/net v0.0.0-20210825183410-e898025ed96a
-	golang.org/x/sys v0.0.0-20210831042530-f4d43177bf5e
+	github.com/vito/go-sse v1.0.0 // indirect
+	github.com/ziutek/mymysql v1.5.4 // indirect
+	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3 // indirect
+	golang.org/x/net v0.0.0-20220105145211-5b0dc2dfae98
+	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e
+	google.golang.org/genproto v0.0.0-20211223182754-3ac035c7e7cb // indirect
 	google.golang.org/grpc v1.43.0
 	gopkg.in/gorp.v1 v1.7.2 // indirect
 	gopkg.in/validator.v2 v2.0.0-20210331031555-b37d688a7fb0
@@ -67,10 +88,10 @@ require (
 	code.cloudfoundry.org/cfhttp/v2 v2.0.1-0.20210513172332-4c5ee488a657 // indirect
 	code.cloudfoundry.org/go-diodes v0.0.0-20190809170250-f77fb823c7ee // indirect
 	code.cloudfoundry.org/go-loggregator/v8 v8.0.5 // indirect
+	code.cloudfoundry.org/go-loggregator/v8 v8.0.5 // indirect
 	github.com/armon/go-metrics v0.0.0-20190430140413-ec5e00d3c878 // indirect
 	github.com/bmizerany/pat v0.0.0-20210406213842-e4b6760bdd6f // indirect
 	github.com/cloudfoundry/gosteno v0.0.0-20150423193413-0c8581caea35 // indirect
-	github.com/cloudfoundry/loggregatorlib v0.0.0-20170823162133-36eddf15ef12 // indirect
 	github.com/cloudfoundry/sonde-go v0.0.0-20171206171820-b33733203bb4 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0 // indirect
@@ -79,21 +100,20 @@ require (
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/hashicorp/consul v0.0.0-00010101000000-000000000000 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
+	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.0 // indirect
+	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/serf v0.9.5 // indirect
 	github.com/mailru/easyjson v0.0.0-20190626092158-b2ccc519800e // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/square/certstrap v1.2.0 // indirect
-	github.com/ziutek/mymysql v1.5.4 // indirect
-	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/tools v0.0.0-20210106214847-113979e3529a // indirect
 	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
-	launchpad.net/gocheck v0.0.0-20140225173054-000000000087 // indirect
 )
 
 replace example-apps/spammer => ../example-apps/spammer
