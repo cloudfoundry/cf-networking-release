@@ -5,9 +5,10 @@ import (
 	"net"
 	"strings"
 
+	"time"
+
 	"github.com/square/certstrap/depot"
 	"github.com/square/certstrap/pkix"
-	"time"
 )
 
 type CertWriter struct {
@@ -69,7 +70,7 @@ func (c *CertWriter) WriteAndSign(commonName, caName string) (string, string, er
 
 	csr, err := pkix.CreateCertificateSigningRequest(
 		key, "", []net.IP{net.ParseIP("127.0.0.1")},
-		[]string{commonName}, "", "", "", "", commonName,
+		[]string{commonName}, nil, "", "", "", "", commonName,
 	)
 	if err != nil {
 		return "", "", fmt.Errorf("create certificate request: %s", err)
