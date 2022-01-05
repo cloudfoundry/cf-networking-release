@@ -31,37 +31,48 @@ const (
 )
 
 const (
-	branchPerm = 0440
-	leafPerm   = 0444
+	BranchPerm = 0440
+	LeafPerm   = 0444
 )
 
 // CrtTag returns a tag corresponding to a certificate
 func CrtTag(prefix string) *Tag {
-	return &Tag{prefix + crtSuffix, leafPerm}
+	return &Tag{prefix + crtSuffix, LeafPerm}
 }
 
 // PrivKeyTag returns a tag corresponding to a private key
 func PrivKeyTag(prefix string) *Tag {
-	return &Tag{prefix + privKeySuffix, branchPerm}
+	return &Tag{prefix + privKeySuffix, BranchPerm}
 }
 
 // CsrTag returns a tag corresponding to a certificate signature request file
 func CsrTag(prefix string) *Tag {
-	return &Tag{prefix + csrSuffix, leafPerm}
+	return &Tag{prefix + csrSuffix, LeafPerm}
 }
 
 // CrlTag returns a tag corresponding to a certificate revocation list
 func CrlTag(prefix string) *Tag {
-	return &Tag{prefix + crlSuffix, leafPerm}
+	return &Tag{prefix + crlSuffix, LeafPerm}
 }
 
 // GetNameFromCrtTag returns the host name from a certificate file tag
 func GetNameFromCrtTag(tag *Tag) string {
-	name := strings.TrimSuffix(tag.name, crtSuffix)
-	if name == tag.name {
-		return ""
-	}
-	return name
+	return getName(tag, crtSuffix)
+}
+
+// GetNameFromPrivKeyTag returns the host name from a private key file tag
+func GetNameFromPrivKeyTag(tag *Tag) string {
+	return getName(tag, privKeySuffix)
+}
+
+// GetNameFromCsrTag returns the host name from a certificate request file tag
+func GetNameFromCsrTag(tag *Tag) string {
+	return getName(tag, csrSuffix)
+}
+
+// GetNameFromCrlTag returns the host name from a certificate revocation list file tag
+func GetNameFromCrlTag(tag *Tag) string {
+	return getName(tag, crlSuffix)
 }
 
 // PutCertificate creates a certificate file for a given CA name in the depot
@@ -168,4 +179,21 @@ func PutCertificateRevocationList(d Depot, name string, crl *pkix.CertificateRev
 		return err
 	}
 	return d.Put(CrlTag(name), b)
+}
+
+//GetCertificateRevocationList gets a CRL file for a given name and ca in the depot.
+func GetCertificateRevocationList(d Depot, name string) (*pkix.CertificateRevocationList, error) {
+	b, err := d.Get(CrlTag(name))
+	if err != nil {
+		return nil, err
+	}
+	return pkix.NewCertificateRevocationListFromPEM(b)
+}
+
+func getName(tag *Tag, suffix string) string {
+	name := strings.TrimSuffix(tag.name, suffix)
+	if name == tag.name {
+		return ""
+	}
+	return name
 }
