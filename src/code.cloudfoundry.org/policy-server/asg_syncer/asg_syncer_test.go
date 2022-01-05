@@ -3,14 +3,7 @@ package asg_syncer_test
 import (
 	"fmt"
 
-	"code.cloudfoundry.org/clock"
-	"code.cloudfoundry.org/consuladapter/consulrunner"
 	"code.cloudfoundry.org/lager/lagertest"
-	"code.cloudfoundry.org/locket"
-	locketconfig "code.cloudfoundry.org/locket/cmd/locket/config"
-	locketrunner "code.cloudfoundry.org/locket/cmd/locket/testrunner"
-	"code.cloudfoundry.org/locket/lock"
-	locketmodels "code.cloudfoundry.org/locket/models"
 	"code.cloudfoundry.org/policy-server/asg_syncer"
 	"code.cloudfoundry.org/policy-server/cc_client"
 	ccfakes "code.cloudfoundry.org/policy-server/cc_client/fakes"
@@ -19,9 +12,6 @@ import (
 	uaafakes "code.cloudfoundry.org/policy-server/uaa_client/fakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/onsi/gomega/gexec"
-	"github.com/tedsuo/ifrit"
-	"github.com/tedsuo/ifrit/ginkgomon"
 )
 
 var _ = Describe("ASGSyncer", func() {
@@ -129,99 +119,6 @@ var _ = Describe("ASGSyncer", func() {
 				}}))
 			})
 		})
-		Context("when acquiring a lock", func() {
-			Context("and the lock is already taken", func() {
-				var locketProcess ifrit.Process
-				var competingLockProcess ifrit.Process
-				var cr *consulrunner.ClusterRunner
-				var locketAddress string
-
-				BeforeEach(func() {
-
-					locketBinPath, err := gexec.Build("code.cloudfoundry.org/locket/cmd/locket", "-race")
-					Expect(err).NotTo(HaveOccurred())
-
-					locketPort := 123456
-					locketAddress = fmt.Sprintf("localhost:%d", locketPort)
-
-					cr = consulrunner.NewClusterRunner(
-						consulrunner.ClusterRunnerConfig{
-							StartingPort: int(123455),
-							NumNodes:     1,
-							Scheme:       "http",
-						},
-					)
-
-					locketRunner := locketrunner.NewLocketRunner(locketBinPath, func(cfg *locketconfig.LocketConfig) {
-						cfg.ConsulCluster = cr.ConsulCluster()
-						cfg.DatabaseConnectionString = "user:password@/locket"
-						cfg.DatabaseDriver = "mysql"
-						cfg.ListenAddress = locketAddress
-					})
-					locketProcess = ginkgomon.Invoke(locketRunner)
-
-					competingIdentifier := &locketmodels.Resource{
-						Key:      "policy-server-asg-syncher",
-						Owner:    "some-server",
-						TypeCode: locketmodels.LOCK,
-						Type:     locketmodels.LockType,
-					}
-
-					competingClient, _ := locket.NewClient(logger,
-						locketrunner.ClientLocketConfig(),
-					)
-					var competingLock = lock.NewLockRunner(
-						logger,
-						competingClient,
-						competingIdentifier,
-						locket.DefaultSessionTTLInSeconds,
-						clock.NewClock(),
-						locket.SQLRetryInterval,
-					)
-					competingLockProcess = ginkgomon.Invoke(competingLock)
-				})
-				AfterEach(func() {
-					ginkgomon.Kill(locketProcess)
-					ginkgomon.Kill(competingLockProcess)
-				})
-
-				FIt("doesn't poll capi or update the database", func() {
-					err := asgSyncer.Poll()
-					Expect(err).ToNot(HaveOccurred())
-					Expect(fakeCCClient.GetSecurityGroupsCallCount()).To(Equal(0))
-					Expect(fakeStore.ReplaceCallCount()).To(Equal(0))
-				})
-				It("debug logs that another policy-server has the lock", func() {
-					Expect(logger.Logs()).To(Equal("something"))
-				})
-			})
-			Context("and the lock is obtained successfully", func() {
-				It("polls CAPI and updates the database", func() {
-					err := asgSyncer.Poll()
-					Expect(err).ToNot(HaveOccurred())
-					Expect(fakeCCClient.GetSecurityGroupsCallCount()).To(Equal(1))
-					Expect(fakeStore.ReplaceCallCount()).To(Equal(1))
-				})
-				It("info logs that it is the leader now", func() {
-					Expect(logger.Logs()).To(Equal("something"))
-				})
-			})
-			Context("and an error occurs obtaining the lock", func() {
-				It("returns a relevant error", func() {
-					err := asgSyncer.Poll()
-					Expect(err).To(HaveOccurred())
-					Expect(err.Error()).To(Equal("uaa error"))
-
-				})
-				It("doesn't poll capi or update the database", func() {
-					asgSyncer.Poll()
-					Expect(fakeCCClient.GetSecurityGroupsCallCount()).To(Equal(0))
-					Expect(fakeStore.ReplaceCallCount()).To(Equal(0))
-				})
-			})
-
-		})
-
 		Context("when errors occur", func() {
 
 			Context("getting a UAA token", func() {

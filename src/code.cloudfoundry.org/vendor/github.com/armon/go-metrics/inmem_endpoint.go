@@ -1,6 +1,10 @@
 package metrics
 
 import (
+<<<<<<< HEAD
+=======
+	"context"
+>>>>>>> Add locking + restart-on-failed-lock functionality
 	"fmt"
 	"net/http"
 	"sort"
@@ -68,6 +72,13 @@ func (i *InmemSink) DisplayMetrics(resp http.ResponseWriter, req *http.Request) 
 		interval = data[n-2]
 	}
 
+<<<<<<< HEAD
+=======
+	return newMetricSummaryFromInterval(interval), nil
+}
+
+func newMetricSummaryFromInterval(interval *IntervalMetrics) MetricsSummary {
+>>>>>>> Add locking + restart-on-failed-lock functionality
 	interval.RLock()
 	defer interval.RUnlock()
 
@@ -103,7 +114,11 @@ func (i *InmemSink) DisplayMetrics(resp http.ResponseWriter, req *http.Request) 
 	summary.Counters = formatSamples(interval.Counters)
 	summary.Samples = formatSamples(interval.Samples)
 
+<<<<<<< HEAD
 	return summary, nil
+=======
+	return summary
+>>>>>>> Add locking + restart-on-failed-lock functionality
 }
 
 func formatSamples(source map[string]SampledValue) []SampledValue {
@@ -129,3 +144,32 @@ func formatSamples(source map[string]SampledValue) []SampledValue {
 
 	return output
 }
+<<<<<<< HEAD
+=======
+
+type Encoder interface {
+	Encode(interface{}) error
+}
+
+// Stream writes metrics using encoder.Encode each time an interval ends. Runs
+// until the request context is cancelled, or the encoder returns an error.
+// The caller is responsible for logging any errors from encoder.
+func (i *InmemSink) Stream(ctx context.Context, encoder Encoder) {
+	interval := i.getInterval()
+
+	for {
+		select {
+		case <-interval.done:
+			summary := newMetricSummaryFromInterval(interval)
+			if err := encoder.Encode(summary); err != nil {
+				return
+			}
+
+			// update interval to the next one
+			interval = i.getInterval()
+		case <-ctx.Done():
+			return
+		}
+	}
+}
+>>>>>>> Add locking + restart-on-failed-lock functionality
