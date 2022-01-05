@@ -1,6 +1,10 @@
 ![diode][diode-logo]
 
+<<<<<<< HEAD
 [![GoDoc][go-doc-badge]][go-doc] [![travis][travis-badge]][travis]
+=======
+[![GoDoc][go-doc-badge]][go-doc]
+>>>>>>> Add locking + restart-on-failed-lock functionality
 
 Diodes are ring buffers manipulated via atomics.
 
@@ -155,5 +159,8 @@ encounter this issue.
 [diode-logo]:   https://raw.githubusercontent.com/cloudfoundry/go-diodes/gh-pages/diode-logo.png
 [go-doc-badge]: https://godoc.org/code.cloudfoundry.org/go-diodes?status.svg
 [go-doc]:       https://godoc.org/code.cloudfoundry.org/go-diodes
+<<<<<<< HEAD
 [travis-badge]: https://travis-ci.org/cloudfoundry/go-diodes.svg?branch=master
 [travis]:       https://travis-ci.org/cloudfoundry/go-diodes?branch=master
+=======
+>>>>>>> Add locking + restart-on-failed-lock functionality

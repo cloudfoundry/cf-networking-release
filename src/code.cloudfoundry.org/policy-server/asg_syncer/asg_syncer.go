@@ -1,5 +1,7 @@
 package asg_syncer
 
+//go:generate counterfeiter -generate
+
 import (
 	"encoding/json"
 	"fmt"
@@ -9,6 +11,11 @@ import (
 	"code.cloudfoundry.org/policy-server/store"
 	"code.cloudfoundry.org/policy-server/uaa_client"
 )
+
+//counterfeiter:generate -o fakes/asg_syncer.go --fake-name ASGSyncer . ASGSync
+type ASGSync interface {
+	Poll() error
+}
 
 type ASGSyncer struct {
 	Logger    lager.Logger

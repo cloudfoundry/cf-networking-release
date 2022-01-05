@@ -4,6 +4,7 @@
 package tools
 
 import (
+	_ "code.cloudfoundry.org/locket/cmd/locket"
 	_ "github.com/onsi/ginkgo/ginkgo"
 )
 
