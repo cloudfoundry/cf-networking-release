@@ -1,6 +1,10 @@
 package store
 
-import "fmt"
+import (
+	"fmt"
+
+	"code.cloudfoundry.org/policy-server/store/helpers"
+)
 
 //counterfeiter:generate -o fakes/security_groups_store.go --fake-name SecurityGroupsStore . SecurityGroupsStore
 type SecurityGroupsStore interface {
@@ -13,7 +17,51 @@ type SGStore struct {
 }
 
 func (sgs *SGStore) BySpaceGuids(spaceGuids []string, page Page) ([]SecurityGroup, Pagination, error) {
-	return nil, Pagination{}, nil
+	if len(spaceGuids) == 0 {
+		return nil, Pagination{}, nil
+	}
+
+	staging_security_groups_spaces_where := fmt.Sprintf("staging_security_groups_spaces.space_guid in (%s)", helpers.QuestionMarks(len(spaceGuids)))
+	running_security_groups_spaces_where := fmt.Sprintf("running_security_groups_spaces.space_guid in (%s)", helpers.QuestionMarks(len(spaceGuids)))
+
+	query := `
+		SELECT
+			guid,
+			name,
+			rules,
+			staging_default,
+			running_default
+		from security_groups
+		left outer join staging_security_groups_spaces on (security_groups.guid = staging_security_groups_spaces.security_group_guid)
+		left outer join running_security_groups_spaces on (security_groups.guid = running_security_groups_spaces.security_group_guid)
+		WHERE ` + staging_security_groups_spaces_where + ` OR ` + running_security_groups_spaces_where
+
+	// one for running and one for staging
+	whereBindings := make([]interface{}, len(spaceGuids)*2)
+	for i, spaceGuid := range spaceGuids {
+		whereBindings[i] = spaceGuid
+		whereBindings[i+len(spaceGuids)] = spaceGuid
+	}
+
+	rebindedQuery := helpers.RebindForSQLDialect(query, sgs.Conn.DriverName())
+	fmt.Println(rebindedQuery)
+	fmt.Println(whereBindings)
+	rows, err := sgs.Conn.Query(rebindedQuery, whereBindings...)
+	if err != nil {
+		return nil, Pagination{}, fmt.Errorf("selecting security groups: %s", err)
+	}
+	defer rows.Close()
+
+	result := []SecurityGroup{}
+	for rows.Next() {
+		var securityGroup SecurityGroup
+		err := rows.Scan(&securityGroup.Guid, &securityGroup.Name, &securityGroup.Rules, &securityGroup.StagingDefault, &securityGroup.RunningDefault)
+		if err != nil {
+			return nil, Pagination{}, fmt.Errorf("scanning security group result: %s", err)
+		}
+		result = append(result, securityGroup)
+	}
+	return result, Pagination{}, nil
 }
 
 func (sgs *SGStore) Replace(newSecurityGroups []SecurityGroup) error {
@@ -32,24 +80,33 @@ func (sgs *SGStore) Replace(newSecurityGroups []SecurityGroup) error {
 	if err != nil {
 		return fmt.Errorf("deleting staging security group associations: %s", err)
 	}
-	// _, err = tx.Exec(tx.Rebind("DELETE from security_groups"))
-	// if err != nil {
-	// 	return fmt.Errorf("deleting security groups: %s", err)
-	// }
+	_, err = tx.Exec(tx.Rebind("DELETE from security_groups"))
+	if err != nil {
+		return fmt.Errorf("deleting security groups: %s", err)
+	}
 
 	existingGuids := map[string]bool{}
-	rows, _ := tx.Queryx("SELECT guid FROM security_groups")
+	rows, err := tx.Queryx("SELECT guid FROM security_groups")
+	if err != nil {
+		return fmt.Errorf("selecting security groups: %s", err)
+	}
 	defer rows.Close()
 	for rows.Next() {
 		var guid string
-		rows.Scan(&guid)
+		err := rows.Scan(&guid)
+		if err != nil {
+			return fmt.Errorf("scanning security group result: %s", err)
+		}
 		existingGuids[guid] = true
 	}
 
 	// loop groups
 	for _, group := range newSecurityGroups {
 		delete(existingGuids, group.Guid)
-		result, _ := tx.Exec("UPDATE where guid=?")
+		result, err := tx.Exec("UPDATE security_groups SET name=?, rules=?, running_default=?, staging_default=? WHERE guid=?", group.Name, group.Rules, group.RunningDefault, group.StagingDefault, group.Guid)
+		if err != nil {
+			return fmt.Errorf("updating security group %s (%s): %s", group.Guid, group.Name, err)
+		}
 		affectedRows, _ := result.RowsAffected()
 		if affectedRows == 0 {
 			_, err = tx.Exec(tx.Rebind(`
@@ -102,7 +159,10 @@ func (sgs *SGStore) Replace(newSecurityGroups []SecurityGroup) error {
 	}
 
 	for guid := range existingGuids {
-		tx.Exec("DELETE FROM security_groups WHERE guid=?", guid)
+		_, err = tx.Exec("DELETE FROM security_groups WHERE guid=?", guid)
+		if err != nil {
+			return fmt.Errorf("deleting security groups: %s", err)
+		}
 	}
 
 	err = tx.Commit()
