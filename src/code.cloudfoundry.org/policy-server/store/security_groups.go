@@ -10,11 +10,12 @@ type SecurityGroup struct {
 	RunningSpaceGuids []string
 }
 
-type SpaceGuid string
-
-type SpaceSecurityGroupRules struct {
-	StagingRules []SecurityGroup
-	RunningRules []SecurityGroup
+type Page struct {
+	Limit int
+	From  int
 }
 
-type SecurityGroupRulesBySpace map[SpaceGuid]SpaceSecurityGroupRules
+type Pagination struct {
+	Next int
+	Prev int
+}
