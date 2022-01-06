@@ -134,6 +134,7 @@ module Bosh::Template::Test
       it 'creates a config/policy-server.json from properties' do
         config = JSON.parse(template.render(merged_manifest_properties))
         expect(config).to eq({
+          'uuid' => 'xxxxxx-xxxxxxxx-xxxxx',
           'listen_host' => '111.11.11.1',
           'listen_port' => 1234,
           'log_prefix' => 'cfnetworking',
