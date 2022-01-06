@@ -32,25 +32,39 @@ func (sgs *SGStore) Replace(newSecurityGroups []SecurityGroup) error {
 	if err != nil {
 		return fmt.Errorf("deleting staging security group associations: %s", err)
 	}
-	_, err = tx.Exec(tx.Rebind("DELETE from security_groups"))
-	if err != nil {
-		return fmt.Errorf("deleting security groups: %s", err)
+	// _, err = tx.Exec(tx.Rebind("DELETE from security_groups"))
+	// if err != nil {
+	// 	return fmt.Errorf("deleting security groups: %s", err)
+	// }
+
+	existingGuids := map[string]bool{}
+	rows, _ := tx.Queryx("SELECT guid FROM security_groups")
+	defer rows.Close()
+	for rows.Next() {
+		var guid string
+		rows.Scan(&guid)
+		existingGuids[guid] = true
 	}
 
 	// loop groups
 	for _, group := range newSecurityGroups {
-		_, err := tx.Exec(tx.Rebind(`
+		delete(existingGuids, group.Guid)
+		result, _ := tx.Exec("UPDATE where guid=?")
+		affectedRows, _ := result.RowsAffected()
+		if affectedRows == 0 {
+			_, err = tx.Exec(tx.Rebind(`
 			INSERT INTO security_groups
 			(guid, name, rules, running_default, staging_default)
 			VALUES(?, ?, ?, ?, ?)`),
-			group.Guid,
-			group.Name,
-			group.Rules,
-			group.RunningDefault,
-			group.StagingDefault,
-		)
-		if err != nil {
-			return fmt.Errorf("adding new security group %s (%s): %s", group.Guid, group.Name, err)
+				group.Guid,
+				group.Name,
+				group.Rules,
+				group.RunningDefault,
+				group.StagingDefault,
+			)
+			if err != nil {
+				return fmt.Errorf("adding new security group %s (%s): %s", group.Guid, group.Name, err)
+			}
 		}
 
 		for _, spaceGuid := range group.StagingSpaceGuids {
@@ -85,6 +99,10 @@ func (sgs *SGStore) Replace(newSecurityGroups []SecurityGroup) error {
 				)
 			}
 		}
+	}
+
+	for guid := range existingGuids {
+		tx.Exec("DELETE FROM security_groups WHERE guid=?", guid)
 	}
 
 	err = tx.Commit()
