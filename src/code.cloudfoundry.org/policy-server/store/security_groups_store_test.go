@@ -75,7 +75,27 @@ var _ = FDescribe("SecurityGroupsStore", func() {
 
 	AfterEach(func() {
 		Expect(realDb.Close()).To(Succeed())
-		testhelpers.RemoveDatabase(dbConf)
+		//testhelpers.RemoveDatabase(dbConf)
+	})
+
+	Describe("BySpaceGuids", func() {
+		BeforeEach(func() {
+			err := securityGroupsStore.Replace(initialRules)
+			Expect(err).ToNot(HaveOccurred())
+		})
+		FIt("fetches global asgs and asgs attached to provided spaces", func() {
+			securityGroups, _, err := securityGroupsStore.BySpaceGuids([]string{"first-space"}, store.Page{})
+			Expect(err).ToNot(HaveOccurred())
+
+			firstSpaceSG := store.SecurityGroup{
+				Guid:              "first-guid",
+				Name:              "first-name",
+				Rules:             "firstRules",
+				RunningSpaceGuids: []string{"first-space"},
+			}
+			Expect(len(securityGroups)).To(Equal(1))
+			Expect(securityGroups).To(ConsistOf(firstSpaceSG))
+		})
 	})
 
 	Describe("Replace", func() {
