@@ -12,6 +12,10 @@ templates:
   uaa_ca.crt.erb: config/certs/uaa_ca.crt
   cc_ca.crt.erb: config/certs/cc_ca.crt
   database_ca.crt.erb: config/certs/database_ca.crt
+
+  locket_ca.crt.erb: config/certs/locket_ca.crt
+  locket.crt.erb: config/certs/locket.crt
+  locket.key.erb: config/certs/locket.key
   
   post-start.erb: bin/post-start
   pre-start.erb: bin/pre-start
@@ -203,3 +207,24 @@ properties:
   allowed_cors_domains:
     description: "List of domains (including scheme) from which Cross-Origin requests will be accepted."
     default: []
+
+  asg_sync_enabled:
+    description: "Enables syncing of ASG data from CAPI for use with dynamic ASGs in silk-release"
+    default: true
+
+  asg_sync_interval:
+    description: "Interval in seconds that policy-server will poll CAPI for ASG data. Requires asg_sync_enabled. Must be > 0"
+    default: 60
+
+  locket_address:
+    description: "Hostname and port of the Locket server. Must be set when asg_sync_enabled is set to true."
+    default: "locket.service.cf.internal:8891"
+
+  locket_ca_cert:
+    description: "The CA certificiate for the CA for Locket."
+
+  locket_client_cert:
+    description: "The client certificate for Locket."
+
+  locket_client_key:
+    description: "The private key for Locket."
