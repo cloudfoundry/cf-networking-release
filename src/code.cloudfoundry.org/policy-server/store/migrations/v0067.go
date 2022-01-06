@@ -14,7 +14,7 @@ var migration_v0067a = map[string][]string{
 			rules mediumtext,
 			staging_default bool DEFAULT false,
 			running_default bool DEFAULT false,
-			UNIQUE (guid, name)
+			UNIQUE (guid)
 		);`,
 	},
 	"postgres": []string{
@@ -25,7 +25,7 @@ var migration_v0067a = map[string][]string{
 			rules text,
 			staging_default bool DEFAULT false,
 			running_default bool DEFAULT false,
-			UNIQUE (guid, name)
+			UNIQUE (guid)
 		);`,
 	},
 }

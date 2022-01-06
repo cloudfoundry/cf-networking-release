@@ -1,7 +1,9 @@
 package store
 
 import (
+	"database/sql"
 	"fmt"
+	"strings"
 
 	"code.cloudfoundry.org/policy-server/store/helpers"
 )
@@ -21,8 +23,7 @@ func (sgs *SGStore) BySpaceGuids(spaceGuids []string, page Page) ([]SecurityGrou
 		return nil, Pagination{}, nil
 	}
 
-	staging_security_groups_spaces_where := fmt.Sprintf("staging_security_groups_spaces.space_guid in (%s)", helpers.QuestionMarks(len(spaceGuids)))
-	running_security_groups_spaces_where := fmt.Sprintf("running_security_groups_spaces.space_guid in (%s)", helpers.QuestionMarks(len(spaceGuids)))
+	whereClause := fmt.Sprintf("space_guid IN (%s)", helpers.QuestionMarks(len(spaceGuids)))
 
 	query := `
 		SELECT
@@ -30,11 +31,16 @@ func (sgs *SGStore) BySpaceGuids(spaceGuids []string, page Page) ([]SecurityGrou
 			name,
 			rules,
 			staging_default,
-			running_default
-		from security_groups
-		left outer join staging_security_groups_spaces on (security_groups.guid = staging_security_groups_spaces.security_group_guid)
-		left outer join running_security_groups_spaces on (security_groups.guid = running_security_groups_spaces.security_group_guid)
-		WHERE ` + staging_security_groups_spaces_where + ` OR ` + running_security_groups_spaces_where
+			running_default,
+			(SELECT GROUP_CONCAT(space_guid SEPARATOR ',')
+				FROM staging_security_groups_spaces
+				WHERE security_group_guid=guid GROUP BY security_group_guid),
+			(SELECT GROUP_CONCAT(space_guid SEPARATOR ',')
+				FROM running_security_groups_spaces
+				WHERE security_group_guid=guid GROUP BY security_group_guid)
+		FROM security_groups
+		WHERE guid IN (SELECT security_group_guid FROM staging_security_groups_spaces WHERE ` + whereClause + `)
+			OR guid IN (SELECT security_group_guid FROM running_security_groups_spaces WHERE ` + whereClause + `)`
 
 	// one for running and one for staging
 	whereBindings := make([]interface{}, len(spaceGuids)*2)
@@ -44,8 +50,6 @@ func (sgs *SGStore) BySpaceGuids(spaceGuids []string, page Page) ([]SecurityGrou
 	}
 
 	rebindedQuery := helpers.RebindForSQLDialect(query, sgs.Conn.DriverName())
-	fmt.Println(rebindedQuery)
-	fmt.Println(whereBindings)
 	rows, err := sgs.Conn.Query(rebindedQuery, whereBindings...)
 	if err != nil {
 		return nil, Pagination{}, fmt.Errorf("selecting security groups: %s", err)
@@ -55,12 +59,29 @@ func (sgs *SGStore) BySpaceGuids(spaceGuids []string, page Page) ([]SecurityGrou
 	result := []SecurityGroup{}
 	for rows.Next() {
 		var securityGroup SecurityGroup
-		err := rows.Scan(&securityGroup.Guid, &securityGroup.Name, &securityGroup.Rules, &securityGroup.StagingDefault, &securityGroup.RunningDefault)
+		var stagingSpaceGuids sql.NullString
+		var runningSpaceGuids sql.NullString
+		err := rows.Scan(&securityGroup.Guid,
+			&securityGroup.Name,
+			&securityGroup.Rules,
+			&securityGroup.StagingDefault,
+			&securityGroup.RunningDefault,
+			&stagingSpaceGuids,
+			&runningSpaceGuids,
+		)
 		if err != nil {
 			return nil, Pagination{}, fmt.Errorf("scanning security group result: %s", err)
 		}
+
+		if stagingSpaceGuids.Valid {
+			securityGroup.StagingSpaceGuids = strings.Split(stagingSpaceGuids.String, ",")
+		}
+		if runningSpaceGuids.Valid {
+			securityGroup.RunningSpaceGuids = strings.Split(runningSpaceGuids.String, ",")
+		}
 		result = append(result, securityGroup)
 	}
+
 	return result, Pagination{}, nil
 }
 
@@ -103,7 +124,16 @@ func (sgs *SGStore) Replace(newSecurityGroups []SecurityGroup) error {
 	// loop groups
 	for _, group := range newSecurityGroups {
 		delete(existingGuids, group.Guid)
-		result, err := tx.Exec("UPDATE security_groups SET name=?, rules=?, running_default=?, staging_default=? WHERE guid=?", group.Name, group.Rules, group.RunningDefault, group.StagingDefault, group.Guid)
+
+		result, err := tx.Exec(tx.Rebind(`
+			UPDATE security_groups SET name=?, rules=?, running_default=?, staging_default=? 
+			WHERE guid=?`),
+			group.Name,
+			group.Rules,
+			group.RunningDefault,
+			group.StagingDefault,
+			group.Guid,
+		)
 		if err != nil {
 			return fmt.Errorf("updating security group %s (%s): %s", group.Guid, group.Name, err)
 		}
