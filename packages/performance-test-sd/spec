@@ -74,7 +74,6 @@ files:
   - code.cloudfoundry.org/vendor/golang.org/x/sys/windows/*.s # gosub
   - code.cloudfoundry.org/vendor/golang.org/x/sys/windows/registry/*.go # gosub
   - code.cloudfoundry.org/vendor/golang.org/x/sys/windows/svc/*.go # gosub
-  - code.cloudfoundry.org/vendor/golang.org/x/sys/windows/svc/*.s # gosub
   - code.cloudfoundry.org/vendor/golang.org/x/sys/windows/svc/debug/*.go # gosub
   - code.cloudfoundry.org/vendor/golang.org/x/sys/windows/svc/eventlog/*.go # gosub
   - code.cloudfoundry.org/vendor/golang.org/x/sys/windows/svc/mgr/*.go # gosub
