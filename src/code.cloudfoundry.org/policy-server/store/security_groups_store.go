@@ -5,12 +5,15 @@ import "fmt"
 //counterfeiter:generate -o fakes/security_groups_store.go --fake-name SecurityGroupsStore . SecurityGroupsStore
 type SecurityGroupsStore interface {
 	Replace([]SecurityGroup) error
-	BySpaceGuids([]string) (SecurityGroupRulesBySpace, error)
-	All() (SecurityGroupRulesBySpace, error)
+	BySpaceGuids([]string, Page) ([]SecurityGroup, Pagination, error)
 }
 
 type SGStore struct {
 	Conn Database
+}
+
+func (sgs *SGStore) BySpaceGuids(spaceGuids []string, page Page) ([]SecurityGroup, Pagination, error) {
+	return nil, Pagination{}, nil
 }
 
 func (sgs *SGStore) Replace(newSecurityGroups []SecurityGroup) error {
