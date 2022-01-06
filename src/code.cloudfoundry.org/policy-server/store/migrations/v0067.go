@@ -14,7 +14,9 @@ var migration_v0067a = map[string][]string{
 			rules mediumtext,
 			staging_default bool DEFAULT false,
 			running_default bool DEFAULT false,
-			UNIQUE (guid, name)
+			staging_spaces json,
+			running_spaces json,
+			UNIQUE (guid)
 		);`,
 	},
 	"postgres": []string{
@@ -25,49 +27,9 @@ var migration_v0067a = map[string][]string{
 			rules text,
 			staging_default bool DEFAULT false,
 			running_default bool DEFAULT false,
-			UNIQUE (guid, name)
-		);`,
-	},
-}
-
-var migration_v0067b = map[string][]string{
-	"mysql": []string{
-		`CREATE TABLE IF NOT EXISTS "staging_security_groups_spaces" (
-			space_guid varchar(36) NOT NULL,
-			security_group_guid varchar(36) NOT NULL,
-			CONSTRAINT staging_security_groups_spaces_id_fk
-				FOREIGN KEY (security_group_guid)
-				REFERENCES security_groups(guid),
-			PRIMARY KEY (space_guid, security_group_guid)
-		);`,
-	},
-	"postgres": []string{
-		`CREATE TABLE IF NOT EXISTS "staging_security_groups_spaces" (
-			space_guid varchar(36) NOT NULL,
-			security_group_guid varchar(36) NOT NULL,
-			FOREIGN KEY (security_group_guid) REFERENCES security_groups(guid),
-			PRIMARY KEY (space_guid, security_group_guid)
-		);`,
-	},
-}
-
-var migration_v0067c = map[string][]string{
-	"mysql": []string{
-		`CREATE TABLE IF NOT EXISTS "running_security_groups_spaces" (
-			space_guid varchar(36) NOT NULL,
-			security_group_guid varchar(36) NOT NULL,
-			CONSTRAINT running_security_groups_spaces_id_fk
-				FOREIGN KEY (security_group_guid)
-				REFERENCES security_groups(guid),
-			PRIMARY KEY (space_guid, security_group_guid)
-		);`,
-	},
-	"postgres": []string{
-		`CREATE TABLE IF NOT EXISTS "running_security_groups_spaces" (
-			space_guid varchar(36) NOT NULL,
-			security_group_guid varchar(36) NOT NULL,
-			FOREIGN KEY (security_group_guid) REFERENCES security_groups(guid),
-			PRIMARY KEY (space_guid, security_group_guid)
+			staging_spaces jsonb,
+			running_spaces jsonb,
+			UNIQUE (guid)
 		);`,
 	},
 }
