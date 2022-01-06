@@ -1,11 +1,5 @@
 package store
 
-type SpaceSecurityGroupRules struct {
-	SpaceGuid    string
-	StagingRules string
-	RunningRules string
-}
-
 type SecurityGroup struct {
 	Guid              string
 	Name              string
@@ -15,3 +9,12 @@ type SecurityGroup struct {
 	StagingSpaceGuids []string
 	RunningSpaceGuids []string
 }
+
+type SpaceGuid string
+
+type SpaceSecurityGroupRules struct {
+	StagingRules []SecurityGroup
+	RunningRules []SecurityGroup
+}
+
+type SecurityGroupRulesBySpace map[SpaceGuid]SpaceSecurityGroupRules

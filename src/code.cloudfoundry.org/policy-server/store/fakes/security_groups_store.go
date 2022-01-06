@@ -8,6 +8,22 @@ import (
 )
 
 type SecurityGroupsStore struct {
+	BySpaceGuidsStub        func([]string, store.Page) ([]store.SecurityGroup, store.Pagination, error)
+	bySpaceGuidsMutex       sync.RWMutex
+	bySpaceGuidsArgsForCall []struct {
+		arg1 []string
+		arg2 store.Page
+	}
+	bySpaceGuidsReturns struct {
+		result1 []store.SecurityGroup
+		result2 store.Pagination
+		result3 error
+	}
+	bySpaceGuidsReturnsOnCall map[int]struct {
+		result1 []store.SecurityGroup
+		result2 store.Pagination
+		result3 error
+	}
 	ReplaceStub        func([]store.SecurityGroup) error
 	replaceMutex       sync.RWMutex
 	replaceArgsForCall []struct {
@@ -21,6 +37,79 @@ type SecurityGroupsStore struct {
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
+}
+
+func (fake *SecurityGroupsStore) BySpaceGuids(arg1 []string, arg2 store.Page) ([]store.SecurityGroup, store.Pagination, error) {
+	var arg1Copy []string
+	if arg1 != nil {
+		arg1Copy = make([]string, len(arg1))
+		copy(arg1Copy, arg1)
+	}
+	fake.bySpaceGuidsMutex.Lock()
+	ret, specificReturn := fake.bySpaceGuidsReturnsOnCall[len(fake.bySpaceGuidsArgsForCall)]
+	fake.bySpaceGuidsArgsForCall = append(fake.bySpaceGuidsArgsForCall, struct {
+		arg1 []string
+		arg2 store.Page
+	}{arg1Copy, arg2})
+	stub := fake.BySpaceGuidsStub
+	fakeReturns := fake.bySpaceGuidsReturns
+	fake.recordInvocation("BySpaceGuids", []interface{}{arg1Copy, arg2})
+	fake.bySpaceGuidsMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2, ret.result3
+	}
+	return fakeReturns.result1, fakeReturns.result2, fakeReturns.result3
+}
+
+func (fake *SecurityGroupsStore) BySpaceGuidsCallCount() int {
+	fake.bySpaceGuidsMutex.RLock()
+	defer fake.bySpaceGuidsMutex.RUnlock()
+	return len(fake.bySpaceGuidsArgsForCall)
+}
+
+func (fake *SecurityGroupsStore) BySpaceGuidsCalls(stub func([]string, store.Page) ([]store.SecurityGroup, store.Pagination, error)) {
+	fake.bySpaceGuidsMutex.Lock()
+	defer fake.bySpaceGuidsMutex.Unlock()
+	fake.BySpaceGuidsStub = stub
+}
+
+func (fake *SecurityGroupsStore) BySpaceGuidsArgsForCall(i int) ([]string, store.Page) {
+	fake.bySpaceGuidsMutex.RLock()
+	defer fake.bySpaceGuidsMutex.RUnlock()
+	argsForCall := fake.bySpaceGuidsArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *SecurityGroupsStore) BySpaceGuidsReturns(result1 []store.SecurityGroup, result2 store.Pagination, result3 error) {
+	fake.bySpaceGuidsMutex.Lock()
+	defer fake.bySpaceGuidsMutex.Unlock()
+	fake.BySpaceGuidsStub = nil
+	fake.bySpaceGuidsReturns = struct {
+		result1 []store.SecurityGroup
+		result2 store.Pagination
+		result3 error
+	}{result1, result2, result3}
+}
+
+func (fake *SecurityGroupsStore) BySpaceGuidsReturnsOnCall(i int, result1 []store.SecurityGroup, result2 store.Pagination, result3 error) {
+	fake.bySpaceGuidsMutex.Lock()
+	defer fake.bySpaceGuidsMutex.Unlock()
+	fake.BySpaceGuidsStub = nil
+	if fake.bySpaceGuidsReturnsOnCall == nil {
+		fake.bySpaceGuidsReturnsOnCall = make(map[int]struct {
+			result1 []store.SecurityGroup
+			result2 store.Pagination
+			result3 error
+		})
+	}
+	fake.bySpaceGuidsReturnsOnCall[i] = struct {
+		result1 []store.SecurityGroup
+		result2 store.Pagination
+		result3 error
+	}{result1, result2, result3}
 }
 
 func (fake *SecurityGroupsStore) Replace(arg1 []store.SecurityGroup) error {
@@ -92,6 +181,8 @@ func (fake *SecurityGroupsStore) ReplaceReturnsOnCall(i int, result1 error) {
 func (fake *SecurityGroupsStore) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.bySpaceGuidsMutex.RLock()
+	defer fake.bySpaceGuidsMutex.RUnlock()
 	fake.replaceMutex.RLock()
 	defer fake.replaceMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
