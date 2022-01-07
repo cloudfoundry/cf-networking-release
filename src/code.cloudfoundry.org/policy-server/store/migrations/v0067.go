@@ -14,6 +14,8 @@ var migration_v0067a = map[string][]string{
 			rules mediumtext,
 			staging_default bool DEFAULT false,
 			running_default bool DEFAULT false,
+			staging_spaces json,
+			running_spaces json,
 			UNIQUE (guid)
 		);`,
 	},
@@ -25,6 +27,8 @@ var migration_v0067a = map[string][]string{
 			rules text,
 			staging_default bool DEFAULT false,
 			running_default bool DEFAULT false,
+			staging_spaces jsonb,
+			running_spaces jsonb,
 			UNIQUE (guid)
 		);`,
 	},

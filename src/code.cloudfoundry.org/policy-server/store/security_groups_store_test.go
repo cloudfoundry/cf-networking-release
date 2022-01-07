@@ -143,7 +143,7 @@ var _ = FDescribe("SecurityGroupsStore", func() {
 		})
 
 		Context("when one of the spaces of the security group wth multiple spaces is requested", func() {
-			FIt("returns that security group", func() {
+			It("returns that security group", func() {
 				securityGroups, _, err := securityGroupsStore.BySpaceGuids([]string{"space-e"}, store.Page{})
 				Expect(err).ToNot(HaveOccurred())
 				Expect(len(securityGroups)).To(Equal(1))
@@ -182,7 +182,7 @@ var _ = FDescribe("SecurityGroupsStore", func() {
 			It("returns all security groups in all requested spaces", func() {
 				securityGroups, _, err := securityGroupsStore.BySpaceGuids([]string{"space-e", "space-d"}, store.Page{})
 				Expect(err).ToNot(HaveOccurred())
-				Expect(len(securityGroups)).To(Equal(2))
+				// Expect(len(securityGroups)).To(Equal(2))
 				Expect(securityGroups).To(ConsistOf(store.SecurityGroup{
 					Guid:              "third-guid",
 					Name:              "third-name",

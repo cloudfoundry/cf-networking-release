@@ -1,9 +1,7 @@
 package store
 
 import (
-	"database/sql"
 	"fmt"
-	"strings"
 
 	"code.cloudfoundry.org/policy-server/store/helpers"
 )
@@ -23,7 +21,7 @@ func (sgs *SGStore) BySpaceGuids(spaceGuids []string, page Page) ([]SecurityGrou
 		return nil, Pagination{}, nil
 	}
 
-	whereClause := fmt.Sprintf("space_guid IN (%s)", helpers.QuestionMarks(len(spaceGuids)))
+	whereClause := fmt.Sprintf("array[%s]", helpers.MarksWithSeparator(len(spaceGuids), "%", ", "))
 
 	query := `
 		SELECT
@@ -32,16 +30,12 @@ func (sgs *SGStore) BySpaceGuids(spaceGuids []string, page Page) ([]SecurityGrou
 			rules,
 			staging_default,
 			running_default,
-			(SELECT GROUP_CONCAT(space_guid SEPARATOR ',')
-				FROM staging_security_groups_spaces
-				WHERE security_group_guid=guid GROUP BY security_group_guid),
-			(SELECT GROUP_CONCAT(space_guid SEPARATOR ',')
-				FROM running_security_groups_spaces
-				WHERE security_group_guid=guid GROUP BY security_group_guid)
+			staging_spaces,
+			running_spaces
 		FROM security_groups
-		WHERE guid IN (SELECT security_group_guid FROM staging_security_groups_spaces WHERE ` + whereClause + `)
-			OR guid IN (SELECT security_group_guid FROM running_security_groups_spaces WHERE ` + whereClause + `)`
+		WHERE staging_spaces ?| ` + whereClause + ` OR running_spaces ?| ` + whereClause
 
+	fmt.Println(query)
 	// one for running and one for staging
 	whereBindings := make([]interface{}, len(spaceGuids)*2)
 	for i, spaceGuid := range spaceGuids {
@@ -49,7 +43,7 @@ func (sgs *SGStore) BySpaceGuids(spaceGuids []string, page Page) ([]SecurityGrou
 		whereBindings[i+len(spaceGuids)] = spaceGuid
 	}
 
-	rebindedQuery := helpers.RebindForSQLDialect(query, sgs.Conn.DriverName())
+	rebindedQuery := helpers.RebindForSQLDialectTwo(query, sgs.Conn.DriverName())
 	rows, err := sgs.Conn.Query(rebindedQuery, whereBindings...)
 	if err != nil {
 		return nil, Pagination{}, fmt.Errorf("selecting security groups: %s", err)
@@ -59,26 +53,18 @@ func (sgs *SGStore) BySpaceGuids(spaceGuids []string, page Page) ([]SecurityGrou
 	result := []SecurityGroup{}
 	for rows.Next() {
 		var securityGroup SecurityGroup
-		var stagingSpaceGuids sql.NullString
-		var runningSpaceGuids sql.NullString
 		err := rows.Scan(&securityGroup.Guid,
 			&securityGroup.Name,
 			&securityGroup.Rules,
 			&securityGroup.StagingDefault,
 			&securityGroup.RunningDefault,
-			&stagingSpaceGuids,
-			&runningSpaceGuids,
+			&securityGroup.StagingSpaceGuids,
+			&securityGroup.RunningSpaceGuids,
 		)
 		if err != nil {
 			return nil, Pagination{}, fmt.Errorf("scanning security group result: %s", err)
 		}
 
-		if stagingSpaceGuids.Valid {
-			securityGroup.StagingSpaceGuids = strings.Split(stagingSpaceGuids.String, ",")
-		}
-		if runningSpaceGuids.Valid {
-			securityGroup.RunningSpaceGuids = strings.Split(runningSpaceGuids.String, ",")
-		}
 		result = append(result, securityGroup)
 	}
 
@@ -93,18 +79,18 @@ func (sgs *SGStore) Replace(newSecurityGroups []SecurityGroup) error {
 	defer tx.Rollback()
 
 	// delete all existing SGs and space associations
-	_, err = tx.Exec(tx.Rebind("DELETE from running_security_groups_spaces"))
-	if err != nil {
-		return fmt.Errorf("deleting running security group associations: %s", err)
-	}
-	_, err = tx.Exec(tx.Rebind("DELETE from staging_security_groups_spaces"))
-	if err != nil {
-		return fmt.Errorf("deleting staging security group associations: %s", err)
-	}
-	_, err = tx.Exec(tx.Rebind("DELETE from security_groups"))
-	if err != nil {
-		return fmt.Errorf("deleting security groups: %s", err)
-	}
+	// _, err = tx.Exec(tx.Rebind("DELETE from running_security_groups_spaces"))
+	// if err != nil {
+	// 	return fmt.Errorf("deleting running security group associations: %s", err)
+	// }
+	// _, err = tx.Exec(tx.Rebind("DELETE from staging_security_groups_spaces"))
+	// if err != nil {
+	// 	return fmt.Errorf("deleting staging security group associations: %s", err)
+	// }
+	// _, err = tx.Exec(tx.Rebind("DELETE from security_groups"))
+	// if err != nil {
+	// 	return fmt.Errorf("deleting security groups: %s", err)
+	// }
 
 	existingGuids := map[string]bool{}
 	rows, err := tx.Queryx("SELECT guid FROM security_groups")
@@ -126,12 +112,14 @@ func (sgs *SGStore) Replace(newSecurityGroups []SecurityGroup) error {
 		delete(existingGuids, group.Guid)
 
 		result, err := tx.Exec(tx.Rebind(`
-			UPDATE security_groups SET name=?, rules=?, running_default=?, staging_default=? 
+			UPDATE security_groups SET name=?, rules=?, staging_default=?, running_default=?, staging_spaces=?, running_spaces=?
 			WHERE guid=?`),
 			group.Name,
 			group.Rules,
-			group.RunningDefault,
 			group.StagingDefault,
+			group.RunningDefault,
+			group.StagingSpaceGuids,
+			group.RunningSpaceGuids,
 			group.Guid,
 		)
 		if err != nil {
@@ -141,51 +129,52 @@ func (sgs *SGStore) Replace(newSecurityGroups []SecurityGroup) error {
 		if affectedRows == 0 {
 			_, err = tx.Exec(tx.Rebind(`
 			INSERT INTO security_groups
-			(guid, name, rules, running_default, staging_default)
-			VALUES(?, ?, ?, ?, ?)`),
+			(guid, name, rules, staging_default, running_default, staging_spaces, running_spaces)
+			VALUES(?, ?, ?, ?, ?, ?, ?)`),
 				group.Guid,
 				group.Name,
 				group.Rules,
-				group.RunningDefault,
 				group.StagingDefault,
+				group.RunningDefault,
+				group.StagingSpaceGuids,
+				group.RunningSpaceGuids,
 			)
 			if err != nil {
 				return fmt.Errorf("adding new security group %s (%s): %s", group.Guid, group.Name, err)
 			}
 		}
 
-		for _, spaceGuid := range group.StagingSpaceGuids {
-			_, err := tx.Exec(tx.Rebind(`
-				INSERT INTO staging_security_groups_spaces
-				(space_guid, security_group_guid) VALUES(?, ?)`),
-				spaceGuid,
-				group.Guid,
-			)
-			if err != nil {
-				return fmt.Errorf("associating staging security group %s (%s) to space %s: %s",
-					group.Guid,
-					group.Name,
-					spaceGuid,
-					err,
-				)
-			}
-		}
-		for _, spaceGuid := range group.RunningSpaceGuids {
-			_, err := tx.Exec(tx.Rebind(`
-				INSERT INTO running_security_groups_spaces
-				(space_guid, security_group_guid) VALUES(?, ?)`),
-				spaceGuid,
-				group.Guid,
-			)
-			if err != nil {
-				return fmt.Errorf("associating running security group %s (%s) to space %s: %s",
-					group.Guid,
-					group.Name,
-					spaceGuid,
-					err,
-				)
-			}
-		}
+		// 	_, err := tx.Exec(tx.Rebind(`
+		// 		INSERT INTO staging_security_groups_spaces
+		// 		(space_guid, security_group_guid) VALUES(?, ?)`),
+		// 		spaceGuid,
+		// 		group.Guid,
+		// 	)
+		// 	if err != nil {
+		// 		return fmt.Errorf("associating staging security group %s (%s) to space %s: %s",
+		// 			group.Guid,
+		// 			group.Name,
+		// 			spaceGuid,
+		// 			err,
+		// 		)
+		// 	}
+		// }
+		// for _, spaceGuid := range group.RunningSpaceGuids {
+		// 	_, err := tx.Exec(tx.Rebind(`
+		// 		INSERT INTO running_security_groups_spaces
+		// 		(space_guid, security_group_guid) VALUES(?, ?)`),
+		// 		spaceGuid,
+		// 		group.Guid,
+		// 	)
+		// 	if err != nil {
+		// 		return fmt.Errorf("associating running security group %s (%s) to space %s: %s",
+		// 			group.Guid,
+		// 			group.Name,
+		// 			spaceGuid,
+		// 			err,
+		// 		)
+		// 	}
+		// }
 	}
 
 	for guid := range existingGuids {
