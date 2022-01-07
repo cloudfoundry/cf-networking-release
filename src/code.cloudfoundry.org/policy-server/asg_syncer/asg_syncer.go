@@ -34,6 +34,9 @@ func NewASGSyncer(logger lager.Logger, store store.SecurityGroupsStore, uaaClien
 }
 
 func (a *ASGSyncer) Poll() error {
+	a.Logger.Debug("asg-sync-started")
+	defer a.Logger.Debug("asg-sync-complete")
+
 	token, err := a.UAAClient.GetToken()
 	if err != nil {
 		return err
