@@ -68,8 +68,10 @@ func main() {
 	if conf.LogPrefix != "" {
 		logPrefix = conf.LogPrefix
 	}
-
-	logger, reconfigurableSink := lagerflags.NewFromConfig(fmt.Sprintf("%s.%s", logPrefix, jobPrefix), common.GetLagerConfig())
+	loggerConfig := common.GetLagerConfig()
+	loggerConfig.LogLevel = conf.LogLevel
+	logger, reconfigurableSink := lagerflags.NewFromConfig(fmt.Sprintf("%s.%s", logPrefix, jobPrefix), loggerConfig)
+	logger.Debug("Debug Logging Enabled")
 
 	var tlsConfig *tls.Config
 	if conf.SkipSSLValidation {
@@ -436,22 +438,21 @@ func main() {
 	policyPoller := initPoller(logger, conf, policyCleaner)
 	debugServer := debugserver.Runner(fmt.Sprintf("%s:%d", conf.DebugServerHost, conf.DebugServerPort), reconfigurableSink)
 
-	var asgLocker ifrit.Runner
-	if conf.ASGSyncInterval > 0 {
-		locketClient, err := locket.NewClient(logger, conf.ClientLocketConfig)
-		if err != nil {
-			log.Fatalf("%s.%s: failed-t-create-locket-client: %s", logPrefix, jobPrefix, err)
-		}
-		asgSyncer := asg_syncer.NewASGSyncer(logger, &securityGroupsStore, uaaClient, ccClient)
-		asgLocker = initASGLocker(logger, conf.UUID, time.Duration(conf.ASGSyncInterval)*time.Second, locket.DefaultSessionTTLInSeconds, asgSyncer, locketClient)
-	}
-
 	members := grouper.Members{
 		{"metrics_emitter", metricsEmitter},
 		{"http_server", externalServer},
 		{"policy-cleaner-poller", policyPoller},
 		{"debug-server", debugServer},
-		{"asg-locker", asgLocker},
+	}
+
+	if conf.ASGSyncInterval > 0 {
+		locketClient, err := locket.NewClient(logger, conf.ClientLocketConfig)
+		if err != nil {
+			log.Fatalf("%s.%s: failed-to-create-locket-client using: %s", logPrefix, jobPrefix, err)
+		}
+		asgSyncer := asg_syncer.NewASGSyncer(logger, &securityGroupsStore, uaaClient, ccClient)
+		asgLocker := initASGLocker(logger, conf.UUID, time.Duration(conf.ASGSyncInterval)*time.Second, locket.RetryInterval, locket.DefaultSessionTTLInSeconds, asgSyncer, locketClient)
+		members = append(members, grouper.Member{"asg-locker", asgLocker})
 	}
 
 	logger.Info("starting external server", lager.Data{"listen-address": conf.ListenHost, "port": conf.ListenPort})
@@ -481,7 +482,7 @@ func initPoller(logger lager.Logger, conf *config.Config, policyCleaner *cleaner
 	}
 }
 
-func initASGLocker(logger lager.Logger, uuid string, pollInterval time.Duration, lockTimeout int64, asgSyncer asg_syncer.ASGSync, locketClient locketmodels.LocketClient) ifrit.Runner {
+func initASGLocker(logger lager.Logger, uuid string, pollInterval time.Duration, lockTimeout time.Duration, lockTTL int64, asgSyncer asg_syncer.ASGSync, locketClient locketmodels.LocketClient) ifrit.Runner {
 
 	lockIdentifier := &locketmodels.Resource{
 		Key:      "policy-server-asg-syncer",
@@ -493,9 +494,9 @@ func initASGLocker(logger lager.Logger, uuid string, pollInterval time.Duration,
 		logger,
 		locketClient,
 		lockIdentifier,
-		lockTimeout,
+		lockTTL,
 		clock.NewClock(),
-		pollInterval,
+		lockTimeout,
 	)}
 
 	asgPoller := &poller.Poller{
