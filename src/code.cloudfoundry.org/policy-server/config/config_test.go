@@ -28,6 +28,7 @@ var _ = Describe("Config", func() {
 		Context("when the config file is valid", func() {
 			It("returns the config", func() {
 				file.WriteString(`{
+					"uuid": "xxxxxx-xxxxxxxx-xxxxx",
 					"listen_host": "http://1.2.3.4",
 					"listen_port": 1234,
 					"log_prefix": "cfnetworking",
@@ -138,6 +139,7 @@ var _ = Describe("Config", func() {
 		DescribeTable("when config file is missing a member",
 			func(missingFlag, errorMsg string) {
 				allData := map[string]interface{}{
+					"uuid":                "xxxxxx-xxxxxxxx-xxxxx",
 					"listen_host":         "http://1.2.3.4",
 					"listen_port":         1234,
 					"log_prefix":          "cfnetworking",
@@ -192,6 +194,7 @@ var _ = Describe("Config", func() {
 			var allData map[string]interface{}
 			BeforeEach(func() {
 				allData = map[string]interface{}{
+					"uuid":                 "xxxxxx-xxxxxxxx-xxxxx",
 					"listen_host":          "http://1.2.3.4",
 					"listen_port":          1234,
 					"log_prefix":           "cfnetworking",
