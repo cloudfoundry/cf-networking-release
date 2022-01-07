@@ -171,6 +171,7 @@ func DefaultTestConfigWithCCServer(dbConfig db.Config, metronAddress string, fix
 	UAAHost, UAAPort := SplitUAAHostPort()
 
 	externalConfig := config.Config{
+		UUID:                            "xxxxxx-xxxxxxxx-xxxxx",
 		ListenHost:                      "127.0.0.1",
 		ListenPort:                      ports.PickAPort(),
 		LogPrefix:                       "testprefix",
