@@ -69,7 +69,9 @@ func main() {
 		logPrefix = conf.LogPrefix
 	}
 	loggerConfig := common.GetLagerConfig()
-	loggerConfig.LogLevel = conf.LogLevel
+	if conf.LogLevel != "" {
+		loggerConfig.LogLevel = conf.LogLevel
+	}
 	logger, reconfigurableSink := lagerflags.NewFromConfig(fmt.Sprintf("%s.%s", logPrefix, jobPrefix), loggerConfig)
 	logger.Debug("Debug Logging Enabled")
 
