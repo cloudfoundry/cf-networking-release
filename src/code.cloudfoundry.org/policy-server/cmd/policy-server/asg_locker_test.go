@@ -26,7 +26,7 @@ import (
 
 var _ = Describe("ASG Locker", func() {
 
-	capiPollInterval := time.Millisecond
+	pollInterval := time.Millisecond
 
 	var (
 		fakeSyncer    *fakesyncer.ASGSyncer
@@ -81,7 +81,7 @@ var _ = Describe("ASG Locker", func() {
 			logger.Info("POLLING")
 			return nil
 		})
-		asgLocker = initASGLocker(logger, "test-uuid", capiPollInterval, 1, fakeSyncer, locketClient)
+		asgLocker = initASGLocker(logger, "test-uuid", pollInterval, pollInterval, 1, fakeSyncer, locketClient)
 	})
 	AfterEach(func() {
 		ginkgomon.Kill(process, 2*time.Second)
@@ -104,7 +104,7 @@ var _ = Describe("ASG Locker", func() {
 
 			BeforeEach(func() {
 				competingFakeSyncer = &fakesyncer.ASGSyncer{}
-				competingLock = initASGLocker(logger, "competing-uuid", capiPollInterval, 1, competingFakeSyncer, locketClient)
+				competingLock = initASGLocker(logger, "competing-uuid", pollInterval, pollInterval, 1, competingFakeSyncer, locketClient)
 				competingProcess = ifrit.Background(competingLock)
 				// Ensure that competingProcess's ready channel is closed (meaning that it has obtained a lock, and
 				// started the poller (both the asg-lock + asg-poller members of its process are ready)
