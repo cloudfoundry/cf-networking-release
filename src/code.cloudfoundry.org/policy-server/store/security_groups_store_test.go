@@ -18,10 +18,9 @@ import (
 
 var _ = FDescribe("SecurityGroupsStore", func() {
 	var (
-		securityGroupsStore    *store.SGStore
-		dbConf                 dbHelper.Config
-		realDb                 *dbHelper.ConnWrapper
-		initialRules, newRules []store.SecurityGroup
+		securityGroupsStore *store.SGStore
+		dbConf              dbHelper.Config
+		realDb              *dbHelper.ConnWrapper
 	)
 
 	BeforeEach(func() {
@@ -40,37 +39,6 @@ var _ = FDescribe("SecurityGroupsStore", func() {
 		}
 
 		migrate(realDb)
-
-		initialRules = []store.SecurityGroup{{
-			Guid:              "first-guid",
-			Name:              "first-asg",
-			Rules:             "firstRules",
-			RunningSpaceGuids: []string{"first-space"},
-		}, {
-			Guid:              "second-guid",
-			Name:              "second-name",
-			Rules:             "secondRules",
-			RunningSpaceGuids: []string{"second-space"},
-			StagingSpaceGuids: []string{"second-space"},
-		}}
-
-		// Validates that we delete the first guid, update the second guid, add a third in place of the first
-		newRules = []store.SecurityGroup{{
-			Guid:              "third-guid",
-			Name:              "third-name",
-			Rules:             "thirdRules",
-			StagingSpaceGuids: []string{"third-space"},
-			StagingDefault:    true,
-			RunningSpaceGuids: []string{},
-		}, {
-			Guid:              "second-guid",
-			Name:              "second-name",
-			Rules:             "secondUpdatedRules",
-			StagingSpaceGuids: []string{"first-space", "second-space"},
-			RunningSpaceGuids: []string{"first-space", "second-space"},
-			StagingDefault:    true,
-			RunningDefault:    true,
-		}}
 	})
 
 	AfterEach(func() {
@@ -78,43 +46,43 @@ var _ = FDescribe("SecurityGroupsStore", func() {
 		testhelpers.RemoveDatabase(dbConf)
 	})
 
-	Describe("performance testing", func() {
-		FIt("works", func() {
-			t1 := time.Now()
-			asgsCount := 100000
-			asgs := []store.SecurityGroup{}
-			for i := 0; i < asgsCount; i++ {
-				asg := store.SecurityGroup{
-					Guid:              fmt.Sprintf("guid-%d", i),
-					Name:              fmt.Sprintf("name-%d", i),
-					Rules:             "some-rules",
-					RunningSpaceGuids: []string{"space-a", "space-b", "space-c"},
-					StagingSpaceGuids: []string{"space-b", "space-d", "space-e"},
-				}
-				asgs = append(asgs, asg)
-			}
-			err := securityGroupsStore.Replace(asgs)
-			Expect(err).ToNot(HaveOccurred())
-			afterT1 := time.Since(t1)
+	// Describe("performance testing", func() {
+	// 	FIt("works", func() {
+	// 		t1 := time.Now()
+	// 		asgsCount := 100000
+	// 		asgs := []store.SecurityGroup{}
+	// 		for i := 0; i < asgsCount; i++ {
+	// 			asg := store.SecurityGroup{
+	// 				Guid:              fmt.Sprintf("guid-%d", i),
+	// 				Name:              fmt.Sprintf("name-%d", i),
+	// 				Rules:             "some-rules",
+	// 				RunningSpaceGuids: []string{"space-a", "space-b", "space-c"},
+	// 				StagingSpaceGuids: []string{"space-b", "space-d", "space-e"},
+	// 			}
+	// 			asgs = append(asgs, asg)
+	// 		}
+	// 		err := securityGroupsStore.Replace(asgs)
+	// 		Expect(err).ToNot(HaveOccurred())
+	// 		afterT1 := time.Since(t1)
 
-			t2 := time.Now()
-			securityGroups, _, err := securityGroupsStore.BySpaceGuids([]string{"space-a"}, store.Page{})
-			Expect(err).ToNot(HaveOccurred())
-			Expect(len(securityGroups)).To(Equal(asgsCount))
+	// 		t2 := time.Now()
+	// 		securityGroups, _, err := securityGroupsStore.BySpaceGuids([]string{"space-a"}, store.Page{})
+	// 		Expect(err).ToNot(HaveOccurred())
+	// 		Expect(len(securityGroups)).To(Equal(asgsCount))
 
-			securityGroups, _, err = securityGroupsStore.BySpaceGuids([]string{"space-b"}, store.Page{})
-			Expect(err).ToNot(HaveOccurred())
-			Expect(len(securityGroups)).To(Equal(asgsCount))
+	// 		securityGroups, _, err = securityGroupsStore.BySpaceGuids([]string{"space-b"}, store.Page{})
+	// 		Expect(err).ToNot(HaveOccurred())
+	// 		Expect(len(securityGroups)).To(Equal(asgsCount))
 
-			securityGroups, _, err = securityGroupsStore.BySpaceGuids([]string{"space-a", "space-b", "space-c", "space-d", "space-e"}, store.Page{})
-			Expect(err).ToNot(HaveOccurred())
-			Expect(len(securityGroups)).To(Equal(asgsCount))
+	// 		securityGroups, _, err = securityGroupsStore.BySpaceGuids([]string{"space-a", "space-b", "space-c", "space-d", "space-e"}, store.Page{})
+	// 		Expect(err).ToNot(HaveOccurred())
+	// 		Expect(len(securityGroups)).To(Equal(asgsCount))
 
-			afterT2 := time.Since(t2)
+	// 		afterT2 := time.Since(t2)
 
-			fmt.Printf("\n\nTime after replace: %s, time after fetch: %s\n\n", afterT1, afterT2)
-		})
-	})
+	// 		fmt.Printf("\n\nTime after replace: %s, time after fetch: %s\n\n", afterT1, afterT2)
+	// 	})
+	// })
 
 	Describe("BySpaceGuids", func() {
 		var securityGroups []store.SecurityGroup
@@ -147,6 +115,15 @@ var _ = FDescribe("SecurityGroupsStore", func() {
 
 			err := securityGroupsStore.Replace(securityGroups)
 			Expect(err).ToNot(HaveOccurred())
+		})
+
+		Context("when no space guids are provided", func() {
+			It("returns empty list", func() {
+				securityGroups, _, err := securityGroupsStore.BySpaceGuids([]string{}, store.Page{})
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(len(securityGroups)).To(Equal(0))
+			})
 		})
 
 		Context("search by staging space guid", func() {
@@ -240,61 +217,52 @@ var _ = FDescribe("SecurityGroupsStore", func() {
 	})
 
 	Describe("Replace", func() {
+		var initialRules, newRules []store.SecurityGroup
+
 		BeforeEach(func() {
+			initialRules = []store.SecurityGroup{{
+				Guid:              "first-guid",
+				Name:              "first-asg",
+				Rules:             "firstRules",
+				RunningSpaceGuids: []string{"first-space"},
+			}, {
+				Guid:              "second-guid",
+				Name:              "second-name",
+				Rules:             "secondRules",
+				RunningSpaceGuids: []string{"second-space"},
+				StagingSpaceGuids: []string{"second-space"},
+			}}
+
+			// Validates that we delete the first guid, update the second guid, add a third in place of the first
+			newRules = []store.SecurityGroup{{
+				Guid:              "third-guid",
+				Name:              "third-name",
+				Rules:             "thirdRules",
+				StagingSpaceGuids: []string{"third-space"},
+				StagingDefault:    true,
+				RunningSpaceGuids: []string{},
+			}, {
+				Guid:              "second-guid",
+				Name:              "second-name",
+				Rules:             "secondUpdatedRules",
+				StagingSpaceGuids: []string{"first-space", "second-space"},
+				RunningSpaceGuids: []string{"first-space", "second-space"},
+				StagingDefault:    true,
+				RunningDefault:    true,
+			}}
+
 			err := securityGroupsStore.Replace(initialRules)
 			Expect(err).ToNot(HaveOccurred())
 		})
+
 		It("replaces the spaceSecurityGroupsStore data with the newly provided data", func() {
 			err := securityGroupsStore.Replace(newRules)
 			Expect(err).ToNot(HaveOccurred())
-			securityGroups := map[string]*store.SecurityGroup{}
-			stagingGuids := []string{}
-			runningGuids := []string{}
-			rows, err := realDb.DB.Query(`SELECT guid, name, rules, running_default, staging_default FROM security_groups`)
-			Expect(err).ToNot(HaveOccurred())
-			for rows.Next() {
-				var guid, name, rules string
-				var runningDefault, stagingDefault bool
-				err = rows.Scan(&guid, &name, &rules, &runningDefault, &stagingDefault)
-				Expect(err).ToNot(HaveOccurred())
-				securityGroups[guid] = &store.SecurityGroup{
-					Guid:              guid,
-					Name:              name,
-					Rules:             rules,
-					StagingDefault:    stagingDefault,
-					StagingSpaceGuids: stagingGuids,
-					RunningDefault:    runningDefault,
-					RunningSpaceGuids: runningGuids,
-				}
-			}
-			rows.Close()
 
-			rows, err = realDb.DB.Query(`SELECT space_guid, security_group_guid FROM staging_security_groups_spaces`)
+			securityGroups, _, err := securityGroupsStore.BySpaceGuids([]string{"first-space", "second-space", "third-space"}, store.Page{})
 			Expect(err).ToNot(HaveOccurred())
-			for rows.Next() {
-				var spaceGuid, securityGroupGuid string
-				err := rows.Scan(&spaceGuid, &securityGroupGuid)
-				Expect(err).ToNot(HaveOccurred())
-				securityGroups[securityGroupGuid].StagingSpaceGuids = append(
-					securityGroups[securityGroupGuid].StagingSpaceGuids, spaceGuid)
-			}
-			rows.Close()
-			rows, err = realDb.DB.Query(`SELECT space_guid, security_group_guid FROM running_security_groups_spaces`)
-			Expect(err).ToNot(HaveOccurred())
-			for rows.Next() {
-				var spaceGuid, securityGroupGuid string
-				err := rows.Scan(&spaceGuid, &securityGroupGuid)
-				Expect(err).ToNot(HaveOccurred())
-				securityGroups[securityGroupGuid].RunningSpaceGuids = append(
-					securityGroups[securityGroupGuid].RunningSpaceGuids, spaceGuid)
-			}
-			rows.Close()
-			sgList := []store.SecurityGroup{}
-			for _, sg := range securityGroups {
-				sgList = append(sgList, *sg)
-			}
 
-			Expect(sgList).To(ConsistOf(newRules))
+			Expect(securityGroups).To(ConsistOf(newRules))
 		})
 
 		Context("when errors occur", func() {
@@ -318,14 +286,16 @@ var _ = FDescribe("SecurityGroupsStore", func() {
 				})
 			})
 
-			Context("deleting data", func() {
+			Context("getting existing security groups", func() {
 				BeforeEach(func() {
-					tx.ExecReturns(nil, errors.New("can't exec SQL"))
+					tx.QueryxReturns(nil, errors.New("can't exec SQL"))
 				})
+
 				It("returns an error", func() {
 					err := securityGroupsStore.Replace(newRules)
-					Expect(err).To(MatchError("deleting running security group associations: can't exec SQL"))
+					Expect(err).To(MatchError("selecting security groups: can't exec SQL"))
 				})
+
 				It("rolls back the transaction", func() {
 					securityGroupsStore.Replace(newRules)
 					Expect(tx.RollbackCallCount()).To(Equal(1))
@@ -334,40 +304,14 @@ var _ = FDescribe("SecurityGroupsStore", func() {
 
 			Context("inserting a security group", func() {
 				BeforeEach(func() {
-					tx.ExecReturnsOnCall(3, nil, errors.New("can't exec SQL"))
+					tx.ExecReturnsOnCall(1, nil, errors.New("can't exec SQL"))
 				})
+
 				It("returns an error", func() {
 					err := securityGroupsStore.Replace(newRules)
 					Expect(err).To(MatchError("adding new security group third-guid (third-name): can't exec SQL"))
 				})
-				It("rolls back the transaction", func() {
-					securityGroupsStore.Replace(newRules)
-					Expect(tx.RollbackCallCount()).To(Equal(1))
-				})
-			})
 
-			Context("associating a space with a staging security group", func() {
-				BeforeEach(func() {
-					tx.ExecReturnsOnCall(4, nil, errors.New("can't exec SQL"))
-				})
-				It("returns an error", func() {
-					err := securityGroupsStore.Replace(newRules)
-					Expect(err).To(MatchError("associating staging security group third-guid (third-name) to space third-space: can't exec SQL"))
-				})
-				It("rolls back the transaction", func() {
-					securityGroupsStore.Replace(newRules)
-					Expect(tx.RollbackCallCount()).To(Equal(1))
-				})
-			})
-
-			Context("associating a space with a running security group", func() {
-				BeforeEach(func() {
-					tx.ExecReturnsOnCall(8, nil, errors.New("can't exec SQL"))
-				})
-				It("returns an error", func() {
-					err := securityGroupsStore.Replace(newRules)
-					Expect(err).To(MatchError("associating running security group second-guid (second-name) to space first-space: can't exec SQL"))
-				})
 				It("rolls back the transaction", func() {
 					securityGroupsStore.Replace(newRules)
 					Expect(tx.RollbackCallCount()).To(Equal(1))
@@ -378,10 +322,12 @@ var _ = FDescribe("SecurityGroupsStore", func() {
 				BeforeEach(func() {
 					tx.CommitReturns(errors.New("can't commit transaction"))
 				})
+
 				It("returns an error", func() {
 					err := securityGroupsStore.Replace(newRules)
 					Expect(err).To(MatchError("committing transaction: can't commit transaction"))
 				})
+
 				It("rolls back the transaction", func() {
 					securityGroupsStore.Replace(newRules)
 					Expect(tx.RollbackCallCount()).To(Equal(1))
