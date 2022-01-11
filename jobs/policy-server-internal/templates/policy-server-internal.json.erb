@@ -11,6 +11,18 @@
 
       raise "must provide dbconn link or database link"
     end
+
+    def parse_ip (ip, var_name)
+      unless ip.empty?
+          begin
+            parsed = IPAddr.new ip
+          rescue  => e
+            raise "Invalid #{var_name} '#{ip}': #{e}"
+          end
+      end
+    end
+
+    parse_ip(p('listen_ip'), 'listen_ip')
 %>
 
 <%=
