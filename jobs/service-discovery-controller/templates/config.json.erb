@@ -1,5 +1,18 @@
 <%=
 
+def parse_ip (ip, var_name)
+  unless ip.empty?
+      begin
+        parsed = IPAddr.new ip
+      rescue  => e
+        raise "Invalid #{var_name} '#{ip}': #{e}"
+      end
+  end
+end
+
+parse_ip(p('address'), 'address')
+parse_ip(p('log_level_address'), 'log_level_address')
+
 raise 'route_emitter_interval_seconds value must be greater than 0' if p('route_emitter_interval_seconds') <= 0
 
 route_emitter_interval_seconds = p('route_emitter_interval_seconds')
