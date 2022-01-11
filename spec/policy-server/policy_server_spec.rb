@@ -175,6 +175,14 @@ module Bosh::Template::Test
         })
       end
 
+      context 'when ips have leading 0s' do
+        it 'listen_ip fails with a nice message' do
+          merged_manifest_properties['listen_ip'] = '127.0.0.01'
+          expect {
+            template.render(merged_manifest_properties)
+          }.to raise_error (/Invalid listen_ip/)
+        end
+      end
 
       context 'when capi provides a link to the https endpoint' do
         let(:links) do
