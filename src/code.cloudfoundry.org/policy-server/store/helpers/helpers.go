@@ -36,17 +36,19 @@ func RebindForSQLDialect(query, dialect string) string {
 	return strings.Join(strParts, "")
 }
 
-func RebindForSQLDialectTwo(query, dialect string) string {
-	if dialect == MySQL {
-		return query
-	}
-	if dialect != Postgres {
+func RebindForSQLDialectAndMark(query, dialect, mark string) string {
+	if dialect != Postgres && dialect != MySQL {
 		panic(fmt.Sprintf("Unrecognized DB dialect '%s'", dialect))
 	}
 
-	strParts := strings.Split(query, "%")
+	if dialect == MySQL {
+		return strings.ReplaceAll(query, mark, "?")
+	}
+
+	strParts := strings.Split(query, mark)
 	for i := 1; i < len(strParts); i++ {
 		strParts[i-1] = fmt.Sprintf("%s$%d", strParts[i-1], i)
 	}
 	return strings.Join(strParts, "")
 }
+

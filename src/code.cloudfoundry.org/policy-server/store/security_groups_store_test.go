@@ -43,7 +43,7 @@ var _ = FDescribe("SecurityGroupsStore", func() {
 
 	AfterEach(func() {
 		Expect(realDb.Close()).To(Succeed())
-		testhelpers.RemoveDatabase(dbConf)
+		// testhelpers.RemoveDatabase(dbConf)
 	})
 
 	// Describe("performance testing", func() {

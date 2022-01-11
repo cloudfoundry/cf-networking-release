@@ -2,6 +2,7 @@ package store
 
 import (
 	"fmt"
+	"strings"
 
 	"code.cloudfoundry.org/policy-server/store/helpers"
 )
@@ -21,9 +22,7 @@ func (sgs *SGStore) BySpaceGuids(spaceGuids []string, page Page) ([]SecurityGrou
 		return nil, Pagination{}, nil
 	}
 
-	whereClause := fmt.Sprintf("array[%s]", helpers.MarksWithSeparator(len(spaceGuids), "%", ", "))
-
-	query := `
+	query := fmt.Sprintf(`
 		SELECT
 			guid,
 			name,
@@ -33,7 +32,9 @@ func (sgs *SGStore) BySpaceGuids(spaceGuids []string, page Page) ([]SecurityGrou
 			staging_spaces,
 			running_spaces
 		FROM security_groups
-		WHERE staging_spaces ?| ` + whereClause + ` OR running_spaces ?| ` + whereClause
+		WHERE %s OR %s`,
+		sgs.jsonOverlapsSQL("staging_spaces", spaceGuids),
+		sgs.jsonOverlapsSQL("running_spaces", spaceGuids))
 
 	// one for running and one for staging
 	whereBindings := make([]interface{}, len(spaceGuids)*2)
@@ -42,7 +43,7 @@ func (sgs *SGStore) BySpaceGuids(spaceGuids []string, page Page) ([]SecurityGrou
 		whereBindings[i+len(spaceGuids)] = spaceGuid
 	}
 
-	rebindedQuery := helpers.RebindForSQLDialectTwo(query, sgs.Conn.DriverName())
+	rebindedQuery := helpers.RebindForSQLDialectAndMark(query, sgs.Conn.DriverName(), "%")
 	rows, err := sgs.Conn.Query(rebindedQuery, whereBindings...)
 	if err != nil {
 		return nil, Pagination{}, fmt.Errorf("selecting security groups: %s", err)
@@ -155,4 +156,20 @@ func (sgs *SGStore) Replace(newSecurityGroups []SecurityGroup) error {
 		return fmt.Errorf("committing transaction: %s", err)
 	}
 	return nil
+}
+
+func (sgs *SGStore) jsonOverlapsSQL(columnName string, filterValues []string) string {
+	switch sgs.Conn.DriverName() {
+	case helpers.MySQL:
+		clauses := []string{}
+		for range filterValues {
+			clauses = append(clauses, fmt.Sprintf(`json_contains(%s, json_quote(?))`, columnName))
+		}
+		return strings.Join(clauses, " OR ")
+	case helpers.Postgres:
+		filterList := fmt.Sprintf("%s", helpers.MarksWithSeparator(len(filterValues), "%", ", "))
+		return fmt.Sprintf(`%s ?| array[%s]`, columnName, filterList)
+	default:
+		return ""
+	}
 }
