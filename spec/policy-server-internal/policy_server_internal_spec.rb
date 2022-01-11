@@ -113,6 +113,15 @@ module Bosh::Template::Test
           })
       end
 
+      context 'when ips have leading 0s' do
+        it 'listen_ip fails with a nice message' do
+          merged_manifest_properties['listen_ip'] = '127.0.0.01'
+          expect {
+            template.render(merged_manifest_properties, consumes: links)
+          }.to raise_error (/Invalid listen_ip/)
+        end
+      end
+
       context 'when dbconn does not have host' do
         let(:dbconn_host) {nil}
 
