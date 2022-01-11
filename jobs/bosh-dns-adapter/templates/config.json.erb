@@ -22,6 +22,19 @@ def vip_resolver_address
   ''
 end
 
+def parse_ip (ip, var_name)
+  unless ip.empty?
+      begin
+        parsed = IPAddr.new ip
+      rescue  => e
+        raise "Invalid #{var_name} '#{ip}': #{e}"
+      end
+  end
+end
+
+parse_ip(p('address'), 'address')
+parse_ip(p('log_level_address'), 'log_level_address')
+
 config = {
     'address' => p('address'),
     'port' => "#{p('port')}",

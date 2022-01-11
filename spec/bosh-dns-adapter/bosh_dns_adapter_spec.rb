@@ -72,6 +72,22 @@ module Bosh::Template::Test
         })
       end
 
+      context 'when ips have leading 0s' do
+        it 'address fails with a nice message' do
+          merged_manifest_properties['address'] = '127.0.0.01'
+          expect {
+            template.render(merged_manifest_properties, consumes: links)
+          }.to raise_error (/Invalid address/)
+        end
+
+        it 'log_level_address fails with a nice message' do
+          merged_manifest_properties['log_level_address'] = '127.0.0.01'
+          expect {
+            template.render(merged_manifest_properties, consumes: links)
+          }.to raise_error (/Invalid log_level_address/)
+        end
+      end
+
       describe 'when the mesh domain has no trailing dot' do
         it 'appends a dot to the domain name' do
           properties = { 'internal_service_mesh_domains' => ['domain.with.no.trailing.dot'] }
