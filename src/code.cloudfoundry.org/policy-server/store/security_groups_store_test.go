@@ -90,7 +90,7 @@ var _ = Describe("SecurityGroupsStore", func() {
 
 		Context("search by staging space guid", func() {
 			It("fetches global asgs and asgs attached to provided spaces", func() {
-				securityGroups, _, err := securityGroupsStore.BySpaceGuids([]string{"space-b"}, store.Page{})
+				securityGroups, pagination, err := securityGroupsStore.BySpaceGuids([]string{"space-b"}, store.Page{})
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(len(securityGroups)).To(Equal(1))
@@ -101,12 +101,13 @@ var _ = Describe("SecurityGroupsStore", func() {
 					RunningSpaceGuids: []string{"space-b"},
 					StagingSpaceGuids: []string{"space-b"},
 				}))
+				Expect(pagination.Next).To(Equal(0))
 			})
 		})
 
 		Context("search by running space guid", func() {
 			It("fetches global asgs and asgs attached to provided spaces", func() {
-				securityGroups, _, err := securityGroupsStore.BySpaceGuids([]string{"space-a"}, store.Page{})
+				securityGroups, pagination, err := securityGroupsStore.BySpaceGuids([]string{"space-a"}, store.Page{})
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(len(securityGroups)).To(Equal(1))
@@ -116,12 +117,13 @@ var _ = Describe("SecurityGroupsStore", func() {
 					Rules:             "firstRules",
 					RunningSpaceGuids: []string{"space-a"},
 				}))
+				Expect(pagination.Next).To(Equal(0))
 			})
 		})
 
 		Context("when one of the spaces of the security group wth multiple spaces is requested", func() {
 			It("returns that security group", func() {
-				securityGroups, _, err := securityGroupsStore.BySpaceGuids([]string{"space-e"}, store.Page{})
+				securityGroups, pagination, err := securityGroupsStore.BySpaceGuids([]string{"space-e"}, store.Page{})
 				Expect(err).ToNot(HaveOccurred())
 				Expect(len(securityGroups)).To(Equal(1))
 				Expect(securityGroups).To(ConsistOf(store.SecurityGroup{
@@ -131,12 +133,36 @@ var _ = Describe("SecurityGroupsStore", func() {
 					RunningSpaceGuids: []string{"space-c", "space-d", "space-e"},
 					StagingSpaceGuids: []string{"space-c", "space-d", "space-f"},
 				}))
+				Expect(pagination.Next).To(Equal(0))
 			})
 		})
 
 		Context("when the space that has multiple groups is requested", func() {
-			It("returns all security groups in that space", func() {
-				securityGroups, _, err := securityGroupsStore.BySpaceGuids([]string{"space-d"}, store.Page{})
+			It("returns all security groups in that space, ordered by id", func() {
+				securityGroups, pagination, err := securityGroupsStore.BySpaceGuids([]string{"space-d"}, store.Page{})
+				Expect(err).ToNot(HaveOccurred())
+				Expect(len(securityGroups)).To(Equal(2))
+				Expect(securityGroups).To(Equal([]store.SecurityGroup{
+					{
+						Guid:              "third-guid",
+						Name:              "third-name",
+						Rules:             "thirdRules",
+						RunningSpaceGuids: []string{"space-c", "space-d", "space-e"},
+						StagingSpaceGuids: []string{"space-c", "space-d", "space-f"},
+					}, {
+						Guid:              "fourth-guid",
+						Name:              "fourth-name",
+						Rules:             "fourthRules",
+						RunningSpaceGuids: []string{"space-d"},
+						StagingSpaceGuids: []string{"space-d"},
+					}}))
+				Expect(pagination.Next).To(Equal(0))
+			})
+		})
+
+		Context("when multiple spaces are requested", func() {
+			It("returns all security groups in all requested spaces", func() {
+				securityGroups, pagination, err := securityGroupsStore.BySpaceGuids([]string{"space-e", "space-d"}, store.Page{})
 				Expect(err).ToNot(HaveOccurred())
 				Expect(len(securityGroups)).To(Equal(2))
 				Expect(securityGroups).To(ConsistOf(store.SecurityGroup{
@@ -152,30 +178,38 @@ var _ = Describe("SecurityGroupsStore", func() {
 					RunningSpaceGuids: []string{"space-d"},
 					StagingSpaceGuids: []string{"space-d"},
 				}))
+				Expect(pagination.Next).To(Equal(0))
 			})
 		})
 
-		Context("when multiple spaces are requested", func() {
-			It("returns all security groups in all requested spaces", func() {
-				securityGroups, _, err := securityGroupsStore.BySpaceGuids([]string{"space-e", "space-d"}, store.Page{})
+		Context("when a page has a limit", func() {
+			It("returns the requested limit", func() {
+				securityGroups, pagination, err := securityGroupsStore.BySpaceGuids([]string{"space-e", "space-d"}, store.Page{Limit: 1, From: 3})
 				Expect(err).ToNot(HaveOccurred())
-				// Expect(len(securityGroups)).To(Equal(2))
+
+				Expect(len(securityGroups)).To(Equal(1))
 				Expect(securityGroups).To(ConsistOf(store.SecurityGroup{
 					Guid:              "third-guid",
 					Name:              "third-name",
 					Rules:             "thirdRules",
 					RunningSpaceGuids: []string{"space-c", "space-d", "space-e"},
 					StagingSpaceGuids: []string{"space-c", "space-d", "space-f"},
-				}, store.SecurityGroup{
+				}))
+				Expect(pagination).To(Equal(store.Pagination{Next: 4}))
+
+				securityGroups, pagination, err = securityGroupsStore.BySpaceGuids([]string{"space-e", "space-d"}, store.Page{Limit: 1, From: 4})
+				Expect(err).ToNot(HaveOccurred())
+				Expect(len(securityGroups)).To(Equal(1))
+				Expect(securityGroups).To(ConsistOf(store.SecurityGroup{
 					Guid:              "fourth-guid",
 					Name:              "fourth-name",
 					Rules:             "fourthRules",
 					RunningSpaceGuids: []string{"space-d"},
 					StagingSpaceGuids: []string{"space-d"},
 				}))
+				Expect(pagination).To(Equal(store.Pagination{Next: 0}))
 			})
 		})
-
 	})
 
 	Describe("Replace", func() {
