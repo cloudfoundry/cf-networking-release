@@ -16,7 +16,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = FDescribe("SecurityGroupsStore", func() {
+var _ = Describe("SecurityGroupsStore", func() {
 	var (
 		securityGroupsStore *store.SGStore
 		dbConf              dbHelper.Config
@@ -43,46 +43,8 @@ var _ = FDescribe("SecurityGroupsStore", func() {
 
 	AfterEach(func() {
 		Expect(realDb.Close()).To(Succeed())
-		// testhelpers.RemoveDatabase(dbConf)
+		testhelpers.RemoveDatabase(dbConf)
 	})
-
-	// Describe("performance testing", func() {
-	// 	FIt("works", func() {
-	// 		t1 := time.Now()
-	// 		asgsCount := 100000
-	// 		asgs := []store.SecurityGroup{}
-	// 		for i := 0; i < asgsCount; i++ {
-	// 			asg := store.SecurityGroup{
-	// 				Guid:              fmt.Sprintf("guid-%d", i),
-	// 				Name:              fmt.Sprintf("name-%d", i),
-	// 				Rules:             "some-rules",
-	// 				RunningSpaceGuids: []string{"space-a", "space-b", "space-c"},
-	// 				StagingSpaceGuids: []string{"space-b", "space-d", "space-e"},
-	// 			}
-	// 			asgs = append(asgs, asg)
-	// 		}
-	// 		err := securityGroupsStore.Replace(asgs)
-	// 		Expect(err).ToNot(HaveOccurred())
-	// 		afterT1 := time.Since(t1)
-
-	// 		t2 := time.Now()
-	// 		securityGroups, _, err := securityGroupsStore.BySpaceGuids([]string{"space-a"}, store.Page{})
-	// 		Expect(err).ToNot(HaveOccurred())
-	// 		Expect(len(securityGroups)).To(Equal(asgsCount))
-
-	// 		securityGroups, _, err = securityGroupsStore.BySpaceGuids([]string{"space-b"}, store.Page{})
-	// 		Expect(err).ToNot(HaveOccurred())
-	// 		Expect(len(securityGroups)).To(Equal(asgsCount))
-
-	// 		securityGroups, _, err = securityGroupsStore.BySpaceGuids([]string{"space-a", "space-b", "space-c", "space-d", "space-e"}, store.Page{})
-	// 		Expect(err).ToNot(HaveOccurred())
-	// 		Expect(len(securityGroups)).To(Equal(asgsCount))
-
-	// 		afterT2 := time.Since(t2)
-
-	// 		fmt.Printf("\n\nTime after replace: %s, time after fetch: %s\n\n", afterT1, afterT2)
-	// 	})
-	// })
 
 	Describe("BySpaceGuids", func() {
 		var securityGroups []store.SecurityGroup
