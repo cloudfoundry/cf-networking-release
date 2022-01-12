@@ -24,6 +24,7 @@ func (sgs *SGStore) BySpaceGuids(spaceGuids []string, page Page) ([]SecurityGrou
 
 	query := fmt.Sprintf(`
 		SELECT
+			id,
 			guid,
 			name,
 			rules,
@@ -32,9 +33,10 @@ func (sgs *SGStore) BySpaceGuids(spaceGuids []string, page Page) ([]SecurityGrou
 			staging_spaces,
 			running_spaces
 		FROM security_groups
-		WHERE %s OR %s`,
+		WHERE (%s OR %s)`,
 		sgs.jsonOverlapsSQL("staging_spaces", spaceGuids),
-		sgs.jsonOverlapsSQL("running_spaces", spaceGuids))
+		sgs.jsonOverlapsSQL("running_spaces", spaceGuids),
+	)
 
 	// one for running and one for staging
 	whereBindings := make([]interface{}, len(spaceGuids)*2)
@@ -43,7 +45,19 @@ func (sgs *SGStore) BySpaceGuids(spaceGuids []string, page Page) ([]SecurityGrou
 		whereBindings[i+len(spaceGuids)] = spaceGuid
 	}
 
+	if page.From > 0 {
+		query = query + " AND id >= %"
+		whereBindings = append(whereBindings, page.From)
+	}
+	query = query + " ORDER BY id"
+
+	if page.Limit > 0 {
+		// we don't use a placeholder because limit is an integer and it is safe to interpolate it
+		query = fmt.Sprintf(`%s LIMIT %d`, query, page.Limit+1)
+	}
+
 	rebindedQuery := helpers.RebindForSQLDialectAndMark(query, sgs.Conn.DriverName(), "%")
+
 	rows, err := sgs.Conn.Query(rebindedQuery, whereBindings...)
 	if err != nil {
 		return nil, Pagination{}, fmt.Errorf("selecting security groups: %s", err)
@@ -51,9 +65,12 @@ func (sgs *SGStore) BySpaceGuids(spaceGuids []string, page Page) ([]SecurityGrou
 	defer rows.Close()
 
 	result := []SecurityGroup{}
+	nextId := 0
 	for rows.Next() {
+		var id int
 		var securityGroup SecurityGroup
-		err := rows.Scan(&securityGroup.Guid,
+		err := rows.Scan(&id,
+			&securityGroup.Guid,
 			&securityGroup.Name,
 			&securityGroup.Rules,
 			&securityGroup.StagingDefault,
@@ -65,10 +82,13 @@ func (sgs *SGStore) BySpaceGuids(spaceGuids []string, page Page) ([]SecurityGrou
 			return nil, Pagination{}, fmt.Errorf("scanning security group result: %s", err)
 		}
 
-		result = append(result, securityGroup)
+		if page.Limit == 0 || len(result) < page.Limit {
+			result = append(result, securityGroup)
+		} else {
+			nextId = id
+		}
 	}
-
-	return result, Pagination{}, nil
+	return result, Pagination{Next: nextId}, nil
 }
 
 func (sgs *SGStore) Replace(newSecurityGroups []SecurityGroup) error {
