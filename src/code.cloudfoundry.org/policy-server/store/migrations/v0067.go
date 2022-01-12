@@ -1,11 +1,6 @@
 package migrations
 
-// These all use different migrations vs multiple statements in a text block,
-// or multiple text blocks per migration, because of errors encountered
-// with the migrator not running migrations in a transaction in mysql properly
-// See commit ID f1280ed0eee131aa57bd9af0cdbc590fb36be80a for more information
-
-var migration_v0067a = map[string][]string{
+var migration_v0067 = map[string][]string{
 	"mysql": []string{
 		`CREATE TABLE IF NOT EXISTS "security_groups" (
 			id integer NOT NULL AUTO_INCREMENT PRIMARY KEY,
