@@ -87,7 +87,7 @@ var _ = Describe("ASGSyncer", func() {
 				},
 			}}, nil)
 		})
-		It("pulls properly", func() {
+		It("polls properly", func() {
 			err := asgSyncer.Poll()
 			Expect(err).To(BeNil())
 
