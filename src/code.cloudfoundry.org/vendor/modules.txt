@@ -29,12 +29,7 @@ code.cloudfoundry.org/clock/fakeclock
 # code.cloudfoundry.org/consuladapter v0.0.0-20211122211027-9dbbfa656ee0
 ## explicit; go 1.16
 code.cloudfoundry.org/consuladapter
-<<<<<<< HEAD
-code.cloudfoundry.org/consuladapter/consulrunner
-# code.cloudfoundry.org/debugserver v0.0.0-20210608171006-d7658ce493f4
-=======
 # code.cloudfoundry.org/debugserver v0.0.0-20211123175613-a7ac7ce093eb
->>>>>>> Add locking + restart-on-failed-lock functionality
 ## explicit; go 1.16
 code.cloudfoundry.org/debugserver
 # code.cloudfoundry.org/diego-logging-client v0.0.0-20211220190808-bd0d93324d64
@@ -49,25 +44,17 @@ code.cloudfoundry.org/filelock
 # code.cloudfoundry.org/garden v0.0.0-20210813150702-ba711ea09ea2
 ## explicit; go 1.16
 code.cloudfoundry.org/garden
-<<<<<<< HEAD
-# code.cloudfoundry.org/go-diodes v0.0.0-20190809170250-f77fb823c7ee
-## explicit
-=======
 # code.cloudfoundry.org/go-diodes v0.0.0-20211115184647-b584dd5df32c
 ## explicit; go 1.16
->>>>>>> Add locking + restart-on-failed-lock functionality
 code.cloudfoundry.org/go-diodes
 # code.cloudfoundry.org/go-loggregator/v8 v8.0.5
 ## explicit; go 1.16
 code.cloudfoundry.org/go-loggregator/v8
 code.cloudfoundry.org/go-loggregator/v8/rfc5424
 code.cloudfoundry.org/go-loggregator/v8/rpc/loggregator_v2
-<<<<<<< HEAD
-=======
 code.cloudfoundry.org/go-loggregator/v8/runtimeemitter
 # code.cloudfoundry.org/inigo v0.0.0-20211021201637-031ac17b0ea6
 ## explicit
->>>>>>> Add locking + restart-on-failed-lock functionality
 # code.cloudfoundry.org/lager v2.0.0+incompatible
 ## explicit
 code.cloudfoundry.org/lager
@@ -77,14 +64,6 @@ code.cloudfoundry.org/lager/lagertest
 # code.cloudfoundry.org/locket v0.0.0-20211014150347-5712a0767913
 ## explicit
 code.cloudfoundry.org/locket
-<<<<<<< HEAD
-code.cloudfoundry.org/locket/cmd/locket/certauthority
-code.cloudfoundry.org/locket/cmd/locket/config
-code.cloudfoundry.org/locket/cmd/locket/testrunner
-code.cloudfoundry.org/locket/lock
-code.cloudfoundry.org/locket/models
-# code.cloudfoundry.org/tlsconfig v0.0.0-20210615191307-5d92ef3894a7
-=======
 code.cloudfoundry.org/locket/cmd/locket
 code.cloudfoundry.org/locket/cmd/locket/certauthority
 code.cloudfoundry.org/locket/cmd/locket/config
@@ -102,17 +81,12 @@ code.cloudfoundry.org/locket/models
 # code.cloudfoundry.org/routing-info v0.0.0-20210811170011-d6736bca3081
 ## explicit
 # code.cloudfoundry.org/tlsconfig v0.0.0-20211123175040-23cc9f05b6b3
->>>>>>> Add locking + restart-on-failed-lock functionality
 ## explicit; go 1.16
 code.cloudfoundry.org/tlsconfig
 # example-apps/spammer v0.0.0-00010101000000-000000000000 => ../example-apps/spammer
 ## explicit; go 1.16
 example-apps/spammer/api
-<<<<<<< HEAD
-# github.com/armon/go-metrics v0.0.0-20190430140413-ec5e00d3c878
-=======
 # github.com/armon/go-metrics v0.3.10
->>>>>>> Add locking + restart-on-failed-lock functionality
 ## explicit; go 1.12
 github.com/armon/go-metrics
 # github.com/benjamintf1/unmarshalledmatchers v1.0.0
@@ -186,13 +160,10 @@ github.com/go-sql-driver/mysql
 # github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0
 ## explicit; go 1.13
 github.com/go-task/slim-sprig
-<<<<<<< HEAD
-=======
 # github.com/go-test/deep v1.0.8
 ## explicit; go 1.16
 # github.com/gofrs/uuid v4.2.0+incompatible
 ## explicit
->>>>>>> Add locking + restart-on-failed-lock functionality
 # github.com/gogo/protobuf v1.3.2
 ## explicit; go 1.15
 github.com/gogo/protobuf/gogoproto
@@ -209,6 +180,8 @@ github.com/golang/protobuf/ptypes
 github.com/golang/protobuf/ptypes/any
 github.com/golang/protobuf/ptypes/duration
 github.com/golang/protobuf/ptypes/timestamp
+# github.com/gorilla/mux v1.8.0
+## explicit; go 1.12
 # github.com/hashicorp/consul v1.11.1 => github.com/hashicorp/consul v0.7.0
 ## explicit
 github.com/hashicorp/consul/api
@@ -223,23 +196,6 @@ github.com/hashicorp/go-immutable-radix
 github.com/hashicorp/golang-lru/simplelru
 # github.com/hashicorp/serf v0.9.6
 ## explicit; go 1.12
-<<<<<<< HEAD
-# github.com/hashicorp/consul v0.0.0-00010101000000-000000000000 => github.com/hashicorp/consul v0.7.0
-## explicit
-github.com/hashicorp/consul/api
-# github.com/hashicorp/go-cleanhttp v0.5.2
-## explicit; go 1.13
-github.com/hashicorp/go-cleanhttp
-# github.com/hashicorp/go-immutable-radix v1.3.0
-## explicit
-github.com/hashicorp/go-immutable-radix
-# github.com/hashicorp/golang-lru v0.5.4
-## explicit; go 1.12
-github.com/hashicorp/golang-lru/simplelru
-# github.com/hashicorp/serf v0.9.5
-## explicit; go 1.12
-github.com/hashicorp/serf/coordinate
-=======
 github.com/hashicorp/serf/coordinate
 # github.com/jackc/fake v0.0.0-20150926172116-812a484cc733
 ## explicit
@@ -252,7 +208,6 @@ github.com/jackc/pgx/pgio
 github.com/jackc/pgx/pgproto3
 github.com/jackc/pgx/pgtype
 github.com/jackc/pgx/stdlib
->>>>>>> Add locking + restart-on-failed-lock functionality
 # github.com/jmoiron/sqlx v1.3.4
 ## explicit; go 1.10
 github.com/jmoiron/sqlx
@@ -372,11 +327,8 @@ github.com/pivotal-cf/paraphernalia/secure/tlsconfig
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
-<<<<<<< HEAD
-=======
 # github.com/shopspring/decimal v1.3.1
 ## explicit; go 1.13
->>>>>>> Add locking + restart-on-failed-lock functionality
 # github.com/square/certstrap v1.2.0
 ## explicit
 github.com/square/certstrap/depot
@@ -452,10 +404,7 @@ golang.org/x/text/secure/precis
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
-<<<<<<< HEAD
-=======
 golang.org/x/text/width
->>>>>>> Add locking + restart-on-failed-lock functionality
 # golang.org/x/tools v0.0.0-20210106214847-113979e3529a
 ## explicit; go 1.12
 golang.org/x/tools/go/ast/inspector

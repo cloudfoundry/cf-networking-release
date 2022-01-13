@@ -228,20 +228,12 @@ func (m *Metrics) allowMetric(key []string, labels []Label) (bool, []Label) {
 func (m *Metrics) collectStats() {
 	for {
 		time.Sleep(m.ProfileInterval)
-<<<<<<< HEAD
-		m.emitRuntimeStats()
-=======
 		m.EmitRuntimeStats()
->>>>>>> Add locking + restart-on-failed-lock functionality
 	}
 }
 
 // Emits various runtime statsitics
-<<<<<<< HEAD
-func (m *Metrics) emitRuntimeStats() {
-=======
 func (m *Metrics) EmitRuntimeStats() {
->>>>>>> Add locking + restart-on-failed-lock functionality
 	// Export number of Goroutines
 	numRoutines := runtime.NumGoroutine()
 	m.SetGauge([]string{"runtime", "num_goroutines"}, float32(numRoutines))
@@ -277,14 +269,6 @@ func (m *Metrics) EmitRuntimeStats() {
 	m.lastNumGC = num
 }
 
-<<<<<<< HEAD
-// Inserts a string value at an index into the slice
-func insert(i int, v string, s []string) []string {
-	s = append(s, "")
-	copy(s[i+1:], s[i:])
-	s[i] = v
-	return s
-=======
 // Creates a new slice with the provided string value as the first element
 // and the provided slice values as the remaining values.
 // Ordering of the values in the provided input slice is kept in tact in the output slice.
@@ -306,5 +290,4 @@ func insert(i int, v string, s []string) []string {
 	}
 
 	return newS
->>>>>>> Add locking + restart-on-failed-lock functionality
 }
