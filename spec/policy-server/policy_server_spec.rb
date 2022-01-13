@@ -420,7 +420,7 @@ module Bosh::Template::Test
           }.to raise_error Bosh::Template::UnknownProperty
         end
 
-        it 'raises and error when asg_sync_enabled is false and there is no locket_ca_cert defined' do
+        it 'does not error when asg_sync_enabled is false and there is no locket_ca_cert defined' do
           merged_manifest_properties['asg_sync_enabled'] = false
           expect {
             template.render(merged_manifest_properties)
@@ -449,7 +449,7 @@ module Bosh::Template::Test
           }.to raise_error Bosh::Template::UnknownProperty
         end
 
-        it 'raises and error when asg_sync_enabled is false and there is no locket_client defined' do
+        it 'does not error when asg_sync_enabled is false and there is no locket_client defined' do
           merged_manifest_properties['asg_sync_enabled'] = false
           expect {
             template.render(merged_manifest_properties)
@@ -478,7 +478,7 @@ module Bosh::Template::Test
           }.to raise_error Bosh::Template::UnknownProperty
         end
 
-        it 'raises and error when asg_sync_enabled is false and there is no locket_client_key defined' do
+        it 'does not error when asg_sync_enabled is false and there is no locket_client_key defined' do
           merged_manifest_properties['asg_sync_enabled'] = false
           expect {
             template.render(merged_manifest_properties)
