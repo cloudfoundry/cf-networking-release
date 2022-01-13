@@ -22,8 +22,5 @@ _testmain.go
 *.exe
 
 /metrics.out
-<<<<<<< HEAD
-=======
 
 .idea
->>>>>>> Add locking + restart-on-failed-lock functionality
