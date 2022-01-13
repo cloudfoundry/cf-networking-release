@@ -6,11 +6,7 @@ import (
 	"sync/atomic"
 	"time"
 
-<<<<<<< HEAD
-	"github.com/hashicorp/go-immutable-radix"
-=======
 	iradix "github.com/hashicorp/go-immutable-radix"
->>>>>>> Add locking + restart-on-failed-lock functionality
 )
 
 // Config is used to configure metrics settings
@@ -52,14 +48,11 @@ func init() {
 	globalMetrics.Store(&Metrics{sink: &BlackholeSink{}})
 }
 
-<<<<<<< HEAD
-=======
 // Default returns the shared global metrics instance.
 func Default() *Metrics {
 	return globalMetrics.Load().(*Metrics)
 }
 
->>>>>>> Add locking + restart-on-failed-lock functionality
 // DefaultConfig provides a sane default configuration
 func DefaultConfig(serviceName string) *Config {
 	c := &Config{
