@@ -210,6 +210,92 @@ var _ = Describe("SecurityGroupsStore", func() {
 				Expect(pagination).To(Equal(store.Pagination{Next: 0}))
 			})
 		})
+
+		Context("when there is a public staging security group", func() {
+			BeforeEach(func() {
+				securityGroups = []store.SecurityGroup{{
+					Guid:              "first-guid",
+					Name:              "first-asg",
+					Rules:             "firstRules",
+					StagingDefault:    true,
+					RunningSpaceGuids: []string{"space-a"},
+				}, {
+					Guid:              "second-guid",
+					Name:              "second-name",
+					Rules:             "secondRules",
+					RunningSpaceGuids: []string{"space-b"},
+					StagingSpaceGuids: []string{"space-b"},
+				}, {}}
+
+				err := securityGroupsStore.Replace(securityGroups)
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("returns it even if it is not requested by space guid", func() {
+				securityGroups, pagination, err := securityGroupsStore.BySpaceGuids([]string{"space-b"}, store.Page{})
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(len(securityGroups)).To(Equal(2))
+				Expect(securityGroups).To(ConsistOf(store.SecurityGroup{
+					Guid:              "first-guid",
+					Name:              "first-asg",
+					Rules:             "firstRules",
+					StagingDefault:    true,
+					RunningSpaceGuids: []string{"space-a"},
+				}, store.SecurityGroup{
+					Guid:              "second-guid",
+					Name:              "second-name",
+					Rules:             "secondRules",
+					RunningSpaceGuids: []string{"space-b"},
+					StagingSpaceGuids: []string{"space-b"},
+				}))
+				Expect(pagination.Next).To(Equal(0))
+
+			})
+		})
+
+		Context("when there is a public running security group", func() {
+			BeforeEach(func() {
+				securityGroups = []store.SecurityGroup{{
+					Guid:              "first-guid",
+					Name:              "first-asg",
+					Rules:             "firstRules",
+					RunningDefault:    true,
+					RunningSpaceGuids: []string{"space-a"},
+				}, {
+					Guid:              "second-guid",
+					Name:              "second-name",
+					Rules:             "secondRules",
+					RunningSpaceGuids: []string{"space-b"},
+					StagingSpaceGuids: []string{"space-b"},
+				}, {}}
+
+				err := securityGroupsStore.Replace(securityGroups)
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("returns it even if it is not requested by space guid", func() {
+				securityGroups, pagination, err := securityGroupsStore.BySpaceGuids([]string{"space-b"}, store.Page{})
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(len(securityGroups)).To(Equal(2))
+				Expect(securityGroups).To(ConsistOf(store.SecurityGroup{
+					Guid:              "first-guid",
+					Name:              "first-asg",
+					Rules:             "firstRules",
+					RunningDefault:    true,
+					RunningSpaceGuids: []string{"space-a"},
+				}, store.SecurityGroup{
+					Guid:              "second-guid",
+					Name:              "second-name",
+					Rules:             "secondRules",
+					RunningSpaceGuids: []string{"space-b"},
+					StagingSpaceGuids: []string{"space-b"},
+				}))
+				Expect(pagination.Next).To(Equal(0))
+
+			})
+		})
 	})
 
 	Describe("Replace", func() {
@@ -261,6 +347,16 @@ var _ = Describe("SecurityGroupsStore", func() {
 			Expect(securityGroups).To(ConsistOf(newRules))
 		})
 
+		It("works if data is the same", func() {
+			err := securityGroupsStore.Replace(initialRules)
+			Expect(err).ToNot(HaveOccurred())
+
+			securityGroups, _, err := securityGroupsStore.BySpaceGuids([]string{"first-space", "second-space", "third-space"}, store.Page{})
+			Expect(err).ToNot(HaveOccurred())
+
+			Expect(securityGroups).To(ConsistOf(initialRules))
+		})
+
 		Context("when errors occur", func() {
 			var mockDB *fakes.Db
 			var tx *dbfakes.Transaction
@@ -300,12 +396,12 @@ var _ = Describe("SecurityGroupsStore", func() {
 
 			Context("inserting a security group", func() {
 				BeforeEach(func() {
-					tx.ExecReturnsOnCall(1, nil, errors.New("can't exec SQL"))
+					tx.ExecReturnsOnCall(0, nil, errors.New("can't exec SQL"))
 				})
 
 				It("returns an error", func() {
 					err := securityGroupsStore.Replace(newRules)
-					Expect(err).To(MatchError("adding new security group third-guid (third-name): can't exec SQL"))
+					Expect(err).To(MatchError("saving security group third-guid (third-name): can't exec SQL"))
 				})
 
 				It("rolls back the transaction", func() {
