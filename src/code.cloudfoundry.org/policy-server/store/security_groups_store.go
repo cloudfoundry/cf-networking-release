@@ -33,7 +33,7 @@ func (sgs *SGStore) BySpaceGuids(spaceGuids []string, page Page) ([]SecurityGrou
 			staging_spaces,
 			running_spaces
 		FROM security_groups
-		WHERE (%s OR %s)`,
+		WHERE (staging_default=true OR running_default=true OR %s OR %s)`,
 		sgs.jsonOverlapsSQL("staging_spaces", spaceGuids),
 		sgs.jsonOverlapsSQL("running_spaces", spaceGuids),
 	)
@@ -115,46 +115,33 @@ func (sgs *SGStore) Replace(newSecurityGroups []SecurityGroup) error {
 		}
 	}
 
-	updateQuery := tx.Rebind(`
-		UPDATE security_groups SET name=?, rules=?, staging_default=?, running_default=?, staging_spaces=?, running_spaces=?
-		WHERE guid=?`)
-	insertQuery := tx.Rebind(`
+	upsertQuery := tx.Rebind(`
 		INSERT INTO security_groups
 		(guid, name, rules, staging_default, running_default, staging_spaces, running_spaces)
-		VALUES(?, ?, ?, ?, ?, ?, ?)`)
+		VALUES(?, ?, ?, ?, ?, ?, ?) ` +
+		sgs.onConflictUpdateSQL() +
+		` name=?, rules=?, staging_default=?, running_default=?, staging_spaces=?, running_spaces=?`)
 
 	for _, group := range newSecurityGroups {
 		delete(existingGuids, group.Guid)
 
-		result, err := tx.Exec(updateQuery,
+		_, err := tx.Exec(upsertQuery,
+			group.Guid,
 			group.Name,
 			group.Rules,
 			group.StagingDefault,
 			group.RunningDefault,
 			group.StagingSpaceGuids,
 			group.RunningSpaceGuids,
-			group.Guid,
+			group.Name,
+			group.Rules,
+			group.StagingDefault,
+			group.RunningDefault,
+			group.StagingSpaceGuids,
+			group.RunningSpaceGuids,
 		)
 		if err != nil {
-			return fmt.Errorf("updating security group %s (%s): %s", group.Guid, group.Name, err)
-		}
-		var affectedRows int64
-		if result != nil {
-			affectedRows, _ = result.RowsAffected()
-		}
-		if affectedRows == 0 {
-			_, err = tx.Exec(insertQuery,
-				group.Guid,
-				group.Name,
-				group.Rules,
-				group.StagingDefault,
-				group.RunningDefault,
-				group.StagingSpaceGuids,
-				group.RunningSpaceGuids,
-			)
-			if err != nil {
-				return fmt.Errorf("adding new security group %s (%s): %s", group.Guid, group.Name, err)
-			}
+			return fmt.Errorf("saving security group %s (%s): %s", group.Guid, group.Name, err)
 		}
 	}
 
@@ -189,6 +176,17 @@ func (sgs *SGStore) jsonOverlapsSQL(columnName string, filterValues []string) st
 	case helpers.Postgres:
 		filterList := fmt.Sprintf("%s", helpers.MarksWithSeparator(len(filterValues), "%", ", "))
 		return fmt.Sprintf(`%s ?| array[%s]`, columnName, filterList)
+	default:
+		return ""
+	}
+}
+
+func (sgs *SGStore) onConflictUpdateSQL() string {
+	switch sgs.Conn.DriverName() {
+	case helpers.MySQL:
+		return "ON DUPLICATE KEY UPDATE"
+	case helpers.Postgres:
+		return "ON CONFLICT (guid) DO UPDATE SET"
 	default:
 		return ""
 	}
