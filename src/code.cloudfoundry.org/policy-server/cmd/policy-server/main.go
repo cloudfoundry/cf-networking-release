@@ -148,7 +148,7 @@ func main() {
 		conf.TagLength,
 	)
 
-	securityGroupsStore := store.SGStore{
+	securityGroupsStore := &store.SGStore{
 		Conn: connectionPool,
 	}
 
@@ -177,8 +177,9 @@ func main() {
 	quotaGuard := handlers.NewQuotaGuard(wrappedStore, conf.MaxPolicies)
 	policyFilter := handlers.NewPolicyFilter(uaaClient, ccClient, 100)
 
-	policyMapperV0 := api_v0.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal), &api_v0.Validator{})
-	policyMapperV1 := api.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal), &api.PolicyValidator{})
+	policyMapperV0 := api_v0.NewPolicyMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal), &api_v0.Validator{})
+	policyMapperV1 := api.NewPolicyMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal), &api.PolicyValidator{})
+	asgMapper := api.NewAsgMapper(marshal.MarshalFunc(json.Marshal))
 
 	createPolicyHandlerV1 := handlers.NewPoliciesCreate(wrappedStore, policyMapperV1,
 		policyGuard, quotaGuard, errorResponse)
@@ -192,6 +193,8 @@ func main() {
 
 	policiesIndexHandlerV1 := handlers.NewPoliciesIndex(wrappedStore, policyMapperV1, policyFilter, policyGuard, errorResponse)
 	policiesIndexHandlerV0 := handlers.NewPoliciesIndex(wrappedStore, policyMapperV0, policyFilter, policyGuard, errorResponse)
+
+	asgsIndexHandlerV1 := handlers.NewAsgsIndex(securityGroupsStore, asgMapper, errorResponse)
 
 	egressDestinationMapper := &api.EgressDestinationMapper{
 		Marshaler:        marshal.MarshalFunc(json.Marshal),
@@ -350,6 +353,7 @@ func main() {
 		{Name: "egress_policies_create", Method: "POST", Path: "/networking/:version/external/egress_policies"},
 		{Name: "egress_policies_delete", Method: "DELETE", Path: "/networking/:version/external/egress_policies/:id"},
 		{Name: "cleanup", Method: "POST", Path: "/networking/:version/external/policies/cleanup"},
+		{Name: "security_groups_index", Method: "GET", Path: "/networking/:version/external/security_groups"},
 		{Name: "tags_index", Method: "GET", Path: "/networking/:version/external/tags"},
 	}
 
@@ -403,6 +407,9 @@ func main() {
 		"cleanup": metricsWrap("Cleanup",
 			logWrap(v0Andv1VersionWrap(authAdminWrap(policiesCleanupHandler), authAdminWrap(policiesCleanupHandler)))),
 
+		"security_groups_index": metricsWrap("SecurityGroupsIndex",
+			logWrap(v1OnlyVersionWrap(authWriteWrap(asgsIndexHandlerV1)))),
+
 		"tags_index": metricsWrap("TagsIndex",
 			logWrap(v0Andv1VersionWrap(authAdminWrap(tagsIndexHandler), authAdminWrap(tagsIndexHandler)))),
 
@@ -452,7 +459,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("%s.%s: failed-to-create-locket-client using: %s", logPrefix, jobPrefix, err)
 		}
-		asgSyncer := asg_syncer.NewASGSyncer(logger, &securityGroupsStore, uaaClient, ccClient)
+		asgSyncer := asg_syncer.NewASGSyncer(logger, securityGroupsStore, uaaClient, ccClient)
 		asgLocker := initASGLocker(logger, conf.UUID, time.Duration(conf.ASGSyncInterval)*time.Second, locket.RetryInterval, locket.DefaultSessionTTLInSeconds, asgSyncer, locketClient)
 		members = append(members, grouper.Member{"asg-locker", asgLocker})
 	}
@@ -485,7 +492,6 @@ func initPoller(logger lager.Logger, conf *config.Config, policyCleaner *cleaner
 }
 
 func initASGLocker(logger lager.Logger, uuid string, pollInterval time.Duration, lockTimeout time.Duration, lockTTL int64, asgSyncer asg_syncer.ASGSync, locketClient locketmodels.LocketClient) ifrit.Runner {
-
 	lockIdentifier := &locketmodels.Resource{
 		Key:      "policy-server-asg-syncer",
 		Owner:    uuid,

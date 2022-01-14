@@ -18,11 +18,7 @@ type SGStore struct {
 }
 
 func (sgs *SGStore) BySpaceGuids(spaceGuids []string, page Page) ([]SecurityGroup, Pagination, error) {
-	if len(spaceGuids) == 0 {
-		return nil, Pagination{}, nil
-	}
-
-	query := fmt.Sprintf(`
+	query := `
 		SELECT
 			id,
 			guid,
@@ -32,11 +28,19 @@ func (sgs *SGStore) BySpaceGuids(spaceGuids []string, page Page) ([]SecurityGrou
 			running_default,
 			staging_spaces,
 			running_spaces
-		FROM security_groups
-		WHERE (staging_default=true OR running_default=true OR %s OR %s)`,
-		sgs.jsonOverlapsSQL("staging_spaces", spaceGuids),
-		sgs.jsonOverlapsSQL("running_spaces", spaceGuids),
-	)
+		FROM security_groups`
+
+	whereClause := `staging_default=true OR running_default=true`
+
+	if len(spaceGuids) > 0 {
+		whereClause = fmt.Sprintf("%s OR %s OR %s",
+			whereClause,
+			sgs.jsonOverlapsSQL("staging_spaces", spaceGuids),
+			sgs.jsonOverlapsSQL("running_spaces", spaceGuids),
+		)
+	}
+
+	query = fmt.Sprintf("%s WHERE (%s)", query, whereClause)
 
 	// one for running and one for staging
 	whereBindings := make([]interface{}, len(spaceGuids)*2)
