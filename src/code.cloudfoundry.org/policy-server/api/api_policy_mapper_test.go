@@ -23,7 +23,7 @@ var _ = Describe("ApiPolicyMapper", func() {
 	)
 	BeforeEach(func() {
 		fakeValidator = &fakes.PolicyValidator{}
-		mapper = api.NewMapper(
+		mapper = api.NewPolicyMapper(
 			marshal.UnmarshalFunc(json.Unmarshal),
 			marshal.MarshalFunc(json.Marshal),
 			fakeValidator,
@@ -116,7 +116,7 @@ var _ = Describe("ApiPolicyMapper", func() {
 		Context("when unmarshalling fails", func() {
 			BeforeEach(func() {
 				fakeUnmarshaler.UnmarshalReturns(errors.New("banana"))
-				mapper = api.NewMapper(
+				mapper = api.NewPolicyMapper(
 					fakeUnmarshaler,
 					marshal.MarshalFunc(json.Marshal),
 					fakeValidator,
@@ -237,7 +237,7 @@ var _ = Describe("ApiPolicyMapper", func() {
 		Context("when marshalling fails", func() {
 			BeforeEach(func() {
 				fakeMarshaler.MarshalReturns(nil, errors.New("banana"))
-				mapper = api.NewMapper(
+				mapper = api.NewPolicyMapper(
 					marshal.UnmarshalFunc(json.Unmarshal),
 					fakeMarshaler,
 					fakeValidator,

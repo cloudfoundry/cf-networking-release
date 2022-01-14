@@ -20,7 +20,7 @@ var _ = Describe("ApiPolicyMapper v000", func() {
 		fakeMarshaler *fakes.Marshaler
 	)
 	BeforeEach(func() {
-		mapper = api_v0_internal.NewMapper(
+		mapper = api_v0_internal.NewPolicyMapper(
 			marshal.UnmarshalFunc(json.Unmarshal),
 			marshal.MarshalFunc(json.Marshal),
 		)
@@ -170,7 +170,7 @@ var _ = Describe("ApiPolicyMapper v000", func() {
 		Context("when marshalling fails", func() {
 			BeforeEach(func() {
 				fakeMarshaler.MarshalReturns(nil, errors.New("banana"))
-				mapper = api_v0_internal.NewMapper(
+				mapper = api_v0_internal.NewPolicyMapper(
 					marshal.UnmarshalFunc(json.Unmarshal),
 					fakeMarshaler,
 				)

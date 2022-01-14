@@ -13,7 +13,7 @@ type policyMapper struct {
 	Marshaler   marshal.Marshaler
 }
 
-func NewMapper(Unmarshaler marshal.Unmarshaler, Marshaler marshal.Marshaler) api.PolicyMapper {
+func NewPolicyMapper(Unmarshaler marshal.Unmarshaler, Marshaler marshal.Marshaler) api.PolicyMapper {
 	return &policyMapper{
 		Unmarshaler: Unmarshaler,
 		Marshaler:   Marshaler,
