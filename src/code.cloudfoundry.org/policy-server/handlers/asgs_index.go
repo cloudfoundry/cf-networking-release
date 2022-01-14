@@ -6,20 +6,20 @@ import (
 	"strconv"
 	"strings"
 
-	"code.cloudfoundry.org/cf-networking-helpers/marshal"
+	"code.cloudfoundry.org/policy-server/api"
 	"code.cloudfoundry.org/policy-server/store"
 )
 
 type AsgsIndex struct {
 	Store         store.SecurityGroupsStore
-	Marshaler     marshal.Marshaler
+	Mapper        api.AsgMapper
 	ErrorResponse errorResponse
 }
 
-func NewAsgsIndex(store store.SecurityGroupsStore, marshaler marshal.Marshaler, errorResponse errorResponse) *AsgsIndex {
+func NewAsgsIndex(store store.SecurityGroupsStore, mapper api.AsgMapper, errorResponse errorResponse) *AsgsIndex {
 	return &AsgsIndex{
 		Store:         store,
-		Marshaler:     marshaler,
+		Mapper:        mapper,
 		ErrorResponse: errorResponse,
 	}
 }
@@ -40,13 +40,12 @@ func (h *AsgsIndex) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	asgs, _, err := h.Store.BySpaceGuids(spaceGuids, store.Page{From: from, Limit: limit})
+	asgs, pagination, err := h.Store.BySpaceGuids(spaceGuids, store.Page{From: from, Limit: limit})
 	if err != nil {
 		h.ErrorResponse.InternalServerError(logger, w, err, "database read failed")
 		return
 	}
-
-	bytes, err := h.Marshaler.Marshal(asgs)
+	bytes, err := h.Mapper.AsBytes(asgs, pagination)
 	if err != nil {
 		h.ErrorResponse.InternalServerError(logger, w, err, "map asgs as bytes failed")
 		return

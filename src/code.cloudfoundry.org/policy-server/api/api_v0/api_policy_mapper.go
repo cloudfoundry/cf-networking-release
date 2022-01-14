@@ -14,7 +14,7 @@ type policyMapper struct {
 	Validator   validator
 }
 
-func NewMapper(unmarshaler marshal.Unmarshaler, marshaler marshal.Marshaler, validator validator) api.PolicyMapper {
+func NewPolicyMapper(unmarshaler marshal.Unmarshaler, marshaler marshal.Marshaler, validator validator) api.PolicyMapper {
 	return &policyMapper{
 		Unmarshaler: unmarshaler,
 		Marshaler:   marshaler,
