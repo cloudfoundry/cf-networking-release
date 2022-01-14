@@ -252,6 +252,21 @@ var _ = Describe("SecurityGroupsStore", func() {
 				Expect(pagination.Next).To(Equal(0))
 
 			})
+
+			It("returns it when no space guids are provided", func() {
+				securityGroups, pagination, err := securityGroupsStore.BySpaceGuids([]string{}, store.Page{})
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(len(securityGroups)).To(Equal(1))
+				Expect(securityGroups).To(ConsistOf(store.SecurityGroup{
+					Guid:              "first-guid",
+					Name:              "first-asg",
+					Rules:             "firstRules",
+					StagingDefault:    true,
+					RunningSpaceGuids: []string{"space-a"},
+				}))
+				Expect(pagination.Next).To(Equal(0))
+			})
 		})
 
 		Context("when there is a public running security group", func() {
@@ -293,7 +308,21 @@ var _ = Describe("SecurityGroupsStore", func() {
 					StagingSpaceGuids: []string{"space-b"},
 				}))
 				Expect(pagination.Next).To(Equal(0))
+			})
 
+			It("returns it when no space guids are requested", func() {
+				securityGroups, pagination, err := securityGroupsStore.BySpaceGuids([]string{}, store.Page{})
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(len(securityGroups)).To(Equal(1))
+				Expect(securityGroups).To(ConsistOf(store.SecurityGroup{
+					Guid:              "first-guid",
+					Name:              "first-asg",
+					Rules:             "firstRules",
+					RunningDefault:    true,
+					RunningSpaceGuids: []string{"space-a"},
+				}))
+				Expect(pagination.Next).To(Equal(0))
 			})
 		})
 	})
