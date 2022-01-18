@@ -103,6 +103,11 @@ func main() {
 		MetricsSender: metricsSender,
 	}
 
+	wrappedSecurityGroupsStore := &store.SecurityGroupsMetricsWrapper{
+		Store:         securityGroupsStore,
+		MetricsSender: metricsSender,
+	}
+
 	errorResponse := &httperror.ErrorResponse{
 		MetricsSender: metricsSender,
 	}
@@ -117,7 +122,7 @@ func main() {
 	}
 
 	asgMapper := api.NewAsgMapper(marshal.MarshalFunc(json.Marshal))
-	securityGroupsHandlerV1 := handlers.NewAsgsIndex(securityGroupsStore, asgMapper, errorResponse)
+	securityGroupsHandlerV1 := handlers.NewAsgsIndex(wrappedSecurityGroupsStore, asgMapper, errorResponse)
 
 	metricsWrap := func(name string, handler http.Handler) http.Handler {
 		metricsWrapper := middleware.MetricWrapper{
