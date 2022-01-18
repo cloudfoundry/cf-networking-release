@@ -161,13 +161,13 @@ var _ = Describe("Internal API Listing security groups", func() {
 			Expect(responseJson.Next).To(Equal(expectedResponse.Next))
 			Expect(responseJson.SecurityGroups).To(ConsistOf(expectedResponse.SecurityGroups))
 
-			// Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
-			// 	HaveName("InternalSecurityGroupsRequestTime"),
-			// ))
+			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
+				HaveName("InternalSecurityGroupsRequestTime"),
+			))
 
-			// Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
-			// 	HaveName("SecurityGroupsIndexRequestTime"),
-			// ))
+			Eventually(fakeMetron.AllEvents, "5s").Should(ContainElement(
+				HaveName("SecurityGroupsStoreBySpaceGuidsSuccessTime"),
+			))
 		}
 
 		sgRule1 := `{"protocol":"tcp","destination":"","ports":"","type":0,"code":0,"description":"sg-rule-1","log":false}`

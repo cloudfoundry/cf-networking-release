@@ -23,7 +23,7 @@ import (
 	"github.com/onsi/gomega/gexec"
 )
 
-var _ = Describe("Internal API", func() {
+var _ = Describe("Internal Policies API", func() {
 	var (
 		sessions                  []*gexec.Session
 		conf                      config.Config
