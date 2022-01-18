@@ -82,6 +82,10 @@ func main() {
 		},
 	}
 
+	securityGroupsStore := &store.SGStore{
+		Conn: connectionPool,
+	}
+
 	tagDataStore := store.NewTagStore(connectionPool, &store.GroupTable{}, conf.TagLength)
 
 	metricsSender := &metrics.MetricsSender{
@@ -112,6 +116,9 @@ func main() {
 		ErrorResponse: errorResponse,
 	}
 
+	asgMapper := api.NewAsgMapper(marshal.MarshalFunc(json.Marshal))
+	securityGroupsHandlerV1 := handlers.NewAsgsIndex(securityGroupsStore, asgMapper, errorResponse)
+
 	metricsWrap := func(name string, handler http.Handler) http.Handler {
 		metricsWrapper := middleware.MetricWrapper{
 			Name:          name,
@@ -136,13 +143,15 @@ func main() {
 	metricsEmitter := common.InitMetricsEmitter(logger, wrappedStore, connectionPool, connectionPool.Monitor)
 
 	internalRoutes := rata.Routes{
-		{Name: "internal_policies", Method: "GET", Path: "/networking/:version/internal/policies"},
 		{Name: "create_tags", Method: "PUT", Path: "/networking/v1/internal/tags"},
+		{Name: "internal_policies", Method: "GET", Path: "/networking/:version/internal/policies"},
+		{Name: "internal_security_groups", Method: "GET", Path: "/networking/:version/internal/security_groups"},
 	}
 
 	internalHandlers := rata.Handlers{
-		"internal_policies": metricsWrap("InternalPolicies", logWrap(internalPoliciesHandlerV1)),
-		"create_tags":       metricsWrap("CreateTags", logWrap(createTagsHandlerV1)),
+		"create_tags":              metricsWrap("CreateTags", logWrap(createTagsHandlerV1)),
+		"internal_policies":        metricsWrap("InternalPolicies", logWrap(internalPoliciesHandlerV1)),
+		"internal_security_groups": metricsWrap("InternalSecurityGroups", logWrap(securityGroupsHandlerV1)),
 	}
 
 	tlsConfig, err := mutualtls.NewServerTLSConfig(conf.ServerCertFile, conf.ServerKeyFile, conf.CACertFile)
