@@ -179,7 +179,6 @@ func main() {
 
 	policyMapperV0 := api_v0.NewPolicyMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal), &api_v0.Validator{})
 	policyMapperV1 := api.NewPolicyMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal), &api.PolicyValidator{})
-	asgMapper := api.NewAsgMapper(marshal.MarshalFunc(json.Marshal))
 
 	createPolicyHandlerV1 := handlers.NewPoliciesCreate(wrappedStore, policyMapperV1,
 		policyGuard, quotaGuard, errorResponse)
@@ -193,8 +192,6 @@ func main() {
 
 	policiesIndexHandlerV1 := handlers.NewPoliciesIndex(wrappedStore, policyMapperV1, policyFilter, policyGuard, errorResponse)
 	policiesIndexHandlerV0 := handlers.NewPoliciesIndex(wrappedStore, policyMapperV0, policyFilter, policyGuard, errorResponse)
-
-	asgsIndexHandlerV1 := handlers.NewAsgsIndex(securityGroupsStore, asgMapper, errorResponse)
 
 	egressDestinationMapper := &api.EgressDestinationMapper{
 		Marshaler:        marshal.MarshalFunc(json.Marshal),
@@ -353,7 +350,6 @@ func main() {
 		{Name: "egress_policies_create", Method: "POST", Path: "/networking/:version/external/egress_policies"},
 		{Name: "egress_policies_delete", Method: "DELETE", Path: "/networking/:version/external/egress_policies/:id"},
 		{Name: "cleanup", Method: "POST", Path: "/networking/:version/external/policies/cleanup"},
-		{Name: "security_groups_index", Method: "GET", Path: "/networking/:version/external/security_groups"},
 		{Name: "tags_index", Method: "GET", Path: "/networking/:version/external/tags"},
 	}
 
@@ -406,9 +402,6 @@ func main() {
 
 		"cleanup": metricsWrap("Cleanup",
 			logWrap(v0Andv1VersionWrap(authAdminWrap(policiesCleanupHandler), authAdminWrap(policiesCleanupHandler)))),
-
-		"security_groups_index": metricsWrap("SecurityGroupsIndex",
-			logWrap(v1OnlyVersionWrap(authWriteWrap(asgsIndexHandlerV1)))),
 
 		"tags_index": metricsWrap("TagsIndex",
 			logWrap(v0Andv1VersionWrap(authAdminWrap(tagsIndexHandler), authAdminWrap(tagsIndexHandler)))),
