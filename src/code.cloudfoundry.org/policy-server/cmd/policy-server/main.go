@@ -10,7 +10,6 @@ import (
 	"os"
 	"time"
 
-	"code.cloudfoundry.org/clock"
 	"code.cloudfoundry.org/lib/common"
 	"code.cloudfoundry.org/lib/nonmutualtls"
 	"code.cloudfoundry.org/lib/poller"
@@ -25,13 +24,9 @@ import (
 	"code.cloudfoundry.org/debugserver"
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/lager/lagerflags"
-	"code.cloudfoundry.org/locket"
-	"code.cloudfoundry.org/locket/lock"
-	locketmodels "code.cloudfoundry.org/locket/models"
 	"code.cloudfoundry.org/policy-server/adapter"
 	"code.cloudfoundry.org/policy-server/api"
 	"code.cloudfoundry.org/policy-server/api/api_v0"
-	"code.cloudfoundry.org/policy-server/asg_syncer"
 	"code.cloudfoundry.org/policy-server/cc_client"
 	"code.cloudfoundry.org/policy-server/cleaner"
 	"code.cloudfoundry.org/policy-server/config"
@@ -42,7 +37,6 @@ import (
 	"github.com/cloudfoundry/dropsonde"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
-	"github.com/tedsuo/ifrit/restart"
 	"github.com/tedsuo/ifrit/sigmon"
 	"github.com/tedsuo/rata"
 )
@@ -147,10 +141,6 @@ func main() {
 		policy,
 		conf.TagLength,
 	)
-
-	securityGroupsStore := &store.SGStore{
-		Conn: connectionPool,
-	}
 
 	tagDataStore := store.NewTagStore(connectionPool, &store.GroupTable{}, conf.TagLength)
 
@@ -447,16 +437,6 @@ func main() {
 		{"debug-server", debugServer},
 	}
 
-	if conf.ASGSyncInterval > 0 {
-		locketClient, err := locket.NewClient(logger, conf.ClientLocketConfig)
-		if err != nil {
-			log.Fatalf("%s.%s: failed-to-create-locket-client using: %s", logPrefix, jobPrefix, err)
-		}
-		asgSyncer := asg_syncer.NewASGSyncer(logger, securityGroupsStore, uaaClient, ccClient)
-		asgLocker := initASGLocker(logger, conf.UUID, time.Duration(conf.ASGSyncInterval)*time.Second, locket.RetryInterval, locket.DefaultSessionTTLInSeconds, asgSyncer, locketClient)
-		members = append(members, grouper.Member{"asg-locker", asgLocker})
-	}
-
 	logger.Info("starting external server", lager.Data{"listen-address": conf.ListenHost, "port": conf.ListenPort})
 
 	group := grouper.NewOrdered(os.Interrupt, members)
@@ -482,39 +462,4 @@ func initPoller(logger lager.Logger, conf *config.Config, policyCleaner *cleaner
 		PollInterval:    pollInterval,
 		SingleCycleFunc: policyCleaner.DeleteStalePoliciesWrapper,
 	}
-}
-
-func initASGLocker(logger lager.Logger, uuid string, pollInterval time.Duration, lockTimeout time.Duration, lockTTL int64, asgSyncer asg_syncer.ASGSync, locketClient locketmodels.LocketClient) ifrit.Runner {
-	lockIdentifier := &locketmodels.Resource{
-		Key:      "policy-server-asg-syncer",
-		Owner:    uuid,
-		TypeCode: locketmodels.LOCK,
-		Type:     locketmodels.LockType,
-	}
-	lock := grouper.Member{"locket", lock.NewLockRunner(
-		logger,
-		locketClient,
-		lockIdentifier,
-		lockTTL,
-		clock.NewClock(),
-		lockTimeout,
-	)}
-
-	asgPoller := &poller.Poller{
-		Logger:          logger.Session("asg-syncer"),
-		PollInterval:    pollInterval,
-		SingleCycleFunc: asgSyncer.Poll,
-	}
-	asgMembers := grouper.NewOrdered(os.Interrupt, grouper.Members{{"asg-lock", lock}, {"asg-poller", asgPoller}})
-
-	loadFuncCallback := func(runner ifrit.Runner, err error) ifrit.Runner {
-		logger.Info("restarting-asg-locker")
-		return grouper.NewOrdered(os.Interrupt, grouper.Members{{"asg-lock", lock}, {"asg-poller", asgPoller}})
-	}
-
-	restarter := restart.Restarter{
-		Runner: asgMembers,
-		Load:   loadFuncCallback,
-	}
-	return restarter
 }

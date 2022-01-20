@@ -1,0 +1,6 @@
+---
+processes:
+  - name: policy-server-asg-syncer
+    executable: "/var/vcap/packages/policy-server/bin/policy-server-asg-syncer"
+    args:
+    - "-config-file=/var/vcap/jobs/policy-server-asg-syncer/config/policy-server-asg-syncer.json"
