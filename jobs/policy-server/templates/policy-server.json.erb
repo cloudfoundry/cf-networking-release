@@ -78,15 +78,7 @@
       end
     end
 
-    def locket_address
-      # if p() is safe here since asg_sync_enabled + locket_address both have defaults and can't be nil
-      if p('asg_sync_enabled')
-        if p('locket_address') =~ /^[a-z0-9.-]+:[0-9]+$/
-          return p('locket_address')
-        end
-        raise 'asg_sync_enabled is true but the locket_address is invalid'
-      end
-    end
+    parse_ip(p('listen_ip'), 'listen_ip')
 %>
 
 <%=
@@ -103,7 +95,6 @@
     end
 
     toRender = {
-      'uuid' => spec.id,
       'listen_host' => p('listen_ip'),
       'listen_port' => p('listen_port'),
       'log_prefix' => 'cfnetworking',
@@ -148,14 +139,6 @@
       'uaa_ca' => '/var/vcap/jobs/policy-server/config/certs/uaa_ca.crt',
       'request_timeout' => 5,
     }
-
-    if p('asg_sync_enabled')
-      toRender['asg_sync_interval'] = asg_sync_interval
-      toRender['locket_address'] = locket_address
-      toRender['locket_ca_cert_file'] = '/var/vcap/jobs/policy-server/config/certs/locket_ca.crt'
-      toRender['locket_client_cert_file'] = '/var/vcap/jobs/policy-server/config/certs/locket.crt'
-      toRender['locket_client_key_file'] = '/var/vcap/jobs/policy-server/config/certs/locket.key'
-    end
 
     JSON.pretty_generate(toRender)
 %>

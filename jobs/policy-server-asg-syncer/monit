@@ -1,0 +1,7 @@
+<% unless p("disable") %>
+check process policy-server-asg-syncer
+  with pidfile /var/vcap/sys/run/bpm/policy-server-asg-syncer/policy-server-asg-syncer.pid
+  start program "/var/vcap/jobs/bpm/bin/bpm start policy-server-asg-syncer"
+  stop program "/var/vcap/jobs/bpm/bin/bpm stop policy-server-asg-syncer"
+  group vcap
+<% end %>
