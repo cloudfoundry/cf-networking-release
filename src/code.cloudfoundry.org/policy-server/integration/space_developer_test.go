@@ -37,7 +37,7 @@ var _ = Describe("External API Space Developer", func() {
 		dbConf = testsupport.GetDBConfig()
 		dbConf.DatabaseName = fmt.Sprintf("space_developer_test_node_%d", ports.PickAPort())
 
-		template, _ := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
+		template, _, _ := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
 		policyServerConfs = configurePolicyServers(template, 2)
 		sessions = startPolicyServers(policyServerConfs)
 		conf = policyServerConfs[0]
@@ -114,7 +114,7 @@ var _ = Describe("External API Space Developer", func() {
 				BeforeEach(func() {
 					stopPolicyServers(sessions, policyServerConfs)
 
-					template, _ := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
+					template, _, _ := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
 					template.EnableSpaceDeveloperSelfService = true
 					policyServerConfs = configurePolicyServers(template, 2)
 

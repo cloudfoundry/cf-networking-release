@@ -31,7 +31,7 @@ var _ = Describe("Cross Origin Resource Sharing", func() {
 		dbConf = testsupport.GetDBConfig()
 		dbConf.DatabaseName = fmt.Sprintf("cors_test_node_%d", ports.PickAPort())
 
-		template, _ := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
+		template, _, _ := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
 		template.AllowedCORSDomains = []string{
 			"https://www.google.com",
 			"https://www.mozilla.org",
