@@ -43,7 +43,7 @@ var _ = Describe("Internal Policies API", func() {
 
 		tlsConfig = helpers.DefaultTLSConfig()
 
-		template, internalTemplate := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
+		template, internalTemplate, _ := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
 		template.TagLength = 2
 		internalTemplate.TagLength = 2
 		policyServerConfs = configurePolicyServers(template, 1)

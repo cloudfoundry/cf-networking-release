@@ -31,7 +31,8 @@ import (
 var _ = Describe("Internal API Listing security groups", func() {
 	var (
 		sessions                  []*gexec.Session
-		conf                      config.Config
+		asgSyncerSession          *gexec.Session
+		asgSyncerConfig           config.ASGSyncerConfig
 		tlsConfig                 *tls.Config
 		policyServerConfs         []config.Config
 		policyServerInternalConfs []config.InternalConfig
@@ -72,24 +73,28 @@ var _ = Describe("Internal API Listing security groups", func() {
 		locketProcess = ifrit.Invoke(locketRunner)
 		Eventually(locketProcess.Ready()).Should(BeClosed())
 
-		policyServerConf, internalPolicyServerConf := helpers.DefaultTestConfigWithCCServer(dbConf, fakeMetron.Address(), "fixtures", mockCCServer.URL())
-		policyServerConf.ASGSyncInterval = 1
-		policyServerConf.LocketAddress = locketAddress
+		var defaultExternalConf config.Config
+		var defaultInternalConf config.InternalConfig
+		defaultExternalConf, defaultInternalConf, asgSyncerConfig = helpers.DefaultTestConfigWithCCServer(dbConf, fakeMetron.Address(), "fixtures", mockCCServer.URL())
+		asgSyncerConfig.LocketAddress = locketAddress
 		locketClientConfig := testrunner.ClientLocketConfig()
-		policyServerConf.LocketCACertFile = locketClientConfig.LocketCACertFile
-		policyServerConf.LocketClientCertFile = locketClientConfig.LocketClientCertFile
-		policyServerConf.LocketClientKeyFile = locketClientConfig.LocketClientKeyFile
-		policyServerConfs = configurePolicyServers(policyServerConf, 2)
-		policyServerInternalConfs = configureInternalPolicyServers(internalPolicyServerConf, 1)
+		asgSyncerConfig.LocketCACertFile = locketClientConfig.LocketCACertFile
+		asgSyncerConfig.LocketClientCertFile = locketClientConfig.LocketClientCertFile
+		asgSyncerConfig.LocketClientKeyFile = locketClientConfig.LocketClientKeyFile
+		policyServerConfs = configurePolicyServers(defaultExternalConf, 1)
+		policyServerInternalConfs = configureInternalPolicyServers(defaultInternalConf, 1)
 		internalConf = policyServerInternalConfs[0]
 
 		sessions = startPolicyAndInternalServers(policyServerConfs, policyServerInternalConfs)
-		conf = policyServerConfs[0]
+
+		asgSyncerSession = helpers.StartAsgSyncer(policyServerAsgSyncerPath, asgSyncerConfig)
 
 		tlsConfig = helpers.DefaultTLSConfig()
 	})
 
 	AfterEach(func() {
+		asgSyncerSession.Interrupt()
+		Eventually(asgSyncerSession, helpers.DEFAULT_TIMEOUT).Should(gexec.Exit())
 		stopPolicyServerExternalAndInternal(sessions, policyServerConfs, policyServerInternalConfs)
 		mockCCServer.Close()
 		fakeMetron.Close()
@@ -140,7 +145,7 @@ var _ = Describe("Internal API Listing security groups", func() {
 					RunningSpaces: cc_client.SecurityGroupSpaceRelationship{Data: []map[string]string{{"guid": "space-a"}}},
 				},
 			})
-			time.Sleep(time.Duration(conf.ASGSyncInterval) * time.Second * 2)
+			time.Sleep(time.Duration(asgSyncerConfig.ASGSyncInterval) * time.Second * 2)
 		})
 
 		listSecurityGroups := func(queryString string, expectedResponse api.AsgsPayload) {

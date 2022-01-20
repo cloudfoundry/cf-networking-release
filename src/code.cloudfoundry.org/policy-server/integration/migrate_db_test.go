@@ -30,7 +30,7 @@ var _ = Describe("Migrate DB Binary", func() {
 		dbConf = testsupport.GetDBConfig()
 		dbConf.DatabaseName = fmt.Sprintf("migrate_test_node_%d", ports.PickAPort())
 
-		conf, _ = helpers.DefaultTestConfig(dbConf, "unused", "fixtures")
+		conf, _, _ = helpers.DefaultTestConfig(dbConf, "unused", "fixtures")
 		conf.Database = dbConf
 	})
 
