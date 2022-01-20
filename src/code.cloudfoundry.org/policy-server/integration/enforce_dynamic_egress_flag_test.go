@@ -40,7 +40,7 @@ var _ = Describe("EnforceExperimentalDynamicEgressPolicies Flag", func() {
 
 		tlsConfig = helpers.DefaultTLSConfig()
 
-		template, internalTemplate := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
+		template, internalTemplate, _ := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
 		template.TagLength = 2
 		internalTemplate.TagLength = 2
 		internalTemplate.EnforceExperimentalDynamicEgressPolicies = false

@@ -41,7 +41,7 @@ var _ = Describe("Integration", func() {
 			dbConf = testsupport.GetDBConfig()
 			dbConf.DatabaseName = fmt.Sprintf("integration_test_node_%d", ports.PickAPort())
 
-			template, _ := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
+			template, _, _ := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
 			policyServerConfs = configurePolicyServers(template, 1)
 			conf = policyServerConfs[0]
 		})
@@ -255,7 +255,7 @@ var _ = Describe("Integration", func() {
 				DatabaseName: "nonexistentDatabase",
 				Timeout:      1,
 			}
-			conf, _ := helpers.DefaultTestConfig(badDbConfig, "some-address", "fixtures")
+			conf, _, _ := helpers.DefaultTestConfig(badDbConfig, "some-address", "fixtures")
 			configFilePath := helpers.WriteConfigFile(conf)
 
 			policyServerCmd := exec.Command(policyServerPath, "-config-file", configFilePath)
@@ -291,7 +291,7 @@ var _ = Describe("Integration", func() {
 					DatabaseName: "nonexistentDatabase",
 					Timeout:      0,
 				}
-				conf, _ := helpers.DefaultTestConfig(badDbConfig, "some-address", "fixtures")
+				conf, _, _ := helpers.DefaultTestConfig(badDbConfig, "some-address", "fixtures")
 				configFilePath := helpers.WriteConfigFile(conf)
 
 				policyServerCmd := exec.Command(policyServerPath, "-config-file", configFilePath)

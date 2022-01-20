@@ -37,7 +37,7 @@ var _ = Describe("External Destination API", func() {
 		dbConf = testsupport.GetDBConfig()
 		dbConf.DatabaseName = fmt.Sprintf("external_api_destination_test_node_%d", ports.PickAPort())
 
-		template, _ := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
+		template, _, _ := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
 		policyServerConfs = configurePolicyServers(template, 2)
 		sessions = startPolicyServers(policyServerConfs)
 
