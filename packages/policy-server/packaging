@@ -12,5 +12,6 @@ mkdir ${BOSH_INSTALL_TARGET}/bin
 pushd src/code.cloudfoundry.org
 go build -o "${BOSH_INSTALL_TARGET}/bin/policy-server" code.cloudfoundry.org/policy-server/cmd/policy-server
 go build -o "${BOSH_INSTALL_TARGET}/bin/policy-server-internal" code.cloudfoundry.org/policy-server/cmd/policy-server-internal
+go build -o "${BOSH_INSTALL_TARGET}/bin/policy-server-asg-syncer" code.cloudfoundry.org/policy-server/cmd/policy-server-asg-syncer
 go build -o "${BOSH_INSTALL_TARGET}/bin/migrate-db" code.cloudfoundry.org/policy-server/cmd/migrate-db
 popd
