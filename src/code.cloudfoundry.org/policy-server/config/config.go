@@ -11,7 +11,6 @@ import (
 )
 
 type Config struct {
-	UUID                            string    `json:"uuid" validate:"nonzero"`
 	ListenHost                      string    `json:"listen_host" validate:"nonzero"`
 	ListenPort                      int       `json:"listen_port" validate:"nonzero"`
 	LogPrefix                       string    `json:"log_prefix" validate:"nonzero"`
