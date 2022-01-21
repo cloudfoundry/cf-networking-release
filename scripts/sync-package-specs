@@ -42,6 +42,7 @@ function sync_package() {
 sync_package policy-server \
   -app code.cloudfoundry.org/policy-server/cmd/policy-server \
   -app code.cloudfoundry.org/policy-server/cmd/policy-server-internal \
+  -app code.cloudfoundry.org/policy-server/cmd/policy-server-asg-syncer \
   -app code.cloudfoundry.org/policy-server/cmd/migrate-db &
 
 sync_package bosh-dns-adapter \
