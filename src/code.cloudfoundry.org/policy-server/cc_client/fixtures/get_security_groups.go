@@ -57,7 +57,10 @@ const OneSecurityGroup = `{
           ]
         },
         "running_spaces": {
-          "data": []
+          "data": [
+            { "guid": "space-guid-3" },
+            { "guid": "space-guid-4" }
+          ]
         }
       },
       "links": {

@@ -61,7 +61,7 @@ type SecurityGroupRule struct {
 }
 type SecurityGroupRelationships struct {
 	StagingSpaces SecurityGroupSpaceRelationship `json:"staging_spaces"`
-	RunningSpaces SecurityGroupSpaceRelationship `json:"running_spacres"`
+	RunningSpaces SecurityGroupSpaceRelationship `json:"running_spaces"`
 }
 type SecurityGroupSpaceRelationship struct {
 	Data []map[string]string `json:"data"`
