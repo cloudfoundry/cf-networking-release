@@ -171,7 +171,6 @@ func DefaultTestConfigWithCCServer(dbConfig db.Config, metronAddress string, fix
 	UAAHost, UAAPort := SplitUAAHostPort()
 
 	externalConfig := config.Config{
-		UUID:                            "xxxxxx-xxxxxxxx-xxxxx",
 		ListenHost:                      "127.0.0.1",
 		ListenPort:                      ports.PickAPort(),
 		LogPrefix:                       "testprefix",
@@ -214,7 +213,7 @@ func DefaultTestConfigWithCCServer(dbConfig db.Config, metronAddress string, fix
 
 	asgSyncerConfig := config.ASGSyncerConfig{
 		ASGSyncInterval:   1,
-		UUID:              "some",
+		UUID:              "xxxxxx-xxxxxxxx-xxxxx",
 		Database:          dbConfig,
 		UAAClient:         "test",
 		UAAClientSecret:   "test",
