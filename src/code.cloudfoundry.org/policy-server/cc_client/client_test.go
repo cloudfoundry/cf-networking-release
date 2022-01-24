@@ -602,6 +602,14 @@ var _ = Describe("Client", func() {
 			Expect(sgs[0].GloballyEnabled.Staging).To(BeFalse())
 			Expect(sgs[0].Rules[0].Protocol).To(Equal("tcp"))
 			Expect(sgs[0].Rules[1].Protocol).To(Equal("icmp"))
+			Expect(sgs[0].Relationships.StagingSpaces.Data).To(Equal([]map[string]string{
+				{"guid": "space-guid-1"},
+				{"guid": "space-guid-2"},
+			}))
+			Expect(sgs[0].Relationships.RunningSpaces.Data).To(Equal([]map[string]string{
+				{"guid": "space-guid-3"},
+				{"guid": "space-guid-4"},
+			}))
 		})
 
 		Context("when there are no security groups", func() {
