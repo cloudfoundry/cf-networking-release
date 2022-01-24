@@ -22,8 +22,8 @@ type ASGSyncerConfig struct {
 	UAAPort           int       `json:"uaa_port" validate:"nonzero"`
 	CCURL             string    `json:"cc_url" validate:"nonzero"`
 	CCCA              string    `json:"cc_ca_cert"`
-	LogPrefix         string    `json:"log_prefix" validate:"nonzero"`
 	LogLevel          string    `json:"log_level"`
+	LogPrefix         string    `json:"log_prefix" validate:"nonzero"`
 	SkipSSLValidation bool      `json:"skip_ssl_validation"`
 	locket.ClientLocketConfig
 }

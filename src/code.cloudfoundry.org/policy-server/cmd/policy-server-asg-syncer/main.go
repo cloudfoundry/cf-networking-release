@@ -53,7 +53,11 @@ func main() {
 		logPrefix = conf.LogPrefix
 	}
 
-	logger, _ := lagerflags.NewFromConfig(fmt.Sprintf("%s.%s", logPrefix, jobPrefix), common.GetLagerConfig())
+	loggerConfig := common.GetLagerConfig()
+	if conf.LogLevel != "" {
+		loggerConfig.LogLevel = conf.LogLevel
+	}
+	logger, _ := lagerflags.NewFromConfig(fmt.Sprintf("%s.%s", logPrefix, jobPrefix), loggerConfig)
 
 	connectionPool, err := db.NewConnectionPool(
 		conf.Database,
@@ -124,7 +128,7 @@ func main() {
 		{Name: "asg-locker", Runner: asgLocker},
 	}
 
-	logger.Info("starting asg syncer")
+	logger.Info("starting asg syncer", lager.Data{"interval": conf.ASGSyncInterval})
 
 	group := grouper.NewOrdered(os.Interrupt, members)
 	monitor := ifrit.Invoke(sigmon.New(group))
