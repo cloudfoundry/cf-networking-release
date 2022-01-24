@@ -24,9 +24,11 @@ module Bosh::Template::Test
         'database' => {
           'connect_timeout_seconds' => 30,
         },
-        'locket_ca_cert' => 'the locket ca cert',
-        'locket_client_cert' => 'the locket cert',
-        'locket_client_key' => 'the locket key',
+        'locket' => {
+          'ca_cert' => 'the locket ca cert',
+          'client_cert' => 'the locket cert',
+          'client_key' => 'the locket key',
+        }
       }
     end
 
@@ -210,7 +212,7 @@ module Bosh::Template::Test
         end
       end
 
-      it 'raises an error when there is no locket_address defined' do
+      it 'raises an error when there is no locket.address defined' do
         addrs = [
           '',
           'my-site-without-port.com',
@@ -221,14 +223,14 @@ module Bosh::Template::Test
         ]
 
         addrs.each do |addr|
-          merged_manifest_properties['locket_address'] = addr
+          merged_manifest_properties['locket']['address'] = addr
           expect {
             JSON.parse(template.render(merged_manifest_properties, consumes: links))
-          }.to raise_error('the locket_address is invalid')
+          }.to raise_error('the locket.address is invalid')
         end
       end
 
-      it 'allows common domain name/ip addr combos for locket_address' do
+      it 'allows common domain name/ip addr combos for locket.address' do
         addrs = [
           'test.com:1234',
           '10.10.10.10:1234',
@@ -236,7 +238,7 @@ module Bosh::Template::Test
         ]
 
         addrs.each do |addr|
-          merged_manifest_properties['locket_address'] = addr
+          merged_manifest_properties['locket']['address'] = addr
           expect {
           JSON.parse(template.render(merged_manifest_properties, consumes: links))
         }.to_not raise_error
@@ -255,7 +257,7 @@ module Bosh::Template::Test
 
       describe 'when the property doesn\'t exist' do
         before do
-          merged_manifest_properties.delete('locket_ca_cert')
+          merged_manifest_properties['locket'].delete('ca_cert')
         end
 
         it 'raises an error when there is no locket_ca_cert defined' do
@@ -277,10 +279,10 @@ module Bosh::Template::Test
 
       describe 'when the property doesn\'t exist' do
         before do
-          merged_manifest_properties.delete('locket_client_cert')
+          merged_manifest_properties['locket'].delete('client_cert')
         end
 
-        it 'raises an error when there is no locket_client defined' do
+        it 'raises an error when there is no locket.client_cert defined' do
           expect {
             template.render(merged_manifest_properties)
           }.to raise_error Bosh::Template::UnknownProperty
@@ -300,7 +302,7 @@ module Bosh::Template::Test
 
       describe 'when the property doesn\'t exist' do
         before do
-          merged_manifest_properties.delete('locket_client_key')
+          merged_manifest_properties['locket'].delete('client_key')
         end
 
         it 'raises an error when there is no locket_client_key defined' do
