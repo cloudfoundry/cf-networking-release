@@ -54,17 +54,17 @@ properties:
     description: "Connection timeout between the policy server and its database."
     default: 120
 
-  locket_address:
+  locket.address:
     description: "Hostname and port of the Locket server. Must be set when asg_sync_enabled is set to true."
     default: "locket.service.cf.internal:8891"
 
-  locket_ca_cert:
+  locket.ca_cert:
     description: "The CA certificiate for the CA for Locket."
 
-  locket_client_cert:
+  locket.client_cert:
     description: "The client certificate for Locket."
 
-  locket_client_key:
+  locket.client_key:
     description: "The private key for Locket."
 
   log_level:
