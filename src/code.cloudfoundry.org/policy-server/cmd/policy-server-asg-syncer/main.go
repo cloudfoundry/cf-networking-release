@@ -122,7 +122,7 @@ func main() {
 	}
 
 	asgSyncer := asg_syncer.NewASGSyncer(logger, wrappedSecurityGroupsStore, uaaClient, ccClient)
-	asgLocker := initASGLocker(logger, conf.UUID, time.Duration(conf.ASGSyncInterval)*time.Second, locket.RetryInterval, locket.DefaultSessionTTLInSeconds, asgSyncer, locketClient)
+	asgLocker := InitASGLocker(logger, conf.UUID, time.Duration(conf.ASGSyncInterval)*time.Second, locket.RetryInterval, locket.DefaultSessionTTLInSeconds, asgSyncer, locketClient)
 
 	members := grouper.Members{
 		{Name: "asg-locker", Runner: asgLocker},
@@ -145,7 +145,7 @@ func main() {
 	logger.Info("exited")
 }
 
-func initASGLocker(logger lager.Logger, uuid string, pollInterval time.Duration, lockTimeout time.Duration, lockTTL int64, asgSyncer asg_syncer.ASGSync, locketClient locketmodels.LocketClient) ifrit.Runner {
+func InitASGLocker(logger lager.Logger, uuid string, pollInterval time.Duration, lockTimeout time.Duration, lockTTL int64, asgSyncer asg_syncer.ASGSync, locketClient locketmodels.LocketClient) ifrit.Runner {
 	lockIdentifier := &locketmodels.Resource{
 		Key:      "policy-server-asg-syncer",
 		Owner:    uuid,
