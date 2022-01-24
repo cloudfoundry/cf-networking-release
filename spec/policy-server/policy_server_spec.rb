@@ -48,9 +48,6 @@ module Bosh::Template::Test
         'metron_port' => 6789,
         'log_level' => 'debug',
         'allowed_cors_domains' => ['some-cors-domain'],
-        'locket_ca_cert' => 'the locket ca cert',
-        'locket_client_cert' => 'the locket cert',
-        'locket_client_key' => 'the locket key',
       }
     end
 
@@ -134,7 +131,6 @@ module Bosh::Template::Test
       it 'creates a config/policy-server.json from properties' do
         config = JSON.parse(template.render(merged_manifest_properties))
         expect(config).to eq({
-          'uuid' => 'xxxxxx-xxxxxxxx-xxxxx',
           'listen_host' => '111.11.11.1',
           'listen_port' => 1234,
           'log_prefix' => 'cfnetworking',
@@ -176,11 +172,6 @@ module Bosh::Template::Test
           'allowed_cors_domains' => ['some-cors-domain'],
           'uaa_ca' => '/var/vcap/jobs/policy-server/config/certs/uaa_ca.crt',
           'request_timeout' => 5,
-          'asg_sync_interval' => 60,
-          'locket_address' => 'locket.service.cf.internal:8891',
-          'locket_ca_cert_file' => '/var/vcap/jobs/policy-server/config/certs/locket_ca.crt',
-          'locket_client_cert_file' => '/var/vcap/jobs/policy-server/config/certs/locket.crt',
-          'locket_client_key_file' => '/var/vcap/jobs/policy-server/config/certs/locket.key',
         })
       end
 
@@ -345,145 +336,6 @@ module Bosh::Template::Test
         expect {
           JSON.parse(template.render(merged_manifest_properties))
         }.to raise_error('policy_cleanup_interval must be at least 1 minute')
-      end
-
-      it 'raises an error when asg_sync_enabled is true and the asg_sync_interval is invalid' do
-        intervals = [
-          'notanumber',
-          0,
-          -1,
-          1.3,
-          0.5,
-          true,
-          -0,
-          '1',
-          '0',
-        ]
-        merged_manifest_properties['asg_sync_enabled'] = true
-        intervals.each do |interval|
-          merged_manifest_properties['asg_sync_interval'] = interval
-          expect {
-            JSON.parse(template.render(merged_manifest_properties))
-          }.to raise_error('asg_sync_interval must be an integer greater than 0')
-        end
-      end
-      it 'raises an error when asg_sync_enabled is true and there is no locket_address defined' do
-        addrs = [
-          '',
-          'my-site-without-port.com',
-          'http://asdf.com',
-          'http://asdf:1234',
-          'asdf.com:badport',
-          'me+you:1234',
-        ]
-        merged_manifest_properties['asg_sync_enabled'] = true
-        addrs.each do |addr|
-          merged_manifest_properties['locket_address'] = addr
-          expect {
-            JSON.parse(template.render(merged_manifest_properties))
-          }.to raise_error('asg_sync_enabled is true but the locket_address is invalid')
-        end
-      end
-      it 'allows common domain name/ip addr combos for locket_address' do
-        addrs = [
-          'test.com:1234',
-          '10.10.10.10:1234',
-          'my-cool-site.com:1234',
-        ]
-        merged_manifest_properties['asg_sync_enabled'] = true
-        addrs.each do |addr|
-          merged_manifest_properties['locket_address'] = addr
-          expect {
-          JSON.parse(template.render(merged_manifest_properties))
-        }.to_not raise_error
-        end
-      end
-    end
-    describe 'locket.ca.crt' do
-      let(:template) {job.template('config/certs/locket_ca.crt')}
-      describe 'When the property exits' do
-        it 'renders the locket cert' do
-          cert = template.render(merged_manifest_properties)
-          expect(cert.strip).to eq('the locket ca cert')
-        end
-      end
-
-      describe 'when the property doesn\'t exist' do
-        before do
-          merged_manifest_properties.delete('locket_ca_cert')
-        end
-
-        it 'raises an error when asg_sync_enabled is true and there is no locket_ca_cert defined' do
-          merged_manifest_properties['asg_sync_enabled'] = true
-          expect {
-            template.render(merged_manifest_properties)
-          }.to raise_error Bosh::Template::UnknownProperty
-        end
-
-        it 'does not error when asg_sync_enabled is false and there is no locket_ca_cert defined' do
-          merged_manifest_properties['asg_sync_enabled'] = false
-          expect {
-            template.render(merged_manifest_properties)
-          }.to_not raise_error
-        end
-      end
-    end
-    describe 'locket.crt' do
-      let(:template) {job.template('config/certs/locket.crt')}
-      describe 'When the property exits' do
-        it 'renders the locket cert' do
-          cert = template.render(merged_manifest_properties)
-          expect(cert.strip).to eq('the locket cert')
-        end
-      end
-
-      describe 'when the property doesn\'t exist' do
-        before do
-          merged_manifest_properties.delete('locket_client_cert')
-        end
-
-        it 'raises an error when asg_sync_enabled is true and there is no locket_client defined' do
-          merged_manifest_properties['asg_sync_enabled'] = true
-          expect {
-            template.render(merged_manifest_properties)
-          }.to raise_error Bosh::Template::UnknownProperty
-        end
-
-        it 'does not error when asg_sync_enabled is false and there is no locket_client defined' do
-          merged_manifest_properties['asg_sync_enabled'] = false
-          expect {
-            template.render(merged_manifest_properties)
-          }.to_not raise_error
-        end
-      end
-    end
-    describe 'locket.key' do
-      let(:template) {job.template('config/certs/locket.key')}
-      describe 'When the property exits' do
-        it 'renders the locket cert' do
-          cert = template.render(merged_manifest_properties)
-          expect(cert.strip).to eq('the locket key')
-        end
-      end
-
-      describe 'when the property doesn\'t exist' do
-        before do
-          merged_manifest_properties.delete('locket_client_key')
-        end
-
-        it 'raises an error when asg_sync_enabled is true and there is no locket_client_key defined' do
-          merged_manifest_properties['asg_sync_enabled'] = true
-          expect {
-            template.render(merged_manifest_properties)
-          }.to raise_error Bosh::Template::UnknownProperty
-        end
-
-        it 'does not error when asg_sync_enabled is false and there is no locket_client_key defined' do
-          merged_manifest_properties['asg_sync_enabled'] = false
-          expect {
-            template.render(merged_manifest_properties)
-          }.to_not raise_error
-        end
       end
     end
   end
