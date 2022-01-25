@@ -54,6 +54,48 @@ var _ = Describe("Internal API Listing security groups", func() {
 		mockCCServer = helpers.NewConfigurableMockCCServer()
 		mockCCServer.Start()
 
+		mockCCServer.AddSecurityGroup(cc_client.SecurityGroupResource{
+			GUID:  "sg-guid-1",
+			Name:  "sg-name-1",
+			Rules: []cc_client.SecurityGroupRule{{Description: "sg-rule-1", Protocol: "tcp"}},
+			GloballyEnabled: cc_client.SecurityGroupGloballyEnabled{
+				Staging: true,
+				Running: false,
+			},
+			Relationships: cc_client.SecurityGroupRelationships{
+				StagingSpaces: cc_client.SecurityGroupSpaceRelationship{Data: []map[string]string{{"guid": "space-a"}}},
+				RunningSpaces: cc_client.SecurityGroupSpaceRelationship{Data: []map[string]string{{"guid": "space-b"}}},
+			},
+		})
+
+		mockCCServer.AddSecurityGroup(cc_client.SecurityGroupResource{
+			GUID:  "sg-guid-2",
+			Name:  "sg-name-2",
+			Rules: []cc_client.SecurityGroupRule{{Description: "sg-rule-2"}},
+			GloballyEnabled: cc_client.SecurityGroupGloballyEnabled{
+				Staging: false,
+				Running: false,
+			},
+			Relationships: cc_client.SecurityGroupRelationships{
+				StagingSpaces: cc_client.SecurityGroupSpaceRelationship{Data: []map[string]string{{"guid": "space-c"}}},
+				RunningSpaces: cc_client.SecurityGroupSpaceRelationship{Data: []map[string]string{{"guid": "space-c"}}},
+			},
+		})
+
+		mockCCServer.AddSecurityGroup(cc_client.SecurityGroupResource{
+			GUID:  "sg-guid-3",
+			Name:  "sg-name-3",
+			Rules: []cc_client.SecurityGroupRule{{Description: "sg-rule-3", Ports: "8080"}},
+			GloballyEnabled: cc_client.SecurityGroupGloballyEnabled{
+				Staging: false,
+				Running: false,
+			},
+			Relationships: cc_client.SecurityGroupRelationships{
+				StagingSpaces: cc_client.SecurityGroupSpaceRelationship{Data: []map[string]string{{"guid": "space-a"}}},
+				RunningSpaces: cc_client.SecurityGroupSpaceRelationship{Data: []map[string]string{{"guid": "space-a"}}},
+			},
+		})
+
 		locketPort := ports.PickAPort()
 		locketAddress := fmt.Sprintf("127.0.0.1:%d", locketPort)
 		locketBinaryPath, err := gexec.Build("code.cloudfoundry.org/locket/cmd/locket", "-race")
@@ -104,47 +146,7 @@ var _ = Describe("Internal API Listing security groups", func() {
 
 	Describe("listing security groups", func() {
 		BeforeEach(func() {
-			mockCCServer.AddSecurityGroup(cc_client.SecurityGroupResource{
-				GUID:  "sg-guid-1",
-				Name:  "sg-name-1",
-				Rules: []cc_client.SecurityGroupRule{{Description: "sg-rule-1", Protocol: "tcp"}},
-				GloballyEnabled: cc_client.SecurityGroupGloballyEnabled{
-					Staging: true,
-					Running: false,
-				},
-				Relationships: cc_client.SecurityGroupRelationships{
-					StagingSpaces: cc_client.SecurityGroupSpaceRelationship{Data: []map[string]string{{"guid": "space-a"}}},
-					RunningSpaces: cc_client.SecurityGroupSpaceRelationship{Data: []map[string]string{{"guid": "space-b"}}},
-				},
-			})
-
-			mockCCServer.AddSecurityGroup(cc_client.SecurityGroupResource{
-				GUID:  "sg-guid-2",
-				Name:  "sg-name-2",
-				Rules: []cc_client.SecurityGroupRule{{Description: "sg-rule-2"}},
-				GloballyEnabled: cc_client.SecurityGroupGloballyEnabled{
-					Staging: false,
-					Running: false,
-				},
-				Relationships: cc_client.SecurityGroupRelationships{
-					StagingSpaces: cc_client.SecurityGroupSpaceRelationship{Data: []map[string]string{{"guid": "space-c"}}},
-					RunningSpaces: cc_client.SecurityGroupSpaceRelationship{Data: []map[string]string{{"guid": "space-c"}}},
-				},
-			})
-
-			mockCCServer.AddSecurityGroup(cc_client.SecurityGroupResource{
-				GUID:  "sg-guid-3",
-				Name:  "sg-name-3",
-				Rules: []cc_client.SecurityGroupRule{{Description: "sg-rule-3", Ports: "8080"}},
-				GloballyEnabled: cc_client.SecurityGroupGloballyEnabled{
-					Staging: false,
-					Running: false,
-				},
-				Relationships: cc_client.SecurityGroupRelationships{
-					StagingSpaces: cc_client.SecurityGroupSpaceRelationship{Data: []map[string]string{{"guid": "space-a"}}},
-					RunningSpaces: cc_client.SecurityGroupSpaceRelationship{Data: []map[string]string{{"guid": "space-a"}}},
-				},
-			})
+			// wait for ASG Syncer to get security groups from cloud controller
 			time.Sleep(time.Duration(asgSyncerConfig.ASGSyncInterval) * time.Second * 2)
 		})
 
