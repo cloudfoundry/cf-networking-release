@@ -39,6 +39,9 @@ containsElement() {
 
 test_package() {
   local package=$1
+  if [ -z "${package}" ]; then
+    return 0
+  fi
   shift
   pushd "${package}" &>/dev/null
   ginkgo --race -randomizeAllSpecs -randomizeSuites -failFast \
@@ -56,7 +59,7 @@ declare -a packages
 if [[ -n "${include_only:-""}" ]]; then
   mapfile -t packages < <(jq -r .[]) <<< "${include_only}"
 else
-  mapfile -t packages < <(find src -type f -name '*_test.go' -print0 | xargs -0 -L 1 -I{} dirname {} | sort -u)
+  mapfile -t packages < <(find src -type f -name '*_test.go' -print0 | xargs -0 -L1 -I{} dirname {} | sort -u)
 fi
 
 # filter out serial_packages from packages
@@ -69,7 +72,6 @@ for i in "${ignored_packages[@]}"; do
   packages=("${packages[@]//*$i*}")
   serial_packages=("${serial_packages[@]//*$i*}")
 done
-
 
 if [[ -z "${specificied_package}" ]]; then
   echo "testing packages: " "${packages[@]}"
