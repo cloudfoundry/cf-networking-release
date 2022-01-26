@@ -43,6 +43,7 @@ var _ = Describe("ASGSyncerConfig", func() {
 				"cc_ca_cert":          "some/ca/cert/cc.ca",
 				"log_prefix":          "cfnetworking",
 				"log_level":           "debug",
+				"metron_address":      "127.0.0.1:3457",
 				"skip_ssl_validation": true,
 				"locket": map[string]interface{}{
 					"locket_address":          "http://6.5.4.3",
@@ -78,6 +79,7 @@ var _ = Describe("ASGSyncerConfig", func() {
 				Expect(c.CCCA).To(Equal("some/ca/cert/cc.ca"))
 				Expect(c.LogPrefix).To(Equal("cfnetworking"))
 				Expect(c.LogLevel).To(Equal("debug"))
+				Expect(c.MetronAddress).To(Equal("127.0.0.1:3457"))
 				Expect(c.SkipSSLValidation).To(Equal(true))
 			})
 		})

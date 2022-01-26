@@ -26,6 +26,7 @@ import (
 	"code.cloudfoundry.org/policy-server/config"
 	"code.cloudfoundry.org/policy-server/store"
 	"code.cloudfoundry.org/policy-server/uaa_client"
+	"github.com/cloudfoundry/dropsonde"
 	"github.com/tedsuo/ifrit"
 	"github.com/tedsuo/ifrit/grouper"
 	"github.com/tedsuo/ifrit/restart"
@@ -78,6 +79,11 @@ func main() {
 
 	metricsSender := &metrics.MetricsSender{
 		Logger: logger.Session("time-metric-emitter"),
+	}
+
+	err = dropsonde.Initialize(conf.MetronAddress, jobPrefix)
+	if err != nil {
+		log.Fatalf("%s.%s: initializing dropsonde: %s", logPrefix, jobPrefix, err)
 	}
 
 	wrappedSecurityGroupsStore := &store.SecurityGroupsMetricsWrapper{

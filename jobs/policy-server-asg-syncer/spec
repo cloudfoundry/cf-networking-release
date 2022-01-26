@@ -71,6 +71,10 @@ properties:
     description: "Logging level (debug, info, warn, error)."
     default: info
 
+  metron_port:
+    description: "Port of metron agent on localhost. This is used to forward metrics."
+    default: 3457
+
   skip_ssl_validation:
     description: "Skip verifying ssl certs when speaking to UAA or Cloud Controller."
     default: false

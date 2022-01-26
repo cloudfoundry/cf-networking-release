@@ -114,6 +114,7 @@ module Bosh::Template::Test
           },
           'log_level' => 'debug',
           'log_prefix' => 'cfnetworking',
+          'metron_address' => '127.0.0.1:3457',
           'skip_ssl_validation' => false,
           'uaa_ca' => '/var/vcap/jobs/policy-server-asg-syncer/config/certs/uaa_ca.crt',
           'asg_sync_interval' => 60,
