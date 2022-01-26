@@ -1,0 +1,99 @@
+---
+name: policy-server-asg-syncer
+templates:
+  bpm.yml.erb: config/bpm.yml
+  policy-server-asg-syncer.json.erb: config/policy-server-asg-syncer.json
+  database_ca.crt.erb: config/certs/database_ca.crt
+  uaa_ca.crt.erb: config/certs/uaa_ca.crt
+  cc_ca.crt.erb: config/certs/cc_ca.crt
+  locket_ca.crt.erb: config/certs/locket_ca.crt
+  locket.crt.erb: config/certs/locket.crt
+  locket.key.erb: config/certs/locket.key
+
+packages:
+  - policy-server
+
+consumes:
+- name: database
+  type: database
+  optional: true
+- name: dbconn
+  type: dbconn
+- name: cloud_controller_https_endpoint
+  type: cloud_controller_https_endpoint
+  optional: true
+
+properties:
+  disable:
+    description: "Disable syncing application security groups for dynamic security group updates"
+    default: false
+
+  asg_sync_interval:
+    description: "Interval in seconds that policy-server will poll CAPI for ASG data. Requires asg_sync_enabled. Must be > 0"
+    default: 60
+
+  cc_hostname:
+    description: |
+      Host name for the Cloud Controller server for connecting to the non-secure api endpoint.
+      If this value is not provided, policy-server-asg-syncer will obtain the secure api endpoint by consuming
+      the `cloud_controller_https_endpoint` link.
+      The value supplied to this property must match the value supplied to the Cloud Controller
+      property `cc.internal_service_hostname`.
+    example: cloud-controller-ng.service.cf.internal
+
+  cc_port:
+    description: |
+      External port of Cloud Controller server for connecting to the non-secure api endpoint.
+      If this value is not provided, policy-server will obtain the secure api port by consuming
+      the `cloud_controller_https_endpoint` link.
+      The value supplied to this property must match the value supplied to the Cloud Controller
+      property `cc.external_port`.
+    example: 9022
+
+  database.connect_timeout_seconds:
+    description: "Connection timeout between the policy server and its database."
+    default: 120
+
+  locket.address:
+    description: "Hostname and port of the Locket server. Must be set when asg_sync_enabled is set to true."
+    default: "locket.service.cf.internal:8891"
+
+  locket.ca_cert:
+    description: "The CA certificiate for the CA for Locket."
+
+  locket.client_cert:
+    description: "The client certificate for Locket."
+
+  locket.client_key:
+    description: "The private key for Locket."
+
+  log_level:
+    description: "Logging level (debug, info, warn, error)."
+    default: info
+
+  skip_ssl_validation:
+    description: "Skip verifying ssl certs when speaking to UAA or Cloud Controller."
+    default: false
+
+  uaa_client:
+    description: |
+      UAA client name. Must match the name of a UAA client with the following properties:
+      `authorities: uaa.resource,cloud_controller.admin_read_only`,
+      `authorities: uaa.resource,cloud_controller.admin_read_only`.
+    default: network-policy
+
+  uaa_client_secret:
+    description: |
+      UAA client secret. Must match the secret of the above UAA client.
+
+  uaa_ca:
+    description: "Trusted CA for UAA server."
+
+  uaa_hostname:
+    description: "Host name for the UAA server.  E.g. the service advertised via Consul DNS.  Must match common name in the UAA server cert. Must be listed in `uaa.zones.internal.hostnames`."
+    default: uaa.service.cf.internal
+
+  uaa_port:
+    description: "Port of the UAA server. Must match `uaa.ssl.port`."
+    default: 8443
+

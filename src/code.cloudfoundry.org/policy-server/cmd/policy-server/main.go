@@ -62,8 +62,12 @@ func main() {
 	if conf.LogPrefix != "" {
 		logPrefix = conf.LogPrefix
 	}
-
-	logger, reconfigurableSink := lagerflags.NewFromConfig(fmt.Sprintf("%s.%s", logPrefix, jobPrefix), common.GetLagerConfig())
+	loggerConfig := common.GetLagerConfig()
+	if conf.LogLevel != "" {
+		loggerConfig.LogLevel = conf.LogLevel
+	}
+	logger, reconfigurableSink := lagerflags.NewFromConfig(fmt.Sprintf("%s.%s", logPrefix, jobPrefix), loggerConfig)
+	logger.Debug("Debug Logging Enabled")
 
 	var tlsConfig *tls.Config
 	if conf.SkipSSLValidation {
@@ -138,10 +142,6 @@ func main() {
 		conf.TagLength,
 	)
 
-	if err != nil {
-		log.Fatalf("%s.%s: failed to construct datastore: %s", logPrefix, jobPrefix, err) // not tested
-	}
-
 	tagDataStore := store.NewTagStore(connectionPool, &store.GroupTable{}, conf.TagLength)
 
 	metricsSender := &metrics.MetricsSender{
@@ -167,8 +167,8 @@ func main() {
 	quotaGuard := handlers.NewQuotaGuard(wrappedStore, conf.MaxPolicies)
 	policyFilter := handlers.NewPolicyFilter(uaaClient, ccClient, 100)
 
-	policyMapperV0 := api_v0.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal), &api_v0.Validator{})
-	policyMapperV1 := api.NewMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal), &api.PolicyValidator{})
+	policyMapperV0 := api_v0.NewPolicyMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal), &api_v0.Validator{})
+	policyMapperV1 := api.NewPolicyMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal), &api.PolicyValidator{})
 
 	createPolicyHandlerV1 := handlers.NewPoliciesCreate(wrappedStore, policyMapperV1,
 		policyGuard, quotaGuard, errorResponse)

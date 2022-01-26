@@ -118,16 +118,14 @@ module Bosh::Template::Test
         end
       end
 
-      # This test must be pended until this PR is merged and a new version of the
-      # bosh-template gem is published:
-      # https://github.com/cloudfoundry/bosh/pull/2116
-      xdescribe 'when the optional vip_resolver_conn link is provided' do
+      describe 'when the optional vip_resolver_conn link is provided' do
         let(:links_with_vip_resolver_conn) do
           links << Link.new(
             name: 'vip_resolver_conn',
             properties: {
-              'listen_port_for_vip_resolver' => 1234
-            }
+              'listen_port_for_vip_resolver' => 1234,
+            },
+            address: 'copilot.bosh',
           )
         end
 

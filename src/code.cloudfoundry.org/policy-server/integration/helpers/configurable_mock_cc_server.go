@@ -6,24 +6,27 @@ import (
 	"net/http"
 	"net/http/httptest"
 
+	"code.cloudfoundry.org/policy-server/cc_client"
 	. "github.com/onsi/gomega"
 )
 
 type ConfigurableMockCCServer struct {
 	server *httptest.Server
 
-	apps   map[string]struct{}
-	spaces map[string]struct{}
+	apps           map[string]struct{}
+	spaces         map[string]struct{}
+	securityGroups map[string]cc_client.SecurityGroupResource
 }
 
 type resource struct {
-	GUID string `json:"guid"`
+	Guid string `json:"guid"`
 }
 
 func NewConfigurableMockCCServer() *ConfigurableMockCCServer {
 	c := &ConfigurableMockCCServer{
-		apps:   make(map[string]struct{}),
-		spaces: make(map[string]struct{}),
+		apps:           make(map[string]struct{}),
+		spaces:         make(map[string]struct{}),
+		securityGroups: make(map[string]cc_client.SecurityGroupResource),
 	}
 	c.server = httptest.NewUnstartedServer(c)
 
@@ -50,12 +53,20 @@ func (c *ConfigurableMockCCServer) AddSpace(guid string) {
 	c.spaces[guid] = struct{}{}
 }
 
+func (c *ConfigurableMockCCServer) AddSecurityGroup(securityGroup cc_client.SecurityGroupResource) {
+	c.securityGroups[securityGroup.GUID] = securityGroup
+}
+
 func (c *ConfigurableMockCCServer) DeleteApp(guid string) {
 	delete(c.apps, guid)
 }
 
 func (c *ConfigurableMockCCServer) DeleteSpace(guid string) {
 	delete(c.spaces, guid)
+}
+
+func (c *ConfigurableMockCCServer) DeleteSecurityGroup(guid string) {
+	delete(c.securityGroups, guid)
 }
 
 func (c *ConfigurableMockCCServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -66,13 +77,19 @@ func (c *ConfigurableMockCCServer) ServeHTTP(w http.ResponseWriter, r *http.Requ
 
 	if r.URL.Path == "/v3/apps" {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(buildCCResponse(c.apps)))
+		w.Write([]byte(buildCCGuidsResponse(c.apps)))
 		return
 	}
 
 	if r.URL.Path == "/v3/spaces" {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(buildCCResponse(c.spaces)))
+		w.Write([]byte(buildCCGuidsResponse(c.spaces)))
+		return
+	}
+
+	if r.URL.Path == "/v3/security_groups" {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(buildCCSecurityGroupsResponse(c.securityGroups)))
 		return
 	}
 
@@ -80,13 +97,27 @@ func (c *ConfigurableMockCCServer) ServeHTTP(w http.ResponseWriter, r *http.Requ
 	return
 }
 
-func buildCCResponse(guids map[string]struct{}) string {
-	var resources []resource
+func buildCCGuidsResponse(guids map[string]struct{}) string {
+	var resources []interface{}
 
 	for guid, _ := range guids {
-		resources = append(resources, resource{GUID: guid})
+		resources = append(resources, resource{Guid: guid})
 	}
 
+	return buildCCResponse(resources)
+}
+
+func buildCCSecurityGroupsResponse(securityGroups map[string]cc_client.SecurityGroupResource) string {
+	var resources []interface{}
+
+	for _, securityGroup := range securityGroups {
+		resources = append(resources, securityGroup)
+	}
+
+	return buildCCResponse(resources)
+}
+
+func buildCCResponse(resources []interface{}) string {
 	resourceJSON, err := json.Marshal(resources)
 	Expect(err).NotTo(HaveOccurred())
 
@@ -96,5 +127,5 @@ func buildCCResponse(guids map[string]struct{}) string {
 			"total_pages": 1
 		},
 		"resources": %s
-	}`, len(guids), string(resourceJSON))
+	}`, len(resources), string(resourceJSON))
 }

@@ -8,12 +8,12 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-//go:generate counterfeiter -o fakes/migrate_adapter.go --fake-name MigrateAdapter . migrateAdapter
+//counterfeiter:generate -o fakes/migrate_adapter.go --fake-name MigrateAdapter . migrateAdapter
 type migrateAdapter interface {
 	ExecMax(db MigrationDb, dialect string, m migrate.MigrationSource, dir migrate.MigrationDirection, maxNumMigrations int) (int, error)
 }
 
-//go:generate counterfeiter -o fakes/migration_db.go --fake-name MigrationDb . MigrationDb
+//counterfeiter:generate -o fakes/migration_db.go --fake-name MigrationDb . MigrationDb
 type MigrationDb interface {
 	Exec(query string, args ...interface{}) (sql.Result, error)
 	Query(query string, args ...interface{}) (*sql.Rows, error)
@@ -22,7 +22,7 @@ type MigrationDb interface {
 	RawConnection() *sqlx.DB
 }
 
-//go:generate counterfeiter -o fakes/migrations_provider.go --fake-name MigrationsProvider . migrationsProvider
+//counterfeiter:generate -o fakes/migrations_provider.go --fake-name MigrationsProvider . migrationsProvider
 type migrationsProvider interface {
 	MigrationsToPerform() (PolicyServerMigrations, error)
 }

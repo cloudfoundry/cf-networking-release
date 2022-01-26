@@ -52,7 +52,11 @@ func main() {
 		logPrefix = conf.LogPrefix
 	}
 
-	logger, reconfigurableSink := lagerflags.NewFromConfig(fmt.Sprintf("%s.%s", logPrefix, jobPrefix), common.GetLagerConfig())
+	loggerConfig := common.GetLagerConfig()
+	if conf.LogLevel != "" {
+		loggerConfig.LogLevel = conf.LogLevel
+	}
+	logger, reconfigurableSink := lagerflags.NewFromConfig(fmt.Sprintf("%s.%s", logPrefix, jobPrefix), loggerConfig)
 
 	connectionPool, err := db.NewConnectionPool(
 		conf.Database,
@@ -82,6 +86,10 @@ func main() {
 		},
 	}
 
+	securityGroupsStore := &store.SGStore{
+		Conn: connectionPool,
+	}
+
 	tagDataStore := store.NewTagStore(connectionPool, &store.GroupTable{}, conf.TagLength)
 
 	metricsSender := &metrics.MetricsSender{
@@ -99,6 +107,11 @@ func main() {
 		MetricsSender: metricsSender,
 	}
 
+	wrappedSecurityGroupsStore := &store.SecurityGroupsMetricsWrapper{
+		Store:         securityGroupsStore,
+		MetricsSender: metricsSender,
+	}
+
 	errorResponse := &httperror.ErrorResponse{
 		MetricsSender: metricsSender,
 	}
@@ -111,6 +124,9 @@ func main() {
 		Store:         wrappedStore,
 		ErrorResponse: errorResponse,
 	}
+
+	asgMapper := api.NewAsgMapper(marshal.MarshalFunc(json.Marshal))
+	securityGroupsHandlerV1 := handlers.NewAsgsIndex(wrappedSecurityGroupsStore, asgMapper, errorResponse)
 
 	metricsWrap := func(name string, handler http.Handler) http.Handler {
 		metricsWrapper := middleware.MetricWrapper{
@@ -136,13 +152,15 @@ func main() {
 	metricsEmitter := common.InitMetricsEmitter(logger, wrappedStore, connectionPool, connectionPool.Monitor)
 
 	internalRoutes := rata.Routes{
-		{Name: "internal_policies", Method: "GET", Path: "/networking/:version/internal/policies"},
 		{Name: "create_tags", Method: "PUT", Path: "/networking/v1/internal/tags"},
+		{Name: "internal_policies", Method: "GET", Path: "/networking/:version/internal/policies"},
+		{Name: "internal_security_groups", Method: "GET", Path: "/networking/:version/internal/security_groups"},
 	}
 
 	internalHandlers := rata.Handlers{
-		"internal_policies": metricsWrap("InternalPolicies", logWrap(internalPoliciesHandlerV1)),
-		"create_tags":       metricsWrap("CreateTags", logWrap(createTagsHandlerV1)),
+		"create_tags":              metricsWrap("CreateTags", logWrap(createTagsHandlerV1)),
+		"internal_policies":        metricsWrap("InternalPolicies", logWrap(internalPoliciesHandlerV1)),
+		"internal_security_groups": metricsWrap("InternalSecurityGroups", logWrap(securityGroupsHandlerV1)),
 	}
 
 	tlsConfig, err := mutualtls.NewServerTLSConfig(conf.ServerCertFile, conf.ServerKeyFile, conf.CACertFile)

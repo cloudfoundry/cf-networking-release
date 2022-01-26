@@ -1,11 +1,13 @@
 package server_metrics
 
+//go:generate counterfeiter -generate
+
 import (
 	"code.cloudfoundry.org/cf-networking-helpers/metrics"
 	"code.cloudfoundry.org/policy-server/store"
 )
 
-//go:generate counterfeiter -o fakes/list_store.go --fake-name ListStore . listStore
+//counterfeiter:generate -o fakes/list_store.go --fake-name ListStore . listStore
 type listStore interface {
 	All() ([]store.Policy, error)
 }

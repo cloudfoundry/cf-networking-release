@@ -1,5 +1,7 @@
 package store
 
+//go:generate counterfeiter -generate
+
 import (
 	"database/sql"
 	"fmt"
@@ -11,12 +13,12 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-//go:generate counterfeiter -o fakes/migrator.go --fake-name Migrator . Migrator
+//counterfeiter:generate -o fakes/migrator.go --fake-name Migrator . Migrator
 type Migrator interface {
 	PerformMigrations(driverName string, migrationDb migrations.MigrationDb, maxNumMigrations int) (int, error)
 }
 
-//go:generate counterfeiter -o fakes/store.go --fake-name Store . Store
+//counterfeiter:generate -o fakes/store.go --fake-name Store . Store
 type Store interface {
 	Create([]Policy) error
 	All() ([]Policy, error)
@@ -25,7 +27,7 @@ type Store interface {
 	CheckDatabase() error
 }
 
-//go:generate counterfeiter -o fakes/database.go --fake-name Db . Database
+//counterfeiter:generate -o fakes/database.go --fake-name Db . Database
 type Database interface {
 	Beginx() (db.Transaction, error)
 	Exec(query string, args ...interface{}) (sql.Result, error)

@@ -97,6 +97,7 @@ files:
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/codes/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/connectivity/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/credentials/*.go # gosub
+  - code.cloudfoundry.org/vendor/google.golang.org/grpc/credentials/insecure/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/encoding/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/encoding/proto/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/grpclog/*.go # gosub
@@ -122,7 +123,6 @@ files:
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/internal/syscall/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/internal/transport/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/internal/transport/networktype/*.go # gosub
-  - code.cloudfoundry.org/vendor/google.golang.org/grpc/internal/xds/env/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/keepalive/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/metadata/*.go # gosub
   - code.cloudfoundry.org/vendor/google.golang.org/grpc/peer/*.go # gosub

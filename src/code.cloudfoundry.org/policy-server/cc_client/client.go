@@ -1,5 +1,7 @@
 package cc_client
 
+//go:generate counterfeiter -generate
+
 import (
 	"fmt"
 	"net/http"
@@ -9,12 +11,67 @@ import (
 
 	"code.cloudfoundry.org/cf-networking-helpers/json_client"
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/policy-server/api"
 )
+
+//counterfeiter:generate -o fakes/cc_client.go --fake-name CCClient . CCClient
+type CCClient interface {
+	GetAppSpaces(token string, appGUIDs []string) (map[string]string, error)
+	GetSpace(token, spaceGUID string) (*SpaceResponse, error)
+	GetSpaceGUIDs(token string, appGUIDs []string) ([]string, error)
+	GetSubjectSpace(token, subjectId string, spaces SpaceResponse) (*SpaceResource, error)
+	GetSubjectSpaces(token, subjectId string) (map[string]struct{}, error)
+	GetLiveAppGUIDs(token string, appGUIDs []string) (map[string]struct{}, error)
+	GetLiveSpaceGUIDs(token string, spaceGUIDs []string) (map[string]struct{}, error)
+	GetSecurityGroups(token string) ([]SecurityGroupResource, error)
+}
 
 type Client struct {
 	Logger     lager.Logger
 	JSONClient json_client.JsonClient
+}
+
+type GetSecurityGroupsResponse struct {
+	Pagination struct {
+		TotalPages int `json:"total_pages"`
+		First      struct {
+			Href string `json:"href"`
+		} `json:"first"`
+		Last struct {
+			Href string `json:"href"`
+		} `json:"last"`
+		Next struct {
+			Href string `json:"href"`
+		} `json:"next"`
+	} `json:"pagination"`
+	Resources []SecurityGroupResource `json:"resources"`
+}
+
+type SecurityGroupGloballyEnabled struct {
+	Running bool `json:"running"`
+	Staging bool `json:"staging"`
+}
+type SecurityGroupRule struct {
+	Protocol    string `json:"protocol"`
+	Destination string `json:"destination"`
+	Ports       string `json:"ports"`
+	Type        int    `json:"type"`
+	Code        int    `json:"code"`
+	Description string `json:"description"`
+	Log         bool   `json:"log"`
+}
+type SecurityGroupRelationships struct {
+	StagingSpaces SecurityGroupSpaceRelationship `json:"staging_spaces"`
+	RunningSpaces SecurityGroupSpaceRelationship `json:"running_spaces"`
+}
+type SecurityGroupSpaceRelationship struct {
+	Data []map[string]string `json:"data"`
+}
+type SecurityGroupResource struct {
+	GUID            string                       `json:"guid"`
+	Name            string                       `json:"name"`
+	GloballyEnabled SecurityGroupGloballyEnabled `json:"globally_enabled"`
+	Rules           []SecurityGroupRule          `json:"rules"`
+	Relationships   SecurityGroupRelationships   `json:"relationships"`
 }
 
 type AppsV3Response struct {
@@ -59,20 +116,19 @@ type SpacesV3Response struct {
 }
 
 type SpaceResponse struct {
-	Entity struct {
-		Name             string `json:"name"`
-		OrganizationGUID string `json:"organization_guid"`
-	} `json:"entity"`
+	Entity SpaceEntity `json:"entity"`
+}
+
+type SpaceEntity struct {
+	Name             string `json:"name"`
+	OrganizationGUID string `json:"organization_guid"`
 }
 
 type SpaceResource struct {
 	Metadata struct {
 		GUID string `json:"guid"`
 	}
-	Entity struct {
-		Name             string `json:"name"`
-		OrganizationGUID string `json:"organization_guid"`
-	} `json:"entity"`
+	Entity SpaceEntity `json:"entity"`
 }
 
 type SpacesResponse struct {
@@ -226,7 +282,7 @@ func (c *Client) GetAppSpaces(token string, appGUIDs []string) (map[string]strin
 	return set, nil
 }
 
-func (c *Client) GetSpace(token, spaceGUID string) (*api.Space, error) {
+func (c *Client) GetSpace(token, spaceGUID string) (*SpaceResponse, error) {
 	token = fmt.Sprintf("bearer %s", token)
 	route := fmt.Sprintf("/v2/spaces/%s", spaceGUID)
 
@@ -243,19 +299,16 @@ func (c *Client) GetSpace(token, spaceGUID string) (*api.Space, error) {
 		return nil, fmt.Errorf("json client do: %s", err)
 	}
 
-	return &api.Space{
-		Name:    response.Entity.Name,
-		OrgGUID: response.Entity.OrganizationGUID,
-	}, nil
+	return &response, nil
 }
 
-func (c *Client) GetSubjectSpace(token, subjectId string, space api.Space) (*api.Space, error) {
+func (c *Client) GetSubjectSpace(token, subjectId string, space SpaceResponse) (*SpaceResource, error) {
 	token = fmt.Sprintf("bearer %s", token)
 
 	values := url.Values{}
 	values.Add("q", fmt.Sprintf("developer_guid:%s", subjectId))
-	values.Add("q", fmt.Sprintf("name:%s", space.Name))
-	values.Add("q", fmt.Sprintf("organization_guid:%s", space.OrgGUID))
+	values.Add("q", fmt.Sprintf("name:%s", space.Entity.Name))
+	values.Add("q", fmt.Sprintf("organization_guid:%s", space.Entity.OrganizationGUID))
 
 	route := fmt.Sprintf("/v2/spaces?%s", values.Encode())
 
@@ -273,10 +326,7 @@ func (c *Client) GetSubjectSpace(token, subjectId string, space api.Space) (*api
 		return nil, fmt.Errorf("found more than one matching space")
 	}
 
-	return &api.Space{
-		Name:    response.Resources[0].Entity.Name,
-		OrgGUID: response.Resources[0].Entity.OrganizationGUID,
-	}, nil
+	return &response.Resources[0], nil
 }
 
 func (c *Client) GetSubjectSpaces(token, subjectId string) (map[string]struct{}, error) {
@@ -306,4 +356,40 @@ func (c *Client) GetSubjectSpaces(token, subjectId string) (map[string]struct{},
 	}
 
 	return subjectSpaces, nil
+}
+
+func (c *Client) GetSecurityGroups(token string) ([]SecurityGroupResource, error) {
+	token = fmt.Sprintf("bearer %s", token)
+
+	securityGroups := []SecurityGroupResource{}
+
+	nextPage := "?"
+	for nextPage != "" {
+		queryParams := strings.Split(nextPage, "?")[1]
+		response, err := c.makeGetSecurityGroupsRequest(queryParams, token)
+		if err != nil {
+			return nil, err
+		}
+		for _, resource := range response.Resources {
+			securityGroups = append(securityGroups, resource)
+		}
+		nextPage = response.Pagination.Next.Href
+	}
+	return securityGroups, nil
+}
+
+func (c *Client) makeGetSecurityGroupsRequest(queryParams, token string) (*GetSecurityGroupsResponse, error) {
+	route := "/v3/security_groups"
+
+	if queryParams != "" {
+		route = fmt.Sprintf("%s?%s", route, queryParams)
+	}
+
+	var response GetSecurityGroupsResponse
+	err := c.JSONClient.Do("GET", route, nil, &response, token)
+	if err != nil {
+		return nil, fmt.Errorf("json client do: %s", err)
+	}
+
+	return &response, nil
 }

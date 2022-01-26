@@ -2,7 +2,7 @@ package store
 
 import "code.cloudfoundry.org/cf-networking-helpers/db"
 
-//go:generate counterfeiter -o fakes/policy_repo.go --fake-name PolicyRepo . PolicyRepo
+//counterfeiter:generate -o fakes/policy_repo.go --fake-name PolicyRepo . PolicyRepo
 type PolicyRepo interface {
 	Create(db.Transaction, int, int) error
 	Delete(db.Transaction, int, int) error

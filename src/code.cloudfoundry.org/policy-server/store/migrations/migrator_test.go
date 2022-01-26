@@ -1752,6 +1752,24 @@ var _ = Describe("migrations", func() {
 			})
 		})
 
+		Describe("V67 - add Dynamic ASG related tables", func() {
+			var rules string
+			BeforeEach(func() {
+				rules = `[{"destination": "0.0.0.0/0","ports": "53","protocol": "udp"}]`
+			})
+
+			It("should migrate", func() {
+				migrateTo("67")
+				By("adding the security_groups table")
+				_, err := realDb.Exec(fmt.Sprintf(`
+					INSERT INTO security_groups
+					(guid, name, rules, staging_default, running_default, staging_spaces, running_spaces)
+					VALUES ('asg-guid', 'my-group', '%s', true, true, '["space-a"]', '["space-b"]')`,
+					rules))
+				Expect(err).NotTo(HaveOccurred())
+			})
+		})
+
 		Context("when migrating in parallel", func() {
 			Context("mysql", func() {
 				BeforeEach(func() {

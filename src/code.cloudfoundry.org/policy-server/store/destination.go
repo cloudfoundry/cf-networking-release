@@ -2,7 +2,7 @@ package store
 
 import "code.cloudfoundry.org/cf-networking-helpers/db"
 
-//go:generate counterfeiter -o fakes/destination_repo.go --fake-name DestinationRepo . DestinationRepo
+//counterfeiter:generate -o fakes/destination_repo.go --fake-name DestinationRepo . DestinationRepo
 type DestinationRepo interface {
 	Create(db.Transaction, int, int, int, int, string) (int, error)
 	Delete(db.Transaction, int) error

@@ -32,7 +32,7 @@ var _ = Describe("Strict-Transport-Security Header", func() {
 		dbConf = testsupport.GetDBConfig()
 		dbConf.DatabaseName = fmt.Sprintf("cors_test_node_%d", ports.PickAPort())
 
-		template, _ := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
+		template, _, _ := helpers.DefaultTestConfig(dbConf, fakeMetron.Address(), "fixtures")
 		policyServerConfs = configurePolicyServers(template, 1)
 	})
 

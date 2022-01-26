@@ -42,7 +42,7 @@ var _ = Describe("Policy Cleanup", func() {
 		mockCCServer.AddApp("live-app-1-guid")
 		mockCCServer.AddApp("live-app-2-guid")
 
-		template, _ := helpers.DefaultTestConfigWithCCServer(dbConf, fakeMetron.Address(), "fixtures", mockCCServer.URL())
+		template, _, _ := helpers.DefaultTestConfigWithCCServer(dbConf, fakeMetron.Address(), "fixtures", mockCCServer.URL())
 		template.CleanupInterval = 1
 		template.CCAppRequestChunkSize = 1
 

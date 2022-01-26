@@ -13,7 +13,7 @@ type EgressPolicyMapper struct {
 	Validator   egressValidator
 }
 
-//go:generate counterfeiter -o fakes/egress_validator.go --fake-name EgressValidator . egressValidator
+//counterfeiter:generate -o fakes/egress_validator.go --fake-name EgressValidator . egressValidator
 type egressValidator interface {
 	ValidateEgressPolicies([]EgressPolicy) error
 }

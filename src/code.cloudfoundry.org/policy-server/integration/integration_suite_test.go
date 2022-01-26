@@ -19,13 +19,15 @@ import (
 )
 
 var (
-	policyServerPath         string
-	policyServerInternalPath string
-	migrateDbPath            string
+	policyServerPath          string
+	policyServerInternalPath  string
+	policyServerAsgSyncerPath string
+	migrateDbPath             string
 )
 
 type policyServerPaths struct {
 	Internal  string
+	AsgSyncer string
 	External  string
 	MigrateDb string
 }
@@ -68,6 +70,11 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	fmt.Fprint(GinkgoWriter, "done")
 	Expect(err).NotTo(HaveOccurred())
 
+	fmt.Fprint(GinkgoWriter, "building policy-server-asg-syncer binary...")
+	paths.AsgSyncer, err = gexec.Build("code.cloudfoundry.org/policy-server/cmd/policy-server-asg-syncer", "-race")
+	fmt.Fprint(GinkgoWriter, "done")
+	Expect(err).NotTo(HaveOccurred())
+
 	fmt.Fprint(GinkgoWriter, "building migrate-db binary...")
 	paths.MigrateDb, err = gexec.Build("code.cloudfoundry.org/policy-server/cmd/migrate-db", "-race")
 	fmt.Fprint(GinkgoWriter, "done")
@@ -83,6 +90,7 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 
 	policyServerPath = paths.External
 	policyServerInternalPath = paths.Internal
+	policyServerAsgSyncerPath = paths.AsgSyncer
 	migrateDbPath = paths.MigrateDb
 
 	rand.Seed(ginkgoConfig.GinkgoConfig.RandomSeed + int64(GinkgoParallelNode()))

@@ -1,10 +1,8 @@
 #!/bin/bash
 
-specified_package="${1}"
+specificied_package="${1}"
 
 set -e -u
-
-DB="${DB:-"notset"}"
 
 SCRIPT_PATH="$(cd "$(dirname "${0}")" && pwd)"
 . "${SCRIPT_PATH}/start-db-helper"
@@ -25,22 +23,25 @@ declare -a serial_packages=(
 
 # smoke/perf/acceptance/scaling tests should be skipped
 declare -a ignored_packages=(
-  "src/code.cloudfoundry.org/test/.*"
+  "src/code.cloudfoundry.org/test"
 )
 
 for pkg in $(echo "${exclude_packages:-""}" | jq -r .[]); do
   ignored_packages+=("${pkg}")
 done
 
-contains_element() {
-  local e match="${1}"
+containsElement() {
+  local e match="$1"
   shift
-  for e; do [[ "${e}" == "${match}" ]] && return 0; done
+  for e; do [[ "$e" == "$match" ]] && return 0; done
   return 1
 }
 
 test_package() {
   local package=$1
+  if [ -z "${package}" ]; then
+    return 0
+  fi
   shift
   pushd "${package}" &>/dev/null
   ginkgo --race -randomizeAllSpecs -randomizeSuites -failFast \
@@ -52,56 +53,42 @@ test_package() {
 }
 
 loadIFB
-bootDB "${DB}"
+bootDB "${DB:-"notset"}"
 
 declare -a packages
 if [[ -n "${include_only:-""}" ]]; then
-  mapfile -t packages < <(jq -r .[] <<< "${include_only}")
+  mapfile -t packages < <(jq -r .[]) <<< "${include_only}"
 else
-  mapfile -t packages < <(find src -type f -name '*_test.go' -print0 | xargs -0 -L 1 -I{} dirname {} | sort -u)
+  mapfile -t packages < <(find src -type f -name '*_test.go' -print0 | xargs -0 -L1 -I{} dirname {} | sort -u)
 fi
 
 # filter out serial_packages from packages
-for serial_pkg in "${serial_packages[@]}"; do
-    for i in "${!packages[@]}"; do
-      if [[ "${packages["${i}"]}" == "${serial_pkg}" ]]; then
-        unset "packages[${i}]"
-      fi
-    done
+for i in "${serial_packages[@]}"; do
+  packages=("${packages[@]//*$i*}")
 done
 
 # filter out explicitly ignored packages
-for ignored_pkg in "${ignored_packages[@]}"; do
-  for i in "${!packages[@]}"; do
-    if [[ "${packages["${i}"]}" =~ ^${ignored_pkg}$ ]]; then
-      unset "packages[${i}]"
-    fi
-  done
-  for i in "${!serial_packages[@]}"; do
-    if [[ "${serial_packages["${i}"]}" =~ ^${ignored_pkg}$ ]]; then
-      unset "serial_packages[${i}]"
-    fi
-  done
+for i in "${ignored_packages[@]}"; do
+  packages=("${packages[@]//*$i*}")
+  serial_packages=("${serial_packages[@]//*$i*}")
 done
 
-if [[ -z "${specified_package}" ]]; then
+if [[ -z "${specificied_package}" ]]; then
   echo "testing packages: " "${packages[@]}"
   for dir in "${packages[@]}"; do
-    echo testing "${dir}"
     test_package "${dir}" -p
   done
   echo "testing serial packages: " "${serial_packages[@]}"
   for dir in "${serial_packages[@]}"; do
-    echo testing "${dir}"
     test_package "${dir}" --nodes "${serial_nodes}"
   done
 else
-  specified_package="${specified_package#./}"
-  if contains_element "${specified_package}" "${serial_packages[@]}"; then
-    echo "testing serial package ${specified_package}"
-    test_package "${specified_package}" --nodes "${serial_nodes}"
+  specificied_package="${specificied_package#./}"
+  if containsElement "${specificied_package}" "${serial_packages[@]}"; then
+    echo "testing serial package ${specificied_package}"
+    test_package "${specificied_package}" --nodes "${serial_nodes}"
   else
-    echo "testing package ${specified_package}"
-    test_package "${specified_package}" -p
+    echo "testing package ${specificied_package}"
+    test_package "${specificied_package}" -p
   fi
 fi

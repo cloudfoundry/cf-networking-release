@@ -163,11 +163,11 @@ func SplitUAAHostPort() (string, int) {
 	return UAAHost, UAAPort
 }
 
-func DefaultTestConfig(dbConfig db.Config, metronAddress string, fixturesPath string) (config.Config, config.InternalConfig) {
+func DefaultTestConfig(dbConfig db.Config, metronAddress string, fixturesPath string) (config.Config, config.InternalConfig, config.ASGSyncerConfig) {
 	return DefaultTestConfigWithCCServer(dbConfig, metronAddress, fixturesPath, MockCCServer.URL)
 }
 
-func DefaultTestConfigWithCCServer(dbConfig db.Config, metronAddress string, fixturesPath string, mockCCServerURL string) (config.Config, config.InternalConfig) {
+func DefaultTestConfigWithCCServer(dbConfig db.Config, metronAddress string, fixturesPath string, mockCCServerURL string) (config.Config, config.InternalConfig, config.ASGSyncerConfig) {
 	UAAHost, UAAPort := SplitUAAHostPort()
 
 	externalConfig := config.Config{
@@ -210,7 +210,22 @@ func DefaultTestConfigWithCCServer(dbConfig db.Config, metronAddress string, fix
 		MetronAddress:                            metronAddress,
 		EnforceExperimentalDynamicEgressPolicies: true,
 	}
-	return externalConfig, internalConfig
+
+	asgSyncerConfig := config.ASGSyncerConfig{
+		ASGSyncInterval:   1,
+		UUID:              "xxxxxx-xxxxxxxx-xxxxx",
+		Database:          dbConfig,
+		UAAClient:         "test",
+		UAAClientSecret:   "test",
+		UAAURL:            "http://" + UAAHost,
+		UAAPort:           UAAPort,
+		CCURL:             mockCCServerURL,
+		CCCA:              "/some/ca/cert",
+		LogPrefix:         "testprefix",
+		SkipSSLValidation: true,
+	}
+
+	return externalConfig, internalConfig, asgSyncerConfig
 }
 
 func DefaultTLSConfig() *tls.Config {
@@ -292,6 +307,16 @@ func StartInternalPolicyServer(pathToBinary string, conf config.InternalConfig) 
 	}
 	Eventually(serverIsAvailable, DEFAULT_TIMEOUT).Should(Succeed())
 	Eventually(debugServerIsAvailable, DEFAULT_TIMEOUT).Should(Succeed())
+	return session
+}
+
+func StartAsgSyncer(pathToBinary string, conf config.ASGSyncerConfig) *gexec.Session {
+	configFilePath := WriteConfigFile(conf)
+
+	startCmd := exec.Command(pathToBinary, "-config-file", configFilePath)
+	session, err := gexec.Start(startCmd, GinkgoWriter, GinkgoWriter)
+	Expect(err).NotTo(HaveOccurred())
+
 	return session
 }
 

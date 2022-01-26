@@ -1,17 +1,24 @@
 package api
 
+//go:generate counterfeiter -generate
+
 import "code.cloudfoundry.org/policy-server/store"
 
 var ICMPDefault = -1
 var AppLifecycleDefault = "all"
 
-//go:generate counterfeiter -o fakes/policy_mapper.go --fake-name PolicyMapper . PolicyMapper
+//counterfeiter:generate -o fakes/policy_mapper.go --fake-name PolicyMapper . PolicyMapper
 type PolicyMapper interface {
-	AsStorePolicy([]byte) ([]store.Policy, error) // marshal
-	AsBytes([]store.Policy) ([]byte, error)       // unmarshal
+	AsStorePolicy([]byte) ([]store.Policy, error) // unmarshal
+	AsBytes([]store.Policy) ([]byte, error)       // marshal
 }
 
-//go:generate counterfeiter -o fakes/policy_collection_writer.go --fake-name PolicyCollectionWriter . PolicyCollectionWriter
+//counterfeiter:generate -o fakes/asg_mapper.go --fake-name AsgMapper . AsgMapper
+type AsgMapper interface {
+	AsBytes([]store.SecurityGroup, store.Pagination) ([]byte, error) // marshal
+}
+
+//counterfeiter:generate -o fakes/policy_collection_writer.go --fake-name PolicyCollectionWriter . PolicyCollectionWriter
 type PolicyCollectionWriter interface {
 	AsBytes([]store.Policy, []store.EgressPolicy) ([]byte, error) // unmarshal
 }
@@ -115,7 +122,17 @@ type Tag struct {
 	Type string `json:"type"`
 }
 
-type Space struct {
-	Name    string `json:"name"`
-	OrgGUID string `json:"organization_guid"`
+type AsgsPayload struct {
+	Next           int             `json:"next"`
+	SecurityGroups []SecurityGroup `json:"security_groups"`
+}
+
+type SecurityGroup struct {
+	Guid              string   `json:"guid"`
+	Name              string   `json:"name"`
+	Rules             string   `json:"rules"`
+	StagingDefault    bool     `json:"staging_default"`
+	RunningDefault    bool     `json:"running_default"`
+	StagingSpaceGuids []string `json:"staging_space_guids"`
+	RunningSpaceGuids []string `json:"running_space_guids"`
 }
