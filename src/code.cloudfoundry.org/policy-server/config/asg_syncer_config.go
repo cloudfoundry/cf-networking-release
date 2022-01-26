@@ -24,6 +24,7 @@ type ASGSyncerConfig struct {
 	CCCA              string    `json:"cc_ca_cert"`
 	LogLevel          string    `json:"log_level"`
 	LogPrefix         string    `json:"log_prefix" validate:"nonzero"`
+	MetronAddress     string    `json:"metron_address" validate:"nonzero"`
 	SkipSSLValidation bool      `json:"skip_ssl_validation"`
 	locket.ClientLocketConfig
 }

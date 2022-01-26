@@ -68,6 +68,7 @@
       'cc_ca_cert' => '/var/vcap/jobs/policy-server-asg-syncer/config/certs/cc_ca.crt',
       'log_prefix' => 'cfnetworking',
       'log_level' => p('log_level'),
+      "metron_address" => "127.0.0.1:#{p("metron_port")}",
       'skip_ssl_validation' => p('skip_ssl_validation'),
       'asg_sync_interval' => asg_sync_interval,
       'locket_address' => locket_address,
