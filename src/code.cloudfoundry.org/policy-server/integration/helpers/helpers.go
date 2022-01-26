@@ -222,6 +222,7 @@ func DefaultTestConfigWithCCServer(dbConfig db.Config, metronAddress string, fix
 		CCURL:             mockCCServerURL,
 		CCCA:              "/some/ca/cert",
 		LogPrefix:         "testprefix",
+		MetronAddress:     metronAddress,
 		SkipSSLValidation: true,
 	}
 
