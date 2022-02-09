@@ -24,13 +24,13 @@
       raise '`cc_hostname` and `cc_port` properties were not supplied as manifest properties, nor were found in `cloud_controller_https_endpoint` link'
     end
 
-    def asg_sync_interval
-      interval = p('asg_sync_interval')
+    def asg_poll_interval_seconds
+      interval = p('asg_poll_interval_seconds')
       if interval.class == Integer and interval >= 1
         return interval
       end
 
-      raise 'asg_sync_interval must be an integer greater than 0'
+      raise 'asg_poll_interval_seconds must be an integer greater than 0'
     end
 
     def locket_address
@@ -70,7 +70,7 @@
       'log_level' => p('log_level'),
       "metron_address" => "127.0.0.1:#{p("metron_port")}",
       'skip_ssl_validation' => p('skip_ssl_validation'),
-      'asg_sync_interval' => asg_sync_interval,
+      'asg_poll_interval_seconds' => asg_poll_interval_seconds,
       'locket_address' => locket_address,
       'locket_ca_cert_file' => '/var/vcap/jobs/policy-server-asg-syncer/config/certs/locket_ca.crt',
       'locket_client_cert_file' => '/var/vcap/jobs/policy-server-asg-syncer/config/certs/locket.crt',

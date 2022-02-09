@@ -117,7 +117,7 @@ module Bosh::Template::Test
           'metron_address' => '127.0.0.1:3457',
           'skip_ssl_validation' => false,
           'uaa_ca' => '/var/vcap/jobs/policy-server-asg-syncer/config/certs/uaa_ca.crt',
-          'asg_sync_interval' => 60,
+          'asg_poll_interval_seconds' => 60,
           'locket_address' => 'locket.service.cf.internal:8891',
           'locket_ca_cert_file' => '/var/vcap/jobs/policy-server-asg-syncer/config/certs/locket_ca.crt',
           'locket_client_cert_file' => '/var/vcap/jobs/policy-server-asg-syncer/config/certs/locket.crt',
@@ -193,7 +193,7 @@ module Bosh::Template::Test
         end
       end
 
-      it 'raises an error when the asg_sync_interval is invalid' do
+      it 'raises an error when the asg_poll_interval_seconds is invalid' do
         intervals = [
           'notanumber',
           0,
@@ -206,10 +206,10 @@ module Bosh::Template::Test
           '0',
         ]
         intervals.each do |interval|
-          merged_manifest_properties['asg_sync_interval'] = interval
+          merged_manifest_properties['asg_poll_interval_seconds'] = interval
           expect {
             JSON.parse(template.render(merged_manifest_properties, consumes: links))
-          }.to raise_error('asg_sync_interval must be an integer greater than 0')
+          }.to raise_error('asg_poll_interval_seconds must be an integer greater than 0')
         end
       end
 

@@ -28,7 +28,7 @@ properties:
     description: "Disable syncing application security groups for dynamic security group updates"
     default: false
 
-  asg_sync_interval:
+  asg_poll_interval_seconds:
     description: "Interval in seconds that policy-server will poll CAPI for ASG data. Requires asg_sync_enabled. Must be > 0"
     default: 60
 
