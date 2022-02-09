@@ -23,8 +23,8 @@ var _ = Describe("ASGSyncerConfig", func() {
 
 		BeforeEach(func() {
 			validConfig = map[string]interface{}{
-				"asg_sync_interval": 60,
-				"uuid":              "some-uuid",
+				"asg_poll_interval_seconds": 60,
+				"uuid":                      "some-uuid",
 				"database": map[string]interface{}{
 					"type":          "mysql",
 					"user":          "root",
@@ -132,7 +132,7 @@ var _ = Describe("ASGSyncerConfig", func() {
 		Describe("asg sync interval", func() {
 			Context("when the asg sync interval is less than 0", func() {
 				BeforeEach(func() {
-					validConfig["asg_sync_interval"] = -10
+					validConfig["asg_poll_interval_seconds"] = -10
 					Expect(json.NewEncoder(file).Encode(validConfig)).To(Succeed())
 				})
 				It("returns an error", func() {
