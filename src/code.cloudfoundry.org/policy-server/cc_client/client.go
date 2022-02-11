@@ -13,6 +13,8 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
+const securityGroupsPerPage = 5000
+
 //counterfeiter:generate -o fakes/cc_client.go --fake-name CCClient . CCClient
 type CCClient interface {
 	GetAppSpaces(token string, appGUIDs []string) (map[string]string, error)
@@ -363,7 +365,7 @@ func (c *Client) GetSecurityGroups(token string) ([]SecurityGroupResource, error
 
 	securityGroups := []SecurityGroupResource{}
 
-	nextPage := "?"
+	nextPage := fmt.Sprintf("?per_page=%d&order_by=created_at", securityGroupsPerPage)
 	for nextPage != "" {
 		queryParams := strings.Split(nextPage, "?")[1]
 		response, err := c.makeGetSecurityGroupsRequest(queryParams, token)

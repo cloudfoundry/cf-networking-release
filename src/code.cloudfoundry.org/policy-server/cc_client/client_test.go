@@ -592,7 +592,7 @@ var _ = Describe("Client", func() {
 			method, route, reqData, _, _ := fakeJSONClient.DoArgsForCall(0)
 
 			Expect(method).To(Equal("GET"))
-			Expect(route).To(Equal("/v3/security_groups"))
+			Expect(route).To(Equal("/v3/security_groups?per_page=5000&order_by=created_at"))
 			Expect(reqData).To(BeNil())
 
 			Expect(len(sgs)).To(Equal(1))
@@ -612,6 +612,19 @@ var _ = Describe("Client", func() {
 			}))
 		})
 
+		It("handles possible pagination ordering race conditions", func() {
+			_, err := client.GetSecurityGroups("some-token")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(fakeJSONClient.DoCallCount()).To(Equal(1))
+			method, route, reqData, _, _ := fakeJSONClient.DoArgsForCall(0)
+
+			By("having CC order by creation date of the SG, with a limit of 5000 groups", func() {
+				Expect(method).To(Equal("GET"))
+				Expect(route).To(Equal("/v3/security_groups?per_page=5000&order_by=created_at"))
+				Expect(reqData).To(BeNil())
+			})
+		})
+
 		Context("when there are no security groups", func() {
 			BeforeEach(func() {
 				fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
@@ -629,7 +642,7 @@ var _ = Describe("Client", func() {
 				method, route, reqData, _, _ := fakeJSONClient.DoArgsForCall(0)
 
 				Expect(method).To(Equal("GET"))
-				Expect(route).To(Equal("/v3/security_groups"))
+				Expect(route).To(Equal("/v3/security_groups?per_page=5000&order_by=created_at"))
 				Expect(reqData).To(BeNil())
 
 				Expect(len(sgs)).To(Equal(0))
@@ -653,7 +666,7 @@ var _ = Describe("Client", func() {
 				method, route, reqData, _, _ := fakeJSONClient.DoArgsForCall(0)
 
 				Expect(method).To(Equal("GET"))
-				Expect(route).To(Equal("/v3/security_groups"))
+				Expect(route).To(Equal("/v3/security_groups?per_page=5000&order_by=created_at"))
 				Expect(reqData).To(BeNil())
 
 				Expect(len(sgs)).To(Equal(2))
@@ -669,10 +682,10 @@ var _ = Describe("Client", func() {
 		Context("when there are multiple pages", func() {
 			BeforeEach(func() {
 				fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
-					if route == "/v3/security_groups?page=2&per_page=1" {
+					if route == "/v3/security_groups?page=2&per_page=5000&order_by=created_at" {
 						err := json.Unmarshal([]byte(fixtures.SecurityGroupsMultiplePagesPg2), respData)
 						Expect(err).ToNot(HaveOccurred())
-					} else if route == "/v3/security_groups?page=3&per_page=1" {
+					} else if route == "/v3/security_groups?page=3&per_page=5000&order_by=created_at" {
 						err := json.Unmarshal([]byte(fixtures.SecurityGroupsMultiplePagesPg3), respData)
 						Expect(err).ToNot(HaveOccurred())
 					} else {
@@ -691,21 +704,21 @@ var _ = Describe("Client", func() {
 				method, route, reqData, _, token := fakeJSONClient.DoArgsForCall(0)
 
 				Expect(method).To(Equal("GET"))
-				Expect(route).To(Equal("/v3/security_groups"))
+				Expect(route).To(Equal("/v3/security_groups?per_page=5000&order_by=created_at"))
 				Expect(reqData).To(BeNil())
 				Expect(token).To(Equal("bearer some-token"))
 
 				method, route, reqData, _, token = fakeJSONClient.DoArgsForCall(1)
 
 				Expect(method).To(Equal("GET"))
-				Expect(route).To(Equal("/v3/security_groups?page=2&per_page=1"))
+				Expect(route).To(Equal("/v3/security_groups?page=2&per_page=5000&order_by=created_at"))
 				Expect(reqData).To(BeNil())
 				Expect(token).To(Equal("bearer some-token"))
 
 				method, route, reqData, _, token = fakeJSONClient.DoArgsForCall(2)
 
 				Expect(method).To(Equal("GET"))
-				Expect(route).To(Equal("/v3/security_groups?page=3&per_page=1"))
+				Expect(route).To(Equal("/v3/security_groups?page=3&per_page=5000&order_by=created_at"))
 				Expect(reqData).To(BeNil())
 				Expect(token).To(Equal("bearer some-token"))
 
