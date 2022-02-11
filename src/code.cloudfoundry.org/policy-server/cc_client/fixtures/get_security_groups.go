@@ -169,7 +169,7 @@ const SecurityGroupsMultiplePages = `{
       "href": "https://api.[your-domain.com]/v3/security_groups?page=1&per_page=1"
     },
 	"next": {
-      "href": "https://api.[your-domain.com]/v3/security_groups?page=2&per_page=1"
+      "href": "https://api.[your-domain.com]/v3/security_groups?page=2&per_page=5000&order_by=created_at"
 	},
     "last": {
       "href": "https://api.[your-domain.com]/v3/security_groups?page=3&per_page=1"
@@ -227,7 +227,7 @@ const SecurityGroupsMultiplePagesPg2 = `{
       "href": "https://api.[your-domain.com]/v3/security_groups?page=1&per_page=1"
     },
 	"next": {
-      "href": "https://api.[your-domain.com]/v3/security_groups?page=3&per_page=1"
+      "href": "https://api.[your-domain.com]/v3/security_groups?page=3&per_page=5000&order_by=created_at"
 	},
     "last": {
       "href": "https://api.[your-domain.com]/v3/security_groups?page=3&per_page=1"
