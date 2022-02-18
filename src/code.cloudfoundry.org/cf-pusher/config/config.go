@@ -12,6 +12,7 @@ type Config struct {
 	AppsDomain                           string   `json:"apps_domain"`
 	Concurrency                          int      `json:"concurrency"`
 	DefaultSecurityGroups                []string `json:"default_security_groups"`
+	DynamicASGsEnabled                   bool     `json:"dynamic_asgs_enabled"`
 	ExtraListenPorts                     int      `json:"extra_listen_ports"`
 	Internetless                         bool     `json:"internetless"`
 	PolicyUpdateWaitSeconds              int      `json:"policy_update_wait_seconds"`
