@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -21,12 +22,19 @@ var httpClient = &http.Client{
 			Timeout:   10 * time.Second,
 			KeepAlive: 0,
 		}).Dial,
+		TLSClientConfig: &tls.Config{
+			InsecureSkipVerify: true,
+		},
 	},
 }
 
 func (h *ProxyHandler) ServeHTTP(resp http.ResponseWriter, req *http.Request) {
-	destination := strings.TrimPrefix(req.URL.Path, "/proxy/")
-	destination = "http://" + destination
+	protocol := req.URL.Query().Get("protocol")
+	if protocol == "" {
+		protocol = "http"
+	}
+	destination := fmt.Sprintf("%s://%s", protocol, strings.TrimPrefix(req.URL.Path, "/proxy/"))
+
 	before := time.Now()
 	getResp, err := httpClient.Get(destination)
 	if err != nil {
