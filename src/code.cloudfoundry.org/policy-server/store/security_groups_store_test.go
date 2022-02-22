@@ -1,6 +1,7 @@
 package store_test
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"time"
@@ -11,6 +12,7 @@ import (
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/policy-server/store"
 	"code.cloudfoundry.org/policy-server/store/fakes"
+	"code.cloudfoundry.org/policy-server/store/helpers"
 	testhelpers "code.cloudfoundry.org/test-helpers"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -386,18 +388,102 @@ var _ = Describe("SecurityGroupsStore", func() {
 			Expect(securityGroups).To(ConsistOf(initialRules))
 		})
 
+		securityGroupGuidsToIds := func() map[string]int {
+			rows, err := securityGroupsStore.Conn.Query(`SELECT id, guid FROM security_groups`)
+			Expect(err).ToNot(HaveOccurred())
+			defer rows.Close()
+
+			result := map[string]int{}
+			var id int
+			var guid string
+
+			for rows.Next() {
+				err := rows.Scan(&id, &guid)
+				Expect(err).ToNot(HaveOccurred())
+				result[guid] = id
+			}
+
+			return result
+		}
+
+		It("sequencing still works", func() {
+			securityGroupsMap := securityGroupGuidsToIds()
+			Expect(securityGroupsMap).To(HaveLen(2))
+			Expect(securityGroupsMap["first-guid"]).To(Equal(1))
+			Expect(securityGroupsMap["second-guid"]).To(Equal(2))
+
+			err := securityGroupsStore.Replace(newRules)
+			Expect(err).ToNot(HaveOccurred())
+
+			securityGroupsMap = securityGroupGuidsToIds()
+			Expect(err).ToNot(HaveOccurred())
+			Expect(securityGroupsMap).To(HaveLen(2))
+			Expect(securityGroupsMap["second-guid"]).To(Equal(2))
+			Expect(securityGroupsMap["third-guid"]).To(Equal(3))
+		})
+
 		Context("when errors occur", func() {
 			var mockDB *fakes.Db
 			var tx *dbfakes.Transaction
+			var currentRows, invalidRows *sql.Rows
+			var maxRow *sql.Row
+
 			BeforeEach(func() {
+				var err error
+				currentRows, err = securityGroupsStore.Conn.Query(`SELECT id, guid FROM security_groups`)
+				Expect(err).ToNot(HaveOccurred())
+				invalidRows, err = securityGroupsStore.Conn.Query(`SELECT name FROM security_groups`)
+				Expect(err).ToNot(HaveOccurred())
+				maxRow = securityGroupsStore.Conn.QueryRow(`SELECT max(id) FROM security_groups`)
 				mockDB = new(fakes.Db)
 				tx = new(dbfakes.Transaction)
 				mockDB.BeginxReturns(tx, nil)
+				mockDB.DriverNameReturns(realDb.DriverName())
+				tx.QueryRowReturns(maxRow)
 				securityGroupsStore.Conn = mockDB
+			})
+
+			Context("getting existing security groups", func() {
+				BeforeEach(func() {
+					mockDB.QueryReturns(nil, errors.New("can't exec SQL"))
+				})
+
+				It("returns an error", func() {
+					err := securityGroupsStore.Replace(newRules)
+					Expect(err).To(MatchError("getting security groups: selecting security groups: can't exec SQL"))
+				})
+			})
+
+			Context("scanning security group rows", func() {
+				BeforeEach(func() {
+					// this will force scan to fail because these rows do not contain id or guids
+					mockDB.QueryReturns(invalidRows, nil)
+				})
+
+				It("returns an error", func() {
+					err := securityGroupsStore.Replace(newRules)
+					Expect(err).To(MatchError("getting security groups: scanning security group result: sql: expected 1 destination arguments in Scan, not 2"))
+				})
+			})
+
+			Context("setting auto_increment", func() {
+				BeforeEach(func() {
+					if realDb.DriverName() == helpers.Postgres {
+						Skip("skipping mysql test")
+					}
+					mockDB.QueryReturns(currentRows, nil)
+					tx.ExecReturnsOnCall(1, nil, errors.New("can't exec SQL"))
+				})
+
+				It("returns an error", func() {
+					err := securityGroupsStore.Replace(newRules)
+					Expect(err).To(MatchError("setting auto_increment: can't exec SQL"))
+				})
 			})
 
 			Context("beginning a transaction", func() {
 				BeforeEach(func() {
+					mockDB.QueryReturns(currentRows, nil)
 					mockDB.BeginxReturns(nil, errors.New("can't create a transaction"))
 				})
 
@@ -407,14 +493,15 @@ var _ = Describe("SecurityGroupsStore", func() {
 				})
 			})
 
-			Context("getting existing security groups", func() {
+			Context("creating security_groups_tmp table", func() {
 				BeforeEach(func() {
-					tx.QueryxReturns(nil, errors.New("can't exec SQL"))
+					mockDB.QueryReturns(currentRows, nil)
+					tx.ExecReturns(nil, errors.New("can't create table"))
 				})
 
 				It("returns an error", func() {
 					err := securityGroupsStore.Replace(newRules)
-					Expect(err).To(MatchError("selecting security groups: can't exec SQL"))
+					Expect(err).To(MatchError("creating security_groups_tmp table: can't create table"))
 				})
 
 				It("rolls back the transaction", func() {
@@ -423,14 +510,102 @@ var _ = Describe("SecurityGroupsStore", func() {
 				})
 			})
 
-			Context("inserting a security group", func() {
+			Context("inserting a security group with id", func() {
 				BeforeEach(func() {
-					tx.ExecReturnsOnCall(0, nil, errors.New("can't exec SQL"))
+					mockDB.QueryReturns(currentRows, nil)
+					insertSGCall := 2
+					if realDb.DriverName() == helpers.Postgres {
+						insertSGCall = 1
+					}
+					tx.ExecReturnsOnCall(insertSGCall, nil, errors.New("can't exec SQL"))
+				})
+
+				It("returns an error", func() {
+					err := securityGroupsStore.Replace(initialRules) // same rules so that they all have ids already
+					Expect(err).To(MatchError("saving security group first-guid (first-asg): can't exec SQL"))
+				})
+
+				It("rolls back the transaction", func() {
+					securityGroupsStore.Replace(newRules)
+					Expect(tx.RollbackCallCount()).To(Equal(1))
+				})
+			})
+
+			Context("inserting a security group without an id", func() {
+				BeforeEach(func() {
+					mockDB.QueryReturns(currentRows, nil)
+					insertSGCall := 2
+					if realDb.DriverName() == helpers.Postgres {
+						insertSGCall = 1
+					}
+					tx.ExecReturnsOnCall(insertSGCall, nil, errors.New("can't exec SQL"))
+				})
+
+				It("returns an error", func() {
+					err := securityGroupsStore.Replace(newRules) // the first item in newRules does not have an id
+					Expect(err).To(MatchError("saving security group third-guid (third-name): can't exec SQL"))
+				})
+
+				It("rolls back the transaction", func() {
+					securityGroupsStore.Replace(newRules)
+					Expect(tx.RollbackCallCount()).To(Equal(1))
+				})
+			})
+
+			Context("swapping table names", func() {
+				BeforeEach(func() {
+					mockDB.QueryReturns(currentRows, nil)
+					swappingTablesCall := 4
+					if realDb.DriverName() == helpers.Postgres {
+						swappingTablesCall = 3
+					}
+					tx.ExecReturnsOnCall(swappingTablesCall, nil, errors.New("can't exec SQL"))
 				})
 
 				It("returns an error", func() {
 					err := securityGroupsStore.Replace(newRules)
-					Expect(err).To(MatchError("saving security group third-guid (third-name): can't exec SQL"))
+					Expect(err).To(MatchError("swapping security_groups_tmp and security_groups: can't exec SQL"))
+				})
+
+				It("rolls back the transaction", func() {
+					securityGroupsStore.Replace(newRules)
+					Expect(tx.RollbackCallCount()).To(Equal(1))
+				})
+			})
+
+			Context("changing seqeunce ownership", func() {
+				BeforeEach(func() {
+					if realDb.DriverName() != helpers.Postgres {
+						Skip("skipping postgres tests")
+					}
+					mockDB.QueryReturns(currentRows, nil)
+					tx.ExecReturnsOnCall(5, nil, errors.New("can't exec SQL"))
+				})
+
+				It("returns an error", func() {
+					err := securityGroupsStore.Replace(newRules)
+					Expect(err).To(MatchError("changing seq owner: can't exec SQL"))
+				})
+
+				It("rolls back the transaction", func() {
+					securityGroupsStore.Replace(newRules)
+					Expect(tx.RollbackCallCount()).To(Equal(1))
+				})
+			})
+
+			Context("dropping security_groups_old table", func() {
+				BeforeEach(func() {
+					droppingSGOldTableCall := 5
+					if realDb.DriverName() == helpers.Postgres {
+						droppingSGOldTableCall = 6
+					}
+					mockDB.QueryReturns(currentRows, nil)
+					tx.ExecReturnsOnCall(droppingSGOldTableCall, nil, errors.New("can't exec SQL"))
+				})
+
+				It("returns an error", func() {
+					err := securityGroupsStore.Replace(newRules)
+					Expect(err).To(MatchError("dropping security_groups_old table: can't exec SQL"))
 				})
 
 				It("rolls back the transaction", func() {
@@ -441,6 +616,7 @@ var _ = Describe("SecurityGroupsStore", func() {
 
 			Context("committing a transaction fails", func() {
 				BeforeEach(func() {
+					mockDB.QueryReturns(currentRows, nil)
 					tx.CommitReturns(errors.New("can't commit transaction"))
 				})
 
