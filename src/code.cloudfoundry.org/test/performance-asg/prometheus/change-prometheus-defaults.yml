@@ -1,0 +1,133 @@
+---
+# stemcell
+- type: replace
+  path: /stemcells/alias=default?/os
+  value: ((default_stemcell_os))
+
+# alertmanager
+- type: replace
+  path: /instance_groups/name=alertmanager/vm_type
+  value: ((default_vm_type))
+
+- type: replace
+  path: /instance_groups/name=alertmanager/networks/name=default?
+  value: 
+    name: ((default_network))
+
+- type: replace
+  path: /instance_groups/name=alertmanager/azs/0
+  value: ((default_az))
+
+- type: replace
+  path: /instance_groups/name=alertmanager/vm_extensions?/-
+  value: public_ip
+
+# prometheus2
+- type: replace
+  path: /instance_groups/name=prometheus2/vm_type
+  value: ((default_vm_type))
+
+- type: replace
+  path: /instance_groups/name=prometheus2/networks/name=default?
+  value: 
+    name: ((default_network))
+
+- type: replace
+  path: /instance_groups/name=prometheus2/azs/0
+  value: ((default_az))
+
+- type: replace
+  path: /instance_groups/name=prometheus2/vm_extensions?/-
+  value: public_ip
+
+# nginx
+- type: replace
+  path: /instance_groups/name=nginx/vm_type
+  value: ((default_vm_type))
+
+- type: replace
+  path: /instance_groups/name=nginx/networks/name=default?
+  value: 
+    name: ((default_network))
+
+- type: replace
+  path: /instance_groups/name=nginx/azs/0
+  value: ((default_az))
+
+- type: replace
+  path: /instance_groups/name=nginx/vm_extensions?/-
+  value: public_ip
+
+# database
+- type: replace
+  path: /instance_groups/name=database/vm_type
+  value: ((default_vm_type))
+
+- type: replace
+  path: /instance_groups/name=database/networks/name=default?
+  value: 
+    name: ((default_network))
+
+- type: replace
+  path: /instance_groups/name=database/azs/0
+  value: ((default_az))
+
+- type: replace
+  path: /instance_groups/name=database/vm_extensions?/-
+  value: public_ip
+
+# grafana
+- type: replace
+  path: /instance_groups/name=grafana/vm_type
+  value: ((default_vm_type))
+
+- type: replace
+  path: /instance_groups/name=grafana/networks/name=default?
+  value: 
+    name: ((default_network))
+
+- type: replace
+  path: /instance_groups/name=grafana/azs/0
+  value: ((default_az))
+
+- type: replace
+  path: /instance_groups/name=grafana/vm_extensions?/-
+  value: public_ip
+
+# firehose?
+- type: replace
+  path: /instance_groups/name=firehose?/vm_type
+  value: ((default_vm_type))
+
+- type: replace
+  path: /instance_groups/name=firehose?/networks/name=default?
+  value: 
+    name: ((default_network))
+
+- type: replace
+  path: /instance_groups/name=firehose?/azs/0
+  value: ((default_az))
+
+- type: replace
+  path: /instance_groups/name=firehose?/vm_extensions?/-
+  value: public_ip
+
+
+# remove the cf_exporter (we don't care about those metrics and it drives too much capi load
+- type: remove
+  path: /instance_groups/name=prometheus2/jobs/name=cf_exporter?
+
+# latest routing release
+- type: replace
+  path: /releases/name=routing?
+  value:
+    name: routing
+    version: latest
+
+# latest bpm release
+- type: replace
+  path: /releases/name=bpm?
+  value:
+    name: bpm
+    version: latest
+
