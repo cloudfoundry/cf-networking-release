@@ -277,6 +277,19 @@ func (a *Adapter) BindSecurityGroup(name, org, space string) error {
 	return a.runCommandWithTimeout(cmd)
 }
 
+func (a *Adapter) BindGlobalRunningSecurityGroup(name string) error {
+	var commandArgs []string
+	if a.CfCliV6() {
+		commandArgs = []string{"bind-running-security-group", name}
+	} else {
+		commandArgs = []string{"bind-running-security-group", name}
+	}
+
+	fmt.Printf("running: cf %v \n", commandArgs)
+	cmd := exec.Command("cf", commandArgs...)
+	return a.runCommandWithTimeout(cmd)
+}
+
 func (a *Adapter) UnbindSecurityGroup(name, org, space string) error {
 	fmt.Printf("running cf unbind-security-group %s %s %s\n", name, org, space)
 	cmd := exec.Command("cf", "unbind-security-group", name, org, space)

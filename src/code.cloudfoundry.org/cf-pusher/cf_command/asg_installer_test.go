@@ -79,4 +79,61 @@ var _ = Describe("AsgInstaller", func() {
 			})
 		})
 	})
+
+	Describe("InstallGlobalASG", func() {
+		It("deletes the existing ASG", func() {
+			err := asgInstaller.InstallGlobalASG("some-asg-name", "some-asg-file-path")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(fakeAdapter.DeleteSecurityGroupCallCount()).To(Equal(1))
+			Expect(fakeAdapter.DeleteSecurityGroupArgsForCall(0)).To(Equal("some-asg-name"))
+		})
+
+		It("creates the (new) security group with the given name", func() {
+			err := asgInstaller.InstallGlobalASG("some-asg-name", "some-asg-file-path")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(fakeAdapter.CreateSecurityGroupCallCount()).To(Equal(1))
+			asgName, asgBody := fakeAdapter.CreateSecurityGroupArgsForCall(0)
+			Expect(asgName).To(Equal("some-asg-name"))
+			Expect(asgBody).To(Equal("some-asg-file-path"))
+		})
+
+		It("binds the security group globally", func() {
+			err := asgInstaller.InstallGlobalASG("some-asg-name", "some-asg-file-path")
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(fakeAdapter.BindGlobalRunningSecurityGroupCallCount()).To(Equal(1))
+			asgName := fakeAdapter.BindGlobalRunningSecurityGroupArgsForCall(0)
+			Expect(asgName).To(Equal("some-asg-name"))
+		})
+
+		Context("when deleting the security group fails", func() {
+			BeforeEach(func() {
+				fakeAdapter.DeleteSecurityGroupReturns(errors.New("banana"))
+			})
+			It("returns a meaningful error", func() {
+				err := asgInstaller.InstallGlobalASG("some-asg-name", "some-asg-file-path")
+				Expect(err).To(MatchError("deleting security group: banana"))
+			})
+		})
+
+		Context("when creating the security group fails", func() {
+			BeforeEach(func() {
+				fakeAdapter.CreateSecurityGroupReturns(errors.New("banana"))
+			})
+			It("returns a meaningful error", func() {
+				err := asgInstaller.InstallGlobalASG("some-asg-name", "some-asg-file-path")
+				Expect(err).To(MatchError("creating security group: banana"))
+			})
+		})
+
+		Context("when binding the security group fails", func() {
+			BeforeEach(func() {
+				fakeAdapter.BindGlobalRunningSecurityGroupReturns(errors.New("banana"))
+			})
+			It("returns a meaningful error", func() {
+				err := asgInstaller.InstallGlobalASG("some-asg-name", "some-asg-file-path")
+				Expect(err).To(MatchError("binding global running security group: banana"))
+			})
+		})
+	})
 })

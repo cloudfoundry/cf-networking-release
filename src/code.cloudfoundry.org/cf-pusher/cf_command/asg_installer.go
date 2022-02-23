@@ -7,6 +7,7 @@ type securityGroupInstallationCLIAdapter interface {
 	DeleteSecurityGroup(name string) error
 	CreateSecurityGroup(name, body string) error
 	BindSecurityGroup(asgName, orgName, spaceName string) error
+	BindGlobalRunningSecurityGroup(asgName string) error
 }
 
 type ASGInstaller struct {
@@ -22,6 +23,19 @@ func (a *ASGInstaller) InstallASG(asgName, asgFilePath, orgName, spaceName strin
 	}
 	if err := a.Adapter.BindSecurityGroup(asgName, orgName, spaceName); err != nil {
 		return fmt.Errorf("binding security group: %s", err)
+	}
+	return nil
+}
+
+func (a *ASGInstaller) InstallGlobalASG(asgName, asgFilePath string) error {
+	if err := a.Adapter.DeleteSecurityGroup(asgName); err != nil {
+		return fmt.Errorf("deleting security group: %s", err)
+	}
+	if err := a.Adapter.CreateSecurityGroup(asgName, asgFilePath); err != nil {
+		return fmt.Errorf("creating security group: %s", err)
+	}
+	if err := a.Adapter.BindGlobalRunningSecurityGroup(asgName); err != nil {
+		return fmt.Errorf("binding global running security group: %s", err)
 	}
 	return nil
 }

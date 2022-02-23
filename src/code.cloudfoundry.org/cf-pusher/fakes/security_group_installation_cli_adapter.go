@@ -6,6 +6,17 @@ import (
 )
 
 type SecurityGroupInstallationCLIAdapter struct {
+	BindGlobalRunningSecurityGroupStub        func(string) error
+	bindGlobalRunningSecurityGroupMutex       sync.RWMutex
+	bindGlobalRunningSecurityGroupArgsForCall []struct {
+		arg1 string
+	}
+	bindGlobalRunningSecurityGroupReturns struct {
+		result1 error
+	}
+	bindGlobalRunningSecurityGroupReturnsOnCall map[int]struct {
+		result1 error
+	}
 	BindSecurityGroupStub        func(string, string, string) error
 	bindSecurityGroupMutex       sync.RWMutex
 	bindSecurityGroupArgsForCall []struct {
@@ -44,6 +55,67 @@ type SecurityGroupInstallationCLIAdapter struct {
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
+}
+
+func (fake *SecurityGroupInstallationCLIAdapter) BindGlobalRunningSecurityGroup(arg1 string) error {
+	fake.bindGlobalRunningSecurityGroupMutex.Lock()
+	ret, specificReturn := fake.bindGlobalRunningSecurityGroupReturnsOnCall[len(fake.bindGlobalRunningSecurityGroupArgsForCall)]
+	fake.bindGlobalRunningSecurityGroupArgsForCall = append(fake.bindGlobalRunningSecurityGroupArgsForCall, struct {
+		arg1 string
+	}{arg1})
+	stub := fake.BindGlobalRunningSecurityGroupStub
+	fakeReturns := fake.bindGlobalRunningSecurityGroupReturns
+	fake.recordInvocation("BindGlobalRunningSecurityGroup", []interface{}{arg1})
+	fake.bindGlobalRunningSecurityGroupMutex.Unlock()
+	if stub != nil {
+		return stub(arg1)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fakeReturns.result1
+}
+
+func (fake *SecurityGroupInstallationCLIAdapter) BindGlobalRunningSecurityGroupCallCount() int {
+	fake.bindGlobalRunningSecurityGroupMutex.RLock()
+	defer fake.bindGlobalRunningSecurityGroupMutex.RUnlock()
+	return len(fake.bindGlobalRunningSecurityGroupArgsForCall)
+}
+
+func (fake *SecurityGroupInstallationCLIAdapter) BindGlobalRunningSecurityGroupCalls(stub func(string) error) {
+	fake.bindGlobalRunningSecurityGroupMutex.Lock()
+	defer fake.bindGlobalRunningSecurityGroupMutex.Unlock()
+	fake.BindGlobalRunningSecurityGroupStub = stub
+}
+
+func (fake *SecurityGroupInstallationCLIAdapter) BindGlobalRunningSecurityGroupArgsForCall(i int) string {
+	fake.bindGlobalRunningSecurityGroupMutex.RLock()
+	defer fake.bindGlobalRunningSecurityGroupMutex.RUnlock()
+	argsForCall := fake.bindGlobalRunningSecurityGroupArgsForCall[i]
+	return argsForCall.arg1
+}
+
+func (fake *SecurityGroupInstallationCLIAdapter) BindGlobalRunningSecurityGroupReturns(result1 error) {
+	fake.bindGlobalRunningSecurityGroupMutex.Lock()
+	defer fake.bindGlobalRunningSecurityGroupMutex.Unlock()
+	fake.BindGlobalRunningSecurityGroupStub = nil
+	fake.bindGlobalRunningSecurityGroupReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *SecurityGroupInstallationCLIAdapter) BindGlobalRunningSecurityGroupReturnsOnCall(i int, result1 error) {
+	fake.bindGlobalRunningSecurityGroupMutex.Lock()
+	defer fake.bindGlobalRunningSecurityGroupMutex.Unlock()
+	fake.BindGlobalRunningSecurityGroupStub = nil
+	if fake.bindGlobalRunningSecurityGroupReturnsOnCall == nil {
+		fake.bindGlobalRunningSecurityGroupReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.bindGlobalRunningSecurityGroupReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
 }
 
 func (fake *SecurityGroupInstallationCLIAdapter) BindSecurityGroup(arg1 string, arg2 string, arg3 string) error {
@@ -235,6 +307,8 @@ func (fake *SecurityGroupInstallationCLIAdapter) DeleteSecurityGroupReturnsOnCal
 func (fake *SecurityGroupInstallationCLIAdapter) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.bindGlobalRunningSecurityGroupMutex.RLock()
+	defer fake.bindGlobalRunningSecurityGroupMutex.RUnlock()
 	fake.bindSecurityGroupMutex.RLock()
 	defer fake.bindSecurityGroupMutex.RUnlock()
 	fake.createSecurityGroupMutex.RLock()
