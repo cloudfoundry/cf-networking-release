@@ -1,0 +1,14 @@
+system_domain: 
+cf_deployment_name: 
+skip_ssl_verify: false
+uaa_clients_cf_exporter_secret: 
+uaa_clients_firehose_exporter_secret: 
+metron_deployment_name: 
+traffic_controller_external_port: 443
+metrics_environment: 
+bosh_username: 
+bosh_password: 
+default_stemcell_os: 
+default_vm_type: 
+default_network: 
+default_az: 

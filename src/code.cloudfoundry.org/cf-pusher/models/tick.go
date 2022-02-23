@@ -6,6 +6,7 @@ type Manifest struct {
 
 type Application struct {
 	Name      string      `yaml:"name,omitempty"`
+	Command   string      `yaml:"command,omitempty"`
 	Memory    string      `yaml:"memory,omitempty"`
 	DiskQuota string      `yaml:"disk_quota,omitempty"`
 	BuildPack string      `yaml:"buildpack,omitempty"`
