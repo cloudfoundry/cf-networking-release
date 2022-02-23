@@ -14,6 +14,7 @@ import (
 type Adapter struct {
 	cfCliPath    string
 	majorVersion int
+	cfHomePath   string
 }
 
 func NewAdapter() *Adapter {
@@ -34,6 +35,13 @@ func NewAdapter() *Adapter {
 	return &Adapter{cfCliPath: "cf", majorVersion: majorVersion}
 }
 
+func NewAdapterWithHome(home string) *Adapter {
+	adapter := NewAdapter()
+	adapter.cfHomePath = home
+
+	return adapter
+}
+
 func (a *Adapter) CfCliV6() bool {
 	return a.majorVersion < 7
 }
@@ -41,57 +49,58 @@ func (a *Adapter) CfCliV6() bool {
 func (a *Adapter) CreateOrg(name string) error {
 	fmt.Printf("running: %s create-org %s\n", a.cfCliPath, name)
 	cmd := exec.Command(a.cfCliPath, "create-org", name)
-	return runCommandWithTimeout(cmd)
+	return a.runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) DeleteOrg(name string) error {
 	fmt.Printf("running: %s delete-org -f %s\n", a.cfCliPath, name)
 	cmd := exec.Command(a.cfCliPath, "delete-org", "-f", name)
-	return runCommandWithTimeout(cmd)
+	return a.runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) CreateSpace(spaceName, orgName string) error {
 	fmt.Printf("running: %s create-space %s -o %s\n", a.cfCliPath, spaceName, orgName)
 	cmd := exec.Command(a.cfCliPath, "create-space", spaceName, "-o", orgName)
-	return runCommandWithTimeout(cmd)
+	return a.runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) TargetOrg(name string) error {
 	fmt.Printf("running: %s target -o  %s\n", a.cfCliPath, name)
 	cmd := exec.Command(a.cfCliPath, "target", "-o", name)
-	return runCommandWithTimeout(cmd)
+	return a.runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) TargetSpace(name string) error {
 	fmt.Printf("running: %s target -s  %s\n", a.cfCliPath, name)
 	cmd := exec.Command(a.cfCliPath, "target", "-s", name)
-	return runCommandWithTimeout(cmd)
+	return a.runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) SetApiWithSsl(api string) error {
 	fmt.Printf("running: %s api  %s\n", a.cfCliPath, api)
 	cmd := exec.Command(a.cfCliPath, "api", api)
-	return runCommandWithTimeout(cmd)
+	return a.runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) SetApiWithoutSsl(api string) error {
 	fmt.Printf("running: %s api  %s --skip-ssl-validation\n", a.cfCliPath, api)
 	cmd := exec.Command(a.cfCliPath, "api", api, "--skip-ssl-validation")
-	return runCommandWithTimeout(cmd)
+	return a.runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) Auth(user, password string) error {
 	fmt.Printf("running: %s auth <user> <pass> \n", a.cfCliPath)
 	cmd := exec.Command(a.cfCliPath, "auth", user, password)
-	return runCommandWithTimeout(cmd)
+	return a.runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) Push(name, directory, manifestFile string) error {
 	fmt.Printf("running: %s push %s -p %s -f %s\n", a.cfCliPath, name, directory, manifestFile)
-	bytes, err := exec.Command(a.cfCliPath,
+	cmd := exec.Command(a.cfCliPath,
 		"push", name,
 		"-p", directory,
-		"-f", manifestFile).CombinedOutput()
+		"-f", manifestFile)
+	bytes, err := a.runCombinedOutput(cmd)
 	fmt.Printf("output: %s\n", string(bytes))
 	return err
 }
@@ -99,25 +108,27 @@ func (a *Adapter) Push(name, directory, manifestFile string) error {
 func (a *Adapter) Delete(appName string) error {
 	fmt.Printf("running: %s delete -f %s\n", a.cfCliPath, appName)
 	cmd := exec.Command(a.cfCliPath, "delete", "-f", appName)
-	return runCommandWithTimeout(cmd)
+	return a.runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) Scale(name string, instances int) error {
 	instancesStr := fmt.Sprintf("%d", instances)
 	fmt.Printf("running: %s scale %s -i %s\n", a.cfCliPath, name, instancesStr)
 	cmd := exec.Command(a.cfCliPath, "scale", name, "-i", instancesStr)
-	return runCommandWithTimeout(cmd)
+	return a.runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) AppGuid(name string) (string, error) {
 	fmt.Printf("running: %s app %s --guid\n", a.cfCliPath, name)
-	bytes, err := exec.Command(a.cfCliPath, "app", name, "--guid").CombinedOutput()
+	cmd := exec.Command(a.cfCliPath, "app", name, "--guid")
+	bytes, err := a.runCombinedOutput(cmd)
 	return strings.TrimSpace(string(bytes)), err
 }
 
 func (a *Adapter) SpaceGuid(name string) (string, error) {
 	fmt.Printf("running: %s space %s --guid\n", a.cfCliPath, name)
-	bytes, err := exec.Command(a.cfCliPath, "space", name, "--guid").CombinedOutput()
+	cmd := exec.Command(a.cfCliPath, "space", name, "--guid")
+	bytes, err := a.runCombinedOutput(cmd)
 	return strings.TrimSpace(string(bytes)), err
 }
 
@@ -127,23 +138,27 @@ type Apps struct {
 
 func (a *Adapter) OrgGuid(name string) (string, error) {
 	fmt.Printf("running: %s org %s --guid\n", a.cfCliPath, name)
-	bytes, err := exec.Command(a.cfCliPath, "org", name, "--guid").CombinedOutput()
+	cmd := exec.Command(a.cfCliPath, "org", name, "--guid")
+	bytes, err := a.runCombinedOutput(cmd)
 	return strings.TrimSpace(string(bytes)), err
 }
 
 func (a *Adapter) Curl(method, path, inputFile string) ([]byte, error) {
 	if inputFile != "" {
 		fmt.Println("running:", a.cfCliPath, "curl", "-X", method, "-d", fmt.Sprintf("@%s", inputFile), path)
-		return exec.Command(a.cfCliPath, "curl", "-X", method, "-d", fmt.Sprintf("@%s", inputFile), path).CombinedOutput()
+		cmd := exec.Command(a.cfCliPath, "curl", "-X", method, "-d", fmt.Sprintf("@%s", inputFile), path)
+		return a.runCombinedOutput(cmd)
 	}
 
 	fmt.Printf("running: %s curl -X %s \"%s\"\n", a.cfCliPath, method, path)
-	return exec.Command(a.cfCliPath, "curl", "-X", method, path).CombinedOutput()
+	cmd := exec.Command(a.cfCliPath, "curl", "-X", method, path)
+	return a.runCombinedOutput(cmd)
 }
 
 func (a *Adapter) AppCount(orgGuid string) (int, error) {
 	fmt.Printf("running: %s curl \"/v2/apps?q=organization_guid%%20IN%%20%s\"\n", a.cfCliPath, orgGuid)
-	bytes, err := exec.Command(a.cfCliPath, "curl", fmt.Sprintf("/v2/apps?q=organization_guid%%20IN%%20%s", orgGuid)).CombinedOutput()
+	cmd := exec.Command(a.cfCliPath, "curl", fmt.Sprintf("/v2/apps?q=organization_guid%%20IN%%20%s", orgGuid))
+	bytes, err := a.runCombinedOutput(cmd)
 	apps := &Apps{}
 	if err := json.Unmarshal(bytes, apps); err != nil {
 		return -1, err
@@ -153,8 +168,8 @@ func (a *Adapter) AppCount(orgGuid string) (int, error) {
 
 func (a *Adapter) CheckApp(guid string) ([]byte, error) {
 	fmt.Printf("running: %s curl \"/v2/apps/%s/summary\"\n", a.cfCliPath, guid)
-	bytes, err := exec.Command(a.cfCliPath, "curl", fmt.Sprintf("/v2/apps/%s/summary", guid)).CombinedOutput()
-	return bytes, err
+	cmd := exec.Command(a.cfCliPath, "curl", fmt.Sprintf("/v2/apps/%s/summary", guid))
+	return a.runCombinedOutput(cmd)
 }
 
 func (a *Adapter) AddNetworkPolicy(sourceApp, destApp string, port int, protocol string) error {
@@ -167,7 +182,7 @@ func (a *Adapter) AddNetworkPolicy(sourceApp, destApp string, port int, protocol
 	}
 	fmt.Printf("running: cf %v \n", commandArgs)
 	cmd := exec.Command("cf", commandArgs...)
-	return runCommandWithTimeout(cmd)
+	return a.runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) RemoveNetworkPolicy(sourceApp, destApp string, port int, protocol string) error {
@@ -180,7 +195,7 @@ func (a *Adapter) RemoveNetworkPolicy(sourceApp, destApp string, port int, proto
 	}
 	fmt.Printf("running: cf %v \n", commandArgs)
 	cmd := exec.Command("cf", commandArgs...)
-	return runCommandWithTimeout(cmd)
+	return a.runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) CreateQuota(name, memory string, instanceMemory, routes, serviceInstances, appInstances, routePorts int) error {
@@ -197,7 +212,7 @@ func (a *Adapter) CreateQuota(name, memory string, instanceMemory, routes, servi
 	}
 	fmt.Printf("running: cf %v \n", commandArgs)
 	cmd := exec.Command("cf", commandArgs...)
-	return runCommandWithTimeout(cmd)
+	return a.runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) SetQuota(org, quota string) error {
@@ -210,13 +225,13 @@ func (a *Adapter) SetQuota(org, quota string) error {
 
 	fmt.Printf("running: cf %v \n", commandArgs)
 	cmd := exec.Command("cf", commandArgs...)
-	return runCommandWithTimeout(cmd)
+	return a.runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) CreateSecurityGroup(name, filepath string) error {
 	fmt.Printf("running cf create-security-group %s %s\n", name, filepath)
 	cmd := exec.Command("cf", "create-security-group", name, filepath)
-	return runCommandWithTimeout(cmd)
+	return a.runCommandWithTimeout(cmd)
 }
 
 type ASG struct {
@@ -233,7 +248,8 @@ type ASG struct {
 
 func (a *Adapter) SecurityGroup(name string) (string, error) {
 	fmt.Printf("running: %s curl \"/v2/security_groups?q=name%%3A%s\n", a.cfCliPath, name)
-	bytes, err := exec.Command(a.cfCliPath, "curl", fmt.Sprintf("/v2/security_groups?q=name%%3A%s", name)).CombinedOutput()
+	cmd := exec.Command(a.cfCliPath, "curl", fmt.Sprintf("/v2/security_groups?q=name%%3A%s", name))
+	bytes, _ := a.runCombinedOutput(cmd)
 	asg := &ASG{}
 	if err := json.Unmarshal(bytes, asg); err != nil {
 		return "", err
@@ -258,19 +274,19 @@ func (a *Adapter) BindSecurityGroup(name, org, space string) error {
 
 	fmt.Printf("running: cf %v \n", commandArgs)
 	cmd := exec.Command("cf", commandArgs...)
-	return runCommandWithTimeout(cmd)
+	return a.runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) UnbindSecurityGroup(name, org, space string) error {
 	fmt.Printf("running cf unbind-security-group %s %s %s\n", name, org, space)
 	cmd := exec.Command("cf", "unbind-security-group", name, org, space)
-	return runCommandWithTimeout(cmd)
+	return a.runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) DeleteSecurityGroup(name string) error {
 	fmt.Printf("running cf delete-security-group -f %s \n", name)
 	cmd := exec.Command("cf", "delete-security-group", "-f", name)
-	return runCommandWithTimeout(cmd)
+	return a.runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) DeleteQuota(quota string) error {
@@ -283,7 +299,7 @@ func (a *Adapter) DeleteQuota(quota string) error {
 
 	fmt.Printf("running: cf %v \n", commandArgs)
 	cmd := exec.Command("cf", commandArgs...)
-	return runCommandWithTimeout(cmd)
+	return a.runCommandWithTimeout(cmd)
 }
 
 func (a *Adapter) RunTask(appName, commandToRun string) error {
@@ -296,7 +312,7 @@ func (a *Adapter) RunTask(appName, commandToRun string) error {
 
 	fmt.Printf("running: cf %v \n", commandArgs)
 	cmd := exec.Command("cf", commandArgs...)
-	return runCommandWithTimeout(cmd)
+	return a.runCommandWithTimeout(cmd)
 }
 
 type CmdErr struct {
@@ -309,7 +325,15 @@ func (e *CmdErr) Error() string {
 	return fmt.Sprintf("%s:\n\nOut:\n%s\n\nErr:%s\n", e.Message, e.Out, e.Err)
 }
 
-func runCommandWithTimeout(cmd *exec.Cmd) error {
+func (a Adapter) runCombinedOutput(cmd *exec.Cmd) ([]byte, error) {
+	if a.cfHomePath != "" {
+		cmd.Env = append(cmd.Env, fmt.Sprintf("CF_HOME=%s", a.cfHomePath))
+	}
+
+	return cmd.CombinedOutput()
+}
+
+func (a Adapter) runCommandWithTimeout(cmd *exec.Cmd) error {
 	outBuffer := &bytes.Buffer{}
 	errBuffer := &bytes.Buffer{}
 	wrapErr := func(msg string) error {
@@ -318,6 +342,9 @@ func runCommandWithTimeout(cmd *exec.Cmd) error {
 			Err:     errBuffer.String(),
 			Message: msg,
 		}
+	}
+	if a.cfHomePath != "" {
+		cmd.Env = append(cmd.Env, fmt.Sprintf("CF_HOME=%s", a.cfHomePath))
 	}
 	cmd.Stdout = outBuffer
 	cmd.Stderr = errBuffer
