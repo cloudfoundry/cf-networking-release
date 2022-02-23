@@ -422,6 +422,41 @@ var _ = Describe("SecurityGroupsStore", func() {
 			Expect(securityGroupsMap["third-guid"]).To(Equal(3))
 		})
 
+		Describe("keeping the index names", func() {
+			getIndexNames := func() []string {
+				indexRows, err := securityGroupsStore.Conn.Query(`SELECT indexname FROM pg_indexes WHERE tablename='security_groups'`)
+				Expect(err).ToNot(HaveOccurred())
+				defer indexRows.Close()
+				var indexNames []string
+				var indexName string
+				for indexRows.Next() {
+					indexRows.Scan(&indexName)
+					indexNames = append(indexNames, indexName)
+				}
+				return indexNames
+			}
+
+			BeforeEach(func() {
+				if realDb.DriverName() == helpers.MySQL {
+					Skip("skipping postgres test")
+				}
+			})
+
+			It("indecies names are unchanged", func() {
+				indexNames := getIndexNames()
+				Expect(indexNames).To(ConsistOf("security_groups_pkey", "security_groups_guid_key"))
+
+				err := securityGroupsStore.Replace(newRules)
+				Expect(err).ToNot(HaveOccurred())
+
+				err = securityGroupsStore.Replace(newRules)
+				Expect(err).ToNot(HaveOccurred())
+
+				indexNames = getIndexNames()
+				Expect(indexNames).To(ConsistOf("security_groups_pkey", "security_groups_guid_key"))
+			})
+		})
+
 		Context("when errors occur", func() {
 			var mockDB *fakes.Db
 			var tx *dbfakes.Transaction

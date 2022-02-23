@@ -203,6 +203,19 @@ func (sgs *SGStore) Replace(newSecurityGroups []SecurityGroup) error {
 		return fmt.Errorf("dropping security_groups_old table: %s", err)
 	}
 
+	if sgs.Conn.DriverName() == helpers.Postgres {
+		// We don't want index names to grow indefinitely
+		_, err = tx.Exec("ALTER INDEX security_groups_tmp_pkey RENAME to security_groups_pkey")
+		if err != nil {
+			return fmt.Errorf("renaming index: %s", err)
+		}
+
+		_, err = tx.Exec("ALTER TABLE security_groups RENAME CONSTRAINT security_groups_tmp_guid_key TO security_groups_guid_key")
+		if err != nil {
+			return fmt.Errorf("renaming constraint: %s", err)
+		}
+	}
+
 	err = tx.Commit()
 	if err != nil {
 		return fmt.Errorf("committing transaction: %s", err)
