@@ -5,6 +5,8 @@ package asg_syncer
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"time"
 
 	"code.cloudfoundry.org/lager"
 	"code.cloudfoundry.org/policy-server/cc_client"
@@ -12,24 +14,36 @@ import (
 	"code.cloudfoundry.org/policy-server/uaa_client"
 )
 
-//counterfeiter:generate -o fakes/asg_syncer.go --fake-name ASGSyncer . ASGSync
-type ASGSync interface {
-	Poll() error
-}
-
 type ASGSyncer struct {
-	Logger    lager.Logger
-	Store     store.SecurityGroupsStore
-	UAAClient uaa_client.UAAClient
-	CCClient  cc_client.CCClient
+	Logger       lager.Logger
+	Store        store.SecurityGroupsStore
+	UAAClient    uaa_client.UAAClient
+	CCClient     cc_client.CCClient
+	PollInterval time.Duration
 }
 
-func NewASGSyncer(logger lager.Logger, store store.SecurityGroupsStore, uaaClient uaa_client.UAAClient, ccClient cc_client.CCClient) *ASGSyncer {
+func NewASGSyncer(logger lager.Logger, store store.SecurityGroupsStore, uaaClient uaa_client.UAAClient, ccClient cc_client.CCClient, pollInterval time.Duration) *ASGSyncer {
 	return &ASGSyncer{
-		Logger:    logger,
-		Store:     store,
-		UAAClient: uaaClient,
-		CCClient:  ccClient,
+		Logger:       logger,
+		Store:        store,
+		UAAClient:    uaaClient,
+		CCClient:     ccClient,
+		PollInterval: pollInterval,
+	}
+}
+
+func (a *ASGSyncer) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
+	close(ready)
+	for {
+		select {
+		case <-signals:
+			return nil
+		case <-time.After(a.PollInterval):
+			if err := a.Poll(); err != nil {
+				a.Logger.Error("asg-sync-cycle", err)
+				return err
+			}
+		}
 	}
 }
 
