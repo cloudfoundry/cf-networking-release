@@ -2,6 +2,8 @@ package asg_syncer_test
 
 import (
 	"fmt"
+	"os"
+	"time"
 
 	"code.cloudfoundry.org/lager/lagertest"
 	"code.cloudfoundry.org/policy-server/asg_syncer"
@@ -12,6 +14,7 @@ import (
 	uaafakes "code.cloudfoundry.org/policy-server/uaa_client/fakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/gbytes"
 )
 
 var _ = Describe("ASGSyncer", func() {
@@ -20,15 +23,17 @@ var _ = Describe("ASGSyncer", func() {
 		fakeCCClient  *ccfakes.CCClient
 		logger        *lagertest.TestLogger
 		fakeStore     *dbfakes.SecurityGroupsStore
+		pollInterval  time.Duration
 	)
 	BeforeEach(func() {
 		fakeStore = &dbfakes.SecurityGroupsStore{}
 		fakeUAAClient = &uaafakes.UAAClient{}
 		fakeCCClient = &ccfakes.CCClient{}
 		logger = lagertest.NewTestLogger("test")
+		pollInterval = time.Millisecond
 	})
 	Describe("NewASGSyncer()", func() {
-		asgSyncer := asg_syncer.NewASGSyncer(logger, fakeStore, fakeUAAClient, fakeCCClient)
+		asgSyncer := asg_syncer.NewASGSyncer(logger, fakeStore, fakeUAAClient, fakeCCClient, pollInterval)
 
 		Expect(asgSyncer).To(Equal(&asg_syncer.ASGSyncer{
 			Logger:    logger,
@@ -37,10 +42,10 @@ var _ = Describe("ASGSyncer", func() {
 			CCClient:  fakeCCClient,
 		}))
 	})
-	Describe("asgSyncer.Sync()", func() {
+	Describe("asgSyncer.Poll()", func() {
 		var asgSyncer *asg_syncer.ASGSyncer
 		BeforeEach(func() {
-			asgSyncer = asg_syncer.NewASGSyncer(logger, fakeStore, fakeUAAClient, fakeCCClient)
+			asgSyncer = asg_syncer.NewASGSyncer(logger, fakeStore, fakeUAAClient, fakeCCClient, pollInterval)
 			fakeUAAClient.GetTokenReturns("fake-token", nil)
 			fakeCCClient.GetSecurityGroupsReturns([]cc_client.SecurityGroupResource{{
 				GUID:            "first-guid",
@@ -87,6 +92,49 @@ var _ = Describe("ASGSyncer", func() {
 				},
 			}}, nil)
 		})
+		Describe("asgSyncer.Run()", func() {
+			var (
+				signals chan os.Signal
+				ready   chan struct{}
+
+				retChan chan error
+			)
+
+			BeforeEach(func() {
+				signals = make(chan os.Signal)
+				ready = make(chan struct{})
+
+				retChan = make(chan error)
+			})
+
+			It("polls at poll interval", func() {
+				go func() {
+					retChan <- asgSyncer.Run(signals, ready)
+				}()
+
+				Eventually(ready).Should(BeClosed())
+				Eventually(fakeUAAClient.GetTokenCallCount()).Should(BeNumerically(">", 1))
+
+				Consistently(retChan).ShouldNot(Receive())
+
+				signals <- os.Interrupt
+				Eventually(retChan).Should(Receive(nil))
+			})
+
+			Context("when the poller func errors", func() {
+				BeforeEach(func() {
+					fakeUAAClient.GetTokenReturns("", fmt.Errorf("banana"))
+				})
+
+				It("logs the error and returns", func() {
+					err := asgSyncer.Run(signals, ready)
+					Expect(err).To(HaveOccurred())
+					Expect(err).To(MatchError(fmt.Errorf("banana")))
+					Expect(logger).To(gbytes.Say("asg-sync-cycle.*banana"))
+				})
+			})
+		})
+
 		It("polls properly", func() {
 			err := asgSyncer.Poll()
 			Expect(err).To(BeNil())
