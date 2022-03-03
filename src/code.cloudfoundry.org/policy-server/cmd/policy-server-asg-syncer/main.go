@@ -125,7 +125,7 @@ func main() {
 		Logger:     logger,
 	}
 
-	asgSyncer := asg_syncer.NewASGSyncer(logger, wrappedSecurityGroupsStore, uaaClient, ccClient, time.Duration(conf.ASGSyncInterval)*time.Second)
+	asgSyncer := asg_syncer.NewASGSyncer(logger, wrappedSecurityGroupsStore, uaaClient, ccClient, time.Duration(conf.ASGSyncInterval)*time.Second, metricsSender)
 	lock := initASGLocker(logger, conf.UUID, locket.RetryInterval, locket.DefaultSessionTTLInSeconds, locketClient)
 
 	members := grouper.Members{
