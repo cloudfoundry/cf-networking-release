@@ -14,21 +14,31 @@ import (
 	"code.cloudfoundry.org/policy-server/uaa_client"
 )
 
-type ASGSyncer struct {
-	Logger       lager.Logger
-	Store        store.SecurityGroupsStore
-	UAAClient    uaa_client.UAAClient
-	CCClient     cc_client.CCClient
-	PollInterval time.Duration
+const metricSecurityGroupsRetrievalFromCCDuration = "SecurityGroupsRetrievalFromCCTime"
+const metricSecurityGroupsTotalSyncDuration = "SecurityGroupsTotalSyncTime"
+
+//go:generate counterfeiter -o fakes/metrics_sender.go --fake-name MetricsSender . metricsSender
+type metricsSender interface {
+	SendDuration(string, time.Duration)
 }
 
-func NewASGSyncer(logger lager.Logger, store store.SecurityGroupsStore, uaaClient uaa_client.UAAClient, ccClient cc_client.CCClient, pollInterval time.Duration) *ASGSyncer {
+type ASGSyncer struct {
+	Logger        lager.Logger
+	Store         store.SecurityGroupsStore
+	UAAClient     uaa_client.UAAClient
+	CCClient      cc_client.CCClient
+	PollInterval  time.Duration
+	MetricsSender metricsSender
+}
+
+func NewASGSyncer(logger lager.Logger, store store.SecurityGroupsStore, uaaClient uaa_client.UAAClient, ccClient cc_client.CCClient, pollInterval time.Duration, metricsSender metricsSender) *ASGSyncer {
 	return &ASGSyncer{
-		Logger:       logger,
-		Store:        store,
-		UAAClient:    uaaClient,
-		CCClient:     ccClient,
-		PollInterval: pollInterval,
+		Logger:        logger,
+		Store:         store,
+		UAAClient:     uaaClient,
+		CCClient:      ccClient,
+		PollInterval:  pollInterval,
+		MetricsSender: metricsSender,
 	}
 }
 
@@ -48,6 +58,7 @@ func (a *ASGSyncer) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 }
 
 func (a *ASGSyncer) Poll() error {
+	syncStartTime := time.Now()
 	a.Logger.Debug("asg-sync-started")
 	defer a.Logger.Debug("asg-sync-complete")
 
@@ -55,10 +66,14 @@ func (a *ASGSyncer) Poll() error {
 	if err != nil {
 		return err
 	}
+
+	retrieveStartTime := time.Now()
 	ccSGs, err := a.CCClient.GetSecurityGroups(token)
 	if err != nil {
 		return err
 	}
+	retrieveEndTime := time.Now()
+	a.MetricsSender.SendDuration(metricSecurityGroupsRetrievalFromCCDuration, retrieveEndTime.Sub(retrieveStartTime))
 
 	sgs := []store.SecurityGroup{}
 	for _, ccSG := range ccSGs {
@@ -93,5 +108,10 @@ func (a *ASGSyncer) Poll() error {
 		})
 	}
 
-	return a.Store.Replace(sgs)
+	err = a.Store.Replace(sgs)
+
+	syncEndTime := time.Now()
+	a.MetricsSender.SendDuration(metricSecurityGroupsTotalSyncDuration, syncEndTime.Sub(syncStartTime))
+
+	return err
 }
