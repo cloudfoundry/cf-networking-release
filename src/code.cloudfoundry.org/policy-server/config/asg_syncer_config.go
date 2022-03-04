@@ -13,6 +13,7 @@ import (
 
 type ASGSyncerConfig struct {
 	ASGSyncInterval   int       `json:"asg_poll_interval_seconds" validate:"min=0"`
+	RetryDeadline     int       `json:"retry_deadline_seconds" validate:"min=1"`
 	UUID              string    `json:"uuid" validate:"nonzero"`
 	Database          db.Config `json:"database" validate:"nonzero"`
 	UAAClient         string    `json:"uaa_client" validate:"nonzero"`

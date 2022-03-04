@@ -36,7 +36,7 @@ var _ = Describe("ASGSyncer", func() {
 		fakeMetricsSender = &fakes.MetricsSender{}
 	})
 	Describe("NewASGSyncer()", func() {
-		asgSyncer := asg_syncer.NewASGSyncer(logger, fakeStore, fakeUAAClient, fakeCCClient, pollInterval, fakeMetricsSender)
+		asgSyncer := asg_syncer.NewASGSyncer(logger, fakeStore, fakeUAAClient, fakeCCClient, pollInterval, fakeMetricsSender, time.Millisecond)
 
 		Expect(asgSyncer).To(Equal(&asg_syncer.ASGSyncer{
 			Logger:        logger,
@@ -44,12 +44,13 @@ var _ = Describe("ASGSyncer", func() {
 			UAAClient:     fakeUAAClient,
 			CCClient:      fakeCCClient,
 			MetricsSender: fakeMetricsSender,
+			RetryDeadline: time.Millisecond,
 		}))
 	})
 	Describe("asgSyncer.Poll()", func() {
 		var asgSyncer *asg_syncer.ASGSyncer
 		BeforeEach(func() {
-			asgSyncer = asg_syncer.NewASGSyncer(logger, fakeStore, fakeUAAClient, fakeCCClient, pollInterval, fakeMetricsSender)
+			asgSyncer = asg_syncer.NewASGSyncer(logger, fakeStore, fakeUAAClient, fakeCCClient, pollInterval, fakeMetricsSender, time.Millisecond)
 			fakeUAAClient.GetTokenReturns("fake-token", nil)
 			fakeCCClient.GetSecurityGroupsReturns([]cc_client.SecurityGroupResource{{
 				GUID:            "first-guid",
@@ -215,6 +216,28 @@ var _ = Describe("ASGSyncer", func() {
 				It("doesn't update the database", func() {
 					asgSyncer.Poll()
 					Expect(fakeStore.ReplaceCallCount()).To(Equal(0))
+				})
+				Context("if changes are detected during capi pagination", func() {
+					BeforeEach(func() {
+						fakeCCClient.GetSecurityGroupsReturns([]cc_client.SecurityGroupResource{}, error(cc_client.NewUnstableSecurityGroupListError(fmt.Errorf("unstable list"))))
+					})
+					It("doesn't return an error", func() {
+						err := asgSyncer.Poll()
+						Expect(err).ToNot(HaveOccurred())
+					})
+					It("doesn't update the database", func() {
+						asgSyncer.Poll()
+						Expect(fakeStore.ReplaceCallCount()).To(Equal(0))
+					})
+					Context("if changes keep happening past the retry deadline", func() {
+						It("throws an error", func() {
+							Eventually(func(g Gomega) {
+								err := asgSyncer.Poll()
+								g.Expect(err).To(MatchError(fmt.Errorf("unable to retrieve a consistent listing of security groups from CAPI after '1ms': unstable list")))
+							}).Should(Succeed())
+							Expect(fakeCCClient.GetSecurityGroupsCallCount()).To(BeNumerically(">", 1))
+						})
+					})
 				})
 			})
 

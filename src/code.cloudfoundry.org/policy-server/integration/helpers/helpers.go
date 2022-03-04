@@ -224,6 +224,7 @@ func DefaultTestConfigWithCCServer(dbConfig db.Config, metronAddress string, fix
 		LogPrefix:         "testprefix",
 		MetronAddress:     metronAddress,
 		SkipSSLValidation: true,
+		RetryDeadline:     300,
 	}
 
 	return externalConfig, internalConfig, asgSyncerConfig

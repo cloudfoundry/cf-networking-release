@@ -29,9 +29,11 @@ type ASGSyncer struct {
 	CCClient      cc_client.CCClient
 	PollInterval  time.Duration
 	MetricsSender metricsSender
+	RetryDeadline time.Duration
+	lastSync      time.Time
 }
 
-func NewASGSyncer(logger lager.Logger, store store.SecurityGroupsStore, uaaClient uaa_client.UAAClient, ccClient cc_client.CCClient, pollInterval time.Duration, metricsSender metricsSender) *ASGSyncer {
+func NewASGSyncer(logger lager.Logger, store store.SecurityGroupsStore, uaaClient uaa_client.UAAClient, ccClient cc_client.CCClient, pollInterval time.Duration, metricsSender metricsSender, retryDeadline time.Duration) *ASGSyncer {
 	return &ASGSyncer{
 		Logger:        logger,
 		Store:         store,
@@ -39,6 +41,7 @@ func NewASGSyncer(logger lager.Logger, store store.SecurityGroupsStore, uaaClien
 		CCClient:      ccClient,
 		PollInterval:  pollInterval,
 		MetricsSender: metricsSender,
+		RetryDeadline: retryDeadline,
 	}
 }
 
@@ -62,6 +65,10 @@ func (a *ASGSyncer) Poll() error {
 	a.Logger.Debug("asg-sync-started")
 	defer a.Logger.Debug("asg-sync-complete")
 
+	if a.lastSync.IsZero() {
+		a.lastSync = time.Now()
+	}
+
 	token, err := a.UAAClient.GetToken()
 	if err != nil {
 		return err
@@ -70,10 +77,18 @@ func (a *ASGSyncer) Poll() error {
 	retrieveStartTime := time.Now()
 	ccSGs, err := a.CCClient.GetSecurityGroups(token)
 	if err != nil {
+		if _, ok := err.(cc_client.UnstableSecurityGroupListError); ok {
+			fmt.Printf("deadline: %s, lastSync: %s\n", time.Now(), a.lastSync.Add(a.RetryDeadline))
+			if time.Now().After(a.lastSync.Add(a.RetryDeadline)) {
+				return fmt.Errorf("unable to retrieve a consistent listing of security groups from CAPI after '%s': %s", a.RetryDeadline, err)
+			}
+			return nil
+		}
 		return err
 	}
 	retrieveEndTime := time.Now()
 	a.MetricsSender.SendDuration(metricSecurityGroupsRetrievalFromCCDuration, retrieveEndTime.Sub(retrieveStartTime))
+	a.lastSync = time.Now()
 
 	sgs := []store.SecurityGroup{}
 	for _, ccSG := range ccSGs {

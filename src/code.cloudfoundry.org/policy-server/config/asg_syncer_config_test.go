@@ -51,6 +51,7 @@ var _ = Describe("ASGSyncerConfig", func() {
 					"locket_client_cert_file": "some/client/cert/locket.cert",
 					"locket_client_key_file":  "some/client/cert/locket.key",
 				},
+				"retry_deadline_seconds": 300,
 			}
 			file, err = ioutil.TempFile(os.TempDir(), "config-")
 			Expect(err).NotTo(HaveOccurred())
@@ -81,6 +82,7 @@ var _ = Describe("ASGSyncerConfig", func() {
 				Expect(c.LogLevel).To(Equal("debug"))
 				Expect(c.MetronAddress).To(Equal("127.0.0.1:3457"))
 				Expect(c.SkipSSLValidation).To(Equal(true))
+				Expect(c.RetryDeadline).To(Equal(300))
 			})
 		})
 
@@ -138,6 +140,19 @@ var _ = Describe("ASGSyncerConfig", func() {
 				It("returns an error", func() {
 					_, err = config.NewASGSyncer(file.Name())
 					Expect(err).To(MatchError("invalid config: ASGSyncInterval: less than min"))
+				})
+			})
+		})
+
+		Describe("asg sync interval", func() {
+			Context("when the asg sync interval is less than 1", func() {
+				BeforeEach(func() {
+					validConfig["retry_deadline_seconds"] = 0
+					Expect(json.NewEncoder(file).Encode(validConfig)).To(Succeed())
+				})
+				It("returns an error", func() {
+					_, err = config.NewASGSyncer(file.Name())
+					Expect(err).To(MatchError("invalid config: RetryDeadline: less than min"))
 				})
 			})
 		})
