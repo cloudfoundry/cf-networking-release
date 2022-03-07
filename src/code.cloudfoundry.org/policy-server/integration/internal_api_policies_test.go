@@ -257,6 +257,18 @@ var _ = Describe("Internal Policies API", func() {
 				ContainElement(HaveOriginAndName("policy-server-internal", "DBQueryDurationMax")),
 			)
 		})
+
+		It("adds a Strict-Transport-Security header", func() {
+			resp := helpers.MakeAndDoHTTPSRequest(
+				"GET",
+				fmt.Sprintf("https://%s:%d/networking/v1/internal/policies", internalConf.ListenHost, internalConf.InternalListenPort),
+				nil,
+				tlsConfig,
+			)
+
+			Expect(resp.StatusCode).To(Equal(http.StatusOK))
+			Expect(resp.Header.Get("Strict-Transport-Security")).To(Equal("max-age=31536000"))
+		})
 	})
 
 	Describe("health", func() {
