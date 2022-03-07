@@ -128,6 +128,8 @@ func main() {
 	asgMapper := api.NewAsgMapper(marshal.MarshalFunc(json.Marshal))
 	securityGroupsHandlerV1 := handlers.NewAsgsIndex(wrappedSecurityGroupsStore, asgMapper, errorResponse)
 
+	hstsHeaderWrapper := handlers.HSTSHandler{}
+
 	metricsWrap := func(name string, handler http.Handler) http.Handler {
 		metricsWrapper := middleware.MetricWrapper{
 			Name:          name,
@@ -161,6 +163,11 @@ func main() {
 		"create_tags":              metricsWrap("CreateTags", logWrap(createTagsHandlerV1)),
 		"internal_policies":        metricsWrap("InternalPolicies", logWrap(internalPoliciesHandlerV1)),
 		"internal_security_groups": metricsWrap("InternalSecurityGroups", logWrap(securityGroupsHandlerV1)),
+	}
+
+	for key, handler := range internalHandlers {
+		wrappedHandler := hstsHeaderWrapper.Wrap(handler)
+		internalHandlers[key] = wrappedHandler
 	}
 
 	tlsConfig, err := mutualtls.NewServerTLSConfig(conf.ServerCertFile, conf.ServerKeyFile, conf.CACertFile)
