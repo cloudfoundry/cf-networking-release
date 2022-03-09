@@ -4,5 +4,5 @@ name: performance-test-sd
 files:
   - code.cloudfoundry.org/go.mod
   - code.cloudfoundry.org/go.sum
-  - code.cloudfoundry.org/test/performance-sd/**/*
+  - code.cloudfoundry.org/test/performance-sd/*.go
   - code.cloudfoundry.org/vendor/**/*
