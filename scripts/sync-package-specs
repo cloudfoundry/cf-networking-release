@@ -51,10 +51,6 @@ sync_package bosh-dns-adapter \
 sync_package service-discovery-controller \
   -app code.cloudfoundry.org/service-discovery-controller &
 
-sync_package performance-test-sd \
-  -test code.cloudfoundry.org/test/performance-sd \
-  -app github.com/onsi/ginkgo/ginkgo &
-
 GOOS=linux sync_package runc-cni \
   -app code.cloudfoundry.org/garden-external-networker &
 
