@@ -3,13 +3,18 @@ package cc_client_test
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"math"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strconv"
+	"strings"
 
 	"code.cloudfoundry.org/cf-networking-helpers/fakes"
 	"code.cloudfoundry.org/cf-networking-helpers/json_client"
 	"code.cloudfoundry.org/lager/lagertest"
+	"code.cloudfoundry.org/policy-server/cc_client"
 	. "code.cloudfoundry.org/policy-server/cc_client"
 	"code.cloudfoundry.org/policy-server/cc_client/fixtures"
 	. "github.com/onsi/ginkgo"
@@ -592,7 +597,7 @@ var _ = Describe("Client", func() {
 			method, route, reqData, _, _ := fakeJSONClient.DoArgsForCall(0)
 
 			Expect(method).To(Equal("GET"))
-			Expect(route).To(Equal("/v3/security_groups?per_page=5000&order_by=created_at"))
+			Expect(route).To(Equal("/v3/security_groups?per_page=5000&order_by=created_at&page=1"))
 			Expect(reqData).To(BeNil())
 
 			Expect(len(sgs)).To(Equal(1))
@@ -612,19 +617,6 @@ var _ = Describe("Client", func() {
 			}))
 		})
 
-		It("handles possible pagination ordering race conditions", func() {
-			_, err := client.GetSecurityGroups("some-token")
-			Expect(err).NotTo(HaveOccurred())
-			Expect(fakeJSONClient.DoCallCount()).To(Equal(1))
-			method, route, reqData, _, _ := fakeJSONClient.DoArgsForCall(0)
-
-			By("having CC order by creation date of the SG, with a limit of 5000 groups", func() {
-				Expect(method).To(Equal("GET"))
-				Expect(route).To(Equal("/v3/security_groups?per_page=5000&order_by=created_at"))
-				Expect(reqData).To(BeNil())
-			})
-		})
-
 		Context("when there are no security groups", func() {
 			BeforeEach(func() {
 				fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
@@ -634,7 +626,7 @@ var _ = Describe("Client", func() {
 				}
 			})
 
-			It("Returns them all", func() {
+			It("Returns an empty set", func() {
 				sgs, err := client.GetSecurityGroups("some-token")
 				Expect(err).NotTo(HaveOccurred())
 				Expect(fakeJSONClient.DoCallCount()).To(Equal(1))
@@ -642,7 +634,7 @@ var _ = Describe("Client", func() {
 				method, route, reqData, _, _ := fakeJSONClient.DoArgsForCall(0)
 
 				Expect(method).To(Equal("GET"))
-				Expect(route).To(Equal("/v3/security_groups?per_page=5000&order_by=created_at"))
+				Expect(route).To(Equal("/v3/security_groups?per_page=5000&order_by=created_at&page=1"))
 				Expect(reqData).To(BeNil())
 
 				Expect(len(sgs)).To(Equal(0))
@@ -666,7 +658,7 @@ var _ = Describe("Client", func() {
 				method, route, reqData, _, _ := fakeJSONClient.DoArgsForCall(0)
 
 				Expect(method).To(Equal("GET"))
-				Expect(route).To(Equal("/v3/security_groups?per_page=5000&order_by=created_at"))
+				Expect(route).To(Equal("/v3/security_groups?per_page=5000&order_by=created_at&page=1"))
 				Expect(reqData).To(BeNil())
 
 				Expect(len(sgs)).To(Equal(2))
@@ -680,67 +672,106 @@ var _ = Describe("Client", func() {
 		})
 
 		Context("when there are multiple pages", func() {
+			var sgs []cc_client.SecurityGroupResource
+			var pages int
+			var deleteBeforePage int
+
 			BeforeEach(func() {
+				pages = 10
+				deleteBeforePage = 0
+				sgs = []cc_client.SecurityGroupResource{}
+				// build a list of SGs that we can paginate over
+				for i := 0; i < pages*cc_client.SecurityGroupsPerPage; i++ {
+					sgs = append(sgs, cc_client.SecurityGroupResource{
+						GUID: fmt.Sprintf("guid-%d", i),
+					})
+				}
+			})
+			JustBeforeEach(func() {
+				// set up a fake client that will return the list of SGs in a paginated fashion
+				// using consistent ordering, and adapting to changes in the per_page number + page request
 				fakeJSONClient.DoStub = func(method, route string, reqData, respData interface{}, token string) error {
-					if route == "/v3/security_groups?page=2&per_page=5000&order_by=created_at" {
-						err := json.Unmarshal([]byte(fixtures.SecurityGroupsMultiplePagesPg2), respData)
-						Expect(err).ToNot(HaveOccurred())
-					} else if route == "/v3/security_groups?page=3&per_page=5000&order_by=created_at" {
-						err := json.Unmarshal([]byte(fixtures.SecurityGroupsMultiplePagesPg3), respData)
-						Expect(err).ToNot(HaveOccurred())
-					} else {
-						err := json.Unmarshal([]byte(fixtures.SecurityGroupsMultiplePages), respData)
-						Expect(err).ToNot(HaveOccurred())
+					url, err := url.Parse(route)
+					Expect(err).ToNot(HaveOccurred())
+
+					//grab per_page + page query params, or set sensible defaults
+					perPageStr := url.Query().Get("per_page")
+					if perPageStr == "" {
+						perPageStr = "50"
 					}
+					pageStr := url.Query().Get("page")
+					if pageStr == "" {
+						pageStr = "1"
+					}
+					perPage, err := strconv.Atoi(perPageStr)
+					Expect(err).ToNot(HaveOccurred())
+					page, err := strconv.Atoi(pageStr)
+					Expect(err).ToNot(HaveOccurred())
+					next := page + 1
+
+					// delete a number of indexes from our dataset, simulating deletions between
+					// pagination requests. any number of deletions should trigger an error, so
+					// delete the same number of indexes as our page is at
+					if deleteBeforePage == page {
+						sgs = sgs[page:]
+					}
+
+					resp := cc_client.GetSecurityGroupsResponse{}
+					resp.Pagination.TotalPages = totalPagesForSet(perPage, len(sgs))
+					//only set the next href if there's another page
+					if next <= resp.Pagination.TotalPages {
+						resp.Pagination.Next.Href = fmt.Sprintf("/v3/security_groups?per_page=%d&order_by=created_at&page=%d", perPage, next)
+					}
+
+					// figure out which results we should return
+					first := (page - 1) * perPage
+					last := first + perPage
+
+					// avoid index errors on the last page of sg results
+					if last > len(sgs) {
+						last = len(sgs)
+					}
+					resp.Resources = sgs[first:last]
+
+					// update the inbound respData with our new response
+					v := reflect.ValueOf(respData)
+					v.Elem().Set(reflect.ValueOf(resp))
+
 					return nil
+				}
+			})
+			It("queries with decreasing page sizes and increasing offsets to detect changes", func() {
+				_, err := client.GetSecurityGroups("some-token")
+				Expect(err).NotTo(HaveOccurred())
+				Expect(fakeJSONClient.DoCallCount()).To(Equal(totalPagesForSet(cc_client.SecurityGroupsPerPage-pages+1, len(sgs))))
+				for i := 1; i <= pages; i++ {
+					method, route, reqData, _, _ := fakeJSONClient.DoArgsForCall(i - 1)
+					Expect(method).To(Equal("GET"))
+					Expect(route).To(Equal(fmt.Sprintf("/v3/security_groups?per_page=%d&order_by=created_at&page=%d", cc_client.SecurityGroupsPerPage-i+1, i)))
+					Expect(reqData).To(BeNil())
 				}
 			})
 
 			It("returns all the security groups", func() {
-				sgs, err := client.GetSecurityGroups("some-token")
+				returnedSGs, err := client.GetSecurityGroups("some-token")
 				Expect(err).NotTo(HaveOccurred())
-				Expect(fakeJSONClient.DoCallCount()).To(Equal(3))
+				Expect(fakeJSONClient.DoCallCount()).To(Equal(11))
 
-				method, route, reqData, _, token := fakeJSONClient.DoArgsForCall(0)
+				Expect(returnedSGs).To(Equal(sgs))
+			})
 
-				Expect(method).To(Equal("GET"))
-				Expect(route).To(Equal("/v3/security_groups?per_page=5000&order_by=created_at"))
-				Expect(reqData).To(BeNil())
-				Expect(token).To(Equal("bearer some-token"))
-
-				method, route, reqData, _, token = fakeJSONClient.DoArgsForCall(1)
-
-				Expect(method).To(Equal("GET"))
-				Expect(route).To(Equal("/v3/security_groups?page=2&per_page=5000&order_by=created_at"))
-				Expect(reqData).To(BeNil())
-				Expect(token).To(Equal("bearer some-token"))
-
-				method, route, reqData, _, token = fakeJSONClient.DoArgsForCall(2)
-
-				Expect(method).To(Equal("GET"))
-				Expect(route).To(Equal("/v3/security_groups?page=3&per_page=5000&order_by=created_at"))
-				Expect(reqData).To(BeNil())
-				Expect(token).To(Equal("bearer some-token"))
-
-				Expect(len(sgs)).To(Equal(3))
-				Expect(sgs[0].Name).To(Equal("my-group0"))
-				Expect(sgs[0].GUID).To(Equal("b85a788e-671f-4549-814d-e34cdb2f539a"))
-				Expect(sgs[0].GloballyEnabled.Running).To(BeTrue())
-				Expect(sgs[0].GloballyEnabled.Staging).To(BeFalse())
-				Expect(sgs[0].Rules[0].Protocol).To(Equal("tcp"))
-				Expect(sgs[0].Rules[1].Protocol).To(Equal("icmp"))
-				Expect(sgs[1].Name).To(Equal("my-group2"))
-				Expect(sgs[1].GUID).To(Equal("second-guid"))
-				Expect(sgs[1].GloballyEnabled.Running).To(BeFalse())
-				Expect(sgs[1].GloballyEnabled.Staging).To(BeTrue())
-				Expect(sgs[1].Rules[0].Protocol).To(Equal("tcp"))
-				Expect(sgs[1].Rules[0].Ports).To(Equal("53"))
-				Expect(sgs[2].Name).To(Equal("my-group3"))
-				Expect(sgs[2].GUID).To(Equal("third-guid"))
-				Expect(sgs[2].GloballyEnabled.Running).To(BeTrue())
-				Expect(sgs[2].GloballyEnabled.Staging).To(BeTrue())
-				Expect(sgs[2].Rules[0].Protocol).To(Equal("tcp"))
-				Expect(sgs[2].Rules[0].Ports).To(Equal("123"))
+			Context("when entries are removed from previous pages", func() {
+				// skip page 1 since it would never trigger an error
+				It("detects a changes and invalidates the by throwing an error", func() {
+					for page := 2; page <= pages; page++ {
+						deleteBeforePage = page
+						_, err := client.GetSecurityGroups("some-token")
+						Expect(err).To(HaveOccurred())
+						Expect(err).To(MatchError(cc_client.NewUnstableSecurityGroupListError(fmt.Errorf("unexpected SG changes during pagination"))))
+						_, route, _, _, _ := fakeJSONClient.DoArgsForCall(fakeJSONClient.DoCallCount() - 1)
+						Expect(strings.Split(route, "?")[1]).To(Equal(fmt.Sprintf("per_page=%d&order_by=created_at&page=%d", cc_client.SecurityGroupsPerPage-page+1, page)))
+					}
+				})
 			})
 		})
 
@@ -756,3 +787,7 @@ var _ = Describe("Client", func() {
 		})
 	})
 })
+
+func totalPagesForSet(perPage, setLength int) int {
+	return int(math.Ceil(float64(setLength) / float64(perPage)))
+}

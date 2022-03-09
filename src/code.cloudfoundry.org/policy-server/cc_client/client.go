@@ -13,7 +13,7 @@ import (
 	"code.cloudfoundry.org/lager"
 )
 
-const securityGroupsPerPage = 5000
+const SecurityGroupsPerPage = 5000
 
 //counterfeiter:generate -o fakes/cc_client.go --fake-name CCClient . CCClient
 type CCClient interface {
@@ -365,18 +365,54 @@ func (c *Client) GetSecurityGroups(token string) ([]SecurityGroupResource, error
 
 	securityGroups := []SecurityGroupResource{}
 
-	nextPage := fmt.Sprintf("?per_page=%d&order_by=created_at", securityGroupsPerPage)
-	for nextPage != "" {
-		queryParams := strings.Split(nextPage, "?")[1]
-		response, err := c.makeGetSecurityGroupsRequest(queryParams, token)
+	var firstNewIndex, page, asgsPerPage int
+
+	lastSeenGuid := ""
+	// page indexing is 1 based, start with SecurityGroupsPerPage
+	for page, asgsPerPage = 1, SecurityGroupsPerPage; asgsPerPage > 0; page++ {
+		// response.Resources indexing is 0 based. represents the index of the first item that we would not have already seen
+		// since we decrement our per-page with each query, we will see more and more duplicate SGs, and need to keep track of
+		// where the first new result is (and by extension, the last already-seen result).
+		// e.g. on the first query, per_page=5000&page=1 -> we see indices 0 through 4999
+		//      on the second query, per_page=4999&page=2 -> we see indices 4999 through 9998
+		//      page will be 2, firstNewIndex will be 1, and the index of what we think the lastSeenSG would be 0
+		firstNewIndex = page - 1
+		targetLastSeen := firstNewIndex - 1
+		asgsPerPage = SecurityGroupsPerPage - firstNewIndex
+		nextPage := genNextPageQueryParams(asgsPerPage, page)
+
+		response, err := c.makeGetSecurityGroupsRequest(nextPage, token)
 		if err != nil {
 			return nil, err
 		}
-		for _, resource := range response.Resources {
-			securityGroups = append(securityGroups, resource)
+
+		// ensure we have new SGs in the response before we try to do any validation
+		if len(response.Resources) > 0 {
+			if firstNewIndex >= len(response.Resources) {
+				// realistically, this won't be hit until 2500 pages + ~6million ASGs, but it prevents a panic
+				err := fmt.Errorf("further querying will result in no new sources being returned")
+				c.Logger.Error("sg-validation-exhausted", err, lager.Data{"pageNumber": page, "initialPerPage": SecurityGroupsPerPage, "currentPerPage": SecurityGroupsPerPage - firstNewIndex})
+				return nil, err
+			}
+			// skip the validation if we haven't seen any guids yet
+			if lastSeenGuid != "" {
+				// validate previous guid against the guid before our firstNewIndex
+				targetGuid := response.Resources[targetLastSeen].GUID
+				if targetGuid != lastSeenGuid {
+					c.Logger.Info("unexpected-changes-to-sg-list-during-pagination", lager.Data{"detectedGuid": targetGuid, "expectedGuid": lastSeenGuid})
+					return nil, NewUnstableSecurityGroupListError(fmt.Errorf("unexpected SG changes during pagination"))
+				}
+			}
+			lastSeenGuid = response.Resources[len(response.Resources)-1].GUID
+			securityGroups = append(securityGroups, response.Resources[firstNewIndex:]...)
 		}
-		nextPage = response.Pagination.Next.Href
+
+		// stop looping if we have no more pages left
+		if response.Pagination.Next.Href == "" {
+			break
+		}
 	}
+
 	return securityGroups, nil
 }
 
@@ -394,4 +430,8 @@ func (c *Client) makeGetSecurityGroupsRequest(queryParams, token string) (*GetSe
 	}
 
 	return &response, nil
+}
+
+func genNextPageQueryParams(perPage, page int) string {
+	return fmt.Sprintf("per_page=%s&order_by=created_at&page=%s", url.QueryEscape(fmt.Sprintf("%d", perPage)), url.QueryEscape(fmt.Sprintf("%d", page)))
 }

@@ -32,6 +32,10 @@ properties:
     description: "Interval in seconds that policy-server will poll CAPI for ASG data. Requires asg_sync_enabled. Must be > 0"
     default: 60
 
+  retry_deadline_seconds:
+    description: "Maximum amount of time that policy-server-asg-syncer will retry CAPI for when detecting unstable ASG lists"
+    default: 300
+
   cc_hostname:
     description: |
       Host name for the Cloud Controller server for connecting to the non-secure api endpoint.
