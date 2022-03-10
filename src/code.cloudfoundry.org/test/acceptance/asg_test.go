@@ -114,7 +114,7 @@ var _ = Describe("Application Security Groups", func() {
 			Expect(err).ToNot(HaveOccurred())
 			resp.Body.Close()
 			return respBytes
-		}).WithTimeout(60 * time.Second).Should(MatchRegexp("refused"))
+		}).WithTimeout(120 * time.Second).Should(MatchRegexp("refused"))
 	})
 
 })
