@@ -19,6 +19,7 @@ const (
 
 	setEnvTimeoutInSec = 10
 	burst              = 60
+	burstVariance      = 1
 )
 
 var (
@@ -57,7 +58,7 @@ var _ = Describe("Outbound connection limit", func() {
 
 			By("verifying the burst is available on start")
 			spamResp := spam()
-			Expect(spamResp.SuccessCount).Should(BeEquivalentTo(burst))
+			Expect(spamResp.SuccessCount).Should(BeNumerically("~", burst, burstVariance))
 
 			By("verifying the burst is exhausted")
 			spamResp = spam()
