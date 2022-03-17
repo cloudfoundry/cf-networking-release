@@ -85,7 +85,7 @@ var _ = Describe("Application Security Groups", func() {
 			Expect(err).ToNot(HaveOccurred())
 			resp.Body.Close()
 			return respBytes
-		}).WithTimeout(60 * time.Second).Should(MatchRegexp("api_version"))
+		}).WithTimeout(180 * time.Second).Should(MatchRegexp("api_version"))
 
 		By("unbinding the security group")
 		Expect(cfCLI.UnbindSecurityGroup(asgName, orgName, spaceName)).To(Succeed())
@@ -114,7 +114,7 @@ var _ = Describe("Application Security Groups", func() {
 			Expect(err).ToNot(HaveOccurred())
 			resp.Body.Close()
 			return respBytes
-		}).WithTimeout(120 * time.Second).Should(MatchRegexp("refused"))
+		}).WithTimeout(180 * time.Second).Should(MatchRegexp("refused"))
 	})
 
 })
