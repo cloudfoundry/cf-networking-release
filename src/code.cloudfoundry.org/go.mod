@@ -12,7 +12,7 @@ replace github.com/nats-io/nats-top => github.com/nats-io/nats-top v0.3.3-0.2016
 
 go 1.18
 
-replace github.com/hashicorp/consul => github.com/hashicorp/consul v0.7.0
+replace github.com/hashicorp/consul => github.com/hashicorp/consul v1.11.4
 
 require (
 	code.cloudfoundry.org/bbs v0.0.0-20211221221754-f246cdd508e9
@@ -39,7 +39,6 @@ require (
 	github.com/cloudfoundry-incubator/cf-test-helpers v1.0.0
 	github.com/cloudfoundry-incubator/executor v0.0.0-20211222191433-23e011088892 // indirect
 	github.com/cloudfoundry/dropsonde v1.0.0
-	github.com/cockroachdb/apd v1.1.0 // indirect
 	github.com/containernetworking/cni v1.0.1
 	github.com/containernetworking/plugins v1.0.0
 	github.com/coreos/go-iptables v0.6.0
@@ -47,10 +46,8 @@ require (
 	github.com/go-test/deep v1.0.8 // indirect
 	github.com/gofrs/uuid v4.2.0+incompatible // indirect
 	github.com/golang/protobuf v1.5.2
-	github.com/hashicorp/consul v1.11.4 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/serf v0.9.7 // indirect
-	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
 	github.com/jackc/pgx v3.6.2+incompatible // indirect
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/lib/pq v1.10.7 // indirect
@@ -94,14 +91,22 @@ require (
 	github.com/bmizerany/pat v0.0.0-20210406213842-e4b6760bdd6f // indirect
 	github.com/cloudfoundry/gosteno v0.0.0-20150423193413-0c8581caea35 // indirect
 	github.com/cloudfoundry/sonde-go v0.0.0-20171206171820-b33733203bb4 // indirect
+	github.com/fatih/color v1.9.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
+	github.com/hashicorp/consul/api v1.11.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
+	github.com/hashicorp/go-hclog v0.14.1 // indirect
+	github.com/hashicorp/go-rootcerts v1.0.2 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/mailru/easyjson v0.0.0-20190626092158-b2ccc519800e // indirect
+	github.com/mattn/go-colorable v0.1.6 // indirect
+	github.com/mattn/go-isatty v0.0.12 // indirect
+	github.com/mitchellh/go-homedir v1.1.0 // indirect
+	github.com/mitchellh/mapstructure v1.4.1-0.20210112042008-8ebf2d61a8b4 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/square/certstrap v1.2.0 // indirect
