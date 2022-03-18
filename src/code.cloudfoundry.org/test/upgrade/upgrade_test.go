@@ -38,11 +38,11 @@ var _ = Describe("apps remain available during an upgrade deploy", func() {
 		noASGTargetIP := boshIPFor("uaa")
 		By(fmt.Sprintf("found ASG Target IPs (allow %s) (deny %s)", ASGTargetIP, noASGTargetIP))
 
-		Expect(cli.SetApiWithoutSsl(config.ApiEndpoint)).To(Succeed())
-		Expect(cli.Auth(config.AdminUser, config.AdminPassword)).To(Succeed())
+		Expect(cli.SetApiWithoutSsl(conf.ApiEndpoint)).To(Succeed())
+		Expect(cli.Auth(conf.AdminUser, conf.AdminPassword)).To(Succeed())
 		Expect(cli.CreateOrg(org)).To(Succeed())
 		Expect(cli.TargetOrg(org)).To(Succeed())
-		Expect(cli.CreateSpace(space)).To(Succeed())
+		Expect(cli.CreateSpace(space, org)).To(Succeed())
 		Expect(cli.TargetSpace(space)).To(Succeed())
 
 		By("create and bind security group")
@@ -69,9 +69,9 @@ var _ = Describe("apps remain available during an upgrade deploy", func() {
 		var appFailures []string
 		var ASGFailures []string
 		var noASGFailures []string
-		go checkContinuously("http://proxy-upgrade."+config.AppsDomain, http.StatusOK, &appFailures)
-		go checkContinuously(fmt.Sprintf("http://proxy-upgrade.%s/proxy/%s", config.AppsDomain, ASGTargetIP), http.StatusOK, &ASGFailures)
-		go checkContinuously(fmt.Sprintf("http://proxy-upgrade.%s/proxy/%s", config.AppsDomain, noASGTargetIP), http.StatusInternalServerError, &noASGFailures)
+		go checkContinuously("http://proxy-upgrade."+conf.AppsDomain, http.StatusOK, &appFailures)
+		go checkContinuously(fmt.Sprintf("http://proxy-upgrade.%s/proxy/%s", conf.AppsDomain, ASGTargetIP), http.StatusOK, &ASGFailures)
+		go checkContinuously(fmt.Sprintf("http://proxy-upgrade.%s/proxy/%s", conf.AppsDomain, noASGTargetIP), http.StatusInternalServerError, &noASGFailures)
 
 		By("deploying upgrade manifest")
 		boshDeploy(upgradeManifest)
@@ -94,10 +94,10 @@ var _ = Describe("apps remain available during an upgrade deploy", func() {
 
 func check(url string) (int, string) {
 	resp, err := http.Get(url)
-	defer resp.Body.Close()
 	if err != nil {
 		return http.StatusTeapot, ""
 	}
+	defer resp.Body.Close()
 
 	dump, err := httputil.DumpResponse(resp, true)
 	if err != nil {
@@ -108,7 +108,7 @@ func check(url string) (int, string) {
 }
 
 func checkStatusCode() int {
-	sc, _ := check("http://proxy-upgrade." + config.AppsDomain)
+	sc, _ := check("http://proxy-upgrade." + conf.AppsDomain)
 	return sc
 }
 

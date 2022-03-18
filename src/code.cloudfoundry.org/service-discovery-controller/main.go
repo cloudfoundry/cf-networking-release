@@ -114,10 +114,10 @@ func mainWithError() error {
 	)
 
 	members := grouper.Members{
-		{"subscriber", subscriber},
-		{"metrics-emitter", metricsEmitter},
-		{"log-level-server", logLevelServer},
-		{"routes-server", routesServer},
+		{Name: "subscriber", Runner: subscriber},
+		{Name: "metrics-emitter", Runner: metricsEmitter},
+		{Name: "log-level-server", Runner: logLevelServer},
+		{Name: "routes-server", Runner: routesServer},
 	}
 
 	group := grouper.NewOrdered(os.Interrupt, members)

@@ -86,6 +86,8 @@ require (
 
 require code.cloudfoundry.org/policy_client v0.0.0-20220509212643-31108c669266
 
+require code.cloudfoundry.org/cf-test-helpers v1.0.0
+
 require (
 	code.cloudfoundry.org/cfhttp/v2 v2.0.1-0.20210513172332-4c5ee488a657 // indirect
 	code.cloudfoundry.org/go-loggregator/v8 v8.0.5 // indirect

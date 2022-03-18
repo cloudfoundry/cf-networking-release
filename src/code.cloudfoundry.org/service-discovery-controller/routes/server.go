@@ -140,16 +140,14 @@ func (s *Server) Run(signals <-chan os.Signal, ready chan<- struct{}) error {
 func (s *Server) buildTLSServerConfig() (*tls.Config, error) {
 	caCert, err := ioutil.ReadFile(s.config.CACert)
 	if err != nil {
-		fmt.Errorf("unable to read ca file: %s", err)
-		return nil, err
+		return nil, fmt.Errorf("unable to read ca file: %s", err)
 	}
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(caCert)
 
 	cert, err := tls.LoadX509KeyPair(s.config.ServerCert, s.config.ServerKey)
 	if err != nil {
-		fmt.Errorf("unable to load x509 key pair: %s", err)
-		return nil, err
+		return nil, fmt.Errorf("unable to load x509 key pair: %s", err)
 	}
 
 	tlsConfig := tlsconfig.Build(
