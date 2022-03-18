@@ -114,8 +114,8 @@ func main() {
 	)
 
 	members := grouper.Members{
-		{"metrics-emitter", metricsEmitter},
-		{"log-level-server", lagerlevel.NewServer(config.LogLevelAddress, config.LogLevelPort, reconfigurableSink, logger.Session("log-level-server"))},
+		{Name: "metrics-emitter", Runner: metricsEmitter},
+		{Name: "log-level-server", Runner: lagerlevel.NewServer(config.LogLevelAddress, config.LogLevelPort, reconfigurableSink, logger.Session("log-level-server"))},
 	}
 	group := grouper.NewOrdered(os.Interrupt, members)
 	monitor := ifrit.Invoke(sigmon.New(group))
