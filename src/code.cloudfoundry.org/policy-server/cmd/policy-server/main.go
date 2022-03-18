@@ -311,10 +311,10 @@ func main() {
 	debugServer := debugserver.Runner(fmt.Sprintf("%s:%d", conf.DebugServerHost, conf.DebugServerPort), reconfigurableSink)
 
 	members := grouper.Members{
-		{"metrics_emitter", metricsEmitter},
-		{"http_server", externalServer},
-		{"policy-cleaner-poller", policyPoller},
-		{"debug-server", debugServer},
+		{Name: "metrics_emitter", Runner: metricsEmitter},
+		{Name: "http_server", Runner: externalServer},
+		{Name: "policy-cleaner-poller", Runner: policyPoller},
+		{Name: "debug-server", Runner: debugServer},
 	}
 
 	logger.Info("starting external server", lager.Data{"listen-address": conf.ListenHost, "port": conf.ListenPort})

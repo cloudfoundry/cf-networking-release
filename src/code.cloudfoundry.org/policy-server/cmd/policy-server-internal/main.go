@@ -185,10 +185,10 @@ func main() {
 		conf.HealthCheckPort, healthHandlers, healthRoutes)
 
 	members := grouper.Members{
-		{"metrics-emitter", metricsEmitter},
-		{"internal-http-server", internalServer},
-		{"debug-server", debugServer},
-		{"health-check-server", healthCheckServer},
+		{Name: "metrics-emitter", Runner: metricsEmitter},
+		{Name: "internal-http-server", Runner: internalServer},
+		{Name: "debug-server", Runner: debugServer},
+		{Name: "health-check-server", Runner: healthCheckServer},
 	}
 
 	logger.Info("starting internal server", lager.Data{"listen-address": conf.ListenHost, "port": conf.InternalListenPort})

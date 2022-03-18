@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/cf-pusher/cf_cli_adapter"
-	"github.com/cloudfoundry-incubator/cf-test-helpers/helpers"
+	"code.cloudfoundry.org/cf-test-helpers/config"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gexec"
@@ -21,7 +21,7 @@ const Timeout_Short = 10 * time.Second
 const BOSH_DEPLOY_TIMEOUT = 75 * time.Minute
 
 var (
-	config     helpers.Config
+	conf       *config.Config
 	boshConfig *BoshConfig
 	cli        *cf_cli_adapter.Adapter
 )
@@ -46,7 +46,7 @@ var _ = BeforeSuite(func() {
 	boshConfig = &BoshConfig{}
 	err = json.Unmarshal(bytes, boshConfig)
 	Expect(err).NotTo(HaveOccurred(), "Could not unmarshal config file. Make sure it is valid JSON.")
-	config = helpers.LoadConfig()
+	conf = config.LoadConfig()
 	cli = cf_cli_adapter.NewAdapter()
 })
 

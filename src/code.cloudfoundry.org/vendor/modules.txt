@@ -19,6 +19,9 @@ code.cloudfoundry.org/cf-networking-helpers/mutualtls
 code.cloudfoundry.org/cf-networking-helpers/testsupport
 code.cloudfoundry.org/cf-networking-helpers/testsupport/metrics
 code.cloudfoundry.org/cf-networking-helpers/testsupport/ports
+# code.cloudfoundry.org/cf-test-helpers v1.0.0
+## explicit
+code.cloudfoundry.org/cf-test-helpers/config
 # code.cloudfoundry.org/cfhttp/v2 v2.0.1-0.20210513172332-4c5ee488a657
 ## explicit
 code.cloudfoundry.org/cfhttp/v2
@@ -110,8 +113,6 @@ github.com/cloudfoundry-incubator/cf-test-helpers/cf
 github.com/cloudfoundry-incubator/cf-test-helpers/commandreporter
 github.com/cloudfoundry-incubator/cf-test-helpers/commandstarter
 github.com/cloudfoundry-incubator/cf-test-helpers/config
-github.com/cloudfoundry-incubator/cf-test-helpers/helpers
-github.com/cloudfoundry-incubator/cf-test-helpers/helpers/internal
 github.com/cloudfoundry-incubator/cf-test-helpers/internal
 github.com/cloudfoundry-incubator/cf-test-helpers/silentcommandstarter
 # github.com/cloudfoundry-incubator/executor v0.0.0-20211222191433-23e011088892

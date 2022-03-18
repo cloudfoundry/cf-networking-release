@@ -34,6 +34,6 @@ type Tag struct {
 }
 
 type Space struct {
-	Name    string `json:name`
-	OrgGUID string `json:organization_guid`
+	Name    string `json:"name"`
+	OrgGUID string `json:"organization_guid"`
 }
