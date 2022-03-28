@@ -24,10 +24,10 @@ require (
 	code.cloudfoundry.org/durationjson v0.0.0-20211123184609-ead4881606b1 // indirect
 	code.cloudfoundry.org/filelock v0.0.0-20180314203404-13cd41364639
 	code.cloudfoundry.org/garden v0.0.0-20210813150702-ba711ea09ea2
-	code.cloudfoundry.org/go-diodes v0.0.0-20211115184647-b584dd5df32c // indirect
+	code.cloudfoundry.org/go-diodes v0.0.0-20220325013804-800fb6f70e2f // indirect
 	code.cloudfoundry.org/inigo v0.0.0-20211021201637-031ac17b0ea6 // indirect
 	code.cloudfoundry.org/lager v2.0.0+incompatible
-	code.cloudfoundry.org/locket v0.0.0-20211014150347-5712a0767913
+	code.cloudfoundry.org/locket v0.0.0-20220325152040-ad30c800960d
 	code.cloudfoundry.org/rep v0.1441.2 // indirect
 	code.cloudfoundry.org/routing-info v0.0.0-20210811170011-d6736bca3081 // indirect
 	code.cloudfoundry.org/tlsconfig v0.0.0-20211123175040-23cc9f05b6b3
@@ -47,9 +47,9 @@ require (
 	github.com/go-test/deep v1.0.8 // indirect
 	github.com/gofrs/uuid v4.2.0+incompatible // indirect
 	github.com/golang/protobuf v1.5.2
-	github.com/hashicorp/consul v1.11.1 // indirect
+	github.com/hashicorp/consul v1.11.4 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
-	github.com/hashicorp/serf v0.9.6 // indirect
+	github.com/hashicorp/serf v0.9.7 // indirect
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
 	github.com/jackc/pgx v3.6.2+incompatible // indirect
 	github.com/jmoiron/sqlx v1.3.4
@@ -75,10 +75,10 @@ require (
 	github.com/vito/go-sse v1.0.0 // indirect
 	github.com/ziutek/mymysql v1.5.4 // indirect
 	golang.org/x/crypto v0.0.0-20211215153901-e495a2d5b3d3 // indirect
-	golang.org/x/net v0.0.0-20220105145211-5b0dc2dfae98
-	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e
-	google.golang.org/genproto v0.0.0-20211223182754-3ac035c7e7cb // indirect
-	google.golang.org/grpc v1.44.0
+	golang.org/x/net v0.0.0-20220325170049-de3da57026de
+	golang.org/x/sys v0.0.0-20220328115105-d36c6a25d886
+	google.golang.org/genproto v0.0.0-20220324131243-acbaeb5b85eb // indirect
+	google.golang.org/grpc v1.45.0
 	gopkg.in/gorp.v1 v1.7.2 // indirect
 	gopkg.in/validator.v2 v2.0.0-20210331031555-b37d688a7fb0
 	gopkg.in/yaml.v2 v2.4.0
@@ -102,7 +102,7 @@ require (
 	github.com/square/certstrap v1.2.0 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/tools v0.0.0-20210106214847-113979e3529a // indirect
-	google.golang.org/protobuf v1.27.1 // indirect
+	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 )
 
