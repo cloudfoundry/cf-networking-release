@@ -18,7 +18,7 @@
   "gnetId": null,
   "graphTooltip": 1,
   "id": 59,
-  "iteration": 1646933446671,
+  "iteration": 1648737035883,
   "links": [
     {
       "asDropdown": true,
@@ -94,12 +94,12 @@
       "renderer": "flot",
       "seriesOverrides": [],
       "spaceLength": 10,
-      "stack": false,
+      "stack": true,
       "steppedLine": false,
       "targets": [
         {
           "exemplar": true,
-          "expr": "avg(firehose_value_metric_vxlan_policy_agent_asg_total_poll_time)/1000",
+          "expr": "max(firehose_value_metric_vxlan_policy_agent_asg_total_poll_time)/1000",
           "hide": false,
           "interval": "",
           "legendFormat": "asg retrieval",
@@ -107,14 +107,14 @@
         },
         {
           "exemplar": true,
-          "expr": "avg(firehose_value_metric_vxlan_policy_agent_asg_iptables_enforce_time)/1000",
+          "expr": "max(firehose_value_metric_vxlan_policy_agent_asg_iptables_enforce_time)/1000",
           "interval": "",
           "legendFormat": "iptables enforce",
           "refId": "A"
         },
         {
           "exemplar": true,
-          "expr": "avg(firehose_value_metric_vxlan_policy_agent_asg_iptables_cleanup_time)/1000",
+          "expr": "max(firehose_value_metric_vxlan_policy_agent_asg_iptables_cleanup_time)/1000",
           "hide": false,
           "interval": "",
           "legendFormat": "iptables cleanup",
@@ -213,7 +213,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "avg(firehose_value_metric_policy_server_asg_syncer_security_groups_retrieval_from_cc_time)/1000",
+          "expr": "max(firehose_value_metric_policy_server_asg_syncer_security_groups_retrieval_from_cc_time)/1000",
           "hide": false,
           "interval": "",
           "legendFormat": "retrieval from cc",
@@ -221,7 +221,7 @@
         },
         {
           "exemplar": true,
-          "expr": "avg(firehose_value_metric_policy_server_asg_syncer_security_groups_store_replace_success_time)/1000",
+          "expr": "max(firehose_value_metric_policy_server_asg_syncer_security_groups_store_replace_success_time)/1000",
           "hide": false,
           "interval": "",
           "legendFormat": "store",
@@ -229,7 +229,7 @@
         },
         {
           "exemplar": true,
-          "expr": "avg(firehose_value_metric_policy_server_asg_syncer_security_groups_total_sync_time)/1000",
+          "expr": "max(firehose_value_metric_policy_server_asg_syncer_security_groups_total_sync_time)/1000",
           "interval": "",
           "legendFormat": "total sync",
           "refId": "A"
@@ -279,64 +279,102 @@
       }
     },
     {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
       "datasource": null,
       "description": "",
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "blue",
-                "value": null
-              }
-            ]
-          },
           "unit": "short"
         },
         "overrides": []
       },
+      "fill": 1,
+      "fillGradient": 0,
       "gridPos": {
         "h": 4,
         "w": 24,
         "x": 0,
         "y": 11
       },
+      "hiddenSeries": false,
       "id": 15,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "textMode": "auto"
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
       },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
       "pluginVersion": "7.5.15",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
       "targets": [
         {
           "exemplar": true,
-          "expr": "avg(firehose_value_metric_netmon_ip_tables_rule_count)by(bosh_job_ip)\n",
+          "expr": "max(firehose_value_metric_netmon_ip_tables_rule_count)by(bosh_job_ip)\n",
           "hide": false,
           "interval": "",
           "legendFormat": "{{bosh_job_ip}}",
           "refId": "C"
         }
       ],
+      "thresholds": [],
       "timeFrom": null,
+      "timeRegions": [],
       "timeShift": null,
       "title": "iptables rules per cell",
-      "type": "stat"
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
     },
     {
       "collapsed": false,
@@ -762,8 +800,8 @@
         "allValue": null,
         "current": {
           "selected": false,
-          "text": "redcola",
-          "value": "redcola"
+          "text": "spanishorange",
+          "value": "spanishorange"
         },
         "datasource": null,
         "definition": "label_values(firehose_value_metric_cc_job_queue_length_total, environment)",
@@ -793,8 +831,8 @@
         "allValue": null,
         "current": {
           "selected": false,
-          "text": "cf-6aa0c3030a3f0c1ff0c0",
-          "value": "cf-6aa0c3030a3f0c1ff0c0"
+          "text": "cf-a93c59fba8ad2b7000c4",
+          "value": "cf-a93c59fba8ad2b7000c4"
         },
         "datasource": null,
         "definition": "label_values(firehose_value_metric_cc_job_queue_length_total{environment=~\"$environment\"}, bosh_deployment)",
@@ -807,7 +845,7 @@
         "name": "bosh_deployment",
         "options": [
           {
-            "selected": true,
+            "selected": false,
             "text": "cf-6aa0c3030a3f0c1ff0c0",
             "value": "cf-6aa0c3030a3f0c1ff0c0"
           }
@@ -836,5 +874,5 @@
   "timezone": "",
   "title": "ASG Scale Test",
   "uid": "LcJkcvLnk",
-  "version": 10
+  "version": 3
 }
