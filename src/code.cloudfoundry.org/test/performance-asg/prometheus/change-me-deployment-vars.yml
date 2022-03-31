@@ -1,14 +1,21 @@
-system_domain: 
-cf_deployment_name: 
-skip_ssl_verify: false
-uaa_clients_cf_exporter_secret: 
-uaa_clients_firehose_exporter_secret: 
-metron_deployment_name: 
+system_domain:             # suffix for CF api domain, e.g. sys.blarg.cf-app.com (TAS), or blarg.cf-app.com (cf-deployment)
+cf_deployment_name:        # bosh deployment name for cf
 traffic_controller_external_port: 443
-metrics_environment: 
-bosh_username: 
-bosh_password: 
-default_stemcell_os: 
-default_vm_type: 
-default_network: 
-default_az: 
+
+default_az:                # get from cloud-config
+default_network:           # get from cloud-config
+default_stemcell_os:       ubuntu-xenial
+default_vm_type:           # get from cloud-config
+
+alertmanager_password:     # generate a random password for alertmanager's we bui
+prometheus_password:       # generate a random password for prometheus's web UI
+grafana_password:          # generate a random password for grafana's web UI
+grafana_secret_key:        # generate a random password for ??
+postgres_grafana_password: # generate a random password for grafana's DB connection
+
+metrics_environment:    # name of toolsmiths env
+metron_deployment_name: cf # always cf regardless of bosh deployment name
+skip_ssl_verify:        false
+
+uaa_clients_cf_exporter_secret:        # get from credhub after deploying cf with the add-prometheus-uaa-clients.yml ops-file
+uaa_clients_firehose_exporter_secret:  # get from credhub after deploying cf with the add-prometheus-uaa-clients.yml ops-file
