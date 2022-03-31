@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -22,6 +23,7 @@ func NewAdapter() *Adapter {
 	// cf7 version 7.0.2+17b4eeafd.2020-07-24
 	bytes, err := exec.Command("cf", "version").CombinedOutput()
 	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", bytes)
 		panic(err)
 	}
 	versionString := string(bytes)
@@ -29,6 +31,7 @@ func NewAdapter() *Adapter {
 	versionString = strings.Split(versionString, ".")[0]
 	majorVersion, err := strconv.Atoi(versionString)
 	if err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", bytes)
 		panic(err)
 	}
 
