@@ -21,11 +21,12 @@ import (
 
 type Config struct {
 	config.Config
-	GlobalAGGs        int `json:"global_asgs"`
-	TotalSpaces       int `json:"total_spaces"`
-	SpacesWithOneASG  int `json:"spaces_with_one_asg"`
-	HowManyASGsIsMany int `json:"how_many_asgs_is_many"`
-	AppsPerSpace      int `json:"apps_per_space"`
+	GlobalAGGs        int  `json:"global_asgs"`
+	TotalSpaces       int  `json:"total_spaces"`
+	SpacesWithOneASG  int  `json:"spaces_with_one_asg"`
+	HowManyASGsIsMany int  `json:"how_many_asgs_is_many"`
+	AppsPerSpace      int  `json:"apps_per_space"`
+	SkipASGCreation   bool `json:"skip_asg_creation"`
 }
 
 type ConcurrentSpaceSetup struct {
@@ -50,10 +51,13 @@ func main() {
 		log.Fatalf("connecting to api: %s", err)
 	}
 
-	// Create global asgs
-	createGlobalASGs(config)
-	// Create a bunch of bindable ASGs
-	manyASGs := createManyASGs(config.HowManyASGsIsMany, config.ASGSize, config.Prefix, globalAdapter)
+	var manyASGs []string
+	if !config.SkipASGCreation {
+		// Create global asgs
+		createGlobalASGs(config)
+		// Create a bunch of bindable ASGs
+		manyASGs = createManyASGs(config.HowManyASGsIsMany, config.ASGSize, config.Prefix, globalAdapter)
+	}
 	// Compile the proxy app
 	compileBinary()
 
