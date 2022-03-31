@@ -131,3 +131,20 @@
     name: bpm
     version: latest
 
+# use nats-tls
+- type: replace
+  path: /instance_groups/name=nginx/jobs/name=route_registrar/consumes?
+  value:
+    nats-tls:
+      ip_addresses: true
+      from: nats-tls
+      deployment: ((cf_deployment_name))
+    routing-api:
+      from: routing-api
+      deployment: ((cf_deployment_name))
+- type: replace
+  path: /instance_groups/name=nginx/jobs/name=route_registrar/properties/nats?/tls
+  value:
+    enabled: true
+    client_cert: ((/opsmgr/cf-a93c59fba8ad2b7000c4/nats_client_cert.cert_pem))
+    client_key: ((/opsmgr/cf-a93c59fba8ad2b7000c4/nats_client_cert.private_key_pem))
