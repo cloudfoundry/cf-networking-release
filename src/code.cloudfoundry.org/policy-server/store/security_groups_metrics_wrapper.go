@@ -4,7 +4,6 @@ import (
 	"time"
 )
 
-//counterfeiter:generate -o fakes/egress_policy_store.go --fake-name SecurityGroupsStore . egressPolicyStore
 type securityGroupsStore interface {
 	Replace([]SecurityGroup) error
 	BySpaceGuids([]string, Page) ([]SecurityGroup, Pagination, error)

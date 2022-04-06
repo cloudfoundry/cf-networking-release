@@ -345,44 +345,5 @@ var _ = Describe("External API Space Developer", func() {
 				})
 			})
 		})
-
-		Describe("Egress Policy and Destination Endpoints", func() {
-			It("does not allow access", func() {
-				req := makeNewRequest("GET", "networking/v1/external/destinations", "")
-				resp, err := http.DefaultClient.Do(req)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
-
-				req = makeNewRequest("POST", "networking/v1/external/destinations", "{}")
-				resp, err = http.DefaultClient.Do(req)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
-
-				req = makeNewRequest("PUT", "networking/v1/external/destinations", "{}")
-				resp, err = http.DefaultClient.Do(req)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
-
-				req = makeNewRequest("DELETE", "networking/v1/external/destinations/meow", "")
-				resp, err = http.DefaultClient.Do(req)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
-
-				req = makeNewRequest("GET", "networking/v1/external/egress_policies", "")
-				resp, err = http.DefaultClient.Do(req)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
-
-				req = makeNewRequest("POST", "networking/v1/external/egress_policies", "{}")
-				resp, err = http.DefaultClient.Do(req)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
-
-				req = makeNewRequest("DELETE", "networking/v1/external/egress_policies/meow", "")
-				resp, err = http.DefaultClient.Do(req)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(resp.StatusCode).To(Equal(http.StatusForbidden))
-			})
-		})
 	})
 })

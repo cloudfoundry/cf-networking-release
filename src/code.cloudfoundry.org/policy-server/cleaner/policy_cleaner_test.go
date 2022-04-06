@@ -16,14 +16,12 @@ import (
 
 var _ = Describe("PolicyCleaner", func() {
 	var (
-		policyCleaner   *cleaner.PolicyCleaner
-		fakeStore       *fakes.PolicyStore
-		fakeEgressStore *fakes.EgressPolicyStore
-		fakeUAAClient   *uaafakes.UAAClient
-		fakeCCClient    *ccfakes.CCClient
-		logger          *lagertest.TestLogger
-		c2cPolicies     []store.Policy
-		egressPolicies  []store.EgressPolicy
+		policyCleaner *cleaner.PolicyCleaner
+		fakeStore     *fakes.PolicyStore
+		fakeUAAClient *uaafakes.UAAClient
+		fakeCCClient  *ccfakes.CCClient
+		logger        *lagertest.TestLogger
+		c2cPolicies   []store.Policy
 	)
 
 	BeforeEach(func() {
@@ -62,107 +60,14 @@ var _ = Describe("PolicyCleaner", func() {
 			},
 		}}
 
-		egressPolicies = []store.EgressPolicy{{
-			ID:     "live-egress-policy-guid-1",
-			Source: store.EgressSource{ID: "live-egress-app-guid", Type: "app"},
-			Destination: store.EgressDestination{
-				Rules: []store.EgressDestinationRule{
-					{
-						Protocol: "tcp",
-						Ports: []store.Ports{
-							{
-								Start: 8080,
-								End:   8080,
-							},
-						},
-						IPRanges: []store.IPRange{
-							{
-								Start: "1.2.3.4",
-								End:   "1.2.3.4",
-							},
-						},
-					},
-				},
-			},
-		}, {
-			ID:     "live-egress-policy-guid-2",
-			Source: store.EgressSource{ID: "live-egress-space-guid", Type: "space"},
-			Destination: store.EgressDestination{
-				Rules: []store.EgressDestinationRule{
-					{
-						Protocol: "tcp",
-						Ports: []store.Ports{
-							{
-								Start: 8080,
-								End:   8080,
-							},
-						},
-						IPRanges: []store.IPRange{
-							{
-								Start: "1.2.3.4",
-								End:   "1.2.3.4",
-							},
-						},
-					},
-				},
-			},
-		}, {
-			ID:     "dead-egress-policy-guid-3",
-			Source: store.EgressSource{ID: "dead-egress-app-guid", Type: "app"},
-			Destination: store.EgressDestination{
-				Rules: []store.EgressDestinationRule{
-					{
-						Protocol: "tcp",
-						Ports: []store.Ports{
-							{
-								Start: 8080,
-								End:   8080,
-							},
-						},
-						IPRanges: []store.IPRange{
-							{
-								Start: "1.2.3.4",
-								End:   "1.2.3.4",
-							},
-						},
-					},
-				},
-			},
-		}, {
-			ID:     "dead-egress-policy-guid-4",
-			Source: store.EgressSource{ID: "dead-egress-space-guid", Type: "space"},
-			Destination: store.EgressDestination{
-				Rules: []store.EgressDestinationRule{
-					{
-						Protocol: "tcp",
-						Ports: []store.Ports{
-							{
-								Start: 8080,
-								End:   8080,
-							},
-						},
-						IPRanges: []store.IPRange{
-							{
-								Start: "1.2.3.4",
-								End:   "1.2.3.4",
-							},
-						},
-					},
-				},
-			},
-		},
-		}
-
 		fakeStore = &fakes.PolicyStore{}
-		fakeEgressStore = &fakes.EgressPolicyStore{}
 		fakeUAAClient = &uaafakes.UAAClient{}
 		fakeCCClient = &ccfakes.CCClient{}
 		logger = lagertest.NewTestLogger("test")
-		policyCleaner = cleaner.NewPolicyCleaner(logger, fakeStore, fakeEgressStore, fakeUAAClient, fakeCCClient, 0)
+		policyCleaner = cleaner.NewPolicyCleaner(logger, fakeStore, fakeUAAClient, fakeCCClient, 0)
 
 		fakeUAAClient.GetTokenReturns("valid-token", nil)
 		fakeStore.AllReturns(c2cPolicies, nil)
-		fakeEgressStore.AllReturns(egressPolicies, nil)
 		fakeCCClient.GetLiveSpaceGUIDsReturns(map[string]struct{}{"live-egress-space-guid": {}}, nil)
 		fakeCCClient.GetLiveAppGUIDsStub = func(token string, appGUIDs []string) (map[string]struct{}, error) {
 			liveGUIDs := make(map[string]struct{})
@@ -176,39 +81,23 @@ var _ = Describe("PolicyCleaner", func() {
 	})
 
 	It("Deletes c2c and egress policies that reference apps that do not exist", func() {
-		deletedPolicies, deletedEgressPolicies, err := policyCleaner.DeleteStalePolicies()
+		deletedPolicies, err := policyCleaner.DeleteStalePolicies()
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(fakeStore.AllCallCount()).To(Equal(1))
-		Expect(fakeEgressStore.AllCallCount()).To(Equal(1))
 		Expect(fakeUAAClient.GetTokenCallCount()).To(Equal(1))
-		Expect(fakeCCClient.GetLiveSpaceGUIDsCallCount()).To(Equal(1))
-		token0, guids0 := fakeCCClient.GetLiveSpaceGUIDsArgsForCall(0)
-		Expect(token0).To(Equal("valid-token"))
-		Expect(guids0).To(ConsistOf(
-			"live-egress-space-guid",
-			"dead-egress-space-guid",
-		))
-		Expect(fakeCCClient.GetLiveAppGUIDsCallCount()).To(Equal(2))
+		Expect(fakeCCClient.GetLiveAppGUIDsCallCount()).To(Equal(1))
 		token, guids := fakeCCClient.GetLiveAppGUIDsArgsForCall(0)
 		Expect(token).To(Equal("valid-token"))
 		Expect(guids).To(ConsistOf("live-guid", "dead-guid"))
 
-		_, guids = fakeCCClient.GetLiveAppGUIDsArgsForCall(1)
-		Expect(guids).To(ConsistOf("live-egress-app-guid", "dead-egress-app-guid"))
-
 		stalePolicies := c2cPolicies[1:]
-		staleEgressPolicies := egressPolicies[2:]
 
 		Expect(fakeStore.DeleteCallCount()).To(Equal(1))
 		Expect(fakeStore.DeleteArgsForCall(0)).To(Equal(stalePolicies))
 
-		Expect(fakeEgressStore.DeleteCallCount()).To(Equal(1))
-		Expect(fakeEgressStore.DeleteArgsForCall(0)).To(Equal([]string{"dead-egress-policy-guid-3", "dead-egress-policy-guid-4"}))
-
-		Expect(logger).To(gbytes.Say("deleting stale policies:.*c2c_policies.*dead-guid.*dead-guid.*egress_policies.*dead-egress-app-guid.*dead-egress-space-guid.*total_c2c_policies\":2.*total_egress_policies\":2"))
+		Expect(logger).To(gbytes.Say("deleting stale policies:.*c2c_policies.*dead-guid.*dead-guid.*total_c2c_policies\":2"))
 		Expect(deletedPolicies).To(Equal(stalePolicies))
-		Expect(deletedEgressPolicies).To(Equal(staleEgressPolicies))
 	})
 
 	Context("when there are more apps with policies than the CC chunk size", func() {
@@ -216,7 +105,6 @@ var _ = Describe("PolicyCleaner", func() {
 			policyCleaner = &cleaner.PolicyCleaner{
 				Logger:                logger,
 				Store:                 fakeStore,
-				EgressStore:           fakeEgressStore,
 				UAAClient:             fakeUAAClient,
 				CCClient:              fakeCCClient,
 				CCAppRequestChunkSize: 1,
@@ -224,12 +112,12 @@ var _ = Describe("PolicyCleaner", func() {
 		})
 
 		It("Calls the CC server multiple times to check which policies to delete", func() {
-			returnedPolicies, _, err := policyCleaner.DeleteStalePolicies()
+			returnedPolicies, err := policyCleaner.DeleteStalePolicies()
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(fakeStore.AllCallCount()).To(Equal(1))
 			Expect(fakeUAAClient.GetTokenCallCount()).To(Equal(1))
-			Expect(fakeCCClient.GetLiveAppGUIDsCallCount()).To(Equal(4))
+			Expect(fakeCCClient.GetLiveAppGUIDsCallCount()).To(Equal(2))
 			token0, guids0 := fakeCCClient.GetLiveAppGUIDsArgsForCall(0)
 			Expect(token0).To(Equal("valid-token"))
 			token1, guids1 := fakeCCClient.GetLiveAppGUIDsArgsForCall(1)
@@ -252,38 +140,14 @@ var _ = Describe("PolicyCleaner", func() {
 		})
 	})
 
-	It("returns a helpful error when get live space guids call fails", func() {
-		fakeCCClient.GetLiveSpaceGUIDsReturns(nil, errors.New("yankee"))
-
-		_, _, err := policyCleaner.DeleteStalePolicies()
-		Expect(err).To(MatchError("get live space guids failed: yankee"))
-		Expect(logger).To(gbytes.Say("get-live-space-guids-failed.*yankee"))
-	})
-
 	Context("When retrieving policies from the db fails", func() {
 		BeforeEach(func() {
 			fakeStore.AllReturns([]store.Policy{}, errors.New("potato"))
 		})
 
 		It("returns a meaningful error", func() {
-			_, _, err := policyCleaner.DeleteStalePolicies()
+			_, err := policyCleaner.DeleteStalePolicies()
 			Expect(err).To(MatchError("database read failed for c2c policies: potato"))
-		})
-
-		It("logs the error", func() {
-			policyCleaner.DeleteStalePolicies()
-			Expect(logger).To(gbytes.Say("store-list-policies-failed.*potato"))
-		})
-	})
-
-	Context("When retrieving egress policies from the db fails", func() {
-		BeforeEach(func() {
-			fakeEgressStore.AllReturns([]store.EgressPolicy{}, errors.New("potato"))
-		})
-
-		It("returns a meaningful error", func() {
-			_, _, err := policyCleaner.DeleteStalePolicies()
-			Expect(err).To(MatchError("database read failed for egress policies: potato"))
 		})
 
 		It("logs the error", func() {
@@ -298,7 +162,7 @@ var _ = Describe("PolicyCleaner", func() {
 		})
 
 		It("returns a meaningful error", func() {
-			_, _, err := policyCleaner.DeleteStalePolicies()
+			_, err := policyCleaner.DeleteStalePolicies()
 			Expect(err).To(MatchError("get UAA token failed: potato"))
 		})
 
@@ -314,7 +178,7 @@ var _ = Describe("PolicyCleaner", func() {
 		})
 
 		It("returns a meaningful error", func() {
-			_, _, err := policyCleaner.DeleteStalePolicies()
+			_, err := policyCleaner.DeleteStalePolicies()
 			Expect(err).To(MatchError("get app guids from Cloud-Controller failed: potato"))
 		})
 
@@ -330,23 +194,7 @@ var _ = Describe("PolicyCleaner", func() {
 		})
 
 		It("returns a meaningful error", func() {
-			_, _, err := policyCleaner.DeleteStalePolicies()
-			Expect(err).To(MatchError("database write failed: potato"))
-		})
-
-		It("logs the full error", func() {
-			policyCleaner.DeleteStalePolicies()
-			Expect(logger).To(gbytes.Say("store-delete-policies-failed.*potato"))
-		})
-	})
-
-	Context("When deleting the egress policies fails", func() {
-		BeforeEach(func() {
-			fakeEgressStore.DeleteReturns(nil, errors.New("potato"))
-		})
-
-		It("returns a meaningful error", func() {
-			_, _, err := policyCleaner.DeleteStalePolicies()
+			_, err := policyCleaner.DeleteStalePolicies()
 			Expect(err).To(MatchError("database write failed: potato"))
 		})
 
