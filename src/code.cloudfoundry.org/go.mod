@@ -53,7 +53,7 @@ require (
 	github.com/jackc/fake v0.0.0-20150926172116-812a484cc733 // indirect
 	github.com/jackc/pgx v3.6.2+incompatible // indirect
 	github.com/jmoiron/sqlx v1.3.4
-	github.com/lib/pq v1.10.4
+	github.com/lib/pq v1.10.5
 	github.com/montanaflynn/stats v0.6.6
 	github.com/nats-io/gnatsd v1.4.1
 	github.com/nats-io/go-nats v0.0.0-00010101000000-000000000000
