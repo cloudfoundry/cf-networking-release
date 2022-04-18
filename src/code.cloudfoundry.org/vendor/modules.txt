@@ -209,7 +209,7 @@ github.com/jackc/pgx/pgio
 github.com/jackc/pgx/pgproto3
 github.com/jackc/pgx/pgtype
 github.com/jackc/pgx/stdlib
-# github.com/jmoiron/sqlx v1.3.4
+# github.com/jmoiron/sqlx v1.3.5
 ## explicit; go 1.10
 github.com/jmoiron/sqlx
 github.com/jmoiron/sqlx/reflectx
