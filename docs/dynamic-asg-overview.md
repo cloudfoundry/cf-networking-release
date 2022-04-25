@@ -84,9 +84,6 @@ If you are using cf-deployment then dynamic ASGs are on by default.
 You can disable dynamic ASGs by using [this opsfile](https://github.com/cloudfoundry/cf-deployment/blob/604b5822259d8c889c3cdc4a2723af0e636570bb/operations/disable-dynamic-asgs.yml).
 
 ### 4. I don't like waiting a few minutes for rules to be enforced. Can it be faster?
-
-You can still restart your app for immediate ASG updates.
-
 If you want to speed up the dynamic enforcement you can update the following
 bosh properties. Lowering these values will have performance implications.
 
@@ -97,10 +94,21 @@ bosh properties. Lowering these values will have performance implications.
 
 ### 5. Did we stop passing ASG information through the LRP?
 No. ASGs are still passed through Cloud Controller to BBS to Rep to Garden to
-Silk CNI. This allows ASGs to be implemented correctly the minute an app is
-created.
+Silk CNI. This allows other CNIs to keep exisiting behavior. However, Silk CNI no longer uses this data to 
+enforce ASGs when dyanmic ASGs are enabled.
 
-### 6. What about windows?
+### 6. If I create an ASG and immediately push an app, will the ASGs be up-to-date?
+The ASGs are synced to the policy server DB within 60 seconds (by default) of creating or updating an ASG.
+When the app container is created, the silk CNI calls the force-asg-sync endpoint on the vxlan-policy-agent.
+This way the vxlan-policy-agent gets the most up-to-date ASG information from the policy server when a container is created.
+
+There is a chance of hitting a race condition if you create an ASG and immediately push an app.
+By default this window is at most 60 seconds. If you run into this issue, try pushing your app again.
+By the time you push a second time the ASGs should be synced.
+
+We believe that this race condition is acceptable because we believe that users do not update their ASGs very often. If this assumption is incorrect and you are running into this issue, please open an issue and let us know.
+
+### 7. What about windows?
 Dynamic ASGs is a linux-only feature. Currently there is no vxlan-policy-agent
 equivalent for windows cells. If this is a feature you are interested in, please
 open an issue as a feature request.
