@@ -44,6 +44,27 @@ type ListDestinationsOptions struct {
 	QueryIDs   []string
 }
 
+type EgressPolicy struct {
+	GUID         string             `json:"id,omitempty"`
+	Source       EgressPolicySource `json:"source"`
+	Destination  Destination        `json:"destination"`
+	AppLifecycle string             `json:"app_lifecycle,omitempty"`
+}
+
+type EgressPolicySource struct {
+	Type string `json:"type,omitempty"`
+	ID   string `json:"id"`
+}
+
+type EgressPolicyDestination struct {
+	ID string `json:"id"`
+}
+
+type EgressPolicyList struct {
+	TotalEgressPolicies int            `json:"total_egress_policies,omitempty"`
+	EgressPolicies      []EgressPolicy `json:"egress_policies"`
+}
+
 func NewClient(logger lager.Logger, httpClient json_client.HttpClient, baseURL string) *Client {
 	return &Client{
 		JsonClient: json_client.New(logger, httpClient, baseURL),
@@ -107,4 +128,46 @@ func (c *Client) DeleteDestination(token string, destination Destination) ([]Des
 		return []Destination{}, fmt.Errorf("json client do: %s", err)
 	}
 	return response.Destinations, nil
+}
+
+func (c *Client) CreateEgressPolicy(egressPolicy EgressPolicy, token string) (string, error) {
+	var response EgressPolicyList
+	err := c.JsonClient.Do("POST", "/networking/v1/external/egress_policies", EgressPolicyList{
+		EgressPolicies: []EgressPolicy{
+			egressPolicy,
+		},
+	}, &response, "Bearer "+token)
+	if err != nil {
+		return "", fmt.Errorf("json client do: %s", err)
+	}
+
+	return response.EgressPolicies[0].GUID, nil
+}
+
+func (c *Client) DeleteEgressPolicy(egressPolicyGUID, token string) (EgressPolicy, error) {
+	var response EgressPolicyList
+	err := c.JsonClient.Do("DELETE", fmt.Sprintf("/networking/v1/external/egress_policies/%s", egressPolicyGUID), "", &response, "Bearer "+token)
+	if err != nil {
+		return EgressPolicy{}, fmt.Errorf("json client do: %s", err)
+	}
+
+	return response.EgressPolicies[0], nil
+}
+
+func (c *Client) ListEgressPolicies(token string, sourceIDs, sourceTypes, destinationIDs, destinationNames []string) (EgressPolicyList, error) {
+	var response EgressPolicyList
+
+	var filter = strings.Join([]string{
+		"SourceIDs=" + strings.Join(sourceIDs, ","),
+		"SourceTypes=" + strings.Join(sourceTypes, ","),
+		"DestinationIDs=" + strings.Join(destinationIDs, ","),
+		"DestinationNames=" + strings.Join(destinationNames, ","),
+	}, "&")
+
+	err := c.JsonClient.Do("GET", "/networking/v1/external/egress_policies?"+filter, "", &response, "Bearer "+token)
+	if err != nil {
+		return EgressPolicyList{}, fmt.Errorf("list egress policies api call: %s", err)
+	}
+
+	return response, nil
 }

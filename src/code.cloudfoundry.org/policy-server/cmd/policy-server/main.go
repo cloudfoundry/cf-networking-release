@@ -122,6 +122,18 @@ func main() {
 
 	logger.Info("db connection retrieved", lager.Data{})
 
+	terminalsTable := &store.TerminalsTable{
+		Guids: &store.GuidGenerator{},
+	}
+	egressPolicyStore := &store.EgressPolicyStore{
+		EgressPolicyRepo: &store.EgressPolicyTable{
+			Conn:  connectionPool,
+			Guids: &store.GuidGenerator{},
+		},
+		TerminalsRepo: terminalsTable,
+		Conn:          connectionPool,
+	}
+
 	c2cPolicyStore := store.New(
 		connectionPool,
 		storeGroup,
@@ -171,10 +183,84 @@ func main() {
 	policiesIndexHandlerV1 := handlers.NewPoliciesIndex(wrappedStore, policyMapperV1, policyFilter, policyGuard, errorResponse)
 	policiesIndexHandlerV0 := handlers.NewPoliciesIndex(wrappedStore, policyMapperV0, policyFilter, policyGuard, errorResponse)
 
-	policyCleaner := cleaner.NewPolicyCleaner(logger.Session("policy-cleaner"), wrappedStore, uaaClient,
+	egressDestinationMapper := &api.EgressDestinationMapper{
+		Marshaler:        marshal.MarshalFunc(json.Marshal),
+		PayloadValidator: &api.EgressDestinationsValidator{},
+	}
+
+	egressDestinationStore := &store.EgressDestinationStore{
+		Conn:                    connectionPool,
+		EgressDestinationRepo:   &store.EgressDestinationTable{},
+		TerminalsRepo:           terminalsTable,
+		DestinationMetadataRepo: &store.DestinationMetadataTable{},
+	}
+
+	destinationsIndexHandlerV1 := &handlers.DestinationsIndex{
+		ErrorResponse:           errorResponse,
+		EgressDestinationStore:  egressDestinationStore,
+		EgressDestinationMapper: egressDestinationMapper,
+		Logger:                  logger,
+	}
+
+	createDestinationsHandlerV1 := &handlers.DestinationsCreate{
+		ErrorResponse:           errorResponse,
+		EgressDestinationStore:  egressDestinationStore,
+		EgressDestinationMapper: egressDestinationMapper,
+		Logger:                  logger,
+	}
+
+	updateDestinationsHandlerV1 := &handlers.DestinationsUpdate{
+		ErrorResponse:           errorResponse,
+		EgressDestinationStore:  egressDestinationStore,
+		EgressDestinationMapper: egressDestinationMapper,
+		Logger:                  logger,
+	}
+
+	deleteDestinationHandlerV1 := &handlers.DestinationDelete{
+		ErrorResponse:           errorResponse,
+		EgressDestinationStore:  egressDestinationStore,
+		EgressDestinationMapper: egressDestinationMapper,
+		Logger:                  logger,
+	}
+
+	egressPolicyValidator := &api.EgressValidator{
+		CCClient:         ccClient,
+		UAAClient:        uaaClient,
+		DestinationStore: egressDestinationStore,
+	}
+
+	egressPolicyMapper := &api.EgressPolicyMapper{
+		Unmarshaler: marshal.UnmarshalFunc(json.Unmarshal),
+		Marshaler:   marshal.MarshalFunc(json.Marshal),
+		Validator:   egressPolicyValidator,
+	}
+
+	indexEgressPolicyHandlerV1 := &handlers.EgressPolicyIndex{
+		ErrorResponse: errorResponse,
+		Store:         egressPolicyStore,
+		Mapper:        egressPolicyMapper,
+		Logger:        logger,
+	}
+
+	createEgressPolicyHandlerV1 := &handlers.EgressPolicyCreate{
+		Store:         egressPolicyStore,
+		Mapper:        egressPolicyMapper,
+		ErrorResponse: errorResponse,
+		Logger:        logger,
+	}
+
+	deleteEgressPolicyHandlerV1 := &handlers.EgressPolicyDelete{
+		Store:         egressPolicyStore,
+		Mapper:        egressPolicyMapper,
+		ErrorResponse: errorResponse,
+		Logger:        logger,
+	}
+
+	policyCleaner := cleaner.NewPolicyCleaner(logger.Session("policy-cleaner"), wrappedStore, egressPolicyStore, uaaClient,
 		ccClient, 100)
 
-	policiesCleanupHandler := handlers.NewPoliciesCleanup(policyMapperV1, policyCleaner, errorResponse)
+	policyCollectionWriter := api.NewPolicyCollectionWriter(marshal.MarshalFunc(json.Marshal))
+	policiesCleanupHandler := handlers.NewPoliciesCleanup(policyCollectionWriter, policyCleaner, errorResponse)
 
 	tagsIndexHandler := handlers.NewTagsIndex(wrappedStore, marshal.MarshalFunc(json.Marshal), errorResponse)
 
@@ -212,6 +298,12 @@ func main() {
 		})
 	}
 
+	v1OnlyVersionWrap := func(v1Handler http.Handler) http.Handler {
+		return checkVersionWrapper.CheckVersion(map[string]http.Handler{
+			"v1": v1Handler,
+		})
+	}
+
 	authAdminWrap := func(handler http.Handler) http.Handler {
 		networkAdminAuthenticator := handlers.Authenticator{
 			Client:        uaaClient,
@@ -240,6 +332,13 @@ func main() {
 		{Name: "create_policies", Method: "POST", Path: "/networking/:version/external/policies"},
 		{Name: "delete_policies", Method: "POST", Path: "/networking/:version/external/policies/delete"},
 		{Name: "policies_index", Method: "GET", Path: "/networking/:version/external/policies"},
+		{Name: "destinations_index", Method: "GET", Path: "/networking/:version/external/destinations"},
+		{Name: "destinations_create", Method: "POST", Path: "/networking/:version/external/destinations"},
+		{Name: "destinations_update", Method: "PUT", Path: "/networking/:version/external/destinations"},
+		{Name: "destination_delete", Method: "DELETE", Path: "/networking/:version/external/destinations/:id"},
+		{Name: "egress_policies_index", Method: "GET", Path: "/networking/:version/external/egress_policies"},
+		{Name: "egress_policies_create", Method: "POST", Path: "/networking/:version/external/egress_policies"},
+		{Name: "egress_policies_delete", Method: "DELETE", Path: "/networking/:version/external/egress_policies/:id"},
 		{Name: "cleanup", Method: "POST", Path: "/networking/:version/external/policies/cleanup"},
 		{Name: "tags_index", Method: "GET", Path: "/networking/:version/external/tags"},
 	}
@@ -269,6 +368,27 @@ func main() {
 
 		"policies_index": metricsWrap("PoliciesIndex",
 			logWrap(v0Andv1VersionWrap(authWriteWrap(policiesIndexHandlerV1), authWriteWrap(policiesIndexHandlerV0)))),
+
+		"destinations_index": metricsWrap("DestinationsIndex",
+			logWrap(v0Andv1VersionWrap(authAdminWrap(destinationsIndexHandlerV1), authAdminWrap(destinationsIndexHandlerV1)))),
+
+		"destinations_create": metricsWrap("DestinationsCreate",
+			logWrap(v1OnlyVersionWrap(authAdminWrap(createDestinationsHandlerV1)))),
+
+		"destinations_update": metricsWrap("DestinationsUpdate",
+			logWrap(v1OnlyVersionWrap(authAdminWrap(updateDestinationsHandlerV1)))),
+
+		"destination_delete": metricsWrap("DestinationDelete",
+			logWrap(v1OnlyVersionWrap(authAdminWrap(deleteDestinationHandlerV1)))),
+
+		"egress_policies_index": metricsWrap("EgressPoliciesIndex",
+			logWrap(v1OnlyVersionWrap(authAdminWrap(indexEgressPolicyHandlerV1)))),
+
+		"egress_policies_create": metricsWrap("EgressPoliciesCreate",
+			logWrap(v1OnlyVersionWrap(authAdminWrap(createEgressPolicyHandlerV1)))),
+
+		"egress_policies_delete": metricsWrap("EgressPoliciesDelete",
+			logWrap(v1OnlyVersionWrap(authAdminWrap(deleteEgressPolicyHandlerV1)))),
 
 		"cleanup": metricsWrap("Cleanup",
 			logWrap(v0Andv1VersionWrap(authAdminWrap(policiesCleanupHandler), authAdminWrap(policiesCleanupHandler)))),

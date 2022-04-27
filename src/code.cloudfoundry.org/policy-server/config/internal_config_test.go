@@ -51,7 +51,8 @@ var _ = Describe("InternalConfig", func() {
 					"connections_max_lifetime_seconds": 45,
 					"tag_length": 2,
 					"metron_address": "http://1.2.3.4:9999",
-					"log_level": "debug"
+					"log_level": "debug",
+					"enforce_experimental_dynamic_egress_policies": true
 				}`)
 				c, err := config.NewInternal(file.Name())
 				Expect(err).NotTo(HaveOccurred())
@@ -77,6 +78,7 @@ var _ = Describe("InternalConfig", func() {
 				Expect(c.MaxIdleConnections).To(Equal(4))
 				Expect(c.MaxOpenConnections).To(Equal(5))
 				Expect(c.MaxConnectionsLifetimeSeconds).To(Equal(45))
+				Expect(c.EnforceExperimentalDynamicEgressPolicies).To(Equal(true))
 			})
 		})
 

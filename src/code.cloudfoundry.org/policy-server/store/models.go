@@ -1,7 +1,8 @@
 package store
 
 type PolicyCollection struct {
-	Policies []Policy
+	Policies       []Policy
+	EgressPolicies []EgressPolicy
 }
 
 type Policy struct {
@@ -31,6 +32,35 @@ type Tag struct {
 	ID   string
 	Tag  string
 	Type string
+}
+
+type EgressPolicy struct {
+	ID           string
+	Source       EgressSource
+	Destination  EgressDestination
+	AppLifecycle string
+}
+
+type EgressSource struct {
+	TerminalGUID string
+	ID           string
+	Type         string
+}
+
+type EgressDestination struct {
+	GUID        string
+	Name        string
+	Description string
+	Rules       []EgressDestinationRule
+}
+
+type EgressDestinationRule struct {
+	Description string
+	Protocol    string
+	Ports       []Ports
+	IPRanges    []IPRange
+	ICMPType    int
+	ICMPCode    int
 }
 
 type IPRange struct {

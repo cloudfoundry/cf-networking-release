@@ -10,20 +10,33 @@ import (
 	"code.cloudfoundry.org/policy-server/store"
 )
 
-type PoliciesIndexInternal struct {
-	Logger        lager.Logger
-	Store         store.Store
-	PolicyMapper  api.PolicyMapper
-	ErrorResponse errorResponse
+//counterfeiter:generate -o fakes/egress_policy_store.go --fake-name EgressPolicyStore . egressPolicyStore
+type egressPolicyStore interface {
+	All() ([]store.EgressPolicy, error)
+	GetByFilter(sourceId, sourceType, destinationId, destinationName, appLifecycle []string) ([]store.EgressPolicy, error)
+	GetBySourceGuidsAndDefaults(ids []string) ([]store.EgressPolicy, error)
+	Create(egressPolicies []store.EgressPolicy) ([]store.EgressPolicy, error)
+	Delete(guids ...string) ([]store.EgressPolicy, error)
 }
 
-func NewPoliciesIndexInternal(logger lager.Logger, store store.Store, writer api.PolicyMapper,
-	errorResponse errorResponse) *PoliciesIndexInternal {
+type PoliciesIndexInternal struct {
+	Logger                                   lager.Logger
+	Store                                    store.Store
+	PolicyCollectionWriter                   api.PolicyCollectionWriter
+	ErrorResponse                            errorResponse
+	EgressStore                              egressPolicyStore
+	EnforceExperimentalDynamicEgressPolicies bool
+}
+
+func NewPoliciesIndexInternal(logger lager.Logger, store store.Store, egressStore egressPolicyStore,
+	writer api.PolicyCollectionWriter, errorResponse errorResponse, enforceExperimentalDynamicEgressPolicies bool) *PoliciesIndexInternal {
 	return &PoliciesIndexInternal{
-		Logger:        logger,
-		Store:         store,
-		PolicyMapper:  writer,
-		ErrorResponse: errorResponse,
+		Logger:                                   logger,
+		Store:                                    store,
+		EgressStore:                              egressStore,
+		PolicyCollectionWriter:                   writer,
+		ErrorResponse:                            errorResponse,
+		EnforceExperimentalDynamicEgressPolicies: enforceExperimentalDynamicEgressPolicies,
 	}
 }
 
@@ -47,7 +60,20 @@ func (h *PoliciesIndexInternal) ServeHTTP(w http.ResponseWriter, req *http.Reque
 		return
 	}
 
-	bytes, err := h.PolicyMapper.AsBytes(policies)
+	var egressPolicies []store.EgressPolicy
+	if h.EnforceExperimentalDynamicEgressPolicies {
+		if len(ids) == 0 {
+			egressPolicies, err = h.EgressStore.All()
+		} else {
+			egressPolicies, err = h.EgressStore.GetBySourceGuidsAndDefaults(ids)
+		}
+		if err != nil {
+			h.ErrorResponse.InternalServerError(logger, w, err, "egress database read failed")
+			return
+		}
+	}
+
+	bytes, err := h.PolicyCollectionWriter.AsBytes(policies, egressPolicies)
 	if err != nil {
 		h.ErrorResponse.InternalServerError(logger, w, err, "map policies as bytes failed")
 		return

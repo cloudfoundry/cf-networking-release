@@ -10,7 +10,7 @@ import (
 
 //counterfeiter:generate -o fakes/policy_cleaner.go --fake-name PolicyCleaner . policyCleaner
 type policyCleaner interface {
-	DeleteStalePolicies() ([]store.Policy, error)
+	DeleteStalePolicies() ([]store.Policy, []store.EgressPolicy, error)
 }
 
 //counterfeiter:generate -o fakes/error_response.go --fake-name ErrorResponse . errorResponse
@@ -24,16 +24,16 @@ type errorResponse interface {
 }
 
 type PoliciesCleanup struct {
-	PolicyMapper  api.PolicyMapper
-	PolicyCleaner policyCleaner
-	ErrorResponse errorResponse
+	PolicyCollectionWriter api.PolicyCollectionWriter
+	PolicyCleaner          policyCleaner
+	ErrorResponse          errorResponse
 }
 
-func NewPoliciesCleanup(writer api.PolicyMapper, policyCleaner policyCleaner, errorResponse errorResponse) *PoliciesCleanup {
+func NewPoliciesCleanup(writer api.PolicyCollectionWriter, policyCleaner policyCleaner, errorResponse errorResponse) *PoliciesCleanup {
 	return &PoliciesCleanup{
-		PolicyMapper:  writer,
-		PolicyCleaner: policyCleaner,
-		ErrorResponse: errorResponse,
+		PolicyCollectionWriter: writer,
+		PolicyCleaner:          policyCleaner,
+		ErrorResponse:          errorResponse,
 	}
 }
 
@@ -41,7 +41,7 @@ func (h *PoliciesCleanup) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	logger := getLogger(req)
 	logger = logger.Session("cleanup-policies")
 
-	c2cPolicies, err := h.PolicyCleaner.DeleteStalePolicies()
+	c2cPolicies, egressPolicies, err := h.PolicyCleaner.DeleteStalePolicies()
 	if err != nil {
 		h.ErrorResponse.InternalServerError(logger, w, err, "policies cleanup failed")
 		return
@@ -52,7 +52,7 @@ func (h *PoliciesCleanup) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 		c2cPolicies[i].Destination.Tag = ""
 	}
 
-	bytes, err := h.PolicyMapper.AsBytes(c2cPolicies)
+	bytes, err := h.PolicyCollectionWriter.AsBytes(c2cPolicies, egressPolicies)
 	if err != nil {
 		h.ErrorResponse.InternalServerError(logger, w, err, "map policy as bytes failed")
 		return

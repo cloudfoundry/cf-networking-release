@@ -17,58 +17,90 @@ type policyStore interface {
 	Delete([]store.Policy) error
 }
 
+//counterfeiter:generate -o fakes/egress_policy_store.go --fake-name EgressPolicyStore . egressPolicyStore
+type egressPolicyStore interface {
+	All() ([]store.EgressPolicy, error)
+	Delete(guids ...string) ([]store.EgressPolicy, error)
+}
+
 type PolicyCleaner struct {
 	Logger                lager.Logger
 	Store                 policyStore
+	EgressStore           egressPolicyStore
 	UAAClient             uaa_client.UAAClient
 	CCClient              cc_client.CCClient
 	CCAppRequestChunkSize int
 }
 
-func NewPolicyCleaner(logger lager.Logger, store policyStore, uaaClient uaa_client.UAAClient,
+func NewPolicyCleaner(logger lager.Logger, store policyStore, egressStore egressPolicyStore, uaaClient uaa_client.UAAClient,
 	ccClient cc_client.CCClient, ccAppRequestChunkSize int) *PolicyCleaner {
 	return &PolicyCleaner{
 		Logger:                logger,
 		Store:                 store,
+		EgressStore:           egressStore,
 		UAAClient:             uaaClient,
 		CCClient:              ccClient,
 		CCAppRequestChunkSize: ccAppRequestChunkSize,
 	}
 }
 
-func (p *PolicyCleaner) DeleteStalePolicies() ([]store.Policy, error) {
+func (p *PolicyCleaner) DeleteStalePolicies() ([]store.Policy, []store.EgressPolicy, error) {
 	policies, err := p.Store.All()
 	if err != nil {
 		p.Logger.Error("store-list-policies-failed", err)
-		return []store.Policy{}, fmt.Errorf("database read failed for c2c policies: %s", err)
+		return []store.Policy{}, []store.EgressPolicy{}, fmt.Errorf("database read failed for c2c policies: %s", err)
+	}
+
+	egressPolicies, err := p.EgressStore.All()
+	if err != nil {
+		p.Logger.Error("store-list-policies-failed", err)
+		return []store.Policy{}, []store.EgressPolicy{}, fmt.Errorf("database read failed for egress policies: %s", err)
 	}
 
 	token, err := p.UAAClient.GetToken()
 	if err != nil {
 		p.Logger.Error("get-uaa-token-failed", err)
-		return []store.Policy{}, fmt.Errorf("get UAA token failed: %s", err)
+		return []store.Policy{}, []store.EgressPolicy{}, fmt.Errorf("get UAA token failed: %s", err)
 	}
 
 	policiesToDelete, err := p.getC2CPoliciesToDelete(policies, token)
 	if err != nil {
-		return []store.Policy{}, err
+		return []store.Policy{}, []store.EgressPolicy{}, err
+	}
+
+	egressPoliciesToDelete, err := p.getEgressPoliciesToDelete(egressPolicies, token)
+	if err != nil {
+		return []store.Policy{}, []store.EgressPolicy{}, err
 	}
 
 	p.Logger.Info("deleting stale policies:", lager.Data{
-		"total_c2c_policies": len(policiesToDelete),
-		"stale_c2c_policies": policiesToDelete,
+		"total_c2c_policies":    len(policiesToDelete),
+		"stale_c2c_policies":    policiesToDelete,
+		"total_egress_policies": len(egressPoliciesToDelete),
+		"stale_egress_policies": egressPoliciesToDelete,
 	})
 	err = p.Store.Delete(policiesToDelete)
 	if err != nil {
 		p.Logger.Error("store-delete-policies-failed", err)
-		return []store.Policy{}, fmt.Errorf("database write failed: %s", err)
+		return []store.Policy{}, []store.EgressPolicy{}, fmt.Errorf("database write failed: %s", err)
 	}
 
-	return policiesToDelete, nil
+	egressPoliciesGUIDsToDelete := make([]string, len(egressPoliciesToDelete))
+	for i, egressPolicy := range egressPoliciesToDelete {
+		egressPoliciesGUIDsToDelete[i] = egressPolicy.ID
+	}
+
+	_, err = p.EgressStore.Delete(egressPoliciesGUIDsToDelete...)
+	if err != nil {
+		p.Logger.Error("egress-store-delete-policies-failed", err)
+		return []store.Policy{}, []store.EgressPolicy{}, fmt.Errorf("database write failed: %s", err)
+	}
+
+	return policiesToDelete, egressPoliciesToDelete, nil
 }
 
 func (p *PolicyCleaner) DeleteStalePoliciesWrapper() error {
-	_, err := p.DeleteStalePolicies()
+	_, _, err := p.DeleteStalePolicies()
 	return err
 }
 
@@ -92,6 +124,66 @@ func (p *PolicyCleaner) getC2CPoliciesToDelete(policies []store.Policy, token st
 	}
 
 	return c2cPoliciesToDelete, nil
+}
+
+func (p *PolicyCleaner) getEgressPoliciesToDelete(egressPolicies []store.EgressPolicy, token string) ([]store.EgressPolicy, error) {
+	var spaceEgressPolicyGUIDs, appEgressPolicyGUIDs []string
+	spaceEgressPolicies := make(map[string][]store.EgressPolicy)
+	var egressPoliciesToDelete []store.EgressPolicy
+	appEgressPolicies := make(map[string][]store.EgressPolicy)
+
+	for _, egressPolicy := range egressPolicies {
+		if egressPolicy.Source.Type == "space" {
+			spaceEgressPolicyGUIDs = append(spaceEgressPolicyGUIDs, egressPolicy.Source.ID)
+			spaceEgressPolicies[egressPolicy.Source.ID] = append(spaceEgressPolicies[egressPolicy.Source.ID], egressPolicy)
+		}
+		if egressPolicy.Source.Type == "app" {
+			appEgressPolicyGUIDs = append(appEgressPolicyGUIDs, egressPolicy.Source.ID)
+			appEgressPolicies[egressPolicy.Source.ID] = append(appEgressPolicies[egressPolicy.Source.ID], egressPolicy)
+		}
+	}
+
+	appGUIDchunks := getChunks(appEgressPolicyGUIDs, p.CCAppRequestChunkSize)
+
+	for _, appGUIDchunk := range appGUIDchunks {
+		liveAppGUIDs, err := p.CCClient.GetLiveAppGUIDs(token, appGUIDchunk)
+		if err != nil {
+			p.Logger.Error("cc-get-app-guids-failed", err)
+			return nil, fmt.Errorf("get app guids from Cloud-Controller failed: %s", err)
+		}
+
+		staleAppGUIDs := getStaleAppGUIDs(liveAppGUIDs, appGUIDchunk)
+		egressPoliciesToDelete = append(egressPoliciesToDelete, getStaleEgressAppPolicies(appEgressPolicies, staleAppGUIDs)...)
+	}
+
+	liveSpaceGUIDs, err := p.CCClient.GetLiveSpaceGUIDs(token, spaceEgressPolicyGUIDs)
+	if err != nil {
+		p.Logger.Error("get-live-space-guids-failed", err)
+		return nil, fmt.Errorf("get live space guids failed: %s", err)
+	}
+	egressPoliciesToDelete = append(egressPoliciesToDelete, getStaleEgressSpacePolicies(spaceEgressPolicies, liveSpaceGUIDs)...)
+	return egressPoliciesToDelete, nil
+}
+
+func getStaleEgressSpacePolicies(spacePolicies map[string][]store.EgressPolicy, liveSpaceGUIDs map[string]struct{}) []store.EgressPolicy {
+	var staleSpaceEgressPolicies []store.EgressPolicy
+	for spaceGUID := range liveSpaceGUIDs {
+		delete(spacePolicies, spaceGUID)
+	}
+	for _, policies := range spacePolicies {
+		staleSpaceEgressPolicies = append(staleSpaceEgressPolicies, policies...)
+	}
+
+	return staleSpaceEgressPolicies
+}
+
+func getStaleEgressAppPolicies(appPolicies map[string][]store.EgressPolicy, staleAppGUIDs map[string]struct{}) []store.EgressPolicy {
+	var staleAppEgressPolicies []store.EgressPolicy
+	for appGUID := range staleAppGUIDs {
+		staleAppEgressPolicies = append(staleAppEgressPolicies, appPolicies[appGUID]...)
+	}
+
+	return staleAppEgressPolicies
 }
 
 func getStaleAppGUIDs(liveAppGUIDs map[string]struct{}, appGUIDs []string) map[string]struct{} {

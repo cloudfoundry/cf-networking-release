@@ -197,17 +197,18 @@ func DefaultTestConfigWithCCServer(dbConfig db.Config, metronAddress string, fix
 	}
 
 	internalConfig := config.InternalConfig{
-		ListenHost:         "127.0.0.1",
-		InternalListenPort: ports.PickAPort(),
-		LogPrefix:          "testprefix",
-		DebugServerHost:    "127.0.0.1",
-		DebugServerPort:    ports.PickAPort(),
-		CACertFile:         filepath.Join(fixturesPath, "netman-ca.crt"),
-		ServerCertFile:     filepath.Join(fixturesPath, "server.crt"),
-		ServerKeyFile:      filepath.Join(fixturesPath, "server.key"),
-		TagLength:          1,
-		Database:           dbConfig,
-		MetronAddress:      metronAddress,
+		ListenHost:                               "127.0.0.1",
+		InternalListenPort:                       ports.PickAPort(),
+		LogPrefix:                                "testprefix",
+		DebugServerHost:                          "127.0.0.1",
+		DebugServerPort:                          ports.PickAPort(),
+		CACertFile:                               filepath.Join(fixturesPath, "netman-ca.crt"),
+		ServerCertFile:                           filepath.Join(fixturesPath, "server.crt"),
+		ServerKeyFile:                            filepath.Join(fixturesPath, "server.key"),
+		TagLength:                                1,
+		Database:                                 dbConfig,
+		MetronAddress:                            metronAddress,
+		EnforceExperimentalDynamicEgressPolicies: true,
 	}
 
 	asgSyncerConfig := config.ASGSyncerConfig{
