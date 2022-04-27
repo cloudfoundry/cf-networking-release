@@ -6,6 +6,7 @@
 * [Expected Logs](#expected-logs)
 * [Affected ASGs](#affected-asgs)
 * [Affected Versions](#affected-versions)
+* [Fixed Version](#fixed-version)
 * [Check your ASGs](#check-your-asgs)
 * [Temporary Mitigation](#temporary-mitigation)
 * [Permanent Fix](#permanent-fix)
@@ -30,12 +31,30 @@ If you are running into this issue, you should see one of the following logs in 
 
 If iptables logging is disabled:
 ```
-{"timestamp":"2022-04-25T20:58:43.429519116Z","level":"error","source":"cfnetworking.vxlan-policy-agent","message":"cfnetworking.vxlan-policy-agent.rules-enforcer.asg-5756ce1650920323410853.cleanup-rules","data":{"error":"clean up parent chain: iptables call: running [/var/vcap/packages/iptables/sbin/iptables -t filter -D netout--c1c6107d-030b-47b7-6 -p icmp -m iprange --dst-range 0.0.0.0-255.255.255.255 -m icmp --icmp-type any -j ACCEPT --wait]: exit status 1: iptables: Bad rule (does a matching rule exist in that chain?).\n and unlock: \u003cnil\u003e","session":"4.11"}}
+{
+  "timestamp": "2022-04-25T20:58:43.429519116Z",
+  "level": "error",
+  "source": "cfnetworking.vxlan-policy-agent",
+  "message": "cfnetworking.vxlan-policy-agent.rules-enforcer.asg-5756ce1650920323410853.cleanup-rules",
+  "data": {
+    "error": "clean up parent chain: iptables call: running [/var/vcap/packages/iptables/sbin/iptables -t filter -D netout--c1c6107d-030b-47b7-6 -p icmp -m iprange --dst-range 0.0.0.0-255.255.255.255 -m icmp --icmp-type any -j ACCEPT --wait]: exit status 1: iptables: Bad rule (does a matching rule exist in that chain?).\n and unlock: <nil>",
+    "session": "4.11"
+  }
+}
 ```
 
-If iptables logging is enable:
+If iptables logging is enabled:
 ```
-{"timestamp":"2022-04-25T20:00:10.555161129Z","level":"error","source":"cfnetworking.vxlan-policy-agent","message":"cfnetworking.vxlan-policy-agent.rules-enforcer.asg-29730f1650916810536136.cleanup-rules","data":{"error":"clean up parent chain: iptables call: running [/var/vcap/packages/iptables/sbin/iptables -t filter -D netout--7a79c4db-0126-4bee-4 -p icmp -m iprange --dst-range 0.0.0.0-255.255.255.255 -m icmp --icmp-type any -g netout--7a79c4db-0126-4--log --wait]: exit status 1: iptables: No chain/target/match by that name.\n and unlock: \u003cnil\u003e","session":"4.30"}}
+{
+  "timestamp": "2022-04-25T20:00:10.555161129Z",
+  "level": "error",
+  "source": "cfnetworking.vxlan-policy-agent",
+  "message": "cfnetworking.vxlan-policy-agent.rules-enforcer.asg-29730f1650916810536136.cleanup-rules",
+  "data": {
+    "error": "clean up parent chain: iptables call: running [/var/vcap/packages/iptables/sbin/iptables -t filter -D netout--7a79c4db-0126-4bee-4 -p icmp -m iprange --dst-range 0.0.0.0-255.255.255.255 -m icmp --icmp-type any -g netout--7a79c4db-0126-4--log --wait]: exit status 1: iptables: No chain/target/match by that name.\n and unlock: <nil>",
+    "session": "4.30"
+  }
+}
 ```
 
 ## Affected ASGs
@@ -47,7 +66,8 @@ If iptables logging is enable:
 ## Affected Versions
 * silk-release 3.0.0 - 3.4.0
 
-This issue will be fixed in silk-release version 3.5.0.
+## Fixed Version
+* silk-release 3.5.0
 
 ## Check your ASGs
 Before upgrading to an affected version, check to see if you have ICMP any rules.
