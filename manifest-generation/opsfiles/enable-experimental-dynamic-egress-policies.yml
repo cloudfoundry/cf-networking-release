@@ -1,4 +1,0 @@
-- type: replace
-  path: /instance_groups/name=api/jobs/name=policy-server-internal/properties/enforce_experimental_dynamic_egress_policies?
-  value: true
-

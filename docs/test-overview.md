@@ -31,7 +31,6 @@ Acceptance tests require a fully deployed Cloud Foundry.
   "admin_secret": "ADMIN_SECRET", # this should be in credhub as "uaa_admin_client_secret"
   "apps_domain": "APPS_DOMAIN",
   "default_security_groups": [ "dns", "public_networks" ], # check these against your own security groups.
-  "skip_experimental_dynamic_egress_tests": false,
   "skip_ssl_validation": true,
   "test_app_instances": 2,
   "test_applications": 2,
@@ -59,7 +58,6 @@ CONFIG=config.yml APPS_DIR=${PWD}/src/example-apps ginkgo -v src/code.cloudfound
 The following ops files are required to ensure a successful run:
 
 - [add-apps-internal-search-domain.yml](https://github.com/cloudfoundry/cf-networking-release/blob/develop/manifest-generation/opsfiles/add-apps-internal-search-domain.yml)
-- [enable-experimental-dynamic-egress-policies.yml](https://github.com/cloudfoundry/cf-networking-release/blob/develop/manifest-generation/opsfiles/enable-experimental-dynamic-egress-policies.yml)
 - [disable-ingress-redirect-to-proxy.yml](https://github.com/cloudfoundry/cf-networking-release/blob/develop/ci/opsfiles/disable-ingress-redirect-to-proxy.yml)
 - [scale-to-2-diego-cells.yml](https://github.com/cloudfoundry/cf-networking-release/blob/develop/ci/opsfiles/scale-to-2-diego-cells.yml)
 
