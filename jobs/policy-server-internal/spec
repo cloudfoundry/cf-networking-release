@@ -98,7 +98,3 @@ properties:
       Lowering the lifetime will result in connections getting reaped sooner, but the policy server may have to renegotiate connections
       more often, which could add some latency. We recommend using the default unless you have seen specific needs to change it.
     default: 3600
-
-  enforce_experimental_dynamic_egress_policies:
-    description: "Set to true for dynamic egress policy enforcement.  Note that you can still create dynamic egress policies through the external API."
-    default: false
