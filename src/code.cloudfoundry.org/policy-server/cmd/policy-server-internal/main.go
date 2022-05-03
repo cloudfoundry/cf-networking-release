@@ -79,13 +79,6 @@ func main() {
 		conf.TagLength,
 	)
 
-	egressDataStore := &store.EgressPolicyStore{
-		EgressPolicyRepo: &store.EgressPolicyTable{
-			Conn:  connectionPool,
-			Guids: &store.GuidGenerator{},
-		},
-	}
-
 	securityGroupsStore := &store.SGStore{
 		Conn: connectionPool,
 	}
@@ -102,11 +95,6 @@ func main() {
 		MetricsSender: metricsSender,
 	}
 
-	wrappedEgressStore := &store.EgressPolicyMetricsWrapper{
-		Store:         egressDataStore,
-		MetricsSender: metricsSender,
-	}
-
 	wrappedSecurityGroupsStore := &store.SecurityGroupsMetricsWrapper{
 		Store:         securityGroupsStore,
 		MetricsSender: metricsSender,
@@ -115,10 +103,10 @@ func main() {
 	errorResponse := &httperror.ErrorResponse{
 		MetricsSender: metricsSender,
 	}
-	policyCollectionWriter := api.NewPolicyCollectionWriter(marshal.MarshalFunc(json.Marshal))
 
-	internalPoliciesHandlerV1 := handlers.NewPoliciesIndexInternal(logger, wrappedStore,
-		wrappedEgressStore, policyCollectionWriter, errorResponse, conf.EnforceExperimentalDynamicEgressPolicies)
+	policyMapperWriter := api.NewPolicyMapper(marshal.UnmarshalFunc(json.Unmarshal), marshal.MarshalFunc(json.Marshal), &api.PolicyValidator{})
+
+	internalPoliciesHandlerV1 := handlers.NewPoliciesIndexInternal(logger, wrappedStore, policyMapperWriter, errorResponse)
 
 	createTagsHandlerV1 := &handlers.TagsCreate{
 		Store:         wrappedStore,

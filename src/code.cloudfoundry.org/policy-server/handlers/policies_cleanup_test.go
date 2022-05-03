@@ -17,16 +17,15 @@ import (
 
 var _ = Describe("PoliciesCleanup", func() {
 	var (
-		request                    *http.Request
-		handler                    *handlers.PoliciesCleanup
-		resp                       *httptest.ResponseRecorder
-		logger                     *lagertest.TestLogger
-		expectedLogger             lager.Logger
-		fakePolicyCleaner          *fakes.PolicyCleaner
-		fakePolicyCollectionWriter *apifakes.PolicyCollectionWriter
-		fakeErrorResponse          *fakes.ErrorResponse
-		policies                   []store.Policy
-		egressPolicies             []store.EgressPolicy
+		request           *http.Request
+		handler           *handlers.PoliciesCleanup
+		resp              *httptest.ResponseRecorder
+		logger            *lagertest.TestLogger
+		expectedLogger    lager.Logger
+		fakePolicyCleaner *fakes.PolicyCleaner
+		fakePolicyMapper  *apifakes.PolicyMapper
+		fakeErrorResponse *fakes.ErrorResponse
+		policies          []store.Policy
 	)
 
 	BeforeEach(func() {
@@ -42,28 +41,6 @@ var _ = Describe("PoliciesCleanup", func() {
 				},
 			},
 		}}
-		egressPolicies = []store.EgressPolicy{{
-			Source: store.EgressSource{ID: "live-guid", Type: "app"},
-			Destination: store.EgressDestination{
-				Rules: []store.EgressDestinationRule{
-					{
-						Protocol: "tcp",
-						IPRanges: []store.IPRange{
-							{
-								Start: "1.2.3.4",
-								End:   "1.2.3.5",
-							},
-						},
-						Ports: []store.Ports{
-							{
-								Start: 8080,
-								End:   8080,
-							},
-						},
-					},
-				},
-			},
-		}}
 
 		logger = lagertest.NewTestLogger("test")
 		expectedLogger = lager.NewLogger("test").Session("cleanup-policies")
@@ -72,18 +49,18 @@ var _ = Describe("PoliciesCleanup", func() {
 		expectedLogger.RegisterSink(testSink)
 		expectedLogger.RegisterSink(lager.NewWriterSink(GinkgoWriter, lager.DEBUG))
 
-		fakePolicyCollectionWriter = &apifakes.PolicyCollectionWriter{}
+		fakePolicyMapper = &apifakes.PolicyMapper{}
 		fakePolicyCleaner = &fakes.PolicyCleaner{}
 		fakeErrorResponse = &fakes.ErrorResponse{}
 
 		handler = &handlers.PoliciesCleanup{
-			PolicyCollectionWriter: fakePolicyCollectionWriter,
-			PolicyCleaner:          fakePolicyCleaner,
-			ErrorResponse:          fakeErrorResponse,
+			PolicyCleaner: fakePolicyCleaner,
+			PolicyMapper:  fakePolicyMapper,
+			ErrorResponse: fakeErrorResponse,
 		}
 
-		fakePolicyCleaner.DeleteStalePoliciesReturns(policies, egressPolicies, nil)
-		fakePolicyCollectionWriter.AsBytesReturns([]byte("some-bytes"), nil)
+		fakePolicyCleaner.DeleteStalePoliciesReturns(policies, nil)
+		fakePolicyMapper.AsBytesReturns([]byte("some-bytes"), nil)
 		resp = httptest.NewRecorder()
 		request, _ = http.NewRequest("POST", "/networking/v0/external/policies/cleanup", nil)
 	})
@@ -92,12 +69,11 @@ var _ = Describe("PoliciesCleanup", func() {
 		MakeRequestWithLogger(handler.ServeHTTP, resp, request, logger)
 
 		Expect(fakePolicyCleaner.DeleteStalePoliciesCallCount()).To(Equal(1))
-		Expect(fakePolicyCollectionWriter.AsBytesCallCount()).To(Equal(1))
+		Expect(fakePolicyMapper.AsBytesCallCount()).To(Equal(1))
 
-		policiesArg, egressPoliciesArg := fakePolicyCollectionWriter.AsBytesArgsForCall(0)
+		policiesArg := fakePolicyMapper.AsBytesArgsForCall(0)
 
 		Expect(policiesArg).To(Equal(policies))
-		Expect(egressPoliciesArg).To(Equal(egressPolicies))
 
 		Expect(resp.Code).To(Equal(http.StatusOK))
 		Expect(resp.Body.String()).To(Equal(`some-bytes`))
@@ -113,7 +89,7 @@ var _ = Describe("PoliciesCleanup", func() {
 
 	Context("When deleting the policies fails", func() {
 		BeforeEach(func() {
-			fakePolicyCleaner.DeleteStalePoliciesReturns(policies, egressPolicies, errors.New("potato"))
+			fakePolicyCleaner.DeleteStalePoliciesReturns(policies, errors.New("potato"))
 		})
 
 		It("calls the internal server error handler", func() {
@@ -131,7 +107,7 @@ var _ = Describe("PoliciesCleanup", func() {
 
 	Context("When mapping the policies to bytes", func() {
 		BeforeEach(func() {
-			fakePolicyCollectionWriter.AsBytesReturns(nil, errors.New("potato"))
+			fakePolicyMapper.AsBytesReturns(nil, errors.New("potato"))
 		})
 
 		It("calls the internal server error handler", func() {

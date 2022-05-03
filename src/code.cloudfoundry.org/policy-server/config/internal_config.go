@@ -11,23 +11,22 @@ import (
 )
 
 type InternalConfig struct {
-	LogPrefix                                string    `json:"log_prefix" validate:"nonzero"`
-	ListenHost                               string    `json:"listen_host" validate:"nonzero"`
-	InternalListenPort                       int       `json:"internal_listen_port" validate:"nonzero"`
-	DebugServerHost                          string    `json:"debug_server_host" validate:"nonzero"`
-	DebugServerPort                          int       `json:"debug_server_port" validate:"nonzero"`
-	HealthCheckPort                          int       `json:"health_check_port" validate:"nonzero"`
-	CACertFile                               string    `json:"ca_cert_file" validate:"nonzero"`
-	ServerCertFile                           string    `json:"server_cert_file" validate:"nonzero"`
-	ServerKeyFile                            string    `json:"server_key_file" validate:"nonzero"`
-	Database                                 db.Config `json:"database" validate:"nonzero"`
-	TagLength                                int       `json:"tag_length" validate:"nonzero"`
-	MetronAddress                            string    `json:"metron_address" validate:"nonzero"`
-	LogLevel                                 string    `json:"log_level"`
-	MaxIdleConnections                       int       `json:"max_idle_connections" validate:"min=0"`
-	MaxOpenConnections                       int       `json:"max_open_connections" validate:"min=0"`
-	MaxConnectionsLifetimeSeconds            int       `json:"connections_max_lifetime_seconds" validate:"min=0"`
-	EnforceExperimentalDynamicEgressPolicies bool      `json:"enforce_experimental_dynamic_egress_policies"`
+	LogPrefix                     string    `json:"log_prefix" validate:"nonzero"`
+	ListenHost                    string    `json:"listen_host" validate:"nonzero"`
+	InternalListenPort            int       `json:"internal_listen_port" validate:"nonzero"`
+	DebugServerHost               string    `json:"debug_server_host" validate:"nonzero"`
+	DebugServerPort               int       `json:"debug_server_port" validate:"nonzero"`
+	HealthCheckPort               int       `json:"health_check_port" validate:"nonzero"`
+	CACertFile                    string    `json:"ca_cert_file" validate:"nonzero"`
+	ServerCertFile                string    `json:"server_cert_file" validate:"nonzero"`
+	ServerKeyFile                 string    `json:"server_key_file" validate:"nonzero"`
+	Database                      db.Config `json:"database" validate:"nonzero"`
+	TagLength                     int       `json:"tag_length" validate:"nonzero"`
+	MetronAddress                 string    `json:"metron_address" validate:"nonzero"`
+	LogLevel                      string    `json:"log_level"`
+	MaxIdleConnections            int       `json:"max_idle_connections" validate:"min=0"`
+	MaxOpenConnections            int       `json:"max_open_connections" validate:"min=0"`
+	MaxConnectionsLifetimeSeconds int       `json:"connections_max_lifetime_seconds" validate:"min=0"`
 }
 
 func (c *InternalConfig) Validate() error {

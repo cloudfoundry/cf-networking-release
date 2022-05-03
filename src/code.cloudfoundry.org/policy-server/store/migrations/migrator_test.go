@@ -1770,6 +1770,188 @@ var _ = Describe("migrations", func() {
 			})
 		})
 
+		Describe("V68 - Remove Dynamic Egress Table - apps", func() {
+			It("should migrate", func() {
+				table_name := "apps"
+				By("performing migration")
+				migrateTo("67")
+
+				By("Looking for existing Dynamic Egress Table")
+				query := fmt.Sprintf("SELECT count(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='%s' AND TABLE_NAME = '%s'", dbConf.DatabaseName, table_name)
+				var count int
+				err := realDb.QueryRow(query).Scan(&count)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(count).To(Equal(1))
+
+				By("performing migration")
+				numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 1)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(numMigrations).To(Equal(1))
+
+				By("Confirming table was deleted")
+				err = realDb.QueryRow(query).Scan(&count)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(count).To(Equal(0))
+
+			})
+		})
+
+		Describe("V69 - Remove Dynamic Egress Table - destination_metadatas", func() {
+			It("should migrate", func() {
+				table_name := "destination_metadatas"
+				By("performing migration")
+				migrateTo("68")
+
+				By("Looking for existing Dynamic Egress Table")
+				query := fmt.Sprintf("SELECT count(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='%s' AND TABLE_NAME = '%s'", dbConf.DatabaseName, table_name)
+				var count int
+				err := realDb.QueryRow(query).Scan(&count)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(count).To(Equal(1))
+
+				By("performing migration")
+				numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 1)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(numMigrations).To(Equal(1))
+
+				By("Confirming table was deleted")
+				err = realDb.QueryRow(query).Scan(&count)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(count).To(Equal(0))
+
+			})
+		})
+
+		Describe("V70 - Remove Dynamic Egress Table - ip_ranges", func() {
+			It("should migrate", func() {
+				table_name := "ip_ranges"
+				By("performing migration")
+				migrateTo("69")
+
+				By("Looking for existing Dynamic Egress Table")
+				query := fmt.Sprintf("SELECT count(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='%s' AND TABLE_NAME = '%s'", dbConf.DatabaseName, table_name)
+				var count int
+				err := realDb.QueryRow(query).Scan(&count)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(count).To(Equal(1))
+
+				By("performing migration")
+				numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 1)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(numMigrations).To(Equal(1))
+
+				By("Confirming table was deleted")
+				err = realDb.QueryRow(query).Scan(&count)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(count).To(Equal(0))
+
+			})
+		})
+
+		Describe("V71 - Remove Dynamic Egress Table - spaces", func() {
+			It("should migrate", func() {
+				table_name := "spaces"
+				By("performing migration")
+				migrateTo("70")
+
+				By("Looking for existing Dynamic Egress Table")
+				query := fmt.Sprintf("SELECT count(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='%s' AND TABLE_NAME = '%s'", dbConf.DatabaseName, table_name)
+				var count int
+				err := realDb.QueryRow(query).Scan(&count)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(count).To(Equal(1))
+
+				By("performing migration")
+				numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 1)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(numMigrations).To(Equal(1))
+
+				By("Confirming table was deleted")
+				err = realDb.QueryRow(query).Scan(&count)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(count).To(Equal(0))
+
+			})
+		})
+
+		Describe("V72 - Remove Dynamic Egress Table - egress_policies", func() {
+			It("should migrate", func() {
+				table_name := "egress_policies"
+				By("performing migration")
+				migrateTo("71")
+
+				By("Looking for existing Dynamic Egress Table")
+				query := fmt.Sprintf("SELECT count(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='%s' AND TABLE_NAME = '%s'", dbConf.DatabaseName, table_name)
+				var count int
+				err := realDb.QueryRow(query).Scan(&count)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(count).To(Equal(1))
+
+				By("performing migration")
+				numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 1)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(numMigrations).To(Equal(1))
+
+				By("Confirming table was deleted")
+				err = realDb.QueryRow(query).Scan(&count)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(count).To(Equal(0))
+
+			})
+		})
+
+		Describe("V73 - Remove Dynamic Egress Table - defaults", func() {
+			It("should migrate", func() {
+				table_name := "defaults"
+				By("performing migration")
+				migrateTo("72")
+
+				By("Looking for existing Dynamic Egress Tables")
+				query := fmt.Sprintf("SELECT count(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='%s' AND TABLE_NAME = '%s'", dbConf.DatabaseName, table_name)
+				var count int
+				err := realDb.QueryRow(query).Scan(&count)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(count).To(Equal(1))
+
+				By("performing migration")
+				numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 1)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(numMigrations).To(Equal(1))
+
+				By("Confirming table was deleted")
+				err = realDb.QueryRow(query).Scan(&count)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(count).To(Equal(0))
+
+			})
+		})
+
+		Describe("V74 - Remove Dynamic Egress Table - terminals", func() {
+			It("should migrate", func() {
+				table_name := "terminals"
+				By("performing migration")
+				migrateTo("73")
+
+				By("Looking for existing Dynamic Egress Table")
+				query := fmt.Sprintf("SELECT count(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='%s' AND TABLE_NAME = '%s'", dbConf.DatabaseName, table_name)
+				var count int
+				err := realDb.QueryRow(query).Scan(&count)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(count).To(Equal(1))
+
+				By("performing migration")
+				numMigrations, err := migrator.PerformMigrations(realDb.DriverName(), realDb, 1)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(numMigrations).To(Equal(1))
+
+				By("Confirming table was deleted")
+				err = realDb.QueryRow(query).Scan(&count)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(count).To(Equal(0))
+
+			})
+		})
+
 		Context("when migrating in parallel", func() {
 			Context("mysql", func() {
 				BeforeEach(func() {
