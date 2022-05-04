@@ -14,8 +14,6 @@ This document is intended to help people who are poking around the `network_poli
 * [Migration Related Tables](#migration-tables)
   * [Gorp_migrations](#gorp-migrations-table)
   * [Gorp_lock](#gorp-lock-table)
-* [Dynamic Egress Related Tables](#dynamic-egress-tables)
-
 -------------------------------------------------------------------------------------------
 
 ## <a name="access-db"></a> How to access an internal database
@@ -212,13 +210,4 @@ mysql> describe gorp_lock;
 |---|---|
 | lock | A value representing the policy-server that is currently running a migration.|
 | applied_at | The time that the policy-server claimed the lock. |
-
-
-## <a name="dynamic-egress-tables"></a> Dynamic Egress Related Tables
-
-There are 7 tables related to dynamic egress policies: apps, defaults, destination_metadatas, egress_policies, ip_ranges, terminals, and spaces. 
-
-Dynamic egress was a beta feature that we are no longer planning on taking GA. These tables should be empty.
-
-
 

@@ -74,14 +74,6 @@ func NewMarkSetRule(sourceIP, tag, appGUID string) IPTablesRule {
 	}, fmt.Sprintf("src:%s", appGUID))
 }
 
-func NewDefaultEgressRule(localSubnet, deviceName string) IPTablesRule {
-	return IPTablesRule{
-		"--source", localSubnet,
-		"!", "-o", deviceName,
-		"--jump", "MASQUERADE",
-	}
-}
-
 func NewLogRule(rule IPTablesRule, name string) IPTablesRule {
 	return IPTablesRule(append(
 		rule, "-m", "limit", "--limit", "2/min",
@@ -250,15 +242,6 @@ func NewOverlayDefaultRejectLogRule(containerHandle, containerIP string, deniedL
 		"--limit-burst", strconv.Itoa(deniedLogsPerSec),
 		"--jump", "LOG",
 		"--log-prefix", trimAndPad(fmt.Sprintf("DENY_C2C_%s", containerHandle)),
-	}
-}
-
-func NewOverlayAllowEgress(deviceName, containerIP string) IPTablesRule {
-	return IPTablesRule{
-		"-s", containerIP,
-		"-o", deviceName,
-		"-m", "mark", "!", "--mark", "0x0",
-		"--jump", "ACCEPT",
 	}
 }
 
