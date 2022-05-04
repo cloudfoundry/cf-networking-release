@@ -1777,7 +1777,7 @@ var _ = Describe("migrations", func() {
 				migrateTo("67")
 
 				By("Looking for existing Dynamic Egress Table")
-				query := fmt.Sprintf("SELECT count(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='%s' AND TABLE_NAME = '%s'", dbConf.DatabaseName, table_name)
+				query := fmt.Sprintf("SELECT count(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '%s'", table_name)
 				var count int
 				err := realDb.QueryRow(query).Scan(&count)
 				Expect(err).NotTo(HaveOccurred())
@@ -1803,7 +1803,7 @@ var _ = Describe("migrations", func() {
 				migrateTo("68")
 
 				By("Looking for existing Dynamic Egress Table")
-				query := fmt.Sprintf("SELECT count(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='%s' AND TABLE_NAME = '%s'", dbConf.DatabaseName, table_name)
+				query := fmt.Sprintf("SELECT count(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '%s'", table_name)
 				var count int
 				err := realDb.QueryRow(query).Scan(&count)
 				Expect(err).NotTo(HaveOccurred())
@@ -1829,7 +1829,7 @@ var _ = Describe("migrations", func() {
 				migrateTo("69")
 
 				By("Looking for existing Dynamic Egress Table")
-				query := fmt.Sprintf("SELECT count(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='%s' AND TABLE_NAME = '%s'", dbConf.DatabaseName, table_name)
+				query := fmt.Sprintf("SELECT count(*) FROM INFORMATION_SCHEMA.TABLES WHERE  TABLE_NAME = '%s'", table_name)
 				var count int
 				err := realDb.QueryRow(query).Scan(&count)
 				Expect(err).NotTo(HaveOccurred())
@@ -1855,7 +1855,7 @@ var _ = Describe("migrations", func() {
 				migrateTo("70")
 
 				By("Looking for existing Dynamic Egress Table")
-				query := fmt.Sprintf("SELECT count(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='%s' AND TABLE_NAME = '%s'", dbConf.DatabaseName, table_name)
+				query := fmt.Sprintf("SELECT count(*) FROM INFORMATION_SCHEMA.TABLES WHERE  TABLE_NAME = '%s'", table_name)
 				var count int
 				err := realDb.QueryRow(query).Scan(&count)
 				Expect(err).NotTo(HaveOccurred())
@@ -1881,7 +1881,7 @@ var _ = Describe("migrations", func() {
 				migrateTo("71")
 
 				By("Looking for existing Dynamic Egress Table")
-				query := fmt.Sprintf("SELECT count(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='%s' AND TABLE_NAME = '%s'", dbConf.DatabaseName, table_name)
+				query := fmt.Sprintf("SELECT count(*) FROM INFORMATION_SCHEMA.TABLES WHERE  TABLE_NAME = '%s'", table_name)
 				var count int
 				err := realDb.QueryRow(query).Scan(&count)
 				Expect(err).NotTo(HaveOccurred())
@@ -1907,7 +1907,7 @@ var _ = Describe("migrations", func() {
 				migrateTo("72")
 
 				By("Looking for existing Dynamic Egress Tables")
-				query := fmt.Sprintf("SELECT count(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='%s' AND TABLE_NAME = '%s'", dbConf.DatabaseName, table_name)
+				query := fmt.Sprintf("SELECT count(*) FROM INFORMATION_SCHEMA.TABLES WHERE  TABLE_NAME = '%s'", table_name)
 				var count int
 				err := realDb.QueryRow(query).Scan(&count)
 				Expect(err).NotTo(HaveOccurred())
@@ -1933,7 +1933,7 @@ var _ = Describe("migrations", func() {
 				migrateTo("73")
 
 				By("Looking for existing Dynamic Egress Table")
-				query := fmt.Sprintf("SELECT count(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA='%s' AND TABLE_NAME = '%s'", dbConf.DatabaseName, table_name)
+				query := fmt.Sprintf("SELECT count(*) FROM INFORMATION_SCHEMA.TABLES WHERE  TABLE_NAME = '%s'", table_name)
 				var count int
 				err := realDb.QueryRow(query).Scan(&count)
 				Expect(err).NotTo(HaveOccurred())
