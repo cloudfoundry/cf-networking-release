@@ -7,20 +7,18 @@ import (
 
 	"code.cloudfoundry.org/cf-networking-helpers/json_client"
 	"code.cloudfoundry.org/lager"
-	"code.cloudfoundry.org/policy-server/api"
-	"code.cloudfoundry.org/policy-server/api/api_v0"
 )
 
-//go:generate counterfeiter -o ../fakes/external_policy_client.go --fake-name ExternalPolicyClient . ExternalPolicyClient
+//go:generate counterfeiter -o ./fakes/external_policy_client.go --fake-name ExternalPolicyClient . ExternalPolicyClient
 type ExternalPolicyClient interface {
-	GetPolicies(token string) ([]api.Policy, error)
-	GetPoliciesByID(token string, ids ...string) ([]api.Policy, error)
-	GetPoliciesV0(token string) ([]api_v0.Policy, error)
-	GetPoliciesV0ByID(token string, ids ...string) ([]api_v0.Policy, error)
-	DeletePolicies(token string, policies []api.Policy) error
-	DeletePoliciesV0(token string, policies []api_v0.Policy) error
-	AddPolicies(token string, policies []api.Policy) error
-	AddPoliciesV0(token string, policies []api_v0.Policy) error
+	GetPolicies(token string) ([]Policy, error)
+	GetPoliciesByID(token string, ids ...string) ([]Policy, error)
+	GetPoliciesV0(token string) ([]PolicyV0, error)
+	GetPoliciesV0ByID(token string, ids ...string) ([]PolicyV0, error)
+	DeletePolicies(token string, policies []Policy) error
+	DeletePoliciesV0(token string, policies []PolicyV0) error
+	AddPolicies(token string, policies []Policy) error
+	AddPoliciesV0(token string, policies []PolicyV0) error
 }
 
 type ExternalClient struct {
@@ -35,9 +33,9 @@ func NewExternal(logger lager.Logger, httpClient json_client.HttpClient, baseURL
 	}
 }
 
-func (c *ExternalClient) GetPolicies(token string) ([]api.Policy, error) {
+func (c *ExternalClient) GetPolicies(token string) ([]Policy, error) {
 	var policies struct {
-		Policies []api.Policy `json:"policies"`
+		Policies []Policy `json:"policies"`
 	}
 	err := c.JsonClient.Do("GET", "/networking/v1/external/policies", nil, &policies, token)
 	if err != nil {
@@ -46,9 +44,9 @@ func (c *ExternalClient) GetPolicies(token string) ([]api.Policy, error) {
 	return policies.Policies, nil
 }
 
-func (c *ExternalClient) GetPoliciesByID(token string, ids ...string) ([]api.Policy, error) {
+func (c *ExternalClient) GetPoliciesByID(token string, ids ...string) ([]Policy, error) {
 	var policies struct {
-		Policies []api.Policy `json:"policies"`
+		Policies []Policy `json:"policies"`
 	}
 	route := "/networking/v1/external/policies?id=" + strings.Join(ids, ",")
 	err := c.JsonClient.Do("GET", route, nil, &policies, token)
@@ -58,9 +56,9 @@ func (c *ExternalClient) GetPoliciesByID(token string, ids ...string) ([]api.Pol
 	return policies.Policies, nil
 }
 
-func (c *ExternalClient) GetPoliciesV0(token string) ([]api_v0.Policy, error) {
+func (c *ExternalClient) GetPoliciesV0(token string) ([]PolicyV0, error) {
 	var policies struct {
-		Policies []api_v0.Policy `json:"policies"`
+		Policies []PolicyV0 `json:"policies"`
 	}
 	err := c.JsonClient.Do("GET", "/networking/v0/external/policies", nil, &policies, token)
 	if err != nil {
@@ -69,9 +67,9 @@ func (c *ExternalClient) GetPoliciesV0(token string) ([]api_v0.Policy, error) {
 	return policies.Policies, nil
 }
 
-func (c *ExternalClient) GetPoliciesV0ByID(token string, ids ...string) ([]api_v0.Policy, error) {
+func (c *ExternalClient) GetPoliciesV0ByID(token string, ids ...string) ([]PolicyV0, error) {
 	var policies struct {
-		Policies []api_v0.Policy `json:"policies"`
+		Policies []PolicyV0 `json:"policies"`
 	}
 	route := "/networking/v0/external/policies?id=" + strings.Join(ids, ",")
 	err := c.JsonClient.Do("GET", route, nil, &policies, token)
@@ -81,8 +79,8 @@ func (c *ExternalClient) GetPoliciesV0ByID(token string, ids ...string) ([]api_v
 	return policies.Policies, nil
 }
 
-func (c *ExternalClient) AddPolicies(token string, policies []api.Policy) error {
-	reqPolicies := map[string][]api.Policy{
+func (c *ExternalClient) AddPolicies(token string, policies []Policy) error {
+	reqPolicies := map[string][]Policy{
 		"policies": policies,
 	}
 
@@ -94,10 +92,10 @@ func (c *ExternalClient) AddPolicies(token string, policies []api.Policy) error 
 	return nil
 }
 
-func (c *ExternalClient) AddPoliciesV0(token string, policies []api_v0.Policy) error {
+func (c *ExternalClient) AddPoliciesV0(token string, policies []PolicyV0) error {
 	chunks := c.Chunker.Chunk(policies)
 	for _, chunk := range chunks {
-		reqPolicies := map[string][]api_v0.Policy{
+		reqPolicies := map[string][]PolicyV0{
 			"policies": chunk,
 		}
 		err := c.JsonClient.Do("POST", "/networking/v0/external/policies", reqPolicies, nil, token)
@@ -108,8 +106,8 @@ func (c *ExternalClient) AddPoliciesV0(token string, policies []api_v0.Policy) e
 	return nil
 }
 
-func (c *ExternalClient) DeletePolicies(token string, policies []api.Policy) error {
-	reqPolicies := map[string][]api.Policy{
+func (c *ExternalClient) DeletePolicies(token string, policies []Policy) error {
+	reqPolicies := map[string][]Policy{
 		"policies": policies,
 	}
 
@@ -121,10 +119,10 @@ func (c *ExternalClient) DeletePolicies(token string, policies []api.Policy) err
 	return nil
 }
 
-func (c *ExternalClient) DeletePoliciesV0(token string, policies []api_v0.Policy) error {
+func (c *ExternalClient) DeletePoliciesV0(token string, policies []PolicyV0) error {
 	chunks := c.Chunker.Chunk(policies)
 	for _, chunk := range chunks {
-		reqPolicies := map[string][]api_v0.Policy{
+		reqPolicies := map[string][]PolicyV0{
 			"policies": chunk,
 		}
 		err := c.JsonClient.Do("POST", "/networking/v0/external/policies/delete", reqPolicies, nil, token)

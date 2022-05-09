@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/lager/lagertest"
-	"code.cloudfoundry.org/lib/policy_client"
 	"code.cloudfoundry.org/policy-server/api/api_v0"
+	"code.cloudfoundry.org/policy_client"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
