@@ -76,6 +76,9 @@ code.cloudfoundry.org/locket/lock
 code.cloudfoundry.org/locket/metrics
 code.cloudfoundry.org/locket/metrics/helpers
 code.cloudfoundry.org/locket/models
+# code.cloudfoundry.org/policy_client v0.0.0-20220509212643-31108c669266
+## explicit; go 1.17
+code.cloudfoundry.org/policy_client
 # code.cloudfoundry.org/rep v0.1441.2
 ## explicit
 # code.cloudfoundry.org/routing-info v0.0.0-20210811170011-d6736bca3081

@@ -1,12 +1,10 @@
 package policy_client
 
-import "code.cloudfoundry.org/policy-server/api/api_v0"
-
 const DefaultMaxPolicies = 100
 
-//go:generate counterfeiter -o ../fakes/chunker.go --fake-name Chunker . Chunker
+//go:generate counterfeiter -o ./fakes/chunker.go --fake-name Chunker . Chunker
 type Chunker interface {
-	Chunk(allPolicies []api_v0.Policy) [][]api_v0.Policy
+	Chunk(allPolicies []PolicyV0) [][]PolicyV0
 }
 
 type SimpleChunker struct {
@@ -27,9 +25,9 @@ func min(a, b int) int {
 	return b
 }
 
-func (c *SimpleChunker) Chunk(allPolicies []api_v0.Policy) [][]api_v0.Policy {
+func (c *SimpleChunker) Chunk(allPolicies []PolicyV0) [][]PolicyV0 {
 	chunkSize := c.getChunkSize()
-	chunkedPolicies := [][]api_v0.Policy{}
+	chunkedPolicies := [][]PolicyV0{}
 	for i := 0; i < len(allPolicies); i += chunkSize {
 		chunkedPolicies = append(chunkedPolicies, allPolicies[i:min(len(allPolicies), i+chunkSize)])
 	}
