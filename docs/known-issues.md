@@ -1,5 +1,15 @@
 # Known Issues
 
+### Apps stop running after a deploy when using dynamic ASGs with icmp any rule
+  When dynamic ASGs are enabled, the vxlan policy agent is unable to clean up
+  ICMP any rules. Undocumented iptables behavior with ICMP any rules causes a
+  cleanup failure, which causes a container creation failure, which prevents any
+  apps from starting. This results in a vxlan policy agent error `iptables: Bad
+  rule (does a matching rule exist in that chain?)` or `exit status 1: iptables:
+  No chain/target/match by that name.`.
+
+  For more information see [this doc](KI-ICMP-any-rules.md).
+
 ### Compatibility with VMware NSX for vSphere 6.2.3+
 
   When using VMware NSX for vSphere 6.2.3+, the default VXLAN port of 4789 used
