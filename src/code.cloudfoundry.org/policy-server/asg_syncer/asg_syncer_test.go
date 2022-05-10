@@ -117,7 +117,7 @@ var _ = Describe("ASGSyncer", func() {
 				}()
 
 				Eventually(ready).Should(BeClosed())
-				Eventually(fakeUAAClient.GetTokenCallCount()).Should(BeNumerically(">", 1))
+				Eventually(fakeUAAClient.GetTokenCallCount).Should(BeNumerically(">", 1))
 
 				Consistently(retChan).ShouldNot(Receive())
 
