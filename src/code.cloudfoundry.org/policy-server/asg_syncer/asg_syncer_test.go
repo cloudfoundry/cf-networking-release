@@ -36,16 +36,15 @@ var _ = Describe("ASGSyncer", func() {
 		fakeMetricsSender = &fakes.MetricsSender{}
 	})
 	Describe("NewASGSyncer()", func() {
-		asgSyncer := asg_syncer.NewASGSyncer(logger, fakeStore, fakeUAAClient, fakeCCClient, pollInterval, fakeMetricsSender, time.Millisecond)
-
-		Expect(asgSyncer).To(Equal(&asg_syncer.ASGSyncer{
-			Logger:        logger,
-			Store:         fakeStore,
-			UAAClient:     fakeUAAClient,
-			CCClient:      fakeCCClient,
-			MetricsSender: fakeMetricsSender,
-			RetryDeadline: time.Millisecond,
-		}))
+		It("works", func() {
+			asgSyncer := asg_syncer.NewASGSyncer(logger, fakeStore, fakeUAAClient, fakeCCClient, pollInterval, fakeMetricsSender, time.Millisecond)
+			Expect(asgSyncer.Logger).To(Equal(logger))
+			Expect(asgSyncer.Store).To(Equal(fakeStore))
+			Expect(asgSyncer.UAAClient).To(Equal(fakeUAAClient))
+			Expect(asgSyncer.CCClient).To(Equal(fakeCCClient))
+			Expect(asgSyncer.MetricsSender).To(Equal(fakeMetricsSender))
+			Expect(asgSyncer.RetryDeadline).To(Equal(time.Millisecond))
+		})
 	})
 	Describe("asgSyncer.Poll()", func() {
 		var asgSyncer *asg_syncer.ASGSyncer
@@ -118,7 +117,7 @@ var _ = Describe("ASGSyncer", func() {
 				}()
 
 				Eventually(ready).Should(BeClosed())
-				Eventually(fakeUAAClient.GetTokenCallCount()).Should(BeNumerically(">", 1))
+				Eventually(fakeUAAClient.GetTokenCallCount).Should(BeNumerically(">", 1))
 
 				Consistently(retChan).ShouldNot(Receive())
 
