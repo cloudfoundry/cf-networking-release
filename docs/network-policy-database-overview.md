@@ -48,19 +48,27 @@ Below are all of the tables in the `network_policy` database.
 
 | Table Name | Description  |
 |---|---|
-| apps | Related to dyanmic egress which is deprecated. Should be empty. |
-| defaults |  Related to dyanmic egress which is deprecated. Should be empty. |
-| destination_metadatas  |  Related to dyanmic egress which is deprecated. Should be empty.  |
 | destinations | List of metadata about network policies. |
-| egress_policies  |  Related to dyanmic egress which is deprecated. Should be empty. |
 | gorp_lock  | Locking mechanism for running migrations. |
 | gorp_migrations  | Record of which migrations have been run. |
 | groups  | List of all apps that are either the source or destination of a network policy. |
-| ip_ranges  | Related to dyanmic egress which is deprecated. Should be empty. |
 | policies  | List of source apps and destination metadata for network policies. |
+
+
+The following tables were related to dynamic egress, which has been removed
+from the codebase. These tables should no longer present in your database as of
+v3.6.0.
+
+| Table Name | Description  |
+|---|---|
+| apps | Related to dyanmic egress which is deprecated. Should be empty. |
+| defaults |  Related to dyanmic egress which is deprecated. Should be empty. |
+| destination_metadatas  |  Related to dyanmic egress which is deprecated. Should be empty.  |
+| egress_policies  |  Related to dyanmic egress which is deprecated. Should be empty. |
+| groups  | List of all apps that are either the source or destination of a network policy. |
+| ip_ranges  | Related to dyanmic egress which is deprecated. Should be empty. |
 | spaces   | Related to dyanmic egress which is deprecated. Should be empty. |
 | terminals  | Related to dyanmic egress which is deprecated. Should be empty.  |
-
 
 ## <a name="network-policy-tables"></a> Network Policy Related Tables
 
