@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"code.cloudfoundry.org/lager/lagertest"
-	"code.cloudfoundry.org/policy-server/api/api_v0"
 	"code.cloudfoundry.org/policy_client"
 	"github.com/cloudfoundry-incubator/cf-test-helpers/cf"
 	. "github.com/onsi/ginkgo"
@@ -146,12 +145,12 @@ var _ = Describe("space developer policy configuration", func() {
 			})
 
 			By("creating a policy", func() {
-				err := policyClient.AddPoliciesV0(spaceDevUserToken, []api_v0.Policy{
+				err := policyClient.AddPoliciesV0(spaceDevUserToken, []policy_client.PolicyV0{
 					{
-						Source: api_v0.Source{
+						Source: policy_client.SourceV0{
 							ID: appAGUID,
 						},
-						Destination: api_v0.Destination{
+						Destination: policy_client.DestinationV0{
 							ID:       appBGUID,
 							Port:     1234,
 							Protocol: "tcp",
@@ -162,12 +161,12 @@ var _ = Describe("space developer policy configuration", func() {
 			})
 
 			By("listing policies", func() {
-				expectedPolicies := []api_v0.Policy{
+				expectedPolicies := []policy_client.PolicyV0{
 					{
-						Source: api_v0.Source{
+						Source: policy_client.SourceV0{
 							ID: appAGUID,
 						},
-						Destination: api_v0.Destination{
+						Destination: policy_client.DestinationV0{
 							ID:       appBGUID,
 							Port:     1234,
 							Protocol: "tcp",
@@ -180,12 +179,12 @@ var _ = Describe("space developer policy configuration", func() {
 			})
 
 			By("deleting the policy", func() {
-				err := policyClient.DeletePoliciesV0(spaceDevUserToken, []api_v0.Policy{
+				err := policyClient.DeletePoliciesV0(spaceDevUserToken, []policy_client.PolicyV0{
 					{
-						Source: api_v0.Source{
+						Source: policy_client.SourceV0{
 							ID: appAGUID,
 						},
-						Destination: api_v0.Destination{
+						Destination: policy_client.DestinationV0{
 							ID:       appBGUID,
 							Port:     1234,
 							Protocol: "tcp",
