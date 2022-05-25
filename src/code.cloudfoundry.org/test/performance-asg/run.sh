@@ -23,6 +23,7 @@ echo "
   \"spaces_with_one_asg\": 1,
   \"how_many_asgs_is_many\": 2,
   \"apps_per_space\": 1
+  \"rule_count_for_space_specific_asgs\": 500,
 }
 " > $CONFIG
 
