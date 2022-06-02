@@ -24,7 +24,12 @@ case $1 in
 
     echo $$ > "${PIDFILE}"
 
-    echo "Hello world!!" > ${RUN_DIR}/index.html
+    cat <<EOF > ${RUN_DIR}/index.html
+HTTP/1.1 200 OK
+Content-Length: 14
+
+Hello world!!
+EOF
     while : ; do
       nc -l 8898 < ${RUN_DIR}/index.html
     done
