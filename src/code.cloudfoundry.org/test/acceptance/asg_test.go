@@ -63,28 +63,28 @@ var _ = Describe("Application Security Groups", func() {
 
 		if !testConfig.DynamicASGsEnabled {
 			By("if dynamic asgs are not enabled, validating an app restart is required")
-			Consistently(func() []byte {
+			Consistently(func() string {
 				resp, err = http.Get(proxyRequestURL)
 				Expect(err).NotTo(HaveOccurred())
 
 				respBytes, err = ioutil.ReadAll(resp.Body)
 				Expect(err).ToNot(HaveOccurred())
 				resp.Body.Close()
-				return respBytes
+				return string(respBytes)
 			}).Should(MatchRegexp("refused"))
 
 			Expect(cf.Cf("restart", appName).Wait(Timeout_Push)).To(gexec.Exit(0))
 		}
 
 		By("checking that our app can now reach cloud controller over internal address")
-		Eventually(func() []byte {
+		Eventually(func() string {
 			resp, err = http.Get(proxyRequestURL)
 			Expect(err).NotTo(HaveOccurred())
 
 			respBytes, err = ioutil.ReadAll(resp.Body)
 			Expect(err).ToNot(HaveOccurred())
 			resp.Body.Close()
-			return respBytes
+			return string(respBytes)
 		}).WithTimeout(10 * time.Second).Should(MatchRegexp("api_version"))
 
 		By("unbinding the security group")
@@ -92,28 +92,28 @@ var _ = Describe("Application Security Groups", func() {
 
 		if !testConfig.DynamicASGsEnabled {
 			By("if dynamics asgs are not enabled, validating an app restart is required")
-			Consistently(func() []byte {
+			Consistently(func() string {
 				resp, err = http.Get(proxyRequestURL)
 				Expect(err).NotTo(HaveOccurred())
 
 				respBytes, err = ioutil.ReadAll(resp.Body)
 				Expect(err).ToNot(HaveOccurred())
 				resp.Body.Close()
-				return respBytes
+				return string(respBytes)
 			}).Should(MatchRegexp("api_version"))
 
 			Expect(cf.Cf("restart", appName).Wait(Timeout_Push)).To(gexec.Exit(0))
 		}
 
 		By("checking that our app can no longer reach cloud controller over internal address")
-		Eventually(func() []byte {
+		Eventually(func() string {
 			resp, err = http.Get(proxyRequestURL)
 			Expect(err).NotTo(HaveOccurred())
 
 			respBytes, err = ioutil.ReadAll(resp.Body)
 			Expect(err).ToNot(HaveOccurred())
 			resp.Body.Close()
-			return respBytes
+			return string(respBytes)
 		}).WithTimeout(10 * time.Second).Should(MatchRegexp("refused"))
 	})
 
