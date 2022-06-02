@@ -99,7 +99,7 @@ releases:
   version: latest
 stemcells:
 - alias: default
-  os: ubuntu-xenial
+  os: ubuntu-bionic
   version: latest
 update:
   canaries: 1
