@@ -95,7 +95,7 @@ done
 
 
 ## Temporary Mitigation
-Disable dynamic ASGs with this opsfile.
+Disable dynamic ASGs with [this opsfile](https://github.com/cloudfoundry/cf-deployment/blob/main/operations/disable-dynamic-asgs.yml).
 
 ## Permanent Fix
 Update to silk-release version 3.5.0.
