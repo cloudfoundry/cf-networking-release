@@ -32,6 +32,13 @@ for pkg in $(echo "${exclude_packages:-""}" | jq -r .[]); do
   ignored_packages+=("${pkg}")
 done
 
+install_ginkgo() {
+  if ! [ $(type -P "ginkgo") ]; then
+    go install -mod=mod github.com/onsi/ginkgo/ginkgo@v1
+    go get github.com/onsi/gomega/...
+  fi
+}
+
 containsElement() {
   local e match="$1"
   shift
@@ -54,6 +61,7 @@ test_package() {
   return "${rc}"
 }
 
+install_ginkgo
 bootDB "${DB}"
 
 declare -a packages
