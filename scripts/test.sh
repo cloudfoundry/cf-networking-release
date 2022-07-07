@@ -9,6 +9,8 @@ SCRIPT_PATH="$(cd "$(dirname "${0}")" && pwd)"
 
 cd "${SCRIPT_PATH}/.."
 
+DB="${DB:-"notset"}"
+
 serial_nodes=1
 if [[ "${DB}" == "postgres" ]]; then
   serial_nodes=4
@@ -53,7 +55,7 @@ test_package() {
 }
 
 loadIFB
-bootDB "${DB:-"notset"}"
+bootDB $DB
 
 declare -a packages
 if [[ -n "${include_only:-""}" ]]; then
