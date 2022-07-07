@@ -1,12 +1,5 @@
 #!/bin/bash
 
-function loadIFB {
-  set +e
-    depmod "$(uname -r)"
-    modprobe ifb
-  set -e
-}
-
 function bootDB {
   db="$1"
 
@@ -20,6 +13,12 @@ function bootDB {
     echo "skipping database"
     return 0
   fi
+
+  echo -n "loading IFB kernel module"
+  set +e
+    depmod "$(uname -r)"
+    modprobe ifb
+  set -e
 
   echo -n "booting ${db}"
   eval "$launchDB"

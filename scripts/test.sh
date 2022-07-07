@@ -54,8 +54,7 @@ test_package() {
   return "${rc}"
 }
 
-loadIFB
-bootDB $DB
+bootDB "${DB}"
 
 declare -a packages
 if [[ -n "${include_only:-""}" ]]; then

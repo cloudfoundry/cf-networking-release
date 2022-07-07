@@ -9,7 +9,6 @@ cd /cf-networking-release
 export GOPATH=$PWD
 
 
-loadIFB
 bootDB "${DB:-"notset"}"
 set +e
 exec /bin/bash
